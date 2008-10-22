@@ -1,4 +1,4 @@
-/* -*- Mode: IDL; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
+/* -*- Mode: C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
 /* ***** BEGIN LICENSE BLOCK *****
  * Version: MPL 1.1/GPL 2.0/LGPL 2.1
  *
@@ -12,15 +12,14 @@
  * for the specific language governing rights and limitations under the
  * License.
  *
- * The Original Code is mozilla.org code.
+ * The Original Code is Mozilla layout code.
  *
- * The Initial Developer of the Original Code is
- * Mozilla Corporation
- * Portions created by the Initial Developer are Copyright (C) 2007
+ * The Initial Developer of the Original Code is Mozilla Corporation.
+ * Portions created by the Initial Developer are Copyright (C) 2008
  * the Initial Developer. All Rights Reserved.
  *
  * Contributor(s):
- *   Dave Camp <dcamp@mozilla.com>
+ *         Peter Van der Beken <peterv@propagandism.org> (Original Author)
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -36,13 +35,24 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-#include "domstubs.idl"
+#ifndef nsICSSRuleList_h___
+#define nsICSSRuleList_h___
 
-interface nsIDOMLoadStatus;
+#include "nsIDOMCSSRuleList.h"
 
-[scriptable, uuid(d58bc0cf-e35c-4d22-9e21-9ada8fc4203a)]
-interface nsIDOMLoadStatusList : nsISupports
+// IID for the nsICSSRuleList interface
+#define NS_ICSSRULELIST_IID \
+{ 0x7ae746fd, 0x259a, 0x4a69, \
+ { 0x97, 0x2d, 0x2c, 0x10, 0xf7, 0xb0, 0x04, 0xa1 } }
+
+class nsICSSRuleList : public nsIDOMCSSRuleList
 {
-  readonly attribute unsigned long length;
-  nsIDOMLoadStatus item(in unsigned long index);
+public:
+  NS_DECLARE_STATIC_IID_ACCESSOR(NS_ICSSRULELIST_IID)
+
+  virtual nsIDOMCSSRule* GetItemAt(PRUint32 aIndex, nsresult* aResult) = 0;
 };
+
+NS_DEFINE_STATIC_IID_ACCESSOR(nsICSSRuleList, NS_ICSSRULELIST_IID)
+
+#endif /* nsICSSRuleList_h___ */
