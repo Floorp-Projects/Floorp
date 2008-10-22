@@ -206,12 +206,23 @@
         </body>
       </method>
 
-      <method name="setLoading">
+      <method name="isLoading">
         <parameter name="browser"/>
         <body><![CDATA[
-          var tab = this.getTabForDisplay(browser.parentNode);
-          if (tab)
-            tab.dragData = null;
+          return browser.parentNode.loading || false;
+        ]]></body>
+      </method>
+
+      <method name="setLoading">
+        <parameter name="browser"/>
+        <parameter name="state"/>
+        <body><![CDATA[
+          browser.parentNode.loading = state;
+          if (state) {
+            var tab = this.getTabForDisplay(browser.parentNode);
+            if (tab)
+              tab.dragData = null;
+          }
         ]]></body>
       </method>
 

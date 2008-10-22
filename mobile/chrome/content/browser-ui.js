@@ -132,6 +132,7 @@ var BrowserUI = {
     this.setURI();
     this._titleChanged(browser.contentDocument);
     this._favicon.src = browser.mIconURL || kDefaultFavIconURL;
+    this.updateIcon(browser);
 
     let toolbar = document.getElementById("toolbar-main");
     if (Browser.content.currentTab.chromeTop) {
@@ -503,26 +504,36 @@ var BrowserUI = {
     var toolbar = document.getElementById("toolbar-main");
     if (aState == TOOLBARSTATE_LOADING) {
       this.show(UIMODE_URLVIEW);
-      Browser.content.setLoading(aBrowser);
+      Browser.content.setLoading(aBrowser, true);
 
       toolbar.top = 0;
       toolbar.setAttribute("mode", "loading");
-      document.getElementById("urlbar-image-deck").selectedIndex = 0;
       this._favicon.src = "";
-      this._throbber.setAttribute("loading", "true");
       this._faviconAdded = false;
+      this.updateIcon(aBrowser);
     }
     else if (aState == TOOLBARSTATE_LOADED) {
       this._setContentPosition("top", toolbar.boxObject.height);
+      Browser.content.setLoading(aBrowser, false);
 
       toolbar.setAttribute("mode", "view");
 
-      document.getElementById("urlbar-image-deck").selectedIndex = 1;
-      this._throbber.removeAttribute("loading");
       if (this._faviconAdded == false) {
         var faviconURI = aBrowser.currentURI.prePath + "/favicon.ico";
         this._setIcon(faviconURI);
       }
+      this.updateIcon(aBrowser);
+    }
+  },
+
+  updateIcon : function(browser) {
+    if (Browser.content.isLoading(browser)) {
+      document.getElementById("urlbar-image-deck").selectedIndex = 0;
+      this._throbber.setAttribute("loading", "true");
+    }
+    else {
+      document.getElementById("urlbar-image-deck").selectedIndex = 1;
+      this._throbber.removeAttribute("loading");
     }
   },
 
