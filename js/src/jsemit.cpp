@@ -3669,8 +3669,7 @@ EmitVariables(JSContext *cx, JSCodeGenerator *cg, JSParseNode *pn,
                 JS_ASSERT(noteIndex < 0 && !pn2->pn_next);
                 op = JSOP_POP;
                 if (!MaybeEmitGroupAssignment(cx, cg,
-                                              inLetHead ? JSOP_POP :
-                                              PN_OP(pn),
+                                              inLetHead ? JSOP_POP : PN_OP(pn),
                                               pn2, &op)) {
                     return JS_FALSE;
                 }
@@ -3848,6 +3847,28 @@ EmitFunctionDefNop(JSContext *cx, JSCodeGenerator *cg, uintN index)
 {
     return js_NewSrcNote2(cx, cg, SRC_FUNCDEF, (ptrdiff_t)index) >= 0 &&
            js_Emit1(cx, cg, JSOP_NOP) >= 0;
+}
+
+/* FIXME: 458851 -- that bug's patch should re-inline this into one place. */
+static JSBool
+EmitForInLoopBody(JSContext *cx, JSCodeGenerator *cg, JSStmtInfo *stmt,
+                  JSParseNode *body, intN noteIndex, ptrdiff_t jmp)
+{
+    /* Set the first srcnote offset so we can find the start of the loop body. */
+    if (!js_SetSrcNoteOffset(cx, cg, (uintN)noteIndex, 0, CG_OFFSET(cg) - jmp))
+        return JS_FALSE;
+
+    /* Emit code for the loop body. */
+    if (!js_EmitTree(cx, cg, body))
+        return JS_FALSE;
+
+    /* Set loop and enclosing "update" offsets, for continue. */
+    do {
+        stmt->update = CG_OFFSET(cg);
+    } while ((stmt = stmt->down) != NULL && stmt->type == STMT_LABEL);
+
+    CHECK_AND_SET_JUMP_OFFSET_AT(cx, cg, jmp);
+    return JS_TRUE;
 }
 
 JSBool
@@ -4173,11 +4194,8 @@ js_EmitTree(JSContext *cx, JSCodeGenerator *cg, JSParseNode *pn)
         js_PushStatement(&cg->treeContext, &stmtInfo, STMT_FOR_LOOP, top);
 
         if (pn2->pn_type == TOK_IN) {
-            JSBool emitIFEQ;
-
             /* Set stmtInfo type for later testing. */
             stmtInfo.type = STMT_FOR_IN_LOOP;
-            noteIndex = -1;
 
             /*
              * If the left part is 'var x', emit code to define x if necessary
@@ -4224,6 +4242,19 @@ js_EmitTree(JSContext *cx, JSCodeGenerator *cg, JSParseNode *pn)
             if (js_Emit2(cx, cg, PN_OP(pn), (uint8) pn->pn_iflags) < 0)
                 return JS_FALSE;
 
+            /* Annotate so the decompiler can find the loop-closing jump. */
+            noteIndex = js_NewSrcNote(cx, cg, SRC_FOR_IN);
+            if (noteIndex < 0)
+                return JS_FALSE;
+
+            /*
+             * Jump down to the loop condition to minimize overhead assuming at
+             * least one iteration, as the other loop forms do.
+             */
+            jmp = EmitJump(cx, cg, JSOP_GOTO, 0);
+            if (jmp < 0)
+                return JS_FALSE;
+
             top = CG_OFFSET(cg);
             SET_STATEMENT_TOP(&stmtInfo, top);
 
@@ -4237,7 +4268,6 @@ js_EmitTree(JSContext *cx, JSCodeGenerator *cg, JSParseNode *pn)
              * assignment, so JSOP_SETNAME is not critical here; many similar
              * ops could be used -- just not JSOP_NOP (which means 'let').
              */
-            emitIFEQ = JS_TRUE;
             op = JSOP_SETNAME;
             switch (type) {
 #if JS_HAS_BLOCK_SCOPE
@@ -4258,29 +4288,31 @@ js_EmitTree(JSContext *cx, JSCodeGenerator *cg, JSParseNode *pn)
 #else
                 JS_ASSERT(pn3->pn_type == TOK_NAME);
 #endif
+                /* FALL THROUGH */
+
+              case TOK_NAME:
+                if (!EmitForInLoopBody(cx, cg, &stmtInfo, pn->pn_right, noteIndex, jmp))
+                    return JS_FALSE;
+
                 /*
                  * Always annotate JSOP_FORLOCAL if given input of the form
                  * 'for (let x in * o)' -- the decompiler must not hoist the
                  * 'let x' out of the loop head, or x will be bound in the
                  * wrong scope.  Likewise, but in this case only for the sake
                  * of higher decompilation fidelity only, do not hoist 'var x'
-                 * when given 'for (var x in o)'.  But 'for (var x = i in o)'
-                 * requires hoisting in order to preserve the initializer i.
-                 * The decompiler can only handle so much!
+                 * when given 'for (var x in o)'.
                  */
                 if ((
 #if JS_HAS_BLOCK_SCOPE
                      type == TOK_LET ||
 #endif
-                     !pn3->pn_expr) &&
+                     (type == TOK_VAR && !pn3->pn_expr)) &&
                     js_NewSrcNote2(cx, cg, SRC_DECL,
                                    type == TOK_VAR
                                    ? SRC_DECL_VAR
                                    : SRC_DECL_LET) < 0) {
                     return JS_FALSE;
                 }
-                /* FALL THROUGH */
-              case TOK_NAME:
                 if (pn3->pn_slot >= 0) {
                     op = PN_OP(pn3);
                     switch (op) {
@@ -4312,10 +4344,16 @@ js_EmitTree(JSContext *cx, JSCodeGenerator *cg, JSParseNode *pn)
                 break;
 
               case TOK_DOT:
+                /*
+                 * 'for (o.p in q)' can use JSOP_FORPROP only if evaluating 'o'
+                 * has no side effects.
+                 */
                 useful = JS_FALSE;
                 if (!CheckSideEffects(cx, cg, pn3->pn_expr, &useful))
                     return JS_FALSE;
                 if (!useful) {
+                    if (!EmitForInLoopBody(cx, cg, &stmtInfo, pn->pn_right, noteIndex, jmp))
+                        return JS_FALSE;
                     if (!EmitPropOp(cx, pn3, JSOP_FORPROP, cg, JS_FALSE))
                         return JS_FALSE;
                     break;
@@ -4323,49 +4361,29 @@ js_EmitTree(JSContext *cx, JSCodeGenerator *cg, JSParseNode *pn)
                 /* FALL THROUGH */
 
 #if JS_HAS_DESTRUCTURING
-              case TOK_RB:
-              case TOK_RC:
               destructuring_for:
 #endif
-#if JS_HAS_XML_SUPPORT
-              case TOK_UNARYOP:
-#endif
-#if JS_HAS_LVALUE_RETURN
-              case TOK_LP:
-#endif
-              case TOK_LB:
+              default:
                 /*
                  * We separate the first/next bytecode from the enumerator
                  * variable binding to avoid any side-effects in the index
                  * expression (e.g., for (x[i++] in {}) should not bind x[i]
                  * or increment i at all).
+                 *
+                 * At this point, JSOP_FORELEM (emitted after the loop body)
+                 * has pushed the next value to iterate, but it is downstream
+                 * of us in js_Emit* order, so we must adjust the stack depth
+                 * manually.
                  */
-                emitIFEQ = JS_FALSE;
-                if (js_Emit1(cx, cg, JSOP_FORELEM) < 0)
-                    return JS_FALSE;
-
-                /*
-                 * Emit a SRC_WHILE note with offset telling the distance to
-                 * the loop-closing jump (we can't reckon from the branch at
-                 * the top of the loop, because the loop-closing jump might
-                 * need to be an extended jump, independent of whether the
-                 * branch is short or long).
-                 */
-                noteIndex = js_NewSrcNote(cx, cg, SRC_WHILE);
-                if (noteIndex < 0)
-                    return JS_FALSE;
-                beq = EmitJump(cx, cg, JSOP_IFEQ, 0);
-                if (beq < 0)
-                    return JS_FALSE;
-
+                if ((uintN) ++cg->stackDepth > cg->maxStackDepth)
+                    cg->maxStackDepth = cg->stackDepth;
 #if JS_HAS_DESTRUCTURING
                 if (pn3->pn_type == TOK_RB || pn3->pn_type == TOK_RC) {
                     if (!EmitDestructuringOps(cx, cg, op, pn3))
                         return JS_FALSE;
                     if (js_Emit1(cx, cg, JSOP_POP) < 0)
                         return JS_FALSE;
-                    break;
-                }
+                } else
 #endif
 #if JS_HAS_LVALUE_RETURN
                 if (pn3->pn_type == TOK_LP) {
@@ -4374,8 +4392,7 @@ js_EmitTree(JSContext *cx, JSCodeGenerator *cg, JSParseNode *pn)
                         return JS_FALSE;
                     if (js_Emit1(cx, cg, JSOP_ENUMELEM) < 0)
                         return JS_FALSE;
-                    break;
-                }
+                } else
 #endif
 #if JS_HAS_XML_SUPPORT
                 if (pn3->pn_type == TOK_UNARYOP) {
@@ -4384,45 +4401,34 @@ js_EmitTree(JSContext *cx, JSCodeGenerator *cg, JSParseNode *pn)
                         return JS_FALSE;
                     if (js_Emit1(cx, cg, JSOP_ENUMELEM) < 0)
                         return JS_FALSE;
-                    break;
-                }
+                } else
 #endif
-
-                /* Now that we're safely past the IFEQ, commit side effects. */
                 if (!EmitElemOp(cx, pn3, JSOP_ENUMELEM, cg))
                     return JS_FALSE;
+
+                if (!EmitForInLoopBody(cx, cg, &stmtInfo, pn->pn_right, noteIndex, jmp))
+                    return JS_FALSE;
+
+                /*
+                 * JSOP_FORELEM has nuses 1, ndefs 3, modeling the case where
+                 * it pushes the next value and then true, to keep iterating.
+                 * For symmetry here, we manually drop cg->stackDepth after to
+                 * reflect the fact that we've emitted JSOP_ENUMELEM already.
+                 */
+                if (js_Emit1(cx, cg, JSOP_FORELEM) < 0)
+                    return JS_FALSE;
+                JS_ASSERT(cg->stackDepth >= 3);
+                --cg->stackDepth;
                 break;
-
-              default:
-                JS_ASSERT(0);
             }
 
-            if (emitIFEQ) {
-                /* Annotate so the decompiler can find the loop-closing jump. */
-                noteIndex = js_NewSrcNote(cx, cg, SRC_WHILE);
-                if (noteIndex < 0)
-                    return JS_FALSE;
-
-                /* Pop and test the loop condition generated by JSOP_FOR*. */
-                beq = EmitJump(cx, cg, JSOP_IFEQ, 0);
-                if (beq < 0)
-                    return JS_FALSE;
-            }
-
-            /* Emit code for the loop body. */
-            if (!js_EmitTree(cx, cg, pn->pn_right))
+            /* Pop and test the loop condition generated by JSOP_FOR*. */
+            beq = EmitJump(cx, cg, JSOP_IFNE, top - CG_OFFSET(cg));
+            if (beq < 0)
                 return JS_FALSE;
 
-            /* Emit the loop-closing jump and fixup all jump offsets. */
-            jmp = EmitJump(cx, cg, JSOP_GOTO, top - CG_OFFSET(cg));
-            if (jmp < 0)
-                return JS_FALSE;
-            if (beq > 0)
-                CHECK_AND_SET_JUMP_OFFSET_AT(cx, cg, beq);
-
-            /* Set the SRC_WHILE note offset so we can find the closing jump. */
-            JS_ASSERT(noteIndex != -1);
-            if (!js_SetSrcNoteOffset(cx, cg, (uintN)noteIndex, 0, jmp - beq))
+            /* Set the second srcnote offset so we can find the closing jump. */
+            if (!js_SetSrcNoteOffset(cx, cg, (uintN)noteIndex, 1, beq - jmp))
                 return JS_FALSE;
         } else {
             /* C-style for (init; cond; update) ... loop. */
@@ -6377,8 +6383,8 @@ JS_FRIEND_DATA(JSSrcNoteSpec) js_SrcNoteSpec[] = {
     {"null",            0,      0,      0},
     {"if",              0,      0,      0},
     {"if-else",         2,      0,      1},
-    {"while",           1,      0,      1},
     {"for",             3,      1,      1},
+    {"while",           1,      0,      1},
     {"continue",        0,      0,      0},
     {"decl",            1,      1,      1},
     {"pcdelta",         1,      0,      1},
