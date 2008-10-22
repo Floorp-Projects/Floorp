@@ -43,7 +43,7 @@
 #include <CoreServices/CoreServices.h>
 #endif
 
-#if defined AVMPLUS_UNIX
+#if defined AVMPLUS_UNIX || defined AVMPLUS_MAC
 #include <sys/mman.h>
 #include <errno.h>
 #endif
@@ -337,25 +337,50 @@ namespace nanojit
 	}
 #endif
 	
-	void Assembler::nMarkExecute(Page* page, int32_t count, bool enable)
+	void Assembler::nMarkExecute(Page* page, int flags)
 	{
+		NanoAssert(sizeof(Page) == NJ_PAGE_SIZE);
 		#if defined WIN32 || defined WIN64
 			DWORD dwIgnore;
-			VirtualProtect(&page->code, count*NJ_PAGE_SIZE, PAGE_EXECUTE_READWRITE, &dwIgnore);
-		#elif defined AVMPLUS_UNIX
-			intptr_t addr = (intptr_t)&page->code;
+			static const DWORD kProtFlags[4] = 
+			{
+				PAGE_READONLY,			// 0
+				PAGE_READWRITE,			// PAGE_WRITE
+				PAGE_EXECUTE_READ,		// PAGE_EXEC
+				PAGE_EXECUTE_READWRITE	// PAGE_EXEC|PAGE_WRITE
+			};
+			DWORD prot = kProtFlags[flags & (PAGE_WRITE|PAGE_EXEC)];
+			BOOL res = VirtualProtect(page, NJ_PAGE_SIZE, prot, &dwIgnore);
+			if (!res)
+			{
+				// todo: we can't abort or assert here, we have to fail gracefully.
+				NanoAssertMsg(false, "FATAL ERROR: VirtualProtect() failed\n");
+			}
+		#elif defined AVMPLUS_UNIX || defined AVMPLUS_MAC
+			static const int kProtFlags[4] = 
+			{
+				PROT_READ,						// 0
+				PROT_READ|PROT_WRITE,			// PAGE_WRITE
+				PROT_READ|PROT_EXEC,			// PAGE_EXEC
+				PROT_READ|PROT_WRITE|PROT_EXEC	// PAGE_EXEC|PAGE_WRITE
+			};
+			int prot = kProtFlags[flags & (PAGE_WRITE|PAGE_EXEC)];
+			intptr_t addr = (intptr_t)page;
 			addr &= ~((uintptr_t)NJ_PAGE_SIZE - 1);
+			NanoAssert(addr == (intptr_t)page);
 			#if defined SOLARIS
-			if (mprotect((char *)addr, count*NJ_PAGE_SIZE, PROT_READ|PROT_WRITE|PROT_EXEC) == -1) {
+			if (mprotect((char *)addr, NJ_PAGE_SIZE, prot) == -1) 
 			#else
-			if (mprotect((void *)addr, count*NJ_PAGE_SIZE, PROT_READ|PROT_WRITE|PROT_EXEC) == -1) {
+			if (mprotect((void *)addr, NJ_PAGE_SIZE, prot) == -1) 
 			#endif
+			{
 				// todo: we can't abort or assert here, we have to fail gracefully.
 				NanoAssertMsg(false, "FATAL ERROR: mprotect(PROT_EXEC) failed\n");
                 abort();
             }
+        #else
+			(void)page;
 		#endif
-			(void)enable;
 	}
 			
 	Register Assembler::nRegisterAllocFromSet(int set)

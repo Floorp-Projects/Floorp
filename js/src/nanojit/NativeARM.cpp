@@ -270,18 +270,30 @@ Assembler::asm_call(LInsp ins)
 }
 
 void
-Assembler::nMarkExecute(Page* page, int32_t count, bool enable)
+Assembler::nMarkExecute(Page* page, int flags)
 {
+	NanoAssert(sizeof(Page) == NJ_PAGE_SIZE);
 #ifdef UNDER_CE
+	static const DWORD kProtFlags[4] = 
+	{
+		PAGE_READONLY,			// 0
+		PAGE_READWRITE,			// PAGE_WRITE
+		PAGE_EXECUTE_READ,		// PAGE_EXEC
+		PAGE_EXECUTE_READWRITE	// PAGE_EXEC|PAGE_WRITE
+	};
+	DWORD prot = kProtFlags[flags & (PAGE_WRITE|PAGE_EXEC)];
     DWORD dwOld;
-    VirtualProtect(page, NJ_PAGE_SIZE, PAGE_EXECUTE_READWRITE, &dwOld);
+    BOOL res = VirtualProtect(page, NJ_PAGE_SIZE, prot, &dwOld);
+	if (!res)
+	{
+		// todo: we can't abort or assert here, we have to fail gracefully.
+		NanoAssertMsg(false, "FATAL ERROR: VirtualProtect() failed\n");
+	}
 #endif
 #ifdef AVMPLUS_PORTING_API
-    NanoJIT_PortAPI_MarkExecutable(page, (void*)((int32_t)page+count));
+    NanoJIT_PortAPI_MarkExecutable(page, (void*)((char*)page+NJ_PAGE_SIZE), flags);
+    // todo, must add error-handling to the portapi
 #endif
-    (void)page;
-    (void)count;
-    (void)enable;
 }
 
 Register
