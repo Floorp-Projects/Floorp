@@ -1,3 +1,4 @@
+/* -*- Mode: C; tab-width: 8; indent-tabs-mode: nil; c-basic-offset: 4 -*- */
 /**
  * A number of the tests in this file depend on the setting of
  * HOTLOOP.  Define some constants up front, so they're easy to grep
@@ -2155,6 +2156,15 @@ function testNumToString() {
 }
 testNumToString.expected = "123456789,-123456789,123456789,-123456789,75bcd15,-75bcd15,21i3v9,-21i3v9";
 test(testNumToString);
+
+function testSubstring() {
+    for (var i = 0; i < 5; ++i) {
+        actual = "".substring(5);
+    }
+    return actual;
+}
+testSubstring.expected = "";
+test(testSubstring);
 
 /* Keep these at the end so that we can see the summary after the trace-debug spew. */
 print("\npassed:", passes.length && passes.join(","));

@@ -1812,19 +1812,10 @@ const char js_lookupGetter_str[] = "__lookupGetter__";
 const char js_lookupSetter_str[] = "__lookupSetter__";
 #endif
 
-#ifdef JS_TRACER
-
-JS_DEFINE_CALLINFO_3(static, INT32, Object_p_hasOwnProperty, CONTEXT, OBJECT, STRING,       0, 0)
-JS_DEFINE_CALLINFO_3(static, INT32, Object_p_propertyIsEnumerable, CONTEXT, OBJECT, STRING, 0, 0)
-
-static const JSTraceableNative obj_hasOwnProperty_trcinfo[] = {
-    { obj_hasOwnProperty,       &_JS_CALLINFO(Object_p_hasOwnProperty),       "TC",  "s", FAIL_VOID }
-};
-static const JSTraceableNative obj_propertyIsEnumerable_trcinfo[] = {
-    { obj_propertyIsEnumerable, &_JS_CALLINFO(Object_p_propertyIsEnumerable), "TC",  "s", FAIL_VOID }
-};
-
-#endif /* JS_TRACER */
+JS_DEFINE_TRCINFO_1(obj_hasOwnProperty,
+    (3, (static, INT32, Object_p_hasOwnProperty, CONTEXT, THIS, STRING,       0, 0)))
+JS_DEFINE_TRCINFO_1(obj_propertyIsEnumerable,
+    (3, (static, INT32, Object_p_propertyIsEnumerable, CONTEXT, THIS, STRING, 0, 0)))
 
 static JSFunctionSpec object_methods[] = {
 #if JS_HAS_TOSOURCE
