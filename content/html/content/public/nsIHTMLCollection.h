@@ -38,7 +38,7 @@
 #ifndef nsIHTMLCollection_h___
 #define nsIHTMLCollection_h___
 
-#include "nsIDOMHTMLCollection.h";
+#include "nsIDOMHTMLCollection.h"
 
 // IID for the nsIHTMLCollection interface
 #define NS_IHTMLCOLLECTION_IID \
