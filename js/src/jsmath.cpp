@@ -203,7 +203,7 @@ math_atan2(JSContext *cx, uintN argc, jsval *vp)
      * - The sign of y determines the multiplicator, 1 or 3.
      */
     if (JSDOUBLE_IS_INFINITE(x) && JSDOUBLE_IS_INFINITE(y)) {
-        z = fd_copysign(M_PI / 4, x);
+        z = js_copysign(M_PI / 4, x);
         if (y < 0)
             z *= 3;
         return js_NewDoubleInRootedValue(cx, z, vp);
@@ -213,7 +213,7 @@ math_atan2(JSContext *cx, uintN argc, jsval *vp)
 #if defined(SOLARIS) && defined(__GNUC__)
     if (x == 0) {
         if (JSDOUBLE_IS_NEGZERO(y)) {
-            z = fd_copysign(M_PI, x);
+            z = js_copysign(M_PI, x);
             return js_NewDoubleInRootedValue(cx, z, vp);
         }
         if (y == 0) {
@@ -344,7 +344,7 @@ math_max(JSContext *cx, uintN argc, jsval *vp)
             *vp = DOUBLE_TO_JSVAL(cx->runtime->jsNaN);
             return JS_TRUE;
         }
-        if (x == 0 && x == z && fd_copysign(1.0, z) == -1)
+        if (x == 0 && x == z && js_copysign(1.0, z) == -1)
             z = x;
         else
             /* 
@@ -378,7 +378,7 @@ math_min(JSContext *cx, uintN argc, jsval *vp)
             *vp = DOUBLE_TO_JSVAL(cx->runtime->jsNaN);
             return JS_TRUE;
         }
-        if (x == 0 && x == z && fd_copysign(1.0,x) == -1)
+        if (x == 0 && x == z && js_copysign(1.0,x) == -1)
             z = x;
         else
             z = (x < z) ? x : z;
@@ -532,7 +532,7 @@ math_round(JSContext *cx, uintN argc, jsval *vp)
     x = js_ValueToNumber(cx, &vp[2]);
     if (JSVAL_IS_NULL(vp[2]))
         return JS_FALSE;
-    z = fd_copysign(floor(x + 0.5), x);
+    z = js_copysign(floor(x + 0.5), x);
     return js_NewNumberInRootedValue(cx, z, vp);
 }
 
@@ -623,7 +623,7 @@ js_Math_max(jsdouble d, jsdouble p)
     if (JSDOUBLE_IS_NaN(d) || JSDOUBLE_IS_NaN(p))
         return js_NaN;
 
-    if (p == 0 && p == d && fd_copysign(1.0, d) == -1)
+    if (p == 0 && p == d && js_copysign(1.0, d) == -1)
         return p;
     return (d > p) ? d : p;
 }
