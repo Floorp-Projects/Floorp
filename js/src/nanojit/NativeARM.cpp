@@ -137,8 +137,11 @@ Assembler::nFragExit(LInsp guard)
     }
 #endif
 
-    // return value is GuardRecord*
-    LDi(R0, int(lr));
+    // return value is GuardRecord*; note that this goes into
+    // R2, not R0 -- genEpilogue will move it into R0.  Otherwise
+    // we want R0 to have the original value that it had at the
+    // start of trace.
+    LDi(R2, int(lr));
 }
 
 NIns*
@@ -147,7 +150,7 @@ Assembler::genEpilogue()
     BX(LR); // return
 
     // this is needed if we jump here from nFragExit
-    //MR(R0,R2); // return LinkRecord*
+    MR(R0,R2); // return LinkRecord*
 
     RegisterMask savingMask = rmask(FP) | rmask(LR);
     POP_mask(savingMask); // regs
