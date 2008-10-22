@@ -23,7 +23,7 @@ const newURI = ios.newURI("http://www.mozilla.org/", null, null);
   
 function NotificationCallbacks(origURI, newURI)
 {
-    this._origURI = origURI;
+  this._origURI = origURI;
   this._newURI = newURI;
 }
 NotificationCallbacks.prototype = {
