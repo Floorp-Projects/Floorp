@@ -1025,7 +1025,13 @@ namespace nanojit
                         JMP(_epilogue);
                     }
                     assignSavedParams();
+#ifdef NANOJIT_ARM
+                    // the epilogue moves R2 to R0; we may want to do this
+                    // after assignSavedParams
+                    findSpecificRegFor(ins->oprnd1(), R2);
+#else
                     findSpecificRegFor(ins->oprnd1(), retRegs[0]);
+#endif
                     break;
                 }
 

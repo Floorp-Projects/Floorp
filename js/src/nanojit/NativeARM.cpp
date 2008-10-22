@@ -149,11 +149,12 @@ Assembler::genEpilogue()
 {
     BX(LR); // return
 
+    RegisterMask savingMask = rmask(FP) | rmask(LR);
+    POP_mask(savingMask); // regs
+
     // this is needed if we jump here from nFragExit
     MR(R0,R2); // return LinkRecord*
 
-    RegisterMask savingMask = rmask(FP) | rmask(LR);
-    POP_mask(savingMask); // regs
     return _nIns;
 }
 
@@ -1224,7 +1225,7 @@ Assembler::asm_loop(LInsp ins, NInsList& loopJumps)
 #ifdef NJ_VERBOSE
     // branching from this frag to ourself.
     if (_frago->core()->config.show_stats)
-		LDi(argRegs[1], int((Fragment*)_thisfrag));
+        LDi(argRegs[1], int((Fragment*)_thisfrag));
 #endif
 
     assignSavedParams();
