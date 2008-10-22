@@ -251,22 +251,23 @@ js_FastCallIteratorNext(JSContext* cx, JSObject* iterobj)
     return v;
 }
 
-GuardRecord* FASTCALL
+SideExit* FASTCALL
 js_CallTree(InterpState* state, Fragment* f)
 {
-    GuardRecord* lr;
     union { NIns *code; GuardRecord* (FASTCALL *func)(InterpState*, Fragment*); } u;
 
     u.code = f->code();
     JS_ASSERT(u.code);
 
+    GuardRecord* rec;
 #if defined(JS_NO_FASTCALL) && defined(NANOJIT_IA32)
-    SIMULATE_FASTCALL(lr, state, NULL, u.func);
+    SIMULATE_FASTCALL(rec, state, NULL, u.func);
 #else
-    lr = u.func(state, NULL);
+    rec = u.func(state, NULL);
 #endif
+    SideExit* lr = rec->exit;
 
-    if (lr->exit->exitType == NESTED_EXIT) {
+    if (lr->exitType == NESTED_EXIT) {
         /* This only occurs once a tree call guard mismatches and we unwind the tree call stack.
            We store the first (innermost) tree call guard in state and we will try to grow
            the outer tree the failing call was in starting at that guard. */

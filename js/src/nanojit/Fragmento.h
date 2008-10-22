@@ -104,7 +104,7 @@ namespace nanojit
             Fragment*   getAnchor(const void* ip);
 			void        clearFrags();	// clear all fragments from the cache
             Fragment*   getMerge(GuardRecord *lr, const void* ip);
-            Fragment*   createBranch(GuardRecord *lr, const void* ip);
+            Fragment*   createBranch(SideExit *exit, const void* ip);
             Fragment*   newFrag(const void* ip);
             Fragment*   newBranch(Fragment *from, const void* ip);
 
@@ -180,13 +180,10 @@ namespace nanojit
 			bool			isBlacklisted()		{ return _hits < 0; }
 			void			resetLinks();
 			void			addLink(GuardRecord* lnk);
-			void			removeLink(GuardRecord* lnk);
+			void            addLink(SideExit* exit);
 			void			link(Assembler* assm);
 			void			linkBranches(Assembler* assm);
-			void			unlink(Assembler* assm);
-			void			unlinkBranches(Assembler* assm);
 			debug_only( bool hasOnlyTreeLinks(); )
-			void			removeIntraLinks();
 			void			releaseLirBuffer();
 			void			releaseCode(Fragmento* frago);
 			void			releaseTreeMem(Fragmento* frago);
@@ -217,8 +214,7 @@ namespace nanojit
 			DWB(BlockHist*) mergeCounts;
             DWB(LirBuffer*) lirbuf;
 			LIns*			lastIns;
-			LIns*		spawnedFrom;
-			GuardRecord*	outbound;
+			SideExit*       spawnedFrom;
 			
 			TraceKind kind;
 			const void* ip;

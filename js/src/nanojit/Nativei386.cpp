@@ -160,7 +160,7 @@ namespace nanojit
 
 	void Assembler::nFragExit(LInsp guard)
 	{
-		SideExit *exit = guard->exit();
+		SideExit *exit = guard->record()->exit;
 		bool trees = _frago->core()->config.tree_opt;
         Fragment *frag = exit->target;
         GuardRecord *lr = 0;
@@ -174,7 +174,7 @@ namespace nanojit
 		else
 		{
 			// target doesn't exit yet.  emit jump to epilog, and set up to patch later.
-			lr = placeGuardRecord(guard);
+			lr = guard->record();
 #if defined NANOJIT_AMD64
             /* 8 bytes for address, 4 for imm32, 2 for jmp */
             underrunProtect(14);
@@ -185,12 +185,6 @@ namespace nanojit
 #else
             JMP_long(_epilogue);
 			lr->jmp = _nIns;
-#endif
-#if 0			
-			// @todo optimization ; is it worth it? It means we can remove the loop over outbound in Fragment.link() 
-			// for trees we need the patch entry on the incoming fragment so we can unhook it later if needed
-			if (tress && destKnown)
-				patch(lr);
 #endif
 		}
 		// first restore ESP from EBP, undoing SUBi(SP,amt) from genPrologue

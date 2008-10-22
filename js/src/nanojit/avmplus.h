@@ -175,45 +175,34 @@ namespace nanojit
 	    OVERFLOW_EXIT
 	};
 	
-	struct SideExit
-	{
+    class LIns;
+
+    struct SideExit;
+    
+    typedef struct GuardRecord 
+    {
+        void *jmp;
+        GuardRecord* next;
+        GuardRecord* peer;
+        SideExit* exit;
+    };
+    
+    typedef struct SideExit
+    {
+        GuardRecord* guards;
+        Fragment *from;
+        Fragment *target;
         intptr_t ip_adj;
         intptr_t sp_adj;
         intptr_t rp_adj;
-        Fragment *target;
-        Fragment *from;
         int32_t calldepth;
         uint32 numGlobalSlots;
         uint32 numStackSlots;
         uint32 numStackSlotsBelowCurrentFrame;
-        uint8 *typeMap;
         ExitType exitType;
-#if defined NJ_VERBOSE
-		uint32_t sid;
-#endif
 	};
-
-	class LIns;
-
-	struct GuardRecord
-	{
-		Fragment *target;
-		Fragment *from;
-		void *jmp;
-		void *origTarget;
-		SideExit *exit;
-		GuardRecord *outgoing;
-		GuardRecord *next;
-		LIns *guard;
-		int32_t calldepth;
-#if defined NJ_VERBOSE
-		uint32_t compileNbr;
-		uint32_t sid;
-#endif
-	};
-
-	#define GuardRecordSize(g) sizeof(GuardRecord)
-    #define SideExitSize(e) sizeof(SideExit)
+    
+    static inline uint8* getTypeMap(SideExit* exit) { return (uint8*)(exit + 1); }
 }
 
 class GC;
@@ -343,9 +332,9 @@ namespace avmplus
         JSContext *cx; /* current VM context handle */
         void* eos; /* first unusable word after the native stack */
         void* eor; /* first unusable word after the call stack */
-        nanojit::GuardRecord* lastTreeExitGuard; /* guard we exited on during a tree call */
-        nanojit::GuardRecord* lastTreeCallGuard; /* guard we want to grow from if the tree
-                                                    call exit guard mismatched */
+        nanojit::SideExit* lastTreeExitGuard; /* guard we exited on during a tree call */
+        nanojit::SideExit* lastTreeCallGuard; /* guard we want to grow from if the tree
+                                                 call exit guard mismatched */
         void* rpAtLastTreeCall; /* value of rp at innermost tree call guard */
     };
 

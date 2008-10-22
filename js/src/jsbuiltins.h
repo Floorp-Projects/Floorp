@@ -129,7 +129,7 @@ struct JSTraceableNative {
 #define _JS_TYPEINFO_OBJECT        _JS_TYPEINFO(JSObject *,              _JS_PTR)
 #define _JS_TYPEINFO_SCOPEPROP     _JS_TYPEINFO(JSScopeProperty *,       _JS_PTR)
 #define _JS_TYPEINFO_PC            _JS_TYPEINFO(jsbytecode *,            _JS_PTR)
-#define _JS_TYPEINFO_GUARDRECORD   _JS_TYPEINFO(nanojit::GuardRecord *,  _JS_PTR)
+#define _JS_TYPEINFO_SIDEEXIT      _JS_TYPEINFO(nanojit::SideExit *,     _JS_PTR)
 #define _JS_TYPEINFO_INTERPSTATE   _JS_TYPEINFO(avmplus::InterpState *,  _JS_PTR)
 #define _JS_TYPEINFO_FRAGMENT      _JS_TYPEINFO(nanojit::Fragment *,     _JS_PTR)
 
