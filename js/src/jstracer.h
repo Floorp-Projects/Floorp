@@ -179,6 +179,7 @@ public:
     unsigned                mismatchCount;
     Queue<nanojit::Fragment*> dependentTrees;
     unsigned                branchCount;
+    Queue<nanojit::SideExit*> sideExits;
 
     TreeInfo(nanojit::Fragment* _fragment) { 
         fragment = _fragment;
