@@ -1060,7 +1060,7 @@ namespace nanojit
 		uint32_t words = argwords(argc);
 		ensureRoom(words+LIns::callInfoWords+1+argc);  // ins size + possible tramps
 		for (int32_t i=0; i < argc; i++)
-			args[i] = ensureReferenceable(args[i], argc-i);
+            args[i] = ensureReferenceable(args[i], argc-i+LIns::callInfoWords);
 		uint8_t* offs = (uint8_t*)_buf->next();
 		LIns *l = _buf->next() + words;
 		*(const CallInfo **)l = ci;
