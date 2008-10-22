@@ -838,11 +838,6 @@ toolbar[iconsize="small"] #unified-back-forward-button > #back-forward-dropmarke
   min-height: 26px;
 }
 
-#urlbar[pageproxystate="invalid"] > #urlbar-icons > :not(#go-button) ,
-#urlbar[pageproxystate="valid"] > #urlbar-icons > #go-button {
-  visibility: collapse;
-}
-
 #urlbar-search-splitter {
   min-width: 4px;
   width: 4px;

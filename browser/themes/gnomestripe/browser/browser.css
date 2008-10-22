@@ -791,11 +791,6 @@ toolbar[iconsize="small"] #paste-button[disabled="true"] {
   cursor: pointer;
 }
 
-#urlbar[pageproxystate="invalid"] > #urlbar-icons > :not(#go-button) ,
-#urlbar[pageproxystate="valid"] > #urlbar-icons > #go-button {
-  visibility: collapse;
-}
-
 #urlbar-search-splitter {
   -moz-appearance: none;
   width: 8px;
