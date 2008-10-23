@@ -47,6 +47,9 @@ _TEST_FILES =	test_feed_discovery.html \
 		feed_discovery.html \
 		test_bug395533.html \
 		bug395533-data.txt \
+		test_contextmenu.html \
+		subtst_contextmenu.html \
+		ctxmenu-image.png \
 		$(NULL)
 
 # browser_bug423833.js disabled temporarily since it's unreliable: bug 428712
