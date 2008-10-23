@@ -395,7 +395,6 @@ nsGeoPosition::GetTimestamp(DOMTimeStamp* aTimestamp)
 NS_INTERFACE_MAP_BEGIN(nsGeolocationService)
   NS_INTERFACE_MAP_ENTRY_AMBIGUOUS(nsISupports, nsIGeolocationUpdate)
   NS_INTERFACE_MAP_ENTRY(nsIGeolocationUpdate)
-  NS_INTERFACE_MAP_ENTRY(nsIGeolocationService)
   NS_INTERFACE_MAP_ENTRY(nsIObserver)
 NS_INTERFACE_MAP_END
 
@@ -433,8 +432,6 @@ nsGeolocationService::Observe(nsISupports* aSubject,
 
     StopDevice();
 
-    // Remove our reference to any prompt that may have been set.
-    mPrompt = nsnull;
     return NS_OK;
   }
   
@@ -455,22 +452,6 @@ nsGeolocationService::Observe(nsISupports* aSubject,
   }
 
   return NS_ERROR_FAILURE;
-}
-
-NS_IMETHODIMP
-nsGeolocationService::GetPrompt(nsIGeolocationPrompt * *aPrompt)
-{
-  NS_ENSURE_ARG_POINTER(aPrompt);
-  *aPrompt = mPrompt;
-  NS_IF_ADDREF(*aPrompt);
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-nsGeolocationService::SetPrompt(nsIGeolocationPrompt * aPrompt)
-{
-  mPrompt = aPrompt;
-  return NS_OK;
 }
 
 NS_IMETHODIMP
@@ -719,7 +700,8 @@ nsGeolocation::GetCurrentPosition(nsIDOMGeoPositionCallback *callback,
                                   nsIDOMGeoPositionErrorCallback *errorCallback,
                                   nsIDOMGeoPositionOptions *options)
 {
-  nsIGeolocationPrompt* prompt = mService->GetPrompt();
+
+  nsCOMPtr<nsIGeolocationPrompt> prompt = do_GetService(NS_GEOLOCATION_PROMPT_CONTRACTID);
   if (prompt == nsnull)
     return NS_ERROR_NOT_AVAILABLE;
 
@@ -740,7 +722,7 @@ nsGeolocation::WatchPosition(nsIDOMGeoPositionCallback *aCallback,
                              nsIDOMGeoPositionOptions *aOptions, 
                              PRUint16 *_retval NS_OUTPARAM)
 {
-  nsIGeolocationPrompt* prompt = mService->GetPrompt();
+  nsCOMPtr<nsIGeolocationPrompt> prompt = do_GetService(NS_GEOLOCATION_PROMPT_CONTRACTID);
   if (prompt == nsnull)
     return NS_ERROR_NOT_AVAILABLE;
     
