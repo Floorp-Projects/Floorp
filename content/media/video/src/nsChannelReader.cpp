@@ -79,7 +79,7 @@ size_t nsChannelReader::io_read(char* aBuffer, size_t aCount)
 {
   PRUint32 bytes = 0;
   nsresult rv = mStream.Read(aBuffer, aCount, &bytes);
-  if (!NS_SUCCEEDED(rv) || bytes == 0) {
+  if (!NS_SUCCEEDED(rv)) {
     return static_cast<size_t>(OGGZ_ERR_SYSTEM);
   }
   mCurrentPosition += bytes;
