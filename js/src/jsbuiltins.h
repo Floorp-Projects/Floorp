@@ -145,8 +145,8 @@ struct JSTraceableNative {
 #define _JS_CTYPE_THIS_DOUBLE      _JS_CTYPE(jsdouble,               _JS_F64,"D", "", INFALLIBLE)
 #define _JS_CTYPE_THIS_STRING      _JS_CTYPE(JSString *,             _JS_PTR,"S", "", INFALLIBLE)
 #define _JS_CTYPE_PC               _JS_CTYPE(jsbytecode *,           _JS_PTR,"P", "", INFALLIBLE)
-#define _JS_CTYPE_JSVAL            _JS_CTYPE(jsval,                  _JS_I32, "","v", INFALLIBLE)
-#define _JS_CTYPE_JSVAL_FAIL       _JS_CTYPE(jsval,                  _JS_I32, --, --, FAIL_JSVAL)
+#define _JS_CTYPE_JSVAL            _JS_CTYPE(jsval,                  _JS_PTR, "","v", INFALLIBLE)
+#define _JS_CTYPE_JSVAL_FAIL       _JS_CTYPE(jsval,                  _JS_PTR, --, --, FAIL_JSVAL)
 #define _JS_CTYPE_BOOL             _JS_CTYPE(JSBool,                 _JS_I32, "","i", INFALLIBLE)
 #define _JS_CTYPE_BOOL_FAIL        _JS_CTYPE(int32,                  _JS_I32, --, --, FAIL_VOID)
 #define _JS_CTYPE_INT32            _JS_CTYPE(int32,                  _JS_I32, "","i", INFALLIBLE)
@@ -168,9 +168,9 @@ struct JSTraceableNative {
 
 #define _JS_CTYPE_TYPE2(t,s,p,a,f)      t
 #define _JS_CTYPE_TYPE(tyname)          _JS_EXPAND(_JS_CTYPE_TYPE2    _JS_CTYPE_##tyname)
-#define _JS_CTYPE_RETSIZE2(t,s,p,a,f)   s##_ARGSIZE
+#define _JS_CTYPE_RETSIZE2(t,s,p,a,f)   s##_RETSIZE
 #define _JS_CTYPE_RETSIZE(tyname)       _JS_EXPAND(_JS_CTYPE_RETSIZE2 _JS_CTYPE_##tyname)
-#define _JS_CTYPE_ARGSIZE2(t,s,p,a,f)   s##_RETSIZE
+#define _JS_CTYPE_ARGSIZE2(t,s,p,a,f)   s##_ARGSIZE
 #define _JS_CTYPE_ARGSIZE(tyname)       _JS_EXPAND(_JS_CTYPE_ARGSIZE2 _JS_CTYPE_##tyname)
 #define _JS_CTYPE_PCH2(t,s,p,a,f)       p
 #define _JS_CTYPE_PCH(tyname)           _JS_EXPAND(_JS_CTYPE_PCH2     _JS_CTYPE_##tyname)
