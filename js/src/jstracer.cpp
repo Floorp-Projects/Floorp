@@ -2986,11 +2986,15 @@ js_CheckForSSE2()
         popad
     }
 #elif defined __GNUC__
-    asm("movl %1, %%eax; cpuid; movl %%edx, %0;"
-        : "m=" (features)                 /* output */
-        : "r"  (0x01)                     /* input */
-        : "eax", "ebx", "ecx", "edx"      /* clobber list */
-        );
+    asm("pusha\n"
+        "mov $0x01, %%eax\n"
+        "cpuid\n"
+        "mov %%edx, %0\n"
+        "popa\n"
+        : "=m" (features)
+        /* We have no inputs */
+        /* We don't clobber anything */
+       );
 #elif defined __SUNPRO_C || defined __SUNPRO_CC
     asm("push %%ebx\n"
         "mov $0x01, %%eax\n"
