@@ -910,6 +910,61 @@ function prepareForStartup() {
   gBrowser.addEventListener("DOMLinkAdded", DOMLinkHandler, false);
 }
 
+function setupGeolocationPrompt()
+{
+  var geolocationService = Cc["@mozilla.org/geolocation/service;1"].getService(Ci.nsIGeolocationService);
+  
+  if (geolocationService.prompt)
+    return;
+
+  geolocationService.prompt = function(request) {
+
+    function getChromeWindow(aWindow) {
+      var chromeWin = aWindow 
+        .QueryInterface(Ci.nsIInterfaceRequestor)
+        .getInterface(Ci.nsIWebNavigation)
+        .QueryInterface(Ci.nsIDocShellTreeItem)
+        .rootTreeItem
+        .QueryInterface(Ci.nsIInterfaceRequestor)
+        .getInterface(Ci.nsIDOMWindow)
+        .QueryInterface(Ci.nsIDOMChromeWindow);
+      return chromeWin;
+    }
+
+    var requestingWindow = request.requestingWindow.top;
+    var tabbrowser = getChromeWindow(requestingWindow).wrappedJSObject.gBrowser;
+    var browser = tabbrowser.getBrowserForDocument(requestingWindow.document);
+    var notificationBox = tabbrowser.getNotificationBox(browser);
+
+    var notification = notificationBox.getNotificationWithValue("geolocation");
+    if (!notification) {
+
+      var buttons = [{
+        label: gNavigatorBundle.getString("geolocation.exactLocation"),
+        accessKey: gNavigatorBundle.getString("geolocation.exactLocationKey"),
+        callback: function() request.allow() ,
+        },
+        {
+        label: gNavigatorBundle.getString("geolocation.neighborhoodLocation"),
+        accessKey: gNavigatorBundle.getString("geolocation.neighborhoodLocationKey"),
+        callback: function() request.allowButFuzz() ,
+        },
+        {
+        label: gNavigatorBundle.getString("geolocation.nothingLocation"),
+        accessKey: gNavigatorBundle.getString("geolocation.nothingLocationKey"),
+        callback: function() request.cancel() ,
+        }];
+      
+      var message = gNavigatorBundle.getFormattedString("geolocation.requestMessage", [request.requestingURI.spec]);      
+      notificationBox.appendNotification(message,
+                                         "geolocation",
+                                         "chrome://browser/skin/Info.png",
+                                         notificationBox.PRIORITY_INFO_HIGH,
+                                         buttons);
+    }
+  };
+}
+
 function delayedStartup(isLoadingBlank, mustLoadSidebar) {
   var os = Cc["@mozilla.org/observer-service;1"].getService(Ci.nsIObserverService);
   os.addObserver(gSessionHistoryObserver, "browser:purge-session-history", false);
@@ -1104,6 +1159,9 @@ function delayedStartup(isLoadingBlank, mustLoadSidebar) {
   placesContext.addEventListener("popupshowing", updateEditUIVisibility, false);
   placesContext.addEventListener("popuphiding", updateEditUIVisibility, false);
 #endif
+
+  // hook up the geolocation prompt to our notificationBox
+  setupGeolocationPrompt();
 
 }
 
