@@ -132,7 +132,9 @@ class nsMediaStream
   // Read up to aCount bytes from the stream. The buffer must have
   // enough room for at least aCount bytes. Stores the number of
   // actual bytes read in aBytes (0 on end of file). Can be called
-  // from any thread.
+  // from any thread. May read less than aCount bytes if the number of
+  // available bytes is less than aCount. Always check *aBytes after
+  // read, and call again if necessary.
   nsresult Read(char* aBuffer, PRUint32 aCount, PRUint32* aBytes);
 
   // Seek to the given bytes offset in the stream. aWhence can be
