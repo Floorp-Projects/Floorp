@@ -1796,21 +1796,21 @@ TraceRecorder::snapshot(ExitType exitType)
        otherwise we have to create our own. */
     SideExit** exits = treeInfo->sideExits.data();
     unsigned nexits = treeInfo->sideExits.length();
-    for (unsigned n = 0; n < nexits; ++n) {
-        SideExit* e = exits[n];
-        if (exitType == LOOP_EXIT &&
-            e->exitType == exitType && 
-            e->ip_adj == ip_adj && 
-            !memcmp(getTypeMap(exits[n]), typemap, typemap_size)) {
-            LIns* data = lir_buf_writer->skip(sizeof(GuardRecord));
-            GuardRecord* rec = (GuardRecord*)data->payload();
-            /* setup guard record structure with shared side exit */
-            memset(rec, 0, sizeof(GuardRecord));
-            SideExit* exit = exits[n];
-            rec->exit = exit;
-            exit->addGuard(rec);
-            AUDIT(mergedLoopExits);
-            return data;
+    if (exitType == LOOP_EXIT) {
+        for (unsigned n = 0; n < nexits; ++n) {
+            SideExit* e = exits[n];
+            if (e->ip_adj == ip_adj && 
+                !memcmp(getTypeMap(exits[n]), typemap, typemap_size)) {
+                LIns* data = lir_buf_writer->skip(sizeof(GuardRecord));
+                GuardRecord* rec = (GuardRecord*)data->payload();
+                /* setup guard record structure with shared side exit */
+                memset(rec, 0, sizeof(GuardRecord));
+                SideExit* exit = exits[n];
+                rec->exit = exit;
+                exit->addGuard(rec);
+                AUDIT(mergedLoopExits);
+                return data;
+            }
         }
     }
     /* We couldn't find a matching side exit, so create our own side exit structure. */
@@ -1841,7 +1841,8 @@ TraceRecorder::snapshot(ExitType exitType)
        to keep references to the side exits here. If we ever start rewinding those lirbufs,
        we have to make sure we purge the side exits that then no longer will be in valid
        memory. */
-    treeInfo->sideExits.add(exit);
+    if (exitType == LOOP_EXIT)
+        treeInfo->sideExits.add(exit);
     return data;
 }
 
