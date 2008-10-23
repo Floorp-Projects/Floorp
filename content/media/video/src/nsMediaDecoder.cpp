@@ -111,6 +111,7 @@ void nsMediaDecoder::Invalidate()
   {
     nsAutoLock lock(mVideoUpdateLock);
     if (mSizeChanged) {
+      mElement->UpdateMediaSize(nsIntSize(mRGBWidth, mRGBHeight));
       mSizeChanged = PR_FALSE;
       nsPresContext* presContext = frame->PresContext();      
       nsIPresShell *presShell = presContext->PresShell();
@@ -161,13 +162,6 @@ nsresult nsMediaDecoder::StopProgress()
   return rv;
 }
 
-void nsMediaDecoder::MediaSizeChanged()
-{
-  nsAutoLock lock(mVideoUpdateLock);
-  if (mElement)
-    mElement->UpdateMediaSize(nsIntSize(mRGBWidth, mRGBHeight));
-}
-
 void nsMediaDecoder::SetRGBData(PRInt32 aWidth, PRInt32 aHeight, float aFramerate, unsigned char* aRGBBuffer)
 {
   if (mRGBWidth != aWidth || mRGBHeight != aHeight) {
@@ -176,12 +170,6 @@ void nsMediaDecoder::SetRGBData(PRInt32 aWidth, PRInt32 aHeight, float aFramerat
     mSizeChanged = PR_TRUE;
     // Delete buffer so we'll reallocate it
     mRGB = nsnull;
-
-    // Inform the element that the size has changed.
-    nsCOMPtr<nsIRunnable> event = 
-      NS_NEW_RUNNABLE_METHOD(nsMediaDecoder, this, MediaSizeChanged); 
-    
-    NS_DispatchToMainThread(event, NS_DISPATCH_NORMAL);    
   }
   mFramerate = aFramerate;
 

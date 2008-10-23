@@ -32,9 +32,8 @@ function playbackEnded() {
     return false
 
   completed = true;
-  //  The following check is disabled and will be re-enabled by bug 460871
-  // ok(v.currentTime >= 3.9 && v.currentTime <= 4.0,
-  //    "Checking currentTime at end: " + v.currentTime);
+  ok(v.currentTime >= 3.9 && v.currentTime <= 4.0,
+     "Checking currentTime at end: " + v.currentTime);
   ok(v.ended, "Checking playback has ended");
   clearTimeout(timeout);
   SimpleTest.finish();
