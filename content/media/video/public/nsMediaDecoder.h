@@ -166,11 +166,6 @@ protected:
   // Stop progress information timer.
   nsresult StopProgress();
 
-  // Called on the main thread when the size of the media data has
-  // changed to inform the element so it can keep a local copy of the
-  // current size.
-  void MediaSizeChanged();
-
   // Set the RGB width, height and framerate. The passed RGB buffer is
   // copied to the mRGB buffer. This also allocates the mRGB buffer if
   // needed.

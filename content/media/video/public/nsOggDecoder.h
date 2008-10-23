@@ -400,12 +400,16 @@ protected:
   // thread.
   void SeekingStarted();
 
+  // Called when the backend has changed the current playback
+  // position. It dispatches a timeupdate event and invalidates the frame.
+  // This must be called on the main thread only.
+  void PlaybackPositionChanged();
+
 private:
   // Register/Unregister with Shutdown Observer. 
   // Call on main thread only.
   void RegisterShutdownObserver();
   void UnregisterShutdownObserver();
-
 
   /******
    * The following members should be accessed on the main thread only
@@ -418,6 +422,12 @@ private:
 
   // Thread to handle decoding of Ogg data.
   nsCOMPtr<nsIThread> mDecodeThread;
+
+  // The current playback position of the media resource in units of
+  // seconds. This is updated approximately at the framerate of the
+  // video (if it is a video) or the callback period of the audio.
+  // It is read and written from the main thread only.
+  float mCurrentTime;
 
   // Volume that playback should start at.  0.0 = muted. 1.0 = full
   // volume.  Readable/Writeable from the main thread. Read from the

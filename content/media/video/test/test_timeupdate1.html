@@ -1,7 +1,7 @@
 <!DOCTYPE HTML>
 <html>
 <head>
-  <title>Media test: ended and replaying</title>
+  <title>Media test: timeupdate during playback</title>
   <script type="text/javascript" src="/MochiKit/MochiKit.js"></script>
   <script type="text/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
   <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
@@ -10,47 +10,45 @@
 <video id='v'
        src='seek.ogg'
        onloadedmetadata='return startTest();'
-       onplay='return playbackStarted();'
-       onended='return playbackEnded();'></video>
+       onended='return playbackEnded();'
+       ontimeupdate='return timeUpdated();'></video>
 <pre id="test">
 <script class="testbody" type="text/javascript">
-// Test if video can be replayed after ended.
-var v = document.getElementById('v');
+// Test if timeupdate is dispatched and the current time during the
+// update is increasing.
+var lastTime = 0.0;
 var completed = false;
-var playCount = 0;
 var timeout;
 
 function startTest() {
   if (completed)
     return false;
 
+  var v = document.getElementById('v');
   v.play();
   return false;
 }
 
-function playbackStarted() {
+function timeUpdated() {
   if (completed)
     return false;
 
-  playCount++;
+  var v = document.getElementById('v');
+  ok(v.currentTime > lastTime,
+     "Check currentTime of " +
+     v.currentTime +
+     " is greater than last time of " +
+     lastTime);
+  lastTime = v.currentTime;
+  return false;
 }
 
 function playbackEnded() {
   if (completed)
     return false
 
-  ok(v.currentTime >= 3.9 && v.currentTime <= 4.0,
-     "Checking currentTime at end: " + v.currentTime);
-  ok(v.ended, "Checking playback has ended");
-  if (playCount < 2) {
-    v.play();
-  }
-  else {
-    ok(playCount == 2, "Check playback after ended event");
-    completed = true;
-    clearTimeout(timeout);
-    SimpleTest.finish();
-  }
+  completed = true;
+  SimpleTest.finish();
   return false;
 }
 timeout = setTimeout(function () {
