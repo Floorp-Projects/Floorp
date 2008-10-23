@@ -460,7 +460,7 @@ protected:
   PRPackedBool mTimerIsActive;
   PRPackedBool mProgressEventWasDelayed;
   PRPackedBool mLoadLengthComputable;
-  PRUint32 mLoadTotal; // 0 if not known.
+  PRUint64 mLoadTotal; // 0 if not known.
   nsCOMPtr<nsITimer> mProgressNotifier;
 
   PRPackedBool mFirstStartRequestSeen;
