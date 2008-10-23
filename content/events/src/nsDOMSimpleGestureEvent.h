@@ -1,4 +1,3 @@
-/* -*- Mode: C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
 /* ***** BEGIN LICENSE BLOCK *****
  * Version: MPL 1.1/GPL 2.0/LGPL 2.1
  *
@@ -15,8 +14,8 @@
  * The Original Code is mozilla.org code.
  *
  * The Initial Developer of the Original Code is
- * Netscape Communications Corporation.
- * Portions created by the Initial Developer are Copyright (C) 1998
+ * Thomas K. Dyas <tdyas@zecador.org>.
+ * Portions created by the Initial Developer are Copyright (C) 2008
  * the Initial Developer. All Rights Reserved.
  *
  * Contributor(s):
@@ -35,49 +34,27 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-#ifndef nsEvent_h__
-#define nsEvent_h__
+#ifndef nsDOMSimpleGestureEvent_h__
+#define nsDOMSimpleGestureEvent_h__
 
-/*
- * This is in a separate header file because it needs to be included
- * in many places where including nsGUIEvent.h would bring in many
- * header files that are totally unnecessary.
- */
+#include "nsIDOMSimpleGestureEvent.h"
+#include "nsDOMUIEvent.h"
 
-/**
- * Return status for event processors.
- */
+class nsPresContext;
 
-enum nsEventStatus {  
-    /// The event is ignored, do default processing
-  nsEventStatus_eIgnore,            
-    /// The event is consumed, don't do default processing
-  nsEventStatus_eConsumeNoDefault, 
-    /// The event is consumed, but do default processing
-  nsEventStatus_eConsumeDoDefault  
+class nsDOMSimpleGestureEvent : public nsIDOMSimpleGestureEvent,
+  public nsDOMUIEvent
+{
+public:
+  nsDOMSimpleGestureEvent(nsPresContext*, nsSimpleGestureEvent*);
+  virtual ~nsDOMSimpleGestureEvent();
+
+  NS_DECL_ISUPPORTS_INHERITED
+
+  NS_DECL_NSIDOMSIMPLEGESTUREEVENT
+
+  // Forward to base class
+  NS_FORWARD_TO_NSDOMUIEVENT
 };
 
-class nsEvent;
-
-class nsGUIEvent;
-class nsSizeEvent;
-class nsSizeModeEvent;
-class nsZLevelEvent;
-class nsPaintEvent;
-class nsScrollbarEvent;
-class nsScrollPortEvent;
-class nsInputEvent;
-class nsMouseEvent;
-class nsAccessibleEvent;
-class nsKeyEvent;
-class nsTextEvent;
-class nsCompositionEvent;
-class nsMouseScrollEvent;
-class nsReconversionEvent;
-class nsTooltipEvent;
-class nsMenuEvent;
-class nsSimpleGestureEvent;
-
-struct nsTextEventReply;
-
-#endif // nsEvent_h__
+#endif

@@ -465,6 +465,9 @@
 #include "nsDOMFile.h"
 #include "nsIDOMFileException.h"
 
+// Simple gestures include
+#include "nsIDOMSimpleGestureEvent.h"
+
 static NS_DEFINE_CID(kCPluginManagerCID, NS_PLUGINMANAGER_CID);
 static NS_DEFINE_CID(kDOMSOF_CID, NS_DOM_SCRIPT_OBJECT_FACTORY_CID);
 
@@ -1292,6 +1295,9 @@ static nsDOMClassInfoData sClassInfoData[] = {
                            DOM_DEFAULT_SCRIPTABLE_FLAGS)
 
   NS_DEFINE_CLASSINFO_DATA(NotifyPaintEvent, nsDOMGenericSH,
+                           DOM_DEFAULT_SCRIPTABLE_FLAGS)
+
+  NS_DEFINE_CLASSINFO_DATA(SimpleGestureEvent, nsDOMGenericSH,
                            DOM_DEFAULT_SCRIPTABLE_FLAGS)
 };
 
@@ -3529,6 +3535,11 @@ nsDOMClassInfo::Init()
   DOM_CLASSINFO_MAP_BEGIN(NotifyPaintEvent, nsIDOMNotifyPaintEvent)
     DOM_CLASSINFO_MAP_ENTRY(nsIDOMNotifyPaintEvent)
     DOM_CLASSINFO_EVENT_MAP_ENTRIES
+  DOM_CLASSINFO_MAP_END
+
+  DOM_CLASSINFO_MAP_BEGIN(SimpleGestureEvent, nsIDOMSimpleGestureEvent)
+    DOM_CLASSINFO_MAP_ENTRY(nsIDOMSimpleGestureEvent)
+    DOM_CLASSINFO_UI_EVENT_MAP_ENTRIES
   DOM_CLASSINFO_MAP_END
 
 #ifdef NS_DEBUG

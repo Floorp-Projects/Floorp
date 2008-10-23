@@ -76,6 +76,7 @@ XPIDLSRCS =					\
 	nsIDOMCommandEvent.idl			\
 	nsIDOMMessageEvent.idl			\
 	nsIDOMNotifyPaintEvent.idl              \
+	nsIDOMSimpleGestureEvent.idl		\
 	$(NULL)
 
 include $(topsrcdir)/config/rules.mk
