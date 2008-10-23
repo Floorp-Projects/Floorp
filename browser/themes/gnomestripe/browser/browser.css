@@ -260,9 +260,19 @@ menuitem[command="Browser:OpenFile"] {
   list-style-image: url("moz-icon://stock/gtk-close?size=menu");
 }
 
+#context-media-play {
+  list-style-image: url("moz-icon://stock/gtk-media-play?size=menu");
+}
+
+#context-media-pause {
+  list-style-image: url("moz-icon://stock/gtk-media-pause?size=menu");
+}
+
 menuitem[command="Browser:SavePage"],
 #context-savelink,
 #context-saveimage,
+#context-savevideo,
+#context-saveaudio,
 #context-savepage,
 #context-saveframe {
   list-style-image: url("moz-icon://stock/gtk-save-as?size=menu");
@@ -312,6 +322,8 @@ menuitem[command="cmd_cut"][disabled],
 menuitem[command="cmd_copy"],
 #context-copy,
 #context-copyimage,
+#context-copyvideourl,
+#context-copyaudiourl,
 #context-copylink,
 #context-copyemail {
   list-style-image: url("moz-icon://stock/gtk-copy?size=menu");
