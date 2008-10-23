@@ -3252,14 +3252,18 @@ Decompile(SprintStack *ss, jsbytecode *pc, intN nb, JSOp nextop)
                                        (jschar)'\'');
                     if (!xval)
                         return NULL;
-                    atom = NULL;
                 }
                 lval = POP_STR();
-                todo = Sprint(&ss->sprinter, ss_format, lval, *lval ? "." : "");
-                if (todo < 0)
-                    return NULL;
-                if (!QuoteString(&ss->sprinter, ATOM_TO_STRING(atom), 0))
-                    return NULL;
+                if (xval) {
+                    JS_ASSERT(*lval);
+                    todo = Sprint(&ss->sprinter, index_format, lval, xval);
+                } else {
+                    todo = Sprint(&ss->sprinter, ss_format, lval, *lval ? "." : "");
+                    if (todo < 0)
+                        return NULL;
+                    if (!QuoteString(&ss->sprinter, ATOM_TO_STRING(atom), 0))
+                        return NULL;
+                }
                 break;
 
               case JSOP_FORELEM:
