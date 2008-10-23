@@ -374,8 +374,6 @@ nsSVGForeignObjectFrame::UpdateCoveredRegion()
   // we should not unconditionally reflow in AttributeChanged
   mRect = GetTransformedRegion(x, y, w, h, ctm, PresContext());
 
-  nsSVGUtils::UpdateFilterRegion(this);
-
   return NS_OK;
 }
 
