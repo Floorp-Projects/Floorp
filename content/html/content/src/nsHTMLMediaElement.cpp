@@ -299,8 +299,9 @@ NS_IMETHODIMP nsHTMLMediaElement::SetCurrentTime(float aCurrentTime)
     return NS_ERROR_DOM_INVALID_STATE_ERR;
 
   mPlayingBeforeSeek = IsActivelyPlaying();
+  // The media backend is responsible for dispatching the timeupdate
+  // event if it changes the playback position as a result of the seek.
   nsresult rv = mDecoder->Seek(aCurrentTime);
-  DispatchAsyncSimpleEvent(NS_LITERAL_STRING("timeupdate"));
   return rv;
 }
 

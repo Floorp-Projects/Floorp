@@ -1,7 +1,7 @@
 <!DOCTYPE HTML>
 <html>
 <head>
-  <title>Media test: ended and replaying</title>
+  <title>Media test: timeupdate and size</title>
   <script type="text/javascript" src="/MochiKit/MochiKit.js"></script>
   <script type="text/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
   <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
@@ -10,49 +10,45 @@
 <video id='v'
        src='seek.ogg'
        onloadedmetadata='return startTest();'
-       onplay='return playbackStarted();'
-       onended='return playbackEnded();'></video>
+       onseeking='return startSeek();'
+       ontimeupdate='return timeUpdated();'></video>
 <pre id="test">
 <script class="testbody" type="text/javascript">
-// Test if video can be replayed after ended.
-var v = document.getElementById('v');
+// Test if the media size during the first timeupdate is correct.
 var completed = false;
-var playCount = 0;
+var seeking = false;
 var timeout;
 
 function startTest() {
   if (completed)
     return false;
 
-  v.play();
+  var v = document.getElementById('v');
+  v.currentTime=2.0;
   return false;
 }
 
-function playbackStarted() {
+function startSeek() {
   if (completed)
     return false;
 
-  playCount++;
-}
-
-function playbackEnded() {
-  if (completed)
-    return false
-
-  ok(v.currentTime >= 3.9 && v.currentTime <= 4.0,
-     "Checking currentTime at end: " + v.currentTime);
-  ok(v.ended, "Checking playback has ended");
-  if (playCount < 2) {
-    v.play();
-  }
-  else {
-    ok(playCount == 2, "Check playback after ended event");
-    completed = true;
-    clearTimeout(timeout);
-    SimpleTest.finish();
-  }
+  seeking = true;
   return false;
 }
+
+function timeUpdated() {
+  if (completed || !seeking)
+    return false;
+
+  var v = document.getElementById('v');
+  ok(v.currentTime >= 1.8 && v.currentTime <= 2.2,
+     "Check currentTime of " + v.currentTime + " is within range in timeupdate after seek");
+  completed = true;
+  v.pause();
+  SimpleTest.finish();
+  return false;
+}
+
 timeout = setTimeout(function () {
                        ok(false, "Test timed out");
                        SimpleTest.finish();
