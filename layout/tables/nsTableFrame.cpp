@@ -2226,6 +2226,27 @@ nsTableFrame::GetCollapsedWidth(nsMargin aBorderPadding)
   return width;
 }
 
+/* virtual */ void
+nsTableFrame::DidSetStyleContext()
+{
+   //avoid this on init or nextinflow
+   if (!mTableLayoutStrategy || GetPrevInFlow())
+     return;
+     
+   PRBool isAuto = IsAutoLayout();
+   if (isAuto != (LayoutStrategy()->GetType() == nsITableLayoutStrategy::Auto)) {
+     nsITableLayoutStrategy* temp;
+     if (isAuto)
+       temp = new BasicTableLayoutStrategy(this);
+     else
+       temp = new FixedTableLayoutStrategy(this);
+     
+     if (temp) {
+       delete mTableLayoutStrategy;
+       mTableLayoutStrategy = temp;
+     }
+  }
+}
 
 
 
@@ -6860,13 +6881,9 @@ nsTableFrame::InvalidateFrame(nsIFrame* aFrame,
     aFrame->Invalidate(overflowRect);
     parent->Invalidate(aOrigOverflowRect + aOrigRect.TopLeft());
   } else {
-    nsHTMLReflowMetrics desiredSize;
     nsRect rect = aFrame->GetRect();
-    desiredSize.width = rect.width;
-    desiredSize.height = rect.height;
-    desiredSize.mOverflowArea = overflowRect;
     aFrame->CheckInvalidateSizeChange(aOrigRect, aOrigOverflowRect,
-                                      desiredSize);
+                                      rect.Size());
     aFrame->InvalidateRectDifference(aOrigOverflowRect, overflowRect);
     parent->InvalidateRectDifference(aOrigRect, rect);
   }    

@@ -41,6 +41,7 @@
 
 #include "nsIAccessible.h"
 #include "nsIAccessNode.h"
+#include "nsIAccessibleRole.h"
 #include "nsARIAMap.h"
 
 #include "nsIDOMNode.h"
@@ -210,8 +211,92 @@ public:
    * @param aNode  The DOM node to get the role map entry for
    * @return       A pointer to the role map entry for the ARIA role, or nsnull if none
    */
-   static nsRoleMapEntry* GetRoleMapEntry(nsIDOMNode *aNode);
+  static nsRoleMapEntry* GetRoleMapEntry(nsIDOMNode *aNode);
+
+  /**
+   * Return the role of the given accessible.
+   */
+  static PRUint32 Role(nsIAccessible *aAcc)
+  {
+    PRUint32 role = nsIAccessibleRole::ROLE_NOTHING;
+    if (aAcc)
+      aAcc->GetFinalRole(&role);
+
+    return role;
+  }
+
+  /**
+   * Return the state for the given accessible.
+   */
+  static PRUint32 State(nsIAccessible *aAcc)
+  {
+    PRUint32 state = 0;
+    if (aAcc)
+      aAcc->GetFinalState(&state, nsnull);
+
+    return state;
+  }
+
+#ifdef DEBUG_A11Y
+  /**
+   * Detect whether the given accessible object implements nsIAccessibleText,
+   * when it is text or has text child node.
+   */
+  static PRBool IsTextInterfaceSupportCorrect(nsIAccessible *aAccessible);
+#endif
+
+  /**
+   * Return true if the given accessible has text role.
+   */
+  static PRBool IsText(nsIAccessible *aAcc)
+  {
+    PRUint32 role = Role(aAcc);
+    return role == nsIAccessibleRole::ROLE_TEXT_LEAF ||
+           role == nsIAccessibleRole::ROLE_STATICTEXT;
+  }
+
+  /**
+   * Return text length of the given accessible, return -1 on failure.
+   */
+  static PRInt32 TextLength(nsIAccessible *aAccessible);
+
+  /**
+   * Return true if the given accessible is embedded object.
+   */
+  static PRBool IsEmbeddedObject(nsIAccessible *aAcc)
+  {
+    PRUint32 role = Role(aAcc);
+    return role != nsIAccessibleRole::ROLE_TEXT_LEAF &&
+           role != nsIAccessibleRole::ROLE_WHITESPACE &&
+           role != nsIAccessibleRole::ROLE_STATICTEXT;
+  }
+
+  /**
+   * Return true if the given accessible hasn't children.
+   */
+  static PRBool IsLeaf(nsIAccessible *aAcc)
+  {
+    PRInt32 numChildren;
+    aAcc->GetChildCount(&numChildren);
+    return numChildren > 0;
+  }
+
+  /**
+   * Return true if the given accessible can't have children. Used when exposing
+   * to platform accessibility APIs, should the children be pruned off?
+   */
+  static PRBool MustPrune(nsIAccessible *aAccessible);
+
+  /**
+   * Return true if the given node can be accessible and attached to
+   * the document's accessible tree.
+   */
+  static PRBool IsNodeRelevant(nsIDOMNode *aNode);
+
+  /**
+   * Return multiselectable parent for the given selectable accessible if any.
+   */
+  static already_AddRefed<nsIAccessible> GetMultiSelectFor(nsIDOMNode *aNode);
 };
 
 #endif
-

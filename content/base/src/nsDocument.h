@@ -368,6 +368,24 @@ public:
                                  nsIStyleSheet* aStyleSheet,
                                  PRBool aDocumentSheet);
 
+  nsIStyleSheet* GetItemAt(PRUint32 aIndex);
+
+  static nsDOMStyleSheetList* FromSupports(nsISupports* aSupports)
+  {
+    nsIDOMStyleSheetList* list = static_cast<nsIDOMStyleSheetList*>(aSupports);
+#ifdef DEBUG
+    {
+      nsCOMPtr<nsIDOMStyleSheetList> list_qi = do_QueryInterface(aSupports);
+
+      // If this assertion fires the QI implementation for the object in
+      // question doesn't use the nsIDOMStyleSheetList pointer as the
+      // nsISupports pointer. That must be fixed, or we'll crash...
+      NS_ASSERTION(list_qi == list, "Uh, fix QI!");
+    }
+#endif
+    return static_cast<nsDOMStyleSheetList*>(list);
+  }
+
 protected:
   PRInt32       mLength;
   nsIDocument*  mDocument;

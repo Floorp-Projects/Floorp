@@ -43,11 +43,13 @@
 #include "nsIAccessibleTypes.h"
 #include "nsPIAccessible.h"
 #include "nsPIAccessNode.h"
-#include "nsAccessibleEventData.h"
 
+#include "nsAccessibleEventData.h"
+#include "nsHyperTextAccessible.h"
 #include "nsAccessibilityAtoms.h"
 #include "nsAccessible.h"
 #include "nsARIAMap.h"
+
 #include "nsIDOMXULContainerElement.h"
 #include "nsIDOMXULSelectCntrlEl.h"
 #include "nsIDOMXULSelectCntrlItemEl.h"
@@ -175,7 +177,7 @@ nsAccUtils::SetAccAttrsForXULSelectControlItem(nsIDOMNode *aNode,
     nsAccessNode::GetAccService()->GetAccessibleFor(currNode,
                                                     getter_AddRefs(itemAcc));
     if (!itemAcc ||
-        nsAccessible::State(itemAcc) & nsIAccessibleStates::STATE_INVISIBLE) {
+        State(itemAcc) & nsIAccessibleStates::STATE_INVISIBLE) {
       setSize--;
       if (index < static_cast<PRUint32>(indexOf))
         posInSet--;
@@ -217,11 +219,11 @@ nsAccUtils::SetAccAttrsForXULContainerItem(nsIDOMNode *aNode,
                                                     getter_AddRefs(itemAcc));
 
     if (itemAcc) {
-      PRUint32 itemRole = nsAccessible::Role(itemAcc);
+      PRUint32 itemRole = Role(itemAcc);
       if (itemRole == nsIAccessibleRole::ROLE_SEPARATOR)
         break; // We reached the beginning of our group.
 
-      PRUint32 itemState = nsAccessible::State(itemAcc);
+      PRUint32 itemState = State(itemAcc);
       if (!(itemState & nsIAccessibleStates::STATE_INVISIBLE)) {
         setSize++;
         posInSet++;
@@ -239,11 +241,11 @@ nsAccUtils::SetAccAttrsForXULContainerItem(nsIDOMNode *aNode,
                                                     getter_AddRefs(itemAcc));
 
     if (itemAcc) {
-      PRUint32 itemRole = nsAccessible::Role(itemAcc);
+      PRUint32 itemRole = Role(itemAcc);
       if (itemRole == nsIAccessibleRole::ROLE_SEPARATOR)
         break; // We reached the end of our group.
 
-      PRUint32 itemState = nsAccessible::State(itemAcc);
+      PRUint32 itemState = State(itemAcc);
       if (!(itemState & nsIAccessibleStates::STATE_INVISIBLE))
         setSize++;
     }
@@ -549,7 +551,7 @@ nsAccUtils::GetScreenCoordsForParent(nsIAccessNode *aAccessNode)
 nsRoleMapEntry*
 nsAccUtils::GetRoleMapEntry(nsIDOMNode *aNode)
 {
-  nsIContent *content = nsAccessible::GetRoleContent(aNode);
+  nsIContent *content = nsCoreUtils::GetRoleContent(aNode);
   nsAutoString roleString;
   if (!content || !content->GetAttr(kNameSpaceID_None, nsAccessibilityAtoms::role, roleString)) {
     return nsnull;
@@ -580,4 +582,133 @@ nsAccUtils::GetRoleMapEntry(nsIDOMNode *aNode)
   // Always use some entry if there is a role string
   // To ensure an accessible object is created
   return &nsARIAMap::gLandmarkRoleMap;
+}
+
+
+#ifdef DEBUG_A11Y
+
+PRBool
+nsAccUtils::IsTextInterfaceSupportCorrect(nsIAccessible *aAccessible)
+{
+  PRBool foundText = PR_FALSE;
+  
+  nsCOMPtr<nsIAccessibleDocument> accDoc = do_QueryInterface(aAccessible);
+  if (accDoc) {
+    // Don't test for accessible docs, it makes us create accessibles too
+    // early and fire mutation events before we need to
+    return PR_TRUE;
+  }
+
+  nsCOMPtr<nsIAccessible> child, nextSibling;
+  aAccessible->GetFirstChild(getter_AddRefs(child));
+  while (child) {
+    if (IsText(child)) {
+      foundText = PR_TRUE;
+      break;
+    }
+    child->GetNextSibling(getter_AddRefs(nextSibling));
+    child.swap(nextSibling);
+  }
+
+  if (foundText) {
+    // found text child node
+    nsCOMPtr<nsIAccessibleText> text = do_QueryInterface(aAccessible);
+    if (!text)
+      return PR_FALSE;
+  }
+
+  return PR_TRUE; 
+}
+#endif
+
+PRInt32
+nsAccUtils::TextLength(nsIAccessible *aAccessible)
+{
+  if (!IsText(aAccessible))
+    return 1;
+  
+  nsCOMPtr<nsPIAccessNode> pAccNode(do_QueryInterface(aAccessible));
+  
+  nsIFrame *frame = pAccNode->GetFrame();
+  if (frame && frame->GetType() == nsAccessibilityAtoms::textFrame) {
+    // Ensure that correct text length is calculated (with non-rendered
+    // whitespace chars not counted).
+    nsIContent *content = frame->GetContent();
+    if (content) {
+      PRUint32 length;
+      nsresult rv = nsHyperTextAccessible::
+        ContentToRenderedOffset(frame, content->TextLength(), &length);
+      return NS_SUCCEEDED(rv) ? static_cast<PRInt32>(length) : -1;
+    }
+  }
+  
+  // For list bullets (or anything other accessible which would compute its own
+  // text. They don't have their own frame.
+  // XXX In the future, list bullets may have frame and anon content, so 
+  // we should be able to remove this at that point
+  nsCOMPtr<nsPIAccessible> pAcc(do_QueryInterface(aAccessible));
+  
+  nsAutoString text;
+  pAcc->AppendTextTo(text, 0, PR_UINT32_MAX); // Get all the text
+  return text.Length();
+}
+
+PRBool
+nsAccUtils::MustPrune(nsIAccessible *aAccessible)
+{ 
+  PRUint32 role = nsAccUtils::Role(aAccessible);
+
+  return role == nsIAccessibleRole::ROLE_MENUITEM || 
+    role == nsIAccessibleRole::ROLE_COMBOBOX_OPTION ||
+    role == nsIAccessibleRole::ROLE_OPTION ||
+    role == nsIAccessibleRole::ROLE_ENTRY ||
+    role == nsIAccessibleRole::ROLE_FLAT_EQUATION ||
+    role == nsIAccessibleRole::ROLE_PASSWORD_TEXT ||
+    role == nsIAccessibleRole::ROLE_PUSHBUTTON ||
+    role == nsIAccessibleRole::ROLE_TOGGLE_BUTTON ||
+    role == nsIAccessibleRole::ROLE_GRAPHIC ||
+    role == nsIAccessibleRole::ROLE_SLIDER ||
+    role == nsIAccessibleRole::ROLE_PROGRESSBAR ||
+    role == nsIAccessibleRole::ROLE_SEPARATOR;
+}
+
+PRBool
+nsAccUtils::IsNodeRelevant(nsIDOMNode *aNode)
+{
+  nsCOMPtr<nsIDOMNode> relevantNode;
+  nsAccessNode::GetAccService()->GetRelevantContentNodeFor(aNode,
+                                                           getter_AddRefs(relevantNode));
+  return aNode == relevantNode;
+}
+
+already_AddRefed<nsIAccessible>
+nsAccUtils::GetMultiSelectFor(nsIDOMNode *aNode)
+{
+  if (!aNode)
+    return nsnull;
+
+  nsCOMPtr<nsIAccessible> accessible;
+  nsAccessNode::GetAccService()->GetAccessibleFor(aNode,
+                                                  getter_AddRefs(accessible));
+  if (!accessible)
+    return nsnull;
+
+  PRUint32 state = State(accessible);
+  if (0 == (state & nsIAccessibleStates::STATE_SELECTABLE))
+    return nsnull;
+
+  PRUint32 containerRole;
+  while (0 == (state & nsIAccessibleStates::STATE_MULTISELECTABLE)) {
+    nsIAccessible *current = accessible;
+    current->GetParent(getter_AddRefs(accessible));
+    if (!accessible || (NS_SUCCEEDED(accessible->GetFinalRole(&containerRole)) &&
+                        containerRole == nsIAccessibleRole::ROLE_PANE)) {
+      return nsnull;
+    }
+    state = State(accessible);
+  }
+
+  nsIAccessible *returnAccessible = nsnull;
+  accessible.swap(returnAccessible);
+  return returnAccessible;
 }

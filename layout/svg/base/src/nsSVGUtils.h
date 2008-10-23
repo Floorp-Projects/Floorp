@@ -260,11 +260,6 @@ public:
   static nsRect FindFilterInvalidation(nsIFrame *aFrame, const nsRect& aRect);
 
   /*
-   * Update the filter invalidation region for this frame, if relevant.
-   */
-  static void UpdateFilterRegion(nsIFrame *aFrame);
-
-  /*
    * Update the area covered by the frame
    */
   static void UpdateGraphic(nsISVGChildFrame *aSVGFrame);
@@ -333,8 +328,8 @@ public:
   /* Paint SVG frame with SVG effects - aDirtyRect is the area being
    * redrawn, in device pixel coordinates relative to the outer svg */
   static void
-  PaintChildWithEffects(nsSVGRenderState *aContext,
-                        nsIntRect *aDirtyRect,
+  PaintFrameWithEffects(nsSVGRenderState *aContext,
+                        const nsIntRect *aDirtyRect,
                         nsIFrame *aFrame);
 
   /* Hit testing - check if point hits the clipPath of indicated

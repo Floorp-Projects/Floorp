@@ -56,6 +56,25 @@ public:
 
   nsresult Refresh();
 
+  nsIDOMMimeType* GetItemAt(PRUint32 aIndex, nsresult* aResult);
+
+  static nsMimeTypeArray* FromSupports(nsISupports* aSupports)
+  {
+#ifdef DEBUG
+    {
+      nsCOMPtr<nsIDOMMimeTypeArray> array_qi = do_QueryInterface(aSupports);
+
+      // If this assertion fires the QI implementation for the object in
+      // question doesn't use the nsIDOMMimeTypeArray pointer as the nsISupports
+      // pointer. That must be fixed, or we'll crash...
+      NS_ASSERTION(array_qi == static_cast<nsIDOMMimeTypeArray*>(aSupports),
+                   "Uh, fix QI!");
+    }
+#endif
+
+    return static_cast<nsMimeTypeArray*>(aSupports);
+  }
+
 private:
   nsresult GetMimeTypes();
   void     Clear();

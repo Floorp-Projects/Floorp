@@ -275,23 +275,11 @@ struct nsBorderColors {
   nsBorderColors* mNext;
   nscolor mColor;
 
-  nsBorderColors* CopyColors() {
-    nsBorderColors* next = nsnull;
-    if (mNext)
-      next = mNext->CopyColors();
-    return new nsBorderColors(mColor, next);
-  }
+  nsBorderColors() : mNext(nsnull), mColor(NS_RGB(0,0,0)) {}
+  nsBorderColors(const nscolor& aColor) : mNext(nsnull), mColor(aColor) {}
+  ~nsBorderColors();
 
-  nsBorderColors() :mNext(nsnull) { mColor = NS_RGB(0,0,0); }
-
-  nsBorderColors(const nscolor& aColor, nsBorderColors* aNext=nsnull) {
-    mColor = aColor;
-    mNext = aNext;
-  }
-
-  ~nsBorderColors() {
-    delete mNext;
-  }
+  nsBorderColors* Clone() const { return Clone(PR_TRUE); }
 
   static PRBool Equal(const nsBorderColors* c1,
                       const nsBorderColors* c2) {
@@ -307,6 +295,9 @@ struct nsBorderColors {
     // has more colors than another
     return !c1 && !c2;
   }
+
+private:
+  nsBorderColors* Clone(PRBool aDeep) const;
 };
 
 struct nsCSSShadowItem {
@@ -812,7 +803,7 @@ struct nsStyleText {
   }
 
   PRBool WordCanWrap() const {
-    return mWordWrap == NS_STYLE_WORDWRAP_BREAK_WORD;
+    return WhiteSpaceCanWrap() && mWordWrap == NS_STYLE_WORDWRAP_BREAK_WORD;
   }
 };
 

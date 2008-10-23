@@ -19,7 +19,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=451376
   </div>
   <pre id="test">
 
-  <div id="area"><button>btn1</button>text<button>btn2</button></div>
+  <div id="area"><button>btn1</button>text <button>btn2</button></div>
 
   <script class="testbody" type="text/javascript">
     SimpleTest.waitForExplicitFinish();
@@ -46,6 +46,15 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=451376
       if (aAfterRangeNode)
         is(range.comparePoint(aAfterRangeNode, aAfterRangeOffset), 1,
            "Wrong result for the point after the range '" + aRangeID + "'");
+       // Comparare also start and end point
+       is(range.comparePoint(aStartNode, aStartOffset), 0,
+          "Wrong result for the start point '" + aRangeID + "'");
+       is(range.comparePoint(aEndNode, aEndOffset), 0,
+          "Wrong result for the end point '" + aRangeID + "'");
+       ok(range.isPointInRange(aStartNode, aStartOffset),
+          "Wrong result for the start point '" + aRangeID + "'");
+       ok(range.isPointInRange(aEndNode, aEndOffset),
+          "Wrong result for the end point '" + aRangeID + "'");
     }
 
     function doTest()
@@ -58,17 +67,17 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=451376
       testRange("range1", area, 0, area, 1,
                 null, 0,
                 area, 0,
-                area, 1);
+                area, 2);
 
       testRange("range2", text, 2, text, 4,
                 text, 0,
                 text, 3,
-                text, 4);
+                text, 5);
 
       testRange("range3", text, 4, area, 2,
                 text, 0,
                 text, 4,
-                area, 2);
+                area, 3);
 
       SimpleTest.finish();
     }

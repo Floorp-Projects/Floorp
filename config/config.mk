@@ -442,6 +442,10 @@ ifdef USE_EXTENSION_MANIFEST
 MAKE_JARS_FLAGS += -e
 endif
 
+ifdef BOTH_MANIFESTS
+MAKE_JARS_FLAGS += --both-manifests
+endif
+
 TAR_CREATE_FLAGS = -cvhf
 
 ifeq ($(OS_ARCH),BSD_OS)
@@ -853,7 +857,15 @@ LOCALE_SRCDIR = $(call EXPAND_LOCALE_SRCDIR,$(relativesrcdir))
 endif
 
 ifdef LOCALE_SRCDIR
+# if LOCALE_MERGEDIR is set, use mergedir first, then the localization,
+# and finally en-US
+ifdef LOCALE_MERGEDIR
+MAKE_JARS_FLAGS += -c $(LOCALE_MERGEDIR)/$(subst /locales,,$(relativesrcdir))
+endif
 MAKE_JARS_FLAGS += -c $(LOCALE_SRCDIR)
+ifdef LOCALE_MERGEDIR
+MAKE_JARS_FLAGS += -c $(topsrcdir)/$(relativesrcdir)/en-US
+endif
 endif
 
 ifeq (,$(filter WINCE WINNT OS2,$(OS_ARCH)))

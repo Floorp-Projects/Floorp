@@ -1,3 +1,4 @@
+
 // returns a list of [string, object] pairs to test encoding
 function getTestPairs() {
   var testPairs = [
@@ -18,7 +19,10 @@ function getTestPairs() {
     ['{"x":{"a":"b","c":{"y":"z"},"f":"g"}}',
      {"x":{"a":"b","c":{"y":"z"},"f":"g"}}],
     ['{"x":[1,{"y":"z"},3]}', {"x":[1,{"y":"z"},3]}],
-    //['{"0":"h","1":"m","2":"m"}', new String("hmm")],
+    ['["hmm"]', [new String("hmm")]],
+    ['[true]', [new Boolean(true)]],
+    ['[42]', [new Number(42)]],
+    ['["1978-09-13T12:24:34.023Z"]', [new Date(Date.UTC(1978, 8, 13, 12, 24, 34, 23))]],
     ['[1,null,3]',[1,,3]],
     [null, function test(){}],
     [null, dump],

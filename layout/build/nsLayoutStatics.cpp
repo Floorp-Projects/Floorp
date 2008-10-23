@@ -111,12 +111,11 @@ PRBool NS_SVGEnabled();
 #endif
 
 #ifdef MOZ_MEDIA
-#include "nsVideoDecoder.h"
+#include "nsMediaDecoder.h"
 #endif
 
 #ifdef MOZ_OGG
 #include "nsAudioStream.h"
-#include "nsVideoDecoder.h"
 #endif
 
 #include "nsError.h"
@@ -237,6 +236,8 @@ nsLayoutStatics::Initialize()
   }
 #endif
 
+  nsCSSRuleProcessor::Startup();
+
 #ifdef MOZ_XUL
   rv = nsXULPopupManager::Init();
   if (NS_FAILED(rv)) {
@@ -246,9 +247,9 @@ nsLayoutStatics::Initialize()
 #endif
 
 #ifdef MOZ_MEDIA
-  rv = nsVideoDecoder::InitLogger();
+  rv = nsMediaDecoder::InitLogger();
   if (NS_FAILED(rv)) {
-    NS_ERROR("Could not initialize nsVideoDecoder");
+    NS_ERROR("Could not initialize nsMediaDecoder");
     return rv;
   }
   

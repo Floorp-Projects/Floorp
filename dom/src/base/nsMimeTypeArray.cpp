@@ -85,20 +85,34 @@ nsMimeTypeArray::GetLength(PRUint32* aLength)
   return NS_OK;
 }
 
+nsIDOMMimeType*
+nsMimeTypeArray::GetItemAt(PRUint32 aIndex, nsresult *aResult)
+{
+  if (mMimeTypeArray == nsnull) {
+    *aResult = GetMimeTypes();
+    if (*aResult != NS_OK)
+      return nsnull;
+  }
+
+  if (aIndex >= mMimeTypeCount) {
+    *aResult = NS_ERROR_FAILURE;
+
+    return nsnull;
+  }
+
+  *aResult = NS_OK;
+
+  return mMimeTypeArray[aIndex];
+}
+
 NS_IMETHODIMP
 nsMimeTypeArray::Item(PRUint32 aIndex, nsIDOMMimeType** aReturn)
 {
-  if (mMimeTypeArray == nsnull) {
-    nsresult rv = GetMimeTypes();
-    if (rv != NS_OK)
-      return rv;
-  }
-  if (aIndex < mMimeTypeCount) {
-    *aReturn = mMimeTypeArray[aIndex];
-    NS_IF_ADDREF(*aReturn);
-    return NS_OK;
-  }
-  return NS_ERROR_FAILURE;
+  nsresult rv;
+
+  NS_IF_ADDREF(*aReturn = GetItemAt(aIndex, &rv));
+
+  return rv;
 }
 
 NS_IMETHODIMP

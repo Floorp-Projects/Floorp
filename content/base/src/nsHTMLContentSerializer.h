@@ -20,6 +20,7 @@
  * the Initial Developer. All Rights Reserved.
  *
  * Contributor(s):
+ *   Laurent Jouanneau <laurent.jouanneau@disruptive-innovations.com>
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either of the GNU General Public License Version 2 or later (the "GPL"),
@@ -47,7 +48,6 @@
 #include "nsXMLContentSerializer.h"
 #include "nsIEntityConverter.h"
 #include "nsString.h"
-#include "nsILineBreaker.h"
 
 class nsIContent;
 class nsIAtom;
@@ -101,8 +101,7 @@ class nsHTMLContentSerializer : public nsXMLContentSerializer {
                               nsAString& aOutputStr,
                               PRBool aTranslateEntities = PR_FALSE,
                               PRBool aIncrColumn = PR_TRUE);
-  virtual void AppendToStringConvertLF(const nsAString& aStr,
-                                       nsAString& aOutputStr);
+
   void AppendWrapped_WhitespaceSequence(
           nsASingleFragmentString::const_char_iterator &aPos,
           const nsASingleFragmentString::const_char_iterator aEnd,
@@ -125,9 +124,8 @@ class nsHTMLContentSerializer : public nsXMLContentSerializer {
   nsCOMPtr<nsIEntityConverter> mEntityConverter;
 
   PRInt32   mIndent;
-  PRInt32   mColPos;
-  PRUint32  mFlags;
-  PRPackedBool  mInBody;
+
+  PRUint32  mInBody;
 
   PRPackedBool  mDoFormat;
   PRPackedBool  mDoHeader;
@@ -158,12 +156,8 @@ class nsHTMLContentSerializer : public nsXMLContentSerializer {
    * what so ever.
    */
   PRPackedBool mInCDATA;
-  PRPackedBool mNeedLineBreaker;
-
-  nsCOMPtr<nsILineBreaker> mLineBreaker;
 
   PRInt32   mMaxColumn;
-  nsString  mLineBreak;
 
   // To keep track of startvalue of OL and first list item for nested lists
   struct olState {

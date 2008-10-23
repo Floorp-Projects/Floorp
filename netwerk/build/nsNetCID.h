@@ -430,6 +430,17 @@
     {0x94, 0xdb, 0xd4, 0xf8, 0x59, 0x05, 0x82, 0x15} \
 }
 
+// component implementing nsIPrivateBrowsingService
+#define NS_PRIVATE_BROWSING_SERVICE_CONTRACTID \
+    "@mozilla.org/privatebrowsing;1"
+#define NS_PRIVATE_BROWSING_SERVICE_CID              \
+{ /* c31f4883-839b-45f6-82ad-a6a9bc5ad599 */         \
+    0xc31f4883,                                      \
+    0x839b,                                          \
+    0x45f6,                                          \
+    {0x82, 0xad, 0xa6, 0xa9, 0xbc, 0x5a, 0xd5, 0x99} \
+}
+
 // component implementing nsIPrompt
 //
 // NOTE: this implementation does not have any way to correctly parent itself,

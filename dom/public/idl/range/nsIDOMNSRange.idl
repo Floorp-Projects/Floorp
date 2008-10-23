@@ -44,14 +44,15 @@ interface nsIDOMNSRange : nsISupports
 {
   nsIDOMDocumentFragment    createContextualFragment(in DOMString fragment);
 
-  // Is the point contained in the range?
+  // This returns true if parent+offset equals either
+  // of the boundary points or is between them.
   boolean                   isPointInRange(in nsIDOMNode parent,
                                            in long offset);
 
   // comparePoint returns
-  //   -1 if point is before range,
-  //    0 if point is in range,
-  //    1 if point is after range
+  //   -1 if point is before the start boundary point,
+  //    0 if point is either of the boundary points or between them,
+  //    1 if point is after the end boundary point.
   // Sort of a strcmp for ranges.
   short                     comparePoint(in nsIDOMNode parent, in long offset);
 };

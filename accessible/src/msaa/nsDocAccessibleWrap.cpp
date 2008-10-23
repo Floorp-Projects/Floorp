@@ -322,7 +322,7 @@ STDMETHODIMP nsDocAccessibleWrap::get_accValue(
   if (FAILED(hr) || *pszValue || varChild.lVal != CHILDID_SELF)
     return hr;
   // If document is being used to create a widget, don't use the URL hack
-  PRUint32 role = Role(this);
+  PRUint32 role = nsAccUtils::Role(this);
   if (role != nsIAccessibleRole::ROLE_DOCUMENT &&
       role != nsIAccessibleRole::ROLE_APPLICATION &&
       role != nsIAccessibleRole::ROLE_DIALOG &&

@@ -1,0 +1,71 @@
+<!DOCTYPE HTML>
+<html>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=147777
+-->
+<head>
+  <title>Test for visited link coloring pref Bug 147777</title>
+  <script type="application/javascript" src="/MochiKit/MochiKit.js"></script>
+  <script type="application/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
+  <style type="text/css">
+
+  :link { float: left; }
+
+  :visited { float: right; }
+
+  </style>
+</head>
+<body>
+<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=147777">Mozilla Bug 147777</a>
+<p id="display"><a id="mylink" href="test_visited_pref.html">link to this page</a></p>
+<pre id="test">
+<script type="application/javascript">
+
+/** Test for Bug 147777 **/
+
+function reinsert_node(e) {
+  var sib = e.nextSibling;
+  var par = e.parentNode;
+  par.removeChild(e);
+  par.insertBefore(e, sib);
+}
+
+netscape.security.PrivilegeManager.enablePrivilege("UniversalXPConnect");
+var prefService = Components.classes["@mozilla.org/preferences-service;1"].
+                    getService(Components.interfaces.nsIPrefService);
+var dispBranch = prefService.getBranch("layout.css.");
+
+function get_pref()
+{
+    netscape.security.PrivilegeManager.enablePrivilege("UniversalXPConnect");
+    return dispBranch.getBoolPref("visited_links_enabled");
+}
+
+function set_pref(val)
+{
+    netscape.security.PrivilegeManager.enablePrivilege("UniversalXPConnect");
+    dispBranch.setBoolPref("visited_links_enabled", val);
+}
+
+is(get_pref(), true, "pref defaults to true");
+
+var link = document.getElementById("mylink");
+var cs = getComputedStyle(link, "");
+is(cs.cssFloat, "right", ":visited selector applies given default preferences");
+
+set_pref(false);
+
+// we don't handle dynamic changes of this pref; it only takes effect
+// when a new page loads
+reinsert_node(link);
+
+is(cs.cssFloat, "left", ":visited selector does not apply given false preference");
+
+// Set the pref back for the rest of the tests.
+set_pref(true);
+
+</script>
+</pre>
+</body>
+</html>

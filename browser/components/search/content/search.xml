@@ -777,7 +777,7 @@
                action="return this.openSearch();"/>
 #endif
 
-      <handler event="dragdrop" phase="capturing">
+      <handler event="drop" phase="capturing">
         nsDragAndDrop.drop(event, this.searchbarDNDObserver);
       </handler>
 
