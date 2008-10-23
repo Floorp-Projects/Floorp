@@ -1284,7 +1284,9 @@ NS_IMETHODIMP nsViewManager::DispatchEvent(nsGUIEvent *aEvent, nsEventStatus *aS
           if ((aEvent->message == NS_MOUSE_MOVE &&
                static_cast<nsMouseEvent*>(aEvent)->reason ==
                  nsMouseEvent::eReal) ||
-              aEvent->message == NS_MOUSE_ENTER) {
+              aEvent->message == NS_MOUSE_ENTER ||
+              aEvent->message == NS_MOUSE_BUTTON_DOWN ||
+              aEvent->message == NS_MOUSE_BUTTON_UP) {
             // aEvent->point is relative to the widget, i.e. the view top-left,
             // so we need to add the offset to the view origin
             nsPoint rootOffset = baseView->GetDimensions().TopLeft();
