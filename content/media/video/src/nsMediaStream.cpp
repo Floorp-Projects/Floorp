@@ -429,7 +429,6 @@ nsresult nsHttpStreamStrategy::Read(char* aBuffer, PRUint32 aCount, PRUint32* aB
   if (!mPipeInput)
     return NS_ERROR_FAILURE;
 
-  // The read call blocks until the required amount of bytes are read.
   // If Cancel() is called then the read will fail with an error so we
   // can bail out of the blocking call.
   nsresult rv = mPipeInput->Read(aBuffer, aCount, aBytes);
@@ -589,14 +588,21 @@ nsresult nsHttpStreamStrategy::Seek(PRInt32 aWhence, PRInt64 aOffset)
       nsAutoArrayPtr<char> data(new char[bytesAhead]);
       if (!data)
         return NS_ERROR_OUT_OF_MEMORY;
-      
+    
+      // Read until the read cursor reaches new seek point. If Cancel() is
+      // called then the read will fail with an error so we can bail out of
+      // the blocking call.
+      PRUint32 bytesRead = 0;
       PRUint32 bytes = 0;
-      // The read call blocks until the required amount of bytes are read.
-      // If Cancel() is called then the read will fail with an error so we
-      // can bail out of the blocking call.
-      nsresult rv = mPipeInput->Read(data.get(), bytesAhead, &bytes);
-      NS_ENSURE_SUCCESS(rv, rv);
-      mPosition += bytesAhead;
+      do {
+        nsresult rv = mPipeInput->Read(data.get(),
+                                       (bytesAhead-bytesRead),
+                                       &bytes);
+        NS_ENSURE_SUCCESS(rv, rv);
+        NS_ENSURE_TRUE(bytes != 0, NS_ERROR_FAILURE); // Tried to read past EOF.
+        mPosition += bytes;
+        bytesRead += bytes;
+      } while (bytesRead != bytesAhead);
       return rv;
     }
   }
