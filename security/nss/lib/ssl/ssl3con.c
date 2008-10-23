@@ -39,7 +39,7 @@
  * the terms of any one of the MPL, the GPL or the LGPL.
  *
  * ***** END LICENSE BLOCK ***** */
-/* $Id: ssl3con.c,v 1.112 2008/03/18 01:32:18 julien.pierre.boogz%sun.com Exp $ */
+/* $Id: ssl3con.c,v 1.113 2008/09/22 23:47:00 wtc%google.com Exp $ */
 
 #include "cert.h"
 #include "ssl.h"
@@ -59,7 +59,6 @@
 
 #include "pk11func.h"
 #include "secmod.h"
-#include "ec.h"
 #include "blapi.h"
 
 #include <stdio.h>

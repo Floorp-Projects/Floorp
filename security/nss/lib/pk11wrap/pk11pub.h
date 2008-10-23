@@ -246,7 +246,7 @@ SECStatus PK11_MergeTokens(PK11SlotInfo *targetSlot, PK11SlotInfo *sourceSlot,
 /*
  * create and destroy merge logs needed by PK11_MergeTokens
  */
-PK11MergeLog * PK11_CreateMergeLog();
+PK11MergeLog * PK11_CreateMergeLog(void);
 void PK11_DestroyMergeLog(PK11MergeLog *log);
 
 
