@@ -25,6 +25,7 @@
  *   Håkan Waara <hwaara@gmail.com>
  *   Stuart Morgan <stuart.morgan@alumni.case.edu>
  *   Mats Palmgren <mats.palmgren@bredband.net>
+ *   Thomas K. Dyas <tdyas@zecador.org> (simple gestures support)
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either the GNU General Public License Version 2 or later (the "GPL"), or 
@@ -71,6 +72,8 @@
 #include "nsWindowMap.h"
 #include "nsCocoaUtils.h"
 #include "nsMenuBarX.h"
+
+#include "nsIDOMSimpleGestureEvent.h"
 
 #include "gfxContext.h"
 #include "gfxQuartzSurface.h"
@@ -2358,6 +2361,10 @@ NSEvent* gLastDragEvent = nil;
     mDragService = nsnull;
 
     mPluginTSMDoc = nil;
+
+    mGestureState = eGestureState_None;
+    mCumulativeMagnification = 0.0;
+    mCumulativeRotation = 0.0;
   }
   
   // register for things we'll take from other applications
@@ -3232,6 +3239,214 @@ static const PRInt32 sShadowInvalidationInterval = 100;
   return retVal;
 
   NS_OBJC_END_TRY_ABORT_BLOCK_RETURN(NO);
+}
+
+
+/*
+ * XXX - The swipeWithEvent, beginGestureWithEvent, magnifyWithEvent,
+ * rotateWithEvent, and endGestureWithEvent methods are part of a
+ * PRIVATE interface exported by nsResponder and reverse-engineering
+ * was necessary to obtain the methods' prototypes. Thus, Apple may
+ * change the interface in the future without notice.
+ *
+ * The prototypes were obtained from the following link:
+ * http://cocoadex.com/2008/02/nsevent-modifications-swipe-ro.html
+ */
+
+- (void)swipeWithEvent:(NSEvent *)anEvent
+{
+  NS_OBJC_BEGIN_TRY_ABORT_BLOCK;
+
+  if (!anEvent || !mGeckoChild)
+    return;
+
+  nsAutoRetainCocoaObject kungFuDeathGrip(self);
+
+  float deltaX = [anEvent deltaX];  // left=1.0, right=-1.0
+  float deltaY = [anEvent deltaY];  // up=1.0, down=-1.0
+
+  // Setup the "swipe" event.
+  nsSimpleGestureEvent geckoEvent(PR_TRUE, NS_SIMPLE_GESTURE_SWIPE, mGeckoChild, 0, 0.0);
+  [self convertGenericCocoaEvent:anEvent toGeckoEvent:&geckoEvent];
+
+  // Record the left/right direction.
+  if (deltaX > 0.0)
+    geckoEvent.direction |= nsIDOMSimpleGestureEvent::DIRECTION_LEFT;
+  else if (deltaX < 0.0)
+    geckoEvent.direction |= nsIDOMSimpleGestureEvent::DIRECTION_RIGHT;
+
+  // Record the up/down direction.
+  if (deltaY > 0.0)
+    geckoEvent.direction |= nsIDOMSimpleGestureEvent::DIRECTION_UP;
+  else if (deltaY < 0.0)
+    geckoEvent.direction |= nsIDOMSimpleGestureEvent::DIRECTION_DOWN;
+
+  // Send the event.
+  mGeckoChild->DispatchWindowEvent(geckoEvent);
+
+  NS_OBJC_END_TRY_ABORT_BLOCK;
+}
+
+
+- (void)beginGestureWithEvent:(NSEvent *)anEvent
+{
+  NS_ASSERTION(mGestureState == eGestureState_None, "mGestureState should be eGestureState_None");
+
+  if (!anEvent)
+    return;
+
+  mGestureState = eGestureState_StartGesture;
+  mCumulativeMagnification = 0;
+  mCumulativeRotation = 0.0;
+}
+
+
+- (void)magnifyWithEvent:(NSEvent *)anEvent
+{
+  NS_OBJC_BEGIN_TRY_ABORT_BLOCK;
+
+  if (!anEvent || !mGeckoChild)
+    return;
+
+  nsAutoRetainCocoaObject kungFuDeathGrip(self);
+
+  float deltaZ = [anEvent deltaZ];
+
+  PRUint32 msg;
+  switch (mGestureState) {
+  case eGestureState_StartGesture:
+    msg = NS_SIMPLE_GESTURE_MAGNIFY_START;
+    mGestureState = eGestureState_MagnifyGesture;
+    break;
+
+  case eGestureState_MagnifyGesture:
+    msg = NS_SIMPLE_GESTURE_MAGNIFY_UPDATE;
+    break;
+
+  case eGestureState_None:
+  case eGestureState_RotateGesture:
+  default:
+    return;
+  }
+
+  // Setup the event.
+  nsSimpleGestureEvent geckoEvent(PR_TRUE, msg, mGeckoChild, 0, deltaZ);
+  [self convertGenericCocoaEvent:anEvent toGeckoEvent:&geckoEvent];
+
+  // Send the event.
+  mGeckoChild->DispatchWindowEvent(geckoEvent);
+
+  // Keep track of the cumulative magnification for the final "magnify" event.
+  mCumulativeMagnification += deltaZ;
+  
+  NS_OBJC_END_TRY_ABORT_BLOCK;
+}
+
+
+- (void)rotateWithEvent:(NSEvent *)anEvent
+{
+  NS_OBJC_BEGIN_TRY_ABORT_BLOCK;
+
+  if (!anEvent || !mGeckoChild)
+    return;
+
+  nsAutoRetainCocoaObject kungFuDeathGrip(self);
+
+  float rotation = [anEvent rotation];
+
+  PRUint32 msg;
+  switch (mGestureState) {
+  case eGestureState_StartGesture:
+    msg = NS_SIMPLE_GESTURE_ROTATE_START;
+    mGestureState = eGestureState_RotateGesture;
+    break;
+
+  case eGestureState_RotateGesture:
+    msg = NS_SIMPLE_GESTURE_ROTATE_UPDATE;
+    break;
+
+  case eGestureState_None:
+  case eGestureState_MagnifyGesture:
+  default:
+    return;
+  }
+
+  // Setup the event.
+  nsSimpleGestureEvent geckoEvent(PR_TRUE, msg, mGeckoChild, 0, 0.0);
+  [self convertGenericCocoaEvent:anEvent toGeckoEvent:&geckoEvent];
+  geckoEvent.delta = -rotation;
+  if (rotation > 0.0) {
+    geckoEvent.direction = nsIDOMSimpleGestureEvent::DIRECTION_LEFT;
+  } else {
+    geckoEvent.direction = nsIDOMSimpleGestureEvent::DIRECTION_RIGHT;
+  }
+
+  // Send the event.
+  mGeckoChild->DispatchWindowEvent(geckoEvent);
+
+  // Keep track of the cumulative rotation for the final "rotate" event.
+  mCumulativeRotation += rotation;
+
+  NS_OBJC_END_TRY_ABORT_BLOCK;
+}
+
+
+- (void)endGestureWithEvent:(NSEvent *)anEvent
+{
+  NS_OBJC_BEGIN_TRY_ABORT_BLOCK;
+
+  if (!anEvent || !mGeckoChild) {
+    // Clear the gestures state if we cannot send an event.
+    mGestureState = eGestureState_None;
+    mCumulativeMagnification = 0.0;
+    mCumulativeRotation = 0.0;
+    return;
+  }
+
+  nsAutoRetainCocoaObject kungFuDeathGrip(self);
+
+  switch (mGestureState) {
+  case eGestureState_MagnifyGesture:
+    {
+      // Setup the "magnify" event.
+      nsSimpleGestureEvent geckoEvent(PR_TRUE, NS_SIMPLE_GESTURE_MAGNIFY,
+                                      mGeckoChild, 0, mCumulativeMagnification);
+      [self convertGenericCocoaEvent:anEvent toGeckoEvent:&geckoEvent];
+
+      // Send the event.
+      mGeckoChild->DispatchWindowEvent(geckoEvent);
+    }
+    break;
+
+  case eGestureState_RotateGesture:
+    {
+      // Setup the "rotate" event.
+      nsSimpleGestureEvent geckoEvent(PR_TRUE, NS_SIMPLE_GESTURE_ROTATE, mGeckoChild, 0, 0.0);
+      [self convertGenericCocoaEvent:anEvent toGeckoEvent:&geckoEvent];
+      geckoEvent.delta = -mCumulativeRotation;
+      if (mCumulativeRotation > 0.0) {
+        geckoEvent.direction = nsIDOMSimpleGestureEvent::DIRECTION_LEFT;
+      } else {
+        geckoEvent.direction = nsIDOMSimpleGestureEvent::DIRECTION_RIGHT;
+      }
+
+      // Send the event.
+      mGeckoChild->DispatchWindowEvent(geckoEvent);
+    }
+    break;
+
+  case eGestureState_None:
+  case eGestureState_StartGesture:
+  default:
+    break;
+  }
+
+  // Clear the gestures state.
+  mGestureState = eGestureState_None;
+  mCumulativeMagnification = 0.0;
+  mCumulativeRotation = 0.0;
+
+  NS_OBJC_END_TRY_ABORT_BLOCK;
 }
 
 
