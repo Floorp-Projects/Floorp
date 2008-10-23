@@ -2528,7 +2528,7 @@ nsGenericElement::BindToTree(nsIDocument* aDocument, nsIContent* aParent,
   NS_ASSERTION(!aBindingParent || IsRootOfNativeAnonymousSubtree() ||
                !HasFlag(NODE_IS_IN_ANONYMOUS_SUBTREE) ||
                aBindingParent->IsInNativeAnonymousSubtree(),
-               "Trying to re-bind content from native anonymous subtree to"
+               "Trying to re-bind content from native anonymous subtree to "
                "non-native anonymous parent!");
   if (IsRootOfNativeAnonymousSubtree() ||
       aParent && aParent->IsInNativeAnonymousSubtree()) {
