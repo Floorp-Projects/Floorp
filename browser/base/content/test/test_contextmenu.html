@@ -337,12 +337,10 @@ function startTest() {
 // The frame causes an extra menu item, and prevents running the test
 // standalone (ie, clicking the test name in the Mochitest window) to see
 // success/failure messages.
-// XXX Disable test to diagnose cause of other test failures.
-todo(false, "Test disabled");
-//var subwindow = window.open("./subtst_contextmenu.html", "contextmenu-subtext", "width=600,height=700");
-//subwindow.onload = startTest;
+var subwindow = window.open("./subtst_contextmenu.html", "contextmenu-subtext", "width=600,height=700");
+subwindow.onload = startTest;
 
-//SimpleTest.waitForExplicitFinish();
+SimpleTest.waitForExplicitFinish();
 </script>
 </pre>
 </body>
