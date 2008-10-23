@@ -83,7 +83,14 @@ static const char* const sEventNames[] = {
   "canshowcurrentframe", "canplay", "canplaythrough", "ratechange",
   "durationchange", "volumechange",
 #endif // MOZ_MEDIA
-  "MozAfterPaint"
+  "MozAfterPaint",
+  "MozSwipeGesture",
+  "MozMagnifyGestureStart",
+  "MozMagnifyGestureUpdate",
+  "MozMagnifyGesture",
+  "MozRotateGestureStart",
+  "MozRotateGestureUpdate",
+  "MozRotateGesture"
 };
 
 static char *sPopupAllowedEvents;
@@ -650,6 +657,22 @@ nsDOMEvent::SetEventType(const nsAString& aEventTypeArg)
     if (atom == nsGkAtoms::onMozAfterPaint)
       mEvent->message = NS_AFTERPAINT;
   }
+  else if (mEvent->eventStructType == NS_SIMPLE_GESTURE_EVENT) {
+    if (atom == nsGkAtoms::onMozSwipeGesture)
+      mEvent->message = NS_SIMPLE_GESTURE_SWIPE;
+    else if (atom == nsGkAtoms::onMozMagnifyGestureStart)
+      mEvent->message = NS_SIMPLE_GESTURE_MAGNIFY_START;
+    else if (atom == nsGkAtoms::onMozMagnifyGestureUpdate)
+      mEvent->message = NS_SIMPLE_GESTURE_MAGNIFY_UPDATE;
+    else if (atom == nsGkAtoms::onMozMagnifyGesture)
+      mEvent->message = NS_SIMPLE_GESTURE_MAGNIFY;
+    else if (atom == nsGkAtoms::onMozRotateGestureStart)
+      mEvent->message = NS_SIMPLE_GESTURE_ROTATE_START;
+    else if (atom == nsGkAtoms::onMozRotateGestureUpdate)
+      mEvent->message = NS_SIMPLE_GESTURE_ROTATE_UPDATE;
+    else if (atom == nsGkAtoms::onMozRotateGesture)
+      mEvent->message = NS_SIMPLE_GESTURE_ROTATE;
+  }
 
   if (mEvent->message == NS_USER_DEFINED_EVENT)
     mEvent->userType = atom;
@@ -970,6 +993,22 @@ NS_METHOD nsDOMEvent::DuplicatePrivateData()
       newEvent =
         new nsNotifyPaintEvent(PR_FALSE, msg,
                                event->sameDocRegion, event->crossDocRegion);
+      break;
+    }
+    case NS_SIMPLE_GESTURE_EVENT:
+    {
+      nsSimpleGestureEvent* oldSimpleGestureEvent = static_cast<nsSimpleGestureEvent*>(mEvent);
+      nsSimpleGestureEvent* simpleGestureEvent = 
+        new nsSimpleGestureEvent(PR_FALSE, msg, nsnull, 0, 0.0);
+      NS_ENSURE_TRUE(simpleGestureEvent, NS_ERROR_OUT_OF_MEMORY);
+      isInputEvent = PR_TRUE;
+      simpleGestureEvent->direction = oldSimpleGestureEvent->direction;
+      simpleGestureEvent->delta = oldSimpleGestureEvent->delta;
+      simpleGestureEvent->isAlt = oldSimpleGestureEvent->isAlt;
+      simpleGestureEvent->isControl = oldSimpleGestureEvent->isControl;
+      simpleGestureEvent->isShift = oldSimpleGestureEvent->isShift;
+      simpleGestureEvent->isMeta = oldSimpleGestureEvent->isMeta;
+      newEvent = simpleGestureEvent;
       break;
     }
     default:
@@ -1471,6 +1510,20 @@ const char* nsDOMEvent::GetEventName(PRUint32 aEventType)
 #endif
   case NS_AFTERPAINT:
     return sEventNames[eDOMEvents_afterpaint];
+  case NS_SIMPLE_GESTURE_SWIPE:
+    return sEventNames[eDOMEvents_MozSwipeGesture];
+  case NS_SIMPLE_GESTURE_MAGNIFY_START:
+    return sEventNames[eDOMEvents_MozMagnifyGestureStart];
+  case NS_SIMPLE_GESTURE_MAGNIFY_UPDATE:
+    return sEventNames[eDOMEvents_MozMagnifyGestureUpdate];
+  case NS_SIMPLE_GESTURE_MAGNIFY:
+    return sEventNames[eDOMEvents_MozMagnifyGesture];
+  case NS_SIMPLE_GESTURE_ROTATE_START:
+    return sEventNames[eDOMEvents_MozRotateGestureStart];
+  case NS_SIMPLE_GESTURE_ROTATE_UPDATE:
+    return sEventNames[eDOMEvents_MozRotateGestureUpdate];
+  case NS_SIMPLE_GESTURE_ROTATE:
+    return sEventNames[eDOMEvents_MozRotateGesture];
   default:
     break;
   }
