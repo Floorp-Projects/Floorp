@@ -2125,8 +2125,10 @@ js_FastNewDate(JSContext* cx, JSObject* proto)
         return NULL;
     *date = date_now_tn(cx);
     obj->fslots[JSSLOT_UTC_TIME] = DOUBLE_TO_JSVAL(date);
-    obj->fslots[JSSLOT_LOCAL_TIME] = DOUBLE_TO_JSVAL(cx->runtime->jsNaN);;
-
+    obj->fslots[JSSLOT_LOCAL_TIME] = DOUBLE_TO_JSVAL(cx->runtime->jsNaN);
+    for (unsigned i = JSSLOT_LOCAL_TIME + 1; i != JS_INITIAL_NSLOTS; ++i)
+        obj->fslots[i] = JSVAL_VOID;
+    
     JS_ASSERT(!clasp->getObjectOps);
     JS_ASSERT(proto->map->ops == &js_ObjectOps);
     obj->map = js_HoldObjectMap(cx, proto->map);
