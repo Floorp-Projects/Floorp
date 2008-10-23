@@ -78,13 +78,6 @@ ifdef NARCISSUS
 DEFINES += -DNARCISSUS
 endif
 
-#ifdef INTEL_CC
-CXX = /opt/intel/Compiler/11.0/054/bin/ia32/icpc
-CC = $(CXX)
-CCC = $(CXX)
-CFLAGS += -m32 -w
-#endif
-
 # Look in OBJDIR to find jsautocfg.h and jsautokw.h
 INCLUDES   += -I. -I$(OBJDIR)
 
