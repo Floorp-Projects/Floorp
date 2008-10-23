@@ -493,3 +493,48 @@ nsDOMWindowUtils::ProcessUpdates()
   batch.EndUpdateViewBatch(NS_VMREFRESH_IMMEDIATE);
   return NS_OK;
 }
+
+NS_IMETHODIMP
+nsDOMWindowUtils::SendSimpleGestureEvent(const nsAString& aType,
+                                         PRUint32 aDirection,
+                                         PRFloat64 aDelta,
+                                         PRInt32 aModifiers)
+{
+  PRBool hasCap = PR_FALSE;
+  if (NS_FAILED(nsContentUtils::GetSecurityManager()->IsCapabilityEnabled("UniversalXPConnect", &hasCap))
+      || !hasCap)
+    return NS_ERROR_DOM_SECURITY_ERR;
+
+  // get the widget to send the event to
+  nsCOMPtr<nsIWidget> widget = GetWidget();
+  if (!widget)
+    return NS_ERROR_FAILURE;
+
+  PRInt32 msg;
+  if (aType.EqualsLiteral("MozSwipeGesture"))
+    msg = NS_SIMPLE_GESTURE_SWIPE;
+  else if (aType.EqualsLiteral("MozMagnifyGestureStart"))
+    msg = NS_SIMPLE_GESTURE_MAGNIFY_START;
+  else if (aType.EqualsLiteral("MozMagnifyGestureUpdate"))
+    msg = NS_SIMPLE_GESTURE_MAGNIFY_UPDATE;
+  else if (aType.EqualsLiteral("MozMagnifyGesture"))
+    msg = NS_SIMPLE_GESTURE_MAGNIFY;
+  else if (aType.EqualsLiteral("MozRotateGestureStart"))
+    msg = NS_SIMPLE_GESTURE_ROTATE_START;
+  else if (aType.EqualsLiteral("MozRotateGestureUpdate"))
+    msg = NS_SIMPLE_GESTURE_ROTATE_UPDATE;
+  else if (aType.EqualsLiteral("MozRotateGesture"))
+    msg = NS_SIMPLE_GESTURE_ROTATE;
+  else
+    return NS_ERROR_FAILURE;
+ 
+  nsSimpleGestureEvent event(PR_TRUE, msg, widget, aDirection, aDelta);
+  event.isShift = (aModifiers & nsIDOMNSEvent::SHIFT_MASK) ? PR_TRUE : PR_FALSE;
+  event.isControl = (aModifiers & nsIDOMNSEvent::CONTROL_MASK) ? PR_TRUE : PR_FALSE;
+  event.isAlt = (aModifiers & nsIDOMNSEvent::ALT_MASK) ? PR_TRUE : PR_FALSE;
+  event.isMeta = (aModifiers & nsIDOMNSEvent::META_MASK) ? PR_TRUE : PR_FALSE;
+  event.time = PR_IntervalNow();
+
+  nsEventStatus status;
+  return widget->DispatchEvent(&event, status);
+}
