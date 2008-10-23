@@ -112,7 +112,7 @@
                      label="&clear.label;" accesskey="&clear.accesskey;"/>
     </toolbar>
   
-    <toolbar class="chromeclass-toolbar" id="ToolbarEval" align="center">
+    <toolbar class="chromeclass-toolbar" id="ToolbarEval" align="center" nowindowdrag="true">
       <label value="&codeEval.label;" accesskey="&codeEval.accesskey;" control="TextboxEval"/>
       <textbox id="TextboxEval" class="toolbar" value="" onkeypress="onEvalKeyPress(event)" flex="1"/>
       <toolbarbutton id="ButtonEval" label="&evaluate.label;"

@@ -2510,6 +2510,7 @@ static JSFunctionSpec string_methods[] = {
     /* Java-like methods. */
     JS_FN(js_toString_str,     str_toString,          0,JSFUN_THISP_STRING),
     JS_FN(js_valueOf_str,      str_toString,          0,JSFUN_THISP_STRING),
+    JS_FN(js_toJSON_str,       str_toString,          0,JSFUN_THISP_STRING),
     JS_TN("substring",         str_substring,         2,GENERIC_PRIMITIVE, str_substring_trcinfo),
     JS_TN("toLowerCase",       str_toLowerCase,       0,GENERIC_PRIMITIVE, str_toLowerCase_trcinfo),
     JS_TN("toUpperCase",       str_toUpperCase,       0,GENERIC_PRIMITIVE, str_toUpperCase_trcinfo),

@@ -44,13 +44,15 @@ include $(DEPTH)/config/autoconf.mk
 MODULE		= content
 
 EXPORTS		= \
-		nsVideoDecoder.h \
+		nsMediaDecoder.h \
 		$(NULL)
 
 ifdef MOZ_OGG
 EXPORTS		+= \
 		nsAudioStream.h \
 		nsChannelReader.h \
+		nsChannelToPipeListener.h \
+		nsMediaStream.h \
 		nsOggDecoder.h \
 		$(NULL)
 endif

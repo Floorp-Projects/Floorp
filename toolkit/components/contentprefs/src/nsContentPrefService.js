@@ -19,6 +19,7 @@
  *
  * Contributor(s):
  *   Myk Melez <myk@mozilla.org>
+ *   Ehsan Akhgari <ehsan.akhgari@gmail.com>
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -138,8 +139,21 @@ ContentPrefService.prototype = {
   setPref: function ContentPrefService_setPref(aURI, aName, aValue) {
     // If the pref is already set to the value, there's nothing more to do.
     var currentValue = this.getPref(aURI, aName);
-    if (typeof currentValue != "undefined" && currentValue == aValue)
-      return;
+    if (typeof currentValue != "undefined") {
+      if (currentValue == aValue)
+        return;
+    }
+    else {
+      // If we are in private browsing mode, refuse to set new prefs
+      var inPrivateBrowsing = false;
+      try { // The Private Browsing service might not be available.
+        var pbs = Cc["@mozilla.org/privatebrowsing;1"].
+                  getService(Ci.nsIPrivateBrowsingService);
+        inPrivateBrowsing = pbs.privateBrowsingEnabled;
+      } catch (e) {}
+      if (inPrivateBrowsing)
+        return;
+    }
 
     var settingID = this._selectSettingID(aName) || this._insertSetting(aName);
     var group, groupID, prefID;

@@ -75,7 +75,6 @@ NS_NewSVGForeignObjectFrame(nsIPresShell   *aPresShell,
 
 nsSVGForeignObjectFrame::nsSVGForeignObjectFrame(nsStyleContext* aContext)
   : nsSVGForeignObjectFrameBase(aContext),
-    mPropagateTransform(PR_TRUE),
     mInReflow(PR_FALSE)
 {
   AddStateBits(NS_FRAME_REFLOW_ROOT |
@@ -230,7 +229,7 @@ GetTransformedRegion(float aX, float aY, float aWidth, float aHeight,
 
 NS_IMETHODIMP
 nsSVGForeignObjectFrame::PaintSVG(nsSVGRenderState *aContext,
-                                  nsIntRect *aDirtyRect)
+                                  const nsIntRect *aDirtyRect)
 {
   if (IsDisabled())
     return NS_OK;
@@ -375,8 +374,6 @@ nsSVGForeignObjectFrame::UpdateCoveredRegion()
   // we should not unconditionally reflow in AttributeChanged
   mRect = GetTransformedRegion(x, y, w, h, ctm, PresContext());
 
-  nsSVGUtils::UpdateFilterRegion(this);
-
   return NS_OK;
 }
 
@@ -483,21 +480,6 @@ nsSVGForeignObjectFrame::GetMatrixPropagation()
 }
 
 NS_IMETHODIMP
-nsSVGForeignObjectFrame::SetOverrideCTM(nsIDOMSVGMatrix *aCTM)
-{
-  mOverrideCTM = aCTM;
-  return NS_OK;
-}
-
-already_AddRefed<nsIDOMSVGMatrix>
-nsSVGForeignObjectFrame::GetOverrideCTM()
-{
-  nsIDOMSVGMatrix *matrix = mOverrideCTM.get();
-  NS_IF_ADDREF(matrix);
-  return matrix;
-}
-
-NS_IMETHODIMP
 nsSVGForeignObjectFrame::GetBBox(nsIDOMSVGRect **_retval)
 {
   *_retval = nsnull;
@@ -544,12 +526,7 @@ nsSVGForeignObjectFrame::GetCanvasTM()
 {
   if (!GetMatrixPropagation()) {
     nsIDOMSVGMatrix *retval;
-    if (mOverrideCTM) {
-      retval = mOverrideCTM;
-      NS_ADDREF(retval);
-    } else {
-      NS_NewSVGMatrix(&retval);
-    }
+    NS_NewSVGMatrix(&retval);
     return retval;
   }
 

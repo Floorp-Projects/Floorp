@@ -66,6 +66,8 @@ interface nsIChannel;
  *          a cookie was changed. the subject is the new cookie.
  *          "cleared"
  *          the entire cookie list was cleared. the subject is null.
+ *          "reload"
+ *          the entire cookie list should be reloaded.  the subject is null.
  *
  * topic  : "cookie-rejected"
  *          broadcast whenever a cookie was rejected from being set as a

@@ -25,6 +25,8 @@
  *   Asaf Romano <mano@mozilla.com>
  *   Marco Bonardo <mak77@bonardo.net>
  *   Edward Lee <edward.lee@engineering.uiuc.edu>
+ *   Michael Ventnor <m.ventnor@gmail.com>
+ *   Ehsan Akhgari <ehsan.akhgari@gmail.com>
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -367,7 +369,8 @@ nsNavHistory::nsNavHistory() : mBatchLevel(0),
                                mExpireDaysMax(0),
                                mExpireSites(0),
                                mNumVisitsForFrecency(10),
-                               mTagsFolder(-1)
+                               mTagsFolder(-1),
+                               mInPrivateBrowsing(PRIVATEBROWSING_NOTINITED)
 {
 #ifdef LAZY_ADD
   mLazyTimerSet = PR_TRUE;
@@ -515,6 +518,7 @@ nsNavHistory::Init()
   observerService->AddObserver(this, gQuitApplicationMessage, PR_FALSE);
   observerService->AddObserver(this, gXpcomShutdown, PR_FALSE);
   observerService->AddObserver(this, gAutoCompleteFeedback, PR_FALSE);
+  observerService->AddObserver(this, NS_PRIVATE_BROWSING_SWITCH_TOPIC, PR_FALSE);
 
   /*****************************************************************************
    *** IMPORTANT NOTICE!
@@ -798,6 +802,11 @@ nsNavHistory::InitDB(PRInt16 *aMadeChanges)
   // http://www.sqlite.org/pragma.html#pragma_locking_mode
   rv = mDBConn->ExecuteSimpleSQL(
     NS_LITERAL_CSTRING("PRAGMA locking_mode = EXCLUSIVE"));
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  // We use the TRUNCATE journal mode to reduce the number of fsyncs
+  rv = mDBConn->ExecuteSimpleSQL(
+    NS_LITERAL_CSTRING("PRAGMA journal_mode = TRUNCATE"));
   NS_ENSURE_SUCCESS(rv, rv);
 
   // moz_places
@@ -2440,6 +2449,12 @@ nsNavHistory::CanAddURI(nsIURI* aURI, PRBool* canAdd)
   NS_ASSERTION(NS_IsMainThread(), "This can only be called on the main thread");
 
   NS_ENSURE_ARG_POINTER(aURI);
+
+  // If the user is in private browsing mode, don't add any entry.
+  if (InPrivateBrowsingMode()) {
+    *canAdd = PR_FALSE;
+    return NS_OK;
+  }
 
   nsCAutoString scheme;
   nsresult rv = aURI->GetScheme(scheme);
@@ -4700,6 +4715,7 @@ nsNavHistory::Observe(nsISupports *aSubject, const char *aTopic,
     nsCOMPtr<nsIObserverService> observerService =
       do_GetService("@mozilla.org/observer-service;1", &rv);
     NS_ENSURE_SUCCESS(rv, rv);
+    observerService->RemoveObserver(this, NS_PRIVATE_BROWSING_SWITCH_TOPIC);
     observerService->RemoveObserver(this, gAutoCompleteFeedback);
     observerService->RemoveObserver(this, gXpcomShutdown);
     observerService->RemoveObserver(this, gQuitApplicationMessage);
@@ -4744,6 +4760,12 @@ nsNavHistory::Observe(nsISupports *aSubject, const char *aTopic,
     if (oldDaysMin != mExpireDaysMin || oldDaysMax != mExpireDaysMax ||
         oldVisits != mExpireSites)
       mExpire.OnExpirationChanged();
+  } else if (nsCRT::strcmp(aTopic, NS_PRIVATE_BROWSING_SWITCH_TOPIC) == 0) {
+    if (NS_LITERAL_STRING(NS_PRIVATE_BROWSING_ENTER).Equals(aData)) {
+      mInPrivateBrowsing = PR_TRUE;
+    } else if (NS_LITERAL_STRING(NS_PRIVATE_BROWSING_LEAVE).Equals(aData)) {
+      mInPrivateBrowsing = PR_FALSE;
+    }
   }
 
   return NS_OK;

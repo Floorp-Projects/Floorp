@@ -459,9 +459,8 @@ nsHTMLTextFieldAccessible::GetState(PRUint32 *aState, PRUint32 *aExtraState)
   else {
     nsCOMPtr<nsIAccessible> parent;
     GetParent(getter_AddRefs(parent));
-    if (parent && Role(parent) == nsIAccessibleRole::ROLE_AUTOCOMPLETE) {
+    if (nsAccUtils::Role(parent) == nsIAccessibleRole::ROLE_AUTOCOMPLETE)
       *aState |= nsIAccessibleStates::STATE_HASPOPUP;
-    }
   }
 
   if (content->HasAttr(kNameSpaceID_None, nsAccessibilityAtoms::readonly)) {
@@ -677,8 +676,7 @@ nsHTMLLegendAccessible::GetAccessibleRelated(PRUint32 aRelationType,
       return NS_ERROR_FAILURE;  // Node already shut down
     }
     nsCOMPtr<nsIAccessible> groupboxAccessible = GetParent();
-    if (groupboxAccessible &&
-        Role(groupboxAccessible) == nsIAccessibleRole::ROLE_GROUPING) {
+    if (nsAccUtils::Role(groupboxAccessible) == nsIAccessibleRole::ROLE_GROUPING) {
       nsCOMPtr<nsIAccessible> testLabelAccessible;
       groupboxAccessible->GetAccessibleRelated(nsIAccessibleRelation::RELATION_LABELLED_BY,
                                                getter_AddRefs(testLabelAccessible));

@@ -79,12 +79,6 @@ public:
   }
 #endif // DEBUG
 
-  // nsISVGChildFrame interface:
-  NS_IMETHOD PaintSVG(gfxContext* aContext)
-  {
-    return NS_OK;  // override - our frames don't directly render
-  }
-
 private:
 
   // Parse our xlink:href and set up our nsSVGPaintingProperty if we

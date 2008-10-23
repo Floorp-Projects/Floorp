@@ -114,7 +114,7 @@ nsSVGPathGeometryFrame::GetType() const
 
 NS_IMETHODIMP
 nsSVGPathGeometryFrame::PaintSVG(nsSVGRenderState *aContext,
-                                 nsIntRect *aDirtyRect)
+                                 const nsIntRect *aDirtyRect)
 {
   if (!GetStyleVisibility()->IsVisible())
     return NS_OK;
@@ -274,7 +274,6 @@ nsSVGPathGeometryFrame::UpdateCoveredRegion()
   // Add in markers
   mRect = GetCoveredRegion();
 
-  nsSVGUtils::UpdateFilterRegion(this);
   return NS_OK;
 }
 
@@ -338,21 +337,6 @@ nsSVGPathGeometryFrame::GetMatrixPropagation()
 }
 
 NS_IMETHODIMP
-nsSVGPathGeometryFrame::SetOverrideCTM(nsIDOMSVGMatrix *aCTM)
-{
-  mOverrideCTM = aCTM;
-  return NS_OK;
-}
-
-already_AddRefed<nsIDOMSVGMatrix>
-nsSVGPathGeometryFrame::GetOverrideCTM()
-{
-  nsIDOMSVGMatrix *matrix = mOverrideCTM.get();
-  NS_IF_ADDREF(matrix);
-  return matrix;
-}
-
-NS_IMETHODIMP
 nsSVGPathGeometryFrame::GetBBox(nsIDOMSVGRect **_retval)
 {
   gfxContext context(nsSVGUtils::GetThebesComputationalSurface());
@@ -373,11 +357,6 @@ nsSVGPathGeometryFrame::GetCanvasTM(nsIDOMSVGMatrix * *aCTM)
   *aCTM = nsnull;
 
   if (!GetMatrixPropagation()) {
-    if (mOverrideCTM) {
-      *aCTM = mOverrideCTM;
-      NS_ADDREF(*aCTM);
-      return NS_OK;
-    }
     return NS_NewSVGMatrix(aCTM);
   }
 

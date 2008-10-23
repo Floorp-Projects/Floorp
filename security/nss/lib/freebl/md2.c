@@ -100,7 +100,7 @@ MD2_Hash(unsigned char *dest, const char *src)
 		return SECFailure;
 	}
 	MD2_Begin(cx);
-	MD2_Update(cx, (unsigned char *)src, PL_strlen(src));
+	MD2_Update(cx, (const unsigned char *)src, PORT_Strlen(src));
 	MD2_End(cx, dest, &len, MD2_DIGEST_LEN);
 	MD2_DestroyContext(cx, PR_TRUE);
 	return SECSuccess;

@@ -359,6 +359,8 @@ retry:
 	    if (!exists && symlink(name, toname) < 0) {
 		if (errno == EEXIST) {
 		    fprintf(stderr, "symlink creation race: %s\n", toname);
+                    fail("symlink was attempted in working directory %s "
+                         "from %s to %s.\n", cwd, name, toname);
 		    goto retry;
 		}
 		diagnosePath(toname);

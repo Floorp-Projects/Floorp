@@ -408,7 +408,6 @@ enum nsDOMClassInfoID {
   eDOMClassInfo_XULCommandEvent_id,
   eDOMClassInfo_CommandEvent_id,
   eDOMClassInfo_OfflineResourceList_id,
-  eDOMClassInfo_LoadStatusList_id,
   eDOMClassInfo_LoadStatus_id,
   eDOMClassInfo_LoadStatusEvent_id,
 
@@ -452,6 +451,8 @@ enum nsDOMClassInfoID {
   eDOMClassInfo_DataTransfer_id,
 
   eDOMClassInfo_NotifyPaintEvent_id,
+
+  eDOMClassInfo_SimpleGestureEvent_id,
 
   // This one better be the last one in this list
   eDOMClassInfoIDCount

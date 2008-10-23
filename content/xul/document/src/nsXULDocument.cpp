@@ -1315,14 +1315,33 @@ nsXULDocument::Persist(const nsAString& aID,
 }
 
 
+PRBool
+nsXULDocument::IsCapabilityEnabled(const char* aCapabilityLabel)
+{
+    nsresult rv;
+
+    // NodePrincipal is guarantied to be non-null
+    PRBool enabled = PR_FALSE;
+    rv = NodePrincipal()->IsCapabilityEnabled(aCapabilityLabel, nsnull, &enabled);
+    if (NS_FAILED(rv))
+        return PR_FALSE;
+ 
+    return enabled;
+}
+
+
 nsresult
 nsXULDocument::Persist(nsIContent* aElement, PRInt32 aNameSpaceID,
                        nsIAtom* aAttribute)
 {
+    // For non-chrome documents, persistance is simply broken
+    if (!IsCapabilityEnabled("UniversalBrowserWrite"))
+        return NS_ERROR_NOT_AVAILABLE;
+
     // First make sure we _have_ a local store to stuff the persisted
     // information into. (We might not have one if profile information
     // hasn't been loaded yet...)
-    if (! mLocalStore)
+    if (!mLocalStore)
         return NS_OK;
 
     nsresult rv;
@@ -1710,10 +1729,7 @@ nsXULDocument::AddSubtreeToDocument(nsIContent* aElement)
     if (NS_FAILED(rv)) return rv;
 
     // Recurse to children
-    nsXULElement *xulcontent = nsXULElement::FromContent(aElement);
-
-    PRUint32 count =
-        xulcontent ? xulcontent->PeekChildCount() : aElement->GetChildCount();
+    PRUint32 count = aElement->GetChildCount();
 
     while (count-- > 0) {
         rv = AddSubtreeToDocument(aElement->GetChildAt(count));
@@ -2119,13 +2135,26 @@ nsXULDocument::PrepareToLoadPrototype(nsIURI* aURI, const char* aCommand,
 nsresult
 nsXULDocument::ApplyPersistentAttributes()
 {
+    // For non-chrome documents, persistance is simply broken
+    if (!IsCapabilityEnabled("UniversalBrowserRead"))
+        return NS_ERROR_NOT_AVAILABLE;
+
     // Add all of the 'persisted' attributes into the content
     // model.
-    if (! mLocalStore)
+    if (!mLocalStore)
         return NS_OK;
 
     mApplyingPersistedAttrs = PR_TRUE;
+    ApplyPersistentAttributesInternal();
+    mApplyingPersistedAttrs = PR_FALSE;
 
+    return NS_OK;
+}
+
+
+nsresult 
+nsXULDocument::ApplyPersistentAttributesInternal()
+{
     nsCOMArray<nsIContent> elements;
 
     nsCAutoString docurl;
@@ -2171,8 +2200,6 @@ nsXULDocument::ApplyPersistentAttributes()
 
         ApplyPersistentAttributesToElements(resource, elements);
     }
-
-    mApplyingPersistedAttrs = PR_FALSE;
 
     return NS_OK;
 }
@@ -3081,8 +3108,7 @@ nsXULDocument::ResumeWalk()
     rv = ResolveForwardReferences();
     if (NS_FAILED(rv)) return rv;
 
-    rv = ApplyPersistentAttributes();
-    if (NS_FAILED(rv)) return rv;
+    ApplyPersistentAttributes();
 
     mStillWalking = PR_FALSE;
     if (mPendingSheets == 0) {
@@ -3757,17 +3783,7 @@ nsXULDocument::CreateTemplateBuilder(nsIContent* aElement)
             return NS_ERROR_FAILURE;
 
         builder->Init(aElement);
-
-        nsXULElement *xulContent = nsXULElement::FromContent(aElement);
-        if (xulContent) {
-            // Mark the XUL element as being lazy, so the template builder
-            // will run when layout first asks for these nodes.
-            xulContent->SetLazyState(nsXULElement::eChildrenMustBeRebuilt);
-        }
-        else {
-            // Force construction of immediate template sub-content _now_.
-            builder->CreateContents(aElement, PR_FALSE);
-        }
+        builder->CreateContents(aElement, PR_FALSE);
     }
 
     return NS_OK;

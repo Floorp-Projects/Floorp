@@ -166,6 +166,19 @@ LoginManagerPrompter.prototype = {
     },
 
 
+    // Whether we are in private browsing mode
+    get _inPrivateBrowsing() {
+      // The Private Browsing service might not be available.
+      try {
+        var pbs = Cc["@mozilla.org/privatebrowsing;1"].
+                  getService(Ci.nsIPrivateBrowsingService);
+        return pbs.privateBrowsingEnabled;
+      } catch (e) {
+        return false;
+      }
+    },
+
+
     /*
      * log
      *
@@ -227,7 +240,11 @@ LoginManagerPrompter.prototype = {
 
         // If hostname is null, we can't save this login.
         if (hostname) {
-            var canRememberLogin = (aSavePassword ==
+            var canRememberLogin;
+            if (this._inPrivateBrowsing)
+                canRememberLogin = false;
+            else
+                canRememberLogin = (aSavePassword ==
                                     Ci.nsIAuthPrompt.SAVE_PASSWORD_PERMANENTLY) &&
                                    this._pwmgr.getLoginSavingEnabled(hostname);
 
@@ -323,7 +340,7 @@ LoginManagerPrompter.prototype = {
         var [hostname, realm, username] = this._getRealmInfo(aPasswordRealm);
 
         // If hostname is null, we can't save this login.
-        if (hostname) {
+        if (hostname && !this._inPrivateBrowsing) {
           var canRememberLogin = (aSavePassword ==
                                   Ci.nsIAuthPrompt.SAVE_PASSWORD_PERMANENTLY) &&
                                  this._pwmgr.getLoginSavingEnabled(hostname);
@@ -448,6 +465,8 @@ LoginManagerPrompter.prototype = {
             }
 
             var canRememberLogin = this._pwmgr.getLoginSavingEnabled(hostname);
+            if (this._inPrivateBrowsing)
+              canRememberLogin = false;
         
             // if checkboxLabel is null, the checkbox won't be shown at all.
             if (canRememberLogin && !notifyBox)

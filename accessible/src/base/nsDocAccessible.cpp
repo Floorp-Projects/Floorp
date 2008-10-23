@@ -1040,7 +1040,7 @@ nsDocAccessible::AttributeChanged(nsIDocument *aDocument, nsIContent* aContent,
     nsCOMPtr<nsIAccessible> focusedAccessible;
     GetAccService()->GetAccessibleFor(targetNode, getter_AddRefs(focusedAccessible));
     if (focusedAccessible) {
-      gLastFocusedAccessiblesState = State(focusedAccessible);
+      gLastFocusedAccessiblesState = nsAccUtils::State(focusedAccessible);
     }
   }
 }
@@ -1078,9 +1078,8 @@ nsDocAccessible::AttributeChangedImpl(nsIContent* aContent, PRInt32 aNameSpaceID
 
   nsCOMPtr<nsIDOMNode> targetNode(do_QueryInterface(aContent));
   NS_ASSERTION(targetNode, "No node for attr modified");
-  if (!targetNode || !IsNodeRelevant(targetNode)) {
+  if (!targetNode || !nsAccUtils::IsNodeRelevant(targetNode))
     return;
-  }
 
   // Since we're in synchronous code, we can store whether the current attribute
   // change is from user input or not. If the attribute change causes an asynchronous
@@ -1140,7 +1139,8 @@ nsDocAccessible::AttributeChangedImpl(nsIContent* aContent, PRInt32 aNameSpaceID
   if (aAttribute == nsAccessibilityAtoms::selected ||
       aAttribute == nsAccessibilityAtoms::aria_selected) {
     // ARIA or XUL selection
-    nsCOMPtr<nsIAccessible> multiSelect = GetMultiSelectFor(targetNode);
+    nsCOMPtr<nsIAccessible> multiSelect =
+      nsAccUtils::GetMultiSelectFor(targetNode);
     // Multi selects use selection_add and selection_remove
     // Single select widgets just mirror event_selection for
     // whatever gets event_focus, which is done in
@@ -1211,7 +1211,7 @@ nsDocAccessible::ARIAAttributeChanged(nsIContent* aContent, nsIAtom* aAttribute)
     // The activedescendant universal property redirects accessible focus events
     // to the element with the id that activedescendant points to
     nsCOMPtr<nsIDOMNode> currentFocus = GetCurrentFocus();
-    if (SameCOMIdentity(GetRoleContent(currentFocus), targetNode)) {
+    if (SameCOMIdentity(nsCoreUtils::GetRoleContent(currentFocus), targetNode)) {
       nsRefPtr<nsRootAccessible> rootAcc = GetRootAccessible();
       if (rootAcc)
         rootAcc->FireAccessibleFocusEvent(nsnull, currentFocus, nsnull, PR_TRUE);
@@ -1245,7 +1245,8 @@ nsDocAccessible::ARIAAttributeChanged(nsIContent* aContent, nsIAtom* aAttribute)
       event->GetAccessible(getter_AddRefs(accessible));
       if (accessible) {
         PRBool wasMixed = (gLastFocusedAccessiblesState & nsIAccessibleStates::STATE_MIXED) != 0;
-        PRBool isMixed  = (State(accessible) & nsIAccessibleStates::STATE_MIXED) != 0;
+        PRBool isMixed  =
+          (nsAccUtils::State(accessible) & nsIAccessibleStates::STATE_MIXED) != 0;
         if (wasMixed != isMixed) {
           nsCOMPtr<nsIAccessibleStateChangeEvent> event =
             new nsAccStateChangeEvent(targetNode,
@@ -1369,7 +1370,7 @@ nsDocAccessible::ParentChainChanged(nsIContent *aContent)
 void
 nsDocAccessible::FireValueChangeForTextFields(nsIAccessible *aPossibleTextFieldAccessible)
 {
-  if (Role(aPossibleTextFieldAccessible) != nsIAccessibleRole::ROLE_ENTRY)
+  if (nsAccUtils::Role(aPossibleTextFieldAccessible) != nsIAccessibleRole::ROLE_ENTRY)
     return;
 
   // Dependent value change event for text changes in textfields
@@ -1483,7 +1484,7 @@ nsDocAccessible::CreateTextChangeEventForNode(nsIAccessible *aContainerAccessibl
       if (!nsCoreUtils::IsAncestorOf(aChangeNode, childNode)) {
         break;  // We only want accessibles with DOM nodes as children of this node
       }
-      length += TextLength(child);
+      length += nsAccUtils::TextLength(child);
       child->GetNextSibling(getter_AddRefs(changeAccessible));
       if (!changeAccessible) {
         break;
@@ -1494,8 +1495,9 @@ nsDocAccessible::CreateTextChangeEventForNode(nsIAccessible *aContainerAccessibl
   else {
     NS_ASSERTION(!changeAccessible || changeAccessible == aAccessibleForChangeNode,
                  "Hypertext is reporting a different accessible for this node");
-    length = TextLength(aAccessibleForChangeNode);
-    if (Role(aAccessibleForChangeNode) == nsIAccessibleRole::ROLE_WHITESPACE) {  // newline
+
+    length = nsAccUtils::TextLength(aAccessibleForChangeNode);
+    if (nsAccUtils::Role(aAccessibleForChangeNode) == nsIAccessibleRole::ROLE_WHITESPACE) {  // newline
       // Don't fire event for the first html:br in an editor.
       nsCOMPtr<nsIEditor> editor;
       textAccessible->GetAssociatedEditor(getter_AddRefs(editor));
@@ -1765,7 +1767,7 @@ void nsDocAccessible::RefreshNodes(nsIDOMNode *aStartNode)
   nsCOMPtr<nsIAccessible> accessible(do_QueryInterface(accessNode));
   if (accessible) {
     // Fire menupopup end if a menu goes away
-    PRUint32 role = Role(accessible);
+    PRUint32 role = nsAccUtils::Role(accessible);
     if (role == nsIAccessibleRole::ROLE_MENUPOPUP) {
       nsCOMPtr<nsIDOMNode> domNode;
       accessNode->GetDOMNode(getter_AddRefs(domNode));

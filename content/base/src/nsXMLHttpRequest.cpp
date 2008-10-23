@@ -143,6 +143,8 @@
 #define NS_BADCERTHANDLER_CONTRACTID \
   "@mozilla.org/content/xmlhttprequest-bad-cert-handler;1"
 
+#define NS_PROGRESS_EVENT_INTERVAL 350
+
 NS_IMPL_CYCLE_COLLECTION_CLASS(nsDOMEventListenerWrapper)
 
 NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION(nsDOMEventListenerWrapper)
@@ -972,7 +974,7 @@ nsAccessControlLRUCache::Clear()
   mTable.Clear();
 }
 
-/* static */ PR_CALLBACK PLDHashOperator
+/* static */ PLDHashOperator
 nsAccessControlLRUCache::RemoveExpiredEntries(const nsACString& aKey,
                                               nsAutoPtr<CacheEntry>& aValue,
                                               void* aUserData)
@@ -1042,7 +1044,11 @@ nsAccessControlLRUCache* nsXMLHttpRequest::sAccessControlCache = nsnull;
 nsXMLHttpRequest::nsXMLHttpRequest()
   : mRequestObserver(nsnull), mState(XML_HTTP_REQUEST_UNINITIALIZED),
     mUploadTransferred(0), mUploadTotal(0), mUploadComplete(PR_TRUE),
-    mErrorLoad(PR_FALSE), mFirstStartRequestSeen(PR_FALSE)
+    mUploadProgress(0), mUploadProgressMax(0),
+    mErrorLoad(PR_FALSE), mTimerIsActive(PR_FALSE),
+    mProgressEventWasDelayed(PR_FALSE),
+    mLoadLengthComputable(PR_FALSE), mLoadTotal(0),
+    mFirstStartRequestSeen(PR_FALSE)
 {
   nsLayoutStatics::AddRef();
 }
@@ -1215,6 +1221,7 @@ NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION_INHERITED(nsXMLHttpRequest)
   NS_INTERFACE_MAP_ENTRY(nsIInterfaceRequestor)
   NS_INTERFACE_MAP_ENTRY(nsISupportsWeakReference)
   NS_INTERFACE_MAP_ENTRY(nsIJSNativeInitializer)
+  NS_INTERFACE_MAP_ENTRY(nsITimerCallback)
   NS_INTERFACE_MAP_ENTRY_CONTENT_CLASSINFO(XMLHttpRequest)
 NS_INTERFACE_MAP_END_INHERITING(nsXHREventTarget)
 
@@ -1487,6 +1494,7 @@ nsXMLHttpRequest::Abort()
     mACGetChannel->Cancel(NS_BINDING_ABORTED);
   }
   mResponseXML = nsnull;
+  PRUint32 responseLength = mResponseBody.Length();
   mResponseBody.Truncate();
   mState |= XML_HTTP_REQUEST_ABORTED;
 
@@ -1498,7 +1506,8 @@ nsXMLHttpRequest::Abort()
 
   if (!(mState & XML_HTTP_REQUEST_SYNCLOOPING)) {
     NS_NAMED_LITERAL_STRING(abortStr, ABORT_STR);
-    DispatchProgressEvent(this, abortStr, PR_FALSE, mResponseBody.Length(), 0);
+    DispatchProgressEvent(this, abortStr, mLoadLengthComputable, responseLength,
+                          mLoadTotal);
     if (mUpload && !mUploadComplete) {
       mUploadComplete = PR_TRUE;
       DispatchProgressEvent(mUpload, abortStr, PR_TRUE, mUploadTransferred,
@@ -2037,7 +2046,7 @@ IsSameOrBaseChannel(nsIRequest* aPossibleBase, nsIChannel* aChannel)
 NS_IMETHODIMP
 nsXMLHttpRequest::OnStartRequest(nsIRequest *request, nsISupports *ctxt)
 {
-  nsresult rv;
+  nsresult rv = NS_OK;
   if (!mFirstStartRequestSeen && mRequestObserver) {
     mFirstStartRequestSeen = PR_TRUE;
     mRequestObserver->OnStartRequest(request, ctxt);
@@ -2179,6 +2188,14 @@ nsXMLHttpRequest::OnStartRequest(nsIRequest *request, nsISupports *ctxt)
     mXMLParserStreamListener = listener;
     rv = mXMLParserStreamListener->OnStartRequest(request, ctxt);
     NS_ENSURE_SUCCESS(rv, rv);
+  }
+
+  // We won't get any progress events anyway if we didn't have progress
+  // events when starting the request - so maybe no need to start timer here.
+  if (NS_SUCCEEDED(rv) &&
+      (mState & XML_HTTP_REQUEST_ASYNC) &&
+      HasListenersFor(NS_LITERAL_STRING(PROGRESS_STR))) {
+    StartProgressEventTimer();
   }
 
   return NS_OK;
@@ -2414,6 +2431,10 @@ nsXMLHttpRequest::Send(nsIVariant *aBody)
   // By default we don't have any upload, so mark upload complete.
   mUploadComplete = PR_TRUE;
   mErrorLoad = PR_FALSE;
+  mLoadLengthComputable = PR_FALSE;
+  mLoadTotal = 0;
+  mUploadProgress = 0;
+  mUploadProgressMax = 0;
   if (aBody && httpChannel && !method.EqualsLiteral("GET")) {
     nsXPIDLString serial;
     nsCOMPtr<nsIInputStream> postDataStream;
@@ -2562,7 +2583,9 @@ nsXMLHttpRequest::Send(nsIVariant *aBody)
       }
 
       mUploadComplete = PR_FALSE;
-      postDataStream->Available(&mUploadTotal);
+      PRUint32 uploadTotal = 0;
+      postDataStream->Available(&uploadTotal);
+      mUploadTotal = uploadTotal;
       rv = uploadChannel->SetUploadStream(postDataStream, contentType, -1);
       // Reset the method to its original value
       if (httpChannel) {
@@ -2741,6 +2764,11 @@ nsXMLHttpRequest::Send(nsIVariant *aBody)
       }
     }
   } else {
+    if (!mUploadComplete &&
+        HasListenersFor(NS_LITERAL_STRING(UPLOADPROGRESS_STR)) ||
+        (mUpload && mUpload->HasListenersFor(NS_LITERAL_STRING(PROGRESS_STR)))) {
+      StartProgressEventTimer();
+    }
     DispatchProgressEvent(this, NS_LITERAL_STRING(LOADSTART_STR), PR_FALSE,
                           0, 0);
     if (mUpload && !mUploadComplete) {
@@ -3047,6 +3075,12 @@ nsXMLHttpRequest::ChangeState(PRUint32 aState, PRBool aBroadcast)
   mState |= aState;
   nsresult rv = NS_OK;
 
+  if (mProgressNotifier &&
+      !(aState & (XML_HTTP_REQUEST_LOADED | XML_HTTP_REQUEST_INTERACTIVE))) {
+    mTimerIsActive = PR_FALSE;
+    mProgressNotifier->Cancel();
+  }
+
   if ((mState & XML_HTTP_REQUEST_ASYNC) &&
       (aState & XML_HTTP_REQUEST_LOADSTATES) && // Broadcast load states only
       aBroadcast) {
@@ -3120,22 +3154,34 @@ nsXMLHttpRequest::OnProgress(nsIRequest *aRequest, nsISupports *aContext, PRUint
   PRBool lengthComputable = (aProgressMax != LL_MAXUINT);
   if (upload) {
    if (lengthComputable) {
-      PRUint32 headerSize = aProgressMax - mUploadTotal;
+      PRUint64 headerSize = aProgressMax - mUploadTotal;
       loaded -= headerSize;
       total -= headerSize;
     }
     mUploadTransferred = loaded;
+    mUploadProgress = aProgress;
+    mUploadProgressMax = aProgressMax;
+  } else {
+    mLoadLengthComputable = lengthComputable;
+    mLoadTotal = mLoadLengthComputable ? total : 0;
+  }
+
+  if (mTimerIsActive) {
+    // The progress event will be dispatched when the notifier calls Notify().
+    mProgressEventWasDelayed = PR_TRUE;
+    return NS_OK;
   }
 
   if (!mErrorLoad) {
+    StartProgressEventTimer();
     NS_NAMED_LITERAL_STRING(progress, PROGRESS_STR);
     NS_NAMED_LITERAL_STRING(uploadprogress, UPLOADPROGRESS_STR);
     DispatchProgressEvent(this, upload ? uploadprogress : progress, PR_TRUE,
                           lengthComputable, loaded, lengthComputable ? total : 0,
                           aProgress, aProgressMax);
 
-    if (upload && mUpload) {
-      NS_WARN_IF_FALSE(mUploadTotal == PRUint32(total), "Wrong upload total?");
+    if (upload && mUpload && !mUploadComplete) {
+      NS_WARN_IF_FALSE(mUploadTotal == total, "Wrong upload total?");
       DispatchProgressEvent(mUpload, progress,  PR_TRUE, lengthComputable, loaded,
                             lengthComputable ? total : 0, aProgress, aProgressMax);
     }
@@ -3246,6 +3292,56 @@ nsXMLHttpRequest::GetUpload(nsIXMLHttpRequestUpload** aUpload)
   }
   NS_ADDREF(*aUpload = mUpload);
   return NS_OK;
+}
+
+NS_IMETHODIMP
+nsXMLHttpRequest::Notify(nsITimer* aTimer)
+{
+  mTimerIsActive = PR_FALSE;
+  if (NS_SUCCEEDED(CheckInnerWindowCorrectness()) && !mErrorLoad) {
+    if (mProgressEventWasDelayed) {
+      mProgressEventWasDelayed = PR_FALSE;
+      if (!(XML_HTTP_REQUEST_MPART_HEADERS & mState)) {
+        StartProgressEventTimer();
+        // We're uploading if our state is XML_HTTP_REQUEST_OPENED or
+        // XML_HTTP_REQUEST_SENT
+        if ((XML_HTTP_REQUEST_OPENED | XML_HTTP_REQUEST_SENT) & mState) {
+          DispatchProgressEvent(this, NS_LITERAL_STRING(UPLOADPROGRESS_STR),
+                                PR_TRUE, PR_TRUE, mUploadTransferred,
+                                mUploadTotal, mUploadProgress,
+                                mUploadProgressMax);
+          if (mUpload && !mUploadComplete) {
+            DispatchProgressEvent(mUpload, NS_LITERAL_STRING(PROGRESS_STR),
+                                  PR_TRUE, PR_TRUE, mUploadTransferred,
+                                  mUploadTotal, mUploadProgress,
+                                  mUploadProgressMax);
+          }
+        } else {
+          DispatchProgressEvent(this, NS_LITERAL_STRING(PROGRESS_STR),
+                                mLoadLengthComputable, mResponseBody.Length(),
+                                mLoadTotal);
+        }
+      }
+    }
+  } else if (mProgressNotifier) {
+    mProgressNotifier->Cancel();
+  }
+  return NS_OK;
+}
+
+void
+nsXMLHttpRequest::StartProgressEventTimer()
+{
+  if (!mProgressNotifier) {
+    mProgressNotifier = do_CreateInstance(NS_TIMER_CONTRACTID);
+  }
+  if (mProgressNotifier) {
+    mProgressEventWasDelayed = PR_FALSE;
+    mTimerIsActive = PR_TRUE;
+    mProgressNotifier->Cancel();
+    mProgressNotifier->InitWithCallback(this, NS_PROGRESS_EVENT_INTERVAL,
+                                        nsITimer::TYPE_ONE_SHOT);
+  }
 }
 
 NS_IMPL_ISUPPORTS1(nsXMLHttpRequest::nsHeaderVisitor, nsIHttpHeaderVisitor)

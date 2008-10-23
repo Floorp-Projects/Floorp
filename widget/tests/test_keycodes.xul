@@ -64,10 +64,11 @@ function synthesizeNativeKey(aLayout, aKeyCode, aModifiers, aSystemChars,
     if (aModifiers.alt) modifiers |= 0x1000;
     if (aModifiers.altRight) modifiers |= 0x2000;
     if (aModifiers.command) modifiers |= 0x4000;
-    if (aModifiers.help) modifiers |= 0x8000;
-    if (aModifiers.function) modifiers |= 0x10000;
+    if (aModifiers.commandRight) modifiers |= 0x8000;
+    if (aModifiers.help) modifiers |= 0x10000;
+    if (aModifiers.function) modifiers |= 0x100000;
     if (aModifiers.numericKeyPad) modifiers |= 0x01000000;
-    
+
     utils.sendNativeKeyEvent(aLayout, aKeyCode, modifiers,
                              aSystemChars, aSystemUnmodifiedChars);
   }
@@ -105,14 +106,26 @@ function eventToString(aEvent)
   if (aEvent.shift) {
     name += " [Shift]";
   }
+  if (aEvent.shiftRight) {
+    name += " [Right Shift]";
+  }
   if (aEvent.ctrl) {
     name += " [Ctrl]";
+  }
+  if (aEvent.ctrlRight) {
+    name += " [Right Ctrl]";
   }
   if (aEvent.alt) {
     name += " [Alt]";
   }
+  if (aEvent.altRight) {
+    name += " [Right Alt]";
+  }
   if (aEvent.command) {
     name += " [Command]";
+  }
+  if (aEvent.commandRight) {
+    name += " [Right Command]";
   }
 
   return name;  
@@ -244,10 +257,10 @@ function runKeyEventTests()
 
       if (firedEventType != "") {
         var e = eventList[i];
-        is(e.ctrlKey, aEvent.ctrl || 0, name + ", Ctrl mismatch");
-        is(e.metaKey, aEvent.command || 0, name + ", Command mismatch");
-        is(e.altKey, aEvent.alt || 0, name + ", Alt mismatch");
-        is(e.shiftKey, aEvent.shift || 0, name + ", Shift mismatch");
+        is(e.ctrlKey, aEvent.ctrl || aEvent.ctrlRight || 0, name + ", Ctrl mismatch");
+        is(e.metaKey, aEvent.command || aEvent.commandRight || 0, name + ", Command mismatch");
+        is(e.altKey, aEvent.alt || aEvent.altRight || 0, name + ", Alt mismatch");
+        is(e.shiftKey, aEvent.shift || aEvent.shiftRight || 0, name + ", Shift mismatch");
 
         if (aExpectGeckoChar.length > 0 && e.type == "keypress")
           is(e.charCode, aExpectGeckoChar.charCodeAt(0), name + ", charcode");
@@ -349,8 +362,48 @@ function runKeyEventTests()
     // XXX keyup event of Caps Lock key is not fired.
     testKey({layout:"US", keyCode:57, capsLock:1, chars:"", unmodifiedChars:""},
             "", SHOULD_DELIVER_KEYDOWN);
-    testKey({layout:"US", keyCode:57, chars:"", unmodifiedChars:""},
+    testKey({layout:"US", keyCode:57, capsLock:0, chars:"", unmodifiedChars:""},
             "", SHOULD_DELIVER_KEYDOWN);
+
+    // Shift/RightShift key event
+    testKey({layout:"US", keyCode:56, shift:1, chars:"", unmodifiedChars:""},
+            "", SHOULD_DELIVER_KEYDOWN);
+    testKey({layout:"US", keyCode:56, shift:0, chars:"", unmodifiedChars:""},
+            "", SHOULD_DELIVER_KEYUP);
+    testKey({layout:"US", keyCode:60, shiftRight:1, chars:"", unmodifiedChars:""},
+            "", SHOULD_DELIVER_KEYDOWN);
+    testKey({layout:"US", keyCode:60, shiftRight:0, chars:"", unmodifiedChars:""},
+            "", SHOULD_DELIVER_KEYUP);
+
+    // Control/RightControl key event
+    testKey({layout:"US", keyCode:59, ctrl:1, chars:"", unmodifiedChars:""},
+            "", SHOULD_DELIVER_KEYDOWN);
+    testKey({layout:"US", keyCode:59, ctrl:0, chars:"", unmodifiedChars:""},
+            "", SHOULD_DELIVER_KEYUP);
+    testKey({layout:"US", keyCode:62, ctrlRight:1, chars:"", unmodifiedChars:""},
+            "", SHOULD_DELIVER_KEYDOWN);
+    testKey({layout:"US", keyCode:62, ctrlRight:0, chars:"", unmodifiedChars:""},
+            "", SHOULD_DELIVER_KEYUP);
+
+    // Option/RightOption key event
+    testKey({layout:"US", keyCode:58, alt:1, chars:"", unmodifiedChars:""},
+            "", SHOULD_DELIVER_KEYDOWN);
+    testKey({layout:"US", keyCode:58, alt:0, chars:"", unmodifiedChars:""},
+            "", SHOULD_DELIVER_KEYUP);
+    testKey({layout:"US", keyCode:61, altRight:1, chars:"", unmodifiedChars:""},
+            "", SHOULD_DELIVER_KEYDOWN);
+    testKey({layout:"US", keyCode:61, altRight:0, chars:"", unmodifiedChars:""},
+            "", SHOULD_DELIVER_KEYUP);
+
+    // Command/RightCommand key event
+    testKey({layout:"US", keyCode:55, command:1, chars:"", unmodifiedChars:""},
+            "", SHOULD_DELIVER_KEYDOWN);
+    testKey({layout:"US", keyCode:55, command:0, chars:"", unmodifiedChars:""},
+            "", SHOULD_DELIVER_KEYUP);
+    testKey({layout:"US", keyCode:54, commandRight:1, chars:"", unmodifiedChars:""},
+            "", SHOULD_DELIVER_KEYDOWN);
+    testKey({layout:"US", keyCode:54, commandRight:0, chars:"", unmodifiedChars:""},
+            "", SHOULD_DELIVER_KEYUP);
   }
 
   if (navigator.platform.indexOf("Win") == 0) {

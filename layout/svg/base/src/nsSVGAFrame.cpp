@@ -153,14 +153,9 @@ nsSVGAFrame::NotifySVGChanged(PRUint32 aFlags)
 already_AddRefed<nsIDOMSVGMatrix>
 nsSVGAFrame::GetCanvasTM()
 {
-  if (!mPropagateTransform) {
+  if (!GetMatrixPropagation()) {
     nsIDOMSVGMatrix *retval;
-    if (mOverrideCTM) {
-      retval = mOverrideCTM;
-      NS_ADDREF(retval);
-    } else {
-      NS_NewSVGMatrix(&retval);
-    }
+    NS_NewSVGMatrix(&retval);
     return retval;
   }
 

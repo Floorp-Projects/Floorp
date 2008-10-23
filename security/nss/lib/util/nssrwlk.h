@@ -74,7 +74,7 @@ PR_BEGIN_EXTERN_C
 **   is returned.
 **  
 ***********************************************************************/
-PR_EXTERN(NSSRWLock*) NSSRWLock_New(PRUint32 lock_rank, const char *lock_name);
+extern NSSRWLock* NSSRWLock_New(PRUint32 lock_rank, const char *lock_name);
 
 /***********************************************************************
 ** FUNCTION:    NSSRWLock_AtomicCreate
@@ -92,7 +92,7 @@ PR_EXTERN(NSSRWLock*) NSSRWLock_New(PRUint32 lock_rank, const char *lock_name);
 **   the pointer will be left NULL.
 **  
 ***********************************************************************/
-PR_EXTERN(NSSRWLock *)
+extern NSSRWLock *
 nssRWLock_AtomicCreate( NSSRWLock  ** prwlock, 
 			PRUint32      lock_rank, 
 			const char *  lock_name);
@@ -105,7 +105,7 @@ nssRWLock_AtomicCreate( NSSRWLock  ** prwlock,
 ** OUTPUTS:     void
 ** RETURN:      None
 ***********************************************************************/
-PR_EXTERN(void) NSSRWLock_Destroy(NSSRWLock *lock);
+extern void NSSRWLock_Destroy(NSSRWLock *lock);
 
 /***********************************************************************
 ** FUNCTION:    NSSRWLock_LockRead
@@ -115,7 +115,7 @@ PR_EXTERN(void) NSSRWLock_Destroy(NSSRWLock *lock);
 ** OUTPUTS:     void
 ** RETURN:      None
 ***********************************************************************/
-PR_EXTERN(void) NSSRWLock_LockRead(NSSRWLock *lock);
+extern void NSSRWLock_LockRead(NSSRWLock *lock);
 
 /***********************************************************************
 ** FUNCTION:    NSSRWLock_LockWrite
@@ -125,7 +125,7 @@ PR_EXTERN(void) NSSRWLock_LockRead(NSSRWLock *lock);
 ** OUTPUTS:     void
 ** RETURN:      None
 ***********************************************************************/
-PR_EXTERN(void) NSSRWLock_LockWrite(NSSRWLock *lock);
+extern void NSSRWLock_LockWrite(NSSRWLock *lock);
 
 /***********************************************************************
 ** FUNCTION:    NSSRWLock_UnlockRead
@@ -135,7 +135,7 @@ PR_EXTERN(void) NSSRWLock_LockWrite(NSSRWLock *lock);
 ** OUTPUTS:     void
 ** RETURN:      void
 ***********************************************************************/
-PR_EXTERN(void) NSSRWLock_UnlockRead(NSSRWLock *lock);
+extern void NSSRWLock_UnlockRead(NSSRWLock *lock);
 
 /***********************************************************************
 ** FUNCTION:    NSSRWLock_UnlockWrite
@@ -145,7 +145,7 @@ PR_EXTERN(void) NSSRWLock_UnlockRead(NSSRWLock *lock);
 ** OUTPUTS:     void
 ** RETURN:      void
 ***********************************************************************/
-PR_EXTERN(void) NSSRWLock_UnlockWrite(NSSRWLock *lock);
+extern void NSSRWLock_UnlockWrite(NSSRWLock *lock);
 
 /***********************************************************************
 ** FUNCTION:    NSSRWLock_HaveWriteLock
@@ -156,7 +156,7 @@ PR_EXTERN(void) NSSRWLock_UnlockWrite(NSSRWLock *lock);
 ** RETURN:      PRBool	PR_TRUE IFF the current thread holds the write lock.
 ***********************************************************************/
 
-PR_EXTERN(PRBool) NSSRWLock_HaveWriteLock(NSSRWLock *rwlock);
+extern PRBool NSSRWLock_HaveWriteLock(NSSRWLock *rwlock);
 
 /* SEC_END_PROTOS */
 PR_END_EXTERN_C

@@ -118,12 +118,7 @@ nsClientRectList::GetLength(PRUint32* aLength)
 NS_IMETHODIMP    
 nsClientRectList::Item(PRUint32 aIndex, nsIDOMClientRect** aReturn)
 {
-  if (aIndex >= PRUint32(mArray.Count())) {
-    *aReturn = nsnull;
-    return NS_OK;
-  } 
-  
-  NS_IF_ADDREF(*aReturn = mArray.ObjectAt(aIndex));
+  NS_IF_ADDREF(*aReturn = GetItemAt(aIndex));
   return NS_OK;
 }
 

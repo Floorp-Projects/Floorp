@@ -1367,7 +1367,6 @@ NS_IMETHODIMP nsAccessibilityService::GetAccessible(nsIDOMNode *aNode,
     }
     else {
       CreateRootAccessible(aPresShell, nodeIsDoc, getter_AddRefs(newAcc)); // Does Init() for us
-      NS_WARN_IF_FALSE(newAcc, "No root/doc accessible created");
     }
 
     *aFrameHint = aPresShell->GetRootFrame();
@@ -1539,7 +1538,8 @@ NS_IMETHODIMP nsAccessibilityService::GetAccessible(nsIDOMNode *aNode,
             // Don't create accessibles for them unless they need to fire focus events
             return NS_OK;
           }
-          if (tableAccessible && nsAccessible::Role(tableAccessible) != nsIAccessibleRole::ROLE_TABLE) {
+          if (tableAccessible &&
+              nsAccUtils::Role(tableAccessible) != nsIAccessibleRole::ROLE_TABLE) {
             NS_ASSERTION(!roleMapEntry, "Should not be changing ARIA role, just overriding impl class role");
             // Not in table: override role (roleMap entry was null).
             roleMapEntry = &nsARIAMap::gEmptyRoleMap;

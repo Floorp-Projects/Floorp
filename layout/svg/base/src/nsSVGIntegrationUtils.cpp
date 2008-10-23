@@ -54,7 +54,8 @@ PRBool
 nsSVGIntegrationUtils::UsingEffectsForFrame(const nsIFrame* aFrame)
 {
   const nsStyleSVGReset *style = aFrame->GetStyleSVGReset();
-  return style->mFilter || style->mClipPath || style->mMask;
+  return (style->mFilter || style->mClipPath || style->mMask) &&
+          !aFrame->IsFrameOfType(nsIFrame::eSVG);
 }
 
 // Get the union the frame border-box rects over all continuations,

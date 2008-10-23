@@ -1053,11 +1053,6 @@ toolbar[iconsize="small"] #paste-button:not([disabled="true"]):hover:active {
   -moz-padding-end: 2px;
 }
 
-#urlbar[pageproxystate="invalid"] > #urlbar-icons > :not(#go-button) ,
-#urlbar[pageproxystate="valid"] > #urlbar-icons > #go-button {
-  visibility: collapse;
-}
-
 #urlbar-search-splitter {
   min-width: 8px;
   -moz-margin-start: -4px;

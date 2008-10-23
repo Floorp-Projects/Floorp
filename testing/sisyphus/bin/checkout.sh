@@ -66,7 +66,8 @@ if [[ "$branch" == "1.9.1" ]]; then
     fi
 
     cd $TEST_MOZILLA_HG_LOCAL
-    hg pull -u
+    hg pull
+    hg update
     echo "`hg root` id `hg id`"
 fi
 
@@ -99,6 +100,7 @@ case $product in
 
                 cd mozilla
                 hg pull
+                hg update
 
                 hg update -r $TEST_MOZILLA_HG_REV
 
@@ -159,6 +161,7 @@ case $product in
 
                 cd mozilla
                 hg pull
+                hg update
 
                 hg update -r $TEST_MOZILLA_HG_REV
 
@@ -169,6 +172,58 @@ case $product in
                     echo "Update to date $MOZ_CO_DATE `hg root` id `hg id`"
                 fi
                 
+
+                # do not use mozilla-build on windows systems as we 
+                # must use the cygwin python with the cygwin mercurial.
+
+                if ! python client.py checkout; then
+                    error "during checkout of $project tree" $LINENO
+                fi
+                ;;
+
+            *)
+                error "branch $branch not yet supported"
+                ;;
+        esac
+        ;;
+
+    fennec)
+
+        case $branch in
+            1.9.1)
+                if [[ ! -d mozilla/.hg ]]; then
+                    if ! hg clone $TEST_MOZILLA_HG_LOCAL $BUILDTREE/mozilla; then
+                        error "during hg clone of $TEST_MOZILLA_HG_LOCAL" $LINENO
+                    fi
+                fi
+
+                # XXX need to generalize the mobile-browser repository
+                if [[ ! -d mozilla/mobile/.hg ]]; then
+                    if ! hg clone http://hg.mozilla.org/mobile-browser $BUILDTREE/mozilla/mobile; then
+                        error "during hg clone of http://hg.mozilla.org/mobile-browser" $LINENO
+                    fi
+                fi
+
+                cd mozilla
+                hg pull
+                hg update
+
+                hg update -r $TEST_MOZILLA_HG_REV
+
+                echo "`hg root` id `hg id`"
+
+                if [[ -n "$DATE_CO_FLAGS" ]]; then
+                    eval hg update $DATE_CO_FLAGS
+                    echo "Update to date $MOZ_CO_DATE `hg root` id `hg id`"
+                fi
+                
+                cd mobile
+                hg pull
+                hg update
+
+                # XXX need to deal with mobile revisions from different repositories
+
+                cd ../
 
                 # do not use mozilla-build on windows systems as we 
                 # must use the cygwin python with the cygwin mercurial.
@@ -217,6 +272,7 @@ case $product in
 
                 cd mozilla
                 hg pull
+                hg update
 
                 hg update -r $TEST_MOZILLA_HG_REV
 

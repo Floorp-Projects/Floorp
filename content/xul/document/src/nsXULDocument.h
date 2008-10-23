@@ -225,6 +225,7 @@ protected:
                         PRBool* aFailureFromContent);
 
     nsresult ApplyPersistentAttributes();
+    nsresult ApplyPersistentAttributesInternal();
     nsresult ApplyPersistentAttributesToElements(nsIRDFResource* aResource,
                                                  nsCOMArray<nsIContent>& aElements);
 
@@ -260,6 +261,9 @@ protected:
     static nsXULPrototypeCache* gXULCache;
 
     static PRLogModuleInfo* gXULLog;
+
+    PRBool
+    IsCapabilityEnabled(const char* aCapabilityLabel);
 
     nsresult
     Persist(nsIContent* aElement, PRInt32 aNameSpaceID, nsIAtom* aAttribute);
