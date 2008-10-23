@@ -176,30 +176,11 @@ NS_IMPL_ISUPPORTS_INHERITED1(nsSVGFilterProperty,
                              nsSVGRenderingObserver,
                              nsISVGFilterProperty)
 
-nsSVGFilterProperty::nsSVGFilterProperty(nsIURI *aURI,
-                                         nsIFrame *aFilteredFrame)
-  : nsSVGRenderingObserver(aURI, aFilteredFrame)
-{
-  UpdateRect();
-}
-
 nsSVGFilterFrame *
 nsSVGFilterProperty::GetFilterFrame()
 {
   return static_cast<nsSVGFilterFrame *>
     (GetReferencedFrame(nsGkAtoms::svgFilterFrame, nsnull));
-}
-
-void
-nsSVGFilterProperty::UpdateRect()
-{
-  nsSVGFilterFrame *filter = GetFilterFrame();
-  if (filter) {
-    mFilterRect = filter->GetFilterBBox(mFrame, nsnull);
-    mFilterRect.ScaleRoundOut(filter->PresContext()->AppUnitsPerDevPixel());
-  } else {
-    mFilterRect = nsRect();
-  }
 }
 
 static void
