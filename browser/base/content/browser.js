@@ -43,6 +43,8 @@
 #   Johnathan Nightingale <johnath@mozilla.com>
 #   Ehsan Akhgari <ehsan.akhgari@gmail.com>
 #   Dão Gottwald <dao@mozilla.com>
+#   Thomas K. Dyas <tdyas@zecador.org>
+#   Edward Lee <edward.lee@engineering.uiuc.edu>
 #
 # Alternatively, the contents of this file may be used under the terms of
 # either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -667,6 +669,143 @@ const gXPInstallObserver = {
   }
 };
 
+// Simple gestures support
+//
+// As per bug #412486, web content must not be allowed to receive any
+// simple gesture events.  Multi-touch gesture APIs are in their
+// infancy and we do NOT want to be forced into supporting an API that
+// will probably have to change in the future.  (The current Mac OS X
+// API is undocumented and was reverse-engineered.)  Until support is
+// implemented in the event dispatcher to keep these events as
+// chrome-only, we must listen for the simple gesture events during
+// the capturing phase and call stopPropagation on every event.
+
+let gGestureSupport = {
+  /**
+   * Add or remove mouse gesture event listeners
+   *
+   * @param aAddListener
+   *        True to add/init listeners and false to remove/uninit
+   */
+  init: function GS_init(aAddListener) {
+    const gestureEvents = ["SwipeGesture",
+      "MagnifyGestureStart", "MagnifyGestureUpdate", "MagnifyGesture",
+      "RotateGesture", "RotateGestureUpdate", "RotateGesture"];
+
+    let addRemove = aAddListener ? window.addEventListener :
+      window.removeEventListener;
+
+    for each (let event in gestureEvents)
+      addRemove("Moz" + event, this, true);
+  },
+
+  /**
+   * Dispatch events based on the type of mouse gesture event.
+   * For now, make sure to stop propagation of every gesture event
+   *
+   * @param aEvent
+   *        The gesture event to handle
+   */
+  handleEvent: function GS_handleEvent(aEvent) {
+    aEvent.stopPropagation();
+
+    switch (aEvent.type) {
+      case "MozSwipeGesture":
+        this.onSwipe(aEvent);
+        break;
+      case "MozMagnifyGestureStart":
+      case "MozRotateGestureStart":
+        this.onStart(aEvent);
+        break;
+      case "MozMagnifyGestureUpdate":
+        this.onMagnify(aEvent);
+        break;
+      case "MozRotateGestureUpdate":
+        this.onRotate(aEvent);
+        break;
+    }
+  },
+
+  /**
+   * Convert the swipe gesture into a browser action based on the direction
+   *
+   * @param aEvent
+   *        The swipe event to handle
+   */
+  onSwipe: function GS_onSwipe(aEvent) {
+    // Create a fake event that pretends the swipe is a button click
+    let fakeEvent = { shiftKey: aEvent.shiftKey, ctrlKey: aEvent.ctrlKey,
+      metaKey: aEvent.metaKey, altKey: aEvent.altKey, button: 0 };
+
+    if (aEvent.direction == SimpleGestureEvent.DIRECTION_LEFT)
+      BrowserBack(fakeEvent);
+    else if (aEvent.direction == SimpleGestureEvent.DIRECTION_RIGHT)
+      BrowserForward(fakeEvent);
+    else if (aEvent.direction == SimpleGestureEvent.DIRECTION_UP)
+      goDoCommand("cmd_scrollTop");
+    else if (aEvent.direction == SimpleGestureEvent.DIRECTION_DOWN)
+      goDoCommand("cmd_scrollBottom");
+  },
+
+  // Keep track of offsets for continual motion events, e.g., zoom and rotate
+  _lastOffset: 0,
+
+  /**
+   * Handle the beginning of a continual motion event
+   *
+   * @param aEvent
+   *        The continual motion event
+   */
+  onStart: function GS_onStart(aEvent) {
+    this._lastOffset = 0;
+  },
+
+  /**
+   * Helper function to determine if a continual motion event has passed some
+   * threshold and should trigger some action. If the action is triggered, the
+   * tracking of the motion is reset as if a new motion has started.
+   *
+   * @param aEvent
+   *        The continual motion event to handle
+   * @param aThreshold
+   *        Minimum positive/negative difference before the action is triggered
+   * @param aIncDec
+   *        Callback function that takes in the current offset
+   */
+  _handleUpdate: function GS__handleUpdate(aEvent, aThreshold, aIncDec) {
+    // Update the offset with new event data
+    this._lastOffset += aEvent.delta;
+
+    // Inform the callback that we passed the threshold and then reset motion
+    if (Math.abs(this._lastOffset) > aThreshold) {
+      aIncDec(this._lastOffset);
+      this.onStart(aEvent);
+    }
+  },
+
+  /**
+   * Convert zoom motions into a page zoom in/out
+   *
+   * @param aEvent
+   *        The zoom event to handle
+   */
+  onMagnify: function GS_onMagnify(aEvent) {
+    this._handleUpdate(aEvent, 100, function(aOffset) aOffset > 0 ?
+      FullZoom.enlarge() : FullZoom.reduce());
+  },
+
+  /**
+   * Convert rotate motions into a next/prev tab
+   *
+   * @param aEvent
+   *        The rotate event to handle
+   */
+  onRotate: function GS_onRotate(aEvent) {
+    this._handleUpdate(aEvent, 22.5, function(aOffset) gBrowser.mTabContainer.
+      advanceSelectedTab(aOffset > 0 ? 1 : -1, true));
+  },
+};
+
 function BrowserStartup() {
   var uriToLoad = null;
 
@@ -908,6 +1047,9 @@ function prepareForStartup() {
 
   // setup our common DOMLinkAdded listener
   gBrowser.addEventListener("DOMLinkAdded", DOMLinkHandler, false);
+
+  // setup simple gestures support
+  gGestureSupport.init(true);
 }
 
 function setupGeolocationPrompt()
@@ -1169,6 +1311,8 @@ function BrowserShutdown()
 {
   tabPreviews.uninit();
   ctrlTab.uninit();
+
+  gGestureSupport.init(false);
 
   try {
     FullZoom.destroy();
