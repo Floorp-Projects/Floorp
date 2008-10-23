@@ -107,21 +107,46 @@ function delayed_prompt(request) {
   setTimeout(geolocation_prompt, prompt_delay, request);
 }
 
+var TestPromptFactory = {
+    QueryInterface: function(iid) {
+        if (iid.equals(Components.interfaces.nsISupports) || iid.equals(Components.interfaces.nsIFactory))
+            return this;
+        throw Components.results.NS_ERROR_NO_INTERFACE;
+    },
+
+    createInstance: function(outer, iid) {
+        if (outer)
+            throw Components.results.NS_ERROR_NO_AGGREGATION;
+
+        if(DELAYED_PROMPT)
+            return delayed_prompt;
+        else
+            return  geolocation_prompt;
+    },
+
+    lockFactory: function(lock) {
+        throw Components.results.NS_ERROR_NOT_IMPLEMENTED;
+    },
+};
+
 function attachPrompt() {
   netscape.security.PrivilegeManager.enablePrivilege('UniversalXPConnect');
-  var geolocationService = Components.classes["@mozilla.org/geolocation/service;1"]
-                           .getService(Components.interfaces.nsIGeolocationService);
-  old_prompt = geolocationService.prompt;
+  old_prompt  =  Components.manager.nsIComponentRegistrar.contractIDToCID("@mozilla.org/geolocation/prompt;1");
+  old_factory =  Components.manager.getClassObjectByContractID("@mozilla.org/geolocation/prompt;1", Components.interfaces.nsIFactory)
 
-  if(DELAYED_PROMPT)
-    geolocationService.prompt = delayed_prompt;
-  else
-    geolocationService.prompt = geolocation_prompt;
+  const testing_prompt_cid = Components.ID("{20C27ECF-A22E-4022-9757-2CFDA88EAEAA}");
+
+  Components.manager.nsIComponentRegistrar.registerFactory(testing_prompt_cid,
+                                                           "Test Geolocation Prompt",
+                                                           "@mozilla.org/geolocation/prompt;1",
+                                                           TestPromptFactory);
 }
 
 function removePrompt() {
   netscape.security.PrivilegeManager.enablePrivilege('UniversalXPConnect');
-  var geolocationService = Components.classes["@mozilla.org/geolocation/service;1"]
-                           .getService(Components.interfaces.nsIGeolocationService);
-  geolocationService.prompt = old_prompt;
+
+  Components.manager.nsIComponentRegistrar.registerFactory(old_prompt,
+                                                           "Geolocation Prompt restored!",
+                                                           "@mozilla.org/geolocation/prompt;1",
+                                                           old_factory);
 }
