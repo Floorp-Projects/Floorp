@@ -69,6 +69,7 @@ _BROWSER_FILES = browser_bug321000.js \
                  page_style_sample.html \
                  browser_ctrlTab.js \
                  browser_selectTabAtIndex.js \
+                 browser_gestureSupport.js \
     $(NULL)
 
 ifneq (,$(filter mac cocoa,$(MOZ_WIDGET_TOOLKIT)))
