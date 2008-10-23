@@ -46,7 +46,6 @@
 #include "nsIDOMAttr.h"
 #include "nsIDOMText.h"
 #include "nsIDOMNodeList.h"
-#include "nsGenericDOMNodeList.h"
 #include "nsString.h"
 #include "nsCOMPtr.h"
 #include "nsINodeInfo.h"

@@ -246,9 +246,8 @@ STDMETHODIMP nsAccessibleWrap::get_accChildCount( long __RPC_FAR *pcountChildren
 {
 __try {
   *pcountChildren = 0;
-  if (MustPrune(this)) {
+  if (nsAccUtils::MustPrune(this))
     return NS_OK;
-  }
 
   PRInt32 numChildren;
   GetChildCount(&numChildren);
@@ -274,7 +273,7 @@ __try {
   }
 
   nsCOMPtr<nsIAccessible> childAccessible;
-  if (!MustPrune(this)) {
+  if (!nsAccUtils::MustPrune(this)) {
     GetChildAt(varChild.lVal - 1, getter_AddRefs(childAccessible));
     if (childAccessible) {
       *ppdispChild = NativeAccessible(childAccessible);
@@ -473,7 +472,8 @@ __try {
     return E_FAIL;
 
 #ifdef DEBUG_A11Y
-  NS_ASSERTION(nsAccessible::IsTextInterfaceSupportCorrect(xpAccessible), "Does not support nsIAccessibleText when it should");
+  NS_ASSERTION(nsAccUtils::IsTextInterfaceSupportCorrect(xpAccessible),
+               "Does not support nsIAccessibleText when it should");
 #endif
 
   PRUint32 xpRole = 0, msaaRole = 0;
@@ -489,9 +489,8 @@ __try {
   // We need this because ARIA has a role of "row" for both grid and treegrid
   if (xpRole == nsIAccessibleRole::ROLE_ROW) {
     nsCOMPtr<nsIAccessible> parent = GetParent();
-    if (parent && Role(parent) == nsIAccessibleRole::ROLE_TREE_TABLE) {
+    if (nsAccUtils::Role(parent) == nsIAccessibleRole::ROLE_TREE_TABLE)
       msaaRole = ROLE_SYSTEM_OUTLINEITEM;
-    }
   }
   
   // -- Try enumerated role
@@ -510,7 +509,7 @@ __try {
     return E_FAIL;
 
   accessNode->GetDOMNode(getter_AddRefs(domNode));
-  nsIContent *content = GetRoleContent(domNode);
+  nsIContent *content = nsCoreUtils::GetRoleContent(domNode);
   if (!content)
     return E_FAIL;
 
@@ -913,14 +912,12 @@ __try {
       xpAccessibleStart->GetAccessibleBelow(getter_AddRefs(xpAccessibleResult));
       break;
     case NAVDIR_FIRSTCHILD:
-      if (!MustPrune(xpAccessibleStart)) {
+      if (!nsAccUtils::MustPrune(xpAccessibleStart))
         xpAccessibleStart->GetFirstChild(getter_AddRefs(xpAccessibleResult));
-      }
       break;
     case NAVDIR_LASTCHILD:
-      if (!MustPrune(xpAccessibleStart)) {
+      if (!nsAccUtils::MustPrune(xpAccessibleStart))
         xpAccessibleStart->GetLastChild(getter_AddRefs(xpAccessibleResult));
-      }
       break;
     case NAVDIR_LEFT:
       xpAccessibleStart->GetAccessibleToLeft(getter_AddRefs(xpAccessibleResult));
@@ -1022,7 +1019,7 @@ __try {
   xLeft = xLeft;
   yTop = yTop;
 
-  if (MustPrune(this)) {
+  if (nsAccUtils::MustPrune(this)) {
     xpAccessible = this;
   }
   else {
@@ -1881,7 +1878,7 @@ void nsAccessibleWrap::GetXPAccessibleFor(const VARIANT& aVarChild, nsIAccessibl
   if (aVarChild.lVal == CHILDID_SELF) {
     *aXPAccessible = static_cast<nsIAccessible*>(this);
   }
-  else if (MustPrune(this)) {
+  else if (nsAccUtils::MustPrune(this)) {
     return;
   }
   else {

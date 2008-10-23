@@ -327,7 +327,7 @@ nsXULMenuitemAccessible::GetState(PRUint32 *aState, PRUint32 *aExtraState)
 
   // Combo box listitem
   PRBool isComboboxOption =
-    (Role(this) == nsIAccessibleRole::ROLE_COMBOBOX_OPTION);
+    (nsAccUtils::Role(this) == nsIAccessibleRole::ROLE_COMBOBOX_OPTION);
   if (isComboboxOption) {
     // Is selected?
     PRBool isSelected = PR_FALSE;
@@ -339,10 +339,8 @@ nsXULMenuitemAccessible::GetState(PRUint32 *aState, PRUint32 *aExtraState)
     // Is collapsed?
     PRBool isCollapsed = PR_FALSE;
     nsCOMPtr<nsIAccessible> parentAccessible(GetParent());
-    if (parentAccessible &&
-        State(parentAccessible) & nsIAccessibleStates::STATE_INVISIBLE) {
+    if (nsAccUtils::State(parentAccessible) & nsIAccessibleStates::STATE_INVISIBLE)
       isCollapsed = PR_TRUE;
-    }
     
     if (isSelected) {
       *aState |= nsIAccessibleStates::STATE_SELECTED;
@@ -353,7 +351,7 @@ nsXULMenuitemAccessible::GetState(PRUint32 *aState, PRUint32 *aExtraState)
         nsCOMPtr<nsIAccessible> grandParentAcc;
         parentAccessible->GetParent(getter_AddRefs(grandParentAcc));
         NS_ENSURE_TRUE(grandParentAcc, NS_ERROR_FAILURE);
-        NS_ASSERTION((Role(grandParentAcc) == nsIAccessibleRole::ROLE_COMBOBOX),
+        NS_ASSERTION(nsAccUtils::Role(grandParentAcc) == nsIAccessibleRole::ROLE_COMBOBOX,
                      "grandparent of combobox listitem is not combobox");
         PRUint32 grandParentState, grandParentExtState;
         grandParentAcc->GetFinalState(&grandParentState, &grandParentExtState);
@@ -485,7 +483,7 @@ NS_IMETHODIMP nsXULMenuitemAccessible::GetRole(PRUint32 *aRole)
 
   nsCOMPtr<nsIAccessible> parent;
   GetParent(getter_AddRefs(parent));
-  if (parent && Role(parent) == nsIAccessibleRole::ROLE_COMBOBOX_LIST) {
+  if (nsAccUtils::Role(parent) == nsIAccessibleRole::ROLE_COMBOBOX_LIST) {
     *aRole = nsIAccessibleRole::ROLE_COMBOBOX_OPTION;
     return NS_OK;
   }
@@ -710,7 +708,7 @@ NS_IMETHODIMP nsXULMenupopupAccessible::GetRole(PRUint32 *aRole)
   GetParent(getter_AddRefs(parent));
   if (parent) {
     // Some widgets like the search bar have several popups, owned by buttons
-    PRUint32 role = Role(parent);
+    PRUint32 role = nsAccUtils::Role(parent);
     if (role == nsIAccessibleRole::ROLE_COMBOBOX ||
         role == nsIAccessibleRole::ROLE_PUSHBUTTON ||
         role == nsIAccessibleRole::ROLE_AUTOCOMPLETE) {

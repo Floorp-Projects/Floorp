@@ -38,7 +38,7 @@
 #
 # ***** END LICENSE BLOCK *****
 #
-#ident	"$Id: Makefile.in,v 1.10 2005/11/18 21:50:20 christophe.ravel.bugs%sun.com Exp $"
+#ident	"$Id: Makefile.in,v 1.11 2008/10/20 22:38:45 christophe.ravel.bugs%sun.com Exp $"
 #
 
 MOD_DEPTH = ../..
@@ -74,7 +74,7 @@ publish:
 	(cd $(dist_includedir) && tar cphf - .) \
 	| (mkdir -p opt/sun/private/include/nspr && cd opt/sun/private/include/nspr && tar xvfBp -)
 	(cd opt/sun/private/include/nspr && \
-		rm -rf md private obsolete/pralarm.h obsolete/probslet.h obsolete/prsem.h)
+		rm -rf md)
 	tar czvf SOURCES/$(NAME)-$(VERSION).tar.gz opt
 	echo "%define name $(NAME)" >$(SPECFILE)
 	echo "%define version $(VERSION)" >>$(SPECFILE)
@@ -100,6 +100,7 @@ publish:
 	echo "%dir /opt/sun/private/include" >>$(SPECFILE)
 	echo "%dir /opt/sun/private/include/nspr" >>$(SPECFILE)
 	echo "%dir /opt/sun/private/include/nspr/obsolete" >>$(SPECFILE)
+	echo "%dir /opt/sun/private/include/nspr/private" >>$(SPECFILE)
 	find opt -type f \( -name "*.h" \) \
 		| sed -e "s-^-/-" >>$(SPECFILE)
 	rpmbuild $(RPMTARGET) -bb $(SPECFILE)

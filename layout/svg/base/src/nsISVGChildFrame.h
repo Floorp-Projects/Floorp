@@ -51,8 +51,8 @@ class nsIDOMSVGMatrix;
 class nsSVGRenderState;
 
 #define NS_ISVGCHILDFRAME_IID \
-{ 0x8b80b2a0, 0x2e1f, 0x4775, \
-  { 0xab, 0x47, 0xbe, 0xeb, 0x4b, 0x81, 0x63, 0x6d } }
+{ 0xfc3ee9b2, 0xaf40, 0x416d, \
+  { 0xa8, 0x51, 0xb4, 0x68, 0xa4, 0xe4, 0x8b, 0xcd } }
 
 class nsISVGChildFrame : public nsISupports {
 public:
@@ -61,7 +61,8 @@ public:
 
   // Paint this frame - aDirtyRect is the area being redrawn, in frame
   // offset pixel coordinates
-  NS_IMETHOD PaintSVG(nsSVGRenderState* aContext, nsIntRect *aDirtyRect)=0;
+  NS_IMETHOD PaintSVG(nsSVGRenderState* aContext,
+                      const nsIntRect *aDirtyRect)=0;
 
   // Check if this frame or children contain the given point,
   // specified in app units relative to the origin of the outer
@@ -99,12 +100,6 @@ public:
   // the current transformation matrix at this frame.
   NS_IMETHOD SetMatrixPropagation(PRBool aPropagate)=0;
   virtual PRBool GetMatrixPropagation()=0;
-
-  // Set the current transformation matrix to a particular matrix.
-  // Value is only used if matrix propagation is prevented
-  // (SetMatrixPropagation()).  nsnull aCTM means identity transform.
-  NS_IMETHOD SetOverrideCTM(nsIDOMSVGMatrix *aCTM)=0;
-  virtual already_AddRefed<nsIDOMSVGMatrix> GetOverrideCTM()=0;
 
   // XXX move this function into interface nsISVGLocatableMetrics
   NS_IMETHOD GetBBox(nsIDOMSVGRect **_retval)=0; // bbox in local coords

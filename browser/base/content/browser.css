@@ -32,6 +32,12 @@ toolbar[printpreview="true"] {
   display: none;
 }
 
+#urlbar[pageproxystate="invalid"] > #urlbar-icons > :not(#go-button) ,
+#urlbar[pageproxystate="valid"] > #urlbar-icons > #go-button ,
+#urlbar[empty="true"] > #urlbar-icons > #go-button {
+  visibility: collapse;
+}
+
 #identity-box > hbox {
   max-width: 22em;
   min-width: 1px;

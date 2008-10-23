@@ -558,8 +558,10 @@
 #else
              title="&preferencesDefaultTitleMac.title;">
 #endif
-      <xul:radiogroup anonid="selector" orient="horizontal" class="paneSelector chromeclass-toolbar"
-                      role="listbox"/> <!-- Expose to accessibility APIs as a listbox -->
+      <xul:windowdragbox orient="vertical">
+        <xul:radiogroup anonid="selector" orient="horizontal" class="paneSelector chromeclass-toolbar"
+                        role="listbox"/> <!-- Expose to accessibility APIs as a listbox -->
+      </xul:windowdragbox>
       <xul:hbox flex="1" class="paneDeckContainer">
         <xul:deck anonid="paneDeck" flex="1">
           <children includes="prefpane"/>

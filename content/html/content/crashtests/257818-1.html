@@ -1,0 +1,82 @@
+<html><head>
+<script type="text/javascript">
+function cE (v) {
+ return document.createElement(v)
+}
+function cTN (v) {
+  return document.createTextNode(v)
+}
+
+function OSXBarIcon(elt) {
+	this.element = elt; 
+	this.labelNode = this.element.firstChild;
+	this.labelNodeParent = this.element;
+	this.labelNodeParent.removeChild(this.labelNode);
+	
+	this.contents = [];
+	var kids = this.element.childNodes;
+	for(var i=0; i<kids.length; i++) this.contents[this.contents.length] = this.element.removeChild(kids[i]); 
+	this.popupSubmenu = new OSXBarSubmenu(this);
+}
+
+function OSXBarSubmenu(icon) {
+	this.parentIcon = icon;
+	this.create();
+	this.addContent();
+}
+OSXBarSubmenu.prototype = {
+	create : function() {
+		var p = this.popupNode = document.createElement("div");
+		var b = document.getElementsByTagName("body").item(0);
+		if(b) b.appendChild(p);
+		this.popupNode.style.display = "none";
+                // Uncomment next line to fix the problem
+//                var v = document.body.offsetWidth;
+	}
+};
+OSXBarSubmenu.prototype.addContent = function() {
+
+	// add popup label:
+	var label = document.createElement("div");
+		label.appendChild(document.createTextNode(this.parentIcon.label));
+	this.popupNode.appendChild(label);
+	
+	// add <li> children to the popup:	
+	var contents = this.parentIcon.contents;
+	for(var i=0; i<contents.length; i++) {
+		this.popupNode.appendChild(contents[i]);
+		
+	}
+};
+
+</script>
+
+<script type="text/javascript">
+function createControlPanel() {
+	var bar = document.getElementById("navigation");
+	var item = cE("li");
+        item.appendChild(cTN("aaa"));
+        var textfield = cE("input");
+        textfield.value = 0;
+        item.appendChild(textfield);
+	bar.insertBefore(item, bar.firstChild);
+}
+
+window.addEventListener("load", createControlPanel, false);
+</script>
+
+<script type="text/javascript">
+function ssload() {
+  new OSXBarIcon(document.getElementById("navigation").childNodes[0]);
+}
+window.addEventListener("load",ssload,false);
+
+
+</script>
+</head>
+
+<body>
+<ul id="navigation"></ul>
+</body></html>
+
+

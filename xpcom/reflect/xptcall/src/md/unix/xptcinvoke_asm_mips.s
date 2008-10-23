@@ -24,6 +24,7 @@
  * Contributor(s):
  *   Brendan Eich     <brendan@mozilla.org>
  *   Stuart Parmenter <pavlov@netscape.com>
+ *   Thiemo Seufer    <seufer@csv.ica.uni-stuttgart.de>
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -44,139 +45,123 @@
 #include <sys/regdef.h>
 #include <sys/asm.h>
 
-.text
-.globl  invoke_count_words
-.globl	invoke_copy_to_stack 
+# NARGSAVE is the argument space in the callers frame, including extra
+# 'shadowed' space for the argument registers. The minimum of 4
+# argument slots is sometimes predefined in the header files.
+#ifndef NARGSAVE
+#define NARGSAVE 4
+#endif
 
-# We need a variable number of words allocated from the stack for copies of
-# the params, and this space must come between the high frame (where ra, gp,
-# and s0 are saved) and the low frame (where a0-a3 are saved by the callee
-# functions we invoke). 
+#define LOCALSZ 3	/* gp, fp, ra */
+#define FRAMESZ ((((NARGSAVE+LOCALSZ)*SZREG)+ALSZ)&ALMASK)
 
-LOCALSZ=4		# s0, s1, ra, gp
-NARGSAVE=4		# a0, a1, a2, a3
-HIFRAMESZ=(LOCALSZ*SZREG)
-LOFRAMESZ=(NARGSAVE*SZREG)
-FRAMESZ=(HIFRAMESZ+LOFRAMESZ+ALSZ)&ALMASK
+#define RAOFF (FRAMESZ - (1*SZREG))
+#define FPOFF (FRAMESZ - (2*SZREG))
+#define GPOFF (FRAMESZ - (3*SZREG))
 
-# XXX these 2*SZREG, etc. are very magic -- we *know* that ALSZ&ALMASK cause
-# FRAMESZ to be 0 mod 8, in this case to be 16 and not 12.
-RAOFF=FRAMESZ - (2*SZREG)
-GPOFF=FRAMESZ - (3*SZREG)
-S0OFF=FRAMESZ - (4*SZREG)
-S1OFF=FRAMESZ - (5*SZREG)
+#define A0OFF (FRAMESZ + (0*SZREG))
+#define A1OFF (FRAMESZ + (1*SZREG))
+#define A2OFF (FRAMESZ + (2*SZREG))
+#define A3OFF (FRAMESZ + (3*SZREG))
 
-# These are not magic -- they are just our argsave slots in the caller frame.
-A0OFF=FRAMESZ
-A1OFF=FRAMESZ + (1*SZREG)
-A2OFF=FRAMESZ + (2*SZREG)
-A3OFF=FRAMESZ + (3*SZREG)
+	.text
 
-	#	
-	# _XPTC_InvokeByIndex(that, methodIndex, paramCount, params)
-	#                      a0       a1          a2         a3
+#	
+# _NS_InvokeByIndex_P(that, methodIndex, paramCount, params)
+#                      a0       a1          a2         a3
 
-NESTED(_XPTC_InvokeByIndex, FRAMESZ, ra)
-
-	.set	noreorder
-	.cpload	t9
-	.set	reorder
-
+	.globl	_NS_InvokeByIndex_P
+	.align	2
+	.type	_NS_InvokeByIndex_P,@function
+	.ent	_NS_InvokeByIndex_P,0
+	.frame	fp, FRAMESZ, ra
+_NS_InvokeByIndex_P:
+	SETUP_GP
 	subu	sp, FRAMESZ
 
-	# specify the save register mask -- XXX do we want the a0-a3 here, given
-	# our "split" frame where the args are saved below a dynamicly allocated
-	# region under the high frame?
-	#
-	# 10010000000000010000000011110000
-	.mask 0x900100F0, -((NARGSAVE+LOCALSZ)*SZREG)
+	# specify the save register mask for gp, fp, ra, a3 - a0
+	.mask 0xD00000F0, RAOFF-FRAMESZ
 
-	# thou shalt not use .cprestore if yer frame has variable size...
-	# .cprestore GPOFF
+	sw	ra, RAOFF(sp)
+	sw	fp, FPOFF(sp)
 
-	REG_S	ra, RAOFF(sp)
+	# we can't use .cprestore in a variable stack frame
+	sw	gp, GPOFF(sp)
 
-	# this happens automatically with .cprestore, but we cannot use that op...
-	REG_S	gp, GPOFF(sp)
-	REG_S	s0, S0OFF(sp)
-	REG_S	s1, S1OFF(sp)
+	sw	a0, A0OFF(sp)
+	sw	a1, A1OFF(sp)
+	sw	a2, A2OFF(sp)
+	sw	a3, A3OFF(sp)
 
-	REG_S	a0, A0OFF(sp)
-	REG_S	a1, A1OFF(sp)
-	REG_S	a2, A2OFF(sp)
-	REG_S	a3, A3OFF(sp)
+	# save bottom of fixed frame
+	move	fp, sp
 
-	# invoke_count_words(paramCount, params)
+	# extern "C" uint32
+	# invoke_count_words(PRUint32 paramCount, nsXPTCVariant* s);
+	la	t9, invoke_count_words
 	move	a0, a2
 	move	a1, a3
+	jalr	t9
+	lw  	gp, GPOFF(fp)
 
-	jal	invoke_count_words
-	lw	gp, GPOFF(sp)
+	# allocate variable stack, with a size of:
+	# wordsize (of 4 bytes) * result (already aligned to dword)
+	# but a minimum of 16 byte
+	sll	v0, 2
+	slt	t0, v0, 16
+	beqz	t0, 1f
+	li	v0, 16
+1:	subu	sp, v0
 
-	# save the old sp so we can pop the param area and any "low frame"
-	# needed as an argsave area below the param block for callees that
-	# we invoke.
-	move	s0, sp
-
-	REG_L	a1, A2OFF(sp)	# a1 = paramCount
-	REG_L	a2, A3OFF(sp)	# a2 = params
-
-	# we define a word as 4 bytes, period end of story!
-	sll	v0, 2		# 4 bytes * result of invoke_copy_words
-	subu	v0, LOFRAMESZ	# but we take back the argsave area built into
-				# our stack frame -- SWEET!
-	subu	sp, sp, v0	# make room
-	move	a0, sp		# a0 = param stack address
-	move	s1, a0		# save it for later -- it should be safe here
-
-	# the old sp is still saved in s0, but we now need another argsave
-	# area ("low frame") for the invoke_copy_to_stack call.
-	subu	sp, sp, LOFRAMESZ
-
-	# copy the param into the stack areas
+	# let a0 point to the bottom of the variable stack, allocate
+	# another fixed stack for:
+	# extern "C" void
 	# invoke_copy_to_stack(PRUint32* d, PRUint32 paramCount,
-	#                      nsXPTCVariant* s)
-	jal     invoke_copy_to_stack
-	lw  	gp, GPOFF(s0)
+	#		       nsXPTCVariant* s);
+	la	t9, invoke_copy_to_stack
+	move	a0, sp
+	lw	a1, A2OFF(fp)
+	lw	a2, A3OFF(fp)
+	subu	sp, 16
+	jalr	t9
+	lw  	gp, GPOFF(fp)
 
-	move	sp, s0		# get orig sp back, popping params and argsave
+	# back to the variable stack frame
+	addu	sp, 16
 
-	REG_L	a0, A0OFF(sp)	# a0 = set "that" to be "this"
-	REG_L	a1, A1OFF(sp)	# a1 = methodIndex
-
-	# t1 = methodIndex * 4
-	# (use shift instead of mult)
-	sll	t1, a1, 2
-
-	# calculate the function we need to jump to,
-	# which must then be saved in t9
+	# calculate the function we need to jump to, which must then be
+	# stored in t9
+	lw	a0, A0OFF(fp)	# a0 = set "that" to be "this"
+	lw	t0, A1OFF(fp)	# a1 = methodIndex
 	lw	t9, 0(a0)
-	addu	t9, t9, t1
-	lw	t9, 8(t9)
+	# t0 = methodIndex << PTRLOG
+	sll	t0, t0, PTRLOG
+	addu	t9, t0
+#if defined(__GXX_ABI_VERSION) && __GXX_ABI_VERSION >= 100 /* G++ V3 ABI */
+	lw	t9, (t9)
+#else /* not G++ V3 ABI */
+	lw	t9, 2*PTRSIZE(t9)
+#endif /* G++ V3 ABI */
 
-	# a1..a3 and f13..f14 should now be set to what
-	# invoke_copy_to_stack told us. skip a0 and f12
-	# because that is the "this" pointer
+	# Set a1-a3 to what invoke_copy_to_stack told us. a0 is already
+	# the "this" pointer. We don't have to care about floating
+	# point arguments, the non-FP "this" pointer as first argument
+	# means they'll never be used.
+	lw	a1, 1*SZREG(sp)
+	lw	a2, 2*SZREG(sp)
+	lw	a3, 3*SZREG(sp)
 
-	REG_L	a1, 1*SZREG(s1)
-	REG_L	a2, 2*SZREG(s1)
-	REG_L	a3, 3*SZREG(s1)
+	jalr	t9
+	# Micro-optimization: There's no gp usage below this point, so
+	# we don't reload.
+	# lw	gp, GPOFF(fp)
 
-	l.d	$f13, 8(s1)
-	l.d	$f14, 16(s1)
+	# leave variable stack frame
+	move	sp, fp
 
-	# Create the stack pointer for the function, which must have 4 words
-	# of space for callee-saved args.  invoke_count_words allocated space
-        # for a0 starting at s1, so we just move s1 into sp.
-	move	sp, s1
+	lw	ra, RAOFF(sp)
+	lw	fp, FPOFF(sp)
 
-	jalr	ra, t9
-	lw	gp, GPOFF(s0)
-
-	move	sp, s0
-
-	REG_L	ra, RAOFF(sp)
-	REG_L	s0, S0OFF(sp)
-	addu	sp, FRAMESZ
+	addiu	sp, FRAMESZ
 	j	ra
-.end _XPTC_InvokeByIndex
+END(_NS_InvokeByIndex_P)

@@ -69,7 +69,6 @@
 #include "secasn1.h"
 #include "secerr.h"
 
-#include "ssl3prot.h" 	/* for SSL3_RANDOM_LENGTH */
 #include "prprf.h"
 
 #define __PASTE(x,y)    x##y
@@ -87,6 +86,11 @@
 #define CK_NEED_ARG_LIST	1
  
 #include "pkcs11f.h"
+
+typedef struct {
+    uint8 client_version[2];
+    uint8 random[46];
+} SSL3RSAPreMasterSecret;
 
 static void sftk_Null(void *data, PRBool freeit)
 {
@@ -242,6 +246,23 @@ NSC_DestroyObject(CK_SESSION_HANDLE hSession, CK_OBJECT_HANDLE hObject)
  */
 
 
+/*
+ * map SEC_ERROR_xxx to CKR_xxx.
+ */
+static CK_RV
+sftk_MapCryptError(int error)
+{
+    switch (error) {
+	case SEC_ERROR_INVALID_ARGS:
+	    return CKR_ARGUMENTS_BAD;
+	case SEC_ERROR_INPUT_LEN:
+	    return CKR_DATA_LEN_RANGE;
+	case SEC_ERROR_OUTPUT_LEN:
+	    return CKR_BUFFER_TOO_SMALL;
+    }
+    return CKR_DEVICE_ERROR;
+}
+ 
 /* 
  * return a context based on the SFTKContext type.
  */
@@ -797,7 +818,9 @@ CK_RV NSC_EncryptUpdate(CK_SESSION_HANDLE hSession,
     	    rv = (*context->update)(context->cipherInfo, pEncryptedPart, 
 		&padoutlen, context->blockSize, context->padBuf,
 							context->blockSize);
-    	    if (rv != SECSuccess) return CKR_DEVICE_ERROR;
+	    if (rv != SECSuccess) {
+		return sftk_MapCryptError(PORT_GetError());
+	    }
 	    pEncryptedPart += padoutlen;
 	    maxout -= padoutlen;
 	}
@@ -821,7 +844,10 @@ CK_RV NSC_EncryptUpdate(CK_SESSION_HANDLE hSession,
     rv = (*context->update)(context->cipherInfo,pEncryptedPart, 
 					&outlen, maxout, pPart, ulPartLen);
     *pulEncryptedPartLen = (CK_ULONG) (outlen + padoutlen);
-    return (rv == SECSuccess) ? CKR_OK : CKR_DEVICE_ERROR;
+    if (rv != SECSuccess) {
+	return sftk_MapCryptError(PORT_GetError());
+    }
+    return CKR_OK;
 }
 
 
@@ -2677,7 +2703,7 @@ CK_RV NSC_GenerateRandom(CK_SESSION_HANDLE hSession,
  */
 static CK_RV
 nsc_pbe_key_gen(NSSPKCS5PBEParameter *pkcs5_pbe, CK_MECHANISM_PTR pMechanism,
-			char *buf, CK_ULONG *key_length, PRBool faulty3DES)
+			void *buf, CK_ULONG *key_length, PRBool faulty3DES)
 {
     SECItem *pbe_key = NULL, iv, pwitem;
     CK_PBE_PARAMS *pbe_params = NULL;
@@ -3017,7 +3043,7 @@ CK_RV NSC_GenerateKey(CK_SESSION_HANDLE hSession,
     CK_BBOOL cktrue = CK_TRUE;
     int i;
     SFTKSlot *slot = sftk_SlotFromSessionHandle(hSession);
-    char buf[MAX_KEY_LEN];
+    unsigned char buf[MAX_KEY_LEN];
     enum {nsc_pbe, nsc_ssl, nsc_bulk, nsc_param} key_gen_type;
     NSSPKCS5PBEParameter *pbe_param;
     SSL3RSAPreMasterSecret *rsa_pms;
@@ -3163,9 +3189,8 @@ CK_RV NSC_GenerateKey(CK_SESSION_HANDLE hSession,
     case nsc_bulk:
 	/* get the key, check for weak keys and repeat if found */
 	do {
-            crv = NSC_GenerateRandom(0, (unsigned char *)buf, key_length);
-	} while (crv == CKR_OK && checkWeak && 
-			sftk_IsWeakKey((unsigned char *)buf,key_type));
+            crv = NSC_GenerateRandom(0, buf, key_length);
+	} while (crv == CKR_OK && checkWeak && sftk_IsWeakKey(buf,key_type));
 	break;
     case nsc_param:
 	/* generate parameters */
@@ -4851,6 +4876,7 @@ static const char * const mixers[NUM_MIXERS] = {
     "IIIIIIIII" };
 #define SSL3_PMS_LENGTH 48
 #define SSL3_MASTER_SECRET_LENGTH 48
+#define SSL3_RANDOM_LENGTH 32
 
 
 /* NSC_DeriveKey derives a key from a base key, creating a new key object. */

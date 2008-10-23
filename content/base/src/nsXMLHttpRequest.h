@@ -70,6 +70,7 @@
 #include "prtime.h"
 #include "nsIEventListenerManager.h"
 #include "nsIDOMNSEvent.h"
+#include "nsITimer.h"
 #include "nsIPrivateDOMEvent.h"
 #include "nsDOMProgressEvent.h"
 
@@ -129,7 +130,7 @@ public:
   void Clear();
 
 private:
-  PR_STATIC_CALLBACK(PLDHashOperator)
+  static PLDHashOperator
     RemoveExpiredEntries(const nsACString& aKey, nsAutoPtr<CacheEntry>& aValue,
                          void* aUserData);
 
@@ -251,7 +252,8 @@ class nsXMLHttpRequest : public nsXHREventTarget,
                          public nsIProgressEventSink,
                          public nsIInterfaceRequestor,
                          public nsSupportsWeakReference,
-                         public nsIJSNativeInitializer
+                         public nsIJSNativeInitializer,
+                         public nsITimerCallback
 {
 public:
   nsXMLHttpRequest();
@@ -292,6 +294,9 @@ public:
 
   // nsIInterfaceRequestor
   NS_DECL_NSIINTERFACEREQUESTOR
+
+  // nsITimerCallback
+  NS_DECL_NSITIMERCALLBACK
 
   // nsIJSNativeInitializer
   NS_IMETHOD Initialize(nsISupports* aOwner, JSContext* cx, JSObject* obj,
@@ -394,6 +399,8 @@ protected:
    */
   nsresult CheckChannelForCrossSiteRequest(nsIChannel* aChannel);
 
+  void StartProgressEventTimer();
+
   nsCOMPtr<nsISupports> mContext;
   nsCOMPtr<nsIPrincipal> mPrincipal;
   nsCOMPtr<nsIChannel> mChannel;
@@ -442,11 +449,19 @@ protected:
   PRUint32 mState;
 
   nsRefPtr<nsXMLHttpRequestUpload> mUpload;
-  PRUint32 mUploadTransferred;
-  PRUint32 mUploadTotal;
+  PRUint64 mUploadTransferred;
+  PRUint64 mUploadTotal;
   PRPackedBool mUploadComplete;
+  PRUint64 mUploadProgress; // For legacy
+  PRUint64 mUploadProgressMax; // For legacy
 
   PRPackedBool mErrorLoad;
+
+  PRPackedBool mTimerIsActive;
+  PRPackedBool mProgressEventWasDelayed;
+  PRPackedBool mLoadLengthComputable;
+  PRUint64 mLoadTotal; // 0 if not known.
+  nsCOMPtr<nsITimer> mProgressNotifier;
 
   PRPackedBool mFirstStartRequestSeen;
 };

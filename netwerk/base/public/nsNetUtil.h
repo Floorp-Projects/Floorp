@@ -1443,30 +1443,6 @@ NS_GetFinalChannelURI(nsIChannel* channel, nsIURI** uri)
     return channel->GetOriginalURI(uri);
 }
 
-/**
- * Checks whether a document at the given URI should have access
- * to the offline cache.
- * @param uri
- *        The URI to check
- * @param prefBranch
- *        The pref branch to use to check the
- *        offline-apps.allow_by_default pref.  If not specified,
- *        the pref service will be used.
- */
-inline PRBool
-NS_OfflineAppAllowed(nsIURI *aURI, nsIPrefBranch *aPrefBranch = nsnull)
-{
-    nsresult rv;
-    nsCOMPtr<nsINetUtil_MOZILLA_1_9_1> util = do_GetIOService(&rv);
-    NS_ENSURE_SUCCESS(rv, PR_FALSE);
-
-    PRBool allowed;
-    rv = util->OfflineAppAllowed(aURI, aPrefBranch, &allowed);
-    NS_ENSURE_SUCCESS(rv, PR_FALSE);
-
-    return allowed;
-}
-
 static inline PRInt32
 GetEffectivePort(nsIURI* aURI)
 {

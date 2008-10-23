@@ -377,12 +377,29 @@ nsStyleBorder::nsStyleBorder(nsPresContext* aPresContext)
   mTwipsPerPixel = aPresContext->DevPixelsToAppUnits(1);
 }
 
+nsBorderColors::~nsBorderColors()
+{
+  NS_CSS_DELETE_LIST_MEMBER(nsBorderColors, this, mNext);
+}
+
+nsBorderColors*
+nsBorderColors::Clone(PRBool aDeep) const
+{
+  nsBorderColors* result = new nsBorderColors(mColor);
+  if (NS_UNLIKELY(!result))
+    return result;
+  if (aDeep)
+    NS_CSS_CLONE_LIST_MEMBER(nsBorderColors, this, mNext, result, (PR_FALSE));
+  return result;
+}
+
 nsStyleBorder::nsStyleBorder(const nsStyleBorder& aSrc)
   : mBorderRadius(aSrc.mBorderRadius),
     mBorderImageSplit(aSrc.mBorderImageSplit),
     mFloatEdge(aSrc.mFloatEdge),
     mBorderImageHFill(aSrc.mBorderImageHFill),
     mBorderImageVFill(aSrc.mBorderImageVFill),
+    mBorderColors(nsnull),
     mBoxShadow(aSrc.mBoxShadow),
     mHaveBorderImageWidth(aSrc.mHaveBorderImageWidth),
     mBorderImageWidth(aSrc.mBorderImageWidth),
@@ -391,12 +408,11 @@ nsStyleBorder::nsStyleBorder(const nsStyleBorder& aSrc)
     mBorderImage(aSrc.mBorderImage),
     mTwipsPerPixel(aSrc.mTwipsPerPixel)
 {
-  mBorderColors = nsnull;
   if (aSrc.mBorderColors) {
     EnsureBorderColors();
     for (PRInt32 i = 0; i < 4; i++)
       if (aSrc.mBorderColors[i])
-        mBorderColors[i] = aSrc.mBorderColors[i]->CopyColors();
+        mBorderColors[i] = aSrc.mBorderColors[i]->Clone();
       else
         mBorderColors[i] = nsnull;
   }

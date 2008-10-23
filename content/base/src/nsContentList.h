@@ -74,11 +74,9 @@ class nsIDocument;
 class nsIDOMHTMLFormElement;
 
 
-class nsBaseContentList : public nsIDOMNodeList,
-                          public nsINodeList
+class nsBaseContentList : public nsINodeList
 {
 public:
-  nsBaseContentList();
   virtual ~nsBaseContentList();
 
   NS_DECL_CYCLE_COLLECTING_ISUPPORTS
@@ -89,7 +87,7 @@ public:
   // nsINodeList
   virtual nsINode* GetNodeAt(PRUint32 aIndex);
   
-  NS_DECL_CYCLE_COLLECTION_CLASS_AMBIGUOUS(nsBaseContentList, nsIDOMNodeList)
+  NS_DECL_CYCLE_COLLECTION_CLASS_AMBIGUOUS(nsBaseContentList, nsINodeList)
 
   void AppendElement(nsIContent *aContent);
   void RemoveElement(nsIContent *aContent);
@@ -264,6 +262,22 @@ public:
   NS_DECL_NSIMUTATIONOBSERVER_NODEWILLBEDESTROYED
   
   static void OnDocumentDestroy(nsIDocument *aDocument);
+
+  static nsContentList* FromSupports(nsISupports* aSupports)
+  {
+    nsINodeList* list = static_cast<nsINodeList*>(aSupports);
+#ifdef DEBUG
+    {
+      nsCOMPtr<nsINodeList> list_qi = do_QueryInterface(aSupports);
+
+      // If this assertion fires the QI implementation for the object in
+      // question doesn't use the nsINodeList pointer as the nsISupports
+      // pointer. That must be fixed, or we'll crash...
+      NS_ASSERTION(list_qi == list, "Uh, fix QI!");
+    }
+#endif
+    return static_cast<nsContentList*>(list);
+  }
 
 protected:
   /**

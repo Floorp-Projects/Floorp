@@ -87,6 +87,10 @@
 #include "nsCSSRules.h"
 #include "nsFontFaceLoader.h"
 
+#define VISITED_PSEUDO_PREF "layout.css.visited_links_enabled"
+
+static PRBool gSupportVisitedPseudo = PR_TRUE;
+
 static NS_DEFINE_CID(kLookAndFeelCID, NS_LOOKANDFEEL_CID);
 static nsTArray< nsCOMPtr<nsIAtom> >* sSystemMetrics = 0;
 
@@ -753,6 +757,16 @@ nsCSSRuleProcessor::~nsCSSRuleProcessor()
 
 NS_IMPL_ISUPPORTS1(nsCSSRuleProcessor, nsIStyleRuleProcessor)
 
+/* static */ void
+nsCSSRuleProcessor::Startup()
+{
+  nsContentUtils::AddBoolPrefVarCache(VISITED_PSEUDO_PREF,
+                                      &gSupportVisitedPseudo);
+  // We want to default to true, not false as AddBoolPrefVarCache does.
+  gSupportVisitedPseudo =
+    nsContentUtils::GetBoolPref(VISITED_PSEUDO_PREF, PR_TRUE);
+}
+
 static PRBool
 InitSystemMetrics()
 {
@@ -919,6 +933,10 @@ RuleProcessorData::RuleProcessorData(nsPresContext* aPresContext,
                            aRuleWalker != nsnull, &mLinkState)) {
       mIsLink = PR_TRUE;
     } 
+  }
+
+  if (mLinkState == eLinkState_Visited && !gSupportVisitedPseudo) {
+    mLinkState = eLinkState_Unvisited;
   }
 }
 

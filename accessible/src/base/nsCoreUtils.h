@@ -87,6 +87,17 @@ public:
   static already_AddRefed<nsIDOMElement> GetDOMElementFor(nsIDOMNode *aNode);
 
   /**
+   * Return the nsIContent* to check for ARIA attributes on -- this may not
+   * always be the DOM node for the accessible. Specifically, for doc
+   * accessibles, it is not the document node, but either the root element or
+   * <body> in HTML. Similar with GetDOMElementFor() method.
+   *
+   * @param aDOMNode  DOM node for the accessible that may be affected by ARIA
+   * @return          the nsIContent which may have ARIA markup
+   */
+  static nsIContent *GetRoleContent(nsIDOMNode *aDOMNode);
+
+  /**
    * Is the first passed in node an ancestor of the second?
    * Note: A node is not considered to be the ancestor of itself.
    * @param aPossibleAncestorNode -- node to test for ancestor-ness of aPossibleDescendantNode
@@ -173,6 +184,25 @@ public:
   static nsIFrame* GetFrameFor(nsIDOMElement *aElm);
 
   /**
+   * Retrun true if the type of given frame equals to the given frame type.
+   *
+   * @param aFrame  the frame
+   * @param aAtom   the frame type
+   */
+  static PRBool IsCorrectFrameType(nsIFrame* aFrame, nsIAtom* aAtom);
+
+  /**
+   * Return presShell for the document containing the given DOM node.
+   */
+  static already_AddRefed<nsIPresShell> GetPresShellFor(nsIDOMNode *aNode);
+
+  /**
+   * Return document node for the given document shell tree item.
+   */
+  static already_AddRefed<nsIDOMNode>
+    GetDOMNodeForContainer(nsIDocShellTreeItem *aContainer);
+
+  /**
    * Get the ID for an element, in some types of XML this may not be the ID attribute
    * @param aContent  Node to get the ID for
    * @param aID       Where to put ID string
@@ -197,6 +227,13 @@ public:
    */
   static void GetLanguageFor(nsIContent *aContent, nsIContent *aRootContent,
                              nsAString& aLanguage);
+
+  /**
+   * Return computed styles declaration for the given node.
+   */
+  static void GetComputedStyleDeclaration(const nsAString& aPseudoElt,
+                                          nsIDOMNode *aNode,
+                                          nsIDOMCSSStyleDeclaration **aCssDecl);
 
   /**
    * Search element in neighborhood of the given element by tag name and
@@ -266,6 +303,18 @@ public:
                                                     PRUint32 aAttrNum = 1,
                                                     nsIContent *aExcludeContent = nsnull,
                                                     nsIAtom *aTagType = nsAccessibilityAtoms::label);
+
+  /**
+   * Return the label element for the given DOM element.
+   */
+  static nsIContent *GetLabelContent(nsIContent *aForNode);
+
+  /**
+   * Return the HTML label element for the given HTML element.
+   */
+  static nsIContent *GetHTMLLabelContent(nsIContent *aForNode);
+
+  
 };
 
 #endif

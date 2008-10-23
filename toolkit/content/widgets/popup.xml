@@ -263,7 +263,7 @@
     </handlers>
   </binding>
 
-  <binding id="tooltip" extends="chrome://global/content/bindings/popup.xml#popup">
+  <binding id="tooltip" extends="chrome://global/content/bindings/popup.xml#popup-base">
     <content>
       <children>
         <xul:label class="tooltip-label" xbl:inherits="xbl:text=label" flex="1"/>

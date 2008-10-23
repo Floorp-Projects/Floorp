@@ -285,6 +285,18 @@
     </implementation>
   </binding>
   
+  <binding id="statusbar-drag"
+           extends="chrome://global/content/bindings/general.xml#statusbar">
+    <implementation>
+      <constructor>
+        try {
+          Components.utils.import("resource://gre/modules/WindowDraggingUtils.jsm");
+          new WindowDraggingElement(this, window);
+        } catch (e) {}
+      </constructor>
+    </implementation>
+  </binding>
+
   <binding id="statusbarpanel-iconic" display="xul:button"
            extends="chrome://global/content/bindings/general.xml#statusbarpanel">
     <content>
@@ -372,6 +384,17 @@
           ]]>
         </getter>
       </property>
+    </implementation>
+  </binding>
+
+  <binding id="windowdragbox">
+    <implementation>
+      <constructor>
+        try {
+          Components.utils.import("resource://gre/modules/WindowDraggingUtils.jsm");
+          new WindowDraggingElement(this, window);
+        } catch (e) {}
+      </constructor>
     </implementation>
   </binding>
 

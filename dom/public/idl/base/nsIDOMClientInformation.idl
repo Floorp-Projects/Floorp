@@ -38,7 +38,6 @@
 #include "domstubs.idl"
 
 interface nsIDOMOfflineResourceList;
-interface nsIDOMLoadStatusList;
 
 [scriptable, uuid(f8bbf8c3-c47b-465a-a221-22824449f689)]
 interface nsIDOMClientInformation : nsISupports

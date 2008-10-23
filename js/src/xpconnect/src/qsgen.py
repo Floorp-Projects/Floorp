@@ -960,10 +960,10 @@ def writeMakeDependOutput(filename):
     f = open(filename, 'w')
     try:
         if len(make_targets) > 0:
-            f.write("%s: \\\n" % makeQuote(make_targets[0]))
+            f.write("%s:" % makeQuote(make_targets[0]))
             for filename in make_dependencies:
-                f.write('\t\t%s \\\n' % makeQuote(filename))
-            f.write('\t\t$(NULL)\n\n')
+                f.write(' \\\n\t\t%s' % makeQuote(filename))
+            f.write('\n\n')
             for filename in make_targets[1:]:
                 f.write('%s: %s\n' % (makeQuote(filename), makeQuote(make_targets[0])))
     finally:

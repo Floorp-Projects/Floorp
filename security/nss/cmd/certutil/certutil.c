@@ -537,7 +537,7 @@ ListCerts(CERTCertDBHandle *handle, char *nickname, PK11SlotInfo *slot,
 {
     SECStatus rv;
 
-    if (!ascii && !raw) {
+    if (!ascii && !raw && !nickname) {
         PR_fprintf(outfile, "\n%-60s %-5s\n%-60s %-5s\n\n",
                    "Certificate Nickname", "Trust Attributes", "",
                    "SSL,S/MIME,JAR/XPI");
@@ -2207,7 +2207,7 @@ certutil_main(int argc, char **argv, PRBool initialize)
     /*  If making a cert request, need a subject.  */
     if ((certutil.commands[cmd_CertReq].activated ||
          certutil.commands[cmd_CreateAndAddCert].activated) &&
-        !certutil.options[opt_Subject].activated) {
+        !(certutil.options[opt_Subject].activated || keysource)) {
 	PR_fprintf(PR_STDERR, 
 	           "%s -%c: subject is required to create a cert request.\n",
 	           progName, commandToRun);
@@ -2626,14 +2626,28 @@ merge_fail:
 	    privkey = PK11_FindKeyByDERCert(slot, keycert, &pwdata);
 	    if (privkey)
 		pubkey = CERT_ExtractPublicKey(keycert);
-	    CERT_DestroyCertificate(keycert);
 	    if (!pubkey) {
 		SECU_PrintError(progName,
 				"Could not get keys from cert %s", keysource);
 		rv = SECFailure;
+		CERT_DestroyCertificate(keycert);
 		goto shutdown;
 	    }
 	    keytype = privkey->keyType;
+	    /* On CertReq for renewal if no subject has been
+	     * specified obtain it from the certificate. 
+	     */
+	    if (certutil.commands[cmd_CertReq].activated && !subject) {
+	        subject = CERT_AsciiToName(keycert->subjectName);
+	        if (!subject) {
+	            SECU_PrintError(progName,
+			"Could not get subject from certificate %s", keysource);
+	            CERT_DestroyCertificate(keycert);
+	            rv = SECFailure;
+	            goto shutdown;
+	        }
+	    }
+	    CERT_DestroyCertificate(keycert);
 	} else {
 	    privkey = 
 		CERTUTIL_GeneratePrivateKey(keytype, slot, keysize,

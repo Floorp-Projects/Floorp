@@ -350,6 +350,19 @@ static PRBool gForce24bpp = PR_FALSE;
 
 nsWindow::nsWindow()
 {
+    mIsTopLevel       = PR_FALSE;
+    mIsDestroyed      = PR_FALSE;
+    mNeedsResize      = PR_FALSE;
+    mNeedsMove        = PR_FALSE;
+    mListenForResizes = PR_FALSE;
+    mIsShown          = PR_FALSE;
+    mNeedsShow        = PR_FALSE;
+    mEnabled          = PR_TRUE;
+    mCreated          = PR_FALSE;
+    mPlaced           = PR_FALSE;
+
+    mPreferredWidth   = 0;
+    mPreferredHeight  = 0;
     mContainer           = nsnull;
     mDrawingarea         = nsnull;
     mShell               = nsnull;
@@ -455,8 +468,146 @@ nsWindow::ReleaseGlobals()
   }
 }
 
-NS_IMPL_ISUPPORTS_INHERITED1(nsWindow, nsCommonWidget,
+NS_IMPL_ISUPPORTS_INHERITED1(nsWindow, nsBaseWidget,
                              nsISupportsWeakReference)
+
+void
+nsWindow::CommonCreate(nsIWidget *aParent, PRBool aListenForResizes)
+{
+    mParent = aParent;
+    mListenForResizes = aListenForResizes;
+    mCreated = PR_TRUE;
+}
+
+void
+nsWindow::InitKeyEvent(nsKeyEvent &aEvent, GdkEventKey *aGdkEvent)
+{
+    aEvent.keyCode   = GdkKeyCodeToDOMKeyCode(aGdkEvent->keyval);
+    aEvent.isShift   = (aGdkEvent->state & GDK_SHIFT_MASK)
+        ? PR_TRUE : PR_FALSE;
+    aEvent.isControl = (aGdkEvent->state & GDK_CONTROL_MASK)
+        ? PR_TRUE : PR_FALSE;
+    aEvent.isAlt     = (aGdkEvent->state & GDK_MOD1_MASK)
+        ? PR_TRUE : PR_FALSE;
+    aEvent.isMeta    = (aGdkEvent->state & GDK_MOD4_MASK)
+        ? PR_TRUE : PR_FALSE;
+    // The transformations above and in gdk for the keyval are not invertible
+    // so link to the GdkEvent (which will vanish soon after return from the
+    // event callback) to give plugins access to hardware_keycode and state.
+    // (An XEvent would be nice but the GdkEvent is good enough.)
+    aEvent.nativeMsg = (void *)aGdkEvent;
+
+    aEvent.time      = aGdkEvent->time;
+}
+
+void
+nsWindow::DispatchGotFocusEvent(void)
+{
+    nsGUIEvent event(PR_TRUE, NS_GOTFOCUS, this);
+    nsEventStatus status;
+    DispatchEvent(&event, status);
+}
+
+void
+nsWindow::DispatchLostFocusEvent(void)
+{
+    nsGUIEvent event(PR_TRUE, NS_LOSTFOCUS, this);
+    nsEventStatus status;
+    DispatchEvent(&event, status);
+}
+
+
+void
+nsWindow::DispatchResizeEvent(nsRect &aRect, nsEventStatus &aStatus)
+{
+    nsSizeEvent event(PR_TRUE, NS_SIZE, this);
+
+    event.windowSize = &aRect;
+    event.refPoint.x = aRect.x;
+    event.refPoint.y = aRect.y;
+    event.mWinWidth = aRect.width;
+    event.mWinHeight = aRect.height;
+
+    nsEventStatus status;
+    DispatchEvent(&event, status); 
+}
+
+void
+nsWindow::DispatchActivateEvent(void)
+{
+#ifdef ACCESSIBILITY
+    DispatchActivateEventAccessible();
+#endif //ACCESSIBILITY
+    nsGUIEvent event(PR_TRUE, NS_ACTIVATE, this);
+    nsEventStatus status;
+    DispatchEvent(&event, status);
+}
+
+void
+nsWindow::DispatchDeactivateEvent(void)
+{
+    nsGUIEvent event(PR_TRUE, NS_DEACTIVATE, this);
+    nsEventStatus status;
+    DispatchEvent(&event, status);
+
+#ifdef ACCESSIBILITY
+    DispatchDeactivateEventAccessible();
+#endif //ACCESSIBILITY
+}
+
+
+
+nsresult
+nsWindow::DispatchEvent(nsGUIEvent *aEvent,
+                              nsEventStatus &aStatus)
+{
+#ifdef DEBUG
+    debug_DumpEvent(stdout, aEvent->widget, aEvent,
+                    nsCAutoString("something"), 0);
+#endif
+
+    aStatus = nsEventStatus_eIgnore;
+
+    // send it to the standard callback
+    if (mEventCallback)
+        aStatus = (* mEventCallback)(aEvent);
+
+    // dispatch to event listener if event was not consumed
+    if ((aStatus != nsEventStatus_eIgnore) && mEventListener)
+        aStatus = mEventListener->ProcessEvent(*aEvent);
+
+    return NS_OK;
+}
+
+void
+nsWindow::OnDestroy(void)
+{
+    if (mOnDestroyCalled)
+        return;
+
+    mOnDestroyCalled = PR_TRUE;
+
+    // release references to children, device context, toolkit + app shell
+    nsBaseWidget::OnDestroy();
+
+    // let go of our parent
+    mParent = nsnull;
+
+    nsCOMPtr<nsIWidget> kungFuDeathGrip = this;
+
+    nsGUIEvent event(PR_TRUE, NS_DESTROY, this);
+    nsEventStatus status;
+    DispatchEvent(&event, status);
+}
+
+PRBool
+nsWindow::AreBoundsSane(void)
+{
+    if (mBounds.width > 0 && mBounds.height > 0)
+        return PR_TRUE;
+
+    return PR_FALSE;
+}
 
 NS_IMETHODIMP
 nsWindow::Create(nsIWidget        *aParent,
@@ -599,6 +750,12 @@ nsWindow::Destroy(void)
     return NS_OK;
 }
 
+nsIWidget *
+nsWindow::GetParent(void)
+{
+    return mParent;
+}
+
 NS_IMETHODIMP
 nsWindow::SetParent(nsIWidget *aNewParent)
 {
@@ -697,6 +854,215 @@ nsWindow::ConstrainPosition(PRBool aAllowSlop, PRInt32 *aX, PRInt32 *aY)
     }
     return NS_OK;
 }
+
+NS_IMETHODIMP
+nsWindow::Show(PRBool aState)
+{
+    mIsShown = aState;
+
+    LOG(("nsWindow::Show [%p] state %d\n", (void *)this, aState));
+
+    // Ok, someone called show on a window that isn't sized to a sane
+    // value.  Mark this window as needing to have Show() called on it
+    // and return.
+    if ((aState && !AreBoundsSane()) || !mCreated) {
+        LOG(("\tbounds are insane or window hasn't been created yet\n"));
+        mNeedsShow = PR_TRUE;
+        return NS_OK;
+    }
+
+    // If someone is hiding this widget, clear any needing show flag.
+    if (!aState)
+        mNeedsShow = PR_FALSE;
+
+    // If someone is showing this window and it needs a resize then
+    // resize the widget.
+    if (aState) {
+        if (mNeedsMove) {
+            LOG(("\tresizing\n"));
+            NativeResize(mBounds.x, mBounds.y, mBounds.width, mBounds.height,
+                         PR_FALSE);
+        } else if (mNeedsResize) {
+            NativeResize(mBounds.width, mBounds.height, PR_FALSE);
+        }
+    }
+
+    NativeShow(aState);
+
+    return NS_OK;
+}
+
+NS_IMETHODIMP
+nsWindow::Resize(PRInt32 aWidth, PRInt32 aHeight, PRBool aRepaint)
+{
+    mBounds.SizeTo(GetSafeWindowSize(nsSize(aWidth, aHeight)));
+
+    if (!mCreated)
+        return NS_OK;
+
+    // There are several cases here that we need to handle, based on a
+    // matrix of the visibility of the widget, the sanity of this resize
+    // and whether or not the widget was previously sane.
+
+    // Has this widget been set to visible?
+    if (mIsShown) {
+        // Are the bounds sane?
+        if (AreBoundsSane()) {
+            // Yep?  Resize the window
+            //Maybe, the toplevel has moved
+
+            // Note that if the widget needs to be shown because it
+            // was previously insane in Resize(x,y,w,h), then we need
+            // to set the x and y here too, because the widget wasn't
+            // moved back then
+            if (mIsTopLevel || mNeedsShow)
+                NativeResize(mBounds.x, mBounds.y,
+                             mBounds.width, mBounds.height, aRepaint);
+            else
+                NativeResize(mBounds.width, mBounds.height, aRepaint);
+
+            // Does it need to be shown because it was previously insane?
+            if (mNeedsShow)
+                NativeShow(PR_TRUE);
+        }
+        else {
+            // If someone has set this so that the needs show flag is false
+            // and it needs to be hidden, update the flag and hide the
+            // window.  This flag will be cleared the next time someone
+            // hides the window or shows it.  It also prevents us from
+            // calling NativeShow(PR_FALSE) excessively on the window which
+            // causes unneeded X traffic.
+            if (!mNeedsShow) {
+                mNeedsShow = PR_TRUE;
+                NativeShow(PR_FALSE);
+            }
+        }
+    }
+    // If the widget hasn't been shown, mark the widget as needing to be
+    // resized before it is shown.
+    else {
+        if (AreBoundsSane() && mListenForResizes) {
+            // For widgets that we listen for resizes for (widgets created
+            // with native parents) we apparently _always_ have to resize.  I
+            // dunno why, but apparently we're lame like that.
+            NativeResize(aWidth, aHeight, aRepaint);
+        }
+        else {
+            mNeedsResize = PR_TRUE;
+        }
+    }
+
+    // synthesize a resize event if this isn't a toplevel
+    if (mIsTopLevel || mListenForResizes) {
+        nsRect rect(mBounds.x, mBounds.y, aWidth, aHeight);
+        nsEventStatus status;
+        DispatchResizeEvent(rect, status);
+    }
+
+    return NS_OK;
+}
+
+NS_IMETHODIMP
+nsWindow::Resize(PRInt32 aX, PRInt32 aY, PRInt32 aWidth, PRInt32 aHeight,
+                       PRBool aRepaint)
+{
+    mBounds.x = aX;
+    mBounds.y = aY;
+    mBounds.SizeTo(GetSafeWindowSize(nsSize(aWidth, aHeight)));
+
+    mPlaced = PR_TRUE;
+
+    if (!mCreated)
+        return NS_OK;
+
+    // There are several cases here that we need to handle, based on a
+    // matrix of the visibility of the widget, the sanity of this resize
+    // and whether or not the widget was previously sane.
+
+    // Has this widget been set to visible?
+    if (mIsShown) {
+        // Are the bounds sane?
+        if (AreBoundsSane()) {
+            // Yep?  Resize the window
+            NativeResize(aX, aY, aWidth, aHeight, aRepaint);
+            // Does it need to be shown because it was previously insane?
+            if (mNeedsShow)
+                NativeShow(PR_TRUE);
+        }
+        else {
+            // If someone has set this so that the needs show flag is false
+            // and it needs to be hidden, update the flag and hide the
+            // window.  This flag will be cleared the next time someone
+            // hides the window or shows it.  It also prevents us from
+            // calling NativeShow(PR_FALSE) excessively on the window which
+            // causes unneeded X traffic.
+            if (!mNeedsShow) {
+                mNeedsShow = PR_TRUE;
+                NativeShow(PR_FALSE);
+            }
+        }
+    }
+    // If the widget hasn't been shown, mark the widget as needing to be
+    // resized before it is shown
+    else {
+        if (AreBoundsSane() && mListenForResizes){
+            // For widgets that we listen for resizes for (widgets created
+            // with native parents) we apparently _always_ have to resize.  I
+            // dunno why, but apparently we're lame like that.
+            NativeResize(aX, aY, aWidth, aHeight, aRepaint);
+        }
+        else {
+            mNeedsResize = PR_TRUE;
+            mNeedsMove = PR_TRUE;
+        }
+    }
+
+    if (mIsTopLevel || mListenForResizes) {
+        // synthesize a resize event
+        nsRect rect(aX, aY, aWidth, aHeight);
+        nsEventStatus status;
+        DispatchResizeEvent(rect, status);
+    }
+
+    return NS_OK;
+}
+
+NS_IMETHODIMP
+nsWindow::GetPreferredSize(PRInt32 &aWidth,
+                                 PRInt32 &aHeight)
+{
+    aWidth  = mPreferredWidth;
+    aHeight = mPreferredHeight;
+    return (mPreferredWidth != 0 && mPreferredHeight != 0) ? 
+        NS_OK : NS_ERROR_FAILURE;
+}
+
+NS_IMETHODIMP
+nsWindow::SetPreferredSize(PRInt32 aWidth,
+                                 PRInt32 aHeight)
+{
+    mPreferredWidth  = aWidth;
+    mPreferredHeight = aHeight;
+    return NS_OK;
+}
+
+NS_IMETHODIMP
+nsWindow::Enable(PRBool aState)
+{
+    mEnabled = aState;
+
+    return NS_OK;
+}
+
+NS_IMETHODIMP
+nsWindow::IsEnabled(PRBool *aState)
+{
+    *aState = mEnabled;
+
+    return NS_OK;
+}
+
+
 
 NS_IMETHODIMP
 nsWindow::Move(PRInt32 aX, PRInt32 aY)
@@ -805,12 +1171,6 @@ nsWindow::SetSizeMode(PRInt32 aMode)
     mSizeState = mSizeMode;
 
     return rv;
-}
-
-NS_IMETHODIMP
-nsWindow::Enable(PRBool aState)
-{
-    return NS_ERROR_NOT_IMPLEMENTED;
 }
 
 typedef void (* SetUserTimeFunc)(GdkWindow* aWindow, guint32 aTimestamp);
@@ -5654,7 +6014,7 @@ nsWindow::DispatchAccessibleEvent(nsIAccessible** aAccessible)
 }
 
 void
-nsWindow::DispatchActivateEvent(void)
+nsWindow::DispatchActivateEventAccessible(void)
 {
     if (sAccessibilityEnabled) {
         nsCOMPtr<nsIAccessible> rootAcc;
@@ -5666,15 +6026,11 @@ nsWindow::DispatchActivateEvent(void)
                          rootAcc);
         }
     }
-
-    nsCommonWidget::DispatchActivateEvent();
 }
 
 void
-nsWindow::DispatchDeactivateEvent(void)
+nsWindow::DispatchDeactivateEventAccessible(void)
 {
-    nsCommonWidget::DispatchDeactivateEvent();
-
     if (sAccessibilityEnabled) {
         nsCOMPtr<nsIAccessible> rootAcc;
         GetRootAccessible(getter_AddRefs(rootAcc));
@@ -5686,6 +6042,7 @@ nsWindow::DispatchDeactivateEvent(void)
         }
     }
 }
+
 #endif /* #ifdef ACCESSIBILITY */
 
 // nsChildWindow class

@@ -76,19 +76,6 @@ if (!this.crockfordJSON) {
             return n < 10 ? '0' + n : n;
         }
 
-        Date.prototype.toJSON = function () {
-
-// Eventually, this method will be based on the date.toISOString method.
-
-            return this.getUTCFullYear()   + '-' +
-                 f(this.getUTCMonth() + 1) + '-' +
-                 f(this.getUTCDate())      + 'T' +
-                 f(this.getUTCHours())     + ':' +
-                 f(this.getUTCMinutes())   + ':' +
-                 f(this.getUTCSeconds())   + 'Z';
-        };
-
-
         var m = {    // table of character substitutions
             '\b': '\\b',
             '\t': '\\t',

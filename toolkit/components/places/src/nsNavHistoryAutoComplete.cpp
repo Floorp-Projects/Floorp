@@ -26,6 +26,7 @@
  *   Seth Spitzer <sspitzer@mozilla.org>
  *   Dietrich Ayala <dietrich@mozilla.com>
  *   Edward Lee <edward.lee@engineering.uiuc.edu>
+ *   Ehsan Akhgari <ehsan.akhgari@gmail.com>
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -1009,6 +1010,10 @@ nsresult
 nsNavHistory::AutoCompleteFeedback(PRInt32 aIndex,
                                    nsIAutoCompleteController *aController)
 {
+  // we don't track user choices in the awesomebar in private browsing mode
+  if (InPrivateBrowsingMode())
+    return NS_OK;
+
   mozStorageStatementScoper scope(mDBFeedbackIncrease);
 
   nsAutoString input;

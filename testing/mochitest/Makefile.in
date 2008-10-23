@@ -138,6 +138,3 @@ GARBAGE += runtests.py automation.py
 
 libs:: $(_SERV_FILES)
 	$(INSTALL) $^ $(_DEST_DIR)
-
-libs::
-	$(PYTHON) $(DEPTH)/_profile/pgo/genpgocert.py --gen-server

@@ -448,7 +448,7 @@ nsXULGroupboxAccessible::GetAccessibleRelated(PRUint32 aRelationType,
     // The xul:label has an accessible object but the xul:caption does not
     nsCOMPtr<nsIAccessible> testLabelAccessible;
     while (NextChild(testLabelAccessible)) {
-      if (Role(testLabelAccessible) == nsIAccessibleRole::ROLE_LABEL) {
+      if (nsAccUtils::Role(testLabelAccessible) == nsIAccessibleRole::ROLE_LABEL) {
         // Ensure that it's our label
         nsCOMPtr<nsIAccessible> testGroupboxAccessible;
         testLabelAccessible->GetAccessibleRelated(nsIAccessibleRelation::RELATION_LABEL_FOR,

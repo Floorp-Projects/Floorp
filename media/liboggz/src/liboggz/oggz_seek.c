@@ -491,6 +491,8 @@ oggz_scan_for_page (OGGZ * oggz, ogg_page * og, ogg_int64_t unit_target,
 #else
       do {
         offset_at = oggz_get_prev_start_page(oggz, og, &granule_at, &serialno);
+        if (offset_at == -1)
+          return -1;
         unit_at = oggz_get_unit(oggz, serialno, granule_at);
       } while (unit_at > unit_target);
       return offset_at;
@@ -556,6 +558,9 @@ oggz_seek_guess (ogg_int64_t unit_at, ogg_int64_t unit_target,
     offset_guess = guess (unit_at, unit_target, unit_begin, unit_end,
 			  offset_begin, offset_end);
   }
+
+  if (offset_end != -1 && guess >= offset_end)
+    offset_guess = offset_begin + (offset_end - offset_begin)/2;
 
 #ifdef DEBUG
     printf ("oggz_seek_guess: guessed %" PRI_OGGZ_OFF_T "d\n", offset_guess);
@@ -764,6 +769,8 @@ oggz_seek_set (OGGZ * oggz, ogg_int64_t unit_target)
  found:
   do {
     offset_at = oggz_get_prev_start_page (oggz, og, &granule_at, &serialno);
+    if (offset_at == -1)
+      break;
     unit_at = oggz_get_unit (oggz, serialno, granule_at);
   } while (unit_at > unit_target);
 
