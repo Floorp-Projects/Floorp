@@ -504,7 +504,8 @@ static const char kDOMStringBundleURL[] =
    nsIXPCScriptable::WANT_ENUMERATE)
 
 #define EXTERNAL_OBJ_SCRIPTABLE_FLAGS                                         \
-  (ELEMENT_SCRIPTABLE_FLAGS & ~nsIXPCScriptable::USE_JSSTUB_FOR_SETPROPERTY | \
+  ((ELEMENT_SCRIPTABLE_FLAGS &                                                \
+    ~nsIXPCScriptable::USE_JSSTUB_FOR_SETPROPERTY) |                          \
    nsIXPCScriptable::WANT_GETPROPERTY |                                       \
    nsIXPCScriptable::WANT_SETPROPERTY |                                       \
    nsIXPCScriptable::WANT_CALL)
