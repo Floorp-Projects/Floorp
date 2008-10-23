@@ -85,6 +85,7 @@
 #include "nsAutoPtr.h"
 #include "nsCRT.h"
 #include "nsCRLInfo.h"
+#include "nsCertOverrideService.h"
 
 #include "nsIWindowWatcher.h"
 #include "nsIPrompt.h"
@@ -2141,6 +2142,16 @@ void nsNSSComponent::ShowAlert(AlertIdentifier ai)
 
 nsresult nsNSSComponent::LogoutAuthenticatedPK11()
 {
+  nsCOMPtr<nsICertOverrideService> icos = 
+    do_GetService("@mozilla.org/security/certoverride;1");
+    
+  nsCertOverrideService *cos = 
+    reinterpret_cast<nsCertOverrideService*>(icos.get());
+
+  if (cos) {
+    cos->RemoveAllTemporaryOverrides();
+  }
+
   return mShutdownObjectList->doPK11Logout();
 }
 
