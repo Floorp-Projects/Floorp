@@ -253,16 +253,19 @@ void
 nsBaseChannel::HandleAsyncRedirect(nsIChannel* newChannel)
 {
   NS_ASSERTION(!mPump, "Shouldn't have gotten here");
+  PRBool doNotify = PR_TRUE;
   if (NS_SUCCEEDED(mStatus)) {
       nsresult rv = Redirect(newChannel, nsIChannelEventSink::REDIRECT_INTERNAL,
                              PR_TRUE);
       if (NS_FAILED(rv))
           Cancel(rv);
+      else
+          doNotify = PR_FALSE;
   }
 
   mWaitingOnAsyncRedirect = PR_FALSE;
 
-  if (NS_FAILED(mStatus)) {
+  if (doNotify) {
     // Notify our consumer ourselves
     mListener->OnStartRequest(this, mListenerContext);
     mListener->OnStopRequest(this, mListenerContext, mStatus);
