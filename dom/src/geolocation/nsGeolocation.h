@@ -120,7 +120,7 @@ private:
 /**
  * Singleton that manages the geolocation provider
  */
-class nsGeolocationService : public nsIGeolocationUpdate, public nsIObserver
+class nsGeolocationService : public nsIGeolocationService, public nsIGeolocationUpdate, public nsIObserver
 {
 public:
 
@@ -131,6 +131,7 @@ public:
   NS_DECL_ISUPPORTS
   NS_DECL_NSIGEOLOCATIONUPDATE
   NS_DECL_NSIOBSERVER
+  NS_DECL_NSIGEOLOCATIONSERVICE
 
   nsGeolocationService();
 
@@ -141,6 +142,9 @@ public:
   // Returns the last geolocation we have seen since calling StartDevice()
   already_AddRefed<nsIDOMGeoPosition> GetLastKnownPosition();
   
+  // Returns the application defined UI prompt
+  nsIGeolocationPrompt* GetPrompt() { return mPrompt; } // does not addref.
+
   // Returns true if the we have successfully found and started a
   // geolocation device
   PRBool   IsDeviceReady();
@@ -173,6 +177,9 @@ private:
   // addes them to this list, and their destructor removes
   // them from this list.
   nsTArray<nsGeolocation*> mGeolocators;
+
+  // prompt callback, if any
+  nsCOMPtr<nsIGeolocationPrompt> mPrompt;
 };
 
 
