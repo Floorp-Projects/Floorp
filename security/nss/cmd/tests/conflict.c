@@ -1,7 +1,4 @@
-/*
- * Softoken version numbers
- *
- * ***** BEGIN LICENSE BLOCK *****
+/* ***** BEGIN LICENSE BLOCK *****
  * Version: MPL 1.1/GPL 2.0/LGPL 2.1
  *
  * The contents of this file are subject to the Mozilla Public License Version
@@ -18,7 +15,7 @@
  *
  * The Initial Developer of the Original Code is
  * Netscape Communications Corporation.
- * Portions created by the Initial Developer are Copyright (C) 1994-2000
+ * Portions created by the Initial Developer are Copyright (C) 2008
  * the Initial Developer. All Rights Reserved.
  *
  * Contributor(s):
@@ -37,30 +34,25 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-#ifndef _SOFTKVER_H_
-#define _SOFTKVER_H_
+/*
+ * This test verifies that NSS public headers don't conflict with common
+ * identifier names.
+ */
 
-#ifdef NSS_ENABLE_ECC
-#ifdef NSS_ECC_MORE_THAN_SUITE_B
-#define SOFTOKEN_ECC_STRING " Extended ECC"
-#else
-#define SOFTOKEN_ECC_STRING " Basic ECC"
-#endif
-#else
-#define SOFTOKEN_ECC_STRING ""
-#endif
+#include "nssilckt.h"
 
 /*
- * Softoken's major version, minor version, patch level, and whether
- * this is a beta release.
- *
- * The format of the version string should be
- *     "<major version>.<minor version>[.<patch level>][ <ECC>][ <Beta>]"
+ * Bug 455424: nssilckt.h used to define the enumeration constant 'Lock',
+ * which conflicts with C++ code that defines a Lock class.  This is a
+ * reduced test case in C for that name conflict.
  */
-#define SOFTOKEN_VERSION  "3.12.2.0" SOFTOKEN_ECC_STRING
-#define SOFTOKEN_VMAJOR   3
-#define SOFTOKEN_VMINOR   12
-#define SOFTOKEN_VPATCH   2
-#define SOFTOKEN_BETA     PR_FALSE
+typedef struct {
+    int dummy;
+} Lock;
 
-#endif /* _SOFTKVER_H_ */
+Lock lock;
+
+int main()
+{
+    return 0;
+}

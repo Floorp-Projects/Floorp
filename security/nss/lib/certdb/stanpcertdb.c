@@ -996,6 +996,7 @@ CERT_OpenCertDBFilename(CERTCertDBHandle *handle, char *certdbname,
                         PRBool readOnly)
 {
     PORT_Assert("CERT_OpenCertDBFilename is Deprecated" == NULL);
+    PORT_SetError(PR_NOT_IMPLEMENTED_ERROR);
     return SECFailure;
 }
 
@@ -1003,6 +1004,7 @@ SECItem *
 SECKEY_HashPassword(char *pw, SECItem *salt)
 {
     PORT_Assert("SECKEY_HashPassword is Deprecated" == NULL);
+    PORT_SetError(PR_NOT_IMPLEMENTED_ERROR);
     return NULL;
 }
 
@@ -1012,6 +1014,7 @@ __CERT_TraversePermCertsForSubject(CERTCertDBHandle *handle,
                                  void *cb, void *cbarg)
 {
     PORT_Assert("CERT_TraversePermCertsForSubject is Deprecated" == NULL);
+    PORT_SetError(PR_NOT_IMPLEMENTED_ERROR);
     return SECFailure;
 }
 
@@ -1021,6 +1024,7 @@ __CERT_TraversePermCertsForNickname(CERTCertDBHandle *handle, char *nickname,
                                   void *cb, void *cbarg)
 {
     PORT_Assert("CERT_TraversePermCertsForNickname is Deprecated" == NULL);
+    PORT_SetError(PR_NOT_IMPLEMENTED_ERROR);
     return SECFailure;
 }
 

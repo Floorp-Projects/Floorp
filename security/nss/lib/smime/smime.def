@@ -267,3 +267,9 @@ SEC_PKCS12DecryptionAllowed;
 ;+    local:
 ;+       *;
 ;+};
+;+NSS_3.12.2 {   # NSS 3.12.2 release
+;+    global:
+SEC_PKCS12AddCertOrChainAndKey;
+;+    local:
+;+       *;
+;+};

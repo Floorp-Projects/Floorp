@@ -1057,7 +1057,7 @@ secu_PrintTime(FILE *out, int64 time, char *m, int level)
     /* Convert to local time */
     PR_ExplodeTime(time, PR_GMTParameters, &printableTime);
 
-    timeString = PORT_Alloc(100);
+    timeString = PORT_Alloc(256);
     if (timeString == NULL)
 	return;
 
@@ -1066,8 +1066,9 @@ secu_PrintTime(FILE *out, int64 time, char *m, int level)
 	fprintf(out, "%s: ", m);
     }
 
-    PR_FormatTime(timeString, 100, "%a %b %d %H:%M:%S %Y", &printableTime);
-    fprintf(out, timeString);
+    if (PR_FormatTime(timeString, 256, "%a %b %d %H:%M:%S %Y", &printableTime)) {
+        fprintf(out, timeString);
+    }
 
     if (m != NULL)
 	fprintf(out, "\n");

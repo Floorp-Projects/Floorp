@@ -36,7 +36,7 @@
  * ***** END LICENSE BLOCK ***** */
 
 #ifdef DEBUG
-static const char CVS_ID[] = "@(#) $RCSfile: utf8.c,v $ $Revision: 1.12 $ $Date: 2005/01/20 02:25:50 $";
+static const char CVS_ID[] = "@(#) $RCSfile: utf8.c,v $ $Revision: 1.13 $ $Date: 2008/10/05 20:59:26 $";
 #endif /* DEBUG */
 
 #include "seccomon.h"
@@ -163,7 +163,7 @@ sec_port_read_utf8(unsigned int *index, unsigned char *inBuf, unsigned int inBuf
   return result;
 }
 
-PR_IMPLEMENT(PRBool)
+PRBool
 sec_port_ucs4_utf8_conversion_function
 (
   PRBool toUnicode,
@@ -287,7 +287,7 @@ sec_port_ucs4_utf8_conversion_function
   }
 }
 
-PR_IMPLEMENT(PRBool)
+PRBool
 sec_port_ucs2_utf8_conversion_function
 (
   PRBool toUnicode,
