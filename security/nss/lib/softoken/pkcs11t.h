@@ -60,9 +60,9 @@
 
 #define CK_PTR *
 #define CK_NULL_PTR 0
-#define CK_CALLBACK_FUNCTION(rv,func) rv (PR_CALLBACK * func)
-#define CK_DECLARE_FUNCTION(rv,func) PR_EXTERN(rv) func
-#define CK_DECLARE_FUNCTION_POINTER(rv,func) rv (PR_CALLBACK * func)
+#define CK_CALLBACK_FUNCTION(rtype,func) rtype (PR_CALLBACK * func)
+#define CK_DECLARE_FUNCTION(rtype,func) extern rtype func
+#define CK_DECLARE_FUNCTION_POINTER(rtype,func) rtype (PR_CALLBACK * func)
 
 #define CK_INVALID_SESSION    0
 

@@ -291,6 +291,7 @@ static PK11Context *pk11_CreateNewContextInSlot(CK_MECHANISM_TYPE type,
 	    context->param = (SECItem *)&pk11_null_params;
 	}
     } else {
+	PORT_SetError(SEC_ERROR_INVALID_ARGS);
 	context->param = NULL;
     }
     context->init = PR_FALSE;

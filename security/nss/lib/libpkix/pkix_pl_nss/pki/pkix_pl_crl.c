@@ -1153,6 +1153,7 @@ PKIX_PL_CRL_VerifySignature(
         CERTSignedCrl *nssSignedCrl = NULL;
         SECKEYPublicKey *nssPubKey = NULL;
         CERTSignedData *tbsCrl = NULL;
+        void* wincx = NULL;
         SECStatus status;
 
         PKIX_ENTER(CRL, "PKIX_PL_CRL_VerifySignature");
@@ -1184,8 +1185,12 @@ PKIX_PL_CRL_VerifySignature(
                 PKIX_ERROR(PKIX_SECKEYEXTRACTPUBLICKEYFAILED);
         }
 
+        PKIX_CHECK(pkix_pl_NssContext_GetWincx
+                   ((PKIX_PL_NssContext *)plContext, &wincx),
+                   PKIX_NSSCONTEXTGETWINCXFAILED);
+
         PKIX_CRL_DEBUG("\t\tCalling CERT_VerifySignedDataWithPublicKey\n");
-        status = CERT_VerifySignedDataWithPublicKey(tbsCrl, nssPubKey, NULL);
+        status = CERT_VerifySignedDataWithPublicKey(tbsCrl, nssPubKey, wincx);
 
         if (status != SECSuccess) {
                 PKIX_ERROR(PKIX_SIGNATUREDIDNOTVERIFYWITHTHEPUBLICKEY);

@@ -35,7 +35,7 @@
  * ***** END LICENSE BLOCK ***** */
 
 #ifdef DEBUG
-static const char CVS_ID[] = "@(#) $RCSfile: wrap.c,v $ $Revision: 1.16 $ $Date: 2008/02/25 20:35:23 $";
+static const char CVS_ID[] = "@(#) $RCSfile: wrap.c,v $ $Revision: 1.17 $ $Date: 2008/08/25 22:47:32 $";
 #endif /* DEBUG */
 
 /*
@@ -274,6 +274,17 @@ NSSCKFWC_Finalize
     break;
   }
 
+  /*
+   * A thread's error stack is automatically destroyed when the thread
+   * terminates or, for the primordial thread, by PR_Cleanup.  On
+   * Windows with MinGW, the thread private data destructor PR_Free
+   * registered by this module is actually a thunk for PR_Free defined
+   * in this module.  When the thread that unloads this module terminates
+   * or calls PR_Cleanup, the thunk for PR_Free is already gone with the
+   * module.  Therefore we need to destroy the error stack before the
+   * module is unloaded.
+   */
+  nss_DestroyErrorStack();
   return error;
 }
 

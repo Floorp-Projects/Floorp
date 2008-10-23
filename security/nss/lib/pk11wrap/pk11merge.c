@@ -1300,7 +1300,7 @@ loser:
 }
 
 PK11MergeLog *
-PK11_CreateMergeLog()
+PK11_CreateMergeLog(void)
 {
     PRArenaPool *arena;
     PK11MergeLog *log;

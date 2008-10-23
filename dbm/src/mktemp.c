@@ -47,8 +47,12 @@ static char sccsid[] = "@(#)mktemp.c	8.1 (Berkeley) 6/4/93";
 #include <ctype.h>
 #include "mcom_db.h"
 
-#ifndef _WINDOWS
+#if !defined(_WINDOWS) && !defined(XP_OS2_VACPP)
 #include <unistd.h>
+#endif
+
+#ifdef XP_OS2_VACPP
+#include <process.h>
 #endif
 
 #ifdef _WINDOWS
