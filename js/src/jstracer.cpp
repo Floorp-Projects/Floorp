@@ -1736,7 +1736,7 @@ TraceRecorder::adjustCallerTypes(Fragment* f)
             lir->insStorei(get(vp), lirbuf->sp, 
                            -treeInfo->nativeStackBase + nativeStackOffset(vp));
         else if (!isPromote && *m == JSVAL_INT) {
-            oracle.markStackSlotUndemotable(script, (jsbytecode*)f->ip, unsigned(m - map));
+            oracle.markStackSlotUndemotable(script, (jsbytecode*)f->root->ip, unsigned(m - map));
             ok = false;
         }
         ++m;
@@ -1969,7 +1969,7 @@ TraceRecorder::verifyTypeStability()
         if (!checkType(*vp, *m, demote))
             return false;
         if (demote) {
-            oracle.markStackSlotUndemotable(cx->fp->script, (jsbytecode*)fragment->ip,
+            oracle.markStackSlotUndemotable(cx->fp->script, (jsbytecode*)fragment->root->ip,
                     unsigned(m - typemap));
             recompile = true;
         }
