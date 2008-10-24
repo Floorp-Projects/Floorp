@@ -981,6 +981,7 @@ TraceRecorder::TraceRecorder(JSContext* cx, SideExit* _anchor, Fragment* _fragme
     this->whichTreeToTrash = _fragment->root;
     this->global_dslots = this->globalObj->dslots;
     this->terminate = false;
+    this->isRootFragment = _fragment == _fragment->root;
 
     debug_only_v(printf("recording starting from %s:%u@%u\n", cx->fp->script->filename,
                         js_PCToLineNumber(cx, cx->fp->script, cx->fp->regs->pc),
@@ -1026,12 +1027,16 @@ TraceRecorder::TraceRecorder(JSContext* cx, SideExit* _anchor, Fragment* _fragme
 TraceRecorder::~TraceRecorder()
 {
     JS_ASSERT(treeInfo);
-    if (fragment->root == fragment && !fragment->root->code()) {
-        JS_ASSERT(!fragment->root->vmprivate);
+    if (fragment) {
+        if (isRootFragment && !fragment->root->code()) {
+            JS_ASSERT(!fragment->root->vmprivate);
+            delete treeInfo;
+        }
+        if (trashTree)
+            js_TrashTree(cx, whichTreeToTrash);
+    } else if (isRootFragment) {
         delete treeInfo;
     }
-    if (trashTree)
-        js_TrashTree(cx, whichTreeToTrash);
 #ifdef DEBUG
     delete verbose_filter;
 #endif
@@ -1042,6 +1047,12 @@ TraceRecorder::~TraceRecorder()
     delete float_filter;
 #endif
     delete lir_buf_writer;
+}
+
+void
+TraceRecorder::safeCleanup()
+{
+    fragment = NULL;
 }
 
 /* Add debug information to a LIR instruction as we emit it. */
@@ -2956,15 +2967,19 @@ js_AbortRecording(JSContext* cx, const char* reason)
 {
     JSTraceMonitor* tm = &JS_TRACE_MONITOR(cx);
     JS_ASSERT(tm->recorder != NULL);
-    Fragment* f = tm->recorder->getFragment();
-    JS_ASSERT(!f->vmprivate);
-    /* Abort the trace and blacklist its starting point. */
     AUDIT(recorderAborted);
+    /* Abort the trace and blacklist its starting point. */
     if (cx->fp) {
         debug_only_v(printf("Abort recording (line %d, pc %d): %s.\n",
                             js_PCToLineNumber(cx, cx->fp->script, cx->fp->regs->pc),
                             cx->fp->regs->pc - cx->fp->script->code, reason);)
     }
+    Fragment* f = tm->recorder->getFragment();
+    if (!f) {
+        js_DeleteRecorder(cx);
+        return;
+    }
+    JS_ASSERT(!f->vmprivate);
     f->blacklist();
     js_DeleteRecorder(cx);
     /* If this is the primary trace and we didn't succeed compiling, trash the TreeInfo object. */
@@ -3094,6 +3109,7 @@ js_FlushJITCache(JSContext* cx)
         tm->globalSlots->clear();
         tm->globalTypeMap->clear();
     }
+    tm->jitCacheGen++;
 }
 
 jsval&
