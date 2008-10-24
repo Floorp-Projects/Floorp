@@ -3,6 +3,8 @@
 """
 Fix references to source files of the form [LOCpath]
 so that they are relative to a given source directory.
+
+Substitute the DOT-generated image map into the document.
 """
 
 import os, sys, re
@@ -21,7 +23,15 @@ def replacer(m):
     file = file[len(srcdir) + 1:]
     return file
 
+s = re.compile(r'\[MAP(.*?)\]')
+
+def mapreplace(m):
+    file = m.group(1)
+    c = open(file).read()
+    return c
+
 for line in sys.stdin:
     line = f.sub(replacer, line)
-    sys.stdout.write(line)
+    line = s.sub(mapreplace, line)
 
+    sys.stdout.write(line)
