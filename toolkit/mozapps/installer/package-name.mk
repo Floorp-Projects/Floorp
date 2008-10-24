@@ -110,16 +110,25 @@ MOZ_PKG_APPNAME = $(MOZ_APP_DISPLAYNAME)
 endif
 MOZ_PKG_APPNAME_LC = $(shell echo $(MOZ_PKG_APPNAME) | tr '[A-Z]' '[a-z]')
 
+
 ifndef MOZ_PKG_LONGVERSION
-MOZ_PKG_LONGVERSION = $(MOZ_PKG_VERSION)
+MOZ_PKG_LONGVERSION = $(shell echo $(MOZ_PKG_VERSION) |\
+                       sed -e 's/a\([0-9][0-9]*\)$/ Alpha \1/' |\
+                       sed -e 's/b\([0-9][0-9]*\)$/ Beta \1/' |\
+                       sed -e 's/rc\([0-9][0-9]*\)$/ RC \1/')
 endif
 
-ifeq (,$(filter-out Darwin OS2 WINNT, $(OS_ARCH)))
+ifeq (,$(filter-out Darwin OS2, $(OS_ARCH))) # Mac and OS2
 PKG_BASENAME = $(MOZ_PKG_APPNAME) $(MOZ_PKG_LONGVERSION)
+PKG_INST_BASENAME = $(MOZ_PKG_APPNAME) Setup $(MOZ_PKG_LONGVERSION)
+else
+ifeq (,$(filter-out WINNT, $(OS_ARCH))) # Windows
+PKG_BASENAME = $(MOZ_PKG_APPNAME_LC)-$(MOZ_PKG_VERSION)
 PKG_INST_BASENAME = $(MOZ_PKG_APPNAME) Setup $(MOZ_PKG_LONGVERSION)
 else # unix (actually, not Windows, Mac or OS/2)
 PKG_BASENAME = $(MOZ_PKG_APPNAME_LC)-$(MOZ_PKG_VERSION)
 PKG_INST_BASENAME = $(MOZ_PKG_APPNAME_LC)-setup-$(MOZ_PKG_VERSION)
+endif
 endif
 PKG_PATH = $(MOZ_PKG_PLATFORM)/$(AB_CD)/
 PKG_INST_PATH = $(PKG_PATH)
