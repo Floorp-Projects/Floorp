@@ -66,6 +66,7 @@
 #include "jsscope.h"
 #include "jsscript.h"
 #include "jsdate.h"
+#include "jsstaticcheck.h"
 #include "jstracer.h"
 
 #include "jsautooplen.h"        // generated headers last
@@ -1771,18 +1772,37 @@ LIns*
 TraceRecorder::snapshot(ExitType exitType)
 {
     JSStackFrame* fp = cx->fp;
-    if (exitType == BRANCH_EXIT && js_IsLoopExit(cx->fp->regs->pc, (jsbytecode*)fragment->root->ip))
+    JSFrameRegs* regs = fp->regs;
+    jsbytecode* pc = regs->pc;
+    if (exitType == BRANCH_EXIT && js_IsLoopExit(pc, (jsbytecode*)fragment->root->ip))
         exitType = LOOP_EXIT;
-    /* Generate the entry map and stash it in the trace. */
+
+    /* Check for a return-value opcode that needs to restart at the next instruction. */
+    const JSCodeSpec& cs = js_CodeSpec[*pc];
+
+    /* WARNING: don't return before restoring the original pc if (resumeAfter). */
+    bool resumeAfter = (pendingTraceableNative &&
+                        JSTN_ERRTYPE(pendingTraceableNative) == FAIL_JSVAL);
+    if (resumeAfter) {
+        JS_ASSERT(cs.format & JOF_RETVAL);
+        pc += cs.length;
+        regs->pc = pc;
+        MUST_FLOW_THROUGH(restore_pc);
+    }
+
+    /* Generate the entry map for the (possibly advanced) pc and stash it in the trace. */
     unsigned stackSlots = js_NativeStackSlots(cx, callDepth);
+
     /* It's sufficient to track the native stack use here since all stores above the
        stack watermark defined by guards are killed. */
     trackNativeStackUse(stackSlots + 1);
+
     /* Capture the type map into a temporary location. */
     unsigned ngslots = traceMonitor->globalSlots->length();
     unsigned typemap_size = (stackSlots + ngslots) * sizeof(uint8);
     uint8* typemap = (uint8*)alloca(typemap_size);
     uint8* m = typemap;
+
     /* Determine the type of a store by looking at the current type of the actual value the
        interpreter is using. For numbers we have to check what kind of store we used last
        (integer or double) to figure out what the side exit show reflect in its typemap. */
@@ -1790,19 +1810,26 @@ TraceRecorder::snapshot(ExitType exitType)
         *m++ = determineSlotType(vp);
     );
     JS_ASSERT(unsigned(m - typemap) == ngslots + stackSlots);
-    /* If we are capturing the stack state on a JSOP_RESUME instruction, the value on top of
+
+    /* If we are capturing the stack state on a JOF_RETVAL instruction, the value on top of
        the stack is a boxed value. */
-    jsbytecode* pc = fp->regs->pc;
-    if (*pc == JSOP_RESUME) 
+    if (resumeAfter) {
         m[-1] = JSVAL_BOXED;
-    /* If we take a snapshot on a goto, advance to the target address. This avoids inner
-       trees returning on a break goto, which the outer recorder then would confuse with
-       a break in the outer tree. */
-    if (*pc == JSOP_GOTO) 
-        pc += GET_JUMP_OFFSET(pc);
-    else if (*pc == JSOP_GOTOX)
-        pc += GET_JUMPX_OFFSET(pc);
+
+        /* Now restore the the original pc (after which early returns are ok). */
+        MUST_FLOW_LABEL(restore_pc);
+        regs->pc = pc - cs.length;
+    } else {
+        /* If we take a snapshot on a goto, advance to the target address. This avoids inner
+           trees returning on a break goto, which the outer recorder then would confuse with
+           a break in the outer tree. */
+        if (*pc == JSOP_GOTO) 
+            pc += GET_JUMP_OFFSET(pc);
+        else if (*pc == JSOP_GOTOX)
+            pc += GET_JUMPX_OFFSET(pc);
+    }
     int ip_adj = pc - (jsbytecode*)fragment->root->ip;
+
     /* Check if we already have a matching side exit. If so use that side exit structure,
        otherwise we have to create our own. */
     SideExit** exits = treeInfo->sideExits.data();
@@ -1824,6 +1851,7 @@ TraceRecorder::snapshot(ExitType exitType)
             }
         }
     }
+
     /* We couldn't find a matching side exit, so create our own side exit structure. */
     LIns* data = lir_buf_writer->skip(sizeof(GuardRecord) +
                                       sizeof(SideExit) + 
@@ -1848,6 +1876,7 @@ TraceRecorder::snapshot(ExitType exitType)
     exit->sp_adj = (stackSlots * sizeof(double)) - treeInfo->nativeStackBase;
     exit->rp_adj = exit->calldepth * sizeof(FrameInfo);
     memcpy(getTypeMap(exit), typemap, typemap_size);
+
     /* BIG FAT WARNING: If compilation fails, we currently don't reset the lirbuf so its safe
        to keep references to the side exits here. If we ever start rewinding those lirbufs,
        we have to make sure we purge the side exits that then no longer will be in valid
@@ -2921,8 +2950,10 @@ js_MonitorRecording(TraceRecorder* tr)
         return false;
     }
     
-    // Clear one-shot flag used to communicate between record_JSOP_CALL and record_EnterFrame.
+    // Clear one-shot state used to communicate between record_JSOP_CALL and mid- and post-
+    // opcode-case-guts record hooks (record_EnterFrame, record_FastNativeCallComplete).
     tr->applyingArguments = false;
+    tr->pendingTraceableNative = NULL;
 
     // In the future, handle dslots realloc by computing an offset from dslots instead.
     if (tr->global_dslots != tr->globalObj->dslots) {
@@ -5324,15 +5355,15 @@ TraceRecorder::record_FastNativeCallComplete()
     /* At this point the generated code has already called the native function
        and we can no longer fail back to the original pc location (JSOP_CALL)
        because that would cause the interpreter to re-execute the native 
-       function, which might have side effects. Instead we advance pc to
-       the JSOP_RESUME opcode that follows JSOP_CALL. snapshot() which is
-       invoked from unbox_jsval() will see that we are currently parked on
-       a JSOP_RESUME instruction and it will indicate in the type map that
-       the element on top of the stack is a boxed value which doesn't need
-       to be boxed if the type guard generated by unbox_jsval() fails. */
-    JSFrameRegs* regs = cx->fp->regs;
-    regs->pc += JSOP_CALL_LENGTH;
-    JS_ASSERT(*regs->pc == JSOP_RESUME);
+       function, which might have side effects.
+
+       Instead, snapshot(), which is invoked from unbox_jsval(), will see that
+       we are currently parked on a JOF_RETVAL instruction, and it will advance
+       the pc to restore by the length of the current opcode, and indicate in
+       the type map that the element on top of the stack is a boxed value which
+       doesn't need to be boxed if the type guard generated by unbox_jsval()
+       fails. */
+    JS_ASSERT(js_CodeSpec[*cx->fp->regs->pc].format & JOF_RETVAL);
 
     jsval& v = stackval(-1);
     LIns* v_ins = get(&v);
@@ -5356,16 +5387,9 @@ TraceRecorder::record_FastNativeCallComplete()
         }
     }
 
-    /* Restore the original pc location. The interpreter will advance pc to
-       step over JSOP_RESUME. */
-    regs->pc -= JSOP_CALL_LENGTH;
+    // We'll null pendingTraceableNative in js_MonitorRecording, on the next op cycle.
+    // There must be a next op since the stack is non-empty.
     return ok;
-}
-
-bool
-TraceRecorder::record_JSOP_RESUME()
-{
-    return true;
 }
 
 bool
@@ -6978,19 +7002,20 @@ TraceRecorder::record_JSOP_HOLE()
     return true;
 }
 
-#define UNUSED(op) bool TraceRecorder::record_##op() { return false; }
+#define UNUSED(n) bool TraceRecorder::record_JSOP_UNUSED##n() { return false; }
 
-UNUSED(JSOP_UNUSED76)
-UNUSED(JSOP_UNUSED77)
-UNUSED(JSOP_UNUSED78)
-UNUSED(JSOP_UNUSED79)
-UNUSED(JSOP_UNUSED131)
-UNUSED(JSOP_UNUSED201)
-UNUSED(JSOP_UNUSED202)
-UNUSED(JSOP_UNUSED203)
-UNUSED(JSOP_UNUSED204)
-UNUSED(JSOP_UNUSED205)
-UNUSED(JSOP_UNUSED206)
-UNUSED(JSOP_UNUSED207)
-UNUSED(JSOP_UNUSED219)
-UNUSED(JSOP_UNUSED226)
+UNUSED(74)
+UNUSED(76)
+UNUSED(77)
+UNUSED(78)
+UNUSED(79)
+UNUSED(131)
+UNUSED(201)
+UNUSED(202)
+UNUSED(203)
+UNUSED(204)
+UNUSED(205)
+UNUSED(206)
+UNUSED(207)
+UNUSED(219)
+UNUSED(226)

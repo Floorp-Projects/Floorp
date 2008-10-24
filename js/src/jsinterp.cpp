@@ -4786,9 +4786,7 @@ js_Interpret(JSContext *cx)
                 goto error;
             regs.sp = vp + 1;
             LOAD_INTERRUPT_HANDLER(cx);
-            JS_ASSERT(regs.pc[JSOP_NEW_LENGTH] == JSOP_RESUME);
-            len = JSOP_NEW_LENGTH + JSOP_RESUME_LENGTH;
-          END_VARLEN_CASE
+          END_CASE(JSOP_NEW)
 
           BEGIN_CASE(JSOP_CALL)
           BEGIN_CASE(JSOP_EVAL)
@@ -5055,13 +5053,7 @@ js_Interpret(JSContext *cx)
                 cx->rval2set = JS_FALSE;
             }
 #endif /* JS_HAS_LVALUE_RETURN */
-            JS_ASSERT(regs.pc[JSOP_CALL_LENGTH] == JSOP_RESUME);
-            len = JSOP_CALL_LENGTH + JSOP_RESUME_LENGTH;
-            END_VARLEN_CASE
-
-          BEGIN_CASE(JSOP_RESUME)
-            /* This case is not truly empty. The tracer is invoked transparently. */
-          END_CASE(JSOP_RESUME)
+          END_CASE(JSOP_CALL)
 
 #if JS_HAS_LVALUE_RETURN
           BEGIN_CASE(JSOP_SETCALL)
@@ -5072,10 +5064,8 @@ js_Interpret(JSContext *cx)
             LOAD_INTERRUPT_HANDLER(cx);
             if (!ok)
                 goto error;
-            JS_ASSERT(regs.pc[JSOP_SETCALL_LENGTH] == JSOP_RESUME);
-            len = JSOP_SETCALL_LENGTH + JSOP_RESUME_LENGTH;
             if (!cx->rval2set) {
-                op2 = (JSOp) regs.pc[len];
+                op2 = (JSOp) regs.pc[JSOP_SETCALL_LENGTH];
                 if (op2 != JSOP_DELELEM) {
                     JS_ASSERT(!(js_CodeSpec[op2].format & JOF_DEL));
                     JS_ReportErrorNumber(cx, js_GetErrorMessage, NULL,
@@ -5089,7 +5079,7 @@ js_Interpret(JSContext *cx)
                  * it doesn't seem worth the code for this obscure case.
                  */
                 *vp = JSVAL_TRUE;
-                regs.pc += len + JSOP_DELELEM_LENGTH;
+                regs.pc += JSOP_SETCALL_LENGTH + JSOP_DELELEM_LENGTH;
                 op = (JSOp) *regs.pc;
                 DO_OP();
             }
@@ -6833,6 +6823,7 @@ js_Interpret(JSContext *cx)
           L_JSOP_DEFXMLNS:
 # endif
 
+          L_JSOP_UNUSED74:
           L_JSOP_UNUSED76:
           L_JSOP_UNUSED77:
           L_JSOP_UNUSED78:
