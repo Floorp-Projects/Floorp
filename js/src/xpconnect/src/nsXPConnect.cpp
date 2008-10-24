@@ -1067,7 +1067,7 @@ TempGlobalResolve(JSContext *aJSContext, JSObject *obj, jsval id)
 }
 
 static JSClass xpcTempGlobalClass = {
-    "xpcTempGlobalClass", 0,
+    "xpcTempGlobalClass", JSCLASS_GLOBAL_FLAGS,
     JS_PropertyStub,  JS_PropertyStub,  JS_PropertyStub,  JS_PropertyStub,
     JS_EnumerateStub, TempGlobalResolve, JS_ConvertStub,   JS_FinalizeStub,
     JSCLASS_NO_OPTIONAL_MEMBERS
