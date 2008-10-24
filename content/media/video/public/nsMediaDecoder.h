@@ -130,7 +130,7 @@ class nsMediaDecoder : public nsIObserver
 
   // Return the current number of bytes loaded from the video file.
   // This is used for progress events.
-  virtual PRUint32 GetBytesLoaded() = 0;
+  virtual PRUint64 GetBytesLoaded() = 0;
 
   // Return the size of the video file in bytes. Return 0 if the
   // size is unknown or the stream is infinite.
@@ -152,7 +152,7 @@ class nsMediaDecoder : public nsIObserver
   virtual void Progress();
 
   // Keep track of the number of bytes downloaded
-  virtual void UpdateBytesDownloaded(PRUint32 aBytes) = 0;
+  virtual void UpdateBytesDownloaded(PRUint64 aBytes) = 0;
 
   // Cleanup internal data structures. Must be called on the main
   // thread by the owning object before that object disposes of this object.  
@@ -165,11 +165,6 @@ protected:
 
   // Stop progress information timer.
   nsresult StopProgress();
-
-  // Called on the main thread when the size of the media data has
-  // changed to inform the element so it can keep a local copy of the
-  // current size.
-  void MediaSizeChanged();
 
   // Set the RGB width, height and framerate. The passed RGB buffer is
   // copied to the mRGB buffer. This also allocates the mRGB buffer if

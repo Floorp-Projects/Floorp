@@ -1187,7 +1187,7 @@ public:
   NS_IMETHOD GetType(PRInt32& aType) const;
   NS_IMETHOD Clone(nsICSSRule*& aClone) const;
 
-  NS_IMETHOD GetDOMRule(nsIDOMCSSRule** aDOMRule);
+  nsIDOMCSSRule* GetDOMRuleWeak(nsresult* aResult);
 
   virtual already_AddRefed<nsICSSStyleRule>
     DeclarationChanged(PRBool aHandleContainer);
@@ -1376,26 +1376,24 @@ CSSStyleRuleImpl::Clone(nsICSSRule*& aClone) const
   return CallQueryInterface(clone, &aClone);
 }
 
-NS_IMETHODIMP
-CSSStyleRuleImpl::GetDOMRule(nsIDOMCSSRule** aDOMRule)
+nsIDOMCSSRule*
+CSSStyleRuleImpl::GetDOMRuleWeak(nsresult *aResult)
 {
+  *aResult = NS_OK;
   if (!mSheet) {
     // inline style rules aren't supposed to have a DOM rule object, only
     // a declaration.
-    *aDOMRule = nsnull;
-    return NS_OK;
+    return nsnull;
   }
   if (!mDOMRule) {
     mDOMRule = new DOMCSSStyleRuleImpl(this);
     if (!mDOMRule) {
-      *aDOMRule = nsnull;
-      return NS_ERROR_OUT_OF_MEMORY;
+      *aResult = NS_ERROR_OUT_OF_MEMORY;
+      return nsnull;
     }
     NS_ADDREF(mDOMRule);
   }
-  *aDOMRule = mDOMRule;
-  NS_ADDREF(*aDOMRule);
-  return NS_OK;
+  return mDOMRule;
 }
 
 /* virtual */ already_AddRefed<nsICSSStyleRule>

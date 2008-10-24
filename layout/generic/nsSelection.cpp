@@ -1853,6 +1853,19 @@ nsFrameSelection::HandleDrag(nsIFrame *aFrame, nsPoint aPoint)
 
     PRInt32 offset;
     nsIFrame* frame = GetFrameForNodeOffset(offsets.content, offsets.offset, HINTRIGHT, &offset);
+
+    if (amount == eSelectWord && direction == eDirPrevious) {
+      // To avoid selecting the previous word when at start of word,
+      // first move one character forward.
+      nsPeekOffsetStruct charPos;
+      charPos.SetData(eSelectCharacter, eDirNext, offset, 0,
+                      PR_FALSE, mLimiter != nsnull, PR_FALSE, PR_FALSE);
+      if (NS_SUCCEEDED(frame->PeekOffset(&charPos))) {
+        frame = charPos.mResultFrame;
+        offset = charPos.mContentOffset;
+      }
+    }
+
     nsPeekOffsetStruct pos;
     pos.SetData(amount, direction, offset, 0,
                 PR_FALSE, mLimiter != nsnull, PR_FALSE, PR_FALSE);

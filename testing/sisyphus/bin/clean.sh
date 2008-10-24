@@ -41,7 +41,7 @@ source $TEST_DIR/bin/library.sh
 source $TEST_DIR/bin/set-build-env.sh $@
 
 case $product in
-    firefox|thunderbird)
+    firefox|thunderbird|fennec)
 #        cd $BUILDTREE/mozilla
 
         if ! $buildbash $bashlogin -c "cd $BUILDTREE/mozilla; make -f client.mk clean" 2>&1; then

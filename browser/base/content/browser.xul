@@ -227,7 +227,7 @@
     </panel>
 
     <tooltip id="urlTooltip">
-      <label crop="center" flex="1"/>
+      <label crop="center" flex="1" class="tooltip-label"/>
     </tooltip>
 
     <panel id="ctrlTab-panel" class="KUI-panel" hidden="true" noautofocus="true" level="top"
@@ -342,6 +342,7 @@
       <toolbaritem id="urlbar-container" align="center" flex="400" persist="width"
                    title="&locationItem.title;" class="chromeclass-location">
         <textbox id="urlbar" flex="1"
+                 delayedemptytext="&urlbar.emptyText;"
                  chromedir="&locale.dir;"
                  type="autocomplete"
                  autocompletesearch="history"

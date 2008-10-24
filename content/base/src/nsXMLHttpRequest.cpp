@@ -974,7 +974,7 @@ nsAccessControlLRUCache::Clear()
   mTable.Clear();
 }
 
-/* static */ PR_CALLBACK PLDHashOperator
+/* static */ PLDHashOperator
 nsAccessControlLRUCache::RemoveExpiredEntries(const nsACString& aKey,
                                               nsAutoPtr<CacheEntry>& aValue,
                                               void* aUserData)
@@ -2583,7 +2583,9 @@ nsXMLHttpRequest::Send(nsIVariant *aBody)
       }
 
       mUploadComplete = PR_FALSE;
-      postDataStream->Available(&mUploadTotal);
+      PRUint32 uploadTotal = 0;
+      postDataStream->Available(&uploadTotal);
+      mUploadTotal = uploadTotal;
       rv = uploadChannel->SetUploadStream(postDataStream, contentType, -1);
       // Reset the method to its original value
       if (httpChannel) {
@@ -3152,7 +3154,7 @@ nsXMLHttpRequest::OnProgress(nsIRequest *aRequest, nsISupports *aContext, PRUint
   PRBool lengthComputable = (aProgressMax != LL_MAXUINT);
   if (upload) {
    if (lengthComputable) {
-      PRUint32 headerSize = aProgressMax - mUploadTotal;
+      PRUint64 headerSize = aProgressMax - mUploadTotal;
       loaded -= headerSize;
       total -= headerSize;
     }
@@ -3179,7 +3181,7 @@ nsXMLHttpRequest::OnProgress(nsIRequest *aRequest, nsISupports *aContext, PRUint
                           aProgress, aProgressMax);
 
     if (upload && mUpload && !mUploadComplete) {
-      NS_WARN_IF_FALSE(mUploadTotal == PRUint32(total), "Wrong upload total?");
+      NS_WARN_IF_FALSE(mUploadTotal == total, "Wrong upload total?");
       DispatchProgressEvent(mUpload, progress,  PR_TRUE, lengthComputable, loaded,
                             lengthComputable ? total : 0, aProgress, aProgressMax);
     }

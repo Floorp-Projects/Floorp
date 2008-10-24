@@ -1200,7 +1200,7 @@ sftk_AddObject(SFTKSession *session, SFTKObject *object)
 } 
 
 /*
- * add an object to a slot andsession queue
+ * delete an object from a slot and session queue
  */
 CK_RV
 sftk_DeleteObject(SFTKSession *session, SFTKObject *object)
@@ -1211,7 +1211,7 @@ sftk_DeleteObject(SFTKSession *session, SFTKObject *object)
     CK_RV crv = CKR_OK;
     PRUint32 index = sftk_hash(object->handle, slot->sessObjHashSize);
 
-  /* Handle Token case */
+    /* Handle Token case */
     if (so && so->session) {
 	SFTKSession *session = so->session;
 	PZ_Lock(session->objectLock);
@@ -1221,7 +1221,7 @@ sftk_DeleteObject(SFTKSession *session, SFTKObject *object)
 	sftkqueue_delete2(object, object->handle, index, slot->sessObjHashTable);
 	PZ_Unlock(slot->objectLock);
 	sftkqueue_clear_deleted_element(object);
-	sftk_FreeObject(object); /* reduce it's reference count */
+	sftk_FreeObject(object); /* free the reference owned by the queue */
     } else {
 	SFTKDBHandle *handle = sftk_getDBForTokenObject(slot, object->handle);
 

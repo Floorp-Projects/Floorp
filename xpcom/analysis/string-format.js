@@ -13,6 +13,9 @@ String.prototype.format = function string_format() {
     d = arguments[0];
 
   function r(s, key, type) {
+    if (type == '%')
+      return '%';
+    
     let v;
     if (key == "") {
       if (curindex == -1)
@@ -50,8 +53,6 @@ String.prototype.format = function string_format() {
       return parseInt(v);
     case "f":
       return Number(v);
-    case "%":
-      return "%";
     default:
       throw Error("Unexpected format character '%s'.".format(type));
     }

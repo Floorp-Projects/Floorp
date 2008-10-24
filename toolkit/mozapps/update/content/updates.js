@@ -1131,7 +1131,7 @@ var gDownloadingPage = {
     if (this._paused) {
       var title = gUpdates.strings.getString("resumePausedAfterCloseTitle");
       var message = gUpdates.strings.getFormattedString(
-        "resumePausedAfterCloseMessage", [gUpdates.brandName]);
+        "resumePausedAfterCloseMsg", [gUpdates.brandName]);
       var ps = Components.classes["@mozilla.org/embedcomp/prompt-service;1"]
                         .getService(Components.interfaces.nsIPromptService);
       var flags = ps.STD_YES_NO_BUTTONS;

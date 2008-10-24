@@ -585,16 +585,6 @@ nsSVGUtils::FindFilterInvalidation(nsIFrame *aFrame, const nsRect& aRect)
 }
 
 void
-nsSVGUtils::UpdateFilterRegion(nsIFrame *aFrame)
-{
-  nsSVGEffects::EffectProperties props =
-    nsSVGEffects::GetEffectProperties(aFrame);
-  if (props.mFilter) {
-    props.mFilter->UpdateRect();
-  }
-}
-
-void
 nsSVGUtils::UpdateGraphic(nsISVGChildFrame *aSVGFrame)
 {
   nsIFrame *frame;

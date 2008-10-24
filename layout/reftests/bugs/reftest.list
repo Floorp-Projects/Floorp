@@ -42,8 +42,6 @@ fails == 25888-2l.html 25888-2l-ref.html # bug 25888
 fails == 25888-2r.html 25888-2r-ref.html # bug 25888
 fails == 25888-3l.html 25888-3l-ref.html # bug 25888
 fails == 25888-3r.html 25888-3r-ref.html # bug 25888
-== 271747-1a.html 271747-1-ref.html
-== 271747-1b.html 271747-1-ref.html
 == 28811-1a.html 28811-1-ref.html
 == 28811-1b.html 28811-1-ref.html
 == 28811-2a.html 28811-2-ref.html
@@ -144,6 +142,8 @@ fails == 25888-3r.html 25888-3r-ref.html # bug 25888
 == 214077-1b.html 214077-1-ref.html
 == 218473-1.html 218473-1-ref.html
 == 223809-1.html 223809-1-ref.html
+== 228856-1.html 228856-1-ref.html
+== 228856-2.html 228856-2-ref.html
 # == 231823-1.html 231823-1-ref.html
 == 234686-1.html 234686-ref.html
 == 234686-2.html 234686-ref.html
@@ -203,6 +203,8 @@ fails == 25888-3r.html 25888-3r-ref.html # bug 25888
 == 262151-1.html 262151-1-ref.html
 #== 263683-1.html 263683-1-ref.html
 == 267353-1.html 267353-1-ref.html
+== 271747-1a.html 271747-1-ref.html
+== 271747-1b.html 271747-1-ref.html
 == 273681-1.html 273681-1-ref.html
 fails-if(MOZ_WIDGET_TOOLKIT!="cocoa") HTTP == 289480.html#top 289480-ref.html # basically-verbatim acid2 test, HTTP for a 404 page -- bug 409329 for the non-Mac failures
 == 290129-1.html 290129-1-ref.html
