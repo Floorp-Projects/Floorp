@@ -5926,7 +5926,7 @@ nsWindowSH::NewResolve(nsIXPConnectWrappedNative *wrapper, JSContext *cx,
       jsval val;
 
       *_retval = (::JS_ValueToId(cx, id, &interned_id) &&
-                  ::JS_LookupPropertyByIdWithFlags(cx, innerObj, interned_id,
+                  ::JS_LookupPropertyWithFlagsById(cx, innerObj, interned_id,
                                                    flags, &pobj, &val));
 
       if (*_retval && pobj) {
@@ -6425,7 +6425,7 @@ nsWindowSH::NewResolve(nsIXPConnectWrappedNative *wrapper, JSContext *cx,
         jsval val;
 
         if (!::JS_ValueToId(cx, id, &interned_id) ||
-            !::JS_LookupPropertyByIdWithFlags(cx, proto, interned_id, flags,
+            !::JS_LookupPropertyWithFlagsById(cx, proto, interned_id, flags,
                                               &pobj, &val)) {
           *_retval = JS_FALSE;
 
