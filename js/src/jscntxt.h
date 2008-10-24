@@ -141,6 +141,7 @@ typedef struct JSTraceMonitor {
     JSFragmentCacheEntry    fcache[JS_FRAGMENT_CACHE_SIZE];
     jsval                   *recoveryDoublePool;
     jsval                   *recoveryDoublePoolPtr;
+    uint32                  jitCacheGen;
 } JSTraceMonitor;
 
 #ifdef JS_TRACER

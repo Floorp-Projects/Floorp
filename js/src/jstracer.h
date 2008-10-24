@@ -235,6 +235,7 @@ class TraceRecorder : public GCObject {
     jsval*                  global_dslots;
     JSTraceableNative*      pendingTraceableNative;
     bool                    terminate;
+    bool                    isRootFragment;
 
     bool isGlobal(jsval* p) const;
     ptrdiff_t nativeGlobalOffset(jsval* p) const;
@@ -354,6 +355,7 @@ public:
     void prepareTreeCall(nanojit::Fragment* inner);
     void emitTreeCall(nanojit::Fragment* inner, nanojit::SideExit* exit);
     unsigned getCallDepth() const;
+    void safeCleanup();
     
     bool record_EnterFrame();
     bool record_LeaveFrame();
