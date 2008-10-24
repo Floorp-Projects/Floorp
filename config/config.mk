@@ -515,7 +515,7 @@ DEHYDRA_ARGS = \
   --treehydra-modules=$(subst $(NULL) ,$(COMMA),$(strip $(TREEHYDRA_MODULES))) \
   $(NULL)
 
-DEHYDRA_FLAGS = -fplugin=$(DEHYDRA_PATH) -fplugin-arg="$(DEHYDRA_SCRIPT) $(DEHYDRA_ARGS)"
+DEHYDRA_FLAGS = -fplugin=$(DEHYDRA_PATH) -fplugin-arg='$(DEHYDRA_SCRIPT) $(DEHYDRA_ARGS)'
 
 ifdef DEHYDRA_PATH
 OS_CXXFLAGS += $(DEHYDRA_FLAGS)
