@@ -1,0 +1,10 @@
+product=fennec
+branch=1.9.1
+url=http://ftp.mozilla.org/pub/mozilla.org/mobile/fennec-1.0a1.en-US.linux-i686.tar.bz2
+profilename=fennec-1.9.1-profile
+profiledirectory=/tmp/fennec-1.9.1-profile
+executablepath=/tmp/fennec-1.9.1
+userpreferences=${TEST_DIR}/prefs/test-user.js
+extensiondir=${TEST_DIR}/xpi
+buildtype=nightly
+TEST_MOZILLA_HG=http://hg.mozilla.org/mozilla-central

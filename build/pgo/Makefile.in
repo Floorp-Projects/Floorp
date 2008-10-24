@@ -131,5 +131,5 @@ GARBAGE += automation.py profileserver.py genpgocert.py
 libs:: $(_PGO_FILES)
 	$(INSTALL) $^ $(_PROFILE_DIR)
 
-tools::
+genservercert::
 	$(PYTHON) $(DEPTH)/_profile/pgo/genpgocert.py --gen-server

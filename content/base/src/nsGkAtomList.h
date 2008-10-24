@@ -1457,6 +1457,16 @@ GK_ATOM(seconds, "seconds")
 GK_ATOM(secondsFromDateTime, "seconds-from-dateTime")
 #endif
 
+// Simple gestures support
+GK_ATOM(onMozSwipeGesture, "onMozSwipeGesture")
+GK_ATOM(onMozMagnifyGestureStart, "onMozMagnifyGestureStart")
+GK_ATOM(onMozMagnifyGestureUpdate, "onMozMagnifyGestureUpdate")
+GK_ATOM(onMozMagnifyGesture, "onMozMagnifyGesture")
+GK_ATOM(onMozRotateGestureStart, "onMozRotateGestureStart")
+GK_ATOM(onMozRotateGestureUpdate, "onMozRotateGestureUpdate")
+GK_ATOM(onMozRotateGesture, "onMozRotateGesture")
+
+
 //---------------------------------------------------------------------------
 // Special atoms
 //---------------------------------------------------------------------------

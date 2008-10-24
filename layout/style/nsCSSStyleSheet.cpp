@@ -61,7 +61,7 @@
 #include "nsIDOMCSSStyleSheet.h"
 #include "nsIDOMCSSRule.h"
 #include "nsIDOMCSSImportRule.h"
-#include "nsIDOMCSSRuleList.h"
+#include "nsICSSRuleList.h"
 #include "nsIDOMMediaList.h"
 #include "nsIDOMNode.h"
 #include "nsDOMError.h"
@@ -81,7 +81,7 @@
 // -------------------------------
 // Style Rule List for the DOM
 //
-class CSSRuleListImpl : public nsIDOMCSSRuleList
+class CSSRuleListImpl : public nsICSSRuleList
 {
 public:
   CSSRuleListImpl(nsCSSStyleSheet *aStyleSheet);
@@ -91,6 +91,8 @@ public:
   // nsIDOMCSSRuleList interface
   NS_IMETHOD    GetLength(PRUint32* aLength); 
   NS_IMETHOD    Item(PRUint32 aIndex, nsIDOMCSSRule** aReturn); 
+
+  virtual nsIDOMCSSRule* GetItemAt(PRUint32 aIndex, nsresult* aResult);
 
   void DropReference() { mStyleSheet = nsnull; }
 
@@ -116,6 +118,7 @@ CSSRuleListImpl::~CSSRuleListImpl()
 
 // QueryInterface implementation for CSSRuleList
 NS_INTERFACE_MAP_BEGIN(CSSRuleListImpl)
+  NS_INTERFACE_MAP_ENTRY(nsICSSRuleList)
   NS_INTERFACE_MAP_ENTRY(nsIDOMCSSRuleList)
   NS_INTERFACE_MAP_ENTRY(nsISupports)
   NS_INTERFACE_MAP_ENTRY_CONTENT_CLASSINFO(CSSRuleList)
@@ -141,12 +144,11 @@ CSSRuleListImpl::GetLength(PRUint32* aLength)
   return NS_OK;
 }
 
-NS_IMETHODIMP    
-CSSRuleListImpl::Item(PRUint32 aIndex, nsIDOMCSSRule** aReturn)
+nsIDOMCSSRule*    
+CSSRuleListImpl::GetItemAt(PRUint32 aIndex, nsresult* aResult)
 {
   nsresult result = NS_OK;
 
-  *aReturn = nsnull;
   if (mStyleSheet) {
     result = mStyleSheet->EnsureUniqueInner(); // needed to ensure rules have correct parent
     if (NS_SUCCEEDED(result)) {
@@ -154,15 +156,31 @@ CSSRuleListImpl::Item(PRUint32 aIndex, nsIDOMCSSRule** aReturn)
 
       result = mStyleSheet->GetStyleRuleAt(aIndex, *getter_AddRefs(rule));
       if (rule) {
-        result = rule->GetDOMRule(aReturn);
         mRulesAccessed = PR_TRUE; // signal to never share rules again
-      } else if (result == NS_ERROR_ILLEGAL_VALUE) {
+        return rule->GetDOMRuleWeak(aResult);
+      }
+      if (result == NS_ERROR_ILLEGAL_VALUE) {
         result = NS_OK; // per spec: "Return Value ... null if ... not a valid index."
       }
     }
   }
-  
-  return result;
+
+  *aResult = result;
+  return nsnull;
+}
+
+NS_IMETHODIMP    
+CSSRuleListImpl::Item(PRUint32 aIndex, nsIDOMCSSRule** aReturn)
+{
+  nsresult rv;
+  nsIDOMCSSRule* rule = GetItemAt(aIndex, &rv);
+  if (!rule) {
+    *aReturn = nsnull;
+
+    return rv;
+  }
+
+  return CallQueryInterface(rule, aReturn);
 }
 
 template <class Numeric>

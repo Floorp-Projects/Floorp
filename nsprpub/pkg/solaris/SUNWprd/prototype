@@ -38,7 +38,7 @@
 #
 # ***** END LICENSE BLOCK *****
 #
-#ident  "$Id: prototype,v 1.4 2006/04/05 20:57:09 wtchang%redhat.com Exp $"
+#ident  "$Id: prototype,v 1.5 2008/10/20 22:38:46 christophe.ravel.bugs%sun.com Exp $"
 #
 # This required package information file contains a list of package contents.
 # The 'pkgmk' command uses this file to identify the contents of a package
@@ -63,7 +63,11 @@ d none usr 0755 root sys
 d none usr/include 0755 root bin
 d none usr/include/mps 0755 root bin
 d none usr/include/mps/obsolete 0755 root bin
+d none usr/include/mps/private 0755 root bin
+f none usr/include/mps/obsolete/pralarm.h 0644 root bin
+f none usr/include/mps/obsolete/probslet.h 0644 root bin
 f none usr/include/mps/obsolete/protypes.h 0644 root bin
+f none usr/include/mps/obsolete/prsem.h 0644 root bin
 f none usr/include/mps/prcpucfg.h 0644 root bin
 f none usr/include/mps/nspr.h 0644 root bin
 f none usr/include/mps/pratom.h 0644 root bin
@@ -81,6 +85,9 @@ f none usr/include/mps/prinit.h 0644 root bin
 f none usr/include/mps/prinrval.h 0644 root bin
 f none usr/include/mps/prio.h 0644 root bin
 f none usr/include/mps/pripcsem.h 0644 root bin
+f none usr/include/mps/private/pprio.h 0644 root bin
+f none usr/include/mps/private/pprthred.h 0644 root bin
+f none usr/include/mps/private/prpriv.h 0644 root bin
 f none usr/include/mps/prlink.h 0644 root bin
 f none usr/include/mps/prlock.h 0644 root bin
 f none usr/include/mps/prlog.h 0644 root bin

@@ -51,7 +51,7 @@ $SCRIPT -p product -b branch  -x executablepath [-d datafiles]
 
 variable            description
 ===============     ============================================================
--p product          required. firefox|thunderbird
+-p product          required. firefox, thunderbird or fennec
 -b branch           required. 1.8.0|1.8.1|1.9.0|1.9.1
 -x executablepath   required. directory where build is installed
 -d datafiles        optional. one or more filenames of files containing 
@@ -88,7 +88,7 @@ if [[ -z "$product" || -z "$branch" || -z "$executablepath" ]]
 fi
 
 
-if [[ ! -d "$executablepath" ]]; then
+if [[ ! ls "$executablepath/*" 2> /dev/null ]]; then
     exit 0
 fi
 

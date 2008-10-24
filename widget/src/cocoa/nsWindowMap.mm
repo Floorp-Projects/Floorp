@@ -146,6 +146,7 @@
   NS_OBJC_BEGIN_TRY_ABORT_BLOCK_NIL;
 
   if ((self = [super init])) {
+    mShouldFocusView = nil;
     [[NSNotificationCenter defaultCenter] addObserver:self
                                              selector:@selector(windowBecameKey:)
                                                  name:NSWindowDidBecomeKeyNotification
@@ -180,10 +181,49 @@
 {
   NS_OBJC_BEGIN_TRY_ABORT_BLOCK;
 
+  if (mShouldFocusView)
+    [mShouldFocusView release];
+
   [[NSNotificationCenter defaultCenter] removeObserver:self];
   [super dealloc];
 
   NS_OBJC_END_TRY_ABORT_BLOCK;
+}
+
+// mShouldFocusView (if non-nil) is the ChildView object that *should* be
+// focused in our NSWindow -- even if it isn't the one that's actually
+// currently focused.  (By "focused" I mean "is our NSWindow's first
+// responder, which takes keyboard input".)  We assume that [ChildView
+// sendFocusEvent:] is sent (to a ChildView object) if and only if that
+// ChildView object is about to be (or has just been) appropriately focused
+// or unfocused.  And mShouldFocusView keeps track of the results of calls
+// to [ChildView sendFocusEvent:] on ChildView objects in our NSWindow.
+- (ChildView *)getShouldFocusView
+{
+  // A ChildView that's been detached from its window should never be made
+  // first responder (it should have been unfocused, but wasn't).
+  if (![mShouldFocusView window]) {
+    [mShouldFocusView release];
+    mShouldFocusView = nil;
+  }
+  return mShouldFocusView;
+}
+
+- (void)markShouldFocus:(ChildView *)aView
+{
+  if (aView == mShouldFocusView)
+    return;
+  if (mShouldFocusView)
+    [mShouldFocusView release];
+  mShouldFocusView = [aView retain];
+}
+
+- (void)markShouldUnfocus:(ChildView *)aView
+{
+  if (aView == mShouldFocusView) {
+    [mShouldFocusView release];
+    mShouldFocusView = nil;
+  }
 }
 
 // As best I can tell, if the notification's object has a corresponding

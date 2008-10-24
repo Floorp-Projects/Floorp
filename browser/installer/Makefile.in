@@ -88,6 +88,8 @@ MOZ_PKG_MANIFEST = packages-static
 
 $(MOZ_PKG_MANIFEST): $(MOZ_PKG_MANIFEST_P)
 	$(PERL) $(topsrcdir)/config/preprocessor.pl $(DEFINES) $(ACDEFINES) $< > $@
+
+GARBAGE += $(MOZ_PKG_MANIFEST)
 endif
 
 ifneq (,$(filter mac cocoa,$(MOZ_WIDGET_TOOLKIT)))

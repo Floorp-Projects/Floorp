@@ -102,6 +102,7 @@ EXPORTS		= \
 		nsICSSParser.h \
 		nsICSSPseudoComparator.h \
 		nsICSSRule.h \
+		nsICSSRuleList.h \
 		nsICSSStyleRule.h \
 		nsICSSStyleRuleDOMWrapper.h \
 		nsICSSStyleSheet.h \

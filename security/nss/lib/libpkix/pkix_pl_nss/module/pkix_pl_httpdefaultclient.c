@@ -410,7 +410,7 @@ pkix_pl_HttpDefaultClient_Create(
         PKIX_PL_HttpDefaultClient *client = NULL;
 
         PKIX_ENTER(HTTPDEFAULTCLIENT, "PKIX_PL_HttpDefaultClient_Create");
-        PKIX_NULLCHECK_ONE(pClient);
+        PKIX_NULLCHECK_TWO(pClient, host);
 
         /* allocate an HttpDefaultClient */
         PKIX_CHECK(PKIX_PL_Object_Alloc
@@ -439,7 +439,12 @@ pkix_pl_HttpDefaultClient_Create(
         client->GETBuf = NULL;
         client->POSTBuf = NULL;
         client->rcvBuf = NULL;
-        client->host = host;
+        /* "host" is a parsing result by CERT_GetURL function that adds
+         * "end of line" to the value. OK to dup the string. */
+        client->host = PORT_Strdup(host);
+        if (!client->host) {
+            PKIX_ERROR(PKIX_ALLOCERROR);
+        }
         client->path = NULL;
         client->rcvContentType = NULL;
         client->rcvHeaders = NULL;
@@ -495,17 +500,22 @@ pkix_pl_HttpDefaultClient_Destroy(
                 PR_smprintf_free(client->GETBuf);
                 client->GETBuf = NULL;
         }
-
         if (client->POSTBuf != NULL) {
                 PKIX_PL_Free(client->POSTBuf, plContext);
                 client->POSTBuf = NULL;
         }
-
         if (client->rcvBuf != NULL) {
                 PKIX_PL_Free(client->rcvBuf, plContext);
                 client->rcvBuf = NULL;
         }
-
+        if (client->host) {
+                PORT_Free(client->host);
+                client->host = NULL;
+        }
+        if (client->path) {
+                PORT_Free(client->path);
+                client->path = NULL;
+        }
         PKIX_DECREF(client->socket);
 
 cleanup:
@@ -1254,7 +1264,15 @@ pkix_pl_HttpDefaultClient_RequestCreate(
                 PKIX_ERROR(PKIX_UNRECOGNIZEDREQUESTMETHOD);
         }
 
-        client->path = path_and_query_string;
+        if (path_and_query_string) {
+            /* "path_and_query_string" is a parsing result by CERT_GetURL
+             * function that adds "end of line" to the value. OK to dup
+             * the string. */
+            client->path = PORT_Strdup(path_and_query_string);
+            if (!client->path) {
+                PKIX_ERROR(PKIX_ALLOCERROR);
+            }
+        }
 
         client->timeout = timeout;
 

@@ -130,7 +130,7 @@ public:
   void Clear();
 
 private:
-  PR_STATIC_CALLBACK(PLDHashOperator)
+  static PLDHashOperator
     RemoveExpiredEntries(const nsACString& aKey, nsAutoPtr<CacheEntry>& aValue,
                          void* aUserData);
 
@@ -449,8 +449,8 @@ protected:
   PRUint32 mState;
 
   nsRefPtr<nsXMLHttpRequestUpload> mUpload;
-  PRUint32 mUploadTransferred;
-  PRUint32 mUploadTotal;
+  PRUint64 mUploadTransferred;
+  PRUint64 mUploadTotal;
   PRPackedBool mUploadComplete;
   PRUint64 mUploadProgress; // For legacy
   PRUint64 mUploadProgressMax; // For legacy
@@ -460,7 +460,7 @@ protected:
   PRPackedBool mTimerIsActive;
   PRPackedBool mProgressEventWasDelayed;
   PRPackedBool mLoadLengthComputable;
-  PRUint32 mLoadTotal; // 0 if not known.
+  PRUint64 mLoadTotal; // 0 if not known.
   nsCOMPtr<nsITimer> mProgressNotifier;
 
   PRPackedBool mFirstStartRequestSeen;

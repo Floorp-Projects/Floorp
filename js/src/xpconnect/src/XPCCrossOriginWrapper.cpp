@@ -266,7 +266,8 @@ CanAccessWrapper(JSContext *cx, JSObject *wrappedObj)
     return NS_ERROR_NOT_INITIALIZED;
   }
 
-  nsIPrincipal *subjectPrin = ssm->GetCxSubjectPrincipal(cx);
+  JSStackFrame *fp = nsnull;
+  nsIPrincipal *subjectPrin = ssm->GetCxSubjectPrincipalAndFrame(cx, &fp);
 
   if (!subjectPrin) {
     ThrowException(NS_ERROR_FAILURE, cx);
@@ -283,6 +284,18 @@ CanAccessWrapper(JSContext *cx, JSObject *wrappedObj)
   // object principal in this case, since Subsumes() would return true.
   if (isSystem) {
     return NS_OK;
+  }
+
+  // There might be no code running, but if there is, we need to see if it is
+  // UniversalXPConnect enabled code.
+  if (fp) {
+    void *annotation = JS_GetFrameAnnotation(cx, fp);
+    rv = subjectPrin->IsCapabilityEnabled("UniversalXPConnect", annotation,
+                                          &isSystem);
+    NS_ENSURE_SUCCESS(rv, rv);
+    if (isSystem) {
+      return NS_OK;
+    }
   }
 
   nsCOMPtr<nsIPrincipal> objectPrin;

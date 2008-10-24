@@ -37,7 +37,7 @@
 /*
  * Base64 decoding (ascii to binary).
  *
- * $Id: nssb64d.c,v 1.6 2004/04/25 15:03:17 gerv%gerv.net Exp $
+ * $Id: nssb64d.c,v 1.7 2008/10/05 20:59:26 nelson%bolyard.com Exp $
  */
 
 #include "nssb64.h"
@@ -53,7 +53,7 @@
  *    - giving everything names that are accepted by the NSPR module owners
  *	(though I tried to choose ones that would work without modification)
  *    - exporting the functions (remove static declarations and add
- *	PR_IMPLEMENT as necessary)
+ *	to nssutil.def as necessary)
  *    - put prototypes into appropriate header file (probably replacing
  *	the entire current lib/libc/include/plbase64.h in NSPR)
  *	along with a typedef for the context structure (which should be

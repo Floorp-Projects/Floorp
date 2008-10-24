@@ -37,7 +37,7 @@
  * the terms of any one of the MPL, the GPL or the LGPL.
  *
  * ***** END LICENSE BLOCK ***** */
-/* $Id: sslsecur.c,v 1.41 2007/09/11 00:48:09 nelson%bolyard.com Exp $ */
+/* $Id: sslsecur.c,v 1.42 2008/10/03 19:20:20 wtc%google.com Exp $ */
 #include "cert.h"
 #include "secitem.h"
 #include "keyhi.h"
@@ -995,14 +995,38 @@ ssl_SecureConnect(sslSocket *ss, const PRNetAddr *sa)
     return rv;
 }
 
+/*
+ * The TLS 1.2 RFC 5246, Section 7.2.1 says:
+ *
+ *     Unless some other fatal alert has been transmitted, each party is
+ *     required to send a close_notify alert before closing the write side
+ *     of the connection.  The other party MUST respond with a close_notify
+ *     alert of its own and close down the connection immediately,
+ *     discarding any pending writes.  It is not required for the initiator
+ *     of the close to wait for the responding close_notify alert before
+ *     closing the read side of the connection.
+ *
+ * The second sentence requires that we send a close_notify alert when we
+ * have received a close_notify alert.  In practice, all SSL implementations
+ * close the socket immediately after sending a close_notify alert (which is
+ * allowed by the third sentence), so responding with a close_notify alert
+ * would result in a write failure with the ECONNRESET error.  This is why
+ * we don't respond with a close_notify alert.
+ *
+ * Also, in the unlikely event that the TCP pipe is full and the peer stops
+ * reading, the SSL3_SendAlert call in ssl_SecureClose and ssl_SecureShutdown
+ * may block indefinitely in blocking mode, and may fail (without retrying)
+ * in non-blocking mode.
+ */
+
 int
 ssl_SecureClose(sslSocket *ss)
 {
     int rv;
 
     if (ss->version >= SSL_LIBRARY_VERSION_3_0 	&&
-    	ss->firstHsDone 			&& 
 	!(ss->shutdownHow & ssl_SHUTDOWN_SEND)	&&
+    	ss->firstHsDone 			&& 
 	!ss->recvdCloseNotify                   &&
 	ss->ssl3.initialized) {
 
@@ -1032,8 +1056,8 @@ ssl_SecureShutdown(sslSocket *ss, int nsprHow)
     }
 
     if ((sslHow & ssl_SHUTDOWN_SEND) != 0 		&&
+    	ss->version >= SSL_LIBRARY_VERSION_3_0		&&
 	!(ss->shutdownHow & ssl_SHUTDOWN_SEND)		&&
-    	(ss->version >= SSL_LIBRARY_VERSION_3_0)	&&
 	ss->firstHsDone 				&& 
 	!ss->recvdCloseNotify                   	&&
 	ss->ssl3.initialized) {
