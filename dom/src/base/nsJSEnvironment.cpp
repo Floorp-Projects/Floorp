@@ -2313,9 +2313,10 @@ nsJSContext::ConnectToInner(nsIScriptGlobalObject *aNewInner, void *aOuterGlobal
   JSObject *newInnerJSObject = (JSObject *)aNewInner->GetScriptGlobal(JAVASCRIPT);
   JSObject *myobject = (JSObject *)aOuterGlobal;
 
-  // *Don't* call JS_ClearScope here since it's unnecessary
-  // and it confuses the JS engine as to which Function is
-  // on which window. See bug 343966.
+  // Call ClearScope to nuke any properties (e.g. Function and Object) on the
+  // outer object. From now on, anybody asking the outer object for these
+  // properties will be forwarded to the inner window.
+  ::JS_ClearScope(mContext, myobject);
 
   // Make the inner and outer window both share the same
   // prototype. The prototype we share is the outer window's
