@@ -209,11 +209,12 @@
           var col = this.columns.getFirstColumn();
           var lastCol = null;
           var currentX = this.boxObject.x;
+          var adjustedX = aX + this.treeBoxObject.horizontalPosition;
           while (col) {
             var cw = col.element.boxObject.width;
             if (cw > 0) {
               currentX += cw;
-              if (currentX - (cw * aThresh) > aX)
+              if (currentX - (cw * aThresh) > adjustedX)
                 return col.element;
             }
             lastCol = col;
