@@ -118,6 +118,8 @@ typedef enum JSOp {
 #define JOF_TMPSLOT_SHIFT 22
 #define JOF_TMPSLOT_MASK  (JS_BITMASK(2) << JOF_TMPSLOT_SHIFT)
 
+#define JOF_RETVAL       (1U<<24) /* op leaves jsval return value on stack */
+
 /* Shorthands for type from format and type from opcode. */
 #define JOF_TYPE(fmt)   ((fmt) & JOF_TYPEMASK)
 #define JOF_OPTYPE(op)  JOF_TYPE(js_CodeSpec[op].format)

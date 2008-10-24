@@ -1767,9 +1767,9 @@ Decompile(SprintStack *ss, jsbytecode *pc, intN nb, JSOp nextop)
  * Pop a condition expression for if/for/while. JSOP_IFEQ's precedence forces
  * extra parens around assignment, which avoids a strict-mode warning.
  */
-#define POP_COND_STR() \
-    PopStr(ss, (js_CodeSpec[ss->opcodes[ss->top - 1]].format & JOF_SET)      \
-               ? JSOP_IFEQ                                                   \
+#define POP_COND_STR()                                                        \
+    PopStr(ss, (js_CodeSpec[ss->opcodes[ss->top - 1]].format & JOF_SET)       \
+               ? JSOP_IFEQ                                                    \
                : JSOP_NOP)
 
 /*
@@ -3476,8 +3476,6 @@ Decompile(SprintStack *ss, jsbytecode *pc, intN nb, JSOp nextop)
                     todo = Sprint(&ss->sprinter, "");
                 }
 #endif
-                LOCAL_ASSERT(pc[len] == JSOP_RESUME);
-                len += JSOP_RESUME_LENGTH;
                 break;
 
               case JSOP_DELNAME:
@@ -3899,10 +3897,6 @@ Decompile(SprintStack *ss, jsbytecode *pc, intN nb, JSOp nextop)
                     LOCAL_ASSERT(*pc == JSOP_CALL);
                     LOCAL_ASSERT(GET_ARGC(pc) == 0);
                     len = JSOP_CALL_LENGTH;
-
-                    /* Skip over the waiting JSOP_RESUME. */
-                    LOCAL_ASSERT(pc[len] == JSOP_RESUME);
-                    len += JSOP_RESUME_LENGTH;
 
                     /*
                      * Arrange to parenthesize this genexp unless:
