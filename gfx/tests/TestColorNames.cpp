@@ -40,6 +40,7 @@
 #include <stdio.h>
 #include <string.h>
 #include "nsColor.h"
+#include "nsColorNames.h"
 #include "prprf.h"
 #include "nsString.h"
 
