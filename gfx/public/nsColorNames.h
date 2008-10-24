@@ -38,39 +38,12 @@
 #ifndef nsColorNames_h___
 #define nsColorNames_h___
 
-#include "nsColor.h"
 #include "gfxCore.h"
-#include "nsStringFwd.h"
-
-/*
-   Declare the enum list using the magic of preprocessing
-   enum values are "eColorName_foo" (where foo is the color name)
-
-   To change the list of colors, see nsColorNameList.h
-
- */
-#define GFX_COLOR(_name, _value) eColorName_##_name,
-enum nsColorName {
-  eColorName_UNKNOWN = -1,
-#include "nsColorNameList.h"
-  eColorName_COUNT
-};
-#undef GFX_COLOR
 
 class NS_GFX nsColorNames {
 public:
   static void AddRefTable(void);
   static void ReleaseTable(void);
-
-  // Given a color name, return the color enum value
-  // This only functions provided a valid ref on the table
-  static nsColorName LookupName(const nsAString& aName);
-  static nsColorName LookupName(const nsACString& aName);
-
-  static const nsAFlatCString& GetStringValue(nsColorName aColorName);
-
-  // Color id to rgb value table
-  static NS_GFX_STATIC_MEMBER_(const nscolor) kColors[];
 };
 
 #endif /* nsColorNames_h___ */
