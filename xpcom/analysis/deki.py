@@ -20,7 +20,7 @@ higher-level than that.
 """
 
 import sys
-import urllib2, cookielib
+import urllib2, cookielib, httplib
 import xml.dom.minidom as dom
 from urllib import quote as _urllib_quote
 from urllib import urlencode as _urlencode
@@ -46,6 +46,10 @@ def _make_url(*dirs, **params):
     if params:
         url += '?' + _urlencode(params)
     return url
+
+class PutRequest(urllib2.Request):
+    def get_method(self):
+        return "PUT"
 
 # === Dream framework client code
 
@@ -96,9 +100,8 @@ class DreamClient:
     def open(self, url):
         return self._opener.open(self.base + url)
 
-    def post(self, url, data, type):
-        #print "DEBUG- posting to:", self.base + url
-        req = urllib2.Request(self.base + url, data, {'Content-Type': type})
+    def _handleResponse(self, req):
+        """Helper method shared between post() and put()"""
         resp = self._opener.open(req)
         try:
             ct = resp.headers.get('Content-Type', '(none)')
@@ -111,6 +114,17 @@ class DreamClient:
                 return None
         finally:
             resp.close()
+
+
+    def post(self, url, data, type):
+        #print "DEBUG- posting to:", self.base + url
+        req = urllib2.Request(self.base + url, data, {'Content-Type': type})
+        return self._handleResponse(req)
+
+    def put(self, url, data, type):
+        #print "DEBUG- putting to:", self.base + url
+        req = PutRequest(self.base + url, data, {'Content-Type': type})
+        return self._handleResponse(req)
 
     def get_xml(self, url):
         resp = self.open(url)
@@ -202,6 +216,27 @@ class Deki(DreamClient):
         _check(doc.documentElement.tagName == 'body')
         p = Page(self)
         p._create(path, title, doc, overwrite)
+
+    def attach_file(self, page, name, data, mimetype, description=None):
+        """Create or update a file attachment.
+
+        Parameters:
+          page - str - the page ID this file is related to
+          name - str - the name of the file
+          data - str - the file data
+          mimetype - str - the MIME type of the file
+          description - str - a description of the file
+        """
+
+        p = {}
+        if description is not None:
+            p['description'] = description
+
+        url = _make_url('pages', _format_page_id(page),
+                        'files', _format_page_id(name), **p)
+
+        r = self.put(url, data, mimetype)
+        _check(r.documentElement.nodeName == u'file')
 
     def get_subpages(self, page_id):
         """ Return the ids of all subpages of the given page. """
