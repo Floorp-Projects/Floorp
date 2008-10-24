@@ -1813,9 +1813,9 @@ const char js_lookupSetter_str[] = "__lookupSetter__";
 #endif
 
 JS_DEFINE_TRCINFO_1(obj_hasOwnProperty,
-    (3, (static, INT32, Object_p_hasOwnProperty, CONTEXT, THIS, STRING,       0, 0)))
+    (3, (static, BOOL_FAIL, Object_p_hasOwnProperty, CONTEXT, THIS, STRING,       0, 0)))
 JS_DEFINE_TRCINFO_1(obj_propertyIsEnumerable,
-    (3, (static, INT32, Object_p_propertyIsEnumerable, CONTEXT, THIS, STRING, 0, 0)))
+    (3, (static, BOOL_FAIL, Object_p_propertyIsEnumerable, CONTEXT, THIS, STRING, 0, 0)))
 
 static JSFunctionSpec object_methods[] = {
 #if JS_HAS_TOSOURCE

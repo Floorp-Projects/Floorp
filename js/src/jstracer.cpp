@@ -5338,10 +5338,22 @@ TraceRecorder::record_FastNativeCallComplete()
     LIns* v_ins = get(&v);
     
     bool ok = true;
-    if (JSTN_ERRTYPE(pendingTraceableNative) == FAIL_JSVAL) {
+    switch (JSTN_ERRTYPE(pendingTraceableNative)) {
+    case FAIL_JSVAL:
         ok = unbox_jsval(v, v_ins);
         if (ok)
             set(&v, v_ins);
+        break;
+    case FAIL_NEG:
+        /* Already added i2f in functionCall. */
+        JS_ASSERT(JSVAL_IS_NUMBER(v));
+        break;
+    default:
+        /* Convert the result to double if the builtin returns int32. */
+        if (JSVAL_IS_NUMBER(v) &&
+            (pendingTraceableNative->builtin->_argtypes & 3) == nanojit::ARGSIZE_LO) {
+            set(&v, lir->ins1(LIR_i2f, v_ins));
+        }
     }
 
     /* Restore the original pc location. The interpreter will advance pc to
