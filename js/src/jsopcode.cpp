@@ -1767,7 +1767,10 @@ Decompile(SprintStack *ss, jsbytecode *pc, intN nb, JSOp nextop)
  * Pop a condition expression for if/for/while. JSOP_IFEQ's precedence forces
  * extra parens around assignment, which avoids a strict-mode warning.
  */
-#define POP_COND_STR()        PopStr(ss, JSOP_IFEQ)
+#define POP_COND_STR() \
+    PopStr(ss, (js_CodeSpec[ss->opcodes[ss->top - 1]].format & JOF_SET)      \
+               ? JSOP_IFEQ                                                   \
+               : JSOP_NOP)
 
 /*
  * Callers know that ATOM_IS_STRING(atom), and we leave it to the optimizer to
