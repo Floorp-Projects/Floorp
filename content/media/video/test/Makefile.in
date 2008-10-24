@@ -44,10 +44,13 @@ include $(DEPTH)/config/autoconf.mk
 include $(topsrcdir)/config/rules.mk
 
 _TEST_FILES = 	test_autoplay.html \
+                test_bug461281.html \
                 test_constants.html \
                 test_controls.html \
                 test_currentTime.html \
                 test_defaultPlaybackRate.html \
+                test_ended1.html \
+                test_ended2.html \
                 test_networkState.html \
                 test_paused.html \
                 test_playbackRate.html \
@@ -61,8 +64,12 @@ _TEST_FILES = 	test_autoplay.html \
                 test_seek6.html \
                 test_seek7.html \
                 test_seek8.html \
+                test_timeupdate1.html \
+                test_timeupdate2.html \
+                test_timeupdate3.html \
                 test_volume.html \
                 320x240.ogg \
+                bug461281.ogg \
                 seek.ogg \
 #                test_bug448534.html \
                 $(NULL)

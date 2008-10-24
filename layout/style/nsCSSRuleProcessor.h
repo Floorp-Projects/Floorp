@@ -72,6 +72,7 @@ public:
 public:
   nsresult ClearRuleCascades();
 
+  static void Startup();
   static void FreeSystemMetrics();
 
   /*

@@ -383,6 +383,20 @@ nsScriptSecurityManager::GetCxSubjectPrincipal(JSContext *cx)
     return principal;
 }
 
+NS_IMETHODIMP_(nsIPrincipal *)
+nsScriptSecurityManager::GetCxSubjectPrincipalAndFrame(JSContext *cx, JSStackFrame **fp)
+{
+    NS_ASSERTION(cx == GetCurrentJSContext(),
+                 "Uh, cx is not the current JS context!");
+
+    nsresult rv = NS_ERROR_FAILURE;
+    nsIPrincipal *principal = GetPrincipalAndFrame(cx, fp, &rv);
+    if (NS_FAILED(rv))
+        return nsnull;
+
+    return principal;
+}
+
 ////////////////////
 // Policy Storage //
 ////////////////////

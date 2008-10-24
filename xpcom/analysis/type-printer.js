@@ -1,7 +1,27 @@
 let dumpTypes = options['dump-types'].split(',');
-function interestingType(name) dumpTypes.some(function(n) n == name);
 
+let interestingList = {};
 let typelist = {};
+
+function interestingType(t)
+{
+  let name = t.name;
+  
+  if (dumpTypes.some(function(n) n == name)) {
+    interestingList[name] = t;
+    typelist[name] = t;
+    return true;
+  }
+  
+  for each (let base in t.bases) {
+    if (base.access == 'public' && interestingType(base.type)) {
+      typelist[name] = t;
+      return true;
+    }
+  }
+  
+  return false;
+}
 
 function addSubtype(t, subt)
 {
@@ -17,13 +37,10 @@ function addSubtype(t, subt)
 
 function process_type(t)
 {
-  let name = t.name;
+  interestingType(t);
   
-  if (interestingType(t.name))
-    typelist[t.name] = t;
-  
-  if (t.memberOf)
-    addSubtype(t.memberOf, t);
+  for each (let base in t.bases)
+    addSubtype(base.type, t);
 }
 
 function process_decl(d)
@@ -223,6 +240,8 @@ function getLocLink(loc, text)
 
 function dumpType(t)
 {
+  print("DUMP-TYPE(%s)".format(t.name));
+
   let methodOverview = <tbody />;
   let methodList = <div/>;
   let memberList = <></>;
@@ -322,6 +341,13 @@ function dumpType(t)
       <p>{getLocLink(t.loc, "Class Declaration")}</p>
   
       {getDocComment(t.loc)}
+
+      {dumpTypes.some(function(n) n == t.name) ?
+         <>
+           [MAP{t.name}-graph.map]
+           <img src={"/@api/deki/pages/=en%%252F%s/files/=%s-graph.png".format(t.name, t.name)} usemap="#classes" />
+         </> : <></>
+      }
   
       {methodOverview.*.length() > 0 ?
          <>
@@ -352,8 +378,36 @@ function dumpType(t)
   write_file(t.name + ".html", r.toXMLString());
 }
 
+function graphType(t)
+{
+  print("GRAPH-TYPE(%s)".format(t.name));
+
+  let contents = "digraph classes {\n"
+               + "  node [shape=rectangle fontsize=11]\n"
+               + "  %s;\n".format(t.name);
+
+  function graphClass(c)
+  {
+    contents += '%s [URL="http://developer.mozilla.org/en/%s"]\n'.format(c.name, c.name);
+    
+    for each (let st in c.subtypes) {
+      contents += "  %s -> %s;\n".format(c.name, st.name);
+      graphClass(st);
+    }
+  }
+
+  graphClass(t);
+  
+  contents += "}\n";
+  
+  write_file(t.name + "-graph.gv", contents);
+}
+  
 function input_end()
 {
   for (let p in typelist)
     dumpType(typelist[p]);
+
+  for (let n in interestingList)
+    graphType(interestingList[n]);
 }

@@ -72,7 +72,6 @@ DIRS = lib  \
  signver \
  shlibsign \
  smimetools  \
- SSLsample \
  ssltap  \
  strsclnt \
  symkeyutil \

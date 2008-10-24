@@ -2218,7 +2218,7 @@ NS_PTR_TO_INT32(frame->GetProperty(nsGkAtoms::embeddingLevel))
    */
   void CheckInvalidateSizeChange(const nsRect& aOldRect,
                                  const nsRect& aOldOverflowRect,
-                                 nsHTMLReflowMetrics& aNewDesiredSize);
+                                 const nsSize& aNewDesiredSize);
 
 protected:
   // Members
@@ -2240,7 +2240,8 @@ protected:
    * Gets the overflow area for any properties that are common to all types of frames
    * e.g. outlines.
    */
-  nsRect GetAdditionalOverflow(const nsRect& aOverflowArea, const nsSize& aNewSize);
+  nsRect GetAdditionalOverflow(const nsRect& aOverflowArea, const nsSize& aNewSize,
+                               PRBool* aHasOutlineOrEffects);
 
   /**
    * Can we stop inside this frame when we're skipping non-rendered whitespace?

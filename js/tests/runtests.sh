@@ -73,7 +73,7 @@ usage: runtests.sh -p products -b branches -e extra\\
 
 variable            description
 ===============     ============================================================
--p products         space separated list of js, firefox
+-p products         space separated list of js, firefox, fennec
 -b branches         space separated list of branches 1.8.0, 1.8.1, 1.9.0, 1.9.1
 -e extra            optional. extra qualifier to pick build tree and mozconfig.
 -T buildtypes       space separated list of build types opt debug
@@ -191,13 +191,14 @@ for testlogfile in $testlogfiles; do
     case "$testlogfile" in
         *,js,*) testtype=shell;;
         *,firefox,*) testtype=browser;;
+        *,fennec,*) testtype=browser;;
         *) error "unknown testtype in logfile $testlogfile" $LINENO;;
     esac
 
     case "$testlogfile" in
         *,opt,*) buildtype=opt;;
         *,debug,*) buildtype=debug;;
-        *,nightly,*) buildtype=opt;;
+        *,nightly*) buildtype=opt;;
         *) error "unknown buildtype in logfile $testlogfile" $LINENO;;
     esac
 

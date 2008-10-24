@@ -41,15 +41,15 @@
 #define nsICSSRule_h___
 
 #include "nsIStyleRule.h"
+#include "nsIDOMCSSRule.h"
 
 class nsICSSStyleSheet;
 class nsICSSGroupRule;
-class nsIDOMCSSRule;
 class nsAString;
 
-// IID for the nsICSSRule interface {b9791e20-1a04-11d3-805a-006008159b5a}
+// IID for the nsICSSRule interface {e775eac0-b022-462c-b1f9-221c01aa2988}
 #define NS_ICSS_RULE_IID     \
-{0xb9791e20, 0x1a04, 0x11d3, {0x80, 0x5a, 0x00, 0x60, 0x08, 0x15, 0x9b, 0x5a}}
+{0xe775eac0, 0xb022, 0x462c, {0xb1, 0xf9, 0x22, 0x1c, 0x01, 0xaa, 0x29, 0x88}}
 
 // inheriting from nsIStyleRule is only for style rules, not other rule types
 class nsICSSRule : public nsIStyleRule {
@@ -77,7 +77,13 @@ public:
 
   // Note that this returns null for inline style rules since they aren't
   // supposed to have a DOM rule representation (and our code wouldn't work).
-  NS_IMETHOD GetDOMRule(nsIDOMCSSRule** aDOMRule) = 0;
+  nsresult GetDOMRule(nsIDOMCSSRule** aDOMRule)
+  {
+    nsresult rv;
+    NS_IF_ADDREF(*aDOMRule = GetDOMRuleWeak(&rv));
+    return rv;
+  }
+  virtual nsIDOMCSSRule* GetDOMRuleWeak(nsresult* aResult) = 0;
 };
 
 NS_DEFINE_STATIC_IID_ACCESSOR(nsICSSRule, NS_ICSS_RULE_IID)

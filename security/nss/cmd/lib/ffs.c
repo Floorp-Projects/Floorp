@@ -33,7 +33,7 @@
  * the terms of any one of the MPL, the GPL or the LGPL.
  *
  * ***** END LICENSE BLOCK ***** */
-#ifdef XP_PC
+#if !defined(XP_UNIX) && !defined(XP_OS2)
 
 int ffs( unsigned int i)
 {

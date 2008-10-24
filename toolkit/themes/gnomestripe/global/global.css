@@ -257,6 +257,10 @@ label[disabled="true"] {
   color: GrayText;
 }
 
+.tooltip-label {
+  margin: 0;
+}
+
 .header {
   font-weight: bold;
 }

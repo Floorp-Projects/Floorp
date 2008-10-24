@@ -47,7 +47,7 @@
 
 interface nsIDOMElement;
 
-[scriptable, uuid(9a1ff4e0-5e31-46af-b393-2cbab8093442)]
+[scriptable, uuid(3fe733aa-823b-443a-9945-b02f973ab439)]
 interface nsIDOMWindowUtils : nsISupports {
 
   /**
@@ -240,4 +240,24 @@ interface nsIDOMWindowUtils : nsISupports {
    */
 
   void processUpdates();
+
+  /** Synthesize a simple gesture event for a window. The event types
+   *  supported are: MozSwipeGesture, MozMagnifyGestureStart,
+   *  MozMagnifyGestureUpdate, MozMagnifyGesture,
+   *  MozRotateGestureStart, MozRotateGestureUpdate, and
+   *  MozRotateGesture.
+   *
+   * Cannot be accessed from unprivileged context (not
+   * content-accessible) Will throw a DOM security error if called
+   * without UniversalXPConnect privileges.
+   *
+   * @param aType event type
+   * @param aDirection direction, using constants defined in nsIDOMSimpleGestureEvent
+   * @param aDelta  amount of magnification or rotation for magnify and rotation events
+   * @param aModifiers modifiers pressed, using constants defined in nsIDOMNSEvent
+   */
+  void sendSimpleGestureEvent(in AString aType,
+                              in unsigned long aDirection,
+                              in double aDelta,
+                              in long aModifiers);
 };

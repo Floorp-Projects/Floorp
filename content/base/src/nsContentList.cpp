@@ -70,10 +70,6 @@ NS_NewPreContentIterator(nsIContentIterator** aInstancePtrResult);
 
 static nsContentList *gCachedContentList;
 
-nsBaseContentList::nsBaseContentList()
-{
-}
-
 nsBaseContentList::~nsBaseContentList()
 {
 }
@@ -90,7 +86,7 @@ NS_IMPL_CYCLE_COLLECTION_TRAVERSE_END
 NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION(nsBaseContentList)
   NS_INTERFACE_MAP_ENTRY(nsINodeList)
   NS_INTERFACE_MAP_ENTRY(nsIDOMNodeList)
-  NS_INTERFACE_MAP_ENTRY_AMBIGUOUS(nsISupports, nsIDOMNodeList)
+  NS_INTERFACE_MAP_ENTRY_AMBIGUOUS(nsISupports, nsINodeList)
   NS_INTERFACE_MAP_ENTRY_CONTENT_CLASSINFO(NodeList)
 NS_INTERFACE_MAP_END
 

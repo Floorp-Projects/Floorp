@@ -78,42 +78,42 @@ nsPrintSettingsWin::~nsPrintSettingsWin()
 }
 
 /* [noscript] attribute charPtr deviceName; */
-NS_IMETHODIMP nsPrintSettingsWin::SetDeviceName(char * aDeviceName)
+NS_IMETHODIMP nsPrintSettingsWin::SetDeviceName(const PRUnichar * aDeviceName)
 {
   if (mDeviceName) {
     nsMemory::Free(mDeviceName);
   }
-  mDeviceName = aDeviceName?nsCRT::strdup(aDeviceName):nsnull;
+  mDeviceName = aDeviceName?wcsdup(aDeviceName):nsnull;
   return NS_OK;
 }
-NS_IMETHODIMP nsPrintSettingsWin::GetDeviceName(char * *aDeviceName)
+NS_IMETHODIMP nsPrintSettingsWin::GetDeviceName(PRUnichar **aDeviceName)
 {
   NS_ENSURE_ARG_POINTER(aDeviceName);
-  *aDeviceName = mDeviceName?nsCRT::strdup(mDeviceName):nsnull;
+  *aDeviceName = mDeviceName?wcsdup(mDeviceName):nsnull;
   return NS_OK;
 }
 
 /* [noscript] attribute charPtr driverName; */
-NS_IMETHODIMP nsPrintSettingsWin::SetDriverName(char * aDriverName)
+NS_IMETHODIMP nsPrintSettingsWin::SetDriverName(const PRUnichar * aDriverName)
 {
   if (mDriverName) {
     nsMemory::Free(mDriverName);
   }
-  mDriverName = aDriverName?nsCRT::strdup(aDriverName):nsnull;
+  mDriverName = aDriverName?wcsdup(aDriverName):nsnull;
   return NS_OK;
 }
-NS_IMETHODIMP nsPrintSettingsWin::GetDriverName(char * *aDriverName)
+NS_IMETHODIMP nsPrintSettingsWin::GetDriverName(PRUnichar **aDriverName)
 {
   NS_ENSURE_ARG_POINTER(aDriverName);
-  *aDriverName = mDriverName?nsCRT::strdup(mDriverName):nsnull;
+  *aDriverName = mDriverName?wcsdup(mDriverName):nsnull;
   return NS_OK;
 }
 
-void nsPrintSettingsWin::CopyDevMode(DEVMODE* aInDevMode, DEVMODE *& aOutDevMode)
+void nsPrintSettingsWin::CopyDevMode(DEVMODEW* aInDevMode, DEVMODEW *& aOutDevMode)
 {
   aOutDevMode = nsnull;
   size_t size = aInDevMode->dmSize + aInDevMode->dmDriverExtra;
-  aOutDevMode = (LPDEVMODE)::HeapAlloc (::GetProcessHeap(), HEAP_ZERO_MEMORY, size);
+  aOutDevMode = (LPDEVMODEW)::HeapAlloc (::GetProcessHeap(), HEAP_ZERO_MEMORY, size);
   if (aOutDevMode) {
     memcpy(aOutDevMode, aInDevMode, size);
   }
@@ -121,7 +121,7 @@ void nsPrintSettingsWin::CopyDevMode(DEVMODE* aInDevMode, DEVMODE *& aOutDevMode
 }
 
 /* [noscript] attribute nsDevMode devMode; */
-NS_IMETHODIMP nsPrintSettingsWin::GetDevMode(DEVMODE * *aDevMode)
+NS_IMETHODIMP nsPrintSettingsWin::GetDevMode(DEVMODEW * *aDevMode)
 {
   NS_ENSURE_ARG_POINTER(aDevMode);
 
@@ -133,7 +133,7 @@ NS_IMETHODIMP nsPrintSettingsWin::GetDevMode(DEVMODE * *aDevMode)
   return NS_OK;
 }
 
-NS_IMETHODIMP nsPrintSettingsWin::SetDevMode(DEVMODE * aDevMode)
+NS_IMETHODIMP nsPrintSettingsWin::SetDevMode(DEVMODEW * aDevMode)
 {
   if (mDevMode) {
     ::HeapFree(::GetProcessHeap(), 0, mDevMode);
@@ -176,8 +176,8 @@ nsPrintSettingsWin& nsPrintSettingsWin::operator=(const nsPrintSettingsWin& rhs)
     ::HeapFree(::GetProcessHeap(), 0, mDevMode);
   }
 
-  mDeviceName = rhs.mDeviceName?nsCRT::strdup(rhs.mDeviceName):nsnull;
-  mDriverName = rhs.mDriverName?nsCRT::strdup(rhs.mDriverName):nsnull;
+  mDeviceName = rhs.mDeviceName?wcsdup(rhs.mDeviceName):nsnull;
+  mDriverName = rhs.mDriverName?wcsdup(rhs.mDriverName):nsnull;
 
   if (rhs.mDevMode) {
     CopyDevMode(rhs.mDevMode, mDevMode);

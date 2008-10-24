@@ -326,7 +326,7 @@ class nsOggDecoder : public nsMediaDecoder
   void GetCurrentURI(nsIURI** aURI);
   nsIPrincipal* GetCurrentPrincipal();
 
-  virtual void UpdateBytesDownloaded(PRUint32 aBytes);
+  virtual void UpdateBytesDownloaded(PRUint64 aBytes);
 
   // Called when the video file has completed downloading.
   // Call on the main thread only.
@@ -378,7 +378,7 @@ protected:
 
   // Return the current number of bytes loaded from the video file.
   // This is used for progress events.
-  virtual PRUint32 GetBytesLoaded();
+  virtual PRUint64 GetBytesLoaded();
 
   // Return the size of the video file in bytes.
   // This is used for progress events.
@@ -400,24 +400,34 @@ protected:
   // thread.
   void SeekingStarted();
 
+  // Called when the backend has changed the current playback
+  // position. It dispatches a timeupdate event and invalidates the frame.
+  // This must be called on the main thread only.
+  void PlaybackPositionChanged();
+
 private:
   // Register/Unregister with Shutdown Observer. 
   // Call on main thread only.
   void RegisterShutdownObserver();
   void UnregisterShutdownObserver();
 
-
   /******
    * The following members should be accessed on the main thread only
    ******/
   // Total number of bytes downloaded so far. 
-  PRUint32 mBytesDownloaded;
+  PRUint64 mBytesDownloaded;
 
   // The URI of the current resource
   nsCOMPtr<nsIURI> mURI;
 
   // Thread to handle decoding of Ogg data.
   nsCOMPtr<nsIThread> mDecodeThread;
+
+  // The current playback position of the media resource in units of
+  // seconds. This is updated approximately at the framerate of the
+  // video (if it is a video) or the callback period of the audio.
+  // It is read and written from the main thread only.
+  float mCurrentTime;
 
   // Volume that playback should start at.  0.0 = muted. 1.0 = full
   // volume.  Readable/Writeable from the main thread. Read from the

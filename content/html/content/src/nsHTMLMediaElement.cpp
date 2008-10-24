@@ -299,8 +299,9 @@ NS_IMETHODIMP nsHTMLMediaElement::SetCurrentTime(float aCurrentTime)
     return NS_ERROR_DOM_INVALID_STATE_ERR;
 
   mPlayingBeforeSeek = IsActivelyPlaying();
+  // The media backend is responsible for dispatching the timeupdate
+  // event if it changes the playback position as a result of the seek.
   nsresult rv = mDecoder->Seek(aCurrentTime);
-  DispatchAsyncSimpleEvent(NS_LITERAL_STRING("timeupdate"));
   return rv;
 }
 
@@ -486,6 +487,11 @@ nsHTMLMediaElement::Play(void)
     NS_ENSURE_SUCCESS(rv, rv);
   }
 
+  if (mEnded) {
+    mEnded = PR_FALSE;
+    SetCurrentTime(0);
+  }
+
   // TODO: If the playback has ended, then the user agent must set 
   // currentLoop to zero and seek to the effective start.
   float rate = 1.0;
@@ -500,7 +506,6 @@ nsHTMLMediaElement::Play(void)
 
   if (oldPaused)
     DispatchAsyncSimpleEvent(NS_LITERAL_STRING("play"));
-
 
   return NS_OK;
 }
@@ -708,7 +713,6 @@ void nsHTMLMediaElement::PlaybackEnded()
   mBegun = PR_FALSE;
   mEnded = PR_TRUE;
   mPaused = PR_TRUE;
-  SetCurrentTime(0);
   DispatchSimpleEvent(NS_LITERAL_STRING("ended"));
 }
 

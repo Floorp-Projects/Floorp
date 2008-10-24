@@ -456,10 +456,15 @@ nsIContent::FindFirstNonNativeAnonymous() const
 
 //----------------------------------------------------------------------
 
-nsChildContentList::~nsChildContentList()
-{
-  MOZ_COUNT_DTOR(nsChildContentList);
-}
+NS_IMPL_ADDREF(nsChildContentList)
+NS_IMPL_RELEASE(nsChildContentList)
+
+NS_INTERFACE_MAP_BEGIN(nsChildContentList)
+  NS_INTERFACE_MAP_ENTRY(nsINodeList)
+  NS_INTERFACE_MAP_ENTRY(nsIDOMNodeList)
+  NS_INTERFACE_MAP_ENTRY_AMBIGUOUS(nsISupports, nsINodeList)
+  NS_INTERFACE_MAP_ENTRY_CONTENT_CLASSINFO(NodeList)
+NS_INTERFACE_MAP_END
 
 NS_IMETHODIMP
 nsChildContentList::GetLength(PRUint32* aLength)
@@ -467,6 +472,19 @@ nsChildContentList::GetLength(PRUint32* aLength)
   *aLength = mNode ? mNode->GetChildCount() : 0;
 
   return NS_OK;
+}
+
+NS_IMETHODIMP
+nsChildContentList::Item(PRUint32 aIndex, nsIDOMNode** aReturn)
+{
+  nsINode* node = GetNodeAt(aIndex);
+  if (!node) {
+    *aReturn = nsnull;
+
+    return NS_OK;
+  }
+
+  return CallQueryInterface(node, aReturn);
 }
 
 nsINode*
@@ -2510,7 +2528,7 @@ nsGenericElement::BindToTree(nsIDocument* aDocument, nsIContent* aParent,
   NS_ASSERTION(!aBindingParent || IsRootOfNativeAnonymousSubtree() ||
                !HasFlag(NODE_IS_IN_ANONYMOUS_SUBTREE) ||
                aBindingParent->IsInNativeAnonymousSubtree(),
-               "Trying to re-bind content from native anonymous subtree to"
+               "Trying to re-bind content from native anonymous subtree to "
                "non-native anonymous parent!");
   if (IsRootOfNativeAnonymousSubtree() ||
       aParent && aParent->IsInNativeAnonymousSubtree()) {
