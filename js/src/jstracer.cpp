@@ -1904,7 +1904,7 @@ TraceRecorder::checkType(jsval& v, uint8 t, bool& unstable)
         if (!isNumber(v))
             return false; /* not a number? type mismatch */
         LIns* i = get(&v);
-        if (!isi2f(i)) {
+        if (!isPromoteInt(i)) {
             debug_only_v(printf("int slot is !isInt32, slot #%d, triggering re-compilation\n",
                                 !isGlobal(&v)
                                 ? nativeStackOffset(&v)
@@ -1913,12 +1913,10 @@ TraceRecorder::checkType(jsval& v, uint8 t, bool& unstable)
             unstable = true;
             return true; /* keep checking types, but request re-compilation */
         }
-        /* Looks good, slot is an int32, the last instruction should be i2f. */
-        JS_ASSERT(isInt32(v) && (i->isop(LIR_i2f) || i->isop(LIR_qjoin)));
-        /* We got the final LIR_i2f as we expected. Overwrite the value in that
-           slot with the argument of i2f since we want the integer store to flow along
-           the loop edge, not the casted value. */
-        set(&v, iu2fArg(i));
+        /* Looks good, slot is an int32, the last instruction should be promotable. */
+        JS_ASSERT(isInt32(v) && isPromoteInt(i));
+        /* Overwrite the value in this slot with the argument promoted back to an integer. */
+        set(&v, f2i(i));
         return true;
     }
     if (t == JSVAL_DOUBLE) {
