@@ -1548,9 +1548,9 @@ function testNestedExitStackOuter() {
 }
 testNestedExitStackOuter.expected = 81;
 testNestedExitStackOuter.jitstats = {
-    recorderStarted: 4,
+    recorderStarted: 3,
     recorderAborted: 0,
-    traceTriggered: 6
+    traceTriggered: 7
 };
 test(testNestedExitStackOuter);
 
