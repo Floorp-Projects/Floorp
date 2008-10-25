@@ -59,7 +59,6 @@
   border: 0px !important;
 }
 
-
 /* Hide labels for the toolbar because we really don't need them what with the
    tooltips */
 #HelpToolbar .toolbarbutton-text {
@@ -68,22 +67,6 @@
 
 /* Set the minimum sidebar width so the help contents aren't squeezed together.*/
 #help-sidebar { min-width: 15em; width: 20em; max-width: 25em; }
-
-#search-sidebar-closebutton {
-  -moz-binding: url(chrome://global/content/bindings/toolbarbutton.xml#toolbarbutton-image);
-  list-style-image: url("chrome://global/skin/icons/closetab.png");
-  padding-right: 4px;
-  margin: 0;
-  border: 0;
-}
-
-#search-sidebar-closebutton:hover {
-  list-style-image: url("chrome://global/skin/icons/closetab-hover.png");
-}
-
-#search-sidebar-closebutton:hover:active {
-  list-style-image: url("chrome://global/skin/icons/closetab-active.png");
-}
 
 #help-back-button { -moz-image-region: rect(0px 24px 24px 0px); }
 #help-back-button:not([disabled="true"]):hover { -moz-image-region: rect(24px 24px 48px 0px); }
@@ -150,28 +133,6 @@
   -moz-image-region: rect(72px, 14px, 96px, 0px);
 }
 
-
 #helpsidebar-splitter {
   border-right: 1px solid #bebebe;
-}
-
-#helpsidebar-box toolbarbutton {
-  background-image: url("chrome://global/skin/icons/white-gray-gradient.gif");
-  background-repeat: repeat-x;
-  background-position: bottom right;
-  background-color: rgb(246, 246, 246);
-  border-bottom: 1px solid #b3b3b3;
-  border-right: 1px solid #bebebe;
-  margin: 0px;
-  text-align: left;
-  color: #505050;
-}
-
-#helpsidebar-box toolbarbutton[selected="true"] {
-  color: #000;
-}
-
-#helpsidebar-box tree {
-  margin: 0px !important;
-  padding: 0px !important;
 }

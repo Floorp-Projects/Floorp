@@ -1156,13 +1156,9 @@ statusbarpanel#statusbar-display {
 
 /* Throbber */
 #navigator-throbber {
-  -moz-appearance: none;
-  -moz-user-focus: ignore;
-  margin: 0 !important;
-  border: none !important;
-  padding: 0px !important;
-  min-width: 0;
-  background-color: transparent;
+  width: 16px;
+  min-height: 16px;
+  margin: 0 3px;
   list-style-image: url("chrome://global/skin/icons/notloading_16.png");
 }
 
@@ -1170,20 +1166,6 @@ statusbarpanel#statusbar-display {
   list-style-image: url("chrome://global/skin/icons/loading_16.png");
 }
 
-#navigator-throbber > hbox {
-  border-top: 0px;
-  border-bottom: 0px;
-  padding-bottom: 1px;
-}
-
-toolbar[mode="text"] #navigator-throbber,
-toolbar[iconsize="small"] #navigator-throbber {
-  list-style-image: url("chrome://global/skin/icons/notloading_16.png");
-}
-toolbar[mode="text"] #navigator-throbber[busy="true"],
-toolbar[iconsize="small"] #navigator-throbber[busy="true"] {
-  list-style-image: url("chrome://global/skin/icons/loading_16.png");
-}
 
 tabpanels {
   -moz-appearance: none;
