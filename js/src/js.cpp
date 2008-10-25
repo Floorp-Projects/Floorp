@@ -760,6 +760,7 @@ ReadLine(JSContext *cx, uintN argc, jsval *vp)
     return JS_TRUE;
 }
 
+#ifdef JS_TRACER
 static jsval JS_FASTCALL
 Print_tn(JSContext *cx, JSString *str)
 {
@@ -771,6 +772,7 @@ Print_tn(JSContext *cx, JSString *str)
     fflush(gOutFile);
     return JSVAL_VOID;
 }
+#endif
 
 static JSBool
 Print(JSContext *cx, uintN argc, jsval *vp)
