@@ -20,6 +20,11 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=248970
 /** Test for Bug 248970 **/
 // based on test_notifications.html
 
+netscape.security.PrivilegeManager.enablePrivilege('UniversalXPConnect');
+const Ci = Components.interfaces;
+const Cc = Components.classes;
+const Cr = Components.results;
+
 var testpath = document.location.pathname + "/../";
 var prefix = "http://test2.example.com" + testpath;
 var subtests = [
@@ -212,6 +217,34 @@ function checkTest() {
 }
 
 
+// This observer prevents a prompt from showing up asking if the current
+// session should be kept or closed upon entering the private browsing mode.
+// It instructs the private browsing service to keep the current session open.
+var observer = {
+  QueryInterface: function (iid) {
+    const interfaces = [Ci.nsIObserver,
+                        Ci.nsISupports];
+    if (!interfaces.some(function(v) iid.equals(v)))
+      throw Cr.NS_ERROR_NO_INTERFACE;
+    return this;
+  },
+  observe: function (subject, topic, data) {
+    netscape.security.PrivilegeManager.enablePrivilege('UniversalXPConnect');
+    subject.QueryInterface(Ci.nsISupportsPRUint32);
+    subject.data = 0;
+  },
+  register: function () {
+    var os = Cc["@mozilla.org/observer-service;1"].
+             getService(Ci.nsIObserverService);
+    os.addObserver(this, "private-browsing-enter", false);
+  },
+  unregister: function () {
+    var os = Cc["@mozilla.org/observer-service;1"].
+             getService(Ci.nsIObserverService);
+    os.removeObserver(this, "private-browsing-enter");
+  }
+};
+
 var _PBSvc = null;
 function get_PBSvc() {
   if (_PBSvc)
@@ -219,26 +252,10 @@ function get_PBSvc() {
 
   netscape.security.PrivilegeManager.enablePrivilege('UniversalXPConnect');
   try {
-    _PBSvc = Components.classes["@mozilla.org/privatebrowsing;1"].
-             getService(Components.interfaces.nsIPrivateBrowsingService);
+    _PBSvc = Cc["@mozilla.org/privatebrowsing;1"].
+             getService(Ci.nsIPrivateBrowsingService);
     if (_PBSvc) {
-      var observer = {
-        QueryInterface: function (iid) {
-          const interfaces = [Components.interfaces.nsIObserver,
-                              Components.interfaces.nsISupports];
-          if (!interfaces.some(function(v) iid.equals(v)))
-            throw Components.results.NS_ERROR_NO_INTERFACE;
-          return this;
-        },
-        observe: function (subject, topic, data) {
-          netscape.security.PrivilegeManager.enablePrivilege('UniversalXPConnect');
-          subject.QueryInterface(Components.interfaces.nsISupportsPRUint32);
-          subject.data = 0;
-        }
-      };
-      var os = Components.classes["@mozilla.org/observer-service;1"].
-               getService(Components.interfaces.nsIObserverService);
-      os.addObserver(observer, "private-browsing-enter", false);
+      observer.register();
     }
     return _PBSvc;
   } catch (e) {}
@@ -269,6 +286,7 @@ function handleLoad(aEvent) {
     loadNextTest();
   } else {
     ok(true, "notification tests finished.");
+    observer.unregister();
     SimpleTest.finish();
   }
 }
@@ -281,8 +299,6 @@ if (!pb) { // Private Browsing might not be available
 } else {
   netscape.security.PrivilegeManager.enablePrivilege('UniversalXPConnect');
 
-  const Ci = Components.interfaces;
-  const Cc = Components.classes;
   ok(Ci != null, "Access Ci");
   ok(Cc != null, "Access Cc");
 
