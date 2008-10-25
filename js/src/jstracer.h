@@ -322,7 +322,8 @@ class TraceRecorder : public GCObject {
     bool guardClass(JSObject* obj, nanojit::LIns* obj_ins, JSClass* clasp);
     bool guardDenseArray(JSObject* obj, nanojit::LIns* obj_ins);
     bool guardDenseArrayIndex(JSObject* obj, jsint idx, nanojit::LIns* obj_ins,
-                              nanojit::LIns* dslots_ins, nanojit::LIns* idx_ins);
+                              nanojit::LIns* dslots_ins, nanojit::LIns* idx_ins, 
+                              nanojit::ExitType exitType);
     bool guardElemOp(JSObject* obj, nanojit::LIns* obj_ins, jsid id, size_t op_offset, jsval* vp);
     void clearFrameSlotsFromCache();
     bool guardShapelessCallee(jsval& callee);
