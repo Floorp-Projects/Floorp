@@ -3440,6 +3440,8 @@ TraceRecorder::incElem(jsint incr, bool pre)
     LIns* addr_ins;
     if (!elem(l, r, vp, v_ins, addr_ins))
         return false;
+    if (!addr_ins) // if we read a hole, abort
+        return false;
     if (!inc(*vp, v_ins, incr, pre))
         return false;
     if (!box_jsval(*vp, v_ins))
@@ -3688,6 +3690,14 @@ TraceRecorder::binary(LOpcode op)
             b = lir->insCall(&js_StringToNumber_ci, args);
             rightNumber = true;
         }
+    }
+    if (l == JSVAL_VOID) {
+        a = lir->insImmq(0);
+        leftNumber = true;
+    }
+    if (r == JSVAL_VOID) {
+        b = lir->insImmq(0);
+        rightNumber = true;
     }
     if (leftNumber && rightNumber) {
         if (intop) {
@@ -4078,7 +4088,7 @@ TraceRecorder::guardDenseArray(JSObject* obj, LIns* obj_ins)
 
 bool
 TraceRecorder::guardDenseArrayIndex(JSObject* obj, jsint idx, LIns* obj_ins,
-                                    LIns* dslots_ins, LIns* idx_ins)
+                                    LIns* dslots_ins, LIns* idx_ins, ExitType exitType)
 {
     jsuint length = ARRAY_DENSE_LENGTH(obj);
     if (!((jsuint)idx < length && idx < obj->fslots[JSSLOT_ARRAY_LENGTH]))
@@ -4087,7 +4097,7 @@ TraceRecorder::guardDenseArrayIndex(JSObject* obj, jsint idx, LIns* obj_ins,
     LIns* length_ins = stobj_get_fslot(obj_ins, JSSLOT_ARRAY_LENGTH);
 
     // guard(0 <= index && index < length)
-    guard(true, lir->ins2(LIR_ult, idx_ins, length_ins), MISMATCH_EXIT);
+    guard(true, lir->ins2(LIR_ult, idx_ins, length_ins), exitType);
 
     // At this point, the guard above => 0 < length <=> obj->dslots != null.
     JS_ASSERT(obj->dslots);
@@ -4445,6 +4455,8 @@ TraceRecorder::record_JSOP_ADD()
         set(&l, concat);
         return true;
     }
+    if (JSVAL_IS_STRING(r))
+        ABORT_TRACE("right hand side string not supported in JSOP_ADD");
     return binary(LIR_fadd);
 }
 
@@ -5523,8 +5535,17 @@ TraceRecorder::elem(jsval& oval, jsval& idx, jsval*& vp, LIns*& v_ins, LIns*& ad
     LIns* idx_ins = makeNumberInt32(get(&idx));
 
     LIns* dslots_ins = lir->insLoad(LIR_ldp, obj_ins, offsetof(JSObject, dslots));
-    if (!guardDenseArrayIndex(obj, i, obj_ins, dslots_ins, idx_ins))
-        return false;
+    if (!guardDenseArrayIndex(obj, i, obj_ins, dslots_ins, idx_ins, BRANCH_EXIT)) {
+        LIns* rt_ins = lir->insLoad(LIR_ldp, cx_ins, offsetof(JSContext, runtime));
+        guard(true, 
+              lir->ins_eq0(lir->insLoad(LIR_ldp, rt_ins,
+                                        offsetof(JSRuntime, anyArrayProtoHasElement))),
+              MISMATCH_EXIT);
+        // Return undefined and indicate that we didn't actually read this (addr_ins).
+        v_ins = lir->insImm(JSVAL_TO_BOOLEAN(JSVAL_VOID));
+        addr_ins = NULL; 
+        return true;
+    }
 
     // We can't "see through" a hole to a possible Array.prototype property, so
     // we abort here and guard below (after unboxing).
@@ -5546,7 +5567,7 @@ TraceRecorder::elem(jsval& oval, jsval& idx, jsval*& vp, LIns*& v_ins, LIns*& ad
         guard(false, lir->ins2(LIR_eq, v_ins, INS_CONST(JSVAL_TO_BOOLEAN(JSVAL_HOLE))),
               MISMATCH_EXIT);
     }
-    return v_ins;
+    return true;
 }
 
 bool
@@ -6045,7 +6066,7 @@ TraceRecorder::record_JSOP_IN()
                 jsint idx = JSVAL_TO_INT(lval);
                 LIns* idx_ins = f2i(get(&lval));
                 LIns* dslots_ins = lir->insLoad(LIR_ldp, obj_ins, offsetof(JSObject, dslots));
-                if (!guardDenseArrayIndex(obj, idx, obj_ins, dslots_ins, idx_ins))
+                if (!guardDenseArrayIndex(obj, idx, obj_ins, dslots_ins, idx_ins, MISMATCH_EXIT))
                     ABORT_TRACE("dense array index out of bounds");
 
                 // We can't "see through" a hole to a possible Array.prototype
