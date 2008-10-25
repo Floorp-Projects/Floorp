@@ -2174,6 +2174,15 @@ function testForInLoopChangeIteratorType() {
 testForInLoopChangeIteratorType.expected = "ok";
 test(testForInLoopChangeIteratorType);
 
+function testGrowDenseArray() {
+    var a = new Array();
+    for (var i = 0; i < 10; ++i)
+	a[i] |= 5;
+    return a.join(",");
+}
+testGrowDenseArray.expected = "5,5,5,5,5,5,5,5,5,5";
+test(testGrowDenseArray);
+
 /* Keep these at the end so that we can see the summary after the trace-debug spew. */
 print("\npassed:", passes.length && passes.join(","));
 print("\nFAILED:", fails.length && fails.join(","));
