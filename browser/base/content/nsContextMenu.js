@@ -84,7 +84,6 @@ function nsContextMenu(aXulMenu, aBrowser) {
   this.hasBGImage        = false;
   this.isTextSelected    = false;
   this.isContentSelected = false;
-  this.inDirList         = false;
   this.shouldDisplay     = true;
   this.isDesignMode      = false;
   this.possibleSpellChecking = false;
@@ -144,8 +143,7 @@ nsContextMenu.prototype = {
                           mailtoHandler.preferredAction == Ci.nsIHandlerInfo.useHelperApp &&
                           (mailtoHandler.preferredApplicationHandler instanceof Ci.nsIWebHandlerApp));
     }
-    var shouldShow = this.onSaveableLink || isMailtoInternal ||
-                     (this.inDirList && this.onLink);
+    var shouldShow = this.onSaveableLink || isMailtoInternal;
     this.showItem("context-openlink", shouldShow);
     this.showItem("context-openlinkintab", shouldShow);
     this.showItem("context-sep-open", shouldShow);
@@ -166,7 +164,7 @@ nsContextMenu.prototype = {
   },
 
   initSaveItems: function CM_initSaveItems() {
-    var shouldShow = !(this.inDirList || this.onTextInput || this.onLink ||
+    var shouldShow = !(this.onTextInput || this.onLink ||
                        this.isContentSelected || this.onImage ||
                        this.onCanvas || this.onVideo || this.onAudio);
     this.showItem("context-savepage", shouldShow);
@@ -193,7 +191,7 @@ nsContextMenu.prototype = {
     this.showItem("context-viewpartialsource-mathml",
                   this.onMathML && !this.isContentSelected);
 
-    var shouldShow = !(this.inDirList || this.isContentSelected ||
+    var shouldShow = !(this.isContentSelected ||
                        this.onImage || this.onCanvas ||
                        this.onVideo || this.onAudio ||
                        this.onLink || this.onTextInput);
@@ -201,7 +199,7 @@ nsContextMenu.prototype = {
     this.showItem("context-viewinfo", shouldShow);
 
     this.showItem("context-sep-properties",
-                  !(this.inDirList || this.isContentSelected ||
+                  !(this.isContentSelected ||
                     this.onTextInput || this.onCanvas ||
                     this.onVideo || this.onAudio));
 
@@ -499,40 +497,6 @@ nsContextMenu.prototype = {
             this.bgImageURL = makeURLAbsolute(bodyElt.baseURI,
                                               computedURL);
           }
-        }
-      }
-      else if ("HTTPIndex" in content &&
-               content.HTTPIndex instanceof Ci.nsIHTTPIndex) {
-        this.inDirList = true;
-        // Bubble outward till we get to an element with URL attribute
-        // (which should be the href).
-        var root = this.target;
-        while (root && !this.link) {
-          if (root.tagName == "tree") {
-            // Hit root of tree; must have clicked in empty space;
-            // thus, no link.
-            break;
-          }
-
-          if (root.getAttribute("URL")) {
-            // Build pseudo link object so link-related functions work.
-            this.onLink = true;
-            this.link = { href : root.getAttribute("URL"),
-                          getAttribute: function (aAttr) {
-                            if (aAttr == "title") {
-                              return root.firstChild.firstChild
-                                         .getAttribute("label");
-                            }
-                            else
-                              return "";
-                           }
-                         };
-
-            // If element is a directory, then you can't save it.
-            this.onSaveableLink = root.getAttribute("container") != "true";
-          }
-          else
-            root = root.parentNode;
         }
       }
     }
