@@ -1292,34 +1292,13 @@ statusbarpanel#statusbar-display {
 /* ::::: throbber ::::: */
 
 #navigator-throbber {
-  -moz-appearance: none;
-  -moz-user-focus: ignore;
-  margin: 0 !important;
-  border: none !important;
-  padding: 0px !important;
-  min-width: 0;
-  background-color: transparent;
+  width: 16px;
+  min-height: 16px;
+  margin: 0 3px;
   list-style-image: url("chrome://global/skin/icons/notloading_16.png");
 }
 
 #navigator-throbber[busy="true"] {
-  list-style-image: url("chrome://global/skin/icons/loading_16.png");
-}
-
-/* the default settings for the throbber hbox is too tall for vista menus */
-#navigator-throbber > hbox {
-  border-top: 0px;
-  border-bottom: 0px;
-  padding-bottom: 1px;
-  -moz-margin-end: 1px;
-}
-
-toolbar[iconsize="small"] #navigator-throbber,
-toolbar[mode="text"] #navigator-throbber {
-  list-style-image: url("chrome://global/skin/icons/notloading_16.png");
-}
-toolbar[iconsize="small"] #navigator-throbber[busy="true"],
-toolbar[mode="text"] #navigator-throbber[busy="true"] {
   list-style-image: url("chrome://global/skin/icons/loading_16.png");
 }
 
