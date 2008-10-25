@@ -72,14 +72,13 @@
 
       <method name="handleRevert">
         <body><![CDATA[
-          var throbberElement = document.getElementById("navigator-throbber");
           var isScrolling = this.popupOpen;
 
           gBrowser.userTypedValue = null;
 
           // don't revert to last valid url unless page is NOT loading
           // and user is NOT key-scrolling through autocomplete list
-          if ((!throbberElement || !throbberElement.hasAttribute("busy")) && !isScrolling) {
+          if (!XULBrowserWindow.isBusy && !isScrolling) {
             URLBarSetURI();
 
             // If the value isn't empty and the urlbar has focus, select the value.
