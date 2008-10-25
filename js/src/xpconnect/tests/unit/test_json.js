@@ -128,11 +128,4 @@ function run_test() {
   
   do_check_false(JSONModule.isMostlyHarmless('(function() { alert("P0wn3d!"); })()'));
   do_check_false(JSONModule.isMostlyHarmless('{ get a() { return "P0wn3d!"; } }'));
-  
-  // this string shouldn't cause a "script stack space quota is exhausted" error
-  let bigString = " ";
-  while (bigString.length < (1 << 22))
-    bigString += bigString;
-  
-  do_check_eq(JSONModule.fromString(toJSONString(bigString)), bigString);
 }
