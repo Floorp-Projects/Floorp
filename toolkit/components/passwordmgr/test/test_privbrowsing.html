@@ -41,34 +41,6 @@ var subtests = [
                ];
 
 
-var ignoreLoad = false;
-function handleLoad(aEvent) {
-  netscape.security.PrivilegeManager.enablePrivilege('UniversalXPConnect');
-
-  // ignore every other load event ... We get one for loading the subtest (which
-  // we want to ignore), and another when the subtest's form submits itself
-  // (which we want to handle, to start the next test).
-  ignoreLoad = !ignoreLoad;
-  if (ignoreLoad) {
-    ok(true, "Ignoring load of subtest #" + testNum);
-    return;
-  }
-  ok(true, "Processing submission of subtest #" + testNum);
-
-  checkTest();
-
-  // Remove any notification bar that might be lingering from a failed test.
-  notifyBox.removeAllNotifications(true);
-
-  if (testNum <= subtests.length) {
-    loadNextTest();
-  } else {
-    ok(true, "private browsing notification tests finished.");
-    SimpleTest.finish();
-  }
-}
-
-
 var testNum = 0;
 function loadNextTest() {
   // run the initialization code for each test
@@ -285,7 +257,7 @@ function handleLoad(aEvent) {
   if (testNum < subtests.length) {
     loadNextTest();
   } else {
-    ok(true, "notification tests finished.");
+    ok(true, "private browsing notification tests finished.");
     observer.unregister();
     SimpleTest.finish();
   }
