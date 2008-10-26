@@ -226,9 +226,9 @@ nsSVGGlyphFrame::CharacterDataChanged(nsPresContext*  aPresContext,
 #define PRECISE_SIZE   200
 
 /* virtual */ void
-nsSVGGlyphFrame::DidSetStyleContext()
+nsSVGGlyphFrame::DidSetStyleContext(nsStyleContext* aOldStyleContext)
 {
-  nsSVGGlyphFrameBase::DidSetStyleContext();
+  nsSVGGlyphFrameBase::DidSetStyleContext(aOldStyleContext);
 
   if (!(GetStateBits() & NS_FRAME_FIRST_REFLOW)) {
     ClearTextRun();

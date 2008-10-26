@@ -80,7 +80,7 @@ public:
                                nsIAtom*        aAttribute,
                                PRInt32         aModType);
 
-  virtual void DidSetStyleContext();
+  virtual void DidSetStyleContext(nsStyleContext* aOldStyleContext);
 
   /**
    * Get the "type" of the frame

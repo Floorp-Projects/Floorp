@@ -1395,6 +1395,23 @@ nsTableRowGroupFrame::Reflow(nsPresContext*           aPresContext,
   return rv;
 }
 
+/* virtual */ void
+nsTableRowGroupFrame::DidSetStyleContext(nsStyleContext* aOldStyleContext)
+{
+  if (!aOldStyleContext) //avoid this on init
+    return;
+     
+  nsTableFrame* tableFrame = nsTableFrame::GetTableFrame(this);
+    
+  if (tableFrame->IsBorderCollapse() &&
+      tableFrame->BCRecalcNeeded(aOldStyleContext, GetStyleContext())) {
+    nsRect damageArea(0, GetStartRowIndex(), tableFrame->GetColCount(),
+                      GetRowCount());
+    tableFrame->SetBCDamageArea(damageArea);
+  }
+  return;
+}
+
 NS_IMETHODIMP
 nsTableRowGroupFrame::AppendFrames(nsIAtom*        aListName,
                                    nsIFrame*       aFrameList)
