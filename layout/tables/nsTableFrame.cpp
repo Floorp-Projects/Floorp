@@ -2360,8 +2360,11 @@ nsTableFrame::InsertFrames(nsIAtom*        aListName,
         nsIFrame* kidFrame;
         PRBool isColGroup = (NS_STYLE_DISPLAY_TABLE_COLUMN_GROUP ==
                              display->mDisplay);
+        nsTableColGroupFrame* lastColGroup;
         if (isColGroup) {
           kidFrame = mColGroups.FirstChild();
+          nsTableColGroupFrame::GetLastRealColGroup(this,
+                                                   (nsIFrame**) &lastColGroup);
         }
         else {
           kidFrame = mFrames.FirstChild();
@@ -2370,10 +2373,9 @@ nsTableFrame::InsertFrames(nsIAtom*        aListName,
         PRInt32 lastIndex = -1;
         while (kidFrame) {
           if (isColGroup) {
-            nsTableColGroupType groupType =
-              ((nsTableColGroupFrame *)kidFrame)->GetColType();
-            if (eColGroupAnonymousCell == groupType) {
-              continue;
+            if (kidFrame == lastColGroup) {
+              aPrevFrame = kidFrame; // there is no real colgroup after this one
+              break;
             }
           }
           pseudoFrame = kidFrame;
