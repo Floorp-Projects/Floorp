@@ -557,7 +557,7 @@ protected:
   PRInt16 DisplaySelection(nsPresContext* aPresContext, PRBool isOkToTurnOn = PR_FALSE);
   
   // Style post processing hook
-  virtual void DidSetStyleContext();
+  virtual void DidSetStyleContext(nsStyleContext* aOldStyleContext);
 
 public:
   //given a frame five me the first/last leaf available

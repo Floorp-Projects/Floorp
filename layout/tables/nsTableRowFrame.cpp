@@ -177,6 +177,21 @@ nsTableRowFrame::Init(nsIContent*      aContent,
   return rv;
 }
 
+/* virtual */ void
+nsTableRowFrame::DidSetStyleContext(nsStyleContext* aOldStyleContext)
+{
+  if (!aOldStyleContext) //avoid this on init
+    return;
+     
+  nsTableFrame* tableFrame = nsTableFrame::GetTableFrame(this);
+    
+  if (tableFrame->IsBorderCollapse() &&
+      tableFrame->BCRecalcNeeded(aOldStyleContext, GetStyleContext())) {
+    nsRect damageArea(0, GetRowIndex(), tableFrame->GetColCount(), 1);
+    tableFrame->SetBCDamageArea(damageArea);
+  }
+  return;
+}
 
 NS_IMETHODIMP
 nsTableRowFrame::AppendFrames(nsIAtom*        aListName,

@@ -237,6 +237,25 @@ nsTableCellFrame::AttributeChanged(PRInt32         aNameSpaceID,
   return NS_OK;
 }
 
+/* virtual */ void
+nsTableCellFrame::DidSetStyleContext(nsStyleContext* aOldStyleContext)
+{
+  if (!aOldStyleContext) //avoid this on init
+    return;
+     
+  nsTableFrame* tableFrame = nsTableFrame::GetTableFrame(this);
+    
+  if (tableFrame->IsBorderCollapse() &&
+      tableFrame->BCRecalcNeeded(aOldStyleContext, GetStyleContext())) {
+    PRInt32 colIndex, rowIndex;
+    GetColIndex(colIndex);
+    GetRowIndex(rowIndex);
+    nsRect damageArea(colIndex, rowIndex, GetColSpan(), GetRowSpan());
+    tableFrame->SetBCDamageArea(damageArea);
+  }
+}
+
+     
 NS_IMETHODIMP
 nsTableCellFrame::AppendFrames(nsIAtom*        aListName,
                                nsIFrame*       aFrameList)

@@ -102,7 +102,7 @@ public:
 
   virtual void Destroy();
 
-  virtual void DidSetStyleContext();
+  virtual void DidSetStyleContext(nsStyleContext* aOldStyleContext);
 
   NS_IMETHOD GetPluginInstance(nsIPluginInstance*& aPluginInstance);
   virtual nsresult Instantiate(nsIChannel* aChannel, nsIStreamListener** aStreamListener);

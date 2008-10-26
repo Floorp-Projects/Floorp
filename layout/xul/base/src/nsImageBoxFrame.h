@@ -90,7 +90,7 @@ public:
                               nsIAtom* aAttribute,
                               PRInt32 aModType);
 
-  virtual void DidSetStyleContext();
+  virtual void DidSetStyleContext(nsStyleContext* aOldStyleContext);
 
   virtual void Destroy();
 

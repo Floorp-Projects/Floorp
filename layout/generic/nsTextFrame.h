@@ -90,7 +90,7 @@ public:
                                   nsIContent*     aChild,
                                   PRBool          aAppend);
                                   
-  virtual void DidSetStyleContext();
+  virtual void DidSetStyleContext(nsStyleContext* aOldStyleContext);
   
   virtual nsIFrame* GetNextContinuation() const {
     return mNextContinuation;

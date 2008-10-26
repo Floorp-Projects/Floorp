@@ -390,9 +390,9 @@ nsImageBoxFrame::PaintImage(nsIRenderingContext& aRenderingContext,
 // When the style context changes, make sure that all of our image is up to date.
 //
 /* virtual */ void
-nsImageBoxFrame::DidSetStyleContext()
+nsImageBoxFrame::DidSetStyleContext(nsStyleContext* aOldStyleContext)
 {
-  nsLeafBoxFrame::DidSetStyleContext();
+  nsLeafBoxFrame::DidSetStyleContext(aOldStyleContext);
 
   // Fetch our subrect.
   const nsStyleList* myList = GetStyleList();
