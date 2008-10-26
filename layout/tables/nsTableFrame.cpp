@@ -4714,34 +4714,7 @@ PRBool
 nsTableFrame::BCRecalcNeeded(nsStyleContext* aOldStyleContext,
                              nsStyleContext* aNewStyleContext)
 {
-   // Attention: the old style context is the one we're forgetting,
-   // and hence possibly completely bogus for GetStyle* purposes.
-   // We use PeekStyleData instead.
-   
-  const nsStyleBorder* oldStyleData = static_cast<const nsStyleBorder*>
-                       (aOldStyleContext->PeekStyleData(eStyleStruct_Border));
-  if (!oldStyleData)
-    return PR_FALSE;
-  
-  const nsStyleBorder* newStyleData = aNewStyleContext->GetStyleBorder();
-  nsChangeHint change = newStyleData->CalcDifference(*oldStyleData);
-  if (change == NS_STYLE_HINT_NONE)
-    return PR_FALSE;
-  if (change == NS_STYLE_HINT_REFLOW)
-    return PR_TRUE; // the caller only needs to mark the bc damage area
-  if (change == NS_STYLE_HINT_VISUAL) {
-    NS_FOR_CSS_SIDES(side) {
-      if (newStyleData->GetBorderStyle(side) !=
-          oldStyleData->GetBorderStyle(side)) {
-        // we need to recompute the borders and the caller needs to mark
-        // the bc damage area
-        nsCOMPtr<nsIRunnable> evt = new nsDelayedCalcBCBorders(this);
-        if (evt)
-          NS_DispatchToCurrentThread(evt);
-        return PR_TRUE;
-      }
-    }
-  }
+  // XXX bernd temp disabled till I figure out the mac failure
   return PR_FALSE;
 }
 
