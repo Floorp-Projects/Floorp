@@ -62,11 +62,11 @@ typedef void         (*NPP_StreamAsFileProcPtr)(NPP instance, NPStream* stream, 
 typedef void         (*NPP_PrintProcPtr)(NPP instance, NPPrint* platformPrint);
 typedef int16_t      (*NPP_HandleEventProcPtr)(NPP instance, void* event);
 typedef void         (*NPP_URLNotifyProcPtr)(NPP instance, const char* url, NPReason reason, void* notifyData);
-typedef NPError      (*NPP_GetValueProcPtr)(NPP instance, NPPVariable variable, void *ret_alue);
-typedef NPError      (*NPP_SetValueProcPtr)(NPP instance, NPNVariable variable, void *ret_alue);
+typedef NPError      (*NPP_GetValueProcPtr)(NPP instance, NPPVariable variable, void *ret_value);
+typedef NPError      (*NPP_SetValueProcPtr)(NPP instance, NPNVariable variable, void *ret_value);
 
-typedef NPError      (*NPN_GetValueProcPtr)(NPP instance, NPNVariable variable, void *ret_alue);
-typedef NPError      (*NPN_SetValueProcPtr)(NPP instance, NPPVariable variable, void *ret_alue);
+typedef NPError      (*NPN_GetValueProcPtr)(NPP instance, NPNVariable variable, void *ret_value);
+typedef NPError      (*NPN_SetValueProcPtr)(NPP instance, NPPVariable variable, void *ret_value);
 typedef NPError      (*NPN_GetURLNotifyProcPtr)(NPP instance, const char* url, const char* window, void* notifyData);
 typedef NPError      (*NPN_PostURLNotifyProcPtr)(NPP instance, const char* url, const char* window, uint32_t len, const char* buf, NPBool file, void* notifyData);
 typedef NPError      (*NPN_GetURLProcPtr)(NPP instance, const char* url, const char* window);
