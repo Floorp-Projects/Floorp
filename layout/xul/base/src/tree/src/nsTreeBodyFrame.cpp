@@ -4219,9 +4219,9 @@ nsTreeBodyFrame::ClearStyleAndImageCaches()
 }
 
 /* virtual */ void
-nsTreeBodyFrame::DidSetStyleContext()
+nsTreeBodyFrame::DidSetStyleContext(nsStyleContext* aOldStyleContext)
 {
-  nsLeafBoxFrame::DidSetStyleContext();
+  nsLeafBoxFrame::DidSetStyleContext(aOldStyleContext);
 
   // Clear the style cache; the pointers are no longer even valid
   mStyleCache.Clear();

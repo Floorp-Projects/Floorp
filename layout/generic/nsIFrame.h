@@ -610,13 +610,14 @@ public:
   void SetStyleContext(nsStyleContext* aContext)
   { 
     if (aContext != mStyleContext) {
-      if (mStyleContext)
-        mStyleContext->Release();
+      nsStyleContext* oldStyleContext = mStyleContext;
       mStyleContext = aContext;
       if (aContext) {
         aContext->AddRef();
-        DidSetStyleContext();
+        DidSetStyleContext(oldStyleContext);
       }
+      if (oldStyleContext)
+        oldStyleContext->Release();
     }
   }
   
@@ -633,7 +634,10 @@ public:
   }
 
   // Style post processing hook
-  virtual void DidSetStyleContext() = 0;
+  // Attention: the old style context is the one we're forgetting,
+  // and hence possibly completely bogus for GetStyle* purposes.
+  // Use PeekStyleData instead.
+  virtual void DidSetStyleContext(nsStyleContext* aOldStyleContext) = 0;
 
   /**
    * Get the style data associated with this frame.  This returns a

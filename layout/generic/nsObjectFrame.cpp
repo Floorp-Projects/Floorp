@@ -625,7 +625,7 @@ nsObjectFrame::Destroy()
 }
 
 /* virtual */ void
-nsObjectFrame::DidSetStyleContext()
+nsObjectFrame::DidSetStyleContext(nsStyleContext* aOldStyleContext)
 {
   if (HasView()) {
     nsIView* view = GetView();
@@ -637,7 +637,7 @@ nsObjectFrame::DidSetStyleContext()
     }
   }
 
-  nsObjectFrameSuper::DidSetStyleContext();
+  nsObjectFrameSuper::DidSetStyleContext(aOldStyleContext);
 }
 
 nsIAtom*

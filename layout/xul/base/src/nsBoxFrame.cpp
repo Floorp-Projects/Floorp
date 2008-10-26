@@ -180,9 +180,9 @@ nsBoxFrame::SetInitialChildList(nsIAtom*        aListName,
 }
 
 /* virtual */ void
-nsBoxFrame::DidSetStyleContext()
+nsBoxFrame::DidSetStyleContext(nsStyleContext* aOldStyleContext)
 {
-  nsContainerFrame::DidSetStyleContext();
+  nsContainerFrame::DidSetStyleContext(aOldStyleContext);
 
   // The values that CacheAttributes() computes depend on our style,
   // so we need to recompute them here...

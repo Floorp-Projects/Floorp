@@ -275,6 +275,7 @@ nsTableFrame::Destroy()
   nsHTMLContainerFrame::Destroy();
 }
 
+
 // Make sure any views are positioned properly
 void
 nsTableFrame::RePositionViews(nsIFrame* aFrame)
@@ -2226,9 +2227,19 @@ nsTableFrame::GetCollapsedWidth(nsMargin aBorderPadding)
   return width;
 }
 
-/* virtual */ void
-nsTableFrame::DidSetStyleContext()
+
+   /* virtual */ void
+nsTableFrame::DidSetStyleContext(nsStyleContext* aOldStyleContext)
 {
+   if (!aOldStyleContext) //avoid this on init
+     return;
+   
+   if (IsBorderCollapse() &&
+       BCRecalcNeeded(aOldStyleContext, GetStyleContext())) {
+     nsRect damageArea(0, 0, GetColCount(), GetRowCount());
+     SetBCDamageArea(damageArea);
+   }
+
    //avoid this on init or nextinflow
    if (!mTableLayoutStrategy || GetPrevInFlow())
      return;
@@ -4678,8 +4689,62 @@ GetColorAndStyle(const nsIFrame*  aFrame,
   width = styleData->GetActualBorderWidth(aSide);
   aWidth = nsPresContext::AppUnitsToIntCSSPixels(width);
 }
- 
- 
+
+class nsDelayedCalcBCBorders : public nsRunnable {
+public:
+  nsDelayedCalcBCBorders(nsIFrame* aFrame) :
+    mFrame(aFrame) {}
+
+  NS_IMETHOD Run() {
+    if (mFrame) {
+      nsTableFrame* tableFrame = static_cast <nsTableFrame*>(mFrame.GetFrame());
+      if (tableFrame) {
+        if (tableFrame->NeedToCalcBCBorders()) {
+          tableFrame->CalcBCBorders();
+        }
+      }
+    }
+    return NS_OK;
+  }
+private:
+  nsWeakFrame mFrame;
+};
+  
+PRBool
+nsTableFrame::BCRecalcNeeded(nsStyleContext* aOldStyleContext,
+                             nsStyleContext* aNewStyleContext)
+{
+   // Attention: the old style context is the one we're forgetting,
+   // and hence possibly completely bogus for GetStyle* purposes.
+   // We use PeekStyleData instead.
+   
+  const nsStyleBorder* oldStyleData = static_cast<const nsStyleBorder*>
+                       (aOldStyleContext->PeekStyleData(eStyleStruct_Border));
+  if (!oldStyleData)
+    return PR_FALSE;
+  
+  const nsStyleBorder* newStyleData = aNewStyleContext->GetStyleBorder();
+  nsChangeHint change = newStyleData->CalcDifference(*oldStyleData);
+  if (change == NS_STYLE_HINT_NONE)
+    return PR_FALSE;
+  if (change == NS_STYLE_HINT_REFLOW)
+    return PR_TRUE; // the caller only needs to mark the bc damage area
+  if (change == NS_STYLE_HINT_VISUAL) {
+    NS_FOR_CSS_SIDES(side) {
+      if (newStyleData->GetBorderStyle(side) !=
+          oldStyleData->GetBorderStyle(side)) {
+        // we need to recompute the borders and the caller needs to mark
+        // the bc damage area
+        nsCOMPtr<nsIRunnable> evt = new nsDelayedCalcBCBorders(this);
+        if (evt)
+          NS_DispatchToCurrentThread(evt);
+        return PR_TRUE;
+      }
+    }
+  }
+  return PR_FALSE;
+}
+
 /* BCCellBorder represents a border segment which can be either a horizontal
  * or a vertical segment. For each segment we need to know the color, width,
  * style, who owns it and how long it is in cellmap coordinates.
