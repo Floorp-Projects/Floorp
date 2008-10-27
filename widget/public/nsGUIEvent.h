@@ -495,9 +495,10 @@ public:
   }
 
   /// Originator of the event
-  nsCOMPtr<nsIWidget> widget;           
+  nsCOMPtr<nsIWidget> widget;
+
   /// Internal platform specific message.
-  void* nativeMsg;        
+  void* nativeMsg;
 };
 
 /**
@@ -699,7 +700,7 @@ protected:
                PRUint8 structType, reasonType aReason)
     : nsMouseEvent_base(isTrusted, msg, w, structType),
       acceptActivation(PR_FALSE), reason(aReason), context(eNormal),
-      exit(eChild), clickCount(0)
+      exit(eChild), clickCount(0), ignoreScrollFrame(PR_FALSE)
   {
     if (msg == NS_MOUSE_MOVE) {
       flags |= NS_EVENT_FLAG_CANT_CANCEL;
@@ -712,7 +713,7 @@ public:
                reasonType aReason, contextType aContext = eNormal)
     : nsMouseEvent_base(isTrusted, msg, w, NS_MOUSE_EVENT),
       acceptActivation(PR_FALSE), reason(aReason), context(aContext),
-      exit(eChild), clickCount(0)
+      exit(eChild), clickCount(0), ignoreScrollFrame(PR_FALSE)
   {
     if (msg == NS_MOUSE_MOVE) {
       flags |= NS_EVENT_FLAG_CANT_CANCEL;
@@ -732,6 +733,10 @@ public:
   /// Special return code for MOUSE_ACTIVATE to signal
   /// if the target accepts activation (1), or denies it (0)
   PRPackedBool acceptActivation;
+  // Whether the event should ignore scroll frame bounds
+  // during dispatch.
+  PRPackedBool ignoreScrollFrame;
+
   reasonType   reason : 4;
   contextType  context : 4;
   exitType     exit;
