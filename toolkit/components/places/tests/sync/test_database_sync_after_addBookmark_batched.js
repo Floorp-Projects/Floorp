@@ -22,6 +22,7 @@
  *
  * Contributor(s):
  *   Shawn Wilsher <me@shawnwilsher.com> (Original Author)
+ *   Marco Bonardo <mak77@bonardo.net>
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -37,33 +38,73 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-Components.utils.import("resource://gre/modules/PlacesBackground.jsm");
+var bs = Cc["@mozilla.org/browser/nav-bookmarks-service;1"].
+         getService(Ci.nsINavBookmarksService);
+var os = Cc["@mozilla.org/observer-service;1"].
+         getService(Ci.nsIObserverService);
+var prefs = Cc["@mozilla.org/preferences-service;1"].
+            getService(Ci.nsIPrefService).
+            getBranch("places.");
 
 const TEST_URI = "http://test.com/";
-const kSyncPrefName = "syncDBTableIntervalInSecs";
+
 const SYNC_INTERVAL = 600; // ten minutes
+const kSyncPrefName = "syncDBTableIntervalInSecs";
+const kSyncFinished = "places-sync-finished";
+
+// Used to check if we are batching and to update observer itemId
+var bookmarksObserver = {
+  _batching: false,
+  onBeginUpdateBatch: function() {
+    this._batching = true;
+  },
+  onEndUpdateBatch: function() {
+    this._batching = false;
+  },
+  onItemAdded: function(aItemId, aNewParent, aNewIndex) {
+    observer.itemId = aItemId;
+  }
+}
+bs.addObserver(bookmarksObserver, false);
+
+var observer = {
+  itemId: -1,
+  observe: function(aSubject, aTopic, aData) {
+    if (aTopic == kSyncFinished) {
+      dump(this.itemId);
+      // item id must be valid
+      do_check_neq(this.itemId, -1);
+      // Check that we are not in a batch
+      do_check_false(bookmarksObserver._batching);
+      // remove the observer, we don't need to observe sync on quit
+      os.removeObserver(this, kSyncFinished);
+      bs.removeObserver(bookmarksObserver);
+      // Check that tables have been correctly synced
+      new_test_bookmark_uri_event(this.itemId, TEST_URI, true, true);
+    }
+  }
+}
+os.addObserver(observer, kSyncFinished, false);
 
 function run_test()
 {
-  // First set the preference for the timer to a really large value so it won't
+  // Set the preference for the timer to a really large value, so it won't
   // run before the test finishes.
-  let prefs = Cc["@mozilla.org/preferences-service;1"].
-              getService(Ci.nsIPrefService).
-              getBranch("places.");
   prefs.setIntPref(kSyncPrefName, SYNC_INTERVAL);
 
-  // Now add the visit
-  let hs = Cc["@mozilla.org/browser/nav-history-service;1"].
-           getService(Ci.nsINavHistoryService);
-  let id = hs.addVisit(uri(TEST_URI), Date.now() * 1000, null,
-                       hs.TRANSITION_TYPED, false, 0);
+  // Add a bookmark in batch mode
+  let id = -1;
+  bs.runInBatchMode({
+    runBatched: function(aUserData)
+    {
+      id = bs.insertBookmark(bs.unfiledBookmarksFolder, uri(TEST_URI),
+                             bs.DEFAULT_INDEX, "test");
+      // We should not sync during a batch
+      new_test_bookmark_uri_event(id, TEST_URI, false);
+    }
+  }, null);
+  // Ensure the bookmark has been added
+  do_check_neq(id, -1);
 
-  // Notify that we are quitting the app - we should sync!
-  let os = Cc["@mozilla.org/observer-service;1"].
-           getService(Ci.nsIObserverService);
-  os.notifyObservers(null, "quit-application", null);
-
-  // Check the visit.  The background thread should have joined with the main
-  // thread by now if everything is working correctly.
-  new_test_visit_uri_event(id, TEST_URI, true, false).run();
+  do_test_pending();
 }
