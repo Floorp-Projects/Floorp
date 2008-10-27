@@ -250,8 +250,6 @@ public:
   nsIStringBundle* GetBundle()
     { return mBundle; }
   nsICollation* GetCollation();
-  nsIDateTimeFormat* GetDateFormatter()
-    { return mDateFormatter; }
   void GetStringFromName(const PRUnichar* aName, nsACString& aResult);
 
   // returns true if history has been disabled
@@ -634,7 +632,6 @@ protected:
   // localization
   nsCOMPtr<nsIStringBundle> mBundle;
   nsCOMPtr<nsICollation> mCollation;
-  nsCOMPtr<nsIDateTimeFormat> mDateFormatter;
 
   // annotation service : MAY BE NULL!
   //nsCOMPtr<mozIAnnotationService> mAnnotationService;
