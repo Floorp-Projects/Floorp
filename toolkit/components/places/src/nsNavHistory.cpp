@@ -1245,28 +1245,6 @@ nsNavHistory::InitStatements()
     getter_AddRefs(mDBVisitToVisitResult));
   NS_ENSURE_SUCCESS(rv, rv);
 
-  // mDBUrlToURLResult, should match kGetInfoIndex_*
-  // We are not checking for duplicated ids into the unified table
-  // for perf reasons, LIMIT 1 will discard duplicates faster since we
-  // have unique urls.
-  rv = mDBConn->CreateStatement(NS_LITERAL_CSTRING(
-      "SELECT h.id, h.url, h.title, h.rev_host, h.visit_count, "
-        SQL_STR_FRAGMENT_MAX_VISIT_DATE( "h.id" )
-        ", f.url, null, null "
-      "FROM moz_places_temp h "
-      "LEFT OUTER JOIN moz_favicons f ON h.favicon_id = f.id "
-      "WHERE h.url = ?1 "
-      "UNION ALL "
-      "SELECT h.id, h.url, h.title, h.rev_host, h.visit_count, "
-        SQL_STR_FRAGMENT_MAX_VISIT_DATE( "h.id" )
-        ", f.url, null, null "
-      "FROM moz_places_temp h "
-      "LEFT OUTER JOIN moz_favicons f ON h.favicon_id = f.id "
-      "WHERE h.url = ?1 "
-      "LIMIT 1"),
-    getter_AddRefs(mDBUrlToUrlResult));
-  NS_ENSURE_SUCCESS(rv, rv);
-
   // mDBBookmarkToUrlResult, should match kGetInfoIndex_*
   // We are not checking for duplicated ids into the unified table
   // for perf reasons, LIMIT 1 will discard duplicates faster since we
