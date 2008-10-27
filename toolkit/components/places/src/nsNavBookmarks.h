@@ -112,6 +112,7 @@ private:
 
   nsresult InitRoots();
   nsresult InitDefaults();
+  nsresult InitStatements();
   nsresult CreateRoot(mozIStorageStatement* aGetRootStatement,
                       const nsCString& name, PRInt64* aID,
                       PRInt64 aParentID, PRBool* aWasCreated);
@@ -127,12 +128,11 @@ private:
   // remove me when there is better query initialization
   nsNavHistory* History() { return nsNavHistory::GetHistoryService(); }
 
-  mozIStorageStatement* DBGetURLPageInfo()
-  { return History()->DBGetURLPageInfo(); }
-
-  mozIStorageConnection* DBConn() { return History()->GetStorageConnection(); }
+  nsCOMPtr<mozIStorageConnection> mDBConn;
 
   nsString mGUIDBase;
+  nsresult GetGUIDBase(nsAString& aGUIDBase);
+
   PRInt32 mItemCount;
 
   nsMaybeWeakPtrArray<nsINavBookmarkObserver> mObservers;
