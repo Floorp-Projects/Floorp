@@ -1195,32 +1195,6 @@ nsNavHistory::InitStatements()
     getter_AddRefs(mDBAddNewPage));
   NS_ENSURE_SUCCESS(rv, rv);
 
-  // mDBBookmarkToUrlResult, should match kGetInfoIndex_*
-  // We are not checking for duplicated ids into the unified table
-  // for perf reasons, LIMIT 1 will discard duplicates faster since we
-  // have unique place ids.
-  rv = mDBConn->CreateStatement(NS_LITERAL_CSTRING(
-      "SELECT b.fk, h.url, COALESCE(b.title, h.title), "
-        "h.rev_host, h.visit_count, "
-        SQL_STR_FRAGMENT_MAX_VISIT_DATE( "b.fk" )
-        ", f.url, null, b.id, b.dateAdded, b.lastModified "
-      "FROM moz_bookmarks b "
-      "JOIN moz_places_temp h ON b.fk = h.id "
-      "LEFT OUTER JOIN moz_favicons f ON h.favicon_id = f.id "
-      "WHERE b.id = ?1 "
-      "UNION ALL "
-      "SELECT b.fk, h.url, COALESCE(b.title, h.title), "
-        "h.rev_host, h.visit_count, "
-        SQL_STR_FRAGMENT_MAX_VISIT_DATE( "b.fk" )
-        ", f.url, null, b.id, b.dateAdded, b.lastModified "
-      "FROM moz_bookmarks b "
-      "JOIN moz_places h ON b.fk = h.id "
-      "LEFT OUTER JOIN moz_favicons f ON h.favicon_id = f.id "
-      "WHERE b.id = ?1 "
-      "LIMIT 1"),
-    getter_AddRefs(mDBBookmarkToUrlResult));
-  NS_ENSURE_SUCCESS(rv, rv);
-
   // mDBGetTags
   rv = mDBConn->CreateStatement(NS_LITERAL_CSTRING(
       "SELECT GROUP_CONCAT(t.title, ' ') "
@@ -6463,19 +6437,21 @@ nsresult
 nsNavHistory::BookmarkIdToResultNode(PRInt64 aBookmarkId, nsNavHistoryQueryOptions* aOptions,
                                      nsNavHistoryResultNode** aResult)
 {
-  mozStorageStatementScoper scoper(mDBBookmarkToUrlResult);
-  nsresult rv = mDBBookmarkToUrlResult->BindInt64Parameter(0, aBookmarkId);
+  mozIStorageStatement *stmt = GetDBBookmarkToUrlResult();
+  NS_ENSURE_TRUE(stmt, NS_ERROR_UNEXPECTED);
+  mozStorageStatementScoper scoper(stmt);
+  nsresult rv = stmt->BindInt64Parameter(0, aBookmarkId);
   NS_ENSURE_SUCCESS(rv, rv);
 
   PRBool hasMore = PR_FALSE;
-  rv = mDBBookmarkToUrlResult->ExecuteStep(&hasMore);
+  rv = stmt->ExecuteStep(&hasMore);
   NS_ENSURE_SUCCESS(rv, rv);
   if (!hasMore) {
     NS_NOTREACHED("Trying to get a result node for an invalid bookmark identifier");
     return NS_ERROR_INVALID_ARG;
   }
 
-  return RowToResult(mDBBookmarkToUrlResult, aOptions, aResult);
+  return RowToResult(stmt, aOptions, aResult);
 }
 
 // nsNavHistory::TitleForDomain
@@ -7400,6 +7376,41 @@ nsNavHistory::GetDBVisitToURLResult()
   NS_ENSURE_SUCCESS(rv, nsnull);
 
   return mDBVisitToURLResult;
+}
+
+mozIStorageStatement *
+nsNavHistory::GetDBBookmarkToUrlResult()
+{
+  if (mDBBookmarkToUrlResult)
+    return mDBBookmarkToUrlResult;
+
+  // mDBBookmarkToUrlResult, should match kGetInfoIndex_*
+  // We are not checking for duplicated ids into the unified table
+  // for perf reasons, LIMIT 1 will discard duplicates faster since we
+  // have unique place ids.
+  nsresult rv = mDBConn->CreateStatement(NS_LITERAL_CSTRING(
+      "SELECT b.fk, h.url, COALESCE(b.title, h.title), "
+        "h.rev_host, h.visit_count, "
+        SQL_STR_FRAGMENT_MAX_VISIT_DATE( "b.fk" )
+        ", f.url, null, b.id, b.dateAdded, b.lastModified "
+      "FROM moz_bookmarks b "
+      "JOIN moz_places_temp h ON b.fk = h.id "
+      "LEFT OUTER JOIN moz_favicons f ON h.favicon_id = f.id "
+      "WHERE b.id = ?1 "
+      "UNION ALL "
+      "SELECT b.fk, h.url, COALESCE(b.title, h.title), "
+        "h.rev_host, h.visit_count, "
+        SQL_STR_FRAGMENT_MAX_VISIT_DATE( "b.fk" )
+        ", f.url, null, b.id, b.dateAdded, b.lastModified "
+      "FROM moz_bookmarks b "
+      "JOIN moz_places h ON b.fk = h.id "
+      "LEFT OUTER JOIN moz_favicons f ON h.favicon_id = f.id "
+      "WHERE b.id = ?1 "
+      "LIMIT 1"),
+    getter_AddRefs(mDBBookmarkToUrlResult));
+  NS_ENSURE_SUCCESS(rv, nsnull);
+
+  return mDBBookmarkToUrlResult;
 }
 
 // nsICharsetResolver **********************************************************
