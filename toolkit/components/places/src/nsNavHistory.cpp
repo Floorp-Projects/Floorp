@@ -462,10 +462,6 @@ nsNavHistory::Init()
       getter_AddRefs(mBundle));
   NS_ENSURE_SUCCESS(rv, rv);
 
-  // date formatter
-  mDateFormatter = do_CreateInstance(NS_DATETIMEFORMAT_CONTRACTID, &rv);
-  NS_ENSURE_SUCCESS(rv, rv);
-
   // initialize idle timer
   InitializeIdleTimer();
 
