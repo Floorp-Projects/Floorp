@@ -220,8 +220,8 @@ nsContextMenu.prototype = {
               .disabled = this.disableSetDesktopBackground();
     }
 
-    // Show image depends on an image that's not fully loaded
-    this.showItem("context-showimage", (this.onImage && !this.onCompletedImage));
+    // Reload image depends on an image that's not fully loaded
+    this.showItem("context-reloadimage", (this.onImage && !this.onCompletedImage));
 
     // View image depends on having an image that's not standalone
     // (or is in a frame), or a canvas.
@@ -740,7 +740,7 @@ nsContextMenu.prototype = {
     BrowserPageInfo(this.target.ownerDocument);
   },
 
-  showImage: function(e) {
+  reloadImage: function(e) {
     urlSecurityCheck(this.mediaURL,
                      this.browser.contentPrincipal,
                      Ci.nsIScriptSecurityManager.DISALLOW_SCRIPT);
