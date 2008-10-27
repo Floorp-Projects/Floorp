@@ -3860,7 +3860,14 @@ TraceRecorder::test_property_cache(JSObject* obj, LIns* obj_ins, JSObject*& obj2
         uint32 vshape = PCVCAP_SHAPE(vcap);
         JS_ASSERT(OBJ_SHAPE(obj2) == vshape);
 
-        LIns* obj2_ins = INS_CONSTPTR(obj2);
+        LIns* obj2_ins;
+        if (PCVCAP_TAG(entry->vcap) == 1) {
+            // Duplicate the special case in PROPERTY_CACHE_TEST.
+            obj2_ins = stobj_get_fslot(obj_ins, JSSLOT_PROTO);
+            guard(false, lir->ins_eq0(obj2_ins), MISMATCH_EXIT);
+        } else {
+            obj2_ins = INS_CONSTPTR(obj2);
+        }
         map_ins = lir->insLoad(LIR_ldp, obj2_ins, (int)offsetof(JSObject, map));
         if (!map_is_native(obj2->map, map_ins, ops_ins))
             return false;
