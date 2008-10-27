@@ -462,19 +462,6 @@ nsNavHistory::Init()
       getter_AddRefs(mBundle));
   NS_ENSURE_SUCCESS(rv, rv);
 
-  // locale
-  nsCOMPtr<nsILocaleService> ls = do_GetService(NS_LOCALESERVICE_CONTRACTID, &rv);
-  NS_ENSURE_SUCCESS(rv, rv);
-  rv = ls->GetApplicationLocale(getter_AddRefs(mLocale));
-  NS_ENSURE_SUCCESS(rv, rv);
-
-  // collation
-  nsCOMPtr<nsICollationFactory> cfact = do_CreateInstance(
-     NS_COLLATIONFACTORY_CONTRACTID, &rv);
-  NS_ENSURE_SUCCESS(rv, rv);
-  rv = cfact->CreateCollation(mLocale, getter_AddRefs(mCollation));
-  NS_ENSURE_SUCCESS(rv, rv);
-
   // date formatter
   mDateFormatter = do_CreateInstance(NS_DATETIMEFORMAT_CONTRACTID, &rv);
   NS_ENSURE_SUCCESS(rv, rv);
@@ -7380,6 +7367,30 @@ nsNavHistory::RecalculateFrecenciesInternal(mozIStorageStatement *aStatement, PR
   }
 
   return NS_OK;
+}
+
+
+nsICollation *
+nsNavHistory::GetCollation()
+{
+  if (mCollation)
+    return mCollation;
+
+  // locale
+  nsCOMPtr<nsILocale> locale;
+  nsCOMPtr<nsILocaleService> ls(do_GetService(NS_LOCALESERVICE_CONTRACTID));
+  NS_ENSURE_TRUE(ls, nsnull);
+  nsresult rv = ls->GetApplicationLocale(getter_AddRefs(locale));
+  NS_ENSURE_SUCCESS(rv, nsnull);
+
+  // collation
+  nsCOMPtr<nsICollationFactory> cfact =
+    do_CreateInstance(NS_COLLATIONFACTORY_CONTRACTID);
+  NS_ENSURE_TRUE(cfact, nsnull);
+  rv = cfact->CreateCollation(locale, getter_AddRefs(mCollation));
+  NS_ENSURE_SUCCESS(rv, nsnull);
+
+  return mCollation;
 }
 
 // nsICharsetResolver **********************************************************
