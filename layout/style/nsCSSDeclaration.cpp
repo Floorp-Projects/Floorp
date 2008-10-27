@@ -237,13 +237,8 @@ PRBool nsCSSDeclaration::AppendValueToString(nsCSSProperty aProperty, nsAString&
           AppendCSSValueToString(aProperty, val->mValue, aResult);
           val = val->mNext;
           if (val) {
-            if (aProperty == eCSSProperty_cursor
-                || aProperty == eCSSProperty_text_shadow
-                || aProperty == eCSSProperty_box_shadow
-#ifdef MOZ_SVG
-                || aProperty == eCSSProperty_stroke_dasharray
-#endif
-               )
+            if (nsCSSProps::kFlagsTable[aProperty] &
+                CSS_PROPERTY_VALUE_LIST_USES_COMMAS)
               aResult.Append(PRUnichar(','));
             aResult.Append(PRUnichar(' '));
           }
