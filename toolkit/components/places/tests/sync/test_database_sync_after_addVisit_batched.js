@@ -22,6 +22,7 @@
  *
  * Contributor(s):
  *   Shawn Wilsher <me@shawnwilsher.com> (Original Author)
+ *   Marco Bonardo <mak77@bonardo.net>
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -37,28 +38,72 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-Components.utils.import("resource://gre/modules/PlacesBackground.jsm");
+  var bs = Cc["@mozilla.org/browser/nav-bookmarks-service;1"].
+           getService(Ci.nsINavBookmarksService);
+  var hs = Cc["@mozilla.org/browser/nav-history-service;1"].
+           getService(Ci.nsINavHistoryService);
+  var os = Cc["@mozilla.org/observer-service;1"].
+           getService(Ci.nsIObserverService);
 
 const TEST_URI = "http://test.com/";
 
+const kSyncFinished = "places-sync-finished";
+
+// Used to check if we are batching
+var bookmarksObserver = {
+  _batching: false,
+  onBeginUpdateBatch: function() {
+    this._batching = true;
+  },
+  onEndUpdateBatch: function() {
+    this._batching = false;
+  }
+}
+bs.addObserver(bookmarksObserver, false);
+
+// Used to update observer visitId
+var historyObserver = {
+  onVisit: function(aURI, aVisitId, aTime, aSessionId, aReferringId,
+                    aTransitionType, aAdded) {
+    observer.visitId = aVisitId;
+  }
+}
+hs.addObserver(historyObserver, false);
+
+var observer = {
+  visitId: -1,
+  observe: function(aSubject, aTopic, aData) {
+    if (aTopic == kSyncFinished) {
+      // visit id must be valid
+      do_check_neq(this.visitId, -1);
+      // Check that we are not in a batch
+      do_check_false(bookmarksObserver._batching);
+      // remove the observer, we don't need to observe sync on quit
+      os.removeObserver(this, kSyncFinished);
+      bs.removeObserver(bookmarksObserver);
+      hs.removeObserver(historyObserver);
+      // Check that tables have been correctly synced
+      new_test_visit_uri_event(this.visitId, TEST_URI, true, true);
+    }
+  }
+}
+os.addObserver(observer, kSyncFinished, false);
+
 function run_test()
 {
-  // First insert it
-  let bh = Cc["@mozilla.org/browser/nav-bookmarks-service;1"].
-           getService(Ci.nsINavBookmarksService);
-  let id = null;
-  bh.runInBatchMode({
+  // Add a visit in batch mode
+  let id = -1;
+  bs.runInBatchMode({
     runBatched: function(aUserData)
     {
-      id = bh.insertBookmark(bh.unfiledBookmarksFolder, uri(TEST_URI),
-                             bh.DEFAULT_INDEX, "test");
-
-      PlacesBackground.dispatch(new_test_bookmark_uri_event(id, TEST_URI, false),
-                                Ci.nsIEventTarget.DISPATCH_SYNC);
+      id = hs.addVisit(uri(TEST_URI), Date.now() * 1000, null,
+                       hs.TRANSITION_TYPED, false, 0);
+      // We should not sync during a batch
+      new_test_visit_uri_event(id, TEST_URI, false);
     }
   }, null);
-  do_check_neq(id, null);
-  PlacesBackground.dispatch(new_test_bookmark_uri_event(id, TEST_URI, true, true),
-                            Ci.nsIEventTarget.DISPATCH_NORMAL);
+  // Ensure the visit has been added
+  do_check_neq(id, -1);
+
   do_test_pending();
 }

@@ -22,6 +22,7 @@
  *
  * Contributor(s):
  *   Shawn Wilsher <me@shawnwilsher.com> (Original Author)
+ *   Marco Bonardo <mak77@bonardo.net>
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -37,67 +38,52 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-/**
- * This test ensures that adding a bookmark (which has an implicit sync), then
- * adding another one that has the same place, we end up with only one entry in
- * moz_places.
- */
-
-Components.utils.import("resource://gre/modules/PlacesBackground.jsm");
+var bs = Cc["@mozilla.org/browser/nav-bookmarks-service;1"].
+         getService(Ci.nsINavBookmarksService);
+var os = Cc["@mozilla.org/observer-service;1"].
+         getService(Ci.nsIObserverService);
+var prefs = Cc["@mozilla.org/preferences-service;1"].
+            getService(Ci.nsIPrefService).
+            getBranch("places.");
 
 const TEST_URI = "http://test.com/";
 
-let db = Cc["@mozilla.org/browser/nav-history-service;1"].
-         getService(Ci.nsPIPlacesDatabase).
-         DBConnection;
+const SYNC_INTERVAL = 600; // ten minutes
+const kSyncPrefName = "syncDBTableIntervalInSecs";
+const kSyncFinished = "places-sync-finished";
+
+// Used to update observer itemId
+var bookmarksObserver = {
+  onItemAdded: function(aItemId, aNewParent, aNewIndex) {
+    observer.itemId = aItemId;
+  }
+}
+bs.addObserver(bookmarksObserver, false);
+
+var observer = {
+  itemId: -1,
+  observe: function(aSubject, aTopic, aData) {
+    if (aTopic == kSyncFinished) {
+      do_check_neq(this.itemId, -1);
+      // remove the observer, we don't need to observe sync on quit
+      os.removeObserver(this, kSyncFinished);
+      bs.removeObserver(bookmarksObserver);
+      // Check that moz_places table has been correctly synced
+      new_test_bookmark_uri_event(this.itemId, TEST_URI, true, true);
+    }
+  }
+}
+os.addObserver(observer, kSyncFinished, false);
 
 function run_test()
 {
-  // Add the first bookmark
-  let bh = Cc["@mozilla.org/browser/nav-bookmarks-service;1"].
-           getService(Ci.nsINavBookmarksService);
-  let id1 = bh.insertBookmark(bh.unfiledBookmarksFolder, uri(TEST_URI),
-                              bh.DEFAULT_INDEX, "test");
+  // First set the preference for the timer to a really large value so it won't
+  // run before the test finishes.
+  prefs.setIntPref(kSyncPrefName, SYNC_INTERVAL);
 
-  // Ensure it was added
-  PlacesBackground.dispatch(new_test_bookmark_uri_event(id1, TEST_URI, true),
-                            Ci.nsIEventTarget.DISPATCH_SYNC);
+  // Insert a new bookmark
+  bs.insertBookmark(bs.unfiledBookmarksFolder, uri(TEST_URI),
+                    bs.DEFAULT_INDEX, "test");
 
-  // Get the place_id
-  let stmt = db.createStatement(
-    "SELECT fk " +
-    "FROM moz_bookmarks " +
-    "WHERE id = ?"
-  );
-  stmt.bindInt64Parameter(0, id1);
-  do_check_true(stmt.executeStep());
-  let place_id = stmt.getInt64(0);
-  stmt.finalize();
-  stmt = null;
-
-  // Now we add another bookmark to a different folder
-  let id2 = bh.insertBookmark(bh.toolbarFolder, uri(TEST_URI),
-                              bh.DEFAULT_INDEX, "test");
-  do_check_neq(id1, id2);
-
-  // Ensure it was added
-  PlacesBackground.dispatch(new_test_bookmark_uri_event(id2, TEST_URI, true),
-                            Ci.nsIEventTarget.DISPATCH_SYNC);
-
-  // Check to make sure we have the same place_id
-  stmt = db.createStatement(
-    "SELECT * " +
-    "FROM moz_bookmarks " +
-    "WHERE id = ?1 " +
-    "AND fk = ?2"
-  );
-  stmt.bindInt64Parameter(0, id2);
-  stmt.bindInt64Parameter(1, place_id);
-  do_check_true(stmt.executeStep());
-  stmt.finalize();
-  stmt = null;
-
-  // finish_test() calls do_test_finished, so we call do_test_pending()...
   do_test_pending();
-  finish_test();
 }
