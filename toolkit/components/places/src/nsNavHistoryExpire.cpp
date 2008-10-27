@@ -539,9 +539,8 @@ nsNavHistoryExpire::FindVisits(PRTime aExpireThreshold, PRUint32 aNumToExpire,
     rv = aConnection->CreateStatement(NS_LITERAL_CSTRING(
         "SELECT "
           "(SELECT count(*) FROM moz_places_temp WHERE visit_count > 0) + "
-          "(SELECT count(*) FROM moz_places WHERE visit_count > 0) - "
-          "(SELECT count(*) FROM moz_places WHERE id IN "
-            "(SELECT id FROM moz_places_temp))"),
+          "(SELECT count(*) FROM moz_places WHERE visit_count > 0 AND "
+            "id NOT IN (SELECT id FROM moz_places_temp))"),
       getter_AddRefs(countStatement));
     NS_ENSURE_SUCCESS(rv, rv);
 
