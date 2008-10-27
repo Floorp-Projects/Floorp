@@ -2183,6 +2183,22 @@ function testGrowDenseArray() {
 testGrowDenseArray.expected = "5,5,5,5,5,5,5,5,5,5";
 test(testGrowDenseArray);
 
+function testCallProtoMethod() {
+    function X() { this.x = 1; }
+    X.prototype.getName = function () { return "X"; }
+
+    function Y() { this.x = 2; }
+    Y.prototype.getName = function() "Y";
+
+    var a = [new X, new X, new X, new X, new Y];
+    var s = '';
+    for (var i = 0; i < a.length; i++)
+        s += a[i].getName();
+    return s;
+}
+testCallProtoMethod.expected = 'XXXXY';
+test(testCallProtoMethod);
+
 /* Keep these at the end so that we can see the summary after the trace-debug spew. */
 print("\npassed:", passes.length && passes.join(","));
 print("\nFAILED:", fails.length && fails.join(","));
