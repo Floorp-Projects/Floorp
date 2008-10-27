@@ -27,6 +27,7 @@
  *   Dietrich Ayala <dietrich@mozilla.com>
  *   Edward Lee <edward.lee@engineering.uiuc.edu>
  *   Ehsan Akhgari <ehsan.akhgari@gmail.com>
+ *   Marco Bonardo <mak77@bonardo.net>
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -116,6 +117,40 @@ const PRUnichar kTitleTagsSeparatorChars[] = { ' ', 0x2013, ' ', 0 };
      "(SELECT rev_host FROM moz_places_temp WHERE id = b.fk), " \
      "(SELECT rev_host FROM moz_places WHERE id = b.fk)) " \
    "ORDER BY frecency DESC LIMIT 1) "
+
+void GetAutoCompleteBaseQuery(nsACString& aQuery) {
+// Define common pieces of various queries
+// XXX bug 412736
+// in the case of a frecency tie, break it with h.typed and h.visit_count
+// which is better than nothing.  but this is slow, so not doing it yet.
+
+// Try to reduce size of compound table since with partitioning this became
+// slower. Limiting moz_places with OFFSET+LIMIT will mostly help speed
+// of first chunks, that are usually most wanted.
+// Can do this only if there aren't additional conditions on final resultset.
+
+// Note: h.frecency is selected because we need it for ordering, but will
+// not be read later and we don't have an associated kAutoCompleteIndex_
+  aQuery = NS_LITERAL_CSTRING(
+      "SELECT h.url, h.title, f.url") + BOOK_TAG_SQL + NS_LITERAL_CSTRING(", "
+        "h.visit_count, h.frecency "
+      "FROM moz_places_temp h "
+      "LEFT OUTER JOIN moz_favicons f ON f.id = h.favicon_id "
+      "WHERE h.frecency <> 0 "
+      "{ADDITIONAL_CONDITIONS} "
+      "UNION ALL "
+      "SELECT * FROM ( "
+        "SELECT h.url, h.title, f.url") + BOOK_TAG_SQL + NS_LITERAL_CSTRING(", "
+          "h.visit_count, h.frecency "
+        "FROM moz_places h "
+        "LEFT OUTER JOIN moz_favicons f ON f.id = h.favicon_id "
+        "WHERE h.id NOT IN (SELECT id FROM moz_places_temp) "
+        "AND h.frecency <> 0 "
+        "{ADDITIONAL_CONDITIONS} "
+        "ORDER BY h.frecency DESC LIMIT (?2 + ?3) "
+      ") "
+      "ORDER BY 8 DESC LIMIT ?2 OFFSET ?3");
+}
 
 ////////////////////////////////////////////////////////////////////////////////
 //// nsNavHistoryAutoComplete Helper Functions
@@ -263,75 +298,115 @@ nsNavHistory::InitAutoComplete()
   return NS_OK;
 }
 
+// nsNavHistory::GetDBAutoCompleteHistoryQuery()
+//
+//    Returns the auto complete statement used when autocomplete results are
+//    restricted to history entries.
+mozIStorageStatement*
+nsNavHistory::GetDBAutoCompleteHistoryQuery()
+{
+  if (mDBAutoCompleteHistoryQuery)
+    return mDBAutoCompleteHistoryQuery;
+
+  nsCString AutoCompleteHistoryQuery;
+  GetAutoCompleteBaseQuery(AutoCompleteHistoryQuery);
+  AutoCompleteHistoryQuery.ReplaceSubstring("{ADDITIONAL_CONDITIONS}",
+                                            "AND h.visit_count > 0");
+  nsresult rv = mDBConn->CreateStatement(AutoCompleteHistoryQuery,
+    getter_AddRefs(mDBAutoCompleteHistoryQuery));
+  NS_ENSURE_SUCCESS(rv, nsnull);
+
+  return mDBAutoCompleteHistoryQuery;
+}
+
+// nsNavHistory::GetDBAutoCompleteStarQuery()
+//
+//    Returns the auto complete statement used when autocomplete results are
+//    restricted to bookmarked entries.
+mozIStorageStatement*
+nsNavHistory::GetDBAutoCompleteStarQuery()
+{
+  if (mDBAutoCompleteStarQuery)
+    return mDBAutoCompleteStarQuery;
+
+  nsCString AutoCompleteStarQuery;
+  GetAutoCompleteBaseQuery(AutoCompleteStarQuery);
+  AutoCompleteStarQuery.ReplaceSubstring("{ADDITIONAL_CONDITIONS}",
+                                         "AND bookmark IS NOT NULL");
+  nsresult rv = mDBConn->CreateStatement(AutoCompleteStarQuery,
+    getter_AddRefs(mDBAutoCompleteStarQuery));
+  NS_ENSURE_SUCCESS(rv, nsnull);
+
+  return mDBAutoCompleteStarQuery;
+}
+
+// nsNavHistory::GetDBAutoCompleteTagsQuery()
+//
+//    Returns the auto complete statement used when autocomplete results are
+//    restricted to tagged entries.
+mozIStorageStatement*
+nsNavHistory::GetDBAutoCompleteTagsQuery()
+{
+  if (mDBAutoCompleteTagsQuery)
+    return mDBAutoCompleteTagsQuery;
+
+  nsCString AutoCompleteTagsQuery;
+  GetAutoCompleteBaseQuery(AutoCompleteTagsQuery);
+  AutoCompleteTagsQuery.ReplaceSubstring("{ADDITIONAL_CONDITIONS}",
+                                         "AND tags IS NOT NULL");
+  nsresult rv = mDBConn->CreateStatement(AutoCompleteTagsQuery,
+    getter_AddRefs(mDBAutoCompleteTagsQuery));
+  NS_ENSURE_SUCCESS(rv, nsnull);
+
+  return mDBAutoCompleteTagsQuery;
+}
+
+// nsNavHistory::GetDBFeedbackIncrease()
+//
+//    Returns the statement to update the input history that keeps track of
+//    selections in the locationbar.  Input history is used for adaptive query.
+mozIStorageStatement*
+nsNavHistory::GetDBFeedbackIncrease()
+{
+  if (mDBFeedbackIncrease)
+    return mDBFeedbackIncrease;
+
+  nsresult rv = mDBConn->CreateStatement(NS_LITERAL_CSTRING(
+    // Leverage the PRIMARY KEY (place_id, input) to insert/update entries
+    "INSERT OR REPLACE INTO moz_inputhistory "
+      // use_count will asymptotically approach the max of 10
+      "SELECT h.id, IFNULL(i.input, ?1), IFNULL(i.use_count, 0) * .9 + 1 "
+      "FROM moz_places_temp h "
+      "LEFT JOIN moz_inputhistory i ON i.place_id = h.id AND i.input = ?1 "
+      "WHERE url = ?2 "
+      "UNION ALL "
+      "SELECT h.id, IFNULL(i.input, ?1), IFNULL(i.use_count, 0) * .9 + 1 "
+      "FROM moz_places h "
+      "LEFT JOIN moz_inputhistory i ON i.place_id = h.id AND i.input = ?1 "
+      "WHERE url = ?2 "
+        "AND h.id NOT IN (SELECT id FROM moz_places_temp)"),
+    getter_AddRefs(mDBFeedbackIncrease));
+  NS_ENSURE_SUCCESS(rv, nsnull);
+
+  return mDBFeedbackIncrease;
+}
 
 // nsNavHistory::CreateAutoCompleteQueries
 //
 //    The auto complete queries we use depend on options, so we have them in
 //    a separate function so it can be re-created when the option changes.
-
+//    We are not lazy creating these queries because they will be most likely
+//    used on first search, and we don't want to lag on first autocomplete use.
 nsresult
 nsNavHistory::CreateAutoCompleteQueries()
 {
-  // Define common pieces of various queries
-  // XXX bug 412736
-  // in the case of a frecency tie, break it with h.typed and h.visit_count
-  // which is better than nothing.  but this is slow, so not doing it yet.
-
-  // Try to reduce size of compound table since with partitioning this became
-  // slower. Limiting moz_places with OFFSET+LIMIT will mostly help speed
-  // of first chunks, that are usually most wanted.
-  // Can do this only if there aren't additional conditions on final resultset.
-
-  // Note: h.frecency is selected because we need it for ordering, but will
-  // not be read later and we don't have an associated kAutoCompleteIndex_
-
-  nsCString sqlBase = NS_LITERAL_CSTRING(
-    "SELECT h.url, h.title, f.url") + BOOK_TAG_SQL + NS_LITERAL_CSTRING(", "
-      "h.visit_count, h.frecency "
-    "FROM moz_places_temp h "
-    "LEFT OUTER JOIN moz_favicons f ON f.id = h.favicon_id "
-    "WHERE h.frecency <> 0 "
-    "{ADDITIONAL_CONDITIONS} "
-    "UNION ALL "
-    "SELECT * FROM ( "
-      "SELECT h.url, h.title, f.url") + BOOK_TAG_SQL + NS_LITERAL_CSTRING(", "
-        "h.visit_count, h.frecency "
-      "FROM moz_places h "
-      "LEFT OUTER JOIN moz_favicons f ON f.id = h.favicon_id "
-      "WHERE h.id NOT IN (SELECT id FROM moz_places_temp) "
-      "AND h.frecency <> 0 "
-      "{ADDITIONAL_CONDITIONS} "
-      "ORDER BY h.frecency DESC LIMIT (?2 + ?3) "
-    ") "
-    "ORDER BY 8 DESC LIMIT ?2 OFFSET ?3"); // ORDER BY frecency
-
-  nsCString AutoCompleteQuery = sqlBase;
+  nsCString AutoCompleteQuery;
+  GetAutoCompleteBaseQuery(AutoCompleteQuery);
   AutoCompleteQuery.ReplaceSubstring("{ADDITIONAL_CONDITIONS}",
                                      (mAutoCompleteOnlyTyped ?
                                         "AND h.typed = 1" : ""));
   nsresult rv = mDBConn->CreateStatement(AutoCompleteQuery,
                                 getter_AddRefs(mDBAutoCompleteQuery));
-  NS_ENSURE_SUCCESS(rv, rv);
-
-  nsCString AutoCompleteHistoryQuery = sqlBase;
-  AutoCompleteHistoryQuery.ReplaceSubstring("{ADDITIONAL_CONDITIONS}",
-                                            "AND h.visit_count > 0");
-  rv = mDBConn->CreateStatement(AutoCompleteHistoryQuery,
-                                getter_AddRefs(mDBAutoCompleteHistoryQuery));
-  NS_ENSURE_SUCCESS(rv, rv);
-
-  nsCString AutoCompleteStarQuery = sqlBase;
-  AutoCompleteStarQuery.ReplaceSubstring("{ADDITIONAL_CONDITIONS}",
-                                         "AND bookmark IS NOT NULL");
-  rv = mDBConn->CreateStatement(AutoCompleteStarQuery,
-                                getter_AddRefs(mDBAutoCompleteStarQuery));
-  NS_ENSURE_SUCCESS(rv, rv);
-
-  nsCString AutoCompleteTagsQuery = sqlBase;
-  AutoCompleteTagsQuery.ReplaceSubstring("{ADDITIONAL_CONDITIONS}",
-                                         "AND tags IS NOT NULL");
-  rv = mDBConn->CreateStatement(AutoCompleteTagsQuery,
-                                getter_AddRefs(mDBAutoCompleteTagsQuery));
   NS_ENSURE_SUCCESS(rv, rv);
 
   // In this query we are taking BOOK_TAG_SQL only for h.id because it
@@ -374,23 +449,6 @@ nsNavHistory::CreateAutoCompleteQueries()
     "WHERE LOWER(k.keyword) = LOWER(?1) "
     "ORDER BY IFNULL(h_t.frecency, h.frecency) DESC");
   rv = mDBConn->CreateStatement(sql, getter_AddRefs(mDBKeywordQuery));
-  NS_ENSURE_SUCCESS(rv, rv);
-
-  sql = NS_LITERAL_CSTRING(
-    // Leverage the PRIMARY KEY (place_id, input) to insert/update entries
-    "INSERT OR REPLACE INTO moz_inputhistory "
-      // use_count will asymptotically approach the max of 10    
-      "SELECT h.id, IFNULL(i.input, ?1), IFNULL(i.use_count, 0) * .9 + 1 "
-      "FROM moz_places_temp h "
-      "LEFT JOIN moz_inputhistory i ON i.place_id = h.id AND i.input = ?1 "
-      "WHERE url = ?2 "
-      "UNION ALL "
-      "SELECT h.id, IFNULL(i.input, ?1), IFNULL(i.use_count, 0) * .9 + 1 "
-      "FROM moz_places h "
-      "LEFT JOIN moz_inputhistory i ON i.place_id = h.id AND i.input = ?1 "
-      "WHERE url = ?2 "
-        "AND h.id NOT IN (SELECT id FROM moz_places_temp)");
-  rv = mDBConn->CreateStatement(sql, getter_AddRefs(mDBFeedbackIncrease));
   NS_ENSURE_SUCCESS(rv, rv);
 
   return NS_OK;
@@ -762,10 +820,10 @@ nsNavHistory::ProcessTokensForSpecialSearch()
 
   // We can use optimized queries for restricts, so check for the most
   // restrictive query first
-  mDBCurrentQuery = mRestrictTag ? mDBAutoCompleteTagsQuery :
-    mRestrictBookmark ? mDBAutoCompleteStarQuery :
-    mRestrictHistory ? mDBAutoCompleteHistoryQuery :
-    mDBAutoCompleteQuery;
+  mDBCurrentQuery = mRestrictTag ? GetDBAutoCompleteTagsQuery() :
+    mRestrictBookmark ? GetDBAutoCompleteStarQuery() :
+    mRestrictHistory ? GetDBAutoCompleteHistoryQuery() :
+    static_cast<mozIStorageStatement *>(mDBAutoCompleteQuery);
 }
 
 nsresult
@@ -1072,21 +1130,22 @@ nsNavHistory::AutoCompleteFeedback(PRInt32 aIndex,
   if (InPrivateBrowsingMode())
     return NS_OK;
 
-  mozStorageStatementScoper scope(mDBFeedbackIncrease);
+  mozIStorageStatement *stmt = GetDBFeedbackIncrease();
+  mozStorageStatementScoper scope(stmt);
 
   nsAutoString input;
   nsresult rv = aController->GetSearchString(input);
   NS_ENSURE_SUCCESS(rv, rv);
-  rv = mDBFeedbackIncrease->BindStringParameter(0, input);
+  rv = stmt->BindStringParameter(0, input);
   NS_ENSURE_SUCCESS(rv, rv);
 
   nsAutoString url;
   rv = aController->GetValueAt(aIndex, url);
   NS_ENSURE_SUCCESS(rv, rv);
-  rv = mDBFeedbackIncrease->BindStringParameter(1, url);
+  rv = stmt->BindStringParameter(1, url);
   NS_ENSURE_SUCCESS(rv, rv);
 
-  rv = mDBFeedbackIncrease->Execute();
+  rv = stmt->Execute();
   NS_ENSURE_SUCCESS(rv, rv);
 
   return NS_OK;
