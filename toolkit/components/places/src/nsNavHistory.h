@@ -432,6 +432,7 @@ protected:
   nsCOMPtr<mozIStorageStatement> mDBAddNewPage; // used by InternalAddNewPage
   nsCOMPtr<mozIStorageStatement> mDBGetTags; // used by FilterResultSet
   nsCOMPtr<mozIStorageStatement> mFoldersWithAnnotationQuery;  // used by StartSearch and FilterResultSet
+  nsCOMPtr<mozIStorageStatement> mDBSetPlaceTitle; // used by SetPageTitleInternal
 
   // these are used by VisitIdToResultNode for making new result nodes from IDs
   nsCOMPtr<mozIStorageStatement> mDBVisitToURLResult; // kGetInfoIndex_* results
