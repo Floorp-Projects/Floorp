@@ -374,8 +374,8 @@ endif
 	@echo "Downloaded $(EN_US_BINARY_URL)/$(PACKAGE) to $(_ABS_DIST)/$(PACKAGE)"
 ifeq ($(OS_ARCH), WINNT)
 	$(NSINSTALL) -D $(_ABS_DIST)/$(PKG_INST_PATH)
-	(cd $(_ABS_DIST) && $(WGET) -nv -N "$(EN_US_BINARY_URL)/$(PKG_PATH)$(PKG_INST_BASENAME).exe")
-	@echo "Downloaded $(EN_US_BINARY_URL)/$(PKG_PATH)$(PKG_INST_BASENAME).exe to $(_ABS_DIST)/$(PKG_INST_PATH)$(PKG_INST_BASENAME)"
+	(cd $(_ABS_DIST)/$(PKG_INST_PATH) && $(WGET) -nv -N "$(EN_US_BINARY_URL)/$(PKG_PATH)$(PKG_INST_BASENAME).exe")
+	@echo "Downloaded $(EN_US_BINARY_URL)/$(PKG_PATH)$(PKG_INST_BASENAME).exe to $(_ABS_DIST)/$(PKG_INST_PATH)$(PKG_INST_BASENAME).exe"
 endif
 
 ident:
