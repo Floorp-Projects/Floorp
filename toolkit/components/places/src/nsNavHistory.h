@@ -486,6 +486,8 @@ protected:
    *          The database was migrated to a new version.
    */
   nsresult InitDB(PRInt16 *aMadeChanges);
+  nsresult InitTempTables();
+  nsresult InitViews();
   nsresult InitFunctions();
   nsresult InitStatements();
   nsresult ForceMigrateBookmarksDB(mozIStorageConnection *aDBConn);
