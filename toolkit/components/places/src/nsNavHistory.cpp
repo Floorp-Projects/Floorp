@@ -453,15 +453,6 @@ nsNavHistory::Init()
       mLastSessionID = 1;
   }
 
-  // string bundle for localization
-  nsCOMPtr<nsIStringBundleService> bundleService =
-    do_GetService(NS_STRINGBUNDLE_CONTRACTID, &rv);
-  NS_ENSURE_SUCCESS(rv, rv);
-  rv = bundleService->CreateBundle(
-      "chrome://places/locale/places.properties",
-      getter_AddRefs(mBundle));
-  NS_ENSURE_SUCCESS(rv, rv);
-
   // initialize idle timer
   InitializeIdleTimer();
 
@@ -6579,12 +6570,16 @@ nsNavHistory::TitleForDomain(const nsCString& domain, nsACString& aTitle)
 void
 nsNavHistory::GetAgeInDaysString(PRInt32 aInt, const PRUnichar *aName, nsACString& aResult)
 {
+  nsIStringBundle *bundle = GetBundle();
+  if (!bundle)
+    aResult.Truncate(0);
+
   nsAutoString intString;
   intString.AppendInt(aInt);
   const PRUnichar* strings[1] = { intString.get() };
   nsXPIDLString value;
-  nsresult rv = mBundle->FormatStringFromName(aName, strings, 
-                                              1, getter_Copies(value));
+  nsresult rv = bundle->FormatStringFromName(aName, strings,
+                                             1, getter_Copies(value));
   if (NS_SUCCEEDED(rv))
     CopyUTF16toUTF8(value, aResult);
   else
@@ -6594,8 +6589,12 @@ nsNavHistory::GetAgeInDaysString(PRInt32 aInt, const PRUnichar *aName, nsACStrin
 void
 nsNavHistory::GetStringFromName(const PRUnichar *aName, nsACString& aResult)
 {
+  nsIStringBundle *bundle = GetBundle();
+  if (!bundle)
+    aResult.Truncate(0);
+
   nsXPIDLString value;
-  nsresult rv = mBundle->GetStringFromName(aName, getter_Copies(value));
+  nsresult rv = bundle->GetStringFromName(aName, getter_Copies(value));
   if (NS_SUCCEEDED(rv))
     CopyUTF16toUTF8(value, aResult);
   else
@@ -7387,6 +7386,23 @@ nsNavHistory::GetCollation()
   NS_ENSURE_SUCCESS(rv, nsnull);
 
   return mCollation;
+}
+
+nsIStringBundle *
+nsNavHistory::GetBundle()
+{
+  if (mBundle)
+    return mBundle;
+
+  nsCOMPtr<nsIStringBundleService> bundleService =
+    do_GetService(NS_STRINGBUNDLE_CONTRACTID);
+  NS_ENSURE_TRUE(bundleService, nsnull);
+  nsresult rv = bundleService->CreateBundle(
+      "chrome://places/locale/places.properties",
+      getter_AddRefs(mBundle));
+  NS_ENSURE_SUCCESS(rv, nsnull);
+
+  return mBundle;
 }
 
 // nsICharsetResolver **********************************************************
