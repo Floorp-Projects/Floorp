@@ -91,7 +91,8 @@ NS_IMETHODIMP nsScrollBoxObject::ScrollTo(PRInt32 x, PRInt32 y)
     return NS_ERROR_FAILURE;
 
   return scrollableView->ScrollTo(nsPresContext::CSSPixelsToAppUnits(x),
-                                  nsPresContext::CSSPixelsToAppUnits(y), 0);
+                                  nsPresContext::CSSPixelsToAppUnits(y),
+                                  NS_SCROLL_PROPERTY_ALWAYS_BLIT);
 }
 
 /* void scrollBy (in long dx, in long dy); */
@@ -227,9 +228,10 @@ NS_IMETHODIMP nsScrollBoxObject::ScrollByIndex(PRInt32 dindexes)
        // In the right-to-left case we scroll so that the right edge of the
        // selected child is scrolled to the right edge of the scrollbox.
        return scrollableView->ScrollTo((isLTR) ? rect.x :
-                                       rect.x + rect.width - frameWidth, cp.y, 0);
+                                       rect.x + rect.width - frameWidth, 
+                                       cp.y, NS_SCROLL_PROPERTY_ALWAYS_BLIT);
    else
-       return scrollableView->ScrollTo(cp.x, rect.y, 0);
+       return scrollableView->ScrollTo(cp.x, rect.y, NS_SCROLL_PROPERTY_ALWAYS_BLIT);
 }
 
 /* void scrollToLine (in long line); */
@@ -241,7 +243,7 @@ NS_IMETHODIMP nsScrollBoxObject::ScrollToLine(PRInt32 line)
   
   nscoord height = 0;
   scrollableView->GetLineHeight(&height);
-  scrollableView->ScrollTo(0, height * line, 0);
+  scrollableView->ScrollTo(0,height*line, NS_SCROLL_PROPERTY_ALWAYS_BLIT);
 
   return NS_OK;
 }
@@ -301,7 +303,7 @@ NS_IMETHODIMP nsScrollBoxObject::ScrollToElement(nsIDOMElement *child)
         newy = rect.y - crect.y;
     }
     // scroll away
-    return scrollableView->ScrollTo(newx, newy, 0);
+    return scrollableView->ScrollTo(newx, newy, NS_SCROLL_PROPERTY_ALWAYS_BLIT);
 }
 
 /* void scrollToIndex (in long index); */
@@ -412,7 +414,7 @@ NS_IMETHODIMP nsScrollBoxObject::EnsureElementIsVisible(nsIDOMElement *child)
     }
     
     // scroll away
-    return scrollableView->ScrollTo(newx, newy, 0);
+    return scrollableView->ScrollTo(newx, newy, NS_SCROLL_PROPERTY_ALWAYS_BLIT);
 }
 
 /* void ensureIndexIsVisible (in long index); */
