@@ -41,7 +41,6 @@
 
 #include "nsINavBookmarksService.h"
 #include "nsIAnnotationService.h"
-#include "nsIStringBundle.h"
 #include "nsITransaction.h"
 #include "nsNavHistory.h"
 #include "nsNavHistoryResult.h" // need for Int64 hashtable
@@ -212,8 +211,6 @@ private:
   nsCOMPtr<mozIStorageStatement> mDBGetKeywordForURI;
   nsCOMPtr<mozIStorageStatement> mDBGetKeywordForBookmark;
   nsCOMPtr<mozIStorageStatement> mDBGetURIForKeyword;
-
-  nsCOMPtr<nsIStringBundle> mBundle;
 
   class RemoveFolderTransaction : public nsITransaction {
   public:
