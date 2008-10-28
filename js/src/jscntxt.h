@@ -108,18 +108,6 @@ class TypeMap;
 # define CLS(T)  void*
 #endif
 
-/* 
- * Fragment quick cache entry.
- */
-typedef struct JSFragmentCacheEntry {
-    jsbytecode*             pc;
-    CLS(nanojit::Fragment)  fragment;
-} JSFragmentCacheEntry;
-
-#define JS_FRAGMENT_CACHE_LOG2  2
-#define JS_FRAGMENT_CACHE_SIZE  JS_BIT(JS_FRAGMENT_CACHE_LOG2)
-#define JS_FRAGMENT_CACHE_MASK  JS_BITMASK(JS_FRAGMENT_CACHE_LOG2)
-
 /*
  * Trace monitor. Every JSThread (if JS_THREADSAFE) or JSRuntime (if not
  * JS_THREADSAFE) has an associated trace monitor that keeps track of loop
@@ -138,7 +126,6 @@ typedef struct JSTraceMonitor {
     uint32                  globalShape;
     CLS(SlotList)           globalSlots;
     CLS(TypeMap)            globalTypeMap;
-    JSFragmentCacheEntry    fcache[JS_FRAGMENT_CACHE_SIZE];
     jsval                   *recoveryDoublePool;
     jsval                   *recoveryDoublePoolPtr;
     uint32                  jitCacheGen;

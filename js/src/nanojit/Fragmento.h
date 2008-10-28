@@ -176,6 +176,7 @@ namespace nanojit
 			void			setCode(NIns* codee, Page* pages) { _code = codee; _pages = pages; }
 			GuardRecord*	links()							{ return _links; }
 			int32_t&		hits()							{ return _hits; }
+            void            resetHits();
             void            blacklist();
 			bool			isBlacklisted()		{ return _hits < 0; }
 			debug_only( bool hasOnlyTreeLinks(); )
@@ -215,6 +216,7 @@ namespace nanojit
 			const void* ip;
 			uint32_t guardCount;
             uint32_t xjumpCount;
+            uint32_t recordAttempts;
             int32_t blacklistLevel;
             NIns* fragEntry;
 			int32_t calldepth;

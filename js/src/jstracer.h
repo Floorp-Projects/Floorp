@@ -168,6 +168,13 @@ public:
     bool matches(TypeMap& other) const;
 };
 
+struct UnstableExit
+{
+    nanojit::Fragment* fragment;
+    nanojit::SideExit* exit;
+    UnstableExit* next;
+};
+
 class TreeInfo MMGC_SUBCLASS_DECL {
     nanojit::Fragment*      fragment;
 public:
@@ -176,14 +183,15 @@ public:
     ptrdiff_t               nativeStackBase;
     unsigned                maxCallDepth;
     TypeMap                 stackTypeMap;
-    unsigned                mismatchCount;
     Queue<nanojit::Fragment*> dependentTrees;
     unsigned                branchCount;
     Queue<nanojit::SideExit*> sideExits;
+    UnstableExit*           unstableExits;
 
-    TreeInfo(nanojit::Fragment* _fragment) { 
+    TreeInfo(nanojit::Fragment* _fragment) : unstableExits(NULL) {
         fragment = _fragment;
     }
+    ~TreeInfo();
 };
 
 struct FrameInfo {
@@ -235,6 +243,9 @@ class TraceRecorder : public GCObject {
     jsval*                  global_dslots;
     JSTraceableNative*      pendingTraceableNative;
     bool                    terminate;
+    intptr_t                terminate_ip_adj;
+    nanojit::Fragment*      outerToBlacklist;
+    nanojit::Fragment*      promotedPeer;
     bool                    isRootFragment;
 
     bool isGlobal(jsval* p) const;
@@ -255,8 +266,10 @@ class TraceRecorder : public GCObject {
     nanojit::LIns* writeBack(nanojit::LIns* i, nanojit::LIns* base, ptrdiff_t offset);
     void set(jsval* p, nanojit::LIns* l, bool initializing = false);
 
-    bool checkType(jsval& v, uint8 type, bool& recompile);
-    bool verifyTypeStability();
+    bool checkType(jsval& v, uint8 t, jsval*& stage_val, nanojit::LIns*& stage_ins,
+                   unsigned& stage_count);
+    bool deduceTypeStability(nanojit::Fragment* root_peer, nanojit::Fragment** stable_peer, 
+                             unsigned* demotes);
 
     jsval& argval(unsigned n) const;
     jsval& varval(unsigned n) const;
@@ -340,7 +353,7 @@ public:
 
     TraceRecorder(JSContext* cx, nanojit::SideExit*, nanojit::Fragment*, TreeInfo*,
             unsigned ngslots, uint8* globalTypeMap, uint8* stackTypeMap, 
-            nanojit::SideExit* expectedInnerExit);
+            nanojit::SideExit* expectedInnerExit, nanojit::Fragment* outerToBlacklist);
     ~TraceRecorder();
 
     uint8 determineSlotType(jsval* vp) const;
@@ -348,11 +361,12 @@ public:
     nanojit::Fragment* getFragment() const { return fragment; }
     bool isLoopHeader(JSContext* cx) const;
     void compile(nanojit::Fragmento* fragmento);
-    void closeLoop(nanojit::Fragmento* fragmento);
+    bool closeLoop(nanojit::Fragmento* fragmento, bool& demote, unsigned *demotes);
     void endLoop(nanojit::Fragmento* fragmento);
+    void joinEdgesToEntry(nanojit::Fragmento* fragmento, nanojit::Fragment* peer_root);
     void blacklist() { fragment->blacklist(); }
-    bool adjustCallerTypes(nanojit::Fragment* f);
-    bool selectCallablePeerFragment(nanojit::Fragment** first);
+    bool adjustCallerTypes(nanojit::Fragment* f, unsigned* demote_slots, bool& trash);
+    nanojit::Fragment* findNestedCompatiblePeer(nanojit::Fragment* f, nanojit::Fragment** empty);
     void prepareTreeCall(nanojit::Fragment* inner);
     void emitTreeCall(nanojit::Fragment* inner, nanojit::SideExit* exit);
     unsigned getCallDepth() const;
@@ -365,9 +379,12 @@ public:
     bool record_DefLocalFunSetSlot(uint32 slot, JSObject* obj);
     bool record_FastNativeCallComplete();
     
+    nanojit::Fragment* getOuterToBlacklist() { return outerToBlacklist; }
     void deepAbort() { deepAborted = true; }
     bool wasDeepAborted() { return deepAborted; }
     bool walkedOutOfLoop() { return terminate; }
+    void setPromotedPeer(nanojit::Fragment* peer) { promotedPeer = peer; }
+    TreeInfo* getTreeInfo() { return treeInfo; }
     
 #define OPDEF(op,val,name,token,length,nuses,ndefs,prec,format)               \
     bool record_##op();

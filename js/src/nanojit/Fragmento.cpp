@@ -204,7 +204,7 @@ namespace nanojit
             }
             f->releaseTreeMem(this);
             delete f;
-		}			
+		}
 
 		verbose_only( enterCounts->clear();)
 		verbose_only( mergeCounts->clear();)
@@ -511,6 +511,12 @@ namespace nanojit
 		NanoAssert(_pages == 0);
     }
 
+    void Fragment::resetHits()
+    {
+        blacklistLevel >>= 1;
+        _hits = 0;
+    }
+	
     void Fragment::blacklist()
     {
         blacklistLevel++;
@@ -522,6 +528,7 @@ namespace nanojit
 		GC *gc = _core->gc;
         Fragment *f = new (gc) Fragment(ip);
 		f->blacklistLevel = 5;
+        f->recordAttempts = 0;
         return f;
     }
 
