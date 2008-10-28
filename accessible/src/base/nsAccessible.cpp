@@ -2182,13 +2182,28 @@ nsAccessible::GetAttributesInternal(nsIPersistentProperties *aAttributes)
   }
 
   // Expose 'display' attribute.
-  nsAutoString displayValue;
+  nsAutoString value;
   nsresult rv = GetComputedStyleValue(EmptyString(),
                                       NS_LITERAL_STRING("display"),
-                                      displayValue);
+                                      value);
   if (NS_SUCCEEDED(rv))
     nsAccUtils::SetAccAttr(aAttributes, nsAccessibilityAtoms::display,
-                           displayValue);
+                           value);
+
+  // Expose 'text-align' attribute.
+  rv = GetComputedStyleValue(EmptyString(), NS_LITERAL_STRING("text-align"),
+                             value);
+  if (NS_SUCCEEDED(rv))
+    nsAccUtils::SetAccAttr(aAttributes, nsAccessibilityAtoms::textAlign,
+                           value);
+
+  // Expose 'text-indent' attribute.
+  rv = GetComputedStyleValue(EmptyString(), NS_LITERAL_STRING("text-indent"),
+                             value);
+  if (NS_SUCCEEDED(rv))
+    nsAccUtils::SetAccAttr(aAttributes, nsAccessibilityAtoms::textIndent,
+                           value);
+
   return NS_OK;
 }
 

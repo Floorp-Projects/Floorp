@@ -1,57 +1,46 @@
 <html>
 <!--
 https://bugzilla.mozilla.org/show_bug.cgi?id=439566
+https://bugzilla.mozilla.org/show_bug.cgi?id=460932
 -->
 <head>
   <title>CSS-like attributes tests</title>
-  <link rel="stylesheet" type="text/css" href="chrome://mochikit/content/tests/SimpleTest/test.css" />
+  <link rel="stylesheet" type="text/css"
+        href="chrome://mochikit/content/tests/SimpleTest/test.css" />
 
-  <script type="application/javascript" src="chrome://mochikit/content/MochiKit/packed.js"></script>
-  <script type="application/javascript" src="chrome://mochikit/content/tests/SimpleTest/SimpleTest.js"></script>
+  <script type="application/javascript"
+          src="chrome://mochikit/content/MochiKit/packed.js"></script>
+  <script type="application/javascript"
+          src="chrome://mochikit/content/tests/SimpleTest/SimpleTest.js"></script>
+
+  <script type="application/javascript"
+          src="chrome://mochikit/content/a11y/accessible/common.js"></script>
+  <script type="application/javascript"
+          src="chrome://mochikit/content/a11y/accessible/attributes.js"></script>
 
   <script type="application/javascript">
-    const nsIAccessibleRetrieval = Components.interfaces.nsIAccessibleRetrieval;
-
-    var gAccRetrieval = null;
-
-    function testAttr(aID, aName, aValue)
+    function testCSSAttrs(aID)
     {
-      var acc = null;
-      try {
-        acc = gAccRetrieval.getAccessibleFor(document.getElementById(aID));
-      } catch(e) { }
+      var node = document.getElementById(aID);
+      var computedStyle = document.defaultView.getComputedStyle(node, "");
 
-      if (!acc) {
-        ok(false, "Can't get accessible object for " + aID);
-        return;
-      }
-
-      var attrs = null;
-      try {
-        attrs = acc.attributes;
-      } catch(e) { }
-
-      if (!attrs) {
-        ok(false, "Can't get accessible attributes for " + aID);
-        return;
-      }
-      
-      is(attrs.getStringProperty(aName), aValue,
-         "Accessible with ID " + aID + " has wrong attribute value");
+      var attrs = {
+        "display": computedStyle.display,
+        "text-align": computedStyle.textAlign,
+        "text-indent": computedStyle.textIndent
+      };
+      testAttrs(aID, attrs, true);
     }
 
     function doTest()
     {
-      gAccRetrieval = Components.classes["@mozilla.org/accessibleRetrieval;1"].
-                      getService(nsIAccessibleRetrieval);
-
-      testAttr("span", "display", "inline");
-      testAttr("div", "display", "block");
-      testAttr("p", "display", "block");
-      testAttr("input", "display", "inline");
-      testAttr("table", "display", "table");
-      testAttr("tr", "display", "table-row");
-      testAttr("td", "display", "table-cell");
+      testCSSAttrs("span");
+      testCSSAttrs("div");
+      testCSSAttrs("p");
+      testCSSAttrs("input");
+      testCSSAttrs("table");
+      testCSSAttrs("tr");
+      testCSSAttrs("td");
 
       SimpleTest.finish();
     }
@@ -67,6 +56,12 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=439566
      title="Include the css display property as an IAccessible2 object attribute">
     Mozilla Bug 439566
   </a>
+  <a target="_blank"
+     href="https://bugzilla.mozilla.org/show_bug.cgi?id=460932"
+     title="text-indent and text-align should really be object attribute">
+    Mozilla Bug 460932
+  </a>
+
   <p id="display"></p>
   <div id="content" style="display: none"></div>
   <pre id="test">
