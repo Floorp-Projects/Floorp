@@ -47,6 +47,13 @@ MODULE		= js
 LIBRARY_NAME	= mozjs
 GRE_MODULE	= 1
 
+PROGRAM         = js$(BIN_SUFFIX)
+# The shell uses some 'HIDDEN' symbols to produce statistics, so we
+# link directly against the .o files, not against the JS shared
+# library.
+PROGOBJS	= js.$(OBJ_SUFFIX) $(OBJS)
+LIBS		= $(NSPR_LIBS)
+
 ifdef GNU_CC
 ifdef INTEL_CC
 # icc gets special optimize flags
