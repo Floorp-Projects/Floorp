@@ -73,11 +73,6 @@ MOZILLA_INTERNAL_API = 1
 REQUIRES	= string \
 		  $(NULL)
 
-# pull in MoreFiles for MacOSX
-ifneq (,$(filter mac cocoa,$(MOZ_WIDGET_TOOLKIT)))
-REQUIRES += macmorefiles
-endif
-
 ifdef NS_TRACE_MALLOC
 REQUIRES += tracemalloc
 endif
