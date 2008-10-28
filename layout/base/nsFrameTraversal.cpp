@@ -171,7 +171,7 @@ NS_NewFrameTraversal(nsIFrameEnumerator **aEnumerator,
 {
   if (!aEnumerator || !aStart)
     return NS_ERROR_NULL_POINTER;
-  nsCOMPtr<nsIFrameIterator> trav;
+  nsCOMPtr<nsIFrameEnumerator> trav;
   if (aVisual) {
     trav = new nsVisualIterator(aPresContext, aStart, aType,
                                 aLockInScrollView, aFollowOOFs);
