@@ -180,7 +180,6 @@ endif
 ifneq (,$(filter mac cocoa,$(MOZ_WIDGET_TOOLKIT)))
 CXXFLAGS	+= $(TK_CFLAGS)
 EXTRA_DSO_LDOPTS += \
-  ../MoreFiles/$(LIB_PREFIX)macmorefiles_s.$(LIB_SUFFIX) \
   $(TK_LIBS) \
   $(NULL)
 endif
