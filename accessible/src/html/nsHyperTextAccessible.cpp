@@ -1685,7 +1685,7 @@ PRInt32 nsHyperTextAccessible::GetCaretLineNumber()
   NS_ENSURE_TRUE(caretFrame, -1);
 
   PRInt32 lineNumber = 1;
-  nsAutoLineIterator lineIterForCaret;
+  nsCOMPtr<nsILineIterator> lineIterForCaret;
   nsCOMPtr<nsIContent> hyperTextContent = do_QueryInterface(mDOMNode);
   while (caretFrame) {
     if (hyperTextContent == caretFrame->GetContent()) {
@@ -1698,10 +1698,11 @@ PRInt32 nsHyperTextAccessible::GetCaretLineNumber()
     // Add lines for the sibling frames before the caret
     nsIFrame *sibling = parentFrame->GetFirstChild(nsnull);
     while (sibling && sibling != caretFrame) {
-      nsAutoLineIterator lineIterForSibling = sibling->GetLineIterator();
+      nsCOMPtr<nsILineIterator> lineIterForSibling = do_QueryInterface(sibling);
       if (lineIterForSibling) {
+        PRInt32 addLines;
         // For the frames before that grab all the lines
-        PRInt32 addLines = lineIterForSibling->GetNumLines();
+        lineIterForSibling->GetNumLines(&addLines);
         lineNumber += addLines;
       }
       sibling = sibling->GetNextSibling();
@@ -1709,10 +1710,11 @@ PRInt32 nsHyperTextAccessible::GetCaretLineNumber()
 
     // Get the line number relative to the container with lines
     if (!lineIterForCaret) {   // Add the caret line just once
-      lineIterForCaret = parentFrame->GetLineIterator();
+      lineIterForCaret = do_QueryInterface(parentFrame);
       if (lineIterForCaret) {
         // Ancestor of caret
-        PRInt32 addLines = lineIterForCaret->FindLineContaining(caretFrame);
+        PRInt32 addLines;
+        lineIterForCaret->FindLineContaining(caretFrame, &addLines);
         lineNumber += addLines;
       }
     }
