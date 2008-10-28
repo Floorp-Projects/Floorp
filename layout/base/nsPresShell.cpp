@@ -3801,9 +3801,11 @@ UnionRectForClosestScrolledView(nsIFrame* aFrame,
         f &&
         frameType == nsGkAtoms::blockFrame) {
       // find the line containing aFrame and increase the top of |offset|.
-      nsAutoLineIterator lines = f->GetLineIterator();
+      nsCOMPtr<nsILineIterator> lines(do_QueryInterface(f));
+
       if (lines) {
-        PRInt32 index = lines->FindLineContaining(prevFrame);
+        PRInt32 index = -1;
+        lines->FindLineContaining(prevFrame, &index);
         if (index >= 0) {
           nsIFrame *trash1;
           PRInt32 trash2;
