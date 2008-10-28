@@ -1001,7 +1001,6 @@ TraceRecorder::TraceRecorder(JSContext* cx, SideExit* _anchor, Fragment* _fragme
     this->global_dslots = this->globalObj->dslots;
     this->terminate = false;
     this->outerToBlacklist = outerToBlacklist;
-    this->isRootFragment = _fragment == _fragment->root;
 
     debug_only_v(printf("recording starting from %s:%u@%u\n", cx->fp->script->filename,
                         js_PCToLineNumber(cx, cx->fp->script, cx->fp->regs->pc),
@@ -1057,17 +1056,13 @@ TreeInfo::~TreeInfo()
 
 TraceRecorder::~TraceRecorder()
 {
-    JS_ASSERT(treeInfo);
-    if (fragment) {
-        if (isRootFragment && !fragment->root->code()) {
-            JS_ASSERT(!fragment->root->vmprivate);
-            delete treeInfo;
-        }
-        if (trashTree)
-            js_TrashTree(cx, whichTreeToTrash);
-    } else if (isRootFragment) {
+    JS_ASSERT(treeInfo && fragment);
+    if (fragment == fragment->root && !fragment->root->code()) {
+        JS_ASSERT(!fragment->root->vmprivate);
         delete treeInfo;
     }
+    if (trashTree)
+        js_TrashTree(cx, whichTreeToTrash);
 #ifdef DEBUG
     delete verbose_filter;
 #endif
@@ -1078,12 +1073,6 @@ TraceRecorder::~TraceRecorder()
     delete float_filter;
 #endif
     delete lir_buf_writer;
-}
-
-void
-TraceRecorder::safeCleanup()
-{
-    fragment = NULL;
 }
 
 /* Add debug information to a LIR instruction as we emit it. */
@@ -3720,7 +3709,6 @@ js_FlushJITCache(JSContext* cx)
         tm->globalSlots->clear();
         tm->globalTypeMap->clear();
     }
-    tm->jitCacheGen++;
 }
 
 jsval&

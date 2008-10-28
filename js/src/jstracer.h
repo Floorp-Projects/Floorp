@@ -246,7 +246,6 @@ class TraceRecorder : public GCObject {
     intptr_t                terminate_ip_adj;
     nanojit::Fragment*      outerToBlacklist;
     nanojit::Fragment*      promotedPeer;
-    bool                    isRootFragment;
 
     bool isGlobal(jsval* p) const;
     ptrdiff_t nativeGlobalOffset(jsval* p) const;
@@ -370,7 +369,6 @@ public:
     void prepareTreeCall(nanojit::Fragment* inner);
     void emitTreeCall(nanojit::Fragment* inner, nanojit::SideExit* exit);
     unsigned getCallDepth() const;
-    void safeCleanup();
     
     bool record_EnterFrame();
     bool record_LeaveFrame();

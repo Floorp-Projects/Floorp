@@ -128,7 +128,6 @@ typedef struct JSTraceMonitor {
     CLS(TypeMap)            globalTypeMap;
     jsval                   *recoveryDoublePool;
     jsval                   *recoveryDoublePoolPtr;
-    uint32                  jitCacheGen;
 } JSTraceMonitor;
 
 #ifdef JS_TRACER
