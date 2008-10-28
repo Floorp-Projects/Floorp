@@ -42,18 +42,22 @@
 #include "nsPlaceholderFrame.h"
 
 
-class nsFrameIterator : public nsIFrameEnumerator
+class nsFrameIterator: public nsIBidirectionalEnumerator
 {
 public:
   NS_DECL_ISUPPORTS
 
-  virtual void First();
-  virtual void Next();
-  virtual nsIFrame* CurrentItem();
-  virtual PRBool IsDone();
+  NS_IMETHOD First();
 
-  virtual void Last();
-  virtual void Prev();
+  NS_IMETHOD Last();
+  
+  NS_IMETHOD Next();
+
+  NS_IMETHOD Prev();
+
+  NS_IMETHOD CurrentItem(nsISupports **aItem);
+
+  NS_IMETHOD IsDone();//what does this mean??off edge? yes
 
   nsFrameIterator(nsPresContext* aPresContext, nsIFrame *aStart,
                   nsIteratorType aType, PRBool aLockScroll, PRBool aFollowOOFs);
@@ -161,7 +165,7 @@ nsresult NS_CreateFrameTraversal(nsIFrameTraversal** aResult)
 }
 
 nsresult
-NS_NewFrameTraversal(nsIFrameEnumerator **aEnumerator,
+NS_NewFrameTraversal(nsIBidirectionalEnumerator **aEnumerator,
                      nsPresContext* aPresContext,
                      nsIFrame *aStart,
                      nsIteratorType aType,
@@ -171,7 +175,7 @@ NS_NewFrameTraversal(nsIFrameEnumerator **aEnumerator,
 {
   if (!aEnumerator || !aStart)
     return NS_ERROR_NULL_POINTER;
-  nsCOMPtr<nsIFrameIterator> trav;
+  nsFrameIterator *trav;
   if (aVisual) {
     trav = new nsVisualIterator(aPresContext, aStart, aType,
                                 aLockInScrollView, aFollowOOFs);
@@ -181,7 +185,7 @@ NS_NewFrameTraversal(nsIFrameEnumerator **aEnumerator,
   }
   if (!trav)
     return NS_ERROR_OUT_OF_MEMORY;
-  *aEnumerator = trav;
+  *aEnumerator = static_cast<nsIBidirectionalEnumerator*>(trav);
   NS_ADDREF(trav);
   return NS_OK;
 }
@@ -198,7 +202,7 @@ nsFrameTraversal::~nsFrameTraversal()
 NS_IMPL_ISUPPORTS1(nsFrameTraversal,nsIFrameTraversal)
 
 NS_IMETHODIMP 
- nsFrameTraversal::NewFrameTraversal(nsIFrameEnumerator **aEnumerator,
+ nsFrameTraversal::NewFrameTraversal(nsIBidirectionalEnumerator **aEnumerator,
                                      nsPresContext* aPresContext,
                                      nsIFrame *aStart,
                                      PRInt32 aType,
@@ -213,7 +217,7 @@ NS_IMETHODIMP
 
 // nsFrameIterator implementation
 
-NS_IMPL_ISUPPORTS1(nsFrameIterator, nsIFrameEnumerator)
+NS_IMPL_ISUPPORTS2(nsFrameIterator, nsIEnumerator, nsIBidirectionalEnumerator)
 
 nsFrameIterator::nsFrameIterator(nsPresContext* aPresContext, nsIFrame *aStart,
                                  nsIteratorType aType, PRBool aLockInScrollView,
@@ -233,27 +237,34 @@ nsFrameIterator::nsFrameIterator(nsPresContext* aPresContext, nsIFrame *aStart,
 
 
 
-nsIFrame*
-nsFrameIterator::CurrentItem()
+NS_IMETHODIMP
+nsFrameIterator::CurrentItem(nsISupports **aItem)
 {
+  if (!aItem)
+    return NS_ERROR_NULL_POINTER;
+  *aItem = mCurrent;
   if (mOffEdge)
-    return nsnull;
-
-  return mCurrent;
+    return NS_ENUMERATOR_FALSE;
+  return NS_OK;
 }
 
 
 
-PRBool
-nsFrameIterator::IsDone()
+NS_IMETHODIMP
+nsFrameIterator::IsDone()//what does this mean??off edge? yes
 {
-  return mOffEdge != 0;
+  if (mOffEdge != 0)
+    return NS_OK;
+  return NS_ENUMERATOR_FALSE;
 }
 
-void
+
+
+NS_IMETHODIMP
 nsFrameIterator::First()
 {
   mCurrent = mStart;
+  return NS_OK;
 }
 
 static PRBool
@@ -264,7 +275,7 @@ IsRootFrame(nsIFrame* aFrame)
          (atom == nsGkAtoms::rootFrame);
 }
 
-void
+NS_IMETHODIMP
 nsFrameIterator::Last()
 {
   nsIFrame* result;
@@ -283,9 +294,10 @@ nsFrameIterator::Last()
   setCurrent(parent);
   if (!parent)
     setOffEdge(1);
+  return NS_OK;
 }
 
-void
+NS_IMETHODIMP
 nsFrameIterator::Next()
 {
   // recursive-oid method to get next frame
@@ -339,9 +351,10 @@ nsFrameIterator::Next()
     setOffEdge(1);
     setLast(parent);
   }
+  return NS_OK;
 }
 
-void
+NS_IMETHODIMP
 nsFrameIterator::Prev()
 {
   // recursive-oid method to get prev frame
@@ -394,6 +407,7 @@ nsFrameIterator::Prev()
     setOffEdge(-1);
     setLast(parent);
   }
+  return NS_OK;
 }
 
 nsIFrame*
