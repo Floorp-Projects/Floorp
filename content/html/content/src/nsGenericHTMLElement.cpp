@@ -1178,13 +1178,17 @@ nsresult
 nsGenericHTMLElement::UnsetAttr(PRInt32 aNameSpaceID, nsIAtom* aAttribute,
                                 PRBool aNotify)
 {
+  PRBool contentEditable = PR_FALSE;
+  PRInt32 contentEditableChange;
+
+  if (aNameSpaceID == kNameSpaceID_None) {
+    contentEditable = PR_TRUE;
+    contentEditableChange = GetContentEditableValue() == eTrue ? -1 : 0;
+  }
+
   // Check for event handlers
   if (aNameSpaceID == kNameSpaceID_None) {
-    if (aAttribute == nsGkAtoms::contenteditable) {
-      ChangeEditableState(GetContentEditableValue() == eTrue ? -1 : 0);
-    }
-    else if (nsContentUtils::IsEventAttributeName(aAttribute,
-                                                  EventNameType_HTML)) {
+    if (nsContentUtils::IsEventAttributeName(aAttribute, EventNameType_HTML)) {
       nsCOMPtr<nsIEventListenerManager> manager;
       GetListenerManager(PR_FALSE, getter_AddRefs(manager));
 
@@ -1194,8 +1198,15 @@ nsGenericHTMLElement::UnsetAttr(PRInt32 aNameSpaceID, nsIAtom* aAttribute,
     }
   }
 
-  return nsGenericHTMLElementBase::UnsetAttr(aNameSpaceID, aAttribute,
-                                             aNotify);
+  nsresult rv = nsGenericHTMLElementBase::UnsetAttr(aNameSpaceID, aAttribute,
+                                                    aNotify);
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  if (contentEditable) {
+    ChangeEditableState(contentEditableChange);
+  }
+
+  return NS_OK;
 }
 
 already_AddRefed<nsIURI>

@@ -39,12 +39,17 @@
 
 #include "nsISupports.idl"
 
-[scriptable, uuid(5c458b3a-8648-45dd-a9a0-c321949cd864)]
+[scriptable, uuid(fc3c5fdc-9a87-4757-b01f-4ace2670a3a0)]
 interface mozIStoragePendingStatement : nsISupports {
 
   /**
-   * Cancels a pending statement.  This may fail because the statement has
-   * already completed.
+   * Cancels a pending statement, if possible.  This will only fail if you try
+   * cancel more than once.
+   *
+   * @note For read statements (such as SELECT), you will no longer receive any
+   *       notifications about results once cancel is called.
+   *
+   * @returns true if canceled successfully, false otherwise.
    */
-   void cancel();
+   boolean cancel();
 };

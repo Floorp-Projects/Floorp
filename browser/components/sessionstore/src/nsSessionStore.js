@@ -2350,6 +2350,11 @@ SessionStoreService.prototype = {
         winData[0].tabs[0].entries[0].url == "about:sessionrestore")
       return false;
     
+    // don't automatically restore in Safe Mode
+    let XRE = Cc["@mozilla.org/xre/app-info;1"].getService(Ci.nsIXULRuntime);
+    if (XRE.inSafeMode)
+      return true;
+    
     let max_resumed_crashes =
       this._prefBranch.getIntPref("sessionstore.max_resumed_crashes");
     let sessionAge = aState.session && aState.session.lastUpdate &&

@@ -99,10 +99,10 @@
                 accesskey="&mediaHideControls.accesskey;"
                 oncommand="gContextMenu.mediaCommand('hidecontrols');"/>
       <menuseparator id="context-media-sep-commands"/>
-      <menuitem id="context-showimage"
-                label="&showImageCmd.label;"
-                accesskey="&showImageCmd.accesskey;"
-                oncommand="gContextMenu.showImage();"/>
+      <menuitem id="context-reloadimage"
+                label="&reloadImageCmd.label;"
+                accesskey="&reloadImageCmd.accesskey;"
+                oncommand="gContextMenu.reloadImage();"/>
       <menuitem id="context-viewimage"
                 label="&viewImageCmd.label;"
                 accesskey="&viewImageCmd.accesskey;"

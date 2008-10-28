@@ -135,7 +135,6 @@ function attachPrompt() {
   old_factory =  Components.manager.getClassObjectByContractID("@mozilla.org/geolocation/prompt;1", Components.interfaces.nsIFactory)
 
   const testing_prompt_cid = Components.ID("{20C27ECF-A22E-4022-9757-2CFDA88EAEAA}");
-
   Components.manager.nsIComponentRegistrar.registerFactory(testing_prompt_cid,
                                                            "Test Geolocation Prompt",
                                                            "@mozilla.org/geolocation/prompt;1",
@@ -144,7 +143,8 @@ function attachPrompt() {
 
 function removePrompt() {
   netscape.security.PrivilegeManager.enablePrivilege('UniversalXPConnect');
-
+  const testing_prompt_cid = Components.ID("{20C27ECF-A22E-4022-9757-2CFDA88EAEAA}");
+  Components.manager.nsIComponentRegistrar.unregisterFactory(testing_prompt_cid, TestPromptFactory);
   Components.manager.nsIComponentRegistrar.registerFactory(old_prompt,
                                                            "Geolocation Prompt restored!",
                                                            "@mozilla.org/geolocation/prompt;1",

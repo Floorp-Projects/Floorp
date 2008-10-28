@@ -139,7 +139,7 @@ public:
   NS_IMETHOD  SetInitialChildList(nsIAtom*        aListName,
                                   nsIFrame*       aChildList);
 
-  virtual void DidSetStyleContext();
+  virtual void DidSetStyleContext(nsStyleContext* aOldStyleContext);
 
   virtual nsIAtom* GetType() const;
 

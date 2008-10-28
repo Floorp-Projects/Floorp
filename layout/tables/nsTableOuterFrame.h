@@ -198,8 +198,6 @@ public:
   NS_IMETHOD GetIndexByRowAndColumn(PRInt32 aRow, PRInt32 aColumn, PRInt32 *aIndex);
   NS_IMETHOD GetRowAndColumnByIndex(PRInt32 aIndex, PRInt32 *aRow, PRInt32 *aColumn);
 
-  PRBool IsNested(const nsHTMLReflowState& aReflowState) const;
-
 protected:
 
 

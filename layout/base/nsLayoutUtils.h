@@ -409,7 +409,8 @@ public:
    * list builder should ignore paint suppression or not
    */
   static nsIFrame* GetFrameForPoint(nsIFrame* aFrame, nsPoint aPt,
-                                    PRBool aShouldIgnoreSuppression = PR_FALSE);
+                                    PRBool aShouldIgnoreSuppression = PR_FALSE,
+                                    PRBool aIgnoreScrollFrame = PR_FALSE);
 
   /**
    * Given a point in the global coordinate space, returns that point expressed

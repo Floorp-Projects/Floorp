@@ -784,6 +784,9 @@ LoginManagerStorage_legacy.prototype = {
         // encrypted username field (which contains an encrypted empty value)
         // (Don't do this if it's a form login, though.)
         if (username && !isFormLogin) {
+            if (isMailNews.test(aLogin.hostname))
+                username = decodeURIComponent(username);
+
             var [encUsername, userCanceled] = this._encrypt(username);
             if (!userCanceled)
                 aLogin.wrappedJSObject.encryptedUsername = encUsername;

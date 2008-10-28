@@ -1,5 +1,5 @@
-/* -*- Mode: C; tab-width: 8; indent-tabs-mode: nil; c-basic-offset: 4 -*-
- *
+/* -*- Mode: C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*-
+ * vim: sw=2 ts=2 sts=2 expandtab
  * ***** BEGIN LICENSE BLOCK *****
  * Version: MPL 1.1/GPL 2.0/LGPL 2.1
  *
@@ -13,16 +13,16 @@
  * for the specific language governing rights and limitations under the
  * License.
  *
- * The Original Code is mozilla.org code, released
- * Jan 28, 2003.
+ * The Original Code is mozilla.org code.
  *
  * The Initial Developer of the Original Code is
- * Netscape Communications Corporation.
- * Portions created by the Initial Developer are Copyright (C) 2003
+ * Mozilla Corporation.
+ * Portions created by the Initial Developer are Copyright (C) 2008
  * the Initial Developer. All Rights Reserved.
  *
  * Contributor(s):
- *   Garrett Arch Blythe, 28-January-2003
+ *   Shawn Wilsher <me@shawnwilsher.com> (Original Author)
+ *   Marco Bonardo <mak77@bonardo.net>
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -38,65 +38,36 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-#include "mozce_internal.h"
+var hs = Cc["@mozilla.org/browser/nav-history-service;1"].
+         getService(Ci.nsINavHistoryService);
+var bs = Cc["@mozilla.org/browser/nav-bookmarks-service;1"].
+         getService(Ci.nsINavBookmarksService);
+var prefs = Cc["@mozilla.org/preferences-service;1"].
+            getService(Ci.nsIPrefService).
+            getBranch("places.");
 
-extern "C" {
-#if 0
-}
-#endif
+const TEST_URI = "http://test.com/";
 
+const kSyncPrefName = "syncDBTableIntervalInSecs";
+const SYNC_INTERVAL = 1;
 
-static _sigsig sigArray[_SIGCOUNT];
-
-
-static void defaultSighandler(int inSignal)
+function run_test()
 {
-    // From process.cpp
-    extern void abort(void);
-    abort();
-}
+  // First set the preference for the timer to a small value
+  prefs.setIntPref(kSyncPrefName, SYNC_INTERVAL);
 
+  // Now add the visit
+  let id = hs.addVisit(uri(TEST_URI), Date.now() * 1000, null,
+                       hs.TRANSITION_TYPED, false, 0);
 
-MOZCE_SHUNT_API int raise(int inSignal)
-{
-    WINCE_LOG_API_CALL("raise called\n");
-
-    void (*handler)(int inSignal) = defaultSighandler;
-
-    if(inSignal >= 0 && inSignal < _SIGCOUNT)
+  // Check the visit, but after enough time has passed for the DB flush service
+  // to have fired it's timer.
+  let timer = Cc["@mozilla.org/timer;1"].createInstance(Ci.nsITimer);
+  timer.initWithCallback({
+    notify: function(aTimer)
     {
-        if(NULL != sigArray[inSignal])
-        {
-            handler = sigArray[inSignal];
-        }
+      new_test_visit_uri_event(id, TEST_URI, true, true);
     }
-
-    handler(inSignal);
-    return 0;
+  }, (SYNC_INTERVAL * 1000) * 2, Ci.nsITimer.TYPE_ONE_SHOT);
+  do_test_pending();
 }
-
-
-MOZCE_SHUNT_API _sigsig signal(int inSignal, _sigsig inFunc)
-{
-    WINCE_LOG_API_CALL("signal called\n");
-
-    void (*retval)(int inSignal) = defaultSighandler;
-
-    if(inSignal >= 0 && inSignal < _SIGCOUNT)
-    {
-        if(NULL != sigArray[inSignal])
-        {
-            retval = sigArray[inSignal];
-        }
-        sigArray[inSignal] = inFunc;
-    }
-
-    return retval;
-}
-
-
-#if 0
-{
-#endif
-} /* extern "C" */
-
