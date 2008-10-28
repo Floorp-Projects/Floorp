@@ -4362,7 +4362,7 @@ nsEventStateManager::GetNextTabbableContent(nsIContent* aRootContent,
   nsresult rv;
   nsCOMPtr<nsIFrameTraversal> trav(do_CreateInstance(kFrameTraversalCID, &rv));
   NS_ENSURE_SUCCESS(rv, rv);
-  nsCOMPtr<nsIFrameEnumerator> frameTraversal;
+  nsCOMPtr<nsIBidirectionalEnumerator> frameTraversal;
 
   // --- Get frame to start with ---
   if (!aStartFrame) {
@@ -4381,7 +4381,7 @@ nsEventStateManager::GetNextTabbableContent(nsIContent* aRootContent,
                                 );
     NS_ENSURE_SUCCESS(rv, rv);
     if (!forward) {
-      frameTraversal->Last();
+      rv = frameTraversal->Last();
     }
   }
   else {
@@ -4397,16 +4397,15 @@ nsEventStateManager::GetNextTabbableContent(nsIContent* aRootContent,
         !aStartContent->IsNodeOfType(nsINode::eHTML)) {
       // Need to do special check in case we're in an imagemap which has multiple
       // content per frame, so don't skip over the starting frame.
-      if (forward)
-        frameTraversal->Next();
-      else
-        frameTraversal->Prev();
+      rv = forward ? frameTraversal->Next() : frameTraversal->Prev();
     }
   }
 
   // -- Walk frames to find something tabbable matching mCurrentTabIndex --
-  while (1) {
-    *aResultFrame = frameTraversal->CurrentItem();
+  while (NS_SUCCEEDED(rv)) {
+    nsISupports* currentItem;
+    frameTraversal->CurrentItem(&currentItem);
+    *aResultFrame = (nsIFrame*)currentItem;
     if (!*aResultFrame) {
       break;
     }
@@ -4438,10 +4437,7 @@ nsEventStateManager::GetNextTabbableContent(nsIContent* aRootContent,
         return NS_OK;
       }
     }
-    if (forward)
-      frameTraversal->Next();
-    else
-      frameTraversal->Prev();
+    rv = forward ? frameTraversal->Next() : frameTraversal->Prev();
   }
 
   // -- Reached end or beginning of document --
@@ -5548,7 +5544,7 @@ nsEventStateManager::GetDocSelectionLocation(nsIContent **aStartContent,
         if (nodeValue.Length() == *aStartOffset && !isFormControl &&
             startContent != mDocument->GetRootContent()) {
           // Yes, indeed we were at the end of the last node
-          nsCOMPtr<nsIFrameEnumerator> frameTraversal;
+          nsCOMPtr<nsIBidirectionalEnumerator> frameTraversal;
 
           nsCOMPtr<nsIFrameTraversal> trav(do_CreateInstance(kFrameTraversalCID,
                                                              &rv));
@@ -5570,8 +5566,9 @@ nsEventStateManager::GetDocSelectionLocation(nsIContent **aStartContent,
             // Continue getting the next frame until the primary content for the frame
             // we are on changes - we don't want to be stuck in the same place
             frameTraversal->Next();
-            newCaretFrame = frameTraversal->CurrentItem();
-            if (nsnull == newCaretFrame) {
+            nsISupports* currentItem;
+            frameTraversal->CurrentItem(&currentItem);
+            if (nsnull == (newCaretFrame = static_cast<nsIFrame*>(currentItem))) {
               break;
             }
             newCaretContent = newCaretFrame->GetContent();            

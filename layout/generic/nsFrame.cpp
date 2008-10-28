@@ -4649,7 +4649,7 @@ nsFrame::GetNextPrevLineFromeBlockFrame(nsPresContext* aPresContext,
       }
       //resultFrame is not a block frame
 
-      nsCOMPtr<nsIFrameEnumerator> frameTraversal;
+      nsCOMPtr<nsIBidirectionalEnumerator> frameTraversal;
       result = NS_NewFrameTraversal(getter_AddRefs(frameTraversal),
                                     aPresContext, resultFrame,
                                     ePostOrder,
@@ -4659,6 +4659,7 @@ nsFrame::GetNextPrevLineFromeBlockFrame(nsPresContext* aPresContext,
                                     );
       if (NS_FAILED(result))
         return result;
+      nsISupports *isupports = nsnull;
       nsIFrame *storeOldResultFrame = resultFrame;
       while ( !found ){
         nsPoint point;
@@ -4736,10 +4737,14 @@ nsFrame::GetNextPrevLineFromeBlockFrame(nsPresContext* aPresContext,
         if (aPos->mDirection == eDirNext && (resultFrame == nearStoppingFrame))
           break;
         //always try previous on THAT line if that fails go the other way
-        frameTraversal->Prev();
-        resultFrame = frameTraversal->CurrentItem();
-        if (!resultFrame)
-          return NS_ERROR_FAILURE;
+        result = frameTraversal->Prev();
+        if (NS_FAILED(result))
+          break;
+        result = frameTraversal->CurrentItem(&isupports);
+        if (NS_FAILED(result) || !isupports)
+          return result;
+        //we must CAST here to an nsIFrame. nsIFrame doesnt really follow the rules
+        resultFrame = (nsIFrame *)isupports;
       }
 
       if (!found){
@@ -4781,11 +4786,14 @@ nsFrame::GetNextPrevLineFromeBlockFrame(nsPresContext* aPresContext,
         if (aPos->mDirection == eDirNext && (resultFrame == farStoppingFrame))
           break;
         //previous didnt work now we try "next"
-        frameTraversal->Next();
-        nsIFrame *tempFrame = frameTraversal->CurrentItem();
-        if (!tempFrame)
+        result = frameTraversal->Next();
+        if (NS_FAILED(result))
           break;
-        resultFrame = tempFrame;
+        result = frameTraversal->CurrentItem(&isupports);
+        if (NS_FAILED(result) || !isupports)
+          break;
+        //we must CAST here to an nsIFrame. nsIFrame doesnt really follow the rules
+        resultFrame = (nsIFrame *)isupports;
       }
       aPos->mResultFrame = resultFrame;
     }
@@ -5472,7 +5480,7 @@ nsIFrame::GetFrameFromDirection(nsDirection aDirection, PRBool aVisual,
         return NS_ERROR_FAILURE; //we are done. cannot jump lines
     }
 
-    nsCOMPtr<nsIFrameEnumerator> frameTraversal;
+    nsCOMPtr<nsIBidirectionalEnumerator> frameTraversal;
     result = NS_NewFrameTraversal(getter_AddRefs(frameTraversal),
                                   presContext, traversedFrame,
                                   eLeaf,
@@ -5484,13 +5492,21 @@ nsIFrame::GetFrameFromDirection(nsDirection aDirection, PRBool aVisual,
       return result;
 
     if (aDirection == eDirNext)
-      frameTraversal->Next();
+      result = frameTraversal->Next();
     else
-      frameTraversal->Prev();
+      result = frameTraversal->Prev();
+    if (NS_FAILED(result))
+      return result;
 
-    traversedFrame = frameTraversal->CurrentItem();
-    if (!traversedFrame)
-      return NS_ERROR_FAILURE;
+    nsISupports *isupports = nsnull;
+    result = frameTraversal->CurrentItem(&isupports);
+    if (NS_FAILED(result))
+      return result;
+    if (!isupports)
+      return NS_ERROR_NULL_POINTER;
+    //we must CAST here to an nsIFrame. nsIFrame doesn't really follow the rules
+    //for speed reasons
+    traversedFrame = (nsIFrame *)isupports;
     traversedFrame->IsSelectable(&selectable, nsnull);
   } // while (!selectable)
 
