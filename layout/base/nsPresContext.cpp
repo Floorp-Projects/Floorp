@@ -233,6 +233,7 @@ nsPresContext::nsPresContext(nsIDocument* aDocument, nsPresContextType aType)
 nsPresContext::~nsPresContext()
 {
   mImageLoaders.Enumerate(destroy_loads, nsnull);
+  mBorderImageLoaders.Enumerate(destroy_loads, nsnull);
 
   NS_PRECONDITION(!mShell, "Presshell forgot to clear our mShell pointer");
   SetShell(nsnull);
@@ -319,6 +320,7 @@ NS_IMPL_CYCLE_COLLECTION_TRAVERSE_BEGIN(nsPresContext)
   // NS_IMPL_CYCLE_COLLECTION_TRAVERSE_RAWPTR(mLangGroup); // an atom
 
   tmp->mImageLoaders.Enumerate(TraverseImageLoader, &cb);
+  tmp->mBorderImageLoaders.Enumerate(TraverseImageLoader, &cb);
 
   // NS_IMPL_CYCLE_COLLECTION_TRAVERSE_NSCOMPTR(mTheme); // a service
   // NS_IMPL_CYCLE_COLLECTION_TRAVERSE_NSCOMPTR(mLangService); // a service
@@ -342,6 +344,8 @@ NS_IMPL_CYCLE_COLLECTION_UNLINK_BEGIN(nsPresContext)
 
   tmp->mImageLoaders.Enumerate(destroy_loads, nsnull);
   tmp->mImageLoaders.Clear();
+  tmp->mBorderImageLoaders.Enumerate(destroy_loads, nsnull);
+  tmp->mBorderImageLoaders.Clear();
 
   // NS_IMPL_CYCLE_COLLECTION_UNLINK_NSCOMPTR(mTheme); // a service
   // NS_IMPL_CYCLE_COLLECTION_UNLINK_NSCOMPTR(mLangService); // a service
@@ -1068,12 +1072,12 @@ nsPresContext::SetImageAnimationModeInternal(PRUint16 aMode)
   if (!IsDynamic())
     return;
 
-  // This hash table contains a list of background images
-  // so iterate over it and set the mode
+  // Set the mode on the image loaders.
   mImageLoaders.Enumerate(set_animation_mode, NS_INT32_TO_PTR(aMode));
+  mBorderImageLoaders.Enumerate(set_animation_mode, NS_INT32_TO_PTR(aMode));
 
   // Now walk the content tree and set the animation mode 
-  // on all the images
+  // on all the images.
   if (mShell != nsnull) {
     nsIDocument *doc = mShell->GetDocument();
     if (doc) {
@@ -1183,7 +1187,7 @@ nsPresContext::DoLoadImage(nsPresContext::ImageLoaderTable& aTable,
       return nsnull;
 
     loader->Init(aTargetFrame, this, aReflowOnLoad);
-    mImageLoaders.Put(aTargetFrame, loader);
+    aTable.Put(aTargetFrame, loader);
   }
 
   loader->Load(aImage);
