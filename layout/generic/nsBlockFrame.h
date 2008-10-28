@@ -74,6 +74,7 @@ class nsBlockInFlowLineIterator;
 class nsBulletFrame;
 class nsLineBox;
 class nsFirstLineFrame;
+class nsILineIterator;
 class nsIntervalSet;
 /**
  * Child list name indices
@@ -596,8 +597,6 @@ protected:
                     nscoord aLineTop);
 
   //----------------------------------------
-
-  virtual nsILineIterator* GetLineIterator();
 
 public:
   nsLineList* GetOverflowLines() const;
