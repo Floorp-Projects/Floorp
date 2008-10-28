@@ -1477,7 +1477,8 @@ nsCSSRendering::PaintBackgroundWithSC(nsPresContext* aPresContext,
   // We have a background image
 
   // Lookup the image
-  imgIRequest *req = aColor.mBackgroundImage;
+  imgIRequest *req = aPresContext->LoadImage(aColor.mBackgroundImage,
+                                             aForFrame);
 
   PRUint32 status = imgIRequest::STATUS_ERROR;
   if (req)
@@ -1915,7 +1916,7 @@ DrawBorderImage(nsPresContext* aPresContext,
     borderImageSplit[NS_SIDE_BOTTOM] = aBorderStyle.mBorderImageSplit.GetBottom();
     borderImageSplit[NS_SIDE_LEFT] = aBorderStyle.mBorderImageSplit.GetLeft();
 
-    imgIRequest *req = aBorderStyle.GetBorderImage();
+    imgIRequest *req = aPresContext->LoadBorderImage(aBorderStyle.GetBorderImage(), aForFrame);
 
     nsCOMPtr<imgIContainer> image;
     req->GetImage(getter_AddRefs(image));
