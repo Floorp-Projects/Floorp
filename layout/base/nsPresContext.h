@@ -67,7 +67,7 @@
 #include "gfxRect.h"
 #include "nsRegion.h"
 
-class nsImageLoadNotifier;
+class nsImageLoader;
 #ifdef IBMBIDI
 class nsBidiPresUtils;
 #endif // IBMBIDI
@@ -364,8 +364,8 @@ public:
    * aImage loads, where aImage is its background image.  Only a single
    * image will be tracked per frame.
    */
-  NS_HIDDEN_(void) SetImageNotifiers(nsIFrame* aTargetFrame,
-                                     nsImageLoadNotifier* aImageNotifiers);
+  NS_HIDDEN_(void) SetImageLoaders(nsIFrame* aTargetFrame,
+                                   nsImageLoader* aImageLoaders);
 
   /**
    * This method is called when a frame is being destroyed to
@@ -764,7 +764,7 @@ protected:
   nsILinkHandler*       mLinkHandler;   // [WEAK]
   nsIAtom*              mLangGroup;     // [STRONG]
 
-  nsRefPtrHashtable<nsVoidPtrHashKey, nsImageLoadNotifier> mImageNotifiers;
+  nsRefPtrHashtable<nsVoidPtrHashKey, nsImageLoader> mImageLoaders;
 
   nsWeakPtr             mContainer;
 
