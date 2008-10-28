@@ -463,11 +463,11 @@ nsContextMenu.prototype = {
       }
       else if (this.target instanceof HTMLVideoElement) {
         this.onVideo = true;
-        this.mediaURL = this.target.src;
+        this.mediaURL = this.target.currentSrc;
       }
       else if (this.target instanceof HTMLAudioElement) {
         this.onAudio = true;
-        this.mediaURL = this.target.src;
+        this.mediaURL = this.target.currentSrc;
       }
       else if (this.target instanceof HTMLInputElement ) {
         this.onTextInput = this.isTargetATextBox(this.target);
