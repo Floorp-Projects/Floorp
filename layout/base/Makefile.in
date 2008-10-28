@@ -172,6 +172,7 @@ LOCAL_INCLUDES += \
 		-I$(srcdir)/../tables \
 		-I$(srcdir)/../printing \
 		-I$(srcdir)/../xul/base/src \
+		-I$(srcdir)/../xul/base/src/tree/src \
 		-I$(srcdir)/../../content/base/src \
 		-I$(srcdir)/../../content/events/src \
 		-I$(srcdir)/../../content/xbl/src \

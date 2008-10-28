@@ -149,7 +149,7 @@
 #include "nsDOMDataTransfer.h"
 #include "nsContentAreaDragDrop.h"
 #ifdef MOZ_XUL
-#include "nsITreeBoxObject.h"
+#include "nsTreeBodyFrame.h"
 #endif
 
 #ifdef XP_MACOSX
@@ -2304,9 +2304,9 @@ nsEventStateManager::DoDefaultDragStart(nsPresContext* aPresContext,
           if (presShell) {
             nsIFrame* frame = presShell->GetPrimaryFrameFor(content);
             if (frame) {
-              nsITreeBoxObject* treeBoxObject;
-              CallQueryInterface(frame, &treeBoxObject);
-              treeBoxObject->GetSelectionRegion(getter_AddRefs(region));
+              nsTreeBodyFrame* treeBody;
+              CallQueryInterface(frame, &treeBody);
+              treeBody->GetSelectionRegion(getter_AddRefs(region));
             }
           }
         }
