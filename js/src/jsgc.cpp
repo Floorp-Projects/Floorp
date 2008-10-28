@@ -3002,8 +3002,12 @@ js_TraceContext(JSTracer *trc, JSContext *acx)
 void
 js_TraceTraceMonitor(JSTracer *trc, JSTraceMonitor *tm)
 {
-    if (IS_GC_MARKING_TRACER(trc))
+    if (IS_GC_MARKING_TRACER(trc)) {
         tm->recoveryDoublePoolPtr = tm->recoveryDoublePool;
+        /* Make sure the global shape changes and will force a flush
+           of the code cache. */
+        tm->globalShape = -1; 
+    }
 }
 
 void
@@ -3357,10 +3361,9 @@ js_GC(JSContext *cx, JSGCInvocationKind gckind)
   }
 #endif
 
-    /* Clear property and JIT caches (only for cx->thread if JS_THREADSAFE). */
+    /* Clear property and JIT oracle caches (only for cx->thread if JS_THREADSAFE). */
     js_FlushPropertyCache(cx);
 #ifdef JS_TRACER
-    js_FlushJITCache(cx);
     js_FlushJITOracle(cx);
 #endif
 
@@ -3385,7 +3388,7 @@ js_GC(JSContext *cx, JSGCInvocationKind gckind)
         GSN_CACHE_CLEAR(&acx->thread->gsnCache);
         js_FlushPropertyCache(acx);
 #ifdef JS_TRACER
-        js_FlushJITCache(acx);
+        js_FlushJITOracle(acx);
 #endif
         DestroyScriptsToGC(cx, &acx->thread->scriptsToGC);
     }
