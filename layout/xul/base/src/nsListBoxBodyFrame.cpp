@@ -504,28 +504,28 @@ nsListBoxBodyFrame::ReflowCallbackCanceled()
 
 ///////// nsIListBoxObject ///////////////
 
-NS_IMETHODIMP
+nsresult
 nsListBoxBodyFrame::GetRowCount(PRInt32* aResult)
 {
   *aResult = GetRowCount();
   return NS_OK;
 }
 
-NS_IMETHODIMP
+nsresult
 nsListBoxBodyFrame::GetNumberOfVisibleRows(PRInt32 *aResult)
 {
   *aResult= mRowHeight ? GetAvailableHeight() / mRowHeight : 0;
   return NS_OK;
 }
 
-NS_IMETHODIMP
+nsresult
 nsListBoxBodyFrame::GetIndexOfFirstVisibleRow(PRInt32 *aResult)
 {
   *aResult = mCurrentIndex;
   return NS_OK;
 }
 
-NS_IMETHODIMP
+nsresult
 nsListBoxBodyFrame::EnsureIndexIsVisible(PRInt32 aRowIndex)
 {
   NS_ASSERTION(aRowIndex >= 0, "Ensure row is visible called with a negative number!");
@@ -563,7 +563,7 @@ nsListBoxBodyFrame::EnsureIndexIsVisible(PRInt32 aRowIndex)
   return NS_OK;
 }
 
-NS_IMETHODIMP
+nsresult
 nsListBoxBodyFrame::ScrollByLines(PRInt32 aNumLines)
 {
   PRInt32 scrollIndex, visibleRows;
@@ -596,7 +596,7 @@ nsListBoxBodyFrame::ScrollByLines(PRInt32 aNumLines)
 }
 
 // walks the DOM to get the zero-based row index of the content
-NS_IMETHODIMP
+nsresult
 nsListBoxBodyFrame::GetIndexOfItem(nsIDOMElement* aItem, PRInt32* _retval)
 {
   if (aItem) {
@@ -626,7 +626,7 @@ nsListBoxBodyFrame::GetIndexOfItem(nsIDOMElement* aItem, PRInt32* _retval)
   return NS_OK;
 }
 
-NS_IMETHODIMP
+nsresult
 nsListBoxBodyFrame::GetItemAtIndex(PRInt32 aIndex, nsIDOMElement** aItem)
 {
   *aItem = nsnull;
@@ -820,7 +820,7 @@ nsListBoxBodyFrame::PostReflowCallback()
 
 ////////// scrolling
 
-NS_IMETHODIMP
+nsresult
 nsListBoxBodyFrame::ScrollToIndex(PRInt32 aRowIndex)
 {
   if (( aRowIndex < 0 ) || (mRowHeight == 0))
