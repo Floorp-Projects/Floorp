@@ -85,7 +85,7 @@ var safebrowsing = {
 
   /**
    * Used to report a phishing page or a false positive
-   * @param name String either "Phish" or "Error"
+   * @param name String One of "Phish", "Error", "Malware" or "MalwareError"
    * @return String the report phishing URL.
    */
   getReportURL: function(name) {

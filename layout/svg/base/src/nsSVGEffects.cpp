@@ -198,19 +198,15 @@ nsSVGFilterProperty::DoUpdate()
   if (!mFrame)
     return;
 
-  if (mFrame->IsFrameOfType(nsIFrame::eSVG)) {
-    nsSVGOuterSVGFrame *outerSVGFrame = nsSVGUtils::GetOuterSVGFrame(mFrame);
-    if (outerSVGFrame) {
-      mFramePresShell->FrameConstructor()->PostRestyleEvent(
-        mFrame->GetContent(), nsReStyleHint(0),
-        nsChangeHint(nsChangeHint_RepaintFrame | nsChangeHint_UpdateEffects));
-    }
-  } else {
-    InvalidateAllContinuations(mFrame);
-    // Reflow so that changes in the filter overflow area get picked up
-    mFramePresShell->FrameNeedsReflow(
-         mFrame, nsIPresShell::eResize, NS_FRAME_IS_DIRTY);
+  // Repaint asynchronously in case the filter frame is being torn down
+  nsChangeHint changeHint =
+    nsChangeHint(nsChangeHint_RepaintFrame | nsChangeHint_UpdateEffects);
+
+  if (!mFrame->IsFrameOfType(nsIFrame::eSVG)) {
+    NS_UpdateHint(changeHint, nsChangeHint_ReflowFrame);
   }
+  mFramePresShell->FrameConstructor()->PostRestyleEvent(
+    mFrame->GetContent(), nsReStyleHint(0), changeHint);
 }
 
 void
@@ -368,7 +364,7 @@ nsSVGEffects::UpdateEffects(nsIFrame *aFrame)
   aFrame->DeleteProperty(nsGkAtoms::stroke);
   aFrame->DeleteProperty(nsGkAtoms::fill);
 
-  // Ensure that the filter's covered area is recalculated correctly
+  // Ensure that the filter is repainted correctly
   // We can't do that in DoUpdate as the referenced frame may not be valid
   const nsStyleSVGReset *style = aFrame->GetStyleSVGReset();
   if (style->mFilter) {

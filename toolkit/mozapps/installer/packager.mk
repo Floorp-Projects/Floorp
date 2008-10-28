@@ -287,7 +287,7 @@ endif
 ifeq ($(OS_ARCH),OS2)
 STRIP		= $(MOZILLA_DIR)/toolkit/mozapps/installer/os2/strip.cmd
 STRIP_FLAGS	=
-PLATFORM_EXCLUDE_LIST = ! -name "*.ico"
+PLATFORM_EXCLUDE_LIST = ! -name "*.ico" ! -name "$(MOZ_PKG_APPNAME).exe"
 endif
 
 ifneq (,$(filter WINNT OS2,$(OS_ARCH)))

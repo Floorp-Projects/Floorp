@@ -47,7 +47,7 @@
 
 interface nsIDOMElement;
 
-[scriptable, uuid(3fe733aa-823b-443a-9945-b02f973ab439)]
+[scriptable, uuid(6db7b95f-0a35-4c16-ac50-094adb3372f9)]
 interface nsIDOMWindowUtils : nsISupports {
 
   /**
@@ -119,13 +119,16 @@ interface nsIDOMWindowUtils : nsISupports {
    * @param aButton button to synthesize
    * @param aClickCount number of clicks that have been performed
    * @param aModifiers modifiers pressed, using constants defined in nsIDOMNSEvent
+   * @param aIgnoreScrollFrame whether the event should ignore viewport bounds
+   *                           during dispatch
    */
   void sendMouseEvent(in AString aType,
                       in long aX,
                       in long aY,
                       in long aButton,
                       in long aClickCount,
-                      in long aModifiers);
+                      in long aModifiers,
+                      [optional] in boolean aIgnoreScrollFrame);
 
   /** Synthesize a mouse scroll event for a window. The event types supported
    *  are: 

@@ -1492,35 +1492,16 @@ sidebarheader > .tabs-closebutton > .toolbarbutton-text {
 /* ----- THROBBER ----- */
 
 #navigator-throbber {
-  -moz-appearance: none;
-  -moz-user-focus: ignore;
-  -moz-box-pack: center;
-  margin: 0px 4px !important;
-  border: none !important;
-  padding: 0;
-  min-width: 0;
-  background-color: transparent;
-  height: 16px;
-  width: 17px;  
-}
-
-/* XXXmano: hack until we figure out why the throbber uses a button instead
-   of a toolbarbutton */
-#navigator-throbber .button-text {
-  display: none;
-  margin: 0 !important;
+  width: 17px;
+  min-height: 16px;
+  margin: 0 4px;
 }
 
 #navigator-throbber[busy="true"] {
   list-style-image: url("chrome://global/skin/icons/loading_16.png");
 }
 
-toolbar[iconsize="small"] #navigator-throbber[busy="true"],
-toolbar[mode="text"] #navigator-throbber[busy="true"] {
-  list-style-image: url("chrome://global/skin/icons/loading_16.png");
-}
-
-#wrapper-throbber-box > #throbber-box > #navigator-throbber {
+#wrapper-navigator-throbber > #navigator-throbber {
   list-style-image: url("chrome://global/skin/icons/notloading_16.png");
 }
 

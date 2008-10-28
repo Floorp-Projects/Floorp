@@ -199,7 +199,8 @@ nsDOMWindowUtils::SendMouseEvent(const nsAString& aType,
                                  PRInt32 aY,
                                  PRInt32 aButton,
                                  PRInt32 aClickCount,
-                                 PRInt32 aModifiers)
+                                 PRInt32 aModifiers,
+                                 PRBool aIgnoreScrollFrame)
 {
   PRBool hasCap = PR_FALSE;
   if (NS_FAILED(nsContentUtils::GetSecurityManager()->IsCapabilityEnabled("UniversalXPConnect", &hasCap))
@@ -243,6 +244,7 @@ nsDOMWindowUtils::SendMouseEvent(const nsAString& aType,
   event.time = PR_IntervalNow();
   event.refPoint.x = aX;
   event.refPoint.y = aY;
+  event.ignoreScrollFrame = aIgnoreScrollFrame;
 
   nsEventStatus status;
   return widget->DispatchEvent(&event, status);

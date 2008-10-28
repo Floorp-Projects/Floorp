@@ -69,7 +69,9 @@ public:
     */
   friend nsTableColFrame* NS_NewTableColFrame(nsIPresShell* aPresShell,
                                               nsStyleContext*  aContext);
-
+  /** @see nsIFrame::DidSetStyleContext */
+  virtual void DidSetStyleContext(nsStyleContext* aOldStyleContext);
+  
   PRInt32 GetColIndex() const;
   
   void SetColIndex (PRInt32 aColIndex);

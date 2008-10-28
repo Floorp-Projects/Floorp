@@ -3287,7 +3287,11 @@ IsSpecialContent(nsIContent*     aContent,
       aTag == nsGkAtoms::spacer ||
       aTag == nsGkAtoms::button ||
       aTag == nsGkAtoms::isindex ||
-      aTag == nsGkAtoms::canvas;
+      aTag == nsGkAtoms::canvas ||
+#if defined(MOZ_MEDIA)
+      aTag == nsGkAtoms::video ||
+#endif
+      PR_FALSE;
   }
 
 

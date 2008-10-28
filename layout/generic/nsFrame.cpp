@@ -449,7 +449,7 @@ nsFrame::Init(nsIContent*      aContent,
     mState |= NS_FRAME_MAY_BE_TRANSFORMED_OR_HAVE_RENDERING_OBSERVERS;
   }
   
-  DidSetStyleContext();
+  DidSetStyleContext(nsnull);
 
   if (IsBoxWrapped())
     InitBoxMetrics(PR_FALSE);
@@ -553,7 +553,7 @@ nsFrame::GetOffsets(PRInt32 &aStart, PRInt32 &aEnd) const
 
 // Subclass hook for style post processing
 /* virtual */ void
-nsFrame::DidSetStyleContext()
+nsFrame::DidSetStyleContext(nsStyleContext* aOldStyleContext)
 {
   // Ensure that this frame gets invalidates (and, in the case of some
   // 'border-image's, reflows) when images that affect it load.
