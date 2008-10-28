@@ -5269,7 +5269,7 @@ TraceRecorder::functionCall(bool constructing)
 
         thisval = oval;
         this_ins = get(&oval);
-        arg1_ins = callArgN(aval_ins, 1);
+        arg1_ins = callArgN(aval_ins, 2);
         arg1 = aobj->dslots[0];
         fun = tfun;
         argc = 1;
