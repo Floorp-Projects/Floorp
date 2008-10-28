@@ -69,6 +69,7 @@
 #include "nsLayoutUtils.h"
 #include "nsFrameManager.h"
 #include "nsHTMLReflowState.h"
+#include "nsIObjectLoadingContent.h"
 
 // for event firing in context menus
 #include "nsPresContext.h"
@@ -177,6 +178,15 @@ nsXULPopupListener::PreLaunchPopup(nsIDOMEvent* aMouseEvent)
     PRBool eventEnabled =
       nsContentUtils::GetBoolPref("dom.event.contextmenu.enabled", PR_TRUE);
     if (!eventEnabled) {
+      // If the target node is for plug-in, we should not open XUL context
+      // menu on windowless plug-ins.
+      nsCOMPtr<nsIObjectLoadingContent> olc = do_QueryInterface(targetNode);
+      PRUint32 type;
+      if (olc && NS_SUCCEEDED(olc->GetDisplayedType(&type)) &&
+          type == nsIObjectLoadingContent::TYPE_PLUGIN) {
+        return NS_OK;
+      }
+
       // The user wants his contextmenus.  Let's make sure that this is a website
       // and not chrome since there could be places in chrome which don't want
       // contextmenus.
