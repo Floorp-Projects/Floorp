@@ -256,11 +256,7 @@ nsLayoutStatics::Initialize()
 #endif
 
 #ifdef MOZ_OGG
-  rv = nsAudioStream::InitLibrary();
-  if (NS_FAILED(rv)) {
-    NS_ERROR("Could not initialize nsAudioStream");
-    return rv;
-  }
+  nsAudioStream::InitLibrary();
 #endif
 
   return NS_OK;
