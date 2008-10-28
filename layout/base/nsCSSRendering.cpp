@@ -366,31 +366,6 @@ MakeBevelColor(PRIntn whichSide, PRUint8 style,
   return theColor;
 }
 
-nscolor
-nsCSSRendering::TransformColor(nscolor  aMapColor,PRBool aNoBackGround)
-{
-PRUint16  hue,sat,value;
-nscolor   newcolor;
-
-  newcolor = aMapColor;
-  if (PR_TRUE == aNoBackGround){
-    // convert the RBG to HSV so we can get the lightness (which is the v)
-    NS_RGB2HSV(newcolor,hue,sat,value);
-    // The goal here is to send white to black while letting colored
-    // stuff stay colored... So we adopt the following approach.
-    // Something with sat = 0 should end up with value = 0.  Something
-    // with a high sat can end up with a high value and it's ok.... At
-    // the same time, we don't want to make things lighter.  Do
-    // something simple, since it seems to work.
-    if (value > sat) {
-      value = sat;
-      // convert this color back into the RGB color space.
-      NS_HSV2RGB(newcolor,hue,sat,value);
-    }
-  }
-  return newcolor;
-}
-
 //----------------------------------------------------------------------
 // Thebes Border Rendering Code Start
 

@@ -181,13 +181,6 @@ struct nsCSSRendering {
                                      nscoord              aStartBevelOffset = 0,
                                      PRUint8              aEndBevelSide = 0,
                                      nscoord              aEndBevelOffset = 0);
-  /**
-   * transform a color to a color that will show up on a printer if needed
-   * aMapColor - color to evaluate
-   * aIsPrinter - Is this a printing device
-   * return - the transformed color
-   */
-  static nscolor TransformColor(nscolor  aMapColor,PRBool aNoBackGround);
 
   /**
    * Function for painting the decoration lines for the text.
