@@ -29,6 +29,7 @@ const nsIAccessibleValue = Components.interfaces.nsIAccessibleValue;
 const nsIObserverService = Components.interfaces.nsIObserverService;
 
 const nsIDOMNode = Components.interfaces.nsIDOMNode;
+const nsIPropertyElement = Components.interfaces.nsIPropertyElement;
 
 ////////////////////////////////////////////////////////////////////////////////
 // Roles
