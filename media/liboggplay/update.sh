@@ -34,3 +34,6 @@ sed s/\#include\ \"config_win32.h\"//g $1/src/liboggplay/oggplay_private.h >./sr
 sed s/\#include\ \<config.h\>/\#ifdef\ WIN32\\n\#include\ \"config_win32.h\"\\n\#else\\n\#include\ \<config.h\>\\n\#endif/g ./src/liboggplay/oggplay_private.h1 >./src/liboggplay/oggplay_private.h
 rm ./src/liboggplay/oggplay_private.h1
 sed s/\#ifdef\ HAVE_INTTYPES_H/\#if\ HAVE_INTTYPES_H/g $1/src/liboggplay/oggplay_data.c >./src/liboggplay/oggplay_data.c
+cd ./src/liboggplay
+patch <../../yuv2rgb-vanilla-fix.patch
+cd ../..
