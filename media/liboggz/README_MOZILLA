@@ -7,3 +7,8 @@ Mozilla build system.
 The seek.patch address a bug in liboggz when a seek call returns an
 error. It also addresses an issue where the guess for the seek
 position can exceed the file size. These will be upstreamed to liboggz.
+
+The warning.patch addresses a printf in liboggz that is not wrapped
+in a DEBUG #ifdef. See Mozilla bug 450891 and Annodex ticket 431:
+
+http://trac.annodex.net/ticket/431
