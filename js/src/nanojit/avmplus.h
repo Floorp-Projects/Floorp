@@ -172,8 +172,11 @@ namespace nanojit
 	    NESTED_EXIT,
 	    MISMATCH_EXIT,
 	    OOM_EXIT,
-	    OVERFLOW_EXIT
+	    OVERFLOW_EXIT,
+	    UNSTABLE_LOOP_EXIT
 	};
+
+    struct GuardRecord;
 	
     class LIns;
 
