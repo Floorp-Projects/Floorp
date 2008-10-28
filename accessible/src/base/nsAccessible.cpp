@@ -1154,15 +1154,16 @@ nsAccessible::GetChildAtPoint(PRInt32 aX, PRInt32 aY,
   nsresult rv = GetDeepestChildAtPoint(aX, aY, aAccessible);
   NS_ENSURE_SUCCESS(rv, rv);
 
-  if (!*aAccessible)
+  if (!*aAccessible || *aAccessible == this)
     return NS_OK;
 
+  // Get direct child containing the deepest child at the given point.
   nsCOMPtr<nsIAccessible> parent, accessible(*aAccessible);
   while (PR_TRUE) {
     accessible->GetParent(getter_AddRefs(parent));
     if (!parent) {
-      NS_ASSERTION(PR_FALSE,
-                   "Obtained accessible isn't a child of this accessible.");
+      NS_NOTREACHED("Obtained accessible isn't a child of this accessible.");
+
       // Reached the top of the hierarchy. These bounds were inside an
       // accessible that is not a descendant of this one.
 
