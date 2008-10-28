@@ -49,7 +49,8 @@ namespace nanojit
 	{
 		free = 0;
 		used = 0;
-		memset(active, 0, (LastReg+1) * sizeof(LIns*));
+		memset(active, 0, sizeof(active));
+		memset(usepri, 0, sizeof(usepri));
 	}
 
 	bool RegAlloc::isFree(Register r) 
@@ -131,7 +132,7 @@ namespace nanojit
 		if (!frag || !frag->lirbuf)
 			return;
 		LirNameMap *names = frag->lirbuf->names;
-		for(int i=0; i<(LastReg+1); i++)
+		for(int i=FirstReg; i<LastReg; i++)
 		{
 			LIns* ins = regs.active[i];
 			Register r = (Register)i;

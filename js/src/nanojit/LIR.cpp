@@ -1726,7 +1726,7 @@ namespace nanojit
 #endif
 			case LIR_fcall:
 			case LIR_call: {
-				sprintf(s, "%s = %s ( ", formatRef(i), i->callInfo()->_name);
+				sprintf(s, "%s = %s %s ( ", formatRef(i), lirNames[op], i->callInfo()->_name);
 				for (int32_t j=i->argc()-1; j >= 0; j--) {
 					s += strlen(s);
 					sprintf(s, "%s ",formatRef(i->arg(j)));
@@ -1738,7 +1738,7 @@ namespace nanojit
 			case LIR_fcalli:
 			case LIR_calli: {
                 int32_t argc = i->argc();
-				sprintf(s, "%s = [%s] ( ", formatRef(i), formatRef(i->arg(argc-1)));
+				sprintf(s, "%s = %s [%s] ( ", formatRef(i), lirNames[op], formatRef(i->arg(argc-1)));
                 s += strlen(s);
                 argc--;
 				for (int32_t j=argc-1; j >= 0; j--) {
@@ -1844,7 +1844,7 @@ namespace nanojit
 				break;
 
 			case LIR_qjoin:
-				sprintf(s, "%s (%s), %s", lirNames[op],
+				sprintf(s, "%s = %s (%s), %s", formatRef(i), lirNames[op],
 					formatIns(i->oprnd1()), 
  					formatRef(i->oprnd2()));
  				break;
