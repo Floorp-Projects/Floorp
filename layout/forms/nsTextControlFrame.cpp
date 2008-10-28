@@ -1029,10 +1029,6 @@ nsTextControlFrame::QueryInterface(const nsIID& aIID, void** aInstancePtr)
     *aInstancePtr = static_cast<nsIScrollableViewProvider*>(this);
     return NS_OK;
   }
-  if (aIID.Equals(NS_GET_IID(nsIPhonetic))) {
-    *aInstancePtr = static_cast<nsIPhonetic*>(this);
-    return NS_OK;
-  }
 
   return nsBoxFrame::QueryInterface(aIID, aInstancePtr);
 }
@@ -2500,7 +2496,7 @@ nsTextControlFrame::GetText(nsString* aText)
 }
 
 
-NS_IMETHODIMP
+nsresult
 nsTextControlFrame::GetPhonetic(nsAString& aPhonetic)
 {
   aPhonetic.Truncate(0); 
