@@ -57,7 +57,7 @@ public:
   }
 #endif
 
-  virtual void DidSetStyleContext();
+  virtual void DidSetStyleContext(nsStyleContext* aOldStyleContext);
 };
 
 nsIFrame*
@@ -67,8 +67,8 @@ NS_NewSVGLeafFrame(nsIPresShell* aPresShell, nsStyleContext* aContext)
 }
 
 /* virtual */ void
-nsSVGLeafFrame::DidSetStyleContext()
+nsSVGLeafFrame::DidSetStyleContext(nsStyleContext* aOldStyleContext)
 {
-  nsFrame::DidSetStyleContext();
+  nsFrame::DidSetStyleContext(aOldStyleContext);
   nsSVGEffects::InvalidateRenderingObservers(this);
 }

@@ -108,9 +108,14 @@
 // this is a work-around for a problem with the optimizer of sqlite
 // A sub-select on MAX(visit_date) is slower than this query with our indexes
 // see Bug #392399 for more details
-#define SQL_STR_FRAGMENT_MAX_VISIT_DATE( place_relation ) \
-  "(SELECT visit_date FROM moz_historyvisits WHERE place_id = " place_relation \
+#define SQL_STR_FRAGMENT_MAX_VISIT_DATE_BASE( __place_relation, __table_name ) \
+  "(SELECT visit_date FROM " __table_name \
+  " WHERE place_id = " __place_relation \
   " AND visit_type NOT IN (0,4,7) ORDER BY visit_date DESC LIMIT 1)"
+
+#define SQL_STR_FRAGMENT_MAX_VISIT_DATE( __place_relation ) \
+  "IFNULL( " SQL_STR_FRAGMENT_MAX_VISIT_DATE_BASE( __place_relation, "moz_historyvisits_temp") \
+          ", " SQL_STR_FRAGMENT_MAX_VISIT_DATE_BASE( __place_relation, "moz_historyvisits") ")"
 
 // This magic number specified an uninitialized value for the
 // mInPrivateBrowsing member
@@ -240,17 +245,13 @@ public:
 
   /**
    * These functions return non-owning references to the locale-specific
-   * objects for places components. Guaranteed to return non-NULL.
+   * objects for places components.
    */
-  nsIStringBundle* GetBundle()
-    { return mBundle; }
-  nsILocale* GetLocale()
-    { return mLocale; }
-  nsICollation* GetCollation()
-    { return mCollation; }
-  nsIDateTimeFormat* GetDateFormatter()
-    { return mDateFormatter; }
+  nsIStringBundle* GetBundle();
+  nsICollation* GetCollation();
   void GetStringFromName(const PRUnichar* aName, nsACString& aResult);
+  void GetAgeInDaysString(PRInt32 aInt, const PRUnichar *aName,
+                          nsACString& aResult);
 
   // returns true if history has been disabled
   PRBool IsHistoryDisabled() { return mExpireDaysMax == 0 || InPrivateBrowsingMode(); }
@@ -427,11 +428,15 @@ protected:
   nsCOMPtr<mozIStorageStatement> mDBAddNewPage; // used by InternalAddNewPage
   nsCOMPtr<mozIStorageStatement> mDBGetTags; // used by FilterResultSet
   nsCOMPtr<mozIStorageStatement> mFoldersWithAnnotationQuery;  // used by StartSearch and FilterResultSet
+  nsCOMPtr<mozIStorageStatement> mDBSetPlaceTitle; // used by SetPageTitleInternal
 
   // these are used by VisitIdToResultNode for making new result nodes from IDs
+  // Consumers need to use the getters since these statements are lazily created
+  mozIStorageStatement *GetDBVisitToURLResult();
   nsCOMPtr<mozIStorageStatement> mDBVisitToURLResult; // kGetInfoIndex_* results
+  mozIStorageStatement *GetDBVisitToVisitResult();
   nsCOMPtr<mozIStorageStatement> mDBVisitToVisitResult; // kGetInfoIndex_* results
-  nsCOMPtr<mozIStorageStatement> mDBUrlToUrlResult; // kGetInfoIndex_* results
+  mozIStorageStatement *GetDBBookmarkToUrlResult();
   nsCOMPtr<mozIStorageStatement> mDBBookmarkToUrlResult; // kGetInfoIndex_* results
 
   // nsICharsetResolver
@@ -452,12 +457,14 @@ protected:
   nsresult CalculateFrecency(PRInt64 aPageID, PRInt32 aTyped, PRInt32 aVisitCount, nsCAutoString &aURL, PRInt32 *aFrecency);
   nsresult CalculateFrecencyInternal(PRInt64 aPageID, PRInt32 aTyped, PRInt32 aVisitCount, PRBool aIsBookmarked, PRInt32 *aFrecency);
   nsCOMPtr<mozIStorageStatement> mDBVisitsForFrecency;
-  nsCOMPtr<mozIStorageStatement> mDBInvalidFrecencies;
-  nsCOMPtr<mozIStorageStatement> mDBOldFrecencies;
   nsCOMPtr<mozIStorageStatement> mDBUpdateFrecencyAndHidden;
   nsCOMPtr<mozIStorageStatement> mDBGetPlaceVisitStats;
   nsCOMPtr<mozIStorageStatement> mDBGetBookmarkParentsForPlace;
   nsCOMPtr<mozIStorageStatement> mDBFullVisitCount;
+  mozIStorageStatement *GetDBInvalidFrecencies();
+  nsCOMPtr<mozIStorageStatement> mDBInvalidFrecencies;
+  mozIStorageStatement *GetDBOldFrecencies();
+  nsCOMPtr<mozIStorageStatement> mDBOldFrecencies;
 
   /**
    * Initializes the database file.  If the database does not exist, was
@@ -486,12 +493,15 @@ protected:
    *          The database was migrated to a new version.
    */
   nsresult InitDB(PRInt16 *aMadeChanges);
+  nsresult InitTempTables();
+  nsresult InitViews();
   nsresult InitFunctions();
   nsresult InitStatements();
   nsresult ForceMigrateBookmarksDB(mozIStorageConnection *aDBConn);
   nsresult MigrateV3Up(mozIStorageConnection *aDBConn);
   nsresult MigrateV6Up(mozIStorageConnection *aDBConn);
   nsresult MigrateV7Up(mozIStorageConnection *aDBConn);
+  nsresult MigrateV8Up(mozIStorageConnection *aDBConn);
   nsresult EnsureCurrentSchema(mozIStorageConnection* aDBConn, PRBool *aMadeChanges);
   nsresult CleanUpOnQuit();
 
@@ -605,9 +615,6 @@ protected:
                          nsNavHistoryQueryOptions* aOptions,
                          nsCOMArray<nsNavHistoryResultNode>* aResults);
 
-  void GetAgeInDaysString(PRInt32 aInt, const PRUnichar *aName, 
-                          nsACString& aResult);
-
   void TitleForDomain(const nsCString& domain, nsACString& aTitle);
 
   nsresult SetPageTitleInternal(nsIURI* aURI, const nsAString& aTitle);
@@ -627,9 +634,7 @@ protected:
 
   // localization
   nsCOMPtr<nsIStringBundle> mBundle;
-  nsCOMPtr<nsILocale> mLocale;
   nsCOMPtr<nsICollation> mCollation;
-  nsCOMPtr<nsIDateTimeFormat> mDateFormatter;
 
   // annotation service : MAY BE NULL!
   //nsCOMPtr<mozIAnnotationService> mAnnotationService;
@@ -672,12 +677,16 @@ protected:
   static const PRInt32 kAutoCompleteIndex_VisitCount;
   nsCOMPtr<mozIStorageStatement> mDBCurrentQuery; //  kAutoCompleteIndex_* results
   nsCOMPtr<mozIStorageStatement> mDBAutoCompleteQuery; //  kAutoCompleteIndex_* results
+  mozIStorageStatement* GetDBAutoCompleteHistoryQuery();
   nsCOMPtr<mozIStorageStatement> mDBAutoCompleteHistoryQuery; //  kAutoCompleteIndex_* results
+  mozIStorageStatement* GetDBAutoCompleteStarQuery();
   nsCOMPtr<mozIStorageStatement> mDBAutoCompleteStarQuery; //  kAutoCompleteIndex_* results
+  mozIStorageStatement* GetDBAutoCompleteTagsQuery();
   nsCOMPtr<mozIStorageStatement> mDBAutoCompleteTagsQuery; //  kAutoCompleteIndex_* results
   nsCOMPtr<mozIStorageStatement> mDBPreviousQuery; //  kAutoCompleteIndex_* results
   nsCOMPtr<mozIStorageStatement> mDBAdaptiveQuery; //  kAutoCompleteIndex_* results
   nsCOMPtr<mozIStorageStatement> mDBKeywordQuery; //  kAutoCompleteIndex_* results
+  mozIStorageStatement* GetDBFeedbackIncrease();
   nsCOMPtr<mozIStorageStatement> mDBFeedbackIncrease;
 
   /**

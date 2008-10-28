@@ -83,13 +83,13 @@ NS_IMETHODIMP nsPrintSettingsWin::SetDeviceName(const PRUnichar * aDeviceName)
   if (mDeviceName) {
     nsMemory::Free(mDeviceName);
   }
-  mDeviceName = aDeviceName?nsCRT::strdup(aDeviceName):nsnull;
+  mDeviceName = aDeviceName?wcsdup(aDeviceName):nsnull;
   return NS_OK;
 }
 NS_IMETHODIMP nsPrintSettingsWin::GetDeviceName(PRUnichar **aDeviceName)
 {
   NS_ENSURE_ARG_POINTER(aDeviceName);
-  *aDeviceName = mDeviceName?nsCRT::strdup(mDeviceName):nsnull;
+  *aDeviceName = mDeviceName?wcsdup(mDeviceName):nsnull;
   return NS_OK;
 }
 
@@ -99,13 +99,13 @@ NS_IMETHODIMP nsPrintSettingsWin::SetDriverName(const PRUnichar * aDriverName)
   if (mDriverName) {
     nsMemory::Free(mDriverName);
   }
-  mDriverName = aDriverName?nsCRT::strdup(aDriverName):nsnull;
+  mDriverName = aDriverName?wcsdup(aDriverName):nsnull;
   return NS_OK;
 }
 NS_IMETHODIMP nsPrintSettingsWin::GetDriverName(PRUnichar **aDriverName)
 {
   NS_ENSURE_ARG_POINTER(aDriverName);
-  *aDriverName = mDriverName?nsCRT::strdup(mDriverName):nsnull;
+  *aDriverName = mDriverName?wcsdup(mDriverName):nsnull;
   return NS_OK;
 }
 
@@ -176,8 +176,8 @@ nsPrintSettingsWin& nsPrintSettingsWin::operator=(const nsPrintSettingsWin& rhs)
     ::HeapFree(::GetProcessHeap(), 0, mDevMode);
   }
 
-  mDeviceName = rhs.mDeviceName?nsCRT::strdup(rhs.mDeviceName):nsnull;
-  mDriverName = rhs.mDriverName?nsCRT::strdup(rhs.mDriverName):nsnull;
+  mDeviceName = rhs.mDeviceName?wcsdup(rhs.mDeviceName):nsnull;
+  mDriverName = rhs.mDriverName?wcsdup(rhs.mDriverName):nsnull;
 
   if (rhs.mDevMode) {
     CopyDevMode(rhs.mDevMode, mDevMode);

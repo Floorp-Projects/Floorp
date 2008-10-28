@@ -84,9 +84,9 @@ nsSVGPathGeometryFrame::AttributeChanged(PRInt32         aNameSpaceID,
 }
 
 /* virtual */ void
-nsSVGPathGeometryFrame::DidSetStyleContext()
+nsSVGPathGeometryFrame::DidSetStyleContext(nsStyleContext* aOldStyleContext)
 {
-  nsSVGPathGeometryFrameBase::DidSetStyleContext();
+  nsSVGPathGeometryFrameBase::DidSetStyleContext(aOldStyleContext);
 
   nsSVGOuterSVGFrame *outerSVGFrame = nsSVGUtils::GetOuterSVGFrame(this);
   if (outerSVGFrame) {

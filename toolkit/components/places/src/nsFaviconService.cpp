@@ -154,10 +154,19 @@ nsFaviconService::Init()
     getter_AddRefs(mDBGetIconInfo));
   NS_ENSURE_SUCCESS(rv, rv);
 
+  // We can avoid checking for duplicates in the unified table since an uri
+  // can only have one favicon associated. LIMIT 1 will ensure that we get
+  // only one result.
   rv = mDBConn->CreateStatement(NS_LITERAL_CSTRING(
       "SELECT f.id, f.url, length(f.data), f.expiration "
-      "FROM moz_places h JOIN moz_favicons f ON h.favicon_id = f.id "
-      "WHERE h.url = ?1"),
+      "FROM ( "
+        "SELECT * FROM moz_places_temp "
+        "WHERE url = ?1 "
+        "UNION ALL "
+        "SELECT * FROM moz_places "
+        "WHERE url = ?1 "
+      ") AS h JOIN moz_favicons f ON h.favicon_id = f.id "
+      "LIMIT 1"),
     getter_AddRefs(mDBGetURL));
   NS_ENSURE_SUCCESS(rv, rv);
 
@@ -179,7 +188,7 @@ nsFaviconService::Init()
   NS_ENSURE_SUCCESS(rv, rv);
 
   rv = mDBConn->CreateStatement(NS_LITERAL_CSTRING(
-      "UPDATE moz_places SET favicon_id = ?2 WHERE id = ?1"),
+      "UPDATE moz_places_view SET favicon_id = ?2 WHERE id = ?1"),
     getter_AddRefs(mDBSetPageFavicon));
   NS_ENSURE_SUCCESS(rv, rv);
 
@@ -1102,6 +1111,7 @@ FaviconLoadListener::OnStopRequest(nsIRequest *aRequest, nsISupports *aContext,
   PRTime expiration = PR_Now() +
                       (PRInt64)(24 * 60 * 60) * (PRInt64)PR_USEC_PER_SEC;
 
+  mozStorageTransaction transaction(mFaviconService->mDBConn, PR_FALSE);
   // save the favicon data
   // This could fail if the favicon is bigger than defined limit, in such a
   // case data will not be saved to the db but we will still continue.
@@ -1115,8 +1125,12 @@ FaviconLoadListener::OnStopRequest(nsIRequest *aRequest, nsISupports *aContext,
                                                      &hasData, &expiration);
   NS_ENSURE_SUCCESS(rv, rv);
 
-  mFaviconService->SendFaviconNotifications(mPageURI, mFaviconURI);
   mFaviconService->UpdateBookmarkRedirectFavicon(mPageURI, mFaviconURI);
+
+  rv = transaction.Commit();
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  mFaviconService->SendFaviconNotifications(mPageURI, mFaviconURI);
   return NS_OK;
 }
 

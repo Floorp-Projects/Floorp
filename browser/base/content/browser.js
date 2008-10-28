@@ -132,14 +132,10 @@ __defineGetter__("gPrefService", function() {
 * We can avoid adding multiple load event listeners and save some time by adding
 * one listener that calls all real handlers.
 */
-
-function pageShowEventHandlers(event)
-{
+function pageShowEventHandlers(event) {
   // Filter out events that are not about the document load we are interested in
   if (event.originalTarget == content.document) {
-    checkForDirectoryListing();
     charsetLoadListener(event);
-    
     XULBrowserWindow.asyncUpdateUI();
   }
 }
@@ -2001,15 +1997,6 @@ function traceVerbose(verbose)
 }
 #endif
 
-function checkForDirectoryListing()
-{
-  if ( "HTTPIndex" in content &&
-       content.HTTPIndex instanceof Components.interfaces.nsIHTTPIndex ) {
-    content.wrappedJSObject.defaultCharacterset =
-      getMarkupDocumentViewer().defaultCharacterSet;
-  }
-}
-
 function URLBarSetURI(aURI, aValid) {
   var value = gBrowser.userTypedValue;
   var valid = false;
@@ -2225,6 +2212,9 @@ function BrowserOnCommand(event) {
     }
     else if (/^about:blocked/.test(errorDoc.documentURI)) {
       // The event came from a button on a malware/phishing block page
+      // First check whether it's malware or phishing, so that we can
+      // use the right strings/links
+      var isMalware = /e=malwareBlocked/.test(errorDoc.documentURI);
       
       if (ot == errorDoc.getElementById('getMeOutButton')) {
         getMeOutOfHere();
@@ -2236,7 +2226,7 @@ function BrowserOnCommand(event) {
         var formatter = Cc["@mozilla.org/toolkit/URLFormatterService;1"]
                        .getService(Components.interfaces.nsIURLFormatter);
         
-        if (/e=malwareBlocked/.test(errorDoc.documentURI)) {
+        if (isMalware) {
           // Get the stop badware "why is this blocked" report url,
           // append the current url, and go there.
           try {
@@ -2247,7 +2237,7 @@ function BrowserOnCommand(event) {
             Components.utils.reportError("Couldn't get malware report URL: " + e);
           }
         }
-        else if (/e=phishingBlocked/.test(errorDoc.documentURI)) {
+        else { // It's a phishing site, not malware
           try {
             content.location = formatter.formatURLPref("browser.safebrowsing.warning.infoURL");
           } catch (e) {
@@ -2262,13 +2252,39 @@ function BrowserOnCommand(event) {
         gBrowser.loadURIWithFlags(content.location.href,
                                   nsIWebNavigation.LOAD_FLAGS_BYPASS_CLASSIFIER,
                                   null, null, null);
+        var buttons = [{
+          label: gNavigatorBundle.getString("safebrowsing.getMeOutOfHereButton.label"),
+          accessKey: gNavigatorBundle.getString("safebrowsing.getMeOutOfHereButton.accessKey"),
+          callback: function() { getMeOutOfHere(); }
+        }];
+        
+        if (isMalware) {
+          var title = gNavigatorBundle.getString("safebrowsing.reportedAttackSite");
+          buttons[1] = {
+            label: gNavigatorBundle.getString("safebrowsing.notAnAttackButton.label"),
+            accessKey: gNavigatorBundle.getString("safebrowsing.notAnAttackButton.accessKey"),
+            callback: function() {
+              openUILinkIn(safebrowsing.getReportURL('MalwareError'), 'tab');
+            }
+          };
+        } else {
+          title = gNavigatorBundle.getString("safebrowsing.reportedWebForgery");
+          buttons[1] = {
+            label: gNavigatorBundle.getString("safebrowsing.notAForgeryButton.label"),
+            accessKey: gNavigatorBundle.getString("safebrowsing.notAForgeryButton.accessKey"),
+            callback: function() {
+              openUILinkIn(safebrowsing.getReportURL('Error'), 'tab');
+            }
+          };
+        }
+        
         var notificationBox = gBrowser.getNotificationBox();
         notificationBox.appendNotification(
-          errorDoc.title, /* Re-use the error page's title, e.g. "Reported Web Forgery!" */
+          title,
           "blocked-badware-page",
           "chrome://global/skin/icons/blacklist_favicon.png",
           notificationBox.PRIORITY_CRITICAL_HIGH,
-          null
+          buttons
         );
       }
     }
@@ -3598,6 +3614,7 @@ var XULBrowserWindow = {
   startTime: 0,
   statusText: "",
   lastURI: null,
+  isBusy: false,
 
   statusTimeoutInEffect: false,
 
@@ -3736,6 +3753,8 @@ var XULBrowserWindow = {
           aRequest && aWebProgress.DOMWindow == content)
         this.startDocumentLoad(aRequest);
 
+      this.isBusy = true;
+
       if (this.throbberElement) {
         // Turn the throbber on.
         this.throbberElement.setAttribute("busy", "true");
@@ -3806,6 +3825,8 @@ var XULBrowserWindow = {
         else
           this.isImage.setAttribute('disabled', 'true');
       }
+
+      this.isBusy = false;
 
       // Turn the progress meter and throbber off.
       gProgressCollapseTimer = window.setTimeout(function () {

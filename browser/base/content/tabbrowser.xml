@@ -1021,8 +1021,7 @@
             // Get the first tab all hooked up with a title listener and popup blocking listener.
             this.mCurrentBrowser.addEventListener("DOMTitleChanged", this.onTitleChanged, true);
 
-            var throbberElement = document.getElementById("navigator-throbber");
-            if (throbberElement && throbberElement.hasAttribute("busy")) {
+            if (XULBrowserWindow.isBusy) {
               this.mCurrentTab.setAttribute("busy", "true");
               this.mIsBusy = true;
               this.setTabTitleLoading(this.mCurrentTab);

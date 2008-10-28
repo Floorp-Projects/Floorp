@@ -41,7 +41,6 @@
 
 #include "nsINavBookmarksService.h"
 #include "nsIAnnotationService.h"
-#include "nsIStringBundle.h"
 #include "nsITransaction.h"
 #include "nsNavHistory.h"
 #include "nsNavHistoryResult.h" // need for Int64 hashtable
@@ -112,6 +111,7 @@ private:
 
   nsresult InitRoots();
   nsresult InitDefaults();
+  nsresult InitStatements();
   nsresult CreateRoot(mozIStorageStatement* aGetRootStatement,
                       const nsCString& name, PRInt64* aID,
                       PRInt64 aParentID, PRBool* aWasCreated);
@@ -127,12 +127,11 @@ private:
   // remove me when there is better query initialization
   nsNavHistory* History() { return nsNavHistory::GetHistoryService(); }
 
-  mozIStorageStatement* DBGetURLPageInfo()
-  { return History()->DBGetURLPageInfo(); }
-
-  mozIStorageConnection* DBConn() { return History()->GetStorageConnection(); }
+  nsCOMPtr<mozIStorageConnection> mDBConn;
 
   nsString mGUIDBase;
+  nsresult GetGUIDBase(nsAString& aGUIDBase);
+
   PRInt32 mItemCount;
 
   nsMaybeWeakPtrArray<nsINavBookmarkObserver> mObservers;
@@ -212,8 +211,6 @@ private:
   nsCOMPtr<mozIStorageStatement> mDBGetKeywordForURI;
   nsCOMPtr<mozIStorageStatement> mDBGetKeywordForBookmark;
   nsCOMPtr<mozIStorageStatement> mDBGetURIForKeyword;
-
-  nsCOMPtr<nsIStringBundle> mBundle;
 
   class RemoveFolderTransaction : public nsITransaction {
   public:

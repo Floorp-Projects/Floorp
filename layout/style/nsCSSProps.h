@@ -55,6 +55,7 @@
 // A property that is a *-ltr-source or *-rtl-source property for one of
 // the directional pseudo-shorthand properties.
 #define CSS_PROPERTY_DIRECTIONAL_SOURCE (1<<0)
+#define CSS_PROPERTY_VALUE_LIST_USES_COMMAS (1<<1) /* otherwise spaces */
 
 class nsCSSProps {
 public:
@@ -100,11 +101,11 @@ public:
   static const nsCSSType       kTypeTable[eCSSProperty_COUNT_no_shorthands];
   static const nsStyleStructID kSIDTable[eCSSProperty_COUNT_no_shorthands];
   static const PRInt32* const  kKeywordTableTable[eCSSProperty_COUNT_no_shorthands];
+private:
   static const PRUint32        kFlagsTable[eCSSProperty_COUNT];
 
   // A table for shorthand properties.  The appropriate index is the
   // property ID minus eCSSProperty_COUNT_no_shorthands.
-private:
   static const nsCSSProperty *const
     kSubpropertyTable[eCSSProperty_COUNT - eCSSProperty_COUNT_no_shorthands];
 
@@ -116,6 +117,11 @@ public:
                  "out of range");
     return nsCSSProps::kSubpropertyTable[aProperty -
                                          eCSSProperty_COUNT_no_shorthands];
+  }
+
+  static inline PRBool PropHasFlags(nsCSSProperty aProperty, PRUint32 aFlags)
+  {
+    return (nsCSSProps::kFlagsTable[aProperty] & aFlags) == aFlags;
   }
 
 #define CSSPROPS_FOR_SHORTHAND_SUBPROPERTIES(iter_, prop_)                    \

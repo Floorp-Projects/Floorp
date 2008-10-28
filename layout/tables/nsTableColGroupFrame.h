@@ -109,6 +109,9 @@ public:
   static PRBool GetLastRealColGroup(nsTableFrame* aTableFrame, 
                                     nsIFrame**    aLastColGroup);
 
+  /** @see nsIFrame::DidSetStyleContext */
+  virtual void DidSetStyleContext(nsStyleContext* aOldStyleContext);
+
   /** @see nsIFrame::AppendFrames, InsertFrames, RemoveFrame
     */
   NS_IMETHOD AppendFrames(nsIAtom*        aListName,

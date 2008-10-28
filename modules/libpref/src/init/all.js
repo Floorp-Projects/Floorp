@@ -661,6 +661,7 @@ pref("network.IDN_show_punycode", false);
 
 // ccTLDs
 pref("network.IDN.whitelist.ac", true);
+pref("network.IDN.whitelist.ar", true);
 pref("network.IDN.whitelist.at", true);
 pref("network.IDN.whitelist.br", true);
 pref("network.IDN.whitelist.ch", true);

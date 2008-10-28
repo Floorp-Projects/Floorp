@@ -97,7 +97,8 @@ nsSVGForeignObjectFrame::Init(nsIContent* aContent,
                               nsIFrame*   aPrevInFlow)
 {
   nsresult rv = nsSVGForeignObjectFrameBase::Init(aContent, aParent, aPrevInFlow);
-  AddStateBits(NS_STATE_SVG_PROPAGATE_TRANSFORM);
+  AddStateBits(NS_STATE_SVG_PROPAGATE_TRANSFORM | 
+               (aParent->GetStateBits() & NS_STATE_SVG_NONDISPLAY_CHILD));
   if (NS_SUCCEEDED(rv)) {
     nsSVGUtils::GetOuterSVGFrame(this)->RegisterForeignObject(this);
   }
@@ -174,7 +175,7 @@ nsSVGForeignObjectFrame::InvalidateInternal(const nsRect& aDamageRect,
                                             nsIFrame* aForChild,
                                             PRUint32 aFlags)
 {
-  if (mParent->GetStateBits() & NS_STATE_SVG_NONDISPLAY_CHILD)
+  if (GetStateBits() & NS_STATE_SVG_NONDISPLAY_CHILD)
     return;
 
   nsRegion* region = (aFlags & INVALIDATE_CROSS_DOC)
@@ -291,7 +292,7 @@ nsresult
 nsSVGForeignObjectFrame::TransformPointFromOuterPx(const nsPoint &aIn,
                                                    nsPoint* aOut)
 {
-  if (mParent->GetStateBits() & NS_STATE_SVG_NONDISPLAY_CHILD)
+  if (GetStateBits() & NS_STATE_SVG_NONDISPLAY_CHILD)
     return NS_ERROR_FAILURE;
 
   nsCOMPtr<nsIDOMSVGMatrix> tm = GetTMIncludingOffset();
@@ -355,7 +356,7 @@ nsSVGForeignObjectFrame::GetCoveredRegion()
 NS_IMETHODIMP
 nsSVGForeignObjectFrame::UpdateCoveredRegion()
 {
-  if (mParent->GetStateBits() & NS_STATE_SVG_NONDISPLAY_CHILD)
+  if (GetStateBits() & NS_STATE_SVG_NONDISPLAY_CHILD)
     return NS_ERROR_FAILURE;
 
   nsCOMPtr<nsIDOMSVGMatrix> ctm = GetCanvasTM();
@@ -452,7 +453,7 @@ nsSVGForeignObjectFrame::NotifyRedrawSuspended()
 NS_IMETHODIMP
 nsSVGForeignObjectFrame::NotifyRedrawUnsuspended()
 {
-  if (!(mParent->GetStateBits() & NS_STATE_SVG_NONDISPLAY_CHILD)) {
+  if (!(GetStateBits() & NS_STATE_SVG_NONDISPLAY_CHILD)) {
     if (GetStateBits() & NS_STATE_SVG_DIRTY) {
       UpdateGraphic();
     } else {
@@ -484,7 +485,7 @@ nsSVGForeignObjectFrame::GetBBox(nsIDOMSVGRect **_retval)
 {
   *_retval = nsnull;
 
-  if (mParent->GetStateBits() & NS_STATE_SVG_NONDISPLAY_CHILD)
+  if (GetStateBits() & NS_STATE_SVG_NONDISPLAY_CHILD)
     return NS_ERROR_FAILURE;
 
   nsCOMPtr<nsIDOMSVGMatrix> ctm = GetCanvasTM();
@@ -612,7 +613,7 @@ nsSVGForeignObjectFrame::DoReflow()
   if (IsDisabled())
     return;
 
-  if (mParent->GetStateBits() & NS_STATE_SVG_NONDISPLAY_CHILD)
+  if (GetStateBits() & NS_STATE_SVG_NONDISPLAY_CHILD)
     return;
 
   nsPresContext *presContext = PresContext();

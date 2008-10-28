@@ -3625,9 +3625,9 @@ nsTextFrame::CharacterDataChanged(nsPresContext* aPresContext,
 }
 
 /* virtual */ void
-nsTextFrame::DidSetStyleContext()
+nsTextFrame::DidSetStyleContext(nsStyleContext* aOldStyleContext)
 {
-  nsFrame::DidSetStyleContext();
+  nsFrame::DidSetStyleContext(aOldStyleContext);
   ClearTextRun();
 } 
 
