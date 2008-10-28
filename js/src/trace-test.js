@@ -2028,14 +2028,6 @@ load("mandelbrot-results.js");
 //testMandelbrotAll();
 // END MANDELBROT STUFF
 
-/* Keep this test last, since it screws up all for...in loops after it */
-function testGlobalProtoAccess() {
-    return "ok";
-}
-this.__proto__.a = 3; for (var j = 0; j < 4; ++j) { [a]; }
-testGlobalProtoAccess.expected = "ok";
-test(testGlobalProtoAccess);
-
 function testNewDate()
 {
     // Accessing global.Date for the first time will change the global shape,
@@ -2168,7 +2160,12 @@ test(testSubstring);
 
 function testForInLoopChangeIteratorType() {
     for(y in [0,1,2]) y = NaN;
-    (function(){ [].__proto__.u = void 0; for (let y in [5,6,7,8]) y = NaN; })()
+    (function(){
+        [].__proto__.u = void 0;
+        for (let y in [5,6,7,8])
+            y = NaN;
+        delete [].__proto__.u;
+    })()
     return "ok";
 }
 testForInLoopChangeIteratorType.expected = "ok";
@@ -2198,6 +2195,26 @@ function testCallProtoMethod() {
 }
 testCallProtoMethod.expected = 'XXXXY';
 test(testCallProtoMethod);
+
+function testTypeUnstableForIn() {
+    var a = [1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16];
+    var x = 0;
+    for (var i in a) {
+        i = parseInt(i);
+        x++;
+    }
+    return x;
+}
+testTypeUnstableForIn.expected = 16;
+test(testTypeUnstableForIn);
+
+/* Keep this test last, since it screws up all for...in loops after it */
+function testGlobalProtoAccess() {
+    return "ok";
+}
+this.__proto__.a = 3; for (var j = 0; j < 4; ++j) { [a]; }
+testGlobalProtoAccess.expected = "ok";
+test(testGlobalProtoAccess);
 
 /* Keep these at the end so that we can see the summary after the trace-debug spew. */
 print("\npassed:", passes.length && passes.join(","));
