@@ -97,7 +97,7 @@ typedef enum JSOp {
 #define JOF_INC          (2U<<10) /* increment (++, not --) opcode */
 #define JOF_INCDEC       (3U<<10) /* increment or decrement opcode */
 #define JOF_POST         (1U<<12) /* postorder increment or decrement */
-#define JOF_FOR          (1U<<13) /* for-in property op */
+#define JOF_FOR          (1U<<13) /* for-in property op (akin to JOF_SET) */
 #define JOF_ASSIGNING     JOF_SET /* hint for JSClass.resolve, used for ops
                                      that do simplex assignment */
 #define JOF_DETECTING    (1U<<14) /* object detection for JSNewResolveOp */
@@ -117,8 +117,6 @@ typedef enum JSOp {
                                      besides the slots opcode uses */
 #define JOF_TMPSLOT_SHIFT 22
 #define JOF_TMPSLOT_MASK  (JS_BITMASK(2) << JOF_TMPSLOT_SHIFT)
-
-#define JOF_RETVAL       (1U<<24) /* op leaves jsval return value on stack */
 
 /* Shorthands for type from format and type from opcode. */
 #define JOF_TYPE(fmt)   ((fmt) & JOF_TYPEMASK)
