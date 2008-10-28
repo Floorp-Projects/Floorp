@@ -427,6 +427,8 @@ nsFrameList::List(FILE* out) const
 nsIFrame*
 nsFrameList::GetPrevVisualFor(nsIFrame* aFrame) const
 {
+  nsCOMPtr<nsILineIterator> iter;
+
   if (!mFirstChild)
     return nsnull;
   
@@ -437,8 +439,8 @@ nsFrameList::GetPrevVisualFor(nsIFrame* aFrame) const
   nsBidiLevel baseLevel = nsBidiPresUtils::GetFrameBaseLevel(mFirstChild);  
   nsBidiPresUtils* bidiUtils = mFirstChild->PresContext()->GetBidiUtils();
 
-  nsAutoLineIterator iter = parent->GetLineIterator();
-  if (!iter) { 
+  nsresult result = parent->QueryInterface(NS_GET_IID(nsILineIterator), getter_AddRefs(iter));
+  if (NS_FAILED(result) || !iter) { 
     // Parent is not a block Frame
     if (parent->GetType() == nsGkAtoms::lineFrame) {
       // Line frames are not bidi-splittable, so need to consider bidi reordering
@@ -463,11 +465,11 @@ nsFrameList::GetPrevVisualFor(nsIFrame* aFrame) const
 
   PRInt32 thisLine;
   if (aFrame) {
-    thisLine = iter->FindLineContaining(aFrame);
-    if (thisLine < 0)
+    result = iter->FindLineContaining(aFrame, &thisLine);
+    if (NS_FAILED(result) || thisLine < 0)
       return nsnull;
   } else {
-    thisLine = iter->GetNumLines();
+    iter->GetNumLines(&thisLine);
   }
 
   nsIFrame* frame = nsnull;
@@ -502,6 +504,8 @@ nsFrameList::GetPrevVisualFor(nsIFrame* aFrame) const
 nsIFrame*
 nsFrameList::GetNextVisualFor(nsIFrame* aFrame) const
 {
+  nsCOMPtr<nsILineIterator> iter;
+
   if (!mFirstChild)
     return nsnull;
   
@@ -512,8 +516,8 @@ nsFrameList::GetNextVisualFor(nsIFrame* aFrame) const
   nsBidiLevel baseLevel = nsBidiPresUtils::GetFrameBaseLevel(mFirstChild);
   nsBidiPresUtils* bidiUtils = mFirstChild->PresContext()->GetBidiUtils();
   
-  nsAutoLineIterator iter = parent->GetLineIterator();
-  if (!iter) { 
+  nsresult result = parent->QueryInterface(NS_GET_IID(nsILineIterator), getter_AddRefs(iter));
+  if (NS_FAILED(result) || !iter) { 
     // Parent is not a block Frame
     if (parent->GetType() == nsGkAtoms::lineFrame) {
       // Line frames are not bidi-splittable, so need to consider bidi reordering
@@ -538,8 +542,8 @@ nsFrameList::GetNextVisualFor(nsIFrame* aFrame) const
   
   PRInt32 thisLine;
   if (aFrame) {
-    thisLine = iter->FindLineContaining(aFrame);
-    if (thisLine < 0)
+    result = iter->FindLineContaining(aFrame, &thisLine);
+    if (NS_FAILED(result) || thisLine < 0)
       return nsnull;
   } else {
     thisLine = -1;
@@ -561,7 +565,8 @@ nsFrameList::GetNextVisualFor(nsIFrame* aFrame) const
     }
   }
   
-  PRInt32 numLines = iter->GetNumLines();
+  PRInt32 numLines;
+  iter->GetNumLines(&numLines);
   if (!frame && thisLine < numLines - 1) {
     // Get the first frame of the next line
     iter->GetLine(thisLine + 1, &firstFrameOnLine, &numFramesOnLine, lineBounds, &lineFlags);
