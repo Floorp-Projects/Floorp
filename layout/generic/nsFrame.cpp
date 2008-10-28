@@ -119,7 +119,6 @@
 #include "nsBoxLayoutState.h"
 #include "nsBlockFrame.h"
 #include "nsDisplayList.h"
-#include "nsImageLoader.h"
 
 #ifdef MOZ_SVG
 #include "nsSVGIntegrationUtils.h"
@@ -554,26 +553,6 @@ nsFrame::GetOffsets(PRInt32 &aStart, PRInt32 &aEnd) const
 /* virtual */ void
 nsFrame::DidSetStyleContext(nsStyleContext* aOldStyleContext)
 {
-  // Ensure that this frame gets invalidates (and, in the case of some
-  // 'border-image's, reflows) when images that affect it load.
-  nsRefPtr<nsImageLoader> loaderChain;
-
-  const nsStyleBackground *background = GetStyleBackground();
-  imgIRequest *newBackgroundImage = background->mBackgroundImage;
-  if (newBackgroundImage) {
-    loaderChain = nsImageLoader::Create(this, newBackgroundImage,
-                                        PR_FALSE, loaderChain);
-  }
-
-  const nsStyleBorder *border = GetStyleBorder();
-  imgIRequest *newBorderImage = border->GetBorderImage();
-  if (newBorderImage) {
-    loaderChain = nsImageLoader::Create(this, newBorderImage,
-                                        border->ImageBorderDiffers(),
-                                        loaderChain);
-  }
-
-  PresContext()->SetImageLoaders(this, loaderChain);
 }
 
 /* virtual */ nsMargin
