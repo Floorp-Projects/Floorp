@@ -3414,7 +3414,7 @@ js_LookupPropertyWithFlags(JSContext *cx, JSObject *obj, jsid id, uintN flags,
                         format = cs->format;
                         if (JOF_MODE(format) != JOF_NAME)
                             flags |= JSRESOLVE_QUALIFIED;
-                        if ((format & (JOF_SET | JOF_FOR)) ||
+                        if ((format & JOF_ASSIGNING) ||
                             (cx->fp->flags & JSFRAME_ASSIGNING)) {
                             flags |= JSRESOLVE_ASSIGNING;
                         } else {
