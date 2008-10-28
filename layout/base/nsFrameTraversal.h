@@ -37,10 +37,11 @@
 #ifndef NSFRAMETRAVERSAL_H
 #define NSFRAMETRAVERSAL_H
 
+#include "nsIEnumerator.h"
 #include "nsIFrame.h"
 #include "nsIFrameTraversal.h"
 
-nsresult NS_NewFrameTraversal(nsIFrameEnumerator **aEnumerator,
+nsresult NS_NewFrameTraversal(nsIBidirectionalEnumerator **aEnumerator,
                               nsPresContext* aPresContext,
                               nsIFrame *aStart,
                               nsIteratorType aType,
@@ -58,7 +59,7 @@ public:
 
   NS_DECL_ISUPPORTS
 
-  NS_IMETHOD NewFrameTraversal(nsIFrameEnumerator **aEnumerator,
+  NS_IMETHOD NewFrameTraversal(nsIBidirectionalEnumerator **aEnumerator,
                                nsPresContext* aPresContext,
                                nsIFrame *aStart,
                                PRInt32 aType,
