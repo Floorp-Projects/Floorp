@@ -2002,8 +2002,6 @@ js_TraceOpcode(JSContext *cx, jsint len)
         prevop = (JSOp) regs->pc[-len];
         ndefs = js_CodeSpec[prevop].ndefs;
         if (ndefs != 0) {
-            if (prevop == JSOP_FORELEM && regs->sp[-1] == JSVAL_FALSE)
-                --ndefs;
             for (n = -ndefs; n < 0; n++) {
                 char *bytes = js_DecompileValueGenerator(cx, n, regs->sp[n],
                                                          NULL);
@@ -3192,130 +3190,88 @@ js_Interpret(JSContext *cx)
           END_CASE(JSOP_IN)
 
           BEGIN_CASE(JSOP_ITER)
-            flags = regs.pc[1];
             JS_ASSERT(regs.sp > StackBase(fp));
+            flags = regs.pc[1];
             if (!js_ValueToIterator(cx, flags, &regs.sp[-1]))
                 goto error;
+            LOAD_INTERRUPT_HANDLER(cx);
             JS_ASSERT(!JSVAL_IS_PRIMITIVE(regs.sp[-1]));
+            PUSH(JSVAL_VOID);
           END_CASE(JSOP_ITER)
 
-          BEGIN_CASE(JSOP_FORPROP)
-            /*
-             * Handle JSOP_FORPROP first, so the cost of the goto do_forinloop
-             * is not paid for the more common cases.
-             */
-            LOAD_ATOM(0);
-            id = ATOM_TO_JSID(atom);
-            i = -2;
-            goto do_forinloop;
+          BEGIN_CASE(JSOP_NEXTITER)
+            JS_ASSERT(regs.sp - 2 >= StackBase(fp));
+            JS_ASSERT(!JSVAL_IS_PRIMITIVE(regs.sp[-2]));
+            if (!js_CallIteratorNext(cx, JSVAL_TO_OBJECT(regs.sp[-2]), &regs.sp[-1]))
+                goto error;
+            LOAD_INTERRUPT_HANDLER(cx);
+            PUSH(BOOLEAN_TO_JSVAL(regs.sp[-1] != JSVAL_HOLE));
+            TRACE_0(IteratorNextComplete);
+          END_CASE(JSOP_NEXTITER)
 
-          BEGIN_CASE(JSOP_FORNAME)
-            LOAD_ATOM(0);
-            id = ATOM_TO_JSID(atom);
-            /* FALL THROUGH */
+          BEGIN_CASE(JSOP_ENDITER)
+            /*
+             * Decrease the stack pointer even when !ok -- see comments in the
+             * exception capturing code for details.
+             */
+            JS_ASSERT(regs.sp - 2 >= StackBase(fp));
+            ok = js_CloseIterator(cx, regs.sp[-2]);
+            regs.sp -= 2;
+            if (!ok)
+                goto error;
+          END_CASE(JSOP_ENDITER)
 
           BEGIN_CASE(JSOP_FORARG)
-          BEGIN_CASE(JSOP_FORCONST)
+            JS_ASSERT(regs.sp - 2 >= StackBase(fp));
+            slot = GET_ARGNO(regs.pc);
+            JS_ASSERT(slot < fp->fun->nargs);
+            fp->argv[slot] = regs.sp[-1];
+          END_CASE(JSOP_FORARG)
+
           BEGIN_CASE(JSOP_FORLOCAL)
-            /*
-             * These bytecodes don't require any lval computation here,
-             * because they address slots on the stack (in fp->args or
-             * fp->slots).
-             */
-            /* FALL THROUGH */
+            JS_ASSERT(regs.sp - 2 >= StackBase(fp));
+            slot = GET_SLOTNO(regs.pc);
+            JS_ASSERT(slot < fp->script->nslots);
+            vp = &fp->slots[slot];
+            GC_POKE(cx, *vp);
+            *vp = regs.sp[-1];
+          END_CASE(JSOP_FORLOCAL)
+
+          BEGIN_CASE(JSOP_FORNAME)
+            JS_ASSERT(regs.sp - 2 >= StackBase(fp));
+            LOAD_ATOM(0);
+            id = ATOM_TO_JSID(atom);
+            if (!js_FindProperty(cx, id, &obj, &obj2, &prop))
+                goto error;
+            if (prop)
+                OBJ_DROP_PROPERTY(cx, obj2, prop);
+            ok = OBJ_SET_PROPERTY(cx, obj, id, &regs.sp[-1]);
+            if (!ok)
+                goto error;
+          END_CASE(JSOP_FORNAME)
+
+          BEGIN_CASE(JSOP_FORPROP)
+            JS_ASSERT(regs.sp - 2 >= StackBase(fp));
+            LOAD_ATOM(0);
+            id = ATOM_TO_JSID(atom);
+            FETCH_OBJECT(cx, -1, lval, obj);
+            ok = OBJ_SET_PROPERTY(cx, obj, id, &regs.sp[-2]);
+            if (!ok)
+                goto error;
+            regs.sp--;
+          END_CASE(JSOP_FORPROP)
 
           BEGIN_CASE(JSOP_FORELEM)
             /*
-             * JSOP_FORELEM simply initializes or updates the iteration state
-             * and leaves the index expression evaluation and assignment to the
-             * enumerator until after the next property has been acquired, via
-             * a JSOP_ENUMELEM bytecode.
+             * JSOP_FORELEM simply dups the property identifier at top of stack
+             * and lets the subsequent JSOP_ENUMELEM opcode sequence handle the
+             * left-hand side expression evaluation and assignment. This opcode
+             * exists solely to help the decompiler.
              */
-            i = -1;
-
-          do_forinloop:
-            /*
-             * Reach under the top of stack to find our property iterator, a
-             * JSObject that contains the iteration state.
-             */
-            JS_ASSERT(!JSVAL_IS_PRIMITIVE(regs.sp[i]));
-            if (!js_CallIteratorNext(cx, JSVAL_TO_OBJECT(regs.sp[i]), &rval))
-                goto error;
-            if (rval == JSVAL_HOLE) {
-                rval = JSVAL_FALSE;
-#ifdef JS_TRACER
-                if (TRACE_RECORDER(cx)) {
-                    js_AbortRecording(cx, "Untraceable for-in loop");
-                    ENABLE_TRACER(0);
-                }
-#endif
-                goto end_forinloop;
-            }
-
-            switch (op) {
-              case JSOP_FORARG:
-                slot = GET_ARGNO(regs.pc);
-                JS_ASSERT(slot < fp->fun->nargs);
-                fp->argv[slot] = rval;
-                break;
-
-              case JSOP_FORCONST:
-                /* Don't update the const slot. */
-                break;
-
-              case JSOP_FORLOCAL:
-                slot = GET_SLOTNO(regs.pc);
-                JS_ASSERT(slot < fp->script->nslots);
-                vp = &fp->slots[slot];
-                GC_POKE(cx, *vp);
-                *vp = rval;
-                break;
-
-              case JSOP_FORELEM:
-                /* FORELEM is not a SET operation, it's more like BINDNAME. */
-                PUSH_OPND(rval);
-                break;
-
-              case JSOP_FORPROP:
-                /*
-                 * We fetch object here to ensure that the iterator is called
-                 * even if lval is null or undefined that throws in
-                 * FETCH_OBJECT. See bug 372331.
-                 */
-                FETCH_OBJECT(cx, -1, lval, obj);
-                goto set_for_property;
-
-              default:
-                JS_ASSERT(op == JSOP_FORNAME);
-
-                /*
-                 * We find property here after the iterator call to ensure
-                 * that we take into account side effects of the iterator
-                 * call. See bug 372331.
-                 */
-                if (!js_FindProperty(cx, id, &obj, &obj2, &prop))
-                    goto error;
-                if (prop)
-                    OBJ_DROP_PROPERTY(cx, obj2, prop);
-
-              set_for_property:
-                /* Set the variable obj[id] to refer to rval. */
-                fp->flags |= JSFRAME_ASSIGNING;
-                ok = OBJ_SET_PROPERTY(cx, obj, id, &rval);
-                fp->flags &= ~JSFRAME_ASSIGNING;
-                if (!ok)
-                    goto error;
-                break;
-            }
-
-            /* Push true to keep looping through properties. */
-            rval = JSVAL_TRUE;
-
-          end_forinloop:
-            regs.sp += i + 1;
-            PUSH_OPND(rval);
-            len = js_CodeSpec[op].length;
-            DO_NEXT_OP(len);
+            JS_ASSERT(regs.sp - 2 >= StackBase(fp));
+            rval = FETCH_OPND(-1);
+            PUSH(rval);
+          END_CASE(JSOP_FORELEM)
 
           BEGIN_CASE(JSOP_DUP)
             JS_ASSERT(regs.sp > StackBase(fp));
@@ -6712,17 +6668,6 @@ js_Interpret(JSContext *cx)
           }
           END_CASE(JSOP_LEAVEBLOCK)
 
-          BEGIN_CASE(JSOP_ENDITER)
-            /*
-             * Decrease the stack pointer even when !ok, see comments in the
-             * exception capturing code for details.
-             */
-            ok = js_CloseIterator(cx, regs.sp[-1]);
-            regs.sp--;
-            if (!ok)
-                goto error;
-          END_CASE(JSOP_ENDITER)
-
 #if JS_HAS_GENERATORS
           BEGIN_CASE(JSOP_GENERATOR)
             ASSERT_NOT_THROWING(cx);
@@ -6823,11 +6768,9 @@ js_Interpret(JSContext *cx)
           L_JSOP_DEFXMLNS:
 # endif
 
-          L_JSOP_UNUSED74:
-          L_JSOP_UNUSED76:
-          L_JSOP_UNUSED77:
           L_JSOP_UNUSED78:
           L_JSOP_UNUSED79:
+          L_JSOP_UNUSED103:
           L_JSOP_UNUSED131:
           L_JSOP_UNUSED201:
           L_JSOP_UNUSED202:
@@ -6836,6 +6779,8 @@ js_Interpret(JSContext *cx)
           L_JSOP_UNUSED205:
           L_JSOP_UNUSED206:
           L_JSOP_UNUSED207:
+          L_JSOP_UNUSED208:
+          L_JSOP_UNUSED209:
           L_JSOP_UNUSED219:
           L_JSOP_UNUSED226:
 
@@ -6984,12 +6929,14 @@ js_Interpret(JSContext *cx)
 
               case JSTRY_ITER:
                 /*
-                 * This is similar to JSOP_ENDITER in the interpreter loop
-                 * except the code now uses a reserved stack slot to save and
-                 * restore the exception.
+                 * This is similar to JSOP_ENDITER in the interpreter loop,
+                 * except the code now uses the stack slot normally used by
+                 * JSOP_NEXTITER, namely regs.sp[-1] before the regs.sp -= 2
+                 * adjustment and regs.sp[1] after, to save and restore the
+                 * pending exception.
                  */
                 JS_ASSERT(*regs.pc == JSOP_ENDITER);
-                PUSH(cx->exception);
+                regs.sp[-1] = cx->exception;
                 cx->throwing = JS_FALSE;
                 ok = js_CloseIterator(cx, regs.sp[-2]);
                 regs.sp -= 2;

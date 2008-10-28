@@ -378,6 +378,7 @@ public:
     bool record_SetPropMiss(JSPropCacheEntry* entry);
     bool record_DefLocalFunSetSlot(uint32 slot, JSObject* obj);
     bool record_FastNativeCallComplete();
+    bool record_IteratorNextComplete();
     
     nanojit::Fragment* getOuterToBlacklist() { return outerToBlacklist; }
     void deepAbort() { deepAborted = true; }
