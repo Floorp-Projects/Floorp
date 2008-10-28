@@ -2809,14 +2809,14 @@ EnsureDifferentColors(nscolor colorA, nscolor colorB)
 
 //-----------------------------------------------------------------------------
 
-// TODO delete nsCSSRendering::TransformColor because we're moving it here
 static nscolor
 DarkenColor(nscolor aColor)
 {
-  PRUint16  hue,sat,value;
+  PRUint16  hue, sat, value;
+  PRUint8 alpha;
 
   // convert the RBG to HSV so we can get the lightness (which is the v)
-  NS_RGB2HSV(aColor,hue,sat,value);
+  NS_RGB2HSV(aColor, hue, sat, value, alpha);
 
   // The goal here is to send white to black while letting colored
   // stuff stay colored... So we adopt the following approach.
@@ -2827,7 +2827,7 @@ DarkenColor(nscolor aColor)
   if (value > sat) {
     value = sat;
     // convert this color back into the RGB color space.
-    NS_HSV2RGB(aColor,hue,sat,value);
+    NS_HSV2RGB(aColor, hue, sat, value, alpha);
   }
   return aColor;
 }

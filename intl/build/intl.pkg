@@ -23,13 +23,8 @@ dist/bin/res/entityTables/mathml20.properties
 #if ENABLE_TESTS
 [gecko-tests]
 dist/bin/UnicharSelfTest@BINS@
-dist/bin/StringBundleTest@BINS@
 dist/bin/TestLineBreak@BINS@
 dist/bin/res/strres.properties
-dist/bin/res/strres-test.html
-dist/bin/res/strres-test.xul
-dist/bin/res/strres-test.dtd
-dist/bin/res/strres-test.js
 #if OS_ARCH==WINNT
 dist/bin/DetectCharset@BINS@
 #endif

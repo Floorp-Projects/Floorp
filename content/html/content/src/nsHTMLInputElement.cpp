@@ -64,6 +64,7 @@
 #include "nsIDocument.h"
 #include "nsIPresShell.h"
 #include "nsIFormControlFrame.h"
+#include "nsITextControlFrame.h"
 #include "nsIFrame.h"
 #include "nsIEventStateManager.h"
 #include "nsIServiceManager.h"
@@ -2255,11 +2256,11 @@ nsHTMLInputElement::GetPhonetic(nsAString& aPhonetic)
   nsIFormControlFrame* formControlFrame = GetFormControlFrame(PR_TRUE);
 
   if (formControlFrame) {
-    nsCOMPtr<nsIPhonetic>
-      phonetic(do_QueryInterface(formControlFrame));
+    nsITextControlFrame* textControlFrame = nsnull;
+    CallQueryInterface(formControlFrame, &textControlFrame);
 
-    if (phonetic)
-      phonetic->GetPhonetic(aPhonetic);
+    if (textControlFrame)
+      textControlFrame->GetPhonetic(aPhonetic);
   }
 
   return NS_OK;
