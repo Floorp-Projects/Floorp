@@ -119,7 +119,7 @@
 #include "nsBoxLayoutState.h"
 #include "nsBlockFrame.h"
 #include "nsDisplayList.h"
-#include "nsImageLoadNotifier.h"
+#include "nsImageLoader.h"
 
 #ifdef MOZ_SVG
 #include "nsSVGIntegrationUtils.h"
@@ -555,24 +555,24 @@ NS_IMETHODIMP nsFrame::DidSetStyleContext()
 {
   // Ensure that this frame gets invalidates (and, in the case of some
   // 'border-image's, reflows) when images that affect it load.
-  nsRefPtr<nsImageLoadNotifier> notifierChain;
+  nsRefPtr<nsImageLoader> loaderChain;
 
   const nsStyleBackground *background = GetStyleBackground();
   imgIRequest *newBackgroundImage = background->mBackgroundImage;
   if (newBackgroundImage) {
-    notifierChain = nsImageLoadNotifier::Create(this, newBackgroundImage,
-                                                PR_FALSE, notifierChain);
+    loaderChain = nsImageLoader::Create(this, newBackgroundImage,
+                                        PR_FALSE, loaderChain);
   }
 
   const nsStyleBorder *border = GetStyleBorder();
   imgIRequest *newBorderImage = border->GetBorderImage();
   if (newBorderImage) {
-    notifierChain = nsImageLoadNotifier::Create(this, newBorderImage,
-                                                border->ImageBorderDiffers(),
-                                                notifierChain);
+    loaderChain = nsImageLoader::Create(this, newBorderImage,
+                                        border->ImageBorderDiffers(),
+                                        loaderChain);
   }
 
-  PresContext()->SetImageNotifiers(this, notifierChain);
+  PresContext()->SetImageLoaders(this, loaderChain);
 
   return NS_OK;
 }
