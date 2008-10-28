@@ -142,6 +142,11 @@ public:
   // main thread when/if the size changes.
   void UpdateMediaSize(nsIntSize size);
 
+  // Handle moving into and out of the bfcache by pausing and playing
+  // as needed.
+  void Freeze();
+  void Thaw();
+
 protected:
   nsresult PickMediaElement(nsAString& aChosenMediaResource);
   virtual nsresult InitializeDecoder(nsAString& aChosenMediaResource);
@@ -213,4 +218,9 @@ protected:
   // or was not actively playing before the current seek. Used to decide whether
   // to raise the 'waiting' event as per 4.7.1.8 in HTML 5 specification.
   PRPackedBool mPlayingBeforeSeek;
+
+  // PR_TRUE if the video was paused before Freeze was called. This is checked
+  // to ensure that the playstate doesn't change when the user goes Forward/Back
+  // from the bfcache.
+  PRPackedBool mPausedBeforeFreeze;
 };
