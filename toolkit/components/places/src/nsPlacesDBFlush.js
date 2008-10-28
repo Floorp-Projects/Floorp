@@ -164,6 +164,12 @@ nsPlacesDBFlush.prototype = {
   //////////////////////////////////////////////////////////////////////////////
   //// mozIStorageStatementCallback
 
+  handleError: function DBFlush_handleError(aError)
+  {
+    Components.utils.reportError("Async statement execution returned with '" +
+                                 aError.result + "', '" + aError.message + "'");
+  },
+
   handleCompletion: function DBFlush_handleCompletion(aReason)
   {
     if (aReason == Ci.mozIStorageStatementCallback.REASON_FINISHED) {
