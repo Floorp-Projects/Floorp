@@ -2570,7 +2570,6 @@ js_Interpret(JSContext *cx)
 #ifdef JS_TRACER
     /* We had better not be entering the interpreter from JIT-compiled code. */
     TraceRecorder *tr = NULL;
-    uint32 jitCacheGen = JS_TRACE_MONITOR(cx).jitCacheGen;
     if (JS_ON_TRACE(cx)) {
         tr = TRACE_RECORDER(cx);
         SET_TRACE_RECORDER(cx, NULL);
@@ -7024,8 +7023,6 @@ js_Interpret(JSContext *cx)
         JS_TRACE_MONITOR(cx).onTrace = JS_TRUE;
         SET_TRACE_RECORDER(cx, tr);
         tr->deepAbort();
-        if (jitCacheGen != JS_TRACE_MONITOR(cx).jitCacheGen)
-            tr->safeCleanup();
     }
 #endif
     return ok;
