@@ -164,7 +164,7 @@
 #include "gfxImageSurface.h"
 #include "gfxContext.h"
 #ifdef MOZ_MEDIA
-#include "nsVideoFrame.h"
+#include "nsHTMLMediaElement.h"
 #endif
 
 // Drag & Drop, Clipboard
@@ -6069,19 +6069,14 @@ StopPluginInstance(PresShell *aShell, nsIContent *aContent)
   objectFrame->StopPlugin();
 }
 
-static void
-StopVideoInstance(PresShell *aShell, nsIContent *aContent)
-{
 #ifdef MOZ_MEDIA
-  nsVideoFrame *frame = static_cast<nsVideoFrame*>(aShell->FrameManager()->GetPrimaryFrameFor(aContent, -1));
-  if (frame) {
-    nsIAtom* frameType = frame->GetType();
-    if (frameType == nsGkAtoms::HTMLVideoFrame) {
-      frame->Freeze();
-    }
-  }
-#endif
+static void
+StopMediaInstance(PresShell *aShell, nsIContent *aContent)
+{
+  nsHTMLMediaElement* element = static_cast<nsHTMLMediaElement*>(aContent);
+  element->Freeze();
 }
+#endif
 
 static PRBool
 FreezeSubDocument(nsIDocument *aDocument, void *aData)
@@ -6101,7 +6096,10 @@ PresShell::Freeze()
     EnumeratePlugins(domDoc, NS_LITERAL_STRING("object"), StopPluginInstance);
     EnumeratePlugins(domDoc, NS_LITERAL_STRING("applet"), StopPluginInstance);
     EnumeratePlugins(domDoc, NS_LITERAL_STRING("embed"), StopPluginInstance);
-    EnumeratePlugins(domDoc, NS_LITERAL_STRING("video"), StopVideoInstance);
+#ifdef MOZ_MEDIA
+    EnumeratePlugins(domDoc, NS_LITERAL_STRING("video"), StopMediaInstance);
+    EnumeratePlugins(domDoc, NS_LITERAL_STRING("audio"), StopMediaInstance);
+#endif
   }
 
   if (mCaret)
@@ -6124,19 +6122,14 @@ StartPluginInstance(PresShell *aShell, nsIContent *aContent)
   objlc->EnsureInstantiation(getter_AddRefs(inst));
 }
 
-static void
-StartVideoInstance(PresShell *aShell, nsIContent *aContent)
-{
 #ifdef MOZ_MEDIA
-  nsVideoFrame *frame = static_cast<nsVideoFrame*>(aShell->FrameManager()->GetPrimaryFrameFor(aContent, -1));
-  if (frame) {
-    nsIAtom* frameType = frame->GetType();
-    if (frameType == nsGkAtoms::HTMLVideoFrame) {
-      frame->Thaw();
-    }
-  }
-#endif
+static void
+StartMediaInstance(PresShell *aShell, nsIContent *aContent)
+{
+ nsHTMLMediaElement* element = static_cast<nsHTMLMediaElement*>(aContent);
+ element->Thaw();
 }
+#endif
 
 static PRBool
 ThawSubDocument(nsIDocument *aDocument, void *aData)
@@ -6156,7 +6149,10 @@ PresShell::Thaw()
     EnumeratePlugins(domDoc, NS_LITERAL_STRING("object"), StartPluginInstance);
     EnumeratePlugins(domDoc, NS_LITERAL_STRING("applet"), StartPluginInstance);
     EnumeratePlugins(domDoc, NS_LITERAL_STRING("embed"), StartPluginInstance);
-    EnumeratePlugins(domDoc, NS_LITERAL_STRING("video"), StartVideoInstance);
+#ifdef MOZ_MEDIA
+    EnumeratePlugins(domDoc, NS_LITERAL_STRING("video"), StartMediaInstance);
+    EnumeratePlugins(domDoc, NS_LITERAL_STRING("audio"), StartMediaInstance);
+#endif
   }
 
   if (mDocument)

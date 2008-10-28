@@ -192,6 +192,11 @@ LOCAL_INCLUDES += \
         -I$(srcdir)/../svg/base/src
 endif
 
+ifdef MOZ_MEDIA
+LOCAL_INCLUDES += \
+        -I$(srcdir)/../../content/html/content/src
+endif
+
 CXXFLAGS += $(MOZ_CAIRO_CFLAGS)
 
 DEFINES += -D_IMPL_NS_LAYOUT

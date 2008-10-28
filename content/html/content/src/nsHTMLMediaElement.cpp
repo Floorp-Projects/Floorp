@@ -887,3 +887,18 @@ void nsHTMLMediaElement::DestroyContent()
   }
   nsGenericHTMLElement::DestroyContent();
 }
+
+void nsHTMLMediaElement::Freeze()
+{
+  mPausedBeforeFreeze = mPaused;
+  if (!mPaused) {
+    Pause();
+  }
+}
+
+void nsHTMLMediaElement::Thaw()
+{
+  if (!mPausedBeforeFreeze) {
+    Play();
+  }
+}
