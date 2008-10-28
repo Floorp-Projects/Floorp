@@ -224,8 +224,12 @@ nsListBoxBodyFrame::Release(void)
 // QueryInterface
 //
 NS_INTERFACE_MAP_BEGIN(nsListBoxBodyFrame)
-  NS_INTERFACE_MAP_ENTRY(nsIListBoxObject)
   NS_INTERFACE_MAP_ENTRY(nsIScrollbarMediator)
+  if (aIID.Equals(NS_GET_IID(nsListBoxBodyFrame))) {
+    *aInstancePtr = this;
+    return NS_OK;
+  }
+  else
 NS_INTERFACE_MAP_END_INHERITING(nsBoxFrame)
 
 
