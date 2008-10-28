@@ -4290,7 +4290,6 @@ MOZ_ACTIVEX_SCRIPTING_SUPPORT=
 MOZ_BRANDING_DIRECTORY=
 MOZ_DBGRINFO_MODULES=
 MOZ_ENABLE_CANVAS=1
-MOZ_EXTENSIONS_ALL=" wallet p3p venkman inspector irc typeaheadfind gnomevfs sroaming datetime finger cview layout-debug tasks sql xforms schema-validation reporter"
 MOZ_FEEDS=1
 MOZ_IMG_DECODERS_DEFAULT="png gif jpeg bmp xbm icon"
 MOZ_IMG_ENCODERS_DEFAULT="png jpeg"
@@ -5473,7 +5472,7 @@ MOZ_ARG_ENABLE_STRING(extensions,
 [  --enable-extensions     Enable extensions],
 [ for option in `echo $enableval | sed 's/,/ /g'`; do
     if test "$option" = "yes" || test "$option" = "all"; then
-        MOZ_EXTENSIONS="$MOZ_EXTENSIONS $MOZ_EXTENSIONS_ALL"
+        AC_MSG_ERROR([--enable-extensions=$option is no longer supported.])
     elif test "$option" = "no" || test "$option" = "none"; then
         MOZ_EXTENSIONS=""
     elif test "$option" = "default"; then
