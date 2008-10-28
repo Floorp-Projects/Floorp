@@ -505,6 +505,7 @@ nsresult nsPluginFile::GetPluginInfo(nsPluginInfo& info)
   }
 
   //XXX FIXME: past this point some (unlikely) error cases will leak memory
+  // (leak is bug 462023)
 
   // Fill in the info struct based on the data in the BPSupportedMIMETypes struct
   int variantCount = info.fVariantCount;

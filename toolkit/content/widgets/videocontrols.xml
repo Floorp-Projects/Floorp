@@ -172,8 +172,7 @@
             this.Utils.muteButton = document.getAnonymousElementByAttribute(self, "id", "muteButton");
 
             // Set initial state of play/pause button.
-            // XXX (force to a bool, due to bug 457964)
-            this.Utils.playButton.setAttribute("paused", video.paused ? true : false);
+            this.Utils.playButton.setAttribute("paused", video.paused);
 
             function eventBouncer(aEvent) {
                 self.Utils.onMediaEvent(aEvent);
