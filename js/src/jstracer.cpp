@@ -4269,12 +4269,14 @@ TraceRecorder::binary(LOpcode op)
             rightNumber = true;
         }
     }
-    if (l == JSVAL_VOID) {
-        a = lir->insImmq(0);
+    if (JSVAL_TAG(l) == JSVAL_BOOLEAN) {
+        LIns* args[] = { a, cx_ins };
+        a = lir->insCall(&js_BooleanToNumber_ci, args);
         leftNumber = true;
     }
-    if (r == JSVAL_VOID) {
-        b = lir->insImmq(0);
+    if (JSVAL_TAG(r) == JSVAL_BOOLEAN) {
+        LIns* args[] = { b, cx_ins };
+        b = lir->insCall(&js_BooleanToNumber_ci, args);
         rightNumber = true;
     }
     if (leftNumber && rightNumber) {

@@ -2216,6 +2216,12 @@ this.__proto__.a = 3; for (var j = 0; j < 4; ++j) { [a]; }
 testGlobalProtoAccess.expected = "ok";
 test(testGlobalProtoAccess);
 
+function testAddUndefined() {
+    for (var j = 0; j < 3; ++j)
+        (0 + void 0) && 0;
+}
+test(testAddUndefined);
+
 /* Keep these at the end so that we can see the summary after the trace-debug spew. */
 print("\npassed:", passes.length && passes.join(","));
 print("\nFAILED:", fails.length && fails.join(","));
