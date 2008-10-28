@@ -68,54 +68,10 @@
 
 #define MAX_BRIGHTNESS  254
 #define MAX_DARKNESS     0
- 
-void NS_Get3DColors(nscolor aResult[2], nscolor aBackgroundColor)
-{
-  int rb = NS_GET_R(aBackgroundColor);
-  int gb = NS_GET_G(aBackgroundColor);
-  int bb = NS_GET_B(aBackgroundColor);
-  
-  int brightness = NS_GetBrightness(rb,gb,bb);
-
-  int f0, f1;
-  if (brightness < COLOR_DARK_THRESHOLD) {
-    f0 = COLOR_DARK_BS_FACTOR;
-    f1 = COLOR_DARK_TS_FACTOR;
-  } else if (brightness > COLOR_LIGHT_THRESHOLD) {
-    f0 = COLOR_LITE_BS_FACTOR;
-    f1 = COLOR_LITE_TS_FACTOR;
-  } else {
-    f0 = COLOR_DARK_BS_FACTOR +
-      (brightness *
-       (COLOR_LITE_BS_FACTOR - COLOR_DARK_BS_FACTOR) / MAX_COLOR);
-    f1 = COLOR_DARK_TS_FACTOR +
-      (brightness *
-       (COLOR_LITE_TS_FACTOR - COLOR_DARK_TS_FACTOR) / MAX_COLOR);
-  }
-
-  int r = rb - (f0 * rb / 100);
-  int g = gb - (f0 * gb / 100);
-  int b = bb - (f0 * bb / 100);
-  aResult[0] = NS_RGB(r, g, b);
-  if ((r == rb) && (g == gb) && (b == bb)) {
-    aResult[0] = (aBackgroundColor == BLACK) ? DARK_GRAY : BLACK;
-  }
-
-  r = rb + (f1 * (MAX_COLOR - rb) / 100);
-  if (r > 255) r = 255;
-  g = gb + (f1 * (MAX_COLOR - gb) / 100);
-  if (g > 255) g = 255;
-  b = bb + (f1 * (MAX_COLOR - bb) / 100);
-  if (b > 255) b = 255;
-  aResult[1] = NS_RGB(r, g, b);
-  if ((r == rb) && (g == gb) && (b == bb)) {
-    aResult[1] = (aBackgroundColor == WHITE) ? LIGHT_GRAY : WHITE;
-  }
-}
 
 void NS_GetSpecial3DColors(nscolor aResult[2],
-											   nscolor aBackgroundColor,
-											   nscolor aBorderColor)
+                           nscolor aBackgroundColor,
+                           nscolor aBorderColor)
 {
 
   PRUint8 f0, f1;
@@ -124,6 +80,8 @@ void NS_GetSpecial3DColors(nscolor aResult[2],
   PRUint8 rb = NS_GET_R(aBorderColor);
   PRUint8 gb = NS_GET_G(aBorderColor);
   PRUint8 bb = NS_GET_B(aBorderColor);
+
+  PRUint8 a = NS_GET_A(aBorderColor);
 
   // This needs to be optimized.
   // Calculating background brightness again and again is 
@@ -169,12 +127,12 @@ void NS_GetSpecial3DColors(nscolor aResult[2],
   r = rb - (f0 * rb / 100);
   g = gb - (f0 * gb / 100);
   b = bb - (f0 * bb / 100);
-  aResult[0] = NS_RGB(r, g, b);
+  aResult[0] = NS_RGBA(r, g, b, a);
 
   r = rb + (f1 * (MAX_COLOR - rb) / 100);
   g = gb + (f1 * (MAX_COLOR - gb) / 100);
   b = bb + (f1 * (MAX_COLOR - bb) / 100);
-  aResult[1] = NS_RGB(r, g, b);
+  aResult[1] = NS_RGBA(r, g, b, a);
 }
 
 int NS_GetBrightness(PRUint8 aRed, PRUint8 aGreen, PRUint8 aBlue)
@@ -203,14 +161,14 @@ PRInt32 NS_GetLuminosity(nscolor aColor)
 
 // Function to convert RGB color space into the HSV colorspace
 // Hue is the primary color defined from 0 to 359 degrees
-// Saturation is defined from 0 to 255.  The higher the number.. the deeper the color
-// Value is the brightness of the color. 0 is black, 255 is white.  
-void
-NS_RGB2HSV(nscolor aColor,PRUint16 &aHue,PRUint16 &aSat,PRUint16 &aValue)
+// Saturation is defined from 0 to 255.  The higher the number.. the deeper
+// the color Value is the brightness of the color. 0 is black, 255 is white.
+void NS_RGB2HSV(nscolor aColor, PRUint16 &aHue, PRUint16 &aSat,
+                PRUint16 &aValue, PRUint8 &aAlpha)
 {
-PRUint8  r,g,b;
-PRInt16  delta,min,max,r1,b1,g1;
-float    hue;
+  PRUint8 r, g, b;
+  PRInt16 delta, min, max, r1, b1, g1;
+  float   hue;
 
   r = NS_GET_R(aColor);
   g = NS_GET_G(aColor);
@@ -261,18 +219,20 @@ float    hue;
   }
 
   aHue = (PRUint16)hue;
+
+  aAlpha = NS_GET_A(aColor);
 }
 
 // Function to convert HSV color space into the RGB colorspace
 // Hue is the primary color defined from 0 to 359 degrees
-// Saturation is defined from 0 to 255.  The higher the number.. the deeper the color
-// Value is the brightness of the color. 0 is black, 255 is white.  
-void
-NS_HSV2RGB(nscolor &aColor,PRUint16 aHue,PRUint16 aSat,PRUint16 aValue)
+// Saturation is defined from 0 to 255.  The higher the number.. the deeper
+// the color Value is the brightness of the color. 0 is black, 255 is white.
+void NS_HSV2RGB(nscolor &aColor, PRUint16 aHue, PRUint16 aSat, PRUint16 aValue,
+                PRUint8 aAlpha)
 {
-PRUint16  r=0,g=0,b=0;
-PRUint16  i,p,q,t;
-double    h,f,percent;
+  PRUint16  r = 0, g = 0, b = 0;
+  PRUint16  i, p, q, t;
+  double    h, f, percent;
 
   if ( aSat == 0 ){
     // achromatic color, no hue is defined
@@ -308,5 +268,5 @@ double    h,f,percent;
       case 5: r = aValue; g = p; b = q;break;
     }
   }
-  aColor = NS_RGB(r,g,b);
+  aColor = NS_RGBA(r, g, b, aAlpha);
 }
