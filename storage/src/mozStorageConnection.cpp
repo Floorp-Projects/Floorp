@@ -50,6 +50,7 @@
 #include "nsIVariant.h"
 #include "nsIPrefService.h"
 #include "nsIPrefBranch.h"
+#include "nsThreadUtils.h"
 
 #include "mozIStorageAggregateFunction.h"
 #include "mozIStorageFunction.h"
@@ -75,6 +76,7 @@ NS_IMPL_THREADSAFE_ISUPPORTS1(mozStorageConnection, mozIStorageConnection)
 
 mozStorageConnection::mozStorageConnection(mozIStorageService* aService) :
     mDBConn(nsnull)
+,   mAsyncExecutionMutex(nsAutoLock::NewLock("AsyncExecutionMutex"))
 ,   mTransactionMutex(nsAutoLock::NewLock("TransactionMutex"))
 ,   mTransactionInProgress(PR_FALSE)
 ,   mFunctionsMutex(nsAutoLock::NewLock("FunctionsMutex"))
@@ -225,6 +227,16 @@ mozStorageConnection::Close()
     PR_LOG(gStorageLog, PR_LOG_NOTICE, ("Opening connection to '%s'",
                                         leafName.get()));
 #endif
+
+    // The shutdown call runs any pending events to completion, so we want to
+    // do this before closing the connection.
+    {
+        nsAutoLock mutex(mAsyncExecutionMutex);
+        if (mAsyncExecutionThread) {
+            mAsyncExecutionThread->Shutdown();
+            mAsyncExecutionThread = nsnull;
+        }
+    }
 
     {
         nsAutoLock mutex(mProgressHandlerMutex);
@@ -919,6 +931,25 @@ mozStorageConnection::ProgressHandler()
 /**
  ** Other bits
  **/
+
+already_AddRefed<nsIEventTarget>
+mozStorageConnection::getAsyncExecutionTarget()
+{
+    nsAutoLock mutex(mAsyncExecutionMutex);
+
+    if (!mAsyncExecutionThread) {
+        nsresult rv = NS_NewThread(getter_AddRefs(mAsyncExecutionThread));
+        if (NS_FAILED(rv)) {
+            NS_WARNING("Failed to create async thread.");
+            return nsnull;
+        }
+    }
+
+    nsIEventTarget *eventTarget;
+    NS_ADDREF(eventTarget = mAsyncExecutionThread);
+    return eventTarget;
+}
+
 void
 mozStorageConnection::HandleSqliteError(const char *aSqlStatement)
 {
