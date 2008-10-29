@@ -11,15 +11,13 @@
 # for the specific language governing rights and limitations under the
 # License.
 #
-# The Original Code is mozilla.org code.
+# The Original Code is the Win32 Version System.
 #
-# The Initial Developer of the Original Code is
-# Netscape Communications.
-# Portions created by the Initial Developer are Copyright (C) 2001
+# The Initial Developer of the Original Code is Netscape Communications Corporation
+# Portions created by the Initial Developer are Copyright (C) 2002
 # the Initial Developer. All Rights Reserved.
 #
 # Contributor(s):
-#  Brian Ryner <bryner@brianryner.com>
 #
 # Alternatively, the contents of this file may be used under the terms of
 # either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -35,55 +33,53 @@
 #
 # ***** END LICENSE BLOCK *****
 
-DEPTH		= ../../../..
-topsrcdir	= @top_srcdir@
-srcdir		= @srcdir@
-VPATH		= @srcdir@
+ifndef INCLUDED_VERSION_MK
+INCLUDED_VERSION_MK=1
 
-include $(DEPTH)/config/autoconf.mk
-include $(topsrcdir)/config/rules.mk
-
-MODULE      = plugin
-
+# Windows gmake build:
+# Build default .rc file if $(RESFILE) isn't defined.
+# TODO:
+# PBI      : Private build info.  Not used currently.
+#            Guessing the best way would be to set an env var.
+# BINARY   : Binary name.  Not used currently.
+ifeq ($(MOZ_WIDGET_TOOLKIT),windows)
+ifndef RESFILE
+RCFILE=./module.rc
+RESFILE=./module.res
+_RC_STRING = -QUIET 1 -DEPTH $(DEPTH) -TOPSRCDIR $(topsrcdir) -BITS $(MOZ_BITS) -OBJDIR . -SRCDIR $(srcdir) -DISPNAME $(MOZ_APP_DISPLAYNAME)
+ifneq ($(BUILD_OFFICIAL)_$(MOZILLA_OFFICIAL),_)
+_RC_STRING += -OFFICIAL 1
+endif
 ifdef MOZ_DEBUG
-BUILDSTYLE	= Debug
+_RC_STRING += -DEBUG 1
+endif
+ifdef MODULE
+_RC_STRING += -MODNAME $(MODULE)
+endif
+ifdef PROGRAM
+_RC_STRING += -BINARY $(PROGRAM)
 else
-BUILDSTYLE	= Release
+ifdef _PROGRAM
+_RC_STRING += -BINARY $(_PROGRAM)
+else
+ifdef SHARED_LIBRARY
+_RC_STRING += -BINARY $(SHARED_LIBRARY)
+endif
+endif
+endif
+ifdef RCINCLUDE
+_RC_STRING += -RCINCLUDE $(srcdir)/$(RCINCLUDE)
 endif
 
-PROJECT=DefaultPlugin.xcodeproj
-PROJECT_ARG=-project $(PROJECT)
-PBBUILD_ARG=$(PBBUILD_SETTINGS)
+GARBAGE += $(RESFILE) $(RCFILE)
 
-TARGET		= "DefaultPlugin"
+#dummy target so $(RCFILE) doesn't become the default =P
+all::
 
-unexport CC CXX
+$(RCFILE): $(RCINCLUDE) $(topsrcdir)/config/version_win.pl
+	$(PERL) $(topsrcdir)/config/version_win.pl $(_RC_STRING)
 
-# for objdir builds, copy the project, and symlink the sources
-ABS_topsrcdir   := $(shell cd $(topsrcdir); pwd)
-ifneq ($(ABS_topsrcdir),$(MOZ_BUILD_ROOT))
-export::
-	rsync -a --exclude .DS_Store --exclude "CVS/" $(srcdir)/$(PROJECT) .
-	ln -fs $(srcdir)/English.lproj
-	ln -fs $(srcdir)/DefaultPlugin.mm
-	ln -fs $(srcdir)/Info.plist
-	ln -fs $(srcdir)/plugin.png
+endif  # RESFILE
+endif  # Windows
 
-GARBAGE_DIRS += $(PROJECT)
-GARBAGE += \
-	English.lproj \
-	DefaultPlugin.mm \
-	Info.plist \
-	plugin.png \
-	$(NULL)
 endif
-
-GARBAGE_DIRS += build
-
-libs install:: install-plugin
-
-install-plugin: build-plugin
-	$(INSTALL) "$(XCODE_PRODUCT_DIR)/DefaultPlugin.plugin" $(DIST)/bin/plugins
-
-build-plugin:
-	$(PBBUILD) $(PROJECT_ARG) -target $(TARGET) -configuration $(BUILDSTYLE) $(PBBUILD_ARG)
