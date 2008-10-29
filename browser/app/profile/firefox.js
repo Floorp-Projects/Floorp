@@ -747,7 +747,7 @@ pref("places.frecency.unvisitedTypedBonus", 200);
 // 0 - don't pre-populate anything
 // 1 - pre-populate site URL, but don't fetch certificate
 // 2 - pre-populate site URL and pre-fetch certificate
-pref("browser.ssl_override_behavior", 1);
+pref("browser.ssl_override_behavior", 2);
 
 // Controls the display of domain in the identity box for SSL connections.
 // 0 - do not show domain
@@ -773,3 +773,6 @@ pref("breakpad.reportURL", "http://crash-stats.mozilla.com/report/index/");
 
 // base URL for web-based support pages
 pref("app.support.baseURL", "http://support.mozilla.com/1/%APP%/%VERSION%/%OS%/%LOCALE%/");
+
+// Name of alternate about: page for certificate errors (when undefined, defaults to about:neterror)
+pref("security.alternate_certificate_error_page", "certerror");
