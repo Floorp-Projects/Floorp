@@ -57,7 +57,7 @@ def fnmatch_any(filename, patterns):
             return True
     return False
 
-# Check the contents of COPY/SUBDIR against ORIGINAL/SUBDIR.  For each
+# Check the contents of the directory tree COPY against ORIGINAL.  For each
 # file that differs, apply REPORT to COPY, ORIGINAL, and the file's
 # relative path.  COPY and ORIGINAL should be absolute.  Ignore files 
 # that match patterns given in the list IGNORE.
