@@ -162,9 +162,12 @@ struct JSAtomState {
     /* The rt->emptyString atom, see jsstr.c's js_InitRuntimeStringState. */
     JSAtom              *emptyAtom;
 
-    /* Type names and value literals. */
-    JSAtom              *typeAtoms[JSTYPE_LIMIT];
+    /*
+     * Literal value and type names.
+     * NB: booleanAtoms must come right before typeAtoms!
+     */
     JSAtom              *booleanAtoms[2];
+    JSAtom              *typeAtoms[JSTYPE_LIMIT];
     JSAtom              *nullAtom;
 
     /* Standard class constructor or prototype names. */
@@ -278,16 +281,15 @@ extern const char *const js_common_atom_names[];
 
 /*
  * Macros to access C strings for JSType and boolean literals together with
- * checks that type names and booleans starts from index 1 and 1+JSTYPE_LIMIT
- * correspondingly.
+ * checks that boolean names start from index 1 and type names from 1+2.
  */
-#define JS_TYPE_STR(type)    (js_common_atom_names[1 + (type)])
-#define JS_BOOLEAN_STR(type) (js_common_atom_names[1 + JSTYPE_LIMIT + (type)])
+#define JS_BOOLEAN_STR(type) (js_common_atom_names[1 + (type)])
+#define JS_TYPE_STR(type)    (js_common_atom_names[1 + 2 + (type)])
 
 JS_STATIC_ASSERT(1 * sizeof(JSAtom *) ==
-                 offsetof(JSAtomState, typeAtoms) - ATOM_OFFSET_START);
-JS_STATIC_ASSERT((1 + JSTYPE_LIMIT) * sizeof(JSAtom *) ==
                  offsetof(JSAtomState, booleanAtoms) - ATOM_OFFSET_START);
+JS_STATIC_ASSERT((1 + 2) * sizeof(JSAtom *) ==
+                 offsetof(JSAtomState, typeAtoms) - ATOM_OFFSET_START);
 
 /* Well-known predefined C strings. */
 #define JS_PROTO(name,code,init) extern const char js_##name##_str[];

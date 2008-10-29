@@ -68,17 +68,23 @@ js_AtomToPrintableString(JSContext *cx, JSAtom *atom)
 #undef JS_PROTO
 
 /*
- * Names for common atoms defined in JSAtomState starting from
+ * String constants for common atoms defined in JSAtomState starting from
  * JSAtomState.emptyAtom until JSAtomState.lazy.
  *
  * The elements of the array after the first empty string define strings
- * corresponding to JSType enumerators from jspubtd.h and to two boolean
- * literals, false and true. The following assert insists that JSType defines
- * exactly 8 types.
+ * corresponding to the two boolean literals, false and true, followed by the
+ * JSType enumerators from jspubtd.h starting with "undefined" for JSTYPE_VOID
+ * (which is pseudo-boolean 2) and continuing as initialized below. The static
+ * asserts check these relations.
  */
 JS_STATIC_ASSERT(JSTYPE_LIMIT == 8);
+JS_STATIC_ASSERT(JSVAL_TO_BOOLEAN(JSVAL_VOID) == 2);
+JS_STATIC_ASSERT(JSTYPE_VOID == 0);
+
 const char *const js_common_atom_names[] = {
     "",                         /* emptyAtom                    */
+    js_false_str,               /* booleanAtoms[0]              */
+    js_true_str,                /* booleanAtoms[1]              */
     js_undefined_str,           /* typeAtoms[JSTYPE_VOID]       */
     js_object_str,              /* typeAtoms[JSTYPE_OBJECT]     */
     js_function_str,            /* typeAtoms[JSTYPE_FUNCTION]   */
@@ -87,8 +93,6 @@ const char *const js_common_atom_names[] = {
     "boolean",                  /* typeAtoms[JSTYPE_BOOLEAN]    */
     js_null_str,                /* typeAtoms[JSTYPE_NULL]       */
     "xml",                      /* typeAtoms[JSTYPE_XML]        */
-    js_false_str,               /* booleanAtoms[0]              */
-    js_true_str,                /* booleanAtoms[1]              */
     js_null_str,                /* nullAtom                     */
 
 #define JS_PROTO(name,code,init) js_##name##_str,
