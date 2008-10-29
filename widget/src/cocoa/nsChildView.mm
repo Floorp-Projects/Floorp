@@ -974,6 +974,38 @@ NS_IMETHODIMP nsChildView::Show(PRBool aState)
   NS_OBJC_END_TRY_ABORT_BLOCK_NSRESULT;
 }
 
+// Reset the parent of this widget
+NS_IMETHODIMP
+nsChildView::SetParent(nsIWidget* aNewParent)
+{
+  NS_OBJC_BEGIN_TRY_ABORT_BLOCK_NSRESULT;
+
+  NS_ENSURE_ARG(aNewParent);
+  NSView<mozView>* newParentView =
+   (NSView*)aNewParent->GetNativeData(NS_NATIVE_WIDGET); 
+  NS_ENSURE_TRUE(newParentView, NS_ERROR_FAILURE);
+
+  if (mOnDestroyCalled)
+    return NS_OK;
+
+  // make sure we stay alive
+  nsCOMPtr<nsIWidget> kungFuDeathGrip(this);
+  
+  // remove us from our existing parent
+  if (mParentWidget)
+    mParentWidget->RemoveChild(this);
+  // we hold a ref to mView, so this is safe
+  [mView removeFromSuperview];
+  
+  // add us to the new parent
+  aNewParent->AddChild(this);
+  mParentWidget = aNewParent;
+  mParentView   = newParentView;
+  [mParentView addSubview:mView];
+  return NS_OK;
+  
+  NS_OBJC_END_TRY_ABORT_BLOCK_NSRESULT;
+}
 
 nsIWidget*
 nsChildView::GetParent(void)
