@@ -249,6 +249,7 @@ class TraceRecorder : public GCObject {
     bool lazilyImportGlobalSlot(unsigned slot);
 
     nanojit::LIns* guard(bool expected, nanojit::LIns* cond, nanojit::ExitType exitType);
+    nanojit::LIns* guard(bool expected, nanojit::LIns* cond, nanojit::LIns* exit);
     nanojit::LIns* addName(nanojit::LIns* ins, const char* name);
 
     nanojit::LIns* get(jsval* p) const;

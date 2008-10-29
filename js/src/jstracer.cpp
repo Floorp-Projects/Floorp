@@ -1886,13 +1886,20 @@ TraceRecorder::snapshot(ExitType exitType)
     return data;
 }
 
-/* Emit a guard for condition (cond), expecting to evaluate to boolean result (expected). */
+/* Emit a guard for condition (cond), expecting to evaluate to boolean result (expected)
+   and using the supplied side exit if the conditon doesn't hold. */
+LIns*
+TraceRecorder::guard(bool expected, nanojit::LIns* cond, nanojit::LIns* exit)
+{
+    return lir->insGuard(expected ? LIR_xf : LIR_xt, cond, exit);
+}
+
+/* Emit a guard for condition (cond), expecting to evaluate to boolean result (expected)
+   and generate a side exit with type exitType to jump to if the condition does not hold. */
 LIns*
 TraceRecorder::guard(bool expected, LIns* cond, ExitType exitType)
 {
-    return lir->insGuard(expected ? LIR_xf : LIR_xt,
-                         cond,
-                         snapshot(exitType));
+    return guard(expected, cond, snapshot(exitType));
 }
 
 /* Try to match the type of a slot to type t. checkType is used to verify that the type of
@@ -4095,19 +4102,45 @@ TraceRecorder::guardDenseArrayIndex(JSObject* obj, jsint idx, LIns* obj_ins,
                                     LIns* dslots_ins, LIns* idx_ins, ExitType exitType)
 {
     jsuint length = ARRAY_DENSE_LENGTH(obj);
-    bool cond = ((jsuint)idx < length && idx < obj->fslots[JSSLOT_ARRAY_LENGTH]);
 
-    LIns* length_ins = stobj_get_fslot(obj_ins, JSSLOT_ARRAY_LENGTH);
-    LIns* capacity_ins = lir->insLoad(LIR_ldp, dslots_ins, 0 - (int)sizeof(jsval));
-
-    LIns* min_ins = lir->ins_choose(lir->ins2(LIR_ult, length_ins, capacity_ins),
-                                    length_ins,
-                                    capacity_ins);
-    
-    // guard(0 <= index && index < min(length, capacity))
-    guard(cond, lir->ins2(LIR_ult, idx_ins, min_ins), exitType);
-
-    return cond;
+    bool cond = (jsuint(idx) < jsuint(obj->fslots[JSSLOT_ARRAY_LENGTH]) && jsuint(idx) < length);
+    if (cond) {
+        /* Guard array length */
+        LIns* exit = guard(true,
+                           lir->ins2(LIR_ult, idx_ins, stobj_get_fslot(obj_ins, JSSLOT_ARRAY_LENGTH)),
+                           exitType)->oprnd2();
+        /* dslots must not be NULL */
+        guard(false,
+              lir->ins_eq0(dslots_ins),
+              exit);
+        /* Guard array capacity */
+        guard(true,
+              lir->ins2(LIR_ult,
+                        idx_ins,
+                        lir->insLoad(LIR_ldp, dslots_ins, 0 - (int)sizeof(jsval))),
+              exit);
+    } else {
+        /* If not idx < length, stay on trace (and read value as undefined). */ 
+        LIns* br1 = lir->insBranch(LIR_jf, 
+                                   lir->ins2(LIR_ult, 
+                                             idx_ins, 
+                                             stobj_get_fslot(obj_ins, JSSLOT_ARRAY_LENGTH)),
+                                   NULL);
+        /* If dslots is NULL, stay on trace (and read value as undefined). */
+        LIns* br2 = lir->insBranch(LIR_jt, lir->ins_eq0(dslots_ins), NULL);
+        /* If not idx < capacity, stay on trace (and read value as undefined). */
+        LIns* br3 = lir->insBranch(LIR_jf,
+                                   lir->ins2(LIR_ult,
+                                             idx_ins,
+                                             lir->insLoad(LIR_ldp, dslots_ins, 0 - (int)sizeof(jsval))),
+                                   NULL);
+        lir->insGuard(LIR_x, lir->insImm(1), snapshot(exitType));
+        LIns* label = lir->ins0(LIR_label);
+        br1->target(label);
+        br2->target(label);
+        br3->target(label);
+    }
+    return cond;    
 }
 
 /*
