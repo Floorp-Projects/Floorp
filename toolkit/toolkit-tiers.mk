@@ -40,7 +40,7 @@ $(error toolkit-tiers.mk is not compatible with --enable-libxul-sdk=)
 endif
 
 include $(topsrcdir)/config/nspr/build.mk
-include $(topsrcdir)/js/src/build.mk
+include $(topsrcdir)/config/js/build.mk
 include $(topsrcdir)/xpcom/build.mk
 include $(topsrcdir)/netwerk/build.mk
 
