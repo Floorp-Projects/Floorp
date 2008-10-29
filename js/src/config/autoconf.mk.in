@@ -334,14 +334,6 @@ MSMANIFEST_TOOL = @MSMANIFEST_TOOL@
 WIN32_REDIST_DIR = @WIN32_REDIST_DIR@
 WIN32_CRT_SRC_DIR = @WIN32_CRT_SRC_DIR@
 WIN32_CUSTOM_CRT_DIR = @WIN32_CUSTOM_CRT_DIR@
-# These are for custom CRT building
-ifdef MOZ_MEMORY
-ifneq (,$(WIN32_CRT_SRC_DIR)$(WIN32_CUSTOM_CRT_DIR))
-export LIB = @MOZ_LIB@
-export PATH = @MOZ_PATH@
-DLLFLAGS = @DLLFLAGS@
-endif
-endif
 
 # Codesighs tools option, enables win32 mapfiles.
 MOZ_MAPINFO	= @MOZ_MAPINFO@
