@@ -1940,11 +1940,11 @@ function BrowserViewSourceOfDocument(aDocument)
 function BrowserPageInfo(doc, initialTab)
 {
   var args = {doc: doc, initialTab: initialTab};
-  toOpenDialogByTypeAndUrl("Browser:page-info",
-                           doc ? doc.location : window.content.document.location,
-                           "chrome://browser/content/pageinfo/pageInfo.xul",
-                           "chrome,toolbar,dialog=no,resizable",
-                           args);
+  return toOpenDialogByTypeAndUrl("Browser:page-info",
+                                  doc ? doc.location : window.content.document.location,
+                                  "chrome://browser/content/pageinfo/pageInfo.xul",
+                                  "chrome,toolbar,dialog=no,resizable",
+                                  args);
 }
 
 #ifdef DEBUG
@@ -3065,9 +3065,9 @@ function toOpenDialogByTypeAndUrl(inType, relatedUrl, windowUri, features, extra
 
   // We didn't find a matching window, so open a new one.
   if (features)
-    window.openDialog(windowUri, "_blank", features, extraArgument);
-  else
-    window.openDialog(windowUri, "_blank", "chrome,extrachrome,menubar,resizable,scrollbars,status,toolbar", extraArgument);
+    return window.openDialog(windowUri, "_blank", features, extraArgument);
+
+  return window.openDialog(windowUri, "_blank", "chrome,extrachrome,menubar,resizable,scrollbars,status,toolbar", extraArgument);
 }
 
 function OpenBrowserWindow()
