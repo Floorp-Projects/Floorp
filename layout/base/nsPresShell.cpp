@@ -2100,7 +2100,7 @@ nsresult PresShell::SetPrefFocusRules(void)
       strRule.AppendLiteral(":focus {outline: ");     // For example 3px dotted WindowText (maximum 4)
       strRule.AppendInt(focusRingWidth);
       if (focusRingStyle == 0) // solid
-        strRule.AppendLiteral("px solid -moz-mac-focusring !important; -moz-outline-radius: 3px;  -moz-outline-offset: 1px; } ");
+        strRule.AppendLiteral("px solid -moz-mac-focusring !important; -moz-outline-radius: 3px; outline-offset: 1px; } ");
       else // dotted
         strRule.AppendLiteral("px dotted WindowText !important; } ");
       // insert the rules
