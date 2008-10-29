@@ -63,6 +63,7 @@ dnl ========================================================
 AC_PREREQ(2.13)
 AC_INIT(jsapi.h)
 AC_CONFIG_AUX_DIR(${srcdir}/build/autoconf)
+AC_CONFIG_HEADER(js-config.h)
 AC_CANONICAL_SYSTEM
 TARGET_CPU="${target_cpu}"
 TARGET_VENDOR="${target_vendor}"
