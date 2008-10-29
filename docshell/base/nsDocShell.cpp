@@ -3067,6 +3067,13 @@ nsDocShell::DisplayLoadError(nsresult aError, nsIURI *aURI,
                 if (expert) {
                     cssClass.AssignLiteral("expertBadCert");
                 }
+                
+                // See if an alternate cert error page is registered
+                nsXPIDLCString alternateErrorPage;
+                mPrefs->GetCharPref("security.alternate_certificate_error_page",
+                                    getter_Copies(alternateErrorPage));
+                if (alternateErrorPage)
+                    errorPage.Assign(alternateErrorPage);
             } else {
                 error.AssignLiteral("nssFailure2");
             }

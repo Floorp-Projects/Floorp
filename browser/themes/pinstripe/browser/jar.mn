@@ -1,6 +1,7 @@
 classic.jar:
 % skin browser classic/1.0 %skin/classic/browser/
 * skin/classic/browser/aboutSessionRestore.css              (aboutSessionRestore.css)
+  skin/classic/browser/aboutCertError.css                   (aboutCertError.css)
   skin/classic/browser/bookmark_toolbar_background.png
   skin/classic/browser/bookmark-open-left.png
   skin/classic/browser/bookmark-open-mid.png
@@ -42,6 +43,8 @@ classic.jar:
   skin/classic/browser/search-bar-background-left.png
   skin/classic/browser/search-bar-background-mid.png
   skin/classic/browser/search-bar-background-right.png
+  skin/classic/browser/section_collapsed.png
+  skin/classic/browser/section_expanded.png
   skin/classic/browser/Secure-Glyph-White.png
   skin/classic/browser/Secure.png
   skin/classic/browser/Security-broken.png
