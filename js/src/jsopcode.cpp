@@ -2453,7 +2453,7 @@ Decompile(SprintStack *ss, jsbytecode *pc, intN nb, JSOp nextop)
                     } else {
                         LOCAL_ASSERT(pc[len] == JSOP_LEAVEBLOCKEXPR);
 
-                        lval = JS_strdup(cx, POP_STR());
+                        lval = JS_strdup(cx, PopStr(ss, JSOP_NOP));
                         if (!lval)
                             return NULL;
 
@@ -2463,7 +2463,7 @@ Decompile(SprintStack *ss, jsbytecode *pc, intN nb, JSOp nextop)
                             JS_free(cx, (char *)lval);
                             return NULL;
                         }
-                        rval = POP_STR();
+                        rval = PopStr(ss, JSOP_SETNAME);
                         todo = Sprint(&ss->sprinter,
                                       (*rval == '{')
                                       ? "let (%s) (%s)"
@@ -4341,14 +4341,10 @@ Decompile(SprintStack *ss, jsbytecode *pc, intN nb, JSOp nextop)
                 const char *maybeComma;
 
               case JSOP_INITELEM:
-                /* Turn off most parens (all if there's only one initialiser). */
-                LOCAL_ASSERT(pc + len < endpc);
                 isFirst = (ss->opcodes[ss->top - 3] == JSOP_NEWINIT);
-                op = (isFirst &&
-                      GetStr(ss, ss->top - 2)[0] == '0' &&
-                      (JSOp) pc[len] == JSOP_ENDINIT)
-                     ? JSOP_NOP
-                     : JSOP_SETNAME;
+
+                /* Turn off most parens. */
+                op = JSOP_SETNAME;
                 rval = POP_STR();
 
                 /* Turn off all parens for xval and lval, which we control. */
