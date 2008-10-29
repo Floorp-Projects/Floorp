@@ -166,10 +166,6 @@ MAKEFILES_intl="
   intl/strres/tests/Makefile
 "
 
-MAKEFILES_js="
-  js/src/Makefile
-"
-
 MAKEFILES_liveconnect="
   js/src/liveconnect/Makefile
   js/src/liveconnect/classes/Makefile
@@ -774,7 +770,6 @@ add_makefiles "
   $MAKEFILES_gfx
   $MAKEFILES_htmlparser
   $MAKEFILES_intl
-  $MAKEFILES_js
   $MAKEFILES_liveconnect
   $MAKEFILES_xpconnect
   $MAKEFILES_jsdebugger
