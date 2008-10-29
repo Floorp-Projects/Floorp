@@ -6768,7 +6768,6 @@ js_Interpret(JSContext *cx)
           L_JSOP_DEFXMLNS:
 # endif
 
-          L_JSOP_UNUSED78:
           L_JSOP_UNUSED79:
           L_JSOP_UNUSED103:
           L_JSOP_UNUSED131:
