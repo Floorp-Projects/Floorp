@@ -11,15 +11,15 @@
 # for the specific language governing rights and limitations under the
 # License.
 #
-# The Original Code is mozilla.org code.
+# The Original Code is the Mozilla build system.
 #
 # The Initial Developer of the Original Code is
-# Netscape Communications.
-# Portions created by the Initial Developer are Copyright (C) 2001
+# the Mozilla Foundation <http://www.mozilla.org/>.
+# Portions created by the Initial Developer are Copyright (C) 2006
 # the Initial Developer. All Rights Reserved.
 #
 # Contributor(s):
-#  Brian Ryner <bryner@brianryner.com>
+#   Benjamin Smedberg <benjamin@smedbergs.us> (Initial Code)
 #
 # Alternatively, the contents of this file may be used under the terms of
 # either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -35,55 +35,6 @@
 #
 # ***** END LICENSE BLOCK *****
 
-DEPTH		= ../../../..
-topsrcdir	= @top_srcdir@
-srcdir		= @srcdir@
-VPATH		= @srcdir@
-
-include $(DEPTH)/config/autoconf.mk
-include $(topsrcdir)/config/rules.mk
-
-MODULE      = plugin
-
-ifdef MOZ_DEBUG
-BUILDSTYLE	= Debug
-else
-BUILDSTYLE	= Release
-endif
-
-PROJECT=DefaultPlugin.xcodeproj
-PROJECT_ARG=-project $(PROJECT)
-PBBUILD_ARG=$(PBBUILD_SETTINGS)
-
-TARGET		= "DefaultPlugin"
-
-unexport CC CXX
-
-# for objdir builds, copy the project, and symlink the sources
-ABS_topsrcdir   := $(shell cd $(topsrcdir); pwd)
-ifneq ($(ABS_topsrcdir),$(MOZ_BUILD_ROOT))
-export::
-	rsync -a --exclude .DS_Store --exclude "CVS/" $(srcdir)/$(PROJECT) .
-	ln -fs $(srcdir)/English.lproj
-	ln -fs $(srcdir)/DefaultPlugin.mm
-	ln -fs $(srcdir)/Info.plist
-	ln -fs $(srcdir)/plugin.png
-
-GARBAGE_DIRS += $(PROJECT)
-GARBAGE += \
-	English.lproj \
-	DefaultPlugin.mm \
-	Info.plist \
-	plugin.png \
-	$(NULL)
-endif
-
-GARBAGE_DIRS += build
-
-libs install:: install-plugin
-
-install-plugin: build-plugin
-	$(INSTALL) "$(XCODE_PRODUCT_DIR)/DefaultPlugin.plugin" $(DIST)/bin/plugins
-
-build-plugin:
-	$(PBBUILD) $(PROJECT_ARG) -target $(TARGET) -configuration $(BUILDSTYLE) $(PBBUILD_ARG)
+TIERS += js
+tier_js_staticdirs = js/src
+tier_js_dirs = config/js

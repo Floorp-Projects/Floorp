@@ -1,3 +1,4 @@
+#
 # ***** BEGIN LICENSE BLOCK *****
 # Version: MPL 1.1/GPL 2.0/LGPL 2.1
 #
@@ -14,16 +15,15 @@
 # The Original Code is mozilla.org code.
 #
 # The Initial Developer of the Original Code is
-# Netscape Communications.
-# Portions created by the Initial Developer are Copyright (C) 2001
+# Netscape Communications Corporation.
+# Portions created by the Initial Developer are Copyright (C) 1998
 # the Initial Developer. All Rights Reserved.
 #
 # Contributor(s):
-#  Brian Ryner <bryner@brianryner.com>
 #
 # Alternatively, the contents of this file may be used under the terms of
-# either the GNU General Public License Version 2 or later (the "GPL"), or
-# the GNU Lesser General Public License Version 2.1 or later (the "LGPL"),
+# either of the GNU General Public License Version 2 or later (the "GPL"),
+# or the GNU Lesser General Public License Version 2.1 or later (the "LGPL"),
 # in which case the provisions of the GPL or the LGPL are applicable instead
 # of those above. If you wish to allow use of your version of this file only
 # under the terms of either the GPL or the LGPL, and not to allow others to
@@ -35,55 +35,19 @@
 #
 # ***** END LICENSE BLOCK *****
 
-DEPTH		= ../../../..
-topsrcdir	= @top_srcdir@
-srcdir		= @srcdir@
-VPATH		= @srcdir@
+INCLUDED_INSURE_MK = 1
 
-include $(DEPTH)/config/autoconf.mk
-include $(topsrcdir)/config/rules.mk
+INSURE_MATCH_SCRIPT=$(topsrcdir)/build/autoconf/match-dir.sh
 
-MODULE      = plugin
+INSURE_EXCLUDE=$(shell $(INSURE_MATCH_SCRIPT) $(MOZ_INSURE_EXCLUDE_DIRS))
 
-ifdef MOZ_DEBUG
-BUILDSTYLE	= Debug
-else
-BUILDSTYLE	= Release
-endif
+INSURE_INCLUDE=$(shell $(INSURE_MATCH_SCRIPT) $(MOZ_INSURE_DIRS))
 
-PROJECT=DefaultPlugin.xcodeproj
-PROJECT_ARG=-project $(PROJECT)
-PBBUILD_ARG=$(PBBUILD_SETTINGS)
+ifeq ($(INSURE_EXCLUDE),0)
 
-TARGET		= "DefaultPlugin"
+ifeq ($(INSURE_INCLUDE),1)
+CC		:= $(MOZ_INSURE)
+CXX		:= $(MOZ_INSURE)
+endif # INSURE_INCLUDE == 1
 
-unexport CC CXX
-
-# for objdir builds, copy the project, and symlink the sources
-ABS_topsrcdir   := $(shell cd $(topsrcdir); pwd)
-ifneq ($(ABS_topsrcdir),$(MOZ_BUILD_ROOT))
-export::
-	rsync -a --exclude .DS_Store --exclude "CVS/" $(srcdir)/$(PROJECT) .
-	ln -fs $(srcdir)/English.lproj
-	ln -fs $(srcdir)/DefaultPlugin.mm
-	ln -fs $(srcdir)/Info.plist
-	ln -fs $(srcdir)/plugin.png
-
-GARBAGE_DIRS += $(PROJECT)
-GARBAGE += \
-	English.lproj \
-	DefaultPlugin.mm \
-	Info.plist \
-	plugin.png \
-	$(NULL)
-endif
-
-GARBAGE_DIRS += build
-
-libs install:: install-plugin
-
-install-plugin: build-plugin
-	$(INSTALL) "$(XCODE_PRODUCT_DIR)/DefaultPlugin.plugin" $(DIST)/bin/plugins
-
-build-plugin:
-	$(PBBUILD) $(PROJECT_ARG) -target $(TARGET) -configuration $(BUILDSTYLE) $(PBBUILD_ARG)
+endif # INSURE_EXCLUDE == 0

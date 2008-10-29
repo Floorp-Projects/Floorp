@@ -42,7 +42,7 @@
 
 #ifdef JS_TRACER
 
-#include "nanojit.h"
+#include "nanojit/nanojit.h"
 
 enum JSTNErrType { INFALLIBLE, FAIL_NULL, FAIL_NEG, FAIL_VOID, FAIL_JSVAL };
 enum { JSTN_ERRTYPE_MASK = 7, JSTN_MORE = 8 };
