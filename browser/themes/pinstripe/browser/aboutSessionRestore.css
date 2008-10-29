@@ -37,7 +37,7 @@
 %endif
 
 #errorPageContainer {
-  background-image: url("chrome://global/skin/icons/question-48.png");
+  background-image: url("chrome://global/skin/icons/question-64.png");
 }
 
 #tabList {
@@ -57,27 +57,13 @@ treechildren::-moz-tree-image(noicon) {
   list-style-image: url("chrome://mozapps/skin/places/defaultFavicon.png");
 }
 treechildren::-moz-tree-image(container, noicon) {
-  list-style-image: url("chrome://global/skin/icons/folder-item.png");
-  -moz-image-region: rect(0px, 32px, 16px, 16px);
-}
-treechildren::-moz-tree-image(container, open, noicon) {
-  -moz-image-region: rect(16px, 32px, 32px, 16px);
+  list-style-image: url("chrome://global/skin/tree/folder.png");
 }
 treechildren::-moz-tree-image(checked) {
   list-style-image: url("chrome://global/skin/checkbox/cbox-check.gif");
 }
 treechildren::-moz-tree-image(partial) {
   list-style-image: url("chrome://global/skin/checkbox/cbox-check-dis.gif");
-}
-
-treechildren::-moz-tree-row(odd) {
-  background-color: -moz-field;
-}
-treechildren::-moz-tree-row(alternate) {
-  background-color: -moz-oddtreerow;
-}
-treechildren::-moz-tree-row(alternate, selected) {
-  background-color: -moz-mac-secondaryhighlight;
 }
 
 #buttons {
