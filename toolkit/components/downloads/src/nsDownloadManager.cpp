@@ -101,12 +101,15 @@
 #define PREF_BDM_SCANWHENDONE "browser.download.manager.scanWhenDone"
 #define PREF_BDM_RESUMEONWAKEDELAY "browser.download.manager.resumeOnWakeDelay"
 #define PREF_BH_DELETETEMPFILEONEXIT "browser.helperApps.deleteTempFileOnExit"
+#define PREF_BDM_ALERTONEXEOPEN "browser.download.manager.alertOnEXEOpen"
 
 static const PRInt64 gUpdateInterval = 400 * PR_USEC_PER_MSEC;
 
 #define DM_SCHEMA_VERSION      8
 #define DM_DB_NAME             NS_LITERAL_STRING("downloads.sqlite")
 #define DM_DB_CORRUPT_FILENAME NS_LITERAL_STRING("downloads.sqlite.corrupt")
+
+#define NS_SYSTEMINFO_CONTRACTID "@mozilla.org/system-info;1"
 
 ////////////////////////////////////////////////////////////////////////////////
 //// nsDownloadManager
@@ -1267,7 +1270,6 @@ nsDownloadManager::GetDefaultDownloadsDirectory(nsILocalFile **aResult)
   NS_ENSURE_SUCCESS(rv, rv);
 
   // Check the os version
-  #define NS_SYSTEMINFO_CONTRACTID "@mozilla.org/system-info;1"
   nsCOMPtr<nsIPropertyBag2> infoService =
      do_GetService(NS_SYSTEMINFO_CONTRACTID, &rv);
   NS_ENSURE_SUCCESS(rv, rv);
@@ -1474,17 +1476,6 @@ nsDownloadManager::AddDownload(DownloadType aDownloadType,
   }
 
   DownloadState startState = nsIDownloadManager::DOWNLOAD_QUEUED;
-#ifdef DOWNLOAD_SCANNER
-  if (mScanner) {
-    AVCheckPolicyState res = mScanner->CheckPolicy(aSource, aTarget);
-    if (res == AVPOLICY_BLOCKED) {
-      // This download will get deleted during a call to IAE's Save,
-      // so go ahead and mark it as blocked and avoid the download.
-      (void)dl->Cancel();
-      startState = nsIDownloadManager::DOWNLOAD_BLOCKED_POLICY;
-    }
-  }
-#endif
 
   PRInt64 id = AddDownloadToDB(dl->mDisplayName, source, target, tempPath,
                                dl->mStartTime, dl->mLastUpdate,
@@ -1496,6 +1487,18 @@ nsDownloadManager::AddDownload(DownloadType aDownloadType,
   rv = AddToCurrentDownloads(dl);
   (void)dl->SetState(startState);
   NS_ENSURE_SUCCESS(rv, rv);
+
+#ifdef DOWNLOAD_SCANNER
+  if (mScanner) {
+    AVCheckPolicyState res = mScanner->CheckPolicy(aSource, aTarget);
+    if (res == AVPOLICY_BLOCKED) {
+      // This download will get deleted during a call to IAE's Save,
+      // so go ahead and mark it as blocked and avoid the download.
+      (void)CancelDownload(id);
+      startState = nsIDownloadManager::DOWNLOAD_BLOCKED_POLICY;
+    }
+  }
+#endif
 
   // Check with parental controls to see if file downloads
   // are allowed for this user. If not allowed, cancel the
@@ -2205,23 +2208,24 @@ nsDownload::SetState(DownloadState aState)
         }
       }
 #if defined(XP_WIN) && !defined(WINCE)
-      // Default is to add the download to the system's "recent documents"
-      // list, with a pref to disable.
-      PRBool addToRecentDocs = PR_TRUE;
-      if (pref)
-        pref->GetBoolPref(PREF_BDM_ADDTORECENTDOCS, &addToRecentDocs);
+      nsCOMPtr<nsIFileURL> fileURL = do_QueryInterface(mTarget);
+      nsCOMPtr<nsIFile> file;
+      nsAutoString path;
+      
+      if (fileURL &&
+          NS_SUCCEEDED(fileURL->GetFile(getter_AddRefs(file))) &&
+          file &&
+          NS_SUCCEEDED(file->GetPath(path))) {
 
-      if (addToRecentDocs) {
-        LPSHELLFOLDER lpShellFolder = NULL;
+        // On windows, add the download to the system's "recent documents"
+        // list, with a pref to disable.
+        {
+          PRBool addToRecentDocs = PR_TRUE;
+          if (pref)
+            pref->GetBoolPref(PREF_BDM_ADDTORECENTDOCS, &addToRecentDocs);
 
-        if (SUCCEEDED(::SHGetDesktopFolder(&lpShellFolder))) {
-          nsCOMPtr<nsIFileURL> fileURL = do_QueryInterface(mTarget);
-          nsCOMPtr<nsIFile> file;
-          nsAutoString path;
-          if (fileURL &&
-              NS_SUCCEEDED(fileURL->GetFile(getter_AddRefs(file))) &&
-              file &&
-              NS_SUCCEEDED(file->GetPath(path))) {
+          LPSHELLFOLDER lpShellFolder = NULL;
+          if (addToRecentDocs && SUCCEEDED(::SHGetDesktopFolder(&lpShellFolder))) {
             PRUnichar *filePath = ToNewUnicode(path);
             LPITEMIDLIST lpItemIDList = NULL;
             if (SUCCEEDED(lpShellFolder->ParseDisplayName(NULL, NULL, filePath,
@@ -2231,8 +2235,41 @@ nsDownload::SetState(DownloadState aState)
               ::CoTaskMemFree(lpItemIDList);
             }
             nsMemory::Free(filePath);
+            lpShellFolder->Release();
           }
-          lpShellFolder->Release();
+        }
+
+        // On Vista and up, we rely on native security prompting when users
+        // open executable content. If the option is set, add meta data to the
+        // 'Zone.Identifier' resource fork of the file which indicates this
+        // content came from the internet.
+        {
+          nsCOMPtr<nsIPrefBranch> pref =
+            do_GetService(NS_PREFSERVICE_CONTRACTID);
+          PRBool alert = PR_TRUE;
+          if (pref)
+            (void)pref->GetBoolPref(PREF_BDM_ALERTONEXEOPEN, &alert);
+          nsAutoString forkPath = path;
+          forkPath.AppendLiteral(":Zone.Identifier");
+
+          if (alert) {
+            HANDLE hFile = CreateFileW(forkPath.get(), GENERIC_WRITE,
+                                       FILE_SHARE_READ | FILE_SHARE_WRITE | FILE_SHARE_DELETE,
+                                       NULL, OPEN_ALWAYS, FILE_ATTRIBUTE_NORMAL, NULL);
+            if (hFile != INVALID_HANDLE_VALUE) {
+              nsAutoString metaData;
+              metaData.AppendLiteral("[ZoneTransfer]\nZoneId=3");
+              DWORD writeLen = 0;
+              (void)WriteFile(hFile, metaData.get(), metaData.Length()*2, &writeLen,
+                              NULL);
+              CloseHandle(hFile);
+            }
+          }
+          else {
+            // Virus scanning will often add the resource fork to the file, but since
+            // the user doesn't want to be prompted, delete it.
+            DeleteFileW(forkPath.get());
+          }
         }
       }
 #endif
