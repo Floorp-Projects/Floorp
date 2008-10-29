@@ -49,7 +49,7 @@
 #include "mozStorageHelper.h"
 #include "mozStorageResultSet.h"
 #include "mozStorageRow.h"
-#include "mozStorageBackground.h"
+#include "mozStorageConnection.h"
 #include "mozStorageError.h"
 #include "mozStorageEvents.h"
 
@@ -532,7 +532,7 @@ NS_IMPL_THREADSAFE_ISUPPORTS2(
 
 nsresult
 NS_executeAsync(nsTArray<sqlite3_stmt *> &aStatements,
-                mozIStorageConnection *aConnection,
+                mozStorageConnection *aConnection,
                 mozIStorageStatementCallback *aCallback,
                 mozIStoragePendingStatement **_stmt)
 {
@@ -544,7 +544,8 @@ NS_executeAsync(nsTArray<sqlite3_stmt *> &aStatements,
   NS_ENSURE_SUCCESS(rv, rv);
 
   // Dispatch it to the background
-  nsIEventTarget *target = mozStorageBackground::getService()->target();
+  nsCOMPtr<nsIEventTarget> target(aConnection->getAsyncExecutionTarget());
+  NS_ENSURE_TRUE(target, NS_ERROR_NOT_AVAILABLE);
   rv = target->Dispatch(event, NS_DISPATCH_NORMAL);
   NS_ENSURE_SUCCESS(rv, rv);
 
