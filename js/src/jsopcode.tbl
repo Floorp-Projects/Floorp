@@ -64,9 +64,10 @@
  * format       Bytecode plus immediate operand encoding format
  *
  * Precedence   Operators               Opcodes
- *  1           let (x = y) z, yield w  JSOP_LEAVEBLOCKEXPR, JSOP_YIELD
+ *  1           yield w                 JSOP_YIELD
  *  2           ,                       JSOP_POP with SRC_PCDELTA, JSOP_RETURN
- *  3           =, +=, etc.             JSOP_SETNAME, etc. (all JOF_SET)
+ *  3           =, +=, etc.             JSOP_SETNAME, etc. (all JOF_SET);
+ *                let (...) ...           and JSOP_LEAVEBLOCKEXPR
  *  4           ?:                      JSOP_IFEQ, JSOP_IFEQX
  *  5           ||                      JSOP_OR, JSOP_ORX
  *  6           &&                      JSOP_AND, JSOP_ANDX
@@ -82,13 +83,21 @@
  * 16           3.14, 0, etc.           JSOP_DOUBLE, JSOP_ZERO, etc.
  * 17           new                     JSOP_NEW
  * 18           x.y, f(), etc.          JSOP_GETPROP, JSOP_CALL, etc.
- * 19           x, null, etc.           JSOP_NAME, JSOP_NULL, etc.
+ * 19           x, null,                JSOP_NAME, JSOP_NULL, etc.;
+ *               function (...) ...       and JSOP_ANONFUNOBJ, JSOP_NAMEDFUNOBJ
  *
  * The push-numeric-constant operators, JSOP_ZERO, JSOP_DOUBLE, etc., have
  * lower precedence than the member operators emitted for the . operator, to
  * cause the decompiler to parenthesize the . left operand, e.g. (0).foo.
- * Otherwise the . could be taken as a decimal point.  We use the same level
- * 16 for function expressions too, to force parenthesization.
+ * Otherwise the . could be taken as a decimal point.
+ *
+ * Let expressions are "primary" when viewed from the left, but they eat up ops
+ * to the right as if assignment expressions and therefore have precedence 3.
+ * This makes the decompiler retain the parentheses in (let (a=0) x) ? a : 0
+ * but omit the superfluous ones in (let (a=0) x), a.
+ *
+ * Yield expressions must be parenthesized even in comma-expressions and
+ * argument lists, so they have the lowest precedence.
  *
  * This file is best viewed with 128 columns:
 12345678901234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789012345678
@@ -506,7 +515,7 @@ OPDEF(JSOP_ENUMCONSTELEM, 214,"enumconstelem",NULL,   1,  3,  0,  3,  JOF_BYTE|J
  * Variant of JSOP_LEAVEBLOCK has a result on the stack above the locals,
  * which must be moved down when the block pops.
  */
-OPDEF(JSOP_LEAVEBLOCKEXPR,215,"leaveblockexpr",NULL,  3, -1,  1,  1,  JOF_UINT16)
+OPDEF(JSOP_LEAVEBLOCKEXPR,215,"leaveblockexpr",NULL,  3, -1,  1,  3,  JOF_UINT16)
 
 /*
  * Optimize common JSOP_{THIS,GET{ARG,LOCAL}} -> JSOP_GETPROP cliches.
