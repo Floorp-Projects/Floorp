@@ -170,6 +170,7 @@ CSRCS 		+= \
 endif
 
 INSTALLED_HEADERS = \
+		js-config.h \
 		jsautocfg.h \
 		jsautokw.h \
 		js.msg \
