@@ -2184,7 +2184,7 @@ function BrowserOnCommand(event) {
 
     // If the event came from an ssl error page, it is probably either the "Add
     // Exception…" or "Get me out of here!" button
-    if (/^about:neterror\?e=nssBadCert/.test(errorDoc.documentURI)) {
+    if (/^about:certerror/.test(errorDoc.documentURI)) {
       if (ot == errorDoc.getElementById('exceptionDialogButton')) {
         var params = { exceptionAdded : false };
         
@@ -2733,8 +2733,10 @@ const DOMLinkHandler = {
             // only allow chrome:// favicons
             const aboutNeterr = /^about:neterror\?/;
             const aboutBlocked = /^about:blocked\?/;
+            const aboutCert = /^about:certerror\?/;
             if (!(aboutNeterr.test(targetDoc.documentURI) ||
-                  aboutBlocked.test(targetDoc.documentURI)) ||
+                  aboutBlocked.test(targetDoc.documentURI) ||
+                  aboutCert.test(targetDoc.documentURI)) ||
                 !uri.schemeIs("chrome")) {
               var ssm = Cc["@mozilla.org/scriptsecuritymanager;1"].
                         getService(Ci.nsIScriptSecurityManager);
