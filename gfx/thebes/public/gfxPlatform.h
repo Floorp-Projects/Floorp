@@ -60,7 +60,6 @@ class gfxFont;
 class gfxFontGroup;
 struct gfxFontStyle;
 class gfxUserFontSet;
-struct gfxDownloadedFontData;
 class gfxFontEntry;
 class nsIURI;
 
@@ -200,10 +199,8 @@ public:
     /**
      * Activate a platform font (needed to support @font-face src url() )
      *
-     * Note: MakePlatformFont implementation is responsible for removing font file data, since data may need to 
-     * persist beyond this call.
      */
-    virtual gfxFontEntry* MakePlatformFont(const gfxFontEntry *aProxyEntry, const gfxDownloadedFontData* aFontData) { return nsnull; }
+    virtual gfxFontEntry* MakePlatformFont(const gfxFontEntry *aProxyEntry, const PRUint8 *aFontData, PRUint32 aLength) { return nsnull; }
 
     /**
      * Whether to allow downloadable fonts via @font-face rules
