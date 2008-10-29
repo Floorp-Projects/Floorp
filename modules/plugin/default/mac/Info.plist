@@ -2,12 +2,26 @@
 <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
 <plist version="1.0">
 <dict>
+	<key>WebPluginMIMETypes</key>
+	<dict>
+		<key>*</key>
+		<dict>
+			<key>WebPluginExtensions</key>
+			<array>
+				<string>*</string>
+			</array>
+			<key>WebPluginTypeDescription</key>
+			<string>All types</string>
+		</dict>
+	</dict>
+	<key>WebPluginDescription</key>
+	<string>Gecko default plugin</string>
+	<key>WebPluginName</key>
+	<string>Default Plugin</string>
 	<key>CFBundleDevelopmentRegion</key>
 	<string>English</string>
 	<key>CFBundleExecutable</key>
-	<string>Default Plugin</string>
-	<key>CFBundleIconFile</key>
-	<string></string>
+	<string>${EXECUTABLE_NAME}</string>
 	<key>CFBundleIdentifier</key>
 	<string>org.mozilla.DefaultPlugin</string>
 	<key>CFBundleInfoDictionaryVersion</key>
@@ -15,8 +29,6 @@
 	<key>CFBundlePackageType</key>
 	<string>NSPL</string>
 	<key>CFBundleVersion</key>
-	<string>1.0.0.15</string>
-	<key>CSResourcesFileMapped</key>
-	<true/>
+	<string>2.0</string>
 </dict>
 </plist>
