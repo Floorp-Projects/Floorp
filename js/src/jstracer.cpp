@@ -1939,7 +1939,7 @@ TraceRecorder::checkType(jsval& v, uint8 t, jsval*& stage_val, LIns*& stage_ins,
         if (!isNumber(v))
             return false; /* not a number? type mismatch */
         LIns* i = get(&v);
-        /* We sink i2f conversions into the side exit, but at the loop edge we have to make
+        /* We sink i2f conversions into the side exit, but at the loop edge we have to
            sure we promote back to double if at loop entry we want a double. */
         if (isPromoteInt(i)) {
             stage_val = &v;
@@ -3864,6 +3864,30 @@ LIns* TraceRecorder::makeNumberInt32(LIns* f)
     return x;
 }
 
+LIns*
+TraceRecorder::stringify(jsval& v, LIns* v_ins)
+{
+    if (JSVAL_IS_STRING(v))
+        return v_ins;
+
+    LIns* args[] = { v_ins, cx_ins };
+    const CallInfo* ci;
+    if (JSVAL_IS_NUMBER(v)) {
+        ci = &js_NumberToString_ci;
+    } else if (JSVAL_TAG(v) == JSVAL_BOOLEAN) {
+        ci = &js_BooleanOrUndefinedToString_ci;
+    } else {
+        JS_ASSERT(JSVAL_IS_OBJECT(v));
+        // This is unsafe until we are able to abort if we re-enter the interpreter.
+        // FIXME: 456511
+        // ci = &js_ObjectToString_ci;
+        return NULL;
+    }
+    v_ins = lir->insCall(ci, args);
+    guard(false, lir->ins_eq0(v_ins), OOM_EXIT);
+    return v_ins;
+}
+
 bool
 TraceRecorder::ifop()
 {
@@ -4129,7 +4153,7 @@ TraceRecorder::cmp(LOpcode op, int flags)
              * branched.  Failing that, I want to be able to ins_choose on quads
              * without cmov.  Failing that, eat flaming builtin!
              */
-            l_ins = lir->insCall(&js_BooleanToNumber_ci, args);
+            l_ins = lir->insCall(&js_BooleanOrUndefinedToNumber_ci, args);
         } else if (!isNumber(l)) {
             ABORT_TRACE("unsupported LHS type for cmp vs number");
         }
@@ -4145,7 +4169,7 @@ TraceRecorder::cmp(LOpcode op, int flags)
             r_ins = lir->insCall(&js_StringToNumber_ci, args);
         } else if (JSVAL_TAG(r) == JSVAL_BOOLEAN) {
             // See above for the sob story.
-            r_ins = lir->insCall(&js_BooleanToNumber_ci, args);
+            r_ins = lir->insCall(&js_BooleanOrUndefinedToNumber_ci, args);
         } else if (!isNumber(r)) {
             ABORT_TRACE("unsupported RHS type for cmp vs number");
         }
@@ -4268,12 +4292,12 @@ TraceRecorder::binary(LOpcode op)
     }
     if (JSVAL_TAG(l) == JSVAL_BOOLEAN) {
         LIns* args[] = { a, cx_ins };
-        a = lir->insCall(&js_BooleanToNumber_ci, args);
+        a = lir->insCall(&js_BooleanOrUndefinedToNumber_ci, args);
         leftNumber = true;
     }
     if (JSVAL_TAG(r) == JSVAL_BOOLEAN) {
         LIns* args[] = { b, cx_ins };
-        b = lir->insCall(&js_BooleanToNumber_ci, args);
+        b = lir->insCall(&js_BooleanOrUndefinedToNumber_ci, args);
         rightNumber = true;
     }
     if (leftNumber && rightNumber) {
@@ -5041,21 +5065,10 @@ TraceRecorder::record_JSOP_ADD()
 {
     jsval& r = stackval(-1);
     jsval& l = stackval(-2);
-    if (JSVAL_IS_STRING(l)) {
-        LIns* args[] = { NULL, get(&l), cx_ins };
-        if (JSVAL_IS_STRING(r)) {
-            args[0] = get(&r);
-        } else {
-            LIns* args2[] = { get(&r), cx_ins };
-            if (JSVAL_IS_NUMBER(r)) {
-                args[0] = lir->insCall(&js_NumberToString_ci, args2);
-            } else if (JSVAL_IS_OBJECT(r)) {
-                args[0] = lir->insCall(&js_ObjectToString_ci, args2);
-            } else {
-                ABORT_TRACE("untraceable right operand to string-JSOP_ADD");
-            }
-            guard(false, lir->ins_eq0(args[0]), OOM_EXIT);
-        }
+    if (JSVAL_IS_STRING(l) || JSVAL_IS_STRING(r)) {
+        LIns* args[] = { stringify(r, get(&r)), stringify(l, get(&l)), cx_ins };
+        if (!args[0] || !args[1])
+            ABORT_TRACE("can't stringify objects");
         LIns* concat = lir->insCall(&js_ConcatStrings_ci, args);
         guard(false, lir->ins_eq0(concat), OOM_EXIT);
         set(&l, concat);

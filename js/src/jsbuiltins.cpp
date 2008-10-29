@@ -432,11 +432,18 @@ js_TypeOfBoolean(JSContext* cx, int32 unboxed)
 }
 
 jsdouble FASTCALL
-js_BooleanToNumber(JSContext* cx, int32 unboxed)
+js_BooleanOrUndefinedToNumber(JSContext* cx, int32 unboxed)
 {
     if (unboxed == JSVAL_TO_BOOLEAN(JSVAL_VOID))
         return js_NaN;
     return unboxed;
+}
+
+JSString* FASTCALL
+js_BooleanOrUndefinedToString(JSContext *cx, int32 unboxed)
+{
+    JS_ASSERT(uint32(unboxed) <= 2);
+    return ATOM_TO_STRING(cx->runtime->atomState.booleanAtoms[unboxed]);
 }
 
 JSString* FASTCALL
