@@ -337,7 +337,7 @@ protected:
   BOOL                    OnIMEReconvert(LPARAM aData, LRESULT *oResult);
   BOOL                    OnIMEQueryCharPosition(LPARAM aData, LRESULT *oResult);
 
-  void                    GetCompositionString(HIMC aHIMC, DWORD aIndex, nsString* aStrUnicode);
+  void                    GetCompositionString(HIMC aHIMC, DWORD aIndex);
 
   /**
    *  ResolveIMECaretPos
@@ -380,7 +380,7 @@ protected:
   void RelayMouseEvent(UINT aMsg, WPARAM wParam, LPARAM lParam);
 
   void GetNonClientBounds(nsRect &aRect);
-  void HandleTextEvent(HIMC hIMEContext, PRBool aCheckAttr=PR_TRUE);
+  void HandleTextEvent(HIMC hIMEContext, PRBool aCheckAttr = PR_TRUE);
   BOOL HandleStartComposition(HIMC hIMEContext);
   void HandleEndComposition(void);
   void GetTextRangeList(PRUint32* textRangeListLengthResult, nsTextRangeArray* textRangeListResult);
