@@ -199,7 +199,7 @@
 				HEADER_SEARCH_PATHS = ../../../../dist/include/plugin;
 				ONLY_ACTIVE_ARCH = YES;
 				PREBINDING = NO;
-				SDKROOT = macosx10.5;
+				SDKROOT = "";
 				WRAPPER_EXTENSION = plugin;
 			};
 			name = Debug;
@@ -214,7 +214,7 @@
 				GCC_WARN_UNUSED_VARIABLE = YES;
 				HEADER_SEARCH_PATHS = ../../../../dist/include/plugin;
 				PREBINDING = NO;
-				SDKROOT = macosx10.5;
+				SDKROOT = "";
 				SEPARATE_SYMBOL_EDIT = NO;
 				STRIP_INSTALLED_PRODUCT = YES;
 				WRAPPER_EXTENSION = plugin;
