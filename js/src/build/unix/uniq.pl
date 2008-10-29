@@ -1,3 +1,5 @@
+#!/usr/bin/env perl
+
 # ***** BEGIN LICENSE BLOCK *****
 # Version: MPL 1.1/GPL 2.0/LGPL 2.1
 #
@@ -11,19 +13,19 @@
 # for the specific language governing rights and limitations under the
 # License.
 #
-# The Original Code is the Mozilla build system.
+# The Original Code is this file as it was released upon December 26, 2000.
 #
 # The Initial Developer of the Original Code is
-# the Mozilla Foundation <http://www.mozilla.org/>.
-# Portions created by the Initial Developer are Copyright (C) 2006
+# Netscape Communications Corporation.
+# Portions created by the Initial Developer are Copyright (C) 2000
 # the Initial Developer. All Rights Reserved.
 #
 # Contributor(s):
-#   Benjamin Smedberg <benjamin@smedbergs.us> (Initial Code)
+#   Christopher Seawood <cls@seawood.org>
 #
 # Alternatively, the contents of this file may be used under the terms of
-# either the GNU General Public License Version 2 or later (the "GPL"), or
-# the GNU Lesser General Public License Version 2.1 or later (the "LGPL"),
+# either of the GNU General Public License Version 2 or later (the "GPL"),
+# or the GNU Lesser General Public License Version 2.1 or later (the "LGPL"),
 # in which case the provisions of the GPL or the LGPL are applicable instead
 # of those above. If you wish to allow use of your version of this file only
 # under the terms of either the GPL or the LGPL, and not to allow others to
@@ -35,8 +37,27 @@
 #
 # ***** END LICENSE BLOCK *****
 
-TIERS += js
+use Getopt::Std;
 
-tier_js_dirs += \
-	js/src \
-	$(NULL)
+getopts('rs');
+$regexp = 1 if (defined($opt_r));
+$sort = 1 if (defined($opt_s));
+
+undef @out;
+if ($sort) {
+    @in = sort @ARGV;
+} else {
+    @in = @ARGV;
+}
+foreach $d (@in) { 
+    if ($regexp) {
+        $found = 0; 
+        foreach $dir (@out) {
+            $found++, last if ($d =~ m/^$dir\// || $d eq $dir);
+        }
+        push @out, $d if (!$found);
+    } else {
+        push @out, $d if (!grep(/^$d$/, @out));
+    }
+}
+print "@out\n"

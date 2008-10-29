@@ -26,3 +26,6 @@
 _DBG\.OBJ/
 _OPT\.OBJ/
 
+# SpiderMonkey configury
+^js/src/configure$
+^js/src/autom4te.cache$
