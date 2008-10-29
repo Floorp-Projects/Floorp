@@ -592,16 +592,8 @@ nsAccessibilityService::CreateHyperTextAccessible(nsISupports *aFrame, nsIAccess
   nsCOMPtr<nsIContent> content(do_QueryInterface(node));
   NS_ENSURE_TRUE(content, NS_ERROR_FAILURE);
   
-  if (nsCoreUtils::HasListener(content, NS_LITERAL_STRING("click"))) {
-    // nsLinkableAccessible inherits from nsHyperTextAccessible, but
-    // it also includes code for dealing with the onclick
-    *aAccessible = new nsLinkableAccessible(node, weakShell);
-  }
-  else {
-    *aAccessible = new nsHyperTextAccessibleWrap(node, weakShell);
-  }
-  if (nsnull == *aAccessible)
-    return NS_ERROR_OUT_OF_MEMORY;
+  *aAccessible = new nsHyperTextAccessibleWrap(node, weakShell);
+  NS_ENSURE_TRUE(*aAccessible, NS_ERROR_OUT_OF_MEMORY);
 
   NS_ADDREF(*aAccessible);
   return NS_OK;
