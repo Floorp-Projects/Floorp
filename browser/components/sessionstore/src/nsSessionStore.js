@@ -1491,16 +1491,6 @@ SessionStoreService.prototype = {
    *        bool this isn't the restoration of the first window
    */
   restoreWindow: function sss_restoreWindow(aWindow, aState, aOverwriteTabs, aFollowUp) {
-    if (this._restoreCount) {
-      this._restoreCount--;
-      if (this._restoreCount == 0) {
-        // This was the last window restored at startup, notify observers.
-        var observerService = Cc["@mozilla.org/observer-service;1"].
-                              getService(Ci.nsIObserverService);
-        observerService.notifyObservers(null, NOTIFY_WINDOWS_RESTORED, "");
-      }
-    }
-
     if (!aFollowUp) {
       this.windowToFocus = aWindow;
     }
@@ -1511,11 +1501,13 @@ SessionStoreService.prototype = {
     try {
       var root = typeof aState == "string" ? this._safeEval(aState) : aState;
       if (!root.windows[0]) {
+        this._notifyIfAllWindowsRestored();
         return; // nothing to restore
       }
     }
     catch (ex) { // invalid state object - don't restore anything 
       debug(ex);
+      this._notifyIfAllWindowsRestored();
       return;
     }
     
@@ -1582,6 +1574,8 @@ SessionStoreService.prototype = {
     
     this.restoreHistoryPrecursor(aWindow, winData.tabs, (aOverwriteTabs ?
       (parseInt(winData.selected) || 1) : 0), 0, 0);
+
+    this._notifyIfAllWindowsRestored();
   },
 
   /**
@@ -2393,6 +2387,18 @@ SessionStoreService.prototype = {
       throw new Error("JSON conversion failed unexpectedly!");
     
     return str;
+  },
+
+  _notifyIfAllWindowsRestored: function sss_notifyIfAllWindowsRestored() {
+    if (this._restoreCount) {
+      this._restoreCount--;
+      if (this._restoreCount == 0) {
+        // This was the last window restored at startup, notify observers.
+        var observerService = Cc["@mozilla.org/observer-service;1"].
+                              getService(Ci.nsIObserverService);
+        observerService.notifyObservers(null, NOTIFY_WINDOWS_RESTORED, "");
+      }
+    }
   },
 
 /* ........ Storage API .............. */
