@@ -151,10 +151,15 @@ static int32    regStartCount = 0;
 char            *globalRegName = NULL;
 static char     *user_name = NULL;
 
+
+
+
 #ifdef XP_MACOSX
 
 void nr_MacAliasFromPath(const char * fileName, void ** alias, int32 * length);
 char * nr_PathFromMacAlias(const void * alias, uint32 aliasLength);
+
+#include "MoreFilesX.h"
 
 static void copyCStringToPascal(Str255 dest, const char *src)
 {
@@ -183,8 +188,7 @@ static OSErr isFileInTrash(FSRef *fsRef, PRBool *inTrash)
         {
             /* FSRefGetParentRef returns noErr and a zeroed FSRef when it reaches the top */
             for (currFSRef = *fsRef;
-                 (FSGetCatalogInfo(&currFSRef, kFSCatInfoNodeID, NULL, NULL, NULL, &parentFSRef) == noErr &&
-                  FSGetCatalogInfo(&parentFSRef, kFSCatInfoNone, NULL, NULL, NULL, NULL) == noErr);
+                 (FSGetParentRef(&currFSRef, &parentFSRef) == noErr && FSRefValid(&parentFSRef));
                  currFSRef = parentFSRef)
             {
                 if (FSCompareFSRefs(&parentFSRef, &trashFSRef) == noErr)
