@@ -2717,11 +2717,17 @@ Decompile(SprintStack *ss, jsbytecode *pc, intN nb, JSOp nextop)
 
               case JSOP_CALLUPVAR:
               case JSOP_GETUPVAR:
+
+                if (!jp->fun)
+                    JS_GET_SCRIPT_FUNCTION(jp->script, 0, jp->fun);
+
+                if (!jp->localNames)
+                    jp->localNames = js_GetLocalNameArray(cx, jp->fun, &jp->pool);
+
                 i = JS_UPVAR_LOCAL_NAME_START(jp->fun) + GET_UINT16(pc);
                 if (i >= JS_GET_LOCAL_NAME_COUNT(jp->fun)) {
-                    JSStackFrame *fp;
                     JSUpvarArray *uva;
-
+#ifdef DEBUG
                     /*
                      * We must be in an eval called from jp->fun, where
                      * jp->script is the eval-compiled script.
@@ -2731,15 +2737,17 @@ Decompile(SprintStack *ss, jsbytecode *pc, intN nb, JSOp nextop)
                      * object that's not a constructor, causing us to be
                      * called with an intervening frame on the stack.
                      */
-                    fp = cx->fp;
-                    while (!(fp->flags & JSFRAME_EVAL))
-                        fp = fp->down;
-                    JS_ASSERT(fp->script == jp->script);
-                    JS_ASSERT(fp->down->fun == jp->fun);
-                    JS_ASSERT(FUN_INTERPRETED(jp->fun));
-                    JS_ASSERT(jp->script != jp->fun->u.i.script);
-                    JS_ASSERT(jp->script->upvarsOffset != 0);
-
+                    JSStackFrame *fp = cx->fp;
+                    if (fp) {
+                        while (!(fp->flags & JSFRAME_EVAL))
+                            fp = fp->down;
+                        JS_ASSERT(fp->script == jp->script);
+                        JS_ASSERT(fp->down->fun == jp->fun);
+                        JS_ASSERT(FUN_INTERPRETED(jp->fun));
+                        JS_ASSERT(jp->script != jp->fun->u.i.script);
+                        JS_ASSERT(jp->script->upvarsOffset != 0);
+                    }
+#endif
                     uva = JS_SCRIPT_UPVARS(jp->script);
                     i = GET_UINT16(pc);
                     JS_ASSERT(UPVAR_FRAME_SKIP(uva->vector[i]) == 1);
