@@ -4628,12 +4628,16 @@ MemberExpr(JSContext *cx, JSTokenStream *ts, JSTreeContext *tc,
             if (!pn2)
                 return NULL;
 
-            /* Pick JSOP_EVAL and flag tc as heavyweight if eval(...). */
             pn2->pn_op = JSOP_CALL;
             if (pn->pn_op == JSOP_NAME &&
                 pn->pn_atom == cx->runtime->atomState.evalAtom) {
+                /* Pick JSOP_EVAL and flag tc as heavyweight if eval(...). */
                 pn2->pn_op = JSOP_EVAL;
                 tc->flags |= TCF_FUN_HEAVYWEIGHT;
+            } else if (pn->pn_op == JSOP_GETPROP &&
+                       pn->pn_atom == cx->runtime->atomState.applyAtom) {
+                /* Pick JSOP_APPLY if apply(...). */
+                pn2->pn_op = JSOP_APPLY;
             }
 
             PN_INIT_LIST_1(pn2, pn);
