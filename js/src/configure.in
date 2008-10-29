@@ -103,11 +103,7 @@ _SUBDIR_CONFIG_ARGS="$ac_configure_args"
 
 dnl Set the version number of the libs included with mozilla
 dnl ========================================================
-MOZJPEG=62
-MOZPNG=10217
-MOZZLIB=0x1230
 NSPR_VERSION=4
-NSS_VERSION=3
 
 dnl Set the minimum version of toolkit libs used by mozilla
 dnl ========================================================
@@ -1977,8 +1973,6 @@ case "$target" in
             fi
         fi
     fi
-    MOZ_JPEG_LIBS='$(call EXPAND_LIBNAME_PATH,jpeg$(MOZ_BITS)$(VERSION_NUMBER),$(DEPTH)/jpeg)'
-    MOZ_PNG_LIBS='$(call EXPAND_LIBNAME_PATH,png,$(DEPTH)/modules/libimg/png)'
     AC_DEFINE(HAVE_SNPRINTF)
     AC_DEFINE(_WINDOWS)
     AC_DEFINE(_WIN32)
@@ -4830,6 +4824,15 @@ dnl ========================================================
 if test "$MOZ_DEBUG" || test "$NS_TRACE_MALLOC"; then
     MOZ_COMPONENTS_VERSION_SCRIPT_LDFLAGS=
 fi
+
+MOZ_ARG_WITH_STRING(sync-build-files,
+[  --with-sync-build-files=DIR
+                          Check that files in 'config' and 'build' match
+                          their originals in 'DIR/config' and 'DIR/build'.
+                          This helps keep the SpiderMonkey build machinery
+                          in sync with Mozilla's, on which it is based.],
+[MOZ_SYNC_BUILD_FILES=$withval ] )
+AC_SUBST(MOZ_SYNC_BUILD_FILES)
 
 dnl ========================================================
 dnl =
