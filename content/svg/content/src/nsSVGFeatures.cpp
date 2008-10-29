@@ -22,6 +22,7 @@
  *
  * Contributor(s):
  *   Scooter Morris <scootermorris@comcast.net>
+ *   Frederic Wang <fred.wang@free.fr> - requiredExtensions
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -87,6 +88,43 @@ HaveFeatures(const nsSubstring& aFeatures)
   nsWhitespaceTokenizer tokenizer(aFeatures);
   while (tokenizer.hasMoreTokens()) {
     if (!NS_SVG_HaveFeature(tokenizer.nextToken())) {
+      return PR_FALSE;
+    }
+  }
+  return PR_TRUE;
+}
+
+/**
+ * Check whether we support the given extension string.
+ *
+ * @param aExtension the URI of an extension. Known extensions are
+ *   MathML and XHTML.
+ */
+static PRBool
+HaveExtension(const nsAString& aExtension)
+{
+#define SVG_SUPPORTED_EXTENSION(str) if (aExtension.Equals(NS_LITERAL_STRING(str).get())) return PR_TRUE;
+  SVG_SUPPORTED_EXTENSION("http://www.w3.org/1999/xhtml")
+#ifdef MOZ_MATHML
+  SVG_SUPPORTED_EXTENSION("http://www.w3.org/1998/Math/MathML")
+#endif
+#undef SVG_SUPPORTED_EXTENSION
+
+  return PR_FALSE;
+}
+
+/**
+ * Check whether we support the given list of extension strings.
+ *
+ * @param aExtension a whitespace separated list containing one or more
+ *   extension strings
+ */
+static PRBool
+HaveExtensions(const nsSubstring& aExtensions)
+{
+  nsWhitespaceTokenizer tokenizer(aExtensions);
+  while (tokenizer.hasMoreTokens()) {
+    if (!HaveExtension(tokenizer.nextToken())) {
       return PR_FALSE;
     }
   }
@@ -174,11 +212,11 @@ NS_SVG_PassesConditionalProcessingTests(nsIContent *aContent)
   // extensions. Language extensions are capabilities within a user agent that
   // go beyond the feature set defined in the SVG specification.
   // Each extension is identified by a URI reference.
-  // For now, claim that mozilla's SVG implementation supports
-  // no extensions.  So, if extensions are required, we don't have
-  // them available.
-  if (aContent->HasAttr(kNameSpaceID_None, nsGkAtoms::requiredExtensions)) {
-    return PR_FALSE;
+  // For now, claim that mozilla's SVG implementation supports XHTML and MathML.
+  if (aContent->GetAttr(kNameSpaceID_None, nsGkAtoms::requiredExtensions, value)) {
+    if (value.IsEmpty() || !HaveExtensions(value)) {
+      return PR_FALSE;
+    }
   }
 
   // systemLanguage
