@@ -287,6 +287,7 @@ class TraceRecorder : public GCObject {
 
     nanojit::LIns* f2i(nanojit::LIns* f);
     nanojit::LIns* makeNumberInt32(nanojit::LIns* f);
+    nanojit::LIns* stringify(jsval& v, nanojit::LIns* v_ins);
     
     bool ifop();
     bool switchop();
