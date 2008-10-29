@@ -213,16 +213,10 @@ SessionStoreService.prototype = {
         // parse the session state into JS objects
         this._initialState = this._safeEval(iniString);
         
-        // if last session crashed, backup the session
         let lastSessionCrashed =
           this._initialState.session && this._initialState.session.state &&
           this._initialState.session.state == STATE_RUNNING_STR;
         if (lastSessionCrashed) {
-          try {
-            this._writeFile(this._sessionFileBackup, iniString);
-          }
-          catch (ex) { } // nothing else we can do here
-          
           this._recentCrashes = (this._initialState.session &&
                                  this._initialState.session.recentCrashes || 0) + 1;
           
@@ -241,7 +235,16 @@ SessionStoreService.prototype = {
     // remove the session data files if crash recovery is disabled
     if (!this._resume_from_crash)
       this._clearDisk();
-    
+    else { // create a backup if the session data file exists
+      try {
+        if (this._sessionFileBackup.exists())
+          this._sessionFileBackup.remove(false);
+        if (this._sessionFile.exists())
+          this._sessionFile.copyTo(null, this._sessionFileBackup.leafName);
+      }
+      catch (ex) { Cu.reportError(ex); } // file was write-locked?
+    }
+
     // at this point, we've as good as resumed the session, so we can
     // clear the resume_session_once flag, if it's set
     if (this._loadState != STATE_QUITTING &&
