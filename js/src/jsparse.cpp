@@ -543,6 +543,19 @@ js_CompileScript(JSContext *cx, JSObject *scopeChain, JSStackFrame *callerFrame,
     cg.treeContext.u.scopeChain = scopeChain;
     cg.staticDepth = TCF_GET_STATIC_DEPTH(tcflags);
 
+    if (callerFrame && (tcflags & TCF_COMPILE_N_GO)) {
+        /*
+         * An eval script in a caller frame needs to have its enclosing function
+         * captured in case it uses an upvar reference, and someone wishes to
+         * decompile it while running.
+         */
+        JSParsedObjectBox *pob;
+        pob = js_NewParsedObjectBox(cx, &pc, FUN_OBJECT(callerFrame->fun));
+        pob->emitLink = cg.objectList.lastPob;
+        cg.objectList.lastPob = pob;
+        cg.objectList.length++;
+    }
+
     /* Inline Statements() to emit as we go to save space. */
     for (;;) {
         pc.tokenStream.flags |= TSF_OPERAND;
