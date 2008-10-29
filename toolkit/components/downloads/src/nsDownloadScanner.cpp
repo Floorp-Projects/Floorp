@@ -135,7 +135,6 @@
  *  * Get antivirus scanner status via WMI/registry
  */
 
-#define PREF_BDA_DONTCLEAN "browser.download.antivirus.dontclean"
 #define PREF_BDM_SKIPWINPOLICYCHECKS "browser.download.manager.skipWinSecurityPolicyChecks"
 
 // IAttachementExecute supports user definable settings for certain
@@ -456,14 +455,6 @@ nsDownloadScanner::Scan::Start()
 
   nsresult rv = NS_OK;
 
-  // Default is to try to clean downloads
-  mIsReadOnlyRequest = PR_FALSE;
-
-  nsCOMPtr<nsIPrefBranch> pref =
-    do_GetService(NS_PREFSERVICE_CONTRACTID);
-  if (pref)
-    rv = pref->GetBoolPref(PREF_BDA_DONTCLEAN, &mIsReadOnlyRequest);
-
   // Get the path to the file on disk
   nsCOMPtr<nsILocalFile> file;
   rv = mDownload->GetTargetFile(getter_AddRefs(file));
@@ -636,7 +627,7 @@ nsDownloadScanner::Scan::DoScanOAV()
   info.cbsize = sizeof(MSOAVINFO);
   info.fPath = TRUE;
   info.fInstalled = FALSE;
-  info.fReadOnlyRequest = mIsReadOnlyRequest;
+  info.fReadOnlyRequest = FALSE;
   info.fHttpDownload = mIsHttpDownload;
   info.hwnd = NULL;
 

@@ -299,6 +299,17 @@ function openDownload(aDownload)
       dontAsk = !pref.getBoolPref(PREF_BDM_ALERTONEXEOPEN);
     } catch (e) { }
 
+#ifdef XP_WIN
+    // On Vista and above, we rely on native security prompting for
+    // downloaded content.
+    try {
+        var sysInfo = Cc["@mozilla.org/system-info;1"].
+                      getService(Ci.nsIPropertyBag2);
+        if (parseFloat(sysInfo.getProperty("version")) >= 6)
+          dontAsk = true;
+    } catch (ex) { }
+#endif
+
     if (!dontAsk) {
       var strings = document.getElementById("downloadStrings");
       var name = aDownload.getAttribute("target");
