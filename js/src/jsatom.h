@@ -175,6 +175,7 @@ struct JSAtomState {
 
     /* Various built-in or commonly-used atoms, pinned on first context. */
     JSAtom              *anonymousAtom;
+    JSAtom              *applyAtom;
     JSAtom              *argumentsAtom;
     JSAtom              *arityAtom;
     JSAtom              *calleeAtom;
@@ -297,6 +298,7 @@ JS_STATIC_ASSERT((1 + 2) * sizeof(JSAtom *) ==
 #undef JS_PROTO
 
 extern const char   js_anonymous_str[];
+extern const char   js_apply_str[];
 extern const char   js_arguments_str[];
 extern const char   js_arity_str[];
 extern const char   js_callee_str[];
