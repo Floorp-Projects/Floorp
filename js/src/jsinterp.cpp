@@ -4745,6 +4745,7 @@ js_Interpret(JSContext *cx)
 
           BEGIN_CASE(JSOP_CALL)
           BEGIN_CASE(JSOP_EVAL)
+          BEGIN_CASE(JSOP_APPLY)
             argc = GET_ARGC(regs.pc);
             vp = regs.sp - (argc + 2);
             lval = *vp;

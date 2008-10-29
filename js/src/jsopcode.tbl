@@ -212,7 +212,7 @@ OPDEF(JSOP_ITER,      75, "iter",       NULL,         2,  1,  2,  0,  JOF_UINT8)
 OPDEF(JSOP_NEXTITER,  76, "nextiter",   NULL,         1,  2,  3,  0,  JOF_BYTE)
 OPDEF(JSOP_ENDITER,   77, "enditer",    NULL,         1,  2,  0,  0,  JOF_BYTE)
 
-OPDEF(JSOP_UNUSED78,  78, "unused78",   NULL,         1,  0,  0,  0,  JOF_BYTE)
+OPDEF(JSOP_APPLY,     78, "apply",      NULL,         3, -1,  1, 18,  JOF_UINT16|JOF_INVOKE)
 OPDEF(JSOP_UNUSED79,  79, "unused79",   NULL,         1,  0,  0,  0,  JOF_BYTE)
 
 /* Push object literal. */

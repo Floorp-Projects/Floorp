@@ -100,6 +100,7 @@ const char *const js_common_atom_names[] = {
 #undef JS_PROTO
 
     js_anonymous_str,           /* anonymousAtom                */
+    js_apply_str,               /* applyAtom                    */
     js_arguments_str,           /* argumentsAtom                */
     js_arity_str,               /* arityAtom                    */
     js_callee_str,              /* calleeAtom                   */
@@ -158,6 +159,7 @@ JS_STATIC_ASSERT(JS_ARRAY_LENGTH(js_common_atom_names) * sizeof(JSAtom *) ==
                  LAZY_ATOM_OFFSET_START - ATOM_OFFSET_START);
 
 const char js_anonymous_str[]       = "anonymous";
+const char js_apply_str[]           = "apply";
 const char js_arguments_str[]       = "arguments";
 const char js_arity_str[]           = "arity";
 const char js_callee_str[]          = "callee";

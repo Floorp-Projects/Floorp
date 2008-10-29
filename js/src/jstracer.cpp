@@ -5979,6 +5979,12 @@ TraceRecorder::record_JSOP_CALL()
 }
 
 bool
+TraceRecorder::record_JSOP_APPLY()
+{
+    return functionCall(false);
+}
+
+bool
 TraceRecorder::record_FastNativeCallComplete()
 {
     JS_ASSERT(pendingTraceableNative);
@@ -7693,7 +7699,6 @@ js_DumpPeerStability(Fragmento* frago, const void* ip)
 
 #define UNUSED(n) bool TraceRecorder::record_JSOP_UNUSED##n() { return false; }
 
-UNUSED(78)
 UNUSED(79)
 UNUSED(103)
 UNUSED(131)
