@@ -262,6 +262,11 @@ protected:
   nsresult CreateAndAddWyciwygChannel(void);
   nsresult RemoveWyciwygChannel(void);
 
+  /**
+   * Like IsEditingOn(), but will flush as needed first.
+   */
+  PRBool IsEditingOnAfterFlush();
+
   void *GenerateParserKey(void);
 
   virtual PRInt32 GetDefaultNamespaceID() const
