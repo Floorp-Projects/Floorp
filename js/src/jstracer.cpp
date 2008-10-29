@@ -2003,7 +2003,7 @@ TraceRecorder::deduceTypeStability(Fragment* root_peer, Fragment** stable_peer, 
         debug_only_v(printf("%s%d ", vpname, vpnum);)
         if (!checkType(*vp, *m, stage_vals[stage_count], stage_ins[stage_count], stage_count)) {
             /* If the failure was an int->double, tell the oracle. */
-            if (*m == JSVAL_INT && !isi2f(get(vp)))
+            if (*m == JSVAL_INT && isNumber(*vp) && !isPromoteInt(get(vp)))
                 oracle.markGlobalSlotUndemotable(cx->fp->script, gslots[n]);
             trashTree = true;
             goto checktype_fail_1;
@@ -2014,7 +2014,7 @@ TraceRecorder::deduceTypeStability(Fragment* root_peer, Fragment** stable_peer, 
     FORALL_SLOTS_IN_PENDING_FRAMES(cx, 0,
         debug_only_v(printf("%s%d ", vpname, vpnum);)
         if (!checkType(*vp, *m, stage_vals[stage_count], stage_ins[stage_count], stage_count)) {
-            if (*m == JSVAL_INT && !isi2f(get(vp)))
+            if (*m == JSVAL_INT && isNumber(*vp) && !isPromoteInt(get(vp)))
                 ADD_DEMOTE_SLOT(demotes, unsigned(m - typemap));
             else
                 goto checktype_fail_1;
