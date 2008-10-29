@@ -330,9 +330,6 @@ JS_DECLARE_CALLINFO(js_Array_1str)
 JS_DECLARE_CALLINFO(js_Array_2obj)
 JS_DECLARE_CALLINFO(js_Array_3num)
 
-/* Defined in jsbool.cpp */
-JS_DECLARE_CALLINFO(js_BooleanToString)
-
 /* Defined in jsdate.cpp */
 JS_DECLARE_CALLINFO(js_FastNewDate)
 
