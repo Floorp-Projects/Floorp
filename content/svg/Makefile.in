@@ -42,6 +42,6 @@ VPATH		= @srcdir@
 
 include $(DEPTH)/config/autoconf.mk
 
-DIRS		= document content
+PARALLEL_DIRS	= document content
 
 include $(topsrcdir)/config/rules.mk

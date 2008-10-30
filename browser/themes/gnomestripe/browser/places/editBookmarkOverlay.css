@@ -56,6 +56,8 @@
 .expander-up,
 .expander-down {
   min-width: 0;
+  padding: 2px 0;
+  -moz-padding-start: 2px;
 }
 
 .expander-up {
@@ -72,6 +74,11 @@
 
 .expander-up:hover:active {
 	list-style-image: url("chrome://global/skin/arrow/arrow-up-hov.gif");
+}
+
+#editBMPanel_tagsSelector[collapsed="true"],
+#editBMPanel_folderTree[collapsed="true"] {
+  display: none;
 }
 
 /**** name picker ****/
@@ -106,4 +113,21 @@
 #editBMPanel_namePicker[droppable="false"] > .menulist-dropmarker,
 #editBMPanel_namePicker[droppable="false"] > menupopup {
   display: none;
+}
+
+
+/* Bookmark panel dropdown menu items */
+#editBMPanel_folderMenuList[selectedIndex="0"],
+#editBMPanel_toolbarFolderItem {
+  list-style-image: url("chrome://browser/skin/places/bookmarksToolbar.png") !important;  
+}
+
+#editBMPanel_folderMenuList[selectedIndex="1"],
+#editBMPanel_bmRootItem {
+  list-style-image: url("chrome://browser/skin/places/bookmarksMenu.png") !important;  
+}
+
+#editBMPanel_folderMenuList[selectedIndex="2"],
+#editBMPanel_unfiledRootItem {
+  list-style-image: url("chrome://browser/skin/places/unsortedBookmarks.png") !important;  
 }
