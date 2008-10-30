@@ -16,10 +16,10 @@
  *
  * The Initial Developer of the Original Code is
  * Mozilla Foundation.
- * Portions created by the Initial Developer are Copyright (C) 2006
+ * Portions created by the Initial Developer are Copyright (C) 2008
  * the Initial Developer. All Rights Reserved.
  *
- * Contributor(s): Jesse Ruderman
+ * Contributor(s): Gary Kwong
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -35,12 +35,13 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-var gTestfile = 'regress-349605.js';
+var gTestfile = 'regress-437288-01.js';
 //-----------------------------------------------------------------------------
-var BUGNUMBER = 349605;
-var summary = 'decompilation of let inside |for| statements';
-var actual = '';
-var expect = '';
+var BUGNUMBER = 437288;
+var summary = 'for loop turning into a while loop';
+var actual = 'No Hang';
+var expect = 'No Hang';
+
 
 //-----------------------------------------------------------------------------
 test();
@@ -52,18 +53,17 @@ function test()
   printBugNumber(BUGNUMBER);
   printStatus (summary);
 
-  var f = function()
-    { alert(1); for((let(y=3) let(y=4) y); 0; x++) ; alert(6); }
+  expect = 'SyntaxError: invalid for/in left-hand side';
+  try
+  {
+    eval('(function() { const x = 1; for (x in null); })();');
+  }
+  catch(ex)
+  {
+    actual = ex + '';
+  }
 
-  expect = 'function () {\n    alert(1);\n' +
-    '    for ((let (y = 3) (let (y = 4) y)); false; x++) {\n' +
-    '    }\n' +
-    '    alert(6);\n' +
-    '}';
-
-  actual = f + '';
-
-  compareSource(expect, actual, summary);
+  reportCompare(expect, actual, summary);
 
   exitFunc ('test');
 }

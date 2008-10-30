@@ -274,6 +274,11 @@ function overParenTest(section, f, exp)
   if (uf == exp)
     return;
 
+  if (uf.indexOf(genexp) == -1) {
+    print('openParenTest: section ' + section + ' expected ' + exp + ' uf ' + uf + ' genexp optimized away');
+    return;
+  }
+
   reportCompare(false, uf.indexOf(genexpParened) == -1, summary + 
                 ': overParenTest genexp snugly in parentheses: section ' + section + ' uf ' + uf);
 

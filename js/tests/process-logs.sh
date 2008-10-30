@@ -120,7 +120,7 @@ for testlogfile in `ls $testlogfiles`; do
     debug "testtype=$testtype"
 
     case "$testlogfile" in
-        *,nightly,*) buildtype=nightly;;
+        *,nightly*) buildtype=nightly;;
         *,opt,*) buildtype=opt;;
         *,debug,*) buildtype=debug;;
         *) error "unknown buildtype in logfile $testlogfile" $LINENO;
