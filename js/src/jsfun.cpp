@@ -1587,8 +1587,8 @@ fun_toSource(JSContext *cx, uintN argc, jsval *vp)
 
 static const char call_str[] = "call";
 
-static JSBool
-fun_call(JSContext *cx, uintN argc, jsval *vp)
+JSBool
+js_fun_call(JSContext *cx, uintN argc, jsval *vp)
 {
     JSObject *obj;
     jsval fval, *argv, *invokevp;
@@ -1659,7 +1659,7 @@ js_fun_apply(JSContext *cx, uintN argc, jsval *vp)
 
     if (argc == 0) {
         /* Will get globalObject as 'this' and no other arguments. */
-        return fun_call(cx, argc, vp);
+        return js_fun_call(cx, argc, vp);
     }
 
     obj = JS_THIS_OBJECT(cx, vp);
@@ -1788,7 +1788,7 @@ static JSFunctionSpec function_methods[] = {
 #endif
     JS_FN(js_toString_str,   fun_toString,   0,0),
     JS_FN("apply",           js_fun_apply,   2,0),
-    JS_FN(call_str,          fun_call,       1,0),
+    JS_FN(call_str,          js_fun_call,    1,0),
 #ifdef NARCISSUS
     JS_FN("__applyConstructor__", fun_applyConstructor, 0,1,0),
 #endif
