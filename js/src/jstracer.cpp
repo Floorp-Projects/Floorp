@@ -2706,20 +2706,11 @@ js_RecordTree(JSContext* cx, JSTraceMonitor* tm, Fragment* f, Fragment* outer, u
     ti->stackTypeMap.captureStackTypes(cx, 0/*callDepth*/);
 
     if (demotes) {
-        /* If we get a list of demotions, an outer tree is telling us our types are not callable. 
-         * We should obey this if we can.
-         */
+        /* If we get a list of demotions, an outer tree is telling us our types are not callable. */
         uint8* typeMap = ti->stackTypeMap.data();
         for (unsigned i = 1; i <= NUM_DEMOTE_SLOTS(demotes); i++) {
             JS_ASSERT(demotes[i] < ti->stackTypeMap.length());
-            if (typeMap[demotes[i]] != JSVAL_INT) {
-                demotes = NULL;
-                break;
-            }
-        }
-        if (demotes) {
-            /* Actually perform demotions now. */
-            for (unsigned i = 1; i <= NUM_DEMOTE_SLOTS(demotes); i++)
+            if (typeMap[demotes[i]] == JSVAL_INT)
                 typeMap[demotes[i]] = JSVAL_DOUBLE;
         }
     }
@@ -2761,25 +2752,18 @@ js_AttemptToStabilizeTree(JSContext* cx, SideExit* exit, Fragment* outer)
 {
     JSTraceMonitor* tm = &JS_TRACE_MONITOR(cx);
     Fragment* from = exit->from->root;
-    TreeInfo* ti = (TreeInfo*)from->vmprivate;
     unsigned* demotes;
     
     demotes = ALLOCA_DEMOTE_SLOTLIST(exit->numStackSlots);
     CLEAR_DEMOTE_SLOTLIST(demotes);
 
-    bool stable = true;
-    uint8* t1 = ti->stackTypeMap.data();
     uint8* t2 = getTypeMap(exit) + exit->numGlobalSlots;
     for (unsigned i = 0; i < exit->numStackSlots; i++) {
-        if (t1[i] == JSVAL_INT && t2[i] == JSVAL_DOUBLE) {
+        if (t2[i] == JSVAL_DOUBLE)
             ADD_DEMOTE_SLOT(demotes, i);
-        } else if (t1[i] != t2[i]) {
-            stable = false;
-            break;
-        }
     }
 
-    if (!stable || !NUM_DEMOTE_SLOTS(demotes))
+    if (!NUM_DEMOTE_SLOTS(demotes))
         demotes = NULL;
 
     if (!js_RecordTree(cx, tm, from->first, outer, demotes))
