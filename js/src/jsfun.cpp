@@ -1585,8 +1585,6 @@ fun_toSource(JSContext *cx, uintN argc, jsval *vp)
 }
 #endif
 
-static const char call_str[] = "call";
-
 JSBool
 js_fun_call(JSContext *cx, uintN argc, jsval *vp)
 {
@@ -1609,7 +1607,7 @@ js_fun_call(JSContext *cx, uintN argc, jsval *vp)
             if (bytes) {
                 JS_ReportErrorNumber(cx, js_GetErrorMessage, NULL,
                                      JSMSG_INCOMPATIBLE_PROTO,
-                                     js_Function_str, call_str,
+                                     js_Function_str, js_call_str,
                                      bytes);
             }
         }
@@ -1675,7 +1673,7 @@ js_fun_apply(JSContext *cx, uintN argc, jsval *vp)
             if (bytes) {
                 JS_ReportErrorNumber(cx, js_GetErrorMessage, NULL,
                                      JSMSG_INCOMPATIBLE_PROTO,
-                                     js_Function_str, "apply",
+                                     js_Function_str, js_apply_str,
                                      bytes);
             }
         }
@@ -1700,7 +1698,7 @@ js_fun_apply(JSContext *cx, uintN argc, jsval *vp)
             }
             if (!arraylike) {
                 JS_ReportErrorNumber(cx, js_GetErrorMessage, NULL,
-                                     JSMSG_BAD_APPLY_ARGS, "apply");
+                                     JSMSG_BAD_APPLY_ARGS, js_apply_str);
                 return JS_FALSE;
             }
         }
@@ -1787,8 +1785,8 @@ static JSFunctionSpec function_methods[] = {
     JS_FN(js_toSource_str,   fun_toSource,   0,0),
 #endif
     JS_FN(js_toString_str,   fun_toString,   0,0),
-    JS_FN("apply",           js_fun_apply,   2,0),
-    JS_FN(call_str,          js_fun_call,    1,0),
+    JS_FN(js_apply_str,      js_fun_apply,   2,0),
+    JS_FN(js_call_str,       js_fun_call,    1,0),
 #ifdef NARCISSUS
     JS_FN("__applyConstructor__", fun_applyConstructor, 1,0),
 #endif

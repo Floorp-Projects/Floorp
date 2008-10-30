@@ -178,6 +178,7 @@ struct JSAtomState {
     JSAtom              *applyAtom;
     JSAtom              *argumentsAtom;
     JSAtom              *arityAtom;
+    JSAtom              *callAtom;
     JSAtom              *calleeAtom;
     JSAtom              *callerAtom;
     JSAtom              *classPrototypeAtom;
@@ -301,6 +302,7 @@ extern const char   js_anonymous_str[];
 extern const char   js_apply_str[];
 extern const char   js_arguments_str[];
 extern const char   js_arity_str[];
+extern const char   js_call_str[];
 extern const char   js_callee_str[];
 extern const char   js_caller_str[];
 extern const char   js_class_prototype_str[];

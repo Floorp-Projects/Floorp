@@ -4795,7 +4795,7 @@ js_Interpret(JSContext *cx)
                         JS_ReportErrorNumber(cx, js_GetErrorMessage, NULL,
                                              JSMSG_INCOMPATIBLE_PROTO,
                                              js_Function_str, 
-                                             apply ? js_apply_str : "call",
+                                             apply ? js_apply_str : js_call_str,
                                              bytes);
                     }
                 }
@@ -4851,7 +4851,7 @@ js_Interpret(JSContext *cx)
                         if (!arraylike) {
                             JS_ReportErrorNumber(cx, js_GetErrorMessage, NULL,
                                                      JSMSG_BAD_APPLY_ARGS, 
-                                                     apply ? js_apply_str : "call");
+                                                     apply ? js_apply_str : js_call_str);
                             goto error;
                         }
 
