@@ -148,9 +148,9 @@ const char *const js_common_atom_names[] = {
 #endif
 
 #ifdef NARCISSUS
-    js_call_str,                /* callAtom                     */
-    js_construct_str,           /* constructAtom                */
-    js_hasInstance_str,         /* hasInstanceAtom              */
+    js___call___str,            /* __call__Atom                 */
+    js___construct___str,       /* __construct__Atom            */
+    js___hasInstance___str,     /* __hasInstance__Atom          */
     js_ExecutionContext_str,    /* ExecutionContextAtom         */
     js_current_str,             /* currentAtom                  */
 #endif
@@ -213,9 +213,9 @@ const char js_send_str[]            = "send";
 #endif
 
 #ifdef NARCISSUS
-const char js_call_str[]             = "__call__";
-const char js_construct_str[]        = "__construct__";
-const char js_hasInstance_str[]      = "__hasInstance__";
+const char js___call___str[]         = "__call__";
+const char js___construct___str[]    = "__construct__";
+const char js___hasInstance___str[]  = "__hasInstance__";
 const char js_ExecutionContext_str[] = "ExecutionContext";
 const char js_current_str[]          = "current";
 #endif

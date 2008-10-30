@@ -663,7 +663,7 @@ JS_TypeOfValue(JSContext *cx, jsval v)
 
                     if (!OBJ_GET_PROPERTY(cx, obj,
                                           ATOM_TO_JSID(cx->runtime->atomState
-                                                       .callAtom),
+                                                       .__call__Atom),
                                           &v)) {
                         JS_ClearPendingException(cx);
                     } else if (VALUE_IS_FUNCTION(cx, v)) {

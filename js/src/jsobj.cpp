@@ -4621,7 +4621,7 @@ js_Call(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
 
         callee = JSVAL_TO_OBJECT(argv[-2]);
         if (!OBJ_GET_PROPERTY(cx, callee,
-                              ATOM_TO_JSID(cx->runtime->atomState.callAtom),
+                              ATOM_TO_JSID(cx->runtime->atomState.__call__Atom),
                               &fval)) {
             return JS_FALSE;
         }
@@ -4664,7 +4664,7 @@ js_Construct(JSContext *cx, JSObject *obj, uintN argc, jsval *argv,
         callee = JSVAL_TO_OBJECT(argv[-2]);
         if (!OBJ_GET_PROPERTY(cx, callee,
                               ATOM_TO_JSID(cx->runtime->atomState
-                                           .constructAtom),
+                                           .__construct__Atom),
                               &cval)) {
             return JS_FALSE;
         }
@@ -4704,7 +4704,7 @@ js_HasInstance(JSContext *cx, JSObject *obj, jsval v, JSBool *bp)
 
         if (!OBJ_GET_PROPERTY(cx, obj,
                               ATOM_TO_JSID(cx->runtime->atomState
-                                           .hasInstanceAtom),
+                                           .__hasInstance__Atom),
                               &fval)) {
             return JS_FALSE;
         }
