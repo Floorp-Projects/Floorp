@@ -3797,7 +3797,7 @@ MakeAbsolutePathname(JSContext *cx, const char *from, const char *leaf)
 
     /* Else, we were given a real pathname, return that + the leaf. */
     dirlen = slash - from + 1;
-    dir = JS_malloc(cx, dirlen + strlen(leaf) + 1);
+    dir = (char*) JS_malloc(cx, dirlen + strlen(leaf) + 1);
     if (!dir)
         return NULL;
 
@@ -3845,7 +3845,7 @@ snarf(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
             if (len == -1 || fseek(file, 0, SEEK_SET) == EOF) {
                 JS_ReportError(cx, "can't seek start of %s", pathname);
             } else {
-                buf = JS_malloc(cx, len + 1);
+                buf = (char*) JS_malloc(cx, len + 1);
                 if (buf) {
                     cc = fread(buf, 1, len, file);
                     if (cc != len) {
