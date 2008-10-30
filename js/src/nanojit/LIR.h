@@ -91,6 +91,8 @@ namespace nanojit
 		LIR_ji      = 25, // jump indirect
 		// operators
 
+		LIR_ldcs    = 25, // non-volatile 16-bit load
+		
 		// LIR_feq though LIR_fge must only be used on float arguments.  They
 		// return integers.
 		LIR_feq		= 26, // floating-point equality [2 float inputs]
@@ -266,7 +268,7 @@ namespace nanojit
     }
 
     inline bool isLoad(LOpcode op) {
-        return op == LIR_ldq || op == LIR_ld || op == LIR_ldc || op == LIR_ldqc;
+        return op == LIR_ldq || op == LIR_ld || op == LIR_ldc || op == LIR_ldqc || op == LIR_ldcs;
     }
 
 	// Low-level Instruction 4B

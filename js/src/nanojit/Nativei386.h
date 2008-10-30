@@ -322,7 +322,10 @@ namespace nanojit
 
 // load 16-bit, sign extend
 #define LD16S(r,d,b) do { ALU2m(0x0fbf,r,d,b); asm_output3("movsx %s,%d(%s)", gpn(r),d,gpn(b)); } while(0)
-
+	
+// load 16-bit, zero extend
+#define LD16Z(r,d,b) do { ALU2m(0x0fb7,r,d,b); asm_output3("movsz %s,%d(%s)", gpn(r),d,gpn(b)); } while(0)
+	
 // load 8-bit, zero extend
 // note, only 5-bit offsets (!) are supported for this, but that's all we need at the moment
 // (movzx actually allows larger offsets mode but 5-bit gives us advantage in Thumb mode)

@@ -75,7 +75,7 @@ namespace nanojit
 	const char* lirNames[] = {
 	/* 0-9 */	"start","nearskip","skip","neartramp","tramp","5","6","7","8","addp",
 	/* 10-19 */	"param","st","ld","alloc","sti","ret","live","calli","call","loop",
-	/* 20-29 */ "x","j","jt","jf","label","25","feq","flt","fgt","fle",
+	/* 20-29 */ "x","j","jt","jf","label","ldcs","feq","flt","fgt","fle",
 	/* 30-39 */ "fge","cmov","short","int","ldc","","neg","add","sub","mul",
 	/* 40-49 */ "callh","and","or","xor","not","lsh","rsh","ush","xt","xf",
 	/* 50-59 */ "qlo","qhi","ldcb","ov","cs","eq","lt","gt","le","ge",
@@ -598,7 +598,7 @@ namespace nanojit
 
 	bool FASTCALL isCse(LOpcode op) {
 		op = LOpcode(op & ~LIR64);
-		return op >= LIR_feq && op <= LIR_uge;
+		return op >= LIR_ldcs && op <= LIR_uge;
 	}
 
     bool LIns::isCse(const CallInfo *functions) const
@@ -1868,7 +1868,8 @@ namespace nanojit
 			case LIR_ldc: 
 			case LIR_ldq: 
 			case LIR_ldqc: 
-			case LIR_ldcb: 
+			case LIR_ldcb:
+			case LIR_ldcs:
 				sprintf(s, "%s = %s %s[%s]", formatRef(i), lirNames[op],
 					formatRef(i->oprnd1()), 
 					formatRef(i->oprnd2()));
