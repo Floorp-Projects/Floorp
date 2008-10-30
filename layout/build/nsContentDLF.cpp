@@ -56,6 +56,9 @@
 #include "nsICSSLoader.h"
 #include "nsCRT.h"
 #include "nsIViewSourceChannel.h"
+#ifdef MOZ_MEDIA
+#include "nsHTMLMediaElement.h"
+#endif
 
 #include "imgILoader.h"
 #include "nsIParser.h"
@@ -77,6 +80,9 @@ static NS_DEFINE_IID(kHTMLDocumentCID, NS_HTMLDOCUMENT_CID);
 static NS_DEFINE_IID(kXMLDocumentCID, NS_XMLDOCUMENT_CID);
 #ifdef MOZ_SVG
 static NS_DEFINE_IID(kSVGDocumentCID, NS_SVGDOCUMENT_CID);
+#endif
+#ifdef MOZ_MEDIA
+static NS_DEFINE_IID(kVideoDocumentCID, NS_VIDEODOCUMENT_CID);
 #endif
 static NS_DEFINE_IID(kImageDocumentCID, NS_IMAGEDOCUMENT_CID);
 static NS_DEFINE_IID(kXULDocumentCID, NS_XULDOCUMENT_CID);
@@ -267,6 +273,15 @@ nsContentDLF::CreateInstance(const char* aCommand,
     }
   }
 
+#ifdef MOZ_MEDIA
+  if (nsHTMLMediaElement::CanHandleMediaType(aContentType)) {
+    return CreateDocument(aCommand, 
+                          aChannel, aLoadGroup,
+                          aContainer, kVideoDocumentCID,
+                          aDocListener, aDocViewer);
+  }  
+#endif
+
   // Try image types
   nsCOMPtr<imgILoader> loader(do_GetService("@mozilla.org/image/loader;1"));
   PRBool isReg = PR_FALSE;
@@ -285,7 +300,6 @@ nsContentDLF::CreateInstance(const char* aCommand,
                           aContainer, kPluginDocumentCID,
                           aDocListener, aDocViewer);
   }
-
 
   // If we get here, then we weren't able to create anything. Sorry!
   return NS_ERROR_FAILURE;

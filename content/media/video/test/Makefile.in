@@ -64,6 +64,7 @@ _TEST_FILES = 	test_autoplay.html \
                 test_seek6.html \
                 test_seek7.html \
                 test_seek8.html \
+                test_standalone.html \
                 test_timeupdate1.html \
                 test_timeupdate2.html \
                 test_timeupdate3.html \
