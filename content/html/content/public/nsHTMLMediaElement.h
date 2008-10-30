@@ -38,6 +38,7 @@
 #include "nsIDOMHTMLMediaElement.h"
 #include "nsGenericHTMLElement.h"
 #include "nsMediaDecoder.h"
+#include "nsIChannel.h"
 
 // Define to output information on decoding and painting framerate
 /* #define DEBUG_FRAME_RATE 1 */
@@ -50,6 +51,16 @@ class nsHTMLMediaElement : public nsGenericHTMLElement
 public:
   nsHTMLMediaElement(nsINodeInfo *aNodeInfo, PRBool aFromParser = PR_FALSE);
   virtual ~nsHTMLMediaElement();
+
+  /**
+   * This is used when the browser is constructing a video element to play
+   * a channel that we've already started loading. The src attribute and
+   * <source> children are ignored. 
+   * @param aChannel the channel to use
+   * @param aListener returns a stream listener that should receive
+   * notifications for the stream
+   */ 
+  nsresult LoadWithChannel(nsIChannel *aChannel, nsIStreamListener **aListener);
 
   // nsIDOMHTMLMediaElement
   NS_DECL_NSIDOMHTMLMEDIAELEMENT
@@ -147,9 +158,40 @@ public:
   void Freeze();
   void Thaw();
 
+  // Returns true if we can handle this MIME type in a <video> or <audio>
+  // element
+  static PRBool CanHandleMediaType(const char* aMIMEType);
+
+  /**
+   * Initialize data for available media types
+   */
+  static void InitMediaTypes();
+  /**
+   * Shutdown data for available media types
+   */
+  static void ShutdownMediaTypes();
+
 protected:
-  nsresult PickMediaElement(nsAString& aChosenMediaResource);
-  virtual nsresult InitializeDecoder(nsAString& aChosenMediaResource);
+  /**
+   * Figure out which resource to load (either the 'src' attribute or
+   * a <source> child) and create the decoder for it.
+   */
+  nsresult PickMediaElement();
+  /**
+   * Create a decoder for the given aMIMEType. Returns false if we
+   * were unable to create the decoder.
+   */
+  PRBool CreateDecoder(const nsACString& aMIMEType);
+  /**
+   * Initialize a decoder to load the given URI.
+   */
+  nsresult InitializeDecoder(const nsAString& aURISpec);
+  /**
+   * Initialize a decoder to load the given channel. The decoder's stream
+   * listener is returned via aListener.
+   */
+  nsresult InitializeDecoderForChannel(nsIChannel *aChannel,
+                                       nsIStreamListener **aListener);
 
   nsRefPtr<nsMediaDecoder> mDecoder;
 

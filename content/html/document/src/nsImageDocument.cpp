@@ -120,7 +120,7 @@ public:
 
   friend class ImageListener;
 protected:
-  nsresult CreateSyntheticDocument();
+  virtual nsresult CreateSyntheticDocument();
 
   nsresult CheckOverflowing(PRBool changeState);
 
