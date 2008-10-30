@@ -530,6 +530,9 @@ NS_GENERIC_FACTORY_CONSTRUCTOR(nsDataDocumentContentPolicy)
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsNoDataProtocolContentPolicy)
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsSyncLoadService)
 MAKE_CTOR(CreatePluginDocument,           nsIDocument,                 NS_NewPluginDocument)
+#ifdef MOZ_MEDIA
+MAKE_CTOR(CreateVideoDocument,            nsIDocument,                 NS_NewVideoDocument)
+#endif
 
 #ifdef MOZ_ENABLE_CANVAS
 MAKE_CTOR(CreateCanvasRenderingContext2D, nsIDOMCanvasRenderingContext2D, NS_NewCanvasRenderingContext2D)
@@ -1281,6 +1284,13 @@ static const nsModuleComponentInfo gComponents[] = {
     NS_PLUGINDOCUMENT_CID,
     nsnull,
     CreatePluginDocument },
+
+#ifdef MOZ_MEDIA
+  { "Video Document",
+    NS_VIDEODOCUMENT_CID,
+    nsnull,
+    CreateVideoDocument },
+#endif
 
   { "Style sheet service",
     NS_STYLESHEETSERVICE_CID,

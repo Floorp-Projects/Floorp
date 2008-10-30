@@ -134,12 +134,3 @@ void nsHTMLVideoElement::UnbindFromTree(PRBool aDeep,
   if (mDecoder) 
     mDecoder->ElementUnavailable();
 }
-
-nsresult nsHTMLVideoElement::InitializeDecoder(nsAString& aChosenMediaResource)
-{
-  if (mDecoder) 
-    mDecoder->ElementAvailable(this);
-
-  return nsHTMLMediaElement::InitializeDecoder(aChosenMediaResource);
-}
-
