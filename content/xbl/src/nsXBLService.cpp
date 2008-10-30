@@ -423,9 +423,6 @@ nsXBLStreamListener::Load(nsIDOMEvent* aEvent)
     NS_WARNING("XBL load did not complete until after document went away! Modal dialog bug?\n");
   }
   else {
-    // Clear script handling object on asynchronously loaded XBL documents.
-    doc->ClearScriptHandlingObject();
-
     // We have to do a flush prior to notification of the document load.
     // This has to happen since the HTML content sink can be holding on
     // to notifications related to our children (e.g., if you bind to the
@@ -1288,9 +1285,6 @@ nsXBLService::FetchBindingDocument(nsIContent* aBoundElement, nsIDocument* aBoun
 
   rv = nsSyncLoadService::PushSyncStreamToListener(in, listener, channel);
   NS_ENSURE_SUCCESS(rv, rv);
-
-  // Clear script handling on synchronously loaded XBL documents.
-  doc->ClearScriptHandlingObject();
 
   doc.swap(*aResult);
 
