@@ -194,22 +194,6 @@ dnl ========================================================
 
 if test "$COMPILE_ENVIRONMENT"; then
 
-dnl Do some special WinCE toolchain stuff
-case "$target" in
-*wince)
-    echo -----------------------------------------------------------------------------
-    echo Building Windows CE Shunt Library and Tool Chain
-    echo -----------------------------------------------------------------------------
-
-    ac_exeext=.exe
-
-    echo -n "#define TOPSRCDIR \"" > $srcdir/build/wince/tools/topsrcdir.h
-    echo `cd "$_topsrcdir" && pwd -W | tr '\n' '\"'` >> $srcdir/build/wince/tools/topsrcdir.h
-    make -C $srcdir/build/wince/tools
-    echo -----------------------------------------------------------------------------
-    ;;
-esac
-
 if test -n "$CROSS_COMPILE" && test "$target" != "$host"; then
     echo "cross compiling from $host to $target"
     cross_compiling=yes
@@ -600,6 +584,12 @@ if test -n "$_WIN32_MSVC"; then
 fi
 
 fi # COMPILE_ENVIRONMENT
+
+if test "$cross_compiling"  = "yes"; then
+    CROSS_COMPILE=1
+else
+    CROSS_COMPILE=
+fi
 
 AC_SUBST(MIDL_FLAGS)
 AC_SUBST(_MSC_VER)
@@ -1168,6 +1158,7 @@ UnixWare)
     OS_RELEASE=`uname -v`
     ;;
 WINCE)
+    WINCE=1
     OS_ARCH=WINCE
     OS_TARGET=WINCE
     ;;
@@ -1866,6 +1857,7 @@ case "$target" in
     XPCOM_FROZEN_LDOPTS='$(LIBXUL_DIST)/lib/xpcom.lib'
     ZIP=zip
 
+    AC_DEFINE(WINCE)
     AC_DEFINE(HAVE_SNPRINTF)
     AC_DEFINE(_WINDOWS)
     AC_DEFINE(_WIN32)
