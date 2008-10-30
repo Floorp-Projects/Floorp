@@ -35,12 +35,15 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-var gTestfile = 'regress-349605.js';
+var gTestfile = 'regress-351070-01.js';
 //-----------------------------------------------------------------------------
-var BUGNUMBER = 349605;
-var summary = 'decompilation of let inside |for| statements';
+var BUGNUMBER = 351070;
+var summary = 'decompilation of let declaration should not change scope';
+var summarytrunk = 'let declaration must be direct child of block or top-level implicit block';
+
 var actual = '';
 var expect = '';
+
 
 //-----------------------------------------------------------------------------
 test();
@@ -52,18 +55,48 @@ function test()
   printBugNumber(BUGNUMBER);
   printStatus (summary);
 
-  var f = function()
-    { alert(1); for((let(y=3) let(y=4) y); 0; x++) ; alert(6); }
+  var f;
+  var c;
 
-  expect = 'function () {\n    alert(1);\n' +
-    '    for ((let (y = 3) (let (y = 4) y)); false; x++) {\n' +
-    '    }\n' +
-    '    alert(6);\n' +
-    '}';
+  try
+  {
+    c = '(function () { var a = 2; if (!!true) let a = 3; return a; })';
+    f = eval(c);
+    expect = 'function ( ) { var a = 2 ; { let a = 3 ; } return a ; }';
+    actual = f + '';
+    compareSource(expect, actual, summary);
 
-  actual = f + '';
+    expect = 3;
+    actual = f();
+    reportCompare(expect, actual, summary);
+  }
+  catch(ex)
+  {
+    // See https://bugzilla.mozilla.org/show_bug.cgi?id=408957
+    expect = 'SyntaxError';
+    actual = ex.name;
+    reportCompare(expect, actual, summarytrunk + ': ' + c);
+  }
 
-  compareSource(expect, actual, summary);
+  try
+  {
+    c = '(function () { var a = 2; if (!!true) {let a = 3;} return a; })';
+    f = eval(c);
+    expect = 'function () { var a = 2; { let a = 3;} return a; }';
+    actual = f + '';
+    compareSource(expect, actual, summary);
+
+    expect = 2;
+    actual = f();
+    reportCompare(expect, actual, summary);
+  }
+  catch(ex)
+  {
+    // See https://bugzilla.mozilla.org/show_bug.cgi?id=408957
+    expect = 'SyntaxError';
+    actual = ex.name;
+    reportCompare(expect, actual, summarytrunk + ': ' + c);
+  }
 
   exitFunc ('test');
 }

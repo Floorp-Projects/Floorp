@@ -122,12 +122,12 @@ function test()
   compareSource(expect, actual, summary + ': 13');
 
   f = function () { while( {} = e ) ; }
-  expect = 'function () { while( [] = e ) {} }';
+  expect = 'function () { while( ( [] = e ) ) {} }';
   actual = f + '';
   compareSource(expect, actual, summary + ': 14');
 
   f = function () { while( {} = (a)(b) ) ; }
-  expect = 'function () { while( [] = a(b) ) {} }';
+  expect = 'function () { while( ( [] = a(b) ) ) {} }';
   actual = f + '';
   compareSource(expect, actual, summary + ': 15');
 
@@ -167,7 +167,7 @@ function test()
   compareSource(expect, actual, summary + ': 22');
 
   f = function () { while(1) [a] = [b]; }
-  expect = 'function () { while(1) {[a] = [b];} } ';
+  expect = 'function () { while(true) {[a] = [b];} } ';
   actual = f + '';
   compareSource(expect, actual, summary + ': 23');
 
@@ -194,7 +194,7 @@ function test()
   f = function() { return [({ x: y }) = p for (z in 5)] }
   expect = 'function() { return [{ x: y } = p for (z in 5)]; }';
   actual = f + '';
-  compareSource(expect, actual, summary + ': 1');
+  compareSource(expect, actual, summary + ': 28');
 
   exitFunc ('test');
 }

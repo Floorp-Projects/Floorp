@@ -20,6 +20,7 @@
  * the Initial Developer. All Rights Reserved.
  *
  * Contributor(s): Jesse Ruderman
+ *                 Robert Sayre
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -35,12 +36,13 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-var gTestfile = 'regress-349605.js';
+var gTestfile = 'regress-352026.js';
 //-----------------------------------------------------------------------------
-var BUGNUMBER = 349605;
-var summary = 'decompilation of let inside |for| statements';
+var BUGNUMBER = 352026;
+var summary = 'decompilation of yield in argument lists';
 var actual = '';
 var expect = '';
+
 
 //-----------------------------------------------------------------------------
 test();
@@ -51,18 +53,26 @@ function test()
   enterFunc ('test');
   printBugNumber(BUGNUMBER);
   printStatus (summary);
-
-  var f = function()
-    { alert(1); for((let(y=3) let(y=4) y); 0; x++) ; alert(6); }
-
-  expect = 'function () {\n    alert(1);\n' +
-    '    for ((let (y = 3) (let (y = 4) y)); false; x++) {\n' +
-    '    }\n' +
-    '    alert(6);\n' +
-    '}';
-
+ 
+  var f;
+  f = function() { z((yield 3)) }
+  expect = 'function() { z(yield 3); }';
   actual = f + '';
+  compareSource(expect, actual, summary);
 
+  f = function f(){g((let(a=b)c,d),e)}
+  expect = 'function f(){g(((let(a=b)c),d),e);}';
+  actual = f + '';
+  compareSource(expect, actual, summary);
+
+  f = function() { let(s=4){foo:"bar"} }  
+  expect = 'function() { let(s=4){foo:"bar";} }';
+  actual = f + '';
+  compareSource(expect, actual, summary);
+
+  f = function() { (let(s=4){foo:"bar"}) }
+  expect = 'function() { (let(s=4)({foo:"bar"})); }';
+  actual = f + '';
   compareSource(expect, actual, summary);
 
   exitFunc ('test');
