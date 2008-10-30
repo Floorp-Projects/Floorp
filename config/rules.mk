@@ -700,8 +700,8 @@ endif
 ifdef PARALLEL_DIRS
 export:: $(PARALLEL_SUBMAKEFILES) | $(PARALLEL_DIRS_export)
 
-$(PARALLEL_DIRS_export):: %_export:
-	+$(MAKE) -C $* export
+$(PARALLEL_DIRS_export):: %_export: %
+	+$(MAKE) -C $< export
 endif
 
 export:: $(SUBMAKEFILES) $(MAKE_DIRS) $(if $(EXPORTS)$(XPIDLSRCS)$(SDK_HEADERS)$(SDK_XPIDLSRCS),$(PUBLIC)) $(if $(SDK_HEADERS)$(SDK_XPIDLSRCS),$(SDK_PUBLIC)) $(if $(XPIDLSRCS),$(IDL_DIR)) $(if $(SDK_XPIDLSRCS),$(SDK_IDL_DIR))
@@ -711,8 +711,8 @@ export:: $(SUBMAKEFILES) $(MAKE_DIRS) $(if $(EXPORTS)$(XPIDLSRCS)$(SDK_HEADERS)$
 ifdef PARALLEL_DIRS
 tools:: $(PARALLEL_SUBMAKEFILES) | $(PARALLEL_DIRS_tools)
 
-$(PARALLEL_DIRS_tools):: %_tools:
-	+$(MAKE) -C $* tools
+$(PARALLEL_DIRS_tools):: %_tools: %
+	+$(MAKE) -C $< tools
 endif
 
 tools:: $(SUBMAKEFILES) $(MAKE_DIRS)
@@ -750,8 +750,8 @@ DSO_LDOPTS_DEPS = $(EXTRA_DSO_LIBS) $(filter %.$(LIB_SUFFIX), $(EXTRA_DSO_LDOPTS
 ifdef PARALLEL_DIRS
 libs:: $(PARALLEL_SUBMAKEFILES) | $(PARALLEL_DIRS_libs)
 
-$(PARALLEL_DIRS_libs):: %_libs:
-	+$(MAKE) -C $* libs
+$(PARALLEL_DIRS_libs):: %_libs: %
+	+$(MAKE) -C $< libs
 endif
 
 libs:: $(SUBMAKEFILES) $(MAKE_DIRS) $(HOST_LIBRARY) $(LIBRARY) $(SHARED_LIBRARY) $(IMPORT_LIBRARY) $(HOST_PROGRAM) $(PROGRAM) $(HOST_SIMPLE_PROGRAMS) $(SIMPLE_PROGRAMS) $(JAVA_LIBRARY)
