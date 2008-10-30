@@ -1523,11 +1523,11 @@ nsNavHistory::MigrateV8Up(mozIStorageConnection *aDBConn)
   mozStorageTransaction transaction(aDBConn, PR_FALSE);
 
   nsresult rv = aDBConn->ExecuteSimpleSQL(NS_LITERAL_CSTRING(
-      "DROP TRIGGER moz_historyvisits_afterinsert_v1_trigger"));
+      "DROP TRIGGER IF EXISTS moz_historyvisits_afterinsert_v1_trigger"));
   NS_ENSURE_SUCCESS(rv, rv);
 
   rv = aDBConn->ExecuteSimpleSQL(NS_LITERAL_CSTRING(
-      "DROP TRIGGER moz_historyvisits_afterdelete_v1_trigger"));
+      "DROP TRIGGER IF EXISTS moz_historyvisits_afterdelete_v1_trigger"));
   NS_ENSURE_SUCCESS(rv, rv);
   
   return transaction.Commit();
