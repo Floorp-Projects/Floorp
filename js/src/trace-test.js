@@ -1779,6 +1779,42 @@ function testDestructuring() {
 testDestructuring.expected = (HOTLOOP + 1) * 3;
 test(testDestructuring);
 
+function loopWithUndefined1(t, val) {
+    var a = new Array(6);
+    for (var i = 0; i < 6; i++)
+        a[i] = (t > val);
+    return a;
+}
+loopWithUndefined1(5.0, 2);     //compile version with val=int
+
+function testLoopWithUndefined1() {
+    return loopWithUndefined1(5.0).join(",");  //val=undefined
+};
+testLoopWithUndefined1.expected = "false,false,false,false,false,false";
+test(testLoopWithUndefined1);
+
+function loopWithUndefined2(t, dostuff, val) {
+    var a = new Array(6);
+    for (var i = 0; i < 6; i++) {
+        if (dostuff) {
+            val = 1; 
+            a[i] = (t > val);
+        } else {
+            a[i] = (val == undefined);
+        }
+    }
+    return a;
+}
+function testLoopWithUndefined2() {
+    var a = loopWithUndefined2(5.0, true, 2);
+    var b = loopWithUndefined2(5.0, true);
+    var c = loopWithUndefined2(5.0, false, 8);
+    var d = loopWithUndefined2(5.0, false);
+    return [a[0], b[0], c[0], d[0]].join(",");
+}
+testLoopWithUndefined2.expected = "true,true,false,true";
+test(testLoopWithUndefined2);
+
 // BEGIN MANDELBROT STUFF
 // XXXbz I would dearly like to wrap it up into a function to avoid polluting
 // the global scope, but the function ends up heavyweight, and then we lose on
