@@ -2126,6 +2126,8 @@ js_JoinPeersIfCompatible(Fragmento* frago, Fragment* stableFrag, TreeInfo* stabl
     exit->target = stableFrag;
     frago->assm()->patch(exit);
 
+    stableTree->dependentTrees.addUnique(exit->from->root);
+
     return true;
 }
 
@@ -2195,6 +2197,7 @@ TraceRecorder::closeLoop(Fragmento* fragmento, bool& demote, unsigned *demotes)
             exit->target = peer;
             debug_only_v(printf("Joining type-unstable trace to target fragment %p.\n", peer););
             stable = true;
+            ((TreeInfo*)peer->vmprivate)->dependentTrees.addUnique(fragment);
         }
 
         compile(fragmento);
@@ -2753,6 +2756,8 @@ js_AttemptToStabilizeTree(JSContext* cx, SideExit* exit, Fragment* outer)
     JSTraceMonitor* tm = &JS_TRACE_MONITOR(cx);
     Fragment* from = exit->from->root;
     unsigned* demotes;
+
+    JS_ASSERT(exit->from->root->code());
     
     demotes = ALLOCA_DEMOTE_SLOTLIST(exit->numStackSlots);
     CLEAR_DEMOTE_SLOTLIST(demotes);
