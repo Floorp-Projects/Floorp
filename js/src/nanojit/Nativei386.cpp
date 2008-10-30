@@ -1174,7 +1174,9 @@ namespace nanojit
 		Register ra = getBaseReg(base, d, GpRegs);
 		if (op == LIR_ldcb)
 			LD8Z(rr, d, ra);
-		else
+		else if (op == LIR_ldcs)
+		    LD16Z(rr, d, ra);
+		else 
 			LD(rr, d, ra); 
 	}
 
