@@ -61,7 +61,7 @@
 #include "mozStorageService.h"
 #include "mozStorageStatement.h"
 #include "mozStorageValueArray.h"
-#include "mozStorage.h"
+#include "mozStoragePrivateHelpers.h"
 
 #include "prlog.h"
 #include "prprf.h"

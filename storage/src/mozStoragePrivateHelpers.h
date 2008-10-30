@@ -38,8 +38,10 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-#ifndef _MOZSTORAGE_H_
-#define _MOZSTORAGE_H_
+#ifndef _MOZSTORAGEPRIVATEHELPERS_H_
+#define _MOZSTORAGEPRIVATEHELPERS_H_
+
+#include "mozStorage.h"
 
 /**
  * This file contains convenience methods for mozStorage.
@@ -66,6 +68,7 @@ ConvertResultCode(int srv)
         case SQLITE_CANTOPEN:
             return NS_ERROR_FILE_ACCESS_DENIED;
         case SQLITE_BUSY:
+            return NS_ERROR_STORAGE_BUSY;
         case SQLITE_LOCKED:
             return NS_ERROR_FILE_IS_LOCKED;
         case SQLITE_READONLY:
@@ -86,5 +89,5 @@ ConvertResultCode(int srv)
     return NS_ERROR_FAILURE;
 }
 
-#endif // _MOZSTORAGE_H_
+#endif // _MOZSTORAGEPRIVATEHELPERS_H_
 
