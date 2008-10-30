@@ -203,7 +203,20 @@ nsPlacesDBFlush.prototype = {
     // XXX due to a bug in sqlite, we cannot wrap these in a transaction.  See
     //     https://bugzilla.mozilla.org/show_bug.cgi?id=462379#c2 for details.
     //this._db.executeAsync(statements, statements.length, this);
-    statements.forEach(function(stmt) stmt.executeAsync(this), this);
+    let self = this;
+    let listener = {
+      // We also need to batch the two handleCompletion objects into one.
+      _count: 0,
+      handleError: function(aError) self.handleError(aError),
+      handleCompletion: function(aReason) {
+        this._count++;
+        if (this._count == 1) {
+          // we have gotten both notifications
+          self.handleCompletion(aReason);
+        }
+      }
+    };
+    statements.forEach(function(stmt) stmt.executeAsync(listener));
 
     // Finalize statements, otherwise we could get in trouble
     statements.forEach(function(stmt) stmt.finalize());
