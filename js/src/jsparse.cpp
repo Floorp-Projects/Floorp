@@ -4634,10 +4634,11 @@ MemberExpr(JSContext *cx, JSTokenStream *ts, JSTreeContext *tc,
                 pn2->pn_op = JSOP_EVAL;
                 tc->flags |= TCF_FUN_HEAVYWEIGHT;
             } else if (pn->pn_op == JSOP_GETPROP &&
-                       pn->pn_atom == cx->runtime->atomState.applyAtom) {
+                       (pn->pn_atom == cx->runtime->atomState.applyAtom ||
+                        pn->pn_atom == cx->runtime->atomState.callAtom)) {
                 /* Pick JSOP_APPLY if apply(...). */
                 pn2->pn_op = JSOP_APPLY;
-            }
+            } 
 
             PN_INIT_LIST_1(pn2, pn);
             pn2->pn_pos.begin = pn->pn_pos.begin;

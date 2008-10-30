@@ -103,6 +103,7 @@ const char *const js_common_atom_names[] = {
     js_apply_str,               /* applyAtom                    */
     js_arguments_str,           /* argumentsAtom                */
     js_arity_str,               /* arityAtom                    */
+    js_call_str,                /* callAtom                     */
     js_callee_str,              /* calleeAtom                   */
     js_caller_str,              /* callerAtom                   */
     js_class_prototype_str,     /* classPrototypeAtom           */
@@ -162,6 +163,7 @@ const char js_anonymous_str[]       = "anonymous";
 const char js_apply_str[]           = "apply";
 const char js_arguments_str[]       = "arguments";
 const char js_arity_str[]           = "arity";
+const char js_call_str[]            = "call";
 const char js_callee_str[]          = "callee";
 const char js_caller_str[]          = "caller";
 const char js_class_prototype_str[] = "prototype";
