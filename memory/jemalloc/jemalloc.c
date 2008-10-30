@@ -1286,6 +1286,9 @@ static uint64_t	reserve_notify(reserve_cnd_t cnd, size_t size, uint64_t seq);
 static uint64_t	reserve_crit(size_t size, const char *fname, uint64_t seq);
 static void	reserve_fail(size_t size, const char *fname);
 
+void		_malloc_prefork(void);
+void		_malloc_postfork(void);
+
 /*
  * End function prototypes.
  */
@@ -5690,6 +5693,11 @@ MALLOC_OUT:
 		atexit(malloc_print_stats);
 #endif
 	}
+
+#if (!defined(MOZ_MEMORY_WINDOWS) && !defined(MOZ_MEMORY_DARWIN))
+	/* Prevent potential deadlock on malloc locks after fork. */
+	pthread_atfork(_malloc_prefork, _malloc_postfork, _malloc_postfork);
+#endif
 
 	/* Set variables according to the value of opt_small_max_2pow. */
 	if (opt_small_max_2pow < opt_quantum_2pow)
