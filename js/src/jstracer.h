@@ -51,6 +51,10 @@
 #include "jsinterp.h"
 #include "jsbuiltins.h"
 
+#if defined(DEBUG) && !defined(JS_JIT_SPEW)
+#define JS_JIT_SPEW
+#endif
+
 template <typename T>
 class Queue : public GCObject {
     T* _data;
