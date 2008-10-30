@@ -46,7 +46,7 @@
 #include "prinit.h"
 #include "nsAutoLock.h"
 #include "nsAutoPtr.h"
-#include "mozStorage.h"
+#include "mozStoragePrivateHelpers.h"
 
 #include "sqlite3.h"
 

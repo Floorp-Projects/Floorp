@@ -52,7 +52,7 @@
 #include "mozStorageStatement.h"
 #include "mozStorageStatementJSHelper.h"
 #include "mozStorageValueArray.h"
-#include "mozStorage.h"
+#include "mozStoragePrivateHelpers.h"
 #include "mozStorageEvents.h"
 
 #include "prlog.h"
@@ -562,7 +562,6 @@ mozStorageStatement::ExecuteStep(PRBool *_retval)
         return NS_OK;
     } else if (srv == SQLITE_BUSY || srv == SQLITE_MISUSE) {
         mExecuting = PR_FALSE;
-        return NS_ERROR_FAILURE;
     } else if (mExecuting == PR_TRUE) {
 #ifdef PR_LOGGING
         PR_LOG(gStorageLog, PR_LOG_ERROR, ("SQLite error after mExecuting was true!"));
