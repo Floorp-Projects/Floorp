@@ -365,6 +365,11 @@ LOOP_OVER_DIRS = \
     @$(EXIT_ON_ERROR) \
     $(foreach dir,$(DIRS),$(UPDATE_TITLE) $(MAKE) -C $(dir) $@; ) true
 
+# we only use this for the makefiles target and other stuff that doesn't matter
+LOOP_OVER_PARALLEL_DIRS = \
+    @$(EXIT_ON_ERROR) \
+    $(foreach dir,$(PARALLEL_DIRS),$(UPDATE_TITLE) $(MAKE) -C $(dir) $@; ) true
+
 LOOP_OVER_STATIC_DIRS = \
     @$(EXIT_ON_ERROR) \
     $(foreach dir,$(STATIC_DIRS),$(UPDATE_TITLE) $(MAKE) -C $(dir) $@; ) true
@@ -372,6 +377,13 @@ LOOP_OVER_STATIC_DIRS = \
 LOOP_OVER_TOOL_DIRS = \
     @$(EXIT_ON_ERROR) \
     $(foreach dir,$(TOOL_DIRS),$(UPDATE_TITLE) $(MAKE) -C $(dir) $@; ) true
+
+ifdef PARALLEL_DIRS
+# create a bunch of fake targets for order-only processing
+PARALLEL_DIRS_export = $(addsuffix _export,$(PARALLEL_DIRS))
+PARALLEL_DIRS_libs = $(addsuffix _libs,$(PARALLEL_DIRS))
+PARALLEL_DIRS_tools = $(addsuffix _tools,$(PARALLEL_DIRS))
+endif
 
 #
 # Now we can differentiate between objects used to build a library, and
@@ -582,6 +594,8 @@ endif
 # SUBMAKEFILES: List of Makefiles for next level down.
 #   This is used to update or create the Makefiles before invoking them.
 SUBMAKEFILES += $(addsuffix /Makefile, $(DIRS) $(TOOL_DIRS))
+PARALLEL_SUBMAKEFILES += $(addsuffix /Makefile, $(PARALLEL_DIRS))
+SUBMAKEFILES += $(PARALLEL_SUBMAKEFILES)
 
 # The root makefile doesn't want to do a plain export/libs, because
 # of the tiers and because of libxul. Suppress the default rules in favor
@@ -677,14 +691,29 @@ endif
 
 # Target to only regenerate makefiles
 makefiles: $(SUBMAKEFILES)
-ifneq (,$(DIRS)$(TOOL_DIRS))
+ifneq (,$(DIRS)$(TOOL_DIRS)$(PARALLEL_DIRS))
+	+$(LOOP_OVER_PARALLEL_DIRS)
 	+$(LOOP_OVER_DIRS)
 	+$(LOOP_OVER_TOOL_DIRS)
+endif
+
+ifdef PARALLEL_DIRS
+export:: $(PARALLEL_SUBMAKEFILES) | $(PARALLEL_DIRS_export)
+
+$(PARALLEL_DIRS_export):: %_export:
+	+$(MAKE) -C $* export
 endif
 
 export:: $(SUBMAKEFILES) $(MAKE_DIRS) $(if $(EXPORTS)$(XPIDLSRCS)$(SDK_HEADERS)$(SDK_XPIDLSRCS),$(PUBLIC)) $(if $(SDK_HEADERS)$(SDK_XPIDLSRCS),$(SDK_PUBLIC)) $(if $(XPIDLSRCS),$(IDL_DIR)) $(if $(SDK_XPIDLSRCS),$(SDK_IDL_DIR))
 	+$(LOOP_OVER_DIRS)
 	+$(LOOP_OVER_TOOL_DIRS)
+
+ifdef PARALLEL_DIRS
+tools:: $(PARALLEL_SUBMAKEFILES) | $(PARALLEL_DIRS_tools)
+
+$(PARALLEL_DIRS_tools):: %_tools:
+	+$(MAKE) -C $* tools
+endif
 
 tools:: $(SUBMAKEFILES) $(MAKE_DIRS)
 	+$(LOOP_OVER_DIRS)
@@ -718,6 +747,13 @@ HOST_LIBS_DEPS = $(filter %.$(LIB_SUFFIX), $(HOST_LIBS))
 DSO_LDOPTS_DEPS = $(EXTRA_DSO_LIBS) $(filter %.$(LIB_SUFFIX), $(EXTRA_DSO_LDOPTS))
 
 ##############################################
+ifdef PARALLEL_DIRS
+libs:: $(PARALLEL_SUBMAKEFILES) | $(PARALLEL_DIRS_libs)
+
+$(PARALLEL_DIRS_libs):: %_libs:
+	+$(MAKE) -C $* libs
+endif
+
 libs:: $(SUBMAKEFILES) $(MAKE_DIRS) $(HOST_LIBRARY) $(LIBRARY) $(SHARED_LIBRARY) $(IMPORT_LIBRARY) $(HOST_PROGRAM) $(PROGRAM) $(HOST_SIMPLE_PROGRAMS) $(SIMPLE_PROGRAMS) $(JAVA_LIBRARY)
 ifndef NO_DIST_INSTALL
 ifdef LIBRARY
@@ -825,11 +861,13 @@ run_viewer: $(FINAL_TARGET)/viewer
 clean clobber realclean clobber_all:: $(SUBMAKEFILES)
 	-rm -f $(ALL_TRASH)
 	-rm -rf $(ALL_TRASH_DIRS)
+	+-$(LOOP_OVER_PARALLEL_DIRS)
 	+-$(LOOP_OVER_DIRS)
 	+-$(LOOP_OVER_STATIC_DIRS)
 	+-$(LOOP_OVER_TOOL_DIRS)
 
 distclean:: $(SUBMAKEFILES)
+	+-$(LOOP_OVER_PARALLEL_DIRS)
 	+-$(LOOP_OVER_DIRS)
 	+-$(LOOP_OVER_STATIC_DIRS)
 	+-$(LOOP_OVER_TOOL_DIRS)
@@ -1605,6 +1643,7 @@ export-idl:: $(XPIDLSRCS) $(SDK_XPIDLSRCS) $(IDL_DIR)
 	$(INSTALL) $(IFLAGS1) $^
 endif
 endif
+	+$(LOOP_OVER_PARALLEL_DIRS)
 	+$(LOOP_OVER_DIRS)
 	+$(LOOP_OVER_TOOL_DIRS)
 
@@ -1751,6 +1790,7 @@ JAR_MANIFEST := $(srcdir)/jar.mn
 
 chrome::
 	$(MAKE) realchrome
+	+$(LOOP_OVER_PARALLEL_DIRS)
 	+$(LOOP_OVER_DIRS)
 	+$(LOOP_OVER_TOOL_DIRS)
 
@@ -1977,11 +2017,13 @@ depend:: $(SUBMAKEFILES) $(MAKE_DIRS) $(MDDEPFILES)
 else
 depend:: $(SUBMAKEFILES)
 endif
+	+$(LOOP_OVER_PARALLEL_DIRS)
 	+$(LOOP_OVER_DIRS)
 	+$(LOOP_OVER_TOOL_DIRS)
 
 dependclean:: $(SUBMAKEFILES)
 	rm -f $(MDDEPFILES)
+	+$(LOOP_OVER_PARALLEL_DIRS)
 	+$(LOOP_OVER_DIRS)
 	+$(LOOP_OVER_TOOL_DIRS)
 
@@ -2083,6 +2125,7 @@ tags: TAGS
 
 TAGS: $(SUBMAKEFILES) $(CSRCS) $(CPPSRCS) $(wildcard *.h)
 	-etags $(CSRCS) $(CPPSRCS) $(wildcard *.h)
+	+$(LOOP_OVER_PARALLEL_DIRS)
 	+$(LOOP_OVER_DIRS)
 
 echo-variable-%:
@@ -2106,6 +2149,7 @@ ifdef _REPORT_ALL_DIRS
 else
 	@$(if $(REQUIRES),echo $(subst $(topsrcdir)/,,$(srcdir)): $(MODULE): $(REQUIRES))
 endif
+	+$(LOOP_OVER_PARALLEL_DIRS)
 	+$(LOOP_OVER_DIRS)
 
 echo-depth-path:
@@ -2135,6 +2179,7 @@ ifneq (,$(filter $(PROGRAM) $(HOST_PROGRAM) $(SIMPLE_PROGRAMS) $(HOST_LIBRARY) $
 	@echo "DEPENDENT_LIBS      = $(DEPENDENT_LIBS)"
 	@echo --------------------------------------------------------------------------------
 endif
+	+$(LOOP_OVER_PARALLEL_DIRS)
 	+$(LOOP_OVER_DIRS)
 
 showbuild:
@@ -2196,6 +2241,7 @@ zipmakes:
 ifneq (,$(filter $(PROGRAM) $(SIMPLE_PROGRAMS) $(LIBRARY) $(SHARED_LIBRARY),$(TARGETS)))
 	zip $(DEPTH)/makefiles $(subst $(topsrcdir),$(MOZ_SRC)/mozilla,$(srcdir)/Makefile.in)
 endif
+	+$(LOOP_OVER_PARALLEL_DIRS)
 	+$(LOOP_OVER_DIRS)
 
 documentation:
@@ -2203,5 +2249,6 @@ documentation:
 	$(DOXYGEN) $(DEPTH)/config/doxygen.cfg
 
 check:: $(SUBMAKEFILES) $(MAKE_DIRS)
+	+$(LOOP_OVER_PARALLEL_DIRS)
 	+$(LOOP_OVER_DIRS)
 	+$(LOOP_OVER_TOOL_DIRS)

@@ -46,10 +46,10 @@ include $(DEPTH)/config/autoconf.mk
 # interfaces and implementations.
 # Likewise for content, because of nsXULAtoms.
 
-DIRS		= document content
+PARALLEL_DIRS	= document content
 
 ifdef MOZ_XUL
-DIRS		+= templates
+PARALLEL_DIRS	+= templates
 endif
 
 include $(topsrcdir)/config/rules.mk
