@@ -621,6 +621,8 @@ private:
 
   NS_IMETHODIMP RefreshSizeCache(nsBoxLayoutState& aState);
 
+  virtual nsILineIterator* GetLineIterator();
+
 protected:
   NS_IMETHOD_(nsrefcnt) AddRef(void);
   NS_IMETHOD_(nsrefcnt) Release(void);
