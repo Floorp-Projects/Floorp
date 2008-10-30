@@ -1815,6 +1815,14 @@ function testLoopWithUndefined2() {
 testLoopWithUndefined2.expected = "true,true,false,true";
 test(testLoopWithUndefined2);
 
+//test no assert
+function testBug462388() {
+    var c = 0, v; for each (let x in ["",v,v,v]) { for (c=0;c<4;++c) { } }
+    return true;
+}
+testBug462388.expected = true;
+test(testBug462388);
+
 // BEGIN MANDELBROT STUFF
 // XXXbz I would dearly like to wrap it up into a function to avoid polluting
 // the global scope, but the function ends up heavyweight, and then we lose on

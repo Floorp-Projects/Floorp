@@ -3070,6 +3070,8 @@ Fragment* TraceRecorder::findNestedCompatiblePeer(Fragment* f, Fragment** empty)
             debug_only_v(printf("%s%d=", vpname, vpnum);)
             if (!js_IsEntryTypeCompatible(vp, m))
                 goto check_fail;
+            if (*m == JSVAL_STRING && *vp == JSVAL_VOID)
+                goto check_fail;
             if (*m == JSVAL_INT && !isPromoteInt(get(vp)))
                 demotes++;
             m++;
