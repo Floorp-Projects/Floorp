@@ -115,13 +115,13 @@ static const char typeChar[] = "OIDVS?B?";
 #define NUM_DEMOTE_SLOTS(list)          list[0]
 #define CLEAR_DEMOTE_SLOTLIST(list)     list[0] = 0
 
-#ifdef DEBUG
+#ifdef JS_JIT_SPEW
 #define ABORT_TRACE(msg)   do { debug_only_v(fprintf(stdout, "abort: %d: %s\n", __LINE__, msg);)  return false; } while (0)
 #else
 #define ABORT_TRACE(msg)   return false
 #endif
 
-#ifdef DEBUG
+#ifdef JS_JIT_SPEW
 struct __jitstats {
 #define JITSTAT(x) uint64 x;
 #include "jitstats.tbl"
@@ -199,7 +199,7 @@ js_InitJITStatsClass(JSContext *cx, JSObject *glob)
 #define AUDIT(x) (jitstats.x++)
 #else
 #define AUDIT(x) ((void)0)
-#endif
+#endif /* JS_JIT_SPEW */
 
 #define INS_CONST(c)    addName(lir->insImm(c), #c)
 #define INS_CONSTPTR(p) addName(lir->insImmPtr((void*) (p)), #p)
@@ -211,7 +211,7 @@ static GC gc = GC();
 static avmplus::AvmCore s_core = avmplus::AvmCore();
 static avmplus::AvmCore* core = &s_core;
 
-#if defined DEBUG
+#ifdef JS_JIT_SPEW
 void
 js_DumpPeerStability(Fragmento* frago, const void* ip);
 #endif
@@ -222,7 +222,7 @@ static bool nesting_enabled = true;
 static bool did_we_check_sse2 = false;
 #endif
 
-#if defined(DEBUG) || defined(INCLUDE_VERBOSE_OUTPUT)
+#ifdef JS_JIT_SPEW
 static bool verbose_debug = getenv("TRACEMONKEY") && strstr(getenv("TRACEMONKEY"), "verbose");
 #define debug_only_v(x) if (verbose_debug) { x; }
 #else
@@ -789,7 +789,7 @@ public:
 
 /* In debug mode vpname contains a textual description of the type of the
    slot during the forall iteration over al slots. */
-#if defined(DEBUG) || defined(INCLUDE_VERBOSE_OUTPUT)
+#ifdef JS_JIT_SPEW
 #define DEF_VPNAME          const char* vpname; unsigned vpnum
 #define SET_VPNAME(name)    do { vpname = name; vpnum = 0; } while(0)
 #define INC_VPNUM()         do { ++vpnum; } while(0)
@@ -3244,7 +3244,7 @@ js_ExecuteTree(JSContext* cx, Fragment* f, uintN& inlineCallCount,
     union { NIns *code; GuardRecord* (FASTCALL *func)(InterpState*, Fragment*); } u;
     u.code = f->code();
 
-#ifdef DEBUG
+#ifdef JS_JIT_SPEW
 #if defined(NANOJIT_IA32) || (defined(NANOJIT_AMD64) && defined(__GNUC__))
     uint64 start = rdtsc();
 #endif
@@ -3366,9 +3366,9 @@ js_ExecuteTree(JSContext* cx, Fragment* f, uintN& inlineCallCount,
     JS_ASSERT(fp->slots + fp->script->nfixed +
               js_ReconstructStackDepth(cx, fp->script, fp->regs->pc) == fp->regs->sp);
 
-#if defined(DEBUG) && (defined(NANOJIT_IA32) || (defined(NANOJIT_AMD64) && defined(__GNUC__)))
+#if defined(JS_JIT_SPEW) && (defined(NANOJIT_IA32) || (defined(NANOJIT_AMD64) && defined(__GNUC__)))
     uint64 cycles = rdtsc() - start;
-#elif defined(DEBUG)
+#elif defined(JS_JIT_SPEW)
     uint64 cycles = 0;
 #endif
 
@@ -3648,7 +3648,7 @@ js_InitJIT(JSTraceMonitor *tm)
 extern void
 js_FinishJIT(JSTraceMonitor *tm)
 {
-#ifdef DEBUG
+#ifdef JS_JIT_SPEW
     printf("recorder: started(%llu), aborted(%llu), completed(%llu), different header(%llu), "
            "trees trashed(%llu), slot promoted(%llu), unstable loop variable(%llu), "
            "breaks(%llu), returns(%llu), unstableInnerCalls(%llu)\n",
@@ -7657,7 +7657,7 @@ TraceRecorder::record_JSOP_HOLE()
     return true;
 }
 
-#if defined DEBUG
+#ifdef JS_JIT_SPEW
 /* Prints information about entry typemaps and unstable exits for all peers at a PC */
 void
 js_DumpPeerStability(Fragmento* frago, const void* ip)
