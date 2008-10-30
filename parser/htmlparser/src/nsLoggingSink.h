@@ -60,7 +60,7 @@ public:
   NS_DECL_ISUPPORTS
 
   // nsIContentSink
-  NS_IMETHOD WillTokenize();
+  NS_IMETHOD WillParse();
   NS_IMETHOD WillBuildModel();
   NS_IMETHOD DidBuildModel();
   NS_IMETHOD WillInterrupt();
@@ -86,7 +86,6 @@ public:
 
   NS_IMETHOD BeginContext(PRInt32 aPosition);
   NS_IMETHOD EndContext(PRInt32 aPosition);
-  NS_IMETHOD WillProcessTokens(void) { return NS_OK; }
   NS_IMETHOD DidProcessTokens(void) { return NS_OK; }
   NS_IMETHOD WillProcessAToken(void) { return NS_OK; }
   NS_IMETHOD DidProcessAToken(void) { return NS_OK; }
