@@ -393,7 +393,24 @@ public:
   NPDrawingModel GetDrawingModel();
   WindowRef FixUpPluginWindow(PRInt32 inPaintState);
   void GUItoMacEvent(const nsGUIEvent& anEvent, EventRecord* origEvent, EventRecord& aMacEvent);
-  void SetCGContextChanged(PRBool aState) { mCGContextChanged = aState; }
+  // Set a flag that (if true) indicates the plugin port info has changed and
+  // SetWindow() needs to be called.
+  void SetPluginPortChanged(PRBool aState) { mPluginPortChanged = aState; }
+  // Return a pointer to the internal nsPluginPort structure that's used to
+  // store a copy of plugin port info and to detect when it's been changed.
+  nsPluginPort* GetPluginPortCopy() { return &mPluginPortCopy; }
+  // Set plugin port info in the plugin (in the 'window' member of the
+  // nsPluginWindow structure passed to the plugin by SetWindow()) and set a
+  // flag (mPluginPortChanged) to indicate whether or not this info has
+  // changed, and SetWindow() needs to be called again.
+  nsPluginPort* SetPluginPortAndDetectChange();
+  // Flag when we've set up a Thebes (and CoreGraphics) context in
+  // nsObjectFrame::PaintPlugin().  We need to know this in
+  // FixUpPluginWindow() (i.e. we need to know when FixUpPluginWindow() has
+  // been called from nsObjectFrame::PaintPlugin() when we're using the
+  // CoreGraphics drawing model).
+  void BeginCGPaint();
+  void EndCGPaint();
 #endif
 
   void SetOwner(nsObjectFrame *aOwner)
@@ -454,13 +471,18 @@ private:
   nsCOMPtr<nsITimer>          mPluginTimer;
   nsCOMPtr<nsIPluginHost>     mPluginHost;
 
+#ifdef XP_MACOSX
+  nsPluginPort                mPluginPortCopy;
+  PRInt32                     mInCGPaintLevel;
+#endif
+
   // Initially, the event loop nesting level we were created on, it's updated
   // if we detect the appshell is on a lower level as long as we're not stopped.
   // We delay DoStopPlugin() until the appshell reaches this level or lower.
   PRUint32                    mLastEventloopNestingLevel;
   PRPackedBool                mContentFocused;
   PRPackedBool                mWidgetVisible;    // used on Mac to store our widget's visible state
-  PRPackedBool                mCGContextChanged;
+  PRPackedBool                mPluginPortChanged;
 
   // If true, destroy the widget on destruction. Used when plugin stop
   // is being delayed to a safer point in time.
@@ -1353,30 +1375,47 @@ nsObjectFrame::PaintPlugin(nsIRenderingContext& aRenderingContext,
         return;
       }
 
-      // If gfxQuartzNativeDrawing hands out a CGContext other than the last
-      // one we passed to the plugin, we need to pass the new one to the
-      // plugin via SetWindow.  This will happen in nsPluginInstanceOwner::
-      // FixUpPluginWindow(), called from nsPluginInstanceOwner::Paint().
-      nsPluginPort* pluginPort = mInstanceOwner->GetPluginPort();
       nsCOMPtr<nsIPluginInstance> inst;
       GetPluginInstance(*getter_AddRefs(inst));
       if (!inst) {
         NS_WARNING("null plugin instance during PaintPlugin");
+        nativeDrawing.EndNativeDrawing();
         return;
       }
       nsPluginWindow* window;
       mInstanceOwner->GetWindow(window);
       if (!window) {
         NS_WARNING("null plugin window during PaintPlugin");
+        nativeDrawing.EndNativeDrawing();
         return;
       }
+      nsPluginPort* pluginPortCopy = mInstanceOwner->GetPluginPortCopy();
+      if (!pluginPortCopy) {
+        NS_WARNING("null plugin port copy during PaintPlugin");
+        nativeDrawing.EndNativeDrawing();
+        return;
+      }
+      if (!mInstanceOwner->SetPluginPortAndDetectChange()) {
+        NS_WARNING("null plugin port during PaintPlugin");
+        nativeDrawing.EndNativeDrawing();
+        return;
+      }
+      // If gfxQuartzNativeDrawing hands out a CGContext different from the
+      // one set by SetPluginPortAndDetectChange(), we need to pass it to the
+      // plugin via SetWindow().  This will happen in nsPluginInstanceOwner::
+      // FixUpPluginWindow(), called from nsPluginInstanceOwner::Paint().
+      // (If SetPluginPortAndDetectChange() made any changes itself, this has
+      // already been detected in that method, and will likewise result in a
+      // call to SetWindow() from FixUpPluginWindow().)
       if (window->window->cgPort.context != cgContext) {
-        pluginPort->cgPort.context = cgContext;
-        window->window = pluginPort;
-        mInstanceOwner->SetCGContextChanged(PR_TRUE);
+        window->window->cgPort.context = cgContext;
+        pluginPortCopy->cgPort.context = cgContext;
+        mInstanceOwner->SetPluginPortChanged(PR_TRUE);
       }
 
+      mInstanceOwner->BeginCGPaint();
       mInstanceOwner->Paint(aDirtyRect);
+      mInstanceOwner->EndCGPaint();
 
       nativeDrawing.EndNativeDrawing();
     } else {
@@ -2198,9 +2237,13 @@ nsPluginInstanceOwner::nsPluginInstanceOwner()
 
   mOwner = nsnull;
   mTagText = nsnull;
+#ifdef XP_MACOSX
+  memset(&mPluginPortCopy, 0, sizeof(nsPluginPort));
+  mInCGPaintLevel = 0;
+#endif
   mContentFocused = PR_FALSE;
   mWidgetVisible = PR_TRUE;
-  mCGContextChanged = PR_FALSE;
+  mPluginPortChanged = PR_FALSE;
   mNumCachedAttrs = 0;
   mNumCachedParams = 0;
   mCachedAttrParamNames = nsnull;
@@ -3249,6 +3292,60 @@ void nsPluginInstanceOwner::GUItoMacEvent(const nsGUIEvent& anEvent, EventRecord
         aMacEvent.what = nsPluginEventType_AdjustCursorEvent;
         break;
   }
+}
+
+// Currently (on OS X in Cocoa widgets) any changes made as a result of
+// calling GetPluginPort() are immediately reflected in the nsPluginWindow
+// structure that has been passed to the plugin via SetWindow().  This is
+// because calls to nsChildView::GetNativeData(NS_NATIVE_PLUGIN_PORT_CG)
+// always return a pointer to the same internal (private) object, but may
+// make changes inside that object.  All calls to GetPluginPort() made while
+// the plugin is active (i.e. excluding those made at our initialization)
+// need to take this into account.  The easiest way to do so is to replace
+// them with calls to SetPluginPortAndDetectChange().  This method keeps track
+// of when calls to GetPluginPort() result in changes, and sets a flag to make
+// sure SetWindow() gets called the next time through FixUpPluginWindow(), so
+// that the plugin is notified of these changes.
+nsPluginPort* nsPluginInstanceOwner::SetPluginPortAndDetectChange()
+{
+  if (!mPluginWindow)
+    return nsnull;
+  nsPluginPort* pluginPort = GetPluginPort();
+  if (!pluginPort)
+    return nsnull;
+  mPluginWindow->window = pluginPort;
+
+  NPDrawingModel drawingModel = GetDrawingModel();
+
+#ifndef NP_NO_QUICKDRAW
+  if (drawingModel == NPDrawingModelQuickDraw) {
+    if (mPluginWindow->window->qdPort.port != mPluginPortCopy.qdPort.port) {
+      mPluginPortCopy.qdPort.port = mPluginWindow->window->qdPort.port;
+      mPluginPortChanged = PR_TRUE;
+    }
+  } else if (drawingModel == NPDrawingModelCoreGraphics)
+#endif
+  {
+    if ((mPluginWindow->window->cgPort.context != mPluginPortCopy.cgPort.context) ||
+        (mPluginWindow->window->cgPort.window != mPluginPortCopy.cgPort.window)) {
+      mPluginPortCopy.cgPort.context = mPluginWindow->window->cgPort.context;
+      mPluginPortCopy.cgPort.window = mPluginWindow->window->cgPort.window;
+      mPluginPortChanged = PR_TRUE;
+    }
+  }
+
+  return mPluginWindow->window;
+}
+
+void nsPluginInstanceOwner::BeginCGPaint()
+{
+  ++mInCGPaintLevel;
+}
+
+void nsPluginInstanceOwner::EndCGPaint()
+{
+  --mInCGPaintLevel;
+  NS_ASSERTION(mInCGPaintLevel >= 0, "Mismatched call to nsPluginInstanceOwner::EndCGPlugin()!");
 }
 
 #endif
@@ -4574,12 +4671,19 @@ WindowRef nsPluginInstanceOwner::FixUpPluginWindow(PRInt32 inPaintState)
   if (!mWidget || !mPluginWindow || !mInstance || !mOwner)
     return nsnull;
 
-  nsPluginPort* pluginPort = GetPluginPort(); 
+  NPDrawingModel drawingModel = GetDrawingModel();
+
+  // If we've already set up a CGContext in nsObjectFrame::PaintPlugin(), we
+  // don't want calls to SetPluginPortAndDetectChange() to step on our work.
+  nsPluginPort* pluginPort = nsnull;
+  if (mInCGPaintLevel > 0) {
+    pluginPort = mPluginWindow->window;
+  } else {
+    pluginPort = SetPluginPortAndDetectChange();
+  }
 
   if (!pluginPort)
     return nsnull;
-
-  NPDrawingModel drawingModel = GetDrawingModel();
 
   // first, check our view for CSS visibility style
   PRBool isVisible =
@@ -4656,7 +4760,7 @@ WindowRef nsPluginInstanceOwner::FixUpPluginWindow(PRInt32 inPaintState)
       mPluginWindow->clipRect.bottom  != oldClipRect.bottom)
   {
     mInstance->SetWindow(mPluginWindow);
-    mCGContextChanged = PR_FALSE;
+    mPluginPortChanged = PR_FALSE;
     // if the clipRect is of size 0, make the null timer fire less often
     CancelTimer();
     if (mPluginWindow->clipRect.left == mPluginWindow->clipRect.right ||
@@ -4666,9 +4770,9 @@ WindowRef nsPluginInstanceOwner::FixUpPluginWindow(PRInt32 inPaintState)
     else {
       StartTimer(NORMAL_PLUGIN_DELAY);
     }
-  } else if (mCGContextChanged) {
+  } else if (mPluginPortChanged) {
     mInstance->SetWindow(mPluginWindow);
-    mCGContextChanged = PR_FALSE;
+    mPluginPortChanged = PR_FALSE;
   }
 
 #ifndef NP_NO_QUICKDRAW
