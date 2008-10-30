@@ -100,7 +100,7 @@ protected:
                  PRInt32 inState);
   void DrawProgress(CGContextRef context, const HIRect& inBoxRect,
                     PRBool inIsIndeterminate, PRBool inIsHorizontal,
-                    PRInt32 inValue, nsIFrame* aFrame);
+                    PRInt32 inValue, PRInt32 inMaxValue, nsIFrame* aFrame);
   void DrawTab(CGContextRef context, const HIRect& inBoxRect,
                PRBool inIsDisabled, PRBool inIsFrontmost, 
                PRBool inIsHorizontal, PRBool inTabBottom,
