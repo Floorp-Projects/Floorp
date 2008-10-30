@@ -4,17 +4,20 @@
 https://bugzilla.mozilla.org/show_bug.cgi?id=429547
 -->
 <head>
-  <title>Table indexes chrome tests</title>
+  <title>aria-activedescendant property chrome tests</title>
   <link rel="stylesheet" type="text/css" href="chrome://mochikit/content/tests/SimpleTest/test.css" />
 
-  <script type="application/javascript" src="chrome://mochikit/content/MochiKit/packed.js"></script>
-  <script type="application/javascript" src="chrome://mochikit/content/tests/SimpleTest/SimpleTest.js"></script>
+  <script type="application/javascript"
+          src="chrome://mochikit/content/MochiKit/packed.js"></script>
+  <script type="application/javascript"
+          src="chrome://mochikit/content/tests/SimpleTest/SimpleTest.js"></script>
+
+  <script type="application/javascript"
+          src="chrome://mochikit/content/a11y/accessible/common.js"></script>
 
   <script type="application/javascript">
-    const nsIAccessibleRetrieval = Components.interfaces.nsIAccessibleRetrieval;
-    const ELEMENT_NODE = Components.interfaces.nsIDOMNode.ELEMENT_NODE;
+    const ELEMENT_NODE = nsIDOMNode.ELEMENT_NODE;
 
-    var gAccRetrieval = null;
     var gContainerFocused = false;
 
     function doTest()
@@ -31,22 +34,15 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=429547
       var container = document.getElementById("container");
       container.addEventListener("focus", focusHandler, false);
 
-      gAccRetrieval = Components.classes["@mozilla.org/accessibleRetrieval;1"].
-                      getService(nsIAccessibleRetrieval);
-
-      var item2 = document.getElementById("item2");
-      var item2Acc = null;
-      try {
-        item2Acc = gAccRetrieval.getAccessibleFor(item2);
-      } catch (e) {}
-      ok (item2Acc,
-          "The element with ID and an ancestor with 'aria-activedescedant' attribute should be accessible.");
-
-      if (item2Acc)
+      var item2Acc = getAccessible("item2");
+      if (item2Acc) {
         item2Acc.takeFocus();
+  
+        ok(gContainerFocused,
+           "Container with active descendant didn't receive the focus.");
+      }
 
-      ok(gContainerFocused,
-         "Container with active descedant didn't recieved the focus.");
+      container.removeEventListener("focus", focusHandler, false);
 
       SimpleTest.finish();
     }
