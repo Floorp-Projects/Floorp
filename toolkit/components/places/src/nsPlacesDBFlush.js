@@ -137,9 +137,11 @@ nsPlacesDBFlush.prototype = {
   {
     this._inBatchMode = false;
 
-    // We need to sync and restore our timer now.
-    this._syncTables(["places", "historyvisits"]);
+    // Restore our timer
     this._timer = this._newTimer();
+
+    // We need to sync now
+    this._syncTables(["places", "historyvisits"]);
   },
 
   onItemAdded: function() this._syncTables(["places"]),
