@@ -267,7 +267,7 @@ nsGeolocationRequest::SendLocation(nsIDOMGeoPosition* aPosition)
     // need to make a copy because nsIDOMGeoPosition is
     // readonly, and we are not sure of its implementation.
 
-    double lat, lon, alt, herror, verror, heading, velocity;
+    double lat, lon, alt, herror, verror, heading, speed;
     DOMTimeStamp time;
     aPosition->GetLatitude(&lat);
     aPosition->GetLongitude(&lon);
@@ -275,7 +275,7 @@ nsGeolocationRequest::SendLocation(nsIDOMGeoPosition* aPosition)
     aPosition->GetAccuracy(&herror);
     aPosition->GetAltitudeAccuracy(&verror);
     aPosition->GetHeading(&heading);
-    aPosition->GetVelocity(&velocity);
+    aPosition->GetSpeed(&speed);
     aPosition->GetTimestamp(&time); 
 
     // Truncate ?
@@ -287,7 +287,7 @@ nsGeolocationRequest::SendLocation(nsIDOMGeoPosition* aPosition)
     lon = 0;
     herror = 0;
     heading = 0; 
-    velocity = 0;
+    speed = 0;
     alt = 0;
     verror = 0;
 
@@ -297,7 +297,7 @@ nsGeolocationRequest::SendLocation(nsIDOMGeoPosition* aPosition)
                                                           herror,
                                                           verror,
                                                           heading,
-                                                          velocity,
+                                                          speed,
                                                           time);
     mCallback->HandleEvent(somewhere);
   }
@@ -376,9 +376,9 @@ nsGeoPosition::GetHeading(double *aHeading)
 }
 
 NS_IMETHODIMP
-nsGeoPosition::GetVelocity(double *aVelocity)
+nsGeoPosition::GetSpeed(double *aSpeed)
 {
-  *aVelocity = mVelocity;
+  *aSpeed = mSpeed;
   return NS_OK;
 }
 

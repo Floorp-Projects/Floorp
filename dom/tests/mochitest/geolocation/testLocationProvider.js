@@ -28,7 +28,7 @@ GeopositionObject.prototype = {
     accuracy: 1,
     altitudeAccuracy: 1,
     heading: 1,
-    velocity: 1,
+    speed: 1,
     timestamp: 1,
 };
 
