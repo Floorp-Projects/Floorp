@@ -1790,7 +1790,7 @@ static JSFunctionSpec function_methods[] = {
     JS_FN("apply",           js_fun_apply,   2,0),
     JS_FN(call_str,          js_fun_call,    1,0),
 #ifdef NARCISSUS
-    JS_FN("__applyConstructor__", fun_applyConstructor, 0,1,0),
+    JS_FN("__applyConstructor__", fun_applyConstructor, 1,0),
 #endif
     JS_FS_END
 };

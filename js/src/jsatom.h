@@ -223,9 +223,9 @@ struct JSAtomState {
 #endif
 
 #ifdef NARCISSUS
-    JSAtom              *callAtom;
-    JSAtom              *constructAtom;
-    JSAtom              *hasInstanceAtom;
+    JSAtom              *__call__Atom;
+    JSAtom              *__construct__Atom;
+    JSAtom              *__hasInstance__Atom;
     JSAtom              *ExecutionContextAtom;
     JSAtom              *currentAtom;
 #endif
@@ -346,9 +346,9 @@ extern const char   js_toJSON_str[];
 extern const char   js_xml_str[];
 
 #ifdef NARCISSUS
-extern const char   js_call_str[];
-extern const char   js_construct_str[];
-extern const char   js_hasInstance_str[];
+extern const char   js___call___str[];
+extern const char   js___construct___str[];
+extern const char   js___hasInstance___str[];
 extern const char   js_ExecutionContext_str[];
 extern const char   js_current_str[];
 #endif
