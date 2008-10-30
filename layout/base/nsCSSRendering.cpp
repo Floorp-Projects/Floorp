@@ -1351,9 +1351,22 @@ IsSolidBorderEdge(const nsStyleBorder& aBorder, PRUint32 aSide)
   if (aBorder.GetBorderStyle(aSide) != NS_STYLE_BORDER_STYLE_SOLID)
     return PR_FALSE;
 
+  // If we're using a border image, assume it's not fully opaque,
+  // because we may not even have the image loaded at this point, and
+  // even if we did, checking whether the relevant tile is fully
+  // opaque would be too much work.
+  if (aBorder.GetBorderImage())
+    return PR_FALSE;
+
   nscolor color;
   PRBool isForeground;
   aBorder.GetBorderColor(aSide, color, isForeground);
+
+  // We don't know the foreground color here, so if it's being used
+  // we must assume it might be transparent.
+  if (isForeground)
+    return PR_FALSE;
+
   return NS_GET_A(color) == 255;
 }
 
