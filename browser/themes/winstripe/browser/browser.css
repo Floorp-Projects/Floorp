@@ -205,23 +205,6 @@ menuitem.bookmark-item {
   -moz-image-region: rect(16px, 32px, 32px, 16px);
 }
 
-/* ::::: bookmark panel dropdown icons ::::: */
-
-#editBMPanel_toolbarFolderItem {
-  list-style-image: url("chrome://browser/skin/places/bookmarksToolbar.png") !important;
-  -moz-image-region: auto !important;
-}
-
-#editBMPanel_bmRootItem {
-  list-style-image: url("chrome://browser/skin/places/bookmarksMenu.png") !important;
-  -moz-image-region: auto !important;
-}
-
-#editBMPanel_unfiledRootItem {
-  list-style-image: url("chrome://browser/skin/places/unsortedBookmarks.png") !important;
-  -moz-image-region: auto !important;
-}
-
 /* ::::: primary toolbar buttons ::::: */
 
 .toolbarbutton-1 {
