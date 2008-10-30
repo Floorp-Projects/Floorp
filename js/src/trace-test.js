@@ -1815,13 +1815,21 @@ function testLoopWithUndefined2() {
 testLoopWithUndefined2.expected = "true,true,false,true";
 test(testLoopWithUndefined2);
 
-//test no assert
+//test no multitrees assert
 function testBug462388() {
     var c = 0, v; for each (let x in ["",v,v,v]) { for (c=0;c<4;++c) { } }
     return true;
 }
 testBug462388.expected = true;
 test(testBug462388);
+
+//test no multitrees assert
+function testBug462407() {
+    for each (let i in [0, {}, 0, 1.5, {}, 0, 1.5, 0, 0]) { }
+    return true;
+}
+testBug462407.expected = true;
+test(testBug462407);
 
 // BEGIN MANDELBROT STUFF
 // XXXbz I would dearly like to wrap it up into a function to avoid polluting
