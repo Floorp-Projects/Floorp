@@ -46,7 +46,7 @@
       </property>
       <property name="max"
                 onget="return this.getAttribute('max') || '100';"
-                onset="this.setAttribute('max', isNaN(val) ? 100 : Math.max(val, 1);
+                onset="this.setAttribute('max', isNaN(val) ? 100 : Math.max(val, 1));
                        this.value = this.value;
                        return val;" />
 
