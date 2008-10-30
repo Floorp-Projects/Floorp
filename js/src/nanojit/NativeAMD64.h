@@ -229,6 +229,7 @@ namespace nanojit
 #define AMD64_MOVD_RM_REG			0x660F7E	/* rm/r */
 #define AMD64_MOVSD_REG_RM			0xF20F10	/* rm/r */
 #define AMD64_MOVZX					0x0FB6		/* rm/r */
+#define AMD64_MOVSZ                 0x0FB7      /* rm/r */
 #define AMD64_MULSD					0xF20F59	/* rm/r */
 #define AMD64_NEG_RM				0xF7		/* rm/3 */
 #define AMD64_NOT_RM				0xF7		/* rm/2 */
@@ -751,7 +752,19 @@ namespace nanojit
 	asm_output3("movzx %s,%d(%s)", gpn(r),d,gpn(b)); 			\
 	} while(0)
 
+	
+#define LD16Z(r,d,b) do {                                        \
+    underrunProtect(5);                                         \
+    AMD64_MODRM_DISP(r, b, d);                                  \
+    *(--_nIns) = AMD64_MOVSX & 0xFF;                            \
+    *(--_nIns) = AMD64_MOVSX >> 8;                              \
+    if (AMD64_NEEDS_REX(r) || AMD64_NEEDS_REX(b)) {             \
+        *(--_nIns) = AMD64_REX(0,r,b);                          \
+    }                                                           \
+    asm_output3("movsx %s,%d(%s)", gpn(r),d,gpn(b));            \
+    } while(0)
 
+    
 #define LDi(r,i) do { 											\
 	underrunProtect(6);											\
 	IMM32(i);													\

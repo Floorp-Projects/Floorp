@@ -1130,6 +1130,7 @@ namespace nanojit
 				case LIR_ld:
 				case LIR_ldc:
 				case LIR_ldcb:
+				case LIR_ldcs:
 				{
                     countlir_ld();
 					asm_ld(ins);
