@@ -110,10 +110,10 @@ static const char typeChar[] = "OIDVS?B?";
 #define MAX_BRANCHES 16
 
 /* Macros for demote slot lists */
-#define ALLOCA_DEMOTE_SLOTLIST(num)     (unsigned*)alloca(((num) + 1) * sizeof(unsigned))
-#define ADD_DEMOTE_SLOT(list, slot)     list[++list[0]] = slot
-#define NUM_DEMOTE_SLOTS(list)          list[0]
-#define CLEAR_DEMOTE_SLOTLIST(list)     list[0] = 0
+#define ALLOCA_UNDEMOTE_SLOTLIST(num)     (unsigned*)alloca(((num) + 1) * sizeof(unsigned))
+#define ADD_UNDEMOTE_SLOT(list, slot)     list[++list[0]] = slot
+#define NUM_UNDEMOTE_SLOTS(list)          list[0]
+#define CLEAR_UNDEMOTE_SLOTLIST(list)     list[0] = 0
 
 #ifdef JS_JIT_SPEW
 #define ABORT_TRACE(msg)   do { debug_only_v(fprintf(stdout, "abort: %d: %s\n", __LINE__, msg);)  return false; } while (0)
@@ -1730,20 +1730,20 @@ TraceRecorder::adjustCallerTypes(Fragment* f, unsigned* demote_slots, bool& tras
             lir->insStorei(get(vp), lirbuf->sp, 
                            -treeInfo->nativeStackBase + nativeStackOffset(vp));
             /* Aggressively undo speculation so the inner tree will compile if this fails. */
-            ADD_DEMOTE_SLOT(demote_slots, unsigned(m - map));
+            ADD_UNDEMOTE_SLOT(demote_slots, unsigned(m - map));
         } else if (!isPromote && *m == JSVAL_INT) {
             debug_only_v(printf("adjusting will fail, %s%d, slot %d\n", vpname, vpnum, m - map);)
             ok = false;
-            ADD_DEMOTE_SLOT(demote_slots, unsigned(m - map));
+            ADD_UNDEMOTE_SLOT(demote_slots, unsigned(m - map));
         } else if (JSVAL_IS_INT(*vp) && *m == JSVAL_DOUBLE) {
             /* Aggressively undo speculation so the inner tree will compile if this fails. */
-            ADD_DEMOTE_SLOT(demote_slots, unsigned(m - map));
+            ADD_UNDEMOTE_SLOT(demote_slots, unsigned(m - map));
         }
         ++m;
     );
     /* If this isn't okay, tell the oracle. */
     if (!ok) {
-        for (unsigned i = 1; i <= NUM_DEMOTE_SLOTS(demote_slots); i++)
+        for (unsigned i = 1; i <= NUM_UNDEMOTE_SLOTS(demote_slots); i++)
             oracle.markStackSlotUndemotable(cx->fp->script, cx->fp->regs->pc, demote_slots[i]);
     }
     JS_ASSERT(f == f->root);
@@ -1983,7 +1983,7 @@ TraceRecorder::deduceTypeStability(Fragment* root_peer, Fragment** stable_peer, 
     if (stable_peer)
         *stable_peer = NULL;
 
-    CLEAR_DEMOTE_SLOTLIST(demotes);
+    CLEAR_UNDEMOTE_SLOTLIST(demotes);
 
     /* Rather than calculate all of this stuff twice, it gets cached locally.  The "stage" buffers 
      * are for calls to set() that will change the exit types.
@@ -2016,7 +2016,7 @@ TraceRecorder::deduceTypeStability(Fragment* root_peer, Fragment** stable_peer, 
         debug_only_v(printf("%s%d ", vpname, vpnum);)
         if (!checkType(*vp, *m, stage_vals[stage_count], stage_ins[stage_count], stage_count)) {
             if (*m == JSVAL_INT && isNumber(*vp) && !isPromoteInt(get(vp)))
-                ADD_DEMOTE_SLOT(demotes, unsigned(m - typemap));
+                ADD_UNDEMOTE_SLOT(demotes, unsigned(m - typemap));
             else
                 goto checktype_fail_1;
         }
@@ -2035,7 +2035,7 @@ checktype_fail_1:
     } else if (trashTree) {
         return false;
     } else {
-        CLEAR_DEMOTE_SLOTLIST(demotes);
+        CLEAR_UNDEMOTE_SLOTLIST(demotes);
     }
 
     /* At this point the tree is about to be incomplete, so let's see if we can connect to any 
@@ -2150,7 +2150,7 @@ TraceRecorder::closeLoop(Fragmento* fragmento, bool& demote, unsigned *demotes)
     stable = deduceTypeStability(peer_root, &peer, demotes);
 
     #if DEBUG
-    if (!stable || NUM_DEMOTE_SLOTS(demotes))
+    if (!stable || NUM_UNDEMOTE_SLOTS(demotes))
         AUDIT(unstableLoopVariable);
     #endif
 
@@ -2159,10 +2159,16 @@ TraceRecorder::closeLoop(Fragmento* fragmento, bool& demote, unsigned *demotes)
         return false;
     }
 
-    if (stable && NUM_DEMOTE_SLOTS(demotes)) {
+    if (stable && NUM_UNDEMOTE_SLOTS(demotes)) {
         /* If this is a loop trace, we can demote and recompile */
         if (fragment->kind == LoopTrace) {
             demote = true;
+            /* Make sure we use doubles in future trees for all other double slots. */
+            uint8* m = treeInfo->stackTypeMap.data();
+            for (unsigned i = 0; i < treeInfo->stackTypeMap.length(); i++) {
+                if (m[i] == JSVAL_DOUBLE)
+                    ADD_UNDEMOTE_SLOT(demotes, i);
+            }
             return false;
         }
         stable = false;
@@ -2711,7 +2717,7 @@ js_RecordTree(JSContext* cx, JSTraceMonitor* tm, Fragment* f, Fragment* outer, u
     if (demotes) {
         /* If we get a list of demotions, an outer tree is telling us our types are not callable. */
         uint8* typeMap = ti->stackTypeMap.data();
-        for (unsigned i = 1; i <= NUM_DEMOTE_SLOTS(demotes); i++) {
+        for (unsigned i = 1; i <= NUM_UNDEMOTE_SLOTS(demotes); i++) {
             JS_ASSERT(demotes[i] < ti->stackTypeMap.length());
             if (typeMap[demotes[i]] == JSVAL_INT)
                 typeMap[demotes[i]] = JSVAL_DOUBLE;
@@ -2759,16 +2765,16 @@ js_AttemptToStabilizeTree(JSContext* cx, SideExit* exit, Fragment* outer)
 
     JS_ASSERT(exit->from->root->code());
     
-    demotes = ALLOCA_DEMOTE_SLOTLIST(exit->numStackSlots);
-    CLEAR_DEMOTE_SLOTLIST(demotes);
+    demotes = ALLOCA_UNDEMOTE_SLOTLIST(exit->numStackSlots);
+    CLEAR_UNDEMOTE_SLOTLIST(demotes);
 
     uint8* t2 = getTypeMap(exit) + exit->numGlobalSlots;
     for (unsigned i = 0; i < exit->numStackSlots; i++) {
         if (t2[i] == JSVAL_DOUBLE)
-            ADD_DEMOTE_SLOT(demotes, i);
+            ADD_UNDEMOTE_SLOT(demotes, i);
     }
 
-    if (!NUM_DEMOTE_SLOTS(demotes))
+    if (!NUM_UNDEMOTE_SLOTS(demotes))
         demotes = NULL;
 
     if (!js_RecordTree(cx, tm, from->first, outer, demotes))
@@ -2862,9 +2868,9 @@ js_CloseLoop(JSContext* cx)
     bool demote;
     Fragment* f = r->getFragment();
     TreeInfo* ti = r->getTreeInfo();
-    unsigned* demotes = ALLOCA_DEMOTE_SLOTLIST(ti->stackTypeMap.length());
+    unsigned* demotes = ALLOCA_UNDEMOTE_SLOTLIST(ti->stackTypeMap.length());
     r->closeLoop(fragmento, demote, demotes);
-    JS_ASSERT(!demote || NUM_DEMOTE_SLOTS(demotes));
+    JS_ASSERT(!demote || NUM_UNDEMOTE_SLOTS(demotes));
     js_DeleteRecorder(cx);
     if (demote)
         return js_RecordTree(cx, tm, f, NULL, demotes);
@@ -2911,8 +2917,8 @@ js_RecordLoopEdge(JSContext* cx, TraceRecorder* r, uintN& inlineCallCount)
         if (f && f->code()) {
             TreeInfo* ti = (TreeInfo*)f->vmprivate;
             /* alloca docs says it lasts out of scopes. */
-            demotes = ALLOCA_DEMOTE_SLOTLIST(ti->stackTypeMap.length());
-            CLEAR_DEMOTE_SLOTLIST(demotes);
+            demotes = ALLOCA_UNDEMOTE_SLOTLIST(ti->stackTypeMap.length());
+            CLEAR_UNDEMOTE_SLOTLIST(demotes);
             success = r->adjustCallerTypes(f, demotes, trash);
         }
 
