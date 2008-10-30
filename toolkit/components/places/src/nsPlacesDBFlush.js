@@ -247,6 +247,7 @@ nsPlacesDBFlush.prototype = {
     Ci.nsIObserver,
     Ci.nsINavBookmarkObserver,
     Ci.nsITimerCallback,
+    Ci.mozIStorageStatementCallback,
   ])
 };
 
