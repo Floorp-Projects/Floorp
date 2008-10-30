@@ -262,6 +262,67 @@ void nsMenuBarX::RemoveMenuAtIndex(PRUint32 aIndex)
 }
 
 
+void nsMenuBarX::ForceUpdateNativeMenuAt(const nsAString& indexString)
+{
+  NSString* locationString = [NSString stringWithCharacters:indexString.BeginReading() length:indexString.Length()];
+  NSArray* indexes = [locationString componentsSeparatedByString:@"|"];
+  unsigned int indexCount = [indexes count];
+  if (indexCount == 0)
+    return;
+
+  nsMenuX* currentMenu = NULL;
+  int targetIndex = [[indexes objectAtIndex:0] intValue];
+  int visible = 0;
+  PRUint32 length = mMenuArray.Length();
+  // first find a menu in the menu bar
+  for (unsigned int i = 0; i < length; i++) {
+    nsMenuX* menu = mMenuArray[i];
+    if (!nsMenuUtilsX::NodeIsHiddenOrCollapsed(menu->Content())) {
+      visible++;
+      if (visible == (targetIndex + 1)) {
+        currentMenu = menu;
+        break;
+      }
+    }
+  }
+
+  if (!currentMenu)
+    return;
+
+  // fake open/close to cause lazy update to happen so submenus populate
+  nsMenuEvent menuEvent(PR_TRUE, NS_MENU_SELECTED, nsnull);
+  menuEvent.time = PR_IntervalNow();
+  menuEvent.mCommand = (PRUint32)_NSGetCarbonMenu(static_cast<NSMenu*>(currentMenu->NativeData()));
+  currentMenu->MenuOpened(menuEvent);
+  currentMenu->MenuClosed(menuEvent);
+
+  // now find the correct submenu
+  for (unsigned int i = 1; currentMenu && i < indexCount; i++) {
+    targetIndex = [[indexes objectAtIndex:i] intValue];
+    visible = 0;
+    length = currentMenu->GetItemCount();
+    for (unsigned int j = 0; j < length; j++) {
+      nsMenuObjectX* targetMenu = currentMenu->GetItemAt(j);
+      if (!targetMenu)
+        return;
+      if (!nsMenuUtilsX::NodeIsHiddenOrCollapsed(targetMenu->Content())) {
+        visible++;
+        if (targetMenu->MenuObjectType() == eSubmenuObjectType && visible == (targetIndex + 1)) {
+          currentMenu = static_cast<nsMenuX*>(targetMenu);
+          // fake open/close to cause lazy update to happen
+          nsMenuEvent menuEvent(PR_TRUE, NS_MENU_SELECTED, nsnull);
+          menuEvent.time = PR_IntervalNow();
+          menuEvent.mCommand = (PRUint32)_NSGetCarbonMenu(static_cast<NSMenu*>(currentMenu->NativeData()));
+          currentMenu->MenuOpened(menuEvent);
+          currentMenu->MenuClosed(menuEvent);
+          break;
+        }
+      }
+    }
+  }
+}
+
+
 // Calling this forces a full reload of the menu system, reloading all native
 // menus and their items.
 // Without this testing is hard because changes to the DOM affect the native
