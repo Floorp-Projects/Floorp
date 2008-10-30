@@ -201,6 +201,9 @@ nsPlacesDBFlush.prototype = {
 
     // Execute sync statements async in a transaction
     this._db.executeAsync(statements, statements.length, this);
+
+    // Finalize statements, otherwise we could get in trouble
+    statements.forEach(function(stmt) stmt.finalize());
   },
 
   /**
