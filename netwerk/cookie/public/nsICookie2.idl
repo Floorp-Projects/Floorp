@@ -79,7 +79,7 @@ interface nsICookie2 : nsICookie
     readonly attribute boolean isHttpOnly;
 
     /**
-     * the creation time of the cookie, in seconds
+     * the creation time of the cookie, in microseconds
      * since midnight (00:00:00), January 1, 1970 UTC.
      */
     readonly attribute PRInt64 creationTime;
