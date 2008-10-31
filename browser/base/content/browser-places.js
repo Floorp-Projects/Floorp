@@ -123,7 +123,10 @@ var StarUI = {
         }
         else if (aEvent.keyCode == KeyEvent.DOM_VK_RETURN) {
           // hide the panel unless the folder tree is focused
-          if (aEvent.target.localName != "tree")
+          // or the tag autocomplete popup is open
+          if (aEvent.target.localName != "tree" &&
+              (aEvent.target.id != "editBMPanel_tagsField" ||
+               !aEvent.target.popupOpen))
             this.panel.hidePopup();
         }
         break;
