@@ -606,24 +606,24 @@ nsDOMStorage::Key(PRUint32 aIndex, nsAString& aKey)
   return NS_OK;
 }
 
-nsIDOMStorageItem*
-nsDOMStorage::GetNamedItem(const nsAString& aKey, nsresult* aResult)
+NS_IMETHODIMP
+nsDOMStorage::GetItem(const nsAString& aKey, nsIDOMStorageItem **aItem)
 {
-  if (!CacheStoragePermissions()) {
-    *aResult = NS_ERROR_DOM_SECURITY_ERR;
-    return nsnull;
-  }
+  *aItem = nsnull;
 
-  *aResult = NS_OK;
+  if (!CacheStoragePermissions())
+    return NS_ERROR_DOM_SECURITY_ERR;
+
   if (aKey.IsEmpty())
-    return nsnull;
+    return NS_OK;
 
   nsSessionStorageEntry *entry = mItems.GetEntry(aKey);
-  nsIDOMStorageItem* item = nsnull;
+ 
   if (entry) {
-    if (IsCallerSecure() || !entry->mItem->IsSecure()) {
-      item = entry->mItem;
+    if (!IsCallerSecure() && entry->mItem->IsSecure()) {
+      return NS_OK;
     }
+    NS_ADDREF(*aItem = entry->mItem);
   }
   else if (UseDB()) {
     PRBool secure;
@@ -632,33 +632,22 @@ nsDOMStorage::GetNamedItem(const nsAString& aKey, nsresult* aResult)
     nsresult rv = GetDBValue(aKey, value, &secure, unused);
     // return null if access isn't allowed or the key wasn't found
     if (rv == NS_ERROR_DOM_SECURITY_ERR || rv == NS_ERROR_DOM_NOT_FOUND_ERR)
-      return nsnull;
-
-    *aResult = rv;
-    NS_ENSURE_SUCCESS(rv, nsnull);
+      return NS_OK;
+    NS_ENSURE_SUCCESS(rv, rv);
 
     nsRefPtr<nsDOMStorageItem> newitem =
       new nsDOMStorageItem(this, aKey, value, secure);
-    if (newitem && (entry = mItems.PutEntry(aKey))) {
-      item = entry->mItem = newitem;
-    }
-    else {
-      *aResult = NS_ERROR_OUT_OF_MEMORY;
-    }
+    if (!newitem)
+      return NS_ERROR_OUT_OF_MEMORY;
+
+    entry = mItems.PutEntry(aKey);
+    NS_ENSURE_TRUE(entry, NS_ERROR_OUT_OF_MEMORY);
+
+    entry->mItem = newitem;
+    NS_ADDREF(*aItem = newitem);
   }
 
-  return item;
-}
-
-
-NS_IMETHODIMP
-nsDOMStorage::GetItem(const nsAString& aKey, nsIDOMStorageItem **aItem)
-{
-  nsresult rv;
-
-  NS_ADDREF(*aItem = GetNamedItem(aKey, &rv));
-
-  return rv;
+  return NS_OK;
 }
 
 NS_IMETHODIMP
@@ -1052,17 +1041,21 @@ NS_INTERFACE_MAP_END
 NS_IMPL_ADDREF(nsDOMStorageList)
 NS_IMPL_RELEASE(nsDOMStorageList)
 
-nsIDOMStorage*
-nsDOMStorageList::GetNamedItem(const nsAString& aDomain, nsresult* aResult)
+nsresult
+nsDOMStorageList::NamedItem(const nsAString& aDomain,
+                            nsIDOMStorage** aStorage)
 {
+  *aStorage = nsnull;
+
   nsCAutoString requestedDomain;
 
+  nsresult rv;
   // Normalize the requested domain
   nsCOMPtr<nsIIDNService> idn = do_GetService(NS_IDNSERVICE_CONTRACTID);
   if (idn) {
-    *aResult = idn->ConvertUTF8toACE(NS_ConvertUTF16toUTF8(aDomain),
-                                     requestedDomain);
-    NS_ENSURE_SUCCESS(*aResult, nsnull);
+    rv = idn->ConvertUTF8toACE(NS_ConvertUTF16toUTF8(aDomain),
+                               requestedDomain);
+    NS_ENSURE_SUCCESS(rv, rv);
   } else {
     // Don't have the IDN service, best we can do is URL escape.
     NS_EscapeURL(NS_ConvertUTF16toUTF8(aDomain),
@@ -1072,51 +1065,42 @@ nsDOMStorageList::GetNamedItem(const nsAString& aDomain, nsresult* aResult)
   ToLowerCase(requestedDomain);
 
   nsIScriptSecurityManager* ssm = nsContentUtils::GetSecurityManager();
-  if (!ssm) {
-    *aResult = NS_ERROR_FAILURE;
-    return nsnull;
-  }
+  if (!ssm)
+    return NS_ERROR_FAILURE;
 
   nsCOMPtr<nsIPrincipal> subjectPrincipal;
-  *aResult = ssm->GetSubjectPrincipal(getter_AddRefs(subjectPrincipal));
-  NS_ENSURE_SUCCESS(*aResult, nsnull);
+  rv = ssm->GetSubjectPrincipal(getter_AddRefs(subjectPrincipal));
+  NS_ENSURE_SUCCESS(rv, rv);
 
   nsCOMPtr<nsIURI> uri;
   nsCAutoString currentDomain;
   if (subjectPrincipal) {
-    *aResult = subjectPrincipal->GetDomain(getter_AddRefs(uri));
-    NS_ENSURE_SUCCESS(*aResult, nsnull);
+    rv = subjectPrincipal->GetDomain(getter_AddRefs(uri));
+    NS_ENSURE_SUCCESS(rv, rv);
 
     if (!uri) {
-      *aResult = subjectPrincipal->GetURI(getter_AddRefs(uri));
-      NS_ENSURE_SUCCESS(*aResult, nsnull);
+      rv = subjectPrincipal->GetURI(getter_AddRefs(uri));
+      NS_ENSURE_SUCCESS(rv, rv);
     }
 
     if (uri) {
       PRPackedBool sessionOnly;
-      if (!nsDOMStorage::CanUseStorage(uri, &sessionOnly)) {
-        *aResult = NS_ERROR_DOM_SECURITY_ERR;
-        return nsnull;
-      }
+      if (!nsDOMStorage::CanUseStorage(uri, &sessionOnly))
+        return NS_ERROR_DOM_SECURITY_ERR;
 
       nsCOMPtr<nsIURI> innerUri = NS_GetInnermostURI(uri);
-      if (!innerUri) {
-        *aResult = NS_ERROR_UNEXPECTED;
-        return nsnull;
-      }
+      if (!innerUri)
+        return NS_ERROR_UNEXPECTED;
 
       uri = innerUri;
-      nsresult rv = uri->GetAsciiHost(currentDomain);
-      if (NS_FAILED(rv)) {
-        *aResult = NS_ERROR_DOM_SECURITY_ERR;
-        return nsnull;
-      }
+      rv = uri->GetAsciiHost(currentDomain);
+      NS_ENSURE_SUCCESS(rv, NS_ERROR_DOM_SECURITY_ERR);
     }
   }
 
   PRBool isSystem;
-  *aResult = ssm->SubjectPrincipalIsSystem(&isSystem);
-  NS_ENSURE_SUCCESS(*aResult, nsnull);
+  rv = ssm->SubjectPrincipalIsSystem(&isSystem);
+  NS_ENSURE_SUCCESS(rv, rv);
 
   // allow code that has read privileges to get the storage for any domain
   if (!isSystem && nsContentUtils::IsCallerTrustedForRead())
@@ -1125,20 +1109,10 @@ nsDOMStorageList::GetNamedItem(const nsAString& aDomain, nsresult* aResult)
   if (isSystem || !currentDomain.IsEmpty()) {
     return GetStorageForDomain(uri, NS_ConvertUTF8toUTF16(requestedDomain),
                                NS_ConvertUTF8toUTF16(currentDomain),
-                               isSystem, aResult);
+                               isSystem, aStorage);
   }
 
-  *aResult = NS_ERROR_DOM_SECURITY_ERR;
-  return nsnull;
-}
-
-NS_IMETHODIMP
-nsDOMStorageList::NamedItem(const nsAString& aDomain,
-                            nsIDOMStorage** aStorage)
-{
-  nsresult rv;
-  NS_IF_ADDREF(*aStorage = GetNamedItem(aDomain, &rv));
-  return rv;
+  return NS_ERROR_DOM_SECURITY_ERR;
 }
 
 // static
@@ -1149,22 +1123,23 @@ nsDOMStorageList::CanAccessDomain(const nsAString& aRequestedDomain,
   return aRequestedDomain.Equals(aCurrentDomain);
 }
 
-nsIDOMStorage*
+nsresult
 nsDOMStorageList::GetStorageForDomain(nsIURI* aURI,
                                       const nsAString& aRequestedDomain,
                                       const nsAString& aCurrentDomain,
                                       PRBool aNoCurrentDomainCheck,
-                                      nsresult* aResult)
+                                      nsIDOMStorage** aStorage)
 {
-  nsStringArray requestedDomainArray;
-  if ((!aNoCurrentDomainCheck &&
-       !CanAccessDomain(aRequestedDomain, aCurrentDomain)) ||
-      !ConvertDomainToArray(aRequestedDomain, &requestedDomainArray)) {
-    *aResult = NS_ERROR_DOM_SECURITY_ERR;
-
-    return nsnull;
+  if (!aNoCurrentDomainCheck && !CanAccessDomain(aRequestedDomain,
+                                                 aCurrentDomain)) {
+    return NS_ERROR_DOM_SECURITY_ERR;
   }
 
+  nsStringArray requestedDomainArray;
+  PRBool ok = ConvertDomainToArray(aRequestedDomain, &requestedDomainArray);
+  if (!ok)
+    return NS_ERROR_DOM_SECURITY_ERR;
+  
   // now rebuild a string for the domain.
   nsAutoString usedDomain;
   PRInt32 requestedPos = 0;
@@ -1175,19 +1150,19 @@ nsDOMStorageList::GetStorageForDomain(nsIURI* aURI,
     usedDomain.Append(*requestedDomainArray[requestedPos]);
   }
 
-  *aResult = NS_OK;
-
   // now have a valid domain, so look it up in the storage table
-  nsIDOMStorage* storage = mStorages.GetWeak(usedDomain);
-  if (!storage) {
+  if (!mStorages.Get(usedDomain, aStorage)) {
     nsCOMPtr<nsIDOMStorage> newstorage = new nsDOMStorage(aURI, usedDomain, PR_TRUE);
-    if (newstorage && mStorages.Put(usedDomain, newstorage))
-      storage = newstorage;
-    else
-      *aResult = NS_ERROR_OUT_OF_MEMORY;
+    if (!newstorage)
+      return NS_ERROR_OUT_OF_MEMORY;
+
+    if (!mStorages.Put(usedDomain, newstorage))
+      return NS_ERROR_OUT_OF_MEMORY;
+
+    newstorage.swap(*aStorage);
   }
 
-  return storage;
+  return NS_OK;
 }
 
 // static

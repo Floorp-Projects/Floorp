@@ -171,7 +171,6 @@ public:
   PRUint32 Enumerate(AttrCache::EnumReadFunction aFunc, void *aUserArg) const;
 
   nsIDOMNode* GetItemAt(PRUint32 aIndex, nsresult *rv);
-  nsIDOMNode* GetNamedItem(const nsAString& aAttrName, nsresult *rv);
 
   static nsDOMAttributeMap* FromSupports(nsISupports* aSupports)
   {
