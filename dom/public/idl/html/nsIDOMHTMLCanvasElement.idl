@@ -47,7 +47,7 @@
  * @status UNDER_DEVELOPMENT
  */
 
-[scriptable, uuid(0583A2EA-AB19-40e1-8BE4-5E9B2F275560)]
+[scriptable, uuid(d87394af-d31a-484e-8b7c-75381045384d)]
 interface nsIDOMHTMLCanvasElement : nsIDOMHTMLElement
 {
   attribute long width;
