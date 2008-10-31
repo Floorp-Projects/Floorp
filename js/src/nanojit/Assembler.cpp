@@ -1628,9 +1628,15 @@ namespace nanojit
         while (allow && len > 0) {
             // get the highest priority var
             Register hi = tosave[0];
-            LIns *i = regs->getActive(hi);
-            Register r = findRegFor(i, allow);
-			allow &= ~rmask(r);
+            if (!(rmask(hi) & SavedRegs)) {
+                LIns *i = regs->getActive(hi);
+                Register r = findRegFor(i, allow);
+			    allow &= ~rmask(r);
+            }
+            else {
+                // hi is already in a saved reg, leave it alone.
+                allow &= ~rmask(hi);
+            }
 
             // remove from heap by replacing root with end element and bubbling down.
             if (allow && --len > 0) {
