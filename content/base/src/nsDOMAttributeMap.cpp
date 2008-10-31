@@ -216,21 +216,35 @@ nsDOMAttributeMap::GetAttribute(nsINodeInfo* aNodeInfo)
   return node;
 }
 
+nsIDOMNode*
+nsDOMAttributeMap::GetNamedItem(const nsAString& aAttrName, nsresult *aResult)
+{
+  *aResult = NS_OK;
+
+  if (mContent) {
+    nsCOMPtr<nsINodeInfo> ni =
+      mContent->GetExistingAttrNameFromQName(aAttrName);
+    if (ni) {
+      nsIDOMNode* node = GetAttribute(ni);
+      if (node) {
+        return node;
+      }
+
+      *aResult = NS_ERROR_OUT_OF_MEMORY;
+    }
+  }
+
+  return nsnull;
+}
+
 NS_IMETHODIMP
 nsDOMAttributeMap::GetNamedItem(const nsAString& aAttrName,
                                 nsIDOMNode** aAttribute)
 {
   NS_ENSURE_ARG_POINTER(aAttribute);
-  *aAttribute = nsnull;
 
-  nsresult rv = NS_OK;
-  if (mContent) {
-    nsCOMPtr<nsINodeInfo> ni =
-      mContent->GetExistingAttrNameFromQName(aAttrName);
-    if (ni) {
-      rv = GetAttribute(ni, aAttribute);
-    }
-  }
+  nsresult rv;
+  NS_IF_ADDREF(*aAttribute = GetNamedItem(aAttrName, &rv));
 
   return rv;
 }
