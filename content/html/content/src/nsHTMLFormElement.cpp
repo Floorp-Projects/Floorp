@@ -375,6 +375,12 @@ public:
 
     return mElements.SafeElementAt(aIndex, nsnull);
   }
+  virtual nsISupports* GetNamedItem(const nsAString& aName, nsresult* aResult)
+  {
+    *aResult = NS_OK;
+
+    return NamedItemInternal(aName, PR_TRUE);
+  }
 
   nsresult AddElementToTable(nsIFormControl* aChild,
                              const nsAString& aName);
@@ -383,8 +389,7 @@ public:
   nsresult IndexOfControl(nsIFormControl* aControl,
                           PRInt32* aIndex);
 
-  void NamedItemInternal(const nsAString& aName, PRBool aFlushContent,
-                         nsISupports **aResult);
+  nsISupports* NamedItemInternal(const nsAString& aName, PRBool aFlushContent);
   
   /**
    * Create a sorted list of form control elements. This list is sorted
@@ -1547,8 +1552,8 @@ already_AddRefed<nsISupports>
 nsHTMLFormElement::DoResolveName(const nsAString& aName,
                                  PRBool aFlushContent)
 {
-  nsISupports *result = nsnull;
-  mControls->NamedItemInternal(aName, aFlushContent, &result);
+  nsISupports *result;
+  NS_IF_ADDREF(result = mControls->NamedItemInternal(aName, aFlushContent));
   return result;
 }
 
@@ -2197,20 +2202,19 @@ NS_IMETHODIMP
 nsFormControlList::NamedItem(const nsAString& aName,
                              nsISupports** aReturn)
 {
-  NamedItemInternal(aName, PR_TRUE, aReturn);
+  NS_IF_ADDREF(*aReturn = NamedItemInternal(aName, PR_TRUE));
   return NS_OK;
 }
 
-void
+nsISupports*
 nsFormControlList::NamedItemInternal(const nsAString& aName,
-                                     PRBool aFlushContent,
-                                     nsISupports** aReturn)
+                                     PRBool aFlushContent)
 {
   if (aFlushContent) {
     FlushPendingNotifications();
   }
 
-  mNameLookupTable.Get(aName, aReturn);
+  return mNameLookupTable.GetWeak(aName);
 }
 
 nsresult
