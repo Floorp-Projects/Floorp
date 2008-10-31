@@ -118,7 +118,6 @@ public:
   NS_DECL_NSIDOMHTMLCOLLECTION
 
   virtual nsISupports* GetNodeAt(PRUint32 aIndex, nsresult* aResult);
-  virtual nsISupports* GetNamedItem(const nsAString& aName, nsresult* aResult);
 
   NS_IMETHOD    ParentDestroyed();
 
@@ -325,42 +324,32 @@ TableRowsCollection::Item(PRUint32 aIndex, nsIDOMNode** aReturn)
   return CallQueryInterface(node, aReturn);
 }
 
-static nsISupports*
+static nsresult
 GetNamedItemInRowGroup(nsIDOMHTMLCollection* aRows,
-                       const nsAString& aName, nsresult* aResult)
+                       const nsAString& aName, nsIDOMNode** aNamedItem)
 {
-  nsCOMPtr<nsIHTMLCollection> rows = do_QueryInterface(aRows);
-  if (rows) {
-    return rows->GetNamedItem(aName, aResult);
+  if (aRows) {
+    return aRows->NamedItem(aName, aNamedItem);
   }
 
-  *aResult = NS_OK;
-  return nsnull;
-}
-
-nsISupports* 
-TableRowsCollection::GetNamedItem(const nsAString& aName, nsresult* aResult)
-{
-  nsresult rv = NS_OK;
-  DO_FOR_EACH_ROWGROUP(
-    nsISupports* item = GetNamedItemInRowGroup(rows, aName, aResult);
-    if (NS_FAILED(*aResult) || item) {
-      return item;
-    }
-  );
-  *aResult = rv;
-  return nsnull;
+  *aNamedItem = nsnull;
+  return NS_OK;
 }
 
 NS_IMETHODIMP 
 TableRowsCollection::NamedItem(const nsAString& aName,
                                nsIDOMNode** aReturn)
 {
-  nsresult rv;
-  nsISupports* item = GetNamedItem(aName, &rv);
-  NS_ENSURE_SUCCESS(rv, rv);
-
-  return CallQueryInterface(item, aReturn);
+  *aReturn = nsnull;
+  nsresult rv = NS_OK;
+  DO_FOR_EACH_ROWGROUP(
+    rv = GetNamedItemInRowGroup(rows, aName, aReturn);
+    NS_ENSURE_SUCCESS(rv, rv);
+    if (*aReturn) {
+      return rv;
+    }
+  );
+  return rv;
 }
 
 NS_IMETHODIMP
