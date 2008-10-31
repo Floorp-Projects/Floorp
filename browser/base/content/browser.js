@@ -266,13 +266,8 @@ function SetClickAndHoldHandlers()
 }
 #endif
 
-function BookmarkThisTab()
-{
-  var tab = gBrowser.mContextTab;
-  if (tab.localName != "tab")
-    tab = gBrowser.mCurrentTab;
-
-  PlacesCommandHook.bookmarkPage(tab.linkedBrowser,
+function BookmarkThisTab() {
+  PlacesCommandHook.bookmarkPage(gBrowser.mContextTab.linkedBrowser,
                                  PlacesUtils.bookmarksMenuFolderId, true);
 }
 
