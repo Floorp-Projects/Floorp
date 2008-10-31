@@ -149,6 +149,7 @@ public:
   NS_DECL_NSITREECOLUMNS
 
   nsITreeColumn* GetColumnAt(PRInt32 aIndex);
+  nsITreeColumn* GetNamedColumn(const nsAString& aId);
 
   static nsTreeColumns* FromSupports(nsISupports* aSupports)
   {

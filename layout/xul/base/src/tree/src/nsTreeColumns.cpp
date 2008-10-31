@@ -524,17 +524,22 @@ nsTreeColumns::GetColumnFor(nsIDOMElement* aElement, nsITreeColumn** _retval)
   return NS_OK;
 }
 
+nsITreeColumn*
+nsTreeColumns::GetNamedColumn(const nsAString& aId)
+{
+  EnsureColumns();
+  for (nsTreeColumn* currCol = mFirstColumn; currCol; currCol = currCol->GetNext()) {
+    if (currCol->GetId().Equals(aId)) {
+      return currCol;
+    }
+  }
+  return nsnull;
+}
+
 NS_IMETHODIMP
 nsTreeColumns::GetNamedColumn(const nsAString& aId, nsITreeColumn** _retval)
 {
-  EnsureColumns();
-  *_retval = nsnull;
-  for (nsTreeColumn* currCol = mFirstColumn; currCol; currCol = currCol->GetNext()) {
-    if (currCol->GetId().Equals(aId)) {
-      NS_ADDREF(*_retval = currCol);
-      break;
-    }
-  }
+  NS_IF_ADDREF(*_retval = GetNamedColumn(aId));
   return NS_OK;
 }
 
@@ -553,7 +558,6 @@ nsTreeColumns::GetColumnAt(PRInt32 aIndex)
 NS_IMETHODIMP
 nsTreeColumns::GetColumnAt(PRInt32 aIndex, nsITreeColumn** _retval)
 {
-  EnsureColumns();
   NS_IF_ADDREF(*_retval = GetColumnAt(aIndex));
   return NS_OK;
 }
