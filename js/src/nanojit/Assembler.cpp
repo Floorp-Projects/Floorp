@@ -724,12 +724,9 @@ namespace nanojit
 
 		nFragExit(guard);
 
-		// restore the callee-saved register (aka saved params)
-		assignSavedParams();
-
-        // restore first parameter, the only one we use
-        LInsp state = _thisfrag->lirbuf->state;
-        findSpecificRegFor(state, argRegs[state->imm8()]); 
+		// restore the callee-saved register and parameters
+		assignSavedRegs();
+		assignParamRegs();
 
 		intersectRegisterState(capture);
 
@@ -1033,10 +1030,10 @@ namespace nanojit
                     if (_nIns != _epilogue) {
                         JMP(_epilogue);
                     }
-                    assignSavedParams();
+                    assignSavedRegs();
 #ifdef NANOJIT_ARM
                     // the epilogue moves R2 to R0; we may want to do this
-                    // after assignSavedParams
+                    // after assignSavedRegs
                     findSpecificRegFor(ins->oprnd1(), R2);
 #else
                     findSpecificRegFor(ins->oprnd1(), retRegs[0]);
@@ -1049,7 +1046,7 @@ namespace nanojit
                     if (_nIns != _epilogue) {
                         JMP(_epilogue);
                     }
-                    assignSavedParams();
+                    assignSavedRegs();
 #ifdef NANOJIT_IA32
                     findSpecificRegFor(ins->oprnd1(), FST0);
 #else
@@ -1357,6 +1354,8 @@ namespace nanojit
 				{
                     countlir_loop();
 					asm_loop(ins, loopJumps);
+			        assignSavedRegs();
+			        assignParamRegs();
 					break;
 				}
 
@@ -1430,32 +1429,43 @@ namespace nanojit
 		}
 	}
 
-    void Assembler::assignSavedParams()
+    void Assembler::assignSavedRegs()
     {
         // restore saved regs
 		releaseRegisters();
         LirBuffer *b = _thisfrag->lirbuf;
         for (int i=0, n = NumSavedRegs; i < n; i++) {
-            LIns *p = b->savedParams[i];
+            LIns *p = b->savedRegs[i];
             if (p)
                 findSpecificRegFor(p, savedRegs[p->imm8()]);
         }
     }
 
-    void Assembler::reserveSavedParams()
+    void Assembler::reserveSavedRegs()
     {
         LirBuffer *b = _thisfrag->lirbuf;
         for (int i=0, n = NumSavedRegs; i < n; i++) {
-            LIns *p = b->savedParams[i];
+            LIns *p = b->savedRegs[i];
             if (p)
                 findMemFor(p);
         }
     }
 
+    // restore parameter registers
+    void Assembler::assignParamRegs()
+    {
+        LInsp state = _thisfrag->lirbuf->state;
+        if (state)
+            findSpecificRegFor(state, argRegs[state->imm8()]); 
+        LInsp param1 = _thisfrag->lirbuf->param1;
+        if (param1)
+            findSpecificRegFor(param1, argRegs[param1->imm8()]);
+    }
+    
     void Assembler::handleLoopCarriedExprs()
     {
         // ensure that exprs spanning the loop are marked live at the end of the loop
-        reserveSavedParams();
+        reserveSavedRegs();
         for (int i=0, n=pending_lives.size(); i < n; i++) {
             findMemFor(pending_lives[i]);
         }
