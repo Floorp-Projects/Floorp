@@ -1172,12 +1172,6 @@ nsJSContext::JSOptionChangedCallback(const char *pref, void *data)
   PRBool useJIT = nsContentUtils::GetBoolPref(chromeWindow ?
                                               js_jit_chrome_str :
                                               js_jit_content_str);
-
-#ifdef MOZ_JSDEBUGGER
-  if (context->mContext->debugHooks->debuggerHandler)
-    useJIT = PR_FALSE;
-#endif
-
   if (useJIT)
     newDefaultJSOptions |= JSOPTION_JIT;
   else
