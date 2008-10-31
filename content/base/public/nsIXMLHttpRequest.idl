@@ -367,7 +367,7 @@ interface nsIXMLHttpRequest : nsISupports
 /**
  * DEPRECATED.
  */
-[scriptable, uuid(261676b4-d508-43bf-b099-74635a0ee2e9)]
+[scriptable, uuid(423fdd3d-41c9-4149-8fe5-b14a1d3912a0)]
 interface nsIJSXMLHttpRequest : nsISupports {
   /**
    * Meant to be a script-only mechanism for setting an upload progress event
