@@ -210,7 +210,7 @@ nsPlacesDBFlush.prototype = {
       handleError: function(aError) self.handleError(aError),
       handleCompletion: function(aReason) {
         this._count++;
-        if (this._count == 1) {
+        if (this._count == 2) {
           // we have gotten both notifications
           self.handleCompletion(aReason);
         }
