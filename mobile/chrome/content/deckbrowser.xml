@@ -123,7 +123,7 @@
             var browsers = [];
             var tabList = this.tabList.children;
             for (var t = 0; t < tabList.length; t++)
-              browsers.push(getBrowserForDisplay(this.displayList.childNodes[t]));
+              browsers.push(this.getBrowserForDisplay(this.displayList.childNodes[t]));
             return browsers;
           ]]>
         </getter>
