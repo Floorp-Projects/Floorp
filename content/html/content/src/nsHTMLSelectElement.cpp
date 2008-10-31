@@ -1959,39 +1959,31 @@ nsHTMLOptionCollection::Item(PRUint32 aIndex, nsIDOMNode** aReturn)
   return CallQueryInterface(item, aReturn);
 }
 
-nsISupports*
-nsHTMLOptionCollection::GetNamedItem(const nsAString& aName, nsresult* aResult)
-{
-  *aResult = NS_OK;
-
-  PRInt32 count = mElements.Count();
-  for (PRInt32 i = 0; i < count; i++) {
-    nsCOMPtr<nsIContent> content = do_QueryInterface(mElements.ObjectAt(i));
-    if (content &&
-        (content->AttrValueIs(kNameSpaceID_None, nsGkAtoms::name, aName,
-                              eCaseMatters) ||
-         content->AttrValueIs(kNameSpaceID_None, nsGkAtoms::id, aName,
-                              eCaseMatters))) {
-      return content;
-    }
-  }
-
-  return nsnull;
-}
-
 NS_IMETHODIMP
 nsHTMLOptionCollection::NamedItem(const nsAString& aName,
                                   nsIDOMNode** aReturn)
 {
-  nsresult rv;
-  nsISupports* item = GetNamedItem(aName, &rv);
-  if (!item) {
-    *aReturn = nsnull;
+  PRInt32 count = mElements.Count();
+  nsresult rv = NS_OK;
 
-    return rv;
+  *aReturn = nsnull;
+
+  for (PRInt32 i = 0; i < count; i++) {
+    nsCOMPtr<nsIContent> content = do_QueryInterface(mElements.ObjectAt(i));
+
+    if (content) {
+      if (content->AttrValueIs(kNameSpaceID_None, nsGkAtoms::name, aName,
+                               eCaseMatters) ||
+          content->AttrValueIs(kNameSpaceID_None, nsGkAtoms::id, aName,
+                               eCaseMatters)) {
+        rv = CallQueryInterface(content, aReturn);
+
+        break;
+      }
+    }
   }
 
-  return CallQueryInterface(item, aReturn);
+  return rv;
 }
 
 NS_IMETHODIMP

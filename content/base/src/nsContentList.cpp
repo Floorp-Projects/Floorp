@@ -351,7 +351,6 @@ nsContentList::~nsContentList()
 
 // QueryInterface implementation for nsContentList
 NS_INTERFACE_MAP_BEGIN(nsContentList)
-  NS_INTERFACE_MAP_ENTRY(nsIHTMLCollection)
   NS_INTERFACE_MAP_ENTRY(nsIDOMHTMLCollection)
   NS_INTERFACE_MAP_ENTRY(nsIMutationObserver)
   NS_INTERFACE_MAP_ENTRY_CONTENT_CLASSINFO(ContentList)
@@ -500,20 +499,6 @@ nsINode*
 nsContentList::GetNodeAt(PRUint32 aIndex)
 {
   return Item(aIndex, PR_TRUE);
-}
-
-nsISupports*
-nsContentList::GetNodeAt(PRUint32 aIndex, nsresult* aResult)
-{
-  *aResult = NS_OK;
-  return Item(aIndex, PR_TRUE);
-}
-
-nsISupports*
-nsContentList::GetNamedItem(const nsAString& aName, nsresult* aResult)
-{
-  *aResult = NS_OK;
-  return NamedItem(aName, PR_TRUE);
 }
 
 void
