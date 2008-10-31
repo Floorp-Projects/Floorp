@@ -1474,7 +1474,7 @@ endif
 
 ifneq ($(EXPORTS)$(XPIDLSRCS)$(SDK_HEADERS)$(SDK_XPIDLSRCS),)
 $(SDK_PUBLIC) $(PUBLIC)::
-	@if test ! -d $@; then $(ECHO) Creating $@; rm -rf $@; $(NSINSTALL) -D $@; else true; fi
+	$(NSINSTALL) -D $@
 endif
 
 ifdef MOZ_JAVAXPCOM
@@ -1485,8 +1485,11 @@ endif
 endif
 
 ifneq ($(XPI_NAME),)
-export::
-	@if test ! -d $(FINAL_TARGET); then echo Creating $(FINAL_TARGET); rm -fr $(FINAL_TARGET); $(NSINSTALL) -D $(FINAL_TARGET); else true; fi
+$(FINAL_TARGET):
+	$(NSINSTALL) -D $@
+
+export:: $(FINAL_TARGET)
+	$(NSINSTALL) -D $(FINAL_TARGET)
 endif
 
 ifndef NO_DIST_INSTALL
@@ -1524,8 +1527,10 @@ PREF_PPFLAGS = --line-endings=crlf
 endif
 
 ifndef NO_DIST_INSTALL
-libs:: $(PREF_JS_EXPORTS)
-	if test ! -d $(FINAL_TARGET)/$(PREF_DIR); then $(NSINSTALL) -D $(FINAL_TARGET)/$(PREF_DIR); fi
+$(FINAL_TARGET)/$(PREF_DIR):
+	$(NSINSTALL) -D $@
+
+libs:: $(FINAL_TARGET)/$(PREF_DIR) $(PREF_JS_EXPORTS)
 	$(EXIT_ON_ERROR)  \
 	for i in $(PREF_JS_EXPORTS); do \
 	  dest=$(FINAL_TARGET)/$(PREF_DIR)/`basename $$i`; \
@@ -1540,7 +1545,7 @@ endif
 
 ifneq ($(AUTOCFG_JS_EXPORTS),)
 $(FINAL_TARGET)/defaults/autoconfig::
-	@if test ! -d $@; then echo Creating $@; rm -rf $@; $(NSINSTALL) -D $@; else true; fi
+	$(NSINSTALL) -D $@
 
 ifndef NO_DIST_INSTALL
 export:: $(AUTOCFG_JS_EXPORTS) $(FINAL_TARGET)/defaults/autoconfig
@@ -1570,7 +1575,7 @@ export:: FORCE
 endif
 
 $(SDK_IDL_DIR) $(IDL_DIR)::
-	@if test ! -d $@; then echo Creating $@; rm -rf $@; $(NSINSTALL) -D $@; else true; fi
+	$(NSINSTALL) -D $@
 
 # generate .h files from into $(XPIDL_GEN_DIR), then export to $(PUBLIC);
 # warn against overriding existing .h file. 
@@ -1633,7 +1638,7 @@ endif # XPIDLSRCS
 #   http://bugzilla.mozilla.org/show_bug.cgi?id=145777
 #
 $(IDL_DIR)::
-	@if test ! -d $@; then echo Creating $@; rm -rf $@; $(NSINSTALL) -D $@; else true; fi
+	$(NSINSTALL) -D $@
 
 export-idl:: $(SUBMAKEFILES) $(MAKE_DIRS)
 
@@ -1763,7 +1768,7 @@ endif
 
 ifneq (,$(SDK_LIBRARY))
 $(SDK_LIB_DIR)::
-	@if test ! -d $@; then echo Creating $@; rm -rf $@; $(NSINSTALL) -D $@; else true; fi
+	$(NSINSTALL) -D $@
 
 ifndef NO_DIST_INSTALL
 libs:: $(SDK_LIBRARY) $(SDK_LIB_DIR)
@@ -1774,7 +1779,7 @@ endif # SDK_LIBRARY
 
 ifneq (,$(SDK_BINARY))
 $(SDK_BIN_DIR)::
-	@if test ! -d $@; then echo Creating $@; rm -rf $@; $(NSINSTALL) -D $@; else true; fi
+	$(NSINSTALL) -D $@
 
 ifndef NO_DIST_INSTALL
 libs:: $(SDK_BINARY) $(SDK_BIN_DIR)
@@ -1794,11 +1799,13 @@ chrome::
 	+$(LOOP_OVER_DIRS)
 	+$(LOOP_OVER_TOOL_DIRS)
 
-libs realchrome:: $(CHROME_DEPS)
+$(FINAL_TARGET)/chrome:
+	$(NSINSTALL) -D $@
+
+libs realchrome:: $(CHROME_DEPS) $(FINAL_TARGET)/chrome
 ifndef NO_DIST_INSTALL
 	@$(EXIT_ON_ERROR) \
 	if test -f $(JAR_MANIFEST); then \
-	  if test ! -d $(FINAL_TARGET)/chrome; then $(NSINSTALL) -D $(FINAL_TARGET)/chrome; fi; \
 	  $(PYTHON) $(MOZILLA_DIR)/config/JarMaker.py \
 	    $(QUIET) -j $(FINAL_TARGET)/chrome \
 	    $(MAKE_JARS_FLAGS) $(XULPPFLAGS) $(DEFINES) $(ACDEFINES) \
