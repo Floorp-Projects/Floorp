@@ -181,31 +181,6 @@ BrowserGlue.prototype = {
   // profile startup handler (contains profile initialization routines)
   _onProfileStartup: function() 
   {
-    // Check to see if the EULA must be shown on startup
-
-    var mustDisplayEULA = false;
-    try {
-      mustDisplayEULA = !this._prefs.getBoolPref("browser.EULA.override");
-    } catch (e) {
-      // Pref might not exist
-    }
-
-    // Make sure it hasn't already been accepted
-    if (mustDisplayEULA) {
-      try {
-        var EULAVersion = this._prefs.getIntPref("browser.EULA.version");
-        mustDisplayEULA = !this._prefs.getBoolPref("browser.EULA." + EULAVersion + ".accepted");
-      } catch(ex) {
-      }
-    }
-
-    if (mustDisplayEULA) {
-      var ww2 = Cc["@mozilla.org/embedcomp/window-watcher;1"].
-                getService(Ci.nsIWindowWatcher);
-      ww2.openWindow(null, "chrome://browser/content/EULA.xul", 
-                     "_blank", "chrome,centerscreen,modal,resizable=yes", null);
-    }
-
     this.Sanitizer.onStartup();
     // check if we're in safe mode
     var app = Cc["@mozilla.org/xre/app-info;1"].getService(Ci.nsIXULAppInfo).
@@ -244,6 +219,10 @@ BrowserGlue.prototype = {
   // Browser startup complete. All initial windows have opened.
   _onBrowserStartup: function()
   {
+    // Show about:rights notification, if needed.
+    if (this._shouldShowRights())
+      this._showRightsNotification();
+
     // If new add-ons were installed during startup open the add-ons manager.
     if (this._prefs.prefHasUserValue(PREF_EM_NEW_ADDONS_LIST)) {
       var args = Cc["@mozilla.org/supports-array;1"].
@@ -378,6 +357,80 @@ BrowserGlue.prototype = {
       }
       break;
     }
+  },
+
+  /*
+   * _shouldShowRights - Determines if the user should be shown the
+   * about:rights notification. The notification should *not* be shown if
+   * we've already shown the current version, or if the override pref says to
+   * never show it. The notification *should* be shown if it's never been seen
+   * before, if a newer version is available, or if the override pref says to
+   * always show it.
+   */
+  _shouldShowRights : function () {
+    // Look for an unconditional override pref. If set, do what it says.
+    // (true --> never show, false --> always show)
+    try {
+      return !this._prefs.getBoolPref("browser.rights.override");
+    } catch (e) { }
+    // Ditto, for the legacy EULA pref.
+    try {
+      return !this._prefs.getBoolPref("browser.EULA.override");
+    } catch (e) { }
+
+#ifndef OFFICIAL_BUILD
+    // Non-official builds shouldn't shouldn't show the notification.
+    return false;
+#endif
+
+    // Look to see if the user has seen the current version or not.
+    var currentVersion = this._prefs.getIntPref("browser.rights.version");
+    try {
+      return !this._prefs.getBoolPref("browser.rights." + currentVersion + ".shown");
+    } catch (e) { }
+
+    // Legacy: If the user accepted a EULA, we won't annoy them with the
+    // equivalent about:rights page until the version changes.
+    try {
+      return !this._prefs.getBoolPref("browser.EULA." + currentVersion + ".accepted");
+    } catch (e) { }
+
+    // We haven't shown the notification before, so do so now.
+    return true;
+  },
+
+  _showRightsNotification : function () {
+    // Stick the notification onto the selected tab of the active browser window.
+    var win = this.getMostRecentBrowserWindow();
+    var browser = win.gBrowser; // for closure in notification bar callback
+    var notifyBox = browser.getNotificationBox();
+
+    var bundleService = Cc["@mozilla.org/intl/stringbundle;1"].
+                        getService(Ci.nsIStringBundleService);
+    var brandBundle  = bundleService.createBundle("chrome://branding/locale/brand.properties");
+    var rightsBundle = bundleService.createBundle("chrome://browser/locale/aboutRights.properties");
+
+    var buttonLabel     = rightsBundle.GetStringFromName("buttonLabel");
+    var buttonAccessKey = rightsBundle.GetStringFromName("buttonAccessKey");
+    var productName     = brandBundle.GetStringFromName("brandFullName");
+    var notifyText      = rightsBundle.formatStringFromName("notifyText", [productName], 1);
+    
+    var buttons = [
+                    {
+                      label:     buttonLabel,
+                      accessKey: buttonAccessKey,
+                      popup:     null,
+                      callback: function(aNotificationBar, aButton) {
+                        browser.selectedTab = browser.addTab("about:rights");
+                      }
+                    }
+                  ];
+
+    // Set pref to indicate we've shown the notficiation.
+    var currentVersion = this._prefs.getIntPref("browser.rights.version");
+    this._prefs.setBoolPref("browser.rights." + currentVersion + ".shown", true);
+
+    notifyBox.appendNotification(notifyText, "about-rights", null, notifyBox.PRIORITY_INFO_LOW, buttons);
   },
 
   // returns the (cached) Sanitizer constructor
@@ -764,6 +817,53 @@ BrowserGlue.prototype = {
       this._prefs.QueryInterface(Ci.nsIPrefService).savePrefFile(null);
     }
   },
+
+#ifdef XP_UNIX
+#ifndef XP_MACOSX
+#define BROKEN_WM_Z_ORDER
+#endif
+#endif
+#ifdef XP_OS2
+#define BROKEN_WM_Z_ORDER
+#endif
+
+  // this returns the most recent non-popup browser window
+  getMostRecentBrowserWindow : function ()
+  {
+    var wm = Cc["@mozilla.org/appshell/window-mediator;1"].
+             getService(Components.interfaces.nsIWindowMediator);
+
+#ifdef BROKEN_WM_Z_ORDER
+    var win = wm.getMostRecentWindow("navigator:browser", true);
+
+    // if we're lucky, this isn't a popup, and we can just return this
+    if (win && win.document.documentElement.getAttribute("chromehidden")) {
+      win = null;
+      var windowList = wm.getEnumerator("navigator:browser", true);
+      // this is oldest to newest, so this gets a bit ugly
+      while (windowList.hasMoreElements()) {
+        var nextWin = windowList.getNext();
+        if (!nextWin.document.documentElement.getAttribute("chromehidden"))
+          win = nextWin;
+      }
+    }
+#else
+    var windowList = wm.getZOrderDOMWindowEnumerator("navigator:browser", true);
+    if (!windowList.hasMoreElements())
+      return null;
+
+    var win = windowList.getNext();
+    while (win.document.documentElement.getAttribute("chromehidden")) {
+      if (!windowList.hasMoreElements())
+        return null;
+
+      win = windowList.getNext();
+    }
+#endif
+
+    return win;
+  },
+
 
   // for XPCOM
   classDescription: "Firefox Browser Glue Service",
