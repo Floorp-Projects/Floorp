@@ -3611,14 +3611,14 @@ js_CheckForSSE2()
         popad
     }
 #elif defined __GNUC__
-    asm("pusha\n"
+    asm("xchg %%esi, %%ebx\n" /* we can't clobber ebx on gcc (PIC register) */
         "mov $0x01, %%eax\n"
         "cpuid\n"
         "mov %%edx, %0\n"
-        "popa\n"
+        "xchg %%esi, %%ebx\n" 
         : "=m" (features)
-        /* We have no inputs */
-        /* We don't clobber anything */
+        : /* We have no inputs */
+        : "%eax", "%esi", "%ecx", "%edx"
        );
 #elif defined __SUNPRO_C || defined __SUNPRO_CC
     asm("push %%ebx\n"
