@@ -132,41 +132,34 @@ nsPluginArray::Item(PRUint32 aIndex, nsIDOMPlugin** aReturn)
   return rv;
 }
 
-nsIDOMPlugin*
-nsPluginArray::GetNamedItem(const nsAString& aName, nsresult* aResult)
+NS_IMETHODIMP
+nsPluginArray::NamedItem(const nsAString& aName, nsIDOMPlugin** aReturn)
 {
-  *aResult = NS_OK;
+  NS_PRECONDITION(nsnull != aReturn, "null arg");
+  *aReturn = nsnull;
 
   if (!AllowPlugins())
-    return nsnull;
+    return NS_OK;
 
   if (mPluginArray == nsnull) {
-    *aResult = GetPlugins();
-    if (*aResult != NS_OK)
-      return nsnull;
+    nsresult rv = GetPlugins();
+    if (rv != NS_OK)
+      return rv;
   }
 
   for (PRUint32 i = 0; i < mPluginCount; i++) {
     nsAutoString pluginName;
     nsIDOMPlugin* plugin = mPluginArray[i];
-    if (plugin->GetName(pluginName) == NS_OK && pluginName.Equals(aName)) {
-      return plugin;
+    if (plugin->GetName(pluginName) == NS_OK) {
+      if (pluginName.Equals(aName)) {
+        *aReturn = plugin;
+        NS_IF_ADDREF(plugin);
+        break;
+      }
     }
   }
 
-  return nsnull;
-}
-
-NS_IMETHODIMP
-nsPluginArray::NamedItem(const nsAString& aName, nsIDOMPlugin** aReturn)
-{
-  NS_PRECONDITION(nsnull != aReturn, "null arg");
-
-  nsresult rv;
-
-  NS_IF_ADDREF(*aReturn = GetNamedItem(aName, &rv));
-
-  return rv;
+  return NS_OK;
 }
 
 nsresult
@@ -371,35 +364,29 @@ nsPluginElement::Item(PRUint32 aIndex, nsIDOMMimeType** aReturn)
   return rv;
 }
 
-nsIDOMMimeType*
-nsPluginElement::GetNamedItem(const nsAString& aName, nsresult *aResult)
-{
-  if (mMimeTypeArray == nsnull) {
-    *aResult = GetMimeTypes();
-    if (*aResult != NS_OK)
-      return nsnull;
-  }
-
-  *aResult = NS_OK;
-  for (PRUint32 i = 0; i < mMimeTypeCount; i++) {
-    nsAutoString type;
-    nsIDOMMimeType* mimeType = mMimeTypeArray[i];
-    if (mimeType->GetType(type) == NS_OK && type.Equals(aName)) {
-      return mimeType;
-    }
-  }
-
-  return nsnull;
-}
-
 NS_IMETHODIMP
 nsPluginElement::NamedItem(const nsAString& aName, nsIDOMMimeType** aReturn)
 {
-  nsresult rv;
+  if (mMimeTypeArray == nsnull) {
+    nsresult rv = GetMimeTypes();
+    if (rv != NS_OK)
+      return rv;
+  }
 
-  NS_IF_ADDREF(*aReturn = GetNamedItem(aName, &rv));
+  *aReturn = nsnull;
+  for (PRUint32 i = 0; i < mMimeTypeCount; i++) {
+    nsAutoString type;
+    nsIDOMMimeType* mimeType = mMimeTypeArray[i];
+    if (mimeType->GetType(type) == NS_OK) {
+      if (type.Equals(aName)) {
+        *aReturn = mimeType;
+        NS_ADDREF(mimeType);
+        break;
+      }
+    }
+  }
 
-  return rv;
+  return NS_OK;
 }
 
 nsresult
