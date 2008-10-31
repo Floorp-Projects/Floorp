@@ -65,7 +65,6 @@
         xmlns:svg="http://www.w3.org/2000/svg"
         xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
         onload="BrowserStartup()" onunload="BrowserShutdown()" onclose="return WindowIsClosing();"
-        contenttitlesetting="true"
         title="&mainWindow.title;"
         titlemodifier="&mainWindow.title;"
         titlemenuseparator="&mainWindow.titlemodifiermenuseparator;"
