@@ -140,8 +140,8 @@ namespace nanojit
 		_stats.lir = 0;
 		_noMem = 0;
 		for (int i = 0; i < NumSavedRegs; ++i)
-			savedParams[i] = NULL;
-		explicitSavedParams = false;
+			savedRegs[i] = NULL;
+		explicitSavedRegs = false;
 	}
 
 	#ifdef _DEBUG
@@ -399,8 +399,8 @@ namespace nanojit
         l->c.imm8b = kind;
         if (kind) {
             NanoAssert(arg < NumSavedRegs);
-            b->savedParams[arg] = l;
-            b->explicitSavedParams = true;
+            b->savedRegs[arg] = l;
+            b->explicitSavedRegs = true;
         }
 		b->commit(1);
 		b->_stats.lir++;

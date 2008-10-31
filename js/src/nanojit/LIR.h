@@ -853,8 +853,8 @@ namespace nanojit
 			const CallInfo* _functions;
             AbiKind abi;
             LInsp state,param1,sp,rp;
-            LInsp savedParams[NumSavedRegs];
-            bool explicitSavedParams;
+            LInsp savedRegs[NumSavedRegs];
+            bool explicitSavedRegs;
 			
 		protected:
 			friend class LirBufWriter;

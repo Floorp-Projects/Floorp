@@ -110,7 +110,7 @@ namespace nanojit
             STACK_GRANULARITY + // returnaddr
             STACK_GRANULARITY; // ebp
 		
-		if (!_thisfrag->lirbuf->explicitSavedParams)
+		if (!_thisfrag->lirbuf->explicitSavedRegs)
 			stackPushed += NumSavedRegs * STACK_GRANULARITY;
 		
 		uint32_t aligned = alignUp(stackNeeded + stackPushed, NJ_ALIGN_STACK);
@@ -133,7 +133,7 @@ namespace nanojit
 		MR(FP, SP); // Establish our own FP.
         PUSHr(FP); // Save caller's FP.
 
-		if (!_thisfrag->lirbuf->explicitSavedParams) 
+		if (!_thisfrag->lirbuf->explicitSavedRegs) 
 			for (int i = 0; i < NumSavedRegs; ++i)
 				PUSHr(savedRegs[i]);
 
@@ -198,19 +198,6 @@ namespace nanojit
 		// first restore ESP from EBP, undoing SUBi(SP,amt) from genPrologue
         MR(SP,FP);
 
-        #ifdef NJ_VERBOSE
-        if (_frago->core()->config.show_stats) {
-			// load EDX (arg1) with Fragment *fromFrag, target fragment
-			// will make use of this when calling fragenter().
-		#if defined NANOJIT_IA32
-            int fromfrag = int((Fragment*)_thisfrag);
-            LDi(argRegs[1], fromfrag);
-		#elif defined NANOJIT_AMD64
-			LDQi(argRegs[1], intptr_t(_thisfrag));
-		#endif
-        }
-        #endif
-
 		// return value is GuardRecord*
 	#if defined NANOJIT_IA32
         LDi(EAX, int(lr));
@@ -223,7 +210,7 @@ namespace nanojit
     {
         RET();
 
-		if (!_thisfrag->lirbuf->explicitSavedParams) 
+		if (!_thisfrag->lirbuf->explicitSavedRegs) 
 			for (int i = NumSavedRegs - 1; i >= 0; --i)
 				POPr(savedRegs[i]);
 
@@ -964,22 +951,6 @@ namespace nanojit
 		Fragment* target = ins->record()->exit->target;
 		if (target != _thisfrag)
 	        MR(SP,FP);
-		
-		#ifdef NJ_VERBOSE
-		// branching from this frag to ourself.
-		if (_frago->core()->config.show_stats)
-		#if defined NANOJIT_AMD64
-			LDQi(argRegs[1], intptr_t((Fragment*)_thisfrag));
-		#else
-			LDi(argRegs[1], int((Fragment*)_thisfrag));
-		#endif
-		#endif
-
-		assignSavedParams();
-
-		// restore first parameter, the only one we use
-		LInsp state = _thisfrag->lirbuf->state;
-		findSpecificRegFor(state, argRegs[state->imm8()]); 
 	}	
 
 	void Assembler::asm_fcond(LInsp ins)
