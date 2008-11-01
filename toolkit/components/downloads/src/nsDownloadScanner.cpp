@@ -152,6 +152,9 @@ static const GUID GUID_MozillaVirusScannerPromptGeneric =
 // Initial timeout is 30 seconds
 #define WATCHDOG_TIMEOUT (30*PR_USEC_PER_SEC)
 
+// Maximum length for URI's passed into IAE
+#define MAX_IAEURILENGTH 1683
+
 class nsDownloadScannerWatchdog 
 {
   typedef nsDownloadScanner::Scan Scan;
@@ -387,6 +390,9 @@ nsDownloadScanner::CheckPolicy(nsIURI *aSource, nsIURI *aTarget)
   if (hr == S_FALSE)
     return AVPOLICY_PROMPT;
 
+  if (hr == E_INVALIDARG)
+    return AVPOLICY_PROMPT;
+
   return AVPOLICY_BLOCKED;
 }
 
@@ -480,6 +486,13 @@ nsDownloadScanner::Scan::Start()
   nsCAutoString origin;
   rv = uri->GetSpec(origin);
   NS_ENSURE_SUCCESS(rv, rv);
+
+  // Certain virus interfaces do not like extremely long uris.
+  // Chop off the path and cgi data and just pass the base domain. 
+  if (origin.Length() > MAX_IAEURILENGTH) {
+    rv = uri->GetPrePath(origin);
+    NS_ENSURE_SUCCESS(rv, rv);
+  }
 
   CopyUTF8toUTF16(origin, mOrigin);
 
@@ -604,6 +617,10 @@ nsDownloadScanner::Scan::DoScanAES()
       }
       else if (HRESULT_CODE(hr) == ERROR_FILE_NOT_FOUND) {
         NS_WARNING("Downloaded file disappeared before it could be scanned");
+        newState = AVSCAN_FAILED;
+      }
+      else if (hr == E_INVALIDARG) {
+        NS_WARNING("IAttachementExecute returned invalid argument error");
         newState = AVSCAN_FAILED;
       }
       else { 
