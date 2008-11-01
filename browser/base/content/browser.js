@@ -681,7 +681,7 @@ let gGestureSupport = {
   init: function GS_init(aAddListener) {
     const gestureEvents = ["SwipeGesture",
       "MagnifyGestureStart", "MagnifyGestureUpdate", "MagnifyGesture",
-      "RotateGesture", "RotateGestureUpdate", "RotateGesture"];
+      "RotateGestureStart", "RotateGestureUpdate", "RotateGesture"];
 
     let addRemove = aAddListener ? window.addEventListener :
       window.removeEventListener;
