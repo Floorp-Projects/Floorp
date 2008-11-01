@@ -40,7 +40,7 @@
 
 #include "nsMaiInterfaceHypertext.h"
 #include "nsIAccessibleDocument.h"
-#include "nsPIAccessNode.h"
+#include "nsAccessNode.h"
 
 void
 hypertextInterfaceInitCB(AtkHypertextIface *aIface)

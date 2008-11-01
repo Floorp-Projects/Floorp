@@ -1046,7 +1046,8 @@ void nsHTMLComboboxAccessible::CacheChildren()
   }
 }
 
-NS_IMETHODIMP nsHTMLComboboxAccessible::Shutdown()
+nsresult
+nsHTMLComboboxAccessible::Shutdown()
 {
   nsAccessibleWrap::Shutdown();
 
@@ -1422,7 +1423,8 @@ nsHTMLSelectListAccessible(aDOMNode, aShell)
 {
 }
 
-nsIFrame *nsHTMLComboboxListAccessible::GetFrame()
+nsIFrame*
+nsHTMLComboboxListAccessible::GetFrame()
 {
   nsIFrame* frame = nsHTMLSelectListAccessible::GetFrame();
 

@@ -107,9 +107,6 @@ public:
   // nsIAccessNode
   NS_IMETHOD GetUniqueID(void **aUniqueID);
 
-  // nsPIAccessNode
-  NS_IMETHOD Shutdown();
-
   // nsIAccessible
   NS_IMETHOD GetRole(PRUint32 *aRole);
   NS_IMETHOD GetName(nsAString& aName);
@@ -120,6 +117,9 @@ public:
   // circular reference since li holds onto us.
   NS_IMETHOD SetParent(nsIAccessible *aParentAccessible);
   NS_IMETHOD GetParent(nsIAccessible **aParentAccessible);
+
+  // nsAccessNode
+  virtual nsresult Shutdown();
 
   // nsPIAccessible
   NS_IMETHOD AppendTextTo(nsAString& aText, PRUint32 aStartOffset, PRUint32 aLength);
@@ -155,8 +155,8 @@ public:
   NS_IMETHOD GetState(PRUint32 *aState, PRUint32 *aExtraState);
   NS_IMETHOD GetBounds(PRInt32 *x, PRInt32 *y, PRInt32 *width, PRInt32 *height);
 
-  // nsPIAccessNode
-  NS_IMETHOD Shutdown();
+  // nsAccessNode
+  virtual nsresult Shutdown();
 
 protected:
   void CacheChildren();  // Include bullet accessible

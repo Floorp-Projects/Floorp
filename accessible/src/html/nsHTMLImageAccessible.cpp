@@ -343,9 +343,9 @@ nsHTMLImageAccessible::GetImageSize(PRInt32 *aWidth, PRInt32 *aHeight)
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-// nsPIAccessNode
+// nsHTMLImageAccessible. nsAccessNode
 
-NS_IMETHODIMP
+nsresult
 nsHTMLImageAccessible::Shutdown()
 {
   nsLinkableAccessible::Shutdown();
@@ -416,11 +416,8 @@ nsHTMLImageAccessible::GetAreaAccessible(nsIDOMHTMLCollection *aAreaCollection,
     if (!accessNode)
       return nsnull;
     
-    nsCOMPtr<nsPIAccessNode> privateAccessNode(do_QueryInterface(accessNode));
-    NS_ASSERTION(privateAccessNode,
-                 "Accessible doesn't implement nsPIAccessNode");
-    
-    nsresult rv = privateAccessNode->Init();
+    nsRefPtr<nsAccessNode> accNode = nsAccUtils::QueryAccessNode(accessNode);
+    nsresult rv = accNode->Init();
     if (NS_FAILED(rv))
       return nsnull;
     

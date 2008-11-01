@@ -1728,14 +1728,12 @@ PRInt32 nsAccessibleWrap::GetChildIDFor(nsIAccessible* aAccessible)
 HWND
 nsAccessibleWrap::GetHWNDFor(nsIAccessible *aAccessible)
 {
-  nsCOMPtr<nsIAccessNode> accessNode(do_QueryInterface(aAccessible));
-  nsCOMPtr<nsPIAccessNode> privateAccessNode(do_QueryInterface(accessNode));
-  if (!privateAccessNode)
+  nsRefPtr<nsAccessNode> accessNode = nsAccUtils::QueryAccessNode(aAccessible);
+  if (!accessNode)
     return 0;
 
   HWND hWnd = 0;
-
-  nsIFrame *frame = privateAccessNode->GetFrame();
+  nsIFrame *frame = accessNode->GetFrame();
   if (frame) {
     nsIWidget *window = frame->GetWindow();
     PRBool isVisible;

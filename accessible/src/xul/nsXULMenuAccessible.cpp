@@ -71,7 +71,8 @@ nsAccessibleWrap(aDOMNode, aShell)
 
 NS_IMPL_ISUPPORTS_INHERITED1(nsXULSelectableAccessible, nsAccessible, nsIAccessibleSelectable)
 
-NS_IMETHODIMP nsXULSelectableAccessible::Shutdown()
+nsresult
+nsXULSelectableAccessible::Shutdown()
 {
   mSelectControl = nsnull;
   return nsAccessibleWrap::Shutdown();
@@ -268,7 +269,8 @@ nsAccessibleWrap(aDOMNode, aShell)
 { 
 }
 
-NS_IMETHODIMP nsXULMenuitemAccessible::Init()
+nsresult
+nsXULMenuitemAccessible::Init()
 {
   nsresult rv = nsAccessibleWrap::Init();
   nsXULMenupopupAccessible::GenerateMenu(mDOMNode);

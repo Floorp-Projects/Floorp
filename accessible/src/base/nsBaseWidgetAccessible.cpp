@@ -233,16 +233,16 @@ nsLinkableAccessible::GetURI(PRInt32 aIndex, nsIURI **aURI)
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-// nsLinkableAccessible. nsPIAccessNode
+// nsLinkableAccessible. nsAccessNode
 
-NS_IMETHODIMP
+nsresult
 nsLinkableAccessible::Init()
 {
   CacheActionContent();
   return nsHyperTextAccessibleWrap::Init();
 }
 
-NS_IMETHODIMP
+nsresult
 nsLinkableAccessible::Shutdown()
 {
   mActionContent = nsnull;

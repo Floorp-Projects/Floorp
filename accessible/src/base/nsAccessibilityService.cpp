@@ -76,7 +76,6 @@
 #include "nsOuterDocAccessible.h"
 #include "nsRootAccessibleWrap.h"
 #include "nsTextFragment.h"
-#include "nsPIAccessNode.h"
 #include "nsPresContext.h"
 #include "nsServiceManagerUtils.h"
 #include "nsUnicharUtils.h"
@@ -452,11 +451,11 @@ nsAccessibilityService::CreateRootAccessible(nsIPresShell *aShell,
   if (!*aRootAcc)
     return NS_ERROR_OUT_OF_MEMORY;
 
-  nsCOMPtr<nsPIAccessNode> privateAccessNode(do_QueryInterface(*aRootAcc));
-  privateAccessNode->Init();
+  nsRefPtr<nsAccessNode> rootAcc = nsAccUtils::QueryAccessNode(*aRootAcc);
+  rootAcc->Init();
+
   nsRoleMapEntry *roleMapEntry = nsAccUtils::GetRoleMapEntry(rootNode);
-  nsCOMPtr<nsPIAccessible> privateAccessible =
-    do_QueryInterface(privateAccessNode);
+  nsCOMPtr<nsPIAccessible> privateAccessible(do_QueryInterface(*aRootAcc));
   privateAccessible->SetRoleMapEntry(roleMapEntry);
 
   NS_ADDREF(*aRootAcc);
@@ -1248,16 +1247,16 @@ nsresult nsAccessibilityService::InitAccessible(nsIAccessible *aAccessibleIn,
   }
   NS_ASSERTION(aAccessibleOut && !*aAccessibleOut, "Out param should already be cleared out");
 
-  nsCOMPtr<nsPIAccessNode> privateAccessNode = do_QueryInterface(aAccessibleIn);
-  NS_ASSERTION(privateAccessNode, "All accessibles must support nsPIAccessNode");
-  nsresult rv = privateAccessNode->Init(); // Add to cache, etc.
-  if (NS_SUCCEEDED(rv)) {
-    nsCOMPtr<nsPIAccessible> privateAccessible =
-      do_QueryInterface(privateAccessNode);
-    privateAccessible->SetRoleMapEntry(aRoleMapEntry);
-    NS_ADDREF(*aAccessibleOut = aAccessibleIn);
-  }
-  return rv;
+  nsRefPtr<nsAccessNode> acc = nsAccUtils::QueryAccessNode(aAccessibleIn);
+  nsresult rv = acc->Init(); // Add to cache, etc.
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  nsCOMPtr<nsPIAccessible> privateAccessible =
+    do_QueryInterface(aAccessibleIn);
+  privateAccessible->SetRoleMapEntry(aRoleMapEntry);
+  NS_ADDREF(*aAccessibleOut = aAccessibleIn);
+
+  return NS_OK;
 }
 
 static PRBool HasRelatedContent(nsIContent *aContent)
