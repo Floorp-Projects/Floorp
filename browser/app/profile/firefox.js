@@ -416,6 +416,17 @@ pref("font.language.group", "chrome://global/locale/intl.properties");
 pref("intl.menuitems.alwaysappendaccesskeys","chrome://global/locale/intl.properties");
 pref("intl.menuitems.insertseparatorbeforeaccesskeys","chrome://global/locale/intl.properties");
 
+pref("browser.gesture.swipe.left", "Browser:BackOrBackDuplicate");
+pref("browser.gesture.swipe.right", "Browser:ForwardOrForwardDuplicate");
+pref("browser.gesture.swipe.up", "cmd_scrollTop");
+pref("browser.gesture.swipe.down", "cmd_scrollBottom");
+pref("browser.gesture.pinch.out", "cmd_fullZoomEnlarge");
+pref("browser.gesture.pinch.in", "cmd_fullZoomReduce");
+pref("browser.gesture.pinch.out.shift", "cmd_fullZoomReset");
+pref("browser.gesture.pinch.in.shift", "cmd_fullZoomReset");
+pref("browser.gesture.twist.right", "Browser:NextTab");
+pref("browser.gesture.twist.left", "Browser:PrevTab");
+
 // 0=lines, 1=pages, 2=history , 3=text size
 #ifdef XP_MACOSX
 // On OS X, if the wheel has one axis only, shift+wheel comes through as a

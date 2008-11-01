@@ -113,6 +113,8 @@
     <command id="Browser:ReloadSkipCache" oncommand="BrowserReloadSkipCache()" disabled="true">
       <observes element="Browser:Reload" attribute="disabled"/>
     </command>
+    <command id="Browser:NextTab" oncommand="gBrowser.mTabContainer.advanceSelectedTab(1, true);"/>
+    <command id="Browser:PrevTab" oncommand="gBrowser.mTabContainer.advanceSelectedTab(-1, true);"/>
     <command id="cmd_fullZoomReduce"  oncommand="FullZoom.reduce()"/>
     <command id="cmd_fullZoomEnlarge" oncommand="FullZoom.enlarge()"/>
     <command id="cmd_fullZoomReset"   oncommand="FullZoom.reset()"/>
