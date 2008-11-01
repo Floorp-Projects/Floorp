@@ -67,18 +67,32 @@ function trimString(s) {
  */
 function parseTestcase(testcase) {
   var lines = testcase.split("\n");
-  if (lines[0] != "#data") {
+
+  /* check that the first non-empty, non-comment line is #data */
+  for each (var line in lines) {
+    if (!line || startsWith(line, "##")) {
+      continue;
+    }
+    if (line == "#data")
+      break;
     log(lines);
     throw "Unknown test format."
   }
+
   var input = [];
   var output = [];
   var errors = [];
   var currentList = input;
   for each (var line in lines) {
-    if (line && !(startsWith(line, "#error") ||
-		  startsWith(line, "#document") ||
-		  startsWith(line, "#data"))) {
+    if (!line || startsWith(line, "##")) {
+      if (startsWith(line, "##todo")) {
+        todo(false, line.substring(6));
+      }
+      continue;
+    }
+    if (!(startsWith(line, "#error") ||
+          startsWith(line, "#document") ||
+          startsWith(line, "#data"))) {
       if (currentList == output && startsWith(line, "|")) {
       	currentList.push(line.substring(2));
       } else {
