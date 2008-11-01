@@ -469,7 +469,8 @@ NS_IMETHODIMP nsAccessible::SetNextSibling(nsIAccessible *aNextSibling)
   return NS_OK;
 }
 
-NS_IMETHODIMP nsAccessible::Shutdown()
+nsresult
+nsAccessible::Shutdown()
 {
   mNextSibling = nsnull;
 
@@ -1077,11 +1078,10 @@ nsAccessible::GetDeepestChildAtPoint(PRInt32 aX, PRInt32 aY,
   NS_ENSURE_SUCCESS(rv, rv);
   NS_ENSURE_TRUE(accDocument, NS_ERROR_FAILURE);
 
-  nsCOMPtr<nsPIAccessNode> accessNodeDocument(do_QueryInterface(accDocument));
-  NS_ASSERTION(accessNodeDocument,
-               "nsIAccessibleDocument doesn't implement nsPIAccessNode");
+  nsRefPtr<nsAccessNode> docAccessNode =
+    nsAccUtils::QueryAccessNode(accDocument);
 
-  nsIFrame *frame = accessNodeDocument->GetFrame();
+  nsIFrame *frame = docAccessNode->GetFrame();
   NS_ENSURE_STATE(frame);
 
   nsPresContext *presContext = frame->PresContext();
@@ -2169,20 +2169,23 @@ nsAccessible::GetAttributesInternal(nsIPersistentProperties *aAttributes)
     NS_ENSURE_STATE(topContent);
     nsAccUtils::SetLiveContainerAttributes(aAttributes, startContent,
                                            topContent);
+
     // Allow ARIA live region markup from outer documents to override
-    nsCOMPtr<nsISupports> container = doc->GetContainer();
-    nsIDocShellTreeItem *docShellTreeItem = nsnull;
-    if (container)
-      CallQueryInterface(container, &docShellTreeItem);
+    nsCOMPtr<nsISupports> container = doc->GetContainer(); 
+    nsCOMPtr<nsIDocShellTreeItem> docShellTreeItem =
+      do_QueryInterface(container);
     if (!docShellTreeItem)
       break;
-    nsIDocShellTreeItem *sameTypeParent = nsnull;
-    docShellTreeItem->GetSameTypeParent(&sameTypeParent);
+
+    nsCOMPtr<nsIDocShellTreeItem> sameTypeParent;
+    docShellTreeItem->GetSameTypeParent(getter_AddRefs(sameTypeParent));
     if (!sameTypeParent || sameTypeParent == docShellTreeItem)
       break;
+
     nsIDocument *parentDoc = doc->GetParentDocument();
     if (!parentDoc)
       break;
+
     startContent = parentDoc->FindContentForSubDocument(doc);      
   }
 

@@ -92,7 +92,7 @@ NS_IMPL_RELEASE_INHERITED(nsApplicationAccessible, nsAccessible)
 ////////////////////////////////////////////////////////////////////////////////
 // nsIAccessNode
 
-NS_IMETHODIMP
+nsresult
 nsApplicationAccessible::Init()
 {
   nsresult rv;

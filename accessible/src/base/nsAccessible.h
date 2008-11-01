@@ -120,8 +120,10 @@ public:
   NS_DECL_NSIACCESSIBLEVALUE
   NS_DECLARE_STATIC_IID_ACCESSOR(NS_ACCESSIBLE_IMPL_CID)
 
-  // nsIAccessNode
-  NS_IMETHOD Shutdown();
+  //////////////////////////////////////////////////////////////////////////////
+  // nsAccessNode
+
+  virtual nsresult Shutdown();
 
   //////////////////////////////////////////////////////////////////////////////
   // Public methods

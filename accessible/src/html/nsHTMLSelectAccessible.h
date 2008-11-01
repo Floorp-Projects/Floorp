@@ -226,7 +226,9 @@ public:
   NS_IMETHOD GetActionName(PRUint8 aIndex, nsAString& aName);
 
   void CacheChildren();
-  NS_IMETHOD Shutdown();
+
+  // nsAccessNode
+  virtual nsresult Shutdown();
 
 protected:
   already_AddRefed<nsIAccessible> GetFocusedOptionAccessible();
@@ -305,8 +307,8 @@ public:
   NS_IMETHOD GetParent(nsIAccessible **aParent);
   NS_IMETHOD GetUniqueID(void **aUniqueID);
 
-  // nsPIAccessNode
-  NS_IMETHOD_(nsIFrame *) GetFrame(void);
+  // nsAccessNode
+  virtual nsIFrame* GetFrame();
 
   virtual void GetBoundsRect(nsRect& aBounds, nsIFrame** aBoundingFrame);
 };

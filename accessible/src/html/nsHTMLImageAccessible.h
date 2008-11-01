@@ -69,11 +69,11 @@ public:
   NS_IMETHOD GetURI(PRInt32 aIndex, nsIURI **aURI);
   NS_IMETHOD GetAnchor(PRInt32 aIndex, nsIAccessible **aAccessible);
 
-  // nsPIAccessNode
-  NS_IMETHOD Shutdown();
-
   // nsIAccessibleImage
   NS_DECL_NSIACCESSIBLEIMAGE
+
+  // nsAccessNode
+  virtual nsresult Shutdown();
 
   // nsAccessible
   virtual nsresult GetNameInternal(nsAString& aName);

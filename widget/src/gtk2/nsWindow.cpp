@@ -84,7 +84,6 @@
 
 #ifdef ACCESSIBILITY
 #include "nsIAccessibleRole.h"
-#include "nsPIAccessNode.h"
 #include "nsPIAccessible.h"
 #include "nsIAccessibleEvent.h"
 #include "prenv.h"

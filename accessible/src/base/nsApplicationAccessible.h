@@ -66,8 +66,8 @@ public:
   NS_DECL_CYCLE_COLLECTION_CLASS_INHERITED(nsApplicationAccessible,
                                            nsAccessible)
 
-  // nsPIAccessNode
-  NS_IMETHOD Init();
+  // nsAccessNode
+  virtual nsresult Init();
 
   // nsIAccessible
   NS_IMETHOD GetName(nsAString & aName);

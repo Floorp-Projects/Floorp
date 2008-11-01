@@ -1005,7 +1005,8 @@ nsAccessibleWrap(aDOMNode, aShell)
 {
 }
 
-NS_IMETHODIMP nsXULComboboxAccessible::Init()
+nsresult
+nsXULComboboxAccessible::Init()
 {
   nsresult rv = nsAccessibleWrap::Init();
   nsXULMenupopupAccessible::GenerateMenu(mDOMNode);
