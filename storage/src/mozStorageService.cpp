@@ -46,9 +46,12 @@
 #include "prinit.h"
 #include "nsAutoLock.h"
 #include "nsAutoPtr.h"
+#include "nsEmbedCID.h"
 #include "mozStoragePrivateHelpers.h"
 
 #include "sqlite3.h"
+
+#include "nsIPromptService.h"
 
 NS_IMPL_THREADSAFE_ISUPPORTS1(mozStorageService, mozIStorageService)
 
@@ -60,6 +63,23 @@ mozStorageService::GetSingleton()
     if (gStorageService) {
         NS_ADDREF(gStorageService);
         return gStorageService;
+    }
+
+    // Ensure that we are using the same version of SQLite that we compiled with
+    // or newer.  Our configure check ensures we are using a new enough version
+    // at compile time.
+    if (SQLITE_VERSION_NUMBER > sqlite3_libversion_number()) {
+        nsCOMPtr<nsIPromptService> ps =
+            do_GetService(NS_PROMPTSERVICE_CONTRACTID);
+        if (ps) {
+            nsAutoString title, message;
+            title.AppendASCII("SQLite Version Error");
+            message.AppendASCII("The application has been updated, but your "
+                                "version of SQLite is too old and the "
+                                "application cannot run.");
+            (void)ps->Alert(nsnull, title.get(), message.get());
+        }
+        PR_Abort();
     }
 
     gStorageService = new mozStorageService();
