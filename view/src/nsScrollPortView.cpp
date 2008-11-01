@@ -268,9 +268,11 @@ NS_IMETHODIMP nsScrollPortView::ScrollTo(nscoord aDestinationX, nscoord aDestina
   PRBool isSmoothScroll = (aUpdateFlags & NS_VMREFRESH_SMOOTHSCROLL) &&
                           IsSmoothScrollingEnabled();
 
-  if (mAsyncScroll && mAsyncScroll->mIsSmoothScroll) {
-    currentVelocityX = mAsyncScroll->mVelocities[mAsyncScroll->mFrameIndex*2];
-    currentVelocityY = mAsyncScroll->mVelocities[mAsyncScroll->mFrameIndex*2 + 1];
+  if (mAsyncScroll) {
+    if (mAsyncScroll->mIsSmoothScroll) {
+      currentVelocityX = mAsyncScroll->mVelocities[mAsyncScroll->mFrameIndex*2];
+      currentVelocityY = mAsyncScroll->mVelocities[mAsyncScroll->mFrameIndex*2 + 1];
+    }
   } else {
     mAsyncScroll = new AsyncScroll;
     if (mAsyncScroll) {
