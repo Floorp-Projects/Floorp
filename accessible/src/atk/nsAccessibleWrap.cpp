@@ -324,7 +324,8 @@ void nsAccessibleWrap::ShutdownAtkObject()
     }
 }
 
-NS_IMETHODIMP nsAccessibleWrap::Shutdown()
+nsresult
+nsAccessibleWrap::Shutdown()
 {
     ShutdownAtkObject();
     return nsAccessible::Shutdown();

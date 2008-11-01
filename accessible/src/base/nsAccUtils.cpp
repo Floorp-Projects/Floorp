@@ -42,7 +42,6 @@
 #include "nsIAccessibleStates.h"
 #include "nsIAccessibleTypes.h"
 #include "nsPIAccessible.h"
-#include "nsPIAccessNode.h"
 
 #include "nsAccessibleEventData.h"
 #include "nsHyperTextAccessible.h"
@@ -597,16 +596,16 @@ nsAccUtils::GetScreenCoordsForWindow(nsIAccessNode *aAccessNode)
 nsIntPoint
 nsAccUtils::GetScreenCoordsForParent(nsIAccessNode *aAccessNode)
 {
-  nsCOMPtr<nsPIAccessNode> parent;
+  nsRefPtr<nsAccessNode> parent;
   nsCOMPtr<nsIAccessible> accessible(do_QueryInterface(aAccessNode));
   if (accessible) {
     nsCOMPtr<nsIAccessible> parentAccessible;
     accessible->GetParent(getter_AddRefs(parentAccessible));
-    parent = do_QueryInterface(parentAccessible);
+    parent = nsAccUtils::QueryAccessNode(parentAccessible);
   } else {
     nsCOMPtr<nsIAccessNode> parentAccessNode;
     aAccessNode->GetParentNode(getter_AddRefs(parentAccessNode));
-    parent = do_QueryInterface(parentAccessNode);
+    parent = nsAccUtils::QueryAccessNode(parentAccessNode);
   }
 
   if (!parent)
@@ -699,9 +698,9 @@ nsAccUtils::TextLength(nsIAccessible *aAccessible)
   if (!IsText(aAccessible))
     return 1;
   
-  nsCOMPtr<nsPIAccessNode> pAccNode(do_QueryInterface(aAccessible));
+  nsRefPtr<nsAccessNode> accNode = nsAccUtils::QueryAccessNode(aAccessible);
   
-  nsIFrame *frame = pAccNode->GetFrame();
+  nsIFrame *frame = accNode->GetFrame();
   if (frame && frame->GetType() == nsAccessibilityAtoms::textFrame) {
     // Ensure that correct text length is calculated (with non-rendered
     // whitespace chars not counted).

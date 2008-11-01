@@ -225,14 +225,13 @@ nsHTMLLIAccessible::nsHTMLLIAccessible(nsIDOMNode *aDOMNode, nsIWeakReference* a
   if (!aBulletText.IsEmpty()) {
     mBulletAccessible = new nsHTMLListBulletAccessible(mDOMNode, mWeakShell, 
                                                        aBulletText);
-    nsCOMPtr<nsPIAccessNode> bulletANode(mBulletAccessible);
-    if (bulletANode) {
-      bulletANode->Init();
-    }
+    if (mBulletAccessible)
+      mBulletAccessible->Init();
   }
 }
 
-NS_IMETHODIMP nsHTMLLIAccessible::Shutdown()
+nsresult
+nsHTMLLIAccessible::Shutdown()
 {
   if (mBulletAccessible) {
     // Ensure that weak pointer to this is nulled out
@@ -304,7 +303,7 @@ nsHTMLListBulletAccessible::GetUniqueID(void **aUniqueID)
   return NS_OK;
 }
 
-NS_IMETHODIMP
+nsresult
 nsHTMLListBulletAccessible::Shutdown()
 {
   mBulletText.Truncate();

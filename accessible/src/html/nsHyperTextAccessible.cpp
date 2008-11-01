@@ -43,7 +43,6 @@
 #include "nsAccessibleTreeWalker.h"
 #include "nsTextUtils.h"
 
-#include "nsPIAccessNode.h"
 #include "nsIClipboard.h"
 #include "nsContentCID.h"
 #include "nsIDOMAbstractView.h"
@@ -384,7 +383,8 @@ nsHyperTextAccessible::GetPosAndText(PRInt32& aStartOffset, PRInt32& aEndOffset,
   // depending on what we need for out parameters
   while (NextChild(accessible)) {
     lastAccessible = accessible;
-    nsCOMPtr<nsPIAccessNode> accessNode(do_QueryInterface(accessible));
+    nsRefPtr<nsAccessNode> accessNode = nsAccUtils::QueryAccessNode(accessible);
+
     nsIFrame *frame = accessNode->GetFrame();
     if (!frame) {
       continue;
@@ -821,11 +821,12 @@ nsHyperTextAccessible::GetRelativeOffset(nsIPresShell *aPresShell,
   nsresult rv;
   PRInt32 contentOffset = aFromOffset;
   if (nsAccUtils::IsText(aFromAccessible)) {
-    nsCOMPtr<nsPIAccessNode> accessNode(do_QueryInterface(aFromAccessible));
-    NS_ASSERTION(accessNode, "nsIAccessible doesn't support nsPIAccessNode");
+    nsRefPtr<nsAccessNode> accessNode =
+      nsAccUtils::QueryAccessNode(aFromAccessible);
 
     nsIFrame *frame = accessNode->GetFrame();
     NS_ENSURE_TRUE(frame, -1);
+
     if (frame->GetType() == nsAccessibilityAtoms::textFrame) {
       rv = RenderedToContentOffset(frame, aFromOffset, &contentOffset);
       NS_ENSURE_SUCCESS(rv, -1);
@@ -1013,8 +1014,9 @@ nsresult nsHyperTextAccessible::GetTextHelper(EGetTextType aType, nsAccessibleTe
     GetCharacterCount(&textLength);
     if (aBoundaryType == BOUNDARY_LINE_START && aOffset > 0 && aOffset == textLength) {
       // Asking for start of line, while on last character
-      nsCOMPtr<nsPIAccessNode> startAccessNode = do_QueryInterface(startAcc);
-      if (startAccessNode) {
+      if (startAcc) {
+        nsRefPtr<nsAccessNode> startAccessNode =
+          nsAccUtils::QueryAccessNode(startAcc);
         startFrame = startAccessNode->GetFrame();
       }
     }
@@ -1369,7 +1371,8 @@ nsHyperTextAccessible::GetOffsetAtPoint(PRInt32 aX, PRInt32 aY,
   PRInt32 offset = 0;
 
   while (NextChild(accessible)) {
-    nsCOMPtr<nsPIAccessNode> accessNode(do_QueryInterface(accessible));
+    nsRefPtr<nsAccessNode> accessNode = nsAccUtils::QueryAccessNode(accessible);
+
     nsIFrame *primaryFrame = accessNode->GetFrame();
     NS_ENSURE_TRUE(primaryFrame, NS_ERROR_FAILURE);
 

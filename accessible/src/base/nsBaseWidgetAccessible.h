@@ -93,9 +93,9 @@ public:
   // nsIHyperLinkAccessible
   NS_IMETHOD GetURI(PRInt32 i, nsIURI **aURI);
 
-  // nsPIAccessNode
-  NS_IMETHOD Init();
-  NS_IMETHOD Shutdown();
+  // nsAccessNode
+  virtual nsresult Init();
+  virtual nsresult Shutdown();
 
 protected:
   /**

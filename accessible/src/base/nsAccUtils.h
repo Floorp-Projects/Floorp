@@ -41,6 +41,7 @@
 
 #include "nsIAccessible.h"
 #include "nsIAccessNode.h"
+#include "nsIAccessibleDocument.h"
 #include "nsIAccessibleRole.h"
 #include "nsIAccessibleText.h"
 #include "nsARIAMap.h"
@@ -49,6 +50,8 @@
 #include "nsIPersistentProperties2.h"
 #include "nsIContent.h"
 #include "nsPoint.h"
+
+class nsAccessNode;
 
 class nsAccUtils
 {
@@ -248,6 +251,45 @@ public:
       aAcc->GetFinalState(&state, nsnull);
 
     return state;
+  }
+
+  /**
+   * Query nsAccessNode from the given nsIAccessible.
+   */
+  static already_AddRefed<nsAccessNode>
+    QueryAccessNode(nsIAccessible *aAccessible)
+  {
+    nsAccessNode* accessNode = nsnull;
+    if (aAccessible)
+      CallQueryInterface(aAccessible, &accessNode);
+
+    return accessNode;
+  }
+
+  /**
+   * Query nsAccessNode from the given nsIAccessNode.
+   */
+  static already_AddRefed<nsAccessNode>
+    QueryAccessNode(nsIAccessNode *aAccessNode)
+  {
+    nsAccessNode* accessNode = nsnull;
+    if (aAccessNode)
+      CallQueryInterface(aAccessNode, &accessNode);
+    
+    return accessNode;
+  }
+
+  /**
+   * Query nsAccessNode from the given nsIAccessNode.
+   */
+  static already_AddRefed<nsAccessNode>
+    QueryAccessNode(nsIAccessibleDocument *aAccessibleDocument)
+  {
+    nsAccessNode* accessNode = nsnull;
+    if (aAccessibleDocument)
+      CallQueryInterface(aAccessibleDocument, &accessNode);
+    
+    return accessNode;
   }
 
 #ifdef DEBUG_A11Y
