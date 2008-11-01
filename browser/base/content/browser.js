@@ -1148,6 +1148,14 @@ function delayedStartup(isLoadingBlank, mustLoadSidebar) {
     SetClickAndHoldHandlers();
 #endif
 
+  // Initialize the microsummary service by retrieving it, prompting its factory
+  // to create its singleton, whose constructor initializes the service.
+  try {
+    Cc["@mozilla.org/microsummary/service;1"].getService(Ci.nsIMicrosummaryService);
+  } catch (ex) {
+    Components.utils.reportError("Failed to init microsummary service:\n" + ex);
+  }
+
   // Initialize the full zoom setting.
   // We do this before the session restore service gets initialized so we can
   // apply full zoom settings to tabs restored by the session restore service.
@@ -1203,22 +1211,11 @@ function delayedStartup(isLoadingBlank, mustLoadSidebar) {
        gPrefService.getBoolPref("browser.ctrlTab.mostRecentlyUsed"))
     ctrlTab.init();
 
-  // Initialize the microsummary service by retrieving it, prompting its factory
-  // to create its singleton, whose constructor initializes the service.
-  // Started 4 seconds after delayedStartup (before the livemarks service below).
-  setTimeout(function() {
-    try {
-      Cc["@mozilla.org/microsummary/service;1"].getService(Ci.nsIMicrosummaryService);
-    } catch (ex) {
-      Components.utils.reportError("Failed to init microsummary service:\n" + ex);
-    }
-  }, 4000);
-
   // Delayed initialization of the livemarks update timer.
   // Livemark updates don't need to start until after bookmark UI 
   // such as the toolbar has initialized. Starting 5 seconds after
-  // delayedStartup in order to stagger this after the microsummary
-  // service (see above) and before the download manager starts (see below).
+  // delayedStartup in order to stagger this before the download
+  // manager starts (see below).
   setTimeout(function() PlacesUtils.livemarks.start(), 5000);
 
   // Initialize the download manager some time after the app starts so that
