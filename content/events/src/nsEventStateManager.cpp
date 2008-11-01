@@ -2616,11 +2616,12 @@ nsEventStateManager::DoScrollText(nsPresContext* aPresContext,
     }
     
     if (aScrollQuantity == eScrollByPage)
-      scrollView->ScrollByPages(scrollX, scrollY);
+      scrollView->ScrollByPages(scrollX, scrollY, NS_VMREFRESH_DEFERRED);
     else if (aScrollQuantity == eScrollByPixel)
-      scrollView->ScrollByPixels(scrollX, scrollY);
+      scrollView->ScrollByPixels(scrollX, scrollY, NS_VMREFRESH_DEFERRED);
     else
-      scrollView->ScrollByLines(scrollX, scrollY);
+      scrollView->ScrollByLines(scrollX, scrollY,
+                                NS_VMREFRESH_SMOOTHSCROLL | NS_VMREFRESH_DEFERRED);
 
     ForceViewUpdate(scrollView->View());
   }
