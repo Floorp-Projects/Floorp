@@ -202,25 +202,22 @@ nsPlacesDBFlush.prototype = {
     // Execute sync statements async in a transaction
     // XXX due to a bug in sqlite, we cannot wrap these in a transaction.  See
     //     https://bugzilla.mozilla.org/show_bug.cgi?id=462379#c2 for details.
-    this._db.executeAsync(statements, statements.length, this);
+    //this._db.executeAsync(statements, statements.length, this);
 
-    // XXX Disabled due to persistent test failures on the tinderbox.
-    /*
     let self = this;
     let listener = {
       // We also need to batch the two handleCompletion objects into one.
-      _count: 0,
+      _count: statements.length,
       handleError: function(aError) self.handleError(aError),
       handleCompletion: function(aReason) {
-        this._count++;
-        if (this._count == 2) {
-          // we have gotten both notifications
+        this._count--;
+        if (this._count == 0) {
+          // we have gotten all notifications
           self.handleCompletion(aReason);
         }
       }
     };
     statements.forEach(function(stmt) stmt.executeAsync(listener));
-    */
 
     // Finalize statements, otherwise we could get in trouble
     statements.forEach(function(stmt) stmt.finalize());
