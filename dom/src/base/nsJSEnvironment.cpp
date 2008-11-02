@@ -1174,8 +1174,8 @@ nsJSContext::JSOptionChangedCallback(const char *pref, void *data)
                                               js_jit_content_str);
 
 #ifdef MOZ_JSDEBUGGER
-  /*  if (context->mContext->debugHooks->debuggerHandler)
-      useJIT = PR_FALSE;*/
+  if (context->mContext->debugHooks->debuggerHandler)
+    useJIT = PR_FALSE;
 #endif
 
   if (useJIT)
