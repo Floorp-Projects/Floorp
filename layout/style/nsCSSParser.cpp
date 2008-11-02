@@ -273,6 +273,7 @@ protected:
   PRBool CheckEndProperty();
   nsSubstring* NextIdent();
   void SkipUntil(PRUnichar aStopSymbol);
+  void SkipUntilOneOf(const PRUnichar* aStopSymbolChars);
   void SkipRuleSet();
   PRBool SkipAtRule();
   PRBool SkipDeclaration(PRBool aCheckForBraces);
@@ -1591,10 +1592,18 @@ CSSParserImpl::GatherMedia(nsMediaList* aMedia,
     PRBool parsedSomething, hitStop;
     if (!ParseMediaQuery(aStopSymbol, getter_Transfers(query),
                          &parsedSomething, &hitStop)) {
+      NS_ASSERTION(!hitStop, "should return true when hit stop");
       if (NS_FAILED(mScanner.GetLowLevelError())) {
         return PR_FALSE;
       }
-      SkipUntil(',');
+      const PRUnichar stopChars[] =
+        { PRUnichar(','), aStopSymbol /* may be null */, PRUnichar(0) };
+      SkipUntilOneOf(stopChars);
+      // Rely on SkipUntilOneOf leaving mToken around as the last token read.
+      if (mToken.mType == eCSSToken_Symbol && mToken.mSymbol == aStopSymbol) {
+        UngetToken();
+        hitStop = PR_TRUE;
+      }
     }
     if (parsedSomething) {
       aMedia->SetNonEmpty();
@@ -2145,6 +2154,30 @@ CSSParserImpl::SkipUntil(PRUnichar aStopSymbol)
     if (eCSSToken_Symbol == tk->mType) {
       PRUnichar symbol = tk->mSymbol;
       if (symbol == aStopSymbol) {
+        break;
+      } else if ('{' == symbol) {
+        SkipUntil('}');
+      } else if ('[' == symbol) {
+        SkipUntil(']');
+      } else if ('(' == symbol) {
+        SkipUntil(')');
+      }
+    }
+  }
+}
+
+void
+CSSParserImpl::SkipUntilOneOf(const PRUnichar* aStopSymbolChars)
+{
+  nsCSSToken* tk = &mToken;
+  nsDependentString stopSymbolChars(aStopSymbolChars);
+  for (;;) {
+    if (!GetToken(PR_TRUE)) {
+      break;
+    }
+    if (eCSSToken_Symbol == tk->mType) {
+      PRUnichar symbol = tk->mSymbol;
+      if (stopSymbolChars.FindChar(symbol) != -1) {
         break;
       } else if ('{' == symbol) {
         SkipUntil('}');
