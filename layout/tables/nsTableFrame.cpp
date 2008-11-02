@@ -4726,16 +4726,15 @@ nsTableFrame::BCRecalcNeeded(nsStyleContext* aOldStyleContext,
   if ((change & NS_STYLE_HINT_REFLOW) == NS_STYLE_HINT_REFLOW)
     return PR_TRUE; // the caller only needs to mark the bc damage area
   if ((change & NS_STYLE_HINT_VISUAL) == NS_STYLE_HINT_VISUAL) {
-    NS_FOR_CSS_SIDES(side) {
-      if (newStyleData->GetBorderStyle(side) !=
-          oldStyleData->GetBorderStyle(side)) {
-        // we need to recompute the borders and the caller needs to mark
-        // the bc damage area
-        nsCOMPtr<nsIRunnable> evt = new nsDelayedCalcBCBorders(this);
-        NS_DispatchToCurrentThread(evt);
-        return PR_TRUE;
-      }
-    }
+    // we need to recompute the borders and the caller needs to mark
+    // the bc damage area
+    // XXX In principle this should only be necessary for border style changes
+    // However the bc painting code tries to maximize the drawn border segments
+    // so it stores in the cellmap where a new border segment starts and this
+    // introduces a unwanted cellmap data dependence on color
+    nsCOMPtr<nsIRunnable> evt = new nsDelayedCalcBCBorders(this);
+    NS_DispatchToCurrentThread(evt);
+    return PR_TRUE;
   }
   return PR_FALSE;
 }
