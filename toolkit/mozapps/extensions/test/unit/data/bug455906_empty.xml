@@ -1,7 +1,0 @@
-<?xml version="1.0" encoding="UTF-8"?>
-
-<blocklist xmlns="http://www.mozilla.org/2006/addons-blocklist">
-  <emItems>
-    <emItem id="dummy_bug455906_2@tests.mozilla.org"/>
-  </emItems>
-</blocklist>
