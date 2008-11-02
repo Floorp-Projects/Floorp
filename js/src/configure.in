@@ -1782,7 +1782,6 @@ case "$target" in
     	CXXFLAGS="$CXXFLAGS -mieee"
     ;;
     i*86)
-    	USE_ELF_DYNSTR_GC=1
         MOZ_ENABLE_OLD_ABI_COMPAT_WRAPPERS=1
     ;;
     mips*)
@@ -2136,11 +2135,6 @@ case "$target" in
 	case "${target_cpu}" in
 	ppc*)
 	AC_DEFINE(HAVE_VA_LIST_AS_ARRAY)	
-	;;
-	esac
-	case "${host_cpu}" in
-	i*86)
-	USE_ELF_DYNSTR_GC=1
 	;;
 	esac
 	;;
@@ -4045,7 +4039,6 @@ MOZ_ARG_ENABLE_BOOL(trace-malloc,
 if test "$NS_TRACE_MALLOC"; then
   # Please, Mr. Linker Man, don't take away our symbol names
   MOZ_COMPONENTS_VERSION_SCRIPT_LDFLAGS=
-  USE_ELF_DYNSTR_GC=
   AC_DEFINE(NS_TRACE_MALLOC)
 fi
 AC_SUBST(NS_TRACE_MALLOC)
@@ -4281,14 +4274,6 @@ MOZ_ARG_ENABLE_BOOL(install-strip,
     PKG_SKIP_STRIP=1)
 
 dnl ========================================================
-dnl = --enable-elf-dynstr-gc
-dnl ========================================================
-MOZ_ARG_ENABLE_BOOL(elf-dynstr-gc,
-[  --enable-elf-dynstr-gc  Enable elf dynstr garbage collector (opt builds only)],
-    USE_ELF_DYNSTR_GC=1,
-    USE_ELF_DYNSTR_GC= )
-
-dnl ========================================================
 dnl = --enable-old-abi-compat-wrappers
 dnl ========================================================
 dnl on x86 linux, the current builds of some popular plugins (notably
@@ -4346,7 +4331,6 @@ MOZ_ARG_ENABLE_BOOL(eazel-profiler-support,
     ENABLE_EAZEL_PROFILER= )
 if test -n "$ENABLE_EAZEL_PROFILER"; then
     AC_DEFINE(ENABLE_EAZEL_PROFILER)
-    USE_ELF_DYNSTR_GC=
     MOZ_COMPONENTS_VERSION_SCRIPT_LDFLAGS=
     EAZEL_PROFILER_CFLAGS="-g -O -gdwarf-2 -finstrument-functions -D__NO_STRING_INLINES  -D__NO_MATH_INLINES"
     EAZEL_PROFILER_LIBS="-lprofiler -lpthread"
@@ -4884,7 +4868,6 @@ AC_SUBST(ENABLE_TESTS)
 
 AC_SUBST(ENABLE_STRIP)
 AC_SUBST(PKG_SKIP_STRIP)
-AC_SUBST(USE_ELF_DYNSTR_GC)
 AC_SUBST(INCREMENTAL_LINKER)
 AC_SUBST(MOZ_COMPONENTS_VERSION_SCRIPT_LDFLAGS)
 AC_SUBST(MOZ_COMPONENT_NSPR_LIBS)

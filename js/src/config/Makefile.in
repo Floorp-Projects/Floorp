@@ -59,14 +59,6 @@ PLSRCS		= nfspwd.pl revdepth.pl
 
 TARGETS		= $(HOST_PROGRAM) $(PLSRCS:.pl=) $(SIMPLE_PROGRAMS)
 
-ifndef CROSS_COMPILE
-ifdef USE_ELF_DYNSTR_GC
-TARGETS		+= elf-dynstr-gc
-MAKE_DIRS	+= $(MDDEPDIR)
-GARBAGE_DIRS	+= $(MDDEPDIR)
-endif
-endif
-
 # IMPORTANT: Disable NSBUILDROOT for this directory only, otherwise we have
 # a recursive rule for finding nsinstall and the Perl scripts.
 ifdef NSBUILDROOT
@@ -104,13 +96,6 @@ export::
 	$(INSTALL) system_wrappers $(DIST)/include
 
 GARBAGE_DIRS += system_wrappers
-endif
-
-ifndef CROSS_COMPILE
-ifdef USE_ELF_DYNSTR_GC
-elf-dynstr-gc: elf-dynstr-gc.c Makefile Makefile.in
-	$(CC) $(COMPILE_CFLAGS) $(GLIB_CFLAGS) -o $@ $< $(LDFLAGS) $(GLIB_LIBS) 
-endif
 endif
 
 FORCE:
