@@ -46,6 +46,7 @@ XPIDL_MODULE  = extensions
 
 XPIDLSRCS = \
   nsIExtensionManager.idl \
+  nsIBlocklistService.idl \
   nsIAddonRepository.idl \
   $(NULL)
 

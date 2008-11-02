@@ -92,7 +92,6 @@
 #include "nsIPrefBranch2.h"
 #include "nsIScriptChannel.h"
 #include "nsPrintfCString.h"
-#include "nsIBlocklistService.h"
 
 // Friggin' X11 has to "#define None". Lame!
 #ifdef None
@@ -5130,14 +5129,13 @@ nsresult nsPluginHostImpl::ScanPluginsDirectory(nsIFile * pluginsDir,
     RemoveCachedPluginsInfo(NS_ConvertUTF16toUTF8(pfd->mFilename).get(),
                             getter_AddRefs(pluginTag));
 
-    PRBool enabled = PR_TRUE;
-    PRBool seenBefore = PR_FALSE;
+    PRUint32 oldFlags = NS_PLUGIN_FLAG_ENABLED;
     if (pluginTag) {
-      seenBefore = PR_TRUE;
       // If plugin changed, delete cachedPluginTag and don't use cache
       if (LL_NE(fileModTime, pluginTag->mLastModifiedTime)) {
         // Plugins has changed. Don't use cached plugin info.
-        enabled = (pluginTag->Flags() & NS_PLUGIN_FLAG_ENABLED) != 0;
+        oldFlags = pluginTag->Flags() &
+                   (NS_PLUGIN_FLAG_ENABLED | NS_PLUGIN_FLAG_BLOCKLISTED);
         pluginTag = nsnull;
 
         // plugin file changed, flag this fact
@@ -5213,25 +5211,12 @@ nsresult nsPluginHostImpl::ScanPluginsDirectory(nsIFile * pluginsDir,
 
       pluginTag->mLibrary = pluginLibrary;
       pluginTag->mLastModifiedTime = fileModTime;
-
-      nsCOMPtr<nsIBlocklistService> blocklist = do_GetService("@mozilla.org/extensions/blocklist;1");
-      if (blocklist) {
-        PRUint32 state;
-        rv = blocklist->GetPluginBlocklistState(pluginTag, EmptyString(),
-                                                EmptyString(), &state);
-
-        if (NS_SUCCEEDED(rv)) {
-          // If the blocklist says so then block the plugin. If the blocklist says
-          // it is risky and we have never seen this plugin before then disable it
-          if (state == nsIBlocklistService::STATE_BLOCKED)
-            pluginTag->Mark(NS_PLUGIN_FLAG_BLOCKLISTED);
-          else if (state == nsIBlocklistService::STATE_SOFTBLOCKED && !seenBefore)
-            enabled = PR_FALSE;
-        }
-      }
-
-      if (!enabled || (pluginTag->mIsJavaPlugin && !mJavaEnabled))
+      if (!(oldFlags & NS_PLUGIN_FLAG_ENABLED) ||
+          (pluginTag->mIsJavaPlugin && !mJavaEnabled))
         pluginTag->UnMark(NS_PLUGIN_FLAG_ENABLED);
+
+      if (oldFlags & NS_PLUGIN_FLAG_BLOCKLISTED)
+        pluginTag->Mark(NS_PLUGIN_FLAG_BLOCKLISTED);
 
       // if this is unwanted plugin we are checkin for, or this is a duplicate plugin,
       // add it to our cache info list so we can cache the unwantedness of this plugin
