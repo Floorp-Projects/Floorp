@@ -11,15 +11,15 @@
 # for the specific language governing rights and limitations under the
 # License.
 #
-# The Original Code is the Mozilla GNOME interfaces code.
+# The Original Code is the Extension Blocklist UI.
 #
 # The Initial Developer of the Original Code is
-# Novell Corporation.
-# Portions created by the Initial Developer are Copyright (C) 2006
+# Mozilla Corporation
+# Portions created by the Initial Developer are Copyright (C) 2008
 # the Initial Developer. All Rights Reserved.
 #
 # Contributor(s):
-#  Robert O'Callahan <robert@ocallahan.org>
+#   Dave Townsend <dtownsend@oxymoronical.com>
 #
 # Alternatively, the contents of this file may be used under the terms of
 # either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -35,25 +35,47 @@
 #
 # ***** END LICENSE BLOCK *****
 
-DEPTH     = ../..
-topsrcdir = @top_srcdir@
-srcdir    = @srcdir@
-VPATH     = @srcdir@
+var gArgs;
 
-include $(DEPTH)/config/autoconf.mk
+function init() {
+  var hasHardBlocks = false;
+  var hasSoftBlocks = false;
+  gArgs = window.arguments[0].wrappedJSObject;
 
-MODULE          = xpcom
-XPIDL_MODULE    = xpcom_system
+  var richlist = document.getElementById("addonList");
+  var list = gArgs.list;
+  list.sort(function(a, b) { return String.localeCompare(a.name, b.name); });
+  for (let i = 0; i < list.length; i++) {
+    let item = document.createElement("richlistitem");
+    item.setAttribute("name", list[i].name);
+    item.setAttribute("version", list[i].version);
+    item.setAttribute("icon", list[i].icon);
+    if (list[i].blocked) {
+      item.setAttribute("class", "hardBlockedAddon");
+      hasHardBlocks = true;
+    }
+    else {
+      item.setAttribute("class", "softBlockedAddon");
+      hasSoftBlocks = true;
+    }
+    richlist.appendChild(item);
+  }
 
-XPIDLSRCS = \
-        nsIXULAppInfo.idl \
-        nsIGConfService.idl \
-        nsIGnomeVFSService.idl \
-        nsIBlocklistService.idl \
-        $(NULL)
+  if (hasHardBlocks && hasSoftBlocks)
+    document.getElementById("bothMessage").hidden = false;
+  else if (hasHardBlocks)
+    document.getElementById("hardBlockMessage").hidden = false;
+  else
+    document.getElementById("softBlockMessage").hidden = false;
+}
 
-ifdef MOZ_CRASHREPORTER
-XPIDLSRCS += nsICrashReporter.idl
-endif
-
-include $(topsrcdir)/config/rules.mk
+function accept() {
+  gArgs.restart = true;
+  var list = gArgs.list;
+  var items = document.getElementById("addonList").childNodes;
+  for (let i = 0; i < list.length; i++) {
+    if (!list[i].blocked)
+      list[i].disable = items[i].checked;
+  }
+  return true;
+}

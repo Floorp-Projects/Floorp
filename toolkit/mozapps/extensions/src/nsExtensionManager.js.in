@@ -152,6 +152,7 @@ const INSTALLERROR_BLOCKLISTED           = -6;
 const INSTALLERROR_INSECURE_UPDATE       = -7;
 const INSTALLERROR_INVALID_MANIFEST      = -8;
 const INSTALLERROR_RESTRICTED            = -9;
+const INSTALLERROR_SOFTBLOCKED           = -10;
 
 const MODE_RDONLY   = 0x01;
 const MODE_WRONLY   = 0x02;
@@ -769,33 +770,30 @@ function showMessage(titleKey, titleParams, messageKey, messageParams) {
 }
 
 /**
- * Shows a dialog for blocklisted items.
- * @param   items
- *          An array of nsIUpdateItems.
- * @param   fromInstall
- *          Whether this is called from an install or from the blocklist
- *          background check.
+ * Shows a dialog for a blocklisted item. For soft blocked items this will
+ * return true if the item should still be installed
+ * @param   item
+ *          The nsIUpdateItem that is blocklisted
+ * @param   softblocked
+ *          True if this item is only soft blocked and may still be installed.
  */
-function showBlocklistMessage(items, fromInstall) {
-  var win = null;
+function showBlocklistMessage(item, softblocked) {
   var params = Cc["@mozilla.org/embedcomp/dialogparam;1"].
                createInstance(Ci.nsIDialogParamBlock);
-  params.SetInt(0, (fromInstall ? 1 : 0));
-  params.SetInt(1, items.length);
-  params.SetNumberStrings(items.length * 2);
-  for (var i = 0; i < items.length; ++i)
-    params.SetString(i, items[i].name + " " + items[i].version);
+  params.SetInt(0, softblocked ? 1 : 0);
+  params.SetInt(1, 0);
+  params.SetNumberStrings(1);
+  params.SetString(0, item.name + " " + item.version);
 
-  // if this was initiated from an install try to find the appropriate manager
-  if (fromInstall) {
-    var wm = Cc["@mozilla.org/appshell/window-mediator;1"].
-             getService(Ci.nsIWindowMediator);
-    win = wm.getMostRecentWindow("Extension:Manager");
-  }
+  var wm = Cc["@mozilla.org/appshell/window-mediator;1"].
+           getService(Ci.nsIWindowMediator);
+  var win = wm.getMostRecentWindow("Extension:Manager");
   var ww = Cc["@mozilla.org/embedcomp/window-watcher;1"].
            getService(Ci.nsIWindowWatcher);
   ww.openWindow(win, URI_EXTENSION_LIST_DIALOG, "",
                 "chrome,centerscreen,modal,dialog,titlebar", params);
+
+  return params.GetInt(1) == 0 ? false : true;
 }
 
 /**
@@ -2979,6 +2977,11 @@ ExtensionManager.prototype = {
         callback(installManifest, installData.id, location, installData.type);
         this._appDisableItem(id);
       }
+      else if (installData.error == INSTALLERROR_SOFTBLOCKED) {
+        LOG("... success, item installed but is soft blocked, item will be disabled");
+        callback(installManifest, installData.id, location, installData.type);
+        this.disableItem(id);
+      }
       else {
         /**
          * Turns an error code into a message for logging
@@ -4256,9 +4259,11 @@ ExtensionManager.prototype = {
     if (!gBlocklist)
       gBlocklist = Cc["@mozilla.org/extensions/blocklist;1"].
                    getService(Ci.nsIBlocklistService);
-    if (gBlocklist.isAddonBlocklisted(installData.id, installData.version,
-                                      null, null))
+    var state = gBlocklist.getAddonBlocklistState(installData.id, installData.version);
+    if (state == Ci.nsIBlocklistService.STATE_BLOCKED)
       installData.error = INSTALLERROR_BLOCKLISTED;
+    else if (state == Ci.nsIBlocklistService.STATE_SOFTBLOCKED)
+      installData.error = INSTALLERROR_SOFTBLOCKED;
 
     return installData;
   },
@@ -4482,7 +4487,7 @@ ExtensionManager.prototype = {
        * @param   installRDF
        *          The install.rdf file that was extracted from the xpi.
        */
-      checkForUpdates: function EM_checkForUpdates(item, installManifest, xpiFile) {
+      checkForUpdates: function IncObs_checkForUpdates(item, installManifest, xpiFile) {
         this._xpi             = xpiFile;
         this._installManifest = installManifest;
 
@@ -4495,21 +4500,21 @@ ExtensionManager.prototype = {
       /**
        * See nsIExtensionManager.idl
        */
-      onUpdateStarted: function EM_onUpdateStarted() {
+      onUpdateStarted: function IncObs_onUpdateStarted() {
         LOG("Phone Home Listener: Update Started");
       },
 
       /**
        * See nsIExtensionManager.idl
        */
-      onUpdateEnded: function EM_onUpdateEnded() {
+      onUpdateEnded: function IncObs_onUpdateEnded() {
         LOG("Phone Home Listener: Update Ended");
       },
 
       /**
        * See nsIExtensionManager.idl
        */
-      onAddonUpdateStarted: function EM_onAddonUpdateStarted(addon) {
+      onAddonUpdateStarted: function IncObs_onAddonUpdateStarted(addon) {
         if (!addon)
           throw Cr.NS_ERROR_INVALID_ARG;
 
@@ -4521,7 +4526,7 @@ ExtensionManager.prototype = {
       /**
        * See nsIExtensionManager.idl
        */
-      onAddonUpdateEnded: function EM_onAddonUpdateEnded(addon, status) {
+      onAddonUpdateEnded: function IncObs_onAddonUpdateEnded(addon, status) {
         if (!addon)
           throw Cr.NS_ERROR_INVALID_ARG;
 
@@ -4666,6 +4671,10 @@ ExtensionManager.prototype = {
             gApp.platformVersion + ". Remote compatibility check was not performed.");
       }
       break;
+    case INSTALLERROR_SOFTBLOCKED:
+      if (!showBlocklistMessage(installData, true))
+        break;
+      // Fall through to continue the install
     case INSTALLERROR_SUCCESS:
       // Installation of multiple extensions / themes contained within a single xpi.
       if (installData.type == Ci.nsIUpdateItem.TYPE_MULTI_XPI) {
@@ -4759,7 +4768,7 @@ ExtensionManager.prototype = {
     case INSTALLERROR_BLOCKLISTED:
       LOG("Blocklisted Item: Item: \"" + installData.id + "\" version " +
           installData.version + " was not installed.");
-      showBlocklistMessage([installData], true);
+      showBlocklistMessage(installData, false);
       break;
     case INSTALLERROR_INSECURE_UPDATE:
       LOG("No secure updates: Item: \"" + installData.id + "\" version " + 
@@ -5489,32 +5498,51 @@ ExtensionManager.prototype = {
   },
 
   /**
-   * Checks for changes to the blocklist using the local blocklist file,
-   * application disables / enables items that have been added / removed from
-   * the blocklist, and if there are additions to the blocklist this will
-   * inform the user by displaying a list of the items added.
-   *
-   * XXXrstrong - this method is not terribly useful and was added so we can
-   * trigger this check from the additional timer used by blocklisting.
+   * See nsIExtensionManager.idl
    */
-  checkForBlocklistChanges: function EM_checkForBlocklistChanges() {
+  updateAndGetNewBlocklistedItems: function EM_updateAndGetNewBlocklistedItems(itemCount) {
+    if (!gBlocklist)
+      gBlocklist = Cc["@mozilla.org/extensions/blocklist;1"].
+                   getService(Ci.nsIBlocklistService);
+
+    var list = [];
     var ds = this.datasource;
     var items = this.getItemList(Ci.nsIUpdateItem.TYPE_ANY, { });
     for (var i = 0; i < items.length; ++i) {
       var id = items[i].id;
-      ds.updateProperty(id, "blocklisted");
-      if (this._isUsableItem(id))
+
+      // Get whether the add-on is currently disabled or set to be disabled.
+      var appDisabled = (ds.getItemProperty(id, "appDisabled") == "true" ||
+                         ds.getItemProperty(id, "appDisabled") == OP_NEEDS_DISABLE);
+      var userDisabled = (ds.getItemProperty(id, "userDisabled") == "true" ||
+                          ds.getItemProperty(id, "userDisabled") == OP_NEEDS_DISABLE);
+      var usable = this._isUsableItem(id);
+      var state = gBlocklist.getAddonBlocklistState(items[i].id, items[i].version);
+
+      // We only return items that are now blocked or to be warned about and aren't
+      // already disabled for some reason.
+      if (!appDisabled && !userDisabled && state != Ci.nsIBlocklistService.STATE_NOT_BLOCKED)
+        list.push(items[i]);
+
+      // Update the appDisabled status based on the new blocked state
+      if (usable)
         this._appEnableItem(id);
+      else
+        this._appDisableItem(id);
+
+      // If the item was appDisabled and is now usable then it is something
+      // that is no longer hard blocked. If it is still to be warned about then
+      // just user disable it.
+      if (appDisabled && usable && !userDisabled &&
+          state == Ci.nsIBlocklistService.STATE_SOFTBLOCKED)
+        this.disableItem(id);
+
+      ds.updateProperty(id, "blocklisted");
+      ds.updateProperty(id, "blocklistedsoft");
     }
 
-    items = ds.getBlocklistedItemList(null, null, Ci.nsIUpdateItem.TYPE_ANY,
-                                      false);
-    for (i = 0; i < items.length; ++i)
-      this._appDisableItem(items[i].id);
-
-    // show the blocklist notification window if there are new blocklist items.
-    if (items.length > 0)
-      showBlocklistMessage(items, false);
+    itemCount.value = list.length;
+    return list;
   },
 
   /**
@@ -5563,14 +5591,7 @@ ExtensionManager.prototype = {
     return this.datasource.getDependentItemListForID(id, includeDisabled, countRef);
   },
 
-  /**
-   * Retrieves a list of nsIUpdateItems of items matching the specified type.
-   * @param   type
-   *          The type of item to return.
-   * @param   countRef
-   *          The XPCJS reference to the number of items returned.
-   * @returns An array of nsIUpdateItems matching the id/type filter.
-   */
+  /* See nsIExtensionManager.idl */
   getItemList: function EM_getItemList(type, countRef) {
     return this.datasource.getItemList(type, countRef);
   },
@@ -6311,8 +6332,10 @@ ExtensionItemUpdater.prototype = {
     if (!gBlocklist)
       gBlocklist = Cc["@mozilla.org/extensions/blocklist;1"].
                    getService(Ci.nsIBlocklistService);
+    // Denies updates that are hard blocked, soft blocked items will be warned
+    // about during the install.
     if (gBlocklist.isAddonBlocklisted(aLocalItem.id, aRemoteItem.version,
-                                      null, null))
+                                      this._appVersion, this._platformVersion))
       return false;
 
     return true;
@@ -7237,49 +7260,6 @@ ExtensionsDataSource.prototype = {
 
       if (type != -1 && (type & desiredType) &&
           !this.isCompatible(this, item, appVersion, platformVersion))
-        items.push(this.getItemForID(id));
-    }
-    return items;
-  },
-
-  /**
-   * Retrieves a list of items that will be blocklisted by the application for
-   * a specific application or toolkit version.
-   * @param   appVersion
-   *          The Version of the application to check the blocklist against.
-   * @param   platformVersion
-   *          The Version of the toolkit to check the blocklist against.
-   * @param   desiredType
-   *          The nsIUpdateItem type of items to look for
-   * @param   includeAppDisabled
-   *          Whether or not items that are or are already set to be disabled
-   *          by the app on next restart should be included in the set returned
-   * @returns An array of nsIUpdateItems that are blocklisted with the application
-   *          or toolkit version supplied.
-   */
-  getBlocklistedItemList: function EMDS_getBlocklistedItemList(appVersion,
-                                                               platformVersion,
-                                                               desiredType,
-                                                               includeAppDisabled) {
-    if (!gBlocklist)
-      gBlocklist = Cc["@mozilla.org/extensions/blocklist;1"].
-                   getService(Ci.nsIBlocklistService);
-    var items = [];
-    var ctr = getContainer(this._inner, this._itemRoot);
-    var elements = ctr.GetElements();
-    while (elements.hasMoreElements()) {
-      var item = elements.getNext().QueryInterface(Ci.nsIRDFResource);
-      var id = stripPrefix(item.Value, PREFIX_ITEM_URI);
-      var type = this.getItemProperty(id, "type");
-
-      if (!includeAppDisabled &&
-          (this.getItemProperty(id, "appDisabled") == "true" ||
-          this.getItemProperty(id, "appDisabled") == OP_NEEDS_DISABLE))
-        continue;
-
-      var version = this.getItemProperty(id, "version");
-      if (type != -1 && (type & desiredType) &&
-          gBlocklist.isAddonBlocklisted(id, version, appVersion, platformVersion))
         items.push(this.getItemForID(id));
     }
     return items;
@@ -8455,7 +8435,23 @@ ExtensionsDataSource.prototype = {
     if (!gBlocklist)
       gBlocklist = Cc["@mozilla.org/extensions/blocklist;1"].
                    getService(Ci.nsIBlocklistService);
-    if (gBlocklist.isAddonBlocklisted(id, version, null, null))
+    if (gBlocklist.getAddonBlocklistState(id, version) == Ci.nsIBlocklistService.STATE_BLOCKED)
+      return EM_L("true");
+
+    return EM_L("false");
+  },
+
+  /**
+   * Get the em:blocklistedsoft property (whether or not this item is listed in the blocklist
+   * at a low severity)
+   */
+  _rdfGet_blocklistedsoft: function EMDS__rdfGet_blocklistedsoft(item, property) {
+    var id = stripPrefix(item.Value, PREFIX_ITEM_URI);
+    var version = this.getItemProperty(id, "version");
+    if (!gBlocklist)
+      gBlocklist = Cc["@mozilla.org/extensions/blocklist;1"].
+                   getService(Ci.nsIBlocklistService);
+    if (gBlocklist.getAddonBlocklistState(id, version) == Ci.nsIBlocklistService.STATE_SOFTBLOCKED)
       return EM_L("true");
 
     return EM_L("false");
