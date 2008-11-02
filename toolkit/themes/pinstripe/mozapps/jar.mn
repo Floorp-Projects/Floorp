@@ -18,6 +18,7 @@ classic.jar:
   skin/classic/mozapps/extensions/extensions.xml                  (extensions/extensions.xml)
   skin/classic/mozapps/extensions/update.css                      (extensions/update.css)
   skin/classic/mozapps/extensions/eula.css                        (extensions/eula.css)
+  skin/classic/mozapps/extensions/blocklist.css                   (extensions/blocklist.css)
   skin/classic/mozapps/passwordmgr/key.png                        (passwordmgr/key.png)
   skin/classic/mozapps/plugins/missingPlugin.css                  (plugins/missingPlugin.css)
   skin/classic/mozapps/plugins/pluginGeneric.png                  (plugins/pluginGeneric.png)
