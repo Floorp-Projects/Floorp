@@ -178,7 +178,6 @@ DisableUncommonLigatures(ATSUStyle aStyle)
         kLigaturesType,
         kLigaturesType,
         kLigaturesType,
-        kLigaturesType,
         kLigaturesType
     };
     static const ATSUFontFeatureType selectors[NS_ARRAY_LENGTH(types)] = {
@@ -187,8 +186,7 @@ DisableUncommonLigatures(ATSUStyle aStyle)
         kRebusPicturesOffSelector,
         kDiphthongLigaturesOffSelector,
         kSquaredLigaturesOffSelector,
-        kAbbrevSquaredLigaturesOffSelector,
-        kSymbolLigaturesOffSelector
+        kAbbrevSquaredLigaturesOffSelector
     };
     ATSUSetFontFeatures(aStyle, NS_ARRAY_LENGTH(types), types, selectors);
 }
