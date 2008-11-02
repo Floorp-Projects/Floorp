@@ -107,7 +107,6 @@ NSPR_VERSION=4
 
 dnl Set the minimum version of toolkit libs used by mozilla
 dnl ========================================================
-GLIB_VERSION=1.2.0
 PERL_VERSION=5.006
 MAKE_VERSION=3.78
 WINDRES_VERSION=2.14.90
@@ -2016,45 +2015,7 @@ case "$target" in
         AC_MSG_ERROR([\$MOZ_TOOLS\\bin must be in your path.])
     fi
     MOZ_TOOLS_DIR=`$CYGPATH_W $MOZ_TOOLS_DIR | $CYGPATH_S`
-
-    if test -n "$GLIB_PREFIX"; then
-        _GLIB_PREFIX_DIR=`cd $GLIB_PREFIX && pwd`
-        if test "$?" = "0"; then
-            if test `echo ${PATH}: | grep -ic "$_GLIB_PREFIX_DIR/bin:"` = 0; then
-                AC_MSG_ERROR([GLIB_PREFIX must be in your \$PATH.])
-            fi
-            _GLIB_PREFIX_DIR=`$CYGPATH_W $_GLIB_PREFIX_DIR | $CYGPATH_S`
-        else
-            AC_MSG_ERROR([GLIB_PREFIX is set but "${GLIB_PREFIX}" is not a directory.])
-        fi
-    else
-        _GLIB_PREFIX_DIR=$MOZ_TOOLS_DIR
-    fi
-    if test ! -f "${_GLIB_PREFIX_DIR}/include/glib.h"; then
-        AC_MSG_ERROR([Cannot find $_GLIB_PREFIX_DIR/include/glib.h .])
-    fi
-    GLIB_CFLAGS="-I${_GLIB_PREFIX_DIR}/include"
-    if test -f "${_GLIB_PREFIX_DIR}/lib/glib-1.2_s.lib"; then
-        GLIB_LIBS="${_GLIB_PREFIX_DIR}/lib/glib-1.2_s.lib"
-    elif test -f "${_GLIB_PREFIX_DIR}/lib/glib-1.2.lib"; then
-        GLIB_LIBS="${_GLIB_PREFIX_DIR}/lib/glib-1.2.lib"
-    else
-        AC_MSG_ERROR([Cannot find $_GLIB_PREFIX_DIR/lib/glib-1.2.lib or $_GLIB_PREFIX_DIR/lib/glib-1.2_s.lib])
-    fi
     ;;
-
-    *) # else cross-compiling
-        if test -n "$GLIB_PREFIX"; then
-            GLIB_CFLAGS="-I${GLIB_PREFIX}/include"
-            if test -f "${GLIB_PREFIX}/lib/glib-1.2_s.lib"; then
-                GLIB_LIBS="${GLIB_PREFIX}/lib/glib-1.2_s.lib"
-            elif test -f "${GLIB_PREFIX}/lib/glib-1.2.lib"; then
-                GLIB_LIBS="${GLIB_PREFIX}/lib/glib-1.2.lib"
-            else
-                AC_MSG_ERROR([Cannot find $GLIB_PREFIX/lib/glib-1.2.lib or $GLIB_PREFIX/lib/glib-1.2_s.lib])
-            fi
-        fi
-        ;;
     esac 
 
 
@@ -4781,20 +4742,6 @@ dnl = Standalone module options
 dnl = 
 dnl ========================================================
 MOZ_ARG_HEADER(Standalone module options (Not for building Mozilla))
-
-if test -z "$SKIP_PATH_CHECKS"; then
-if test -z "${GLIB_CFLAGS}" || test -z "${GLIB_LIBS}" ; then
-    PKG_CHECK_MODULES(GLIB, glib-2.0 >= 1.3.7 gobject-2.0)
-fi
-fi
-
-if test -z "${GLIB_GMODULE_LIBS}" -a -n "${GLIB_CONFIG}"; then
-    GLIB_GMODULE_LIBS=`$GLIB_CONFIG gmodule --libs`
-fi
-
-AC_SUBST(GLIB_CFLAGS)
-AC_SUBST(GLIB_LIBS)
-AC_SUBST(GLIB_GMODULE_LIBS)
 
 dnl ========================================================
 if test "$MOZ_DEBUG" || test "$NS_TRACE_MALLOC"; then
