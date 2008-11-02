@@ -13267,6 +13267,10 @@ nsCSSFrameConstructor::RebuildAllStyleData(nsChangeHint aExtraHint)
   if (!mPresShell || !mPresShell->GetRootFrame())
     return;
 
+  // Processing the style changes could cause a flush that propagates to
+  // the parent frame and thus destroys the pres shell.
+  nsCOMPtr<nsIPresShell> kungFuDeathGrip(mPresShell);
+
   // Tell the style set to get the old rule tree out of the way
   // so we can recalculate while maintaining rule tree immutability
   nsresult rv = mPresShell->StyleSet()->BeginReconstruct();
