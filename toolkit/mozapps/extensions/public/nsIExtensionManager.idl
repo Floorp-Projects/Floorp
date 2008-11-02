@@ -199,7 +199,7 @@ interface nsIInstallLocation : nsISupports
  * XXXben - Some of this stuff should go into a management-ey interface,
  *          some into an app-startup-ey interface.
  */
-[scriptable, uuid(23080b61-dab9-48b7-bd68-b5ea23cae14b)]
+[scriptable, uuid(7fbb049a-00e6-4ce2-82fc-854c52788df9)]
 interface nsIExtensionManager : nsISupports
 {
   /**
@@ -470,15 +470,20 @@ interface nsIExtensionManager : nsISupports
                                  [retval, array, size_is(itemCount)] out nsIUpdateItem items);
 
   /**
-   * Checks for changes to the blocklist using the local blocklist file,
-   * application disables / enables items that have been added / removed from
-   * the blocklist, and if there are additions to the blocklist this will
-   * inform the user by displaying a list of the items added.
+   * Checks for changes to the blocklist using the local blocklist file.
+   * This will immediately application disable items that have been hard blocked
+   * and application enable items that are no longer hard blocked. It will also
+   * return items that are either soft or hard blocked and aren't already
+   * disabled or disabled pending a restart.
    *
-   * XXXrstrong - this method is not terribly useful and was added so we can
-   * trigger this check from the additional timer used by blocklisting.
+   * This is likely to change or go away in the future and should not be used
+   * by anyone outside of the blocklist service.
+   *
+   * @returns An array of nsIUpdateItems that are blocklisted or the user should
+   *          be warned about but are currently enabled.
    */
-  void checkForBlocklistChanges();
+  void updateAndGetNewBlocklistedItems(out unsigned long itemCount,
+                                       [retval, array, size_is(itemCount)] out nsIUpdateItem items);
 
   /**
    * Sorts addons of the specified type by the specified property in the

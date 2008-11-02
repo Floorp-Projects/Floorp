@@ -39,13 +39,23 @@
 
 #include "nsISupports.idl"
 
-[scriptable, uuid(0c3fe697-d50d-4f42-b747-0c5855cfc60e)]
+interface nsIPluginTag;
+
+[scriptable, uuid(8439f9c0-da03-4260-8b21-dc635eed28fb)]
 interface nsIBlocklistService : nsISupports
 {
+  // Indicates that the item does not appear in the blocklist.
+  const unsigned long STATE_NOT_BLOCKED = 0;
+  // Indicates that the item is in the blocklist but the problem is not severe
+  // enough to warant forcibly blocking.
+  const unsigned long STATE_SOFTBLOCKED = 1;
+  // Indicates that the item should be blocked and never used.
+  const unsigned long STATE_BLOCKED     = 2;
+
   /**
    * Determine if an item is blocklisted
    * @param   id
-   *          The GUID of the item.
+   *          The ID of the item.
    * @param   version
    *          The item's version.
    * @param   appVersion
@@ -60,5 +70,44 @@ interface nsIBlocklistService : nsISupports
    *          application or this version of the toolkit, false, otherwise.
    */
   boolean isAddonBlocklisted(in AString id, in AString version,
-                             in AString appVersion, in AString toolkitVersion);
+                             [optional] in AString appVersion,
+                             [optional] in AString toolkitVersion);
+
+  /**
+   * Determine the blocklist state of an add-on
+   * @param   id
+   *          The ID of the item.
+   * @param   version
+   *          The item's version.
+   * @param   appVersion
+   *          The version of the application we are checking in the blocklist.
+   *          If this parameter is null, the version of the running application
+   *          is used.
+   * @param   toolkitVersion
+   *          The version of the toolkit we are checking in the blocklist.
+   *          If this parameter is null, the version of the running toolkit
+   *          is used.
+   * @returns The STATE constant.
+   */
+  unsigned long getAddonBlocklistState(in AString id, in AString version,
+                                       [optional] in AString appVersion,
+                                       [optional] in AString toolkitVersion);
+
+  /**
+   * Determine the blocklist state of a plugin
+   * @param   plugin
+   *          The plugin to get the state for
+   * @param   appVersion
+   *          The version of the application we are checking in the blocklist.
+   *          If this parameter is null, the version of the running application
+   *          is used.
+   * @param   toolkitVersion
+   *          The version of the toolkit we are checking in the blocklist.
+   *          If this parameter is null, the version of the running toolkit
+   *          is used.
+   * @returns The STATE constant.
+   */
+  unsigned long getPluginBlocklistState(in nsIPluginTag plugin,
+                                        [optional] in AString appVersion,
+                                        [optional] in AString toolkitVersion);
 };
