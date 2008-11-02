@@ -8,6 +8,7 @@ classic.jar:
         skin/classic/mozapps/downloads/downloads.css               (downloads/downloads.css)
         skin/classic/mozapps/downloads/unknownContentType.css      (downloads/unknownContentType.css)
         skin/classic/mozapps/extensions/about.css                  (extensions/about.css)
+        skin/classic/mozapps/extensions/blocklist.css              (extensions/blocklist.css)
         skin/classic/mozapps/extensions/extensions.css             (extensions/extensions.css)
         skin/classic/mozapps/extensions/itemDisabledFader.png      (extensions/itemDisabledFader.png)
         skin/classic/mozapps/extensions/itemEnabledFader.png       (extensions/itemEnabledFader.png)

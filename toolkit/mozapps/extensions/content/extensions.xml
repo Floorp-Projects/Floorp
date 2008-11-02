@@ -95,6 +95,7 @@
       <property name="type" onget="return parseInt(this.getAttribute('type'));"/>
       <property name="isCompatible" onget="return this.getAttribute('compatible') == 'true';"/>
       <property name="isBlocklisted" onget="return this.getAttribute('blocklisted') == 'true';"/>
+      <property name="isSoftBlocklisted" onget="return this.getAttribute('blocklistedsoft') == 'true';"/>
       <property name="isDisabled" onget="return this.getAttribute('isDisabled') == 'true';"/>
       <property name="providesUpdatesSecurely" onget="return this.getAttribute('providesUpdatesSecurely') == 'true';"/>
       <property name="satisfiesDependencies" onget="return this.getAttribute('satisfiesDependencies') == 'true';"/>
@@ -133,10 +134,36 @@
         <xul:vbox flex="1" class="addonTextBox">
           <xul:hbox class="addon-name-version" xbl:inherits="name, version"/>
           <xul:hbox anonid="addonDescription" class="addon-description" xbl:inherits="description, opType"/>
+          <xul:vbox anonid="addonSelectedStatusMsgs" class="selectedStatusMsgs">
+            <xul:hbox flex="1" class="blocklistedBox attention" align="center">
+              <xul:label class="blocklistedLabel" value="&blocklisted.label;" crop="end"/>
+              <xul:label class="softBlocklistedLabel" value="&softBlocklisted.label;" crop="end"/>
+              <xul:label anonid="blocklistMoreInfo" class="text-link" value="&moreInfo.label;"
+                         onclick="if (event.button == 0) { openURL(this.getAttribute('moreInfoURL')); }" />
+            </xul:hbox>
+          </xul:vbox>
         </xul:vbox>
       </xul:hbox>
     </content>
     <implementation implements="nsIAccessibleProvider, nsIDOMXULSelectControlItemElement">
+      <constructor>
+        <![CDATA[
+          if (this.isBlocklisted || this.isSoftBlocklisted) {
+            try {
+              var blocklistMoreInfo = document.getAnonymousElementByAttribute(this, "anonid", "blocklistMoreInfo");
+              var prefs = Components.classes["@mozilla.org/preferences-service;1"]
+                                    .getService(Components.interfaces.nsIPrefBranch);
+              var formatter = Components.classes["@mozilla.org/toolkit/URLFormatterService;1"]
+                                        .getService(Components.interfaces.nsIURLFormatter);
+              var url = formatter.formatURLPref("extensions.blocklist.detailsURL");
+              blocklistMoreInfo.setAttribute("moreInfoURL", url);
+            } catch(e) {
+              blocklistMoreInfo.hidden = true;
+            }
+          }
+        ]]>
+      </constructor>
+
       <field name="_addonDescription">
         document.getAnonymousElementByAttribute(this, "anonid", "addonDescription");
       </field>
@@ -214,7 +241,8 @@
               <xul:label value="&needsDependencies.label;" crop="end"/>
             </xul:hbox>
             <xul:hbox flex="1" class="blocklistedBox attention" align="center">
-              <xul:label value="&blocklisted.label;" crop="end"/>
+              <xul:label class="blocklistedLabel" value="&blocklisted.label;" crop="end"/>
+              <xul:label class="softBlocklistedLabel" value="&softBlocklisted.label;" crop="end"/>
               <xul:label anonid="blocklistMoreInfo" class="text-link" value="&moreInfo.label;"
                          onclick="if (event.button == 0) { openURL(this.getAttribute('moreInfoURL')); }" />
             </xul:hbox>
@@ -259,7 +287,7 @@
     <implementation implements="nsIAccessibleProvider, nsIDOMXULSelectControlItemElement">
       <constructor>
         <![CDATA[
-          if (this.isBlocklisted) {
+          if (this.isBlocklisted || this.isSoftBlocklisted) {
             try {
               var blocklistMoreInfo = document.getAnonymousElementByAttribute(this, "anonid", "blocklistMoreInfo");
               var prefs = Components.classes["@mozilla.org/preferences-service;1"]
@@ -919,6 +947,42 @@
           <![CDATA[
             return Components.interfaces.nsIAccessibleProvider.XULListitem;
           ]]>
+        </getter>
+      </property>
+    </implementation>
+  </binding>
+
+  <binding id="hardblockedaddon">
+    <content align="start">
+      <xul:image xbl:inherits="src=icon"/>
+      <xul:vbox flex="1">
+        <xul:hbox class="addon-name-version" xbl:inherits="name, version"/>
+        <xul:hbox>
+          <xul:spacer flex="1"/>
+          <xul:label class="blockedLabel" value="&blocklist.blocked.label;"/>
+        </xul:hbox>
+      </xul:vbox>
+    </content>
+  </binding>
+
+  <binding id="softblockedaddon">
+    <content align="start">
+      <xul:image xbl:inherits="src=icon"/>
+      <xul:vbox flex="1">
+        <xul:hbox class="addon-name-version" xbl:inherits="name, version"/>
+        <xul:hbox>
+          <xul:spacer flex="1"/>
+          <xul:checkbox class="disableCheckbox" checked="true" label="&blocklist.checkbox.label;"/>
+        </xul:hbox>
+      </xul:vbox>
+    </content>
+    <implementation>
+      <field name="_checkbox">
+        document.getAnonymousElementByAttribute(this, "class", "disableCheckbox")
+      </field>
+      <property name="checked" readonly="true">
+        <getter>
+          return this._checkbox.checked;
         </getter>
       </property>
     </implementation>
