@@ -298,7 +298,6 @@ function showView(aView) {
                         ["availableUpdateURL", "?availableUpdateURL"],
                         ["availableUpdateVersion", "?availableUpdateVersion"],
                         ["blocklisted", "?blocklisted"],
-                        ["blocklistedsoft", "?blocklistedsoft"],
                         ["compatible", "?compatible"],
                         ["description", "?description"],
                         ["downloadURL", "?downloadURL"],
@@ -385,7 +384,6 @@ function showView(aView) {
                         ["availableUpdateVersion", "?availableUpdateVersion"],
                         ["availableUpdateInfo", "?availableUpdateInfo"],
                         ["blocklisted", "?blocklisted"],
-                        ["blocklistedsoft", "?blocklistedsoft"],
                         ["homepageURL", "?homepageURL"],
                         ["iconURL", "?iconURL"],
                         ["internalName", "?internalName"],
@@ -412,7 +410,6 @@ function showView(aView) {
                         ["availableUpdateURL", "?availableUpdateURL"],
                         ["availableUpdateVersion", "?availableUpdateVersion"],
                         ["blocklisted", "?blocklisted"],
-                        ["blocklistedsoft", "?blocklistedsoft"],
                         ["compatible", "?compatible"],
                         ["description", "?description"],
                         ["downloadURL", "?downloadURL"],
@@ -921,8 +918,6 @@ function rebuildPluginsDS()
     gPlugins[name][desc].plugins.push(plugin);
   }
 
-  var blocklist = Cc["@mozilla.org/extensions/blocklist;1"].
-                  getService(Ci.nsIBlocklistService);
   for (var pluginName in gPlugins) {
     for (var pluginDesc in gPlugins[pluginName]) {
       plugin = gPlugins[pluginName][pluginDesc];
@@ -957,11 +952,6 @@ function rebuildPluginsDS()
       gPluginsDS.Assert(pluginNode,
                         gRDF.GetResource(PREFIX_NS_EM + "blocklisted"),
                         gRDF.GetLiteral(plugin.blocklisted ? "true" : "false"),
-                        true);
-      var softblocked = blocklist.getPluginBlocklistState(plugin) == Ci.nsIBlocklistService.STATE_SOFTBLOCKED;
-      gPluginsDS.Assert(pluginNode,
-                        gRDF.GetResource(PREFIX_NS_EM + "blocklistedsoft"),
-                        gRDF.GetLiteral(softblocked ? "true" : "false"),
                         true);
       gPluginsDS.Assert(pluginNode,
                         gRDF.GetResource(PREFIX_NS_EM + "compatible"),
