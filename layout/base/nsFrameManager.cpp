@@ -202,7 +202,15 @@ public:
   NS_HIDDEN ~UndisplayedNode()
   {
     MOZ_COUNT_DTOR(UndisplayedNode);
-    delete mNext;
+
+    // Delete mNext iteratively to avoid blowing up the stack (bug 460461).
+    UndisplayedNode *cur = mNext;
+    while (cur) {
+      UndisplayedNode *next = cur->mNext;
+      cur->mNext = nsnull;
+      delete cur;
+      cur = next;
+    }
   }
 
   nsCOMPtr<nsIContent>      mContent;
