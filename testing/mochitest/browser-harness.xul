@@ -23,6 +23,7 @@
    -
    - Contributor(s):
    -      Gavin Sharp <gavin@gavinsharp.com> (original author)
+   -      Ehsan Akhgari <ehsan.akhgari@gmail.com>
    -
    - Alternatively, the contents of this file may be used under the terms of
    - either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -161,11 +162,17 @@
                               }).join("\n");
       },
       get htmlLog() {
-        var path = this.path;
+        let txtToHTML = Cc["@mozilla.org/txttohtmlconv;1"].
+                        getService(Ci.mozITXTToHTMLConv);
+        function _entityEncode(str) {
+          return txtToHTML.scanTXT(str, Ci.mozITXTToHTMLConv.kEntities);
+        }
+        var path = _entityEncode( this.path );
         return this.tests.map(function (t) {
                                   var result = "<p class=\"result ";
                                   result += t.pass ? "passed" : "failed";
-                                  result += "\">" + t.result + " | " + path + " | " + t.msg + "</p>";
+                                  result += "\">" + t.result + " | " + path +
+                                    " | " + _entityEncode( t.msg ) + "</p>";
                                   return result;
                               }).join("\n");
       }
