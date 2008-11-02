@@ -57,13 +57,11 @@ function run() {
     .appendChild(parse_test_style_element);
 
   function query_is_parseable(q) {
-    parse_test_style_text.data = "@media " + q + " {}";
+    parse_test_style_text.data = "@media screen, " + q + " {}";
     var sheet = parse_test_style_element.sheet; // XXX yikes, not live!
-    if (sheet.cssRules.length == 0)
-      return false;
     if (sheet.cssRules.length == 1 &&
         sheet.cssRules[0].type == CSSRule.MEDIA_RULE)
-      return true;
+      return sheet.cssRules[0].media.mediaText != "screen";
     ok(false, "unexpected result testing whether query " + q +
               " is parseable");
     return true; // doesn't matter, we already failed
