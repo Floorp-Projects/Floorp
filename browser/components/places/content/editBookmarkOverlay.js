@@ -195,8 +195,13 @@ var gEditItemOverlay = {
         this._allTags = [];
         this._itemIds = aItemIdList;
         var nodeToCheck = 0;
-        for (var i = 0; i < this._itemIds.length; i++) {
-          this._uris[i] = PlacesUtils.bookmarks.getBookmarkURI(this._itemIds[i], {});
+        for (var i = 0; i < aItemIdList.length; i++) {
+          if (aItemIdList[i] instanceof Ci.nsIURI) {
+            this._uris[i] = aItemIdList[i];
+            this._itemIds[i] = -1;
+          }
+          else
+            this._uris[i] = PlacesUtils.bookmarks.getBookmarkURI(this._itemIds[i], {});
           this._tags[i] = PlacesUtils.tagging.getTagsForURI(this._uris[i], {});
           if (this._tags[i].length < this._tags[nodeToCheck].length)
             nodeToCheck =  i;
