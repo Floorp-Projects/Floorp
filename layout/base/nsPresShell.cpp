@@ -2637,6 +2637,7 @@ PresShell::FireResizeEvent()
   nsPIDOMWindow *window = mDocument->GetWindow();
   if (window) {
     nsEventDispatcher::Dispatch(window, mPresContext, &event, nsnull, &status);
+    // |this| may now be destroyed
   }
 }
 
