@@ -93,6 +93,7 @@
 #include "nsIScriptChannel.h"
 #include "nsPrintfCString.h"
 #include "nsIBlocklistService.h"
+#include "nsVersionComparator.h"
 
 // Friggin' X11 has to "#define None". Lame!
 #ifdef None
@@ -204,7 +205,10 @@
 // 0.08 mime entry point on MachO, bug 137535
 // 0.09 the file encoding is changed to UTF-8, bug 420285
 // 0.10 added plugin versions on appropriate platforms, bug 427743
+// The current plugin registry version (and the maximum version we know how to read)
 static const char *kPluginRegistryVersion = "0.10";
+// The minimum registry version we know how to read
+static const char *kMinimumRegistryVersion = "0.9";
 ////////////////////////////////////////////////////////////////////////
 // CID's && IID's
 static NS_DEFINE_IID(kIPluginInstanceIID, NS_IPLUGININSTANCE_IID);
@@ -5789,9 +5793,18 @@ nsPluginHostImpl::ReadPluginInfo()
   }
 
   // kPluginRegistryVersion
-  if (PL_strcmp(values[1], kPluginRegistryVersion)) {
+  PRInt32 vdiff = NS_CompareVersions(values[1], kPluginRegistryVersion);
+  // If this is a registry from some future version then don't attempt to read it
+  if (vdiff > 0) {
     return rv;
   }
+  // If this is a registry from before the minimum then don't attempt to read it
+  if (NS_CompareVersions(values[1], kMinimumRegistryVersion) < 0) {
+    return rv;
+  }
+
+  // Registry v0.10 and upwards includes the plugin version field
+  PRBool regHasVersion = NS_CompareVersions(values[1], "0.10") >= 0;
 
   if (!ReadSectionHeader(reader, "PLUGINS")) {
     return rv;
@@ -5806,15 +5819,22 @@ nsPluginHostImpl::ReadPluginInfo()
     if (!reader.NextLine())
       return rv;
 
-    char *version = reader.LinePtr();
-    if (!reader.NextLine())
-      return rv;
+    char *version;
+    if (regHasVersion) {
+      version = reader.LinePtr();
+      if (!reader.NextLine())
+        return rv;
+    }
+    else {
+      version = "0";
+    }
 
     // lastModifiedTimeStamp|canUnload|tag.mFlag
     if (3 != reader.ParseLine(values, 3))
       return rv;
 
-    PRInt64 lastmod = nsCRT::atoll(values[0]);
+    // If this is an old plugin registry mark this plugin tag to be refreshed
+    PRInt64 lastmod = vdiff == 0 ? nsCRT::atoll(values[0]) : -1;
     PRBool canunload = atoi(values[1]);
     PRUint32 tagflag = atoi(values[2]);
     if (!reader.NextLine())
