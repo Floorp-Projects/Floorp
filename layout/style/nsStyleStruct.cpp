@@ -452,54 +452,53 @@ nsStyleBorder::Destroy(nsPresContext* aContext) {
 
 nsChangeHint nsStyleBorder::CalcDifference(const nsStyleBorder& aOther) const
 {
+  nsChangeHint shadowDifference =
+    CalcShadowDifference(mBoxShadow, aOther.mBoxShadow);
+
   // Note that differences in mBorder don't affect rendering (which should only
   // use mComputedBorder), so don't need to be tested for here.
-  if (mTwipsPerPixel == aOther.mTwipsPerPixel &&
-      GetActualBorder() == aOther.GetActualBorder() && 
-      mFloatEdge == aOther.mFloatEdge) {
-    // Note that mBorderStyle stores not only the border style but also
-    // color-related flags.  Given that we've already done an mComputedBorder
-    // comparison, border-style differences can only lead to a VISUAL hint.  So
-    // it's OK to just compare the values directly -- if either the actual
-    // style or the color flags differ we want to repaint.
-    NS_FOR_CSS_SIDES(ix) {
-      if (mBorderStyle[ix] != aOther.mBorderStyle[ix] || 
-          mBorderColor[ix] != aOther.mBorderColor[ix]) {
-        return NS_STYLE_HINT_VISUAL;
-      }
-    }
+  if (mTwipsPerPixel != aOther.mTwipsPerPixel ||
+      GetActualBorder() != aOther.GetActualBorder() || 
+      mFloatEdge != aOther.mFloatEdge ||
+      (shadowDifference & nsChangeHint_ReflowFrame))
+    return NS_STYLE_HINT_REFLOW;
 
-    if (mBorderRadius != aOther.mBorderRadius ||
-        !mBorderColors != !aOther.mBorderColors) {
+  // Note that mBorderStyle stores not only the border style but also
+  // color-related flags.  Given that we've already done an mComputedBorder
+  // comparison, border-style differences can only lead to a VISUAL hint.  So
+  // it's OK to just compare the values directly -- if either the actual
+  // style or the color flags differ we want to repaint.
+  NS_FOR_CSS_SIDES(ix) {
+    if (mBorderStyle[ix] != aOther.mBorderStyle[ix] || 
+        mBorderColor[ix] != aOther.mBorderColor[ix])
       return NS_STYLE_HINT_VISUAL;
-    }
-
-    if (IsBorderImageLoaded() || aOther.IsBorderImageLoaded()) {
-      if (mBorderImage != aOther.mBorderImage ||
-          mBorderImageHFill != aOther.mBorderImageHFill ||
-          mBorderImageVFill != aOther.mBorderImageVFill ||
-          mBorderImageSplit != aOther.mBorderImageSplit) {
-        return NS_STYLE_HINT_VISUAL;
-      }
-      // The call to GetActualBorder above already considered
-      // mBorderImageWidth and mHaveBorderImageWidth.
-    }
-
-    // Note that at this point if mBorderColors is non-null so is
-    // aOther.mBorderColors
-    if (mBorderColors) {
-      NS_FOR_CSS_SIDES(ix) {
-        if (!nsBorderColors::Equal(mBorderColors[ix],
-                                   aOther.mBorderColors[ix])) {
-          return NS_STYLE_HINT_VISUAL;
-        }
-      }
-    }
-
-    // Decide what to do with regards to box-shadow
-    return CalcShadowDifference(mBoxShadow, aOther.mBoxShadow);
   }
-  return NS_STYLE_HINT_REFLOW;
+
+  if (mBorderRadius != aOther.mBorderRadius ||
+      !mBorderColors != !aOther.mBorderColors)
+    return NS_STYLE_HINT_VISUAL;
+
+  if (IsBorderImageLoaded() || aOther.IsBorderImageLoaded()) {
+    if (mBorderImage != aOther.mBorderImage ||
+        mBorderImageHFill != aOther.mBorderImageHFill ||
+        mBorderImageVFill != aOther.mBorderImageVFill ||
+        mBorderImageSplit != aOther.mBorderImageSplit)
+      return NS_STYLE_HINT_VISUAL;
+    // The call to GetActualBorder above already considered
+    // mBorderImageWidth and mHaveBorderImageWidth.
+  }
+
+  // Note that at this point if mBorderColors is non-null so is
+  // aOther.mBorderColors
+  if (mBorderColors) {
+    NS_FOR_CSS_SIDES(ix) {
+      if (!nsBorderColors::Equal(mBorderColors[ix],
+                                 aOther.mBorderColors[ix]))
+        return NS_STYLE_HINT_VISUAL;
+    }
+  }
+
+  return shadowDifference;
 }
 
 #ifdef DEBUG
@@ -1750,6 +1749,8 @@ nsCSSShadowArray::Release()
   return mRefCnt;
 }
 
+// Allowed to return one of NS_STYLE_HINT_NONE, NS_STYLE_HINT_REFLOW
+// or NS_STYLE_HINT_VISUAL. Currently we just return NONE or REFLOW, though.
 static nsChangeHint
 CalcShadowDifference(nsCSSShadowArray* lhs,
                      nsCSSShadowArray* rhs)
