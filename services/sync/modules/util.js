@@ -273,7 +273,7 @@ let Utils = {
     }
 
     if (msg) {
-      let log = Log4Moz.Service.getLogger("Service.Util");
+      let log = Log4Moz.repository.getLogger("Service.Util");
       log.error(msg + " Error code: " + code);
     }
 
@@ -312,7 +312,13 @@ let Utils = {
       return null;
     let ioservice = Cc["@mozilla.org/network/io-service;1"].
       getService(Ci.nsIIOService);
-    return ioservice.newURI(URIString, null, null);
+    try {
+      return ioservice.newURI(URIString, null, null);
+    } catch (e) {
+      let log = Log4Moz.repository.getLogger("Service.Util");
+      log.debug("Could not create URI: " + e);
+      return null;
+    }
   },
 
   xpath: function Weave_xpath(xmlDoc, xpathString) {
@@ -435,7 +441,7 @@ let Utils = {
   EventListener: function Weave_EventListener(handler, eventName) {
     this._handler = handler;
     this._eventName = eventName;
-    this._log = Log4Moz.Service.getLogger("Async.EventHandler");
+    this._log = Log4Moz.repository.getLogger("Async.EventHandler");
     this._log.level =
       Log4Moz.Level[Utils.prefs.getCharPref("log.logger.async")];
   }
