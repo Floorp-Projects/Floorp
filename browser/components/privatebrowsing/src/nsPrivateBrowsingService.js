@@ -75,6 +75,9 @@ PrivateBrowsingService.prototype = {
   // Whether we're entering the private browsing mode at application startup
   _autoStart: false,
 
+  // Whether the private browsing mode has been started automatically
+  _autoStarted: false,
+
   // XPCOM registration
   classDescription: "PrivateBrowsing Service",
   contractID: "@mozilla.org/privatebrowsing;1",
@@ -126,8 +129,8 @@ PrivateBrowsingService.prototype = {
           // Close all windows
           this._closeAllWindows();
 
-          // Open a single window
-          this._openSingleWindow();
+          // Open about:privatebrowsing
+          this._openAboutPrivateBrowsing();
         }
       }
       else {
@@ -139,8 +142,9 @@ PrivateBrowsingService.prototype = {
 
         // restore the windows/tabs which were open before entering the private mode
         if (this._saveSession && this._savedBrowserState) {
-          if (!this._quitting) // don't restore when shutting down!
+          if (!this._quitting) { // don't restore when shutting down!
             ss.setBrowserState(this._savedBrowserState);
+          }
           this._savedBrowserState = null;
         }
       }
@@ -168,11 +172,14 @@ PrivateBrowsingService.prototype = {
     }
   },
 
-  _openSingleWindow: function PBS__openSingleWindow() {
+  _openAboutPrivateBrowsing: function PBS__openAboutPrivateBrowsing() {
     let windowWatcher = Cc["@mozilla.org/embedcomp/window-watcher;1"].
                         getService(Ci.nsIWindowWatcher);
+    let url = Cc["@mozilla.org/supports-string;1"].
+              createInstance(Ci.nsISupportsString);
+    url.data = "about:privatebrowsing";
     windowWatcher.openWindow(null, "chrome://browser/content/browser.xul",
-                             null, "chrome,all,resizable=yes,dialog=no", null);
+                             null, "chrome,all,resizable=yes,dialog=no", url);
   },
 
   _canEnterPrivateBrowsingMode: function PBS__canEnterPrivateBrowsingMode() {
@@ -204,6 +211,7 @@ PrivateBrowsingService.prototype = {
                            getService(Ci.nsIPrefBranch);
         this._autoStart = prefsService.getBoolPref("browser.privatebrowsing.autostart");
         if (this._autoStart) {
+          this._autoStarted = true;
           this.privateBrowsingEnabled = true;
           this._autoStart = false;
         }
@@ -249,6 +257,8 @@ PrivateBrowsingService.prototype = {
             return;
         }
 
+        if (!val)
+          this._autoStarted = false;
         this._inPrivateBrowsing = val != false;
 
         let data = val ? "enter" : "exit";
@@ -266,6 +276,13 @@ PrivateBrowsingService.prototype = {
     } finally {
       this._alreadyChangingMode = false;
     }
+  },
+
+  /**
+   * Whether private browsing has been started automatically.
+   */
+  get autoStarted PBS_get_autoStarted() {
+    return this._autoStarted;
   }
 };
 

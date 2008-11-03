@@ -66,12 +66,16 @@ function run_test() {
 
   // private browsing should be turned off initially
   do_check_false(pb.privateBrowsingEnabled);
+  // private browsing not auto-started
+  do_check_false(pb.autoStarted);
 
   // it should be possible to toggle its status
   pb.privateBrowsingEnabled = true;
   do_check_true(pb.privateBrowsingEnabled);
+  do_check_false(pb.autoStarted);
   pb.privateBrowsingEnabled = false;
   do_check_false(pb.privateBrowsingEnabled);
+  do_check_false(pb.autoStarted);
 
   // test the private-browsing notification
   var observer = {

@@ -11,19 +11,18 @@
  * for the specific language governing rights and limitations under the
  * License.
  *
- * The Original Code is Private Browsing Tests.
+ * The Original Code is Private Browsing.
  *
  * The Initial Developer of the Original Code is
- * Ehsan Akhgari.
+ * Ehsan Akhgari <ehsan.akhgari@gmail.com>
  * Portions created by the Initial Developer are Copyright (C) 2008
  * the Initial Developer. All Rights Reserved.
  *
  * Contributor(s):
- *   Ehsan Akhgari <ehsan.akhgari@gmail.com> (Original Author)
  *
  * Alternatively, the contents of this file may be used under the terms of
- * either of the GNU General Public License Version 2 or later (the "GPL"),
- * or the GNU Lesser General Public License Version 2.1 or later (the "LGPL"),
+ * either the GNU General Public License Version 2 or later (the "GPL"), or
+ * the GNU Lesser General Public License Version 2.1 or later (the "LGPL"),
  * in which case the provisions of the GPL or the LGPL are applicable instead
  * of those above. If you wish to allow use of your version of this file only
  * under the terms of either the GPL or the LGPL, and not to allow others to
@@ -35,34 +34,30 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-// This test checks the browser.privatebrowsing.autostart preference.
+const Cc = Components.classes;
+const Ci = Components.interfaces;
 
-function run_test() {
-  // initialization
-  var prefsService = Cc["@mozilla.org/preferences-service;1"].
-                     getService(Ci.nsIPrefBranch);
-  prefsService.setBoolPref("browser.privatebrowsing.autostart", true);
-  do_check_true(prefsService.getBoolPref("browser.privatebrowsing.autostart"));
+Components.utils.import("resource://gre/modules/XPCOMUtils.jsm");
 
-  var pb = Cc["@mozilla.org/privatebrowsing;1"].
-           getService(Ci.nsIPrivateBrowsingService).
-           QueryInterface(Ci.nsIObserver);
+function AboutPrivateBrowsing() { }
+AboutPrivateBrowsing.prototype = {
+  classDescription: "about:privatebrowsing",
+  contractID: "@mozilla.org/network/protocol/about;1?what=privatebrowsing",
+  classID: Components.ID("{d92a18c8-234d-49e4-9936-3b7e020c29a2}"),
+  QueryInterface: XPCOMUtils.generateQI([Ci.nsIAboutModule]),
+  
+  getURIFlags: function(aURI) {
+    return Ci.nsIAboutModule.ALLOW_SCRIPT;
+  },
+  
+  newChannel: function(aURI) {
+    let ios = Cc["@mozilla.org/network/io-service;1"].getService(Ci.nsIIOService);
+    let channel = ios.newChannel("chrome://browser/content/aboutPrivateBrowsing.xhtml",
+                                 null, null);
+    channel.originalURI = aURI;
+    return channel;
+  }
+};
 
-  // private browsing not auto-started yet
-  do_check_false(pb.autoStarted);
-
-  // simulate startup to make the PB service read the prefs
-  pb.observe(null, "profile-after-change", "");
-
-  // the private mode should be entered automatically
-  do_check_true(pb.privateBrowsingEnabled);
-
-  // private browsing is auto-started
-  do_check_true(pb.autoStarted);
-
-  // leave private browsing mode
-  pb.privateBrowsingEnabled = false;
-
-  // private browsing not auto-started
-  do_check_false(pb.autoStarted);
-}
+function NSGetModule(compMgr, fileSpec)
+  XPCOMUtils.generateModule([AboutPrivateBrowsing]);
