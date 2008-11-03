@@ -756,13 +756,13 @@ BookmarksEngine.prototype = {
     /* After syncing the regular bookmark folder contents,
      * also update both the incoming and outgoing shared folders. */
     let self = yield;
-    let ret = yield this._sharing.getNewShares(self.cb);
+    //let ret = yield this._sharing.getNewShares(self.cb);
     this.__proto__.__proto__._sync.async(this, self.cb );
     yield;
-    this._sharing.updateAllOutgoingShares(self.cb);
-    yield;
-    this._sharing.updateAllIncomingShares(self.cb);
-    yield;
+    //this._sharing.updateAllOutgoingShares(self.cb);
+    //yield;
+    //this._sharing.updateAllIncomingShares(self.cb);
+    //yield;
     self.done();
   },
 

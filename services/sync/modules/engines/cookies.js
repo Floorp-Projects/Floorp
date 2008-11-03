@@ -203,7 +203,7 @@ CookieStore.prototype = {
     var matchingCookie = null;
     while (iter.hasMoreElements()){
       let cookie = iter.getNext();
-      if (cookie.QueryInterface( Ci.nsICookie ) ){
+      if (cookie.QueryInterface( Ci.nsICookie2 ) ){
         // see if host:path:name of cookie matches GUID given in command
 	let key = cookie.host + ":" + cookie.path + ":" + cookie.name;
 	if (key == command.GUID) {
@@ -248,7 +248,7 @@ CookieStore.prototype = {
     var iter = this._cookieManager.enumerator;
     while (iter.hasMoreElements()) {
       var cookie = iter.getNext();
-      if (cookie.QueryInterface( Ci.nsICookie )) {
+      if (cookie.QueryInterface( Ci.nsICookie2 )) {
 	      // String used to identify cookies is
 	      // host:path:name
 	      if ( cookie.isSession ) {
