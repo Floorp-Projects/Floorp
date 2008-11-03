@@ -383,6 +383,8 @@ ifdef PARALLEL_DIRS
 PARALLEL_DIRS_export = $(addsuffix _export,$(PARALLEL_DIRS))
 PARALLEL_DIRS_libs = $(addsuffix _libs,$(PARALLEL_DIRS))
 PARALLEL_DIRS_tools = $(addsuffix _tools,$(PARALLEL_DIRS))
+
+.PHONY: $(PARALLEL_DIRS_export) $(PARALLEL_DIRS_libs) $(PARALLEL_DIRS_tools)
 endif
 
 #
@@ -593,9 +595,7 @@ endif
 
 # SUBMAKEFILES: List of Makefiles for next level down.
 #   This is used to update or create the Makefiles before invoking them.
-SUBMAKEFILES += $(addsuffix /Makefile, $(DIRS) $(TOOL_DIRS))
-PARALLEL_SUBMAKEFILES += $(addsuffix /Makefile, $(PARALLEL_DIRS))
-SUBMAKEFILES += $(PARALLEL_SUBMAKEFILES)
+SUBMAKEFILES += $(addsuffix /Makefile, $(DIRS) $(TOOL_DIRS) $(PARALLEL_DIRS))
 
 # The root makefile doesn't want to do a plain export/libs, because
 # of the tiers and because of libxul. Suppress the default rules in favor
@@ -698,10 +698,10 @@ ifneq (,$(DIRS)$(TOOL_DIRS)$(PARALLEL_DIRS))
 endif
 
 ifdef PARALLEL_DIRS
-export:: $(PARALLEL_SUBMAKEFILES) | $(PARALLEL_DIRS_export)
+export:: $(PARALLEL_DIRS_export)
 
-$(PARALLEL_DIRS_export):: %_export: %
-	+$(MAKE) -C $< export
+$(PARALLEL_DIRS_export): %_export: %/Makefile
+	+$(MAKE) -C $* export
 endif
 
 export:: $(SUBMAKEFILES) $(MAKE_DIRS) $(if $(EXPORTS)$(XPIDLSRCS)$(SDK_HEADERS)$(SDK_XPIDLSRCS),$(PUBLIC)) $(if $(SDK_HEADERS)$(SDK_XPIDLSRCS),$(SDK_PUBLIC)) $(if $(XPIDLSRCS),$(IDL_DIR)) $(if $(SDK_XPIDLSRCS),$(SDK_IDL_DIR))
@@ -709,10 +709,10 @@ export:: $(SUBMAKEFILES) $(MAKE_DIRS) $(if $(EXPORTS)$(XPIDLSRCS)$(SDK_HEADERS)$
 	+$(LOOP_OVER_TOOL_DIRS)
 
 ifdef PARALLEL_DIRS
-tools:: $(PARALLEL_SUBMAKEFILES) | $(PARALLEL_DIRS_tools)
+tools:: $(PARALLEL_DIRS_tools)
 
-$(PARALLEL_DIRS_tools):: %_tools: %
-	+$(MAKE) -C $< tools
+$(PARALLEL_DIRS_tools): %_tools: %/Makefile
+	+$(MAKE) -C $* tools
 endif
 
 tools:: $(SUBMAKEFILES) $(MAKE_DIRS)
@@ -748,10 +748,10 @@ DSO_LDOPTS_DEPS = $(EXTRA_DSO_LIBS) $(filter %.$(LIB_SUFFIX), $(EXTRA_DSO_LDOPTS
 
 ##############################################
 ifdef PARALLEL_DIRS
-libs:: $(PARALLEL_SUBMAKEFILES) | $(PARALLEL_DIRS_libs)
+libs:: $(PARALLEL_DIRS_libs)
 
-$(PARALLEL_DIRS_libs):: %_libs: %
-	+$(MAKE) -C $< libs
+$(PARALLEL_DIRS_libs): %_libs: %/Makefile
+	+$(MAKE) -C $* libs
 endif
 
 libs:: $(SUBMAKEFILES) $(MAKE_DIRS) $(HOST_LIBRARY) $(LIBRARY) $(SHARED_LIBRARY) $(IMPORT_LIBRARY) $(HOST_PROGRAM) $(PROGRAM) $(HOST_SIMPLE_PROGRAMS) $(SIMPLE_PROGRAMS) $(JAVA_LIBRARY)
