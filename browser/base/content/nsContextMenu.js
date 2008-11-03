@@ -292,7 +292,8 @@ nsContextMenu.prototype = {
     }
 
     // Only show the block image item if the image can be blocked
-    this.showItem("context-blockimage", this.onImage && hostLabel);
+    this.showItem("context-blockimage", this.onImage && hostLabel &&
+      !gPrivateBrowsingUI.privateBrowsingEnabled);
   },
 
   initSpellingItems: function() {
