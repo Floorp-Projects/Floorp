@@ -2158,11 +2158,7 @@ DocumentViewerImpl::CreateStyleSet(nsIDocument* aDocument,
   }
 
   // Make sure to clone the quirk sheet so that it can be usefully
-<<<<<<< local
-  // enabled/disabled as we needed.
-=======
   // enabled/disabled as needed.
->>>>>>> other
   nsCOMPtr<nsICSSStyleSheet> quirkClone;
   if (!nsLayoutStylesheetCache::UASheet() ||
       !nsLayoutStylesheetCache::QuirkSheet() ||
