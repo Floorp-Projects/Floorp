@@ -1200,9 +1200,11 @@ protected:
 
 NS_IMPL_ADDREF(nsDOMStyleSheetSetList)
 NS_IMPL_RELEASE(nsDOMStyleSheetSetList)
-NS_INTERFACE_MAP_BEGIN(nsDOMStyleSheetSetList)
-  NS_INTERFACE_MAP_ENTRY(nsIDOMDOMStringList)
-  NS_INTERFACE_MAP_ENTRY(nsISupports)
+NS_INTERFACE_TABLE_HEAD(nsDOMStyleSheetSetList)
+  NS_OFFSET_AND_INTERFACE_TABLE_BEGIN(nsDOMStyleSheetSetList)
+    NS_INTERFACE_TABLE_ENTRY(nsDOMStyleSheetSetList, nsIDOMDOMStringList)
+  NS_OFFSET_AND_INTERFACE_TABLE_END
+  NS_OFFSET_AND_INTERFACE_TABLE_TO_MAP_SEGUE
   NS_INTERFACE_MAP_ENTRY_CONTENT_CLASSINFO(DOMStringList)
 NS_INTERFACE_MAP_END
 
@@ -1572,39 +1574,26 @@ nsDocument::~nsDocument()
 NS_IMPL_CYCLE_COLLECTION_CLASS(nsDocument)
 
 NS_INTERFACE_TABLE_HEAD(nsDocument)
-  NS_INTERFACE_TABLE_BEGIN
+  NS_DOCUMENT_INTERFACE_TABLE_BEGIN(nsDocument)
     NS_INTERFACE_TABLE_ENTRY(nsDocument, nsINode)
     NS_INTERFACE_TABLE_ENTRY(nsDocument, nsIDocument)
-    NS_INTERFACE_TABLE_ENTRY(nsDocument, nsIDOMDocument)
-    NS_INTERFACE_TABLE_ENTRY(nsDocument, nsIDOMNSDocument)
-    NS_INTERFACE_TABLE_ENTRY(nsDocument, nsIDOMDocumentEvent)
     NS_INTERFACE_TABLE_ENTRY(nsDocument, nsIDOM3DocumentEvent)
     NS_INTERFACE_TABLE_ENTRY(nsDocument, nsIDOMDocumentStyle)
     NS_INTERFACE_TABLE_ENTRY(nsDocument, nsIDOMNSDocumentStyle)
-    NS_INTERFACE_TABLE_ENTRY(nsDocument, nsIDOMDocumentView)
     NS_INTERFACE_TABLE_ENTRY(nsDocument, nsIDOMDocumentRange)
-    NS_INTERFACE_TABLE_ENTRY(nsDocument, nsIDOMDocumentTraversal)
     NS_INTERFACE_TABLE_ENTRY(nsDocument, nsIDOMDocumentXBL)
     NS_INTERFACE_TABLE_ENTRY(nsDocument, nsIScriptObjectPrincipal)
-    NS_INTERFACE_TABLE_ENTRY(nsDocument, nsIDOMEventTarget)
     NS_INTERFACE_TABLE_ENTRY(nsDocument, nsIDOM3EventTarget)
     NS_INTERFACE_TABLE_ENTRY(nsDocument, nsIDOMNSEventTarget)
-    NS_INTERFACE_TABLE_ENTRY(nsDocument, nsIDOMNode)
     NS_INTERFACE_TABLE_ENTRY(nsDocument, nsPIDOMEventTarget)
-    NS_INTERFACE_TABLE_ENTRY(nsDocument, nsIDOM3Node)
-    NS_INTERFACE_TABLE_ENTRY(nsDocument, nsIDOM3Document)
     NS_INTERFACE_TABLE_ENTRY(nsDocument, nsISupportsWeakReference)
     NS_INTERFACE_TABLE_ENTRY(nsDocument, nsIRadioGroupContainer)
     NS_INTERFACE_TABLE_ENTRY(nsDocument, nsIMutationObserver)
     NS_INTERFACE_TABLE_ENTRY(nsDocument, nsIDOMNodeSelector)
     NS_INTERFACE_TABLE_ENTRY(nsDocument, nsIApplicationCacheContainer)
-    // nsNodeSH::PreCreate() depends on the identity pointer being the
-    // same as nsINode (which nsIDocument inherits), so if you change
-    // the below line, make sure nsNodeSH::PreCreate() still does the
-    // right thing!
-    NS_INTERFACE_TABLE_ENTRY_AMBIGUOUS(nsDocument, nsISupports, nsIDocument)
-  NS_INTERFACE_TABLE_END
-  NS_INTERFACE_TABLE_TO_MAP_SEGUE_CYCLE_COLLECTION(nsDocument)
+  NS_OFFSET_AND_INTERFACE_TABLE_END
+  NS_OFFSET_AND_INTERFACE_TABLE_TO_MAP_SEGUE
+  NS_INTERFACE_MAP_ENTRIES_CYCLE_COLLECTION(nsDocument)
   if (aIID.Equals(NS_GET_IID(nsIDOMXPathEvaluator)) ||
       aIID.Equals(NS_GET_IID(nsIXPathEvaluatorInternal))) {
     if (!mXPathEvaluatorTearoff) {

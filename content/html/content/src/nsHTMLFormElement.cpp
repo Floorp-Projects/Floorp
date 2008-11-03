@@ -565,14 +565,15 @@ NS_IMPL_RELEASE_INHERITED(nsHTMLFormElement, nsGenericElement)
 
 
 // QueryInterface implementation for nsHTMLFormElement
-NS_HTML_CONTENT_CC_INTERFACE_TABLE_HEAD(nsHTMLFormElement,
-                                        nsGenericHTMLElement)
-  NS_INTERFACE_TABLE_INHERITED5(nsHTMLFormElement,
-                                nsIDOMHTMLFormElement,
-                                nsIDOMNSHTMLFormElement,
-                                nsIForm,
-                                nsIWebProgressListener,
-                                nsIRadioGroupContainer)
+NS_INTERFACE_TABLE_HEAD_CYCLE_COLLECTION_INHERITED(nsHTMLFormElement)
+  NS_HTML_CONTENT_INTERFACE_TABLE5(nsHTMLFormElement,
+                                   nsIDOMHTMLFormElement,
+                                   nsIDOMNSHTMLFormElement,
+                                   nsIForm,
+                                   nsIWebProgressListener,
+                                   nsIRadioGroupContainer)
+  NS_HTML_CONTENT_INTERFACE_TABLE_TO_MAP_SEGUE(nsHTMLFormElement,
+                                               nsGenericHTMLElement)
 NS_HTML_CONTENT_INTERFACE_TABLE_TAIL_CLASSINFO(HTMLFormElement)
 
 

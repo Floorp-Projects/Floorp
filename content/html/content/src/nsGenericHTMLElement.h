@@ -1109,63 +1109,35 @@ NS_NewHTML##_elementName##Element(nsINodeInfo *aNodeInfo, PRBool aFromParser)\
  * QueryInterface() implementation helper macros
  */
 
-#define NS_HTML_CONTENT_INTERFACE_TABLE_AMBIGOUS_HEAD(_class, _base,          \
-                                                      _base_if)               \
-  NS_IMETHODIMP _class::QueryInterface(REFNSIID aIID, void** aInstancePtr)    \
-  {                                                                           \
-    NS_PRECONDITION(aInstancePtr, "null out param");                          \
-                                                                              \
-    nsresult rv;                                                              \
-                                                                              \
-    rv = _base::QueryInterface(aIID, aInstancePtr);                           \
-                                                                              \
-    if (NS_SUCCEEDED(rv))                                                     \
-      return rv;                                                              \
-                                                                              \
-    rv = DOMQueryInterface(static_cast<_base_if *>(this), aIID,               \
-                           aInstancePtr);                                     \
-                                                                              \
-    if (NS_SUCCEEDED(rv))                                                     \
-      return rv;
+#define NS_HTML_CONTENT_INTERFACE_TABLE_AMBIGUOUS_BEGIN(_class, _base)        \
+  NS_NODE_OFFSET_AND_INTERFACE_TABLE_BEGIN(_class)                            \
+    NS_INTERFACE_TABLE_ENTRY_AMBIGUOUS(_class, nsIDOMNode, _base)             \
+    NS_INTERFACE_TABLE_ENTRY_AMBIGUOUS(_class, nsIDOMElement, _base)          \
+    NS_INTERFACE_TABLE_ENTRY_AMBIGUOUS(_class, nsIDOMHTMLElement, _base)
 
+#define NS_HTML_CONTENT_INTERFACE_TABLE_BEGIN(_class)                         \
+  NS_HTML_CONTENT_INTERFACE_TABLE_AMBIGUOUS_BEGIN(_class, nsIDOMHTMLElement)
 
-#define NS_HTML_CONTENT_INTERFACE_TABLE_HEAD(_class, _base)                   \
-  NS_HTML_CONTENT_INTERFACE_TABLE_AMBIGOUS_HEAD(_class, _base,                \
-                                                nsIDOMHTMLElement)
+#define NS_HTML_CONTENT_INTERFACE_TABLE_TO_MAP_SEGUE_AMBIGUOUS(_class, _base, \
+                                                               _base_if)      \
+  rv = _base::QueryInterface(aIID, aInstancePtr);                             \
+  if (NS_SUCCEEDED(rv))                                                       \
+    return rv;                                                                \
+                                                                              \
+  rv = DOMQueryInterface(static_cast<_base_if *>(this), aIID, aInstancePtr);  \
+  if (NS_SUCCEEDED(rv))                                                       \
+    return rv;                                                                \
+                                                                              \
+  NS_OFFSET_AND_INTERFACE_TABLE_TO_MAP_SEGUE
 
-#define NS_HTML_CONTENT_CC_INTERFACE_TABLE_AMBIGUOUS_HEAD(_class, _base,      \
-                                                          _base_if)           \
-  NS_INTERFACE_TABLE_HEAD_CYCLE_COLLECTION_INHERITED(_class)                  \
-                                                                              \
-    rv = _base::QueryInterface(aIID, aInstancePtr);                           \
-                                                                              \
-    if (NS_SUCCEEDED(rv))                                                     \
-      return rv;                                                              \
-                                                                              \
-    rv = DOMQueryInterface(static_cast<_base_if *>(this), aIID,               \
-                           aInstancePtr);                                     \
-                                                                              \
-    if (NS_SUCCEEDED(rv))                                                     \
-      return rv;
-
-#define NS_HTML_CONTENT_CC_INTERFACE_TABLE_HEAD(_class, _base)                \
-  NS_HTML_CONTENT_CC_INTERFACE_TABLE_AMBIGUOUS_HEAD(_class, _base,            \
-                                                    nsIDOMHTMLElement)
+#define NS_HTML_CONTENT_INTERFACE_TABLE_TO_MAP_SEGUE(_class, _base)           \
+  NS_HTML_CONTENT_INTERFACE_TABLE_TO_MAP_SEGUE_AMBIGUOUS(_class, _base,       \
+                                                         nsIDOMHTMLElement)
 
 #define NS_HTML_CONTENT_INTERFACE_MAP_END                                     \
-    {                                                                         \
-      return PostQueryInterface(aIID, aInstancePtr);                          \
-    }                                                                         \
-                                                                              \
-    NS_ADDREF(foundInterface);                                                \
-                                                                              \
-    *aInstancePtr = foundInterface;                                           \
-                                                                              \
-    return NS_OK;                                                             \
-  }
+  NS_ELEMENT_INTERFACE_MAP_END
 
 #define NS_HTML_CONTENT_INTERFACE_TABLE_TAIL_CLASSINFO(_class)                \
-    NS_INTERFACE_TABLE_TO_MAP_SEGUE                                           \
     NS_INTERFACE_MAP_ENTRY_CONTENT_CLASSINFO(_class)                          \
   NS_HTML_CONTENT_INTERFACE_MAP_END
 
@@ -1184,6 +1156,77 @@ NS_NewHTML##_elementName##Element(nsINodeInfo *aNodeInfo, PRBool aFromParser)\
     }                                                                         \
   } else
 
+#define NS_HTML_CONTENT_INTERFACE_TABLE0(_class)                              \
+  NS_HTML_CONTENT_INTERFACE_TABLE_BEGIN(_class)                               \
+  NS_OFFSET_AND_INTERFACE_TABLE_END
+
+#define NS_HTML_CONTENT_INTERFACE_TABLE1(_class, _i1)                         \
+  NS_HTML_CONTENT_INTERFACE_TABLE_BEGIN(_class)                               \
+    NS_INTERFACE_TABLE_ENTRY(_class, _i1)                                     \
+  NS_OFFSET_AND_INTERFACE_TABLE_END
+
+#define NS_HTML_CONTENT_INTERFACE_TABLE2(_class, _i1, _i2)                    \
+  NS_HTML_CONTENT_INTERFACE_TABLE_BEGIN(_class)                               \
+    NS_INTERFACE_TABLE_ENTRY(_class, _i1)                                     \
+    NS_INTERFACE_TABLE_ENTRY(_class, _i2)                                     \
+  NS_OFFSET_AND_INTERFACE_TABLE_END
+
+#define NS_HTML_CONTENT_INTERFACE_TABLE4(_class, _i1, _i2, _i3, _i4)          \
+  NS_HTML_CONTENT_INTERFACE_TABLE_BEGIN(_class)                               \
+    NS_INTERFACE_TABLE_ENTRY(_class, _i1)                                     \
+    NS_INTERFACE_TABLE_ENTRY(_class, _i2)                                     \
+    NS_INTERFACE_TABLE_ENTRY(_class, _i3)                                     \
+    NS_INTERFACE_TABLE_ENTRY(_class, _i4)                                     \
+  NS_OFFSET_AND_INTERFACE_TABLE_END
+
+#define NS_HTML_CONTENT_INTERFACE_TABLE5(_class, _i1, _i2, _i3, _i4, _i5)     \
+  NS_HTML_CONTENT_INTERFACE_TABLE_BEGIN(_class)                               \
+    NS_INTERFACE_TABLE_ENTRY(_class, _i1)                                     \
+    NS_INTERFACE_TABLE_ENTRY(_class, _i2)                                     \
+    NS_INTERFACE_TABLE_ENTRY(_class, _i3)                                     \
+    NS_INTERFACE_TABLE_ENTRY(_class, _i4)                                     \
+    NS_INTERFACE_TABLE_ENTRY(_class, _i5)                                     \
+  NS_OFFSET_AND_INTERFACE_TABLE_END
+
+#define NS_HTML_CONTENT_INTERFACE_TABLE6(_class, _i1, _i2, _i3, _i4, _i5,     \
+                                         _i6)                                 \
+  NS_HTML_CONTENT_INTERFACE_TABLE_BEGIN(_class)                               \
+    NS_INTERFACE_TABLE_ENTRY(_class, _i1)                                     \
+    NS_INTERFACE_TABLE_ENTRY(_class, _i2)                                     \
+    NS_INTERFACE_TABLE_ENTRY(_class, _i3)                                     \
+    NS_INTERFACE_TABLE_ENTRY(_class, _i4)                                     \
+    NS_INTERFACE_TABLE_ENTRY(_class, _i5)                                     \
+    NS_INTERFACE_TABLE_ENTRY(_class, _i6)                                     \
+  NS_OFFSET_AND_INTERFACE_TABLE_END
+
+#define NS_HTML_CONTENT_INTERFACE_TABLE9(_class, _i1, _i2, _i3, _i4, _i5,     \
+                                         _i6, _i7, _i8, _i9)                  \
+  NS_HTML_CONTENT_INTERFACE_TABLE_BEGIN(_class)                               \
+    NS_INTERFACE_TABLE_ENTRY(_class, _i1)                                     \
+    NS_INTERFACE_TABLE_ENTRY(_class, _i2)                                     \
+    NS_INTERFACE_TABLE_ENTRY(_class, _i3)                                     \
+    NS_INTERFACE_TABLE_ENTRY(_class, _i4)                                     \
+    NS_INTERFACE_TABLE_ENTRY(_class, _i5)                                     \
+    NS_INTERFACE_TABLE_ENTRY(_class, _i6)                                     \
+    NS_INTERFACE_TABLE_ENTRY(_class, _i7)                                     \
+    NS_INTERFACE_TABLE_ENTRY(_class, _i8)                                     \
+    NS_INTERFACE_TABLE_ENTRY(_class, _i9)                                     \
+  NS_OFFSET_AND_INTERFACE_TABLE_END
+
+#define NS_HTML_CONTENT_INTERFACE_TABLE10(_class, _i1, _i2, _i3, _i4, _i5,    \
+                                          _i6, _i7, _i8, _i9, _i10)           \
+  NS_HTML_CONTENT_INTERFACE_TABLE_BEGIN(_class)                               \
+    NS_INTERFACE_TABLE_ENTRY(_class, _i1)                                     \
+    NS_INTERFACE_TABLE_ENTRY(_class, _i2)                                     \
+    NS_INTERFACE_TABLE_ENTRY(_class, _i3)                                     \
+    NS_INTERFACE_TABLE_ENTRY(_class, _i4)                                     \
+    NS_INTERFACE_TABLE_ENTRY(_class, _i5)                                     \
+    NS_INTERFACE_TABLE_ENTRY(_class, _i6)                                     \
+    NS_INTERFACE_TABLE_ENTRY(_class, _i7)                                     \
+    NS_INTERFACE_TABLE_ENTRY(_class, _i8)                                     \
+    NS_INTERFACE_TABLE_ENTRY(_class, _i9)                                     \
+    NS_INTERFACE_TABLE_ENTRY(_class, _i10)                                    \
+  NS_OFFSET_AND_INTERFACE_TABLE_END
 
 
 // Element class factory methods

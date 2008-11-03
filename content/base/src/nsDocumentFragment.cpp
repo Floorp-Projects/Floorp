@@ -195,10 +195,9 @@ nsDocumentFragment::IsNodeOfType(PRUint32 aFlags) const
 }
 
 // QueryInterface implementation for nsDocumentFragment
-NS_INTERFACE_MAP_BEGIN(nsDocumentFragment)
-  NS_INTERFACE_MAP_ENTRY(nsIDOMDocumentFragment)
-  NS_INTERFACE_MAP_ENTRY(nsIDOMNode)
-  NS_INTERFACE_MAP_ENTRY_TEAROFF(nsIDOM3Node, new nsNode3Tearoff(this))
+NS_INTERFACE_TABLE_HEAD(nsDocumentFragment)
+  NS_NODE_INTERFACE_TABLE2(nsDocumentFragment, nsIDOMNode,
+                           nsIDOMDocumentFragment)
   NS_INTERFACE_MAP_ENTRY_CONTENT_CLASSINFO(DocumentFragment)
 NS_INTERFACE_MAP_END_INHERITING(nsGenericElement)
 

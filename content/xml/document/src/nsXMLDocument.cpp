@@ -235,11 +235,12 @@ nsXMLDocument::~nsXMLDocument()
 
 // QueryInterface implementation for nsXMLDocument
 NS_INTERFACE_TABLE_HEAD(nsXMLDocument)
-  NS_INTERFACE_TABLE_INHERITED3(nsXMLDocument,
-                                nsIInterfaceRequestor,
-                                nsIChannelEventSink,
-                                nsIDOMXMLDocument)
-  NS_INTERFACE_TABLE_TO_MAP_SEGUE
+  NS_DOCUMENT_INTERFACE_TABLE_BEGIN(nsXMLDocument)
+    NS_INTERFACE_TABLE_ENTRY(nsXMLDocument, nsIInterfaceRequestor)
+    NS_INTERFACE_TABLE_ENTRY(nsXMLDocument, nsIChannelEventSink)
+    NS_INTERFACE_TABLE_ENTRY(nsXMLDocument, nsIDOMXMLDocument)
+  NS_OFFSET_AND_INTERFACE_TABLE_END
+  NS_OFFSET_AND_INTERFACE_TABLE_TO_MAP_SEGUE
   NS_INTERFACE_MAP_ENTRY_CONTENT_CLASSINFO(XMLDocument)
 NS_INTERFACE_MAP_END_INHERITING(nsDocument)
 
