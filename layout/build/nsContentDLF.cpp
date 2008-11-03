@@ -69,9 +69,6 @@
 static NS_DEFINE_CID(kPluginManagerCID, NS_PLUGINMANAGER_CID);
 static NS_DEFINE_CID(kPluginDocumentCID, NS_PLUGINDOCUMENT_CID);
 
-// URL for the "user agent" style sheet
-#define UA_CSS_URL "resource://gre/res/ua.css"
-
 // Factory code for creating variations on html documents
 
 #undef NOISY_REGISTRY
@@ -131,8 +128,6 @@ static const char* const gXULTypes[] = {
   0
 };
 
-nsICSSStyleSheet* nsContentDLF::gUAStyleSheet;
-
 nsresult
 NS_NewContentDocumentLoaderFactory(nsIDocumentLoaderFactory** aResult)
 {
@@ -169,8 +164,6 @@ nsContentDLF::CreateInstance(const char* aCommand,
                              nsIStreamListener** aDocListener,
                              nsIContentViewer** aDocViewer)
 {
-  EnsureUAStyleSheet();
-
   // Are we viewing source?
 #ifdef MOZ_VIEW_SOURCE
   nsCOMPtr<nsIViewSourceChannel> viewSourceChannel = do_QueryInterface(aChannel);
@@ -314,15 +307,11 @@ nsContentDLF::CreateInstanceForDocument(nsISupports* aContainer,
 {
   nsresult rv = NS_ERROR_FAILURE;  
 
-  EnsureUAStyleSheet();
-
   do {
     nsCOMPtr<nsIDocumentViewer> docv;
     rv = NS_NewDocumentViewer(getter_AddRefs(docv));
     if (NS_FAILED(rv))
       break;
-
-    docv->SetUAStyleSheet(static_cast<nsIStyleSheet*>(gUAStyleSheet));
 
     // Bind the document to the Content Viewer
     nsIContentViewer* cv = static_cast<nsIContentViewer*>(docv.get());
@@ -439,7 +428,6 @@ nsContentDLF::CreateDocument(const char* aCommand,
     rv = NS_NewDocumentViewer(getter_AddRefs(docv));
     if (NS_FAILED(rv))
       break;
-    docv->SetUAStyleSheet(gUAStyleSheet);
 
     doc->SetContainer(aContainer);
 
@@ -476,9 +464,6 @@ nsContentDLF::CreateXULDocument(const char* aCommand,
   nsCOMPtr<nsIDocumentViewer> docv;
   rv = NS_NewDocumentViewer(getter_AddRefs(docv));
   if (NS_FAILED(rv)) return rv;
-
-  // Load the UA style sheet if we haven't already done that
-  docv->SetUAStyleSheet(gUAStyleSheet);
 
   nsCOMPtr<nsIURI> aURL;
   rv = aChannel->GetURI(getter_AddRefs(aURL));
@@ -616,32 +601,5 @@ nsContentDLF::UnregisterDocumentFactories(nsIComponentManager* aCompMgr,
       break;
   } while (PR_FALSE);
 
-  return rv;
-}
-
-/* static */ nsresult
-nsContentDLF::EnsureUAStyleSheet()
-{
-  if (gUAStyleSheet)
-    return NS_OK;
-
-  // Load the UA style sheet
-  nsCOMPtr<nsIURI> uri;
-  nsresult rv = NS_NewURI(getter_AddRefs(uri), NS_LITERAL_CSTRING(UA_CSS_URL));
-  if (NS_FAILED(rv)) {
-#ifdef DEBUG
-    printf("*** open of %s failed: error=%x\n", UA_CSS_URL, rv);
-#endif
-    return rv;
-  }
-  nsCOMPtr<nsICSSLoader> cssLoader;
-  NS_NewCSSLoader(getter_AddRefs(cssLoader));
-  if (!cssLoader)
-    return NS_ERROR_OUT_OF_MEMORY;
-  rv = cssLoader->LoadSheetSync(uri, PR_TRUE, &gUAStyleSheet);
-#ifdef DEBUG
-  if (NS_FAILED(rv))
-    printf("*** open of %s failed: error=%x\n", UA_CSS_URL, rv);
-#endif
   return rv;
 }
