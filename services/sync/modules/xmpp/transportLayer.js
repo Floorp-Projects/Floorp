@@ -198,7 +198,7 @@ function HTTPPollingTransport( serverUrl, useKeys, interval ) {
 }
 HTTPPollingTransport.prototype = {
   _init: function( serverUrl, useKeys, interval ) {
-    this._log = Log4Moz.Service.getLogger("Service.XmppTransportLayer");
+    this._log = Log4Moz.repository.getLogger("Service.XmppTransportLayer");
     this._log.info("Initializing transport: serverUrl=" + serverUrl + ", useKeys=" + useKeys + ", interval=" + interval);
     this._serverUrl = serverUrl
     this._n = 0;

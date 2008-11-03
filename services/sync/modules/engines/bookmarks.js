@@ -55,7 +55,6 @@ const INCOMING_SHARE_ROOT_NAME = "Shared Folders";
 
 Cu.import("resource://gre/modules/XPCOMUtils.jsm");
 Cu.import("resource://weave/log4moz.js");
-Cu.import("resource://weave/dav.js");
 Cu.import("resource://weave/util.js");
 Cu.import("resource://weave/crypto.js");
 Cu.import("resource://weave/async.js");
@@ -67,7 +66,7 @@ Cu.import("resource://weave/identity.js");
 Cu.import("resource://weave/xmpp/xmppClient.js");
 Cu.import("resource://weave/notifications.js");
 Cu.import("resource://weave/sharing.js");
-Cu.import("resource://weave/remote.js");
+Cu.import("resource://weave/resource.js");
 
 Function.prototype.async = Async.sugar;
 
@@ -100,7 +99,7 @@ BookmarksSharingManager.prototype = {
 
   _init: function SharingManager__init(engine) {
     this._engine = engine;
-    this._log = Log4Moz.Service.getLogger("Bookmark Share");
+    this._log = Log4Moz.repository.getLogger("Bookmark Share");
     if ( Utils.prefs.getBoolPref( "xmpp.enabled" ) ) {
       this._log.info( "Starting XMPP client for bookmark engine..." );
       this._startXmppClient.async(this);
@@ -301,8 +300,8 @@ BookmarksSharingManager.prototype = {
   },
   _getNewShares: function BmkSharing__getNewShares() {
     let self = yield;
-
-    let sharingApi = new Sharing.Api( DAV );
+// FIXME
+//    let sharingApi = new Sharing.Api( DAV );
     let result = yield sharingApi.getShares(self.cb);
 
 		this._log.info("Got Shares: " + result);
@@ -440,7 +439,8 @@ BookmarksSharingManager.prototype = {
 
     /* Create the directory on the server if it does not exist already. */
     let serverPath = "share/" + folderGuid;
-    let ret = yield DAV.MKCOL(serverPath, self.cb);
+// FIXME
+//    let ret = yield DAV.MKCOL(serverPath, self.cb);
 
     if (!ret) {
       this._log.error("Can't create remote folder for outgoing share.");
@@ -463,7 +463,8 @@ BookmarksSharingManager.prototype = {
     }
 
     // Call Atul's js api for setting htaccess:
-    let sharingApi = new Sharing.Api( DAV );
+// FIXME
+//    let sharingApi = new Sharing.Api( DAV );
     let result = yield sharingApi.shareWithUsers( serverPath,
 						  [username], folderName,
 						  self.cb );
@@ -1414,7 +1415,7 @@ BookmarksTracker.prototype = {
   },
 
   _init: function BMT__init() {
-    this._log = Log4Moz.Service.getLogger("Service." + this._logName);
+    this._log = Log4Moz.repository.getLogger("Service." + this._logName);
     this._score = 0;
 
     Cc["@mozilla.org/browser/nav-bookmarks-service;1"].

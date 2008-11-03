@@ -107,7 +107,7 @@ function AsyncException(asyncStack, exceptionToWrap) {
 
 function Generator(thisArg, method, onComplete, args) {
   this._outstandingCbs = 0;
-  this._log = Log4Moz.Service.getLogger("Async.Generator");
+  this._log = Log4Moz.repository.getLogger("Async.Generator");
   this._log.level =
     Log4Moz.Level[Utils.prefs.getCharPref("log.logger.async")];
   this._thisArg = thisArg;

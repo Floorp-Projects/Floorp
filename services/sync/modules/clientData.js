@@ -45,8 +45,7 @@ const Cu = Components.utils;
 Cu.import("resource://gre/modules/XPCOMUtils.jsm");
 Cu.import("resource://weave/log4moz.js");
 Cu.import("resource://weave/util.js");
-Cu.import("resource://weave/dav.js");
-Cu.import("resource://weave/remote.js");
+Cu.import("resource://weave/resource.js");
 Cu.import("resource://weave/async.js");
 
 Function.prototype.async = Async.sugar;
@@ -94,7 +93,7 @@ ClientDataSvc.prototype = {
   },
 
   _init: function ClientData__init() {
-    this._log = Log4Moz.Service.getLogger("Service.ClientData");
+    this._log = Log4Moz.repository.getLogger("Service.ClientData");
     this._remote = new Resource("meta/clients");
     this._remote.pushFilter(new JsonFilter());
   },

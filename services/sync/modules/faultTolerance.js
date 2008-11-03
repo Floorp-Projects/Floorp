@@ -50,9 +50,9 @@ FaultTolerance = {
 };
 
 function FTService() {
-  this._log = Log4Moz.Service.getLogger("FaultTolerance");
+  this._log = Log4Moz.repository.getLogger("FaultTolerance");
   this._appender = new FTAppender(this);
-  Log4Moz.Service.rootLogger.addAppender(this._appender);
+  Log4Moz.repository.rootLogger.addAppender(this._appender);
 }
 FTService.prototype = {
   get lastException() this._lastException,
