@@ -131,6 +131,12 @@ PrivateBrowsingService.prototype = {
         }
       }
       else {
+        // Clear the error console
+        let consoleService = Cc["@mozilla.org/consoleservice;1"].
+                             getService(Ci.nsIConsoleService);
+        consoleService.logStringMessage(null); // trigger the listeners
+        consoleService.reset();
+
         // restore the windows/tabs which were open before entering the private mode
         if (this._saveSession && this._savedBrowserState) {
           if (!this._quitting) // don't restore when shutting down!
