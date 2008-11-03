@@ -46,6 +46,7 @@ include $(topsrcdir)/config/rules.mk
 
 _BROWSER_TEST_FILES =  \
 		browser_privatebrowsing_ui.js \
+		browser_console_clear.js \
 		$(NULL)
 
 libs:: $(_BROWSER_TEST_FILES)
