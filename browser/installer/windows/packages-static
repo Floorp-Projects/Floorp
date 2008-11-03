@@ -163,6 +163,7 @@ bin\components\places.xpt
 bin\components\plugin.xpt
 bin\components\pref.xpt
 bin\components\prefetch.xpt
+bin\components\privatebrowsing.xpt
 bin\components\profile.xpt
 bin\components\proxyObject.xpt
 bin\components\rdf.xpt
@@ -224,6 +225,7 @@ bin\components\nsUpdateService.js
 bin\components\nsMicrosummaryService.js
 bin\components\nsPlacesTransactionsService.js
 bin\components\nsPostUpdateWin.js
+bin\components\nsPrivateBrowsingService.js
 bin\components\nsLoginInfo.js
 bin\components\nsLoginManager.js
 bin\components\nsLoginManagerPrompter.js

@@ -11,19 +11,19 @@
 # for the specific language governing rights and limitations under the
 # License.
 #
-# The Original Code is the Mozilla Browser code.
+# The Original Code is Private Browsing.
 #
 # The Initial Developer of the Original Code is
-# Netscape Communications Corporation.
-# Portions created by the Initial Developer are Copyright (C) 2002
+# Ehsan Akhgari.
+# Portions created by the Initial Developer are Copyright (C) 2008
 # the Initial Developer. All Rights Reserved.
 #
 # Contributor(s):
-#  Brian Ryner <bryner@brianryner.com>
+#   Ehsan Akhgari <ehsan.akhgari@gmail.com>
 #
 # Alternatively, the contents of this file may be used under the terms of
-# either the GNU General Public License Version 2 or later (the "GPL"), or
-# the GNU Lesser General Public License Version 2.1 or later (the "LGPL"),
+# either of the GNU General Public License Version 2 or later (the "GPL"),
+# or the GNU Lesser General Public License Version 2.1 or later (the "LGPL"),
 # in which case the provisions of the GPL or the LGPL are applicable instead
 # of those above. If you wish to allow use of your version of this file only
 # under the terms of either the GPL or the LGPL, and not to allow others to
@@ -35,53 +35,19 @@
 #
 # ***** END LICENSE BLOCK *****
 
-DEPTH		= ../..
+DEPTH		= ../../../..
 topsrcdir	= @top_srcdir@
 srcdir		= @srcdir@
 VPATH		= @srcdir@
+relativesrcdir  = browser/components/privatebrowsing/test
 
 include $(DEPTH)/config/autoconf.mk
 
-MODULE = browsercomps
-XPIDL_MODULE = browsercompsbase
+MODULE		= test_privatebrowsing
 
-XPIDLSRCS = \
-	nsIBrowserHandler.idl \
-	nsIBrowserGlue.idl \
-	$(NULL)
+XPCSHELL_TESTS	= unit
 
-EXTRA_PP_COMPONENTS = \
-	nsBrowserContentHandler.js \
-	nsBrowserGlue.js \
-	aboutRights.js \
-	aboutRobots.js \
-	$(NULL)
-
-EXTRA_JS_MODULES = distribution.js
-
-DIRS = \
-	certerror \
-	dirprovider \
-	microsummaries \
-	migration \
-	preferences \
-	search \
-	sessionstore \
-	shell \
-	sidebar \
-	feeds \
-	places \
-	privatebrowsing \
-	$(NULL)
-
-ifdef MOZ_SAFE_BROWSING
-DIRS += safebrowsing
-endif
-
-DIRS += build
-
-ifneq (,$(BUILD_OFFICIAL)$(MOZILLA_OFFICIAL))
-DEFINES += -DOFFICIAL_BUILD=1
-endif
+DIRS +=	browser \
+		$(NULL)
 
 include $(topsrcdir)/config/rules.mk
