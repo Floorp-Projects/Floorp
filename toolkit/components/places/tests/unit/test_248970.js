@@ -87,24 +87,6 @@ function get_PBSvc() {
   try {
     _PBSvc = Components.classes["@mozilla.org/privatebrowsing;1"].
              getService(Components.interfaces.nsIPrivateBrowsingService);
-    if (_PBSvc) {
-      var observer = {
-        QueryInterface: function (iid) {
-          const interfaces = [Components.interfaces.nsIObserver,
-                              Components.interfaces.nsISupports];
-          if (!interfaces.some(function(v) iid.equals(v)))
-            throw Components.results.NS_ERROR_NO_INTERFACE;
-          return this;
-        },
-        observe: function (subject, topic, data) {
-          subject.QueryInterface(Components.interfaces.nsISupportsPRUint32);
-          subject.data = 0;
-        }
-      };
-      var os = Components.classes["@mozilla.org/observer-service;1"].
-               getService(Components.interfaces.nsIObserverService);
-      os.addObserver(observer, "private-browsing-enter", false);
-    }
     return _PBSvc;
   } catch (e) {}
   return null;
@@ -276,6 +258,9 @@ function run_test() {
   var pb = get_PBSvc();
 
   if(pb){ // Private Browsing might not be available
+    var prefBranch = Cc["@mozilla.org/preferences-service;1"].
+                     getService(Ci.nsIPrefBranch);
+    prefBranch.setBoolPref("browser.privatebrowsing.keep_current_session", true);
 
     // History database should be empty
     do_check_false(histsvc.hasHistoryEntries);
@@ -354,5 +339,7 @@ function run_test() {
       do_check_true(uri_in_db(uri(visited_uri)));
       do_check_true(bhist.isVisited(uri(visited_uri)));
     }
+
+    prefBranch.clearUserPref("browser.privatebrowsing.keep_current_session");
   }
 }
