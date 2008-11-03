@@ -1549,14 +1549,7 @@ nsObjectFrame::PaintPlugin(nsIRenderingContext& aRenderingContext,
           new gfxWindowsSurface(gfxIntSize(rc.right - rc.left, rc.bottom - rc.top));
 
         if (surface && printProc) {
-          // CAUTION: EVIL AHEAD
-          // We have to temporarily make hwnd a top-level window so that
-          // PrintWindow won't clip it
-          HWND parent = ::GetParent(hwnd);
-          ::SetParent(hwnd, NULL);
           printProc(hwnd, surface->GetDC(), 0);
-          ::SetParent(hwnd, parent);
-          // END EVIL
         
           ctx->Translate(frameGfxRect.pos);
           ctx->SetSource(surface);
