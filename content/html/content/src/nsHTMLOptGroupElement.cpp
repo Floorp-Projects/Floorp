@@ -115,10 +115,11 @@ NS_IMPL_RELEASE_INHERITED(nsHTMLOptGroupElement, nsGenericElement)
 
 
 // QueryInterface implementation for nsHTMLOptGroupElement
-NS_HTML_CONTENT_INTERFACE_TABLE_HEAD(nsHTMLOptGroupElement,
-                                     nsGenericHTMLElement)
-  NS_INTERFACE_TABLE_INHERITED1(nsHTMLOptGroupElement,
-                                nsIDOMHTMLOptGroupElement)
+NS_INTERFACE_TABLE_HEAD(nsHTMLOptGroupElement)
+  NS_HTML_CONTENT_INTERFACE_TABLE1(nsHTMLOptGroupElement,
+                                   nsIDOMHTMLOptGroupElement)
+  NS_HTML_CONTENT_INTERFACE_TABLE_TO_MAP_SEGUE(nsHTMLOptGroupElement,
+                                               nsGenericHTMLElement)
 NS_HTML_CONTENT_INTERFACE_TABLE_TAIL_CLASSINFO(HTMLOptGroupElement)
 
 

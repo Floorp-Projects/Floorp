@@ -64,35 +64,14 @@ nsXMLElement::nsXMLElement(nsINodeInfo *aNodeInfo)
 
 
 // QueryInterface implementation for nsXMLElement
-NS_IMETHODIMP 
-nsXMLElement::QueryInterface(REFNSIID aIID, void** aInstancePtr)
-{
-  NS_PRECONDITION(aInstancePtr, "null out param");
-
-  nsresult rv = nsGenericElement::QueryInterface(aIID, aInstancePtr);
-
-  if (NS_SUCCEEDED(rv))
-    return rv;
-
-  nsISupports *inst = nsnull;
-
-  if (aIID.Equals(NS_GET_IID(nsIDOMNode))) {
-    inst = static_cast<nsIDOMNode *>(this);
-  } else if (aIID.Equals(NS_GET_IID(nsIDOMElement))) {
-    inst = static_cast<nsIDOMElement *>(this);
-  } else if (aIID.Equals(NS_GET_IID(nsIClassInfo))) {
-    inst = NS_GetDOMClassInfoInstance(eDOMClassInfo_Element_id);
-    NS_ENSURE_TRUE(inst, NS_ERROR_OUT_OF_MEMORY);
-  } else {
-    return PostQueryInterface(aIID, aInstancePtr);
-  }
-
-  NS_ADDREF(inst);
-
-  *aInstancePtr = inst;
-
-  return NS_OK;
-}
+NS_INTERFACE_TABLE_HEAD(nsXMLElement)
+  NS_NODE_OFFSET_AND_INTERFACE_TABLE_BEGIN(nsXMLElement)
+    NS_INTERFACE_TABLE_ENTRY(nsXMLElement, nsIDOMNode)
+    NS_INTERFACE_TABLE_ENTRY(nsXMLElement, nsIDOMElement)
+  NS_OFFSET_AND_INTERFACE_TABLE_END
+  NS_ELEMENT_INTERFACE_TABLE_TO_MAP_SEGUE
+  NS_INTERFACE_MAP_ENTRY_CONTENT_CLASSINFO(Element)
+NS_ELEMENT_INTERFACE_MAP_END
 
 
 NS_IMPL_ADDREF_INHERITED(nsXMLElement, nsGenericElement)

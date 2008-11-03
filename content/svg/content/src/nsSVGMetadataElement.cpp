@@ -73,11 +73,9 @@ NS_IMPL_NS_NEW_SVG_ELEMENT(Metadata)
 NS_IMPL_ADDREF_INHERITED(nsSVGMetadataElement, nsSVGMetadataElementBase)
 NS_IMPL_RELEASE_INHERITED(nsSVGMetadataElement, nsSVGMetadataElementBase)
 
-NS_INTERFACE_MAP_BEGIN(nsSVGMetadataElement)
-  NS_INTERFACE_MAP_ENTRY(nsIDOMNode)
-  NS_INTERFACE_MAP_ENTRY(nsIDOMElement)
-  NS_INTERFACE_MAP_ENTRY(nsIDOMSVGElement)
-  NS_INTERFACE_MAP_ENTRY(nsIDOMSVGMetadataElement)
+NS_INTERFACE_TABLE_HEAD(nsSVGMetadataElement)
+  NS_NODE_INTERFACE_TABLE4(nsSVGMetadataElement, nsIDOMNode, nsIDOMElement,
+                           nsIDOMSVGElement, nsIDOMSVGMetadataElement)
   NS_INTERFACE_MAP_ENTRY_CONTENT_CLASSINFO(SVGMetadataElement)
 NS_INTERFACE_MAP_END_INHERITING(nsSVGMetadataElementBase)
 

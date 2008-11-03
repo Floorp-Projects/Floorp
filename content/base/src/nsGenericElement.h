@@ -1081,4 +1081,23 @@ private:
                      nsIFrame **aFrame = nsnull);
 };
 
+#define NS_ELEMENT_INTERFACE_TABLE_TO_MAP_SEGUE                               \
+    rv = nsGenericElement::QueryInterface(aIID, aInstancePtr);                \
+    if (NS_SUCCEEDED(rv))                                                     \
+      return rv;                                                              \
+                                                                              \
+    NS_OFFSET_AND_INTERFACE_TABLE_TO_MAP_SEGUE
+
+#define NS_ELEMENT_INTERFACE_MAP_END                                          \
+    {                                                                         \
+      return PostQueryInterface(aIID, aInstancePtr);                          \
+    }                                                                         \
+                                                                              \
+    NS_ADDREF(foundInterface);                                                \
+                                                                              \
+    *aInstancePtr = foundInterface;                                           \
+                                                                              \
+    return NS_OK;                                                             \
+  }
+
 #endif /* nsGenericElement_h___ */
