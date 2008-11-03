@@ -43,7 +43,8 @@ const Cr = Components.results;
 Cu.import("resource://gre/modules/XPCOMUtils.jsm");
 
 function PrivateBrowsingService() {
-  this._obs.addObserver(this, "quit-application-granted", false);
+  this._obs.addObserver(this, "profile-after-change", true);
+  this._obs.addObserver(this, "quit-application-granted", true);
 }
 
 PrivateBrowsingService.prototype = {
@@ -71,6 +72,9 @@ PrivateBrowsingService.prototype = {
   // Make sure we don't allow re-enterant changing of the private mode
   _alreadyChangingMode: false,
 
+  // Whether we're entering the private browsing mode at application startup
+  _autoStart: false,
+
   // XPCOM registration
   classDescription: "PrivateBrowsing Service",
   contractID: "@mozilla.org/privatebrowsing;1",
@@ -80,59 +84,63 @@ PrivateBrowsingService.prototype = {
   ],
 
   QueryInterface: XPCOMUtils.generateQI([Ci.nsIPrivateBrowsingService, 
-                                         Ci.nsIObserver]),
+                                         Ci.nsIObserver,
+                                         Ci.nsISupportsWeakReference]),
 
   _unload: function PBS__destroy() {
     // Force an exit from the private browsing mode on shutdown
     this._quitting = true;
     if (this._inPrivateBrowsing)
       this.privateBrowsingEnabled = false;
-
-    this._obs.removeObserver(this, "quit-application-granted");
   },
 
   _onPrivateBrowsingModeChanged: function PBS__onPrivateBrowsingModeChanged() {
-    // clear all auth tokens
-    let sdr = Cc["@mozilla.org/security/sdr;1"].
-              getService(Ci.nsISecretDecoderRing);
-    sdr.logoutAndTeardown();
+    // nothing needs to be done here if we're auto-starting
+    if (!this._autoStart) {
+      // clear all auth tokens
+      let sdr = Cc["@mozilla.org/security/sdr;1"].
+                getService(Ci.nsISecretDecoderRing);
+      sdr.logoutAndTeardown();
 
-    // clear plain HTTP auth sessions
-    let authMgr = Cc['@mozilla.org/network/http-auth-manager;1'].
-                  getService(Ci.nsIHttpAuthManager);
-    authMgr.clearAll();
+      // clear plain HTTP auth sessions
+      let authMgr = Cc['@mozilla.org/network/http-auth-manager;1'].
+                    getService(Ci.nsIHttpAuthManager);
+      authMgr.clearAll();
 
-    let ss = Cc["@mozilla.org/browser/sessionstore;1"].
-             getService(Ci.nsISessionStore);
-    if (this.privateBrowsingEnabled) {
-      // whether we should save and close the current session
-      this._saveSession = true;
-      var prefBranch = Cc["@mozilla.org/preferences-service;1"].
-                       getService(Ci.nsIPrefBranch);
-      try {
-        if (prefBranch.getBoolPref("browser.privatebrowsing.keep_current_session"))
-          this._saveSession = false;
-      } catch (ex) {}
+      let ss = Cc["@mozilla.org/browser/sessionstore;1"].
+               getService(Ci.nsISessionStore);
+      if (this.privateBrowsingEnabled) {
+        // whether we should save and close the current session
+        this._saveSession = true;
+        var prefBranch = Cc["@mozilla.org/preferences-service;1"].
+                         getService(Ci.nsIPrefBranch);
+        try {
+          if (prefBranch.getBoolPref("browser.privatebrowsing.keep_current_session"))
+            this._saveSession = false;
+        } catch (ex) {}
 
-      // save the whole browser state in order to restore all windows/tabs later
-      if (this._saveSession && !this._savedBrowserState) {
-        this._savedBrowserState = ss.getBrowserState();
+        // save the whole browser state in order to restore all windows/tabs later
+        if (this._saveSession && !this._savedBrowserState) {
+          this._savedBrowserState = ss.getBrowserState();
 
-        // Close all windows
-        this._closeAllWindows();
+          // Close all windows
+          this._closeAllWindows();
 
-        // Open a single window
-        this._openSingleWindow();
+          // Open a single window
+          this._openSingleWindow();
+        }
+      }
+      else {
+        // restore the windows/tabs which were open before entering the private mode
+        if (this._saveSession && this._savedBrowserState) {
+          if (!this._quitting) // don't restore when shutting down!
+            ss.setBrowserState(this._savedBrowserState);
+          this._savedBrowserState = null;
+        }
       }
     }
-    else {
-      // restore the windows/tabs which were open before entering the private mode
-      if (this._saveSession && this._savedBrowserState) {
-        if (!this._quitting) // don't restore when shutting down!
-          ss.setBrowserState(this._savedBrowserState);
-        this._savedBrowserState = null;
-      }
-    }
+    else
+      this._saveSession = false;
   },
 
 #ifndef XP_WIN
@@ -181,6 +189,20 @@ PrivateBrowsingService.prototype = {
 
   observe: function PBS_observe(aSubject, aTopic, aData) {
     switch (aTopic) {
+      case "profile-after-change":
+        // If the autostart prefs has been set, simulate entering the
+        // private browsing mode upon startup.
+        // This won't interfere with the session store component, because
+        // that component will be initialized on final-ui-startup.
+        let prefsService = Cc["@mozilla.org/preferences-service;1"].
+                           getService(Ci.nsIPrefBranch);
+        this._autoStart = prefsService.getBoolPref("browser.privatebrowsing.autostart");
+        if (this._autoStart) {
+          this.privateBrowsingEnabled = true;
+          this._autoStart = false;
+        }
+        this._obs.removeObserver(this, "profile-after-change");
+        break;
       case "quit-application-granted":
         this._unload();
         break;
