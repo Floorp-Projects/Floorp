@@ -96,6 +96,7 @@ public:
   virtual ~nsDownloadManager();
   nsDownloadManager() :
       mDBType(DATABASE_DISK)
+    , mInPrivateBrowsing(PR_FALSE)
   {
   }
 
@@ -252,6 +253,9 @@ protected:
    */
   enum QuitBehavior GetQuitBehavior();
 
+  void OnEnterPrivateBrowsingMode();
+  void OnLeavePrivateBrowsingMode();
+
   // Virus scanner for windows
 #ifdef DOWNLOAD_SCANNER
 private:
@@ -269,6 +273,7 @@ private:
   nsAutoPtr<mozStorageTransaction> mHistoryTransaction;
 
   enum DatabaseType mDBType;
+  PRBool mInPrivateBrowsing;
 
   static nsDownloadManager *gDownloadManagerService;
 
