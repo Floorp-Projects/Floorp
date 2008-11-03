@@ -18,7 +18,7 @@ FakeCookie.prototype = {
   },
 
   QueryInterface: function( aIID ) {
-    if ( !aIID.equals( Components.interfaces.nsICookie ) ) {
+    if ( !aIID.equals( Components.interfaces.nsICookie2 ) ) {
       throw Components.results.NS_ERROR_NO_INTERFACE;
     }
     return this;
