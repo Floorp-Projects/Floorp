@@ -3,6 +3,7 @@ classic.jar:
 % skin browser classic/1.0 %skin/classic/browser/ os!=WINNT
 # NOTE: If you add a new file here, you'll need to add it to the aero
 # section at the bottom of this file
+*       skin/classic/browser/aboutPrivateBrowsing.css                (aboutPrivateBrowsing.css)
 *       skin/classic/browser/aboutSessionRestore.css                 (aboutSessionRestore.css)
         skin/classic/browser/aboutCertError.css                      (aboutCertError.css)
 *       skin/classic/browser/browser.css                             (browser.css)
@@ -16,6 +17,10 @@ classic.jar:
         skin/classic/browser/livemark-item.png                       (livemark-item.png)
         skin/classic/browser/livemark-folder.png                     (livemark-folder.png)
         skin/classic/browser/Bookmarks-folder.png                    (Bookmarks-folder.png)
+        skin/classic/browser/Privacy-16.png
+        skin/classic/browser/Privacy-32.png
+        skin/classic/browser/Privacy-48.png
+        skin/classic/browser/Privacy-64.png
         skin/classic/browser/Secure.png                              (Secure.png)
         skin/classic/browser/Secure24.png                            (Secure24.png)
         skin/classic/browser/Security-broken.png                     (Security-broken.png)
@@ -93,6 +98,7 @@ classic.jar:
 #ifdef XP_WIN
 classic.jar:
 % skin browser classic/1.0 %skin/classic/aero/browser/ os=WINNT osversion>=6
+*       skin/classic/aero/browser/aboutPrivateBrowsing.css           (aboutPrivateBrowsing.css)
 *       skin/classic/aero/browser/aboutSessionRestore.css            (aboutSessionRestore.css)
         skin/classic/aero/browser/aboutCertError.css                 (aboutCertError.css)
 *       skin/classic/aero/browser/browser.css                        (browser-aero.css)
@@ -106,6 +112,10 @@ classic.jar:
         skin/classic/aero/browser/livemark-item.png                  (livemark-item-aero.png)
         skin/classic/aero/browser/livemark-folder.png                (livemark-folder-aero.png)
         skin/classic/aero/browser/Bookmarks-folder.png               (Bookmarks-folder-aero.png)
+        skin/classic/aero/browser/Privacy-16.png
+        skin/classic/aero/browser/Privacy-32.png
+        skin/classic/aero/browser/Privacy-48.png
+        skin/classic/aero/browser/Privacy-64.png
         skin/classic/aero/browser/Secure.png                         (Secure-aero.png)
         skin/classic/aero/browser/Secure24.png                       (Secure24-aero.png)
         skin/classic/aero/browser/Security-broken.png                (Security-broken-aero.png)

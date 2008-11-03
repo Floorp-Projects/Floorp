@@ -794,3 +794,6 @@ pref("security.alternate_certificate_error_page", "certerror");
 
 // Whether to start the private browsing mode at application startup
 pref("browser.privatebrowsing.autostart", false);
+
+// Whether we should skip prompting before starting the private browsing mode
+pref("browser.privatebrowsing.dont_prompt_on_enter", false);
