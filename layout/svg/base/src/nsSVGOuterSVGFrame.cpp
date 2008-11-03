@@ -785,9 +785,7 @@ nsSVGOuterSVGFrame::GetCanvasTM()
     // our content is the document element so we must premultiply the values
     // of its currentScale and currentTranslate properties
     if (mCurrentScale &&
-        mCurrentTranslate &&
-        svgElement->mEnumAttributes[nsSVGSVGElement::ZOOMANDPAN].GetAnimValue()
-        == nsIDOMSVGZoomAndPan::SVG_ZOOMANDPAN_MAGNIFY) {
+        mCurrentTranslate) {
       nsCOMPtr<nsIDOMSVGMatrix> zoomPanMatrix;
       nsCOMPtr<nsIDOMSVGMatrix> temp;
       float scale, x, y;
