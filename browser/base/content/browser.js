@@ -437,6 +437,9 @@ const gPopupBlockerObserver = {
       blockedPopupAllowSite.setAttribute("hidden", "true");
     }
 
+    if (gPrivateBrowsingUI.privateBrowsingEnabled)
+      blockedPopupAllowSite.setAttribute("disabled", "true");
+
     var item = aEvent.target.lastChild;
     while (item && item.getAttribute("observes") != "blockedPopupsSeparator") {
       var next = item.previousSibling;
@@ -6780,5 +6783,9 @@ let gPrivateBrowsingUI = {
   toggleMode: function PBUI_toggleMode() {
     this._privateBrowsingService.privateBrowsingEnabled =
       !this._privateBrowsingService.privateBrowsingEnabled;
+  },
+
+  get privateBrowsingEnabled PBUI_get_privateBrowsingEnabled() {
+    return this._privateBrowsingService.privateBrowsingEnabled;
   }
 };
