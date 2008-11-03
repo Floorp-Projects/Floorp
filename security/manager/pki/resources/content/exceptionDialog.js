@@ -20,6 +20,7 @@
  *
  * Contributor(s):
  *   Johnathan Nightingale <johnath@mozilla.com>
+ *   Ehsan Akhgari <ehsan.akhgari@gmail.com>
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -81,6 +82,19 @@ function initExceptionDialog() {
   setText("warningText", gPKIBundle.formatStringFromName("addExceptionBrandedWarning2",
                                                          [brandName], 1));
   gDialog.getButton("extra1").disabled = true;
+  
+  // If the Private Browsing service is available and the mode is active,
+  // don't store permanent exceptions, since they would persist after
+  // private browsing mode was disabled.
+  try {
+    var pb = Components.classes["@mozilla.org/privatebrowsing;1"].
+             getService(Components.interfaces.nsIPrivateBrowsingService);
+    if (pb.privateBrowsingEnabled) {
+      var permanentCheckbox = document.getElementById("permanent");
+      permanentCheckbox.setAttribute("disabled", "true");
+      permanentCheckbox.removeAttribute("checked");
+    }
+  } catch (ex) {}
   
   var args = window.arguments;
   if (args && args[0]) {
