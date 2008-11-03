@@ -32,6 +32,7 @@ let provider = {
 ds.QueryInterface(Ci.nsIDirectoryService).registerProvider(provider);
 
 do_bind_resource(do_get_file("modules"), "weave");
+do_bind_resource(do_get_file("tests"), "tests");
 
 function loadInSandbox(aUri) {
   var sandbox = Components.utils.Sandbox(this);
@@ -74,7 +75,7 @@ function FakeTimerService() {
 };
 
 function getTestLogger(component) {
-  return Log4Moz.Service.getLogger("Testing");
+  return Log4Moz.repository.getLogger("Testing");
 }
 
 function initTestLogging(level) {
@@ -93,7 +94,7 @@ function initTestLogging(level) {
   };
   LogStats.prototype.__proto__ = new Log4Moz.Formatter();
 
-  var log = Log4Moz.Service.rootLogger;
+  var log = Log4Moz.repository.rootLogger;
   var logStats = new LogStats();
   var appender = new Log4Moz.DumpAppender(logStats);
 

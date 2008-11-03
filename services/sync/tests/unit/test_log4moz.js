@@ -12,7 +12,7 @@ MockAppender.prototype = {
 MockAppender.prototype.__proto__ = new Log4Moz.Appender();
 
 function run_test() {
-  var log = Log4Moz.Service.rootLogger;
+  var log = Log4Moz.repository.rootLogger;
   var appender = new MockAppender(new Log4Moz.BasicFormatter());
 
   log.level = Log4Moz.Level.Debug;
