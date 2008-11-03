@@ -10,12 +10,6 @@
 // A checkbox element. 
 #define NS_THEME_CHECKBOX                                  3
 
-// A small radio button, for HTML forms
-#define NS_THEME_RADIO_SMALL                               4
-
-// A small checkbox, for HTML forms
-#define NS_THEME_CHECKBOX_SMALL                            5
-
 // A rectangular button that contains complex content
 // like images (e.g. HTML <button> elements)
 #define NS_THEME_BUTTON_BEVEL                              7
