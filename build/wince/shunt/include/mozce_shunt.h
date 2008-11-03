@@ -50,6 +50,10 @@
 #define stricmp _stricmp
 #define wgetcwd _wgetcwd
 
+#define SHGetSpecialFolderPathW SHGetSpecialFolderPath
+#define SHGetPathFromIDListW    SHGetPathFromIDList
+#define FONTENUMPROCW           FONTENUMPROC
+
 #ifdef __cplusplus
 extern "C" {
 #endif
