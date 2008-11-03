@@ -111,7 +111,7 @@ function run_test()
   dm.addListener(listener);
   dm.addListener(getDownloadListener());
 
-  var dl = addDownload(resultFileName);
+  var dl = addDownload({resultFileName: resultFileName});
 
   cleanup();
 }
