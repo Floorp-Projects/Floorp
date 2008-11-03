@@ -71,7 +71,7 @@ OAuthSvc.prototype = {
   _cb2: null,
   
   _init: function OAuth__init() {
-    this._log = Log4Moz.Service.getLogger("Service." + this._logName);
+    this._log = Log4Moz.repository.getLogger("Service." + this._logName);
     this._log.level = "Debug";
     this._log.info("OAuth Module Initialized");
   },

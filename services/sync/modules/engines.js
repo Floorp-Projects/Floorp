@@ -48,8 +48,7 @@ Cu.import("resource://weave/constants.js");
 Cu.import("resource://weave/util.js");
 Cu.import("resource://weave/wrap.js");
 Cu.import("resource://weave/crypto.js");
-Cu.import("resource://weave/dav.js");
-Cu.import("resource://weave/remote.js");
+Cu.import("resource://weave/resource.js");
 Cu.import("resource://weave/clientData.js");
 Cu.import("resource://weave/identity.js");
 Cu.import("resource://weave/stores.js");
@@ -173,7 +172,7 @@ Engine.prototype = {
     try { level = Utils.prefs.getCharPref(levelPref); }
     catch (e) { /* ignore unset prefs */ }
 
-    this._log = Log4Moz.Service.getLogger("Service." + this.logName);
+    this._log = Log4Moz.repository.getLogger("Service." + this.logName);
     this._log.level = Log4Moz.Level[level];
     this._osPrefix = "weave:" + this.name + ":";
   },
@@ -504,8 +503,9 @@ BlobEngine.prototype = {
     this._log.info("Beginning sync");
     this._os.notifyObservers(null, "weave:service:sync:engine:start", this.name);
 
-    if (!(yield DAV.MKCOL(this.serverPrefix, self.cb)))
-      throw "Could not create remote folder";
+    // FIXME
+    //if (!(yield DAV.MKCOL(this.serverPrefix, self.cb)))
+    //  throw "Could not create remote folder";
 
     try {
       if ("none" != Utils.prefs.getCharPref("encryption"))

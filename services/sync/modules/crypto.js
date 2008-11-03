@@ -84,7 +84,7 @@ CryptoSvc.prototype = {
   },
 
   _init: function Crypto__init() {
-    this._log = Log4Moz.Service.getLogger("Service." + this._logName);
+    this._log = Log4Moz.repository.getLogger("Service." + this._logName);
     this._log.level =
       Log4Moz.Level[Utils.prefs.getCharPref("log.logger.service.crypto")];
     let branch = Cc["@mozilla.org/preferences-service;1"]

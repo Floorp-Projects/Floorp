@@ -82,7 +82,7 @@ Store.prototype = {
   },
 
   _init: function Store__init() {
-    this._log = Log4Moz.Service.getLogger("Service." + this._logName);
+    this._log = Log4Moz.repository.getLogger("Service." + this._logName);
   },
 
   applyCommands: function Store_applyCommands(commandList) {
@@ -180,7 +180,7 @@ SnapshotStore.prototype = {
 
   _init: function SStore__init(name) {
     this.filename = name;
-    this._log = Log4Moz.Service.getLogger("Service." + this._logName);
+    this._log = Log4Moz.repository.getLogger("Service." + this._logName);
   },
 
   _createCommand: function SStore__createCommand(command) {

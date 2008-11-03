@@ -71,7 +71,7 @@ XmppClient.prototype = {
   IQ_ERROR: -1,
 
   _init: function( clientName, realm, clientPassword, transport, authenticator ) {
-    this._log = Log4Moz.Service.getLogger("Service.XmppClient");
+    this._log = Log4Moz.repository.getLogger("Service.XmppClient");
     this._myName = clientName;
     this._realm = realm;
     this._fullName = clientName + "@" + realm;

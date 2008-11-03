@@ -67,7 +67,7 @@ SyncCore.prototype = {
   _store: null,
 
   _init: function SC__init() {
-    this._log = Log4Moz.Service.getLogger("Service." + this._logName);
+    this._log = Log4Moz.repository.getLogger("Service." + this._logName);
   },
 
   // FIXME: this won't work for deep objects, or objects with optional

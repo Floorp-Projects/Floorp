@@ -71,7 +71,7 @@ Tracker.prototype = {
   _score: 0,
 
   _init: function T__init() {
-    this._log = Log4Moz.Service.getLogger("Service." + this._logName);
+    this._log = Log4Moz.repository.getLogger("Service." + this._logName);
     this._score = 0;
   },
 
