@@ -137,12 +137,14 @@ NS_IMPL_RELEASE_INHERITED(nsHTMLStyleElement, nsGenericElement)
 
 
 // QueryInterface implementation for nsHTMLStyleElement
-NS_HTML_CONTENT_INTERFACE_TABLE_HEAD(nsHTMLStyleElement, nsGenericHTMLElement)
-  NS_INTERFACE_TABLE_INHERITED4(nsHTMLStyleElement,
-                                nsIDOMHTMLStyleElement,
-                                nsIDOMLinkStyle,
-                                nsIStyleSheetLinkingElement,
-                                nsIMutationObserver)
+NS_INTERFACE_TABLE_HEAD(nsHTMLStyleElement)
+  NS_HTML_CONTENT_INTERFACE_TABLE4(nsHTMLStyleElement,
+                                   nsIDOMHTMLStyleElement,
+                                   nsIDOMLinkStyle,
+                                   nsIStyleSheetLinkingElement,
+                                   nsIMutationObserver)
+  NS_HTML_CONTENT_INTERFACE_TABLE_TO_MAP_SEGUE(nsHTMLStyleElement,
+                                               nsGenericHTMLElement)
 NS_HTML_CONTENT_INTERFACE_TABLE_TAIL_CLASSINFO(HTMLStyleElement)
 
 

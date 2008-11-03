@@ -257,14 +257,15 @@ NS_IMPL_RELEASE_INHERITED(nsHTMLTextAreaElement, nsGenericElement)
 
 
 // QueryInterface implementation for nsHTMLTextAreaElement
-NS_HTML_CONTENT_CC_INTERFACE_TABLE_HEAD(nsHTMLTextAreaElement,
-                                        nsGenericHTMLFormElement)
-  NS_INTERFACE_TABLE_INHERITED5(nsHTMLTextAreaElement,
-                                nsIDOMHTMLTextAreaElement,
-                                nsIDOMNSHTMLTextAreaElement,
-                                nsITextControlElement,
-                                nsIDOMNSEditableElement,
-                                nsIMutationObserver)
+NS_INTERFACE_TABLE_HEAD_CYCLE_COLLECTION_INHERITED(nsHTMLTextAreaElement)
+  NS_HTML_CONTENT_INTERFACE_TABLE5(nsHTMLTextAreaElement,
+                                   nsIDOMHTMLTextAreaElement,
+                                   nsIDOMNSHTMLTextAreaElement,
+                                   nsITextControlElement,
+                                   nsIDOMNSEditableElement,
+                                   nsIMutationObserver)
+  NS_HTML_CONTENT_INTERFACE_TABLE_TO_MAP_SEGUE(nsHTMLTextAreaElement,
+                                               nsGenericHTMLFormElement)
 NS_HTML_CONTENT_INTERFACE_TABLE_TAIL_CLASSINFO(HTMLTextAreaElement)
 
 

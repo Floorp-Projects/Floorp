@@ -410,19 +410,20 @@ NS_IMPL_RELEASE_INHERITED(nsHTMLInputElement, nsGenericElement)
 
 
 // QueryInterface implementation for nsHTMLInputElement
-NS_HTML_CONTENT_CC_INTERFACE_TABLE_HEAD(nsHTMLInputElement,
-                                        nsGenericHTMLFormElement)
-  NS_INTERFACE_TABLE_INHERITED10(nsHTMLInputElement,
-                                 nsIDOMHTMLInputElement,
-                                 nsIDOMNSHTMLInputElement,
-                                 nsITextControlElement,
-                                 nsIFileControlElement,
-                                 nsIRadioControlElement,
-                                 nsIPhonetic,
-                                 imgIDecoderObserver,
-                                 nsIImageLoadingContent,
-                                 imgIContainerObserver,
-                                 nsIDOMNSEditableElement)
+NS_INTERFACE_TABLE_HEAD_CYCLE_COLLECTION_INHERITED(nsHTMLInputElement)
+  NS_HTML_CONTENT_INTERFACE_TABLE10(nsHTMLInputElement,
+                                    nsIDOMHTMLInputElement,
+                                    nsIDOMNSHTMLInputElement,
+                                    nsITextControlElement,
+                                    nsIFileControlElement,
+                                    nsIRadioControlElement,
+                                    nsIPhonetic,
+                                    imgIDecoderObserver,
+                                    nsIImageLoadingContent,
+                                    imgIContainerObserver,
+                                    nsIDOMNSEditableElement)
+  NS_HTML_CONTENT_INTERFACE_TABLE_TO_MAP_SEGUE(nsHTMLInputElement,
+                                               nsGenericHTMLFormElement)
 NS_HTML_CONTENT_INTERFACE_TABLE_TAIL_CLASSINFO(HTMLInputElement)
 
 

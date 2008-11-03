@@ -100,21 +100,13 @@ NS_IMPL_CYCLE_COLLECTION_UNLINK_BEGIN(nsDOMAttribute)
   NS_IMPL_CYCLE_COLLECTION_UNLINK_PRESERVED_WRAPPER
 NS_IMPL_CYCLE_COLLECTION_UNLINK_END
 // QueryInterface implementation for nsDOMAttribute
-NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION(nsDOMAttribute)
-  NS_INTERFACE_MAP_ENTRY(nsIDOMAttr)
-  NS_INTERFACE_MAP_ENTRY(nsIAttribute)
-  NS_INTERFACE_MAP_ENTRY(nsINode)
-  NS_INTERFACE_MAP_ENTRY(nsIDOMNode)
-  NS_INTERFACE_MAP_ENTRY(nsIDOM3Node)
-  NS_INTERFACE_MAP_ENTRY(nsIDOM3Attr)
-  NS_INTERFACE_MAP_ENTRY(nsPIDOMEventTarget)
+NS_INTERFACE_TABLE_HEAD(nsDOMAttribute)
+  NS_NODE_INTERFACE_TABLE7(nsDOMAttribute, nsIDOMAttr, nsIAttribute, nsINode,
+                           nsIDOMNode, nsIDOM3Node, nsIDOM3Attr,
+                           nsPIDOMEventTarget)
+  NS_INTERFACE_MAP_ENTRIES_CYCLE_COLLECTION(nsDOMAttribute)
   NS_INTERFACE_MAP_ENTRY_TEAROFF(nsISupportsWeakReference,
                                  new nsNodeSupportsWeakRefTearoff(this))
-  // nsNodeSH::PreCreate() depends on the identity pointer being the
-  // same as nsINode (which nsIAttribute inherits), so if you change
-  // the below line, make sure nsNodeSH::PreCreate() still does the
-  // right thing!
-  NS_INTERFACE_MAP_ENTRY_AMBIGUOUS(nsISupports, nsIAttribute)
   NS_INTERFACE_MAP_ENTRY_CONTENT_CLASSINFO(Attr)
 NS_INTERFACE_MAP_END
 

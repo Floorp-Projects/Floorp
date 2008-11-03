@@ -171,13 +171,14 @@ NS_IMPL_RELEASE_INHERITED(nsHTMLSelectElement, nsGenericElement)
 
 
 // QueryInterface implementation for nsHTMLSelectElement
-NS_HTML_CONTENT_CC_INTERFACE_TABLE_HEAD(nsHTMLSelectElement,
-                                        nsGenericHTMLFormElement)
-  NS_INTERFACE_TABLE_INHERITED4(nsHTMLSelectElement,
-                                nsIDOMHTMLSelectElement,
-                                nsIDOMNSHTMLSelectElement,
-                                nsIDOMNSXBLFormControl,
-                                nsISelectElement)
+NS_INTERFACE_TABLE_HEAD_CYCLE_COLLECTION_INHERITED(nsHTMLSelectElement)
+  NS_HTML_CONTENT_INTERFACE_TABLE4(nsHTMLSelectElement,
+                                   nsIDOMHTMLSelectElement,
+                                   nsIDOMNSHTMLSelectElement,
+                                   nsIDOMNSXBLFormControl,
+                                   nsISelectElement)
+  NS_HTML_CONTENT_INTERFACE_TABLE_TO_MAP_SEGUE(nsHTMLSelectElement,
+                                               nsGenericHTMLFormElement)
 NS_HTML_CONTENT_INTERFACE_TABLE_TAIL_CLASSINFO(HTMLSelectElement)
 
 
