@@ -2753,7 +2753,6 @@ Decompile(SprintStack *ss, jsbytecode *pc, intN nb, JSOp nextop)
 #endif
                     uva = JS_SCRIPT_UPVARS(jp->script);
                     i = GET_UINT16(pc);
-                    JS_ASSERT(UPVAR_FRAME_SKIP(uva->vector[i]) == 1);
                     i = UPVAR_FRAME_SLOT(uva->vector[i]);
                 }
                 atom = GetArgOrVarAtom(jp, i);
