@@ -6,8 +6,8 @@ function run_test() {
   FaultTolerance.Service._testProperty = "hi";
   do_check_eq(FaultTolerance.Service._testProperty, "hi");
 
-  var log = Log4Moz.Service.rootLogger;
+  var log = Log4Moz.repository.rootLogger;
   log.level = Log4Moz.Level.All;
   log.info("Testing.");
-  do_check_eq(Log4Moz.Service.rootLogger.appenders.length, 1);
+  do_check_eq(Log4Moz.repository.rootLogger.appenders.length, 1);
 }
