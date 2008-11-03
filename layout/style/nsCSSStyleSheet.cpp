@@ -1281,46 +1281,6 @@ nsCSSStyleSheet::GetOwnerRule(nsICSSImportRule** aOwnerRule)
 }
 
 NS_IMETHODIMP
-nsCSSStyleSheet::ContainsStyleSheet(nsIURI* aURL, PRBool& aContains, nsIStyleSheet** aTheChild /*=nsnull*/)
-{
-  NS_PRECONDITION(nsnull != aURL, "null arg");
-
-  if (!mInner->mSheetURI) {
-    // We're not yet far enough along in our load to know what our URL is (we
-    // may still get redirected and such).  Assert (caller should really not be
-    // calling this on us at this stage) and return.
-    NS_ERROR("ContainsStyleSheet called on a sheet that's still loading");
-    aContains = PR_FALSE;
-    return NS_OK;
-  }
-  
-  // first check ourself out
-  nsresult rv = mInner->mSheetURI->Equals(aURL, &aContains);
-  if (NS_FAILED(rv)) aContains = PR_FALSE;
-
-  if (aContains) {
-    // if we found it and the out-param is there, set it and addref
-    if (aTheChild) {
-      rv = CallQueryInterface(this, aTheChild);
-    }
-  } else {
-    // now check the chil'ins out (recursively)
-    for (nsCSSStyleSheet* child = mInner->mFirstChild;
-         child;
-         child = child->mNext) {
-      child->ContainsStyleSheet(aURL, aContains, aTheChild);
-      if (aContains) {
-        break;
-      }
-    }
-  }
-
-  // NOTE: if there are errors in the above we are handling them locally 
-  //       and not promoting them to the caller
-  return NS_OK;
-}
-
-NS_IMETHODIMP
 nsCSSStyleSheet::AppendStyleSheet(nsICSSStyleSheet* aSheet)
 {
   NS_PRECONDITION(nsnull != aSheet, "null arg");

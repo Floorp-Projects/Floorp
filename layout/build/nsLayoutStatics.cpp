@@ -312,7 +312,6 @@ nsLayoutStatics::Shutdown()
 
   nsCSSScanner::ReleaseGlobals();
 
-  NS_IF_RELEASE(nsContentDLF::gUAStyleSheet);
   NS_IF_RELEASE(nsRuleNode::gLangService);
   nsStyledElement::Shutdown();
 
@@ -323,7 +322,6 @@ nsLayoutStatics::Shutdown()
   nsNodeInfo::ClearCache();
   nsLayoutStylesheetCache::Shutdown();
   NS_NameSpaceManagerShutdown();
-  nsStyleSet::FreeGlobals();
 
   nsJSRuntime::Shutdown();
   nsGlobalWindow::ShutDown();
