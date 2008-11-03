@@ -1300,6 +1300,8 @@ function delayedStartup(isLoadingBlank, mustLoadSidebar) {
   placesContext.addEventListener("popuphiding", updateEditUIVisibility, false);
 #endif
 
+  // initialize the private browsing UI
+  gPrivateBrowsingUI.init();
 }
 
 function BrowserShutdown()
@@ -6736,3 +6738,47 @@ function getNotificationBox(aWindow) {
 /* DEPRECATED */
 function getBrowser() gBrowser;
 function getNavToolbox() gNavToolbox;
+
+let gPrivateBrowsingUI = {
+  _observerService: null,
+  _privateBrowsingService: null,
+
+  init: function PBUI_init() {
+    this._observerService = Cc["@mozilla.org/observer-service;1"].
+                            getService(Ci.nsIObserverService);
+    this._observerService.addObserver(this, "private-browsing", false);
+    this._observerService.addObserver(this, "quit-application", false);
+
+    this._privateBrowsingService = Cc["@mozilla.org/privatebrowsing;1"].
+                                   getService(Ci.nsIPrivateBrowsingService);
+
+    if (this._privateBrowsingService.privateBrowsingEnabled)
+      this.onEnterPrivateBrowsing();
+    else
+      this.onExitPrivateBrowsing();
+  },
+
+  observe: function PBUI_observe(aSubject, aTopic, aData) {
+    if (aTopic == "private-browsing") {
+      if (aData == "enter")
+        this.onEnterPrivateBrowsing();
+      else if (aData == "exit")
+        this.onExitPrivateBrowsing();
+    }
+    else if (aTopic == "quit-application") {
+      this._observerService.removeObserver(this, "quit-application");
+      this._observerService.removeObserver(this, "private-browsing");
+    }
+  },
+
+  onEnterPrivateBrowsing: function PBUI_onEnterPrivateBrowsing() {
+  },
+
+  onExitPrivateBrowsing: function PBUI_onExitPrivateBrowsing() {
+  },
+
+  toggleMode: function PBUI_toggleMode() {
+    this._privateBrowsingService.privateBrowsingEnabled =
+      !this._privateBrowsingService.privateBrowsingEnabled;
+  }
+};
