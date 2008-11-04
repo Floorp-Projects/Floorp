@@ -194,7 +194,9 @@ private:
     void     HandleAsyncFallback();
     nsresult ContinueHandleAsyncFallback(nsresult);
     nsresult PromptTempRedirect();
-    virtual nsresult SetupReplacementChannel(nsIURI *, nsIChannel *, bool preserveMethod);
+    virtual nsresult SetupReplacementChannel(nsIURI *, nsIChannel *,
+                                             bool preserveMethod,
+                                             bool forProxy);
 
     // proxy specific methods
     nsresult ProxyFailover();
