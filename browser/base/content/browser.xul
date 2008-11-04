@@ -240,25 +240,22 @@
 #endif
     >
       <label id="ctrlTab-label" flex="1"/>
-      <svg:svg id="ctrlTab-svgRoot">
-        <svg:defs>
-          <svg:linearGradient id="ctrlTab-fadeGradient" x1="1" y1="1" x2="1" y2="0">
-            <svg:stop id="ctrlTab-fadeGradientBottom" offset="0"/>
-            <svg:stop id="ctrlTab-fadeGradientTop" offset="1"/>
-          </svg:linearGradient>
-          <svg:filter id="ctrlTab-iconShadow">
-            <svg:feOffset result="shadow" in="SourceAlpha" dx="2" dy="-1"/>
-            <svg:feColorMatrix result="transparent-shadow" in="shadow"
-                               values="1 0 0 0   0
-                                       0 1 0 0   0
-                                       0 0 1 0   0
-                                       0 0 0 0.5 0"/>
-            <svg:feBlend in="SourceGraphic" in2="transparent-shadow"/>
-          </svg:filter>
-        </svg:defs>
-        <svg:g id="ctrlTab-container"/>
-        <svg:rect id="ctrlTab-groundFade" fill="url(#ctrlTab-fadeGradient)" width="100%"/>
-      </svg:svg>
+      <hbox class="ctrlTab-row">
+        <hbox flex="1" pack="center"><hbox class="ctrlTab-thumbnail" onclick="ctrlTab.thumbnailClick(event);"/></hbox>
+        <hbox class="ctrlTab-thumbnail" onclick="ctrlTab.thumbnailClick(event);"/>
+        <hbox flex="1" pack="center"><hbox class="ctrlTab-thumbnail" onclick="ctrlTab.thumbnailClick(event);"/></hbox>
+      </hbox>
+      <hbox class="ctrlTab-row">
+        <hbox flex="1" pack="center"><hbox class="ctrlTab-thumbnail" onclick="ctrlTab.thumbnailClick(event);"/></hbox>
+        <hbox class="ctrlTab-thumbnail" onclick="ctrlTab.thumbnailClick(event);"/>
+        <hbox flex="1" pack="center"><hbox class="ctrlTab-thumbnail" onclick="ctrlTab.thumbnailClick(event);"/></hbox>
+      </hbox>
+      <hbox class="ctrlTab-row">
+        <hbox flex="1" pack="center"><hbox class="ctrlTab-thumbnail" onclick="ctrlTab.thumbnailClick(event);"/></hbox>
+        <hbox class="ctrlTab-thumbnail" onclick="ctrlTab.thumbnailClick(event);"/>
+        <hbox flex="1" pack="center"><hbox class="ctrlTab-thumbnail" onclick="ctrlTab.thumbnailClick(event);"/></hbox>
+      </hbox>
+      <hbox id="ctrlTab-pages"/>
     </panel>
   </popupset>
 

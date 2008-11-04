@@ -47,7 +47,6 @@
 
 @namespace url("http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul");
 @namespace html url("http://www.w3.org/1999/xhtml");
-@namespace svg url("http://www.w3.org/2000/svg");
 
 #menubar-items {
   -moz-box-orient: vertical; /* for flex hack */
@@ -1375,22 +1374,35 @@ toolbar[mode="text"] > #window-controls > toolbarbutton > .toolbarbutton-text {
 /* ::::: Ctrl-Tab Panel ::::: */
 #ctrlTab-label {
   font-weight: bold;
+  font-size: 1.5em;
   text-align: center;
-  margin-top: .5em;
-  margin-bottom: .7em;
+  margin-top: 1em;
+  margin-bottom: 1.5em;
 }
 
-svg|*.ctrlTab-thumbnailborder {
-  stroke: ThreeDDarkShadow;
-  stroke-width: .7px;
+.ctrlTab-thumbnail {
+  margin-bottom: 40px;
+  -moz-box-shadow: 1px 2px 3px ThreeDShadow;
+}
+ 
+.ctrlTab-thumbnail[selected="true"] {
+  -moz-box-shadow: 1px 2px 3px ThreeDShadow, 0 0 10px Highlight, 0 0 20px Highlight, 0 0 25px Highlight, 0 0 30px Highlight;
+}
+ 
+#ctrlTab-pages {
+  display: block;
+  text-align: center;
+}
+ 
+.ctrlTab-pagePointer {
+  display: inline-block;
+  margin: 0 1em 1em;
+  width: 1.5em;
+  height: 1.5em;
+  -moz-border-radius: .75em;
+  background: ThreeDShadow;
 }
 
-svg|*#ctrlTab-fadeGradientTop {
-  stop-color: ThreeDShadow;
-  stop-opacity: .75;
-}
-
-svg|*#ctrlTab-fadeGradientBottom {
-  stop-color: -moz-dialog;
-  stop-opacity: 1;
+.ctrlTab-pagePointer[selected="true"] {
+  background: ThreeDDarkShadow;
 }

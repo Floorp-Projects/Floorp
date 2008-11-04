@@ -1,6 +1,5 @@
 @namespace url("http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul");
-@namespace svg url("http://www.w3.org/2000/svg");
-@namespace xlink url("http://www.w3.org/1999/xlink");
+@namespace html url("http://www.w3.org/1999/xhtml");
 
 searchbar {
   -moz-binding: url("chrome://browser/content/search/search.xml#searchbar");
@@ -99,15 +98,6 @@ window[chromehidden~="toolbar"] toolbar:not(.toolbar-primary):not(.chromeclass-m
 }
 
 /* Tab Previews */
-svg|*.ctrlTab-icon:not([xlink|href]) ,
-svg|*.ctrlTab-thumbnail:not([xlink|href]) {
-  display: none;
-}
-
-svg|*.ctrlTab-thumbnailborder {
-  fill: transparent;
-}
-
-svg|*.ctrlTab-icon {
-  filter: url(chrome://browser/content/browser.xul#ctrlTab-iconShadow);
+.ctrlTab-thumbnail:not([valid]) {
+  visibility: hidden;
 }
