@@ -687,10 +687,8 @@ nsOfflineManifestItem::HandleManifestLine(const nsCString::const_iterator &aBegi
             break;
 
         mFallbackURIs.AppendObject(fallbackURI);
-        mOpportunisticNamespaces.AppendElement(namespaceSpec);
 
-        AddNamespace(nsIApplicationCacheNamespace::NAMESPACE_FALLBACK |
-                     nsIApplicationCacheNamespace::NAMESPACE_OPPORTUNISTIC,
+        AddNamespace(nsIApplicationCacheNamespace::NAMESPACE_FALLBACK,
                      namespaceSpec, fallbackSpec);
         break;
     }
