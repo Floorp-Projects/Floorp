@@ -125,7 +125,7 @@ private:
     // called to cause the underlying socket to start speaking SSL
     nsresult ProxyStartSSL();
 
-    nsresult CreateTransport();
+    nsresult CreateTransport(PRUint8 caps);
     nsresult OnTransactionDone(nsresult reason);
     nsresult OnSocketWritable();
     nsresult OnSocketReadable();
