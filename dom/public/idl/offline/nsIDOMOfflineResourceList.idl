@@ -38,7 +38,7 @@
 
 #include "domstubs.idl"
 
-[scriptable, uuid(8449bce2-0d8c-4c74-ab79-b41b8d81f1c4)]
+[scriptable, uuid(c9732cb7-e104-4cf1-9936-a8592fd46c5a)]
 interface nsIDOMOfflineResourceList : nsISupports
 {
   /**
@@ -82,13 +82,11 @@ interface nsIDOMOfflineResourceList : nsISupports
   /* Resources are being downloaded to be added to the cache */
   const unsigned short DOWNLOADING = 3;
 
-  /**
-   * There is a new version of the application cache available
-   *
-   * Versioned application caches are not currently implemented, so this
-   * value will not yet be returned
-   */
+  /* There is a new version of the application cache available */
   const unsigned short UPDATEREADY = 4;
+
+  /* The application cache group is now obsolete. */
+  const unsigned short OBSOLETE = 5;
 
   readonly attribute unsigned short status;
 
@@ -98,10 +96,8 @@ interface nsIDOMOfflineResourceList : nsISupports
   void update();
 
   /**
-   * Swap in the newest version of the application cache.
-   *
-   * Versioned application caches are not currently implemented, so this
-   * method will throw an exception.
+   * Swap in the newest version of the application cache, or disassociate
+   * from the cache if the cache group is obsolete.
    */
   void swapCache();
 
@@ -113,4 +109,5 @@ interface nsIDOMOfflineResourceList : nsISupports
   attribute nsIDOMEventListener onprogress;
   attribute nsIDOMEventListener onupdateready;
   attribute nsIDOMEventListener oncached;
+  attribute nsIDOMEventListener onobsolete;
 };
