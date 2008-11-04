@@ -431,411 +431,245 @@ nsThebesImage::UnlockImagePixels(PRBool aMaskPixels)
     return NS_OK;
 }
 
-/* NB: These are pixels, not twips. */
-NS_IMETHODIMP
-nsThebesImage::Draw(nsIRenderingContext &aContext,
-                    const gfxRect &aSourceRect,
-                    const gfxRect &aSubimageRect,
-                    const gfxRect &aDestRect)
+static PRBool
+IsSafeImageTransformComponent(gfxFloat aValue)
 {
-    if (NS_UNLIKELY(aDestRect.IsEmpty())) {
-        NS_ERROR("nsThebesImage::Draw zero dest size - please fix caller.");
-        return NS_OK;
-    }
-
-    nsThebesRenderingContext *thebesRC = static_cast<nsThebesRenderingContext*>(&aContext);
-    gfxContext *ctx = thebesRC->ThebesContext();
-
-#if 0
-    fprintf (stderr, "nsThebesImage::Draw src [%f %f %f %f] dest [%f %f %f %f] trans: [%f %f] dec: [%f %f]\n",
-             aSourceRect.pos.x, aSourceRect.pos.y, aSourceRect.size.width, aSourceRect.size.height,
-             aDestRect.pos.x, aDestRect.pos.y, aDestRect.size.width, aDestRect.size.height,
-             ctx->CurrentMatrix().GetTranslation().x, ctx->CurrentMatrix().GetTranslation().y,
-             mDecoded.x, mDecoded.y, mDecoded.width, mDecoded.height);
-#endif
-
-    if (mSinglePixel) {
-        // if a == 0, it's a noop
-        if (mSinglePixelColor.a == 0.0)
-            return NS_OK;
-
-        // otherwise
-        gfxContext::GraphicsOperator op = ctx->CurrentOperator();
-        if (op == gfxContext::OPERATOR_OVER && mSinglePixelColor.a == 1.0)
-            ctx->SetOperator(gfxContext::OPERATOR_SOURCE);
-
-        ctx->SetDeviceColor(mSinglePixelColor);
-        ctx->NewPath();
-        ctx->Rectangle(aDestRect, PR_TRUE);
-        ctx->Fill();
-        ctx->SetOperator(op);
-        return NS_OK;
-    }
-
-    gfxFloat xscale = aDestRect.size.width / aSourceRect.size.width;
-    gfxFloat yscale = aDestRect.size.height / aSourceRect.size.height;
-
-    gfxRect srcRect(aSourceRect);
-    gfxRect subimageRect(aSubimageRect);
-    gfxRect destRect(aDestRect);
-
-    if (!GetIsImageComplete()) {
-        gfxRect decoded = gfxRect(mDecoded.x, mDecoded.y,
-                                  mDecoded.width, mDecoded.height);
-        srcRect = srcRect.Intersect(decoded);
-        subimageRect = subimageRect.Intersect(decoded);
-
-        // This happens when mDecoded.width or height is zero. bug 368427.
-        if (NS_UNLIKELY(srcRect.size.width == 0 || srcRect.size.height == 0))
-            return NS_OK;
-
-        destRect.pos.x += (srcRect.pos.x - aSourceRect.pos.x)*xscale;
-        destRect.pos.y += (srcRect.pos.y - aSourceRect.pos.y)*yscale;
-
-        destRect.size.width  = srcRect.size.width * xscale;
-        destRect.size.height = srcRect.size.height * yscale;
-    }
-
-    // if either rectangle is empty now (possibly after the image complete check)
-    if (srcRect.IsEmpty() || destRect.IsEmpty())
-        return NS_OK;
-
-    // Reject over-wide or over-tall images.
-    if (!AllowedImageSize(destRect.size.width + 1, destRect.size.height + 1))
-        return NS_ERROR_FAILURE;
-
-    // Expand the subimageRect to place its edges on integer coordinates.
-    // Basically, if we're allowed to sample part of a pixel we can
-    // sample the whole pixel.
-    subimageRect.RoundOut();
-
-    nsRefPtr<gfxPattern> pat;
-    PRBool ctxHasNonTranslation = ctx->CurrentMatrix().HasNonTranslation();
-    if ((xscale == 1.0 && yscale == 1.0 && !ctxHasNonTranslation) ||
-        subimageRect == gfxRect(0, 0, mWidth, mHeight))
-    {
-        // No need to worry about sampling outside the subimage rectangle,
-        // so no need for a temporary
-        // XXX should we also check for situations where the source rect
-        // is well inside the subimage so we can't sample outside?
-        pat = new gfxPattern(ThebesSurface());
-    } else {
-        // Because of the RoundOut above, the subimageRect has
-        // integer width and height.
-        gfxIntSize size(PRInt32(subimageRect.Width()),
-                        PRInt32(subimageRect.Height()));
-        nsRefPtr<gfxASurface> temp =
-            gfxPlatform::GetPlatform()->CreateOffscreenSurface(size, mFormat);
-        if (!temp || temp->CairoStatus() != 0)
-            return NS_ERROR_FAILURE;
-
-        gfxContext tempctx(temp);
-        tempctx.SetSource(ThebesSurface(), -subimageRect.pos);
-        tempctx.SetOperator(gfxContext::OPERATOR_SOURCE);
-        tempctx.Paint();
-
-        pat = new gfxPattern(temp);
-        srcRect.MoveBy(-subimageRect.pos);
-    }
-
-    /* See bug 364968 to understand the necessity of this goop; we basically
-     * have to pre-downscale any image that would fall outside of a scaled 16-bit
-     * coordinate space.
-     */
-    if (aDestRect.pos.x * (1.0 / xscale) >= 32768.0 ||
-        aDestRect.pos.y * (1.0 / yscale) >= 32768.0)
-    {
-        gfxIntSize dim(NS_lroundf(destRect.size.width),
-                       NS_lroundf(destRect.size.height));
-
-        // nothing to do in this case
-        if (dim.width == 0 || dim.height == 0)
-            return NS_OK;
-
-        nsRefPtr<gfxASurface> temp =
-            gfxPlatform::GetPlatform()->CreateOffscreenSurface (dim,  mFormat);
-        if (!temp || temp->CairoStatus() != 0)
-            return NS_ERROR_FAILURE;
-
-        gfxContext tempctx(temp);
-
-        gfxMatrix mat;
-        mat.Translate(srcRect.pos);
-        mat.Scale(1.0 / xscale, 1.0 / yscale);
-        pat->SetMatrix(mat);
-
-        tempctx.SetPattern(pat);
-        tempctx.SetOperator(gfxContext::OPERATOR_SOURCE);
-        tempctx.NewPath();
-        tempctx.Rectangle(gfxRect(0.0, 0.0, dim.width, dim.height));
-        tempctx.Fill();
-
-        pat = new gfxPattern(temp);
-
-        srcRect.pos.x = 0.0;
-        srcRect.pos.y = 0.0;
-        srcRect.size.width = dim.width;
-        srcRect.size.height = dim.height;
-
-        xscale = 1.0;
-        yscale = 1.0;
-    }
-
-    gfxMatrix mat;
-    mat.Translate(srcRect.pos);
-    mat.Scale(1.0/xscale, 1.0/yscale);
-
-    /* Translate the start point of the image (srcRect.pos)
-     * to coincide with the destination rectangle origin
-     */
-    mat.Translate(-destRect.pos);
-
-    pat->SetMatrix(mat);
-
-    nsRefPtr<gfxASurface> target = ctx->CurrentSurface();
-    switch (target->GetType()) {
-    case gfxASurface::SurfaceTypeXlib:
-    case gfxASurface::SurfaceTypeXcb:
-        // See bug 324698.  This is a workaround for EXTEND_PAD not being
-        // implemented correctly on linux in the X server.
-        //
-        // Set the filter to CAIRO_FILTER_FAST if we're scaling up -- otherwise,
-        // pixman's sampling will sample transparency for the outside edges and we'll
-        // get blurry edges.  CAIRO_EXTEND_PAD would also work here, if
-        // available
-        //
-        // This effectively disables smooth upscaling for images.
-        if (xscale > 1.0 || yscale > 1.0 || ctxHasNonTranslation)
-            pat->SetFilter(0);
-        break;
-
-    case gfxASurface::SurfaceTypeQuartz:
-    case gfxASurface::SurfaceTypeQuartzImage:
-        // Do nothing, Mac seems to be OK. Really?
-        break;
-
-    default:
-        // turn on EXTEND_PAD.
-        // This is what we really want for all surface types, if the
-        // implementation was universally good.
-        if (xscale != 1.0 || yscale != 1.0 || ctxHasNonTranslation)
-            pat->SetExtend(gfxPattern::EXTEND_PAD);
-        break;
-    }
-
-    gfxContext::GraphicsOperator op = ctx->CurrentOperator();
-    if (op == gfxContext::OPERATOR_OVER && mFormat == gfxASurface::ImageFormatRGB24)
-        ctx->SetOperator(gfxContext::OPERATOR_SOURCE);
-
-    ctx->NewPath();
-    ctx->SetPattern(pat);
-#ifdef MOZ_GFX_OPTIMIZE_MOBILE
-    ctx->Rectangle(destRect, PR_TRUE);
-#else
-    ctx->Rectangle(destRect);
-#endif
-    ctx->Fill();
-
-    ctx->SetOperator(op);
-    ctx->SetDeviceColor(gfxRGBA(0,0,0,0));
-
-    return NS_OK;
+    return aValue >= -32768 && aValue <= 32767;
 }
 
-nsresult
-nsThebesImage::ThebesDrawTile(gfxContext *thebesContext,
-                              nsIDeviceContext* dx,
-                              const gfxPoint& offset,
-                              const gfxRect& targetRect,
-                              const nsIntRect& aSubimageRect,
-                              const PRInt32 xPadding,
-                              const PRInt32 yPadding)
+void
+nsThebesImage::Draw(gfxContext*        aContext,
+                    const gfxMatrix&   aUserSpaceToImageSpace,
+                    const gfxRect&     aFill,
+                    const nsIntMargin& aPadding,
+                    const nsIntRect&   aSubimage)
 {
-    NS_ASSERTION(xPadding >= 0 && yPadding >= 0, "negative padding");
+    NS_ASSERTION(!aFill.IsEmpty(), "zero dest size --- fix caller");
+    NS_ASSERTION(!aSubimage.IsEmpty(), "zero source size --- fix caller");
 
-    if (targetRect.size.width <= 0.0 || targetRect.size.height <= 0.0)
-        return NS_OK;
+    PRBool doPadding = aPadding != nsIntMargin(0,0,0,0);
+    PRBool doPartialDecode = !GetIsImageComplete();
+    gfxContext::GraphicsOperator op = aContext->CurrentOperator();
 
-    // don't do anything if we have a transparent pixel source
-    if (mSinglePixel && mSinglePixelColor.a == 0.0)
-        return NS_OK;
+    if (mSinglePixel && !doPadding && !doPartialDecode) {
+        // Single-color fast path
+        // if a == 0, it's a noop
+        if (mSinglePixelColor.a == 0.0)
+            return;
 
-#ifdef MOZ_GFX_OPTIMIZE_MOBILE
-    PRBool doSnap = PR_TRUE;
-#else
-    PRBool doSnap = !(thebesContext->CurrentMatrix().HasNonTranslation());
-#endif
-    PRBool hasPadding = ((xPadding != 0) || (yPadding != 0));
-    gfxImageSurface::gfxImageFormat format = mFormat;
-    
-    gfxPoint tmpOffset = offset;
+        if (op == gfxContext::OPERATOR_OVER && mSinglePixelColor.a == 1.0)
+            aContext->SetOperator(gfxContext::OPERATOR_SOURCE);
 
-    if (mSinglePixel && !hasPadding) {
-        thebesContext->SetDeviceColor(mSinglePixelColor);
-    } else {
-        nsRefPtr<gfxASurface> surface;
-        PRInt32 width, height;
-
-        if (hasPadding) {
-            /* Ugh we have padding; create a temporary surface that's the size of the surface + pad area,
-             * and render the image into it first.  Then we'll tile that surface. */
-            width = mWidth + xPadding;
-            height = mHeight + yPadding;
-
-            // Reject over-wide or over-tall images.
-            if (!AllowedImageSize(width, height))
-                return NS_ERROR_FAILURE;
-
-            format = gfxASurface::ImageFormatARGB32;
-            surface = gfxPlatform::GetPlatform()->CreateOffscreenSurface(
-                    gfxIntSize(width, height), format);
-            if (!surface || surface->CairoStatus()) {
-                return NS_ERROR_OUT_OF_MEMORY;
-            }
-
-            gfxContext tmpContext(surface);
-            if (mSinglePixel) {
-                tmpContext.SetDeviceColor(mSinglePixelColor);
-            } else {
-                tmpContext.SetSource(ThebesSurface());
-            }
-            tmpContext.SetOperator(gfxContext::OPERATOR_SOURCE);
-            tmpContext.Rectangle(gfxRect(0, 0, mWidth, mHeight));
-            tmpContext.Fill();
-        } else {
-            width = mWidth;
-            height = mHeight;
-            surface = ThebesSurface();
-        }
-        
-        // Scale factor to account for CSS pixels; note that the offset (and 
-        // therefore p0) is in device pixels, while the width and height are in
-        // CSS pixels.
-        gfxFloat scale = gfxFloat(dx->AppUnitsPerDevPixel()) /
-                         gfxFloat(nsIDeviceContext::AppUnitsPerCSSPixel());
-
-        if ((aSubimageRect.width < width || aSubimageRect.height < height) &&
-            (thebesContext->CurrentMatrix().HasNonTranslation() || scale != 1.0)) {
-            // Some of the source image should not be drawn, and we're going
-            // to be doing more than just translation, so we might accidentally
-            // sample the non-drawn pixels. Avoid that by creating a
-            // temporary image representing the portion that will be drawn,
-            // with built-in padding since we can't use EXTEND_PAD and
-            // EXTEND_REPEAT at the same time for different axes.
-            PRInt32 padX = aSubimageRect.width < width ? 1 : 0;
-            PRInt32 padY = aSubimageRect.height < height ? 1 : 0;
-            PRInt32 tileWidth = PR_MIN(aSubimageRect.width, width);
-            PRInt32 tileHeight = PR_MIN(aSubimageRect.height, height);
-            
-            // This tmpSurface will contain a snapshot of the repeated
-            // tile image at (aSubimageRect.x, aSubimageRect.y,
-            // tileWidth, tileHeight), with padX padding added to the left
-            // and right sides and padY padding added to the top and bottom
-            // sides.
-            nsRefPtr<gfxASurface> tmpSurface;
-            tmpSurface = gfxPlatform::GetPlatform()->CreateOffscreenSurface(
-                    gfxIntSize(tileWidth + 2*padX, tileHeight + 2*padY), format);
-            if (!tmpSurface || tmpSurface->CairoStatus()) {
-                return NS_ERROR_OUT_OF_MEMORY;
-            }
-
-            gfxContext tmpContext(tmpSurface);
-            tmpContext.SetOperator(gfxContext::OPERATOR_SOURCE);
-            gfxPattern pat(surface);
-            pat.SetExtend(gfxPattern::EXTEND_REPEAT);
-            
-            // Copy the needed portion of the source image to the temporary
-            // surface. We also copy over horizontal and/or vertical padding
-            // strips one pixel wide, plus the corner pixels if necessary.
-            // So in the most general case the temporary surface ends up
-            // looking like
-            //     P P P ... P P P
-            //     P X X ... X X P
-            //     P X X ... X X P
-            //     ...............
-            //     P X X ... X X P
-            //     P X X ... X X P
-            //     P P P ... P P P
-            // Where each P pixel has the color of its nearest source X
-            // pixel. We implement this as a loop over all nine possible
-            // areas, [padding, body, padding] x [padding, body, padding].
-            // Note that we will not need padding on both axes unless
-            // we are painting just a single tile, in which case this
-            // will hardly ever get called since nsCSSRendering converts
-            // the single-tile case to nsLayoutUtils::DrawImage. But this
-            // could be called on other paths (XUL trees?) and it's simpler
-            // and clearer to do it the general way.
-            PRInt32 destY = 0;
-            for (PRInt32 y = -1; y <= 1; ++y) {
-                PRInt32 stripHeight = y == 0 ? tileHeight : padY;
-                if (stripHeight == 0)
-                    continue;
-                PRInt32 srcY = y == 1 ? aSubimageRect.YMost() - padY : aSubimageRect.y;
-                
-                PRInt32 destX = 0;
-                for (PRInt32 x = -1; x <= 1; ++x) {
-                    PRInt32 stripWidth = x == 0 ? tileWidth : padX;
-                    if (stripWidth == 0)
-                        continue;
-                    PRInt32 srcX = x == 1 ? aSubimageRect.XMost() - padX : aSubimageRect.x;
-
-                    gfxMatrix patMat;
-                    patMat.Translate(gfxPoint(srcX - destX, srcY - destY));
-                    pat.SetMatrix(patMat);
-                    tmpContext.SetPattern(&pat);
-                    tmpContext.Rectangle(gfxRect(destX, destY, stripWidth, stripHeight));
-                    tmpContext.Fill();
-                    tmpContext.NewPath();
-                    
-                    destX += stripWidth;
-                }
-                destY += stripHeight;
-            }
-
-            // tmpOffset was the top-left of the old tile image. Make it
-            // the top-left of the new tile image. Note that tmpOffset is
-            // in destination coordinate space so we have to scale our
-            // CSS pixels.
-            tmpOffset += gfxPoint(aSubimageRect.x - padX, aSubimageRect.y - padY)/scale;
-            
-            surface = tmpSurface;
-        }
-
-        gfxMatrix patMat;
-        gfxPoint p0;
-
-        p0.x = - floor(tmpOffset.x + 0.5);
-        p0.y = - floor(tmpOffset.y + 0.5);
-        patMat.Scale(scale, scale);
-        patMat.Translate(p0);
-
-        gfxPattern pat(surface);
-        pat.SetExtend(gfxPattern::EXTEND_REPEAT);
-        pat.SetMatrix(patMat);
-
-#ifndef XP_MACOSX
-        if (scale < 1.0) {
-            // See bug 324698.  This is a workaround.  See comments
-            // by the earlier SetFilter call.
-            pat.SetFilter(0);
-        }
-#endif
-
-        thebesContext->SetPattern(&pat);
+        aContext->SetDeviceColor(mSinglePixelColor);
+        aContext->NewPath();
+        aContext->Rectangle(aFill);
+        aContext->Fill();
+        aContext->SetOperator(op);
+        aContext->SetDeviceColor(gfxRGBA(0,0,0,0));
+        return;
     }
 
-    gfxContext::GraphicsOperator op = thebesContext->CurrentOperator();
-    if (op == gfxContext::OPERATOR_OVER && format == gfxASurface::ImageFormatRGB24)
-        thebesContext->SetOperator(gfxContext::OPERATOR_SOURCE);
+    gfxMatrix userSpaceToImageSpace = aUserSpaceToImageSpace;
+    gfxRect sourceRect = userSpaceToImageSpace.Transform(aFill);
+    gfxRect imageRect(0, 0, mWidth + aPadding.LeftRight(), mHeight + aPadding.TopBottom());
+    gfxRect subimage(aSubimage.x, aSubimage.y, aSubimage.width, aSubimage.height);
+    gfxRect fill = aFill;
+    nsRefPtr<gfxASurface> surface;
+    gfxImageSurface::gfxImageFormat format;
 
-    thebesContext->NewPath();
-    thebesContext->Rectangle(targetRect, doSnap);
-    thebesContext->Fill();
+    PRBool doTile = !imageRect.Contains(sourceRect);
+    if (doPadding || doPartialDecode) {
+        gfxRect available = gfxRect(mDecoded.x, mDecoded.y, mDecoded.width, mDecoded.height) +
+            gfxPoint(aPadding.left, aPadding.top);
+  
+        if (!doTile && !mSinglePixel) {
+            // Not tiling, and we have a surface, so we can account for
+            // padding and/or a partial decode just by twiddling parameters.
+            // First, update our user-space fill rect.
+            sourceRect = sourceRect.Intersect(available);
+            gfxMatrix imageSpaceToUserSpace = userSpaceToImageSpace;
+            imageSpaceToUserSpace.Invert();
+            fill = imageSpaceToUserSpace.Transform(sourceRect);
+  
+            surface = ThebesSurface();
+            format = mFormat;
+            subimage = subimage.Intersect(available) - gfxPoint(aPadding.left, aPadding.top);
+            userSpaceToImageSpace.Multiply(
+                gfxMatrix().Translate(gfxPoint(aPadding.left, aPadding.top)));
+            sourceRect = sourceRect - gfxPoint(aPadding.left, aPadding.top);
+            imageRect = gfxRect(0, 0, mWidth, mHeight);
+        } else {
+            // Create a temporary surface
+            gfxIntSize size(PRInt32(imageRect.Width()),
+                            PRInt32(imageRect.Height()));
+            // Give this surface an alpha channel because there are
+            // transparent pixels in the padding or undecoded area
+            format = gfxASurface::ImageFormatARGB32;
+            surface = gfxPlatform::GetPlatform()->CreateOffscreenSurface(size,
+                format);
+            if (!surface || surface->CairoStatus() != 0)
+                return;
+  
+            // Fill 'available' with whatever we've got
+            gfxContext tmpCtx(surface);
+            tmpCtx.SetOperator(gfxContext::OPERATOR_SOURCE);
+            if (mSinglePixel) {
+                tmpCtx.SetDeviceColor(mSinglePixelColor);
+            } else {
+                tmpCtx.SetSource(ThebesSurface(), gfxPoint(aPadding.left, aPadding.top));
+            }
+            tmpCtx.Rectangle(available);
+            tmpCtx.Fill();
+        }
+    } else {
+        NS_ASSERTION(!mSinglePixel, "This should already have been handled");
+        surface = ThebesSurface();
+        format = mFormat;
+    }
+    // At this point, we've taken care of mSinglePixel images, images with
+    // aPadding, and partially-decoded images.
 
-    thebesContext->SetOperator(op);
-    thebesContext->SetDeviceColor(gfxRGBA(0,0,0,0));
+    if (!AllowedImageSize(fill.size.width + 1, fill.size.height + 1)) {
+        NS_WARNING("Destination area too large, bailing out");
+        return;
+    }
 
-    return NS_OK;
+    // BEGIN working around cairo/pixman bug (bug 364968)
+    // Compute device-space-to-image-space transform. We need to sanity-
+    // check it to work around a pixman bug :-(
+    // XXX should we only do this for certain surface types?
+    gfxFloat deviceX, deviceY;
+    nsRefPtr<gfxASurface> currentTarget =
+        aContext->CurrentSurface(&deviceX, &deviceY);
+    gfxMatrix currentMatrix = aContext->CurrentMatrix();
+    gfxMatrix deviceToUser = currentMatrix;
+    deviceToUser.Invert();
+    deviceToUser.Translate(-gfxPoint(-deviceX, -deviceY));
+    gfxMatrix deviceToImage = deviceToUser;
+    deviceToImage.Multiply(userSpaceToImageSpace);
+  
+    // Our device-space-to-image-space transform may not be acceptable to pixman.
+    if (!IsSafeImageTransformComponent(deviceToImage.xx) ||
+        !IsSafeImageTransformComponent(deviceToImage.xy) ||
+        !IsSafeImageTransformComponent(deviceToImage.yx) ||
+        !IsSafeImageTransformComponent(deviceToImage.yy)) {
+        NS_WARNING("Scaling up too much, bailing out");
+        return;
+    }
+
+    PRBool pushedGroup = PR_FALSE;
+    if (!IsSafeImageTransformComponent(deviceToImage.x0) ||
+        !IsSafeImageTransformComponent(deviceToImage.y0)) {
+        // We'll push a group, which will hopefully reduce our transform's
+        // translation so it's in bounds
+        aContext->Save();
+  
+        // Clip the rounded-out-to-device-pixels bounds of the
+        // transformed fill area. This is the area for the group we
+        // want to push.
+        aContext->IdentityMatrix();
+        gfxRect bounds = currentMatrix.TransformBounds(fill);
+        bounds.RoundOut();
+        aContext->Clip(bounds);
+        aContext->SetMatrix(currentMatrix);
+  
+        aContext->PushGroup(gfxASurface::CONTENT_COLOR_ALPHA);
+        aContext->SetOperator(gfxContext::OPERATOR_OVER);
+        pushedGroup = PR_TRUE;
+    }
+    // END working around cairo/pixman bug (bug 364968)
+  
+    nsRefPtr<gfxPattern> pattern = new gfxPattern(surface);
+    pattern->SetMatrix(userSpaceToImageSpace);
+
+    // OK now, the hard part left is to account for the subimage sampling
+    // restriction. If all the transforms involved are just integer
+    // translations, then we assume no resampling will occur so there's
+    // nothing to do.
+    // XXX if only we had source-clipping in cairo!
+    if (!currentMatrix.HasNonIntegerTranslation() &&
+        !userSpaceToImageSpace.HasNonIntegerTranslation()) {
+        if (doTile) {
+            pattern->SetExtend(gfxPattern::EXTEND_REPEAT);
+        }
+    } else {
+        if (doTile || !subimage.Contains(imageRect)) {
+            // EXTEND_PAD won't help us here; we have to create a temporary
+            // surface to hold the subimage of pixels we're allowed to
+            // sample
+            gfxRect needed = subimage.Intersect(sourceRect);
+            needed.RoundOut();
+            gfxIntSize size(PRInt32(needed.Width()), PRInt32(needed.Height()));
+            nsRefPtr<gfxASurface> temp =
+                gfxPlatform::GetPlatform()->CreateOffscreenSurface(size, format);
+            if (temp && temp->CairoStatus() == 0) {
+                gfxContext tmpCtx(temp);
+                tmpCtx.SetOperator(gfxContext::OPERATOR_SOURCE);
+                nsRefPtr<gfxPattern> tmpPattern = new gfxPattern(surface);
+                if (tmpPattern) {
+                    tmpPattern->SetExtend(gfxPattern::EXTEND_REPEAT);
+                    tmpPattern->SetMatrix(gfxMatrix().Translate(needed.pos));
+                    tmpCtx.SetPattern(tmpPattern);
+                    tmpCtx.Paint();
+                    tmpPattern = new gfxPattern(temp);
+                    if (tmpPattern) {
+                        pattern.swap(tmpPattern);
+                        pattern->SetMatrix(
+                            gfxMatrix(userSpaceToImageSpace).Multiply(gfxMatrix().Translate(-needed.pos)));
+                    }
+                }
+            }
+        }
+  
+        // In theory we can handle this using cairo's EXTEND_PAD,
+        // but implementation limitations mean we have to consult
+        // the surface type.
+        switch (currentTarget->GetType()) {
+        case gfxASurface::SurfaceTypeXlib:
+        case gfxASurface::SurfaceTypeXcb:
+            // See bug 324698.  This is a workaround for EXTEND_PAD not being
+            // implemented correctly on linux in the X server.
+            //
+            // Set the filter to CAIRO_FILTER_FAST --- otherwise,
+            // pixman's sampling will sample transparency for the outside edges and we'll
+            // get blurry edges.  CAIRO_EXTEND_PAD would also work here, if
+            // available
+            //
+            // This effectively disables smooth upscaling for images.
+            pattern->SetFilter(0);
+            break;
+  
+        case gfxASurface::SurfaceTypeQuartz:
+        case gfxASurface::SurfaceTypeQuartzImage:
+            // Do nothing, Mac seems to be OK. Really?
+            break;
+
+        default:
+            // turn on EXTEND_PAD.
+            // This is what we really want for all surface types, if the
+            // implementation was universally good.
+            pattern->SetExtend(gfxPattern::EXTEND_PAD);
+            break;
+        }
+    }
+
+    if ((op == gfxContext::OPERATOR_OVER || pushedGroup) &&
+        format == gfxASurface::ImageFormatRGB24) {
+        aContext->SetOperator(gfxContext::OPERATOR_SOURCE);
+    }
+
+    // Phew! Now we can actually draw this image
+    aContext->NewPath();
+    aContext->SetPattern(pattern);
+    aContext->Rectangle(fill);
+    aContext->Fill();
+  
+    aContext->SetOperator(op);
+    if (pushedGroup) {
+        aContext->PopGroupToSource();
+        aContext->Paint();
+        aContext->Restore();
+    }
 }
 
 PRBool

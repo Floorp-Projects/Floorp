@@ -1069,7 +1069,7 @@ nsImageFrame::DisplayAltFeedback(nsIRenderingContext& aRenderingContext,
         nsRect dest((vis->mDirection == NS_STYLE_DIRECTION_RTL) ?
                     inner.XMost() - size : inner.x,
                     inner.y, size, size);
-        nsLayoutUtils::DrawImage(&aRenderingContext, imgCon, dest, aDirtyRect);
+        nsLayoutUtils::DrawSingleImage(&aRenderingContext, imgCon, dest, aDirtyRect);
         iconUsed = PR_TRUE;
       }
     }
@@ -1174,13 +1174,10 @@ nsImageFrame::PaintImage(nsIRenderingContext& aRenderingContext, nsPoint aPt,
   // the borders and padding)
   NS_ASSERTION(GetInnerArea().width == mComputedSize.width, "bad width");
   nsRect inner = GetInnerArea() + aPt;
-  nsRect clip;
-  clip.IntersectRect(inner, aDirtyRect);
-
   nsRect dest(inner.TopLeft(), mComputedSize);
   dest.y -= GetContinuationOffset();
 
-  nsLayoutUtils::DrawImage(&aRenderingContext, aImage, dest, clip);
+  nsLayoutUtils::DrawSingleImage(&aRenderingContext, aImage, dest, aDirtyRect);
 
   nsPresContext* presContext = PresContext();
   nsImageMap* map = GetImageMap(presContext);

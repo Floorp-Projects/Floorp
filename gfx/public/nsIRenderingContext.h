@@ -97,9 +97,10 @@ typedef enum
 
 
 // IID for the nsIRenderingContext interface
-// a67de6b9-fffa-465c-abea-d7b394588a07
+// 3a6209e8-d80d-42ab-ad6a-b8832f7fb09f
 #define NS_IRENDERING_CONTEXT_IID \
- { 0xa67de6b9, 0xfffa, 0x465c,{0xab, 0xea, 0xd7, 0xb3, 0x94, 0x58, 0x8a, 0x07}}
+{ 0x3a6209e8, 0xd80d, 0x42ab, \
+  { 0xad, 0x6a, 0xb8, 0x83, 0x2f, 0x7f, 0xb0, 0x9f } }
 
 //----------------------------------------------------------------------
 
@@ -585,21 +586,6 @@ public:
    * overridden to have this direction.
    */
   virtual void SetTextRunRTL(PRBool aIsRTL) = 0;
-
-  /*
-   * Tiles an image over an area
-   * @param aImage       Image to tile
-   * @param aXImageStart x location where the origin (0,0) of the image starts
-   * @param aYImageStart y location where the origin (0,0) of the image starts
-   * @param aTargetRect  area to draw to
-   * @param aSubimageRect the subimage (in tile space) which we expect to
-   * sample from; may be null to indicate that the whole image is
-   * OK to sample from
-   */
-  NS_IMETHOD DrawTile(imgIContainer *aImage,
-                      nscoord aXImageStart, nscoord aYImageStart,
-                      const nsRect * aTargetRect,
-                      const nsIntRect * aSubimageRect) = 0;
 
   /**
    * Find the closest cursor position for a given x coordinate.
