@@ -796,6 +796,7 @@ namespace nanojit
 	public:
 
 		LInsHashSet(GC* gc);
+		~LInsHashSet();
 		LInsp find32(int32_t a, uint32_t &i);
 		LInsp find64(uint64_t a, uint32_t &i);
 		LInsp find1(LOpcode v, LInsp a, uint32_t &i);
