@@ -266,7 +266,7 @@ public:
 
 struct xpc_qsSelfRef
 {
-    xpc_qsSelfRef() : ptr(nsnull) {}
+    xpc_qsSelfRef() {}
     explicit xpc_qsSelfRef(nsISupports *p) : ptr(p) {}
     ~xpc_qsSelfRef() { NS_IF_RELEASE(ptr); }
 
