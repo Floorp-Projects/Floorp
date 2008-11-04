@@ -63,6 +63,7 @@ SDK_XPIDLSRCS   = \
 
 XPIDLSRCS	= \
 		nsIApplicationCache.idl \
+		nsIApplicationCacheChannel.idl \
 		nsIApplicationCacheContainer.idl \
 		nsIApplicationCacheService.idl \
 		nsIAuthInformation.idl \
