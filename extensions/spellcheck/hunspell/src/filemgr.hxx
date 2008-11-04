@@ -11,12 +11,11 @@
  * for the specific language governing rights and limitations under the
  * License.
  * 
- * The Initial Developer of the Original Code is Björn Jacke. Portions created
- * by the Initial Developers are Copyright (C) 2000-2007 the Initial
- * Developers. All Rights Reserved.
+ * The Initial Developers of the Original Code are Kevin Hendricks (MySpell)
+ * and László Németh (Hunspell). Portions created by the Initial Developers
+ * are Copyright (C) 2002-2005 the Initial Developers. All Rights Reserved.
  * 
- * Contributor(s): Björn Jacke (bjoern.jacke@gmx.de)
- *                 László Németh (nemethl@gyorsposta.hu)
+ * Contributor(s): László Németh (nemethl@gyorsposta.hu)
  * 
  * Alternatively, the contents of this file may be used under the terms of
  * either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -30,37 +29,26 @@
  * the provisions above, a recipient may use your version of this file under
  * the terms of any one of the MPL, the GPL or the LGPL.
  *
- * Changelog:
- *  2000-01-05  Björn Jacke <bjoern.jacke AT gmx.de>
- *              Initial Release insprired by the article about phonetic
- *              transformations out of c't 25/1999
- *
- *  2007-07-20  Björn Jacke <bjoern.jacke AT gmx.de>
- *              Released under MPL/GPL/LGPL tri-license for Hunspell
- *
- *  2007-08-22  László Németh <nemeth at OOo>
- *              Porting from Aspell to Hunspell by little modifications
- *
  ******* END LICENSE BLOCK *******/
 
-#ifndef __PHONETHXX__
-#define __PHONETHXX__
+#ifndef _FILEMGR_HXX_
+#define _FILEMGR_HXX_
 
-#define HASHSIZE          256
-#define MAXPHONETLEN      256
-#define MAXPHONETUTF8LEN  (MAXPHONETLEN * 4)
+#include "hunzip.hxx"
 
-struct phonetable {
-  char utf8;
-  cs_info * lang;
-  int num;
-  char * * rules;
-  int hash[HASHSIZE];
+class FileMgr
+{
+protected:
+    FILE * fin;
+    Hunzip * hin;
+    char in[BUFSIZE + 50]; // input buffer
+    int fail(const char * err, const char * par);
+    int linenum;
+
+public:
+    FileMgr(const char * filename, const char * key = NULL);
+    ~FileMgr();
+    char * getline();
+    int getlinenum();
 };
-
-void init_phonet_hash(phonetable & parms);
-
-int phonet (const char * inword, char * target,
-              int len, phonetable & phone);
-
 #endif
