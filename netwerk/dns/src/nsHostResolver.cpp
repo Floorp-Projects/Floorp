@@ -173,7 +173,7 @@ nsHostRecord::Create(const nsHostKey *key, nsHostRecord **result)
     }
 
     rec->host = ((char *) rec) + sizeof(nsHostRecord);
-    rec->flags = RES_KEY_FLAGS(key->flags);
+    rec->flags = key->flags;
     rec->af = key->af;
 
     rec->_refc = 1; // addref
@@ -214,7 +214,7 @@ static PLDHashNumber
 HostDB_HashKey(PLDHashTable *table, const void *key)
 {
     const nsHostKey *hk = static_cast<const nsHostKey *>(key);
-    return PL_DHashStringKey(table, hk->host) ^ hk->flags ^ hk->af;
+    return PL_DHashStringKey(table, hk->host) ^ RES_KEY_FLAGS(hk->flags) ^ hk->af;
 }
 
 static PRBool
@@ -226,7 +226,7 @@ HostDB_MatchEntry(PLDHashTable *table,
     const nsHostKey *hk = static_cast<const nsHostKey *>(key); 
 
     return !strcmp(he->rec->host, hk->host) &&
-            he->rec->flags == hk->flags &&
+            RES_KEY_FLAGS (he->rec->flags) == RES_KEY_FLAGS(hk->flags) &&
             he->rec->af == hk->af;
 }
 
@@ -490,6 +490,7 @@ nsHostResolver::ResolveHost(const char            *host,
                 PR_APPEND_LINK(callback, &he->rec->callbacks);
 
                 if (!he->rec->resolving) {
+                    he->rec->flags = flags;
                     rv = IssueLookup(he->rec);
                     if (NS_FAILED(rv))
                         PR_REMOVE_AND_INIT_LINK(callback);
