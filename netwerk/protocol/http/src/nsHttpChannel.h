@@ -70,7 +70,7 @@
 #include "nsICacheEntryDescriptor.h"
 #include "nsICacheListener.h"
 #include "nsIApplicationCache.h"
-#include "nsIApplicationCacheContainer.h"
+#include "nsIApplicationCacheChannel.h"
 #include "nsIEncodedChannel.h"
 #include "nsITransport.h"
 #include "nsIUploadChannel.h"
@@ -108,7 +108,7 @@ class nsHttpChannel : public nsHashPropertyBag
                     , public nsIProtocolProxyCallback
                     , public nsIProxiedChannel
                     , public nsITraceableChannel
-                    , public nsIApplicationCacheContainer
+                    , public nsIApplicationCacheChannel
 {
 public:
     NS_DECL_ISUPPORTS_INHERITED
@@ -129,6 +129,7 @@ public:
     NS_DECL_NSIPROXIEDCHANNEL
     NS_DECL_NSITRACEABLECHANNEL
     NS_DECL_NSIAPPLICATIONCACHECONTAINER
+    NS_DECL_NSIAPPLICATIONCACHECHANNEL
 
     nsHttpChannel();
     virtual ~nsHttpChannel();
@@ -331,6 +332,8 @@ private:
     // True if we are loading a fallback cache entry from the
     // application cache.
     PRUint32                          mFallbackChannel          : 1;
+    PRUint32                          mInheritApplicationCache  : 1;
+    PRUint32                          mChooseApplicationCache   : 1;
     PRUint32                          mTracingEnabled           : 1;
 
     class nsContentEncodings : public nsIUTF8StringEnumerator

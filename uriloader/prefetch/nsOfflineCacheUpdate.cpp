@@ -40,7 +40,7 @@
 
 #include "nsCPrefetchService.h"
 #include "nsCURILoader.h"
-#include "nsIApplicationCacheContainer.h"
+#include "nsIApplicationCacheChannel.h"
 #include "nsIApplicationCacheService.h"
 #include "nsICache.h"
 #include "nsICacheService.h"
@@ -164,14 +164,14 @@ nsOfflineCacheUpdateItem::OpenChannel()
                        nsICachingChannel::LOAD_CHECK_OFFLINE_CACHE);
     NS_ENSURE_SUCCESS(rv, rv);
 
-    nsCOMPtr<nsIApplicationCacheContainer> appCacheContainer =
+    nsCOMPtr<nsIApplicationCacheChannel> appCacheChannel =
         do_QueryInterface(mChannel, &rv);
 
-    // Support for nsIApplicationCacheContainer is required.
+    // Support for nsIApplicationCacheChannel is required.
     NS_ENSURE_SUCCESS(rv, rv);
 
     // Use the existing application cache as the cache to check.
-    rv = appCacheContainer->SetApplicationCache(mPreviousApplicationCache);
+    rv = appCacheChannel->SetApplicationCache(mPreviousApplicationCache);
     NS_ENSURE_SUCCESS(rv, rv);
 
     // configure HTTP specific stuff
