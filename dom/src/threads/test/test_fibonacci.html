@@ -1,15 +1,16 @@
 <!DOCTYPE HTML>
 <html>
 <!--
-Tests of DOM Worker Threads RegExp statics
+Tests of DOM Worker Threads with Fibonacci
 -->
 <head>
-  <title>Test for DOM Worker Threads RegExp statics</title>
+  <title>Test for DOM Worker Threads with Fibonacci</title>
   <script type="text/javascript" src="/MochiKit/MochiKit.js"></script>
   <script type="text/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
   <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
 </head>
 <body>
+<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=450452">DOM Worker Threads Fibonacci</a>
 <p id="display"></p>
 <div id="content" style="display: none">
 
@@ -17,26 +18,21 @@ Tests of DOM Worker Threads RegExp statics
 <pre id="test">
 <script class="testbody" type="text/javascript">
 
-  const WORKER_COUNT = 25;
+  var worker = new Worker("fibonacci_worker.js");
 
-  var doneWorkers = 0;
-  function onmessage(event) {
-    if (++doneWorkers == WORKER_COUNT) {
-      SimpleTest.finish();
-    }
-  }
+  worker.onmessage = function(event) {
+    is(event.target, worker);
+    is(event.data, 5);
+    SimpleTest.finish();
+  };
 
-  function onerror(event) {
+  worker.onerror = function(event) {
+    is(event.target, worker);
     ok(false, "Worker had an error: " + event.data);
     SimpleTest.finish();
   };
 
-  for (var i = 0; i < WORKER_COUNT; i++) {
-    var worker = new Worker("regExpStatics_worker.js");
-    worker.onmessage = onmessage;
-    worker.onerror = onerror;
-    worker.postMessage("start");
-  }
+  worker.postMessage(5);
 
   SimpleTest.waitForExplicitFinish();
 
@@ -44,3 +40,4 @@ Tests of DOM Worker Threads RegExp statics
 </pre>
 </body>
 </html>
+

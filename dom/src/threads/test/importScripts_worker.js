@@ -1,17 +1,17 @@
-function messageListener(message, source) {
-  switch (message) {
+onmessage = function(event) {
+  switch (event.data) {
     case 'start':
-      loadScripts("importScripts_worker_imported2.js");
+      importScripts("importScripts_worker_imported2.js");
       importedScriptFunction2();
       tryBadScripts();
-      source.postMessage('started');
+      postMessage('started');
       break;
     case 'stop':
       tryBadScripts();
-      postMessageToPool('stopped');
+      postMessage('stopped');
       break;
     default:
-      throw new Error("Bad message: " + message);
+      throw new Error("Bad message: " + event.data);
       break;
   }
 }
@@ -19,7 +19,7 @@ function messageListener(message, source) {
 // This caused security exceptions in the past, make sure it doesn't!
 var constructor = {}.constructor;
 
-loadScripts("importScripts_worker_imported1.js");
+importScripts("importScripts_worker_imported1.js");
 
 // Try to call a function defined in the imported script.
 importedScriptFunction();
@@ -40,7 +40,7 @@ function tryBadScripts() {
     var caughtException = false;
     var url = badScripts[i];
     try {
-      loadScripts(url);
+      importScripts(url);
     }
     catch (e) {
       caughtException = true;
