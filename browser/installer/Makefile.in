@@ -49,6 +49,7 @@ NO_PKG_FILES = \
 	regchrome* \
 	regxpcom* \
 	xpcshell* \
+	js \
 	xpidl* \
 	xpt_dump* \
 	xpt_link* \
