@@ -1616,6 +1616,7 @@ nsNavHistory::MigrateV8Up(mozIStorageConnection *aDBConn)
       "DROP TRIGGER IF EXISTS moz_historyvisits_afterdelete_v1_trigger"));
   NS_ENSURE_SUCCESS(rv, rv);
 
+
   // bug #381795 - remove unused indexes
   rv = mDBConn->ExecuteSimpleSQL(
     NS_LITERAL_CSTRING("DROP INDEX IF EXISTS moz_places_titleindex"));
@@ -1623,6 +1624,33 @@ nsNavHistory::MigrateV8Up(mozIStorageConnection *aDBConn)
   rv = mDBConn->ExecuteSimpleSQL(
     NS_LITERAL_CSTRING("DROP INDEX IF EXISTS moz_annos_item_idindex"));
   NS_ENSURE_SUCCESS(rv, rv);
+
+
+  // Do a one-time re-creation of the moz_annos indexes (bug 415201)
+  PRBool oldIndexExists = PR_FALSE;
+  rv = mDBConn->IndexExists(NS_LITERAL_CSTRING("moz_annos_attributesindex"), &oldIndexExists);
+  NS_ENSURE_SUCCESS(rv, rv);
+  if (oldIndexExists) {
+    // drop old uri annos index
+    rv = mDBConn->ExecuteSimpleSQL(
+        NS_LITERAL_CSTRING("DROP INDEX moz_annos_attributesindex"));
+    NS_ENSURE_SUCCESS(rv, rv);
+
+    // create new uri annos index
+    rv = mDBConn->ExecuteSimpleSQL(
+      NS_LITERAL_CSTRING("CREATE UNIQUE INDEX moz_annos_placeattributeindex ON moz_annos (place_id, anno_attribute_id)"));
+    NS_ENSURE_SUCCESS(rv, rv);
+
+    // drop old item annos index
+    rv = mDBConn->ExecuteSimpleSQL(
+        NS_LITERAL_CSTRING("DROP INDEX IF EXISTS moz_items_annos_attributesindex"));
+    NS_ENSURE_SUCCESS(rv, rv);
+
+    // create new item annos index
+    rv = mDBConn->ExecuteSimpleSQL(
+      NS_LITERAL_CSTRING("CREATE UNIQUE INDEX moz_items_annos_itemattributeindex ON moz_items_annos (item_id, anno_attribute_id)"));
+    NS_ENSURE_SUCCESS(rv, rv);
+  }
 
   return transaction.Commit();
 }
@@ -1711,46 +1739,6 @@ nsNavHistory::EnsureCurrentSchema(mozIStorageConnection* aDBConn, PRBool* aDidMi
     NS_ENSURE_SUCCESS(rv, rv);
   }
 
-  return NS_OK;
-}
-
-nsresult
-nsNavHistory::CleanUpOnQuit()
-{
-  // Do a one-time re-creation of the moz_annos indexes (bug 415201)
-  PRBool oldIndexExists = PR_FALSE;
-  nsresult rv = mDBConn->IndexExists(NS_LITERAL_CSTRING("moz_annos_attributesindex"),
-                            &oldIndexExists);
-  NS_ENSURE_SUCCESS(rv, rv);
-  if (oldIndexExists) {
-    // wrap in a transaction for safety and performance
-    mozStorageTransaction annoIndexTransaction(mDBConn, PR_FALSE);
-
-    // drop old uri annos index
-    rv = mDBConn->ExecuteSimpleSQL(NS_LITERAL_CSTRING(
-        "DROP INDEX moz_annos_attributesindex"));
-    NS_ENSURE_SUCCESS(rv, rv);
-
-    // create new uri annos index
-    rv = mDBConn->ExecuteSimpleSQL(NS_LITERAL_CSTRING(
-        "CREATE UNIQUE INDEX moz_annos_placeattributeindex "
-          "ON moz_annos (place_id, anno_attribute_id)"));
-    NS_ENSURE_SUCCESS(rv, rv);
-
-    // drop old item annos index
-    rv = mDBConn->ExecuteSimpleSQL(NS_LITERAL_CSTRING(
-        "DROP INDEX IF EXISTS moz_items_annos_attributesindex"));
-    NS_ENSURE_SUCCESS(rv, rv);
-
-    // create new item annos index
-    rv = mDBConn->ExecuteSimpleSQL(NS_LITERAL_CSTRING(
-      "CREATE UNIQUE INDEX moz_items_annos_itemattributeindex "
-        "ON moz_items_annos (item_id, anno_attribute_id)"));
-    NS_ENSURE_SUCCESS(rv, rv);
-
-    rv = annoIndexTransaction.Commit();
-    NS_ENSURE_SUCCESS(rv, rv);
-  }
   return NS_OK;
 }
 
@@ -5276,11 +5264,6 @@ nsNavHistory::Observe(nsISupports *aSubject, const char *aTopic,
 
     // notify expiring system that we're quitting, it may want to do stuff
     mExpire.OnQuit();
-
-    // run post-run migration
-    // NOTE: This must run after expiration. It causes expiration to take a
-    // very long time if run first.
-    (void)CleanUpOnQuit();
 
     // notify the bookmarks service we're quitting
     nsNavBookmarks* bookmarks = nsNavBookmarks::GetBookmarksService();
