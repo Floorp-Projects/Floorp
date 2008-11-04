@@ -1846,7 +1846,7 @@ nsFrameSelection::HandleDrag(nsIFrame *aFrame, nsPoint aPoint)
     PRInt32 offset;
     nsIFrame* frame = GetFrameForNodeOffset(offsets.content, offsets.offset, HINTRIGHT, &offset);
 
-    if (amount == eSelectWord && direction == eDirPrevious) {
+    if (frame && amount == eSelectWord && direction == eDirPrevious) {
       // To avoid selecting the previous word when at start of word,
       // first move one character forward.
       nsPeekOffsetStruct charPos;
