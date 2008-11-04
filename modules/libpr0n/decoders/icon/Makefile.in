@@ -47,8 +47,6 @@ LIBRARY_NAME	= imgicon
 IS_COMPONENT	= 1
 MODULE_NAME	= nsIconDecoderModule
 
-PACKAGE_FILE = imgicon.pkg
-
 ifneq (,$(filter gtk2,$(MOZ_WIDGET_TOOLKIT)))
 EXTRA_DSO_LDOPTS = $(MOZ_GTK2_LIBS)
 PLATFORM = gtk

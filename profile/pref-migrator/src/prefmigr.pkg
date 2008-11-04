@@ -1,8 +1,0 @@
-# xxxbsmedberg does firebird actually use this? It's currently shipping.
-[xpfe-browser browser]
-#if SHARED_LIBRARY
-dist/bin/components/@SHARED_LIBRARY@
-#else
-!staticcomp @LIBRARY@ @MODULE_NAME@
-#endif
-!xpt dist/bin/components/prefmigr.xpt
