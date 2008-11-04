@@ -331,6 +331,10 @@ class nsOggDecoder : public nsMediaDecoder
   // Call on the main thread only.
   void ResourceLoaded();
 
+  // Called if the media file encounters a network error.
+  // Call on the main thread only.
+  void NetworkError();
+
   // Call from any thread safely. Return PR_TRUE if we are currently
   // seeking in the media resource.
   virtual PRBool IsSeeking() const;
