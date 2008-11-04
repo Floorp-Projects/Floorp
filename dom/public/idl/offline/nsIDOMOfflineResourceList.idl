@@ -38,13 +38,36 @@
 
 #include "domstubs.idl"
 
-[scriptable, uuid(c9732cb7-e104-4cf1-9936-a8592fd46c5a)]
+interface nsIDOMDOMStringList;
+
+[scriptable, uuid(dfcf7ad8-da0d-4e71-b36c-1780733a18e9)]
 interface nsIDOMOfflineResourceList : nsISupports
 {
   /**
-   * Enumerate the list of dynamically-managed entries.
+   * Get the list of dynamically-managed entries.
+   */
+  readonly attribute nsIDOMDOMStringList items;
+
+  /**
+   * Check that an entry exists in the list of dynamically-managed entries.
+   *
+   * @param uri
+   *        The resource to check.
+   */
+  boolean hasItem(in DOMString uri);
+
+  /**
+   * Get the number of dynamically-managed entries.
+   * @status DEPRECATED
+   *         Clients should use the "items" attribute.
    */
   readonly attribute unsigned long length;
+
+  /**
+   * Get the URI of a dynamically-managed entry.
+   * @status DEPRECATED
+   *         Clients should use the "items" attribute.
+   */
   DOMString item(in unsigned long index);
 
   /**
