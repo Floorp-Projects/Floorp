@@ -1615,7 +1615,15 @@ nsNavHistory::MigrateV8Up(mozIStorageConnection *aDBConn)
   rv = aDBConn->ExecuteSimpleSQL(NS_LITERAL_CSTRING(
       "DROP TRIGGER IF EXISTS moz_historyvisits_afterdelete_v1_trigger"));
   NS_ENSURE_SUCCESS(rv, rv);
-  
+
+  // bug #381795 - remove unused indexes
+  rv = mDBConn->ExecuteSimpleSQL(
+    NS_LITERAL_CSTRING("DROP INDEX IF EXISTS moz_places_titleindex"));
+  NS_ENSURE_SUCCESS(rv, rv);
+  rv = mDBConn->ExecuteSimpleSQL(
+    NS_LITERAL_CSTRING("DROP INDEX IF EXISTS moz_annos_item_idindex"));
+  NS_ENSURE_SUCCESS(rv, rv);
+
   return transaction.Commit();
 }
 
@@ -1709,17 +1717,9 @@ nsNavHistory::EnsureCurrentSchema(mozIStorageConnection* aDBConn, PRBool* aDidMi
 nsresult
 nsNavHistory::CleanUpOnQuit()
 {
-  // bug #381795 - remove unused indexes
-  mozStorageTransaction idxTransaction(mDBConn, PR_FALSE);
-  nsresult rv = mDBConn->ExecuteSimpleSQL(NS_LITERAL_CSTRING(
-      "DROP INDEX IF EXISTS moz_places_titleindex"));
-  rv = mDBConn->ExecuteSimpleSQL(NS_LITERAL_CSTRING(
-      "DROP INDEX IF EXISTS moz_annos_item_idindex"));
-  idxTransaction.Commit();
-
   // Do a one-time re-creation of the moz_annos indexes (bug 415201)
   PRBool oldIndexExists = PR_FALSE;
-  rv = mDBConn->IndexExists(NS_LITERAL_CSTRING("moz_annos_attributesindex"),
+  nsresult rv = mDBConn->IndexExists(NS_LITERAL_CSTRING("moz_annos_attributesindex"),
                             &oldIndexExists);
   NS_ENSURE_SUCCESS(rv, rv);
   if (oldIndexExists) {
