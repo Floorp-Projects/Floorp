@@ -81,6 +81,7 @@
 #include "nsIOService.h"
 #include "nsAuthInformationHolder.h"
 #include "nsICacheService.h"
+#include "nsDNSPrefetch.h"
 
 // True if the local cache should be bypassed when processing a request.
 #define BYPASS_LOCAL_CACHE(loadFlags) \
@@ -3992,6 +3993,13 @@ nsHttpChannel::AsyncOpen(nsIStreamListener *listener, nsISupports *context)
     rv = NS_CheckPortSafety(mURI);
     if (NS_FAILED(rv))
         return rv;
+
+    // Start a DNS lookup very early in case the real open is queued the DNS can 
+    // happen in parallel.
+    nsRefPtr<nsDNSPrefetch> prefetch = new nsDNSPrefetch(mURI);
+    if (prefetch) {
+        prefetch->PrefetchMedium();
+    }
 
     // Remember the cookie header that was set, if any
     const char *cookieHeader = mRequestHead.PeekHeader(nsHttp::Cookie);
