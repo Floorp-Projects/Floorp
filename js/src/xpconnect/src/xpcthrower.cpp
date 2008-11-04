@@ -284,7 +284,7 @@ XPCThrower::ThrowExceptionObject(JSContext* cx, nsIException* e)
         // (see XPCConvert::ConstructException) and we are in a web
         // context (i.e., not chrome), rethrow the original value.
         if((xpcEx = do_QueryInterface(e)) &&
-           xpcEx->StealThrownJSVal(&thrown) &&
+           xpcEx->GetThrownJSVal(&thrown) &&
            !IsCallerChrome())
         {
             JS_SetPendingException(cx, thrown);
