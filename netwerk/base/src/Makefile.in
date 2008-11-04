@@ -93,7 +93,6 @@ CPPSRCS		= \
 		nsNetStrings.cpp \
 		nsBase64Encoder.cpp \
 		nsSerializationHelper.cpp \
-		nsDNSPrefetch.cpp \
 		$(NULL)
 
 ifeq ($(MOZ_WIDGET_TOOLKIT),os2)
