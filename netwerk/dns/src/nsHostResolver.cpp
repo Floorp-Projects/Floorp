@@ -68,8 +68,28 @@
 
 //----------------------------------------------------------------------------
 
-#define MAX_THREADS 8
-#define IDLE_TIMEOUT PR_SecondsToInterval(60)
+// Use a persistent thread pool in order to avoid spinning up new threads all the time.
+// In particular, thread creation results in a res_init() call from libc which is 
+// quite expensive.
+//
+// The pool dynamically grows between 0 and MAX_RESOLVER_THREADS in size. New requests
+// go first to an idle thread. If that cannot be found and there are fewer than MAX_RESOLVER_THREADS
+// currently in the pool a new thread is created for high priority requests. If
+// the new request is at a lower priority a new thread will only be created if 
+// there are fewer than HighThreadThreshold currently outstanding. If a thread cannot be
+// created or an idle thread located for the request it is queued.
+//
+// When the pool is greater than HighThreadThreshold in size a thread will be destroyed after
+// ShortIdleTimeoutSeconds of idle time. Smaller pools use LongIdleTimeoutSeconds for a 
+// timeout period.
+
+#define MAX_NON_PRIORITY_REQUESTS 150
+
+#define HighThreadThreshold     4
+#define LongIdleTimeoutSeconds  300           // for threads 1 -> HighThreadThreshold
+#define ShortIdleTimeoutSeconds 60            // for threads HighThreadThreshold+1 -> MAX_RESOLVER_THREADS
+
+PR_STATIC_ASSERT (HighThreadThreshold <= MAX_RESOLVER_THREADS);
 
 //----------------------------------------------------------------------------
 
@@ -184,6 +204,7 @@ nsHostRecord::Create(const nsHostKey *key, nsHostRecord **result)
     rec->addr = nsnull;
     rec->expiration = NowInMinutes();
     rec->resolving = PR_FALSE;
+    rec->onQueue = PR_FALSE;
     PR_INIT_CLIST(rec);
     PR_INIT_CLIST(&rec->callbacks);
     rec->negative = PR_FALSE;
@@ -308,14 +329,26 @@ nsHostResolver::nsHostResolver(PRUint32 maxCacheEntries,
     , mMaxCacheLifetime(maxCacheLifetime)
     , mLock(nsnull)
     , mIdleThreadCV(nsnull)
-    , mHaveIdleThread(PR_FALSE)
+    , mNumIdleThreads(0)
     , mThreadCount(0)
+    , mAnyPriorityThreadCount(0)
     , mEvictionQSize(0)
+    , mPendingCount(0)
     , mShutdown(PR_TRUE)
 {
     mCreationTime = PR_Now();
-    PR_INIT_CLIST(&mPendingQ);
+    PR_INIT_CLIST(&mHighQ);
+    PR_INIT_CLIST(&mMediumQ);
+    PR_INIT_CLIST(&mLowQ);
     PR_INIT_CLIST(&mEvictionQ);
+
+    mHighPriorityInfo.self = this;
+    mHighPriorityInfo.onlyHighPriority = PR_TRUE;
+    mAnyPriorityInfo.self = this;
+    mAnyPriorityInfo.onlyHighPriority = PR_FALSE;
+
+    mLongIdleTimeout  = PR_SecondsToInterval(LongIdleTimeoutSeconds);
+    mShortIdleTimeout = PR_SecondsToInterval(ShortIdleTimeoutSeconds);
 }
 
 nsHostResolver::~nsHostResolver()
@@ -360,12 +393,28 @@ nsHostResolver::Init()
 }
 
 void
+nsHostResolver::ClearPendingQueue(PRCList *aPendingQ)
+{
+    // loop through pending queue, erroring out pending lookups.
+    if (!PR_CLIST_IS_EMPTY(aPendingQ)) {
+        PRCList *node = aPendingQ->next;
+        while (node != aPendingQ) {
+            nsHostRecord *rec = static_cast<nsHostRecord *>(node);
+            node = node->next;
+            OnLookupComplete(rec, NS_ERROR_ABORT, nsnull);
+        }
+    }
+}
+
+void
 nsHostResolver::Shutdown()
 {
     LOG(("nsHostResolver::Shutdown\n"));
 
-    PRCList pendingQ, evictionQ;
-    PR_INIT_CLIST(&pendingQ);
+    PRCList pendingQHigh, pendingQMed, pendingQLow, evictionQ;
+    PR_INIT_CLIST(&pendingQHigh);
+    PR_INIT_CLIST(&pendingQMed);
+    PR_INIT_CLIST(&pendingQLow);
     PR_INIT_CLIST(&evictionQ);
 
     {
@@ -373,26 +422,23 @@ nsHostResolver::Shutdown()
         
         mShutdown = PR_TRUE;
 
-        MoveCList(mPendingQ, pendingQ);
+        MoveCList(mHighQ, pendingQHigh);
+        MoveCList(mMediumQ, pendingQMed);
+        MoveCList(mLowQ, pendingQLow);
         MoveCList(mEvictionQ, evictionQ);
         mEvictionQSize = 0;
-
-        if (mHaveIdleThread)
+        mPendingCount = 0;
+        
+        if (mNumIdleThreads)
             PR_NotifyCondVar(mIdleThreadCV);
         
         // empty host database
         PL_DHashTableEnumerate(&mDB, HostDB_RemoveEntry, nsnull);
     }
-
-    // loop through pending queue, erroring out pending lookups.
-    if (!PR_CLIST_IS_EMPTY(&pendingQ)) {
-        PRCList *node = pendingQ.next;
-        while (node != &pendingQ) {
-            nsHostRecord *rec = static_cast<nsHostRecord *>(node);
-            node = node->next;
-            OnLookupComplete(rec, NS_ERROR_ABORT, nsnull);
-        }
-    }
+    
+    ClearPendingQueue(&pendingQHigh);
+    ClearPendingQueue(&pendingQMed);
+    ClearPendingQueue(&pendingQLow);
 
     if (!PR_CLIST_IS_EMPTY(&evictionQ)) {
         PRCList *node = evictionQ.next;
@@ -403,6 +449,33 @@ nsHostResolver::Shutdown()
         }
     }
 
+}
+
+static inline PRBool
+IsHighPriority(PRUint16 flags)
+{
+    return !(flags & (nsHostResolver::RES_PRIORITY_LOW | nsHostResolver::RES_PRIORITY_MEDIUM));
+}
+
+static inline PRBool
+IsMediumPriority(PRUint16 flags)
+{
+    return flags & nsHostResolver::RES_PRIORITY_MEDIUM;
+}
+
+static inline PRBool
+IsLowPriority(PRUint16 flags)
+{
+    return flags & nsHostResolver::RES_PRIORITY_LOW;
+}
+
+void 
+nsHostResolver::MoveQueue(nsHostRecord *aRec, PRCList &aDestQ)
+{
+    NS_ASSERTION(aRec->onQueue, "Moving Host Record Not Currently Queued");
+    
+    PR_REMOVE_LINK(aRec);
+    PR_APPEND_LINK(aRec, &aDestQ);
 }
 
 nsresult
@@ -484,9 +557,15 @@ nsHostResolver::ResolveHost(const char            *host,
                 // put reference to host record on stack...
                 result = he->rec;
             }
+            else if (mPendingCount >= MAX_NON_PRIORITY_REQUESTS &&
+                     !IsHighPriority(flags) &&
+                     !he->rec->resolving) {
+                // This is a lower priority request and we are swamped, so refuse it.
+                rv = NS_ERROR_DNS_LOOKUP_QUEUE_FULL;
+            }
             // otherwise, hit the resolver...
             else {
-                // add callback to the list of pending callbacks
+                // Add callback to the list of pending callbacks.
                 PR_APPEND_LINK(callback, &he->rec->callbacks);
 
                 if (!he->rec->resolving) {
@@ -494,6 +573,21 @@ nsHostResolver::ResolveHost(const char            *host,
                     rv = IssueLookup(he->rec);
                     if (NS_FAILED(rv))
                         PR_REMOVE_AND_INIT_LINK(callback);
+                }
+                else if (he->rec->onQueue) {
+                    // Consider the case where we are on a pending queue of 
+                    // lower priority than the request is being made at.
+                    // In that case we should upgrade to the higher queue.
+
+                    if (IsHighPriority(flags) && !IsHighPriority(he->rec->flags)) {
+                        // Move from (low|med) to high.
+                        MoveQueue(he->rec, mHighQ);
+                        he->rec->flags = flags;
+                    } else if (IsMediumPriority(flags) && IsLowPriority(he->rec->flags)) {
+                        // Move from low to med.
+                        MoveQueue(he->rec, mMediumQ);
+                        he->rec->flags = flags;
+                    }
                 }
             }
         }
@@ -543,35 +637,57 @@ nsHostResolver::IssueLookup(nsHostRecord *rec)
 {
     NS_ASSERTION(!rec->resolving, "record is already being resolved"); 
 
-    // add rec to mPendingQ, possibly removing it from mEvictionQ.
-    // if rec is on mEvictionQ, then we can just move the owning
-    // reference over to mPendingQ.
+    // Add rec to one of the pending queues, possibly removing it from mEvictionQ.
+    // If rec is on mEvictionQ, then we can just move the owning
+    // reference over to the new active queue.
     if (rec->next == rec)
         NS_ADDREF(rec);
     else {
         PR_REMOVE_LINK(rec);
         mEvictionQSize--;
     }
-    PR_APPEND_LINK(rec, &mPendingQ);
+    
+    if (IsHighPriority(rec->flags))
+        PR_APPEND_LINK(rec, &mHighQ);
+    else if (IsMediumPriority(rec->flags))
+        PR_APPEND_LINK(rec, &mMediumQ);
+    else
+        PR_APPEND_LINK(rec, &mLowQ);
+    mPendingCount++;
+    
     rec->resolving = PR_TRUE;
+    rec->onQueue = PR_TRUE;
 
-    if (mHaveIdleThread) {
+    if (mNumIdleThreads) {
         // wake up idle thread to process this lookup
         PR_NotifyCondVar(mIdleThreadCV);
     }
-    else if (mThreadCount < MAX_THREADS) {
+    else if ((mThreadCount < HighThreadThreshold) ||
+             (IsHighPriority(rec->flags) && mThreadCount < MAX_RESOLVER_THREADS)) {
         // dispatch new worker thread
         NS_ADDREF_THIS(); // owning reference passed to thread
+
+        struct nsHostResolverThreadInfo *info;
+        
+        if (mAnyPriorityThreadCount < HighThreadThreshold) {
+            info = &mAnyPriorityInfo;
+            mAnyPriorityThreadCount++;
+        }
+        else
+            info = &mHighPriorityInfo;
+
         mThreadCount++;
         PRThread *thr = PR_CreateThread(PR_SYSTEM_THREAD,
                                         ThreadFunc,
-                                        this,
+                                        info,
                                         PR_PRIORITY_NORMAL,
                                         PR_GLOBAL_THREAD,
                                         PR_UNJOINABLE_THREAD,
                                         0);
         if (!thr) {
             mThreadCount--;
+            if (info == &mAnyPriorityInfo)
+                mAnyPriorityThreadCount--;
             NS_RELEASE_THIS();
             return NS_ERROR_OUT_OF_MEMORY;
         }
@@ -584,25 +700,54 @@ nsHostResolver::IssueLookup(nsHostRecord *rec)
     return NS_OK;
 }
 
+void
+nsHostResolver::DeQueue(PRCList &aQ, nsHostRecord **aResult)
+{
+    *aResult = static_cast<nsHostRecord *>(aQ.next);
+    PR_REMOVE_AND_INIT_LINK(*aResult);
+    mPendingCount--;
+    (*aResult)->onQueue = PR_FALSE;
+}
+
 PRBool
-nsHostResolver::GetHostToLookup(nsHostRecord **result)
+nsHostResolver::GetHostToLookup(nsHostRecord **result, struct nsHostResolverThreadInfo *aID)
 {
     nsAutoLock lock(mLock);
 
-    PRIntervalTime start = PR_IntervalNow(), timeout = IDLE_TIMEOUT;
-    //
-    // wait for one or more of the following to occur:
-    //  (1) the pending queue has a host record to process
-    //  (2) the shutdown flag has been set
-    //  (3) the thread has been idle for too long
-    //
-    // PR_WaitCondVar will return when any of these conditions is true.
-    //
-    while (PR_CLIST_IS_EMPTY(&mPendingQ) && !mHaveIdleThread && !mShutdown) {
+    PRIntervalTime start = PR_IntervalNow(), timeout;
+    
+    while (!mShutdown) {
+        // remove next record from Q; hand over owning reference. Check high, then med, then low
+        
+        if (!PR_CLIST_IS_EMPTY(&mHighQ)) {
+            DeQueue (mHighQ, result);
+            return PR_TRUE;
+        }
+
+        if (! aID->onlyHighPriority) {
+            if (!PR_CLIST_IS_EMPTY(&mMediumQ)) {
+                DeQueue (mMediumQ, result);
+                return PR_TRUE;
+            }
+            
+            if (!PR_CLIST_IS_EMPTY(&mLowQ)) {
+                DeQueue (mLowQ, result);
+                return PR_TRUE;
+            }
+        }
+        
+        timeout = (mNumIdleThreads >= HighThreadThreshold) ? mShortIdleTimeout : mLongIdleTimeout;
+        // wait for one or more of the following to occur:
+        //  (1) the pending queue has a host record to process
+        //  (2) the shutdown flag has been set
+        //  (3) the thread has been idle for too long
+        //
+        // PR_WaitCondVar will return when any of these conditions is true.
         // become the idle thread and wait for a lookup
-        mHaveIdleThread = PR_TRUE;
+        
+        mNumIdleThreads++;
         PR_WaitCondVar(mIdleThreadCV, timeout);
-        mHaveIdleThread = PR_FALSE;
+        mNumIdleThreads--;
 
         PRIntervalTime delta = PR_IntervalNow() - start;
         if (delta >= timeout)
@@ -611,15 +756,10 @@ nsHostResolver::GetHostToLookup(nsHostRecord **result)
         start += delta;
     }
 
-    if (!PR_CLIST_IS_EMPTY(&mPendingQ)) {
-        // remove next record from mPendingQ; hand over owning reference.
-        *result = static_cast<nsHostRecord *>(mPendingQ.next);
-        PR_REMOVE_AND_INIT_LINK(*result);
-        return PR_TRUE;
-    }
-
     // tell thread to exit...
     mThreadCount--;
+    if (!aID->onlyHighPriority)
+        mAnyPriorityThreadCount--;
     return PR_FALSE;
 }
 
@@ -698,11 +838,11 @@ nsHostResolver::ThreadFunc(void *arg)
 #if defined(RES_RETRY_ON_FAILURE)
     nsResState rs;
 #endif
-
-    nsHostResolver *resolver = (nsHostResolver *) arg;
+    struct nsHostResolverThreadInfo *info = (struct nsHostResolverThreadInfo *) arg;
+    nsHostResolver *resolver = info->self;
     nsHostRecord *rec;
     PRAddrInfo *ai;
-    while (resolver->GetHostToLookup(&rec)) {
+    while (resolver->GetHostToLookup(&rec, info)) {
         LOG(("resolving %s ...\n", rec->host));
 
         PRIntn flags = PR_AI_ADDRCONFIG;
