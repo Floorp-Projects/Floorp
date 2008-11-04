@@ -339,6 +339,19 @@ public:
     PRBool UserToDevicePixelSnapped(gfxRect& rect, PRBool ignoreScale = PR_FALSE) const;
 
     /**
+     * Takes the given point and tries to align it to device pixels.  If
+     * this succeeds, the method will return PR_TRUE, and the point will
+     * be in device coordinates (already transformed by the CTM).  If it 
+     * fails, the method will return PR_FALSE, and the point will not be
+     * changed.
+     *
+     * If ignoreScale is PR_TRUE, then snapping will take place even if
+     * the CTM has a scale applied.  Snapping never takes place if
+     * there is a rotation in the CTM.
+     */
+    PRBool UserToDevicePixelSnapped(gfxPoint& pt, PRBool ignoreScale = PR_FALSE) const;
+
+    /**
      * Attempts to pixel snap the rectangle, add it to the current
      * path, and to set pattern as the current painting source.  This
      * should be used for drawing filled pixel-snapped rectangles (like
