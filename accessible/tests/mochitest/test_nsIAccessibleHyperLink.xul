@@ -36,7 +36,7 @@
     function testStates(aID, aAcc, aState, aExtraState, aUndesiredState)
     {
       var state = {}, extraState = {};
-      aAcc.getFinalState(state, extraState);
+      aAcc.getState(state, extraState);
       is(state.value & aState, aState, "Wrong state bits for " + aID + "!");
       is(extraState.value & aExtraState, aExtraState, 
          "Wrong extra state bits for " + aID + "!");
@@ -119,7 +119,7 @@
            "Wrong name for normal label!");
     
         var stateNormal = {}, extraStateNormal = {};
-        normalLabelAcc.getFinalState(stateNormal, extraStateNormal);
+        normalLabelAcc.getState(stateNormal, extraStateNormal);
         undesiredState = (state_focusable | state_linked);
         is(stateNormal.value & undesiredState, 0, "Wrong state bits for normal label!");
       }

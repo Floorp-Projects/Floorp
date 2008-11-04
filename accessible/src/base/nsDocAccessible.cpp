@@ -270,11 +270,11 @@ nsDocAccessible::GetDescription(nsAString& aDescription)
   return NS_OK;
 }
 
-NS_IMETHODIMP
-nsDocAccessible::GetState(PRUint32 *aState, PRUint32 *aExtraState)
+nsresult
+nsDocAccessible::GetStateInternal(PRUint32 *aState, PRUint32 *aExtraState)
 {
-  // nsAccessible::GetState() always fail for document accessible.
-  nsAccessible::GetState(aState, aExtraState);
+  // nsAccessible::GetStateInternal() always fail for document accessible.
+  nsAccessible::GetStateInternal(aState, aExtraState);
   if (!mDOMNode)
     return NS_OK;
 
@@ -365,7 +365,7 @@ NS_IMETHODIMP nsDocAccessible::TakeFocus()
 {
   NS_ENSURE_TRUE(mDocument, NS_ERROR_FAILURE);
   PRUint32 state;
-  GetState(&state, nsnull);
+  GetStateInternal(&state, nsnull);
   if (0 == (state & nsIAccessibleStates::STATE_FOCUSABLE)) {
     return NS_ERROR_FAILURE; // Not focusable
   }

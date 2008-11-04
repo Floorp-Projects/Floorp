@@ -195,11 +195,12 @@ NS_IMETHODIMP nsHTMLTableAccessible::GetRole(PRUint32 *aResult)
   return NS_OK;
 }
 
-NS_IMETHODIMP
-nsHTMLTableAccessible::GetState(PRUint32 *aState, PRUint32 *aExtraState)
+nsresult
+nsHTMLTableAccessible::GetStateInternal(PRUint32 *aState, PRUint32 *aExtraState)
 {
-  nsresult rv= nsAccessible::GetState(aState, aExtraState);
+  nsresult rv= nsAccessible::GetStateInternal(aState, aExtraState);
   NS_ENSURE_SUCCESS(rv, rv);
+
   *aState |= nsIAccessibleStates::STATE_READONLY;
   return NS_OK;
 }
@@ -1058,7 +1059,7 @@ NS_IMETHODIMP nsHTMLTableAccessible::IsProbablyForLayout(PRBool *aIsProbablyForL
   nsCOMPtr<nsIAccessible> docAccessible = do_QueryInterface(nsCOMPtr<nsIAccessibleDocument>(GetDocAccessible()));
   if (docAccessible) {
     PRUint32 state, extState;
-    docAccessible->GetFinalState(&state, &extState);
+    docAccessible->GetState(&state, &extState);
     if (extState & nsIAccessibleStates::EXT_STATE_EDITABLE) {  // Need to see all elements while document is being edited
       RETURN_LAYOUT_ANSWER(PR_FALSE, "In editable document");
     }

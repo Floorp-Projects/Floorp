@@ -169,10 +169,10 @@ NS_IMETHODIMP nsHyperTextAccessible::GetRole(PRUint32 *aRole)
   return NS_OK;
 }
 
-NS_IMETHODIMP
-nsHyperTextAccessible::GetState(PRUint32 *aState, PRUint32 *aExtraState)
+nsresult
+nsHyperTextAccessible::GetStateInternal(PRUint32 *aState, PRUint32 *aExtraState)
 {
-  nsresult rv = nsAccessibleWrap::GetState(aState, aExtraState);
+  nsresult rv = nsAccessibleWrap::GetStateInternal(aState, aExtraState);
   NS_ENSURE_SUCCESS(rv, rv);
   if (!mDOMNode || !aExtraState)
     return NS_OK;

@@ -143,8 +143,9 @@ nsApplicationAccessible::GetFinalRole(PRUint32 *aFinalRole)
   return GetRole(aFinalRole);
 }
 
-NS_IMETHODIMP
-nsApplicationAccessible::GetState(PRUint32 *aState, PRUint32 *aExtraState)
+nsresult
+nsApplicationAccessible::GetStateInternal(PRUint32 *aState,
+                                          PRUint32 *aExtraState)
 {
   *aState = 0;
   if (aExtraState)

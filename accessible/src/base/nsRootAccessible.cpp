@@ -210,10 +210,10 @@ PRUint32 nsRootAccessible::GetChromeFlags()
 }
 #endif
 
-NS_IMETHODIMP
-nsRootAccessible::GetState(PRUint32 *aState, PRUint32 *aExtraState)
+nsresult
+nsRootAccessible::GetStateInternal(PRUint32 *aState, PRUint32 *aExtraState)
 {
-  nsresult rv = nsDocAccessibleWrap::GetState(aState, aExtraState);
+  nsresult rv = nsDocAccessibleWrap::GetStateInternal(aState, aExtraState);
   NS_ENSURE_SUCCESS(rv, rv);
   if (!mDOMNode)
     return NS_OK;
@@ -697,7 +697,7 @@ nsresult nsRootAccessible::HandleEventWithTarget(nsIDOMEvent* aEvent,
 
     // radiogroup in prefWindow is exposed as a list,
     // and panebutton is exposed as XULListitem in A11y.
-    // nsXULListitemAccessible::GetState uses STATE_SELECTED in this case,
+    // nsXULListitemAccessible::GetStateInternal uses STATE_SELECTED in this case,
     // so we need to check nsIAccessibleStates::STATE_SELECTED also.
     PRBool isEnabled = (state & (nsIAccessibleStates::STATE_CHECKED |
                         nsIAccessibleStates::STATE_SELECTED)) != 0;

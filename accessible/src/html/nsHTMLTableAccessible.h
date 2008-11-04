@@ -74,12 +74,12 @@ public:
 
   // nsIAccessible
   NS_IMETHOD GetRole(PRUint32 *aResult); 
-  NS_IMETHOD GetState(PRUint32 *aState, PRUint32 *aExtraState);
   NS_IMETHOD GetDescription(nsAString& aDescription);
   NS_IMETHOD GetAccessibleRelated(PRUint32 aRelationType, nsIAccessible **aRelated);
 
   // nsAccessible
   virtual nsresult GetNameInternal(nsAString& aName);
+  virtual nsresult GetStateInternal(PRUint32 *aState, PRUint32 *aExtraState);
   virtual nsresult GetAttributesInternal(nsIPersistentProperties *aAttributes);
 
   // nsHTMLTableAccessible
