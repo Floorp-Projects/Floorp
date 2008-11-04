@@ -1308,7 +1308,6 @@ nsXULContentBuilder::IsOpen(nsIContent* aElement)
     // XXXhyatt Use the XBL service to obtain a base tag.
     nsIAtom *tag = aElement->Tag();
     if (tag == nsGkAtoms::menu ||
-        tag == nsGkAtoms::menulist ||
         tag == nsGkAtoms::menubutton ||
         tag == nsGkAtoms::toolbarbutton ||
         tag == nsGkAtoms::button ||
