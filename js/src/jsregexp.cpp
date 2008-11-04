@@ -2043,7 +2043,7 @@ class RegExpNativeCompiler {
         LIns *byteIndex = lir->ins2(LIR_rsh, text_ch, lir->insImm(3));
         /* FIXME  When available in nanojit, use LIR that can generate
          *        indexed load instructions instead of this workaround. */
-        LIns *bitmap = lir->insLoad(LIR_ld, lir->insImmPtr(charSet), offsetof(RECharSet, u.bits));
+        LIns *bitmap = lir->insLoad(LIR_ld, lir->insImmPtr(charSet), (int) offsetof(RECharSet, u.bits));
         LIns *byte = lir->insLoad(LIR_ldcb, lir->ins2(LIR_piadd, bitmap, byteIndex), (int) 0);
         LIns *bitMask = lir->ins2(LIR_lsh, lir->insImm(1),
                                lir->ins2(LIR_and, text_ch, lir->insImm(0x7)));
