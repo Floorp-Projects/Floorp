@@ -112,6 +112,8 @@ namespace nanojit
             Fragment*   createBranch(SideExit *exit, const void* ip);
             Fragment*   newFrag(const void* ip);
             Fragment*   newBranch(Fragment *from, const void* ip);
+            void        disconnectLoops();
+            void        reconnectLoops();
 
             verbose_only ( uint32_t pageCount(); )
 			verbose_only ( void dumpStats(); )
@@ -225,6 +227,7 @@ namespace nanojit
             uint32_t recordAttempts;
             int32_t blacklistLevel;
             NIns* fragEntry;
+            NIns* loopEntry;
 			int32_t calldepth;
 			void* vmprivate;
 			

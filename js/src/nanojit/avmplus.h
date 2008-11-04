@@ -173,7 +173,8 @@ namespace nanojit
 	    MISMATCH_EXIT,
 	    OOM_EXIT,
 	    OVERFLOW_EXIT,
-	    UNSTABLE_LOOP_EXIT
+	    UNSTABLE_LOOP_EXIT,
+	    TIMEOUT_EXIT
 	};
 
     struct GuardRecord;
@@ -184,7 +185,9 @@ namespace nanojit
     
     typedef struct GuardRecord 
     {
-        void *jmp;
+        void* jmpToStub;
+        void* stubEntry;
+        void* jmpToTarget;
         GuardRecord* next;
         SideExit* exit;
     };
@@ -192,8 +195,8 @@ namespace nanojit
     typedef struct SideExit
     {
         GuardRecord* guards;
-        Fragment *from;
-        Fragment *target;
+        Fragment* from;
+        Fragment* target;
         intptr_t ip_adj;
         intptr_t sp_adj;
         intptr_t rp_adj;
