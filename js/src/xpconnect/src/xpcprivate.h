@@ -95,6 +95,7 @@
 #include "nsString.h"
 #include "nsReadableUtils.h"
 #include "nsXPIDLString.h"
+#include "nsAutoJSValHolder.h"
 
 #include "nsThreadUtils.h"
 #include "nsIJSContextStack.h"
@@ -2834,7 +2835,8 @@ public:
                                        const char* methodName,
                                        nsISupports* data,
                                        nsIException** exception,
-                                       const jsval *jsExceptionPtr);
+                                       JSContext* cx,
+                                       jsval *jsExceptionPtr);
 
     static void RemoveXPCOMUCStringFinalizer();
 
@@ -2920,8 +2922,6 @@ private:
 
 /***************************************************************************/
 
-class XPCVariant;
-
 class nsXPCException :
             public nsIXPCException
 {
@@ -2954,8 +2954,8 @@ public:
 
     static void InitStatics() { sEverMadeOneFromFactory = JS_FALSE; }
 
-    PRBool GetThrownJSVal(jsval *vp) const;
-    void   SetThrownJSVal(jsval v);
+    PRBool StealThrownJSVal(jsval* vp);
+    void StowThrownJSVal(JSContext* cx, jsval v);
 
 protected:
     void Reset();
@@ -2970,7 +2970,7 @@ private:
     nsIException*   mInner;
     PRBool          mInitialized;
 
-    nsCOMPtr<XPCVariant> mThrownJSVal;
+    nsAutoJSValHolder mThrownJSVal;
 
     static JSBool sEverMadeOneFromFactory;
 };
