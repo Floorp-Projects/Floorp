@@ -124,9 +124,14 @@ tier_gecko_dirs += \
 		media/libogg \
 		media/liboggplay \
 		media/liboggz \
-		media/libsydneyaudio \
 		media/libtheora \
 		media/libvorbis \
+		$(NULL)
+endif
+
+ifdef MOZ_SYDNEYAUDIO
+tier_gecko_dirs += \
+		media/libsydneyaudio \
 		$(NULL)
 endif
 
