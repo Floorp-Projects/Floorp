@@ -3700,6 +3700,11 @@ js_InitJIT(JSTraceMonitor *tm)
         tm->globalTypeMap = new (&gc) TypeMap();
         tm->recoveryDoublePoolPtr = tm->recoveryDoublePool = new jsval[MAX_NATIVE_STACK_SLOTS];
     }
+    if (!tm->reFragmento) {
+        Fragmento* fragmento = new (&gc) Fragmento(core, 24);
+        verbose_only(fragmento->labels = new (&gc) LabelMap(core, NULL);)
+        tm->reFragmento = fragmento;
+    }
 #if !defined XP_WIN
     debug_only(memset(&jitstats, 0, sizeof(jitstats)));
 #endif
