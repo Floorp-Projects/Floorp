@@ -5901,7 +5901,7 @@ TraceRecorder::record_JSOP_CALLNAME()
         if (!activeCallOrGlobalSlot(obj, vp))
             return false;
         stack(0, get(vp));
-        stack(1, INS_CONSTPTR(NULL));
+        stack(1, INS_CONSTPTR(globalObj));
         return true;
     }
 
