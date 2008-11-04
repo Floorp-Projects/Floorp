@@ -11,12 +11,11 @@
  * for the specific language governing rights and limitations under the
  * License.
  * 
- * The Initial Developer of the Original Code is Björn Jacke. Portions created
- * by the Initial Developers are Copyright (C) 2000-2007 the Initial
- * Developers. All Rights Reserved.
+ * The Initial Developers of the Original Code are Kevin Hendricks (MySpell)
+ * and László Németh (Hunspell). Portions created by the Initial Developers
+ * are Copyright (C) 2002-2005 the Initial Developers. All Rights Reserved.
  * 
- * Contributor(s): Björn Jacke (bjoern.jacke@gmx.de)
- *                 László Németh (nemethl@gyorsposta.hu)
+ * Contributor(s): László Németh (nemethl@gyorsposta.hu)
  * 
  * Alternatively, the contents of this file may be used under the terms of
  * either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -30,37 +29,56 @@
  * the provisions above, a recipient may use your version of this file under
  * the terms of any one of the MPL, the GPL or the LGPL.
  *
- * Changelog:
- *  2000-01-05  Björn Jacke <bjoern.jacke AT gmx.de>
- *              Initial Release insprired by the article about phonetic
- *              transformations out of c't 25/1999
- *
- *  2007-07-20  Björn Jacke <bjoern.jacke AT gmx.de>
- *              Released under MPL/GPL/LGPL tri-license for Hunspell
- *
- *  2007-08-22  László Németh <nemeth at OOo>
- *              Porting from Aspell to Hunspell by little modifications
- *
  ******* END LICENSE BLOCK *******/
 
-#ifndef __PHONETHXX__
-#define __PHONETHXX__
-
-#define HASHSIZE          256
-#define MAXPHONETLEN      256
-#define MAXPHONETUTF8LEN  (MAXPHONETLEN * 4)
-
-struct phonetable {
-  char utf8;
-  cs_info * lang;
-  int num;
-  char * * rules;
-  int hash[HASHSIZE];
-};
-
-void init_phonet_hash(phonetable & parms);
-
-int phonet (const char * inword, char * target,
-              int len, phonetable & phone);
-
+#ifndef MOZILLA_CLIENT
+#include <cstdlib>
+#include <cstring>
+#include <cstdio>
+#else
+#include <stdlib.h> 
+#include <string.h>
+#include <stdio.h> 
 #endif
+
+#include "filemgr.hxx"
+
+int FileMgr::fail(const char * err, const char * par) {
+    fprintf(stderr, err, par);
+    return -1;
+}
+
+FileMgr::FileMgr(const char * file, const char * key) {
+    linenum = 0;
+    hin = NULL;
+    fin = fopen(file, "r");
+    if (!fin) {
+        // check hzipped file
+        char * st = (char *) malloc(strlen(file) + strlen(HZIP_EXTENSION));
+        if (st) {
+            strcpy(st, file);
+            strcat(st, HZIP_EXTENSION);
+            hin = new Hunzip(st, key);
+        }
+    }    
+    if (!fin && !hin) fail(MSG_OPEN, file);
+}
+
+FileMgr::~FileMgr()
+{
+    if (fin) fclose(fin);
+    if (hin) delete hin;
+}
+
+char * FileMgr::getline() {
+    const char * l;
+    linenum++;
+    if (fin) return fgets(in, BUFSIZE - 1, fin);
+    if (hin && (l = hin->getline())) return strcpy(in, l);
+    linenum--;
+    return NULL;
+}
+
+int FileMgr::getlinenum() {
+    return linenum;
+}
