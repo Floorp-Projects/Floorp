@@ -188,22 +188,34 @@ namespace nanojit
 		}
 	}
 	
+	// Clear the fragment. This *does not* remove the fragment from the
+	// map--the caller must take care of this.
+	void Fragmento::clearFragment(Fragment* f)
+	{
+		Fragment *peer = f->peer;
+		while (peer) {
+			Fragment *next = peer->peer;
+			peer->releaseTreeMem(this);
+			delete peer;
+			peer = next;
+		}
+		f->releaseTreeMem(this);
+		delete f;
+	}
+
+	void Fragmento::clearFrag(const void* ip)
+	{
+		Fragment *f = _frags->remove(ip);
+		if (f) clearFragment(f);
+	}
+
 	void Fragmento::clearFrags()
 	{
 		// reclaim any dangling native pages
 		_assm->pageReset();
 
         while (!_frags->isEmpty()) {
-            Fragment *f = _frags->removeLast();
-            Fragment *peer = f->peer;
-            while (peer) {
-                Fragment *next = peer->peer;
-                peer->releaseTreeMem(this);
-                delete peer;
-                peer = next;
-            }
-            f->releaseTreeMem(this);
-            delete f;
+            clearFragment(_frags->removeLast());
 		}
 
 		verbose_only( enterCounts->clear();)
