@@ -2094,9 +2094,15 @@ TraceRecorder::compile(Fragmento* fragmento)
         return;
     }
     ++treeInfo->branchCount;
+    if (lirbuf->outOmem()) {
+        fragmento->assm()->setError(nanojit::OutOMem);
+        return;
+    }
     ::compile(fragmento->assm(), fragment);
     if (anchor) 
         fragmento->assm()->patch(anchor);
+    if (fragmento->assm()->error() != nanojit::None)
+        return;
     JS_ASSERT(fragment->code());
     JS_ASSERT(!fragment->vmprivate);
     if (fragment == fragment->root)
@@ -2213,6 +2219,9 @@ TraceRecorder::closeLoop(Fragmento* fragmento, bool& demote, unsigned *demotes)
         compile(fragmento);
     }
 
+    if (fragmento->assm()->error() != nanojit::None)
+        return false;
+
     joinEdgesToEntry(fragmento, peer_root);
 
     debug_only_v(printf("recording completed at %s:%u@%u via closeLoop\n", cx->fp->script->filename,
@@ -2288,6 +2297,9 @@ TraceRecorder::endLoop(Fragmento* fragmento)
 {
     fragment->lastIns = lir->insGuard(LIR_x, lir->insImm(1), snapshot(LOOP_EXIT));
     compile(fragmento);
+
+    if (fragmento->assm()->error() != nanojit::None)
+        return;
 
     joinEdgesToEntry(fragmento, fragmento->getLoop(fragment->root->ip));
 
@@ -2704,6 +2716,12 @@ js_RecordTree(JSContext* cx, JSTraceMonitor* tm, Fragment* f, Fragment* outer, u
 #ifdef DEBUG
         f->lirbuf->names = new (&gc) LirNameMap(&gc, NULL, tm->fragmento->labels);
 #endif
+    }
+
+    if (f->lirbuf->outOmem()) {
+        js_FlushJITCache(cx);
+        debug_only_v(printf("Out of memory recording new tree, flushing cache.\n");)
+        return false;
     }
 
     JS_ASSERT(!f->code() && !f->vmprivate);
@@ -3511,6 +3529,12 @@ bool
 js_MonitorRecording(TraceRecorder* tr)
 {
     JSContext* cx = tr->cx;
+
+    if (tr->lirbuf->outOmem()) {
+        js_AbortRecording(cx, "no more LIR memory");
+        js_FlushJITCache(cx);
+        return false;
+    }
 
     if (tr->walkedOutOfLoop())
         return js_CloseLoop(cx);

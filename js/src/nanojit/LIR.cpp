@@ -2019,6 +2019,8 @@ namespace nanojit
 //		loopJumps.set_meminfo_name("LIR loopjumps");
 #endif
 		assm->beginAssembly(triggerFrag, &regMap);
+		if (assm->error())
+			return;
 
 		//fprintf(stderr, "recompile trigger %X kind %d\n", (int)triggerFrag, triggerFrag->kind);
 		Fragment* root = triggerFrag;
