@@ -65,7 +65,6 @@
 #ifdef MOZ_XUL
 #include "nsXULPrototypeCache.h"
 #endif
-#include "nsThreadUtils.h"
 
 static NS_DEFINE_CID(kDOMScriptObjectFactoryCID, NS_DOM_SCRIPT_OBJECT_FACTORY_CID);
 
@@ -396,10 +395,6 @@ nsDOMExceptionProvider::GetException(nsresult result,
                                      nsIException *aDefaultException,
                                      nsIException **_retval)
 {
-  if (!NS_IsMainThread()) {
-    return NS_ERROR_NOT_IMPLEMENTED;
-  }
-
   switch (NS_ERROR_GET_MODULE(result))
   {
     case NS_ERROR_MODULE_DOM_RANGE:

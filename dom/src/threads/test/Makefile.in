@@ -47,32 +47,20 @@ include $(DEPTH)/config/autoconf.mk
 include $(topsrcdir)/config/rules.mk
 
 _TEST_FILES = \
-  test_importScripts.html \
   importScripts_worker.js \
   importScripts_worker_imported1.js \
   importScripts_worker_imported2.js \
   importScripts_worker_imported3.js \
   importScripts_worker_imported4.js \
-  test_longThread.html \
-  longThread_worker.js \
-  test_recursion.html \
-  recursion_worker.js \
-  test_regExpStatics.html \
-  regExpStatics_worker.js \
+  test_importScripts.html \
   test_simpleThread.html \
-  simpleThread_worker.js \
   test_threadErrors.html \
-  threadErrors_worker1.js \
-  threadErrors_worker2.js \
-  threadErrors_worker3.js \
-  threadErrors_worker4.js \
   test_threadTimeouts.html \
-  threadTimeouts_worker.js \
+  test_longThread.html \
+  test_recursion.html \
+  test_regExpStatics.html \
   test_xhr.html \
-  xhr_worker.js \
   testXHR.txt \
-  test_fibonacci.html \
-  fibonacci_worker.js \
   $(NULL)
 
 libs:: $(_TEST_FILES)
