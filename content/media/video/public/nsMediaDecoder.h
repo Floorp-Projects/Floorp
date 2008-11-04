@@ -142,12 +142,6 @@ class nsMediaDecoder : public nsIObserver
   // Set the size of the video file in bytes.
   virtual void SetTotalBytes(PRInt64 aBytes) = 0;
 
-  // Set a flag indicating whether seeking is supported
-  virtual void SetSeekable(PRBool aSeekable) = 0;
-
-  // Return PR_TRUE if seeking is supported.
-  virtual PRBool GetSeekable() = 0;
-
   // Called when the HTML DOM element is bound.
   virtual void ElementAvailable(nsHTMLMediaElement* anElement);
 
