@@ -93,6 +93,7 @@
                             this.playButton.setAttribute("paused", false);
                             break;
                         case "pause":
+                        case "ended":
                             this.playButton.setAttribute("paused", true);
                             break;
                         case "volumechange":
@@ -174,6 +175,7 @@
             // Use Utils.handleEvent() callback for all media events.
             video.addEventListener("play",         this.Utils, false);
             video.addEventListener("pause",        this.Utils, false);
+            video.addEventListener("ended",        this.Utils, false);
             video.addEventListener("volumechange", this.Utils, false);
 
             this.Utils.log("--- videocontrols initialized ---");
