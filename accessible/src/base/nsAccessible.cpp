@@ -944,7 +944,7 @@ PRBool nsAccessible::IsVisible(PRBool *aIsOffscreen)
 }
 
 nsresult
-nsAccessible::GetState(PRUint32 *aState, PRUint32 *aExtraState)
+nsAccessible::GetStateInternal(PRUint32 *aState, PRUint32 *aExtraState)
 {
   *aState = 0;
 
@@ -1992,7 +1992,7 @@ nsAccessible::GetAttributes(nsIPersistentProperties **aAttributes)
       content->HasAttr(kNameSpaceID_None, nsAccessibilityAtoms::aria_checked)) {
     // Might be checkable -- checking role & ARIA attribute first is faster than getting state
     PRUint32 state = 0;
-    GetFinalState(&state, nsnull);
+    GetState(&state, nsnull);
     if (state & nsIAccessibleStates::STATE_CHECKABLE) {
       // No official state for checkable, so use object attribute to expose that
       attributes->SetStringProperty(NS_LITERAL_CSTRING("checkable"), NS_LITERAL_STRING("true"),
@@ -2269,11 +2269,11 @@ PRBool nsAccessible::MappedAttrState(nsIContent *aContent, PRUint32 *aStateInOut
 }
 
 NS_IMETHODIMP
-nsAccessible::GetFinalState(PRUint32 *aState, PRUint32 *aExtraState)
+nsAccessible::GetState(PRUint32 *aState, PRUint32 *aExtraState)
 {
   NS_ENSURE_ARG_POINTER(aState);
 
-  nsresult rv = GetState(aState, aExtraState);
+  nsresult rv = GetStateInternal(aState, aExtraState);
   NS_ENSURE_SUCCESS(rv, rv);
 
   // Apply ARIA states to be sure accessible states will be overriden.
