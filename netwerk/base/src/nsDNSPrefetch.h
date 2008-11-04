@@ -1,3 +1,4 @@
+/* -*- Mode: C++; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 4 -*- */
 /* ***** BEGIN LICENSE BLOCK *****
  * Version: MPL 1.1/GPL 2.0/LGPL 2.1
  *
@@ -13,16 +14,17 @@
  *
  * The Original Code is Mozilla.
  *
- * The Initial Developer of the Original Code is IBM Corporation.
- * Portions created by IBM Corporation are Copyright (C) 2003
- * IBM Corporation. All Rights Reserved.
+ * The Initial Developer of the Original Code is
+ * Mozilla Corporation.
+ * Portions created by the Initial Developer are Copyright (C) 2008
+ * the Initial Developer. All Rights Reserved.
  *
  * Contributor(s):
- *   IBM Corp.
+ *   Patrick McManus <mcmanus@ducksong.com>
  *
  * Alternatively, the contents of this file may be used under the terms of
- * either the GNU General Public License Version 2 or later (the "GPL"), or
- * the GNU Lesser General Public License Version 2.1 or later (the "LGPL"),
+ * either of the GNU General Public License Version 2 or later (the "GPL"),
+ * or the GNU Lesser General Public License Version 2.1 or later (the "LGPL"),
  * in which case the provisions of the GPL or the LGPL are applicable instead
  * of those above. If you wish to allow use of your version of this file only
  * under the terms of either the GPL or the LGPL, and not to allow others to
@@ -34,38 +36,36 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-#include "nsPIDNSService.h"
-#include "nsIIDNService.h"
-#include "nsIObserver.h"
-#include "nsHostResolver.h"
-#include "nsAutoPtr.h"
-#include "nsString.h"
-#include "prlock.h"
+#ifndef nsDNSPrefetch_h___
 
-class nsDNSService : public nsPIDNSService
-                   , public nsIObserver
+#include "nsCOMPtr.h"
+#include "nsString.h"
+
+#include "nsIDNSListener.h"
+
+class nsIURI;
+class nsIDNSService;
+
+class nsDNSPrefetch : public nsIDNSListener
 {
 public:
     NS_DECL_ISUPPORTS
-    NS_DECL_NSPIDNSSERVICE
-    NS_DECL_NSIDNSSERVICE
-    NS_DECL_NSIOBSERVER
+    NS_DECL_NSIDNSLISTENER
+  
+    nsDNSPrefetch(nsIURI *aURI);
 
-    nsDNSService();
-    ~nsDNSService();
+    static nsresult Initialize(nsIDNSService *aDNSService);
+    static nsresult Shutdown();
 
+    // Call one of the following methods to start the Prefetch.
+    nsresult PrefetchHigh();
+    nsresult PrefetchMedium();
+    nsresult PrefetchLow();
+  
 private:
-    PRUint16 GetAFForLookup(const nsACString &host);
-
-    nsRefPtr<nsHostResolver>  mResolver;
-    nsCOMPtr<nsIIDNService>   mIDN;
-
-    // mLock protects access to mResolver and mIPv4OnlyDomains
-    PRLock                   *mLock;
-
-    // mIPv4OnlyDomains is a comma-separated list of domains for which only
-    // IPv4 DNS lookups are performed. This allows the user to disable IPv6 on
-    // a per-domain basis and work around broken DNS servers. See bug 68796.
-    nsAdoptingCString         mIPv4OnlyDomains;
-    PRBool                    mDisableIPv6;
+    nsCString  mHostname;
+    
+    nsresult Prefetch(PRUint16 flags);
 };
+
+#endif 
