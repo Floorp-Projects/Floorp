@@ -233,33 +233,27 @@
       <label crop="center" flex="1" class="tooltip-label"/>
     </tooltip>
 
-    <panel id="ctrlTab-panel" class="KUI-panel" hidden="true" norestorefocus="true"
+    <panel id="ctrlTab-panel" class="KUI-panel" hidden="true" noautofocus="true" level="top"
 #ifdef XP_WIN
 # XXX bug 457997
       noautohide="true"
 #endif
     >
-      <hbox pack="center">
-        <textbox id="ctrlTab-search"
-                 type="search"
-                 emptytext="&ctrlTab.search.emptyText;"
-                 oncommand="ctrlTab.search();"
-                 onfocus="ctrlTab.sticky = true;"/>
+      <label id="ctrlTab-label" flex="1"/>
+      <hbox class="ctrlTab-row">
+        <hbox flex="1" pack="center"><hbox class="ctrlTab-thumbnail" onclick="ctrlTab.thumbnailClick(event);"/></hbox>
+        <hbox class="ctrlTab-thumbnail" onclick="ctrlTab.thumbnailClick(event);"/>
+        <hbox flex="1" pack="center"><hbox class="ctrlTab-thumbnail" onclick="ctrlTab.thumbnailClick(event);"/></hbox>
       </hbox>
       <hbox class="ctrlTab-row">
-        <hbox flex="1" pack="center"><vbox class="ctrlTab-thumbnail"/></hbox>
-        <vbox class="ctrlTab-thumbnail"/>
-        <hbox flex="1" pack="center"><vbox class="ctrlTab-thumbnail"/></hbox>
+        <hbox flex="1" pack="center"><hbox class="ctrlTab-thumbnail" onclick="ctrlTab.thumbnailClick(event);"/></hbox>
+        <hbox class="ctrlTab-thumbnail" onclick="ctrlTab.thumbnailClick(event);"/>
+        <hbox flex="1" pack="center"><hbox class="ctrlTab-thumbnail" onclick="ctrlTab.thumbnailClick(event);"/></hbox>
       </hbox>
       <hbox class="ctrlTab-row">
-        <hbox flex="1" pack="center"><vbox class="ctrlTab-thumbnail"/></hbox>
-        <vbox class="ctrlTab-thumbnail"/>
-        <hbox flex="1" pack="center"><vbox class="ctrlTab-thumbnail"/></hbox>
-      </hbox>
-      <hbox class="ctrlTab-row">
-        <hbox flex="1" pack="center"><vbox class="ctrlTab-thumbnail"/></hbox>
-        <vbox class="ctrlTab-thumbnail"/>
-        <hbox flex="1" pack="center"><vbox class="ctrlTab-thumbnail"/></hbox>
+        <hbox flex="1" pack="center"><hbox class="ctrlTab-thumbnail" onclick="ctrlTab.thumbnailClick(event);"/></hbox>
+        <hbox class="ctrlTab-thumbnail" onclick="ctrlTab.thumbnailClick(event);"/>
+        <hbox flex="1" pack="center"><hbox class="ctrlTab-thumbnail" onclick="ctrlTab.thumbnailClick(event);"/></hbox>
       </hbox>
       <hbox id="ctrlTab-pages"/>
     </panel>

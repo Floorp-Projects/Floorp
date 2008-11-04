@@ -1300,9 +1300,22 @@ tabpanels {
   opacity: 0.0;
 }
 
+/* All tabs menupopup */
+.alltabs-item > .menu-iconic-left > .menu-iconic-icon {
+  list-style-image: url("chrome://global/skin/icons/folder-item.png");
+  -moz-image-region: rect(0px, 16px, 16px, 0px);
+}
+
+.alltabs-item[selected="true"] {
+  font-weight: bold;
+}
+
+.alltabs-item[busy] > .menu-iconic-left > .menu-iconic-icon {
+  list-style-image: url("chrome://global/skin/icons/loading_16.png");
+}
+
 .tabs-alltabs-button > .toolbarbutton-icon {
-  list-style-image: url("chrome://browser/skin/tabbrowser/alltabs.png");
-  margin: 2px 0 2px;
+   margin: 0px;
 }
 
 /* Sidebar */
@@ -1359,41 +1372,37 @@ toolbar[mode="text"] > #window-controls > toolbarbutton > .toolbarbutton-text {
 }
 
 /* ::::: Ctrl-Tab Panel ::::: */
-#ctrlTab-panel {
-  padding-top: 15px;
-}
-
-#ctrlTab-search {
-  margin: 0 0 15px;
+#ctrlTab-label {
+  font-weight: bold;
+  font-size: 1.5em;
+  text-align: center;
+  margin-top: 1em;
+  margin-bottom: 1.5em;
 }
 
 .ctrlTab-thumbnail {
-  margin-bottom: 15px;
-  cursor: pointer;
+  margin-bottom: 40px;
+  -moz-box-shadow: 1px 2px 3px ThreeDShadow;
 }
-
-.ctrlTab-thumbnail > html|canvas {
-  border: 1px solid ThreeDShadow;
-  margin: -1px;
+ 
+.ctrlTab-thumbnail[selected="true"] {
+  -moz-box-shadow: 1px 2px 3px ThreeDShadow, 0 0 10px Highlight, 0 0 20px Highlight, 0 0 25px Highlight, 0 0 30px Highlight;
 }
-
-.ctrlTab-thumbnail[selected="true"] ,
-.ctrlTab-thumbnail:hover {
-  background: Highlight;
-  color: HighlightText;
-  -moz-box-shadow: 0 0 2px Highlight, 0 0 2px Highlight, 0 0 3px Highlight, 0 0 4px Highlight, 0 0 10px Highlight, 0 0 15px Highlight;
+ 
+#ctrlTab-pages {
+  display: block;
+  text-align: center;
 }
  
 .ctrlTab-pagePointer {
+  display: inline-block;
   margin: 0 1em 1em;
   width: 1.5em;
   height: 1.5em;
   -moz-border-radius: .75em;
   background: ThreeDShadow;
-  cursor: pointer;
 }
 
 .ctrlTab-pagePointer[selected="true"] {
   background: ThreeDDarkShadow;
-  cursor: default;
 }
