@@ -1119,15 +1119,6 @@ nsContentUtils::doReparentContentWrapper(nsIContent *aNode,
                                                 getter_AddRefs(old_wrapper));
   NS_ENSURE_SUCCESS(rv, rv);
 
-  if (aOldDocument) {
-    nsCOMPtr<nsISupports> old_ref = aOldDocument->GetReference(aNode);
-    if (old_ref) {
-      // Transfer the reference from aOldDocument to aNewDocument
-      aOldDocument->RemoveReference(aNode);
-      aNewDocument->AddReference(aNode, old_ref);
-    }
-  }
-
   // Whether or not aChild is already wrapped we must iterate through
   // its descendants since there's no guarantee that a descendant isn't
   // wrapped even if this child is not wrapped. That used to be true
