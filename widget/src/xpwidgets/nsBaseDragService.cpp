@@ -559,11 +559,10 @@ nsBaseDragService::DrawDragForImage(nsPresContext* aPresContext,
     aScreenDragRect->height = height;
   }
 
-  nsRect srcRect = *aScreenDragRect;
-  srcRect.MoveTo(0, 0);
-  nsRect destRect = srcRect;
+  nsSize srcSize = aScreenDragRect->Size();
+  nsSize destSize = srcSize;
 
-  if (destRect.width == 0 || destRect.height == 0)
+  if (destSize.width == 0 || destSize.height == 0)
     return NS_ERROR_FAILURE;
 
   // if the image is larger than half the screen size, scale it down. This
@@ -573,48 +572,44 @@ nsBaseDragService::DrawDragForImage(nsPresContext* aPresContext,
   deviceContext->GetClientRect(maxSize);
   nscoord maxWidth = aPresContext->AppUnitsToDevPixels(maxSize.width >> 1);
   nscoord maxHeight = aPresContext->AppUnitsToDevPixels(maxSize.height >> 1);
-  if (destRect.width > maxWidth || destRect.height > maxHeight) {
+  if (destSize.width > maxWidth || destSize.height > maxHeight) {
     float scale = 1.0;
-    if (destRect.width > maxWidth)
-      scale = PR_MIN(scale, float(maxWidth) / destRect.width);
-    if (destRect.height > maxHeight)
-      scale = PR_MIN(scale, float(maxHeight) / destRect.height);
+    if (destSize.width > maxWidth)
+      scale = PR_MIN(scale, float(maxWidth) / destSize.width);
+    if (destSize.height > maxHeight)
+      scale = PR_MIN(scale, float(maxHeight) / destSize.height);
 
-    destRect.width = NSToIntFloor(float(destRect.width) * scale);
-    destRect.height = NSToIntFloor(float(destRect.height) * scale);
+    destSize.width = NSToIntFloor(float(destSize.width) * scale);
+    destSize.height = NSToIntFloor(float(destSize.height) * scale);
 
     aScreenDragRect->x = NSToIntFloor(aScreenX - float(mImageX) * scale);
     aScreenDragRect->y = NSToIntFloor(aScreenY - float(mImageY) * scale);
-    aScreenDragRect->width = destRect.width;
-    aScreenDragRect->height = destRect.height;
+    aScreenDragRect->width = destSize.width;
+    aScreenDragRect->height = destSize.height;
   }
 
   nsRefPtr<gfxImageSurface> surface =
-    new gfxImageSurface(gfxIntSize(destRect.width, destRect.height),
+    new gfxImageSurface(gfxIntSize(destSize.width, destSize.height),
                         gfxImageSurface::ImageFormatARGB32);
   if (!surface)
+    return NS_ERROR_FAILURE;
+
+  nsRefPtr<gfxContext> ctx = new gfxContext(surface);
+  if (!ctx)
     return NS_ERROR_FAILURE;
 
   *aSurface = surface;
   NS_ADDREF(*aSurface);
 
-  nsCOMPtr<nsIRenderingContext> rc;
-  deviceContext->CreateRenderingContextInstance(*getter_AddRefs(rc));
-  rc->Init(deviceContext, surface);
-
   if (aImageLoader) {
-    // clear the image before drawing
-    gfxContext context(surface);
-    context.SetOperator(gfxContext::OPERATOR_CLEAR);
-    context.Rectangle(gfxRect(0, 0, destRect.width, destRect.height));
-    context.Fill();
-
-    gfxRect inRect = gfxRect(srcRect.x, srcRect.y, srcRect.width, srcRect.height);
-    gfxRect outRect = gfxRect(destRect.x, destRect.y, destRect.width, destRect.height);
-    return img->Draw(*rc, inRect, inRect, outRect);
-  }
-  else {
-    return aCanvas->RenderContexts(rc->ThebesContext());
+    gfxRect outRect(0, 0, destSize.width, destSize.height);
+    gfxMatrix scale =
+      gfxMatrix().Scale(srcSize.width/outRect.Width(), srcSize.height/outRect.Height());
+    img->Draw(ctx, scale, outRect, nsIntMargin(0,0,0,0),
+              nsIntRect(0, 0, srcSize.width, srcSize.height));
+    return NS_OK;
+  } else {
+    return aCanvas->RenderContexts(ctx);
   }
 }
 

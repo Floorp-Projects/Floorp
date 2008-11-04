@@ -71,21 +71,9 @@ public:
     /* Create native win32 drawing for a rectangle bounded by
      * nativeRect.
      *
-     * This class assumes that native drawing can take place only if
-     * the destination surface has a content type of COLOR (that is,
-     * RGB24), and that the transformation matrix consists of only a
-     * translation (in which case the coordinates are munged directly)
-     * or a translation and scale (in which case SetWorldTransform is used).
-     *
-     * If the destination is of a non-win32 surface type, a win32
-     * surface of content COLOR_ALPHA, or if there is a complex
-     * transform (i.e., one with rotation) set, then the native drawing
-     * code will fall back to alpha recovery, but will still take advantage
-     * of native axis-aligned scaling.
-     *
      * Typical usage looks like:
      *
-     *   gfxWindowsNativeDrawing nativeDraw(ctx, destGfxRect);
+     *   gfxWindowsNativeDrawing nativeDraw(ctx, destGfxRect, capabilities);
      *   do {
      *     HDC dc = nativeDraw.BeginNativeDrawing();
      *     if (!dc)
