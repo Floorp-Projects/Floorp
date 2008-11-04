@@ -56,7 +56,14 @@ function manifestUpdated()
   OfflineTest.checkCache("https://localhost:8888/MochiKit/packed.js", false);
   OfflineTest.checkCache("bad:/uri/invalid", false);
 
-  applicationCache.swapCache();
+  OfflineTest.is(applicationCache.status, 1, "Cache status should be 1 (CACHED)");
+
+  try {
+    applicationCache.swapCache();
+    OfflineTest.ok(false, "application.swapCache() should fail after initial update.");
+  } catch(ex) {
+    OfflineTest.ok(true, "application.swapCache() should fail after initial update.");
+  }
 
   // XXX: make sure that the previous version went away after the swapCache().
 

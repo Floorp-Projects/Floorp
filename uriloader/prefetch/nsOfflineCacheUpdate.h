@@ -217,6 +217,10 @@ public:
 
     void LoadCompleted();
 
+    void AddDocument(nsIDOMDocument *aDocument) {
+        mDocuments.AppendObject(aDocument);
+    };
+
 private:
     nsresult HandleManifest(PRBool *aDoUpdate);
     nsresult AddURI(nsIURI *aURI, PRUint32 aItemType);
@@ -236,6 +240,7 @@ private:
     nsresult NotifyDownloading();
     nsresult NotifyStarted(nsOfflineCacheUpdateItem *aItem);
     nsresult NotifyCompleted(nsOfflineCacheUpdateItem *aItem);
+    nsresult AssociateDocument(nsIDOMDocument *aDocument);
     nsresult Finish();
 
     enum {
@@ -270,6 +275,9 @@ private:
     /* Clients watching this update for changes */
     nsCOMArray<nsIWeakReference> mWeakObservers;
     nsCOMArray<nsIOfflineCacheUpdateObserver> mObservers;
+
+    /* Documents that requested this update */
+    nsCOMArray<nsIDOMDocument> mDocuments;
 };
 
 class nsOfflineCacheUpdateService : public nsIOfflineCacheUpdateService
@@ -289,6 +297,11 @@ public:
     nsresult Init();
 
     nsresult Schedule(nsOfflineCacheUpdate *aUpdate);
+    nsresult Schedule(nsIURI *aManifestURI,
+                      nsIURI *aDocumentURI,
+                      nsIDOMDocument *aDocument,
+                      nsIOfflineCacheUpdate **aUpdate);
+
     nsresult UpdateFinished(nsOfflineCacheUpdate *aUpdate);
 
     /**
@@ -299,7 +312,7 @@ public:
 
     /** Addrefs and returns the singleton nsOfflineCacheUpdateService. */
     static nsOfflineCacheUpdateService *GetInstance();
-    
+
 private:
     nsresult ProcessNextUpdate();
 
