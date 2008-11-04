@@ -2668,7 +2668,7 @@ NSEvent* gLastDragEvent = nil;
   PRInt32 p2a = mGeckoChild->GetDeviceContext()->AppUnitsPerDevPixel();
   nscoord newX = mHandScrollStartScrollX + NSIntPixelsToAppUnits(deltaX, p2a);
   nscoord newY = mHandScrollStartScrollY + NSIntPixelsToAppUnits(deltaY, p2a);
-  aScrollableView->ScrollTo(newX, newY, NS_VMREFRESH_IMMEDIATE);
+  aScrollableView->ScrollTo(newX, newY, 0);
 
   NS_OBJC_END_TRY_ABORT_BLOCK;
 }

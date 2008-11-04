@@ -151,13 +151,7 @@ nsXBLProtoImpl::InitTargetObjects(nsXBLPrototypeBinding* aBinding,
   if (NS_FAILED(rv))
     return rv;
 
-  // Root ourselves in the document.
-  nsIDocument* doc = aBoundElement->GetOwnerDoc();
-  if (doc) {
-    nsCOMPtr<nsIXPConnectWrappedNative> nativeWrapper(do_QueryInterface(wrapper));
-    if (nativeWrapper)
-      doc->AddReference(aBoundElement, nativeWrapper);
-  }
+  aBoundElement->PreserveWrapper();
 
   wrapper.swap(*aScriptObjectHolder);
   
