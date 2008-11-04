@@ -51,7 +51,7 @@ native PRNetAddr(union PRNetAddr);
  * NOTE: This is a free-threaded interface, meaning that the methods on
  * this interface may be called from any thread.
  */
-[scriptable, uuid(ef3f4993-cfbc-4e5a-9509-16deafe16549)]
+[scriptable, uuid(66418cc8-5f5d-4f52-a7f9-db8fb3b2cfe6)]
 interface nsISocketTransport : nsITransport 
 {
     /**
@@ -134,22 +134,6 @@ interface nsISocketTransport : nsITransport
     const unsigned long STATUS_SENDING_TO     = 0x804b0005;
     const unsigned long STATUS_WAITING_FOR    = 0x804b000a;
     const unsigned long STATUS_RECEIVING_FROM = 0x804b0006;
-
-    /**
-     * connectionFlags is a bitmask that can be used to modify underlying 
-     * behavior of the socket connection.
-     */
-    attribute unsigned long connectionFlags;
-
-    /**
-     * Values for the connectionFlags
-     *
-     * When making a new connection BYPASS_CACHE will force the Necko DNS 
-     * cache entry to be refreshed with a new call to NSPR if it is set before
-     * opening the new stream.
-     */
-    const unsigned long BYPASS_CACHE = (1 << 0);
-
 };
 
 %{C++
