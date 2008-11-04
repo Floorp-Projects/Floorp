@@ -60,6 +60,8 @@ _TEST_FILES	= \
 	445544_part2.html \
 	445544.cacheManifest \
 	445544.cacheManifest^headers^ \
+	test_obsolete.html \
+	obsolete.html \
 	badManifestMagic.cacheManifest \
 	badManifestMagic.cacheManifest^headers^ \
 	missingFile.cacheManifest \

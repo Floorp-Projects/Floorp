@@ -46,7 +46,7 @@ interface nsIOfflineCacheUpdate;
 interface nsIPrincipal;
 interface nsIPrefBranch;
 
-[scriptable, uuid(0aa38757-999c-44d6-bdb4-7dd32634fa83)]
+[scriptable, uuid(a28abeaf-a0b4-4440-b2fe-bc78249710ea)]
 interface nsIOfflineCacheUpdateObserver : nsISupports {
   /**
    * There was an error updating the cache.
@@ -71,6 +71,14 @@ interface nsIOfflineCacheUpdateObserver : nsISupports {
    *        The nsIOfflineCacheUpdate being processed.
    */
   void noUpdate(in nsIOfflineCacheUpdate aUpdate);
+
+  /**
+   * The cache group is now obsolete.
+   *
+   * @param aUpdate
+   *        The nsIOfflineCacheUpdate being processed.
+   */
+  void obsolete(in nsIOfflineCacheUpdate aUpdate);
 
   /**
    * Starting to download resources

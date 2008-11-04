@@ -2029,6 +2029,28 @@ nsOfflineCacheDevice::GetActiveCache(const nsACString &group,
   return NS_OK;
 }
 
+NS_IMETHODIMP
+nsOfflineCacheDevice::DeactivateGroup(const nsACString &group)
+{
+  nsCString *active = nsnull;
+
+  AutoResetStatement statement(mStatement_DeactivateGroup);
+  nsresult rv = statement->BindUTF8StringParameter(0, group);
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  rv = statement->Execute();
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  if (mActiveCachesByGroup.Get(group, &active))
+  {
+    mActiveCaches.Remove(*active);
+    mActiveCachesByGroup.Remove(group);
+    active = nsnull;
+  }
+
+  return NS_OK;
+}
+
 PRBool
 nsOfflineCacheDevice::CanUseCache(nsIURI *keyURI, const nsCString &clientID)
 {
@@ -2182,29 +2204,6 @@ nsOfflineCacheDevice::IsActiveCache(const nsCSubstring &group,
 {
   nsCString *active = nsnull;
   return mActiveCachesByGroup.Get(group, &active) && *active == clientID;
-}
-
-nsresult
-nsOfflineCacheDevice::DeactivateGroup(const nsCSubstring &group)
-{
-  nsCString *active = nsnull;
-
-  AutoResetStatement statement(mStatement_DeactivateGroup);
-  nsresult rv = statement->BindUTF8StringParameter(
-                                           0, group);
-  NS_ENSURE_SUCCESS(rv, rv);
-
-  rv = statement->Execute();
-  NS_ENSURE_SUCCESS(rv, rv);
-
-  if (mActiveCachesByGroup.Get(group, &active))
-  {
-    mActiveCaches.Remove(*active);
-    mActiveCachesByGroup.Remove(group);
-    active = nsnull;
-  }
-
-  return NS_OK;
 }
 
 nsresult
