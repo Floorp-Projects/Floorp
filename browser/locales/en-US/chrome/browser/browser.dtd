@@ -426,3 +426,5 @@ just addresses the organization to follow, e.g. "This site is run by " -->
 <!ENTITY identity.moreInfoLinkText "More Information…">
 
 <!ENTITY downloadMonitor2.tooltip "Click to open downloads window">
+
+<!ENTITY ctrlTab.search.emptyText "Search Tabs">

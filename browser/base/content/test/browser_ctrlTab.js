@@ -113,9 +113,6 @@ function test() {
       ok(ctrlTab.panel.state == "showing" || ctrlTab.panel.state == "open",
          "With " + tabCount + " tabs open, Ctrl+Tab opens the preview panel");
 
-      is(ctrlTab.label.value, gBrowser.mTabs[expectedIndex].label,
-         "Preview panel displays label of expected tab");
-
       releaseCtrl();
 
       ok(ctrlTab.panel.state == "hiding" || ctrlTab.panel.state == "closed",
