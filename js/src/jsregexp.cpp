@@ -2135,6 +2135,10 @@ class RegExpNativeCompiler {
         : re(re), cs(cs), fragment(NULL) {  }
 
     JSBool compile(JSContext *cx) {
+        LoopGuardRecord *guard;
+        LIns *skip;
+        LIns *start;
+
         Fragmento *fragmento = JS_TRACE_MONITOR(cx).reFragmento;
         fragment = fragmento->getAnchor(re);
         fragment->lirbuf = new (&gc) LirBuffer(fragmento, NULL);
@@ -2154,7 +2158,7 @@ class RegExpNativeCompiler {
         lir->ins0(LIR_start);
         lirbuf->state = state = addName(lirbuf, lir->insParam(0, 0), "state");
         lirbuf->param1 = gdata = addName(lirbuf, lir->insParam(1, 0), "gdata");
-        LIns *start = addName(lirbuf, lir->insLoad(LIR_ldp, lirbuf->param1, (int) offsetof(REGlobalData, skipped)), "start");
+        start = addName(lirbuf, lir->insLoad(LIR_ldp, lirbuf->param1, (int) offsetof(REGlobalData, skipped)), "start");
         cpend = addName(lirbuf, lir->insLoad(LIR_ldp, lirbuf->param1, offsetof(REGlobalData, cpend)), "cpend");
 
         if (cs->flags & JSREG_STICKY) {
@@ -2164,8 +2168,8 @@ class RegExpNativeCompiler {
         }
 
         /* Create fake guard record for loop edge. */
-        LIns *skip = lirb->skip(sizeof(LoopGuardRecord));
-        LoopGuardRecord *guard = (LoopGuardRecord *) skip->payload();
+        skip = lirb->skip(sizeof(LoopGuardRecord));
+        guard = (LoopGuardRecord *) skip->payload();
         memset(guard, 0, sizeof(*guard));
         guard->exit = (SideExit *) &guard->guards;
         guard->from = guard->target = fragment;
