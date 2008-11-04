@@ -338,12 +338,6 @@ class nsOggDecoder : public nsMediaDecoder
   // Get the size of the media file in bytes. Called on the main thread only.
   virtual void SetTotalBytes(PRInt64 aBytes);
 
-  // Set a flag indicating whether seeking is supported
-  virtual void SetSeekable(PRBool aSeekable);
-
-  // Return PR_TRUE if seeking is supported.
-  virtual PRBool GetSeekable();
-
 protected:
   // Change to a new play state. This updates the mState variable and
   // notifies any thread blocking on this objects monitor of the
@@ -454,10 +448,6 @@ private:
 
   // True if we are registered with the observer service for shutdown.
   PRPackedBool mNotifyOnShutdown;
-
-  // True if the media resource is seekable (server supports byte range
-  // requests).
-  PRPackedBool mSeekable;
 
   /******
    * The following member variables can be accessed from any thread.
