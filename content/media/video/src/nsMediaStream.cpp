@@ -425,16 +425,6 @@ nsresult nsHttpStreamStrategy::Open(nsIStreamListener **aStreamListener)
     *aStreamListener = mListener;
     NS_ADDREF(*aStreamListener);
   } else {
-    // Use a byte range request from the start of the resource.
-    // This enables us to detect if the stream supports byte range
-    // requests, and therefore seeking, early.
-    nsCOMPtr<nsIHttpChannel> hc = do_QueryInterface(mChannel);
-    if (hc) {
-      hc->SetRequestHeader(NS_LITERAL_CSTRING("Range"),
-          NS_LITERAL_CSTRING("bytes=0-"),
-          PR_FALSE);
-    }
- 
     rv = mChannel->AsyncOpen(mListener, nsnull);
     NS_ENSURE_SUCCESS(rv, rv);
   }
@@ -535,7 +525,7 @@ public:
       hc->SetRequestHeader(NS_LITERAL_CSTRING("Range"), rangeString, PR_FALSE);
     }
 
-    mListener = new nsChannelToPipeListener(mDecoder, PR_TRUE);
+    mListener = new nsChannelToPipeListener(mDecoder);
     NS_ENSURE_TRUE(mListener, NS_ERROR_OUT_OF_MEMORY);
 
     mResult = mListener->Init();
