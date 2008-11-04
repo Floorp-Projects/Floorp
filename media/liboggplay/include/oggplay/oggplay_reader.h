@@ -54,7 +54,7 @@ typedef struct _OggPlayReader {
   int               (*available)(struct _OggPlayReader *me,
                                               ogg_int64_t current_bytes,
                                               ogg_int64_t current_time);
-  int               (*duration)(struct _OggPlayReader *me);
+  ogg_int64_t       (*duration)(struct _OggPlayReader *me);
   int               (*finished_retrieving)(struct _OggPlayReader *me);
 
   /* low-level io functions for oggz */

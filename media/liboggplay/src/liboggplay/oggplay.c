@@ -634,14 +634,21 @@ oggplay_get_available(OggPlay *me) {
 
 }
 
-int
+ogg_int64_t
 oggplay_get_duration(OggPlay *me) {
 
   if (me == NULL) {
     return E_OGGPLAY_BAD_OGGPLAY;
   }
 
-  return me->reader->duration(me->reader);
+  if (me->reader->duration) 
+    return me->reader->duration(me->reader);
+  else {
+    ogg_int64_t pos = oggz_tell_units(me->oggz);
+    ogg_int64_t duration = oggz_seek_units(me->oggz, 0, SEEK_END);
+    oggz_seek_units(me->oggz, pos, SEEK_SET);
+    return duration;
+  }
 }
 
 int

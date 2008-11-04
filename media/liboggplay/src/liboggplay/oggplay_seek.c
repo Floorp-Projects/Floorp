@@ -55,7 +55,7 @@ oggplay_seek(OggPlay *me, ogg_int64_t milliseconds) {
     return E_OGGPLAY_CANT_SEEK;
   }
 
-  eof = me->reader->duration(me->reader);
+  eof = oggplay_get_duration(me);
   if (eof > -1 && milliseconds > eof) {
     return E_OGGPLAY_CANT_SEEK;
   }
