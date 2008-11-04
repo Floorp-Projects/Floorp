@@ -192,14 +192,16 @@ NS_IMPL_RELEASE_INHERITED(nsHTMLImageElement, nsGenericElement)
 
 
 // QueryInterface implementation for nsHTMLImageElement
-NS_HTML_CONTENT_INTERFACE_TABLE_HEAD(nsHTMLImageElement, nsGenericHTMLElement)
-  NS_INTERFACE_TABLE_INHERITED6(nsHTMLImageElement,
-                                nsIDOMHTMLImageElement,
-                                nsIDOMNSHTMLImageElement,
-                                nsIJSNativeInitializer,
-                                imgIDecoderObserver,
-                                nsIImageLoadingContent,
-                                imgIContainerObserver)
+NS_INTERFACE_TABLE_HEAD(nsHTMLImageElement)
+  NS_HTML_CONTENT_INTERFACE_TABLE6(nsHTMLImageElement,
+                                   nsIDOMHTMLImageElement,
+                                   nsIDOMNSHTMLImageElement,
+                                   nsIJSNativeInitializer,
+                                   imgIDecoderObserver,
+                                   nsIImageLoadingContent,
+                                   imgIContainerObserver)
+  NS_HTML_CONTENT_INTERFACE_TABLE_TO_MAP_SEGUE(nsHTMLImageElement,
+                                               nsGenericHTMLElement)
 NS_HTML_CONTENT_INTERFACE_TABLE_TAIL_CLASSINFO(HTMLImageElement)
 
 

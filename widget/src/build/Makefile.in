@@ -50,8 +50,6 @@ RESFILE		= widget.res
 MODULE_NAME	= nsWidgetModule
 LIBXUL_LIBRARY = 1
 
-PACKAGE_FILE = widget_win.pkg
-
 REQUIRES	= xpcom \
 		  string \
 		  necko \

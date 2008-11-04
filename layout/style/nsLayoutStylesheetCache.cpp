@@ -133,6 +133,26 @@ nsLayoutStylesheetCache::UserChromeSheet()
   return gStyleCache->mUserChromeSheet;
 }
 
+nsICSSStyleSheet*
+nsLayoutStylesheetCache::UASheet()
+{
+  EnsureGlobal();
+  if (!gStyleCache)
+    return nsnull;
+
+  return gStyleCache->mUASheet;
+}
+
+nsICSSStyleSheet*
+nsLayoutStylesheetCache::QuirkSheet()
+{
+  EnsureGlobal();
+  if (!gStyleCache)
+    return nsnull;
+
+  return gStyleCache->mQuirkSheet;
+}
+
 void
 nsLayoutStylesheetCache::Shutdown()
 {
@@ -154,6 +174,21 @@ nsLayoutStylesheetCache::nsLayoutStylesheetCache()
   }
 
   InitFromProfile();
+
+  // And make sure that we load our UA sheets.  No need to do this
+  // per-profile, since they're profile-invariant.
+  nsCOMPtr<nsIURI> uri;
+  NS_NewURI(getter_AddRefs(uri), "resource://gre/res/ua.css");
+  if (uri) {
+    LoadSheet(uri, mUASheet, PR_TRUE);
+  }
+  NS_ASSERTION(mUASheet, "Could not load ua.css");
+
+  NS_NewURI(getter_AddRefs(uri), "resource://gre/res/quirk.css");
+  if (uri) {
+    LoadSheet(uri, mQuirkSheet, PR_TRUE);
+  }
+  NS_ASSERTION(mQuirkSheet, "Could not load quirk.css");
 }
 
 nsLayoutStylesheetCache::~nsLayoutStylesheetCache()

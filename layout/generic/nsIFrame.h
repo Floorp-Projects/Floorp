@@ -85,6 +85,7 @@ class nsIDOMRange;
 class nsISelectionController;
 class nsBoxLayoutState;
 class nsIBoxLayout;
+class nsILineIterator;
 #ifdef ACCESSIBILITY
 class nsIAccessible;
 #endif
@@ -2223,6 +2224,14 @@ NS_PTR_TO_INT32(frame->GetProperty(nsGkAtoms::embeddingLevel))
   void CheckInvalidateSizeChange(const nsRect& aOldRect,
                                  const nsRect& aOldOverflowRect,
                                  const nsSize& aNewDesiredSize);
+
+  /**
+   * Get a line iterator for this frame, if supported.
+   *
+   * @return nsnull if no line iterator is supported.
+   * @note dispose the line iterator using nsILineIterator::DisposeLineIterator
+   */
+  virtual nsILineIterator* GetLineIterator() = 0;
 
 protected:
   // Members

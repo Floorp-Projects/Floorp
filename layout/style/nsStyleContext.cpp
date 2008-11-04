@@ -235,7 +235,7 @@ const void* nsStyleContext::GetStyleData(nsStyleStructID aSID)
 #include "nsStyleStructList.h"
 #undef STYLE_STRUCT
 
-inline const void* nsStyleContext::PeekStyleData(nsStyleStructID aSID)
+const void* nsStyleContext::PeekStyleData(nsStyleStructID aSID)
 {
   const void* cachedData = mCachedStyleData.GetStyleData(aSID); 
   if (cachedData)

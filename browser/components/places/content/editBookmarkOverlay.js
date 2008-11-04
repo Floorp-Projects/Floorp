@@ -195,8 +195,13 @@ var gEditItemOverlay = {
         this._allTags = [];
         this._itemIds = aItemIdList;
         var nodeToCheck = 0;
-        for (var i = 0; i < this._itemIds.length; i++) {
-          this._uris[i] = PlacesUtils.bookmarks.getBookmarkURI(this._itemIds[i], {});
+        for (var i = 0; i < aItemIdList.length; i++) {
+          if (aItemIdList[i] instanceof Ci.nsIURI) {
+            this._uris[i] = aItemIdList[i];
+            this._itemIds[i] = -1;
+          }
+          else
+            this._uris[i] = PlacesUtils.bookmarks.getBookmarkURI(this._itemIds[i], {});
           this._tags[i] = PlacesUtils.tagging.getTagsForURI(this._uris[i], {});
           if (this._tags[i].length < this._tags[nodeToCheck].length)
             nodeToCheck =  i;
@@ -334,6 +339,10 @@ var gEditItemOverlay = {
 
     var defaultItem = this._getFolderMenuItem(aSelectedFolder);
     this._folderMenuList.selectedItem = defaultItem;
+
+    // Set a selectedIndex attribute to show special icons
+    this._folderMenuList.setAttribute("selectedIndex",
+                                      this._folderMenuList.selectedIndex);
 
     // Hide the folders-separator if no folder is annotated as recently-used
     this._element("foldersSeparator").hidden = (menupopup.childNodes.length <= 6);
@@ -798,6 +807,9 @@ var gEditItemOverlay = {
   },
 
   onFolderMenuListCommand: function EIO_onFolderMenuListCommand(aEvent) {
+    // Set a selectedIndex attribute to show special icons
+    this._folderMenuList.setAttribute("selectedIndex",
+                                      this._folderMenuList.selectedIndex);
     if (aEvent.target.id == "editBMPanel_chooseFolderMenuItem") {
       // reset the selection back to where it was and expand the tree
       // (this menu-item is hidden when the tree is already visible

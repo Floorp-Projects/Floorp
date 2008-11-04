@@ -82,11 +82,18 @@ NS_IMPL_CYCLE_COLLECTION_TRAVERSE_BEGIN(nsBaseContentList)
   NS_IMPL_CYCLE_COLLECTION_TRAVERSE_NSCOMARRAY(mElements)
 NS_IMPL_CYCLE_COLLECTION_TRAVERSE_END
 
+#define NS_CONTENT_LIST_INTERFACES(_class)                                    \
+    NS_INTERFACE_TABLE_ENTRY(_class, nsINodeList)                             \
+    NS_INTERFACE_TABLE_ENTRY(_class, nsIDOMNodeList)
+
+
 // QueryInterface implementation for nsBaseContentList
-NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION(nsBaseContentList)
-  NS_INTERFACE_MAP_ENTRY(nsINodeList)
-  NS_INTERFACE_MAP_ENTRY(nsIDOMNodeList)
-  NS_INTERFACE_MAP_ENTRY_AMBIGUOUS(nsISupports, nsINodeList)
+NS_INTERFACE_TABLE_HEAD(nsBaseContentList)
+  NS_NODELIST_OFFSET_AND_INTERFACE_TABLE_BEGIN(nsBaseContentList)
+    NS_CONTENT_LIST_INTERFACES(nsBaseContentList)
+  NS_OFFSET_AND_INTERFACE_TABLE_END
+  NS_OFFSET_AND_INTERFACE_TABLE_TO_MAP_SEGUE
+  NS_INTERFACE_MAP_ENTRIES_CYCLE_COLLECTION(nsBaseContentList)
   NS_INTERFACE_MAP_ENTRY_CONTENT_CLASSINFO(NodeList)
 NS_INTERFACE_MAP_END
 
@@ -350,9 +357,14 @@ nsContentList::~nsContentList()
 
 
 // QueryInterface implementation for nsContentList
-NS_INTERFACE_MAP_BEGIN(nsContentList)
-  NS_INTERFACE_MAP_ENTRY(nsIDOMHTMLCollection)
-  NS_INTERFACE_MAP_ENTRY(nsIMutationObserver)
+NS_INTERFACE_TABLE_HEAD(nsContentList)
+  NS_NODELIST_OFFSET_AND_INTERFACE_TABLE_BEGIN(nsContentList)
+    NS_CONTENT_LIST_INTERFACES(nsContentList)
+    NS_INTERFACE_TABLE_ENTRY(nsContentList, nsIHTMLCollection)
+    NS_INTERFACE_TABLE_ENTRY(nsContentList, nsIDOMHTMLCollection)
+    NS_INTERFACE_TABLE_ENTRY(nsContentList, nsIMutationObserver)
+  NS_OFFSET_AND_INTERFACE_TABLE_END
+  NS_OFFSET_AND_INTERFACE_TABLE_TO_MAP_SEGUE
   NS_INTERFACE_MAP_ENTRY_CONTENT_CLASSINFO(ContentList)
 NS_INTERFACE_MAP_END_INHERITING(nsBaseContentList)
 
@@ -499,6 +511,20 @@ nsINode*
 nsContentList::GetNodeAt(PRUint32 aIndex)
 {
   return Item(aIndex, PR_TRUE);
+}
+
+nsISupports*
+nsContentList::GetNodeAt(PRUint32 aIndex, nsresult* aResult)
+{
+  *aResult = NS_OK;
+  return Item(aIndex, PR_TRUE);
+}
+
+nsISupports*
+nsContentList::GetNamedItem(const nsAString& aName, nsresult* aResult)
+{
+  *aResult = NS_OK;
+  return NamedItem(aName, PR_TRUE);
 }
 
 void

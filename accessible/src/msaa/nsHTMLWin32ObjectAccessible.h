@@ -55,10 +55,14 @@ public:
   // have the effect of cutting off all content after the plugin.
   nsHTMLWin32ObjectOwnerAccessible(nsIDOMNode* aNode, nsIWeakReference* aShell, void* aHwnd);
   virtual ~nsHTMLWin32ObjectOwnerAccessible() {}
-  NS_IMETHOD Shutdown();
+
+  // nsIAccessible
   NS_IMETHOD GetFirstChild(nsIAccessible **aFirstChild);
   NS_IMETHOD GetLastChild(nsIAccessible **aLastChild);
   NS_IMETHOD GetChildCount(PRInt32 *aChildCount);  // Zero or one child
+
+  // nsAccessNode
+  virtual nsresult Shutdown();
 
 protected:
   void* mHwnd;

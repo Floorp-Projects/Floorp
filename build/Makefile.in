@@ -44,7 +44,6 @@ VPATH		= @srcdir@
 include $(DEPTH)/config/autoconf.mk
 
 MODULE = build
-PACKAGE_FILE = build.pkg
 
 ifeq (,$(filter WINCE WINNT OS2,$(OS_ARCH)))
 DIRS		= unix

@@ -43,7 +43,7 @@ function check_geolocation(location) {
   ok("accuracy" in location, "Check to see if there is a accuracy");
   ok("altitudeAccuracy" in location, "Check to see if there is a alt accuracy");
   ok("heading" in location, "Check to see if there is a heading");
-  ok("velocity" in location, "Check to see if there is a velocity");
+  ok("speed" in location, "Check to see if there is a speed");
   ok("timestamp" in location, "Check to see if there is a timestamp");
 
 }

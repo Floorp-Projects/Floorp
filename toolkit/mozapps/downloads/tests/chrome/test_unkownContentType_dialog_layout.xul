@@ -92,7 +92,7 @@ let windowObserver = {
         return;
 
       // Let the dialog initialize
-      executeSoon(function() {
+      SimpleTest.executeSoon(function() {
         checkWindow(win);
         testIndex++;
         if (!tests[testIndex]) {

@@ -13,7 +13,7 @@
  * for the specific language governing rights and limitations under the
  * License.
  *
- * The Original Code is MozJSHTTP code.
+ * The Original Code is httpd.js code.
  *
  * The Initial Developer of the Original Code is
  * Chris Double <chris.double@double.co.nz>.

@@ -47,7 +47,7 @@
 
 interface nsIDOMElement;
 
-[scriptable, uuid(6db7b95f-0a35-4c16-ac50-094adb3372f9)]
+[scriptable, uuid(440D036F-0879-4497-9364-35DE49F6849F)]
 interface nsIDOMWindowUtils : nsISupports {
 
   /**
@@ -207,14 +207,13 @@ interface nsIDOMWindowUtils : nsISupports {
   void activateNativeMenuItemAt(in AString indexString);
 
   /**
-   * See nsIWidget::ForceNativeMenuReload
+   * See nsIWidget::ForceUpdateNativeMenuAt
    *
-   * This is used for native menu system testing. Calling this forces a full
-   * reload of the menu system, reloading all native menus and their items.
-   * This is important for testing because changes to the DOM can affect the
-   * native menu system lazily.
+   * Cannot be accessed from unprivileged context (not content-accessible)
+   * Will throw a DOM security error if called without UniversalXPConnect
+   * privileges.
    */
-  void forceNativeMenuReload();
+  void forceUpdateNativeMenuAt(in AString indexString);
 
   /**
    * Focus the element aElement. The element should be in the same document

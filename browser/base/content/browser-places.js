@@ -123,7 +123,10 @@ var StarUI = {
         }
         else if (aEvent.keyCode == KeyEvent.DOM_VK_RETURN) {
           // hide the panel unless the folder tree is focused
-          if (aEvent.target.localName != "tree")
+          // or the tag autocomplete popup is open
+          if (aEvent.target.localName != "tree" &&
+              (aEvent.target.id != "editBMPanel_tagsField" ||
+               !aEvent.target.popupOpen))
             this.panel.hidePopup();
         }
         break;
@@ -462,14 +465,12 @@ var PlacesCommandHook = {
   bookmarkLink: function PCH_bookmarkLink(aParent, aURL, aTitle) {
     var linkURI = makeURI(aURL);
     var itemId = PlacesUtils.getMostRecentBookmarkForURI(linkURI);
-    if (itemId == -1) {
-      StarUI.beginBatch();
-      var txn = PlacesUIUtils.ptm.createItem(linkURI, aParent, -1, aTitle);
-      PlacesUIUtils.ptm.doTransaction(txn);
-      itemId = PlacesUtils.getMostRecentBookmarkForURI(linkURI);
+    if (itemId == -1)
+      PlacesUIUtils.showMinimalAddBookmarkUI(linkURI, aTitle);
+    else {
+      PlacesUIUtils.showItemProperties(itemId,
+                                       PlacesUtils.bookmarks.TYPE_BOOKMARK);
     }
-
-    StarUI.showEditBookmarkPopup(itemId, getBrowser(), "overlap");
   },
 
   /**

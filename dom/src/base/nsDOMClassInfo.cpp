@@ -443,12 +443,7 @@
 #include "nsIImageDocument.h"
 
 // Storage includes
-#include "nsIDOMStorage.h"
-#include "nsPIDOMStorage.h"
-#include "nsIDOMStorageList.h"
-#include "nsIDOMStorageItem.h"
-#include "nsIDOMStorageEvent.h"
-#include "nsIDOMToString.h"
+#include "nsDOMStorage.h"
 
 // Drag and drop
 #include "nsIDOMDataTransfer.h"
@@ -674,7 +669,7 @@ static nsDOMClassInfoData sClassInfoData[] = {
                            ARRAY_SCRIPTABLE_FLAGS |
                            nsIXPCScriptable::WANT_SETPROPERTY)
   NS_DEFINE_CLASSINFO_DATA_WITH_NAME(HTMLFormControlCollection, HTMLCollection,
-                                     nsFormControlListSH,
+                                     nsHTMLCollectionSH,
                                      ARRAY_SCRIPTABLE_FLAGS)
   NS_DEFINE_CLASSINFO_DATA_WITH_NAME(HTMLGenericCollection, HTMLCollection,
                                      nsHTMLCollectionSH,
@@ -7715,9 +7710,9 @@ nsNamedArraySH::GetProperty(nsIXPConnectWrappedNative *wrapper, JSContext *cx,
                             PRBool *_retval)
 {
   if (JSVAL_IS_STRING(id) && !ObjectIsNativeWrapper(cx, obj)) {
-    nsCOMPtr<nsISupports> item;
-    nsresult rv = GetNamedItem(wrapper->Native(), nsDependentJSString(id),
-                               getter_AddRefs(item));
+    nsresult rv = NS_OK;
+    nsISupports* item = GetNamedItem(wrapper->Native(), nsDependentJSString(id),
+                                     &rv);
     NS_ENSURE_SUCCESS(rv, rv);
 
     if (item) {
@@ -7748,23 +7743,38 @@ nsNamedNodeMapSH::GetItemAt(nsISupports *aNative, PRUint32 aIndex,
   return map->GetItemAt(aIndex, aResult);
 }
 
-nsresult
+nsISupports*
 nsNamedNodeMapSH::GetNamedItem(nsISupports *aNative, const nsAString& aName,
-                               nsISupports **aResult)
+                               nsresult *aResult)
 {
-  nsCOMPtr<nsIDOMNamedNodeMap> map(do_QueryInterface(aNative));
-  NS_ENSURE_TRUE(map, NS_ERROR_UNEXPECTED);
+  nsDOMAttributeMap* map = nsDOMAttributeMap::FromSupports(aNative);
 
-  nsIDOMNode *node = nsnull; // Weak, transfer the ownership over to aResult
-  nsresult rv = map->GetNamedItem(aName, &node);
-
-  *aResult = node;
-
-  return rv;
+  return map->GetNamedItem(aName, aResult);
 }
 
 
 // HTMLCollection helper
+
+nsresult
+nsHTMLCollectionSH::GetLength(nsIXPConnectWrappedNative *wrapper, JSContext *cx,
+                              JSObject *obj, PRUint32 *length)
+{
+  nsIHTMLCollection* collection =
+    static_cast<nsIHTMLCollection*>(wrapper->Native());
+#ifdef DEBUG
+  {
+    nsCOMPtr<nsIHTMLCollection> collection_qi =
+      do_QueryInterface(wrapper->Native());
+
+    // If this assertion fires the QI implementation for the object in
+    // question doesn't use the nsIHTMLCollection pointer as the nsISupports
+    // pointer. That must be fixed, or we'll crash...
+    NS_ASSERTION(collection_qi == collection, "Uh, fix QI!");
+  }
+#endif
+
+  return collection->GetLength(length);
+}
 
 nsISupports*
 nsHTMLCollectionSH::GetItemAt(nsISupports *aNative, PRUint32 aIndex,
@@ -7785,20 +7795,24 @@ nsHTMLCollectionSH::GetItemAt(nsISupports *aNative, PRUint32 aIndex,
   return collection->GetNodeAt(aIndex, aResult);
 }
 
-nsresult
+nsISupports*
 nsHTMLCollectionSH::GetNamedItem(nsISupports *aNative,
                                  const nsAString& aName,
-                                 nsISupports **aResult)
+                                 nsresult *aResult)
 {
-  nsCOMPtr<nsIDOMHTMLCollection> collection(do_QueryInterface(aNative));
-  NS_ENSURE_TRUE(collection, NS_ERROR_UNEXPECTED);
+  nsIHTMLCollection* collection = static_cast<nsIHTMLCollection*>(aNative);
+#ifdef DEBUG
+  {
+    nsCOMPtr<nsIHTMLCollection> collection_qi = do_QueryInterface(aNative);
 
-  nsIDOMNode *node = nsnull; // Weak, transfer the ownership over to aResult
-  nsresult rv = collection->NamedItem(aName, &node);
+    // If this assertion fires the QI implementation for the object in
+    // question doesn't use the nsIHTMLCollection pointer as the nsISupports
+    // pointer. That must be fixed, or we'll crash...
+    NS_ASSERTION(collection_qi == collection, "Uh, fix QI!");
+  }
+#endif
 
-  *aResult = node;
-
-  return rv;
+  return collection->GetNamedItem(aName, aResult);
 }
 
 
@@ -7826,41 +7840,33 @@ nsContentListSH::PreCreate(nsISupports *nativeObj, JSContext *cx,
   return rv;
 }
 
-NS_IMETHODIMP
-nsContentListSH::GetProperty(nsIXPConnectWrappedNative *wrapper, JSContext *cx,
-                             JSObject *obj, jsval id, jsval *vp,
-                             PRBool *_retval)
-{
-  if (JSVAL_IS_STRING(id) && !ObjectIsNativeWrapper(cx, obj)) {
-    nsContentList *list = nsContentList::FromSupports(wrapper->Native());
-    nsINode* node = list->NamedItem(nsDependentJSString(id), PR_TRUE);
-    if (!node) {
-      return NS_OK;
-    }
-
-    nsCOMPtr<nsIXPConnectJSObjectHolder> holder;
-    nsresult rv = WrapNative(cx, obj, node, NS_GET_IID(nsISupports), vp,
-                             getter_AddRefs(holder));
-
-    return NS_FAILED(rv) ? rv : NS_SUCCESS_I_DID_SOMETHING;
-  }
-
-  return nsNodeListSH::GetProperty(wrapper, cx, obj, id, vp, _retval);
-}
-
-
-// FormControlList helper
-
 nsresult
-nsFormControlListSH::GetNamedItem(nsISupports *aNative,
-                                  const nsAString& aName,
-                                  nsISupports **aResult)
+nsContentListSH::GetLength(nsIXPConnectWrappedNative *wrapper, JSContext *cx,
+                           JSObject *obj, PRUint32 *length)
 {
-  nsCOMPtr<nsIDOMNSHTMLFormControlList> list(do_QueryInterface(aNative));
-  NS_ENSURE_TRUE(list, NS_ERROR_UNEXPECTED);
+  nsContentList *list = nsContentList::FromSupports(wrapper->Native());
 
-  return list->NamedItem(aName, aResult);
+  return list->GetLength(length);
 }
+
+nsISupports*
+nsContentListSH::GetItemAt(nsISupports *aNative, PRUint32 aIndex,
+                           nsresult *aResult)
+{
+  nsContentList *list = nsContentList::FromSupports(aNative);
+
+  return list->GetNodeAt(aIndex, aResult);
+}
+
+nsISupports*
+nsContentListSH::GetNamedItem(nsISupports *aNative, const nsAString& aName,
+                              nsresult *aResult)
+{
+  nsContentList *list = nsContentList::FromSupports(aNative);
+
+  return list->GetNamedItem(aName, aResult);
+}
+
 
 // Document helper for document.location and document.on*
 
@@ -9895,20 +9901,13 @@ nsPluginSH::GetItemAt(nsISupports *aNative, PRUint32 aIndex,
   return plugin->GetItemAt(aIndex, aResult);
 }
 
-nsresult
+nsISupports*
 nsPluginSH::GetNamedItem(nsISupports *aNative, const nsAString& aName,
-                         nsISupports **aResult)
+                         nsresult *aResult)
 {
-  nsCOMPtr<nsIDOMPlugin> plugin(do_QueryInterface(aNative));
-  NS_ENSURE_TRUE(plugin, NS_ERROR_UNEXPECTED);
+  nsPluginElement* plugin = nsPluginElement::FromSupports(aNative);
 
-  nsIDOMMimeType *mime_type = nsnull;
-
-  nsresult rv = plugin->NamedItem(aName, &mime_type);
-
-  *aResult = mime_type;
-
-  return rv;
+  return plugin->GetNamedItem(aName, aResult);
 }
 
 
@@ -9923,20 +9922,13 @@ nsPluginArraySH::GetItemAt(nsISupports *aNative, PRUint32 aIndex,
   return array->GetItemAt(aIndex, aResult);
 }
 
-nsresult
+nsISupports*
 nsPluginArraySH::GetNamedItem(nsISupports *aNative, const nsAString& aName,
-                              nsISupports **aResult)
+                              nsresult *aResult)
 {
-  nsCOMPtr<nsIDOMPluginArray> array(do_QueryInterface(aNative));
-  NS_ENSURE_TRUE(array, NS_ERROR_UNEXPECTED);
+  nsPluginArray* array = nsPluginArray::FromSupports(aNative);
 
-  nsIDOMPlugin *plugin = nsnull;
-
-  nsresult rv = array->NamedItem(aName, &plugin);
-
-  *aResult = plugin;
-
-  return rv;
+  return array->GetNamedItem(aName, aResult);
 }
 
 
@@ -9951,20 +9943,13 @@ nsMimeTypeArraySH::GetItemAt(nsISupports *aNative, PRUint32 aIndex,
   return array->GetItemAt(aIndex, aResult);
 }
 
-nsresult
+nsISupports*
 nsMimeTypeArraySH::GetNamedItem(nsISupports *aNative, const nsAString& aName,
-                                nsISupports **aResult)
+                                nsresult *aResult)
 {
-  nsCOMPtr<nsIDOMMimeTypeArray> array(do_QueryInterface(aNative));
-  NS_ENSURE_TRUE(array, NS_ERROR_UNEXPECTED);
+  nsMimeTypeArray* array = nsMimeTypeArray::FromSupports(aNative);
 
-  nsIDOMMimeType *mime_type = nsnull;
-
-  nsresult rv = array->NamedItem(aName, &mime_type);
-
-  *aResult = mime_type;
-
-  return rv;
+  return array->GetNamedItem(aName, aResult);
 }
 
 
@@ -10145,20 +10130,14 @@ nsTreeColumnsSH::GetItemAt(nsISupports *aNative, PRUint32 aIndex,
   return columns->GetColumnAt(aIndex);
 }
 
-nsresult
+nsISupports*
 nsTreeColumnsSH::GetNamedItem(nsISupports *aNative,
                               const nsAString& aName,
-                              nsISupports **aResult)
+                              nsresult *aResult)
 {
-  nsCOMPtr<nsITreeColumns> columns(do_QueryInterface(aNative));
-  NS_ENSURE_TRUE(columns, NS_ERROR_UNEXPECTED);
+  nsTreeColumns* columns = nsTreeColumns::FromSupports(aNative);
 
-  nsITreeColumn* column = nsnull; // Weak, transfer the ownership over to aResult
-  nsresult rv = columns->GetNamedColumn(aName, &column);
-
-  *aResult = column;
-
-  return rv;
+  return columns->GetNamedColumn(aName);
 }
 #endif
 
@@ -10224,20 +10203,13 @@ nsStorageSH::NewResolve(nsIXPConnectWrappedNative *wrapper, JSContext *cx,
   return NS_OK;
 }
 
-nsresult
+nsISupports*
 nsStorageSH::GetNamedItem(nsISupports *aNative, const nsAString& aName,
-                          nsISupports **aResult)
+                          nsresult *aResult)
 {
-  nsCOMPtr<nsIDOMStorage> storage(do_QueryInterface(aNative));
-  NS_ENSURE_TRUE(storage, NS_ERROR_UNEXPECTED);
+  nsDOMStorage* storage = nsDOMStorage::FromSupports(aNative);
 
-  // Weak, transfer the ownership over to aResult
-  nsIDOMStorageItem* item = nsnull;
-  nsresult rv = storage->GetItem(aName, &item);
-
-  *aResult = item;
-
-  return rv;
+  return storage->GetNamedItem(aName, aResult);
 }
 
 NS_IMETHODIMP
@@ -10342,20 +10314,13 @@ nsStorageSH::NewEnumerate(nsIXPConnectWrappedNative *wrapper, JSContext *cx,
 
 // StorageList scriptable helper
 
-nsresult
+nsISupports*
 nsStorageListSH::GetNamedItem(nsISupports *aNative, const nsAString& aName,
-                              nsISupports **aResult)
+                              nsresult *aResult)
 {
-  nsCOMPtr<nsIDOMStorageList> storagelist(do_QueryInterface(aNative));
-  NS_ENSURE_TRUE(storagelist, NS_ERROR_UNEXPECTED);
+  nsDOMStorageList* storagelist = static_cast<nsDOMStorageList*>(aNative);
 
-  // Weak, transfer the ownership over to aResult
-  nsIDOMStorage* storage = nsnull;
-  nsresult rv = storagelist->NamedItem(aName, &storage);
-
-  *aResult = storage;
-
-  return rv;
+  return storagelist->GetNamedItem(aName, aResult);
 }
 
 

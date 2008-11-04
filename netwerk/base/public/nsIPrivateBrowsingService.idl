@@ -37,7 +37,7 @@
 
 #include "nsISupports.idl"
 
-[scriptable, uuid(d2943870-c781-11dc-95ff-0800200c9a66)]
+[scriptable, uuid(effb626c-676f-4c9d-b6ca-70696787901a)]
 interface nsIPrivateBrowsingService : nsISupports
 {
     // When read, determines whether the private browsing mode is currently
@@ -46,6 +46,11 @@ interface nsIPrivateBrowsingService : nsISupports
     // Setting this value while handling one of the notifications generated
     // by the private browsing service throws NS_ERROR_FAILURE.
     attribute boolean privateBrowsingEnabled;
+
+    // Determine whether the private browsing mode has been started
+    // automatically at application startup.
+    // This value will never be true if privateBrowsingEnabled is false.
+    readonly attribute boolean autoStarted;
 };
 
 %{C++

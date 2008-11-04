@@ -60,6 +60,9 @@ public:
   virtual nsINode* GetNodeAt(PRUint32 aIndex) = 0;
 };
 
+#define NS_NODELIST_OFFSET_AND_INTERFACE_TABLE_BEGIN(_class)                  \
+  NS_OFFSET_AND_INTERFACE_TABLE_BEGIN_AMBIGUOUS(_class, nsINodeList)
+
 NS_DEFINE_STATIC_IID_ACCESSOR(nsINodeList, NS_INODELIST_IID)
 
 #endif /* nsINodeList_h___ */

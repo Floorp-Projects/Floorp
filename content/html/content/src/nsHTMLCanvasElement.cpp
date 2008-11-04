@@ -159,10 +159,12 @@ nsHTMLCanvasElement::~nsHTMLCanvasElement()
 NS_IMPL_ADDREF_INHERITED(nsHTMLCanvasElement, nsGenericElement)
 NS_IMPL_RELEASE_INHERITED(nsHTMLCanvasElement, nsGenericElement)
 
-NS_HTML_CONTENT_INTERFACE_TABLE_HEAD(nsHTMLCanvasElement, nsGenericHTMLElement)
-  NS_INTERFACE_TABLE_INHERITED2(nsHTMLCanvasElement,
-                                nsIDOMHTMLCanvasElement,
-                                nsICanvasElement)
+NS_INTERFACE_TABLE_HEAD(nsHTMLCanvasElement)
+  NS_HTML_CONTENT_INTERFACE_TABLE2(nsHTMLCanvasElement,
+                                   nsIDOMHTMLCanvasElement,
+                                   nsICanvasElement)
+  NS_HTML_CONTENT_INTERFACE_TABLE_TO_MAP_SEGUE(nsHTMLCanvasElement,
+                                               nsGenericHTMLElement)
 NS_HTML_CONTENT_INTERFACE_TABLE_TAIL_CLASSINFO(HTMLCanvasElement)
 
 NS_IMPL_ELEMENT_CLONE(nsHTMLCanvasElement)

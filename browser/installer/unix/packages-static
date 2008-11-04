@@ -157,6 +157,7 @@ bin/components/places.xpt
 bin/components/plugin.xpt
 bin/components/prefetch.xpt
 bin/components/pref.xpt
+bin/components/privatebrowsing.xpt
 bin/components/proxyObjInst.xpt
 bin/components/toolkitremote.xpt
 bin/components/rdf.xpt
@@ -205,6 +206,7 @@ bin/components/nsBrowserGlue.js
 bin/components/nsSetDefaultBrowser.js
 bin/components/nsMicrosummaryService.js
 bin/components/nsPlacesTransactionsService.js
+bin/components/nsPrivateBrowsingService.js
 bin/components/nsSearchService.js
 bin/components/nsSearchSuggestions.js
 bin/components/nsLoginInfo.js
@@ -227,6 +229,7 @@ bin/components/extensions.xpt
 bin/components/update.xpt
 bin/components/nsSessionStartup.js
 bin/components/nsSessionStore.js
+bin/components/aboutPrivateBrowsing.js
 bin/components/aboutSessionRestore.js
 bin/components/sessionstore.xpt
 bin/components/nsURLFormatter.js
@@ -243,7 +246,9 @@ bin/components/nsContentDispatchChooser.js
 bin/components/nsHandlerService.js
 bin/components/nsWebHandlerApp.js
 bin/components/libdbusservice.so
+bin/components/aboutRights.js
 bin/components/aboutRobots.js
+bin/components/aboutCertError.js
 bin/components/nsBadCertHandler.js
 
 ; Modules

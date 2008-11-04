@@ -189,34 +189,6 @@ function checkTest() {
 }
 
 
-// This observer prevents a prompt from showing up asking if the current
-// session should be kept or closed upon entering the private browsing mode.
-// It instructs the private browsing service to keep the current session open.
-var observer = {
-  QueryInterface: function (iid) {
-    const interfaces = [Ci.nsIObserver,
-                        Ci.nsISupports];
-    if (!interfaces.some(function(v) iid.equals(v)))
-      throw Cr.NS_ERROR_NO_INTERFACE;
-    return this;
-  },
-  observe: function (subject, topic, data) {
-    netscape.security.PrivilegeManager.enablePrivilege('UniversalXPConnect');
-    subject.QueryInterface(Ci.nsISupportsPRUint32);
-    subject.data = 0;
-  },
-  register: function () {
-    var os = Cc["@mozilla.org/observer-service;1"].
-             getService(Ci.nsIObserverService);
-    os.addObserver(this, "private-browsing-enter", false);
-  },
-  unregister: function () {
-    var os = Cc["@mozilla.org/observer-service;1"].
-             getService(Ci.nsIObserverService);
-    os.removeObserver(this, "private-browsing-enter");
-  }
-};
-
 var _PBSvc = null;
 function get_PBSvc() {
   if (_PBSvc)
@@ -258,7 +230,7 @@ function handleLoad(aEvent) {
     loadNextTest();
   } else {
     ok(true, "private browsing notification tests finished.");
-    observer.unregister();
+    prefBranch.clearUserPref("browser.privatebrowsing.keep_current_session");
     SimpleTest.finish();
   }
 }
@@ -273,6 +245,10 @@ if (!pb) { // Private Browsing might not be available
 
   ok(Ci != null, "Access Ci");
   ok(Cc != null, "Access Cc");
+
+  var prefBranch = Cc["@mozilla.org/preferences-service;1"].
+                   getService(Ci.nsIPrefBranch);
+  prefBranch.setBoolPref("browser.privatebrowsing.keep_current_session", true);
 
   var pwmgr = Cc["@mozilla.org/login-manager;1"].
               getService(Ci.nsILoginManager);

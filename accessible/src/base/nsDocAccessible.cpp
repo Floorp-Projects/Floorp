@@ -270,11 +270,11 @@ nsDocAccessible::GetDescription(nsAString& aDescription)
   return NS_OK;
 }
 
-NS_IMETHODIMP
-nsDocAccessible::GetState(PRUint32 *aState, PRUint32 *aExtraState)
+nsresult
+nsDocAccessible::GetStateInternal(PRUint32 *aState, PRUint32 *aExtraState)
 {
-  // nsAccessible::GetState() always fail for document accessible.
-  nsAccessible::GetState(aState, aExtraState);
+  // nsAccessible::GetStateInternal() always fail for document accessible.
+  nsAccessible::GetStateInternal(aState, aExtraState);
   if (!mDOMNode)
     return NS_OK;
 
@@ -365,7 +365,7 @@ NS_IMETHODIMP nsDocAccessible::TakeFocus()
 {
   NS_ENSURE_TRUE(mDocument, NS_ERROR_FAILURE);
   PRUint32 state;
-  GetState(&state, nsnull);
+  GetStateInternal(&state, nsnull);
   if (0 == (state & nsIAccessibleStates::STATE_FOCUSABLE)) {
     return NS_ERROR_FAILURE; // Not focusable
   }
@@ -510,7 +510,7 @@ NS_IMETHODIMP nsDocAccessible::GetAssociatedEditor(nsIEditor **aEditor)
       nsCoreUtils::GetDOMElementFor(DOMDocument);
     nsCOMPtr<nsIContent> content(do_QueryInterface(DOMElement));
 
-    if (!content->HasFlag(NODE_IS_EDITABLE))
+    if (!content || !content->HasFlag(NODE_IS_EDITABLE))
       return NS_OK;
   }
 
@@ -564,8 +564,8 @@ nsDocAccessible::CacheAccessNode(void *aUniqueID, nsIAccessNode *aAccessNode)
   nsCOMPtr<nsIAccessNode> accessNode;
   GetCacheEntry(mAccessNodeCache, aUniqueID, getter_AddRefs(accessNode));
   if (accessNode) {
-    nsCOMPtr<nsPIAccessNode> prAccessNode = do_QueryInterface(accessNode);
-    prAccessNode->Shutdown();
+    nsRefPtr<nsAccessNode> accNode = nsAccUtils::QueryAccessNode(accessNode);
+    accNode->Shutdown();
   }
 
   PutCacheEntry(mAccessNodeCache, aUniqueID, aAccessNode);
@@ -598,7 +598,8 @@ NS_IMETHODIMP nsDocAccessible::GetParent(nsIAccessible **aParent)
   return mParent ? nsAccessible::GetParent(aParent) : NS_ERROR_FAILURE;
 }
 
-NS_IMETHODIMP nsDocAccessible::Init()
+nsresult
+nsDocAccessible::Init()
 {
   PutCacheEntry(gGlobalDocAccessibleCache, mDocument, this);
 
@@ -610,7 +611,8 @@ NS_IMETHODIMP nsDocAccessible::Init()
   return nsHyperTextAccessibleWrap::Init();
 }
 
-NS_IMETHODIMP nsDocAccessible::Shutdown()
+nsresult
+nsDocAccessible::Shutdown()
 {
   if (!mWeakShell) {
     return NS_OK;  // Already shutdown
@@ -670,15 +672,17 @@ void nsDocAccessible::ShutdownChildDocuments(nsIDocShellTreeItem *aStart)
       }
       nsCOMPtr<nsIAccessibleDocument> docAccessible =
         GetDocAccessibleFor(treeItemChild);
-      nsCOMPtr<nsPIAccessNode> accessNode = do_QueryInterface(docAccessible);
-      if (accessNode) {
-        accessNode->Shutdown();
+      if (docAccessible) {
+        nsRefPtr<nsAccessNode> docAccNode =
+          nsAccUtils::QueryAccessNode(docAccessible);
+        docAccNode->Shutdown();
       }
     }
   }
 }
 
-nsIFrame* nsDocAccessible::GetFrame()
+nsIFrame*
+nsDocAccessible::GetFrame()
 {
   nsCOMPtr<nsIPresShell> shell(do_QueryReferent(mWeakShell));
 
@@ -1836,8 +1840,8 @@ void nsDocAccessible::RefreshNodes(nsIDOMNode *aStartNode)
   // Shut down the actual accessible or access node
   void *uniqueID;
   accessNode->GetUniqueID(&uniqueID);
-  nsCOMPtr<nsPIAccessNode> privateAccessNode(do_QueryInterface(accessNode));
-  privateAccessNode->Shutdown();
+  nsRefPtr<nsAccessNode> accNode = nsAccUtils::QueryAccessNode(accessNode);
+  accNode->Shutdown();
 
   // Remove from hash table as well
   mAccessNodeCache.Remove(uniqueID);

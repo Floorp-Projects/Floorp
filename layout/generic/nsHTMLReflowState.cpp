@@ -289,6 +289,17 @@ nsHTMLReflowState::Init(nsPresContext* aPresContext,
 
   InitResizeFlags(aPresContext);
 
+  // We have to start loading the border image now, because the
+  // border-image's width overrides only apply once the image is loaded.
+  // Starting the load of the image means we'll get a reflow when the
+  // image loads.  (If we didn't do it now, and the image loaded between
+  // reflow and paint, we'd never get the notification, and our size
+  // would be wrong.)
+  imgIRequest *borderImage = mStyleBorder->GetBorderImage();
+  if (borderImage) {
+    aPresContext->LoadBorderImage(borderImage, frame);
+  }
+
   NS_ASSERTION((mFrameType == NS_CSS_FRAME_TYPE_INLINE &&
                 !frame->IsFrameOfType(nsIFrame::eReplaced)) ||
                frame->GetType() == nsGkAtoms::textFrame ||

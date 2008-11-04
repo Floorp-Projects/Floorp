@@ -315,6 +315,22 @@ nsBlockFrame::Destroy()
   nsBlockFrameSuper::Destroy();
 }
 
+/* virtual */ nsILineIterator*
+nsBlockFrame::GetLineIterator()
+{
+  nsLineIterator* it = new nsLineIterator;
+  if (!it)
+    return nsnull;
+
+  const nsStyleVisibility* visibility = GetStyleVisibility();
+  nsresult rv = it->Init(mLines, visibility->mDirection == NS_STYLE_DIRECTION_RTL);
+  if (NS_FAILED(rv)) {
+    delete it;
+    return nsnull;
+  }
+  return it;
+}
+
 NS_IMETHODIMP
 nsBlockFrame::QueryInterface(const nsIID& aIID, void** aInstancePtr)
 {
@@ -324,26 +340,6 @@ nsBlockFrame::QueryInterface(const nsIID& aIID, void** aInstancePtr)
     *aInstancePtr = static_cast<void*>(static_cast<nsBlockFrame*>(this));
     return NS_OK;
   }
-  if (aIID.Equals(NS_GET_IID(nsILineIterator)) ||
-      aIID.Equals(NS_GET_IID(nsILineIteratorNavigator))) {
-    nsLineIterator* it = new nsLineIterator;
-    if (!it) {
-      *aInstancePtr = nsnull;
-      return NS_ERROR_OUT_OF_MEMORY;
-    }
-    NS_ADDREF(it); // reference passed to caller
-    const nsStyleVisibility* visibility = GetStyleVisibility();
-    nsresult rv = it->Init(mLines,
-                           visibility->mDirection == NS_STYLE_DIRECTION_RTL);
-    if (NS_FAILED(rv)) {
-      *aInstancePtr = nsnull;
-      NS_RELEASE(it);
-      return rv;
-    }
-    *aInstancePtr = static_cast<nsILineIteratorNavigator*>(it);
-    return NS_OK;
-  }
-
   return nsBlockFrameSuper::QueryInterface(aIID, aInstancePtr);
 }
 

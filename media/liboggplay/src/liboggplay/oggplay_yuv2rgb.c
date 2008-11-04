@@ -357,29 +357,27 @@ void oggplay_yuv2rgb(OggPlayYUVChannels * yuv, OggPlayRGBChannels * rgb) {
     ptro2 = ptro;
     for (j = 0; j < yuv->y_width; j += 2) {
 
-      short pr, pg, pb;
+      short pr, pg, pb, y;
       short r, g, b;
 
-    //pr = ((128 + (ptrv[j/2] - 128) * 292) >> 8) - 16; /* 1.14 * 256 */
-      pr = (-41344 + ptrv[j/2] * 292) >> 8;
-    //pg = ((128 - (ptru[j/2] - 128) * 101 - (ptrv[j/2] - 128) * 149) >> 8)-16;
-    //                                /* 0.395 & 0.581 */
-      pg = (28032 - ptru[j/2] * 101 - ptrv[j/2] * 149) >> 8;
-    //pb = ((128 + (ptru[j/2] - 128) * 520) >> 8) - 16; /* 2.032 */
-      pb = (-70528 + ptru[j/2] * 520) >> 8;
+      pr = (-56992 + ptrv[j/2] * 409) >> 8;
+      pg = (34784 - ptru[j/2] * 100 - ptrv[j/2] * 208) >> 8;
+      pb = (-70688 + ptru[j/2] * 516) >> 8;
 
-      r = ptry[j] + pr;
-      g = ptry[j] + pg;
-      b = ptry[j] + pb;
+      y = 298*ptry[j] >> 8;
+      r = y + pr;
+      g = y + pg;
+      b = y + pb;
 
       *ptro2++ = CLAMP(r);
       *ptro2++ = CLAMP(g);
       *ptro2++ = CLAMP(b);
       *ptro2++ = 255;
 
-      r = ptry[j + 1] + pr;
-      g = ptry[j + 1] + pg;
-      b = ptry[j + 1] + pb;
+      y = 298*ptry[j + 1] >> 8;
+      r = y + pr;
+      g = y + pg;
+      b = y + pb;
 
       *ptro2++ = CLAMP(r);
       *ptro2++ = CLAMP(g);
@@ -409,29 +407,27 @@ void oggplay_yuv2bgr(OggPlayYUVChannels * yuv, OggPlayRGBChannels * rgb) {
     ptro2 = ptro;
     for (j = 0; j < yuv->y_width; j += 2) {
 
-      short pr, pg, pb;
+      short pr, pg, pb, y;
       short r, g, b;
 
-    //pr = ((128 + (ptrv[j/2] - 128) * 292) >> 8) - 16; /* 1.14 * 256 */
-      pr = (-41344 + ptrv[j/2] * 292) >> 8;
-    //pg = ((128 - (ptru[j/2] - 128) * 101 - (ptrv[j/2] - 128) * 149) >> 8)-16;
-    //                                /* 0.395 & 0.581 */
-      pg = (28032 - ptru[j/2] * 101 - ptrv[j/2] * 149) >> 8;
-    //pb = ((128 + (ptru[j/2] - 128) * 520) >> 8) - 16; /* 2.032 */
-      pb = (-70528 + ptru[j/2] * 520) >> 8;
+      pr = (-56992 + ptrv[j/2] * 409) >> 8;
+      pg = (34784 - ptru[j/2] * 100 - ptrv[j/2] * 208) >> 8;
+      pb = (-70688 + ptru[j/2] * 516) >> 8;
 
-      r = ptry[j] + pr;
-      g = ptry[j] + pg;
-      b = ptry[j] + pb;
+      y = 298*ptry[j] >> 8;
+      r = y + pr;
+      g = y + pg;
+      b = y + pb;
 
       *ptro2++ = CLAMP(b);
       *ptro2++ = CLAMP(g);
       *ptro2++ = CLAMP(r);
       *ptro2++ = 255;
 
-      r = ptry[j + 1] + pr;
-      g = ptry[j + 1] + pg;
-      b = ptry[j + 1] + pb;
+      y = 298*ptry[j + 1] >> 8;
+      r = y + pr;
+      g = y + pg;
+      b = y + pb;
 
       *ptro2++ = CLAMP(b);
       *ptro2++ = CLAMP(g);
