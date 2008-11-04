@@ -1,0 +1,27 @@
+diff --git a/gfx/cairo/cairo/src/cairo-win32-surface.c b/gfx/cairo/cairo/src/cairo-win32-surface.c
+--- a/gfx/cairo/cairo/src/cairo-win32-surface.c
++++ b/gfx/cairo/cairo/src/cairo-win32-surface.c
+@@ -1892,21 +1892,22 @@ cairo_win32_surface_get_dc (cairo_surfac
+ 	return winsurf->dc;
+     }
+ 
+     if (_cairo_surface_is_paginated (surface)) {
+ 	cairo_surface_t *target;
+ 
+ 	target = _cairo_paginated_surface_get_target (surface);
+ 
++#ifndef CAIRO_OMIT_WIN32_PRINTING
+ 	if (_cairo_surface_is_win32_printing (target)) {
+ 	    winsurf = (cairo_win32_surface_t *) target;
+-
+ 	    return winsurf->dc;
+ 	}
++#endif
+     }
+ 
+     return NULL;
+ }
+ 
+ /**
+  * cairo_win32_surface_get_image
+  * @surface: a #cairo_surface_t

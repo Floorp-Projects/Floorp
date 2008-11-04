@@ -57,12 +57,13 @@ gfxWindowsSurface::gfxWindowsSurface(HDC dc, PRUint32 flags) :
     if (flags & FLAG_TAKE_DC)
         mOwnsDC = PR_TRUE;
 
+#ifdef NS_PRINTING
     if (flags & FLAG_FOR_PRINTING) {
         Init(cairo_win32_printing_surface_create(mDC));
         mForPrinting = PR_TRUE;
-    } else {
+    } else
+#endif
         Init(cairo_win32_surface_create(mDC));
-    }
 }
 
 gfxWindowsSurface::gfxWindowsSurface(const gfxIntSize& size, gfxImageFormat imageFormat) :
