@@ -44,15 +44,6 @@ include $(DEPTH)/config/autoconf.mk
 
 MODULE  = widget
 
-PACKAGE_FILE = widget.pkg
-PACKAGE_VARS += \
-	MOZ_ENABLE_GTK2 \
-	MOZ_ENABLE_QT \
-	MOZ_ENABLE_XLIB \
-	MOZ_ENABLE_PHOTON \
-	MOZ_ENABLE_XREMOTE \
-	$(NULL)
-
 DIRS		= xpwidgets support
 
 ifneq (,$(filter beos os2 mac cocoa,$(MOZ_WIDGET_TOOLKIT)))

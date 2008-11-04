@@ -50,8 +50,6 @@ MODULE_NAME	= nsSecurityManagerModule
 GRE_MODULE	= 1
 LIBXUL_LIBRARY = 1
 
-PACKAGE_FILE = caps.pkg
-
 REQUIRES	= xpcom \
 		  string \
 		  pref \

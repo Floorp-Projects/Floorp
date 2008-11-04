@@ -90,8 +90,6 @@ LIBRARY_NAME	= js$(MOZ_BITS)$(VERSION_NUMBER)
 RESFILE		= js$(MOZ_BITS)40.res
 endif
 
-PACKAGE_FILE = js.pkg
-
 # JavaScript must be built shared, even for static builds, as it is used by
 # other modules which are always built shared. Failure to do so results in
 # the js code getting copied into xpinstall and jsd as well as mozilla-bin,
