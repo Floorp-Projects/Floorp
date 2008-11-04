@@ -67,9 +67,7 @@ class nsChannelToPipeListener : public nsIStreamListener
   NS_DECL_NSISTREAMLISTENER
 
   public:
-  // If aSeeking is PR_TRUE then this listener was created as part of a
-  // seek request and is expecting a byte range partial result.
-  nsChannelToPipeListener(nsMediaDecoder* aDecoder, PRBool aSeeking = PR_FALSE);
+  nsChannelToPipeListener(nsMediaDecoder* aDecoder);
   nsresult Init();
   nsresult GetInputStream(nsIInputStream** aStream);
   void Stop();
@@ -97,9 +95,6 @@ private:
 
   // Total bytes transferred so far
   PRInt64 mTotalBytes;
-
-  // PR_TRUE if this listener is expecting a byte range request result
-  PRPackedBool mSeeking;
 };
 
 #endif
