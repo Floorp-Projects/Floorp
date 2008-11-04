@@ -248,6 +248,13 @@ NS_IMETHODIMP nsAccessibilityService::ProcessDocLoadEvent(nsITimer *aTimer, void
   return NS_OK;
 }
 
+NS_IMETHODIMP
+nsAccessibilityService::FireAccessibleEvent(PRUint32 aEvent,
+                                            nsIAccessible *aTarget)
+{
+  return nsAccUtils::FireAccEvent(aEvent, aTarget);
+}
+
 void nsAccessibilityService::StartLoadCallback(nsITimer *aTimer, void *aClosure)
 {
   nsIAccessibilityService *accService = nsAccessNode::GetAccService();
