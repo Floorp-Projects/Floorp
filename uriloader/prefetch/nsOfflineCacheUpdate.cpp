@@ -40,6 +40,7 @@
 
 #include "nsCPrefetchService.h"
 #include "nsCURILoader.h"
+#include "nsIApplicationCacheContainer.h"
 #include "nsIApplicationCacheChannel.h"
 #include "nsIApplicationCacheService.h"
 #include "nsICache.h"
@@ -1439,6 +1440,29 @@ nsOfflineCacheUpdate::NotifyCompleted(nsOfflineCacheUpdateItem *aItem)
 }
 
 nsresult
+nsOfflineCacheUpdate::AssociateDocument(nsIDOMDocument *aDocument)
+{
+    // Check that the document that requested this update was
+    // previously associated with an application cache.  If not, it
+    // should be associated with the new one.
+    nsCOMPtr<nsIApplicationCacheContainer> container =
+        do_QueryInterface(aDocument);
+    if (!container)
+        return NS_OK;
+
+    nsCOMPtr<nsIApplicationCache> existingCache;
+    nsresult rv = container->GetApplicationCache(getter_AddRefs(existingCache));
+    NS_ENSURE_SUCCESS(rv, rv);
+
+    if (!existingCache) {
+        rv = container->SetApplicationCache(mApplicationCache);
+        NS_ENSURE_SUCCESS(rv, rv);
+    }
+
+    return NS_OK;
+}
+
+nsresult
 nsOfflineCacheUpdate::Finish()
 {
     LOG(("nsOfflineCacheUpdate::Finish [%p]", this));
@@ -1464,6 +1488,10 @@ nsOfflineCacheUpdate::Finish()
             if (NS_FAILED(rv)) {
                 NotifyError();
                 mSucceeded = PR_FALSE;
+            }
+
+            for (PRInt32 i = 0; i < mDocuments.Count(); i++) {
+                AssociateDocument(mDocuments[i]);
             }
         }
 
@@ -1912,11 +1940,11 @@ nsOfflineCacheUpdateService::GetUpdate(PRUint32 aIndex,
     return NS_OK;
 }
 
-
-NS_IMETHODIMP
-nsOfflineCacheUpdateService::ScheduleUpdate(nsIURI *aManifestURI,
-                                            nsIURI *aDocumentURI,
-                                            nsIOfflineCacheUpdate **aUpdate)
+nsresult
+nsOfflineCacheUpdateService::Schedule(nsIURI *aManifestURI,
+                                      nsIURI *aDocumentURI,
+                                      nsIDOMDocument *aDocument,
+                                      nsIOfflineCacheUpdate **aUpdate)
 {
     // Check for existing updates
     nsresult rv;
@@ -1938,6 +1966,8 @@ nsOfflineCacheUpdateService::ScheduleUpdate(nsIURI *aManifestURI,
             PRBool equals;
             rv = manifestURI->Equals(aManifestURI, &equals);
             if (equals) {
+                if (aDocument)
+                    update->AddDocument(aDocument);
                 NS_ADDREF(*aUpdate = update);
                 return NS_OK;
             }
@@ -1953,12 +1983,23 @@ nsOfflineCacheUpdateService::ScheduleUpdate(nsIURI *aManifestURI,
     rv = update->Init(aManifestURI, aDocumentURI);
     NS_ENSURE_SUCCESS(rv, rv);
 
+    if (aDocument)
+        update->AddDocument(aDocument);
+
     rv = update->Schedule();
     NS_ENSURE_SUCCESS(rv, rv);
 
     NS_ADDREF(*aUpdate = update);
 
     return NS_OK;
+}
+
+NS_IMETHODIMP
+nsOfflineCacheUpdateService::ScheduleUpdate(nsIURI *aManifestURI,
+                                            nsIURI *aDocumentURI,
+                                            nsIOfflineCacheUpdate **aUpdate)
+{
+    return Schedule(aManifestURI, aDocumentURI, nsnull, aUpdate);
 }
 
 //-----------------------------------------------------------------------------
@@ -2017,15 +2058,14 @@ nsOfflineCacheUpdateService::OnStateChange(nsIWebProgress* aWebProgress,
         LOG(("nsOfflineCacheUpdateService::OnStateChange [%p, doc=%p]",
              this, doc.get()));
 
-
         PendingUpdate *pendingUpdate;
         if (mDocUpdates.Get(doc, &pendingUpdate)) {
-            // Only schedule the update if the document loaded successfull
+            // Only schedule the update if the document loaded successfully
             if (NS_SUCCEEDED(aStatus)) {
                 nsCOMPtr<nsIOfflineCacheUpdate> update;
-                ScheduleUpdate(pendingUpdate->mManifestURI,
-                               pendingUpdate->mDocumentURI,
-                               getter_AddRefs(update));
+                Schedule(pendingUpdate->mManifestURI,
+                         pendingUpdate->mDocumentURI,
+                         doc, getter_AddRefs(update));
             }
             mDocUpdates.Remove(doc);
         }
