@@ -45,7 +45,6 @@
 
 @namespace url("http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul");
 @namespace html url("http://www.w3.org/1999/xhtml");
-@namespace svg url("http://www.w3.org/2000/svg");
 
 #main-window[chromehidden~="toolbar"][chromehidden~="location"][chromehidden~="directories"] {
   border-top: 1px solid rgba(0,0,0,0.65);
@@ -2136,41 +2135,53 @@ tabpanels.plain {
 /* ::::: Keyboard UI Panel ::::: */
 .KUI-panel {
   -moz-appearance: none;
-  background: rgba(0, 0, 0, .8) url(KUI-background.png) repeat-x;
+  background: rgba(68, 68, 68, .9) url(KUI-background.png) repeat-x;
   color: white;
-  border: 1px solid #ccc;
+  border: 1px solid rgba(255, 255, 255, 0.15);
   -moz-border-radius: 10px;
   margin-top: -1px;
   margin-left: -1px;
+}
+
+.KUI-panel[level="top"] {
+  background-color: rgba(68, 68, 68, .5);
   -moz-window-shadow: none;
 }
 
 /* ::::: Ctrl-Tab Panel ::::: */
-#ctrlTab-panel {
-  margin-top: -20px;
-  border-bottom-width: 9px;
-  -moz-border-bottom-colors: #ccc black black black black black black black black;
-}
-
 #ctrlTab-label {
   font-weight: bold;
-  font-size: 14px;
+  font-size: 1.5em;
   text-align: center;
-  margin-top: 6px;
-  margin-bottom: 10px;
+  margin-top: 1em;
+  margin-bottom: 1.5em;
+  text-shadow: black 0 0 1em;
 }
 
-svg|*.ctrlTab-thumbnailborder {
-  stroke: white;
-  stroke-width: 1px;
+.ctrlTab-thumbnail {
+  margin-bottom: 40px;
+  -moz-box-shadow: 1px 2px 3px black;
 }
 
-svg|*#ctrlTab-fadeGradientTop {
-  stop-color: black;
-  stop-opacity: .5;
+.ctrlTab-thumbnail[selected="true"] {
+  -moz-box-shadow: 1px 2px 3px black, 0 0 10px white, 0 0 20px rgb(50, 170, 255), 0 0 30px rgb(50, 170, 255);
 }
 
-svg|*#ctrlTab-fadeGradientBottom {
-  stop-color: black;
-  stop-opacity: 1;
+#ctrlTab-pages {
+  display: block;
+  text-align: center;
+}
+
+.ctrlTab-pagePointer {
+  display: inline-block;
+  margin: 0 1em 1em;
+  width: 1.5em;
+  height: 1.5em;
+  -moz-border-radius: .75em;
+  background: rgba(0, 0, 0, .5);
+  border: 1px solid rgba(255, 255, 255, .3);
+}
+
+.ctrlTab-pagePointer[selected="true"] {
+  background: rgba(255, 255, 255, .6);
 }
