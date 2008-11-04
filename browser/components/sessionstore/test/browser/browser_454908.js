@@ -57,9 +57,8 @@ function test() {
       doc.getElementById(id).value = fieldValues[id];
     
     gBrowser.removeTab(tab);
-    undoCloseTab();
     
-    tab = gBrowser.selectedTab;
+    tab = undoCloseTab();
     tab.linkedBrowser.addEventListener("load", function(aEvent) {
       let doc = tab.linkedBrowser.contentDocument;
       for (let id in fieldValues) {
@@ -72,6 +71,10 @@ function test() {
       
       // clean up
       gPrefService.setIntPref("browser.sessionstore.privacy_level", privacy_level);
+      // undoCloseTab can reuse a single blank tab, so we have to
+      // make sure not to close the window when closing our last tab
+      if (gBrowser.tabContainer.childNodes.length == 1)
+        gBrowser.addTab();
       gBrowser.removeTab(tab);
       finish();
     }, true);
