@@ -209,6 +209,7 @@ nsMimeTypeArray::NamedItem(const nsAString& aName, nsIDOMMimeType** aReturn)
 
 void  nsMimeTypeArray::Clear()
 {
+  mInited = PR_FALSE;
   mMimeTypeArray.Clear();
   mPluginMimeTypeCount = 0;
 }
@@ -229,7 +230,7 @@ nsresult nsMimeTypeArray::GetMimeTypes()
   if (rv == NS_OK) {
     // count up all possible MimeTypes, and collect them here. Later,
     // we'll remove duplicates.
-    mPluginMimeTypeCount = 0;
+    PRUint32 pluginMimeTypeCount = 0;
     PRUint32 pluginCount = 0;
     rv = pluginArray->GetLength(&pluginCount);
     if (rv == NS_OK) {
@@ -240,12 +241,16 @@ nsresult nsMimeTypeArray::GetMimeTypes()
             plugin) {
           PRUint32 mimeTypeCount = 0;
           if (plugin->GetLength(&mimeTypeCount) == NS_OK)
-            mPluginMimeTypeCount += mimeTypeCount;
+            pluginMimeTypeCount += mimeTypeCount;
         }
       }
       // now we know how many there are, start gathering them.
-      if (!mMimeTypeArray.SetCapacity(mPluginMimeTypeCount))
+      if (!mMimeTypeArray.SetCapacity(pluginMimeTypeCount))
         return NS_ERROR_OUT_OF_MEMORY;
+
+      mPluginMimeTypeCount = pluginMimeTypeCount;
+      mInited = PR_TRUE;
+
       PRUint32 k;
       for (k = 0; k < pluginCount; k++) {
         nsIDOMPlugin* plugin = nsnull;
