@@ -42,11 +42,17 @@
 #include "nsChannelToPipeListener.h"
 #include "nsICachingChannel.h"
 
-nsChannelToPipeListener::nsChannelToPipeListener(nsMediaDecoder* aDecoder) :
+#define HTTP_OK_CODE 200
+#define HTTP_PARTIAL_RESPONSE_CODE 206
+
+nsChannelToPipeListener::nsChannelToPipeListener(
+    nsMediaDecoder* aDecoder,
+    PRBool aSeeking) :
   mDecoder(aDecoder),
   mIntervalStart(0),
   mIntervalEnd(0),
-  mTotalBytes(0)
+  mTotalBytes(0),
+  mSeeking(aSeeking)
 {
 }
 
@@ -98,10 +104,25 @@ nsresult nsChannelToPipeListener::OnStartRequest(nsIRequest* aRequest, nsISuppor
   if (hc) {
     PRUint32 responseStatus = 0; 
     hc->GetResponseStatus(&responseStatus);
-    if (responseStatus == 200) {
+    if (mSeeking && responseStatus == HTTP_OK_CODE) {
+      // If we get an OK response but we were seeking,
+      // and therefore expecting a partial response of
+      // HTTP_PARTIAL_RESPONSE_CODE, tell the decoder
+      // we don't support seeking.
+      mDecoder->SetSeekable(PR_FALSE);
+    }
+    else if (!mSeeking && 
+             (responseStatus == HTTP_OK_CODE ||
+              responseStatus == HTTP_PARTIAL_RESPONSE_CODE)) {
+      // We weren't seeking and got a valid response status,
+      // set the length of the content.
       PRInt32 cl = 0;
       hc->GetContentLength(&cl);
       mDecoder->SetTotalBytes(cl);
+
+      // If we get an HTTP_OK_CODE response to our byte range
+      // request, then we don't support seeking.
+      mDecoder->SetSeekable(responseStatus == HTTP_PARTIAL_RESPONSE_CODE);
     }
   }
 
