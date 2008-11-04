@@ -66,7 +66,6 @@
 #include "jsscope.h"
 #include "jsstr.h"
 
-#include "nanojit/nanojit.h"
 #include "jstracer.h"
 using namespace avmplus;
 using namespace nanojit;
