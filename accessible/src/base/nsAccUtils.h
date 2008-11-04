@@ -248,7 +248,7 @@ public:
   {
     PRUint32 state = 0;
     if (aAcc)
-      aAcc->GetFinalState(&state, nsnull);
+      aAcc->GetState(&state, nsnull);
 
     return state;
   }

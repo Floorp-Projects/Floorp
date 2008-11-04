@@ -141,13 +141,11 @@ public:
 
   /**
    * Return the state of accessible that doesn't take into account ARIA states.
-   * Use nsIAccessible::finalState() to get all states for accessible. If
+   * Use nsIAccessible::state to get all states for accessible. If
    * second argument is omitted then second bit field of accessible state won't
    * be calculated.
-   *
-   * XXX: should be renamed into GetStateInternal
    */
-  NS_IMETHOD GetState(PRUint32 *aState, PRUint32 *aExtraState);
+  virtual nsresult GetStateInternal(PRUint32 *aState, PRUint32 *aExtraState);
 
   /**
    * Returns attributes for accessible without explicitly setted ARIA

@@ -30,7 +30,7 @@ function testValue(aID, aAcc, aValue, aRole)
 function testStates(aID, aAcc, aState, aExtraState, aAbsentState)
 {
   var state = {}, extraState = {};
-  aAcc.getFinalState(state, extraState);
+  aAcc.getState(state, extraState);
   is(state.value & aState, aState, "wrong state bits for " + aID + "!");
   is(extraState.value & aExtraState, aExtraState,
      "wrong extraState bits for " + aID + "!");

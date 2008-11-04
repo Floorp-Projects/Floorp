@@ -77,7 +77,6 @@ class nsRootAccessible : public nsDocAccessibleWrap,
     NS_IMETHOD GetName(nsAString& aName);
     NS_IMETHOD GetParent(nsIAccessible * *aParent);
     NS_IMETHOD GetRole(PRUint32 *aRole);
-    NS_IMETHOD GetState(PRUint32 *aState, PRUint32 *aExtraState);
     NS_IMETHOD GetAccessibleRelated(PRUint32 aRelationType,
                                     nsIAccessible **aRelated);
 
@@ -90,6 +89,9 @@ class nsRootAccessible : public nsDocAccessibleWrap,
     // nsAccessNode
     virtual nsresult Init();
     virtual nsresult Shutdown();
+
+    // nsAccessible
+    virtual nsresult GetStateInternal(PRUint32 *aState, PRUint32 *aExtraState);
 
     void ShutdownAll();
     
