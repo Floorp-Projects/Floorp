@@ -47,29 +47,13 @@ EXPORTS		= \
 		nsMediaDecoder.h \
 		$(NULL)
 
-ifdef MOZ_MEDIA
-EXPORTS		+= \
-		nsChannelToPipeListener.h \
-		nsMediaStream.h \
-		$(NULL)
-endif
-
-ifdef MOZ_SYDNEYAUDIO
-EXPORTS		+= \
-		nsAudioStream.h \
-		$(NULL)
-endif
-
 ifdef MOZ_OGG
 EXPORTS		+= \
+		nsAudioStream.h \
 		nsChannelReader.h \
+		nsChannelToPipeListener.h \
+		nsMediaStream.h \
 		nsOggDecoder.h \
-		$(NULL)
-endif
-
-ifdef MOZ_WAVE
-EXPORTS		+= \
-		nsWaveDecoder.h \
 		$(NULL)
 endif
 
