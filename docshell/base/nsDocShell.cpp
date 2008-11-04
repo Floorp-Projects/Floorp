@@ -146,6 +146,7 @@
 #include "nsITransportSecurityInfo.h"
 #include "nsINSSErrorsService.h"
 #include "nsIApplicationCache.h"
+#include "nsIApplicationCacheChannel.h"
 #include "nsIApplicationCacheContainer.h"
 #include "nsIPermissionManager.h"
 
@@ -5122,6 +5123,15 @@ nsDocShell::OnRedirectStateChange(nsIChannel* aOldChannel,
             return; // nothing to tell anybody about
         AddToGlobalHistory(oldURI, PR_TRUE, aOldChannel);
     }
+
+    // check if the new load should go through the application cache.
+    nsCOMPtr<nsIApplicationCacheChannel> appCacheChannel =
+        do_QueryInterface(aNewChannel);
+    if (appCacheChannel) {
+        nsCOMPtr<nsIURI> newURI;
+        aNewChannel->GetURI(getter_AddRefs(newURI));
+        appCacheChannel->SetChooseApplicationCache(ShouldCheckAppCache(newURI));
+    }
 }
 
 NS_IMETHODIMP
@@ -7374,10 +7384,6 @@ nsDocShell::DoURILoad(nsIURI * aURI,
     if (aFirstParty) {
         // tag first party URL loads
         loadFlags |= nsIChannel::LOAD_INITIAL_DOCUMENT_URI;
-
-        if (ShouldCheckAppCache(aURI)) {
-            loadFlags |= nsICachingChannel::LOAD_CHECK_OFFLINE_CACHE;
-        }
     }
 
     if (mLoadType == LOAD_ERROR_PAGE) {
@@ -7409,6 +7415,21 @@ nsDocShell::DoURILoad(nsIURI * aURI,
         }
             
         return rv;
+    }
+
+    nsCOMPtr<nsIApplicationCacheChannel> appCacheChannel =
+        do_QueryInterface(channel);
+    if (appCacheChannel) {
+        // Toplevel document loads should not inherit application
+        // caches
+        nsCOMPtr<nsIDocShellTreeItem> root;
+        GetSameTypeRootTreeItem(getter_AddRefs(root));
+        if (root == this) {
+            appCacheChannel->SetInheritApplicationCache(PR_FALSE);
+            // And loads with the correct permissions should check
+            // for a matching application cache.
+            appCacheChannel->SetChooseApplicationCache(ShouldCheckAppCache(aURI));
+        }
     }
 
     // Make sure to give the caller a channel if we managed to create one
