@@ -157,7 +157,7 @@
 #endif
 
 // Oh, did I mention that I hate Microsoft for doing this to me?
-#ifdef WINCE
+#ifdef XP_WIN
 #undef GetClassName
 #endif
 
