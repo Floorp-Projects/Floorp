@@ -50,10 +50,19 @@
 #define stricmp _stricmp
 #define wgetcwd _wgetcwd
 
+#define SHGetSpecialFolderPathW SHGetSpecialFolderPath
+#define SHGetPathFromIDListW    SHGetPathFromIDList
+#define FONTENUMPROCW           FONTENUMPROC
+
 #ifdef __cplusplus
 extern "C" {
 #endif
 
+/* errno and family */
+extern MOZCE_SHUNT_API int errno;
+MOZCE_SHUNT_API char* strerror(int);
+
+/* abort */
 MOZCE_SHUNT_API void abort(void);
   
 /* Environment stuff */

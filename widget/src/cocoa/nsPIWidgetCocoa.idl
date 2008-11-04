@@ -51,7 +51,7 @@ interface nsIWidget;
 // A private interface (unfrozen, private to the widget implementation) that
 // gives us access to some extra features on a widget/window.
 //
-[uuid(F08E9D06-6705-4749-BE81-CEF931246E06)]
+[uuid(f75ff69e-3a51-419e-bd29-042f804bc2ed)]
 interface nsPIWidgetCocoa : nsISupports
 {
   void SendSetZLevelEvent();

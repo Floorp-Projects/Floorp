@@ -46,8 +46,6 @@ MODULE       = plugin
 LIBRARY_NAME = unixprintplugin
 GRE_MODULE   = 1
 
-PACKAGE_FILE = npprint.pkg
-
 REQUIRES	= java \
 		  $(NULL)
 

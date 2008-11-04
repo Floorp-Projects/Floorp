@@ -87,7 +87,10 @@ NS_IMPL_RELEASE_INHERITED(nsHTMLSpanElement, nsGenericElement)
 
 
 // QueryInterface implementation for nsHTMLSpanElement
-NS_HTML_CONTENT_INTERFACE_TABLE_HEAD(nsHTMLSpanElement, nsGenericHTMLElement)
+NS_INTERFACE_TABLE_HEAD(nsHTMLSpanElement)
+  NS_HTML_CONTENT_INTERFACE_TABLE0(nsHTMLSpanElement)
+  NS_HTML_CONTENT_INTERFACE_TABLE_TO_MAP_SEGUE(nsHTMLSpanElement,
+                                               nsGenericHTMLElement)
 NS_HTML_CONTENT_INTERFACE_TABLE_TAIL_CLASSINFO(HTMLSpanElement)
 
 

@@ -72,16 +72,6 @@ NS_IMPL_ISUPPORTS2(nsNativeThemeGTK, nsITheme, nsIObserver)
 
 static int gLastGdkError;
 
-static inline bool IsCheckboxWidgetType(PRUint8 aWidgetType)
-{
-  return (aWidgetType == NS_THEME_CHECKBOX || aWidgetType == NS_THEME_CHECKBOX_SMALL);
-}
-
-static inline bool IsRadioWidgetType(PRUint8 aWidgetType)
-{
-  return (aWidgetType == NS_THEME_RADIO || aWidgetType == NS_THEME_RADIO_SMALL);
-}
-
 nsNativeThemeGTK::nsNativeThemeGTK()
 {
   if (moz_gtk_init() != MOZ_GTK_SUCCESS) {
@@ -194,8 +184,8 @@ nsNativeThemeGTK::GetGtkWidgetAndState(PRUint8 aWidgetType, nsIFrame* aFrame,
       // For XUL checkboxes and radio buttons, the state of the parent
       // determines our state.
       nsIFrame *stateFrame = aFrame;
-      if (aFrame && ((aWidgetFlags && (IsCheckboxWidgetType(aWidgetType) ||
-                                       IsRadioWidgetType(aWidgetType))) ||
+      if (aFrame && ((aWidgetFlags && (aWidgetType == NS_THEME_CHECKBOX ||
+                                       aWidgetType == NS_THEME_RADIO)) ||
                      aWidgetType == NS_THEME_CHECKBOX_LABEL ||
                      aWidgetType == NS_THEME_RADIO_LABEL)) {
 
@@ -213,7 +203,7 @@ nsNativeThemeGTK::GetGtkWidgetAndState(PRUint8 aWidgetType, nsIFrame* aFrame,
           }
           if (aWidgetFlags) {
             if (!atom) {
-              atom = (IsCheckboxWidgetType(aWidgetType) ||
+              atom = (aWidgetType == NS_THEME_CHECKBOX ||
                       aWidgetType == NS_THEME_CHECKBOX_LABEL) ? nsWidgetAtoms::checked
                                                               : nsWidgetAtoms::selected;
             }
@@ -255,8 +245,8 @@ nsNativeThemeGTK::GetGtkWidgetAndState(PRUint8 aWidgetType, nsIFrame* aFrame,
             aWidgetType == NS_THEME_RADIO_CONTAINER ||
             aWidgetType == NS_THEME_RADIO_LABEL) {
           aState->focused = IsFocused(aFrame);
-        } else if (IsRadioWidgetType(aWidgetType) ||
-                   IsCheckboxWidgetType(aWidgetType)) {
+        } else if (aWidgetType == NS_THEME_RADIO ||
+                   aWidgetType == NS_THEME_CHECKBOX) {
           // In XUL, checkboxes and radios shouldn't have focus rings, their labels do
           aState->focused = FALSE;
         }
@@ -371,10 +361,8 @@ nsNativeThemeGTK::GetGtkWidgetAndState(PRUint8 aWidgetType, nsIFrame* aFrame,
     aGtkWidgetType = MOZ_GTK_BUTTON;
     break;
   case NS_THEME_CHECKBOX:
-  case NS_THEME_CHECKBOX_SMALL:
   case NS_THEME_RADIO:
-  case NS_THEME_RADIO_SMALL:
-    aGtkWidgetType = IsRadioWidgetType(aWidgetType) ? MOZ_GTK_RADIOBUTTON : MOZ_GTK_CHECKBUTTON;
+    aGtkWidgetType = (aWidgetType == NS_THEME_RADIO) ? MOZ_GTK_RADIOBUTTON : MOZ_GTK_CHECKBUTTON;
     break;
   case NS_THEME_SCROLLBAR_BUTTON_UP:
   case NS_THEME_SCROLLBAR_BUTTON_DOWN:
@@ -670,13 +658,11 @@ GetExtraSizeForWidget(PRUint8 aWidgetType, nsIntMargin* aExtra)
 
   // Include the indicator spacing (the padding around the control).
   case NS_THEME_CHECKBOX:
-  case NS_THEME_CHECKBOX_SMALL:
   case NS_THEME_RADIO:
-  case NS_THEME_RADIO_SMALL:
     {
       gint indicator_size, indicator_spacing;
 
-      if (IsCheckboxWidgetType(aWidgetType)) {
+      if (aWidgetType == NS_THEME_CHECKBOX) {
         moz_gtk_checkbox_get_metrics(&indicator_size, &indicator_spacing);
       } else {
         moz_gtk_radio_get_metrics(&indicator_size, &indicator_spacing);
@@ -880,9 +866,7 @@ nsNativeThemeGTK::GetWidgetPadding(nsIDeviceContext* aContext,
     // and have a meaningful baseline, so they can't have
     // author-specified padding.
     case NS_THEME_CHECKBOX:
-    case NS_THEME_CHECKBOX_SMALL:
     case NS_THEME_RADIO:
-    case NS_THEME_RADIO_SMALL:
       aResult->SizeTo(0, 0, 0, 0);
       return PR_TRUE;
   }
@@ -1049,13 +1033,11 @@ nsNativeThemeGTK::GetMinimumWidgetSize(nsIRenderingContext* aContext,
     }
     break;
   case NS_THEME_CHECKBOX:
-  case NS_THEME_CHECKBOX_SMALL:
   case NS_THEME_RADIO:
-  case NS_THEME_RADIO_SMALL:
     {
       gint indicator_size, indicator_spacing;
 
-      if (IsCheckboxWidgetType(aWidgetType)) {
+      if (aWidgetType == NS_THEME_CHECKBOX) {
         moz_gtk_checkbox_get_metrics(&indicator_size, &indicator_spacing);
       } else {
         moz_gtk_radio_get_metrics(&indicator_size, &indicator_spacing);
@@ -1217,9 +1199,7 @@ nsNativeThemeGTK::ThemeSupportsWidget(nsPresContext* aPresContext,
   case NS_THEME_BUTTON:
   case NS_THEME_BUTTON_FOCUS:
   case NS_THEME_RADIO:
-  case NS_THEME_RADIO_SMALL:
   case NS_THEME_CHECKBOX:
-  case NS_THEME_CHECKBOX_SMALL:
   case NS_THEME_TOOLBOX: // N/A
   case NS_THEME_TOOLBAR:
   case NS_THEME_TOOLBAR_BUTTON:
@@ -1310,8 +1290,8 @@ nsNativeThemeGTK::WidgetIsContainer(PRUint8 aWidgetType)
 {
   // XXXdwh At some point flesh all of this out.
   if (aWidgetType == NS_THEME_DROPDOWN_BUTTON ||
-      IsRadioWidgetType(aWidgetType) ||
-      IsCheckboxWidgetType(aWidgetType) ||
+      aWidgetType == NS_THEME_RADIO ||
+      aWidgetType == NS_THEME_CHECKBOX ||
       aWidgetType == NS_THEME_TAB_SCROLLARROW_BACK ||
       aWidgetType == NS_THEME_TAB_SCROLLARROW_FORWARD)
     return PR_FALSE;

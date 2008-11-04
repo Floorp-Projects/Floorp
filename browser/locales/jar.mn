@@ -2,7 +2,11 @@
 
 @AB_CD@.jar:
 % locale browser @AB_CD@ %locale/browser/
+    locale/browser/aboutCertError.dtd              (%chrome/browser/aboutCertError.dtd)
     locale/browser/aboutDialog.dtd                 (%chrome/browser/aboutDialog.dtd)
+    locale/browser/aboutPrivateBrowsing.dtd        (%chrome/browser/aboutPrivateBrowsing.dtd)
+    locale/browser/aboutRights.dtd                 (%chrome/browser/aboutRights.dtd)
+    locale/browser/aboutRights.properties          (%chrome/browser/aboutRights.properties)
     locale/browser/aboutRobots.dtd                 (%chrome/browser/aboutRobots.dtd)
     locale/browser/aboutSessionRestore.dtd         (%chrome/browser/aboutSessionRestore.dtd)
     locale/browser/credits.dtd                     (%chrome/browser/credits.dtd)
@@ -30,7 +34,6 @@
     locale/browser/places/places.dtd               (%chrome/browser/places/places.dtd)
     locale/browser/places/places.properties        (%chrome/browser/places/places.properties)
     locale/browser/places/editBookmarkOverlay.dtd  (%chrome/browser/places/editBookmarkOverlay.dtd)
-    locale/browser/places/bookmarkProperties.dtd   (%chrome/browser/places/bookmarkProperties.dtd)
     locale/browser/places/bookmarkProperties.properties (%chrome/browser/places/bookmarkProperties.properties)
     locale/browser/preferences/selectBookmark.dtd  (%chrome/browser/preferences/selectBookmark.dtd)
     locale/browser/places/moveBookmarks.dtd        (%chrome/browser/places/moveBookmarks.dtd)

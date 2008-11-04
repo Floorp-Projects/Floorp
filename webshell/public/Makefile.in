@@ -45,10 +45,6 @@ include $(DEPTH)/config/autoconf.mk
 MODULE		= webshell
 XPIDL_MODULE = webshell_idls
 
-PACKAGE_FILE = webshell.pkg
-PACKAGE_VARS += \
-		$(NULL)
-
 SDK_XPIDLSRCS = \
         nsIClipboardCommands.idl \
         $(NULL)

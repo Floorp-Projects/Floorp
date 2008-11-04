@@ -121,10 +121,11 @@ nsLinkableAccessible::TakeFocus()
   return nsHyperTextAccessibleWrap::TakeFocus();
 }
 
-NS_IMETHODIMP
-nsLinkableAccessible::GetState(PRUint32 *aState, PRUint32 *aExtraState)
+nsresult
+nsLinkableAccessible::GetStateInternal(PRUint32 *aState, PRUint32 *aExtraState)
 {
-  nsresult rv = nsHyperTextAccessibleWrap::GetState(aState, aExtraState);
+  nsresult rv = nsHyperTextAccessibleWrap::GetStateInternal(aState,
+                                                            aExtraState);
   NS_ENSURE_SUCCESS(rv, rv);
 
   if (mIsLink) {
@@ -233,16 +234,16 @@ nsLinkableAccessible::GetURI(PRInt32 aIndex, nsIURI **aURI)
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-// nsLinkableAccessible. nsPIAccessNode
+// nsLinkableAccessible. nsAccessNode
 
-NS_IMETHODIMP
+nsresult
 nsLinkableAccessible::Init()
 {
   CacheActionContent();
   return nsHyperTextAccessibleWrap::Init();
 }
 
-NS_IMETHODIMP
+nsresult
 nsLinkableAccessible::Shutdown()
 {
   mActionContent = nsnull;

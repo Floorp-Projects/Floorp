@@ -262,6 +262,11 @@ protected:
   nsresult CreateAndAddWyciwygChannel(void);
   nsresult RemoveWyciwygChannel(void);
 
+  /**
+   * Like IsEditingOn(), but will flush as needed first.
+   */
+  PRBool IsEditingOnAfterFlush();
+
   void *GenerateParserKey(void);
 
   virtual PRInt32 GetDefaultNamespaceID() const
@@ -367,5 +372,11 @@ protected:
   // Parser used for constructing document fragments.
   nsCOMPtr<nsIParser> mFragmentParser;
 };
+
+#define NS_HTML_DOCUMENT_INTERFACE_TABLE_BEGIN(_class)                        \
+    NS_DOCUMENT_INTERFACE_TABLE_BEGIN(_class)                                 \
+    NS_INTERFACE_TABLE_ENTRY(_class, nsIHTMLDocument)                         \
+    NS_INTERFACE_TABLE_ENTRY(_class, nsIDOMHTMLDocument)                      \
+    NS_INTERFACE_TABLE_ENTRY(_class, nsIDOMNSHTMLDocument)
 
 #endif /* nsHTMLDocument_h___ */

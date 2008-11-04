@@ -93,6 +93,9 @@ include svg-integration/reftest.list
 # table-background/
 include table-background/reftest.list
 
+# table-bordercollapse/
+include table-bordercollapse/reftest.list
+
 # table-dom/
 include table-dom/reftest.list
 

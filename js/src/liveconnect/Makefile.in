@@ -54,8 +54,6 @@ JNI_GEN_DIR	= _jni
 GRE_MODULE	= 1
 LIBXUL_LIBRARY	= 1
 
-PACKAGE_FILE = liveconnect.pkg
-
 REQUIRES	= js \
 		  xpcom \
 		  xpconnect \

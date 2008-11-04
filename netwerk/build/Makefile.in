@@ -50,12 +50,6 @@ MODULE_NAME	= necko
 GRE_MODULE	= 1
 LIBXUL_LIBRARY = 1
 
-PACKAGE_FILE = necko.pkg
-
-ifdef ENABLE_TESTS
-PACKAGE_FILE += necko-tests.pkg
-endif
-
 REQUIRES	= xpcom \
 		  string \
 		  nkcache \

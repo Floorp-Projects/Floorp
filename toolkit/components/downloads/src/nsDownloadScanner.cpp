@@ -135,7 +135,6 @@
  *  * Get antivirus scanner status via WMI/registry
  */
 
-#define PREF_BDA_DONTCLEAN "browser.download.antivirus.dontclean"
 #define PREF_BDM_SKIPWINPOLICYCHECKS "browser.download.manager.skipWinSecurityPolicyChecks"
 
 // IAttachementExecute supports user definable settings for certain
@@ -152,6 +151,9 @@ static const GUID GUID_MozillaVirusScannerPromptGeneric =
 
 // Initial timeout is 30 seconds
 #define WATCHDOG_TIMEOUT (30*PR_USEC_PER_SEC)
+
+// Maximum length for URI's passed into IAE
+#define MAX_IAEURILENGTH 1683
 
 class nsDownloadScannerWatchdog 
 {
@@ -388,6 +390,9 @@ nsDownloadScanner::CheckPolicy(nsIURI *aSource, nsIURI *aTarget)
   if (hr == S_FALSE)
     return AVPOLICY_PROMPT;
 
+  if (hr == E_INVALIDARG)
+    return AVPOLICY_PROMPT;
+
   return AVPOLICY_BLOCKED;
 }
 
@@ -456,14 +461,6 @@ nsDownloadScanner::Scan::Start()
 
   nsresult rv = NS_OK;
 
-  // Default is to try to clean downloads
-  mIsReadOnlyRequest = PR_FALSE;
-
-  nsCOMPtr<nsIPrefBranch> pref =
-    do_GetService(NS_PREFSERVICE_CONTRACTID);
-  if (pref)
-    rv = pref->GetBoolPref(PREF_BDA_DONTCLEAN, &mIsReadOnlyRequest);
-
   // Get the path to the file on disk
   nsCOMPtr<nsILocalFile> file;
   rv = mDownload->GetTargetFile(getter_AddRefs(file));
@@ -489,6 +486,13 @@ nsDownloadScanner::Scan::Start()
   nsCAutoString origin;
   rv = uri->GetSpec(origin);
   NS_ENSURE_SUCCESS(rv, rv);
+
+  // Certain virus interfaces do not like extremely long uris.
+  // Chop off the path and cgi data and just pass the base domain. 
+  if (origin.Length() > MAX_IAEURILENGTH) {
+    rv = uri->GetPrePath(origin);
+    NS_ENSURE_SUCCESS(rv, rv);
+  }
 
   CopyUTF8toUTF16(origin, mOrigin);
 
@@ -615,6 +619,10 @@ nsDownloadScanner::Scan::DoScanAES()
         NS_WARNING("Downloaded file disappeared before it could be scanned");
         newState = AVSCAN_FAILED;
       }
+      else if (hr == E_INVALIDARG) {
+        NS_WARNING("IAttachementExecute returned invalid argument error");
+        newState = AVSCAN_FAILED;
+      }
       else { 
         newState = AVSCAN_UGLY;
       }
@@ -636,7 +644,7 @@ nsDownloadScanner::Scan::DoScanOAV()
   info.cbsize = sizeof(MSOAVINFO);
   info.fPath = TRUE;
   info.fInstalled = FALSE;
-  info.fReadOnlyRequest = mIsReadOnlyRequest;
+  info.fReadOnlyRequest = FALSE;
   info.fHttpDownload = mIsHttpDownload;
   info.hwnd = NULL;
 

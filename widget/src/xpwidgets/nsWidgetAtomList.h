@@ -85,6 +85,7 @@ WIDGET_ATOM(input, "input")
 WIDGET_ATOM(key, "key") // The key element / attribute
 WIDGET_ATOM(label, "label")
 WIDGET_ATOM(lasttab, "last-tab")
+WIDGET_ATOM(max, "max")
 WIDGET_ATOM(maxpos, "maxpos")
 WIDGET_ATOM(menu, "menu") // Represents an XP menu
 WIDGET_ATOM(menuitem, "menuitem") // Represents an XP menu item

@@ -84,18 +84,17 @@ public:
   NS_DECL_ISUPPORTS
 
   // nsIDOMSVGPathSeg interface:
-  NS_DECL_NSIDOMSVGPATHSEG
-  NS_IMETHOD GetValueString(nsAString& aValue) = 0;
+  NS_IMETHOD GetPathSegType(PRUint16 *aPathSegType) = 0;
+  NS_IMETHOD GetPathSegTypeAsLetter(nsAString & aPathSegTypeAsLetter) = 0;
 
   // nsSVGPathSeg methods:
+  NS_IMETHOD GetValueString(nsAString& aValue) = 0;
   virtual float GetLength(nsSVGPathSegTraversalState *ts) = 0;
 
 protected:
-  virtual PRUint16 GetSegType() = 0;
   void DidModify();
 
 private:
-  static char mTypeLetters[];
   nsCOMPtr<nsIWeakReference> mCurrentList;
 };
 

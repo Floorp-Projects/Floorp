@@ -120,7 +120,7 @@ LIBIDL_VERSION=0.6.3
 PERL_VERSION=5.006
 LIBART_VERSION=2.3.4
 CAIRO_VERSION=1.6.0
-PANGO_VERSION=1.10.0
+PANGO_VERSION=1.14.0
 GTK2_VERSION=2.10.0
 MAKE_VERSION=3.78
 WINDRES_VERSION=2.14.90
@@ -8048,8 +8048,6 @@ elif test "$OS_ARCH" != "WINNT" -a "$OS_ARCH" != "OS2" -a "$OS_ARCH" != "WINCE";
 fi
 AC_SUBST(MOZ_MOVEMAIL)
 
-AC_DEFINE(JS_THREADSAFE)
-
 if test "$MOZ_DEBUG"; then
     AC_DEFINE(MOZ_REFLOW_PERF)
     AC_DEFINE(MOZ_REFLOW_PERF_DSP)
@@ -8248,7 +8246,9 @@ RC=
 unset MAKEFILES
 unset CONFIG_FILES
 
-if test "$COMPILE_ENVIRONMENT"; then
+# No need to run subconfigures when building with LIBXUL_SDK_DIR
+if test "$COMPILE_ENVIRONMENT" -a -z "$LIBXUL_SDK_DIR"; then
+
 if test -z "$MOZ_NATIVE_NSPR"; then
     ac_configure_args="$_SUBDIR_CONFIG_ARGS --with-dist-prefix=$MOZ_BUILD_ROOT/dist --with-mozilla"
     if test -z "$MOZ_DEBUG"; then
@@ -8282,5 +8282,22 @@ if test -z "$MOZ_NATIVE_NSPR"; then
     rm -f config/autoconf.mk.bak
 fi
 
-fi # COMPILE_ENVIRONMENT
+# Run the SpiderMonkey 'configure' script.
+dist=$MOZ_BUILD_ROOT/dist
+ac_configure_args="$_SUBDIR_CONFIG_ARGS"
+ac_configure_args="$ac_configure_args --enable-threadsafe"
+if test -z "$MOZ_NATIVE_NSPR"; then
+    ac_configure_args="$ac_configure_args --with-nspr-cflags='$NSPR_CFLAGS'"
+    ac_configure_args="$ac_configure_args --with-nspr-libs='$NSPR_LIBS'"
+fi
+ac_configure_args="$ac_configure_args --includedir=$dist/include"
+ac_configure_args="$ac_configure_args --bindir=$dist/bin"
+ac_configure_args="$ac_configure_args --libdir=$dist/lib"
+ac_configure_args="$ac_configure_args --with-sync-build-files=$srcdir"
+if test "$MOZ_MEMORY"; then
+   ac_configure_args="$ac_configure_args --enable-jemalloc"  
+fi
+AC_OUTPUT_SUBDIRS(js/src)
+ac_configure_args="$_SUBDIR_CONFIG_ARGS"
 
+fi # COMPILE_ENVIRONMENT && !LIBXUL_SDK_DIR

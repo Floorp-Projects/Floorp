@@ -425,25 +425,31 @@ MakeTmpCtx() {
 NS_IMETHODIMP
 nsSVGGlyphFrame::UpdateCoveredRegion()
 {
+  mRect.Empty();
+
   nsRefPtr<gfxContext> tmpCtx = MakeTmpCtx();
-  SetupGlobalTransform(tmpCtx);
   CharacterIterator iter(this, PR_TRUE);
-  iter.SetInitialMatrix(tmpCtx);
   
   gfxRect extent;
 
   if (SetupCairoStrokeGeometry(tmpCtx)) {
     AddCharactersToPath(&iter, tmpCtx);
-    extent = tmpCtx->UserToDevice(tmpCtx->GetUserStrokeExtent());
+    extent = tmpCtx->GetUserStrokeExtent();
   } else if (GetStyleSVG()->mFill.mType != eStyleSVGPaintType_None) {
     AddBoundingBoxesToPath(&iter, tmpCtx);
-    tmpCtx->IdentityMatrix();
     extent = tmpCtx->GetUserPathExtent();
   } else {
     extent = gfxRect(0, 0, 0, 0);
   }
 
-  mRect = nsSVGUtils::ToAppPixelRect(PresContext(), extent);
+  if (!extent.IsEmpty()) {
+    gfxMatrix matrix;
+    GetGlobalTransform(&matrix);
+
+    extent = matrix.TransformBounds(extent);
+    mRect = nsSVGUtils::ToAppPixelRect(PresContext(), extent);
+  }
+
   return NS_OK;
 }
 

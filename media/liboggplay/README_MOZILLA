@@ -5,4 +5,7 @@ the Mozilla build system.
 
 http://svn.annodex.net/liboggplay/trunk/
 
-The svn revision number used was r3729.
+The svn revision number used was r3757.
+
+The patch from Annodex trac ticket 421 is applied to fix bug 459938:
+  http://trac.annodex.net/ticket/421

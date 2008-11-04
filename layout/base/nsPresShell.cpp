@@ -164,7 +164,7 @@
 #include "gfxImageSurface.h"
 #include "gfxContext.h"
 #ifdef MOZ_MEDIA
-#include "nsVideoFrame.h"
+#include "nsHTMLMediaElement.h"
 #endif
 
 // Drag & Drop, Clipboard
@@ -193,7 +193,7 @@
 #include "nsCSSFrameConstructor.h"
 #ifdef MOZ_XUL
 #include "nsMenuFrame.h"
-#include "nsITreeBoxObject.h"
+#include "nsTreeBodyFrame.h"
 #endif
 #include "nsIMenuParent.h"
 #include "nsPlaceholderFrame.h"
@@ -2100,7 +2100,7 @@ nsresult PresShell::SetPrefFocusRules(void)
       strRule.AppendLiteral(":focus {outline: ");     // For example 3px dotted WindowText (maximum 4)
       strRule.AppendInt(focusRingWidth);
       if (focusRingStyle == 0) // solid
-        strRule.AppendLiteral("px solid -moz-mac-focusring !important; -moz-outline-radius: 3px;  -moz-outline-offset: 1px; } ");
+        strRule.AppendLiteral("px solid -moz-mac-focusring !important; -moz-outline-radius: 3px; outline-offset: 1px; } ");
       else // dotted
         strRule.AppendLiteral("px dotted WindowText !important; } ");
       // insert the rules
@@ -2637,6 +2637,7 @@ PresShell::FireResizeEvent()
   nsPIDOMWindow *window = mDocument->GetWindow();
   if (window) {
     nsEventDispatcher::Dispatch(window, mPresContext, &event, nsnull, &status);
+    // |this| may now be destroyed
   }
 }
 
@@ -3801,11 +3802,9 @@ UnionRectForClosestScrolledView(nsIFrame* aFrame,
         f &&
         frameType == nsGkAtoms::blockFrame) {
       // find the line containing aFrame and increase the top of |offset|.
-      nsCOMPtr<nsILineIterator> lines(do_QueryInterface(f));
-
+      nsAutoLineIterator lines = f->GetLineIterator();
       if (lines) {
-        PRInt32 index = -1;
-        lines->FindLineContaining(prevFrame, &index);
+        PRInt32 index = lines->FindLineContaining(prevFrame);
         if (index >= 0) {
           nsIFrame *trash1;
           PRInt32 trash2;
@@ -6069,19 +6068,14 @@ StopPluginInstance(PresShell *aShell, nsIContent *aContent)
   objectFrame->StopPlugin();
 }
 
-static void
-StopVideoInstance(PresShell *aShell, nsIContent *aContent)
-{
 #ifdef MOZ_MEDIA
-  nsVideoFrame *frame = static_cast<nsVideoFrame*>(aShell->FrameManager()->GetPrimaryFrameFor(aContent, -1));
-  if (frame) {
-    nsIAtom* frameType = frame->GetType();
-    if (frameType == nsGkAtoms::HTMLVideoFrame) {
-      frame->Freeze();
-    }
-  }
-#endif
+static void
+StopMediaInstance(PresShell *aShell, nsIContent *aContent)
+{
+  nsHTMLMediaElement* element = static_cast<nsHTMLMediaElement*>(aContent);
+  element->Freeze();
 }
+#endif
 
 static PRBool
 FreezeSubDocument(nsIDocument *aDocument, void *aData)
@@ -6101,7 +6095,10 @@ PresShell::Freeze()
     EnumeratePlugins(domDoc, NS_LITERAL_STRING("object"), StopPluginInstance);
     EnumeratePlugins(domDoc, NS_LITERAL_STRING("applet"), StopPluginInstance);
     EnumeratePlugins(domDoc, NS_LITERAL_STRING("embed"), StopPluginInstance);
-    EnumeratePlugins(domDoc, NS_LITERAL_STRING("video"), StopVideoInstance);
+#ifdef MOZ_MEDIA
+    EnumeratePlugins(domDoc, NS_LITERAL_STRING("video"), StopMediaInstance);
+    EnumeratePlugins(domDoc, NS_LITERAL_STRING("audio"), StopMediaInstance);
+#endif
   }
 
   if (mCaret)
@@ -6124,19 +6121,14 @@ StartPluginInstance(PresShell *aShell, nsIContent *aContent)
   objlc->EnsureInstantiation(getter_AddRefs(inst));
 }
 
-static void
-StartVideoInstance(PresShell *aShell, nsIContent *aContent)
-{
 #ifdef MOZ_MEDIA
-  nsVideoFrame *frame = static_cast<nsVideoFrame*>(aShell->FrameManager()->GetPrimaryFrameFor(aContent, -1));
-  if (frame) {
-    nsIAtom* frameType = frame->GetType();
-    if (frameType == nsGkAtoms::HTMLVideoFrame) {
-      frame->Thaw();
-    }
-  }
-#endif
+static void
+StartMediaInstance(PresShell *aShell, nsIContent *aContent)
+{
+ nsHTMLMediaElement* element = static_cast<nsHTMLMediaElement*>(aContent);
+ element->Thaw();
 }
+#endif
 
 static PRBool
 ThawSubDocument(nsIDocument *aDocument, void *aData)
@@ -6156,7 +6148,10 @@ PresShell::Thaw()
     EnumeratePlugins(domDoc, NS_LITERAL_STRING("object"), StartPluginInstance);
     EnumeratePlugins(domDoc, NS_LITERAL_STRING("applet"), StartPluginInstance);
     EnumeratePlugins(domDoc, NS_LITERAL_STRING("embed"), StartPluginInstance);
-    EnumeratePlugins(domDoc, NS_LITERAL_STRING("video"), StartVideoInstance);
+#ifdef MOZ_MEDIA
+    EnumeratePlugins(domDoc, NS_LITERAL_STRING("video"), StartMediaInstance);
+    EnumeratePlugins(domDoc, NS_LITERAL_STRING("audio"), StartMediaInstance);
+#endif
   }
 
   if (mDocument)
@@ -6504,9 +6499,10 @@ ReResolveMenusAndTrees(nsIFrame *aFrame, void *aClosure)
 {
   // Trees have a special style cache that needs to be flushed when
   // the theme changes.
-  nsCOMPtr<nsITreeBoxObject> treeBox(do_QueryInterface(aFrame));
-  if (treeBox)
-    treeBox->ClearStyleAndImageCaches();
+  nsTreeBodyFrame *treeBody = nsnull;
+  CallQueryInterface(aFrame, &treeBody);
+  if (treeBody)
+    treeBody->ClearStyleAndImageCaches();
 
   // We deliberately don't re-resolve style on a menu's popup
   // sub-content, since doing so slows menus to a crawl.  That means we

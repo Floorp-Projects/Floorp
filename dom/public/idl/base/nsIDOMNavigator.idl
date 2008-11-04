@@ -41,7 +41,7 @@
 
 interface nsIDOMWorkerPool;
 
-[scriptable, uuid(8e150a70-3e51-45df-bee3-77505fbe016c)]
+[scriptable, uuid(c206f746-52e2-47dd-8ccc-ce76ccda6c6d)]
 interface nsIDOMNavigator : nsISupports
 {
   readonly attribute DOMString           appCodeName;

@@ -1,0 +1,13 @@
+<!ENTITY privatebrowsingpage.tabtitle                  "Private Browsing">
+
+<!ENTITY privatebrowsingpage.pagetitle                 "Private Browsing">
+
+<!ENTITY privatebrowsingpage.issueDesc                 "&brandShortName; won't remember any history for this session.">
+<!ENTITY privatebrowsingpage.longDesc                  "No history will be recorded by &brandShortName; during this browsing session.  This includes browser history, search history, download history, web form history, cookies, and temporary internet files.  However, any files you download or bookmarks you create will be preserved.">
+
+<!ENTITY privatebrowsingpage.clearRecentHistoryDesc    "You may want to start by also clearing your recent history.">
+<!ENTITY privatebrowsingpage.recentHistory.label       "Clear Recent History">
+<!ENTITY privatebrowsingpage.recentHistory.accesskey   "C">
+
+<!ENTITY privatebrowsingpage.howToStopDesc             "To stop private browsing, uncheck Tools &gt; Private Browsing.">
+<!ENTITY privatebrowsingpage.footerDesc                "Enjoy!">

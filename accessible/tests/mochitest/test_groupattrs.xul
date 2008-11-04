@@ -10,43 +10,29 @@
           src="chrome://mochikit/content/MochiKit/packed.js"></script>
   <script type="application/javascript"
           src="chrome://mochikit/content/tests/SimpleTest/SimpleTest.js" />
+
+  <script type="application/javascript"
+          src="chrome://mochikit/content/a11y/accessible/common.js" />
+  <script type="application/javascript"
+          src="chrome://mochikit/content/a11y/accessible/attributes.js" />
+
   <script type="application/javascript">
   <![CDATA[
-    var gAccService = null;
-
-    function accAttributes(aId)
-    {
-      this.getAttribute = function getAttribute(aName)
-      {
-        try {
-          return this.mAttrs.getStringProperty(aName);
-        } catch (e) {
-          return "";
-        }
-      }
-
-      this.mAcc = gAccService.getAccessibleFor(document.getElementById(aId));
-      ok(this.mAcc, "Can't get accessible for " + aId);
-
-      if (this.mAcc)
-        this.mAttrs = this.mAcc.attributes;
-    }
-
     function testGroupAttrs(aID, aPosInSet, aSetSize, aLevel)
     {
-      var attrs = new accAttributes(aID);
-      is(attrs.getAttribute("posinset"), aPosInSet, "Wrong posinset on " + aID);
-      is(attrs.getAttribute("setsize"), aSetSize, "Wrong setsize on " + aID);
+      var attrs = {
+        "posinset": aPosInSet,
+        "setsize": aSetSize
+      };
+
       if (aLevel)
-        is(attrs.getAttribute("level"), aLevel, "Wrong level on " + aID);
+        attrs["level"] = aLevel;
+
+      testAttrs(aID, attrs, true);
     }
 
     function doTest()
     {
-      // Activate accessibility, otherwise events aren't fired.
-      gAccService = Components.classes["@mozilla.org/accessibleRetrieval;1"].
-                    getService(Components.interfaces.nsIAccessibleRetrieval);
-
       //////////////////////////////////////////////////////////////////////////
       // xul:listbox (bug 417317)
       testGroupAttrs("item1", "1", "2");

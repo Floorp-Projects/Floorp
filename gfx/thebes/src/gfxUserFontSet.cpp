@@ -210,7 +210,7 @@ gfxUserFontSet::FindFontEntry(const nsAString& aName,
 
 PRBool 
 gfxUserFontSet::OnLoadComplete(gfxFontEntry *aFontToLoad, 
-                               const gfxDownloadedFontData& aFontData, 
+                               const PRUint8 *aFontData, PRUint32 aLength, 
                                nsresult aDownloadStatus)
 {
     NS_ASSERTION(aFontToLoad->mIsProxy, "trying to load font data for wrong font entry type");
@@ -222,7 +222,8 @@ gfxUserFontSet::OnLoadComplete(gfxFontEntry *aFontToLoad,
 
     // download successful, make platform font using font data
     if (NS_SUCCEEDED(aDownloadStatus)) {
-        gfxFontEntry *fe = gfxPlatform::GetPlatform()->MakePlatformFont(pe, &aFontData);
+        gfxFontEntry *fe = 
+           gfxPlatform::GetPlatform()->MakePlatformFont(pe, aFontData, aLength);
         if (fe) {
             pe->mFamily->ReplaceFontEntry(pe, fe);
             IncrementGeneration();
@@ -231,13 +232,10 @@ gfxUserFontSet::OnLoadComplete(gfxFontEntry *aFontToLoad,
                 nsCAutoString fontURI;
                 pe->mSrcList[pe->mSrcIndex].mURI->GetSpec(fontURI);
 
-                nsAutoString filePath;
-                aFontData.mFontFile->GetPath(filePath);
-
-                LOG(("userfonts (%p) [src %d] loaded uri: (%s) file: (%s) for (%s) gen: %8.8x\n", 
+                LOG(("userfonts (%p) [src %d] loaded uri: (%s) for (%s) gen: %8.8x\n", 
                      this, pe->mSrcIndex, fontURI.get(), 
-                     NS_ConvertUTF16toUTF8(filePath).get(), 
-                     NS_ConvertUTF16toUTF8(pe->mFamily->Name()).get(), PRUint32(mGeneration)));
+                     NS_ConvertUTF16toUTF8(pe->mFamily->Name()).get(), 
+                     PRUint32(mGeneration)));
             }
 #endif
             return PR_TRUE;

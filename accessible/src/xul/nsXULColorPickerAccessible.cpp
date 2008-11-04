@@ -65,11 +65,12 @@ NS_IMETHODIMP nsXULColorPickerTileAccessible::GetRole(PRUint32 *_retval)
 /**
   * Possible states: focused, focusable, selected
   */
-NS_IMETHODIMP
-nsXULColorPickerTileAccessible::GetState(PRUint32 *aState, PRUint32 *aExtraState)
+nsresult
+nsXULColorPickerTileAccessible::GetStateInternal(PRUint32 *aState,
+                                                 PRUint32 *aExtraState)
 {
   // get focus and disable status from base class
-  nsresult rv = nsFormControlAccessible::GetState(aState, aExtraState);
+  nsresult rv = nsFormControlAccessible::GetStateInternal(aState, aExtraState);
   NS_ENSURE_SUCCESS(rv, rv);
   if (!mDOMNode)
     return NS_OK;
@@ -123,11 +124,12 @@ nsXULColorPickerTileAccessible(aNode, aShell)
 /**
   * Possible states: focused, focusable, unavailable(disabled)
   */
-NS_IMETHODIMP
-nsXULColorPickerAccessible::GetState(PRUint32 *aState, PRUint32 *aExtraState)
+nsresult
+nsXULColorPickerAccessible::GetStateInternal(PRUint32 *aState,
+                                             PRUint32 *aExtraState)
 {
   // get focus and disable status from base class
-  nsresult rv = nsFormControlAccessible::GetState(aState, aExtraState);
+  nsresult rv = nsFormControlAccessible::GetStateInternal(aState, aExtraState);
   NS_ENSURE_SUCCESS(rv, rv);
   if (!mDOMNode)
     return NS_OK;
