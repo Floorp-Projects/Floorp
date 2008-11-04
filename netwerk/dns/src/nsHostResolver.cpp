@@ -430,7 +430,7 @@ nsHostResolver::Shutdown()
         mPendingCount = 0;
         
         if (mNumIdleThreads)
-            PR_NotifyCondVar(mIdleThreadCV);
+            PR_NotifyAllCondVar(mIdleThreadCV);
         
         // empty host database
         PL_DHashTableEnumerate(&mDB, HostDB_RemoveEntry, nsnull);
