@@ -2787,7 +2787,7 @@ nsTextControlFrame::SetValue(const nsAString& aValue)
       // Scroll the upper left corner of the text control's
       // content area back into view.
 
-      scrollableView->ScrollTo(0, 0, NS_VMREFRESH_NO_SYNC);
+      scrollableView->ScrollTo(0, 0, 0);
     }
   }
   else

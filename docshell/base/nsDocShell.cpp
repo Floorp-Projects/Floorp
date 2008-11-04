@@ -4183,7 +4183,7 @@ nsDocShell::SetCurScrollPos(PRInt32 scrollOrientation, PRInt32 curPos)
         y = 0;                  // fix compiler warning, not actually executed
     }
 
-    NS_ENSURE_SUCCESS(scrollView->ScrollTo(x, y, NS_VMREFRESH_IMMEDIATE),
+    NS_ENSURE_SUCCESS(scrollView->ScrollTo(x, y, 0),
                       NS_ERROR_FAILURE);
     return NS_OK;
 }
@@ -4198,8 +4198,7 @@ nsDocShell::SetCurScrollPosEx(PRInt32 curHorizontalPos, PRInt32 curVerticalPos)
         return NS_ERROR_FAILURE;
     }
 
-    NS_ENSURE_SUCCESS(scrollView->ScrollTo(curHorizontalPos, curVerticalPos,
-                                           NS_VMREFRESH_IMMEDIATE),
+    NS_ENSURE_SUCCESS(scrollView->ScrollTo(curHorizontalPos, curVerticalPos, 0),
                       NS_ERROR_FAILURE);
     return NS_OK;
 }
