@@ -205,8 +205,9 @@ namespace nanojit
 
 	void Fragmento::clearFrag(const void* ip)
 	{
-		Fragment *f = _frags->remove(ip);
-		if (f) clearFragment(f);
+		if (_frags->containsKey(ip)) {
+			clearFragment(_frags->remove(ip));
+		}
 	}
 
 	void Fragmento::clearFrags()
