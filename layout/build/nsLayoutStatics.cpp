@@ -83,6 +83,7 @@
 #include "nsXMLHttpRequest.h"
 #include "nsIFocusEventSuppressor.h"
 #include "nsDOMThreadService.h"
+#include "nsHTMLDNSPrefetch.h"
 
 #ifdef MOZ_XUL
 #include "nsXULPopupManager.h"
@@ -185,6 +186,12 @@ nsLayoutStatics::Initialize()
     return rv;
   }
 
+  rv = nsHTMLDNSPrefetch::Initialize();
+  if (NS_FAILED(rv)) {
+    NS_ERROR("Could not initialize HTML DNS prefetch");
+    return rv;
+  }
+
 #ifdef MOZ_XUL
   rv = nsXULContentUtils::Init();
   if (NS_FAILED(rv)) {
@@ -280,6 +287,7 @@ nsLayoutStatics::Shutdown()
   CSSLoaderImpl::Shutdown();
   nsCSSRuleProcessor::FreeSystemMetrics();
   nsTextFrameTextRunCache::Shutdown();
+  nsHTMLDNSPrefetch::Shutdown();
   nsCSSRendering::Shutdown();
 #ifdef DEBUG
   nsFrame::DisplayReflowShutdown();
