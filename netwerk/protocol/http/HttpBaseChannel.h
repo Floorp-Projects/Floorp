@@ -233,7 +233,8 @@ protected:
   void AddCookiesToRequest();
   virtual nsresult SetupReplacementChannel(nsIURI *,
                                            nsIChannel *,
-                                           bool preserveMethod);
+                                           bool preserveMethod,
+                                           bool forProxy);
 
   // Helper function to simplify getting notification callbacks.
   template <class T>
