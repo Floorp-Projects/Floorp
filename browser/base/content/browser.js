@@ -437,6 +437,9 @@ const gPopupBlockerObserver = {
       blockedPopupAllowSite.setAttribute("hidden", "true");
     }
 
+    if (gPrivateBrowsingUI.privateBrowsingEnabled)
+      blockedPopupAllowSite.setAttribute("disabled", "true");
+
     var item = aEvent.target.lastChild;
     while (item && item.getAttribute("observes") != "blockedPopupsSeparator") {
       var next = item.previousSibling;
@@ -1300,6 +1303,8 @@ function delayedStartup(isLoadingBlank, mustLoadSidebar) {
   placesContext.addEventListener("popuphiding", updateEditUIVisibility, false);
 #endif
 
+  // initialize the private browsing UI
+  gPrivateBrowsingUI.init();
 }
 
 function BrowserShutdown()
@@ -1342,6 +1347,7 @@ function BrowserShutdown()
   BrowserOffline.uninit();
   OfflineApps.uninit();
   DownloadMonitorPanel.uninit();
+  gPrivateBrowsingUI.uninit();
 
   var windowManager = Components.classes['@mozilla.org/appshell/window-mediator;1'].getService();
   var windowManagerInterface = windowManager.QueryInterface(Components.interfaces.nsIWindowMediator);
@@ -6736,3 +6742,151 @@ function getNotificationBox(aWindow) {
 /* DEPRECATED */
 function getBrowser() gBrowser;
 function getNavToolbox() gNavToolbox;
+
+let gPrivateBrowsingUI = {
+  _observerService: null,
+  _privateBrowsingService: null,
+  _privateBrowsingAutoStarted: false,
+
+  init: function PBUI_init() {
+    this._observerService = Cc["@mozilla.org/observer-service;1"].
+                            getService(Ci.nsIObserverService);
+    this._observerService.addObserver(this, "private-browsing", false);
+
+    this._privateBrowsingService = Cc["@mozilla.org/privatebrowsing;1"].
+                                   getService(Ci.nsIPrivateBrowsingService);
+
+    if (this.privateBrowsingEnabled)
+      this.onEnterPrivateBrowsing();
+  },
+
+  uninit: function PBUI_unint() {
+    this._observerService.removeObserver(this, "private-browsing");
+  },
+
+  observe: function PBUI_observe(aSubject, aTopic, aData) {
+    if (aTopic == "private-browsing") {
+      if (aData == "enter")
+        this.onEnterPrivateBrowsing();
+      else if (aData == "exit")
+        this.onExitPrivateBrowsing();
+    }
+  },
+
+  _shouldEnter: function PBUI__shouldEnter() {
+    try {
+      // Never prompt if the session is not going to be closed, or if user has
+      // already requested not to be prompted.
+      if (gPrefService.getBoolPref("browser.privatebrowsing.dont_prompt_on_enter") ||
+          gPrefService.getBoolPref("browser.privatebrowsing.keep_current_session"))
+        return true;
+    }
+    catch (ex) { }
+
+    var bundleService = Cc["@mozilla.org/intl/stringbundle;1"].
+                        getService(Ci.nsIStringBundleService);
+    var pbBundle = bundleService.createBundle("chrome://browser/locale/browser.properties");
+    var brandBundle = bundleService.createBundle("chrome://branding/locale/brand.properties");
+
+    var appName = brandBundle.GetStringFromName("brandShortName");
+    var dialogTitle = pbBundle.GetStringFromName("privateBrowsingDialogTitle");
+    var message = pbBundle.formatStringFromName("privateBrowsingMessage", [appName], 1);
+
+    var promptService = Cc["@mozilla.org/embedcomp/prompt-service;1"].
+                        getService(Ci.nsIPromptService);
+
+    var flags = promptService.BUTTON_TITLE_IS_STRING * promptService.BUTTON_POS_0 +
+                promptService.BUTTON_TITLE_IS_STRING * promptService.BUTTON_POS_1 +
+                promptService.BUTTON_POS_0_DEFAULT;
+
+    var neverAsk = {value:false};
+    var button0Title = pbBundle.GetStringFromName("privateBrowsingYesTitle");
+    var button1Title = pbBundle.GetStringFromName("privateBrowsingNoTitle");
+    var neverAskText = pbBundle.GetStringFromName("privateBrowsingNeverAsk");
+
+    var result;
+    var choice = promptService.confirmEx(null, dialogTitle, message,
+                               flags, button0Title, button1Title, null,
+                               neverAskText, neverAsk);
+
+    switch (choice) {
+    case 0: // Start Private Browsing
+      result = true;
+      if (neverAsk.value)
+        gPrefService.setBoolPref("browser.privatebrowsing.dont_prompt_on_enter", true);
+      break;
+    case 1: // Keep
+      result = false;
+      break;
+    }
+
+    return result;
+  },
+
+  onEnterPrivateBrowsing: function PBUI_onEnterPrivateBrowsing() {
+    let pbMenuItem = document.getElementById("privateBrowsingItem");
+    if (pbMenuItem)
+      pbMenuItem.setAttribute("checked", "true");
+
+    this._privateBrowsingAutoStarted = this._privateBrowsingService.autoStarted;
+
+    if (!this._privateBrowsingAutoStarted) {
+      // Adjust the window's title
+      let docElement = document.documentElement;
+#ifdef XP_MACOSX // see bug 411929 comment 38 for the reason behind this
+      docElement.setAttribute("titlemodifier",
+        docElement.getAttribute("titlemodifier_privatebrowsing"));
+      docElement.setAttribute("titledefault", "");
+#else
+      docElement.setAttribute("title",
+        docElement.getAttribute("title_privatebrowsing"));
+      docElement.setAttribute("titlemodifier",
+        docElement.getAttribute("titlemodifier_privatebrowsing"));
+#endif
+    }
+    else {
+      // Disable the menu item in auto-start mode
+      if (pbMenuItem)
+        pbMenuItem.setAttribute("disabled", "true");
+      document.getElementById("Tools:PrivateBrowsing")
+              .setAttribute("disabled", "true");
+    }
+  },
+
+  onExitPrivateBrowsing: function PBUI_onExitPrivateBrowsing() {
+    let pbMenuItem = document.getElementById("privateBrowsingItem");
+    if (pbMenuItem)
+      pbMenuItem.removeAttribute("checked");
+
+    if (!this._privateBrowsingAutoStarted) {
+      // Adjust the window's title
+      let docElement = document.documentElement;
+#ifdef XP_MACOSX // see bug 411929 comment 38 for the reason behind this
+      docElement.setAttribute("titlemodifier", "");
+      docElement.setAttribute("titledefault",
+        docElement.getAttribute("titlemodifier_normal"));
+#else
+      docElement.setAttribute("title",
+        docElement.getAttribute("title_normal"));
+      docElement.setAttribute("titlemodifier",
+        docElement.getAttribute("titlemodifier_normal"));
+#endif
+    }
+    else
+      this._privateBrowsingAutoStarted = false;
+  },
+
+  toggleMode: function PBUI_toggleMode() {
+    // prompt the users on entering the private mode, if needed
+    if (!this.privateBrowsingEnabled)
+      if (!this._shouldEnter())
+        return;
+
+    this._privateBrowsingService.privateBrowsingEnabled =
+      !this.privateBrowsingEnabled;
+  },
+
+  get privateBrowsingEnabled PBUI_get_privateBrowsingEnabled() {
+    return this._privateBrowsingService.privateBrowsingEnabled;
+  }
+};

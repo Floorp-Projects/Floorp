@@ -83,6 +83,8 @@
 #include "nsToolkitCompsCID.h"
 #include "nsIDownloadHistory.h"
 #include "nsDocShellCID.h"
+#include "nsIPrivateBrowsingService.h"
+#include "nsNetCID.h"
 
 #if defined(XP_WIN) && !defined(WINCE) 
 #include <shlobj.h>
@@ -1002,10 +1004,18 @@ nsDownloadManager::Init()
   rv = RestoreActiveDownloads();
   NS_WARN_IF_FALSE(NS_SUCCEEDED(rv), "Failed to restore all active downloads");
 
+  nsCOMPtr<nsIPrivateBrowsingService> pbs =
+    do_GetService(NS_PRIVATE_BROWSING_SERVICE_CONTRACTID);
+  if (pbs) {
+    (void)pbs->GetPrivateBrowsingEnabled(&mInPrivateBrowsing);
+    if (mInPrivateBrowsing)
+      OnEnterPrivateBrowsingMode();
+  }
+
   nsCOMPtr<nsINavHistoryService> history =
     do_GetService(NS_NAVHISTORYSERVICE_CONTRACTID);
 
-  // The following three AddObserver calls must be the last lines in this function,
+  // The following AddObserver calls must be the last lines in this function,
   // because otherwise, this function may fail (and thus, this object would be not
   // completely initialized), but the observerservice would still keep a reference
   // to us and notify us about shutdown, which may cause crashes.
@@ -1021,6 +1031,7 @@ nsDownloadManager::Init()
   mObserverService->AddObserver(this, "wake_notification", PR_FALSE);
   mObserverService->AddObserver(this, NS_IOSERVICE_GOING_OFFLINE_TOPIC, PR_FALSE);
   mObserverService->AddObserver(this, NS_IOSERVICE_OFFLINE_STATUS_TOPIC, PR_FALSE);
+  mObserverService->AddObserver(this, NS_PRIVATE_BROWSING_SWITCH_TOPIC, PR_FALSE);
 
   if (history)
     (void)history->AddObserver(this, PR_FALSE);
@@ -2034,8 +2045,61 @@ nsDownloadManager::Observe(nsISupports *aSubject,
         this, resumeOnWakeDelay, nsITimer::TYPE_ONE_SHOT);
     }
   }
+  else if (strcmp(aTopic, NS_PRIVATE_BROWSING_REQUEST_TOPIC) == 0 &&
+           currDownloadCount) {
+    if (NS_LITERAL_STRING(NS_PRIVATE_BROWSING_ENTER).Equals(aData)) {
+      nsCOMPtr<nsISupportsPRBool> cancelDownloads =
+        do_QueryInterface(aSubject, &rv);
+      NS_ENSURE_SUCCESS(rv, rv);
+      ConfirmCancelDownloads(currDownloadCount, cancelDownloads,
+                             NS_LITERAL_STRING("enterPrivateBrowsingCancelDownloadsAlertTitle").get(),
+                             NS_LITERAL_STRING("enterPrivateBrowsingCancelDownloadsAlertMsgMultiple").get(),
+                             NS_LITERAL_STRING("enterPrivateBrowsingCancelDownloadsAlertMsg").get(),
+                             NS_LITERAL_STRING("dontEnterPrivateBrowsingButton").get());
+    }
+    else if (NS_LITERAL_STRING(NS_PRIVATE_BROWSING_LEAVE).Equals(aData)) {
+      nsCOMPtr<nsISupportsPRBool> cancelDownloads =
+        do_QueryInterface(aSubject, &rv);
+      NS_ENSURE_SUCCESS(rv, rv);
+      ConfirmCancelDownloads(currDownloadCount, cancelDownloads,
+                             NS_LITERAL_STRING("leavePrivateBrowsingCancelDownloadsAlertTitle").get(),
+                             NS_LITERAL_STRING("leavePrivateBrowsingCancelDownloadsAlertMsgMultiple").get(),
+                             NS_LITERAL_STRING("leavePrivateBrowsingCancelDownloadsAlertMsg").get(),
+                             NS_LITERAL_STRING("dontLeavePrivateBrowsingButton").get());
+    }
+  }
+  else if (strcmp(aTopic, NS_PRIVATE_BROWSING_SWITCH_TOPIC) == 0) {
+    if (NS_LITERAL_STRING(NS_PRIVATE_BROWSING_ENTER).Equals(aData))
+      OnEnterPrivateBrowsingMode();
+    else if (NS_LITERAL_STRING(NS_PRIVATE_BROWSING_LEAVE).Equals(aData))
+      OnLeavePrivateBrowsingMode();
+  }
 
   return NS_OK;
+}
+
+void
+nsDownloadManager::OnEnterPrivateBrowsingMode()
+{
+  // Pause all downloads, and mark them to auto-resume.
+  (void)PauseAllDownloads(PR_TRUE);
+
+  // Switch to using an in-memory DB
+  (void)SwitchDatabaseTypeTo(DATABASE_MEMORY);
+
+  mInPrivateBrowsing = PR_TRUE;
+}
+
+void
+nsDownloadManager::OnLeavePrivateBrowsingMode()
+{
+  // We can now resume all downloads that are supposed to auto-resume.
+  (void)ResumeAllDownloads(PR_FALSE);
+
+  // Switch back to the on-disk DB again
+  (void)SwitchDatabaseTypeTo(DATABASE_DISK);
+
+  mInPrivateBrowsing = PR_FALSE;
 }
 
 void

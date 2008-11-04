@@ -87,24 +87,6 @@ function get_PBSvc() {
   try {
     _PBSvc = Components.classes["@mozilla.org/privatebrowsing;1"].
              getService(Components.interfaces.nsIPrivateBrowsingService);
-    if (_PBSvc) {
-      var observer = {
-        QueryInterface: function (iid) {
-          const interfaces = [Components.interfaces.nsIObserver,
-                              Components.interfaces.nsISupports];
-          if (!interfaces.some(function(v) iid.equals(v)))
-            throw Components.results.NS_ERROR_NO_INTERFACE;
-          return this;
-        },
-        observe: function (subject, topic, data) {
-          subject.QueryInterface(Components.interfaces.nsISupportsPRUint32);
-          subject.data = 0;
-        }
-      };
-      var os = Components.classes["@mozilla.org/observer-service;1"].
-               getService(Components.interfaces.nsIObserverService);
-      os.addObserver(observer, "private-browsing-enter", false);
-    }
     return _PBSvc;
   } catch (e) {}
   return null;
@@ -208,15 +190,28 @@ var num_places_entries = 8;
  * @returns nothing
  */
 function check_placesItem_Count(){
+  // get bookmarks count
   var options = histsvc.getNewQueryOptions();
   options.includeHidden = true;
+  options.queryType = Ci.nsINavHistoryQueryOptions.QUERY_TYPE_BOOKMARKS;
   var query = histsvc.getNewQuery();
   var result = histsvc.executeQuery(query, options);
   var root = result.root;
   root.containerOpen = true;
   var cc = root.childCount;
-  do_check_eq(cc,num_places_entries);
   root.containerOpen = false;
+
+  // get history item count
+  options.queryType = Ci.nsINavHistoryQueryOptions.QUERY_TYPE_HISTORY;
+  query = histsvc.getNewQuery();
+  result = histsvc.executeQuery(query, options);
+  root = result.root;
+  root.containerOpen = true;
+  cc += root.childCount;
+  root.containerOpen = false;
+
+  // check the total count
+  do_check_eq(cc,num_places_entries);
 }
 
 /**
@@ -257,7 +252,7 @@ function is_bookmark_A_altered(){
   var query  = histsvc.getNewQuery();
   query.setFolders([bmsvc.bookmarksMenuFolder],1);
 
-  var result = histsvc.executeQuery(query,options);
+  var result = histsvc.executeQuery(query, options);
   var root = result.root;
 
   root.containerOpen = true;
@@ -275,7 +270,94 @@ function run_test() {
   // Fetch the private browsing service
   var pb = get_PBSvc();
 
-  if(pb){ // Private Browsing might not be available
+  if(pb) { // Private Browsing might not be available
+    start_sync(); // enable syncing
+
+    // need to catch places sync notifications
+    var os = Cc["@mozilla.org/observer-service;1"].
+             getService(Ci.nsIObserverService);
+    const kSyncFinished = "places-sync-finished";
+    do_test_pending();
+
+    var prefBranch = Cc["@mozilla.org/preferences-service;1"].
+                     getService(Ci.nsIPrefBranch);
+    prefBranch.setBoolPref("browser.privatebrowsing.keep_current_session", true);
+
+    var bookmark_A_URI = ios.newURI("http://google.com/", null, null);
+    var bookmark_B_URI = ios.newURI("http://bugzilla.mozilla.org/", null, null);
+    var onBookmarkAAdded = {
+      observe: function (aSubject, aTopic, aData) {
+        os.removeObserver(this, kSyncFinished);
+
+        check_placesItem_Count();
+
+        // Bookmark-A should be bookmarked, data should be retrievable
+        do_check_true(bmsvc.isBookmarked(bookmark_A_URI));
+        do_check_eq("google",bmsvc.getKeywordForURI(bookmark_A_URI));
+
+        // Enter Private Browsing Mode
+        pb.privateBrowsingEnabled = true;
+
+        // History items should not retrievable by isVisited
+        for each(var visited_uri in visited_URIs)
+          do_check_false(bhist.isVisited(uri(visited_uri)));
+
+        // Check if Bookmark-A has been visited, should be false
+        do_check_false(is_bookmark_A_altered());
+
+        // Add a second set of history items during private browsing mode
+        // should not be viewed/stored or in any way retrievable
+        fill_history_nonvisitedURI();
+        for each(var nonvisited_uri in nonvisited_URIs) {
+          do_check_false(uri_in_db(uri(nonvisited_uri)));
+          do_check_false(bhist.isVisited(uri(nonvisited_uri)));
+        }
+
+        // We attempted to add another 7 new entires, but we still have 7 history entries
+        // and 1 history entry, Bookmark-A.
+        // Private browsing blocked the entry of the new history entries
+        check_placesItem_Count();
+
+        // Check if Bookmark-A is still accessible
+        do_check_true(bmsvc.isBookmarked(bookmark_A_URI));
+        do_check_eq("google",bmsvc.getKeywordForURI(bookmark_A_URI));
+
+        os.addObserver(onBookmarkBAdded, kSyncFinished, false);
+
+        // Create Bookmark-B
+        myBookmarks[1] = create_bookmark(bookmark_B_URI,"title 2", "bugzilla");
+      }
+    };
+    var onBookmarkBAdded = {
+      observe: function (aSubject, aTopic, aData) {
+        os.removeObserver(this, kSyncFinished);
+
+        // A check on the history count should be same as before, 7 history entries with
+        // now 2 bookmark items (A) and bookmark (B), so we set num_places_entries to 9
+        num_places_entries = 9; // Bookmark-B successfully added but not the history entries.
+        check_placesItem_Count();
+
+        // Exit Private Browsing Mode
+        pb.privateBrowsingEnabled = false;
+
+        // Check if Bookmark-B is still accessible
+        do_check_true(bmsvc.isBookmarked(bookmark_B_URI));
+        do_check_eq("bugzilla",bmsvc.getKeywordForURI(bookmark_B_URI));
+
+        // Check if Bookmark-A is still accessible
+        do_check_true(bmsvc.isBookmarked(bookmark_A_URI));
+        do_check_eq("google",bmsvc.getKeywordForURI(bookmark_A_URI));
+
+        // Check that the original set of history items are still accessible via isVisited
+        for each(var visited_uri in visited_URIs) {
+          do_check_true(uri_in_db(uri(visited_uri)));
+          do_check_true(bhist.isVisited(uri(visited_uri)));
+        }
+
+        prefBranch.clearUserPref("browser.privatebrowsing.keep_current_session");
+        finish_test();
+      }
+    };
 
     // History database should be empty
     do_check_false(histsvc.hasHistoryEntries);
@@ -286,73 +368,15 @@ function run_test() {
     // History database should have entries
     do_check_true(histsvc.hasHistoryEntries);
 
+    os.addObserver(onBookmarkAAdded, kSyncFinished, false);
+
     // Create Bookmark-A
-    var bookmark_A_URI = ios.newURI("http://google.com/", null, null);
     myBookmarks[0] = create_bookmark(bookmark_A_URI,"title 1", "google");
 
     // History items should be retrievable by query
     for each(var visited_uri in visited_URIs) {
       do_check_true(bhist.isVisited(uri(visited_uri)));
       do_check_true(uri_in_db(uri(visited_uri)));
-    }
-
-    check_placesItem_Count();
-
-    // Bookmark-A should be bookmarked, data should be retrievable
-    do_check_true(bmsvc.isBookmarked(bookmark_A_URI));
-    do_check_eq("google",bmsvc.getKeywordForURI(bookmark_A_URI));
-
-    // Enter Private Browsing Mode
-    pb.privateBrowsingEnabled = true;
-
-    // History items should not retrievable by isVisited
-    for each(var visited_uri in visited_URIs)
-      do_check_false(bhist.isVisited(uri(visited_uri)));
-
-    // Check if Bookmark-A has been visited, should be false
-    do_check_false(is_bookmark_A_altered());
-
-    // Add a second set of history items during private browsing mode
-    // should not be viewed/stored or in any way retrievable
-    fill_history_nonvisitedURI();
-    for each(var nonvisited_uri in nonvisited_URIs) {
-      do_check_false(uri_in_db(uri(nonvisited_uri)));
-      do_check_false(bhist.isVisited(uri(nonvisited_uri)));
-    }
-
-    // We attempted to add another 7 new entires, but we still have 7 history entries
-    // and 1 history entry, Bookmark-A.
-    // Private browsing blocked the entry of the new history entries
-    check_placesItem_Count();
-
-    // Check if Bookmark-A is still accessible
-    do_check_true(bmsvc.isBookmarked(bookmark_A_URI));
-    do_check_eq("google",bmsvc.getKeywordForURI(bookmark_A_URI));
-
-    // Create Bookmark-B
-    var bookmark_B_URI = ios.newURI("http://bugzilla.mozilla.org/", null, null);
-    myBookmarks[1] = create_bookmark(bookmark_B_URI,"title 2", "bugzilla");
-
-    // A check on the history count should be same as before, 7 history entries with
-    // now 2 bookmark items (A) and bookmark (B), so we set num_places_entries to 9
-    num_places_entries = 9; // Bookmark-B successfully added but not the history entries.
-    check_placesItem_Count();
-
-    // Exit Private Browsing Mode
-    pb.privateBrowsingEnabled = false;
-
-    // Check if Bookmark-B is still accessible
-    do_check_true(bmsvc.isBookmarked(bookmark_B_URI));
-    do_check_eq("bugzilla",bmsvc.getKeywordForURI(bookmark_B_URI));
-
-    // Check if Bookmark-A is still accessible
-    do_check_true(bmsvc.isBookmarked(bookmark_A_URI));
-    do_check_eq("google",bmsvc.getKeywordForURI(bookmark_A_URI));
-
-    // Check that the original set of history items are still accessible via isVisited
-    for each(var visited_uri in visited_URIs) {
-      do_check_true(uri_in_db(uri(visited_uri)));
-      do_check_true(bhist.isVisited(uri(visited_uri)));
     }
   }
 }

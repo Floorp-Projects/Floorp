@@ -791,3 +791,9 @@ pref("app.support.baseURL", "http://support.mozilla.com/1/%APP%/%VERSION%/%OS%/%
 
 // Name of alternate about: page for certificate errors (when undefined, defaults to about:neterror)
 pref("security.alternate_certificate_error_page", "certerror");
+
+// Whether to start the private browsing mode at application startup
+pref("browser.privatebrowsing.autostart", false);
+
+// Whether we should skip prompting before starting the private browsing mode
+pref("browser.privatebrowsing.dont_prompt_on_enter", false);
