@@ -404,11 +404,10 @@ public:
 // See jsinterp.cpp for the ENABLE_TRACER definition.
 #define RECORD_ARGS(x,args)                                                   \
     JS_BEGIN_MACRO                                                            \
-        TraceRecorder* tr_ = TRACE_RECORDER(cx);                              \
-        if (!js_MonitorRecording(tr_))                                        \
+        if (!js_MonitorRecording(TRACE_RECORDER(cx)))                         \
             ENABLE_TRACER(0);                                                 \
         else                                                                  \
-            TRACE_ARGS_(tr_,x,args);                                          \
+            TRACE_ARGS_(TRACE_RECORDER(cx),x,args);                           \
     JS_END_MACRO
 
 #define TRACE_ARGS_(tr,x,args)                                                \
