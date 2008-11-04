@@ -152,15 +152,15 @@
 #ifdef OJI
 // HTMLAppletElement helper includes
 #include "nsIJVMManager.h"
-
-// Oh, did I mention that I hate Microsoft for doing this to me?
-#ifndef WINCE
-#undef GetClassName
-#endif
-
 #include "nsILiveConnectManager.h"
 #include "nsIJVMPluginInstance.h"
 #endif
+
+// Oh, did I mention that I hate Microsoft for doing this to me?
+#ifdef WINCE
+#undef GetClassName
+#endif
+
 
 // HTMLOptionsCollection includes
 #include "nsIDOMHTMLOptionElement.h"
