@@ -55,24 +55,6 @@ function get_privatebrowsing_service() {
   try {
     _PBSvc = Cc["@mozilla.org/privatebrowsing;1"].
              getService(Ci.nsIPrivateBrowsingService);
-    if (_PBSvc) {
-      var observer = {
-        QueryInterface: function (iid) {
-          const interfaces = [Ci.nsIObserver,
-                              Ci.nsISupports];
-          if (!interfaces.some(function(v) iid.equals(v)))
-            throw Cr.NS_ERROR_NO_INTERFACE;
-          return this;
-        },
-        observe: function (subject, topic, data) {
-          subject.QueryInterface(Ci.nsISupportsPRUint32);
-          subject.data = 0;
-        }
-      };
-      var os = Cc["@mozilla.org/observer-service;1"].
-               getService(Ci.nsIObserverService);
-      os.addObserver(observer, "private-browsing-enter", false);
-    }
     return _PBSvc;
   } catch (e) {}
   return null;
@@ -235,6 +217,10 @@ function retrieve_from_cache(aKey, aWhere) {
 function run_test() {
   var pb = get_privatebrowsing_service();
   if (pb) { // Private Browsing might not be available
+    var prefBranch = Cc["@mozilla.org/preferences-service;1"].
+                     getService(Ci.nsIPrefBranch);
+    prefBranch.setBoolPref("browser.privatebrowsing.keep_current_session", true);
+
     const kCacheA = "cache-A",
           kCacheB = "cache-B",
           kCacheC = "cache-C",
@@ -285,5 +271,7 @@ function run_test() {
     do_check_eq(retrieve_from_cache(kCacheA, kMemoryDevice), null);
     do_check_eq(retrieve_from_cache(kCacheB, kDiskDevice), kTestContent);
     do_check_eq(retrieve_from_cache(kCacheC, kOfflineDevice), kTestContent);
+
+    prefBranch.clearUserPref("browser.privatebrowsing.keep_current_session");
   }
 }

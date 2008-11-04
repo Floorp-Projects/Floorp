@@ -1,5 +1,6 @@
 classic.jar:
 % skin browser classic/1.0 %skin/classic/browser/
+* skin/classic/browser/aboutPrivateBrowsing.css             (aboutPrivateBrowsing.css)
 * skin/classic/browser/aboutSessionRestore.css        (aboutSessionRestore.css)
   skin/classic/browser/aboutCertError.css             (aboutCertError.css)
 * skin/classic/browser/browser.css                    (browser.css)
@@ -14,6 +15,10 @@ classic.jar:
 * skin/classic/browser/pageInfo.css
   skin/classic/browser/pageInfo.png
   skin/classic/browser/page-livemarks.png
+  skin/classic/browser/Privacy-16.png
+  skin/classic/browser/Privacy-32.png
+  skin/classic/browser/Privacy-48.png
+  skin/classic/browser/Privacy-64.png
   skin/classic/browser/searchbar.css                  (searchbar.css)
   skin/classic/browser/Search-glass.png
   skin/classic/browser/Search-glass-rtl.png

@@ -71,6 +71,7 @@ DIRS = \
 	sidebar \
 	feeds \
 	places \
+	privatebrowsing \
 	$(NULL)
 
 ifdef MOZ_SAFE_BROWSING

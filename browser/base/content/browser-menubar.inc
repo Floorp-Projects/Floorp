@@ -466,6 +466,12 @@
                         key="key_viewInfo" command="View:PageInfo"/>
 #endif
               <menuseparator id="sanitizeSeparator"/>
+              <menuitem id="privateBrowsingItem"
+                        label="&privateBrowsingCmd.label;"
+                        accesskey="&privateBrowsingCmd.accesskey;"
+                        type="checkbox"
+                        autocheck="false"
+                        command="Tools:PrivateBrowsing"/>
               <menuitem id="sanitizeItem"
                         accesskey="&clearPrivateDataCmd.accesskey;"
                         label="&clearPrivateDataCmd.label;"
