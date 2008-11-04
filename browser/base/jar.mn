@@ -22,6 +22,7 @@ browser.jar:
 *       content/browser/browser.css                   (content/browser.css)
 *       content/browser/browser.js                    (content/browser.js)
 *       content/browser/browser.xul                   (content/browser.xul)
+*       content/browser/browser-tabPreviews.xml       (content/browser-tabPreviews.xml)
 *       content/browser/credits.xhtml                 (content/credits.xhtml)
 *       content/browser/EULA.js                       (content/EULA.js)
 *       content/browser/EULA.xhtml                    (content/EULA.xhtml)
