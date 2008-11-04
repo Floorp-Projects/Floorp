@@ -18,40 +18,79 @@ Tests of DOM Worker Threads (Bug 437152)
 <pre id="test">
 <script class="testbody" type="text/javascript">
 
-  const expectedErrorCount = 4;
+  netscape.security.PrivilegeManager.enablePrivilege('UniversalXPConnect');
 
-  function messageListener(event) {
-    ok(false, "Unexpected message: " + event.data);
+  var prefs = Components.classes["@mozilla.org/preferences-service;1"].
+              getService(Components.interfaces.nsIPrefBranch);
+  //prefs.setIntPref("javascript.options.gczeal", 2);
+
+  var badWorkerScripts = [
+    // Syntax error
+    "function messageListener(message, source) { " +
+    "  for (var i = 0; i < 10) { } " +
+    "} " +
+    "",
+
+    // Bad function error
+    "function messageListener(message, source) { " +
+    "  foopy(); " +
+    "} " +
+    "",
+
+    // Unhandled exception in body
+    "function messageListener(message, source) { " +
+    "} " +
+    "throw new Error('Bah!'); " +
+    "",
+
+    // Throwing message listener
+    "function messageListener(message, source) { " +
+    "  throw 'Bad message: ' + message; " +
+    "} " +
+    ""
+  ];
+
+  var expectedErrorCount = badWorkerScripts.length;
+
+  var pool = navigator.newWorkerPool();
+
+  pool.messageListener = function(message, source) {
+    netscape.security.PrivilegeManager.enablePrivilege('UniversalXPConnect');
+
+    prefs.setIntPref("javascript.options.gczeal", 0);
+    ok(false, "Unexpected message");
     SimpleTest.finish();
   };
 
   var actualErrorCount = 0;
   var failedWorkers = [];
 
-  function errorListener(event) {
-    if (failedWorkers.indexOf(event.target) != -1) {
+  pool.errorListener = function(error, source) {
+    netscape.security.PrivilegeManager.enablePrivilege('UniversalXPConnect');
+
+    if (failedWorkers.indexOf(source) != -1) {
+      dump("Already seen worker: " + source + "\n");
       ok(false, "Seen an extra error from this worker");
+      prefs.setIntPref("javascript.options.gczeal", 0);
       SimpleTest.finish();
       return;
     }
 
-    failedWorkers.push(event.target);
+    failedWorkers.push(source);
     actualErrorCount++;
 
     if (actualErrorCount == expectedErrorCount) {
+      prefs.setIntPref("javascript.options.gczeal", 0);
       SimpleTest.finish();
     }
   };
 
-  for (var i = 1; i <= expectedErrorCount; i++) {
-    var worker = new Worker("threadErrors_worker" + i + ".js");
-    worker.onmessage = messageListener;
-    worker.onerror = errorListener;
+  for (var i = 0; i < expectedErrorCount; i++) {
+    var worker = pool.createWorker(badWorkerScripts[i]);
     worker.postMessage("Hi");
   }
 
   SimpleTest.waitForExplicitFinish();
-
 </script>
 </pre>
 </body>
