@@ -152,7 +152,7 @@ CSRCS	+= 	cairo-win32-font.c \
 ifdef NS_PRINTING
 CSRCS   += cairo-win32-printing-surface.c
 else
-DEFINES += CAIRO_OMIT_WIN32_PRINTING
+DEFINES += -DCAIRO_OMIT_WIN32_PRINTING
 endif
 
 EXPORTS += cairo-win32.h
