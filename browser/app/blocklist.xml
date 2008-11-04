@@ -31,10 +31,20 @@
     <match name="name" exp="^Yahoo Application State Plugin$"/>
     <match name="description" exp="^Yahoo Application State Plugin$"/>
     <match name="filename" exp="npYState.dll"/>
+    <versionRange>
+      <targetApplication id="{ec8030f7-c20a-464f-9b0e-13a3a9e97384}">
+        <versionRange minVersion="3.0a1" maxVersion="3.*"/>
+      </targetApplication>
+    </versionRange>
   </pluginItem>
   <pluginItem>
     <match name="name" exp="QuickTime Plug-in 7[.]1[.]"/>
     <match name="filename" exp="npqtplugin.?[.]dll"/>
+    <versionRange>
+      <targetApplication id="{ec8030f7-c20a-464f-9b0e-13a3a9e97384}">
+        <versionRange minVersion="3.0a1" maxVersion="3.*"/>
+      </targetApplication>
+    </versionRange>
   </pluginItem>
 </pluginItems>
 </blocklist>

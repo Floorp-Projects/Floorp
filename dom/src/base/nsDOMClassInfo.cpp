@@ -171,6 +171,7 @@
 
 // ContentList includes
 #include "nsContentList.h"
+#include "nsGenericElement.h"
 
 // Event related includes
 #include "nsIEventListenerManager.h"
@@ -212,7 +213,7 @@
 #include "nsIDOMLSProgressEvent.h"
 #include "nsIDOMParser.h"
 #include "nsIDOMSerializer.h"
-#include "nsIXMLHttpRequest.h"
+#include "nsXMLHttpRequest.h"
 
 // includes needed for the prototype chain interfaces
 #include "nsIDOMNavigator.h"
@@ -489,7 +490,8 @@ static const char kDOMStringBundleURL[] =
  ((DOM_DEFAULT_SCRIPTABLE_FLAGS |                                             \
    nsIXPCScriptable::WANT_GETPROPERTY |                                       \
    nsIXPCScriptable::WANT_ADDPROPERTY |                                       \
-   nsIXPCScriptable::WANT_SETPROPERTY) &                                      \
+   nsIXPCScriptable::WANT_SETPROPERTY |                                       \
+   nsIXPCScriptable::WANT_FINALIZE) &                                         \
   ~nsIXPCScriptable::USE_JSSTUB_FOR_ADDPROPERTY)
 
 // We need to let JavaScript QI elements to interfaces that are not in
@@ -513,14 +515,21 @@ static const char kDOMStringBundleURL[] =
    nsIXPCScriptable::WANT_ADDPROPERTY |                                       \
    nsIXPCScriptable::WANT_DELPROPERTY |                                       \
    nsIXPCScriptable::WANT_GETPROPERTY |                                       \
-   nsIXPCScriptable::WANT_ENUMERATE   |                                       \
-   nsIXPCScriptable::WANT_POSTCREATE  |                                       \
-   nsIXPCScriptable::WANT_FINALIZE)
+   nsIXPCScriptable::WANT_ENUMERATE)
 
 #define ARRAY_SCRIPTABLE_FLAGS                                                \
   (DOM_DEFAULT_SCRIPTABLE_FLAGS       |                                       \
    nsIXPCScriptable::WANT_GETPROPERTY |                                       \
    nsIXPCScriptable::WANT_ENUMERATE)
+
+#define NODELIST_SCRIPTABLE_FLAGS                                             \
+  (ARRAY_SCRIPTABLE_FLAGS             |                                       \
+   nsIXPCScriptable::WANT_FINALIZE)
+
+#define EVENTTARGET_SCRIPTABLE_FLAGS                                          \
+  (DOM_DEFAULT_SCRIPTABLE_FLAGS       |                                       \
+   nsIXPCScriptable::WANT_ADDPROPERTY |                                       \
+   nsIXPCScriptable::WANT_FINALIZE)
 
 #define DOMCLASSINFO_STANDARD_FLAGS                                           \
   (nsIClassInfo::MAIN_THREAD_ONLY | nsIClassInfo::DOM_OBJECT)
@@ -632,7 +641,7 @@ static nsDOMClassInfoData sClassInfoData[] = {
   NS_DEFINE_CLASSINFO_DATA(ProcessingInstruction, nsNodeSH,
                            NODE_SCRIPTABLE_FLAGS)
   NS_DEFINE_CLASSINFO_DATA(Notation, nsNodeSH, NODE_SCRIPTABLE_FLAGS)
-  NS_DEFINE_CLASSINFO_DATA(NodeList, nsNodeListSH, ARRAY_SCRIPTABLE_FLAGS)
+  NS_DEFINE_CLASSINFO_DATA(NodeList, nsNodeListSH, NODELIST_SCRIPTABLE_FLAGS)
   NS_DEFINE_CLASSINFO_DATA(NamedNodeMap, nsNamedNodeMapSH,
                            ARRAY_SCRIPTABLE_FLAGS)
 
@@ -883,9 +892,7 @@ static nsDOMClassInfoData sClassInfoData[] = {
                            ARRAY_SCRIPTABLE_FLAGS)
 
   NS_DEFINE_CLASSINFO_DATA_WITH_NAME(ContentList, HTMLCollection,
-                                     nsContentListSH,
-                                     ARRAY_SCRIPTABLE_FLAGS |
-                                     nsIXPCScriptable::WANT_PRECREATE)
+                                     nsContentListSH, NODELIST_SCRIPTABLE_FLAGS)
 
   NS_DEFINE_CLASSINFO_DATA(XMLStylesheetProcessingInstruction, nsNodeSH,
                            NODE_SCRIPTABLE_FLAGS)
@@ -1206,8 +1213,7 @@ static nsDOMClassInfoData sClassInfoData[] = {
   NS_DEFINE_CLASSINFO_DATA(XMLHttpProgressEvent, nsDOMGenericSH,
                            DOM_DEFAULT_SCRIPTABLE_FLAGS)
   NS_DEFINE_CLASSINFO_DATA(XMLHttpRequest, nsEventTargetSH,
-                           DOM_DEFAULT_SCRIPTABLE_FLAGS |
-                           nsIXPCScriptable::WANT_ADDPROPERTY)
+                           EVENTTARGET_SCRIPTABLE_FLAGS)
 
   NS_DEFINE_CLASSINFO_DATA(ClientRect, nsDOMGenericSH,
                            DOM_DEFAULT_SCRIPTABLE_FLAGS)
@@ -1278,8 +1284,7 @@ static nsDOMClassInfoData sClassInfoData[] = {
                            DOM_DEFAULT_SCRIPTABLE_FLAGS)
 
   NS_DEFINE_CLASSINFO_DATA(XMLHttpRequestUpload, nsEventTargetSH,
-                           DOM_DEFAULT_SCRIPTABLE_FLAGS |
-                           nsIXPCScriptable::WANT_ADDPROPERTY)
+                           EVENTTARGET_SCRIPTABLE_FLAGS)
 
   // DOM Traversal NodeIterator class  
   NS_DEFINE_CLASSINFO_DATA(NodeIterator, nsDOMGenericSH,
@@ -1294,6 +1299,11 @@ static nsDOMClassInfoData sClassInfoData[] = {
 
   NS_DEFINE_CLASSINFO_DATA(SimpleGestureEvent, nsDOMGenericSH,
                            DOM_DEFAULT_SCRIPTABLE_FLAGS)
+
+#ifdef MOZ_MATHML
+  NS_DEFINE_CLASSINFO_DATA_WITH_NAME(MathMLElement, Element, nsElementSH,
+                                     ELEMENT_SCRIPTABLE_FLAGS)
+#endif
 };
 
 // Objects that shuld be constructable through |new Name();|
@@ -3537,6 +3547,16 @@ nsDOMClassInfo::Init()
     DOM_CLASSINFO_UI_EVENT_MAP_ENTRIES
   DOM_CLASSINFO_MAP_END
 
+#ifdef MOZ_MATHML
+  DOM_CLASSINFO_MAP_BEGIN_NO_CLASS_IF(MathMLElement, nsIDOMElement)
+    DOM_CLASSINFO_MAP_ENTRY(nsIDOMElement)
+    DOM_CLASSINFO_MAP_ENTRY(nsIDOMNSElement)
+    DOM_CLASSINFO_MAP_ENTRY(nsIDOMEventTarget)
+    DOM_CLASSINFO_MAP_ENTRY(nsIDOM3Node)
+    DOM_CLASSINFO_MAP_ENTRY(nsIDOMNodeSelector)
+  DOM_CLASSINFO_MAP_END
+#endif
+
 #ifdef NS_DEBUG
   {
     PRUint32 i = NS_ARRAY_LENGTH(sClassInfoData);
@@ -4167,28 +4187,14 @@ nsDOMClassInfo::GetClassInfoInstance(nsDOMClassInfoData* aData)
 }
 
 // static
-nsresult
+void
 nsDOMClassInfo::PreserveNodeWrapper(nsIXPConnectWrappedNative *aWrapper)
 {
-   nsISupports *native = aWrapper->Native();
-   nsCOMPtr<nsIDOMNode> node(do_QueryInterface(native));
-   
-   nsCOMPtr<nsIDocument> doc;
-   if (node) {
-     nsCOMPtr<nsIDOMDocument> domdoc;
-     node->GetOwnerDocument(getter_AddRefs(domdoc));
-     doc = do_QueryInterface(domdoc);
+  nsWrapperCache* cache;
+  CallQueryInterface(aWrapper->Native(), &cache);
+  if (cache) {
+    cache->PreserveWrapper();
   }
-
-   if (!doc) {
-     doc = do_QueryInterface(native);
-   }
-
-   if (doc) {
-     nsCOMPtr<nsINode> n(do_QueryInterface(node));
-     doc->AddReference(n, aWrapper);
-   }
-   return NS_OK;
 }
 
 
@@ -6911,6 +6917,16 @@ nsNodeSH::PreCreate(nsISupports *nativeObj, JSContext *cx, JSObject *globalObj,
 }
 
 NS_IMETHODIMP
+nsNodeSH::PostCreate(nsIXPConnectWrappedNative *wrapper, JSContext *cx,
+                     JSObject *obj)
+{
+  nsINode* node = static_cast<nsINode*>(wrapper->Native());
+  node->SetWrapper(wrapper);
+
+  return nsEventReceiverSH::PostCreate(wrapper, cx, obj);
+}
+
+NS_IMETHODIMP
 nsNodeSH::AddProperty(nsIXPConnectWrappedNative *wrapper, JSContext *cx,
                       JSObject *obj, jsval id, jsval *vp, PRBool *_retval)
 {
@@ -6926,6 +6942,13 @@ nsNodeSH::NewResolve(nsIXPConnectWrappedNative *wrapper, JSContext *cx,
   if ((id == sBaseURIObject_id || id == sNodePrincipal_id) &&
       IsPrivilegedScript()) {
     return DefineVoidProp(cx, obj, id, objp);
+  }
+
+  if (id == sOnload_id || id == sOnerror_id) {
+    // Make sure that this node can't go away while waiting for a
+    // network load that could fire an event handler.
+    nsINode* node = static_cast<nsINode*>(wrapper->Native());
+    node->PreserveWrapper();
   }
 
   return nsEventReceiverSH::NewResolve(wrapper, cx, obj, id, flags, objp,
@@ -6996,6 +7019,16 @@ nsNodeSH::GetFlags(PRUint32 *aFlags)
   return NS_OK;
 }
 
+NS_IMETHODIMP
+nsNodeSH::Finalize(nsIXPConnectWrappedNative *wrapper, JSContext *cx,
+                   JSObject *obj)
+{
+  nsINode* node = static_cast<nsINode*>(wrapper->Native());
+  node->ClearWrapper();
+
+  return NS_OK;
+}
+ 
 // EventReceiver helper
 
 // static
@@ -7246,12 +7279,6 @@ nsEventReceiverSH::NewResolve(nsIXPConnectWrappedNative *wrapper,
                               JSContext *cx, JSObject *obj, jsval id,
                               PRUint32 flags, JSObject **objp, PRBool *_retval)
 {
-  if (id == sOnload_id || id == sOnerror_id) {    
-    // Make sure that this node can't go away while waiting for a
-    // network load that could fire an event handler.
-    nsDOMClassInfo::PreserveNodeWrapper(wrapper);
-  }
-
   if (!JSVAL_IS_STRING(id)) {
     return NS_OK;
   }
@@ -7337,6 +7364,30 @@ nsEventReceiverSH::AddProperty(nsIXPConnectWrappedNative *wrapper,
 // EventTarget helper
 
 NS_IMETHODIMP
+nsEventTargetSH::PreCreate(nsISupports *nativeObj, JSContext *cx,
+                           JSObject *globalObj, JSObject **parentObj)
+{
+  nsXHREventTarget *target = nsXHREventTarget::FromSupports(nativeObj);
+
+  nsCOMPtr<nsIScriptGlobalObject> native_parent;
+  target->GetParentObject(getter_AddRefs(native_parent));
+
+  *parentObj = native_parent ? native_parent->GetGlobalJSObject() : globalObj;
+
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsEventTargetSH::PostCreate(nsIXPConnectWrappedNative *wrapper, JSContext *cx,
+                            JSObject *obj)
+{
+  nsXHREventTarget *target = nsXHREventTarget::FromSupports(wrapper->Native());
+  target->SetWrapper(wrapper);
+
+  return nsDOMGenericSH::PostCreate(wrapper, cx, obj);
+}
+
+NS_IMETHODIMP
 nsEventTargetSH::NewResolve(nsIXPConnectWrappedNative *wrapper,
                             JSContext *cx, JSObject *obj, jsval id,
                             PRUint32 flags, JSObject **objp, PRBool *_retval)
@@ -7358,25 +7409,23 @@ nsEventTargetSH::AddProperty(nsIXPConnectWrappedNative *wrapper, JSContext *cx,
   if (id == sAddEventListener_id) {
     return NS_OK;
   }
-  nsISupports* native = wrapper->Native();
-  nsCOMPtr<nsPIDOMEventTarget> target = do_QueryInterface(native);
-  if (target) {
-    nsCOMPtr<nsIScriptContext> scriptContext;
-    target->GetContextForEventHandlers(getter_AddRefs(scriptContext));
-    if (scriptContext) {
-      nsCOMPtr<nsPIDOMWindow> window =
-        do_QueryInterface(scriptContext->GetGlobalObject());
-      if (window) {
-        nsCOMPtr<nsIDocument> doc =
-          do_QueryInterface(window->GetExtantDocument());
-        if (doc) {
-          doc->AddReference(native, wrapper);
-        }
-      }
-    }
-  }
+
+  nsXHREventTarget *target = nsXHREventTarget::FromSupports(wrapper->Native());
+  target->PreserveWrapper();
+
   return NS_OK;
 }
+
+NS_IMETHODIMP
+nsEventTargetSH::Finalize(nsIXPConnectWrappedNative *wrapper, JSContext *cx,
+                          JSObject *obj)
+{
+  nsXHREventTarget *target = nsXHREventTarget::FromSupports(wrapper->Native());
+  target->ClearWrapper();
+
+  return NS_OK;
+}
+
 
 // Element helper
 
@@ -7651,6 +7700,49 @@ nsArraySH::GetProperty(nsIXPConnectWrappedNative *wrapper, JSContext *cx,
 // NodeList scriptable helper
 
 nsresult
+nsNodeListSH::PreCreate(nsISupports *nativeObj, JSContext *cx,
+                        JSObject *globalObj, JSObject **parentObj)
+{
+  nsWrapperCache* cache;
+  CallQueryInterface(nativeObj, &cache);
+  if (!cache) {
+    *parentObj = globalObj;
+    return NS_OK;
+  }
+
+  // nsChildContentList is the only class that uses nsNodeListSH and has a
+  // cached wrapper.
+  nsChildContentList *list = nsChildContentList::FromSupports(nativeObj);
+  nsISupports *native_parent = list->GetParentObject();
+  if (!native_parent) {
+    return NS_ERROR_FAILURE;
+  }
+
+  jsval v;
+  nsCOMPtr<nsIXPConnectJSObjectHolder> holder;
+  nsresult rv = WrapNative(cx, globalObj, native_parent,
+                           NS_GET_IID(nsISupports), &v,
+                           getter_AddRefs(holder));
+
+  *parentObj = JSVAL_TO_OBJECT(v);
+
+  return rv;
+}
+
+NS_IMETHODIMP
+nsNodeListSH::PostCreate(nsIXPConnectWrappedNative *wrapper, JSContext *cx,
+                         JSObject *obj)
+{
+  nsWrapperCache* cache;
+  CallQueryInterface(wrapper->Native(), &cache);
+  if (cache) {
+    cache->SetWrapper(wrapper);
+  }
+
+  return nsArraySH::PostCreate(wrapper, cx, obj);
+}
+
+nsresult
 nsNodeListSH::GetLength(nsIXPConnectWrappedNative *wrapper, JSContext *cx,
                         JSObject *obj, PRUint32 *length)
 {
@@ -7686,6 +7778,19 @@ nsNodeListSH::GetItemAt(nsISupports *aNative, PRUint32 aIndex,
 #endif
 
   return list->GetNodeAt(aIndex);
+}
+
+NS_IMETHODIMP
+nsNodeListSH::Finalize(nsIXPConnectWrappedNative *wrapper, JSContext *cx,
+                       JSObject *obj)
+{
+  nsWrapperCache* cache;
+  CallQueryInterface(wrapper->Native(), &cache);
+  if (cache) {
+    cache->ClearWrapper();
+  }
+
+  return NS_OK;
 }
 
 
@@ -7825,8 +7930,7 @@ nsContentListSH::PreCreate(nsISupports *nativeObj, JSContext *cx,
   nsISupports *native_parent = contentList->GetParentObject();
 
   if (!native_parent) {
-    *parentObj = globalObj;
-    return NS_OK;
+    return NS_ERROR_FAILURE;
   }
 
   jsval v;
@@ -7838,6 +7942,16 @@ nsContentListSH::PreCreate(nsISupports *nativeObj, JSContext *cx,
   *parentObj = JSVAL_TO_OBJECT(v);
 
   return rv;
+}
+
+NS_IMETHODIMP
+nsContentListSH::PostCreate(nsIXPConnectWrappedNative *wrapper, JSContext *cx,
+                            JSObject *obj)
+{
+  nsContentList *list = nsContentList::FromSupports(wrapper->Native());
+  list->SetWrapper(wrapper);
+
+  return nsNamedArraySH::PostCreate(wrapper, cx, obj);
 }
 
 nsresult
@@ -7867,6 +7981,15 @@ nsContentListSH::GetNamedItem(nsISupports *aNative, const nsAString& aName,
   return list->GetNamedItem(aName, aResult);
 }
 
+NS_IMETHODIMP
+nsContentListSH::Finalize(nsIXPConnectWrappedNative *wrapper, JSContext *cx,
+                          JSObject *obj)
+{
+  nsContentList *list = nsContentList::FromSupports(wrapper->Native());
+  list->ClearWrapper();
+
+  return NS_OK;
+}
 
 // Document helper for document.location and document.on*
 
@@ -8091,7 +8214,7 @@ nsDocumentSH::Finalize(nsIXPConnectWrappedNative *wrapper, JSContext *cx,
 
   doc->SetJSObject(nsnull);
 
-  return NS_OK;
+  return nsNodeSH::Finalize(wrapper, cx, obj);
 }
 
 // HTMLDocument helper

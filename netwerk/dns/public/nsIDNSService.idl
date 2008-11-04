@@ -46,7 +46,7 @@ interface nsIDNSListener;
 /**
  * nsIDNSService
  */
-[scriptable, uuid(3ac9e611-e6b6-44b5-b312-c040e65b2929)]
+[scriptable, uuid(ee4d9f1d-4f99-4384-b547-29da735f8b6e)]
 interface nsIDNSService : nsISupports
 {
     /**
@@ -107,4 +107,11 @@ interface nsIDNSService : nsISupports
      * if set, the canonical name of the specified host will be queried.
      */
     const unsigned long RESOLVE_CANONICAL_NAME = (1 << 1);
+
+    /**
+     * if set, the query is given lower priority. Medium takes precedence
+     * if both are used.
+     */
+    const unsigned long RESOLVE_PRIORITY_MEDIUM = (1 << 2);
+    const unsigned long RESOLVE_PRIORITY_LOW    = (1 << 3);
 };

@@ -101,6 +101,8 @@
 #include "nsIDocumentLoader.h"
 #include "nsICachingChannel.h"
 #include "nsICacheEntryDescriptor.h"
+#include "nsGenericHTMLElement.h"
+#include "nsHTMLDNSPrefetch.h"
 
 PRLogModuleInfo* gContentSinkLogModuleInfo;
 
@@ -721,6 +723,10 @@ nsContentSink::ProcessLink(nsIContent* aElement,
     PrefetchHref(aHref, aElement, hasPrefetch);
   }
 
+  if ((!aHref.IsEmpty()) && linkTypes.IndexOf(NS_LITERAL_STRING("dns-prefetch")) != -1) {
+    PrefetchDNS(aHref);
+  }
+
   // is it a stylesheet link?
   if (linkTypes.IndexOf(NS_LITERAL_STRING("stylesheet")) == -1) {
     return NS_OK;
@@ -849,6 +855,23 @@ nsContentSink::PrefetchHref(const nsAString &aHref,
       nsCOMPtr<nsIDOMNode> domNode = do_QueryInterface(aSource);
       prefetchService->PrefetchURI(uri, mDocumentURI, domNode, aExplicit);
     }
+  }
+}
+
+void
+nsContentSink::PrefetchDNS(const nsAString &aHref)
+{
+  nsAutoString hostname;
+
+  if (StringBeginsWith(aHref, NS_LITERAL_STRING("//")))  {
+    hostname = Substring(aHref, 2);
+  }
+  else
+    nsGenericHTMLElement::GetHostnameFromHrefString(aHref, hostname);
+      
+  nsRefPtr<nsHTMLDNSPrefetch> prefetch = new nsHTMLDNSPrefetch(hostname, mDocument);
+  if (prefetch) {
+    prefetch->PrefetchLow();
   }
 }
 
