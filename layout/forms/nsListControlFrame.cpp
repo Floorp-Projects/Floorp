@@ -2324,7 +2324,7 @@ nsListControlFrame::ScrollToFrame(nsIContent* aOptElement)
   if (scrollableView) {
     // if null is passed in we scroll to 0,0
     if (nsnull == aOptElement) {
-      scrollableView->ScrollTo(0, 0, PR_TRUE);
+      scrollableView->ScrollTo(0, 0, 0);
       return NS_OK;
     }
   
@@ -2382,7 +2382,7 @@ nsListControlFrame::ScrollToFrame(nsIContent* aOptElement)
           } else {
             y = fRect.y;
           }
-          scrollableView->ScrollTo(pnt.x, y, PR_TRUE);
+          scrollableView->ScrollTo(pnt.x, y, 0);
         }
 
       }

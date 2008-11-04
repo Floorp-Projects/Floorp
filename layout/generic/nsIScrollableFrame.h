@@ -99,10 +99,10 @@ public:
    * legal. Updates the display based on aUpdateFlags.
    * @param aX left edge to scroll to
    * @param aY top edge to scroll to
-   * @param aUpdateFlags passed onto nsIViewManager->UpdateView()
+   * @param aUpdateFlags indicate smooth or async scrolling
    * @return error status
    */
-  virtual void ScrollTo(nsPoint aScrollPosition, PRUint32 aFlags = NS_VMREFRESH_NO_SYNC)=0;
+  virtual void ScrollTo(nsPoint aScrollPosition, PRUint32 aFlags = 0)=0;
 
   virtual nsIScrollableView* GetScrollableView() = 0;
 

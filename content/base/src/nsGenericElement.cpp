@@ -1103,7 +1103,7 @@ nsNSElementTearoff::SetScrollTop(PRInt32 aScrollTop)
 
     if (NS_SUCCEEDED(rv)) {
       rv = view->ScrollTo(xPos, nsPresContext::CSSPixelsToAppUnits(aScrollTop),
-                          NS_VMREFRESH_IMMEDIATE);
+                          0);
     }
   }
 
@@ -1145,7 +1145,7 @@ nsNSElementTearoff::SetScrollLeft(PRInt32 aScrollLeft)
 
     if (NS_SUCCEEDED(rv)) {
       rv = view->ScrollTo(nsPresContext::CSSPixelsToAppUnits(aScrollLeft),
-                          yPos, NS_VMREFRESH_IMMEDIATE);
+                          yPos, 0);
     }
   }
 
