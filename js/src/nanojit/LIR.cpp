@@ -1204,6 +1204,11 @@ namespace nanojit
         WB(gc, this, &m_list, list);
 	}
 
+    LInsHashSet::~LInsHashSet()
+    {
+        m_gc->Free(m_list);
+    }
+
     void LInsHashSet::clear() {
         memset(m_list, 0, sizeof(LInsp)*m_cap);
         m_used = 0;
