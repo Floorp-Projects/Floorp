@@ -12,7 +12,7 @@
  * for the specific language governing rights and limitations under the
  * License.
  *
- * The Original Code is worker threads.
+ * The Original Code is Web Workers.
  *
  * The Initial Developer of the Original Code is
  *   Mozilla Corporation.
@@ -20,8 +20,7 @@
  * the Initial Developer. All Rights Reserved.
  *
  * Contributor(s):
- *   Vladimir Vukicevic <vladimir@pobox.com> (Original Author)
- *   Ben Turner <bent.mozilla@gmail.com>
+ *   Ben Turner <bent.mozilla@gmail.com> (Original Author)
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -37,28 +36,10 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-#ifndef __NSDOMWORKERTHREAD_H__
-#define __NSDOMWORKERTHREAD_H__
+#ifndef __NSDOMWORKERMACROS_H__
+#define __NSDOMWORKERMACROS_H__
 
-// Bases
-#include "nsDOMWorkerBase.h"
-#include "nsIClassInfo.h"
-#include "nsIDOMThreads.h"
-
-// Other includes
-#include "jsapi.h"
-#include "nsAutoJSObjectHolder.h"
-#include "nsCOMPtr.h"
-#include "nsStringGlue.h"
-#include "nsTArray.h"
-#include "nsThreadUtils.h"
-#include "prclist.h"
-#include "prlock.h"
-
-// DOMWorker includes
-#include "nsDOMThreadService.h"
-
-// Macro to generate nsIClassInfo methods for these threadsafe DOM classes 
+// Macro to generate nsIClassInfo methods for these threadsafe DOM classes
 #define NS_IMPL_THREADSAFE_DOM_CI_GETINTERFACES(_class)                       \
 NS_IMETHODIMP                                                                 \
 _class::GetInterfaces(PRUint32* _count, nsIID*** _array)                      \
@@ -66,14 +47,15 @@ _class::GetInterfaces(PRUint32* _count, nsIID*** _array)                      \
   return NS_CI_INTERFACE_GETTER_NAME(_class)(_count, _array);                 \
 }                                                                             \
 
-#define NS_IMPL_THREADSAFE_DOM_CI_ALL_THE_REST(_class)                        \
+#define NS_IMPL_THREADSAFE_DOM_CI_HELPER(_class)                              \
 NS_IMETHODIMP                                                                 \
 _class::GetHelperForLanguage(PRUint32 _language, nsISupports** _retval)       \
 {                                                                             \
   *_retval = nsnull;                                                          \
   return NS_OK;                                                               \
-}                                                                             \
-                                                                              \
+}
+
+#define NS_IMPL_THREADSAFE_DOM_CI_ALL_THE_REST(_class)                        \
 NS_IMETHODIMP                                                                 \
 _class::GetContractID(char** _contractID)                                     \
 {                                                                             \
@@ -117,96 +99,52 @@ _class::GetClassIDNoAlloc(nsCID* _classIDNoAlloc)                             \
 
 #define NS_IMPL_THREADSAFE_DOM_CI(_class)                                     \
 NS_IMPL_THREADSAFE_DOM_CI_GETINTERFACES(_class)                               \
+NS_IMPL_THREADSAFE_DOM_CI_HELPER(_class)                                      \
 NS_IMPL_THREADSAFE_DOM_CI_ALL_THE_REST(_class)
 
-class nsDOMWorkerPool;
-class nsDOMWorkerScriptLoader;
-class nsDOMWorkerTimeout;
-class nsDOMWorkerXHR;
+#define NS_FORWARD_NSICLASSINFO_NOGETINTERFACES(_to)                          \
+  NS_IMETHOD GetHelperForLanguage(PRUint32 aLanguage, nsISupports** _retval)  \
+    { return _to GetHelperForLanguage(aLanguage, _retval); }                  \
+  NS_IMETHOD GetContractID(char** aContractID)                                \
+    { return _to GetContractID(aContractID); }                                \
+  NS_IMETHOD GetClassDescription(char** aClassDescription)                    \
+    { return _to GetClassDescription(aClassDescription); }                    \
+  NS_IMETHOD GetClassID(nsCID** aClassID)                                     \
+    { return _to GetClassID(aClassID); }                                      \
+  NS_IMETHOD GetImplementationLanguage(PRUint32* aImplementationLanguage)     \
+    { return _to GetImplementationLanguage(aImplementationLanguage); }        \
+  NS_IMETHOD GetFlags(PRUint32* aFlags)                                       \
+    { return _to GetFlags(aFlags); }                                          \
+  NS_IMETHOD GetClassIDNoAlloc(nsCID* aClassIDNoAlloc)                        \
+    { return _to GetClassIDNoAlloc(aClassIDNoAlloc); }
 
-class nsDOMWorkerThread : public nsDOMWorkerBase,
-                          public nsIDOMWorkerThread,
-                          public nsIClassInfo
-{
-  friend class nsDOMCreateJSContextRunnable;
-  friend class nsDOMWorkerFunctions;
-  friend class nsDOMWorkerPool;
-  friend class nsDOMWorkerRunnable;
-  friend class nsDOMWorkerScriptLoader;
-  friend class nsDOMWorkerTimeout;
-  friend class nsDOMWorkerXHR;
+#define NS_DECL_NSICLASSINFO_GETINTERFACES                                    \
+  NS_IMETHOD GetInterfaces(PRUint32* aCount, nsIID*** aArray);
 
-  friend JSBool DOMWorkerOperationCallback(JSContext* aCx);
+#define NS_FORWARD_NSIDOMEVENT_SPECIAL                                        \
+  NS_IMETHOD GetType(nsAString& aType)                                        \
+    { return mEvent->GetType(aType); }                                        \
+  NS_IMETHOD GetTarget(nsIDOMEventTarget** aTarget)                           \
+    { return mEvent->GetTarget(aTarget); }                                    \
+  NS_IMETHOD GetCurrentTarget(nsIDOMEventTarget** aCurrentTarget)             \
+    { return mEvent->GetCurrentTarget(aCurrentTarget); }                      \
+  NS_IMETHOD GetEventPhase(PRUint16* aEventPhase)                             \
+    { return mEvent->GetEventPhase(aEventPhase); }                            \
+  NS_IMETHOD GetBubbles(PRBool* aBubbles)                                     \
+    { return mEvent->GetBubbles(aBubbles); }                                  \
+  NS_IMETHOD GetCancelable(PRBool* aCancelable)                               \
+    { return mEvent->GetCancelable(aCancelable); }                            \
+  NS_IMETHOD GetTimeStamp(DOMTimeStamp* aTimeStamp)                           \
+    { return mEvent->GetTimeStamp(aTimeStamp); }                              \
+  NS_IMETHOD StopPropagation()                                                \
+    { return mEvent->StopPropagation(); }
 
-public:
-  NS_DECL_ISUPPORTS
-  NS_DECL_NSIDOMWORKERTHREAD
-  NS_DECL_NSICLASSINFO
+// Don't know why nsISupports.idl defines this out...
+#define NS_FORWARD_NSISUPPORTS(_to)                                           \
+  NS_IMETHOD QueryInterface(const nsIID& uuid, void** result) {               \
+    return _to QueryInterface(uuid, result);                                  \
+  }                                                                           \
+  NS_IMETHOD_(nsrefcnt) AddRef(void) { return _to AddRef(); }                 \
+  NS_IMETHOD_(nsrefcnt) Release(void) { return _to Release(); }
 
-  nsDOMWorkerThread(nsDOMWorkerPool* aPool,
-                    const nsAString& aSource,
-                    PRBool aSourceIsURL);
-
-  virtual nsDOMWorkerPool* Pool() {
-    NS_ASSERTION(!IsCanceled(), "Don't touch Pool after we've been canceled!");
-    return mPool;
-  }
-
-private:
-  virtual ~nsDOMWorkerThread();
-
-  nsresult Init();
-
-  // For nsDOMWorkerBase
-  virtual nsresult HandleMessage(const nsAString& aMessage,
-                                 nsDOMWorkerBase* aSourceThread);
-
-  // For nsDOMWorkerBase
-  virtual nsresult DispatchMessage(nsIRunnable* aRunnable);
-
-  virtual void Cancel();
-  virtual void Suspend();
-  virtual void Resume();
-
-  PRBool SetGlobalForContext(JSContext* aCx);
-  PRBool CompileGlobalObject(JSContext* aCx);
-
-  inline nsDOMWorkerTimeout* FirstTimeout();
-  inline nsDOMWorkerTimeout* NextTimeout(nsDOMWorkerTimeout* aTimeout);
-
-  PRBool AddTimeout(nsDOMWorkerTimeout* aTimeout);
-  void RemoveTimeout(nsDOMWorkerTimeout* aTimeout);
-  void ClearTimeouts();
-  void CancelTimeout(PRUint32 aId);
-  void SuspendTimeouts();
-  void ResumeTimeouts();
-
-  void CancelScriptLoaders();
-
-  PRBool AddXHR(nsDOMWorkerXHR* aXHR);
-  void RemoveXHR(nsDOMWorkerXHR* aXHR);
-  void CancelXHRs();
-
-  PRLock* Lock() {
-    return mLock;
-  }
-
-  nsDOMWorkerPool* mPool;
-  nsString mSource;
-  nsString mSourceURL;
-
-  nsAutoJSObjectHolder mGlobal;
-  PRBool mCompiled;
-
-  PRUint32 mCallbackCount;
-
-  PRUint32 mNextTimeoutId;
-
-  PRLock* mLock;
-  PRCList mTimeouts;
-
-  nsTArray<nsDOMWorkerScriptLoader*> mScriptLoaders;
-  nsTArray<nsDOMWorkerXHR*> mXHRs;
-};
-
-#endif /* __NSDOMWORKERTHREAD_H__ */
+#endif /* __NSDOMWORKERMACROS_H__ */
