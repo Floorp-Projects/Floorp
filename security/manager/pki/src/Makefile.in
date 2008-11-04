@@ -54,8 +54,6 @@ META_COMPONENT	= crypto
 GRE_MODULE	= 1
 LIBXUL_LIBRARY	= 1
 
-PACKAGE_FILE = pippki.pkg
-
 CPPSRCS = \
 	nsNSSDialogs.cpp \
 	nsPKIModule.cpp \

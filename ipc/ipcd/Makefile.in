@@ -45,8 +45,6 @@ include $(DEPTH)/config/autoconf.mk
 
 MODULE		= ipcd
 
-PACKAGE_FILE = ipc.pkg
-
 DIRS		= \
 			util \
 			shared/src \
