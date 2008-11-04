@@ -403,24 +403,30 @@ namespace nanojit
 		debug_only( a.managed = a.free; )
 	}
 
-	void Assembler::nPatchBranch(NIns* branch, NIns* location)
+	NIns* Assembler::nPatchBranch(NIns* branch, NIns* targ)
 	{
 #if defined NANOJIT_IA32
-		intptr_t offset = intptr_t(location) - intptr_t(branch);
-		if (branch[0] == JMPc)
-			*(uint32_t*)&branch[1] = offset - 5;
-		else
-			*(uint32_t*)&branch[2] = offset - 6;
+        NIns* was = 0;
+		intptr_t offset = intptr_t(targ) - intptr_t(branch);
+		if (branch[0] == JMP32) {
+            was = branch + *(int32_t*)&branch[1] + 5;
+		    *(int32_t*)&branch[1] = offset - 5;
+		} else if (branch[0] == JCC32) {
+            was = branch + *(int32_t*)&branch[2] + 6;
+		    *(int32_t*)&branch[2] = offset - 6;
+		} else
+		    NanoAssertMsg(0, "Unknown branch type in nPatchBranch");
 #else
         if (branch[0] == 0xFF && branch[1] == 0x25) {
             NIns *mem;
-
             mem = &branch[6] + *(int32_t *)&branch[2];
-            *(intptr_t *)mem = intptr_t(location);
+            was = *(intptr_t*)mem;
+            *(intptr_t *)mem = intptr_t(targ);
         } else {
             NanoAssertMsg(0, "Unknown branch type in nPatchBranch");
         }
 #endif
+        return was;
 	}
 
 	RegisterMask Assembler::hint(LIns* i, RegisterMask allow)
@@ -819,7 +825,7 @@ namespace nanojit
 #endif
     }
 
-	NIns* Assembler::asm_branch(bool branchOnFalse, LInsp cond, NIns* targ)
+	NIns* Assembler::asm_branch(bool branchOnFalse, LInsp cond, NIns* targ, bool far)
 	{
 		NIns* at = 0;
 		LOpcode condop = cond->opcode();
@@ -834,52 +840,52 @@ namespace nanojit
 		if (branchOnFalse)
 		{
 			if (condop == LIR_eq)
-				JNE(targ);
+				JNE(targ, far);
 			else if (condop == LIR_ov)
-				JNO(targ);
+				JNO(targ, far);
 			else if (condop == LIR_cs)
-				JNC(targ);
+				JNC(targ, far);
 			else if (condop == LIR_lt)
-				JNL(targ);
+				JNL(targ, far);
 			else if (condop == LIR_le)
-				JNLE(targ);
+				JNLE(targ, far);
 			else if (condop == LIR_gt)
-				JNG(targ);
+				JNG(targ, far);
 			else if (condop == LIR_ge)
-				JNGE(targ);
+				JNGE(targ, far);
 			else if (condop == LIR_ult)
-				JNB(targ);
+				JNB(targ, far);
 			else if (condop == LIR_ule)
-				JNBE(targ);
+				JNBE(targ, far);
 			else if (condop == LIR_ugt)
-				JNA(targ);
+				JNA(targ, far);
 			else //if (condop == LIR_uge)
-				JNAE(targ);
+				JNAE(targ, far);
 		}
 		else // op == LIR_xt
 		{
 			if (condop == LIR_eq)
-				JE(targ);
+				JE(targ, far);
 			else if (condop == LIR_ov)
-				JO(targ);
+				JO(targ, far);
 			else if (condop == LIR_cs)
-				JC(targ);
+				JC(targ, far);
 			else if (condop == LIR_lt)
-				JL(targ);
+				JL(targ, far);
 			else if (condop == LIR_le)
-				JLE(targ);
+				JLE(targ, far);
 			else if (condop == LIR_gt)
-				JG(targ);
+				JG(targ, far);
 			else if (condop == LIR_ge)
-				JGE(targ);
+				JGE(targ, far);
 			else if (condop == LIR_ult)
-				JB(targ);
+				JB(targ, far);
 			else if (condop == LIR_ule)
-				JBE(targ);
+				JBE(targ, far);
 			else if (condop == LIR_ugt)
-				JA(targ);
+				JA(targ, far);
 			else //if (condop == LIR_uge)
-				JAE(targ);
+				JAE(targ, far);
 		}
 		at = _nIns;
 		asm_cmp(cond);
@@ -1786,10 +1792,10 @@ namespace nanojit
             }
 
             if (c == LIR_fgt) {
-                if (branchOnFalse) { JNA(targ); } else { JA(targ); }
+                if (branchOnFalse) { JNA(targ, false); } else { JA(targ, false); }
             }
             else { // if (c == LIR_fge)
-                if (branchOnFalse) { JNAE(targ); } else { JAE(targ); }
+                if (branchOnFalse) { JNAE(targ, false); } else { JAE(targ, false); }
             }
             NIns *at = _nIns;
             Reservation *rA, *rB;
@@ -1799,9 +1805,9 @@ namespace nanojit
         }
 
     	if (branchOnFalse)
-			JP(targ);
+			JP(targ, false);
 		else
-			JNP(targ);
+			JNP(targ, false);
 		NIns *at = _nIns;
 		asm_fcmp(cond);
         return at;
@@ -1928,24 +1934,6 @@ namespace nanojit
 		    }
         }
 #endif
-	}
-	
-	NIns* Assembler::asm_adjustBranch(NIns* at, NIns* target)
-	{
-        NIns* was;
-#if defined NANOJIT_AMD64
-		was = (NIns*)( *(intptr_t*)(at) );
-        *(intptr_t *)(at) = intptr_t(target);
-#else
-		NIns* save = _nIns;
-		was = (NIns*)( (intptr_t)*(int32_t*)(at+1)+(intptr_t)(at+5) );
-		_nIns = at +5; // +5 is size of JMP
-		intptr_t tt = (intptr_t)target - (intptr_t)_nIns;
-		IMM32(tt);
-		*(--_nIns) = JMPc;
-        _nIns = save;
-#endif
-		return was;
 	}
 	
 	void Assembler::nativePageReset()
