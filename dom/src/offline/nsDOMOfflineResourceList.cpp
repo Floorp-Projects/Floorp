@@ -39,6 +39,7 @@
 #include "nsDOMOfflineResourceList.h"
 #include "nsDOMClassInfo.h"
 #include "nsDOMError.h"
+#include "nsDOMLists.h"
 #include "nsIPrefetchService.h"
 #include "nsCPrefetchService.h"
 #include "nsNetUtil.h"
@@ -259,6 +260,68 @@ nsDOMOfflineResourceList::Disconnect()
 //
 // nsDOMOfflineResourceList::nsIDOMOfflineResourceList
 //
+
+NS_IMETHODIMP
+nsDOMOfflineResourceList::GetItems(nsIDOMDOMStringList **aItems)
+{
+  *aItems = nsnull;
+
+  nsRefPtr<nsDOMStringList> items = new nsDOMStringList();
+  NS_ENSURE_TRUE(items, NS_ERROR_OUT_OF_MEMORY);
+
+  // If we are not associated with an application cache, return an
+  // empty list.
+  nsCOMPtr<nsIApplicationCache> appCache = GetDocumentAppCache();
+  if (!appCache) {
+    NS_ADDREF(*aItems = items);
+    return NS_OK;
+  }
+
+  nsresult rv = Init();
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  PRUint32 length;
+  char **keys;
+  rv = appCache->GatherEntries(nsIApplicationCache::ITEM_DYNAMIC,
+                               &length, &keys);
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  for (PRUint32 i = 0; i < length; i++) {
+    items->Add(NS_ConvertUTF8toUTF16(keys[i]));
+  }
+
+  NS_FREE_XPCOM_ALLOCATED_POINTER_ARRAY(length, keys);
+
+  NS_ADDREF(*aItems = items);
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsDOMOfflineResourceList::HasItem(const nsAString& aURI, PRBool* aExists)
+{
+  nsresult rv = Init();
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  nsCOMPtr<nsIApplicationCache> appCache = GetDocumentAppCache();
+  if (!appCache) {
+    return NS_ERROR_DOM_INVALID_STATE_ERR;
+  }
+
+  nsCAutoString key;
+  rv = GetCacheKey(aURI, key);
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  PRUint32 types;
+  rv = appCache->GetTypes(key, &types);
+  if (rv == NS_ERROR_CACHE_KEY_NOT_FOUND) {
+    *aExists = PR_FALSE;
+    return NS_OK;
+  }
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  *aExists = ((types & nsIApplicationCache::ITEM_DYNAMIC) != 0);
+  return NS_OK;
+}
 
 NS_IMETHODIMP
 nsDOMOfflineResourceList::GetLength(PRUint32 *aLength)
