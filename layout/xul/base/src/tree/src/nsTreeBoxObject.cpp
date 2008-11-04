@@ -106,7 +106,7 @@ static void FindBodyElement(nsIContent* aParent, nsIContent** aResult)
   }
 }
 
-nsITreeBoxObject*
+nsTreeBodyFrame*
 nsTreeBoxObject::GetTreeBody()
 {
   if (mTreeBody) {
@@ -130,16 +130,12 @@ nsTreeBoxObject::GetTreeBody()
   if (!frame)
      return nsnull;
 
-  // It's a frame. Refcounts are irrelevant.
-  // Make sure that the treebodyframe, which implements nsITreeBoxObject,
-  // has a pointer to |this|.
-  nsITreeBoxObject* innerTreeBoxObject = nsnull;
-  CallQueryInterface(frame, &innerTreeBoxObject);
-  NS_ENSURE_TRUE(innerTreeBoxObject &&
-    static_cast<nsTreeBodyFrame*>(innerTreeBoxObject)->GetTreeBoxObject() ==
-    static_cast<nsITreeBoxObject*>(this), nsnull);
+  // Make sure that the treebodyframe has a pointer to |this|.
+  nsTreeBodyFrame *treeBody = nsnull;
+  CallQueryInterface(frame, &treeBody);
+  NS_ENSURE_TRUE(treeBody && treeBody->GetTreeBoxObject() == this, nsnull);
 
-  mTreeBody = innerTreeBoxObject;
+  mTreeBody = treeBody;
   return mTreeBody;
 }
 
@@ -198,7 +194,7 @@ NS_IMETHODIMP nsTreeBoxObject::SetView(nsITreeView * aView)
     return NS_ERROR_DOM_SECURITY_ERR;
   
   mView = aView;
-  nsITreeBoxObject* body = GetTreeBody();
+  nsTreeBodyFrame* body = GetTreeBody();
   if (body)
     body->SetView(aView);
 
@@ -208,7 +204,7 @@ NS_IMETHODIMP nsTreeBoxObject::SetView(nsITreeView * aView)
 NS_IMETHODIMP nsTreeBoxObject::GetFocused(PRBool* aFocused)
 {
   *aFocused = PR_FALSE;
-  nsITreeBoxObject* body = GetTreeBody();
+  nsTreeBodyFrame* body = GetTreeBody();
   if (body)
     return body->GetFocused(aFocused);
   return NS_OK;
@@ -216,7 +212,7 @@ NS_IMETHODIMP nsTreeBoxObject::GetFocused(PRBool* aFocused)
 
 NS_IMETHODIMP nsTreeBoxObject::SetFocused(PRBool aFocused)
 {
-  nsITreeBoxObject* body = GetTreeBody();
+  nsTreeBodyFrame* body = GetTreeBody();
   if (body)
     return body->SetFocused(aFocused);
   return NS_OK;
@@ -225,7 +221,7 @@ NS_IMETHODIMP nsTreeBoxObject::SetFocused(PRBool aFocused)
 NS_IMETHODIMP nsTreeBoxObject::GetTreeBody(nsIDOMElement** aElement)
 {
   *aElement = nsnull;
-  nsITreeBoxObject* body = GetTreeBody();
+  nsTreeBodyFrame* body = GetTreeBody();
   if (body) 
     return body->GetTreeBody(aElement);
   return NS_OK;
@@ -234,7 +230,7 @@ NS_IMETHODIMP nsTreeBoxObject::GetTreeBody(nsIDOMElement** aElement)
 NS_IMETHODIMP nsTreeBoxObject::GetColumns(nsITreeColumns** aColumns)
 {
   *aColumns = nsnull;
-  nsITreeBoxObject* body = GetTreeBody();
+  nsTreeBodyFrame* body = GetTreeBody();
   if (body) 
     return body->GetColumns(aColumns);
   return NS_OK;
@@ -243,7 +239,7 @@ NS_IMETHODIMP nsTreeBoxObject::GetColumns(nsITreeColumns** aColumns)
 NS_IMETHODIMP nsTreeBoxObject::GetRowHeight(PRInt32* aRowHeight)
 {
   *aRowHeight = 0;
-  nsITreeBoxObject* body = GetTreeBody();
+  nsTreeBodyFrame* body = GetTreeBody();
   if (body) 
     return body->GetRowHeight(aRowHeight);
   return NS_OK;
@@ -252,7 +248,7 @@ NS_IMETHODIMP nsTreeBoxObject::GetRowHeight(PRInt32* aRowHeight)
 NS_IMETHODIMP nsTreeBoxObject::GetRowWidth(PRInt32 *aRowWidth)
 {
   *aRowWidth = 0;
-  nsITreeBoxObject* body = GetTreeBody();
+  nsTreeBodyFrame* body = GetTreeBody();
   if (body) 
     return body->GetRowWidth(aRowWidth);
   return NS_OK;
@@ -261,7 +257,7 @@ NS_IMETHODIMP nsTreeBoxObject::GetRowWidth(PRInt32 *aRowWidth)
 NS_IMETHODIMP nsTreeBoxObject::GetFirstVisibleRow(PRInt32 *aFirstVisibleRow)
 {
   *aFirstVisibleRow = 0;
-  nsITreeBoxObject* body = GetTreeBody();
+  nsTreeBodyFrame* body = GetTreeBody();
   if (body)
     return body->GetFirstVisibleRow(aFirstVisibleRow);
   return NS_OK;
@@ -270,7 +266,7 @@ NS_IMETHODIMP nsTreeBoxObject::GetFirstVisibleRow(PRInt32 *aFirstVisibleRow)
 NS_IMETHODIMP nsTreeBoxObject::GetLastVisibleRow(PRInt32 *aLastVisibleRow)
 {
   *aLastVisibleRow = 0;
-  nsITreeBoxObject* body = GetTreeBody();
+  nsTreeBodyFrame* body = GetTreeBody();
   if (body)
     return body->GetLastVisibleRow(aLastVisibleRow);
   return NS_OK;
@@ -279,7 +275,7 @@ NS_IMETHODIMP nsTreeBoxObject::GetLastVisibleRow(PRInt32 *aLastVisibleRow)
 NS_IMETHODIMP nsTreeBoxObject::GetHorizontalPosition(PRInt32 *aHorizontalPosition)
 {
   *aHorizontalPosition = 0;
-  nsITreeBoxObject* body = GetTreeBody();
+  nsTreeBodyFrame* body = GetTreeBody();
   if (body)
     return body->GetHorizontalPosition(aHorizontalPosition);
   return NS_OK;
@@ -288,7 +284,7 @@ NS_IMETHODIMP nsTreeBoxObject::GetHorizontalPosition(PRInt32 *aHorizontalPositio
 NS_IMETHODIMP nsTreeBoxObject::GetPageLength(PRInt32 *aPageLength)
 {
   *aPageLength = 0;
-  nsITreeBoxObject* body = GetTreeBody();
+  nsTreeBodyFrame* body = GetTreeBody();
   if (body)
     return body->GetPageLength(aPageLength);
   return NS_OK;
@@ -297,7 +293,7 @@ NS_IMETHODIMP nsTreeBoxObject::GetPageLength(PRInt32 *aPageLength)
 NS_IMETHODIMP nsTreeBoxObject::GetSelectionRegion(nsIScriptableRegion **aRegion)
 {
  *aRegion = nsnull;
-  nsITreeBoxObject* body = GetTreeBody();
+  nsTreeBodyFrame* body = GetTreeBody();
   if (body)
     return body->GetSelectionRegion(aRegion);
   return NS_OK;
@@ -306,7 +302,7 @@ NS_IMETHODIMP nsTreeBoxObject::GetSelectionRegion(nsIScriptableRegion **aRegion)
 NS_IMETHODIMP
 nsTreeBoxObject::EnsureRowIsVisible(PRInt32 aRow)
 {
-  nsITreeBoxObject* body = GetTreeBody();
+  nsTreeBodyFrame* body = GetTreeBody();
   if (body)
     return body->EnsureRowIsVisible(aRow);
   return NS_OK;
@@ -315,7 +311,7 @@ nsTreeBoxObject::EnsureRowIsVisible(PRInt32 aRow)
 NS_IMETHODIMP 
 nsTreeBoxObject::EnsureCellIsVisible(PRInt32 aRow, nsITreeColumn* aCol)
 {
-  nsITreeBoxObject* body = GetTreeBody();
+  nsTreeBodyFrame* body = GetTreeBody();
   if (body)
     return body->EnsureCellIsVisible(aRow, aCol);
   return NS_OK;
@@ -325,7 +321,7 @@ nsTreeBoxObject::EnsureCellIsVisible(PRInt32 aRow, nsITreeColumn* aCol)
 NS_IMETHODIMP
 nsTreeBoxObject::ScrollToRow(PRInt32 aRow)
 {
-  nsITreeBoxObject* body = GetTreeBody();
+  nsTreeBodyFrame* body = GetTreeBody();
   if (body)
     return body->ScrollToRow(aRow);
   return NS_OK;
@@ -334,7 +330,7 @@ nsTreeBoxObject::ScrollToRow(PRInt32 aRow)
 NS_IMETHODIMP
 nsTreeBoxObject::ScrollByLines(PRInt32 aNumLines)
 {
-  nsITreeBoxObject* body = GetTreeBody();
+  nsTreeBodyFrame* body = GetTreeBody();
   if (body)
     return body->ScrollByLines(aNumLines);
   return NS_OK;
@@ -343,7 +339,7 @@ nsTreeBoxObject::ScrollByLines(PRInt32 aNumLines)
 NS_IMETHODIMP
 nsTreeBoxObject::ScrollByPages(PRInt32 aNumPages)
 {
-  nsITreeBoxObject* body = GetTreeBody();
+  nsTreeBodyFrame* body = GetTreeBody();
   if (body)
     return body->ScrollByPages(aNumPages);
   return NS_OK;
@@ -352,7 +348,7 @@ nsTreeBoxObject::ScrollByPages(PRInt32 aNumPages)
 NS_IMETHODIMP 
 nsTreeBoxObject::ScrollToCell(PRInt32 aRow, nsITreeColumn* aCol)
 {
-  nsITreeBoxObject* body = GetTreeBody();
+  nsTreeBodyFrame* body = GetTreeBody();
   if (body)
     return body->ScrollToCell(aRow, aCol);
   return NS_OK;
@@ -361,7 +357,7 @@ nsTreeBoxObject::ScrollToCell(PRInt32 aRow, nsITreeColumn* aCol)
 NS_IMETHODIMP 
 nsTreeBoxObject::ScrollToColumn(nsITreeColumn* aCol)
 {
-  nsITreeBoxObject* body = GetTreeBody();
+  nsTreeBodyFrame* body = GetTreeBody();
   if (body)
     return body->ScrollToColumn(aCol);
   return NS_OK;
@@ -370,7 +366,7 @@ nsTreeBoxObject::ScrollToColumn(nsITreeColumn* aCol)
 NS_IMETHODIMP 
 nsTreeBoxObject::ScrollToHorizontalPosition(PRInt32 aHorizontalPosition)
 {
-  nsITreeBoxObject* body = GetTreeBody();
+  nsTreeBodyFrame* body = GetTreeBody();
   if (body)
     return body->ScrollToHorizontalPosition(aHorizontalPosition);
   return NS_OK;
@@ -378,7 +374,7 @@ nsTreeBoxObject::ScrollToHorizontalPosition(PRInt32 aHorizontalPosition)
 
 NS_IMETHODIMP nsTreeBoxObject::Invalidate()
 {
-  nsITreeBoxObject* body = GetTreeBody();
+  nsTreeBodyFrame* body = GetTreeBody();
   if (body)
     return body->Invalidate();
   return NS_OK;
@@ -386,7 +382,7 @@ NS_IMETHODIMP nsTreeBoxObject::Invalidate()
 
 NS_IMETHODIMP nsTreeBoxObject::InvalidateColumn(nsITreeColumn* aCol)
 {
-  nsITreeBoxObject* body = GetTreeBody();
+  nsTreeBodyFrame* body = GetTreeBody();
   if (body)
     return body->InvalidateColumn(aCol);
   return NS_OK;
@@ -394,7 +390,7 @@ NS_IMETHODIMP nsTreeBoxObject::InvalidateColumn(nsITreeColumn* aCol)
 
 NS_IMETHODIMP nsTreeBoxObject::InvalidateRow(PRInt32 aIndex)
 {
-  nsITreeBoxObject* body = GetTreeBody();
+  nsTreeBodyFrame* body = GetTreeBody();
   if (body)
     return body->InvalidateRow(aIndex);
   return NS_OK;
@@ -402,7 +398,7 @@ NS_IMETHODIMP nsTreeBoxObject::InvalidateRow(PRInt32 aIndex)
 
 NS_IMETHODIMP nsTreeBoxObject::InvalidateCell(PRInt32 aRow, nsITreeColumn* aCol)
 {
-  nsITreeBoxObject* body = GetTreeBody();
+  nsTreeBodyFrame* body = GetTreeBody();
   if (body)
     return body->InvalidateCell(aRow, aCol);
   return NS_OK;
@@ -410,7 +406,7 @@ NS_IMETHODIMP nsTreeBoxObject::InvalidateCell(PRInt32 aRow, nsITreeColumn* aCol)
 
 NS_IMETHODIMP nsTreeBoxObject::InvalidateRange(PRInt32 aStart, PRInt32 aEnd)
 {
-  nsITreeBoxObject* body = GetTreeBody();
+  nsTreeBodyFrame* body = GetTreeBody();
   if (body)
     return body->InvalidateRange(aStart, aEnd);
   return NS_OK;
@@ -418,7 +414,7 @@ NS_IMETHODIMP nsTreeBoxObject::InvalidateRange(PRInt32 aStart, PRInt32 aEnd)
 
 NS_IMETHODIMP nsTreeBoxObject::InvalidateColumnRange(PRInt32 aStart, PRInt32 aEnd, nsITreeColumn* aCol)
 {
-  nsITreeBoxObject* body = GetTreeBody();
+  nsTreeBodyFrame* body = GetTreeBody();
   if (body)
     return body->InvalidateColumnRange(aStart, aEnd, aCol);
   return NS_OK;
@@ -427,7 +423,7 @@ NS_IMETHODIMP nsTreeBoxObject::InvalidateColumnRange(PRInt32 aStart, PRInt32 aEn
 NS_IMETHODIMP nsTreeBoxObject::GetRowAt(PRInt32 x, PRInt32 y, PRInt32 *aRow)
 {
   *aRow = 0;
-  nsITreeBoxObject* body = GetTreeBody();
+  nsTreeBodyFrame* body = GetTreeBody();
   if (body)
     return body->GetRowAt(x, y, aRow);
   return NS_OK;
@@ -438,7 +434,7 @@ NS_IMETHODIMP nsTreeBoxObject::GetCellAt(PRInt32 aX, PRInt32 aY, PRInt32 *aRow, 
 {
   *aRow = 0;
   *aCol = nsnull;
-  nsITreeBoxObject* body = GetTreeBody();
+  nsTreeBodyFrame* body = GetTreeBody();
   if (body)
     return body->GetCellAt(aX, aY, aRow, aCol, aChildElt);
   return NS_OK;
@@ -449,7 +445,7 @@ nsTreeBoxObject::GetCoordsForCellItem(PRInt32 aRow, nsITreeColumn* aCol, const n
                                       PRInt32 *aX, PRInt32 *aY, PRInt32 *aWidth, PRInt32 *aHeight)
 {
   *aX = *aY = *aWidth = *aHeight = 0;
-  nsITreeBoxObject* body = GetTreeBody();
+  nsTreeBodyFrame* body = GetTreeBody();
   if (body)
     return body->GetCoordsForCellItem(aRow, aCol, aElement, aX, aY, aWidth, aHeight);
   return NS_OK;
@@ -459,7 +455,7 @@ NS_IMETHODIMP
 nsTreeBoxObject::IsCellCropped(PRInt32 aRow, nsITreeColumn* aCol, PRBool *aIsCropped)
 {  
   *aIsCropped = PR_FALSE;
-  nsITreeBoxObject* body = GetTreeBody();
+  nsTreeBodyFrame* body = GetTreeBody();
   if (body)
     return body->IsCellCropped(aRow, aCol, aIsCropped);
   return NS_OK;
@@ -467,7 +463,7 @@ nsTreeBoxObject::IsCellCropped(PRInt32 aRow, nsITreeColumn* aCol, PRBool *aIsCro
 
 NS_IMETHODIMP nsTreeBoxObject::RowCountChanged(PRInt32 aIndex, PRInt32 aDelta)
 {
-  nsITreeBoxObject* body = GetTreeBody();
+  nsTreeBodyFrame* body = GetTreeBody();
   if (body)
     return body->RowCountChanged(aIndex, aDelta);
   return NS_OK;
@@ -475,7 +471,7 @@ NS_IMETHODIMP nsTreeBoxObject::RowCountChanged(PRInt32 aIndex, PRInt32 aDelta)
 
 NS_IMETHODIMP nsTreeBoxObject::BeginUpdateBatch()
 {
-  nsITreeBoxObject* body = GetTreeBody();
+  nsTreeBodyFrame* body = GetTreeBody();
   if (body)
     return body->BeginUpdateBatch();
   return NS_OK;
@@ -483,7 +479,7 @@ NS_IMETHODIMP nsTreeBoxObject::BeginUpdateBatch()
 
 NS_IMETHODIMP nsTreeBoxObject::EndUpdateBatch()
 {
-  nsITreeBoxObject* body = GetTreeBody();
+  nsTreeBodyFrame* body = GetTreeBody();
   if (body)
     return body->EndUpdateBatch();
   return NS_OK;
@@ -491,7 +487,7 @@ NS_IMETHODIMP nsTreeBoxObject::EndUpdateBatch()
 
 NS_IMETHODIMP nsTreeBoxObject::ClearStyleAndImageCaches()
 {
-  nsITreeBoxObject* body = GetTreeBody();
+  nsTreeBodyFrame* body = GetTreeBody();
   if (body)
     return body->ClearStyleAndImageCaches();
   return NS_OK;

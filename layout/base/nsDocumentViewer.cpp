@@ -321,7 +321,6 @@ public:
   NS_DECL_NSICONTENTVIEWER
 
   // nsIDocumentViewer interface...
-  NS_IMETHOD SetUAStyleSheet(nsIStyleSheet* aUAStyleSheet);
   NS_IMETHOD GetDocument(nsIDocument** aResult);
   NS_IMETHOD GetPresShell(nsIPresShell** aResult);
   NS_IMETHOD GetPresContext(nsPresContext** aResult);
@@ -424,8 +423,6 @@ protected:
   nsCOMPtr<nsIViewManager> mViewManager;
   nsCOMPtr<nsPresContext> mPresContext;
   nsCOMPtr<nsIPresShell>   mPresShell;
-
-  nsCOMPtr<nsIStyleSheet>  mUAStyleSheet;
 
   nsCOMPtr<nsISelectionListener> mSelectionListener;
   nsCOMPtr<nsIDOMFocusListener> mFocusListener;
@@ -1660,19 +1657,6 @@ DocumentViewerImpl::SetDOMDocument(nsIDOMDocument *aDocument)
 }
 
 NS_IMETHODIMP
-DocumentViewerImpl::SetUAStyleSheet(nsIStyleSheet* aUAStyleSheet)
-{
-  NS_ASSERTION(aUAStyleSheet, "unexpected null pointer");
-  nsCOMPtr<nsICSSStyleSheet> sheet(do_QueryInterface(aUAStyleSheet));
-  if (sheet) {
-    nsCOMPtr<nsICSSStyleSheet> newSheet;
-    sheet->Clone(nsnull, nsnull, nsnull, nsnull, getter_AddRefs(newSheet));
-    mUAStyleSheet = newSheet;
-  }
-  return NS_OK;
-}
-
-NS_IMETHODIMP
 DocumentViewerImpl::GetDocument(nsIDocument** aResult)
 {
   NS_IF_ADDREF(*aResult = mDocument);
@@ -2091,10 +2075,6 @@ DocumentViewerImpl::CreateStyleSet(nsIDocument* aDocument,
 
   // this should eventually get expanded to allow for creating
   // different sets for different media
-  if (!mUAStyleSheet) {
-    NS_WARNING("unable to load UA style sheet");
-  }
-
   nsStyleSet *styleSet = new nsStyleSet();
   if (!styleSet) {
     return NS_ERROR_OUT_OF_MEMORY;
@@ -2177,9 +2157,24 @@ DocumentViewerImpl::CreateStyleSet(nsIDocument* aDocument,
     styleSet->PrependStyleSheet(nsStyleSet::eAgentSheet, sheet);
   }
 
-  if (mUAStyleSheet) {
-    styleSet->PrependStyleSheet(nsStyleSet::eAgentSheet, mUAStyleSheet);
+  // Make sure to clone the quirk sheet so that it can be usefully
+  // enabled/disabled as needed.
+  nsCOMPtr<nsICSSStyleSheet> quirkClone;
+  if (!nsLayoutStylesheetCache::UASheet() ||
+      !nsLayoutStylesheetCache::QuirkSheet() ||
+      NS_FAILED(nsLayoutStylesheetCache::QuirkSheet()->
+                Clone(nsnull, nsnull, nsnull, nsnull,
+                      getter_AddRefs(quirkClone))) ||
+      !sheet) {
+    delete styleSet;
+    return NS_ERROR_OUT_OF_MEMORY;
   }
+  // quirk.css needs to come after the regular UA sheet (or more precisely,
+  // after the html.css and so forth that the UA sheet imports).
+  styleSet->PrependStyleSheet(nsStyleSet::eAgentSheet, quirkClone);
+  styleSet->SetQuirkStyleSheet(quirkClone);
+  styleSet->PrependStyleSheet(nsStyleSet::eAgentSheet,
+                              nsLayoutStylesheetCache::UASheet());
 
   nsCOMPtr<nsIStyleSheetService> dummy =
     do_GetService(NS_STYLESHEETSERVICE_CONTRACTID);

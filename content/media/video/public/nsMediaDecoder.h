@@ -109,10 +109,13 @@ class nsMediaDecoder : public nsIObserver
   // Stop playback of a video, and stop download of video stream.
   virtual void Stop() = 0;
 
-  // Start downloading the video at the given URI. Decode
-  // the downloaded data up to the point of the first frame
-  // of data. 
-  virtual nsresult Load(nsIURI* aURI) = 0;
+  // Start downloading the video. Decode the downloaded data up to the
+  // point of the first frame of data.
+  // Exactly one of aURI and aChannel must be null. aListener must be
+  // null if and only if aChannel is.
+  virtual nsresult Load(nsIURI* aURI,
+                        nsIChannel* aChannel,
+                        nsIStreamListener **aListener) = 0;
 
   // Draw the latest video data. This is done
   // here instead of in nsVideoFrame so that the lock around the

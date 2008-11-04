@@ -58,8 +58,6 @@
 #include "nsIFrame.h"
 #include "nsContentUtils.h"
 
-nsIURI *nsStyleSet::gQuirkURI = 0;
-
 nsStyleSet::nsStyleSet()
   : mRuleTree(nsnull),
     mRuleWalker(nsnull),
@@ -75,12 +73,6 @@ nsStyleSet::nsStyleSet()
 nsresult
 nsStyleSet::Init(nsPresContext *aPresContext)
 {
-  if (!gQuirkURI) {
-    static const char kQuirk_href[] = "resource://gre/res/quirk.css";
-    NS_NewURI(&gQuirkURI, kQuirk_href);
-    NS_ENSURE_TRUE(gQuirkURI, NS_ERROR_OUT_OF_MEMORY);
-  }
-
   if (!BuildDefaultStyleData(aPresContext)) {
     mDefaultStyleData.Destroy(0, aPresContext);
     return NS_ERROR_OUT_OF_MEMORY;
@@ -142,6 +134,16 @@ nsStyleSet::EndReconstruct()
   // been destroyed by the caller beforehand)
   mOldRuleTree->Destroy();
   mOldRuleTree = nsnull;
+}
+
+void
+nsStyleSet::SetQuirkStyleSheet(nsIStyleSheet* aQuirkStyleSheet)
+{
+  NS_ASSERTION(aQuirkStyleSheet, "Must have quirk sheet if this is called");
+  NS_ASSERTION(!mQuirkStyleSheet, "Multiple calls to SetQuirkStyleSheet?");
+  NS_ASSERTION(mSheets[eAgentSheet].IndexOf(aQuirkStyleSheet) != -1,
+               "Quirk style sheet not one of our agent sheets?");
+  mQuirkStyleSheet = aQuirkStyleSheet;
 }
 
 nsresult
@@ -341,50 +343,21 @@ nsStyleSet::EndUpdate()
 void
 nsStyleSet::EnableQuirkStyleSheet(PRBool aEnable)
 {
-  if (!mQuirkStyleSheet) {
-    // first find the quirk sheet:
-    // - run through all of the agent sheets and check for a CSSStyleSheet that
-    //   has the URL we want
-    PRInt32 nSheets = mSheets[eAgentSheet].Count();
-    for (PRInt32 i = 0; i < nSheets; ++i) {
-      nsIStyleSheet *sheet = mSheets[eAgentSheet].ObjectAt(i);
-      NS_ASSERTION(sheet, "mAgentSheets should not contain null sheets");
-
-      nsICSSStyleSheet *cssSheet = static_cast<nsICSSStyleSheet*>(sheet);
-      NS_ASSERTION(nsCOMPtr<nsICSSStyleSheet>(do_QueryInterface(sheet)) == cssSheet,
-                   "Agent sheet must be a CSSStyleSheet");
-
-      nsCOMPtr<nsIStyleSheet> quirkSheet;
-      PRBool bHasSheet = PR_FALSE;
-      if (NS_SUCCEEDED(cssSheet->ContainsStyleSheet(gQuirkURI, bHasSheet, 
-                                                    getter_AddRefs(quirkSheet))) 
-          && bHasSheet) {
-        NS_ASSERTION(quirkSheet, "QuirkSheet must be set: ContainsStyleSheet is hosed");
-        // cache the sheet for faster lookup next time
-        mQuirkStyleSheet = quirkSheet;
-        // only one quirk style sheet can exist, so stop looking
-        break;
-      }
-    }
-  }
-  NS_ASSERTION(mQuirkStyleSheet, "no quirk stylesheet");
-  if (mQuirkStyleSheet) {
 #ifdef DEBUG
-    if (mRuleProcessors[eAgentSheet]) {
-      static_cast<nsCSSRuleProcessor*>(static_cast<nsIStyleRuleProcessor*>(
-        mRuleProcessors[eAgentSheet]))->AssertQuirksChangeOK();
-    }
+  if (mRuleProcessors[eAgentSheet]) {
+    static_cast<nsCSSRuleProcessor*>(static_cast<nsIStyleRuleProcessor*>(
+      mRuleProcessors[eAgentSheet]))->AssertQuirksChangeOK();
+  }
 #endif
 #ifdef DEBUG_dbaron_off // XXX Make this |DEBUG| once it stops firing.
-    PRBool applicableNow;
-    mQuirkStyleSheet->GetApplicable(applicableNow);
-    NS_ASSERTION(!mRuleProcessors[eAgentSheet] || aEnable == applicableNow,
-                 "enabling/disabling quirk stylesheet too late or incomplete quirk stylesheet");
-    if (mRuleProcessors[eAgentSheet] && aEnable == applicableNow)
-      printf("WARNING: We set the quirks mode too many times.\n"); // we do!
+  PRBool applicableNow;
+  mQuirkStyleSheet->GetApplicable(applicableNow);
+  NS_ASSERTION(!mRuleProcessors[eAgentSheet] || aEnable == applicableNow,
+               "enabling/disabling quirk stylesheet too late or incomplete quirk stylesheet");
+  if (mRuleProcessors[eAgentSheet] && aEnable == applicableNow)
+    printf("WARNING: We set the quirks mode too many times.\n"); // we do!
 #endif
-    mQuirkStyleSheet->SetEnabled(aEnable);
-  }
+  mQuirkStyleSheet->SetEnabled(aEnable);
 }
 
 static PRBool

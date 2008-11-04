@@ -79,7 +79,7 @@ static CFBundleRef getPluginBundle(const char* path)
     CFStringRef pathRef = CFStringCreateWithCString(NULL, path, kCFStringEncodingUTF8);
     if (pathRef) {
         CFURLRef bundleURL = CFURLCreateWithFileSystemPath(NULL, pathRef, kCFURLPOSIXPathStyle, true);
-        if (bundleURL != NULL) {
+        if (bundleURL) {
             bundle = CFBundleCreate(NULL, bundleURL);
             CFRelease(bundleURL);
         }
@@ -204,7 +204,7 @@ static char* CFStringRefToUTF8Buffer(CFStringRef cfString)
 {
   int bufferLength = ::CFStringGetLength(cfString) + 1;
   char* newBuffer = static_cast<char*>(NS_Alloc(bufferLength));
-  if (!::CFStringGetCString(cfString, newBuffer, bufferLength, kCFStringEncodingUTF8)) {
+  if (newBuffer && !::CFStringGetCString(cfString, newBuffer, bufferLength, kCFStringEncodingUTF8)) {
     NS_Free(newBuffer);
     newBuffer = nsnull;
   }
@@ -314,8 +314,8 @@ nsresult nsPluginFile::LoadPlugin(PRLibrary* &outLibrary)
 static char* p2cstrdup(StringPtr pstr)
 {
     int len = pstr[0];
-    char* cstr = new char[len + 1];
-    if (cstr != NULL) {
+    char* cstr = static_cast<char*>(NS_Alloc(len + 1));
+    if (cstr) {
         ::BlockMoveData(pstr + 1, cstr, len);
         cstr[len] = '\0';
     }
@@ -504,14 +504,24 @@ nsresult nsPluginFile::GetPluginInfo(nsPluginInfo& info)
     }
   }
 
+  //XXX FIXME: past this point some (unlikely) error cases will leak memory
+  // (leak is bug 462023)
+
   // Fill in the info struct based on the data in the BPSupportedMIMETypes struct
   int variantCount = info.fVariantCount;
-  info.fMimeTypeArray = new char*[variantCount];
-  info.fExtensionArray = new char*[variantCount];
-  if (mi.infoStrings)
-    info.fMimeDescriptionArray = new char*[variantCount];
-
-  short mimeIndex = 2, descriptionIndex = 2;
+  info.fMimeTypeArray = static_cast<char**>(NS_Alloc(variantCount * sizeof(char*)));
+  if (!info.fMimeTypeArray)
+    return NS_ERROR_OUT_OF_MEMORY;
+  info.fExtensionArray = static_cast<char**>(NS_Alloc(variantCount * sizeof(char*)));
+  if (!info.fExtensionArray)
+    return NS_ERROR_OUT_OF_MEMORY;
+  if (mi.infoStrings) {
+    info.fMimeDescriptionArray = static_cast<char**>(NS_Alloc(variantCount * sizeof(char*)));
+    if (!info.fMimeDescriptionArray)
+      return NS_ERROR_OUT_OF_MEMORY;
+  }
+  short mimeIndex = 2;
+  short descriptionIndex = 2;
   for (int i = 0; i < variantCount; i++) {
     info.fMimeTypeArray[i] = GetNextPluginStringFromHandle(mi.typeStrings, &mimeIndex);
     info.fExtensionArray[i] = GetNextPluginStringFromHandle(mi.typeStrings, &mimeIndex);
@@ -532,20 +542,20 @@ nsresult nsPluginFile::GetPluginInfo(nsPluginInfo& info)
 nsresult nsPluginFile::FreePluginInfo(nsPluginInfo& info)
 {
   if (info.fPluginInfoSize <= sizeof(nsPluginInfo)) {
-    delete[] info.fName;
-    delete[] info.fDescription;
+    NS_Free(info.fName);
+    NS_Free(info.fDescription);
     int variantCount = info.fVariantCount;
     for (int i = 0; i < variantCount; i++) {
-      delete[] info.fMimeTypeArray[i];
-      delete[] info.fExtensionArray[i];
-      delete[] info.fMimeDescriptionArray[i];
+      NS_Free(info.fMimeTypeArray[i]);
+      NS_Free(info.fExtensionArray[i]);
+      NS_Free(info.fMimeDescriptionArray[i]);
     }
-    delete[] info.fMimeTypeArray;
-    delete[] info.fMimeDescriptionArray;
-    delete[] info.fExtensionArray;
-    delete[] info.fFileName;
-    delete[] info.fFullPath;
-    delete[] info.fVersion;
+    NS_Free(info.fMimeTypeArray);
+    NS_Free(info.fMimeDescriptionArray);
+    NS_Free(info.fExtensionArray);
+    NS_Free(info.fFileName);
+    NS_Free(info.fFullPath);
+    NS_Free(info.fVersion);
   }
 
   return NS_OK;

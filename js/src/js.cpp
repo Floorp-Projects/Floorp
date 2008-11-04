@@ -2579,7 +2579,7 @@ ShapeOf(JSContext *cx, uintN argc, jsval *vp)
 #ifdef JS_THREADSAFE
 
 static JSBool
-Sleep(JSContext *cx, uintN argc, jsval *vp)
+Sleep_fn(JSContext *cx, uintN argc, jsval *vp)
 {
     jsdouble t_secs;
     PRUint32 t_ticks;
@@ -2908,7 +2908,7 @@ static JSFunctionSpec shell_functions[] = {
     JS_FS("arrayInfo",       js_ArrayInfo,       1,0,0),
 #endif
 #ifdef JS_THREADSAFE
-    JS_FN("sleep",          Sleep,          1,0),
+    JS_FN("sleep",          Sleep_fn,       1,0),
     JS_FN("scatter",        Scatter,        1,0),
 #endif
     JS_FS_END

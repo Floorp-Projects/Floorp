@@ -258,13 +258,6 @@ install-prefs: activex.js
 	$(INSTALL) $< $(DIST)/bin/defaults/pref
 
 ifdef MOZ_USE_ACTIVEX_PLUGIN
-PACKAGE_FILE = axplugin.pkg
-PACKAGE_VARS += \
-	MOZ_ACTIVEX_PLUGIN_LIVECONNECT \
-	MOZ_ACTIVEX_PLUGIN_XPCONNECT \
-	XPC_IDISPATCH_SUPPORT \
-	$(NULL)
-
 libs:: install-plugin install-prefs
 
 ifdef MOZ_ACTIVEX_PLUGIN_LIVECONNECT

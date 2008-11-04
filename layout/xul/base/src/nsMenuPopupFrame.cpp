@@ -1377,11 +1377,11 @@ void nsMenuPopupFrame::EnsureMenuItemIsVisible(nsMenuFrame* aMenuItem)
   
       // scroll down
       if ( itemRect.y + itemRect.height > scrollY + viewRect.height )
-        scrollableView->ScrollTo(scrollX, itemRect.y + itemRect.height - viewRect.height, NS_SCROLL_PROPERTY_ALWAYS_BLIT);
+        scrollableView->ScrollTo(scrollX, itemRect.y + itemRect.height - viewRect.height, 0);
       
       // scroll up
       else if ( itemRect.y < scrollY )
-        scrollableView->ScrollTo(scrollX, itemRect.y, NS_SCROLL_PROPERTY_ALWAYS_BLIT);
+        scrollableView->ScrollTo(scrollX, itemRect.y, 0);
     }
   }
 }

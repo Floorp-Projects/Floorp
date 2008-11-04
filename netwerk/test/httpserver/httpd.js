@@ -13,7 +13,7 @@
  * for the specific language governing rights and limitations under the
  * License.
  *
- * The Original Code is the MozJSHTTP server.
+ * The Original Code is the httpd.js server.
  *
  * The Initial Developer of the Original Code is
  * Mozilla Corporation.
@@ -43,7 +43,7 @@
 /*
  * An implementation of an HTTP server both as a loadable script and as an XPCOM
  * component.  See the accompanying README file for user documentation on
- * MozJSHTTP.
+ * httpd.js.
  */
 
 const Cc = Components.classes;
@@ -2941,10 +2941,10 @@ ServerHandler.prototype =
       response.setHeader("Content-Type", "text/html", false);
 
       var body = "<html>\
-                    <head><title>MozJSHTTP</title></head>\
+                    <head><title>httpd.js</title></head>\
                     <body>\
-                      <h1>MozJSHTTP</h1>\
-                      <p>If you're seeing this page, MozJSHTTP is up and\
+                      <h1>httpd.js</h1>\
+                      <p>If you're seeing this page, httpd.js is up and\
                         serving requests!  Now set a base path and serve some\
                         files!</p>\
                     </body>\
@@ -3905,7 +3905,7 @@ const module =
     {
       CID:         Components.ID("{54ef6f81-30af-4b1d-ac55-8ba811293e41}"),
       contractID:  "@mozilla.org/server/jshttp;1",
-      className:   "MozJSHTTP server",
+      className:   "httpd.js server",
       factory:     makeFactory(nsHttpServer)
     }
   }

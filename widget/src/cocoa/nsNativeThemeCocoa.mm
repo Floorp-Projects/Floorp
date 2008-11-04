@@ -850,7 +850,8 @@ nsNativeThemeCocoa::DrawFrame(CGContextRef cgContext, HIThemeFrameKind inKind,
 void
 nsNativeThemeCocoa::DrawProgress(CGContextRef cgContext, const HIRect& inBoxRect,
                                  PRBool inIsIndeterminate, PRBool inIsHorizontal,
-                                 PRInt32 inValue, nsIFrame* aFrame)
+                                 PRInt32 inValue, PRInt32 inMaxValue,
+                                 nsIFrame* aFrame)
 {
   NS_OBJC_BEGIN_TRY_ABORT_BLOCK;
 
@@ -863,7 +864,7 @@ nsNativeThemeCocoa::DrawProgress(CGContextRef cgContext, const HIRect& inBoxRect
   tdi.kind = inIsIndeterminate ? kThemeMediumIndeterminateBar: kThemeMediumProgressBar;
   tdi.bounds = inBoxRect;
   tdi.min = 0;
-  tdi.max = 100;
+  tdi.max = inMaxValue;
   tdi.value = inValue;
   tdi.attributes = inIsHorizontal ? kThemeTrackHorizontal : 0;
   tdi.enableState = FrameIsInActiveWindow(aFrame) ? kThemeTrackActive : kThemeTrackInactive;
@@ -1333,11 +1334,8 @@ nsNativeThemeCocoa::DrawWidgetBackground(nsIRenderingContext* aContext, nsIFrame
       break;
 
     case NS_THEME_CHECKBOX:
-    case NS_THEME_CHECKBOX_SMALL:
-    case NS_THEME_RADIO:
-    case NS_THEME_RADIO_SMALL: {
-      PRBool isCheckbox = (aWidgetType == NS_THEME_CHECKBOX ||
-                           aWidgetType == NS_THEME_CHECKBOX_SMALL);
+    case NS_THEME_RADIO: {
+      PRBool isCheckbox = (aWidgetType == NS_THEME_CHECKBOX);
       DrawCheckboxOrRadio(cgContext, isCheckbox, macRect, GetCheckedOrSelected(aFrame, !isCheckbox),
                           IsDisabled(aFrame), eventState, aFrame);
     }
@@ -1431,12 +1429,14 @@ nsNativeThemeCocoa::DrawWidgetBackground(nsIRenderingContext* aContext, nsIFrame
       
     case NS_THEME_PROGRESSBAR:
       DrawProgress(cgContext, macRect, IsIndeterminateProgress(aFrame),
-                   PR_TRUE, GetProgressValue(aFrame), aFrame);
+                   PR_TRUE, GetProgressValue(aFrame),
+                   GetProgressMaxValue(aFrame), aFrame);
       break;
 
     case NS_THEME_PROGRESSBAR_VERTICAL:
       DrawProgress(cgContext, macRect, IsIndeterminateProgress(aFrame),
-                   PR_FALSE, GetProgressValue(aFrame), aFrame);
+                   PR_FALSE, GetProgressValue(aFrame),
+                   GetProgressMaxValue(aFrame), aFrame);
       break;
 
     case NS_THEME_PROGRESSBAR_CHUNK:
@@ -1703,9 +1703,7 @@ nsNativeThemeCocoa::GetWidgetPadding(nsIDeviceContext* aContext,
     // and have a meaningful baseline, so they can't have
     // author-specified padding.
     case NS_THEME_CHECKBOX:
-    case NS_THEME_CHECKBOX_SMALL:
     case NS_THEME_RADIO:
-    case NS_THEME_RADIO_SMALL:
       aResult->SizeTo(0, 0, 0, 0);
       return PR_TRUE;
   }
@@ -1725,9 +1723,7 @@ nsNativeThemeCocoa::GetWidgetOverflow(nsIDeviceContext* aContext, nsIFrame* aFra
     case NS_THEME_DROPDOWN:
     case NS_THEME_DROPDOWN_BUTTON:
     case NS_THEME_CHECKBOX:
-    case NS_THEME_CHECKBOX_SMALL:
     case NS_THEME_RADIO:
-    case NS_THEME_RADIO_SMALL:
     {
       // We assume that the above widgets can draw a focus ring that will be less than
       // or equal to 4 pixels thick.
@@ -2036,10 +2032,8 @@ nsNativeThemeCocoa::ThemeSupportsWidget(nsPresContext* aPresContext, nsIFrame* a
     case NS_THEME_TOOLTIP:
     
     case NS_THEME_CHECKBOX:
-    case NS_THEME_CHECKBOX_SMALL:
     case NS_THEME_CHECKBOX_CONTAINER:
     case NS_THEME_RADIO:
-    case NS_THEME_RADIO_SMALL:
     case NS_THEME_RADIO_CONTAINER:
     case NS_THEME_GROUPBOX:
     case NS_THEME_BUTTON:
@@ -2106,9 +2100,7 @@ nsNativeThemeCocoa::WidgetIsContainer(PRUint8 aWidgetType)
   switch (aWidgetType) {
    case NS_THEME_DROPDOWN_BUTTON:
    case NS_THEME_RADIO:
-   case NS_THEME_RADIO_SMALL:
    case NS_THEME_CHECKBOX:
-   case NS_THEME_CHECKBOX_SMALL:
    case NS_THEME_PROGRESSBAR:
     return PR_FALSE;
     break;
@@ -2123,9 +2115,7 @@ nsNativeThemeCocoa::ThemeDrawsFocusForWidget(nsPresContext* aPresContext, nsIFra
   if (aWidgetType == NS_THEME_DROPDOWN ||
       aWidgetType == NS_THEME_BUTTON ||
       aWidgetType == NS_THEME_RADIO ||
-      aWidgetType == NS_THEME_RADIO_SMALL ||
-      aWidgetType == NS_THEME_CHECKBOX ||
-      aWidgetType == NS_THEME_CHECKBOX_SMALL)
+      aWidgetType == NS_THEME_CHECKBOX)
     return PR_TRUE;
 
   return PR_FALSE;

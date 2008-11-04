@@ -171,13 +171,14 @@ NS_IMPL_RELEASE_INHERITED(nsHTMLSelectElement, nsGenericElement)
 
 
 // QueryInterface implementation for nsHTMLSelectElement
-NS_HTML_CONTENT_CC_INTERFACE_TABLE_HEAD(nsHTMLSelectElement,
-                                        nsGenericHTMLFormElement)
-  NS_INTERFACE_TABLE_INHERITED4(nsHTMLSelectElement,
-                                nsIDOMHTMLSelectElement,
-                                nsIDOMNSHTMLSelectElement,
-                                nsIDOMNSXBLFormControl,
-                                nsISelectElement)
+NS_INTERFACE_TABLE_HEAD_CYCLE_COLLECTION_INHERITED(nsHTMLSelectElement)
+  NS_HTML_CONTENT_INTERFACE_TABLE4(nsHTMLSelectElement,
+                                   nsIDOMHTMLSelectElement,
+                                   nsIDOMNSHTMLSelectElement,
+                                   nsIDOMNSXBLFormControl,
+                                   nsISelectElement)
+  NS_HTML_CONTENT_INTERFACE_TABLE_TO_MAP_SEGUE(nsHTMLSelectElement,
+                                               nsGenericHTMLFormElement)
 NS_HTML_CONTENT_INTERFACE_TABLE_TAIL_CLASSINFO(HTMLSelectElement)
 
 
@@ -1959,31 +1960,39 @@ nsHTMLOptionCollection::Item(PRUint32 aIndex, nsIDOMNode** aReturn)
   return CallQueryInterface(item, aReturn);
 }
 
+nsISupports*
+nsHTMLOptionCollection::GetNamedItem(const nsAString& aName, nsresult* aResult)
+{
+  *aResult = NS_OK;
+
+  PRInt32 count = mElements.Count();
+  for (PRInt32 i = 0; i < count; i++) {
+    nsCOMPtr<nsIContent> content = do_QueryInterface(mElements.ObjectAt(i));
+    if (content &&
+        (content->AttrValueIs(kNameSpaceID_None, nsGkAtoms::name, aName,
+                              eCaseMatters) ||
+         content->AttrValueIs(kNameSpaceID_None, nsGkAtoms::id, aName,
+                              eCaseMatters))) {
+      return content;
+    }
+  }
+
+  return nsnull;
+}
+
 NS_IMETHODIMP
 nsHTMLOptionCollection::NamedItem(const nsAString& aName,
                                   nsIDOMNode** aReturn)
 {
-  PRInt32 count = mElements.Count();
-  nsresult rv = NS_OK;
+  nsresult rv;
+  nsISupports* item = GetNamedItem(aName, &rv);
+  if (!item) {
+    *aReturn = nsnull;
 
-  *aReturn = nsnull;
-
-  for (PRInt32 i = 0; i < count; i++) {
-    nsCOMPtr<nsIContent> content = do_QueryInterface(mElements.ObjectAt(i));
-
-    if (content) {
-      if (content->AttrValueIs(kNameSpaceID_None, nsGkAtoms::name, aName,
-                               eCaseMatters) ||
-          content->AttrValueIs(kNameSpaceID_None, nsGkAtoms::id, aName,
-                               eCaseMatters)) {
-        rv = CallQueryInterface(content, aReturn);
-
-        break;
-      }
-    }
+    return rv;
   }
 
-  return rv;
+  return CallQueryInterface(item, aReturn);
 }
 
 NS_IMETHODIMP

@@ -665,9 +665,10 @@ namespace nanojit
     {
         Fragment *frag = lr->exit->target;
 		NanoAssert(frag->fragEntry != 0);
-		NIns* was = asm_adjustBranch((NIns*)lr->jmp, frag->fragEntry);
+		NIns* was = nPatchBranch((NIns*)lr->jmpToTarget, frag->fragEntry);
 		verbose_only(verbose_outputf("patching jump at %p to target %p (was %p)\n",
-			lr->jmp, frag->fragEntry, was);)
+			lr->jmpToTarget, frag->fragEntry, was);)
+		(void)was;
     }
 
     void Assembler::patch(SideExit *exit)
@@ -679,6 +680,24 @@ namespace nanojit
             rec = rec->next;
         }
     }
+
+	void Assembler::disconnectLoop(GuardRecord *lr)
+	{
+        NanoAssert(lr->stubEntry);
+        NIns* was = nPatchBranch((NIns*)lr->jmpToStub, (NIns*)lr->stubEntry);
+        verbose_only(verbose_outputf("disconnected loop-jump at %p: exiting to %p (was looping to %p)\n",
+                                     lr->jmpToStub, lr->stubEntry, was);)
+        NanoAssert(lr->exit->from->loopEntry == was);
+	}
+
+	void Assembler::reconnectLoop(GuardRecord *lr)
+	{
+        NanoAssert(lr->exit->from->loopEntry);
+        NIns* was = nPatchBranch((NIns*)lr->jmpToStub, lr->exit->from->loopEntry);
+        verbose_only(verbose_outputf("reconnected loop-jump at %p: looping to %p (was exiting to %p)\n",
+                                     lr->jmpToStub, lr->exit->from->loopEntry, was);)
+        NanoAssert(lr->stubEntry == was);
+	}
     
     NIns* Assembler::asm_exit(LInsp guard)
     {
@@ -737,14 +756,14 @@ namespace nanojit
 		//NOP();
 
 		// we are done producing the exit logic for the guard so demark where our exit block code begins
-		NIns* jmpTarget = _nIns;	 // target in exit path for our mainline conditional jump 
+		guard->record()->stubEntry = _nIns;	 // target in exit path for our mainline conditional jump 
 
 		// swap back pointers, effectively storing the last location used in the exit path
 		swapptrs();
 		_inExit = false;
 		
 		//verbose_only( verbose_outputf("         LIR_xt/xf swapptrs, _nIns is now %08X(%08X), _nExitIns is now %08X(%08X)",_nIns, *_nIns,_nExitIns,*_nExitIns) );
-		verbose_only( verbose_outputf("        %p:",jmpTarget);)
+		verbose_only( verbose_outputf("        %p:",guard->record()->stubEntry);)
 		verbose_only( verbose_outputf("--------------------------------------- exit block (LIR_xt|LIR_xf)") );
 
 #ifdef NANOJIT_IA32
@@ -755,7 +774,7 @@ namespace nanojit
         verbose_only( _verbose = priorVerbose; )
         verbose_only(_stats.exitnative += (_stats.native-nativeSave));
 
-        return jmpTarget;
+        return (NIns*) guard->record()->stubEntry;
     }
 	
 	void Assembler::beginAssembly(Fragment *frag, RegAllocMap* branchStateMap)
@@ -824,7 +843,7 @@ namespace nanojit
 		verbose_only(_frago->_stats.totalCompiles++; )
 		_inExit = false;	
         gen(rdr, loopJumps);
-		frag->fragEntry = _nIns;
+		frag->loopEntry = _nIns;
 		//frag->outbound = core->config.tree_opt? _latestGuard : 0;
 		//fprintf(stderr, "assemble frag %X entry %X\n", (int)frag, (int)frag->fragEntry);
 
@@ -851,7 +870,7 @@ namespace nanojit
 	{
 	    NIns* SOT = 0;
 	    if (frag->isRoot()) {
-	        SOT = _nIns;
+	        SOT = frag->loopEntry;
             verbose_only( verbose_outputf("        %p:",_nIns); )
 	    } else {
 	        SOT = frag->root->fragEntry;
@@ -864,10 +883,11 @@ namespace nanojit
 			nPatchBranch(loopJump, SOT);
 		}
 
-		NIns* patchEntry = 0;
+		NIns* fragEntry = 0;
+		
 		if (!error())
 		{
-			patchEntry = genPrologue();
+			fragEntry = genPrologue();
 			verbose_only( verbose_outputf("        %p:",_nIns); )
 			verbose_only( verbose_output("        prologue"); )
 		}
@@ -882,7 +902,7 @@ namespace nanojit
 				}
 			)
 
-            frag->fragEntry = patchEntry;
+            frag->fragEntry = fragEntry;
 			NIns* code = _nIns;
 #ifdef PERFM
 			_nvprof("code", codeBytes());  // requires that all pages are released between begin/endAssembly()otherwise we double count
@@ -1285,7 +1305,7 @@ namespace nanojit
                     if (label && label->addr) {
                         // forward jump to known label.  need to merge with label's register state.
                         unionRegisterState(label->regs);
-    					asm_branch(op == LIR_jf, cond, label->addr);
+    					asm_branch(op == LIR_jf, cond, label->addr, false);
                     }
                     else {
                         // back edge.
@@ -1300,7 +1320,7 @@ namespace nanojit
                             // evict all registers, most conservative approach.
                             intersectRegisterState(label->regs);
                         }
-                        NIns *branch = asm_branch(op == LIR_jf, cond, 0);
+                        NIns *branch = asm_branch(op == LIR_jf, cond, 0, false);
 			            _patches.put(branch,to);
                         verbose_only(
                             verbose_outputf("Loop %s -> %s", 
@@ -1340,7 +1360,7 @@ namespace nanojit
 					// we only support cmp with guard right now, also assume it is 'close' and only emit the branch
                     NIns* exit = asm_exit(ins); // does intersectRegisterState()
 					LIns* cond = ins->oprnd1();
-					asm_branch(op == LIR_xf, cond, exit);
+					asm_branch(op == LIR_xf, cond, exit, false);
 					break;
 				}
 				case LIR_x:

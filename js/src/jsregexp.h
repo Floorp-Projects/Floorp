@@ -106,6 +106,7 @@ struct JSRegExp {
     size_t       classCount;    /* count [...] bitmaps */
     RECharSet    *classList;    /* list of [...] bitmaps */
     JSString     *source;       /* locked source string, sans // */
+    JSBool       is_native;     /* regexp should be handled natively. */
     jsbytecode   program[1];    /* regular expression bytecode */
 };
 

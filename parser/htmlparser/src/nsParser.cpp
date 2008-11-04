@@ -1724,6 +1724,9 @@ nsParser::ContinueInterruptedParsing()
   PRBool isFinalChunk = mParserContext &&
                         mParserContext->mStreamListenerState == eOnStop;
 
+  if (mSink) {
+    mSink->WillParse();
+  }
   result = ResumeParse(PR_TRUE, isFinalChunk); // Ref. bug 57999
 
   if (result != NS_OK) {
@@ -2867,6 +2870,9 @@ nsParser::OnDataAvailable(nsIRequest *request, nsISupports* aContext,
     // Don't bother to start parsing until we've seen some
     // non-whitespace data
     if (theContext->mScanner->FirstNonWhitespacePosition() >= 0) {
+      if (mSink) {
+        mSink->WillParse();
+      }
       rv = ResumeParse();
     }
   } else {
@@ -2915,6 +2921,9 @@ nsParser::OnStopRequest(nsIRequest *request, nsISupports* aContext,
     mParserFilter->Finish();
 
   if (NS_SUCCEEDED(rv)) {
+    if (mSink) {
+      mSink->WillParse();
+    }
     rv = ResumeParse(PR_TRUE, PR_TRUE);
   }
 
@@ -2964,7 +2973,6 @@ nsParser::WillTokenize(PRBool aIsFinalChunk)
                                         NS_IPARSER_FLAG_HTML;
   nsresult result = mParserContext->GetTokenizer(type, mSink, theTokenizer);
   NS_ENSURE_SUCCESS(result, PR_FALSE);
-  mSink->WillTokenize();
   return NS_SUCCEEDED(theTokenizer->WillTokenize(aIsFinalChunk,
                                                  &mTokenAllocator));
 }

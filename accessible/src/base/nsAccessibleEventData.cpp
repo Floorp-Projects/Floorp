@@ -421,7 +421,7 @@ nsAccStateChangeEvent::
   nsCOMPtr<nsIAccessible> accessible(GetAccessibleByNode());
   if (accessible) {
     PRUint32 state = 0, extraState = 0;
-    accessible->GetFinalState(&state, mIsExtraState ? &extraState : nsnull);
+    accessible->GetState(&state, mIsExtraState ? &extraState : nsnull);
     mIsEnabled = ((mIsExtraState ? extraState : state) & mState) != 0;
   } else {
     mIsEnabled = PR_FALSE;

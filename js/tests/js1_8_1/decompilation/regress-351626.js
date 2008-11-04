@@ -57,7 +57,7 @@ function test()
 
   f = function () { if (function () {}) { g(); } }
   actual = f + '';
-  expect = 'function () {\n  g();\n    }\n}';
+  expect = 'function () {\n  g();\n}';
   compareSource(expect, actual, summary);
 
   exitFunc ('test');

@@ -131,13 +131,13 @@ class nsContentSink : public nsICSSLoaderObserver,
   virtual nsresult ProcessMETATag(nsIContent* aContent);
 
   // nsIContentSink implementation helpers
+  NS_HIDDEN_(nsresult) WillParseImpl(void);
   NS_HIDDEN_(nsresult) WillInterruptImpl(void);
   NS_HIDDEN_(nsresult) WillResumeImpl(void);
   NS_HIDDEN_(nsresult) DidProcessATokenImpl(void);
   NS_HIDDEN_(void) WillBuildModelImpl(void);
   NS_HIDDEN_(void) DidBuildModelImpl(void);
   NS_HIDDEN_(void) DropParserAndPerfHint(void);
-  NS_HIDDEN_(nsresult) WillProcessTokensImpl(void);
 
   void NotifyAppend(nsIContent* aContent, PRUint32 aStartIndex);
 

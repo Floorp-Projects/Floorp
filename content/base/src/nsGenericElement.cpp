@@ -169,6 +169,8 @@ DebugListContentTree(nsIContent* aElement)
 
 #endif
 
+NS_DEFINE_IID(kThisPtrOffsetsSID, NS_THISPTROFFSETS_SID);
+
 PRInt32 nsIContent::sTabFocusModel = eTabFocus_any;
 PRBool nsIContent::sTabFocusModelAppliesToXUL = PR_FALSE;
 nsresult NS_NewContentIterator(nsIContentIterator** aInstancePtrResult);
@@ -459,10 +461,12 @@ nsIContent::FindFirstNonNativeAnonymous() const
 NS_IMPL_ADDREF(nsChildContentList)
 NS_IMPL_RELEASE(nsChildContentList)
 
-NS_INTERFACE_MAP_BEGIN(nsChildContentList)
-  NS_INTERFACE_MAP_ENTRY(nsINodeList)
-  NS_INTERFACE_MAP_ENTRY(nsIDOMNodeList)
-  NS_INTERFACE_MAP_ENTRY_AMBIGUOUS(nsISupports, nsINodeList)
+NS_INTERFACE_TABLE_HEAD(nsChildContentList)
+  NS_NODELIST_OFFSET_AND_INTERFACE_TABLE_BEGIN(nsChildContentList)
+    NS_INTERFACE_TABLE_ENTRY(nsChildContentList, nsINodeList)
+    NS_INTERFACE_TABLE_ENTRY(nsChildContentList, nsIDOMNodeList)
+  NS_OFFSET_AND_INTERFACE_TABLE_END
+  NS_OFFSET_AND_INTERFACE_TABLE_TO_MAP_SEGUE
   NS_INTERFACE_MAP_ENTRY_CONTENT_CLASSINFO(NodeList)
 NS_INTERFACE_MAP_END
 

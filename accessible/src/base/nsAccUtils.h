@@ -41,13 +41,17 @@
 
 #include "nsIAccessible.h"
 #include "nsIAccessNode.h"
+#include "nsIAccessibleDocument.h"
 #include "nsIAccessibleRole.h"
+#include "nsIAccessibleText.h"
 #include "nsARIAMap.h"
 
 #include "nsIDOMNode.h"
 #include "nsIPersistentProperties2.h"
 #include "nsIContent.h"
 #include "nsPoint.h"
+
+class nsAccessNode;
 
 class nsAccUtils
 {
@@ -161,6 +165,18 @@ public:
                            nsIAccessible **aTreeItemParent);
 
   /**
+   * Return text accessible containing focus point of the given selection.
+   * Used for normal and misspelling selection changes processing.
+   *
+   * @param aSelection  [in] the given selection
+   * @param aNode       [out, optional] the DOM node of text accessible
+   * @return            text accessible
+   */
+  static already_AddRefed<nsIAccessibleText>
+    GetTextAccessibleFromSelection(nsISelection *aSelection,
+                                   nsIDOMNode **aNode = nsnull);
+
+  /**
    * Converts the given coordinates to coordinates relative screen.
    *
    * @param aX               [in] the given x coord
@@ -232,9 +248,48 @@ public:
   {
     PRUint32 state = 0;
     if (aAcc)
-      aAcc->GetFinalState(&state, nsnull);
+      aAcc->GetState(&state, nsnull);
 
     return state;
+  }
+
+  /**
+   * Query nsAccessNode from the given nsIAccessible.
+   */
+  static already_AddRefed<nsAccessNode>
+    QueryAccessNode(nsIAccessible *aAccessible)
+  {
+    nsAccessNode* accessNode = nsnull;
+    if (aAccessible)
+      CallQueryInterface(aAccessible, &accessNode);
+
+    return accessNode;
+  }
+
+  /**
+   * Query nsAccessNode from the given nsIAccessNode.
+   */
+  static already_AddRefed<nsAccessNode>
+    QueryAccessNode(nsIAccessNode *aAccessNode)
+  {
+    nsAccessNode* accessNode = nsnull;
+    if (aAccessNode)
+      CallQueryInterface(aAccessNode, &accessNode);
+    
+    return accessNode;
+  }
+
+  /**
+   * Query nsAccessNode from the given nsIAccessNode.
+   */
+  static already_AddRefed<nsAccessNode>
+    QueryAccessNode(nsIAccessibleDocument *aAccessibleDocument)
+  {
+    nsAccessNode* accessNode = nsnull;
+    if (aAccessibleDocument)
+      CallQueryInterface(aAccessibleDocument, &accessNode);
+    
+    return accessNode;
   }
 
 #ifdef DEBUG_A11Y

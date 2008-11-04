@@ -74,10 +74,10 @@ NS_IMETHODIMP nsHTMLTextAccessible::GetRole(PRUint32 *aRole)
   return nsTextAccessible::GetRole(aRole);
 }
 
-NS_IMETHODIMP
-nsHTMLTextAccessible::GetState(PRUint32 *aState, PRUint32 *aExtraState)
+nsresult
+nsHTMLTextAccessible::GetStateInternal(PRUint32 *aState, PRUint32 *aExtraState)
 {
-  nsresult rv = nsTextAccessible::GetState(aState, aExtraState);
+  nsresult rv = nsTextAccessible::GetStateInternal(aState, aExtraState);
   NS_ENSURE_SUCCESS(rv, rv);
   if (!mDOMNode)
     return NS_OK;
@@ -86,7 +86,7 @@ nsHTMLTextAccessible::GetState(PRUint32 *aState, PRUint32 *aExtraState)
     do_QueryInterface(nsCOMPtr<nsIAccessibleDocument>(GetDocAccessible()));
   if (docAccessible) {
      PRUint32 state, extState;
-     docAccessible->GetFinalState(&state, &extState);
+     docAccessible->GetState(&state, &extState);
      if (0 == (extState & nsIAccessibleStates::EXT_STATE_EDITABLE)) {
        *aState |= nsIAccessibleStates::STATE_READONLY; // Links not focusable in editor
      }
@@ -135,8 +135,8 @@ NS_IMETHODIMP nsHTMLBRAccessible::GetRole(PRUint32 *aRole)
   return NS_OK;
 }
 
-NS_IMETHODIMP
-nsHTMLBRAccessible::GetState(PRUint32 *aState, PRUint32 *aExtraState)
+nsresult
+nsHTMLBRAccessible::GetStateInternal(PRUint32 *aState, PRUint32 *aExtraState)
 {
   *aState = nsIAccessibleStates::STATE_READONLY;
   if (aExtraState) {
@@ -186,10 +186,10 @@ NS_IMETHODIMP nsHTMLLabelAccessible::GetRole(PRUint32 *aRole)
   return NS_OK;
 }
 
-NS_IMETHODIMP
-nsHTMLLabelAccessible::GetState(PRUint32 *aState, PRUint32 *aExtraState)
+nsresult
+nsHTMLLabelAccessible::GetStateInternal(PRUint32 *aState, PRUint32 *aExtraState)
 {
-  nsresult rv = nsTextAccessible::GetState(aState, aExtraState);
+  nsresult rv = nsTextAccessible::GetStateInternal(aState, aExtraState);
   NS_ENSURE_SUCCESS(rv, rv);
   if (mDOMNode) {
     *aState &= (nsIAccessibleStates::STATE_LINKED |
@@ -225,14 +225,13 @@ nsHTMLLIAccessible::nsHTMLLIAccessible(nsIDOMNode *aDOMNode, nsIWeakReference* a
   if (!aBulletText.IsEmpty()) {
     mBulletAccessible = new nsHTMLListBulletAccessible(mDOMNode, mWeakShell, 
                                                        aBulletText);
-    nsCOMPtr<nsPIAccessNode> bulletANode(mBulletAccessible);
-    if (bulletANode) {
-      bulletANode->Init();
-    }
+    if (mBulletAccessible)
+      mBulletAccessible->Init();
   }
 }
 
-NS_IMETHODIMP nsHTMLLIAccessible::Shutdown()
+nsresult
+nsHTMLLIAccessible::Shutdown()
 {
   if (mBulletAccessible) {
     // Ensure that weak pointer to this is nulled out
@@ -243,10 +242,10 @@ NS_IMETHODIMP nsHTMLLIAccessible::Shutdown()
   return rv;
 }
 
-NS_IMETHODIMP
-nsHTMLLIAccessible::GetState(PRUint32 *aState, PRUint32 *aExtraState)
+nsresult
+nsHTMLLIAccessible::GetStateInternal(PRUint32 *aState, PRUint32 *aExtraState)
 {
-  nsresult rv = nsAccessibleWrap::GetState(aState, aExtraState);
+  nsresult rv = nsAccessibleWrap::GetStateInternal(aState, aExtraState);
   NS_ENSURE_SUCCESS(rv, rv);
 
   *aState |= nsIAccessibleStates::STATE_READONLY;
@@ -304,7 +303,7 @@ nsHTMLListBulletAccessible::GetUniqueID(void **aUniqueID)
   return NS_OK;
 }
 
-NS_IMETHODIMP
+nsresult
 nsHTMLListBulletAccessible::Shutdown()
 {
   mBulletText.Truncate();
@@ -328,10 +327,10 @@ nsHTMLListBulletAccessible::GetRole(PRUint32 *aRole)
   return NS_OK;
 }
 
-NS_IMETHODIMP
-nsHTMLListBulletAccessible::GetState(PRUint32 *aState, PRUint32 *aExtraState)
+nsresult
+nsHTMLListBulletAccessible::GetStateInternal(PRUint32 *aState, PRUint32 *aExtraState)
 {
-  nsresult rv = nsLeafAccessible::GetState(aState, aExtraState);
+  nsresult rv = nsLeafAccessible::GetStateInternal(aState, aExtraState);
   NS_ENSURE_SUCCESS(rv, rv);
 
   *aState &= ~nsIAccessibleStates::STATE_FOCUSABLE;
@@ -368,10 +367,11 @@ nsHTMLListBulletAccessible::AppendTextTo(nsAString& aText, PRUint32 aStartOffset
 
 // nsHTMLListAccessible
 
-NS_IMETHODIMP
-nsHTMLListAccessible::GetState(PRUint32 *aState, PRUint32 *aExtraState)
+nsresult
+nsHTMLListAccessible::GetStateInternal(PRUint32 *aState, PRUint32 *aExtraState)
 {
-  nsresult rv = nsHyperTextAccessibleWrap::GetState(aState, aExtraState);
+  nsresult rv = nsHyperTextAccessibleWrap::GetStateInternal(aState,
+                                                            aExtraState);
   NS_ENSURE_SUCCESS(rv, rv);
 
   *aState |= nsIAccessibleStates::STATE_READONLY;

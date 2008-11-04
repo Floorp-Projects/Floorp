@@ -137,9 +137,11 @@ nsPlacesDBFlush.prototype = {
   {
     this._inBatchMode = false;
 
-    // We need to sync and restore our timer now.
-    this._syncTables(["places", "historyvisits"]);
+    // Restore our timer
     this._timer = this._newTimer();
+
+    // We need to sync now
+    this._syncTables(["places", "historyvisits"]);
   },
 
   onItemAdded: function() this._syncTables(["places"]),
@@ -163,6 +165,12 @@ nsPlacesDBFlush.prototype = {
 
   //////////////////////////////////////////////////////////////////////////////
   //// mozIStorageStatementCallback
+
+  handleError: function DBFlush_handleError(aError)
+  {
+    Components.utils.reportError("Async statement execution returned with '" +
+                                 aError.result + "', '" + aError.message + "'");
+  },
 
   handleCompletion: function DBFlush_handleCompletion(aReason)
   {
@@ -192,7 +200,27 @@ nsPlacesDBFlush.prototype = {
       statements.push(this._getSyncTableStatement(aTableNames[i]));
 
     // Execute sync statements async in a transaction
-    this._db.executeAsync(statements, statements.length, this);
+    // XXX due to a bug in sqlite, we cannot wrap these in a transaction.  See
+    //     https://bugzilla.mozilla.org/show_bug.cgi?id=462379#c2 for details.
+    //this._db.executeAsync(statements, statements.length, this);
+
+    let self = this;
+    let listener = {
+      // We also need to batch the two handleCompletion objects into one.
+      _count: statements.length,
+      handleError: function(aError) self.handleError(aError),
+      handleCompletion: function(aReason) {
+        this._count--;
+        if (this._count == 0) {
+          // we have gotten all notifications
+          self.handleCompletion(aReason);
+        }
+      }
+    };
+    statements.forEach(function(stmt) stmt.executeAsync(listener));
+
+    // Finalize statements, otherwise we could get in trouble
+    statements.forEach(function(stmt) stmt.finalize());
   },
 
   /**
@@ -239,6 +267,7 @@ nsPlacesDBFlush.prototype = {
     Ci.nsIObserver,
     Ci.nsINavBookmarkObserver,
     Ci.nsITimerCallback,
+    Ci.mozIStorageStatementCallback,
   ])
 };
 

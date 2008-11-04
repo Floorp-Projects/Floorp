@@ -42,7 +42,6 @@
 #include "nsIAccessibleStates.h"
 #include "nsIAccessibleTypes.h"
 #include "nsPIAccessible.h"
-#include "nsPIAccessNode.h"
 
 #include "nsAccessibleEventData.h"
 #include "nsHyperTextAccessible.h"
@@ -442,6 +441,78 @@ nsAccUtils::GetARIATreeItemParent(nsIAccessible *aStartTreeItem,
   }
 }
 
+already_AddRefed<nsIAccessibleText>
+nsAccUtils::GetTextAccessibleFromSelection(nsISelection *aSelection,
+                                           nsIDOMNode **aNode)
+{
+  // Get accessible from selection's focus DOM point (the DOM point where
+  // selection is ended).
+
+  nsCOMPtr<nsIDOMNode> resultNode;
+  aSelection->GetFocusNode(getter_AddRefs(resultNode));
+  if (!resultNode)
+    return nsnull;
+
+  // Get DOM node that focus DOM point points to.
+  nsCOMPtr<nsIContent> content(do_QueryInterface(resultNode));
+  if (content && content->IsNodeOfType(nsINode::eELEMENT)) {
+    PRInt32 offset = 0;
+    aSelection->GetFocusOffset(&offset);
+
+    PRInt32 childCount = static_cast<PRInt32>(content->GetChildCount());
+    NS_ASSERTION(offset >= 0 && offset <= childCount,
+                 "Wrong focus offset in selection!");
+
+    // The offset can be after last child of container node that means DOM point
+    // is placed immediately after the last child. In this case use focusNode
+    // as result node.
+    if (offset != childCount) {
+      nsCOMPtr<nsIContent> child = content->GetChildAt(offset);
+      resultNode = do_QueryInterface(child);
+    }
+  }
+
+  nsIAccessibilityService *accService = nsAccessNode::GetAccService();
+
+  // Get text accessible containing the result node.
+  while (resultNode) {
+    // Make sure to get the correct starting node for selection events inside
+    // XBL content trees.
+    nsCOMPtr<nsIDOMNode> relevantNode;
+    nsresult rv = accService->
+      GetRelevantContentNodeFor(resultNode, getter_AddRefs(relevantNode));
+    if (NS_FAILED(rv))
+      return nsnull;
+
+    if (relevantNode)
+      resultNode.swap(relevantNode);
+
+    nsCOMPtr<nsIContent> content = do_QueryInterface(resultNode);
+    if (!content || !content->IsNodeOfType(nsINode::eTEXT)) {
+      nsCOMPtr<nsIAccessible> accessible;
+      accService->GetAccessibleFor(resultNode, getter_AddRefs(accessible));
+      if (accessible) {
+        nsIAccessibleText *textAcc = nsnull;
+        CallQueryInterface(accessible, &textAcc);
+        if (textAcc) {
+          if (aNode)
+            NS_ADDREF(*aNode = resultNode);
+
+          return textAcc;
+        }
+      }
+    }
+
+    nsCOMPtr<nsIDOMNode> parentNode;
+    resultNode->GetParentNode(getter_AddRefs(parentNode));
+    resultNode.swap(parentNode);
+  }
+
+  NS_NOTREACHED("No nsIAccessibleText for selection change event!");
+
+  return nsnull;
+}
+
 nsresult
 nsAccUtils::ConvertToScreenCoords(PRInt32 aX, PRInt32 aY,
                                   PRUint32 aCoordinateType,
@@ -525,16 +596,16 @@ nsAccUtils::GetScreenCoordsForWindow(nsIAccessNode *aAccessNode)
 nsIntPoint
 nsAccUtils::GetScreenCoordsForParent(nsIAccessNode *aAccessNode)
 {
-  nsCOMPtr<nsPIAccessNode> parent;
+  nsRefPtr<nsAccessNode> parent;
   nsCOMPtr<nsIAccessible> accessible(do_QueryInterface(aAccessNode));
   if (accessible) {
     nsCOMPtr<nsIAccessible> parentAccessible;
     accessible->GetParent(getter_AddRefs(parentAccessible));
-    parent = do_QueryInterface(parentAccessible);
+    parent = nsAccUtils::QueryAccessNode(parentAccessible);
   } else {
     nsCOMPtr<nsIAccessNode> parentAccessNode;
     aAccessNode->GetParentNode(getter_AddRefs(parentAccessNode));
-    parent = do_QueryInterface(parentAccessNode);
+    parent = nsAccUtils::QueryAccessNode(parentAccessNode);
   }
 
   if (!parent)
@@ -627,9 +698,9 @@ nsAccUtils::TextLength(nsIAccessible *aAccessible)
   if (!IsText(aAccessible))
     return 1;
   
-  nsCOMPtr<nsPIAccessNode> pAccNode(do_QueryInterface(aAccessible));
+  nsRefPtr<nsAccessNode> accNode = nsAccUtils::QueryAccessNode(aAccessible);
   
-  nsIFrame *frame = pAccNode->GetFrame();
+  nsIFrame *frame = accNode->GetFrame();
   if (frame && frame->GetType() == nsAccessibilityAtoms::textFrame) {
     // Ensure that correct text length is calculated (with non-rendered
     // whitespace chars not counted).

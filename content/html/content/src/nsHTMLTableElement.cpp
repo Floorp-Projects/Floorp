@@ -118,6 +118,7 @@ public:
   NS_DECL_NSIDOMHTMLCOLLECTION
 
   virtual nsISupports* GetNodeAt(PRUint32 aIndex, nsresult* aResult);
+  virtual nsISupports* GetNamedItem(const nsAString& aName, nsresult* aResult);
 
   NS_IMETHOD    ParentDestroyed();
 
@@ -324,32 +325,46 @@ TableRowsCollection::Item(PRUint32 aIndex, nsIDOMNode** aReturn)
   return CallQueryInterface(node, aReturn);
 }
 
-static nsresult
+static nsISupports*
 GetNamedItemInRowGroup(nsIDOMHTMLCollection* aRows,
-                       const nsAString& aName, nsIDOMNode** aNamedItem)
+                       const nsAString& aName, nsresult* aResult)
 {
-  if (aRows) {
-    return aRows->NamedItem(aName, aNamedItem);
+  nsCOMPtr<nsIHTMLCollection> rows = do_QueryInterface(aRows);
+  if (rows) {
+    return rows->GetNamedItem(aName, aResult);
   }
 
-  *aNamedItem = nsnull;
-  return NS_OK;
+  *aResult = NS_OK;
+  return nsnull;
+}
+
+nsISupports* 
+TableRowsCollection::GetNamedItem(const nsAString& aName, nsresult* aResult)
+{
+  nsresult rv = NS_OK;
+  DO_FOR_EACH_ROWGROUP(
+    nsISupports* item = GetNamedItemInRowGroup(rows, aName, aResult);
+    if (NS_FAILED(*aResult) || item) {
+      return item;
+    }
+  );
+  *aResult = rv;
+  return nsnull;
 }
 
 NS_IMETHODIMP 
 TableRowsCollection::NamedItem(const nsAString& aName,
                                nsIDOMNode** aReturn)
 {
-  *aReturn = nsnull;
-  nsresult rv = NS_OK;
-  DO_FOR_EACH_ROWGROUP(
-    rv = GetNamedItemInRowGroup(rows, aName, aReturn);
-    NS_ENSURE_SUCCESS(rv, rv);
-    if (*aReturn) {
-      return rv;
-    }
-  );
-  return rv;
+  nsresult rv;
+  nsISupports* item = GetNamedItem(aName, &rv);
+  if (!item) {
+    *aReturn = nsnull;
+
+    return rv;
+  }
+
+  return CallQueryInterface(item, aReturn);
 }
 
 NS_IMETHODIMP
@@ -394,9 +409,10 @@ NS_IMPL_RELEASE_INHERITED(nsHTMLTableElement, nsGenericElement)
 
 
 // QueryInterface implementation for nsHTMLTableElement
-NS_HTML_CONTENT_CC_INTERFACE_TABLE_HEAD(nsHTMLTableElement,
-                                        nsGenericHTMLElement)
-  NS_INTERFACE_TABLE_INHERITED1(nsHTMLTableElement, nsIDOMHTMLTableElement)
+NS_INTERFACE_TABLE_HEAD_CYCLE_COLLECTION_INHERITED(nsHTMLTableElement)
+  NS_HTML_CONTENT_INTERFACE_TABLE1(nsHTMLTableElement, nsIDOMHTMLTableElement)
+  NS_HTML_CONTENT_INTERFACE_TABLE_TO_MAP_SEGUE(nsHTMLTableElement,
+                                               nsGenericHTMLElement)
 NS_HTML_CONTENT_INTERFACE_TABLE_TAIL_CLASSINFO(HTMLTableElement)
 
 

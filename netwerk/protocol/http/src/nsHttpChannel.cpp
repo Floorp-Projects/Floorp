@@ -2410,17 +2410,30 @@ nsHttpChannel::AddCacheEntryHeaders(nsICacheEntryDescriptor *entry)
     return rv;
 }
 
+inline void
+GetAuthType(const char *challenge, nsCString &authType)
+{
+    const char *p;
+
+    // get the challenge type
+    if ((p = strchr(challenge, ' ')) != nsnull)
+        authType.Assign(challenge, p - challenge);
+    else
+        authType.Assign(challenge);
+}
+
 nsresult
 nsHttpChannel::StoreAuthorizationMetaData(nsICacheEntryDescriptor *entry)
 {
     // Not applicable to proxy authorization...
     const char *val = mRequestHead.PeekHeader(nsHttp::Authorization);
-    if (val) {
-        // eg. [Basic realm="wally world"]
-        nsCAutoString buf(Substring(val, strchr(val, ' ')));
-        return entry->SetMetaDataElement("auth", buf.get());
-    }
-    return NS_OK;
+    if (!val)
+        return NS_OK;
+
+    // eg. [Basic realm="wally world"]
+    nsCAutoString buf;
+    GetAuthType(val, buf);
+    return entry->SetMetaDataElement("auth", buf.get());
 }
 
 // Finalize the cache entry
@@ -3279,14 +3292,8 @@ nsHttpChannel::GetAuthenticator(const char *challenge,
 {
     LOG(("nsHttpChannel::GetAuthenticator [this=%x]\n", this));
 
-    const char *p;
-  
-    // get the challenge type
-    if ((p = strchr(challenge, ' ')) != nsnull)
-        authType.Assign(challenge, p - challenge);
-    else
-        authType.Assign(challenge);
-  
+    GetAuthType(challenge, authType);
+ 
     // normalize to lowercase
     ToLowerCase(authType);
 

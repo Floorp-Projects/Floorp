@@ -1412,6 +1412,92 @@ nsNavHistory::MigrateV6Up(mozIStorageConnection* aDBConn)
       "DROP INDEX IF EXISTS moz_anno_attributes_nameindex"));
   NS_ENSURE_SUCCESS(rv, rv);
 
+
+  // bug #371800 - remove moz_places.user_title
+  // test for moz_places.user_title
+  nsCOMPtr<mozIStorageStatement> statement2;
+  rv = mDBConn->CreateStatement(NS_LITERAL_CSTRING(
+      "SELECT user_title FROM moz_places"),
+    getter_AddRefs(statement2));
+  if (NS_SUCCEEDED(rv)) {
+    // 1. Indexes are moved along with the renamed table. Since we're dropping
+    // that table, we're also dropping its indexes, and later re-creating them
+    // for the new table.
+    rv = mDBConn->ExecuteSimpleSQL(NS_LITERAL_CSTRING(
+        "DROP INDEX IF EXISTS moz_places_urlindex"));
+    NS_ENSURE_SUCCESS(rv, rv);
+    rv = mDBConn->ExecuteSimpleSQL(NS_LITERAL_CSTRING(
+        "DROP INDEX IF EXISTS moz_places_titleindex"));
+    NS_ENSURE_SUCCESS(rv, rv);
+    rv = mDBConn->ExecuteSimpleSQL(NS_LITERAL_CSTRING(
+        "DROP INDEX IF EXISTS moz_places_faviconindex"));
+    NS_ENSURE_SUCCESS(rv, rv);
+    rv = mDBConn->ExecuteSimpleSQL(NS_LITERAL_CSTRING(
+        "DROP INDEX IF EXISTS moz_places_hostindex"));
+    NS_ENSURE_SUCCESS(rv, rv);
+    rv = mDBConn->ExecuteSimpleSQL(NS_LITERAL_CSTRING(
+        "DROP INDEX IF EXISTS moz_places_visitcount"));
+    NS_ENSURE_SUCCESS(rv, rv);
+    rv = mDBConn->ExecuteSimpleSQL(NS_LITERAL_CSTRING(
+        "DROP INDEX IF EXISTS moz_places_frecencyindex"));
+    NS_ENSURE_SUCCESS(rv, rv);
+
+    // 2. remove any duplicate URIs
+    rv = RemoveDuplicateURIs();
+    NS_ENSURE_SUCCESS(rv, rv);
+
+    // 3. rename moz_places to moz_places_backup
+    rv = mDBConn->ExecuteSimpleSQL(NS_LITERAL_CSTRING(
+        "ALTER TABLE moz_places RENAME TO moz_places_backup"));
+    NS_ENSURE_SUCCESS(rv, rv);
+
+    // 4. create moz_places w/o user_title
+    rv = mDBConn->ExecuteSimpleSQL(NS_LITERAL_CSTRING(
+        "CREATE TABLE moz_places ("
+          "id INTEGER PRIMARY KEY, "
+          "url LONGVARCHAR, "
+          "title LONGVARCHAR, "
+          "rev_host LONGVARCHAR, "
+          "visit_count INTEGER DEFAULT 0, "
+          "hidden INTEGER DEFAULT 0 NOT NULL, "
+          "typed INTEGER DEFAULT 0 NOT NULL, "
+          "favicon_id INTEGER, "
+          "frecency INTEGER DEFAULT -1 NOT NULL)"));
+    NS_ENSURE_SUCCESS(rv, rv);
+
+    // 5. recreate the indexes
+    // NOTE: tests showed that it's faster to create the indexes prior to filling
+    // the table than it is to add them afterwards.
+    rv = mDBConn->ExecuteSimpleSQL(NS_LITERAL_CSTRING(
+        "CREATE UNIQUE INDEX moz_places_url_uniqueindex ON moz_places (url)"));
+    NS_ENSURE_SUCCESS(rv, rv);
+    rv = mDBConn->ExecuteSimpleSQL(NS_LITERAL_CSTRING(
+        "CREATE INDEX moz_places_faviconindex ON moz_places (favicon_id)"));
+    NS_ENSURE_SUCCESS(rv, rv);
+    rv = mDBConn->ExecuteSimpleSQL(NS_LITERAL_CSTRING(
+        "CREATE INDEX moz_places_hostindex ON moz_places (rev_host)"));
+    NS_ENSURE_SUCCESS(rv, rv);
+    rv = mDBConn->ExecuteSimpleSQL(NS_LITERAL_CSTRING(
+        "CREATE INDEX moz_places_visitcount ON moz_places (visit_count)"));
+    NS_ENSURE_SUCCESS(rv, rv);
+    rv = mDBConn->ExecuteSimpleSQL(NS_LITERAL_CSTRING(
+        "CREATE INDEX moz_places_frecencyindex ON moz_places (frecency)"));
+    NS_ENSURE_SUCCESS(rv, rv);
+
+    // 6. copy all data into moz_places
+    rv = mDBConn->ExecuteSimpleSQL(NS_LITERAL_CSTRING(
+        "INSERT INTO moz_places "
+        "SELECT id, url, title, rev_host, visit_count, hidden, typed, "
+          "favicon_id, frecency "
+        "FROM moz_places_backup"));
+    NS_ENSURE_SUCCESS(rv, rv);
+
+    // 7. drop moz_places_backup
+    rv = mDBConn->ExecuteSimpleSQL(NS_LITERAL_CSTRING(
+        "DROP TABLE moz_places_backup"));
+    NS_ENSURE_SUCCESS(rv, rv);
+  }
+
   return transaction.Commit();
 }
 
@@ -1523,13 +1609,49 @@ nsNavHistory::MigrateV8Up(mozIStorageConnection *aDBConn)
   mozStorageTransaction transaction(aDBConn, PR_FALSE);
 
   nsresult rv = aDBConn->ExecuteSimpleSQL(NS_LITERAL_CSTRING(
-      "DROP TRIGGER moz_historyvisits_afterinsert_v1_trigger"));
+      "DROP TRIGGER IF EXISTS moz_historyvisits_afterinsert_v1_trigger"));
   NS_ENSURE_SUCCESS(rv, rv);
 
   rv = aDBConn->ExecuteSimpleSQL(NS_LITERAL_CSTRING(
-      "DROP TRIGGER moz_historyvisits_afterdelete_v1_trigger"));
+      "DROP TRIGGER IF EXISTS moz_historyvisits_afterdelete_v1_trigger"));
   NS_ENSURE_SUCCESS(rv, rv);
-  
+
+
+  // bug #381795 - remove unused indexes
+  rv = mDBConn->ExecuteSimpleSQL(
+    NS_LITERAL_CSTRING("DROP INDEX IF EXISTS moz_places_titleindex"));
+  NS_ENSURE_SUCCESS(rv, rv);
+  rv = mDBConn->ExecuteSimpleSQL(
+    NS_LITERAL_CSTRING("DROP INDEX IF EXISTS moz_annos_item_idindex"));
+  NS_ENSURE_SUCCESS(rv, rv);
+
+
+  // Do a one-time re-creation of the moz_annos indexes (bug 415201)
+  PRBool oldIndexExists = PR_FALSE;
+  rv = mDBConn->IndexExists(NS_LITERAL_CSTRING("moz_annos_attributesindex"), &oldIndexExists);
+  NS_ENSURE_SUCCESS(rv, rv);
+  if (oldIndexExists) {
+    // drop old uri annos index
+    rv = mDBConn->ExecuteSimpleSQL(
+        NS_LITERAL_CSTRING("DROP INDEX moz_annos_attributesindex"));
+    NS_ENSURE_SUCCESS(rv, rv);
+
+    // create new uri annos index
+    rv = mDBConn->ExecuteSimpleSQL(
+      NS_LITERAL_CSTRING("CREATE UNIQUE INDEX moz_annos_placeattributeindex ON moz_annos (place_id, anno_attribute_id)"));
+    NS_ENSURE_SUCCESS(rv, rv);
+
+    // drop old item annos index
+    rv = mDBConn->ExecuteSimpleSQL(
+        NS_LITERAL_CSTRING("DROP INDEX IF EXISTS moz_items_annos_attributesindex"));
+    NS_ENSURE_SUCCESS(rv, rv);
+
+    // create new item annos index
+    rv = mDBConn->ExecuteSimpleSQL(
+      NS_LITERAL_CSTRING("CREATE UNIQUE INDEX moz_items_annos_itemattributeindex ON moz_items_annos (item_id, anno_attribute_id)"));
+    NS_ENSURE_SUCCESS(rv, rv);
+  }
+
   return transaction.Commit();
 }
 
@@ -1617,141 +1739,6 @@ nsNavHistory::EnsureCurrentSchema(mozIStorageConnection* aDBConn, PRBool* aDidMi
     NS_ENSURE_SUCCESS(rv, rv);
   }
 
-  return NS_OK;
-}
-
-nsresult
-nsNavHistory::CleanUpOnQuit()
-{
-  // bug #371800 - remove moz_places.user_title
-  // test for moz_places.user_title
-  nsCOMPtr<mozIStorageStatement> statement2;
-  nsresult rv = mDBConn->CreateStatement(NS_LITERAL_CSTRING(
-      "SELECT user_title FROM moz_places"),
-    getter_AddRefs(statement2));
-  if (NS_SUCCEEDED(rv)) {
-    mozStorageTransaction transaction(mDBConn, PR_FALSE);
-    // 1. Indexes are moved along with the renamed table. Since we're dropping
-    // that table, we're also dropping its indexes, and later re-creating them
-    // for the new table.
-    rv = mDBConn->ExecuteSimpleSQL(NS_LITERAL_CSTRING(
-        "DROP INDEX IF EXISTS moz_places_urlindex"));
-    NS_ENSURE_SUCCESS(rv, rv);
-    rv = mDBConn->ExecuteSimpleSQL(NS_LITERAL_CSTRING(
-        "DROP INDEX IF EXISTS moz_places_titleindex"));
-    NS_ENSURE_SUCCESS(rv, rv);
-    rv = mDBConn->ExecuteSimpleSQL(NS_LITERAL_CSTRING(
-        "DROP INDEX IF EXISTS moz_places_faviconindex"));
-    NS_ENSURE_SUCCESS(rv, rv);
-    rv = mDBConn->ExecuteSimpleSQL(NS_LITERAL_CSTRING(
-        "DROP INDEX IF EXISTS moz_places_hostindex"));
-    NS_ENSURE_SUCCESS(rv, rv);
-    rv = mDBConn->ExecuteSimpleSQL(NS_LITERAL_CSTRING(
-        "DROP INDEX IF EXISTS moz_places_visitcount"));
-    NS_ENSURE_SUCCESS(rv, rv);
-    rv = mDBConn->ExecuteSimpleSQL(NS_LITERAL_CSTRING(
-        "DROP INDEX IF EXISTS moz_places_frecencyindex"));
-    NS_ENSURE_SUCCESS(rv, rv);
-
-    // 2. remove any duplicate URIs
-    rv = RemoveDuplicateURIs();
-    NS_ENSURE_SUCCESS(rv, rv);
-
-    // 3. rename moz_places to moz_places_backup
-    rv = mDBConn->ExecuteSimpleSQL(NS_LITERAL_CSTRING(
-        "ALTER TABLE moz_places RENAME TO moz_places_backup"));
-    NS_ENSURE_SUCCESS(rv, rv);
-
-    // 4. create moz_places w/o user_title
-    rv = mDBConn->ExecuteSimpleSQL(NS_LITERAL_CSTRING(
-        "CREATE TABLE moz_places ("
-          "id INTEGER PRIMARY KEY, "
-          "url LONGVARCHAR, "
-          "title LONGVARCHAR, "
-          "rev_host LONGVARCHAR, "
-          "visit_count INTEGER DEFAULT 0, "
-          "hidden INTEGER DEFAULT 0 NOT NULL, "
-          "typed INTEGER DEFAULT 0 NOT NULL, "
-          "favicon_id INTEGER, "
-          "frecency INTEGER DEFAULT -1 NOT NULL)"));
-    NS_ENSURE_SUCCESS(rv, rv);
-
-    // 5. recreate the indexes
-    // NOTE: tests showed that it's faster to create the indexes prior to filling
-    // the table than it is to add them afterwards.
-    rv = mDBConn->ExecuteSimpleSQL(NS_LITERAL_CSTRING(
-        "CREATE UNIQUE INDEX moz_places_url_uniqueindex ON moz_places (url)"));
-    NS_ENSURE_SUCCESS(rv, rv);
-    rv = mDBConn->ExecuteSimpleSQL(NS_LITERAL_CSTRING(
-        "CREATE INDEX moz_places_faviconindex ON moz_places (favicon_id)"));
-    NS_ENSURE_SUCCESS(rv, rv);
-    rv = mDBConn->ExecuteSimpleSQL(NS_LITERAL_CSTRING(
-        "CREATE INDEX moz_places_hostindex ON moz_places (rev_host)"));
-    NS_ENSURE_SUCCESS(rv, rv);
-    rv = mDBConn->ExecuteSimpleSQL(NS_LITERAL_CSTRING(
-        "CREATE INDEX moz_places_visitcount ON moz_places (visit_count)"));
-    NS_ENSURE_SUCCESS(rv, rv);
-    rv = mDBConn->ExecuteSimpleSQL(NS_LITERAL_CSTRING(
-        "CREATE INDEX moz_places_frecencyindex ON moz_places (frecency)"));
-    NS_ENSURE_SUCCESS(rv, rv);
-
-    // 6. copy all data into moz_places
-    rv = mDBConn->ExecuteSimpleSQL(NS_LITERAL_CSTRING(
-        "INSERT INTO moz_places "
-        "SELECT id, url, title, rev_host, visit_count, hidden, typed, "
-          "favicon_id, frecency "
-        "FROM moz_places_backup"));
-    NS_ENSURE_SUCCESS(rv, rv);
-
-    // 7. drop moz_places_backup
-    rv = mDBConn->ExecuteSimpleSQL(NS_LITERAL_CSTRING(
-        "DROP TABLE moz_places_backup"));
-    NS_ENSURE_SUCCESS(rv, rv);
-    transaction.Commit();
-  }
-
-  // bug #381795 - remove unused indexes
-  mozStorageTransaction idxTransaction(mDBConn, PR_FALSE);
-  rv = mDBConn->ExecuteSimpleSQL(NS_LITERAL_CSTRING(
-      "DROP INDEX IF EXISTS moz_places_titleindex"));
-  rv = mDBConn->ExecuteSimpleSQL(NS_LITERAL_CSTRING(
-      "DROP INDEX IF EXISTS moz_annos_item_idindex"));
-  idxTransaction.Commit();
-
-  // Do a one-time re-creation of the moz_annos indexes (bug 415201)
-  PRBool oldIndexExists = PR_FALSE;
-  rv = mDBConn->IndexExists(NS_LITERAL_CSTRING("moz_annos_attributesindex"),
-                            &oldIndexExists);
-  NS_ENSURE_SUCCESS(rv, rv);
-  if (oldIndexExists) {
-    // wrap in a transaction for safety and performance
-    mozStorageTransaction annoIndexTransaction(mDBConn, PR_FALSE);
-
-    // drop old uri annos index
-    rv = mDBConn->ExecuteSimpleSQL(NS_LITERAL_CSTRING(
-        "DROP INDEX moz_annos_attributesindex"));
-    NS_ENSURE_SUCCESS(rv, rv);
-
-    // create new uri annos index
-    rv = mDBConn->ExecuteSimpleSQL(NS_LITERAL_CSTRING(
-        "CREATE UNIQUE INDEX moz_annos_placeattributeindex "
-          "ON moz_annos (place_id, anno_attribute_id)"));
-    NS_ENSURE_SUCCESS(rv, rv);
-
-    // drop old item annos index
-    rv = mDBConn->ExecuteSimpleSQL(NS_LITERAL_CSTRING(
-        "DROP INDEX IF EXISTS moz_items_annos_attributesindex"));
-    NS_ENSURE_SUCCESS(rv, rv);
-
-    // create new item annos index
-    rv = mDBConn->ExecuteSimpleSQL(NS_LITERAL_CSTRING(
-      "CREATE UNIQUE INDEX moz_items_annos_itemattributeindex "
-        "ON moz_items_annos (item_id, anno_attribute_id)"));
-    NS_ENSURE_SUCCESS(rv, rv);
-
-    rv = annoIndexTransaction.Commit();
-    NS_ENSURE_SUCCESS(rv, rv);
-  }
   return NS_OK;
 }
 
@@ -5277,11 +5264,6 @@ nsNavHistory::Observe(nsISupports *aSubject, const char *aTopic,
 
     // notify expiring system that we're quitting, it may want to do stuff
     mExpire.OnQuit();
-
-    // run post-run migration
-    // NOTE: This must run after expiration. It causes expiration to take a
-    // very long time if run first.
-    (void)CleanUpOnQuit();
 
     // notify the bookmarks service we're quitting
     nsNavBookmarks* bookmarks = nsNavBookmarks::GetBookmarksService();

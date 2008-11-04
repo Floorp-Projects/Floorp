@@ -100,13 +100,11 @@ NS_IMPL_NS_NEW_SVG_ELEMENT(Text)
 NS_IMPL_ADDREF_INHERITED(nsSVGTextElement,nsSVGTextElementBase)
 NS_IMPL_RELEASE_INHERITED(nsSVGTextElement,nsSVGTextElementBase)
 
-NS_INTERFACE_MAP_BEGIN(nsSVGTextElement)
-  NS_INTERFACE_MAP_ENTRY(nsIDOMNode)
-  NS_INTERFACE_MAP_ENTRY(nsIDOMElement)
-  NS_INTERFACE_MAP_ENTRY(nsIDOMSVGElement)
-  NS_INTERFACE_MAP_ENTRY(nsIDOMSVGTextElement)
-  NS_INTERFACE_MAP_ENTRY(nsIDOMSVGTextPositioningElement)
-  NS_INTERFACE_MAP_ENTRY(nsIDOMSVGTextContentElement)
+NS_INTERFACE_TABLE_HEAD(nsSVGTextElement)
+  NS_NODE_INTERFACE_TABLE6(nsSVGTextElement, nsIDOMNode, nsIDOMElement,
+                           nsIDOMSVGElement, nsIDOMSVGTextElement,
+                           nsIDOMSVGTextPositioningElement,
+                           nsIDOMSVGTextContentElement)
   NS_INTERFACE_MAP_ENTRY_CONTENT_CLASSINFO(SVGTextElement)
 NS_INTERFACE_MAP_END_INHERITING(nsSVGTextElementBase)
 

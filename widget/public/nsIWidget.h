@@ -93,10 +93,10 @@ typedef nsEventStatus (* EVENT_CALLBACK)(nsGUIEvent *event);
 #define NS_NATIVE_PLUGIN_PORT_CG    101
 #endif
 
-// 8c91457a-ef86-4da1-b4f9-36022dcc6c7e
+// 7E01D11D-DAFC-4A5E-8C0A-7442A2E17252
 #define NS_IWIDGET_IID \
-{ 0x8c91457a, 0xef86, 0x4da1, \
-  { 0xb4, 0xf9, 0x36, 0x02, 0x2d, 0xcc, 0x6c, 0x7e } }
+{ 0x7E01D11D, 0xDAFC, 0x4A5E, \
+  { 0x8C, 0x0A, 0x74, 0x42, 0xA2, 0xE1, 0x72, 0x52 } }
 
 // Hide the native window systems real window type so as to avoid
 // including native window system types and APIs. This is necessary
@@ -1134,7 +1134,7 @@ class nsIWidget : public nsISupports {
      * Activates a native menu item at the position specified by the index
      * string. The index string is a string of positive integers separated
      * by the "|" (pipe) character. The last integer in the string represents
-     * the item index in a submenu located using the integers prior to it.
+     * the item index in a submenu located using the integers preceeding it.
      *
      * Example: 1|0|4
      * In this string, the first integer represents the top-level submenu
@@ -1143,6 +1143,24 @@ class nsIWidget : public nsISupports {
      * submenu, and we want to activate the 5th item within that submenu.
      */
     virtual nsresult ActivateNativeMenuItemAt(const nsAString& indexString) = 0;
+
+    /**
+     * This is used for native menu system testing.
+     *
+     * Updates a native menu at the position specified by the index string.
+     * The index string is a string of positive integers separated by the "|" 
+     * (pipe) character.
+     *
+     * Example: 1|0|4
+     * In this string, the first integer represents the top-level submenu
+     * in the native menu bar. Since the integer is 1, it is the second submeu
+     * in the native menu bar. Within that, the first item (index 0) is a
+     * submenu, and we want to update submenu at index 4 within that submenu.
+     *
+     * If this is called with an empty string it forces a full reload of the
+     * menu system.
+     */
+    virtual nsresult ForceUpdateNativeMenuAt(const nsAString& indexString) = 0;
 
     /*
      * Force Input Method Editor to commit the uncommited input
@@ -1221,14 +1239,6 @@ class nsIWidget : public nsISupports {
      * state), this method returns NS_ERROR_NOT_IMPLEMENTED.
      */
     NS_IMETHOD GetToggledKeyState(PRUint32 aKeyCode, PRBool* aLEDState) = 0;
-
-    /**
-     * This is used for native menu system testing. Calling this forces a full
-     * reload of the menu system, reloading all native menus and their items.
-     * This is important for testing because changes to the DOM can affect the
-     * native menu system lazily.
-     */
-    virtual nsresult ForceNativeMenuReload() = 0;
 
 protected:
     // keep the list of children.  We also keep track of our siblings.

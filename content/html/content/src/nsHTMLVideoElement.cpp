@@ -73,8 +73,10 @@ NS_IMPL_NS_NEW_HTML_ELEMENT_CHECK_PARSER(Video)
 NS_IMPL_ADDREF_INHERITED(nsHTMLVideoElement, nsHTMLMediaElement)
 NS_IMPL_RELEASE_INHERITED(nsHTMLVideoElement, nsHTMLMediaElement)
 
-NS_HTML_CONTENT_INTERFACE_TABLE_HEAD(nsHTMLVideoElement, nsHTMLMediaElement)
-  NS_INTERFACE_TABLE_INHERITED1(nsHTMLVideoElement, nsIDOMHTMLVideoElement)
+NS_INTERFACE_TABLE_HEAD(nsHTMLVideoElement)
+  NS_HTML_CONTENT_INTERFACE_TABLE1(nsHTMLVideoElement, nsIDOMHTMLVideoElement)
+  NS_HTML_CONTENT_INTERFACE_TABLE_TO_MAP_SEGUE(nsHTMLVideoElement,
+                                               nsHTMLMediaElement)
 NS_HTML_CONTENT_INTERFACE_TABLE_TAIL_CLASSINFO(HTMLVideoElement)
 
 NS_IMPL_ELEMENT_CLONE(nsHTMLVideoElement)
@@ -134,12 +136,3 @@ void nsHTMLVideoElement::UnbindFromTree(PRBool aDeep,
   if (mDecoder) 
     mDecoder->ElementUnavailable();
 }
-
-nsresult nsHTMLVideoElement::InitializeDecoder(nsAString& aChosenMediaResource)
-{
-  if (mDecoder) 
-    mDecoder->ElementAvailable(this);
-
-  return nsHTMLMediaElement::InitializeDecoder(aChosenMediaResource);
-}
-

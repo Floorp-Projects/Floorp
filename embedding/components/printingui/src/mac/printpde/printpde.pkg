@@ -1,7 +1,0 @@
-[xpfe-browser]
-dist/package/PrintPDE.plugin/Contents/Info.plist                                       approot/Plug-Ins/PrintPDE.plugin/Contents/Info.plist
-dist/package/PrintPDE.plugin/Contents/MacOS/PrintPDE                                   approot/Plug-Ins/PrintPDE.plugin/Contents/MacOS/PrintPDE
-dist/package/PrintPDE.plugin/Contents/Resources/English.lproj/Localizable.strings      approot/Plug-Ins/PrintPDE.plugin/Contents/Resources/English.lproj/Localizable.strings
-dist/package/PrintPDE.plugin/Contents/Resources/English.lproj/PrintPDE.nib/classes.nib approot/Plug-Ins/PrintPDE.plugin/Contents/Resources/English.lproj/PrintPDE.nib/classes.nib
-dist/package/PrintPDE.plugin/Contents/Resources/English.lproj/PrintPDE.nib/info.nib    approot/Plug-Ins/PrintPDE.plugin/Contents/Resources/English.lproj/PrintPDE.nib/info.nib
-dist/package/PrintPDE.plugin/Contents/Resources/English.lproj/PrintPDE.nib/objects.xib approot/Plug-Ins/PrintPDE.plugin/Contents/Resources/English.lproj/PrintPDE.nib/objects.xib
