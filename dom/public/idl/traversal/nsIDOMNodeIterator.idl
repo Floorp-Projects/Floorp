@@ -43,7 +43,7 @@ interface nsIDOMNodeIterator;
 interface nsIDOMNodeFilter;
 
 
-[scriptable, uuid(354b5f02-1dd2-11b2-b053-b8c2997022a0)]
+[scriptable, uuid(5af83f50-c8d5-4824-be29-1aa9d640bacb)]
 // Introduced in DOM Level 2:
 interface nsIDOMNodeIterator : nsISupports
 {

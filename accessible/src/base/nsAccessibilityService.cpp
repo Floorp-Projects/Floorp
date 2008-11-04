@@ -76,7 +76,6 @@
 #include "nsOuterDocAccessible.h"
 #include "nsRootAccessibleWrap.h"
 #include "nsTextFragment.h"
-#include "nsPIAccessNode.h"
 #include "nsPresContext.h"
 #include "nsServiceManagerUtils.h"
 #include "nsUnicharUtils.h"
@@ -247,6 +246,13 @@ NS_IMETHODIMP nsAccessibilityService::ProcessDocLoadEvent(nsITimer *aTimer, void
   privDocAccessible->FireDocLoadEvents(aEventType);
 
   return NS_OK;
+}
+
+NS_IMETHODIMP
+nsAccessibilityService::FireAccessibleEvent(PRUint32 aEvent,
+                                            nsIAccessible *aTarget)
+{
+  return nsAccUtils::FireAccEvent(aEvent, aTarget);
 }
 
 void nsAccessibilityService::StartLoadCallback(nsITimer *aTimer, void *aClosure)
@@ -452,11 +458,11 @@ nsAccessibilityService::CreateRootAccessible(nsIPresShell *aShell,
   if (!*aRootAcc)
     return NS_ERROR_OUT_OF_MEMORY;
 
-  nsCOMPtr<nsPIAccessNode> privateAccessNode(do_QueryInterface(*aRootAcc));
-  privateAccessNode->Init();
+  nsRefPtr<nsAccessNode> rootAcc = nsAccUtils::QueryAccessNode(*aRootAcc);
+  rootAcc->Init();
+
   nsRoleMapEntry *roleMapEntry = nsAccUtils::GetRoleMapEntry(rootNode);
-  nsCOMPtr<nsPIAccessible> privateAccessible =
-    do_QueryInterface(privateAccessNode);
+  nsCOMPtr<nsPIAccessible> privateAccessible(do_QueryInterface(*aRootAcc));
   privateAccessible->SetRoleMapEntry(roleMapEntry);
 
   NS_ADDREF(*aRootAcc);
@@ -592,16 +598,8 @@ nsAccessibilityService::CreateHyperTextAccessible(nsISupports *aFrame, nsIAccess
   nsCOMPtr<nsIContent> content(do_QueryInterface(node));
   NS_ENSURE_TRUE(content, NS_ERROR_FAILURE);
   
-  if (nsCoreUtils::HasListener(content, NS_LITERAL_STRING("click"))) {
-    // nsLinkableAccessible inherits from nsHyperTextAccessible, but
-    // it also includes code for dealing with the onclick
-    *aAccessible = new nsLinkableAccessible(node, weakShell);
-  }
-  else {
-    *aAccessible = new nsHyperTextAccessibleWrap(node, weakShell);
-  }
-  if (nsnull == *aAccessible)
-    return NS_ERROR_OUT_OF_MEMORY;
+  *aAccessible = new nsHyperTextAccessibleWrap(node, weakShell);
+  NS_ENSURE_TRUE(*aAccessible, NS_ERROR_OUT_OF_MEMORY);
 
   NS_ADDREF(*aAccessible);
   return NS_OK;
@@ -1256,16 +1254,16 @@ nsresult nsAccessibilityService::InitAccessible(nsIAccessible *aAccessibleIn,
   }
   NS_ASSERTION(aAccessibleOut && !*aAccessibleOut, "Out param should already be cleared out");
 
-  nsCOMPtr<nsPIAccessNode> privateAccessNode = do_QueryInterface(aAccessibleIn);
-  NS_ASSERTION(privateAccessNode, "All accessibles must support nsPIAccessNode");
-  nsresult rv = privateAccessNode->Init(); // Add to cache, etc.
-  if (NS_SUCCEEDED(rv)) {
-    nsCOMPtr<nsPIAccessible> privateAccessible =
-      do_QueryInterface(privateAccessNode);
-    privateAccessible->SetRoleMapEntry(aRoleMapEntry);
-    NS_ADDREF(*aAccessibleOut = aAccessibleIn);
-  }
-  return rv;
+  nsRefPtr<nsAccessNode> acc = nsAccUtils::QueryAccessNode(aAccessibleIn);
+  nsresult rv = acc->Init(); // Add to cache, etc.
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  nsCOMPtr<nsPIAccessible> privateAccessible =
+    do_QueryInterface(aAccessibleIn);
+  privateAccessible->SetRoleMapEntry(aRoleMapEntry);
+  NS_ADDREF(*aAccessibleOut = aAccessibleIn);
+
+  return NS_OK;
 }
 
 static PRBool HasRelatedContent(nsIContent *aContent)

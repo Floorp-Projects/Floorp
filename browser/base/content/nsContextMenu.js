@@ -228,6 +228,8 @@ nsContextMenu.prototype = {
     this.showItem("context-viewimage", (this.onImage &&
                   (!this.onStandaloneImage || this.inFrame)) || this.onCanvas);
 
+    this.showItem("context-viewvideo", this.onVideo);
+
     // View background image depends on whether there is one.
     this.showItem("context-viewbgimage", shouldShow);
     this.showItem("context-sep-viewbgimage", shouldShow);
@@ -290,7 +292,8 @@ nsContextMenu.prototype = {
     }
 
     // Only show the block image item if the image can be blocked
-    this.showItem("context-blockimage", this.onImage && hostLabel);
+    this.showItem("context-blockimage", this.onImage && hostLabel &&
+      !gPrivateBrowsingUI.privateBrowsingEnabled);
   },
 
   initSpellingItems: function() {
@@ -463,11 +466,11 @@ nsContextMenu.prototype = {
       }
       else if (this.target instanceof HTMLVideoElement) {
         this.onVideo = true;
-        this.mediaURL = this.target.src;
+        this.mediaURL = this.target.currentSrc;
       }
       else if (this.target instanceof HTMLAudioElement) {
         this.onAudio = true;
-        this.mediaURL = this.target.src;
+        this.mediaURL = this.target.currentSrc;
       }
       else if (this.target instanceof HTMLInputElement ) {
         this.onTextInput = this.isTargetATextBox(this.target);

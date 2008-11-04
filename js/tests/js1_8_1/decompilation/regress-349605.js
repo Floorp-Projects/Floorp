@@ -56,7 +56,7 @@ function test()
     { alert(1); for((let(y=3) let(y=4) y); 0; x++) ; alert(6); }
 
   expect = 'function () {\n    alert(1);\n' +
-    '    for ((let (y = 3) (let (y = 4) y)); 0; x++) {\n' +
+    '    for ((let (y = 3) (let (y = 4) y)); false; x++) {\n' +
     '    }\n' +
     '    alert(6);\n' +
     '}';

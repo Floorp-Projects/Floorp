@@ -128,11 +128,31 @@ function cleanup()
 var gDownloadCount = 0;
 /**
  * Adds a download to the DM, and starts it.
- * @param aResultFileName (optional): the leafName of the download's target
- *                                    file.
+ * @param aParams (optional): an optional object which contains the function
+ *                            parameters:
+ *                              resultFileName: leaf node for the target file
+ *                              targetFile: nsIFile for the target (overrides resultFileName)
+ *                              sourceURI: the download source URI
+ *                              downloadName: the display name of the download
+ *                              runBeforeStart: a function to run before starting the download
  */
-function addDownload(aResultFileName)
+function addDownload(aParams)
 {
+  if (!aParams)
+    aParams = {};
+  if (!("resultFileName" in aParams))
+    aParams.resultFileName = "download.result";
+  if (!("targetFile" in aParams)) {
+    aParams.targetFile = dirSvc.get("ProfD", Ci.nsIFile);
+    aParams.targetFile.append(aParams.resultFileName);
+  }
+  if (!("sourceURI" in aParams))
+    aParams.sourceURI = "http://localhost:4444/res/language.properties";
+  if (!("downloadName" in aParams))
+    aParams.downloadName = null;
+  if (!("runBeforeStart" in aParams))
+    aParams.runBeforeStart = function () {};
+
   const nsIWBP = Ci.nsIWebBrowserPersist;
   var persist = Cc["@mozilla.org/embedding/browser/nsWebBrowserPersist;1"]
                 .createInstance(Ci.nsIWebBrowserPersist);
@@ -140,20 +160,19 @@ function addDownload(aResultFileName)
                          nsIWBP.PERSIST_FLAGS_BYPASS_CACHE |
                          nsIWBP.PERSIST_FLAGS_AUTODETECT_APPLY_CONVERSION;
 
-  var destFile = dirSvc.get("ProfD", Ci.nsIFile);
-  destFile.append(aResultFileName || "download.result");
-
   // it is part of the active downloads the moment addDownload is called
   gDownloadCount++;
 
-  var dl = dm.addDownload(nsIDownloadManager.DOWNLOAD_TYPE_DOWNLOAD,
-                          createURI("http://localhost:4444/res/language.properties"),
-                          createURI(destFile), null, null,
+  var dl = dm.addDownload(Ci.nsIDownloadManager.DOWNLOAD_TYPE_DOWNLOAD,
+                          createURI(aParams.sourceURI),
+                          createURI(aParams.targetFile), aParams.downloadName, null,
                           Math.round(Date.now() * 1000), null, persist);
 
   // This will throw if it isn't found, and that would mean test failure, so no
   // try catch block
   var test = dm.getDownload(dl.id);
+
+  aParams.runBeforeStart.call(undefined, dl);
 
   persist.progressListener = dl.QueryInterface(Ci.nsIWebProgressListener);
   persist.saveURI(dl.source, null, null, null, null, dl.targetFile);

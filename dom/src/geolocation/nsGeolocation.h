@@ -108,12 +108,12 @@ public:
   NS_DECL_ISUPPORTS
   NS_DECL_NSIDOMGEOPOSITION
 
-    nsGeoPosition(double aLat, double aLong, double aAlt, double aHError, double aVError, double aHeading, double aVelocity, long long aTimestamp)
-    : mLat(aLat), mLong(aLong), mAlt(aAlt), mHError(aHError), mVError(aVError), mHeading(aHeading), mVelocity(aVelocity), mTimestamp(aTimestamp){};
+    nsGeoPosition(double aLat, double aLong, double aAlt, double aHError, double aVError, double aHeading, double aSpeed, long long aTimestamp)
+    : mLat(aLat), mLong(aLong), mAlt(aAlt), mHError(aHError), mVError(aVError), mHeading(aHeading), mSpeed(aSpeed), mTimestamp(aTimestamp){};
 
 private:
   ~nsGeoPosition(){}
-  double mLat, mLong, mAlt, mHError, mVError, mHeading, mVelocity;
+  double mLat, mLong, mAlt, mHError, mVError, mHeading, mSpeed;
   long long mTimestamp;
 };
 

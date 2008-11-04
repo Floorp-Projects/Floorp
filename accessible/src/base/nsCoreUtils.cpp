@@ -167,8 +167,12 @@ nsCoreUtils::GetDOMElementFor(nsIDOMNode *aNode)
   if (node->IsNodeOfType(nsINode::eELEMENT))
     CallQueryInterface(node, &element);
 
-  else if (node->IsNodeOfType(nsINode::eTEXT))
-    CallQueryInterface(node->GetNodeParent(), &element);
+  else if (node->IsNodeOfType(nsINode::eTEXT)) {
+    nsCOMPtr<nsINode> nodeParent = node->GetNodeParent();
+    NS_ASSERTION(nodeParent, "Text node has no parent!");
+    if (nodeParent)
+      CallQueryInterface(nodeParent, &element);
+  }
 
   else if (node->IsNodeOfType(nsINode::eDOCUMENT)) {
     nsCOMPtr<nsIDOMHTMLDocument> htmlDoc(do_QueryInterface(node));

@@ -107,9 +107,3 @@ tabpanels {
   background-color		: #EEEEEE;
   margin-bottom: 10px;
 }
-
-tabstrip-box {
-	-moz-appearance: tabpanels;
-        margin-top: -1px;
-}
-

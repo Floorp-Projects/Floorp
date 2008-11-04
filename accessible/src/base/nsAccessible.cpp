@@ -469,7 +469,8 @@ NS_IMETHODIMP nsAccessible::SetNextSibling(nsIAccessible *aNextSibling)
   return NS_OK;
 }
 
-NS_IMETHODIMP nsAccessible::Shutdown()
+nsresult
+nsAccessible::Shutdown()
 {
   mNextSibling = nsnull;
 
@@ -943,7 +944,7 @@ PRBool nsAccessible::IsVisible(PRBool *aIsOffscreen)
 }
 
 nsresult
-nsAccessible::GetState(PRUint32 *aState, PRUint32 *aExtraState)
+nsAccessible::GetStateInternal(PRUint32 *aState, PRUint32 *aExtraState)
 {
   *aState = 0;
 
@@ -1077,11 +1078,10 @@ nsAccessible::GetDeepestChildAtPoint(PRInt32 aX, PRInt32 aY,
   NS_ENSURE_SUCCESS(rv, rv);
   NS_ENSURE_TRUE(accDocument, NS_ERROR_FAILURE);
 
-  nsCOMPtr<nsPIAccessNode> accessNodeDocument(do_QueryInterface(accDocument));
-  NS_ASSERTION(accessNodeDocument,
-               "nsIAccessibleDocument doesn't implement nsPIAccessNode");
+  nsRefPtr<nsAccessNode> docAccessNode =
+    nsAccUtils::QueryAccessNode(accDocument);
 
-  nsIFrame *frame = accessNodeDocument->GetFrame();
+  nsIFrame *frame = docAccessNode->GetFrame();
   NS_ENSURE_STATE(frame);
 
   nsPresContext *presContext = frame->PresContext();
@@ -1154,15 +1154,16 @@ nsAccessible::GetChildAtPoint(PRInt32 aX, PRInt32 aY,
   nsresult rv = GetDeepestChildAtPoint(aX, aY, aAccessible);
   NS_ENSURE_SUCCESS(rv, rv);
 
-  if (!*aAccessible)
+  if (!*aAccessible || *aAccessible == this)
     return NS_OK;
 
+  // Get direct child containing the deepest child at the given point.
   nsCOMPtr<nsIAccessible> parent, accessible(*aAccessible);
   while (PR_TRUE) {
     accessible->GetParent(getter_AddRefs(parent));
     if (!parent) {
-      NS_ASSERTION(PR_FALSE,
-                   "Obtained accessible isn't a child of this accessible.");
+      NS_NOTREACHED("Obtained accessible isn't a child of this accessible.");
+
       // Reached the top of the hierarchy. These bounds were inside an
       // accessible that is not a descendant of this one.
 
@@ -1623,11 +1624,16 @@ nsAccessible::AppendFlatStringFromSubtreeRecurse(nsIContent *aContent,
   // Append all the text into one flat string
   PRUint32 numChildren = 0;
   nsCOMPtr<nsIDOMXULSelectControlElement> selectControlEl(do_QueryInterface(aContent));
-  
-  if (!selectControlEl && aContent->Tag() != nsAccessibilityAtoms::textarea) {
+  nsCOMPtr<nsIAtom> tag = aContent->Tag();
+
+  if (!selectControlEl && 
+      tag != nsAccessibilityAtoms::textarea && 
+      tag != nsAccessibilityAtoms::select) {
     // Don't walk children of elements with options, just get label directly.
     // Don't traverse the children of a textarea, we want the value, not the
     // static text node.
+    // Don't traverse the children of a select element, we only want the
+    // current value.
     numChildren = aContent->GetChildCount();
   }
 
@@ -1854,20 +1860,6 @@ nsresult nsAccessible::GetXULName(nsAString& aLabel, PRBool aCanAggregateSubtree
 }
 
 NS_IMETHODIMP
-nsAccessible::FireToolkitEvent(PRUint32 aEvent, nsIAccessible *aTarget)
-{
-  // Don't fire event for accessible that has been shut down.
-  if (!mWeakShell)
-    return NS_ERROR_FAILURE;
-
-  nsCOMPtr<nsIAccessibleEvent> accEvent =
-    new nsAccEvent(aEvent, aTarget);
-  NS_ENSURE_TRUE(accEvent, NS_ERROR_OUT_OF_MEMORY);
-
-  return FireAccessibleEvent(accEvent);
-}
-
-NS_IMETHODIMP
 nsAccessible::FireAccessibleEvent(nsIAccessibleEvent *aEvent)
 {
   NS_ENSURE_ARG_POINTER(aEvent);
@@ -2000,7 +1992,7 @@ nsAccessible::GetAttributes(nsIPersistentProperties **aAttributes)
       content->HasAttr(kNameSpaceID_None, nsAccessibilityAtoms::aria_checked)) {
     // Might be checkable -- checking role & ARIA attribute first is faster than getting state
     PRUint32 state = 0;
-    GetFinalState(&state, nsnull);
+    GetState(&state, nsnull);
     if (state & nsIAccessibleStates::STATE_CHECKABLE) {
       // No official state for checkable, so use object attribute to expose that
       attributes->SetStringProperty(NS_LITERAL_CSTRING("checkable"), NS_LITERAL_STRING("true"),
@@ -2163,31 +2155,49 @@ nsAccessible::GetAttributesInternal(nsIPersistentProperties *aAttributes)
     NS_ENSURE_STATE(topContent);
     nsAccUtils::SetLiveContainerAttributes(aAttributes, startContent,
                                            topContent);
+
     // Allow ARIA live region markup from outer documents to override
-    nsCOMPtr<nsISupports> container = doc->GetContainer();
-    nsIDocShellTreeItem *docShellTreeItem = nsnull;
-    if (container)
-      CallQueryInterface(container, &docShellTreeItem);
+    nsCOMPtr<nsISupports> container = doc->GetContainer(); 
+    nsCOMPtr<nsIDocShellTreeItem> docShellTreeItem =
+      do_QueryInterface(container);
     if (!docShellTreeItem)
       break;
-    nsIDocShellTreeItem *sameTypeParent = nsnull;
-    docShellTreeItem->GetSameTypeParent(&sameTypeParent);
+
+    nsCOMPtr<nsIDocShellTreeItem> sameTypeParent;
+    docShellTreeItem->GetSameTypeParent(getter_AddRefs(sameTypeParent));
     if (!sameTypeParent || sameTypeParent == docShellTreeItem)
       break;
+
     nsIDocument *parentDoc = doc->GetParentDocument();
     if (!parentDoc)
       break;
+
     startContent = parentDoc->FindContentForSubDocument(doc);      
   }
 
   // Expose 'display' attribute.
-  nsAutoString displayValue;
+  nsAutoString value;
   nsresult rv = GetComputedStyleValue(EmptyString(),
                                       NS_LITERAL_STRING("display"),
-                                      displayValue);
+                                      value);
   if (NS_SUCCEEDED(rv))
     nsAccUtils::SetAccAttr(aAttributes, nsAccessibilityAtoms::display,
-                           displayValue);
+                           value);
+
+  // Expose 'text-align' attribute.
+  rv = GetComputedStyleValue(EmptyString(), NS_LITERAL_STRING("text-align"),
+                             value);
+  if (NS_SUCCEEDED(rv))
+    nsAccUtils::SetAccAttr(aAttributes, nsAccessibilityAtoms::textAlign,
+                           value);
+
+  // Expose 'text-indent' attribute.
+  rv = GetComputedStyleValue(EmptyString(), NS_LITERAL_STRING("text-indent"),
+                             value);
+  if (NS_SUCCEEDED(rv))
+    nsAccUtils::SetAccAttr(aAttributes, nsAccessibilityAtoms::textIndent,
+                           value);
+
   return NS_OK;
 }
 
@@ -2259,11 +2269,11 @@ PRBool nsAccessible::MappedAttrState(nsIContent *aContent, PRUint32 *aStateInOut
 }
 
 NS_IMETHODIMP
-nsAccessible::GetFinalState(PRUint32 *aState, PRUint32 *aExtraState)
+nsAccessible::GetState(PRUint32 *aState, PRUint32 *aExtraState)
 {
   NS_ENSURE_ARG_POINTER(aState);
 
-  nsresult rv = GetState(aState, aExtraState);
+  nsresult rv = GetStateInternal(aState, aExtraState);
   NS_ENSURE_SUCCESS(rv, rv);
 
   // Apply ARIA states to be sure accessible states will be overriden.

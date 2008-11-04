@@ -460,7 +460,7 @@ var PlacesUIUtils = {
     if (aDefaultInsertionPoint) {
       info.defaultInsertionPoint = aDefaultInsertionPoint;
       if (!aShowPicker)
-        info.hiddenRows = ["folder picker"];
+        info.hiddenRows = ["folderPicker"];
     }
 
     if (aLoadInSidebar)
@@ -496,7 +496,7 @@ var PlacesUIUtils = {
     var info = {
       action: "add",
       type: "bookmark",
-      hiddenRows: ["location", "description", "loadInSidebar"]
+      hiddenRows: ["description"]
     };
     if (aURI)
       info.uri = aURI;
@@ -511,14 +511,18 @@ var PlacesUIUtils = {
     if (aDefaultInsertionPoint) {
       info.defaultInsertionPoint = aDefaultInsertionPoint;
       if (!aShowPicker)
-        info.hiddenRows.push("folder picker");
+        info.hiddenRows.push("folderPicker");
     }
 
     if (aLoadInSidebar)
       info.loadBookmarkInSidebar = true;
+    else
+      info.hiddenRows = info.hiddenRows.concat(["location", "loadInSidebar"]);
 
     if (typeof(aKeyword) == "string") {
       info.keyword = aKeyword;
+      // hide the Tags field if we are adding a keyword
+      info.hiddenRows.push("tags");
       if (typeof(aPostData) == "string")
         info.postData = aPostData;
       if (typeof(aCharSet) == "string")
@@ -578,7 +582,7 @@ var PlacesUIUtils = {
     if (aDefaultInsertionPoint) {
       info.defaultInsertionPoint = aDefaultInsertionPoint;
       if (!aShowPicker)
-        info.hiddenRows = ["folder picker"];
+        info.hiddenRows = ["folderPicker"];
     }
     return this._showBookmarkDialog(info);
   },
@@ -598,7 +602,7 @@ var PlacesUIUtils = {
     var info = {
       action: "add",
       type: "livemark",
-      hiddenRows: ["feedURI", "siteURI", "description"]
+      hiddenRows: ["feedLocation", "siteLocation", "description"]
     };
 
     if (aFeedURI)
@@ -616,7 +620,7 @@ var PlacesUIUtils = {
     if (aDefaultInsertionPoint) {
       info.defaultInsertionPoint = aDefaultInsertionPoint;
       if (!aShowPicker)
-        info.hiddenRows.push("folder picker");
+        info.hiddenRows.push("folderPicker");
     }
     this._showBookmarkDialog(info, true);
   },
@@ -689,7 +693,7 @@ var PlacesUIUtils = {
     if (aDefaultInsertionPoint) {
       info.defaultInsertionPoint = aDefaultInsertionPoint;
       if (!aShowPicker)
-        info.hiddenRows.push("folder picker");
+        info.hiddenRows.push("folderPicker");
     }
     return this._showBookmarkDialog(info);
   },
@@ -704,11 +708,7 @@ var PlacesUIUtils = {
    *        [optional] if true, the dialog is opened by its alternative
    *        chrome: uri.
    *
-   * Note: In minimal UI mode, we open the dialog non-modal on any system but
-   *       Mac OS X.
    * @return true if any transaction has been performed, false otherwise.
-   * Note: the return value of this method is not reliable in minimal UI mode
-   * since the dialog may not be opened modally.
    */
   _showBookmarkDialog: function PU__showBookmarkDialog(aInfo, aMinimalUI) {
     var dialogURL = aMinimalUI ?
@@ -717,11 +717,7 @@ var PlacesUIUtils = {
 
     var features;
     if (aMinimalUI)
-#ifdef XP_MACOSX
       features = "centerscreen,chrome,dialog,resizable,modal";
-#else
-      features = "centerscreen,chrome,dialog,resizable,dependent";
-#endif
     else
       features = "centerscreen,chrome,modal,resizable=no";
     window.openDialog(dialogURL, "",  features, aInfo);

@@ -101,7 +101,7 @@ function testThis(aID, aAcc, aNames, aRoles, aStates, aUndesiredStates, aIndex)
 function testStates(aID, aAcc, aStates, aUndesiredStates, aIndex)
 {
   var state = {}, extraState = {};
-  aAcc.getFinalState(state, extraState);
+  aAcc.getState(state, extraState);
   if (aStates[aIndex] != 0)
     is(state.value & aStates[aIndex], aStates[aIndex],
        "Wrong state bits for " + aID + " at index " + aIndex + "!");

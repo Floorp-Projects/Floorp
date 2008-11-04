@@ -494,8 +494,6 @@ CSS_KEY(xx-small, xx_small)
 // Appearance keywords for widget styles
 CSS_KEY(radio, radio)
 CSS_KEY(checkbox, checkbox)
-CSS_KEY(radio-small, radio_small)
-CSS_KEY(checkbox-small, checkbox_small)
 CSS_KEY(button-bevel, button_bevel)
 CSS_KEY(toolbox, toolbox)
 CSS_KEY(toolbar, toolbar)

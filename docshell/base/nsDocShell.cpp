@@ -295,13 +295,13 @@ nsDocShell::nsDocShell():
     mObserveErrorPages(PR_TRUE),
     mAllowAuth(PR_TRUE),
     mAllowKeywordFixup(PR_FALSE),
+    mIsOffScreenBrowser(PR_FALSE),
     mFiredUnloadEvent(PR_FALSE),
     mEODForCurrentDocument(PR_FALSE),
     mURIResultedInDocument(PR_FALSE),
     mIsBeingDestroyed(PR_FALSE),
     mIsExecutingOnLoadHandler(PR_FALSE),
     mIsPrintingOrPP(PR_FALSE),
-    mIsOffScreenBrowser(PR_FALSE),
     mSavingOldViewer(PR_FALSE),
     mAppType(nsIDocShell::APP_TYPE_UNKNOWN),
     mChildOffset(0),
@@ -3067,6 +3067,13 @@ nsDocShell::DisplayLoadError(nsresult aError, nsIURI *aURI,
                 if (expert) {
                     cssClass.AssignLiteral("expertBadCert");
                 }
+                
+                // See if an alternate cert error page is registered
+                nsXPIDLCString alternateErrorPage;
+                mPrefs->GetCharPref("security.alternate_certificate_error_page",
+                                    getter_Copies(alternateErrorPage));
+                if (alternateErrorPage)
+                    errorPage.Assign(alternateErrorPage);
             } else {
                 error.AssignLiteral("nssFailure2");
             }
@@ -3914,16 +3921,16 @@ NS_IMETHODIMP
 nsDocShell::GetVisibility(PRBool * aVisibility)
 {
     NS_ENSURE_ARG_POINTER(aVisibility);
-    if (!mContentViewer) {
-        *aVisibility = PR_FALSE;
-        return NS_OK;
-    }
 
-    // get the pres shell
+    *aVisibility = PR_FALSE;
+
+    if (!mContentViewer)
+        return NS_OK;
+
     nsCOMPtr<nsIPresShell> presShell;
-    NS_ENSURE_SUCCESS(GetPresShell(getter_AddRefs(presShell)),
-                      NS_ERROR_FAILURE);
-    NS_ENSURE_TRUE(presShell, NS_ERROR_FAILURE);
+    GetPresShell(getter_AddRefs(presShell));
+    if (!presShell)
+        return NS_OK;
 
     // get the view manager
     nsIViewManager* vm = presShell->GetViewManager();
@@ -3935,10 +3942,8 @@ nsDocShell::GetVisibility(PRBool * aVisibility)
     NS_ENSURE_TRUE(view, NS_ERROR_FAILURE);
 
     // if our root view is hidden, we are not visible
-    if (view->GetVisibility() == nsViewVisibility_kHide) {
-        *aVisibility = PR_FALSE;
+    if (view->GetVisibility() == nsViewVisibility_kHide)
         return NS_OK;
-    }
 
     // otherwise, we must walk up the document and view trees checking
     // for a hidden view, unless we're an off screen browser, which 
@@ -3957,8 +3962,7 @@ nsDocShell::GetVisibility(PRBool * aVisibility)
 
         // Null-check for crash in bug 267804
         if (!pPresShell) {
-            NS_NOTREACHED("docshell has null pres shell");
-            *aVisibility = PR_FALSE;
+            NS_NOTREACHED("parent docshell has null pres shell");
             return NS_OK;
         }
 
@@ -3969,17 +3973,14 @@ nsDocShell::GetVisibility(PRBool * aVisibility)
         nsIFrame* frame = pPresShell->GetPrimaryFrameFor(shellContent);
         PRBool isDocShellOffScreen = PR_FALSE;
         docShell->GetIsOffScreenBrowser(&isDocShellOffScreen);
-        if (frame && !frame->AreAncestorViewsVisible() && !isDocShellOffScreen) {
-            *aVisibility = PR_FALSE;
+        if (frame && !frame->AreAncestorViewsVisible() && !isDocShellOffScreen)
             return NS_OK;
-        }
 
         treeItem = parentItem;
         treeItem->GetParent(getter_AddRefs(parentItem));
     }
 
-    nsCOMPtr<nsIBaseWindow>
-        treeOwnerAsWin(do_QueryInterface(mTreeOwner));
+    nsCOMPtr<nsIBaseWindow> treeOwnerAsWin(do_QueryInterface(mTreeOwner));
     if (!treeOwnerAsWin) {
         *aVisibility = PR_TRUE;
         return NS_OK;

@@ -275,7 +275,6 @@ nsTableFrame::Destroy()
   nsHTMLContainerFrame::Destroy();
 }
 
-
 // Make sure any views are positioned properly
 void
 nsTableFrame::RePositionViews(nsIFrame* aFrame)
@@ -2227,8 +2226,7 @@ nsTableFrame::GetCollapsedWidth(nsMargin aBorderPadding)
   return width;
 }
 
-
-   /* virtual */ void
+/* virtual */ void
 nsTableFrame::DidSetStyleContext(nsStyleContext* aOldStyleContext)
 {
    if (!aOldStyleContext) //avoid this on init
@@ -4698,10 +4696,8 @@ public:
   NS_IMETHOD Run() {
     if (mFrame) {
       nsTableFrame* tableFrame = static_cast <nsTableFrame*>(mFrame.GetFrame());
-      if (tableFrame) {
-        if (tableFrame->NeedToCalcBCBorders()) {
-          tableFrame->CalcBCBorders();
-        }
+      if (tableFrame->NeedToCalcBCBorders()) {
+        tableFrame->CalcBCBorders();
       }
     }
     return NS_OK;
@@ -4714,7 +4710,32 @@ PRBool
 nsTableFrame::BCRecalcNeeded(nsStyleContext* aOldStyleContext,
                              nsStyleContext* aNewStyleContext)
 {
-  // XXX bernd temp disabled till I figure out the mac failure
+  // Attention: the old style context is the one we're forgetting,
+  // and hence possibly completely bogus for GetStyle* purposes.
+  // We use PeekStyleData instead.
+
+  const nsStyleBorder* oldStyleData = static_cast<const nsStyleBorder*>
+                        (aOldStyleContext->PeekStyleData(eStyleStruct_Border));
+  if (!oldStyleData)
+    return PR_FALSE;
+
+  const nsStyleBorder* newStyleData = aNewStyleContext->GetStyleBorder();
+  nsChangeHint change = newStyleData->CalcDifference(*oldStyleData);
+  if (change == NS_STYLE_HINT_NONE)
+    return PR_FALSE;
+  if ((change & NS_STYLE_HINT_REFLOW) == NS_STYLE_HINT_REFLOW)
+    return PR_TRUE; // the caller only needs to mark the bc damage area
+  if ((change & NS_STYLE_HINT_VISUAL) == NS_STYLE_HINT_VISUAL) {
+    // we need to recompute the borders and the caller needs to mark
+    // the bc damage area
+    // XXX In principle this should only be necessary for border style changes
+    // However the bc painting code tries to maximize the drawn border segments
+    // so it stores in the cellmap where a new border segment starts and this
+    // introduces a unwanted cellmap data dependence on color
+    nsCOMPtr<nsIRunnable> evt = new nsDelayedCalcBCBorders(this);
+    NS_DispatchToCurrentThread(evt);
+    return PR_TRUE;
+  }
   return PR_FALSE;
 }
 

@@ -53,16 +53,14 @@ class nsICSSImportRule;
 class nsIPrincipal;
 
 // IID for the nsICSSStyleSheet interface
-// 363c1c5f-81ec-4d83-ad8a-b48d48f1398d
+// ee0270c7-5581-4165-92a5-a83ff691f60d
 #define NS_ICSS_STYLE_SHEET_IID     \
-{ 0x363c1c5f, 0x81ec, 0x4d83, \
- { 0xad, 0x8a, 0xb4, 0x8d, 0x48, 0xf1, 0x39, 0x8d } }
+{ 0xee0270c7, 0x5581, 0x4165, \
+ { 0x92, 0xa5, 0xa8, 0x3f, 0xf6, 0x91, 0xf6, 0x0d } }
 
 class nsICSSStyleSheet : public nsIStyleSheet {
 public:
   NS_DECLARE_STATIC_IID_ACCESSOR(NS_ICSS_STYLE_SHEET_IID)
-
-  NS_IMETHOD  ContainsStyleSheet(nsIURI* aURL, PRBool& aContains, nsIStyleSheet** aTheChild=nsnull) = 0;
 
   NS_IMETHOD  AppendStyleSheet(nsICSSStyleSheet* aSheet) = 0;
   NS_IMETHOD  InsertStyleSheetAt(nsICSSStyleSheet* aSheet, PRInt32 aIndex) = 0;

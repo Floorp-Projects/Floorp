@@ -551,7 +551,7 @@ __try {
     return E_FAIL;
 
   PRUint32 state = 0;
-  if (NS_FAILED(xpAccessible->GetFinalState(&state, nsnull)))
+  if (NS_FAILED(xpAccessible->GetState(&state, nsnull)))
     return E_FAIL;
 
   pvarState->lVal = state;
@@ -1360,7 +1360,7 @@ __try {
   // XXX: bug 344674 should come with better approach that we have here.
 
   PRUint32 states = 0, extraStates = 0;
-  nsresult rv = GetFinalState(&states, &extraStates);
+  nsresult rv = GetState(&states, &extraStates);
   if (NS_FAILED(rv))
     return GetHRESULT(rv);
 
@@ -1728,14 +1728,12 @@ PRInt32 nsAccessibleWrap::GetChildIDFor(nsIAccessible* aAccessible)
 HWND
 nsAccessibleWrap::GetHWNDFor(nsIAccessible *aAccessible)
 {
-  nsCOMPtr<nsIAccessNode> accessNode(do_QueryInterface(aAccessible));
-  nsCOMPtr<nsPIAccessNode> privateAccessNode(do_QueryInterface(accessNode));
-  if (!privateAccessNode)
+  nsRefPtr<nsAccessNode> accessNode = nsAccUtils::QueryAccessNode(aAccessible);
+  if (!accessNode)
     return 0;
 
   HWND hWnd = 0;
-
-  nsIFrame *frame = privateAccessNode->GetFrame();
+  nsIFrame *frame = accessNode->GetFrame();
   if (frame) {
     nsIWidget *window = frame->GetWindow();
     PRBool isVisible;

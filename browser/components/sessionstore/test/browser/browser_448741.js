@@ -45,6 +45,7 @@ function test() {
   
   let uniqueName = "bug 448741";
   let uniqueValue = "as good as unique: " + Date.now();
+  let interval = gPrefService.getIntPref("browser.sessionstore.interval");
   
   // set a unique value on a new, blank tab
   var tab = tabbrowser.addTab();
@@ -86,6 +87,7 @@ function test() {
       // clean up
       tabbrowser.removeTab(tab);
       os.removeObserver(this, aTopic, false);
+      gPrefService.setIntPref("browser.sessionstore.interval", interval);
       finish();
     }
   };
@@ -93,4 +95,7 @@ function test() {
   // last added observers are invoked first
   os.addObserver(checkingObserver, "sessionstore-state-write", false);
   os.addObserver(cleaningObserver, "sessionstore-state-write", false);
+  
+  // trigger an immediate save operation
+  gPrefService.setIntPref("browser.sessionstore.interval", 0);
 }

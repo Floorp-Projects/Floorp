@@ -535,6 +535,9 @@ static nsExtraMimeTypeEntry extraMimeEntries [] =
   { TEXT_XUL, "xul", "XML-Based User Interface Language", MAC_TYPE('TEXT'), MAC_TYPE('ttxt') },
   { TEXT_XML, "xml,xsl,xbl", "Extensible Markup Language", MAC_TYPE('TEXT'), MAC_TYPE('ttxt') },
   { TEXT_CSS, "css", "Style Sheet", MAC_TYPE('TEXT'), MAC_TYPE('ttxt') },
+  { "audio/ogg", "oga", "Ogg Audio", 0, 0 },
+  { "video/ogg", "ogv", "Ogg Video", 0, 0 },
+  { "audio/ogg", "ogg", "Ogg Audio", 0, 0 }
 };
 
 #undef MAC_TYPE

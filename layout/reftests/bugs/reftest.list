@@ -926,7 +926,10 @@ fails == 441259-2.html 441259-2-ref.html # bug 441400
 == 451168-1.html 451168-1-ref.html
 == 452964-1.html 452964-1-ref.html
 == 454361.html about:blank
+== 455105-1.html 455105-ref.html
+== 455105-2.html 455105-ref.html
 == 455280-1.xhtml 455280-1-ref.xhtml
 fails-if(MOZ_WIDGET_TOOLKIT=="cocoa") == 456147.xul 456147-ref.html # bug 456147, but not caused by it
 == 456484-1.html 456484-1-ref.html
-== 461512-1.html 461512-1-ref.html
+== 461266-1.html 461266-1-ref.html
+fails == 461512-1.html 461512-1-ref.html # Bug 461512

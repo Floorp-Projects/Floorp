@@ -699,8 +699,8 @@ protected:
   nsMouseEvent(PRBool isTrusted, PRUint32 msg, nsIWidget *w,
                PRUint8 structType, reasonType aReason)
     : nsMouseEvent_base(isTrusted, msg, w, structType),
-      acceptActivation(PR_FALSE), reason(aReason), context(eNormal),
-      exit(eChild), clickCount(0), ignoreScrollFrame(PR_FALSE)
+      acceptActivation(PR_FALSE), ignoreScrollFrame(PR_FALSE),
+      reason(aReason), context(eNormal), exit(eChild), clickCount(0)
   {
     if (msg == NS_MOUSE_MOVE) {
       flags |= NS_EVENT_FLAG_CANT_CANCEL;
@@ -712,8 +712,8 @@ public:
   nsMouseEvent(PRBool isTrusted, PRUint32 msg, nsIWidget *w,
                reasonType aReason, contextType aContext = eNormal)
     : nsMouseEvent_base(isTrusted, msg, w, NS_MOUSE_EVENT),
-      acceptActivation(PR_FALSE), reason(aReason), context(aContext),
-      exit(eChild), clickCount(0), ignoreScrollFrame(PR_FALSE)
+      acceptActivation(PR_FALSE), ignoreScrollFrame(PR_FALSE),
+      reason(aReason), context(aContext), exit(eChild), clickCount(0)
   {
     if (msg == NS_MOUSE_MOVE) {
       flags |= NS_EVENT_FLAG_CANT_CANCEL;

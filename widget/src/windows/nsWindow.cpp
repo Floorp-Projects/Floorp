@@ -4800,7 +4800,7 @@ PRBool nsWindow::ProcessMessage(UINT msg, WPARAM wParam, LPARAM lParam, LRESULT 
       }
       {
         // Get current input context
-        HIMC hC = ImmGetContext(mWnd);		
+        HIMC hC = ImmGetContext(mWnd);
         // Open the IME 
         ImmSetOpenStatus(hC, TRUE);
         // Set "multi-press" input mode
@@ -5450,7 +5450,7 @@ LPCTSTR nsWindow::WindowClass()
   // XXX: The class name used here must be kept in sync with
   //      the classname used in WindowClassW();
 #ifdef UNICODE
-	return classNameW;
+  return classNameW;
 #else
   if (classNameW == kWClassNameHidden) {
     return kClassNameHidden;
@@ -5878,6 +5878,7 @@ PRBool nsWindow::OnPaint(HDC aDC)
 #endif
 
       nsRefPtr<gfxContext> thebesContext = new gfxContext(targetSurface);
+      thebesContext->SetFlag(gfxContext::FLAG_DESTINED_FOR_SCREEN);
 
 #ifdef MOZ_XUL
       if (eTransparencyGlass == mTransparencyMode && nsUXThemeData::sHaveCompositor) {
@@ -6464,7 +6465,7 @@ NS_METHOD nsWindow::SetPreferredSize(PRInt32 aWidth, PRInt32 aHeight)
 PRBool gPinYinIMECaretCreated = PR_FALSE;
 
 void
-nsWindow::HandleTextEvent(HIMC hIMEContext,PRBool aCheckAttr)
+nsWindow::HandleTextEvent(HIMC hIMEContext, PRBool aCheckAttr)
 {
   NS_ASSERTION(sIMECompUnicode, "sIMECompUnicode is null");
   NS_ASSERTION(sIMEIsComposing, "conflict state");
@@ -6616,7 +6617,7 @@ nsWindow::HandleStartComposition(HIMC hIMEContext)
   }
 
   if (!sIMECompUnicode)
-    sIMECompUnicode = new nsAutoString();
+    sIMECompUnicode = new nsString();
   sIMEIsComposing = PR_TRUE;
 
   return PR_TRUE;
@@ -6676,7 +6677,7 @@ nsWindow::GetTextRangeList(PRUint32* textRangeListLengthResult,nsTextRangeArray*
 
   long maxlen = sIMECompUnicode->Length();
   long cursor = sIMECursorPosition;
-  NS_ASSERTION(cursor <= maxlen, "wrong cursor positoin");
+  NS_ASSERTION(cursor <= maxlen, "wrong cursor position");
   if (cursor > maxlen)
     cursor = maxlen;
 
@@ -6687,7 +6688,7 @@ nsWindow::GetTextRangeList(PRUint32* textRangeListLengthResult,nsTextRangeArray*
     *textRangeListLengthResult = 2;
     *textRangeListResult = new nsTextRange[2];
     (*textRangeListResult)[0].mStartOffset = 0;
-    (*textRangeListResult)[0].mEndOffset = sIMECompUnicode->Length();
+    (*textRangeListResult)[0].mEndOffset = maxlen;
     (*textRangeListResult)[0].mRangeType = NS_TEXTRANGE_RAWINPUT;
     (*textRangeListResult)[1].mStartOffset = cursor;
     (*textRangeListResult)[1].mEndOffset = cursor;
@@ -6794,17 +6795,19 @@ BOOL nsWindow::OnIMEChar(BYTE aByte1, BYTE aByte2, LPARAM aKeyState)
 // This function is used when aIndex is GCS_COMPSTR, GCS_COMPREADSTR,
 // GCS_RESULTSTR, and GCS_RESULTREADSTR.
 // Otherwise use ::ImmGetCompositionStringW.
-void nsWindow::GetCompositionString(HIMC aHIMC, DWORD aIndex, nsString* aStrUnicode)
+void nsWindow::GetCompositionString(HIMC aHIMC, DWORD aIndex)
 {
-  long lRtn;
-  lRtn = ::ImmGetCompositionStringW(aHIMC, aIndex, NULL, 0);
-  if (!EnsureStringLength(*aStrUnicode, (lRtn / sizeof(WCHAR)) + 1))
-    return; // out of memory
+  // Retrieve the size of the required output buffer.
+  long lRtn = ::ImmGetCompositionStringW(aHIMC, aIndex, NULL, 0);
+  if (lRtn < 0 ||
+      !EnsureStringLength(*sIMECompUnicode, (lRtn / sizeof(WCHAR)) + 1))
+    return; // Error or out of memory.
 
-  long buflen = lRtn + sizeof(WCHAR);
-  lRtn = ::ImmGetCompositionStringW(aHIMC, aIndex, (LPVOID)aStrUnicode->BeginWriting(), buflen);
-  lRtn = lRtn / sizeof(WCHAR);
-  aStrUnicode->SetLength(lRtn);
+  // Actually retrieve the composition string information.
+  lRtn = ::ImmGetCompositionStringW(aHIMC, aIndex,
+                                    (LPVOID)sIMECompUnicode->BeginWriting(),
+                                    lRtn + sizeof(WCHAR));
+  sIMECompUnicode->SetLength(lRtn / sizeof(WCHAR));
 }
 
 //==========================================================================
@@ -6816,12 +6819,13 @@ BOOL nsWindow::OnIMEComposition(LPARAM aGCS)
   // for bug #60050
   // MS-IME 95/97/98/2000 may send WM_IME_COMPOSITION with non-conversion
   // mode before it send WM_IME_STARTCOMPOSITION.
-  if (!sIMECompUnicode)
-    sIMECompUnicode = new nsAutoString();
-
-  NS_ASSERTION(sIMECompUnicode, "sIMECompUnicode is null");
-  if (!sIMECompUnicode)
-    return PR_TRUE;
+  if (!sIMECompUnicode) {
+    sIMECompUnicode = new nsString();
+    if (NS_UNLIKELY(!sIMECompUnicode)) {
+      NS_ASSERTION(sIMECompUnicode, "sIMECompUnicode is null");
+      return PR_TRUE;
+    }
+  }
 
   HIMC hIMEContext = ::ImmGetContext(mWnd);
   if (hIMEContext==NULL) 
@@ -6842,7 +6846,7 @@ BOOL nsWindow::OnIMEComposition(LPARAM aGCS)
     if (!sIMEIsComposing) 
       HandleStartComposition(hIMEContext);
 
-    GetCompositionString(hIMEContext, GCS_RESULTSTR, sIMECompUnicode);
+    GetCompositionString(hIMEContext, GCS_RESULTSTR);
 #ifdef DEBUG_IME
     printf("GCS_RESULTSTR compStrLen = %d\n", sIMECompUnicode->Length());
 #endif
@@ -6867,7 +6871,7 @@ BOOL nsWindow::OnIMEComposition(LPARAM aGCS)
     //--------------------------------------------------------
     // 1. Get GCS_COMPSTR
     //--------------------------------------------------------
-    GetCompositionString(hIMEContext, GCS_COMPSTR, sIMECompUnicode);
+    GetCompositionString(hIMEContext, GCS_COMPSTR);
 
     // See https://bugzilla.mozilla.org/show_bug.cgi?id=296339
     if (sIMECompUnicode->IsEmpty() &&
@@ -6957,7 +6961,7 @@ BOOL nsWindow::OnIMEComposition(LPARAM aGCS)
   }
   if (!result) {
 #ifdef DEBUG_IME
-    fprintf(stderr,"Haandle 0 length TextEvent. \n");
+    fprintf(stderr, "Handle 0 length TextEvent.\n");
 #endif
     if (!sIMEIsComposing) 
       HandleStartComposition(hIMEContext);
@@ -7000,7 +7004,7 @@ BOOL nsWindow::OnIMEEndComposition()
     // first when we hit space in composition mode
     // we need to clear out the current composition string
     // in that case.
-    sIMECompUnicode->Truncate(0);
+    sIMECompUnicode->Truncate();
 
     HandleTextEvent(hIMEContext, PR_FALSE);
 
@@ -7423,8 +7427,9 @@ nsWindow::HandleMouseActionOfIME(int aAction, POINT *ptPos)
 
       // Note: hitText has been done, so no check of sIMECompCharPos
       // and composing char maximum limit is necessary.
+      PRUint32 len = sIMECompUnicode->Length();
       PRUint32 i = 0;
-      for (i = 0; i < sIMECompUnicode->Length(); i++) {
+      for (i = 0; i < len; ++i) {
         if (PT_IN_RECT(*ptPos, sIMECompCharPos[i]))
           break;
       }

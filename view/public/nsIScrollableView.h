@@ -46,8 +46,8 @@ struct nsSize;
 
 // IID for the nsIScrollableView interface
 #define NS_ISCROLLABLEVIEW_IID    \
-{ 0x1fcd151c, 0x5e26, 0x4c9d, \
-{ 0xa5, 0x2c, 0x87, 0x43, 0x7d, 0x7b, 0x1c, 0xe8 } }
+{ 0x00bba69f, 0xbbef, 0x4725, \
+{ 0x8b, 0xee, 0xec, 0xfe, 0x82, 0xf7, 0xbd, 0xb0 } }
 
 /**
  * A scrolling view allows an arbitrary view that you supply to be scrolled
@@ -100,7 +100,7 @@ public:
    * legal. Updates the display based on aUpdateFlags.
    * @param aX left edge to scroll to
    * @param aY top edge to scroll to
-   * @param aUpdateFlags passed onto nsIViewManager->UpdateView()
+   * @param aUpdateFlags indicate smooth or async scrolling
    * @return error status
    */
   NS_IMETHOD ScrollTo(nscoord aX, nscoord aY, PRUint32 aUpdateFlags) = 0;
@@ -142,9 +142,11 @@ public:
    * Prevents scrolling off the end of the view.
    * @param aNumLinesX number of lines to scroll the view horizontally
    * @param aNumLinesY number of lines to scroll the view vertically
+   * @param aUpdateFlags indicate smooth or async scrolling
    * @return error status
    */
-  NS_IMETHOD ScrollByLines(PRInt32 aNumLinesX, PRInt32 aNumLinexY) = 0;
+  NS_IMETHOD ScrollByLines(PRInt32 aNumLinesX, PRInt32 aNumLinexY,
+                           PRUint32 aUpdateFlags = 0) = 0;
 
   /**
    * Get the desired size of a page scroll in each dimension.
@@ -160,17 +162,20 @@ public:
    * Prevents scrolling off the end of the view.
    * @param aNumPagesX number of pages to scroll the view horizontally
    * @param aNumPagesY number of pages to scroll the view vertically
+   * @param aUpdateFlags indicate smooth or async scrolling
    * @return error status
    */
-  NS_IMETHOD ScrollByPages(PRInt32 aNumPagesX, PRInt32 aNumPagesY) = 0;
+  NS_IMETHOD ScrollByPages(PRInt32 aNumPagesX, PRInt32 aNumPagesY,
+                           PRUint32 aUpdateFlags = 0) = 0;
 
   /**
    * Scroll the view to the top or bottom of the document depending
    * on the value of aTop.
    * @param aForward indicates whether to scroll to top or bottom
+   * @param aUpdateFlags indicate smooth or async scrolling
    * @return error status
    */
-  NS_IMETHOD ScrollByWhole(PRBool aTop) = 0;
+  NS_IMETHOD ScrollByWhole(PRBool aTop, PRUint32 aUpdateFlags = 0) = 0;
 
   /**
    * Scroll the view left or right by aNumLinesX pixels.  Positive values move 
@@ -178,9 +183,11 @@ public:
    * move down.  Prevents scrolling off the end of the view.
    * @param aNumLinesX number of lines to scroll the view horizontally
    * @param aNumLinesY number of lines to scroll the view vertically
+   * @param aUpdateFlags indicate smooth or async scrolling
    * @return error status
    */
-  NS_IMETHOD ScrollByPixels(PRInt32 aNumPixelsX, PRInt32 aNumPixelsY) = 0;
+  NS_IMETHOD ScrollByPixels(PRInt32 aNumPixelsX, PRInt32 aNumPixelsY,
+                            PRUint32 aUpdateFlags = 0) = 0;
 
   /**
    * Check the view can scroll from current offset.

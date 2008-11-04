@@ -46,8 +46,6 @@ MODULE       = plugin
 LIBRARY_NAME = nullplugin
 GRE_MODULE   = 1
 
-PACKAGE_FILE = npnul.pkg
-
 REQUIRES	= java \
 		  $(NULL)
 

@@ -67,8 +67,9 @@ nsXULColumnsAccessible::GetRole(PRUint32 *aRole)
   return NS_OK;
 }
 
-NS_IMETHODIMP
-nsXULColumnsAccessible::GetState(PRUint32 *aState, PRUint32 *aExtraState)
+nsresult
+nsXULColumnsAccessible::GetStateInternal(PRUint32 *aState,
+                                         PRUint32 *aExtraState)
 {
   NS_ENSURE_ARG_POINTER(aState);
   *aState = nsIAccessibleStates::STATE_READONLY;
@@ -96,8 +97,9 @@ nsXULColumnItemAccessible::GetRole(PRUint32 *aRole)
   return NS_OK;
 }
 
-NS_IMETHODIMP
-nsXULColumnItemAccessible::GetState(PRUint32 *aState, PRUint32 *aExtraState)
+nsresult
+nsXULColumnItemAccessible::GetStateInternal(PRUint32 *aState,
+                                            PRUint32 *aExtraState)
 {
   NS_ENSURE_ARG_POINTER(aState);
   *aState = nsIAccessibleStates::STATE_READONLY;
@@ -183,8 +185,9 @@ nsXULListboxAccessible::IsTree()
 ////////////////////////////////////////////////////////////////////////////////
 // nsXULListboxAccessible. nsIAccessible
 
-NS_IMETHODIMP
-nsXULListboxAccessible::GetState(PRUint32 *aState, PRUint32 *aExtraState)
+nsresult
+nsXULListboxAccessible::GetStateInternal(PRUint32 *aState,
+                                         PRUint32 *aExtraState)
 {
   // As a nsXULListboxAccessible we can have the following states:
   //   STATE_FOCUSED
@@ -192,7 +195,7 @@ nsXULListboxAccessible::GetState(PRUint32 *aState, PRUint32 *aExtraState)
   //   STATE_FOCUSABLE
 
   // Get focus status from base class
-  nsresult rv = nsAccessible::GetState(aState, aExtraState);
+  nsresult rv = nsAccessible::GetStateInternal(aState, aExtraState);
   NS_ENSURE_SUCCESS(rv, rv);
   if (!mDOMNode) {
     return NS_OK;
@@ -897,14 +900,12 @@ NS_IMETHODIMP nsXULListitemAccessible::GetRole(PRUint32 *aRole)
   return NS_OK;
 }
 
-/**
-  *
-  */
-NS_IMETHODIMP
-nsXULListitemAccessible::GetState(PRUint32 *aState, PRUint32 *aExtraState)
+nsresult
+nsXULListitemAccessible::GetStateInternal(PRUint32 *aState,
+                                          PRUint32 *aExtraState)
 {
   if (mIsCheckbox) {
-    return nsXULMenuitemAccessible::GetState(aState, aExtraState);
+    return nsXULMenuitemAccessible::GetStateInternal(aState, aExtraState);
   }
 
   *aState = 0;
@@ -939,7 +940,8 @@ NS_IMETHODIMP nsXULListitemAccessible::GetActionName(PRUint8 aIndex, nsAString& 
   if (aIndex == eAction_Click && mIsCheckbox) {
     // check or uncheck
     PRUint32 state;
-    GetState(&state, nsnull);
+    nsresult rv = GetStateInternal(&state, nsnull);
+    NS_ENSURE_SUCCESS(rv, rv);
 
     if (state & nsIAccessibleStates::STATE_CHECKED)
       aName.AssignLiteral("uncheck");
@@ -1005,7 +1007,8 @@ nsAccessibleWrap(aDOMNode, aShell)
 {
 }
 
-NS_IMETHODIMP nsXULComboboxAccessible::Init()
+nsresult
+nsXULComboboxAccessible::Init()
 {
   nsresult rv = nsAccessibleWrap::Init();
   nsXULMenupopupAccessible::GenerateMenu(mDOMNode);
@@ -1036,11 +1039,12 @@ NS_IMETHODIMP nsXULComboboxAccessible::GetRole(PRUint32 *aRole)
   *     STATE_EXPANDED
   *     STATE_COLLAPSED
   */
-NS_IMETHODIMP
-nsXULComboboxAccessible::GetState(PRUint32 *aState, PRUint32 *aExtraState)
+nsresult
+nsXULComboboxAccessible::GetStateInternal(PRUint32 *aState,
+                                          PRUint32 *aExtraState)
 {
   // Get focus status from base class
-  nsresult rv = nsAccessible::GetState(aState, aExtraState);
+  nsresult rv = nsAccessible::GetStateInternal(aState, aExtraState);
   NS_ENSURE_SUCCESS(rv, rv);
   if (!mDOMNode) {
     return NS_OK;

@@ -128,6 +128,11 @@ typedef struct JSTraceMonitor {
     CLS(TypeMap)            globalTypeMap;
     jsval                   *recoveryDoublePool;
     jsval                   *recoveryDoublePoolPtr;
+
+    /* Fragmento for the regular expression compiler. This is logically
+     * a distinct compiler but needs to be managed in exactly the same
+     * way as the real tracing Fragmento. */
+    CLS(nanojit::Fragmento) reFragmento;
 } JSTraceMonitor;
 
 #ifdef JS_TRACER

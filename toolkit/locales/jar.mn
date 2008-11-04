@@ -77,6 +77,7 @@
   locale/@AB_CD@/mozapps/downloads/downloads.properties           (%chrome/mozapps/downloads/downloads.properties)
   locale/@AB_CD@/mozapps/extensions/extensions.dtd                (%chrome/mozapps/extensions/extensions.dtd)
   locale/@AB_CD@/mozapps/extensions/extensions.properties         (%chrome/mozapps/extensions/extensions.properties)
+  locale/@AB_CD@/mozapps/extensions/blocklist.dtd                 (%chrome/mozapps/extensions/blocklist.dtd)
   locale/@AB_CD@/mozapps/extensions/about.dtd                     (%chrome/mozapps/extensions/about.dtd)
   locale/@AB_CD@/mozapps/extensions/errors.dtd                    (%chrome/mozapps/extensions/errors.dtd)
   locale/@AB_CD@/mozapps/extensions/update.dtd                    (%chrome/mozapps/extensions/update.dtd)

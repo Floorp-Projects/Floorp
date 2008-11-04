@@ -48,6 +48,7 @@ include $(topsrcdir)/config/rules.mk
 _TEST_FILES =\
 		moz.png \
 		longdesc_src.html \
+		attributes.js \
 		common.js \
 		nsIAccessible_actions.js \
 		nsIAccessible_name.css \
@@ -58,6 +59,7 @@ _TEST_FILES =\
 		nsIAccessibleEditableText.js \
 		test_aria_activedescendant.html \
 		test_aria_role_article.html \
+		test_aria_role_equation.html \
 		test_bug368835.xul \
 		test_bug420863.html \
 		test_cssattrs.html \
@@ -92,7 +94,6 @@ _TEST_FILES =\
 		test_textboxes.html \
 		test_textboxes.xul \
 		testTextboxes.js \
-		test_bug428479.html \
 		test_bug429285.html \
 		test_bug434464.html \
 		$(NULL)

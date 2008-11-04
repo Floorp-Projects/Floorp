@@ -136,6 +136,7 @@
 
 #ifdef XP_WIN
 #include "gfxWindowsNativeDrawing.h"
+#include "gfxWindowsSurface.h"
 #endif
 
 // accessibility support
@@ -356,7 +357,7 @@ public:
   nsEventStatus ProcessEvent(const nsGUIEvent & anEvent);
   
 #ifdef XP_WIN
-  void Paint(const nsRect& aDirtyRect, HDC ndc);
+  void Paint(const RECT& aDirty, HDC aDC);
 #elif defined(XP_MACOSX)
   void Paint(const nsRect& aDirtyRect);  
 #elif defined(MOZ_X11) || defined(MOZ_DFB)
@@ -392,7 +393,24 @@ public:
   NPDrawingModel GetDrawingModel();
   WindowRef FixUpPluginWindow(PRInt32 inPaintState);
   void GUItoMacEvent(const nsGUIEvent& anEvent, EventRecord* origEvent, EventRecord& aMacEvent);
-  void SetCGContextChanged(PRBool aState) { mCGContextChanged = aState; }
+  // Set a flag that (if true) indicates the plugin port info has changed and
+  // SetWindow() needs to be called.
+  void SetPluginPortChanged(PRBool aState) { mPluginPortChanged = aState; }
+  // Return a pointer to the internal nsPluginPort structure that's used to
+  // store a copy of plugin port info and to detect when it's been changed.
+  nsPluginPort* GetPluginPortCopy() { return &mPluginPortCopy; }
+  // Set plugin port info in the plugin (in the 'window' member of the
+  // nsPluginWindow structure passed to the plugin by SetWindow()) and set a
+  // flag (mPluginPortChanged) to indicate whether or not this info has
+  // changed, and SetWindow() needs to be called again.
+  nsPluginPort* SetPluginPortAndDetectChange();
+  // Flag when we've set up a Thebes (and CoreGraphics) context in
+  // nsObjectFrame::PaintPlugin().  We need to know this in
+  // FixUpPluginWindow() (i.e. we need to know when FixUpPluginWindow() has
+  // been called from nsObjectFrame::PaintPlugin() when we're using the
+  // CoreGraphics drawing model).
+  void BeginCGPaint();
+  void EndCGPaint();
 #endif
 
   void SetOwner(nsObjectFrame *aOwner)
@@ -453,13 +471,18 @@ private:
   nsCOMPtr<nsITimer>          mPluginTimer;
   nsCOMPtr<nsIPluginHost>     mPluginHost;
 
+#ifdef XP_MACOSX
+  nsPluginPort                mPluginPortCopy;
+  PRInt32                     mInCGPaintLevel;
+#endif
+
   // Initially, the event loop nesting level we were created on, it's updated
   // if we detect the appshell is on a lower level as long as we're not stopped.
   // We delay DoStopPlugin() until the appshell reaches this level or lower.
   PRUint32                    mLastEventloopNestingLevel;
   PRPackedBool                mContentFocused;
   PRPackedBool                mWidgetVisible;    // used on Mac to store our widget's visible state
-  PRPackedBool                mCGContextChanged;
+  PRPackedBool                mPluginPortChanged;
 
   // If true, destroy the widget on destruction. Used when plugin stop
   // is being delayed to a safer point in time.
@@ -1269,27 +1292,17 @@ nsObjectFrame::PrintPlugin(nsIRenderingContext& aRenderingContext,
 
   /* Make sure plugins don't do any damage outside of where they're supposed to */
   ctx->NewPath();
-  ctx->Rectangle(gfxRect(window.x, window.y,
-                         window.width, window.height));
+  gfxRect r(window.x, window.y, window.width, window.height);
+  ctx->Rectangle(r);
   ctx->Clip();
 
-  /* If we're windowless, we need to do COLOR_ALPHA, and do alpha recovery.
-   * XXX - we could have some sort of flag here that would indicate whether
-   * the plugin knows how to render to an ARGB DIB
-   */
-  if (windowless)
-    ctx->PushGroup(gfxASurface::CONTENT_COLOR_ALPHA);
-  else
-    ctx->PushGroup(gfxASurface::CONTENT_COLOR);
-
-  gfxWindowsNativeDrawing nativeDraw(ctx,
-                                     gfxRect(window.x, window.y,
-                                             window.width, window.height));
+  gfxWindowsNativeDrawing nativeDraw(ctx, r);
   do {
     HDC dc = nativeDraw.BeginNativeDrawing();
     if (!dc)
       return;
 
+    // XXX don't we need to call nativeDraw.TransformToNativeRect here?
     npprint.print.embedPrint.platformPrint = dc;
     npprint.print.embedPrint.window = window;
     // send off print info to plugin
@@ -1298,9 +1311,6 @@ nsObjectFrame::PrintPlugin(nsIRenderingContext& aRenderingContext,
     nativeDraw.EndNativeDrawing();
   } while (nativeDraw.ShouldRenderAgain());
   nativeDraw.PaintToContext();
-
-  ctx->PopGroupToSource();
-  ctx->Paint();
 
   ctx->Restore();
 
@@ -1365,30 +1375,47 @@ nsObjectFrame::PaintPlugin(nsIRenderingContext& aRenderingContext,
         return;
       }
 
-      // If gfxQuartzNativeDrawing hands out a CGContext other than the last
-      // one we passed to the plugin, we need to pass the new one to the
-      // plugin via SetWindow.  This will happen in nsPluginInstanceOwner::
-      // FixUpPluginWindow(), called from nsPluginInstanceOwner::Paint().
-      nsPluginPort* pluginPort = mInstanceOwner->GetPluginPort();
       nsCOMPtr<nsIPluginInstance> inst;
       GetPluginInstance(*getter_AddRefs(inst));
       if (!inst) {
         NS_WARNING("null plugin instance during PaintPlugin");
+        nativeDrawing.EndNativeDrawing();
         return;
       }
       nsPluginWindow* window;
       mInstanceOwner->GetWindow(window);
       if (!window) {
         NS_WARNING("null plugin window during PaintPlugin");
+        nativeDrawing.EndNativeDrawing();
         return;
       }
+      nsPluginPort* pluginPortCopy = mInstanceOwner->GetPluginPortCopy();
+      if (!pluginPortCopy) {
+        NS_WARNING("null plugin port copy during PaintPlugin");
+        nativeDrawing.EndNativeDrawing();
+        return;
+      }
+      if (!mInstanceOwner->SetPluginPortAndDetectChange()) {
+        NS_WARNING("null plugin port during PaintPlugin");
+        nativeDrawing.EndNativeDrawing();
+        return;
+      }
+      // If gfxQuartzNativeDrawing hands out a CGContext different from the
+      // one set by SetPluginPortAndDetectChange(), we need to pass it to the
+      // plugin via SetWindow().  This will happen in nsPluginInstanceOwner::
+      // FixUpPluginWindow(), called from nsPluginInstanceOwner::Paint().
+      // (If SetPluginPortAndDetectChange() made any changes itself, this has
+      // already been detected in that method, and will likewise result in a
+      // call to SetWindow() from FixUpPluginWindow().)
       if (window->window->cgPort.context != cgContext) {
-        pluginPort->cgPort.context = cgContext;
-        window->window = pluginPort;
-        mInstanceOwner->SetCGContextChanged(PR_TRUE);
+        window->window->cgPort.context = cgContext;
+        pluginPortCopy->cgPort.context = cgContext;
+        mInstanceOwner->SetPluginPortChanged(PR_TRUE);
       }
 
+      mInstanceOwner->BeginCGPaint();
       mInstanceOwner->Paint(aDirtyRect);
+      mInstanceOwner->EndCGPaint();
 
       nativeDrawing.EndNativeDrawing();
     } else {
@@ -1396,22 +1423,147 @@ nsObjectFrame::PaintPlugin(nsIRenderingContext& aRenderingContext,
     }
   }
 #elif defined(MOZ_X11) || defined(MOZ_DFB)
-  if (mInstanceOwner)
-    {
-      nsPluginWindow * window;
-      mInstanceOwner->GetWindow(window);
+  if (mInstanceOwner) {
+    nsPluginWindow * window;
+    mInstanceOwner->GetWindow(window);
 
-      if (window->type == nsPluginWindowType_Drawable) {
-        gfxRect frameGfxRect =
-          PresContext()->AppUnitsToGfxUnits(nsRect(aFramePt, GetSize()));
-        gfxRect dirtyGfxRect =
-          PresContext()->AppUnitsToGfxUnits(aDirtyRect);
-        gfxContext* ctx = aRenderingContext.ThebesContext();
+    if (window->type == nsPluginWindowType_Drawable) {
+      gfxRect frameGfxRect =
+        PresContext()->AppUnitsToGfxUnits(nsRect(aFramePt, GetSize()));
+      gfxRect dirtyGfxRect =
+        PresContext()->AppUnitsToGfxUnits(aDirtyRect);
+      gfxContext* ctx = aRenderingContext.ThebesContext();
 
-        mInstanceOwner->Paint(ctx, frameGfxRect, dirtyGfxRect);
+      mInstanceOwner->Paint(ctx, frameGfxRect, dirtyGfxRect);
+    }
+  }
+#elif defined(XP_WIN)
+  nsCOMPtr<nsIPluginInstance> inst;
+  GetPluginInstance(*getter_AddRefs(inst));
+  if (inst) {
+    gfxRect frameGfxRect =
+      PresContext()->AppUnitsToGfxUnits(nsRect(aFramePt, GetSize()));
+    gfxRect dirtyGfxRect =
+      PresContext()->AppUnitsToGfxUnits(aDirtyRect);
+    gfxContext *ctx = aRenderingContext.ThebesContext();
+    gfxMatrix currentMatrix = ctx->CurrentMatrix();
+
+    if (ctx->UserToDevicePixelSnapped(frameGfxRect, PR_FALSE)) {
+      dirtyGfxRect = ctx->UserToDevice(dirtyGfxRect);
+      ctx->IdentityMatrix();
+    }
+    dirtyGfxRect.RoundOut();
+
+    // Look if it's windowless
+    nsPluginWindow * window;
+    mInstanceOwner->GetWindow(window);
+
+    if (window->type == nsPluginWindowType_Drawable) {
+      // check if we need to call SetWindow with updated parameters
+      PRBool doupdatewindow = PR_FALSE;
+      // the offset of the DC
+      nsPoint origin;
+      
+      gfxWindowsNativeDrawing nativeDraw(ctx, frameGfxRect);
+      do {
+        HDC hdc = nativeDraw.BeginNativeDrawing();
+        if (!hdc)
+          return;
+
+        RECT dest;
+        nativeDraw.TransformToNativeRect(frameGfxRect, dest);
+        RECT dirty;
+        nativeDraw.TransformToNativeRect(dirtyGfxRect, dirty);
+
+        // XXX how can we be sure that window->window doesn't point to
+        // a dead DC and hdc has been reallocated at the same address?
+        if (reinterpret_cast<HDC>(window->window) != hdc ||
+            window->x != dest.left || window->y != dest.top) {
+          window->window = reinterpret_cast<nsPluginPort*>(hdc);
+          window->x = dest.left;
+          window->y = dest.top;
+
+          // Windowless plugins on windows need a special event to update their location, see bug 135737
+          // bug 271442: note, the rectangle we send is now purely the bounds of the plugin
+          // relative to the window it is contained in, which is useful for the plugin to correctly translate mouse coordinates
+          //
+          // this does not mesh with the comments for bug 135737 which imply that the rectangle
+          // must be clipped in some way to prevent the plugin attempting to paint over areas it shouldn't;
+          //
+          // since the two uses of the rectangle are mutually exclusive in some cases,
+          // and since I don't see any incorrect painting (at least with Flash and ViewPoint - the originator of 135737),
+          // it seems that windowless plugins are not relying on information here for clipping their drawing,
+          // and we can safely use this message to tell the plugin exactly where it is in all cases.
+
+          nsIntPoint origin = GetWindowOriginInPixels(PR_TRUE);
+          nsRect winlessRect = nsRect(origin, nsSize(window->width, window->height));
+          // XXX I don't think we can be certain that the location wrt to
+          // the window only changes when the location wrt to the drawable
+          // changes, but the hdc probably changes on every paint so
+          // doupdatewindow is rarely false, and there is not likely to be
+          // a problem.
+          if (mWindowlessRect != winlessRect) {
+            mWindowlessRect = winlessRect;
+
+            WINDOWPOS winpos;
+            memset(&winpos, 0, sizeof(winpos));
+            winpos.x = mWindowlessRect.x;
+            winpos.y = mWindowlessRect.y;
+            winpos.cx = mWindowlessRect.width;
+            winpos.cy = mWindowlessRect.height;
+
+            // finally, update the plugin by sending it a WM_WINDOWPOSCHANGED event
+            nsPluginEvent pluginEvent;
+            pluginEvent.event = WM_WINDOWPOSCHANGED;
+            pluginEvent.wParam = 0;
+            pluginEvent.lParam = (uint32)&winpos;
+            PRBool eventHandled = PR_FALSE;
+
+            inst->HandleEvent(&pluginEvent, &eventHandled);
+          }
+
+          inst->SetWindow(window);        
+        }
+
+        mInstanceOwner->Paint(dirty, hdc);
+        nativeDraw.EndNativeDrawing();
+      } while (nativeDraw.ShouldRenderAgain());
+
+      nativeDraw.PaintToContext();
+    } else if (!(ctx->GetFlags() & gfxContext::FLAG_DESTINED_FOR_SCREEN)) {
+      // Get PrintWindow dynamically since it's not present on Win2K,
+      // which we still support
+      typedef BOOL (WINAPI * PrintWindowPtr)
+          (HWND hwnd, HDC hdcBlt, UINT nFlags);
+      PrintWindowPtr printProc = nsnull;
+      HMODULE module = ::GetModuleHandleW(L"user32.dll");
+      if (module) {
+        printProc = reinterpret_cast<PrintWindowPtr>
+          (::GetProcAddress(module, "PrintWindow"));
+      }
+      if (printProc) {
+        HWND hwnd = reinterpret_cast<HWND>(window->window);
+        RECT rc;
+        GetWindowRect(hwnd, &rc);
+        nsRefPtr<gfxWindowsSurface> surface =
+          new gfxWindowsSurface(gfxIntSize(rc.right - rc.left, rc.bottom - rc.top));
+
+        if (surface && printProc) {
+          printProc(hwnd, surface->GetDC(), 0);
+        
+          ctx->Translate(frameGfxRect.pos);
+          ctx->SetSource(surface);
+          gfxRect r = frameGfxRect.Intersect(dirtyGfxRect) - frameGfxRect.pos;
+          ctx->NewPath();
+          ctx->Rectangle(r);
+          ctx->Fill();
+        }
       }
     }
-#elif defined (XP_WIN) || defined(XP_OS2)
+
+    ctx->SetMatrix(currentMatrix);
+  }
+#elif defined(XP_OS2)
   nsCOMPtr<nsIPluginInstance> inst;
   GetPluginInstance(*getter_AddRefs(inst));
   if (inst) {
@@ -1438,6 +1590,7 @@ nsObjectFrame::PaintPlugin(nsIRenderingContext& aRenderingContext,
        * |HandleEvent| to tell the plugin when its window moved
        */
       gfxContext *ctx = aRenderingContext.ThebesContext();
+
       gfxMatrix ctxMatrix = ctx->CurrentMatrix();
       if (ctxMatrix.HasNonTranslation()) {
         // soo; in the future, we should be able to render
@@ -1466,21 +1619,6 @@ nsObjectFrame::PaintPlugin(nsIRenderingContext& aRenderingContext,
         return;
       }
 
-#ifdef XP_WIN
-      // check if we need to update hdc
-      HDC hdc = (HDC)aRenderingContext.GetNativeGraphicData(nsIRenderingContext::NATIVE_WINDOWS_DC);
-
-      if (reinterpret_cast<HDC>(window->window) != hdc) {
-        window->window = reinterpret_cast<nsPluginPort*>(hdc);
-        doupdatewindow = PR_TRUE;
-      }
-
-      SaveDC(hdc);
-
-      POINT origViewportOrigin;
-      GetViewportOrgEx(hdc, &origViewportOrigin);
-      SetViewportOrgEx(hdc, origViewportOrigin.x + (int) xoff, origViewportOrigin.y + (int) yoff, NULL);
-#else // do something similar on OS/2
       // check if we need to update the PS
       HPS hps = (HPS)aRenderingContext.GetNativeGraphicData(nsIRenderingContext::NATIVE_OS2_PS);
       if (reinterpret_cast<HPS>(window->window) != hps) {
@@ -1498,7 +1636,6 @@ nsObjectFrame::PaintPlugin(nsIRenderingContext& aRenderingContext,
           GpiSetPageViewport(hps, &rclViewport);
         }
       }
-#endif
 
       if ((window->x != origin.x) || (window->y != origin.y)) {
         window->x = origin.x;
@@ -1508,63 +1645,13 @@ nsObjectFrame::PaintPlugin(nsIRenderingContext& aRenderingContext,
 
       // if our location or visible area has changed, we need to tell the plugin
       if (doupdatewindow) {
-#ifdef XP_WIN    // Windowless plugins on windows need a special event to update their location, see bug 135737
-           // bug 271442: note, the rectangle we send is now purely the bounds of the plugin
-           // relative to the window it is contained in, which is useful for the plugin to correctly translate mouse coordinates
-           //
-           // this does not mesh with the comments for bug 135737 which imply that the rectangle
-           // must be clipped in some way to prevent the plugin attempting to paint over areas it shouldn't;
-           //
-           // since the two uses of the rectangle are mutually exclusive in some cases,
-           // and since I don't see any incorrect painting (at least with Flash and ViewPoint - the originator of 135737),
-           // it seems that windowless plugins are not relying on information here for clipping their drawing,
-           // and we can safely use this message to tell the plugin exactly where it is in all cases.
-
-              origin = GetWindowOriginInPixels(PR_TRUE);
-              nsRect winlessRect = nsRect(origin, nsSize(window->width, window->height));
-              // XXX I don't think we can be certain that the location wrt to
-              // the window only changes when the location wrt to the drawable
-              // changes, but the hdc probably changes on every paint so
-              // doupdatewindow is rarely false, and there is not likely to be
-              // a problem.
-              if (mWindowlessRect != winlessRect) {
-                mWindowlessRect = winlessRect;
-
-                WINDOWPOS winpos;
-                memset(&winpos, 0, sizeof(winpos));
-                winpos.x = mWindowlessRect.x;
-                winpos.y = mWindowlessRect.y;
-                winpos.cx = mWindowlessRect.width;
-                winpos.cy = mWindowlessRect.height;
-
-                // finally, update the plugin by sending it a WM_WINDOWPOSCHANGED event
-                nsPluginEvent pluginEvent;
-                pluginEvent.event = WM_WINDOWPOSCHANGED;
-                pluginEvent.wParam = 0;
-                pluginEvent.lParam = (uint32)&winpos;
-                PRBool eventHandled = PR_FALSE;
-
-                inst->HandleEvent(&pluginEvent, &eventHandled);
-              }
-#endif
-
         inst->SetWindow(window);        
       }
 
-#ifdef XP_WIN
-      // FIXME - Bug 385435:
-      // This expects a dirty rect relative to the plugin's rect
-      // XXX I wonder if this breaks if we give the frame a border so the
-      // frame origin and plugin origin are not the same
-      mInstanceOwner->Paint(aDirtyRect, hdc);
-
-      RestoreDC(hdc, -1);
-#else // do something similar on OS/2
       mInstanceOwner->Paint(aDirtyRect, hps);
       if (lPSid >= 1) {
         GpiRestorePS(hps, lPSid);
       }
-#endif
       surf->MarkDirty();
     }
   }
@@ -2143,9 +2230,13 @@ nsPluginInstanceOwner::nsPluginInstanceOwner()
 
   mOwner = nsnull;
   mTagText = nsnull;
+#ifdef XP_MACOSX
+  memset(&mPluginPortCopy, 0, sizeof(nsPluginPort));
+  mInCGPaintLevel = 0;
+#endif
   mContentFocused = PR_FALSE;
   mWidgetVisible = PR_TRUE;
-  mCGContextChanged = PR_FALSE;
+  mPluginPortChanged = PR_FALSE;
   mNumCachedAttrs = 0;
   mNumCachedParams = 0;
   mCachedAttrParamNames = nsnull;
@@ -3196,6 +3287,60 @@ void nsPluginInstanceOwner::GUItoMacEvent(const nsGUIEvent& anEvent, EventRecord
   }
 }
 
+// Currently (on OS X in Cocoa widgets) any changes made as a result of
+// calling GetPluginPort() are immediately reflected in the nsPluginWindow
+// structure that has been passed to the plugin via SetWindow().  This is
+// because calls to nsChildView::GetNativeData(NS_NATIVE_PLUGIN_PORT_CG)
+// always return a pointer to the same internal (private) object, but may
+// make changes inside that object.  All calls to GetPluginPort() made while
+// the plugin is active (i.e. excluding those made at our initialization)
+// need to take this into account.  The easiest way to do so is to replace
+// them with calls to SetPluginPortAndDetectChange().  This method keeps track
+// of when calls to GetPluginPort() result in changes, and sets a flag to make
+// sure SetWindow() gets called the next time through FixUpPluginWindow(), so
+// that the plugin is notified of these changes.
+nsPluginPort* nsPluginInstanceOwner::SetPluginPortAndDetectChange()
+{
+  if (!mPluginWindow)
+    return nsnull;
+  nsPluginPort* pluginPort = GetPluginPort();
+  if (!pluginPort)
+    return nsnull;
+  mPluginWindow->window = pluginPort;
+
+  NPDrawingModel drawingModel = GetDrawingModel();
+
+#ifndef NP_NO_QUICKDRAW
+  if (drawingModel == NPDrawingModelQuickDraw) {
+    if (mPluginWindow->window->qdPort.port != mPluginPortCopy.qdPort.port) {
+      mPluginPortCopy.qdPort.port = mPluginWindow->window->qdPort.port;
+      mPluginPortChanged = PR_TRUE;
+    }
+  } else if (drawingModel == NPDrawingModelCoreGraphics)
+#endif
+  {
+    if ((mPluginWindow->window->cgPort.context != mPluginPortCopy.cgPort.context) ||
+        (mPluginWindow->window->cgPort.window != mPluginPortCopy.cgPort.window)) {
+      mPluginPortCopy.cgPort.context = mPluginWindow->window->cgPort.context;
+      mPluginPortCopy.cgPort.window = mPluginWindow->window->cgPort.window;
+      mPluginPortChanged = PR_TRUE;
+    }
+  }
+
+  return mPluginWindow->window;
+}
+
+void nsPluginInstanceOwner::BeginCGPaint()
+{
+  ++mInCGPaintLevel;
+}
+
+void nsPluginInstanceOwner::EndCGPaint()
+{
+  --mInCGPaintLevel;
+  NS_ASSERTION(mInCGPaintLevel >= 0, "Mismatched call to nsPluginInstanceOwner::EndCGPlugin()!");
+}
+
 #endif
 
 nsresult nsPluginInstanceOwner::ScrollPositionWillChange(nsIScrollableView* aScrollable, nscoord aX, nscoord aY)
@@ -3943,30 +4088,15 @@ void nsPluginInstanceOwner::Paint(const nsRect& aDirtyRect)
 #endif
 
 #ifdef XP_WIN
-void nsPluginInstanceOwner::Paint(const nsRect& aDirtyRect, HDC ndc)
+void nsPluginInstanceOwner::Paint(const RECT& aDirty, HDC aDC)
 {
   if (!mInstance || !mOwner)
     return;
 
-  nsPluginWindow * window;
-  GetWindow(window);
-  nsRect relDirtyRect = nsRect(aDirtyRect.x, aDirtyRect.y, aDirtyRect.width, aDirtyRect.height);
-  nsIntRect relDirtyRectInPixels;
-  ConvertAppUnitsToPixels(*mOwner->PresContext(), relDirtyRect,
-                          relDirtyRectInPixels);
-
-  // we got dirty rectangle in relative window coordinates, but we
-  // need it in absolute units and in the (left, top, right, bottom) form
-  RECT drc;
-  drc.left   = relDirtyRectInPixels.x + window->x;
-  drc.top    = relDirtyRectInPixels.y + window->y;
-  drc.right  = drc.left + relDirtyRectInPixels.width;
-  drc.bottom = drc.top + relDirtyRectInPixels.height;
-
   nsPluginEvent pluginEvent;
   pluginEvent.event = WM_PAINT;
-  pluginEvent.wParam = (uint32)ndc;
-  pluginEvent.lParam = (uint32)&drc;
+  pluginEvent.wParam = WPARAM(aDC);
+  pluginEvent.lParam = LPARAM(&aDirty);
   PRBool eventHandled = PR_FALSE;
   mInstance->HandleEvent(&pluginEvent, &eventHandled);
 }
@@ -4534,12 +4664,19 @@ WindowRef nsPluginInstanceOwner::FixUpPluginWindow(PRInt32 inPaintState)
   if (!mWidget || !mPluginWindow || !mInstance || !mOwner)
     return nsnull;
 
-  nsPluginPort* pluginPort = GetPluginPort(); 
+  NPDrawingModel drawingModel = GetDrawingModel();
+
+  // If we've already set up a CGContext in nsObjectFrame::PaintPlugin(), we
+  // don't want calls to SetPluginPortAndDetectChange() to step on our work.
+  nsPluginPort* pluginPort = nsnull;
+  if (mInCGPaintLevel > 0) {
+    pluginPort = mPluginWindow->window;
+  } else {
+    pluginPort = SetPluginPortAndDetectChange();
+  }
 
   if (!pluginPort)
     return nsnull;
-
-  NPDrawingModel drawingModel = GetDrawingModel();
 
   // first, check our view for CSS visibility style
   PRBool isVisible =
@@ -4616,7 +4753,7 @@ WindowRef nsPluginInstanceOwner::FixUpPluginWindow(PRInt32 inPaintState)
       mPluginWindow->clipRect.bottom  != oldClipRect.bottom)
   {
     mInstance->SetWindow(mPluginWindow);
-    mCGContextChanged = PR_FALSE;
+    mPluginPortChanged = PR_FALSE;
     // if the clipRect is of size 0, make the null timer fire less often
     CancelTimer();
     if (mPluginWindow->clipRect.left == mPluginWindow->clipRect.right ||
@@ -4626,9 +4763,9 @@ WindowRef nsPluginInstanceOwner::FixUpPluginWindow(PRInt32 inPaintState)
     else {
       StartTimer(NORMAL_PLUGIN_DELAY);
     }
-  } else if (mCGContextChanged) {
+  } else if (mPluginPortChanged) {
     mInstance->SetWindow(mPluginWindow);
-    mCGContextChanged = PR_FALSE;
+    mPluginPortChanged = PR_FALSE;
   }
 
 #ifndef NP_NO_QUICKDRAW

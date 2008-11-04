@@ -216,7 +216,7 @@ ViewportFrame::GetPrefWidth(nsIRenderingContext *aRenderingContext)
 }
 
 nsPoint
- ViewportFrame::AdjustReflowStateForScrollbars(nsHTMLReflowState* aReflowState) const
+ViewportFrame::AdjustReflowStateForScrollbars(nsHTMLReflowState* aReflowState) const
 {
   // Calculate how much room is available for fixed frames. That means
   // determining if the viewport is scrollable and whether the vertical and/or
@@ -240,7 +240,7 @@ nsPoint
 }
 
 NS_IMETHODIMP
-ViewportFrame::Reflow(nsPresContext*          aPresContext,
+ViewportFrame::Reflow(nsPresContext*           aPresContext,
                       nsHTMLReflowMetrics&     aDesiredSize,
                       const nsHTMLReflowState& aReflowState,
                       nsReflowStatus&          aStatus)

@@ -49,7 +49,7 @@
 
 <html xmlns="http://www.w3.org/1999/xhtml">
   <head>
-    <title>&restorepage.title;</title>
+    <title>&restorepage.tabtitle;</title>
     <link rel="stylesheet" href="chrome://global/skin/netError.css" type="text/css" media="all"/>
     <link rel="stylesheet" href="chrome://browser/skin/aboutSessionRestore.css" type="text/css" media="all"/>
     <link rel="icon" type="image/png" href="chrome://global/skin/icons/question-16.png"/>
@@ -64,7 +64,7 @@
     
       <!-- Error Title -->
       <div id="errorTitle">
-        <h1 id="errorTitleText">&restorepage.titletext;</h1>
+        <h1 id="errorTitleText">&restorepage.pagetitle;</h1>
       </div>
       
       <!-- LONG CONTENT (the section most likely to require scrolling) -->
@@ -72,7 +72,7 @@
       
         <!-- Short Description -->
         <div id="errorShortDesc">
-          <p id="errorShortDescText">&restorepage.shortDesc;</p>
+          <p id="errorShortDescText">&restorepage.issueDesc;</p>
         </div>
 
         <!-- Long Description (Note: See netError.dtd for used XHTML tags) -->
@@ -102,12 +102,21 @@
 
       <!-- Buttons -->
       <hbox xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul" id="buttons">
+#ifdef XP_UNIX
+        <button id="errorCancel" label="&restorepage.cancelButton;"
+                accesskey="&restorepage.cancel.access;"
+                oncommand="startNewSession();"/>
+        <button id="errorTryAgain" label="&restorepage.restoreButton;"
+                accesskey="&restorepage.restore.access;"
+                oncommand="restoreSession();"/>
+#else
         <button id="errorTryAgain" label="&restorepage.restoreButton;"
                 accesskey="&restorepage.restore.access;"
                 oncommand="restoreSession();"/>
         <button id="errorCancel" label="&restorepage.cancelButton;"
                 accesskey="&restorepage.cancel.access;"
                 oncommand="startNewSession();"/>
+#endif
       </hbox>
       <!-- holds the session data for when the tab is closed -->
       <input type="text" id="sessionData" style="display: none;"/>

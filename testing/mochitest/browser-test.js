@@ -136,6 +136,16 @@ function testScope(aTests) {
     self.todo(a != b, name, "Didn't expect " + a + ", but got it");
   };
 
+  this.executeSoon = function test_executeSoon(func) {
+    let tm = Cc["@mozilla.org/thread-manager;1"].getService(Ci.nsIThreadManager);
+
+    tm.mainThread.dispatch({
+      run: function() {
+        func();
+      }
+    }, Ci.nsIThread.DISPATCH_NORMAL);
+  };
+
   this.waitForExplicitFinish = function test_WFEF() {
     self.done = false;
   };

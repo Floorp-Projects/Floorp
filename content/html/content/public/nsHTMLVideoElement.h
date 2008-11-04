@@ -73,8 +73,4 @@ public:
   // Returns the current video frame width and height.
   // If there is no video frame, returns the given default size.
   nsIntSize GetVideoSize(nsIntSize defaultSize);
-
-protected:
-  virtual nsresult InitializeDecoder(nsAString& aChosenMediaResource);
-
 };

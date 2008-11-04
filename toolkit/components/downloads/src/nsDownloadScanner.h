@@ -103,7 +103,6 @@ private:
     // Also true if it is an ftp download
     PRBool mIsHttpDownload;
     PRBool mSkipSource;
-    PRBool mIsReadOnlyRequest;
 
     /* @summary Sets the Scan's state to newState if the current state is
                 expectedState

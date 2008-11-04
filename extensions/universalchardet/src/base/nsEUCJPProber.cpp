@@ -91,8 +91,8 @@ nsProbingState nsEUCJPProber::HandleData(const char* aBuf, PRUint32 aLen)
 
 float nsEUCJPProber::GetConfidence(void)
 {
-  float contxtCf = mContextAnalyser.GetConfidence();
-  float distribCf = mDistributionAnalyser.GetConfidence();
+  float contxtCf = mContextAnalyser.GetConfidence(mIsPreferredLanguage);
+  float distribCf = mDistributionAnalyser.GetConfidence(mIsPreferredLanguage);
 
   return (contxtCf > distribCf ? contxtCf : distribCf);
 }

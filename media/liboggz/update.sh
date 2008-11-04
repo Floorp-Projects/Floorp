@@ -42,3 +42,4 @@ cp $1/src/liboggz/oggz_dlist.h ./src/liboggz/oggz_dlist.h
 sed s/\#include\ \"config.h\"/\#ifdef\ WIN32\\n\#include\ \"config_win32.h\"\\n\#else\\n\#include\ \"config.h\"\\n\#endif/g $1/src/liboggz/metric_internal.c >./src/liboggz/metric_internal.c
 cp $1/AUTHORS ./AUTHORS
 patch -p4 <seek.patch
+patch -p4 <warning.patch

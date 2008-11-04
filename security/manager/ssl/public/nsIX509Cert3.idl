@@ -20,6 +20,7 @@
  *
  * Contributor(s):
  *   Kai Engert <kengert@redhat.com>
+ *   Jesper Kristensen <mail@jesperkristensen.dk>
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -42,7 +43,7 @@ interface nsICertVerificationListener;
 /**
  * Extending nsIX509Cert
  */
-[scriptable, uuid(aa67eb02-ccc8-4f55-84da-bcafff9265ae)]
+[scriptable, uuid(399004d8-b8c7-4eb9-8362-d99f4c0161fd)]
 interface nsIX509Cert3 : nsIX509Cert2 {
 
   /**
@@ -74,6 +75,19 @@ interface nsIX509Cert3 : nsIX509Cert2 {
                    [retval, array, size_is(length)] out octet data);
 
   readonly attribute boolean isSelfSigned;
+
+  /**
+   * Human readable names identifying all hardware or
+   * software tokens the certificate is stored on.
+   *
+   * @param On success, the number of entries in the returned array.
+   * @return On success, an array containing the names of all tokens 
+   *         the certificate is stored on (may be empty).
+   *         On failure the function throws/returns an error.
+   */
+  void getAllTokenNames(out unsigned long length,
+                       [retval, array, size_is(length)] out wstring
+                       tokenNames);
 };
 
 [scriptable, uuid(2fd0a785-9f2d-4327-8871-8c3e0783891d)]

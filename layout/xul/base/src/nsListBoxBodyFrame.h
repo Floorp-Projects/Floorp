@@ -51,6 +51,10 @@
 #include "nsThreadUtils.h"
 #include "nsPIBoxObject.h"
 
+#define NS_LISTBOXBODYFRAME_IID \
+{ 0x6e0acf13, 0x0b07, 0x481d, \
+  { 0xa3, 0x39, 0x4c, 0xb6, 0x44, 0xbc, 0x1b, 0xd8 } }
+
 class nsListScrollSmoother;
 nsIFrame* NS_NewListBoxBodyFrame(nsIPresShell* aPresShell,
                                  nsStyleContext* aContext,
@@ -58,7 +62,6 @@ nsIFrame* NS_NewListBoxBodyFrame(nsIPresShell* aPresShell,
                                  nsIBoxLayout* aLayoutManager = nsnull);
 
 class nsListBoxBodyFrame : public nsBoxFrame,
-                           public nsIListBoxObject,
                            public nsIScrollbarMediator,
                            public nsIReflowCallback
 {
@@ -66,8 +69,19 @@ class nsListBoxBodyFrame : public nsBoxFrame,
   virtual ~nsListBoxBodyFrame();
 
 public:
+  NS_DECLARE_STATIC_IID_ACCESSOR(NS_LISTBOXBODYFRAME_IID)
+
   NS_DECL_ISUPPORTS
-  NS_DECL_NSILISTBOXOBJECT
+
+  // non-virtual nsIListBoxObject
+  nsresult GetRowCount(PRInt32 *aResult);
+  nsresult GetNumberOfVisibleRows(PRInt32 *aResult);
+  nsresult GetIndexOfFirstVisibleRow(PRInt32 *aResult);
+  nsresult EnsureIndexIsVisible(PRInt32 aRowIndex);
+  nsresult ScrollToIndex(PRInt32 aRowIndex);
+  nsresult ScrollByLines(PRInt32 aNumLines);
+  nsresult GetItemAtIndex(PRInt32 aIndex, nsIDOMElement **aResult);
+  nsresult GetIndexOfItem(nsIDOMElement *aItem, PRInt32 *aResult);
 
   friend nsIFrame* NS_NewListBoxBodyFrame(nsIPresShell* aPresShell,
                                           nsStyleContext* aContext,
@@ -208,5 +222,7 @@ protected:
 
   nsCOMPtr<nsPIBoxObject> mBoxObject;
 }; 
+
+NS_DEFINE_STATIC_IID_ACCESSOR(nsListBoxBodyFrame, NS_LISTBOXBODYFRAME_IID)
 
 #endif // nsListBoxBodyFrame_h

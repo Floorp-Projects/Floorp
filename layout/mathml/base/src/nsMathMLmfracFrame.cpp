@@ -294,7 +294,6 @@ nsMathMLmfracFrame::Place(nsIRenderingContext& aRenderingContext,
     frameDen = frameNum->GetNextSibling();
   if (!frameNum || !frameDen || frameDen->GetNextSibling()) {
     // report an error, encourage people to get their markups in order
-    NS_WARNING("invalid markup");
     return ReflowError(aRenderingContext, aDesiredSize);
   }
   GetReflowAndBoundingMetricsFor(frameNum, sizeNum, bmNum);

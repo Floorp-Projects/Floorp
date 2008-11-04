@@ -809,10 +809,12 @@ auto_calc_vorbis(ogg_int64_t now, oggz_stream_t *stream, ogg_packet *op) {
       }
       
       size_check += 1;
+#ifdef DEBUG
       if (size_check != size)
       {
         printf("WARNING: size parsing failed for VORBIS mode packets\n");
       }
+#endif
 
       /*
        * store mode size information in our info struct
