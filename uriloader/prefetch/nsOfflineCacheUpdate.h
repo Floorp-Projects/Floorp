@@ -237,6 +237,7 @@ private:
     nsresult NotifyError();
     nsresult NotifyChecking();
     nsresult NotifyNoUpdate();
+    nsresult NotifyObsolete();
     nsresult NotifyDownloading();
     nsresult NotifyStarted(nsOfflineCacheUpdateItem *aItem);
     nsresult NotifyCompleted(nsOfflineCacheUpdateItem *aItem);
@@ -252,9 +253,11 @@ private:
         STATE_FINISHED
     } mState;
 
-    PRBool mAddedItems;
-    PRBool mPartialUpdate;
-    PRBool mSucceeded;
+    PRPackedBool mAddedItems;
+    PRPackedBool mPartialUpdate;
+    PRPackedBool mSucceeded;
+    PRPackedBool mObsolete;
+
     nsCString mUpdateDomain;
     nsCOMPtr<nsIURI> mManifestURI;
 

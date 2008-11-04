@@ -904,6 +904,7 @@ nsOfflineCacheUpdate::nsOfflineCacheUpdate()
     , mAddedItems(PR_FALSE)
     , mPartialUpdate(PR_FALSE)
     , mSucceeded(PR_TRUE)
+    , mObsolete(PR_FALSE)
     , mCurrentItem(-1)
 {
 }
@@ -1118,6 +1119,19 @@ nsOfflineCacheUpdate::LoadCompleted()
 
         NS_ASSERTION(mManifestItem,
                      "Must have a manifest item in STATE_CHECKING.");
+
+        // A 404 or 410 is interpreted as an intentional removal of
+        // the manifest file, rather than a transient server error.
+        // Obsolete this cache group if one of these is returned.
+        PRUint16 status;
+        rv = mManifestItem->GetStatus(&status);
+        if (status == 404 || status == 410) {
+            mSucceeded = PR_FALSE;
+            mObsolete = PR_TRUE;
+            NotifyObsolete();
+            Finish();
+            return;
+        }
 
         PRBool doUpdate;
         if (NS_FAILED(HandleManifest(&doUpdate))) {
@@ -1392,6 +1406,24 @@ nsOfflineCacheUpdate::NotifyNoUpdate()
 }
 
 nsresult
+nsOfflineCacheUpdate::NotifyObsolete()
+{
+    LOG(("nsOfflineCacheUpdate::NotifyObsolete [%p]", this));
+
+    mState = STATE_FINISHED;
+
+    nsCOMArray<nsIOfflineCacheUpdateObserver> observers;
+    nsresult rv = GatherObservers(observers);
+    NS_ENSURE_SUCCESS(rv, rv);
+
+    for (PRInt32 i = 0; i < observers.Count(); i++) {
+        observers[i]->Obsolete(this);
+    }
+
+    return NS_OK;
+}
+
+nsresult
 nsOfflineCacheUpdate::NotifyDownloading()
 {
     LOG(("nsOfflineCacheUpdate::NotifyDownloading [%p]", this));
@@ -1494,6 +1526,16 @@ nsOfflineCacheUpdate::Finish()
                 AssociateDocument(mDocuments[i]);
             }
         }
+
+        if (mObsolete) {
+            nsCOMPtr<nsIApplicationCacheService> appCacheService =
+                do_GetService(NS_APPLICATIONCACHESERVICE_CONTRACTID);
+            if (appCacheService) {
+                nsCAutoString groupID;
+                mApplicationCache->GetGroupID(groupID);
+                appCacheService->DeactivateGroup(groupID);
+             }
+         }
 
         if (!mSucceeded) {
             // Update was not merged, mark all the loads as failures
