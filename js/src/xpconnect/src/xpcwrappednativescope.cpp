@@ -744,9 +744,6 @@ void DEBUG_CheckForComponentsInScope(XPCCallContext& ccx, JSObject* obj,
     if(OKIfNotInitialized)
         return;
 
-    if(!(JS_GetOptions(ccx) & JSOPTION_PRIVATE_IS_NSISUPPORTS))
-        return;
-
     const char* name = ccx.GetRuntime()->GetStringName(XPCJSRuntime::IDX_COMPONENTS);
     jsval prop;
     if(JS_LookupProperty(ccx, obj, name, &prop) && !JSVAL_IS_PRIMITIVE(prop))

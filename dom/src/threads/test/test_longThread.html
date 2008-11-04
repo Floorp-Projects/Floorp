@@ -18,36 +18,63 @@ Tests of DOM Worker Threads (Bug 437152)
 <pre id="test">
 <script class="testbody" type="text/javascript">
 
-  const numThreads = 5;
+  netscape.security.PrivilegeManager.enablePrivilege('UniversalXPConnect');
+
+  var prefs = Components.classes["@mozilla.org/preferences-service;1"].
+              getService(Components.interfaces.nsIPrefBranch);
+  //prefs.setIntPref("javascript.options.gczeal", 2);
+
+  var workerScript =
+    "function messageListener(message, source) { " +
+    "  switch (message) { " +
+    "    case 'start': " +
+    "      /* do a ton of stuff! */ " +
+    "      for (var i = 0; i < 10000000; i++) { } " +
+    "      dump('done!\\n'); " +
+    "      /* pass message to source */ " +
+    "      source.postMessage('done'); " +
+    "      break; " +
+    "    default: " +
+    "      throw 'Bad message: ' + message; " +
+    "  } " +
+    "} " +
+    "";
+
+  var pool = navigator.newWorkerPool();
+  ok(pool, "Couldn't get worker pool");
+
+  const numThreads = 10;
   var doneThreads = 0;
 
-  function onmessage(event) {
-    switch (event.data) {
+  pool.messageListener = function(message, source) {
+    netscape.security.PrivilegeManager.enablePrivilege('UniversalXPConnect');
+    switch (message) {
       case "done":
         if (++doneThreads == numThreads) {
+          prefs.setIntPref("javascript.options.gczeal", 0);
           SimpleTest.finish();
         }
         break;
       default:
         ok(false, "Unexpected message");
+        prefs.setIntPref("javascript.options.gczeal", 0);
         SimpleTest.finish();
     }
-  }
+  };
 
-  function onerror(event) {
+  pool.errorListener = function(error, source) {
+    netscape.security.PrivilegeManager.enablePrivilege('UniversalXPConnect');
     ok(false, "Worker had an error");
+    prefs.setIntPref("javascript.options.gczeal", 0);
     SimpleTest.finish();
-  }
+  };
 
   for (var i = 0; i < numThreads; i++) {
-    var worker = new Worker("longThread_worker.js");
-    worker.onmessage = onmessage;
-    worker.onerror = onerror;
+    var worker = pool.createWorker(workerScript);
     worker.postMessage("start");
   }
 
   SimpleTest.waitForExplicitFinish();
-
 </script>
 </pre>
 </body>

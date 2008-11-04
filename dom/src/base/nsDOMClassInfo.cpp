@@ -457,9 +457,6 @@
 #include "nsIDOMGeoPosition.h"
 #include "nsIDOMGeoPositionError.h"
 
-// Workers
-#include "nsDOMWorker.h"
-
 #include "nsDOMFile.h"
 #include "nsIDOMFileException.h"
 
@@ -1302,9 +1299,6 @@ static nsDOMClassInfoData sClassInfoData[] = {
   NS_DEFINE_CLASSINFO_DATA_WITH_NAME(MathMLElement, Element, nsElementSH,
                                      ELEMENT_SCRIPTABLE_FLAGS)
 #endif
-
-  NS_DEFINE_CLASSINFO_DATA(Worker, nsDOMGenericSH,
-                           DOM_DEFAULT_SCRIPTABLE_FLAGS)
 };
 
 // Objects that shuld be constructable through |new Name();|
@@ -1325,20 +1319,6 @@ static const nsContractIDMapData kConstructorMap[] =
   NS_DEFINE_CONSTRUCTOR_DATA(XPathEvaluator, NS_XPATH_EVALUATOR_CONTRACTID)
   NS_DEFINE_CONSTRUCTOR_DATA(XSLTProcessor,
                              "@mozilla.org/document-transformer;1?type=xslt")
-};
-
-struct nsConstructorFuncMapData
-{
-  PRInt32 mDOMClassInfoID;
-  nsDOMConstructorFunc mConstructorFunc;
-};
-
-#define NS_DEFINE_CONSTRUCTOR_FUNC_DATA(_class, _func)                        \
-  { eDOMClassInfo_##_class##_id, _func },
-
-static const nsConstructorFuncMapData kConstructorFuncMap[] =
-{
-  NS_DEFINE_CONSTRUCTOR_FUNC_DATA(Worker, nsDOMWorker::NewWorker)
 };
 
 nsIXPConnect *nsDOMClassInfo::sXPConnect = nsnull;
@@ -3572,12 +3552,6 @@ nsDOMClassInfo::Init()
   DOM_CLASSINFO_MAP_END
 #endif
 
-  DOM_CLASSINFO_MAP_BEGIN(Worker, nsIWorker)
-    DOM_CLASSINFO_MAP_ENTRY(nsIWorker)
-    DOM_CLASSINFO_MAP_ENTRY(nsIAbstractWorker)
-    DOM_CLASSINFO_MAP_ENTRY(nsIDOMEventTarget)
-  DOM_CLASSINFO_MAP_END
-
 #ifdef NS_DEBUG
   {
     PRUint32 i = NS_ARRAY_LENGTH(sClassInfoData);
@@ -4992,17 +4966,6 @@ FindConstructorContractID(PRInt32 aDOMClassInfoID)
   return nsnull;
 }
 
-static nsDOMConstructorFunc
-FindConstructorFunc(PRInt32 aDOMClassInfoID)
-{
-  for (PRUint32 i = 0; i < NS_ARRAY_LENGTH(kConstructorFuncMap); ++i) {
-    if (kConstructorFuncMap[i].mDOMClassInfoID == aDOMClassInfoID) {
-      return kConstructorFuncMap[i].mConstructorFunc;
-    }
-  }
-  return nsnull;
-}
-
 static nsresult
 BaseStubConstructor(nsIWeakReference* aWeakOwner,
                     const nsGlobalNameStruct *name_struct, JSContext *cx,
@@ -5013,16 +4976,7 @@ BaseStubConstructor(nsIWeakReference* aWeakOwner,
   if (name_struct->mType == nsGlobalNameStruct::eTypeClassConstructor) {
     const char *contractid =
       FindConstructorContractID(name_struct->mDOMClassInfoID);
-    if (contractid) {
-      native = do_CreateInstance(contractid, &rv);
-    }
-    else {
-      nsDOMConstructorFunc func =
-        FindConstructorFunc(name_struct->mDOMClassInfoID);
-      if (func) {
-        rv = func(getter_AddRefs(native));
-      }
-    }
+    native = do_CreateInstance(contractid, &rv);
   } else if (name_struct->mType == nsGlobalNameStruct::eTypeExternalConstructor) {
     native = do_CreateInstance(name_struct->mCID, &rv);
   } else if (name_struct->mType == nsGlobalNameStruct::eTypeExternalConstructorAlias) {
@@ -5240,8 +5194,7 @@ private:
   {
     return
       (aNameStruct->mType == nsGlobalNameStruct::eTypeClassConstructor &&
-       (FindConstructorContractID(aNameStruct->mDOMClassInfoID) ||
-        FindConstructorFunc(aNameStruct->mDOMClassInfoID))) ||
+       FindConstructorContractID(aNameStruct->mDOMClassInfoID)) ||
       (aNameStruct->mType == nsGlobalNameStruct::eTypeExternalClassInfo &&
        aNameStruct->mData->mConstructorCID) ||
       aNameStruct->mType == nsGlobalNameStruct::eTypeExternalConstructor ||

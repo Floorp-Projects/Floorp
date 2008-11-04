@@ -434,7 +434,6 @@ public:
     CacheXBLPrototypeHandler(nsXBLPrototypeHandler* aKey,
                              nsScriptObjectHolder& aHandler);
 
-  static PRBool DOMWindowDumpEnabled();
 
 protected:
   // Object Management
