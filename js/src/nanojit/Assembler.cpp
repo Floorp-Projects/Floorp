@@ -665,9 +665,10 @@ namespace nanojit
     {
         Fragment *frag = lr->exit->target;
 		NanoAssert(frag->fragEntry != 0);
-		NIns* was = asm_adjustBranch((NIns*)lr->jmp, frag->fragEntry);
+		NIns* was = nPatchBranch((NIns*)lr->jmp, frag->fragEntry);
 		verbose_only(verbose_outputf("patching jump at %p to target %p (was %p)\n",
 			lr->jmp, frag->fragEntry, was);)
+		(void)was;
     }
 
     void Assembler::patch(SideExit *exit)
@@ -1285,7 +1286,7 @@ namespace nanojit
                     if (label && label->addr) {
                         // forward jump to known label.  need to merge with label's register state.
                         unionRegisterState(label->regs);
-    					asm_branch(op == LIR_jf, cond, label->addr);
+    					asm_branch(op == LIR_jf, cond, label->addr, false);
                     }
                     else {
                         // back edge.
@@ -1300,7 +1301,7 @@ namespace nanojit
                             // evict all registers, most conservative approach.
                             intersectRegisterState(label->regs);
                         }
-                        NIns *branch = asm_branch(op == LIR_jf, cond, 0);
+                        NIns *branch = asm_branch(op == LIR_jf, cond, 0, false);
 			            _patches.put(branch,to);
                         verbose_only(
                             verbose_outputf("Loop %s -> %s", 
@@ -1340,7 +1341,7 @@ namespace nanojit
 					// we only support cmp with guard right now, also assume it is 'close' and only emit the branch
                     NIns* exit = asm_exit(ins); // does intersectRegisterState()
 					LIns* cond = ins->oprnd1();
-					asm_branch(op == LIR_xf, cond, exit);
+					asm_branch(op == LIR_xf, cond, exit, false);
 					break;
 				}
 				case LIR_x:
