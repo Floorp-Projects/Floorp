@@ -537,8 +537,7 @@ static nsExtraMimeTypeEntry extraMimeEntries [] =
   { TEXT_CSS, "css", "Style Sheet", MAC_TYPE('TEXT'), MAC_TYPE('ttxt') },
   { "audio/ogg", "oga", "Ogg Audio", 0, 0 },
   { "video/ogg", "ogv", "Ogg Video", 0, 0 },
-  { "audio/ogg", "ogg", "Ogg Audio", 0, 0 },
-  { "audio/x-wav", "wav", "Waveform Audio", 0, 0 }
+  { "audio/ogg", "ogg", "Ogg Audio", 0, 0 }
 };
 
 #undef MAC_TYPE

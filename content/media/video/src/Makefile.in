@@ -82,29 +82,13 @@ CPPSRCS		= \
 		nsMediaDecoder.cpp \
 		$(NULL)
 
-ifdef MOZ_MEDIA
-CPPSRCS		+= \
-		nsChannelToPipeListener.cpp \
-		nsMediaStream.cpp \
-		$(NULL)
-endif
-
-ifdef MOZ_SYDNEYAUDIO
-CPPSRCS		+= \
-		nsAudioStream.cpp \
-		$(NULL)
-endif
-
 ifdef MOZ_OGG
 CPPSRCS		+= \
+		nsAudioStream.cpp \
 		nsChannelReader.cpp \
+		nsChannelToPipeListener.cpp \
+		nsMediaStream.cpp \
 		nsOggDecoder.cpp \
-		$(NULL)
-endif
-
-ifdef MOZ_WAVE
-CPPSRCS		+= \
-		nsWaveDecoder.cpp \
 		$(NULL)
 endif
 
