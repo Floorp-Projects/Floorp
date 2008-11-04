@@ -1104,7 +1104,7 @@ nsOfflineCacheDevice::Init()
                                                      "  ON ns.ClientID = groups.ActiveClientID"
                                                      " WHERE ns.NameSpace <= ?1 AND ?1 GLOB ns.NameSpace || '*'"
                                                      " ORDER BY ns.NameSpace DESC, groups.ActivateTimeStamp DESC;"),
-    StatementSql ( mStatement_FindNamespaceEntry,    "SELECT ns.ClientID, ns.Data, ns.ItemType FROM "
+    StatementSql ( mStatement_FindNamespaceEntry,    "SELECT ns.NameSpace, ns.Data, ns.ItemType FROM "
                                                      "  moz_cache_namespaces AS ns JOIN moz_cache_groups AS groups"
                                                      "  ON ns.ClientID = groups.ActiveClientID"
                                                      " WHERE ClientID = ?1"

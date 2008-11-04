@@ -38,8 +38,27 @@
 #define NSIFRAMETRAVERSAL_H
 
 #include "nsISupports.h"
-#include "nsIEnumerator.h"
 #include "nsIFrame.h"
+
+#define NS_IFRAMEENUMERATOR_IID \
+{ 0x7c633f5d, 0x91eb, 0x494e, \
+  { 0xa1, 0x40, 0x17, 0x46, 0x17, 0x4c, 0x23, 0xd3 } }
+
+class nsIFrameEnumerator : public nsISupports
+{
+public:
+  NS_DECLARE_STATIC_IID_ACCESSOR(NS_IFRAMEENUMERATOR_IID)
+
+  virtual void First() = 0;
+  virtual void Next() = 0;
+  virtual nsIFrame* CurrentItem() = 0;
+  virtual PRBool IsDone() = 0;
+
+  virtual void Last() = 0;
+  virtual void Prev() = 0;
+};
+
+NS_DEFINE_STATIC_IID_ACCESSOR(nsIFrameEnumerator, NS_IFRAMEENUMERATOR_IID)
 
 enum nsIteratorType {
   eLeaf,
@@ -71,7 +90,7 @@ public:
    *        the real frame. Going back up will go on past the placeholder,
    *        so the placeholders are logically part of the frame tree.
    */
-  NS_IMETHOD NewFrameTraversal(nsIBidirectionalEnumerator **aEnumerator,
+  NS_IMETHOD NewFrameTraversal(nsIFrameEnumerator **aEnumerator,
                                nsPresContext* aPresContext,
                                nsIFrame *aStart,
                                PRInt32 aType,

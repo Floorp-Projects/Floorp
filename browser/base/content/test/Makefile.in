@@ -70,6 +70,13 @@ _BROWSER_FILES = browser_bug321000.js \
                  browser_ctrlTab.js \
                  browser_selectTabAtIndex.js \
                  browser_gestureSupport.js \
+                 browser_feed_tab.js \
+                 feed_tab.html \
+                 browser_pluginnotification.js \
+                 plugin_unknown.html \
+                 plugin_test.html \
+                 plugin_both.html \
+                 plugin_both2.html \
     $(NULL)
 
 ifneq (,$(filter mac cocoa,$(MOZ_WIDGET_TOOLKIT)))

@@ -120,7 +120,7 @@ public:
 
   friend class ImageListener;
 protected:
-  nsresult CreateSyntheticDocument();
+  virtual nsresult CreateSyntheticDocument();
 
   nsresult CheckOverflowing(PRBool changeState);
 
@@ -278,12 +278,13 @@ NS_IMPL_ADDREF_INHERITED(nsImageDocument, nsMediaDocument)
 NS_IMPL_RELEASE_INHERITED(nsImageDocument, nsMediaDocument)
 
 NS_INTERFACE_TABLE_HEAD(nsImageDocument)
-  NS_INTERFACE_TABLE_INHERITED4(nsImageDocument,
-                                nsIImageDocument,
-                                imgIDecoderObserver,
-                                imgIContainerObserver,
-                                nsIDOMEventListener)
-  NS_INTERFACE_TABLE_TO_MAP_SEGUE
+  NS_HTML_DOCUMENT_INTERFACE_TABLE_BEGIN(nsImageDocument)
+    NS_INTERFACE_TABLE_ENTRY(nsImageDocument, nsIImageDocument)
+    NS_INTERFACE_TABLE_ENTRY(nsImageDocument, imgIDecoderObserver)
+    NS_INTERFACE_TABLE_ENTRY(nsImageDocument, imgIContainerObserver)
+    NS_INTERFACE_TABLE_ENTRY(nsImageDocument, nsIDOMEventListener)
+  NS_OFFSET_AND_INTERFACE_TABLE_END
+  NS_OFFSET_AND_INTERFACE_TABLE_TO_MAP_SEGUE
   NS_INTERFACE_MAP_ENTRY_CONTENT_CLASSINFO(ImageDocument)
 NS_INTERFACE_MAP_END_INHERITING(nsMediaDocument)
 

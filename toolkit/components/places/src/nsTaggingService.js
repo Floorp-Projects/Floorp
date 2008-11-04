@@ -83,6 +83,7 @@ TaggingService.prototype = {
       query.setFolders([this._bms.tagsFolder], 1);
       this.__tagsResult = this._history.executeQuery(query, options);
       this.__tagsResult.root.containerOpen = true;
+      this.__tagsResult.viewer = this;
 
       // we need to null out the result on shutdown
       var observerSvc = Cc[OBSS_CONTRACTID].getService(Ci.nsIObserverService);
@@ -280,31 +281,273 @@ TaggingService.prototype = {
   },
 
   // nsITaggingService
+  _allTags: null,
   get allTags() {
-    var tags = [];
-    var root = this._tagsResult.root;
-    var cc = root.childCount;
-    for (var j=0; j < cc; j++) {
-      var child = root.getChild(j);
-      tags.push(child.title);
-    }
+    if (!this._allTags) {
+      this._allTags = [];
+      var root = this._tagsResult.root;
+      var cc = root.childCount;
+      for (var j=0; j < cc; j++) {
+        var child = root.getChild(j);
+        this._allTags.push(child.title);
+      }
 
-    // sort the tag list
-    tags.sort();
-    return tags;
+      // sort the tag list
+      this.allTags.sort();
+    }
+    return this._allTags;
   },
 
   // nsIObserver
-  observe: function TS_observe(subject, topic, data) {
-    if (topic == "xpcom-shutdown") {
+  observe: function TS_observe(aSubject, aTopic, aData) {
+    if (aTopic == "xpcom-shutdown") {
       this.__tagsResult.root.containerOpen = false;
+      this.__tagsResult.viewer = null;
       this.__tagsResult = null;
       var observerSvc = Cc[OBSS_CONTRACTID].getService(Ci.nsIObserverService);
       observerSvc.removeObserver(this, "xpcom-shutdown");
     }
+  },
+
+  // nsINavHistoryResultViewer
+  // Used to invalidate the cached tag list
+  itemInserted: function() this._allTags = null,
+  itemRemoved: function() this._allTags = null,
+  itemMoved: function() {},
+  itemChanged: function() {},
+  itemReplaced: function() {},
+  containerOpened: function() {},
+  containerClosed: function() {},
+  invalidateContainer: function() this._allTags = null,
+  invalidateAll: function() this._allTags = null,
+  sortingChanged: function() {},
+  result: null
+};
+
+// Implements nsIAutoCompleteResult
+function TagAutoCompleteResult(searchString, searchResult,
+                               defaultIndex, errorDescription,
+                               results, comments) {
+  this._searchString = searchString;
+  this._searchResult = searchResult;
+  this._defaultIndex = defaultIndex;
+  this._errorDescription = errorDescription;
+  this._results = results;
+  this._comments = comments;
+}
+
+TagAutoCompleteResult.prototype = {
+  
+  /**
+   * The original search string
+   */
+  get searchString() {
+    return this._searchString;
+  },
+
+  /**
+   * The result code of this result object, either:
+   *         RESULT_IGNORED   (invalid searchString)
+   *         RESULT_FAILURE   (failure)
+   *         RESULT_NOMATCH   (no matches found)
+   *         RESULT_SUCCESS   (matches found)
+   */
+  get searchResult() {
+    return this._searchResult;
+  },
+
+  /**
+   * Index of the default item that should be entered if none is selected
+   */
+  get defaultIndex() {
+    return this._defaultIndex;
+  },
+
+  /**
+   * A string describing the cause of a search failure
+   */
+  get errorDescription() {
+    return this._errorDescription;
+  },
+
+  /**
+   * The number of matches
+   */
+  get matchCount() {
+    return this._results.length;
+  },
+
+  /**
+   * Get the value of the result at the given index
+   */
+  getValueAt: function PTACR_getValueAt(index) {
+    return this._results[index];
+  },
+
+  /**
+   * Get the comment of the result at the given index
+   */
+  getCommentAt: function PTACR_getCommentAt(index) {
+    return this._comments[index];
+  },
+
+  /**
+   * Get the style hint for the result at the given index
+   */
+  getStyleAt: function PTACR_getStyleAt(index) {
+    if (!this._comments[index])
+      return null;  // not a category label, so no special styling
+
+    if (index == 0)
+      return "suggestfirst";  // category label on first line of results
+
+    return "suggesthint";   // category label on any other line of results
+  },
+
+  /**
+   * Get the image for the result at the given index
+   */
+  getImageAt: function PTACR_getImageAt(index) {
+    return null;
+  },
+
+  /**
+   * Remove the value at the given index from the autocomplete results.
+   * If removeFromDb is set to true, the value should be removed from
+   * persistent storage as well.
+   */
+  removeValueAt: function PTACR_removeValueAt(index, removeFromDb) {
+    this._results.splice(index, 1);
+    this._comments.splice(index, 1);
+  },
+
+  QueryInterface: function(aIID) {
+    if (!aIID.equals(Ci.nsIAutoCompleteResult) && !aIID.equals(Ci.nsISupports))
+        throw Components.results.NS_ERROR_NO_INTERFACE;
+    return this;
   }
 };
 
+// Implements nsIAutoCompleteSearch
+function TagAutoCompleteSearch() {
+}
+
+TagAutoCompleteSearch.prototype = {
+  _stopped : false, 
+
+  get tagging() {
+    let svc = Cc["@mozilla.org/browser/tagging-service;1"].
+              getService(Ci.nsITaggingService);
+    this.__defineGetter__("tagging", function() svc);
+    return this.tagging;
+  },
+
+  /*
+   * Search for a given string and notify a listener (either synchronously
+   * or asynchronously) of the result
+   *
+   * @param searchString - The string to search for
+   * @param searchParam - An extra parameter
+   * @param previousResult - A previous result to use for faster searching
+   * @param listener - A listener to notify when the search is complete
+   */
+  startSearch: function PTACS_startSearch(searchString, searchParam, result, listener) {
+    var searchResults = this.tagging.allTags;
+    var results = [];
+    var comments = [];
+    this._stopped = false;
+
+    // only search on characters for the last tag
+    var index = Math.max(searchString.lastIndexOf(","), 
+      searchString.lastIndexOf(";"));
+    var before = ''; 
+    if (index != -1) {  
+      before = searchString.slice(0, index+1);
+      searchString = searchString.slice(index+1);
+      // skip past whitespace
+      var m = searchString.match(/\s+/);
+      if (m) {
+         before += m[0];
+         searchString = searchString.slice(m[0].length);
+      }
+    }
+
+    if (!searchString.length) {
+      var newResult = new TagAutoCompleteResult(searchString,
+        Ci.nsIAutoCompleteResult.RESULT_NOMATCH, 0, "", results, comments);
+      listener.onSearchResult(self, newResult);
+      return;
+    }
+    
+    var self = this;
+    // generator: if yields true, not done
+    function doSearch() {
+      var i = 0;
+      while (i < searchResults.length) {
+        if (self._stopped)
+          yield false;
+        // for each match, prepend what the user has typed so far
+        var pattern = new RegExp("(^" + searchResults[i] + "$|" + searchResults[i] + "(,|;))");
+        if (searchResults[i].indexOf(searchString) == 0 &&
+            !pattern.test(before)) {
+          results.push(before + searchResults[i]);
+          comments.push(searchResults[i]);
+        }
+    
+        ++i;
+        // 100 loops per yield
+        if ((i % 100) == 0) {
+          var newResult = new TagAutoCompleteResult(searchString,
+            Ci.nsIAutoCompleteResult.RESULT_SUCCESS_ONGOING, 0, "", results, comments);
+          listener.onSearchResult(self, newResult);
+          yield true;
+        } 
+      }
+
+      var newResult = new TagAutoCompleteResult(searchString,
+        Ci.nsIAutoCompleteResult.RESULT_SUCCESS, 0, "", results, comments);
+      listener.onSearchResult(self, newResult);
+      yield false;
+    }
+    
+    // chunk the search results via a generator
+    var gen = doSearch();
+    function driveGenerator() {
+      if (gen.next()) { 
+        var timer = Cc["@mozilla.org/timer;1"]
+          .createInstance(Components.interfaces.nsITimer);
+        self._callback = driveGenerator;
+        timer.initWithCallback(self, 0, timer.TYPE_ONE_SHOT);
+      }
+      else {
+        gen.close();	
+      }
+    }
+    driveGenerator();
+  },
+
+  notify: function PTACS_notify(timer) {
+    if (this._callback) 
+      this._callback();
+  },
+
+  /*
+   * Stop an asynchronous search that is in progress
+   */
+  stopSearch: function PTACS_stopSearch() {
+    this._stopped = true;
+  },
+
+  // nsISupports
+  QueryInterface: XPCOMUtils.generateQI([Ci.nsIAutoCompleteSearch,
+                                         Ci.nsITimerCallback]), 
+
+  classDescription: "Places Tag AutoComplete",
+  contractID: "@mozilla.org/autocomplete/search;1?name=places-tag-autocomplete",
+  classID: Components.ID("{1dcc23b0-d4cb-11dc-9ad6-479d56d89593}")
+};
+
+var component = [TaggingService, TagAutoCompleteSearch];
 function NSGetModule(compMgr, fileSpec) {
-  return XPCOMUtils.generateModule([TaggingService]);
+  return XPCOMUtils.generateModule(component);
 }

@@ -41,12 +41,6 @@ VPATH		= @srcdir@
 
 include $(DEPTH)/config/autoconf.mk
 
-ifdef MOZ_OGG
-ifneq (,$(filter WINNT WINCE,$(OS_ARCH)))
-DEFINES += -DSYDNEY_AUDIO_NO_VOLUME -DSYDNEY_AUDIO_NO_POSITION
-endif
-endif
-
 MODULE		= content
 LIBRARY_NAME	= gkconvideo_s
 LIBXUL_LIBRARY 	= 1

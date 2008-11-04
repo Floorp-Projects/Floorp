@@ -53,6 +53,8 @@
 #include <sqlite3.h>
 
 class nsIFile;
+class nsIEventTarget;
+class nsIThread;
 class mozIStorageService;
 
 class mozStorageConnection : public mozIStorageConnection
@@ -69,6 +71,15 @@ public:
 
     // fetch the native handle
     sqlite3 *GetNativeConnection() { return mDBConn; }
+
+    /**
+     * Lazily creates and returns a background execution thread.  In the future,
+     * the thread may be re-claimed if left idle, so you should call this
+     * method just before you dispatch and not save the reference.
+     * 
+     * @returns an event target suitable for asynchronous statement execution.
+     */
+    already_AddRefed<nsIEventTarget> getAsyncExecutionTarget();
 
 private:
     ~mozStorageConnection();
@@ -92,6 +103,18 @@ protected:
 
     sqlite3 *mDBConn;
     nsCOMPtr<nsIFile> mDatabaseFile;
+
+    /**
+     * Protects access to mAsyncExecutionThread.
+     */
+    PRLock *mAsyncExecutionMutex;
+
+    /**
+     * Lazily created thread for asynchronous statement execution.  Consumers
+     * should use getAsyncExecutionTarget rather than directly accessing this
+     * field.
+     */
+    nsCOMPtr<nsIThread> mAsyncExecutionThread;
 
     PRLock *mTransactionMutex;
     PRBool mTransactionInProgress;

@@ -96,8 +96,8 @@ class nsFrameLoader;
 
 // IID for the nsIDocument interface
 #define NS_IDOCUMENT_IID      \
-{ 0x189ebc9e, 0x779b, 0x4c49, \
- { 0x90, 0x8b, 0x9a, 0x80, 0x25, 0x9b, 0xaf, 0xa7 } }
+{ 0x6304ae8e, 0x2634, 0x45ed, \
+  { 0x9e, 0x09, 0x83, 0x09, 0x5b, 0x46, 0x72, 0x8b } }
 
 // Flag for AddStyleSheet().
 #define NS_STYLESHEET_FROM_CATALOG                (1 << 0)
@@ -567,11 +567,6 @@ public:
   virtual nsIScriptGlobalObject*
     GetScriptHandlingObject(PRBool& aHasHadScriptHandlingObject) const = 0;
   virtual void SetScriptHandlingObject(nsIScriptGlobalObject* aScriptObject) = 0;
-
-  /**
-   * Sets script handling object to null and marks that document has had one.
-   */
-  virtual void ClearScriptHandlingObject() = 0;
 
   /**
    * Get the object that is used as the scope for all of the content
@@ -1261,6 +1256,11 @@ NS_NewSVGDocument(nsIDocument** aInstancePtrResult);
 
 nsresult
 NS_NewImageDocument(nsIDocument** aInstancePtrResult);
+
+#ifdef MOZ_MEDIA
+nsresult
+NS_NewVideoDocument(nsIDocument** aInstancePtrResult);
+#endif
 
 nsresult
 NS_NewDocumentFragment(nsIDOMDocumentFragment** aInstancePtrResult,

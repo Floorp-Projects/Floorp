@@ -192,8 +192,8 @@
               accesskey="&itemPasswords.accesskey;"
               preference="privacy.item.passwords"
               onsyncfrompreference="return gSanitizePromptDialog.onReadGeneric();"/>
-    <checkbox label="&itemSessions.label;"
-              accesskey="&itemSessions.accesskey;"
+    <checkbox label="&itemActiveLogins.label;"
+              accesskey="&itemActiveLogins.accesskey;"
               preference="privacy.item.sessions"
               onsyncfrompreference="return gSanitizePromptDialog.onReadGeneric();"/>
 

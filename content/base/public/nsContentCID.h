@@ -281,6 +281,15 @@
 
 #endif // MOZ_SVG
 
+#ifdef MOZ_MEDIA
+
+// {d899a152-9412-46b2-b651-2e71c5c2f05f}
+#define NS_VIDEODOCUMENT_CID   \
+{ 0xd899a152, 0x9412, 0x46b2,  \
+  { 0xb6, 0x51, 0x2e, 0x71, 0xc5, 0xc2, 0xf0, 0x5f } }
+
+#endif
+
 #define NS_SYNCLOADDOMSERVICE_CID                   \
  { /* 0e4e7d00-f71a-439f-9178-1a71ff11b55f */       \
   0x0e4e7d00, 0xf71a, 0x439f,                       \

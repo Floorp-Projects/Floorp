@@ -87,8 +87,6 @@ static nsCSSTextAttrMapItem gCSSTextAttrsMap[] = {
   { "font-weight",       kAnyValue,       kCopyName,                  kCopyValue },
   { "text-decoration",   "line-through",  "text-line-through-style",  "solid" },
   { "text-decoration",   "underline",     "text-underline-style",     "solid" },
-  { "text-align",        kAnyValue,       kCopyName,                  kCopyValue },
-  { "text-indent",       kAnyValue,       kCopyName,                  kCopyValue },
   { "vertical-align",    kAnyValue,       "text-position",            kCopyValue }
 };
 

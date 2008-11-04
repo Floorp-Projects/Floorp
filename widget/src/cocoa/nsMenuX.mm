@@ -74,8 +74,6 @@
 extern nsIRollupListener * gRollupListener;
 extern nsIWidget         * gRollupWidget;
 
-extern "C" MenuRef _NSGetCarbonMenu(NSMenu* aMenu);
-
 static PRBool gConstructingMenu = PR_FALSE;
 static PRBool gMenuMethodsSwizzled = PR_FALSE;
 

@@ -53,12 +53,14 @@ XPIDLSRCS = \
 EXTRA_PP_COMPONENTS = \
 	nsBrowserContentHandler.js \
 	nsBrowserGlue.js \
+	aboutRights.js \
 	aboutRobots.js \
 	$(NULL)
 
 EXTRA_JS_MODULES = distribution.js
 
 DIRS = \
+	certerror \
 	dirprovider \
 	microsummaries \
 	migration \
@@ -69,6 +71,7 @@ DIRS = \
 	sidebar \
 	feeds \
 	places \
+	privatebrowsing \
 	$(NULL)
 
 ifdef MOZ_SAFE_BROWSING
@@ -76,5 +79,9 @@ DIRS += safebrowsing
 endif
 
 DIRS += build
+
+ifneq (,$(BUILD_OFFICIAL)$(MOZILLA_OFFICIAL))
+DEFINES += -DOFFICIAL_BUILD=1
+endif
 
 include $(topsrcdir)/config/rules.mk

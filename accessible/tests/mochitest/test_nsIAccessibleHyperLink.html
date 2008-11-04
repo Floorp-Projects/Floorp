@@ -42,7 +42,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=418368
                         aShowStateDebugFlag)
     {
       var state = {}, extraState = {};
-      aAcc.getFinalState(state, extraState);
+      aAcc.getState(state, extraState);
 
       if (aShowStateDebugFlag) {
         var list = gAccRetrieval.getStringStates(state.value, 0);

@@ -40,7 +40,7 @@ function test() {
   waitForExplicitFinish();
   
   let testURL = "http://localhost:8888/browser/" +
-    "browser/components/sessionstore/test/browser/browser_339445_sample.html"
+    "browser/components/sessionstore/test/browser/browser_339445_sample.html";
   
   let tab = gBrowser.addTab(testURL);
   tab.linkedBrowser.addEventListener("load", function(aEvent) {

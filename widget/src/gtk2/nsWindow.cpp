@@ -83,9 +83,8 @@
 #include "nsGfxCIID.h"
 
 #ifdef ACCESSIBILITY
+#include "nsIAccessibilityService.h"
 #include "nsIAccessibleRole.h"
-#include "nsPIAccessNode.h"
-#include "nsPIAccessible.h"
 #include "nsIAccessibleEvent.h"
 #include "prenv.h"
 #include "stdlib.h"
@@ -6019,11 +6018,14 @@ nsWindow::DispatchActivateEventAccessible(void)
     if (sAccessibilityEnabled) {
         nsCOMPtr<nsIAccessible> rootAcc;
         GetRootAccessible(getter_AddRefs(rootAcc));
-        nsCOMPtr<nsPIAccessible> privAcc(do_QueryInterface(rootAcc));
-        if (privAcc) {
-            privAcc->FireToolkitEvent(
-                         nsIAccessibleEvent::EVENT_WINDOW_ACTIVATE,
-                         rootAcc);
+
+        nsCOMPtr<nsIAccessibilityService> accService =
+            do_GetService("@mozilla.org/accessibilityService;1");
+
+        if (accService) {
+            accService->FireAccessibleEvent(
+                            nsIAccessibleEvent::EVENT_WINDOW_ACTIVATE,
+                            rootAcc);
         }
     }
 }
@@ -6034,11 +6036,14 @@ nsWindow::DispatchDeactivateEventAccessible(void)
     if (sAccessibilityEnabled) {
         nsCOMPtr<nsIAccessible> rootAcc;
         GetRootAccessible(getter_AddRefs(rootAcc));
-        nsCOMPtr<nsPIAccessible> privAcc(do_QueryInterface(rootAcc));
-        if (privAcc) {
-            privAcc->FireToolkitEvent(
-                         nsIAccessibleEvent::EVENT_WINDOW_DEACTIVATE,
-                         rootAcc);
+
+        nsCOMPtr<nsIAccessibilityService> accService =
+            do_GetService("@mozilla.org/accessibilityService;1");
+
+        if (accService) {
+          accService->FireAccessibleEvent(
+                          nsIAccessibleEvent::EVENT_WINDOW_DEACTIVATE,
+                          rootAcc);
         }
     }
 }

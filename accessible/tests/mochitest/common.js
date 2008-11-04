@@ -29,6 +29,7 @@ const nsIAccessibleValue = Components.interfaces.nsIAccessibleValue;
 const nsIObserverService = Components.interfaces.nsIObserverService;
 
 const nsIDOMNode = Components.interfaces.nsIDOMNode;
+const nsIPropertyElement = Components.interfaces.nsIPropertyElement;
 
 ////////////////////////////////////////////////////////////////////////////////
 // Roles
@@ -36,6 +37,8 @@ const nsIDOMNode = Components.interfaces.nsIDOMNode;
 const ROLE_COMBOBOX = nsIAccessibleRole.ROLE_COMBOBOX;
 const ROLE_COMBOBOX_LIST = nsIAccessibleRole.ROLE_COMBOBOX_LIST;
 const ROLE_COMBOBOX_OPTION = nsIAccessibleRole.ROLE_COMBOBOX_OPTION;
+const ROLE_DOCUMENT = nsIAccessibleRole.ROLE_DOCUMENT;
+const ROLE_FLAT_EQUATION = nsIAccessibleRole.ROLE_FLAT_EQUATION;
 const ROLE_LABEL = nsIAccessibleRole.ROLE_LABEL;
 const ROLE_LIST = nsIAccessibleRole.ROLE_LIST;
 const ROLE_OPTION = nsIAccessibleRole.ROLE_OPTION;

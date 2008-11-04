@@ -42,8 +42,8 @@
 
 // IID for the nsIHTMLCollection interface
 #define NS_IHTMLCOLLECTION_IID \
-{ 0xb90f2c8c, 0xc564, 0x4464, \
- { 0x97, 0x01, 0x05, 0x14, 0xe4, 0xeb, 0x69, 0x65 } }
+{ 0x5709485b, 0xc057, 0x4ba7, \
+ { 0x95, 0xbd, 0x98, 0xb7, 0x94, 0x4f, 0x13, 0xe7 } }
 
 /**
  * An internal interface that allows QI-less getting of nodes from HTML
@@ -55,9 +55,15 @@ public:
   NS_DECLARE_STATIC_IID_ACCESSOR(NS_IHTMLCOLLECTION_IID)
 
   /**
-   * Get the node at the index.  Returns null if the index is out of bounds
+   * Get the node at the index.  Returns null if the index is out of bounds.
    */
   virtual nsISupports* GetNodeAt(PRUint32 aIndex, nsresult* aResult) = 0;
+
+  /**
+   * Get the node for the name.  Returns null if no node exists for the name.
+   */
+  virtual nsISupports* GetNamedItem(const nsAString& aName,
+                                    nsresult* aResult) = 0;
 };
 
 NS_DEFINE_STATIC_IID_ACCESSOR(nsIHTMLCollection, NS_IHTMLCOLLECTION_IID)

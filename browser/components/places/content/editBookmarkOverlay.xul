@@ -35,12 +35,9 @@
 #
 # ***** END LICENSE BLOCK *****
 
-<!-- XXXmano: temporary also use moveBookmarks for the "New Folder" button -->
 <!DOCTYPE overlay [
 <!ENTITY % editBookmarkOverlayDTD SYSTEM "chrome://browser/locale/places/editBookmarkOverlay.dtd">
 %editBookmarkOverlayDTD;
-<!ENTITY % moveBookmarksDTD SYSTEM "chrome://browser/locale/places/moveBookmarks.dtd">
-%moveBookmarksDTD;
 ]>
 
 <?xml-stylesheet href="chrome://browser/skin/places/editBookmarkOverlay.css"?>
@@ -121,15 +118,15 @@
                     observes="paneElementsBroadcaster">
             <menupopup>
               <!-- Static item for special folders -->
-              <menuitem id="editBMPanel_unfiledRootItem"
+              <menuitem id="editBMPanel_toolbarFolderItem"
                         class="menuitem-iconic folder-icon"/>
               <menuitem id="editBMPanel_bmRootItem"
                         class="menuitem-iconic folder-icon"/>
-              <menuitem id="editBMPanel_toolbarFolderItem"
+              <menuitem id="editBMPanel_unfiledRootItem"
                         class="menuitem-iconic folder-icon"/>
               <menuseparator id="editBMPanel_chooseFolderSeparator"/>
               <menuitem id="editBMPanel_chooseFolderMenuItem"
-	        label="&editBookmarkOverlay.choose.label;"
+                        label="&editBookmarkOverlay.choose.label;"
                         class="menuitem-iconic folder-icon"/>
               <menuseparator id="editBMPanel_foldersSeparator" hidden="true"/>
             </menupopup>
@@ -159,9 +156,9 @@
         </tree>
 
         <hbox id="editBMPanel_newFolderBox" collapsed="true">
-          <button label="&newFolderButton.label;"
+          <button label="&editBookmarkOverlay.newFolderButton.label;"
                   id="editBMPanel_newFolderButton"
-                  accesskey="&newFolderButton.accesskey;"
+                  accesskey="&editBookmarkOverlay.newFolderButton.accesskey;"
                   oncommand="gEditItemOverlay.newFolder();"/>
           <spacer flex="1"/>
         </hbox>
@@ -180,6 +177,11 @@
                  control="editBMPanel_tagsField"
                  observes="paneElementsBroadcaster"/>
           <textbox id="editBMPanel_tagsField"
+                   type="autocomplete"
+                   autocompletesearch="places-tag-autocomplete" 
+                   completedefaultindex="true"
+                   tabscrolling="true"
+                   showcommentcolumn="true"
                    onblur="gEditItemOverlay.onTagsFieldBlur();"
                    observes="paneElementsBroadcaster"
                    emptytext="&editBookmarkOverlay.tagsEmptyDesc.label;"/>

@@ -204,10 +204,11 @@ nsXFormsInputBooleanAccessible::GetRole(PRUint32 *aRole)
   return NS_OK;
 }
 
-NS_IMETHODIMP
-nsXFormsInputBooleanAccessible::GetState(PRUint32 *aState, PRUint32 *aExtraState)
+nsresult
+nsXFormsInputBooleanAccessible::GetStateInternal(PRUint32 *aState,
+                                                 PRUint32 *aExtraState)
 {
-  nsresult rv = nsXFormsAccessible::GetState(aState, aExtraState);
+  nsresult rv = nsXFormsAccessible::GetStateInternal(aState, aExtraState);
   NS_ENSURE_SUCCESS(rv, rv);
   if (!mDOMNode)
     return NS_OK;
@@ -292,10 +293,11 @@ nsXFormsSecretAccessible::GetRole(PRUint32 *aRole)
   return NS_OK;
 }
 
-NS_IMETHODIMP
-nsXFormsSecretAccessible::GetState(PRUint32 *aState, PRUint32 *aExtraState)
+nsresult
+nsXFormsSecretAccessible::GetStateInternal(PRUint32 *aState,
+                                           PRUint32 *aExtraState)
 {
-  nsresult rv = nsXFormsInputAccessible::GetState(aState, aExtraState);
+  nsresult rv = nsXFormsInputAccessible::GetStateInternal(aState, aExtraState);
   NS_ENSURE_SUCCESS(rv, rv);
   if (!mDOMNode)
     return NS_OK;
@@ -328,10 +330,11 @@ nsXFormsRangeAccessible::GetRole(PRUint32 *aRole)
   return NS_OK;
 }
 
-NS_IMETHODIMP
-nsXFormsRangeAccessible::GetState(PRUint32 *aState, PRUint32 *aExtraState)
+nsresult
+nsXFormsRangeAccessible::GetStateInternal(PRUint32 *aState,
+                                          PRUint32 *aExtraState)
 {
-  nsresult rv = nsXFormsAccessible::GetState(aState, aExtraState);
+  nsresult rv = nsXFormsAccessible::GetStateInternal(aState, aExtraState);
   NS_ENSURE_SUCCESS(rv, rv);
   if (!mDOMNode)
     return NS_OK;
@@ -411,10 +414,12 @@ nsXFormsSelectAccessible::
 {
 }
 
-NS_IMETHODIMP
-nsXFormsSelectAccessible::GetState(PRUint32 *aState, PRUint32 *aExtraState)
+nsresult
+nsXFormsSelectAccessible::GetStateInternal(PRUint32 *aState,
+                                           PRUint32 *aExtraState)
 {
-  nsresult rv = nsXFormsContainerAccessible::GetState(aState, aExtraState);
+  nsresult rv = nsXFormsContainerAccessible::GetStateInternal(aState,
+                                                              aExtraState);
   NS_ENSURE_SUCCESS(rv, rv);
   if (!mDOMNode)
     return NS_OK;
@@ -503,11 +508,12 @@ nsXFormsItemCheckgroupAccessible::GetRole(PRUint32 *aRole)
   return NS_OK;
 }
 
-NS_IMETHODIMP
-nsXFormsItemCheckgroupAccessible::GetState(PRUint32 *aState,
-                                           PRUint32 *aExtraState)
+nsresult
+nsXFormsItemCheckgroupAccessible::GetStateInternal(PRUint32 *aState,
+                                                   PRUint32 *aExtraState)
 {
-  nsresult rv = nsXFormsSelectableItemAccessible::GetState(aState, aExtraState);
+  nsresult rv = nsXFormsSelectableItemAccessible::GetStateInternal(aState,
+                                                                   aExtraState);
   NS_ENSURE_SUCCESS(rv, rv);
   if (!mDOMNode)
     return NS_OK;
@@ -550,11 +556,12 @@ nsXFormsItemRadiogroupAccessible::GetRole(PRUint32 *aRole)
   return NS_OK;
 }
 
-NS_IMETHODIMP
-nsXFormsItemRadiogroupAccessible::GetState(PRUint32 *aState,
-                                           PRUint32 *aExtraState)
+nsresult
+nsXFormsItemRadiogroupAccessible::GetStateInternal(PRUint32 *aState,
+                                                   PRUint32 *aExtraState)
 {
-  nsresult rv = nsXFormsSelectableItemAccessible::GetState(aState, aExtraState);
+  nsresult rv = nsXFormsSelectableItemAccessible::GetStateInternal(aState,
+                                                                   aExtraState);
   NS_ENSURE_SUCCESS(rv, rv);
   if (!mDOMNode)
     return NS_OK;
@@ -593,11 +600,12 @@ nsXFormsSelectComboboxAccessible::GetRole(PRUint32 *aRole)
   return NS_OK;
 }
 
-NS_IMETHODIMP
-nsXFormsSelectComboboxAccessible::GetState(PRUint32 *aState,
-                                           PRUint32 *aExtraState)
+nsresult
+nsXFormsSelectComboboxAccessible::GetStateInternal(PRUint32 *aState,
+                                                   PRUint32 *aExtraState)
 {
-  nsresult rv = nsXFormsSelectableAccessible::GetState(aState, aExtraState);
+  nsresult rv = nsXFormsSelectableAccessible::GetStateInternal(aState,
+                                                               aExtraState);
   NS_ENSURE_SUCCESS(rv, rv);
   if (!mDOMNode)
     return NS_OK;
@@ -643,11 +651,12 @@ nsXFormsItemComboboxAccessible::GetRole(PRUint32 *aRole)
   return NS_OK;
 }
 
-NS_IMETHODIMP
-nsXFormsItemComboboxAccessible::GetState(PRUint32 *aState,
-                                         PRUint32 *aExtraState)
+nsresult
+nsXFormsItemComboboxAccessible::GetStateInternal(PRUint32 *aState,
+                                                 PRUint32 *aExtraState)
 {
-  nsresult rv = nsXFormsSelectableItemAccessible::GetState(aState, aExtraState);
+  nsresult rv = nsXFormsSelectableItemAccessible::GetStateInternal(aState,
+                                                                   aExtraState);
   NS_ENSURE_SUCCESS(rv, rv);
   if (!mDOMNode || (*aState & nsIAccessibleStates::STATE_UNAVAILABLE))
     return NS_OK;

@@ -84,3 +84,7 @@ endif
 ifneq (,$(filter windows mac cocoa gtk2, $(MOZ_WIDGET_TOOLKIT)))
 DEFINES += -DCONTEXT_COPY_IMAGE_CONTENTS=1
 endif
+
+ifneq (,$(BUILD_OFFICIAL)$(MOZILLA_OFFICIAL))
+DEFINES += -DOFFICIAL_BUILD=1
+endif

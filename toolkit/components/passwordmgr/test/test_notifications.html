@@ -21,6 +21,10 @@ Login Manager test: notifications
 
 /** Test for Login Manager: notifications. **/
 
+// Set testpath to the directory where we live. Used to load tests from
+// alternate Mochitest servers (different hostnames, same content).
+var testpath = document.location.pathname + "/../";
+
 var subtests = [
                    "subtst_notifications_1.html", // 1
                    "subtst_notifications_1.html", // 2
@@ -41,7 +45,10 @@ var subtests = [
                    "subtst_notifications_8.html", // 17
                    "subtst_notifications_8.html", // 18
                    "subtst_notifications_9.html", // 19
-                   "subtst_notifications_10.html"  // 20
+                   "subtst_notifications_10.html",  // 20
+                   "http://test1.example.org:80" + testpath + "subtst_notifications_1.html", // 21
+                   "http://test1.example.org:80" + testpath + "subtst_notifications_7.html", // 22
+                   "http://test1.example.org:80" + testpath + "subtst_notifications_6.html", // 23
                ];
 
 
@@ -79,7 +86,7 @@ function handleLoad(aEvent) {
 
 // Remember, Never for This Site, Not Now
 function checkTest() {
-    var bar;
+    var bar, notificationText, expectedText;
 
     // The document generated from formsubmit.sjs contains the user/pass it
     // received inside <span id="blah">value</span>
@@ -310,6 +317,45 @@ function checkTest() {
         clickNotificationButton(bar, "Change");
 
         pwmgr.removeLogin(login2);
+        break;
+
+      case 21:
+        // Check text on a user+pass notification bar
+        is(gotUser, "notifyu1", "Checking submitted username");
+        is(gotPass, "notifyp1", "Checking submitted password");
+        bar = getNotificationBar(notifyBox, "password-save");
+        ok(bar, "got notification bar");
+        // Check the text, which comes from the localized saveLoginText string.
+        notificationText = bar.getAttribute("label");
+        expectedText = /^Do you want .+ to remember the password for \"notifyu1\" on example.org\?$/;
+        ok(expectedText.test(notificationText), "Checking text: " + notificationText);
+        clickNotificationButton(bar, "Not Now");
+        break;
+
+      case 22:
+        // Check text on a user+pass notification bar, username is really long
+        is(gotUser, "nowisthetimeforallgoodmentocometotheaidoftheircountry", "Checking submitted username");
+        is(gotPass, "notifyp1", "Checking submitted password");
+        bar = getNotificationBar(notifyBox, "password-save");
+        ok(bar, "got notification bar");
+        // Check the text, which comes from the localized saveLoginText string.
+        notificationText = bar.getAttribute("label");
+        expectedText = /^Do you want .+ to remember the password for \"nowisthetimeforallgoodmentocom[^e]\" on example.org\?$/;
+        ok(expectedText.test(notificationText), "Checking text: " + notificationText);
+        clickNotificationButton(bar, "Not Now");
+        break;
+
+      case 23:
+        // Check text on a pass-only notification bar
+        is(gotUser, "null",     "Checking submitted username");
+        is(gotPass, "notifyp1", "Checking submitted password");
+        bar = getNotificationBar(notifyBox, "password-save");
+        ok(bar, "got notification bar");
+        // Check the text, which comes from the localized saveLoginTextNoUser string.
+        notificationText = bar.getAttribute("label");
+        expectedText = /^Do you want .+ to remember this password on example.org\?$/;
+        ok(expectedText.test(notificationText), "Checking text: " + notificationText);
+        clickNotificationButton(bar, "Not Now");
         break;
 
       default:

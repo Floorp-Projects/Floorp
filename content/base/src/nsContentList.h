@@ -47,7 +47,7 @@
 #include "nsISupports.h"
 #include "nsCOMArray.h"
 #include "nsString.h"
-#include "nsIDOMHTMLCollection.h"
+#include "nsIHTMLCollection.h"
 #include "nsIDOMNodeList.h"
 #include "nsINodeList.h"
 #include "nsStubMutationObserver.h"
@@ -181,7 +181,7 @@ protected:
  */
 class nsContentList : public nsBaseContentList,
                       protected nsContentListKey,
-                      public nsIDOMHTMLCollection,
+                      public nsIHTMLCollection,
                       public nsStubMutationObserver
 {
 public:
@@ -241,7 +241,10 @@ public:
   // nsBaseContentList overrides
   virtual PRInt32 IndexOf(nsIContent *aContent, PRBool aDoFlush);
   virtual nsINode* GetNodeAt(PRUint32 aIndex);
-  
+
+  // nsIHTMLCollection
+  virtual nsISupports* GetNodeAt(PRUint32 aIndex, nsresult* aResult);
+  virtual nsISupports* GetNamedItem(const nsAString& aName, nsresult* aResult);
 
   // nsContentList public methods
   NS_HIDDEN_(nsISupports*) GetParentObject();

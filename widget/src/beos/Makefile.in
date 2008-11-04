@@ -50,8 +50,6 @@ MODULE_NAME	= nsWidgetBeOSModule
 GRE_MODULE	= 1
 LIBXUL_LIBRARY = 1
 
-PACKAGE_FILE = widget_beos.pkg
-
 REQUIRES	= xpcom \
 		  string \
 		  webshell \

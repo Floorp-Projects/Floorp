@@ -116,9 +116,12 @@ NS_IMPL_CYCLE_COLLECTION_TRAVERSE_END
 
 
 // QueryInterface implementation for nsDOMAttributeMap
-NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION(nsDOMAttributeMap)
-  NS_INTERFACE_MAP_ENTRY(nsISupports)
-  NS_INTERFACE_MAP_ENTRY(nsIDOMNamedNodeMap)
+NS_INTERFACE_TABLE_HEAD(nsDOMAttributeMap)
+  NS_OFFSET_AND_INTERFACE_TABLE_BEGIN(nsDOMAttributeMap)
+    NS_INTERFACE_TABLE_ENTRY(nsDOMAttributeMap, nsIDOMNamedNodeMap)
+  NS_OFFSET_AND_INTERFACE_TABLE_END
+  NS_OFFSET_AND_INTERFACE_TABLE_TO_MAP_SEGUE
+  NS_INTERFACE_MAP_ENTRIES_CYCLE_COLLECTION(nsDOMAttributeMap)
   NS_INTERFACE_MAP_ENTRY_CONTENT_CLASSINFO(NamedNodeMap)
 NS_INTERFACE_MAP_END
 
@@ -216,21 +219,35 @@ nsDOMAttributeMap::GetAttribute(nsINodeInfo* aNodeInfo)
   return node;
 }
 
+nsIDOMNode*
+nsDOMAttributeMap::GetNamedItem(const nsAString& aAttrName, nsresult *aResult)
+{
+  *aResult = NS_OK;
+
+  if (mContent) {
+    nsCOMPtr<nsINodeInfo> ni =
+      mContent->GetExistingAttrNameFromQName(aAttrName);
+    if (ni) {
+      nsIDOMNode* node = GetAttribute(ni);
+      if (node) {
+        return node;
+      }
+
+      *aResult = NS_ERROR_OUT_OF_MEMORY;
+    }
+  }
+
+  return nsnull;
+}
+
 NS_IMETHODIMP
 nsDOMAttributeMap::GetNamedItem(const nsAString& aAttrName,
                                 nsIDOMNode** aAttribute)
 {
   NS_ENSURE_ARG_POINTER(aAttribute);
-  *aAttribute = nsnull;
 
-  nsresult rv = NS_OK;
-  if (mContent) {
-    nsCOMPtr<nsINodeInfo> ni =
-      mContent->GetExistingAttrNameFromQName(aAttrName);
-    if (ni) {
-      rv = GetAttribute(ni, aAttribute);
-    }
-  }
+  nsresult rv;
+  NS_IF_ADDREF(*aAttribute = GetNamedItem(aAttrName, &rv));
 
   return rv;
 }

@@ -37,15 +37,24 @@
 #
 # ***** END LICENSE BLOCK *****
 
-DEPTH		= ../..
+DEPTH		= .
 topsrcdir	= @top_srcdir@
 srcdir		= @srcdir@
+
+DIRS		= config
 
 include $(DEPTH)/config/autoconf.mk
 
 MODULE		= js
 LIBRARY_NAME	= mozjs
 GRE_MODULE	= 1
+
+PROGRAM         = js$(BIN_SUFFIX)
+# The shell uses some 'HIDDEN' symbols to produce statistics, so we
+# link directly against the .o files, not against the JS shared
+# library.
+PROGOBJS	= js.$(OBJ_SUFFIX) $(OBJS)
+LIBS		= $(NSPR_LIBS)
 
 ifdef GNU_CC
 ifdef INTEL_CC
@@ -66,16 +75,20 @@ ifeq ($(OS_ARCH),SunOS)
 MODULE_OPTIMIZE_FLAGS = -xO4
 endif
 ifeq ($(OS_ARCH),WINNT)
+ifdef WINCE
+# -GL is not supported on windows mobile while we are using the arm-wince-link command
+MODULE_OPTIMIZE_FLAGS = -O2
+else
 MODULE_OPTIMIZE_FLAGS = -O2 -GL
 endif
 endif
+endif
+
 
 ifeq (,$(filter-out WINNT WINCE,$(OS_ARCH)))
 LIBRARY_NAME	= js$(MOZ_BITS)$(VERSION_NUMBER)
 RESFILE		= js$(MOZ_BITS)40.res
 endif
-
-PACKAGE_FILE = js.pkg
 
 # JavaScript must be built shared, even for static builds, as it is used by
 # other modules which are always built shared. Failure to do so results in
@@ -160,7 +173,8 @@ CSRCS 		+= \
 		jsdtracef.c
 endif
 
-EXPORTS		= \
+INSTALLED_HEADERS = \
+		js-config.h \
 		jsautocfg.h \
 		jsautokw.h \
 		js.msg \
@@ -214,7 +228,7 @@ EXPORTS		= \
 ifdef ENABLE_JIT
 VPATH		+= $(srcdir)/nanojit
 
-EXPORTS += \
+INSTALLED_HEADERS += \
 		builtins.tbl    \
 		jsbuiltins.h    \
 		Assembler.h     \
@@ -247,14 +261,14 @@ DEFINES += -DFEATURE_NANOJIT -DJS_TRACER
 endif
 
 ifdef HAVE_DTRACE
-EXPORTS 	+= \
+INSTALLED_HEADERS += \
 		jsdtracef.h \
 		javascript-trace.h \
 		$(NULL)
 endif
 
 ifeq (,$(filter-out WINNT WINCE,$(OS_ARCH)))
-EXPORTS		+= jscpucfg.h
+INSTALLED_HEADERS += jscpucfg.h
 endif
 
 JS_SAFE_ARENA	= 1
@@ -322,6 +336,27 @@ MOZILLA_DTRACE_SRC = $(srcdir)/javascript-trace.d
 endif
 
 include $(topsrcdir)/config/rules.mk
+
+ifdef MOZ_SYNC_BUILD_FILES
+# Because the SpiderMonkey can be distributed and built independently
+# of the Mozilla source tree, it contains its own copies of many of
+# the files used by the top-level Mozilla build process, from the
+# 'config' and 'build' subtrees.
+#
+# To make it simpler to keep the copies in sync, we follow the policy
+# that the SpiderMonkey copies must always be exact copies of those in
+# the containing Mozilla tree.  If you've made a change in one, it
+# belongs in the other as well.  If the change isn't right for both
+# places, then that's something to bring up with the other developers.
+#
+# Some files are reasonable to diverge; for example,
+# js/config/autoconf.mk.in doesn't need most of the stuff in
+# config/autoconf.mk.in.
+check-sync-dirs = $(PYTHON) $(srcdir)/config/check-sync-dirs.py
+check::
+	$(check-sync-dirs) $(srcdir)/config $(MOZ_SYNC_BUILD_FILES)/config
+	$(check-sync-dirs) $(srcdir)/build $(MOZ_SYNC_BUILD_FILES)/build
+endif
 
 # our build system doesn't handle subdir srcs very gracefully today
 export::
@@ -481,6 +516,8 @@ endif
 
 jsopcode.h jsopcode.cpp: jsopcode.tbl
 
+export:: jsautocfg.h
+
 ifeq (,$(CROSS_COMPILE)$(filter-out WINNT,$(OS_ARCH)))
 jsautocfg.h:
 	touch $@
@@ -539,6 +576,64 @@ else
 jscpucfg$(HOST_BIN_SUFFIX): jscpucfg.cpp Makefile.in
 	$(HOST_CXX) $(HOST_CXXFLAGS) $(JSCPUCFG_DEFINES) $(DEFINES) $(NSPR_CFLAGS) $(HOST_OUTOPTION)$@ $<
 endif
+endif
+
+# Compute the linker flags that programs linking against SpiderMonkey should
+# pass to get SpiderMonkey and its dependencies, beyond just the -L and -l
+# for the SpiderMonkey library itself.
+# - EXTRA_DSO_LDOPTS includes the NSPR -L and -l flags.
+# - OS_LIBS includes libraries selected by the configure script.
+# - EXTRA_LIBS includes libraries selected by this Makefile.
+JS_CONFIG_LIBS=$(EXTRA_DSO_LDOPTS) $(OS_LIBS) $(EXTRA_LIBS) 
+
+# The configure script invokes this rule explicitly at configure time!
+# It's important that js-config be ready by the time we're done
+# configuring, because we may be running other configure scripts that
+# would like to run js-config themselves, before js is built.
+#
+# This file and rules.mk go through a certain amount of work to decide
+# which libraries to build, what to name them, and what flags to pass
+# when linking them (and thus what flags its own clients must pass).
+# All this information needs to go into the js-config script.  To
+# avoid trying to re-compute all that in the configure script, we just
+# have the configure script generate this Makefile, and then invoke
+# this rule.
+at=@
+js-config: js-config.in Makefile $(DEPTH)/config/autoconf.mk $(topsrcdir)/config/config.mk $(topsrcdir)/config/rules.mk
+	rm -f js-config.tmp
+	sed < $< > js-config.tmp \
+	-e 's|$(at)prefix$(at)|$(prefix)|' \
+	-e 's|$(at)exec_prefix$(at)|$(exec_prefix)|' \
+	-e 's|$(at)includedir$(at)|$(includedir)|' \
+	-e 's|$(at)libdir$(at)|$(libdir)|' \
+	-e 's|$(at)MOZILLA_VERSION$(at)|$(MOZILLA_VERSION)|' \
+	-e 's|$(at)LIBRARY_NAME$(at)|$(LIBRARY_NAME)|' \
+	-e 's|$(at)NSPR_CFLAGS$(at)|$(NSPR_CFLAGS)|' \
+	-e 's|$(at)JS_CONFIG_LIBS$(at)|$(JS_CONFIG_LIBS)|' \
+	-e 's|$(at)MOZ_JS_LIBS$(at)|$(MOZ_JS_LIBS)|' \
+	&& mv js-config.tmp $@ && chmod +x $@
+
+SCRIPTS = js-config
+
+install:: $(INSTALLED_HEADERS)
+	$(SYSINSTALL) $(IFLAGS1) $^ $(includedir)/$(MODULE)
+
+install:: $(SCRIPTS) $(PROGRAM)
+	$(SYSINSTALL) $(IFLAGS2) $^ $(bindir)
+
+# The Mozilla top-level makefiles use install-runtime-libs directly to
+# place an additional copy of the libraries in the 'dist/bin'
+# directory.
+install:: install-runtime-libs
+install-runtime-libs:: $(LIBRARY) $(SHARED_LIBRARY) $(IMPORT_LIBRARY)
+ifneq (,$(LIBRARY))
+	$(SYSINSTALL) $(IFLAGS1) $(LIBRARY) $(libdir)
+endif
+ifneq (,$(SHARED_LIBRARY))
+	$(SYSINSTALL) $(IFLAGS2) $(SHARED_LIBRARY) $(libdir)
+endif
+ifneq (,$(IMPORT_LIBRARY))
+	$(SYSINSTALL) $(IFLAGS2) $(IMPORT_LIBRARY) $(libdir)
 endif
 
 # Extra dependancies and rules for auto-generated headers

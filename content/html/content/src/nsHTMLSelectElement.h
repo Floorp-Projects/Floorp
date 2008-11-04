@@ -94,6 +94,7 @@ public:
 
     return mElements.SafeObjectAt(aIndex);
   }
+  virtual nsISupports* GetNamedItem(const nsAString& aName, nsresult* aResult);
 
   NS_DECL_CYCLE_COLLECTION_CLASS_AMBIGUOUS(nsHTMLOptionCollection,
                                            nsIHTMLCollection)
