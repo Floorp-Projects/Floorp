@@ -12,6 +12,10 @@
 }
 %endif
 
+.tabs-alltabs-popup {
+  -moz-binding: url("chrome://browser/content/tabbrowser.xml#tabbrowser-alltabs-popup");
+}
+
 .tab-close-button, .tabs-closebutton {
   -moz-binding: url("chrome://browser/content/tabbrowser.xml#tabbrowser-close-tab-button");
 }
