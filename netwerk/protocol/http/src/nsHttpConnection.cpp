@@ -140,7 +140,7 @@ nsHttpConnection::Activate(nsAHttpTransaction *trans, PRUint8 caps)
 
     // if we don't have a socket transport then create a new one
     if (!mSocketTransport) {
-        rv = CreateTransport(caps);
+        rv = CreateTransport();
         if (NS_FAILED(rv))
             goto loser;
     }
@@ -424,7 +424,7 @@ nsHttpConnection::ResumeRecv()
 //-----------------------------------------------------------------------------
 
 nsresult
-nsHttpConnection::CreateTransport(PRUint8 caps)
+nsHttpConnection::CreateTransport()
 {
     nsresult rv;
 
@@ -451,9 +451,6 @@ nsHttpConnection::CreateTransport(PRUint8 caps)
                               mConnInfo->ProxyInfo(),
                               getter_AddRefs(strans));
     if (NS_FAILED(rv)) return rv;
-
-    if (caps & NS_HTTP_REFRESH_DNS)
-        strans->SetConnectionFlags(nsISocketTransport::BYPASS_CACHE); 
 
     // NOTE: these create cyclical references, which we break inside
     //       nsHttpConnection::Close
