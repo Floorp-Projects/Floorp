@@ -90,9 +90,13 @@ nsXMLProcessingInstruction::~nsXMLProcessingInstruction()
 
 
 // QueryInterface implementation for nsXMLProcessingInstruction
-NS_INTERFACE_MAP_BEGIN(nsXMLProcessingInstruction)
-  NS_INTERFACE_MAP_ENTRY(nsIDOMNode)
-  NS_INTERFACE_MAP_ENTRY(nsIDOMProcessingInstruction)
+NS_INTERFACE_TABLE_HEAD(nsXMLProcessingInstruction)
+  NS_NODE_OFFSET_AND_INTERFACE_TABLE_BEGIN(nsXMLProcessingInstruction)
+    NS_INTERFACE_TABLE_ENTRY(nsXMLProcessingInstruction, nsIDOMNode)
+    NS_INTERFACE_TABLE_ENTRY(nsXMLProcessingInstruction,
+                             nsIDOMProcessingInstruction)
+  NS_OFFSET_AND_INTERFACE_TABLE_END
+  NS_OFFSET_AND_INTERFACE_TABLE_TO_MAP_SEGUE
   NS_INTERFACE_MAP_ENTRY_CONTENT_CLASSINFO(ProcessingInstruction)
 NS_INTERFACE_MAP_END_INHERITING(nsGenericDOMDataNode)
 

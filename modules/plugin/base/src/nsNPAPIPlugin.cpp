@@ -189,21 +189,21 @@ PR_END_EXTERN_C
 static void*
 _TV2FP(void *tvp)
 {
-    static uint32_t glue[6] = {
-      0x3D800000, 0x618C0000, 0x800C0000, 0x804C0004, 0x7C0903A6, 0x4E800420
-    };
-    uint32_t* newGlue = NULL;
+  static uint32_t glue[6] = {
+    0x3D800000, 0x618C0000, 0x800C0000, 0x804C0004, 0x7C0903A6, 0x4E800420
+  };
+  uint32_t* newGlue = NULL;
 
-    if (tvp != NULL) {
-        newGlue = (uint32_t*) malloc(sizeof(glue));
-        if (newGlue != NULL) {
-            memcpy(newGlue, glue, sizeof(glue));
-            newGlue[0] |= ((UInt32)tvp >> 16);
-            newGlue[1] |= ((UInt32)tvp & 0xFFFF);
-            MakeDataExecutable(newGlue, sizeof(glue));
-        }
+  if (tvp) {
+    newGlue = (uint32_t*)malloc(sizeof(glue));
+    if (newGlue) {
+      memcpy(newGlue, glue, sizeof(glue));
+      newGlue[0] |= ((UInt32)tvp >> 16);
+      newGlue[1] |= ((UInt32)tvp & 0xFFFF);
+      MakeDataExecutable(newGlue, sizeof(glue));
     }
-    return newGlue;
+  }
+  return newGlue;
 }
 
 #define FP2TV(fp) _FP2TV((void *)fp)
@@ -211,15 +211,15 @@ _TV2FP(void *tvp)
 static void*
 _FP2TV(void *fp)
 {
-    void **newGlue = NULL;
-    if (fp != NULL) {
-        newGlue = (void**) malloc(2 * sizeof(void *));
-        if (newGlue != NULL) {
-            newGlue[0] = fp;
-            newGlue[1] = NULL;
-        }
+  void **newGlue = NULL;
+  if (fp) {
+    newGlue = (void**)malloc(2 * sizeof(void*));
+    if (newGlue) {
+      newGlue[0] = fp;
+      newGlue[1] = NULL;
     }
-    return newGlue;
+  }
+  return newGlue;
 }
 
 #else
@@ -503,8 +503,8 @@ nsNPAPIPlugin::CreatePlugin(const char* aFileName, const char* aFullPath,
   NP_PLUGINUNIXINIT pfnInitialize =
     (NP_PLUGINUNIXINIT)PR_FindFunctionSymbol(aLibrary, "NP_Initialize");
 
-  if (pfnInitialize == NULL)
-    return NS_ERROR_UNEXPECTED; // XXX Right error?
+  if (!pfnInitialize)
+    return NS_ERROR_UNEXPECTED;
 
   if (pfnInitialize(&(nsNPAPIPlugin::CALLBACKS),&callbacks) != NS_OK)
     return NS_ERROR_UNEXPECTED;
@@ -535,7 +535,7 @@ nsNPAPIPlugin::CreatePlugin(const char* aFileName, const char* aFullPath,
   NP_PLUGININIT pfnInitialize =
     (NP_PLUGININIT)PR_FindSymbol(aLibrary, "NP_Initialize");
 
-  if (pfnInitialize == NULL)
+  if (!pfnInitialize)
     return NS_ERROR_UNEXPECTED;
 
   if (pfnInitialize(&(nsNPAPIPlugin::CALLBACKS)) != NS_OK)
@@ -562,8 +562,8 @@ nsNPAPIPlugin::CreatePlugin(const char* aFileName, const char* aFullPath,
   NP_PLUGININIT pfnInitialize =
     (NP_PLUGININIT)PR_FindSymbol(aLibrary, "NP_Initialize");
 
-  if (pfnInitialize == NULL)
-    return NS_ERROR_UNEXPECTED; // XXX Right error?
+  if (!pfnInitialize)
+    return NS_ERROR_UNEXPECTED;
 
   // Fixes problem where the OS/2 native multimedia plugins weren't
   // working on mozilla though did work on 4.x.  Problem is that they
@@ -664,8 +664,7 @@ nsNPAPIPlugin::CreatePlugin(const char* aFileName, const char* aFullPath,
     (NP_PLUGINSHUTDOWN)PR_FindSymbol(aLibrary, "NP_Shutdown");
 
   // create the new plugin handler
-  *aResult = plptr =
-    new nsNPAPIPlugin(&callbacks, aLibrary, pfnShutdown);
+  *aResult = plptr = new nsNPAPIPlugin(&callbacks, aLibrary, pfnShutdown);
 
   if (*aResult == NULL)
     return NS_ERROR_OUT_OF_MEMORY;
@@ -680,7 +679,7 @@ nsNPAPIPlugin::CreatePlugin(const char* aFileName, const char* aFullPath,
   NP_PLUGINUNIXINIT pfnInitialize =
     (NP_PLUGINUNIXINIT)PR_FindSymbol(aLibrary, "NP_Initialize");
 
-  if (pfnInitialize == NULL)
+  if (!pfnInitialize)
     return NS_ERROR_FAILURE;
 
   if (pfnInitialize(&(nsNPAPIPlugin::CALLBACKS),&callbacks) != NS_OK)
@@ -697,7 +696,7 @@ nsresult
 nsNPAPIPlugin::CreateInstance(nsISupports *aOuter, const nsIID &aIID,
                            void **aResult)
 {
-  if (aResult == NULL)
+  if (!aResult)
     return NS_ERROR_NULL_POINTER;
 
   *aResult = NULL;
@@ -729,7 +728,7 @@ nsNPAPIPlugin::CreatePluginInstance(nsISupports *aOuter, REFNSIID aIID,
 nsresult
 nsNPAPIPlugin::Initialize(void)
 {
-  if (nsnull == fLibrary)
+  if (!fLibrary)
     return NS_ERROR_FAILURE;
   return NS_OK;
 }
@@ -809,8 +808,8 @@ MakeNewNPAPIStreamInternal(NPP npp, const char *relativeURL, const char *target,
 
   nsIPluginInstance *inst = (nsIPluginInstance *) npp->ndata;
 
-  NS_ASSERTION(inst != NULL, "null instance");
-  if (inst == NULL)
+  NS_ASSERTION(inst, "null instance");
+  if (!inst)
     return NPERR_INVALID_INSTANCE_ERROR;
 
   nsCOMPtr<nsIPluginManager> pm = do_GetService(kPluginManagerCID);
@@ -818,7 +817,7 @@ MakeNewNPAPIStreamInternal(NPP npp, const char *relativeURL, const char *target,
   if (!pm) return NPERR_GENERIC_ERROR;
 
   nsCOMPtr<nsIPluginStreamListener> listener;
-  if (target == nsnull)
+  if (!target)
     ((nsNPAPIPluginInstance*)inst)->NewNotifyStream(getter_AddRefs(listener),
                                                     notifyData,
                                                     bDoNotify, relativeURL);
@@ -864,7 +863,7 @@ _geturl(NPP npp, const char* relativeURL, const char* target)
 
   // Block Adobe Acrobat from loading URLs that are not http:, https:,
   // or ftp: URLs if the given target is null.
-  if (target == nsnull && relativeURL &&
+  if (!target && relativeURL &&
       (strncmp(relativeURL, "http:", 5) != 0) &&
       (strncmp(relativeURL, "https:", 6) != 0) &&
       (strncmp(relativeURL, "ftp:", 4) != 0)) {
@@ -966,7 +965,7 @@ NS_IMPL_ISUPPORTS1(nsNPAPIStreamWrapper, nsISupports)
 nsNPAPIStreamWrapper::nsNPAPIStreamWrapper(nsIOutputStream* stream)
 : fStream(stream)
 {
-  NS_ASSERTION(stream != NULL, "bad stream");
+  NS_ASSERTION(stream, "bad stream");
 
   fStream = stream;
   NS_ADDREF(fStream);
@@ -1043,9 +1042,8 @@ _write(NPP npp, NPStream *pstream, int32_t len, void *buffer)
   PluginDestructionGuard guard(npp);
 
   nsNPAPIStreamWrapper* wrapper = (nsNPAPIStreamWrapper*) pstream->ndata;
-  NS_ASSERTION(wrapper != NULL, "null stream");
-
-  if (wrapper == NULL)
+  NS_ASSERTION(wrapper, "null stream");
+  if (!wrapper)
     return -1;
 
   nsIOutputStream* stream;
@@ -1093,9 +1091,9 @@ _destroystream(NPP npp, NPStream *pstream, NPError reason)
     // etc?
   } else {
     nsNPAPIStreamWrapper* wrapper = (nsNPAPIStreamWrapper *)pstream->ndata;
-    NS_ASSERTION(wrapper != NULL, "null wrapper");
+    NS_ASSERTION(wrapper, "null wrapper");
 
-    if (wrapper == NULL)
+    if (!wrapper)
       return NPERR_INVALID_PARAM;
 
     // This will release the wrapped nsIOutputStream.
@@ -1219,7 +1217,7 @@ _invalidateregion(NPP npp, NPRegion invalidRegion)
     return;
   }
 
-  nsIPluginInstance *inst = (nsIPluginInstance *) npp->ndata;
+  nsIPluginInstance *inst = (nsIPluginInstance *)npp->ndata;
 
   PluginDestructionGuard guard(inst);
 
@@ -2217,9 +2215,9 @@ _setvalue(NPP npp, NPPVariable variable, void *result)
 
   nsNPAPIPluginInstance *inst = (nsNPAPIPluginInstance *) npp->ndata;
 
-  NS_ASSERTION(inst != NULL, "null instance");
+  NS_ASSERTION(inst, "null instance");
 
-  if (inst == NULL)
+  if (!inst)
     return NPERR_INVALID_INSTANCE_ERROR;
 
   PluginDestructionGuard guard(inst);

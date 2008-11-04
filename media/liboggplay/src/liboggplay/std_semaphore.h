@@ -34,7 +34,7 @@
 
 #ifndef _STD_SEMAPHORE_H
 #define _STD_SEMAPHORE_H
-#if defined(linux)
+#if defined(linux) || defined(SOLARIS)
 #include <semaphore.h>
 #define SEM_CREATE(p,s) sem_init(&(p), 1, s)
 #define SEM_SIGNAL(p)   sem_post(&(p))

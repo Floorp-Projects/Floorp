@@ -374,51 +374,21 @@ NS_IMPL_CYCLE_COLLECTION_TRAVERSE_END
 NS_IMPL_ADDREF_INHERITED(nsXULElement, nsGenericElement)
 NS_IMPL_RELEASE_INHERITED(nsXULElement, nsGenericElement)
 
-NS_IMETHODIMP
-nsXULElement::QueryInterface(REFNSIID aIID, void** aInstancePtr)
-{
-    NS_PRECONDITION(aInstancePtr, "null out param");
-
-    if (aIID.Equals(NS_GET_IID(nsXPCOMCycleCollectionParticipant))) {
-      *aInstancePtr = &NS_CYCLE_COLLECTION_NAME(nsXULElement);
-      return NS_OK;
-    }
-
-    nsresult rv = nsGenericElement::QueryInterface(aIID, aInstancePtr);
-    if (NS_SUCCEEDED(rv))
-        return rv;
-
-    nsISupports *inst = nsnull;
-
-    if (aIID.Equals(NS_GET_IID(nsIDOMNode))) {
-        inst = static_cast<nsIDOMNode *>(this);
-    } else if (aIID.Equals(NS_GET_IID(nsIDOMElement))) {
-        inst = static_cast<nsIDOMElement *>(this);
-    } else if (aIID.Equals(NS_GET_IID(nsIDOMXULElement))) {
-        inst = static_cast<nsIDOMXULElement *>(this);
-    } else if (aIID.Equals(NS_GET_IID(nsIScriptEventHandlerOwner))) {
-        inst = static_cast<nsIScriptEventHandlerOwner*>
-                          (new nsScriptEventHandlerOwnerTearoff(this));
-        NS_ENSURE_TRUE(inst, NS_ERROR_OUT_OF_MEMORY);
-    } else if (aIID.Equals(NS_GET_IID(nsIDOMElementCSSInlineStyle))) {
-        inst = static_cast<nsIDOMElementCSSInlineStyle *>
-                          (new nsXULElementTearoff(this));
-        NS_ENSURE_TRUE(inst, NS_ERROR_OUT_OF_MEMORY);
-    } else if (aIID.Equals(NS_GET_IID(nsIClassInfo))) {
-        inst = NS_GetDOMClassInfoInstance(eDOMClassInfo_XULElement_id);
-        NS_ENSURE_TRUE(inst, NS_ERROR_OUT_OF_MEMORY);
-    } else if (aIID.Equals(NS_GET_IID(nsIFrameLoaderOwner))) {
-        inst = static_cast<nsIFrameLoaderOwner*>(new nsXULElementTearoff(this));
-        NS_ENSURE_TRUE(inst, NS_ERROR_OUT_OF_MEMORY);
-    } else {
-        return PostQueryInterface(aIID, aInstancePtr);
-    }
-
-    NS_ADDREF(inst);
- 
-    *aInstancePtr = inst;
-    return NS_OK;
-}
+NS_INTERFACE_TABLE_HEAD_CYCLE_COLLECTION_INHERITED(nsXULElement)
+    NS_NODE_OFFSET_AND_INTERFACE_TABLE_BEGIN(nsXULElement)
+        NS_INTERFACE_TABLE_ENTRY(nsXULElement, nsIDOMNode)
+        NS_INTERFACE_TABLE_ENTRY(nsXULElement, nsIDOMElement)
+        NS_INTERFACE_TABLE_ENTRY(nsXULElement, nsIDOMXULElement)
+    NS_OFFSET_AND_INTERFACE_TABLE_END
+    NS_ELEMENT_INTERFACE_TABLE_TO_MAP_SEGUE
+    NS_INTERFACE_MAP_ENTRY_TEAROFF(nsIScriptEventHandlerOwner,
+                                   new nsScriptEventHandlerOwnerTearoff(this))
+    NS_INTERFACE_MAP_ENTRY_TEAROFF(nsIDOMElementCSSInlineStyle,
+                                   new nsXULElementTearoff(this))
+    NS_INTERFACE_MAP_ENTRY_TEAROFF(nsIFrameLoaderOwner,
+                                   new nsXULElementTearoff(this))
+    NS_INTERFACE_MAP_ENTRY_CONTENT_CLASSINFO(XULElement)
+NS_ELEMENT_INTERFACE_MAP_END
 
 //----------------------------------------------------------------------
 // nsIDOMNode interface

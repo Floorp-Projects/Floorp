@@ -324,7 +324,8 @@ void nsAccessibleWrap::ShutdownAtkObject()
     }
 }
 
-NS_IMETHODIMP nsAccessibleWrap::Shutdown()
+nsresult
+nsAccessibleWrap::Shutdown()
 {
     ShutdownAtkObject();
     return nsAccessible::Shutdown();
@@ -834,7 +835,7 @@ GetAttributeSet(nsIAccessible* aAccessible)
     if (attributes) {
         // Deal with attributes that we only need to expose in ATK
         PRUint32 state;
-        aAccessible->GetFinalState(&state, nsnull);
+        aAccessible->GetState(&state, nsnull);
         if (state & nsIAccessibleStates::STATE_HASPOPUP) {
           // There is no ATK state for haspopup, must use object attribute to expose the same info
           nsAutoString oldValueUnused;
@@ -1032,7 +1033,7 @@ refStateSetCB(AtkObject *aAtkObj)
 
     // Map states
     PRUint32 accState = 0, accExtState = 0;
-    nsresult rv = accWrap->GetFinalState(&accState, &accExtState);
+    nsresult rv = accWrap->GetState(&accState, &accExtState);
     NS_ENSURE_SUCCESS(rv, state_set);
 
     TranslateStates(accState, gAtkStateMap, state_set);

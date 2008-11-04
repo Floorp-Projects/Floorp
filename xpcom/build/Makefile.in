@@ -55,13 +55,6 @@ endif
 
 LIBXUL_LIBRARY = 1
 
-PACKAGE_FILE = xpcom.pkg
-PACKAGE_VARS += USE_SHORT_LIBNAME
-
-ifdef ENABLE_TESTS
-PACKAGE_FILE += xpcom-tests.pkg
-endif
-
 # This is only a static library in libxul builds
 ifdef MOZ_ENABLE_LIBXUL
 EXPORT_LIBRARY = 1

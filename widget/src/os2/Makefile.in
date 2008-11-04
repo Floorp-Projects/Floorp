@@ -51,8 +51,6 @@ MODULE_NAME	= nsWidgetOS2Module
 GRE_MODULE	= 1
 LIBXUL_LIBRARY = 1
 
-PACKAGE_FILE = widget_os2.pkg
-
 REQUIRES	= gfx \
 		  xpcom \
 		  string \

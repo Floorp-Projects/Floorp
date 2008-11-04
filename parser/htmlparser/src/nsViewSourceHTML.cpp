@@ -451,8 +451,6 @@ NS_IMETHODIMP CViewSourceHTML::BuildModel(nsIParser* aParser,nsITokenizer* aToke
       }
     }
 
-    mSink->WillProcessTokens();
-
     while(NS_SUCCEEDED(result)){
       CToken* theToken=mTokenizer->PopToken();
       if(theToken) {

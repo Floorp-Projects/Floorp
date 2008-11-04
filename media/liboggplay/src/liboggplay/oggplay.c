@@ -100,7 +100,7 @@ oggplay_initialise(OggPlay *me, int block) {
 
   while (1) {
 
-    if (oggz_read(me->oggz, OGGZ_READ_CHUNK_SIZE) < 0) {
+    if (oggz_read(me->oggz, OGGZ_READ_CHUNK_SIZE) <= 0) {
       return E_OGGPLAY_BAD_INPUT;
     }
 

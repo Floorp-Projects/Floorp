@@ -19,6 +19,7 @@
 # the Initial Developer. All Rights Reserved.
 #
 # Contributor(s):
+#   Ehsan Akhgari <ehsan.akhgari@gmail.com>
 #
 # Alternatively, the contents of this file may be used under the terms of
 # either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -157,6 +158,17 @@ function onload()
     } catch (e) {
     }
   }
+
+  // The Private Browsing service might not be available
+  try {
+    var pb = Components.classes["@mozilla.org/privatebrowsing;1"].
+             getService(Components.interfaces.nsIPrivateBrowsingService);
+    if (pb.privateBrowsingEnabled) {
+      var persistCheckbox = document.getElementById("persistDomainAcceptance");
+      persistCheckbox.removeAttribute("checked");
+      persistCheckbox.setAttribute("disabled", "true");
+    }
+  } catch (ex) {}
 }
 
 function showhideinfo()

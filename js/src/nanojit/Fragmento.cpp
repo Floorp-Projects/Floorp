@@ -205,8 +205,9 @@ namespace nanojit
 
 	void Fragmento::clearFrag(const void* ip)
 	{
-		Fragment *f = _frags->remove(ip);
-		if (f) clearFragment(f);
+		if (_frags->containsKey(ip)) {
+			clearFragment(_frags->remove(ip));
+		}
 	}
 
 	void Fragmento::clearFrags()
@@ -564,6 +565,24 @@ namespace nanojit
 			p->nextbranch = f;
 		}
 		return f;
+	}
+
+	void Fragmento::disconnectLoops()
+	{
+		for (int i = 0; i < _frags->size(); ++i) {
+			Fragment* frag = _frags->at(i);
+			if (frag->lastIns->isop(LIR_loop))
+				_assm->disconnectLoop(frag->lastIns->record());
+		}
+	}
+
+	void Fragmento::reconnectLoops()
+	{
+		for (int i = 0; i < _frags->size(); ++i) {
+			Fragment* frag = _frags->at(i);
+			if (frag->lastIns->isop(LIR_loop))
+				_assm->reconnectLoop(frag->lastIns->record());
+		}
 	}
 
 	void Fragment::releaseLirBuffer()

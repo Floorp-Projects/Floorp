@@ -113,6 +113,8 @@
     <command id="Browser:ReloadSkipCache" oncommand="BrowserReloadSkipCache()" disabled="true">
       <observes element="Browser:Reload" attribute="disabled"/>
     </command>
+    <command id="Browser:NextTab" oncommand="gBrowser.mTabContainer.advanceSelectedTab(1, true);"/>
+    <command id="Browser:PrevTab" oncommand="gBrowser.mTabContainer.advanceSelectedTab(-1, true);"/>
     <command id="cmd_fullZoomReduce"  oncommand="FullZoom.reduce()"/>
     <command id="cmd_fullZoomEnlarge" oncommand="FullZoom.enlarge()"/>
     <command id="cmd_fullZoomReset"   oncommand="FullZoom.reset()"/>
@@ -124,6 +126,7 @@
     <command id="Tools:Addons" oncommand="BrowserOpenAddonsMgr();"/>
     <command id="Tools:Sanitize"
      oncommand="Cc[GLUE_CID].getService(Ci.nsIBrowserGlue).sanitize(window || null);"/>
+    <command id="Tools:PrivateBrowsing" oncommand="gPrivateBrowsingUI.toggleMode();"/>
     <command id="History:UndoCloseTab" oncommand="undoCloseTab();"/>
   </commandset>
 

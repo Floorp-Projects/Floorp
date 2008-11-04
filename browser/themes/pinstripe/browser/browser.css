@@ -300,20 +300,6 @@ toolbarpaletteitem[place="toolbar"] .places-toolbar-items {
   list-style-image: url("chrome://browser/skin/places/bookmarksToolbar.png");  
 }
 
-/* ----- BOOKMARK PANEL DROPDOWN MENU ITEMS ----- */	
-
-#editBMPanel_toolbarFolderItem {
-  list-style-image: url("chrome://browser/skin/places/bookmarksToolbar.png") !important;  
-}
-
-#editBMPanel_bmRootItem {
-  list-style-image: url("chrome://browser/skin/places/bookmarksMenu.png") !important;  
-}
-
-#editBMPanel_unfiledRootItem {
-  list-style-image: url("chrome://browser/skin/places/unfiledBookmarks.png") !important;  
-}
-
 /* ----- PRIMARY TOOLBAR BUTTONS ----- */	
 
 .toolbarbutton-1,
@@ -1340,7 +1326,11 @@ richlistitem[selected="true"][current="true"] > hbox > .ac-result-type-bookmark,
   display: none;
 }
 
-#editBookmarkPanel #editBMPanel_tagsField,
+#editBookmarkPanel #editBMPanel_tagsField[focused="true"] {
+  background-color: #eeeeee;
+  color: #000000;
+}
+
 #editBookmarkPanel #editBMPanel_namePicker[droppable="false"] > .menulist-editable-box {
   -moz-appearance: none !important;
   cursor: text;
@@ -1360,7 +1350,6 @@ richlistitem[selected="true"][current="true"] > hbox > .ac-result-type-bookmark,
   color: #bbbbbb;
 }
 
-#editBookmarkPanel #editBMPanel_tagsField[focused="true"],
 #editBookmarkPanel #editBMPanel_namePicker[droppable="false"][focused="true"] > .menulist-editable-box {
   outline: 2px solid -moz-mac-focusring;
   outline-offset: -1px;

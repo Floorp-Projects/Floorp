@@ -49,8 +49,6 @@ LIBRARY_NAME	= gtkxtbin
 EXPORT_LIBRARY = 1
 LIBXUL_LIBRARY = 1
 
-PACKAGE_FILE = gtkxtbin.pkg
-
 ifdef MOZ_ENABLE_GTK2
 CSRCS		= \
 		gtk2xtbin.c \

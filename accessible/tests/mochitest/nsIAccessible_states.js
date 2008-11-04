@@ -53,7 +53,7 @@ function getStates(aAccOrElmOrID)
     return [0, 0];
   
   var state = {}, extraState = {};
-  acc.getFinalState(state, extraState);
+  acc.getState(state, extraState);
 
   return [state.value, extraState.value];
 }

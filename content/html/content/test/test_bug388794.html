@@ -1,0 +1,97 @@
+<!DOCTYPE HTML>
+<html>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=388794
+-->
+<head>
+  <title>Test for Bug 388794</title>
+  <script type="application/javascript" src="/MochiKit/MochiKit.js"></script>
+  <script type="application/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <script type="application/javascript" src="/tests/SimpleTest/EventUtils.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
+  <style>
+    input { padding: 0; margin: 0; border: none; }
+  </style>
+</head>
+<body>
+<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=388794">Mozilla Bug 388794</a>
+<p id="display">
+  <form action="data:text/html," target="test1" method="GET">
+    <input id="test1image" type="image" name="testImage">
+  </form>
+  <form action="data:text/html," target="test2" method="GET">
+    <input id="test2image" type="image">
+  </form>
+  <form action="data:text/html," target="test3" method="GET">
+    <input id="test3image" type="image" src="nnc_lockup.gif" name="testImage">
+  </form>
+  <form action="data:text/html," target="test4" method="GET">
+    <input id="test4image" type="image" src="nnc_lockup.gif">
+  </form>
+  <form action="data:text/html," target="test5" method="GET">
+    <input id="test5image" type="image" src="nnc_lockup.gif" name="testImage">
+  </form>
+  <form action="data:text/html," target="test6" method="GET">
+    <input id="test6image" type="image" src="nnc_lockup.gif">
+  </form>
+  <iframe name="test1" id="test1"></iframe>
+  <iframe name="test2" id="test2"></iframe>
+  <iframe name="test3" id="test3"></iframe>
+  <iframe name="test4" id="test4"></iframe>
+  <iframe name="test5" id="test5"></iframe>
+  <iframe name="test6" id="test6"></iframe>
+</p>
+<div id="content" style="display: none">
+  
+</div>
+<pre id="test">
+<script type="application/javascript">
+
+/** Test for Bug 388794 **/
+SimpleTest.waitForExplicitFinish();
+
+var pendingLoads = 0;
+
+var hrefs = {
+  test1: "data:text/html,?testImage.x=0&testImage.y=0",
+  test2: "data:text/html,?x=0&y=0",
+  test3: "data:text/html,?testImage.x=0&testImage.y=0",
+  test4: "data:text/html,?x=0&y=0",
+  test5: "data:text/html,?testImage.x=5&testImage.y=5",
+  test6: "data:text/html,?x=5&y=5",
+};
+
+function submitForm(idNum) {
+  $("test"+idNum).setAttribute("onload", "frameLoaded(this)");
+  sendKey("return", "test" + idNum + "image");
+}
+
+function submitFormMouse(idNum) {
+  $("test"+idNum).setAttribute("onload", "frameLoaded(this)");
+  synthesizeMouse($("test" + idNum + "image"), 5, 5, {});
+}
+
+addLoadEvent(function() {
+  // Need the timeout so painting has a chance to be unsuppressed.
+  setTimeout(function() {
+    submitForm(++pendingLoads);
+    submitForm(++pendingLoads);
+    submitForm(++pendingLoads);
+    submitForm(++pendingLoads);
+/*    submitFormMouse(++pendingLoads);
+    submitFormMouse(++pendingLoads);*/
+  }, 0);
+});
+
+function frameLoaded(frame) {
+  is(frame.contentWindow.location.href, hrefs[frame.name],
+     "Unexpected href for frame " + frame.name);
+  if (--pendingLoads == 0) {
+    SimpleTest.finish();
+  }
+}
+
+</script>
+</pre>
+</body>
+</html>

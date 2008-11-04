@@ -133,8 +133,6 @@ public:
 #endif
   
   // nsICSSStyleSheet interface
-  NS_IMETHOD ContainsStyleSheet(nsIURI* aURL, PRBool& aContains,
-                                nsIStyleSheet** aTheChild=nsnull);
   NS_IMETHOD AppendStyleSheet(nsICSSStyleSheet* aSheet);
   NS_IMETHOD InsertStyleSheetAt(nsICSSStyleSheet* aSheet, PRInt32 aIndex);
   NS_IMETHOD PrependStyleRule(nsICSSRule* aRule);

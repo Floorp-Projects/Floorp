@@ -53,10 +53,10 @@ NS_IMETHODIMP nsXULAlertAccessible::GetRole(PRUint32 *aRole)
   return NS_OK;
 }
 
-NS_IMETHODIMP
-nsXULAlertAccessible::GetState(PRUint32 *aState, PRUint32 *aExtraState)
+nsresult
+nsXULAlertAccessible::GetStateInternal(PRUint32 *aState, PRUint32 *aExtraState)
 {
-  nsresult rv = nsAccessible::GetState(aState, aExtraState);
+  nsresult rv = nsAccessible::GetStateInternal(aState, aExtraState);
   NS_ENSURE_SUCCESS(rv, rv);
   if (mDOMNode) {
     *aState |= nsIAccessibleStates::STATE_ALERT_MEDIUM; // XUL has no markup for low, medium or high

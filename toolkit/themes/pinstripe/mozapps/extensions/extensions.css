@@ -164,6 +164,7 @@ richlistitem[availableUpdateURL][updateable="true"] .updateAvailableBox,
 richlistitem[compatible="false"] .notifyBadge,
 richlistitem[providesUpdatesSecurely="false"] .notifyBadge,
 richlistitem[blocklisted="true"] .notifyBadge,
+richlistitem[blocklistedsoft="true"] .notifyBadge,
 richlistitem[satisfiesDependencies="false"] .notifyBadge {
   display: -moz-box;
 }
@@ -197,15 +198,16 @@ richlistitem[satisfiesDependencies="false"] .notifyBadge {
 richlistitem[compatible="true"] .incompatibleBox,
 richlistitem[providesUpdatesSecurely="true"] .insecureUpdateBox,
 richlistitem[satisfiesDependencies="true"] .needsDependenciesBox,
-richlistitem[blocklisted="false"] .blocklistedBox,
+richlistitem:not([blocklisted="true"]):not([blocklistedsoft="true"]) .blocklistedBox,
+richlistitem[blocklistedsoft="false"]:not([selected="true"]) .blocklistedBox,
+richlistitem[blocklisted="false"] .blocklistedLabel,
+richlistitem[blocklistedsoft="false"] .softBlocklistedLabel,
 richlistitem[opType="needs-uninstall"] .blocklistedBox,
 richlistitem[opType="needs-uninstall"] .incompatibleBox,
 richlistitem[opType="needs-uninstall"] .needsDependenciesBox,
 richlistitem[opType="needs-uninstall"] .blocklistedBox {
   display: none;
 }
-
-
 
 richlistitem[loading="true"] .updateBadge {
   display: -moz-box;

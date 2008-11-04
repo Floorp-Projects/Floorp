@@ -57,8 +57,6 @@ SHORT_LIBNAME	= xpc$(MOZ_BITS)$(VERSION_NUMBER)
 endif
 LIBXUL_LIBRARY = 1
 
-PACKAGE_FILE = xpconnect.pkg
-
 REQUIRES	= xpcom \
 		  string \
 		  js \

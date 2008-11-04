@@ -46,18 +46,16 @@ include $(topsrcdir)/config/rules.mk
 MODULE      = plugin
 
 ifdef MOZ_DEBUG
-BUILDSTYLE	= Development
+BUILDSTYLE	= Debug
 else
-BUILDSTYLE	= Deployment
+BUILDSTYLE	= Release
 endif
 
 PROJECT=DefaultPlugin.xcodeproj
 PROJECT_ARG=-project $(PROJECT)
 PBBUILD_ARG=$(PBBUILD_SETTINGS)
 
-TARGET		= "Default Plugin"
-
-PACKAGE_FILE = npnul.pkg
+TARGET		= "DefaultPlugin"
 
 unexport CC CXX
 
@@ -67,20 +65,16 @@ ifneq ($(ABS_topsrcdir),$(MOZ_BUILD_ROOT))
 export::
 	rsync -a --exclude .DS_Store --exclude "CVS/" $(srcdir)/$(PROJECT) .
 	ln -fs $(srcdir)/English.lproj
-	ln -fs $(srcdir)/DefaultPluginPrefix.h
-	ln -fs $(srcdir)/NullPlugin.cpp
-	ln -fs $(srcdir)/npmac.cpp
-	ln -fs $(srcdir)/Info-*.plist .
-	ln -fs $(srcdir)/NullPlugin.rsrc
+	ln -fs $(srcdir)/DefaultPlugin.mm
+	ln -fs $(srcdir)/Info.plist
+	ln -fs $(srcdir)/plugin.png
 
 GARBAGE_DIRS += $(PROJECT)
 GARBAGE += \
 	English.lproj \
-	DefaultPluginPrefix.h \
-	NullPlugin.cpp \
-	npmac.cpp \
-	Info-*.plist \
-	NullPlugin.rsrc \
+	DefaultPlugin.mm \
+	Info.plist \
+	plugin.png \
 	$(NULL)
 endif
 
@@ -89,7 +83,7 @@ GARBAGE_DIRS += build
 libs install:: install-plugin
 
 install-plugin: build-plugin
-	$(INSTALL) "$(XCODE_PRODUCT_DIR)/Default Plugin.plugin" $(DIST)/bin/plugins
+	$(INSTALL) "$(XCODE_PRODUCT_DIR)/DefaultPlugin.plugin" $(DIST)/bin/plugins
 
 build-plugin:
-	$(PBBUILD) $(PROJECT_ARG) -target $(TARGET) -buildstyle $(BUILDSTYLE) $(PBBUILD_ARG)
+	$(PBBUILD) $(PROJECT_ARG) -target $(TARGET) -configuration $(BUILDSTYLE) $(PBBUILD_ARG)

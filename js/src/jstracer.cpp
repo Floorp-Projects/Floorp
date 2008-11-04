@@ -51,7 +51,7 @@
 #include <alloca.h>
 #endif
 
-#include "nanojit.h"
+#include "nanojit/nanojit.h"
 #include "jsarray.h"            // higher-level library and API headers
 #include "jsbool.h"
 #include "jscntxt.h"
@@ -2663,12 +2663,35 @@ js_SynthesizeFrame(JSContext* cx, const FrameInfo& fi)
     newifp->frame.pcDisabledSave = 0;
 #endif
 
+    /*
+     * Note that cx->fp->script is still the caller's script; set the callee
+     * inline frame's idea of caller version from its version.
+     */
+    newifp->callerVersion = (JSVersion) cx->fp->script->version;
+
     cx->fp->regs = &newifp->callerRegs;
     cx->fp = &newifp->frame;
 
     if (fun->flags & JSFUN_HEAVYWEIGHT) {
+        /*
+         * Set hookData to null because the failure case for js_GetCallObject
+         * involves it calling the debugger hook.
+         */
+        newifp->hookData = NULL;
         if (!js_GetCallObject(cx, &newifp->frame, newifp->frame.scopeChain))
             return -1;
+    }
+
+    /*
+     * If there's a call hook, invoke it to compute the hookData used by
+     * debuggers that cooperate with the interpreter.
+     */
+    JSInterpreterHook hook = cx->debugHooks->callHook;
+    if (hook) {
+        newifp->hookData = hook(cx, &newifp->frame, JS_TRUE, 0,
+                                cx->debugHooks->callHookData);
+    } else {
+        newifp->hookData = NULL;
     }
 
     // FIXME? we must count stack slots from caller's operand stack up to (but not including)
@@ -3676,6 +3699,11 @@ js_InitJIT(JSTraceMonitor *tm)
         tm->globalSlots = new (&gc) SlotList();
         tm->globalTypeMap = new (&gc) TypeMap();
         tm->recoveryDoublePoolPtr = tm->recoveryDoublePool = new jsval[MAX_NATIVE_STACK_SLOTS];
+    }
+    if (!tm->reFragmento) {
+        Fragmento* fragmento = new (&gc) Fragmento(core, 24);
+        verbose_only(fragmento->labels = new (&gc) LabelMap(core, NULL);)
+        tm->reFragmento = fragmento;
     }
 #if !defined XP_WIN
     debug_only(memset(&jitstats, 0, sizeof(jitstats)));

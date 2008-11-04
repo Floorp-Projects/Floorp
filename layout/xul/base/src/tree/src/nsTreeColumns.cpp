@@ -78,8 +78,11 @@ NS_INTERFACE_MAP_BEGIN(nsTreeColumn)
   NS_INTERFACE_MAP_ENTRY(nsITreeColumn)
   NS_INTERFACE_MAP_ENTRY(nsISupports)
   NS_INTERFACE_MAP_ENTRY_DOM_CLASSINFO(TreeColumn)
-  if (aIID.Equals(kTreeColumnImplCID))
-    foundInterface = static_cast<nsITreeColumn*>(this);
+  if (aIID.Equals(NS_GET_IID(nsTreeColumn))) {
+    AddRef();
+    *aInstancePtr = this;
+    return NS_OK;
+  }
   else
 NS_INTERFACE_MAP_END
                                                                                 
@@ -521,17 +524,22 @@ nsTreeColumns::GetColumnFor(nsIDOMElement* aElement, nsITreeColumn** _retval)
   return NS_OK;
 }
 
+nsITreeColumn*
+nsTreeColumns::GetNamedColumn(const nsAString& aId)
+{
+  EnsureColumns();
+  for (nsTreeColumn* currCol = mFirstColumn; currCol; currCol = currCol->GetNext()) {
+    if (currCol->GetId().Equals(aId)) {
+      return currCol;
+    }
+  }
+  return nsnull;
+}
+
 NS_IMETHODIMP
 nsTreeColumns::GetNamedColumn(const nsAString& aId, nsITreeColumn** _retval)
 {
-  EnsureColumns();
-  *_retval = nsnull;
-  for (nsTreeColumn* currCol = mFirstColumn; currCol; currCol = currCol->GetNext()) {
-    if (currCol->GetId().Equals(aId)) {
-      NS_ADDREF(*_retval = currCol);
-      break;
-    }
-  }
+  NS_IF_ADDREF(*_retval = GetNamedColumn(aId));
   return NS_OK;
 }
 
@@ -550,7 +558,6 @@ nsTreeColumns::GetColumnAt(PRInt32 aIndex)
 NS_IMETHODIMP
 nsTreeColumns::GetColumnAt(PRInt32 aIndex, nsITreeColumn** _retval)
 {
-  EnsureColumns();
   NS_IF_ADDREF(*_retval = GetColumnAt(aIndex));
   return NS_OK;
 }

@@ -266,13 +266,8 @@ function SetClickAndHoldHandlers()
 }
 #endif
 
-function BookmarkThisTab()
-{
-  var tab = gBrowser.mContextTab;
-  if (tab.localName != "tab")
-    tab = gBrowser.mCurrentTab;
-
-  PlacesCommandHook.bookmarkPage(tab.linkedBrowser,
+function BookmarkThisTab() {
+  PlacesCommandHook.bookmarkPage(gBrowser.mContextTab.linkedBrowser,
                                  PlacesUtils.bookmarksMenuFolderId, true);
 }
 
@@ -441,6 +436,9 @@ const gPopupBlockerObserver = {
     catch (e) {
       blockedPopupAllowSite.setAttribute("hidden", "true");
     }
+
+    if (gPrivateBrowsingUI.privateBrowsingEnabled)
+      blockedPopupAllowSite.setAttribute("disabled", "true");
 
     var item = aEvent.target.lastChild;
     while (item && item.getAttribute("observes") != "blockedPopupsSeparator") {
@@ -686,7 +684,7 @@ let gGestureSupport = {
   init: function GS_init(aAddListener) {
     const gestureEvents = ["SwipeGesture",
       "MagnifyGestureStart", "MagnifyGestureUpdate", "MagnifyGesture",
-      "RotateGesture", "RotateGestureUpdate", "RotateGesture"];
+      "RotateGestureStart", "RotateGestureUpdate", "RotateGesture"];
 
     let addRemove = aAddListener ? window.addEventListener :
       window.removeEventListener;
@@ -707,19 +705,100 @@ let gGestureSupport = {
 
     switch (aEvent.type) {
       case "MozSwipeGesture":
-        this.onSwipe(aEvent);
-        break;
+        return this.onSwipe(aEvent);
       case "MozMagnifyGestureStart":
       case "MozRotateGestureStart":
-        this.onStart(aEvent);
-        break;
+        return this.onStart(aEvent);
       case "MozMagnifyGestureUpdate":
-        this.onMagnify(aEvent);
-        break;
+        return this._handleUpdate(aEvent, 100, "pinch.out", "pinch.in");
       case "MozRotateGestureUpdate":
-        this.onRotate(aEvent);
-        break;
+        return this._handleUpdate(aEvent, 22.5, "twist.right", "twist.left");
     }
+  },
+
+  /**
+   * Convert a gesture and pressed keys into the corresponding command action.
+   * The preference must have "shift" before "alt" before "ctrl" before "meta"
+   * with each separated by periods.
+   *
+   * @param aGestureKeys
+   *        An array that has the gesture type as the first element and
+   *        additional elements for each key pressed
+   * @return Id of the command to execute
+   */
+  _getCommand: function GS__getCommand(aGestureKeys) {
+    const gestureBranch = "browser.gesture."
+    try {
+      return gPrefService.getCharPref(gestureBranch + aGestureKeys.join("."));
+    }
+    // No preference is set, so don't give a command
+    catch (e) {}
+  },
+
+  /**
+   * Generator producing the powerset of the input array where the first result
+   * is the complete set and the last result (before StopIteration) is empty.
+   *
+   * @param aArray
+   *        Source array containing any number of elements
+   * @yield Array that is a subset of the input array from full set to empty
+   */
+  _power: function GS__power(aArray) {
+    // Create a bitmask based on the length of the array
+    let num = 1 << aArray.length;
+    while (--num >= 0)
+      // Only select array elements where the current bit is set
+      yield aArray.reduce(function(aPrev, aCurr, aIndex) {
+        if (num & 1 << aIndex)
+          aPrev.push(aCurr);
+        return aPrev;
+      }, []);
+  },
+
+  /**
+   * Determine what action to do for the gesture based on which keys are
+   * pressed and which commands are set
+   *
+   * @param aEvent
+   *        The original gesture event to convert into a fake click event
+   * @param aGesture
+   *        Name of the gesture
+   */
+  _doAction: function GS__doAction(aEvent, aGesture) {
+    // Create a fake event that pretends the gesture is a button click
+    let fakeEvent = { shiftKey: aEvent.shiftKey, ctrlKey: aEvent.ctrlKey,
+      metaKey: aEvent.metaKey, altKey: aEvent.altKey, button: 0 };
+
+    // Create an array of pressed keys in a fixed order so that a command for
+    // "meta" is preferred over "ctrl" when both buttons are pressed (and a
+    // command for both don't exist)
+    let keyCombos = [];
+    const keys = ["shift", "alt", "ctrl", "meta"];
+    for each (let key in keys)
+      if (aEvent[key + "Key"]) 
+        keyCombos.push(key);
+
+    try {
+      // Try each combination of key presses in decreasing order for commands
+      for (let subCombo in this._power(keyCombos)) {
+        let command = this._getCommand([aGesture].concat(subCombo));
+        // Do the command if we found one to do
+        if (command) {
+          let node = document.getElementById(command);
+          // Use the command element if it exists
+          if (node && node.hasAttribute("oncommand"))
+            // XXX: Use node.oncommand(event) once bug 246720 is fixed
+            return node.getAttribute("disabled") == "true" ? true :
+              new Function("event", node.getAttribute("oncommand")).
+              call(node, fakeEvent);
+
+          // Otherwise it should be a "standard" command
+          return goDoCommand(command);
+        }
+      }
+    }
+    // The generator ran out of key combinations, so just do nothing
+    catch (e) {}
   },
 
   /**
@@ -729,18 +808,16 @@ let gGestureSupport = {
    *        The swipe event to handle
    */
   onSwipe: function GS_onSwipe(aEvent) {
-    // Create a fake event that pretends the swipe is a button click
-    let fakeEvent = { shiftKey: aEvent.shiftKey, ctrlKey: aEvent.ctrlKey,
-      metaKey: aEvent.metaKey, altKey: aEvent.altKey, button: 0 };
-
-    if (aEvent.direction == SimpleGestureEvent.DIRECTION_LEFT)
-      BrowserBack(fakeEvent);
-    else if (aEvent.direction == SimpleGestureEvent.DIRECTION_RIGHT)
-      BrowserForward(fakeEvent);
-    else if (aEvent.direction == SimpleGestureEvent.DIRECTION_UP)
-      goDoCommand("cmd_scrollTop");
-    else if (aEvent.direction == SimpleGestureEvent.DIRECTION_DOWN)
-      goDoCommand("cmd_scrollBottom");
+    switch (aEvent.direction) {
+      case SimpleGestureEvent.DIRECTION_LEFT:
+        return this._doAction(aEvent, "swipe.left");
+      case SimpleGestureEvent.DIRECTION_RIGHT:
+        return this._doAction(aEvent, "swipe.right");
+      case SimpleGestureEvent.DIRECTION_UP:
+        return this._doAction(aEvent, "swipe.up");
+      case SimpleGestureEvent.DIRECTION_DOWN:
+        return this._doAction(aEvent, "swipe.down");
+    }
   },
 
   // Keep track of offsets for continual motion events, e.g., zoom and rotate
@@ -765,40 +842,20 @@ let gGestureSupport = {
    *        The continual motion event to handle
    * @param aThreshold
    *        Minimum positive/negative difference before the action is triggered
-   * @param aIncDec
-   *        Callback function that takes in the current offset
+   * @param aInc
+   *        Name of the gesture for increasing motion
+   * @param aDec
+   *        Name of the gesture for decreasing motion
    */
-  _handleUpdate: function GS__handleUpdate(aEvent, aThreshold, aIncDec) {
+  _handleUpdate: function GS__handleUpdate(aEvent, aThreshold, aInc, aDec) {
     // Update the offset with new event data
     this._lastOffset += aEvent.delta;
 
-    // Inform the callback that we passed the threshold and then reset motion
+    // Do the gesture action when we pass the threshold and then reset motion
     if (Math.abs(this._lastOffset) > aThreshold) {
-      aIncDec(this._lastOffset);
+      this._doAction(aEvent, this._lastOffset > 0 ? aInc : aDec);
       this.onStart(aEvent);
     }
-  },
-
-  /**
-   * Convert zoom motions into a page zoom in/out
-   *
-   * @param aEvent
-   *        The zoom event to handle
-   */
-  onMagnify: function GS_onMagnify(aEvent) {
-    this._handleUpdate(aEvent, 100, function(aOffset) aOffset > 0 ?
-      FullZoom.enlarge() : FullZoom.reduce());
-  },
-
-  /**
-   * Convert rotate motions into a next/prev tab
-   *
-   * @param aEvent
-   *        The rotate event to handle
-   */
-  onRotate: function GS_onRotate(aEvent) {
-    this._handleUpdate(aEvent, 22.5, function(aOffset) gBrowser.mTabContainer.
-      advanceSelectedTab(aOffset > 0 ? 1 : -1, true));
   },
 };
 
@@ -1153,14 +1210,6 @@ function delayedStartup(isLoadingBlank, mustLoadSidebar) {
     SetClickAndHoldHandlers();
 #endif
 
-  // Initialize the microsummary service by retrieving it, prompting its factory
-  // to create its singleton, whose constructor initializes the service.
-  try {
-    Cc["@mozilla.org/microsummary/service;1"].getService(Ci.nsIMicrosummaryService);
-  } catch (ex) {
-    Components.utils.reportError("Failed to init microsummary service:\n" + ex);
-  }
-
   // Initialize the full zoom setting.
   // We do this before the session restore service gets initialized so we can
   // apply full zoom settings to tabs restored by the session restore service.
@@ -1216,11 +1265,22 @@ function delayedStartup(isLoadingBlank, mustLoadSidebar) {
        gPrefService.getBoolPref("browser.ctrlTab.mostRecentlyUsed"))
     ctrlTab.init();
 
+  // Initialize the microsummary service by retrieving it, prompting its factory
+  // to create its singleton, whose constructor initializes the service.
+  // Started 4 seconds after delayedStartup (before the livemarks service below).
+  setTimeout(function() {
+    try {
+      Cc["@mozilla.org/microsummary/service;1"].getService(Ci.nsIMicrosummaryService);
+    } catch (ex) {
+      Components.utils.reportError("Failed to init microsummary service:\n" + ex);
+    }
+  }, 4000);
+
   // Delayed initialization of the livemarks update timer.
   // Livemark updates don't need to start until after bookmark UI 
   // such as the toolbar has initialized. Starting 5 seconds after
-  // delayedStartup in order to stagger this before the download
-  // manager starts (see below).
+  // delayedStartup in order to stagger this after the microsummary
+  // service (see above) and before the download manager starts (see below).
   setTimeout(function() PlacesUtils.livemarks.start(), 5000);
 
   // Initialize the download manager some time after the app starts so that
@@ -1243,6 +1303,8 @@ function delayedStartup(isLoadingBlank, mustLoadSidebar) {
   placesContext.addEventListener("popuphiding", updateEditUIVisibility, false);
 #endif
 
+  // initialize the private browsing UI
+  gPrivateBrowsingUI.init();
 }
 
 function BrowserShutdown()
@@ -1285,6 +1347,7 @@ function BrowserShutdown()
   BrowserOffline.uninit();
   OfflineApps.uninit();
   DownloadMonitorPanel.uninit();
+  gPrivateBrowsingUI.uninit();
 
   var windowManager = Components.classes['@mozilla.org/appshell/window-mediator;1'].getService();
   var windowManagerInterface = windowManager.QueryInterface(Components.interfaces.nsIWindowMediator);
@@ -1940,11 +2003,11 @@ function BrowserViewSourceOfDocument(aDocument)
 function BrowserPageInfo(doc, initialTab)
 {
   var args = {doc: doc, initialTab: initialTab};
-  toOpenDialogByTypeAndUrl("Browser:page-info",
-                           doc ? doc.location : window.content.document.location,
-                           "chrome://browser/content/pageinfo/pageInfo.xul",
-                           "chrome,toolbar,dialog=no,resizable",
-                           args);
+  return toOpenDialogByTypeAndUrl("Browser:page-info",
+                                  doc ? doc.location : window.content.document.location,
+                                  "chrome://browser/content/pageinfo/pageInfo.xul",
+                                  "chrome,toolbar,dialog=no,resizable",
+                                  args);
 }
 
 #ifdef DEBUG
@@ -2184,7 +2247,7 @@ function BrowserOnCommand(event) {
 
     // If the event came from an ssl error page, it is probably either the "Add
     // Exception…" or "Get me out of here!" button
-    if (/^about:neterror\?e=nssBadCert/.test(errorDoc.documentURI)) {
+    if (/^about:certerror/.test(errorDoc.documentURI)) {
       if (ot == errorDoc.getElementById('exceptionDialogButton')) {
         var params = { exceptionAdded : false };
         
@@ -2733,8 +2796,10 @@ const DOMLinkHandler = {
             // only allow chrome:// favicons
             const aboutNeterr = /^about:neterror\?/;
             const aboutBlocked = /^about:blocked\?/;
+            const aboutCert = /^about:certerror\?/;
             if (!(aboutNeterr.test(targetDoc.documentURI) ||
-                  aboutBlocked.test(targetDoc.documentURI)) ||
+                  aboutBlocked.test(targetDoc.documentURI) ||
+                  aboutCert.test(targetDoc.documentURI)) ||
                 !uri.schemeIs("chrome")) {
               var ssm = Cc["@mozilla.org/scriptsecuritymanager;1"].
                         getService(Ci.nsIScriptSecurityManager);
@@ -3065,9 +3130,9 @@ function toOpenDialogByTypeAndUrl(inType, relatedUrl, windowUri, features, extra
 
   // We didn't find a matching window, so open a new one.
   if (features)
-    window.openDialog(windowUri, "_blank", features, extraArgument);
-  else
-    window.openDialog(windowUri, "_blank", "chrome,extrachrome,menubar,resizable,scrollbars,status,toolbar", extraArgument);
+    return window.openDialog(windowUri, "_blank", features, extraArgument);
+
+  return window.openDialog(windowUri, "_blank", "chrome,extrachrome,menubar,resizable,scrollbars,status,toolbar", extraArgument);
 }
 
 function OpenBrowserWindow()
@@ -6677,3 +6742,151 @@ function getNotificationBox(aWindow) {
 /* DEPRECATED */
 function getBrowser() gBrowser;
 function getNavToolbox() gNavToolbox;
+
+let gPrivateBrowsingUI = {
+  _observerService: null,
+  _privateBrowsingService: null,
+  _privateBrowsingAutoStarted: false,
+
+  init: function PBUI_init() {
+    this._observerService = Cc["@mozilla.org/observer-service;1"].
+                            getService(Ci.nsIObserverService);
+    this._observerService.addObserver(this, "private-browsing", false);
+
+    this._privateBrowsingService = Cc["@mozilla.org/privatebrowsing;1"].
+                                   getService(Ci.nsIPrivateBrowsingService);
+
+    if (this.privateBrowsingEnabled)
+      this.onEnterPrivateBrowsing();
+  },
+
+  uninit: function PBUI_unint() {
+    this._observerService.removeObserver(this, "private-browsing");
+  },
+
+  observe: function PBUI_observe(aSubject, aTopic, aData) {
+    if (aTopic == "private-browsing") {
+      if (aData == "enter")
+        this.onEnterPrivateBrowsing();
+      else if (aData == "exit")
+        this.onExitPrivateBrowsing();
+    }
+  },
+
+  _shouldEnter: function PBUI__shouldEnter() {
+    try {
+      // Never prompt if the session is not going to be closed, or if user has
+      // already requested not to be prompted.
+      if (gPrefService.getBoolPref("browser.privatebrowsing.dont_prompt_on_enter") ||
+          gPrefService.getBoolPref("browser.privatebrowsing.keep_current_session"))
+        return true;
+    }
+    catch (ex) { }
+
+    var bundleService = Cc["@mozilla.org/intl/stringbundle;1"].
+                        getService(Ci.nsIStringBundleService);
+    var pbBundle = bundleService.createBundle("chrome://browser/locale/browser.properties");
+    var brandBundle = bundleService.createBundle("chrome://branding/locale/brand.properties");
+
+    var appName = brandBundle.GetStringFromName("brandShortName");
+    var dialogTitle = pbBundle.GetStringFromName("privateBrowsingDialogTitle");
+    var message = pbBundle.formatStringFromName("privateBrowsingMessage", [appName], 1);
+
+    var promptService = Cc["@mozilla.org/embedcomp/prompt-service;1"].
+                        getService(Ci.nsIPromptService);
+
+    var flags = promptService.BUTTON_TITLE_IS_STRING * promptService.BUTTON_POS_0 +
+                promptService.BUTTON_TITLE_IS_STRING * promptService.BUTTON_POS_1 +
+                promptService.BUTTON_POS_0_DEFAULT;
+
+    var neverAsk = {value:false};
+    var button0Title = pbBundle.GetStringFromName("privateBrowsingYesTitle");
+    var button1Title = pbBundle.GetStringFromName("privateBrowsingNoTitle");
+    var neverAskText = pbBundle.GetStringFromName("privateBrowsingNeverAsk");
+
+    var result;
+    var choice = promptService.confirmEx(null, dialogTitle, message,
+                               flags, button0Title, button1Title, null,
+                               neverAskText, neverAsk);
+
+    switch (choice) {
+    case 0: // Start Private Browsing
+      result = true;
+      if (neverAsk.value)
+        gPrefService.setBoolPref("browser.privatebrowsing.dont_prompt_on_enter", true);
+      break;
+    case 1: // Keep
+      result = false;
+      break;
+    }
+
+    return result;
+  },
+
+  onEnterPrivateBrowsing: function PBUI_onEnterPrivateBrowsing() {
+    let pbMenuItem = document.getElementById("privateBrowsingItem");
+    if (pbMenuItem)
+      pbMenuItem.setAttribute("checked", "true");
+
+    this._privateBrowsingAutoStarted = this._privateBrowsingService.autoStarted;
+
+    if (!this._privateBrowsingAutoStarted) {
+      // Adjust the window's title
+      let docElement = document.documentElement;
+#ifdef XP_MACOSX // see bug 411929 comment 38 for the reason behind this
+      docElement.setAttribute("titlemodifier",
+        docElement.getAttribute("titlemodifier_privatebrowsing"));
+      docElement.setAttribute("titledefault", "");
+#else
+      docElement.setAttribute("title",
+        docElement.getAttribute("title_privatebrowsing"));
+      docElement.setAttribute("titlemodifier",
+        docElement.getAttribute("titlemodifier_privatebrowsing"));
+#endif
+    }
+    else {
+      // Disable the menu item in auto-start mode
+      if (pbMenuItem)
+        pbMenuItem.setAttribute("disabled", "true");
+      document.getElementById("Tools:PrivateBrowsing")
+              .setAttribute("disabled", "true");
+    }
+  },
+
+  onExitPrivateBrowsing: function PBUI_onExitPrivateBrowsing() {
+    let pbMenuItem = document.getElementById("privateBrowsingItem");
+    if (pbMenuItem)
+      pbMenuItem.removeAttribute("checked");
+
+    if (!this._privateBrowsingAutoStarted) {
+      // Adjust the window's title
+      let docElement = document.documentElement;
+#ifdef XP_MACOSX // see bug 411929 comment 38 for the reason behind this
+      docElement.setAttribute("titlemodifier", "");
+      docElement.setAttribute("titledefault",
+        docElement.getAttribute("titlemodifier_normal"));
+#else
+      docElement.setAttribute("title",
+        docElement.getAttribute("title_normal"));
+      docElement.setAttribute("titlemodifier",
+        docElement.getAttribute("titlemodifier_normal"));
+#endif
+    }
+    else
+      this._privateBrowsingAutoStarted = false;
+  },
+
+  toggleMode: function PBUI_toggleMode() {
+    // prompt the users on entering the private mode, if needed
+    if (!this.privateBrowsingEnabled)
+      if (!this._shouldEnter())
+        return;
+
+    this._privateBrowsingService.privateBrowsingEnabled =
+      !this.privateBrowsingEnabled;
+  },
+
+  get privateBrowsingEnabled PBUI_get_privateBrowsingEnabled() {
+    return this._privateBrowsingService.privateBrowsingEnabled;
+  }
+};

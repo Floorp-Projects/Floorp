@@ -410,19 +410,20 @@ NS_IMPL_RELEASE_INHERITED(nsHTMLInputElement, nsGenericElement)
 
 
 // QueryInterface implementation for nsHTMLInputElement
-NS_HTML_CONTENT_CC_INTERFACE_TABLE_HEAD(nsHTMLInputElement,
-                                        nsGenericHTMLFormElement)
-  NS_INTERFACE_TABLE_INHERITED10(nsHTMLInputElement,
-                                 nsIDOMHTMLInputElement,
-                                 nsIDOMNSHTMLInputElement,
-                                 nsITextControlElement,
-                                 nsIFileControlElement,
-                                 nsIRadioControlElement,
-                                 nsIPhonetic,
-                                 imgIDecoderObserver,
-                                 nsIImageLoadingContent,
-                                 imgIContainerObserver,
-                                 nsIDOMNSEditableElement)
+NS_INTERFACE_TABLE_HEAD_CYCLE_COLLECTION_INHERITED(nsHTMLInputElement)
+  NS_HTML_CONTENT_INTERFACE_TABLE10(nsHTMLInputElement,
+                                    nsIDOMHTMLInputElement,
+                                    nsIDOMNSHTMLInputElement,
+                                    nsITextControlElement,
+                                    nsIFileControlElement,
+                                    nsIRadioControlElement,
+                                    nsIPhonetic,
+                                    imgIDecoderObserver,
+                                    nsIImageLoadingContent,
+                                    imgIContainerObserver,
+                                    nsIDOMNSEditableElement)
+  NS_HTML_CONTENT_INTERFACE_TABLE_TO_MAP_SEGUE(nsHTMLInputElement,
+                                               nsGenericHTMLFormElement)
 NS_HTML_CONTENT_INTERFACE_TABLE_TAIL_CLASSINFO(HTMLInputElement)
 
 
@@ -2388,16 +2389,20 @@ nsHTMLInputElement::SubmitNamesValues(nsIFormSubmission* aFormSubmission,
   //
   if (mType == NS_FORM_INPUT_IMAGE) {
     // Get a property set by the frame to find out where it was clicked.
-    nsAutoString xVal;
-    nsAutoString yVal;
-
     nsIntPoint* lastClickedPoint =
       static_cast<nsIntPoint*>(GetProperty(nsGkAtoms::imageClickedPoint));
+    PRInt32 x, y;
     if (lastClickedPoint) {
       // Convert the values to strings for submission
-      xVal.AppendInt(lastClickedPoint->x);
-      yVal.AppendInt(lastClickedPoint->y);
+      x = lastClickedPoint->x;
+      y = lastClickedPoint->y;
+    } else {
+      x = y = 0;
     }
+
+    nsAutoString xVal, yVal;
+    xVal.AppendInt(x);
+    yVal.AppendInt(y);
 
     if (!name.IsEmpty()) {
       aFormSubmission->AddNameValuePair(this,

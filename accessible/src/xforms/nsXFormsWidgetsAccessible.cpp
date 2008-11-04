@@ -55,9 +55,9 @@ nsXFormsDropmarkerWidgetAccessible::GetRole(PRUint32 *aRole)
   return NS_OK;
 }
 
-NS_IMETHODIMP
-nsXFormsDropmarkerWidgetAccessible::GetState(PRUint32 *aState,
-                                             PRUint32 *aExtraState)
+nsresult
+nsXFormsDropmarkerWidgetAccessible::GetStateInternal(PRUint32 *aState,
+                                                     PRUint32 *aExtraState)
 {
   NS_ENSURE_ARG_POINTER(aState);
   *aState = 0;
@@ -154,13 +154,13 @@ nsXFormsComboboxPopupWidgetAccessible::GetRole(PRUint32 *aRole)
   return NS_OK;
 }
 
-NS_IMETHODIMP
-nsXFormsComboboxPopupWidgetAccessible::GetState(PRUint32 *aState,
-                                                PRUint32 *aExtraState)
+nsresult
+nsXFormsComboboxPopupWidgetAccessible::GetStateInternal(PRUint32 *aState,
+                                                        PRUint32 *aExtraState)
 {
   NS_ENSURE_ARG_POINTER(aState);
 
-  nsresult rv = nsXFormsAccessible::GetState(aState, aExtraState);
+  nsresult rv = nsXFormsAccessible::GetStateInternal(aState, aExtraState);
   NS_ENSURE_SUCCESS(rv, rv);
   if (!mDOMNode)
     return NS_OK;

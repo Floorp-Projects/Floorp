@@ -53,8 +53,6 @@ IS_COMPONENT     = 1
 MODULE_NAME      = nsAutoConfigModule
 LIBXUL_LIBRARY   = 1
 
-PACKAGE_FILE     = autoconfig.pkg
-
 REQUIRES         = xpcom \
                    string \
                    intl \

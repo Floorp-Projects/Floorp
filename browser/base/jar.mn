@@ -13,6 +13,7 @@ browser.jar:
 *       content/browser/aboutDialog.xul               (content/aboutDialog.xul)
 *       content/browser/aboutDialog.js                (content/aboutDialog.js)
         content/browser/aboutDialog.css               (content/aboutDialog.css)
+*       content/browser/aboutRights.xhtml             (content/aboutRights.xhtml)
 *       content/browser/aboutRobots.xhtml             (content/aboutRobots.xhtml)
         content/browser/aboutRobots-icon.png          (content/aboutRobots-icon.png)
         content/browser/aboutRobots-icon-rtl.png      (content/aboutRobots-icon-rtl.png)

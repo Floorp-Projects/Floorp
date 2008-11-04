@@ -332,6 +332,7 @@ public:
   NS_IMETHOD              Show(PRBool aState);
   NS_IMETHOD              IsVisible(PRBool& outState);
 
+  NS_IMETHOD              SetParent(nsIWidget* aNewParent);
   virtual nsIWidget*      GetParent(void);
 
   NS_IMETHOD              ModalEventFilter(PRBool aRealEvent, void *aEvent,
@@ -389,7 +390,7 @@ public:
   NS_IMETHOD        GetAttention(PRInt32 aCycleCount);
 
   NS_IMETHOD        ActivateNativeMenuItemAt(const nsAString& indexString);
-  NS_IMETHOD        ForceNativeMenuReload();
+  NS_IMETHOD        ForceUpdateNativeMenuAt(const nsAString& indexString);
 
   NS_IMETHOD        ResetInputState();
   NS_IMETHOD        SetIMEOpenState(PRBool aState);

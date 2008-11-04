@@ -61,6 +61,7 @@ public:
   nsresult GetPluginHost(nsIPluginHost** aPluginHost);
 
   nsIDOMPlugin* GetItemAt(PRUint32 aIndex, nsresult* aResult);
+  nsIDOMPlugin* GetNamedItem(const nsAString& aName, nsresult* aResult);
 
   static nsPluginArray* FromSupports(nsISupports* aSupports)
   {
@@ -104,6 +105,7 @@ public:
   NS_DECL_NSIDOMPLUGIN
 
   nsIDOMMimeType* GetItemAt(PRUint32 aIndex, nsresult* aResult);
+  nsIDOMMimeType* GetNamedItem(const nsAString& aName, nsresult* aResult);
 
   static nsPluginElement* FromSupports(nsISupports* aSupports)
   {
