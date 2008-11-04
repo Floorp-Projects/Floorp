@@ -61,8 +61,7 @@ class nsDefaultStreamStrategy : public nsStreamStrategy
 {
 public:
   nsDefaultStreamStrategy(nsMediaDecoder* aDecoder, nsIChannel* aChannel, nsIURI* aURI) :
-    nsStreamStrategy(aDecoder, aChannel, aURI),
-    mPosition(0)
+    nsStreamStrategy(aDecoder, aChannel, aURI)
   {
   }
   
@@ -88,10 +87,6 @@ private:
   // Input stream for the media data currently downloaded 
   // and stored in the pipe. This can be used from any thread.
   nsCOMPtr<nsIInputStream>  mPipeInput;
-
-  // Current seek position. Need to compute this manually because
-  // the underlying channel may not offer this information.
-  PRInt64 mPosition;
 };
 
 nsresult nsDefaultStreamStrategy::Open(nsIStreamListener** aStreamListener)
@@ -116,8 +111,6 @@ nsresult nsDefaultStreamStrategy::Open(nsIStreamListener** aStreamListener)
 
   rv = mListener->GetInputStream(getter_AddRefs(mPipeInput));
   NS_ENSURE_SUCCESS(rv, rv);
-
-  mPosition = 0;
 
   return NS_OK;
 }
@@ -144,14 +137,7 @@ nsresult nsDefaultStreamStrategy::Read(char* aBuffer, PRUint32 aCount, PRUint32*
   // stream. This allows calling from any thread as the pipe is
   // threadsafe.
   nsAutoLock lock(mLock);
-  if (!mPipeInput)
-    return NS_ERROR_FAILURE;
-
-  nsresult rv = mPipeInput->Read(aBuffer, aCount, aBytes);
-  NS_ENSURE_SUCCESS(rv, rv);
-  mPosition += *aBytes;
-
-  return NS_OK;
+  return mPipeInput ? mPipeInput->Read(aBuffer, aCount, aBytes) : NS_ERROR_FAILURE;
 }
 
 nsresult nsDefaultStreamStrategy::Seek(PRInt32 aWhence, PRInt64 aOffset) 
@@ -162,7 +148,8 @@ nsresult nsDefaultStreamStrategy::Seek(PRInt32 aWhence, PRInt64 aOffset)
 
 PRInt64 nsDefaultStreamStrategy::Tell()
 {
-  return mPosition;
+  // Default streams cannot be seeked
+  return 0;
 }
 
 PRUint32 nsDefaultStreamStrategy::Available()

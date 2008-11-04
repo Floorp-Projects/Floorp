@@ -35,9 +35,6 @@
  * the terms of any one of the MPL, the GPL or the LGPL.
  *
  * ***** END LICENSE BLOCK ***** */
-#if !defined(nsAudioStream_h_)
-#define nsAudioStream_h_
-
 #include "nscore.h"
 #include "prlog.h"
 
@@ -67,12 +64,7 @@ class nsAudioStream
   // Write sound data to the audio hardware. aBuf is an array of floats of
   // length aCount. aCount should be evenly divisible by the number of 
   // channels in this audio stream.
-  void Write(const float* aBuf, PRUint32 aCount);
-
-  // Write sound data to the audio hardware.  aBuf is an array of shorts in
-  // signed 16-bit little endian format of length aCount.  Acount should be
-  // evenly divisible by the number of channels in this audio stream.
-  void Write(const short* aBuf, PRUint32 aCount);
+  void Write(float* aBuf, PRUint32 count);
 
   // Return the number of sound samples that can be written to the audio device
   // without blocking.
@@ -86,29 +78,10 @@ class nsAudioStream
   // 0 (meaning muted) to 1 (meaning full volume).
   void SetVolume(float aVolume);
 
-  // Block until buffered audio data has been consumed.
-  void Drain();
-
-  // Pause sound playback.
-  void Pause();
-
-  // Resume sound playback.
-  void Resume();
-
-  // Return the position (in seconds) of the audio sample currently being
-  // played by the audio hardware.
-  double GetTime();
-
  private:
   double mVolume;
   void* mAudioHandle;
   int mRate;
   int mChannels;
-
-  // The byte position in the audio buffer where playback was last paused.
-  PRInt64 mSavedPauseBytes;
-  PRInt64 mPauseBytes;
-
-  PRPackedBool mPaused;
+  PRPackedBool mMute;
 };
-#endif
