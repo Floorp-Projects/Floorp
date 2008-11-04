@@ -1860,20 +1860,6 @@ nsresult nsAccessible::GetXULName(nsAString& aLabel, PRBool aCanAggregateSubtree
 }
 
 NS_IMETHODIMP
-nsAccessible::FireToolkitEvent(PRUint32 aEvent, nsIAccessible *aTarget)
-{
-  // Don't fire event for accessible that has been shut down.
-  if (!mWeakShell)
-    return NS_ERROR_FAILURE;
-
-  nsCOMPtr<nsIAccessibleEvent> accEvent =
-    new nsAccEvent(aEvent, aTarget);
-  NS_ENSURE_TRUE(accEvent, NS_ERROR_OUT_OF_MEMORY);
-
-  return FireAccessibleEvent(accEvent);
-}
-
-NS_IMETHODIMP
 nsAccessible::FireAccessibleEvent(nsIAccessibleEvent *aEvent)
 {
   NS_ENSURE_ARG_POINTER(aEvent);
