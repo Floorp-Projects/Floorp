@@ -129,6 +129,8 @@ PlacesController.prototype = {
     case "cmd_cut":
     case "cmd_delete":
       return this._hasRemovableSelection(false);
+    case "placesCmd_deleteDataHost":
+      return this._hasRemovableSelection(false);
     case "placesCmd_moveBookmarks":
       return this._hasRemovableSelection(true);
     case "cmd_copy":
@@ -230,6 +232,12 @@ PlacesController.prototype = {
       break;
     case "cmd_delete":
       this.remove("Remove Selection");
+      break;
+    case "placesCmd_deleteDataHost":
+      let pb = Cc["@mozilla.org/privatebrowsing;1"].
+               getService(Ci.nsIPrivateBrowsingService);
+      let uri = PlacesUtils._uri(this._view.selectedNode.uri);
+      pb.removeDataFromDomain(uri.host);
       break;
     case "cmd_selectAll":
       this.selectAll();

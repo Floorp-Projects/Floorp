@@ -2736,13 +2736,10 @@
                              command="cmd_newNavigatorTab" chromedir="&locale.dir;"
                              tooltiptext="&newTabButton.tooltip;"/>
           <xul:stack align="center" pack="end" chromedir="&locale.dir;">
-            <xul:hbox flex="1" class="tabs-alltabs-box" anonid="alltabs-box"/>
             <xul:hbox flex="1" class="tabs-alltabs-box-animate" anonid="alltabs-box-animate"/>
-            <xul:toolbarbutton class="tabs-alltabs-button" type="menu" anonid="alltabs-button"
-                               tooltipstring="&listAllTabs.label;">
-              <xul:menupopup class="tabs-alltabs-popup" anonid="alltabs-popup"
-                             position="after_end"/>
-            </xul:toolbarbutton>
+            <xul:toolbarbutton class="tabs-alltabs-button" anonid="alltabs-button"
+                               tooltiptext="&listAllTabs.label;"
+                               oncommand="ctrlTab.open(true);"/>
           </xul:stack>
 #ifdef XP_MACOSX
           <xul:hbox anonid="tabstrip-closebutton" class="tabs-closebutton-box" align="center" pack="end" chromedir="&locale.dir;">
@@ -2935,11 +2932,6 @@
         ]]></body>
       </method>
 
-      <field name="mAllTabsPopup">
-        document.getAnonymousElementByAttribute(this, 
-                                                "anonid", "alltabs-popup");
-      </field>
-
       <field name="mAllTabsBoxAnimate">
         document.getAnonymousElementByAttribute(this, 
                                                 "anonid",
@@ -2951,11 +2943,6 @@
         this.mTabstrip._scrollButtonDownBoxAnimate;
       </field>
 #endif
-
-      <field name="mAllTabsButton">
-        document.getAnonymousElementByAttribute(this, 
-                                                "anonid", "alltabs-button");
-      </field>
 
       <field name="_animateTimer">null</field>
       <field name="_animateStep">-1</field>
@@ -3049,226 +3036,6 @@
     </implementation>
     <handlers>
       <handler event="TabSelect" action="this._handleTabSelect();"/>
-      <handler event="mouseover"><![CDATA[
-        if (event.originalTarget == this.mAllTabsButton) {
-          this.mAllTabsButton
-              .setAttribute("tooltiptext",
-                            this.mAllTabsButton.getAttribute("tooltipstring"));
-        }
-        else
-          this.mAllTabsButton.removeAttribute("tooltiptext");
-      ]]></handler>
-    </handlers>
-  </binding>
-
-  <!-- alltabs-popup binding
-       This binding relies on the structure of the tabbrowser binding.
-       Therefore it should only be used as a child of the tabs element.
-       This binding is exposed as a pseudo-public-API so themes can customize
-       the tabbar appearance without having to be scriptable
-       (see globalBindings.xml in Pinstripe for example).
-  -->
-  <binding id="tabbrowser-alltabs-popup"
-           extends="chrome://global/content/bindings/popup.xml#popup">
-    <implementation implements="nsIDOMEventListener">
-      <field name="_xulWindow">
-        null
-      </field>
-
-      <constructor><![CDATA[
-        // We cannot cache the XULBrowserWindow object itself since it might
-        // be set after this binding is constructed.
-        try {
-          this._xulWindow = 
-            window.QueryInterface(Components.interfaces.nsIInterfaceRequestor)
-                  .getInterface(Components.interfaces.nsIWebNavigation)
-                  .QueryInterface(Components.interfaces.nsIDocShellTreeItem)
-                  .treeOwner
-                  .QueryInterface(Components.interfaces.nsIInterfaceRequestor)
-                  .getInterface(Components.interfaces.nsIXULWindow);
-        }
-        catch(ex) { }
-      ]]></constructor>
-
-      <method name="_menuItemOnCommand">
-        <parameter name="aEvent"/>
-        <body><![CDATA[
-          var tabcontainer = document.getBindingParent(this);
-          tabcontainer.selectedItem = aEvent.target.tab;
-        ]]></body>
-      </method>
-
-      <method name="_tabOnAttrModified">
-        <parameter name="aEvent"/>
-        <body><![CDATA[
-          var menuItem = aEvent.target.mCorrespondingMenuitem;
-          if (menuItem) {
-            var attrName = aEvent.attrName;
-            switch (attrName) {
-              case "label":
-              case "crop":
-              case "busy":
-              case "image":
-              case "selected":
-                if (aEvent.attrChange == aEvent.REMOVAL)
-                  menuItem.removeAttribute(attrName);
-                else
-                  menuItem.setAttribute(attrName, aEvent.newValue);
-            }
-          }
-        ]]></body>
-      </method>
-
-      <method name="_tabOnTabClose">
-        <parameter name="aEvent"/>
-        <body><![CDATA[
-          var menuItem = aEvent.target.mCorrespondingMenuitem;
-          if (menuItem)
-            this.removeChild(menuItem);
-        ]]></body>
-      </method>
-
-      <method name="handleEvent">
-        <parameter name="aEvent"/>
-        <body><![CDATA[
-          if (!aEvent.isTrusted)
-            return;
-
-          switch (aEvent.type) {
-            case "command":
-              this._menuItemOnCommand(aEvent);
-              break;
-            case "DOMAttrModified":
-              this._tabOnAttrModified(aEvent);
-              break;
-            case "TabClose":
-              this._tabOnTabClose(aEvent);
-              break;
-            case "TabOpen":
-              this._createTabMenuItem(aEvent.originalTarget);
-              break;
-            case "scroll":
-              this._updateTabsVisibilityStatus();
-              break;
-          }
-        ]]></body>
-      </method>
-
-      <method name="_updateTabsVisibilityStatus">
-        <body><![CDATA[
-          var tabContainer = document.getBindingParent(this);
-          // We don't want menu item decoration unless there is overflow.
-          if (tabContainer.getAttribute("overflow") != "true")
-            return;
-
-          var tabstripBO = tabContainer.mTabstrip.scrollBoxObject;
-          for (var i = 0; i < this.childNodes.length; i++) {
-            var curTabBO = this.childNodes[i].tab.boxObject;
-            if (curTabBO.screenX >= tabstripBO.screenX &&
-                curTabBO.screenX + curTabBO.width <= tabstripBO.screenX + tabstripBO.width)
-              this.childNodes[i].setAttribute("tabIsVisible", "true"); 
-            else
-              this.childNodes[i].removeAttribute("tabIsVisible");
-          }
-        ]]></body>
-      </method>
-
-      <method name="_createTabMenuItem">
-        <parameter name="aTab"/>
-        <body><![CDATA[
-          var menuItem = document.createElementNS(
-            "http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul", 
-            "menuitem");
-
-          menuItem.setAttribute("class", "menuitem-iconic alltabs-item");
-
-          menuItem.setAttribute("label", aTab.label);
-          menuItem.setAttribute("crop", aTab.getAttribute("crop"));
-          menuItem.setAttribute("image", aTab.getAttribute("image"));
-
-          if (aTab.hasAttribute("busy"))
-            menuItem.setAttribute("busy", aTab.getAttribute("busy"));
-          if (aTab.selected)
-            menuItem.setAttribute("selected", "true");
-
-          // Keep some attributes of the menuitem in sync with its
-          // corresponding tab (e.g. the tab label)
-          aTab.mCorrespondingMenuitem = menuItem;
-          aTab.addEventListener("DOMAttrModified", this, false);
-          aTab.addEventListener("TabClose", this, false);
-          menuItem.tab = aTab;
-          menuItem.addEventListener("command", this, false);
-
-          this.appendChild(menuItem);
-          return menuItem;
-        ]]></body>
-      </method>
-    </implementation>
-
-    <handlers>
-      <handler event="popupshowing">
-      <![CDATA[
-        // set up the menu popup
-        var tabcontainer = document.getBindingParent(this);
-        var tabs = tabcontainer.childNodes;
-
-        // Listen for changes in the tab bar.
-        var tabbrowser = document.getBindingParent(tabcontainer);
-        tabbrowser.addEventListener("TabOpen", this, false);
-        tabcontainer.mTabstrip.addEventListener("scroll", this, false);
-
-        // if an animation is in progress and the user
-        // clicks on the "all tabs" button, stop the animation
-        tabcontainer._stopAnimation();
-
-        for (var i = 0; i < tabs.length; i++) {
-          this._createTabMenuItem(tabs[i]);
-        }
-        this._updateTabsVisibilityStatus();
-      ]]></handler>
-
-      <handler event="popuphiding">
-      <![CDATA[
-        // clear out the menu popup and remove the listeners
-        while (this.hasChildNodes()) {
-          var menuItem = this.lastChild;
-          menuItem.removeEventListener("command", this, false);
-          menuItem.tab.removeEventListener("DOMAttrModified", this, false);
-          menuItem.tab.removeEventListener("TabClose", this, false);
-          menuItem.tab.mCorrespondingMenuitem = null;
-          this.removeChild(menuItem);
-        }
-        var tabcontainer = document.getBindingParent(this);
-        tabcontainer.mTabstrip.removeEventListener("scroll", this, false);
-        document.getBindingParent(tabcontainer).removeEventListener("TabOpen", this, false);
-      ]]></handler>
-
-      <handler event="DOMMenuItemActive">
-      <![CDATA[
-        if (!this._xulWindow || !this._xulWindow.XULBrowserWindow)
-          return;
-
-        var tab = event.target.tab;
-        if (tab) {
-          var statusText = tab.linkedBrowser.currentURI.spec;
-          if (statusText == "about:blank") {
-            // XXXhack: Passing a space here (and not "")
-            // to make sure the the browser implementation would
-            // still consider it a hovered link.
-            statusText = " ";
-          }
-
-          this._xulWindow.XULBrowserWindow.setOverLink(statusText, null);
-        }
-      ]]></handler>
-
-      <handler event="DOMMenuItemInactive">
-      <![CDATA[
-        if (!this._xulWindow || !this._xulWindow.XULBrowserWindow)
-          return;
-
-        this._xulWindow.XULBrowserWindow.setOverLink("", null);
-      ]]></handler>
     </handlers>
   </binding>
 
@@ -3357,7 +3124,6 @@
 
     <implementation>
       <field name="mOverCloseButton">false</field>
-      <field name="mCorrespondingMenuitem">null</field>
     </implementation>
 
     <handlers>

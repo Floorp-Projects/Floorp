@@ -1,10 +1,8 @@
 toolkit.jar:
 % content mozapps %content/mozapps/ xpcnativewrappers=yes
-  content/mozapps/update/updates.css                            (content/updates.css)
-* content/mozapps/update/updates.xul                            (content/updates.xul)
-* content/mozapps/update/updates.js                             (content/updates.js)
-* content/mozapps/update/updates.xml                            (content/updates.xml)
-* content/mozapps/update/incompatible.xul                       (content/incompatible.xul)
-* content/mozapps/update/incompatible.js                        (content/incompatible.js)
 * content/mozapps/update/history.xul                            (content/history.xul)
 * content/mozapps/update/history.js                             (content/history.js)
+  content/mozapps/update/updates.css                            (content/updates.css)
+* content/mozapps/update/updates.js                             (content/updates.js)
+* content/mozapps/update/updates.xml                            (content/updates.xml)
+* content/mozapps/update/updates.xul                            (content/updates.xul)

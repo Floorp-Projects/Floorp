@@ -163,6 +163,8 @@ const MODE_TRUNCATE = 0x20;
 const PERMS_FILE      = 0644;
 const PERMS_DIRECTORY = 0755;
 
+const REQ_VERSION = 2;
+
 var gApp  = null;
 var gPref = null;
 var gRDF  = null;
@@ -6398,7 +6400,7 @@ function escapeAddonURI(aItem, aAppVersion, aURI, aDS)
   aURI = aURI.replace(/%ITEM_STATUS%/g, itemStatus);
   aURI = aURI.replace(/%APP_ID%/g, gApp.ID);
   aURI = aURI.replace(/%APP_VERSION%/g, aAppVersion ? aAppVersion : gApp.version);
-  aURI = aURI.replace(/%REQ_VERSION%/g, 1);
+  aURI = aURI.replace(/%REQ_VERSION%/g, REQ_VERSION);
   aURI = aURI.replace(/%APP_OS%/g, gOSTarget);
   aURI = aURI.replace(/%APP_ABI%/g, gXPCOMABI);
   aURI = aURI.replace(/%APP_LOCALE%/g, gLocale);
