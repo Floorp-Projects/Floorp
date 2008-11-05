@@ -72,6 +72,9 @@
 #ifdef MOZ_OGG
 #include "nsOggDecoder.h"
 #endif
+#ifdef MOZ_WAVE
+#include "nsWaveDecoder.h"
+#endif
 
 class nsAsyncEventRunner : public nsRunnable
 {
@@ -610,11 +613,33 @@ static PRBool IsOggType(const nsACString& aType)
 }
 #endif
 
+#ifdef MOZ_WAVE
+static const char gWaveTypes[][16] = {
+  "audio/x-wav",
+  "audio/wav",
+  "audio/wave",
+  "audio/x-pn-wav"
+};
+
+static PRBool IsWaveType(const nsACString& aType)
+{
+  for (PRUint32 i = 0; i < NS_ARRAY_LENGTH(gWaveTypes); ++i) {
+    if (aType.EqualsASCII(gWaveTypes[i]))
+      return PR_TRUE;
+  }
+  return PR_FALSE;
+}
+#endif
+
 /* static */
 PRBool nsHTMLMediaElement::CanHandleMediaType(const char* aMIMEType)
 {
 #ifdef MOZ_OGG
   if (IsOggType(nsDependentCString(aMIMEType)))
+    return PR_TRUE;
+#endif
+#ifdef MOZ_WAVE
+  if (IsWaveType(nsDependentCString(aMIMEType)))
     return PR_TRUE;
 #endif
   return PR_FALSE;
@@ -633,6 +658,13 @@ void nsHTMLMediaElement::InitMediaTypes()
                                PR_FALSE, PR_TRUE, nsnull);
     }
 #endif
+#ifdef MOZ_WAVE
+    for (PRUint32 i = 0; i < NS_ARRAY_LENGTH(gWaveTypes); i++) {
+      catMan->AddCategoryEntry("Gecko-Content-Viewers", gWaveTypes[i],
+                               "@mozilla.org/content/document-loader-factory;1",
+                               PR_FALSE, PR_TRUE, nsnull);
+    }
+#endif
   }
 }
 
@@ -647,6 +679,11 @@ void nsHTMLMediaElement::ShutdownMediaTypes()
       catMan->DeleteCategoryEntry("Gecko-Content-Viewers", gOggTypes[i], PR_FALSE);
     }
 #endif
+#ifdef MOZ_WAVE
+    for (PRUint32 i = 0; i < NS_ARRAY_LENGTH(gWaveTypes); i++) {
+      catMan->DeleteCategoryEntry("Gecko-Content-Viewers", gWaveTypes[i], PR_FALSE);
+    }
+#endif
   }
 }
 
@@ -655,6 +692,14 @@ PRBool nsHTMLMediaElement::CreateDecoder(const nsACString& aType)
 #ifdef MOZ_OGG
   if (IsOggType(aType)) {
     mDecoder = new nsOggDecoder();
+    if (mDecoder && !mDecoder->Init()) {
+      mDecoder = nsnull;
+    }
+  }
+#endif
+#ifdef MOZ_WAVE
+  if (IsWaveType(aType)) {
+    mDecoder = new nsWaveDecoder();
     if (mDecoder && !mDecoder->Init()) {
       mDecoder = nsnull;
     }
