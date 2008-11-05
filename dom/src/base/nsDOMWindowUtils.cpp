@@ -538,3 +538,16 @@ nsDOMWindowUtils::SendSimpleGestureEvent(const nsAString& aType,
   nsEventStatus status;
   return widget->DispatchEvent(&event, status);
 }
+
+NS_IMETHODIMP
+nsDOMWindowUtils::ElementFromPoint(PRInt32 aX, PRInt32 aY,
+                                   PRBool aIgnoreRootScrollFrame,
+                                   PRBool aFlushLayout,
+                                   nsIDOMElement** aReturn)
+{
+  nsCOMPtr<nsIDocument> doc(do_QueryInterface(mWindow->GetExtantDocument()));
+  NS_ENSURE_STATE(doc);
+  
+  return doc->ElementFromPointHelper(aX, aY, aIgnoreRootScrollFrame, aFlushLayout,
+                                     aReturn);
+}
