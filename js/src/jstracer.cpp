@@ -3701,7 +3701,7 @@ js_InitJIT(JSTraceMonitor *tm)
         tm->recoveryDoublePoolPtr = tm->recoveryDoublePool = new jsval[MAX_NATIVE_STACK_SLOTS];
     }
     if (!tm->reFragmento) {
-        Fragmento* fragmento = new (&gc) Fragmento(core, 24);
+        Fragmento* fragmento = new (&gc) Fragmento(core, 20);
         verbose_only(fragmento->labels = new (&gc) LabelMap(core, NULL);)
         tm->reFragmento = fragmento;
     }
@@ -3736,6 +3736,10 @@ js_FinishJIT(JSTraceMonitor *tm)
         tm->globalTypeMap = NULL;
         delete[] tm->recoveryDoublePool;
         tm->recoveryDoublePool = tm->recoveryDoublePoolPtr = NULL;
+    }
+    if (tm->reFragmento != NULL) {
+        verbose_only(delete tm->reFragmento->labels;)
+        delete tm->reFragmento;
     }
 }
 
