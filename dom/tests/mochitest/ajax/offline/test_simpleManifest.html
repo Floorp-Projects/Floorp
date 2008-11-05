@@ -11,15 +11,25 @@
 var gGotChecking = false;
 var gGotDownloading = false;
 
+ok(applicationCache.items.length == 0,
+   "applicationCache.items should be available and empty before associating with a cache.");
+
 function addFinished()
 {
   // Check that the entry was added successfully
   OfflineTest.checkCache("http://localhost:8888/tests/SimpleTest/EventUtils.js",
                          true);
 
-  OfflineTest.ok(applicationCache.length == 1, "applicationCache should have one dynamic entry");
+  OfflineTest.ok(applicationCache.length == 1, "applicationCache should have one dynamic entry (deprecated API)");
   OfflineTest.ok(applicationCache.item(0) == "http://localhost:8888/tests/SimpleTest/EventUtils.js",
+    "applicationCache's dynamic entry should be the one we expect (deprecated API)");
+
+  OfflineTest.ok(applicationCache.items.length == 1, "applicationCache should have one dynamic entry");
+  OfflineTest.ok(applicationCache.items[0] == "http://localhost:8888/tests/SimpleTest/EventUtils.js",
     "applicationCache's dynamic entry should be the one we expect");
+
+  OfflineTest.ok(applicationCache.hasItem("http://localhost:8888/tests/SimpleTest/EventUtils.js"),
+                 "applicationCache.hasItem() should see the dynamic entry");
 
   // Now test that removes work
   applicationCache.remove("http://localhost:8888/tests/SimpleTest/EventUtils.js");
@@ -27,7 +37,11 @@ function addFinished()
   OfflineTest.checkCache("http://localhost:8888/tests/SimpleTest/EventUtils.js",
                          false);
   OfflineTest.ok(applicationCache.length == 0,
+                 "applicationCache should have no dynamic entries (deprecated API)");
+  OfflineTest.ok(applicationCache.items.length == 0,
                  "applicationCache should have no dynamic entries");
+  OfflineTest.ok(!applicationCache.hasItem("http://localhost:8888/tests/SimpleTest/EventUtils.js"),
+                 "applicationCache.hasItem() should not see the removed dynamic entry");
 
   // We're done
 
@@ -56,7 +70,14 @@ function manifestUpdated()
   OfflineTest.checkCache("https://localhost:8888/MochiKit/packed.js", false);
   OfflineTest.checkCache("bad:/uri/invalid", false);
 
-  applicationCache.swapCache();
+  OfflineTest.is(applicationCache.status, 1, "Cache status should be 1 (CACHED)");
+
+  try {
+    applicationCache.swapCache();
+    OfflineTest.ok(false, "application.swapCache() should fail after initial update.");
+  } catch(ex) {
+    OfflineTest.ok(true, "application.swapCache() should fail after initial update.");
+  }
 
   // XXX: make sure that the previous version went away after the swapCache().
 

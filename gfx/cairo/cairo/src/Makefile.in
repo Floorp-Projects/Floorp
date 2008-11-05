@@ -147,8 +147,14 @@ PS_EXPORTS = cairo-ps.h
 
 ifeq ($(MOZ_WIDGET_TOOLKIT),windows)
 CSRCS	+= 	cairo-win32-font.c \
-			cairo-win32-surface.c \
-			cairo-win32-printing-surface.c
+			cairo-win32-surface.c
+
+ifdef NS_PRINTING
+CSRCS   += cairo-win32-printing-surface.c
+else
+DEFINES += -DCAIRO_OMIT_WIN32_PRINTING
+endif
+
 EXPORTS += cairo-win32.h
 CSRCS   += $(PSPDF_BASE_CSRCS) $(PDF_CSRCS)
 EXPORTS += $(PDF_EXPORTS)

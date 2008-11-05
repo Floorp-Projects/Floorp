@@ -152,15 +152,15 @@
 #ifdef OJI
 // HTMLAppletElement helper includes
 #include "nsIJVMManager.h"
-
-// Oh, did I mention that I hate Microsoft for doing this to me?
-#ifndef WINCE
-#undef GetClassName
-#endif
-
 #include "nsILiveConnectManager.h"
 #include "nsIJVMPluginInstance.h"
 #endif
+
+// Oh, did I mention that I hate Microsoft for doing this to me?
+#ifdef XP_WIN
+#undef GetClassName
+#endif
+
 
 // HTMLOptionsCollection includes
 #include "nsIDOMHTMLOptionElement.h"
@@ -1294,6 +1294,11 @@ static nsDOMClassInfoData sClassInfoData[] = {
 
   NS_DEFINE_CLASSINFO_DATA(SimpleGestureEvent, nsDOMGenericSH,
                            DOM_DEFAULT_SCRIPTABLE_FLAGS)
+
+#ifdef MOZ_MATHML
+  NS_DEFINE_CLASSINFO_DATA_WITH_NAME(MathMLElement, Element, nsElementSH,
+                                     ELEMENT_SCRIPTABLE_FLAGS)
+#endif
 };
 
 // Objects that shuld be constructable through |new Name();|
@@ -3536,6 +3541,16 @@ nsDOMClassInfo::Init()
     DOM_CLASSINFO_MAP_ENTRY(nsIDOMSimpleGestureEvent)
     DOM_CLASSINFO_UI_EVENT_MAP_ENTRIES
   DOM_CLASSINFO_MAP_END
+
+#ifdef MOZ_MATHML
+  DOM_CLASSINFO_MAP_BEGIN_NO_CLASS_IF(MathMLElement, nsIDOMElement)
+    DOM_CLASSINFO_MAP_ENTRY(nsIDOMElement)
+    DOM_CLASSINFO_MAP_ENTRY(nsIDOMNSElement)
+    DOM_CLASSINFO_MAP_ENTRY(nsIDOMEventTarget)
+    DOM_CLASSINFO_MAP_ENTRY(nsIDOM3Node)
+    DOM_CLASSINFO_MAP_ENTRY(nsIDOMNodeSelector)
+  DOM_CLASSINFO_MAP_END
+#endif
 
 #ifdef NS_DEBUG
   {

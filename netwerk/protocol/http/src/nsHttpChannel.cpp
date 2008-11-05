@@ -52,6 +52,7 @@
 #include "nsHttp.h"
 #include "nsIHttpAuthenticator.h"
 #include "nsIApplicationCacheService.h"
+#include "nsIApplicationCacheContainer.h"
 #include "nsIAuthInformation.h"
 #include "nsIAuthPrompt2.h"
 #include "nsIAuthPromptProvider.h"
@@ -81,6 +82,7 @@
 #include "nsIOService.h"
 #include "nsAuthInformationHolder.h"
 #include "nsICacheService.h"
+#include "nsDNSPrefetch.h"
 
 // True if the local cache should be bypassed when processing a request.
 #define BYPASS_LOCAL_CACHE(loadFlags) \
@@ -129,6 +131,8 @@ nsHttpChannel::nsHttpChannel()
     , mCacheForOfflineUse(PR_FALSE)
     , mCachingOpportunistically(PR_FALSE)
     , mFallbackChannel(PR_FALSE)
+    , mInheritApplicationCache(PR_TRUE)
+    , mChooseApplicationCache(PR_FALSE)
     , mTracingEnabled(PR_TRUE)
 {
     LOG(("Creating nsHttpChannel @%x\n", this));
@@ -1537,26 +1541,28 @@ nsHttpChannel::OpenCacheEntry(PRBool offline, PRBool *delayed)
     else
         accessRequested = nsICache::ACCESS_READ_WRITE; // normal browsing
 
-    if (!mApplicationCache) {
-        // Pick up an application cache from the load group if available
+    if (!mApplicationCache && mInheritApplicationCache) {
+        // Pick up an application cache from the notification
+        // callbacks if available
         nsCOMPtr<nsIApplicationCacheContainer> appCacheContainer;
         GetCallback(appCacheContainer);
 
         if (appCacheContainer) {
             appCacheContainer->GetApplicationCache(getter_AddRefs(mApplicationCache));
         }
+    }
 
-        if ((mLoadFlags & LOAD_CHECK_OFFLINE_CACHE) && !mApplicationCache) {
-            // We're supposed to load from an application cache, but
-            // one was not supplied by the load group.  Ask the
-            // application cache service to choose one for us.
-            nsCOMPtr<nsIApplicationCacheService> appCacheService =
-                do_GetService(NS_APPLICATIONCACHESERVICE_CONTRACTID);
-            if (appCacheService) {
-                nsresult rv = appCacheService->ChooseApplicationCache
-                    (cacheKey, getter_AddRefs(mApplicationCache));
-                NS_ENSURE_SUCCESS(rv, rv);
-            }
+    if (!mApplicationCache &&
+        (mChooseApplicationCache || (mLoadFlags & LOAD_CHECK_OFFLINE_CACHE))) {
+        // We're supposed to load from an application cache, but
+        // one was not supplied by the load group.  Ask the
+        // application cache service to choose one for us.
+        nsCOMPtr<nsIApplicationCacheService> appCacheService =
+            do_GetService(NS_APPLICATIONCACHESERVICE_CONTRACTID);
+        if (appCacheService) {
+            nsresult rv = appCacheService->ChooseApplicationCache
+                (cacheKey, getter_AddRefs(mApplicationCache));
+            NS_ENSURE_SUCCESS(rv, rv);
         }
     }
 
@@ -2566,6 +2572,9 @@ nsHttpChannel::SetupReplacementChannel(nsIURI       *newURI,
     if (mConnectionInfo->UsingSSL())
         newLoadFlags &= ~INHIBIT_PERSISTENT_CACHING;
 
+    // Do not pass along LOAD_CHECK_OFFLINE_CACHE
+    newLoadFlags &= ~LOAD_CHECK_OFFLINE_CACHE;
+
     newChannel->SetOriginalURI(mOriginalURI);
     newChannel->SetLoadGroup(mLoadGroup); 
     newChannel->SetNotificationCallbacks(mCallbacks);
@@ -2635,12 +2644,12 @@ nsHttpChannel::SetupReplacementChannel(nsIURI       *newURI,
     }
 
     // transfer application cache information
-    if (mApplicationCache) {
-        nsCOMPtr<nsIApplicationCacheContainer> appCacheContainer =
-            do_QueryInterface(newChannel);
-        if (appCacheContainer) {
-            appCacheContainer->SetApplicationCache(mApplicationCache);
-        }
+    nsCOMPtr<nsIApplicationCacheChannel> appCacheChannel =
+        do_QueryInterface(newChannel);
+    if (appCacheChannel) {
+        appCacheChannel->SetApplicationCache(mApplicationCache);
+        appCacheChannel->SetInheritApplicationCache(mInheritApplicationCache);
+        // We purposely avoid transfering mChooseApplicationCache.
     }
 
     // transfer any properties
@@ -3696,6 +3705,7 @@ NS_INTERFACE_MAP_BEGIN(nsHttpChannel)
     NS_INTERFACE_MAP_ENTRY(nsIProxiedChannel)
     NS_INTERFACE_MAP_ENTRY(nsITraceableChannel)
     NS_INTERFACE_MAP_ENTRY(nsIApplicationCacheContainer)
+    NS_INTERFACE_MAP_ENTRY(nsIApplicationCacheChannel)
 NS_INTERFACE_MAP_END_INHERITING(nsHashPropertyBag)
 
 //-----------------------------------------------------------------------------
@@ -3993,6 +4003,13 @@ nsHttpChannel::AsyncOpen(nsIStreamListener *listener, nsISupports *context)
     if (NS_FAILED(rv))
         return rv;
 
+    // Start a DNS lookup very early in case the real open is queued the DNS can 
+    // happen in parallel.
+    nsRefPtr<nsDNSPrefetch> prefetch = new nsDNSPrefetch(mURI);
+    if (prefetch) {
+        prefetch->PrefetchMedium();
+    }
+
     // Remember the cookie header that was set, if any
     const char *cookieHeader = mRequestHead.PeekHeader(nsHttp::Cookie);
     if (cookieHeader)
@@ -4010,6 +4027,10 @@ nsHttpChannel::AsyncOpen(nsIStreamListener *listener, nsISupports *context)
     if (mRequestHead.HasHeaderValue(nsHttp::Connection, "close"))
         mCaps &= ~(NS_HTTP_ALLOW_KEEPALIVE | NS_HTTP_ALLOW_PIPELINING);
     
+    if ((mLoadFlags & VALIDATE_ALWAYS) || 
+        (BYPASS_LOCAL_CACHE(mLoadFlags)))
+        mCaps |= NS_HTTP_REFRESH_DNS;
+
     mIsPending = PR_TRUE;
     mWasOpened = PR_TRUE;
 
@@ -5213,7 +5234,7 @@ nsHttpChannel::DoAuthRetry(nsAHttpConnection *conn)
 }
 
 //-----------------------------------------------------------------------------
-// nsHttpChannel::nsIApplicationCacheContainer
+// nsHttpChannel::nsIApplicationCacheChannel
 //-----------------------------------------------------------------------------
 NS_IMETHODIMP
 nsHttpChannel::GetApplicationCache(nsIApplicationCache **out)
@@ -5225,10 +5246,43 @@ nsHttpChannel::GetApplicationCache(nsIApplicationCache **out)
 NS_IMETHODIMP
 nsHttpChannel::SetApplicationCache(nsIApplicationCache *appCache)
 {
+    NS_ENSURE_TRUE(!mWasOpened, NS_ERROR_ALREADY_OPENED);
+
     mApplicationCache = appCache;
     return NS_OK;
 }
 
+NS_IMETHODIMP
+nsHttpChannel::GetInheritApplicationCache(PRBool *aInherit)
+{
+    *aInherit = mInheritApplicationCache;
+    return NS_OK;
+}
+
+NS_IMETHODIMP
+nsHttpChannel::SetInheritApplicationCache(PRBool aInherit)
+{
+    NS_ENSURE_TRUE(!mWasOpened, NS_ERROR_ALREADY_OPENED);
+
+    mInheritApplicationCache = aInherit;
+    return NS_OK;
+}
+
+NS_IMETHODIMP
+nsHttpChannel::GetChooseApplicationCache(PRBool *aChoose)
+{
+    *aChoose = mChooseApplicationCache;
+    return NS_OK;
+}
+
+NS_IMETHODIMP
+nsHttpChannel::SetChooseApplicationCache(PRBool aChoose)
+{
+    NS_ENSURE_TRUE(!mWasOpened, NS_ERROR_ALREADY_OPENED);
+
+    mChooseApplicationCache = aChoose;
+    return NS_OK;
+}
 
 //-----------------------------------------------------------------------------
 // nsHttpChannel::nsContentEncodings <public>

@@ -1897,11 +1897,12 @@ cairo_win32_surface_get_dc (cairo_surface_t *surface)
 
 	target = _cairo_paginated_surface_get_target (surface);
 
+#ifndef CAIRO_OMIT_WIN32_PRINTING
 	if (_cairo_surface_is_win32_printing (target)) {
 	    winsurf = (cairo_win32_surface_t *) target;
-
 	    return winsurf->dc;
 	}
+#endif
     }
 
     return NULL;

@@ -38,13 +38,36 @@
 
 #include "domstubs.idl"
 
-[scriptable, uuid(8449bce2-0d8c-4c74-ab79-b41b8d81f1c4)]
+interface nsIDOMDOMStringList;
+
+[scriptable, uuid(dfcf7ad8-da0d-4e71-b36c-1780733a18e9)]
 interface nsIDOMOfflineResourceList : nsISupports
 {
   /**
-   * Enumerate the list of dynamically-managed entries.
+   * Get the list of dynamically-managed entries.
+   */
+  readonly attribute nsIDOMDOMStringList items;
+
+  /**
+   * Check that an entry exists in the list of dynamically-managed entries.
+   *
+   * @param uri
+   *        The resource to check.
+   */
+  boolean hasItem(in DOMString uri);
+
+  /**
+   * Get the number of dynamically-managed entries.
+   * @status DEPRECATED
+   *         Clients should use the "items" attribute.
    */
   readonly attribute unsigned long length;
+
+  /**
+   * Get the URI of a dynamically-managed entry.
+   * @status DEPRECATED
+   *         Clients should use the "items" attribute.
+   */
   DOMString item(in unsigned long index);
 
   /**
@@ -82,13 +105,11 @@ interface nsIDOMOfflineResourceList : nsISupports
   /* Resources are being downloaded to be added to the cache */
   const unsigned short DOWNLOADING = 3;
 
-  /**
-   * There is a new version of the application cache available
-   *
-   * Versioned application caches are not currently implemented, so this
-   * value will not yet be returned
-   */
+  /* There is a new version of the application cache available */
   const unsigned short UPDATEREADY = 4;
+
+  /* The application cache group is now obsolete. */
+  const unsigned short OBSOLETE = 5;
 
   readonly attribute unsigned short status;
 
@@ -98,10 +119,8 @@ interface nsIDOMOfflineResourceList : nsISupports
   void update();
 
   /**
-   * Swap in the newest version of the application cache.
-   *
-   * Versioned application caches are not currently implemented, so this
-   * method will throw an exception.
+   * Swap in the newest version of the application cache, or disassociate
+   * from the cache if the cache group is obsolete.
    */
   void swapCache();
 
@@ -113,4 +132,5 @@ interface nsIDOMOfflineResourceList : nsISupports
   attribute nsIDOMEventListener onprogress;
   attribute nsIDOMEventListener onupdateready;
   attribute nsIDOMEventListener oncached;
+  attribute nsIDOMEventListener onobsolete;
 };
