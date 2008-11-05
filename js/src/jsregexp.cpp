@@ -1966,20 +1966,6 @@ typedef List<LIns*, LIST_NonGCObjects> LInsList;
 /* Dummy GC for nanojit placement new. */
 static GC gc;
 
-/* 
- * Small guard record structure that contains just the fields needed 
- * for the LIR_loop.
- * FIXME bug 463258
- */
-struct LoopGuardRecord {
-    void*            jmp;
-    GuardRecord*     next;
-    SideExit*        exit;
-    GuardRecord*     guards;
-    Fragment*        from;
-    Fragment*        target;
-};
-
 class RegExpNativeCompiler {
  private:
     JSRegExp*        re;   /* Careful: not fully initialized */
@@ -2163,7 +2149,7 @@ class RegExpNativeCompiler {
 
     JSBool compile(JSContext* cx) 
     {
-        LoopGuardRecord* guard;
+        GuardRecord* guard;
         LIns* skip;
         LIns* start;
 
@@ -2196,11 +2182,11 @@ class RegExpNativeCompiler {
         }
 
         /* Create fake guard record for loop edge. */
-        skip = lirb->skip(sizeof(LoopGuardRecord));
-        guard = (LoopGuardRecord *) skip->payload();
+        skip = lirb->skip(sizeof(GuardRecord) + sizeof(SideExit));
+        guard = (GuardRecord *) skip->payload();
         memset(guard, 0, sizeof(*guard));
-        guard->exit = (SideExit *) &guard->guards;
-        guard->from = guard->target = fragment;
+        guard->exit = (SideExit *) guard+1;
+        guard->exit->target = fragment;
         fragment->lastIns = lir->insGuard(LIR_loop, lir->insImm(1), skip);
 
         ::compile(fragmento->assm(), fragment);
