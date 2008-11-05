@@ -20,7 +20,6 @@
  *
  * Contributor(s):
  *   Masayuki Nakano <masayuki@d-toybox.com>
- *   Karl Tomlinson <karlt+@karlt.net>, Mozilla Corporation
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -41,40 +40,15 @@
 
 #include "gfxPlatform.h"
 
-#include "nsAutoRef.h"
 #include "nsTArray.h"
-#include "nsTHashtable.h"
+#include "nsDataHashtable.h"
 
 #include <fontconfig/fontconfig.h>
-
-
-NS_SPECIALIZE_TEMPLATE
-class nsAutoRefTraits<FcPattern> : public nsPointerRefTraits<FcPattern>
-{
-public:
-    static void Release(FcPattern *ptr) { FcPatternDestroy(ptr); }
-    static void AddRef(FcPattern *ptr) { FcPatternReference(ptr); }
-};
-
-NS_SPECIALIZE_TEMPLATE
-class nsAutoRefTraits<FcFontSet> : public nsPointerRefTraits<FcFontSet>
-{
-public:
-    static void Release(FcFontSet *ptr) { FcFontSetDestroy(ptr); }
-};
-
-NS_SPECIALIZE_TEMPLATE
-class nsAutoRefTraits<FcCharSet> : public nsPointerRefTraits<FcCharSet>
-{
-public:
-    static void Release(FcCharSet *ptr) { FcCharSetDestroy(ptr); }
-};
-
 
 class gfxFontNameList : public nsTArray<nsString>
 {
 public:
-    THEBES_INLINE_DECL_REFCOUNTING(gfxFontNameList)
+    THEBES_INLINE_DECL_REFCOUNTING(gfxFontList)
     PRBool Exists(nsAString& aName);
 };
 
@@ -102,41 +76,8 @@ public:
 
     nsresult GetStandardFamilyName(const nsAString& aFontName, nsAString& aFamilyName);
 
-    const nsTArray< nsCountedRef<FcPattern> >&
-    GetFontsForFamily(const FcChar8 *aFamilyName);
-
-    // Returns the best support that any font offers for |aLang|. 
-    FcLangResult GetBestLangSupport(const FcChar8 *aLang);
-    // Returns the fonts offering this best level of support.
-    const nsTArray< nsCountedRef<FcPattern> >&
-    GetFontsForLang(const FcChar8 *aLang);
-
-    // Retuns the language support for a fontconfig font pattern
-    static FcLangResult GetLangSupport(FcPattern *aFont, const FcChar8 *aLang);
-
-    // Conversions between FcChar8*, which is unsigned char*,
-    // and (signed) char*, that check the type of the argument.
-    static const FcChar8 *ToFcChar8(const char *aCharPtr)
-    {
-        return reinterpret_cast<const FcChar8*>(aCharPtr);
-    }
-    static const char *ToCString(const FcChar8 *aChar8Ptr)
-    {
-        return reinterpret_cast<const char*>(aChar8Ptr);
-    }
-
     static PRUint8 GetThebesStyle(FcPattern *aPattern); // slant
     static PRUint16 GetThebesWeight(FcPattern *aPattern);
-
-    static int GetFcSlant(const gfxFontStyle& aFontStyle);
-    // Returns a precise FC_WEIGHT from CSS weight |aBaseWeight|.
-    static int FcWeightForBaseWeight(PRInt8 aBaseWeight);
-
-    // This doesn't consider which faces exist, and so initializes the pattern
-    // using a guessed weight, and doesn't consider sizeAdjust.
-    static nsReturnRef<FcPattern>
-    NewPattern(const nsStringArray& aFamilies, const gfxFontStyle& aFontStyle,
-               const char *aLang);
 
     /**
      * @param aLangGroup [in] a Mozilla langGroup.
@@ -147,132 +88,22 @@ public:
                                       nsACString *aFcLang);
 
 protected:
-    // Base class for hash table entries with case-insensitive FcChar8
-    // string keys.
-    class FcStrEntryBase : public PLDHashEntryHdr {
-    public:
-        typedef const FcChar8 *KeyType;
-        typedef const FcChar8 *KeyTypePointer;
-
-        static KeyTypePointer KeyToPointer(KeyType aKey) { return aKey; }
-        // Case-insensitive hash.
-        //
-        // fontconfig always ignores case of ASCII characters in family
-        // names and languages, but treatment of whitespace in families is
-        // not consistent.  FcFontSort and FcFontMatch ignore whitespace
-        // except for whitespace in the first character, while FcFontList
-        // and config subsitution tests require whitespace to match
-        // exactly.  CSS 2.1 implies that whitespace is important in the
-        // font-family property.  FcStrCmpIgnoreCase considers whitespace
-        // important.
-        static PLDHashNumber HashKey(const FcChar8 *aKey) {
-            PRUint32 hash = 0;
-            for (const FcChar8* c = aKey; *c != '\0'; ++c) {
-                hash = PR_ROTATE_LEFT32(hash, 3) ^ FcToLower(*c);
-            }
-            return hash;
-        }
-        enum { ALLOW_MEMMOVE = PR_TRUE };
-    };
-
-public:
-    // Hash entry with a dependent const FcChar8* pointer to an external
-    // string for a key (and no data).  The user must ensure that the string
-    // associated with the pointer is not destroyed.  This entry type is
-    // useful for family name keys as the family name string is held in the
-    // font pattern.
-    class DepFcStrEntry : public FcStrEntryBase {
-    public:
-        // When constructing a new entry in the hashtable, the key is left
-        // blank.  The caller of PutEntry() must fill in mKey when NULL.  This
-        // provides a mechanism for the caller of PutEntry() to determine
-        // whether the entry has been initialized.
-        DepFcStrEntry(KeyTypePointer aName)
-            : mKey(NULL) { }
-
-        DepFcStrEntry(const DepFcStrEntry& toCopy)
-            : mKey(toCopy.mKey) { }
-
-        PRBool KeyEquals(KeyTypePointer aKey) const {
-            return FcStrCmpIgnoreCase(aKey, mKey) == 0;
-        }
-
-        const FcChar8 *mKey;
-    };
-
-    // Hash entry that uses a copy of an FcChar8 string to store the key.
-    // This entry type is useful for language keys, as languages are usually
-    // not stored as strings in font patterns.
-    class CopiedFcStrEntry : public FcStrEntryBase {
-    public:
-        // When constructing a new entry in the hashtable, the key is void.
-        // The caller of PutEntry() must call InitKey() when IsKeyInitialized()
-        // returns false.  This provides a mechanism for the caller of
-        // PutEntry() to determine whether the entry has been initialized.
-        CopiedFcStrEntry(KeyTypePointer aName) {
-            mKey.SetIsVoid(PR_TRUE);
-        }
-
-        CopiedFcStrEntry(const CopiedFcStrEntry& toCopy)
-            : mKey(toCopy.mKey) { }
-
-        PRBool KeyEquals(KeyTypePointer aKey) const {
-            return FcStrCmpIgnoreCase(aKey, ToFcChar8(mKey.get())) == 0;
-        }
-
-        PRBool IsKeyInitialized() { return !mKey.IsVoid(); }
-        void InitKey(const FcChar8* aKey) { mKey.Assign(ToCString(aKey)); }
-
-    private:
-        nsCString mKey;
-    };
-
-protected:
-    class FontsByFcStrEntry : public DepFcStrEntry {
-    public:
-        FontsByFcStrEntry(KeyTypePointer aName)
-            : DepFcStrEntry(aName) { }
-
-        FontsByFcStrEntry(const FontsByFcStrEntry& toCopy)
-            : DepFcStrEntry(toCopy), mFonts(toCopy.mFonts) { }
-
-        PRBool AddFont(FcPattern *aFont) {
-            return mFonts.AppendElement(aFont) != nsnull;
-        }
-        const nsTArray< nsCountedRef<FcPattern> >& GetFonts() {
-            return mFonts;
-        }
-    private:
-        nsTArray< nsCountedRef<FcPattern> > mFonts;
-    };
-
-    class LangSupportEntry : public CopiedFcStrEntry {
-    public:
-        LangSupportEntry(KeyTypePointer aName)
-            : CopiedFcStrEntry(aName) { }
-
-        LangSupportEntry(const LangSupportEntry& toCopy)
-            : CopiedFcStrEntry(toCopy), mSupport(toCopy.mSupport) { }
-
-        FcLangResult mSupport;
-        nsTArray< nsCountedRef<FcPattern> > mFonts;
-    };
-
     static gfxFontconfigUtils* sUtils;
 
-    PRBool IsExistingFamily(const nsCString& aFamilyName);
+    PRInt32 IsExistingFont(const nsACString& aFontName);
+    nsresult GetResolvedFonts(const nsACString& aName,
+                              gfxFontNameList* aResult);
 
     nsresult GetFontListInternal(nsCStringArray& aListOfFonts,
-                                 const nsACString& aLangGroup);
+                                 const nsACString *aLangGroup = nsnull);
     nsresult UpdateFontListInternal(PRBool aForce = PR_FALSE);
 
-    LangSupportEntry *GetLangSupportEntry(const FcChar8 *aLang,
-                                          PRBool aWithFonts);
-
-    nsTHashtable<FontsByFcStrEntry> mFontsByFamily;
-    nsTHashtable<LangSupportEntry> mLangSupportTable;
-
+    nsCStringArray mFonts;
+    nsCStringArray mNonExistingFonts;
+    nsCStringArray mAliasForSingleFont;
     nsCStringArray mAliasForMultiFonts;
+
+    nsDataHashtable<nsCStringHashKey, nsRefPtr<gfxFontNameList> > mAliasTable;
 
     FcConfig *mLastConfig;
 };
