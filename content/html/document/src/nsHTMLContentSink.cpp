@@ -2950,13 +2950,6 @@ HTMLContentSink::ProcessLINKTag(const nsIParserNode& aNode)
             PrefetchHref(hrefVal, element, hasPrefetch);
           }
         }
-        if (linkTypes.IndexOf(NS_LITERAL_STRING("dns-prefetch")) != -1) {
-          nsAutoString hrefVal;
-          element->GetAttr(kNameSpaceID_None, nsGkAtoms::href, hrefVal);
-          if (!hrefVal.IsEmpty()) {
-            PrefetchDNS(hrefVal);
-          }
-        }
       }
     }
   }
