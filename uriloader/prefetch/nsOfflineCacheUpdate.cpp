@@ -41,6 +41,7 @@
 #include "nsCPrefetchService.h"
 #include "nsCURILoader.h"
 #include "nsIApplicationCacheContainer.h"
+#include "nsIApplicationCacheChannel.h"
 #include "nsIApplicationCacheService.h"
 #include "nsICache.h"
 #include "nsICacheService.h"
@@ -164,14 +165,14 @@ nsOfflineCacheUpdateItem::OpenChannel()
                        nsICachingChannel::LOAD_CHECK_OFFLINE_CACHE);
     NS_ENSURE_SUCCESS(rv, rv);
 
-    nsCOMPtr<nsIApplicationCacheContainer> appCacheContainer =
+    nsCOMPtr<nsIApplicationCacheChannel> appCacheChannel =
         do_QueryInterface(mChannel, &rv);
 
-    // Support for nsIApplicationCacheContainer is required.
+    // Support for nsIApplicationCacheChannel is required.
     NS_ENSURE_SUCCESS(rv, rv);
 
     // Use the existing application cache as the cache to check.
-    rv = appCacheContainer->SetApplicationCache(mPreviousApplicationCache);
+    rv = appCacheChannel->SetApplicationCache(mPreviousApplicationCache);
     NS_ENSURE_SUCCESS(rv, rv);
 
     // configure HTTP specific stuff
@@ -686,10 +687,8 @@ nsOfflineManifestItem::HandleManifestLine(const nsCString::const_iterator &aBegi
             break;
 
         mFallbackURIs.AppendObject(fallbackURI);
-        mOpportunisticNamespaces.AppendElement(namespaceSpec);
 
-        AddNamespace(nsIApplicationCacheNamespace::NAMESPACE_FALLBACK |
-                     nsIApplicationCacheNamespace::NAMESPACE_OPPORTUNISTIC,
+        AddNamespace(nsIApplicationCacheNamespace::NAMESPACE_FALLBACK,
                      namespaceSpec, fallbackSpec);
         break;
     }
@@ -903,6 +902,7 @@ nsOfflineCacheUpdate::nsOfflineCacheUpdate()
     , mAddedItems(PR_FALSE)
     , mPartialUpdate(PR_FALSE)
     , mSucceeded(PR_TRUE)
+    , mObsolete(PR_FALSE)
     , mCurrentItem(-1)
 {
 }
@@ -1117,6 +1117,19 @@ nsOfflineCacheUpdate::LoadCompleted()
 
         NS_ASSERTION(mManifestItem,
                      "Must have a manifest item in STATE_CHECKING.");
+
+        // A 404 or 410 is interpreted as an intentional removal of
+        // the manifest file, rather than a transient server error.
+        // Obsolete this cache group if one of these is returned.
+        PRUint16 status;
+        rv = mManifestItem->GetStatus(&status);
+        if (status == 404 || status == 410) {
+            mSucceeded = PR_FALSE;
+            mObsolete = PR_TRUE;
+            NotifyObsolete();
+            Finish();
+            return;
+        }
 
         PRBool doUpdate;
         if (NS_FAILED(HandleManifest(&doUpdate))) {
@@ -1391,6 +1404,24 @@ nsOfflineCacheUpdate::NotifyNoUpdate()
 }
 
 nsresult
+nsOfflineCacheUpdate::NotifyObsolete()
+{
+    LOG(("nsOfflineCacheUpdate::NotifyObsolete [%p]", this));
+
+    mState = STATE_FINISHED;
+
+    nsCOMArray<nsIOfflineCacheUpdateObserver> observers;
+    nsresult rv = GatherObservers(observers);
+    NS_ENSURE_SUCCESS(rv, rv);
+
+    for (PRInt32 i = 0; i < observers.Count(); i++) {
+        observers[i]->Obsolete(this);
+    }
+
+    return NS_OK;
+}
+
+nsresult
 nsOfflineCacheUpdate::NotifyDownloading()
 {
     LOG(("nsOfflineCacheUpdate::NotifyDownloading [%p]", this));
@@ -1439,6 +1470,29 @@ nsOfflineCacheUpdate::NotifyCompleted(nsOfflineCacheUpdateItem *aItem)
 }
 
 nsresult
+nsOfflineCacheUpdate::AssociateDocument(nsIDOMDocument *aDocument)
+{
+    // Check that the document that requested this update was
+    // previously associated with an application cache.  If not, it
+    // should be associated with the new one.
+    nsCOMPtr<nsIApplicationCacheContainer> container =
+        do_QueryInterface(aDocument);
+    if (!container)
+        return NS_OK;
+
+    nsCOMPtr<nsIApplicationCache> existingCache;
+    nsresult rv = container->GetApplicationCache(getter_AddRefs(existingCache));
+    NS_ENSURE_SUCCESS(rv, rv);
+
+    if (!existingCache) {
+        rv = container->SetApplicationCache(mApplicationCache);
+        NS_ENSURE_SUCCESS(rv, rv);
+    }
+
+    return NS_OK;
+}
+
+nsresult
 nsOfflineCacheUpdate::Finish()
 {
     LOG(("nsOfflineCacheUpdate::Finish [%p]", this));
@@ -1465,7 +1519,21 @@ nsOfflineCacheUpdate::Finish()
                 NotifyError();
                 mSucceeded = PR_FALSE;
             }
+
+            for (PRInt32 i = 0; i < mDocuments.Count(); i++) {
+                AssociateDocument(mDocuments[i]);
+            }
         }
+
+        if (mObsolete) {
+            nsCOMPtr<nsIApplicationCacheService> appCacheService =
+                do_GetService(NS_APPLICATIONCACHESERVICE_CONTRACTID);
+            if (appCacheService) {
+                nsCAutoString groupID;
+                mApplicationCache->GetGroupID(groupID);
+                appCacheService->DeactivateGroup(groupID);
+             }
+         }
 
         if (!mSucceeded) {
             // Update was not merged, mark all the loads as failures
@@ -1912,11 +1980,11 @@ nsOfflineCacheUpdateService::GetUpdate(PRUint32 aIndex,
     return NS_OK;
 }
 
-
-NS_IMETHODIMP
-nsOfflineCacheUpdateService::ScheduleUpdate(nsIURI *aManifestURI,
-                                            nsIURI *aDocumentURI,
-                                            nsIOfflineCacheUpdate **aUpdate)
+nsresult
+nsOfflineCacheUpdateService::Schedule(nsIURI *aManifestURI,
+                                      nsIURI *aDocumentURI,
+                                      nsIDOMDocument *aDocument,
+                                      nsIOfflineCacheUpdate **aUpdate)
 {
     // Check for existing updates
     nsresult rv;
@@ -1938,6 +2006,8 @@ nsOfflineCacheUpdateService::ScheduleUpdate(nsIURI *aManifestURI,
             PRBool equals;
             rv = manifestURI->Equals(aManifestURI, &equals);
             if (equals) {
+                if (aDocument)
+                    update->AddDocument(aDocument);
                 NS_ADDREF(*aUpdate = update);
                 return NS_OK;
             }
@@ -1953,12 +2023,23 @@ nsOfflineCacheUpdateService::ScheduleUpdate(nsIURI *aManifestURI,
     rv = update->Init(aManifestURI, aDocumentURI);
     NS_ENSURE_SUCCESS(rv, rv);
 
+    if (aDocument)
+        update->AddDocument(aDocument);
+
     rv = update->Schedule();
     NS_ENSURE_SUCCESS(rv, rv);
 
     NS_ADDREF(*aUpdate = update);
 
     return NS_OK;
+}
+
+NS_IMETHODIMP
+nsOfflineCacheUpdateService::ScheduleUpdate(nsIURI *aManifestURI,
+                                            nsIURI *aDocumentURI,
+                                            nsIOfflineCacheUpdate **aUpdate)
+{
+    return Schedule(aManifestURI, aDocumentURI, nsnull, aUpdate);
 }
 
 //-----------------------------------------------------------------------------
@@ -2017,15 +2098,14 @@ nsOfflineCacheUpdateService::OnStateChange(nsIWebProgress* aWebProgress,
         LOG(("nsOfflineCacheUpdateService::OnStateChange [%p, doc=%p]",
              this, doc.get()));
 
-
         PendingUpdate *pendingUpdate;
         if (mDocUpdates.Get(doc, &pendingUpdate)) {
-            // Only schedule the update if the document loaded successfull
+            // Only schedule the update if the document loaded successfully
             if (NS_SUCCEEDED(aStatus)) {
                 nsCOMPtr<nsIOfflineCacheUpdate> update;
-                ScheduleUpdate(pendingUpdate->mManifestURI,
-                               pendingUpdate->mDocumentURI,
-                               getter_AddRefs(update));
+                Schedule(pendingUpdate->mManifestURI,
+                         pendingUpdate->mDocumentURI,
+                         doc, getter_AddRefs(update));
             }
             mDocUpdates.Remove(doc);
         }

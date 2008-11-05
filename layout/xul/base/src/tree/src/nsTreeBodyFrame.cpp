@@ -3371,18 +3371,18 @@ nsTreeBodyFrame::PaintTwisty(PRInt32              aRowIndex,
       PRBool useImageRegion = PR_TRUE;
       GetImage(aRowIndex, aColumn, PR_TRUE, twistyContext, useImageRegion, getter_AddRefs(image));
       if (image) {
-        nsRect r(twistyRect.x, twistyRect.y, imageSize.width, imageSize.height);
+        nsPoint pt = twistyRect.TopLeft();
 
         // Center the image. XXX Obey vertical-align style prop?
         if (imageSize.height < twistyRect.height) {
-          r.y += (twistyRect.height - imageSize.height)/2;
+          pt.y += (twistyRect.height - imageSize.height)/2;
         }
           
         // Paint the image.
-        nsLayoutUtils::DrawImage(&aRenderingContext, image,
-                                 r, aDirtyRect, &imageSize);
+        nsLayoutUtils::DrawSingleUnscaledImage(&aRenderingContext, image,
+            pt, aDirtyRect, &imageSize);
       }
-    }        
+    }
   }
 }
 
@@ -3490,10 +3490,7 @@ nsTreeBodyFrame::PaintImage(PRInt32              aRowIndex,
     // sourceRect will be passed as the aSrcRect argument in the DrawImage method.
     nsRect sourceRect = GetImageSourceRect(imageContext, useImageRegion, image);
 
-    // If destRect width/height was adjusted to fit within the cell
-    // width/height, we need to make corresponding adjustments to the
-    // sourceRect width/height.
-    // Here's an explanation. Let's say that the image is 100 pixels tall and
+    // Let's say that the image is 100 pixels tall and
     // that the CSS has specified that the destination height should be 50
     // pixels tall. Let's say that the cell height is only 20 pixels. So, in
     // those 20 visible pixels, we want to see the top 20/50ths of the image.
@@ -3501,11 +3498,15 @@ nsTreeBodyFrame::PaintImage(PRInt32              aRowIndex,
     // Essentially, we are scaling the image as dictated by the CSS destination
     // height and width, and we are then clipping the scaled image by the cell
     // width and height.
-    nsRect clip;
-    clip.IntersectRect(aDirtyRect, destRect);
+    nsIntSize rawImageSize;
+    image->GetWidth(&rawImageSize.width);
+    image->GetHeight(&rawImageSize.height);
+    nsRect wholeImageDest =
+      nsLayoutUtils::GetWholeImageDestination(rawImageSize, sourceRect,
+          nsRect(destRect.TopLeft(), imageDestSize));
+
     nsLayoutUtils::DrawImage(&aRenderingContext, image,
-                             nsRect(destRect.TopLeft(), imageDestSize),
-                             clip, &sourceRect);
+        wholeImageDest, destRect, destRect.TopLeft(), aDirtyRect);
   }
 
   // Update the aRemainingWidth and aCurrX values.
@@ -3653,19 +3654,19 @@ nsTreeBodyFrame::PaintCheckbox(PRInt32              aRowIndex,
   PRBool useImageRegion = PR_TRUE;
   GetImage(aRowIndex, aColumn, PR_TRUE, checkboxContext, useImageRegion, getter_AddRefs(image));
   if (image) {
-    nsRect r(checkboxRect.x, checkboxRect.y, imageSize.width, imageSize.height);
+    nsPoint pt = checkboxRect.TopLeft();
           
     if (imageSize.height < checkboxRect.height) {
-      r.y += (checkboxRect.height - imageSize.height)/2;
+      pt.y += (checkboxRect.height - imageSize.height)/2;
     }
 
     if (imageSize.width < checkboxRect.width) {
-      r.x += (checkboxRect.width - imageSize.width)/2;
+      pt.x += (checkboxRect.width - imageSize.width)/2;
     }
 
     // Paint the image.
-    nsLayoutUtils::DrawImage(&aRenderingContext, image,
-                             r, aDirtyRect, &imageSize);
+    nsLayoutUtils::DrawSingleUnscaledImage(&aRenderingContext, image,
+        pt, aDirtyRect, &imageSize);
   }
 }
 
@@ -3719,10 +3720,17 @@ nsTreeBodyFrame::PaintProgressMeter(PRInt32              aRowIndex,
     PRBool useImageRegion = PR_TRUE;
     nsCOMPtr<imgIContainer> image;
     GetImage(aRowIndex, aColumn, PR_TRUE, meterContext, useImageRegion, getter_AddRefs(image));
-    if (image)
-      aRenderingContext.DrawTile(image, 0, 0, &meterRect, nsnull);
-    else
+    if (image) {
+      PRInt32 width, height;
+      image->GetWidth(&width);
+      image->GetHeight(&height);
+      nsSize size(width*nsIDeviceContext::AppUnitsPerCSSPixel(),
+                  height*nsIDeviceContext::AppUnitsPerCSSPixel());
+      nsLayoutUtils::DrawImage(&aRenderingContext, image,
+          nsRect(meterRect.TopLeft(), size), meterRect, meterRect.TopLeft(), aDirtyRect);
+    } else {
       aRenderingContext.FillRect(meterRect);
+    }
   }
   else if (state == nsITreeView::PROGRESS_UNDETERMINED) {
     // Adjust the rect for its border and padding.
@@ -3731,8 +3739,15 @@ nsTreeBodyFrame::PaintProgressMeter(PRInt32              aRowIndex,
     PRBool useImageRegion = PR_TRUE;
     nsCOMPtr<imgIContainer> image;
     GetImage(aRowIndex, aColumn, PR_TRUE, meterContext, useImageRegion, getter_AddRefs(image));
-    if (image)
-      aRenderingContext.DrawTile(image, 0, 0, &meterRect, nsnull);
+    if (image) {
+      PRInt32 width, height;
+      image->GetWidth(&width);
+      image->GetHeight(&height);
+      nsSize size(width*nsIDeviceContext::AppUnitsPerCSSPixel(),
+                  height*nsIDeviceContext::AppUnitsPerCSSPixel());
+      nsLayoutUtils::DrawImage(&aRenderingContext, image,
+          nsRect(meterRect.TopLeft(), size), meterRect, meterRect.TopLeft(), aDirtyRect);
+    }
   }
 }
 

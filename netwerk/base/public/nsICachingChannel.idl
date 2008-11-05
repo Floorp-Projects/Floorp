@@ -156,6 +156,8 @@ interface nsICachingChannel : nsISupports
     /**
      * This load flag causes the offline cache to be checked when fetching
      * a request.  It will be set automatically if the browser is offline.
+     *
+     * This flag will not be transferred through a redirect.
      */
     const unsigned long LOAD_CHECK_OFFLINE_CACHE = 1 << 27;
 

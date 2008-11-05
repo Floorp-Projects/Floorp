@@ -96,8 +96,3 @@
   color: black;
   text-shadow: white -1px -1px 9px, white -1px 1px 9px, white 1px 1px 9px, white 1px -1px 9px;
 }
-
-svg|*#ctrlTab-groundFade:-moz-system-metric(windows-compositor),
-svg|*.ctrlTab-reflection:-moz-system-metric(windows-compositor) {
-  display: none;
-}

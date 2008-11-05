@@ -32,3 +32,6 @@ tmpfile_wince.patch: Make Windows CE use tmpfile() on windows mobile due to the 
 
 endian.patch: include cairo-platform.h for endian macros
 
+==== disable printing patch ====
+
+disable-printing.patch:  allows us to use NS_PRINTING to disable printing.

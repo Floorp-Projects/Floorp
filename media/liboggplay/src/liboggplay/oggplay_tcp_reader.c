@@ -597,7 +597,7 @@ oggplay_tcp_reader_available(OggPlayReader * opr, ogg_int64_t current_bytes,
 
 }
 
-int
+ogg_int64_t
 oggplay_tcp_reader_duration(OggPlayReader * opr) {
   OggPlayTCPReader    *me = (OggPlayTCPReader *)opr;
   return me->duration;

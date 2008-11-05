@@ -378,8 +378,8 @@ nsImageBoxFrame::PaintImage(nsIRenderingContext& aRenderingContext,
 
   if (imgCon) {
     PRBool hasSubRect = !mUseSrcAttr && (mSubRect.width > 0 || mSubRect.height > 0);
-    nsLayoutUtils::DrawImage(&aRenderingContext, imgCon,
-                             rect, dirty, hasSubRect ? &mSubRect : nsnull);
+    nsLayoutUtils::DrawSingleImage(&aRenderingContext, imgCon,
+        rect, dirty, hasSubRect ? &mSubRect : nsnull);
   }
 }
 

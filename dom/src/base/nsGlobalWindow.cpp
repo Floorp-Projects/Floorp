@@ -4597,7 +4597,7 @@ nsGlobalWindow::ScrollTo(PRInt32 aXScroll, PRInt32 aYScroll)
 
     result = view->ScrollTo(nsPresContext::CSSPixelsToAppUnits(aXScroll),
                             nsPresContext::CSSPixelsToAppUnits(aYScroll),
-                            NS_VMREFRESH_IMMEDIATE);
+                            0);
   }
 
   return result;

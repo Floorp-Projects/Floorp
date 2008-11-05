@@ -2662,17 +2662,46 @@ nsLayoutUtils::GetClosestLayer(nsIFrame* aFrame)
   return aFrame->PresContext()->PresShell()->FrameManager()->GetRootFrame();
 }
 
+static gfxPoint
+MapToFloatImagePixels(const nsIntSize& aSize,
+                      const nsRect& aDest, const nsPoint& aPt)
+{
+  return gfxPoint((gfxFloat(aPt.x - aDest.x)*aSize.width)/aDest.width,
+                  (gfxFloat(aPt.y - aDest.y)*aSize.height)/aDest.height);
+}
+
 /* static */ nsresult
 nsLayoutUtils::DrawImage(nsIRenderingContext* aRenderingContext,
-                         imgIContainer* aImage,
-                         const nsRect& aDestRect,
-                         const nsRect& aDirtyRect,
-                         const nsRect* aSourceRect)
+                         imgIContainer*       aImage,
+                         const nsRect&        aDest,
+                         const nsRect&        aFill,
+                         const nsPoint&       aAnchor,
+                         const nsRect&        aDirty)
 {
-  nsRect dirtyRect;
-  dirtyRect.IntersectRect(aDirtyRect, aDestRect);
-  if (dirtyRect.IsEmpty())
+  if (aDest.IsEmpty())
     return NS_OK;
+
+  nsCOMPtr<nsIDeviceContext> dc;
+  aRenderingContext->GetDeviceContext(*getter_AddRefs(dc));
+  gfxFloat appUnitsPerDevPixel = dc->AppUnitsPerDevPixel();
+  gfxContext *ctx = aRenderingContext->ThebesContext();
+
+  // Compute the pixel-snapped area that should be drawn
+  gfxRect fill(aFill.x/appUnitsPerDevPixel,
+               aFill.y/appUnitsPerDevPixel,
+               aFill.width/appUnitsPerDevPixel,
+               aFill.height/appUnitsPerDevPixel);
+  PRBool ignoreScale = PR_FALSE;
+#ifdef MOZ_GFX_OPTIMIZE_MOBILE
+  ignoreScale = PR_TRUE;
+#endif
+  PRBool didSnap = ctx->UserToDevicePixelSnapped(fill, ignoreScale);
+
+  // Compute dirty rect in gfx space
+  gfxRect dirty(aDirty.x/appUnitsPerDevPixel,
+                aDirty.y/appUnitsPerDevPixel,
+                aDirty.width/appUnitsPerDevPixel,
+                aDirty.height/appUnitsPerDevPixel);
 
   nsCOMPtr<gfxIImageFrame> imgFrame;
   aImage->GetCurrentFrame(getter_AddRefs(imgFrame));
@@ -2681,131 +2710,137 @@ nsLayoutUtils::DrawImage(nsIRenderingContext* aRenderingContext,
   nsCOMPtr<nsIImage> img(do_GetInterface(imgFrame));
   if (!img) return NS_ERROR_FAILURE;
 
-  // twSrcRect is always in appunits (twips),
-  // and has nothing to do with the current transform (it's a region
-  // of the image)
-  gfxRect pxSrc;
-  if (aSourceRect) {
-    pxSrc.pos.x = nsIDeviceContext::AppUnitsToGfxCSSPixels(aSourceRect->x);
-    pxSrc.pos.y = nsIDeviceContext::AppUnitsToGfxCSSPixels(aSourceRect->y);
-    pxSrc.size.width = nsIDeviceContext::AppUnitsToGfxCSSPixels(aSourceRect->width);
-    pxSrc.size.height = nsIDeviceContext::AppUnitsToGfxCSSPixels(aSourceRect->height);
+  nsIntSize imageSize;
+  aImage->GetWidth(&imageSize.width);
+  aImage->GetHeight(&imageSize.height);
+  if (imageSize.width == 0 || imageSize.height == 0)
+    return NS_OK;
+
+  // Compute the set of pixels that would be sampled by an ideal rendering
+  gfxPoint subimageTopLeft =
+    MapToFloatImagePixels(imageSize, aDest, aFill.TopLeft());
+  gfxPoint subimageBottomRight =
+    MapToFloatImagePixels(imageSize, aDest, aFill.BottomRight());
+  nsIntRect intSubimage;
+  intSubimage.MoveTo(NSToIntFloor(subimageTopLeft.x),
+                     NSToIntFloor(subimageTopLeft.y));
+  intSubimage.SizeTo(NSToIntCeil(subimageBottomRight.x) - intSubimage.x,
+                     NSToIntCeil(subimageBottomRight.y) - intSubimage.y);
+
+  // Compute the anchor point and compute final fill rect.
+  // This code assumes that pixel-based devices have one pixel per
+  // device unit!
+  gfxPoint anchorPoint(aAnchor.x/appUnitsPerDevPixel,
+                       aAnchor.y/appUnitsPerDevPixel);
+  gfxMatrix currentMatrix = ctx->CurrentMatrix();
+  gfxRect finalFillRect = fill;
+  if (didSnap) {
+    ctx->UserToDevicePixelSnapped(anchorPoint, ignoreScale);
+
+    // This form of Transform is safe to call since non-axis-aligned
+    // transforms wouldn't be snapped.
+    dirty = currentMatrix.Transform(dirty);
+    dirty.RoundOut();
+    finalFillRect = fill.Intersect(dirty);
+    if (finalFillRect.IsEmpty())
+      return NS_OK;
+
+    ctx->IdentityMatrix();
+  }
+  // If we're not snapping, then we ignore the dirty rect. It's hard
+  // to correctly use it with arbitrary transforms --- it really *has*
+  // to be aligned perfectly with pixel boundaries or the choice of
+  // dirty rect will affect the values of rendered pixels.
+
+  gfxPoint imageSpaceAnchorPoint =
+    MapToFloatImagePixels(imageSize, aDest, aAnchor);
+  imageSpaceAnchorPoint.Round();
+  gfxFloat scaleX = imageSize.width*appUnitsPerDevPixel/aDest.width;
+  gfxFloat scaleY = imageSize.height*appUnitsPerDevPixel/aDest.height;
+  if (didSnap) {
+    // ctx now has the identity matrix, so we need to adjust our
+    // scales to match
+    scaleX /= currentMatrix.xx;
+    scaleY /= currentMatrix.yy;
+  }
+  gfxFloat translateX = imageSpaceAnchorPoint.x - anchorPoint.x*scaleX;
+  gfxFloat translateY = imageSpaceAnchorPoint.y - anchorPoint.y*scaleY;
+  gfxMatrix transform(scaleX, 0, 0, scaleY, translateX, translateY);
+
+  nsIntRect innerRect;
+  imgFrame->GetRect(innerRect);
+  nsIntMargin padding(innerRect.x, innerRect.y,
+    imageSize.width - innerRect.XMost(), imageSize.height - innerRect.YMost());
+  img->Draw(ctx, transform, finalFillRect, padding, intSubimage);
+  ctx->SetMatrix(currentMatrix);
+  return NS_OK;
+}
+
+/* static */ nsresult
+nsLayoutUtils::DrawSingleUnscaledImage(nsIRenderingContext* aRenderingContext,
+                                       imgIContainer*       aImage,
+                                       const nsPoint&       aDest,
+                                       const nsRect&        aDirty,
+                                       const nsRect*        aSourceArea)
+{
+  nsIntSize size;
+  aImage->GetWidth(&size.width);
+  aImage->GetHeight(&size.height);
+
+  nscoord appUnitsPerCSSPixel = nsIDeviceContext::AppUnitsPerCSSPixel();
+  nsRect source;
+  if (aSourceArea) {
+    source = *aSourceArea;
   } else {
-    pxSrc.pos.x = pxSrc.pos.y = 0.0;
-    PRInt32 w = 0, h = 0;
-    aImage->GetWidth(&w);
-    aImage->GetHeight(&h);
-    pxSrc.size.width = gfxFloat(w);
-    pxSrc.size.height = gfxFloat(h);
+    source.SizeTo(size.width*appUnitsPerCSSPixel, size.height*appUnitsPerCSSPixel);
   }
-  gfxRect pxSubimage = pxSrc;
 
-  nsCOMPtr<nsIDeviceContext> dc;
-  aRenderingContext->GetDeviceContext(*getter_AddRefs(dc));
+  nsRect dest(aDest - source.TopLeft(),
+    nsSize(size.width*appUnitsPerCSSPixel, size.height*appUnitsPerCSSPixel));
+  nsRect fill(aDest, source.Size());
+  return DrawImage(aRenderingContext, aImage, dest, fill, aDest, aDirty);
+}
 
-  gfxContext *ctx = aRenderingContext->ThebesContext();
+/* static */ nsresult
+nsLayoutUtils::DrawSingleImage(nsIRenderingContext* aRenderingContext,
+                               imgIContainer*       aImage,
+                               const nsRect&        aDest,
+                               const nsRect&        aDirty,
+                               const nsRect*        aSourceArea)
+{
+  nsIntSize size;
+  aImage->GetWidth(&size.width);
+  aImage->GetHeight(&size.height);
 
-  // the dest rect is affected by the current transform; that'll be
-  // handled by Image::Draw(), when we actually set up the rectangle.
+  if (size.width == 0 || size.height == 0)
+    return NS_OK;
   
-  // Snap the edges of where layout wants the image to the nearest
-  // pixel, but then convert back to gfxFloats for the rest of the math.
-  gfxRect pxDest;
-  {
-    pxDest.pos.x = dc->AppUnitsToGfxUnits(aDestRect.x);
-    pxDest.pos.y = dc->AppUnitsToGfxUnits(aDestRect.y);
-    pxDest.size.width = dc->AppUnitsToGfxUnits(aDestRect.width);
-    pxDest.size.height = dc->AppUnitsToGfxUnits(aDestRect.height);
-    if (ctx->UserToDevicePixelSnapped(pxDest))
-      pxDest = ctx->DeviceToUser(pxDest);
+  nscoord appUnitsPerCSSPixel = nsIDeviceContext::AppUnitsPerCSSPixel();
+  nsRect source;
+  if (aSourceArea) {
+    source = *aSourceArea;
+  } else {
+    source.SizeTo(size.width*appUnitsPerCSSPixel, size.height*appUnitsPerCSSPixel);
   }
 
-  // And likewise for the dirty rect.  (Is should be OK to round to
-  // nearest rather than outwards, since any dirty rects coming from the
-  // OS should be on pixel boundaries; the rest is other things it's
-  // been intersected with, and we should be rounding those consistently.)
-  gfxRect pxDirty;
-  {
-    pxDirty.pos.x = dc->AppUnitsToGfxUnits(dirtyRect.x);
-    pxDirty.pos.y = dc->AppUnitsToGfxUnits(dirtyRect.y);
-    pxDirty.size.width = dc->AppUnitsToGfxUnits(dirtyRect.width);
-    pxDirty.size.height = dc->AppUnitsToGfxUnits(dirtyRect.height);
-    if (ctx->UserToDevicePixelSnapped(pxDirty))
-      pxDirty = ctx->DeviceToUser(pxDirty);
-  }
+  nsRect dest = GetWholeImageDestination(size, source, aDest);
+  return DrawImage(aRenderingContext, aImage, dest, aDest, aDest.TopLeft(), aDirty);
+}
 
-  // Reduce the src rect to what's needed for the dirty rect.
-  if (pxDirty.size.width != pxDest.size.width) {
-    const gfxFloat ratio = pxSrc.size.width / pxDest.size.width;
-    pxSrc.pos.x += (pxDirty.pos.x - pxDest.pos.x) * ratio;
-    pxSrc.size.width = pxDirty.size.width * ratio;
-  }
-  if (pxDirty.size.height != pxDest.size.height) {
-    const gfxFloat ratio = pxSrc.size.height / pxDest.size.height;
-    pxSrc.pos.y += (pxDirty.pos.y - pxDest.pos.y) * ratio;
-    pxSrc.size.height = pxDirty.size.height * ratio;
-  }
-
-  // If we were asked to draw a 0-width or 0-height image,
-  // as either the src or dst, just bail; we can't do anything
-  // useful with this.
-  if (pxSrc.IsEmpty() || pxDirty.IsEmpty())
-  {
-    return NS_OK;
-  }
-
-  // For Bug 87819
-  // imgFrame may want image to start at different position, so adjust
-  nsIntRect pxImgFrameRect;
-  imgFrame->GetRect(pxImgFrameRect);
-
-  if (pxImgFrameRect.x > 0) {
-    gfxFloat fx(pxImgFrameRect.x);
-    pxSubimage.pos.x -= fx;
-    pxSrc.pos.x -= fx;
-
-    gfxFloat scaled_x = pxSrc.pos.x;
-    if (pxDirty.size.width != pxSrc.size.width) {
-      scaled_x = scaled_x * (pxDirty.size.width / pxSrc.size.width);
-    }
-
-    if (pxSrc.pos.x < 0.0) {
-      pxDirty.pos.x -= scaled_x;
-      pxSrc.size.width += pxSrc.pos.x;
-      pxDirty.size.width += scaled_x;
-      if (pxSrc.size.width <= 0.0 || pxDirty.size.width <= 0.0)
-        return NS_OK;
-      pxSrc.pos.x = 0.0;
-    }
-  }
-  if (pxSrc.pos.x > gfxFloat(pxImgFrameRect.width)) {
-    return NS_OK;
-  }
-
-  if (pxImgFrameRect.y > 0) {
-    gfxFloat fy(pxImgFrameRect.y);
-    pxSubimage.pos.y -= fy;
-    pxSrc.pos.y -= fy;
-
-    gfxFloat scaled_y = pxSrc.pos.y;
-    if (pxDirty.size.height != pxSrc.size.height) {
-      scaled_y = scaled_y * (pxDirty.size.height / pxSrc.size.height);
-    }
-
-    if (pxSrc.pos.y < 0.0) {
-      pxDirty.pos.y -= scaled_y;
-      pxSrc.size.height += pxSrc.pos.y;
-      pxDirty.size.height += scaled_y;
-      if (pxSrc.size.height <= 0.0 || pxDirty.size.height <= 0.0)
-        return NS_OK;
-      pxSrc.pos.y = 0.0;
-    }
-  }
-  if (pxSrc.pos.y > gfxFloat(pxImgFrameRect.height)) {
-    return NS_OK;
-  }
-
-  return img->Draw(*aRenderingContext, pxSrc, pxSubimage, pxDirty);
+/* static */ nsRect
+nsLayoutUtils::GetWholeImageDestination(const nsIntSize& aWholeImageSize,
+                                        const nsRect& aImageSourceArea,
+                                        const nsRect& aDestArea)
+{
+  double scaleX = double(aDestArea.width)/aImageSourceArea.width;
+  double scaleY = double(aDestArea.height)/aImageSourceArea.height;
+  nscoord destOffsetX = NSToCoordRound(aImageSourceArea.x*scaleX);
+  nscoord destOffsetY = NSToCoordRound(aImageSourceArea.y*scaleY);
+  nscoord appUnitsPerCSSPixel = nsIDeviceContext::AppUnitsPerCSSPixel();
+  nscoord wholeSizeX = NSToCoordRound(aWholeImageSize.width*appUnitsPerCSSPixel*scaleX);
+  nscoord wholeSizeY = NSToCoordRound(aWholeImageSize.height*appUnitsPerCSSPixel*scaleY);
+  return nsRect(aDestArea.TopLeft() - nsPoint(destOffsetX, destOffsetY),
+                nsSize(wholeSizeX, wholeSizeY));
 }
 
 void
