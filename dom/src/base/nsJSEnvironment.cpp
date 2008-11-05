@@ -2373,11 +2373,6 @@ nsJSContext::InitContext(nsIScriptGlobalObject *aGlobalObject)
     return NS_OK;
   }
 
-  nsCxPusher cxPusher;
-  if (!cxPusher.Push(mContext)) {
-    return NS_ERROR_FAILURE;
-  }
-
   nsIXPConnect *xpc = nsContentUtils::XPConnect();
 
   JSObject *global = ::JS_GetGlobalObject(mContext);

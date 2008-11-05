@@ -147,11 +147,7 @@ public:
    * Pretend to be a JSObject*. Assert if not held.
    */
   JSObject* operator=(JSObject* aOther) {
-#ifdef DEBUG
-    if (aOther) {
-      NS_ASSERTION(mHeld, "Not rooted!");
-    }
-#endif
+    NS_ASSERTION(mHeld, "Not rooted!");
     return mObj = aOther;
   }
 
