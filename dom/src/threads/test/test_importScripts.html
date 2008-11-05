@@ -18,12 +18,11 @@ Tests of DOM Worker Threads (Bug 437152)
 <pre id="test">
 <script class="testbody" type="text/javascript">
 
-  var worker = new Worker("importScripts_worker.js");
-
-  worker.onmessage = function(event) {
-    switch (event.data) {
+  var pool = navigator.newWorkerPool();
+  pool.messageListener = function(message, source) {
+    switch (message) {
       case "started":
-        worker.postMessage("stop");
+        source.postMessage("stop");
         break;
       case "stopped":
         SimpleTest.finish();
@@ -34,15 +33,15 @@ Tests of DOM Worker Threads (Bug 437152)
     }
   };
 
-  worker.onerror = function(event) {
-    ok(false, "Worker had an error:" + event.data);
+  pool.errorListener = function(error, source) {
+    ok(false, "Worker had an error:" + error);
     SimpleTest.finish();
   }
 
+  var worker = pool.createWorkerFromURL("importScripts_worker.js");
   worker.postMessage("start");
 
   SimpleTest.waitForExplicitFinish();
-
 </script>
 </pre>
 </body>
