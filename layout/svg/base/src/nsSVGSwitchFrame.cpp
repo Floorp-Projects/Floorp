@@ -120,8 +120,7 @@ nsSVGSwitchFrame::GetFrameForPoint(const nsPoint &aPoint)
 {
   nsIFrame *kid = GetActiveChildFrame();
   if (kid) {
-    nsISVGChildFrame* svgFrame;
-    CallQueryInterface(kid, &svgFrame);
+    nsISVGChildFrame* svgFrame = do_QueryFrame(kid);
     if (svgFrame) {
       return svgFrame->GetFrameForPoint(aPoint);
     }
@@ -137,8 +136,7 @@ nsSVGSwitchFrame::GetCoveredRegion()
 
   nsIFrame *kid = GetActiveChildFrame();
   if (kid) {
-    nsISVGChildFrame* child = nsnull;
-    CallQueryInterface(kid, &child);
+    nsISVGChildFrame* child = do_QueryFrame(kid);
     if (child) {
       rect = child->GetCoveredRegion();
     }
@@ -178,8 +176,7 @@ nsSVGSwitchFrame::GetBBox(nsIDOMSVGRect **aRect)
 
   nsIFrame *kid = GetActiveChildFrame();
   if (kid) {
-    nsISVGChildFrame* svgFrame = nsnull;
-    CallQueryInterface(kid, &svgFrame);
+    nsISVGChildFrame* svgFrame = do_QueryFrame(kid);
     if (svgFrame) {
       nsCOMPtr<nsIDOMSVGRect> box;
       svgFrame->GetBBox(getter_AddRefs(box));

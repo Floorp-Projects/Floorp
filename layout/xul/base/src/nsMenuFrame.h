@@ -110,7 +110,7 @@ class nsMenuFrame : public nsBoxFrame,
 public:
   nsMenuFrame(nsIPresShell* aShell, nsStyleContext* aContext);
 
-  NS_DECL_ISUPPORTS
+  NS_DECL_QUERYFRAME
 
   // nsIBox
   NS_IMETHOD DoLayout(nsBoxLayoutState& aBoxLayoutState);

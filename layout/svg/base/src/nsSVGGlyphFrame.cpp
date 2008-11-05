@@ -187,8 +187,7 @@ nsIFrame*
 NS_NewSVGGlyphFrame(nsIPresShell* aPresShell, nsIContent* aContent, nsIFrame* parentFrame, nsStyleContext* aContext)
 {
   NS_ASSERTION(parentFrame, "null parent");
-  nsISVGTextContentMetrics *metrics;
-  CallQueryInterface(parentFrame, &metrics);
+  nsISVGTextContentMetrics *metrics = do_QueryFrame(parentFrame);
   NS_ASSERTION(metrics, "trying to construct an SVGGlyphFrame for an invalid container");
   
   NS_ASSERTION(aContent->IsNodeOfType(nsINode::eTEXT),
@@ -198,13 +197,13 @@ NS_NewSVGGlyphFrame(nsIPresShell* aPresShell, nsIContent* aContent, nsIFrame* pa
 }
 
 //----------------------------------------------------------------------
-// nsISupports methods
+// nsQueryFrame methods
 
-NS_INTERFACE_MAP_BEGIN(nsSVGGlyphFrame)
-  NS_INTERFACE_MAP_ENTRY(nsISVGGlyphFragmentLeaf)
-  NS_INTERFACE_MAP_ENTRY(nsISVGGlyphFragmentNode)
-  NS_INTERFACE_MAP_ENTRY(nsISVGChildFrame)
-NS_INTERFACE_MAP_END_INHERITING(nsSVGGlyphFrameBase)
+NS_QUERYFRAME_HEAD(nsSVGGlyphFrame)
+  NS_QUERYFRAME_ENTRY(nsISVGGlyphFragmentLeaf)
+  NS_QUERYFRAME_ENTRY(nsISVGGlyphFragmentNode)
+  NS_QUERYFRAME_ENTRY(nsISVGChildFrame)
+NS_QUERYFRAME_TAIL_INHERITING(nsSVGGlyphFrameBase)
 
 //----------------------------------------------------------------------
 // nsIFrame methods
@@ -1121,8 +1120,7 @@ nsSVGGlyphFrame::GetNextGlyphFragment()
 {
   nsIFrame* sibling = mNextSibling;
   while (sibling) {
-    nsISVGGlyphFragmentNode *node = nsnull;
-    CallQueryInterface(sibling, &node);
+    nsISVGGlyphFragmentNode *node = do_QueryFrame(sibling);
     if (node)
       return node->GetFirstGlyphFragment();
     sibling = sibling->GetNextSibling();
@@ -1131,8 +1129,7 @@ nsSVGGlyphFrame::GetNextGlyphFragment()
   // no more siblings. go back up the tree.
   
   NS_ASSERTION(mParent, "null parent");
-  nsISVGGlyphFragmentNode *node = nsnull;
-  CallQueryInterface(mParent, &node);
+  nsISVGGlyphFragmentNode *node = do_QueryFrame(mParent);
   return node ? node->GetNextGlyphFragment() : nsnull;
 }
 

@@ -95,8 +95,7 @@ nsHTMLTableCellAccessible::GetAttributesInternal(nsIPersistentProperties *aAttri
   NS_ASSERTION(frame, "The frame cannot be obtaied for HTML table cell.");
   NS_ENSURE_STATE(frame);
 
-  nsITableCellLayout *cellLayout = nsnull;
-  CallQueryInterface(frame, &cellLayout);
+  nsITableCellLayout *cellLayout = do_QueryFrame(frame);
   NS_ENSURE_STATE(cellLayout);
 
   PRInt32 rowIdx = -1, cellIdx = -1;
@@ -928,7 +927,11 @@ nsHTMLTableAccessible::GetTableLayout(nsITableLayout **aTableLayout)
   NS_ENSURE_TRUE(shell, NS_ERROR_FAILURE);
 
   nsIFrame *frame = shell->GetPrimaryFrameFor(tableContent);
-  return frame ? CallQueryInterface(frame, aTableLayout) : NS_ERROR_FAILURE;
+  if (!frame)
+    return NS_ERROR_FAILURE;
+
+  *aTableLayout = do_QueryFrame(frame);
+  return (*aTableLayout) ? NS_OK : NS_NOINTERFACE;
 }
 
 nsresult

@@ -71,10 +71,7 @@ protected:
   }
 
 public:
-   // nsISupports interface:
-  NS_IMETHOD QueryInterface(const nsIID& aIID, void** aInstancePtr);
-  NS_IMETHOD_(nsrefcnt) AddRef() { return 1; }
-  NS_IMETHOD_(nsrefcnt) Release() { return 1; }
+  NS_DECL_QUERYFRAME
 
   // nsIFrame interface:
   NS_IMETHOD  CharacterDataChanged(nsPresContext*  aPresContext,

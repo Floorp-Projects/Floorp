@@ -65,24 +65,6 @@ NS_NewTreeColFrame(nsIPresShell* aPresShell, nsStyleContext* aContext,
   return new (aPresShell) nsTreeColFrame(aPresShell, aContext, aIsRoot, aLayoutManager);
 } // NS_NewTreeColFrame
 
-NS_IMETHODIMP_(nsrefcnt) 
-nsTreeColFrame::AddRef(void)
-{
-  return NS_OK;
-}
-
-NS_IMETHODIMP_(nsrefcnt)
-nsTreeColFrame::Release(void)
-{
-  return NS_OK;
-}
-
-//
-// QueryInterface
-//
-NS_INTERFACE_MAP_BEGIN(nsTreeColFrame)
-NS_INTERFACE_MAP_END_INHERITING(nsBoxFrame)
-
 // Destructor
 nsTreeColFrame::~nsTreeColFrame()
 {

@@ -48,8 +48,6 @@ nsIFrame* NS_NewListItemFrame(nsIPresShell* aPresShell,
 class nsListItemFrame : public nsGridRowLeafFrame
 {
 public:
-  NS_DECL_ISUPPORTS
-
   friend nsIFrame* NS_NewListItemFrame(nsIPresShell* aPresShell,
                                        nsStyleContext *aContext,
                                        PRBool aIsRoot,

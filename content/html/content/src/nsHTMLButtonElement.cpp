@@ -306,9 +306,7 @@ nsHTMLButtonElement::PreHandleEvent(nsEventChainPreVisitor& aVisitor)
   nsIFormControlFrame* formControlFrame = GetFormControlFrame(PR_FALSE);
 
   if (formControlFrame) {
-    nsIFrame* formFrame = nsnull;
-    CallQueryInterface(formControlFrame, &formFrame);
-
+    nsIFrame* formFrame = do_QueryFrame(formControlFrame);
     if (formFrame) {
       const nsStyleUserInterface* uiStyle = formFrame->GetStyleUserInterface();
 
