@@ -488,18 +488,25 @@ function placesRemoveItemTransaction(aItemId) {
     this._removeTxn = PlacesUtils.bookmarks
                                  .getRemoveFolderTransaction(this._id);
   }
+  else if (this._itemType == Ci.nsINavBookmarksService.TYPE_BOOKMARK) {
+    this._uri = PlacesUtils.bookmarks.getBookmarkURI(this._id);
+    this._keyword = PlacesUtils.bookmarks.getKeywordForBookmark(this._id);
+  }
+
+  if (this._itemType != Ci.nsINavBookmarksService.TYPE_SEPARATOR)
+    this._title = PlacesUtils.bookmarks.getItemTitle(this._id);
+
+  this._oldContainer = PlacesUtils.bookmarks.getFolderIdForItem(this._id);
+  this._annotations = PlacesUtils.getAnnotationsForItem(this._id);
+  this._dateAdded = PlacesUtils.bookmarks.getItemDateAdded(this._id);
+  this._lastModified = PlacesUtils.bookmarks.getItemLastModified(this._id);
 }
 
 placesRemoveItemTransaction.prototype = {
   __proto__: placesBaseTransaction.prototype,
 
   doTransaction: function PRIT_doTransaction() {
-    this._oldContainer = PlacesUtils.bookmarks.getFolderIdForItem(this._id);
     this._oldIndex = PlacesUtils.bookmarks.getItemIndex(this._id);
-    this._title = PlacesUtils.bookmarks.getItemTitle(this._id);
-    this._annotations = PlacesUtils.getAnnotationsForItem(this._id);
-    this._dateAdded = PlacesUtils.bookmarks.getItemDateAdded(this._id);
-    this._lastModified = PlacesUtils.bookmarks.getItemLastModified(this._id);
 
     if (this._itemType == Ci.nsINavBookmarksService.TYPE_FOLDER) {
       this._saveFolderContents();
@@ -512,8 +519,6 @@ placesRemoveItemTransaction.prototype = {
       this._removeTxn.doTransaction();
     }
     else {
-      if (this._itemType == Ci.nsINavBookmarksService.TYPE_BOOKMARK)
-        this._uri = PlacesUtils.bookmarks.getBookmarkURI(this._id);
       PlacesUtils.bookmarks.removeItem(this._id);
       if (this._uri) {
         // if this was the last bookmark (excluding tag-items and livemark
@@ -535,6 +540,8 @@ placesRemoveItemTransaction.prototype = {
                                                       this._title);
       if (this._tags && this._tags.length > 0)
         PlacesUtils.tagging.tagURI(this._uri, this._tags);
+      if (this._keyword)
+        PlacesUtils.bookmarks.setKeywordForBookmark(this._id, this._keyword);
     }
     else if (this._itemType == Ci.nsINavBookmarksService.TYPE_FOLDER) {
       this._removeTxn.undoTransaction();
