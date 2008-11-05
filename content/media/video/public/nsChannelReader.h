@@ -87,7 +87,6 @@ public:
   size_t io_read(char* aBuffer, size_t aCount);
   int io_seek(long aOffset, int aWhence);
   long io_tell();  
-  int duration();
   
 public:
   nsMediaStream mStream;

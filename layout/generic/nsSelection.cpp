@@ -1846,7 +1846,7 @@ nsFrameSelection::HandleDrag(nsIFrame *aFrame, nsPoint aPoint)
     PRInt32 offset;
     nsIFrame* frame = GetFrameForNodeOffset(offsets.content, offsets.offset, HINTRIGHT, &offset);
 
-    if (amount == eSelectWord && direction == eDirPrevious) {
+    if (frame && amount == eSelectWord && direction == eDirPrevious) {
       // To avoid selecting the previous word when at start of word,
       // first move one character forward.
       nsPeekOffsetStruct charPos;
@@ -5089,8 +5089,7 @@ nsTypedSelection::ScrollPointIntoClipView(nsPresContext *aPresContext, nsIView *
 
     // Now scroll the view!
 
-    result = scrollableView->ScrollTo(bounds.x + dx, bounds.y + dy,
-                                      NS_VMREFRESH_NO_SYNC);
+    result = scrollableView->ScrollTo(bounds.x + dx, bounds.y + dy, 0);
 
     if (NS_FAILED(result))
       return result;
@@ -6400,7 +6399,7 @@ nsTypedSelection::ScrollRectIntoView(nsIScrollableView *aScrollableView,
     }
   }
 
-  aScrollableView->ScrollTo(scrollOffsetX, scrollOffsetY, NS_VMREFRESH_IMMEDIATE);
+  aScrollableView->ScrollTo(scrollOffsetX, scrollOffsetY, 0);
 
   if (aScrollParentViews)
   {

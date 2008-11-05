@@ -427,6 +427,26 @@ gfxContext::UserToDevicePixelSnapped(gfxRect& rect, PRBool ignoreScale) const
     return PR_TRUE;
 }
 
+PRBool
+gfxContext::UserToDevicePixelSnapped(gfxPoint& pt, PRBool ignoreScale) const
+{
+    if (GetFlags() & FLAG_DISABLE_SNAPPING)
+        return PR_FALSE;
+
+    // if we're not at 1.0 scale, don't snap, unless we're
+    // ignoring the scale.  If we're not -just- a scale,
+    // never snap.
+    cairo_matrix_t mat;
+    cairo_get_matrix(mCairo, &mat);
+    if ((!ignoreScale && (mat.xx != 1.0 || mat.yy != 1.0)) ||
+        (mat.xy != 0.0 || mat.yx != 0.0))
+        return PR_FALSE;
+
+    pt = UserToDevice(pt);
+    pt.Round();
+    return PR_TRUE;
+}
+
 void
 gfxContext::PixelSnappedRectangleAndSetPattern(const gfxRect& rect,
                                                gfxPattern *pattern)
