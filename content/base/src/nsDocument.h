@@ -921,6 +921,12 @@ public:
                                                    nsIDOMNodeList** aResult);
   virtual NS_HIDDEN_(nsresult) GetContentListFor(nsIContent* aContent,
                                                  nsIDOMNodeList** aResult);
+
+  virtual NS_HIDDEN_(nsresult) ElementFromPointHelper(PRInt32 aX, PRInt32 aY,
+                                                      PRBool aIgnoreRootScrollFrame,
+                                                      PRBool aFlushLayout,
+                                                      nsIDOMElement** aReturn);
+
   virtual NS_HIDDEN_(void) FlushSkinBindings();
 
   virtual NS_HIDDEN_(nsresult) InitializeFrameLoader(nsFrameLoader* aLoader);
