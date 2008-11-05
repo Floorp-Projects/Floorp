@@ -70,6 +70,15 @@
 #include "jstracer.h"
 using namespace avmplus;
 using namespace nanojit;
+
+/* FIXME  Duplicated with jstracer.cpp, doing it this way for now
+ *        to keep it private to files that need it. */
+#ifdef JS_JIT_SPEW
+static bool verbose_debug = getenv("TRACEMONKEY") && strstr(getenv("TRACEMONKEY"), "verbose");
+#define debug_only_v(x) if (verbose_debug) { x; }
+#else
+#define debug_only_v(x)
+#endif
 #endif
 
 typedef enum REOp {
@@ -2127,9 +2136,7 @@ class RegExpNativeCompiler {
     inline LIns*
     addName(LirBuffer *lirbuf, LIns* ins, const char* name)
     {
-    #ifdef DEBUG
-        lirbuf->names->addName(ins, name);
-    #endif
+        debug_only_v(lirbuf->names->addName(ins, name);)
         return ins;
     }
 
@@ -2154,9 +2161,9 @@ class RegExpNativeCompiler {
         lir = lirb = new (&gc) LirBufWriter(lirbuf);
 
         /* FIXME  Use smart pointer instead. */
-        verbose_only(fragment->lirbuf->names = new (&gc) LirNameMap(&gc, NULL, fragmento->labels);)
+        debug_only_v(fragment->lirbuf->names = new (&gc) LirNameMap(&gc, NULL, fragmento->labels);)
         /* FIXME  Use smart pointer instead. */
-        verbose_only(lir = new (&gc) VerboseWriter(&gc, lir, lirbuf->names);)
+        debug_only_v(lir = new (&gc) VerboseWriter(&gc, lir, lirbuf->names);)
 
         lir->ins0(LIR_start);
         lirbuf->state = state = addName(lirbuf, lir->insParam(0, 0), "state");
@@ -2181,11 +2188,11 @@ class RegExpNativeCompiler {
         ::compile(fragmento->assm(), fragment);
 
         delete lirb;
-        verbose_only(delete lir;)
+        debug_only_v(delete lir;)
         return JS_TRUE;
     fail:
         delete lirb;
-        verbose_only(delete lir;)
+        debug_only_v(delete lir;)
         fragmento->clearFrag(re);
         return JS_FALSE;
     }
