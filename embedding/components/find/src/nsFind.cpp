@@ -378,8 +378,7 @@ nsFindContentIterator::SetupInnerIterator(nsIContent* aContent)
   if (!frame)
     return;
 
-  nsITextControlFrame* tcFrame = nsnull;
-  CallQueryInterface(frame, &tcFrame);
+  nsITextControlFrame* tcFrame = do_QueryFrame(frame);
   if (!tcFrame)
     return;
 

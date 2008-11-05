@@ -71,24 +71,12 @@ nsVideoFrame::~nsVideoFrame()
 {
 }
 
-NS_INTERFACE_MAP_BEGIN(nsVideoFrame)
-  NS_INTERFACE_MAP_ENTRY(nsIAnonymousContentCreator)
-#ifdef NS_DEBUG
-  NS_INTERFACE_MAP_ENTRY(nsIFrameDebug)
+NS_QUERYFRAME_HEAD(nsVideoFrame)
+  NS_QUERYFRAME_ENTRY(nsIAnonymousContentCreator)
+#ifdef DEBUG
+  NS_QUERYFRAME_ENTRY(nsIFrameDebug)
 #endif
-NS_INTERFACE_MAP_END_INHERITING(nsContainerFrame)
-
-NS_IMETHODIMP_(nsrefcnt) 
-nsVideoFrame::AddRef(void)
-{
-  return NS_OK;
-}
-
-NS_IMETHODIMP_(nsrefcnt)
-nsVideoFrame::Release(void)
-{
-    return NS_OK;
-}
+NS_QUERYFRAME_TAIL_INHERITING(nsContainerFrame)
 
 nsresult
 nsVideoFrame::CreateAnonymousContent(nsTArray<nsIContent*>& aElements)

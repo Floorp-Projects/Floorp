@@ -38,24 +38,19 @@
 #ifndef nsIListControlFrame_h___
 #define nsIListControlFrame_h___
 
-#include "nsISupports.h"
+#include "nsQueryFrame.h"
 #include "nsFont.h"
 class nsPresContext;
 class nsAString;
 class nsIContent;
 
-// IID for the nsIListControlFrame class
-#define NS_ILISTCONTROLFRAME_IID    \
-{ 0x4de9ab73, 0x31b5, 0x4d92, \
- { 0xb7, 0xe4, 0x73, 0xb4, 0x4d, 0xcb, 0xfc, 0xda } }
-
 /** 
   * nsIListControlFrame is the interface for frame-based listboxes.
   */
-class nsIListControlFrame : public nsISupports {
-
+class nsIListControlFrame : public nsQueryFrame
+{
 public:
-  NS_DECLARE_STATIC_IID_ACCESSOR(NS_ILISTCONTROLFRAME_IID)
+  NS_DECLARE_FRAME_ACCESSOR(nsIListControlFrame)
 
   /**
    * Sets the ComboBoxFrame
@@ -125,8 +120,6 @@ public:
    */
   virtual void OnContentReset() = 0;
 };
-
-NS_DEFINE_STATIC_IID_ACCESSOR(nsIListControlFrame, NS_ILISTCONTROLFRAME_IID)
 
 #endif
 

@@ -52,8 +52,6 @@
 #include "nsFont.h"
 #include "nsFormControlFrame.h"
 
-static NS_DEFINE_IID(kLegendFrameCID, NS_LEGEND_FRAME_CID);
- 
 nsIFrame*
 NS_NewLegendFrame(nsIPresShell* aPresShell, nsStyleContext* aContext)
 {
@@ -77,19 +75,9 @@ nsLegendFrame::Destroy()
   nsBlockFrame::Destroy();
 }
 
-// Frames are not refcounted, no need to AddRef
-NS_IMETHODIMP
-nsLegendFrame::QueryInterface(REFNSIID aIID, void** aInstancePtr)
-{
-  NS_PRECONDITION(aInstancePtr, "null out param");
-
-  if (aIID.Equals(kLegendFrameCID)) {
-    *aInstancePtr = this;
-    return NS_OK;
-  }
-
-  return nsBlockFrame::QueryInterface(aIID, aInstancePtr);
-}
+NS_QUERYFRAME_HEAD(nsLegendFrame)
+  NS_QUERYFRAME_ENTRY(nsLegendFrame)
+NS_QUERYFRAME_TAIL_INHERITING(nsBlockFrame)
 
 NS_IMETHODIMP 
 nsLegendFrame::Reflow(nsPresContext*          aPresContext,

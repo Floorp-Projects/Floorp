@@ -45,11 +45,11 @@
 #include "nsDOMError.h"
 
 //----------------------------------------------------------------------
-// nsISupports methods
+// nsQueryFrame methods
 
-NS_INTERFACE_MAP_BEGIN(nsSVGTextContainerFrame)
-  NS_INTERFACE_MAP_ENTRY(nsISVGTextContentMetrics)
-NS_INTERFACE_MAP_END_INHERITING(nsSVGDisplayContainerFrame)
+NS_QUERYFRAME_HEAD(nsSVGTextContainerFrame)
+  NS_QUERYFRAME_ENTRY(nsISVGTextContentMetrics)
+NS_QUERYFRAME_TAIL_INHERITING(nsSVGDisplayContainerFrame)
 
 void
 nsSVGTextContainerFrame::NotifyGlyphMetricsChange()
@@ -308,7 +308,7 @@ nsSVGTextContainerFrame::GetFirstGlyphFragmentChildNode()
   nsISVGGlyphFragmentNode *retval = nsnull;
   nsIFrame* kid = mFrames.FirstChild();
   while (kid) {
-    CallQueryInterface(kid, &retval);
+    retval = do_QueryFrame(kid);
     if (retval) break;
     kid = kid->GetNextSibling();
   }
@@ -319,12 +319,11 @@ nsISVGGlyphFragmentNode *
 nsSVGTextContainerFrame::GetNextGlyphFragmentChildNode(nsISVGGlyphFragmentNode *node)
 {
   nsISVGGlyphFragmentNode *retval = nsnull;
-  nsIFrame *frame = nsnull;
-  CallQueryInterface(node, &frame);
+  nsIFrame *frame = do_QueryFrame(node);
   NS_ASSERTION(frame, "interface not implemented");
   frame = frame->GetNextSibling();
   while (frame) {
-    CallQueryInterface(frame, &retval);
+    retval = do_QueryFrame(frame);
     if (retval) break;
     frame = frame->GetNextSibling();
   }

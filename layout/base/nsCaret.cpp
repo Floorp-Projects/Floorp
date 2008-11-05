@@ -1184,8 +1184,7 @@ nsresult nsCaret::UpdateCaretRects(nsIFrame* aFrame, PRInt32 aFrameOffset)
   if (scrollFrame)
   {
     // First, use the scrollFrame to get at the scrollable view that we're in.
-    nsIScrollableFrame *scrollable;
-    CallQueryInterface(scrollFrame, &scrollable);
+    nsIScrollableFrame *scrollable = do_QueryFrame(scrollFrame);
     nsIScrollableView *scrollView = scrollable->GetScrollableView();
     nsIView *view;
     scrollView->GetScrolledView(view);

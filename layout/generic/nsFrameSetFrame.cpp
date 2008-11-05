@@ -253,18 +253,9 @@ nsHTMLFramesetFrame::~nsHTMLFramesetFrame()
                                          FrameResizePrefCallback, this);
 }
 
-NS_IMETHODIMP
-nsHTMLFramesetFrame::QueryInterface(const nsIID& aIID, void** aInstancePtr)
-{
-  NS_PRECONDITION(aInstancePtr, "null out param");
-
-  if (aIID.Equals(NS_GET_IID(nsHTMLFramesetFrame))) {
-    *aInstancePtr = (void*)this;
-    return NS_OK;
-  } 
-
-  return nsHTMLContainerFrame::QueryInterface(aIID, aInstancePtr);
-}
+NS_QUERYFRAME_HEAD(nsHTMLFramesetFrame)
+  NS_QUERYFRAME_ENTRY(nsHTMLFramesetFrame)
+NS_QUERYFRAME_TAIL_INHERITING(nsHTMLContainerFrame)
 
 // static
 int
@@ -311,9 +302,7 @@ nsHTMLFramesetFrame::Init(nsIContent*      aContent,
   nsIFrame* parentFrame = GetParent();
   mTopLevelFrameset = (nsHTMLFramesetFrame*)this;
   while (parentFrame) {
-    nsHTMLFramesetFrame* frameset = nsnull;
-    CallQueryInterface(parentFrame, &frameset);
-    
+    nsHTMLFramesetFrame* frameset = do_QueryFrame(parentFrame);
     if (frameset) {
       mTopLevelFrameset = frameset;
       parentFrame = parentFrame->GetParent();
@@ -1309,8 +1298,7 @@ nsHTMLFramesetFrame::IsLeaf() const
 PRBool 
 nsHTMLFramesetFrame::ChildIsFrameset(nsIFrame* aChild) 
 {
-  nsIFrame* childFrame = nsnull;
-  aChild->QueryInterface(NS_GET_IID(nsHTMLFramesetFrame), (void**)&childFrame);
+  nsHTMLFramesetFrame* childFrame = do_QueryFrame(aChild);
   if (childFrame) {
     return PR_TRUE;
   }

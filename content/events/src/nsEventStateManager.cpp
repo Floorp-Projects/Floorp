@@ -2379,8 +2379,7 @@ nsEventStateManager::DoDefaultDragStart(nsPresContext* aPresContext,
           if (presShell) {
             nsIFrame* frame = presShell->GetPrimaryFrameFor(content);
             if (frame) {
-              nsTreeBodyFrame* treeBody;
-              CallQueryInterface(frame, &treeBody);
+              nsTreeBodyFrame* treeBody = do_QueryFrame(frame);
               treeBody->GetSelectionRegion(getter_AddRefs(region));
             }
           }
@@ -2535,8 +2534,7 @@ static nsIScrollableView*
 GetScrollableViewForFrame(nsPresContext* aPresContext, nsIFrame* aFrame)
 {
   for (; aFrame; aFrame = GetParentFrameToScroll(aPresContext, aFrame)) {
-    nsIScrollableViewProvider* svp;
-    CallQueryInterface(aFrame, &svp);
+    nsIScrollableViewProvider* svp = do_QueryFrame(aFrame);
     if (svp) {
       nsIScrollableView* scrollView = svp->GetScrollableView();
       if (scrollView)
@@ -2612,8 +2610,7 @@ nsEventStateManager::DoScrollText(nsPresContext* aPresContext,
   // operation, even if the mouse hasn't moved.
   nsIFrame* lastScrollFrame = nsMouseWheelTransaction::GetTargetFrame();
   if (lastScrollFrame) {
-    nsIScrollableViewProvider* svp;
-    CallQueryInterface(lastScrollFrame, &svp);
+    nsIScrollableViewProvider* svp = do_QueryFrame(lastScrollFrame);
     if (svp) {
       scrollView = svp->GetScrollableView();
       nsMouseWheelTransaction::UpdateTransaction();
@@ -2628,8 +2625,7 @@ nsEventStateManager::DoScrollText(nsPresContext* aPresContext,
        scrollFrame = GetParentFrameToScroll(aPresContext, scrollFrame)) {
     // Check whether the frame wants to provide us with a scrollable view.
     scrollView = nsnull;
-    nsIScrollableViewProvider* svp;
-    CallQueryInterface(scrollFrame, &svp);
+    nsIScrollableViewProvider* svp = do_QueryFrame(scrollFrame);
     if (svp) {
       scrollView = svp->GetScrollableView();
     }
@@ -2658,8 +2654,7 @@ nsEventStateManager::DoScrollText(nsPresContext* aPresContext,
       }
 
       // Comboboxes need special care.
-      nsIComboboxControlFrame* comboBox = nsnull;
-      CallQueryInterface(scrollFrame, &comboBox);
+      nsIComboboxControlFrame* comboBox = do_QueryFrame(scrollFrame);
       if (comboBox) {
         if (comboBox->IsDroppedDown()) {
           // Don't propagate to parent when drop down menu is active.
@@ -3593,8 +3588,7 @@ nsEventStateManager::NotifyMouseOut(nsGUIEvent* aEvent, nsIContent* aMovingInto)
   if (mLastMouseOverFrame) {
     // if the frame is associated with a subdocument,
     // tell the subdocument that we're moving out of it
-    nsIFrameFrame* subdocFrame;
-    CallQueryInterface(mLastMouseOverFrame.GetFrame(), &subdocFrame);
+    nsIFrameFrame* subdocFrame = do_QueryFrame(mLastMouseOverFrame.GetFrame());
     if (subdocFrame) {
       nsCOMPtr<nsIDocShell> docshell;
       subdocFrame->GetDocShell(getter_AddRefs(docshell));
@@ -5215,9 +5209,7 @@ nsEventStateManager::SendFocusBlur(nsPresContext* aPresContext,
       currentFocusFrame = presShell->GetPrimaryFrameFor(mCurrentFocus);
     if (!currentFocusFrame)
       currentFocusFrame = mCurrentTarget;
-    nsIObjectFrame* objFrame = nsnull;
-    if (currentFocusFrame)
-      CallQueryInterface(currentFocusFrame, &objFrame);
+    nsIObjectFrame* objFrame = do_QueryFrame(currentFocusFrame);
     if (objFrame) {
       nsIView* view = currentFocusFrame->GetViewExternal();
       NS_ASSERTION(view, "Object frames must have views");
