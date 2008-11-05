@@ -371,8 +371,11 @@ class TraceRecorder : public avmplus::GCObject {
     bool test_property_cache(JSObject* obj, nanojit::LIns* obj_ins, JSObject*& obj2,
                              jsuword& pcval);
     bool test_property_cache_direct_slot(JSObject* obj, nanojit::LIns* obj_ins, uint32& slot);
-    void stobj_set_slot(nanojit::LIns* obj_ins, unsigned slot,
-                        nanojit::LIns*& dslots_ins, nanojit::LIns* v_ins);
+    void stobj_set_slot(nanojit::LIns* obj_ins, unsigned slot, nanojit::LIns*& dslots_ins,
+                        nanojit::LIns* v_ins);
+    void stobj_set_dslot(nanojit::LIns *obj_ins, unsigned slot, nanojit::LIns*& dslots_ins,
+                         nanojit::LIns* v_ins, const char *name);
+
     nanojit::LIns* stobj_get_fslot(nanojit::LIns* obj_ins, unsigned slot);
     nanojit::LIns* stobj_get_slot(nanojit::LIns* obj_ins, unsigned slot,
                                   nanojit::LIns*& dslots_ins);
@@ -401,6 +404,8 @@ class TraceRecorder : public avmplus::GCObject {
     bool guardElemOp(JSObject* obj, nanojit::LIns* obj_ins, jsid id, size_t op_offset, jsval* vp);
     void clearFrameSlotsFromCache();
     bool guardShapelessCallee(jsval& callee);
+    bool getClassPrototype(JSObject* ctor, nanojit::LIns*& proto_ins);
+    bool newArray(JSObject* ctor, uint32 argc, jsval* argv, jsval* vp);
     bool interpretedFunctionCall(jsval& fval, JSFunction* fun, uintN argc, bool constructing);
     bool functionCall(bool constructing);
 
