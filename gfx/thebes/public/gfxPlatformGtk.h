@@ -40,6 +40,7 @@
 #define GFX_PLATFORM_GTK_H
 
 #include "gfxPlatform.h"
+#include "nsAutoRef.h"
 
 extern "C" {
     typedef struct _GdkDrawable GdkDrawable;
@@ -52,7 +53,12 @@ class FontEntry;
 typedef struct FT_LibraryRec_ *FT_Library;
 #endif
 
-
+template <class T>
+class gfxGObjectRefTraits : public nsPointerRefTraits<T> {
+public:
+    static void Release(T *aPtr) { g_object_unref(aPtr); }
+    static void AddRef(T *aPtr) { g_object_ref(aPtr); }
+};
 
 class THEBES_API gfxPlatformGtk : public gfxPlatform {
 public:
