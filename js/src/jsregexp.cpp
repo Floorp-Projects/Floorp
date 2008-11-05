@@ -2084,6 +2084,8 @@ class RegExpNativeCompiler {
     }
 
     JSBool compileNode(RENode *node, LIns *pos, LInsList &fails) {
+        if (fragment->lirbuf->outOmem()) return JS_FALSE;
+
         if (!node) {
             lir->insStorei(pos, state, (int) offsetof(REMatchState, cp));
             lir->ins1(LIR_ret, state);
@@ -2157,6 +2159,7 @@ class RegExpNativeCompiler {
         fragment->root = fragment;
         LirBuffer *lirbuf = fragment->lirbuf;
         LirBufWriter *lirb;
+        if (lirbuf->outOmem()) goto fail2;
         /* FIXME  Use smart pointer instead. */
         lir = lirb = new (&gc) LirBufWriter(lirbuf);
 
@@ -2186,6 +2189,8 @@ class RegExpNativeCompiler {
         fragment->lastIns = lir->insGuard(LIR_loop, lir->insImm(1), skip);
 
         ::compile(fragmento->assm(), fragment);
+        if (fragmento->assm()->error() != nanojit::None)
+            goto fail;
 
         delete lirb;
         debug_only_v(delete lir;)
@@ -2193,6 +2198,7 @@ class RegExpNativeCompiler {
     fail:
         delete lirb;
         debug_only_v(delete lir;)
+    fail2:
         fragmento->clearFrag(re);
         return JS_FALSE;
     }
