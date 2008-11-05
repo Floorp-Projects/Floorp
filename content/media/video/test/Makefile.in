@@ -69,9 +69,11 @@ _TEST_FILES = 	test_autoplay.html \
                 test_timeupdate2.html \
                 test_timeupdate3.html \
                 test_volume.html \
+                test_wav_ended1.html \
                 320x240.ogg \
                 bug461281.ogg \
                 seek.ogg \
+                r11025_s16_c1.wav \
 #                test_bug448534.html \
                 $(NULL)
 

@@ -64,7 +64,10 @@ nsAudioStream::nsAudioStream() :
   mVolume(1.0),
   mAudioHandle(0),
   mRate(0),
-  mChannels(0)
+  mChannels(0),
+  mSavedPauseBytes(0),
+  mPauseBytes(0),
+  mPaused(PR_FALSE)
 {
 }
 
@@ -100,7 +103,7 @@ void nsAudioStream::Shutdown()
   mAudioHandle = nsnull;
 }
 
-void nsAudioStream::Write(float* aBuf, PRUint32 aCount)
+void nsAudioStream::Write(const float* aBuf, PRUint32 aCount)
 {
   if (!mAudioHandle)
     return;
@@ -126,7 +129,26 @@ void nsAudioStream::Write(float* aBuf, PRUint32 aCount)
     if (sa_stream_write(reinterpret_cast<sa_stream_t*>(mAudioHandle), s_data.get(), aCount * sizeof(short)) != SA_SUCCESS) {
       PR_LOG(gAudioStreamLog, PR_LOG_ERROR, ("nsAudioStream: sa_stream_write error"));
       Shutdown();
-    }     
+    }
+  }
+}
+
+void nsAudioStream::Write(const short* aBuf, PRUint32 aCount)
+{
+  if (!mAudioHandle)
+    return;
+
+  nsAutoArrayPtr<short> s_data(new short[aCount]);
+
+  if (s_data) {
+    for (PRUint32 i = 0; i < aCount; ++i) {
+      s_data[i] = aBuf[i] * mVolume;
+    }
+
+    if (sa_stream_write(reinterpret_cast<sa_stream_t*>(mAudioHandle), s_data.get(), aCount * sizeof(short)) != SA_SUCCESS) {
+      PR_LOG(gAudioStreamLog, PR_LOG_ERROR, ("nsAudioStream: sa_stream_write error"));
+      Shutdown();
+    }
   }
 }
 
@@ -148,4 +170,65 @@ float nsAudioStream::GetVolume()
 void nsAudioStream::SetVolume(float aVolume)
 {
   mVolume = aVolume;
+}
+
+void nsAudioStream::Drain()
+{
+  if (!mAudioHandle)
+    return;
+
+  if (sa_stream_drain(reinterpret_cast<sa_stream_t*>(mAudioHandle)) != SA_SUCCESS) {
+        PR_LOG(gAudioStreamLog, PR_LOG_ERROR, ("nsAudioStream: sa_stream_drain error"));
+        Shutdown();
+  }
+}
+
+void nsAudioStream::Pause()
+{
+  if (!mAudioHandle)
+    return;
+
+  if (mPaused)
+    return;
+
+  mPaused = PR_TRUE;
+
+  int64_t bytes = 0;
+#if !defined(WIN32)
+  sa_stream_get_position(reinterpret_cast<sa_stream_t*>(mAudioHandle), SA_POSITION_WRITE_SOFTWARE, &bytes);
+#endif
+  mSavedPauseBytes = bytes;
+
+  sa_stream_pause(reinterpret_cast<sa_stream_t*>(mAudioHandle));
+}
+
+void nsAudioStream::Resume()
+{
+  if (!mAudioHandle)
+    return;
+
+  if (!mPaused)
+    return;
+
+  mPaused = PR_FALSE;
+
+  sa_stream_resume(reinterpret_cast<sa_stream_t*>(mAudioHandle));
+
+#if !defined(WIN32)
+  mPauseBytes += mSavedPauseBytes;
+#endif
+}
+
+double nsAudioStream::GetTime()
+{
+  if (!mAudioHandle)
+    return 0.0;
+
+  int64_t bytes = 0;
+#if defined(WIN32)
+  sa_stream_get_position(reinterpret_cast<sa_stream_t*>(mAudioHandle), SA_POSITION_WRITE_HARDWARE, &bytes);
+#else
+  sa_stream_get_position(reinterpret_cast<sa_stream_t*>(mAudioHandle), SA_POSITION_WRITE_SOFTWARE, &bytes);
+#endif
+  return double(bytes + mPauseBytes) / (sizeof(short) * mChannels * mRate);
 }
