@@ -84,6 +84,7 @@ namespace nanojit {
 		#define asm_output1(s,x)		PRFX,s,x); PSFX
 		#define asm_output2(s,x,y)		PRFX,s,x,y); PSFX
 		#define asm_output3(s,x,y,z)	PRFX,s,x,y,z); PSFX
+		#define asm_output5(s,x,y,z,a,b) PRFX,s,x,y,z,a,b); PSFX
 		#define gpn(r)					regNames[(r)] 
 		#define fpn(r)					regNames[(r)] 
 	#else
@@ -92,6 +93,7 @@ namespace nanojit {
 		#define asm_output1(s,x)	
 		#define asm_output2(s,x,y)	
 		#define asm_output3(s,x,y,z)	
+		#define asm_output5(s,x,y,z,a,b)	
 		#define gpn(r)		
 	#endif /* NJ_VERBOSE */
 
