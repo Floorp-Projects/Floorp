@@ -2058,7 +2058,6 @@ class RegExpNativeCompiler {
         LIns* text_ch = lir->insLoad(LIR_ldcs, pos, lir->insImm(0));
         fails.add(lir->insBranch(LIR_jf, lir->ins2(LIR_le, text_ch, lir->insImm(charSet->length)), 0));
         LIns* byteIndex = lir->ins2(LIR_rsh, text_ch, lir->insImm(3));
-        /* FIXME Use indexed load created in bug 444682 */
         LIns* bitmap = lir->insLoad(LIR_ld, lir->insImmPtr(charSet), (int) offsetof(RECharSet, u.bits));
         LIns* byte = lir->insLoad(LIR_ldcb, lir->ins2(LIR_piadd, bitmap, byteIndex), (int) 0);
         LIns* bitMask = lir->ins2(LIR_lsh, lir->insImm(1),
