@@ -71,8 +71,10 @@
 using namespace avmplus;
 using namespace nanojit;
 
-/* FIXME  Duplicated with jstracer.cpp, doing it this way for now
- *        to keep it private to files that need it. */
+/* 
+ * FIXME  Duplicated with jstracer.cpp, doing it this way for now
+ *        to keep it private to files that need it. 
+ */
 #ifdef JS_JIT_SPEW
 static bool verbose_debug = getenv("TRACEMONKEY") && strstr(getenv("TRACEMONKEY"), "verbose");
 #define debug_only_v(x) if (verbose_debug) { x; }
@@ -1959,59 +1961,60 @@ EmitREBytecode(CompilerState *state, JSRegExp *re, size_t treeDepth,
 }
 
 #ifdef JS_TRACER
-typedef List<LIns *, LIST_NonGCObjects> LInsList;
+typedef List<LIns*, LIST_NonGCObjects> LInsList;
 
 /* Dummy GC for nanojit placement new. */
 static GC gc;
 
-/* Small guard record structure that contains just the fields needed 
+/* 
+ * Small guard record structure that contains just the fields needed 
  * for the LIR_loop.
- * FIXME  Should consolidate with tracing structures or eliminate the need
- *        for a guard record at the loop edge. */
+ * FIXME bug 463258
+ */
 struct LoopGuardRecord {
-    void *jmp;
-    GuardRecord* next;
-    SideExit* exit;
-    GuardRecord* guards;
-    Fragment *from;
-    Fragment *target;
+    void*            jmp;
+    GuardRecord*     next;
+    SideExit*        exit;
+    GuardRecord*     guards;
+    Fragment*        from;
+    Fragment*        target;
 };
 
-/* dpm -- need to delete all the new'd stuff here. */
 class RegExpNativeCompiler {
  private:
-    JSRegExp      *re;   /* Careful: not fully initialized */
-    CompilerState *cs;   /* RegExp to compile */
-    Fragment      *fragment;
-    LirWriter     *lir;
+    JSRegExp*        re;   /* Careful: not fully initialized */
+    CompilerState*   cs;   /* RegExp to compile */
+    Fragment*        fragment;
+    LirWriter*       lir;
 
-    LIns          *state;
-    LIns          *gdata;
-    LIns          *cpend;
+    LIns*            state;
+    LIns*            gdata;
+    LIns*            cpend;
 
-    JSBool isCaseInsensitive() const {
-        return cs->flags & JSREG_FOLD;
-    }
+    JSBool isCaseInsensitive() const { return cs->flags & JSREG_FOLD; }
 
-    void targetCurrentPoint(LIns *ins) {
-        ins->target(lir->ins0(LIR_label));
-    }
+    void targetCurrentPoint(LIns* ins) { ins->target(lir->ins0(LIR_label)); }
 
-    void targetCurrentPoint(LInsList &fails) {
-        LIns *fail = lir->ins0(LIR_label);
+    void targetCurrentPoint(LInsList& fails) 
+    {
+        LIns* fail = lir->ins0(LIR_label);
         for (size_t i = 0; i < fails.size(); ++i) {
             fails[i]->target(fail);
         }
         fails.clear();
     }
 
-    JSBool compileEmpty(RENode *node, LIns *pos, LInsList &fails) {
+    JSBool compileEmpty(RENode* node, LIns* pos, LInsList& fails) 
+    {
         return compileNode(node->next, pos, fails);
     }
 
-    JSBool compileFlatSingleChar(RENode *node, LIns *pos, LInsList &fails) {
-        /* Fast case-insensitive test for ASCII letters: convert text
-         * char to lower case by bit-or-ing in 32 and compare. */
+    JSBool compileFlatSingleChar(RENode* node, LIns* pos, LInsList& fails) 
+    {
+        /* 
+         * Fast case-insensitive test for ASCII letters: convert text
+         * char to lower case by bit-or-ing in 32 and compare.
+         */
         JSBool useFastCI = JS_FALSE;
         jschar ch = node->u.flat.chr; /* char to test for */
         jschar ch2 = ch;              /* 2nd char to test for if ci */
@@ -2026,16 +2029,16 @@ class RegExpNativeCompiler {
             }
         }
 
-        LIns *to_fail = lir->insBranch(LIR_jf, lir->ins2(LIR_lt, pos, cpend), 0);
+        LIns* to_fail = lir->insBranch(LIR_jf, lir->ins2(LIR_lt, pos, cpend), 0);
         fails.add(to_fail);
-        LIns *text_ch = lir->insLoad(LIR_ldcs, pos, lir->insImm(0));
-        LIns *comp_ch = useFastCI ? 
+        LIns* text_ch = lir->insLoad(LIR_ldcs, pos, lir->insImm(0));
+        LIns* comp_ch = useFastCI ? 
             lir->ins2(LIR_or, text_ch, lir->insImm(32)) : 
             text_ch;
         if (ch == ch2) {
             fails.add(lir->insBranch(LIR_jf, lir->ins2(LIR_eq, comp_ch, lir->insImm(ch)), 0));
         } else {
-            LIns *to_ok = lir->insBranch(LIR_jt, lir->ins2(LIR_eq, comp_ch, lir->insImm(ch)), 0);
+            LIns* to_ok = lir->insBranch(LIR_jt, lir->ins2(LIR_eq, comp_ch, lir->insImm(ch)), 0);
             fails.add(lir->insBranch(LIR_jf, lir->ins2(LIR_eq, comp_ch, lir->insImm(ch2)), 0));
             targetCurrentPoint(to_ok);
         }
@@ -2044,47 +2047,57 @@ class RegExpNativeCompiler {
         return compileNode(node->next, pos, fails);
     }
 
-    JSBool compileClass(RENode *node, LIns *pos, LInsList &fails) {
-        if (!node->u.ucclass.sense) return JS_FALSE;
+    JSBool compileClass(RENode* node, LIns* pos, LInsList& fails) 
+    {
+        if (!node->u.ucclass.sense) 
+            return JS_FALSE;
 
-        RECharSet *charSet = InitNodeCharSet(re, node);
-        LIns *to_fail = lir->insBranch(LIR_jf, lir->ins2(LIR_lt, pos, cpend), 0);
+        RECharSet* charSet = InitNodeCharSet(re, node);
+        LIns* to_fail = lir->insBranch(LIR_jf, lir->ins2(LIR_lt, pos, cpend), 0);
         fails.add(to_fail);
-        LIns *text_ch = lir->insLoad(LIR_ldcs, pos, lir->insImm(0));
+        LIns* text_ch = lir->insLoad(LIR_ldcs, pos, lir->insImm(0));
         fails.add(lir->insBranch(LIR_jf, lir->ins2(LIR_le, text_ch, lir->insImm(charSet->length)), 0));
-        LIns *byteIndex = lir->ins2(LIR_rsh, text_ch, lir->insImm(3));
-        /* FIXME  When available in nanojit, use LIR that can generate
-         *        indexed load instructions instead of this workaround. */
-        LIns *bitmap = lir->insLoad(LIR_ld, lir->insImmPtr(charSet), (int) offsetof(RECharSet, u.bits));
-        LIns *byte = lir->insLoad(LIR_ldcb, lir->ins2(LIR_piadd, bitmap, byteIndex), (int) 0);
-        LIns *bitMask = lir->ins2(LIR_lsh, lir->insImm(1),
+        LIns* byteIndex = lir->ins2(LIR_rsh, text_ch, lir->insImm(3));
+        /* FIXME Use indexed load created in bug 444682 */
+        LIns* bitmap = lir->insLoad(LIR_ld, lir->insImmPtr(charSet), (int) offsetof(RECharSet, u.bits));
+        LIns* byte = lir->insLoad(LIR_ldcb, lir->ins2(LIR_piadd, bitmap, byteIndex), (int) 0);
+        LIns* bitMask = lir->ins2(LIR_lsh, lir->insImm(1),
                                lir->ins2(LIR_and, text_ch, lir->insImm(0x7)));
-        LIns *test = lir->ins2(LIR_eq, lir->ins2(LIR_and, byte, bitMask), lir->insImm(0));
+        LIns* test = lir->ins2(LIR_eq, lir->ins2(LIR_and, byte, bitMask), lir->insImm(0));
         
-        LIns *to_next = lir->insBranch(LIR_jt, test, 0);
+        LIns* to_next = lir->insBranch(LIR_jt, test, 0);
         fails.add(to_next);
         pos = lir->ins2(LIR_piadd, pos, lir->insImm(2));
         return compileNode(node->next, pos, fails);
     }
 
-    JSBool compileAlt(RENode *node, LIns *pos, LInsList &fails) {
+    JSBool compileAlt(RENode* node, LIns* pos, LInsList& fails) 
+    {
         LInsList kidFails(NULL);
-        if (!compileNode((RENode *) node->kid, pos, kidFails)) return JS_FALSE;
-        if (!compileNode(node->next, pos, kidFails)) return JS_FALSE;
+        if (!compileNode((RENode *) node->kid, pos, kidFails)) 
+            return JS_FALSE;
+        if (!compileNode(node->next, pos, kidFails)) 
+            return JS_FALSE;
 
         targetCurrentPoint(kidFails);
-        if (!compileNode(node->u.altprereq.kid2, pos, fails)) return JS_FALSE;
-        /* Disable compilation for any regexp where something follows an
+        if (!compileNode(node->u.altprereq.kid2, pos, fails)) 
+            return JS_FALSE;
+        /* 
+         * Disable compilation for any regexp where something follows an
          * alternation. To make this work, we need to redesign to either
          * (a) pass around continuations so we know the right place to go
          * when we logically return, or (b) generate explicit backtracking
-         * code. */
-        if (node->next) return JS_FALSE;
+         * code. 
+         */
+        if (node->next) 
+            return JS_FALSE;
         return compileNode(node->next, pos, fails);
     }
 
-    JSBool compileNode(RENode *node, LIns *pos, LInsList &fails) {
-        if (fragment->lirbuf->outOmem()) return JS_FALSE;
+    JSBool compileNode(RENode* node, LIns* pos, LInsList& fails) 
+    {
+        if (fragment->lirbuf->outOmem()) 
+            return JS_FALSE;
 
         if (!node) {
             lir->insStorei(pos, state, (int) offsetof(REMatchState, cp));
@@ -2096,9 +2109,9 @@ class RegExpNativeCompiler {
         case REOP_EMPTY:
             return compileEmpty(node, pos, fails);
         case REOP_FLAT:
-            if (node->u.flat.length == 1) {
+            if (node->u.flat.length == 1)
                 return compileFlatSingleChar(node, pos, fails);
-            }
+            return JS_FALSE;
         case REOP_ALT:
         case REOP_ALTPREREQ:
             return compileAlt(node, pos, fails);
@@ -2109,20 +2122,24 @@ class RegExpNativeCompiler {
         }
     }
 
-    JSBool compileSticky(RENode *root, LIns *start) {
+    JSBool compileSticky(RENode* root, LIns* start) 
+    {
         LInsList fails(NULL);
-        if (!compileNode(root, start, fails)) return JS_FALSE;
+        if (!compileNode(root, start, fails)) 
+            return JS_FALSE;
         targetCurrentPoint(fails);
         lir->ins1(LIR_ret, lir->insImm(0));
         return JS_TRUE;
     }
 
-    JSBool compileAnchoring(RENode *root, LIns *start) {
+    JSBool compileAnchoring(RENode* root, LIns* start) 
+    {
         /* Even at the end, the empty regexp would match. */
-        LIns *to_next = lir->insBranch(LIR_jf, 
+        LIns* to_next = lir->insBranch(LIR_jf, 
                                        lir->ins2(LIR_le, start, cpend), 0);
         LInsList fails(NULL);
-        if (!compileNode(root, start, fails)) return JS_FALSE;
+        if (!compileNode(root, start, fails)) 
+            return JS_FALSE;
 
         targetCurrentPoint(to_next);
         lir->ins1(LIR_ret, lir->insImm(0));
@@ -2134,9 +2151,8 @@ class RegExpNativeCompiler {
         return JS_TRUE;
     }
 
-    /* FIXME  Partial duplication with TraceRecorder::addName */
     inline LIns*
-    addName(LirBuffer *lirbuf, LIns* ins, const char* name)
+    addName(LirBuffer* lirbuf, LIns* ins, const char* name)
     {
         debug_only_v(lirbuf->names->addName(ins, name);)
         return ins;
@@ -2146,26 +2162,26 @@ class RegExpNativeCompiler {
     RegExpNativeCompiler(JSRegExp *re, CompilerState *cs) 
         : re(re), cs(cs), fragment(NULL) {  }
 
-    JSBool compile(JSContext *cx) {
-        LoopGuardRecord *guard;
-        LIns *skip;
-        LIns *start;
+    JSBool compile(JSContext* cx) 
+    {
+        LoopGuardRecord* guard;
+        LIns* skip;
+        LIns* start;
 
-        Fragmento *fragmento = JS_TRACE_MONITOR(cx).reFragmento;
+        Fragmento* fragmento = JS_TRACE_MONITOR(cx).reFragmento;
         fragment = fragmento->getAnchor(re);
         fragment->lirbuf = new (&gc) LirBuffer(fragmento, NULL);
-        /* Scary: this is required to have the onDestroy method delete
-         * the lirbuf. */
+        /* Scary: required to have the onDestroy method delete the lirbuf. */
         fragment->root = fragment;
-        LirBuffer *lirbuf = fragment->lirbuf;
-        LirBufWriter *lirb;
+        LirBuffer* lirbuf = fragment->lirbuf;
+        LirBufWriter* lirb;
         if (lirbuf->outOmem()) goto fail2;
-        /* FIXME  Use smart pointer instead. */
+        /* FIXME Use bug 463260 smart pointer when available. */
         lir = lirb = new (&gc) LirBufWriter(lirbuf);
 
-        /* FIXME  Use smart pointer instead. */
+        /* FIXME Use bug 463260 smart pointer when available. */
         debug_only_v(fragment->lirbuf->names = new (&gc) LirNameMap(&gc, NULL, fragmento->labels);)
-        /* FIXME  Use smart pointer instead. */
+        /* FIXME Use bug 463260 smart pointer when available. */
         debug_only_v(lir = new (&gc) VerboseWriter(&gc, lir, lirbuf->names);)
 
         lir->ins0(LIR_start);
