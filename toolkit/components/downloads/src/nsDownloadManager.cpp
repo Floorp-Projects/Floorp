@@ -1690,6 +1690,42 @@ nsDownloadManager::RemoveDownload(PRUint32 aID)
 }
 
 NS_IMETHODIMP
+nsDownloadManager::RemoveDownloadsByTimeframe(PRInt64 aStartTime,
+                                              PRInt64 aEndTime)
+{
+  nsCOMPtr<mozIStorageStatement> stmt;
+  nsresult rv = mDBConn->CreateStatement(NS_LITERAL_CSTRING(
+    "DELETE FROM moz_downloads "
+    "WHERE startTime >= ?1 "
+    "AND startTime <= ?2 "
+    "AND state NOT IN (?3, ?4, ?5)"), getter_AddRefs(stmt));
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  // Bind the times
+  rv = stmt->BindInt64Parameter(0, aStartTime);
+  NS_ENSURE_SUCCESS(rv, rv);
+  rv = stmt->BindInt64Parameter(1, aEndTime);
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  // Bind the active states
+  rv = stmt->BindInt32Parameter(2, nsIDownloadManager::DOWNLOAD_DOWNLOADING);
+  NS_ENSURE_SUCCESS(rv, rv);
+  rv = stmt->BindInt32Parameter(3, nsIDownloadManager::DOWNLOAD_PAUSED);
+  NS_ENSURE_SUCCESS(rv, rv);
+  rv = stmt->BindInt32Parameter(4, nsIDownloadManager::DOWNLOAD_QUEUED);
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  // Execute
+  rv = stmt->Execute();
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  // Notify the UI with the topic and null subject to indicate "remove multiple"
+  return mObserverService->NotifyObservers(nsnull,
+                                           "download-manager-remove-download",
+                                           nsnull);
+}
+
+NS_IMETHODIMP
 nsDownloadManager::CleanUp()
 {
   DownloadState states[] = { nsIDownloadManager::DOWNLOAD_FINISHED,
@@ -1730,7 +1766,7 @@ nsDownloadManager::CleanUp()
     NS_ENSURE_SUCCESS(rv, rv);
   }
 
-  // Notify the UI with the topic and null subject to indicate "remove all"
+  // Notify the UI with the topic and null subject to indicate "remove multiple"
   return mObserverService->NotifyObservers(nsnull,
                                            "download-manager-remove-download",
                                            nsnull);
