@@ -87,12 +87,8 @@
   -moz-appearance: -moz-win-glass;
   -moz-border-radius: 0;
   border: none;
-}
-
-#ctrlTab-label:-moz-system-metric(windows-compositor) {
-  font: Segoe UI, window;
+  font: "Segoe UI", window;
   font-weight: normal;
-  font-size: 1.5em;
   color: black;
-  text-shadow: white -1px -1px 9px, white -1px 1px 9px, white 1px 1px 9px, white 1px -1px 9px;
+  text-shadow: white -1px -1px .5em, white -1px 1px .5em, white 1px 1px .5em, white 1px -1px .5em;
 }

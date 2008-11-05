@@ -116,9 +116,6 @@ function test() {
       ok(isOpen(),
          "With " + tabCount + " tabs open, Ctrl+Tab opens the preview panel");
 
-      is(ctrlTab.label.value, gBrowser.mTabs[expectedIndex].label,
-         "Preview panel displays label of expected tab");
-
       releaseCtrl();
 
       ok(!isOpen(),
