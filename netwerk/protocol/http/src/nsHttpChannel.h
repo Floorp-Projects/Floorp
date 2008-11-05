@@ -178,9 +178,7 @@ private:
     void     HandleAsyncNotModified();
     void     HandleAsyncFallback();
     nsresult PromptTempRedirect();
-    nsresult SetupReplacementChannel(nsIURI *, nsIChannel *,
-                                     PRBool preserveMethod,
-                                     PRBool forProxy);
+    nsresult SetupReplacementChannel(nsIURI *, nsIChannel *, PRBool preserveMethod);
 
     // proxy specific methods
     nsresult ProxyFailover();
