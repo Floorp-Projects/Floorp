@@ -178,6 +178,29 @@ namespace nanojit
  			*(--_nIns) = (uint8_t) ( 2<<6 | (r)<<3 | (b) ); \
  		} 
 
+#define MODRMSIB(reg,base,index,scale,disp)					\
+		if (disp != 0 || base == EBP) {						\
+			if (isS8(disp)) {								\
+				*(--_nIns) = int8_t(disp);					\
+			} else {										\
+				IMM32(disp);								\
+			}												\
+		}													\
+		*(--_nIns) = uint8_t((scale)<<6|(index)<<3|(base));	\
+		if (disp == 0 && base != EBP) {						\
+			*(--_nIns) = uint8_t(((reg)<<3)|4);				\
+		} else {											\
+			if (isS8(disp))									\
+				*(--_nIns) = uint8_t((1<<6)|(reg<<3)|4);	\
+			else											\
+				*(--_nIns) = uint8_t((2<<6)|(reg<<3)|4);	\
+		}
+
+#define MODRMdm(r,addr)					\
+		NanoAssert(unsigned(r)<8);		\
+		IMM32(addr);					\
+		*(--_nIns) = (uint8_t)( (r)<<3 | 5 );
+
 #define MODRM(d,s) \
 		NanoAssert(((unsigned)(d))<8 && ((unsigned)(s))<8); \
 		*(--_nIns) = (uint8_t) ( 3<<6|(d)<<3|(s) )
@@ -191,16 +214,38 @@ namespace nanojit
 		MODRMm(r,d,b);		\
 		*(--_nIns) = uint8_t(c)
 
+#define ALUdm(c,r,addr)		\
+		underrunProtect(6);	\
+		MODRMdm(r,addr);	\
+		*(--_nIns) = uint8_t(c)
+
+#define ALUsib(c,r,base,index,scale,disp)	\
+		underrunProtect(7);					\
+		MODRMSIB(r,base,index,scale,disp);	\
+		*(--_nIns) = uint8_t(c)
+
 #define ALUm16(c,r,d,b)		\
 		underrunProtect(9); \
 		MODRMm(r,d,b);		\
 		*(--_nIns) = uint8_t(c);\
 		*(--_nIns) = 0x66
 
+#define ALU2dm(c,r,addr)	\
+		underrunProtect(7);	\
+		MODRMdm(r,addr);	\
+        *(--_nIns) = (uint8_t) (c);\
+        *(--_nIns) = (uint8_t) ((c)>>8)
+
 #define ALU2m(c,r,d,b)      \
         underrunProtect(9); \
         MODRMm(r,d,b);      \
         *(--_nIns) = (uint8_t) (c);\
+        *(--_nIns) = (uint8_t) ((c)>>8)
+
+#define ALU2sib(c,r,base,index,scale,disp)	\
+		underrunProtect(8);					\
+		MODRMSIB(r,base,index,scale,disp);	\
+        *(--_nIns) = (uint8_t) (c);			\
         *(--_nIns) = (uint8_t) ((c)>>8)
 
 #define ALU(c,d,s)  \
@@ -320,16 +365,49 @@ namespace nanojit
 	ALUm(0x8b,reg,disp,base);	\
 	asm_output3("mov %s,%d(%s)",gpn(reg),disp,gpn(base)); } while(0)
 
+#define LDdm(reg,addr) do {		\
+	ALUdm(0x8b,reg,addr);		\
+	asm_output2("mov %s,0(%x)",gpn(reg),addr); \
+	} while (0)
+
+
+#define SIBIDX(n)	"1248"[n]
+
+#define LDsib(reg,disp,base,index,scale) do {	\
+	ALUsib(0x8b,reg,base,index,scale,disp);		\
+	asm_output5("mov %s,%d(%s+%s*%c)",gpn(reg),disp,gpn(base),gpn(index),SIBIDX(scale)); \
+	} while (0)
+
 // load 16-bit, sign extend
 #define LD16S(r,d,b) do { ALU2m(0x0fbf,r,d,b); asm_output3("movsx %s,%d(%s)", gpn(r),d,gpn(b)); } while(0)
 	
 // load 16-bit, zero extend
 #define LD16Z(r,d,b) do { ALU2m(0x0fb7,r,d,b); asm_output3("movsz %s,%d(%s)", gpn(r),d,gpn(b)); } while(0)
-	
+
+#define LD16Zdm(r,addr) do { ALU2dm(0x0fb7,r,addr); asm_output2("movsz %s,0(%x)", gpn(r),addr); } while (0)
+
+#define LD16Zsib(r,disp,base,index,scale) do {	\
+	ALU2sib(0x0fb7,r,base,index,scale,disp);	\
+	asm_output5("movsz %s,%d(%s+%s*%c)",gpn(r),disp,gpn(base),gpn(index),SIBIDX(scale)); \
+	} while (0)
+
 // load 8-bit, zero extend
 // note, only 5-bit offsets (!) are supported for this, but that's all we need at the moment
 // (movzx actually allows larger offsets mode but 5-bit gives us advantage in Thumb mode)
 #define LD8Z(r,d,b)	do { NanoAssert((d)>=0&&(d)<=31); ALU2m(0x0fb6,r,d,b); asm_output3("movzx %s,%d(%s)", gpn(r),d,gpn(b)); } while(0)
+
+#define LD8Zdm(r,addr) do { \
+	NanoAssert((d)>=0&&(d)<=31); \
+	ALU2dm(0x0fb6,r,addr); \
+	asm_output2("movzx %s,0(%x)", gpn(r),addr); \
+	} while(0)
+
+#define LD8Zsib(r,disp,base,index,scale) do {	\
+	NanoAssert((d)>=0&&(d)<=31);				\
+	ALU2sib(0x0fb6,r,base,index,scale,disp);	\
+	asm_output5("movzx %s,%d(%s+%s*%c)",gpn(r),disp,gpn(base),gpn(index),SIBIDX(scale)); \
+	} while(0)
+	
 
 #define LDi(r,i) do { \
 	underrunProtect(5);			\
