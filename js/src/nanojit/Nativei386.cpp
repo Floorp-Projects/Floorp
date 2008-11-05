@@ -1196,7 +1196,7 @@ namespace nanojit
 			 * :TODO: If LHS is const, we could eliminate a register use.  
 			 */
 			if (rL == NULL || rL->reg == UnknownReg)
-				rleft = getBaseReg(lhs, d, rmask(rr));
+				rleft = findSpecificRegFor(lhs, rr);
 			else
 				rleft = rL->reg;
 
