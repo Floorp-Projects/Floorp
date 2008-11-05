@@ -5255,8 +5255,12 @@ TraceRecorder::functionCall(bool constructing)
     JSStackFrame* fp = cx->fp;
     jsbytecode *pc = fp->regs->pc;
     uintN argc = GET_ARGC(pc);
+
     jsval& fval = stackval(0 - (2 + argc));
     JS_ASSERT(&fval >= StackBase(fp));
+
+    if (!VALUE_IS_FUNCTION(cx, fval))
+        ABORT_TRACE("callee is not a function");
 
     jsval& tval = stackval(0 - (argc + 1));
     LIns* this_ins = get(&tval);
@@ -5275,7 +5279,6 @@ TraceRecorder::functionCall(bool constructing)
      * Bytecode sequences that push shapeless callees must guard on the callee
      * class being Function and the function being interpreted.
      */
-    JS_ASSERT(VALUE_IS_FUNCTION(cx, fval));
     JSFunction* fun = GET_FUNCTION_PRIVATE(cx, JSVAL_TO_OBJECT(fval));
 
     if (FUN_INTERPRETED(fun)) {
@@ -5967,9 +5970,6 @@ TraceRecorder::record_JSOP_CALLUPVAR()
 bool
 TraceRecorder::guardShapelessCallee(jsval& callee)
 {
-    if (!VALUE_IS_FUNCTION(cx, callee))
-        ABORT_TRACE("shapeless callee is not a function");
-
     guard(true,
           addName(lir->ins2(LIR_eq, get(&callee), INS_CONSTPTR(JSVAL_TO_OBJECT(callee))),
                   "guard(shapeless callee)"),
