@@ -42,23 +42,27 @@ source $TEST_DIR/bin/set-build-env.sh $@
 
 case $product in
     firefox|thunderbird|fennec)
-#        cd $BUILDTREE/mozilla
 
         if ! $buildbash $bashlogin -c "cd $BUILDTREE/mozilla; make -f client.mk clobber" 2>&1; then
-            error "during client.mk clobber" $LINENO
+            echo "error during client.mk clobber" $LINENO
+            echo "Forcing clobber" $LINENO
+            rm -fR $BUILDTREE/mozilla/$product-$buildtype/
         fi
         ;;
 
     js)
-#        cd $BUILDTREE/mozilla/js/src/editline
-        if ! $buildbash $bashlogin -c "cd $BUILDTREE/mozilla/js/src/editline; make -f Makefile.ref clobber" 2>&1; then
-            error "during editline clobber" $LINENO
-        fi
 
-#        cd ..
-        if ! $buildbash $bashlogin -c "cd $BUILDTREE/mozilla/js/src; make -f Makefile.ref clobber" 2>&1; then
-            echo "error during SpiderMonkey clobber." $LINENO
-            echo "Forcing clobber" $LINENO
+        if [[ -e "$BUILDTREE/mozilla/js/src/Makefile.ref" ]]; then
+            if ! $buildbash $bashlogin -c "cd $BUILDTREE/mozilla/js/src/editline; make -f Makefile.ref clobber" 2>&1; then
+                error "during editline clobber" $LINENO
+            fi
+
+            if ! $buildbash $bashlogin -c "cd $BUILDTREE/mozilla/js/src; make -f Makefile.ref clobber" 2>&1; then
+                echo "error during SpiderMonkey clobber." $LINENO
+                echo "Forcing clobber" $LINENO
+                rm -fR $BUILDTREE/mozilla/js/src/*_*.OBJ
+            fi
+        else
             rm -fR $BUILDTREE/mozilla/js/src/*_*.OBJ
         fi
         ;;
