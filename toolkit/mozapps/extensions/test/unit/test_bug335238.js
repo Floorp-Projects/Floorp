@@ -56,7 +56,7 @@ var EXPECTED = [
     appOs: "XPCShell",
     appAbi: "noarch-spidermonkey",
     locale: "en-US",
-    reqVersion: "1"
+    reqVersion: "2"
   },
   {
     id: "bug335238_2@tests.mozilla.org",
@@ -68,7 +68,7 @@ var EXPECTED = [
     appOs: "XPCShell",
     appAbi: "noarch-spidermonkey",
     locale: "en-US",
-    reqVersion: "1"
+    reqVersion: "2"
   }
 ];
 
