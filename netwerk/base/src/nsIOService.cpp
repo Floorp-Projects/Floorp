@@ -551,17 +551,7 @@ nsIOService::NewChannelFromURI(nsIURI *aURI, nsIChannel **result)
                 NS_WARNING("failed to get protocol proxy service");
         }
         if (mProxyService) {
-            PRUint32 flags = 0;
-            if (scheme.EqualsLiteral("http") || scheme.EqualsLiteral("https"))
-                flags = nsIProtocolProxyService::RESOLVE_NON_BLOCKING;
-            rv = mProxyService->Resolve(aURI, flags, getter_AddRefs(pi));
-            if (rv == NS_BASE_STREAM_WOULD_BLOCK) {
-                // Use an UNKNOWN proxy to defer resolution and avoid blocking.
-                rv = mProxyService->NewProxyInfo(NS_LITERAL_CSTRING("unknown"),
-                                                 NS_LITERAL_CSTRING(""),
-                                                 -1, 0, 0, nsnull,
-                                                 getter_AddRefs(pi));
-            }
+            rv = mProxyService->Resolve(aURI, 0, getter_AddRefs(pi));
             if (NS_FAILED(rv))
                 pi = nsnull;
         }

@@ -28,7 +28,7 @@ classic.jar:
   skin/classic/mozapps/plugins/pluginBlocked-16.png               (plugins/pluginBlocked-16.png)
   skin/classic/mozapps/profile/profileicon.png                    (profile/profileicon.png)
   skin/classic/mozapps/profile/profileSelection.css               (profile/profileSelection.css)
-  skin/classic/mozapps/update/warning.gif                         (update/warning.gif)
+  skin/classic/mozapps/update/buttons.png                         (update/buttons.png)
   skin/classic/mozapps/update/updates.css                         (update/updates.css)
   skin/classic/mozapps/update/update.png                          (update/update.png)
   skin/classic/mozapps/viewsource/viewsource.css                  (viewsource/viewsource.css)

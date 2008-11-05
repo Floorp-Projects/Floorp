@@ -439,7 +439,7 @@ interface nsIUpdateManager : nsISupports
  * An interface describing an object that can show various kinds of Update
  * notification UI to the user.
  */
-[scriptable, uuid(6f145728-abc0-11dc-8314-0800200c9a66)]
+[scriptable, uuid(599fd3c6-ec68-4499-ada5-2997739c97a6)]
 interface nsIUpdatePrompt : nsISupports
 {
   /**
@@ -458,8 +458,7 @@ interface nsIUpdatePrompt : nsISupports
 
   /**
    * Show a message advising that an update has now been downloaded and that
-   * the user should restart their software should be restarted so that the
-   * update can be installed.
+   * a restart is necessary to complete the update.
    * @param   update
    *          The update that was downloaded
    * @param   background
@@ -469,11 +468,9 @@ interface nsIUpdatePrompt : nsISupports
                             [optional] in boolean background);
 
   /**
-   * Shows a message detailing the update which was installed.
-   * @param   update
-   *          The nsIUpdate object which was just installed
+   * Shows a message that an update was installed successfully.
    */
-  void showUpdateInstalled(in nsIUpdate update);
+  void showUpdateInstalled();
 
   /**
    * Shows an error message UI telling the user about some kind of update
