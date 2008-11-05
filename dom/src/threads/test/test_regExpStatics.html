@@ -19,50 +19,22 @@ Tests of DOM Worker Threads RegExp statics
 
   const WORKER_COUNT = 25;
 
-  function workerScript() {
-    var runCount = 0;
-    var timeout;
-
-    this.messageListener = function(message, source) {
-      run();
-      timeout = setTimeout(run, 0);
-      timeout = setTimeout(run, 5000);
-    };
-
-    function run() {
-      if (RegExp.$1) {
-        throw "RegExp.$1 already set!";
-        cancelTimeout(timeout);
-      }
-
-      var match = /a(sd)f/("asdf");
-      if (!RegExp.$1) {
-        throw "RegExp.$1 didn't get set!";
-        cancelTimeout(timeout);
-      }
-
-      if (++runCount == 3) {
-        postMessageToPool("done");
-      }
-    }
-  }
-
-  var pool = navigator.newWorkerPool();
-
   var doneWorkers = 0;
-  pool.messageListener = function(message, source) {
+  function onmessage(event) {
     if (++doneWorkers == WORKER_COUNT) {
       SimpleTest.finish();
     }
-  };
+  }
 
-  pool.errorListener = function(error, source) {
-    ok(false, "Worker had an error: " + error);
+  function onerror(event) {
+    ok(false, "Worker had an error: " + event.data);
     SimpleTest.finish();
   };
 
   for (var i = 0; i < WORKER_COUNT; i++) {
-    var worker = pool.createWorker("(" + workerScript + ")();");
+    var worker = new Worker("regExpStatics_worker.js");
+    worker.onmessage = onmessage;
+    worker.onerror = onerror;
     worker.postMessage("start");
   }
 

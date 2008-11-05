@@ -17,31 +17,16 @@ Tests of DOM Worker Threads
 <pre id="test">
 <script class="testbody" type="text/javascript">
 
-  function workerScript() {
-    function recurse() {
-      recurse();
-    }
+  var worker = new Worker("recursion_worker.js");
 
-    this.messageListener = function(message, source) {
-      switch (message) {
-        case "start":
-          recurse();
-          break;
-        default:
-      }
-    }
-  }
-
-  var pool = navigator.newWorkerPool();
-
-  pool.errorListener = function(error, source) {
-    is(error.message,
-       '[JavaScript Error: "too much recursion" {file: "DOMWorker inline ' +
-       'script" line: 4}]');
+  worker.onerror = function(event) {
+    dump(event.data + "\n");
+    is(event.data,
+       '[JavaScript Error: "too much recursion" {file: "http://localhost:8888' +
+       '/tests/dom/src/threads/tests/recursion_worker.js" line: 2}]');
     SimpleTest.finish();
   }
 
-  var worker = pool.createWorker("(" + workerScript + ")();");
   worker.postMessage("start");
 
   SimpleTest.waitForExplicitFinish();

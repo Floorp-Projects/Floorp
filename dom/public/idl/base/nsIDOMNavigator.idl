@@ -39,9 +39,7 @@
 
 #include "domstubs.idl"
 
-interface nsIDOMWorkerPool;
-
-[scriptable, uuid(c206f746-52e2-47dd-8ccc-ce76ccda6c6d)]
+[scriptable, uuid(777bd8a1-38c1-4b12-ba8f-ff6c2eb8c56b)]
 interface nsIDOMNavigator : nsISupports
 {
   readonly attribute DOMString           appCodeName;
@@ -64,8 +62,6 @@ interface nsIDOMNavigator : nsISupports
 
   boolean                   javaEnabled();
   boolean                   taintEnabled();
-
-  nsIDOMWorkerPool newWorkerPool();
 
   // XXX This one's tough, would nsISupports preference(in DOMString
   // pref /*, ... */); work?
