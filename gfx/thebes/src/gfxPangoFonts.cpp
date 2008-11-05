@@ -602,8 +602,6 @@ private:
     PRPackedBool mHaveFallbackFonts;
 };
 
-static
-
 typedef FcBool (*FcPatternRemoveFunction)(FcPattern *p, const char *object,
                                           int id);
 
