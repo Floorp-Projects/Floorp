@@ -98,6 +98,19 @@ window[chromehidden~="toolbar"] toolbar:not(.toolbar-primary):not(.chromeclass-m
 }
 
 /* Tab Previews */
+.ctrlTab-thumbnail {
+  -moz-binding: url("chrome://browser/content/browser-tabPreviews.xml#ctrlTab-thumbnail");
+}
+
 .ctrlTab-thumbnail:not([valid]) {
   visibility: hidden;
+}
+
+#ctrlTab-pages {
+  display: block;
+  text-align: center;
+}
+ 
+.ctrlTab-pagePointer {
+  display: inline-block;
 }
