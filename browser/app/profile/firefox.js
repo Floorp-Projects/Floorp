@@ -121,16 +121,16 @@ pref("app.update.url", "https://aus2.mozilla.org/update/3/%PRODUCT%/%VERSION%/%B
 // User-settable override to app.update.url for testing purposes.
 //pref("app.update.url.override", "");
 
-// Interval: Time between checks for a new version (in seconds)
-//           default=1 day
-pref("app.update.interval", 86400);
+// app.update.interval is in branding section
+
 // Interval: Time before prompting the user again to restart to install the
 //           latest download (in seconds) default=1 day
 pref("app.update.nagTimer.restart", 86400);
+
 // Interval: When all registered timers should be checked (in milliseconds)
 //           default=10 minutes
 pref("app.update.timer", 600000);
-// Give the user x seconds to react before showing the big UI. default=12 hrs
+// Give the user x seconds to react before showing the big UI. default=12 hours
 pref("app.update.promptWaitTime", 43200);
 // Show the Update Checking/Ready UI when the user was idle for x seconds
 pref("app.update.idletime", 60);
@@ -157,7 +157,7 @@ pref("app.update.incompatible.mode", 0);
 //  .. etc ..
 //
 pref("extensions.update.enabled", true);
-pref("extensions.update.url", "https://versioncheck.addons.mozilla.org/update/VersionCheck.php?reqVersion=%REQ_VERSION%&id=%ITEM_ID%&version=%ITEM_VERSION%&maxAppVersion=%ITEM_MAXAPPVERSION%&status=%ITEM_STATUS%&appID=%APP_ID%&appVersion=%APP_VERSION%&appOS=%APP_OS%&appABI=%APP_ABI%&locale=%APP_LOCALE%");
+pref("extensions.update.url", "https://versioncheck.addons.mozilla.org/update/VersionCheck.php?reqVersion=%REQ_VERSION%&id=%ITEM_ID%&version=%ITEM_VERSION%&maxAppVersion=%ITEM_MAXAPPVERSION%&status=%ITEM_STATUS%&appID=%APP_ID%&appVersion=%APP_VERSION%&appOS=%APP_OS%&appABI=%APP_ABI%&locale=%APP_LOCALE%&currentAppVersion=%CURRENT_APP_VERSION%");
 pref("extensions.update.interval", 86400);  // Check for updates to Extensions and 
                                             // Themes every day
 // Non-symmetric (not shared by extensions) extension-specific [update] preferences
@@ -339,7 +339,7 @@ pref("browser.tabs.closeButtons", 1);
 // false  return to the adjacent tab (old default)
 pref("browser.tabs.selectOwnerOnClose", true);
 
-pref("browser.ctrlTab.mostRecentlyUsed", true);
+pref("browser.ctrlTab.previews", true);
 pref("browser.ctrlTab.recentlyUsedLimit", 7);
 
 // Default bookmark sorting

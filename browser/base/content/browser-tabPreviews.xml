@@ -1,6 +1,6 @@
 <?xml version="1.0"?>
 
-# -*- Mode: Java; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 4 -*-
+# -*- Mode: HTML -*-
 # ***** BEGIN LICENSE BLOCK *****
 # Version: MPL 1.1/GPL 2.0/LGPL 2.1
 #
@@ -14,14 +14,14 @@
 # for the specific language governing rights and limitations under the
 # License.
 #
-# The Original Code is The Update Wizard/Manager.
+# The Original Code is mozilla.org browser.
 #
-# The Initial Developer of the Original Code is Google Inc.
-# Portions created by the Initial Developer are Copyright (C) 2005
+# The Initial Developer of the Original Code is Mozilla.
+# Portions created by the Initial Developer are Copyright (C) 2006
 # the Initial Developer. All Rights Reserved.
 #
 # Contributor(s):
-#   Ben Goodger <ben@mozilla.org>
+# Dão Gottwald <dao@mozilla.com>
 #
 # Alternatively, the contents of this file may be used under the terms of
 # either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -37,40 +37,18 @@
 #
 # ***** END LICENSE BLOCK *****
 
-<!DOCTYPE dialog [
-<!ENTITY % incompatibleDTD SYSTEM "chrome://mozapps/locale/update/incompatible.dtd">
-<!ENTITY % brandDTD SYSTEM "chrome://branding/locale/brand.dtd">
-%incompatibleDTD;
-%brandDTD;
-]>
-
-<?xml-stylesheet href="chrome://global/skin/"?>
-<?xml-stylesheet href="chrome://mozapps/content/update/updates.css"?>
-<?xml-stylesheet href="chrome://mozapps/skin/update/updates.css"?>
-
-<dialog id="incompatible"
-        xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
-        style="width: 35em;"
-        buttons="cancel"
-        defaultButton="cancel"
-        buttonlabelcancel="&closebutton.label;"
-        title="&incompatible.title;"
-        onload="init();">
-
-  <script type="application/javascript" 
-          src="chrome://mozapps/content/update/incompatible.js"/>
-          
-  <stringbundle id="updateBundle" 
-                src="chrome://mozapps/locale/update/updates.properties"/>
-  
-  <label>&incompatible.intro;</label>
-  <separator/>
-  <listbox id="incompatibleItems" rows="5"/>
-  <separator/>
-  <label>&incompatible.update;</label>        
-  <separator class="thin"/>
-  <label class="bold">&incompatible.suffix;</label>        
-  <separator/>
-
-</dialog>
-
+<bindings id="tabPreviews"
+          xmlns="http://www.mozilla.org/xbl"
+          xmlns:xul="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
+          xmlns:xbl="http://www.mozilla.org/xbl">
+  <binding id="ctrlTab-thumbnail">
+    <content align="center">
+      <children/>
+      <xul:label xbl:inherits="value=label,crop"/>
+    </content>
+    <handlers>
+      <handler event="click" button="0" action="ctrlTab.selectThumbnail(this);"/>
+      <handler event="click" button="1" action="gBrowser.removeTab(this._tab);"/>
+    </handlers>
+  </binding>
+</bindings>
