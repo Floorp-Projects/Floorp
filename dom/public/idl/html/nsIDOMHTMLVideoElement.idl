@@ -48,13 +48,12 @@
  * @status UNDER_DEVELOPMENT
  */
 
-[scriptable, uuid(B08457F7-8709-4D70-AC19-90433C77CD1E)]
+[scriptable, uuid(4e3f05a5-ca9b-4576-af7f-b1d4038e6eb3)]
 interface nsIDOMHTMLVideoElement : nsIDOMHTMLMediaElement
 {
            attribute long width; 
            attribute long height;
   readonly attribute unsigned long videoWidth;
   readonly attribute unsigned long videoHeight;
-           attribute DOMString poster;
 };
 
