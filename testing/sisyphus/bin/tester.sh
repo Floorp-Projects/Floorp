@@ -117,7 +117,7 @@ for data in $datalist; do
             nt)
                 ;;
             linux)
-                if which fix-linux-stack.pl > /dev/null; then
+                if findprogram fix-linux-stack.pl; then
                     fix-linux-stack.pl < $TEST_LOG > $TEST_LOG.tmp
                     mv $TEST_LOG.tmp $TEST_LOG
                 else
@@ -125,7 +125,7 @@ for data in $datalist; do
                 fi
                 ;;
             darwin)
-                if which fix-macosx-stack.pl > /dev/null; then
+                if findprogram fix-macosx-stack.pl; then
                     fix-macosx-stack.pl < $TEST_LOG > $TEST_LOG.tmp
                     mv $TEST_LOG.tmp $TEST_LOG
                 else
