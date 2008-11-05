@@ -825,7 +825,7 @@ namespace nanojit
 #endif
     }
 
-	NIns* Assembler::asm_branch(bool branchOnFalse, LInsp cond, NIns* targ, bool far)
+	NIns* Assembler::asm_branch(bool branchOnFalse, LInsp cond, NIns* targ, bool isfar)
 	{
 		NIns* at = 0;
 		LOpcode condop = cond->opcode();
@@ -840,52 +840,52 @@ namespace nanojit
 		if (branchOnFalse)
 		{
 			if (condop == LIR_eq)
-				JNE(targ, far);
+				JNE(targ, isfar);
 			else if (condop == LIR_ov)
-				JNO(targ, far);
+				JNO(targ, isfar);
 			else if (condop == LIR_cs)
-				JNC(targ, far);
+				JNC(targ, isfar);
 			else if (condop == LIR_lt)
-				JNL(targ, far);
+				JNL(targ, isfar);
 			else if (condop == LIR_le)
-				JNLE(targ, far);
+				JNLE(targ, isfar);
 			else if (condop == LIR_gt)
-				JNG(targ, far);
+				JNG(targ, isfar);
 			else if (condop == LIR_ge)
-				JNGE(targ, far);
+				JNGE(targ, isfar);
 			else if (condop == LIR_ult)
-				JNB(targ, far);
+				JNB(targ, isfar);
 			else if (condop == LIR_ule)
-				JNBE(targ, far);
+				JNBE(targ, isfar);
 			else if (condop == LIR_ugt)
-				JNA(targ, far);
+				JNA(targ, isfar);
 			else //if (condop == LIR_uge)
-				JNAE(targ, far);
+				JNAE(targ, isfar);
 		}
 		else // op == LIR_xt
 		{
 			if (condop == LIR_eq)
-				JE(targ, far);
+				JE(targ, isfar);
 			else if (condop == LIR_ov)
-				JO(targ, far);
+				JO(targ, isfar);
 			else if (condop == LIR_cs)
-				JC(targ, far);
+				JC(targ, isfar);
 			else if (condop == LIR_lt)
-				JL(targ, far);
+				JL(targ, isfar);
 			else if (condop == LIR_le)
-				JLE(targ, far);
+				JLE(targ, isfar);
 			else if (condop == LIR_gt)
-				JG(targ, far);
+				JG(targ, isfar);
 			else if (condop == LIR_ge)
-				JGE(targ, far);
+				JGE(targ, isfar);
 			else if (condop == LIR_ult)
-				JB(targ, far);
+				JB(targ, isfar);
 			else if (condop == LIR_ule)
-				JBE(targ, far);
+				JBE(targ, isfar);
 			else if (condop == LIR_ugt)
-				JA(targ, far);
+				JA(targ, isfar);
 			else //if (condop == LIR_uge)
-				JAE(targ, far);
+				JAE(targ, isfar);
 		}
 		at = _nIns;
 		asm_cmp(cond);
