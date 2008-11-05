@@ -38,9 +38,6 @@
 
 #include "nsIDOMHTMLElement.idl"
 #include "nsIDOMHTMLMediaError.idl"
-#include "nsIDOMHTMLTimeRanges.idl"
-#include "nsIDOMHTMLByteRanges.idl"
-#include "nsIDOMHTMLVoidCallback.idl"
 
 /**
  * The nsIDOMHTMLMediaElement interface is an interface to be implemented by the HTML
@@ -52,7 +49,7 @@
  * @status UNDER_DEVELOPMENT
  */
 
-[scriptable, uuid(c8ce31b9-d18b-48c4-8309-944f0ccb1435)]
+[scriptable, uuid(d95c02ac-92dc-4fff-ad52-41e125340fab)]
 interface nsIDOMHTMLMediaElement : nsIDOMHTMLElement
 {
   // error state
@@ -67,10 +64,6 @@ interface nsIDOMHTMLMediaElement : nsIDOMHTMLElement
   const unsigned short LOADED_FIRST_FRAME = 3;
   const unsigned short LOADED = 4;
   readonly attribute unsigned short networkState;
-  readonly attribute float bufferingRate;
-  readonly attribute boolean bufferingThrottled;
-  readonly attribute nsIDOMHTMLTimeRanges buffered;
-  readonly attribute nsIDOMHTMLByteRanges bufferedBytes;
   readonly attribute unsigned long totalBytes;
   void load();
 
@@ -86,27 +79,10 @@ interface nsIDOMHTMLMediaElement : nsIDOMHTMLElement
            attribute float currentTime;
   readonly attribute float duration;
   readonly attribute boolean paused;
-           attribute float defaultPlaybackRate;
-           attribute float playbackRate;
-  readonly attribute nsIDOMHTMLTimeRanges played;
-  readonly attribute nsIDOMHTMLTimeRanges seekable;
   readonly attribute boolean ended;
            attribute boolean autoplay;
   void play();
   void pause();
-
-  // looping
-           attribute float start;
-           attribute float end;
-           attribute float loopStart;
-           attribute float loopEnd;
-           attribute unsigned long playCount;
-           attribute unsigned long currentLoop;
-
-  // cue points
-  void addCueRange(in DOMString className, in float start, in float end, in boolean pauseOnExit, in nsIDOMHTMLVoidCallback enterCallback, in nsIDOMHTMLVoidCallback exitCallback);
-  void removeCueRanges(in DOMString className);
-
 
   // controls
            attribute boolean controls;
