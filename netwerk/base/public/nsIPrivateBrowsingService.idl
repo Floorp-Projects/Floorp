@@ -37,7 +37,7 @@
 
 #include "nsISupports.idl"
 
-[scriptable, uuid(effb626c-676f-4c9d-b6ca-70696787901a)]
+[scriptable, uuid(49d6f133-80c0-48c7-876d-0b70bbfd0289)]
 interface nsIPrivateBrowsingService : nsISupports
 {
     // When read, determines whether the private browsing mode is currently
@@ -51,6 +51,15 @@ interface nsIPrivateBrowsingService : nsISupports
     // automatically at application startup.
     // This value will never be true if privateBrowsingEnabled is false.
     readonly attribute boolean autoStarted;
+
+    /**
+     * Removes all data stored for a given domain.  This includes all data for
+     * subdomains of the given domain.
+     *
+     * @param aDomain
+     *        The domain that will have its data removed.
+     */
+    void removeDataFromDomain(in AUTF8String aDomain);
 };
 
 %{C++
