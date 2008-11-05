@@ -59,12 +59,8 @@
 #include "prthread.h"
 
 // DOMWorker includes
-#include "nsDOMThreadService.h"
-#include "nsDOMWorker.h"
-#include "nsDOMWorkerEvents.h"
-#include "nsDOMWorkerMacros.h"
 #include "nsDOMWorkerPool.h"
-#include "nsDOMWorkerXHR.h"
+#include "nsDOMWorkerThread.h"
 #include "nsDOMWorkerXHRProxiedFunctions.h"
 
 #define MAX_XHR_LISTENER_TYPE nsDOMWorkerXHREventTarget::sMaxXHREventTypes
@@ -113,7 +109,7 @@ public:
   NS_DECL_ISUPPORTS
 
   nsResultReturningRunnable(nsIEventTarget* aTarget, nsIRunnable* aRunnable,
-                            nsDOMWorker* aWorker)
+                            nsDOMWorkerThread* aWorker)
   : mTarget(aTarget), mRunnable(aRunnable), mWorker(aWorker),
     mResult(NS_OK), mDone(PR_FALSE) { }
 
@@ -161,12 +157,328 @@ public:
 private:
   nsCOMPtr<nsIEventTarget> mTarget;
   nsCOMPtr<nsIRunnable> mRunnable;
-  nsRefPtr<nsDOMWorker> mWorker;
+  nsRefPtr<nsDOMWorkerThread> mWorker;
   nsresult mResult;
   volatile PRBool mDone;
 };
 
 NS_IMPL_THREADSAFE_ISUPPORTS1(nsResultReturningRunnable, nsIRunnable)
+
+class nsDOMWorkerXHREvent : public nsIRunnable,
+                            public nsIDOMProgressEvent,
+                            public nsIClassInfo
+{
+  friend class nsDOMWorkerXHRProxy;
+  friend class nsDOMWorkerXHREventTargetProxy;
+
+public:
+  NS_DECL_ISUPPORTS
+  NS_DECL_NSIRUNNABLE
+  NS_DECL_NSIDOMEVENT
+  NS_DECL_NSIDOMPROGRESSEVENT
+  NS_DECL_NSICLASSINFO
+
+  nsDOMWorkerXHREvent(nsDOMWorkerXHRProxy* aXHRProxy);
+
+  nsresult Init(PRUint32 aType,
+                const nsAString& aTypeString,
+                nsIDOMEvent* aEvent);
+
+  nsresult Init(nsIXMLHttpRequest* aXHR);
+
+  void EventHandled();
+
+protected:
+  nsRefPtr<nsDOMWorkerXHRProxy> mXHRProxy;
+  nsCOMPtr<nsIDOMEventTarget> mTarget;
+  nsString mTypeString;
+  PRUint32 mType;
+  PRUint16 mEventPhase;
+  DOMTimeStamp mTimeStamp;
+  nsString mResponseText;
+  nsCString mStatusText;
+  nsresult mStatus;
+  PRInt32 mReadyState;
+  PRUint64 mLoaded;
+  PRUint64 mTotal;
+  PRInt32 mChannelID;
+  PRPackedBool mBubbles;
+  PRPackedBool mCancelable;
+  PRPackedBool mUploadEvent;
+  PRPackedBool mProgressEvent;
+  PRPackedBool mLengthComputable;
+};
+
+nsDOMWorkerXHREvent::nsDOMWorkerXHREvent(nsDOMWorkerXHRProxy* aXHRProxy)
+: mXHRProxy(aXHRProxy),
+  mType(PR_UINT32_MAX),
+  mEventPhase(0),
+  mTimeStamp(0),
+  mStatus(NS_OK),
+  mReadyState(0),
+  mLoaded(0),
+  mTotal(0),
+  mChannelID(-1),
+  mBubbles(PR_FALSE),
+  mCancelable(PR_FALSE),
+  mUploadEvent(PR_FALSE),
+  mProgressEvent(PR_FALSE),
+  mLengthComputable(PR_FALSE)
+{
+  NS_ASSERTION(aXHRProxy, "Can't be null!");
+}
+
+NS_IMPL_THREADSAFE_ADDREF(nsDOMWorkerXHREvent)
+NS_IMPL_THREADSAFE_RELEASE(nsDOMWorkerXHREvent)
+
+NS_INTERFACE_MAP_BEGIN(nsDOMWorkerXHREvent)
+  NS_INTERFACE_MAP_ENTRY_AMBIGUOUS(nsISupports, nsIDOMEvent)
+  NS_INTERFACE_MAP_ENTRY(nsIRunnable)
+  NS_INTERFACE_MAP_ENTRY(nsIDOMEvent)
+  NS_INTERFACE_MAP_ENTRY(nsIClassInfo)
+  NS_INTERFACE_MAP_ENTRY_CONDITIONAL(nsIDOMProgressEvent, mProgressEvent)
+NS_INTERFACE_MAP_END
+
+NS_IMPL_CI_INTERFACE_GETTER1(nsDOMWorkerXHREvent, nsIDOMEvent)
+NS_IMETHODIMP
+nsDOMWorkerXHREvent::GetInterfaces(PRUint32* aCount,
+                                   nsIID*** aArray)
+{
+  PRUint32 count = *aCount = mProgressEvent ? 2 : 1;
+
+  *aArray = (nsIID**)nsMemory::Alloc(sizeof(nsIID*) * count);
+
+  if (mProgressEvent) {
+    (*aArray)[--count] =
+      (nsIID*)nsMemory::Clone(&NS_GET_IID(nsIDOMProgressEvent), sizeof(nsIID));
+  }
+
+  (*aArray)[--count] =
+    (nsIID *)nsMemory::Clone(&NS_GET_IID(nsIDOMEvent), sizeof(nsIID));
+
+  NS_ASSERTION(!count, "Bad math!");
+  return NS_OK;
+}
+
+NS_IMPL_THREADSAFE_DOM_CI_ALL_THE_REST(nsDOMWorkerXHREvent)
+
+nsresult
+nsDOMWorkerXHREvent::Init(PRUint32 aType,
+                          const nsAString& aTypeString,
+                          nsIDOMEvent* aEvent)
+{
+  NS_ASSERTION(NS_IsMainThread(), "Wrong thread!");
+  NS_ASSERTION(aEvent, "Don't pass null here!");
+
+  nsresult rv;
+
+  mType = aType;
+  mTypeString.Assign(aTypeString);
+
+  mChannelID = mXHRProxy->ChannelID();
+
+  nsCOMPtr<nsIDOMProgressEvent> progressEvent(do_QueryInterface(aEvent));
+  if (progressEvent) {
+    mProgressEvent = PR_TRUE;
+
+    PRBool lengthComputable;
+    rv = progressEvent->GetLengthComputable(&lengthComputable);
+    NS_ENSURE_SUCCESS(rv, rv);
+
+    mLengthComputable = lengthComputable ? PR_TRUE : PR_FALSE;
+
+    rv = progressEvent->GetLoaded(&mLoaded);
+    NS_ENSURE_SUCCESS(rv, rv); 
+
+    rv = progressEvent->GetTotal(&mTotal);
+    NS_ENSURE_SUCCESS(rv, rv);
+  }
+
+  nsCOMPtr<nsIDOMEventTarget> mainThreadTarget;
+  rv = aEvent->GetTarget(getter_AddRefs(mainThreadTarget));
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  nsCOMPtr<nsIXMLHttpRequestUpload> upload(do_QueryInterface(mainThreadTarget));
+  if (upload) {
+    mUploadEvent = PR_TRUE;
+    mTarget =
+      static_cast<nsDOMWorkerXHREventTarget*>(mXHRProxy->mWorkerXHR->mUpload);
+  }
+  else {
+    mUploadEvent = PR_FALSE;
+    mTarget = mXHRProxy->mWorkerXHR;
+  }
+
+  PRBool boolVal;
+  rv = aEvent->GetBubbles(&boolVal);
+  NS_ENSURE_SUCCESS(rv, rv);
+  mBubbles = boolVal ? PR_TRUE : PR_FALSE;
+
+  rv = aEvent->GetCancelable(&boolVal);
+  NS_ENSURE_SUCCESS(rv, rv);
+  mCancelable = boolVal ? PR_TRUE : PR_FALSE;
+
+  rv = aEvent->GetTimeStamp(&mTimeStamp);
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  rv = Init(mXHRProxy->mXHR);
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  return NS_OK;
+}
+
+nsresult
+nsDOMWorkerXHREvent::Init(nsIXMLHttpRequest* aXHR)
+{
+  NS_ASSERTION(NS_IsMainThread(), "Wrong thread!");
+  NS_ASSERTION(aXHR, "Don't pass null here!");
+
+  nsresult rv = aXHR->GetResponseText(mResponseText);
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  rv = aXHR->GetStatusText(mStatusText);
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  rv = aXHR->GetStatus(&mStatus);
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  rv = aXHR->GetReadyState(&mReadyState);
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  return NS_OK;
+}
+
+void
+nsDOMWorkerXHREvent::EventHandled()
+{
+  // Prevent reference cycles by releasing these here.
+  mXHRProxy = nsnull;
+}
+
+NS_IMETHODIMP
+nsDOMWorkerXHREvent::Run()
+{
+  nsresult rv = mXHRProxy->HandleWorkerEvent(this, mUploadEvent);
+
+  EventHandled();
+
+  NS_ENSURE_SUCCESS(rv, rv);
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsDOMWorkerXHREvent::GetType(nsAString& aType)
+{
+  aType.Assign(mTypeString);
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsDOMWorkerXHREvent::GetTarget(nsIDOMEventTarget** aTarget)
+{
+  NS_ENSURE_ARG_POINTER(aTarget);
+  NS_ADDREF(*aTarget = mTarget);
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsDOMWorkerXHREvent::GetCurrentTarget(nsIDOMEventTarget** aCurrentTarget)
+{
+  NS_ENSURE_ARG_POINTER(aCurrentTarget);
+  NS_ADDREF(*aCurrentTarget = mTarget);
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsDOMWorkerXHREvent::GetEventPhase(PRUint16* aEventPhase)
+{
+  NS_ENSURE_ARG_POINTER(aEventPhase);
+  *aEventPhase = mEventPhase;
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsDOMWorkerXHREvent::GetBubbles(PRBool* aBubbles)
+{
+  NS_ENSURE_ARG_POINTER(aBubbles);
+  *aBubbles = mBubbles;
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsDOMWorkerXHREvent::GetCancelable(PRBool* aCancelable)
+{
+  NS_ENSURE_ARG_POINTER(aCancelable);
+  *aCancelable = mCancelable;
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsDOMWorkerXHREvent::GetTimeStamp(DOMTimeStamp* aTimeStamp)
+{
+  NS_ENSURE_ARG_POINTER(aTimeStamp);
+  *aTimeStamp = mTimeStamp;
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsDOMWorkerXHREvent::StopPropagation()
+{
+  NS_WARNING("StopPropagation doesn't do anything here!");
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsDOMWorkerXHREvent::PreventDefault()
+{
+  NS_WARNING("PreventDefault doesn't do anything yet!");
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsDOMWorkerXHREvent::InitEvent(const nsAString& aEventTypeArg,
+                               PRBool aCanBubbleArg,
+                               PRBool aCancelableArg)
+{
+  NS_WARNING("InitEvent doesn't do anything here!");
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsDOMWorkerXHREvent::GetLengthComputable(PRBool* aLengthComputable)
+{
+  NS_ENSURE_ARG_POINTER(aLengthComputable);
+  *aLengthComputable = mLengthComputable;
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsDOMWorkerXHREvent::GetLoaded(PRUint64* aLoaded)
+{
+  NS_ENSURE_ARG_POINTER(aLoaded);
+  *aLoaded = mLoaded;
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsDOMWorkerXHREvent::GetTotal(PRUint64* aTotal)
+{
+  NS_ENSURE_ARG_POINTER(aTotal);
+  *aTotal = mTotal;
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsDOMWorkerXHREvent::InitProgressEvent(const nsAString_internal& aTypeArg,
+                                       PRBool aCanBubbleArg,
+                                       PRBool aCancelableArg,
+                                       PRBool aLengthComputableArg,
+                                       PRUint64 aLoadedArg,
+                                       PRUint64 aTotalArg)
+{
+  NS_WARNING("InitProgressEvent doesn't do anything here!");
+  return NS_OK;
+}
 
 class nsDOMWorkerXHRLastProgressOrLoadEvent : public nsIRunnable
 {
@@ -184,9 +496,6 @@ public:
     if (!mProxy->mCanceled) {
       nsAutoLock lock(mProxy->mWorkerXHR->Lock());
       mProxy->mLastProgressOrLoadEvent.swap(lastProgressOrLoadEvent);
-      if (mProxy->mCanceled) {
-        return NS_ERROR_ABORT;
-      }
     }
 
     if (lastProgressOrLoadEvent) {
@@ -320,7 +629,7 @@ nsDOMWorkerXHRProxy::nsDOMWorkerXHRProxy(nsDOMWorkerXHR* aWorkerXHR)
 nsDOMWorkerXHRProxy::~nsDOMWorkerXHRProxy()
 {
   if (mOwnedByXHR) {
-    mWorkerXHRWN = nsnull;
+    mWorkerXHR->Release();
   }
   else if (mXHR) {
     nsCOMPtr<nsIThread> mainThread;
@@ -342,6 +651,18 @@ nsDOMWorkerXHRProxy::Init()
   NS_ASSERTION(!NS_IsMainThread(), "Wrong thread!");
 
   NS_ENSURE_FALSE(mXHR, NS_ERROR_ALREADY_INITIALIZED);
+
+  PRBool success = mXHRListeners.SetLength(MAX_XHR_LISTENER_TYPE);
+  NS_ENSURE_TRUE(success, NS_ERROR_OUT_OF_MEMORY);
+
+  success = mXHROnXListeners.SetLength(MAX_XHR_LISTENER_TYPE);
+  NS_ENSURE_TRUE(success, NS_ERROR_OUT_OF_MEMORY);
+
+  success = mUploadListeners.SetLength(MAX_UPLOAD_LISTENER_TYPE);
+  NS_ENSURE_TRUE(success, NS_ERROR_OUT_OF_MEMORY);
+
+  success = mUploadOnXListeners.SetLength(MAX_UPLOAD_LISTENER_TYPE);
+  NS_ENSURE_TRUE(success, NS_ERROR_OUT_OF_MEMORY);
 
   mMainThread = do_GetMainThread();
   NS_ENSURE_TRUE(mMainThread, NS_ERROR_UNEXPECTED);
@@ -372,20 +693,20 @@ nsDOMWorkerXHRProxy::Destroy()
 {
   NS_ASSERTION(NS_IsMainThread(), "Wrong thread!");
 
+  mCanceled = PR_TRUE;
+
+  ClearEventListeners();
+
   {
     nsAutoLock lock(mWorkerXHR->Lock());
-
-    mCanceled = PR_TRUE;
-
     mLastProgressOrLoadEvent = nsnull;
-    mLastXHREvent = nsnull;
   }
 
   if (mXHR) {
     DestroyInternal();
   }
 
-  NS_ASSERTION(!(mLastProgressOrLoadEvent && mLastXHREvent), "Going to leak!");
+  mLastXHREvent = nsnull;
 
   return NS_OK;
 }
@@ -396,7 +717,7 @@ nsDOMWorkerXHRProxy::InitInternal()
   NS_ASSERTION(NS_IsMainThread(), "Wrong thread!");
   NS_ASSERTION(!mXHR, "InitInternal shouldn't be called twice!");
 
-  nsDOMWorker* worker = mWorkerXHR->mWorker;
+  nsDOMWorkerThread* worker = mWorkerXHR->mWorker;
   nsRefPtr<nsDOMWorkerPool> pool = worker->Pool();
 
   if (worker->IsCanceled()) {
@@ -426,11 +747,11 @@ nsDOMWorkerXHRProxy::InitInternal()
   nsRefPtr<nsDOMWorkerXHREvent> nullEvent = new nsDOMWorkerXHREvent(this);
   NS_ENSURE_TRUE(nullEvent, NS_ERROR_OUT_OF_MEMORY);
 
-  rv = nullEvent->SnapshotXHRState(xhr);
+  rv = nullEvent->Init(xhr);
   NS_ENSURE_SUCCESS(rv, rv);
-
-  nullEvent->EventHandled();
   mLastXHREvent.swap(nullEvent);
+
+  mLastXHREvent->EventHandled();
 
   xhrConcrete->SetRequestObserver(this);
 
@@ -476,6 +797,7 @@ nsDOMWorkerXHRProxy::DestroyInternal()
 
   NS_ASSERTION(!mOwnedByXHR, "Should have flipped already!");
   NS_ASSERTION(!mSyncFinishedRunnable, "Should have fired this already!");
+  NS_ASSERTION(!mLastProgressOrLoadEvent, "Should have killed this already!");
 
   // mXHR could be null if Init fails.
   if (mXHR) {
@@ -494,10 +816,9 @@ nsDOMWorkerXHRProxy::AddRemoveXHRListeners(PRBool aAdd)
   nsCOMPtr<nsIDOMEventTarget> xhrTarget(do_QueryInterface(mXHR));
   NS_ASSERTION(xhrTarget, "This shouldn't fail!");
 
-  EventListenerFunction addRemoveEventListener =
-    aAdd ?
-    &nsIDOMEventTarget::AddEventListener :
-    &nsIDOMEventTarget::RemoveEventListener;
+  EventListenerFunction function = aAdd ?
+                                   &nsIDOMEventTarget::AddEventListener :
+                                   &nsIDOMEventTarget::RemoveEventListener;
 
   nsAutoString eventName;
   PRUint32 index = 0;
@@ -508,14 +829,14 @@ nsDOMWorkerXHRProxy::AddRemoveXHRListeners(PRBool aAdd)
 
     for (; index < MAX_UPLOAD_LISTENER_TYPE; index++) {
       eventName.AssignASCII(nsDOMWorkerXHREventTarget::sListenerTypes[index]);
-      (xhrTarget.get()->*addRemoveEventListener)(eventName, this, PR_FALSE);
-      (uploadTarget.get()->*addRemoveEventListener)(eventName, this, PR_FALSE);
+      (xhrTarget.get()->*function)(eventName, this, PR_FALSE);
+      (uploadTarget.get()->*function)(eventName, this, PR_FALSE);
     }
   }
 
   for (; index < MAX_XHR_LISTENER_TYPE; index++) {
     eventName.AssignASCII(nsDOMWorkerXHREventTarget::sListenerTypes[index]);
-    (xhrTarget.get()->*addRemoveEventListener)(eventName, this, PR_FALSE);
+    (xhrTarget.get()->*function)(eventName, this, PR_FALSE);
   }
 }
 
@@ -532,44 +853,144 @@ nsDOMWorkerXHRProxy::FlipOwnership()
   nsRefPtr<nsDOMWorkerXHRProxy> kungFuDeathGrip(this);
 
   if (mOwnedByXHR) {
-    mWorkerXHRWN = mWorkerXHR->GetWrappedNative();
-    NS_ASSERTION(mWorkerXHRWN, "Null pointer!");
+    mWorkerXHR->AddRef();
     mXHR->Release();
   }
   else {
     mXHR->AddRef();
-    mWorkerXHRWN = nsnull;
+    mWorkerXHR->Release();
   }
 }
 
 nsresult
-nsDOMWorkerXHRProxy::UploadEventListenerAdded()
+nsDOMWorkerXHRProxy::AddEventListener(PRUint32 aType,
+                                      nsIDOMEventListener* aListener,
+                                      PRBool aOnXListener,
+                                      PRBool aUploadListener)
 {
   NS_ASSERTION(!NS_IsMainThread(), "Wrong thread!");
 
-  // If this is the first time we're setting an upload listener then we have to
-  // hit the main thread to attach the upload listeners. Otherwise there's
-  // nothing to do here.
-  if (mWantUploadListeners) {
+  if ((aUploadListener && aType >= MAX_UPLOAD_LISTENER_TYPE) ||
+      aType >= MAX_XHR_LISTENER_TYPE) {
+    // Silently fail on junk events.
     return NS_OK;
   }
 
-  nsRefPtr<nsDOMWorkerXHRAttachUploadListenersRunnable> attachRunnable =
-    new nsDOMWorkerXHRAttachUploadListenersRunnable(this);
-  NS_ENSURE_TRUE(attachRunnable, NS_ERROR_OUT_OF_MEMORY);
+  ListenerArray& listeners = aUploadListener ? mUploadListeners[aType] :
+                                               mXHRListeners[aType];
+  WrappedListener& onXListener = aUploadListener ? mUploadOnXListeners[aType] :
+                                                   mXHROnXListeners[aType];
 
-  nsRefPtr<nsResultReturningRunnable> runnable =
-    new nsResultReturningRunnable(mMainThread, attachRunnable,
-                                  mWorkerXHR->mWorker);
-  NS_ENSURE_TRUE(runnable, NS_ERROR_OUT_OF_MEMORY);
+  {
+    nsAutoLock lock(mWorkerXHR->Lock());
 
-  nsresult rv = runnable->Dispatch();
-  if (NS_FAILED(rv)) {
-    return rv;
+    if (mCanceled) {
+      return NS_ERROR_ABORT;
+    }
+
+#ifdef DEBUG
+    if (!aListener) {
+      NS_ASSERTION(aOnXListener, "Shouldn't pass a null listener!");
+    }
+#endif
+
+    if (aOnXListener) {
+      // Remove the old one from the array if it exists.
+      if (onXListener) {
+#ifdef DEBUG
+        PRBool removed =
+#endif
+        listeners.RemoveElement(onXListener);
+        NS_ASSERTION(removed, "Should still be in the array!");
+      }
+
+      if (!aListener) {
+        onXListener = nsnull;
+        return NS_OK;
+      }
+
+      onXListener = new nsDOMWorkerXHRWrappedListener(aListener);
+      NS_ENSURE_TRUE(onXListener, NS_ERROR_OUT_OF_MEMORY);
+
+      aListener = onXListener;
+    }
+
+    Listener* added = listeners.AppendElement(aListener);
+    NS_ENSURE_TRUE(added, NS_ERROR_OUT_OF_MEMORY);
   }
 
-  NS_ASSERTION(mWantUploadListeners, "Should have set this!");
+  // If this is the first time we're setting an upload listener then we have to
+  // hit the main thread to attach the upload listeners.
+  if (aUploadListener && aListener && !mWantUploadListeners) {
+    nsRefPtr<nsDOMWorkerXHRAttachUploadListenersRunnable> attachRunnable =
+      new nsDOMWorkerXHRAttachUploadListenersRunnable(this);
+    NS_ENSURE_TRUE(attachRunnable, NS_ERROR_OUT_OF_MEMORY);
+
+    nsRefPtr<nsResultReturningRunnable> runnable =
+      new nsResultReturningRunnable(mMainThread, attachRunnable,
+                                    mWorkerXHR->mWorker);
+    NS_ENSURE_TRUE(runnable, NS_ERROR_OUT_OF_MEMORY);
+
+    nsresult rv = runnable->Dispatch();
+    if (NS_FAILED(rv)) {
+      return rv;
+    }
+
+    NS_ASSERTION(mWantUploadListeners, "Should have set this!");
+  }
+
   return NS_OK;
+}
+
+nsresult
+nsDOMWorkerXHRProxy::RemoveEventListener(PRUint32 aType,
+                                         nsIDOMEventListener* aListener,
+                                         PRBool aUploadListener)
+{
+  NS_ASSERTION(!NS_IsMainThread(), "Wrong thread!");
+  NS_ASSERTION(aListener, "Null pointer!");
+
+  if (mCanceled) {
+    return NS_ERROR_ABORT;
+  }
+
+  if ((aUploadListener && aType >= MAX_UPLOAD_LISTENER_TYPE) ||
+      aType >= MAX_XHR_LISTENER_TYPE) {
+    // Silently fail on junk events.
+    return NS_OK;
+  }
+
+  ListenerArray& listeners = aUploadListener ? mUploadListeners[aType] :
+                                               mXHRListeners[aType];
+
+  nsAutoLock lock(mWorkerXHR->Lock());
+
+  listeners.RemoveElement(aListener);
+
+  return NS_OK;
+}
+
+already_AddRefed<nsIDOMEventListener>
+nsDOMWorkerXHRProxy::GetOnXListener(PRUint32 aType,
+                                    PRBool aUploadListener)
+{
+  if (mCanceled) {
+    return nsnull;
+  }
+
+  if ((aUploadListener && aType >= MAX_UPLOAD_LISTENER_TYPE) ||
+      aType >= MAX_XHR_LISTENER_TYPE) {
+    // Silently fail on junk events.
+    return nsnull;
+  }
+
+  WrappedListener& onXListener = aUploadListener ? mUploadOnXListeners[aType] :
+                                                   mXHROnXListeners[aType];
+
+  nsAutoLock lock(mWorkerXHR->Lock());
+
+  nsCOMPtr<nsIDOMEventListener> listener = onXListener->Inner();
+  return listener.forget();
 }
 
 nsresult
@@ -579,19 +1000,38 @@ nsDOMWorkerXHRProxy::HandleWorkerEvent(nsDOMWorkerXHREvent* aEvent,
   NS_ASSERTION(!NS_IsMainThread(), "Wrong thread!");
   NS_ASSERTION(aEvent, "Should not be null!");
 
-  {
-    nsAutoLock lock(mWorkerXHR->Lock());
-
-    if (mCanceled ||
-        (aEvent->mChannelID != -1 && aEvent->mChannelID != mChannelID)) {
-      return NS_OK;
-    }
-
-    mLastXHREvent = aEvent;
+  if (mCanceled ||
+      (aEvent->mChannelID != -1 && aEvent->mChannelID != mChannelID)) {
+    return NS_OK;
   }
 
-  nsIDOMEvent* event = static_cast<nsDOMWorkerEvent*>(aEvent);
-  return HandleEventInternal(aEvent->mXHREventType, event, aUploadEvent);
+  mLastXHREvent = aEvent;
+
+  return HandleEventInternal(aEvent->mType, aEvent, aUploadEvent);
+}
+
+nsresult
+nsDOMWorkerXHRProxy::HandleWorkerEvent(nsIDOMEvent* aEvent,
+                                       PRBool aUploadEvent)
+{
+  NS_ASSERTION(!NS_IsMainThread(), "Wrong thread!");
+  NS_ASSERTION(aEvent, "Should not be null!");
+
+  nsString typeString;
+  nsresult rv = aEvent->GetType(typeString);
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  PRUint32 maxType = aUploadEvent ? MAX_UPLOAD_LISTENER_TYPE :
+                                    MAX_XHR_LISTENER_TYPE;
+
+  PRUint32 type =
+    nsDOMWorkerXHREventTarget::GetListenerTypeFromString(typeString);
+  if (type >= maxType) {
+    // Silently fail on junk events.
+    return NS_OK;
+  }
+
+  return HandleEventInternal(type, aEvent, aUploadEvent);
 }
 
 nsresult
@@ -605,7 +1045,6 @@ nsDOMWorkerXHRProxy::HandleEventInternal(PRUint32 aType,
 #ifdef DEBUG
   if (aUploadListener) {
     NS_ASSERTION(aType < MAX_UPLOAD_LISTENER_TYPE, "Bad type!");
-    NS_ASSERTION(mWorkerXHR->mUpload, "No upload object!");
   }
   else {
     NS_ASSERTION(aType < MAX_XHR_LISTENER_TYPE, "Bad type!");
@@ -616,23 +1055,82 @@ nsDOMWorkerXHRProxy::HandleEventInternal(PRUint32 aType,
     return NS_ERROR_ABORT;
   }
 
-  nsIDOMEventTarget* target = aUploadListener ?
-    static_cast<nsDOMWorkerMessageHandler*>(mWorkerXHR->mUpload) :
-    static_cast<nsDOMWorkerMessageHandler*>(mWorkerXHR);
+  ListenerArray& listeners = aUploadListener ? mUploadListeners[aType] :
+                                               mXHRListeners[aType];
 
-  return target->DispatchEvent(aEvent, nsnull);
+  nsAutoTArray<Listener, 10> listenerCopy;
+  PRUint32 count;
+
+  {
+    nsAutoLock lock(mWorkerXHR->Lock());
+
+    count = listeners.Length();
+    if (!count) {
+      return NS_OK;
+    }
+
+    Listener* copied = listenerCopy.AppendElements(listeners);
+    NS_ENSURE_TRUE(copied, NS_ERROR_OUT_OF_MEMORY);
+  }
+
+  for (PRUint32 index = 0; index < count; index++) {
+    NS_ASSERTION(listenerCopy[index], "Null listener?!");
+    listenerCopy[index]->HandleEvent(aEvent);
+  }
+
+  return NS_OK;
+}
+
+void
+nsDOMWorkerXHRProxy::ClearEventListeners()
+{
+  NS_ASSERTION(NS_IsMainThread(), "Wrong thread!");
+
+  nsTArray<ListenerArray> doomedArrays;
+  PRBool ok = doomedArrays.SetLength(MAX_XHR_LISTENER_TYPE +
+                                     MAX_UPLOAD_LISTENER_TYPE);
+  NS_ENSURE_TRUE(ok,);
+
+  nsTArray<WrappedListener> doomedListeners;
+  ok = doomedListeners.SetLength(MAX_XHR_LISTENER_TYPE +
+                                 MAX_UPLOAD_LISTENER_TYPE);
+  NS_ENSURE_TRUE(ok,);
+
+  {
+    PRUint32 listenerIndex, doomedIndex;
+
+    nsAutoLock lock(mWorkerXHR->Lock());
+
+    for (listenerIndex = 0, doomedIndex = 0;
+         listenerIndex < MAX_UPLOAD_LISTENER_TYPE;
+         listenerIndex++, doomedIndex++) {
+      mUploadListeners[listenerIndex].
+        SwapElements(doomedArrays[doomedIndex]);
+      mUploadOnXListeners[listenerIndex].
+        swap(doomedListeners[doomedIndex]);
+    }
+
+    for (listenerIndex = 0;
+         listenerIndex < MAX_XHR_LISTENER_TYPE;
+         listenerIndex++, doomedIndex++) {
+      mXHRListeners[listenerIndex].
+        SwapElements(doomedArrays[doomedIndex]);
+      mXHROnXListeners[listenerIndex].
+        swap(doomedListeners[doomedIndex]);
+    }
+  }
+
+  // Destructors for the nsTArrays actually kill the listeners outside of the
+  // lock.
 }
 
 PRBool
-nsDOMWorkerXHRProxy::HasListenersForType(const nsAString& aType,
+nsDOMWorkerXHRProxy::HasListenersForType(PRUint32 aType,
                                          nsIDOMEvent* aEvent)
 {
-#ifdef DEBUG
-  PRUint32 type = nsDOMWorkerXHREventTarget::GetListenerTypeFromString(aType);
-  NS_ASSERTION(type < MAX_XHR_LISTENER_TYPE, "Bad type!");
-#endif
+  NS_ASSERTION(aType < MAX_XHR_LISTENER_TYPE, "Bad type!");
 
-  if (mWorkerXHR->HasListeners(aType)) {
+  if (mXHRListeners[aType].Length()) {
     return PR_TRUE;
   }
 
@@ -648,7 +1146,7 @@ nsDOMWorkerXHRProxy::HasListenersForType(const nsAString& aType,
     checkUploadListeners = PR_TRUE;
   }
 
-  if (checkUploadListeners && mWorkerXHR->mUpload->HasListeners(aType)) {
+  if (checkUploadListeners && mUploadListeners[aType].Length()) {
     return PR_TRUE;
   }
 
@@ -673,29 +1171,20 @@ nsDOMWorkerXHRProxy::HandleEvent(nsIDOMEvent* aEvent)
     return NS_OK;
   }
 
-  if (mCanceled) {
-    // When Abort is called on nsXMLHttpRequest (either from a proxied Abort
-    // call or from DestroyInternal) the OnStopRequest call is not run
-    // synchronously. Thankfully an abort event *is* fired synchronously so we
-    // can flip our ownership around and fire the sync finished runnable if
-    // we're running in sync mode.
-    if (type == LISTENER_TYPE_ABORT) {
-      OnStopRequest(nsnull, nsnull, NS_ERROR_ABORT);
-    }
+  // When Abort is called on nsXMLHttpRequest (either from a proxied Abort call
+  // or from DestroyInternal) the OnStopRequest call is not run synchronously.
+  // Thankfully an abort event *is* fired synchronously so we can flip our
+  // ownership around and fire the sync finished runnable if we're running in
+  // sync mode.
+  if (type == LISTENER_TYPE_ABORT && mCanceled) {
+    OnStopRequest(nsnull, nsnull, NS_ERROR_ABORT);
+  }
 
-    // Always bail out if we're canceled.
+  if (mCanceled) {
     return NS_ERROR_ABORT;
   }
 
-  PRBool ignoreEvent = !HasListenersForType(typeString, aEvent);
-  if (ignoreEvent && mSyncRequest) {
-    // Only ignore the event if it isn't final.
-    ignoreEvent = type != LISTENER_TYPE_ABORT &&
-                  type != LISTENER_TYPE_ERROR &&
-                  type != LISTENER_TYPE_LOAD;
-  }
-
-  if (ignoreEvent) {
+  if (!HasListenersForType(type, aEvent)) {
     return NS_OK;
   }
 
@@ -713,11 +1202,6 @@ nsDOMWorkerXHRProxy::HandleEvent(nsIDOMEvent* aEvent)
 
     {
       nsAutoLock lock(mWorkerXHR->Lock());
-
-      if (mCanceled) {
-        return NS_ERROR_ABORT;
-      }
-
       mLastProgressOrLoadEvent.swap(newEvent);
 
       if (newEvent) {
