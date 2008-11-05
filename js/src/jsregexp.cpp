@@ -66,9 +66,11 @@
 #include "jsscope.h"
 #include "jsstr.h"
 
+#ifdef JS_TRACER
 #include "jstracer.h"
 using namespace avmplus;
 using namespace nanojit;
+#endif
 
 typedef enum REOp {
 #define REOP_DEF(opcode, name) opcode,
@@ -1947,6 +1949,7 @@ EmitREBytecode(CompilerState *state, JSRegExp *re, size_t treeDepth,
     goto cleanup;
 }
 
+#ifdef JS_TRACER
 typedef List<LIns *, LIST_NonGCObjects> LInsList;
 
 /* Dummy GC for nanojit placement new. */
@@ -2194,6 +2197,7 @@ js_CompileRegExpToNative(JSContext *cx, JSRegExp *re, CompilerState *cs)
     RegExpNativeCompiler rc(re, cs);
     return rc.compile(cx);
 }
+#endif
 
 JSRegExp *
 js_NewRegExp(JSContext *cx, JSTokenStream *ts,
@@ -2264,11 +2268,13 @@ js_NewRegExp(JSContext *cx, JSTokenStream *ts,
         re->classList = NULL;
     }
 
+#ifdef JS_TRACER
     /* FIXME  Shrink allocation to avoid allocating space for bytecode
      *        when we are using native. */
     if (js_CompileRegExpToNative(cx, re, &state)) {
         re->is_native = JS_TRUE;
     } else {
+#endif
         re->is_native = JS_FALSE;
         /* Compile the bytecode version. */
         endPC = EmitREBytecode(&state, re, state.treeDepth, re->program, state.result);
@@ -2291,7 +2297,9 @@ js_NewRegExp(JSContext *cx, JSTokenStream *ts,
             if (tmp)
                 re = tmp;
         }
+#ifdef JS_TRACER
     }
+#endif
 
     re->flags = flags;
     re->parenCount = state.parenCount;
@@ -2807,7 +2815,9 @@ void
 js_DestroyRegExp(JSContext *cx, JSRegExp *re)
 {
     if (JS_ATOMIC_DECREMENT(&re->nrefs) == 0) {
+#ifdef JS_TRACER
         JS_TRACE_MONITOR(cx).reFragmento->clearFrag(re);
+#endif
         if (re->classList) {
             uintN i;
             for (i = 0; i < re->classCount; i++) {
@@ -3614,6 +3624,7 @@ MatchRegExp(REGlobalData *gData, REMatchState *x)
     const jschar *cp = x->cp;
     const jschar *cp2;
     uintN j;
+#ifdef JS_TRACER
     Fragment *fragment;
 
     /* Run with native regexp if possible. */
@@ -3630,6 +3641,7 @@ MatchRegExp(REGlobalData *gData, REMatchState *x)
         gData->skipped = ((const jschar *) gData->skipped) - cp;
         return lr;
     }
+#endif
     /*
      * Have to include the position beyond the last character
      * in order to detect end-of-input/line condition.
