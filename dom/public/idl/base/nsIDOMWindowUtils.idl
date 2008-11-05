@@ -262,4 +262,17 @@ interface nsIDOMWindowUtils : nsISupports {
                               in unsigned long aDirection,
                               in double aDelta,
                               in long aModifiers);
+
+  /**
+   * Retrieve the element at point aX, aY in the window's document.
+   *
+   * @param aIgnoreRootScrollFrame whether or not to ignore the root scroll
+   *        frame when retrieving the element. If false, this method returns
+   *        null for coordinates outside of the viewport.
+   * @param aFlushLayout flushes layout if true. Otherwise, no flush occurs.
+   */
+  nsIDOMElement elementFromPoint(in long aX,
+                                 in long aY,
+                                 in boolean aIgnoreRootScrollFrame,
+                                 in boolean aFlushLayout);
 };
