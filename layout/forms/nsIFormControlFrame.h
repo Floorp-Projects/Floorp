@@ -38,26 +38,21 @@
 #ifndef nsIFormControlFrame_h___
 #define nsIFormControlFrame_h___
 
-#include "nsISupports.h"
+#include "nsQueryFrame.h"
 class nsAString;
 class nsIContent;
 class nsIAtom;
 struct nsSize;
-
-// IID for the nsIFormControlFrame class
-#define NS_IFORMCONTROLFRAME_IID    \
-  { 0x189e1565, 0x44f, 0x11da, \
-      { 0x94, 0xfc, 0x0, 0xe0, 0x81, 0x61, 0x16, 0x5f } }
 
 /** 
   * nsIFormControlFrame is the common interface for frames of form controls. It
   * provides a uniform way of creating widgets, resizing, and painting.
   * @see nsLeafFrame and its base classes for more info
   */
-class nsIFormControlFrame : public nsISupports {
-
+class nsIFormControlFrame : public nsQueryFrame
+{
 public:
-  NS_DECLARE_STATIC_IID_ACCESSOR(NS_IFORMCONTROLFRAME_IID)
+  NS_DECLARE_FRAME_ACCESSOR(nsIFormControlFrame)
 
   /**
    * 
@@ -85,8 +80,6 @@ public:
 
   virtual nsresult GetFormProperty(nsIAtom* aName, nsAString& aValue) const = 0;
 };
-
-NS_DEFINE_STATIC_IID_ACCESSOR(nsIFormControlFrame, NS_IFORMCONTROLFRAME_IID)
 
 #endif
 

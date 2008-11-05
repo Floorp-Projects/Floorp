@@ -52,7 +52,7 @@ class nsMathMLForeignFrameWrapper : public nsBlockFrame,
 public:
   friend nsIFrame* NS_NewMathMLForeignFrameWrapper(nsIPresShell* aPresShell, nsStyleContext* aContext);
 
-  NS_DECL_ISUPPORTS_INHERITED
+  NS_DECL_QUERYFRAME
 
   // Overloaded nsIMathMLFrame methods
 

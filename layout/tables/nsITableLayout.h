@@ -37,13 +37,8 @@
 #ifndef nsITableLayout_h__
 #define nsITableLayout_h__
 
-#include "nsISupports.h"
+#include "nsQueryFrame.h"
 class nsIDOMElement;
-
-// IID for the nsITableLayout interface 
-// A9222E6B-437E-11d3-B227-004095E27A10
-#define NS_ITABLELAYOUT_IID \
- { 0xf8363dea, 0x11ad, 0x483a, { 0xba, 0xea, 0xf6, 0xf2, 0xc3, 0x58, 0x8d, 0xde }}
 
 /**
  * nsITableLayout
@@ -52,11 +47,11 @@ class nsIDOMElement;
  *
  * @author  sclark
  */
-class nsITableLayout : public nsISupports
+class nsITableLayout
 {
 public:
 
-  NS_DECLARE_STATIC_IID_ACCESSOR(NS_ITABLELAYOUT_IID)
+  NS_DECLARE_FRAME_ACCESSOR(nsITableLayout)
 
   /** return all the relevant layout information about a cell.
    *  @param aRowIndex       a row which the cell intersects
@@ -113,7 +108,5 @@ public:
   NS_IMETHOD GetRowAndColumnByIndex(PRInt32 aIndex,
                                     PRInt32 *aRow, PRInt32 *aColumn) = 0;
 };
-
-NS_DEFINE_STATIC_IID_ACCESSOR(nsITableLayout, NS_ITABLELAYOUT_IID)
 
 #endif

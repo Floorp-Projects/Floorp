@@ -561,8 +561,7 @@ nsObjectLoadingContent::OnStartRequest(nsIRequest *aRequest,
       }
 
       {
-        nsIFrame *nsiframe;
-        CallQueryInterface(frame, &nsiframe);
+        nsIFrame *nsiframe = do_QueryFrame(frame);
 
         nsWeakFrame weakFrame(nsiframe);
 
@@ -751,8 +750,7 @@ nsObjectLoadingContent::EnsureInstantiation(nsIPluginInstance** aInstance)
     }
   }
 
-  nsIFrame *nsiframe;
-  CallQueryInterface(frame, &nsiframe);
+  nsIFrame *nsiframe = do_QueryFrame(frame);
   nsWeakFrame weakFrame(nsiframe);
 
   // We may have a plugin instance already; if so, do nothing
@@ -805,8 +803,7 @@ nsObjectLoadingContent::HasNewFrame(nsIObjectFrame* aFrame)
       }
     }
 
-    nsIFrame* frame = nsnull;
-    CallQueryInterface(aFrame, &frame);
+    nsIFrame* frame = do_QueryFrame(aFrame);
     nsCOMPtr<nsIRunnable> event =
       new nsAsyncInstantiateEvent(this, frame, mContentType, mURI);
     if (!event) {
@@ -1652,8 +1649,7 @@ nsObjectLoadingContent::GetExistingFrame(FlushType aFlushType)
     aFlushType = eDontFlush;
   } while (1);
 
-  nsIObjectFrame* objFrame;
-  CallQueryInterface(frame, &objFrame);
+  nsIObjectFrame* objFrame = do_QueryFrame(frame);
   return objFrame;
 }
 
@@ -1695,8 +1691,7 @@ nsObjectLoadingContent::TryInstantiate(const nsACString& aMIMEType,
     // frame does have a plugin instance already, be sure to
     // re-instantiate the plugin as its source or whatnot might have
     // chanced since it was instantiated.
-    nsIFrame* iframe;
-    CallQueryInterface(frame, &iframe);
+    nsIFrame* iframe = do_QueryFrame(frame);
     if (iframe->GetStateBits() & NS_FRAME_FIRST_REFLOW) {
       LOG(("OBJLC [%p]: Frame hasn't been reflown yet\n", this));
       return NS_OK; // Not a failure to have no frame

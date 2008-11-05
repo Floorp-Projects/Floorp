@@ -87,7 +87,9 @@ public:
   : nsHTMLContainerFrame(aContext), mDoPaintFocus(PR_FALSE),
     mAbsoluteContainer(nsGkAtoms::absoluteList) {}
 
-   // nsISupports
+  NS_DECL_QUERYFRAME
+
+  // nsISupports (nsIScrollPositionListener)
   NS_IMETHOD QueryInterface(const nsIID& aIID, void** aInstancePtr);
 
   NS_IMETHOD Init(nsIContent*      aContent,
@@ -188,24 +190,11 @@ NS_NewCanvasFrame(nsIPresShell* aPresShell, nsStyleContext* aContext)
   return new (aPresShell)CanvasFrame(aContext);
 }
 
-//--------------------------------------------------------------
-// Frames are not refcounted, no need to AddRef
-NS_IMETHODIMP
-CanvasFrame::QueryInterface(const nsIID& aIID, void** aInstancePtr)
-{
-  NS_PRECONDITION(aInstancePtr, "null out param");
+NS_IMPL_QUERY_INTERFACE1(CanvasFrame, nsIScrollPositionListener)
 
-  if (aIID.Equals(NS_GET_IID(nsIScrollPositionListener))) {
-    *aInstancePtr = static_cast<nsIScrollPositionListener*>(this);
-    return NS_OK;
-  } 
-  if (aIID.Equals(NS_GET_IID(nsICanvasFrame))) {
-    *aInstancePtr = static_cast<nsICanvasFrame*>(this);
-    return NS_OK;
-  } 
-
-  return nsHTMLContainerFrame::QueryInterface(aIID, aInstancePtr);
-}
+NS_QUERYFRAME_HEAD(CanvasFrame)
+  NS_QUERYFRAME_ENTRY(nsICanvasFrame)
+NS_QUERYFRAME_TAIL_INHERITING(nsHTMLContainerFrame)
 
 NS_IMETHODIMP
 CanvasFrame::Init(nsIContent*      aContent,
@@ -407,8 +396,7 @@ nsRect CanvasFrame::CanvasArea() const
 {
   nsRect result(GetOverflowRect());
 
-  nsIScrollableFrame *scrollableFrame;
-  CallQueryInterface(GetParent(), &scrollableFrame);
+  nsIScrollableFrame *scrollableFrame = do_QueryFrame(GetParent());
   if (scrollableFrame) {
     nsIScrollableView* scrollableView = scrollableFrame->GetScrollableView();
     nsRect vcr = scrollableView->View()->GetBounds();
@@ -549,9 +537,7 @@ CanvasFrame::PaintFocus(nsIRenderingContext& aRenderingContext, nsPoint aPt)
 {
   nsRect focusRect(aPt, GetSize());
 
-  nsIScrollableFrame *scrollableFrame;
-  CallQueryInterface(GetParent(), &scrollableFrame);
-
+  nsIScrollableFrame *scrollableFrame = do_QueryFrame(GetParent());
   if (scrollableFrame) {
     nsIScrollableView* scrollableView = scrollableFrame->GetScrollableView();
     nsRect vcr = scrollableView->View()->GetBounds();

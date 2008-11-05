@@ -369,8 +369,8 @@ nsAbsoluteContainingBlock::ReflowAbsoluteFrame(nsIFrame*                aDelegat
     nsFrame::IndentBy(stdout,nsBlockFrame::gNoiseIndent);
     printf("abs pos ");
     if (nsnull != aKidFrame) {
-      nsIFrameDebug*  frameDebug;
-      if (NS_SUCCEEDED(CallQueryInterface(aKidFrame, &frameDebug))) {
+      nsIFrameDebug *frameDebug = do_QueryFrame(aKidFrame);
+      if (frameDebug) {
         nsAutoString name;
         frameDebug->GetFrameName(name);
         printf("%s ", NS_LossyConvertUTF16toASCII(name).get());
@@ -513,8 +513,8 @@ nsAbsoluteContainingBlock::ReflowAbsoluteFrame(nsIFrame*                aDelegat
     nsFrame::IndentBy(stdout,nsBlockFrame::gNoiseIndent - 1);
     printf("abs pos ");
     if (nsnull != aKidFrame) {
-      nsIFrameDebug*  frameDebug;
-      if (NS_SUCCEEDED(CallQueryInterface(aKidFrame, &frameDebug))) {
+      nsIFrameDebug *frameDebug = do_QueryFrame(aKidFrame);
+      if (frameDebug) {
         nsAutoString name;
         frameDebug->GetFrameName(name);
         printf("%s ", NS_LossyConvertUTF16toASCII(name).get());

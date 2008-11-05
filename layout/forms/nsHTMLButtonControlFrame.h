@@ -65,7 +65,7 @@ public:
 
   virtual void Destroy();
 
-  NS_IMETHOD  QueryInterface(const nsIID& aIID, void** aInstancePtr);
+  NS_DECL_QUERYFRAME
 
   NS_IMETHOD BuildDisplayList(nsDisplayListBuilder*   aBuilder,
                               const nsRect&           aDirtyRect,
@@ -141,9 +141,6 @@ protected:
                             nsIFrame* aFirstKid,
                             nsMargin aFocusPadding,
                             nsReflowStatus& aStatus);
-
-  NS_IMETHOD_(nsrefcnt) AddRef(void);
-  NS_IMETHOD_(nsrefcnt) Release(void);
 
   PRIntn GetSkipSides() const;
   nsButtonFrameRenderer mRenderer;

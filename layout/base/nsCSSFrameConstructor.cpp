@@ -4517,8 +4517,7 @@ nsCSSFrameConstructor::ConstructRootFrame(nsIContent*     aDocElement,
                                                   PR_TRUE,
                                                   newFrame);
 
-      nsIScrollableFrame* scrollable;
-      CallQueryInterface(newFrame, &scrollable);
+      nsIScrollableFrame* scrollable = do_QueryFrame(newFrame);
       NS_ENSURE_TRUE(scrollable, NS_ERROR_FAILURE);
 
       nsIScrollableView* scrollableView = scrollable->GetScrollableView();
@@ -4673,8 +4672,8 @@ nsCSSFrameConstructor::ConstructRadioControlFrame(nsIFrame**      aNewFrame,
   radioStyle = mPresShell->StyleSet()->ResolvePseudoStyleFor(aContent,
                                                              nsCSSAnonBoxes::radio,
                                                              aStyleContext);
-  nsIRadioControlFrame* radio = nsnull;
-  if (*aNewFrame && NS_SUCCEEDED(CallQueryInterface(*aNewFrame, &radio))) {
+  nsIRadioControlFrame* radio = do_QueryFrame(*aNewFrame);
+  if (radio) {
     radio->SetRadioButtonFaceStyleContext(radioStyle);
   }
   return NS_OK;
@@ -4694,8 +4693,8 @@ nsCSSFrameConstructor::ConstructCheckboxControlFrame(nsIFrame**      aNewFrame,
   checkboxStyle = mPresShell->StyleSet()->ResolvePseudoStyleFor(aContent,
                                                                 nsCSSAnonBoxes::check, 
                                                                 aStyleContext);
-  nsICheckboxControlFrame* checkbox = nsnull;
-  if (*aNewFrame && NS_SUCCEEDED(CallQueryInterface(*aNewFrame, &checkbox))) {
+  nsICheckboxControlFrame* checkbox = do_QueryFrame(*aNewFrame);
+  if (checkbox) {
     checkbox->SetCheckboxFaceStyleContext(checkboxStyle);
   }
   return NS_OK;
@@ -4772,8 +4771,7 @@ nsCSSFrameConstructor::ConstructButtonFrame(nsFrameConstructorState& aState,
 #ifdef DEBUG
   // Make sure that we're an anonymous content creator exactly when we're a
   // leaf
-  nsIAnonymousContentCreator* creator = nsnull;
-  CallQueryInterface(buttonFrame, &creator);
+  nsIAnonymousContentCreator* creator = do_QueryFrame(buttonFrame);
   NS_ASSERTION(!creator == !isLeaf,
                "Should be creator exactly when we're a leaf");
 #endif
@@ -4791,8 +4789,7 @@ nsCSSFrameConstructor::ConstructButtonFrame(nsFrameConstructorState& aState,
 
 #ifdef DEBUG
     // Make sure that anonymous child creation will have no effect in this case
-    nsIAnonymousContentCreator* creator = nsnull;
-    CallQueryInterface(blockFrame, &creator);
+    nsIAnonymousContentCreator* creator = do_QueryFrame(blockFrame);
     NS_ASSERTION(!creator, "Shouldn't be an anonymous content creator!");
 #endif
 
@@ -4878,8 +4875,7 @@ nsCSSFrameConstructor::ConstructSelectFrame(nsFrameConstructorState& aState,
       ///////////////////////////////////////////////////////////////////
       // Combobox - Old Native Implementation
       ///////////////////////////////////////////////////////////////////
-      nsIComboboxControlFrame* comboBox = nsnull;
-      CallQueryInterface(comboboxFrame, &comboBox);
+      nsIComboboxControlFrame* comboBox = do_QueryFrame(comboboxFrame);
       NS_ASSERTION(comboBox, "NS_NewComboboxControlFrame returned frame that "
                              "doesn't implement nsIComboboxControlFrame");
 
@@ -4893,9 +4889,8 @@ nsCSSFrameConstructor::ConstructSelectFrame(nsFrameConstructorState& aState,
       nsIFrame* listFrame = NS_NewListControlFrame(mPresShell, listStyle);
 
         // Notify the listbox that it is being used as a dropdown list.
-      nsIListControlFrame * listControlFrame;
-      rv = CallQueryInterface(listFrame, &listControlFrame);
-      if (NS_SUCCEEDED(rv)) {
+      nsIListControlFrame * listControlFrame = do_QueryFrame(listFrame);
+      if (listControlFrame) {
         listControlFrame->SetComboboxFrame(comboboxFrame);
       }
          // Notify combobox that it should use the listbox as it's popup
@@ -5115,13 +5110,12 @@ nsCSSFrameConstructor::ConstructFieldSetFrame(nsFrameConstructorState& aState,
   ProcessChildren(aState, aContent, aStyleContext, blockFrame, PR_TRUE,
                   childItems, PR_TRUE);
 
-  static NS_DEFINE_IID(kLegendFrameCID, NS_LEGEND_FRAME_CID);
   nsIFrame * child      = childItems.childList;
   nsIFrame * previous   = nsnull;
-  nsIFrame* legendFrame = nsnull;
+  nsLegendFrame* legendFrame = nsnull;
   while (nsnull != child) {
-    nsresult result = child->QueryInterface(kLegendFrameCID, (void**)&legendFrame);
-    if (NS_SUCCEEDED(result) && legendFrame) {
+    legendFrame = do_QueryFrame(child);
+    if (legendFrame) {
       // We want the legend to be the first frame in the fieldset child list.
       // That way the EventStateManager will do the right thing when tabbing
       // from a selection point within the legend (bug 236071), which is
@@ -5188,8 +5182,7 @@ nsCSSFrameConstructor::ConstructTextFrame(nsFrameConstructorState& aState,
   if (aParentFrame->IsFrameOfType(nsIFrame::eSVG)) {
     nsIFrame *ancestorFrame = SVG_GetFirstNonAAncestorFrame(aParentFrame);
     if (ancestorFrame) {
-      nsISVGTextContentMetrics* metrics;
-      CallQueryInterface(ancestorFrame, &metrics);
+      nsISVGTextContentMetrics* metrics = do_QueryFrame(ancestorFrame);
       if (!metrics) {
         return NS_OK;
       }
@@ -5579,8 +5572,7 @@ nsCSSFrameConstructor::CreateAnonymousFrames(nsFrameConstructorState& aState,
                                              nsIFrame*                aParentFrame,
                                              nsFrameItems&            aChildItems)
 {
-  nsIAnonymousContentCreator* creator = nsnull;
-  CallQueryInterface(aParentFrame, &creator);
+  nsIAnonymousContentCreator* creator = do_QueryFrame(aParentFrame);
   if (!creator)
     return NS_OK;
 
@@ -6993,8 +6985,7 @@ nsCSSFrameConstructor::ConstructSVGFrame(nsFrameConstructorState& aState,
   else if (aTag == nsGkAtoms::text) {
     nsIFrame *ancestorFrame = SVG_GetFirstNonAAncestorFrame(aParentFrame);
     if (ancestorFrame) {
-      nsISVGTextContentMetrics* metrics;
-      CallQueryInterface(ancestorFrame, &metrics);
+      nsISVGTextContentMetrics* metrics = do_QueryFrame(ancestorFrame);
       // Text cannot be nested
       if (!metrics)
         newFrame = NS_NewSVGTextFrame(mPresShell, aContent, aStyleContext);
@@ -7003,8 +6994,7 @@ nsCSSFrameConstructor::ConstructSVGFrame(nsFrameConstructorState& aState,
   else if (aTag == nsGkAtoms::tspan) {
     nsIFrame *ancestorFrame = SVG_GetFirstNonAAncestorFrame(aParentFrame);
     if (ancestorFrame) {
-      nsISVGTextContentMetrics* metrics;
-      CallQueryInterface(ancestorFrame, &metrics);
+      nsISVGTextContentMetrics* metrics = do_QueryFrame(ancestorFrame);
       if (metrics)
         newFrame = NS_NewSVGTSpanFrame(mPresShell, aContent,
                                        ancestorFrame, aStyleContext);
@@ -8499,8 +8489,7 @@ nsCSSFrameConstructor::ContentAppended(nsIContent*     aContainer,
 
 #ifdef DEBUG
   if (gReallyNoisyContentUpdates) {
-    nsIFrameDebug* fdbg = nsnull;
-    CallQueryInterface(parentFrame, &fdbg);
+    nsIFrameDebug* fdbg = do_QueryFrame(parentFrame);
     if (fdbg) {
       printf("nsCSSFrameConstructor::ContentAppended: resulting frame model:\n");
       fdbg->List(stdout, 0);
@@ -8647,8 +8636,7 @@ nsCSSFrameConstructor::ContentInserted(nsIContent*            aContainer,
         InvalidateCanvasIfNeeded(docElementFrame);
 #ifdef DEBUG
         if (gReallyNoisyContentUpdates) {
-          nsIFrameDebug* fdbg = nsnull;
-          CallQueryInterface(docElementFrame, &fdbg);
+          nsIFrameDebug* fdbg = do_QueryFrame(docElementFrame);
           if (fdbg) {
             printf("nsCSSFrameConstructor::ContentInserted: resulting frame model:\n");
             fdbg->List(stdout, 0);
@@ -8940,8 +8928,7 @@ nsCSSFrameConstructor::ContentInserted(nsIContent*            aContainer,
 
 #ifdef DEBUG
   if (gReallyNoisyContentUpdates && parentFrame) {
-    nsIFrameDebug* fdbg = nsnull;
-    CallQueryInterface(parentFrame, &fdbg);
+    nsIFrameDebug* fdbg = do_QueryFrame(parentFrame);
     if (fdbg) {
       printf("nsCSSFrameConstructor::ContentInserted: resulting frame model:\n");
       fdbg->List(stdout, 0);
@@ -9319,8 +9306,7 @@ nsCSSFrameConstructor::ContentRemoved(nsIContent* aContainer,
       nsFrame::ListTag(stdout, childFrame);
       printf("\n");
 
-      nsIFrameDebug* fdbg = nsnull;
-      CallQueryInterface(parentFrame, &fdbg);
+      nsIFrameDebug* fdbg = do_QueryFrame(parentFrame);
       if (fdbg)
         fdbg->List(stdout, 0);
     }
@@ -9384,8 +9370,7 @@ nsCSSFrameConstructor::ContentRemoved(nsIContent* aContainer,
 
 #ifdef DEBUG
     if (gReallyNoisyContentUpdates && parentFrame) {
-      nsIFrameDebug* fdbg = nsnull;
-      CallQueryInterface(parentFrame, &fdbg);
+      nsIFrameDebug* fdbg = do_QueryFrame(parentFrame);
       if (fdbg) {
         printf("nsCSSFrameConstructor::ContentRemoved: resulting frame model:\n");
         fdbg->List(stdout, 0);
@@ -12536,16 +12521,15 @@ nsCSSFrameConstructor::ConstructInline(nsFrameConstructorState& aState,
     nsIFrameDebug*  frameDebug;
 
     printf("nsCSSFrameConstructor::ConstructInline:\n");
-    if (NS_SUCCEEDED(CallQueryInterface(aNewFrame, &frameDebug))) {
+    if ( (frameDebug = do_QueryFrame(aNewFrame)) ) {
       printf("  ==> leading inline frame:\n");
       frameDebug->List(stdout, 2);
     }
-    if (NS_SUCCEEDED(CallQueryInterface(blockFrame, &frameDebug))) {
+    if ( (frameDebug = do_QueryFrame(blockFrame)) ) {
       printf("  ==> block frame:\n");
       frameDebug->List(stdout, 2);
     }
-    if (inlineFrame &&
-        NS_SUCCEEDED(CallQueryInterface(inlineFrame, &frameDebug))) {
+    if ( (frameDebug = do_QueryFrame(inlineFrame)) ) {
       printf("  ==> trailing inline frame:\n");
       frameDebug->List(stdout, 2);
     }
