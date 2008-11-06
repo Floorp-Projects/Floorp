@@ -56,6 +56,7 @@ struct gfxFontFaceSrc {
     PRPackedBool           mIsLocal;       // url or local
     nsString               mLocalName;     // full font name if local
     nsCOMPtr<nsIURI>       mURI;           // uri if url 
+    nsCOMPtr<nsIURI>       mReferrer;      // referrer url if url
 
     // format hint flags, union of all possible formats
     // (e.g. TrueType, EOT, SVG, etc.)
@@ -146,8 +147,10 @@ class THEBES_API gfxUserFontSet {
 
 public:
     class LoaderContext;
-    typedef PRBool (*LoaderCallback) (gfxFontEntry *aFontToLoad, nsIURI *aSrcURL, 
-                                      LoaderContext *aContextData);
+    typedef nsresult (*LoaderCallback) (gfxFontEntry *aFontToLoad, 
+                                        nsIURI *aSrcURL,
+                                        nsIURI *aReferrerURI,
+                                        LoaderContext *aContextData);
 
     class LoaderContext {
     public:
