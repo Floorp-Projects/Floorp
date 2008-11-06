@@ -132,6 +132,7 @@ nsHttpChannel::nsHttpChannel()
     , mFallbackChannel(PR_FALSE)
     , mInheritApplicationCache(PR_TRUE)
     , mChooseApplicationCache(PR_FALSE)
+    , mLoadedFromApplicationCache(PR_FALSE)
     , mTracingEnabled(PR_TRUE)
 {
     LOG(("Creating nsHttpChannel @%x\n", this));
@@ -1485,6 +1486,7 @@ nsHttpChannel::OpenCacheEntry(PRBool offline, PRBool *delayed)
     nsresult rv;
 
     *delayed = PR_FALSE;
+    mLoadedFromApplicationCache = PR_FALSE;
 
     LOG(("nsHttpChannel::OpenCacheEntry [this=%x]", this));
 
@@ -1646,6 +1648,11 @@ nsHttpChannel::OpenCacheEntry(PRBool offline, PRBool *delayed)
                 SetOfflineCacheClientID(clientID);
                 mCachingOpportunistically = PR_TRUE;
             }
+        }
+        else if (NS_SUCCEEDED(rv)) {
+            // We successfully opened an offline cache session and the entry,
+            // now indiciate we load from the offline cache.
+            mLoadedFromApplicationCache = PR_TRUE;
         }
     }
 
@@ -5241,6 +5248,13 @@ nsHttpChannel::SetApplicationCache(nsIApplicationCache *appCache)
     NS_ENSURE_TRUE(!mWasOpened, NS_ERROR_ALREADY_OPENED);
 
     mApplicationCache = appCache;
+    return NS_OK;
+}
+
+NS_IMETHODIMP
+nsHttpChannel::GetLoadedFromApplicationCache(PRBool *aLoadedFromApplicationCache)
+{
+    *aLoadedFromApplicationCache = mLoadedFromApplicationCache;
     return NS_OK;
 }
 

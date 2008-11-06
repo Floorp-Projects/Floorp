@@ -1022,10 +1022,19 @@ nsContentSink::ProcessOfflineManifest(nsIContent *aElement)
   nsCOMPtr<nsIApplicationCacheChannel> applicationCacheChannel =
     do_QueryInterface(mDocument->GetChannel());
   if (applicationCacheChannel) {
-    rv = applicationCacheChannel->GetApplicationCache(
-      getter_AddRefs(applicationCache));
+    PRBool loadedFromApplicationCache;
+    rv = applicationCacheChannel->GetLoadedFromApplicationCache(
+      &loadedFromApplicationCache);
     if (NS_FAILED(rv)) {
       return;
+    }
+
+    if (loadedFromApplicationCache) {
+      rv = applicationCacheChannel->GetApplicationCache(
+        getter_AddRefs(applicationCache));
+      if (NS_FAILED(rv)) {
+        return;
+      }
     }
   }
 

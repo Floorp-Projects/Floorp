@@ -303,9 +303,9 @@ _checkCache: function(cacheSession, url, expectEntry)
     } else if (e.result == NS_ERROR_CACHE_KEY_WAIT_FOR_VALIDATION) {
       // There was a cache key that we couldn't access yet, that's good enough.
       if (expectEntry) {
-        this.ok(true, url + " should exist in the offline cache");
+        this.ok(!mustBeValid, url + " should exist in the offline cache");
       } else {
-        this.ok(false, url + " should not exist in the offline cache");
+        this.ok(mustBeValid, url + " should not exist in the offline cache");
       }
     } else {
       throw e;
