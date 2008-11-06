@@ -1115,6 +1115,11 @@ if [ "$MOZ_OGG" ]; then
    $MAKEFILES_libogg
    $MAKEFILES_libfishsound
    $MAKEFILES_liboggplay
+ "
+fi
+
+if [ "$MOZ_SYDNEYAUDIO" ]; then
+ add_makefiles "
    $MAKEFILES_libsydneyaudio
  "
 fi
