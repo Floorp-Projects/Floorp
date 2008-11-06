@@ -46,6 +46,7 @@ include $(topsrcdir)/config/rules.mk
 
 _BROWSER_TEST_FILES =  \
 		browser_console_clear.js \
+		browser_privatebrowsing_theming.js \
 		$(NULL)
 
 ifeq (,$(filter mac cocoa,$(MOZ_WIDGET_TOOLKIT)))
