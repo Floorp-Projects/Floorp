@@ -1,0 +1,33 @@
+<html xmlns="http://www.w3.org/1999/xhtml" manifest="http://localhost:8888/tests/dom/tests/mochitest/ajax/offline/updating.cacheManifest">
+<head>
+<title>Updating implicit</title>
+
+<script type="text/javascript" src="/MochiKit/packed.js"></script>
+<script type="text/javascript" src="/tests/dom/tests/mochitest/ajax/offline/offlineTests.js"></script>
+
+<script type="text/javascript">
+
+function manifestUpdated()
+{
+  window.opener.implicitLoaded(window, false);
+}
+
+function manifestError()
+{
+  window.opener.implicitLoaded(window, true);
+}
+
+if (OfflineTest.setupChild()) {
+  applicationCache.onerror = OfflineTest.priv(manifestError);
+  applicationCache.onupdateready = OfflineTest.failEvent;
+  applicationCache.oncached = OfflineTest.failEvent;
+  applicationCache.onnoupdate = OfflineTest.priv(manifestUpdated);
+}
+
+</script>
+
+</head>
+
+<body>
+</body>
+</html>
