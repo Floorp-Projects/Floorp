@@ -249,11 +249,26 @@ function runHttpTests(testArray, done)
       {
         var ch = request.QueryInterface(Ci.nsIHttpChannel)
                         .QueryInterface(Ci.nsIHttpChannelInternal);
-      
-        testArray[testIndex].onStopRequest(ch, cx, status, this._data);
 
-        performNextTest();
-        do_test_finished();
+        // NB: The onStopRequest callback must run before performNextTest here,
+        //     because the latter runs the next test's initChannel callback, and
+        //     we want one test to be sequentially processed before the next
+        //     one.
+        try
+        {
+          testArray[testIndex].onStopRequest(ch, cx, status, this._data);
+        }
+        finally
+        {
+          try
+          {
+            performNextTest();
+          }
+          finally
+          {
+            do_test_finished();
+          }
+        }
       },
       QueryInterface: function(aIID)
       {
