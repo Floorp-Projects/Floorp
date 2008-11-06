@@ -2152,7 +2152,8 @@ class RegExpNativeCompiler {
         GuardRecord* guard;
         LIns* skip;
         LIns* start;
-
+        bool oom = false;
+        
         Fragmento* fragmento = JS_TRACE_MONITOR(cx).reFragmento;
         fragment = fragmento->getAnchor(re);
         fragment->lirbuf = new (&gc) LirBuffer(fragmento, NULL);
@@ -2190,8 +2191,10 @@ class RegExpNativeCompiler {
         fragment->lastIns = lir->insGuard(LIR_loop, lir->insImm(1), skip);
 
         ::compile(fragmento->assm(), fragment);
-        if (fragmento->assm()->error() != nanojit::None)
+        if (fragmento->assm()->error() != nanojit::None) {
+            oom = fragmento->assm()->error() == nanojit::OutOMem;
             goto fail;
+        }
 
         delete lirb;
         debug_only_v(delete lir;)
@@ -2200,7 +2203,8 @@ class RegExpNativeCompiler {
         delete lirb;
         debug_only_v(delete lir;)
     fail2:
-        fragmento->clearFrag(re);
+        if (lirbuf->outOmem() || oom) 
+            fragmento->clearFrags();
         return JS_FALSE;
     }
 };
@@ -2283,37 +2287,34 @@ js_NewRegExp(JSContext *cx, JSTokenStream *ts,
     }
 
 #ifdef JS_TRACER
-    /* FIXME  Shrink allocation to avoid allocating space for bytecode
-     *        when we are using native. */
-    if (js_CompileRegExpToNative(cx, re, &state)) {
-        re->is_native = JS_TRUE;
-    } else {
+    /*
+     * Try compiling the native code version. For the time being we also 
+     * compile the bytecode version in case we evict the native code
+     * version from the code cache.
+     */
+    js_CompileRegExpToNative(cx, re, &state);
 #endif
-        re->is_native = JS_FALSE;
-        /* Compile the bytecode version. */
-        endPC = EmitREBytecode(&state, re, state.treeDepth, re->program, state.result);
-        if (!endPC) {
-            js_DestroyRegExp(cx, re);
-            re = NULL;
-            goto out;
-        }
-        *endPC++ = REOP_END;
-        /*
-         * Check whether size was overestimated and shrink using realloc.
-         * This is safe since no pointers to newly parsed regexp or its parts
-         * besides re exist here.
-         */
-        if ((size_t)(endPC - re->program) != state.progLength + 1) {
-            JSRegExp *tmp;
-            JS_ASSERT((size_t)(endPC - re->program) < state.progLength + 1);
-            resize = offsetof(JSRegExp, program) + (endPC - re->program);
-            tmp = (JSRegExp *) JS_realloc(cx, re, resize);
-            if (tmp)
-                re = tmp;
-        }
-#ifdef JS_TRACER
+    /* Compile the bytecode version. */
+    endPC = EmitREBytecode(&state, re, state.treeDepth, re->program, state.result);
+    if (!endPC) {
+        js_DestroyRegExp(cx, re);
+        re = NULL;
+        goto out;
     }
-#endif
+    *endPC++ = REOP_END;
+    /*
+     * Check whether size was overestimated and shrink using realloc.
+     * This is safe since no pointers to newly parsed regexp or its parts
+     * besides re exist here.
+     */
+    if ((size_t)(endPC - re->program) != state.progLength + 1) {
+        JSRegExp *tmp;
+        JS_ASSERT((size_t)(endPC - re->program) < state.progLength + 1);
+        resize = offsetof(JSRegExp, program) + (endPC - re->program);
+        tmp = (JSRegExp *) JS_realloc(cx, re, resize);
+        if (tmp)
+            re = tmp;
+    }
 
     re->flags = flags;
     re->parenCount = state.parenCount;
@@ -3642,7 +3643,8 @@ MatchRegExp(REGlobalData *gData, REMatchState *x)
     Fragment *fragment;
 
     /* Run with native regexp if possible. */
-    if (gData->regexp->is_native && (fragment = JS_TRACE_MONITOR(gData->cx).reFragmento->getLoop(gData->regexp))) {
+    if (((fragment = JS_TRACE_MONITOR(gData->cx).reFragmento->getLoop(gData->regexp)) != NULL)
+        && fragment->code()) {
         union { NIns *code; REMatchState* (FASTCALL *func)(void*, void*); } u;
         u.code = fragment->code();
         REMatchState *lr;
