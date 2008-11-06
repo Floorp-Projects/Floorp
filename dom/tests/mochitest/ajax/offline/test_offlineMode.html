@@ -76,8 +76,7 @@ function finalize()
   {
     OfflineTest.checkCache("http://localhost:8888/tests/dom/tests/mochitest/ajax/offline/notonwhitelist.html", true);
     OfflineTest.checkCache("http://localhost:8888/tests/dom/tests/mochitest/ajax/offline/updatingIFrame.html", true);
-    OfflineTest.todo(false, "Bug 461325 - implicit entry should be in cache");
-    //OfflineTest.checkCache("http://localhost:8888/tests/dom/tests/mochitest/ajax/offline/updatingImplicit.html", true);
+    OfflineTest.checkCache("http://localhost:8888/tests/dom/tests/mochitest/ajax/offline/updatingImplicit.html", true);
 
     OfflineTest.is(gGotExplicitVersion, 1, "Explicit entry loaded");
     OfflineTest.is(gGotImplicitVersion, 1, "Implicit entry loaded");
@@ -119,7 +118,7 @@ function finalize()
     ioserv.offline = false;
 
     OfflineTest.is(gGotExplicitVersion, 1, "Explicit entry loaded");
-    OfflineTest.todo(gGotImplicitVersion == 1, "Bug 461325 - Implicit entry loaded");
+    OfflineTest.is(gGotImplicitVersion == 1, "Bug 461325 - Implicit entry loaded");
     OfflineTest.is(gGotDynamicVersion, 1, "Dynamic entry loaded");
     OfflineTest.ok(gGotOnError, "Got onerror event invoked by implicit page load in offline mode");
 

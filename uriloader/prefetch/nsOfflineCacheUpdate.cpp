@@ -47,9 +47,12 @@
 #include "nsICacheService.h"
 #include "nsICacheSession.h"
 #include "nsICachingChannel.h"
+#include "nsIContent.h"
 #include "nsIDocumentLoader.h"
+#include "nsIDOMElement.h"
 #include "nsIDOMWindow.h"
 #include "nsIDOMOfflineResourceList.h"
+#include "nsIDocument.h"
 #include "nsIObserverService.h"
 #include "nsIURL.h"
 #include "nsIWebProgress.h"
@@ -1328,6 +1331,7 @@ nsOfflineCacheUpdate::LoadCompleted()
             mSucceeded = PR_FALSE;
             NotifyNoUpdate();
             Finish();
+            ScheduleImplicit();
             return;
         }
 
@@ -1700,6 +1704,96 @@ nsOfflineCacheUpdate::NotifyCompleted(nsOfflineCacheUpdateItem *aItem)
     for (PRInt32 i = 0; i < observers.Count(); i++) {
         observers[i]->ItemCompleted(this, aItem);
     }
+
+    return NS_OK;
+}
+
+void
+nsOfflineCacheUpdate::AddDocument(nsIDOMDocument *aDocument)
+{
+    // Add document only if it was not loaded from an offline cache.
+    // If it were loaded from an offline cache then it has already
+    // been associated with it and must not be again cached as
+    // implicit (which are the reasons we collect documents here).
+    nsCOMPtr<nsIDocument> document = do_QueryInterface(aDocument);
+    if (!document)
+        return;
+
+    nsIChannel* channel = document->GetChannel();
+    nsCOMPtr<nsIApplicationCacheChannel> appCacheChannel =
+        do_QueryInterface(channel);
+    if (!appCacheChannel)
+        return;
+
+    PRBool loadedFromAppCache;
+    appCacheChannel->GetLoadedFromApplicationCache(&loadedFromAppCache);
+    if (loadedFromAppCache)
+        return;
+
+    mDocuments.AppendObject(aDocument);
+}
+
+nsresult
+nsOfflineCacheUpdate::ScheduleImplicit()
+{
+    if (mDocuments.Count() == 0)
+        return NS_OK;
+
+    nsresult rv;
+
+    nsRefPtr<nsOfflineCacheUpdate> update = new nsOfflineCacheUpdate();
+    NS_ENSURE_TRUE(update, NS_ERROR_OUT_OF_MEMORY);
+
+    nsCAutoString clientID;
+    if (mPreviousApplicationCache) {
+        rv = mPreviousApplicationCache->GetClientID(clientID);
+        NS_ENSURE_SUCCESS(rv, rv);
+    }
+    else {
+        clientID = mClientID;
+    }
+
+    rv = update->InitPartial(mManifestURI, clientID, mDocumentURI);
+    NS_ENSURE_SUCCESS(rv, rv);
+
+    PRBool added = PR_FALSE;
+    for (PRInt32 i = 0; i < mDocuments.Count(); i++) {
+        nsIDOMDocument* domDoc = mDocuments[i];
+        nsCOMPtr<nsIDocument> doc = do_QueryInterface(domDoc);
+        if (!doc)
+            continue;
+
+        nsIURI* uri = doc->GetDocumentURI();
+        if (!uri)
+            continue;
+
+        nsIContent* content = doc->GetRootContent();
+        nsCOMPtr<nsIDOMElement> root = do_QueryInterface(content);
+        if (!root)
+            continue;
+
+        nsAutoString manifestSpec;
+        rv = root->GetAttribute(NS_LITERAL_STRING("manifest"), manifestSpec);
+        NS_ENSURE_SUCCESS(rv, rv);
+
+        nsCOMPtr<nsIURI> manifestURI;
+        NS_NewURI(getter_AddRefs(manifestURI), manifestSpec,
+                  doc->GetDocumentCharacterSet().get(),
+                  doc->GetDocumentURI());
+        if (!manifestURI)
+            continue;
+
+        rv = update->AddURI(uri, nsIApplicationCache::ITEM_IMPLICIT);
+        NS_ENSURE_SUCCESS(rv, rv);
+
+        added = PR_TRUE;
+    }
+
+    if (!added)
+      return NS_OK;
+
+    rv = update->Schedule();
+    NS_ENSURE_SUCCESS(rv, rv);
 
     return NS_OK;
 }
