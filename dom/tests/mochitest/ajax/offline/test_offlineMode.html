@@ -1,0 +1,147 @@
+<html xmlns="http://www.w3.org/1999/xhtml" manifest="http://localhost:8888/tests/dom/tests/mochitest/ajax/offline/updating.cacheManifest">
+<head>
+<title>Offline mode test</title>
+
+<script type="text/javascript" src="/MochiKit/packed.js"></script>
+<script type="text/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+<script type="text/javascript" src="/tests/dom/tests/mochitest/ajax/offline/offlineTests.js"></script>
+<link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
+
+<script class="testbody" type="text/javascript">
+
+/**
+ * The test loads a manifest and cache it.
+ * Then tests if all works in online mode
+ * as expected. Then switches firefox to offline
+ * mode and tries the page load still works as
+ * expected, i.e. all items from the cache load.
+ */
+
+var gImplicitWindow = null;
+var gCompleteTimeout = null;
+var gGotExplicitVersion = 0;
+var gGotImplicitVersion = 0;
+var gGotDynamicVersion = 0;
+var gGotOnError = false;
+
+// test
+
+function manifestUpdated()
+{
+  applicationCache.add("http://localhost:8888/tests/dom/tests/mochitest/ajax/offline/notonwhitelist.html");
+  OfflineTest.waitForAdd("http://localhost:8888/tests/dom/tests/mochitest/ajax/offline/notonwhitelist.html", dynamicAdded);
+}
+
+function dynamicAdded()
+{
+  aFrame.location = "http://localhost:8888/tests/dom/tests/mochitest/ajax/offline/notonwhitelist.html";
+}
+
+// Called by the dynamically added iframe on load
+function notwhitelistOnLoad()
+{
+  gGotDynamicVersion = 1;
+  aFrame.location = "http://localhost:8888/tests/dom/tests/mochitest/ajax/offline/updatingIFrame.html";
+}
+
+// Called by the explicit iframe on load
+function frameLoad(version)
+{
+  gGotExplicitVersion = version;
+  gImplicitWindow = window.open("http://localhost:8888/tests/dom/tests/mochitest/ajax/offline/updatingImplicit.html");
+}
+
+// Called by the implicit window on load
+function implicitLoaded(aWindow, errorOccured)
+{
+  aWindow.close();
+
+  gGotImplicitVersion = 1;
+  OfflineTest.waitForAdd("http://localhost:8888/tests/dom/tests/mochitest/ajax/offline/updatingImplicit.html", implicitAdded);
+}
+
+function implicitAdded()
+{
+  OfflineTest.priv(finalize)();
+}
+
+function finalize()
+{
+  window.clearTimeout(gCompleteTimeout);
+
+  var ioserv = Cc["@mozilla.org/network/io-service;1"]
+      .getService(Ci.nsIIOService);
+
+  if (!ioserv.offline)
+  {
+    OfflineTest.checkCache("http://localhost:8888/tests/dom/tests/mochitest/ajax/offline/notonwhitelist.html", true);
+    OfflineTest.checkCache("http://localhost:8888/tests/dom/tests/mochitest/ajax/offline/updatingIFrame.html", true);
+    OfflineTest.checkCache("http://localhost:8888/tests/dom/tests/mochitest/ajax/offline/updatingImplicit.html", true);
+
+    OfflineTest.is(gGotExplicitVersion, 1, "Explicit entry loaded");
+    OfflineTest.is(gGotImplicitVersion, 1, "Implicit entry loaded");
+    OfflineTest.is(gGotDynamicVersion, 1, "Dynamic entry loaded");
+
+    gGotExplicitVersion = 0;
+    gGotImplicitVersion = 0;
+    gGotDynamicVersion = 0;
+
+
+    // Delete HTTP cache to ensure we are going from offline cache
+    var sessionServ = Cc["@mozilla.org/network/cache-service;1"]
+      .getService(Ci.nsICacheService);
+    cacheSession = sessionServ.createSession("HTTP", Ci.nsICache.STORE_ANYWHERE, Ci.nsICache.STREAM_BASED);
+    function doomHTTPCacheEntry(entryKey) {
+      entry = cacheSession.openCacheEntry(entryKey, Ci.nsICache.ACCESS_WRITE, false)
+      entry.doom();
+    }
+    doomHTTPCacheEntry("http://localhost:8888/tests/dom/tests/mochitest/ajax/offline/notonwhitelist.html");
+    doomHTTPCacheEntry("http://localhost:8888/tests/dom/tests/mochitest/ajax/offline/updatingIFrame.html");
+    doomHTTPCacheEntry("http://localhost:8888/tests/dom/tests/mochitest/ajax/offline/updatingImplicit.html");
+
+
+    ioserv.offline = true;
+
+    gCompleteTimeout = window.setTimeout(OfflineTest.priv(finalize), 10000);
+
+    // remove error handling. in offline mode
+    // is correct to get error message
+    applicationCache.onerror = function() {gGotOnError = true;}
+
+    aFrame.location = "http://localhost:8888/tests/dom/tests/mochitest/ajax/offline/notonwhitelist.html";
+    // Starts the chain all over again but in offline mode.
+  }
+  else
+  {
+    gImplicitWindow.close();
+
+    ioserv.offline = false;
+
+    OfflineTest.is(gGotExplicitVersion, 1, "Explicit entry loaded");
+    OfflineTest.is(gGotImplicitVersion == 1, "Bug 461325 - Implicit entry loaded");
+    OfflineTest.is(gGotDynamicVersion, 1, "Dynamic entry loaded");
+    OfflineTest.ok(gGotOnError, "Got onerror event invoked by implicit page load in offline mode");
+
+    OfflineTest.teardown();
+    OfflineTest.finish();
+  }
+}
+
+SimpleTest.waitForExplicitFinish();
+
+if (OfflineTest.setup()) {
+  applicationCache.onerror = OfflineTest.failEvent;
+  applicationCache.onupdateready = OfflineTest.failEvent;
+  applicationCache.oncached = OfflineTest.priv(manifestUpdated);
+}
+
+</script>
+
+</head>
+
+<body>
+
+<iframe name="aFrame" src=""></iframe>
+
+</body>
+</html>

@@ -1998,7 +1998,9 @@ PREFIX(_contains_point) (region_type_t * region,
         return(FALSE);
     if (numRects == 1)
     {
-	*box = region->extents;
+        if (box)
+	    *box = region->extents;
+
 	return(TRUE);
     }
     for (pbox = PIXREGION_BOXPTR(region), pboxEnd = pbox + numRects;
@@ -2011,7 +2013,10 @@ PREFIX(_contains_point) (region_type_t * region,
 	   break;		/* missed it */
 	if (x >= pbox->x2)
 	   continue;		/* not there yet */
-	*box = *pbox;
+
+        if (box)
+	    *box = *pbox;
+
 	return(TRUE);
     }
     return(FALSE);

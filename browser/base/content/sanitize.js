@@ -22,6 +22,7 @@
 # Contributor(s):
 #   Ben Goodger <ben@mozilla.org>
 #   Giorgio Maone <g.maone@informaction.com>
+#   Johnathan Nightingale <johnath@mozilla.com>
 #
 # Alternatively, the contents of this file may be used under the terms of
 # either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -51,10 +52,11 @@ Sanitizer.prototype = {
     return this.items[aItemName].canClear;
   },
   
-  _prefDomain: "privacy.item.",
+  prefDomain: "privacy.item.",
+  
   getNameFromPreference: function (aPreferenceName)
   {
-    return aPreferenceName.substr(this._prefDomain.length);
+    return aPreferenceName.substr(this.prefDomain.length);
   },
   
   /**
@@ -67,10 +69,18 @@ Sanitizer.prototype = {
   {
     var psvc = Components.classes["@mozilla.org/preferences-service;1"]
                          .getService(Components.interfaces.nsIPrefService);
-    var branch = psvc.getBranch(this._prefDomain);
+    var branch = psvc.getBranch(this.prefDomain);
     var errors = null;
+
+    // Cache the range of times to clear
+    if (this.ignoreTimespan)
+      var range = null;  // If we ignore timespan, clear everything
+    else
+      range = Sanitizer.getClearRange();
+      
     for (var itemName in this.items) {
       var item = this.items[itemName];
+      item.range = range;
       if ("clear" in item && item.canClear && branch.getBoolPref(itemName)) {
         // Some of these clear() may raise exceptions (see bug #265028)
         // to sanitize as much as possible, we catch and store them, 
@@ -90,16 +100,22 @@ Sanitizer.prototype = {
     return errors;
   },
   
+  // Time span only makes sense in certain cases.  Consumers who want
+  // to only clear some private data can opt in by setting this to false
+  ignoreTimespan : true,
+  
   items: {
     cache: {
       clear: function ()
       {
-        const cc = Components.classes;
-        const ci = Components.interfaces;
-        var cacheService = cc["@mozilla.org/network/cache-service;1"]
-                             .getService(ci.nsICacheService);
+        const Cc = Components.classes;
+        const Ci = Components.interfaces;
+        var cacheService = Cc["@mozilla.org/network/cache-service;1"].
+                          getService(Ci.nsICacheService);
         try {
-          cacheService.evictEntries(ci.nsICache.STORE_ANYWHERE);
+          // Cache doesn't consult timespan, nor does it have the
+          // facility for timespan-based eviction.  Wipe it.
+          cacheService.evictEntries(Ci.nsICache.STORE_ANYWHERE);
         } catch(er) {}
       },
       
@@ -112,9 +128,25 @@ Sanitizer.prototype = {
     cookies: {
       clear: function ()
       {
+        const Ci = Components.interfaces;
         var cookieMgr = Components.classes["@mozilla.org/cookiemanager;1"]
-                                  .getService(Components.interfaces.nsICookieManager);
-        cookieMgr.removeAll();
+                                  .getService(Ci.nsICookieManager);
+        if (this.range) {
+          // Iterate through the cookies and delete any created after our cutoff.
+          var cookiesEnum = cookieMgr.enumerator;
+          while (cookiesEnum.hasMoreElements()) {
+            var cookie = cookiesEnum.getNext().QueryInterface(Ci.nsICookie2);
+            
+            if (cookie.creationTime > this.range[0])
+              // This cookie was created after our cutoff, clear it
+              cookieMgr.remove(cookie.host, cookie.name, cookie.path, false);
+          }
+        }
+        else {
+          // Remove everything
+          cookieMgr.removeAll();
+        }
+
       },
       
       get canClear()
@@ -131,6 +163,8 @@ Sanitizer.prototype = {
         var cacheService = Cc["@mozilla.org/network/cache-service;1"].
                            getService(Ci.nsICacheService);
         try {
+          // Offline app data is "timeless", and doesn't respect
+          // the setting of timespan, it always clears everything
           cacheService.evictEntries(Ci.nsICache.STORE_OFFLINE);
         } catch(er) {}
 
@@ -150,7 +184,10 @@ Sanitizer.prototype = {
       {
         var globalHistory = Components.classes["@mozilla.org/browser/global-history;2"]
                                       .getService(Components.interfaces.nsIBrowserHistory);
-        globalHistory.removeAllPages();
+        if (this.range)
+          globalHistory.removePagesByTimeframe(this.range[0], this.range[1]);
+        else
+          globalHistory.removeAllPages();
         
         try {
           var os = Components.classes["@mozilla.org/observer-service;1"]
@@ -223,7 +260,35 @@ Sanitizer.prototype = {
       {
         var dlMgr = Components.classes["@mozilla.org/download-manager;1"]
                               .getService(Components.interfaces.nsIDownloadManager);
-        dlMgr.cleanUp();
+
+        var dlIDsToRemove = [];
+        if (this.range) {
+          // First, remove the completed/cancelled downloads
+          dlMgr.removeDownloadsByTimeframe(this.range[0], this.range[1]);
+          
+          // Queue up any active downloads that started in the time span as well
+          var dlsEnum = dlMgr.activeDownloads;
+          while(dlsEnum.hasMoreElements()) {
+            var dl = dlsEnum.next();
+            if(dl.startTime >= this.range[0])
+              dlIDsToRemove.push(dl.id);
+          }
+        }
+        else {
+          // Clear all completed/cancelled downloads
+          dlMgr.cleanUp();
+          
+          // Queue up all active ones as well
+          var dlsEnum = dlMgr.activeDownloads;
+          while(dlsEnum.hasMoreElements()) {
+            dlIDsToRemove.push(dlsEnum.next().id);
+          }
+        }
+        
+        // Remove any queued up active downloads
+        dlIDsToRemove.forEach(function(id) {
+          dlMgr.removeDownload(id);
+        });
       },
 
       get canClear()
@@ -239,6 +304,7 @@ Sanitizer.prototype = {
       {
         var pwmgr = Components.classes["@mozilla.org/login-manager;1"]
                               .getService(Components.interfaces.nsILoginManager);
+        // Passwords are timeless, and don't respect the timeSpan setting
         pwmgr.removeAllLogins();
       },
       
@@ -280,6 +346,47 @@ Sanitizer.prefDomain          = "privacy.sanitize.";
 Sanitizer.prefPrompt          = "promptOnSanitize";
 Sanitizer.prefShutdown        = "sanitizeOnShutdown";
 Sanitizer.prefDidShutdown     = "didShutdownSanitize";
+
+// Time span constants corresponding to values of the privacy.sanitize.timeSpan
+// pref.  Used to determine how much history to clear, for various items
+Sanitizer.TIMESPAN_EVERYTHING = 0;
+Sanitizer.TIMESPAN_HOUR       = 1;
+Sanitizer.TIMESPAN_2HOURS     = 2;
+Sanitizer.TIMESPAN_4HOURS     = 3;
+Sanitizer.TIMESPAN_TODAY      = 4;
+
+// Return a 2 element array representing the start and end times,
+// in the uSec-since-epoch format that PRTime likes.  If we should
+// clear everything, return null
+Sanitizer.getClearRange = function() {
+  var ts = Sanitizer.prefs.getIntPref("timeSpan");
+  if (ts === Sanitizer.TIMESPAN_EVERYTHING)
+    return null;
+  
+  // PRTime is microseconds while JS time is milliseconds
+  var endDate = Date.now() * 1000;
+  switch (ts) {
+    case Sanitizer.TIMESPAN_HOUR :
+      var startDate = endDate - 3600000000; // 1*60*60*1000000
+      break;
+    case Sanitizer.TIMESPAN_2HOURS :
+      startDate = endDate - 7200000000; // 2*60*60*1000000
+      break;
+    case Sanitizer.TIMESPAN_4HOURS :
+      startDate = endDate - 14400000000; // 4*60*60*1000000
+      break;
+    case Sanitizer.TIMESPAN_TODAY :
+      var d = new Date();  // Start with today
+      d.setHours(0);      // zero us back to midnight...
+      d.setMinutes(0);
+      d.setSeconds(0);
+      startDate = d.valueOf() * 1000; // convert to epoch usec
+      break;
+    default:
+      throw "Invalid time span for clear private data: " + ts;
+  }
+  return [startDate, endDate];
+};
 
 Sanitizer._prefs = null;
 Sanitizer.__defineGetter__("prefs", function() 

@@ -150,49 +150,14 @@ function run_test()
   var observer = {
     observe: function(aSubject, aTopic, aData) {
       var dl = aSubject.QueryInterface(Ci.nsIDownload);
-      switch (aTopic) {
-        case "dl-start":
-          do_check_eq(nsIDownloadManager.DOWNLOAD_DOWNLOADING, dl.state);
-          do_test_pending();
-          break;
-        case "dl-failed":
-          do_check_eq(nsIDownloadManager.DOWNLOAD_FAILED, dl.state);
-          do_check_true(dm.canCleanUp);
-          test_dm_getDownload(dl);
-          do_test_finished();
-          break;
-        case "dl-cancel":
-          do_check_eq(nsIDownloadManager.DOWNLOAD_CANCELED, dl.state);
-          do_check_true(dm.canCleanUp);
-          test_dm_getDownload(dl);
-          do_test_finished();
-          break;
-        case "dl-done":
-          test_dm_getDownload(dl);
-          dm.removeDownload(dl.id);
-
-          var stmt = dm.DBConnection.createStatement("SELECT COUNT(*) " +
-                                                     "FROM moz_downloads " +
-                                                     "WHERE id = ?1");
-          stmt.bindInt32Parameter(0, dl.id);
-          stmt.executeStep();
-
-          do_check_eq(0, stmt.getInt32(0));
-          stmt.reset();
-
-          do_check_eq(nsIDownloadManager.DOWNLOAD_FINISHED, dl.state);
-          do_check_true(dm.canCleanUp);
-          do_test_finished();
-          break;
-      };
+      do_check_eq(nsIDownloadManager.DOWNLOAD_CANCELED, dl.state);
+      do_check_true(dm.canCleanUp);
+      test_dm_getDownload(dl);
     }
   };
   var os = Cc["@mozilla.org/observer-service;1"]
            .getService(Ci.nsIObserverService);
-  os.addObserver(observer, "dl-start", false);
-  os.addObserver(observer, "dl-failed", false);
   os.addObserver(observer, "dl-cancel", false);
-  os.addObserver(observer, "dl-done", false);
 
   for (var i = 0; i < tests.length; i++)
     tests[i]();

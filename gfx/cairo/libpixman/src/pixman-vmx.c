@@ -30,18 +30,14 @@
 #include "pixman-combine32.h"
 #include <altivec.h>
 
-#ifdef __GNUC__
-#   define inline __inline__ __attribute__ ((__always_inline__))
-#endif
-
-static inline vector unsigned int
+static force_inline vector unsigned int
 splat_alpha (vector unsigned int pix) {
     return vec_perm (pix, pix,
     (vector unsigned char)AVV(0x00,0x00,0x00,0x00, 0x04,0x04,0x04,0x04,
                                0x08,0x08,0x08,0x08, 0x0C,0x0C,0x0C,0x0C));
 }
 
-static inline vector unsigned int
+static force_inline vector unsigned int
 pix_multiply (vector unsigned int p, vector unsigned int a)
 {
     vector unsigned short hi, lo, mod;
@@ -80,14 +76,14 @@ pix_multiply (vector unsigned int p, vector unsigned int a)
     return (vector unsigned int)vec_packsu (hi, lo);
 }
 
-static inline vector unsigned int
+static force_inline vector unsigned int
 pix_add (vector unsigned int a, vector unsigned int b)
 {
     return (vector unsigned int)vec_adds ((vector unsigned char)a,
                      (vector unsigned char)b);
 }
 
-static inline vector unsigned int
+static force_inline vector unsigned int
 pix_add_mul (vector unsigned int x, vector unsigned int a,
              vector unsigned int y, vector unsigned int b)
 {
@@ -143,13 +139,13 @@ pix_add_mul (vector unsigned int x, vector unsigned int a,
     return (vector unsigned int)vec_packsu (hi, lo);
 }
 
-static inline vector unsigned int
+static force_inline vector unsigned int
 negate (vector unsigned int src)
 {
     return vec_nor (src, src);
 }
 /* dest*~srca + src */
-static inline vector unsigned int
+static force_inline vector unsigned int
 over (vector unsigned int src, vector unsigned int srca,
       vector unsigned int dest)
 {

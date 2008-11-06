@@ -36,7 +36,7 @@
 #include "cairo-atomic-private.h"
 #include "cairo-mutex-private.h"
 
-#ifndef CAIRO_HAS_ATOMIC_OPS
+#ifndef HAS_ATOMIC_OPS
 void
 _cairo_atomic_int_inc (int *x)
 {
@@ -73,7 +73,7 @@ _cairo_atomic_int_cmpxchg (int *x, int oldv, int newv)
 
 #endif
 
-#ifdef CAIRO_ATOMIC_OP_NEEDS_MEMORY_BARRIER
+#ifdef ATOMIC_OP_NEEDS_MEMORY_BARRIER
 int
 _cairo_atomic_int_get (int *x)
 {

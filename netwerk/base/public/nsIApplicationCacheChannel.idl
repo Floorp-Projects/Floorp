@@ -43,9 +43,17 @@
 /**
  * Interface implemented by channels that support application caches.
  */
-[scriptable, uuid(a27beec8-b40c-4919-ad68-f1576264713c)]
+[scriptable, uuid(9acfd21c-9c07-459f-8dae-ed2ffba23ddc)]
 interface nsIApplicationCacheChannel : nsIApplicationCacheContainer
 {
+    /**
+     * TRUE when the resource came from the application cache. This
+     * might be false even there is assigned an application cache
+     * e.g. in case of fallback of load of an entry matching bypass
+     * namespace.
+     */
+    readonly attribute PRBool loadedFromApplicationCache;
+
     /**
      * When true, the channel will ask its notification callbacks for
      * an application cache if one is not explicitly provided.  Default

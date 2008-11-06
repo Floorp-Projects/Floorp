@@ -52,6 +52,8 @@ const Cr = Components.results;
 const Cu = Components.utils;
 const CC = Components.Constructor;
 
+const PR_UINT32_MAX = Math.pow(2, 32) - 1;
+
 /** True if debugging output is enabled, false otherwise. */
 var DEBUG = false; // non-const *only* so tweakable in server tests
 
@@ -195,6 +197,9 @@ const ServerSocket = CC("@mozilla.org/network/server-socket;1",
 const BinaryInputStream = CC("@mozilla.org/binaryinputstream;1",
                              "nsIBinaryInputStream",
                              "setInputStream");
+const BinaryOutputStream = CC("@mozilla.org/binaryoutputstream;1",
+                             "nsIBinaryOutputStream",
+                             "setOutputStream");
 const ScriptableInputStream = CC("@mozilla.org/scriptableinputstream;1",
                                  "nsIScriptableInputStream",
                                  "init");
@@ -951,26 +956,26 @@ function readBytes(inputStream, count)
 
 
 /** Request reader processing states; see RequestReader for details. */
-const READER_INITIAL    = 0;
-const READER_IN_HEADERS = 1;
-const READER_IN_BODY    = 2;
+const READER_IN_REQUEST_LINE = 0;
+const READER_IN_HEADERS      = 1;
+const READER_IN_BODY         = 2;
+const READER_FINISHED        = 3;
 
 
 /**
  * Reads incoming request data asynchronously, does any necessary preprocessing,
  * and forwards it to the request handler.  Processing occurs in three states:
  *
- *   READER_INITIAL             Haven't read the entire request line yet
+ *   READER_IN_REQUEST_LINE     Reading the request's status line
  *   READER_IN_HEADERS          Reading headers in the request
- *   READER_IN_BODY             Finished reading all request headers (when body
- *                              support's added, will be reading the body)
+ *   READER_IN_BODY             Reading the body of the request
+ *   READER_FINISHED            Entire request has been read and processed
  *
  * During the first two stages, initial metadata about the request is gathered
  * into a Request object.  Once the status line and headers have been processed,
- * we create a Response and hand it off to the ServerHandler to be given to the
- * appropriate request handler.
- *
- * XXX we should set up a stream to provide lazy access to the request body
+ * we start processing the body of the request into the Request.  Finally, when
+ * the entire body has been read, we create a Response and hand it off to the
+ * ServerHandler to be given to the appropriate request handler.
  *
  * @param connection : Connection
  *   the connection for the request being read
@@ -988,10 +993,15 @@ function RequestReader(connection)
    */
   this._data = new LineData();
 
+  /**
+   * The amount of data remaining to be read from the body of this request.
+   * After all headers in the request have been read this is the value in the
+   * Content-Length header, but as the body is read its value decreases to zero.
+   */
   this._contentLength = 0;
 
   /** The current state of parsing the incoming request. */
-  this._state = READER_INITIAL;
+  this._state = READER_IN_REQUEST_LINE;
 
   /** Metadata constructed from the incoming request for the request handler. */
   this._metadata = new Request(connection.port);
@@ -1024,38 +1034,35 @@ RequestReader.prototype =
           gThreadManager.mainThread + ")");
     dumpn("*** this._state == " + this._state);
 
-    var count = input.available();
-
     // Handle cases where we get more data after a request error has been
     // discovered but *before* we can close the connection.
-    if (!this._data)
+    var data = this._data;
+    if (!data)
       return;
 
-    var moreAvailable = false;
-    var wasInBody = false;
-    
+    data.appendBytes(readBytes(input, input.available()));
+
     switch (this._state)
     {
-      case READER_INITIAL:
-        moreAvailable = this._processRequestLine(input, count);
-        break;
-
-      case READER_IN_HEADERS:
-        moreAvailable = this._processHeaders(input, count);
-        break;
-
-      case READER_IN_BODY:
-        wasInBody = true;
-        moreAvailable = this._processBody(input, count);
-        break;
       default:
         NS_ASSERT(false);
+        break;
+
+      case READER_IN_REQUEST_LINE:
+        if (!this._processRequestLine())
+          break;
+        /* fall through */
+
+      case READER_IN_HEADERS:
+        if (!this._processHeaders())
+          break;
+        /* fall through */
+
+      case READER_IN_BODY:
+        this._processBody();
     }
 
-    if (!wasInBody && this._state == READER_IN_BODY && moreAvailable)
-      moreAvailable = this._processBody(input, count);
-
-    if (moreAvailable)
+    if (this._state != READER_FINISHED)
       input.asyncWait(this, 0, 0, gThreadManager.currentThread);
   },
 
@@ -1075,26 +1082,19 @@ RequestReader.prototype =
   // PRIVATE API
 
   /**
-   * Reads count bytes from input and processes unprocessed, downloaded data as
-   * a request line.
+   * Processes unprocessed, downloaded data as a request line.
    *
-   * @param input : nsIInputStream
-   *   stream from which count bytes of data must be read
-   * @param count : PRUint32
-   *   the number of bytes of data which must be read from input
    * @returns boolean
-   *   true if more data must be read from the request, false otherwise
+   *   true iff the request line has been fully processed
    */
-  _processRequestLine: function(input, count)
+  _processRequestLine: function()
   {
-    NS_ASSERT(this._state == READER_INITIAL);
-
-    var data = this._data;
-    data.appendBytes(readBytes(input, count));
+    NS_ASSERT(this._state == READER_IN_REQUEST_LINE);
 
 
     // servers SHOULD ignore any empty line(s) received where a Request-Line
     // is expected (section 4.1)
+    var data = this._data;
     var line = {};
     var readSuccess;
     while ((readSuccess = data.readLine(line)) && line.value == "")
@@ -1108,18 +1108,8 @@ RequestReader.prototype =
     try
     {
       this._parseRequestLine(line.value);
-
-      // do we have more header data to read?
-      if (!this._parseHeaders())
-        return true;
-
-      dumpn("_processRequestLine, Content-length="+this._contentLength);
-      if (this._contentLength > 0)
-        return true;
-
-      // headers complete, do a data check and then forward to the handler
-      this._validateRequest();
-      return this._handleResponse();
+      this._state = READER_IN_HEADERS;
+      return true;
     }
     catch (e)
     {
@@ -1129,17 +1119,13 @@ RequestReader.prototype =
   },
 
   /**
-   * Reads data from input and processes it, assuming it is either at the
-   * beginning or in the middle of processing request headers.
+   * Processes stored data, assuming it is either at the beginning or in
+   * the middle of processing request headers.
    *
-   * @param input : nsIInputStream
-   *   stream from which count bytes of data must be read
-   * @param count : PRUint32
-   *   the number of bytes of data which must be read from input
    * @returns boolean
-   *   true if more data must be read from the request, false otherwise
+   *   true iff header data in the request has been fully processed
    */
-  _processHeaders: function(input, count)
+  _processHeaders: function()
   {
     NS_ASSERT(this._state == READER_IN_HEADERS);
 
@@ -1147,21 +1133,24 @@ RequestReader.prototype =
     //
     // - need to support RFC 2047-encoded non-US-ASCII characters
 
-    this._data.appendBytes(readBytes(input, count));
-
     try
     {
-      // do we have all the headers?
-      if (!this._parseHeaders())
-        return true;
+      var done = this._parseHeaders();
+      if (done)
+      {
+        var request = this._metadata;
 
-      dumpn("_processHeaders, Content-length="+this._contentLength);
-      if (this._contentLength > 0)
-        return true;
+        // XXX this is wrong for requests with transfer-encodings applied to
+        //     them, particularly chunked (which by its nature can have no
+        //     meaningful Content-Length header)!
+        this._contentLength = request.hasHeader("Content-Length")
+                            ? parseInt(request.getHeader("Content-Length"), 10)
+                            : 0;
+        dumpn("_processHeaders, Content-length=" + this._contentLength);
 
-      // we have all the headers, continue with the body
-      this._validateRequest();
-      return this._handleResponse();
+        this._state = READER_IN_BODY;
+      }
+      return done;
     }
     catch (e)
     {
@@ -1170,34 +1159,43 @@ RequestReader.prototype =
     }
   },
 
-  _processBody: function(input, count)
+  /**
+   * Processes stored data, assuming it is either at the beginning or in
+   * the middle of processing the request body.
+   *
+   * @returns boolean
+   *   true iff the request body has been fully processed
+   */
+  _processBody: function()
   {
     NS_ASSERT(this._state == READER_IN_BODY);
+
+    // XXX handle chunked transfer-coding request bodies!
 
     try
     {
       if (this._contentLength > 0)
       {
-        var bodyData = this._data.purge();
-        if (!bodyData || bodyData.length == 0)
-        {
-          if (count > this._contentLength)
-            count = this._contentLength;
+        var data = this._data.purge();
+        var count = Math.min(data.length, this._contentLength);
+        dumpn("*** loading data=" + data + " len=" + data.length +
+              " excess=" + (data.length - count));
 
-          bodyData = readBytes(input, count);
-        }
-        dumpn("*** loading data="+bodyData+" len="+bodyData.length);
-
-        this._metadata._body.appendBytes(bodyData);
-        this._contentLength -= bodyData.length;
+        var bos = new BinaryOutputStream(this._metadata._bodyOutputStream);
+        bos.writeByteArray(data, count);
+        this._contentLength -= count;
       }
 
-      dumpn("*** remainig body data len="+this._contentLength);
-      if (this._contentLength > 0)
+      dumpn("*** remaining body data len=" + this._contentLength);
+      if (this._contentLength == 0)
+      {
+        this._validateRequest();
+        this._state = READER_FINISHED;
+        this._handleResponse();
         return true;
-
-      this._validateRequest();
-      return this._handleResponse();
+      }
+      
+      return false;
     }
     catch (e)
     {
@@ -1306,6 +1304,8 @@ RequestReader.prototype =
    */
   _handleError: function(e)
   {
+    this._state = READER_FINISHED;
+
     var server = this._connection.server;
     if (e instanceof HttpError)
     {
@@ -1330,21 +1330,16 @@ RequestReader.prototype =
    *
    * This method is called once per request, after the request line and all
    * headers and the body, if any, have been received.
-   *
-   * @returns boolean
-   *   true if more data must be read, false otherwise
    */
   _handleResponse: function()
   {
-    NS_ASSERT(this._state == READER_IN_BODY);
+    NS_ASSERT(this._state == READER_FINISHED);
 
     // We don't need the line-based data any more, so make attempted reuse an
     // error.
     this._data = null;
 
     this._connection.process(this._metadata);
-
-    return false;
   },
 
 
@@ -1358,7 +1353,7 @@ RequestReader.prototype =
    */
   _parseRequestLine: function(line)
   {
-    NS_ASSERT(this._state == READER_INITIAL);
+    NS_ASSERT(this._state == READER_IN_REQUEST_LINE);
 
     dumpn("*** _parseRequestLine('" + line + "')");
 
@@ -1449,9 +1444,6 @@ RequestReader.prototype =
     metadata._scheme = scheme;
     metadata._host = host;
     metadata._port = port;
-
-    // our work here is finished
-    this._state = READER_IN_HEADERS;
   },
 
   /**
@@ -1517,12 +1509,6 @@ RequestReader.prototype =
 
         // either way, we're done processing headers
         this._state = READER_IN_BODY;
-        try
-        {
-          this._contentLength = parseInt(headers.getHeader("Content-Length"));
-          dumpn("Content-Length="+this._contentLength);
-        }
-        catch (e) {}
         return true;
       }
       else if (firstChar == " " || firstChar == "\t")
@@ -1652,16 +1638,15 @@ LineData.prototype =
   },
 
   /**
-   * Retrieve any bytes we may have overread from the request's postdata.  After
-   * this method is called, this must not be used in any way.
+   * Removes the bytes currently within this and returns them in an array.
    *
    * @returns Array
-   *   the bytes read past the CRLFCRLF at the end of request headers
+   *   the bytes within this when this method is called
    */
   purge: function()
   {
     var data = this._data;
-    this._data = null;
+    this._data = [];
     return data;
   }
 };
@@ -1979,8 +1964,13 @@ ServerHandler.prototype =
         if (metadata.method == "PUT")
         {
           // remotely set path override
-          var data = metadata.body.purge();
-          data = String.fromCharCode.apply(null, data.splice(0, data.length + 2));
+          var avail;
+          var bytes = [];
+          var body = new BinaryInputStream(metadata.bodyInputStream);
+          while ((avail = body.available()) > 0)
+            Array.prototype.push.apply(bytes, body.readByteArray(avail));
+
+          var data = String.fromCharCode.apply(null, bytes);
           var contentType;
           try
           {
@@ -1991,13 +1981,13 @@ ServerHandler.prototype =
             contentType = "application/octet-stream";
           }
 
-          dumpn("PUT data \'"+data+"\' for "+path);
+          dumpn("PUT data \'" + data + "\' for " + path);
           this._putDataOverrides[path] =
             function(ametadata, aresponse)
             {
-              aresponse.setStatusLine(metadata.httpVersion, 200, "OK");
+              aresponse.setStatusLine(ametadata.httpVersion, 200, "OK");
               aresponse.setHeader("Content-Type", contentType, false);
-              dumpn("*** writting PUT data=\'"+data+"\'");
+              dumpn("*** writing PUT data=\'" + data + "\'");
               aresponse.bodyOutputStream.write(data, data.length);
             };
 
@@ -2008,12 +1998,12 @@ ServerHandler.prototype =
           if (path in this._putDataOverrides)
           {
             delete this._putDataOverrides[path];
-            dumpn("clearing PUT data for "+path);
+            dumpn("clearing PUT data for " + path);
             response.setStatusLine(metadata.httpVersion, 200, "OK");
           }
           else
           {
-            dumpn("no PUT data for "+path+" to delete");
+            dumpn("no PUT data for " + path + " to delete");
             response.setStatusLine(metadata.httpVersion, 204, "No Content");
           }
         }
@@ -2021,14 +2011,14 @@ ServerHandler.prototype =
         {
           // PUT data overrides are priviledged before all
           // other overrides.
-          dumpn("calling PUT data override for "+path);
+          dumpn("calling PUT data override for " + path);
           this._putDataOverrides[path](metadata, response);
         }
         else if (path in this._overridePaths)
         {
           // explicit paths first, then files based on existing directory mappings,
           // then (if the file doesn't exist) built-in server default paths
-          dumpn("calling override for "+path);
+          dumpn("calling override for " + path);
           this._overridePaths[path](metadata, response);
         }
         else
@@ -3098,7 +3088,6 @@ Response.prototype =
 
     if (!this._bodyOutputStream && !this._outputProcessed)
     {
-      const PR_UINT32_MAX = Math.pow(2, 32) - 1;
       var pipe = new Pipe(false, false, 0, PR_UINT32_MAX, null);
       this._bodyOutputStream = pipe.outputStream;
       this._bodyInputStream = pipe.inputStream;
@@ -3683,8 +3672,13 @@ function Request(port)
   /** Port number over which the request was received. */
   this._port = port;
 
-  /** Body data of the request */
-  this._body = new LineData();
+  var bodyPipe = new Pipe(false, false, 0, PR_UINT32_MAX, null);
+
+  /** Stream from which data in this request's body may be read. */
+  this._bodyInputStream = bodyPipe.inputStream;
+
+  /** Stream to which data in this request's body is written. */
+  this._bodyOutputStream = bodyPipe.outputStream;
 
   /**
    * The headers in this request.
@@ -3796,6 +3790,14 @@ Request.prototype =
   },
 
   //
+  // see nsIHttpRequestMetadata.headers
+  //
+  get bodyInputStream()
+  {
+    return this._bodyInputStream;
+  },
+
+  //
   // see nsIPropertyBag.getProperty
   //
   getProperty: function(name) 
@@ -3809,11 +3811,6 @@ Request.prototype =
   {
     if (!this._bag)
       this._bag = new WritablePropertyBag();
-  },
-
-  get body()
-  {
-    return this._body;
   }
 };
 

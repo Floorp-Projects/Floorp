@@ -396,6 +396,13 @@ pref("privacy.item.siteprefs",   false);
 pref("privacy.item.sessions",    true);
 pref("privacy.item.offlineApps", false);
 
+// What default should we use for the time span in the sanitizer:
+// 0 - Clear everything
+// 1 - Last Hour
+// 2 - Last 2 Hours
+// 3 - Last 4 Hours
+// 4 - Today
+pref("privacy.sanitize.timeSpan", 0);
 pref("privacy.sanitize.sanitizeOnShutdown", false);
 pref("privacy.sanitize.promptOnSanitize", true);
 
@@ -617,16 +624,16 @@ pref("browser.safebrowsing.enabled", true);
 pref("browser.safebrowsing.malware.enabled", true);
 
 // Non-enhanced mode (local url lists) URL list to check for updates
-pref("browser.safebrowsing.provider.0.updateURL", "http://safebrowsing.clients.google.com/safebrowsing/downloads?client={moz:client}&appver={moz:version}&pver=2.1");
+pref("browser.safebrowsing.provider.0.updateURL", "http://safebrowsing.clients.google.com/safebrowsing/downloads?client={moz:client}&appver={moz:version}&pver=2.2");
 
 pref("browser.safebrowsing.dataProvider", 0);
 
 // Does the provider name need to be localizable?
 pref("browser.safebrowsing.provider.0.name", "Google");
 pref("browser.safebrowsing.provider.0.lookupURL", "http://safebrowsing.clients.google.com/safebrowsing/lookup?sourceid=firefox-antiphish&features=TrustRank&client={moz:client}&appver={moz:version}&");
-pref("browser.safebrowsing.provider.0.keyURL", "https://sb-ssl.google.com/safebrowsing/newkey?client={moz:client}&appver={moz:version}&pver=2.1");
+pref("browser.safebrowsing.provider.0.keyURL", "https://sb-ssl.google.com/safebrowsing/newkey?client={moz:client}&appver={moz:version}&pver=2.2");
 pref("browser.safebrowsing.provider.0.reportURL", "http://safebrowsing.clients.google.com/safebrowsing/report?");
-pref("browser.safebrowsing.provider.0.gethashURL", "http://safebrowsing.clients.google.com/safebrowsing/gethash?client={moz:client}&appver={moz:version}&pver=2.1");
+pref("browser.safebrowsing.provider.0.gethashURL", "http://safebrowsing.clients.google.com/safebrowsing/gethash?client={moz:client}&appver={moz:version}&pver=2.2");
 
 // privacy policy -- Both url and fallbackurl must exist, although they may
 // point to the same file.  fallbackurl must be a chrome url
@@ -679,15 +686,7 @@ pref("browser.safebrowsing.malware.reportURL", "http://safebrowsing.clients.goog
 
 pref("browser.EULA.version", 3);
 pref("browser.rights.version", 3);
-
-// defaults to true on Windows and Mac, because the installer shows a EULA
-#ifdef XP_MACOSX
-pref("browser.rights.3.shown", true);
-#elifdef XP_WIN
-pref("browser.rights.3.shown", true);
-#else
 pref("browser.rights.3.shown", false);
-#endif
 
 #ifdef DEBUG
 // Don't show the about:rights notification in debug builds.

@@ -49,6 +49,7 @@
 class nsIRequest;
 class nsISupports;
 class nsPresContext;
+class nsIPrincipal;
 
 class nsFontFaceLoader : public nsIStreamLoaderObserver
 {
@@ -65,10 +66,17 @@ public:
   nsresult Init();  
 
   // returns whether create succeeded or not
-  static PRBool CreateHandler(gfxFontEntry *aFontToLoad, nsIURI *aFontURI, 
-                              gfxUserFontSet::LoaderContext *aContext);
-
+  static nsresult CreateHandler(gfxFontEntry *aFontToLoad, 
+                                nsIURI *aFontURI,
+                                nsIURI *aReferrerURI,
+                                gfxUserFontSet::LoaderContext *aContext);
+                              
 private:
+
+  static nsresult CheckLoadAllowed(nsIPrincipal* aSourcePrincipal,
+                                   nsIURI* aTargetURI,
+                                   nsISupports* aContext);
+  
   nsRefPtr<gfxFontEntry>              mFontEntry;
   nsCOMPtr<nsIURI>                    mFontURI;
   gfxUserFontSet::LoaderContext*      mLoaderContext;

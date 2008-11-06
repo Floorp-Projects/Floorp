@@ -38,6 +38,9 @@
 #ifndef CAIRO_OS2_PRIVATE_H
 #define CAIRO_OS2_PRIVATE_H
 
+#include "cairo-os2.h"
+#include "cairoint.h"
+
 #define INCL_DOS
 #define INCL_DOSSEMAPHORES
 #define INCL_DOSERRORS
@@ -48,9 +51,6 @@
 #else
 # include <os2emx.h>
 #endif
-
-#include "cairo-os2.h"
-#include "cairoint.h"
 
 typedef struct _cairo_os2_surface
 {
