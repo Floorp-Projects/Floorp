@@ -154,12 +154,10 @@ NS_INTERFACE_MAP_END
 NS_IMPL_CYCLE_COLLECTING_ADDREF(nsDOMOfflineResourceList)
 NS_IMPL_CYCLE_COLLECTING_RELEASE(nsDOMOfflineResourceList)
 
-nsDOMOfflineResourceList::nsDOMOfflineResourceList(PRBool aToplevel,
-                                                   nsIURI *aManifestURI,
+nsDOMOfflineResourceList::nsDOMOfflineResourceList(nsIURI *aManifestURI,
                                                    nsIURI *aDocumentURI,
                                                    nsIDOMWindow *aWindow)
   : mInitialized(PR_FALSE)
-  , mToplevel(aToplevel)
   , mManifestURI(aManifestURI)
   , mDocumentURI(aDocumentURI)
   , mCachedKeys(nsnull)
@@ -536,10 +534,6 @@ nsDOMOfflineResourceList::SwapCache()
     return NS_ERROR_DOM_SECURITY_ERR;
   }
 
-  if (!mToplevel) {
-    return NS_ERROR_DOM_INVALID_STATE_ERR;
-  }
-
   nsCOMPtr<nsIApplicationCacheService> serv =
     do_GetService(NS_APPLICATIONCACHESERVICE_CONTRACTID, &rv);
   NS_ENSURE_SUCCESS(rv, rv);
@@ -893,11 +887,6 @@ nsDOMOfflineResourceList::SendEvent(const nsAString &aEventName,
                                     nsIDOMEventListener *aListener,
                                     const nsCOMArray<nsIDOMEventListener> &aListeners)
 {
-  // Only toplevel windows get application cache events.
-  if (!mToplevel) {
-    return NS_OK;
-  }
-
   if (!aListener && aListeners.Count() == 0) {
     return NS_OK;
   }

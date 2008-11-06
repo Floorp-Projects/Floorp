@@ -167,7 +167,10 @@ protected:
     // document.  In this case, the document is marked as foreign in
     // the cache it was loaded from and must be reloaded from the
     // correct cache (the one it specifies).
-    CACHE_SELECTION_RELOAD = 2
+    CACHE_SELECTION_RELOAD = 2,
+
+    // Some conditions require we must reselect the cache without the manifest
+    CACHE_SELECTION_RESELECT_WITHOUT_MANIFEST = 3
   };
 
   nsresult Init(nsIDocument* aDoc, nsIURI* aURI,
@@ -206,8 +209,6 @@ protected:
   //        any.
   // @param aManifestURI
   //        The manifest URI listed in the document.
-  // @param aIsTopDocument
-  //        TRUE if this is a toplevel document.
   // @param aFetchedWithHTTPGetOrEquiv
   //        TRUE if this was fetched using the HTTP GET method.
   // @param aAction
@@ -215,7 +216,6 @@ protected:
   //        by the calling function.
   nsresult SelectDocAppCache(nsIApplicationCache *aLoadApplicationCache,
                              nsIURI *aManifestURI,
-                             PRBool aIsTopDocument,
                              PRBool aFetchedWithHTTPGetOrEquiv,
                              CacheSelectionAction *aAction);
 
@@ -228,8 +228,6 @@ protected:
   // @param aLoadApplicationCache
   //        The application cache from which the load originated, if
   //        any.
-  // @param aIsTopDocument
-  //        TRUE if this is a toplevel document.
   // @param aManifestURI
   //        Out parameter, returns the manifest URI of the cache that
   //        was selected.
@@ -237,7 +235,6 @@ protected:
   //        Out parameter, returns the action that should be performed
   //        by the calling function.
   nsresult SelectDocAppCacheNoManifest(nsIApplicationCache *aLoadApplicationCache,
-                                       PRBool aIsTopDocument,
                                        nsIURI **aManifestURI,
                                        CacheSelectionAction *aAction);
 
