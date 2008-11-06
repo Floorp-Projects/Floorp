@@ -198,24 +198,20 @@ endif
 ifeq (,$(filter-out WINNT WINCE,$(OS_ARCH)))
 ifndef GNU_CC
 
-# Previously when possible we wrote to $LIBRARY_NAME.pdb.  This broke parallel
-# make builds on Windows.  Now we just write to a pdb file per compiled file.
-# See bug 286179 <https://bugzilla.mozilla.org/show_bug.cgi?id=286179> for
-# details. -- chase@mozilla.org
 #
-# Changes to the PDBFILE naming scheme should also be reflected in HOST_PDBFILE
-# 
-ifdef LIBRARY_NAME
-PDBFILE=$(LIBRARY_NAME).pdb
-ifdef MOZ_DEBUG
-CODFILE=$(LIBRARY_NAME).cod
-endif
-else
-PDBFILE=$(basename $(@F)).pdb
+# All C++ files share a PDB file per directory. For parallel builds, this PDB
+# file is shared and locked by MSPDBSRV.EXE, starting with MSVC8 SP1. If
+# you're using MSVC 7.1 or MSVC8 without SP1, don't do parallel builds.
+#
+# The final PDB for libraries and programs is created by the linker and uses
+# a different name from the single PDB file created by the compiler. See
+# bug 462740.
+#
+COMPILE_PDBFILE = generated.pdb
+LINK_PDBFILE = $(basename $(@F)).pdb
 ifdef MOZ_DEBUG
 CODFILE=$(basename $(@F)).cod
 endif
-endif # LIBRARY_NAME
 
 ifdef MOZ_MAPINFO
 ifdef LIBRARY_NAME
@@ -894,7 +890,7 @@ ifeq (WINCE,$(OS_ARCH))
 	$(LD) -NOLOGO -OUT:$@ $(WIN32_EXE_LDFLAGS) $(LDFLAGS) $(PROGOBJS) $(RESFILE) $(LIBS) $(EXTRA_LIBS) $(OS_LIBS)
 else
 ifeq (_WINNT,$(GNU_CC)_$(OS_ARCH))
-	$(LD) -NOLOGO -OUT:$@ -PDB:$(PDBFILE) $(WIN32_EXE_LDFLAGS) $(LDFLAGS) $(PROGOBJS) $(RESFILE) $(LIBS) $(EXTRA_LIBS) $(OS_LIBS)
+	$(LD) -NOLOGO -OUT:$@ -PDB:$(LINK_PDBFILE) $(WIN32_EXE_LDFLAGS) $(LDFLAGS) $(PROGOBJS) $(RESFILE) $(LIBS) $(EXTRA_LIBS) $(OS_LIBS)
 ifdef MSMANIFEST_TOOL
 	@if test -f $@.manifest; then \
 		if test -f "$(srcdir)/$@.manifest"; then \
@@ -932,7 +928,7 @@ ifeq (WINCE,$(OS_ARCH))
 	$(HOST_LD) -NOLOGO -OUT:$@ $(HOST_OBJS) $(WIN32_EXE_LDFLAGS) $(HOST_LIBS) $(HOST_EXTRA_LIBS)
 else
 ifeq (_WINNT,$(GNU_CC)_$(HOST_OS_ARCH))
-	$(HOST_LD) -NOLOGO -OUT:$@ -PDB:$(PDBFILE) $(HOST_OBJS) $(WIN32_EXE_LDFLAGS) $(HOST_LIBS) $(HOST_EXTRA_LIBS)
+	$(HOST_LD) -NOLOGO -OUT:$@ -PDB:$(HOST_PDBFILE) $(HOST_OBJS) $(WIN32_EXE_LDFLAGS) $(HOST_LIBS) $(HOST_EXTRA_LIBS)
 ifdef MSMANIFEST_TOOL
 	@if test -f $@.manifest; then \
 		mt.exe -NOLOGO -MANIFEST $@.manifest -OUTPUTRESOURCE:$@\;1; \
@@ -961,7 +957,7 @@ ifeq (WINCE,$(OS_ARCH))
 	$(LD) -nologo  -entry:main -out:$@ $< $(WIN32_EXE_LDFLAGS) $(LDFLAGS) $(LIBS) $(EXTRA_LIBS) $(OS_LIBS)
 else
 ifeq (_WINNT,$(GNU_CC)_$(OS_ARCH))
-	$(LD) -nologo -out:$@ -pdb:$(PDBFILE) $< $(WIN32_EXE_LDFLAGS) $(LDFLAGS) $(LIBS) $(EXTRA_LIBS) $(OS_LIBS)
+	$(LD) -nologo -out:$@ -pdb:$(LINK_PDBFILE) $< $(WIN32_EXE_LDFLAGS) $(LDFLAGS) $(LIBS) $(EXTRA_LIBS) $(OS_LIBS)
 ifdef MSMANIFEST_TOOL
 	@if test -f $@.manifest; then \
 		mt.exe -NOLOGO -MANIFEST $@.manifest -OUTPUTRESOURCE:$@\;1; \
@@ -989,7 +985,7 @@ ifeq (WINCE,$(OS_ARCH))
 	$(HOST_LD) -NOLOGO -OUT:$@ $(WIN32_EXE_LDFLAGS) $< $(HOST_LIBS) $(HOST_EXTRA_LIBS)
 else
 ifeq (WINNT_,$(HOST_OS_ARCH)_$(GNU_CC))
-	$(HOST_LD) -NOLOGO -OUT:$@ -PDB:$(PDBFILE) $< $(WIN32_EXE_LDFLAGS) $(HOST_LIBS) $(HOST_EXTRA_LIBS)
+	$(HOST_LD) -NOLOGO -OUT:$@ -PDB:$(HOST_PDBFILE) $< $(WIN32_EXE_LDFLAGS) $(HOST_LIBS) $(HOST_EXTRA_LIBS)
 else
 ifneq (,$(HOST_CPPSRCS)$(USE_HOST_CXX))
 	$(HOST_CXX) $(HOST_OUTOPTION)$@ $(HOST_CXXFLAGS) $(INCLUDES) $< $(HOST_LIBS) $(HOST_EXTRA_LIBS)

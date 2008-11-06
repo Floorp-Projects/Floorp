@@ -48,14 +48,11 @@ _TEST_FILES = 	test_autoplay.html \
                 test_constants.html \
                 test_controls.html \
                 test_currentTime.html \
-                test_defaultPlaybackRate.html \
                 test_ended1.html \
                 test_ended2.html \
                 test_networkState.html \
                 test_paused.html \
-                test_playbackRate.html \
                 test_readyState.html \
-                test_start.html \
                 test_seek1.html \
                 test_seek2.html \
                 test_seek3.html \

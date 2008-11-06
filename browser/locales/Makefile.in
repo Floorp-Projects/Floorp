@@ -205,7 +205,6 @@ ifneq (,$(filter mac cocoa,$(MOZ_WIDGET_TOOLKIT)))
 MOZ_PKG_MAC_DSSTORE=$(_ABS_DIST)/branding/dsstore
 MOZ_PKG_MAC_BACKGROUND=$(_ABS_DIST)/branding/background.png
 MOZ_PKG_MAC_ICON=$(_ABS_DIST)/branding/disk.icns
-MOZ_PKG_MAC_RSRC=$(_ABS_DIST)/branding/license.r
 MOZ_PKG_MAC_EXTRA=--symlink "/Applications:/ "
 endif
 

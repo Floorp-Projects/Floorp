@@ -490,7 +490,7 @@ let gDownloadObserver = {
   observe: function gdo_observe(aSubject, aTopic, aData) {
     switch (aTopic) {
       case "download-manager-remove-download":
-        // A null subject here indicates "remove all"
+        // A null subject here indicates "remove multiple", so we just rebuild.
         if (!aSubject) {
           // Rebuild the default view
           buildDownloadList(true);

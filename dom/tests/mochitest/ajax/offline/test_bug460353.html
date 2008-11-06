@@ -1,0 +1,113 @@
+<html xmlns="http://www.w3.org/1999/xhtml" manifest="http://localhost:8888/tests/dom/tests/mochitest/ajax/offline/simpleManifest.cacheManifest">
+<head>
+<title>Bug 460353</title>
+
+<!--
+  This test checks that each iframe creates its own
+  scope. Actually, we just check that it loads and updates
+  its associated cache. There is no check that the cache is the
+  expected one, there is no API to gain that information.
+-->
+
+<script type="text/javascript" src="/MochiKit/packed.js"></script>
+<script type="text/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+<link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
+
+<script class="testbody" type="text/javascript">
+
+var result = new Array();
+var expectedUpdates = 2;
+
+init();
+
+function init()
+{
+  netscape.security.PrivilegeManager.enablePrivilege("UniversalXPConnect");
+
+  var Cc = Components.classes;
+  var Ci = Components.interfaces;
+  var pm = Cc["@mozilla.org/permissionmanager;1"]
+    .getService(Ci.nsIPermissionManager);
+  var uri = Cc["@mozilla.org/network/io-service;1"]
+    .getService(Ci.nsIIOService)
+    .newURI(window.location.href, null, null);
+  pm.add(uri, "offline-app", Ci.nsIPermissionManager.ALLOW_ACTION);
+}
+
+function frameOnLoad(frameid, status)
+{
+  var obj = new Object();
+  result[frameid] = obj;
+
+  result[frameid].load = true;
+  result[frameid].cacheStatus = status;
+}
+
+function frameOnUpdate(frameid, ok, status)
+{
+  result[frameid].update = true;
+  result[frameid].updateOK = ok;
+  result[frameid].cacheStatus = status;
+
+  if (!(--expectedUpdates))
+    finish();
+}
+
+function finish()
+{
+  SimpleTest.ok(result["same"].load || false, "Frame with the same manifest loads");
+  SimpleTest.ok(result["same"].update || false, "Frame with the same manifest cache update notification");
+  SimpleTest.ok(result["same"].updateOK || false, "Frame with the same manifest cache update passed OK");
+  SimpleTest.is(result["same"].cacheStatus || -1, 1, "Frame with the same manifest cache status was IDLE");
+
+  SimpleTest.ok(result["diff"].load || false, "Frame with different manifest loads");
+  SimpleTest.ok(result["diff"].update || false, "Frame with different manifest cache update notification");
+  SimpleTest.ok(result["diff"].updateOK || false, "Frame with different manifest cache update passed OK");
+  SimpleTest.is(result["diff"].cacheStatus || -1, 1, "Frame with different manifest cache status was IDLE");
+
+  SimpleTest.ok(result["noman"].load || false, "Frame with no manifest loads");
+  SimpleTest.ok(result["noman"].update == undefined, "Frame with no manifest cache update didn't notify");
+  SimpleTest.ok(result["noman"].updateOK == undefined, "Frame with no manifest cache update didn't pass");
+  SimpleTest.is(result["noman"].cacheStatus || -1, -1, "Frame with no manifest cache status was undefined");
+
+  netscape.security.PrivilegeManager.enablePrivilege("UniversalXPConnect");
+
+  var Cc = Components.classes;
+  var Ci = Components.interfaces;
+  var pm = Cc["@mozilla.org/permissionmanager;1"]
+           .getService(Ci.nsIPermissionManager);
+  var uri = Cc["@mozilla.org/network/io-service;1"]
+            .getService(Ci.nsIIOService)
+            .newURI(window.location.href, null, null);
+  pm.remove(uri.host, "offline-app");
+
+  cleanCache("http://localhost:8888/tests/dom/tests/mochitest/ajax/offline/simpleManifest.cacheManifest");
+  cleanCache("http://localhost:8888/tests/dom/tests/mochitest/ajax/offline/updating.cacheManifest");
+
+  SimpleTest.finish();
+}
+
+function cleanCache(manifestURL)
+{
+  netscape.security.PrivilegeManager.enablePrivilege("UniversalXPConnect");
+
+  var Cc = Components.classes;
+  var Ci = Components.interfaces;
+
+  var serv = Cc["@mozilla.org/network/application-cache-service;1"]
+             .getService(Ci.nsIApplicationCacheService);
+  var cache = serv.getActiveCache(manifestURL);
+  if (cache)
+    cache.discard();
+}
+
+SimpleTest.waitForExplicitFinish();
+
+</script>
+
+<body>
+  <iframe src="460353_iframe_nomanifest.html"></iframe>
+  <iframe src="460353_iframe_ownmanifest.html"></iframe>
+  <iframe src="460353_iframe_samemanifest.html"></iframe>
+</body>
+</html>

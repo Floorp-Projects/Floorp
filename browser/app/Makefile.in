@@ -323,7 +323,6 @@ ifneq (,$(filter mac cocoa,$(MOZ_WIDGET_TOOLKIT)))
 	cp $(srcdir)/macbuild/dsstore $(DIST)/branding/dsstore
 	cp $(srcdir)/macbuild/background.png $(DIST)/branding/background.png
 	cp $(srcdir)/macbuild/disk.icns $(DIST)/branding/disk.icns
-	cp $(srcdir)/macbuild/license.r $(DIST)/branding/license.r
 endif
 ifneq (,$(filter gtk2,$(MOZ_WIDGET_TOOLKIT)))
 	cp $(srcdir)/mozicon128.png $(DIST)/branding/mozicon128.png

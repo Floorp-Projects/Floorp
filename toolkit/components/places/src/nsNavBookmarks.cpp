@@ -55,7 +55,7 @@
 
 const PRInt32 nsNavBookmarks::kFindBookmarksIndex_ID = 0;
 const PRInt32 nsNavBookmarks::kFindBookmarksIndex_Type = 1;
-const PRInt32 nsNavBookmarks::kFindBookmarksIndex_ForeignKey = 2;
+const PRInt32 nsNavBookmarks::kFindBookmarksIndex_PlaceID = 2;
 const PRInt32 nsNavBookmarks::kFindBookmarksIndex_Parent = 3;
 const PRInt32 nsNavBookmarks::kFindBookmarksIndex_Position = 4;
 const PRInt32 nsNavBookmarks::kFindBookmarksIndex_Title = 5;
@@ -63,7 +63,8 @@ const PRInt32 nsNavBookmarks::kFindBookmarksIndex_Title = 5;
 // These columns sit to the right of the kGetInfoIndex_* columns.
 const PRInt32 nsNavBookmarks::kGetChildrenIndex_Position = 11;
 const PRInt32 nsNavBookmarks::kGetChildrenIndex_Type = 12;
-const PRInt32 nsNavBookmarks::kGetChildrenIndex_ForeignKey = 13;
+const PRInt32 nsNavBookmarks::kGetChildrenIndex_PlaceID = 13;
+const PRInt32 nsNavBookmarks::kGetChildrenIndex_ServiceContractId = 14;
 
 const PRInt32 nsNavBookmarks::kGetItemPropertiesIndex_ID = 0;
 const PRInt32 nsNavBookmarks::kGetItemPropertiesIndex_URI = 1;
@@ -238,7 +239,7 @@ nsNavBookmarks::InitStatements()
         "h.rev_host, h.visit_count, "
           SQL_STR_FRAGMENT_MAX_VISIT_DATE( "h.id" )
           ", f.url, null, b.id, b.dateAdded, b.lastModified, "
-          "b.position, b.type, b.fk "
+          "b.position, b.type, b.fk, b.folder_type "
         "FROM moz_bookmarks b "
         "JOIN moz_places_temp h ON b.fk = h.id "
         "LEFT JOIN moz_favicons f ON h.favicon_id = f.id "
@@ -248,7 +249,7 @@ nsNavBookmarks::InitStatements()
         "h.rev_host, h.visit_count, "
           SQL_STR_FRAGMENT_MAX_VISIT_DATE( "h.id" )
           ", f.url, null, b.id, b.dateAdded, b.lastModified, "
-          "b.position, b.type, b.fk "
+          "b.position, b.type, b.fk, b.folder_type "
         "FROM moz_bookmarks b "
         "LEFT JOIN moz_places h ON b.fk = h.id "
         "LEFT JOIN moz_favicons f ON h.favicon_id = f.id "
@@ -1054,10 +1055,10 @@ nsNavBookmarks::InsertBookmark(PRInt64 aFolder, nsIURI *aItem, PRInt32 aIndex,
   // If the bookmark has been added to a tag container, notify all
   // bookmark-folder result nodes which contain a bookmark for the new
   // bookmark's url
-  PRInt64 grandParent;
-  rv = GetFolderIdForItem(aFolder, &grandParent);
+  PRInt64 grandParentId;
+  rv = GetFolderIdForItem(aFolder, &grandParentId);
   NS_ENSURE_SUCCESS(rv, rv);
-  if (grandParent == mTagRoot) {
+  if (grandParentId == mTagRoot) {
     // query for all bookmarks for that URI, notify for each
     nsTArray<PRInt64> bookmarks;
 
@@ -1081,7 +1082,7 @@ nsNavBookmarks::RemoveItem(PRInt64 aItemId)
   nsresult rv;
   PRInt32 childIndex;
   PRInt64 placeId, folderId;
-  PRInt32 itemType;
+  PRUint16 itemType;
   nsCAutoString buffer;
   nsCAutoString spec;
 
@@ -1099,7 +1100,7 @@ nsNavBookmarks::RemoveItem(PRInt64 aItemId)
     childIndex = mDBGetItemProperties->AsInt32(kGetItemPropertiesIndex_Position);
     placeId = mDBGetItemProperties->AsInt64(kGetItemPropertiesIndex_PlaceID);
     folderId = mDBGetItemProperties->AsInt64(kGetItemPropertiesIndex_Parent);
-    itemType = mDBGetItemProperties->AsInt32(kGetItemPropertiesIndex_Type);
+    itemType = (PRUint16) mDBGetItemProperties->AsInt32(kGetItemPropertiesIndex_Type);
     if (itemType == TYPE_BOOKMARK) {
       rv = mDBGetItemProperties->GetUTF8String(kGetItemPropertiesIndex_URI, spec);
       NS_ENSURE_SUCCESS(rv, rv);
@@ -1158,10 +1159,10 @@ nsNavBookmarks::RemoveItem(PRInt64 aItemId)
     // If the removed bookmark was a child of a tag container, notify all
     // bookmark-folder result nodes which contain a bookmark for the removed
     // bookmark's url.
-    PRInt64 grandParent;
-    rv = GetFolderIdForItem(folderId, &grandParent);
+    PRInt64 grandParentId;
+    rv = GetFolderIdForItem(folderId, &grandParentId);
     NS_ENSURE_SUCCESS(rv, rv);
-    if (grandParent == mTagRoot) {
+    if (grandParentId == mTagRoot) {
       nsCOMPtr<nsIURI> uri;
       rv = NS_NewURI(getter_AddRefs(uri), spec);
       NS_ENSURE_SUCCESS(rv, rv);
@@ -1568,7 +1569,8 @@ nsNavBookmarks::RemoveFolder(PRInt64 aFolderId)
   }
 
   // Remove all of the folder's children
-  RemoveFolderChildren(aFolderId);
+  rv = RemoveFolderChildren(aFolderId);
+  NS_ENSURE_SUCCESS(rv, rv);
 
   // Remove the folder from its parent
   nsCAutoString buffer;
@@ -1613,48 +1615,197 @@ nsNavBookmarks::GetRemoveFolderTransaction(PRInt64 aFolder, nsITransaction** aRe
   return NS_OK;
 }
 
-NS_IMETHODIMP
-nsNavBookmarks::RemoveFolderChildren(PRInt64 aFolder)
-{
-  mozStorageTransaction transaction(mDBConn, PR_FALSE);
-
-  nsTArray<PRInt64> folderChildren;
-  nsTArray<PRInt64> itemChildren; // bookmarks / separators
+nsresult
+nsNavBookmarks::GetDescendantChildren(PRInt64 aFolderId,
+                                      PRInt64 aGrandParentId,
+                                      nsTArray<folderChildrenInfo>& aFolderChildrenArray) {
+  // New children will be added from this index on.
+  PRUint32 startIndex = aFolderChildrenArray.Length();
   nsresult rv;
   {
+    // Collect children informations.
     mozStorageStatementScoper scope(mDBGetChildren);
-    rv = mDBGetChildren->BindInt64Parameter(0, aFolder);
+    rv = mDBGetChildren->BindInt64Parameter(0, aFolderId);
     NS_ENSURE_SUCCESS(rv, rv);
 
     PRBool hasMore;
     while (NS_SUCCEEDED(mDBGetChildren->ExecuteStep(&hasMore)) && hasMore) {
-      PRInt32 type = mDBGetChildren->AsInt32(kGetChildrenIndex_Type);
-      if (type == TYPE_FOLDER) {
-        // folder
-        folderChildren.AppendElement(
-            mDBGetChildren->AsInt64(nsNavHistory::kGetInfoIndex_ItemId));
-      } else {
-        // bookmarks / separators
-        itemChildren.AppendElement(mDBGetChildren->AsInt64(nsNavHistory::kGetInfoIndex_ItemId));
+      folderChildrenInfo child;
+      child.itemId = mDBGetChildren->AsInt64(nsNavHistory::kGetInfoIndex_ItemId);
+      child.parentId = aFolderId;
+      child.grandParentId = aGrandParentId;
+      child.itemType = (PRUint16) mDBGetChildren->AsInt32(kGetChildrenIndex_Type);
+      child.placeId = mDBGetChildren->AsInt64(kGetChildrenIndex_PlaceID);
+      child.index = mDBGetChildren->AsInt32(kGetChildrenIndex_Position);
+
+      if (child.itemType == TYPE_BOOKMARK) {
+        nsCAutoString URIString;
+        rv = mDBGetChildren->GetUTF8String(nsNavHistory::kGetInfoIndex_URL,
+                                           URIString);
+        NS_ENSURE_SUCCESS(rv, rv);
+        child.url = URIString;
+      }
+      else if (child.itemType == TYPE_FOLDER) {
+        nsCAutoString folderType;
+        rv = mDBGetChildren->GetUTF8String(kGetChildrenIndex_ServiceContractId,
+                                           folderType);
+        NS_ENSURE_SUCCESS(rv, rv);
+        child.folderType = folderType;
+      }
+      // Append item to children's array.
+      aFolderChildrenArray.AppendElement(child);
+    }
+  }
+
+  // Recursively call GetDescendantChildren for added folders.
+  // We start at startIndex since previous folders are checked
+  // by previous calls to this method.
+  PRUint32 childCount = aFolderChildrenArray.Length();
+  for (PRUint32 i = startIndex; i < childCount; i++) {
+    if (aFolderChildrenArray[i].itemType == TYPE_FOLDER) {
+      GetDescendantChildren(aFolderChildrenArray[i].itemId,
+                            aFolderId,
+                            aFolderChildrenArray);
+    }
+  }
+
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsNavBookmarks::RemoveFolderChildren(PRInt64 aFolderId)
+{
+  nsresult rv;
+  PRUint16 itemType;
+  PRInt64 grandParentId;
+  {
+    mozStorageStatementScoper scope(mDBGetItemProperties);
+    rv = mDBGetItemProperties->BindInt64Parameter(0, aFolderId);
+    NS_ENSURE_SUCCESS(rv, rv);
+
+    // Sanity check: ensure that item exists.
+    PRBool folderExists;
+    if (NS_FAILED(mDBGetItemProperties->ExecuteStep(&folderExists)) || !folderExists)
+      return NS_ERROR_INVALID_ARG;
+
+    // Sanity check: ensure that this is a folder.
+    itemType = (PRUint16) mDBGetItemProperties->AsInt32(kGetItemPropertiesIndex_Type);
+    if (itemType != TYPE_FOLDER)
+      return NS_ERROR_INVALID_ARG;
+
+    // Get the grandParent.
+    // We have to do this only once since recursion will give us other
+    // grandParents without the need of additional queries.
+    grandParentId = mDBGetItemProperties->AsInt64(kGetItemPropertiesIndex_Parent);
+  }
+
+  // Fill folder children array recursively.
+  nsTArray<folderChildrenInfo> folderChildrenArray;
+  rv = GetDescendantChildren(aFolderId, grandParentId, folderChildrenArray);
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  // Build a string of folders whose children will be removed.
+  nsCString foldersToRemove;
+  for (PRUint32 i = 0; i < folderChildrenArray.Length(); i++) {
+    folderChildrenInfo child = folderChildrenArray[i];
+    if (child.itemType == TYPE_FOLDER) {
+      foldersToRemove.AppendLiteral(",");
+      foldersToRemove.AppendInt(child.itemId);
+
+      // If this is a dynamic container, try to notify its service that we
+      // are going to remove it.
+      if (child.folderType.Length() > 0) {
+        nsCOMPtr<nsIDynamicContainer> bmcServ =
+          do_GetService(child.folderType.get());
+        if (bmcServ) {
+          rv = bmcServ->OnContainerRemoving(child.itemId);
+          if (NS_FAILED(rv))
+            NS_WARNING("Remove folder container notification failed.");
+        }
       }
     }
   }
 
-  PRUint32 i;
+  // Delete items from the database now.
+  mozStorageTransaction transaction(mDBConn, PR_FALSE);
 
-  // remove folders
-  for (i = 0; i < folderChildren.Length(); ++i) {
-    rv = RemoveFolder(folderChildren[i]);
-    NS_ENSURE_SUCCESS(rv, rv);
+  rv = mDBConn->ExecuteSimpleSQL(
+    NS_LITERAL_CSTRING(
+      "DELETE FROM moz_bookmarks "
+      "WHERE parent IN (") +
+        nsPrintfCString("%d", aFolderId) +
+        foldersToRemove +
+      NS_LITERAL_CSTRING(")"));
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  // Clean up orphan items annotations.
+  rv = mDBConn->ExecuteSimpleSQL(
+    NS_LITERAL_CSTRING(
+      "DELETE FROM moz_items_annos "
+      "WHERE id IN ("
+        "SELECT a.id from moz_items_annos a "
+        "LEFT JOIN moz_bookmarks b ON a.item_id = b.id "
+        "WHERE b.id ISNULL)"));
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  // Set the lastModified date.
+  rv = SetItemDateInternal(mDBSetItemLastModified, aFolderId, PR_Now());
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  for (PRUint32 i = 0; i < folderChildrenArray.Length(); i++) {
+    folderChildrenInfo child = folderChildrenArray[i];
+    if (child.itemType == TYPE_BOOKMARK) {
+      PRInt64 placeId = child.placeId;
+      UpdateBookmarkHashOnRemove(placeId);
+
+      // XXX is this too expensive when updating livemarks?
+      // UpdateBookmarkHashOnRemove() does a sanity check using
+      // IsBookmarkedInDatabase(),  so it might not have actually
+      // removed the bookmark.  should we have a boolean out param
+      // for if we actually removed it, and use that to decide if we call
+      // UpdateFrecency() and the rest of this code?
+      rv = History()->UpdateFrecency(placeId, PR_FALSE /* isBookmark */);
+      NS_ENSURE_SUCCESS(rv, rv);
+    }
   }
 
-  // remove items
-  for (i = 0; i < itemChildren.Length(); ++i) {
-    rv = RemoveItem(itemChildren[i]);
-    NS_ENSURE_SUCCESS(rv, rv);
+  rv = transaction.Commit();
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  // Call observers in reverse order to serve children before their parent.
+  for (PRInt32 i = folderChildrenArray.Length() - 1; i >= 0 ; i--) {
+    folderChildrenInfo child = folderChildrenArray[i];
+
+    ENUMERATE_WEAKARRAY(mObservers, nsINavBookmarkObserver,
+                        OnItemRemoved(child.itemId,
+                                      child.parentId,
+                                      child.index));
+
+    if (child.itemType == TYPE_BOOKMARK) {
+      // If the removed bookmark was a child of a tag container, notify all
+      // bookmark-folder result nodes which contain a bookmark for the removed
+      // bookmark's url.
+
+      if (child.grandParentId == mTagRoot) {
+        nsCOMPtr<nsIURI> uri;
+        rv = NS_NewURI(getter_AddRefs(uri), child.url);
+        NS_ENSURE_SUCCESS(rv, rv);
+
+        nsTArray<PRInt64> bookmarks;
+        rv = GetBookmarkIdsForURITArray(uri, &bookmarks);
+        NS_ENSURE_SUCCESS(rv, rv);
+
+        if (bookmarks.Length()) {
+          for (PRUint32 i = 0; i < bookmarks.Length(); i++) {
+            ENUMERATE_WEAKARRAY(mObservers, nsINavBookmarkObserver,
+                                OnItemChanged(bookmarks[i], NS_LITERAL_CSTRING("tags"),
+                                              PR_FALSE, EmptyCString()))
+          }
+        }
+      }
+    }
   }
 
-  transaction.Commit();
   return NS_OK;
 }
 
@@ -1674,7 +1825,8 @@ nsNavBookmarks::MoveItem(PRInt64 aItemId, PRInt64 aNewParent, PRInt32 aIndex)
   // get item properties
   nsresult rv;
   PRInt64 oldParent;
-  PRInt32 oldIndex, itemType;
+  PRInt32 oldIndex;
+  PRUint16 itemType;
   nsCAutoString folderType;
   {
     mozStorageStatementScoper scope(mDBGetItemProperties);
@@ -1690,7 +1842,7 @@ nsNavBookmarks::MoveItem(PRInt64 aItemId, PRInt64 aNewParent, PRInt32 aIndex)
 
     oldParent = mDBGetItemProperties->AsInt64(kGetItemPropertiesIndex_Parent);
     oldIndex = mDBGetItemProperties->AsInt32(kGetItemPropertiesIndex_Position);
-    itemType = mDBGetItemProperties->AsInt32(kGetItemPropertiesIndex_Type);
+    itemType = (PRUint16) mDBGetItemProperties->AsInt32(kGetItemPropertiesIndex_Type);
     if (itemType == TYPE_FOLDER) {
       rv = mDBGetItemProperties->GetUTF8String(kGetItemPropertiesIndex_ServiceContractId,
                                                folderType);
@@ -2140,7 +2292,7 @@ nsNavBookmarks::ResultNodeForContainer(PRInt64 aID,
   nsCAutoString title;
   rv = mDBGetItemProperties->GetUTF8String(kGetItemPropertiesIndex_Title, title);
 
-  PRInt32 itemType = mDBGetItemProperties->AsInt32(kGetItemPropertiesIndex_Type);
+  PRUint16 itemType = (PRUint16) mDBGetItemProperties->AsInt32(kGetItemPropertiesIndex_Type);
   if (itemType == TYPE_DYNAMIC_CONTAINER) {
     *aNode = new nsNavHistoryContainerResultNode(EmptyCString(), title, EmptyCString(),
                                                  nsINavHistoryResultNode::RESULT_TYPE_DYNAMIC_CONTAINER,
@@ -2187,7 +2339,7 @@ nsNavBookmarks::QueryFolderChildren(PRInt64 aFolderId,
     // it will start counting at 0 the first time through the loop.
     index ++;
 
-    PRInt32 itemType = mDBGetChildren->AsInt32(kGetChildrenIndex_Type);
+    PRUint16 itemType = (PRUint16) mDBGetChildren->AsInt32(kGetChildrenIndex_Type);
     PRInt64 id = mDBGetChildren->AsInt64(nsNavHistory::kGetInfoIndex_ItemId);
     nsRefPtr<nsNavHistoryResultNode> node;
     if (itemType == TYPE_BOOKMARK) {

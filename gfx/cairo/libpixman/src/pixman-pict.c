@@ -34,12 +34,8 @@
 #include "pixman-mmx.h"
 #include "pixman-vmx.h"
 #include "pixman-sse2.h"
-#include "pixman-arm.h"
+#include "pixman-arm-simd.h"
 #include "pixman-combine32.h"
-
-#ifdef __GNUC__
-#   define inline __inline__ __attribute__ ((__always_inline__))
-#endif
 
 #define FbFullMask(n)   ((n) == 32 ? (uint32_t)-1 : ((((uint32_t) 1) << n) - 1))
 
@@ -53,7 +49,7 @@ typedef void (* CompositeFunc) (pixman_op_t,
 				int16_t, int16_t, int16_t, int16_t, int16_t, int16_t,
 				uint16_t, uint16_t);
 
-static inline uint32_t
+static force_inline uint32_t
 fbOver (uint32_t src, uint32_t dest)
 {
     // dest = (dest * (255 - alpha)) / 255 + src
@@ -1428,7 +1424,7 @@ static const FastPathInfo mmx_fast_paths[] =
     { PIXMAN_OP_SRC, PIXMAN_x8r8g8b8,  PIXMAN_null,	PIXMAN_x8r8g8b8, fbCompositeCopyAreammx, 0 },
     { PIXMAN_OP_SRC, PIXMAN_x8b8g8r8,  PIXMAN_null,	PIXMAN_x8b8g8r8, fbCompositeCopyAreammx, 0 },
     { PIXMAN_OP_SRC, PIXMAN_r5g6b5,    PIXMAN_null,     PIXMAN_r5g6b5,   fbCompositeCopyAreammx, 0 },
-    { PIXMAN_OP_SRC, PIXMAN_b5g6r5,    PIXMAN_null,     PIXMAN_b5g6r5,   fbCompositeCopyAreammx, 0 },
+    { PIXMAN_OP_SRC, PIXMAN_b5g6r5,    PIXMAN_null,     PIXMAN_b5g6r5,   fbCompositeCopyAreammx, 0 },    
     { PIXMAN_OP_IN,  PIXMAN_a8,        PIXMAN_null,     PIXMAN_a8,       fbCompositeIn_8x8mmx,   0 },
     { PIXMAN_OP_IN,  PIXMAN_solid,     PIXMAN_a8,	PIXMAN_a8,	 fbCompositeIn_nx8x8mmx, 0 },
     { PIXMAN_OP_NONE },
@@ -1501,6 +1497,8 @@ static const FastPathInfo sse2_fast_paths[] =
 
     { PIXMAN_OP_SRC, PIXMAN_a8r8g8b8,  PIXMAN_null,     PIXMAN_a8r8g8b8, fbCompositeCopyAreasse2,               0 },
     { PIXMAN_OP_SRC, PIXMAN_a8b8g8r8,  PIXMAN_null,     PIXMAN_a8b8g8r8, fbCompositeCopyAreasse2,               0 },
+    { PIXMAN_OP_SRC, PIXMAN_a8r8g8b8,  PIXMAN_null,     PIXMAN_x8r8g8b8, fbCompositeCopyAreasse2,		0 },
+    { PIXMAN_OP_SRC, PIXMAN_a8b8g8r8,  PIXMAN_null,	PIXMAN_x8b8g8r8, fbCompositeCopyAreasse2,		0 },
     { PIXMAN_OP_SRC, PIXMAN_x8r8g8b8,  PIXMAN_null,     PIXMAN_x8r8g8b8, fbCompositeCopyAreasse2,               0 },
     { PIXMAN_OP_SRC, PIXMAN_x8b8g8r8,  PIXMAN_null,     PIXMAN_x8b8g8r8, fbCompositeCopyAreasse2,               0 },
     { PIXMAN_OP_SRC, PIXMAN_r5g6b5,    PIXMAN_null,     PIXMAN_r5g6b5,   fbCompositeCopyAreasse2,               0 },
@@ -1520,8 +1518,8 @@ static const FastPathInfo vmx_fast_paths[] =
 };
 #endif
 
-#ifdef USE_ARM
-static const FastPathInfo arm_fast_paths[] =
+#ifdef USE_ARM_SIMD
+static const FastPathInfo arm_simd_fast_paths[] =
 {
     { PIXMAN_OP_OVER, PIXMAN_a8r8g8b8, PIXMAN_null,     PIXMAN_a8r8g8b8, fbCompositeSrc_8888x8888arm,      0 },
     { PIXMAN_OP_OVER, PIXMAN_a8r8g8b8, PIXMAN_null,	PIXMAN_x8r8g8b8, fbCompositeSrc_8888x8888arm,	   0 },
@@ -1895,9 +1893,9 @@ pixman_image_composite (pixman_op_t      op,
 	    info = get_fast_path (vmx_fast_paths, op, pSrc, pMask, pDst, pixbuf);
 #endif
 
-#ifdef USE_ARM
-	if (!info && pixman_have_arm())
-	    info = get_fast_path (arm_fast_paths, op, pSrc, pMask, pDst, pixbuf);
+#ifdef USE_ARM_SIMD
+	if (!info && pixman_have_arm_simd())
+	    info = get_fast_path (arm_simd_fast_paths, op, pSrc, pMask, pDst, pixbuf);
 #endif
 
         if (!info)

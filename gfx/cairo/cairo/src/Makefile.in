@@ -85,6 +85,8 @@ CSRCS   = \
         cairo-deflate-stream.c \
         cairo-fixed.c \
 	cairo-font-face.c \
+	cairo-font-face-twin.c \
+	cairo-font-face-twin-data.c \
         cairo-font-options.c \
         cairo-freelist.c \
         cairo-gstate.c \

@@ -36,98 +36,12 @@
 
 #include "cairoint.h"
 
-#ifdef CAIRO_HAS_QUARTZ_IMAGE_SURFACE
 #include "cairo-quartz-image.h"
-#endif
-
 #include "cairo-quartz-private.h"
 
 #define SURFACE_ERROR_NO_MEMORY (_cairo_surface_create_in_error(_cairo_error(CAIRO_STATUS_NO_MEMORY)))
 #define SURFACE_ERROR_TYPE_MISMATCH (_cairo_surface_create_in_error(_cairo_error(CAIRO_STATUS_SURFACE_TYPE_MISMATCH)))
 #define SURFACE_ERROR_INVALID_FORMAT (_cairo_surface_create_in_error(_cairo_error(CAIRO_STATUS_INVALID_FORMAT)))
-
-CGImageRef
-_cairo_quartz_create_cgimage (cairo_format_t format,
-			      unsigned int width,
-			      unsigned int height,
-			      unsigned int stride,
-			      void *data,
-			      cairo_bool_t interpolate,
-			      CGColorSpaceRef colorSpaceOverride,
-			      CGDataProviderReleaseDataCallback releaseCallback,
-			      void *releaseInfo)
-{
-    CGImageRef image = NULL;
-    CGDataProviderRef dataProvider = NULL;
-    CGColorSpaceRef colorSpace = colorSpaceOverride;
-    CGBitmapInfo bitinfo;
-    int bitsPerComponent, bitsPerPixel;
-
-    switch (format) {
-	case CAIRO_FORMAT_ARGB32:
-	    if (colorSpace == NULL)
-		colorSpace = CGColorSpaceCreateDeviceRGB();
-	    bitinfo = kCGImageAlphaPremultipliedFirst | kCGBitmapByteOrder32Host;
-	    bitsPerComponent = 8;
-	    bitsPerPixel = 32;
-	    break;
-
-	case CAIRO_FORMAT_RGB24:
-	    if (colorSpace == NULL)
-		colorSpace = CGColorSpaceCreateDeviceRGB();
-	    bitinfo = kCGImageAlphaNoneSkipFirst | kCGBitmapByteOrder32Host;
-	    bitsPerComponent = 8;
-	    bitsPerPixel = 32;
-	    break;
-
-	/* XXX -- should use CGImageMaskCreate! */
-	case CAIRO_FORMAT_A8:
-	    if (colorSpace == NULL)
-		colorSpace = CGColorSpaceCreateDeviceGray();
-	    bitinfo = kCGImageAlphaNone;
-	    bitsPerComponent = 8;
-	    bitsPerPixel = 8;
-	    break;
-
-	case CAIRO_FORMAT_A1:
-	default:
-	    return NULL;
-    }
-
-    dataProvider = CGDataProviderCreateWithData (releaseInfo,
-						 data,
-						 height * stride,
-						 releaseCallback);
-
-    if (!dataProvider) {
-	// manually release
-	if (releaseCallback)
-	    releaseCallback (releaseInfo, data, height * stride);
-	goto FINISH;
-    }
-
-    image = CGImageCreate (width, height,
-			   bitsPerComponent,
-			   bitsPerPixel,
-			   stride,
-			   colorSpace,
-			   bitinfo,
-			   dataProvider,
-			   NULL,
-			   interpolate,
-			   kCGRenderingIntentDefault);
-
-FINISH:
-
-    CGDataProviderRelease (dataProvider);
-
-    if (colorSpace != colorSpaceOverride)
-	CGColorSpaceRelease (colorSpace);
-
-    return image;
-}
-
-#ifdef CAIRO_HAS_QUARTZ_IMAGE_SURFACE
 
 static void
 DataProviderReleaseCallback (void *info, const void *data, size_t size)
@@ -370,5 +284,3 @@ cairo_quartz_image_surface_get_image (cairo_surface_t *asurface)
 
     return (cairo_surface_t*) surface->imageSurface;
 }
-
-#endif /* CAIRO_HAS_QUARTZ_IMAGE_SURFACE */

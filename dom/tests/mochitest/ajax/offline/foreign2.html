@@ -1,0 +1,74 @@
+<html xmlns="http://www.w3.org/1999/xhtml" manifest="http://localhost:8888/tests/dom/tests/mochitest/ajax/offline/foreign2.cacheManifest">
+<head>
+<title>Foreign page 2</title>
+
+<script type="text/javascript" src="/MochiKit/packed.js"></script>
+<script type="text/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+<script type="text/javascript" src="/tests/dom/tests/mochitest/ajax/offline/offlineTests.js"></script>
+<link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
+
+<script class="testbody" type="text/javascript">
+
+function manifestUpdated()
+{
+  var appCacheService = Components.classes["@mozilla.org/network/application-cache-service;1"]
+    .getService(Components.interfaces.nsIApplicationCacheService);
+
+  var foreign2cache = appCacheService.chooseApplicationCache(
+    "http://localhost:8888/tests/dom/tests/mochitest/ajax/offline/foreign2.html");
+
+  OfflineTest.ok(foreign2cache, "Foreign 2 cache present, chosen for foreign2.html");
+  OfflineTest.is(foreign2cache.groupID, "http://localhost:8888/tests/dom/tests/mochitest/ajax/offline/foreign2.cacheManifest")
+
+  var foreign1cache = appCacheService.getActiveCache(
+    "http://localhost:8888/tests/dom/tests/mochitest/ajax/offline/foreign1.cacheManifest");
+  OfflineTest.ok(foreign1cache, "Foreign 1 cache loaded");
+  foreign1cache.discard();
+
+  OfflineTest.teardown();
+  OfflineTest.finish();
+}
+
+function onLoaded()
+{
+  var appCacheService = Components.classes["@mozilla.org/network/application-cache-service;1"]
+    .getService(Components.interfaces.nsIApplicationCacheService);
+
+  var foreign1cache = appCacheService.getActiveCache(
+    "http://localhost:8888/tests/dom/tests/mochitest/ajax/offline/foreign1.cacheManifest");
+  OfflineTest.ok(foreign1cache, "Foreign 1 cache loaded");
+
+  var foreign2cache = appCacheService.getActiveCache(
+    "http://localhost:8888/tests/dom/tests/mochitest/ajax/offline/foreign2.cacheManifest");
+  OfflineTest.ok(!foreign2cache, "Foreign 2 cache not present");
+
+  foreign1cache = appCacheService.chooseApplicationCache(
+    "http://localhost:8888/tests/dom/tests/mochitest/ajax/offline/foreign2.html");
+  OfflineTest.ok(!foreign1cache, "foreign2.html not chosen from foreign1 cache");
+
+  try
+  {
+    OfflineTest.ok(applicationCache.status == Components.interfaces.nsIDOMOfflineResourceList.UNCACHED,
+        "there is no associated application cache");
+  }
+  catch (ex)
+  {
+    OfflineTest.ok(false, "applicationCache.status must not throw an exception");
+  }
+}
+
+if (OfflineTest.setup())
+{
+  applicationCache.onerror = OfflineTest.failEvent;
+  applicationCache.onupdateready = OfflineTest.failEvent;
+  applicationCache.onnoupdate = OfflineTest.failEvent;
+  applicationCache.oncached = OfflineTest.priv(manifestUpdated);
+}
+
+</script>
+
+</head>
+
+<body onload="OfflineTest.priv(onLoaded)();">
+</body>
+</html>

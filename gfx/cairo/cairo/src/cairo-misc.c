@@ -240,7 +240,7 @@ slim_hidden_def (cairo_text_cluster_free);
  * @num_glyphs: number of glyphs
  * @clusters: array of cluster mapping information
  * @num_clusters: number of clusters in the mapping
- * @backward: whether the text to glyphs mapping goes backward
+ * @cluster_flags: cluster flags
  *
  * Check that clusters cover the entire glyphs and utf8 arrays,
  * and that cluster boundaries are UTF-8 boundaries.
@@ -257,7 +257,7 @@ _cairo_validate_text_clusters (const char		   *utf8,
 			       int			    num_glyphs,
 			       const cairo_text_cluster_t  *clusters,
 			       int			    num_clusters,
-			       cairo_bool_t		    backward)
+			       cairo_text_cluster_flags_t   cluster_flags)
 {
     cairo_status_t status;
     unsigned int n_bytes  = 0;

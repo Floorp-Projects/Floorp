@@ -39,8 +39,6 @@
 #ifndef CAIRO_TYPES_PRIVATE_H
 #define CAIRO_TYPES_PRIVATE_H
 
-/* This is the only header file not including cairoint.h.  It only contains
- * typedefs.*/
 #include "cairo.h"
 #include "cairo-fixed-type-private.h"
 
@@ -118,7 +116,6 @@ struct _cairo_array {
 struct _cairo_font_options {
     cairo_antialias_t antialias;
     cairo_subpixel_order_t subpixel_order;
-    cairo_lcd_filter_t lcd_filter;
     cairo_hint_style_t hint_style;
     cairo_hint_metrics_t hint_metrics;
 };
@@ -132,6 +129,24 @@ struct _cairo_cache {
     unsigned long size;
 
     int freeze_count;
+};
+
+/* XXX: Right now, the _cairo_color structure puts unpremultiplied
+   color in the doubles and premultiplied color in the shorts. Yes,
+   this is crazy insane, (but at least we don't export this
+   madness). I'm still working on a cleaner API, but in the meantime,
+   at least this does prevent precision loss in color when changing
+   alpha. */
+struct _cairo_color {
+    double red;
+    double green;
+    double blue;
+    double alpha;
+
+    unsigned short red_short;
+    unsigned short green_short;
+    unsigned short blue_short;
+    unsigned short alpha_short;
 };
 
 typedef enum _cairo_paginated_mode {

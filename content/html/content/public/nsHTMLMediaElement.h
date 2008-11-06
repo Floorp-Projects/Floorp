@@ -210,18 +210,6 @@ protected:
   // it changes. Defaults to a width and height of -1 if not set.
   nsIntSize mMediaSize;
 
-  // The defaultPlaybackRate attribute gives the desired speed at
-  // which the media resource is to play, as a multiple of its
-  // intrinsic speed.
-  float mDefaultPlaybackRate;
-
-  // The playbackRate attribute gives the speed at which the media
-  // resource plays, as a multiple of its intrinsic speed. If it is
-  // not equal to the defaultPlaybackRate, then the implication is
-  // that the user is using a feature such as fast forward or slow
-  // motion playback.
-  float mPlaybackRate;
-
   // If true then we have begun downloading the media content.
   // Set to false when completed, or not yet started.
   PRPackedBool mBegun;

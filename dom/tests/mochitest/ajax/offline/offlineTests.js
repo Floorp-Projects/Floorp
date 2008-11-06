@@ -63,6 +63,9 @@ _slaveWindow: null,
 // The window where test results should be sent.
 _masterWindow: null,
 
+// Array of all PUT overrides on the server
+_pathOverrides: [],
+
 setupChild: function()
 {
   if (window.parent.OfflineTest.hasSlave()) {
@@ -124,6 +127,10 @@ teardown: function()
             .newURI(window.location.href, null, null);
   pm.remove(uri.host, "offline-app");
 
+  // Clear all overrides on the server
+  for (override in this._pathOverrides)
+    this.deleteData(this._pathOverrides[override]);
+
   this.clear();
 },
 
@@ -160,11 +167,14 @@ isnot: function(a, b, name)
   return this._masterWindow.SimpleTest.isnot(a, b, name);
 },
 
+todo: function(a, name)
+{
+  return this._masterWindow.SimpleTest.todo(a, name);
+},
+
 clear: function()
 {
   // XXX: maybe we should just wipe out the entire disk cache.
-  var appCacheService = Cc["@mozilla.org/network/application-cache-service;1"]
-                        .getService(Ci.nsIApplicationCacheService);
   var applicationCache = this.getActiveCache();
   if (applicationCache) {
     applicationCache.discard();
@@ -185,7 +195,7 @@ waitForAdd: function(url, onFinished) {
     var cacheSession = OfflineTest.getActiveSession();
     var entry;
     try {
-      var entry = cacheSession.openCacheEntry(url, Ci.nsICache.ACCESS_READ, true);
+      var entry = cacheSession.openCacheEntry(url, Ci.nsICache.ACCESS_READ, false);
     } catch (e) {
     }
 
@@ -241,9 +251,31 @@ priv: function(func)
   }
 },
 
+checkCustomCache: function(group, url, expectEntry)
+{
+  var serv = Cc["@mozilla.org/network/application-cache-service;1"]
+             .getService(Ci.nsIApplicationCacheService);
+  var cache = serv.getActiveCache(group);
+  var cacheSession = null;
+  if (cache) {
+    var cacheService = Cc["@mozilla.org/network/cache-service;1"]
+                       .getService(Ci.nsICacheService);
+    cacheSession = cacheService.createSession(cache.clientID,
+                                      Ci.nsICache.STORE_OFFLINE,
+                                      true);
+  }
+
+  this._checkCache(cacheSession, url, expectEntry);
+},
+
 checkCache: function(url, expectEntry)
 {
   var cacheSession = this.getActiveSession();
+  this._checkCache(cacheSession, url, expectEntry);
+},
+
+_checkCache: function(cacheSession, url, expectEntry)
+{
   if (!cacheSession) {
     if (expectEntry) {
       this.ok(false, url + " should exist in the offline cache");
@@ -271,14 +303,36 @@ checkCache: function(url, expectEntry)
     } else if (e.result == NS_ERROR_CACHE_KEY_WAIT_FOR_VALIDATION) {
       // There was a cache key that we couldn't access yet, that's good enough.
       if (expectEntry) {
-        this.ok(true, url + " should exist in the offline cache");
+        this.ok(!mustBeValid, url + " should exist in the offline cache");
       } else {
-        this.ok(false, url + " should not exist in the offline cache");
+        this.ok(mustBeValid, url + " should not exist in the offline cache");
       }
     } else {
       throw e;
     }
   }
+},
+
+putData: function(serverPath, contentType, data)
+{
+  if (!data.length)
+    throw "Data length mush be specified";
+
+  var client = new XMLHttpRequest();
+  client.open("PUT", serverPath, false);
+  client.setRequestHeader("Content-Type", contentType);
+  client.send(data);
+
+  this._pathOverrides.push(serverPath);
+},
+
+deleteData: function(serverPath)
+{
+  delete this._pathOverrides[serverPath];
+
+  var client = new XMLHttpRequest();
+  client.open("DELETE", serverPath, false);
+  client.send();
 }
 
 };

@@ -68,6 +68,12 @@ cairo_win32_surface_get_dc (cairo_surface_t *surface);
 cairo_public cairo_surface_t *
 cairo_win32_surface_get_image (cairo_surface_t *surface);
 
+#if CAIRO_HAS_WIN32_FONT
+
+/*
+ * Win32 font support
+ */
+
 cairo_public cairo_font_face_t *
 cairo_win32_font_face_create_for_logfontw (LOGFONTW *logfont);
 
@@ -94,6 +100,8 @@ cairo_win32_scaled_font_get_logical_to_device (cairo_scaled_font_t *scaled_font,
 cairo_public void
 cairo_win32_scaled_font_get_device_to_logical (cairo_scaled_font_t *scaled_font,
 					       cairo_matrix_t *device_to_logical);
+
+#endif /* CAIRO_HAS_WIN32_FONT */
 
 CAIRO_END_DECLS
 

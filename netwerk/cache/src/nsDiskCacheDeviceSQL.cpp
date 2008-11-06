@@ -1770,7 +1770,7 @@ nsOfflineCacheDevice::GetMatchingNamespace(const nsCString &clientID,
 
   *out = nsnull;
 
-  while (hasRows)
+  if (hasRows)
   {
     nsCString namespaceSpec;
     rv = statement->GetUTF8String(0, namespaceSpec);
@@ -1784,17 +1784,6 @@ nsOfflineCacheDevice::GetMatchingNamespace(const nsCString &clientID,
     rv = statement->GetInt32(2, &itemType);
     NS_ENSURE_SUCCESS(rv, rv);
 
-    // XXX: There is currently a proposal on the table to extend matching
-    // semantics for bypass entries to be a namespace (possibly with extra
-    // filter data).  When/if that happens, this logic will need to change.
-    if ((itemType & nsIApplicationCacheNamespace::NAMESPACE_BYPASS) &&
-        (namespaceSpec != key)) {
-      rv = statement->ExecuteStep(&hasRows);
-      NS_ENSURE_SUCCESS(rv, rv);
-
-      continue;
-    }
-
     nsCOMPtr<nsIApplicationCacheNamespace> ns =
       new nsApplicationCacheNamespace();
     if (!ns)
@@ -1804,7 +1793,6 @@ nsOfflineCacheDevice::GetMatchingNamespace(const nsCString &clientID,
     NS_ENSURE_SUCCESS(rv, rv);
 
     ns.swap(*out);
-    return NS_OK;
   }
 
   return NS_OK;
@@ -1881,7 +1869,7 @@ nsOfflineCacheDevice::AddNamespace(const nsCString &clientID,
   rv = ns->GetItemType(&itemType);
   NS_ENSURE_SUCCESS(rv, rv);
 
-  LOG(("nsOfflineCacheDevice::AddNamespace [cid=%s, ns=%s, type=%d]",
+  LOG(("nsOfflineCacheDevice::AddNamespace [cid=%s, ns=%s, data=%s, type=%d]",
        PromiseFlatCString(clientID).get(),
        namespaceSpec.get(), data.get(), itemType));
 

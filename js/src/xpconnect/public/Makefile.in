@@ -48,6 +48,7 @@ MODULE		= xpconnect
 EXPORTS		= \
 		nsAXPCNativeCallContext.h \
 		xpc_map_end.h \
+		nsAutoJSValHolder.h \
 		$(NULL)
 
 include $(topsrcdir)/config/rules.mk

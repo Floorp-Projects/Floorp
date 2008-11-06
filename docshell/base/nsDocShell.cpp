@@ -468,17 +468,10 @@ NS_IMETHODIMP nsDocShell::GetInterface(const nsIID & aIID, void **aSink)
     else if (aIID.Equals(NS_GET_IID(nsIApplicationCacheContainer))) {
         *aSink = nsnull;
 
-        // Return the toplevel document as an
-        // nsIApplicationCacheContainer.
-
-        nsCOMPtr<nsIDocShellTreeItem> rootItem;
-        GetSameTypeRootTreeItem(getter_AddRefs(rootItem));
-        nsCOMPtr<nsIDocShell> rootDocShell = do_QueryInterface(rootItem);
-        if (!rootDocShell)
-            return NS_ERROR_NO_INTERFACE;
+        // Return application cache associated with this docshell, if any
 
         nsCOMPtr<nsIContentViewer> contentViewer;
-        rootDocShell->GetContentViewer(getter_AddRefs(contentViewer));
+        GetContentViewer(getter_AddRefs(contentViewer));
         if (!contentViewer)
             return NS_ERROR_NO_INTERFACE;
 
@@ -488,6 +481,11 @@ NS_IMETHODIMP nsDocShell::GetInterface(const nsIID & aIID, void **aSink)
         if (!domDoc)
             return NS_ERROR_NO_INTERFACE;
 
+#if defined(PR_LOGGING) && defined(DEBUG)
+        PR_LOG(gDocShellLog, PR_LOG_DEBUG,
+               ("nsDocShell[%p]: returning app cache container %p",
+                this, domDoc.get()));
+#endif
         return domDoc->QueryInterface(aIID, aSink);
     }
     else if (aIID.Equals(NS_GET_IID(nsIPrompt)) &&
@@ -5115,7 +5113,7 @@ nsDocShell::OnRedirectStateChange(nsIChannel* aOldChannel,
     if (result == NS_ERROR_NOT_IMPLEMENTED) {
         // when there is no GlobalHistory3, or it doesn't implement
         // AddToplevelRedirect, we fall back to GlobalHistory2.  Just notify
-        // that the redirecting page was a redirect so it will be link colored
+        // that the redirecting page was a rePdirect so it will be link colored
         // but not visible.
         nsCOMPtr<nsIURI> oldURI;
         aOldChannel->GetURI(getter_AddRefs(oldURI));
@@ -7338,15 +7336,6 @@ nsDocShell::GetInheritedPrincipal(PRBool aConsiderCurrentDocument)
 PRBool
 nsDocShell::ShouldCheckAppCache(nsIURI *aURI)
 {
-    // Toplevel document loads in domains with the offline-app
-    // permission should check for an associated application
-    // cache.
-    nsCOMPtr<nsIDocShellTreeItem> root;
-    GetSameTypeRootTreeItem(getter_AddRefs(root));
-    if (root != this) {
-        return PR_FALSE;
-    }
-
     nsCOMPtr<nsIOfflineCacheUpdateService> offlineService =
         do_GetService(NS_OFFLINECACHEUPDATESERVICE_CONTRACTID);
     if (!offlineService) {
@@ -7420,16 +7409,12 @@ nsDocShell::DoURILoad(nsIURI * aURI,
     nsCOMPtr<nsIApplicationCacheChannel> appCacheChannel =
         do_QueryInterface(channel);
     if (appCacheChannel) {
-        // Toplevel document loads should not inherit application
-        // caches
-        nsCOMPtr<nsIDocShellTreeItem> root;
-        GetSameTypeRootTreeItem(getter_AddRefs(root));
-        if (root == this) {
-            appCacheChannel->SetInheritApplicationCache(PR_FALSE);
-            // And loads with the correct permissions should check
-            // for a matching application cache.
-            appCacheChannel->SetChooseApplicationCache(ShouldCheckAppCache(aURI));
-        }
+        // Any document load should not inherit application cache.
+        appCacheChannel->SetInheritApplicationCache(PR_FALSE);
+
+        // Loads with the correct permissions should check for a matching
+        // application cache.
+        appCacheChannel->SetChooseApplicationCache(ShouldCheckAppCache(aURI));
     }
 
     // Make sure to give the caller a channel if we managed to create one

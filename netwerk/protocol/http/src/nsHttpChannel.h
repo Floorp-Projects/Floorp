@@ -334,6 +334,7 @@ private:
     PRUint32                          mFallbackChannel          : 1;
     PRUint32                          mInheritApplicationCache  : 1;
     PRUint32                          mChooseApplicationCache   : 1;
+    PRUint32                          mLoadedFromApplicationCache : 1;
     PRUint32                          mTracingEnabled           : 1;
 
     class nsContentEncodings : public nsIUTF8StringEnumerator
