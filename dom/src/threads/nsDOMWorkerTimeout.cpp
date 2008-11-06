@@ -47,7 +47,9 @@
 // Other includes
 #include "nsContentUtils.h"
 #include "nsJSUtils.h"
+#include "nsThreadUtils.h"
 #include "pratom.h"
+#include "prtime.h"
 
 // DOMWorker includes
 #include "nsDOMThreadService.h"
@@ -73,15 +75,15 @@ nsDOMWorkerTimeout::FunctionCallback::FunctionCallback(PRUint32 aArgc,
                                                        nsresult* aRv)
 : mCallback(nsnull),
   mCallbackArgs(nsnull),
-  mCallbackArgsLength(0)
+  mCallbackArgsLength(0),
+  mRuntime(NULL)
 {
   MOZ_COUNT_CTOR(nsDOMWorkerTimeout::FunctionCallback);
 
-  JSRuntime* rt;
-  *aRv = nsDOMThreadService::JSRuntimeService()->GetRuntime(&rt);
+  *aRv = nsDOMThreadService::JSRuntimeService()->GetRuntime(&mRuntime);
   NS_ENSURE_SUCCESS(*aRv,);
 
-  PRBool success = JS_AddNamedRootRT(rt, &mCallback,
+  PRBool success = JS_AddNamedRootRT(mRuntime, &mCallback,
                                      "nsDOMWorkerTimeout Callback Object");
   CONSTRUCTOR_ENSURE_TRUE(success, *aRv);
 
@@ -102,7 +104,7 @@ nsDOMWorkerTimeout::FunctionCallback::FunctionCallback(PRUint32 aArgc,
 
   for (PRUint32 i = 0; i < mCallbackArgsLength - 1; i++) {
     mCallbackArgs[i] = aArgv[i + 2];
-    success = JS_AddNamedRootRT(rt, &mCallbackArgs[i],
+    success = JS_AddNamedRootRT(mRuntime, &mCallbackArgs[i],
                                 "nsDOMWorkerTimeout Callback Arg");
     if (NS_UNLIKELY(!success)) {
       // Set this to i so that the destructor only unroots the right number of
@@ -117,7 +119,7 @@ nsDOMWorkerTimeout::FunctionCallback::FunctionCallback(PRUint32 aArgc,
 
   // Take care of the last arg.
   mCallbackArgs[mCallbackArgsLength - 1] = 0;
-  success = JS_AddNamedRootRT(rt, &mCallbackArgs[mCallbackArgsLength - 1],
+  success = JS_AddNamedRootRT(mRuntime, &mCallbackArgs[mCallbackArgsLength - 1],
                               "nsDOMWorkerTimeout Callback Final Arg");
   if (NS_UNLIKELY(!success)) {
     // Decrement this so that the destructor only unroots the right number of
@@ -137,17 +139,10 @@ nsDOMWorkerTimeout::FunctionCallback::~FunctionCallback()
   MOZ_COUNT_DTOR(nsDOMWorkerTimeout::FunctionCallback);
 
   if (mCallback) {
-    JSRuntime* rt;
-    nsresult rv = nsDOMThreadService::JSRuntimeService()->GetRuntime(&rt);
-
-    NS_WARN_IF_FALSE(NS_SUCCEEDED(rv), "Can't unroot callback objects!");
-
-    if (NS_SUCCEEDED(rv)) {
-      for (PRUint32 i = 0; i < mCallbackArgsLength; i++) {
-        JS_RemoveRootRT(rt, &mCallbackArgs[i]);
-      }
-      JS_RemoveRootRT(rt, &mCallback);
+    for (PRUint32 i = 0; i < mCallbackArgsLength; i++) {
+      JS_RemoveRootRT(mRuntime, &mCallbackArgs[i]);
     }
+    JS_RemoveRootRT(mRuntime, &mCallback);
   }
 
   delete [] mCallbackArgs;
@@ -178,7 +173,8 @@ nsDOMWorkerTimeout::ExpressionCallback::ExpressionCallback(PRUint32 aArgc,
                                                            JSContext* aCx,
                                                            nsresult* aRv)
 : mExpression(nsnull),
-  mLineNumber(0)
+  mLineNumber(0),
+  mRuntime(NULL)
 {
   MOZ_COUNT_CTOR(nsDOMWorkerTimeout::ExpressionCallback);
 
@@ -186,11 +182,10 @@ nsDOMWorkerTimeout::ExpressionCallback::ExpressionCallback(PRUint32 aArgc,
   *aRv = expr ? NS_OK : NS_ERROR_FAILURE;
   NS_ENSURE_SUCCESS(*aRv,);
 
-  JSRuntime* rt;
-  *aRv = nsDOMThreadService::JSRuntimeService()->GetRuntime(&rt);
+  *aRv = nsDOMThreadService::JSRuntimeService()->GetRuntime(&mRuntime);
   NS_ENSURE_SUCCESS(*aRv,);
 
-  PRBool success = JS_AddNamedRootRT(rt, &mExpression,
+  PRBool success = JS_AddNamedRootRT(mRuntime, &mExpression,
                                      "nsDOMWorkerTimeout Expression");
   CONSTRUCTOR_ENSURE_TRUE(success, *aRv);
 
@@ -212,14 +207,7 @@ nsDOMWorkerTimeout::ExpressionCallback::~ExpressionCallback()
   MOZ_COUNT_DTOR(nsDOMWorkerTimeout::ExpressionCallback);
 
   if (mExpression) {
-    JSRuntime* rt;
-    nsresult rv = nsDOMThreadService::JSRuntimeService()->GetRuntime(&rt);
-
-    NS_WARN_IF_FALSE(NS_SUCCEEDED(rv), "Can't unroot callback objects!");
-
-    if (NS_SUCCEEDED(rv)) {
-      JS_RemoveRootRT(rt, &mExpression);
-    }
+    JS_RemoveRootRT(mRuntime, &mExpression);
   }
 }
 
@@ -231,37 +219,22 @@ nsDOMWorkerTimeout::ExpressionCallback::Run(nsDOMWorkerTimeout* aTimeout,
   return NS_ERROR_NOT_IMPLEMENTED;
 }
 
-nsDOMWorkerTimeout::nsDOMWorkerTimeout(nsDOMWorkerThread* aWorker,
+nsDOMWorkerTimeout::nsDOMWorkerTimeout(nsDOMWorker* aWorker,
                                        PRUint32 aId)
-: mWorker(aWorker),
+: nsDOMWorkerFeature(aWorker, aId),
   mInterval(0),
-  mIsInterval(PR_FALSE),
-  mId(aId),
   mSuspendSpinlock(0),
+  mSuspendInterval(0),
+  mIsInterval(PR_FALSE),
   mIsSuspended(PR_FALSE),
-  mSuspendInterval(0)
-#ifdef DEBUG
-, mFiredOrCanceled(PR_FALSE)
-#endif
+  mSuspendedBeforeStart(PR_FALSE),
+  mStarted(PR_FALSE)
 {
-  MOZ_COUNT_CTOR(nsDOMWorkerTimeout);
   NS_ASSERTION(mWorker, "Need a worker here!");
 }
 
-nsDOMWorkerTimeout::~nsDOMWorkerTimeout()
-{
-  MOZ_COUNT_DTOR(nsDOMWorkerTimeout);
-
-  // If we have a timer then we assume we added ourselves to the thread's list.
-  if (mTimer) {
-    NS_ASSERTION(mFiredOrCanceled || mWorker->IsCanceled(),
-                 "Timeout should have fired or been canceled!");
-
-    mWorker->RemoveTimeout(this);
-  }
-}
-
-NS_IMPL_THREADSAFE_ISUPPORTS1(nsDOMWorkerTimeout, nsITimerCallback)
+NS_IMPL_ISUPPORTS_INHERITED1(nsDOMWorkerTimeout, nsDOMWorkerFeature,
+                                                 nsITimerCallback)
 
 nsresult
 nsDOMWorkerTimeout::Init(JSContext* aCx, PRUint32 aArgc, jsval* aArgv,
@@ -294,6 +267,8 @@ nsDOMWorkerTimeout::Init(JSContext* aCx, PRUint32 aArgc, jsval* aArgv,
 
   mInterval = interval;
 
+  mIsInterval = aIsInterval;
+
   mTargetTime = PR_Now() + interval * (PRTime)PR_USEC_PER_MSEC;
 
   nsresult rv;
@@ -315,19 +290,10 @@ nsDOMWorkerTimeout::Init(JSContext* aCx, PRUint32 aArgc, jsval* aArgv,
     default:
       JS_ReportError(aCx, "useless %s call (missing quotes around argument?)",
                      aIsInterval ? kSetIntervalStr : kSetTimeoutStr);
-  
+
       // Return an error that nsGlobalWindow can recognize and turn into NS_OK.
       return NS_ERROR_INVALID_ARG;
   }
-
-  PRInt32 type;
-  if (aIsInterval) {
-    type = nsITimer::TYPE_REPEATING_SLACK;
-  }
-  else {
-    type = nsITimer::TYPE_ONE_SHOT;
-  }
-  mIsInterval = aIsInterval;
 
   nsCOMPtr<nsITimer> timer = do_CreateInstance(NS_TIMER_CONTRACTID, &rv);
   NS_ENSURE_SUCCESS(rv, rv);
@@ -338,18 +304,30 @@ nsDOMWorkerTimeout::Init(JSContext* aCx, PRUint32 aArgc, jsval* aArgv,
   rv = timer->SetTarget(target);
   NS_ENSURE_SUCCESS(rv, rv);
 
-  rv = timer->InitWithCallback(this, interval, type);
-  NS_ENSURE_SUCCESS(rv, rv);
-
   mTimer.swap(timer);
+  return NS_OK;
+}
 
-  if (!mWorker->AddTimeout(this)) {
-    // Must have been canceled.
-    mTimer->Cancel();
-    mTimer = nsnull;
-    return NS_ERROR_ABORT;
+nsresult
+nsDOMWorkerTimeout::Start()
+{
+  if (IsSuspended()) {
+    NS_ASSERTION(mSuspendedBeforeStart, "Bad state!");
+    return NS_OK;
   }
 
+  PRInt32 type;
+  if (mIsInterval) {
+    type = nsITimer::TYPE_REPEATING_SLACK;
+  }
+  else {
+    type = nsITimer::TYPE_ONE_SHOT;
+  }
+
+  nsresult rv = mTimer->InitWithCallback(this, mInterval, type);
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  mStarted = PR_TRUE;
   return NS_OK;
 }
 
@@ -359,10 +337,6 @@ nsDOMWorkerTimeout::Run()
   NS_ENSURE_TRUE(mCallback, NS_ERROR_NOT_INITIALIZED);
   LOG(("Worker [0x%p] running timeout [0x%p] with id %u",
        static_cast<void*>(mWorker.get()), static_cast<void*>(this), mId));
-
-#ifdef DEBUG
-  mFiredOrCanceled = PR_TRUE;
-#endif
 
   JSContext* cx;
   nsresult rv =
@@ -391,10 +365,6 @@ nsDOMWorkerTimeout::Cancel()
   LOG(("Worker [0x%p] canceling timeout [0x%p] with id %u",
        static_cast<void*>(mWorker.get()), static_cast<void*>(this), mId));
 
-#ifdef DEBUG
-  mFiredOrCanceled = PR_TRUE;
-#endif
-
   {
     AutoSpinlock lock(this);
 
@@ -410,21 +380,29 @@ nsDOMWorkerTimeout::Cancel()
 }
 
 void
-nsDOMWorkerTimeout::Suspend(PRTime aNow)
+nsDOMWorkerTimeout::Suspend()
 {
-  NS_ASSERTION(NS_IsMainThread(), "Wrong thread!");
-  NS_ASSERTION(mTimer, "Impossible to get here without a timer!");
+#ifdef DEBUG
+  if (mStarted) {
+    NS_ASSERTION(NS_IsMainThread(), "Wrong thread!");
+  }
+#endif
 
   AutoSpinlock lock(this);
 
-  if (!mIsSuspended) {
-    mIsSuspended = PR_TRUE;
-    mSuspendedRef = this;
+  NS_ASSERTION(!IsSuspendedNoLock(), "Bad state!");
+
+  mIsSuspended = PR_TRUE;
+  mSuspendedRef = this;
+
+  if (!mStarted) {
+    mSuspendedBeforeStart = PR_TRUE;
+    return;
   }
 
   mTimer->Cancel();
 
-  mSuspendInterval = PR_MAX(0, PRInt32(mTargetTime - aNow)) /
+  mSuspendInterval = PR_MAX(0, PRInt32(mTargetTime - PR_Now())) /
                      (PRTime)PR_USEC_PER_MSEC;
 
   LOG(("Worker [0x%p] suspending timeout [0x%p] with id %u (interval = %u)",
@@ -433,9 +411,14 @@ nsDOMWorkerTimeout::Suspend(PRTime aNow)
 }
 
 void
-nsDOMWorkerTimeout::Resume(PRTime aNow)
+nsDOMWorkerTimeout::Resume()
 {
-  NS_ASSERTION(NS_IsMainThread(), "Wrong thread!");
+#ifdef DEBUG
+  if (!mSuspendedBeforeStart) {
+    NS_ASSERTION(NS_IsMainThread(), "Wrong thread!");
+  }
+#endif
+
   NS_ASSERTION(mTimer, "Impossible to get here without a timer!");
 
   LOG(("Worker [0x%p] resuming timeout [0x%p] with id %u",
@@ -445,7 +428,14 @@ nsDOMWorkerTimeout::Resume(PRTime aNow)
 
   NS_ASSERTION(IsSuspendedNoLock(), "Should be suspended!");
 
-  mTargetTime = aNow + mSuspendInterval * (PRTime)PR_USEC_PER_MSEC;
+  if (mSuspendedBeforeStart) {
+    NS_ASSERTION(!mSuspendInterval, "Bad state!");
+    mSuspendedBeforeStart = PR_FALSE;
+    mSuspendInterval = mInterval;
+    mStarted = PR_TRUE;
+  }
+
+  mTargetTime = PR_Now() + mSuspendInterval * (PRTime)PR_USEC_PER_MSEC;
 
 #ifdef DEBUG
   nsresult rv =
@@ -499,10 +489,9 @@ nsDOMWorkerTimeout::Notify(nsITimer* aTimer)
   if (type == nsITimer::TYPE_ONE_SHOT) {
     AutoSpinlock lock(this);
     if (mIsSuspended) {
+      mIsSuspended = PR_FALSE;
+      mSuspendedRef = nsnull;
       if (mIsInterval) {
-        //LOG(("Timeout [0x%p] resuming normal interval (%u) with id %u",
-             //static_cast<void*>(this), mInterval, mId));
-
         // This is the first fire since we resumed. Set our interval back to the
         // real interval.
         mTargetTime = PR_Now() + mInterval * (PRTime)PR_USEC_PER_MSEC;
@@ -511,9 +500,6 @@ nsDOMWorkerTimeout::Notify(nsITimer* aTimer)
                                       nsITimer::TYPE_REPEATING_SLACK);
         NS_ENSURE_SUCCESS(rv, rv);
       }
-
-      mIsSuspended = PR_FALSE;
-      mSuspendedRef = nsnull;
     }
   }
 
