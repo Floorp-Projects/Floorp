@@ -20,7 +20,6 @@ Tests of DOM Worker Threads
   var worker = new Worker("recursion_worker.js");
 
   worker.onerror = function(event) {
-    dump(event.data + "\n");
     is(event.data,
        '[JavaScript Error: "too much recursion" {file: "http://localhost:8888' +
        '/tests/dom/src/threads/tests/recursion_worker.js" line: 2}]');
