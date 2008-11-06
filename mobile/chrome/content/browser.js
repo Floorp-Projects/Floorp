@@ -408,10 +408,10 @@ ProgressController.prototype = {
       if (aStateFlags & Ci.nsIWebProgressListener.STATE_STOP) {
         aWebProgress.DOMWindow.focus();
 
-        // update the tab canvas image
+        // update the viewport
         this._tabbrowser.updateCanvasState();
 
-        // update the viewport
+        // update the tab canvas image
         this._tabbrowser.updateBrowser(this._browser, true);
 
         // linkify phone numbers
