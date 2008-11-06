@@ -124,6 +124,8 @@ _cairo_surface_fallback_clone_similar (cairo_surface_t  *surface,
 				       int               src_y,
 				       int               width,
 				       int               height,
+				       int              *clone_offset_x,
+				       int              *clone_offset_y,
 				       cairo_surface_t **clone_out);
 
 #endif

@@ -527,16 +527,14 @@ _clip_and_composite_trapezoids (cairo_pattern_t *src,
     cairo_rectangle_int_t extents;
     cairo_composite_traps_info_t traps_info;
 
-    if (traps->num_traps == 0)
+    if (_cairo_operator_bounded_by_mask (op) && traps->num_traps == 0)
         return CAIRO_STATUS_SUCCESS;
 
     status = _cairo_surface_get_extents (dst, &extents);
-
     if (status)
         return status;
 
     status = _cairo_traps_extract_region (traps, &trap_region);
-
     if (CAIRO_INT_STATUS_UNSUPPORTED == status) {
         has_trap_region = FALSE;
     } else if (status) {
@@ -697,14 +695,9 @@ _cairo_surface_fallback_paint (cairo_surface_t	*surface,
     if (status)
 	return status;
 
-    box.p1.x = _cairo_fixed_from_int (extents.x);
-    box.p1.y = _cairo_fixed_from_int (extents.y);
-    box.p2.x = _cairo_fixed_from_int (extents.x + extents.width);
-    box.p2.y = _cairo_fixed_from_int (extents.y + extents.height);
+    _cairo_box_from_rectangle (&box, &extents);
 
-    status = _cairo_traps_init_box (&traps, &box);
-    if (status)
-	return status;
+    _cairo_traps_init_box (&traps, &box);
 
     status = _clip_and_composite_trapezoids (source,
 				             op,
@@ -821,13 +814,12 @@ _cairo_surface_fallback_stroke (cairo_surface_t		*surface,
     if (status)
         return status;
 
-    box.p1.x = _cairo_fixed_from_int (extents.x);
-    box.p1.y = _cairo_fixed_from_int (extents.y);
-    box.p2.x = _cairo_fixed_from_int (extents.x + extents.width);
-    box.p2.y = _cairo_fixed_from_int (extents.y + extents.height);
+    if (extents.width == 0 || extents.height == 0)
+	return CAIRO_STATUS_SUCCESS;
+
+    _cairo_box_from_rectangle (&box, &extents);
 
     _cairo_traps_init (&traps);
-
     _cairo_traps_limit (&traps, &box);
 
     status = _cairo_path_fixed_stroke_to_traps (path,
@@ -835,10 +827,8 @@ _cairo_surface_fallback_stroke (cairo_surface_t		*surface,
 						ctm, ctm_inverse,
 						tolerance,
 						&traps);
-    if (status) {
-	_cairo_traps_fini (&traps);
-	return status;
-    }
+    if (status)
+	goto FAIL;
 
     status = _clip_and_composite_trapezoids (source,
 				             op,
@@ -847,6 +837,7 @@ _cairo_surface_fallback_stroke (cairo_surface_t		*surface,
 					     surface->clip,
 					     antialias);
 
+FAIL:
     _cairo_traps_fini (&traps);
 
     return status;
@@ -883,13 +874,12 @@ _cairo_surface_fallback_fill (cairo_surface_t		*surface,
     if (status)
         return status;
 
-    box.p1.x = _cairo_fixed_from_int (extents.x);
-    box.p1.y = _cairo_fixed_from_int (extents.y);
-    box.p2.x = _cairo_fixed_from_int (extents.x + extents.width);
-    box.p2.y = _cairo_fixed_from_int (extents.y + extents.height);
+    if (extents.width == 0 || extents.height == 0)
+	return CAIRO_STATUS_SUCCESS;
+
+    _cairo_box_from_rectangle (&box, &extents);
 
     _cairo_traps_init (&traps);
-
     _cairo_traps_limit (&traps, &box);
 
     status = _cairo_path_fixed_fill_to_traps (path,
@@ -998,6 +988,7 @@ _cairo_surface_fallback_show_glyphs (cairo_surface_t		*surface,
 
     if (_cairo_operator_bounded_by_mask (op)) {
         cairo_rectangle_int_t glyph_extents;
+
 	status = _cairo_scaled_font_glyph_device_extents (scaled_font,
 							  glyphs,
 							  num_glyphs,
@@ -1259,6 +1250,8 @@ _cairo_surface_fallback_clone_similar (cairo_surface_t	*surface,
 				       int		 src_y,
 				       int		 width,
 				       int		 height,
+				       int		*clone_offset_x,
+				       int		*clone_offset_y,
 				       cairo_surface_t **clone_out)
 {
     cairo_status_t status;
@@ -1288,9 +1281,11 @@ _cairo_surface_fallback_clone_similar (cairo_surface_t	*surface,
     status = cairo_status (cr);
     cairo_destroy (cr);
 
-    if (status == CAIRO_STATUS_SUCCESS)
+    if (status == CAIRO_STATUS_SUCCESS) {
+	*clone_offset_x = src_x;
+	*clone_offset_y = src_y;
 	*clone_out = new_surface;
-    else
+    } else
 	cairo_surface_destroy (new_surface);
 
     return status;

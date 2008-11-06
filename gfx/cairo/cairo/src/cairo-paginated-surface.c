@@ -108,6 +108,7 @@ _cairo_paginated_surface_create (cairo_surface_t				*target,
     return &surface->base;
 
   FAIL_CLEANUP_SURFACE:
+    cairo_surface_destroy (target);
     free (surface);
   FAIL:
     return _cairo_surface_create_in_error (status);
@@ -299,8 +300,10 @@ _paint_page (cairo_paginated_surface_t *surface)
     if (analysis->status)
 	return _cairo_surface_set_error (surface->target, analysis->status);
 
-    surface->backend->set_paginated_mode (surface->target, CAIRO_PAGINATED_MODE_ANALYZE);
-    status = _cairo_meta_surface_replay_and_create_regions (surface->meta, analysis);
+    surface->backend->set_paginated_mode (surface->target,
+	                                  CAIRO_PAGINATED_MODE_ANALYZE);
+    status = _cairo_meta_surface_replay_and_create_regions (surface->meta,
+	                                                    analysis);
     if (status || analysis->status) {
 	if (status == CAIRO_STATUS_SUCCESS)
 	    status = analysis->status;
@@ -325,43 +328,31 @@ _paint_page (cairo_paginated_surface_t *surface)
 	    goto FAIL;
     }
 
-    surface->backend->set_paginated_mode (surface->target, CAIRO_PAGINATED_MODE_RENDER);
-
     /* Finer grained fallbacks are currently only supported for some
      * surface types */
-    switch (surface->target->type) {
-        case CAIRO_SURFACE_TYPE_PDF:
-        case CAIRO_SURFACE_TYPE_PS:
-        case CAIRO_SURFACE_TYPE_WIN32_PRINTING:
-            has_supported = _cairo_analysis_surface_has_supported (analysis);
-            has_page_fallback = FALSE;
-            has_finegrained_fallback = _cairo_analysis_surface_has_unsupported (analysis);
-            break;
-
-	case CAIRO_SURFACE_TYPE_IMAGE:
-	case CAIRO_SURFACE_TYPE_XLIB:
-	case CAIRO_SURFACE_TYPE_XCB:
-	case CAIRO_SURFACE_TYPE_GLITZ:
-	case CAIRO_SURFACE_TYPE_QUARTZ:
-	case CAIRO_SURFACE_TYPE_QUARTZ_IMAGE:
-	case CAIRO_SURFACE_TYPE_WIN32:
-	case CAIRO_SURFACE_TYPE_BEOS:
-	case CAIRO_SURFACE_TYPE_DIRECTFB:
-	case CAIRO_SURFACE_TYPE_SVG:
-	case CAIRO_SURFACE_TYPE_OS2:
-        default:
-            if (_cairo_analysis_surface_has_unsupported (analysis)) {
-                has_supported = FALSE;
-                has_page_fallback = TRUE;
-            } else {
-                has_supported = TRUE;
-                has_page_fallback = FALSE;
-            }
-            has_finegrained_fallback = FALSE;
-            break;
+    if (surface->backend->supports_fine_grained_fallbacks != NULL &&
+	surface->backend->supports_fine_grained_fallbacks (surface->target))
+    {
+	has_supported = _cairo_analysis_surface_has_supported (analysis);
+	has_page_fallback = FALSE;
+	has_finegrained_fallback = _cairo_analysis_surface_has_unsupported (analysis);
+    }
+    else
+    {
+	if (_cairo_analysis_surface_has_unsupported (analysis)) {
+	    has_supported = FALSE;
+	    has_page_fallback = TRUE;
+	} else {
+	    has_supported = TRUE;
+	    has_page_fallback = FALSE;
+	}
+	has_finegrained_fallback = FALSE;
     }
 
     if (has_supported) {
+	surface->backend->set_paginated_mode (surface->target,
+		                              CAIRO_PAGINATED_MODE_RENDER);
+
 	status = _cairo_meta_surface_replay_region (surface->meta,
 						    surface->target,
 						    CAIRO_META_REGION_NATIVE);
@@ -370,9 +361,11 @@ _paint_page (cairo_paginated_surface_t *surface)
 	    goto FAIL;
     }
 
-    if (has_page_fallback)
-    {
+    if (has_page_fallback) {
 	cairo_box_int_t box;
+
+	surface->backend->set_paginated_mode (surface->target,
+		                              CAIRO_PAGINATED_MODE_FALLBACK);
 
 	box.p1.x = 0;
 	box.p1.y = 0;
@@ -383,13 +376,13 @@ _paint_page (cairo_paginated_surface_t *surface)
 	    goto FAIL;
     }
 
-    if (has_finegrained_fallback)
-    {
+    if (has_finegrained_fallback) {
         cairo_region_t *region;
         cairo_box_int_t *boxes;
         int num_boxes, i;
 
-	surface->backend->set_paginated_mode (surface->target, CAIRO_PAGINATED_MODE_FALLBACK);
+	surface->backend->set_paginated_mode (surface->target,
+		                              CAIRO_PAGINATED_MODE_FALLBACK);
 
     /* Reset clip region before drawing the fall back images */
 	status = _cairo_surface_intersect_clip_path (surface->target,
@@ -622,7 +615,7 @@ _cairo_paginated_surface_show_text_glyphs (void			    *abstract_surface,
 					  int			     num_glyphs,
 					  const cairo_text_cluster_t *clusters,
 					  int			     num_clusters,
-					  cairo_bool_t		     backward,
+					  cairo_text_cluster_flags_t cluster_flags,
 					  cairo_scaled_font_t	    *scaled_font)
 {
     cairo_paginated_surface_t *surface = abstract_surface;
@@ -644,14 +637,12 @@ _cairo_paginated_surface_show_text_glyphs (void			    *abstract_surface,
      * show_glyphs functions, (which would get less testing and likely
      * lead to bugs).
      */
-    CAIRO_MUTEX_UNLOCK (scaled_font->mutex);
     status = _cairo_surface_show_text_glyphs (surface->meta, op, source,
 					      utf8, utf8_len,
 					      glyphs, num_glyphs,
 					      clusters, num_clusters,
-					      backward,
+					      cluster_flags,
 					      scaled_font);
-    CAIRO_MUTEX_LOCK (scaled_font->mutex);
 
     return status;
 }

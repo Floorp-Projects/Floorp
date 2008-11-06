@@ -216,32 +216,6 @@ _cairo_meta_surface_release_source_image (void			*abstract_surface,
     cairo_surface_destroy (&image->base);
 }
 
-static cairo_status_t
-_init_pattern_with_snapshot (cairo_pattern_t       *pattern,
-			     const cairo_pattern_t *other)
-{
-    cairo_status_t status;
-
-    status = _cairo_pattern_init_copy (pattern, other);
-    if (status)
-	return status;
-
-    if (pattern->type == CAIRO_PATTERN_TYPE_SURFACE) {
-	cairo_surface_pattern_t *surface_pattern =
-	    (cairo_surface_pattern_t *) pattern;
-	cairo_surface_t *surface = surface_pattern->surface;
-
-	surface_pattern->surface = _cairo_surface_snapshot (surface);
-
-	cairo_surface_destroy (surface);
-
-	if (surface_pattern->surface->status)
-	    return surface_pattern->surface->status;
-    }
-
-    return CAIRO_STATUS_SUCCESS;
-}
-
 static cairo_int_status_t
 _cairo_meta_surface_paint (void			*abstract_surface,
 			   cairo_operator_t	 op,
@@ -259,7 +233,7 @@ _cairo_meta_surface_paint (void			*abstract_surface,
     command->header.region = CAIRO_META_REGION_ALL;
     command->op = op;
 
-    status = _init_pattern_with_snapshot (&command->source.base, source);
+    status = _cairo_pattern_init_snapshot (&command->source.base, source);
     if (status)
 	goto CLEANUP_COMMAND;
 
@@ -300,11 +274,11 @@ _cairo_meta_surface_mask (void			*abstract_surface,
     command->header.region = CAIRO_META_REGION_ALL;
     command->op = op;
 
-    status = _init_pattern_with_snapshot (&command->source.base, source);
+    status = _cairo_pattern_init_snapshot (&command->source.base, source);
     if (status)
 	goto CLEANUP_COMMAND;
 
-    status = _init_pattern_with_snapshot (&command->mask.base, mask);
+    status = _cairo_pattern_init_snapshot (&command->mask.base, mask);
     if (status)
 	goto CLEANUP_SOURCE;
 
@@ -346,7 +320,7 @@ _cairo_meta_surface_stroke (void			*abstract_surface,
     command->header.region = CAIRO_META_REGION_ALL;
     command->op = op;
 
-    status = _init_pattern_with_snapshot (&command->source.base, source);
+    status = _cairo_pattern_init_snapshot (&command->source.base, source);
     if (status)
 	goto CLEANUP_COMMAND;
 
@@ -401,7 +375,7 @@ _cairo_meta_surface_fill (void			*abstract_surface,
     command->header.region = CAIRO_META_REGION_ALL;
     command->op = op;
 
-    status = _init_pattern_with_snapshot (&command->source.base, source);
+    status = _cairo_pattern_init_snapshot (&command->source.base, source);
     if (status)
 	goto CLEANUP_COMMAND;
 
@@ -444,7 +418,7 @@ _cairo_meta_surface_show_text_glyphs (void			    *abstract_surface,
 				      int			     num_glyphs,
 				      const cairo_text_cluster_t    *clusters,
 				      int			     num_clusters,
-				      cairo_bool_t		     backward,
+				      cairo_text_cluster_flags_t     cluster_flags,
 				      cairo_scaled_font_t	    *scaled_font)
 {
     cairo_status_t status;
@@ -459,7 +433,7 @@ _cairo_meta_surface_show_text_glyphs (void			    *abstract_surface,
     command->header.region = CAIRO_META_REGION_ALL;
     command->op = op;
 
-    status = _init_pattern_with_snapshot (&command->source.base, source);
+    status = _cairo_pattern_init_snapshot (&command->source.base, source);
     if (status)
 	goto CLEANUP_COMMAND;
 
@@ -495,7 +469,7 @@ _cairo_meta_surface_show_text_glyphs (void			    *abstract_surface,
 	memcpy (command->clusters, clusters, sizeof (clusters[0]) * num_clusters);
     }
 
-    command->backward = backward;
+    command->cluster_flags = cluster_flags;
 
     command->scaled_font = cairo_scaled_font_reference (scaled_font);
 
@@ -848,7 +822,7 @@ _cairo_meta_surface_replay_internal (cairo_surface_t	     *surface,
 	    if (has_device_transform) {
 		cairo_matrix_multiply (&dev_ctm, &dev_ctm, device_transform);
 		cairo_matrix_multiply (&dev_ctm_inverse,
-				       &surface->device_transform_inverse,
+				       &target->device_transform_inverse,
 				       &dev_ctm_inverse);
 	    }
 
@@ -952,7 +926,7 @@ _cairo_meta_surface_replay_internal (cairo_surface_t	     *surface,
 							 command->show_text_glyphs.utf8, command->show_text_glyphs.utf8_len,
 							 dev_glyphs, num_glyphs,
 							 command->show_text_glyphs.clusters, command->show_text_glyphs.num_clusters,
-							 command->show_text_glyphs.backward,
+							 command->show_text_glyphs.cluster_flags,
 							 command->show_text_glyphs.scaled_font);
 
 	    free (dev_glyphs);

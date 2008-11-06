@@ -7,8 +7,8 @@ http://www.cairographics.org/.
 
 VERSIONS:
 
-  cairo (1.7.4-136-g5ea2555)
-  pixman (pixman-0.11.10-8-g7180230)
+  cairo (1.8.2)
+  pixman (pixman-0.12.0-19-g95f2af9)
 
 ***** NOTE FOR VISUAL C++ 6.0 *****
 
@@ -27,6 +27,8 @@ nonfatal-assertions.patch: Make assertions non-fatal
 buggy-repeat.patch: Unconditionally turn on buggy-repeat handling to bandaid bug 413583.
 
 tmpfile_wince.patch: Make Windows CE use tmpfile() on windows mobile due to the lack of _open_osfhandle and no fs permissions.
+
+cairo-version-fixes.patch: fix up cairo-version.c/cairo-version.h for in-place builds
 
 ==== pixman patches ====
 

@@ -1220,6 +1220,12 @@ _cairo_truetype_reverse_cmap (cairo_scaled_font_t *scaled_font,
 	goto fail;
 
     num_segments = be16_to_cpu (map->segCountX2)/2;
+
+    /* A Format 4 cmap contains 8 uint16_t numbers and 4 arrays of
+     * uint16_t each num_segments long. */
+    if (size < (8 + 4*num_segments)*sizeof(uint16_t))
+	return CAIRO_INT_STATUS_UNSUPPORTED;
+
     end_code = map->endCount;
     start_code = &(end_code[num_segments + 1]);
     delta = &(start_code[num_segments]);
@@ -1246,13 +1252,17 @@ _cairo_truetype_reverse_cmap (cairo_scaled_font_t *scaled_font,
 	    uint16_t g_id_be = cpu_to_be16 (index);
 	    int j;
 
-	    if (range_size > 0)
+	    if (range_size > 0) {
+		if ((char*)glyph_ids + 2*range_size > (char*)map + size)
+		    return CAIRO_INT_STATUS_UNSUPPORTED;
+
 		for (j = 0; j < range_size; j++) {
 		    if (glyph_ids[j] == g_id_be) {
 			*ucs4 = be16_to_cpu (start_code[i]) + j;
 			goto found;
 		    }
 		}
+	    }
 	}
     }
 

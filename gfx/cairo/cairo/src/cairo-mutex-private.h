@@ -41,10 +41,6 @@
 #ifndef CAIRO_MUTEX_PRIVATE_H
 #define CAIRO_MUTEX_PRIVATE_H
 
-#if HAVE_CONFIG_H
-#include "config.h"
-#endif
-
 #include "cairo-mutex-type-private.h"
 
 CAIRO_BEGIN_DECLS
@@ -62,7 +58,7 @@ cairo_private void _cairo_mutex_finalize (void);
 
 /* Finally, extern the static mutexes and undef */
 
-#define CAIRO_MUTEX_DECLARE(mutex) cairo_private extern cairo_mutex_t mutex
+#define CAIRO_MUTEX_DECLARE(mutex) cairo_private extern cairo_mutex_t mutex;
 #include "cairo-mutex-list-private.h"
 #undef CAIRO_MUTEX_DECLARE
 
