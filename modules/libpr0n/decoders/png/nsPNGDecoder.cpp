@@ -326,6 +326,19 @@ static NS_METHOD ReadDataOut(nsIInputStream* in,
     return NS_ERROR_FAILURE;
   }
 
+  // we force to add even erroneous data to restore halfway frame information
+  // later - bug 441563
+  nsresult result = decoder->mImage->AddRestoreData(const_cast<char *>(fromRawSegment), count);
+  if (NS_FAILED (result)) {
+    PR_LOG(gPNGDecoderAccountingLog, PR_LOG_DEBUG,
+           ("PNGDecoderAccounting: ReadDataOut(): failed to add restore data to image container %p",
+            decoder->mImage.get()));
+
+    decoder->mError = PR_TRUE;
+    *writeCount = 0;
+    return result;
+  }
+
   // we need to do the setjmp here otherwise bad things will happen
   if (setjmp(decoder->mPNG->jmpbuf)) {
     png_destroy_read_struct(&decoder->mPNG, &decoder->mInfo, NULL);
@@ -336,17 +349,6 @@ static NS_METHOD ReadDataOut(nsIInputStream* in,
   }
   png_process_data(decoder->mPNG, decoder->mInfo,
                    reinterpret_cast<unsigned char *>(const_cast<char *>(fromRawSegment)), count);
-
-  nsresult result = decoder->mImage->AddRestoreData((char *) fromRawSegment, count);
-  if (NS_FAILED (result)) {
-    PR_LOG(gPNGDecoderAccountingLog, PR_LOG_DEBUG,
-           ("PNGDecoderAccounting: ReadDataOut(): failed to add restore data to image container %p",
-            decoder->mImage.get()));
-
-    decoder->mError = PR_TRUE;
-    *writeCount = 0;
-    return result;
-  }
 
   PR_LOG(gPNGDecoderAccountingLog, PR_LOG_DEBUG,
          ("PNGDecoderAccounting: ReadDataOut(): Added restore data to image container %p",

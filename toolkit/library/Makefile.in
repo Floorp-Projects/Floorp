@@ -206,7 +206,7 @@ EXTRA_DSO_LDOPTS += \
 	$(TK_LIBS) \
 	$(NULL)
 
-ifdef MOZ_OGG
+ifdef MOZ_SYDNEYAUDIO
 EXTRA_DSO_LDOPTS += \
 	-framework CoreAudio \
  	-framework AudioToolbox \
