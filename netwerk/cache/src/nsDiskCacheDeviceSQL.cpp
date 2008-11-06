@@ -1881,7 +1881,7 @@ nsOfflineCacheDevice::AddNamespace(const nsCString &clientID,
   rv = ns->GetItemType(&itemType);
   NS_ENSURE_SUCCESS(rv, rv);
 
-  LOG(("nsOfflineCacheDevice::AddNamespace [cid=%s, ns=%s, type=%d]",
+  LOG(("nsOfflineCacheDevice::AddNamespace [cid=%s, ns=%s, data=%s, type=%d]",
        PromiseFlatCString(clientID).get(),
        namespaceSpec.get(), data.get(), itemType));
 

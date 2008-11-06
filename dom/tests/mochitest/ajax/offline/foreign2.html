@@ -17,7 +17,7 @@ function manifestUpdated()
   var foreign2cache = appCacheService.chooseApplicationCache(
     "http://localhost:8888/tests/dom/tests/mochitest/ajax/offline/foreign2.html");
 
-  OfflineTest.ok(foreign2cache, "Foreign 2 cache present, choosed for foreign2.html");
+  OfflineTest.ok(foreign2cache, "Foreign 2 cache present, chosen for foreign2.html");
   OfflineTest.is(foreign2cache.groupID, "http://localhost:8888/tests/dom/tests/mochitest/ajax/offline/foreign2.cacheManifest")
 
   var foreign1cache = appCacheService.getActiveCache(
@@ -44,7 +44,7 @@ function onLoaded()
 
   foreign1cache = appCacheService.chooseApplicationCache(
     "http://localhost:8888/tests/dom/tests/mochitest/ajax/offline/foreign2.html");
-  OfflineTest.ok(!foreign1cache, "foreign2.html not choosed from foreign1 cache");
+  OfflineTest.ok(!foreign1cache, "foreign2.html not chosen from foreign1 cache");
 
   try
   {
