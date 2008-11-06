@@ -902,6 +902,15 @@ NS_DEFINE_STATIC_IID_ACCESSOR(nsIContent, NS_ICONTENT_IID)
     nsContentUtils::TraverseListenerManager(tmp, cb);     \
   }
 
+#define NS_IMPL_CYCLE_COLLECTION_TRAVERSE_PRESERVED_WRAPPER      \
+  {                                                              \
+    nsISupports *preservedWrapper = nsnull;                      \
+    if (tmp->GetOwnerDoc())                                      \
+      preservedWrapper = tmp->GetOwnerDoc()->GetReference(tmp);  \
+    NS_CYCLE_COLLECTION_NOTE_EDGE_NAME(cb, "[preserved wrapper]");\
+    cb.NoteXPCOMChild(preservedWrapper);                         \
+  }
+
 #define NS_IMPL_CYCLE_COLLECTION_TRAVERSE_USERDATA \
   if (tmp->HasProperties()) {                      \
     nsNodeUtils::TraverseUserData(tmp, cb);        \
@@ -912,6 +921,10 @@ NS_DEFINE_STATIC_IID_ACCESSOR(nsIContent, NS_ICONTENT_IID)
     nsContentUtils::RemoveListenerManager(tmp);         \
     tmp->UnsetFlags(NODE_HAS_LISTENERMANAGER);          \
   }
+
+#define NS_IMPL_CYCLE_COLLECTION_UNLINK_PRESERVED_WRAPPER \
+  if (tmp->GetOwnerDoc())                                 \
+    tmp->GetOwnerDoc()->RemoveReference(tmp);
 
 #define NS_IMPL_CYCLE_COLLECTION_UNLINK_USERDATA \
   if (tmp->HasProperties()) {                    \

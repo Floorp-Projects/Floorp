@@ -48,7 +48,6 @@
 #include "nsIAtom.h"
 #include "XPCWrapper.h"
 #include "nsJSPrincipals.h"
-#include "nsWrapperCache.h"
 
 //#define STRICT_CHECK_OF_UNICODE
 #ifdef STRICT_CHECK_OF_UNICODE
@@ -1092,28 +1091,15 @@ XPCConvert::NativeInterface2JSObject(XPCCallContext& ccx,
         if(!iface)
             return JS_FALSE;
 
-        nsresult rv;
         XPCWrappedNative* wrapper;
-        nsWrapperCache* cache = nsnull;
-        CallQueryInterface(src, &cache);
-        if(cache &&
-           (wrapper = static_cast<XPCWrappedNative*>(cache->GetWrapper())))
-        {
-            NS_ADDREF(wrapper);
-            wrapper->FindTearOff(ccx, iface, JS_FALSE, &rv);
-        }
-        else
-        {
-            rv = XPCWrappedNative::GetNewOrUsed(ccx, src, xpcscope, iface,
-                                                isGlobal, &wrapper);
-        }
-
+        nsresult rv = XPCWrappedNative::GetNewOrUsed(ccx, src, xpcscope,
+                                                     iface, isGlobal,
+                                                     &wrapper);
         if(pErr)
             *pErr = rv;
         if(NS_SUCCEEDED(rv) && wrapper)
         {
             uint32 flags = 0;
-            JSObject *flat = wrapper->GetFlatJSObject();
             if (allowNativeWrapper && wrapper->GetScope() != xpcscope)
             {
                 // Cross scope access detected. Check if chrome code
@@ -1171,6 +1157,7 @@ XPCConvert::NativeInterface2JSObject(XPCCallContext& ccx,
 
                 flags = script ? JS_GetScriptFilenameFlags(script) : 0;
                 NS_ASSERTION(flags != JSFILENAME_NULL, "null script filename");
+                JSObject *flat = wrapper->GetFlatJSObject();
 
                 if(!JS_IsSystemObject(ccx, flat))
                 {
@@ -1278,6 +1265,7 @@ XPCConvert::NativeInterface2JSObject(XPCCallContext& ccx,
                 }
             }
 
+            JSObject *flat = wrapper->GetFlatJSObject();
             const char *name = STOBJ_GET_CLASS(flat)->name;
             if(allowNativeWrapper &&
                !(flags & JSFILENAME_SYSTEM) &&
