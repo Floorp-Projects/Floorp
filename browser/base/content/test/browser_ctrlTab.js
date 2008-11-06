@@ -91,12 +91,20 @@ function test() {
     ok(isOpen(),
        "panel is sticky after focusing the search field and releasing the Ctrl key");
 
+    ctrlTab.searchField.value = "foo";
+    EventUtils.synthesizeKey("VK_ESCAPE", {});
+    is(ctrlTab.searchField.value, "",
+       "ESC key clears the search field");
+    ok(isOpen(),
+       "Clearing the search field with ESC keeps the panel open");
+
     // blur the search field
     EventUtils.synthesizeKey("VK_TAB", {});
     isnot(document.activeElement, ctrlTab.searchField.inputField,
           "Tab key blurs the panel's search field");
 
     // advance selection and close panel
+    EventUtils.synthesizeKey("VK_TAB", {});
     EventUtils.synthesizeKey("VK_TAB", {});
     EventUtils.synthesizeKey("VK_RETURN", {});
     ok(!isOpen(),

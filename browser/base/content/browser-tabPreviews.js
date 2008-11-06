@@ -434,7 +434,9 @@ var ctrlTab = {
   onKeyPress: function ctrlTab__onKeyPress(event) {
     var isOpen = this.isOpen;
 
-    if (isOpen && event.target == this.searchField)
+    if (isOpen &&
+        event.target == this.searchField &&
+        event.keyCode != event.DOM_VK_ESCAPE)
       return;
 
     if (isOpen) {
@@ -615,8 +617,7 @@ var ctrlTab = {
       case "keydown":
       case "keyup":
         if (event.target == this.searchField) {
-          if (event.keyCode == event.DOM_VK_RETURN ||
-              event.keyCode == event.DOM_VK_ESCAPE)
+          if (event.keyCode == event.DOM_VK_RETURN)
             this.panel.focus();
         } else {
           // Manually consume the events, as the panel is open but doesn't
