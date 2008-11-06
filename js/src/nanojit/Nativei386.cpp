@@ -46,6 +46,7 @@
 #if defined AVMPLUS_UNIX || defined AVMPLUS_MAC
 #include <sys/mman.h>
 #include <errno.h>
+#include <stdlib.h>
 #endif
 #include "nanojit.h"
 
