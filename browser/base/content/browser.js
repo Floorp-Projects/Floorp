@@ -6852,6 +6852,9 @@ let gPrivateBrowsingUI = {
   },
 
   onExitPrivateBrowsing: function PBUI_onExitPrivateBrowsing() {
+    if (BrowserSearch.searchBar)
+      BrowserSearch.searchBar.textbox.reset();
+
     let pbMenuItem = document.getElementById("privateBrowsingItem");
     if (pbMenuItem)
       pbMenuItem.removeAttribute("checked");
