@@ -631,16 +631,19 @@ var ctrlTab = {
           this.selectThumbnail();
         break;
       case "popupshown":
-        if (this.sticky)
+        if (this.sticky && event.target == this.panel)
           this.searchField.focus();
         break;
       case "popuphiding":
-        this.onPopupHiding();
+        if (event.target == this.panel)
+          this.onPopupHiding();
         break;
       case "popuphidden":
-        // Destroy the widget in order to prevent outdated content
-        // when re-opening the panel.
-        this.panel.hidden = true;
+        if (event.target == this.panel) {
+          // Destroy the widget in order to prevent outdated content
+          // when re-opening the panel.
+          this.panel.hidden = true;
+        }
         break;
     }
   }
