@@ -140,6 +140,7 @@ NS_CP_ContentTypeName(PRUint32 contentType)
     CASE_RETURN( TYPE_XMLHTTPREQUEST    );
     CASE_RETURN( TYPE_OBJECT_SUBREQUEST );
     CASE_RETURN( TYPE_DTD               );
+    CASE_RETURN( TYPE_FONT              );
    default:
     return "<Unknown Type>";
   }
