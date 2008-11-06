@@ -98,6 +98,10 @@ window[chromehidden~="toolbar"] toolbar:not(.toolbar-primary):not(.chromeclass-m
 }
 
 /* Tab Previews */
+#ctrlTab-panel {
+  -moz-user-focus: normal;
+}
+
 .ctrlTab-thumbnail {
   -moz-binding: url("chrome://browser/content/browser-tabPreviews.xml#ctrlTab-thumbnail");
 }
