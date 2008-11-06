@@ -77,17 +77,6 @@ gfxFontconfigUtils::GetThebesStyle(FcPattern *aPattern)
     return FONT_STYLE_NORMAL;
 }
 
-/* static */ int
-gfxFontconfigUtils::GetFcSlant(const gfxFontStyle& aFontStyle)
-{
-    if (aFontStyle.style == FONT_STYLE_ITALIC)
-        return FC_SLANT_ITALIC;
-    if (aFontStyle.style == FONT_STYLE_OBLIQUE)
-        return FC_SLANT_OBLIQUE;
-
-    return FC_SLANT_ROMAN;
-}
-
 // OS/2 weight classes were introduced in fontconfig-2.1.93 (2003).
 #ifndef FC_WEIGHT_THIN 
 #define FC_WEIGHT_THIN              0 // 2.1.93
@@ -98,10 +87,6 @@ gfxFontconfigUtils::GetFcSlant(const gfxFontStyle& aFontStyle)
 // book was introduced in fontconfig-2.2.90 (and so fontconfig-2.3.0 in 2005)
 #ifndef FC_WEIGHT_BOOK
 #define FC_WEIGHT_BOOK              75
-#endif
-// extra black was introduced in fontconfig-2.4.91 (2007)
-#ifndef FC_WEIGHT_EXTRABLACK
-#define FC_WEIGHT_EXTRABLACK        215
 #endif
 
 /* static */ PRUint16
@@ -131,134 +116,14 @@ gfxFontconfigUtils::GetThebesWeight(FcPattern *aPattern)
     if (weight <= FC_WEIGHT_BLACK)
         return 900;
 
-    // including FC_WEIGHT_EXTRABLACK
+    // FC_WEIGHT_EXTRABLACK was introduced in fontconfig-2.4.91 (2007)
     return 901;
-}
-
-/* static */ int
-gfxFontconfigUtils::FcWeightForBaseWeight(PRInt8 aBaseWeight)
-{
-    switch (aBaseWeight) {
-        case 2:
-            return FC_WEIGHT_EXTRALIGHT;
-        case 3:
-            return FC_WEIGHT_LIGHT;
-        case 4:
-            return FC_WEIGHT_REGULAR;
-        case 5:
-            return FC_WEIGHT_MEDIUM;
-        case 6:
-            return FC_WEIGHT_DEMIBOLD;
-        case 7:
-            return FC_WEIGHT_BOLD;
-        case 8:
-            return FC_WEIGHT_EXTRABOLD;
-        case 9:
-            return FC_WEIGHT_BLACK;
-    }
-
-    // extremes
-    return aBaseWeight < 2 ? FC_WEIGHT_THIN : FC_WEIGHT_EXTRABLACK;
-}
-
-// This makes a guess at an FC_WEIGHT corresponding to a base weight and
-// offset (without any knowledge of which weights are available).
-
-/* static */ int
-GuessFcWeight(const gfxFontStyle& aFontStyle)
-{
-    /*
-     * weights come in two parts crammed into one
-     * integer -- the "base" weight is weight / 100,
-     * the rest of the value is the "offset" from that
-     * weight -- the number of steps to move to adjust
-     * the weight in the list of supported font weights,
-     * this value can be negative or positive.
-     */
-    PRInt8 weight;
-    PRInt8 offset;
-    aFontStyle.ComputeWeightAndOffset(&weight, &offset);
-
-    // ComputeWeightAndOffset trimmed the range of weights for us
-    NS_ASSERTION(weight >= 0 && weight <= 10,
-                 "base weight out of range");
-
-    // Most font families do not support every weight.  The tables here are
-    // chosen such that a normal (4) base weight and an offset of +1 will
-    // guess bold.
-
-    // Mapping from weight to a guess of the nearest available lighter weight
-    static const int lighterGuess[11] =
-        { 0, 0, 1, 1, 2, 3, 4, 4, 6, 7, 8 };
-    // Mapping from weight to a guess of the nearest available bolder weight
-    static const int bolderGuess[11] =
-        { 2, 3, 4, 6, 7, 7, 8, 9, 10, 10, 10 };
-
-    while (offset < 0) {
-        weight = lighterGuess[weight];
-        offset++;
-    }
-    while (offset > 0) {
-        weight = bolderGuess[weight];
-        offset--;
-    }
-
-    return gfxFontconfigUtils::FcWeightForBaseWeight(weight);
-}
-
-static void
-AddString(FcPattern *aPattern, const char *object, const char *aString)
-{
-    // Cast from signed chars used in nsString to unsigned in fontconfig
-    const FcChar8 *fcString = gfxFontconfigUtils::ToFcChar8(aString);
-    // and cast away the const for fontconfig, that will merely make a copy.
-    FcPatternAddString(aPattern, object, const_cast<FcChar8*>(fcString));
-}
-
-static void
-AddLangGroup(FcPattern *aPattern, const nsACString& aLangGroup)
-{
-    // Translate from mozilla's internal mapping into fontconfig's
-    nsCAutoString lang;
-    gfxFontconfigUtils::GetSampleLangForGroup(aLangGroup, &lang);
-
-    if (!lang.IsEmpty()) {
-        AddString(aPattern, FC_LANG, lang.get());
-    }
-}
-
-
-nsReturnRef<FcPattern>
-gfxFontconfigUtils::NewPattern(const nsStringArray& aFamilies,
-                               const gfxFontStyle& aFontStyle,
-                               const char *aLang)
-{
-    nsAutoRef<FcPattern> pattern(FcPatternCreate());
-    if (!pattern)
-        return nsReturnRef<FcPattern>();
-
-    FcPatternAddDouble(pattern, FC_PIXEL_SIZE, aFontStyle.size);
-    FcPatternAddInteger(pattern, FC_SLANT, GetFcSlant(aFontStyle));
-    FcPatternAddInteger(pattern, FC_WEIGHT, GuessFcWeight(aFontStyle));
-
-    if (aLang) {
-        AddString(pattern, FC_LANG, aLang);
-    }
-
-    for (PRInt32 i = 0; i < aFamilies.Count(); ++i) {
-        NS_ConvertUTF16toUTF8 family(*aFamilies[i]);
-        AddString(pattern, FC_FAMILY, family.get());
-    }
-
-    return pattern.out();
 }
 
 gfxFontconfigUtils::gfxFontconfigUtils()
     : mLastConfig(NULL)
 {
-    mFontsByFamily.Init(50);
-    mLangSupportTable.Init(20);
-    UpdateFontListInternal();
+    mAliasTable.Init(50);
 }
 
 nsresult
@@ -268,14 +133,21 @@ gfxFontconfigUtils::GetFontList(const nsACString& aLangGroup,
 {
     aListOfFonts.Clear();
 
-    nsCStringArray fonts;
-    nsresult rv = GetFontListInternal(fonts, aLangGroup);
+    nsresult rv = UpdateFontListInternal();
     if (NS_FAILED(rv))
         return rv;
 
-    for (PRInt32 i = 0; i < fonts.Count(); ++i) {
-        aListOfFonts.AppendString(NS_ConvertUTF8toUTF16(*fonts.CStringAt(i)));
+    nsCStringArray tmpFonts;
+    nsCStringArray *fonts = &mFonts;
+    if (!aLangGroup.IsEmpty() || !aGenericFamily.IsEmpty()) {
+        rv = GetFontListInternal(tmpFonts, &aLangGroup);
+        if (NS_FAILED(rv))
+            return rv;
+        fonts = &tmpFonts;
     }
+
+    for (PRInt32 i = 0; i < fonts->Count(); ++i)
+         aListOfFonts.AppendString(NS_ConvertUTF8toUTF16(*fonts->CStringAt(i)));
 
     aListOfFonts.Sort();
 
@@ -382,7 +254,7 @@ gfxFontconfigUtils::GetSampleLangForGroup(const nsACString& aLangGroup,
 
     const MozLangGroupData *langGroup = nsnull;
 
-    for (unsigned int i = 0; i < NS_ARRAY_LENGTH(MozLangGroups); ++i) {
+    for (unsigned int i=0; i < NS_ARRAY_LENGTH(MozLangGroups); ++i) {
         if (aLangGroup.Equals(MozLangGroups[i].mozLangGroup,
                               nsCaseInsensitiveCStringComparator())) {
             langGroup = &MozLangGroups[i];
@@ -437,9 +309,25 @@ gfxFontconfigUtils::GetSampleLangForGroup(const nsACString& aLangGroup,
     }
 }
 
+static void
+AddLangGroup(FcPattern *aPattern, const nsACString& aLangGroup)
+{
+    // Translate from mozilla's internal mapping into fontconfig's
+    nsCAutoString lang;
+    gfxFontconfigUtils::GetSampleLangForGroup(aLangGroup, &lang);
+
+    if (!lang.IsEmpty()) {
+        // cast from signed chars used in nsString to unsigned in fontconfig
+        const FcChar8 *fcString = reinterpret_cast<const FcChar8*>(lang.get());
+        // and cast away the const for fontconfig, that will merely make a copy.
+        FcPatternAddString(aPattern, FC_LANG, const_cast<FcChar8*>(fcString));
+    }
+}
+
+
 nsresult
 gfxFontconfigUtils::GetFontListInternal(nsCStringArray& aListOfFonts,
-                                        const nsACString& aLangGroup)
+                                        const nsACString *aLangGroup)
 {
     FcPattern *pat = NULL;
     FcObjectSet *os = NULL;
@@ -457,8 +345,8 @@ gfxFontconfigUtils::GetFontListInternal(nsCStringArray& aListOfFonts,
         goto end;
 
     // take the pattern and add the lang group to it
-    if (!aLangGroup.IsEmpty()) {
-        AddLangGroup(pat, aLangGroup);
+    if (aLangGroup && !aLangGroup->IsEmpty()) {
+        AddLangGroup(pat, *aLangGroup);
     }
 
     fs = FcFontList(NULL, pat, os);
@@ -525,38 +413,16 @@ gfxFontconfigUtils::UpdateFontListInternal(PRBool aForce)
     if (currentConfig == mLastConfig)
         return NS_OK;
 
-    // This FcFontSet is owned by fontconfig
-    FcFontSet *fontSet = FcConfigGetFonts(currentConfig, FcSetSystem);
-
-    mFontsByFamily.Clear();
-    mLangSupportTable.Clear();
+    mFonts.Clear();
+    mAliasForSingleFont.Clear();
     mAliasForMultiFonts.Clear();
+    mNonExistingFonts.Clear();
 
-    // Record the existing font families
-    for (int f = 0; f < fontSet->nfont; ++f) {
-        FcPattern *font = fontSet->fonts[f];
+    mAliasTable.Clear();
 
-        FcChar8 *family;
-        for (int v = 0;
-             FcPatternGetString(font, FC_FAMILY, v, &family) == FcResultMatch;
-             ++v) {
-            FontsByFcStrEntry *entry = mFontsByFamily.PutEntry(family);
-            if (entry) {
-                PRBool added = entry->AddFont(font);
-
-                if (!entry->mKey) {
-                    // The reference to the font pattern keeps the pointer to
-                    // string for the key valid.  If adding the font failed
-                    // then the entry must be removed.
-                    if (added) {
-                        entry->mKey = family;
-                    } else {
-                        mFontsByFamily.RawRemoveEntry(entry);
-                    }
-                }
-            }
-        }
-    }
+    nsresult rv = GetFontListInternal(mFonts);
+    if (NS_FAILED(rv))
+        return rv;
 
     // XXX we don't support all alias names.
     // Because if we don't check whether the given font name is alias name,
@@ -597,8 +463,70 @@ gfxFontconfigUtils::UpdateFontListInternal(PRBool aForce)
         }
     }
 
+    for (PRInt32 i = 0; i < mAliasForMultiFonts.Count(); i++) {
+        nsRefPtr<gfxFontNameList> fonts = new gfxFontNameList;
+        nsCAutoString fontname(*mAliasForMultiFonts.CStringAt(i));
+        rv = GetResolvedFonts(fontname, fonts);
+        if (NS_FAILED(rv))
+            return rv;
+
+        nsCAutoString key;
+        ToLowerCase(fontname, key);
+        mAliasTable.Put(key, fonts);
+    }
+
     mLastConfig = currentConfig;
     return NS_OK;
+}
+
+nsresult
+gfxFontconfigUtils::GetResolvedFonts(const nsACString& aName,
+                                     gfxFontNameList* aResult)
+{
+    FcPattern *pat = NULL;
+    FcFontSet *fs = NULL;
+    FcResult fresult;
+    aResult->Clear();
+    nsresult rv = NS_ERROR_FAILURE;
+
+    pat = FcPatternCreate();
+    if (!pat)
+        goto end;
+
+    FcDefaultSubstitute(pat);
+    FcPatternAddString(pat, FC_FAMILY,
+                       (FcChar8 *)nsPromiseFlatCString(aName).get());
+    // Delete the lang param. We need lang independent alias list.
+    FcPatternDel(pat, FC_LANG);
+    FcConfigSubstitute(NULL, pat, FcMatchPattern);
+
+    fs = FcFontSort(NULL, pat, FcTrue, NULL, &fresult);
+    if (!fs)
+        goto end;
+
+    rv = NS_OK;
+    for (int i = 0; i < fs->nfont; i++) {
+        char *family;
+
+        if (FcPatternGetString(fs->fonts[i], FC_FAMILY, 0,
+                               (FcChar8 **) &family) != FcResultMatch ||
+            mAliasForMultiFonts.IndexOfIgnoreCase(nsDependentCString(family)) >= 0 ||
+            IsExistingFont(nsDependentCString(family)) == 0)
+        {
+            continue;
+        }
+        NS_ConvertUTF8toUTF16 actualName(family);
+        if (aResult->Exists(actualName))
+            continue;
+        aResult->AppendElement(actualName);
+    }
+
+  end:
+    if (pat)
+        FcPatternDestroy(pat);
+    if (fs)
+        FcFontSetDestroy(fs);
+    return rv;
 }
 
 nsresult
@@ -620,8 +548,12 @@ gfxFontconfigUtils::GetStandardFamilyName(const nsAString& aFontName, nsAString&
 
     NS_ConvertUTF16toUTF8 fontname(aFontName);
 
-    // return empty string if no such family exists
-    if (!IsExistingFamily(fontname))
+    if (mFonts.IndexOf(fontname) >= 0) {
+        aFamilyName.Assign(aFontName);
+        return NS_OK;
+    }
+
+    if (mNonExistingFonts.IndexOf(fontname) >= 0)
         return NS_OK;
 
     FcPattern *pat = NULL;
@@ -723,203 +655,87 @@ gfxFontconfigUtils::ResolveFontName(const nsAString& aFontName,
         return rv;
 
     NS_ConvertUTF16toUTF8 fontname(aFontName);
-    // Sometimes, the font has two or more names (e.g., "Sazanami Gothic" has
-    // Japanese localized name).  We should not resolve to a single name
-    // because different names sometimes have different behavior. e.g., with
-    // the default settings of "Sazanami" on Fedora Core 5, the non-localized
-    // name uses anti-alias, but the localized name uses it.  So, we should
-    // check just whether the font is existing, without resolving to regular
-    // name.
-    //
-    // The family names in mAliasForMultiFonts are names understood by
-    // fontconfig.  The actual font to which they resolve depends on the
-    // entire match pattern.  That info is not available here, but there
-    // will be a font so leave the resolving to the gfxFontGroup.
-    if (IsExistingFamily(fontname) ||
-        mAliasForMultiFonts.IndexOfIgnoreCase(fontname))
-        aAborted = !(*aCallback)(aFontName, aClosure);
+    if (mAliasForMultiFonts.IndexOfIgnoreCase(fontname) >= 0) {
+        nsCAutoString key;
+        ToLowerCase(fontname, key);
+        nsRefPtr<gfxFontNameList> fonts;
+        if (!mAliasTable.Get(key, &fonts))
+            NS_ERROR("The mAliasTable was broken!");
+        for (PRUint32 i = 0; i < fonts->Length(); i++) {
+            aAborted = !(*aCallback)(fonts->ElementAt(i), aClosure);
+            if (aAborted)
+                break;
+        }
+    } else {
+        PRInt32 result = IsExistingFont(fontname);
+        if (result < 0)
+            return NS_ERROR_FAILURE;
+
+        if (result > 0)
+            aAborted = !(*aCallback)(aFontName, aClosure);
+    }
 
     return NS_OK;
 }
 
-PRBool
-gfxFontconfigUtils::IsExistingFamily(const nsCString& aFamilyName)
+PRInt32
+gfxFontconfigUtils::IsExistingFont(const nsACString &aFontName)
 {
-    return mFontsByFamily.GetEntry(ToFcChar8(aFamilyName.get())) != nsnull;
-}
+    // Very many sites may specify the font-family only for Windows and Mac.
+    // We should check negative cache at first.
+    if (mNonExistingFonts.IndexOf(aFontName) >= 0)
+        return 0;
+    if (mAliasForSingleFont.IndexOf(aFontName) >= 0)
+        return 1;
+    if (mFonts.IndexOf(aFontName) >= 0)
+        return 1;
 
-const nsTArray< nsCountedRef<FcPattern> >&
-gfxFontconfigUtils::GetFontsForFamily(const FcChar8 *aFamilyName)
-{
-    FontsByFcStrEntry *entry = mFontsByFamily.GetEntry(aFamilyName);
+    // XXX Sometimes, the font has two or more names (e.g., "Sazanami Gothic"
+    // has Japanese localized name). The another name doesn't including the
+    // cache. Therefore, we need to check the name.
+    // But we don't need to resolve the name. Because both names are not same
+    // behavior. E.g., the default settings of "Sazanami" on Fedora Core 5,
+    // the non-localized name uses Anti-alias, but the localized name uses it.
+    // So, we should check just whether the font is existing, don't resolve
+    // to regular name.
 
-    if (!entry)
-        return mEmptyPatternArray;
+    FcPattern *pat = NULL;
+    FcObjectSet *os = NULL;
+    FcFontSet *fs = NULL;
+    PRInt32 result = -1;
 
-    return entry->GetFonts();
-}
+    pat = FcPatternCreate();
+    if (!pat)
+        goto end;
 
-static FcLangResult
-CompareLangString(const FcChar8 *aLangA, const FcChar8 *aLangB) {
-    FcLangResult result = FcLangDifferentLang;
-    for (PRUint32 i = 0; ; ++i) {
-        FcChar8 a = FcToLower(aLangA[i]);
-        FcChar8 b = FcToLower(aLangB[i]);
+    FcPatternAddString(pat, FC_FAMILY,
+                       (FcChar8 *)nsPromiseFlatCString(aFontName).get());
 
-        if (a != b) {
-            if ((a == '\0' && b == '-') || (a == '-' && b == '\0'))
-                return FcLangDifferentCountry;
+    os = FcObjectSetBuild(FC_FAMILY, NULL);
+    if (!os)
+        goto end;
 
-            return result;
-        }
-        if (a == '\0')
-            return FcLangEqual;
+    fs = FcFontList(NULL, pat, os);
+    if (!fs)
+        goto end;
 
-        if (a == '-') {
-            result = FcLangDifferentCountry;
-        }
-    }
-}
-
-/* static */
-FcLangResult
-gfxFontconfigUtils::GetLangSupport(FcPattern *aFont, const FcChar8 *aLang)
-{
-    // When fontconfig builds a pattern for the font, it will set a single
-    // LangSet property value for the font.  That value may be removed and
-    // additional string values may be added through FcConfigSubsitute with
-    // FcMatchScan.  Values that are neither LangSet nor string are considered
-    // errors in fontconfig sort and match functions.
-    FcValue value;
-    FcLangResult best = FcLangDifferentLang;
-    int v = 0;
-    while (FcPatternGet(aFont, FC_LANG, v, &value) == FcResultMatch) {
-        ++v;
-
-        FcLangResult support;
-        switch (value.type) {
-            case FcTypeLangSet:
-                support = FcLangSetHasLang(value.u.l, aLang);
-                break;
-            case FcTypeString:
-                support = CompareLangString(value.u.s, aLang);
-                break;
-            default:
-                // error
-                return FcLangEqual;
-        }
-
-        if (support < best) { // lower is better
-            if (support == FcLangEqual)
-                return support;
-            best = support;
-        }        
-    }
-
-    // A missing FC_LANG property is considered a match in fontconfig sort
-    // and match functions.
-    if (v == 0)
-        return FcLangEqual;        
-
-    return best;
-}
-
-gfxFontconfigUtils::LangSupportEntry *
-gfxFontconfigUtils::GetLangSupportEntry(const FcChar8 *aLang, PRBool aWithFonts)
-{
-    // Currently any unrecognized languages from documents will be converted
-    // to x-unicode by nsILanguageAtomService, so there is a limit on the
-    // langugages that will be added here.  Reconsider when/if document
-    // languages are passed to this routine.
-
-    LangSupportEntry *entry = mLangSupportTable.PutEntry(aLang);
-    if (!entry)
-        return nsnull;
-
-    FcLangResult best = FcLangDifferentLang;
-
-    if (!entry->IsKeyInitialized()) {
-        entry->InitKey(aLang);
+    // There can be more than one matching set of family names: see bug 393819.
+    if (fs->nfont > 0) {
+        mAliasForSingleFont.AppendCString(aFontName);
+        result = 1;
     } else {
-        // mSupport is already initialized.
-        if (!aWithFonts)
-            return entry;
-
-        best = entry->mSupport;
-        // If there is support for this language, an empty font list indicates
-        // that the list hasn't been initialized yet.
-        if (best == FcLangDifferentLang || entry->mFonts.Length() > 0)
-            return entry;
+        mNonExistingFonts.AppendCString(aFontName);
+        result = 0;
     }
 
-    // This FcFontSet is owned by fontconfig
-    FcFontSet *fontSet = FcConfigGetFonts(NULL, FcSetSystem);
-
-    nsAutoTArray<FcPattern*,100> fonts;
-
-    for (int f = 0; f < fontSet->nfont; ++f) {
-        FcPattern *font = fontSet->fonts[f];
-
-        FcLangResult support = GetLangSupport(font, aLang);
-
-        if (support < best) { // lower is better
-            best = support;
-            if (aWithFonts) {
-                fonts.Clear();
-            } else if (best == FcLangEqual) {
-                break;
-            }
-        }
-
-        // The font list in the LangSupportEntry is expected to be used only
-        // when no default fonts support the language.  There would be a large
-        // number of fonts in entries for languages using Latin script but
-        // these do not need to be created because default fonts already
-        // support these languages.
-        if (aWithFonts && support != FcLangDifferentLang && support == best) {
-            fonts.AppendElement(font);
-        }
-    }
-
-    entry->mSupport = best;
-    if (aWithFonts) {
-        if (fonts.Length() != 0) {
-            entry->mFonts.AppendElements(fonts.Elements(), fonts.Length());
-        } else if (best != FcLangDifferentLang) {
-            // Previously there was a font that supported this language at the
-            // level of entry->mSupport, but it has now disappeared.  At least
-            // entry->mSupport needs to be recalculated, but this is an
-            // indication that the set of installed fonts has changed, so
-            // update all caches.
-            mLastConfig = NULL; // invalidates caches
-            UpdateFontListInternal(PR_TRUE);
-            return GetLangSupportEntry(aLang, aWithFonts);
-        }
-    }
-
-    return entry;
-}
-
-FcLangResult
-gfxFontconfigUtils::GetBestLangSupport(const FcChar8 *aLang)
-{
-    UpdateFontListInternal();
-
-    LangSupportEntry *entry = GetLangSupportEntry(aLang, PR_FALSE);
-    if (!entry)
-        return FcLangEqual;
-
-    return entry->mSupport;
-}
-
-const nsTArray< nsCountedRef<FcPattern> >&
-gfxFontconfigUtils::GetFontsForLang(const FcChar8 *aLang)
-{
-    LangSupportEntry *entry = GetLangSupportEntry(aLang, PR_TRUE);
-    if (!entry)
-        return mEmptyPatternArray;
-
-    return entry->mFonts;
+  end:
+    if (pat)
+        FcPatternDestroy(pat);
+    if (os)
+        FcObjectSetDestroy(os);
+    if (fs)
+        FcFontSetDestroy(fs);
+    return result;
 }
 
 PRBool
@@ -930,3 +746,4 @@ gfxFontNameList::Exists(nsAString& aName) {
     }
     return PR_FALSE;
 }
+
