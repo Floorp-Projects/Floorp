@@ -1497,7 +1497,7 @@ SanitizeListener.prototype =
   _updateSanitizeItem: function ()
   {
     var label = gPrefService.getBoolPref(this.promptDomain) ?
-        gNavigatorBundle.getString("sanitizeWithPromptLabel") : 
+        gNavigatorBundle.getString("sanitizeWithPromptLabel2") : 
         this._defaultLabel;
     document.getElementById("sanitizeItem").setAttribute("label", label);
   }
