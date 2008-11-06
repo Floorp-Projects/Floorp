@@ -1247,10 +1247,10 @@ ValueToNative(JSContext* cx, jsval v, uint8 type, double* slot)
     }
 }
 
-/* We maintain an emergency reserve pool of doubles so we can recover safely if a trace runs
+/* We maintain an emergency recovery pool of doubles so we can recover safely if a trace runs
    out of memory (doubles or objects). */
 static jsval
-AllocateDoubleFromReservePool(JSContext* cx)
+AllocateDoubleFromRecoveryPool(JSContext* cx)
 {
     JSTraceMonitor* tm = &JS_TRACE_MONITOR(cx);
     JS_ASSERT(tm->recoveryDoublePoolPtr > tm->recoveryDoublePool);
@@ -1258,7 +1258,7 @@ AllocateDoubleFromReservePool(JSContext* cx)
 }
 
 static bool
-ReplenishReservePool(JSContext* cx, JSTraceMonitor* tm, bool& didGC)
+js_ReplenishRecoveryPool(JSContext* cx, JSTraceMonitor* tm)
 {
     /* We should not be called with a full pool. */
     JS_ASSERT((size_t) (tm->recoveryDoublePoolPtr - tm->recoveryDoublePool) <
@@ -1266,31 +1266,33 @@ ReplenishReservePool(JSContext* cx, JSTraceMonitor* tm, bool& didGC)
 
     /*
      * When the GC runs in js_NewDoubleInRootedValue, it resets
-     * tm->recoveryDoublePoolPtr back to tm->recoveryDoublePool. We tolerate
-     * that only once.
+     * tm->recoveryDoublePoolPtr back to tm->recoveryDoublePool. 
      */
     JSRuntime* rt = cx->runtime;
     uintN gcNumber = rt->gcNumber;
-    didGC = false;
-    for (; tm->recoveryDoublePoolPtr < tm->recoveryDoublePool + MAX_NATIVE_STACK_SLOTS;
-         ++tm->recoveryDoublePoolPtr) {
-        if (!js_NewDoubleInRootedValue(cx, 0.0, tm->recoveryDoublePoolPtr)) {
-            didGC = true;
+    jsval* ptr = tm->recoveryDoublePoolPtr; 
+    while (ptr < tm->recoveryDoublePool + MAX_NATIVE_STACK_SLOTS) {
+        if (!js_NewDoubleInRootedValue(cx, 0.0, ptr)) 
+            goto oom;
+        if (rt->gcNumber != gcNumber) {
             JS_ASSERT(tm->recoveryDoublePoolPtr == tm->recoveryDoublePool);
-            return false;
+            ptr = tm->recoveryDoublePool;
+            if (uintN(rt->gcNumber - gcNumber) > uintN(1))
+                goto oom;
+            continue;
         }
-        if (tm->recoveryDoublePoolPtr == tm->recoveryDoublePool) {
-            if (gcNumber != rt->gcNumber) {
-                if (didGC)
-                    return false;
-                didGC = true;
-            }
-        } else {
-            JS_ASSERT(rt->gcNumber == gcNumber ||
-                      (rt->gcNumber - gcNumber == (unsigned) 1 && didGC));
-        }
+        ++ptr;
     }
+    tm->recoveryDoublePoolPtr = ptr;
     return true;
+
+oom:
+    /*
+     * Already massive GC pressure, no need to hold doubles back.
+     * We won't run any native code anyway.
+     */
+    tm->recoveryDoublePoolPtr = tm->recoveryDoublePool;
+    return false;
 }
 
 /* Box a value from the native stack back into the jsval format. Integers
@@ -1332,7 +1334,7 @@ NativeToValue(JSContext* cx, jsval& v, uint8 type, double* slot)
             JS_ASSERT(ok);
             return true;
         }
-        v = AllocateDoubleFromReservePool(cx);
+        v = AllocateDoubleFromRecoveryPool(cx);
         JS_ASSERT(JSVAL_IS_DOUBLE(v) && *JSVAL_TO_DOUBLE(v) == 0.0);
         *JSVAL_TO_DOUBLE(v) = d;
         return true;
@@ -2493,6 +2495,24 @@ js_DeleteRecorder(JSContext* cx)
     tm->recorder = NULL;
 }
 
+/**
+ * Checks whether the shape of the global object has changed and if so 
+ * flushes the JIT cache.
+ */
+static inline bool
+js_CheckGlobalObjectShape(JSContext* cx, JSTraceMonitor* tm, JSObject* globalObj)
+{
+    /* Check the global shape. */
+    if (tm->globalSlots->length() && (OBJ_SHAPE(globalObj) != tm->globalShape)) {
+        AUDIT(globalShapeMismatchAtEntry);
+        debug_only_v(printf("Global shape mismatch (%u vs. %u), flushing cache.\n",
+                            OBJ_SHAPE(globalObj), tm->globalShape);)
+        js_FlushJITCache(cx);
+        return false;
+    }
+    return true;
+}
+
 static bool
 js_StartRecorder(JSContext* cx, SideExit* anchor, Fragment* f, TreeInfo* ti,
         unsigned ngslots, uint8* globalTypeMap, uint8* stackTypeMap, 
@@ -2884,9 +2904,6 @@ static SideExit*
 js_ExecuteTree(JSContext* cx, Fragment* f, uintN& inlineCallCount, 
                SideExit** innermostNestedGuardp);
 
-static bool
-js_CheckIfFlushNeeded(JSContext* cx);
-
 static nanojit::Fragment*
 js_FindVMCompatiblePeer(JSContext* cx, Fragment* f);
 
@@ -2936,13 +2953,22 @@ js_RecordLoopEdge(JSContext* cx, TraceRecorder* r, uintN& inlineCallCount)
     Fragment* peer_root = f;
     if (nesting_enabled && f) {
         JSTraceMonitor* tm = &JS_TRACE_MONITOR(cx);
-        /* Make sure we can call the inner tree. */
-        if (js_CheckIfFlushNeeded(cx)) {
-            if (tm->recorder)
-                js_AbortRecording(cx, "Couldn't call inner tree (prep failed)");
+        
+        /* Make sure inner tree call will not run into an out-of-memory condition. */
+        if (tm->recoveryDoublePoolPtr < (tm->recoveryDoublePool + MAX_NATIVE_STACK_SLOTS) &&
+            !js_ReplenishRecoveryPool(cx, tm)) {
+            js_AbortRecording(cx, "Couldn't call inner tree (out of memory)");
+            return false; 
+        }
+        
+        /* Make sure the shape of the global object still matches (this might flush 
+           the JIT cache). */
+        JSObject* globalObj = JS_GetGlobalForObject(cx, cx->fp->scopeChain);
+        if (!js_CheckGlobalObjectShape(cx, tm, globalObj)) {
+            js_AbortRecording(cx, "Couldn't call inner tree (prep failed)");
             return false;
         }
-
+        
         debug_only_v(printf("Looking for type-compatible peer (%s:%d@%d)\n",
                             cx->fp->script->filename,
                             js_PCToLineNumber(cx, cx->fp->script, cx->fp->regs->pc),
@@ -3212,39 +3238,7 @@ js_FindVMCompatiblePeer(JSContext* cx, Fragment* f)
 }
 
 /**
- * Checks and prepares the environment for executing a tree.
- * On failure, the JIT cache is always flushed.
- */
-static bool
-js_CheckIfFlushNeeded(JSContext* cx)
-{
-    JSObject* globalObj;
-    JSTraceMonitor* tm;
-
-    tm = &JS_TRACE_MONITOR(cx);
-
-    /* Check the global shape. */
-    globalObj = JS_GetGlobalForObject(cx, cx->fp->scopeChain);
-    if (tm->globalSlots->length() && (OBJ_SHAPE(globalObj) != tm->globalShape)) {
-        AUDIT(globalShapeMismatchAtEntry);
-        debug_only_v(printf("Global shape mismatch (%u vs. %u), flushing cache.\n",
-                            OBJ_SHAPE(globalObj), tm->globalShape);)
-        js_FlushJITCache(cx);
-        return true;
-    }
-
-    /* Check the reserve pool of doubles (this might trigger a GC) */
-    if (tm->recoveryDoublePoolPtr < tm->recoveryDoublePool + MAX_NATIVE_STACK_SLOTS) {
-        bool didGC;
-        if (!ReplenishReservePool(cx, tm, didGC) || didGC)
-            return true;
-    }
-
-    return false;
-}
-
-/**
- * Executes a tree.  js_CheckIfFlushNeeded must be called first.
+ * Executes a tree.
  */
 static SideExit*
 js_ExecuteTree(JSContext* cx, Fragment* f, uintN& inlineCallCount, 
@@ -3253,10 +3247,10 @@ js_ExecuteTree(JSContext* cx, Fragment* f, uintN& inlineCallCount,
     JS_ASSERT(f->code() && f->vmprivate);
 
     JSTraceMonitor* tm = &JS_TRACE_MONITOR(cx);
+    JSObject* globalObj = JS_GetGlobalForObject(cx, cx->fp->scopeChain);
     TreeInfo* ti = (TreeInfo*)f->vmprivate;
     unsigned ngslots = tm->globalSlots->length();
     uint16* gslots = tm->globalSlots->data();
-    JSObject* globalObj = JS_GetGlobalForObject(cx, cx->fp->scopeChain);
     unsigned globalFrameSize = STOBJ_NSLOTS(globalObj);
     double* global = (double*)alloca((globalFrameSize+1) * sizeof(double));
     double stack_buffer[MAX_NATIVE_STACK_SLOTS];
@@ -3267,8 +3261,10 @@ js_ExecuteTree(JSContext* cx, Fragment* f, uintN& inlineCallCount,
     /* Make sure our caller replenished the double pool. */
     JS_ASSERT(tm->recoveryDoublePoolPtr >= tm->recoveryDoublePool + MAX_NATIVE_STACK_SLOTS);
 
+#ifdef DEBUG
     memset(stack_buffer, 0xCD, sizeof(stack_buffer));
     memset(global, 0xCD, (globalFrameSize+1)*sizeof(double));
+#endif    
 
     debug_only(*(uint64*)&global[globalFrameSize] = 0xdeadbeefdeadbeefLL;)
     debug_only_v(printf("entering trace at %s:%u@%u, native stack slots: %u code: %p\n",
@@ -3490,7 +3486,17 @@ js_MonitorLoopEdge(JSContext* cx, uintN& inlineCallCount)
     }
     JS_ASSERT(!tm->recorder);
 
-again:    
+    
+    /* Check the recovery pool of doubles (this might trigger a GC). */
+    if (tm->recoveryDoublePoolPtr < (tm->recoveryDoublePool + MAX_NATIVE_STACK_SLOTS) &&
+        !js_ReplenishRecoveryPool(cx, tm)) {
+        return false; /* Out of memory, don't try to record now. */
+    }
+    
+    /* Make sure the shape of the global object still matches (this might flush the JIT cache). */
+    JSObject* globalObj = JS_GetGlobalForObject(cx, cx->fp->scopeChain);
+    js_CheckGlobalObjectShape(cx, tm, globalObj);
+    
     jsbytecode* pc = cx->fp->regs->pc;
     Fragmento* fragmento = tm->fragmento;
     Fragment* f;
@@ -3498,10 +3504,6 @@ again:
     if (!f)
         f = fragmento->getAnchor(pc);
 
-    /* Prepare for execution. */
-    if (js_CheckIfFlushNeeded(cx)) 
-        goto again;
-    
     /* If we have no code in the anchor and no peers, we definitively won't be able to 
        activate any trees so increment the hit counter and start compiling if appropriate. */
     if (!f->code() && !f->peer) {
