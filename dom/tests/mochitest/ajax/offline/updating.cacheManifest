@@ -1,0 +1,12 @@
+CACHE MANIFEST
+# v1
+
+http://localhost:8888/tests/dom/tests/mochitest/ajax/offline/offlineTests.js
+http://localhost:8888/MochiKit/packed.js
+http://localhost:8888/tests/dom/tests/mochitest/ajax/offline/updatingIFrame.html
+
+FALLBACK:
+namespace1/ fallback.html
+
+NETWORK:
+onwhitelist.html
