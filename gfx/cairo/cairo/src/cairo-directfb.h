@@ -49,7 +49,7 @@
 
 #include "cairo.h"
 
-#ifdef  CAIRO_HAS_DIRECTFB_SURFACE
+#if  CAIRO_HAS_DIRECTFB_SURFACE
 
 #include <directfb.h>
 

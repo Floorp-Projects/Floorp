@@ -232,6 +232,12 @@ void _buffer_free (void *buffer)
 #endif
 }
 
+/* XXX
+ * The cairo_os2_ini() and cairo_os2_fini() functions should be removed and
+ * the LibMain code moved to cairo-system.c.  It should also call
+ * cairo_debug_reset_static_data() instead of duplicating its logic...
+ */
+
 #ifdef BUILD_CAIRO_DLL
 /* The main DLL entry for DLL initialization and uninitialization */
 /* Only include this code if we're about to build a DLL.          */
@@ -1201,6 +1207,8 @@ cairo_os2_surface_set_manual_window_refresh (cairo_surface_t *surface,
 /**
  * cairo_os2_surface_get_manual_window_refresh:
  * @surface: the cairo surface to query the refresh mode from
+ *
+ * This space left intentionally blank.
  *
  * Return value: current refresh mode of the surface (true by default)
  *

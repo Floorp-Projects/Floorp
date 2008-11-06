@@ -1,7 +1,7 @@
 /* -*- Mode: c; tab-width: 8; c-basic-offset: 4; indent-tabs-mode: t; -*- */
 /* Cairo - a vector graphics library with display and print output
  *
- * Copyright © 2007 Adrian Johnson
+ * Copyright © 2005 Red Hat, Inc.
  *
  * This library is free software; you can redistribute it and/or
  * modify it either under the terms of the GNU Lesser General Public
@@ -28,11 +28,29 @@
  *
  * The Original Code is the cairo graphics library.
  *
- * The Initial Developer of the Original Code is Adrian Johnson.
+ * The Initial Developer of the Original Code is Red Hat, Inc.
  *
  * Contributor(s):
- *      Adrian Johnson <ajohnson@redneon.com>
+ *	Owen Taylor <otaylor@redhat.com>
+ *	Stuart Parmenter <stuart@mozilla.com>
+ *	Vladimir Vukicevic <vladimir@pobox.com>
  */
+
+/* This file should include code that is system-specific, not
+ * feature-specific.  For example, the DLL initialization/finalization
+ * code on Win32 or OS/2 must live here (not in cairo-whatever-surface.c).
+ * Same about possible ELF-specific code.
+ *
+ * And no other function should live here.
+ */
+
+
+#include "cairoint.h"
+
+
+
+#if CAIRO_MUTEX_IMPL_WIN32
+#if !CAIRO_WIN32_STATIC_BUILD
 
 #define WIN32_LEAN_AND_MEAN
 /* We require Windows 2000 features such as ETO_PDY */
@@ -43,56 +61,37 @@
 # define _WIN32_WINNT 0x0500
 #endif
 
-#include "cairoint.h"
+#include "cairo-clip-private.h"
+#include "cairo-paginated-private.h"
+#include "cairo-win32-private.h"
+#include "cairo-scaled-font-subsets-private.h"
 
 #include <windows.h>
-#include <io.h>
 
-/* tmpfile() replacment for Windows.
- *
- * On Windows tmpfile() creates the file in the root directory. This
- * may fail due to unsufficient privileges.
- */
-FILE *
-_cairo_win32_tmpfile (void)
+/* declare to avoid "no previous prototype for 'DllMain'" warning */
+BOOL WINAPI
+DllMain (HINSTANCE hinstDLL,
+         DWORD     fdwReason,
+         LPVOID    lpvReserved);
+
+BOOL WINAPI
+DllMain (HINSTANCE hinstDLL,
+         DWORD     fdwReason,
+         LPVOID    lpvReserved)
 {
-    DWORD path_len;
-    WCHAR path_name[MAX_PATH + 1];
-    WCHAR file_name[MAX_PATH + 1];
-    HANDLE handle;
-    int fd;
-    FILE *fp;
+    switch (fdwReason) {
+        case DLL_PROCESS_ATTACH:
+            CAIRO_MUTEX_INITIALIZE ();
+            break;
 
-    path_len = GetTempPathW (MAX_PATH, path_name);
-    if (path_len <= 0 || path_len >= MAX_PATH)
-	return NULL;
-
-    if (GetTempFileNameW (path_name, L"ps_", 0, file_name) == 0)
-	return NULL;
-
-    handle = CreateFileW (file_name,
-			 GENERIC_READ | GENERIC_WRITE,
-			 0,
-			 NULL,
-			 CREATE_ALWAYS,
-			 FILE_ATTRIBUTE_NORMAL | FILE_FLAG_DELETE_ON_CLOSE,
-			 NULL);
-    if (handle == INVALID_HANDLE_VALUE) {
-	DeleteFileW (file_name);
-	return NULL;
+        case DLL_PROCESS_DETACH:
+            CAIRO_MUTEX_FINALIZE ();
+            break;
     }
 
-    fd = _open_osfhandle((intptr_t) handle, 0);
-    if (fd < 0) {
-	CloseHandle (handle);
-	return NULL;
-    }
-
-    fp = fdopen(fd, "w+b");
-    if (fp == NULL) {
-	_close(fd);
-	return NULL;
-    }
-
-    return fp;
+    return TRUE;
 }
+
+#endif
+#endif
+

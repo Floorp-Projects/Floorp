@@ -65,7 +65,7 @@ struct _cairo_paginated_surface_backend {
      * before the mode is changed to RENDER.
      */
     cairo_warn cairo_int_status_t
-    (*set_bounding_box)	(void	   	*surface,
+    (*set_bounding_box)	(void		*surface,
 			 cairo_box_t	*bbox);
 
     /* Optional. Indicates whether the page requires fallback images.
@@ -73,8 +73,11 @@ struct _cairo_paginated_surface_backend {
      * mode is changed to RENDER.
      */
     cairo_warn cairo_int_status_t
-    (*set_fallback_images_required)(void   	  *surface,
-				    cairo_bool_t   fallbacks_required);
+    (*set_fallback_images_required) (void	    *surface,
+				     cairo_bool_t    fallbacks_required);
+
+    cairo_bool_t
+    (*supports_fine_grained_fallbacks) (void		    *surface);
 };
 
 /* A #cairo_paginated_surface_t provides a very convenient wrapper that
