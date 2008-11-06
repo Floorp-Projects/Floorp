@@ -115,7 +115,7 @@ PRBool NS_SVGEnabled();
 #include "nsHTMLMediaElement.h"
 #endif
 
-#ifdef MOZ_OGG
+#ifdef MOZ_SYDNEYAUDIO
 #include "nsAudioStream.h"
 #endif
 
@@ -257,7 +257,7 @@ nsLayoutStatics::Initialize()
   nsHTMLMediaElement::InitMediaTypes();
 #endif
 
-#ifdef MOZ_OGG
+#ifdef MOZ_SYDNEYAUDIO
   nsAudioStream::InitLibrary();
 #endif
 
@@ -342,7 +342,7 @@ nsLayoutStatics::Shutdown()
 #ifdef MOZ_MEDIA
   nsHTMLMediaElement::ShutdownMediaTypes();
 #endif
-#ifdef MOZ_OGG
+#ifdef MOZ_SYDNEYAUDIO
   nsAudioStream::ShutdownLibrary();
 #endif
 
