@@ -358,7 +358,6 @@ nsContentList::~nsContentList()
 
 // QueryInterface implementation for nsContentList
 NS_INTERFACE_TABLE_HEAD(nsContentList)
-  NS_WRAPPERCACHE_INTERFACE_MAP_ENTRY
   NS_NODELIST_OFFSET_AND_INTERFACE_TABLE_BEGIN(nsContentList)
     NS_CONTENT_LIST_INTERFACES(nsContentList)
     NS_INTERFACE_TABLE_ENTRY(nsContentList, nsIHTMLCollection)
