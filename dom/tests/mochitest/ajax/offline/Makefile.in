@@ -43,7 +43,7 @@ relativesrcdir	= dom/tests/mochitest/ajax/offline
 
 include $(DEPTH)/config/autoconf.mk
 
-DIRS = namespace1
+DIRS = namespace1 namespace2
 
 include $(topsrcdir)/config/rules.mk
 
@@ -51,6 +51,7 @@ _TEST_FILES	= \
 	offlineTests.js \
 	test_badManifestMagic.html \
 	test_badManifestMime.html \
+	test_bypass.html \
 	test_missingFile.html \
 	test_noManifest.html \
 	test_simpleManifest.html \
@@ -71,6 +72,9 @@ _TEST_FILES	= \
 	obsolete.html \
 	badManifestMagic.cacheManifest \
 	badManifestMagic.cacheManifest^headers^ \
+	bypass.cacheManifest \
+	bypass.cacheManifest^headers^ \
+	bypass.html \
 	fallback.html \
 	fallback2.html \
 	fallbackTop.html \
