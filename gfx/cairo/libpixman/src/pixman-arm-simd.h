@@ -26,15 +26,15 @@
 
 #include "pixman-private.h"
 
-#ifdef USE_ARM
+#ifdef USE_ARM_SIMD
 
-static inline pixman_bool_t pixman_have_arm(void) { return TRUE; }
+static inline pixman_bool_t pixman_have_arm_simd(void) { return TRUE; }
 
 #else
-#define pixman_have_arm() FALSE
+#define pixman_have_arm_simd() FALSE
 #endif
 
-#ifdef USE_ARM
+#ifdef USE_ARM_SIMD
 
 void
 fbCompositeSrcAdd_8000x8000arm (pixman_op_t op,
