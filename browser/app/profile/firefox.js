@@ -396,6 +396,13 @@ pref("privacy.item.siteprefs",   false);
 pref("privacy.item.sessions",    true);
 pref("privacy.item.offlineApps", false);
 
+// What default should we use for the time span in the sanitizer:
+// 0 - Clear everything
+// 1 - Last Hour
+// 2 - Last 2 Hours
+// 3 - Last 4 Hours
+// 4 - Today
+pref("privacy.sanitize.timeSpan", 0);
 pref("privacy.sanitize.sanitizeOnShutdown", false);
 pref("privacy.sanitize.promptOnSanitize", true);
 
