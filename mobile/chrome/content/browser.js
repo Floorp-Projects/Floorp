@@ -297,7 +297,8 @@ var Browser = {
 
   translatePhoneNumbers: function() {
     let doc = getBrowser().contentDocument;
-    let textnodes = doc.evaluate("//text()",
+    // jonas black magic (only match text nodes that contain a sequence of 4 numbers)
+    let textnodes = doc.evaluate('//text()[contains(translate(., "0123456789", "^^^^^^^^^^"), "^^^^")]',
                                  doc,
                                  null,
                                  XPathResult.UNORDERED_NODE_SNAPSHOT_TYPE,
@@ -406,9 +407,16 @@ ProgressController.prototype = {
     if (aStateFlags & Ci.nsIWebProgressListener.STATE_IS_DOCUMENT) {
       if (aStateFlags & Ci.nsIWebProgressListener.STATE_STOP) {
         aWebProgress.DOMWindow.focus();
-        Browser.translatePhoneNumbers();
+
+        // update the tab canvas image
         this._tabbrowser.updateCanvasState();
+
+        // update the viewport
         this._tabbrowser.updateBrowser(this._browser, true);
+
+        // linkify phone numbers
+        Browser.translatePhoneNumbers();
+
         //aWebProgress.DOMWindow.scrollbars.visible = false;
       }
     }
