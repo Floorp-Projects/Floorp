@@ -41,11 +41,14 @@ Components.utils.import("resource://gre/modules/PlacesBackground.jsm");
 
 function test_service_exists()
 {
+  print("begin test_service_exists");
   do_check_neq(PlacesBackground, null);
+  print("end test_service_exists");
 }
 
 function test_isOnCurrentThread()
 {
+  print("begin test_isOnCurrentThread");
   do_check_false(PlacesBackground.isOnCurrentThread());
 
   let event = {
@@ -55,10 +58,12 @@ function test_isOnCurrentThread()
     }
   };
   PlacesBackground.dispatch(event, Ci.nsIEventTarget.DISPATCH_SYNC);
+  print("end test_isOnCurrentThread");
 }
 
 function test_two_events_same_thread()
 {
+   print("begin test_two_events_same_thread");
   // This test imports PlacesBackground.jsm onto two different objects to
   // ensure that the thread is the same for both.
   let event = {
@@ -81,10 +86,12 @@ function test_two_events_same_thread()
   Components.utils.import("resource://gre/modules/PlacesBackground.jsm", obj2);
   obj2.PlacesBackground.dispatch(event, Ci.nsIEventTarget.DISPATCH_SYNC);
   do_check_eq(event.thread1, event.thread2);
+  print("end test_two_events_same_thread");
 }
 
 function test_places_background_shutdown_topic()
 {
+  print("begin test_places_background_shutdown_topic");
   // Ensures that the places shutdown topic is dispatched before the thread is
   // shutdown.
   let os = Cc["@mozilla.org/observer-service;1"].
@@ -102,6 +109,7 @@ function test_places_background_shutdown_topic()
     }
   }, "places-background-shutdown", false);
   do_test_pending();
+  print("end test_places_background_shutdown_topic");
 }
 
 let tests = [
@@ -113,11 +121,14 @@ let tests = [
 
 function run_test()
 {
+  print("begin run_test");
   for (let i = 0; i < tests.length; i++)
     tests[i]();
 
+  print("dispatch shutdown");
   // xpcshell doesn't dispatch shutdown-application
   let os = Cc["@mozilla.org/observer-service;1"].
            getService(Ci.nsIObserverService);
   os.notifyObservers(null, "quit-application", null);
+  print("end run_test");
 }
