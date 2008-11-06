@@ -46,6 +46,7 @@
 
 #include "nsFontFaceLoader.h"
 
+#include "nsError.h"
 #include "nsIFile.h"
 #include "nsILocalFile.h"
 #include "nsIStreamListener.h"
@@ -63,7 +64,10 @@
 
 #include "nsDirectoryServiceUtils.h"
 #include "nsDirectoryServiceDefs.h"
-
+#include "nsIContentPolicy.h"
+#include "nsContentPolicyUtils.h"
+#include "nsContentErrors.h"
+#include "nsCrossSiteListenerProxy.h"
 
 #ifdef PR_LOGGING
 static PRLogModuleInfo *gFontDownloaderLog = PR_NewLogModule("fontdownloader");
@@ -71,31 +75,6 @@ static PRLogModuleInfo *gFontDownloaderLog = PR_NewLogModule("fontdownloader");
 
 #define LOG(args) PR_LOG(gFontDownloaderLog, PR_LOG_DEBUG, args)
 #define LOG_ENABLED() PR_LOG_TEST(gFontDownloaderLog, PR_LOG_DEBUG)
-
-
-#define ENFORCE_SAME_SITE_ORIGIN "gfx.downloadable_fonts.enforce_same_site_origin"
-static PRBool gEnforceSameSiteOrigin = PR_TRUE;
-
-static PRBool
-CheckMayLoad(nsIDocument* aDoc, nsIURI* aURI)
-{
-  // allow this to be disabled via a pref
-  static PRBool init = PR_FALSE;
-
-  if (!init) {
-    init = PR_TRUE;
-    nsContentUtils::AddBoolPrefVarCache(ENFORCE_SAME_SITE_ORIGIN, &gEnforceSameSiteOrigin);
-  }
-
-  if (!gEnforceSameSiteOrigin)
-    return PR_TRUE;
-
-  if (!aDoc)
-    return PR_FALSE;
-
-  nsresult rv = aDoc->NodePrincipal()->CheckMayLoad(aURI, PR_TRUE);
-  return NS_SUCCEEDED(rv);
-}
 
 
 nsFontFaceLoader::nsFontFaceLoader(gfxFontEntry *aFontToLoad, nsIURI *aFontURI,
@@ -157,45 +136,122 @@ nsFontFaceLoader::OnStreamComplete(nsIStreamLoader* aLoader,
   return aStatus;
 }
 
-PRBool
-nsFontFaceLoader::CreateHandler(gfxFontEntry *aFontToLoad, nsIURI *aFontURI, 
+nsresult
+nsFontFaceLoader::CreateHandler(gfxFontEntry *aFontToLoad, 
+                                nsIURI *aFontURI,
+                                nsIURI *aReferrerURI,
                                 gfxUserFontSet::LoaderContext *aContext)
 {
+  nsresult rv;
+  
   // check same-site origin
   nsFontFaceLoaderContext *loaderCtx 
                              = static_cast<nsFontFaceLoaderContext*> (aContext);
 
   nsIPresShell *ps = loaderCtx->mPresContext->PresShell();
   if (!ps)
-    return PR_FALSE;
+    return NS_ERROR_FAILURE;
+    
+  NS_ASSERTION(aFontURI, "null font uri");
+  if (!aFontURI)
+    return NS_ERROR_FAILURE;
 
-  if (!CheckMayLoad(ps->GetDocument(), aFontURI))
-    return PR_FALSE;
+  // xxx - need to detect system principal here
+  nsCOMPtr<nsIPrincipal> principal = ps->GetDocument()->NodePrincipal();
 
+  rv = CheckLoadAllowed(principal, aFontURI, ps->GetDocument());
+  if (NS_FAILED(rv)) {
+    nsCAutoString fontURI, referrerURI;
+    aFontURI->GetSpec(fontURI);
+    if (aReferrerURI)
+      aReferrerURI->GetSpec(referrerURI);
+    LOG(("fontdownloader download blocked - font uri: (%s) "
+         "referrer uri: (%s) err: %8.8x\n", 
+        fontURI.get(), referrerURI.get(), rv));
+    return rv;
+  }
+    
   nsRefPtr<nsFontFaceLoader> fontLoader = new nsFontFaceLoader(aFontToLoad, 
                                                                aFontURI, 
                                                                aContext);
   if (!fontLoader)
-    return PR_FALSE;
+    return NS_ERROR_OUT_OF_MEMORY;
 
 #ifdef PR_LOGGING
   if (LOG_ENABLED()) {
-    nsCAutoString fontURI;
+    nsCAutoString fontURI, referrerURI;
     aFontURI->GetSpec(fontURI);
-    LOG(("fontdownloader (%p) download start - font uri: (%s)\n", 
-         fontLoader.get(), fontURI.get()));
+    if (aReferrerURI)
+      aReferrerURI->GetSpec(referrerURI);
+    LOG(("fontdownloader (%p) download start - font uri: (%s) "
+         "referrer uri: (%s)\n", 
+         fontLoader.get(), fontURI.get(), referrerURI.get()));
   }
 #endif  
 
   nsCOMPtr<nsIStreamLoader> streamLoader;
   nsCOMPtr<nsILoadGroup> loadGroup(ps->GetDocument()->GetDocumentLoadGroup());
-  nsCOMPtr<nsIInterfaceRequestor> sameOriginChecker 
-                                       = nsContentUtils::GetSameOriginChecker();
 
-  nsresult rv = NS_NewStreamLoader(getter_AddRefs(streamLoader), aFontURI, 
-                                   fontLoader, nsnull, loadGroup, 
-                                   sameOriginChecker);
+  nsCOMPtr<nsIChannel> channel;
+  rv = NS_NewChannel(getter_AddRefs(channel),
+                     aFontURI,
+                     nsnull,
+                     loadGroup,
+                     nsnull,
+                     nsIRequest::LOAD_NORMAL);
+                     
+  NS_ENSURE_SUCCESS(rv, rv);
 
-  return NS_SUCCEEDED(rv);
+  nsCOMPtr<nsIHttpChannel> httpChannel(do_QueryInterface(channel));
+  if (httpChannel)
+    httpChannel->SetReferrer(aReferrerURI);
+  rv = NS_NewStreamLoader(getter_AddRefs(streamLoader), fontLoader);
+  NS_ENSURE_SUCCESS(rv, rv);
+  
+  // unless data url, open with cross-site listener
+  PRBool isData = PR_FALSE;
+  if (NS_SUCCEEDED(aFontURI->SchemeIs("data", &isData)) && isData) {
+    rv = channel->AsyncOpen(streamLoader, nsnull);
+  } else {
+    nsCOMPtr<nsIStreamListener> listener =
+      new nsCrossSiteListenerProxy(streamLoader, principal, channel, 
+                                   PR_FALSE, &rv);
+    NS_ENSURE_TRUE(listener, NS_ERROR_OUT_OF_MEMORY);
+    NS_ENSURE_SUCCESS(rv, rv);
+
+    rv = channel->AsyncOpen(listener, nsnull);
+  }
+
+  return rv;
 }
+
+nsresult
+nsFontFaceLoader::CheckLoadAllowed(nsIPrincipal* aSourcePrincipal,
+                                   nsIURI* aTargetURI,
+                                   nsISupports* aContext)
+{
+  nsresult rv;
+  
+  if (!aSourcePrincipal)
+    return NS_OK;
+    
+  // check content policy
+  PRInt16 shouldLoad = nsIContentPolicy::ACCEPT;
+  rv = NS_CheckContentLoadPolicy(nsIContentPolicy::TYPE_FONT,
+                                 aTargetURI,
+                                 aSourcePrincipal,
+                                 aContext,
+                                 EmptyCString(), // mime type
+                                 nsnull,
+                                 &shouldLoad,
+                                 nsContentUtils::GetContentPolicy(),
+                                 nsContentUtils::GetSecurityManager());
+
+  if (NS_FAILED(rv) || NS_CP_REJECTED(shouldLoad)) {
+    return NS_ERROR_CONTENT_BLOCKED;
+  }
+
+  return NS_OK;
+}
+  
 
