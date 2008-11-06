@@ -640,21 +640,25 @@ _cairo_win32_scaled_font_type1_text_to_glyphs (cairo_win32_scaled_font_t *scaled
 
     if (GetGlyphIndicesW (hdc, utf16, n16, glyph_indices, 0) == GDI_ERROR) {
 	status = _cairo_win32_print_gdi_error ("_cairo_win32_scaled_font_type1_text_to_glyphs:GetGlyphIndicesW");
-	goto FAIL2;
+	goto FAIL3;
     }
 
     *num_glyphs = n16;
     *glyphs = _cairo_malloc_ab (n16, sizeof (cairo_glyph_t));
     if (!*glyphs) {
 	status = _cairo_error (CAIRO_STATUS_NO_MEMORY);
-	goto FAIL2;
+	goto FAIL3;
     }
 
     x_pos = x;
     y_pos = y;
+
     mat = scaled_font->base.ctm;
     status = cairo_matrix_invert (&mat);
     assert (status == CAIRO_STATUS_SUCCESS);
+
+    _cairo_scaled_font_freeze_cache (&scaled_font->base);
+
     for (i = 0; i < n16; i++) {
 	cairo_scaled_glyph_t *scaled_glyph;
 
@@ -668,7 +672,8 @@ _cairo_win32_scaled_font_type1_text_to_glyphs (cairo_win32_scaled_font_t *scaled
 					     &scaled_glyph);
 	if (status) {
 	    free (*glyphs);
-	    goto FAIL2;
+	    *glyphs = NULL;
+	    break;
 	}
 
 	x = scaled_glyph->x_advance;
@@ -678,8 +683,10 @@ _cairo_win32_scaled_font_type1_text_to_glyphs (cairo_win32_scaled_font_t *scaled
 	y_pos += y;
     }
 
-    cairo_win32_scaled_font_done_font (&scaled_font->base);
+    _cairo_scaled_font_thaw_cache (&scaled_font->base);
 
+FAIL3:
+    cairo_win32_scaled_font_done_font (&scaled_font->base);
 FAIL2:
     free (glyph_indices);
 FAIL1:
@@ -1829,6 +1836,7 @@ _cairo_win32_scaled_font_init_glyph_path (cairo_win32_scaled_font_t *scaled_font
 
 const cairo_scaled_font_backend_t _cairo_win32_scaled_font_backend = {
     CAIRO_FONT_TYPE_WIN32,
+    NULL,
     _cairo_win32_scaled_font_create_toy,
     _cairo_win32_scaled_font_fini,
     _cairo_win32_scaled_font_glyph_init,
@@ -1898,6 +1906,7 @@ _cairo_win32_font_face_scaled_font_create (void			*abstract_face,
 static const cairo_font_face_backend_t _cairo_win32_font_face_backend = {
     CAIRO_FONT_TYPE_WIN32,
     _cairo_win32_font_face_destroy,
+    NULL, /* direct implementation */
     _cairo_win32_font_face_scaled_font_create
 };
 

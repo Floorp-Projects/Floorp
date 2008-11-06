@@ -435,6 +435,8 @@ _cairo_win32_surface_clone_similar (void *abstract_surface,
 				    int src_y,
 				    int width,
 				    int height,
+				    int *clone_offset_x,
+				    int *clone_offset_y,
 				    cairo_surface_t **clone_out)
 {
     cairo_content_t src_content;
@@ -444,10 +446,16 @@ _cairo_win32_surface_clone_similar (void *abstract_surface,
 
     src_content = cairo_surface_get_content(src);
     new_surface =
-	_cairo_win32_surface_create_similar_internal (abstract_surface, src_content, width, height, FALSE);
+	_cairo_win32_surface_create_similar_internal (abstract_surface,
+						      src_content,
+						      width, height,
+						      FALSE);
+    if (new_surface == NULL)
+	return CAIRO_INT_STATUS_UNSUPPORTED;
 
-    if (cairo_surface_status(new_surface))
-	return cairo_surface_status(new_surface);
+    status = new_surface->status;
+    if (status)
+	return status;
 
     _cairo_pattern_init_for_surface (&pattern, src);
 
@@ -462,9 +470,11 @@ _cairo_win32_surface_clone_similar (void *abstract_surface,
 
     _cairo_pattern_fini (&pattern.base);
 
-    if (status == CAIRO_STATUS_SUCCESS)
+    if (status == CAIRO_STATUS_SUCCESS) {
+	*clone_offset_x = src_x;
+	*clone_offset_y = src_y;
 	*clone_out = new_surface;
-    else
+    } else
 	cairo_surface_destroy (new_surface);
 
     return status;
@@ -512,8 +522,10 @@ _cairo_win32_surface_get_subimage (cairo_win32_surface_t  *surface,
     local =
 	(cairo_win32_surface_t *) _cairo_win32_surface_create_similar_internal
 	(surface, content, width, height, TRUE);
+    if (local == NULL)
+	return CAIRO_INT_STATUS_UNSUPPORTED;
     if (local->base.status)
-	return _cairo_error (CAIRO_STATUS_NO_MEMORY);
+	return local->base.status;
 
     status = CAIRO_INT_STATUS_UNSUPPORTED;
 
@@ -2004,34 +2016,6 @@ static const cairo_surface_backend_t cairo_win32_surface_backend = {
  *              multiplied by all the src components.
  */
 
-
-#if !defined(CAIRO_WIN32_STATIC_BUILD)
-
-/* declare to avoid "no previous prototype for 'DllMain'" warning */
-BOOL WINAPI
-DllMain (HINSTANCE hinstDLL,
-         DWORD     fdwReason,
-         LPVOID    lpvReserved);
-
-BOOL WINAPI
-DllMain (HINSTANCE hinstDLL,
-         DWORD     fdwReason,
-         LPVOID    lpvReserved)
-{
-    switch (fdwReason) {
-        case DLL_PROCESS_ATTACH:
-            CAIRO_MUTEX_INITIALIZE ();
-            break;
-
-        case DLL_PROCESS_DETACH:
-            CAIRO_MUTEX_FINALIZE ();
-            break;
-    }
-
-    return TRUE;
-}
-
-#endif
 
 cairo_int_status_t
 _cairo_win32_save_initial_clip (HDC hdc, cairo_win32_surface_t *surface)

@@ -85,6 +85,7 @@ _cairo_array_init_snapshot (cairo_array_t	*array,
 
 /**
  * _cairo_array_fini:
+ * @array: A #cairo_array_t
  *
  * Free all resources associated with @array. After this call, @array
  * should not be used again without a subsequent call to
@@ -104,6 +105,7 @@ _cairo_array_fini (cairo_array_t *array)
 
 /**
  * _cairo_array_grow_by:
+ * @array: a #cairo_array_t
  *
  * Increase the size of @array (if needed) so that there are at least
  * @additional free spaces in the array. The actual size of the array
@@ -158,6 +160,7 @@ _cairo_array_grow_by (cairo_array_t *array, unsigned int additional)
 
 /**
  * _cairo_array_truncate:
+ * @array: a #cairo_array_t
  *
  * Truncate size of the array to @num_elements if less than the
  * current size. No memory is actually freed. The stored objects
@@ -174,14 +177,16 @@ _cairo_array_truncate (cairo_array_t *array, unsigned int num_elements)
 
 /**
  * _cairo_array_index:
+ * @array: a #cairo_array_t
+ * Returns: A pointer to the object stored at @index.
  *
- * Return value: A pointer to object stored at @index. If the
- * resulting value is assigned to a pointer to an object of the same
+ * If the resulting value is assigned to a pointer to an object of the same
  * element_size as initially passed to _cairo_array_init() then that
  * pointer may be used for further direct indexing with []. For
  * example:
  *
- * 	#cairo_array_t array;
+ * <informalexample><programlisting>
+ *	cairo_array_t array;
  *	double *values;
  *
  *	_cairo_array_init (&array, sizeof(double));
@@ -190,6 +195,7 @@ _cairo_array_truncate (cairo_array_t *array, unsigned int num_elements)
  *	values = _cairo_array_index (&array, 0);
  *      for (i = 0; i < _cairo_array_num_elements (&array); i++)
  *	    ... use values[i] here ...
+ * </programlisting></informalexample>
  **/
 void *
 _cairo_array_index (cairo_array_t *array, unsigned int index)
@@ -215,6 +221,7 @@ _cairo_array_index (cairo_array_t *array, unsigned int index)
 
 /**
  * _cairo_array_copy_element:
+ * @array: a #cairo_array_t
  *
  * Copy a single element out of the array from index @index into the
  * location pointed to by @dst.
@@ -227,6 +234,7 @@ _cairo_array_copy_element (cairo_array_t *array, int index, void *dst)
 
 /**
  * _cairo_array_append:
+ * @array: a #cairo_array_t
  *
  * Append a single item onto the array by growing the array by at
  * least one element, then copying element_size bytes from @element
@@ -250,6 +258,7 @@ _cairo_array_append (cairo_array_t	*array,
 
 /**
  * _cairo_array_append:
+ * @array: a #cairo_array_t
  *
  * Append one or more items onto the array by growing the array by
  * @num_elements, then copying @num_elements * element_size bytes from
@@ -280,6 +289,7 @@ _cairo_array_append_multiple (cairo_array_t	*array,
 
 /**
  * _cairo_array_allocate:
+ * @array: a #cairo_array_t
  *
  * Allocate space at the end of the array for @num_elements additional
  * elements, providing the address of the new memory chunk in
@@ -314,8 +324,10 @@ _cairo_array_allocate (cairo_array_t	 *array,
 
 /**
  * _cairo_array_num_elements:
+ * @array: a #cairo_array_t
+ * Returns: The number of elements stored in @array.
  *
- * Return value: The number of elements stored in @array.
+ * This space was left intentionally blank, but gtk-doc filled it.
  **/
 int
 _cairo_array_num_elements (cairo_array_t *array)
@@ -325,9 +337,11 @@ _cairo_array_num_elements (cairo_array_t *array)
 
 /**
  * _cairo_array_size:
+ * @array: a #cairo_array_t
+ * Returns: The number of elements for which there is currently space
+ * allocated in @array.
  *
- * Return value: The number of elements for which there is currently
- * space allocated in array.
+ * This space was left intentionally blank, but gtk-doc filled it.
  **/
 int
 _cairo_array_size (cairo_array_t *array)

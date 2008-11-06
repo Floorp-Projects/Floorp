@@ -230,7 +230,7 @@ _cairo_utf8_get_char_validated (const char *p,
 }
 
 /**
- * _cairo_utf8_to_utf32:
+ * _cairo_utf8_to_ucs4:
  * @str: an UTF-8 string
  * @len: length of @str in bytes, or -1 if it is nul-terminated.
  *   If @len is supplied and the string has an embedded nul
@@ -247,7 +247,7 @@ _cairo_utf8_get_char_validated (const char *p,
  *
  * Return value: %CAIRO_STATUS_SUCCESS if the entire string was
  *   successfully converted. %CAIRO_STATUS_INVALID_STRING if an
- *   an invalid sequence was found.
+ *   invalid sequence was found.
  **/
 cairo_status_t
 _cairo_utf8_to_ucs4 (const char *str,
@@ -301,6 +301,8 @@ _cairo_utf8_to_ucs4 (const char *str,
  * @unicode: a UCS-4 character
  * @utf8: buffer to write utf8 string into. Must have at least 4 bytes
  * space available. Or %NULL.
+ *
+ * This space left intentionally blank.
  *
  * Return value: Number of bytes in the utf8 string or 0 if an invalid
  * unicode character

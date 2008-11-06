@@ -47,7 +47,7 @@
  * as a pair of 32-bit ints
  */
 
-#define I cairo_private
+#define I cairo_private cairo_const
 
 #if !HAVE_UINT64_T
 
@@ -61,8 +61,10 @@ cairo_uint64_t I	_cairo_uint64_lsl (cairo_uint64_t a, int shift);
 cairo_uint64_t I	_cairo_uint64_rsl (cairo_uint64_t a, int shift);
 cairo_uint64_t I	_cairo_uint64_rsa (cairo_uint64_t a, int shift);
 int	       I	_cairo_uint64_lt (cairo_uint64_t a, cairo_uint64_t b);
+int	       I	_cairo_uint64_cmp (cairo_uint64_t a, cairo_uint64_t b);
 int	       I	_cairo_uint64_eq (cairo_uint64_t a, cairo_uint64_t b);
 cairo_uint64_t I	_cairo_uint64_negate (cairo_uint64_t a);
+#define			_cairo_uint64_is_zero(a) ((a).hi == 0 && (a).lo == 0)
 #define			_cairo_uint64_negative(a)   (((int32_t) ((a).hi)) < 0)
 cairo_uint64_t I	_cairo_uint64_not (cairo_uint64_t a);
 
@@ -75,7 +77,9 @@ cairo_int64_t  I	_cairo_int32_to_int64(int32_t i);
 #define			_cairo_int64_sub(a,b)	    _cairo_uint64_sub (a,b)
 #define			_cairo_int64_mul(a,b)	    _cairo_uint64_mul (a,b)
 cairo_int64_t  I	_cairo_int32x32_64_mul (int32_t a, int32_t b);
-int	       I	_cairo_int64_lt (cairo_uint64_t a, cairo_uint64_t b);
+int	       I	_cairo_int64_lt (cairo_int64_t a, cairo_int64_t b);
+int	       I	_cairo_int64_cmp (cairo_int64_t a, cairo_int64_t b);
+#define			_cairo_int64_is_zero(a)	    _cairo_uint64_is_zero (a)
 #define			_cairo_int64_eq(a,b)	    _cairo_uint64_eq (a,b)
 #define			_cairo_int64_lsl(a,b)	    _cairo_uint64_lsl (a,b)
 #define			_cairo_int64_rsl(a,b)	    _cairo_uint64_rsl (a,b)
@@ -96,6 +100,8 @@ int	       I	_cairo_int64_lt (cairo_uint64_t a, cairo_uint64_t b);
 #define			_cairo_uint64_rsl(a,b)	    ((uint64_t) (a) >> (b))
 #define			_cairo_uint64_rsa(a,b)	    ((uint64_t) ((int64_t) (a) >> (b)))
 #define			_cairo_uint64_lt(a,b)	    ((a) < (b))
+#define                 _cairo_uint64_cmp(a,b)       ((a) == (b) ? 0 : (a) < (b) ? -1 : 1)
+#define			_cairo_uint64_is_zero(a)    ((a) == 0)
 #define			_cairo_uint64_eq(a,b)	    ((a) == (b))
 #define			_cairo_uint64_negate(a)	    ((uint64_t) -((int64_t) (a)))
 #define			_cairo_uint64_negative(a)   ((int64_t) (a) < 0)
@@ -111,6 +117,8 @@ int	       I	_cairo_int64_lt (cairo_uint64_t a, cairo_uint64_t b);
 #define			_cairo_int64_mul(a,b)	    ((a) * (b))
 #define			_cairo_int32x32_64_mul(a,b) ((int64_t) (a) * (b))
 #define			_cairo_int64_lt(a,b)	    ((a) < (b))
+#define                 _cairo_int64_cmp(a,b)       ((a) == (b) ? 0 : (a) < (b) ? -1 : 1)
+#define			_cairo_int64_is_zero(a)     ((a) == 0)
 #define			_cairo_int64_eq(a,b)	    ((a) == (b))
 #define			_cairo_int64_lsl(a,b)	    ((a) << (b))
 #define			_cairo_int64_rsl(a,b)	    ((int64_t) ((uint64_t) (a) >> (b)))
@@ -165,7 +173,9 @@ cairo_uint128_t I	_cairo_uint128_lsl (cairo_uint128_t a, int shift);
 cairo_uint128_t I	_cairo_uint128_rsl (cairo_uint128_t a, int shift);
 cairo_uint128_t I	_cairo_uint128_rsa (cairo_uint128_t a, int shift);
 int	        I	_cairo_uint128_lt (cairo_uint128_t a, cairo_uint128_t b);
+int	        I	_cairo_uint128_cmp (cairo_uint128_t a, cairo_uint128_t b);
 int	        I	_cairo_uint128_eq (cairo_uint128_t a, cairo_uint128_t b);
+#define			_cairo_uint128_is_zero(a) (_cairo_uint64_is_zero ((a).hi) && _cairo_uint64_is_zero ((a).lo))
 cairo_uint128_t I	_cairo_uint128_negate (cairo_uint128_t a);
 #define			_cairo_uint128_negative(a)  (_cairo_uint64_negative(a.hi))
 cairo_uint128_t I	_cairo_uint128_not (cairo_uint128_t a);
@@ -181,10 +191,13 @@ cairo_int128_t  I	_cairo_int64_to_int128 (cairo_int64_t i);
 #define			_cairo_int128_sub(a,b)	    _cairo_uint128_sub(a,b)
 #define			_cairo_int128_mul(a,b)	    _cairo_uint128_mul(a,b)
 cairo_int128_t I _cairo_int64x64_128_mul (cairo_int64_t a, cairo_int64_t b);
+#define                 _cairo_int64x32_128_mul(a, b) _cairo_int64x64_128_mul(a, _cairo_int32_to_int64(b))
 #define			_cairo_int128_lsl(a,b)	    _cairo_uint128_lsl(a,b)
 #define			_cairo_int128_rsl(a,b)	    _cairo_uint128_rsl(a,b)
 #define			_cairo_int128_rsa(a,b)	    _cairo_uint128_rsa(a,b)
 int 	        I	_cairo_int128_lt (cairo_int128_t a, cairo_int128_t b);
+int	        I	_cairo_int128_cmp (cairo_int128_t a, cairo_int128_t b);
+#define			_cairo_int128_is_zero(a)    _cairo_uint128_is_zero (a)
 #define			_cairo_int128_eq(a,b)	    _cairo_uint128_eq (a,b)
 #define			_cairo_int128_negate(a)	    _cairo_uint128_negate(a)
 #define			_cairo_int128_negative(a)   (_cairo_uint128_negative(a))
@@ -204,6 +217,8 @@ int 	        I	_cairo_int128_lt (cairo_int128_t a, cairo_int128_t b);
 #define			_cairo_uint128_rsl(a,b)	    ((uint128_t) (a) >> (b))
 #define			_cairo_uint128_rsa(a,b)	    ((uint128_t) ((int128_t) (a) >> (b)))
 #define			_cairo_uint128_lt(a,b)	    ((a) < (b))
+#define			_cairo_uint128_cmp(a,b)	    ((a) == (b) ? 0 : (a) < (b) ? -1 : 1)
+#define			_cairo_uint128_is_zero(a)   ((a) == 0)
 #define			_cairo_uint128_eq(a,b)	    ((a) == (b))
 #define			_cairo_uint128_negate(a)    ((uint128_t) -((int128_t) (a)))
 #define			_cairo_uint128_negative(a)  ((int128_t) (a) < 0)
@@ -221,6 +236,8 @@ int 	        I	_cairo_int128_lt (cairo_int128_t a, cairo_int128_t b);
 #define			_cairo_int128_mul(a,b)	    ((a) * (b))
 #define			_cairo_int64x64_128_mul(a,b) ((int128_t) (a) * (b))
 #define			_cairo_int128_lt(a,b)	    ((a) < (b))
+#define			_cairo_int128_cmp(a,b)	    ((a) == (b) ? 0 : (a) < (b) ? -1 : 1)
+#define			_cairo_int128_is_zero(a)    ((a) == 0)
 #define			_cairo_int128_eq(a,b)	    ((a) == (b))
 #define			_cairo_int128_lsl(a,b)	    ((a) << (b))
 #define			_cairo_int128_rsl(a,b)	    ((int128_t) ((uint128_t) (a) >> (b)))
