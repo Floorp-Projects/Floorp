@@ -45,7 +45,6 @@
 #include "nsCRT.h"
 #include "XPCNativeWrapper.h"
 #include "XPCWrapper.h"
-#include "nsWrapperCache.h"
 
 /***************************************************************************/
 
@@ -590,49 +589,33 @@ XPCWrappedNative::GetUsedOnly(XPCCallContext& ccx,
                               XPCWrappedNative** resultWrapper)
 {
     NS_ASSERTION(Object, "XPCWrappedNative::GetUsedOnly was called with a null Object");
+    nsCOMPtr<nsISupports> identity;
+#ifdef XPC_IDISPATCH_SUPPORT
+    // XXX See GetNewOrUsed for more info on this
+    if(Interface->GetIID()->Equals(NSID_IDISPATCH))
+        identity = Object;
+    else
+#endif
+        identity = do_QueryInterface(Object);
+
+    if(!identity)
+    {
+        NS_ERROR("This XPCOM object fails in QueryInterface to nsISupports!");
+        return NS_ERROR_FAILURE;
+    }
 
     XPCWrappedNative* wrapper;
-    nsWrapperCache* cache = nsnull;
-    CallQueryInterface(Object, &cache);
-    if(cache)
-    {
-        wrapper = static_cast<XPCWrappedNative*>(cache->GetWrapper());
+    Native2WrappedNativeMap* map = Scope->GetWrappedNativeMap();
+
+    {   // scoped lock
+        XPCAutoLock lock(Scope->GetRuntime()->GetMapLock());
+        wrapper = map->Find(identity);
         if(!wrapper)
         {
             *resultWrapper = nsnull;
             return NS_OK;
         }
         NS_ADDREF(wrapper);
-    }
-    else
-    {
-        nsCOMPtr<nsISupports> identity;
-#ifdef XPC_IDISPATCH_SUPPORT
-        // XXX See GetNewOrUsed for more info on this
-        if(Interface->GetIID()->Equals(NSID_IDISPATCH))
-            identity = Object;
-        else
-#endif
-            identity = do_QueryInterface(Object);
-
-        if(!identity)
-        {
-            NS_ERROR("This XPCOM object fails in QueryInterface to nsISupports!");
-            return NS_ERROR_FAILURE;
-        }
-
-        Native2WrappedNativeMap* map = Scope->GetWrappedNativeMap();
-
-        {   // scoped lock
-            XPCAutoLock lock(Scope->GetRuntime()->GetMapLock());
-            wrapper = map->Find(identity);
-            if(!wrapper)
-            {
-                *resultWrapper = nsnull;
-                return NS_OK;
-            }
-            NS_ADDREF(wrapper);
-        }
     }
 
     nsresult rv;
