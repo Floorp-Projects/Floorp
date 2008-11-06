@@ -63,6 +63,10 @@ _TEST_FILES	= \
 	445544_part2.html \
 	445544.cacheManifest \
 	445544.cacheManifest^headers^ \
+	test_bug460353.html \
+	460353_iframe_nomanifest.html \
+	460353_iframe_ownmanifest.html \
+	460353_iframe_samemanifest.html \
 	test_obsolete.html \
 	obsolete.html \
 	badManifestMagic.cacheManifest \

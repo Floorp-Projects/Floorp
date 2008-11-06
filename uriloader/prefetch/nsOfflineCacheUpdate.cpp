@@ -1720,6 +1720,8 @@ nsOfflineCacheUpdate::AssociateDocument(nsIDOMDocument *aDocument)
     NS_ENSURE_SUCCESS(rv, rv);
 
     if (!existingCache) {
+        LOG(("Update %p: associating app cache %s to document %p", this, mClientID.get(), aDocument));
+
         rv = container->SetApplicationCache(mApplicationCache);
         NS_ENSURE_SUCCESS(rv, rv);
     }
@@ -2241,8 +2243,10 @@ nsOfflineCacheUpdateService::Schedule(nsIURI *aManifestURI,
             PRBool equals;
             rv = manifestURI->Equals(aManifestURI, &equals);
             if (equals) {
-                if (aDocument)
+                if (aDocument) {
+                    LOG(("Document %p added to update %p", aDocument, update.get()));
                     update->AddDocument(aDocument);
+                }
                 NS_ADDREF(*aUpdate = update);
                 return NS_OK;
             }
@@ -2258,8 +2262,10 @@ nsOfflineCacheUpdateService::Schedule(nsIURI *aManifestURI,
     rv = update->Init(aManifestURI, aDocumentURI);
     NS_ENSURE_SUCCESS(rv, rv);
 
-    if (aDocument)
+    if (aDocument) {
+        LOG(("First document %p added to update %p", aDocument, update.get()));
         update->AddDocument(aDocument);
+    }
 
     rv = update->Schedule();
     NS_ENSURE_SUCCESS(rv, rv);

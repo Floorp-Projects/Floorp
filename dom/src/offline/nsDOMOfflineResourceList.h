@@ -76,8 +76,7 @@ public:
   NS_DECL_CYCLE_COLLECTION_CLASS_AMBIGUOUS(nsDOMOfflineResourceList,
                                            nsIDOMOfflineResourceList)
 
-  nsDOMOfflineResourceList(PRBool aToplevel,
-                           nsIURI* aManifestURI,
+  nsDOMOfflineResourceList(nsIURI* aManifestURI,
                            nsIURI* aDocumentURI,
                            nsIDOMWindow* aWindow);
   virtual ~nsDOMOfflineResourceList();
@@ -109,7 +108,6 @@ private:
   void ClearCachedKeys();
 
   PRBool mInitialized;
-  PRBool mToplevel;
 
   nsCOMPtr<nsIURI> mManifestURI;
   // AsciiSpec of mManifestURI
