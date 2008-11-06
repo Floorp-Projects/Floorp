@@ -6840,6 +6840,7 @@ let gPrivateBrowsingUI = {
       docElement.setAttribute("titlemodifier",
         docElement.getAttribute("titlemodifier_privatebrowsing"));
 #endif
+      docElement.setAttribute("browsingmode", "private");
     }
     else {
       // Disable the menu item in auto-start mode
@@ -6868,6 +6869,7 @@ let gPrivateBrowsingUI = {
       docElement.setAttribute("titlemodifier",
         docElement.getAttribute("titlemodifier_normal"));
 #endif
+      docElement.setAttribute("browsingmode", "normal");
     }
     else
       this._privateBrowsingAutoStarted = false;
