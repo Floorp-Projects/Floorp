@@ -198,8 +198,7 @@ function implicitCached()
   checkFallbackAndWhitelisting("http://localhost:8888/tests/dom/tests/mochitest/ajax/offline/onwhitelist.html", "", true);
 
   // Implicit entries
-  OfflineTest.todo(false, "Bug 461325");
-  //OfflineTest.checkCache("http://localhost:8888/tests/dom/tests/mochitest/ajax/offline/updatingImplicit.html", true);
+  OfflineTest.checkCache("http://localhost:8888/tests/dom/tests/mochitest/ajax/offline/updatingImplicit.html", true);
 
   // Dynamic entries
   OfflineTest.checkCache("http://localhost:8888/tests/SimpleTest/EventUtils.js", true);
@@ -248,8 +247,7 @@ function manifestUpdated()
     checkFallbackAndWhitelisting("http://localhost:8888/tests/dom/tests/mochitest/ajax/offline/onwhitelist.html", "", false);
 
     // Implicit entries
-    OfflineTest.todo(false, "Bug 461325");
-    //OfflineTest.checkCache("http://localhost:8888/tests/dom/tests/mochitest/ajax/offline/updatingImplicit.html", true);
+    OfflineTest.checkCache("http://localhost:8888/tests/dom/tests/mochitest/ajax/offline/updatingImplicit.html", true);
 
     // Dynamic entries
     OfflineTest.checkCache("http://localhost:8888/tests/SimpleTest/EventUtils.js", true);
@@ -294,8 +292,7 @@ function manifestUpdated()
     checkFallbackAndWhitelisting("http://localhost:8888/tests/dom/tests/mochitest/ajax/offline/onwhitelist.html", "", true);
 
     // Implicit entries
-    OfflineTest.todo(false, "Bug 461325");
-    //OfflineTest.checkCache("http://localhost:8888/tests/dom/tests/mochitest/ajax/offline/updatingImplicit.html", true);
+    OfflineTest.checkCache("http://localhost:8888/tests/dom/tests/mochitest/ajax/offline/updatingImplicit.html", true);
 
     // Dynamic entries
     OfflineTest.checkCache("http://localhost:8888/tests/SimpleTest/EventUtils.js", true);

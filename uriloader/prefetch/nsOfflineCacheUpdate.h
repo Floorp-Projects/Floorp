@@ -222,10 +222,7 @@ public:
     void LoadCompleted();
     void ManifestCheckCompleted(nsresult aStatus,
                                 const nsCString &aManifestHash);
-
-    void AddDocument(nsIDOMDocument *aDocument) {
-        mDocuments.AppendObject(aDocument);
-    };
+    void AddDocument(nsIDOMDocument *aDocument);
 
 private:
     nsresult HandleManifest(PRBool *aDoUpdate);
@@ -248,6 +245,7 @@ private:
     nsresult NotifyStarted(nsOfflineCacheUpdateItem *aItem);
     nsresult NotifyCompleted(nsOfflineCacheUpdateItem *aItem);
     nsresult AssociateDocument(nsIDOMDocument *aDocument);
+    nsresult ScheduleImplicit();
     nsresult Finish();
 
     enum {
