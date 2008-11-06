@@ -56,6 +56,7 @@ _TEST_FILES	= \
 	test_simpleManifest.html \
 	test_identicalManifest.html \
 	test_changingManifest.html \
+	test_refetchManifest.html \
 	test_offlineIFrame.html \
 	test_bug445544.html \
 	445544_part1.html \
@@ -88,7 +89,8 @@ _TEST_FILES	= \
 	simpleManifest.notmanifest \
 	changing1Sec.sjs \
 	changing1Hour.sjs \
-	changingManifest.sjs \
+	changingManifest.cacheManifest \
+	changingManifest.cacheManifest^headers^ \
 	offlineChild.html \
         $(NULL)
 
