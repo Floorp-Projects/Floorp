@@ -27,7 +27,7 @@
 #include <config.h>
 #endif
 
-#include "pixman-arm.h"
+#include "pixman-arm-simd.h"
 
 void
 fbCompositeSrcAdd_8000x8000arm (pixman_op_t op,
@@ -133,14 +133,14 @@ fbCompositeSrc_8888x8888arm (pixman_op_t op,
 			"cmp %[w], #0\n\t"
 			"beq 2f\n\t"
 			"1:\n\t"
-			/* load dest */
+			/* load src */
 			"ldr r5, [%[src]], #4\n\t"
 #ifdef inner_branch
 			/* We can avoid doing the multiplication in two cases: 0x0 or 0xff.
 			 * The 0x0 case also allows us to avoid doing an unecessary data
 			 * write which is more valuable so we only check for that */
-			"cmp r5, #0x1000000\n\t"
-			"blt 3f\n\t"
+			"cmp r5, #0\n\t"
+			"beq 3f\n\t"
 
 			/* = 255 - alpha */
 			"sub r8, %[alpha_mask], r5, lsr #24\n\t"
@@ -227,14 +227,14 @@ fbCompositeSrc_8888x8x8888arm (pixman_op_t op,
 			"cmp %[w], #0\n\t"
 			"beq 2f\n\t"
 			"1:\n\t"
-			/* load dest */
+			/* load src */
 			"ldr r5, [%[src]], #4\n\t"
 #ifdef inner_branch
 			/* We can avoid doing the multiplication in two cases: 0x0 or 0xff.
 			 * The 0x0 case also allows us to avoid doing an unecessary data
 			 * write which is more valuable so we only check for that */
-			"cmp r5, #0x1000000\n\t"
-			"blt 3f\n\t"
+			"cmp r5, #0\n\t"
+			"beq 3f\n\t"
 
 #endif
 			"ldr r4, [%[dest]] \n\t"
@@ -347,9 +347,7 @@ fbCompositeSolidMask_nx8x8888arm (pixman_op_t      op,
 			/* We can avoid doing the multiplication in two cases: 0x0 or 0xff.
 			 * The 0x0 case also allows us to avoid doing an unecessary data
 			 * write which is more valuable so we only check for that */
-			/* 0x1000000 is the least value that contains alpha all values
-			 * less than it have a 0 alpha value */
-			"cmp r5, #0x0\n\t"
+			"cmp r5, #0\n\t"
 			"beq 3f\n\t"
 
 #endif
