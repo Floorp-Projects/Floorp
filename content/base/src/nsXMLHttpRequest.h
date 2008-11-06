@@ -73,6 +73,7 @@
 #include "nsITimer.h"
 #include "nsIPrivateDOMEvent.h"
 #include "nsDOMProgressEvent.h"
+#include "nsIScriptGlobalObject.h"
 
 class nsILoadGroup;
 
@@ -159,7 +160,8 @@ protected:
 
 class nsXHREventTarget : public nsIXMLHttpRequestEventTarget,
                          public nsPIDOMEventTarget,
-                         public nsIDOMNSEventTarget
+                         public nsIDOMNSEventTarget,
+                         public nsWrapperCache
 {
 public:
   nsXHREventTarget() : mLang(nsIProgrammingLanguage::JAVASCRIPT) {}
@@ -207,6 +209,36 @@ public:
     }
     return NS_OK;
   }
+
+  void GetParentObject(nsIScriptGlobalObject **aParentObject)
+  {
+    if (mOwner) {
+      CallQueryInterface(mOwner, aParentObject);
+    }
+    else {
+      *aParentObject = nsnull;
+    }
+  }
+
+  static nsXHREventTarget* FromSupports(nsISupports* aSupports)
+  {
+    nsIXMLHttpRequestEventTarget* target =
+      static_cast<nsIXMLHttpRequestEventTarget*>(aSupports);
+#ifdef DEBUG
+    {
+      nsCOMPtr<nsIXMLHttpRequestEventTarget> target_qi =
+        do_QueryInterface(aSupports);
+
+      // If this assertion fires the QI implementation for the object in
+      // question doesn't use the nsIXMLHttpRequestEventTarget pointer as the
+      // nsISupports pointer. That must be fixed, or we'll crash...
+      NS_ASSERTION(target_qi == target, "Uh, fix QI!");
+    }
+#endif
+
+    return static_cast<nsXHREventTarget*>(target);
+  }
+
 protected:
   nsRefPtr<nsDOMEventListenerWrapper> mOnLoadListener;
   nsRefPtr<nsDOMEventListenerWrapper> mOnErrorListener;
