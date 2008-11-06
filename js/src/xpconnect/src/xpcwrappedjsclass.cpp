@@ -1566,7 +1566,7 @@ pre_call_clean_up:
             nsCOMPtr<nsIException> e;
 
             XPCConvert::ConstructException(code, sz, GetInterfaceName(), name,
-                                           nsnull, getter_AddRefs(e), nsnull);
+                                           nsnull, getter_AddRefs(e), nsnull, nsnull);
             xpcc->SetException(e);
             if(sz)
                 JS_smprintf_free(sz);
