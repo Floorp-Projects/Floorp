@@ -135,6 +135,13 @@ function needHomepageOverride(prefb) {
                          .getService(nsIHttpProtocolHandler).misc;
 
   if (mstone != savedmstone) {
+    // Bug 462254. Previous releases had a default pref to suppress the EULA
+    // agreement if the platform's installer had already shown one. Now with
+    // about:rights we've removed the EULA stuff and default pref, but we need
+    // a way to make existing profiles retain the default that we removed.
+    if (savedmstone)
+      prefb.setBoolPref("browser.rights.3.shown", true);
+    
     prefb.setCharPref("browser.startup.homepage_override.mstone", mstone);
     return (savedmstone ? OVERRIDE_NEW_MSTONE : OVERRIDE_NEW_PROFILE);
   }
