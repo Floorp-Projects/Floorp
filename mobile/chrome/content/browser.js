@@ -407,8 +407,8 @@ ProgressController.prototype = {
       if (aStateFlags & Ci.nsIWebProgressListener.STATE_STOP) {
         aWebProgress.DOMWindow.focus();
         Browser.translatePhoneNumbers();
-        this._tabbrowser.updateBrowser(this._browser, true);
         this._tabbrowser.updateCanvasState();
+        this._tabbrowser.updateBrowser(this._browser, true);
         //aWebProgress.DOMWindow.scrollbars.visible = false;
       }
     }

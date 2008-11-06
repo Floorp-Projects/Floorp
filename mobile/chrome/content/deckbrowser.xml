@@ -241,8 +241,7 @@
 
           var tab = this.getTabForDisplay(display);
           if (tab) {
-            tab.updateTab(browser);
-
+            tab.updateTab(browser, this._canvas);
             var canvas = display.firstChild;
             if (canvas.localName == "canvas")
               display.removeChild(canvas);
@@ -1396,22 +1395,28 @@
 
       <method name="updateTab">
         <parameter name="browser"/>
+        <parameter name="srcCanvas"/>
         <body>
           <![CDATA[
+            const tabWidth = 80
+            const tabHeight = 60
             let canvas = document.getAnonymousElementByAttribute(this, "anonid", "canvas");
 
             let domWin = browser.contentWindow;
-            let width = domWin.innerWidth;
-            let height = domWin.innerHeight;
-
             let ctx = canvas.getContext("2d");
-
-            ctx.clearRect(0, 0, 80, 60);
-            ctx.restore(); // XXXndeakin remove this
-            ctx.save();
-            ctx.scale(80 / width, 60 / height);
-            ctx.drawWindow(domWin, 0, 0, width, height, "white");
-            ctx.restore();
+            if (srcCanvas) {
+              let width = tabWidth * srcCanvas.width / domWin.innerWidth;
+              let height = tabHeight * srcCanvas.height / domWin.innerHeight;
+              ctx.drawImage(srcCanvas, 0, 0, width, height)
+            } else {
+              let width = domWin.innerWidth;
+              let height = domWin.innerHeight;
+              ctx.clearRect(0, 0, tabWidth, tabHeight);
+              ctx.save();
+              ctx.scale(tabWidth / width, tabHeight / height);
+              ctx.drawWindow(domWin, 0, 0, width, height, "white");
+              ctx.restore();              
+            }
           ]]>
         </body>
       </method>
