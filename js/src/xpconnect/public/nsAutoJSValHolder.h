@@ -21,6 +21,7 @@
  *
  * Contributor(s):
  *   Ben Turner <bent.mozilla@gmail.com> (Original Author)
+ *   Ben Newman <b{enjamn,newman}@mozilla.com>
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -36,55 +37,33 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-#ifndef __NSAUTOJSOBJECTHOLDER_H__
-#define __NSAUTOJSOBJECTHOLDER_H__
+#ifndef __NSAUTOJSVALHOLDER_H__
+#define __NSAUTOJSVALHOLDER_H__
 
 #include "jsapi.h"
 
 /**
- * Simple class that looks and acts like a JSObject* except that it unroots
+ * Simple class that looks and acts like a jsval except that it unroots
  * itself automatically if Root() is ever called. Designed to be rooted on the
- * context or runtime (but not both!). Also automatically nulls its JSObject*
- * on Unroot and asserts that Root has been called prior to assigning an object.
+ * context or runtime (but not both!).
  */
-class nsAutoJSObjectHolder
+class nsAutoJSValHolder
 {
 public:
-  /**
-   * Default constructor, no holding.
-   */
-  nsAutoJSObjectHolder()
-  : mRt(NULL), mObj(NULL), mHeld(PR_FALSE) { }
 
-  /**
-   * Hold by rooting on the context's runtime in the constructor, passing the
-   * result out.
-   */
-  nsAutoJSObjectHolder(JSContext* aCx, JSBool* aRv = NULL,
-                       JSObject* aObj = NULL)
-  : mRt(NULL), mObj(aObj), mHeld(JS_FALSE) {
-    JSBool rv = Hold(aCx);
-    if (aRv) {
-      *aRv = rv;
-    }
-  }
-
-  /**
-   * Hold by rooting on the runtime in the constructor, passing the result out.
-   */
-  nsAutoJSObjectHolder(JSRuntime* aRt, JSBool* aRv = NULL,
-                       JSObject* aObj = NULL)
-  : mRt(aRt), mObj(aObj), mHeld(JS_FALSE) {
-    JSBool rv = Hold(aRt);
-    if (aRv) {
-      *aRv = rv;
-    }
+  nsAutoJSValHolder()
+    : mRt(NULL)
+    , mVal(JSVAL_NULL)
+    , mGCThing(NULL)
+    , mHeld(JS_FALSE)
+  {
+    // nothing to do
   }
 
   /**
    * Always release on destruction.
    */
-  ~nsAutoJSObjectHolder() {
+  virtual ~nsAutoJSValHolder() {
     Release();
   }
 
@@ -97,29 +76,39 @@ public:
 
   /**
    * Hold by rooting on the runtime.
+   * Note that mGCThing may be JSVAL_NULL, which is not a problem.
    */
   JSBool Hold(JSRuntime* aRt) {
     if (!mHeld) {
-      mHeld = JS_AddNamedRootRT(aRt, &mObj, "nsAutoRootedJSObject");
-      if (mHeld) {
+      if (JS_AddNamedRootRT(aRt, &mGCThing, "nsAutoJSValHolder")) {
         mRt = aRt;
+        mHeld = JS_TRUE;
+      } else {
+        Release(); // out of memory
       }
     }
     return mHeld;
   }
 
   /**
-   * Manually release.
+   * Manually release, nullifying mVal, mGCThing, and mRt, but returning
+   * the original jsval.
    */
-  void Release() {
+  jsval Release() {
     NS_ASSERTION(!mHeld || mRt, "Bad!");
+
+    jsval oldval = mVal;
+
     if (mHeld) {
-      mHeld = !JS_RemoveRootRT(mRt, &mObj);
-      if (!mHeld) {
-        mRt = NULL;
-      }
-      mObj = NULL;
+      JS_RemoveRootRT(mRt, &mGCThing); // infallible
+      mHeld = JS_FALSE;
     }
+
+    mVal = JSVAL_NULL;
+    mGCThing = NULL;
+    mRt = NULL;
+
+    return oldval;
   }
 
   /**
@@ -132,33 +121,44 @@ public:
   /**
    * Pretend to be a JSObject*.
    */
-  JSObject* get() const {
-    return mObj;
-  }
-
-  /**
-   * Pretend to be a JSObject*.
-   */
   operator JSObject*() const {
-    return get();
+    return JSVAL_IS_OBJECT(mVal)
+         ? JSVAL_TO_OBJECT(mVal)
+         : JSVAL_NULL;
   }
 
   /**
-   * Pretend to be a JSObject*. Assert if not held.
+   * Pretend to be a jsval.
    */
-  JSObject* operator=(JSObject* aOther) {
+  operator jsval() const { return mVal; }
+
+  nsAutoJSValHolder &operator=(JSObject* aOther) {
 #ifdef DEBUG
     if (aOther) {
       NS_ASSERTION(mHeld, "Not rooted!");
     }
 #endif
-    return mObj = aOther;
+    return *this = OBJECT_TO_JSVAL(aOther);
+  }
+
+  nsAutoJSValHolder &operator=(jsval aOther) {
+#ifdef DEBUG
+    if (aOther) {
+      NS_ASSERTION(mHeld, "Not rooted!");
+    }
+#endif
+    mVal = aOther;
+    mGCThing = JSVAL_IS_GCTHING(aOther)
+             ? JSVAL_TO_GCTHING(aOther)
+             : NULL;
+    return *this;
   }
 
 private:
   JSRuntime* mRt;
-  JSObject* mObj;
+  jsval mVal;
+  void* mGCThing;
   JSBool mHeld;
 };
 
-#endif /* __NSAUTOJSOBJECTHOLDER_H__ */
+#endif /* __NSAUTOJSVALHOLDER_H__ */

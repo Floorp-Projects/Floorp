@@ -50,7 +50,7 @@
 // Other includes
 #include "jsapi.h"
 #include "nsAutoPtr.h"
-#include "nsAutoJSObjectHolder.h"
+#include "nsAutoJSValHolder.h"
 #include "nsCOMPtr.h"
 #include "nsStringGlue.h"
 #include "nsTArray.h"
@@ -162,12 +162,12 @@ private:
     ScriptCompiler(nsDOMWorkerScriptLoader* aLoader,
                    const nsString& aScriptText,
                    const nsCString& aFilename,
-                   nsAutoJSObjectHolder& aScriptObj);
+                   nsAutoJSValHolder& aScriptObj);
 
   private:
     nsString mScriptText;
     nsCString mFilename;
-    nsAutoJSObjectHolder& mScriptObj;
+    nsAutoJSValHolder& mScriptObj;
   };
 
   class ScriptLoaderDone : public ScriptLoaderRunnable
@@ -202,7 +202,7 @@ private:
     nsresult result;
     nsCOMPtr<nsIURI> finalURI;
     nsCOMPtr<nsIChannel> channel;
-    nsAutoJSObjectHolder scriptObj;
+    nsAutoJSValHolder scriptObj;
   };
 
   nsIThread* mTarget;
