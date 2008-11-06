@@ -672,7 +672,7 @@ nsDOMWorkerScriptLoader::
 ScriptCompiler::ScriptCompiler(nsDOMWorkerScriptLoader* aLoader,
                                const nsString& aScriptText,
                                const nsCString& aFilename,
-                               nsAutoJSObjectHolder& aScriptObj)
+                               nsAutoJSValHolder& aScriptObj)
 : ScriptLoaderRunnable(aLoader),
   mScriptText(aScriptText),
   mFilename(aFilename),
