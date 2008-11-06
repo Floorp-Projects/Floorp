@@ -4308,6 +4308,8 @@ MOZ_NO_INSPECTOR_APIS=
 MOZ_NO_XPCOM_OBSOLETE=
 MOZ_NO_FAST_LOAD=
 MOZ_OGG=1
+MOZ_SYDNEYAUDIO=
+MOZ_WAVE=1
 MOZ_MEDIA=
 MOZ_OJI=1
 MOZ_PERMISSIONS=1
@@ -5280,7 +5282,7 @@ if test -n "$MOZ_NO_FAST_LOAD"; then
 fi
 
 dnl ========================================================
-dnl = Enable Ogg Codecs
+dnl = Disable Ogg Codecs
 dnl ========================================================
 MOZ_ARG_DISABLE_BOOL(ogg,
 [  --disable-ogg           Disable Ogg Codec support],
@@ -5291,7 +5293,34 @@ AC_SUBST(MOZ_OGG)
 
 if test -n "$MOZ_OGG"; then
     AC_DEFINE(MOZ_OGG)
+    MOZ_SYDNEYAUDIO=1
     MOZ_MEDIA=1
+fi
+
+dnl ========================================================
+dnl = Disable Wave decoder support
+dnl ========================================================
+MOZ_ARG_ENABLE_BOOL(wave,
+[  --disable-wave          Disable Wave decoder support],
+    MOZ_WAVE=,
+    MOZ_WAVE=1)
+
+AC_SUBST(MOZ_WAVE)
+
+if test -n "$MOZ_WAVE"; then
+    AC_DEFINE(MOZ_WAVE)
+    MOZ_SYDNEYAUDIO=1
+    MOZ_MEDIA=1
+fi
+
+dnl ========================================================
+dnl = Handle dependent SYDNEYAUDIO and MEDIA defines
+dnl ========================================================
+
+AC_SUBST(MOZ_SYDNEYAUDIO)
+
+if test -n "$MOZ_SYDNEYAUDIO"; then
+    AC_DEFINE(MOZ_SYDNEYAUDIO)
 fi
 
 AC_SUBST(MOZ_MEDIA)
@@ -5300,13 +5329,19 @@ if test -n "$MOZ_MEDIA"; then
     AC_DEFINE(MOZ_MEDIA)
 fi
 
-dnl If using Ogg with Linux, ensure that the alsa library is available
-if test -n "$MOZ_OGG"; then
+dnl ========================================================
+dnl = Check alsa availability on Linux if using sydneyaudio
+dnl ========================================================
+
+dnl If using sydneyaudio with Linux, ensure that the alsa library is available
+if test "$COMPILE_ENVIRONMENT"; then
+if test -n "$MOZ_SYDNEYAUDIO"; then
    case "$target_os" in
 linux*)
       AC_CHECK_LIB(asound, snd_pcm_open,,AC_MSG_ERROR([Ogg support on Linux requires the alsa library]))
       ;;
    esac
+fi
 fi
 
 dnl ========================================================

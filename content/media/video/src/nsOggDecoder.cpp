@@ -966,7 +966,7 @@ nsresult nsOggDecodeStateMachine::Run()
           mReader->Available() < mBufferingBytes) {
         LOG(PR_LOG_DEBUG, 
             ("Buffering data until %d bytes available or %d milliseconds", 
-             (long)(mBufferingBytes - mReader->Available()),
+             mBufferingBytes - mReader->Available(),
              BUFFERING_WAIT*1000 - (PR_IntervalToMilliseconds(PR_IntervalNow() - mBufferingStart))));
         mon.Wait(PR_MillisecondsToInterval(1000));
         if (mState == DECODER_STATE_SHUTDOWN)
@@ -1334,6 +1334,13 @@ void nsOggDecoder::ResourceLoaded()
     mElement->ResourceLoaded();
   }
   StopProgress();
+}
+
+void nsOggDecoder::NetworkError()
+{
+  if (mElement)
+    mElement->NetworkError();
+  Stop();
 }
 
 PRBool nsOggDecoder::IsSeeking() const
