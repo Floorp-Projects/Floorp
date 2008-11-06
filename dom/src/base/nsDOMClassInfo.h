@@ -61,6 +61,7 @@ struct nsDOMClassInfoData;
 typedef nsIClassInfo* (*nsDOMClassInfoConstructorFnc)
   (nsDOMClassInfoData* aData);
 
+typedef nsresult (*nsDOMConstructorFunc)(nsISupports** aNewObject);
 
 struct nsDOMClassInfoData
 {
