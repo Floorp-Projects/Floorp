@@ -40,7 +40,7 @@
 #define __NSDOMWORKERSCRIPTLOADER_H__
 
 // Bases
-#include "nsThreadUtils.h"
+#include "nsIRunnable.h"
 #include "nsIStreamLoader.h"
 
 // Interfaces
@@ -56,8 +56,9 @@
 #include "nsTArray.h"
 #include "prlock.h"
 
-// DOMWorker includes
-#include "nsDOMWorkerThread.h"
+#include "nsDOMWorker.h"
+
+class nsIThread;
 
 /**
  * This class takes a list of script URLs, downloads the scripts, compiles the
@@ -86,12 +87,11 @@
  * Currently if *anything* after 2 fails then we cancel any pending loads and
  * bail out entirely.
  */
-class nsDOMWorkerScriptLoader : public nsRunnable,
+class nsDOMWorkerScriptLoader : public nsDOMWorkerFeature,
+                                public nsIRunnable,
                                 public nsIStreamLoaderObserver
 {
   friend class AutoSuspendWorkerEvents;
-  friend class nsDOMWorkerFunctions;
-  friend class nsDOMWorkerThread;
   friend class ScriptLoaderRunnable;
 
 public:
@@ -99,24 +99,23 @@ public:
   NS_DECL_NSIRUNNABLE
   NS_DECL_NSISTREAMLOADEROBSERVER
 
-  nsDOMWorkerScriptLoader();
+  nsDOMWorkerScriptLoader(nsDOMWorker* aWorker);
 
-  nsresult LoadScripts(nsDOMWorkerThread* aWorker,
-                       JSContext* aCx,
+  nsresult LoadScripts(JSContext* aCx,
                        const nsTArray<nsString>& aURLs);
 
-  nsresult LoadScript(nsDOMWorkerThread* aWorker,
-                       JSContext* aCx,
-                       const nsString& aURL);
+  nsresult LoadScript(JSContext* aCx,
+                      const nsString& aURL);
 
-  void Cancel();
+  virtual void Cancel();
 
 private:
-  ~nsDOMWorkerScriptLoader();
+  ~nsDOMWorkerScriptLoader() { }
 
-  nsresult DoRunLoop();
-  nsresult VerifyScripts();
-  nsresult ExecuteScripts();
+
+  nsresult DoRunLoop(JSContext* aCx);
+  nsresult VerifyScripts(JSContext* aCx);
+  nsresult ExecuteScripts(JSContext* aCx);
 
   nsresult RunInternal();
 
@@ -135,8 +134,11 @@ private:
     return mWorker->Lock();
   }
 
-  class ScriptLoaderRunnable : public nsRunnable
+  class ScriptLoaderRunnable : public nsIRunnable
   {
+  public:
+    NS_DECL_ISUPPORTS
+
   protected:
     // Meant to be inherited.
     ScriptLoaderRunnable(nsDOMWorkerScriptLoader* aLoader);
@@ -158,13 +160,11 @@ private:
     NS_DECL_NSIRUNNABLE
 
     ScriptCompiler(nsDOMWorkerScriptLoader* aLoader,
-                   JSContext* aCx,
                    const nsString& aScriptText,
                    const nsCString& aFilename,
                    nsAutoJSObjectHolder& aScriptObj);
 
   private:
-    JSContext* mCx;
     nsString mScriptText;
     nsCString mFilename;
     nsAutoJSObjectHolder& mScriptObj;
@@ -205,20 +205,17 @@ private:
     nsAutoJSObjectHolder scriptObj;
   };
 
-  nsDOMWorkerThread* mWorker;
   nsIThread* mTarget;
-  JSContext* mCx;
 
   nsRefPtr<ScriptLoaderDone> mDoneRunnable;
 
   PRUint32 mScriptCount;
   nsTArray<ScriptLoadInfo> mLoadInfos;
 
-  PRPackedBool mCanceled;
-  PRPackedBool mTrackedByWorker;
-
   // Protected by mWorker's lock!
   nsTArray<ScriptLoaderRunnable*> mPendingRunnables;
+
+  PRPackedBool mCanceled;
 };
 
 #endif /* __NSDOMWORKERSCRIPTLOADER_H__ */
