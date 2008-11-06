@@ -225,6 +225,7 @@ FINISH:
 static const cairo_font_face_backend_t _cairo_quartz_font_face_backend = {
     CAIRO_FONT_TYPE_QUARTZ,
     _cairo_quartz_font_face_destroy,
+    NULL, /* direct implementation */
     _cairo_quartz_font_face_scaled_font_create
 };
 
@@ -277,24 +278,27 @@ _cairo_quartz_scaled_to_face (void *abstract_font)
 }
 
 static cairo_status_t
-_cairo_quartz_font_create_toy(cairo_toy_font_face_t *toy_face,
-			      const cairo_matrix_t *font_matrix,
-			      const cairo_matrix_t *ctm,
-			      const cairo_font_options_t *options,
-			      cairo_scaled_font_t **font_out)
+_cairo_quartz_font_get_implementation (cairo_toy_font_face_t *toy_face,
+				       cairo_scaled_font_t **font_face_out)
 {
+    static cairo_user_data_key_t impl_font_face_key;
+    cairo_font_face_t *face;
+    cairo_status_t status;
     const char *family = toy_face->family;
     char *full_name = malloc(strlen(family) + 64); // give us a bit of room to tack on Bold, Oblique, etc.
     CFStringRef cgFontName = NULL;
     CGFontRef cgFont = NULL;
     int loop;
 
-    cairo_status_t status;
-    cairo_font_face_t *face;
-    cairo_scaled_font_t *scaled_font;
+    face = cairo_font_face_get_user_data (&toy_face->base,
+					  &impl_font_face_key);
+    if (face) {
+	*font_face_out = face;
+	return CAIRO_STATUS_SUCCESS;
+    }
 
     quartz_font_ensure_symbols();
-    if (!_cairo_quartz_font_symbols_present)
+    if (! _cairo_quartz_font_symbols_present)
 	return _cairo_error (CAIRO_STATUS_NO_MEMORY);
 
     /* handle CSS-ish faces */
@@ -345,7 +349,7 @@ _cairo_quartz_font_create_toy(cairo_toy_font_face_t *toy_face,
 
     if (!cgFont) {
 	/* Give up */
-	return CAIRO_STATUS_NO_MEMORY;
+	return _cairo_error (CAIRO_STATUS_NO_MEMORY);
     }
 
     face = cairo_quartz_font_face_create_for_cgfont (cgFont);
@@ -353,6 +357,35 @@ _cairo_quartz_font_create_toy(cairo_toy_font_face_t *toy_face,
 
     if (face->status)
 	return face->status;
+
+    status = cairo_font_face_set_user_data (&toy_face->base,
+					    &impl_font_face_key,
+					    face,
+					    (cairo_destroy_func_t) cairo_font_face_destroy);
+
+    if (status) {
+	cairo_font_face_destroy (face);
+	return status;
+    }
+
+    *font_face_out = face;
+    return CAIRO_STATUS_SUCCESS;
+}
+
+static cairo_status_t
+_cairo_quartz_font_create_toy (cairo_toy_font_face_t *toy_face,
+			       const cairo_matrix_t *font_matrix,
+			       const cairo_matrix_t *ctm,
+			       const cairo_font_options_t *options,
+			       cairo_scaled_font_t **font_out)
+{
+    cairo_font_face_t *face;
+    cairo_scaled_font_t *scaled_font;
+    cairo_status_t status;
+
+    status = _cairo_quartz_font_get_implementation (toy_face, &face);
+    if (status)
+	return status;
 
     status = _cairo_quartz_font_face_scaled_font_create (face,
 							 font_matrix, ctm,
@@ -363,7 +396,6 @@ _cairo_quartz_font_create_toy(cairo_toy_font_face_t *toy_face,
 	return status;
 
     *font_out = scaled_font;
-
     return CAIRO_STATUS_SUCCESS;
 }
 
@@ -743,6 +775,7 @@ _cairo_quartz_ucs4_to_index (void *abstract_font,
 
 const cairo_scaled_font_backend_t _cairo_quartz_scaled_font_backend = {
     CAIRO_FONT_TYPE_QUARTZ,
+    _cairo_quartz_font_get_implementation,
     _cairo_quartz_font_create_toy,
     _cairo_quartz_font_fini,
     _cairo_quartz_font_scaled_glyph_init,

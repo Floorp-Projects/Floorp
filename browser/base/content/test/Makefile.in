@@ -55,6 +55,7 @@ _TEST_FILES =	test_feed_discovery.html \
 # browser_bug423833.js disabled temporarily since it's unreliable: bug 428712
 # browser_sanitize-download-history.js disabled temporarily since it's unreliable: bug 432425
 _BROWSER_FILES = browser_bug321000.js \
+                 browser_sanitize-timespans.js \
                  browser_bug405137.js \
                  browser_bug409481.js \
                  browser_bug413915.js \

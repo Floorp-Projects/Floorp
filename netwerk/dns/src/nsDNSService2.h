@@ -68,5 +68,4 @@ private:
     // a per-domain basis and work around broken DNS servers. See bug 68796.
     nsAdoptingCString         mIPv4OnlyDomains;
     PRBool                    mDisableIPv6;
-    PRBool                    mDisablePrefetch;
 };

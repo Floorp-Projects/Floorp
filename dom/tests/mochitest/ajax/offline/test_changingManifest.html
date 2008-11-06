@@ -1,10 +1,11 @@
-<html xmlns="http://www.w3.org/1999/xhtml" manifest="http://localhost:8888/tests/dom/tests/mochitest/ajax/offline/changingManifest.sjs">
+<html xmlns="http://www.w3.org/1999/xhtml" manifest="http://localhost:8888/tests/dom/tests/mochitest/ajax/offline/changingManifest.cacheManifest">
 <head>
 <title>changing manifest test</title>
 
 <script type="text/javascript" src="/MochiKit/packed.js"></script>
 <script type="text/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
 <script type="text/javascript" src="/tests/dom/tests/mochitest/ajax/offline/offlineTests.js"></script>
+<link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
 
 <script type="text/javascript">
 
@@ -15,6 +16,17 @@ var g1SecUrl =  "http://localhost:8888/tests/dom/tests/mochitest/ajax/offline/ch
 var g1HourUrl = "http://localhost:8888/tests/dom/tests/mochitest/ajax/offline/changing1Hour.sjs";
 
 var gCacheContents = null;
+
+function finish()
+{
+  // Get rid of the changed manifest.
+  var req = new XMLHttpRequest();
+  req.open("DELETE", "changingManifest.cacheManifest", false);
+  req.send("");
+
+  OfflineTest.teardown();
+  OfflineTest.finish();
+}
 
 function manifestUpdatedAgain()
 {
@@ -29,15 +41,13 @@ function manifestUpdatedAgain()
     OfflineTest.isnot(gCacheContents[g1SecUrl], contents[g1SecUrl], "1-second expiration should have changed");
     OfflineTest.is(gCacheContents[g1HourUrl], contents[g1HourUrl], "1-hour expiration should not have changed");
 
-    OfflineTest.teardown();
-    OfflineTest.finish();
+    finish();
   });
 }
 
 function failAndFinish(e) {
   OfflineTest.ok(false, "Unexpected event: " + e.type);
-  OfflineTest.teardown();
-  OfflineTest.finish();
+  finish();
 }
 
 function manifestUpdated()
@@ -45,12 +55,25 @@ function manifestUpdated()
   OfflineTest.ok(gGotChecking, "Should get a checking event");
   OfflineTest.ok(gGotDownloading, "Should get a downloading event");
 
+  // Replace this manifest with a new one.
+
+  // XXX: After this put, we will no longer have Cache-Control:
+  // no-cache on the manifest, so future updates will just use the
+  // cached manifest.
+  var req = new XMLHttpRequest();
+  req.open("PUT", "changingManifest.cacheManifest", false);
+  req.setRequestHeader("Content-Type", "text/cache-manifest");
+  req.send("CACHE MANIFEST\n" +
+           "# v2\n" +
+           "changing1Hour.sjs\n" +
+           "changing1Sec.sjs\n");
+
   // Get the initial contents of the first two files.
   fetcher = new OfflineCacheContents([g1SecUrl, g1HourUrl]);
   fetcher.fetch(function(contents) {
     gCacheContents = contents;
 
-     // Now make sure applicationCache.update() does what we expect.
+    // Now make sure applicationCache.update() does what we expect.
     applicationCache.onupdateready = OfflineTest.priv(manifestUpdatedAgain);
     applicationCache.onnoupdate = failAndFinish;
     applicationCache.oncached = failAndFinish;

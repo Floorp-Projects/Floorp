@@ -40,6 +40,19 @@
  *	Adrian Johnson <ajohnson@redneon.com>
  */
 
+
+/*
+ * Design of the PS output:
+ *
+ * The PS output is harmonised with the PDF operations using PS procedures
+ * to emulate the PDF operators.
+ *
+ * This has a number of advantages:
+ *   1. A large chunk of code is shared between the PDF and PS backends.
+ *      See cairo-pdf-operators.
+ *   2. Using gs to do PS -> PDF and PDF -> PS will always work well.
+ */
+
 #define _BSD_SOURCE /* for ctime_r(), snprintf(), strdup() */
 #include "cairoint.h"
 #include "cairo-ps.h"
@@ -173,6 +186,8 @@ _cairo_ps_surface_emit_header (cairo_ps_surface_t *surface)
 				 "/S { stroke } bind def\n"
 				 "/f { fill } bind def\n"
 				 "/f* { eofill } bind def\n"
+				 "/B { fill stroke } bind def\n"
+				 "/B* { eofill stroke } bind def\n"
 				 "/n { newpath } bind def\n"
 				 "/W { clip } bind def\n"
 				 "/W* { eoclip } bind def\n"
@@ -196,12 +211,12 @@ _cairo_ps_surface_emit_header (cairo_ps_surface_t *surface)
 				 "/cairo_selectfont { cairo_font_matrix aload pop pop pop 0 0 6 array astore\n"
 				 "    cairo_font exch selectfont cairo_point_x cairo_point_y moveto } bind def\n"
 				 "/Tf { pop /cairo_font exch def /cairo_font_matrix where\n"
-				 "      { cairo_selectfont } if } bind def\n"
+				 "      { pop cairo_selectfont } if } bind def\n"
 				 "/Td { matrix translate cairo_font_matrix matrix concatmatrix dup\n"
 				 "      /cairo_font_matrix exch def dup 4 get exch 5 get cairo_store_point\n"
-				 "      /cairo_font where { cairo_selectfont } if } bind def\n"
+				 "      /cairo_font where { pop cairo_selectfont } if } bind def\n"
 				 "/Tm { 2 copy 8 2 roll 6 array astore /cairo_font_matrix exch def\n"
-				 "      cairo_store_point /cairo_font where { cairo_selectfont } if } bind def\n"
+				 "      cairo_store_point /cairo_font where { pop cairo_selectfont } if } bind def\n"
 				 "/g { setgray } bind def\n"
 				 "/rg { setrgbcolor } bind def\n"
 				 "/d1 { setcachedevice } bind def\n");
@@ -427,6 +442,32 @@ _cairo_ps_emit_imagemask (cairo_image_surface_t *image,
 }
 
 static cairo_status_t
+_cairo_ps_surface_analyze_user_font_subset (cairo_scaled_font_subset_t *font_subset,
+					    void		       *closure)
+{
+    cairo_ps_surface_t *surface = closure;
+    cairo_status_t status = CAIRO_STATUS_SUCCESS;
+    unsigned int i;
+    cairo_surface_t *type3_surface;
+
+    type3_surface = _cairo_type3_glyph_surface_create (font_subset->scaled_font,
+						       NULL,
+						       _cairo_ps_emit_imagemask,
+						       surface->font_subsets);
+
+    for (i = 0; i < font_subset->num_glyphs; i++) {
+	status = _cairo_type3_glyph_surface_analyze_glyph (type3_surface,
+							   font_subset->glyphs[i]);
+	if (status)
+	    break;
+
+    }
+    cairo_surface_destroy (type3_surface);
+
+    return status;
+}
+
+static cairo_status_t
 _cairo_ps_surface_emit_type3_font_subset (cairo_ps_surface_t		*surface,
 					  cairo_scaled_font_subset_t	*font_subset)
 
@@ -438,6 +479,9 @@ _cairo_ps_surface_emit_type3_font_subset (cairo_ps_surface_t		*surface,
     cairo_box_t bbox = {{0,0},{0,0}};
     cairo_surface_t *type3_surface;
     double width;
+
+    if (font_subset->num_glyphs == 0)
+	return CAIRO_STATUS_SUCCESS;
 
 #if DEBUG_PS
     _cairo_output_stream_printf (surface->final_stream,
@@ -453,9 +497,10 @@ _cairo_ps_surface_emit_type3_font_subset (cairo_ps_surface_t		*surface,
 
     type3_surface = _cairo_type3_glyph_surface_create (font_subset->scaled_font,
 						       NULL,
-						       _cairo_ps_emit_imagemask);
+						       _cairo_ps_emit_imagemask,
+						       surface->font_subsets);
 
-    for (i = 1; i < font_subset->num_glyphs; i++) {
+    for (i = 0; i < font_subset->num_glyphs; i++) {
 	if (font_subset->glyph_names != NULL) {
 	    _cairo_output_stream_printf (surface->final_stream,
 					 "Encoding %d /%s put\n",
@@ -472,20 +517,13 @@ _cairo_ps_surface_emit_type3_font_subset (cairo_ps_surface_t		*surface,
     for (i = 0; i < font_subset->num_glyphs; i++) {
 	_cairo_output_stream_printf (surface->final_stream,
 				     "    { %% %d\n", i);
-	if (i == 0) {
-	    status = _cairo_type3_glyph_surface_emit_notdef_glyph (type3_surface,
-								   surface->final_stream,
-								   &bbox,
-								   &width);
-	} else {
-	    status = _cairo_type3_glyph_surface_emit_glyph (type3_surface,
-							    surface->final_stream,
-							    font_subset->glyphs[i],
-							    &bbox,
-							    &width);
-	}
+	status = _cairo_type3_glyph_surface_emit_glyph (type3_surface,
+							surface->final_stream,
+							font_subset->glyphs[i],
+							&bbox,
+							&width);
 	if (status)
-	    return status;
+	    break;
 
 	_cairo_output_stream_printf (surface->final_stream,
 				     "    }\n");
@@ -506,13 +544,16 @@ _cairo_ps_surface_emit_type3_font_subset (cairo_ps_surface_t		*surface,
         }
     }
     cairo_surface_destroy (type3_surface);
+    if (status)
+	return status;
 
     _cairo_output_stream_printf (surface->final_stream,
 				 "] def\n"
 				 "/FontBBox [%f %f %f %f] def\n"
 				 "/BuildChar {\n"
 				 "  exch /Glyphs get\n"
-				 "  exch get exec\n"
+				 "  exch get\n"
+				 "  10 dict begin exec end\n"
 				 "} bind def\n"
 				 "currentdict\n"
 				 "end\n"
@@ -586,6 +627,12 @@ _cairo_ps_surface_emit_font_subsets (cairo_ps_surface_t *surface)
 				 "%% _cairo_ps_surface_emit_font_subsets\n");
 #endif
 
+    status = _cairo_scaled_font_subsets_foreach_user (surface->font_subsets,
+						      _cairo_ps_surface_analyze_user_font_subset,
+						      surface);
+    if (status)
+	goto BAIL;
+
     status = _cairo_scaled_font_subsets_foreach_unscaled (surface->font_subsets,
                                                           _cairo_ps_surface_emit_unscaled_font_subset,
                                                           surface);
@@ -595,7 +642,12 @@ _cairo_ps_surface_emit_font_subsets (cairo_ps_surface_t *surface)
     status = _cairo_scaled_font_subsets_foreach_scaled (surface->font_subsets,
                                                         _cairo_ps_surface_emit_scaled_font_subset,
                                                         surface);
+    if (status)
+	goto BAIL;
 
+    status = _cairo_scaled_font_subsets_foreach_user (surface->font_subsets,
+						      _cairo_ps_surface_emit_scaled_font_subset,
+						      surface);
 BAIL:
     _cairo_scaled_font_subsets_destroy (surface->font_subsets);
     surface->font_subsets = NULL;
@@ -734,7 +786,10 @@ _cairo_ps_surface_create_for_stream_internal (cairo_output_stream_t *stream,
 
 /**
  * cairo_ps_surface_create:
- * @filename: a filename for the PS output (must be writable)
+ * @filename: a filename for the PS output (must be writable), %NULL may be
+ *            used to specify no output. This will generate a PS surface that
+ *            may be queried and used as a source, without generating a
+ *            temporary file.
  * @width_in_points: width of the surface, in points (1 point == 1/72.0 inch)
  * @height_in_points: height of the surface, in points (1 point == 1/72.0 inch)
  *
@@ -774,7 +829,10 @@ cairo_ps_surface_create (const char		*filename,
 
 /**
  * cairo_ps_surface_create_for_stream:
- * @write_func: a #cairo_write_func_t to accept the output data
+ * @write_func: a #cairo_write_func_t to accept the output data, may be %NULL
+ *              to indicate a no-op @write_func. With a no-op @write_func,
+ *              the surface may be queried or used as a source without
+ *              generating any temporary files.
  * @closure: the closure argument for @write_func
  * @width_in_points: width of the surface, in points (1 point == 1/72.0 inch)
  * @height_in_points: height of the surface, in points (1 point == 1/72.0 inch)
@@ -1422,12 +1480,25 @@ static cairo_bool_t
 _gradient_pattern_supported (cairo_ps_surface_t    *surface,
 			     cairo_pattern_t *pattern)
 {
+    cairo_gradient_pattern_t *gradient = (cairo_gradient_pattern_t *) pattern;
+    uint16_t alpha;
     cairo_extend_t extend;
+    unsigned int i;
 
     if (surface->ps_level == CAIRO_PS_LEVEL_2)
 	return FALSE;
 
-    surface->ps_level_used = CAIRO_PS_LEVEL_3;
+    if (gradient->n_stops == 0)
+	return TRUE;
+
+    /* Alpha gradients are only supported (by flattening the alpha)
+     * if there is no variation in the alpha across the gradient. */
+    alpha = gradient->stops[0].color.alpha_short;
+    for (i = 0; i < gradient->n_stops; i++) {
+	if (gradient->stops[i].color.alpha_short != alpha)
+	    return FALSE;
+    }
+
     extend = cairo_pattern_get_extend (pattern);
 
     /* Radial gradients are currently only supported when one circle
@@ -1453,6 +1524,8 @@ _gradient_pattern_supported (cairo_ps_surface_t    *surface,
             return FALSE;
         }
     }
+
+    surface->ps_level_used = CAIRO_PS_LEVEL_3;
 
     return TRUE;
 }
@@ -1504,7 +1577,7 @@ _cairo_ps_surface_analyze_operation (cairo_ps_surface_t    *surface,
      * surface. If the analysis surface determines that there is
      * anything drawn under this operation, a fallback image will be
      * used. Otherwise the operation will be replayed during the
-     * render stage and we blend the transarency into the white
+     * render stage and we blend the transparency into the white
      * background to convert the pattern to opaque.
      */
 
@@ -2089,21 +2162,19 @@ _cairo_ps_surface_flatten_transparency (cairo_ps_surface_t	*surface,
 					double			*green,
 					double			*blue)
 {
-    *red = color->red;
+    *red   = color->red;
     *green = color->green;
-    *blue = color->blue;
+    *blue  = color->blue;
 
-    if (!CAIRO_COLOR_IS_OPAQUE(color)) {
+    if (! CAIRO_COLOR_IS_OPAQUE (color)) {
+	*red   *= color->alpha;
+	*green *= color->alpha;
+	*blue  *= color->alpha;
 	if (surface->content == CAIRO_CONTENT_COLOR_ALPHA) {
-	    uint8_t one_minus_alpha = 255 - (color->alpha_short >> 8);
-
-	    *red   = ((color->red_short   >> 8) + one_minus_alpha) / 255.0;
-	    *green = ((color->green_short >> 8) + one_minus_alpha) / 255.0;
-	    *blue  = ((color->blue_short  >> 8) + one_minus_alpha) / 255.0;
-	} else {
-	    *red   = (color->red_short   >> 8) / 255.0;
-	    *green = (color->green_short >> 8) / 255.0;
-	    *blue  = (color->blue_short  >> 8) / 255.0;
+	    double one_minus_alpha = 1. - color->alpha;
+	    *red   += one_minus_alpha;
+	    *green += one_minus_alpha;
+	    *blue  += one_minus_alpha;
 	}
     }
 }
@@ -2826,10 +2897,7 @@ _cairo_ps_surface_emit_pattern (cairo_ps_surface_t *surface,
 	cairo_solid_pattern_t *solid = (cairo_solid_pattern_t *) pattern;
 
 	if (surface->current_pattern_is_solid_color == FALSE ||
-	    surface->current_color_red != solid->color.red ||
-	    surface->current_color_green != solid->color.green ||
-	    surface->current_color_blue != solid->color.blue ||
-	    surface->current_color_alpha != solid->color.alpha)
+	    ! _cairo_color_equal (&surface->current_color, &solid->color))
 	{
 	    status = _cairo_pdf_operators_flush (&surface->pdf_operators);
 	    if (status)
@@ -2838,10 +2906,7 @@ _cairo_ps_surface_emit_pattern (cairo_ps_surface_t *surface,
 	    _cairo_ps_surface_emit_solid_pattern (surface, (cairo_solid_pattern_t *) pattern);
 
 	    surface->current_pattern_is_solid_color = TRUE;
-	    surface->current_color_red = solid->color.red;
-	    surface->current_color_green = solid->color.green;
-	    surface->current_color_blue = solid->color.blue;
-	    surface->current_color_alpha = solid->color.alpha;
+	    surface->current_color = solid->color;
 	}
 
 	return CAIRO_STATUS_SUCCESS;
@@ -3223,6 +3288,12 @@ _cairo_ps_surface_set_bounding_box (void		*abstract_surface,
     return _cairo_output_stream_get_status (surface->stream);
 }
 
+static cairo_bool_t
+_cairo_ps_surface_supports_fine_grained_fallbacks (void	    *abstract_surface)
+{
+    return TRUE;
+}
+
 static const cairo_surface_backend_t cairo_ps_surface_backend = {
     CAIRO_SURFACE_TYPE_PS,
     _cairo_ps_surface_create_similar,
@@ -3261,4 +3332,6 @@ static const cairo_paginated_surface_backend_t cairo_ps_surface_paginated_backen
     _cairo_ps_surface_start_page,
     _cairo_ps_surface_set_paginated_mode,
     _cairo_ps_surface_set_bounding_box,
+    NULL, /* _cairo_ps_surface_has_fallback_images, */
+    _cairo_ps_surface_supports_fine_grained_fallbacks,
 };

@@ -51,11 +51,13 @@ FORCE_STATIC_LIB = 1
 REQUIRES = \
   caps \
   content \
+  docshell \
   gfx \
   js \
   layout \
   locale \
   necko \
+  plugin \
   pref \
   string \
   thebes \
@@ -66,11 +68,12 @@ REQUIRES = \
 
 CPPSRCS = \
   nsDOMThreadService.cpp \
-  nsDOMWorkerBase.cpp \
+  nsDOMWorker.cpp \
+  nsDOMWorkerEvents.cpp \
+  nsDOMWorkerMessageHandler.cpp \
   nsDOMWorkerPool.cpp \
   nsDOMWorkerScriptLoader.cpp \
   nsDOMWorkerSecurityManager.cpp \
-  nsDOMWorkerThread.cpp \
   nsDOMWorkerTimeout.cpp \
   nsDOMWorkerXHR.cpp \
   nsDOMWorkerXHRProxy.cpp \
@@ -87,5 +90,3 @@ DIRS += test
 endif
 
 include $(topsrcdir)/config/rules.mk
-
-#CXXFLAGS += $(WARNINGS_AS_ERRORS)

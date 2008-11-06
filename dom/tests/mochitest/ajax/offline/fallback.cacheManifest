@@ -1,0 +1,12 @@
+CACHE MANIFEST
+http://localhost:8888/tests/SimpleTest/SimpleTest.js
+http://localhost:8888/MochiKit/packed.js
+http://localhost:8888/tests/dom/tests/mochitest/ajax/offline/offlineTests.js
+
+FALLBACK:
+namespace1/ fallback.html
+namespace1/sub/		fallback2.html
+namespace2/ fallbackTop.html
+
+NETWORK:
+onwhitelist.html

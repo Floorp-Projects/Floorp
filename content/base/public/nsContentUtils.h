@@ -1241,14 +1241,14 @@ public:
   static nsIAtom* IsNamedItem(nsIContent* aContent);
 
   /**
-   * Get the application manifest URI for this context.  The manifest URI
+   * Get the application manifest URI for this document.  The manifest URI
    * is specified in the manifest= attribute of the root element of the
-   * toplevel window.
+   * document.
    *
-   * @param aWindow The context to check.
+   * @param aDocument The document that lists the manifest.
    * @param aURI The manifest URI.
    */
-  static void GetOfflineAppManifest(nsIDOMWindow *aWindow, nsIURI **aURI);
+  static void GetOfflineAppManifest(nsIDocument *aDocument, nsIURI **aURI);
 
   /**
    * Check whether an application should be allowed to use offline APIs.

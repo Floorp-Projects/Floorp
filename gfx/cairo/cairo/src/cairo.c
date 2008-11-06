@@ -42,7 +42,7 @@
 #include "cairo-arc-private.h"
 #include "cairo-path-private.h"
 
-#define CAIRO_TOLERANCE_MINIMUM	0.0002 /* We're limited by 16 bits of sub-pixel precision */
+#define CAIRO_TOLERANCE_MINIMUM	_cairo_fixed_to_double(1)
 
 static const cairo_t _cairo_nil = {
   CAIRO_REFERENCE_COUNT_INVALID,	/* ref_count */
@@ -84,8 +84,7 @@ static const cairo_t _cairo_nil = {
 cairo_status_t
 _cairo_error (cairo_status_t status)
 {
-    assert (status > CAIRO_STATUS_SUCCESS &&
-	    status <= CAIRO_STATUS_LAST_STATUS);
+    assert (_cairo_status_is_error (status));
 
     return status;
 }
@@ -288,7 +287,7 @@ cairo_set_user_data (cairo_t			 *cr,
 		     cairo_destroy_func_t	 destroy)
 {
     if (CAIRO_REFERENCE_COUNT_IS_INVALID (&cr->ref_count))
-	return _cairo_error (CAIRO_STATUS_NO_MEMORY);
+	return cr->status;
 
     return _cairo_user_data_array_set_data (&cr->user_data,
 					    key, user_data, destroy);
@@ -926,6 +925,7 @@ cairo_set_line_width (cairo_t *cr, double width)
     if (status)
 	_cairo_set_error (cr, status);
 }
+slim_hidden_def (cairo_set_line_width);
 
 /**
  * cairo_set_line_cap:
@@ -955,6 +955,7 @@ cairo_set_line_cap (cairo_t *cr, cairo_line_cap_t line_cap)
     if (status)
 	_cairo_set_error (cr, status);
 }
+slim_hidden_def (cairo_set_line_cap);
 
 /**
  * cairo_set_line_join:
@@ -984,6 +985,7 @@ cairo_set_line_join (cairo_t *cr, cairo_line_join_t line_join)
     if (status)
 	_cairo_set_error (cr, status);
 }
+slim_hidden_def (cairo_set_line_join);
 
 /**
  * cairo_set_dash:
@@ -2087,6 +2089,7 @@ cairo_stroke (cairo_t *cr)
 
     cairo_new_path (cr);
 }
+slim_hidden_def(cairo_stroke);
 
 /**
  * cairo_stroke_preserve:
@@ -3077,8 +3080,9 @@ cairo_show_text (cairo_t *cr, const char *utf8)
     cairo_glyph_t *glyphs = NULL, *last_glyph;
     cairo_text_cluster_t *clusters = NULL;
     int utf8_len, num_glyphs, num_clusters;
-    cairo_bool_t backward;
+    cairo_text_cluster_flags_t cluster_flags;
     double x, y;
+    cairo_bool_t has_show_text_glyphs;
 
     if (cr->status)
 	return;
@@ -3090,12 +3094,15 @@ cairo_show_text (cairo_t *cr, const char *utf8)
 
     utf8_len = strlen (utf8);
 
+    has_show_text_glyphs =
+	cairo_surface_has_show_text_glyphs (cairo_get_target (cr));
+
     status = _cairo_gstate_text_to_glyphs (cr->gstate,
 					   x, y,
 					   utf8, utf8_len,
 					   &glyphs, &num_glyphs,
-					   cairo_has_show_text_glyphs (cr) ? &clusters : NULL, &num_clusters,
-					   &backward);
+					   has_show_text_glyphs ? &clusters : NULL, &num_clusters,
+					   &cluster_flags);
     if (status)
 	goto BAIL;
 
@@ -3106,7 +3113,7 @@ cairo_show_text (cairo_t *cr, const char *utf8)
 					     utf8, utf8_len,
 					     glyphs, num_glyphs,
 					     clusters, num_clusters,
-					     backward);
+					     cluster_flags);
     if (status)
 	goto BAIL;
 
@@ -3170,36 +3177,6 @@ cairo_show_glyphs (cairo_t *cr, const cairo_glyph_t *glyphs, int num_glyphs)
 }
 
 /**
- * cairo_has_show_text_glyphs:
- * @cr: a cairo context
- *
- * Returns whether the target surface of a cairo context supports
- * sophisticated cairo_show_text_glyphs() operations.  That is,
- * whether it actually uses the provided text and cluster data
- * to a cairo_show_text_glyphs() call.
- *
- * Note: Even if this function returns %FALSE, a
- * cairo_show_text_glyphs() operation will still succeed.  It just will
- * act like a cairo_show_glyphs() operation.  Users can use this
- * function to avoid computing UTF-8 text and cluster mapping if the
- * target surface does not use it.
- *
- * This is a convenience function that simply calls
- * cairo_surface_has_show_text_glyphs() on @cr's target.
- *
- * Return value: %TRUE if the target surface of @cr supports
- *               cairo_show_text_glyphs(), %FALSE otherwise
- *
- * Since: 1.8
- **/
-cairo_bool_t
-cairo_has_show_text_glyphs (cairo_t			   *cr)
-{
-    return _cairo_gstate_has_show_text_glyphs (cr->gstate);
-}
-slim_hidden_def (cairo_has_show_text_glyphs);
-
-/**
  * cairo_show_text_glyphs:
  * @cr: a cairo context
  * @utf8: a string of text encoded in UTF-8
@@ -3208,14 +3185,14 @@ slim_hidden_def (cairo_has_show_text_glyphs);
  * @num_glyphs: number of glyphs to show
  * @clusters: array of cluster mapping information
  * @num_clusters: number of clusters in the mapping
- * @backward: whether the text to glyphs mapping goes backward
+ * @cluster_flags: cluster mapping flags
  *
  * This operation has rendering effects similar to cairo_show_glyphs()
  * but, if the target surface supports it, uses the provided text and
  * cluster mapping to embed the text for the glyphs shown in the output.
- * The cairo_has_show_text_glyphs() function can be used to query that.
- * If the target does not support it, this function acts like
- * cairo_show_glyphs().
+ * If the target does not support the extended attributes, this function
+ * acts like the basic cairo_show_glyphs() as if it had been passed
+ * @glyphs and @num_glyphs.
  *
  * The mapping between @utf8 and @glyphs is provided by an array of
  * <firstterm>clusters</firstterm>.  Each cluster covers a number of
@@ -3224,7 +3201,8 @@ slim_hidden_def (cairo_has_show_text_glyphs);
  * and @glyphs in entirety.
  *
  * The first cluster always covers bytes from the beginning of @utf8.
- * If @backward is %FALSE, the first cluster also covers the beginning
+ * If @cluster_flags do not have the %CAIRO_TEXT_CLUSTER_FLAG_BACKWARD
+ * set, the first cluster also covers the beginning
  * of @glyphs, otherwise it covers the end of the @glyphs array and
  * following clusters move backward.
  *
@@ -3240,7 +3218,7 @@ cairo_show_text_glyphs (cairo_t			   *cr,
 			int			    num_glyphs,
 			const cairo_text_cluster_t *clusters,
 			int			    num_clusters,
-			cairo_bool_t		    backward)
+			cairo_text_cluster_flags_t  cluster_flags)
 {
     cairo_status_t status;
 
@@ -3275,8 +3253,7 @@ cairo_show_text_glyphs (cairo_t			   *cr,
      * and that cluster boundaries are UTF-8 boundaries. */
     status = _cairo_validate_text_clusters (utf8, utf8_len,
 					    glyphs, num_glyphs,
-					    clusters, num_clusters,
-					    backward);
+					    clusters, num_clusters, cluster_flags);
     if (status == CAIRO_STATUS_INVALID_CLUSTERS) {
 	/* Either got invalid UTF-8 text, or cluster mapping is bad.
 	 * Differentiate those. */
@@ -3297,8 +3274,7 @@ cairo_show_text_glyphs (cairo_t			   *cr,
     status = _cairo_gstate_show_text_glyphs (cr->gstate,
 					     utf8, utf8_len,
 					     glyphs, num_glyphs,
-					     clusters, num_clusters,
-					     !!backward);
+					     clusters, num_clusters, cluster_flags);
     if (status)
 	_cairo_set_error (cr, status);
 }
@@ -3585,6 +3561,7 @@ cairo_get_line_width (cairo_t *cr)
 
     return _cairo_gstate_get_line_width (cr->gstate);
 }
+slim_hidden_def (cairo_get_line_width);
 
 /**
  * cairo_get_line_cap:
