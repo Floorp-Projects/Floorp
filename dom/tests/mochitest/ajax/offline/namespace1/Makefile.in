@@ -43,7 +43,7 @@ relativesrcdir	= dom/tests/mochitest/ajax/offline/namespace1
 
 include $(DEPTH)/config/autoconf.mk
 
-DIRS = sub
+DIRS = sub sub2
 
 include $(topsrcdir)/config/rules.mk
 
