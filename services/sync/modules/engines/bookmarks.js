@@ -717,7 +717,8 @@ function BookmarksEngine(pbeId) {
   this._init(pbeId);
 }
 BookmarksEngine.prototype = {
-  __proto__: new SyncEngine(),
+  __proto__: NewEngine.prototype,
+  get _super() NewEngine.prototype,
 
   get name() { return "bookmarks"; },
   get displayName() { return "Bookmarks"; },
@@ -743,42 +744,10 @@ BookmarksEngine.prototype = {
     if (!this.__tracker)
       this.__tracker = new BookmarksTracker();
     return this.__tracker;
-  },
-
-  __sharing: null,
-  get _sharing() {
-    if (!this.__sharing)
-      this.__sharing = new BookmarksSharingManager(this);
-    return this.__sharing;
-  },
-
-  _sync: function BmkEngine__sync() {
-    /* After syncing the regular bookmark folder contents,
-     * also update both the incoming and outgoing shared folders. */
-    let self = yield;
-    //let ret = yield this._sharing.getNewShares(self.cb);
-    this.__proto__.__proto__._sync.async(this, self.cb );
-    yield;
-    //this._sharing.updateAllOutgoingShares(self.cb);
-    //yield;
-    //this._sharing.updateAllIncomingShares(self.cb);
-    //yield;
-    self.done();
-  },
-
-  _share: function BmkEngine__share(guid, username) {
-    let self = yield;
-    this._sharing._share.async( this._sharing, self.cb, guid, username);
-    yield;
-    self.done(true);
-  },
-
-  _stopSharing: function BmkEngine__stopSharing(guid, username) {
-    let self = yield;
-    this._sharing._stopSharing.async( this._sharing, self.cb, guid, username);
-    yield;
-    self.done();
   }
+
+  // XXX for sharing, will need to re-add code to get new shares before syncing,
+  //     and updating incoming/outgoing shared folders after syncing
 };
 
 function BookmarksSyncCore(store) {
@@ -786,6 +755,7 @@ function BookmarksSyncCore(store) {
   this._init();
 }
 BookmarksSyncCore.prototype = {
+  __proto__: SyncCore.prototype,
   _logName: "BMSync",
   _store: null,
 
@@ -867,12 +837,12 @@ BookmarksSyncCore.prototype = {
     }
   }
 };
-BookmarksSyncCore.prototype.__proto__ = new SyncCore();
 
 function BookmarksStore() {
   this._init();
 }
 BookmarksStore.prototype = {
+  __proto__: Store.prototype,
   _logName: "BStore",
   _lookup: null,
 
@@ -1369,7 +1339,6 @@ BookmarksStore.prototype = {
     this.__resetGUIDs(this._getNode(this._bms.unfiledBookmarksFolder));
   }
 };
-BookmarksStore.prototype.__proto__ = new Store();
 
 /*
  * Tracker objects for each engine may need to subclass the
@@ -1386,6 +1355,7 @@ function BookmarksTracker() {
   this._init();
 }
 BookmarksTracker.prototype = {
+  __proto__: Tracker.prototype,
   _logName: "BMTracker",
 
   /* We don't care about the first three */
@@ -1422,5 +1392,4 @@ BookmarksTracker.prototype = {
     getService(Ci.nsINavBookmarksService).
     addObserver(this, false);
   }
-}
-BookmarksTracker.prototype.__proto__ = new Tracker();
+};
