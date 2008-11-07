@@ -3730,21 +3730,47 @@ nsEventStatus nsPluginInstanceOwner::ProcessEvent(const nsGUIEvent& anEvent)
   // we can get synthetic events from the nsEventStateManager... these
   // have no nativeMsg
   nsPluginEvent pluginEvent;
-  if (!pPluginEvent) {
-    switch (anEvent.message) {
-      case NS_FOCUS_CONTENT:
-        pluginEvent.event = WM_SETFOCUS;
-        pluginEvent.wParam = 0;
-        pluginEvent.lParam = 0;
-        pPluginEvent = &pluginEvent;
-        break;
-      case NS_BLUR_CONTENT:
-        pluginEvent.event = WM_KILLFOCUS;
-        pluginEvent.wParam = 0;
-        pluginEvent.lParam = 0;
-        pPluginEvent = &pluginEvent;
-        break;
-    }
+  switch (anEvent.eventStructType) {
+    case NS_MOUSE_EVENT:
+      // XXX we could synthesize Windows mouse events here for our
+      // synthetic mouse events (i.e. !pPluginEvent)
+      if (pPluginEvent) {
+        // Make event coordinates relative to our enclosing widget,
+        // not the widget they were received on.
+        // See use of nsPluginEvent in widget/src/windows/nsWindow.cpp
+        // for why this assert should be safe
+        NS_ASSERTION(anEvent.message == NS_MOUSE_BUTTON_DOWN ||
+                     anEvent.message == NS_MOUSE_BUTTON_UP ||
+                     anEvent.message == NS_MOUSE_DOUBLECLICK ||
+                     anEvent.message == NS_MOUSE_MOVE,
+                     "Incorrect event type for coordinate translation");
+        nsPoint pt = nsLayoutUtils::GetEventCoordinatesRelativeTo(&anEvent, mOwner);
+        nsPresContext* presContext = mOwner->PresContext();
+        nsIntPoint ptPx(presContext->AppUnitsToDevPixels(pt.x),
+                        presContext->AppUnitsToDevPixels(pt.y));
+        nsIntPoint widgetPtPx = ptPx + mOwner->GetWindowOriginInPixels(PR_TRUE);
+        pPluginEvent->lParam = MAKELPARAM(widgetPtPx.x, widgetPtPx.y);
+      }
+      break;
+
+    case NS_FOCUS_EVENT:
+      if (!pPluginEvent) {
+        switch (anEvent.message) {
+          case NS_FOCUS_CONTENT:
+            pluginEvent.event = WM_SETFOCUS;
+            pluginEvent.wParam = 0;
+            pluginEvent.lParam = 0;
+            pPluginEvent = &pluginEvent;
+            break;
+          case NS_BLUR_CONTENT:
+            pluginEvent.event = WM_KILLFOCUS;
+            pluginEvent.wParam = 0;
+            pluginEvent.lParam = 0;
+            pPluginEvent = &pluginEvent;
+            break;
+        }
+      }
+      break;
   }
 
   if (pPluginEvent) {
