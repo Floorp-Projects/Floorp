@@ -525,11 +525,6 @@ GetFontGroup(PangoContext *aContext)
  * (fontconfig cache data) and (when needed) PangoFonts.
  */
 
-#if 0
-static int font_sets = 0;
-static int max_font_sets = 0;
-#endif
-
 class gfxFcPangoFontSet {
 public:
     THEBES_INLINE_DECL_REFCOUNTING(gfxFcPangoFontSet)
@@ -539,24 +534,6 @@ public:
           mFcFontSet(SortPreferredFonts()), mFcFontsTrimmed(0),
           mHaveFallbackFonts(PR_FALSE)
     {
-#if 0
-        ++font_sets;
-        if (font_sets > max_font_sets) {
-            max_font_sets = font_sets;
-            fprintf(stderr, "font sets: %i\n", font_sets);
-        }
-#endif
-    }
-
-    ~gfxFcPangoFontSet()
-    {
-#if 0
-        --font_sets;
-#endif
-        PRInt32 last = mFonts.Length() - 1;
-        for (; last >= 0 && !mFonts[last].mFont; --last) ;
-        fprintf(stderr, "patterns/fonts allocated: %i/%i\n",
-                mFonts.Length(), last + 1);
     }
 
     // A reference is held by the FontSet.
@@ -1539,9 +1516,6 @@ gfxPangoFontGroup::Shutdown()
     }
 
     NS_IF_RELEASE(gLangService);
-#if 0
-    fprintf(stderr, "font sets: %i\n", font_sets);
-#endif
 }
 
 static double

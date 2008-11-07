@@ -261,30 +261,6 @@ gfxFontconfigUtils::gfxFontconfigUtils()
     UpdateFontListInternal();
 }
 
-#if 0
-PR_STATIC_CALLBACK(PLDHashOperator)
-GetFamilyNamesCallback(FamilyHashEntry *aEntry, void *aData)
-{
-    nsStringArray *names = static_cast<nsStringArray *>(aData);
-
-    const FcChar8 *name = aEntry->GetName();
-
-    // XXXkt only want to return entries for which GetStandardFamilyName
-    // returns the same family.
-    names.AppendString(NS_ConvertUTF8toUTF16(ToCString(sname)));
-}
-
-    if (aLangGroup.IsEmpty()) {
-        nsresult rv = UpdateFontListInternal();
-        if (NS_FAILED(rv))
-            return rv;
-
-        mFonts.EnumerateEntries(GetFamilyNamesCallback, &aListOfFonts);
-
-    } else {
-    }
-#endif
-
 nsresult
 gfxFontconfigUtils::GetFontList(const nsACString& aLangGroup,
                                 const nsACString& aGenericFamily,
@@ -648,7 +624,6 @@ gfxFontconfigUtils::GetStandardFamilyName(const nsAString& aFontName, nsAString&
     if (!IsExistingFamily(fontname))
         return NS_OK;
 
-    // XXXkt this could use mFontsByFamily.GetEntry()
     FcPattern *pat = NULL;
     FcObjectSet *os = NULL;
     FcFontSet *givenFS = NULL;
