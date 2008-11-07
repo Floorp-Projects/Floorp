@@ -98,7 +98,7 @@ nsMenuItemIconX::nsMenuItemIconX(nsMenuObjectX* aMenuItem,
 nsMenuItemIconX::~nsMenuItemIconX()
 {
   if (mIconRequest)
-    mIconRequest->Cancel(NS_BINDING_ABORTED);
+    mIconRequest->CancelAndForgetObserver(NS_BINDING_ABORTED);
 }
 
 
