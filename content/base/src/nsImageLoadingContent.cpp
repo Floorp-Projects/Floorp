@@ -121,11 +121,11 @@ nsImageLoadingContent::DestroyImageLoadingContent()
 {
   // Cancel our requests so they won't hold stale refs to us
   if (mCurrentRequest) {
-    mCurrentRequest->CancelAndForgetObserver(NS_ERROR_FAILURE);
+    mCurrentRequest->Cancel(NS_ERROR_FAILURE);
     mCurrentRequest = nsnull;
   }
   if (mPendingRequest) {
-    mPendingRequest->CancelAndForgetObserver(NS_ERROR_FAILURE);
+    mPendingRequest->Cancel(NS_ERROR_FAILURE);
     mPendingRequest = nsnull;
   }
 }

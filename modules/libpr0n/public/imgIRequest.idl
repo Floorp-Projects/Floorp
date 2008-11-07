@@ -104,11 +104,5 @@ interface imgIRequest : nsIRequest
    * The principal gotten from the channel the image was loaded from.
    */
   readonly attribute nsIPrincipal imagePrincipal;
-
-  /**
-   * Cancels this request as in nsIRequest::Cancel(); further, also nulls out
-   * decoderObserver so it gets no further notifications from us.
-   */
-  void cancelAndForgetObserver(in nsresult aStatus);
 };
 
