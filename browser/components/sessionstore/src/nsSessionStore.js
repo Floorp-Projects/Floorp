@@ -485,19 +485,16 @@ SessionStoreService.prototype = {
         this._restoreCount = this._initialState.windows ? this._initialState.windows.length : 0;
         this.restoreWindow(aWindow, this._initialState, this._isCmdLineEmpty(aWindow));
         delete this._initialState;
-        
-        // mark ourselves as running
-        this.saveState(true);
       }
       else {
         // Nothing to restore, notify observers things are complete.
         var observerService = Cc["@mozilla.org/observer-service;1"].
                               getService(Ci.nsIObserverService);
         observerService.notifyObservers(null, NOTIFY_WINDOWS_RESTORED, "");
-        
-        // the next delayed save request should execute immediately
-        this._lastSaveTime -= this._interval;
       }
+      
+      // mark ourselves as running
+      this.saveState(true);
     }
     // this window was opened by _openWindowWithState
     else if (!this._isWindowLoaded(aWindow)) {
