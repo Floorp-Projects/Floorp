@@ -228,7 +228,6 @@ namespace nanojit
             int32_t blacklistLevel;
             NIns* fragEntry;
             NIns* loopEntry;
-			int32_t calldepth;
 			void* vmprivate;
 			
 		private:

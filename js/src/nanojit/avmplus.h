@@ -162,60 +162,6 @@ static __inline__ unsigned long long rdtsc(void)
 
 struct JSContext;
 
-namespace nanojit
-{
-	class Fragment;
-
-	enum ExitType {
-	    BRANCH_EXIT, 
-	    LOOP_EXIT, 
-	    NESTED_EXIT,
-	    MISMATCH_EXIT,
-	    OOM_EXIT,
-	    OVERFLOW_EXIT,
-	    UNSTABLE_LOOP_EXIT,
-	    TIMEOUT_EXIT
-	};
-
-    struct GuardRecord;
-	
-    class LIns;
-
-    struct SideExit;
-    
-    typedef struct GuardRecord 
-    {
-        void* jmpToStub;
-        void* stubEntry;
-        void* jmpToTarget;
-        GuardRecord* next;
-        SideExit* exit;
-    };
-    
-    typedef struct SideExit
-    {
-        GuardRecord* guards;
-        Fragment* from;
-        Fragment* target;
-        intptr_t ip_adj;
-        intptr_t sp_adj;
-        intptr_t rp_adj;
-        int32_t calldepth;
-        uint32 numGlobalSlots;
-        uint32 numStackSlots;
-        uint32 numStackSlotsBelowCurrentFrame;
-        ExitType exitType;
-        
-        void addGuard(GuardRecord* lr) 
-        {
-            lr->next = guards;
-            guards = lr;
-        }
-	};
-    
-    static inline uint8* getTypeMap(SideExit* exit) { return (uint8*)(exit + 1); }
-}
-
 class GC;
 
 class GCObject 
@@ -335,20 +281,6 @@ typedef int FunctionID;
 
 namespace avmplus
 {
-    struct InterpState
-    {
-        void* sp; /* native stack pointer, stack[0] is spbase[0] */
-        void* rp; /* call stack pointer */
-        void* gp; /* global frame pointer */
-        JSContext *cx; /* current VM context handle */
-        void* eos; /* first unusable word after the native stack */
-        void* eor; /* first unusable word after the call stack */
-        nanojit::SideExit* lastTreeExitGuard; /* guard we exited on during a tree call */
-        nanojit::SideExit* lastTreeCallGuard; /* guard we want to grow from if the tree
-                                                 call exit guard mismatched */
-        void* rpAtLastTreeCall; /* value of rp at innermost tree call guard */
-    };
-
     class String
     {
     };

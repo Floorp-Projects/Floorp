@@ -43,6 +43,7 @@
 #ifdef JS_TRACER
 
 #include "nanojit/nanojit.h"
+#include "jstracer.h"
 
 enum JSTNErrType { INFALLIBLE, FAIL_NULL, FAIL_NEG, FAIL_VOID, FAIL_JSVAL };
 enum { JSTN_ERRTYPE_MASK = 7, JSTN_MORE = 8 };
@@ -160,8 +161,8 @@ struct JSTraceableNative {
 #define _JS_CTYPE_OBJECT_FAIL_VOID _JS_CTYPE(JSObject *,             _JS_PTR, --, --, FAIL_VOID)
 #define _JS_CTYPE_REGEXP           _JS_CTYPE(JSObject *,             _JS_PTR, "","r", INFALLIBLE)
 #define _JS_CTYPE_SCOPEPROP        _JS_CTYPE(JSScopeProperty *,      _JS_PTR, --, --, INFALLIBLE)
-#define _JS_CTYPE_SIDEEXIT         _JS_CTYPE(nanojit::SideExit *,    _JS_PTR, --, --, INFALLIBLE)
-#define _JS_CTYPE_INTERPSTATE      _JS_CTYPE(avmplus::InterpState *, _JS_PTR, --, --, INFALLIBLE)
+#define _JS_CTYPE_SIDEEXIT         _JS_CTYPE(SideExit *,             _JS_PTR, --, --, INFALLIBLE)
+#define _JS_CTYPE_INTERPSTATE      _JS_CTYPE(InterpState *,          _JS_PTR, --, --, INFALLIBLE)
 #define _JS_CTYPE_FRAGMENT         _JS_CTYPE(nanojit::Fragment *,    _JS_PTR, --, --, INFALLIBLE)
 
 #define _JS_EXPAND(tokens)  tokens

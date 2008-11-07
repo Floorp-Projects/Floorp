@@ -113,7 +113,7 @@ class TypeMap;
  * JS_THREADSAFE) has an associated trace monitor that keeps track of loop
  * frequencies for all JavaScript code loaded into that runtime.
  */
-typedef struct JSTraceMonitor {
+struct JSTraceMonitor {
     /*
      * Flag set when running (or recording) JIT-compiled code. This prevents
      * both interpreter activation and last-ditch garbage collection when up
@@ -133,7 +133,7 @@ typedef struct JSTraceMonitor {
      * a distinct compiler but needs to be managed in exactly the same
      * way as the real tracing Fragmento. */
     CLS(nanojit::Fragmento) reFragmento;
-} JSTraceMonitor;
+};
 
 #ifdef JS_TRACER
 # define JS_ON_TRACE(cx)   (JS_TRACE_MONITOR(cx).onTrace)

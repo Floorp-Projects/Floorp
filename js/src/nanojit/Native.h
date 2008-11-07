@@ -59,6 +59,31 @@
 
 namespace nanojit {
 	const uint32_t NJ_PAGE_SIZE = 1 << NJ_LOG2_PAGE_SIZE;
+	
+    class Fragment;
+    struct SideExit;
+    
+    struct GuardRecord 
+    {
+        void* jmpToStub;
+        void* stubEntry;
+        void* jmpToTarget;
+        GuardRecord* next;
+        SideExit* exit;
+    };
+    
+    struct SideExit
+    {
+        GuardRecord* guards;
+        Fragment* from;
+        Fragment* target;
+        
+        void addGuard(GuardRecord* lr) 
+        {
+            lr->next = guards;
+            guards = lr;
+        }
+    };
 }
 
 	#ifdef NJ_STACK_GROWTH_UP

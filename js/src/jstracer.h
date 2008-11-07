@@ -44,6 +44,7 @@
 
 #ifdef JS_TRACER
 
+#include "jscntxt.h"
 #include "jsstddef.h"
 #include "jstypes.h"
 #include "jslock.h"
@@ -172,10 +173,52 @@ public:
     bool matches(TypeMap& other) const;
 };
 
+enum ExitType {
+    BRANCH_EXIT, 
+    LOOP_EXIT, 
+    NESTED_EXIT,
+    MISMATCH_EXIT,
+    OOM_EXIT,
+    OVERFLOW_EXIT,
+    UNSTABLE_LOOP_EXIT,
+    TIMEOUT_EXIT
+};
+
+struct VMSideExit : public nanojit::SideExit
+{
+    intptr_t ip_adj;
+    intptr_t sp_adj;
+    intptr_t rp_adj;
+    int32_t calldepth;
+    uint32 numGlobalSlots;
+    uint32 numStackSlots;
+    uint32 numStackSlotsBelowCurrentFrame;
+    ExitType exitType;
+};
+    
+static inline uint8* getTypeMap(nanojit::SideExit* exit) 
+{ 
+    return (uint8*)(((VMSideExit*)exit) + 1); 
+}
+
+struct InterpState
+{
+    void* sp; /* native stack pointer, stack[0] is spbase[0] */
+    void* rp; /* call stack pointer */
+    void* gp; /* global frame pointer */
+    JSContext *cx; /* current VM context handle */
+    void* eos; /* first unusable word after the native stack */
+    void* eor; /* first unusable word after the call stack */
+    VMSideExit* lastTreeExitGuard; /* guard we exited on during a tree call */
+    VMSideExit* lastTreeCallGuard; /* guard we want to grow from if the tree
+                                      call exit guard mismatched */
+    void* rpAtLastTreeCall; /* value of rp at innermost tree call guard */
+}; 
+
 struct UnstableExit
 {
     nanojit::Fragment* fragment;
-    nanojit::SideExit* exit;
+    VMSideExit* exit;
     UnstableExit* next;
 };
 
@@ -189,7 +232,7 @@ public:
     TypeMap                 stackTypeMap;
     Queue<nanojit::Fragment*> dependentTrees;
     unsigned                branchCount;
-    Queue<nanojit::SideExit*> sideExits;
+    Queue<VMSideExit*>      sideExits;
     UnstableExit*           unstableExits;
 
     TreeInfo(nanojit::Fragment* _fragment) : unstableExits(NULL) {
@@ -220,7 +263,7 @@ class TraceRecorder : public GCObject {
     char*                   entryTypeMap;
     unsigned                callDepth;
     JSAtom**                atoms;
-    nanojit::SideExit*      anchor;
+    VMSideExit*             anchor;
     nanojit::Fragment*      fragment;
     TreeInfo*               treeInfo;
     nanojit::LirBuffer*     lirbuf;
@@ -262,7 +305,7 @@ class TraceRecorder : public GCObject {
 
     bool lazilyImportGlobalSlot(unsigned slot);
 
-    nanojit::LIns* guard(bool expected, nanojit::LIns* cond, nanojit::ExitType exitType);
+    nanojit::LIns* guard(bool expected, nanojit::LIns* cond, ExitType exitType);
     nanojit::LIns* guard(bool expected, nanojit::LIns* cond, nanojit::LIns* exit);
     nanojit::LIns* addName(nanojit::LIns* ins, const char* name);
 
@@ -341,7 +384,7 @@ class TraceRecorder : public GCObject {
     bool guardDenseArray(JSObject* obj, nanojit::LIns* obj_ins);
     bool guardDenseArrayIndex(JSObject* obj, jsint idx, nanojit::LIns* obj_ins,
                               nanojit::LIns* dslots_ins, nanojit::LIns* idx_ins, 
-                              nanojit::ExitType exitType);
+                              ExitType exitType);
     bool guardElemOp(JSObject* obj, nanojit::LIns* obj_ins, jsid id, size_t op_offset, jsval* vp);
     void clearFrameSlotsFromCache();
     bool guardShapelessCallee(jsval& callee);
@@ -356,13 +399,13 @@ class TraceRecorder : public GCObject {
 public:
     friend bool js_MonitorRecording(TraceRecorder* tr);
 
-    TraceRecorder(JSContext* cx, nanojit::SideExit*, nanojit::Fragment*, TreeInfo*,
+    TraceRecorder(JSContext* cx, VMSideExit*, nanojit::Fragment*, TreeInfo*,
             unsigned ngslots, uint8* globalTypeMap, uint8* stackTypeMap, 
-            nanojit::SideExit* expectedInnerExit, nanojit::Fragment* outerToBlacklist);
+            VMSideExit* expectedInnerExit, nanojit::Fragment* outerToBlacklist);
     ~TraceRecorder();
 
     uint8 determineSlotType(jsval* vp) const;
-    nanojit::LIns* snapshot(nanojit::ExitType exitType);
+    nanojit::LIns* snapshot(ExitType exitType);
     nanojit::Fragment* getFragment() const { return fragment; }
     bool isLoopHeader(JSContext* cx) const;
     void compile(nanojit::Fragmento* fragmento);
@@ -373,7 +416,7 @@ public:
     bool adjustCallerTypes(nanojit::Fragment* f, unsigned* demote_slots, bool& trash);
     nanojit::Fragment* findNestedCompatiblePeer(nanojit::Fragment* f, nanojit::Fragment** empty);
     void prepareTreeCall(nanojit::Fragment* inner);
-    void emitTreeCall(nanojit::Fragment* inner, nanojit::SideExit* exit);
+    void emitTreeCall(nanojit::Fragment* inner, VMSideExit* exit);
     unsigned getCallDepth() const;
     
     bool record_EnterFrame();
