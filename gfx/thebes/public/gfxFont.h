@@ -1536,19 +1536,6 @@ public:
 
     const gfxFontStyle *GetStyle() const { return &mStyle; }
 
-#if !MOZ_WIDGET_GTK2
-#error "don't bother building"
-#endif
-#if 0
-    virtual const gfxFont::Metrics& GetMetrics() const {
-        gfxFont *firstFont = GetFontAt(0);
-        if (!firstFont) // OOM
-            return gfxFont::Metrics();
-        return firstFont->GetMetrics();
-    }
-#endif
-
-    // Used in nsTextRunTransformations: rename to GetSimilar
     virtual gfxFontGroup *Copy(const gfxFontStyle *aStyle) = 0;
 
     /**
