@@ -57,7 +57,7 @@
 #endif
 
 template <typename T>
-class Queue : public GCObject {
+class Queue : public avmplus::GCObject {
     T* _data;
     unsigned _len;
     unsigned _max;
@@ -254,7 +254,7 @@ struct FrameInfo {
     };
 };
  
-class TraceRecorder : public GCObject {
+class TraceRecorder : public avmplus::GCObject {
     JSContext*              cx;
     JSTraceMonitor*         traceMonitor;
     JSObject*               globalObj;

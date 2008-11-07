@@ -62,7 +62,7 @@ namespace nanojit
             NIns code[(NJ_PAGE_SIZE-sizeof(PageHeader))/sizeof(NIns)];
         };
     };
-    struct AllocEntry : public GCObject
+    struct AllocEntry : public avmplus::GCObject
     {
         Page *page;
         uint32_t allocSize;
@@ -73,7 +73,7 @@ namespace nanojit
 	class BlockHist: public BlockSortedMap
 	{
 	public:
-		BlockHist(GC*gc) : BlockSortedMap(gc)
+		BlockHist(avmplus::GC*gc) : BlockSortedMap(gc)
 		{
 		}
 		uint32_t count(const void *p) {
@@ -88,7 +88,7 @@ namespace nanojit
 	 *
 	 * This is the main control center for creating and managing fragments.
 	 */
-	class Fragmento : public GCFinalizedObject
+	class Fragmento : public avmplus::GCFinalizedObject
 	{
 		public:
 			Fragmento(AvmCore* core, uint32_t cacheSizeLog2);
@@ -155,7 +155,7 @@ namespace nanojit
 
 			/* unmanaged mem */
 			AllocList	_allocList;
-			GCHeap*		_gcHeap;
+			avmplus::GCHeap* _gcHeap;
 
 			const uint32_t _max_pages;
 			uint32_t _pagesGrowth;
@@ -174,7 +174,7 @@ namespace nanojit
 	 * It may turn out that that this arrangement causes too much traffic
 	 * between d and i-caches and that we need to carve up the structure differently.
 	 */
-	class Fragment : public GCFinalizedObject
+	class Fragment : public avmplus::GCFinalizedObject
 	{
 		public:
 			Fragment(const void*);
