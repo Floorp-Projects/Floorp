@@ -367,7 +367,7 @@ namespace nanojit
 
 #define LDdm(reg,addr) do {		\
 	ALUdm(0x8b,reg,addr);		\
-	asm_output2("mov %s,0(%x)",gpn(reg),addr); \
+	asm_output2("mov %s,0(%lx)",gpn(reg),addr); \
 	} while (0)
 
 
@@ -384,7 +384,7 @@ namespace nanojit
 // load 16-bit, zero extend
 #define LD16Z(r,d,b) do { ALU2m(0x0fb7,r,d,b); asm_output3("movsz %s,%d(%s)", gpn(r),d,gpn(b)); } while(0)
 
-#define LD16Zdm(r,addr) do { ALU2dm(0x0fb7,r,addr); asm_output2("movsz %s,0(%x)", gpn(r),addr); } while (0)
+#define LD16Zdm(r,addr) do { ALU2dm(0x0fb7,r,addr); asm_output2("movsz %s,0(%lx)", gpn(r),addr); } while (0)
 
 #define LD16Zsib(r,disp,base,index,scale) do {	\
 	ALU2sib(0x0fb7,r,base,index,scale,disp);	\
@@ -399,7 +399,7 @@ namespace nanojit
 #define LD8Zdm(r,addr) do { \
 	NanoAssert((d)>=0&&(d)<=31); \
 	ALU2dm(0x0fb6,r,addr); \
-	asm_output2("movzx %s,0(%x)", gpn(r),addr); \
+	asm_output2("movzx %s,0(%lx)", gpn(r),addr); \
 	} while(0)
 
 #define LD8Zsib(r,disp,base,index,scale) do {	\

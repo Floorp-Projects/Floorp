@@ -173,7 +173,7 @@ namespace nanojit
         Fragment *frag = exit->target;
         GuardRecord *lr = 0;
 		bool destKnown = (frag && frag->fragEntry);
-		if (destKnown && !trees && exit->exitType != TIMEOUT_EXIT)
+		if (destKnown && !trees && !guard->isop(LIR_loop))
 		{
 			// already exists, emit jump now.  no patching required.
 			JMP(frag->fragEntry);
@@ -951,8 +951,8 @@ namespace nanojit
 		GuardRecord* guard = ins->record();
 		SideExit* exit = guard->exit;
 
-		// Emit an exit stub that the loop may be patched to jump to, if a timeout fires.
-		exit->exitType = TIMEOUT_EXIT;
+		// Emit an exit stub that the loop may be patched to jump to (for example if we
+		// want to terminate the loop because a timeout fires).
 		asm_exit(ins);
 
 		// Emit the patchable jump itself.
