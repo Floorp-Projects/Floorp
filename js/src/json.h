@@ -88,7 +88,7 @@ struct JSONParser {
     JSONParserState *statep;
     JSONParserState stateStack[JSON_MAX_DEPTH];
     jsval *rootVal;
-    JSString *objectKey;
+    JSStringBuffer *objectKey;
     JSStringBuffer *buffer;
     JSObject *objectStack;
 };
