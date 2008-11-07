@@ -147,12 +147,12 @@ PubKeyManager.prototype = {
   _keyType: PubKey,
   _logName: "PubKeyManager",
 
-  get defaultKeyUrl() this._defaultKeyUrl,
-  set defaultKeyUrl(value) { this._defaultKeyUrl = value; },
+  get defaultKeyUri() this._defaultKeyUrl,
+  set defaultKeyUri(value) { this._defaultKeyUri = value; },
 
   _getDefaultKey: function KeyMgr__getDefaultKey() {
     let self = yield;
-    let ret = yield this.get(self.cb, this.defaultKeyUrl);
+    let ret = yield this.get(self.cb, this.defaultKeyUri);
     self.done(ret);
   },
   getDefaultKey: function KeyMgr_getDefaultKey(onComplete) {
