@@ -1805,11 +1805,11 @@ function maybeAddHeaders(file, metadata, response)
   var fis = new FileInputStream(headerFile, PR_RDONLY, 0444,
                                 Ci.nsIFileInputStream.CLOSE_ON_EOF);
 
-  var lis = new ConverterInputStream(fis, "UTF-8", 1024, 0x0);
-  lis.QueryInterface(Ci.nsIUnicharLineInputStream);
-
   try
   {
+    var lis = new ConverterInputStream(fis, "UTF-8", 1024, 0x0);
+    lis.QueryInterface(Ci.nsIUnicharLineInputStream);
+
     var line = {value: ""};
     var more = lis.readLine(line);
 
@@ -1860,6 +1860,10 @@ function maybeAddHeaders(file, metadata, response)
   {
     dumpn("WARNING: error in headers for " + metadata.path + ": " + e);
     throw HTTP_500;
+  }
+  finally
+  {
+    fis.close();
   }
 }
 
@@ -2338,20 +2342,45 @@ ServerHandler.prototype =
     var type = this._getTypeFromFile(file);
     if (type == SJS_TYPE)
     {
+      var fis = new FileInputStream(file, PR_RDONLY, 0444,
+                                    Ci.nsIFileInputStream.CLOSE_ON_EOF);
+
       try
       {
-        var fis = new FileInputStream(file, PR_RDONLY, 0444,
-                                      Ci.nsIFileInputStream.CLOSE_ON_EOF);
         var sis = new ScriptableInputStream(fis);
         var s = Cu.Sandbox(gGlobalObject);
         s.importFunction(dump, "dump");
-        Cu.evalInSandbox(sis.read(file.fileSize), s);
-        s.handleRequest(metadata, response);
+
+        try
+        {
+          // Alas, the line number in errors dumped to console when calling the
+          // request handler is simply an offset from where we load the SJS file.
+          // Work around this in a reasonably non-fragile way by dynamically
+          // getting the line number where we evaluate the SJS file.  Don't
+          // separate these two lines!
+          var line = new Error().lineNumber;
+          Cu.evalInSandbox(sis.read(file.fileSize), s);
+        }
+        catch (e)
+        {
+          dumpn("*** syntax error in SJS at " + file.path + ": " + e);
+          throw HTTP_500;
+        }
+
+        try
+        {
+          s.handleRequest(metadata, response);
+        }
+        catch (e)
+        {
+          dumpn("*** error running SJS at " + file.path + ": " +
+                e + " on line " + (e.lineNumber - line));
+          throw HTTP_500;
+        }
       }
-      catch (e)
+      finally
       {
-        dump("*** error running SJS: " + e + " on line " + (e.lineNumber-2192) + "\n");
-        throw HTTP_500;
+        fis.close();
       }
     }
     else
@@ -2368,21 +2397,28 @@ ServerHandler.prototype =
   
       var fis = new FileInputStream(file, PR_RDONLY, 0444,
                                     Ci.nsIFileInputStream.CLOSE_ON_EOF);
-      offset = offset || 0;
-      count  = count || file.fileSize;
 
-      NS_ASSERT(offset == 0 || offset < file.fileSize, "bad offset");
-      NS_ASSERT(count >= 0, "bad count");
-
-      if (offset != 0)
+      try
       {
-        // Read and discard data up to offset so the data sent to
-        // the client matches the requested range request.
-        var sis = new ScriptableInputStream(fis);
-        sis.read(offset);
+        offset = offset || 0;
+        count  = count || file.fileSize;
+  
+        NS_ASSERT(offset == 0 || offset < file.fileSize, "bad offset");
+        NS_ASSERT(count >= 0, "bad count");
+  
+        if (offset != 0)
+        {
+          // Read and discard data up to offset so the data sent to
+          // the client matches the requested range request.
+          var sis = new ScriptableInputStream(fis);
+          sis.read(offset);
+        }
+        response.bodyOutputStream.writeFrom(fis, count);
       }
-      response.bodyOutputStream.writeFrom(fis, count);
-      fis.close();
+      finally
+      {
+        fis.close();
+      }
       
       maybeAddHeaders(file, metadata, response);
     }

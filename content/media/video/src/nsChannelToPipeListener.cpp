@@ -135,8 +135,12 @@ nsresult nsChannelToPipeListener::OnStartRequest(nsIRequest* aRequest, nsISuppor
 nsresult nsChannelToPipeListener::OnStopRequest(nsIRequest* aRequest, nsISupports* aContext, nsresult aStatus) 
 {
   mOutput = nsnull;
-  if (mDecoder) {
-    mDecoder->ResourceLoaded();
+  if (aStatus != NS_BINDING_ABORTED && mDecoder) {
+    if (NS_SUCCEEDED(aStatus)) {
+      mDecoder->ResourceLoaded();
+    } else {
+      mDecoder->NetworkError();
+    }
   }
   return NS_OK;
 }
