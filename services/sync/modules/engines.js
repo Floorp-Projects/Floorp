@@ -35,7 +35,7 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-const EXPORTED_SYMBOLS = ['Engines', 'Engine', 'SyncEngine', 'BlobEngine'];
+const EXPORTED_SYMBOLS = ['Engines', 'NewEngine', 'Engine', 'SyncEngine', 'BlobEngine'];
 
 const Cc = Components.classes;
 const Ci = Components.interfaces;
@@ -111,12 +111,6 @@ Engine.prototype = {
   // "user-data/default-engine/";
   get serverPrefix() { throw "serverPrefix property must be overridden in subclasses"; },
 
-  get _remote() {
-    let remote = new RemoteStore(this);
-    this.__defineGetter__("_remote", function() remote);
-    return remote;
-  },
-
   get enabled() {
     return Utils.prefs.getBoolPref("engine." + this.name);
   },
@@ -191,7 +185,7 @@ Engine.prototype = {
 
   _resetServer: function Engine__resetServer() {
     let self = yield;
-    yield this._remote.wipe(self.cb);
+    throw "_resetServer needs to be subclassed";
   },
 
   _resetClient: function Engine__resetClient() {
@@ -248,14 +242,35 @@ Engine.prototype = {
   }
 };
 
+function NewEngine() {}
+NewEngine.prototype = {
+  __proto__: Engine.prototype,
+
+  _sync: function NewEngine__sync() {
+    let self = yield;
+    self.done();
+  }
+};
+
 function SyncEngine() {}
 SyncEngine.prototype = {
   __proto__: new Engine(),
+
+  get _remote() {
+    let remote = new RemoteStore(this);
+    this.__defineGetter__("_remote", function() remote);
+    return remote;
+  },
 
   get _snapshot() {
     let snap = new SnapshotStore(this.name);
     this.__defineGetter__("_snapshot", function() snap);
     return snap;
+  },
+
+  _resetServer: function SyncEngine__resetServer() {
+    let self = yield;
+    yield this._remote.wipe(self.cb);
   },
 
   _resetClient: function SyncEngine__resetClient() {
@@ -529,10 +544,21 @@ function HeuristicEngine() {
 HeuristicEngine.prototype = {
   __proto__: new Engine(),
 
+  get _remote() {
+    let remote = new RemoteStore(this);
+    this.__defineGetter__("_remote", function() remote);
+    return remote;
+  },
+
   get _snapshot() {
     let snap = new SnapshotStore(this.name);
     this.__defineGetter__("_snapshot", function() snap);
     return snap;
+  },
+
+  _resetServer: function SyncEngine__resetServer() {
+    let self = yield;
+    yield this._remote.wipe(self.cb);
   },
 
   _resetClient: function SyncEngine__resetClient() {
