@@ -61,26 +61,35 @@ function PubKey(uri, authenticator) {
 }
 PubKey.prototype = {
   __proto__: WBORecord.prototype,
+  _logName: "Record.PubKey",
 
   _PubKey_init: function PubKey_init(uri, authenticator) {
     this._WBORec_init(uri, authenticator);
+    this.data.payload = {
+      type: "pubkey",
+      key_data: null,
+      private_key: null
+    };
   },
 
-  get keyData() {
-    if (!this.data)
-      return null;
-    return this.data.payload.key_data;
+  get keyData() this.data.payload.key_data,
+  set keyData(value) {
+    this.data.payload.key_data = value;
+  },
+  get _privateKeyUri() this.data.payload.private_key,
+  set _privateKeyUri(value) {
+    this.data.payload.private_key = value;
   },
 
   get privateKeyUri() {
     if (!this.data)
       return null;
     // resolve
-    let uri = this.uri.resolve(this.data.payload.private_key);
+    let uri = this.uri.resolve(this._privateKeyUri);
     if (uri)
       return Utils.makeURI(uri);
     // does not resolve, return raw (this uri type might not be able to resolve)
-    return Utils.makeURI(this.data.payload.private_key);
+    return Utils.makeURI(this._privateKeyUri);
   }
 };
 
@@ -89,15 +98,24 @@ function PrivKey(uri, authenticator) {
 }
 PrivKey.prototype = {
   __proto__: WBORecord.prototype,
+  _logName: "Record.PrivKey",
 
   _PrivKey_init: function PrivKey_init(uri, authenticator) {
     this._WBORec_init(uri, authenticator);
+    this.data.payload = {
+      type: "privkey",
+      key_data: null,
+      private_key: null
+    };
   },
 
-  get keyData() {
-    if (!this.data)
-      return null;
-    return this.data.payload.key_data;
+  get keyData() this.data.payload.key_data,
+  set keyData(value) {
+    this.data.payload.key_data = value;
+  },
+  get _publicKeyUri() this.payload.public_key,
+  set _publicKeyUri(value) {
+    this.data.payload.public_key = value;
   },
 
   get privateKeyUri() {
@@ -108,14 +126,15 @@ PrivKey.prototype = {
     if (!this.data)
       return null;
     // resolve
-    let uri = this.uri.resolve(this.data.payload.public_key);
+    let uri = this.uri.resolve(this._publicKeyUri);
     if (uri)
       return Utils.makeURI(uri);
     // does not resolve, return raw (this uri type might not be able to resolve)
-    return Utils.makeURI(this.data.payload.public_key);
+    return Utils.makeURI(this._publicKeyUri);
   }
 };
 
+// XXX unused/unfinished
 function SymKey(keyData, wrapped) {
   this._init(keyData, wrapped);
 }
@@ -147,7 +166,7 @@ PubKeyManager.prototype = {
   _keyType: PubKey,
   _logName: "PubKeyManager",
 
-  get defaultKeyUri() this._defaultKeyUrl,
+  get defaultKeyUri() this._defaultKeyUri,
   set defaultKeyUri(value) { this._defaultKeyUri = value; },
 
   _getDefaultKey: function KeyMgr__getDefaultKey() {
@@ -159,6 +178,18 @@ PubKeyManager.prototype = {
     return this._getDefaultKey.async(this, onComplete);
   },
 
+  createKeypair: function KeyMgr_createKeypair() {
+    let pubOut = {}, privOut = {};
+    let cryptoSvc = Cc["@labs.mozilla.com/Weave/Crypto;1"].
+      getService(Ci.IWeaveCrypto);
+    cryptoSvc.generateKeypair("my passphrase", salt, iv, pubOut, privOut);
+    let pubkey = new PubKey();
+    let privkey = new PrivKey();
+    pubkey.keyData = pubOut.value;
+    privkey.keyData = privOut.value;
+    return {pubkey: pubkey, privkey: privkey};
+  },
+
   _init: function KeyMgr__init() {
     this._log = Log4Moz.repository.getLogger(this._logName);
     this._keys = {};
@@ -167,21 +198,18 @@ PubKeyManager.prototype = {
 
   _import: function KeyMgr__import(url) {
     let self = yield;
-    let ret = null;
 
     this._log.trace("Importing key: " + (url.spec? url.spec : url));
 
     try {
       let key = new this._keyType(url);
-      let foo = yield key.get(self.cb);
+      yield key.get(self.cb);
       this.set(url, key);
-      ret = key;
+      self.done(key);
     } catch (e) {
       this._log.debug("Failed to import key: " + e);
-      // don't do anything else, we'll just return null
+      self.done(null);
     }
-
-    self.done(ret);
   },
   import: function KeyMgr_import(onComplete, url) {
     this._import.async(this, onComplete, url);
