@@ -307,11 +307,11 @@ private:
     {
       // in case the pref service releases us later
       if (mLoadingImage) {
-        mLoadingImage->Cancel(NS_ERROR_FAILURE);
+        mLoadingImage->CancelAndForgetObserver(NS_ERROR_FAILURE);
         mLoadingImage = nsnull;
       }
       if (mBrokenImage) {
-        mBrokenImage->Cancel(NS_ERROR_FAILURE);
+        mBrokenImage->CancelAndForgetObserver(NS_ERROR_FAILURE);
         mBrokenImage = nsnull;
       }
     }
