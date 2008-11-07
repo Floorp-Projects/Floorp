@@ -184,10 +184,6 @@ static JSBool
 XPC_NW_toString(JSContext *cx, JSObject *obj, uintN argc, jsval *argv,
                 jsval *rval);
 
-static JSBool
-XPCNativeWrapperCtor(JSContext *cx, JSObject *obj, uintN argc, jsval *argv,
-                     jsval *rval);
-
 static inline
 JSBool
 ThrowException(nsresult ex, JSContext *cx)
@@ -790,7 +786,7 @@ MirrorWrappedNativeParent(JSContext *cx, XPCWrappedNative *wrapper,
   return JS_TRUE;
 }
 
-static JSBool
+JSBool
 XPCNativeWrapperCtor(JSContext *cx, JSObject *obj, uintN argc, jsval *argv,
                      jsval *rval)
 {
