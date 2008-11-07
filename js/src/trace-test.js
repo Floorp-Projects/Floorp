@@ -2308,6 +2308,15 @@ function testStringify() {
 testStringify.expected = "true,true,false,false,undefined,undefined,5,5,5.5,5.5,x,x";
 test(testStringify);
 
+function testApply() {
+    var q = [];
+    for (var i = 0; i < 10; ++i)
+        Array.prototype.push.apply(q, [5]);
+    return q.join(",");
+}
+testApply.expected = "5,5,5,5,5,5,5,5,5,5";
+test(testApply);
+
 /* NOTE: Keep this test last, since it screws up all for...in loops after it. */
 function testGlobalProtoAccess() {
     return "ok";
