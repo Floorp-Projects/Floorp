@@ -127,6 +127,9 @@ class nsMediaDecoder : public nsIObserver
   // Called when the video file has completed downloading.
   virtual void ResourceLoaded() = 0;
 
+  // Called if the media file encounters a network error.
+  virtual void NetworkError() = 0;
+
   // Call from any thread safely. Return PR_TRUE if we are currently
   // seeking in the media resource.
   virtual PRBool IsSeeking() const = 0;

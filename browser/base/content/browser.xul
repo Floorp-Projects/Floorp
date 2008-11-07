@@ -74,6 +74,7 @@
         titlemenuseparator="&mainWindow.titlemodifiermenuseparator;"
         windowtype="navigator:browser"
         screenX="4" screenY="4"
+        browsingmode="normal"
         persist="screenX screenY width height sizemode"> 
 
 # All JS files which are not content (only) dependent that browser.xul
@@ -233,7 +234,7 @@
       <label crop="center" flex="1" class="tooltip-label"/>
     </tooltip>
 
-    <panel id="ctrlTab-panel" class="KUI-panel" hidden="true" norestorefocus="true"
+    <panel id="ctrlTab-panel" class="KUI-panel" hidden="true" norestorefocus="true" ignorekeys="true"
 #ifdef XP_WIN
 # XXX bug 457997
       noautohide="true"
