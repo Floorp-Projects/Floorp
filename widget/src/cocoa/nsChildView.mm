@@ -3153,6 +3153,13 @@ static const PRInt32 sShadowInvalidationInterval = 100;
   if (!gRollupWidget)
     return YES;
 
+  // Don't bother if we've been destroyed:  mWindow will now be nil, which
+  // makes all our work here pointless, and can even cause us to resend the
+  // event to ourselves in an infinte loop (since targetWindow == mWindow no
+  // longer tests whether targetWindow is us).
+  if (!mGeckoChild || !mWindow)
+    return YES;
+
   // If this is the rollup widget and the event is not a mouse move then trust the OS routing.  
   // The reason for this trust is complicated.
   //
