@@ -61,15 +61,9 @@ FTService.prototype = {
     // our current state
   },
   onException: function FTS_onException(exception) {
-    let continueSync = true;
     this._lastException = exception;
-
-    if ("Could not acquire lock" == exception)
-      continueSync = false;
-    else
-      this._log.debug(Utils.stackTrace(exception));
-
-    return continueSync;
+    this._log.debug("\n" + Utils.stackTrace(exception));
+    return true; // continue sync if thrown by a sync engine
   }
 };
 
