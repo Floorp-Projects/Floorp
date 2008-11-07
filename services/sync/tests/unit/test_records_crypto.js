@@ -61,7 +61,7 @@ function async_test() {
 
     let auth = new BasicAuthenticator(new Identity("secret", "guest", "guest"));
     Auth.defaultAuthenticator = auth;
-    PubKeys.defaultKeyUrl = "http://localhost:8080/pubkey";
+    PubKeys.defaultKeyUri = "http://localhost:8080/pubkey";
 
     server = httpd_setup({"/pubkey": pubkey_handler,
                           "/privkey": privkey_handler,
