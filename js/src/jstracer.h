@@ -283,7 +283,6 @@ class TraceRecorder : public avmplus::GCObject {
     nanojit::LIns*          rval_ins;
     nanojit::LIns*          inner_sp_ins;
     bool                    deepAborted;
-    bool                    applyingArguments;
     bool                    trashTree;
     nanojit::Fragment*      whichTreeToTrash;
     Queue<jsbytecode*>      cfgMerges;
@@ -387,9 +386,9 @@ class TraceRecorder : public avmplus::GCObject {
                               ExitType exitType);
     bool guardElemOp(JSObject* obj, nanojit::LIns* obj_ins, jsid id, size_t op_offset, jsval* vp);
     void clearFrameSlotsFromCache();
-    bool guardShapelessCallee(jsval& callee);
+    bool guardCallee(jsval& callee);
     bool interpretedFunctionCall(jsval& fval, JSFunction* fun, uintN argc, bool constructing);
-    bool functionCall(bool constructing);
+    bool functionCall(bool constructing, uintN argc);
     bool forInLoop(jsval* vp);
 
     void trackCfgMerges(jsbytecode* pc);
@@ -426,6 +425,7 @@ public:
     bool record_DefLocalFunSetSlot(uint32 slot, JSObject* obj);
     bool record_FastNativeCallComplete();
     bool record_IteratorNextComplete();
+    bool record_ApplyComplete(uintN argc);
     
     nanojit::Fragment* getOuterToBlacklist() { return outerToBlacklist; }
     void deepAbort() { deepAborted = true; }
