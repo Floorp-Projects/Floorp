@@ -3850,6 +3850,10 @@ EmitFunctionDefNop(JSContext *cx, JSCodeGenerator *cg, uintN index)
            js_Emit1(cx, cg, JSOP_NOP) >= 0;
 }
 
+/* See the SRC_FOR source note offsetBias comments later in this file. */
+JS_STATIC_ASSERT(JSOP_NOP_LENGTH == 1);
+JS_STATIC_ASSERT(JSOP_POP_LENGTH == 1);
+
 JSBool
 js_EmitTree(JSContext *cx, JSCodeGenerator *cg, JSParseNode *pn)
 {
@@ -4288,7 +4292,7 @@ js_EmitTree(JSContext *cx, JSCodeGenerator *cg, JSParseNode *pn)
 #endif
                      (type == TOK_VAR && !pn3->pn_expr)) &&
                     js_NewSrcNote2(cx, cg, SRC_DECL,
-                                   type == TOK_VAR
+                                   (type == TOK_VAR)
                                    ? SRC_DECL_VAR
                                    : SRC_DECL_LET) < 0) {
                     return JS_FALSE;
@@ -4441,11 +4445,17 @@ js_EmitTree(JSContext *cx, JSCodeGenerator *cg, JSParseNode *pn)
                 }
                 cg->treeContext.flags &= ~TCF_IN_FOR_INIT;
             }
+
+            /*
+             * NB: the SRC_FOR note has offsetBias 1 (JSOP_{NOP,POP}_LENGTH).
+             * Use tmp to hold the biased srcnote "top" offset, which differs
+             * from the top local variable by the length of the JSOP_GOTO{,X}
+             * emitted in between tmp and top if this loop has a condition.
+             */
             noteIndex = js_NewSrcNote(cx, cg, SRC_FOR);
-            if (noteIndex < 0 ||
-                js_Emit1(cx, cg, op) < 0) {
+            if (noteIndex < 0 || js_Emit1(cx, cg, op) < 0)
                 return JS_FALSE;
-            }
+            tmp = CG_OFFSET(cg);
 
             if (pn2->pn_kid2) {
                 /* Goto the loop condition, which branches back to iterate. */
@@ -4453,6 +4463,7 @@ js_EmitTree(JSContext *cx, JSCodeGenerator *cg, JSParseNode *pn)
                 if (jmp < 0)
                     return JS_FALSE;
             }
+
             top = CG_OFFSET(cg);
             SET_STATEMENT_TOP(&stmtInfo, top);
 
@@ -4463,7 +4474,7 @@ js_EmitTree(JSContext *cx, JSCodeGenerator *cg, JSParseNode *pn)
             /* Set the second note offset so we can find the update part. */
             JS_ASSERT(noteIndex != -1);
             if (!js_SetSrcNoteOffset(cx, cg, (uintN)noteIndex, 1,
-                                     CG_OFFSET(cg) - top)) {
+                                     CG_OFFSET(cg) - tmp)) {
                 return JS_FALSE;
             }
 
@@ -4483,12 +4494,12 @@ js_EmitTree(JSContext *cx, JSCodeGenerator *cg, JSParseNode *pn)
                     return JS_FALSE;
                 }
 #endif
-                if (op == JSOP_POP) {
-                    if (!js_EmitTree(cx, cg, pn3))
-                        return JS_FALSE;
-                    if (js_Emit1(cx, cg, op) < 0)
-                        return JS_FALSE;
-                }
+                if (op == JSOP_POP && !js_EmitTree(cx, cg, pn3))
+                    return JS_FALSE;
+
+                /* Always emit the POP or NOP, to help the decompiler. */
+                if (js_Emit1(cx, cg, op) < 0)
+                    return JS_FALSE;
 
                 /* Restore the absolute line number for source note readers. */
                 off = (ptrdiff_t) pn->pn_pos.end.lineno;
@@ -4501,7 +4512,7 @@ js_EmitTree(JSContext *cx, JSCodeGenerator *cg, JSParseNode *pn)
 
             /* Set the first note offset so we can find the loop condition. */
             if (!js_SetSrcNoteOffset(cx, cg, (uintN)noteIndex, 0,
-                                     CG_OFFSET(cg) - top)) {
+                                     CG_OFFSET(cg) - tmp)) {
                 return JS_FALSE;
             }
 
@@ -4516,7 +4527,7 @@ js_EmitTree(JSContext *cx, JSCodeGenerator *cg, JSParseNode *pn)
 
             /* The third note offset helps us find the loop-closing jump. */
             if (!js_SetSrcNoteOffset(cx, cg, (uintN)noteIndex, 2,
-                                     CG_OFFSET(cg) - top)) {
+                                     CG_OFFSET(cg) - tmp)) {
                 return JS_FALSE;
             }
 
@@ -6356,7 +6367,10 @@ js_EmitTree(JSContext *cx, JSCodeGenerator *cg, JSParseNode *pn)
     return ok;
 }
 
-/* XXX get rid of offsetBias, it's used only by SRC_FOR and SRC_DECL */
+/*
+ * We should try to get rid of offsetBias (always 0 or 1, where 1 is
+ * JSOP_{NOP,POP}_LENGTH), which is used only by SRC_FOR and SRC_DECL.
+ */
 JS_FRIEND_DATA(JSSrcNoteSpec) js_SrcNoteSpec[] = {
     {"null",            0,      0,      0},
     {"if",              0,      0,      0},
