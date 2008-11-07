@@ -142,10 +142,10 @@ namespace nanojit
 
     class LabelStateMap
     {
-        GC *gc;
+        avmplus::GC *gc;
         avmplus::SortedMap<LIns*, LabelState*, avmplus::LIST_GCObjects> labels;
     public:
-        LabelStateMap(GC *gc) : gc(gc), labels(gc)
+        LabelStateMap(avmplus::GC *gc) : gc(gc), labels(gc)
         {}
         ~LabelStateMap();
 
@@ -252,7 +252,7 @@ namespace nanojit
             }
 
 			DWB(Fragmento*)		_frago;
-            GC*					_gc;
+			avmplus::GC*		_gc;
             DWB(Fragment*)		_thisfrag;
 			RegAllocMap*		_branchStateMap;
 		
