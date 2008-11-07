@@ -209,14 +209,21 @@ let Utils = {
   // there are multiple extensions with similar filenames
   formatFrame: function Utils_formatFrame(frame) {
     let tmp = "<file:unknown>";
+
     if (frame.filename)
       tmp = frame.filename.replace(/^file:\/\/.*\/([^\/]+.js)$/, "module:$1");
     else if (frame.fileName)
       tmp = frame.fileName.replace(/^file:\/\/.*\/([^\/]+.js)$/, "module:$1");
+
+    // skip async.js frames
+    if (tmp == "module:async.js")
+      return null;
+
     if (frame.lineNumber)
       tmp += ":" + frame.lineNumber;
     if (frame.name)
       tmp += " :: " + frame.name;
+
     return tmp;
   },
 
@@ -241,7 +248,9 @@ let Utils = {
     let output = "";
 
     while (frame) {
-      output += formatter(frame) + "\n";
+      let str = formatter(frame);
+      if (str)
+        output += str + "\n";
       frame = frame.caller;
     }
 
@@ -250,11 +259,12 @@ let Utils = {
 
   stackTrace: function Weave_stackTrace(e, formatter) {
     if (e.asyncStack) // AsyncException
-      return e.asyncStack;
+      return "Original exception: " + Utils.exceptionStr(e.originalException) + "\n" +
+             "Async stack trace:\n" + e.asyncStack;
     else if (e.location) // Wrapped nsIException
-      return this.stackTraceFromFrame(e.location, formatter);
+      return "Stack trace:\n" + this.stackTraceFromFrame(e.location, formatter);
     else if (e.stack) // Standard JS exception
-      return e.stack;
+      return "JS Stack trace:\n" + e.stack;
     else
       return "No traceback available";
   },
