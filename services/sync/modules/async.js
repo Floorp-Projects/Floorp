@@ -172,13 +172,9 @@ Generator.prototype = {
   get asyncStack() {
     let cbGenText = "";
     if (this._stackAtLastCallbackGen)
-      cbGenText = (" (last self.cb generated at " +
-                   Utils.formatFrame(this._stackAtLastCallbackGen) + ")");
-
-    let frame = skipAsyncFrames(this._initFrame);
-
-    return ("unknown (async) :: " + this.name + cbGenText + "\n" +
-            Utils.stackTraceFromFrame(frame, Utils.formatFrame));
+      cbGenText = "Last callback created at " +
+                  Utils.formatFrame(this._stackAtLastCallbackGen);
+    return Utils.stackTraceFromFrame(this._initFrame, Utils.formatFrame) + cbGenText;
   },
 
   _handleException: function AsyncGen__handleException(e) {
