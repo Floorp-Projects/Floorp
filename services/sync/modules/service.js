@@ -513,6 +513,8 @@ WeaveSvc.prototype = {
       this._syncError = false;
       throw "Some engines did not sync correctly";
     }
+
+    this._log.debug("Sync complete");
   },
   sync: function WeaveSvc_sync(onComplete) {
     this._notify("sync", "",
