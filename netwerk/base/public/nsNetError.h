@@ -273,6 +273,14 @@
     NS_ERROR_GENERATE_FAILURE(NS_ERROR_MODULE_NETWORK, 30)
 
 /**
+ * A low or medium priority DNS lookup failed because the pending
+ * queue was already full. High priorty (the default) always
+ * makes room
+ */
+#define NS_ERROR_DNS_LOOKUP_QUEUE_FULL \
+    NS_ERROR_GENERATE_FAILURE(NS_ERROR_MODULE_NETWORK, 33)
+
+/**
  * The lookup of a proxy hostname failed.
  *
  * If a channel is configured to speak to a proxy server, then it will
