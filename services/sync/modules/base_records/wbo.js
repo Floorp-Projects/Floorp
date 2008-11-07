@@ -57,5 +57,19 @@ WBORecord.prototype = {
   _WBORec_init: function WBORec_init(uri, authenticator) {
     this._init(uri, authenticator);
     this.pushFilter(new JsonFilter());
+    this.data = {
+      modified: "2454725.98283", // FIXME
+      payload: {}
+    };
+  },
+
+  get modified() this.data.modified,
+  set modified(value) {
+    this.data.modified = value;
+  },
+
+  get payload() this.data.payload,
+  set payload(value) {
+    this.data.payload = value;
   }
 };

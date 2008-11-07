@@ -246,8 +246,37 @@ function NewEngine() {}
 NewEngine.prototype = {
   __proto__: Engine.prototype,
 
+  get lastSync() Utils.prefs.getCharPref(this.name + ".lastSync"),
+  set lastSync(value) {
+    Utils.prefs.setCharPref(this.name + ".lastSync", value);
+  },
+
+  _incoming: null,
+  get incoming() {
+    if (!this._incoming)
+      this._incoming = [];
+    return this._incoming;
+  },
+
+  _outgoing: null,
+  get outgoing() {
+    if (!this._outgoing)
+      this._outgoing = [];
+    return this._outgoing;
+  },
+
   _sync: function NewEngine__sync() {
     let self = yield;
+    // find new items from server, place into incoming queue
+
+    // if snapshot-based, generate outgoing queue
+
+    // apply incoming queue one by one
+
+    // upload new/changed items from our outgoing queue
+    foreach (this.outgoing) {
+      // ...
+    }
     self.done();
   }
 };
@@ -475,7 +504,7 @@ function BlobEngine() {
   // we don't call it here because it requires serverPrefix to be set
 }
 BlobEngine.prototype = {
-  __proto__: new Engine(),
+  __proto__: Engine.prototype,
 
   get _profileID() {
     return ClientData.GUID;

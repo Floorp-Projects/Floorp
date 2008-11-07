@@ -109,42 +109,40 @@ Resource.prototype = {
     this._uri.spec = value;
   },
 
-  get data() {
-    return this._data;
-  },
+  _data: null,
+  get data() this._data,
   set data(value) {
     this._dirty = true;
     this._data = value;
   },
 
-  get lastRequest() { return this._lastRequest; },
-  get downloaded() { return this._downloaded; },
-  get dirty() { return this._dirty; },
+  _lastRequest: null,
+  _downloaded: false,
+  _dirty: false,
+  get lastRequest() this._lastRequest,
+  get downloaded() this._downloaded,
+  get dirty() this._dirty,
 
+  _filters: null,
   pushFilter: function Res_pushFilter(filter) {
+    if (!this._filters)
+      this._filters = [];
     this._filters.push(filter);
   },
-
   popFilter: function Res_popFilter() {
     return this._filters.pop();
   },
-
   clearFilters: function Res_clearFilters() {
     this._filters = [];
   },
 
   _init: function Res__init(uri, authenticator) {
+    this._log = Log4Moz.repository.getLogger(this._logName);
     if (typeof uri == 'string')
       uri = Utils.makeURI(uri);
     this._uri = uri;
     this._authenticator = authenticator;
     this._headers = {'Content-type': 'text/plain'};
-    this._data = null;
-    this._downloaded = false;
-    this._dirty = false;
-    this._filters = [];
-    this._lastRequest = null;
-    this._log = Log4Moz.repository.getLogger(this._logName);
   },
 
   _createRequest: function Res__createRequest(op, onRequestFinished) {
@@ -198,7 +196,7 @@ Resource.prototype = {
 
     if ("PUT" == action) {
       for each (let filter in this._filters) {
-        data = yield filter.beforePUT.async(filter, self.cb, data);
+        data = yield filter.beforePUT.async(filter, self.cb, data, this);
       }
     }
 
@@ -224,7 +222,7 @@ Resource.prototype = {
           this._data = this._lastRequest.responseText;
           let filters = this._filters.slice(); // reverse() mutates, so we copy
           for each (let filter in filters.reverse()) {
-            this._data = yield filter.afterGET.async(filter, self.cb, this._data);
+            this._data = yield filter.afterGET.async(filter, self.cb, this._data, this);
           }
         }
         break;
@@ -270,7 +268,7 @@ Resource.prototype = {
 
 
 function JsonFilter() {
-  this._log = Log4Moz.repository.getLogger("Service.JsonFilter");
+  this._log = Log4Moz.repository.getLogger("Net.JsonFilter");
 }
 JsonFilter.prototype = {
   get _json() {

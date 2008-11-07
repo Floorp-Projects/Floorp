@@ -62,6 +62,7 @@ CryptoWrapper.prototype = {
 
   _CryptoWrap_init: function CryptoWrap_init(uri, authenticator) {
     this._WBORec_init(uri, authenticator);
+    this.data.payload = "";
   },
 
   _encrypt: function CryptoWrap__encrypt(passphrase) {
@@ -114,6 +115,11 @@ CryptoMeta.prototype = {
 
   _CryptoMeta_init: function CryptoMeta_init(uri, authenticator) {
     this._WBORec_init(uri, authenticator);
+    this.data.payload = {
+      salt: null,
+      iv: null,
+      keyring: {}
+    };
   },
 
   get salt() this.data.payload.salt,
@@ -138,7 +144,7 @@ CryptoMeta.prototype = {
         wrappedKey = this.data.payload.keyring[relUri];
     }
     if (!wrappedKey)
-      throw "keyring doesn't contain a key for " + pubKeyUrl;
+      throw "keyring doesn't contain a key for " + pubKeyUri;
 
     let crypto = Cc["@labs.mozilla.com/Weave/Crypto;1"].
       createInstance(Ci.IWeaveCrypto);
