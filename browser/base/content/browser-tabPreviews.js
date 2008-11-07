@@ -434,7 +434,9 @@ var ctrlTab = {
   onKeyPress: function ctrlTab__onKeyPress(event) {
     var isOpen = this.isOpen;
 
-    if (isOpen && event.target == this.searchField)
+    if (isOpen &&
+        event.target == this.searchField &&
+        event.keyCode != event.DOM_VK_ESCAPE)
       return;
 
     if (isOpen) {
@@ -615,8 +617,7 @@ var ctrlTab = {
       case "keydown":
       case "keyup":
         if (event.target == this.searchField) {
-          if (event.keyCode == event.DOM_VK_RETURN ||
-              event.keyCode == event.DOM_VK_ESCAPE)
+          if (event.keyCode == event.DOM_VK_RETURN)
             this.panel.focus();
         } else {
           // Manually consume the events, as the panel is open but doesn't
@@ -631,16 +632,19 @@ var ctrlTab = {
           this.selectThumbnail();
         break;
       case "popupshown":
-        if (this.sticky)
+        if (this.sticky && event.target == this.panel)
           this.searchField.focus();
         break;
       case "popuphiding":
-        this.onPopupHiding();
+        if (event.target == this.panel)
+          this.onPopupHiding();
         break;
       case "popuphidden":
-        // Destroy the widget in order to prevent outdated content
-        // when re-opening the panel.
-        this.panel.hidden = true;
+        if (event.target == this.panel) {
+          // Destroy the widget in order to prevent outdated content
+          // when re-opening the panel.
+          this.panel.hidden = true;
+        }
         break;
     }
   }
