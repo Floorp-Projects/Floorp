@@ -48,6 +48,7 @@
 #include "nsIScriptObjectPrincipal.h"
 #include "nsIDOMWindow.h"
 #include "xpcJSWeakReference.h"
+#include "XPCWrapper.h"
 
 #ifdef MOZ_JSLOADER
 #include "mozJSComponentLoader.h"
@@ -2725,6 +2726,21 @@ nsXPCComponents_Utils::GetSandbox(nsIXPCComponents_utils_Sandbox **aSandbox)
     return NS_OK;
 }
 
+static JSBool
+MethodWrapper(JSContext *cx, JSObject *obj, uintN argc, jsval *argv,
+              jsval *rval)
+{
+    jsval v;
+    if (!JS_GetReservedSlot(cx, JSVAL_TO_OBJECT(argv[-2]), 0, &v) ||
+        !JS_CallFunctionValue(cx, obj, v, argc, argv, rval)) {
+        return JS_FALSE;
+    }
+
+    if (JSVAL_IS_PRIMITIVE(*rval))
+       return JS_TRUE;
+    return XPCNativeWrapperCtor(cx, nsnull, 1, rval, rval);
+}
+
 /* void lookupMethod (); */
 NS_IMETHODIMP
 nsXPCComponents_Utils::LookupMethod()
@@ -2831,10 +2847,35 @@ nsXPCComponents_Utils::LookupMethod()
                                   &funval))
         return NS_ERROR_XPC_BAD_CONVERT_JS;
 
-    // return the function and let xpconnect know we did so
+    // Stick the function in the return value. This roots it.
     *retval = funval;
-    cc->SetReturnValueWasSet(PR_TRUE);
 
+    // Callers of this method are implicitly buying into
+    // XPCNativeWrapper-like protection. The easiest way
+    // to enforce this is to use our own wrapper.
+    // Note: We use the outer call context to ensure that we wrap
+    // the function in the right scope.
+    NS_ASSERTION(JSVAL_IS_OBJECT(funval), "Function is not an object");
+    JSContext *outercx;
+    cc->GetJSContext(&outercx);
+    JSFunction *oldfunction = JS_ValueToFunction(outercx, funval);
+    NS_ASSERTION(oldfunction, "Function is not a function");
+
+    JSFunction *f = JS_NewFunction(outercx, MethodWrapper,
+                                   JS_GetFunctionArity(oldfunction), 0,
+                                   JS_GetScopeChain(outercx),
+                                   JS_GetFunctionName(oldfunction));
+    if(!f)
+        return NS_ERROR_FAILURE;
+
+    JSObject *funobj = JS_GetFunctionObject(f);
+    if(!JS_SetReservedSlot(outercx, funobj, 0, funval))
+        return NS_ERROR_FAILURE;
+
+    *retval = OBJECT_TO_JSVAL(funobj);
+
+    // Tell XPConnect that we returned the function through the call context.
+    cc->SetReturnValueWasSet(PR_TRUE);
     return NS_OK;
 }
 
@@ -3010,7 +3051,7 @@ SandboxFunForwarder(JSContext *cx, JSObject *obj, uintN argc, jsval *argv,
 
     if (JSVAL_IS_PRIMITIVE(*rval))
         return JS_TRUE; // nothing more to do.
-    
+
     XPCThrower::Throw(NS_ERROR_NOT_IMPLEMENTED, cx);
     return JS_FALSE;
 }
@@ -3023,7 +3064,7 @@ SandboxImport(JSContext *cx, JSObject *obj, uintN argc, jsval *argv,
         XPCThrower::Throw(NS_ERROR_INVALID_ARG, cx);
         return JS_FALSE;
     }
-    
+
     JSFunction *fun = JS_ValueToFunction(cx, argv[0]);
     if (!fun) {
         XPCThrower::Throw(NS_ERROR_INVALID_ARG, cx);
