@@ -1831,6 +1831,26 @@ function testBug462407() {
 testBug462407.expected = true;
 test(testBug462407);
 
+//test no multitrees assert
+function testBug463490() {
+    function f(a, b, d) {
+        for (var i = 0; i < 10; i++) {
+            if (d)
+                b /= 2;
+        }
+        return a + b;
+    }
+    //integer stable loop
+    f(2, 2, false);
+    //double stable loop
+    f(3, 4.5, false);
+    //integer unstable branch
+    f(2, 2, true);
+    return true;
+};
+testBug463490.expected = true;
+test(testBug463490);
+
 // BEGIN MANDELBROT STUFF
 // XXXbz I would dearly like to wrap it up into a function to avoid polluting
 // the global scope, but the function ends up heavyweight, and then we lose on
