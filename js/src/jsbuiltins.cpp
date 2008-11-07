@@ -265,7 +265,7 @@ js_CallTree(InterpState* state, Fragment* f)
 #else
     rec = u.func(state, NULL);
 #endif
-    SideExit* lr = rec->exit;
+    VMSideExit* lr = (VMSideExit*)rec->exit;
 
     if (lr->exitType == NESTED_EXIT) {
         /* This only occurs once a tree call guard mismatches and we unwind the tree call stack.

@@ -286,7 +286,6 @@ namespace nanojit
 		Fragment *f = newBranch(anchor, ip);
 		f->root = f;
 		f->kind = MergeTrace;
-		f->calldepth = lr->exit->calldepth;
 		verbose_only(
 			int mergeid = 1;
 			for (Fragment *g = anchor->branches; g != 0; g = g->nextbranch)
@@ -301,7 +300,6 @@ namespace nanojit
     {
         Fragment *f = newBranch(exit->from, ip);
 		f->kind = BranchTrace;
-		f->calldepth = exit->calldepth;
 		f->treeBranches = f->root->treeBranches;
 		f->root->treeBranches = f;
         return f;
