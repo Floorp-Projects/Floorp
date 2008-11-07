@@ -344,6 +344,9 @@ SessionStoreService.prototype = {
         win.setTimeout(function() { _this.saveState(true); }, 0);
       else if (this._loadState == STATE_RUNNING)
         this.saveState(true);
+      // Delete the private browsing backed up state, if any
+      if ("_stateBackup" in this)
+        delete this._stateBackup;
       break;
     case "nsPref:changed": // catch pref changes
       switch (aData) {
@@ -398,6 +401,8 @@ SessionStoreService.prototype = {
 
             this._saveStateObject(oState);
           }
+          // make sure to restore the non-private session upon resuming
+          this._prefBranch.setBoolPref("sessionstore.resume_session_once", true);
         }
         else
           this._inPrivateBrowsing = false;
