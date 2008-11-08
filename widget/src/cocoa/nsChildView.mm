@@ -2419,6 +2419,7 @@ NSEvent* gLastDragEvent = nil;
   PR_LOG(sCocoaLog, PR_LOG_ALWAYS, ("ChildView initWithFrame: registering drag types\n"));
   [self registerForDraggedTypes:[NSArray arrayWithObjects:NSFilenamesPboardType,
                                                           NSStringPboardType,
+                                                          NSHTMLPboardType,
                                                           NSURLPboardType,
                                                           NSFilesPromisePboardType,
                                                           kWildcardPboardType,
@@ -3150,6 +3151,13 @@ static const PRInt32 sShadowInvalidationInterval = 100;
 
   // If there is no rollup widget we assume the OS routed the event correctly.
   if (!gRollupWidget)
+    return YES;
+
+  // Don't bother if we've been destroyed:  mWindow will now be nil, which
+  // makes all our work here pointless, and can even cause us to resend the
+  // event to ourselves in an infinte loop (since targetWindow == mWindow no
+  // longer tests whether targetWindow is us).
+  if (!mGeckoChild || !mWindow)
     return YES;
 
   // If this is the rollup widget and the event is not a mouse move then trust the OS routing.  

@@ -35,7 +35,9 @@ function test() {
     gPageA.events.removeListener("load", onPageAFirstLoad);
 
     gPageB = activeWin.open(url("chrome://mochikit/content/browser/browser/fuel/test/ContentB.html"));
-    gPageB.events.addListener("load", afterOpen);
+    gPageB.events.addListener("load", function() {
+      executeSoon(afterOpen);
+    });
     gPageB.focus();
 
     is(activeWin.tabs.length, 3, "Checking length of 'Browser.tabs' after opening a second additional tab");
@@ -64,10 +66,27 @@ function test() {
     // check event
     is(gTabMoveCount, 1, "Checking event handler for tab move");
 
-    // test loading new content into a tab
-    // the event will be checked in onPageLoad
-    gPageA.events.addListener("load", onPageASecondLoad);
-    gPageA.load(gPageB.uri);
+    let browser = gBrowser.getBrowserAtIndex(gPageB.index);
+    browser.addProgressListener({
+      onStateChange: function(webProgress, request, stateFlags, status) {
+        const complete = Ci.nsIWebProgressListener.STATE_IS_WINDOW +
+                         Ci.nsIWebProgressListener.STATE_IS_NETWORK +
+                         Ci.nsIWebProgressListener.STATE_STOP;
+        if ((stateFlags & complete) == complete) {
+          browser.removeProgressListener(this);
+          onPageBLoadComplete();
+        }
+      },
+
+      QueryInterface: function(iid) {
+        if (iid.equals(Ci.nsISupportsWeakReference) ||
+           iid.equals(Ci.nsIWebProgressListener) ||
+           iid.equals(Ci.nsISupports))
+           return this;
+
+        throw Components.results.NS_ERROR_NO_INTERFACE;
+      }
+    });
 
     // test loading new content with a frame into a tab
     // the event will be checked in afterClose
@@ -75,33 +94,34 @@ function test() {
     gPageB.load(url("chrome://mochikit/content/browser/browser/fuel/test/ContentWithFrames.html"));
   }
 
+  function onPageBLoadWithFrames(event) {
+    gPageLoadCount++;
+  }
+
+  function onPageBLoadComplete() {
+    gPageB.events.removeListener("load", onPageBLoadWithFrames);
+    // check page load with frame event
+    is(gPageLoadCount, 1, "Checking load count after loading new content with a frame");
+
+    // test loading new content into a tab
+    // the event will be checked in onPageLoad
+    gPageA.events.addListener("load", onPageASecondLoad);
+    gPageA.load(url("chrome://mochikit/content/browser/browser/fuel/test/ContentB.html"));
+  }
+
   function onPageASecondLoad(event) {
+    gPageA.events.removeListener("load", onPageASecondLoad);
     is(gPageA.uri.spec, "chrome://mochikit/content/browser/browser/fuel/test/ContentB.html", "Checking 'BrowserTab.uri' after loading new content");
 
     // start testing closing tabs
     // the event will be checked in afterClose
     // use executeSoon so the onPageASecondLoad
     // has a chance to finish first
-    executeSoon(function() {
-      gPageA.close();
-      gPageB.close();
-      executeSoon(afterClose);
-     });
-  }
+    gPageA.close();
+    gPageB.close();
 
-  function onPageBLoadWithFrames(event) {
-    gPageLoadCount++;
-  }
-
-  function afterClose() {
-    // check close event
-    is(gTabCloseCount, 2, "Checking event handler for tab close");
-
-    // check page load with frame event
-    is(gPageLoadCount, 1, "Checking 'BrowserTab.uri' after loading new content with a frame");
-
+    is(gTabCloseCount, 2, "Checking that tabs closed");
     is(activeWin.tabs.length, 1, "Checking length of 'Browser.tabs' after closing 2 tabs");
-
     finish();
   }
 }

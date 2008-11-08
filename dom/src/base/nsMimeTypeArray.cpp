@@ -82,7 +82,7 @@ nsMimeTypeArray::GetLength(PRUint32* aLength)
       return rv;
   }
 
-  NS_ASSERTION(mPluginMimeTypeCount <= mMimeTypeArray.Count(),
+  NS_ASSERTION(mPluginMimeTypeCount <= (PRUint32)mMimeTypeArray.Count(),
                "The number of total mimetypes should be equal to or higher "
                "than the number of plugin mimetypes.");
  
@@ -99,7 +99,7 @@ nsMimeTypeArray::GetItemAt(PRUint32 aIndex, nsresult *aResult)
       return nsnull;
   }
 
-  NS_ASSERTION(mPluginMimeTypeCount <= mMimeTypeArray.Count(),
+  NS_ASSERTION(mPluginMimeTypeCount <= (PRUint32)mMimeTypeArray.Count(),
                "The number of total mimetypes should be equal to or higher "
                "than the number of plugin mimetypes.");
 
@@ -133,7 +133,7 @@ nsMimeTypeArray::GetNamedItem(const nsAString& aName, nsresult* aResult)
       return nsnull;
   }
 
-  NS_ASSERTION(mPluginMimeTypeCount <= mMimeTypeArray.Count(),
+  NS_ASSERTION(mPluginMimeTypeCount <= (PRUint32)mMimeTypeArray.Count(),
                "The number of total mimetypes should be equal to or higher "
                "than the number of plugin mimetypes.");
 

@@ -81,17 +81,26 @@ function test() {
   tab_A.linkedBrowser.addEventListener("load", function (aEvent) {
     this.removeEventListener("load", arguments.callee, true);
 
-    let prePBModeTimeStamp = getSessionstorejsModificationTime();
+    // remove sessionstore.js to make sure it's created again when entering
+    // the private browsing mode.
+    let profilePath = Cc["@mozilla.org/file/directory_service;1"].
+                      getService(Ci.nsIProperties).
+                      get("ProfD", Ci.nsIFile);
+    let sessionStoreJS = profilePath.clone();
+    sessionStoreJS.append("sessionstore.js");
+    ok(sessionStoreJS.exists(),
+      "sessionstore.js should exist prior to entering the private browsing mode");
+    sessionStoreJS.remove(false);
+
     // enter private browsing mode
     pb.privateBrowsingEnabled = true;
     ok(pb.privateBrowsingEnabled, "private browsing enabled");
 
-    // sessionstore.js should be modified at this point
-    /* XXX this strangely fails!
-       TODO filed bug 462986
-    isnot(prePBModeTimeStamp, getSessionstorejsModificationTime(),
-      "sessionstore.js should be modified when entering the private browsing mode");
-    */
+    // sessionstore.js should be re-created at this point
+    sessionStoreJS = profilePath.clone();
+    sessionStoreJS.append("sessionstore.js");
+    ok(sessionStoreJS.exists(),
+      "sessionstore.js should be re-created after entering the private browsing mode");
 
     // record the time stamp of sessionstore.js in the private session
     let startPBModeTimeStamp = getSessionstorejsModificationTime();

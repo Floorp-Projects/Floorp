@@ -495,7 +495,7 @@ nsThebesImage::Draw(gfxContext*        aContext,
             format = mFormat;
             subimage = subimage.Intersect(available) - gfxPoint(aPadding.left, aPadding.top);
             userSpaceToImageSpace.Multiply(
-                gfxMatrix().Translate(gfxPoint(aPadding.left, aPadding.top)));
+                gfxMatrix().Translate(-gfxPoint(aPadding.left, aPadding.top)));
             sourceRect = sourceRect - gfxPoint(aPadding.left, aPadding.top);
             imageRect = gfxRect(0, 0, mWidth, mHeight);
         } else {

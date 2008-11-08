@@ -338,7 +338,8 @@ menupopup,
 panel,
 tooltip {
   display: -moz-popup;
-  z-index: 2147483647; 
+  z-index: 2147483647;
+  text-shadow: none;
 }
 
 tooltip {

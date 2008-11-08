@@ -44,8 +44,6 @@ function run_test() {
            getService(Ci.nsIObserverService);
   var pb = Cc["@mozilla.org/privatebrowsing;1"].
            getService(Ci.nsIPrivateBrowsingService);
-  var appStartup = Cc["@mozilla.org/toolkit/app-startup;1"].
-                   getService(Ci.nsIAppStartup);
   var prefBranch = Cc["@mozilla.org/preferences-service;1"].
                    getService(Ci.nsIPrefBranch);
   prefBranch.setBoolPref("browser.privatebrowsing.keep_current_session", true);
@@ -92,8 +90,8 @@ function run_test() {
   // enter the private browsing mode
   pb.privateBrowsingEnabled = true;
 
-  // exit and leave the test pending
+  // Simulate an exit
   expectedQuitting = true;
   do_test_pending();
-  appStartup.quit(Ci.nsIAppStartup.eForceQuit);
+  os.notifyObservers(null, "quit-application-granted", null);
 }
