@@ -995,6 +995,7 @@ TraceRecorder::TraceRecorder(JSContext* cx, VMSideExit* _anchor, Fragment* _frag
     this->callDepth = _anchor ? _anchor->calldepth : 0;
     this->atoms = cx->fp->script->atomMap.vector;
     this->deepAborted = false;
+    this->applyingArguments = false;
     this->trashTree = false;
     this->whichTreeToTrash = _fragment->root;
     this->global_dslots = this->globalObj->dslots;
@@ -3592,8 +3593,9 @@ js_MonitorRecording(TraceRecorder* tr)
     if (tr->walkedOutOfLoop())
         return js_CloseLoop(cx);
 
-    // Clear one-shot state used to communicate between record_JSOP_CALL and post-                                                                                            
-    // opcode-case-guts record hook (record_FastNativeCallComplete).
+    // Clear one-shot state used to communicate between record_JSOP_CALL and mid- and post-
+    // opcode-case-guts record hooks (record_EnterFrame, record_FastNativeCallComplete).
+    tr->applyingArguments = false;
     tr->pendingTraceableNative = NULL;
 
     // In the future, handle dslots realloc by computing an offset from dslots instead.
@@ -4742,7 +4744,6 @@ TraceRecorder::unbox_jsval(jsval v, LIns*& v_ins)
         v_ins = lir->ins2(LIR_piand, v_ins, INS_CONST(~JSVAL_TAGMASK));
         return true;
     }
-    JS_NOT_REACHED("unbox_jsval");
     return false;
 }
 
@@ -4927,10 +4928,20 @@ TraceRecorder::record_EnterFrame()
 
     jsval* vp = &fp->argv[fp->argc];
     jsval* vpstop = vp + ptrdiff_t(fp->fun->nargs) - ptrdiff_t(fp->argc);
-    while (vp < vpstop) {
-        if (vp >= fp->down->regs->sp)
+    if (applyingArguments) {
+        applyingArguments = false;
+        while (vp < vpstop) {
+            JS_ASSERT(vp >= fp->down->regs->sp);
             nativeFrameTracker.set(vp, (LIns*)0);
-        set(vp++, void_ins, true);
+            LIns* arg_ins = get(&fp->down->argv[fp->argc + (vp - vpstop)]);
+            set(vp++, arg_ins, true);
+        }
+    } else {
+        while (vp < vpstop) {
+            if (vp >= fp->down->regs->sp)
+                nativeFrameTracker.set(vp, (LIns*)0);
+            set(vp++, void_ins, true);
+        }
     }
 
     vp = &fp->slots[0];
@@ -5266,11 +5277,15 @@ js_Object(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval);
 JSBool
 js_Date(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval);
 
+JSBool
+js_fun_apply(JSContext* cx, uintN argc, jsval* vp);
+
 bool
-TraceRecorder::functionCall(bool constructing, uintN argc)
+TraceRecorder::functionCall(bool constructing)
 {
     JSStackFrame* fp = cx->fp;
     jsbytecode *pc = fp->regs->pc;
+    uintN argc = GET_ARGC(pc);
 
     jsval& fval = stackval(0 - (2 + argc));
     JS_ASSERT(&fval >= StackBase(fp));
@@ -5281,7 +5296,7 @@ TraceRecorder::functionCall(bool constructing, uintN argc)
     jsval& tval = stackval(0 - (argc + 1));
     LIns* this_ins = get(&tval);
 
-    if (this_ins->isconstp() && !this_ins->constvalp() && !guardCallee(fval))
+    if (this_ins->isconstp() && !this_ins->constvalp() && !guardShapelessCallee(fval))
         return false;
 
     /*
@@ -5305,6 +5320,87 @@ TraceRecorder::functionCall(bool constructing, uintN argc)
             set(&tval, tv_ins);
         }
         return interpretedFunctionCall(fval, fun, argc, constructing);
+    }
+
+    LIns* arg1_ins = NULL;
+    jsval arg1 = JSVAL_VOID;
+    jsval thisval = tval;
+    if (!constructing && FUN_FAST_NATIVE(fun) == js_fun_apply) {
+        if (argc != 2)
+            ABORT_TRACE("can't trace Function.prototype.apply with other than 2 args");
+
+        if (!guardShapelessCallee(tval))
+            return false;
+        JSObject* tfunobj = JSVAL_TO_OBJECT(tval);
+        JSFunction* tfun = GET_FUNCTION_PRIVATE(cx, tfunobj);
+
+        jsval& oval = stackval(-2);
+        if (JSVAL_IS_PRIMITIVE(oval))
+            ABORT_TRACE("can't trace Function.prototype.apply with primitive 1st arg");
+
+        jsval& aval = stackval(-1);
+        if (JSVAL_IS_PRIMITIVE(aval))
+            ABORT_TRACE("can't trace Function.prototype.apply with primitive 2nd arg");
+        JSObject* aobj = JSVAL_TO_OBJECT(aval);
+
+        LIns* aval_ins = get(&aval);
+        if (!aval_ins->isCall())
+            ABORT_TRACE("can't trace Function.prototype.apply on non-builtin-call 2nd arg");
+
+        if (aval_ins->callInfo() == &js_Arguments_ci) {
+            JS_ASSERT(OBJ_GET_CLASS(cx, aobj) == &js_ArgumentsClass);
+            JS_ASSERT(OBJ_GET_PRIVATE(cx, aobj) == fp);
+            if (!FUN_INTERPRETED(tfun))
+                ABORT_TRACE("can't trace Function.prototype.apply(native_function, arguments)");
+
+            // We can only fasttrack applys where the argument array we pass in has the
+            // same length (fp->argc) as the number of arguments the function expects (tfun->nargs).
+            argc = fp->argc;
+            if (tfun->nargs != argc || fp->fun->nargs != argc)
+                ABORT_TRACE("can't trace Function.prototype.apply(scripted_function, arguments)");
+
+            jsval* sp = fp->regs->sp - 4;
+            set(sp, get(&tval));
+            *sp++ = tval;
+            set(sp, get(&oval));
+            *sp++ = oval;
+            jsval* newsp = sp + argc;
+            if (newsp > fp->slots + fp->script->nslots) {
+                JSArena* a = cx->stackPool.current;
+                if (jsuword(newsp) > a->limit)
+                    ABORT_TRACE("can't grow stack for Function.prototype.apply");
+                if (jsuword(newsp) > a->avail)
+                    a->avail = jsuword(newsp);
+            }
+
+            jsval* argv = fp->argv;
+            for (uintN i = 0; i < JS_MIN(argc, 2); i++) {
+                set(&sp[i], get(&argv[i]));
+                sp[i] = argv[i];
+            }
+            applyingArguments = true;
+            return interpretedFunctionCall(tval, tfun, argc, false);
+        }
+
+        if (aval_ins->callInfo() != &js_Array_1str_ci)
+            ABORT_TRACE("can't trace Function.prototype.apply on other than [str] 2nd arg");
+
+        JS_ASSERT(OBJ_IS_ARRAY(cx, aobj));
+        JS_ASSERT(aobj->fslots[JSSLOT_ARRAY_LENGTH] == 1);
+        JS_ASSERT(JSVAL_IS_STRING(aobj->dslots[0]));
+
+        if (FUN_INTERPRETED(tfun))
+            ABORT_TRACE("can't trace Function.prototype.apply for scripted functions");
+
+        if (!(tfun->flags & JSFUN_TRACEABLE))
+            ABORT_TRACE("Function.prototype.apply on untraceable native");
+
+        thisval = oval;
+        this_ins = get(&oval);
+        arg1_ins = callArgN(aval_ins, 2);
+        arg1 = aobj->dslots[0];
+        fun = tfun;
+        argc = 1;
     }
 
     if (!constructing && !(fun->flags & JSFUN_TRACEABLE))
@@ -5344,11 +5440,11 @@ TraceRecorder::functionCall(bool constructing, uintN argc)
             if (argtype == 'C') {
                 *argp = cx_ins;
             } else if (argtype == 'T') {   /* this, as an object */
-                if (!JSVAL_IS_OBJECT(tval))
+                if (!JSVAL_IS_OBJECT(thisval))
                     goto next_specialization;
                 *argp = this_ins;
             } else if (argtype == 'S') {   /* this, as a string */
-                if (!JSVAL_IS_STRING(tval))
+                if (!JSVAL_IS_STRING(thisval))
                     goto next_specialization;
                 *argp = this_ins;
             } else if (argtype == 'f') {
@@ -5370,7 +5466,7 @@ TraceRecorder::functionCall(bool constructing, uintN argc)
             } else if (argtype == 'P') {
                 *argp = INS_CONSTPTR(pc);
             } else if (argtype == 'D') {  /* this, as a number */
-                if (!isNumber(tval))
+                if (!isNumber(thisval))
                     goto next_specialization;
                 *argp = this_ins;
             } else {
@@ -5380,8 +5476,8 @@ TraceRecorder::functionCall(bool constructing, uintN argc)
         }
 
         for (i = knownargc; i--; ) {
-            jsval& arg = stackval(-(i + 1));
-            *argp = get(&arg);
+            jsval& arg = (!constructing && i == 0 && arg1_ins) ? arg1 : stackval(-(i + 1));
+            *argp = (!constructing && i == 0 && arg1_ins) ? arg1_ins : get(&arg);
 
             argtype = known->argtypes[i];
             if (argtype == 'd' || argtype == 'i') {
@@ -5415,10 +5511,10 @@ TraceRecorder::functionCall(bool constructing, uintN argc)
          * isn't going to return a NaN.
          */
         if (!constructing && known->builtin == &js_String_p_charCodeAt_ci) {
-            JSString* str = JSVAL_TO_STRING(tval);
-            jsval& arg = stackval(-1);
+            JSString* str = JSVAL_TO_STRING(thisval);
+            jsval& arg = arg1_ins ? arg1 : stackval(-1);
 
-            JS_ASSERT(JSVAL_IS_STRING(tval));
+            JS_ASSERT(JSVAL_IS_STRING(thisval));
             JS_ASSERT(isNumber(arg));
 
             if (JSVAL_IS_INT(arg)) {
@@ -5483,7 +5579,7 @@ success:
 bool
 TraceRecorder::record_JSOP_NEW()
 {
-    return functionCall(true, GET_ARGC(cx->fp->regs->pc));
+    return functionCall(true);
 }
 
 bool
@@ -5903,14 +5999,11 @@ TraceRecorder::record_JSOP_CALLUPVAR()
 }
 
 bool
-TraceRecorder::guardCallee(jsval& callee)
+TraceRecorder::guardShapelessCallee(jsval& callee)
 {
-    if (!VALUE_IS_FUNCTION(cx, callee))
-        ABORT_TRACE("callee is not a function");
-    
     guard(true,
           addName(lir->ins2(LIR_eq, get(&callee), INS_CONSTPTR(JSVAL_TO_OBJECT(callee))),
-                  "guard(callee)"),
+                  "guard(shapeless callee)"),
           MISMATCH_EXIT);
     return true;
 }
@@ -5971,161 +6064,13 @@ TraceRecorder::interpretedFunctionCall(jsval& fval, JSFunction* fun, uintN argc,
 bool
 TraceRecorder::record_JSOP_CALL()
 {
-    return functionCall(false, GET_ARGC(cx->fp->regs->pc));
+    return functionCall(false);
 }
 
 bool
 TraceRecorder::record_JSOP_APPLY()
 {
-    JSStackFrame* fp = cx->fp;
-    jsbytecode *pc = fp->regs->pc;
-    uintN argc = GET_ARGC(pc);
-    jsval* vp = fp->regs->sp - (argc + 2);
-    JS_ASSERT(vp >= StackBase(fp));
-    jsuint length = 0;
-    JSObject* aobj = NULL;
-    LIns* aobj_ins = NULL;
-    LIns* dslots_ins = NULL;
-    
-    if (!VALUE_IS_FUNCTION(cx, vp[0]))
-        return record_JSOP_CALL();
-
-    JSObject* obj = JSVAL_TO_OBJECT(vp[0]);
-    JSFunction* fun = GET_FUNCTION_PRIVATE(cx, obj);
-    if (FUN_INTERPRETED(fun))
-        return record_JSOP_CALL();
-
-    bool apply = (JSFastNative)fun->u.n.native == js_fun_apply;
-    if (!apply && (JSFastNative)fun->u.n.native != js_fun_call)
-        return record_JSOP_CALL();
-
-    /* 
-     * If this is apply, and the argument is too long and would need
-     * a separate stack chunk, do a heavy-weight apply. 
-     */
-    if (apply && argc >= 2) {
-        if (JSVAL_IS_PRIMITIVE(vp[3]))
-            ABORT_TRACE("arguments parameter of apply is primitive");
-        aobj = JSVAL_TO_OBJECT(vp[3]);
-        aobj_ins = get(&vp[3]);
-        
-        /* 
-         * We expect a dense array for the arguments (the other
-         * frequent case is the arguments object, but that we
-         * don't trace at the moment). 
-         */
-        guard(false, lir->ins_eq0(aobj_ins), MISMATCH_EXIT);
-        if (!guardDenseArray(aobj, aobj_ins))
-            ABORT_TRACE("arguments parameter of apply is not a dense array");
-        
-        /*
-         * Make sure the array has the same length at runtime.
-         */
-        length = jsuint(aobj->fslots[JSSLOT_ARRAY_LENGTH]);
-        guard(true, 
-              lir->ins2i(LIR_eq,stobj_get_fslot(aobj_ins, JSSLOT_ARRAY_LENGTH), length), 
-              BRANCH_EXIT);
- 
-        /* 
-         * Make sure dslots is not NULL and guard the array's capacity.
-         */
-        dslots_ins = lir->insLoad(LIR_ldp, aobj_ins, offsetof(JSObject, dslots));
-        guard(false,
-              lir->ins_eq0(dslots_ins),
-              MISMATCH_EXIT);
-        guard(true,
-              lir->ins2(LIR_ult,
-                        lir->insImm(length),
-                        lir->insLoad(LIR_ldp, dslots_ins, 0 - (int)sizeof(jsval))),
-              MISMATCH_EXIT);
-        
-        /*
-         * If this is apply, and the argument is too long and would need
-         * a separate stack chunk, the interpreter deoptimizes and goes the 
-         * js_Invoke route. We can't trace that case.
-         */
-        length = (uintN)JS_MIN(length, ARRAY_INIT_LIMIT - 1);
-        jsval* newsp = vp + 2 + length;
-        JS_ASSERT(newsp >= vp + 2);
-        JSArena *a = cx->stackPool.current;
-        if (jsuword(newsp) > a->limit)
-            ABORT_TRACE("apply or call across stack-chunks");
-    }
-
-    /*
-     * Guard on the identity of this, which is the function we
-     * are applying.
-     */
-    if (!guardCallee(vp[1]))
-        return false;
-
-    LIns* callee_ins = get(&vp[1]);
-    LIns* this_ins = NULL;
-    if (argc > 0) {
-        this_ins = get(&vp[2]);
-        if (JSVAL_IS_PRIMITIVE(vp[2]))
-            ABORT_TRACE("apply with primitive this");
-    } else {
-        this_ins = lir->insImm(0);
-    }
-    
-    LIns** argv;
-    if (!apply) {
-        --argc;
-        argv = (LIns**)alloca(sizeof(LIns*) * argc);
-        for (jsuint n = 0; n < argc; ++n)
-            argv[n] = get(&vp[3 + n]); /* skip over the this parameter */
-    } else {
-        if (argc >= 2) {
-            /*
-             * We already established that argments is a dense array
-             * and we know its length and we know dslots is not NULL
-             * and the length is not beyond the dense array's capacity. 
-             */
-            argc = length;
-            argv = (LIns**)alloca(sizeof(LIns*) * argc);
-            for (unsigned n = 0; n < argc; ++n) {
-                /* Load the value and guard on its type to unbox it. */
-                LIns* v_ins = lir->insLoadi(dslots_ins, n * sizeof(jsval));
-                
-                /* 
-                 * We can't "see through" a hole to a possible Array.prototype property, so
-                 * we abort here and guard below (after unboxing).
-                 */
-                jsval* vp = &aobj->dslots[n];
-                if (*vp == JSVAL_HOLE)
-                    ABORT_TRACE("can't see through hole in dense array");
-                if (!unbox_jsval(*vp, v_ins))
-                    return false;
-                if (JSVAL_TAG(*vp) == JSVAL_BOOLEAN) {
-                    // Optimize to guard for a hole only after untagging, so we know that
-                    // we have a boolean, to avoid an extra guard for non-boolean values.
-                    guard(false, 
-                          lir->ins2(LIR_eq, v_ins, INS_CONST(JSVAL_TO_BOOLEAN(JSVAL_HOLE))),
-                          MISMATCH_EXIT);
-                }
-                argv[n] = v_ins;
-            }
-        } else {
-            argc = 0;
-        }
-    }
-    /*
-     * We have all arguments unpacked and we are now ready to modify the
-     * tracker.
-     */
-    tracker.set(&vp[0], callee_ins);
-    tracker.set(&vp[1], this_ins);
-    for (unsigned n = 0; n < argc; ++n)
-        tracker.set(&vp[2 + n], argv[n]);
-
-    return true;
-}
-
-bool
-TraceRecorder::record_ApplyComplete(uintN argc)
-{
-    return functionCall(false, argc);
+    return functionCall(false);
 }
 
 bool
