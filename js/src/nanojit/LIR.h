@@ -60,124 +60,14 @@ namespace nanojit
 		// flags; upper bits reserved
 		LIR64	= 0x40,			// result is double or quad
 		
-		// special operations (must be 0..N)
-		LIR_start = 0,	
-		LIR_nearskip = 1, // must be LIR_skip-1 and lsb=1
-		LIR_skip = 2,
-        LIR_neartramp = 3, // must be LIR_tramp-1 and lsb=1
-        LIR_tramp = 4,
-
-		// non-pure operations
-		LIR_addp    = 9,
-		LIR_param	= 10,
-		LIR_st		= 11, // 32-bit store
-		LIR_ld		= 12, // 32-bit load
-		LIR_alloc   = 13, // alloca some stack space
-        LIR_sti     = 14,
-		LIR_ret     = 15,
-		LIR_live    = 16, // extend live range of reference
-		LIR_calli   = 17, // indirect call	
-		LIR_call	= 18, // subroutine call returning a 32-bit value
-			
-		// guards
-		LIR_loop    = 19, // loop fragment
-		LIR_x		= 20, // exit always
-
-		// branches
-		LIR_j		= 21, // jump always
-		LIR_jt		= 22, // jump true
-		LIR_jf		= 23, // jump false
-		LIR_label	= 24, // a jump target
-		LIR_ji      = 25, // jump indirect
-		// operators
-
-		LIR_ldcs    = 25, // non-volatile 16-bit load
-		
-		// LIR_feq though LIR_fge must only be used on float arguments.  They
-		// return integers.
-		LIR_feq		= 26, // floating-point equality [2 float inputs]
-		LIR_flt		= 27, // floating-point less than: arg1 < arg2
-		LIR_fgt		= 28, // floating-point greater than: arg1 > arg2
-		LIR_fle		= 29, // arg1 <= arg2, both floating-point
-		LIR_fge		= 30, // arg1 >= arg2, both floating-point
-
-		LIR_cmov    = 31, // conditional move (op1=cond, op2=cond(iftrue,iffalse))
-		LIR_short   = 32, // constant 16-bit integer
-		LIR_int		= 33, // constant 32-bit integer
-		LIR_ldc     = 34, // non-volatile load
-		LIR_2       = 35, // wraps a pair of refs
-
-		// LIR_neg through LIR_ush are all integer operations
-		LIR_neg		= 36, // numeric negation [ 1 integer input / integer output ]
-		LIR_add		= 37, // integer addition [ 2 operand integer intputs / integer output ]
-		LIR_sub		= 38, // integer subtraction
-		LIR_mul		= 39, // integer multiplication
-		LIR_callh   = 40, 
-		LIR_and		= 41,
-		LIR_or		= 42,
-		LIR_xor		= 43,
-		LIR_not		= 44,
-		LIR_lsh		= 45,
-		LIR_rsh		= 46,	// >>
-		LIR_ush		= 47,	// >>>
-
-		// conditional guards, op^1 to complement.  Only things that are
-		// isCond() can be passed to these.
-		LIR_xt		= 48, // exit if true   0x30 0011 0000
-		LIR_xf		= 49, // exit if false  0x31 0011 0001
-
-		// qlo and qhi take a single quad argument and return its low and high
-		// 32 bits respectively as 32-bit integers.
-		LIR_qlo		= 50,
-		LIR_qhi		= 51,
-
-		LIR_ldcb    = 52, // non-volatile 8-bit load
-
-        LIR_ov      = 53,
-        LIR_cs      = 54,
-		LIR_eq      = 55, // integer equality
-        // integer (all sizes) relational operators.  op^1 to swap left/right,
-        // op^3 to complement.
-		LIR_lt      = 56, // 0x38 0011 1000
-		LIR_gt      = 57, // 0x39 0011 1001
-		LIR_le		= 58, // 0x3A 0011 1010
-		LIR_ge		= 59, // 0x3B 0011 1011
-		// and the unsigned integer versions
-		LIR_ult		= 60, // 0x3C 0011 1100
-		LIR_ugt		= 61, // 0x3D 0011 1101
-		LIR_ule		= 62, // 0x3E 0011 1110
-		LIR_uge		= 63, // 0x3F 0011 1111
-
-		// non-64bit ops, but we're out of code space below 64
-		LIR_file    = 1 | LIR64,
-		LIR_line    = 2 | LIR64,
-
-		/**
-		 * 64bit operations
-		 */
-		LIR_stq		= LIR_st | LIR64, // quad store
-		LIR_stqi	= LIR_sti | LIR64,
-		LIR_fret    = LIR_ret | LIR64,
-		LIR_quad    = LIR_int | LIR64, // quad constant value
-		LIR_ldq		= LIR_ld    | LIR64, // quad load
-		LIR_ldqc    = LIR_ldc   | LIR64,
-        LIR_qiand   = 24 | LIR64,
-        LIR_qiadd   = 25 | LIR64,
-        LIR_qilsh   = LIR_lsh | LIR64,
-
-		LIR_fcall   = LIR_call  | LIR64, // subroutine call returning quad
-		LIR_fcalli  = LIR_calli | LIR64,
-		LIR_fneg	= LIR_neg  | LIR64, // floating-point numeric negation
-		LIR_fadd	= LIR_add  | LIR64, // floating-point addition
-		LIR_fsub	= LIR_sub  | LIR64, // floating-point subtraction
-		LIR_fmul	= LIR_mul  | LIR64, // floating-point multiplication
-		LIR_fdiv	= 40        | LIR64, // floating-point division
-		LIR_qcmov	= LIR_cmov | LIR64, 
-
-		LIR_qjoin	= 41 | LIR64,
-		LIR_i2f		= 42 | LIR64, // convert an integer to a float
-		LIR_u2f		= 43 | LIR64, // convert an unsigned integer to a float
-        LIR_qior    = 44 | LIR64
+#define OPDEF(op, number, args) \
+        LIR_##op = (number),
+#define OPDEF64(op, number, args) \
+        LIR_##op = ((number) | LIR64),
+#include "LIRopcode.tbl"
+        LIR_sentinel
+#undef OPDEF
+#undef OPDEF64
 	};
 
 	#if defined NANOJIT_64BIT

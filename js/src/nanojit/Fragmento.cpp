@@ -54,6 +54,22 @@ namespace nanojit
 		return in;
 	}
 
+#ifdef _DEBUG
+    bool Fragmento::_firstFragmentoCreated = false;
+
+	static void makeRuntimeStaticAssertions()
+    {
+      /* Opcodes must be strictly increasing without holes. */
+      uint32_t count = 0;
+#define OPDEF(op, number, operands) \
+      NanoAssertMsg(LIR_##op == count++, "misnumbered opcode");
+#define OPDEF64(op, number, operands) OPDEF(op, number, operands)
+#include "LIRopcode.tbl"
+#undef OPDEF
+#undef OPDEF64
+    }
+#endif
+
 	/**
 	 * This is the main control center for creating and managing fragments.
 	 */
@@ -62,6 +78,14 @@ namespace nanojit
 			_max_pages(1 << (calcSaneCacheSize(cacheSizeLog2) - NJ_LOG2_PAGE_SIZE)),
 			_pagesGrowth(1)
 	{
+#ifdef _DEBUG
+       if (!_firstFragmentoCreated)
+       {
+         makeRuntimeStaticAssertions();
+         _firstFragmentoCreated = true;
+       }
+#endif
+
 #ifdef MEMORY_INFO
 		_allocList.set_meminfo_name("Fragmento._allocList");
 #endif

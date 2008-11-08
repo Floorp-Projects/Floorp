@@ -50,43 +50,28 @@ namespace nanojit
 	#ifdef FEATURE_NANOJIT
 
 	const uint8_t operandCount[] = {
-	/* 0 */		/*trace*/0, /*nearskip*/0, /*skip*/0, /*neartramp*/0, /*tramp*/0, 2, 2, 2, 2, /*addp*/2, 
-	/* 10 */	/*param*/0, 2, 2, /*alloc*/0, 2, /*ret*/1, /*live*/1, /*calli*/0, /*call*/0, /*loop*/0,
-	/* 20 */	/*x*/0, 0, 1, 1, /*label*/0, 2, 2, 2, 2, 2,
-	/* 30 */	2, 2, /*short*/0, /*int*/0, 2, 2, /*neg*/1, 2, 2, 2,
-#if defined NANOJIT_64BIT
-	/* 40 */	/*callh*/0, 2, 2, 2, /*not*/1, 2, 2, 2, /*xt*/1, /*xf*/1,
-#else
-	/* 40 */	/*callh*/1, 2, 2, 2, /*not*/1, 2, 2, 2, /*xt*/1, /*xf*/1,
-#endif
-	/* 50 */	/*qlo*/1, /*qhi*/1, 2, /*ov*/1, /*cs*/1, 2, 2, 2, 2, 2,
-	/* 60 */	2, 2, 2, 2, 2, /*file*/1, /*line*/1, 2, 2, 2,
-	/* 70 */	2, 2, 2, 2, 2, 2, 2, 2, 2, /*fret*/1,
-	/* 80 */	2, /*fcalli*/0, /*fcall*/0, 2, 2, 2, 2, 2, 2, 2,
-	/* 90 */	2, 2, 2, 2, 2, 2, 2, /*quad*/0, 2, 2,
-	/* 100 */	/*fneg*/1, 2, 2, 2, 2, 2, /*i2f*/1, /*u2f*/1, 2, 2,
-	/* 110 */	2, 2, 2, 2, 2, 2, 2, 2, 2, 2,
-	/* 120 */	2, 2, 2, 2, 2, 2, 2, 2, 
+#define OPDEF(op, number, operands) \
+        operands,
+#define OPDEF64(op, number, operands) \
+        operands,
+#include "LIRopcode.tbl"
+#undef OPDEF
+#undef OPDEF64
+        0
 	};
 
 	// LIR verbose specific
 	#ifdef NJ_VERBOSE
 
 	const char* lirNames[] = {
-	/* 0-9 */	"start","nearskip","skip","neartramp","tramp","5","6","7","8","addp",
-	/* 10-19 */	"param","st","ld","alloc","sti","ret","live","calli","call","loop",
-	/* 20-29 */ "x","j","jt","jf","label","ldcs","feq","flt","fgt","fle",
-	/* 30-39 */ "fge","cmov","short","int","ldc","","neg","add","sub","mul",
-	/* 40-49 */ "callh","and","or","xor","not","lsh","rsh","ush","xt","xf",
-	/* 50-59 */ "qlo","qhi","ldcb","ov","cs","eq","lt","gt","le","ge",
-	/* 60-63 */ "ult","ugt","ule","uge",
-	/* 64-69 */ "LIR64","file","line","67","68","69",
-	/* 70-79 */ "70","71","72","73","74","stq","ldq","77","stqi","fret",
-	/* 80-89 */ "80","fcalli","fcall","83","84","85","86","87","88","89",
-	/* 90-99 */ "90","91","92","93","94","95","96","quad","ldqc","99",
-	/* 100-109 */ "fneg","fadd","fsub","fmul","fdiv","qjoin","i2f","u2f","qior","qilsh",
-	/* 110-119 */ "110","111","112","113","114","115","116","117","118","119",
-	/* 120-127 */ "120","121","122","123","124","125","126","127"
+#define OPDEF(op, number, operands) \
+        #op,
+#define OPDEF64(op, number, operands) \
+        #op,
+#include "LIRopcode.tbl"
+#undef OPDEF
+#undef OPDEF64
+        NULL
 	};
 
 	#endif /* NANOJIT_VEBROSE */
