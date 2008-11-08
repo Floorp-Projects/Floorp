@@ -138,6 +138,7 @@ static nsresult SetUpDragClipboard(nsISupportsArray* aTransferableArray)
       NSString* currentKey = [types objectAtIndex:i];
       id currentValue = [pasteboardOutputDict valueForKey:currentKey];
       if (currentKey == NSStringPboardType ||
+          currentKey == NSHTMLPboardType ||
           currentKey == kCorePboardType_url ||
           currentKey == kCorePboardType_urld ||
           currentKey == kCorePboardType_urln) {
@@ -411,11 +412,13 @@ nsDragService::GetData(nsITransferable* aTransferable, PRUint32 aItemIndex)
       break;
     }
 
-    if (flavorStr.EqualsLiteral(kUnicodeMime) ||
+    const NSString *pboardType = NSStringPboardType;
+
+    if (nsClipboard::IsStringType(flavorStr, &pboardType) ||
         flavorStr.EqualsLiteral(kURLMime) ||
         flavorStr.EqualsLiteral(kURLDataMime) ||
         flavorStr.EqualsLiteral(kURLDescriptionMime)) {
-      NSString* pString = [globalDragPboard stringForType:NSStringPboardType];
+      NSString* pString = [globalDragPboard stringForType:pboardType];
       if (!pString)
         continue;
 
@@ -512,6 +515,8 @@ nsDragService::IsDataFlavorSupported(const char *aDataFlavor, PRBool *_retval)
     }
   }
 
+  const NSString *pboardType;
+
   if (dataFlavor.EqualsLiteral(kFileMime)) {
     NSString* availableType = [globalDragPboard availableTypeFromArray:[NSArray arrayWithObject:NSFilenamesPboardType]];
     if (availableType && [availableType isEqualToString:NSFilenamesPboardType])
@@ -522,9 +527,9 @@ nsDragService::IsDataFlavorSupported(const char *aDataFlavor, PRBool *_retval)
     if (availableType && [availableType isEqualToString:kCorePboardType_url])
       *_retval = PR_TRUE;
   }
-  else if (dataFlavor.EqualsLiteral(kUnicodeMime)) {
-    NSString* availableType = [globalDragPboard availableTypeFromArray:[NSArray arrayWithObject:NSStringPboardType]];
-    if (availableType && [availableType isEqualToString:NSStringPboardType])
+  else if (nsClipboard::IsStringType(dataFlavor, &pboardType)) {
+    NSString* availableType = [globalDragPboard availableTypeFromArray:[NSArray arrayWithObject:pboardType]];
+    if (availableType && [availableType isEqualToString:pboardType])
       *_retval = PR_TRUE;
   }
 

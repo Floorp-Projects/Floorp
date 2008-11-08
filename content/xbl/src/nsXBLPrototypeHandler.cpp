@@ -302,11 +302,9 @@ nsXBLPrototypeHandler::ExecuteHandler(nsPIDOMEventTarget* aTarget,
         return NS_OK;
     }
 
-    boundGlobal = boundDocument->GetScriptGlobalObject();
+    boundGlobal = boundDocument->GetScopeObject();
   }
 
-  // If we still don't have a 'boundGlobal', we're doomed. bug 95465.
-  NS_ASSERTION(boundGlobal, "failed to get the nsIScriptGlobalObject. bug 95465?");
   if (!boundGlobal)
     return NS_OK;
 
