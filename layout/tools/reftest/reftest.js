@@ -281,11 +281,15 @@ function ServeFiles(manifestURL, directory, files)
     var secMan = CC[NS_SCRIPTSECURITYMANAGER_CONTRACTID]
                      .getService(CI.nsIScriptSecurityManager);
 
+    var testbase =
+        gIOService.newURI("http://localhost:" + HTTP_SERVER_PORT + path,
+                          null, null);
+
     function FileToURI(file)
     {
-        var testURI = gIOService.newURI("http://localhost:" + HTTP_SERVER_PORT +
-                                        path + file,
-                                        null, null);
+        // Only serve relative URIs via the HTTP server, not absolute
+        // ones like about:blank.
+        var testURI = gIOService.newURI(file, null, testbase);
 
         // XXX necessary?  manifestURL guaranteed to be file, others always HTTP
         secMan.checkLoadURI(manifestURL, testURI,
