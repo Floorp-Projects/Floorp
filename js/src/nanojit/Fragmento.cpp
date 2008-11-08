@@ -62,6 +62,26 @@ namespace nanojit
 			_max_pages(1 << (calcSaneCacheSize(cacheSizeLog2) - NJ_LOG2_PAGE_SIZE)),
 			_pagesGrowth(1)
 	{
+#ifdef _DEBUG
+		{
+			// XXX These belong somewhere else, but I can't find the
+			//     right location right now.
+			NanoStaticAssert((LIR_lt ^ 3) == LIR_ge);
+			NanoStaticAssert((LIR_le ^ 3) == LIR_gt);
+			NanoStaticAssert((LIR_ult ^ 3) == LIR_uge);
+			NanoStaticAssert((LIR_ule ^ 3) == LIR_ugt);
+
+			/* Opcodes must be strictly increasing without holes. */
+			uint32_t count = 0;
+			#define OPDEF(op, number, operands) \
+				NanoAssertMsg(LIR_##op == count++, "misnumbered opcode");
+			#define OPDEF64(op, number, operands) OPDEF(op, number, operands)
+			#include "LIRopcode.tbl"
+			#undef OPDEF
+			#undef OPDEF64
+		}
+#endif
+
 #ifdef MEMORY_INFO
 		_allocList.set_meminfo_name("Fragmento._allocList");
 #endif
