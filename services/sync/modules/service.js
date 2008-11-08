@@ -465,8 +465,9 @@ WeaveSvc.prototype = {
   },
   login: function WeaveSvc_login(onComplete, username, password, passphrase) {
     this._localLock(
-      this._notify("login", "", this._login,
-                   username, password, passphrase)).async(this, onComplete);
+      this._notify("login", "",
+                   this._catchAll(this._login, username, password, passphrase))).
+      async(this, onComplete);
   },
 
   logout: function WeaveSvc_logout() {

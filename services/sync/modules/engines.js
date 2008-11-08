@@ -56,6 +56,9 @@ Cu.import("resource://weave/syncCores.js");
 Cu.import("resource://weave/trackers.js");
 Cu.import("resource://weave/async.js");
 
+Cu.import("resource://weave/base_records/wbo.js");
+Cu.import("resource://weave/base_records/crypto.js");
+
 Function.prototype.async = Async.sugar;
 
 // Singleton service, holds registered engines
@@ -271,12 +274,30 @@ NewEngine.prototype = {
 
     // if snapshot-based, generate outgoing queue
 
-    // apply incoming queue one by one
+    // tmp- generate all items
+    let all = this._store.wrap();
+    for (let key in all) {
+      let record = new CryptoWrapper();
+      record.id = key;
+      record.cleartext = all[key];
+      this.outgoing.push(record);
+    }
+
+
+    // remove from incoming queue any items also in outgoing queue
 
     // upload new/changed items from our outgoing queue
-    foreach (this.outgoing) {
-      // ...
+    // FIXME: roll these up into a single POST!
+    for each (record in this.outgoing) {
+      
+      this._log.info(uneval(record.payload));
+      //record.put(self.cb);
     }
+
+    // apply incoming queue one by one
+    for each (record in this.outgoing) {
+    }
+
     self.done();
   }
 };

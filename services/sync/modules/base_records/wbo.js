@@ -58,9 +58,20 @@ WBORecord.prototype = {
     this._init(uri, authenticator);
     this.pushFilter(new JsonFilter());
     this.data = {
+      id: "",
       modified: "2454725.98283", // FIXME
       payload: {}
     };
+  },
+
+  get id() this.data.id,
+  set id(value) {
+    this.data.id = value;
+  },
+
+  get parentid() this.data.parentid,
+  set parentid(value) {
+    this.data.parentid = value;
   },
 
   get modified() this.data.modified,
@@ -68,8 +79,16 @@ WBORecord.prototype = {
     this.data.modified = value;
   },
 
+  get encoding() this.data.encoding,
+  set encoding(value) {
+    this.data.encoding = value;
+  },
+
   get payload() this.data.payload,
   set payload(value) {
     this.data.payload = value;
   }
+
+  // note: encryption is part of the CryptoWrapper object, which uses
+  // a string (encrypted) payload instead of an object
 };

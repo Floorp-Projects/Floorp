@@ -34,7 +34,7 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-const EXPORTED_SYMBOLS = ['CryptoWrapper'];
+const EXPORTED_SYMBOLS = ['CryptoWrapper', 'CryptoMeta'];
 
 const Cc = Components.classes;
 const Ci = Components.interfaces;
@@ -53,6 +53,10 @@ Cu.import("resource://weave/base_records/keys.js");
 
 Function.prototype.async = Async.sugar;
 
+// fixme: global, ugh
+let json = Cc["@mozilla.org/dom/json;1"].createInstance(Ci.nsIJSON);
+let crypto = Cc["@labs.mozilla.com/Weave/Crypto;1"].createInstance(Ci.IWeaveCrypto);
+
 function CryptoWrapper(uri, authenticator) {
   this._CryptoWrap_init(uri, authenticator);
 }
@@ -61,8 +65,20 @@ CryptoWrapper.prototype = {
   _logName: "Record.CryptoWrapper",
 
   _CryptoWrap_init: function CryptoWrap_init(uri, authenticator) {
+    // FIXME: this will add a json filter, meaning our payloads will be json
+    //        encoded, even though they are already a string
     this._WBORec_init(uri, authenticator);
+    this.data.encryption = "";
     this.data.payload = "";
+  },
+
+  // FIXME: we make no attempt to ensure cleartext is in sync
+  //        with the encrypted payload
+  cleartext: null,
+
+  get encryption() this.data.encryption,
+  set encryption(value) {
+    this.data.encryption = value;
   },
 
   _encrypt: function CryptoWrap__encrypt(passphrase) {
@@ -71,13 +87,11 @@ CryptoWrapper.prototype = {
     let pubkey = yield PubKeys.getDefaultKey(self.cb);
     let privkey = yield PrivKeys.get(self.cb, pubkey.privateKeyUri);
 
-    let meta = new CryptoMeta(this.data.encryption); // FIXME: cache!
+    let meta = new CryptoMeta(this.encryption); // FIXME: cache!
     yield meta.get(self.cb);
-    let symkey = meta.getKey(pubkey, privkey, passphrase);
+    let symkey = yield meta.getKey(self.cb, privkey, passphrase);
 
-    let crypto = Cc["@labs.mozilla.com/Weave/Crypto;1"].
-      createInstance(Ci.IWeaveCrypto);
-    this.data.payload = crypto.encrypt(this.cleartext, symkey, meta.iv);
+    this.payload = crypto.encrypt(json.encode([this.cleartext]), symkey, meta.bulkIV);
 
     self.done();
   },
@@ -91,13 +105,11 @@ CryptoWrapper.prototype = {
     let pubkey = yield PubKeys.getDefaultKey(self.cb);
     let privkey = yield PrivKeys.get(self.cb, pubkey.privateKeyUri);
 
-    let meta = new CryptoMeta(this.data.encryption); // FIXME: cache!
+    let meta = new CryptoMeta(this.encryption); // FIXME: cache!
     yield meta.get(self.cb);
-    let symkey = meta.getKey(pubkey, privkey, passphrase);
+    let symkey = yield meta.getKey(self.cb, privkey, passphrase);
 
-    let crypto = Cc["@labs.mozilla.com/Weave/Crypto;1"].
-      createInstance(Ci.IWeaveCrypto);
-    this.cleartext = crypto.decrypt(this.data.payload, symkey, meta.iv);
+    this.cleartext = json.decode(crypto.decrypt(this.payload, symkey, meta.bulkIV))[0];
 
     self.done(this.cleartext);
   },
@@ -116,39 +128,143 @@ CryptoMeta.prototype = {
   _CryptoMeta_init: function CryptoMeta_init(uri, authenticator) {
     this._WBORec_init(uri, authenticator);
     this.data.payload = {
-      salt: null,
-      iv: null,
+      bulkIV: null,
       keyring: {}
     };
   },
 
-  get salt() this.data.payload.salt,
-  set salt(value) { this.data.payload.salt = value; },
+  generateIV: function CryptoMeta_generateIV() {
+    this.bulkIV = crypto.generateRandomIV();
+  },
 
-  get iv() this.data.payload.iv,
-  set iv(value) { this.data.payload.iv = value; },
+  get bulkIV() this.data.payload.bulkIV,
+  set bulkIV(value) { this.data.payload.bulkIV = value; },
 
-  getKey: function getKey(pubKey, privKey, passphrase) {
-    let wrappedKey;
+  _getKey: function CryptoMeta__getKey(privkey, passphrase) {
+    let self = yield;
+    let wrapped_key;
 
-    // get the full uri to our public key
-    let pubKeyUri;
-    if (typeof pubKey == 'string')
-      pubKeyUri = this.uri.resolve(pubKey);
-    else
-      pubKeyUri = pubKey.spec;
+    // get the uri to our public key
+    let pubkeyUri = privkey.publicKeyUri.spec;
 
     // each hash key is a relative uri, resolve those and match against ours
-    for (let relUri in this.data.payload.keyring) {
-      if (pubKeyUri == this.uri.resolve(relUri))
-        wrappedKey = this.data.payload.keyring[relUri];
+    for (let relUri in this.payload.keyring) {
+      if (pubkeyUri == this.uri.resolve(relUri))
+        wrapped_key = this.payload.keyring[relUri];
     }
-    if (!wrappedKey)
-      throw "keyring doesn't contain a key for " + pubKeyUri;
+    if (!wrapped_key)
+      throw "keyring doesn't contain a key for " + pubkeyUri;
 
-    let crypto = Cc["@labs.mozilla.com/Weave/Crypto;1"].
-      createInstance(Ci.IWeaveCrypto);
-    return crypto.unwrapSymmetricKey(wrappedKey, privKey.keyData,
-                                     passphrase, this.salt, this.iv);
+    let ret = crypto.unwrapSymmetricKey(wrapped_key, privkey.keyData,
+                                        passphrase, privkey.salt, privkey.iv);
+    self.done(ret);
+  },
+  getKey: function CryptoMeta_getKey(onComplete, privkey, passphrase) {
+    this._getKey.async(this, onComplete, privkey, passphrase);
+  },
+
+  _addKey: function CryptoMeta__addKey(new_pubkey, privkey, passphrase) {
+    let self = yield;
+    let symkey = yield this.getKey(self.cb, privkey, passphrase);
+    yield this.addUnwrappedKey(self.cb, new_pubkey, symkey);
+  },
+  addKey: function CryptoMeta_addKey(onComplete, new_pubkey, privkey, passphrase) {
+    this._addKey.async(this, onComplete, new_pubkey, privkey, passphrase);
+  },
+
+  _addUnwrappedKey: function CryptoMeta__addUnwrappedKey(new_pubkey, symkey) {
+    let self = yield;
+
+    // get the new public key
+    if (typeof new_pubkey == 'string')
+      new_pubkey = PubKeys.get(self.cb, new_pubkey);
+
+    // each hash key is a relative uri, resolve those and
+    // if we find the one we're about to add, remove it
+    for (let relUri in this.payload.keyring) {
+      if (pubkeyUri == this.uri.resolve(relUri))
+        delete this.payload.keyring[relUri];
+    }
+
+    this.payload.keyring[new_pubkey.uri.spec] =
+      crypto.wrapSymmetricKey(symkey, new_pubkey.keyData);
+  },
+  addUnwrappedKey: function CryptoMeta_addUnwrappedKey(onComplete, new_pubkey, symkey) {
+    this._addUnwrappedKey.async(this, onComplete, new_pubkey, symkey);
+  }
+};
+
+function CryptoMetaManager() {
+  this._init();
+}
+CryptoMetaManager.prototype = {
+  _init: function CryptoMetaMgr__init() {
+    this._log = Log4Moz.repository.getLogger("CryptoMetaMgr");
+    this._records = {};
+    this._aliases = {};
+  },
+
+  _import: function CryptoMetaMgr__import(url) {
+    let self = yield;
+
+    this._log.trace("Importing record: " + (url.spec? url.spec : url));
+
+    try {
+      let rec = new CryptoMeta(url);
+      yield rec.get(self.cb);
+      this.set(url, rec);
+      self.done(rec);
+    } catch (e) {
+      this._log.debug("Failed to import record: " + e);
+      self.done(null);
+    }
+  },
+  import: function CryptoMetaMgr_import(onComplete, url) {
+    this._import.async(this, onComplete, url);
+  },
+
+  _get: function CryptoMetaMgr__get(url) {
+    let self = yield;
+
+    let rec = null;
+    if (url in this._aliases)
+      url = this._aliases[url];
+    if (url in this._records)
+      rec = this._keys[url];
+
+    if (!key)
+      rec = yield this.import(self.cb, url);
+
+    self.done(rec);
+  },
+  get: function KeyMgr_get(onComplete, url) {
+    this._get.async(this, onComplete, url);
+  },
+
+  set: function KeyMgr_set(url, key) {
+    this._keys[url] = key;
+    return key;
+  },
+
+  contains: function KeyMgr_contains(url) {
+    let key = null;
+    if (url in this._aliases)
+      url = this._aliases[url];
+    if (url in this._keys)
+      return true;
+    return false;
+  },
+
+  del: function KeyMgr_del(url) {
+    delete this._keys[url];
+  },
+  getAlias: function KeyMgr_getAlias(alias) {
+    return this._aliases[alias];
+  },
+  setAlias: function KeyMgr_setAlias(url, alias) {
+    this._aliases[alias] = url;
+  },
+  delAlias: function KeyMgr_delAlias(alias) {
+    delete this._aliases[alias];
   }
 };
