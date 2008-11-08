@@ -97,11 +97,16 @@ Resource.prototype = {
   set uri(value) {
     this._dirty = true;
     this._downloaded = false;
-    this._uri = value;
+    if (typeof value == 'string')
+      this._uri = Utils.makeURI(value);
+    else
+      this._uri = value;
   },
 
   get spec() {
-    return this._uri.spec;
+    if (this._uri)
+      return this._uri.spec;
+    return null;
   },
   set spec(value) {
     this._dirty = true;
@@ -125,8 +130,6 @@ Resource.prototype = {
 
   _filters: null,
   pushFilter: function Res_pushFilter(filter) {
-    if (!this._filters)
-      this._filters = [];
     this._filters.push(filter);
   },
   popFilter: function Res_popFilter() {
@@ -138,11 +141,10 @@ Resource.prototype = {
 
   _init: function Res__init(uri, authenticator) {
     this._log = Log4Moz.repository.getLogger(this._logName);
-    if (typeof uri == 'string')
-      uri = Utils.makeURI(uri);
-    this._uri = uri;
+    this.uri = uri;
     this._authenticator = authenticator;
     this._headers = {'Content-type': 'text/plain'};
+    this._filters = [];
   },
 
   _createRequest: function Res__createRequest(op, onRequestFinished) {
@@ -234,7 +236,8 @@ Resource.prototype = {
 
       } else {
         // wait for a bit and try again
-        this._log.debug(action + " request failed, retrying...");
+        this._log.debug(action + " request failed (" +
+                        this._lastRequest.status + "), retrying...");
         listener = new Utils.EventListener(self.cb);
         wait_timer = Cc["@mozilla.org/timer;1"].createInstance(Ci.nsITimer);
         yield wait_timer.initWithCallback(listener, iter * iter * 1000,

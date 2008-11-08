@@ -11,40 +11,29 @@ try {
 }
 Function.prototype.async = Async.sugar;
 
-let jsonSvc, cryptoSvc, salt, iv, symKey, wrappedKey, pubKey, privKey;
+let jsonSvc = Cc["@mozilla.org/dom/json;1"].createInstance(Ci.nsIJSON);
+let cryptoSvc = Cc["@labs.mozilla.com/Weave/Crypto;1"].
+  getService(Ci.IWeaveCrypto);
+let keys, cryptoMeta, cryptoWrap;
 
 function pubkey_handler(metadata, response) {
-  let obj = {modified: "2454725.98283",
-             payload: {type: "pubkey",
-                       private_key: "http://localhost:8080/privkey",
-                       key_data: pubKey}};
-  return httpd_basic_auth_handler(jsonSvc.encode(obj), metadata, response);
+  return httpd_basic_auth_handler(jsonSvc.encode(keys.pubkey.data),
+                                  metadata, response);
 }
 
 function privkey_handler(metadata, response) {
-  let obj = {modified: "2454725.98283",
-             payload: {type: "privkey",
-                       public_key: "http://localhost:8080/pubkey",
-                       key_data: privKey}};
-  return httpd_basic_auth_handler(jsonSvc.encode(obj), metadata, response);
+  return httpd_basic_auth_handler(jsonSvc.encode(keys.privkey.data),
+                                  metadata, response);
 }
 
 function crypted_resource_handler(metadata, response) {
-  let obj = {modified: "2454725.98283",
-             encryption: "http://localhost:8080/crypto-meta",
-             payload: cryptoSvc.encrypt("my payload here", symKey, iv)};
-  return httpd_basic_auth_handler(jsonSvc.encode(obj), metadata, response);
+  return httpd_basic_auth_handler(jsonSvc.encode(cryptoWrap.data),
+                                  metadata, response);
 }
 
 function crypto_meta_handler(metadata, response) {
-  let obj = {modified: "2454725.98283",
-             payload: {type: "crypto-meta",
-                       salt: salt,
-                       iv: iv,
-                       keyring: {
-                         "pubkey": wrappedKey
-                       }}};
-  return httpd_basic_auth_handler(jsonSvc.encode(obj), metadata, response);
+  return httpd_basic_auth_handler(jsonSvc.encode(cryptoMeta.data),
+                                  metadata, response);
 }
 
 function async_test() {
@@ -55,40 +44,37 @@ function async_test() {
     let log = Log4Moz.repository.getLogger();
     Log4Moz.repository.rootLogger.addAppender(new Log4Moz.DumpAppender());
 
-    jsonSvc = Cc["@mozilla.org/dom/json;1"].createInstance(Ci.nsIJSON);
-    cryptoSvc = Cc["@labs.mozilla.com/Weave/Crypto;1"].
-      getService(Ci.IWeaveCrypto);
-
     let auth = new BasicAuthenticator(new Identity("secret", "guest", "guest"));
     Auth.defaultAuthenticator = auth;
-    PubKeys.defaultKeyUri = "http://localhost:8080/pubkey";
 
     server = httpd_setup({"/pubkey": pubkey_handler,
                           "/privkey": privkey_handler,
                           "/crypted-resource": crypted_resource_handler,
                           "/crypto-meta": crypto_meta_handler});
 
-    salt = cryptoSvc.generateRandomBytes(16);
-    iv = cryptoSvc.generateRandomIV();
+    PubKeys.defaultKeyUri = "http://localhost:8080/pubkey";
+    keys = PubKeys.createKeypair("my passphrase",
+                                 "http://localhost:8080/pubkey",
+                                 "http://localhost:8080/privkey");
+    keys.symkey = cryptoSvc.generateRandomKey();
+    keys.wrappedkey = cryptoSvc.wrapSymmetricKey(keys.symkey, keys.pubkey.keyData);
 
-    let pubOut = {}, privOut = {};
-    cryptoSvc.generateKeypair("my passphrase", salt, iv, pubOut, privOut);
-    pubKey = pubOut.value;
-    privKey = privOut.value;
+    cryptoMeta = new CryptoMeta("http://localhost:8080/crypto-meta", auth);
+    cryptoMeta.generateIV();
+    yield cryptoMeta.addUnwrappedKey(self.cb, keys.pubkey, keys.symkey);
 
-    symKey = cryptoSvc.generateRandomKey();
-    wrappedKey = cryptoSvc.wrapSymmetricKey(symKey, pubKey);
+    cryptoWrap = new CryptoWrapper("http://localhost:8080/crypted-resource", auth);
+    cryptoWrap.encryption = "http://localhost:8080/crypto-meta";
+    cryptoWrap.cleartext = "my payload here";
+    yield cryptoWrap.encrypt(self.cb, "my passphrase");
 
-    let wrap = new CryptoWrapper("http://localhost:8080/crypted-resource", auth);
-    yield wrap.get(self.cb);
-
-    let payload = yield wrap.decrypt(self.cb, "my passphrase");
+    let payload = yield cryptoWrap.decrypt(self.cb, "my passphrase");
     do_check_eq(payload, "my payload here");
-    do_check_neq(payload, wrap.data.payload); // wrap.data.payload is the encrypted one
+    do_check_neq(payload, cryptoWrap.payload); // wrap.data.payload is the encrypted one
 
-    wrap.cleartext = "another payload";
-    yield wrap.encrypt(self.cb, "my passphrase");
-    payload = yield wrap.decrypt(self.cb, "my passphrase");
+    cryptoWrap.cleartext = "another payload";
+    yield cryptoWrap.encrypt(self.cb, "my passphrase");
+    payload = yield cryptoWrap.decrypt(self.cb, "my passphrase");
     do_check_eq(payload, "another payload");
 
     do_test_finished();

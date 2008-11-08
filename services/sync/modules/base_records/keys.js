@@ -77,10 +77,6 @@ PubKey.prototype = {
     this.data.payload.key_data = value;
   },
   get _privateKeyUri() this.data.payload.private_key,
-  set _privateKeyUri(value) {
-    this.data.payload.private_key = value;
-  },
-
   get privateKeyUri() {
     if (!this.data)
       return null;
@@ -90,6 +86,13 @@ PubKey.prototype = {
       return Utils.makeURI(uri);
     // does not resolve, return raw (this uri type might not be able to resolve)
     return Utils.makeURI(this._privateKeyUri);
+  },
+  set privateKeyUri(value) {
+    this.data.payload.private_key = value;
+  },
+
+  get publicKeyUri() {
+    throw "attempted to get public key url from a public key!";
   }
 };
 
@@ -104,33 +107,42 @@ PrivKey.prototype = {
     this._WBORec_init(uri, authenticator);
     this.data.payload = {
       type: "privkey",
+      salt: null,
+      iv: null,
       key_data: null,
-      private_key: null
+      public_key: null
     };
   },
 
+  get salt() this.data.payload.salt,
+  set salt(value) {
+    this.data.payload.salt = value;
+  },
+  get iv() this.data.payload.iv,
+  set iv(value) {
+    this.data.payload.iv = value;
+  },
   get keyData() this.data.payload.key_data,
   set keyData(value) {
     this.data.payload.key_data = value;
-  },
-  get _publicKeyUri() this.payload.public_key,
-  set _publicKeyUri(value) {
-    this.data.payload.public_key = value;
-  },
-
-  get privateKeyUri() {
-    throw "attempted to get private key url from a private key!";
   },
 
   get publicKeyUri() {
     if (!this.data)
       return null;
     // resolve
-    let uri = this.uri.resolve(this._publicKeyUri);
+    let uri = this.uri.resolve(this.payload.public_key);
     if (uri)
       return Utils.makeURI(uri);
     // does not resolve, return raw (this uri type might not be able to resolve)
-    return Utils.makeURI(this._publicKeyUri);
+    return Utils.makeURI(this.payload.public_key);
+  },
+  set publicKeyUri(value) {
+    this.payload.public_key = value;
+  },
+
+  get privateKeyUri() {
+    throw "attempted to get private key url from a private key!";
   }
 };
 
@@ -166,6 +178,19 @@ PubKeyManager.prototype = {
   _keyType: PubKey,
   _logName: "PubKeyManager",
 
+  _init: function KeyMgr__init() {
+    this._log = Log4Moz.repository.getLogger(this._logName);
+    this._keys = {};
+    this._aliases = {};
+  },
+
+  get _crypto() {
+    let crypto = Cc["@labs.mozilla.com/Weave/Crypto;1"].
+      getService(Ci.IWeaveCrypto);
+    this.__defineGetter__("_crypto", function() crypto);
+    return crypto;
+  },
+
   get defaultKeyUri() this._defaultKeyUri,
   set defaultKeyUri(value) { this._defaultKeyUri = value; },
 
@@ -178,22 +203,26 @@ PubKeyManager.prototype = {
     return this._getDefaultKey.async(this, onComplete);
   },
 
-  createKeypair: function KeyMgr_createKeypair() {
-    let pubOut = {}, privOut = {};
-    let cryptoSvc = Cc["@labs.mozilla.com/Weave/Crypto;1"].
-      getService(Ci.IWeaveCrypto);
-    cryptoSvc.generateKeypair("my passphrase", salt, iv, pubOut, privOut);
+  createKeypair: function KeyMgr_createKeypair(passphrase, pubkeyUri, privkeyUri) {
     let pubkey = new PubKey();
     let privkey = new PrivKey();
-    pubkey.keyData = pubOut.value;
-    privkey.keyData = privOut.value;
-    return {pubkey: pubkey, privkey: privkey};
-  },
+    privkey.salt = this._crypto.generateRandomBytes(16);
+    privkey.iv = this._crypto.generateRandomIV();
 
-  _init: function KeyMgr__init() {
-    this._log = Log4Moz.repository.getLogger(this._logName);
-    this._keys = {};
-    this._aliases = {};
+    let pub = {}, priv = {};
+    this._crypto.generateKeypair(passphrase, privkey.salt, privkey.iv, pub, priv);
+    [pubkey.keyData, privkey.keyData] = [pub.value, priv.value];
+
+    if (pubkeyUri) {
+      pubkey.uri = pubkeyUri;
+      privkey.publicKeyUri = pubkeyUri;
+    }
+    if (privkeyUri) {
+      privkey.uri = privkeyUri;
+      pubkey.privateKeyUri = privkeyUri;
+    }
+
+    return {pubkey: pubkey, privkey: privkey};
   },
 
   _import: function KeyMgr__import(url) {
