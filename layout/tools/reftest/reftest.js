@@ -210,9 +210,18 @@ function ReadManifest(aURL)
             }
         }
 
-        var runHttp = items[0] == "HTTP";
-        if (runHttp)
+        var runHttp = false;
+        var httpDepth;
+        if (items[0] == "HTTP") {
+            runHttp = true;
+            httpDepth = 0;
             items.shift();
+        } else if (items[0].match(/HTTP\(\.\.(\/\.\.)*\)/)) {
+            // Accept HTTP(..), HTTP(../..), HTTP(../../..), etc.
+            runHttp = true;
+            httpDepth = (items[0].length - 5) / 3;
+            items.shift();
+        }
 
         if (items[0] == "include") {
             if (items.length != 2 || runHttp)
@@ -229,7 +238,7 @@ function ReadManifest(aURL)
                  expected_status != EXPECTED_DEATH))
                 throw "Error in manifest file " + aURL.spec + " line " + lineNo;
             var [testURI] = runHttp
-                            ? ServeFiles(aURL,
+                            ? ServeFiles(aURL, httpDepth,
                                          listURL.file.parent, [items[1]])
                             : [gIOService.newURI(items[1], null, listURL)];
             var prettyPath = runHttp
@@ -246,7 +255,7 @@ function ReadManifest(aURL)
             if (items.length != 3)
                 throw "Error in manifest file " + aURL.spec + " line " + lineNo;
             var [testURI, refURI] = runHttp
-                                  ? ServeFiles(aURL,
+                                  ? ServeFiles(aURL, httpDepth,
                                                listURL.file.parent, [items[1], items[2]])
                                   : [gIOService.newURI(items[1], null, listURL),
                                      gIOService.newURI(items[2], null, listURL)];
@@ -268,22 +277,31 @@ function ReadManifest(aURL)
     } while (more);
 }
 
-function ServeFiles(manifestURL, directory, files)
+function ServeFiles(manifestURL, depth, directory, files)
 {
     if (!gServer)
         gServer = CC["@mozilla.org/server/jshttp;1"].
                       createInstance(CI.nsIHttpServer);
 
+    // Allow serving a tree that's an ancestor of the directory containing
+    // the files so that they can use resources in ../ (etc.).
+    var dirPath = "/";
+    while (depth > 0) {
+        dirPath = "/" + directory.leafName + dirPath;
+        directory = directory.parent;
+        --depth;
+    }
+
     gCount++;
-    var path = "/" + gCount + "/";
-    gServer.registerDirectory(path, directory);
+    var path = "/" + gCount;
+    gServer.registerDirectory(path + "/", directory);
 
     var secMan = CC[NS_SCRIPTSECURITYMANAGER_CONTRACTID]
                      .getService(CI.nsIScriptSecurityManager);
 
-    var testbase =
-        gIOService.newURI("http://localhost:" + HTTP_SERVER_PORT + path,
-                          null, null);
+    var testbase = gIOService.newURI("http://localhost:" + HTTP_SERVER_PORT +
+                                         path + dirPath,
+                                     null, null);
 
     function FileToURI(file)
     {
