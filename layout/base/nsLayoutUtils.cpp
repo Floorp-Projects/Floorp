@@ -2678,7 +2678,7 @@ nsLayoutUtils::DrawImage(nsIRenderingContext* aRenderingContext,
                          const nsPoint&       aAnchor,
                          const nsRect&        aDirty)
 {
-  if (aDest.IsEmpty())
+  if (aDest.IsEmpty() || aFill.IsEmpty())
     return NS_OK;
 
   nsCOMPtr<nsIDeviceContext> dc;
@@ -2687,14 +2687,15 @@ nsLayoutUtils::DrawImage(nsIRenderingContext* aRenderingContext,
   gfxContext *ctx = aRenderingContext->ThebesContext();
 
   // Compute the pixel-snapped area that should be drawn
-  gfxRect fill(aFill.x/appUnitsPerDevPixel,
-               aFill.y/appUnitsPerDevPixel,
-               aFill.width/appUnitsPerDevPixel,
-               aFill.height/appUnitsPerDevPixel);
+  gfxRect devPixelFill(aFill.x/appUnitsPerDevPixel,
+                       aFill.y/appUnitsPerDevPixel,
+                       aFill.width/appUnitsPerDevPixel,
+                       aFill.height/appUnitsPerDevPixel);
   PRBool ignoreScale = PR_FALSE;
 #ifdef MOZ_GFX_OPTIMIZE_MOBILE
   ignoreScale = PR_TRUE;
 #endif
+  gfxRect fill = devPixelFill;
   PRBool didSnap = ctx->UserToDevicePixelSnapped(fill, ignoreScale);
 
   // Compute dirty rect in gfx space
@@ -2735,7 +2736,13 @@ nsLayoutUtils::DrawImage(nsIRenderingContext* aRenderingContext,
   gfxMatrix currentMatrix = ctx->CurrentMatrix();
   gfxRect finalFillRect = fill;
   if (didSnap) {
-    ctx->UserToDevicePixelSnapped(anchorPoint, ignoreScale);
+    NS_ASSERTION(!currentMatrix.HasNonAxisAlignedTransform(),
+                 "How did we snap, then?");
+    anchorPoint.x = fill.pos.x + 
+        (anchorPoint.x - devPixelFill.pos.x)*fill.size.width/devPixelFill.size.width;
+    anchorPoint.y = fill.pos.y +
+        (anchorPoint.y - devPixelFill.pos.y)*fill.size.height/devPixelFill.size.height;
+    anchorPoint.Round();
 
     // This form of Transform is safe to call since non-axis-aligned
     // transforms wouldn't be snapped.

@@ -105,20 +105,7 @@
           var s = new Sanitizer();
           s.ignoreTimespan = false;
           s.prefDomain = "privacy.cpd.";
-          var sanitizePreferences = document.getElementById("sanitizePreferences");
-          var preference, name;
-          for (var i = 0; i < sanitizePreferences.childNodes.length; ++i) {
-            preference = sanitizePreferences.childNodes[i];
-            if (preference.value) {
-              name = s.getNameFromPreference(preference.name);
-              try {
-                s.clearItem(name);
-              } catch(er) {
-                dump(er + " sanitizing " + name); 
-                // TODO: give user feedback about partially failed sanitization
-              }
-            }
-          }
+          s.sanitize();
         },
         
         onReadGeneric: function ()

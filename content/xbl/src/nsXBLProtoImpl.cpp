@@ -64,7 +64,7 @@ nsXBLProtoImpl::InstallImplementation(nsXBLPrototypeBinding* aBinding, nsIConten
   nsIDocument* document = aBoundElement->GetOwnerDoc();
   if (!document) return NS_OK;
 
-  nsIScriptGlobalObject *global = document->GetScriptGlobalObject();
+  nsIScriptGlobalObject *global = document->GetScopeObject();
   if (!global) return NS_OK;
 
   nsCOMPtr<nsIScriptContext> context = global->GetContext();
@@ -122,9 +122,7 @@ nsXBLProtoImpl::InitTargetObjects(nsXBLPrototypeBinding* aBinding,
   nsIDocument *ownerDoc = aBoundElement->GetOwnerDoc();
   nsIScriptGlobalObject *sgo;
 
-  if (!ownerDoc || !(sgo = ownerDoc->GetScriptGlobalObject())) {
-    NS_ERROR("Can't find global object for bound content!");
-
+  if (!ownerDoc || !(sgo = ownerDoc->GetScopeObject())) {
     return NS_ERROR_UNEXPECTED;
   }
 
