@@ -198,7 +198,6 @@ verbose_only( extern const char* regNames[]; )
     const static Register argRegs[4], retRegs[2];                       \
     void LD32_nochk(Register r, int32_t imm);                           \
     void BL(NIns*);                                                     \
-    void BL_far(NIns*);                                                 \
     void JMP_far(NIns*);                                                \
     void B_cond_chk(ConditionCode, NIns*, bool);                        \
     void underrunProtect(int bytes);                                    \
@@ -593,8 +592,14 @@ typedef enum {
 //#define INT3()  underrunProtect(1); *(--_nIns) = 0xcc;  asm_output("int3")
 //#define RET() INT3()
 
+#define BKPT_insn ((NIns)( (0xE<<24) | (0x12<<20) | (0x7<<4) ))
 #define BKPT_nochk() do { \
-        *(--_nIns) = (NIns)( (0xE<<24) | (0x12<<20) | (0x7<<4) ); } while (0)
+        *(--_nIns) = BKPT_insn; } while (0)
+
+// this isn't a armv6t2 NOP -- it's a mov r0,r0
+#define NOP_nochk() do { \
+        *(--_nIns) = (NIns)( COND_AL | (0xD<<21) | ((R0)<<12) | (R0) ); \
+        asm_output("nop"); } while(0)
 
 // this is pushing a reg
 #define PUSHr(_r)  do {                                                 \
@@ -641,15 +646,6 @@ typedef enum {
 
 #define JMP_nochk(_t)                           \
     B_cond_chk(AL,_t,0)
-
-// emit a placeholder that will be filled in later by nPatchBranch;
-// emit two breakpoint instructions in case something goes wrong with
-// the patching.
-#define JMP_long_placeholder()  do {            \
-        underrunProtect(8);                     \
-        BKPT_nochk();                           \
-        BKPT_nochk();                           \
-    } while(0)
 
 #define JA(t)   do {B_cond(HI,t); asm_output1("ja 0x%08x",(unsigned int)t); } while(0)
 #define JNA(t)  do {B_cond(LS,t); asm_output1("jna 0x%08x",(unsigned int)t); } while(0)
