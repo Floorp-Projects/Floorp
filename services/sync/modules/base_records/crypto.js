@@ -34,7 +34,7 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-const EXPORTED_SYMBOLS = ['CryptoWrapper', 'CryptoMeta'];
+const EXPORTED_SYMBOLS = ['CryptoWrapper', 'CryptoMeta', 'CryptoMetas'];
 
 const Cc = Components.classes;
 const Ci = Components.interfaces;
@@ -52,6 +52,8 @@ Cu.import("resource://weave/base_records/wbo.js");
 Cu.import("resource://weave/base_records/keys.js");
 
 Function.prototype.async = Async.sugar;
+
+Utils.lazy(this, 'CryptoMetas', RecordManager);
 
 // fixme: global, ugh
 let json = Cc["@mozilla.org/dom/json;1"].createInstance(Ci.nsIJSON);
@@ -87,10 +89,11 @@ CryptoWrapper.prototype = {
     let pubkey = yield PubKeys.getDefaultKey(self.cb);
     let privkey = yield PrivKeys.get(self.cb, pubkey.privateKeyUri);
 
-    let meta = new CryptoMeta(this.encryption); // FIXME: cache!
-    yield meta.get(self.cb);
+    let meta = yield CryptoMetas.get(self.cb, this.encryption);
     let symkey = yield meta.getKey(self.cb, privkey, passphrase);
 
+    // note: we wrap the cleartext payload in an array because
+    // when it's a simple string nsIJSON returns null
     this.payload = crypto.encrypt(json.encode([this.cleartext]), symkey, meta.bulkIV);
 
     self.done();
@@ -105,10 +108,10 @@ CryptoWrapper.prototype = {
     let pubkey = yield PubKeys.getDefaultKey(self.cb);
     let privkey = yield PrivKeys.get(self.cb, pubkey.privateKeyUri);
 
-    let meta = new CryptoMeta(this.encryption); // FIXME: cache!
-    yield meta.get(self.cb);
+    let meta = yield CryptoMetas.get(self.cb, this.encryption);
     let symkey = yield meta.getKey(self.cb, privkey, passphrase);
 
+    // note: payload is wrapped in an array, see _encrypt
     this.cleartext = json.decode(crypto.decrypt(this.payload, symkey, meta.bulkIV))[0];
 
     self.done(this.cleartext);
@@ -194,23 +197,26 @@ CryptoMeta.prototype = {
   }
 };
 
-function CryptoMetaManager() {
+function RecordManager() {
   this._init();
 }
-CryptoMetaManager.prototype = {
-  _init: function CryptoMetaMgr__init() {
-    this._log = Log4Moz.repository.getLogger("CryptoMetaMgr");
+RecordManager.prototype = {
+  _recordType: CryptoMeta,
+  _logName: "RecordMgr",
+
+  _init: function RegordMgr__init() {
+    this._log = Log4Moz.repository.getLogger(this._logName);
     this._records = {};
     this._aliases = {};
   },
 
-  _import: function CryptoMetaMgr__import(url) {
+  _import: function RegordMgr__import(url) {
     let self = yield;
 
     this._log.trace("Importing record: " + (url.spec? url.spec : url));
 
     try {
-      let rec = new CryptoMeta(url);
+      let rec = new this._recordType(url);
       yield rec.get(self.cb);
       this.set(url, rec);
       self.done(rec);
@@ -219,52 +225,51 @@ CryptoMetaManager.prototype = {
       self.done(null);
     }
   },
-  import: function CryptoMetaMgr_import(onComplete, url) {
+  import: function RegordMgr_import(onComplete, url) {
     this._import.async(this, onComplete, url);
   },
 
-  _get: function CryptoMetaMgr__get(url) {
+  _get: function RegordMgr__get(url) {
     let self = yield;
 
     let rec = null;
     if (url in this._aliases)
       url = this._aliases[url];
     if (url in this._records)
-      rec = this._keys[url];
+      rec = this._records[url];
 
-    if (!key)
+    if (!rec)
       rec = yield this.import(self.cb, url);
 
     self.done(rec);
   },
-  get: function KeyMgr_get(onComplete, url) {
+  get: function RegordMgr_get(onComplete, url) {
     this._get.async(this, onComplete, url);
   },
 
-  set: function KeyMgr_set(url, key) {
-    this._keys[url] = key;
-    return key;
+  set: function RegordMgr_set(url, record) {
+    this._records[url] = record;
   },
 
-  contains: function KeyMgr_contains(url) {
-    let key = null;
+  contains: function RegordMgr_contains(url) {
+    let record = null;
     if (url in this._aliases)
       url = this._aliases[url];
-    if (url in this._keys)
+    if (url in this._records)
       return true;
     return false;
   },
 
-  del: function KeyMgr_del(url) {
-    delete this._keys[url];
+  del: function RegordMgr_del(url) {
+    delete this._records[url];
   },
-  getAlias: function KeyMgr_getAlias(alias) {
+  getAlias: function RegordMgr_getAlias(alias) {
     return this._aliases[alias];
   },
-  setAlias: function KeyMgr_setAlias(url, alias) {
+  setAlias: function RegordMgr_setAlias(url, alias) {
     this._aliases[alias] = url;
   },
-  delAlias: function KeyMgr_delAlias(alias) {
+  delAlias: function RegordMgr_delAlias(alias) {
     delete this._aliases[alias];
   }
 };
