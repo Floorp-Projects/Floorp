@@ -85,7 +85,7 @@ Assembler::genPrologue()
     uint32_t savingMask = rmask(FP) | rmask(LR);
     uint32_t savingCount = 2;
 
-    if (!_thisfrag->lirbuf->explicitSavedParams) {
+    if (!_thisfrag->lirbuf->explicitSavedRegs) {
         for (int i = 0; i < NumSavedRegs; ++i)
             savingMask |= rmask(savedRegs[i]);
         savingCount += NumSavedRegs;
@@ -117,18 +117,18 @@ Assembler::nFragExit(LInsp guard)
     GuardRecord *lr;
 
     if (frag && frag->fragEntry) {
-        JMP(frag->fragEntry);
+        JMP_far(frag->fragEntry);
         lr = 0;
     } else {
         // target doesn't exit yet.  emit jump to epilog, and set up to patch later.
         lr = guard->record();
 
-        // we need to know that there's an extra immediate value available
-        // for us; always force a far jump here.
+        // jump to the epilogue; JMP_far will insert an extra dummy insn for later
+        // patching.
         JMP_far(_epilogue);
 
         // stick the jmp pointer to the start of the sequence
-        lr->jmp = _nIns;
+        lr->jmpToTarget = _nIns;
     }
 
     // pop the stack frame first
@@ -157,11 +157,13 @@ Assembler::genEpilogue()
 
     RegisterMask savingMask = rmask(FP) | rmask(LR);
 
-    if (!_thisfrag->lirbuf->explicitSavedParams)
+    if (!_thisfrag->lirbuf->explicitSavedRegs)
         for (int i = 0; i < NumSavedRegs; ++i)
             savingMask |= rmask(savedRegs[i]);
 
     POP_mask(savingMask); // regs
+
+    MR(SP,FP);
 
     // this is needed if we jump here from nFragExit
     MR(R0,R2); // return LinkRecord*
@@ -325,29 +327,48 @@ Assembler::nRegisterResetAll(RegAlloc& a)
     debug_only(a.managed = a.free);
 }
 
-void
-Assembler::nPatchBranch(NIns* branch, NIns* target)
+NIns*
+Assembler::nPatchBranch(NIns* at, NIns* target)
 {
-    // Patch the jump in a loop
+    // Patch the jump in a loop, as emitted by JMP_far.
+    // Figure out which, and do the right thing.
 
-    // This is ALWAYS going to be a long branch (using the BL instruction)
-    // Which is really 2 instructions, so we need to modify both
-    // XXX -- this is B, not BL, at least on non-Thumb..
+    NIns* was = 0;
 
-    int32_t offset = PC_OFFSET_FROM(target, branch);
-
-    //printf("---patching branch at 0x%08x to location 0x%08x (%d-0x%08x)\n", branch, target, offset, offset);
-
-    // We have 2 words to work with here -- if offset is in range of a 24-bit
-    // relative jump, emit that; otherwise, we do a pc-relative load into pc.
-    if (isS24(offset)) {
-        // ARM goodness, using unconditional B
-        *branch = (NIns)( COND_AL | (0xA<<24) | ((offset>>2) & 0xFFFFFF) );
+    if (at[0] == (NIns)( COND_AL | (0x51<<20) | (PC<<16) | (PC<<12) | (4) )) {
+        // this needed to be emitted with a 32-bit immediate.
+        was = (NIns*) at[1];
     } else {
-        // LDR pc,[pc]
-        *branch++ = (NIns)( COND_AL | (0x51<<20) | (PC<<16) | (PC<<12) | ( 0x004 ) );
-        *branch = (NIns)target;
+        // nope, just a regular PC-relative B; calculate the destination address
+        // based on at and the offset.
+        NanoAssert((at[0] & 0xff000000) == (COND_AL | (0xA<<24)));
+        was = (NIns*) (((intptr_t)at + 8) + (intptr_t)((at[0] & 0xffffff) << 2));
     }
+
+    // let's see how we have to emit it
+    intptr_t offs = PC_OFFSET_FROM(target, at);
+    if (isS24(offs>>2)) {
+        // great, just stick it in at[0]
+        at[0] = (NIns)( COND_AL | (0xA<<24) | ((offs >> 2) & 0xffffff) );
+        // and reset at[1] for good measure
+        at[1] = BKPT_insn;
+    } else {
+        at[0] = (NIns)( COND_AL | (0x51<<20) | (PC<<16) | (PC<<12) | (4) );
+        at[1] = (NIns)(target);
+    }
+
+#if defined(UNDER_CE)
+    // we changed the code, so we need to do this (sadly)
+    FlushInstructionCache(GetCurrentProcess(), NULL, NULL);
+#elif defined(AVMPLUS_LINUX)
+    __clear_cache((char*)at, (char*)(at+3));
+#endif
+
+#ifdef AVMPLUS_PORTING_API
+    NanoJIT_PortAPI_FlushInstructionCache(at, at+3);
+#endif
+
+    return was;
 }
 
 RegisterMask
@@ -485,7 +506,7 @@ Assembler::asm_store64(LInsp value, int dr, LInsp base)
     //asm_output1("<<< store64 (dr: %d)", dr);
 
 #ifdef NJ_ARM_VFP
-    Reservation *valResv = getresv(value);
+    //Reservation *valResv = getresv(value);
     Register rb = findRegFor(base, GpRegs);
 
     if (value->isconstq()) {
@@ -715,35 +736,6 @@ Assembler::nativePageSetup()
     }
 }
 
-NIns*
-Assembler::asm_adjustBranch(NIns* at, NIns* target)
-{
-    // This always got emitted as a JMP_far sequence; at points
-    // to the first of 3 instructions.  Ensure that we're where
-    // we think we were..
-    NanoAssert(at[0] == (NIns)( COND_AL | (0x59<<20) | (PC<<16) | (IP<<12) | (0) ));
-    NanoAssert(at[1] == (NIns)( COND_AL | (0x9<<21) | (0xFFF<<8) | (1<<4) | (IP) ));
-
-    NIns* was = (NIns*) at[2];
-
-    //fprintf (stderr, "Adjusting branch @ 0x%8x: 0x%x -> 0x%x\n", at+3, at[3], target);
-
-    at[2] = (NIns)target;
-
-#if defined(UNDER_CE)
-    // we changed the code, so we need to do this (sadly)
-    FlushInstructionCache(GetCurrentProcess(), NULL, NULL);
-#elif defined(AVMPLUS_LINUX)
-    __clear_cache((char*)at, (char*)(at+3));
-#endif
-
-#ifdef AVMPLUS_PORTING_API
-    NanoJIT_PortAPI_FlushInstructionCache(at, at+3);
-#endif
-
-    return was;
-}
-
 void
 Assembler::underrunProtect(int bytes)
 {
@@ -782,46 +774,26 @@ Assembler::underrunProtect(int bytes)
 void
 Assembler::JMP_far(NIns* addr)
 {
-    // we have to stick an immediate into the stream
-    underrunProtect(12);
+    // we may have to stick an immediate into the stream, so always
+    // reserve space
+    underrunProtect(8);
 
-    // TODO use a slot in const pool for address, but emit single insn
-    // for branch if offset fits
+    intptr_t offs = PC_OFFSET_FROM(addr,_nIns-2);
 
-    // the address
-    *(--_nIns) = (NIns)((addr));
-    // bx ip             // branch to the address we loaded earlier
-    *(--_nIns) = (NIns)( COND_AL | (0x9<<21) | (0xFFF<<8) | (1<<4) | (IP) );
-    // ldr ip, [pc + #0] // load the address into ip, reading it from [pc]
-    *(--_nIns) = (NIns)( COND_AL | (0x59<<20) | (PC<<16) | (IP<<12) | (0));
+    if (isS24(offs>>2)) {
+        BKPT_nochk();
+        *(--_nIns) = (NIns)( COND_AL | (0xA<<24) | ((offs>>2) & 0xFFFFFF) );
 
-    //fprintf (stderr, "JMP_far sequence @ 0x%08x\n", _nIns);
+        asm_output1("b %p", addr);
+    } else {
+        // the address
+        *(--_nIns) = (NIns)((addr));
+        // ldr pc, [pc - #4] // load the address into pc, reading it from [pc-4] (e.g.,
+        // the next instruction)
+        *(--_nIns) = (NIns)( COND_AL | (0x51<<20) | (PC<<16) | (PC<<12) | (4));
 
-    asm_output1("b %p (32-bit)", addr);
-}
-
-void
-Assembler::BL_far(NIns* addr)
-{
-    // we have to stick an immediate into the stream and make lr
-    // point to the right spot before branching
-    underrunProtect(16);
-
-    // TODO use a slot in const pool for address, but emit single insn
-    // for branch if offset fits
-
-    // the address
-    *(--_nIns) = (NIns)((addr));
-    // bx ip             // branch to the address we loaded earlier
-    *(--_nIns) = (NIns)( COND_AL | (0x9<<21) | (0xFFF<<8) | (1<<4) | (IP) );
-    // add lr, [pc + #4] // set lr to be past the address that we wrote
-    *(--_nIns) = (NIns)( COND_AL | OP_IMM | (1<<23) | (PC<<16) | (LR<<12) | (4) );
-    // ldr ip, [pc + #4] // load the address into ip, reading it from [pc+4]
-    *(--_nIns) = (NIns)( COND_AL | (0x59<<20) | (PC<<16) | (IP<<12) | (4));
-
-    //fprintf (stderr, "BL_far sequence @ 0x%08x\n", _nIns);
-
-    asm_output1("bl %p (32-bit)", addr);
+        asm_output1("b %p (32-bit)", addr);
+    }
 }
 
 void
@@ -831,19 +803,26 @@ Assembler::BL(NIns* addr)
 
     //fprintf (stderr, "BL: 0x%x (offs: %d [%x]) @ 0x%08x\n", addr, offs, offs, (intptr_t)(_nIns-1));
 
-    if (isS24(offs)) {
-        // try to do this with a single S24 call;
-        // recompute offset in case underrunProtect had to allocate a new page
+    // try to do this with a single S24 call
+    if (isS24(offs>>2)) {
         underrunProtect(4);
-        offs = PC_OFFSET_FROM(addr,_nIns-1);
-    }
 
-    if (isS24(offs)) {
-        // already did underrunProtect above
-        *(--_nIns) = (NIns)( COND_AL | (0xB<<24) | (((offs)>>2) & 0xFFFFFF) );
+        // recompute offset in case underrunProtect had to allocate a new page.
+        offs = PC_OFFSET_FROM(addr,_nIns-1);
+        *(--_nIns) = (NIns)( COND_AL | (0xB<<24) | ((offs>>2) & 0xFFFFFF) );
+
         asm_output1("bl %p", addr);
     } else {
-        BL_far(addr);
+        underrunProtect(12);
+
+        // the address
+        *(--_nIns) = (NIns)((addr));
+        // ldr pc, [pc - #4] // load the address into ip, reading it from [pc-4]
+        *(--_nIns) = (NIns)( COND_AL | (0x51<<20) | (PC<<16) | (PC<<12) | (4));
+        // add lr, pc, #4    // set lr to be past the address that we wrote
+        *(--_nIns) = (NIns)( COND_AL | OP_IMM | (1<<23) | (PC<<16) | (LR<<12) | (4) );
+
+        asm_output1("bl %p (32-bit)", addr);
     }
 }
 
@@ -890,12 +869,12 @@ Assembler::B_cond_chk(ConditionCode _c, NIns* _t, bool _chk)
 {
     int32_t offs = PC_OFFSET_FROM(_t,_nIns-1);
     //fprintf(stderr, "B_cond_chk target: 0x%08x offset: %d @0x%08x\n", _t, offs, _nIns-1);
-    if (isS24(offs)) {
+    if (isS24(offs>>2)) {
         if (_chk) underrunProtect(4);
         offs = PC_OFFSET_FROM(_t,_nIns-1);
     }
 
-    if (isS24(offs)) {
+    if (isS24(offs>>2)) {
         *(--_nIns) = (NIns)( ((_c)<<28) | (0xA<<24) | (((offs)>>2) & 0xFFFFFF) );
     } else if (_c == AL) {
         if(_chk) underrunProtect(8);
@@ -1116,8 +1095,12 @@ Assembler::asm_prep_fcall(Reservation*, LInsp)
 }
 
 NIns*
-Assembler::asm_branch(bool branchOnFalse, LInsp cond, NIns* targ)
+Assembler::asm_branch(bool branchOnFalse, LInsp cond, NIns* targ, bool far)
 {
+    // ignore far -- we figure this out on our own.
+    // XXX noone actually uses the far param in nj anyway... (always false)
+    (void)far;
+
     NIns* at = 0;
     LOpcode condop = cond->opcode();
     NanoAssert(cond->isCond());
@@ -1227,23 +1210,25 @@ Assembler::asm_cmp(LIns *cond)
 void
 Assembler::asm_loop(LInsp ins, NInsList& loopJumps)
 {
-    (void)ins;
-    JMP_long_placeholder(); // jump to SOT
-    verbose_only( if (_verbose && _outputCache) { _outputCache->removeLast(); outputf("         jmp   SOT"); } );
+    GuardRecord* guard = ins->record();
+    SideExit* exit = guard->exit;
+
+    // XXX asm_loop should be in Assembler.cpp!
+
+    // Emit an exit stub that the loop may be patched to jump to (for example if we
+    // want to terminate the loop because a timeout fires).
+    asm_exit(ins);
+
+    // Emit the patchable jump itself.
+    JMP_far(0);
 
     loopJumps.add(_nIns);
+    guard->jmpToStub = _nIns;
 
-#ifdef NJ_VERBOSE
-    // branching from this frag to ourself.
-    if (_frago->core()->config.show_stats)
-        LDi(argRegs[1], int((Fragment*)_thisfrag));
-#endif
-
-    assignSavedParams();
-
-    // restore first parameter, the only one we use
-    LInsp state = _thisfrag->lirbuf->state;
-    findSpecificRegFor(state, argRegs[state->imm8()]);
+    // If the target we are looping to is in a different fragment, we have to restore
+    // SP since we will target fragEntry and not loopEntry.
+    if (exit->target != _thisfrag)
+        MR(SP,FP);
 }
 
 void
