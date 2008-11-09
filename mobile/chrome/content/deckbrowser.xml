@@ -646,11 +646,14 @@
                      width : width,
                      height: height };
 
-          // check to see if the input coordinates are inside the visiable destination
-          let r2 = { x : this.dragData.pageX,
-                     y : this.dragData.pageY,
-                     width : this._canvas.width / this._zoomLevel,
-                     height: this._canvas.height / this._zoomLevel };
+          // check to see if the input coordinates are inside the visible destination
+          let [canvasW, canvasH] = this._effectiveCanvasDimensions;
+          let r2 = {
+            x : this.dragData.pageX,
+            y : this.dragData.pageY,
+            width : canvasW,
+            height: canvasH
+          };
 
           let dest = intersect(r1, r2);
 
@@ -772,32 +775,41 @@
         ]]></body>
       </method>
 
-      /**
-       * Retrieve the content element for a given point (relative to the top
-       * left corner of the browser window).
-       */
+      <!--
+        - Retrieve the content element for a given point in client coordinates
+        - (relative to the top left corner of the chrome window).
+       -->
       <method name="elementFromPoint">
         <parameter name="aX"/>
         <parameter name="aY"/>
         <body><![CDATA[
-          var cdoc = this.browser.contentDocument;
-
           var [x, y] = this._clientToContentCoords(aX, aY);
-          var element =  cdoc.elementFromPoint(x, y);
+          var cwu = this.browser.contentWindow
+                        .QueryInterface(Components.interfaces.nsIInterfaceRequestor)
+                        .getInterface(Components.interfaces.nsIDOMWindowUtils);
+
+          var element =  cwu.elementFromPoint(x, y,
+                                    true,   /* ignore root scroll frame */
+                                    false); /* don't flush layout*/
 
           return element;
         ]]></body>
       </method>
 
+      <!--
+        - Retrieve the page position for a given element
+        - (relative to the document origin).
+       -->
       <method name="_getPagePosition">
         <parameter name="aElement"/>
         <body><![CDATA[
           var r = aElement.getBoundingClientRect();
+          var cwin = this.browser.contentWindow;
           var retVal = {
             width: r.width,
             height: r.height,
-            x: r.left,
-            y: r.top
+            x: r.left + cwin.scrollX,
+            y: r.top + cwin.scrollY
           };
 
           return retVal;
@@ -815,6 +827,7 @@
 
           var [x, y] = this._clientToContentCoords(aEvent.clientX, aEvent.clientY);
 
+          // Redispatch the mouse event, ignoring the root scroll frame
           var cwin = this.browser.contentWindow;
           var cwu = cwin.QueryInterface(Components.interfaces.nsIInterfaceRequestor)
                         .getInterface(Components.interfaces.nsIDOMWindowUtils);
@@ -822,37 +835,28 @@
                              x, y,
                              aEvent.button || 0,
                              aEvent.detail || 1,
-                             0);
+                             0, true);
         ]]></body>
       </method>
 
       <!-- Given a set of client coordinates (relative to the app window),
-           scrolls the content window as close to the clicked on content item
-           as possible, and returns the remaining offsets into the content
-           window if the object isn't at 0, 0. Callers should be sure to reset
-           scroll state after calling this method.
+           returns the content coordinates relative to the viewport.
       -->
       <method name="_clientToContentCoords">
         <parameter name="aClientX"/>
         <parameter name="aClientY"/>
         <body><![CDATA[
+          // Determine position relative to the document origin
           // Need to adjust for the deckbrowser not being at 0,0
           // (e.g. due to other browser UI)
-          var browserRect = this.getBoundingClientRect();
+          let browserRect = this.getBoundingClientRect();
+          let clickOffsetX = this._screenToPage(aClientX - browserRect.left) + this.dragData.pageX;
+          let clickOffsetY = this._screenToPage(aClientY - browserRect.top) + this.dragData.pageY;
 
-          var clickOffsetX = this._screenToPage(aClientX - browserRect.left) + this.dragData.pageX;
-          var clickOffsetY = this._screenToPage(aClientY - browserRect.top) + this.dragData.pageY;
-
-          // Scroll the browser so that the event is targeted properly
-          var cwin = this.browser.contentWindow;
-          cwin.scrollTo(clickOffsetX, clickOffsetY);
-
-          // Might not have been able to scroll all the way if we're zoomed in,
-          // so we need to account for that difference.
-          var pageOffsetX = clickOffsetX - cwin.scrollX;
-          var pageOffsetY = clickOffsetY - cwin.scrollY;
-
-          return [pageOffsetX, pageOffsetY];
+          // Take scroll offset into account to return coordinates relative to the viewport
+          let cwin = this.browser.contentWindow;
+          return [clickOffsetX - cwin.scrollX,
+                  clickOffsetY - cwin.scrollY];
         ]]></body>
       </method>
 
