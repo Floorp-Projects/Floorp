@@ -74,6 +74,12 @@ cairo_win32_surface_get_image (cairo_surface_t *surface);
  * Win32 font support
  */
 
+cairo_public cairo_status_t
+cairo_win32_surface_set_can_convert_to_dib (cairo_surface_t *surface, cairo_bool_t can_convert);
+
+cairo_public cairo_status_t
+cairo_win32_surface_get_can_convert_to_dib (cairo_surface_t *surface, cairo_bool_t *can_convert);
+
 cairo_public cairo_font_face_t *
 cairo_win32_font_face_create_for_logfontw (LOGFONTW *logfont);
 
