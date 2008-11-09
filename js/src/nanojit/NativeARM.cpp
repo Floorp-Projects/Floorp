@@ -1210,7 +1210,7 @@ Assembler::asm_cmp(LIns *cond)
         if (c == 0 && cond->isop(LIR_eq)) {
             Register r = findRegFor(lhs, GpRegs);
             TEST(r,r);
-			// No 64-bit immediates so fall-back to below
+            // No 64-bit immediates so fall-back to below
         }
         else if (!rhs->isQuad()) {
             Register r = getBaseReg(lhs, c, GpRegs);
@@ -1228,9 +1228,9 @@ void
 Assembler::asm_loop(LInsp ins, NInsList& loopJumps)
 {
     (void)ins;
-    JMP_long_placeholder(); // jump to SOT	
+    JMP_long_placeholder(); // jump to SOT
     verbose_only( if (_verbose && _outputCache) { _outputCache->removeLast(); outputf("         jmp   SOT"); } );
-		
+
     loopJumps.add(_nIns);
 
 #ifdef NJ_VERBOSE
@@ -1255,12 +1255,12 @@ Assembler::asm_fcond(LInsp ins)
     SETE(r);
     asm_fcmp(ins);
 }
-				
+
 void
 Assembler::asm_cond(LInsp ins)
 {
     // only want certain regs
-    LOpcode op = ins->opcode();			
+    LOpcode op = ins->opcode();
     Register r = prepResultReg(ins, AllowableFlagRegs);
     // SETcc only sets low 8 bits, so extend
     MOVZX8(r,r);
@@ -1288,11 +1288,11 @@ Assembler::asm_cond(LInsp ins)
         SETAE(r);
     asm_cmp(ins);
 }
-	
+
 void
 Assembler::asm_arith(LInsp ins)
 {
-    LOpcode op = ins->opcode();			
+    LOpcode op = ins->opcode();
     LInsp lhs = ins->oprnd1();
     LInsp rhs = ins->oprnd2();
 
@@ -1357,7 +1357,7 @@ Assembler::asm_arith(LInsp ins)
         if (op == LIR_add || op == LIR_addp)
             ADDi(rr, c);
         else if (op == LIR_sub)
-					SUBi(rr, c);
+                    SUBi(rr, c);
         else if (op == LIR_and)
             ANDi(rr, c);
         else if (op == LIR_or)
@@ -1377,11 +1377,11 @@ Assembler::asm_arith(LInsp ins)
     if (rr != ra)
         MR(rr,ra);
 }
-	
+
 void
 Assembler::asm_neg_not(LInsp ins)
 {
-    LOpcode op = ins->opcode();			
+    LOpcode op = ins->opcode();
     Register rr = prepResultReg(ins, GpRegs);
 
     LIns* lhs = ins->oprnd1();
@@ -1400,11 +1400,11 @@ Assembler::asm_neg_not(LInsp ins)
     if ( rr != ra )
         MR(rr,ra);
 }
-				
+
 void
 Assembler::asm_ld(LInsp ins)
 {
-    LOpcode op = ins->opcode();			
+    LOpcode op = ins->opcode();
     LIns* base = ins->oprnd1();
     LIns* disp = ins->oprnd2();
     Register rr = prepResultReg(ins, GpRegs);
@@ -1419,7 +1419,7 @@ Assembler::asm_ld(LInsp ins)
 void
 Assembler::asm_cmov(LInsp ins)
 {
-    LOpcode op = ins->opcode();			
+    LOpcode op = ins->opcode();
     LIns* condval = ins->oprnd1();
     NanoAssert(condval->isCmp());
 
@@ -1430,7 +1430,7 @@ Assembler::asm_cmov(LInsp ins)
     LIns* iffalse = values->oprnd2();
 
     NanoAssert(op == LIR_qcmov || (!iftrue->isQuad() && !iffalse->isQuad()));
-		
+
     const Register rr = prepResultReg(ins, GpRegs);
 
     // this code assumes that neither LD nor MR nor MRcc set any of the condition flags.
@@ -1439,18 +1439,18 @@ Assembler::asm_cmov(LInsp ins)
     if (op == LIR_cmov) {
         switch (condval->opcode()) {
             // note that these are all opposites...
-            case LIR_eq:	MRNE(rr, iffalsereg);	break;
+            case LIR_eq:    MRNE(rr, iffalsereg);   break;
             case LIR_ov:    MRNO(rr, iffalsereg);   break;
             case LIR_cs:    MRNC(rr, iffalsereg);   break;
-            case LIR_lt:	MRGE(rr, iffalsereg);	break;
-            case LIR_le:	MRG(rr, iffalsereg);	break;
-            case LIR_gt:	MRLE(rr, iffalsereg);	break;
-            case LIR_ge:	MRL(rr, iffalsereg);	break;
-            case LIR_ult:	MRAE(rr, iffalsereg);	break;
-            case LIR_ule:	MRA(rr, iffalsereg);	break;
-            case LIR_ugt:	MRBE(rr, iffalsereg);	break;
-            case LIR_uge:	MRB(rr, iffalsereg);	break;
-				debug_only( default: NanoAssert(0); break; )
+            case LIR_lt:    MRGE(rr, iffalsereg);   break;
+            case LIR_le:    MRG(rr, iffalsereg);    break;
+            case LIR_gt:    MRLE(rr, iffalsereg);   break;
+            case LIR_ge:    MRL(rr, iffalsereg);    break;
+            case LIR_ult:   MRAE(rr, iffalsereg);   break;
+            case LIR_ule:   MRA(rr, iffalsereg);    break;
+            case LIR_ugt:   MRBE(rr, iffalsereg);   break;
+            case LIR_uge:   MRB(rr, iffalsereg);    break;
+            default: debug_only( NanoAssert(0) );   break;
         }
     } else if (op == LIR_qcmov) {
         NanoAssert(0);
@@ -1458,7 +1458,7 @@ Assembler::asm_cmov(LInsp ins)
     /*const Register iftruereg =*/ findSpecificRegFor(iftrue, rr);
     asm_cmp(condval);
 }
-				
+
 void
 Assembler::asm_qhi(LInsp ins)
 {
@@ -1561,7 +1561,7 @@ Assembler::asm_quad(LInsp ins)
             if (q == 0.0) {
                 // test (int64)0 since -0.0 == 0.0
                 SSE_XORPDr(rr, rr);
-				} else if (d == 1.0) {
+            } else if (d == 1.0) {
                 // 1.0 is extremely frequent and worth special-casing!
                 static const double k_ONE = 1.0;
                 LDSDm(rr, &k_ONE);
