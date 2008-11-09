@@ -66,6 +66,12 @@
 #include "jsscope.h"
 #include "jsstr.h"
 
+#ifdef NANOJIT_ARM
+// Something's broken with regexp tracing on ARM;
+// disable to get everything else limping along.
+#undef JS_TRACER
+#endif
+
 #ifdef JS_TRACER
 #include "jstracer.h"
 using namespace avmplus;
@@ -3649,11 +3655,21 @@ MatchRegExp(REGlobalData *gData, REMatchState *x)
         u.code = fragment->code();
         REMatchState *lr;
         gData->skipped = (ptrdiff_t) x->cp;
+
+        debug_only_v(printf("entering REGEXP trace at %s:%u@%u, code: %p\n",
+                            gData->cx->fp->script->filename,
+                            js_PCToLineNumber(gData->cx, gData->cx->fp->script, gData->cx->fp->regs->pc),
+                            gData->cx->fp->regs->pc - gData->cx->fp->script->code,
+                            fragment->code()););
+
 #if defined(JS_NO_FASTCALL) && defined(NANOJIT_IA32)
         SIMULATE_FASTCALL(lr, x, gData, u.func);
 #else
         lr = u.func(x, gData);
 #endif
+
+        debug_only_v(printf("leaving REGEXP trace\n"));
+
         gData->skipped = ((const jschar *) gData->skipped) - cp;
         return lr;
     }
@@ -4609,7 +4625,9 @@ static JSFunctionSpec regexp_methods[] = {
     JS_FN(js_toString_str,  regexp_toString,    0,0),
     JS_FN("compile",        regexp_compile,     2,0),
     JS_FN("exec",           regexp_exec,        1,0),
+#ifdef JS_TRACER
     JS_TN("test",           regexp_test,        1,0, regexp_test_trcinfo),
+#endif
     JS_FS_END
 };
 
