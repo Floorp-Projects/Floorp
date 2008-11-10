@@ -17,7 +17,6 @@
 var v = document.getElementById('v');
 var endPassed = false;
 var completed = false;
-var timeout;
 
 function startTest() {
   if (completed)
@@ -35,14 +34,9 @@ function playbackEnded() {
   ok(v.currentTime >= 3.9 && v.currentTime <= 4.0,
      "Checking currentTime at end: " + v.currentTime);
   ok(v.ended, "Checking playback has ended");
-  clearTimeout(timeout);
   SimpleTest.finish();
   return false;
 }
-timeout = setTimeout(function () {
-                       ok(false, "Test timed out");
-                       SimpleTest.finish();
-                     }, 30000);
 
 SimpleTest.waitForExplicitFinish();
 </script>

@@ -23,7 +23,6 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=448534
 var v = document.getElementById('v');
 var played = false;
 var completed = false;
-var timeout;
 
 function loaded() {
   if (completed)
@@ -49,16 +48,9 @@ function stopped() {
 
   completed = true;
   ok(v.paused, "Video should be paused after removing from the Document");
-  clearTimeout(timeout);
   SimpleTest.finish();
   return false;
 }
-
-var timeout = setTimeout(function () {
-                ok(false, "Video test timed out");
-                SimpleTest.finish();
-                return false;
-              }, 30000);
 
 SimpleTest.waitForExplicitFinish();
 </script>
