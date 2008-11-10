@@ -1395,10 +1395,14 @@ Assembler::asm_ld(LInsp ins)
     Register rr = prepResultReg(ins, GpRegs);
     int d = disp->constval();
     Register ra = getBaseReg(base, d, GpRegs);
-    if (op == LIR_ldcb)
-        LD8Z(rr, d, ra);
-    else
+    if (op == LIR_ld || op == LIR_ldc)
         LD(rr, d, ra);
+    else if (op == LIR_ldcb)
+        LDRB(rr, d, ra);
+    else if (op == LIR_ldcs)
+        LDRH(rr, d, ra);
+    else
+        NanoAssertMsg(0, "Unsupported instruction in asm_ld");
 }
 
 void
