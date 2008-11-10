@@ -124,15 +124,13 @@
   Shutdown(), Play(), Pause(), Seek(float)
 
   The decoder implementation is currently limited to Linear PCM encoded
-  audio data with one or two channels of 16-bit samples at sample rates from
-  100 Hz to 96 kHz.  The sample size and number of channels (and, to some
-  extent, the sample format) is limited by what the audio backend
-  (sydneyaudio via nsAudioStream) currently supports.  sydneyaudio's API
-  suggests support of 8-bit, µ-Law, and A-Law samples, but this support is
-  not currently implemented.  The supported sample rate is artificially
-  limited to arbitrarily selected sane values.  Support for additional
-  channels (and other new features) would require extending nsWaveDecoder to
-  support parsing the newer WAVE_FORMAT_EXTENSIBLE chunk format.
+  audio data with one or two channels of 8- or 16-bit samples at sample
+  rates from 100 Hz to 96 kHz.  The number of channels is limited by what
+  the audio backend (sydneyaudio via nsAudioStream) currently supports.  The
+  supported sample rate is artificially limited to arbitrarily selected sane
+  values.  Support for additional channels (and other new features) would
+  require extending nsWaveDecoder to support parsing the newer
+  WAVE_FORMAT_EXTENSIBLE chunk format.
  */
 
 class nsWaveStateMachine;
