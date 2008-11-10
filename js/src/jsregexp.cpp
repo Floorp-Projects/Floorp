@@ -66,12 +66,6 @@
 #include "jsscope.h"
 #include "jsstr.h"
 
-#ifdef NANOJIT_ARM
-// Something's broken with regexp tracing on ARM;
-// disable to get everything else limping along.
-#undef JS_TRACER
-#endif
-
 #ifdef JS_TRACER
 #include "jstracer.h"
 using namespace avmplus;

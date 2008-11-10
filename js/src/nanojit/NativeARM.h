@@ -533,15 +533,23 @@ typedef enum {
     } while(0)
 
 
-// load 8-bit, zero extend (aka LDRB)
-// note, only 5-bit offsets (!) are supported for this, but that's all we need at the moment
-// (LDRB actually allows 12-bit offset in ARM mode but constraining to 5-bit gives us advantage for Thumb)
-// @todo, untested!
-#define LD8Z(_d,_off,_b) do {                                           \
-        NanoAssert((d)>=0&&(d)<=31);                                    \
+// load 8-bit, zero extend (aka LDRB) note, only 5-bit offsets (!) are
+// supported for this, but that's all we need at the moment.
+// (LDRB/LDRH actually allow a 12-bit offset in ARM mode but
+// constraining to 5-bit gives us advantage for Thumb)
+#define LDRB(_d,_off,_b) do {                                           \
+        NanoAssert((_off)>=0&&(_off)<=31);                              \
         underrunProtect(4);                                             \
-        *(--_nIns) = (NIns)( COND_AL | (0x5D<<20) | ((_b)<<16) | ((_d)<<12) |  ((_off)&0xfff)  ); \
+        *(--_nIns) = (NIns)( COND_AL | (0x5D<<20) | ((_b)<<16) | ((_d)<<12) | ((_off)&0xfff)  ); \
         asm_output3("ldrb %s,%d(%s)", gpn(_d),(_off),gpn(_b));          \
+    } while(0)
+
+// P and U
+#define LDRH(_d,_off,_b) do {                  \
+        NanoAssert((_off)>=0&&(_off)<=31);      \
+        underrunProtect(4);                     \
+        *(--_nIns) = (NIns)( COND_AL | (0x1D<<20) | ((_b)<<16) | ((_d)<<12) | ((0xB)<<4) | (((_off)&0xf0)<<4) | ((_off)&0xf) ); \
+        asm_output3("ldrsh %s,%d(%s)", gpn(_d),(_off),gpn(_b));         \
     } while(0)
 
 #define STR(_d,_n,_off) do {                                            \
