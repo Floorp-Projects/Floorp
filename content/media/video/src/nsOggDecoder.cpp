@@ -35,6 +35,7 @@
  * the terms of any one of the MPL, the GPL or the LGPL.
  *
  * ***** END LICENSE BLOCK ***** */
+#include <limits>
 #include "prlog.h"
 #include "prmem.h"
 #include "nsIFrame.h"
@@ -267,6 +268,18 @@ public:
   // monitor must be obtained before calling this.
   float GetCurrentTime();
 
+  // Called from the main thread to get the duration. The decoder monitor
+  // must be obtained before calling this. It is in units of milliseconds.
+  PRInt64 GetDuration();
+
+  // Called from the main thread to set the content length of the media
+  // resource. The decoder monitor must be obtained before calling this.
+  void SetContentLength(PRInt64 aLength);
+
+  // Called from the main thread to set whether the media resource can
+  // be seeked. The decoder monitor must be obtained before calling this.
+  void SetSeekable(PRBool aSeekable);
+
   // Get and set the audio volume. The decoder monitor must be
   // obtained before calling this.
   float GetVolume();
@@ -427,6 +440,20 @@ private:
   // monitor.
   float mVolume;
 
+  // Duration of the media resource. It is accessed from the decoder and main
+  // threads. Synchronised via decoder monitor. It is in units of
+  // milliseconds.
+  PRInt64 mDuration;
+
+  // Content Length of the media resource if known. If it is -1 then the
+  // size is unknown. Accessed from the decoder and main threads. Synchronised
+  // via decoder monitor.
+  PRInt64 mContentLength;
+
+  // PR_TRUE if the media resource can be seeked. Accessed from the decoder
+  // and main threads. Synchronised via decoder monitor.
+  PRPackedBool mSeekable;
+
   // PR_TRUE if an event to notify about a change in the playback
   // position has been queued, but not yet run. It is set to PR_FALSE when
   // the event is run. This allows coalescing of these events as they can be
@@ -455,6 +482,9 @@ nsOggDecodeStateMachine::nsOggDecodeStateMachine(nsOggDecoder* aDecoder, nsChann
   mSeekTime(0.0),
   mCurrentFrameTime(0.0),
   mVolume(1.0),
+  mDuration(-1),
+  mContentLength(-1),
+  mSeekable(PR_TRUE),
   mPositionChangeQueued(PR_FALSE)
 {
 }
@@ -773,6 +803,23 @@ float nsOggDecodeStateMachine::GetCurrentTime()
   return mCurrentFrameTime;
 }
 
+PRInt64 nsOggDecodeStateMachine::GetDuration()
+{
+  //  NS_ASSERTION(PR_InMonitor(mDecoder->GetMonitor()), "GetDuration() called without acquiring decoder monitor");
+  return mDuration;
+}
+
+void nsOggDecodeStateMachine::SetContentLength(PRInt64 aLength)
+{
+  //  NS_ASSERTION(PR_InMonitor(mDecoder->GetMonitor()), "SetContentLength() called without acquiring decoder monitor");
+  mContentLength = aLength;
+}
+
+void nsOggDecodeStateMachine::SetSeekable(PRBool aSeekable)
+{
+   //  NS_ASSERTION(PR_InMonitor(mDecoder->GetMonitor()), "SetSeekable() called without acquiring decoder monitor");
+  mSeekable = aSeekable;
+}
 
 void nsOggDecodeStateMachine::Shutdown()
 {
@@ -1044,12 +1091,12 @@ void nsOggDecodeStateMachine::LoadOggHeaders()
         oggplay_get_audio_channels(mPlayer, i, &mAudioChannels);
         LOG(PR_LOG_DEBUG, ("samplerate: %d, channels: %d", mAudioRate, mAudioChannels));
       }
-      
+ 
       if (oggplay_set_track_active(mPlayer, i) < 0)  {
         LOG(PR_LOG_ERROR, ("Could not set track %d active", i));
       }
     }
-    
+
     if (mVideoTrack == -1) {
       oggplay_set_callback_num_frames(mPlayer, mAudioTrack, OGGPLAY_FRAMES_PER_CALLBACK);
       mCallbackPeriod = 1.0 / (float(mAudioRate) / OGGPLAY_FRAMES_PER_CALLBACK);
@@ -1057,6 +1104,27 @@ void nsOggDecodeStateMachine::LoadOggHeaders()
     LOG(PR_LOG_DEBUG, ("Callback Period: %f", mCallbackPeriod));
 
     oggplay_use_buffer(mPlayer, OGGPLAY_BUFFER_SIZE);
+
+    // Get the duration from the Ogg file. We only do this if the
+    // content length of the resource is known as we need to seek
+    // to the end of the file to get the last time field. We also
+    // only do this if the resource is seekable.
+    {
+      nsAutoMonitor mon(mDecoder->GetMonitor());
+      if (mState != DECODER_STATE_SHUTDOWN &&
+          mContentLength >= 0 && 
+          mSeekable) {
+        // Don't hold the monitor during the duration
+        // call as it can issue seek requests
+        // and blocks until these are completed.
+        mon.Exit();
+        PRInt64 d = oggplay_get_duration(mPlayer);
+        mon.Enter();
+        mDuration = d;
+      }
+      if (mState == DECODER_STATE_SHUTDOWN)
+        return;
+    }
 
     // Inform the element that we've loaded the Ogg metadata
     nsCOMPtr<nsIRunnable> metadataLoadedEvent = 
@@ -1097,10 +1165,11 @@ void nsOggDecoder::SetVolume(float volume)
 
 float nsOggDecoder::GetDuration()
 {
-  // Currently not implemented. Video Spec says to return
-  // NaN if unknown.
-  // TODO: return NaN
-  return 0.0;
+  if (mDuration >= 0) {
+     return static_cast<float>(mDuration) / 1000.0;
+  }
+
+  return std::numeric_limits<float>::quiet_NaN();
 }
 
 nsOggDecoder::nsOggDecoder() :
@@ -1109,8 +1178,9 @@ nsOggDecoder::nsOggDecoder() :
   mCurrentTime(0.0),
   mInitialVolume(0.0),
   mRequestedSeekTime(-1.0),
-  mContentLength(0),
+  mContentLength(-1),
   mNotifyOnShutdown(PR_FALSE),
+  mSeekable(PR_TRUE),
   mReader(0),
   mMonitor(0),
   mPlayState(PLAY_STATE_PAUSED),
@@ -1201,6 +1271,11 @@ nsresult nsOggDecoder::Load(nsIURI* aURI, nsIChannel* aChannel,
   NS_ENSURE_SUCCESS(rv, rv);
 
   mDecodeStateMachine = new nsOggDecodeStateMachine(this, mReader);
+  {
+    nsAutoMonitor mon(mMonitor);
+    mDecodeStateMachine->SetContentLength(mContentLength);
+    mDecodeStateMachine->SetSeekable(mSeekable);
+  }
 
   ChangeState(PLAY_STATE_LOADING);
 
@@ -1302,6 +1377,11 @@ nsIPrincipal* nsOggDecoder::GetCurrentPrincipal()
 
 void nsOggDecoder::MetadataLoaded()
 {
+  {
+    nsAutoMonitor mon(mMonitor);
+    mDuration = mDecodeStateMachine ? mDecodeStateMachine->GetDuration() : -1;
+  }
+
   if (mElement) {
     mElement->MetadataLoaded();
   }
@@ -1380,6 +1460,10 @@ PRInt64 nsOggDecoder::GetTotalBytes()
 void nsOggDecoder::SetTotalBytes(PRInt64 aBytes)
 {
   mContentLength = aBytes;
+  if (mDecodeStateMachine) {
+    nsAutoMonitor mon(mMonitor);
+    mDecodeStateMachine->SetContentLength(aBytes);
+  } 
 }
 
 void nsOggDecoder::UpdateBytesDownloaded(PRUint64 aBytes)
@@ -1547,3 +1631,18 @@ void nsOggDecoder::PlaybackPositionChanged()
     mElement->DispatchSimpleEvent(NS_LITERAL_STRING("timeupdate"));
   }
 }
+
+void nsOggDecoder::SetSeekable(PRBool aSeekable)
+{
+  mSeekable = aSeekable;
+  if (mDecodeStateMachine) {
+    nsAutoMonitor mon(mMonitor);
+    mDecodeStateMachine->SetSeekable(aSeekable);
+  }
+}
+
+PRBool nsOggDecoder::GetSeekable()
+{
+  return mSeekable;
+}
+
