@@ -444,6 +444,9 @@ var BrowserUI = {
   },
 
   _sizeControls : function(aEvent) {
+    if (window != aEvent.target) {
+      return
+    }
     var rect = document.getElementById("browser-container").getBoundingClientRect();
     var containerW = rect.right - rect.left;
     var containerH = rect.bottom - rect.top;
@@ -453,12 +456,10 @@ var BrowserUI = {
     var sidebar = document.getElementById("browser-controls");
     var panelUI = document.getElementById("panel-container");
     var tabbar = document.getElementById("tab-list-container");
-    if (window == aEvent.target) {
-      tabbar.left = -tabbar.boxObject.width;
-      panelUI.left = containerW + sidebar.boxObject.width;
-      sidebar.left = containerW;
-      sidebar.height = tabbar.height = (panelUI.height = containerH) - toolbarH;
-    }
+    tabbar.left = -tabbar.boxObject.width;
+    panelUI.left = containerW + sidebar.boxObject.width;
+    sidebar.left = containerW;
+    sidebar.height = tabbar.height = (panelUI.height = containerH) - toolbarH;
     panelUI.width = containerW - sidebar.boxObject.width - tabbar.boxObject.width;
 
     var popup = document.getElementById("popup_autocomplete");
