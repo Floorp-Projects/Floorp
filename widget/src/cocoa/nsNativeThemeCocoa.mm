@@ -256,8 +256,7 @@ static void DrawCellWithScaling(NSCell *cell,
   if (drawRect.size.height < minimumSize.height)
     drawRect.size.height = minimumSize.height;
 
-  CGAffineTransform savedCTM = CGContextGetCTM(cgContext);
-  NSGraphicsContext* savedContext = [NSGraphicsContext currentContext];
+  [NSGraphicsContext saveGraphicsState];
 
   if (flip) {
     // This flips the image in place and is necessary to work around a bug in the way
@@ -274,12 +273,16 @@ static void DrawCellWithScaling(NSCell *cell,
     // Inflate the rect Gecko gave us by the margin for the control.
     InflateControlRect(&drawRect, controlSize, marginSet);
 
+    NSGraphicsContext* savedContext = [NSGraphicsContext currentContext];
+
     // Set up the graphics context we've been asked to draw to.
     [NSGraphicsContext setCurrentContext:[NSGraphicsContext graphicsContextWithGraphicsPort:cgContext flipped:YES]];
 
     // [NSView focusView] may return nil here, but
     // [NSCell drawWithFrame:inView:] can deal with that.
     [cell drawWithFrame:drawRect inView:[NSView focusView]];
+
+    [NSGraphicsContext setCurrentContext:savedContext];
   }
   else {
     float w = ceil(drawRect.size.width);
@@ -302,6 +305,8 @@ static void DrawCellWithScaling(NSCell *cell,
     CGColorSpaceRelease(rgb);
 
     CGContextTranslateCTM(ctx, MAX_FOCUS_RING_WIDTH, MAX_FOCUS_RING_WIDTH);
+
+    NSGraphicsContext* savedContext = [NSGraphicsContext currentContext];
 
     [NSGraphicsContext setCurrentContext:[NSGraphicsContext graphicsContextWithGraphicsPort:ctx flipped:YES]];
 
@@ -330,9 +335,7 @@ static void DrawCellWithScaling(NSCell *cell,
     CGContextRelease(ctx);
   }
 
-  CGContextSetCTM(cgContext, savedCTM);
-
-  [NSGraphicsContext setCurrentContext:savedContext];
+  [NSGraphicsContext restoreGraphicsState];
 
 #if DRAW_IN_FRAME_DEBUG
   CGContextSetRGBFillColor(cgContext, 0.0, 0.0, 0.5, 0.25);
