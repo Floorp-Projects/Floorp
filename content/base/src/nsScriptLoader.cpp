@@ -108,6 +108,7 @@ public:
   nsString mScriptText;              // Holds script for loaded scripts
   PRUint32 mJSVersion;
   nsCOMPtr<nsIURI> mURI;
+  nsCOMPtr<nsIURI> mFinalURI;
   PRInt32 mLineNo;
 };
 
@@ -624,11 +625,10 @@ nsScriptLoader::EvaluateScript(nsScriptLoadRequest* aRequest,
 
   nsCAutoString url;
 
-  if (aRequest->mURI) {
-    rv = aRequest->mURI->GetSpec(url);
-    if (NS_FAILED(rv)) {
-      return rv;
-    }
+  nsIURI* uri = aRequest->mFinalURI ? aRequest->mFinalURI : aRequest->mURI;
+  rv = uri->GetSpec(url);
+  if (NS_FAILED(rv)) {
+    return rv;
   }
 
   PRBool oldProcessingScriptTag = context->GetProcessingScriptTag();
@@ -912,6 +912,7 @@ nsScriptLoader::PrepareLoadedRequest(nsScriptLoadRequest* aRequest,
   }
 
   nsCOMPtr<nsIChannel> channel = do_QueryInterface(req);
+  NS_GetFinalChannelURI(channel, getter_AddRefs(aRequest->mFinalURI));
   if (aStringLen) {
     // Check the charset attribute to determine script charset.
     nsAutoString hintCharset;
