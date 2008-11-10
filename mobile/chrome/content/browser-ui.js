@@ -117,7 +117,7 @@ var BrowserUI = {
 
   _linkAdded : function(aEvent) {
     var link = aEvent.originalTarget;
-    if (!link || !link.href || this._faviconLink )
+    if (!link || !link.href)
       return;
 
     if (/\bicon\b/i(link.rel)) {
