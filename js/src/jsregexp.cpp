@@ -4619,9 +4619,7 @@ static JSFunctionSpec regexp_methods[] = {
     JS_FN(js_toString_str,  regexp_toString,    0,0),
     JS_FN("compile",        regexp_compile,     2,0),
     JS_FN("exec",           regexp_exec,        1,0),
-#ifdef JS_TRACER
     JS_TN("test",           regexp_test,        1,0, regexp_test_trcinfo),
-#endif
     JS_FS_END
 };
 
