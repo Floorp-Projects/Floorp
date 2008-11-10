@@ -131,6 +131,8 @@ classic.jar:
         skin/classic/aero/browser/Search-glass.png                   (Search-glass-aero.png)
         skin/classic/aero/browser/Search-glass-rtl.png               (Search-glass-rtl-aero.png)
         skin/classic/aero/browser/Search-addengines.png
+        skin/classic/aero/browser/section_collapsed.png
+        skin/classic/aero/browser/section_expanded.png
         skin/classic/aero/browser/setDesktopBackground.css
         skin/classic/aero/browser/menu-back.png                      (menu-back-aero.png)
         skin/classic/aero/browser/menu-forward.png                   (menu-forward-aero.png)

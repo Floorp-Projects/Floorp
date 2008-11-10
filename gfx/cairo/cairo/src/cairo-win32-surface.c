@@ -560,6 +560,56 @@ _cairo_win32_surface_get_subimage (cairo_win32_surface_t  *surface,
     return CAIRO_STATUS_SUCCESS;
 }
 
+static void
+_cairo_win32_convert_ddb_to_dib (cairo_win32_surface_t *surface)
+{
+    cairo_win32_surface_t *new_surface;
+    int width = surface->extents.width;
+    int height = surface->extents.height;
+
+    BOOL ok;
+    HBITMAP oldbitmap;
+
+    new_surface = (cairo_win32_surface_t*)
+	_cairo_win32_surface_create_for_dc (surface->dc,
+					    surface->format,
+					    width,
+					    height);
+
+    if (new_surface->base.status)
+	return;
+
+    /* DDB can't be 32bpp, so BitBlt is safe */
+    ok = BitBlt (new_surface->dc,
+		 0, 0, width, height,
+		 surface->dc,
+		 0, 0, SRCCOPY);
+
+    if (!ok)
+	goto out;
+
+    /* Now swap around new_surface and surface's internal bitmap
+     * pointers. */
+    DeleteDC (new_surface->dc);
+    new_surface->dc = NULL;
+
+    oldbitmap = SelectObject (surface->dc, new_surface->bitmap);
+    DeleteObject (oldbitmap);
+
+    surface->image = new_surface->image;
+    surface->is_dib = new_surface->is_dib;
+    surface->bitmap = new_surface->bitmap;
+
+    new_surface->bitmap = NULL;
+    new_surface->image = NULL;
+
+    /* Finally update flags */
+    surface->flags = _cairo_win32_flags_for_dc (surface->dc);
+
+  out:
+    cairo_surface_destroy ((cairo_surface_t*)new_surface);
+}
+
 static cairo_status_t
 _cairo_win32_surface_acquire_source_image (void                    *abstract_surface,
 					   cairo_image_surface_t  **image_out,
@@ -568,6 +618,17 @@ _cairo_win32_surface_acquire_source_image (void                    *abstract_sur
     cairo_win32_surface_t *surface = abstract_surface;
     cairo_win32_surface_t *local = NULL;
     cairo_status_t status;
+
+    if (!surface->image && !surface->is_dib && surface->bitmap &&
+	(surface->flags & CAIRO_WIN32_SURFACE_CAN_CONVERT_TO_DIB) != 0)
+    {
+	/* This is a DDB, and we're being asked to use it as a source for
+	 * something that we couldn't support natively.  So turn it into
+	 * a DIB, so that we have an equivalent image surface, as long
+	 * as we're allowed to via flags.
+	 */
+	_cairo_win32_convert_ddb_to_dib (surface);
+    }
 
     if (surface->image) {
 	*image_out = (cairo_image_surface_t *)surface->image;
@@ -2132,4 +2193,62 @@ _cairo_win32_debug_dump_hrgn (HRGN rgn, char *header)
 
     free(rd);
     fflush (stderr);
+}
+
+/**
+ * cairo_win32_surface_set_can_convert_to_dib
+ * @surface: a #cairo_surface_t
+ * @can_convert: a #cairo_bool_t indicating whether this surface can
+ *               be coverted to a DIB if necessary
+ *
+ * A DDB surface with this flag set can be converted to a DIB if it's
+ * used as a source in a way that GDI can't natively handle; for
+ * example, drawing a RGB24 DDB onto an ARGB32 DIB.  Doing this
+ * conversion results in a significant speed optimization, because we
+ * can call on pixman to perform the operation natively, instead of
+ * reading the data from the DC each time.
+ *
+ * Return value: %CAIRO_STATUS_SUCCESS if the flag was successfully
+ * changed, or an error otherwise.
+ * 
+ */
+cairo_status_t
+cairo_win32_surface_set_can_convert_to_dib (cairo_surface_t *asurface, cairo_bool_t can_convert)
+{
+    cairo_win32_surface_t *surface = (cairo_win32_surface_t*) asurface;
+    if (surface->base.type != CAIRO_SURFACE_TYPE_WIN32)
+	return CAIRO_STATUS_SURFACE_TYPE_MISMATCH;
+
+    if (surface->bitmap) {
+	if (can_convert)
+	    surface->flags |= CAIRO_WIN32_SURFACE_CAN_CONVERT_TO_DIB;
+	else
+	    surface->flags &= ~CAIRO_WIN32_SURFACE_CAN_CONVERT_TO_DIB;
+    }
+
+    return CAIRO_STATUS_SUCCESS;
+}
+
+/**
+ * cairo_win32_surface_get_can_convert_to_dib
+ * @surface: a #cairo_surface_t
+ * @can_convert: a #cairo_bool_t* that receives the return value
+ *
+ * Returns the value of the flag indicating whether the surface can be
+ * converted to a DIB if necessary, as set by
+ * cairo_win32_surface_set_can_convert_to_dib.
+ *
+ * Return value: %CAIRO_STATUS_SUCCESS if the flag was successfully
+ * retreived, or an error otherwise.
+ * 
+ */
+cairo_status_t
+cairo_win32_surface_get_can_convert_to_dib (cairo_surface_t *asurface, cairo_bool_t *can_convert)
+{
+    cairo_win32_surface_t *surface = (cairo_win32_surface_t*) asurface;
+    if (surface->base.type != CAIRO_SURFACE_TYPE_WIN32)
+	return CAIRO_STATUS_SURFACE_TYPE_MISMATCH;
+
+    *can_convert = ((surface->flags & CAIRO_WIN32_SURFACE_CAN_CONVERT_TO_DIB) != 0);
+    return CAIRO_STATUS_SUCCESS;
 }
