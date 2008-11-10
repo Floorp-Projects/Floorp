@@ -2805,6 +2805,10 @@ nsLayoutUtils::DrawSingleUnscaledImage(nsIRenderingContext* aRenderingContext,
   nsRect dest(aDest - source.TopLeft(),
     nsSize(size.width*appUnitsPerCSSPixel, size.height*appUnitsPerCSSPixel));
   nsRect fill(aDest, source.Size());
+  // Ensure that only a single image tile is drawn. If aSourceArea extends
+  // outside the image bounds, we want to honor the aSourceArea-to-aDest
+  // translation but we don't want to actually tile the image.
+  fill.IntersectRect(fill, dest);
   return DrawImage(aRenderingContext, aImage, dest, fill, aDest, aDirty);
 }
 
@@ -2831,7 +2835,12 @@ nsLayoutUtils::DrawSingleImage(nsIRenderingContext* aRenderingContext,
   }
 
   nsRect dest = GetWholeImageDestination(size, source, aDest);
-  return DrawImage(aRenderingContext, aImage, dest, aDest, aDest.TopLeft(), aDirty);
+  // Ensure that only a single image tile is drawn. If aSourceArea extends
+  // outside the image bounds, we want to honor the aSourceArea-to-aDest
+  // transform but we don't want to actually tile the image.
+  nsRect fill;
+  fill.IntersectRect(aDest, dest);
+  return DrawImage(aRenderingContext, aImage, dest, fill, fill.TopLeft(), aDirty);
 }
 
 /* static */ nsRect
