@@ -18,7 +18,6 @@
 // update is increasing.
 var lastTime = 0.0;
 var completed = false;
-var timeout;
 
 function startTest() {
   if (completed)
@@ -51,10 +50,6 @@ function playbackEnded() {
   SimpleTest.finish();
   return false;
 }
-timeout = setTimeout(function () {
-                       ok(false, "Test timed out");
-                       SimpleTest.finish();
-                     }, 30000);
 
 SimpleTest.waitForExplicitFinish();
 </script>

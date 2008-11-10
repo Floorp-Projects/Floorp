@@ -16,7 +16,6 @@
 // otherwise an infinite loop in the Ogg backend occurs.
 var v = document.getElementById('v');
 var completed = false;
-var timeout;
 var thrown1 = false;
 var thrown2 = false;
 var thrown3 = false;
@@ -43,7 +42,6 @@ function startTest() {
     thrown3 = true;
   }
 
-  clearTimeout(timeout);
   completed = true;
   ok(thrown1, "Setting currentTime to invalid value of NaN");
   ok(thrown2, "Setting currentTime to invalid value of -1");
@@ -51,11 +49,6 @@ function startTest() {
   SimpleTest.finish();
   return false;
 }
-
-timeout = setTimeout(function () {
-                       ok(false, "Test timed out");
-                       SimpleTest.finish();
-                     }, 30000);
 
 SimpleTest.waitForExplicitFinish();
 </script>
