@@ -1,0 +1,27 @@
+# Everything here uses HTTP(..) because they use fonts in ../fonts/.  We
+# can't use file:/// URLs because of cross-directory access restrictions
+# on file: URLs.
+
+fails-if(MOZ_WIDGET_TOOLKIT=="gtk2") HTTP(..) != download-1.html download-1-notref.html
+fails-if(MOZ_WIDGET_TOOLKIT=="gtk2") HTTP(..) == download-2.html download-2-ref.html
+HTTP(..) != download-2.html about:blank
+HTTP(..) == fallback-to-system-1.html fallback-to-system-1-ref.html
+fails-if(MOZ_WIDGET_TOOLKIT=="gtk2") HTTP(..) == name-override-simple-1.html name-override-simple-1-ref.html
+fails-if(MOZ_WIDGET_TOOLKIT=="gtk2") HTTP(..) != name-override-simple-1.html download-1-notref.html
+fails HTTP(..) == name-override-1.html name-override-1-ref.html
+HTTP(..) == multiple-descriptor-1.html multiple-descriptor-1-ref.html
+fails-if(MOZ_WIDGET_TOOLKIT=="gtk2") HTTP(..) != multiple-descriptor-1.html multiple-descriptor-1-notref.html
+HTTP(..) == src-list-1.html src-list-1-ref.html
+fails-if(MOZ_WIDGET_TOOLKIT!="gtk2") HTTP(..) == src-list-2.html src-list-2-ref.html
+fails-if(MOZ_WIDGET_TOOLKIT!="gtk2") HTTP(..) == src-list-3.html src-list-3-ref.html
+# FIXME: The behavior here is neither mandated nor specified by the spec, but
+# it really ought to be.
+HTTP(..) == order-1.html src-list-1-ref.html
+fails-if(MOZ_WIDGET_TOOLKIT!="gtk2") HTTP(..) == order-2.html src-list-2-ref.html
+fails-if(MOZ_WIDGET_TOOLKIT!="gtk2") HTTP(..) == order-3.html src-list-3-ref.html
+fails-if(MOZ_WIDGET_TOOLKIT=="cocoa") random-if(MOZ_WIDGET_TOOLKIT=="windows") HTTP(..) == multiple-in-family-1.html multiple-in-family-1-ref.html
+fails-if(MOZ_WIDGET_TOOLKIT=="gtk2") fails-if(MOZ_WIDGET_TOOLKIT=="cocoa") random-if(MOZ_WIDGET_TOOLKIT=="windows") HTTP(..) != multiple-in-family-1.html multiple-in-family-1-notref.html
+random-if(MOZ_WIDGET_TOOLKIT=="windows") HTTP(..) == prop-order-over-rule-order-1a.html prop-order-over-rule-order-2a.html
+random-if(MOZ_WIDGET_TOOLKIT=="windows") HTTP(..) == prop-order-over-rule-order-1b.html prop-order-over-rule-order-2b.html
+random-if(MOZ_WIDGET_TOOLKIT=="windows") fails-if(MOZ_WIDGET_TOOLKIT=="gtk2") HTTP(..) != prop-order-over-rule-order-1a.html prop-order-over-rule-order-1b.html
+fails-if(MOZ_WIDGET_TOOLKIT=="gtk2") HTTP(..) == cross-iframe-1.html cross-iframe-1-ref.html

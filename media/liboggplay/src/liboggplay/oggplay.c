@@ -644,9 +644,12 @@ oggplay_get_duration(OggPlay *me) {
   if (me->reader->duration) 
     return me->reader->duration(me->reader);
   else {
-    ogg_int64_t pos = oggz_tell_units(me->oggz);
-    ogg_int64_t duration = oggz_seek_units(me->oggz, 0, SEEK_END);
+    ogg_int64_t pos;
+    ogg_int64_t duration;
+    pos = oggz_tell_units(me->oggz);
+    duration = oggz_seek_units(me->oggz, 0, SEEK_END);
     oggz_seek_units(me->oggz, pos, SEEK_SET);
+    oggplay_seek_cleanup(me, pos);
     return duration;
   }
 }

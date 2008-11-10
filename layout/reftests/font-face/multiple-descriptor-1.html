@@ -1,0 +1,26 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD HTML 4.01//EN"
+	"http://www.w3.org/TR/html4/strict.dtd">
+<html lang="en-US">
+<head>
+	<title></title>
+	<meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+	<style type="text/css">
+
+	/* The last descriptor in a given rule wins, per CSS 2.0 */
+
+	@font-face {
+		font-family: "One";
+		src: url(../fonts/markB.ttf);
+		src: url(../fonts/markA.ttf);
+		font-family: "Two";
+	}
+
+	</style>
+</head>
+<body>
+
+<p style="font-family: One">ABC</p>
+<p style="font-family: Two">ABC</p>
+
+</body>
+</html>

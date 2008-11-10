@@ -30,6 +30,10 @@ tmpfile_wince.patch: Make Windows CE use tmpfile() on windows mobile due to the 
 
 cairo-version-fixes.patch: fix up cairo-version.c/cairo-version.h for in-place builds
 
+win32-ddb-dib.patch: fix for bug 455513; not upstream yet pending feebdack
+
+qpainter-type.patch: add SURFACE_TYPE_QPAINTER to cairo.h
+
 ==== pixman patches ====
 
 endian.patch: include cairo-platform.h for endian macros
