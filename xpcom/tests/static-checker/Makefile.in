@@ -41,9 +41,8 @@ topsrcdir = @top_srcdir@
 srcdir = @srcdir@
 VPATH = @srcdir@
 
-# MAKE_DIRS: List of directories to build while looping over directories.
-MAKE_DIRS               += $(MDDEPDIR)
-GARBAGE_DIRS            += $(MDDEPDIR)
+# We will do compilations that create dependency files.
+NEED_MDDEPDIR = 1
 
 include $(DEPTH)/config/autoconf.mk
 
