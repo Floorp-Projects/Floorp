@@ -49,6 +49,13 @@
     <handlers>
       <handler event="click" button="0" action="ctrlTab.selectThumbnail(this);"/>
       <handler event="click" button="1" action="gBrowser.removeTab(this._tab);"/>
+#ifdef XP_MACOSX
+# Control+click is a right click on OS X
+      <handler event="click" button="2"><![CDATA[
+        if (!ctrlTab.sticky)
+          ctrlTab.selectThumbnail(this);
+      ]]></handler>
+#endif
     </handlers>
   </binding>
 </bindings>
