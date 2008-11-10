@@ -2292,7 +2292,8 @@ js_NewRegExp(JSContext *cx, JSTokenStream *ts,
      * compile the bytecode version in case we evict the native code
      * version from the code cache.
      */
-    js_CompileRegExpToNative(cx, re, &state);
+    if (TRACING_ENABLED(cx))
+        js_CompileRegExpToNative(cx, re, &state);
 #endif
     /* Compile the bytecode version. */
     endPC = EmitREBytecode(&state, re, state.treeDepth, re->program, state.result);
@@ -2830,9 +2831,6 @@ void
 js_DestroyRegExp(JSContext *cx, JSRegExp *re)
 {
     if (JS_ATOMIC_DECREMENT(&re->nrefs) == 0) {
-#ifdef JS_TRACER
-        JS_TRACE_MONITOR(cx).reFragmento->clearFrag(re);
-#endif
         if (re->classList) {
             uintN i;
             for (i = 0; i < re->classCount; i++) {
@@ -3643,7 +3641,8 @@ MatchRegExp(REGlobalData *gData, REMatchState *x)
     Fragment *fragment;
 
     /* Run with native regexp if possible. */
-    if (((fragment = JS_TRACE_MONITOR(gData->cx).reFragmento->getLoop(gData->regexp)) != NULL)
+    if (TRACING_ENABLED(gData->cx) &&
+        ((fragment = JS_TRACE_MONITOR(gData->cx).reFragmento->getLoop(gData->regexp)) != NULL)
         && fragment->code()) {
         union { NIns *code; REMatchState* (FASTCALL *func)(void*, void*); } u;
         u.code = fragment->code();
