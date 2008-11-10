@@ -53,6 +53,9 @@ include first-letter/reftest.list
 # first-line/
 include first-line/reftest.list
 
+# font-face
+include font-face/reftest.list
+
 # forms
 include forms/reftest.list
 

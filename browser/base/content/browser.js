@@ -6855,6 +6855,8 @@ let gPrivateBrowsingUI = {
     if (BrowserSearch.searchBar)
       BrowserSearch.searchBar.textbox.reset();
 
+    gFindBar.getElement("findbar-textbox").reset();
+
     let pbMenuItem = document.getElementById("privateBrowsingItem");
     if (pbMenuItem)
       pbMenuItem.removeAttribute("checked");
