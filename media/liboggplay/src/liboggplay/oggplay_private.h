@@ -229,6 +229,9 @@ oggplay_set_data_callback_force(OggPlay *me, OggPlayDataCallback callback,
 void
 oggplay_take_out_trash(OggPlay *me, OggPlaySeekTrash *trash);
 
+void
+oggplay_seek_cleanup(OggPlay *me, ogg_int64_t milliseconds);
+
 typedef struct {
   void (*init)(void *user_data);
   int (*callback)(OGGZ * oggz, ogg_packet * op, long serialno,
