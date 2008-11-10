@@ -606,7 +606,13 @@ nsWaveStateMachine::Run()
         monitor.Exit();
         mAudioStream->Drain();
         monitor.Enter();
+        mTimeOffset = mAudioStream->GetTime();
       }
+
+      // Dispose the audio stream early (before SHUTDOWN) so that
+      // GetCurrentTime no longer attempts to query the audio backend for
+      // stream time.
+      CloseAudioStream();
 
       if (mState != STATE_SHUTDOWN) {
         nsCOMPtr<nsIRunnable> event =
