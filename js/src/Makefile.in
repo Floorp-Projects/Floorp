@@ -639,16 +639,20 @@ endif
 # Extra dependancies and rules for auto-generated headers
 host_jskwgen.$(OBJ_SUFFIX): jsversion.h jskeyword.tbl
 
-jsautokw.h: host_jskwgen$(HOST_BIN_SUFFIX)
+# Use CURDIR to avoid finding a jsautokw.h in the source tree (from a
+# previous build?) via VPATH when we're building in a separate tree.
+$(CURDIR)/jsautokw.h: host_jskwgen$(HOST_BIN_SUFFIX)
 	./host_jskwgen$(HOST_BIN_SUFFIX) $@
 
 host_jsoplengen.$(OBJ_SUFFIX): jsopcode.tbl
 
-jsautooplen.h: host_jsoplengen$(HOST_BIN_SUFFIX)
+# Use CURDIR to avoid finding a jsautooplen.h in the source tree (from
+# a previous build?) via VPATH when we're building in a separate tree.
+$(CURDIR)/jsautooplen.h: host_jsoplengen$(HOST_BIN_SUFFIX)
 	./host_jsoplengen$(HOST_BIN_SUFFIX) $@
 
 # Force auto-header generation before compiling any source that may use them
-$(CPPSRCS:%.cpp=%.$(OBJ_SUFFIX)): jsautokw.h jsautooplen.h
+$(CPPSRCS:%.cpp=%.$(OBJ_SUFFIX)): $(CURDIR)/jsautokw.h $(CURDIR)/jsautooplen.h
 
 ifdef HAVE_DTRACE
 javascript-trace.h: $(srcdir)/javascript-trace.d
