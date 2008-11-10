@@ -106,7 +106,7 @@ struct JSRegExp {
     size_t       classCount;    /* count [...] bitmaps */
     RECharSet    *classList;    /* list of [...] bitmaps */
     JSString     *source;       /* locked source string, sans // */
-    jsbytecode   *bytecode;     /* regular expression bytecode */
+    jsbytecode   program[1];    /* regular expression bytecode */
 };
 
 extern JSRegExp *
