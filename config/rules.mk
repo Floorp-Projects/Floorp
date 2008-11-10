@@ -396,8 +396,10 @@ HOST_PROGOBJS		= $(HOST_OBJS)
 endif
 
 # MAKE_DIRS: List of directories to build while looping over directories.
-ifneq (,$(OBJS)$(XPIDLSRCS)$(SDK_XPIDLSRCS)$(SIMPLE_PROGRAMS))
-MAKE_DIRS		+= $(MDDEPDIR)
+# A Makefile that needs $(MDDEPDIR) created but doesn't set any of these
+# variables we know to check can just set NEED_MDDEPDIR explicitly.
+ifneq (,$(OBJS)$(XPIDLSRCS)$(SDK_XPIDLSRCS)$(SIMPLE_PROGRAMS)$(NEED_MDDEPDIR))
+MAKE_DIRS		+= $(CURDIR)/$(MDDEPDIR)
 GARBAGE_DIRS		+= $(MDDEPDIR)
 endif
 
@@ -2041,7 +2043,13 @@ endif # COMPILER_DEPEND
 #   builds (-jN). If this were done in the LOOP_OVER_DIRS macro, two
 #   processes could simultaneously try to create the same directory.
 #
-$(MDDEPDIR):
+#   We use $(CURDIR) in the rule's target to ensure that we don't find
+#   a dependency directory in the source tree via VPATH (perhaps from
+#   a previous build in the source tree) and thus neglect to create a
+#   dependency directory in the object directory, where we really need
+#   it.
+
+$(CURDIR)/$(MDDEPDIR):
 	@if test ! -d $@; then echo Creating $@; rm -rf $@; mkdir $@; else true; fi
 
 ifneq (,$(filter-out all chrome default export realchrome tools clean clobber clobber_all distclean realclean,$(MAKECMDGOALS)))
