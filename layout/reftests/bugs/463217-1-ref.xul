@@ -1,0 +1,7 @@
+<?xml version="1.0"?>
+<window xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
+  <vbox style="height:204px; border:2px solid blue;" flex="0">
+    <image style="list-style-image: url(mozilla-banner.gif);"/>
+  </vbox>
+  <vbox/>
+</window>
