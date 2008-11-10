@@ -79,7 +79,7 @@ var BrowserUI = {
   _throbber : null,
   _autocompleteNavbuttons : null,
   _favicon : null,
-  _faviconAdded : false,
+  _faviconLink : null,
 
   _setContentPosition : function (aProp, aValue) {
     let value = Math.round(aValue);
@@ -117,13 +117,11 @@ var BrowserUI = {
 
   _linkAdded : function(aEvent) {
     var link = aEvent.originalTarget;
-    if (!link || !link.ownerDocument || !link.href)
+    if (!link || !link.href || this._faviconLink )
       return;
 
-    var rel = link.rel && link.rel.toLowerCase();
-    var rels = rel.split(/\s+/);
-    if (rels.indexOf("icon") != -1) {
-      this._setIcon(link.href);
+    if (/\bicon\b/i(link.rel)) {
+      this._faviconLink = link.href 
     }
   },
 
@@ -165,7 +163,6 @@ var BrowserUI = {
 
     fis.setAndLoadFaviconForPage(browser.currentURI, faviconURI, true);
     this._favicon.src = faviconURI.spec;
-    this._faviconAdded = true;
   },
 
   _getBookmarks : function(aFolders) {
@@ -496,7 +493,7 @@ var BrowserUI = {
 
   update : function(aState, aBrowser) {
     if (aState == TOOLBARSTATE_INDETERMINATE) {
-      this._faviconAdded = false;
+      this._faviconLink = null;
       aState = TOOLBARSTATE_LOADED;
       this.setURI();
     }
@@ -509,7 +506,7 @@ var BrowserUI = {
       toolbar.top = 0;
       toolbar.setAttribute("mode", "loading");
       this._favicon.src = "";
-      this._faviconAdded = false;
+      this._faviconLink = null;
       this.updateIcon(aBrowser);
     }
     else if (aState == TOOLBARSTATE_LOADED) {
@@ -518,10 +515,10 @@ var BrowserUI = {
 
       toolbar.setAttribute("mode", "view");
 
-      if (this._faviconAdded == false) {
-        var faviconURI = aBrowser.currentURI.prePath + "/favicon.ico";
-        this._setIcon(faviconURI);
+      if (!this._faviconLink) {
+        this._faviconLink = aBrowser.currentURI.prePath + "/favicon.ico";
       }
+      this._setIcon(this._faviconLink);
       this.updateIcon(aBrowser);
     }
   },
