@@ -196,16 +196,15 @@ write_string(JSContext *cx, JSONWriteCallback callback, void *data, const jschar
         } else if (buf[i] <= 31 || buf[i] == 127) {
             if (!callback(&buf[mark], i - mark, data) || !callback(unicodeEscape, 4, data))
                 return JS_FALSE;
-            char ubuf[10];
-            unsigned int len = JS_snprintf(ubuf, sizeof(ubuf), "%.2x", buf[i]);
+            char ubuf[3];
+            size_t len = JS_snprintf(ubuf, sizeof(ubuf), "%.2x", buf[i]);
             JS_ASSERT(len == 2);
-            // FIXME: bug 463715 - don't allocate a JSString just to inflate
-            // (js_InflateStringToBuffer on static?)
-            JSString *us = JS_NewStringCopyN(cx, ubuf, len);
-            if (!us)
+            jschar wbuf[3];
+            size_t wbufSize = JS_ARRAY_LENGTH(wbuf);
+            if (!js_InflateStringToBuffer(cx, ubuf, len, wbuf, &wbufSize) ||
+                !callback(wbuf, wbufSize, data)) {
                 return JS_FALSE;
-            if (!callback(JS_GetStringChars(us), len, data))
-                return JS_FALSE;
+            }
             mark = i + 1;
         }
     }
