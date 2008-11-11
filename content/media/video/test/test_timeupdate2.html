@@ -15,7 +15,6 @@
 <script class="testbody" type="text/javascript">
 // Test if the media size during the first timeupdate is correct.
 var completed = false;
-var timeout;
 
 function startTest() {
   if (completed)
@@ -38,11 +37,6 @@ function timeUpdated() {
   SimpleTest.finish();
   return false;
 }
-
-timeout = setTimeout(function () {
-                       ok(false, "Test timed out");
-                       SimpleTest.finish();
-                     }, 30000);
 
 SimpleTest.waitForExplicitFinish();
 </script>

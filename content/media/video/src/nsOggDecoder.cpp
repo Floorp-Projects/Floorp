@@ -708,7 +708,7 @@ void nsOggDecodeStateMachine::OpenAudioStream()
     LOG(PR_LOG_ERROR, ("Could not create audio stream"));
   }
   else {
-    mAudioStream->Init(mAudioChannels, mAudioRate);
+    mAudioStream->Init(mAudioChannels, mAudioRate, nsAudioStream::FORMAT_FLOAT32_LE);
     mAudioStream->SetVolume(mVolume);
   }
 }

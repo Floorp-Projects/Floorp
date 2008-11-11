@@ -21,7 +21,6 @@ var seekFlagStart = false;
 var seekFlagEnd = false;
 var readonly = true;
 var completed = false;
-var timeout;
 
 ok(!document.getElementById('v').seeking, "seeking should default to false");
 try {
@@ -73,15 +72,9 @@ function playbackEnded() {
   ok(endPassed, "seeked event");
   ok(seekFlagStart, "seeking flag on start should be true");
   ok(!seekFlagEnd, "seeking flag on end should be false");
-  clearTimeout(timeout);
   SimpleTest.finish();
   return false;
 }
-
-timeout = setTimeout(function () {
-		       ok(false, "Test timed out");
-		       SimpleTest.finish();
-		     }, 30000);
 
 SimpleTest.waitForExplicitFinish();
 </script>
