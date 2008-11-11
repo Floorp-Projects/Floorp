@@ -1623,9 +1623,9 @@ function testNestedExitStackOuter() {
 }
 testNestedExitStackOuter.expected = 81;
 testNestedExitStackOuter.jitstats = {
-    recorderStarted: 4,
+    recorderStarted: 3,
     recorderAborted: 0,
-    traceTriggered: 8
+    traceTriggered: 7
 };
 test(testNestedExitStackOuter);
 
@@ -1952,6 +1952,78 @@ function testReallyDeepNestedExit()
 }
 testReallyDeepNestedExit.expected = 198;
 test(testReallyDeepNestedExit);
+
+function testRegExpTest() {
+    var r = /abc/;
+    var flag = false;
+    for (var i = 0; i < 10; ++i)
+	flag = r.test("abc");
+    return flag;
+}
+testRegExpTest.expected = true;
+test(testRegExpTest);
+
+function testNumToString() {
+    var r = [];
+    var d = 123456789;
+    for (var i = 0; i < 10; ++i) {
+	r = [
+	     d.toString(),
+	     (-d).toString(),
+	     d.toString(10),
+	     (-d).toString(10),
+	     d.toString(16),
+	     (-d).toString(16),
+	     d.toString(36),
+	     (-d).toString(36)
+        ];
+    }
+    return r.join(",");
+}
+testNumToString.expected = "123456789,-123456789,123456789,-123456789,75bcd15,-75bcd15,21i3v9,-21i3v9";
+test(testNumToString);
+
+function testSubstring() {
+    for (var i = 0; i < 5; ++i) {
+        actual = "".substring(5);
+    }
+    return actual;
+}
+testSubstring.expected = "";
+test(testSubstring);
+
+function testForInLoopChangeIteratorType() {
+    for(y in [0,1,2]) y = NaN;
+    (function(){ [].__proto__.u = void 0; for (let y in [5,6,7,8]) y = NaN; })()
+    return "ok";
+}
+testForInLoopChangeIteratorType.expected = "ok";
+test(testForInLoopChangeIteratorType);
+
+function testGrowDenseArray() {
+    var a = new Array();
+    for (var i = 0; i < 10; ++i)
+	a[i] |= 5;
+    return a.join(",");
+}
+testGrowDenseArray.expected = "5,5,5,5,5,5,5,5,5,5";
+test(testGrowDenseArray);
+
+function testCallProtoMethod() {
+    function X() { this.x = 1; }
+    X.prototype.getName = function () { return "X"; }
+
+    function Y() { this.x = 2; }
+    Y.prototype.getName = function() "Y";
+
+    var a = [new X, new X, new X, new X, new Y];
+    var s = '';
+    for (var i = 0; i < a.length; i++)
+        s += a[i].getName();
+    return s;
+}
+testCallProtoMethod.expected = 'XXXXY';
+test(testCallProtoMethod);
 
 jit(false);
 
