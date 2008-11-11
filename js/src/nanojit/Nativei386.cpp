@@ -144,7 +144,7 @@ namespace nanojit
 	}
 
     void Assembler::asm_align_code() {
-        static char nop[][9] = {
+        static uint8_t nop[][9] = {
                 {0x90},
                 {0x66,0x90},
                 {0x0f,0x1f,0x00},
