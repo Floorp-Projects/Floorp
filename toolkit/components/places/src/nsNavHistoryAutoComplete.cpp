@@ -620,17 +620,20 @@ nsNavHistory::StartSearch(const nsAString & aSearchString,
   NS_ENSURE_SUCCESS(rv, rv);
   mCurrentResult->SetSearchString(aSearchString);
 
+  // Short circuit to give no results if we don't need to search for matches.
   // Use the previous in-progress search by looking at which urls it found if
   // the new search begins with the old one and both aren't empty. We don't run
   // into bug 412730 because we only specify urls and not titles to look at.
   // Also, only reuse the search if the previous and new search both start with
   // javascript: or both don't. (bug 417798)
-  if (!prevSearchString.IsEmpty() &&
-      StringBeginsWith(mCurrentSearchString, prevSearchString) &&
-      (StartsWithJS(prevSearchString) == StartsWithJS(mCurrentSearchString))) {
+  if (mAutoCompleteSearchSources == SEARCH_NONE ||
+      (!prevSearchString.IsEmpty() &&
+       StringBeginsWith(mCurrentSearchString, prevSearchString) &&
+       (StartsWithJS(prevSearchString) == StartsWithJS(mCurrentSearchString)))) {
 
     // Got nothing before? We won't get anything new, so stop now
-    if (mAutoCompleteFinishedSearch && prevMatchCount == 0) {
+    if (mAutoCompleteSearchSources == SEARCH_NONE ||
+        (mAutoCompleteFinishedSearch && prevMatchCount == 0)) {
       // Set up the result to let the listener know that there's nothing
       mCurrentResult->SetSearchResult(nsIAutoCompleteResult::RESULT_NOMATCH);
       mCurrentResult->SetDefaultIndex(-1);
@@ -794,6 +797,13 @@ nsNavHistory::ProcessTokensForSpecialSearch()
   mRestrictTag = mAutoCompleteRestrictTag.IsEmpty();
   mMatchTitle = mAutoCompleteMatchTitle.IsEmpty();
   mMatchUrl = mAutoCompleteMatchUrl.IsEmpty();
+
+  // If we're searching only one of history or bookmark, we can use filters
+  if (mAutoCompleteSearchSources == SEARCH_HISTORY)
+    mRestrictHistory = PR_TRUE;
+  else if (mAutoCompleteSearchSources == SEARCH_BOOKMARK)
+    mRestrictBookmark = PR_TRUE;
+  // SEARCH_BOTH doesn't require any filtering
 
   // Determine which special searches to apply
   for (PRInt32 i = mCurrentSearchTokens.Count(); --i >= 0; ) {

@@ -254,6 +254,10 @@ _TEST_FILES = 	test_bug5141.html \
 		file_XHRDocURI.text \
 		file_XHRDocURI.text^headers^ \
 		test_bug459424.html \
+		bug461735-redirect1.sjs \
+		bug461735-redirect2.sjs \
+		bug461735-post-redirect.js \
+		test_bug461735.html \
 		$(NULL)
 
 # Disabled for now. Mochitest isn't reliable enough for these.

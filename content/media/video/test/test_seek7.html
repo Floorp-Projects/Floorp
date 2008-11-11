@@ -19,7 +19,6 @@ var v = document.getElementById('v');
 var seekCount = 0;
 var completed = false;
 var interval;
-var timeout;
 
 function startTest() {
   if (completed)
@@ -37,17 +36,11 @@ function seekEnded() {
   ok(true, "Seek " + seekCount);
   if (seekCount == 3) {
     clearInterval(interval);
-    clearTimeout(timeout);
     completed = true;
     SimpleTest.finish();
   }
   return false;
 }
-
-timeout = setTimeout(function () {
-                       ok(false, "Test timed out");
-                       SimpleTest.finish();
-                     }, 30000);
 
 SimpleTest.waitForExplicitFinish();
 </script>
