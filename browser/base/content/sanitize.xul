@@ -102,17 +102,10 @@
         
         sanitize: function ()
         {
-          // Update pref values before handing off to the sanitizer (bug 453440)
-          this.updatePrefs();
           var s = new Sanitizer();
           s.ignoreTimespan = false;
           s.prefDomain = "privacy.cpd.";
-          try {
-            s.sanitize();
-          } catch (er) {
-            Components.utils.reportError("Exception during sanitize: " + er);
-          }
-          return true;
+          s.sanitize();
         },
         
         onReadGeneric: function ()
@@ -162,18 +155,6 @@
           if (history.checked)
             downloads.checked = true;
         },
-        
-        updatePrefs : function ()
-        {
-          var tsPref = document.getElementById("privacy.sanitize.timeSpan");
-          Sanitizer.prefs.setIntPref("timeSpan", tsPref.value);
-          var sanitizePreferences = document.getElementById("sanitizePreferences");
-          var prefs = sanitizePreferences.rootBranch;
-          for (var i = 0; i < sanitizePreferences.childNodes.length; ++i) {
-            var p = sanitizePreferences.childNodes[i];
-            prefs.setBoolPref(p.name, p.value);
-          }
-        }
       };
     ]]>
     </script>
