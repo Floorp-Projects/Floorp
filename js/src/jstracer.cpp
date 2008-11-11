@@ -344,7 +344,7 @@ static inline bool isInt32(jsval v)
 /* Return JSVAL_DOUBLE for all numbers (int and double) and the tag otherwise. */
 static inline uint8 getPromotedType(jsval v) 
 {
-    return JSVAL_IS_INT(v) ? JSVAL_DOUBLE : JSVAL_TAG(v);
+    return JSVAL_IS_INT(v) ? JSVAL_DOUBLE : uint8(JSVAL_TAG(v));
 }
 
 /* Return JSVAL_INT for all whole numbers that fit into signed 32-bit and the tag otherwise. */
@@ -5476,7 +5476,7 @@ TraceRecorder::functionCall(bool constructing)
         }
 
         for (i = knownargc; i--; ) {
-            jsval& arg = (!constructing && i == 0 && arg1_ins) ? arg1 : stackval(-(i + 1));
+            jsval& arg = (!constructing && i == 0 && arg1_ins) ? arg1 : stackval(0 - (i + 1));
             *argp = (!constructing && i == 0 && arg1_ins) ? arg1_ins : get(&arg);
 
             argtype = known->argtypes[i];
