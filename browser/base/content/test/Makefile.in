@@ -54,6 +54,7 @@ _TEST_FILES =	test_feed_discovery.html \
 
 # browser_bug423833.js disabled temporarily since it's unreliable: bug 428712
 # browser_sanitize-download-history.js disabled temporarily since it's unreliable: bug 432425
+# browser_ctrlTab.js disabled since it seems to be causing subsequent tests to fail:  bug 464141
 _BROWSER_FILES = browser_bug321000.js \
                  browser_sanitize-timespans.js \
                  browser_bug405137.js \
@@ -68,7 +69,6 @@ _BROWSER_FILES = browser_bug321000.js \
                  browser_getshortcutoruri.js \
                  browser_page_style_menu.js \
                  page_style_sample.html \
-                 browser_ctrlTab.js \
                  browser_selectTabAtIndex.js \
                  browser_gestureSupport.js \
                  browser_feed_tab.js \
