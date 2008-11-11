@@ -840,8 +840,8 @@
       </method>
 
       <!-- Given a set of client coordinates (relative to the app window),
-           returns the content coordinates relative to the viewport.
-      -->
+        -  returns the content coordinates relative to the viewport.
+       -->
       <method name="_clientToContentCoords">
         <parameter name="aClientX"/>
         <parameter name="aClientY"/>
@@ -895,13 +895,13 @@
          ]]></getter>
       </property>
 
-      /**
-       * Given a set of page coordinates, constrain them such that they
-       * fit within the rect defined by [0,0] and [x,y], where x and y are
-       * the maximum values that can be used for the canvas' .top and .left
-       * such that it is still within the scrollable area of the page, taking
-       * into account the current zoomLevel.
-       */
+      <!--
+        - Given a set of page coordinates, constrain them such that they
+        - fit within the rect defined by [0,0] and [x,y], where x and y are
+        - the maximum values that can be used for the canvas' .top and .left
+        - such that it is still within the scrollable area of the page, taking
+        - into account the current zoomLevel.
+       -->
       <method name="_constrainPanCoords">
         <parameter name="aX"/>
         <parameter name="aY"/>
