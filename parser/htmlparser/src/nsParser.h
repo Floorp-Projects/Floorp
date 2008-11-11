@@ -94,7 +94,6 @@ class nsICharsetConverterManager;
 class nsICharsetAlias;
 class nsIDTD;
 class nsScanner;
-class nsIProgressEventSink;
 class nsSpeculativeScriptThread;
 class nsIThreadPool;
 
@@ -104,11 +103,9 @@ class nsIThreadPool;
 
 
 class nsParser : public nsIParser,
-                 public nsIStreamListener{
-
-  
+                 public nsIStreamListener
+{
   public:
-    friend class CTokenHandler;
     /**
      * Called on module init
      */
