@@ -18,7 +18,6 @@
 var v = document.getElementById('v');
 var completed = false;
 var playCount = 0;
-var timeout;
 
 function startTest() {
   if (completed)
@@ -48,15 +47,10 @@ function playbackEnded() {
   else {
     ok(playCount == 2, "Check playback after ended event");
     completed = true;
-    clearTimeout(timeout);
     SimpleTest.finish();
   }
   return false;
 }
-timeout = setTimeout(function () {
-                       ok(false, "Test timed out");
-                       SimpleTest.finish();
-                     }, 30000);
 
 SimpleTest.waitForExplicitFinish();
 </script>

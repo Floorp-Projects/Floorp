@@ -1,16 +1,17 @@
 <!DOCTYPE HTML>
 <html>
 <head>
-  <title>Media test: ended</title>
+  <title>Wave Media test: 8-bit sample format</title>
   <script type="text/javascript" src="/MochiKit/MochiKit.js"></script>
   <script type="text/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
   <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
 </head>
 <body>
-<video id='v'
-       src='seek.ogg'
+<audio id='v'
        onloadedmetadata='return startTest();'
-       onended='return playbackEnded();'></video>
+       onended='return playbackEnded();'>
+  <source type='audio/x-wav' src='r11025_u8_c1.wav'>
+</audio>
 <pre id="test">
 <script class="testbody" type="text/javascript">
 // Test if the ended event works correctly.
@@ -31,7 +32,7 @@ function playbackEnded() {
     return false
 
   completed = true;
-  ok(v.currentTime >= 3.9 && v.currentTime <= 4.0,
+  ok(v.currentTime >= 0.9 && v.currentTime <= 1.1,
      "Checking currentTime at end: " + v.currentTime);
   ok(v.ended, "Checking playback has ended");
   SimpleTest.finish();

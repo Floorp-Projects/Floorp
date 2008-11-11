@@ -7877,12 +7877,13 @@ nsWindow :: DealWithPopups ( HWND inWnd, UINT inMsg, WPARAM inWParam, LPARAM inL
         inMsg == WM_NCRBUTTONDOWN || 
         inMsg == WM_MOVING || 
         inMsg == WM_SIZING || 
-        inMsg == WM_GETMINMAXINFO ||
         inMsg == WM_NCLBUTTONDOWN || 
         inMsg == WM_NCMBUTTONDOWN ||
         inMsg == WM_MOUSEACTIVATE ||
         inMsg == WM_ACTIVATEAPP ||
         inMsg == WM_MENUSELECT ||
+        // Non-toplevel windows normally don't get WM_GETMINMAXINFO.
+        // Therefore if a non-toplevel window gets this message, we should ignore it.
         (inMsg == WM_GETMINMAXINFO && !::GetParent(inWnd))
 #endif
         )

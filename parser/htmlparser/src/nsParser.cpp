@@ -200,7 +200,7 @@ private:
 class nsSpeculativeScriptThread : public nsIRunnable {
 public:
   nsSpeculativeScriptThread()
-    : mLock(PR_DestroyLock),
+    : mLock(nsAutoLock::DestroyLock),
       mCVar(PR_DestroyCondVar),
       mKeepParsing(0),
       mCurrentlyParsing(0),
@@ -257,7 +257,7 @@ public:
 
 private:
 
-  nsresult ProcessToken(CToken *aToken);
+  void ProcessToken(CToken *aToken);
 
   void AddToPrefetchList(const nsAString &src,
                          const nsAString &charset,
@@ -272,8 +272,8 @@ private:
   Holder<PRLock> mLock;
   Holder<PRCondVar> mCVar;
 
-  PRUint32 mKeepParsing;
-  PRUint32 mCurrentlyParsing;
+  volatile PRUint32 mKeepParsing;
+  volatile PRUint32 mCurrentlyParsing;
   nsRefPtr<nsHTMLTokenizer> mTokenizer;
   nsAutoPtr<nsScanner> mScanner;
 
@@ -381,7 +381,7 @@ nsSpeculativeScriptThread::Run()
   while (mKeepParsing) {
     PRBool flushTokens = PR_FALSE;
     nsresult rv = mTokenizer->ConsumeToken(*mScanner, flushTokens);
-    if (rv == kEOF) {
+    if (NS_FAILED(rv)) {
       break;
     }
 
@@ -389,16 +389,18 @@ nsSpeculativeScriptThread::Run()
 
     // TODO Don't pop the tokens.
     CToken *token;
-    while (mKeepParsing && NS_SUCCEEDED(rv) && (token = mTokenizer->PopToken())) {
-      rv = ProcessToken(token);
+    while (mKeepParsing && (token = mTokenizer->PopToken())) {
+      ProcessToken(token);
     }
   }
   mTokenizer->DidTokenize(PR_FALSE);
 
-  nsAutoLock al(mLock.get());
+  {
+    nsAutoLock al(mLock.get());
 
-  mCurrentlyParsing = 0;
-  PR_NotifyCondVar(mCVar.get());
+    mCurrentlyParsing = 0;
+    PR_NotifyCondVar(mCVar.get());
+  }
   return NS_OK;
 }
 
@@ -425,7 +427,7 @@ nsSpeculativeScriptThread::StartParsing(nsParser *aParser)
   nsAutoString toScan;
   CParserContext *context = aParser->PeekContext();
   if (!mLock.get()) {
-    mLock = PR_NewLock();
+    mLock = nsAutoLock::NewLock("nsSpeculativeScriptThread::mLock");
     if (!mLock.get()) {
       return NS_ERROR_OUT_OF_MEMORY;
     }
@@ -496,7 +498,7 @@ nsSpeculativeScriptThread::StartParsing(nsParser *aParser)
 }
 
 void
-nsSpeculativeScriptThread::StopParsing(PRBool aFromDocWrite)
+nsSpeculativeScriptThread::StopParsing(PRBool /*aFromDocWrite*/)
 {
   NS_ASSERTION(NS_IsMainThread(), "Can't stop parsing from another thread");
 
@@ -533,10 +535,9 @@ nsSpeculativeScriptThread::StopParsing(PRBool aFromDocWrite)
   // Note: Currently, we pop the tokens off (see the comment in Run) so this
   // isn't a problem. If and when we actually use the tokens created
   // off-thread, we'll need to use aFromDocWrite for real.
-  (void)aFromDocWrite;
 }
 
-nsresult
+void
 nsSpeculativeScriptThread::ProcessToken(CToken *aToken)
 {
   // Only called on the speculative script thread.
@@ -635,7 +636,6 @@ nsSpeculativeScriptThread::ProcessToken(CToken *aToken)
   }
 
   IF_FREE(aToken, &mTokenAllocator);
-  return NS_OK;
 }
 
 void
@@ -1538,7 +1538,6 @@ nsParser::DidBuildModel(nsresult anErrorCode)
 void
 nsParser::SpeculativelyParse()
 {
-#if 0 // Disable temporarily to see if this is the cause of the bustage.
   if (mParserContext->mParserCommand == eViewNormal &&
       !mParserContext->mMimeType.EqualsLiteral("text/html")) {
     return;
@@ -1555,7 +1554,6 @@ nsParser::SpeculativelyParse()
   if (NS_FAILED(rv)) {
     mSpeculativeScriptThread = nsnull;
   }
-#endif
 }
 
 /**
