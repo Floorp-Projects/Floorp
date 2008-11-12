@@ -691,24 +691,30 @@ nsHTMLSelectElement::GetLength(PRUint32* aLength)
   return mOptions->GetLength(aLength);
 }
 
+#define MAX_DYNAMIC_SELECT_LENGTH 10000
+
 NS_IMETHODIMP
 nsHTMLSelectElement::SetLength(PRUint32 aLength)
 {
   nsresult rv=NS_OK;
 
   PRUint32 curlen;
-  PRInt32 i;
+  PRUint32 i;
 
   rv = GetLength(&curlen);
   if (NS_FAILED(rv)) {
     curlen = 0;
   }
 
-  if (curlen && (curlen > aLength)) { // Remove extra options
-    for (i = (curlen - 1); (i >= (PRInt32)aLength) && NS_SUCCEEDED(rv); i--) {
-      rv = Remove(i);
+  if (curlen > aLength) { // Remove extra options
+    for (i = curlen; i > aLength && NS_SUCCEEDED(rv); --i) {
+      rv = Remove(i-1);
     }
-  } else if (aLength) {
+  } else if (aLength > curlen) {
+    if (aLength > MAX_DYNAMIC_SELECT_LENGTH) {
+      return NS_ERROR_DOM_NOT_SUPPORTED_ERR;
+    }
+    
     // This violates the W3C DOM but we do this for backwards compatibility
     nsCOMPtr<nsINodeInfo> nodeInfo;
 
@@ -729,7 +735,7 @@ nsHTMLSelectElement::SetLength(PRUint32 aLength)
 
     nsCOMPtr<nsIDOMNode> node(do_QueryInterface(element));
 
-    for (i = curlen; i < (PRInt32)aLength; i++) {
+    for (i = curlen; i < aLength; i++) {
       nsCOMPtr<nsIDOMNode> tmpNode;
 
       rv = AppendChild(node, getter_AddRefs(tmpNode));
