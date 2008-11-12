@@ -2746,26 +2746,6 @@ NSEvent* gLastDragEvent = nil;
 }
 
 
-// Override in order to keep our mouse enter/exit tracking rect in sync with
-// the frame of the view
-- (void)setFrame:(NSRect)frameRect
-{
-  NS_OBJC_BEGIN_TRY_ABORT_BLOCK;
-
-  [super setFrame:frameRect];
-  if (mMouseEnterExitTag)
-    [self removeTrackingRect:mMouseEnterExitTag];
-
-  if ([self window])
-    mMouseEnterExitTag = [self addTrackingRect:[self bounds]
-                                         owner:self
-                                      userData:nil
-                                  assumeInside:[[self window] acceptsMouseMovedEvents]];
-
-  NS_OBJC_END_TRY_ABORT_BLOCK;
-}
-
-
 // Make the origin of this view the topLeft corner (gecko origin) rather
 // than the bottomLeft corner (standard cocoa origin).
 - (BOOL)isFlipped
@@ -2848,34 +2828,6 @@ NSEvent* gLastDragEvent = nil;
 - (BOOL)acceptsFirstResponder
 {
   return YES;
-}
-
-
-- (void)viewWillMoveToWindow:(NSWindow *)newWindow
-{
-  NS_OBJC_BEGIN_TRY_ABORT_BLOCK;
-
-  if (mMouseEnterExitTag)
-    [self removeTrackingRect:mMouseEnterExitTag];
-
-  [super viewWillMoveToWindow:newWindow];
-
-  NS_OBJC_END_TRY_ABORT_BLOCK;
-}
-
-
-- (void)viewDidMoveToWindow
-{
-  NS_OBJC_BEGIN_TRY_ABORT_BLOCK;
-
-  if ([self window])
-    mMouseEnterExitTag = [self addTrackingRect:[self bounds] owner:self
-                                      userData:nil assumeInside: [[self window]
-                                      acceptsMouseMovedEvents]];
-
-  [super viewDidMoveToWindow];
-
-  NS_OBJC_END_TRY_ABORT_BLOCK;
 }
 
 
