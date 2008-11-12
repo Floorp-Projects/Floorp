@@ -100,15 +100,6 @@ radio[pane=paneAdvanced][selected="true"] {
 	-moz-image-region: rect(32px, 224px, 64px, 192px)
 }
 
-/* General Pane */
-#browserHomePage {
-  padding-top: 2px;
-  padding-bottom: 3px;
-  -moz-padding-start: 4px;
-  -moz-padding-end: 2px;
-  background-color: -moz-Dialog;
-}
-
 /* Applications Pane */
 #BrowserPreferences[animated="true"] #handlersView {
   height: 25em;
