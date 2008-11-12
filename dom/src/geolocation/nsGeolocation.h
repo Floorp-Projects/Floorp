@@ -119,13 +119,6 @@ public:
   void AddLocator(nsGeolocation* locator);
   void RemoveLocator(nsGeolocation* locator);
 
-  // Returns the last geolocation we have seen since calling StartDevice()
-  already_AddRefed<nsIDOMGeoPosition> GetLastKnownPosition();
-  
-  // Returns true if the we have successfully found and started a
-  // geolocation device
-  PRBool   IsDeviceReady();
-
   // Returns true if there is a geolocation provider registered.
   PRBool   HasGeolocationProvider();
 
