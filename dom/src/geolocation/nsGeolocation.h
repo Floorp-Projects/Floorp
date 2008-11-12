@@ -88,7 +88,6 @@ class nsGeolocationRequest : public nsIGeolocationRequest, public nsITimerCallba
   void NotifyError(PRInt16 errorCode);
   PRPackedBool mAllowed;
   PRPackedBool mCleared;
-  PRPackedBool mFuzzLocation;
   PRPackedBool mHasSentData;
 
   nsCOMPtr<nsITimer> mTimeoutTimer;
@@ -97,24 +96,6 @@ class nsGeolocationRequest : public nsIGeolocationRequest, public nsITimerCallba
   nsCOMPtr<nsIDOMGeoPositionOptions> mOptions;
 
   nsGeolocation* mLocator; // The locator exists longer than this object.
-};
-
-/**
- * Simple object that holds a single point in space.
- */ 
-class nsGeoPosition : public nsIDOMGeoPosition
-{
-public:
-  NS_DECL_ISUPPORTS
-  NS_DECL_NSIDOMGEOPOSITION
-
-    nsGeoPosition(double aLat, double aLong, double aAlt, double aHError, double aVError, double aHeading, double aSpeed, long long aTimestamp)
-    : mLat(aLat), mLong(aLong), mAlt(aAlt), mHError(aHError), mVError(aVError), mHeading(aHeading), mSpeed(aSpeed), mTimestamp(aTimestamp){};
-
-private:
-  ~nsGeoPosition(){}
-  double mLat, mLong, mAlt, mHError, mVError, mHeading, mSpeed;
-  long long mTimestamp;
 };
 
 /**

@@ -923,11 +923,6 @@ GeolocationPrompt.prototype = {
         callback: function() request.allow() ,
         },
         {
-        label: browserBundle.GetStringFromName("geolocation.neighborhoodLocation"),
-        accessKey: browserBundle.GetStringFromName("geolocation.neighborhoodLocationKey"),
-        callback: function() request.allowButFuzz() ,
-        },
-        {
         label: browserBundle.GetStringFromName("geolocation.nothingLocation"),
         accessKey: browserBundle.GetStringFromName("geolocation.nothingLocationKey"),
         callback: function() request.cancel() ,
