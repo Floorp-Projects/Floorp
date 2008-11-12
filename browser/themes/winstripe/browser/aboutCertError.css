@@ -86,7 +86,7 @@ body[dir="rtl"] #errorPageContainer {
 }
 
 #technicalContent > h2, #expertContent > h2 {
-  background : url("chrome://browser/skin/section_expanded.png") left 0 no-repeat;
+  background : url("chrome://browser/skin/section_expanded.png") left center no-repeat;
 }
 
 #technicalContent[collapsed] > h2,
