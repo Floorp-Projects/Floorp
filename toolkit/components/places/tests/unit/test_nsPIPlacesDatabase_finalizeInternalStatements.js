@@ -1,6 +1,6 @@
-/* -*- Mode: C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*-
- * vim: sw=2 ts=2 sts=2
- * ***** BEGIN LICENSE BLOCK *****
+/* -*- Mode: Java; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
+/* vim:set ts=2 sw=2 sts=2 et: */
+/* ***** BEGIN LICENSE BLOCK *****
  * Version: MPL 1.1/GPL 2.0/LGPL 2.1
  *
  * The contents of this file are subject to the Mozilla Public License Version
@@ -13,15 +13,14 @@
  * for the specific language governing rights and limitations under the
  * License.
  *
- * The Original Code is Places code
+ * The Original Code is Places Unit Test Code.
  *
- * The Initial Developer of the Original Code is
- * Mozilla Corporation.
+ * The Initial Developer of the Original Code is Mozilla Corp.
  * Portions created by the Initial Developer are Copyright (C) 2008
  * the Initial Developer. All Rights Reserved.
  *
  * Contributor(s):
- *   Shawn Wilsher <me@shawnwilsher.com> (Original Author)
+ *  Marco Bonardo <mak77bonardo.net> (Original Author)
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -37,26 +36,14 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-#include "nsISupports.idl"
+// main
+function run_test() {
+  var hs = Cc["@mozilla.org/browser/nav-history-service;1"].
+           getService(Ci.nsINavHistoryService);
 
-interface mozIStorageConnection;
+  var mDBConn = hs.QueryInterface(Ci.nsPIPlacesDatabase).DBConnection;
 
-/**
- * This is a private interface used by Places components to get access to the
- * database.  If outside consumers wish to use this, they should only read from
- * the database so they do not break any internal invariants.
- */
-[scriptable, uuid(8e6d4f8a-4b8e-4026-9fca-517c4494ddb7)]
-interface nsPIPlacesDatabase : nsISupports
-{
-  /**
-   * The database connection used by Places.
-   */
-  readonly attribute mozIStorageConnection DBConnection;
-
-  /**
-   * Finalizes all Places internal statements, allowing to safely close the
-   * database connection.
-   */
-  void finalizeInternalStatements();
-};
+  hs.QueryInterface(Ci.nsPIPlacesDatabase).finalizeInternalStatements();
+  mDBConn.close();
+  do_check_false(mDBConn.connectionReady);
+}

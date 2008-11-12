@@ -2007,3 +2007,22 @@ nsAnnotationService::CallSetForItemObservers(PRInt64 aItemId, const nsACString& 
   for (PRInt32 i = 0; i < mObservers.Count(); i ++)
     mObservers[i]->OnItemAnnotationSet(aItemId, aName);
 }
+
+void
+nsAnnotationService::FinalizeStatements() {
+    mDBSetAnnotation = nsnull;
+    mDBSetItemAnnotation = nsnull;
+    mDBGetAnnotation = nsnull;
+    mDBGetItemAnnotation = nsnull;
+    mDBGetAnnotationNames = nsnull;
+    mDBGetItemAnnotationNames = nsnull;
+    mDBGetAnnotationFromURI = nsnull;
+    mDBGetAnnotationFromItemId = nsnull;
+    mDBGetAnnotationNameID = nsnull;
+    mDBAddAnnotationName = nsnull;
+    mDBAddAnnotation = nsnull;
+    mDBAddItemAnnotation = nsnull;
+    mDBRemoveAnnotation = nsnull;
+    mDBRemoveItemAnnotation = nsnull;
+    mDBGetItemsWithAnnotation = nsnull;
+}
