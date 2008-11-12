@@ -100,6 +100,20 @@ namespace nanojit
 		#define NanoAssert(a)             do { } while (0) /* no semi */
 	#endif
 
+	/*
+	 * Sun Studio C++ compiler has a bug
+	 * "sizeof expression not accepted as size of array parameter"
+	 * The bug number is 6688515. It is not public yet.
+	 * Turn off this assert for Sun Studio until this bug is fixed.
+	 */
+	#ifdef __SUNPRO_CC
+		#define NanoStaticAssert(condition)
+	#else
+		#define NanoStaticAssert(condition) \
+			extern void nano_static_assert(int arg[(condition) ? 1 : -1])
+	#endif
+
+
 	/**
 	 * -------------------------------------------
 	 * END AVM bridging definitions
