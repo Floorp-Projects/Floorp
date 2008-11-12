@@ -2095,6 +2095,11 @@ function losslessDecodeURI(aURI) {
                          encodeURIComponent);
     } catch (e) {}
 
+  // Encode invisible characters (invisible control characters, soft hyphen,
+  // zero-width space, BOM, line separator, paragraph separator) (bug 452979)
+  value = value.replace(/[\v\x0c\x1c\x1d\x1e\x1f\u00ad\u200b\ufeff\u2028\u2029]/g,
+                        encodeURIComponent);
+
   // Encode bidirectional formatting characters.
   // (RFC 3987 sections 3.2 and 4.1 paragraph 6)
   value = value.replace(/[\u200e\u200f\u202a\u202b\u202c\u202d\u202e]/g,
