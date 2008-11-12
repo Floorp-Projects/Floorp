@@ -74,6 +74,7 @@ class nsGeolocationRequest : public nsIGeolocationRequest, public nsITimerCallba
                        nsIDOMGeoPositionCallback* callback,
                        nsIDOMGeoPositionErrorCallback* errorCallback,
                        nsIDOMGeoPositionOptions* options);
+  nsresult Init();
   void Shutdown();
 
   void SendLocation(nsIDOMGeoPosition* location);
@@ -145,6 +146,9 @@ public:
   // geolocation device
   PRBool   IsDeviceReady();
 
+  // Returns true if there is a geolocation provider registered.
+  PRBool   HasGeolocationProvider();
+
   // Find and startup a geolocation device (gps, nmea, etc.)
   nsresult StartDevice();
 
@@ -168,6 +172,9 @@ private:
 
   // The object providing geo location information to us.
   nsCOMPtr<nsIGeolocationProvider> mProvider;
+
+  // A flag that lets us know if the mProvider has been started up.
+  PRBool mProviderStarted;
 
   // mGeolocators are not owned here.  Their constructor
   // addes them to this list, and their destructor removes
