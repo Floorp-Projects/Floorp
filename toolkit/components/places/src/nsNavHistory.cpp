@@ -5279,6 +5279,32 @@ nsNavHistory::GetDBConnection(mozIStorageConnection **_DBConnection)
   return NS_OK;
 }
 
+NS_IMETHODIMP
+nsNavHistory::FinalizeInternalStatements()
+{
+  NS_ASSERTION(NS_IsMainThread(), "This can only be called on the main thread");
+
+  // nsNavHistory
+  FinalizeStatements();
+
+  // nsNavBookmarks
+  nsNavBookmarks* bookmarks = nsNavBookmarks::GetBookmarksService();
+  NS_ENSURE_TRUE(bookmarks, NS_ERROR_OUT_OF_MEMORY);
+  bookmarks->FinalizeStatements();
+
+  // nsAnnotationService
+  nsAnnotationService* annosvc = nsAnnotationService::GetAnnotationService();
+  NS_ENSURE_TRUE(annosvc, NS_ERROR_OUT_OF_MEMORY);
+  annosvc->FinalizeStatements();
+
+  // nsFaviconService
+  nsFaviconService* iconsvc = nsFaviconService::GetFaviconService();
+  NS_ENSURE_TRUE(iconsvc, NS_ERROR_OUT_OF_MEMORY);
+  iconsvc->FinalizeStatements();
+
+  return NS_OK;
+}
+
 // nsIObserver *****************************************************************
 
 NS_IMETHODIMP
@@ -7453,6 +7479,41 @@ nsNavHistory::GetDBOldFrecencies()
   NS_ENSURE_SUCCESS(rv, nsnull);
 
   return mDBOldFrecencies;
+}
+
+void
+nsNavHistory::FinalizeStatements() {
+  mDBGetURLPageInfo = nsnull;
+  mDBGetIdPageInfo = nsnull;
+  mDBRecentVisitOfURL = nsnull;
+  mDBRecentVisitOfPlace = nsnull;
+  mDBInsertVisit = nsnull;
+  mDBGetPageVisitStats = nsnull;
+  mDBIsPageVisited = nsnull;
+  mDBUpdatePageVisitStats = nsnull;
+  mDBAddNewPage = nsnull;
+  mDBGetTags = nsnull;
+  mFoldersWithAnnotationQuery = nsnull;
+  mDBSetPlaceTitle = nsnull;
+  mDBVisitToURLResult = nsnull;
+  mDBVisitToVisitResult = nsnull;
+  mDBBookmarkToUrlResult = nsnull;
+  mDBVisitsForFrecency = nsnull;
+  mDBUpdateFrecencyAndHidden = nsnull;
+  mDBGetPlaceVisitStats = nsnull;
+  mDBGetBookmarkParentsForPlace = nsnull;
+  mDBFullVisitCount = nsnull;
+  mDBInvalidFrecencies = nsnull;
+  mDBOldFrecencies = nsnull;
+  mDBCurrentQuery = nsnull;
+  mDBAutoCompleteQuery = nsnull;
+  mDBAutoCompleteHistoryQuery = nsnull;
+  mDBAutoCompleteStarQuery = nsnull;
+  mDBAutoCompleteTagsQuery = nsnull;
+  mDBPreviousQuery = nsnull;
+  mDBAdaptiveQuery = nsnull;
+  mDBKeywordQuery = nsnull;
+  mDBFeedbackIncrease = nsnull;
 }
 
 // nsICharsetResolver **********************************************************

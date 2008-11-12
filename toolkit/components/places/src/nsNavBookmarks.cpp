@@ -432,6 +432,26 @@ nsNavBookmarks::InitStatements()
   return NS_OK;
 }
 
+void
+nsNavBookmarks::FinalizeStatements() {
+  mDBGetChildren = nsnull;
+  mDBFindURIBookmarks = nsnull;
+  mDBFolderCount = nsnull;
+  mDBGetItemIndex = nsnull;
+  mDBGetChildAt = nsnull;
+  mDBGetItemProperties = nsnull;
+  mDBGetItemIdForGUID = nsnull;
+  mDBGetRedirectDestinations = nsnull;
+  mDBInsertBookmark = nsnull;
+  mDBIsBookmarkedInDatabase = nsnull;
+  mDBGetLastBookmarkID = nsnull;
+  mDBSetItemDateAdded = nsnull;
+  mDBSetItemLastModified = nsnull;
+  mDBSetItemIndex = nsnull;
+  mDBGetKeywordForURI = nsnull;
+  mDBGetKeywordForBookmark = nsnull;
+  mDBGetURIForKeyword = nsnull;
+}
 
 // nsNavBookmarks::InitRoots
 //
