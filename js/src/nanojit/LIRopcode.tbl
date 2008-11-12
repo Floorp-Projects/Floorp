@@ -1,0 +1,248 @@
+/* -*- Mode: C; tab-width: 8; indent-tabs-mode: nil; c-basic-offset: 4 -*-
+ * vim: set ts=8 sw=4 et tw=0 ft=C:
+ *
+ * ***** BEGIN LICENSE BLOCK *****
+ * Version: MPL 1.1/GPL 2.0/LGPL 2.1
+ *
+ * The contents of this file are subject to the Mozilla Public License Version
+ * 1.1 (the "License"); you may not use this file except in compliance with
+ * the License. You may obtain a copy of the License at
+ * http://www.mozilla.org/MPL/
+ *
+ * Software distributed under the License is distributed on an "AS IS" basis,
+ * WITHOUT WARRANTY OF ANY KIND, either express or implied. See the License
+ * for the specific language governing rights and limitations under the
+ * License.
+ *
+ * The Original Code is SpiderMonkey nanojit.
+ *
+ * The Initial Developer of the Original Code is
+ * the Mozilla Corporation.
+ * Portions created by the Initial Developer are Copyright (C) 2008
+ * the Initial Developer. All Rights Reserved.
+ *
+ * Contributor(s):
+ *   Jeff Walden <jwalden+code@mit.edu>
+ *
+ * Alternatively, the contents of this file may be used under the terms of
+ * either of the GNU General Public License Version 2 or later (the "GPL"),
+ * or the GNU Lesser General Public License Version 2.1 or later (the "LGPL"),
+ * in which case the provisions of the GPL or the LGPL are applicable instead
+ * of those above. If you wish to allow use of your version of this file only
+ * under the terms of either the GPL or the LGPL, and not to allow others to
+ * use your version of this file under the terms of the MPL, indicate your
+ * decision by deleting the provisions above and replace them with the notice
+ * and other provisions required by the GPL or the LGPL. If you do not delete
+ * the provisions above, a recipient may use your version of this file under
+ * the terms of any one of the MPL, the GPL or the LGPL.
+ *
+ * ***** END LICENSE BLOCK ***** */
+
+/*
+ * Definitions of LIR opcodes.  If you need to allocate an opcode, look
+ * for a name of the form unused* and claim it.
+ *
+ * Includers must define OPDEF and OPDEF64 macros of the following forms:
+ *
+ * #define   OPDEF(op,val,operands) ...
+ * #define OPDEF64(op,val,operands) ...
+ *
+ * Selected arguments can then be used within the macro expansions.
+ *
+ * Field        Description
+ * op           Bytecode name, token-pasted after "LIR_" to form an LOpcode
+ * val          Bytecode value, which is the LOpcode enumerator value
+ * operands     Number of operands for this instruction
+ *
+ * This file is best viewed with 128 columns:
+12345678901234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789012345678
+ */
+
+/*    op    val name        operands */
+
+/* special operations (must be 0..N) */
+OPDEF(start,     0, 0)
+OPDEF(nearskip,  1, 0) // must be skip-1 and lsb=1
+OPDEF(skip,      2, 0)
+OPDEF(neartramp, 3, 0) // must be tramp-1 and lsb=1
+OPDEF(tramp,     4, 0)
+
+OPDEF(unused1,   5, 2)
+OPDEF(unused2,   6, 2)
+OPDEF(unused3,   7, 2)
+OPDEF(unused4,   8, 2)
+
+/* non-pure operations */
+OPDEF(addp,      9, 2)
+OPDEF(param,    10, 0)
+OPDEF(st,       11, 2) // 32-bit store
+OPDEF(ld,       12, 2) // 32-bit load
+OPDEF(alloc,    13, 0) // alloca some stack space
+OPDEF(sti,      14, 2)
+OPDEF(ret,      15, 1)
+OPDEF(live,     16, 1) // extend live range of reference
+OPDEF(calli,    17, 0) // indirect call
+OPDEF(call,     18, 0) // subroutine call returning a 32-bit value
+
+/* guards */
+OPDEF(loop,     19, 0) // loop fragment
+OPDEF(x,        20, 0) // exit always
+
+/* branches */
+OPDEF(j,        21, 0) // jump always
+OPDEF(jt,       22, 1) // jump true
+OPDEF(jf,       23, 1) // jump false
+OPDEF(label,    24, 0) // a jump target
+OPDEF(ji,       25, 2) // jump indirect
+/* operators */
+
+/*
+ * NB: Opcodes ldcs through uge must remain continuous to aid in
+ *     common-subexpression-elimination detection code.
+ */
+
+OPDEF(ldcs, 26, 2) // non-volatile 16-bit load
+
+/*
+ * feq though fge must only be used on float arguments.  They
+ * return integers.  NB: These opcodes must remain continuous
+ * so that comparison-opcode detection works correctly.
+ */
+OPDEF(feq,      27, 2) // floating-point equality [2 float inputs]
+OPDEF(flt,      28, 2) // floating-point less than: arg1 < arg2
+OPDEF(fgt,      29, 2) // floating-point greater than: arg1 > arg2
+OPDEF(fle,      30, 2) // arg1 <= arg2, both floating-point
+OPDEF(fge,      31, 2) // arg1 >= arg2, both floating-point
+
+OPDEF(short,    32, 0) // constant 16-bit integer
+OPDEF(int,      33, 0) // constant 32-bit integer
+OPDEF(cmov,     34, 2) // conditional move (op1=cond, op2=cond(iftrue,iffalse))
+OPDEF(ldc,      35, 2) // non-volatile load
+
+// neg through ush are all integer operations
+OPDEF(neg,      36, 1) // numeric negation [ 1 integer input / integer output ]
+OPDEF(add,      37, 2) // integer addition [ 2 operand integer intputs / integer output ]
+OPDEF(sub,      38, 2) // integer subtraction
+OPDEF(mul,      39, 2) // integer multiplication
+#if defined(NANOJIT_64BIT)
+OPDEF(callh,    40, 0)
+#else
+OPDEF(callh,    40, 1)
+#endif
+OPDEF(and,      41, 2)
+OPDEF(or,       42, 2)
+OPDEF(xor,      43, 2)
+OPDEF(not,      44, 1)
+OPDEF(lsh,      45, 2)
+OPDEF(rsh,      46, 2) // >>
+OPDEF(ush,      47, 2) // >>>
+
+// conditional guards, op^1 to complement.  Only things that are
+// isCond() can be passed to these.
+OPDEF(xt,       48, 1) // exit if true   0x30 0011 0000
+OPDEF(xf,       49, 1) // exit if false  0x31 0011 0001
+
+// qlo and qhi take a single quad argument and return its low and high
+// 32 bits respectively as 32-bit integers.
+OPDEF(qlo,      50, 1)
+OPDEF(qhi,      51, 1)
+
+OPDEF(ldcb,     52, 2) // non-volatile 8-bit load
+
+OPDEF(ov,       53, 1)
+OPDEF(cs,       54, 1)
+
+// Integer (all sizes) relational operators.  (op ^ 1) is the op which flips the
+// left and right sides of the comparison, so (lt ^ 1) == gt, or the operator
+// "<" is xored with 1 to get ">".  Similarly, (op ^ 3) is the complement of
+// op, so (lt ^ 1) == ge, or the complement of the operator "<" is ">=" xored
+// with 3.  'u' prefix indicates the unsigned integer variant.
+// NB: These opcodes must remain continuous so that comparison-opcode detection
+// works correctly.
+OPDEF(eq,       55, 2) // integer equality
+OPDEF(lt,       56, 2) // 0x38 0011 1000
+OPDEF(gt,       57, 2) // 0x39 0011 1001
+OPDEF(le,       58, 2) // 0x3A 0011 1010
+OPDEF(ge,       59, 2) // 0x3B 0011 1011
+OPDEF(ult,      60, 2) // 0x3C 0011 1100
+OPDEF(ugt,      61, 2) // 0x3D 0011 1101
+OPDEF(ule,      62, 2) // 0x3E 0011 1110
+OPDEF(uge,      63, 2) // 0x3F 0011 1111
+
+OPDEF64(2,          0, 2) // wraps a pair of refs
+OPDEF64(file,       1, 2)
+OPDEF64(line,       2, 2)
+OPDEF64(unused3_64, 3, 2)
+
+OPDEF64(unused4_64,   4, 2)
+OPDEF64(unused5_64,   5, 2)
+OPDEF64(unused6_64,   6, 2)
+OPDEF64(unused7_64,   7, 2)
+OPDEF64(unused8_64,   8, 2)
+OPDEF64(unused9_64,   9, 2)
+OPDEF64(unused10_64, 10, 2)
+
+OPDEF64(stq, LIR_st, 2) // quad store
+OPDEF64(ldq, LIR_ld, 2) // quad load
+
+OPDEF64(unused13_64, 13, 2)
+
+OPDEF64(stqi,   LIR_sti, 2)
+OPDEF64(fret,   LIR_ret, 1)
+
+OPDEF64(unused16_64, 16, 2)
+
+OPDEF64(fcalli,      LIR_calli, 0)
+OPDEF64(fcall,       LIR_call, 0) // subroutine call returning quad
+
+OPDEF64(unused19_64, 19, 2)
+OPDEF64(unused20_64, 20, 2)
+OPDEF64(unused21_64, 21, 2)
+OPDEF64(unused22_64, 22, 2)
+OPDEF64(unused23_64, 23, 2)
+OPDEF64(qiand,       24, 2)
+OPDEF64(qiadd,       25, 2)
+OPDEF64(unused26_64, 26, 2)
+OPDEF64(unused27_64, 27, 2)
+OPDEF64(unused28_64, 28, 2)
+OPDEF64(unused29_64, 29, 2)
+OPDEF64(unused30_64, 30, 2)
+OPDEF64(unused31_64, 31, 2)
+OPDEF64(unused32_64, 32, 2)
+
+OPDEF64(quad,  LIR_int,  0) // quad constant value
+OPDEF64(qcmov, LIR_cmov, 2)
+OPDEF64(ldqc,  LIR_ldc,  2)
+
+
+/* floating-point arithmetic operations */
+OPDEF64(fneg,   LIR_neg, 1)
+OPDEF64(fadd,   LIR_add, 2)
+OPDEF64(fsub,   LIR_sub, 2)
+OPDEF64(fmul,   LIR_mul, 2)
+OPDEF64(fdiv,   40,      2)
+
+OPDEF64(qjoin, 41,      2)
+OPDEF64(i2f,   42,      1) // convert an integer to a float
+OPDEF64(u2f,   43,      1) // convert an unsigned integer to a float
+OPDEF64(qior,  44,      2)
+OPDEF64(qilsh, LIR_lsh, 2)
+
+OPDEF64(unused46_64, 46, 2)
+OPDEF64(unused47_64, 47, 2)
+OPDEF64(unused48_64, 48, 2)
+OPDEF64(unused49_64, 49, 2)
+OPDEF64(unused50_64, 50, 2)
+OPDEF64(unused51_64, 51, 2)
+OPDEF64(unused52_64, 52, 2)
+OPDEF64(unused53_64, 53, 2)
+OPDEF64(unused54_64, 54, 2)
+OPDEF64(unused55_64, 55, 2)
+OPDEF64(unused56_64, 56, 2)
+OPDEF64(unused57_64, 57, 2)
+OPDEF64(unused58_64, 58, 2)
+OPDEF64(unused59_64, 59, 2)
+OPDEF64(unused60_64, 60, 2)
+OPDEF64(unused61_64, 61, 2)
+OPDEF64(unused62_64, 62, 2)
+OPDEF64(unused63_64, 63, 2)
