@@ -445,7 +445,7 @@ CSSLoaderImpl::RecycleParser(nsICSSParser* aParser)
   return NS_OK;
 }
 
-static const char kCharsetSym[] = "@charset";
+static const char kCharsetSym[] = "@charset \"";
 
 static nsresult GetCharsetFromData(const unsigned char* aStyleSheetData,
                                    PRUint32 aDataLength,
@@ -576,25 +576,9 @@ static nsresult GetCharsetFromData(const unsigned char* aStyleSheetData,
     pos += step;
   }
 
-  while (pos < aDataLength && nsCRT::IsAsciiSpace(aStyleSheetData[pos])) {
-    pos += step;
-  }
-
-  if (pos >= aDataLength ||
-      (aStyleSheetData[pos] != '"' && aStyleSheetData[pos] != '\'')) {
-    return aCharset.IsEmpty() ? NS_ERROR_NOT_AVAILABLE : NS_OK;
-  }
-
-  char quote = aStyleSheetData[pos];
-  pos += step;
   nsCAutoString charset;
   while (pos < aDataLength) {
-    if (aStyleSheetData[pos] == '\\') {
-      pos += step;
-      if (pos >= aDataLength) {
-        break;
-      }          
-    } else if (aStyleSheetData[pos] == quote) {
+    if (aStyleSheetData[pos] == '"') {
       break;
     }
     
@@ -605,10 +589,6 @@ static nsresult GetCharsetFromData(const unsigned char* aStyleSheetData,
 
   // Check for the ending ';'
   pos += step;
-  while (pos < aDataLength && nsCRT::IsAsciiSpace(aStyleSheetData[pos])) {
-    pos += step;    
-  }
-
   if (pos >= aDataLength || aStyleSheetData[pos] != ';') {
     return aCharset.IsEmpty() ? NS_ERROR_NOT_AVAILABLE : NS_OK;
   }
