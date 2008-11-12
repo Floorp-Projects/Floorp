@@ -257,18 +257,10 @@ nsNavHistoryExpire::ClearHistory()
       "SELECT h.id FROM moz_places_temp h "
       "WHERE "
         "EXISTS (SELECT id FROM moz_bookmarks WHERE fk = h.id) "
-        "OR EXISTS "
-          "(SELECT id FROM moz_annos WHERE place_id = h.id AND expiration = ") +
-          nsPrintfCString("%d", nsIAnnotationService::EXPIRE_NEVER) +
-          NS_LITERAL_CSTRING(") "
       "UNION ALL "
       "SELECT h.id FROM moz_places h "
       "WHERE "
         "EXISTS (SELECT id FROM moz_bookmarks WHERE fk = h.id) "
-        "OR EXISTS "
-          "(SELECT id FROM moz_annos WHERE place_id = h.id AND expiration = ") +
-          nsPrintfCString("%d", nsIAnnotationService::EXPIRE_NEVER) +
-          NS_LITERAL_CSTRING(") "
     ")"));
   NS_ENSURE_SUCCESS(rv, rv);
 
@@ -837,13 +829,17 @@ nsNavHistoryExpire::ExpireAnnotations(mozIStorageConnection* aConnection)
   NS_ENSURE_SUCCESS(rv, rv);
   rv = expirePagesStatement->Execute();
   NS_ENSURE_SUCCESS(rv, rv);
-  
+  rv = expirePagesStatement->Reset();
+  NS_ENSURE_SUCCESS(rv, rv);
+
   // remove days item annos
   rv = expireItemsStatement->BindInt32Parameter(0, nsIAnnotationService::EXPIRE_DAYS);
   NS_ENSURE_SUCCESS(rv, rv);
   rv = expireItemsStatement->BindInt64Parameter(1, (now - EXPIRATION_POLICY_DAYS));
   NS_ENSURE_SUCCESS(rv, rv);
   rv = expireItemsStatement->Execute();
+  NS_ENSURE_SUCCESS(rv, rv);
+  rv = expireItemsStatement->Reset();
   NS_ENSURE_SUCCESS(rv, rv);
 
   // remove weeks annos
@@ -853,6 +849,8 @@ nsNavHistoryExpire::ExpireAnnotations(mozIStorageConnection* aConnection)
   NS_ENSURE_SUCCESS(rv, rv);
   rv = expirePagesStatement->Execute();
   NS_ENSURE_SUCCESS(rv, rv);
+  rv = expirePagesStatement->Reset();
+  NS_ENSURE_SUCCESS(rv, rv);
 
   // remove weeks item annos
   rv = expireItemsStatement->BindInt32Parameter(0, nsIAnnotationService::EXPIRE_WEEKS);
@@ -860,6 +858,8 @@ nsNavHistoryExpire::ExpireAnnotations(mozIStorageConnection* aConnection)
   rv = expireItemsStatement->BindInt64Parameter(1, (now - EXPIRATION_POLICY_WEEKS));
   NS_ENSURE_SUCCESS(rv, rv);
   rv = expireItemsStatement->Execute();
+  NS_ENSURE_SUCCESS(rv, rv);
+  rv = expireItemsStatement->Reset();
   NS_ENSURE_SUCCESS(rv, rv);
 
   // remove months annos

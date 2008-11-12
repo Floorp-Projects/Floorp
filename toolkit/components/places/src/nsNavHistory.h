@@ -444,6 +444,11 @@ protected:
   mozIStorageStatement *GetDBBookmarkToUrlResult();
   nsCOMPtr<mozIStorageStatement> mDBBookmarkToUrlResult; // kGetInfoIndex_* results
 
+  /**
+   * Finalize all internal statements.
+   */
+  void FinalizeStatements();
+
   // nsICharsetResolver
   NS_DECL_NSICHARSETRESOLVER
 
