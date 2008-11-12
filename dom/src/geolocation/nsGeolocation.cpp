@@ -379,26 +379,6 @@ nsGeolocationService::Update(nsIDOMGeoPosition *aSomewhere)
   return NS_OK;
 }
 
-already_AddRefed<nsIDOMGeoPosition>
-nsGeolocationService::GetLastKnownPosition()
-{
-  nsIDOMGeoPosition* p = nsnull;
-  if (mProvider)
-    mProvider->GetCurrentPosition(&p);
-
-  return p;
-}
-
-PRBool
-nsGeolocationService::IsDeviceReady()
-{
-  PRBool ready = PR_FALSE;
-  if (mProvider)
-    mProvider->IsReady(&ready);
-
-  return ready;
-}
-
 PRBool
 nsGeolocationService::HasGeolocationProvider()
 {
