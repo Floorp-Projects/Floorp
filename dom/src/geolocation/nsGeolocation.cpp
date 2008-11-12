@@ -268,6 +268,12 @@ nsGeolocationRequest::SendLocation(nsIDOMGeoPosition* aPosition)
   if (mCleared || !mAllowed)
     return;
 
+  // we should not pass null back to the DOM.
+  if (!aPosition) {
+    NotifyError(nsIDOMGeoPositionError::POSITION_UNAVAILABLE);
+    return;
+  }
+
   // Ensure that the proper context is on the stack (bug 452762)
   nsCOMPtr<nsIJSContextStack> stack(do_GetService("@mozilla.org/js/xpc/ContextStack;1"));
   if (!stack || NS_FAILED(stack->Push(nsnull)))
