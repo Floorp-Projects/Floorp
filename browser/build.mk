@@ -66,6 +66,9 @@ clean::
 distclean::
 	@$(MAKE) -C browser/installer distclean
 
+source-package::
+	@$(MAKE) -C browser/installer source-package
+
 ifdef ENABLE_TESTS
 # Implemented in testing/testsuite-targets.mk
 
