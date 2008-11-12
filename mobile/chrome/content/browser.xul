@@ -229,12 +229,12 @@
                    clickSelectsAll="true"/>
         </hbox>
         <hbox id="urlbar-icons">
-          <toolbarbutton id="tool-reload" class="urlbar-icon-button" command="cmd_reload"/>
-          <toolbarbutton id="tool-stop" class="urlbar-icon-button" command="cmd_stop"/>
-          <toolbarbutton id="tool-go" class="urlbar-icon-button" command="cmd_go"/>
+          <toolbarbutton id="tool-reload" class="urlbar-cap-button" command="cmd_reload"/>
+          <toolbarbutton id="tool-stop" class="urlbar-cap-button" command="cmd_stop"/>
+          <toolbarbutton id="tool-go" class="urlbar-cap-button" command="cmd_go"/>
         </hbox>
       </hbox>
-      <toolbarbutton id="tool-bookmarks" class="urlbar-icon-button" command="cmd_bookmarks"/>
+      <toolbarbutton id="tool-bookmarks" class="urlbar-button" command="cmd_bookmarks"/>
     </toolbar>
 
     <vbox id="browser-controls" style="-moz-stack-sizing: ignore;" top="60" left="0">
@@ -248,6 +248,7 @@
 
     <hbox id="panel-container" style="-moz-stack-sizing: ignore;" top="0" left="0">
       <vbox id="panel-controls" oncommand="BrowserUI.switchPane(event.target.getAttribute('linkedpanel'));">
+        <toolbarspring/>
         <toolbarbutton id="tool-addons" type="radio" group="1" class="panel-button" linkedpanel="addons-container"/>
         <toolbarbutton id="tool-downloads" type="radio" group="1" class="panel-button" linkedpanel="downloads-container"/>
         <toolbarbutton id="tool-preferences" type="radio" group="1" class="panel-button" linkedpanel="prefs-container" checked="true"/>

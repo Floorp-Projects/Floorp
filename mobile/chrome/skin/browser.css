@@ -65,15 +65,22 @@ richlistitem {
   font-size: 16.75pt !important;
 }
 
+/* main toolbar (URL bar) -------------------------------------------------- */
+#toolbar-main {
+  -moz-appearance: none;
+  -moz-box-align: center;
+  background: url("chrome://browser/skin/images/toolbar_background.png") repeat-x;
+  padding: 0px 10px;
+  border: none;
+}
 
-/* Toolbar  */
 toolbarbutton {
   -moz-appearance: none !important;
   -moz-box-orient: vertical;
   min-width: 0px;
-  padding: 5px !important;
-  margin: 0px !important;
-  -moz-margin-end: 0px;
+  /* override default toolbarbutton padding/margin */
+  margin: 0;
+  padding: 5px;
 }
 
 toolbarbutton:not(.searchengine) .toolbarbutton-text {
@@ -86,111 +93,55 @@ toolbarbutton[open="true"] {
   border-color: transparent;
 }
 
-#toolbar-main {
-  -moz-appearance: none;
-  -moz-box-align: center;
-  background-image: url("chrome://browser/skin/images/toolbar-background.png");
-  background-repeat: repeat-x;
-  background-position: top left;
-  padding: 4px 12px;
-  border: none;
-}
-
-toolbarbutton.urlbar-icon-button {
-  list-style-image: url("chrome://browser/skin/images/titlebar.png");
-  -moz-padding-start: 24px !important;
-}
-
-#tool-reload {
-  -moz-image-region: rect(0px 222px 24px 198px);
-}
-
-#tool-stop {
-  -moz-image-region: rect(0px 246px 24px 222px);
-}
-
-#tool-go {
-  -moz-image-region: rect(0px 198px 24px 174px);
+/* main toolbar buttons */
+toolbarbutton.urlbar-button {
+  list-style-image: url("chrome://browser/skin/images/toolbar.png");
+  /* -1px to align backgrounds with endcap */
+  padding: 0px;
+  margin-top: -1px;
+  /* space out the buttons a little bit horizontally */
+  -moz-padding-start: 10px !important;
 }
 
 #tool-bookmarks {
-  -moz-image-region: rect(0px 174px 48px 126px);
-}
-
-#tool-bookmarks:hover:active {
-  -moz-image-region: rect(48px 174px 96px 126px);
-}
-
-#browser-controls {
-  background: url("images/right_sidebar_middle.png") transparent top left repeat-y;
-}
-
-toolbarbutton.browser-control-button {
-  list-style-image: url("chrome://browser/skin/images/right_buttons.png");
-}
-
-#tool-star {
   -moz-image-region: rect(0px 48px 48px 0px);
 }
 
-#tool-star:hover:active {
-  -moz-image-region: rect(0px 96px 48px 48px);
+#tool-bookmarks:hover:active {
+  -moz-image-region: rect(48px 48px 96px 0px);
 }
 
-#tool-star[starred="true"] {
-  -moz-image-region: rect(0px 192px 48px 144px);
+/* URL bar cap buttons */
+toolbarbutton.urlbar-cap-button {
+  list-style-image: url("chrome://browser/skin/images/toolbar.png");
+  /* position the button near the right edge of the endcap */
+  padding: 0;
+  padding-top: 5px;
+  -moz-padding-start: 24px;
 }
 
-#tool-back {
-  -moz-image-region: rect(48px 64px 112px 0px);
-  padding-bottom: 0px !important;
+#tool-go {
+  -moz-image-region: rect(0px 72px 24px 48px);
 }
 
-#tool-back:hover:active {
-  -moz-image-region: rect(48px 128px 112px 64px);
-  padding-bottom: 0px !important;
+#urlbar-icons:hover:active > #tool-go {
+  -moz-image-region: rect(24px 72px 48px 48px);
 }
 
-#tool-back[disabled="true"] {
-  -moz-image-region: rect(48px 192px 112px 128px) !important;
-  padding-bottom: 0px !important;
+#tool-reload {
+  -moz-image-region: rect(0px 96px 24px 72px);
 }
 
-#tool-forward {
-  -moz-image-region: rect(112px 48px 160px 0px);
-  padding-top: 0px !important;
+#urlbar-icons:hover:active > #tool-reload {
+  -moz-image-region: rect(24px 96px 48px 72px);
 }
 
-#tool-forward:hover:active {
-  -moz-image-region: rect(112px 96px 160px 48px);
-  padding-top: 0px !important;
+#tool-stop {
+  -moz-image-region: rect(0px 120px 24px 96px);
 }
 
-#tool-forward[disabled="true"] {
-  -moz-image-region: rect(112px 144px 160px 96px) !important;
-  padding-top: 0px !important;
-}
-
-#tool-actions {
-  -moz-image-region: rect(160px 48px 208px 0px);
-}
-
-#tool-actions:hover:active {
-  -moz-image-region: rect(160px 96px 208px 48px);
-}
-
-#tool-panel {
-  -moz-image-region: rect(208px 48px 256px 0px);
-}
-
-#tool-panel:hover:active, #tool-panel[checked] {
-  -moz-image-region: rect(208px 96px 256px 48px);
-  background: none !important;            /* override checked style */
-  border-color: transparent !important;   /* override checked style */
-}
-
-.tool-search {
-  list-style-image: url("chrome://browser/skin/images/navigation_magnifier.png");
+#urlbar-icons:hover:active > #tool-stop {
+  -moz-image-region: rect(24px 120px 48px 96px);
 }
 
 #toolbar-main[mode="loading"] > #urlbar-container > #urlbar-icons > #tool-go,
@@ -208,18 +159,9 @@ toolbarbutton.browser-control-button {
   visibility: collapse;
 }
 
-.searchengine {
-  -moz-box-orient: horizontal;
-  color: white;
-}
-.searchengine > .toolbarbutton-text {
-  font-size: 12pt !important;
-}
-
+/* URL bar ----------------------------------------------------------------- */
 #urlbar-container {
-  background-color: transparent;
   color: #000;
-  -moz-box-orient: horizontal;
   -moz-box-align: center;
   min-height: 60px;
 }
@@ -227,11 +169,11 @@ toolbarbutton.browser-control-button {
 #identity-box {
   min-height: 49px;
   min-width: 65px;
-  background: url("images/addressbar_endcap_l_off.png") transparent top right no-repeat;
+  background: url("images/addressbar_endcap_l_off.png") top right no-repeat;
 }
 
 #identity-box:hover:active {
-  background: url("images/addressbar_endcap_l_on.png") transparent top right no-repeat;
+  background: url("images/addressbar_endcap_l_on.png") top right no-repeat;
 }
 
 /* favicon images are 16x16 */
@@ -250,7 +192,7 @@ toolbarbutton.browser-control-button {
 #urlbar-editarea {
   min-height: 49px;
   -moz-box-align: center;
-  background: url("images/addressbar_middle.png") transparent top left repeat-x;
+  background: url("images/addressbar_middle.png") repeat-x;
 }
 
 #urlbar-caption {
@@ -268,33 +210,158 @@ toolbarbutton.browser-control-button {
 #urlbar-icons {
   min-height: 49px;
   min-width: 65px;
-  -moz-box-align: center;
-  background: url("images/addressbar_endcap_r_off.png") transparent top left no-repeat;
+  -moz-box-align: start;
+  padding-top: 6px;
+  background: url("images/addressbar_endcap_r_off.png") no-repeat;
 }
 
 #urlbar-icons:hover:active {
-  background: url("images/addressbar_endcap_r_on.png") transparent top left no-repeat;
+  background: url("images/addressbar_endcap_r_on.png") no-repeat;
 }
 
-/* URL List and navigation bar */
+/* right toolbar (browser controls) ---------------------------------------- */
+#browser-controls {
+  background: url("images/right_sidebar_middle.png") repeat-y;
+  /* first 10 pixels in right_sidebar_middle are a gradient */
+  /* end padding must match #toolbar-main */
+  padding: 0 10px;
+  /* ...and right-align so that the buttons line up with
+     the bookmark button in the main toolbar */
+  -moz-box-align: end;
+}
+
+toolbarbutton.browser-control-button {
+  list-style-image: url("chrome://browser/skin/images/right_buttons.png");
+}
+
+toolbarbutton.browser-control-button,
+toolbarbutton.panel-button {
+  /* space out the buttons a bit vertically */
+  padding: 0;
+  padding-top: 8px;
+}
+
+#tool-star {
+  -moz-image-region: rect(0px 48px 48px 0px);
+}
+
+#tool-star:hover:active {
+  -moz-image-region: rect(0px 96px 48px 48px);
+}
+
+#tool-star[starred="true"] {
+  -moz-image-region: rect(0px 192px 48px 144px);
+}
+
+#tool-back {
+  -moz-image-region: rect(48px 64px 112px 0px);
+  /* this button is 16px wider than the others, so offset by 8px */
+  -moz-margin-end: -8px;
+}
+
+#tool-back:hover:active {
+  -moz-image-region: rect(48px 128px 112px 64px);
+}
+
+#tool-back[disabled="true"] {
+  -moz-image-region: rect(48px 192px 112px 128px) !important;
+}
+
+#tool-forward {
+  -moz-image-region: rect(112px 48px 160px 0px);
+  /* cuddle up underneath the back button */
+  padding-top: 0px;
+}
+
+#tool-forward:hover:active {
+  -moz-image-region: rect(112px 96px 160px 48px);
+}
+
+#tool-forward[disabled="true"] {
+  -moz-image-region: rect(112px 144px 160px 96px) !important;
+}
+
+#tool-actions {
+  -moz-image-region: rect(160px 48px 208px 0px);
+}
+
+#tool-actions:hover:active {
+  -moz-image-region: rect(160px 96px 208px 48px);
+}
+
+#tool-panel {
+  -moz-image-region: rect(208px 48px 256px 0px);
+}
+
+#tool-panel:hover:active, #tool-panel[checked] {
+  -moz-image-region: rect(208px 96px 256px 48px);
+
+  /* override checked style */
+  background: none !important;
+  border-color: transparent !important;
+}
+
+/* "extras" panel UI   ----------------------------------------------------- */
+#panel-controls {
+  /* match #browser-controls end padding */
+  padding: 0px 10px;
+}
+
+#panel-container {
+  background: url("images/panel_background.png") repeat-x;
+}
+
+toolbarbutton.panel-button {
+  list-style-image: url("chrome://browser/skin/images/panel_buttons.png");
+  /* override checked style */
+  background: none !important;
+  border-color: transparent !important;
+}
+
+#tool-addons {
+  -moz-image-region: rect(48px 48px 96px 0px);
+}
+
+#tool-addons:hover:active, #tool-addons[checked] {
+  -moz-image-region: rect(48px 96px 96px 48px);
+}
+
+#tool-downloads {
+  -moz-image-region: rect(96px 48px 144px 0px);
+}
+
+#tool-downloads:hover:active, #tool-downloads[checked] {
+  -moz-image-region: rect(96px 96px 144px 48px);
+}
+
+#tool-preferences {
+  -moz-image-region: rect(0px 48px 48px 0px);
+}
+
+#tool-preferences:hover:active, #tool-preferences[checked] {
+  -moz-image-region: rect(0px 96px 48px 48px);
+}
+
+#tool-shortcuts {
+  -moz-image-region: rect(0px 48px 48px 0px);
+}
+
+#tool-shortcuts:hover:active, #tool-shortcuts[checked] {
+  -moz-image-region: rect(0px 96px 48px 48px);
+}
+
+/* URL List and autocomplete navigation popup ------------------------------ */
 #urllist-container {
-  background-color: rgba(123,125,123,0.9);
+  background-color: rgb(123,125,123);
   padding: 8px;
 }
 
 #urllist-close {
   -moz-appearance: none;
   border: none;
-  background-color: transparent;
   margin: 0;
   padding: 0;
   list-style-image: url("chrome://browser/skin/images/close-small.png");
-}
-
-#popup_autocomplete {
-  background: url(images/navigation_background.png) transparent repeat-x;
-  -moz-appearance: none;
-  padding-top: 8px !important;
 }
 
 .urllist-item {
@@ -307,10 +374,28 @@ toolbarbutton.browser-control-button {
   height: 24px;
 }
 
+#popup_autocomplete {
+  background: url(images/navigation_background.png) repeat-x;
+  -moz-appearance: none;
+  padding-top: 8px !important;
+}
+
+.tool-search {
+  list-style-image: url("chrome://browser/skin/images/navigation_magnifier.png");
+}
+
+.searchengine {
+  -moz-box-orient: horizontal;
+  color: white;
+}
+.searchengine > .toolbarbutton-text {
+  font-size: 12pt !important;
+}
+
 /* old rules */
 #urllist-items {
   -moz-appearance: none !important;
-  background-color: rgba(207,207,207,0.9);
+  background-color: rgb(207,207,207);
   border: 2px solid #fff !important;
   -moz-border-radius: 10px;
 }
@@ -325,10 +410,8 @@ toolbarbutton.browser-control-button {
 #autocomplete_navbuttons {
   -moz-border-image: url(images/navigation_search_caps.png) 0 23 0 23;
   border-width: 0 23px;
-  background-color: transparent;
   margin-top: 12px;
   min-height: 50px;
-  padding-left: -10px !important;
 }
 
 #PopupAutoCompleteRichResult {
@@ -343,8 +426,6 @@ toolbarbutton.browser-control-button {
   -moz-appearance: none !important;
   -moz-border-image: url(images/navigation_url_caps.png) 25 24 25 24 stretch stretch;
   border-width: 26px 25px;
-  border-color: transparent;
-  background-color: transparent;
 }
 
 .autocomplete-richlistitem {
@@ -353,7 +434,6 @@ toolbarbutton.browser-control-button {
   padding-top: 0px;
   padding-left: 0px;
   color: white;
-  background-color: transparent;
 }
 
 .ac-result-type-bookmark {
@@ -385,8 +465,7 @@ toolbarbutton.browser-control-button {
   display: none;
 }
 
-/* tab list */
-
+/* Left sidebar (tabs)  ---------------------------------------------------- */
 #tab-list-container {
   background: url("images/left_sidebar_middle.png") rgb(87,87,87) top right repeat-y;
   min-width: 132px;
@@ -442,50 +521,10 @@ vbox:first-child richlistitem[type="documenttab"]:only-child .documenttab-close 
   -moz-image-region: rect(48px 96px 96px 48px);
 }
 
-/* panel UI */
-#panel-container {
-  background: url("images/panel_background.png") transparent top left repeat-x;
+/* findbar   --------------------------------------------------------------- */
+findbar {
+  background: rgba(128, 128, 128, 0.75);
 }
-
-toolbarbutton.panel-button {
-  list-style-image: url("chrome://browser/skin/images/panel_buttons.png");
-  background: none !important;            /* override checked style */
-  border-color: transparent !important;   /* override checked style */
-}
-
-#tool-addons {
-  -moz-image-region: rect(48px 48px 96px 0px);
-}
-
-#tool-addons:hover:active, #tool-addons[checked] {
-  -moz-image-region: rect(48px 96px 96px 48px);
-}
-
-#tool-downloads {
-  -moz-image-region: rect(96px 48px 144px 0px);
-}
-
-#tool-downloads:hover:active, #tool-downloads[checked] {
-  -moz-image-region: rect(96px 96px 144px 48px);
-}
-
-#tool-preferences {
-  -moz-image-region: rect(0px 48px 48px 0px);
-}
-
-#tool-preferences:hover:active, #tool-preferences[checked] {
-  -moz-image-region: rect(0px 96px 48px 48px);
-}
-
-#tool-shortcuts {
-  -moz-image-region: rect(0px 48px 48px 0px);
-}
-
-#tool-shortcuts:hover:active, #tool-shortcuts[checked] {
-  -moz-image-region: rect(0px 96px 48px 48px);
-}
-
-/* find bar */
 
 #findpanel {
   padding: 0 !important;
@@ -493,18 +532,14 @@ toolbarbutton.panel-button {
   background: transparent;
 }
 
-findbar {
-  background: rgba(128, 128, 128, 0.75);
-}
-
-/* Bookmark editor */
+/* bookmark editor   ------------------------------------------------------- */
 #bookmark-container {
-  background-color: rgba(123,125,123,0.9);
+  background-color: rgb(123,125,123);
   padding: 8px;
 }
 
 #bookmark-form {
-  background-color: rgba(207,207,207,0.9);
+  background-color: rgb(207,207,207);
   border: 2px solid #fff !important;
   -moz-border-radius: 10px;
   padding: 8px;
@@ -527,6 +562,7 @@ findbar {
   list-style-image: url("chrome://browser/skin/images/close-small.png");
 }
 
+/* Identity popup   -------------------------------------------------------- */
 /* Popup Icons */
 #identity-popup-icon {
   height: 64px;
@@ -623,53 +659,44 @@ findbar {
   min-width: 280px;
 }
 
-/* Preferences window */
-#prefs-container
-{
-  background-color: rgba(123,125,123,0.9);
+/* Preferences window   ---------------------------------------------------- */
+#prefs-container {
+  background-color: rgb(123,125,123);
 }
 
-richpref
-{
+richpref {
   background-color: white;
 }
 
-.prefsection
-{
+.prefsection {
   font-size: 1.5em ! important;
   color: white;
   background-color: grey;
   padding: .2em 0 .2em 0;
 }
 
-.prefbox
-{
+.prefbox {
   padding: .3em .3em .3em .5em;
   border: thin solid lightgrey;
 }
 
-.preftitle
-{
+.preftitle {
   font-size: 1.25em ! important;
 }
 
-.prefdesc
-{
+.prefdesc {
   font-size: 1em ! important;
   color: grey;
   background-color: white;
 }
 
 /* BUG: This rule doesn't actually work; I don't know why. */
-richpref > button
-{
+richpref > button {
   font-size: 1em ! important;
 }
 
-/* Shortcut editor */
-
-#shortcuts
-{
+/* Shortcut editor   ------------------------------------------------------- */
+#shortcuts {
   border: 0;
   padding: .2em;
 }
