@@ -25,6 +25,13 @@ var numCallbacks = 5;
 var callbackCounter = new Array(numCallbacks);
 var watchID = new Array(numCallbacks);
 
+function failureCallback(error)
+{
+  ok(error.code == 2, "Failure was something other than position unavailable");
+  removePrompt();
+  SimpleTest.finish();
+}
+
 // define success callbacks
 for(var i = 0; i < numCallbacks; i++) {
   eval("function successCallback" + i + "(position) {" +
@@ -37,7 +44,7 @@ for(var i = 0; i < numCallbacks; i++) {
 function registerWatches() {
   for(var i = 0; i < numCallbacks; i++) {
     watchID[i] = eval("navigator.geolocation.watchPosition(successCallback"
-                       + i + ", null, null);"
+                       + i + ", failureCallback, null);"
     );
   }
 }
