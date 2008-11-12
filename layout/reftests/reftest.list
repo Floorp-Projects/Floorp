@@ -35,6 +35,9 @@ include canvas/reftest.list
 # css @import tests
 include css-import/reftest.list
 
+# css character encoding tests
+include css-charset/reftest.list
+
 # columns/
 include columns/reftest.list
 
