@@ -640,6 +640,7 @@ html|span.accesskey {
 textbox {
   -moz-binding: url("chrome://global/content/bindings/textbox.xml#textbox");
   -moz-user-select: text;
+  text-shadow: none;
 }
 
 textbox[multiline="true"] {
@@ -649,10 +650,12 @@ textbox[multiline="true"] {
 html|*.textbox-input {
   -moz-appearance: none !important;
   text-align: inherit;
+  text-shadow: inherit;
 }
 
 html|*.textbox-textarea {
   -moz-appearance: none !important;
+  text-shadow: inherit;
 }
 
 .textbox-input-box {
