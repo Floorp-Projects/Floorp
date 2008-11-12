@@ -159,7 +159,7 @@ nsGeolocationRequest::Init()
   // check to see if we have a geolocation provider, if not, notify an error and bail.
   nsRefPtr<nsGeolocationService> geoService = nsGeolocationService::GetInstance();
   if (!geoService->HasGeolocationProvider()) {
-    NotifyError(NS_GEO_ERROR_CODE_LOCATION_PROVIDER_ERROR);
+    NotifyError(nsIDOMGeoPositionError::POSITION_UNAVAILABLE);
     return NS_ERROR_FAILURE;;
   }
 
@@ -196,7 +196,7 @@ nsGeolocationRequest::Notify(nsITimer* aTimer)
   // ::Cancel, just a different error
   
   if (!mHasSentData) {
-    NotifyError(NS_GEO_ERROR_CODE_TIMEOUT);
+    NotifyError(nsIDOMGeoPositionError::TIMEOUT);
     // remove ourselves from the locator's callback lists.
     mLocator->RemoveRequest(this);
   }
@@ -226,7 +226,7 @@ nsGeolocationRequest::GetRequestingWindow(nsIDOMWindow * *aRequestingWindow)
 NS_IMETHODIMP
 nsGeolocationRequest::Cancel()
 {
-  NotifyError(NS_GEO_ERROR_CODE_PERMISSION_ERROR);
+  NotifyError(nsIDOMGeoPositionError::PERMISSION_DENIED);
 
   // remove ourselves from the locators callback lists.
   mLocator->RemoveRequest(this);
@@ -242,7 +242,7 @@ nsGeolocationRequest::Allow()
   
   if (NS_FAILED(rv)) {
     // Location provider error
-    NotifyError(NS_GEO_ERROR_CODE_LOCATION_PROVIDER_ERROR);
+    NotifyError(nsIDOMGeoPositionError::POSITION_UNAVAILABLE);
     return NS_OK;
   }
 

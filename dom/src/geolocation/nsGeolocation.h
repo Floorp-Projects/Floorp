@@ -55,11 +55,6 @@
 
 #include "nsIGeolocationProvider.h"
 
-#define NS_GEO_ERROR_CODE_PERMISSION_ERROR        1
-#define NS_GEO_ERROR_CODE_LOCATION_PROVIDER_ERROR 2
-#define NS_GEO_ERROR_CODE_POSITION_NOT_FOUND      3
-#define NS_GEO_ERROR_CODE_TIMEOUT                 4
-
 class nsGeolocationService;
 class nsGeolocation;
 
