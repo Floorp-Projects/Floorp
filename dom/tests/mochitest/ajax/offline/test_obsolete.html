@@ -40,6 +40,9 @@ req.onreadystatechange = function() {
 
 function finish()
 {
+  netscape.security.PrivilegeManager.enablePrivilege("UniversalXPConnect");
+  pm.remove(uri.asciiHost, "offline-app");
+
   gTestWin.close();
   SimpleTest.finish();
 }
