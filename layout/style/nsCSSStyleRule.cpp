@@ -504,47 +504,46 @@ void nsCSSSelector::ToStringInternal(nsAString& aString,
   PRBool wroteNamespace = PR_FALSE;
   if (!isPseudoElement || !mNext) {
     // append the namespace prefix if needed
-    if (mNameSpace == kNameSpaceID_None) {
-      // The only way to do this in CSS is to have an explicit namespace
-      // of "none" specified in the sheet by having a '|' with nothing
-      // before it.
+    nsXMLNameSpaceMap *sheetNS = aSheet ? aSheet->GetNameSpaceMap() : nsnull;
+
+    // sheetNS is non-null if and only if we had an @namespace rule.  If it's
+    // null, that means that the only namespaces we could have are the
+    // wildcard namespace (which can be implicit in this case) and the "none"
+    // namespace, which then needs to be explicitly specified.
+    if (!sheetNS) {
+      NS_ASSERTION(mNameSpace == kNameSpaceID_Unknown ||
+                   mNameSpace == kNameSpaceID_None,
+                   "How did we get this namespace?");
+      if (mNameSpace == kNameSpaceID_None) {
+        aString.Append(PRUnichar('|'));
+        wroteNamespace = PR_TRUE;
+      }
+    } else if (sheetNS->FindNameSpaceID(nsnull) == mNameSpace) {
+      // We have the default namespace (possibly including the wildcard
+      // namespace).  Do nothing.
+      NS_ASSERTION(mNameSpace == kNameSpaceID_Unknown ||
+                   CanBeNamespaced(aIsNegated),
+                   "How did we end up with this namespace?");
+    } else if (mNameSpace != kNameSpaceID_Unknown) {
+      NS_ASSERTION(CanBeNamespaced(aIsNegated),
+                   "How did we end up with this namespace?");
+      nsIAtom *prefixAtom = sheetNS->FindPrefix(mNameSpace);
+      NS_ASSERTION(prefixAtom, "how'd we get a non-default namespace "
+                   "without a prefix?");
+      nsAutoString prefix;
+      prefixAtom->ToString(prefix);
+      aString.Append(prefix);
       aString.Append(PRUnichar('|'));
       wroteNamespace = PR_TRUE;
     } else {
-      if (aSheet) {
-        nsXMLNameSpaceMap *sheetNS = aSheet->GetNameSpaceMap();
-    
-        // sheetNS is non-null if and only if we had an @namespace rule.  If it's
-        // null, that means that the only namespaces we could have are the
-        // wildcard namespace (which can be implicit in this case) and the "none"
-        // namespace, which we handled above.  So no need to output anything when
-        // sheetNS is null.
-        if (sheetNS) {
-          if (mNameSpace != kNameSpaceID_Unknown) {
-            if (sheetNS->FindNameSpaceID(nsnull) != mNameSpace) {
-              nsIAtom *prefixAtom = sheetNS->FindPrefix(mNameSpace);
-              NS_ASSERTION(prefixAtom, "how'd we get a non-default namespace "
-                                       "without a prefix?");
-              nsAutoString prefix;
-              prefixAtom->ToString(prefix);
-              aString.Append(prefix);
-              aString.Append(PRUnichar('|'));
-              wroteNamespace = PR_TRUE;
-            }
-            // otherwise it must be the default namespace
-          } else {
-            // A selector for an element in any namespace.
-            if (// Use explicit "*|" only when it's not implied
-                sheetNS->FindNameSpaceID(nsnull) != kNameSpaceID_None &&
-                // :not() is special in that the default namespace is
-                // not implied for non-type selectors
-                (!aIsNegated || (!mIDList && !mClassList &&
-                                 !mPseudoClassList && !mAttrList))) {
-              aString.AppendLiteral("*|");
-              wroteNamespace = PR_TRUE;
-            }
-          }
-        }
+      // A selector for an element in any namespace, while the default
+      // namespace is something else.  :not() is special in that the default
+      // namespace is not implied for non-type selectors, so if this is a
+      // negated non-type selector we don't need to output an explicit wildcard
+      // namespace here, since those default to a wildcard namespace.
+      if (CanBeNamespaced(aIsNegated)) {
+        aString.AppendLiteral("*|");
+        wroteNamespace = PR_TRUE;
       }
     }
   }
@@ -702,6 +701,13 @@ void nsCSSSelector::ToStringInternal(nsAString& aString,
     aString.Append(PRUnichar(' '));
     aString.Append(mOperator);
   }
+}
+
+PRBool
+nsCSSSelector::CanBeNamespaced(PRBool aIsNegated) const
+{
+  return !aIsNegated ||
+         (!mIDList && !mClassList && !mPseudoClassList && !mAttrList);
 }
 
 // -- nsCSSSelectorList -------------------------------
