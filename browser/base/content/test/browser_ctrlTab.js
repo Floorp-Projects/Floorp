@@ -91,7 +91,18 @@ function test() {
     ok(isOpen(),
        "panel is sticky after focusing the search field and releasing the Ctrl key");
 
-    ctrlTab.searchField.value = "foo";
+    EventUtils.synthesizeKey("f", {});
+    EventUtils.synthesizeKey("o", {});
+    EventUtils.synthesizeKey("o", {});
+    is(ctrlTab.searchField.value, "foo",
+       "text entered into search field");
+
+    EventUtils.synthesizeKey("VK_RETURN", {});
+    ok(isOpen(),
+       "Enter key kicks pending search off; the panel stays open as there's no match");
+    is(ctrlTab.searchField.value, "foo",
+       "search field value persists after Enter pressed");
+
     EventUtils.synthesizeKey("VK_ESCAPE", {});
     is(ctrlTab.searchField.value, "",
        "ESC key clears the search field");
