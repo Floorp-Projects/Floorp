@@ -4760,47 +4760,42 @@ js_Interpret(JSContext *cx)
                 goto do_call;
 
             /* 
-             * If this is apply, and the argument is too long and would need
-             * a separate stack chunk, do a heavy-weight apply. 
+             * If the second arg to apply is null or void, treat it as an empty
+             * array.
              */
-            if (apply && argc >= 2 && !JSVAL_IS_PRIMITIVE(vp[3])) {
+            jsuint applylen = 0;
+            if (apply && argc >= 2 &&
+                !JSVAL_IS_VOID(vp[3]) && !JSVAL_IS_NULL(vp[3])) {
                 /* 
-                 * This is a problem only if the second argument is 
-                 * array-like. 
+                 * Fall back on js_Invoke when the array argument has a wrong
+                 * type or when it has too many elements to fit into the
+                 * current stack chunk.
                  */
-                JSBool arraylike = JS_FALSE;
-                jsuint length = 0;
+                if (!JSVAL_IS_OBJECT(vp[3]))
+                    goto do_call;
+
+                JSBool arraylike;
                 JSObject* aobj = JSVAL_TO_OBJECT(vp[3]);
-                if (js_IsArrayLike(cx, aobj, &arraylike, &length)) {
-                    length = (uintN)JS_MIN(length, ARRAY_INIT_LIMIT - 1);
-                    jsval* newsp = vp + 2 + length;
-                    JS_ASSERT(newsp >= vp + 2);
-                    JSArena *a = cx->stackPool.current;
-                    if (jsuword(newsp) > a->limit)
-                        goto do_call; /* do a heavy-weight apply */
-                }
-            }
-            
-            obj = JS_THIS_OBJECT(cx, vp);
-            if (!obj || !OBJ_DEFAULT_VALUE(cx, obj, JSTYPE_FUNCTION, &vp[1]))
-                goto error;
-            rval = vp[1];
+                if (!js_IsArrayLike(cx, aobj, &arraylike, &applylen))
+                    goto error;
+                if (!arraylike || applylen > ARGC_LIMIT)
+                    goto do_call;
 
-            if (!VALUE_IS_FUNCTION(cx, rval)) {
-                str = JS_ValueToString(cx, rval);
-                if (str) {
-                    const char *bytes = js_GetStringBytes(cx, str);
+                JSArena *a = cx->stackPool.current;
+                JS_ASSERT(jsuword(vp + 2) <= a->limit);
 
-                    if (bytes) {
-                        JS_ReportErrorNumber(cx, js_GetErrorMessage, NULL,
-                                             JSMSG_INCOMPATIBLE_PROTO,
-                                             js_Function_str, 
-                                             apply ? js_apply_str : js_call_str,
-                                             bytes);
-                    }
-                }
-                goto error;
+                /*
+                 * We need space for applylen elements plus an extra slot to
+                 * temporary root the array object when we unpack its elements
+                 * using OBJ_GET_PROPERTY below.
+                 */
+                if (a->limit - jsuword(vp + 2) < (applylen + 1) * sizeof(jsval))
+                    goto do_call;
             }
+
+            if (!VALUE_IS_FUNCTION(cx, vp[1]))
+                goto do_call;
+            vp[0] = vp[1];
 
             if (argc == 0) {
                 /* 
@@ -4815,105 +4810,49 @@ js_Interpret(JSContext *cx)
                 else if (!js_ValueToObject(cx, vp[2], &obj))
                     goto error;
             }
+            vp[1] = OBJECT_TO_JSVAL(obj);
 
             if (!apply) {
-                /* If we have a first arg, copy the rest as arguments. */
-                if (argc > 0) {
+                if (argc != 0) {
                     --argc;
                     memmove(vp + 2, vp + 3, argc * sizeof *vp);
                 }
-                
-                /* 
-                 * obj is no longer rooted since its not held in vp[2]
-                 * any more. We will put it into vp[1] momentarily. 
-                 */
+            } else if (applylen == 0) {
+                argc = 0;
             } else {
-                if (argc >= 2) { /* Have to expand arguments? */
-                    JSObject *aobj = NULL;
-                    
-                    /* 
-                     * If the second arg is null or void, call the function 
-                     * with 0 args.
-                     */
-                    if (JSVAL_IS_NULL(vp[3]) || JSVAL_IS_VOID(vp[3])) {
-                        argc = 0;
-                    } else {
-                        /* 
-                         * The second arg must be an array or arguments object.
-                         */
-                        JSBool arraylike = JS_FALSE;
-                        jsuint length = 0;
-                        if (!JSVAL_IS_PRIMITIVE(vp[3])) {
-                            aobj = JSVAL_TO_OBJECT(vp[3]);
-                            if (!js_IsArrayLike(cx, aobj, &arraylike, &length)) 
-                                goto error;
-                        }
-                        if (!arraylike) {
-                            JS_ReportErrorNumber(cx, js_GetErrorMessage, NULL,
-                                                     JSMSG_BAD_APPLY_ARGS, 
-                                                     apply ? js_apply_str : js_call_str);
-                            goto error;
-                        }
+                /* 
+                 * Make room for missing arguments to the right including the
+                 * temporary root nulling any extra stack slots for GC safety.
+                 */
+                jsval* newsp = vp + 2 + applylen + 1;
+                if (newsp > regs.sp) {
+                    JSArena *a = cx->stackPool.current;
+                    JS_ASSERT(jsuword(newsp) <= a->limit); /* see above */
+                    if ((jsuword) newsp > a->avail)
+                        a->avail = (jsuword) newsp;
+                    memset(vp + 2 + argc, 0, (applylen - argc) * sizeof(jsval));
+                }
 
-                        jsuint orig_argc = argc;
-                        argc = (uintN)JS_MIN(length, ARRAY_INIT_LIMIT - 1);
-                            
-                        /* 
-                         * Make room for another missing arguments to the right.
-                         */
-                        if (argc > orig_argc) {
-                            jsval* newsp = vp + 2 + argc;
-                            JS_ASSERT(newsp > regs.sp);
-                            JSArena *a = cx->stackPool.current;
-                            JS_ASSERT(jsuword(newsp) <= a->limit); /* we checked for this */
-                            if ((jsuword) newsp > a->avail)
-                                a->avail = (jsuword) newsp;
-                            
-                            /* Null any stack cells we just added. */
-                            memset(vp + 2 + orig_argc, 0, (argc - orig_argc) * sizeof(jsval));
-                        }
+                JSObject *aobj = JSVAL_TO_OBJECT(vp[3]);
+                newsp[-1] = vp[3];
+                regs.sp = newsp;
 
+                /* Expand array content onto the stack. */
+                for (i = 0; i < jsint(applylen); i++) {
+                    id = INT_TO_JSID(i);
+                    if (!OBJ_GET_PROPERTY(cx, aobj, id, &vp[2 + i])) {
                         /* 
-                         * Place callee/this and bump regs.sp early for GC safety.
+                         * There is no good way to restore the original stack
+                         * state here, but it is in a reasonable  state with
+                         * either original elements or nulls for all arguments
+                         * we didn't unpack yet, so we leave it at that.
                          */
-                        vp[0] = rval;
-                        vp[1] = OBJECT_TO_JSVAL(obj);
-                        if (argc > 0) {
-                            /* 
-                             * The last stack cell holds a pointer to the arguments
-                             * array to make sure it is rooted during any GCs triggered
-                             * during the OBJ_GET_PROPERTY calls below. 
-                             */
-                            vp[2 + argc - 1] = vp[3]; /* aobj */
-                        }
-                        regs.sp = vp + 2 + argc;
-
-                        /* Expand array content onto the stack. */
-                        jsval* sp = vp + 2;
-                        for (i = 0; i < jsint(argc); i++) {
-                            id = INT_TO_JSID(i);
-                            if (!OBJ_GET_PROPERTY(cx, aobj, id, sp)) {
-                                /* 
-                                 * There is no good way to restore the original
-                                 * stack state here, but it is in a reasonable 
-                                 * state with undefineds for all arguments we 
-                                 * didn't unpack yet, so we leave it at that. 
-                                 */
-                                goto error;
-                            }
-                            sp++;
-                        }
-                        
-                        goto do_call_with_specified_vp_and_argc;
+                        goto error;
                     }
-                } else
-                    argc = 0;
+                }
+                argc = applylen;
             }
-                 
-            vp[0] = rval;
-            vp[1] = OBJECT_TO_JSVAL(obj);
             regs.sp = vp + 2 + argc;
-
             goto do_call_with_specified_vp_and_argc;
           }
           
