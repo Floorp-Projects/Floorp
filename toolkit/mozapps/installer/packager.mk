@@ -479,3 +479,16 @@ make-sdk:
 	(cd $(DIST)/sdk/lib && tar $(TAR_CREATE_FLAGS) - .) | \
 	  (cd $(DIST)/$(MOZ_APP_NAME)-sdk/lib && tar -xf -)
 	cd $(DIST) && $(MAKE_SDK)
+
+ifndef MOZ_PKG_SRCDIR
+MOZ_PKG_SRCDIR = $(topsrcdir)
+endif
+
+CREATE_SOURCE_TAR = $(TAR) -c --owner=0 --group=0 --numeric-owner \
+  --mode="go-w" --exclude=".hg*" --exclude="CVS" --exclude=".cvs*" -f
+
+# source-package creates a source tarball from the files in MOZ_PKG_SRCDIR,
+# which is either set to a clean checkout or defaults to $topsrcdir
+source-package:
+	@echo "Packaging source tarball..."
+	(cd $(MOZ_PKG_SRCDIR) && $(CREATE_SOURCE_TAR) - .) | bzip2 -vf > $(DIST)/$(PKG_SRCPACK_PATH)$(PKG_SRCPACK_BASENAME).tar.bz2
