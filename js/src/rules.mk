@@ -70,12 +70,12 @@ endif
 
 $(OBJDIR)/%: %.cpp
 	@$(MAKE_OBJDIR)
-	$(CXX) -o $@ $(CFLAGS) $(OPTIMIZER) $*.cpp $(LDFLAGS)
+	$(CXX) -o $@ $(CFLAGS) $(OPTIMIZER) $< $(LDFLAGS)
 
 # This rule must come before the rule with no dep on header
 $(OBJDIR)/%.o: %.cpp %.h
 	@$(MAKE_OBJDIR)
-	$(CXX) -o $@ -c $(CFLAGS) $(OPTIMIZER) $*.cpp
+	$(CXX) -o $@ -c $(CFLAGS) $(OPTIMIZER) $<
 
 $(OBJDIR)/jsinterp.o: jsinterp.cpp jsinterp.h
 	@$(MAKE_OBJDIR)
@@ -87,16 +87,16 @@ $(OBJDIR)/jsbuiltins.o: jsbuiltins.cpp jsinterp.h
 
 $(OBJDIR)/%.o: %.cpp
 	@$(MAKE_OBJDIR)
-	$(CXX) -o $@ -c $(CFLAGS) $(OPTIMIZER) $*.cpp
+	$(CXX) -o $@ -c $(CFLAGS) $(OPTIMIZER) $<
 
 $(OBJDIR)/%.o: %.s
 	@$(MAKE_OBJDIR)
-	$(AS) -o $@ $(ASFLAGS) $*.s
+	$(AS) -o $@ $(ASFLAGS) $<
 
 # This rule must come before rule with no dep on header
 $(OBJDIR)/%.obj: %.cpp %.h
 	@$(MAKE_OBJDIR)
-	$(CXX) -Fo$(OBJDIR)/ -c $(CFLAGS) $(JSDLL_CFLAGS) $(OPTIMIZER) $*.cpp
+	$(CXX) -Fo$(OBJDIR)/ -c $(CFLAGS) $(JSDLL_CFLAGS) $(OPTIMIZER) $<
 
 $(OBJDIR)/jsinterp.obj: jsinterp.cpp jsinterp.h
 	@$(MAKE_OBJDIR)
@@ -108,7 +108,7 @@ $(OBJDIR)/jsbuiltins.obj: jsbuiltins.cpp jsinterp.h
 
 $(OBJDIR)/%.obj: %.cpp
 	@$(MAKE_OBJDIR)
-	$(CXX) -Fo$(OBJDIR)/ -c $(CFLAGS) $(JSDLL_CFLAGS) $(OPTIMIZER) $*.cpp
+	$(CXX) -Fo$(OBJDIR)/ -c $(CFLAGS) $(JSDLL_CFLAGS) $(OPTIMIZER) $<
 
 $(OBJDIR)/js.obj: js.cpp
 	@$(MAKE_OBJDIR)
