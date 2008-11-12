@@ -79,6 +79,7 @@ if __name__ == '__main__':
     if automation.UNIXISH:
         browserEnv["LD_LIBRARY_PATH"] = os.path.join(SCRIPT_DIR, DIST_BIN)
         browserEnv["MOZILLA_FIVE_HOME"] = os.path.join(SCRIPT_DIR, DIST_BIN)
+        browserEnv["GNOME_DISABLE_CRASH_DIALOG"] = "1"
 
     automation.runApp("http://localhost:%d/bloatcycle.html" % PORT, browserEnv,
                       os.path.join(SCRIPT_DIR, automation.DEFAULT_APP),
