@@ -4498,7 +4498,8 @@ nsWindow::GrabPointer(void)
                                              GDK_BUTTON_RELEASE_MASK |
                                              GDK_ENTER_NOTIFY_MASK |
                                              GDK_LEAVE_NOTIFY_MASK |
-                                             GDK_POINTER_MOTION_MASK),
+                                             GDK_POINTER_MOTION_MASK |
+                                             GDK_POINTER_MOTION_HINT_MASK),
                               (GdkWindow *)NULL, NULL, GDK_CURRENT_TIME);
 
     if (retval != GDK_GRAB_SUCCESS) {
@@ -5328,6 +5329,7 @@ motion_notify_event_cb(GtkWidget *widget, GdkEventMotion *event)
 
     window->OnMotionNotifyEvent(widget, event);
 
+    gdk_event_request_motions(event);
     return TRUE;
 }
 
