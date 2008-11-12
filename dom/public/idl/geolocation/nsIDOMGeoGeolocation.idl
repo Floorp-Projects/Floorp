@@ -41,7 +41,7 @@ interface nsIDOMGeoPositionOptions;
 interface nsIDOMGeoPositionCallback;
 interface nsIDOMGeoPositionErrorCallback;
 
-[scriptable, function, uuid(CE495440-C8B9-42DE-B67C-60E6928C0F40)]
+[scriptable, function, uuid(0EC70F3F-7E15-45E0-84E9-CDE078CB150A)]
 interface nsIDOMGeoGeolocation : nsISupports
 {
   readonly attribute nsIDOMGeoPosition lastPosition;
@@ -50,9 +50,9 @@ interface nsIDOMGeoGeolocation : nsISupports
                           [optional] in nsIDOMGeoPositionErrorCallback errorCallback,
                           [optional] in nsIDOMGeoPositionOptions options);
 
-  unsigned short watchPosition(in nsIDOMGeoPositionCallback successCallback,
-                               [optional] in nsIDOMGeoPositionErrorCallback errorCallback,
-                               [optional] in nsIDOMGeoPositionOptions options);
+  long watchPosition(in nsIDOMGeoPositionCallback successCallback,
+                     [optional] in nsIDOMGeoPositionErrorCallback errorCallback,
+                     [optional] in nsIDOMGeoPositionOptions options);
 
-  void clearWatch(in unsigned short watchId);
+  void clearWatch(in long watchId);
 };

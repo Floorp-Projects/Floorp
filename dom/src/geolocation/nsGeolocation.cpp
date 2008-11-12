@@ -753,7 +753,7 @@ NS_IMETHODIMP
 nsGeolocation::WatchPosition(nsIDOMGeoPositionCallback *aCallback,
                              nsIDOMGeoPositionErrorCallback *aErrorCallback,
                              nsIDOMGeoPositionOptions *aOptions, 
-                             PRUint16 *_retval NS_OUTPARAM)
+                             PRInt32 *_retval NS_OUTPARAM)
 {
   nsCOMPtr<nsIGeolocationPrompt> prompt = do_GetService(NS_GEOLOCATION_PROMPT_CONTRACTID);
   if (prompt == nsnull)
@@ -778,8 +778,13 @@ nsGeolocation::WatchPosition(nsIDOMGeoPositionCallback *aCallback,
 }
 
 NS_IMETHODIMP
-nsGeolocation::ClearWatch(PRUint16 aWatchId)
+nsGeolocation::ClearWatch(PRInt32 aWatchId)
 {
+  PRUint32 count = mWatchingCallbacks.Length();
+
+  if (aWatchId < 0 || count == 0 || aWatchId > count + 1)
+    return NS_ERROR_FAILURE;
+
   mWatchingCallbacks[aWatchId]->MarkCleared();
   return NS_OK;
 }
