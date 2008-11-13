@@ -3226,7 +3226,8 @@ js_Interpret(JSContext *cx)
             if (!js_CallIteratorNext(cx, JSVAL_TO_OBJECT(regs.sp[-2]), &regs.sp[-1]))
                 goto error;
             LOAD_INTERRUPT_HANDLER(cx);
-            PUSH(BOOLEAN_TO_JSVAL(regs.sp[-1] != JSVAL_HOLE));
+            rval = BOOLEAN_TO_JSVAL(regs.sp[-1] != JSVAL_HOLE);
+            PUSH(rval);
             TRACE_0(IteratorNextComplete);
           END_CASE(JSOP_NEXTITER)
 
