@@ -3668,8 +3668,8 @@ MatchRegExp(REGlobalData *gData, REMatchState *x)
 
         debug_only_v(printf("entering REGEXP trace at %s:%u@%u, code: %p\n",
                             gData->cx->fp->script->filename,
-                            js_PCToLineNumber(gData->cx, gData->cx->fp->script, gData->cx->fp->regs->pc),
-                            gData->cx->fp->regs->pc - gData->cx->fp->script->code,
+                            js_FramePCToLineNumber(gData->cx, gData->cx->fp),
+                            FramePCOffset(gData->cx->fp),
                             fragment->code()););
 
 #if defined(JS_NO_FASTCALL) && defined(NANOJIT_IA32)

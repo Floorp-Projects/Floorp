@@ -1547,6 +1547,16 @@ Array_p_join(JSContext* cx, JSObject* obj, JSString *str)
     JS_ASSERT(JSVAL_IS_STRING(v));
     return JSVAL_TO_STRING(v);
 }
+
+static JSString* FASTCALL
+Array_p_toString(JSContext* cx, JSObject* obj)
+{
+    jsval v;
+    if (!array_join_sub(cx, obj, TO_STRING, NULL, &v))
+        return NULL;
+    JS_ASSERT(JSVAL_IS_STRING(v));
+    return JSVAL_TO_STRING(v);
+}
 #endif
 
 /*
@@ -2967,18 +2977,20 @@ static JSPropertySpec array_props[] = {
     {0,0,0,0,0}
 };
 
+JS_DEFINE_TRCINFO_1(array_toString,
+    (2, (static, STRING_FAIL, Array_p_toString, CONTEXT, THIS,      0, 0)))
 JS_DEFINE_TRCINFO_1(array_join,
     (3, (static, STRING_FAIL, Array_p_join, CONTEXT, THIS, STRING,  0, 0)))
 JS_DEFINE_TRCINFO_1(array_push,
-    (3, (static, JSVAL_FAIL, Array_p_push1, CONTEXT, THIS, JSVAL,  0, 0)))
+    (3, (static, JSVAL_FAIL, Array_p_push1, CONTEXT, THIS, JSVAL,   0, 0)))
 JS_DEFINE_TRCINFO_1(array_pop,
-    (2, (static, JSVAL_FAIL, Array_p_pop, CONTEXT, THIS,           0, 0)))
+    (2, (static, JSVAL_FAIL, Array_p_pop, CONTEXT, THIS,            0, 0)))
 
 static JSFunctionSpec array_methods[] = {
 #if JS_HAS_TOSOURCE
     JS_FN(js_toSource_str,      array_toSource,     0,0),
 #endif
-    JS_FN(js_toString_str,      array_toString,     0,0),
+    JS_TN(js_toString_str,      array_toString,     0,0, array_toString_trcinfo),
     JS_FN(js_toLocaleString_str,array_toLocaleString,0,0),
 
     /* Perl-ish methods. */
