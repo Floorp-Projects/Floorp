@@ -324,7 +324,7 @@ _cairo_image_surface_create_with_pixman_format (unsigned char		*data,
     cairo_surface_t *surface;
     pixman_image_t *pixman_image;
 
-    pixman_image = pixman_image_create_bits (pixman_format, width, height,
+    pixman_image = pixman_image_create_bits (pixman_format, width ? width : 1, height ? height : 1,
 					     (uint32_t *) data, stride);
 
     if (pixman_image == NULL)
