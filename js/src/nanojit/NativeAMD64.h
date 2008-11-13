@@ -133,7 +133,6 @@ namespace nanojit
 
 	#define nextreg(r)		Register(r+1)
 	#define prevreg(r)		Register(r-1)
-	#define imm2register(c) (Register)(c)
 	
 	verbose_only( extern const char* regNames[]; )
 
