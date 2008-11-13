@@ -90,6 +90,9 @@ function uri_in_db(aURI) {
 
 // main
 function run_test() {
+  // we have a new profile, so we should have imported bookmarks
+  do_check_eq(histsvc.databaseStatus, histsvc.DATABASE_STATUS_CREATE);
+
   // add a visit
   var testURI = uri("http://mozilla.com");
   add_visit(testURI);
