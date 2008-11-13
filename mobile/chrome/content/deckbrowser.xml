@@ -572,7 +572,7 @@
           return [left, top];
         ]]></getter>
       </property>
-      
+
       <property name="_drawOffset" readonly="true">
         <getter><![CDATA[
           let [offX, offY] = this._canvasPageOffset;
@@ -601,7 +601,7 @@
                          "white",
                          ctx.DRAWWINDOW_DO_NOT_FLUSH);
           ctx.restore();
-          
+
           this._updateCanvasPosition();
         ]]></body>
       </method>
@@ -750,10 +750,11 @@
         <body><![CDATA[
           // Adjust the zoomLevel to fit the page contents in our window
           // width
-          var [contentWidth, ] = this._contentAreaDimensions;
+          var [contentW, ] = this._contentAreaDimensions;
           var [viewportW, ] = this.viewportDimensions;
 
-          this._zoomLevel = viewportW / contentWidth;
+          if (contentW > viewportW)
+            this._zoomLevel = viewportW / contentW;
 
           this._browserToCanvas();
         ]]></body>
@@ -869,6 +870,11 @@
           if (cdoc instanceof XULDocument)
             return [cdoc.width, cdoc.height];
 
+          if (cdoc instanceof SVGDocument) {
+            let rect = cdoc.rootElement.getBoundingClientRect();
+            return [rect.width, rect.height];
+          }
+
           // These might not exist yet depending on page load state
           var body = cdoc.body || {};
           var html = cdoc.documentElement || {};
@@ -876,8 +882,10 @@
           var w = Math.max(body.scrollWidth, html.scrollWidth);
           var h = Math.max(body.scrollHeight, html.scrollHeight);
 
-          if (isNaN(w) || isNaN(h))
-            return [this._canvas.width, this._canvas.height];
+          if (isNaN(w) || isNaN(h)) {
+            let rect = this._viewport.getBoundingClientRect();
+            return [rect.width, rect.height];
+          }
 
           return [w, h];
         </getter>
@@ -1419,7 +1427,7 @@
               ctx.save();
               ctx.scale(tabWidth / width, tabHeight / height);
               ctx.drawWindow(domWin, 0, 0, width, height, "white");
-              ctx.restore();              
+              ctx.restore();
             }
           ]]>
         </body>
