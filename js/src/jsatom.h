@@ -266,7 +266,13 @@ struct JSAtomState {
 #define ATOM_OFFSET_LIMIT       (sizeof(JSAtomState))
 
 #define COMMON_ATOMS_START(state)                                             \
-    (JSAtom **)((uint8 *)(state) + ATOM_OFFSET_START)
+    ((JSAtom **)((uint8 *)(state) + ATOM_OFFSET_START))
+#define COMMON_ATOM_INDEX(name)                                               \
+    ((offsetof(JSAtomState, name##Atom) - ATOM_OFFSET_START)                  \
+     / sizeof(JSAtom*))
+#define COMMON_TYPE_ATOM_INDEX(type)                                          \
+    ((offsetof(JSAtomState, typeAtoms[type]) - ATOM_OFFSET_START)             \
+     / sizeof(JSAtom*))
 
 /* Start and limit offsets should correspond to atoms. */
 JS_STATIC_ASSERT(ATOM_OFFSET_START % sizeof(JSAtom *) == 0);
@@ -280,6 +286,7 @@ JS_STATIC_ASSERT(ATOM_OFFSET_LIMIT % sizeof(JSAtom *) == 0);
     ((cx)->runtime->atomState.classAtoms[JSProto_##name])
 
 extern const char *const js_common_atom_names[];
+extern const size_t      js_common_atom_count;
 
 /*
  * Macros to access C strings for JSType and boolean literals together with

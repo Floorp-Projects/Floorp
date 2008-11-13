@@ -1968,10 +1968,30 @@ date_toString(JSContext *cx, uintN argc, jsval *vp)
     return date_format(cx, utctime, FORMATSPEC_FULL, vp);
 }
 
+#ifdef JS_TRACER
+static jsval FASTCALL
+date_valueOf_tn(JSContext* cx, JSObject* obj, JSString* str)
+{
+    JS_ASSERT(JS_InstanceOf(cx, obj, &js_DateClass, NULL));
+    jsdouble t = *JSVAL_TO_DOUBLE(obj->fslots[JSSLOT_UTC_TIME]);
+
+    JSString* number_str = ATOM_TO_STRING(cx->runtime->atomState.typeAtoms[JSTYPE_NUMBER]);
+    jsval v;
+    if (js_EqualStrings(str, number_str)) {
+        if (!js_NewNumberInRootedValue(cx, t, &v))
+            return JSVAL_ERROR_COOKIE;
+    } else {
+        if (!date_format(cx, t, FORMATSPEC_FULL, &v))
+            return JSVAL_ERROR_COOKIE;
+    }
+    return v;
+}
+#endif
+
 static JSBool
 date_valueOf(JSContext *cx, uintN argc, jsval *vp)
 {
-    JSString *str, *str2;
+    JSString *str, *number_str;
 
     /* It is an error to call date_valueOf on a non-date object, but we don't
      * need to check for that explicitly here because every path calls
@@ -1986,8 +2006,8 @@ date_valueOf(JSContext *cx, uintN argc, jsval *vp)
     str = js_ValueToString(cx, vp[2]);
     if (!str)
         return JS_FALSE;
-    str2 = ATOM_TO_STRING(cx->runtime->atomState.typeAtoms[JSTYPE_NUMBER]);
-    if (js_EqualStrings(str, str2))
+    number_str = ATOM_TO_STRING(cx->runtime->atomState.typeAtoms[JSTYPE_NUMBER]);
+    if (js_EqualStrings(str, number_str))
         return date_getTime(cx, argc, vp);
     return date_toString(cx, argc, vp);
 }
@@ -2004,6 +2024,9 @@ static JSFunctionSpec date_static_methods[] = {
     JS_TN("now",                 date_now,                0,0, date_now_trcinfo),
     JS_FS_END
 };
+
+JS_DEFINE_TRCINFO_1(date_valueOf,
+    (3, (static, JSVAL_FAIL, date_valueOf_tn, CONTEXT, THIS, STRING, 0, 0)))
 
 static JSFunctionSpec date_methods[] = {
     JS_FN("getTime",             date_getTime,            0,0),
@@ -2055,7 +2078,7 @@ static JSFunctionSpec date_methods[] = {
     JS_FN(js_toSource_str,       date_toSource,           0,0),
 #endif
     JS_FN(js_toString_str,       date_toString,           0,0),
-    JS_FN(js_valueOf_str,        date_valueOf,            0,0),
+    JS_TN(js_valueOf_str,        date_valueOf,            0,0, date_valueOf_trcinfo),
     JS_FS_END
 };
 

@@ -789,6 +789,16 @@ str_substring(JSContext *cx, uintN argc, jsval *vp)
 
 #ifdef JS_TRACER
 static JSString* FASTCALL
+String_p_toString(JSContext* cx, JSObject* obj)
+{
+    if (!JS_InstanceOf(cx, obj, &js_StringClass, NULL))
+        return NULL;
+    jsval v = OBJ_GET_SLOT(cx, obj, JSSLOT_PRIVATE);
+    JS_ASSERT(JSVAL_IS_STRING(v));
+    return JSVAL_TO_STRING(v);
+}
+
+static JSString* FASTCALL
 String_p_substring(JSContext* cx, JSString* str, int32 begin, int32 end)
 {
     JS_ASSERT(JS_ON_TRACE(cx));
@@ -2471,6 +2481,8 @@ js_String_getelem(JSContext* cx, JSString* str, int32 i)
 JS_DEFINE_CALLINFO_2(extern, BOOL,   js_EqualStrings, STRING, STRING,                       1, 1)
 JS_DEFINE_CALLINFO_2(extern, INT32,  js_CompareStrings, STRING, STRING,                     1, 1)
 
+JS_DEFINE_TRCINFO_1(str_toString,
+    (2, (extern, STRING_FAIL,      String_p_toString, CONTEXT, THIS,                        1, 1)))
 JS_DEFINE_TRCINFO_2(str_substring,
     (4, (static, STRING_FAIL,      String_p_substring, CONTEXT, THIS_STRING, INT32, INT32,   1, 1)),
     (3, (static, STRING_FAIL,      String_p_substring_1, CONTEXT, THIS_STRING, INT32,        1, 1)))
@@ -2508,7 +2520,7 @@ static JSFunctionSpec string_methods[] = {
 #endif
 
     /* Java-like methods. */
-    JS_FN(js_toString_str,     str_toString,          0,JSFUN_THISP_STRING),
+    JS_TN(js_toString_str,     str_toString,          0,JSFUN_THISP_STRING, str_toString_trcinfo),
     JS_FN(js_valueOf_str,      str_toString,          0,JSFUN_THISP_STRING),
     JS_FN(js_toJSON_str,       str_toString,          0,JSFUN_THISP_STRING),
     JS_TN("substring",         str_substring,         2,GENERIC_PRIMITIVE, str_substring_trcinfo),

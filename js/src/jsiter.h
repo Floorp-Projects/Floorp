@@ -125,6 +125,13 @@ extern JSClass          js_GeneratorClass;
 extern JSClass          js_IteratorClass;
 extern JSClass          js_StopIterationClass;
 
+static inline bool
+js_ValueIsStopIteration(jsval v)
+{
+    return !JSVAL_IS_PRIMITIVE(v) &&
+           STOBJ_GET_CLASS(JSVAL_TO_OBJECT(v)) == &js_StopIterationClass;
+}
+
 extern JSObject *
 js_InitIteratorClasses(JSContext *cx, JSObject *obj);
 
