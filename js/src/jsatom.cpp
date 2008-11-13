@@ -156,8 +156,17 @@ const char *const js_common_atom_names[] = {
     js_current_str,             /* currentAtom                  */
 #endif
 };
+
 JS_STATIC_ASSERT(JS_ARRAY_LENGTH(js_common_atom_names) * sizeof(JSAtom *) ==
                  LAZY_ATOM_OFFSET_START - ATOM_OFFSET_START);
+
+/*
+ * Interpreter macros called by the trace recorder assume common atom indexes
+ * fit in one byte of immediate operand.
+ */
+JS_STATIC_ASSERT(JS_ARRAY_LENGTH(js_common_atom_names) < 256);
+
+const size_t js_common_atom_count = JS_ARRAY_LENGTH(js_common_atom_names);
 
 const char js_anonymous_str[]       = "anonymous";
 const char js_apply_str[]           = "apply";

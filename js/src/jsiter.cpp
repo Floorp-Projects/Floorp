@@ -612,12 +612,8 @@ js_CallIteratorNext(JSContext *cx, JSObject *iterobj, jsval *rval)
             return JS_FALSE;
         if (!js_InternalCall(cx, iterobj, *rval, 0, NULL, rval)) {
             /* Check for StopIteration. */
-            if (!cx->throwing ||
-                JSVAL_IS_PRIMITIVE(cx->exception) ||
-                OBJ_GET_CLASS(cx, JSVAL_TO_OBJECT(cx->exception))
-                    != &js_StopIterationClass) {
+            if (!cx->throwing || !js_ValueIsStopIteration(cx->exception))
                 return JS_FALSE;
-            }
 
             /* Inline JS_ClearPendingException(cx). */
             cx->throwing = JS_FALSE;
@@ -633,8 +629,7 @@ js_CallIteratorNext(JSContext *cx, JSObject *iterobj, jsval *rval)
 static JSBool
 stopiter_hasInstance(JSContext *cx, JSObject *obj, jsval v, JSBool *bp)
 {
-    *bp = !JSVAL_IS_PRIMITIVE(v) &&
-          OBJ_GET_CLASS(cx, JSVAL_TO_OBJECT(v)) == &js_StopIterationClass;
+    *bp = js_ValueIsStopIteration(v);
     return JS_TRUE;
 }
 
@@ -717,7 +712,7 @@ JSObject *
 js_NewGenerator(JSContext *cx, JSStackFrame *fp)
 {
     JSObject *obj;
-    uintN argc, nargs, nvars, nslots;
+    uintN argc, nargs, nslots;
     JSGenerator *gen;
     jsval *slots;
 
@@ -729,7 +724,6 @@ js_NewGenerator(JSContext *cx, JSStackFrame *fp)
     /* Load and compute stack slot counts. */
     argc = fp->argc;
     nargs = JS_MAX(argc, fp->fun->nargs);
-    nvars = fp->fun->u.i.nvars;
     nslots = 2 + nargs + fp->script->nslots;
 
     /* Allocate obj's private data struct. */
@@ -780,6 +774,7 @@ js_NewGenerator(JSContext *cx, JSStackFrame *fp)
     gen->frame.annotation = NULL;
     gen->frame.scopeChain = fp->scopeChain;
 
+    gen->frame.imacpc = NULL;
     gen->frame.slots = slots;
     JS_ASSERT(StackBase(fp) == fp->regs->sp);
     gen->savedRegs.sp = slots + fp->script->nfixed;
