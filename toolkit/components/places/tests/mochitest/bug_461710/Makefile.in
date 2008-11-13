@@ -47,7 +47,11 @@ include $(topsrcdir)/config/rules.mk
 
 _HTTP_FILES	= \
 		visited_page.html \
+		visited_page-2.html \
+		visited_page-3.html \
 		link_page.html \
+		link_page-2.html \
+		link_page-3.html \
 		$(NULL)
 
 libs:: $(_HTTP_FILES)
