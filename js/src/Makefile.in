@@ -263,7 +263,7 @@ endif
 ifdef HAVE_DTRACE
 INSTALLED_HEADERS += \
 		jsdtracef.h \
-		javascript-trace.h \
+		$(CURDIR)/javascript-trace.h \
 		$(NULL)
 endif
 
@@ -651,8 +651,10 @@ jsautooplen.h: host_jsoplengen$(HOST_BIN_SUFFIX)
 $(CPPSRCS:%.cpp=%.$(OBJ_SUFFIX)): jsautokw.h jsautooplen.h
 
 ifdef HAVE_DTRACE
-javascript-trace.h: $(srcdir)/javascript-trace.d
+$(CURDIR)/javascript-trace.h: $(srcdir)/javascript-trace.d
 	dtrace -h -s $(srcdir)/javascript-trace.d -o javascript-trace.h.in
 	sed 's/if _DTRACE_VERSION/ifdef INCLUDE_MOZILLA_DTRACE/' \
 	    javascript-trace.h.in > javascript-trace.h
+
+$(CPPSRCS:%.cpp=%.$(OBJ_SUFFIX)): $(CURDIR)/javascript-trace.h
 endif
