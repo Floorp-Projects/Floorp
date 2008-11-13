@@ -73,6 +73,6 @@ function cleanUpFormHist() {
   var formhistFile = dirSvc.get("ProfD", Ci.nsIFile);
   formhistFile.append("formhistory.dat");
   if (formhistFile.exists())
-    formhistFile.remove();
+    formhistFile.remove(false);
 }
 cleanUpFormHist();
