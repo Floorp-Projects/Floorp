@@ -767,7 +767,7 @@ namespace nanojit
 		verbose_only( verbose_outputf("--------------------------------------- exit block (LIR_xt|LIR_xf)") );
 
 #ifdef NANOJIT_IA32
-		NanoAssertMsgf(_fpuStkDepth == _sv_fpuStkDepth, "LIR_xtf, _fpuStkDepth=%d, expect %d\n",_fpuStkDepth, _sv_fpuStkDepth);
+		NanoAssertMsgf(_fpuStkDepth == _sv_fpuStkDepth, "LIR_xtf, _fpuStkDepth=%d, expect %d",_fpuStkDepth, _sv_fpuStkDepth);
 		debug_only( _fpuStkDepth = _sv_fpuStkDepth; _sv_fpuStkDepth = 9999; )
 #endif
 
@@ -898,7 +898,7 @@ namespace nanojit
 			// check for resource leaks 
 			debug_only( 
 				for(uint32_t i=_activation.lowwatermark;i<_activation.highwatermark; i++) {
-					NanoAssertMsgf(_activation.entry[i] == 0, "frame entry %d wasn't freed\n",-4*i);
+					NanoAssertMsgf(_activation.entry[i] == 0, "frame entry %d wasn't freed",-4*i);
 				}
 			)
 
@@ -913,7 +913,7 @@ namespace nanojit
 			//fprintf(stderr, "endAssembly frag %X entry %X\n", (int)frag, (int)frag->fragEntry);
 		}
 		
-		NanoAssertMsgf(error() || _fpuStkDepth == 0,"_fpuStkDepth %d\n",_fpuStkDepth);
+		NanoAssertMsgf(error() || _fpuStkDepth == 0,"_fpuStkDepth %d",_fpuStkDepth);
 
 		internalReset();  // clear the reservation tables and regalloc
 		NanoAssert(!_branchStateMap || _branchStateMap->isEmpty());
@@ -1038,7 +1038,7 @@ namespace nanojit
 			switch(op)
 			{
 				default:
-					NanoAssertMsgf(false, "unsupported LIR instruction: %d (~0x40: %d)\n", op, op&~LIR64);
+					NanoAssertMsgf(false, "unsupported LIR instruction: %d (~0x40: %d)", op, op&~LIR64);
 					break;
 					
                 case LIR_live: {
