@@ -1851,6 +1851,21 @@ function testBug463490() {
 testBug463490.expected = true;
 test(testBug463490);
 
+// Test no assert (bug 464089)
+function shortRecursiveLoop(b, c) {
+    for (var i = 0; i < c; i++) {
+        if (b)
+            shortRecursiveLoop(c - 1);
+    }
+}
+function testClosingRecursion() {
+    shortRecursiveLoop(false, 1);
+    shortRecursiveLoop(true, 3);
+    return true;
+}
+testClosingRecursion.expected = true;
+test(testClosingRecursion);
+
 // BEGIN MANDELBROT STUFF
 // XXXbz I would dearly like to wrap it up into a function to avoid polluting
 // the global scope, but the function ends up heavyweight, and then we lose on

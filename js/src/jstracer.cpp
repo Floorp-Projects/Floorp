@@ -2191,6 +2191,16 @@ TraceRecorder::closeLoop(Fragmento* fragmento, bool& demote, unsigned *demotes)
     
     exitIns = snapshot(UNSTABLE_LOOP_EXIT);
     exit = (VMSideExit*)((GuardRecord*)exitIns->payload())->exit;
+
+    if (callDepth != 0) {
+        debug_only_v(printf("Stack depth mismatch, possible recursion\n");)
+        js_BlacklistPC(fragmento, fragment);
+        trashTree = true;
+        return false;
+    }
+
+    JS_ASSERT(exit->numStackSlots == treeInfo->stackTypeMap.length());
+
     peer_root = fragmento->getLoop(fragment->root->ip);
     JS_ASSERT(peer_root != NULL);
     stable = deduceTypeStability(peer_root, &peer, demotes);
@@ -2326,7 +2336,16 @@ TraceRecorder::joinEdgesToEntry(nanojit::Fragmento* fragmento, nanojit::Fragment
 void
 TraceRecorder::endLoop(Fragmento* fragmento)
 {
-    fragment->lastIns = lir->insGuard(LIR_x, lir->insImm(1), snapshot(LOOP_EXIT));
+    LIns* exitIns = snapshot(LOOP_EXIT);
+
+    if (callDepth != 0) {
+        debug_only_v(printf("Stack depth mismatch, possible recursion\n");)
+        js_BlacklistPC(fragmento, fragment);
+        trashTree = true;
+        return;
+    }
+
+    fragment->lastIns = lir->insGuard(LIR_x, lir->insImm(1), exitIns);
     compile(fragmento);
 
     if (fragmento->assm()->error() != nanojit::None)
