@@ -415,11 +415,14 @@ var PlacesOrganizer = {
       restorePopup.removeChild(restorePopup.firstChild);
 
     // get list of files
+    var localizedFilename = PlacesUtils.getString("bookmarksArchiveFilename");
+    var localizedFilenamePrefix = localizedFilename.substr(0, localizedFilename.indexOf("-"));
     var fileList = [];
     var files = this.bookmarksBackupDir.directoryEntries;
     while (files.hasMoreElements()) {
       var f = files.getNext().QueryInterface(Ci.nsIFile);
-      if (!f.isHidden() && f.leafName.match(/^bookmarks-.+json$/))
+      var rx = new RegExp("^(bookmarks|" + localizedFilenamePrefix + ")-.+\.json");
+      if (!f.isHidden() && f.leafName.match(rx))
         fileList.push(f);
     }
 
@@ -435,8 +438,8 @@ var PlacesOrganizer = {
       var m = restorePopup.insertBefore
         (document.createElement("menuitem"),
          document.getElementById("restoreFromFile"));
-      var dateStr = fileList[i].leafName.replace("bookmarks-", "").
-        replace(/\.json$/, "");
+      var rx = new RegExp("^(bookmarks|" + localizedFilenamePrefix + ")-");
+      var dateStr = fileList[i].leafName.replace(rx, "").replace(/\.json$/, "");
       if (!dateStr.length)
         dateStr = fileList[i].leafName;
       m.setAttribute("label", dateStr);

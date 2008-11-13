@@ -480,6 +480,13 @@ make-sdk:
 	  (cd $(DIST)/$(MOZ_APP_NAME)-sdk/lib && tar -xf -)
 	cd $(DIST) && $(MAKE_SDK)
 
+ifeq ($(OS_TARGET), WINNT)
+INSTALLER_PACKAGE = $(DIST)/$(PKG_INST_PATH)$(PKG_INST_BASENAME).exe
+endif
+
+upload:
+	$(PYTHON) $(topsrcdir)/build/upload.py --base-path $(DIST) $(DIST)/$(PACKAGE) $(INSTALLER_PACKAGE)
+
 ifndef MOZ_PKG_SRCDIR
 MOZ_PKG_SRCDIR = $(topsrcdir)
 endif

@@ -1585,17 +1585,26 @@ var PlacesUtils = {
     // Use YYYY-MM-DD (ISO 8601) as it doesn't contain illegal characters
     // and makes the alphabetical order of multiple backup files more useful.
     var date = new Date().toLocaleFormat("%Y-%m-%d");
-    var backupFilename = this.getFormattedString("bookmarksArchiveFilename", [date]);
+    var backupFilename = "bookmarks-" + date + ".json";
 
     var backupFile = null;
     if (!aForceArchive) {
       var backupFileNames = [];
       var backupFilenamePrefix = backupFilename.substr(0, backupFilename.indexOf("-"));
+
+      // Get the localized backup filename, to clear out
+      // old backups with a localized name (bug 445704).
+      var localizedFilename = this.getFormattedString("bookmarksArchiveFilename", [date]);
+      var localizedFilenamePrefix = localizedFilename.substr(0, localizedFilename.indexOf("-"));
+      var rx = new RegExp("^(bookmarks|" + localizedFilenamePrefix + ")-.+\.json");
+
       var entries = bookmarksBackupDir.directoryEntries;
       while (entries.hasMoreElements()) {
         var entry = entries.getNext().QueryInterface(Ci.nsIFile);
         var backupName = entry.leafName;
-        if (backupName.substr(0, backupFilenamePrefix.length) == backupFilenamePrefix) {
+        // A valid backup is any file that matches either the localized or
+        // not-localized filename (bug 445704).
+        if (backupName.match(rx)) {
           if (backupName == backupFilename)
             backupFile = entry;
           backupFileNames.push(backupName);
