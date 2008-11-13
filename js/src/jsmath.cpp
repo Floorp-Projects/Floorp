@@ -605,6 +605,12 @@ MATH_BUILTIN_1(floor)
 MATH_BUILTIN_1(ceil)
 
 static jsdouble FASTCALL
+math_abs_tn(jsdouble d)
+{
+    return fabs(d);
+}
+
+static jsdouble FASTCALL
 math_log_tn(jsdouble d)
 {
 #if defined(SOLARIS) && defined(__GNUC__)
@@ -648,6 +654,14 @@ math_random_tn(JSRuntime* rt)
     return z;
 }
 
+static jsdouble FASTCALL
+math_round_tn(jsdouble x)
+{
+    return js_copysign(floor(x + 0.5), x);
+}
+
+JS_DEFINE_TRCINFO_1(math_abs,
+    (1, (static, DOUBLE, math_abs_tn, DOUBLE,           1, 1)))
 JS_DEFINE_TRCINFO_1(math_log,
     (1, (static, DOUBLE, math_log_tn, DOUBLE,           1, 1)))
 JS_DEFINE_TRCINFO_1(math_max,
@@ -656,6 +670,8 @@ JS_DEFINE_TRCINFO_1(math_pow,
     (2, (static, DOUBLE, math_pow_tn, DOUBLE, DOUBLE,   1, 1)))
 JS_DEFINE_TRCINFO_1(math_random,
     (1, (static, DOUBLE, math_random_tn, RUNTIME,       0, 0)))
+JS_DEFINE_TRCINFO_1(math_round,
+    (1, (static, DOUBLE, math_round_tn, DOUBLE,         1, 1)))
 
 #endif /* JS_TRACER */
 
@@ -663,7 +679,7 @@ static JSFunctionSpec math_static_methods[] = {
 #if JS_HAS_TOSOURCE
     JS_FN(js_toSource_str,  math_toSource,        0, 0),
 #endif
-    JS_FN("abs",            math_abs,             1, 0),
+    JS_TN("abs",            math_abs,             1, 0, math_abs_trcinfo),
     JS_FN("acos",           math_acos,            1, 0),
     JS_FN("asin",           math_asin,            1, 0),
     JS_FN("atan",           math_atan,            1, 0),
@@ -677,7 +693,7 @@ static JSFunctionSpec math_static_methods[] = {
     JS_FN("min",            math_min,             2, 0),
     JS_TN("pow",            math_pow,             2, 0, math_pow_trcinfo),
     JS_TN("random",         math_random,          0, 0, math_random_trcinfo),
-    JS_FN("round",          math_round,           1, 0),
+    JS_TN("round",          math_round,           1, 0, math_round_trcinfo),
     JS_TN("sin",            math_sin,             1, 0, math_sin_trcinfo),
     JS_TN("sqrt",           math_sqrt,            1, 0, math_sqrt_trcinfo),
     JS_FN("tan",            math_tan,             1, 0),
