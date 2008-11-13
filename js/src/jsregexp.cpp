@@ -1990,12 +1990,16 @@ class RegExpNativeCompiler {
         fails.clear();
     }
 
-    JSBool compileEmpty(RENode* node, LIns* pos, LInsList& fails) 
+    /* 
+     * These functions return the new position after their match operation,
+     * or NULL if there was an error.
+     */
+    LIns* compileEmpty(RENode* node, LIns* pos, LInsList& fails) 
     {
-        return compileNode(node->next, pos, fails);
+        return pos;
     }
 
-    JSBool compileFlatSingleChar(RENode* node, LIns* pos, LInsList& fails) 
+    LIns* compileFlatSingleChar(RENode* node, LIns* pos, LInsList& fails) 
     {
         /* 
          * Fast case-insensitive test for ASCII letters: convert text
@@ -2029,11 +2033,10 @@ class RegExpNativeCompiler {
             targetCurrentPoint(to_ok);
         }
 
-        pos = lir->ins2(LIR_piadd, pos, lir->insImm(2));
-        return compileNode(node->next, pos, fails);
+        return lir->ins2(LIR_piadd, pos, lir->insImm(2));
     }
 
-    JSBool compileClass(RENode* node, LIns* pos, LInsList& fails) 
+    LIns* compileClass(RENode* node, LIns* pos, LInsList& fails) 
     {
         if (!node->u.ucclass.sense) 
             return JS_FALSE;
@@ -2052,11 +2055,10 @@ class RegExpNativeCompiler {
         
         LIns* to_next = lir->insBranch(LIR_jt, test, 0);
         fails.add(to_next);
-        pos = lir->ins2(LIR_piadd, pos, lir->insImm(2));
-        return compileNode(node->next, pos, fails);
+        return lir->ins2(LIR_piadd, pos, lir->insImm(2));
     }
 
-    JSBool compileAlt(RENode* node, LIns* pos, LInsList& fails) 
+    LIns* compileAlt(RENode* node, LIns* pos, LInsList& fails) 
     {
         LInsList kidFails(NULL);
         if (!compileNode((RENode *) node->kid, pos, kidFails)) 
@@ -2076,35 +2078,41 @@ class RegExpNativeCompiler {
          */
         if (node->next) 
             return JS_FALSE;
-        return compileNode(node->next, pos, fails);
+        return pos;
     }
 
     JSBool compileNode(RENode* node, LIns* pos, LInsList& fails) 
     {
-        if (fragment->lirbuf->outOmem()) 
-            return JS_FALSE;
+        for (; node; node = node->next) {
+            if (fragment->lirbuf->outOmem()) 
+                return JS_FALSE;
 
-        if (!node) {
-            lir->insStorei(pos, state, (int) offsetof(REMatchState, cp));
-            lir->ins1(LIR_ret, state);
-            return JS_TRUE;
+            switch (node->op) {
+            case REOP_EMPTY:
+                pos = compileEmpty(node, pos, fails);
+                break;
+            case REOP_FLAT:
+                if (node->u.flat.length != 1) 
+                    return JS_FALSE;
+                pos = compileFlatSingleChar(node, pos, fails);
+                break;
+            case REOP_ALT:
+            case REOP_ALTPREREQ:
+                pos = compileAlt(node, pos, fails);
+                break;
+            case REOP_CLASS:
+                pos = compileClass(node, pos, fails);
+                break;
+            default:
+                return JS_FALSE;
+            }
+            if (!pos) 
+                return JS_FALSE;
         }
 
-        switch (node->op) {
-        case REOP_EMPTY:
-            return compileEmpty(node, pos, fails);
-        case REOP_FLAT:
-            if (node->u.flat.length == 1)
-                return compileFlatSingleChar(node, pos, fails);
-            return JS_FALSE;
-        case REOP_ALT:
-        case REOP_ALTPREREQ:
-            return compileAlt(node, pos, fails);
-        case REOP_CLASS:
-            return compileClass(node, pos, fails);
-        default:
-            return JS_FALSE;
-        }
+        lir->insStorei(pos, state, (int) offsetof(REMatchState, cp));
+        lir->ins1(LIR_ret, state);
+        return JS_TRUE;
     }
 
     JSBool compileSticky(RENode* root, LIns* start) 
