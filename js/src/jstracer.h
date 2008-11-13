@@ -61,9 +61,9 @@ class Queue : public avmplus::GCObject {
     T* _data;
     unsigned _len;
     unsigned _max;
-
+    
     void ensure(unsigned size) {
-        while (_max < size)
+        while (_max < size) 
             _max <<= 1;
         _data = (T*)realloc(_data, _max * sizeof(T));
     }
@@ -73,45 +73,45 @@ public:
         this->_len = 0;
         this->_data = (T*)malloc(max * sizeof(T));
     }
-
+    
     ~Queue() {
         free(_data);
     }
-
+    
     bool contains(T a) {
         for (unsigned n = 0; n < _len; ++n)
             if (_data[n] == a)
                 return true;
         return false;
     }
-
+    
     void add(T a) {
         ensure(_len + 1);
         JS_ASSERT(_len <= _max);
         _data[_len++] = a;
     }
-
+    
     void add(T* chunk, unsigned size) {
         ensure(_len + size);
         JS_ASSERT(_len <= _max);
         memcpy(&_data[_len], chunk, size * sizeof(T));
         _len += size;
     }
-
+    
     void addUnique(T a) {
         if (!contains(a))
             add(a);
     }
-
+    
     void setLength(unsigned len) {
         ensure(len + 1);
         _len = len;
     }
-
+    
     void clear() {
         _len = 0;
     }
-
+    
     unsigned length() const {
         return _len;
     }
@@ -148,7 +148,7 @@ public:
 
 /*
  * The oracle keeps track of slots that should not be demoted to int because we know them
- * to overflow or they result in type-unstable traces. We are using a simple hash table.
+ * to overflow or they result in type-unstable traces. We are using a simple hash table. 
  * Collisions lead to loss of optimization (demotable slots are not demoted) but have no
  * correctness implications.
  */
@@ -195,7 +195,7 @@ struct VMSideExit : public nanojit::SideExit
     uint32 numStackSlotsBelowCurrentFrame;
     ExitType exitType;
 };
-
+    
 static inline uint8* getTypeMap(nanojit::SideExit* exit) 
 { 
     return (uint8*)(((VMSideExit*)exit) + 1); 
@@ -243,7 +243,7 @@ public:
 
 struct FrameInfo {
     JSObject*       callee;     // callee function object
-    intptr_t        ip_adj;     // callee script-based pc index and imacro pc
+    jsbytecode*     callpc;     // pc of JSOP_CALL in caller script
     uint8*          typemap;    // typemap for the stack frame
     union {
         struct {
@@ -253,7 +253,7 @@ struct FrameInfo {
         uint32      word;       // for spdist/argc LIR store in record_JSOP_CALL
     };
 };
-
+ 
 class TraceRecorder : public avmplus::GCObject {
     JSContext*              cx;
     JSTraceMonitor*         traceMonitor;
@@ -297,9 +297,9 @@ class TraceRecorder : public avmplus::GCObject {
     bool isGlobal(jsval* p) const;
     ptrdiff_t nativeGlobalOffset(jsval* p) const;
     ptrdiff_t nativeStackOffset(jsval* p) const;
-    void import(nanojit::LIns* base, ptrdiff_t offset, jsval* p, uint8& t,
+    void import(nanojit::LIns* base, ptrdiff_t offset, jsval* p, uint8& t, 
                 const char *prefix, uintN index, JSStackFrame *fp);
-    void import(TreeInfo* treeInfo, nanojit::LIns* sp, unsigned ngslots, unsigned callDepth,
+    void import(TreeInfo* treeInfo, nanojit::LIns* sp, unsigned ngslots, unsigned callDepth, 
                 uint8* globalTypeMap, uint8* stackTypeMap);
     void trackNativeStackUse(unsigned slots);
 
@@ -315,7 +315,7 @@ class TraceRecorder : public avmplus::GCObject {
 
     bool checkType(jsval& v, uint8 t, jsval*& stage_val, nanojit::LIns*& stage_ins,
                    unsigned& stage_count);
-    bool deduceTypeStability(nanojit::Fragment* root_peer, nanojit::Fragment** stable_peer,
+    bool deduceTypeStability(nanojit::Fragment* root_peer, nanojit::Fragment** stable_peer, 
                              unsigned* demotes);
 
     jsval& argval(unsigned n) const;
@@ -334,10 +334,8 @@ class TraceRecorder : public avmplus::GCObject {
 
     nanojit::LIns* f2i(nanojit::LIns* f);
     nanojit::LIns* makeNumberInt32(nanojit::LIns* f);
-    nanojit::LIns* stringify(jsval& v);
-
-    bool call_imacro(jsbytecode* imacro);
-
+    nanojit::LIns* stringify(jsval& v, nanojit::LIns* v_ins);
+    
     bool ifop();
     bool switchop();
     bool inc(jsval& v, jsint incr, bool pre = true);
@@ -371,7 +369,7 @@ class TraceRecorder : public avmplus::GCObject {
                     nanojit::LIns*& dslots_ins, nanojit::LIns* v_ins);
     bool native_get(nanojit::LIns* obj_ins, nanojit::LIns* pobj_ins, JSScopeProperty* sprop,
                     nanojit::LIns*& dslots_ins, nanojit::LIns*& v_ins);
-
+    
     bool name(jsval*& vp);
     bool prop(JSObject* obj, nanojit::LIns* obj_ins, uint32& slot, nanojit::LIns*& v_ins);
     bool elem(jsval& oval, jsval& idx, jsval*& vp, nanojit::LIns*& v_ins, nanojit::LIns*& addr_ins);
@@ -382,46 +380,28 @@ class TraceRecorder : public avmplus::GCObject {
 
     bool box_jsval(jsval v, nanojit::LIns*& v_ins);
     bool unbox_jsval(jsval v, nanojit::LIns*& v_ins);
-    bool guardClass(JSObject* obj, nanojit::LIns* obj_ins, JSClass* clasp,
-                    ExitType exitType = MISMATCH_EXIT);
-    bool guardDenseArray(JSObject* obj, nanojit::LIns* obj_ins,
-                         ExitType exitType = MISMATCH_EXIT);
+    bool guardClass(JSObject* obj, nanojit::LIns* obj_ins, JSClass* clasp);
+    bool guardDenseArray(JSObject* obj, nanojit::LIns* obj_ins);
     bool guardDenseArrayIndex(JSObject* obj, jsint idx, nanojit::LIns* obj_ins,
-                              nanojit::LIns* dslots_ins, nanojit::LIns* idx_ins,
+                              nanojit::LIns* dslots_ins, nanojit::LIns* idx_ins, 
                               ExitType exitType);
     bool guardElemOp(JSObject* obj, nanojit::LIns* obj_ins, jsid id, size_t op_offset, jsval* vp);
     void clearFrameSlotsFromCache();
     bool guardShapelessCallee(jsval& callee);
     bool interpretedFunctionCall(jsval& fval, JSFunction* fun, uintN argc, bool constructing);
     bool functionCall(bool constructing);
+    bool forInLoop(jsval* vp);
 
     void trackCfgMerges(jsbytecode* pc);
     void flipIf(jsbytecode* pc, bool& cond);
     void fuseIf(jsbytecode* pc, bool cond, nanojit::LIns* x);
 
-    bool hasMethod(JSObject* obj, jsid id);
-    bool hasToStringMethod(JSObject* obj);
-    bool hasToStringMethod(jsval v) {
-        JS_ASSERT(JSVAL_IS_OBJECT(v));
-        return hasToStringMethod(JSVAL_TO_OBJECT(v));
-    }
-    bool hasValueOfMethod(JSObject* obj);
-    bool hasValueOfMethod(jsval v) {
-        JS_ASSERT(JSVAL_IS_OBJECT(v));
-        return hasValueOfMethod(JSVAL_TO_OBJECT(v));
-    }
-    bool hasIteratorMethod(JSObject* obj);
-    bool hasIteratorMethod(jsval v) {
-        JS_ASSERT(JSVAL_IS_OBJECT(v));
-        return hasIteratorMethod(JSVAL_TO_OBJECT(v));
-    }
-
 public:
     friend bool js_MonitorRecording(TraceRecorder* tr);
 
     TraceRecorder(JSContext* cx, VMSideExit*, nanojit::Fragment*, TreeInfo*,
-                  unsigned ngslots, uint8* globalTypeMap, uint8* stackTypeMap,
-                  VMSideExit* expectedInnerExit, nanojit::Fragment* outerToBlacklist);
+            unsigned ngslots, uint8* globalTypeMap, uint8* stackTypeMap, 
+            VMSideExit* expectedInnerExit, nanojit::Fragment* outerToBlacklist);
     ~TraceRecorder();
 
     uint8 determineSlotType(jsval* vp) const;
@@ -438,7 +418,7 @@ public:
     void prepareTreeCall(nanojit::Fragment* inner);
     void emitTreeCall(nanojit::Fragment* inner, VMSideExit* exit);
     unsigned getCallDepth() const;
-
+    
     bool record_EnterFrame();
     bool record_LeaveFrame();
     bool record_SetPropHit(JSPropCacheEntry* entry, JSScopeProperty* sprop);
@@ -446,14 +426,14 @@ public:
     bool record_DefLocalFunSetSlot(uint32 slot, JSObject* obj);
     bool record_FastNativeCallComplete();
     bool record_IteratorNextComplete();
-
+    
     nanojit::Fragment* getOuterToBlacklist() { return outerToBlacklist; }
     void deepAbort() { deepAborted = true; }
     bool wasDeepAborted() { return deepAborted; }
     bool walkedOutOfLoop() { return terminate; }
     void setPromotedPeer(nanojit::Fragment* peer) { promotedPeer = peer; }
     TreeInfo* getTreeInfo() { return treeInfo; }
-
+    
 #define OPDEF(op,val,name,token,length,nuses,ndefs,prec,format)               \
     bool record_##op();
 # include "jsopcode.tbl"
@@ -464,41 +444,29 @@ public:
 #define TRACE_RECORDER(cx)        (JS_TRACE_MONITOR(cx).recorder)
 #define SET_TRACE_RECORDER(cx,tr) (JS_TRACE_MONITOR(cx).recorder = (tr))
 
-#define JSOP_IS_BINARY(op) ((uintN)((op) - JSOP_BITOR) <= (uintN)(JSOP_MOD - JSOP_BITOR))
-
-/*
- * See jsinterp.cpp for the ENABLE_TRACER definition. Also note how comparing x
- * to JSOP_* constants specializes trace-recording code at compile time either
- * to include imacro support, or exclude it altogether for this particular x.
- */
+// See jsinterp.cpp for the ENABLE_TRACER definition.
 #define RECORD_ARGS(x,args)                                                   \
     JS_BEGIN_MACRO                                                            \
-        if (!js_MonitorRecording(TRACE_RECORDER(cx))) {                       \
+        if (!js_MonitorRecording(TRACE_RECORDER(cx)))                         \
             ENABLE_TRACER(0);                                                 \
-        } else {                                                              \
-            TRACE_ARGS_(x, args,                                              \
-                if (fp->imacpc &&                                             \
-                    (x == JSOP_ITER || x == JSOP_NEXTITER ||                  \
-                    JSOP_IS_BINARY(x))) {                                     \
-                    atoms = COMMON_ATOMS_START(&rt->atomState);               \
-                    op = JSOp(*regs.pc);                                      \
-                    DO_OP();                                                  \
-                }                                                             \
-            );                                                                \
-         }                                                                    \
+        else                                                                  \
+            TRACE_ARGS_(TRACE_RECORDER(cx),x,args);                           \
     JS_END_MACRO
 
-#define TRACE_ARGS_(x,args,onfalse)                                           \
+#define TRACE_ARGS_(tr,x,args)                                                \
     JS_BEGIN_MACRO                                                            \
-        TraceRecorder* tr_ = TRACE_RECORDER(cx);                              \
-        if (tr_ && !tr_->record_##x args) {                                   \
-            onfalse                                                           \
+        if (!tr->record_##x args) {                                           \
             js_AbortRecording(cx, #x);                                        \
             ENABLE_TRACER(0);                                                 \
         }                                                                     \
     JS_END_MACRO
 
-#define TRACE_ARGS(x,args)      TRACE_ARGS_(x, args, )
+#define TRACE_ARGS(x,args)                                                    \
+    JS_BEGIN_MACRO                                                            \
+        TraceRecorder* tr_ = TRACE_RECORDER(cx);                              \
+        if (tr_)                                                              \
+            TRACE_ARGS_(tr_, x, args);                                        \
+    JS_END_MACRO
 
 #define RECORD(x)               RECORD_ARGS(x, ())
 #define TRACE_0(x)              TRACE_ARGS(x, ())
