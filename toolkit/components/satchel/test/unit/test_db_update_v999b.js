@@ -11,7 +11,7 @@
  * for the specific language governing rights and limitations under the
  * License.
  *
- * The Original Code is Form Autocomplete Test Code.
+ * The Original Code is Satchel Test Code.
  *
  * The Initial Developer of the Original Code is
  * Mozilla Corporation.
@@ -19,7 +19,7 @@
  * the Initial Developer. All Rights Reserved.
  *
  * Contributor(s):
- *   Mike Connor <mconnor@mozilla.com> (Original Author)
+ *   Justin Dolske <dolske@mozilla.com> (Original Author)
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -34,45 +34,60 @@
  * the terms of any one of the MPL, the GPL or the LGPL.
  *
  * ***** END LICENSE BLOCK ***** */
- 
-const Ci = Components.interfaces;
-const Cc = Components.classes;
-var dirSvc = Cc["@mozilla.org/file/directory_service;1"].
-             getService(Ci.nsIProperties);
 
-var dirSvc = Cc["@mozilla.org/file/directory_service;1"].
-             getService(Ci.nsIProperties);
-var profileDir = null;
-try {
-  profileDir = dirSvc.get("ProfD", Ci.nsIFile);
-} catch (e) { }
-if (!profileDir) {
-  // Register our own provider for the profile directory.
-  // It will simply return the current directory.
-  var provider = {
-    getFile: function(prop, persistent) {
-      persistent.value = true;
-      if (prop == "ProfD") {
-        return dirSvc.get("CurProcD", Ci.nsILocalFile);
-      }
-      print("*** Throwing trying to get " + prop);
-      throw Cr.NS_ERROR_FAILURE;
-    },
-    QueryInterface: function(iid) {
-      if (iid.equals(Ci.nsIDirectoryProvider) ||
-          iid.equals(Ci.nsISupports)) {
-        return this;
-      }
-      throw Cr.NS_ERROR_NO_INTERFACE;
-    }
-  };
-  dirSvc.QueryInterface(Ci.nsIDirectoryService).registerProvider(provider);
-}
+/*
+ * This test uses a formhistory.sqlite with schema version set to 999 (a
+ * future version). This exercies the code that allows using a future schema
+ * version as long as the expected columns are present.
+ *
+ * Part A tests this when the columns do match, so the DB is used.
+ * Part B tests this when the columns do *not* match, so the DB is reset.
+ */
 
-function cleanUpFormHist() {
-  var formhistFile = dirSvc.get("ProfD", Ci.nsIFile);
-  formhistFile.append("formhistory.dat");
-  if (formhistFile.exists())
-    formhistFile.remove(false);
+function run_test()
+{
+  try {
+  var testnum = 0;
+
+  // ===== test init =====
+  var testfile = do_get_file("toolkit/components/satchel/test/unit/formhistory_v999b.sqlite");
+  var profileDir = dirSvc.get("ProfD", Ci.nsIFile);
+
+  // Cleanup from any previous tests or failures.
+  var destFile = profileDir.clone();
+  destFile.append("formhistory.sqlite");
+  if (destFile.exists())
+    destFile.remove(false);
+
+  testfile.copyTo(profileDir, "formhistory.sqlite");
+
+  var fh = Cc["@mozilla.org/satchel/form-history;1"].
+           getService(Ci.nsIFormHistory2);
+
+
+  // ===== 1 =====
+  testnum++;
+  // File should be empty
+  do_check_false(fh.hasEntries);
+  do_check_false(fh.entryExists("name-A", "value-A"));
+
+
+  // ===== 2 =====
+  testnum++;
+  // Try adding an entry
+  fh.addEntry("name-A", "value-A");
+  do_check_true(fh.hasEntries);
+  do_check_true(fh.entryExists("name-A", "value-A"));
+
+
+  // ===== 3 =====
+  testnum++;
+  // Try removing an entry
+  fh.removeEntry("name-A", "value-A");
+  do_check_false(fh.hasEntries);
+  do_check_false(fh.entryExists("name-A", "value-A"));
+
+  } catch (e) {
+    throw "FAILED in test #" + testnum + " -- " + e;
+  }
 }
-cleanUpFormHist();
