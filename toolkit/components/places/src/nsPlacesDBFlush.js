@@ -103,24 +103,7 @@ nsPlacesDBFlush.prototype = {
       this._prefs.QueryInterface(Ci.nsIPrefBranch2).removeObserver("", this);
       this._timer.cancel();
       this._timer = null;
-      // Other components could still make changes to history at this point,
-      // for example to clear private data on shutdown, so here we dispatch
-      // an event to the main thread so that we will sync after
-      // quit-application ensuring all data have been saved.
-      let tm = Cc["@mozilla.org/thread-manager;1"].
-          getService(Ci.nsIThreadManager);
-      tm.mainThread.dispatch({
-        _self: this,
-        run: function() {
-          this._self._syncTables(["places", "historyvisits"]);
-          // Close the database connection, this was the last sync and we can't
-          // ensure database coherence from now on.
-          Cc["@mozilla.org/browser/nav-history-service;1"].
-            getService(Ci.nsPIPlacesDatabase).finalizeInternalStatements();
-          this._self._db.close();
-        }
-      }, Ci.nsIThread.DISPATCH_NORMAL);
-
+      this._syncTables(["places", "historyvisits"]);
     }
     else if (aTopic == "nsPref:changed" && aData == kSyncPrefName) {
       // Get the new pref value, and then update our timer

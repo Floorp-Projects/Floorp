@@ -1011,15 +1011,6 @@ nsFaviconService::OptimizeFaviconImage(const PRUint8* aData, PRUint32 aDataLen,
   return NS_OK;
 }
 
-void
-nsFaviconService::FinalizeStatements() {
-  mDBGetURL = nsnull;
-  mDBGetData = nsnull;
-  mDBGetIconInfo = nsnull;
-  mDBInsertIcon = nsnull;
-  mDBUpdateIcon = nsnull;
-  mDBSetPageFavicon = nsnull;
-}
 
 NS_IMPL_ISUPPORTS4(FaviconLoadListener,
                    nsIRequestObserver,

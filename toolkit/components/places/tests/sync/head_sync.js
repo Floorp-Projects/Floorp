@@ -111,7 +111,9 @@ clearDB();
  */
 function dump_table(aName)
 {
-  let db = DBConn()
+  let db = Cc["@mozilla.org/browser/nav-history-service;1"].
+           getService(Ci.nsPIPlacesDatabase).
+           DBConnection;
   let stmt = db.createStatement("SELECT * FROM " + aName);
 
   dump("\n*** Printing data from " + aName + ":\n");
@@ -183,7 +185,9 @@ function finish_test()
  */
 function new_test_bookmark_uri_event(aBookmarkId, aExpectedURI, aExpected, aFinish)
 {
-  let db = DBConn();
+  let db = Cc["@mozilla.org/browser/nav-history-service;1"].
+           getService(Ci.nsPIPlacesDatabase).
+           DBConnection;
   let stmt = db.createStatement(
     "SELECT moz_places.url " +
     "FROM moz_bookmarks INNER JOIN moz_places " +
@@ -223,7 +227,9 @@ function new_test_bookmark_uri_event(aBookmarkId, aExpectedURI, aExpected, aFini
  */
 function new_test_visit_uri_event(aVisitId, aExpectedURI, aExpected, aFinish)
 {
-  let db = DBConn();
+  let db = Cc["@mozilla.org/browser/nav-history-service;1"].
+           getService(Ci.nsPIPlacesDatabase).
+           DBConnection;
   let stmt = db.createStatement(
     "SELECT moz_places.url " +
     "FROM moz_historyvisits INNER JOIN moz_places " +
@@ -245,31 +251,6 @@ function new_test_visit_uri_event(aVisitId, aExpectedURI, aExpected, aFinish)
 
   if (aFinish)
     finish_test();
-}
-
-/**
- * Function gets current database connection, if the connection has been closed
- * it will try to reconnect to the places.sqlite database.
- */
-function DBConn()
-{
-  let db = Cc["@mozilla.org/browser/nav-history-service;1"].
-           getService(Ci.nsPIPlacesDatabase).
-           DBConnection;
-  if (db.connectionReady)
-    return db;
-
-  // open a new connection if needed
-  let file = dirSvc.get('ProfD', Ci.nsIFile);
-  file.append("places.sqlite");
-  let storageService = Cc["@mozilla.org/storage/service;1"].
-                       getService(Ci.mozIStorageService);
-  try {
-    var dbConn = storageService.openDatabase(file);
-  } catch (ex) {
-    return null;
-  }
-  return dbConn;
 }
 
 // profile-after-change doesn't create components in xpcshell, so we have to do
