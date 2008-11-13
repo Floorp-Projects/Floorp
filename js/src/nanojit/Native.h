@@ -110,11 +110,9 @@ namespace nanojit {
 		#define gpn(r)					regNames[(r)] 
 		#define fpn(r)					regNames[(r)] 
 	#else
-		#define PRFX			
 		#define asm_output(f, ...)
 		#define gpn(r)		
 		#define fpn(r)		
 	#endif /* NJ_VERBOSE */
-
 
 #endif // __nanojit_Native__
