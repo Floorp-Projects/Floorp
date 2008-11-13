@@ -1002,10 +1002,9 @@ TraceRecorder::TraceRecorder(JSContext* cx, VMSideExit* _anchor, Fragment* _frag
     this->terminate = false;
     this->outerToBlacklist = outerToBlacklist;
 
-    debug_only_v(printf("recording starting from %s:%u@%u\n",
-                        cx->fp->script->filename,
-                        js_FramePCToLineNumber(cx, cx->fp),
-                        FramePCOffset(cx->fp));)
+    debug_only_v(printf("recording starting from %s:%u@%u\n", cx->fp->script->filename,
+                        js_PCToLineNumber(cx, cx->fp->script, cx->fp->regs->pc),
+                        cx->fp->regs->pc - cx->fp->script->code););
     debug_only_v(printf("globalObj=%p, shape=%d\n", this->globalObj, OBJ_SHAPE(this->globalObj));)
 
     lir = lir_buf_writer = new (&gc) LirBufWriter(lirbuf);
@@ -1517,8 +1516,7 @@ TraceRecorder::import(LIns* base, ptrdiff_t offset, jsval* p, uint8& t,
     static const char* typestr[] = {
         "object", "int", "double", "3", "string", "5", "boolean", "any"
     };
-    debug_only_v(printf("import vp=%p name=%s type=%s flags=%d\n",
-                        p, name, typestr[t & 7], t >> 3);)
+    debug_only_v(printf("import vp=%p name=%s type=%s flags=%d\n", p, name, typestr[t & 7], t >> 3););
 #endif
 }
 
@@ -1765,41 +1763,6 @@ TraceRecorder::determineSlotType(jsval* vp) const
     return m;
 }
 
-#define IMACRO_PC_ADJ_BITS   8
-#define SCRIPT_PC_ADJ_BITS   (32 - IMACRO_PC_ADJ_BITS)
-
-// The stored imacro_pc_adj byte offset is biased by 1.
-#define IMACRO_PC_ADJ_LIMIT  (JS_BIT(IMACRO_PC_ADJ_BITS) - 1)
-#define SCRIPT_PC_ADJ_LIMIT  JS_BIT(SCRIPT_PC_ADJ_BITS)
-
-#define IMACRO_PC_ADJ(ip)    ((uintptr_t)(ip) >> SCRIPT_PC_ADJ_BITS)
-#define SCRIPT_PC_ADJ(ip)    ((ip) & JS_BITMASK(SCRIPT_PC_ADJ_BITS))
-
-#define FI_SCRIPT_PC(fi,fp)  ((fp)->script->code + SCRIPT_PC_ADJ((fi).ip_adj))
-
-#define FI_IMACRO_PC(fi,fp)  (IMACRO_PC_ADJ((fi).ip_adj)                      \
-                              ? imacro_code[*FI_SCRIPT_PC(fi, fp)] +          \
-                                IMACRO_PC_ADJ((fi).ip_adj)                    \
-                              : NULL)
-
-#define IMACRO_PC_OK(fp,pc)  JS_ASSERT(uintN((pc)-imacro_code[*(fp)->imacpc]) \
-                                       < JS_BIT(IMACRO_PC_ADJ_BITS))
-#define ENCODE_IP_ADJ(fp,pc) ((fp)->imacpc                                    \
-                              ? (IMACRO_PC_OK(fp, pc),                        \
-                                 (((pc) - imacro_code[*(fp)->imacpc])         \
-                                  << SCRIPT_PC_ADJ_BITS) +                    \
-                                 (fp)->imacpc - (fp)->script->code)           \
-                              : (pc) - (fp)->script->code)
-
-#define DECODE_IP_ADJ(ip,fp) (IMACRO_PC_ADJ(ip)                               \
-                              ? (fp)->imacpc = (fp)->script->code +           \
-                                               SCRIPT_PC_ADJ(ip),             \
-                                (fp)->regs->pc = imacro_code[*(fp)->imacpc] + \
-                                                 IMACRO_PC_ADJ(ip)            \
-                              : (fp)->regs->pc = (fp)->script->code + (ip))
-
-static jsbytecode* imacro_code[JSOP_LIMIT];
-
 LIns*
 TraceRecorder::snapshot(ExitType exitType)
 {
@@ -1861,7 +1824,7 @@ TraceRecorder::snapshot(ExitType exitType)
         else if (*pc == JSOP_GOTOX)
             pc += GET_JUMPX_OFFSET(pc);
     }
-    intptr_t ip_adj = ENCODE_IP_ADJ(fp, pc);
+    int ip_adj = pc - (jsbytecode*)fragment->root->ip;
 
     /* Check if we already have a matching side exit. If so use that side exit structure,
        otherwise we have to create our own. */
@@ -1922,7 +1885,7 @@ TraceRecorder::snapshot(ExitType exitType)
 /* Emit a guard for condition (cond), expecting to evaluate to boolean result (expected)
    and using the supplied side exit if the conditon doesn't hold. */
 LIns*
-TraceRecorder::guard(bool expected, LIns* cond, LIns* exit)
+TraceRecorder::guard(bool expected, nanojit::LIns* cond, nanojit::LIns* exit)
 {
     return lir->insGuard(expected ? LIR_xf : LIR_xt, cond, exit);
 }
@@ -1978,7 +1941,7 @@ TraceRecorder::checkType(jsval& v, uint8 t, jsval*& stage_val, LIns*& stage_ins,
         if (!isNumber(v))
             return false; /* not a number? type mismatch */
         LIns* i = get(&v);
-        /* We sink i2f conversions into the side exit, but at the loop edge we have to make
+        /* We sink i2f conversions into the side exit, but at the loop edge we have to
            sure we promote back to double if at loop entry we want a double. */
         if (isPromoteInt(i)) {
             stage_val = &v;
@@ -1991,7 +1954,7 @@ TraceRecorder::checkType(jsval& v, uint8 t, jsval*& stage_val, LIns*& stage_ins,
 #ifdef DEBUG
     if (JSVAL_TAG(v) != t) {
         debug_only_v(printf("Type mismatch: val %c, map %c ", typeChar[JSVAL_TAG(v)],
-                            typeChar[t]);)
+                            typeChar[t]););
     }
 #endif
     debug_only_v(printf("checkType(tag=%d, t=%d) stage_count=%d\n",
@@ -2185,9 +2148,9 @@ TraceRecorder::compile(Fragmento* fragmento)
         fragment->vmprivate = treeInfo;
     /* :TODO: windows support */
 #if defined DEBUG && !defined WIN32
-    char* label = (char*)malloc(strlen(cx->fp->script->filename) + 16);
+    char* label = (char*)malloc(strlen(cx->fp->script->filename) + 64);
     sprintf(label, "%s:%u", cx->fp->script->filename,
-            js_FramePCToLineNumber(cx, cx->fp));
+            js_PCToLineNumber(cx, cx->fp->script, cx->fp->regs->pc));
     fragmento->labels->add(fragment, sizeof(Fragment), 0, label);
     free(label);
 #endif
@@ -2251,28 +2214,21 @@ TraceRecorder::closeLoop(Fragmento* fragmento, bool& demote, unsigned *demotes)
     if (!stable) {
         fragment->lastIns = lir->insGuard(LIR_x, lir->insImm(1), exitIns);
 
-        /*
-         * If we didn't find a type stable peer, we compile the loop anyway and
-         * hope it becomes stable later.
+        /* If we didn't find a type stable peer, we compile the loop anyway and hope it becomes 
+         * stable later.
          */
         if (!peer) {
-            /*
-             * If such a fragment does not exist, let's compile the loop ahead
-             * of time anyway.  Later, if the loop becomes type stable, we will
-             * connect these two fragments together.
+            /* If such a fragment does not exist, let's compile the loop ahead of time anyway. 
+             * Later, if the loop becomes type stable, we will connect these two fragments together.
              */
-            debug_only_v(printf("Trace has unstable loop variable with no stable peer, "
-                                "compiling anyway.\n");)
+            debug_only_v(printf("Trace has unstable loop variable with no stable peer, compiling anyway.\n");)
             UnstableExit* uexit = new UnstableExit;
             uexit->fragment = fragment;
             uexit->exit = exit;
             uexit->next = treeInfo->unstableExits;
             treeInfo->unstableExits = uexit;
 
-            /*
-             * If we walked out of a loop, this exit is wrong. We need to back
-             * up to the if operation.
-             */
+            /* If we walked out of a loop, this exit is wrong.  We need to back up to the if operation. */
             if (walkedOutOfLoop())
                 exit->ip_adj = terminate_ip_adj;
 
@@ -2282,7 +2238,7 @@ TraceRecorder::closeLoop(Fragmento* fragmento, bool& demote, unsigned *demotes)
         } else {
             JS_ASSERT(peer->code());
             exit->target = peer;
-            debug_only_v(printf("Joining type-unstable trace to target fragment %p.\n", peer);)
+            debug_only_v(printf("Joining type-unstable trace to target fragment %p.\n", peer););
             stable = true;
             ((TreeInfo*)peer->vmprivate)->dependentTrees.addUnique(fragment);
         }
@@ -2299,15 +2255,14 @@ TraceRecorder::closeLoop(Fragmento* fragmento, bool& demote, unsigned *demotes)
 
     joinEdgesToEntry(fragmento, peer_root);
 
-    debug_only_v(printf("recording completed at %s:%u@%u via closeLoop\n",
-                        cx->fp->script->filename,
-                        js_FramePCToLineNumber(cx, cx->fp),
-                        FramePCOffset(cx->fp));)
+    debug_only_v(printf("recording completed at %s:%u@%u via closeLoop\n", cx->fp->script->filename,
+                        js_PCToLineNumber(cx, cx->fp->script, cx->fp->regs->pc),
+                        cx->fp->regs->pc - cx->fp->script->code););
     return true;
 }
 
 void
-TraceRecorder::joinEdgesToEntry(Fragmento* fragmento, Fragment* peer_root)
+TraceRecorder::joinEdgesToEntry(nanojit::Fragmento* fragmento, nanojit::Fragment* peer_root)
 {
     if (fragment->kind == LoopTrace) {
         TreeInfo* ti;
@@ -2379,10 +2334,9 @@ TraceRecorder::endLoop(Fragmento* fragmento)
 
     joinEdgesToEntry(fragmento, fragmento->getLoop(fragment->root->ip));
 
-    debug_only_v(printf("recording completed at %s:%u@%u via endLoop\n",
-                        cx->fp->script->filename,
-                        js_FramePCToLineNumber(cx, cx->fp),
-                        FramePCOffset(cx->fp));)
+    debug_only_v(printf("recording completed at %s:%u@%u via endLoop\n", cx->fp->script->filename,
+                        js_PCToLineNumber(cx, cx->fp->script, cx->fp->regs->pc),
+                        cx->fp->regs->pc - cx->fp->script->code););
 }
 
 /* Emit code to adjust the stack to match the inner tree's stack expectations. */
@@ -2495,10 +2449,9 @@ TraceRecorder::flipIf(jsbytecode* pc, bool& cond)
            value of the IP the interpreter expects, so we can use it in our final LIR_x.
          */
         if (*pc == JSOP_IFEQX || *pc == JSOP_IFNEX)
-            pc += GET_JUMPX_OFFSET(pc);
+            terminate_ip_adj = pc + GET_JUMPX_OFFSET(pc) - (jsbytecode*)fragment->root->ip;
         else
-            pc += GET_JUMP_OFFSET(pc);
-        terminate_ip_adj = ENCODE_IP_ADJ(cx->fp, pc);
+            terminate_ip_adj = pc + GET_JUMP_OFFSET(pc) - (jsbytecode*)fragment->root->ip;
     }
 }
 
@@ -2518,62 +2471,6 @@ TraceRecorder::fuseIf(jsbytecode* pc, bool cond, LIns* x)
     }
 }
 
-bool
-TraceRecorder::hasMethod(JSObject* obj, jsid id)
-{
-    if (!obj)
-        return false;
-
-    JSObject* pobj;
-    JSProperty* prop;
-    int protoIndex = js_LookupPropertyWithFlags(cx, obj, id, cx->resolveFlags, &pobj, &prop);
-    if (protoIndex < 0 || !prop)
-        return false;
-
-    JSScope* scope = OBJ_SCOPE(pobj);
-    JSScopeProperty* sprop = (JSScopeProperty*) prop;
-    bool found = false;
-
-    if (SPROP_HAS_STUB_GETTER(sprop) &&
-        SPROP_HAS_VALID_SLOT(sprop, scope)) {
-        jsval v = LOCKED_OBJ_GET_SLOT(pobj, sprop->slot);
-        if (VALUE_IS_FUNCTION(cx, v)) {
-            found = true;
-            if (!SCOPE_IS_BRANDED(scope)) {
-                SCOPE_MAKE_UNIQUE_SHAPE(cx, scope);
-                SCOPE_SET_BRANDED(scope);
-            }
-        }
-    }
-
-    OBJ_DROP_PROPERTY(cx, pobj, prop);
-    return found;
-}
-
-bool
-TraceRecorder::hasToStringMethod(JSObject* obj)
-{
-    JS_ASSERT(cx->fp->regs->sp + 1 <= cx->fp->slots + cx->fp->script->nslots);
-
-    return hasMethod(obj, ATOM_TO_JSID(cx->runtime->atomState.toStringAtom));
-}
-
-bool
-TraceRecorder::hasValueOfMethod(JSObject* obj)
-{
-    JS_ASSERT(cx->fp->regs->sp + 2 <= cx->fp->slots + cx->fp->script->nslots);
-
-    return hasMethod(obj, ATOM_TO_JSID(cx->runtime->atomState.valueOfAtom));
-}
-
-bool
-TraceRecorder::hasIteratorMethod(JSObject* obj)
-{
-    JS_ASSERT(cx->fp->regs->sp + 2 <= cx->fp->slots + cx->fp->script->nslots);
-
-    return hasMethod(obj, ATOM_TO_JSID(cx->runtime->atomState.iteratorAtom));
-}
-
 int
 nanojit::StackFilter::getTop(LInsp guard)
 {
@@ -2588,18 +2485,20 @@ nanojit::StackFilter::getTop(LInsp guard)
 void
 nanojit::LirNameMap::formatGuard(LIns *i, char *out)
 {
+    uint32_t ip;
     VMSideExit *x;
 
     x = (VMSideExit *)i->record()->exit;
+    ip = intptr_t(x->from->ip) + x->ip_adj;
     sprintf(out,
-            "%s: %s %s -> %lu:%lu sp%+ld rp%+ld",
-            formatRef(i),
-            lirNames[i->opcode()],
-            i->oprnd1()->isCond() ? formatRef(i->oprnd1()) : "",
-            IMACRO_PC_ADJ(x->ip_adj),
-            SCRIPT_PC_ADJ(x->ip_adj),
-            (long int)x->sp_adj,
-            (long int)x->rp_adj);
+        "%s: %s %s -> %s sp%+ld rp%+ld",
+        formatRef(i),
+        lirNames[i->opcode()],
+        i->oprnd1()->isCond() ? formatRef(i->oprnd1()) : "",
+        labels->format((void *)ip),
+        (long int)x->sp_adj,
+        (long int)x->rp_adj
+        );
 }
 #endif
 
@@ -2703,12 +2602,8 @@ js_SynthesizeFrame(JSContext* cx, const FrameInfo& fi)
     JS_ASSERT(FUN_INTERPRETED(fun));
 
     /* Assert that we have a correct sp distance from cx->fp->slots in fi. */
-    JS_ASSERT(js_ReconstructStackDepth(cx, cx->fp->script,
-                                       FI_IMACRO_PC(fi, cx->fp)
-                                       ? FI_SCRIPT_PC(fi, cx->fp) +
-                                         js_CodeSpec[*FI_SCRIPT_PC(fi, cx->fp)].length
-                                       : FI_SCRIPT_PC(fi, cx->fp))
-              == uintN(fi.s.spdist - cx->fp->script->nfixed));
+    JS_ASSERT(js_ReconstructStackDepth(cx, cx->fp->script, fi.callpc) ==
+              uintN(fi.s.spdist - cx->fp->script->nfixed));
 
     uintN nframeslots = JS_HOWMANY(sizeof(JSInlineFrame), sizeof(jsval));
     JSScript* script = fun->u.i.script;
@@ -2779,14 +2674,10 @@ js_SynthesizeFrame(JSContext* cx, const FrameInfo& fi)
     newifp->frame.fun = fun;
 
     bool constructing = fi.s.argc & 0x8000;
+    
     newifp->frame.argc = argc;
-
-    jsbytecode* imacro_pc = FI_IMACRO_PC(fi, cx->fp);
-    jsbytecode* script_pc = FI_SCRIPT_PC(fi, cx->fp);
-    newifp->callerRegs.pc = imacro_pc ? imacro_pc : script_pc;
+    newifp->callerRegs.pc = fi.callpc;
     newifp->callerRegs.sp = cx->fp->slots + fi.s.spdist;
-    cx->fp->imacpc = imacro_pc ? script_pc : NULL;
-
     newifp->frame.argv = newifp->callerRegs.sp - argc;
     JS_ASSERT(newifp->frame.argv);
 #ifdef DEBUG
@@ -2812,7 +2703,6 @@ js_SynthesizeFrame(JSContext* cx, const FrameInfo& fi)
     newifp->frame.regs = cx->fp->regs;
     newifp->frame.regs->pc = script->code;
     newifp->frame.regs->sp = newsp + script->nfixed;
-    newifp->frame.imacpc = NULL;
     newifp->frame.slots = newsp;
     if (script->staticDepth < JS_DISPLAY_SIZE) {
         JSStackFrame **disp = &cx->display[script->staticDepth];
@@ -2865,12 +2755,6 @@ js_SynthesizeFrame(JSContext* cx, const FrameInfo& fi)
 bool
 js_RecordTree(JSContext* cx, JSTraceMonitor* tm, Fragment* f, Fragment* outer, unsigned* demotes)
 {
-    /* Avoid recording loops in overlarge scripts. */
-    if (cx->fp->script->length >= SCRIPT_PC_ADJ_LIMIT) {
-        js_AbortRecording(cx, "script too large");
-        return false;
-    }
-
     /* Make sure the global type map didn't change on us. */
     uint32 globalShape = OBJ_SHAPE(JS_GetGlobalForObject(cx, cx->fp->scopeChain));
     if (tm->globalShape != globalShape) {
@@ -3049,7 +2933,7 @@ static VMSideExit*
 js_ExecuteTree(JSContext* cx, Fragment* f, uintN& inlineCallCount, 
                VMSideExit** innermostNestedGuardp);
 
-static Fragment*
+static nanojit::Fragment*
 js_FindVMCompatiblePeer(JSContext* cx, Fragment* f);
 
 static bool
@@ -3062,7 +2946,6 @@ js_CloseLoop(JSContext* cx)
 
     if (fragmento->assm()->error()) {
         js_AbortRecording(cx, "Error during recording");
-
         /* If we ran out of memory, flush the code cache and abort. */
         if (fragmento->assm()->error() == OutOMem)
             js_FlushJITCache(cx);
@@ -3117,8 +3000,8 @@ js_RecordLoopEdge(JSContext* cx, TraceRecorder* r, uintN& inlineCallCount)
         
         debug_only_v(printf("Looking for type-compatible peer (%s:%d@%d)\n",
                             cx->fp->script->filename,
-                            js_FramePCToLineNumber(cx, cx->fp),
-                            FramePCOffset(cx->fp));)
+                            js_PCToLineNumber(cx, cx->fp->script, cx->fp->regs->pc),
+                            cx->fp->regs->pc - cx->fp->script->code);)
 
         /* Find an acceptable peer, make sure our types fit. */
         Fragment* empty;
@@ -3195,7 +3078,6 @@ js_RecordLoopEdge(JSContext* cx, TraceRecorder* r, uintN& inlineCallCount)
 
     /* not returning to our own loop header, not an inner loop we can call, abort trace */
     AUDIT(returnToDifferentLoopHeader);
-    JS_ASSERT(!cx->fp->imacpc);
     debug_only_v(printf("loop edge to %d, header %d\n",
                  cx->fp->regs->pc - cx->fp->script->code,
                  (jsbytecode*)r->getFragment()->root->ip - cx->fp->script->code));
@@ -3371,7 +3253,7 @@ check_fail:
  * @param f             First peer fragment.
  * @param nodemote      If true, will try to find a peer that does not require demotion.
  */
-static Fragment*
+static nanojit::Fragment*
 js_FindVMCompatiblePeer(JSContext* cx, Fragment* f)
 {
     for (; f != NULL; f = f->peer) {
@@ -3416,10 +3298,9 @@ js_ExecuteTree(JSContext* cx, Fragment* f, uintN& inlineCallCount,
     debug_only(*(uint64*)&global[globalFrameSize] = 0xdeadbeefdeadbeefLL;)
     debug_only_v(printf("entering trace at %s:%u@%u, native stack slots: %u code: %p\n",
                         cx->fp->script->filename,
-                        js_FramePCToLineNumber(cx, cx->fp),
-                        FramePCOffset(cx->fp),
-                        ti->maxNativeStackSlots,
-                        f->code());)
+                        js_PCToLineNumber(cx, cx->fp->script, cx->fp->regs->pc),
+                        cx->fp->regs->pc - cx->fp->script->code, ti->maxNativeStackSlots,
+                        f->code()););
     
     if (ngslots)
         BuildNativeGlobalFrame(cx, ngslots, gslots, tm->globalTypeMap->data(), global);
@@ -3521,10 +3402,8 @@ js_ExecuteTree(JSContext* cx, Fragment* f, uintN& inlineCallCount,
 #ifdef DEBUG
         JSStackFrame* fp = cx->fp;
         debug_only_v(printf("synthesized deep frame for %s:%u@%u, slots=%d\n",
-                            fp->script->filename,
-                            js_FramePCToLineNumber(cx, fp),
-                            FramePCOffset(fp),
-                            slots);)
+                            fp->script->filename, js_PCToLineNumber(cx, fp->script, fp->regs->pc),
+                            fp->regs->pc - fp->script->code, slots);)
 #endif        
         if (slots < 0)
             return NULL;
@@ -3549,24 +3428,22 @@ js_ExecuteTree(JSContext* cx, Fragment* f, uintN& inlineCallCount,
 #ifdef DEBUG        
         JSStackFrame* fp = cx->fp;
         debug_only_v(printf("synthesized shallow frame for %s:%u@%u\n",
-                            fp->script->filename, js_FramePCToLineNumber(cx, fp),
-                            FramePCOffset(fp));)
+                            fp->script->filename, js_PCToLineNumber(cx, fp->script, fp->regs->pc),
+                            fp->regs->pc - fp->script->code);)
 #endif        
     }
 
-    /* Adjust sp and pc relative to the tree we exited from (not the tree we entered into).
-       These are our final values for sp and pc since js_SynthesizeFrame has already taken
-       care of all frames in between. */
+    /* Adjust sp and pc relative to the tree we exited from (not the tree we entered
+       into). These are our final values for sp and pc since js_SynthesizeFrame has
+       already taken care of all frames in between. */
     JSStackFrame* fp = cx->fp;
 
     /* If we are not exiting from an inlined frame the state->sp is spbase, otherwise spbase
        is whatever slots frames around us consume. */
-    DECODE_IP_ADJ(innermost->ip_adj, fp);
+    fp->regs->pc = (jsbytecode*)innermost->from->root->ip + innermost->ip_adj;
     fp->regs->sp = StackBase(fp) + (innermost->sp_adj / sizeof(double)) - calldepth_slots;
-    JS_ASSERT_IF(!fp->imacpc,
-                 fp->slots + fp->script->nfixed +
-                 js_ReconstructStackDepth(cx, fp->script, fp->regs->pc) == fp->regs->sp);
-                                              
+    JS_ASSERT(fp->slots + fp->script->nfixed +
+              js_ReconstructStackDepth(cx, fp->script, fp->regs->pc) == fp->regs->sp);
 
 #if defined(JS_JIT_SPEW) && (defined(NANOJIT_IA32) || (defined(NANOJIT_AMD64) && defined(__GNUC__)))
     uint64 cycles = rdtsc() - start;
@@ -3576,10 +3453,9 @@ js_ExecuteTree(JSContext* cx, Fragment* f, uintN& inlineCallCount,
 
     debug_only_v(printf("leaving trace at %s:%u@%u, op=%s, lr=%p, exitType=%d, sp=%d, "
                         "calldepth=%d, cycles=%llu\n",
-                        fp->script->filename,
-                        js_FramePCToLineNumber(cx, fp),
-                        FramePCOffset(fp),
-                        js_CodeName[fp->imacpc ? *fp->imacpc : *fp->regs->pc],
+                        fp->script->filename, js_PCToLineNumber(cx, fp->script, fp->regs->pc),
+                        fp->regs->pc - fp->script->code,
+                        js_CodeName[*fp->regs->pc],
                         lr,
                         lr->exitType,
                         fp->regs->sp - StackBase(fp), 
@@ -3607,9 +3483,8 @@ js_ExecuteTree(JSContext* cx, Fragment* f, uintN& inlineCallCount,
     JS_ASSERT(*(uint64*)&global[globalFrameSize] == 0xdeadbeefdeadbeefLL);
 
     /* write back native stack frame */
-    slots = FlushNativeStackFrame(cx, innermost->calldepth,
-                                  getTypeMap(innermost) + innermost->numGlobalSlots,
-                                  stack, NULL);
+    slots = FlushNativeStackFrame(cx, innermost->calldepth, getTypeMap(innermost) + 
+                                                            innermost->numGlobalSlots, stack, NULL);
     if (slots < 0)
         return NULL;
     JS_ASSERT(unsigned(slots) == innermost->numStackSlots);
@@ -3672,9 +3547,8 @@ monitor_loop:
     }
     
     debug_only_v(printf("Looking for compat peer %d@%d, from %p (ip: %p, hits=%d)\n",
-                        js_FramePCToLineNumber(cx, cx->fp), 
-                        FramePCOffset(cx->fp),
-                        f, f->ip, f->hits());)
+                        js_PCToLineNumber(cx, cx->fp->script, cx->fp->regs->pc), 
+                        cx->fp->regs->pc - cx->fp->script->code, f, f->ip, f->hits());)
     Fragment* match = js_FindVMCompatiblePeer(cx, f);
     /* If we didn't find a tree that actually matched, keep monitoring the loop. */
     if (!match) 
@@ -3777,14 +3651,11 @@ js_AbortRecording(JSContext* cx, const char* reason)
     JSTraceMonitor* tm = &JS_TRACE_MONITOR(cx);
     JS_ASSERT(tm->recorder != NULL);
     AUDIT(recorderAborted);
-
     /* Abort the trace and blacklist its starting point. */
-    JSStackFrame* fp = cx->fp;
-    if (fp) {
+    if (cx->fp) {
         debug_only_v(printf("Abort recording (line %d, pc %d): %s.\n",
-                            js_FramePCToLineNumber(cx, fp),
-                            FramePCOffset(fp),
-                            reason);)
+                            js_PCToLineNumber(cx, cx->fp->script, cx->fp->regs->pc),
+                            cx->fp->regs->pc - cx->fp->script->code, reason);)
     }
     Fragment* f = tm->recorder->getFragment();
     if (!f) {
@@ -3841,8 +3712,6 @@ js_CheckForSSE2()
 }
 #endif
 
-static void InitIMacroCode();
-
 extern void
 js_InitJIT(JSTraceMonitor *tm)
 {
@@ -3867,7 +3736,6 @@ js_InitJIT(JSTraceMonitor *tm)
         verbose_only(fragmento->labels = new (&gc) LabelMap(core, NULL);)
         tm->reFragmento = fragmento;
     }
-    InitIMacroCode();
 #if !defined XP_WIN
     debug_only(memset(&jitstats, 0, sizeof(jitstats)));
 #endif
@@ -3919,7 +3787,7 @@ js_FlushJITCache(JSContext* cx)
 {
     if (!TRACING_ENABLED(cx))
         return;
-    debug_only_v(printf("Flushing cache.\n");)
+    debug_only_v(printf("Flushing cache.\n"););
     JSTraceMonitor* tm = &JS_TRACE_MONITOR(cx);
     if (tm->recorder)
         js_AbortRecording(cx, "flush cache");
@@ -4086,9 +3954,8 @@ LIns* TraceRecorder::makeNumberInt32(LIns* f)
 }
 
 LIns*
-TraceRecorder::stringify(jsval& v)
+TraceRecorder::stringify(jsval& v, LIns* v_ins)
 {
-    LIns* v_ins = get(&v);
     if (JSVAL_IS_STRING(v))
         return v_ins;
 
@@ -4108,19 +3975,6 @@ TraceRecorder::stringify(jsval& v)
     v_ins = lir->insCall(ci, args);
     guard(false, lir->ins_eq0(v_ins), OOM_EXIT);
     return v_ins;
-}
-
-bool
-TraceRecorder::call_imacro(jsbytecode* imacro)
-{
-    JSStackFrame* fp = cx->fp;
-    JSFrameRegs* regs = fp->regs;
-
-    JS_ASSERT(!fp->imacpc);
-    fp->imacpc = regs->pc;
-    regs->pc = imacro;
-    atoms = COMMON_ATOMS_START(&cx->runtime->atomState);
-    return false;
 }
 
 bool
@@ -4500,59 +4354,11 @@ TraceRecorder::unary(LOpcode op)
     return false;
 }
 
-static struct {
-    jsbytecode obj_any[13];
-    jsbytecode any_obj[11];
-    jsbytecode obj_obj[22];
-} binary_imacros = {
-    {
-        JSOP_SWAP,
-        JSOP_CALLPROP, 0, COMMON_ATOM_INDEX(valueOf),
-        JSOP_STRING, 0, COMMON_TYPE_ATOM_INDEX(JSTYPE_NUMBER),
-        JSOP_CALL, 0, 1,
-        JSOP_SWAP,
-        JSOP_IMACOP,
-        JSOP_STOP
-    },
-
-    {
-        JSOP_CALLPROP, 0, COMMON_ATOM_INDEX(valueOf),
-        JSOP_STRING, 0, COMMON_TYPE_ATOM_INDEX(JSTYPE_NUMBER),
-        JSOP_CALL, 0, 1,
-        JSOP_IMACOP,
-        JSOP_STOP
-    },
-
-    {
-        JSOP_SWAP,
-        JSOP_CALLPROP, 0, COMMON_ATOM_INDEX(valueOf),
-        JSOP_STRING, 0, COMMON_TYPE_ATOM_INDEX(JSTYPE_NUMBER),
-        JSOP_CALL, 0, 1,
-        JSOP_SWAP,
-        JSOP_CALLPROP, 0, COMMON_ATOM_INDEX(valueOf),
-        JSOP_STRING, 0, COMMON_TYPE_ATOM_INDEX(JSTYPE_NUMBER),
-        JSOP_CALL, 0, 1,
-        JSOP_IMACOP,
-        JSOP_STOP
-    }
-};
-
-JS_STATIC_ASSERT(sizeof(binary_imacros) < IMACRO_PC_ADJ_LIMIT);
-
 bool
 TraceRecorder::binary(LOpcode op)
 {
     jsval& r = stackval(-1);
     jsval& l = stackval(-2);
-
-    if (JSVAL_IS_OBJECT(l) && hasValueOfMethod(l)) {
-        if (JSVAL_IS_OBJECT(r) && hasValueOfMethod(r))
-            return call_imacro(binary_imacros.obj_obj);
-        return call_imacro(binary_imacros.obj_any);
-    }
-    if (JSVAL_IS_OBJECT(r) && hasValueOfMethod(r))
-        return call_imacro(binary_imacros.any_obj);
-
     bool intop = !(op & LIR64);
     LIns* a = get(&l);
     LIns* b = get(&r);
@@ -4739,7 +4545,7 @@ TraceRecorder::test_property_cache(JSObject* obj, LIns* obj_ins, JSObject*& obj2
         }
     }
 
-    // For any hit that goes up the scope and/or proto chains, we will need to
+    // For any hit that goes up the scope and or proto chains, we will need to
     // guard on the shape of the object containing the property.
     if (PCVCAP_TAG(entry->vcap) >= 1) {
         jsuword vcap = entry->vcap;
@@ -4956,7 +4762,7 @@ TraceRecorder::getThis(LIns*& this_ins)
 }
 
 bool
-TraceRecorder::guardClass(JSObject* obj, LIns* obj_ins, JSClass* clasp, ExitType exitType)
+TraceRecorder::guardClass(JSObject* obj, LIns* obj_ins, JSClass* clasp)
 {
     bool cond = STOBJ_GET_CLASS(obj) == clasp;
 
@@ -4965,14 +4771,15 @@ TraceRecorder::guardClass(JSObject* obj, LIns* obj_ins, JSClass* clasp, ExitType
 
     char namebuf[32];
     JS_snprintf(namebuf, sizeof namebuf, "guard(class is %s)", clasp->name);
-    guard(cond, addName(lir->ins2(LIR_eq, class_ins, INS_CONSTPTR(clasp)), namebuf), exitType);
+    guard(cond, addName(lir->ins2(LIR_eq, class_ins, INS_CONSTPTR(clasp)), namebuf),
+          MISMATCH_EXIT);
     return cond;
 }
 
 bool
-TraceRecorder::guardDenseArray(JSObject* obj, LIns* obj_ins, ExitType exitType)
+TraceRecorder::guardDenseArray(JSObject* obj, LIns* obj_ins)
 {
-    return guardClass(obj, obj_ins, &js_ArrayClass, exitType);
+    return guardClass(obj, obj_ins, &js_ArrayClass);
 }
 
 bool
@@ -5116,7 +4923,7 @@ TraceRecorder::record_EnterFrame()
     
     debug_only_v(printf("EnterFrame %s, callDepth=%d\n",
                         js_AtomToPrintableString(cx, cx->fp->fun->atom),
-                        callDepth);)
+                        callDepth););
     LIns* void_ins = INS_CONST(JSVAL_TO_BOOLEAN(JSVAL_VOID));
 
     jsval* vp = &fp->argv[fp->argc];
@@ -5163,8 +4970,7 @@ TraceRecorder::record_LeaveFrame()
     return true;
 }
 
-bool
-TraceRecorder::record_JSOP_INTERRUPT()
+bool TraceRecorder::record_JSOP_INTERRUPT()
 {
     return false;
 }
@@ -5192,14 +4998,11 @@ TraceRecorder::record_JSOP_POPV()
     return true;
 }
 
-bool
-TraceRecorder::record_JSOP_ENTERWITH()
+bool TraceRecorder::record_JSOP_ENTERWITH()
 {
     return false;
 }
-
-bool
-TraceRecorder::record_JSOP_LEAVEWITH()
+bool TraceRecorder::record_JSOP_LEAVEWITH()
 {
     return false;
 }
@@ -5215,7 +5018,7 @@ TraceRecorder::record_JSOP_RETURN()
     } else {
         rval_ins = get(&rval);
     }
-    debug_only_v(printf("returning from %s\n", js_AtomToPrintableString(cx, cx->fp->fun->atom));)
+    debug_only_v(printf("returning from %s\n", js_AtomToPrintableString(cx, cx->fp->fun->atom)););
     clearFrameSlotsFromCache();
     return true;
 }
@@ -5265,18 +5068,6 @@ TraceRecorder::record_JSOP_DUP2()
 {
     stack(0, get(&stackval(-2)));
     stack(1, get(&stackval(-1)));
-    return true;
-}
-
-bool
-TraceRecorder::record_JSOP_SWAP()
-{
-    jsval& l = stackval(-2);
-    jsval& r = stackval(-1);
-    LIns* l_ins = get(&l);
-    LIns* r_ins = get(&r);
-    set(&r, l_ins);
-    set(&l, r_ins);
     return true;
 }
 
@@ -5358,57 +5149,13 @@ TraceRecorder::record_JSOP_URSH()
     return binary(LIR_ush);
 }
 
-static struct {
-    jsbytecode obj_any[10];
-    jsbytecode any_obj[8];
-    jsbytecode obj_obj[16];
-} add_imacros = {
-    {
-        JSOP_SWAP,
-        JSOP_CALLPROP, 0, COMMON_ATOM_INDEX(toString),
-        JSOP_CALL, 0, 0,
-        JSOP_SWAP,
-        JSOP_ADD,
-        JSOP_STOP
-    },
-
-    {
-        JSOP_CALLPROP, 0, COMMON_ATOM_INDEX(toString),
-        JSOP_CALL, 0, 0,
-        JSOP_ADD,
-        JSOP_STOP
-    },
-
-    {
-        JSOP_SWAP,
-        JSOP_CALLPROP, 0, COMMON_ATOM_INDEX(toString),
-        JSOP_CALL, 0, 0,
-        JSOP_SWAP,
-        JSOP_CALLPROP, 0, COMMON_ATOM_INDEX(toString),
-        JSOP_CALL, 0, 0,
-        JSOP_ADD,
-        JSOP_STOP
-    }
-};
-
-JS_STATIC_ASSERT(sizeof(add_imacros) < IMACRO_PC_ADJ_LIMIT);
-
 bool
 TraceRecorder::record_JSOP_ADD()
 {
     jsval& r = stackval(-1);
     jsval& l = stackval(-2);
-
-    if (JSVAL_IS_OBJECT(l) && hasToStringMethod(l)) {
-        if (JSVAL_IS_OBJECT(r) && hasToStringMethod(r))
-            return call_imacro(add_imacros.obj_obj);
-        return call_imacro(add_imacros.obj_any);
-    }
-    if (JSVAL_IS_OBJECT(r) && hasToStringMethod(r))
-        return call_imacro(add_imacros.any_obj);
-
     if (JSVAL_IS_STRING(l) || JSVAL_IS_STRING(r)) {
-        LIns* args[] = { stringify(r), stringify(l), cx_ins };
+        LIns* args[] = { stringify(r, get(&r)), stringify(l, get(&l)), cx_ins };
         if (!args[0] || !args[1])
             ABORT_TRACE("can't stringify objects");
         LIns* concat = lir->insCall(&js_ConcatStrings_ci, args);
@@ -5416,7 +5163,8 @@ TraceRecorder::record_JSOP_ADD()
         set(&l, concat);
         return true;
     }
-
+    if (JSVAL_IS_STRING(r))
+        ABORT_TRACE("right hand side string not supported in JSOP_ADD");
     return binary(LIR_fadd);
 }
 
@@ -5443,15 +5191,6 @@ TraceRecorder::record_JSOP_MOD()
 {
     jsval& r = stackval(-1);
     jsval& l = stackval(-2);
-
-    if (JSVAL_IS_OBJECT(l) && hasValueOfMethod(l)) {
-        if (JSVAL_IS_OBJECT(r) && hasValueOfMethod(r))
-            return call_imacro(binary_imacros.obj_obj);
-        return call_imacro(binary_imacros.obj_any);
-    }
-    if (JSVAL_IS_OBJECT(r) && hasValueOfMethod(r))
-        return call_imacro(binary_imacros.any_obj);
-
     if (isNumber(l) && isNumber(r)) {
         LIns* l_ins = get(&l);
         LIns* r_ins = get(&r);
@@ -6112,7 +5851,7 @@ TraceRecorder::record_JSOP_GETELEM()
         // Store the interned string to the stack to save the interpreter from redoing this work.
         idx = ID_TO_VALUE(id);
         jsuint index;
-        if (js_IdIsIndex(idx, &index) && guardDenseArray(obj, obj_ins, BRANCH_EXIT)) {
+        if (js_IdIsIndex(idx, &index) && guardDenseArray(obj, obj_ins)) {
             v = (index >= ARRAY_DENSE_LENGTH(obj)) ? JSVAL_HOLE : obj->dslots[index];
             if (v == JSVAL_HOLE)
                 ABORT_TRACE("can't see through hole in dense array");
@@ -6197,7 +5936,7 @@ TraceRecorder::record_JSOP_SETELEM()
         idx_ins = makeNumberInt32(idx_ins);
         LIns* args[] = { boxed_v_ins, idx_ins, obj_ins, cx_ins };
         LIns* res_ins;
-        if (guardDenseArray(obj, obj_ins, BRANCH_EXIT)) {
+        if (guardDenseArray(obj, obj_ins)) {
             res_ins = lir->insCall(&js_Array_dense_setelem_ci, args);
         } else {
             if (!js_IndexToId(cx, JSVAL_TO_INT(idx), &id))
@@ -6300,7 +6039,7 @@ TraceRecorder::interpretedFunctionCall(jsval& fval, JSFunction* fun, uintN argc,
 
     FrameInfo fi = {
         JSVAL_TO_OBJECT(fval),
-        ENCODE_IP_ADJ(fp, fp->regs->pc),
+        fp->regs->pc,
         typemap,
         { { fp->regs->sp - fp->slots, argc | (constructing ? 0x8000 : 0) } }
     };
@@ -6311,8 +6050,8 @@ TraceRecorder::interpretedFunctionCall(jsval& fval, JSFunction* fun, uintN argc,
 
     lir->insStorei(INS_CONSTPTR(fi.callee), lirbuf->rp,
                    callDepth * sizeof(FrameInfo) + offsetof(FrameInfo, callee));
-    lir->insStorei(INS_CONSTPTR(fi.ip_adj), lirbuf->rp,
-                   callDepth * sizeof(FrameInfo) + offsetof(FrameInfo, ip_adj));
+    lir->insStorei(INS_CONSTPTR(fi.callpc), lirbuf->rp,
+                   callDepth * sizeof(FrameInfo) + offsetof(FrameInfo, callpc));
     lir->insStorei(INS_CONSTPTR(fi.typemap), lirbuf->rp,
                    callDepth * sizeof(FrameInfo) + offsetof(FrameInfo, typemap));
     lir->insStorei(INS_CONST(fi.word), lirbuf->rp,
@@ -6872,58 +6611,19 @@ TraceRecorder::record_JSOP_LOCALDEC()
 }
 
 bool
-TraceRecorder::record_JSOP_IMACOP()
-{
-    JS_ASSERT(cx->fp->imacpc);
-    return true;
-}
-
-static struct {
-    jsbytecode for_in[10];
-    jsbytecode for_each[10];
-} iter_imacros = {
-    {
-        JSOP_CALLPROP, 0, COMMON_ATOM_INDEX(iterator),
-        JSOP_INT8, JSITER_ENUMERATE,
-        JSOP_CALL, 0, 1,
-        JSOP_PUSH,
-        JSOP_STOP
-    },
-
-    {
-        JSOP_CALLPROP, 0, COMMON_ATOM_INDEX(iterator),
-        JSOP_INT8, JSITER_ENUMERATE | JSITER_FOREACH,
-        JSOP_CALL, 0, 1,
-        JSOP_PUSH,
-        JSOP_STOP
-    }
-};
-
-JS_STATIC_ASSERT(sizeof(iter_imacros) < IMACRO_PC_ADJ_LIMIT);
-
-bool
 TraceRecorder::record_JSOP_ITER()
 {
     jsval& v = stackval(-1);
     if (!JSVAL_IS_PRIMITIVE(v)) {
         jsuint flags = cx->fp->regs->pc[1];
+        LIns* args[] = { get(&v), INS_CONST(flags), cx_ins };
+        LIns* v_ins = lir->insCall(&js_FastValueToIterator_ci, args);
+        guard(false, lir->ins_eq0(v_ins), MISMATCH_EXIT);
+        set(&v, v_ins);
 
-        if (!hasIteratorMethod(v)) {
-            LIns* args[] = { get(&v), INS_CONST(flags), cx_ins };
-            LIns* v_ins = lir->insCall(&js_FastValueToIterator_ci, args);
-            guard(false, lir->ins_eq0(v_ins), MISMATCH_EXIT);
-            set(&v, v_ins);
-
-            LIns* void_ins = INS_CONST(JSVAL_TO_BOOLEAN(JSVAL_VOID));
-            stack(0, void_ins);
-            return true;
-        }
-
-        if (flags == JSITER_ENUMERATE)
-            return call_imacro(iter_imacros.for_in);
-        if (flags == JSITER_FOREACH)
-            return call_imacro(iter_imacros.for_each);
-        ABORT_TRACE("unimplemented JSITER_* flags");
+        LIns* void_ins = INS_CONST(JSVAL_TO_BOOLEAN(JSVAL_VOID));
+        stack(0, void_ins);
+        return true;
     }
 
     ABORT_TRACE("for-in on a primitive value");
@@ -6937,39 +6637,21 @@ static JSTraceableNative js_FastCallIteratorNext_tn = {
     FAIL_JSVAL                          // uintN                   flags;
 };
 
-static jsbytecode nextiter_imacro[] = {
-    JSOP_POP,
-    JSOP_DUP,
-    JSOP_CALLPROP, 0, COMMON_ATOM_INDEX(next),
-    JSOP_CALL, 0, 0,
-    JSOP_TRUE,
-    JSOP_STOP
-};
-
-JS_STATIC_ASSERT(sizeof(nextiter_imacro) < IMACRO_PC_ADJ_LIMIT);
-
 bool
 TraceRecorder::record_JSOP_NEXTITER()
 {
     jsval& iterobj_val = stackval(-2);
     if (!JSVAL_IS_PRIMITIVE(iterobj_val)) {
-        LIns* iterobj_ins = get(&iterobj_val);
+        LIns* args[] = { get(&iterobj_val), cx_ins };
+        LIns* v_ins = lir->insCall(&js_FastCallIteratorNext_ci, args);
+        guard(false, lir->ins2(LIR_eq, v_ins, INS_CONST(JSVAL_ERROR_COOKIE)), OOM_EXIT);
 
-        if (guardClass(JSVAL_TO_OBJECT(iterobj_val), iterobj_ins, &js_IteratorClass, BRANCH_EXIT)) {
-            LIns* args[] = { iterobj_ins, cx_ins };
-            LIns* v_ins = lir->insCall(&js_FastCallIteratorNext_ci, args);
-            guard(false, lir->ins2(LIR_eq, v_ins, INS_CONST(JSVAL_ERROR_COOKIE)), OOM_EXIT);
+        LIns* flag_ins = lir->ins_eq0(lir->ins2(LIR_eq, v_ins, INS_CONST(JSVAL_HOLE)));
+        stack(-1, v_ins);
+        stack(0, flag_ins);
 
-            LIns* flag_ins = lir->ins_eq0(lir->ins2(LIR_eq, v_ins, INS_CONST(JSVAL_HOLE)));
-            stack(-1, v_ins);
-            stack(0, flag_ins);
-
-            pendingTraceableNative = &js_FastCallIteratorNext_tn;
-            return true;
-        }
-
-        // Custom iterator, possibly a generator.
-        return call_imacro(nextiter_imacro);
+        pendingTraceableNative = &js_FastCallIteratorNext_tn;
+        return true;
     }
 
     ABORT_TRACE("for-in on a primitive value");
@@ -6978,8 +6660,8 @@ TraceRecorder::record_JSOP_NEXTITER()
 bool
 TraceRecorder::record_IteratorNextComplete()
 {
+    JS_ASSERT(pendingTraceableNative);
     JS_ASSERT(*cx->fp->regs->pc == JSOP_NEXTITER);
-    JS_ASSERT(pendingTraceableNative == &js_FastCallIteratorNext_tn);
 
     jsval& v = stackval(-2);
     LIns* v_ins = get(&v);
@@ -7114,7 +6796,7 @@ TraceRecorder::record_JSOP_IN()
     bool cond;
     LIns* x;
     do {
-        if (guardDenseArray(obj, obj_ins, BRANCH_EXIT)) {
+        if (guardDenseArray(obj, obj_ins)) {
             if (JSVAL_IS_INT(lval)) {
                 jsint idx = JSVAL_TO_INT(lval);
                 LIns* idx_ins = f2i(get(&lval));
@@ -7827,15 +7509,6 @@ TraceRecorder::record_JSOP_CALLELEM()
 bool
 TraceRecorder::record_JSOP_STOP()
 {
-    JSStackFrame *fp = cx->fp;
-
-    if (fp->imacpc) {
-        // End of imacro, so return true to the interpreter immediately. The
-        // interpreter's JSOP_STOP case will return from the imacro, back to
-        // the pc after the calling op, still in the same JSStackFrame.
-        return true;
-    }
-
     /*
      * We know falling off the end of a constructor returns the new object that
      * was passed in via fp->argv[-1], while falling off the end of a function
@@ -7844,6 +7517,7 @@ TraceRecorder::record_JSOP_STOP()
      * NB: we do not support script rval (eval, API users who want the result
      * of the last expression-statement, debugger API calls).
      */
+    JSStackFrame *fp = cx->fp;
     if (fp->flags & JSFRAME_CONSTRUCTING) {
         JS_ASSERT(OBJECT_TO_JSVAL(fp->thisp) == fp->argv[-1]);
         rval_ins = get(&fp->argv[-1]);
@@ -7900,29 +7574,6 @@ bool
 TraceRecorder::record_JSOP_GENERATOR()
 {
     return false;
-#if 0
-    JSStackFrame* fp = cx->fp;
-    if (fp->callobj || fp->argsobj || fp->varobj)
-        ABORT_TRACE("can't trace hard-case generator");
-
-    // Generate a type map for the outgoing frame and stash it in the LIR
-    unsigned stackSlots = js_NativeStackSlots(cx, 0/*callDepth*/);
-    LIns* data = lir_buf_writer->skip(stackSlots * sizeof(uint8));
-    uint8* typemap = (uint8 *)data->payload();
-    uint8* m = typemap;
-    /* Determine the type of a store by looking at the current type of the actual value the
-       interpreter is using. For numbers we have to check what kind of store we used last
-       (integer or double) to figure out what the side exit show reflect in its typemap. */
-    FORALL_SLOTS_IN_PENDING_FRAMES(cx, 0/*callDepth*/,
-        *m++ = determineSlotType(vp);
-    );
-    FlushNativeStackFrame(cx, 0, typemap, state.???, NULL);
-
-    LIns* args[] = { INS_CONST(fp->argc), INS_CONSTPTR(fp->callee), cx_ins };
-    LIns* g_ins = lir->insCall(&js_FastNewGenerator_ci, args);
-    guard(false, lir->ins_eq0(g_ins), OOM_EXIT);
-    return true;
-#endif
 }
 
 bool
@@ -8115,7 +7766,7 @@ js_DumpPeerStability(Fragmento* frago, const void* ip)
     Fragment* f;
     TreeInfo* ti;
     bool looped = false;
-    unsigned length = 0;
+    unsigned length;
 
     for (f = frago->getLoop(ip); f != NULL; f = f->peer) {
         if (!f->vmprivate)
@@ -8142,36 +7793,10 @@ js_DumpPeerStability(Fragmento* frago, const void* ip)
 }
 #endif
 
-/*
- * 17 potentially-converting binary operators:
- *  | ^ & == != < <= > >= << >> >>> + - * / %
- */
-JS_STATIC_ASSERT((uintN)(JSOP_MOD - JSOP_BITOR) == 16);
-
-/*
- * Use an old <ctype.h> trick: bias imacro_code[op] by -1 to allow zero high
- * FrameInfo.ip_adj byte to mean "not in an imacro".
- */
-static void
-InitIMacroCode()
-{
-    if (imacro_code[JSOP_NEXTITER]) {
-        JS_ASSERT(imacro_code[JSOP_NEXTITER] == nextiter_imacro - 1);
-        return;
-    }
-
-    for (uintN op = JSOP_BITOR; op <= JSOP_MOD; op++)
-        imacro_code[op] = (jsbytecode*)&binary_imacros - 1;
-
-    // NB: above loop mis-set JSOP_ADD's entry, so order here is crucial.
-    imacro_code[JSOP_ADD] = (jsbytecode*)&add_imacros - 1;
-
-    imacro_code[JSOP_ITER] = (jsbytecode*)&iter_imacros - 1;
-    imacro_code[JSOP_NEXTITER] = nextiter_imacro - 1;
-}
-
 #define UNUSED(n) bool TraceRecorder::record_JSOP_UNUSED##n() { return false; }
 
+UNUSED(79)
+UNUSED(103)
 UNUSED(131)
 UNUSED(201)
 UNUSED(202)

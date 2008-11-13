@@ -1743,12 +1743,6 @@ js_GetSrcNoteCached(JSContext *cx, JSScript *script, jsbytecode *pc)
 }
 
 uintN
-js_FramePCToLineNumber(JSContext *cx, JSStackFrame *fp)
-{
-    return js_PCToLineNumber(cx, fp->script, fp->imacpc ? fp->imacpc : fp->regs->pc);
-}
-
-uintN
 js_PCToLineNumber(JSContext *cx, JSScript *script, jsbytecode *pc)
 {
     JSFunction *fun;

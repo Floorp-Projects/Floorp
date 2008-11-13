@@ -920,7 +920,7 @@ js_ReportOutOfMemory(JSContext *cx)
     for (fp = cx->fp; fp; fp = fp->down) {
         if (fp->regs) {
             report.filename = fp->script->filename;
-            report.lineno = js_FramePCToLineNumber(cx, fp);
+            report.lineno = js_PCToLineNumber(cx, fp->script, fp->regs->pc);
             break;
         }
     }
@@ -990,7 +990,7 @@ js_ReportErrorVA(JSContext *cx, uintN flags, const char *format, va_list ap)
     for (fp = cx->fp; fp; fp = fp->down) {
         if (fp->regs) {
             report.filename = fp->script->filename;
-            report.lineno = js_FramePCToLineNumber(cx, fp);
+            report.lineno = js_PCToLineNumber(cx, fp->script, fp->regs->pc);
             break;
         }
     }
@@ -1202,7 +1202,7 @@ js_ReportErrorNumberVA(JSContext *cx, uintN flags, JSErrorCallback callback,
     for (fp = cx->fp; fp; fp = fp->down) {
         if (fp->regs) {
             report.filename = fp->script->filename;
-            report.lineno = js_FramePCToLineNumber(cx, fp);
+            report.lineno = js_PCToLineNumber(cx, fp->script, fp->regs->pc);
             break;
         }
     }

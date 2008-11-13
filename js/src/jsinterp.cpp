@@ -309,8 +309,7 @@ js_FullTestPropertyCache(JSContext *cx, jsbytecode *pc,
     JSPropCacheEntry *entry;
     uint32 vcap;
 
-    JS_ASSERT(uintN((cx->fp->imacpc ? cx->fp->imacpc : pc) - cx->fp->script->code)
-              < cx->fp->script->length);
+    JS_ASSERT(JS_UPTRDIFF(pc, cx->fp->script->code) < cx->fp->script->length);
 
     op = (JSOp) *pc;
     cs = &js_CodeSpec[op];
@@ -1261,7 +1260,6 @@ have_fun:
     frame.annotation = NULL;
     frame.scopeChain = NULL;    /* set below for real, after cx->fp is set */
     frame.regs = NULL;
-    frame.imacpc = NULL;
     frame.slots = NULL;
     frame.sharpDepth = 0;
     frame.sharpArray = NULL;
@@ -1494,8 +1492,6 @@ js_Execute(JSContext *cx, JSObject *chain, JSScript *script,
         frame.annotation = NULL;
         frame.sharpArray = NULL;
     }
-
-    frame.imacpc = NULL;
     if (script->nslots != 0) {
         frame.slots = js_AllocRawStack(cx, script->nslots, &mark);
         if (!frame.slots) {
@@ -2030,8 +2026,7 @@ js_TraceOpcode(JSContext *cx, jsint len)
         fputc('\n', tracefp);
     }
 
-    fprintf(tracefp, "%4u: ",
-            js_PCToLineNumber(cx, fp->script, fp->imacpc ? fp->imacpc : regs->pc));
+    fprintf(tracefp, "%4u: ", js_PCToLineNumber(cx, fp->script, regs->pc));
     js_Disassemble1(cx, fp->script, regs->pc,
                     PTRDIFF(regs->pc, fp->script->code, jsbytecode),
                     JS_FALSE, tracefp);
@@ -2606,12 +2601,9 @@ js_Interpret(JSContext *cx)
 
 #define LOAD_ATOM(PCOFF)                                                      \
     JS_BEGIN_MACRO                                                            \
-        JS_ASSERT(fp->imacpc                                                  \
-                  ? atoms == COMMON_ATOMS_START(&rt->atomState) &&            \
-                    GET_INDEX(regs.pc + PCOFF) < js_common_atom_count         \
-                  : (size_t)(atoms - script->atomMap.vector) <                \
-                    (size_t)(script->atomMap.length -                         \
-                             GET_INDEX(regs.pc + PCOFF)));                    \
+        JS_ASSERT((size_t)(atoms - script->atomMap.vector) <                  \
+                  (size_t)(script->atomMap.length -                           \
+                           GET_INDEX(regs.pc + PCOFF)));                      \
         atom = atoms[GET_INDEX(regs.pc + PCOFF)];                             \
     JS_END_MACRO
 
@@ -2947,23 +2939,6 @@ js_Interpret(JSContext *cx)
              * will be false after the inline_return label.
              */
             ASSERT_NOT_THROWING(cx);
-
-            if (fp->imacpc) {
-                /*
-                 * If we are at the end of an imacro, return to its caller in
-                 * the current frame.
-                 */
-                JS_ASSERT(op == JSOP_STOP);
-
-              end_imacro:
-                JS_ASSERT((uintN)(regs.sp - fp->slots) < script->nslots);
-                regs.pc = fp->imacpc + js_CodeSpec[*fp->imacpc].length;
-                fp->imacpc = NULL;
-                atoms = script->atomMap.vector;
-                op = JSOp(*regs.pc);
-                DO_OP();
-            }
-
             JS_ASSERT(regs.sp == StackBase(fp));
             if ((fp->flags & JSFRAME_CONSTRUCTING) &&
                 JSVAL_IS_PRIMITIVE(fp->rval)) {
@@ -3064,7 +3039,10 @@ js_Interpret(JSContext *cx)
                 /* Resume execution in the calling frame. */
                 inlineCallCount--;
                 if (JS_LIKELY(ok)) {
-                    TRACE_0(LeaveFrame);
+#ifdef JS_TRACER
+                    if (TRACE_RECORDER(cx))
+                        RECORD(LeaveFrame);
+#endif
                     JS_ASSERT(js_CodeSpec[*regs.pc].length == JSOP_CALL_LENGTH);
                     len = JSOP_CALL_LENGTH;
                     DO_NEXT_OP(len);
@@ -3308,14 +3286,6 @@ js_Interpret(JSContext *cx)
             PUSH(rval);
           END_CASE(JSOP_DUP2)
 
-          BEGIN_CASE(JSOP_SWAP)
-            JS_ASSERT(regs.sp - 2 >= StackBase(fp));
-            lval = FETCH_OPND(-2);
-            rval = FETCH_OPND(-1);
-            STORE_OPND(-1, lval);
-            STORE_OPND(-2, rval);
-          END_CASE(JSOP_SWAP)
-
 #define PROPERTY_OP(n, call)                                                  \
     JS_BEGIN_MACRO                                                            \
         /* Fetch the left part and resolve it to a non-null object. */        \
@@ -3500,11 +3470,6 @@ js_Interpret(JSContext *cx)
             } while (0);
             PUSH_OPND(OBJECT_TO_JSVAL(obj));
           END_CASE(JSOP_BINDNAME)
-
-          BEGIN_CASE(JSOP_IMACOP)
-            JS_ASSERT(JS_UPTRDIFF(fp->imacpc, script->code) < script->length);
-            op = JSOp(*fp->imacpc);
-            DO_OP();
 
 #define BITWISE_OP(OP)                                                        \
     JS_BEGIN_MACRO                                                            \
@@ -5016,7 +4981,6 @@ js_Interpret(JSContext *cx)
                     newifp->frame.thisp = (JSObject *)vp[1];
 
                     newifp->frame.regs = NULL;
-                    newifp->frame.imacpc = NULL;
                     newifp->frame.slots = newsp;
 
                     /* Push void to initialize local variables. */
@@ -5056,7 +5020,10 @@ js_Interpret(JSContext *cx)
                     newifp->frame.regs = &regs;
                     cx->fp = fp = &newifp->frame;
 
-                    TRACE_0(EnterFrame);
+#ifdef JS_TRACER
+                    if (TRACE_RECORDER(cx))
+                        RECORD(EnterFrame);
+#endif
 
                     inlineCallCount++;
                     JS_RUNTIME_METER(rt, inlineCalls);
@@ -6916,6 +6883,8 @@ js_Interpret(JSContext *cx)
           L_JSOP_DEFXMLNS:
 # endif
 
+          L_JSOP_UNUSED79:
+          L_JSOP_UNUSED103:
           L_JSOP_UNUSED131:
           L_JSOP_UNUSED201:
           L_JSOP_UNUSED202:
@@ -6961,25 +6930,6 @@ js_Interpret(JSContext *cx)
 #endif /* !JS_THREADED_INTERP */
 
   error:
-    if (fp->imacpc && cx->throwing) {
-        // To keep things simple, we hard-code imacro exception handlers here.
-        if (*fp->imacpc == JSOP_NEXTITER) {
-            JS_ASSERT(*regs.pc == JSOP_CALL);
-            if (js_ValueIsStopIteration(cx->exception)) {
-                cx->throwing = JS_FALSE;
-                cx->exception = JSVAL_VOID;
-                regs.sp[-1] = JSVAL_HOLE;
-                PUSH(JSVAL_FALSE);
-                goto end_imacro;
-            }
-        }
-
-        // Handle other exceptions as if they came from the imacro-calling pc.
-        regs.pc = fp->imacpc;
-        fp->imacpc = NULL;
-        atoms = script->atomMap.vector;
-    }
-
     JS_ASSERT((size_t)(regs.pc - script->code) < script->length);
     if (!cx->throwing) {
         /* This is an error, not a catchable exception, quit the frame ASAP. */
