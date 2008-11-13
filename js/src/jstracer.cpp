@@ -6942,7 +6942,7 @@ TraceRecorder::record_JSOP_ITER()
 
         if (flags == JSITER_ENUMERATE)
             return call_imacro(iter_imacros.for_in);
-        if (flags == JSITER_FOREACH)
+        if (flags == (JSITER_ENUMERATE | JSITER_FOREACH))
             return call_imacro(iter_imacros.for_each);
         ABORT_TRACE("unimplemented JSITER_* flags");
     }
