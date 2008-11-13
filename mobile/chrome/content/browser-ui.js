@@ -121,7 +121,7 @@ var BrowserUI = {
       return;
 
     if (/\bicon\b/i(link.rel)) {
-      this._faviconLink = link.href 
+      this._faviconLink = link.href
     }
   },
 
@@ -379,6 +379,7 @@ var BrowserUI = {
       this._caption.hidden = true;
       this._edit.hidden = false;
       this._edit.inputField.focus();
+      this._edit.editor.selectAll();
     }
     else {
       toolbar.setAttribute("mode", "view");
@@ -810,8 +811,7 @@ var BrowserUI = {
         break;
       // URL textbox events
       case "click":
-        this.show(UIMODE_URLEDIT);
-        setTimeout(function () {BrowserUI.updateAutoComplete(true)}, 0);
+        this.doCommand("cmd_openLocation");
         break;
       case "input":
         this.updateAutoComplete(false);
@@ -862,6 +862,7 @@ var BrowserUI = {
       case "cmd_stop":
       case "cmd_search":
       case "cmd_go":
+      case "cmd_openLocation":
       case "cmd_star":
       case "cmd_bookmarks":
       case "cmd_menu":
@@ -905,6 +906,10 @@ var BrowserUI = {
         break;
       case "cmd_go":
         this.goToURI();
+        break;
+      case "cmd_openLocation":
+        this.show(UIMODE_URLEDIT);
+        setTimeout(function () {BrowserUI.updateAutoComplete(true)}, 0);
         break;
       case "cmd_star":
       {

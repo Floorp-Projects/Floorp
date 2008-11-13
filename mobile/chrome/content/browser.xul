@@ -89,6 +89,7 @@
     <command id="cmd_stop" label="&stop.label;" oncommand="CommandUpdater.doCommand(this.id);"/>
     <command id="cmd_search" label="&search.label;" oncommand="CommandUpdater.doCommand(this.id);"/>
     <command id="cmd_go" label="&go.label;" oncommand="CommandUpdater.doCommand(this.id);"/>
+    <command id="cmd_openLocation" label="&openLocation.label;" oncommand="CommandUpdater.doCommand(this.id);"/>
 
     <!-- tabs -->
     <command id="cmd_newTab" label="&newtab.label;" oncommand="CommandUpdater.doCommand(this.id);"/>
@@ -132,6 +133,7 @@
     <key id="key_back2" keycode="VK_BACK" command="cmd_back"/>
     <key id="key_forward2" keycode="VK_BACK" command="cmd_forward" modifiers="shift"/>
     <key id="key_reload" keycode="VK_F5" command="cmd_reload"/>
+    <key id="key_focusURL" key="l" modifiers="accel" command="cmd_openLocation"/>
 
     <!-- scrolling -->
     <key id="key_pageUp" keycode="VK_UP" command="cmd_scrollPageUp" modifiers="shift"/>

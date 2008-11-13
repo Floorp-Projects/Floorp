@@ -13,6 +13,8 @@
 <!ENTITY search.tooltip        "Search">
 <!ENTITY go.label              "Go">
 <!ENTITY go.tooltip            "Go">
+<!ENTITY openLocation.label    "Open location">
+<!ENTITY openLocation.tooltip  "Open location">
 <!ENTITY star.label            "Star">
 <!ENTITY star.tooltip          "Bookmark this page">
 <!ENTITY bookmarks.label       "Bookmarks">
