@@ -170,11 +170,12 @@ if __name__ == '__main__':
     host = RequireEnvironmentVariable('UPLOAD_HOST')
     user = RequireEnvironmentVariable('UPLOAD_USER')
     path = RequireEnvironmentVariable('UPLOAD_PATH')
-    if sys.platform == 'win32':
-        path = FixupMsysPath(path)
     port = int(OptionalEnvironmentVariable('UPLOAD_PORT'))
     key = OptionalEnvironmentVariable('UPLOAD_SSH_KEY')
     post_upload_command = OptionalEnvironmentVariable('POST_UPLOAD_CMD')
+    if sys.platform == 'win32':
+        path = FixupMsysPath(path)
+        post_upload_command = FixupMsysPath(post_upload_command)
 
     parser = OptionParser(usage="usage: %prog [options] <files>")
     parser.add_option("-b", "--base-path",
