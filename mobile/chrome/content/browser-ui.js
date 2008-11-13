@@ -121,7 +121,7 @@ var BrowserUI = {
       return;
 
     if (/\bicon\b/i(link.rel)) {
-      this._faviconLink = link.href
+      this._faviconLink = link.href;
     }
   },
 
