@@ -2007,3 +2007,31 @@ nsAnnotationService::CallSetForItemObservers(PRInt64 aItemId, const nsACString& 
   for (PRInt32 i = 0; i < mObservers.Count(); i ++)
     mObservers[i]->OnItemAnnotationSet(aItemId, aName);
 }
+
+nsresult
+nsAnnotationService::FinalizeStatements() {
+  mozIStorageStatement* stmts[] = {
+    mDBSetAnnotation,
+    mDBSetItemAnnotation,
+    mDBGetAnnotation,
+    mDBGetItemAnnotation,
+    mDBGetAnnotationNames,
+    mDBGetItemAnnotationNames,
+    mDBGetAnnotationFromURI,
+    mDBGetAnnotationFromItemId,
+    mDBGetAnnotationNameID,
+    mDBAddAnnotationName,
+    mDBAddAnnotation,
+    mDBAddItemAnnotation,
+    mDBRemoveAnnotation,
+    mDBRemoveItemAnnotation,
+    mDBGetItemsWithAnnotation
+  };
+
+  for (PRUint32 i = 0; i < NS_ARRAY_LENGTH(stmts); i++) {
+    nsresult rv = nsNavHistory::FinalizeStatement(stmts[i]);
+    NS_ENSURE_SUCCESS(rv, rv);
+  }
+
+  return NS_OK;
+}
