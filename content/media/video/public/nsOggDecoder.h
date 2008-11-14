@@ -348,9 +348,6 @@ class nsOggDecoder : public nsMediaDecoder
   // Return PR_TRUE if seeking is supported.
   virtual PRBool GetSeekable();
 
-  // Returns the channel reader.
-  nsChannelReader* GetReader() { return mReader; }
-
 protected:
   // Change to a new play state. This updates the mState variable and
   // notifies any thread blocking on this objects monitor of the
@@ -489,7 +486,7 @@ private:
   // the decoder thread, and the state machine for that thread keeps
   // a pointer to this reader. This is safe as the only methods called
   // are threadsafe (via the threadsafe nsMediaStream).
-  nsAutoPtr<nsChannelReader> mReader;
+  nsChannelReader* mReader;
 
   // Monitor for detecting when the video play state changes. A call
   // to Wait on this monitor will block the thread until the next
