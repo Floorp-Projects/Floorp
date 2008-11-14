@@ -355,6 +355,9 @@ ifdef MOZ_UPDATE_XTERM
 # makes the make -s output easier to read.  Echo -n does not work on all
 # platforms, but we can trick sed into doing it.
 UPDATE_TITLE = sed -e "s!Y!$@ in $(shell $(BUILD_TOOLS)/print-depth-path.sh)/$(dir)!" $(MOZILLA_DIR)/config/xterm.str;
+UPDATE_TITLE_export = sed -e "s!Y!export in $(shell $(BUILD_TOOLS)/print-depth-path.sh)/$*!" $(MOZILLA_DIR)/config/xterm.str;
+UPDATE_TITLE_libs = sed -e "s!Y!libs in $(shell $(BUILD_TOOLS)/print-depth-path.sh)/$*!" $(MOZILLA_DIR)/config/xterm.str;
+UPDATE_TITLE_tools = sed -e "s!Y!tools in $(shell $(BUILD_TOOLS)/print-depth-path.sh)/$*!" $(MOZILLA_DIR)/config/xterm.str;
 endif
 
 LOOP_OVER_DIRS = \
@@ -697,7 +700,7 @@ ifdef PARALLEL_DIRS
 export:: $(PARALLEL_DIRS_export)
 
 $(PARALLEL_DIRS_export): %_export: %/Makefile
-	+$(MAKE) -C $* export
+	+@$(UPDATE_TITLE_export) $(MAKE) -C $* export
 endif
 
 export:: $(SUBMAKEFILES) $(MAKE_DIRS) $(if $(EXPORTS)$(XPIDLSRCS)$(SDK_HEADERS)$(SDK_XPIDLSRCS),$(PUBLIC)) $(if $(SDK_HEADERS)$(SDK_XPIDLSRCS),$(SDK_PUBLIC)) $(if $(XPIDLSRCS),$(IDL_DIR)) $(if $(SDK_XPIDLSRCS),$(SDK_IDL_DIR))
@@ -708,7 +711,7 @@ ifdef PARALLEL_DIRS
 tools:: $(PARALLEL_DIRS_tools)
 
 $(PARALLEL_DIRS_tools): %_tools: %/Makefile
-	+$(MAKE) -C $* tools
+	+@$(UPDATE_TITLE_tools) $(MAKE) -C $* tools
 endif
 
 tools:: $(SUBMAKEFILES) $(MAKE_DIRS)
@@ -747,7 +750,7 @@ ifdef PARALLEL_DIRS
 libs:: $(PARALLEL_DIRS_libs)
 
 $(PARALLEL_DIRS_libs): %_libs: %/Makefile
-	+$(MAKE) -C $* libs
+	+@$(UPDATE_TITLE_libs) $(MAKE) -C $* libs
 endif
 
 libs:: $(SUBMAKEFILES) $(MAKE_DIRS) $(HOST_LIBRARY) $(LIBRARY) $(SHARED_LIBRARY) $(IMPORT_LIBRARY) $(HOST_PROGRAM) $(PROGRAM) $(HOST_SIMPLE_PROGRAMS) $(SIMPLE_PROGRAMS) $(JAVA_LIBRARY)
