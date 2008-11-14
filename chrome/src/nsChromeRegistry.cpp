@@ -750,8 +750,8 @@ nsChromeRegistry::ConvertChromeURL(nsIURI* aChromeURI, nsIURI* *aResult)
 
   PackageEntry* entry =
     static_cast<PackageEntry*>(PL_DHashTableOperate(&mPackagesHash,
-                                                       & (nsACString&) package,
-                                                       PL_DHASH_LOOKUP));
+                                                    & (nsACString&) package,
+                                                    PL_DHASH_LOOKUP));
 
   if (PL_DHASH_ENTRY_IS_FREE(entry)) {
     if (!mInitialized)
@@ -1324,6 +1324,32 @@ nsChromeRegistry::CheckForNewChrome()
   }
 
   return NS_OK;
+}
+
+NS_IMETHODIMP_(PRBool)
+nsChromeRegistry::WrappersEnabled(nsIURI *aURI)
+{
+  nsCOMPtr<nsIURL> chromeURL (do_QueryInterface(aURI));
+  if (!chromeURL)
+    return PR_FALSE;
+
+  PRBool isChrome = PR_FALSE;
+  nsresult rv = chromeURL->SchemeIs("chrome", &isChrome);
+  if (NS_FAILED(rv) || !isChrome)
+    return PR_FALSE;
+
+  nsCAutoString package;
+  rv = chromeURL->GetHostPort(package);
+  if (NS_FAILED(rv))
+    return PR_FALSE;
+
+  PackageEntry* entry =
+    static_cast<PackageEntry*>(PL_DHashTableOperate(&mPackagesHash,
+                                                    & (nsACString&) package,
+                                                    PL_DHASH_LOOKUP));
+
+  return PL_DHASH_ENTRY_IS_LIVE(entry) &&
+         entry->flags & PackageEntry::XPCNATIVEWRAPPERS;
 }
 
 nsresult
