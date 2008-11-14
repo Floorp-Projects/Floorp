@@ -2297,6 +2297,15 @@ js_NewRegExp(JSContext *cx, JSTokenStream *ts,
         re->classList = NULL;
     }
 
+#ifdef JS_TRACER
+    /*
+     * Try compiling the native code version. For the time being we also 
+     * compile the bytecode version in case we evict the native code
+     * version from the code cache.
+     */
+    if (TRACING_ENABLED(cx))
+        js_CompileRegExpToNative(cx, re, &state);
+#endif
     /* Compile the bytecode version. */
     endPC = EmitREBytecode(&state, re, state.treeDepth, re->program, state.result);
     if (!endPC) {
@@ -2310,6 +2319,11 @@ js_NewRegExp(JSContext *cx, JSTokenStream *ts,
      * This is safe since no pointers to newly parsed regexp or its parts
      * besides re exist here.
      */
+#if 0 
+    /*
+     * FIXME: Until bug 464866 is fixed, we can't move the re object so
+     * don't shrink it for now.
+     */
     if ((size_t)(endPC - re->program) != state.progLength + 1) {
         JSRegExp *tmp;
         JS_ASSERT((size_t)(endPC - re->program) < state.progLength + 1);
@@ -2318,22 +2332,11 @@ js_NewRegExp(JSContext *cx, JSTokenStream *ts,
         if (tmp)
             re = tmp;
     }
+#endif    
 
     re->flags = flags;
     re->parenCount = state.parenCount;
     re->source = str;
-
-#ifdef JS_TRACER
-    /*
-     * Try compiling the native code version. For the time being we also 
-     * compile the bytecode version in case we evict the native code
-     * version from the code cache.
-     * We have to compile at this point because we are using the JSRegExp
-     * address as a key and the shrink step above can move it.
-     */
-    if (TRACING_ENABLED(cx))
-        js_CompileRegExpToNative(cx, re, &state);
-#endif
 
 out:
     JS_ARENA_RELEASE(&cx->tempPool, mark);
