@@ -635,8 +635,12 @@ nsThebesImage::Draw(gfxContext*        aContext,
             // get blurry edges.  CAIRO_EXTEND_PAD would also work here, if
             // available
             //
-            // This effectively disables smooth upscaling for images.
-            pattern->SetFilter(0);
+            // This effectively disables smooth upscaling for images. So only set the
+            // FAST filter on upscaling. We must NEVER use FAST on downscaling otherwise
+            // very ugly images will result all over chrome and the web.
+            // xx is x scaling, yy is y scaling. Lower number is higher scale.
+            if (userSpaceToImageSpace.xx < 1.0 || userSpaceToImageSpace.yy < 1.0)
+              pattern->SetFilter(0);
             break;
   
         case gfxASurface::SurfaceTypeQuartz:
