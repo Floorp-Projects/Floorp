@@ -583,6 +583,24 @@ nsIOService::NewChannel(const nsACString &aSpec, const char *aCharset, nsIURI *a
     return NewChannelFromURI(uri, result);
 }
 
+PRBool
+nsIOService::IsLinkUp()
+{
+    if (!mNetworkLinkService) {
+        // We cannot decide, assume the link is up
+        return PR_TRUE;
+    }
+
+    PRBool isLinkUp;
+    nsresult rv;
+    rv = mNetworkLinkService->GetIsLinkUp(&isLinkUp);
+    if (NS_FAILED(rv)) {
+        return PR_TRUE;
+    }
+
+    return isLinkUp;
+}
+
 NS_IMETHODIMP
 nsIOService::GetOffline(PRBool *offline)
 {

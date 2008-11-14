@@ -45,8 +45,7 @@
 
 /* ::::: textbox ::::: */
 
-textbox 
-{
+textbox {
   -moz-appearance: textfield;
   cursor: text;
   margin: 2px 4px;
@@ -55,7 +54,8 @@ textbox
   -moz-border-right-colors: ThreeDHighlight ThreeDLightShadow;
   -moz-border-bottom-colors: ThreeDHighlight ThreeDLightShadow;
   -moz-border-left-colors: ThreeDShadow ThreeDDarkShadow;
-  padding: 2px 2px 3px 4px;
+  padding: 2px 2px 3px;
+  -moz-padding-start: 4px;
   background-color: -moz-Field;
   color: -moz-FieldText;
 }

@@ -1011,6 +1011,24 @@ nsFaviconService::OptimizeFaviconImage(const PRUint8* aData, PRUint32 aDataLen,
   return NS_OK;
 }
 
+nsresult
+nsFaviconService::FinalizeStatements() {
+  mozIStorageStatement* stmts[] = {
+    mDBGetURL,
+    mDBGetData,
+    mDBGetIconInfo,
+    mDBInsertIcon,
+    mDBUpdateIcon,
+    mDBSetPageFavicon
+  };
+
+  for (PRUint32 i = 0; i < NS_ARRAY_LENGTH(stmts); i++) {
+    nsresult rv = nsNavHistory::FinalizeStatement(stmts[i]);
+    NS_ENSURE_SUCCESS(rv, rv);
+  }
+
+  return NS_OK;
+}
 
 NS_IMPL_ISUPPORTS4(FaviconLoadListener,
                    nsIRequestObserver,

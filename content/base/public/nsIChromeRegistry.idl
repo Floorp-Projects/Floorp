@@ -43,7 +43,7 @@
 
 interface nsIURI;
 
-[scriptable, uuid(68389281-f6d0-4533-841d-344a2018140c)]
+[scriptable, uuid(249fb5ad-ae29-4e2c-a728-ba5cf464d188)]
 interface nsIChromeRegistry : nsISupports
 {
   const PRInt32 NONE = 0;
@@ -73,6 +73,11 @@ interface nsIChromeRegistry : nsISupports
    * refresh the chrome list at runtime, looking for new packages/etc
    */
   void checkForNewChrome();
+
+  /**
+   * returns whether XPCNativeWrappers are enabled for aURI.
+   */
+  [notxpcom] boolean wrappersEnabled(in nsIURI aURI);
 };
 
 [scriptable, uuid(2860e205-490e-4b06-90b6-87160d35a5a7)]

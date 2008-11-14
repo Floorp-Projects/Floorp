@@ -38,14 +38,18 @@
 
 #include "nsNativeConnectionHelper.h"
 #include "nsAutodialWin.h"
+#include "nsIOService.h"
+
 //-----------------------------------------------------------------------------
 // API typically invoked on the socket transport thread
 //-----------------------------------------------------------------------------
 
-
 PRBool
 nsNativeConnectionHelper::OnConnectionFailed(const PRUnichar* hostName)
 {
+    if (gIOService->IsLinkUp())
+        return PR_FALSE;
+
     nsRASAutodial autodial;
 
     if (autodial.ShouldDialOnNetworkError()) 

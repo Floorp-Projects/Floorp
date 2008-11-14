@@ -258,6 +258,8 @@ _TEST_FILES = 	test_bug5141.html \
 		bug461735-redirect2.sjs \
 		bug461735-post-redirect.js \
 		test_bug461735.html \
+		test_bug380418.html \
+		test_bug380418.html^headers^ \
 		$(NULL)
 
 # Disabled for now. Mochitest isn't reliable enough for these.

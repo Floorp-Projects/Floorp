@@ -657,6 +657,18 @@ nsXMLContentSink::CloseElement(nsIContent* aContent)
         mScriptLoader->AddExecuteBlocker();
       }
     }
+    // Look for <link rel="dns-prefetch" href="hostname">
+    if (nodeInfo->Equals(nsGkAtoms::link, kNameSpaceID_XHTML)) {
+      nsAutoString relVal;
+      aContent->GetAttr(kNameSpaceID_None, nsGkAtoms::rel, relVal);
+      if (relVal.EqualsLiteral("dns-prefetch")) {
+        nsAutoString hrefVal;
+        aContent->GetAttr(kNameSpaceID_None, nsGkAtoms::href, hrefVal);
+        if (!hrefVal.IsEmpty()) {
+          PrefetchDNS(hrefVal);
+        }
+      }
+    }
   }
 
   return rv;

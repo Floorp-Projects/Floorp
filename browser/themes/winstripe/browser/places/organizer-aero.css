@@ -59,3 +59,9 @@
 #placeContent:-moz-system-metric(windows-default-theme) {
   background-color: #EEF3FA;
 }
+
+/**** Vista default theme: Library's search box needs to be vertically centered ****/
+#searchFilter:-moz-system-metric(windows-default-theme) {
+  padding-top: 3px;
+  padding-bottom: 2px;
+}

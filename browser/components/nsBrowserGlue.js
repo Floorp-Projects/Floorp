@@ -22,6 +22,7 @@
 #   Giorgio Maone <g.maone@informaction.com>
 #   Seth Spitzer <sspitzer@mozilla.com>
 #   Asaf Romano <mano@mozilla.com>
+#   Marco Bonardo <mak77@bonardo.net>
 #
 # Alternatively, the contents of this file may be used under the terms of
 # either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -127,6 +128,9 @@ BrowserGlue.prototype = {
         subject.QueryInterface(Ci.nsISupportsPRBool);
         subject.data = true;
         break;
+      case "places-init-complete":
+        this._initPlaces();
+        break;
       case "idle":
         if (this.idleService.idleTime > BOOKMARKS_ARCHIVE_IDLE_TIME * 1000) {
           // Back up bookmarks.
@@ -151,6 +155,7 @@ BrowserGlue.prototype = {
     osvr.addObserver(this, "quit-application-requested", false);
     osvr.addObserver(this, "quit-application-granted", false);
     osvr.addObserver(this, "session-save", false);
+    osvr.addObserver(this, "places-init-complete", false);
   },
 
   // cleanup (called on application shutdown)
@@ -168,6 +173,7 @@ BrowserGlue.prototype = {
     osvr.removeObserver(this, "quit-application-requested");
     osvr.removeObserver(this, "quit-application-granted");
     osvr.removeObserver(this, "session-save");
+    osvr.removeObserver(this, "places-init-complete");
   },
 
   _onAppDefaults: function()
@@ -191,9 +197,6 @@ BrowserGlue.prototype = {
       ww.openWindow(null, "chrome://browser/content/safeMode.xul", 
                     "_blank", "chrome,centerscreen,modal,resizable=no", null);
     }
-
-    // initialize Places
-    this._initPlaces();
 
     // apply distribution customizations
     // prefs are applied in _onAppDefaults()
@@ -426,7 +429,7 @@ BrowserGlue.prototype = {
                     }
                   ];
 
-    // Set pref to indicate we've shown the notficiation.
+    // Set pref to indicate we've shown the notification.
     var currentVersion = this._prefs.getIntPref("browser.rights.version");
     this._prefs.setBoolPref("browser.rights." + currentVersion + ".shown", true);
 
@@ -454,46 +457,73 @@ BrowserGlue.prototype = {
 
   /**
    * Initialize Places
-   * - imports the bookmarks html file if bookmarks datastore is empty
+   * - imports the bookmarks html file if bookmarks database is empty, try to
+   *   restore bookmarks from a JSON backup if the backend indicates that the
+   *   database was corrupt.
    *
-   * These prefs are set by the backend services upon creation (or recreation)
-   * of the Places db:
+   * These prefs can be set up by the frontend:
+   *
+   * WARNING: setting these preferences to true will overwite existing bookmarks
+   *
    * - browser.places.importBookmarksHTML
-   *   Set to false by the history service to indicate we need to re-import.
+   *   Set to true will import the bookmarks.html file from the profile folder.
    * - browser.places.smartBookmarksVersion
    *   Set during HTML import to indicate that Smart Bookmarks were created.
    *   Set to -1 to disable Smart Bookmarks creation.
    *   Set to 0 to restore current Smart Bookmarks.
-   *
-   * These prefs are set up by the frontend:
    * - browser.bookmarks.restore_default_bookmarks
    *   Set to true by safe-mode dialog to indicate we must restore default
    *   bookmarks.
    */
   _initPlaces: function bg__initPlaces() {
-    // we need to instantiate the history service before checking
-    // the browser.places.importBookmarksHTML pref, as
-    // nsNavHistory::ForceMigrateBookmarksDB() will set that pref
-    // if we need to force a migration (due to a schema change)
+    // We must instantiate the history service since it will tell us if we
+    // need to import or restore bookmarks due to first-run, corruption or
+    // forced migration (due to a major schema change).
     var histsvc = Cc["@mozilla.org/browser/nav-history-service;1"].
                   getService(Ci.nsINavHistoryService);
+    var databaseStatus = histsvc.databaseStatus;
 
-    var importBookmarks = false;
-    var restoreDefaultBookmarks = false;
+    // If the database is corrupt or has been newly created we should
+    // import bookmarks.
+    var importBookmarks = databaseStatus != histsvc.DATABASE_STATUS_OK;
+
+    // Check if user or an extension has required to import bookmarks.html
+    var importBookmarksHTML = false;
     try {
-      restoreDefaultBookmarks = this._prefs.getBoolPref("browser.bookmarks.restore_default_bookmarks");
+      importBookmarksHTML =
+        this._prefs.getBoolPref("browser.places.importBookmarksHTML");
+      if (importBookmarksHTML)
+        importBookmarks = true;
     } catch(ex) {}
 
-    if (restoreDefaultBookmarks) {
-      // Ensure that we already have a bookmarks backup for today
-      this._archiveBookmarks();
-      // we will restore bookmarks from html
-      importBookmarks = true;
-    }
-    else {
-      try {
-        importBookmarks = this._prefs.getBoolPref("browser.places.importBookmarksHTML");
-      } catch(ex) {}
+    // Check if Safe Mode or the user has required to restore bookmarks from
+    // default profile's bookmarks.html
+    var restoreDefaultBookmarks = false;
+    try {
+      restoreDefaultBookmarks =
+        this._prefs.getBoolPref("browser.bookmarks.restore_default_bookmarks");
+      if (restoreDefaultBookmarks) {
+        // Ensure that we already have a bookmarks backup for today
+        this._archiveBookmarks();
+        importBookmarks = true;
+      }
+    } catch(ex) {}
+
+    // If the user did not require to restore default bookmarks, or import
+    // from bookmarks.html, we will try to restore from JSON
+    if (importBookmarks && !restoreDefaultBookmarks && !importBookmarksHTML) {
+      // get latest JSON backup
+      Cu.import("resource://gre/modules/utils.js");
+      var bookmarksFile = PlacesUtils.getMostRecentBackup();
+      if (bookmarksFile && bookmarksFile.leafName.match("\.json$")) {
+        // restore from JSON backup
+        PlacesUtils.restoreBookmarksFromJSONFile(bookmarksFile);
+        importBookmarks = false;
+      }
+      else {
+        // No backup was available we will try to import from bookmarks.html
+        importBookmarks = true;
+      }
     }
 
     if (!importBookmarks) {
@@ -502,45 +532,41 @@ BrowserGlue.prototype = {
       this.ensurePlacesDefaultQueriesInitialized();
     }
     else {
-      // get latest backup
-      Cu.import("resource://gre/modules/utils.js");
-      var bookmarksFile = PlacesUtils.getMostRecentBackup();
+      // Create a new Organizer left pane folder root, the old will not be
+      // valid anymore.
+      this._prefs.setIntPref("browser.places.leftPaneFolderId", -1);
 
-      if (!restoreDefaultBookmarks &&
-          bookmarksFile && bookmarksFile.leafName.match("\.json$")) {
-        // restore a JSON backup
-        PlacesUtils.restoreBookmarksFromJSONFile(bookmarksFile);
+      // ensurePlacesDefaultQueriesInitialized() is called by import.
+      this._prefs.setIntPref("browser.places.smartBookmarksVersion", 0);
+
+      // Get bookmarks folder
+      var dirService = Cc["@mozilla.org/file/directory_service;1"].
+                       getService(Ci.nsIProperties);
+      var bookmarksFile = dirService.get("BMarks", Ci.nsILocalFile);
+
+      // User wants to restore default bookmarks
+      if (restoreDefaultBookmarks || !bookmarksFile.exists()) {
+        // get bookmarks.html file from default profile folder
+        bookmarksFile = dirService.get("profDef", Ci.nsILocalFile);
+        bookmarksFile.append("bookmarks.html");
       }
-      else {
-        // if there's no JSON backup or we are restoring default bookmarks
 
-        // ensurePlacesDefaultQueriesInitialized() is called by import.
-        this._prefs.setIntPref("browser.places.smartBookmarksVersion", 0);
+      // import the file
+      try {
+        var importer = Cc["@mozilla.org/browser/places/import-export-service;1"].
+                       getService(Ci.nsIPlacesImportExportService);
+        importer.importHTMLFromFile(bookmarksFile, true /* overwrite existing */);
+      } catch (err) {
+        // Report the error, but ignore it.
+        Cu.reportError(err);
+      }
 
-        var dirService = Cc["@mozilla.org/file/directory_service;1"].
-                         getService(Ci.nsIProperties);
-
-        var bookmarksFile = dirService.get("BMarks", Ci.nsILocalFile);
-        if (restoreDefaultBookmarks || !bookmarksFile.exists()) {
-          // get bookmarks.html file from default profile folder
-          bookmarksFile = dirService.get("profDef", Ci.nsILocalFile);
-          bookmarksFile.append("bookmarks.html");
-        }
-
-        // import the file
-        try {
-          var importer = Cc["@mozilla.org/browser/places/import-export-service;1"].
-                         getService(Ci.nsIPlacesImportExportService);
-          importer.importHTMLFromFile(bookmarksFile, true /* overwrite existing */);
-        } catch (err) {
-          // Report the error, but ignore it.
-          Cu.reportError(err);
-        }
+      // Reset preferences, so we won't try to import again at next run
+      if (importBookmarksHTML)
         this._prefs.setBoolPref("browser.places.importBookmarksHTML", false);
-        if (restoreDefaultBookmarks)
-          this._prefs.setBoolPref("browser.bookmarks.restore_default_bookmarks",
-                                 false);
-      }
+      if (restoreDefaultBookmarks)
+        this._prefs.setBoolPref("browser.bookmarks.restore_default_bookmarks",
+                                false);
     }
 
     // Initialize bookmark archiving on idle.
@@ -921,11 +947,6 @@ GeolocationPrompt.prototype = {
         label: browserBundle.GetStringFromName("geolocation.exactLocation"),
         accessKey: browserBundle.GetStringFromName("geolocation.exactLocationKey"),
         callback: function() request.allow() ,
-        },
-        {
-        label: browserBundle.GetStringFromName("geolocation.neighborhoodLocation"),
-        accessKey: browserBundle.GetStringFromName("geolocation.neighborhoodLocationKey"),
-        callback: function() request.allowButFuzz() ,
         },
         {
         label: browserBundle.GetStringFromName("geolocation.nothingLocation"),

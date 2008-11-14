@@ -623,13 +623,7 @@ nsScriptLoader::EvaluateScript(nsScriptLoadRequest* aRequest,
     return NS_ERROR_FAILURE;
   }
 
-  nsCAutoString url;
-
   nsIURI* uri = aRequest->mFinalURI ? aRequest->mFinalURI : aRequest->mURI;
-  rv = uri->GetSpec(url);
-  if (NS_FAILED(rv)) {
-    return rv;
-  }
 
   PRBool oldProcessingScriptTag = context->GetProcessingScriptTag();
   context->SetProcessingScriptTag(PR_TRUE);
@@ -637,6 +631,9 @@ nsScriptLoader::EvaluateScript(nsScriptLoadRequest* aRequest,
   // Update our current script.
   nsCOMPtr<nsIScriptElement> oldCurrent = mCurrentScript;
   mCurrentScript = aRequest->mElement;
+
+  nsCAutoString url;
+  nsContentUtils::GetWrapperSafeScriptFilename(mDocument, uri, url);
 
   PRBool isUndefined;
   rv = context->EvaluateString(aScript,

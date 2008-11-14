@@ -54,6 +54,7 @@
 #include "nsIAtom.h"
 #include "nsINameSpaceManager.h"
 #include "nsCycleCollectionParticipant.h"
+#include "nsWrapperCache.h"
 
 // Magic namespace id that means "match all namespaces".  This is
 // negative so it won't collide with actual namespace constants.
@@ -182,7 +183,8 @@ protected:
 class nsContentList : public nsBaseContentList,
                       protected nsContentListKey,
                       public nsIHTMLCollection,
-                      public nsStubMutationObserver
+                      public nsStubMutationObserver,
+                      public nsWrapperCache
 {
 public:
   NS_DECL_ISUPPORTS_INHERITED

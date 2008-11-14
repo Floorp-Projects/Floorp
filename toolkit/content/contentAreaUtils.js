@@ -23,6 +23,7 @@
 #   Ben Goodger <ben@netscape.com> (Save File)
 #   Fredrik Holmqvist <thesuckiestemail@yahoo.se>
 #   Asaf Romano <mozilla.mano@sent.com>
+#   Ehsan Akhgari <ehsan.akhgari@gmail.com>
 #
 # Alternatively, the contents of this file may be used under the terms of
 # either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -510,9 +511,21 @@ function getTargetFile(aFpP, aSkipPrompt)
 
     if (fp.show() == Components.interfaces.nsIFilePicker.returnCancel || !fp.file)
       return false;
-    
-    var directory = fp.file.parent.QueryInterface(nsILocalFile);
-    prefs.setComplexValue("lastDir", nsILocalFile, directory);
+
+    // Do not remember the last save directory inside the private browsing mode
+    var persistLastDir = true;
+    try {
+      var pbs = Components.classes["@mozilla.org/privatebrowsing;1"]
+                          .getService(Components.interfaces.nsIPrivateBrowsingService);
+      if (pbs.privateBrowsingEnabled)
+        persistLastDir = false;
+    }
+    catch (e) {
+    }
+    if (persistLastDir) {
+      var directory = fp.file.parent.QueryInterface(nsILocalFile);
+      prefs.setComplexValue("lastDir", nsILocalFile, directory);
+    }
 
     fp.file.leafName = validateFileName(fp.file.leafName);
     aFpP.saveAsType = fp.filterIndex;

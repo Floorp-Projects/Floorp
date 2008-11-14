@@ -37,9 +37,14 @@
 
 #include "domstubs.idl"
 
-[scriptable, uuid(39928BF8-4466-4A64-BF5F-97114A5CD171)]
+[scriptable, uuid(1B493214-4E58-4A40-AA4C-1AB70C6DDBEC)]
 interface nsIDOMGeoPositionError : nsISupports
 {
+  const unsigned short UNKNOWN_ERROR = 0;
+  const unsigned short PERMISSION_DENIED  = 1;
+  const unsigned short POSITION_UNAVAILABLE = 2;
+  const unsigned short TIMEOUT = 3;
+
   readonly attribute short code;
   readonly attribute DOMString message;
 };
