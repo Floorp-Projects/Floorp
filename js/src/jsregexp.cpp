@@ -2297,14 +2297,6 @@ js_NewRegExp(JSContext *cx, JSTokenStream *ts,
         re->classList = NULL;
     }
 
-#ifdef JS_TRACER
-    /*
-     * Try compiling the native code version. For the time being we also 
-     * compile the bytecode version in case we evict the native code
-     * version from the code cache.
-     */
-    js_CompileRegExpToNative(cx, re, &state);
-#endif
     /* Compile the bytecode version. */
     endPC = EmitREBytecode(&state, re, state.treeDepth, re->program, state.result);
     if (!endPC) {
@@ -2330,6 +2322,17 @@ js_NewRegExp(JSContext *cx, JSTokenStream *ts,
     re->flags = flags;
     re->parenCount = state.parenCount;
     re->source = str;
+
+#ifdef JS_TRACER
+    /*
+     * Try compiling the native code version. For the time being we also 
+     * compile the bytecode version in case we evict the native code
+     * version from the code cache.
+     * We have to compile at this point because we are using the JSRegExp
+     * address as a key and the shrink step above can move it.
+     */
+    js_CompileRegExpToNative(cx, re, &state);
+#endif
 
 out:
     JS_ARENA_RELEASE(&cx->tempPool, mark);
