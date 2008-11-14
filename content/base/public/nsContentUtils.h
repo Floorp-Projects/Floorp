@@ -809,6 +809,20 @@ public:
   static PRBool IsChromeDoc(nsIDocument *aDocument);
 
   /**
+   * Get the script file name to use when compiling the script
+   * referenced by aURI. In cases where there's no need for any extra
+   * security wrapper automation the script file name that's returned
+   * will be the spec in aURI, else it will be the spec in aDocument's
+   * URI followed by aURI's spec, separated by " -> ". Returns PR_TRUE
+   * if the script file name was modified, PR_FALSE if it's aURI's
+   * spec.
+   */
+  static PRBool GetWrapperSafeScriptFilename(nsIDocument *aDocument,
+                                             nsIURI *aURI,
+                                             nsACString& aScriptURI);
+
+
+  /**
    * Returns true if aDocument belongs to a chrome docshell for
    * display purposes.  Returns false for null documents or documents
    * which do not belong to a docshell.
