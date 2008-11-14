@@ -56,8 +56,8 @@ PROGRAM         = js$(BIN_SUFFIX)
 PROGOBJS	= js.$(OBJ_SUFFIX) $(OBJS)
 LIBS		= $(NSPR_LIBS)
 
-ifdef GNU_CC
-ifdef INTEL_CC
+ifdef GNU_CXX
+ifdef INTEL_CXX
 # icc gets special optimize flags
 ifdef MOZ_PROFILE_GENERATE
 MODULE_OPTIMIZE_FLAGS = -O0
@@ -65,12 +65,12 @@ else
 MODULE_OPTIMIZE_FLAGS = -O2 -ip
 #XXX: do we want different INTERP_OPTIMIZER flags here?
 endif
-else
+else # not INTEL_CXX
 MODULE_OPTIMIZE_FLAGS = -Os -fstrict-aliasing $(MOZ_OPTIMIZE_SIZE_TWEAK)
 # Special optimization flags for jsinterp.c
 INTERP_OPTIMIZER = -O3 -fstrict-aliasing
 endif
-else
+else # not GNU_CXX
 ifeq ($(OS_ARCH),SunOS)
 MODULE_OPTIMIZE_FLAGS = -xO4
 endif
