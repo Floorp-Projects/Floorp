@@ -1086,6 +1086,9 @@ UpdateService.prototype = {
     case "xpcom-shutdown":
       os.removeObserver(this, "xpcom-shutdown");
 
+      // Prevent leaking the downloader (bug 454964)
+      this._downloader = null;
+
       // Release Services
       gApp      = null;
       gPref     = null;
