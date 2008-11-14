@@ -1166,7 +1166,7 @@ PRBool CViewSourceHTML::IsTokenValueTrimmableCharacter(char ch) {
   if (ch == ' ') return PR_TRUE;
   if (ch == '\t') return PR_TRUE;
   if (ch == '\r') return PR_TRUE;
-  if (ch == '\t') return PR_TRUE;
+  if (ch == '\n') return PR_TRUE;
   if (ch == '\'') return PR_TRUE;
   if (ch == '"') return PR_TRUE;
   return PR_FALSE;
