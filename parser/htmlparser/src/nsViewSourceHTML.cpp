@@ -1113,8 +1113,19 @@ void CViewSourceHTML::WriteTextInElement(const nsAString& tagName,
                                          const nsAString& attrName, 
                                          const nsAString& attrValue) {
   // Open the element, supplying the attribute, if any.
-  CStartToken startToken(tagName, tagType);
-  nsCParserStartNode startNode(&startToken, 0/*stack token*/);
+  nsTokenAllocator* theAllocator = mTokenizer->GetTokenAllocator();
+  if (!theAllocator) {
+    return;
+  }
+
+  CStartToken* startToken =
+    static_cast<CStartToken*>
+      (theAllocator->CreateTokenOfType(eToken_start, tagType, tagName));
+  if (!startToken) {
+    return;
+  }
+
+  nsCParserStartNode startNode(startToken, theAllocator);
   if (!attrName.IsEmpty()) {
     AddAttrToNode(startNode, allocator, attrName, attrValue);
   }
@@ -1162,7 +1173,7 @@ void CViewSourceHTML::TrimTokenValue(nsAString::const_iterator& start,
   }
 }
 
-PRBool CViewSourceHTML::IsTokenValueTrimmableCharacter(char ch) {
+PRBool CViewSourceHTML::IsTokenValueTrimmableCharacter(PRUnichar ch) {
   if (ch == ' ') return PR_TRUE;
   if (ch == '\t') return PR_TRUE;
   if (ch == '\r') return PR_TRUE;
