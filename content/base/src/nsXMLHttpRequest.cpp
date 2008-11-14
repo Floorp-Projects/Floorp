@@ -530,13 +530,7 @@ GetDocumentFromScriptContext(nsIScriptContext *aScriptContext)
 NS_IMPL_CYCLE_COLLECTION_CLASS(nsXHREventTarget)
 
 NS_IMPL_CYCLE_COLLECTION_TRAVERSE_BEGIN(nsXHREventTarget)
-  if (tmp->mOwner) {
-    nsCOMPtr<nsIDocument> doc =
-      do_QueryInterface(tmp->mOwner->GetExtantDocument());
-    if (doc) {
-      cb.NoteXPCOMChild(doc->GetReference(tmp));
-    }
-  }
+  NS_IMPL_CYCLE_COLLECTION_TRAVERSE_PRESERVED_WRAPPER
   NS_IMPL_CYCLE_COLLECTION_TRAVERSE_NSCOMPTR(mOnLoadListener)
   NS_IMPL_CYCLE_COLLECTION_TRAVERSE_NSCOMPTR(mOnErrorListener)
   NS_IMPL_CYCLE_COLLECTION_TRAVERSE_NSCOMPTR(mOnAbortListener)
@@ -548,13 +542,7 @@ NS_IMPL_CYCLE_COLLECTION_TRAVERSE_BEGIN(nsXHREventTarget)
 NS_IMPL_CYCLE_COLLECTION_TRAVERSE_END
 
 NS_IMPL_CYCLE_COLLECTION_UNLINK_BEGIN(nsXHREventTarget)
-  if (tmp->mOwner) {
-    nsCOMPtr<nsIDocument> doc =
-      do_QueryInterface(tmp->mOwner->GetExtantDocument());
-    if (doc) {
-      doc->RemoveReference(tmp);
-    }
-  }
+  NS_IMPL_CYCLE_COLLECTION_UNLINK_PRESERVED_WRAPPER
   NS_IMPL_CYCLE_COLLECTION_UNLINK_NSCOMPTR(mOnLoadListener)
   NS_IMPL_CYCLE_COLLECTION_UNLINK_NSCOMPTR(mOnErrorListener)
   NS_IMPL_CYCLE_COLLECTION_UNLINK_NSCOMPTR(mOnAbortListener)
@@ -565,7 +553,9 @@ NS_IMPL_CYCLE_COLLECTION_UNLINK_BEGIN(nsXHREventTarget)
   NS_IMPL_CYCLE_COLLECTION_UNLINK_NSCOMPTR(mOwner)
 NS_IMPL_CYCLE_COLLECTION_UNLINK_END
 
-NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION(nsXHREventTarget)
+NS_INTERFACE_MAP_BEGIN(nsXHREventTarget)
+  NS_WRAPPERCACHE_INTERFACE_MAP_ENTRY
+  NS_INTERFACE_MAP_ENTRIES_CYCLE_COLLECTION(nsXHREventTarget)
   NS_INTERFACE_MAP_ENTRY_AMBIGUOUS(nsISupports, nsIXMLHttpRequestEventTarget)
   NS_INTERFACE_MAP_ENTRY(nsIXMLHttpRequestEventTarget)
   NS_INTERFACE_MAP_ENTRY(nsPIDOMEventTarget)
@@ -1569,6 +1559,17 @@ nsXMLHttpRequest::GetResponseHeader(const nsACString& header,
 {
   nsresult rv = NS_OK;
   _retval.Truncate();
+
+  // See bug #380418. Hide "Set-Cookie" headers from non-chrome scripts.
+  PRBool chrome = PR_FALSE; // default to false in case IsCapabilityEnabled fails
+  IsCapabilityEnabled("UniversalXPConnect", &chrome);
+  if (!chrome &&
+       (header.LowerCaseEqualsASCII("set-cookie") ||
+        header.LowerCaseEqualsASCII("set-cookie2"))) {
+    NS_WARNING("blocked access to response header");
+    _retval.SetIsVoid(PR_TRUE);
+    return NS_OK;
+  }
 
   // Check for dangerous headers
   if (mState & XML_HTTP_REQUEST_USE_XSITE_AC) {
@@ -3353,10 +3354,19 @@ NS_IMPL_ISUPPORTS1(nsXMLHttpRequest::nsHeaderVisitor, nsIHttpHeaderVisitor)
 NS_IMETHODIMP nsXMLHttpRequest::
 nsHeaderVisitor::VisitHeader(const nsACString &header, const nsACString &value)
 {
-    mHeaders.Append(header);
-    mHeaders.Append(": ");
-    mHeaders.Append(value);
-    mHeaders.Append('\n');
+    // See bug #380418. Hide "Set-Cookie" headers from non-chrome scripts.
+    PRBool chrome = PR_FALSE; // default to false in case IsCapabilityEnabled fails
+    IsCapabilityEnabled("UniversalXPConnect", &chrome);
+    if (!chrome &&
+         (header.LowerCaseEqualsASCII("set-cookie") ||
+          header.LowerCaseEqualsASCII("set-cookie2"))) {
+        NS_WARNING("blocked access to response header");
+    } else {
+        mHeaders.Append(header);
+        mHeaders.Append(": ");
+        mHeaders.Append(value);
+        mHeaders.Append('\n');
+    }
     return NS_OK;
 }
 

@@ -29,10 +29,12 @@ const kBlue = "rgb(0, 0, 255)";
 var testpath = document.location.pathname + "/../bug_461710/";
 var prefix = "http://localhost:8888" + testpath;
 var subtests = [
-                   "visited_page.html", // 1
-                   "link_page.html", // 2
-                   "link_page.html", // 3
-                   "link_page.html" // 4
+                   "visited_page.html",   // 1
+                   "visited_page-2.html", // 2
+                   "visited_page-3.html", // 3
+                   "link_page.html",      // 4
+                   "link_page-2.html",    // 5
+                   "link_page-3.html"     // 6
                ];
 
 
@@ -47,15 +49,23 @@ function loadNextTest() {
       break;
 
     case 2:
-      ok(!pb.privateBrowsingEnabled, "Test #" + testNum + " should be run outside of private mode");
+      // nothing to do here
       break;
 
     case 3:
+      // nothing to do here
+      break;
+
+    case 4:
+      ok(!pb.privateBrowsingEnabled, "Test #" + testNum + " should be run outside of private mode");
+      break;
+
+    case 5:
       pb.privateBrowsingEnabled = true;
       ok(pb.privateBrowsingEnabled, "Test #" + testNum + " should be run inside of private mode");
       break;
 
-    case 4:
+    case 6:
       pb.privateBrowsingEnabled = false;
       ok(!pb.privateBrowsingEnabled, "Test #" + testNum + " should be run outside of private mode");
       break;
@@ -75,6 +85,14 @@ function checkTest() {
       break;
 
     case 2:
+      // nothing to do here, we just want to mark the page as visited
+      break;
+
+    case 3:
+      // nothing to do here, we just want to mark the page as visited
+      break;
+
+    case 4:
       // run outside of private mode, link should appear as visited
       var doc = iframe.contentDocument;
       var win = doc.defaultView;
@@ -82,7 +100,7 @@ function checkTest() {
       is(style.getPropertyValue("color"), kRed, "Visited link coloring should work outside of private mode");
       break;
 
-    case 3:
+    case 5:
       // run inside of private mode, link should appear as not visited
       var doc = iframe.contentDocument;
       var win = doc.defaultView;
@@ -90,7 +108,7 @@ function checkTest() {
       is(style.getPropertyValue("color"), kBlue, "Visited link coloring should not work inside of private mode");
       break;
 
-    case 4:
+    case 6:
       // run outside of private mode, link should appear as visited
       var doc = iframe.contentDocument;
       var win = doc.defaultView;
@@ -126,9 +144,7 @@ function handleLoad(aEvent) {
   checkTest();
 
   if (testNum < subtests.length) {
-    setTimeout(function() {
-      loadNextTest();
-    }, 500);
+    loadNextTest();
   } else {
     prefBranch.clearUserPref("browser.privatebrowsing.keep_current_session");
     SimpleTest.finish();

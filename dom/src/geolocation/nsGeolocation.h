@@ -55,11 +55,6 @@
 
 #include "nsIGeolocationProvider.h"
 
-#define NS_GEO_ERROR_CODE_PERMISSION_ERROR        1
-#define NS_GEO_ERROR_CODE_LOCATION_PROVIDER_ERROR 2
-#define NS_GEO_ERROR_CODE_POSITION_NOT_FOUND      3
-#define NS_GEO_ERROR_CODE_TIMEOUT                 4
-
 class nsGeolocationService;
 class nsGeolocation;
 
@@ -74,6 +69,7 @@ class nsGeolocationRequest : public nsIGeolocationRequest, public nsITimerCallba
                        nsIDOMGeoPositionCallback* callback,
                        nsIDOMGeoPositionErrorCallback* errorCallback,
                        nsIDOMGeoPositionOptions* options);
+  nsresult Init();
   void Shutdown();
 
   void SendLocation(nsIDOMGeoPosition* location);
@@ -87,7 +83,6 @@ class nsGeolocationRequest : public nsIGeolocationRequest, public nsITimerCallba
   void NotifyError(PRInt16 errorCode);
   PRPackedBool mAllowed;
   PRPackedBool mCleared;
-  PRPackedBool mFuzzLocation;
   PRPackedBool mHasSentData;
 
   nsCOMPtr<nsITimer> mTimeoutTimer;
@@ -96,25 +91,6 @@ class nsGeolocationRequest : public nsIGeolocationRequest, public nsITimerCallba
   nsCOMPtr<nsIDOMGeoPositionOptions> mOptions;
 
   nsGeolocation* mLocator; // The locator exists longer than this object.
-
-};
-
-/**
- * Simple object that holds a single point in space.
- */ 
-class nsGeoPosition : public nsIDOMGeoPosition
-{
-public:
-  NS_DECL_ISUPPORTS
-  NS_DECL_NSIDOMGEOPOSITION
-
-    nsGeoPosition(double aLat, double aLong, double aAlt, double aHError, double aVError, double aHeading, double aSpeed, long long aTimestamp)
-    : mLat(aLat), mLong(aLong), mAlt(aAlt), mHError(aHError), mVError(aVError), mHeading(aHeading), mSpeed(aSpeed), mTimestamp(aTimestamp){};
-
-private:
-  ~nsGeoPosition(){}
-  double mLat, mLong, mAlt, mHError, mVError, mHeading, mSpeed;
-  long long mTimestamp;
 };
 
 /**
@@ -138,12 +114,8 @@ public:
   void AddLocator(nsGeolocation* locator);
   void RemoveLocator(nsGeolocation* locator);
 
-  // Returns the last geolocation we have seen since calling StartDevice()
-  already_AddRefed<nsIDOMGeoPosition> GetLastKnownPosition();
-  
-  // Returns true if the we have successfully found and started a
-  // geolocation device
-  PRBool   IsDeviceReady();
+  // Returns true if there is a geolocation provider registered.
+  PRBool   HasGeolocationProvider();
 
   // Find and startup a geolocation device (gps, nmea, etc.)
   nsresult StartDevice();
@@ -168,6 +140,9 @@ private:
 
   // The object providing geo location information to us.
   nsCOMPtr<nsIGeolocationProvider> mProvider;
+
+  // A flag that lets us know if the mProvider has been started up.
+  PRBool mProviderStarted;
 
   // mGeolocators are not owned here.  Their constructor
   // addes them to this list, and their destructor removes

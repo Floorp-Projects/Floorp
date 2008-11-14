@@ -157,7 +157,6 @@ bin/components/places.xpt
 bin/components/plugin.xpt
 bin/components/prefetch.xpt
 bin/components/pref.xpt
-bin/components/privatebrowsing.xpt
 bin/components/proxyObjInst.xpt
 bin/components/toolkitremote.xpt
 bin/components/rdf.xpt

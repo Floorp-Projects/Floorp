@@ -617,8 +617,12 @@ var ctrlTab = {
       case "keydown":
       case "keyup":
         if (event.target == this.searchField) {
-          if (event.keyCode == event.DOM_VK_RETURN)
-            this.panel.focus();
+          if (event.keyCode == event.DOM_VK_RETURN) {
+            // If there's a pending search, kick it off now.
+            if (this.searchField._timer)
+              this.search();
+            this.selectThumbnail();
+          }
         } else {
           // Manually consume the events, as the panel is open but doesn't
           // necessarily have focus.

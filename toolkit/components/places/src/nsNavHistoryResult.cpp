@@ -2195,7 +2195,10 @@ nsNavHistoryQueryResultNode::GetHasChildren(PRBool* aHasChildren)
     rv = hasTagsStatement->BindInt64Parameter(0, tagsFolderId);
     NS_ENSURE_SUCCESS(rv, rv);
 
-    return hasTagsStatement->ExecuteStep(aHasChildren);
+    rv = hasTagsStatement->ExecuteStep(aHasChildren);
+    NS_ENSURE_SUCCESS(rv, rv);
+
+    return NS_OK;
   }
 
   // For history containers query we must check if we have any history

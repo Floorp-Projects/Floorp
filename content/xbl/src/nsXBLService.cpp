@@ -548,6 +548,14 @@ nsXBLService::LoadBindings(nsIContent* aContent, nsIURI* aURL,
   if (!document)
     return NS_OK;
 
+  nsCAutoString urlspec;
+  if (nsContentUtils::GetWrapperSafeScriptFilename(document, aURL, urlspec)) {
+    // Block an attempt to load a binding that has special wrapper
+    // automation needs.
+
+    return NS_OK;
+  }
+
   nsBindingManager *bindingManager = document->BindingManager();
   
   nsXBLBinding *binding = bindingManager->GetBinding(aContent);
@@ -682,28 +690,6 @@ nsXBLService::ResolveTag(nsIContent* aContent, PRInt32* aNameSpaceID,
   }
 
   return NS_OK;
-}
-
-nsIXBLDocumentInfo*
-nsXBLService::GetXBLDocumentInfo(nsIURI* aURI, nsIContent* aBoundElement)
-{
-#ifdef MOZ_XUL
-  nsXULPrototypeCache* cache = nsXULPrototypeCache::GetInstance();
-  if (cache && cache->IsEnabled()) { 
-    // The first line of defense is the chrome cache.  
-    // This cache crosses the entire product, so any XBL bindings that are
-    // part of chrome will be reused across all XUL documents.
-    return cache->GetXBLDocumentInfo(aURI);
-  }
-#endif
-
-  // The second line of defense is the binding manager's document table.
-  nsIDocument* boundDocument = aBoundElement->GetOwnerDoc();
-  if (boundDocument) {
-    return boundDocument->BindingManager()->GetXBLDocumentInfo(aURI);
-  }
-
-  return nsnull;
 }
 
 

@@ -3182,7 +3182,8 @@ CSSParserImpl::ParseNegatedSimpleSelector(PRInt32&       aDataMask,
   // Given the current parsing rules, every selector in mNegations
   // contains only one simple selector (css3 definition) within it.
   // This could easily change in future versions of CSS, and the only
-  // thing we need to change to support that is this parsing code.
+  // thing we need to change to support that is this parsing code and the
+  // serialization code for nsCSSSelector.
   nsCSSSelector *newSel = new nsCSSSelector();
   if (!newSel) {
     mScanner.SetLowLevelError(NS_ERROR_OUT_OF_MEMORY);
@@ -3220,6 +3221,11 @@ CSSParserImpl::ParseNegatedSimpleSelector(PRInt32&       aDataMask,
     REPORT_UNEXPECTED_TOKEN(PENegationNoClose);
     return eSelectorParsingStatus_Error;
   }
+
+  NS_ASSERTION(newSel->mNameSpace == kNameSpaceID_Unknown ||
+               (!newSel->mIDList && !newSel->mClassList &&
+                !newSel->mPseudoClassList && !newSel->mAttrList),
+               "Need to fix the serialization code to deal with this");
 
   return eSelectorParsingStatus_Continue;
 }

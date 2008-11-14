@@ -2129,33 +2129,6 @@ void patternDraw(void* aInfo, CGContextRef aContext)
 @end
 
 
-// This is an internal Apple class, which we need to work around a bug in. It is
-// the class responsible for drawing the titlebar for metal windows. It actually
-// is a few levels deep in the inhertiance graph, but we don't need to know about
-// all its superclasses.
-@interface NSGrayFrame : NSObject
-+ (void)drawBevel:(NSRect)bevel inFrame:(NSRect)frame topCornerRounded:(BOOL)top;
-+ (void)drawBevel:(NSRect)bevel inFrame:(NSRect)frame topCornerRounded:(BOOL)top bottomCornerRounded:(BOOL)bottom;
-@end
-
-@implementation NSGrayFrame(DrawingBugWorkaround)
-
-// Work around a bug in this method -- it draws a strange 1px border on the left and
-// right edges of a window. We don't want that, so call the similar method defined
-// in the superclass.
-+ (void)drawBevel:(NSRect)bevel inFrame:(NSRect)frame topCornerRounded:(BOOL)top bottomCornerRounded:(BOOL)bottom
-{
-  NS_OBJC_BEGIN_TRY_ABORT_BLOCK;
-
-  if ([self respondsToSelector:@selector(drawBevel:inFrame:topCornerRounded:)])
-    [self drawBevel:bevel inFrame:frame topCornerRounded:top];
-
-  NS_OBJC_END_TRY_ABORT_BLOCK;
-}
-
-@end
-
-
 @interface NSWindow (MethodSwizzling)
 - (void)nsCocoaWindow_NSWindow_sendEvent:(NSEvent *)anEvent;
 @end

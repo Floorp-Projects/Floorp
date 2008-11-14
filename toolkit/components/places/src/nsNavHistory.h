@@ -121,6 +121,8 @@
 // mInPrivateBrowsing member
 #define PRIVATEBROWSING_NOTINITED (PRBool(0xffffffff))
 
+#define PLACES_INIT_COMPLETE_EVENT_TOPIC "places-init-complete"
+
 struct AutoCompleteIntermediateResult;
 class AutoCompleteResultComparator;
 class mozIAnnotationService;
@@ -193,17 +195,6 @@ public:
     NS_ENSURE_TRUE(serv, nsnull);
 
     return gHistoryService;
-  }
-
-  /**
-   * Call this function before doing any database reads. It will ensure that
-   * any data not flushed to the DB yet is flushed.
-   */
-  void SyncDB()
-  {
-    #ifdef LAZY_ADD
-      CommitLazyMessages();
-    #endif
   }
 
 #ifdef LAZY_ADD
@@ -398,6 +389,19 @@ public:
 
   typedef nsDataHashtable<nsCStringHashKey, nsCString> StringHash;
 
+  /**
+   * Helper method to finalize a statement
+   */
+  static nsresult
+  FinalizeStatement(mozIStorageStatement *aStatement) {
+    nsresult rv;
+    if (aStatement) {
+      rv = aStatement->Finalize();
+      NS_ENSURE_SUCCESS(rv, rv);
+    }
+    return NS_OK;
+  }
+
  private:
   ~nsNavHistory();
 
@@ -441,6 +445,11 @@ protected:
   nsCOMPtr<mozIStorageStatement> mDBVisitToVisitResult; // kGetInfoIndex_* results
   mozIStorageStatement *GetDBBookmarkToUrlResult();
   nsCOMPtr<mozIStorageStatement> mDBBookmarkToUrlResult; // kGetInfoIndex_* results
+
+  /**
+   * Finalize all internal statements.
+   */
+  nsresult FinalizeStatements();
 
   // nsICharsetResolver
   NS_DECL_NSICHARSETRESOLVER
@@ -835,6 +844,8 @@ protected:
   PRInt64 mTagsFolder;
 
   PRBool mInPrivateBrowsing;
+
+  PRBool mDatabaseStatus;
 };
 
 /**

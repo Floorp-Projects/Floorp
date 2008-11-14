@@ -215,6 +215,12 @@ nsFormHistory::RemoveAllEntries()
   return rv;
 }
 
+NS_IMETHODIMP
+nsFormHistory::GetDBConnection()
+{
+  return NS_ERROR_NOT_IMPLEMENTED;
+}
+
 ////////////////////////////////////////////////////////////////////////
 //// nsIObserver
 

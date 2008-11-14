@@ -48,7 +48,7 @@ interface nsIGeolocationPrompt;
  * the nsIGeolocationPrompt so that the application can approve
  * or deny the request.
  */
-[scriptable, function, uuid(D681C322-C075-4C6E-9765-C22711A4A60E)]
+[scriptable, function, uuid(F2AEFDE1-8E38-48B3-BBB8-BD6C4AE1AC8A)]
 interface nsIGeolocationRequest : nsISupports {
 
   readonly attribute nsIURI requestingURI;
@@ -56,7 +56,6 @@ interface nsIGeolocationRequest : nsISupports {
 
   void cancel();
   void allow();
-  void allowButFuzz();
 };
 
 /**

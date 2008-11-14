@@ -90,9 +90,14 @@ public:
   static nsresult OptimizeFaviconImage(const PRUint8* aData, PRUint32 aDataLen,
                                        const nsACString& aMimeType,
                                        nsACString& aNewData, nsACString& aNewMimeType);
+
+  /**
+   * Finalize all internal statements.
+   */
+  nsresult FinalizeStatements();
+
   NS_DECL_ISUPPORTS
   NS_DECL_NSIFAVICONSERVICE
-
 
 private:
   ~nsFaviconService();

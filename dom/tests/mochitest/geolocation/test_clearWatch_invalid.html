@@ -1,0 +1,52 @@
+ <!DOCTYPE HTML>
+<html>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=463039
+-->
+<head>
+  <title>Test for Bug 463039</title>
+  <script type="text/javascript" src="/MochiKit/MochiKit.js"></script>
+  <script type="text/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <script type="text/javascript" src="prompt_common.js"></script>
+  <script type="text/javascript" src="geolocation_common.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
+</head>
+<body>
+<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=463039">Mozilla Bug 463039</a>
+<p id="display"></p>
+<div id="content" style="display: none">
+  
+</div>
+<pre id="test">
+<script class="testbody" type="text/javascript">
+
+/** Test for Bug 463039 **/
+
+ok(navigator.geolocation, "Should have geolocation");
+
+
+// there are no watches, so this should always throw
+for (x=-10; x<10; x++) {
+    try {
+        navigator.geolocation.clearWatch(x);
+        ok(0, "clearWatch should throw");
+    } catch (ex) {
+        ok(1, "clearWatch with a bad value did throw");
+    }
+}
+
+// lets try something huge
+try {
+    navigator.geolocation.clearWatch(Number.MAX_VALUE);
+    ok(0, "clearWatch should throw");
+} catch (ex) {
+    ok(1, "clearWatch with a bad value did throw");
+}
+
+
+    
+</script>
+</pre>
+</body>
+</html>
+
