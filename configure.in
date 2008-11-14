@@ -1824,22 +1824,29 @@ case "$target" in
     ;;
 
 *-*linux*)
-    if test "$GNU_CC"; then
+    # Note: both GNU_CC and INTEL_CC are set when using Intel's C compiler.
+    # Similarly for GNU_CXX and INTEL_CXX.
+    if test "$INTEL_CC" || test "$INTEL_CXX"; then
+        # -Os has been broken on Intel's C/C++ compilers for quite a
+        # while; Intel recommends against using it.
+        MOZ_OPTIMIZE_FLAGS="-O2"
+        MOZ_DEBUG_FLAGS="-g -fno-inline"
+    elif test "$GNU_CC" || test "$GNU_CXX"; then
         GCC_VERSION=`$CC -v 2>&1 | awk '/^gcc version/ { print $3 }'`
         case $GCC_VERSION in
         4.1.*|4.2.*)
             # -Os is broken on gcc 4.1.x and 4.2.x, we need to tweak it to get good results.
             MOZ_OPTIMIZE_SIZE_TWEAK="-finline-limit=50"
         esac
+        MOZ_OPTIMIZE_FLAGS="-Os -freorder-blocks -fno-reorder-functions $MOZ_OPTIMIZE_SIZE_TWEAK"
+        MOZ_DEBUG_FLAGS="-g -fno-inline"  # most people on linux use gcc/gdb,
+                                          # and that combo is not yet good at
+                                          # debugging inlined functions (even
+                                          # when using DWARF2 as the debugging
+                                          # format)
     fi
 
     TARGET_NSPR_MDCPUCFG='\"md/_linux.cfg\"'
-    MOZ_OPTIMIZE_FLAGS="-Os -freorder-blocks -fno-reorder-functions $MOZ_OPTIMIZE_SIZE_TWEAK"
-    MOZ_DEBUG_FLAGS="-g -fno-inline"  # most people on linux use gcc/gdb,
-                                      # and that combo is not yet good at
-                                      # debugging inlined functions (even
-                                      # when using DWARF2 as the debugging
-                                      # format)    
 
     MOZ_MEMORY=1
 
