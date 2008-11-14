@@ -7,26 +7,14 @@
 	<style type="text/css">
 
 	@font-face {
-		font-family: "One";
-		src: url(../fonts/markB.ttf);
-	}
-
-	@font-face {
-		font-family: "One";
-		src: url(../fonts/mark2A.ttf);
-	}
-
-	@font-face {
-		font-family: "One";
-		src: url(../fonts/mark2B.ttf);
-	}
-
-	@font-face {
-		font-family: "One";
+		font-family: "MarkA";
 		src: url(../fonts/markA.ttf);
 	}
 
-	body { font-family: "One"; }
+	@font-face {
+		font-family: "Mark2B";
+		src: url(../fonts/mark2B.ttf);
+	}
 
 	span.spacer {
 		/* to ensure the same vertical positioning of the text */
@@ -40,7 +28,7 @@
 </head>
 <body>
 
-<p>ABC<span class="spacer"></span></p>
+<p><span style="font-family: MarkA">A</span><span style="font-family: Mark2B">B</span>C<span class="spacer"></span></p>
 
 </body>
 </html>
