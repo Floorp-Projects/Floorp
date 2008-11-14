@@ -115,9 +115,9 @@ MOZ_PKG_APPNAME_LC = $(shell echo $(MOZ_PKG_APPNAME) | tr '[A-Z]' '[a-z]')
 
 ifndef MOZ_PKG_LONGVERSION
 MOZ_PKG_LONGVERSION = $(shell echo $(MOZ_PKG_VERSION) |\
-                       sed -e 's/a\([0-9][0-9]*\)$/ Alpha \1/' |\
-                       sed -e 's/b\([0-9][0-9]*\)$/ Beta \1/' |\
-                       sed -e 's/rc\([0-9][0-9]*\)$/ RC \1/')
+                       sed -e 's/a\([0-9][0-9]*\)$$/ Alpha \1/' |\
+                       sed -e 's/b\([0-9][0-9]*\)$$/ Beta \1/' |\
+                       sed -e 's/rc\([0-9][0-9]*\)$$/ RC \1/')
 endif
 
 ifeq (,$(filter-out Darwin OS2, $(OS_ARCH))) # Mac and OS2
