@@ -2185,8 +2185,9 @@ TraceRecorder::compile(Fragmento* fragmento)
         fragment->vmprivate = treeInfo;
     /* :TODO: windows support */
 #if defined DEBUG && !defined WIN32
-    char* label = (char*)malloc(strlen(cx->fp->script->filename) + 16);
-    sprintf(label, "%s:%u", cx->fp->script->filename,
+    const char* filename = cx->fp->script->filename;
+    char* label = (char*)malloc((filename ? strlen(filename) : 7) + 16);
+    sprintf(label, "%s:%u", filename ? filename : "<stdin>",
             js_FramePCToLineNumber(cx, cx->fp));
     fragmento->labels->add(fragment, sizeof(Fragment), 0, label);
     free(label);
