@@ -2956,7 +2956,7 @@ js_Interpret(JSContext *cx)
                 JS_ASSERT(op == JSOP_STOP);
 
               end_imacro:
-                JS_ASSERT((uintN)(regs.sp - fp->slots) < script->nslots);
+                JS_ASSERT((uintN)(regs.sp - fp->slots) <= script->nslots);
                 regs.pc = fp->imacpc + js_CodeSpec[*fp->imacpc].length;
                 fp->imacpc = NULL;
                 atoms = script->atomMap.vector;
