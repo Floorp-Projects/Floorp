@@ -5279,6 +5279,57 @@ nsNavHistory::GetDBConnection(mozIStorageConnection **_DBConnection)
   return NS_OK;
 }
 
+NS_IMETHODIMP
+nsNavHistory::FinalizeInternalStatements()
+{
+  NS_ASSERTION(NS_IsMainThread(), "This can only be called on the main thread");
+
+#ifdef LAZY_ADD
+  // Kill lazy timer or it could fire later when statements won't be valid
+  // anymore.
+  // At this point we should have called CommitPendingChanges before the last
+  // sync, so all data is saved to disk and we can finalize all statements.
+  if (mLazyTimer)
+    mLazyTimer->Cancel();
+  NS_ABORT_IF_FALSE(mLazyMessages.Length() == 0,
+    "There are pending lazy messages, did you call CommitPendingChanges()?");
+#endif
+
+  // nsNavHistory
+  nsresult rv = FinalizeStatements();
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  // nsNavBookmarks
+  nsNavBookmarks* bookmarks = nsNavBookmarks::GetBookmarksService();
+  NS_ENSURE_TRUE(bookmarks, NS_ERROR_OUT_OF_MEMORY);
+  rv = bookmarks->FinalizeStatements();
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  // nsAnnotationService
+  nsAnnotationService* annosvc = nsAnnotationService::GetAnnotationService();
+  NS_ENSURE_TRUE(annosvc, NS_ERROR_OUT_OF_MEMORY);
+  rv = annosvc->FinalizeStatements();
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  // nsFaviconService
+  nsFaviconService* iconsvc = nsFaviconService::GetFaviconService();
+  NS_ENSURE_TRUE(iconsvc, NS_ERROR_OUT_OF_MEMORY);
+  rv = iconsvc->FinalizeStatements();
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsNavHistory::CommitPendingChanges()
+{
+  #ifdef LAZY_ADD
+    CommitLazyMessages();
+  #endif
+
+  return NS_OK;
+}
+
 // nsIObserver *****************************************************************
 
 NS_IMETHODIMP
@@ -7453,6 +7504,50 @@ nsNavHistory::GetDBOldFrecencies()
   NS_ENSURE_SUCCESS(rv, nsnull);
 
   return mDBOldFrecencies;
+}
+
+nsresult
+nsNavHistory::FinalizeStatements() {
+  mozIStorageStatement* stmts[] = {
+    mDBGetURLPageInfo,
+    mDBGetIdPageInfo,
+    mDBRecentVisitOfURL,
+    mDBRecentVisitOfPlace,
+    mDBInsertVisit,
+    mDBGetPageVisitStats,
+    mDBIsPageVisited,
+    mDBUpdatePageVisitStats,
+    mDBAddNewPage,
+    mDBGetTags,
+    mFoldersWithAnnotationQuery,
+    mDBSetPlaceTitle,
+    mDBVisitToURLResult,
+    mDBVisitToVisitResult,
+    mDBBookmarkToUrlResult,
+    mDBVisitsForFrecency,
+    mDBUpdateFrecencyAndHidden,
+    mDBGetPlaceVisitStats,
+    mDBGetBookmarkParentsForPlace,
+    mDBFullVisitCount,
+    mDBInvalidFrecencies,
+    mDBOldFrecencies,
+    mDBCurrentQuery,
+    mDBAutoCompleteQuery,
+    mDBAutoCompleteHistoryQuery,
+    mDBAutoCompleteStarQuery,
+    mDBAutoCompleteTagsQuery,
+    mDBPreviousQuery,
+    mDBAdaptiveQuery,
+    mDBKeywordQuery,
+    mDBFeedbackIncrease
+  };
+
+  for (PRUint32 i = 0; i < NS_ARRAY_LENGTH(stmts); i++) {
+    nsresult rv = nsNavHistory::FinalizeStatement(stmts[i]);
+    NS_ENSURE_SUCCESS(rv, rv);
+  }
+
+  return NS_OK;
 }
 
 // nsICharsetResolver **********************************************************
