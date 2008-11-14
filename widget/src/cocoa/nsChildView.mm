@@ -2831,6 +2831,19 @@ NSEvent* gLastDragEvent = nil;
 }
 
 
+- (void)viewWillMoveToWindow:(NSWindow *)newWindow
+{
+  NS_OBJC_BEGIN_TRY_ABORT_BLOCK;
+
+  if (!newWindow)
+    HideChildPluginViews(self);
+
+  [super viewWillMoveToWindow:newWindow];
+
+  NS_OBJC_END_TRY_ABORT_BLOCK;
+}
+
+
 - (void)viewWillStartLiveResize
 {
   NS_OBJC_BEGIN_TRY_ABORT_BLOCK;
