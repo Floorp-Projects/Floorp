@@ -42,10 +42,13 @@ function is_about_now(timestamp) {
   return delta < seconds;
 }
 
+var testnum = 0;
+var fh;
+var timesUsed, firstUsed, lastUsed;
+
 function run_test()
 {
   try {
-  var testnum = 0;
 
   // ===== test init =====
   var testfile = do_get_file("toolkit/components/satchel/test/unit/formhistory_v0.sqlite");
@@ -59,8 +62,8 @@ function run_test()
 
   testfile.copyTo(profileDir, "formhistory.sqlite");
 
-  var fh = Cc["@mozilla.org/satchel/form-history;1"].
-           getService(Ci.nsIFormHistory2);
+  fh = Cc["@mozilla.org/satchel/form-history;1"].
+       getService(Ci.nsIFormHistory2);
 
 
   // ===== 1 =====
@@ -94,13 +97,29 @@ function run_test()
   var stmt = fh.DBConnection.createStatement(query);
   stmt.executeStep();
 
-  var timesUsed = stmt.getInt32(0);
-  var firstUsed = stmt.getInt64(1);
-  var lastUsed  = stmt.getInt64(2);
+  timesUsed = stmt.getInt32(0);
+  firstUsed = stmt.getInt64(1);
+  lastUsed  = stmt.getInt64(2);
 
   do_check_eq(1, timesUsed);
   do_check_true(firstUsed == lastUsed);
   do_check_true(is_about_now(firstUsed));
+
+  // The next test adds the entry again, and check to see that the lastUsed
+  // field is updated. Unfortunately, on Windows PR_Now() is granular
+  // (robarnold says usually 16.5ms, sometimes 10ms), so if we execute the
+  // test too soon the timestamp will be the same! So, we'll wait a short
+  // period of time to make sure the timestamp will differ.
+  do_test_pending();
+  do_timeout(50, "delayed_test()");
+
+  } catch (e) {
+    throw "FAILED in test #" + testnum + " -- " + e;
+  }
+}
+
+function delayed_test() {
+  try {
 
   // ===== 4 =====
   testnum++;
@@ -109,9 +128,9 @@ function run_test()
   fh.addEntry("name-E", "value-E");
   do_check_true(fh.entryExists("name-E", "value-E"));
 
-  query = "SELECT timesUsed, firstUsed, lastUsed " +
-          "FROM moz_formhistory WHERE fieldname = 'name-E'";
-  stmt = fh.DBConnection.createStatement(query);
+  var query = "SELECT timesUsed, firstUsed, lastUsed " +
+              "FROM moz_formhistory WHERE fieldname = 'name-E'";
+  var stmt = fh.DBConnection.createStatement(query);
   stmt.executeStep();
 
   timesUsed = stmt.getInt32(0);
@@ -125,7 +144,7 @@ function run_test()
   do_check_true(lastUsed   != lastUsed2);  //changed
   do_check_true(firstUsed2 != lastUsed2);
 
-
+  do_test_finished();
   } catch (e) {
     throw "FAILED in test #" + testnum + " -- " + e;
   }
