@@ -2219,7 +2219,7 @@ TraceRecorder::compile(Fragmento* fragmento)
         return;
     }
     ++treeInfo->branchCount;
-    if (lirbuf->outOmem()) {
+    if (lirbuf->outOMem()) {
         fragmento->assm()->setError(nanojit::OutOMem);
         return;
     }
@@ -2991,7 +2991,7 @@ js_RecordTree(JSContext* cx, JSTraceMonitor* tm, Fragment* f, Fragment* outer, u
 #endif
     }
 
-    if (f->lirbuf->outOmem()) {
+    if (f->lirbuf->outOMem()) {
         js_FlushJITCache(cx);
         debug_only_v(printf("Out of memory recording new tree, flushing cache.\n");)
         return false;
@@ -3808,7 +3808,7 @@ js_MonitorRecording(TraceRecorder* tr)
 {
     JSContext* cx = tr->cx;
 
-    if (tr->lirbuf->outOmem()) {
+    if (tr->lirbuf->outOMem()) {
         js_AbortRecording(cx, "no more LIR memory");
         js_FlushJITCache(cx);
         return false;
