@@ -123,7 +123,7 @@ private:
     const nsDependentSubstring TrimTokenValue(const nsAString& tokenValue);
     void TrimTokenValue(nsAString::const_iterator& start, 
                         nsAString::const_iterator& end);
-    PRBool IsTokenValueTrimmableCharacter(char ch);
+    PRBool IsTokenValueTrimmableCharacter(PRUnichar ch);
     nsresult GetBaseURI(nsIURI **result);
     nsresult SetBaseURI(const nsAString& baseSpec);
 
