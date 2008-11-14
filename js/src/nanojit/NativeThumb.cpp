@@ -980,6 +980,8 @@ namespace nanojit
 
 	void Assembler::underrunProtect(int bytes)
 	{
+		NanoAssertMsg(bytes<=LARGEST_UNDERRUN_PROT, "constant LARGEST_UNDERRUN_PROT is too small"); 
+
 		// perhaps bytes + sizeof(PageHeader)/sizeof(NIns) + 4 ?
 		intptr_t u = bytes + 4;
 		if (!samepage(_nIns-u, _nIns-1)) {

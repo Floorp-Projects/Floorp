@@ -262,6 +262,7 @@ namespace nanojit
 			
 			NIns*		_nIns;			// current native instruction
 			NIns*		_nExitIns;		// current instruction in exit fragment page
+			NIns*		_startingIns;	// starting location of code compilation for error handling
 			NIns*       _epilogue;
 			Page*		_nativePages;	// list of NJ_PAGE_SIZE pages that have been alloc'd
 			Page*		_nativeExitPages; // list of pages that have been allocated for exit code
@@ -275,7 +276,7 @@ namespace nanojit
 			Reservation _resvTable[ NJ_MAX_STACK_ENTRY ]; // table where we house stack and register information
 			uint32_t	_resvFree;
 			bool		_inExit, vpad2[3];
-            avmplus::List<LIns*, avmplus::LIST_GCObjects> pending_lives;
+            InsList     pending_lives;
 
 			void		asm_cmp(LIns *cond);
 			void		asm_fcmp(LIns *cond);
@@ -359,7 +360,6 @@ namespace nanojit
 			// these pointers are required to store
 			// the address range where code has been
 			// modified so we can flush the instruction cache.
-			void* _endJit1Addr;
 			void* _endJit2Addr;
 	#endif // AVMPLUS_PORTING_API
 	};

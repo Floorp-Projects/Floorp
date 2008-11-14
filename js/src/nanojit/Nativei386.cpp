@@ -2113,6 +2113,7 @@ namespace nanojit
 	// enough room for n bytes
     void Assembler::underrunProtect(int n)
     {
+		NanoAssertMsg(n<=LARGEST_UNDERRUN_PROT, "constant LARGEST_UNDERRUN_PROT is too small"); 
         NIns *eip = this->_nIns;
         Page *p = (Page*)pageTop(eip-1);
         NIns *top = (NIns*) &p->code[0];

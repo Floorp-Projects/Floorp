@@ -444,7 +444,11 @@ namespace avmplus {
      * array use the [] operators.  
      */
 
-    enum ListElementType { LIST_NonGCObjects, LIST_GCObjects };
+    enum ListElementType {
+        LIST_NonGCObjects = 0,
+        LIST_GCObjects = 1,
+        LIST_RCObjects = 2
+    };
 
     template <typename T, ListElementType kElementType>
     class List
@@ -470,6 +474,8 @@ namespace avmplus {
             if (data)
                 free(data);
         }
+
+        const T *getData() const { return data; }
         
         // 'this' steals the guts of 'that' and 'that' gets reset.
         void FASTCALL become(List& that)
@@ -520,6 +526,15 @@ namespace avmplus {
             wb(index, value);
         }
         
+        void add(const List<T, kElementType>& l)
+        {
+            ensureCapacity(len+l.size());
+            // FIXME: make RCObject version
+            AvmAssert(kElementType != LIST_RCObjects);
+            arraycopy(l.getData(), 0, data, len, l.size());
+            len += l.size();
+        }
+
         inline void clear()
         {
             zero_range(0, len);
@@ -542,7 +557,7 @@ namespace avmplus {
             return -1;
         }   
         
-        inline T last()
+        inline T last() const
         {
             return get(len-1);
         }
@@ -612,6 +627,21 @@ namespace avmplus {
             ensureCapacity(newMax);
         }
         
+        void arraycopy(const T* src, int srcStart, T* dst, int dstStart, int nbr)
+        {
+            // we have 2 cases, either closing a gap or opening it.
+            if ((src == dst) && (srcStart > dstStart) )
+            {
+                for(int i=0; i<nbr; i++)
+                    dst[i+dstStart] = src[i+srcStart];  
+            }
+            else
+            {
+                for(int i=nbr-1; i>=0; i--)
+                    dst[i+dstStart] = src[i+srcStart];
+            }
+        }
+
         inline void do_wb_nongc(T* slot, T value)
         {   
             *slot = value;

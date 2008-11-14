@@ -84,6 +84,8 @@ const int NJ_LOG2_PAGE_SIZE = 12;       // 4K
 const int NJ_MAX_CPOOL_OFFSET = 4096;
 const int NJ_CPOOL_SIZE = 16;
 
+const int LARGEST_UNDERRUN_PROT = 32;  // largest value passed to underrunProtect
+
 typedef int NIns;
 
 /* ARM registers */

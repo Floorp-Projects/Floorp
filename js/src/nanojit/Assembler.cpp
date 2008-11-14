@@ -88,7 +88,7 @@ namespace nanojit
 	{
 		Assembler *assm;
 		LirNameMap *names;
-		avmplus::List<LInsp, avmplus::LIST_NonGCObjects> block;
+		InsList block;
         bool flushnext;
 	public:
 		VerboseBlockReader(LirFilter *in, Assembler *a, LirNameMap *n) 
@@ -158,7 +158,7 @@ namespace nanojit
 		verbose_only( outlineEOL[0] = '\0');
 		
 		internalReset();
-		pageReset();
+		pageReset();		
 	}
 
     void Assembler::arReset()
@@ -297,11 +297,9 @@ namespace nanojit
 		}
 		else
 		{
-			// return prior page (to allow overwrites) and mark out of mem 
-			page = list;
+			// return a location that is 'safe' to write to while we are out of mem
 			setError(OutOMem);
-			if (!list)
-				return NULL;
+			return _startingIns;
 		}
 		return &page->code[sizeof(page->code)/sizeof(NIns)]; // just past the end
 	}
@@ -313,6 +311,7 @@ namespace nanojit
 		
 		_nIns = 0;
 		_nExitIns = 0;
+		_startingIns = 0;
 		_stats.pages = 0;
 
 		nativePageReset();
@@ -794,8 +793,11 @@ namespace nanojit
 		// native code gen buffer setup
 		nativePageSetup();
 		
+		// When outOMem, nIns is set to startingIns and we overwrite the region until the error is handled
+		underrunProtect(LARGEST_UNDERRUN_PROT);  // the largest value passed to underrunProtect() 
+		_startingIns = _nIns;
+		
 	#ifdef AVMPLUS_PORTING_API
-		_endJit1Addr = _nIns;
 		_endJit2Addr = _nExitIns;
 	#endif
 
@@ -863,6 +865,9 @@ namespace nanojit
 			    }
 		    }
         }
+		else {
+			_nIns = _startingIns;  // in case of failure reset nIns ready for the next assembly run
+		}
 	}
 
 	void Assembler::endAssembly(Fragment* frag, NInsList& loopJumps)
@@ -911,6 +916,10 @@ namespace nanojit
 			frag->setCode(code, manage); // root of tree should manage all pages
 			//fprintf(stderr, "endAssembly frag %X entry %X\n", (int)frag, (int)frag->fragEntry);
 		}
+		else
+		{
+			_nIns = _startingIns;  // in case of failure reset nIns ready for the next assembly run
+		}
 		
 		NanoAssertMsgf(error() || _fpuStkDepth == 0,"_fpuStkDepth %d",_fpuStkDepth);
 
@@ -940,7 +949,7 @@ namespace nanojit
 #endif
 
 # ifdef AVMPLUS_PORTING_API
-		NanoJIT_PortAPI_FlushInstructionCache(_nIns, _endJit1Addr);
+		NanoJIT_PortAPI_FlushInstructionCache(_nIns, _startingIns);
 		NanoJIT_PortAPI_FlushInstructionCache(_nExitIns, _endJit2Addr);
 # endif
 	}
