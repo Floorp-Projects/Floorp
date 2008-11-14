@@ -104,6 +104,11 @@ public:
 
   PRBool ItemExists(PRInt64 aItemId);
 
+  /**
+   * Finalize all internal statements.
+   */
+  nsresult FinalizeStatements();
+
 private:
   static nsNavBookmarks *sInstance;
 
