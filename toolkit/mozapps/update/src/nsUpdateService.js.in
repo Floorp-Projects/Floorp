@@ -84,6 +84,7 @@ const KEY_UAPPDATA        = "UAppData";
 
 const DIR_UPDATES         = "updates";
 const FILE_UPDATE_STATUS  = "update.status";
+const FILE_UPDATE_VERSION = "update.version";
 const FILE_UPDATE_ARCHIVE = "update.mar";
 const FILE_UPDATE_LOG     = "update.log"
 const FILE_UPDATES_DB     = "updates.xml";
@@ -396,6 +397,28 @@ function writeStatusFile(dir, state) {
   var statusFile = dir.clone();
   statusFile.append(FILE_UPDATE_STATUS);
   writeStringToFile(statusFile, state);
+}
+
+/**
+#  Writes the update's application version to a file in the patch directory. If
+#  the update doesn't provide application version information via the
+#  extensionVersion attribute the string "null" will be written to the file.
+#  This value is compared during startup (in nsUpdateDriver.cpp) to determine if
+#  the update should be applied. Note that this won't provide protection from
+#  downgrade of the application for the nightly user case where the application
+#  version doesn't change.
+#  @param   dir
+#           The patch directory where the update.version file should be
+#           written.
+#  @param   version
+#           The version value to write. Will be the string "null" when the
+#           update doesn't provide the extensionVersion attribute in the update
+#           xml.
+ */
+function writeVersionFile(dir, version) {
+  var versionFile = dir.clone();
+  versionFile.append(FILE_UPDATE_VERSION);
+  writeStringToFile(versionFile, version);
 }
 
 /**
@@ -1228,6 +1251,7 @@ UpdateService.prototype = {
           if (update.errorCode == WRITE_ERROR) {
             prompter.showUpdateError(update);
             writeStatusFile(getUpdatesDir(), update.state = STATE_PENDING);
+            writeVersionFile(getUpdatesDir(), update.extensionVersion);
             return;
           }
         }
@@ -2410,6 +2434,7 @@ Downloader.prototype = {
           // This is a pretty fatal error.  Just bail.
           LOG("Downloader", "_selectPatch - failed to apply complete patch!");
           writeStatusFile(updateDir, STATE_NONE);
+          writeVersionFile(getUpdatesDir(), null);
           return null;
         }
       }
@@ -2635,6 +2660,7 @@ Downloader.prototype = {
 
         // Tell the updater.exe we're ready to apply.
         writeStatusFile(getUpdatesDir(), state);
+        writeVersionFile(getUpdatesDir(), this._update.extensionVersion);
         this._update.installDate = (new Date()).getTime();
         this._update.statusText = updateStrings.GetStringFromName("installPending");
       }
