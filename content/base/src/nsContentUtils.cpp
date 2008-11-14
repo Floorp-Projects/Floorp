@@ -160,6 +160,7 @@ static NS_DEFINE_CID(kXTFServiceCID, NS_XTFSERVICE_CID);
 #include "nsIInterfaceRequestor.h"
 #include "nsIOfflineCacheUpdate.h"
 #include "nsCPrefetchService.h"
+#include "nsIChromeRegistry.h"
 
 #ifdef IBMBIDI
 #include "nsIBidiKeyboard.h"
@@ -2906,6 +2907,53 @@ nsContentUtils::IsChromeDoc(nsIDocument *aDocument)
   sSecurityManager->GetSystemPrincipal(getter_AddRefs(systemPrincipal));
 
   return aDocument->NodePrincipal() == systemPrincipal;
+}
+
+PRBool
+nsContentUtils::GetWrapperSafeScriptFilename(nsIDocument *aDocument,
+                                             nsIURI *aURI,
+                                             nsACString& aScriptURI)
+{
+  PRBool scriptFileNameModified = PR_FALSE;
+  aURI->GetSpec(aScriptURI);
+
+  if (IsChromeDoc(aDocument)) {
+    nsCOMPtr<nsIChromeRegistry> chromeReg =
+      do_GetService(NS_CHROMEREGISTRY_CONTRACTID);
+
+    if (!chromeReg) {
+      // If we're running w/o a chrome registry we won't modify any
+      // script file names.
+
+      return scriptFileNameModified;
+    }
+
+    PRBool docWrappersEnabled =
+      chromeReg->WrappersEnabled(aDocument->GetDocumentURI());
+
+    PRBool uriWrappersEnabled = chromeReg->WrappersEnabled(aURI);
+
+    nsIURI *docURI = aDocument->GetDocumentURI();
+
+    if (docURI && docWrappersEnabled && !uriWrappersEnabled) {
+      // aURI is a script from a URL that doesn't get wrapper
+      // automation. aDocument is a chrome document that does get
+      // wrapper automation. Prepend the chrome document's URI
+      // followed by the string " -> " to the URI of the script we're
+      // loading here so that script in that URI gets the same wrapper
+      // automation that the chrome document expects.
+      nsCAutoString spec;
+      docURI->GetSpec(spec);
+      spec.AppendASCII(" -> ");
+      spec.Append(aScriptURI);
+
+      aScriptURI = spec;
+
+      scriptFileNameModified = PR_TRUE;
+    }
+  }
+
+  return scriptFileNameModified;
 }
 
 // static
