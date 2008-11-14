@@ -1,0 +1,4 @@
+Set-Cookie: test
+Set-Cookie2: test2
+X-Dummy: test
+Cache-Control: max-age=0
