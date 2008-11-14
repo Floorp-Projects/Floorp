@@ -155,10 +155,6 @@
 #define PREF_FRECENCY_DEFAULT_VISIT_BONUS       "places.frecency.defaultVisitBonus"
 #define PREF_FRECENCY_UNVISITED_BOOKMARK_BONUS  "places.frecency.unvisitedBookmarkBonus"
 #define PREF_FRECENCY_UNVISITED_TYPED_BONUS     "places.frecency.unvisitedTypedBonus"
-#define PREF_BROWSER_IMPORT_BOOKMARKS           "browser.places.importBookmarksHTML"
-#define PREF_BROWSER_IMPORT_DEFAULTS            "browser.places.importDefaults"
-#define PREF_BROWSER_SMARTBOOKMARKSVERSION      "browser.places.smartBookmarksVersion"
-#define PREF_BROWSER_LEFTPANEFOLDERID           "browser.places.leftPaneFolderId"
 
 // Default (integer) value of PREF_DB_CACHE_PERCENTAGE from 0-100
 // This is 6% of machine memory, giving 15MB for a user with 256MB of memory.
@@ -286,6 +282,23 @@ protected:
   nsNavHistory& mNavHistory;
 };
 
+class PlacesInitCompleteEvent : public nsRunnable {
+  public:
+  NS_IMETHOD Run() {
+    nsresult rv;
+    nsCOMPtr<nsIObserverService> observerService =
+      do_GetService("@mozilla.org/observer-service;1", &rv);
+    NS_ENSURE_SUCCESS(rv, rv);
+
+    rv = observerService->NotifyObservers(nsnull,
+                                          PLACES_INIT_COMPLETE_EVENT_TOPIC,
+                                          nsnull);
+    NS_ENSURE_SUCCESS(rv, rv);
+
+    return NS_OK;
+  }
+};
+
 // if adding a new one, be sure to update nsNavBookmarks statements and
 // its kGetChildrenIndex_* constants
 const PRInt32 nsNavHistory::kGetInfoIndex_PageID = 0;
@@ -372,7 +385,8 @@ nsNavHistory::nsNavHistory() : mBatchLevel(0),
                                mExpireSites(0),
                                mNumVisitsForFrecency(10),
                                mTagsFolder(-1),
-                               mInPrivateBrowsing(PRIVATEBROWSING_NOTINITED)
+                               mInPrivateBrowsing(PRIVATEBROWSING_NOTINITED),
+                               mDatabaseStatus(DATABASE_STATUS_OK)
 {
 #ifdef LAZY_ADD
   mLazyTimerSet = PR_TRUE;
@@ -425,6 +439,13 @@ nsNavHistory::Init()
     NS_ENSURE_SUCCESS(rv, rv);
     rv = InitDB(&migrationType);
   }
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  // Notify we have finished database initialization
+  // Enqueue the notification, so if we init another service that requires
+  // nsNavHistoryService we don't recursive try to get it.
+  nsCOMPtr<PlacesInitCompleteEvent> completeEvent = new PlacesInitCompleteEvent();
+  rv = NS_DispatchToMainThread(completeEvent);
   NS_ENSURE_SUCCESS(rv, rv);
 
 #ifdef MOZ_XUL
@@ -549,9 +570,8 @@ nsNavHistory::InitDBFile(PRBool aForceInit)
   NS_ENSURE_SUCCESS(rv, rv);
   rv = mDBFile->Append(DB_FILENAME);
   NS_ENSURE_SUCCESS(rv, rv);
-  
+
   // if forcing, backup and remove the old file
-  PRBool dbExists;
   if (aForceInit) {
     // backup the database
     nsCOMPtr<nsIFile> backup;
@@ -566,21 +586,29 @@ nsNavHistory::InitDBFile(PRBool aForceInit)
     // and remove the file
     rv = mDBFile->Remove(PR_FALSE);
     NS_ENSURE_SUCCESS(rv, rv);
-    dbExists = PR_FALSE;
+
+    // If aForceInit is true we were unable to initialize or upgrade the current
+    // database, so it was corrupt.
+    mDatabaseStatus = DATABASE_STATUS_CORRUPT;
   }
   else {
     // file exists?
+    PRBool dbExists = PR_TRUE;
     rv = mDBFile->Exists(&dbExists);
     NS_ENSURE_SUCCESS(rv, rv);
+    // If the database didn't previously exist, we create it.
+    if (!dbExists)
+      mDatabaseStatus = DATABASE_STATUS_CREATE;
   }
-  
+
   // open the database
   mDBService = do_GetService(MOZ_STORAGE_SERVICE_CONTRACTID, &rv);
   NS_ENSURE_SUCCESS(rv, rv);
   rv = mDBService->OpenUnsharedDatabase(mDBFile, getter_AddRefs(mDBConn));
   if (rv == NS_ERROR_FILE_CORRUPTED) {
-    dbExists = PR_FALSE;
-  
+    // The database is corrupt, we create a new one.
+    mDatabaseStatus = DATABASE_STATUS_CORRUPT;
+
     // backup file
     nsCOMPtr<nsIFile> backup;
     rv = mDBService->BackupDatabaseFile(mDBFile, DB_CORRUPT_FILENAME, profDir,
@@ -599,33 +627,12 @@ nsNavHistory::InitDBFile(PRBool aForceInit)
     rv = mDBService->OpenUnsharedDatabase(mDBFile, getter_AddRefs(mDBConn));
   }
   NS_ENSURE_SUCCESS(rv, rv);
-  
-  // if the db didn't previously exist, or was corrupted, re-import bookmarks.
-  if (!dbExists) {
-    nsCOMPtr<nsIPrefBranch> prefs(do_GetService("@mozilla.org/preferences-service;1"));
-    if (prefs) {
-      rv = prefs->SetBoolPref(PREF_BROWSER_IMPORT_BOOKMARKS, PR_TRUE);
-      NS_ENSURE_SUCCESS(rv, rv);
-
-      rv = prefs->SetBoolPref(PREF_BROWSER_IMPORT_DEFAULTS, PR_TRUE);
-      NS_ENSURE_SUCCESS(rv, rv);  
-
-      // if the places.sqlite gets deleted/corrupted the queries should be created again
-      rv = prefs->SetIntPref(PREF_BROWSER_SMARTBOOKMARKSVERSION, 0);
-      NS_ENSURE_SUCCESS(rv, rv);  
-      
-      // we must create a new Organizer left pane folder root, the old will not be valid anymore
-      rv = prefs->SetIntPref(PREF_BROWSER_LEFTPANEFOLDERID, -1);
-      NS_ENSURE_SUCCESS(rv, rv); 
-    }
-  }
 
   return NS_OK;
 }
 
 // nsNavHistory::InitDB
 //
-
 
 #define PLACES_SCHEMA_VERSION 8
 
@@ -897,6 +904,13 @@ nsNavHistory::InitializeIdleTimer()
                                         idleTimerTimeout,
                                         nsITimer::TYPE_REPEATING_SLACK);
   NS_ENSURE_SUCCESS(rv, rv);
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsNavHistory::GetDatabaseStatus(PRUint16 *aDatabaseStatus)
+{
+  *aDatabaseStatus = mDatabaseStatus;
   return NS_OK;
 }
 
@@ -1332,12 +1346,12 @@ nsNavHistory::ForceMigrateBookmarksDB(mozIStorageConnection* aDBConn)
   rv = nsNavBookmarks::InitTables(aDBConn);
   NS_ENSURE_SUCCESS(rv, rv);
 
-  // set pref indicating bookmarks.html should be imported.
-  nsCOMPtr<nsIPrefBranch> prefs(do_GetService("@mozilla.org/preferences-service;1"));
-  if (prefs) {
-    prefs->SetBoolPref(PREF_BROWSER_IMPORT_BOOKMARKS, PR_TRUE);
-  }
-  return rv;
+  // We have done a new database init, so we mark this as if the database has
+  // been created now, so the frontend can distinguish this status and import
+  // if needed.
+  mDatabaseStatus = DATABASE_STATUS_CREATE;
+
+  return NS_OK;
 }
 
 // nsNavHistory::MigrateV3Up
@@ -5265,6 +5279,57 @@ nsNavHistory::GetDBConnection(mozIStorageConnection **_DBConnection)
   return NS_OK;
 }
 
+NS_IMETHODIMP
+nsNavHistory::FinalizeInternalStatements()
+{
+  NS_ASSERTION(NS_IsMainThread(), "This can only be called on the main thread");
+
+#ifdef LAZY_ADD
+  // Kill lazy timer or it could fire later when statements won't be valid
+  // anymore.
+  // At this point we should have called CommitPendingChanges before the last
+  // sync, so all data is saved to disk and we can finalize all statements.
+  if (mLazyTimer)
+    mLazyTimer->Cancel();
+  NS_ABORT_IF_FALSE(mLazyMessages.Length() == 0,
+    "There are pending lazy messages, did you call CommitPendingChanges()?");
+#endif
+
+  // nsNavHistory
+  nsresult rv = FinalizeStatements();
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  // nsNavBookmarks
+  nsNavBookmarks* bookmarks = nsNavBookmarks::GetBookmarksService();
+  NS_ENSURE_TRUE(bookmarks, NS_ERROR_OUT_OF_MEMORY);
+  rv = bookmarks->FinalizeStatements();
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  // nsAnnotationService
+  nsAnnotationService* annosvc = nsAnnotationService::GetAnnotationService();
+  NS_ENSURE_TRUE(annosvc, NS_ERROR_OUT_OF_MEMORY);
+  rv = annosvc->FinalizeStatements();
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  // nsFaviconService
+  nsFaviconService* iconsvc = nsFaviconService::GetFaviconService();
+  NS_ENSURE_TRUE(iconsvc, NS_ERROR_OUT_OF_MEMORY);
+  rv = iconsvc->FinalizeStatements();
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsNavHistory::CommitPendingChanges()
+{
+  #ifdef LAZY_ADD
+    CommitLazyMessages();
+  #endif
+
+  return NS_OK;
+}
+
 // nsIObserver *****************************************************************
 
 NS_IMETHODIMP
@@ -7439,6 +7504,50 @@ nsNavHistory::GetDBOldFrecencies()
   NS_ENSURE_SUCCESS(rv, nsnull);
 
   return mDBOldFrecencies;
+}
+
+nsresult
+nsNavHistory::FinalizeStatements() {
+  mozIStorageStatement* stmts[] = {
+    mDBGetURLPageInfo,
+    mDBGetIdPageInfo,
+    mDBRecentVisitOfURL,
+    mDBRecentVisitOfPlace,
+    mDBInsertVisit,
+    mDBGetPageVisitStats,
+    mDBIsPageVisited,
+    mDBUpdatePageVisitStats,
+    mDBAddNewPage,
+    mDBGetTags,
+    mFoldersWithAnnotationQuery,
+    mDBSetPlaceTitle,
+    mDBVisitToURLResult,
+    mDBVisitToVisitResult,
+    mDBBookmarkToUrlResult,
+    mDBVisitsForFrecency,
+    mDBUpdateFrecencyAndHidden,
+    mDBGetPlaceVisitStats,
+    mDBGetBookmarkParentsForPlace,
+    mDBFullVisitCount,
+    mDBInvalidFrecencies,
+    mDBOldFrecencies,
+    mDBCurrentQuery,
+    mDBAutoCompleteQuery,
+    mDBAutoCompleteHistoryQuery,
+    mDBAutoCompleteStarQuery,
+    mDBAutoCompleteTagsQuery,
+    mDBPreviousQuery,
+    mDBAdaptiveQuery,
+    mDBKeywordQuery,
+    mDBFeedbackIncrease
+  };
+
+  for (PRUint32 i = 0; i < NS_ARRAY_LENGTH(stmts); i++) {
+    nsresult rv = nsNavHistory::FinalizeStatement(stmts[i]);
+    NS_ENSURE_SUCCESS(rv, rv);
+  }
+
+  return NS_OK;
 }
 
 // nsICharsetResolver **********************************************************

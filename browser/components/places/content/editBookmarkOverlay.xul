@@ -178,6 +178,7 @@
                  observes="paneElementsBroadcaster"/>
           <textbox id="editBMPanel_tagsField"
                    type="autocomplete"
+                   class="padded"
                    autocompletesearch="places-tag-autocomplete" 
                    completedefaultindex="true"
                    tabscrolling="true"

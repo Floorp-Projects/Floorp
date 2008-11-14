@@ -24,6 +24,7 @@
  *   Christian Biesinger <cbiesinger@web.de>
  *   Dan Mosedale <dmose@mozilla.org>
  *   Myk Melez <myk@mozilla.org>
+ *   Ehsan Akhgari <ehsan.akhgari@gmail.com>
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either of the GNU General Public License Version 2 or later (the "GPL"),
@@ -201,14 +202,33 @@ protected:
   friend class nsExternalLoadRequest;
 
   /**
+   * Helper function for ExpungeTemporaryFiles and ExpungeTemporaryPrivateFiles
+   */
+  static void ExpungeTemporaryFilesHelper(nsCOMArray<nsILocalFile> &fileList);
+  /**
    * Functions related to the tempory file cleanup service provided by
    * nsExternalHelperAppService
    */
-  NS_HIDDEN_(nsresult) ExpungeTemporaryFiles();
+  void ExpungeTemporaryFiles();
+  /**
+   * Functions related to the tempory file cleanup service provided by
+   * nsExternalHelperAppService (for the temporary files added during
+   * the private browsing mode)
+   */
+  void ExpungeTemporaryPrivateFiles();
   /**
    * Array for the files that should be deleted
    */
   nsCOMArray<nsILocalFile> mTemporaryFilesList;
+  /**
+   * Array for the files that should be deleted (for the temporary files
+   * added during the private browsing mode)
+   */
+  nsCOMArray<nsILocalFile> mTemporaryPrivateFilesList;
+  /**
+   * Whether we are in private browsing mode
+   */
+  PRBool mInPrivateBrowsing;
 };
 
 /**

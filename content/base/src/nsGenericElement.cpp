@@ -462,6 +462,7 @@ NS_IMPL_ADDREF(nsChildContentList)
 NS_IMPL_RELEASE(nsChildContentList)
 
 NS_INTERFACE_TABLE_HEAD(nsChildContentList)
+  NS_WRAPPERCACHE_INTERFACE_MAP_ENTRY
   NS_NODELIST_OFFSET_AND_INTERFACE_TABLE_BEGIN(nsChildContentList)
     NS_INTERFACE_TABLE_ENTRY(nsChildContentList, nsINodeList)
     NS_INTERFACE_TABLE_ENTRY(nsChildContentList, nsIDOMNodeList)
@@ -3473,6 +3474,10 @@ nsGenericElement::DestroyContent()
     document->ClearBoxObjectFor(this);
   }
 
+  // XXX We really should let cycle collection do this, but that currently still
+  //     leaks (see https://bugzilla.mozilla.org/show_bug.cgi?id=406684).
+  ReleaseWrapper();
+
   PRUint32 i, count = mAttrsAndChildren.ChildCount();
   for (i = 0; i < count; ++i) {
     // The child can remove itself from the parent in BindToTree.
@@ -4066,7 +4071,9 @@ NS_IMPL_CYCLE_COLLECTION_TRAVERSE_BEGIN(nsGenericElement)
 NS_IMPL_CYCLE_COLLECTION_TRAVERSE_END
 
 
-NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION(nsGenericElement)
+NS_INTERFACE_MAP_BEGIN(nsGenericElement)
+  NS_WRAPPERCACHE_INTERFACE_MAP_ENTRY
+  NS_INTERFACE_MAP_ENTRIES_CYCLE_COLLECTION(nsGenericElement)
   NS_INTERFACE_MAP_ENTRY(nsIContent)
   NS_INTERFACE_MAP_ENTRY(nsINode)
   NS_INTERFACE_MAP_ENTRY(nsPIDOMEventTarget)

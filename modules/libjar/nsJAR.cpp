@@ -203,6 +203,7 @@ nsJAR::Close()
   }
 
   mParsedManifest = PR_FALSE;
+  mManifestData.Reset();
   mGlobalStatus = JAR_MANIFEST_NOT_PARSED;
   mTotalItemsInManifest = 0;
 

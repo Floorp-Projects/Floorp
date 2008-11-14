@@ -50,6 +50,7 @@
 #include "nsAutoPtr.h"
 #include "nsNetCID.h"
 #include "nsNetError.h"
+#include "nsDNSPrefetch.h"
 #include "prsystem.h"
 #include "prnetdb.h"
 #include "prmon.h"
@@ -61,6 +62,7 @@ static const char kPrefDnsCacheExpiration[] = "network.dnsCacheExpiration";
 static const char kPrefEnableIDN[]          = "network.enableIDN";
 static const char kPrefIPv4OnlyDomains[]    = "network.dns.ipv4OnlyDomains";
 static const char kPrefDisableIPv6[]        = "network.dns.disableIPv6";
+static const char kPrefDisablePrefetch[]    = "network.dns.disablePrefetch";
 
 //-----------------------------------------------------------------------------
 
@@ -321,10 +323,12 @@ nsDNSService::Init()
     PRBool firstTime = (mLock == nsnull);
 
     // prefs
-    PRUint32 maxCacheEntries  = 20;
-    PRUint32 maxCacheLifetime = 1; // minutes
+    PRUint32 maxCacheEntries  = 400;
+    PRUint32 maxCacheLifetime = 3; // minutes
     PRBool   enableIDN        = PR_TRUE;
     PRBool   disableIPv6      = PR_FALSE;
+    PRBool   disablePrefetch  = PR_FALSE;
+    
     nsAdoptingCString ipv4OnlyDomains;
 
     // read prefs
@@ -340,6 +344,7 @@ nsDNSService::Init()
         prefs->GetBoolPref(kPrefEnableIDN, &enableIDN);
         prefs->GetBoolPref(kPrefDisableIPv6, &disableIPv6);
         prefs->GetCharPref(kPrefIPv4OnlyDomains, getter_Copies(ipv4OnlyDomains));
+        prefs->GetBoolPref(kPrefDisablePrefetch, &disablePrefetch);
     }
 
     if (firstTime) {
@@ -354,6 +359,7 @@ nsDNSService::Init()
             prefs->AddObserver(kPrefEnableIDN, this, PR_FALSE);
             prefs->AddObserver(kPrefIPv4OnlyDomains, this, PR_FALSE);
             prefs->AddObserver(kPrefDisableIPv6, this, PR_FALSE);
+            prefs->AddObserver(kPrefDisablePrefetch, this, PR_FALSE);
         }
     }
 
@@ -374,8 +380,10 @@ nsDNSService::Init()
         mIDN = idn;
         mIPv4OnlyDomains = ipv4OnlyDomains; // exchanges buffer ownership
         mDisableIPv6 = disableIPv6;
+        mDisablePrefetch = disablePrefetch;
     }
-
+    
+    nsDNSPrefetch::Initialize(this);
     return rv;
 }
 
@@ -406,6 +414,10 @@ nsDNSService::AsyncResolve(const nsACString  &hostname,
     nsCOMPtr<nsIIDNService> idn;
     {
         nsAutoLock lock(mLock);
+
+        if (mDisablePrefetch && (flags & (RESOLVE_PRIORITY_LOW | RESOLVE_PRIORITY_MEDIUM)))
+            return NS_ERROR_DNS_LOOKUP_QUEUE_FULL;
+
         res = mResolver;
         idn = mIDN;
     }

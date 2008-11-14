@@ -101,6 +101,7 @@ NS_IMPL_CYCLE_COLLECTION_UNLINK_BEGIN(nsDOMAttribute)
 NS_IMPL_CYCLE_COLLECTION_UNLINK_END
 // QueryInterface implementation for nsDOMAttribute
 NS_INTERFACE_TABLE_HEAD(nsDOMAttribute)
+  NS_WRAPPERCACHE_INTERFACE_MAP_ENTRY
   NS_NODE_INTERFACE_TABLE7(nsDOMAttribute, nsIDOMAttr, nsIAttribute, nsINode,
                            nsIDOMNode, nsIDOM3Node, nsIDOM3Attr,
                            nsPIDOMEventTarget)

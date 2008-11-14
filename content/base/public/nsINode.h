@@ -44,6 +44,7 @@
 #include "nsTObserverArray.h"
 #include "nsINodeInfo.h"
 #include "nsCOMPtr.h"
+#include "nsWrapperCache.h"
 
 class nsIContent;
 class nsIDocument;
@@ -150,16 +151,17 @@ inline nsINode* NODE_FROM(C& aContent, D& aDocument)
 
 // IID for the nsINode interface
 #define NS_INODE_IID \
-{ 0x2593b0d5, 0x9a06, 0x4d6b, \
-  { 0x9a, 0x10, 0xb1, 0x39, 0x9f, 0x1b, 0xa0, 0x8e } }
-
+{ 0x0f7b2557, 0xa09d, 0x468f, \
+  { 0x93, 0x92, 0xf1, 0xf1, 0xd1, 0xfa, 0x31, 0x78 } }
 
 /**
  * An internal interface that abstracts some DOMNode-related parts that both
  * nsIContent and nsIDocument share.  An instance of this interface has a list
  * of nsIContent children and provides access to them.
  */
-class nsINode : public nsPIDOMEventTarget {
+class nsINode : public nsPIDOMEventTarget,
+                public nsWrapperCache
+{
 public:
   NS_DECLARE_STATIC_IID_ACCESSOR(NS_INODE_IID)
 
@@ -849,5 +851,13 @@ extern const nsIID kThisPtrOffsetsSID;
 
 
 NS_DEFINE_STATIC_IID_ACCESSOR(nsINode, NS_INODE_IID)
+
+
+#define NS_IMPL_CYCLE_COLLECTION_TRAVERSE_PRESERVED_WRAPPER \
+   tmp->TraverseWrapper(cb);
+
+#define NS_IMPL_CYCLE_COLLECTION_UNLINK_PRESERVED_WRAPPER \
+  tmp->ReleaseWrapper();
+
 
 #endif /* nsINode_h___ */
