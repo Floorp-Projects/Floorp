@@ -95,16 +95,17 @@ namespace nanojit {
 	#define isSPorFP(r)		( (r)==SP || (r)==FP )
 
 	#ifdef NJ_VERBOSE
-		#define asm_output(FMT, ...) do {\
+		#define asm_output(...) do {\
 			counter_increment(native);\
 			if (verbose_enabled()) {\
 				outline[0]='\0';\
 				if (outputAddr) sprintf(outline, "  %10p  ",_nIns);\
-				else sprintf(outline, "              ");\
-				sprintf(&outline[14], FMT, ##__VA_ARGS__);\
+				else sprintf(outline, "            ");\
+				sprintf(&outline[14], ##__VA_ARGS__);\
 				Assembler::outputAlign(outline, 45);\
 				RegAlloc::formatRegisters(_allocator, outline, _thisfrag);\
 				Assembler::output_asm(outline);\
+				outputAddr=false; /* set =true if you like to see addresses for each native instruction */ \
 			}\
 		} while (0) /* no semi */ 
 		#define gpn(r)					regNames[(r)] 

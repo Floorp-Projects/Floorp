@@ -99,6 +99,8 @@ namespace nanojit
         // SSE instructions like MOVDQA (if not by Tamarin itself,
         // then by the C functions it calls).
 	const int NJ_ALIGN_STACK = 16;
+
+	const int32_t LARGEST_UNDERRUN_PROT = 32;  // largest value passed to underrunProtect
 	
 	typedef uint8_t NIns;
 
@@ -829,7 +831,7 @@ namespace nanojit
   int offset = (c->_address) - ((int)_nIns); \
   IMM32( (uint32_t)offset );	\
   *(--_nIns) = 0xE8;		\
-  verbose_only(outputAddr=true; asm_output("call %s",(c->_name));) \
+  verbose_only(asm_output("call %s",(c->_name));) \
   debug_only(if ((c->_argtypes&3)==ARGSIZE_F) fpu_push();)\
 } while (0)
 
@@ -838,7 +840,7 @@ namespace nanojit
   count_calli();\
   underrunProtect(2);\
   ALU(0xff, 2, (r));\
-  verbose_only(outputAddr=true; asm_output("call %s",gpn(r));) \
+  verbose_only(asm_output("call %s",gpn(r));) \
   debug_only(if ((c->_argtypes&3)==ARGSIZE_F) fpu_push();)\
 } while (0)
 

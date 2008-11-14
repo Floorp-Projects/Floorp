@@ -57,7 +57,8 @@ namespace nanojit
 	#define NJ_STACK_GROWTH_UP
 	#define NJ_THUMB_JIT
 
-	
+	const int LARGEST_UNDERRUN_PROT = 32;  // largest value passed to underrunProtect
+
 	typedef unsigned short NIns;
 
 	/* ARM registers */

@@ -751,6 +751,7 @@ Assembler::nativePageSetup()
 void
 Assembler::underrunProtect(int bytes)
 {
+	NanoAssertMsg(bytes<=LARGEST_UNDERRUN_PROT, "constant LARGEST_UNDERRUN_PROT is too small"); 
     intptr_t u = bytes + sizeof(PageHeader)/sizeof(NIns) + 8;
     if ( (samepage(_nIns,_nSlot) && (((intptr_t)_nIns-u) <= intptr_t(_nSlot+1))) ||
          (!samepage((intptr_t)_nIns-u,_nIns)) )

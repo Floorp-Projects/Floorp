@@ -2136,7 +2136,7 @@ class RegExpNativeCompiler {
         if (!charSet->converted && !ProcessCharSet(cx, re, charSet))
             return NULL;
         LIns* skip = lirBufWriter->skip(bitmapLen);
-        if (fragment->lirbuf->outOmem())
+        if (fragment->lirbuf->outOMem())
             return NULL;
         void* bitmapData = skip->payload();
         memcpy(bitmapData, charSet->u.bits, bitmapLen);
@@ -2183,7 +2183,7 @@ class RegExpNativeCompiler {
     JSBool compileNode(RENode* node, LIns* pos, LInsList& fails) 
     {
         for (; node; node = node->next) {
-            if (fragment->lirbuf->outOmem()) 
+            if (fragment->lirbuf->outOMem()) 
                 return JS_FALSE;
 
             switch (node->op) {
@@ -2301,7 +2301,7 @@ class RegExpNativeCompiler {
         this->cx = cx;
         /* At this point we have an empty fragment. */
         LirBuffer* lirbuf = fragment->lirbuf;
-        if (lirbuf->outOmem()) 
+        if (lirbuf->outOMem()) 
             goto fail;
         /* FIXME Use bug 463260 smart pointer when available. */
         lir = lirBufWriter = new (&gc) LirBufWriter(lirbuf);
@@ -2327,7 +2327,7 @@ class RegExpNativeCompiler {
 
         guard = insertGuard(re_chars, re_length);
 
-        if (lirbuf->outOmem()) 
+        if (lirbuf->outOMem()) 
             goto fail;
         ::compile(fragmento->assm(), fragment);
         if (fragmento->assm()->error() != nanojit::None) {
@@ -2339,7 +2339,7 @@ class RegExpNativeCompiler {
         debug_only_v(delete lir;)
         return JS_TRUE;
     fail:
-        if (lirbuf->outOmem() || oom) {
+        if (lirbuf->outOMem() || oom) {
             fragmento->clearFrags();
         } else {
             if (!guard) insertGuard(re_chars, re_length);
