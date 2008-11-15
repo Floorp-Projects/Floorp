@@ -256,6 +256,7 @@ function viewSource(url)
     document.getElementById("menu_highlightSyntax").setAttribute("hidden", "true");
   }
 
+  window.addEventListener("AppCommand", HandleAppCommandEvent, true);
   window._content.focus();
 
   return true;
@@ -285,6 +286,19 @@ function onUnloadContent()
   // or toggling of syntax highlighting.
   //
   document.getElementById('cmd_goToLine').setAttribute('disabled', 'true');
+}
+
+function HandleAppCommandEvent(evt)
+{
+  evt.stopPropagation();
+  switch (evt.command) {
+    case "Back":
+      BrowserBack();
+      break;
+    case "Forward":
+      BrowserForward();
+      break;
+  }
 }
 
 function ViewSourceClose()
