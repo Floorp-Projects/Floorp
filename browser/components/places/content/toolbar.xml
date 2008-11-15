@@ -1032,6 +1032,7 @@
         var ip = this.insertionPoint;
         if (!ip || !PlacesControllerDragHelper.canDrop(ip)) {
           ib.removeAttribute("dragging");
+          PlacesControllerDragHelper.currentDataTransfer = null;
           return;
         }
 
@@ -1103,8 +1104,10 @@
       ]]></handler>
 
       <handler event="drop"><![CDATA[
-        // Cache the dataTransfer
-        PlacesControllerDragHelper.currentDataTransfer = event.dataTransfer;
+        // If the data-transfer isn't cached, it's not ours
+        // This happens when dropping tabs
+        if (event.dataTransfer != PlacesControllerDragHelper.currentDataTransfer)
+          return;
 
         var dropPoint = this._getDropPoint(event);
         if (!dropPoint)
