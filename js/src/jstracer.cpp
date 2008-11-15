@@ -4143,6 +4143,7 @@ TraceRecorder::call_imacro(jsbytecode* imacro)
 
     JS_ASSERT(!fp->imacpc);
     fp->imacpc = regs->pc;
+    fp->flags |= JSFRAME_IMACRO_START;
     regs->pc = imacro;
     atoms = COMMON_ATOMS_START(&cx->runtime->atomState);
     return false;
@@ -4362,7 +4363,7 @@ TraceRecorder::cmp(LOpcode op, int flags)
     LIns* r_ins = get(&r);
     bool fp = false;
 
-    // CMP_STRICT is only set for JSOP_STRICTEQ and JSOP_STRICTNE, which correspond to the
+    // CMP_STRICT is set only for JSOP_STRICTEQ and JSOP_STRICTNE, which correspond to the
     // === and !== operators. negate is true for !== and false for ===. The strict equality
     // operators produce false if the types of the operands differ, i.e. if only one of 
     // them is a number. 
@@ -4378,9 +4379,10 @@ TraceRecorder::cmp(LOpcode op, int flags)
             (JSVAL_TAG(l) == JSVAL_BOOLEAN || JSVAL_TAG(r) == JSVAL_BOOLEAN)) {
             x = INS_CONST(negate);
             cond = negate;
-        } else if (!JSVAL_IS_STRING(l) || !JSVAL_IS_STRING(r)) {
-            ABORT_TRACE("unsupported type for cmp vs string");
         } else {
+            if (!JSVAL_IS_STRING(l) || !JSVAL_IS_STRING(r))
+                ABORT_TRACE("unsupported type for cmp vs string");
+
             LIns* args[] = { r_ins, l_ins };
             if (op == LIR_feq)
                 l_ins = lir->ins_eq0(lir->insCall(&js_EqualStrings_ci, args));
@@ -4410,7 +4412,7 @@ TraceRecorder::cmp(LOpcode op, int flags)
              * What I really want here is for undefined to be type-specialized
              * differently from real booleans.  Failing that, I want to be able
              * to cmov on quads.  Failing that, I want to have small forward
-             * branched.  Failing that, I want to be able to ins_choose on quads
+             * branches.  Failing that, I want to be able to ins_choose on quads
              * without cmov.  Failing that, eat flaming builtin!
              */
             l_ins = lir->insCall(&js_BooleanOrUndefinedToNumber_ci, args);
