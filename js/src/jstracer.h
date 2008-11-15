@@ -470,6 +470,12 @@ public:
  * See jsinterp.cpp for the ENABLE_TRACER definition. Also note how comparing x
  * to JSOP_* constants specializes trace-recording code at compile time either
  * to include imacro support, or exclude it altogether for this particular x.
+ *
+ * We save macro-generated code size also via bool TraceRecorder::record_JSOP_*
+ * return type, instead of a three-state: OK, ABORTED, IMACRO_STARTED. But the
+ * price of this is the JSFRAME_IMACRO_START frame flag. We need one more bit
+ * to detect that TraceRecorder::call_imacro was invoked by the record_JSOP_*
+ * method invoked by TRACE_ARGS_.
  */
 #define RECORD_ARGS(x,args)                                                   \
     JS_BEGIN_MACRO                                                            \
@@ -477,9 +483,10 @@ public:
             ENABLE_TRACER(0);                                                 \
         } else {                                                              \
             TRACE_ARGS_(x, args,                                              \
-                if (fp->imacpc &&                                             \
+                if ((fp->flags & JSFRAME_IMACRO_START) &&                     \
                     (x == JSOP_ITER || x == JSOP_NEXTITER ||                  \
                     JSOP_IS_BINARY(x))) {                                     \
+                    fp->flags &= ~JSFRAME_IMACRO_START;                       \
                     atoms = COMMON_ATOMS_START(&rt->atomState);               \
                     op = JSOp(*regs.pc);                                      \
                     DO_OP();                                                  \
