@@ -7860,6 +7860,7 @@ TraceRecorder::record_JSOP_STOP()
         // End of imacro, so return true to the interpreter immediately. The
         // interpreter's JSOP_STOP case will return from the imacro, back to
         // the pc after the calling op, still in the same JSStackFrame.
+        atoms = cx->fp->script->atomMap.vector;
         return true;
     }
 
