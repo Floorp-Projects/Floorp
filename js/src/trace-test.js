@@ -2392,6 +2392,15 @@ function testBoxDoubleWithDoubleSizedInt()
 testBoxDoubleWithDoubleSizedInt.expected = "1518500249,1518500249,1518500249";
 test(testBoxDoubleWithDoubleSizedInt);
 
+function testObjectOrderedCmp()
+{
+  var a = new Array(5);
+  for(i=0;i<5;++i) a[i] = ({} < {});
+  return a.join(",");
+}
+testObjectOrderedCmp.expected = "false,false,false,false,false";
+test(testObjectOrderedCmp);
+
 /* NOTE: Keep this test last, since it screws up all for...in loops after it. */
 function testGlobalProtoAccess() {
     return "ok";
