@@ -4163,10 +4163,7 @@ TraceRecorder::stringify(jsval& v)
     } else if (JSVAL_TAG(v) == JSVAL_BOOLEAN) {
         ci = &js_BooleanOrUndefinedToString_ci;
     } else {
-        JS_ASSERT(JSVAL_IS_OBJECT(v));
-        // This is unsafe until we are able to abort if we re-enter the interpreter.
-        // FIXME: 456511
-        // ci = &js_ObjectToString_ci;
+        JS_NOT_REACHED("caller of stringify should have used an imacro here");
         return NULL;
     }
     v_ins = lir->insCall(ci, args);
@@ -4390,6 +4387,45 @@ evalCmp(LOpcode op, JSString* l, JSString* r)
     return evalCmp(op, js_CompareStrings(l, r));
 }
 
+static struct {
+    jsbytecode obj_any[13];
+    jsbytecode any_obj[11];
+    jsbytecode obj_obj[22];
+} binary_imacros = {
+    {
+        JSOP_SWAP,
+        JSOP_CALLPROP, 0, COMMON_ATOM_INDEX(valueOf),
+        JSOP_STRING, 0, COMMON_TYPE_ATOM_INDEX(JSTYPE_NUMBER),
+        JSOP_CALL, 0, 1,
+        JSOP_SWAP,
+        JSOP_IMACOP,
+        JSOP_STOP
+    },
+
+    {
+        JSOP_CALLPROP, 0, COMMON_ATOM_INDEX(valueOf),
+        JSOP_STRING, 0, COMMON_TYPE_ATOM_INDEX(JSTYPE_NUMBER),
+        JSOP_CALL, 0, 1,
+        JSOP_IMACOP,
+        JSOP_STOP
+    },
+
+    {
+        JSOP_SWAP,
+        JSOP_CALLPROP, 0, COMMON_ATOM_INDEX(valueOf),
+        JSOP_STRING, 0, COMMON_TYPE_ATOM_INDEX(JSTYPE_NUMBER),
+        JSOP_CALL, 0, 1,
+        JSOP_SWAP,
+        JSOP_CALLPROP, 0, COMMON_ATOM_INDEX(valueOf),
+        JSOP_STRING, 0, COMMON_TYPE_ATOM_INDEX(JSTYPE_NUMBER),
+        JSOP_CALL, 0, 1,
+        JSOP_IMACOP,
+        JSOP_STOP
+    }
+};
+
+JS_STATIC_ASSERT(sizeof(binary_imacros) < IMACRO_PC_ADJ_LIMIT);
+
 bool
 TraceRecorder::cmp(LOpcode op, int flags)
 {
@@ -4401,6 +4437,16 @@ TraceRecorder::cmp(LOpcode op, int flags)
     LIns* l_ins = get(&l);
     LIns* r_ins = get(&r);
     bool fp = false;
+
+    if (op != LIR_feq) {
+        if (JSVAL_IS_OBJECT(l) && hasValueOfMethod(l)) {
+            if (JSVAL_IS_OBJECT(r) && hasValueOfMethod(r))
+                return call_imacro(binary_imacros.obj_obj);
+            return call_imacro(binary_imacros.obj_any);
+        }
+        if (JSVAL_IS_OBJECT(r) && hasValueOfMethod(r))
+            return call_imacro(binary_imacros.any_obj);
+    }
 
     // CMP_STRICT is set only for JSOP_STRICTEQ and JSOP_STRICTNE, which correspond to the
     // === and !== operators. negate is true for !== and false for ===. The strict equality
@@ -4487,8 +4533,8 @@ TraceRecorder::cmp(LOpcode op, int flags)
         // compare to anything, even itself). The code for this is emitted a few lines down.
     } else if (JSVAL_IS_OBJECT(l) && JSVAL_IS_OBJECT(r)) {
         if (op != LIR_feq) {
-            negate = !(op == LIR_fle || op == LIR_fge);
-            op = LIR_feq;
+            JS_NOT_REACHED("we should have converted to numbers already");
+            return false;
         }
         cond = (l == r); 
     } else {
@@ -4565,45 +4611,6 @@ TraceRecorder::unary(LOpcode op)
     }
     return false;
 }
-
-static struct {
-    jsbytecode obj_any[13];
-    jsbytecode any_obj[11];
-    jsbytecode obj_obj[22];
-} binary_imacros = {
-    {
-        JSOP_SWAP,
-        JSOP_CALLPROP, 0, COMMON_ATOM_INDEX(valueOf),
-        JSOP_STRING, 0, COMMON_TYPE_ATOM_INDEX(JSTYPE_NUMBER),
-        JSOP_CALL, 0, 1,
-        JSOP_SWAP,
-        JSOP_IMACOP,
-        JSOP_STOP
-    },
-
-    {
-        JSOP_CALLPROP, 0, COMMON_ATOM_INDEX(valueOf),
-        JSOP_STRING, 0, COMMON_TYPE_ATOM_INDEX(JSTYPE_NUMBER),
-        JSOP_CALL, 0, 1,
-        JSOP_IMACOP,
-        JSOP_STOP
-    },
-
-    {
-        JSOP_SWAP,
-        JSOP_CALLPROP, 0, COMMON_ATOM_INDEX(valueOf),
-        JSOP_STRING, 0, COMMON_TYPE_ATOM_INDEX(JSTYPE_NUMBER),
-        JSOP_CALL, 0, 1,
-        JSOP_SWAP,
-        JSOP_CALLPROP, 0, COMMON_ATOM_INDEX(valueOf),
-        JSOP_STRING, 0, COMMON_TYPE_ATOM_INDEX(JSTYPE_NUMBER),
-        JSOP_CALL, 0, 1,
-        JSOP_IMACOP,
-        JSOP_STOP
-    }
-};
-
-JS_STATIC_ASSERT(sizeof(binary_imacros) < IMACRO_PC_ADJ_LIMIT);
 
 bool
 TraceRecorder::binary(LOpcode op)
