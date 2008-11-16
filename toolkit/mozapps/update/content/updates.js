@@ -204,6 +204,8 @@ var gUpdates = {
     bnf.hidden = !nextFinishButtonString;
     be1.hidden = !extra1ButtonString;
     be2.hidden = !extra2ButtonString;
+    // Hide the back button each time setButtons is called (see bug 464765)
+    this.wiz.getButton("back").hidden = true;
   },
 
   getAUSString: function(key, strings) {
@@ -328,7 +330,6 @@ var gUpdates = {
     this._cacheButtonStrings("extra1");
     this._cacheButtonStrings("extra2");
 
-    this.wiz.getButton("back").hidden = true;
     this.wiz.getButton("cancel").hidden = true;
 
     // Advance to the Start page.
@@ -740,7 +741,6 @@ var gUpdatesAvailablePage = {
     updateTypeElement.setAttribute("severity", severity);
 
     var moreInfoContent = document.getElementById("moreInfoContent");
-    var moreInfoURL = document.getElementById("moreInfoURL");
     var intro;
     if (severity == "major") {
       // for major updates, use the brandName and the version for the intro
@@ -754,8 +754,8 @@ var gUpdatesAvailablePage = {
       remoteContent.update_version = gUpdates.update.version;
       remoteContent.url = gUpdates.update.detailsURL;
 
-      moreInfoURL.hidden = true;
       moreInfoContent.hidden = false;
+      document.getElementById("moreInfoURL").hidden = true;
       document.getElementById("updateName").hidden = true;
       document.getElementById("updateNameSep").hidden = true;
       document.getElementById("upgradeEvangelism").hidden = true;
@@ -778,9 +778,8 @@ var gUpdatesAvailablePage = {
       // This element when hidden still receives focus events which will
       // cause assertions with debug builds so remove it if it isn't used.
       moreInfoContent.parentNode.removeChild(moreInfoContent);
-      var moreInfoURL = document.getElementById("updateMoreInfoURL");
-      moreInfoURL.setAttribute("url", gUpdates.update.detailsURL);
-      moreInfoURL.hidden = false;
+      var updateMoreInfoURL = document.getElementById("updateMoreInfoURL");
+      updateMoreInfoURL.setAttribute("url", gUpdates.update.detailsURL);
     }
     updateTypeElement.textContent = intro;
 
