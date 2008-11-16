@@ -863,7 +863,10 @@ function BrowserStartup() {
   var uriToLoad = null;
 
   // window.arguments[0]: URI to load (string), or an nsISupportsArray of
-  //                      nsISupportsStrings to load
+  //                      nsISupportsStrings to load, or a xul:tab of
+  //                      a tabbrowser, which will be replaced by this
+  //                      window (for this case, all other arguments are
+  //                      ignored).
   //                 [1]: character set (string)
   //                 [2]: referrer (nsIURI)
   //                 [3]: postData (nsIInputStream)
@@ -880,7 +883,7 @@ function BrowserStartup() {
   appCore.startPageCycler();
 #else
 # only load url passed in when we're not page cycling
-  if (uriToLoad && !isLoadingBlank) {
+  if (uriToLoad && !isLoadingBlank) { 
     if (uriToLoad instanceof Ci.nsISupportsArray) {
       let count = uriToLoad.Count();
       let specs = [];
@@ -894,6 +897,17 @@ function BrowserStartup() {
       try {
         gBrowser.loadTabs(specs, false, true);
       } catch (e) {}
+    }
+    else if (uriToLoad instanceof XULElement) {
+      // swap the given tab with the default about:blank tab and then close
+      // the original tab in the other window.
+
+      // Stop the about:blank load
+      gBrowser.selectedBrowser.stop();
+      // make sure it has a docshell
+      gBrowser.selectedBrowser.docShell;
+
+      gBrowser.swapBrowsersAndCloseOther(gBrowser.selectedTab, uriToLoad);
     }
     else if (window.arguments.length >= 3) {
       loadURI(uriToLoad, window.arguments[2], window.arguments[3] || null,
