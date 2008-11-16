@@ -2380,6 +2380,18 @@ function bug464403() {
 bug464403.expected = "ok";
 test(bug464403);
 
+function testBoxDoubleWithDoubleSizedInt()
+{
+  var i = 0;
+  var a = new Array(3);
+
+  while (i < a.length)
+    a[i++] = 0x5a827999;
+  return a.join(",");
+}
+testBoxDoubleWithDoubleSizedInt.expected = "1518500249,1518500249,1518500249";
+test(testBoxDoubleWithDoubleSizedInt);
+
 /* NOTE: Keep this test last, since it screws up all for...in loops after it. */
 function testGlobalProtoAccess() {
     return "ok";
