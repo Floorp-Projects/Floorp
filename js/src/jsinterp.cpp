@@ -2579,6 +2579,7 @@ js_Interpret(JSContext *cx)
         tr = TRACE_RECORDER(cx);
         SET_TRACE_RECORDER(cx, NULL);
         JS_TRACE_MONITOR(cx).onTrace = JS_FALSE;
+        tr->pushAbortStack();
     }
 #endif
 
@@ -7188,7 +7189,10 @@ js_Interpret(JSContext *cx)
     if (tr) {
         JS_TRACE_MONITOR(cx).onTrace = JS_TRUE;
         SET_TRACE_RECORDER(cx, tr);
-        tr->deepAbort();
+        if (!tr->wasDeepAborted()) {
+            tr->popAbortStack();
+            tr->deepAbort();
+        }
     }
 #endif
     return ok;

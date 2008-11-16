@@ -133,6 +133,9 @@ typedef struct JSTraceMonitor {
      * a distinct compiler but needs to be managed in exactly the same
      * way as the real tracing Fragmento. */
     CLS(nanojit::Fragmento) reFragmento;
+
+    /* Keep a list of recorders we need to abort on cache flush. */
+    CLS(TraceRecorder)      abortStack;
 } JSTraceMonitor;
 
 #ifdef JS_TRACER
