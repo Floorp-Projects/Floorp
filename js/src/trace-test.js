@@ -1866,6 +1866,16 @@ function testClosingRecursion() {
 testClosingRecursion.expected = true;
 test(testClosingRecursion);
 
+// Test no assert or crash from outer recorders (bug 465145)
+function testBug465145() {
+	this.__defineSetter__("x", function(){});
+	this.watch("x", function(){});
+	y = this;
+	for (var z = 0; z < 2; ++z) { x = y };
+	this.__defineSetter__("x", function(){});
+	for (var z = 0; z < 2; ++z) { x = y };
+}
+
 // BEGIN MANDELBROT STUFF
 // XXXbz I would dearly like to wrap it up into a function to avoid polluting
 // the global scope, but the function ends up heavyweight, and then we lose on
