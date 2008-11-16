@@ -2949,6 +2949,21 @@ if test "$result" = "yes"; then
 fi
 AC_SUBST(HAVE_ARM_SIMD)
 
+dnl Check for force_align_arg_pointer
+dnl This first appeared in gcc 4.2
+AC_MSG_CHECKING(for __attribute__((__force_align_arg_pointer__)))
+AC_TRY_COMPILE([
+                __attribute__((__force_align_arg_pointer__)) int pixman(int a) { return a; }
+                ],
+                [],
+                result="yes", result="no")
+AC_MSG_RESULT("$result")
+if test "$result" = "yes"; then
+    AC_DEFINE(HAVE_FORCE_ALIGN_ARG_POINTER)
+    HAVE_FORCE_ALIGN_ARG_POINTER=1
+fi
+AC_SUBST(HAVE_FORCE_ALIGN_ARG_POINTER)
+
 dnl Check whether the compiler supports the new-style C++ standard
 dnl library headers (i.e. <new>) or needs the old "new.h"
 AC_LANG_CPLUSPLUS
