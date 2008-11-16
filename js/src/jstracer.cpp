@@ -2741,12 +2741,9 @@ js_SynthesizeFrame(JSContext* cx, const FrameInfo& fi)
     JS_ASSERT(FUN_INTERPRETED(fun));
 
     /* Assert that we have a correct sp distance from cx->fp->slots in fi. */
-    JS_ASSERT(js_ReconstructStackDepth(cx, cx->fp->script,
-                                       FI_IMACRO_PC(fi, cx->fp)
-                                       ? FI_SCRIPT_PC(fi, cx->fp) +
-                                         js_CodeSpec[*FI_SCRIPT_PC(fi, cx->fp)].length
-                                       : FI_SCRIPT_PC(fi, cx->fp))
-              == uintN(fi.s.spdist - cx->fp->script->nfixed));
+    JS_ASSERT_IF(!FI_IMACRO_PC(fi, cx->fp),
+                 js_ReconstructStackDepth(cx, cx->fp->script, FI_SCRIPT_PC(fi, cx->fp))
+                 == uintN(fi.s.spdist - cx->fp->script->nfixed));
 
     uintN nframeslots = JS_HOWMANY(sizeof(JSInlineFrame), sizeof(jsval));
     JSScript* script = fun->u.i.script;
