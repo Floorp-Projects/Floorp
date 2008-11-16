@@ -1966,6 +1966,41 @@ typedef List<LIns*, LIST_NonGCObjects> LInsList;
 /* Dummy GC for nanojit placement new. */
 static GC gc;
 
+static void*
+HashRegExp(uint16 flags, jschar* s, size_t n)
+{
+    uint32 h;
+
+    for (h = 0; n; s++, n--)
+        h = JS_ROTATE_LEFT32(h, 4) ^ *s;
+    return (void*)(h + flags);
+}
+
+struct RESideExit : public SideExit {
+    size_t re_length;
+    uint16 re_flags;
+    jschar re_chars[1];
+};
+
+static Fragment* 
+LookupNativeRegExp(JSContext* cx, void* hash, uint16 re_flags, jschar* re_chars, size_t re_length)
+{
+    Fragmento* fragmento = JS_TRACE_MONITOR(cx).reFragmento;
+    Fragment* fragment = fragmento->getLoop(hash);
+    while (fragment) {
+        if (fragment->lastIns) {
+            RESideExit* exit = (RESideExit*)fragment->lastIns->record()->exit;
+            if (exit->re_flags == re_flags && 
+                exit->re_length == re_length &&
+                !memcmp(exit->re_chars, re_chars, re_length)) {
+                return fragment;
+            }
+        }
+        fragment = fragment->peer;
+    }
+    return NULL;
+}
+
 class RegExpNativeCompiler {
  private:
     JSRegExp*        re;   /* Careful: not fully initialized */
@@ -2162,14 +2197,18 @@ class RegExpNativeCompiler {
         LIns* start;
         bool oom = false;
         
+        jschar* re_chars;
+        size_t re_length;
+        JSSTRING_CHARS_AND_LENGTH(re->source, re_chars, re_length);
+        void* hash = HashRegExp(re->flags, re_chars, re_length);
+        if (LookupNativeRegExp(cx, hash, re->flags, re_chars, re_length))
+            return JS_TRUE;
+        /* if we don't have the regular expression yet then compile it now */
         Fragmento* fragmento = JS_TRACE_MONITOR(cx).reFragmento;
-        fragment = fragmento->getLoop(re);
-        if (!fragment) {
-            fragment = fragmento->getAnchor(re);
-            fragment->lirbuf = new (&gc) LirBuffer(fragmento, NULL);
-            /* Scary: required to have the onDestroy method delete the lirbuf. */
-            fragment->root = fragment;
-        }
+        fragment = fragmento->getAnchor(hash);
+        fragment->lirbuf = new (&gc) LirBuffer(fragmento, NULL);
+        /* required to have the onDestroy method delete the lirbuf. */
+        fragment->root = fragment;
         LirBuffer* lirbuf = fragment->lirbuf;
         LirBufWriter* lirb;
         if (lirbuf->outOmem()) goto fail2;
@@ -2194,11 +2233,17 @@ class RegExpNativeCompiler {
         }
 
         /* Create fake guard record for loop edge. */
-        skip = lirb->skip(sizeof(GuardRecord) + sizeof(SideExit));
+        skip = lirb->skip(sizeof(GuardRecord) + 
+                          sizeof(RESideExit) + 
+                          re_length - sizeof(jschar));
         guard = (GuardRecord *) skip->payload();
         memset(guard, 0, sizeof(*guard));
-        guard->exit = (SideExit *) guard+1;
+        RESideExit* exit = (RESideExit*)(guard+1);
+        guard->exit = exit;
         guard->exit->target = fragment;
+        exit->re_flags = re->flags;
+        exit->re_length = re_length;
+        memcpy(exit->re_chars, re_chars, re_length);
         fragment->lastIns = lir->insGuard(LIR_loop, lir->insImm(1), skip);
 
         ::compile(fragmento->assm(), fragment);
@@ -2303,8 +2348,11 @@ js_NewRegExp(JSContext *cx, JSTokenStream *ts,
      * compile the bytecode version in case we evict the native code
      * version from the code cache.
      */
-    if (TRACING_ENABLED(cx))
+    if (TRACING_ENABLED(cx)) {
+        re->flags = flags;
+        re->source = str;
         js_CompileRegExpToNative(cx, re, &state);
+    }
 #endif
     /* Compile the bytecode version. */
     endPC = EmitREBytecode(&state, re, state.treeDepth, re->program, state.result);
@@ -2319,11 +2367,6 @@ js_NewRegExp(JSContext *cx, JSTokenStream *ts,
      * This is safe since no pointers to newly parsed regexp or its parts
      * besides re exist here.
      */
-#if 0 
-    /*
-     * FIXME: Until bug 464866 is fixed, we can't move the re object so
-     * don't shrink it for now.
-     */
     if ((size_t)(endPC - re->program) != state.progLength + 1) {
         JSRegExp *tmp;
         JS_ASSERT((size_t)(endPC - re->program) < state.progLength + 1);
@@ -2332,7 +2375,6 @@ js_NewRegExp(JSContext *cx, JSTokenStream *ts,
         if (tmp)
             re = tmp;
     }
-#endif    
 
     re->flags = flags;
     re->parenCount = state.parenCount;
@@ -2848,12 +2890,6 @@ void
 js_DestroyRegExp(JSContext *cx, JSRegExp *re)
 {
     if (JS_ATOMIC_DECREMENT(&re->nrefs) == 0) {
-#ifdef JS_TRACER
-        /* Don't reuse this compiled code for some new regexp at same addr. */
-        Fragment* fragment = JS_TRACE_MONITOR(cx).reFragmento->getLoop(re);
-        if (fragment) 
-            fragment->blacklist();
-#endif
         if (re->classList) {
             uintN i;
             for (i = 0; i < re->classCount; i++) {
@@ -3664,9 +3700,15 @@ MatchRegExp(REGlobalData *gData, REMatchState *x)
     Fragment *fragment;
 
     /* Run with native regexp if possible. */
-    if (TRACING_ENABLED(gData->cx) &&
-        ((fragment = JS_TRACE_MONITOR(gData->cx).reFragmento->getLoop(gData->regexp)) != NULL)
-        && fragment->code() && !fragment->isBlacklisted()) {
+    jschar* re_chars;
+    size_t re_length;
+    JSContext* cx = gData->cx;
+    JSRegExp* re = gData->regexp;
+    JSSTRING_CHARS_AND_LENGTH(re->source, re_chars, re_length);
+    void* hash = HashRegExp(re->flags, re_chars, re_length);
+    if (TRACING_ENABLED(cx) && 
+        ((fragment = LookupNativeRegExp(cx, hash, re->flags, re_chars, re_length)) != NULL) &&
+        !fragment->isBlacklisted()) {
         union { NIns *code; REMatchState* (FASTCALL *func)(void*, void*); } u;
         u.code = fragment->code();
         REMatchState *lr;
