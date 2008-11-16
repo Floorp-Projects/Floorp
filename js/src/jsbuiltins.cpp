@@ -105,7 +105,7 @@ jsval FASTCALL
 js_BoxDouble(JSContext* cx, jsdouble d)
 {
     int32 i;
-    if (JSDOUBLE_IS_INT(d, i))
+    if (JSDOUBLE_IS_INT(d, i) && INT_FITS_IN_JSVAL(i))
         return INT_TO_JSVAL(i);
     JS_ASSERT(JS_ON_TRACE(cx));
     jsval v; /* not rooted but ok here because we know GC won't run */
