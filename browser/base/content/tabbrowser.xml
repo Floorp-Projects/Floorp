@@ -50,6 +50,8 @@
 %tabBrowserDTD;
 <!ENTITY % globalDTD SYSTEM "chrome://global/locale/global.dtd">
 %globalDTD;
+<!ENTITY % placesDTD SYSTEM "chrome://browser/locale/places/places.dtd">
+%placesDTD;
 ]>
 
 <bindings id="tabBrowserBindings"
@@ -66,7 +68,10 @@
       <xul:stringbundle anonid="tbstringbundle" src="chrome://browser/locale/tabbrowser.properties"/>
       <xul:tabbox anonid="tabbox" flex="1" eventnode="document" xbl:inherits="handleCtrlPageUpDown"
                   onselect="if (!('updateCurrentBrowser' in this.parentNode) || event.target.localName != 'tabpanels') return; this.parentNode.updateCurrentBrowser();">
-        <xul:hbox class="tab-drop-indicator-bar" collapsed="true" chromedir="&locale.dir;">
+        <xul:hbox class="tab-drop-indicator-bar" collapsed="true" chromedir="&locale.dir;"
+                  ondragover="this.parentNode.parentNode._onDragOver(event); event.stopPropagation();"
+                  ondragleave="this.parentNode.parentNode._onDragLeave(event); event.stopPropagation();"
+                  ondrop="this.parentNode.parentNode._onDrop(event); event.stopPropagation();">
           <xul:hbox class="tab-drop-indicator" mousethrough="always"/>
         </xul:hbox>
         <xul:hbox class="tabbrowser-strip" collapsed="true" tooltip="_child" context="_child"
@@ -74,6 +79,7 @@
                   ondragstart="this.parentNode.parentNode._onDragStart(event); event.stopPropagation();"
                   ondragover="this.parentNode.parentNode._onDragOver(event); event.stopPropagation();"
                   ondrop="this.parentNode.parentNode._onDrop(event); event.stopPropagation();"
+                  ondragend="this.parentNode.parentNode._onDragEnd(event); event.stopPropagation();"
                   ondragleave="this.parentNode.parentNode._onDragLeave(event); event.stopPropagation();">
           <xul:tooltip onpopupshowing="return this.parentNode.parentNode.parentNode.createTooltip(event);"/>
           <xul:menupopup anonid="tabContextMenu" onpopupshowing="this.parentNode.parentNode.parentNode.updatePopupMenu(this);">
@@ -91,6 +97,11 @@
                           tbattr="tabbrowser-multiple"
                           oncommand="var tabbrowser = this.parentNode.parentNode.parentNode.parentNode;
                                      tabbrowser.removeAllTabsBut(tabbrowser.mContextTab);"/>
+            <xul:menuseparator/>
+            <xul:menuitem id="context_openTabInWindow" label="&cmd.open_window.label;"
+                          tbattr="tabbrowser-multiple"
+                          oncommand="var tabbrowser = this.parentNode.parentNode.parentNode.parentNode;
+                                     tabbrowser._replaceTabWithWindow(tabbrowser.mContextTab);"/>
             <xul:menuseparator/>
             <xul:menuitem id="context_bookmarkTab"
                           label="&bookmarkThisTab.label;"
@@ -693,10 +704,11 @@
       </method>
 
       <method name="updateCurrentBrowser">
+        <parameter name="aForceUpdate"/>
         <body>
           <![CDATA[
             var newBrowser = this.getBrowserAtIndex(this.mTabContainer.selectedIndex);
-            if (this.mCurrentBrowser == newBrowser)
+            if (this.mCurrentBrowser == newBrowser && !aForceUpdate)
               return;
 
             if (this.mCurrentBrowser) {
@@ -1609,6 +1621,13 @@
 
             ourBrowser.webProgress.addProgressListener(filter,
               Components.interfaces.nsIWebProgress.NOTIFY_ALL);
+
+            this.setTabTitle(aOurTab);
+
+            // If the tab was already selected (this happpens in the scenraio of
+            // _replaceTabWithWindow), notify onLoactionChange, etc.
+            if (aOurTab == this.selectedTab)
+              this.updateCurrentBrowser(true);
           ]]>
         </body>
       </method>
@@ -1783,17 +1802,12 @@
           if (target.localName == "tab" &&
               aEvent.originalTarget.localName != "toolbarbutton") {
             var dt = aEvent.dataTransfer;
-            dt.mozSetDataAt("application/x-moz-node", target, 0);
-            var URI = this.getBrowserForTab(aEvent.target).currentURI;
-            if (URI) {
-              var spec = URI.spec;
-              dt.mozSetDataAt("text/x-moz-url", spec + "\n" + aEvent.target.label, 0);
-              dt.mozSetDataAt("text/uri-list", spec + "\n" + aEvent.target.label, 0);
-              dt.mozSetDataAt("text/plain", spec, 0);
-              dt.mozSetDataAt("text/html", '<a href="' + spec + '">' + aEvent.target.label + '</a>', 0);
-            } else {
-              dt.mozSetDataAt("text/plain", "about:blank", 0);
-            }
+            // We're internetionally not setting any other data-type, otherwise
+            // applications may override our drop-as-window behavior
+            dt.mozSetDataAt("application/x-moz-tabbrowser-tab", target, 0);
+
+            var canvas = tabPreviews.capture(target, false);
+            dt.setDragImage(canvas, 0, 0);
           }
         ]]>
         </body>
@@ -1806,10 +1820,23 @@
         ["text/x-moz-url", "text/uri-list", "text/plain", "application/x-moz-file"]
       ]]></field>
 
+      <field name="_cachedTargetInToolbox">null</field>
       <method name="_setEffectAllowedForDataTransfer">
         <parameter name="aEvent"/>
         <body>
           <![CDATA[
+            // Find out if the we're dragged over the toolbox
+            var target = aEvent.target;
+            var isInToolbox = target == this._cachedTargetInToolbox;
+            while (target && !isInToolbox) {
+              if (target == gNavToolbox) {
+                isInToolbox = true;
+                this._cachedTargetInToolbox = target;
+              }
+              else
+                target = target.parentNode;
+            }
+
             var dt = aEvent.dataTransfer;
             // Disallow dropping multiple items
             if (dt.mozItemCount > 1)
@@ -1818,8 +1845,8 @@
             var types = dt.mozTypesAt(0);
             var sourceNode = null;
             // tabs are always added as the first type
-            if (types[0] == "application/x-moz-node") {
-              var sourceNode = dt.mozGetDataAt("application/x-moz-node", 0);
+            if (types[0] == "application/x-moz-tabbrowser-tab") {
+              var sourceNode = dt.mozGetDataAt("application/x-moz-tabbrowser-tab", 0);
               if (sourceNode instanceof XULElement &&
                   sourceNode.localName == "tab" &&
                   (sourceNode.parentNode == this.mTabContainer ||
@@ -1829,12 +1856,22 @@
                     (aEvent.screenX >= sourceNode.boxObject.screenX &&
                       aEvent.screenX <= (sourceNode.boxObject.screenX +
                                          sourceNode.boxObject.width))) {
-                  return dt.effectAllowed = "none";                                         
+                  return dt.effectAllowed = "none";
                 }
 
+                // Within the toolbox, allow dropping by the height of a tab off
+                // the tabbar
+                if (isInToolbox &&
+                    aEvent.screenY < sourceNode.boxObject.screenY -
+                                     sourceNode.boxObject.height)
+                  return dt.effectAllowed = "none";
                 return dt.effectAllowed = "copyMove";
               }
             }
+
+            // only tab-drags are taken care off within the toolbox
+            if (!isInToolbox)
+              return dt.effectAllowed = "none";
 
             for (var i=0; i < this._supportedLinkDropTypes.length; i++) {
               if (types.contains(this._supportedLinkDropTypes[i])) {
@@ -1956,12 +1993,15 @@
             var dropEffect = dt.dropEffect;
             var draggedTab;
             if (dropEffect != "link") { // copy or move
-              draggedTab = dt.mozGetDataAt("application/x-moz-node", 0);
+              draggedTab = dt.mozGetDataAt("application/x-moz-tabbrowser-tab", 0);
               NS_ASSERT(draggedTab && draggedTab.localName == "tab",
                         "copy or move action without a tab");
             }
 
-            if (draggedTab && (dropEffect == "copy" || draggedTab.parentNode == this.mTabContainer)) {
+            this.mTabDropIndicatorBar.collapsed = true;
+
+            if (draggedTab && (dropEffect == "copy" ||
+                draggedTab.parentNode == this.mTabContainer)) {
               var newIndex = this.getNewIndex(aEvent);
               if (dropEffect == "copy") {
                 // copy the dropped tab (wherever it's from)
@@ -1998,7 +2038,6 @@
               // swapBrowsersAndCloseOther, so that the updateCurrentBrowser
               // it triggers will correctly update our URL bar.
               this.selectedTab = newTab;
-              this.setTabTitle(newTab);
             }
             else {
               var url;
@@ -2060,20 +2099,51 @@
         </body>
       </method>
 
+      <method name="_onDragEnd">
+        <parameter name="aEvent"/>
+        <body>
+          <![CDATA[
+            if (this.mTabs.length == 1)
+              return;
+
+            var dt = aEvent.dataTransfer;
+            if (dt.dropEffect == "none") {
+              var draggedTab = dt.mozGetDataAt("application/x-moz-tabbrowser-tab", 0);
+              this._replaceTabWithWindow(draggedTab);
+            }
+          ]]>
+        </body>
+      </method>
+
+      <method name="_replaceTabWithWindow">
+        <parameter name="aTab"/>
+        <body>
+          <![CDATA[
+            // tell a new window to take the "dropped" tab
+            var ww = Cc["@mozilla.org/embedcomp/window-watcher;1"].
+                      getService(Ci.nsIWindowWatcher);
+            ww.openWindow(window,
+                          getBrowserURL(),
+                          null,
+                          "chrome,dialog=no,all",
+                          aTab);
+          ]]>
+        </body>
+      </method>
+
       <method name="_onDragLeave">
         <parameter name="aEvent"/>
         <body>
           <![CDATA[
             this.mDragTime = 0;
 
-            var dropEffect = aEvent.dataTransfer.dropEffect;
-            if (dropEffect == "move" || dropEffect == "copy") {
-              var target = aEvent.relatedTarget;
-              while (target && target != this.mStrip)
-                target = target.parentNode;
-              if (target)
-                return;
-            }
+            // This does not work at all (see bug 458613)
+            var target = aEvent.relatedTarget;
+            while (target && (target != this && target != gNavToolbox))
+              target = target.parentNode;
+            if (target)
+              return;
+
             this.mTabDropIndicatorBar.collapsed = true;
           ]]>
         </body>
