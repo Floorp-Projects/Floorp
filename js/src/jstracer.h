@@ -293,6 +293,8 @@ class TraceRecorder : public avmplus::GCObject {
     intptr_t                terminate_ip_adj;
     nanojit::Fragment*      outerToBlacklist;
     nanojit::Fragment*      promotedPeer;
+    TraceRecorder*          nextRecorderToAbort;
+    bool                    wasRootFragment;
 
     bool isGlobal(jsval* p) const;
     ptrdiff_t nativeGlobalOffset(jsval* p) const;
@@ -438,6 +440,9 @@ public:
     void prepareTreeCall(nanojit::Fragment* inner);
     void emitTreeCall(nanojit::Fragment* inner, VMSideExit* exit);
     unsigned getCallDepth() const;
+    void pushAbortStack();
+    void popAbortStack();
+    void removeFragmentoReferences();
 
     bool record_EnterFrame();
     bool record_LeaveFrame();
