@@ -1060,6 +1060,14 @@ TraceRecorder::~TraceRecorder()
 {
     JS_ASSERT(nextRecorderToAbort == NULL);
     JS_ASSERT(treeInfo && (fragment || wasDeepAborted()));
+#ifdef DEBUG
+    TraceRecorder* tr = JS_TRACE_MONITOR(cx).abortStack;
+    while (tr != NULL)
+    {
+        JS_ASSERT(this != tr);
+        tr = tr->nextRecorderToAbort;
+    }
+#endif
     if (fragment) {
         if (wasRootFragment && !fragment->root->code()) {
             JS_ASSERT(!fragment->root->vmprivate);
