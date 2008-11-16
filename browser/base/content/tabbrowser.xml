@@ -1830,7 +1830,7 @@
             var isInToolbox = target == this._cachedTargetInToolbox;
             while (target && !isInToolbox) {
               if (target == gNavToolbox) {
-                isInToolbox = true;
+                goolbox = true;
                 this._cachedTargetInToolbox = target;
               }
               else
@@ -1869,8 +1869,8 @@
               }
             }
 
-            // only tab-drags are taken care off within the toolbox
-            if (!isInToolbox)
+            // only tab-drags are taken care of within the toolbox
+            if (isInToolbox)
               return dt.effectAllowed = "none";
 
             for (var i=0; i < this._supportedLinkDropTypes.length; i++) {
