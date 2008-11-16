@@ -1001,6 +1001,7 @@ TraceRecorder::TraceRecorder(JSContext* cx, VMSideExit* _anchor, Fragment* _frag
     this->global_dslots = this->globalObj->dslots;
     this->terminate = false;
     this->outerToBlacklist = outerToBlacklist;
+    this->wasRootFragment = _fragment == _fragment->root;
 
     debug_only_v(printf("recording starting from %s:%u@%u\n",
                         cx->fp->script->filename,
@@ -1057,13 +1058,18 @@ TreeInfo::~TreeInfo()
 
 TraceRecorder::~TraceRecorder()
 {
-    JS_ASSERT(treeInfo && fragment);
-    if (fragment == fragment->root && !fragment->root->code()) {
-        JS_ASSERT(!fragment->root->vmprivate);
+    JS_ASSERT(nextRecorderToAbort == NULL);
+    JS_ASSERT(treeInfo && (fragment || wasDeepAborted()));
+    if (fragment) {
+        if (wasRootFragment && !fragment->root->code()) {
+            JS_ASSERT(!fragment->root->vmprivate);
+            delete treeInfo;
+        }
+        if (trashTree)
+            js_TrashTree(cx, whichTreeToTrash);
+    } else if (wasRootFragment) {
         delete treeInfo;
     }
-    if (trashTree)
-        js_TrashTree(cx, whichTreeToTrash);
 #ifdef DEBUG
     delete verbose_filter;
 #endif
@@ -1074,6 +1080,11 @@ TraceRecorder::~TraceRecorder()
     delete float_filter;
 #endif
     delete lir_buf_writer;
+}
+
+void TraceRecorder::removeFragmentoReferences()
+{
+    fragment = NULL;
 }
 
 /* Add debug information to a LIR instruction as we emit it. */
@@ -3931,6 +3942,28 @@ js_FinishJIT(JSTraceMonitor *tm)
     }
 }
 
+void
+TraceRecorder::pushAbortStack()
+{
+    JSTraceMonitor* tm = &JS_TRACE_MONITOR(cx);
+
+    JS_ASSERT(tm->abortStack != this);
+
+    nextRecorderToAbort = tm->abortStack;
+    tm->abortStack = this;
+}
+
+void
+TraceRecorder::popAbortStack()
+{
+    JSTraceMonitor* tm = &JS_TRACE_MONITOR(cx);
+
+    JS_ASSERT(tm->abortStack == this);
+
+    tm->abortStack = nextRecorderToAbort;
+    nextRecorderToAbort = NULL;
+}
+
 extern void
 js_FlushJITOracle(JSContext* cx)
 {
@@ -3948,6 +3981,12 @@ js_FlushJITCache(JSContext* cx)
     JSTraceMonitor* tm = &JS_TRACE_MONITOR(cx);
     if (tm->recorder)
         js_AbortRecording(cx, "flush cache");
+    TraceRecorder* tr;
+    while ((tr = tm->abortStack) != NULL) {
+        tr->removeFragmentoReferences();
+        tr->deepAbort();
+        tr->popAbortStack();
+    }
     Fragmento* fragmento = tm->fragmento;
     if (fragmento) {
         fragmento->clearFrags();
