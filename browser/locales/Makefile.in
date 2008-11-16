@@ -77,13 +77,19 @@ APP_VERSION := $(shell cat $(srcdir)/../config/version.txt)
 PWD := $(shell pwd)
 core_abspath = $(if $(findstring :,$(1)),$(1),$(if $(filter /%,$(1)),$(1),$(PWD)/$(1)))
 
+# ZIP_IN is defaulted to be compatible with the files the wget-en-US target
+# pulls. You may override ZIP_IN if you provide your own files. You also _must_
+# override ZIP_IN when MOZ_PKG_PRETTYNAMES is defined - the default will not
+# work in that case.
+ZIP_IN ?= $(_ABS_DIST)/$(PACKAGE)
+
 DEFINES += \
 	-DAB_CD=$(AB_CD) \
 	-DMOZ_LANGPACK_EID=langpack-$(AB_CD)@firefox.mozilla.org \
 	-DMOZ_APP_VERSION=$(MOZ_APP_VERSION) \
 	-DLOCALE_SRCDIR=$(call core_abspath,$(LOCALE_SRCDIR)) \
-	-DPKG_BASENAME=$(PKG_BASENAME) \
-	-DPKG_INST_BASENAME=$(PKG_INST_BASENAME) \
+	-DPKG_BASENAME="$(PKG_BASENAME)" \
+	-DPKG_INST_BASENAME="$(PKG_INST_BASENAME)" \
 	$(NULL)
 
 ifndef MOZ_BRANDING_DIRECTORY
@@ -212,7 +218,7 @@ PACKAGER_NO_LIBS = 1
 include $(topsrcdir)/toolkit/mozapps/installer/packager.mk
 include $(call EXPAND_LOCALE_SRCDIR,toolkit/locales)/installer/windows/charset.mk
 
-repackage-win32-installer: WIN32_INSTALLER_OUT=$(_ABS_DIST)/$(PKG_INST_PATH)$(PKG_INST_BASENAME).exe
+repackage-win32-installer: WIN32_INSTALLER_OUT="$(_ABS_DIST)/$(PKG_INST_PATH)$(PKG_INST_BASENAME).exe"
 repackage-win32-installer: $(WIN32_INSTALLER_IN) $(SUBMAKEFILES)
 	@echo "Repackaging $(WIN32_INSTALLER_IN) into $(WIN32_INSTALLER_OUT)."
 ifdef MOZ_BRANDING_DIRECTORY
@@ -220,8 +226,8 @@ ifdef MOZ_BRANDING_DIRECTORY
 else
 	$(MAKE) -C ../installer/windows export
 endif
-	if test ! -d $(dir $(WIN32_INSTALLER_OUT)); then \
-	  $(NSINSTALL) -D $(dir $(WIN32_INSTALLER_OUT)); \
+	if test ! -d $(_ABS_DIST)/$(PKG_INST_PATH); then \
+	  $(NSINSTALL) -D $(_ABS_DIST)/$(PKG_INST_PATH); \
 	fi
 	$(RM) -rf l10n-stage
 	$(NSINSTALL) -D l10n-stage
@@ -256,8 +262,8 @@ STAGEDIST = $(_ABS_DIST)/l10n-stage/$(MOZ_PKG_APPNAME)
 endif
 
 $(STAGEDIST): AB_CD:=en-US
-$(STAGEDIST): UNPACKAGE=$(_ABS_DIST)/$(PACKAGE)
-$(STAGEDIST): $(_ABS_DIST)/$(PACKAGE)
+$(STAGEDIST): UNPACKAGE=$(ZIP_IN)
+$(STAGEDIST): $(ZIP_IN)
 # only mac needs to remove the parent of STAGEDIST...
 ifneq (,$(filter mac cocoa,$(MOZ_WIDGET_TOOLKIT)))
 	if test -d $(DIST)/l10n-stage; then \
@@ -272,6 +278,17 @@ endif
 	$(NSINSTALL) -D $(DIST)/l10n-stage
 	cd $(DIST)/l10n-stage && \
 	  $(UNMAKE_PACKAGE)
+ifdef MOZ_PKG_PRETTYNAMES
+ifneq (,$(filter WINNT Linux,$(OS_ARCH)))
+# Linux and Windows unpack to a directory named after the MOZ_APP_NAME
+# they were built with. This is fine when when MOZ_PKG_PRETTYNAMES
+# isn't defined, because MOZ_PKG_APPNAME will be the same as MOZ_APP_NAME.
+# However, when MOZ_PKG_PRETTYNAMES is passed MOZ_PKG_APPNAME inherits
+# from MOZ_PKG_DISPLAYNAME, which is not always the same as MOZ_APP_NAME.
+	cd $(DIST)/l10n-stage && \
+      mv $(MOZ_APP_NAME) $(MOZ_PKG_APPNAME)
+endif
+endif
 	make clobber-zip AB_CD=en-US
 
 clobber-zip:
@@ -287,8 +304,8 @@ clobber-zip:
 unpack: $(STAGEDIST)
 	@echo done unpacking
 
-repackage-zip: ZIP_OUT=$(_ABS_DIST)/$(PACKAGE)
-repackage-zip: UNPACKAGE=$(ZIP_IN)
+repackage-zip: ZIP_OUT="$(_ABS_DIST)/$(PACKAGE)"
+repackage-zip: UNPACKAGE="$(ZIP_IN)"
 repackage-zip:
 ifeq (WINNT,$(OS_ARCH))
 	$(RM) -r $(STAGEDIST)/uninstall
@@ -313,7 +330,7 @@ endif
 endif
 	$(MAKE) clobber-zip AB_CD=$(AB_CD)
 	$(NSINSTALL) -D $(DIST)/$(PKG_PATH)
-	mv -f $(DIST)/l10n-stage/$(PACKAGE) $(DIST)/$(PACKAGE)
+	mv -f "$(DIST)/l10n-stage/$(PACKAGE)" "$(DIST)/$(PACKAGE)"
 
 repackage-zip-%: ZIP_IN=$(_ABS_DIST)/$(PACKAGE)
 repackage-zip-%: $(ZIP_IN) $(STAGEDIST) libs-%

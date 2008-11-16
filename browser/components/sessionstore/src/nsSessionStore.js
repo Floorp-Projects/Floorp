@@ -1957,7 +1957,7 @@ SessionStoreService.prototype = {
     var textArray = this.__SS_restore_text ? this.__SS_restore_text.split(" ") : [];
     function restoreTextData(aContent, aPrefix) {
       textArray.forEach(function(aEntry) {
-        if (/^((?:\d+\|)*)(#?)([^\s=]+)=(.*)$/.test(aEntry) && (!RegExp.$1 || RegExp.$1 == aPrefix)) {
+        if (/^((?:\d+\|)*)(#?)([^\s=]+)=(.*)$/.test(aEntry) && RegExp.$1 == aPrefix) {
           var document = aContent.document;
           var node = RegExp.$2 ? document.getElementById(RegExp.$3) : document.getElementsByName(RegExp.$3)[0] || null;
           if (node && "value" in node) {
@@ -2023,7 +2023,7 @@ SessionStoreService.prototype = {
       });
       for (var i = 0; i < aContent.frames.length; i++) {
         if (aData.children && aData.children[i]) {
-          restoreTextDataAndScrolling(aContent.frames[i], aData.children[i], i + "|" + aPrefix);
+          restoreTextDataAndScrolling(aContent.frames[i], aData.children[i], aPrefix + i + "|");
         }
       }
     }

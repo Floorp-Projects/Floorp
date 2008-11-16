@@ -224,6 +224,7 @@ class nsDataObj : public IDataObject,
 		virtual HRESULT AddSetFormat(FORMATETC&  FE);
 		virtual HRESULT AddGetFormat(FORMATETC&  FE);
 
+		virtual HRESULT GetFile ( FORMATETC& aFE, STGMEDIUM& aSTG );
 		virtual HRESULT GetText ( const nsACString& aDF, FORMATETC& aFE, STGMEDIUM & aSTG );
 		virtual HRESULT GetBitmap ( const nsACString& inFlavor, FORMATETC&  FE, STGMEDIUM&  STM);
 		virtual HRESULT GetDib ( const nsACString& inFlavor, FORMATETC &, STGMEDIUM & aSTG );
@@ -272,7 +273,7 @@ class nsDataObj : public IDataObject,
     CEnumFormatEtc   * m_enumFE;      // Ownership Rules: 
                                       // nsDataObj owns and ref counts CEnumFormatEtc,
 
-    nsCOMPtr<nsILocalFile> mCachedTempFile;
+    nsCOMPtr<nsIFile> mCachedTempFile;
 
     BOOL mIsAsyncMode;
     BOOL mIsInOperation;

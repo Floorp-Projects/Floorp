@@ -265,7 +265,7 @@
           <menuitem id="context-saveframe"
                     label="&saveFrameCmd.label;"
                     accesskey="&saveFrameCmd.accesskey;"
-                    oncommand="saveDocument(gContextMenu.target.ownerDocument);"/>
+                    oncommand="gContextMenu.saveFrame();"/>
           <menuseparator/>
           <menuitem id="context-printframe"
                     label="&printFrameCmd.label;"
