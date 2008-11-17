@@ -2581,6 +2581,14 @@ function testUndemotableBinaryOp() {
 testUndemotableBinaryOp.expected = "2147483649,2147483649,2147483649,2147483649,2147483649";
 test(testUndemotableBinaryOp);
 
+function testNullRelCmp() {
+    var out = [];
+    for(j=0;j<3;++j) { out.push(3 > null); out.push(3 < null); out.push(0 == null); out.push(3 == null); }
+    return out.join(",");
+}
+testNullRelCmp.expected = "true,false,false,false,true,false,false,false,true,false,false,false";
+test(testNullRelCmp);
+
 /* NOTE: Keep this test last, since it screws up all for...in loops after it. */
 function testGlobalProtoAccess() {
     return "ok";

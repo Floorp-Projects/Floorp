@@ -4538,7 +4538,7 @@ TraceRecorder::cmp(LOpcode op, int flags)
         LIns* args[] = { l_ins, cx_ins };
         if (l == JSVAL_NULL && l_ins->isconst()) {
             jsdpun u;
-            u.d = js_NaN;
+            u.d = (op == LIR_feq) ? js_NaN : 0.0;
             l_ins = lir->insImmq(u.u64);
         } else if (JSVAL_IS_STRING(l)) {
             l_ins = lir->insCall(&js_StringToNumber_ci, args);
@@ -4558,9 +4558,9 @@ TraceRecorder::cmp(LOpcode op, int flags)
 
         args[0] = r_ins;
         args[1] = cx_ins;
-        if (r == JSVAL_NULL) {
+        if (r == JSVAL_NULL && r_ins->isconst()) {
             jsdpun u;
-            u.d = js_NaN;
+            u.d = (op == LIR_feq) ? js_NaN : 0.0;
             r_ins = lir->insImmq(u.u64);
         } else if (JSVAL_IS_STRING(r)) {
             r_ins = lir->insCall(&js_StringToNumber_ci, args);
