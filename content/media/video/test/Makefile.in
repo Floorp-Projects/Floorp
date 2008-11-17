@@ -43,7 +43,9 @@ relativesrcdir  = content/media/video/test
 include $(DEPTH)/config/autoconf.mk
 include $(topsrcdir)/config/rules.mk
 
-_TEST_FILES = 	test_autoplay.html \
+_TEST_FILES = 	test_access_control.html \
+                file_access_controls.html \
+                test_autoplay.html \
                 test_bug461281.html \
                 test_constants.html \
                 test_controls.html \
@@ -70,10 +72,13 @@ _TEST_FILES = 	test_autoplay.html \
                 test_wav_8bit.html \
                 test_wav_ended1.html \
                 320x240.ogg \
+                320x240.allow-origin.ogg \
+                320x240.allow-origin.ogg^headers^ \
                 bug461281.ogg \
                 seek.ogg \
                 r11025_s16_c1.wav \
                 r11025_u8_c1.wav \
+                redirect.sjs \
 #                test_bug448534.html \
                 $(NULL)
 
