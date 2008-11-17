@@ -3675,7 +3675,7 @@ out:
         goto restart;
     }
 
-    if (rt->shapeGen & SHAPE_OVERFLOW_BIT) {
+    if (rt->shapeGen >= SHAPE_OVERFLOW_BIT - 1) {
         /*
          * FIXME bug 440834: The shape id space has overflowed. Currently we
          * cope badly with this. Every call to js_GenerateShape does GC, and
