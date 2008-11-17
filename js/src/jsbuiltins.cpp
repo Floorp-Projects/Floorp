@@ -228,9 +228,7 @@ js_Any_getelem(JSContext* cx, JSObject* obj, int32 index)
 {
     jsval v;
     jsid id;
-    if (index < 0)
-        return JSVAL_ERROR_COOKIE;
-    if (!js_IndexToId(cx, index, &id))
+    if (!js_Int32ToId(cx, index, &id))
         return JSVAL_ERROR_COOKIE;
     if (!OBJ_GET_PROPERTY(cx, obj, id, &v))
         return JSVAL_ERROR_COOKIE;
@@ -241,10 +239,8 @@ JSBool FASTCALL
 js_Any_setelem(JSContext* cx, JSObject* obj, int32 index, jsval v)
 {
     jsid id;
-    if (index < 0)
+    if (!js_Int32ToId(cx, index, &id))
         return JSVAL_ERROR_COOKIE;
-    if (!js_IndexToId(cx, index, &id))
-        return JS_FALSE;
     return OBJ_SET_PROPERTY(cx, obj, id, &v);
 }
 
