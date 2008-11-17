@@ -1910,6 +1910,13 @@ namespace nanojit
 		return exprs.add(out->insImmq(q), k);
 	}
 
+	LIns* CseFilter::ins0(LOpcode v)
+	{
+	    if (v == LIR_label)
+	        exprs.clear();
+	    return out->ins0(v);
+	}
+	
 	LIns* CseFilter::ins1(LOpcode v, LInsp a)
 	{
 		if (isCse(v)) {

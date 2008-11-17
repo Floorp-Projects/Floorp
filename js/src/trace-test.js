@@ -2476,6 +2476,15 @@ function testIn() {
 testIn.expected = "true,true,true,true,true,false,false,false,false,false,true,true,true,true,true,false,false,false,false,false,true,true,true,true,true,false,false,false,false,false,true,true,true,true,true,false,false,false,false,false,true,true,true,true,true,false,false,false,false,false";
 test(testIn);
 
+function testBranchCse() {
+    empty = [];
+    out = [];
+    for (var j=0;j<10;++j) { empty[42]; out.push((1 * (1)) | ""); }
+    return out.join(",");
+}
+testBranchCse.expected = "1,1,1,1,1,1,1,1,1,1";
+test(testBranchCse);
+
 /* NOTE: Keep this test last, since it screws up all for...in loops after it. */
 function testGlobalProtoAccess() {
     return "ok";
