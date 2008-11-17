@@ -2411,6 +2411,16 @@ function testObjectOrderedCmp()
 testObjectOrderedCmp.expected = "false,false,false,false,false";
 test(testObjectOrderedCmp);
 
+function testLogicalNotNaN() {
+    var i = 0;
+    var a = new Array(5);
+    while (i < a.length)
+        a[i++] = !NaN;
+    return a.join();
+}
+testLogicalNotNaN.expected = "true,true,true,true,true";
+test(testLogicalNotNaN);
+
 /* NOTE: Keep this test last, since it screws up all for...in loops after it. */
 function testGlobalProtoAccess() {
     return "ok";
