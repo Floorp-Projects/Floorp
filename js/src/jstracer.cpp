@@ -7182,81 +7182,39 @@ bool
 TraceRecorder::record_JSOP_IN()
 {
     jsval& rval = stackval(-1);
+    jsval& lval = stackval(-2);
+
     if (JSVAL_IS_PRIMITIVE(rval))
         ABORT_TRACE("JSOP_IN on non-object right operand");
-
-    jsval& lval = stackval(-2);
-    if (!JSVAL_IS_PRIMITIVE(lval))
-        ABORT_TRACE("JSOP_IN on E4X QName left operand");
-
-    jsid id;
-    if (JSVAL_IS_INT(lval)) {
-        id = INT_JSVAL_TO_JSID(lval);
-    } else {
-        if (!JSVAL_IS_STRING(lval))
-            ABORT_TRACE("non-string left operand to JSOP_IN");
-        if (!js_ValueToStringId(cx, lval, &id))
-            return false;
-    }
-
-    // Expect what we see at trace recording time (hit or miss) to be the same
-    // when executing the trace. Use a builtin helper for named properties, as
-    // the for-in tracing code does. First, handle indexes in dense arrays as a
-    // special case.
     JSObject* obj = JSVAL_TO_OBJECT(rval);
     LIns* obj_ins = get(&rval);
 
-    bool cond;
+    jsid id;
     LIns* x;
-    do {
-        if (guardDenseArray(obj, obj_ins, BRANCH_EXIT)) {
-            if (JSVAL_IS_INT(lval)) {
-                jsint idx = JSVAL_TO_INT(lval);
-                LIns* idx_ins = f2i(get(&lval));
-                LIns* dslots_ins = lir->insLoad(LIR_ldp, obj_ins, offsetof(JSObject, dslots));
-                if (!guardDenseArrayIndex(obj, idx, obj_ins, dslots_ins, idx_ins, MISMATCH_EXIT))
-                    ABORT_TRACE("dense array index out of bounds");
-
-                // We can't "see through" a hole to a possible Array.prototype
-                // property, so we must abort/guard.
-                if (obj->dslots[idx] == JSVAL_HOLE)
-                    ABORT_TRACE("can't see through hole in dense array");
-
-                LIns* addr_ins = lir->ins2(LIR_piadd, dslots_ins,
-                                           lir->ins2i(LIR_pilsh, idx_ins,
-                                                      (sizeof(jsval) == 4) ? 2 : 3));
-                guard(false,
-                      lir->ins2(LIR_eq, lir->insLoad(LIR_ldp, addr_ins, 0), INS_CONST(JSVAL_HOLE)),
-                      MISMATCH_EXIT);
-
-                cond = true;
-                x = INS_CONST(cond);
-                break;
-            }
-
-            // Not an index id, but a dense array -- go up to the proto. */
-            obj = STOBJ_GET_PROTO(obj);
-            obj_ins = stobj_get_fslot(obj_ins, JSSLOT_PROTO);
-        } else {
-            if (JSVAL_IS_INT(id))
-                ABORT_TRACE("INT in OBJ where OBJ is not a dense array");
-        }
-
-        JSObject* obj2;
-        JSProperty* prop;
-        if (!OBJ_LOOKUP_PROPERTY(cx, obj, id, &obj2, &prop))
-            ABORT_TRACE("OBJ_LOOKUP_PROPERTY failed in JSOP_IN");
-
-        cond = prop != NULL;
-        if (prop)
-            OBJ_DROP_PROPERTY(cx, obj2, prop);
-
+    if (JSVAL_IS_INT(lval)) {
+        id = INT_JSVAL_TO_JSID(lval);
+        LIns* args[] = { makeNumberInt32(get(&lval)), obj_ins, cx_ins };
+        x = lir->insCall(&js_HasNamedPropertyInt32_ci, args);
+    } else if (JSVAL_IS_STRING(lval)) {
+        if (!js_ValueToStringId(cx, lval, &id))
+            ABORT_TRACE("left operand of JSOP_IN didn't convert to a string-id");
         LIns* args[] = { get(&lval), obj_ins, cx_ins };
         x = lir->insCall(&js_HasNamedProperty_ci, args);
-        guard(false, lir->ins2i(LIR_eq, x, JSVAL_TO_BOOLEAN(JSVAL_VOID)), OOM_EXIT);
-        x = lir->ins2i(LIR_eq, x, 1);
-    } while (0);
+    } else {
+        ABORT_TRACE("string or integer expected");
+    }        
 
+    guard(false, lir->ins2i(LIR_eq, x, JSVAL_TO_BOOLEAN(JSVAL_VOID)), OOM_EXIT);
+    x = lir->ins2i(LIR_eq, x, 1);
+
+    JSObject* obj2;
+    JSProperty* prop;
+    if (!OBJ_LOOKUP_PROPERTY(cx, obj, id, &obj2, &prop))
+        ABORT_TRACE("OBJ_LOOKUP_PROPERTY failed in JSOP_IN");
+    bool cond = prop != NULL;
+    if (prop)
+        OBJ_DROP_PROPERTY(cx, obj2, prop);
+    
     /* The interpreter fuses comparisons and the following branch,
        so we have to do that here as well. */
     fuseIf(cx->fp->regs->pc + 1, cond, x);
