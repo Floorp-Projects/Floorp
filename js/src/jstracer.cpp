@@ -3105,7 +3105,7 @@ js_CloseLoop(JSContext* cx)
     js_DeleteRecorder(cx);
     
     /*
-     * If we just walked out of a thin loop, we can't immediate start the 
+     * If we just walked out of a thin loop, we can't immediately start the 
      * compiler again here since we didn't return to the loop header.
      */
     if (demote && !walkedOutOfLoop)
