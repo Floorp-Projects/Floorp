@@ -138,6 +138,10 @@ public:
   // events can be fired.
   void ChangeReadyState(nsMediaReadyState aState);
 
+  // Gets the pref browser.media.enforce_same_site_origin, which determines
+  // if we should check Access Controls, or allow cross domain loads.
+  PRBool ShouldCheckAllowOrigin();
+
   // Is the media element actively playing as defined by the HTML 5 specification.
   // http://www.whatwg.org/specs/web-apps/current-work/#actively
   PRBool IsActivelyPlaying() const;
