@@ -2695,7 +2695,7 @@ static inline bool
 js_CheckGlobalObjectShape(JSContext* cx, JSTraceMonitor* tm, JSObject* globalObj)
 {
     /* Check the global shape. */
-    if (tm->globalSlots->length() && (OBJ_SHAPE(globalObj) != tm->globalShape)) {
+    if (OBJ_SHAPE(globalObj) != tm->globalShape) {
         AUDIT(globalShapeMismatchAtEntry);
         debug_only_v(printf("Global shape mismatch (%u vs. %u), flushing cache.\n",
                             OBJ_SHAPE(globalObj), tm->globalShape);)
