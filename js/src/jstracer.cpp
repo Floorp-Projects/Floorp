@@ -6096,7 +6096,7 @@ TraceRecorder::record_JSOP_ELEMINC()
 bool
 TraceRecorder::record_JSOP_NAMEDEC()
 {
-    return incName(-1, true);
+    return incName(-1, false);
 }
 
 bool

@@ -2597,6 +2597,27 @@ function testEqFalseEmptyString() {
 testEqFalseEmptyString.expected = "true,true,true,true,true";
 test(testEqFalseEmptyString);
 
+function testIncDec2(ii) {
+    var x = [];
+    for (let j=0;j<5;++j) { 
+	ii=j;
+	jj=j; 
+	var kk=j; 
+	x.push(ii--);
+	x.push(jj--); 
+	x.push(kk--); 
+	x.push(++ii);
+	x.push(++jj); 
+	x.push(++kk); 
+    }
+    return x.join(",");
+}
+function testIncDec() {
+    return testIncDec2(0);
+}
+testIncDec.expected = "0,0,0,0,0,0,1,1,1,1,1,1,2,2,2,2,2,2,3,3,3,3,3,3,4,4,4,4,4,4";
+test(testIncDec);
+
 /* NOTE: Keep this test last, since it screws up all for...in loops after it. */
 function testGlobalProtoAccess() {
     return "ok";
