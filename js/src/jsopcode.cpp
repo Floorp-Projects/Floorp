@@ -4987,7 +4987,6 @@ js_DecompileValueGenerator(JSContext *cx, intN spindex, jsval v,
              * it that caused exception, see bug 328664.
              */
             stackBase = StackBase(fp);
-            JS_ASSERT((size_t) (regs->sp - stackBase) <= StackDepth(script));
             sp = regs->sp;
             do {
                 if (sp == stackBase) {
@@ -4998,9 +4997,10 @@ js_DecompileValueGenerator(JSContext *cx, intN spindex, jsval v,
 
             if (sp >= stackBase + pcdepth) {
                 /*
-                 * This happens when the value comes from a temporary slot
-                 * that the interpreter uses for GC roots. Assume that it is
-                 * fp->pc that caused the exception.
+                 * The value comes from a temporary slot that the interpreter
+                 * uses for GC roots or when JSOP_APPLY extended the stack to
+                 * fit the argument array elements. Assume that it is the
+                 * current PC that caused the exception.
                  */
                 pc = regs->pc;
             } else {
