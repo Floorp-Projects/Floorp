@@ -654,6 +654,12 @@ namespace nanojit
         LIns* insAlloc(int32_t size) {
             return add(out->insAlloc(size));
         }
+        LIns* insImm(int32_t imm) {
+            return add(out->insImm(imm));
+        }
+        LIns* insImmq(uint64_t imm) {
+            return add(out->insImmq(imm));
+        }
     };
 
 #endif
@@ -712,6 +718,7 @@ namespace nanojit
 		CseFilter(LirWriter *out, avmplus::GC *gc);
 	    LIns* insImm(int32_t imm);
 	    LIns* insImmq(uint64_t q);
+	    LIns* ins0(LOpcode v);
 		LIns* ins1(LOpcode v, LInsp);
 		LIns* ins2(LOpcode v, LInsp, LInsp);
 		LIns* insLoad(LOpcode v, LInsp b, LInsp d);
