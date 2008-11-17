@@ -184,7 +184,7 @@ js_StringToInt32(JSContext* cx, JSString* str)
     JSSTRING_CHARS_AND_END(str, bp, end);
     if (!js_strtod(cx, bp, end, &ep, &d) || js_SkipWhiteSpace(ep, end) != end)
         return 0;
-    return (int32)d;
+    return js_DoubleToECMAInt32(d);
 }
 
 jsval FASTCALL
