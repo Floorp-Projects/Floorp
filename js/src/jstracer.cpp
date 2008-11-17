@@ -4505,13 +4505,10 @@ TraceRecorder::cmp(LOpcode op, int flags)
         x = INS_CONST(negate);
         cond = negate;
     } else if (JSVAL_IS_STRING(l) || JSVAL_IS_STRING(r)) {
-        // The following cases always produce a constant false (or true if negated):
-        // - comparing a string against null
-        // - comparing a string against any boolean (including undefined)
+        // Comparing equality of a string against null always produces false.
         if (op == LIR_feq &&
             ((JSVAL_IS_NULL(l) && l_ins->isconst()) ||
-             (JSVAL_IS_NULL(r) && r_ins->isconst()) ||
-             (JSVAL_TAG(l) == JSVAL_BOOLEAN || JSVAL_TAG(r) == JSVAL_BOOLEAN))) {
+             (JSVAL_IS_NULL(r) && r_ins->isconst()))) {
             x = INS_CONST(negate);
             cond = negate;
         } else {
