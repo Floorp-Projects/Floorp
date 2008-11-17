@@ -508,6 +508,11 @@ private:
   // when writing to the state, or when reading from a non-main thread.
   // Any change to the state must call NotifyAll on the monitor.
   PlayState mNextState;	
+
+  // Flags if we've called Stop(). Prevents multiple events being
+  // sent to call Shutdown(). Accessed on the main thread
+  // only.
+  PRPackedBool mIsStopping;
 };
 
 #endif
