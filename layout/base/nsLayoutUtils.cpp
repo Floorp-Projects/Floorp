@@ -2662,12 +2662,36 @@ nsLayoutUtils::GetClosestLayer(nsIFrame* aFrame)
   return aFrame->PresContext()->PresShell()->FrameManager()->GetRootFrame();
 }
 
+/**
+ * Given an image being drawn into an appunit coordinate system, and
+ * a point in that coordinate system, map the point back into image
+ * pixel space.
+ * @param aSize the size of the image, in pixels
+ * @param aDest the rectangle that the image is being mapped into
+ * @param aPt a point in the same coordinate system as the rectangle
+ */
 static gfxPoint
 MapToFloatImagePixels(const nsIntSize& aSize,
                       const nsRect& aDest, const nsPoint& aPt)
 {
   return gfxPoint((gfxFloat(aPt.x - aDest.x)*aSize.width)/aDest.width,
                   (gfxFloat(aPt.y - aDest.y)*aSize.height)/aDest.height);
+}
+
+/**
+ * Given an image being drawn into an pixel-based coordinate system, and
+ * a point in image space, map the point into the pixel-based coordinate
+ * system.
+ * @param aSize the size of the image, in pixels
+ * @param aDest the rectangle that the image is being mapped into
+ * @param aPt a point in image space
+ */
+static gfxPoint
+MapToFloatUserPixels(const nsIntSize& aSize,
+                     const gfxRect& aDest, const gfxPoint& aPt)
+{
+  return gfxPoint(aPt.x*aDest.size.width/aSize.width + aDest.pos.x,
+                  aPt.y*aDest.size.height/aSize.height + aDest.pos.y);
 }
 
 /* static */ nsresult
@@ -2733,16 +2757,22 @@ nsLayoutUtils::DrawImage(nsIRenderingContext* aRenderingContext,
   // device unit!
   gfxPoint anchorPoint(aAnchor.x/appUnitsPerDevPixel,
                        aAnchor.y/appUnitsPerDevPixel);
+  gfxPoint imageSpaceAnchorPoint =
+    MapToFloatImagePixels(imageSize, aDest, aAnchor);
   gfxMatrix currentMatrix = ctx->CurrentMatrix();
+
   gfxRect finalFillRect = fill;
   if (didSnap) {
     NS_ASSERTION(!currentMatrix.HasNonAxisAlignedTransform(),
                  "How did we snap, then?");
-    anchorPoint.x = fill.pos.x + 
-        (anchorPoint.x - devPixelFill.pos.x)*fill.size.width/devPixelFill.size.width;
-    anchorPoint.y = fill.pos.y +
-        (anchorPoint.y - devPixelFill.pos.y)*fill.size.height/devPixelFill.size.height;
-    anchorPoint.Round();
+    imageSpaceAnchorPoint.Round();
+    anchorPoint = imageSpaceAnchorPoint;
+    gfxRect devPixelDest(aDest.x/appUnitsPerDevPixel,
+                         aDest.y/appUnitsPerDevPixel,
+                         aDest.width/appUnitsPerDevPixel,
+                         aDest.height/appUnitsPerDevPixel);
+    anchorPoint = MapToFloatUserPixels(imageSize, devPixelDest, anchorPoint);
+    anchorPoint = currentMatrix.Transform(anchorPoint);
 
     // This form of Transform is safe to call since non-axis-aligned
     // transforms wouldn't be snapped.
@@ -2759,9 +2789,6 @@ nsLayoutUtils::DrawImage(nsIRenderingContext* aRenderingContext,
   // to be aligned perfectly with pixel boundaries or the choice of
   // dirty rect will affect the values of rendered pixels.
 
-  gfxPoint imageSpaceAnchorPoint =
-    MapToFloatImagePixels(imageSize, aDest, aAnchor);
-  imageSpaceAnchorPoint.Round();
   gfxFloat scaleX = imageSize.width*appUnitsPerDevPixel/aDest.width;
   gfxFloat scaleY = imageSize.height*appUnitsPerDevPixel/aDest.height;
   if (didSnap) {
