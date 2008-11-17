@@ -365,4 +365,10 @@ JS_DECLARE_CALLINFO(js_CompareStrings)
 #undef BUILTIN4
 #undef BUILTIN5
 
+jsdouble FASTCALL
+js_StringToNumber(JSContext* cx, JSString* str);
+
+jsdouble FASTCALL
+js_BooleanOrUndefinedToNumber(JSContext* cx, int32 unboxed);
+
 #endif /* jsbuiltins_h___ */
