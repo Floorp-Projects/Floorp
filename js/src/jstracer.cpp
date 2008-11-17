@@ -2328,7 +2328,7 @@ TraceRecorder::closeLoop(Fragmento* fragmento, bool& demote, unsigned *demotes)
             exit->target = peer;
             debug_only_v(printf("Joining type-unstable trace to target fragment %p.\n", peer);)
             stable = true;
-            ((TreeInfo*)peer->vmprivate)->dependentTrees.addUnique(fragment);
+            ((TreeInfo*)peer->vmprivate)->dependentTrees.addUnique(fragment->root);
         }
 
         compile(fragmento);
