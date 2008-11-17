@@ -69,6 +69,10 @@
 #include "nsHTMLMediaError.h"
 #include "nsICategoryManager.h"
 
+#include "nsIContentPolicy.h"
+#include "nsContentPolicyUtils.h"
+#include "nsContentErrors.h"
+
 #ifdef MOZ_OGG
 #include "nsOggDecoder.h"
 #endif
@@ -169,7 +173,7 @@ nsresult nsHTMLMediaElement::LoadWithChannel(nsIChannel *aChannel,
   if (mBegun) {
     mBegun = PR_FALSE;
     
-    mError = new nsHTMLMediaError(nsHTMLMediaError::MEDIA_ERR_ABORTED);
+    mError = new nsHTMLMediaError(nsIDOMHTMLMediaError::MEDIA_ERR_ABORTED);
     DispatchProgressEvent(NS_LITERAL_STRING("abort"));
     return NS_OK;
   }
@@ -662,6 +666,23 @@ nsresult nsHTMLMediaElement::InitializeDecoder(const nsAString& aURISpec)
                                                  baseURL);
   NS_ENSURE_SUCCESS(rv, rv);
 
+  nsCOMPtr<nsIPrincipal> elementPrincipal = NodePrincipal();
+  NS_ENSURE_TRUE(elementPrincipal, NS_ERROR_FAILURE);
+
+  PRInt16 shouldLoad = nsIContentPolicy::ACCEPT;
+  rv = NS_CheckContentLoadPolicy(nsIContentPolicy::TYPE_MEDIA,
+                                 uri,
+                                 elementPrincipal,
+                                 this,
+                                 EmptyCString(), // mime type
+                                 nsnull, // extra
+                                 &shouldLoad,
+                                 nsContentUtils::GetContentPolicy(),
+                                 nsContentUtils::GetSecurityManager());
+  if (NS_FAILED(rv) || NS_CP_REJECTED(shouldLoad)) {
+    return NS_ERROR_CONTENT_BLOCKED;
+  }
+
   if (mDecoder) {
     mDecoder->ElementAvailable(this);
     rv = mDecoder->Load(uri, nsnull, nsnull);
@@ -702,7 +723,7 @@ void nsHTMLMediaElement::ResourceLoaded()
 
 void nsHTMLMediaElement::NetworkError()
 {
-  mError = new nsHTMLMediaError(nsHTMLMediaError::MEDIA_ERR_NETWORK);
+  mError = new nsHTMLMediaError(nsIDOMHTMLMediaError::MEDIA_ERR_NETWORK);
   mBegun = PR_FALSE;
   DispatchProgressEvent(NS_LITERAL_STRING("error"));
   mNetworkState = nsIDOMHTMLMediaElement::EMPTY;
@@ -731,6 +752,23 @@ void nsHTMLMediaElement::SeekCompleted()
 {
   mPlayingBeforeSeek = PR_FALSE;
   DispatchAsyncSimpleEvent(NS_LITERAL_STRING("seeked"));
+}
+
+PRBool nsHTMLMediaElement::ShouldCheckAllowOrigin()
+{
+  nsCOMPtr<nsIPrefService> prefs = do_GetService("@mozilla.org/preferences-service;1");
+  PRBool checkOrigin = PR_TRUE;
+  if (prefs) {
+    nsCOMPtr<nsIPrefBranch> prefBranch;
+    prefs->GetBranch(nsnull, getter_AddRefs(prefBranch));
+    if (prefBranch) {
+      nsresult res = prefBranch->GetBoolPref("browser.media.enforce_same_site_origin",
+                                             &checkOrigin);
+      if (NS_FAILED(res))
+        return PR_TRUE;
+    }
+  }
+  return checkOrigin;
 }
 
 void nsHTMLMediaElement::ChangeReadyState(nsMediaReadyState aState)
