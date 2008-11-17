@@ -36,6 +36,7 @@ function jitstatHandler(f)
     f("treesTrashed");
     f("slotPromoted");
     f("unstableLoopVariable");
+    f("noCompatInnerTrees");
     f("breakLoopExits");
     f("returnLoopExits");
 }
@@ -2514,7 +2515,63 @@ function testThinLoopDemote() {
     return f();
 }
 testThinLoopDemote.expected = 100;
+testThinLoopDemote.jitstats = {
+    recorderStarted: 3,
+    recorderAborted: 0,
+    traceCompleted: 1,
+    traceTriggered: 0,
+    unstableLoopVariable: 2
+};
 test(testThinLoopDemote);
+
+var global = this;
+function testWeirdDateParseOuter()
+{
+    var vDateParts = ["11", "17", "2008"];
+    var out = [];
+    for (var vI = 0; vI < vDateParts.length; vI++) {
+	out.push(testWeirdDateParseInner(vDateParts[vI]));
+    }
+    /* Mutate the global shape so we fall off trace; this causes
+     * additional oddity */
+    global.x = Math.random();
+    return out;
+} 
+function testWeirdDateParseInner(pVal)
+{
+    var vR = 0;
+    for (var vI = 0; vI < pVal.length; vI++) {
+	var vC = pVal.charAt(vI);
+	if ((vC >= '0') && (vC <= '9'))
+	    vR = (vR * 10) + parseInt(vC);
+    }
+    return vR;
+}
+function testWeirdDateParse() {
+    var result = [];
+    result.push(testWeirdDateParseInner("11"));
+    result.push(testWeirdDateParseInner("17"));
+    result.push(testWeirdDateParseInner("2008"));
+    result.push(testWeirdDateParseInner("11"));
+    result.push(testWeirdDateParseInner("17"));
+    result.push(testWeirdDateParseInner("2008"));
+    result = result.concat(testWeirdDateParseOuter());
+    result = result.concat(testWeirdDateParseOuter());
+    result.push(testWeirdDateParseInner("11"));
+    result.push(testWeirdDateParseInner("17"));
+    result.push(testWeirdDateParseInner("2008"));
+    return result.join(",");
+}
+testWeirdDateParse.expected = "11,17,2008,11,17,2008,11,17,2008,11,17,2008,11,17,2008";
+testWeirdDateParse.jitstats = {
+    recorderStarted: 10,
+    recorderAborted: 1,
+    traceCompleted: 5,
+    traceTriggered: 13,
+    unstableLoopVariable: 6,
+    noCompatInnerTrees: 1
+};
+test(testWeirdDateParse);
 
 /* NOTE: Keep this test last, since it screws up all for...in loops after it. */
 function testGlobalProtoAccess() {
