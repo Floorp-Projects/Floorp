@@ -695,7 +695,7 @@ public:
                 if (d0->isconst() && d1->isconst()) {
                     int i0 = d0->constval();
                     int i1 = d1->constval();
-                    if (v == LIR_fsub)
+                    if (v == LIR_sub)
                         i1 = -i1;
                     int ir = i0 + i1;
                     /* If these overflow safely, emit an integer constant. */
