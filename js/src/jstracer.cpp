@@ -5559,7 +5559,9 @@ TraceRecorder::record_JSOP_NOT()
         return true;
     } 
     if (isNumber(v)) {
-        set(&v, lir->ins2(LIR_feq, get(&v), lir->insImmq(0)));
+        LIns* v_ins = get(&v);
+        set(&v, lir->ins2(LIR_or, lir->ins2(LIR_feq, v_ins, lir->insImmq(0)),
+                                  lir->ins_eq0(lir->ins2(LIR_feq, v_ins, v_ins))));
         return true;
     } 
     if (JSVAL_IS_OBJECT(v)) {
