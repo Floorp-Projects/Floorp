@@ -2501,6 +2501,21 @@ function testMulOverflow() {
 testMulOverflow.expected = "-1073741824,-1073741824,-1073741824,-1073741824,-1073741824";
 test(testMulOverflow);
 
+function testThinLoopDemote() {
+    function f()
+    {
+        var k = 1;
+        for (var n = 0; n < 2; n++) {
+            k = (k * 10);
+        }
+        return k;
+    }
+    f();
+    return f();
+}
+testThinLoopDemote.expected = 100;
+test(testThinLoopDemote);
+
 /* NOTE: Keep this test last, since it screws up all for...in loops after it. */
 function testGlobalProtoAccess() {
     return "ok";
