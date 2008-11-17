@@ -690,9 +690,23 @@ public:
             if (isPromoteInt(s0) && isPromoteInt(s1)) {
                 // demote fop to op
                 v = (LOpcode)((int)v & ~LIR64);
-                LIns* d0;
-                LIns* d1;
-                LIns* result = out->ins2(v, d0 = demote(out, s0), d1 = demote(out, s1));
+                LIns* d0 = demote(out, s0);
+                LIns* d1 = demote(out, s1);
+                if (d0->isconst() && d1->isconst()) {
+                    int i0 = d0->constval();
+                    int i1 = d1->constval();
+                    if (v == LIR_fsub)
+                        i1 = -i1;
+                    int ir = i0 + i1;
+                    /* If these overflow safely, emit an integer constant. */
+                    if (!(i0 > 0 && i1 > 0 && ir < 0) && !(i0 < 0 && i1 < 0 && ir > 0))
+                        return out->ins1(LIR_i2f, out->insImm(ir));
+                    /* Otherwise, emit a double constant. */
+                    jsdpun u;
+                    u.d = (double)i0 + (double)i1;
+                    return out->insImmq(u.u64);
+                }
+                LIns* result = out->ins2(v, d0, d1);
                 if (!overflowSafe(d0) || !overflowSafe(d1)) {
                     out->insGuard(LIR_xt, out->ins1(LIR_ov, result),
                                   recorder.snapshot(OVERFLOW_EXIT));
@@ -5560,7 +5574,9 @@ TraceRecorder::record_JSOP_NOT()
         return true;
     } 
     if (isNumber(v)) {
-        set(&v, lir->ins2(LIR_feq, get(&v), lir->insImmq(0)));
+        LIns* v_ins = get(&v);
+        set(&v, lir->ins2(LIR_or, lir->ins2(LIR_feq, v_ins, lir->insImmq(0)),
+                                  lir->ins_eq0(lir->ins2(LIR_feq, v_ins, v_ins))));
         return true;
     } 
     if (JSVAL_IS_OBJECT(v)) {
