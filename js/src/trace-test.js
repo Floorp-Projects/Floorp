@@ -2493,6 +2493,14 @@ function testBranchCse() {
 testBranchCse.expected = "1,1,1,1,1,1,1,1,1,1";
 test(testBranchCse);
 
+function testMulOverflow() {
+    var a = [];
+    for (let j=0;j<5;++j) a.push(0 | ((0x60000009) * 0x60000009));
+    return a.join(",");
+}
+testMulOverflow.expected = "-1073741824,-1073741824,-1073741824,-1073741824,-1073741824";
+test(testMulOverflow);
+
 /* NOTE: Keep this test last, since it screws up all for...in loops after it. */
 function testGlobalProtoAccess() {
     return "ok";
