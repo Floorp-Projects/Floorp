@@ -215,7 +215,7 @@ public:
     DECODER_STATE_SHUTDOWN
   };
 
-  nsOggDecodeStateMachine(nsOggDecoder* aDecoder);
+  nsOggDecodeStateMachine(nsOggDecoder* aDecoder, nsChannelReader* aReader);
   ~nsOggDecodeStateMachine();
 
   // Cause state transitions. These methods obtain the decoder monitor
@@ -389,6 +389,13 @@ private:
   PRInt32 mAudioChannels;
   PRInt32 mAudioTrack;
 
+  // Channel Reader. Originally created by the mDecoder object, it is
+  // destroyed when we close the mPlayer handle in the
+  // destructor. Used to obtain download and playback rate information
+  // for buffering.  Synchronisation for those methods are handled by
+  // nsMediaStream.
+  nsChannelReader* mReader;
+
   // Time that buffering started. Used for buffering timeout and only
   // accessed in the decoder thread.
   PRIntervalTime mBufferingStart;
@@ -454,7 +461,7 @@ private:
   PRPackedBool mPositionChangeQueued;
 };
 
-nsOggDecodeStateMachine::nsOggDecodeStateMachine(nsOggDecoder* aDecoder) :
+nsOggDecodeStateMachine::nsOggDecodeStateMachine(nsOggDecoder* aDecoder, nsChannelReader* aReader) :
   mDecoder(aDecoder),
   mPlayer(0),
   mPlayStartTime(0),
@@ -467,6 +474,7 @@ nsOggDecodeStateMachine::nsOggDecodeStateMachine(nsOggDecoder* aDecoder) :
   mAudioRate(0),
   mAudioChannels(0),
   mAudioTrack(-1),
+  mReader(aReader),
   mBufferingStart(0),
   mBufferingBytes(0),
   mLastFrameTime(0),
@@ -486,8 +494,10 @@ nsOggDecodeStateMachine::~nsOggDecodeStateMachine()
   while (!mDecodedFrames.IsEmpty()) {
     delete mDecodedFrames.Pop();
   }
+
   oggplay_close(mPlayer);
 }
+
 
 OggPlayErrorCode nsOggDecodeStateMachine::DecodeFrame()
 {
@@ -843,8 +853,6 @@ void nsOggDecodeStateMachine::Seek(float aTime)
 
 nsresult nsOggDecodeStateMachine::Run()
 {
-  nsChannelReader* reader = mDecoder->GetReader();
-  NS_ENSURE_TRUE(reader, NS_ERROR_NULL_POINTER);
   while (PR_TRUE) {
    nsAutoMonitor mon(mDecoder->GetMonitor());
    switch(mState) {
@@ -894,8 +902,8 @@ nsresult nsOggDecodeStateMachine::Run()
     case DECODER_STATE_DECODING:
       {
         // Before decoding check if we should buffer more data
-        if (reader->DownloadRate() >= 0 &&
-            reader->Available() < reader->PlaybackRate() * BUFFERING_SECONDS_LOW_WATER_MARK) {
+        if (mReader->DownloadRate() >= 0 &&
+            mReader->Available() < mReader->PlaybackRate() * BUFFERING_SECONDS_LOW_WATER_MARK) {
           if (mDecoder->GetState() == nsOggDecoder::PLAY_STATE_PLAYING) {
             if (mPlaying) {
               StopPlayback();
@@ -903,7 +911,7 @@ nsresult nsOggDecodeStateMachine::Run()
           }
 
           mBufferingStart = PR_IntervalNow();
-          mBufferingBytes = PRUint32(BUFFERING_RATE(reader->PlaybackRate()) * BUFFERING_WAIT);
+          mBufferingBytes = PRUint32(BUFFERING_RATE(mReader->PlaybackRate()) * BUFFERING_WAIT);
           mState = DECODER_STATE_BUFFERING;
 
           nsCOMPtr<nsIRunnable> event =
@@ -1001,11 +1009,11 @@ nsresult nsOggDecodeStateMachine::Run()
 
     case DECODER_STATE_BUFFERING:
       if ((PR_IntervalToMilliseconds(PR_IntervalNow() - mBufferingStart) < BUFFERING_WAIT*1000) &&
-          reader->DownloadRate() >= 0 &&            
-          reader->Available() < mBufferingBytes) {
+          mReader->DownloadRate() >= 0 &&            
+          mReader->Available() < mBufferingBytes) {
         LOG(PR_LOG_DEBUG, 
             ("Buffering data until %d bytes available or %d milliseconds", 
-             mBufferingBytes - reader->Available(),
+             mBufferingBytes - mReader->Available(),
              BUFFERING_WAIT*1000 - (PR_IntervalToMilliseconds(PR_IntervalNow() - mBufferingStart))));
         mon.Wait(PR_MillisecondsToInterval(1000));
         if (mState == DECODER_STATE_SHUTDOWN)
@@ -1061,7 +1069,7 @@ nsresult nsOggDecodeStateMachine::Run()
 void nsOggDecodeStateMachine::LoadOggHeaders() 
 {
   LOG(PR_LOG_DEBUG, ("Loading Ogg Headers"));
-  mPlayer = oggplay_open_with_reader(mDecoder->GetReader());
+  mPlayer = oggplay_open_with_reader(mReader);
   if (mPlayer) {
     LOG(PR_LOG_DEBUG, ("There are %d tracks", oggplay_get_num_tracks(mPlayer)));
 
@@ -1262,7 +1270,7 @@ nsresult nsOggDecoder::Load(nsIURI* aURI, nsIChannel* aChannel,
   rv = NS_NewThread(getter_AddRefs(mDecodeThread));
   NS_ENSURE_SUCCESS(rv, rv);
 
-  mDecodeStateMachine = new nsOggDecodeStateMachine(this);
+  mDecodeStateMachine = new nsOggDecodeStateMachine(this, mReader);
   {
     nsAutoMonitor mon(mMonitor);
     mDecodeStateMachine->SetContentLength(mContentLength);
@@ -1318,13 +1326,6 @@ nsresult nsOggDecoder::PlaybackRateChanged()
 
 void nsOggDecoder::Stop()
 {
-  NS_ASSERTION(NS_IsMainThread(), 
-               "nsOggDecoder::Stop called on non-main thread");  
-  
-  if (mPlayState == PLAY_STATE_ENDED ||
-      mPlayState == PLAY_STATE_SHUTDOWN)
-    return;
-
   ChangeState(PLAY_STATE_ENDED);
 
   StopProgress();
@@ -1333,6 +1334,7 @@ void nsOggDecoder::Stop()
   // to prevent shutdown from deadlocking.
   if (mReader) {
     mReader->Cancel();
+    mReader = nsnull;
   }
 
   // Shutdown must be on called the mDecodeStateMachine before deleting.
@@ -1351,7 +1353,6 @@ void nsOggDecoder::Stop()
   }
 
   mDecodeStateMachine = nsnull;
-  mReader = nsnull;
   UnregisterShutdownObserver();
 }
 
@@ -1548,8 +1549,6 @@ void nsOggDecoder::UnregisterShutdownObserver()
 
 void nsOggDecoder::ChangeState(PlayState aState)
 {
-  NS_ASSERTION(NS_IsMainThread(), 
-               "nsOggDecoder::ChangeState called on non-main thread");   
   nsAutoMonitor mon(mMonitor);
 
   if (mNextState == aState) {
