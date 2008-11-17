@@ -193,12 +193,11 @@ js_Int32ToId(JSContext* cx, int32 index, jsid* id)
     if (unsigned(index) <= JSVAL_INT_MAX) {
         *id = INT_TO_JSID(index);
         return JS_TRUE;
-    } else {
-        JSString* str = js_NumberToString(cx, index);
-        if (!str)
-            return JS_FALSE;
-        return js_ValueToStringId(cx, STRING_TO_JSVAL(str), id);
     }
+    JSString* str = js_NumberToString(cx, index);
+    if (!str)
+        return JS_FALSE;
+    return js_ValueToStringId(cx, STRING_TO_JSVAL(str), id);
 }
 
 jsval FASTCALL
