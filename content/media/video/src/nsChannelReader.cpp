@@ -71,6 +71,7 @@ OggPlayErrorCode nsChannelReader::initialise(int aBlock)
 OggPlayErrorCode nsChannelReader::destroy()
 {
   mStream.Close();
+
   return E_OGGPLAY_OK;
 }
 
@@ -112,7 +113,9 @@ static OggPlayErrorCode oggplay_channel_reader_initialise(OggPlayReader* aReader
 static OggPlayErrorCode oggplay_channel_reader_destroy(OggPlayReader* aReader) 
 {
   nsChannelReader* me = static_cast<nsChannelReader*>(aReader);
-  return me->destroy();
+  OggPlayErrorCode result = me->destroy();
+  delete me;
+  return result;
 }
 
 static size_t oggplay_channel_reader_io_read(void* aReader, void* aBuffer, size_t aCount) 
