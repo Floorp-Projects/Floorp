@@ -190,7 +190,7 @@ js_StringToInt32(JSContext* cx, JSString* str)
 static inline JSBool
 js_Int32ToId(JSContext* cx, int32 index, jsid* id)
 {
-    if (unsigned(index) <= JSVAL_INT_MAX) {
+    if (index <= JSVAL_INT_MAX) {
         *id = INT_TO_JSID(index);
         return JS_TRUE;
     }
