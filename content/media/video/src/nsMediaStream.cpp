@@ -51,9 +51,6 @@
 #include "nsIStreamListener.h"
 #include "nsIScriptSecurityManager.h"
 #include "nsChannelToPipeListener.h"
-#include "nsCrossSiteListenerProxy.h"
-#include "nsHTMLMediaElement.h"
-#include "nsIDocument.h"
 
 // For HTTP seeking, if number of bytes needing to be
 // seeked forward is less than this value then a read is
@@ -109,36 +106,11 @@ nsresult nsDefaultStreamStrategy::Open(nsIStreamListener** aStreamListener)
   nsresult rv = mListener->Init();
   NS_ENSURE_SUCCESS(rv, rv);
 
-  nsCOMPtr<nsIStreamListener> listener = do_QueryInterface(mListener);
-
   if (aStreamListener) {
     *aStreamListener = mListener;
     NS_ADDREF(mListener);
   } else {
-    // Ensure that if we're loading cross domain, that the server is sending
-    // an authorizing Access-Control header.
-    nsHTMLMediaElement* element = mDecoder->GetMediaElement();
-    NS_ENSURE_TRUE(element, NS_ERROR_FAILURE);
-    nsIPrincipal* elementPrincipal = element->NodePrincipal();
-    NS_ENSURE_TRUE(elementPrincipal, NS_ERROR_FAILURE);
-    if (element->ShouldCheckAllowOrigin()) {
-      listener = new nsCrossSiteListenerProxy(mListener,
-                                              elementPrincipal,
-                                              mChannel, 
-                                              PR_FALSE,
-                                              &rv);
-      NS_ENSURE_TRUE(listener, NS_ERROR_OUT_OF_MEMORY);
-      NS_ENSURE_SUCCESS(rv, rv);
-    } else {
-      // Ensure that we never load a local file from some page on a 
-      // web server.
-      rv = nsContentUtils::GetSecurityManager()->
-             CheckLoadURIWithPrincipal(elementPrincipal,
-                                       mURI,
-                                       nsIScriptSecurityManager::STANDARD);
-      NS_ENSURE_SUCCESS(rv, rv);
-    }
-    rv = mChannel->AsyncOpen(listener, nsnull);
+    rv = mChannel->AsyncOpen(mListener, nsnull);
     NS_ENSURE_SUCCESS(rv, rv);
   }
 
@@ -280,24 +252,6 @@ nsresult nsFileStreamStrategy::Open(nsIStreamListener** aStreamListener)
 
     rv = NS_NewLocalFileInputStream(getter_AddRefs(mInput), file);
   } else {
-    // Ensure that we never load a local file from some page on a 
-    // web server.
-    nsHTMLMediaElement* element = mDecoder->GetMediaElement();
-    NS_ENSURE_TRUE(element, NS_ERROR_FAILURE);
-
-    nsCOMPtr<nsIURI> uri;
-    rv = mChannel->GetURI(getter_AddRefs(uri));
-    NS_ENSURE_SUCCESS(rv, rv);
-
-    nsIPrincipal* elementPrincipal = element->NodePrincipal();
-    NS_ENSURE_TRUE(elementPrincipal, NS_ERROR_FAILURE);
-
-    rv = nsContentUtils::GetSecurityManager()->
-           CheckLoadURIWithPrincipal(elementPrincipal,
-                                     mURI,
-                                     nsIScriptSecurityManager::STANDARD);
-    NS_ENSURE_SUCCESS(rv, rv);
-
     rv = mChannel->Open(getter_AddRefs(mInput));
   }
   NS_ENSURE_SUCCESS(rv, rv);
@@ -408,7 +362,7 @@ public:
   }
   
   // These methods have the same thread calling requirements 
-  // as those with the same name in nsMediaStream.
+  // as those with the same name in nsMediaStream
   virtual nsresult Open(nsIStreamListener** aListener);
   virtual nsresult Close();
   virtual nsresult Read(char* aBuffer, PRUint32 aCount, PRUint32* aBytes);
@@ -422,14 +376,13 @@ public:
   // Return PR_TRUE if the stream has been cancelled.
   PRBool IsCancelled() const;
 
-  // This must be called on the main thread only, and at a time when the
-  // strategy is not reading from the current channel/stream. It's primary
-  // purpose is to be called from a Seek to reset to the new byte range
-  // request HTTP channel.
-  nsresult OpenInternal(nsIChannel* aChannel, PRInt64 aOffset);
-
-  // Opens the HTTP channel, using a byte range request to start at aOffset.
-  nsresult OpenInternal(nsIStreamListener **aStreamListener, PRInt64 aOffset);
+  // This must be called on the main thread only, and at a
+  // time when the strategy is not reading from the current
+  // channel/stream. It's primary purpose is to be called from
+  // a Seek to reset to the new byte range request http channel.
+  void Reset(nsIChannel* aChannel, 
+             nsChannelToPipeListener* aListener, 
+             nsIInputStream* aStream);
 
 private:
   // Listener attached to channel to constantly download the
@@ -459,25 +412,18 @@ private:
   PRPackedBool mCancelled;
 };
 
-nsresult nsHttpStreamStrategy::Open(nsIStreamListener **aStreamListener)
-{
-  return OpenInternal(aStreamListener, 0);
-}
-
-nsresult nsHttpStreamStrategy::OpenInternal(nsIChannel* aChannel,
-                                            PRInt64 aOffset)
+void nsHttpStreamStrategy::Reset(nsIChannel* aChannel, 
+                                 nsChannelToPipeListener* aListener, 
+                                 nsIInputStream* aStream)
 {
   nsAutoLock lock(mLock);
   mChannel = aChannel;
-  return OpenInternal(static_cast<nsIStreamListener**>(nsnull), aOffset);
+  mListener = aListener;
+  mPipeInput = aStream;
 }
 
-nsresult nsHttpStreamStrategy::OpenInternal(nsIStreamListener **aStreamListener,
-                                            PRInt64 aOffset)
+nsresult nsHttpStreamStrategy::Open(nsIStreamListener **aStreamListener)
 {
-  NS_ASSERTION(NS_IsMainThread(), "Only call on main thread");
-  NS_ENSURE_TRUE(mChannel, NS_ERROR_NULL_POINTER);
-
   if (aStreamListener) {
     *aStreamListener = nsnull;
   }
@@ -488,61 +434,34 @@ nsresult nsHttpStreamStrategy::OpenInternal(nsIStreamListener **aStreamListener,
   nsresult rv = mListener->Init();
   NS_ENSURE_SUCCESS(rv, rv);
   
-  nsCOMPtr<nsIStreamListener> listener = do_QueryInterface(mListener);
-
   if (aStreamListener) {
     *aStreamListener = mListener;
     NS_ADDREF(*aStreamListener);
   } else {
-    // Ensure that if we're loading cross domain, that the server is sending
-    // an authorizing Access-Control header.
-    nsHTMLMediaElement* element = mDecoder->GetMediaElement();
-    NS_ENSURE_TRUE(element, NS_ERROR_FAILURE);
-    nsIPrincipal* elementPrincipal = element->NodePrincipal();
-    NS_ENSURE_TRUE(elementPrincipal, NS_ERROR_FAILURE);
-    if (element->ShouldCheckAllowOrigin()) {
-      listener = new nsCrossSiteListenerProxy(mListener,
-                                              elementPrincipal,
-                                              mChannel, 
-                                              PR_FALSE,
-                                              &rv);
-      NS_ENSURE_TRUE(listener, NS_ERROR_OUT_OF_MEMORY);
-      NS_ENSURE_SUCCESS(rv, rv);
-    } else {
-      rv = nsContentUtils::GetSecurityManager()->
-             CheckLoadURIWithPrincipal(elementPrincipal,
-                                       mURI,
-                                       nsIScriptSecurityManager::STANDARD);
-      NS_ENSURE_SUCCESS(rv, rv);
-
-    }
     // Use a byte range request from the start of the resource.
     // This enables us to detect if the stream supports byte range
     // requests, and therefore seeking, early.
     nsCOMPtr<nsIHttpChannel> hc = do_QueryInterface(mChannel);
     if (hc) {
-      nsCAutoString rangeString("bytes=");
-      rangeString.AppendInt(aOffset);
-      rangeString.Append("-");
-      hc->SetRequestHeader(NS_LITERAL_CSTRING("Range"), rangeString, PR_FALSE);
+      hc->SetRequestHeader(NS_LITERAL_CSTRING("Range"),
+          NS_LITERAL_CSTRING("bytes=0-"),
+          PR_FALSE);
     }
  
-    rv = mChannel->AsyncOpen(listener, nsnull);
+    rv = mChannel->AsyncOpen(mListener, nsnull);
     NS_ENSURE_SUCCESS(rv, rv);
   }
   
   rv = mListener->GetInputStream(getter_AddRefs(mPipeInput));
   NS_ENSURE_SUCCESS(rv, rv);
 
-  mPosition = aOffset;
+  mPosition = 0;
 
   return NS_OK;
 }
 
-
 nsresult nsHttpStreamStrategy::Close()
 {
-  NS_ASSERTION(NS_IsMainThread(), "Only call on main thread");
   nsAutoLock lock(mLock);
   if (mChannel) {
     mChannel->Cancel(NS_BINDING_ABORTED);
@@ -579,9 +498,11 @@ class nsByteRangeEvent : public nsRunnable
 {
 public:
   nsByteRangeEvent(nsHttpStreamStrategy* aStrategy, 
+                   nsMediaDecoder* aDecoder, 
                    nsIURI* aURI, 
                    PRInt64 aOffset) :
     mStrategy(aStrategy),
+    mDecoder(aDecoder),
     mURI(aURI),
     mOffset(aOffset),
     mResult(NS_OK)
@@ -611,16 +532,35 @@ public:
       return NS_OK;
     }
 
-    nsCOMPtr<nsIChannel> channel;
     mStrategy->Close();
-    mResult = NS_NewChannel(getter_AddRefs(channel),
+    mResult = NS_NewChannel(getter_AddRefs(mChannel),
                             mURI,
                             nsnull,
                             nsnull,
                             nsnull,
                             nsIRequest::LOAD_NORMAL);
     NS_ENSURE_SUCCESS(mResult, mResult);
-    mResult = mStrategy->OpenInternal(channel, mOffset);
+    nsCOMPtr<nsIHttpChannel> hc = do_QueryInterface(mChannel);
+    if (hc) {
+      nsCAutoString rangeString("bytes=");
+      rangeString.AppendInt(mOffset);
+      rangeString.Append("-");
+      hc->SetRequestHeader(NS_LITERAL_CSTRING("Range"), rangeString, PR_FALSE);
+    }
+
+    mListener = new nsChannelToPipeListener(mDecoder, PR_TRUE);
+    NS_ENSURE_TRUE(mListener, NS_ERROR_OUT_OF_MEMORY);
+
+    mResult = mListener->Init();
+    NS_ENSURE_SUCCESS(mResult, mResult);
+
+    mResult = mChannel->AsyncOpen(mListener, nsnull);
+    NS_ENSURE_SUCCESS(mResult, mResult);
+
+    mResult = mListener->GetInputStream(getter_AddRefs(mStream));
+    NS_ENSURE_SUCCESS(mResult, mResult);
+
+    mStrategy->Reset(mChannel, mListener, mStream);
     return NS_OK;
   }
 
@@ -725,7 +665,7 @@ nsresult nsHttpStreamStrategy::Seek(PRInt32 aWhence, PRInt64 aOffset)
 
   // Don't acquire mLock in this scope as we do a synchronous call to the main thread
   // which would deadlock if that thread is calling Close().
-  nsCOMPtr<nsByteRangeEvent> event = new nsByteRangeEvent(this, mURI, aOffset);
+  nsCOMPtr<nsByteRangeEvent> event = new nsByteRangeEvent(this, mDecoder, mURI, aOffset);
   NS_DispatchToMainThread(event, NS_DISPATCH_SYNC);
 
   // If the sync request fails, or a call to Cancel() is made during the request,
