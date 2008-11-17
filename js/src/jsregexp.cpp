@@ -2193,6 +2193,7 @@ class RegExpNativeCompiler {
     JSBool compile(JSContext* cx) 
     {
         GuardRecord* guard;
+        RESideExit* exit;
         LIns* skip;
         LIns* start;
         bool oom = false;
@@ -2227,9 +2228,11 @@ class RegExpNativeCompiler {
         cpend = addName(lirbuf, lir->insLoad(LIR_ldp, lirbuf->param1, offsetof(REGlobalData, cpend)), "cpend");
 
         if (cs->flags & JSREG_STICKY) {
-            if (!compileSticky(cs->result, start)) goto fail;
+            if (!compileSticky(cs->result, start)) 
+                goto fail;
         } else {
-            if (!compileAnchoring(cs->result, start)) goto fail;
+            if (!compileAnchoring(cs->result, start)) 
+                goto fail;
         }
 
         /* Create fake guard record for loop edge. */
@@ -2238,7 +2241,7 @@ class RegExpNativeCompiler {
                           re_length - sizeof(jschar));
         guard = (GuardRecord *) skip->payload();
         memset(guard, 0, sizeof(*guard));
-        RESideExit* exit = (RESideExit*)(guard+1);
+        exit = (RESideExit*)(guard+1);
         guard->exit = exit;
         guard->exit->target = fragment;
         exit->re_flags = re->flags;
