@@ -1876,6 +1876,14 @@ function testBug465145() {
 	for (var z = 0; z < 2; ++z) { x = y };
 }
 
+function testTrueShiftTrue() {
+    var a = new Array(5);
+    for (var i=0;i<5;++i) a[i] = "" + (true << true);
+    return a.join(",");
+}
+testTrueShiftTrue.expected = "2,2,2,2,2";
+test(testTrueShiftTrue);
+
 // BEGIN MANDELBROT STUFF
 // XXXbz I would dearly like to wrap it up into a function to avoid polluting
 // the global scope, but the function ends up heavyweight, and then we lose on
