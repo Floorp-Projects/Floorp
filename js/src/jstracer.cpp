@@ -650,10 +650,9 @@ public:
 
 class FuncFilter: public LirWriter
 {
-    TraceRecorder& recorder;
 public:
-    FuncFilter(LirWriter* out, TraceRecorder& _recorder):
-        LirWriter(out), recorder(_recorder)
+    FuncFilter(LirWriter* out):
+        LirWriter(out)
     {
     }
 
@@ -683,35 +682,6 @@ public:
                 if (v != LIR_eq)
                     v = LOpcode(v + (LIR_ult - LIR_lt)); // cmp -> ucmp
                 return out->ins2(v, demote(out, s0), demote(out, s1));
-            }
-        } else if (v == LIR_fadd || v == LIR_fsub) {
-            /* demoting multiplication seems to be tricky since it can quickly overflow the
-               value range of int32 */
-            if (isPromoteInt(s0) && isPromoteInt(s1)) {
-                // demote fop to op
-                v = (LOpcode)((int)v & ~LIR64);
-                LIns* d0 = demote(out, s0);
-                LIns* d1 = demote(out, s1);
-                if (d0->isconst() && d1->isconst()) {
-                    int i0 = d0->constval();
-                    int i1 = d1->constval();
-                    if (v == LIR_sub)
-                        i1 = -i1;
-                    int ir = i0 + i1;
-                    /* If these overflow safely, emit an integer constant. */
-                    if (!(i0 > 0 && i1 > 0 && ir < 0) && !(i0 < 0 && i1 < 0 && ir > 0))
-                        return out->ins1(LIR_i2f, out->insImm(ir));
-                    /* Otherwise, emit a double constant. */
-                    jsdpun u;
-                    u.d = (double)i0 + (double)i1;
-                    return out->insImmq(u.u64);
-                }
-                LIns* result = out->ins2(v, d0, d1);
-                if (!overflowSafe(d0) || !overflowSafe(d1)) {
-                    out->insGuard(LIR_xt, out->ins1(LIR_ov, result),
-                                  recorder.snapshot(OVERFLOW_EXIT));
-                }
-                return out->ins1(LIR_i2f, result);
             }
         } else if (v == LIR_or &&
                    s0->isop(LIR_lsh) && isconst(s0->oprnd2(), 16) &&
@@ -1033,7 +1003,7 @@ TraceRecorder::TraceRecorder(JSContext* cx, VMSideExit* _anchor, Fragment* _frag
 #endif
     lir = cse_filter = new (&gc) CseFilter(lir, &gc);
     lir = expr_filter = new (&gc) ExprFilter(lir);
-    lir = func_filter = new (&gc) FuncFilter(lir, *this);
+    lir = func_filter = new (&gc) FuncFilter(lir);
     lir->ins0(LIR_start);
 
     if (!nanojit::AvmCore::config.tree_opt || fragment->root == fragment) 
@@ -4158,12 +4128,64 @@ TraceRecorder::stack(int n, LIns* i)
     set(&stackval(n), i, n >= 0);
 }
 
-LIns* TraceRecorder::f2i(LIns* f)
+LIns*
+TraceRecorder::alu(LOpcode v, jsdouble v0, jsdouble v1, LIns* s0, LIns* s1)
+{
+    if (v == LIR_fadd || v == LIR_fsub) {
+        jsdouble r;
+        if (v == LIR_fadd)
+            r = v0 + v1;
+        else
+            r = v0 - v1;
+        /*
+         * Calculate the result of the addition for the current values. If the
+         * value is not within the integer range, don't even try to demote 
+         * here.
+         */
+        if (!JSDOUBLE_IS_NEGZERO(r) && (jsint(r) == r) && isPromoteInt(s0) && isPromoteInt(s1)) {
+            LIns* d0 = ::demote(lir, s0);
+            LIns* d1 = ::demote(lir, s1);
+            /*
+             * If the inputs are constant, generate an integer constant for 
+             * this operation.
+             */
+            if (d0->isconst() && d1->isconst()) 
+                return lir->ins1(LIR_i2f, lir->insImm(jsint(r)));
+            /*
+             * Speculatively generate code that will perform the addition over
+             * the integer inputs as an integer addition/subtraction and exit
+             * if that fails.
+             */
+            v = (LOpcode)((int)v & ~LIR64);
+            LIns* result = lir->ins2(v, d0, d1);
+            if (!overflowSafe(d0) || !overflowSafe(d1)) {
+                lir->insGuard(LIR_xt, lir->ins1(LIR_ov, result),
+                              snapshot(OVERFLOW_EXIT));
+            }
+            return lir->ins1(LIR_i2f, result);
+        }
+        /*
+         * The result doesn't fit into the integer domain, so either generate
+         * a floating point constant or a floating point operation.
+         */
+        if (s0->isconst() && s1->isconst()) {
+            jsdpun u;
+            u.d = r;
+            return lir->insImmq(u.u64);
+        }
+        return lir->ins2(v, s0, s1);
+    }
+    return lir->ins2(v, s0, s1);
+}
+
+LIns*
+TraceRecorder::f2i(LIns* f)
 {
     return lir->insCall(&js_DoubleToInt32_ci, &f);
 }
 
-LIns* TraceRecorder::makeNumberInt32(LIns* f)
+LIns*
+TraceRecorder::makeNumberInt32(LIns* f)
 {
     JS_ASSERT(f->isQuad());
     LIns* x;
@@ -4314,7 +4336,7 @@ TraceRecorder::inc(jsval& v, LIns*& v_ins, jsint incr, bool pre)
     jsdpun u;
     u.d = jsdouble(incr);
 
-    LIns* v_after = lir->ins2(LIR_fadd, v_ins, lir->insImmq(u.u64));
+    LIns* v_after = alu(LIR_fadd, asNumber(v), incr, v_ins, lir->insImmq(u.u64));
 
     const JSCodeSpec& cs = js_CodeSpec[*cx->fp->regs->pc];
     JS_ASSERT(cs.ndefs == 1);
@@ -4657,7 +4679,13 @@ TraceRecorder::binary(LOpcode op)
     bool intop = !(op & LIR64);
     LIns* a = get(&l);
     LIns* b = get(&r);
-    bool leftNumber = isNumber(l), rightNumber = isNumber(r);
+
+    bool leftIsNumber = isNumber(l);
+    jsdouble lnum = leftIsNumber ? asNumber(l) : 0;
+    
+    bool rightIsNumber = isNumber(r);
+    jsdouble rnum = rightIsNumber ? asNumber(r) : 0;
+    
     if ((op >= LIR_sub && op <= LIR_ush) ||  // sub, mul, (callh), or, xor, (not,) lsh, rsh, ush
         (op >= LIR_fsub && op <= LIR_fdiv)) { // fsub, fmul, fdiv
         LIns* args[2];
@@ -4665,32 +4693,36 @@ TraceRecorder::binary(LOpcode op)
             args[0] = a;
             args[1] = cx_ins;
             a = lir->insCall(&js_StringToNumber_ci, args);
-            leftNumber = true;
+            lnum = js_StringToNumber(cx, JSVAL_TO_STRING(l));
+            leftIsNumber = true;
         }
         if (JSVAL_IS_STRING(r)) {
             args[0] = b;
             args[1] = cx_ins;
             b = lir->insCall(&js_StringToNumber_ci, args);
-            rightNumber = true;
+            rnum = js_StringToNumber(cx, JSVAL_TO_STRING(r));
+            rightIsNumber = true;
         }
     }
     if (JSVAL_TAG(l) == JSVAL_BOOLEAN) {
         LIns* args[] = { a, cx_ins };
         a = lir->insCall(&js_BooleanOrUndefinedToNumber_ci, args);
-        leftNumber = true;
+        lnum = js_BooleanOrUndefinedToNumber(cx, JSVAL_TO_BOOLEAN(l));
+        leftIsNumber = true;
     }
     if (JSVAL_TAG(r) == JSVAL_BOOLEAN) {
         LIns* args[] = { b, cx_ins };
         b = lir->insCall(&js_BooleanOrUndefinedToNumber_ci, args);
-        rightNumber = true;
+        rnum = js_BooleanOrUndefinedToNumber(cx, JSVAL_TO_BOOLEAN(r));
+        rightIsNumber = true;
     }
-    if (leftNumber && rightNumber) {
+    if (leftIsNumber && rightIsNumber) {
         if (intop) {
             LIns *args[] = { a };
             a = lir->insCall(op == LIR_ush ? &js_DoubleToUint32_ci : &js_DoubleToInt32_ci, args);
             b = f2i(b);
         }
-        a = lir->ins2(op, a, b);
+        a = alu(op, lnum, rnum, a, b);
         if (intop)
             a = lir->ins1(op == LIR_ush ? LIR_u2f : LIR_i2f, a);
         set(&l, a);

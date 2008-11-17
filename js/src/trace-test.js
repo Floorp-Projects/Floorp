@@ -2516,6 +2516,14 @@ function testThinLoopDemote() {
 testThinLoopDemote.expected = 100;
 test(testThinLoopDemote);
 
+function testUndemotableBinaryOp() {
+    var out = [];
+    for (let j = 0; j < 5; ++j) { out.push(6 - ((void 0) ^ 0x80000005)); }
+    return out.join(",");
+}
+testUndemotableBinaryOp.expected = "2147483649,2147483649,2147483649,2147483649,2147483649";
+test(testUndemotableBinaryOp);
+
 /* NOTE: Keep this test last, since it screws up all for...in loops after it. */
 function testGlobalProtoAccess() {
     return "ok";
