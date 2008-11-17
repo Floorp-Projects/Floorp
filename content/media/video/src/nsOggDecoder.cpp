@@ -1176,8 +1176,7 @@ nsOggDecoder::nsOggDecoder() :
   mReader(0),
   mMonitor(0),
   mPlayState(PLAY_STATE_PAUSED),
-  mNextState(PLAY_STATE_PAUSED),
-  mIsStopping(PR_FALSE)
+  mNextState(PLAY_STATE_PAUSED)
 {
   MOZ_COUNT_CTOR(nsOggDecoder);
 }
@@ -1231,10 +1230,6 @@ nsOggDecoder::~nsOggDecoder()
 nsresult nsOggDecoder::Load(nsIURI* aURI, nsIChannel* aChannel,
                             nsIStreamListener** aStreamListener)
 {
-  // Reset Stop guard flag flag, else shutdown won't occur properly when
-  // reusing decoder.
-  mIsStopping = PR_FALSE;
-
   if (aStreamListener) {
     *aStreamListener = nsnull;
   }
@@ -1325,9 +1320,9 @@ void nsOggDecoder::Stop()
   NS_ASSERTION(NS_IsMainThread(), 
                "nsOggDecoder::Stop called on non-main thread");  
   
-  if (mIsStopping)
+  if (mPlayState == PLAY_STATE_ENDED ||
+      mPlayState == PLAY_STATE_SHUTDOWN)
     return;
-  mIsStopping = PR_TRUE;
 
   ChangeState(PLAY_STATE_ENDED);
 
