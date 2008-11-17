@@ -4160,7 +4160,6 @@ TraceRecorder::stringify(jsval& v)
     } else if (JSVAL_TAG(v) == JSVAL_BOOLEAN) {
         ci = &js_BooleanOrUndefinedToString_ci;
     } else {
-        JS_NOT_REACHED("caller of stringify should have used an imacro here");
         return NULL;
     }
     v_ins = lir->insCall(ci, args);
