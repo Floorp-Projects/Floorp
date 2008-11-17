@@ -170,10 +170,6 @@ class nsMediaDecoder : public nsIObserver
   // thread by the owning object before that object disposes of this object.  
   virtual void Shutdown();
 
-  // Returns a weak reference to the media element we're decoding for,
-  // if it's available.
-  nsHTMLMediaElement* GetMediaElement();
-
 protected:
 
   // Start timer to update download progress information.
