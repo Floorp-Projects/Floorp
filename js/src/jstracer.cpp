@@ -895,7 +895,6 @@ js_NativeStackSlots(JSContext *cx, unsigned callDepth)
 #endif
     for (;;) {
         unsigned operands = fp->regs->sp - StackBase(fp);
-        JS_ASSERT(operands <= unsigned(fp->script->nslots - fp->script->nfixed));
         slots += operands;
         if (fp->callee)
             slots += fp->script->nfixed;
@@ -4018,7 +4017,6 @@ jsval&
 TraceRecorder::stackval(int n) const
 {
     jsval* sp = cx->fp->regs->sp;
-    JS_ASSERT(size_t((sp + n) - StackBase(cx->fp)) < StackDepth(cx->fp->script));
     return sp[n];
 }
 
