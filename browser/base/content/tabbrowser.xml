@@ -1830,7 +1830,7 @@
             var isInToolbox = target == this._cachedTargetInToolbox;
             while (target && !isInToolbox) {
               if (target == gNavToolbox) {
-                goolbox = true;
+                isInToolbox = true;
                 this._cachedTargetInToolbox = target;
               }
               else
