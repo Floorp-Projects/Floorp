@@ -2922,6 +2922,8 @@ js_SynthesizeFrame(JSContext* cx, const FrameInfo& fi)
 bool
 js_RecordTree(JSContext* cx, JSTraceMonitor* tm, Fragment* f, Fragment* outer, unsigned* demotes)
 {
+    JS_ASSERT(cx->fp->regs->pc == f->ip && f->root == f);
+    
     /* Avoid recording loops in overlarge scripts. */
     if (cx->fp->script->length >= SCRIPT_PC_ADJ_LIMIT) {
         js_AbortRecording(cx, "script too large");
@@ -3113,7 +3115,8 @@ js_CloseLoop(JSContext* cx)
     Fragmento* fragmento = tm->fragmento;
     TraceRecorder* r = tm->recorder;
     JS_ASSERT(fragmento && r);
-
+    bool walkedOutOfLoop = r->walkedOutOfLoop();
+    
     if (fragmento->assm()->error()) {
         js_AbortRecording(cx, "Error during recording");
 
@@ -3130,7 +3133,12 @@ js_CloseLoop(JSContext* cx)
     r->closeLoop(fragmento, demote, demotes);
     JS_ASSERT(!demote || NUM_UNDEMOTE_SLOTS(demotes));
     js_DeleteRecorder(cx);
-    if (demote)
+    
+    /*
+     * If we just walked out of a thin loop, we can't immediate start the 
+     * compiler again here since we didn't return to the loop header.
+     */
+    if (demote && !walkedOutOfLoop)
         return js_RecordTree(cx, tm, f, NULL, demotes);
     return false;
 }
