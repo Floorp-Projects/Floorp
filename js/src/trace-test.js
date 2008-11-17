@@ -2405,11 +2405,20 @@ test(testBoxDoubleWithDoubleSizedInt);
 function testObjectOrderedCmp()
 {
   var a = new Array(5);
-  for(i=0;i<5;++i) a[i] = ({} < {});
+  for(var i=0;i<5;++i) a[i] = ({} < {});
   return a.join(",");
 }
 testObjectOrderedCmp.expected = "false,false,false,false,false";
 test(testObjectOrderedCmp);
+
+function testObjectOrderedCmp2()
+{
+  var a = new Array(5);
+  for(var i=0;i<5;++i) a[i] = ("" <= null);
+  return a.join(",");
+}
+testObjectOrderedCmp2.expected = "true,true,true,true,true";
+test(testObjectOrderedCmp2);
 
 /* NOTE: Keep this test last, since it screws up all for...in loops after it. */
 function testGlobalProtoAccess() {
