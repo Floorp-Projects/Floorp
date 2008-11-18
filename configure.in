@@ -5306,7 +5306,7 @@ fi
 dnl ========================================================
 dnl = Disable Wave decoder support
 dnl ========================================================
-MOZ_ARG_ENABLE_BOOL(wave,
+MOZ_ARG_DISABLE_BOOL(wave,
 [  --disable-wave          Disable Wave decoder support],
     MOZ_WAVE=,
     MOZ_WAVE=1)
