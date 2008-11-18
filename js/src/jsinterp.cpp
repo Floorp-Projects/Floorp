@@ -85,17 +85,22 @@
 #if !JS_LONE_INTERPRET ^ defined jsinvoke_cpp___
 
 uint32
-js_GenerateShape(JSContext *cx, JSBool gcLocked)
+js_GenerateShape(JSContext *cx, JSBool gcLocked, JSScopeProperty *sprop)
 {
     JSRuntime *rt;
     uint32 shape;
+    JSTempValueRooter tvr;
 
     rt = cx->runtime;
     shape = JS_ATOMIC_INCREMENT(&rt->shapeGen);
     JS_ASSERT(shape != 0);
     if (shape & SHAPE_OVERFLOW_BIT) {
         rt->gcPoke = JS_TRUE;
+        if (sprop)
+            JS_PUSH_TEMP_ROOT_SPROP(cx, sprop, &tvr);
         js_GC(cx, gcLocked ? GC_LOCK_HELD : GC_NORMAL);
+        if (sprop)
+            JS_POP_TEMP_ROOT(cx, &tvr);
         shape = JS_ATOMIC_INCREMENT(&rt->shapeGen);
         JS_ASSERT(shape != 0);
         JS_ASSERT_IF(shape & SHAPE_OVERFLOW_BIT,
