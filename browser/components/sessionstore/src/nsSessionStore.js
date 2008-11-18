@@ -1953,11 +1953,16 @@ SessionStoreService.prototype = {
       return;
     }
     
+    // always call this before injecting content into a document!
+    function hasExpectedURL(aDocument, aURL)
+      !aURL || aURL.replace(/#.*/, "") == aDocument.location.href.replace(/#.*/, "");
+    
     // restore text data saved by Firefox 2.0/3.0
     var textArray = this.__SS_restore_text ? this.__SS_restore_text.split(" ") : [];
-    function restoreTextData(aContent, aPrefix) {
+    function restoreTextData(aContent, aPrefix, aURL) {
       textArray.forEach(function(aEntry) {
-        if (/^((?:\d+\|)*)(#?)([^\s=]+)=(.*)$/.test(aEntry) && RegExp.$1 == aPrefix) {
+        if (/^((?:\d+\|)*)(#?)([^\s=]+)=(.*)$/.test(aEntry) &&
+            RegExp.$1 == aPrefix && hasExpectedURL(aContent.document, aURL)) {
           var document = aContent.document;
           var node = RegExp.$2 ? document.getElementById(RegExp.$3) : document.getElementsByName(RegExp.$3)[0] || null;
           if (node && "value" in node) {
@@ -1971,8 +1976,11 @@ SessionStoreService.prototype = {
       });
     }
     
-    function restoreFormData(aDocument, aData) {
+    function restoreFormData(aDocument, aData, aURL) {
       for (let key in aData) {
+        if (!hasExpectedURL(aDocument, aURL))
+          return;
+        
         let node = key.charAt(0) == "#" ? aDocument.getElementById(key.slice(1)) :
                                           XPathHelper.resolve(aDocument, key);
         if (!node)
@@ -2002,18 +2010,19 @@ SessionStoreService.prototype = {
     }
     
     let selectedPageStyle = this.__SS_restore_pageStyle;
+    let window = this.ownerDocument.defaultView;
     function restoreTextDataAndScrolling(aContent, aData, aPrefix) {
       if (aData.formdata)
-        restoreFormData(aContent.document, aData.formdata);
+        restoreFormData(aContent.document, aData.formdata, aData.url);
       else
-        restoreTextData(aContent, aPrefix);
+        restoreTextData(aContent, aPrefix, aData.url);
       if (aData.innerHTML) {
-        aContent.setTimeout(
-              function(aHTML) {
-                if (aContent.document.designMode == "on") {
-                  aContent.document.body.innerHTML = aHTML;
-                }
-              }, 0, aData.innerHTML);
+        window.setTimeout(function() {
+          if (aContent.document.designMode == "on" &&
+              hasExpectedURL(aContent.document, aData.url)) {
+            aContent.document.body.innerHTML = aData.innerHTML;
+          }
+        }, 0);
       }
       if (aData.scroll && /(\d+),(\d+)/.test(aData.scroll)) {
         aContent.scrollTo(RegExp.$1, RegExp.$2);
@@ -2022,7 +2031,8 @@ SessionStoreService.prototype = {
         aSS.disabled = aSS.title && aSS.title != selectedPageStyle;
       });
       for (var i = 0; i < aContent.frames.length; i++) {
-        if (aData.children && aData.children[i]) {
+        if (aData.children && aData.children[i] &&
+          hasExpectedURL(aContent.document, aData.url)) {
           restoreTextDataAndScrolling(aContent.frames[i], aData.children[i], aPrefix + i + "|");
         }
       }
@@ -2030,8 +2040,7 @@ SessionStoreService.prototype = {
     
     // don't restore text data and scrolling state if the user has navigated
     // away before the loading completed (except for in-page navigation)
-    if (!this.__SS_restore_data.url || this.currentURI.spec.replace(/#.*/, "") ==
-                                       this.__SS_restore_data.url.replace(/#.*/, "")) {
+    if (hasExpectedURL(aEvent.originalTarget, this.__SS_restore_data.url)) {
       var content = aEvent.originalTarget.defaultView;
       if (this.currentURI.spec == "about:config") {
         // unwrap the document for about:config because otherwise the properties
