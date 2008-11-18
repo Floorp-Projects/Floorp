@@ -1820,10 +1820,13 @@ nsHTMLDocument::OpenCommon(const nsACString& aContentType, PRBool aReplace)
     do_QueryInterface(nsContentUtils::GetDocumentFromContext());
 
   // Grab a reference to the calling documents security info (if any)
-  // and principal as it may be lost in the call to Reset().
+  // and URIs as they may be lost in the call to Reset().
   nsCOMPtr<nsISupports> securityInfo;
+  nsCOMPtr<nsIURI> uri, baseURI;
   if (callerDoc) {
     securityInfo = callerDoc->GetSecurityInfo();
+    uri = callerDoc->GetDocumentURI();
+    baseURI = callerDoc->GetBaseURI();
   }
 
   nsCOMPtr<nsIPrincipal> callerPrincipal;
@@ -1852,18 +1855,6 @@ nsHTMLDocument::OpenCommon(const nsACString& aContentType, PRBool aReplace)
   if (NS_FAILED(callerPrincipal->Equals(NodePrincipal(), &equals)) ||
       !equals) {
     return NS_ERROR_DOM_SECURITY_ERR;
-  }
-
-  // The URI for the document after this call. Get it from the calling
-  // principal (if available), or set it to "about:blank" if no
-  // principal is reachable.
-  nsCOMPtr<nsIURI> uri;
-  callerPrincipal->GetURI(getter_AddRefs(uri));
-
-  if (!uri) {
-    rv = NS_NewURI(getter_AddRefs(uri),
-                   NS_LITERAL_CSTRING("about:blank"));
-    NS_ENSURE_SUCCESS(rv, rv);
   }
 
   // Stop current loads targeted at the window this document is in.
@@ -1896,6 +1887,9 @@ nsHTMLDocument::OpenCommon(const nsACString& aContentType, PRBool aReplace)
   if (NS_FAILED(rv)) {
     return rv;
   }
+
+  // We can't depend on channels implementing property bags, so do our
+  // base URI manually after reset.
 
   // Set the caller principal, if any, on the channel so that we'll
   // make sure to use it when we reset.
@@ -1969,6 +1963,9 @@ nsHTMLDocument::OpenCommon(const nsACString& aContentType, PRBool aReplace)
   // null.
 
   Reset(channel, group);
+  if (baseURI) {
+    mDocumentBaseURI = baseURI;
+  }
 
   if (root) {
     // Tear down the frames for the root element.
