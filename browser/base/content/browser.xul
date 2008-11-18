@@ -271,9 +271,9 @@
   </tooltip>
 
   <toolbox id="navigator-toolbox" class="toolbox-top" mode="icons"
-           ondragover="gBrowser._onDragOver(event); event.stopPropagation();"
-           ondrop="gBrowser._onDrop(event); event.stopPropagation();"
-           ondragleave="gBrowser._onDragLeave(event); event.stopPropagation();"
+           ondragover="gBrowser._onDragOver(event);"
+           ondrop="gBrowser._onDrop(event);"
+           ondragleave="gBrowser._onDragLeave(event);"
            defaultmode="icons">
     <!-- Menu -->
     <toolbar type="menubar" id="toolbar-menubar" class="chromeclass-menubar" customizable="true"
