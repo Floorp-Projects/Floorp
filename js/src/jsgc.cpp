@@ -2796,8 +2796,6 @@ js_TraceStackFrame(JSTracer *trc, JSStackFrame *fp)
              * Don't mark what has not been pushed yet, or what has been
              * popped already.
              */
-            JS_ASSERT((size_t) (fp->regs->sp - fp->slots) <=
-                      fp->script->nslots);
             nslots = (uintN) (fp->regs->sp - fp->slots);
             TRACE_JSVALS(trc, nslots, fp->slots, "slot");
         }
@@ -3677,7 +3675,7 @@ out:
         goto restart;
     }
 
-    if (rt->shapeGen & SHAPE_OVERFLOW_BIT) {
+    if (rt->shapeGen >= SHAPE_OVERFLOW_BIT - 1) {
         /*
          * FIXME bug 440834: The shape id space has overflowed. Currently we
          * cope badly with this. Every call to js_GenerateShape does GC, and

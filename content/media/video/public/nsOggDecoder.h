@@ -333,7 +333,7 @@ class nsOggDecoder : public nsMediaDecoder
 
   // Called if the media file encounters a network error.
   // Call on the main thread only.
-  void NetworkError();
+  virtual void NetworkError();
 
   // Call from any thread safely. Return PR_TRUE if we are currently
   // seeking in the media resource.
@@ -348,21 +348,20 @@ class nsOggDecoder : public nsMediaDecoder
   // Return PR_TRUE if seeking is supported.
   virtual PRBool GetSeekable();
 
+  // Returns the channel reader.
+  nsChannelReader* GetReader() { return mReader; }
+
 protected:
-  // Change to a new play state. This updates the mState variable and
-  // notifies any thread blocking on this objects monitor of the
-  // change. Can be called on any thread.
-  void ChangeState(PlayState aState);
 
   // Returns the monitor for other threads to synchronise access to
-  // state
+  // state.
   PRMonitor* GetMonitor() 
   { 
     return mMonitor; 
   }
 
-  // Return the current state. The caller must have entered the
-  // monitor.
+  // Return the current state. Can be called on any thread. If called from
+  // a non-main thread, the decoder monitor must be held.
   PlayState GetState()
   {
     return mPlayState;
@@ -372,6 +371,11 @@ protected:
    * The following methods must only be called on the main
    * thread.
    ******/
+
+  // Change to a new play state. This updates the mState variable and
+  // notifies any thread blocking on this object's monitor of the
+  // change. Call on the main thread only.
+  void ChangeState(PlayState aState);
 
   // Called when the metadata from the Ogg file has been read.
   // Call on the main thread only.
@@ -486,7 +490,7 @@ private:
   // the decoder thread, and the state machine for that thread keeps
   // a pointer to this reader. This is safe as the only methods called
   // are threadsafe (via the threadsafe nsMediaStream).
-  nsChannelReader* mReader;
+  nsAutoPtr<nsChannelReader> mReader;
 
   // Monitor for detecting when the video play state changes. A call
   // to Wait on this monitor will block the thread until the next
@@ -499,11 +503,16 @@ private:
   // must call NotifyAll on the monitor so the decode thread can wake up.
   PlayState mPlayState;
 
-  // The state to change to after a seek or load operation. It is
-  // protected by the monitor mMonitor. This monitor must be acquired
-  // when reading or writing the state. Any change to the state must
-  // call NotifyAll on the monitor.
-  PlayState mNextState;
+  // The state to change to after a seek or load operation. It must only
+  // be changed from the main thread. The decoder monitor must be acquired
+  // when writing to the state, or when reading from a non-main thread.
+  // Any change to the state must call NotifyAll on the monitor.
+  PlayState mNextState;	
+
+  // Flags if we've called Stop(). Prevents multiple events being
+  // sent to call Shutdown(). Accessed on the main thread
+  // only.
+  PRPackedBool mIsStopping;
 };
 
 #endif

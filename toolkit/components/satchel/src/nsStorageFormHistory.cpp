@@ -413,6 +413,27 @@ nsFormHistory::RemoveAllEntries()
 
 
 NS_IMETHODIMP
+nsFormHistory::RemoveEntriesByTimeframe(PRInt64 aStartTime, PRInt64 aEndTime)
+{
+  nsCOMPtr<mozIStorageStatement> stmt;
+  nsresult rv = mDBConn->CreateStatement(NS_LITERAL_CSTRING(
+    "DELETE FROM moz_formhistory "
+    "WHERE firstUsed >= ?1 "
+    "AND firstUsed <= ?2"), getter_AddRefs(stmt));
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  // Bind the times and execute statement.
+  rv = stmt->BindInt64Parameter(0, aStartTime);
+  NS_ENSURE_SUCCESS(rv, rv);
+  rv = stmt->BindInt64Parameter(1, aEndTime);
+  NS_ENSURE_SUCCESS(rv, rv);
+  rv = stmt->Execute();
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  return NS_OK;
+}
+
+NS_IMETHODIMP
 nsFormHistory::GetDBConnection(mozIStorageConnection **aResult)
 {
   NS_ADDREF(*aResult = mDBConn);
