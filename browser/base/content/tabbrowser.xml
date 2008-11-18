@@ -194,6 +194,9 @@
       <field name="mProgressListeners">
         []
       </field>
+      <field name="mTabsProgressListeners">
+        []
+      </field>
       <field name="mTabListeners">
         []
       </field>
@@ -305,7 +308,12 @@
                                          aCurSelfProgress, aMaxSelfProgress,
                                          aCurTotalProgress, aMaxTotalProgress)
             {
-              if (!this.mBlank && this.mTabBrowser.mCurrentTab == this.mTab) {
+              this.mTotalProgress = aMaxTotalProgress ? aCurTotalProgress / aMaxTotalProgress : 0;
+
+              if (this.mBlank)
+                return;
+
+              if (this.mTabBrowser.mCurrentTab == this.mTab) {
                 for (var i = 0; i < this.mTabBrowser.mProgressListeners.length; i++) {
                   var p = this.mTabBrowser.mProgressListeners[i];
                   if (p)
@@ -320,7 +328,18 @@
                 }
               }
 
-              this.mTotalProgress = aMaxTotalProgress ? aCurTotalProgress / aMaxTotalProgress : 0;
+              for (var i = 0; i < this.mTabBrowser.mTabsProgressListeners.length; i++) {
+                var p = this.mTabBrowser.mTabsProgressListeners[i];
+                if (p)
+                  try {
+                    p.onProgressChange(this.mBrowser, aWebProgress, aRequest,
+                                       aCurSelfProgress, aMaxSelfProgress,
+                                       aCurTotalProgress, aMaxTotalProgress);
+                  } catch (e) {
+                    // don't inhibit other listeners or following code
+                    Components.utils.reportError(e);
+                  }
+              }
             },
 
             onProgressChange64 : function (aWebProgress, aRequest,
@@ -429,6 +448,17 @@
                 }
               }
 
+              for (var i = 0; i < this.mTabBrowser.mTabsProgressListeners.length; i++) {
+                var p = this.mTabBrowser.mTabsProgressListeners[i];
+                if (p)
+                  try {
+                    p.onStateChange(this.mBrowser, aWebProgress, aRequest, aStateFlags, aStatus);
+                  } catch (e) {
+                    // don't inhibit other listeners or following code
+                    Components.utils.reportError(e);
+                  }
+              }
+
               if (aStateFlags & (nsIWebProgressListener.STATE_START |
                                  nsIWebProgressListener.STATE_STOP)) {
                 // reset cached temporary values at beginning and end
@@ -452,7 +482,10 @@
               // changing location, clear out the missing plugins list
               this.mBrowser.missingPlugins = null;
 
-              if (!this.mBlank && this.mTabBrowser.mCurrentTab == this.mTab) {
+              if (this.mBlank)
+                return;
+
+              if (this.mTabBrowser.mCurrentTab == this.mTab) {
                 for (var i = 0; i < this.mTabBrowser.mProgressListeners.length; i++) {
                   var p = this.mTabBrowser.mProgressListeners[i];
                   if (p)
@@ -463,6 +496,17 @@
                       Components.utils.reportError(e);
                     }
                 }
+              }
+
+              for (var i = 0; i < this.mTabBrowser.mTabsProgressListeners.length; i++) {
+                var p = this.mTabBrowser.mTabsProgressListeners[i];
+                if (p)
+                  try {
+                    p.onLocationChange(this.mBrowser, aWebProgress, aRequest, aLocation);
+                  } catch (e) {
+                    // don't inhibit other listeners
+                    Components.utils.reportError(e);
+                  }
               }
             },
 
@@ -484,6 +528,17 @@
                 }
               }
 
+              for (var i = 0; i < this.mTabBrowser.mTabsProgressListeners.length; i++) {
+                var p = this.mTabBrowser.mTabsProgressListeners[i];
+                if (p)
+                  try {
+                    p.onStatusChange(this.mBrowser, aWebProgress, aRequest, aStatus, aMessage);
+                  } catch (e) {
+                    // don't inhibit other listeners or following code
+                    Components.utils.reportError(e);
+                  }
+              }
+
               this.mMessage = aMessage;
             },
 
@@ -501,26 +556,52 @@
                     }
                 }
               }
+
+              for (var i = 0; i < this.mTabBrowser.mTabsProgressListeners.length; i++) {
+                var p = this.mTabBrowser.mTabsProgressListeners[i];
+                if (p)
+                  try {
+                    p.onSecurityChange(this.mBrowser, aWebProgress, aRequest, aState);
+                  } catch (e) {
+                    // don't inhibit other listeners
+                    Components.utils.reportError(e);
+                  }
+              }
             },
 
-             onRefreshAttempted : function(aWebProgress, aURI, aDelay, aSameURI)
-             {
-               var allowRefresh = true;
-               for (var i = 0; i < this.mTabBrowser.mProgressListeners.length; i++) {
-                 var p = this.mTabBrowser.mProgressListeners[i];
-                 if (p && "onRefreshAttempted" in p) {
-                   try {
-                     if (!p.onRefreshAttempted(aWebProgress, aURI, aDelay, aSameURI))
-                       allowRefresh = false;
-                    } catch (e) {
-                      // don't inhibit other listeners or following code
-                      Components.utils.reportError(e);
-                    }
-                 }
-               }
-               return allowRefresh;
-             },
- 
+            onRefreshAttempted : function(aWebProgress, aURI, aDelay, aSameURI)
+            {
+              var allowRefresh = true;
+              if (this.mTabBrowser.mCurrentTab == this.mTab) {
+                for (var i = 0; i < this.mTabBrowser.mProgressListeners.length; i++) {
+                  var p = this.mTabBrowser.mProgressListeners[i];
+                  if (p && "onRefreshAttempted" in p) {
+                    try {
+                      if (!p.onRefreshAttempted(aWebProgress, aURI, aDelay, aSameURI))
+                        allowRefresh = false;
+                     } catch (e) {
+                       // don't inhibit other listeners or following code
+                       Components.utils.reportError(e);
+                     }
+                  }
+                }
+              }
+
+              for (var i = 0; i < this.mTabBrowser.mTabsProgressListeners.length; i++) {
+                var p = this.mTabBrowser.mTabsProgressListeners[i];
+                if (p && "onRefreshAttempted" in p) {
+                  try {
+                    if (!p.onRefreshAttempted(this.mBrowser, aWebProgress, aURI, aDelay, aSameURI))
+                      allowRefresh = false;
+                   } catch (e) {
+                     // don't inhibit other listeners or following code
+                     Components.utils.reportError(e);
+                   }
+                }
+              }
+              return allowRefresh;
+            },
+
             QueryInterface : function(aIID)
             {
               if (aIID.equals(Components.interfaces.nsIWebProgressListener) ||
@@ -555,8 +636,21 @@
 
             this.updateIcon(aTab);
 
-            for (var i = 0; i < this.mProgressListeners.length; i++) {
-              var p = this.mProgressListeners[i];
+            if (browser == this.mCurrentBrowser) {
+              for (var i = 0; i < this.mProgressListeners.length; i++) {
+                var p = this.mProgressListeners[i];
+                if ('onLinkIconAvailable' in p)
+                  try {
+                    p.onLinkIconAvailable(browser);
+                  } catch (e) {
+                    // don't inhibit other listeners
+                    Components.utils.reportError(e);
+                  }
+              }
+            }
+
+            for (var i = 0; i < this.mTabsProgressListeners.length; i++) {
+              var p = this.mTabsProgressListeners[i];
               if ('onLinkIconAvailable' in p)
                 try {
                   p.onLinkIconAvailable(browser);
@@ -1660,6 +1754,24 @@
               }
             }
          ]]>
+        </body>
+      </method>
+
+      <method name="addTabsProgressListener">
+        <parameter name="aListener"/>
+        <body>
+          this.mTabsProgressListeners.push(aListener);
+        </body>
+      </method>
+
+      <method name="removeTabsProgressListener">
+        <parameter name="aListener"/>
+        <body>
+        <![CDATA[
+          var pos = this.mTabsProgressListeners.indexOf(aListener);
+          if (pos >= 0)
+            this.mTabsProgressListeners.splice(pos, 1);
+        ]]>
         </body>
       </method>
 
