@@ -4159,9 +4159,15 @@ var XULBrowserWindow = {
     if (level) {
       this.securityButton.setAttribute("level", level);
       this.securityButton.hidden = false;
+      // We don't style the Location Bar based on the the 'level' attribute
+      // anymore, but still set it for third-party themes.
+      if (gURLBar)
+        gURLBar.setAttribute("level", level);
     } else {
       this.securityButton.hidden = true;
       this.securityButton.removeAttribute("level");
+      if (gURLBar)
+        gURLBar.removeAttribute("level");
     }
 
     if (setHost && this._host)
