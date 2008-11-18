@@ -4,6 +4,7 @@ var now_uSec = Date.now() * 1000;
 const dm = Cc["@mozilla.org/download-manager;1"].getService(Ci.nsIDownloadManager);
 const bhist = Cc["@mozilla.org/browser/global-history;2"].getService(Ci.nsIBrowserHistory);
 const iosvc = Cc["@mozilla.org/network/io-service;1"].getService(Ci.nsIIOService);
+const formhist = Cc["@mozilla.org/satchel/form-history;1"].getService(Ci.nsIFormHistory2);
 
 Cc["@mozilla.org/moz/jssubscript-loader;1"].getService(Components.interfaces.mozIJSSubScriptLoader)
                                            .loadSubScript("chrome://browser/content/sanitize.js");
@@ -13,6 +14,7 @@ function test() {
   var hoursSinceMidnight = new Date().getHours();
 
   setupHistory();
+  setupFormHistory();
   setupDownloads();
   
   // Should test cookies here, but nsICookieManager/nsICookieService
@@ -28,7 +30,7 @@ function test() {
   itemPrefs.setBoolPref("downloads", true);
   itemPrefs.setBoolPref("cache", false);
   itemPrefs.setBoolPref("cookies", false);
-  itemPrefs.setBoolPref("formdata", false);
+  itemPrefs.setBoolPref("formdata", true);
   itemPrefs.setBoolPref("offlineApps", false);
   itemPrefs.setBoolPref("passwords", false);
   itemPrefs.setBoolPref("sessions", false);
@@ -46,6 +48,13 @@ function test() {
     ok(bhist.isVisited(uri("http://today.com")), "Pretend visit to today.com should still exist");
   ok(bhist.isVisited(uri("http://before-today.com")), "Pretend visit to before-today.com should still exist");
   
+  ok(!formhist.nameExists("1hour"), "1hour form entry should be deleted");
+  ok(formhist.nameExists("2hour"), "2hour form entry should still exist");
+  ok(formhist.nameExists("4hour"), "4hour form entry should still exist");
+  if(hoursSinceMidnight > 1)
+    ok(formhist.nameExists("today"), "today form entry should still exist");
+  ok(formhist.nameExists("b4today"), "b4today form entry should still exist");
+
   ok(!downloadExists(5555551), "<1 hour download should now be deleted");
   ok(downloadExists(5555550), "Year old download should still be present");
   ok(downloadExists(5555552), "<2 hour old download should still be present");
@@ -64,6 +73,13 @@ function test() {
     ok(bhist.isVisited(uri("http://today.com")), "Pretend visit to today.com should still exist");
   ok(bhist.isVisited(uri("http://before-today.com")), "Pretend visit to before-today.com should still exist");
   
+  ok(!formhist.nameExists("2hour"), "2hour form entry should be deleted");
+  ok(formhist.nameExists("4hour"), "4hour form entry should still exist");
+  if(hoursSinceMidnight > 2)
+    ok(formhist.nameExists("today"), "today form entry should still exist");
+  ok(formhist.nameExists("b4today"), "b4today form entry should still exist");
+
+  ok(formhist.nameExists("b4today"), "b4today form entry should still exist");
   ok(!downloadExists(5555552), "<2 hour old download should now be deleted");
   ok(downloadExists(5555550), "Year old download should still be present");
   ok(downloadExists(5555553), "<4 hour old download should still be present");
@@ -79,6 +95,11 @@ function test() {
     ok(bhist.isVisited(uri("http://today.com")), "Pretend visit to today.com should still exist");
   ok(bhist.isVisited(uri("http://before-today.com")), "Pretend visit to before-today.com should still exist");
   
+  ok(!formhist.nameExists("4hour"), "4hour form entry should be deleted");
+  if(hoursSinceMidnight > 4)
+    ok(formhist.nameExists("today"), "today form entry should still exist");
+  ok(formhist.nameExists("b4today"), "b4today form entry should still exist");
+
   ok(!downloadExists(5555553), "<4 hour old download should now be deleted");
   ok(downloadExists(5555550), "Year old download should still be present");
   if(hoursSinceMidnight > 4)
@@ -91,6 +112,9 @@ function test() {
   ok(!bhist.isVisited(uri("http://today.com")), "Pretend visit to today.com should now be deleted");
   ok(bhist.isVisited(uri("http://before-today.com")), "Pretend visit to before-today.com should still exist");
 
+  ok(!formhist.nameExists("today"), "today form entry should be deleted");
+  ok(formhist.nameExists("b4today"), "b4today form entry should still exist");
+
   ok(!downloadExists(5555554), "'Today' download should now be deleted");
   ok(downloadExists(5555550), "Year old download should still be present");
 
@@ -99,6 +123,8 @@ function test() {
   s.sanitize();
   
   ok(!bhist.isVisited(uri("http://before-today.com")), "Pretend visit to before-today.com should now be deleted");
+
+  ok(!formhist.nameExists("b4today"), "b4today form entry should be deleted");
   
   ok(!downloadExists(5555550), "Year old download should now be deleted");
 
@@ -116,7 +142,7 @@ function setupHistory() {
   bhist.addPageWithDetails(uri("http://today.com/"), "Today", today.valueOf() * 1000);
   
   let lastYear = new Date();
-  lastYear.setFullYear(lastYear.year - 1);
+  lastYear.setFullYear(lastYear.getFullYear() - 1);
   bhist.addPageWithDetails(uri("http://before-today.com/"), "Before Today", lastYear.valueOf() * 1000);
   
   // Confirm everything worked
@@ -125,6 +151,51 @@ function setupHistory() {
   ok(bhist.isVisited(uri("http://4hour.com")), "Pretend visit to 4hour.com should exist");
   ok(bhist.isVisited(uri("http://today.com")), "Pretend visit to today.com should exist");
   ok(bhist.isVisited(uri("http://before-today.com")), "Pretend visit to before-today.com should exist");
+}
+
+function setupFormHistory() {
+  // Make sure we've got a clean DB to start with.
+  formhist.removeAllEntries();
+
+  // Add the entries we'll be testing.
+  formhist.addEntry("1hour", "1h");
+  formhist.addEntry("2hour", "2h");
+  formhist.addEntry("4hour", "4h");
+  formhist.addEntry("today", "1d");
+  formhist.addEntry("b4today", "1y");
+
+  // Artifically age the entries to the proper vintage.
+  let db = formhist.DBConnection;
+  let timestamp = now_uSec - 45*60*1000000;
+  db.executeSimpleSQL("UPDATE moz_formhistory SET firstUsed = " +
+                      timestamp +  " WHERE fieldname = '1hour'");
+  timestamp = now_uSec - 90*60*1000000;
+  db.executeSimpleSQL("UPDATE moz_formhistory SET firstUsed = " +
+                      timestamp +  " WHERE fieldname = '2hour'");
+  timestamp = now_uSec - 180*60*1000000;
+  db.executeSimpleSQL("UPDATE moz_formhistory SET firstUsed = " +
+                      timestamp +  " WHERE fieldname = '4hour'");
+
+  let today = new Date();
+  today.setHours(0);
+  today.setMinutes(0);
+  today.setSeconds(1);
+  timestamp = today.valueOf() * 1000;
+  db.executeSimpleSQL("UPDATE moz_formhistory SET firstUsed = " +
+                      timestamp +  " WHERE fieldname = 'today'");
+
+  let lastYear = new Date();
+  lastYear.setFullYear(lastYear.getFullYear() - 1);
+  timestamp = lastYear.valueOf() * 1000;
+  db.executeSimpleSQL("UPDATE moz_formhistory SET firstUsed = " +
+                      timestamp +  " WHERE fieldname = 'b4today'");
+
+  // Sanity check.
+  ok(formhist.nameExists("1hour"), "Checking for 1hour form history entry creation");
+  ok(formhist.nameExists("2hour"), "Checking for 2hour form history entry creation");
+  ok(formhist.nameExists("4hour"), "Checking for 4hour form history entry creation");
+  ok(formhist.nameExists("today"), "Checking for today form history entry creation");
+  ok(formhist.nameExists("b4today"), "Checking for b4today form history entry creation");
 }
 
 function setupDownloads() {
@@ -226,7 +297,7 @@ function setupDownloads() {
   
   // Add "before today" download
   let lastYear = new Date();
-  lastYear.setFullYear(lastYear.year - 1);
+  lastYear.setFullYear(lastYear.getFullYear() - 1);
   data = {
     id:   "5555550",
     name: "fakefile-old",
