@@ -315,6 +315,12 @@ struct JSTraceableNative {
 
 #define _JS_DEFINE_CALLINFO_n(n, args)  JS_DEFINE_CALLINFO_##n args
 
+jsdouble FASTCALL
+js_StringToNumber(JSContext* cx, JSString* str);
+
+jsdouble FASTCALL
+js_BooleanOrUndefinedToNumber(JSContext* cx, int32 unboxed);
+
 #else
 
 #define JS_DEFINE_CALLINFO_1(linkage, rt, op, at0, cse, fold)

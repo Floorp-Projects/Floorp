@@ -334,6 +334,8 @@ class TraceRecorder : public avmplus::GCObject {
     nanojit::LIns* stack(int n);
     void stack(int n, nanojit::LIns* i);
 
+    nanojit::LIns* alu(nanojit::LOpcode op, jsdouble v0, jsdouble v1, 
+                       nanojit::LIns* s0, nanojit::LIns* s1);
     nanojit::LIns* f2i(nanojit::LIns* f);
     nanojit::LIns* makeNumberInt32(nanojit::LIns* f);
     nanojit::LIns* stringify(jsval& v);

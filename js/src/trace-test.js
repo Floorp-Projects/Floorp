@@ -36,6 +36,7 @@ function jitstatHandler(f)
     f("treesTrashed");
     f("slotPromoted");
     f("unstableLoopVariable");
+    f("noCompatInnerTrees");
     f("breakLoopExits");
     f("returnLoopExits");
 }
@@ -2500,6 +2501,122 @@ function testMulOverflow() {
 }
 testMulOverflow.expected = "-1073741824,-1073741824,-1073741824,-1073741824,-1073741824";
 test(testMulOverflow);
+
+function testThinLoopDemote() {
+    function f()
+    {
+        var k = 1;
+        for (var n = 0; n < 2; n++) {
+            k = (k * 10);
+        }
+        return k;
+    }
+    f();
+    return f();
+}
+testThinLoopDemote.expected = 100;
+testThinLoopDemote.jitstats = {
+    recorderStarted: 3,
+    recorderAborted: 0,
+    traceCompleted: 1,
+    traceTriggered: 0,
+    unstableLoopVariable: 2
+};
+test(testThinLoopDemote);
+
+var global = this;
+function testWeirdDateParseOuter()
+{
+    var vDateParts = ["11", "17", "2008"];
+    var out = [];
+    for (var vI = 0; vI < vDateParts.length; vI++) {
+	out.push(testWeirdDateParseInner(vDateParts[vI]));
+    }
+    /* Mutate the global shape so we fall off trace; this causes
+     * additional oddity */
+    global.x = Math.random();
+    return out;
+} 
+function testWeirdDateParseInner(pVal)
+{
+    var vR = 0;
+    for (var vI = 0; vI < pVal.length; vI++) {
+	var vC = pVal.charAt(vI);
+	if ((vC >= '0') && (vC <= '9'))
+	    vR = (vR * 10) + parseInt(vC);
+    }
+    return vR;
+}
+function testWeirdDateParse() {
+    var result = [];
+    result.push(testWeirdDateParseInner("11"));
+    result.push(testWeirdDateParseInner("17"));
+    result.push(testWeirdDateParseInner("2008"));
+    result.push(testWeirdDateParseInner("11"));
+    result.push(testWeirdDateParseInner("17"));
+    result.push(testWeirdDateParseInner("2008"));
+    result = result.concat(testWeirdDateParseOuter());
+    result = result.concat(testWeirdDateParseOuter());
+    result.push(testWeirdDateParseInner("11"));
+    result.push(testWeirdDateParseInner("17"));
+    result.push(testWeirdDateParseInner("2008"));
+    return result.join(",");
+}
+testWeirdDateParse.expected = "11,17,2008,11,17,2008,11,17,2008,11,17,2008,11,17,2008";
+testWeirdDateParse.jitstats = {
+    recorderStarted: 10,
+    recorderAborted: 1,
+    traceCompleted: 5,
+    traceTriggered: 13,
+    unstableLoopVariable: 6,
+    noCompatInnerTrees: 1
+};
+test(testWeirdDateParse);
+
+function testUndemotableBinaryOp() {
+    var out = [];
+    for (let j = 0; j < 5; ++j) { out.push(6 - ((void 0) ^ 0x80000005)); }
+    return out.join(",");
+}
+testUndemotableBinaryOp.expected = "2147483649,2147483649,2147483649,2147483649,2147483649";
+test(testUndemotableBinaryOp);
+
+function testNullRelCmp() {
+    var out = [];
+    for(j=0;j<3;++j) { out.push(3 > null); out.push(3 < null); out.push(0 == null); out.push(3 == null); }
+    return out.join(",");
+}
+testNullRelCmp.expected = "true,false,false,false,true,false,false,false,true,false,false,false";
+test(testNullRelCmp);
+
+function testEqFalseEmptyString() {
+    var x = [];
+    for (var i=0;i<5;++i) x.push(false == "");
+    return x.join(",");
+}
+testEqFalseEmptyString.expected = "true,true,true,true,true";
+test(testEqFalseEmptyString);
+
+function testIncDec2(ii) {
+    var x = [];
+    for (let j=0;j<5;++j) { 
+	ii=j;
+	jj=j; 
+	var kk=j; 
+	x.push(ii--);
+	x.push(jj--); 
+	x.push(kk--); 
+	x.push(++ii);
+	x.push(++jj); 
+	x.push(++kk); 
+    }
+    return x.join(",");
+}
+function testIncDec() {
+    return testIncDec2(0);
+}
+testIncDec.expected = "0,0,0,0,0,0,1,1,1,1,1,1,2,2,2,2,2,2,3,3,3,3,3,3,4,4,4,4,4,4";
+test(testIncDec);
 
 /* NOTE: Keep this test last, since it screws up all for...in loops after it. */
 function testGlobalProtoAccess() {
