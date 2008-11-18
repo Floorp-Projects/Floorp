@@ -128,13 +128,12 @@ nsresult nsDefaultStreamStrategy::Close()
   if (mChannel) {
     mChannel->Cancel(NS_BINDING_ABORTED);
     mChannel = nsnull;
-
+  }
+  if (mPipeInput) {
     mPipeInput->Close();
     mPipeInput = nsnull;
-
-    mListener = nsnull;
   }
-
+  mListener = nsnull;
   return NS_OK;
 }
 
@@ -466,13 +465,12 @@ nsresult nsHttpStreamStrategy::Close()
   if (mChannel) {
     mChannel->Cancel(NS_BINDING_ABORTED);
     mChannel = nsnull;
-
+  }
+  if (mPipeInput) {
     mPipeInput->Close();
     mPipeInput = nsnull;
-
-    mListener = nsnull;
   }
-
+  mListener = nsnull;
   return NS_OK;
 }
 
