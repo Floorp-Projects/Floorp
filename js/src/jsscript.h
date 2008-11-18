@@ -156,13 +156,13 @@ StackDepth(JSScript *script)
     (JS_ASSERT((script)->trynotesOffset != 0),                                \
      (JSTryNoteArray *)((uint8 *)(script) + (script)->trynotesOffset))
 
-#define JS_GET_SCRIPT_ATOM(script, index, atom)                               \
+#define JS_GET_SCRIPT_ATOM(script_, index, atom)                              \
     JS_BEGIN_MACRO                                                            \
-        JSAtomMap *atoms_ = &(script)->atomMap;                               \
-        if (cx->fp && cx->fp->imacpc) {                                       \
+        if (cx->fp && cx->fp->imacpc && cx->fp->script == script_) {          \
             JS_ASSERT((size_t)(index) < js_common_atom_count);                \
             (atom) = COMMON_ATOMS_START(&cx->runtime->atomState)[index];      \
         } else {                                                              \
+            JSAtomMap *atoms_ = &(script_)->atomMap;                          \
             JS_ASSERT((uint32)(index) < atoms_->length);                      \
             (atom) = atoms_->vector[index];                                   \
         }                                                                     \
