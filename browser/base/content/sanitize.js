@@ -230,7 +230,10 @@ Sanitizer.prototype = {
 
         var formHistory = Components.classes["@mozilla.org/satchel/form-history;1"]
                                     .getService(Components.interfaces.nsIFormHistory2);
-        formHistory.removeAllEntries();
+        if (this.range)
+          formHistory.removeEntriesByTimeframe(this.range[0], this.range[1]);
+        else
+          formHistory.removeAllEntries();
       },
 
       get canClear()

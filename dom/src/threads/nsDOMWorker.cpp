@@ -1025,7 +1025,7 @@ nsDOMWorker::CompileGlobalObject(JSContext* aCx)
   NS_ASSERTION(!JS_GetGlobalObject(aCx), "Global object should be unset!");
 
   nsRefPtr<nsDOMWorkerScope> scope = new nsDOMWorkerScope(this);
-  NS_ENSURE_TRUE(scope, NS_ERROR_OUT_OF_MEMORY);
+  NS_ENSURE_TRUE(scope, PR_FALSE);
 
   nsISupports* scopeSupports = NS_ISUPPORTS_CAST(nsIWorkerScope*, scope);
 

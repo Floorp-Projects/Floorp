@@ -960,3 +960,4 @@ fails-if(MOZ_WIDGET_TOOLKIT=="cocoa") == 456147.xul 456147-ref.html # bug 456147
 fails == 461512-1.html 461512-1-ref.html # Bug 461512
 == 463204-1.html 463204-1-ref.html
 == 463217-1.xul 463217-1-ref.xul
+== 464811-1.html 464811-1-ref.html

@@ -154,6 +154,7 @@
           newMarginTop += sbo.y - this._scrollBox.boxObject.y;
           this._indicatorBar.firstChild.style.marginTop = newMarginTop + "px";
           this._indicatorBar.hidden = false;
+          aEvent.stopPropagation();
         ]]></body>
       </method>
 
@@ -212,6 +213,7 @@
           this._rootView._controller.setDataTransfer(aEvent);
 
           this.setAttribute("dragstart", "true");
+          aEvent.stopPropagation();
         ]]></body>
       </method>
 
@@ -228,6 +230,7 @@
             return;
 
           PlacesControllerDragHelper.onDrop(dropPoint.ip);
+          aEvent.stopPropagation();
         ]]></body>
       </method>
 
@@ -521,7 +524,7 @@
           window.XULBrowserWindow.setOverLink("", null);
       ]]></handler>
       <handler event="draggesture" action="if (event.target.node) nsDragAndDrop.startDrag(event, this);"/>
-      <handler event="dragdrop" action="nsDragAndDrop.drop(event, this);"/>
+      <handler event="drop" action="nsDragAndDrop.drop(event, this);"/>
       <handler event="dragover" action="nsDragAndDrop.dragOver(event, this);"/>
       <handler event="dragexit" action="nsDragAndDrop.dragExit(event, this);"/>
     </handlers>
