@@ -1111,6 +1111,7 @@ function prepareForStartup() {
 
   // hook up UI through progress listener
   gBrowser.addProgressListener(window.XULBrowserWindow, Components.interfaces.nsIWebProgress.NOTIFY_ALL);
+  gBrowser.addTabsProgressListener(window.TabsProgressListener);
 
   // setup our common DOMLinkAdded listener
   gBrowser.addEventListener("DOMLinkAdded", DOMLinkHandler, false);
@@ -1339,6 +1340,7 @@ function BrowserShutdown()
 
   try {
     gBrowser.removeProgressListener(window.XULBrowserWindow);
+    gBrowser.removeTabsProgressListener(window.TabsProgressListener);
   } catch (ex) {
   }
 
@@ -3796,8 +3798,7 @@ var XULBrowserWindow = {
   },
   
   onLinkIconAvailable: function (aBrowser) {
-    if (gProxyFavIcon && gBrowser.mCurrentBrowser == aBrowser &&
-        gBrowser.userTypedValue === null)
+    if (gProxyFavIcon && gBrowser.userTypedValue === null)
       PageProxySetIcon(aBrowser.mIconURL); // update the favicon in the URL bar
   },
 
@@ -4039,7 +4040,26 @@ var XULBrowserWindow = {
     this.updateStatusField();
   },
 
-  onRefreshAttempted: function (aWebProgress, aURI, aDelay, aSameURI) {
+  onSecurityChange: function (aBrowser, aWebProgress, aRequest, aState) {
+  }
+}
+
+var TabsProgressListener = {
+  onProgressChange: function (aBrowser, aWebProgress, aRequest,
+                              aCurSelfProgress, aMaxSelfProgress,
+                              aCurTotalProgress, aMaxTotalProgress) {
+  },
+
+  onStateChange: function (aBrowser, aWebProgress, aRequest, aStateFlags, aStatus) {
+  },
+
+  onLocationChange: function (aBrowser, aWebProgress, aRequest, aLocationURI) {
+  },
+  
+  onStatusChange: function (aBrowser, aWebProgress, aRequest, aStatus, aMessage) {
+  },
+
+  onRefreshAttempted: function (aBrowser, aWebProgress, aURI, aDelay, aSameURI) {
     if (gPrefService.getBoolPref("accessibility.blockautorefresh")) {
       let brandBundle = document.getElementById("bundle_brand");
       let brandShortName = brandBundle.getString("brandShortName");
@@ -4051,12 +4071,11 @@ var XULBrowserWindow = {
         gNavigatorBundle.getFormattedString(aSameURI ? "refreshBlocked.refreshLabel"
                                                      : "refreshBlocked.redirectLabel",
                                             [brandShortName]);
-      let topBrowser = getBrowserFromContentWindow(aWebProgress.DOMWindow.top);
       let docShell = aWebProgress.DOMWindow
                                  .QueryInterface(Ci.nsIInterfaceRequestor)
                                  .getInterface(Ci.nsIWebNavigation)
                                  .QueryInterface(Ci.nsIDocShell);
-      let notificationBox = gBrowser.getNotificationBox(topBrowser);
+      let notificationBox = gBrowser.getNotificationBox(aBrowser);
       let notification = notificationBox.getNotificationWithValue("refresh-blocked");
       if (notification) {
         notification.label = message;
