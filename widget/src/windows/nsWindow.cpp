@@ -7944,6 +7944,9 @@ nsWindow :: DealWithPopups ( HWND inWnd, UINT inMsg, WPARAM inWParam, LPARAM inL
       else
 #endif
       if ( rollup ) {
+        // gRollupConsumeRollupEvent may be modified by
+        // nsIRollupListener::Rollup.
+        PRBool consumeRollupEvent = gRollupConsumeRollupEvent;
         // only need to deal with the last rollup for left mouse down events.
         gRollupListener->Rollup(inMsg == WM_LBUTTONDOWN ? &mLastRollup : nsnull);
 
@@ -7956,7 +7959,7 @@ nsWindow :: DealWithPopups ( HWND inWnd, UINT inMsg, WPARAM inWParam, LPARAM inL
         // false allows the event to be dispatched
         //
         // So if we are NOT supposed to be consuming events, let it go through
-        if (gRollupConsumeRollupEvent && inMsg != WM_RBUTTONDOWN) {
+        if (consumeRollupEvent && inMsg != WM_RBUTTONDOWN) {
           *outResult = TRUE;
           return TRUE;
         }
