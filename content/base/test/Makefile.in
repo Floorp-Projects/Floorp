@@ -91,6 +91,8 @@ _TEST_FILES = 	test_bug5141.html \
 		test_bug254337.html \
 		test_bug276037-1.html \
 		test_bug276037-2.xhtml \
+		test_bug298064.html \
+		bug298064-subframe.html \
 		test_bug308484.html \
 		test_bug311681.xml \
 		test_bug322317.html \
