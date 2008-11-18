@@ -1024,6 +1024,7 @@ namespace nanojit
 		RegisterMask allow = GpRegs;
 		bool forceReg = (op == LIR_mul || !rhs->isconst());
 
+        /* Even if lhs == rhs && forceReg, shift instructions require ECX on the rhs. */
 		if ((lhs != rhs || (op == LIR_lsh || op == LIR_rsh || op == LIR_ush)) && forceReg)
 		{
 			if ((rb = asm_binop_rhs_reg(ins)) == UnknownReg) {
