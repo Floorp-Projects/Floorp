@@ -190,7 +190,7 @@ js_StringToInt32(JSContext* cx, JSString* str)
 static inline JSBool
 js_Int32ToId(JSContext* cx, int32 index, jsid* id)
 {
-    if (unsigned(index) <= JSVAL_INT_MAX) {
+    if (index <= JSVAL_INT_MAX) {
         *id = INT_TO_JSID(index);
         return JS_TRUE;
     }
@@ -402,8 +402,8 @@ JSBool FASTCALL
 js_HasNamedProperty(JSContext* cx, JSObject* obj, JSString* idstr)
 {
     jsid id;
-    if (!js_ValueToStringId(cx, STRING_TO_JSVAL(idstr), &id))
-        return JS_FALSE;
+    if (!obj || !js_ValueToStringId(cx, STRING_TO_JSVAL(idstr), &id))
+        return JSVAL_TO_BOOLEAN(JSVAL_VOID);
 
     JSObject* obj2;
     JSProperty* prop;
@@ -418,8 +418,9 @@ JSBool FASTCALL
 js_HasNamedPropertyInt32(JSContext* cx, JSObject* obj, int32 index)
 {
     jsid id;
-    if (!js_Int32ToId(cx, index, &id))
+    if (!obj || !js_Int32ToId(cx, index, &id))
         return JSVAL_TO_BOOLEAN(JSVAL_VOID);
+
     JSObject* obj2;
     JSProperty* prop;
     if (!OBJ_LOOKUP_PROPERTY(cx, obj, id, &obj2, &prop))
