@@ -540,6 +540,8 @@ MAKE_CTOR(CreateCanvasRenderingContext2D, nsIDOMCanvasRenderingContext2D, NS_New
 
 NS_GENERIC_FACTORY_CONSTRUCTOR_INIT(nsStyleSheetService, Init)
 
+NS_GENERIC_FACTORY_CONSTRUCTOR(nsJSURI)
+
 // views are not refcounted, so this is the same as
 // NS_GENERIC_FACTORY_CONSTRUCTOR without the NS_ADDREF/NS_RELEASE
 #define NS_GENERIC_FACTORY_CONSTRUCTOR_NOREFS(_InstanceClass)                 \
@@ -1255,6 +1257,10 @@ static const nsModuleComponentInfo gComponents[] = {
     NS_JSPROTOCOLHANDLER_CID,
     NS_JSPROTOCOLHANDLER_CONTRACTID,
     nsJSProtocolHandler::Create },
+  { "JavaScript URI",
+    NS_JSURI_CID,
+    nsnull,
+    nsJSURIConstructor },
   { "Window Command Table",
     NS_WINDOWCOMMANDTABLE_CID,
     "",

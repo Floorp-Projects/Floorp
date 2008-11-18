@@ -918,6 +918,7 @@ fails == 441259-2.html 441259-2-ref.html # bug 441400
 == 444928-1.html 444928-1-ref.html
 == 444928-2.html 444928-2-ref.html
 != 444928-3.html 444928-3-notref.html
+== 445004-1.html 445004-1-ref.html
 == 446100-1a.html about:blank
 == 446100-1b.html about:blank
 == 446100-1c.html about:blank
