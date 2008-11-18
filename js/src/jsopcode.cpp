@@ -685,7 +685,7 @@ struct JSPrinter {
     JSPackedBool    grouped;        /* in parenthesized expression context */
     JSScript        *script;        /* script being printed */
     jsbytecode      *dvgfence;      /* DecompileExpression fencepost */
-    jsbytecode      **pcstack;      /* DecompileExpression modelled stack */
+    jsbytecode      **pcstack;      /* DecompileExpression modeled stack */
     JSFunction      *fun;           /* interpreted function */
     jsuword         *localNames;    /* argument and variable names */
 };
@@ -4953,7 +4953,7 @@ js_DecompileValueGenerator(JSContext *cx, intN spindex, jsval v,
 
     script = fp->script;
     regs = fp->regs;
-    pc = regs->pc;
+    pc = fp->imacpc ? fp->imacpc : regs->pc;
     if (pc < script->main || script->code + script->length <= pc) {
         JS_NOT_REACHED("bug");
         goto do_fallback;
@@ -4970,7 +4970,7 @@ js_DecompileValueGenerator(JSContext *cx, intN spindex, jsval v,
                   JS_malloc(cx, StackDepth(script) * sizeof *pcstack);
         if (!pcstack)
             return NULL;
-        pcdepth = ReconstructPCStack(cx, script, regs->pc, pcstack);
+        pcdepth = ReconstructPCStack(cx, script, pc, pcstack);
         if (pcdepth < 0)
             goto release_pcstack;
 
@@ -5002,7 +5002,7 @@ js_DecompileValueGenerator(JSContext *cx, intN spindex, jsval v,
                  * that the interpreter uses for GC roots. Assume that it is
                  * fp->pc that caused the exception.
                  */
-                pc = regs->pc;
+                pc = fp->imacpc ? fp->imacpc : regs->pc;
             } else {
                 pc = pcstack[sp - stackBase];
             }
@@ -5014,7 +5014,19 @@ js_DecompileValueGenerator(JSContext *cx, intN spindex, jsval v,
             goto do_fallback;
     }
 
-    name = DecompileExpression(cx, script, fp->fun, pc);
+    {
+        jsbytecode* savepc = regs->pc;
+        jsbytecode* imacpc = fp->imacpc;
+        if (imacpc) {
+            regs->pc = imacpc;
+            fp->imacpc = NULL;
+        }
+        name = DecompileExpression(cx, script, fp->fun, pc);
+        if (imacpc) {
+            regs->pc = savepc;
+            fp->imacpc = imacpc;
+        }
+    }
     if (name != FAILED_EXPRESSION_DECOMPILER)
         return name;
 

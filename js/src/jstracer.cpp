@@ -4226,11 +4226,12 @@ TraceRecorder::call_imacro(jsbytecode* imacro)
     JSStackFrame* fp = cx->fp;
     JSFrameRegs* regs = fp->regs;
 
-    JS_ASSERT(!fp->imacpc);
-    fp->imacpc = regs->pc;
-    fp->flags |= JSFRAME_IMACRO_START;
-    regs->pc = imacro;
-    atoms = COMMON_ATOMS_START(&cx->runtime->atomState);
+    if (!fp->imacpc) {
+        fp->imacpc = regs->pc;
+        fp->flags |= JSFRAME_IMACRO_START;
+        regs->pc = imacro;
+        atoms = COMMON_ATOMS_START(&cx->runtime->atomState);
+    }
     return false;
 }
 
