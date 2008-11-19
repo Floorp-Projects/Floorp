@@ -92,7 +92,7 @@ _TEST_FILES =\
 		test_nsOuterDocAccessible.html \
 		test_textattrs.html \
 		test_textboxes.html \
-		test_textboxes.xul \
+		$(warning test_textboxes.xul temporarily disabled) \
 		testTextboxes.js \
 		test_bug429285.html \
 		test_bug434464.html \
