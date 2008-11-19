@@ -55,10 +55,12 @@ include $(topsrcdir)/config/rules.mk
 # libdir, and includedir, so that the 'make install' will put things
 # mostly in the right places.  The install-runtime-libs target takes
 # care of getting the needed libraries into the 'bin' directory as
-# well as the 'lib' directory.
+# well as the 'lib' directory.  Clearing NSDISTMODE= ensures that we
+# get symlinks (the proper in-tree build behavior), not copies (the
+# default GNU behavior).
 export::
-	$(MAKE) -C $(JS_OBJDIR) install
-	$(MAKE) -C $(JS_OBJDIR) install-runtime-libs libdir=$(DIST)/bin
+	$(MAKE) -C $(JS_OBJDIR) NSDISTMODE= install
+	$(MAKE) -C $(JS_OBJDIR) NSDISTMODE= install-runtime-libs libdir=$(DIST)/bin
 	$(INSTALL) $(IFLAGS2) $(JS_CONFIG) $(SDK_BIN_DIR)
 
 check::
