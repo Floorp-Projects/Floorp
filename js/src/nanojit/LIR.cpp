@@ -1121,7 +1121,7 @@ namespace nanojit
 			*--offs = (uint8_t) l->i.reference(args[i]);
 		NanoAssert((LInsp)offs>=_buf->next());
 		
-#ifdef NANOJIT_64BIT
+#ifndef NANOJIT_64BIT
 		l->i.initOpcode(op==LIR_callh ? LIR_call : op);
 #else
 		l->i.initOpcode(op);
