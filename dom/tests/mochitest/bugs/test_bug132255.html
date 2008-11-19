@@ -1,0 +1,39 @@
+<!DOCTYPE HTML>
+<html>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=132255
+-->
+<head>
+  <title>Test for Bug 132255</title>
+  <script type="application/javascript" src="/MochiKit/MochiKit.js"></script>
+  <script type="application/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
+  <base href="http://localhost:8888/tests/dom/tests/mochitest/">
+</head>
+<body>
+<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=132255">Mozilla Bug 132255</a>
+<p id="display">
+  <iframe src="javascript:'<a href=\'foo.html\'>test-anchor</a>'"></iframe>
+  <iframe src="javascript:'<base href=\'http://example.com/\'><a href=\'foo.html\'>test-anchor</a>'"></iframe>
+</p>
+<div id="content" style="display: none">
+  
+</div>
+<pre id="test">
+<script type="application/javascript">
+
+/** Test for Bug 132255 **/
+SimpleTest.waitForExplicitFinish();
+addLoadEvent(function() {
+  is(window.frames[0].document.links[0].href,
+     window.location.href.replace(/bugs\/test_bug132255\.html/, "foo.html"),
+     "Unexpected anchor href");
+  is(window.frames[1].document.links[0].href,
+     "http://example.com/foo.html",
+     "Unexpected anchor href when base set");
+})
+addLoadEvent(SimpleTest.finish);
+</script>
+</pre>
+</body>
+</html>
