@@ -217,6 +217,13 @@ public:
 
 protected:
   /**
+   * Helper function to check the content policy for a given request.
+   */
+  nsresult CheckContentPolicy(nsScriptLoadRequest *aRequest,
+                              nsISupports *aContext,
+                              const nsAString &aType);
+
+  /**
    * Start a load for aRequest's URI.
    */
   nsresult StartLoad(nsScriptLoadRequest *aRequest, const nsAString &aType);
