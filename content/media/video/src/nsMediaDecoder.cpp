@@ -51,6 +51,7 @@
 #include "gfxImageSurface.h"
 #include "nsPresContext.h"
 #include "nsMediaDecoder.h"
+#include "nsDOMError.h"
 
 #ifdef PR_LOGGING
 // Logging object for decoder
@@ -235,3 +236,7 @@ void nsMediaDecoder::ElementUnavailable()
   mElement = nsnull;
 }
 
+nsHTMLMediaElement* nsMediaDecoder::GetMediaElement()
+{
+  return mElement;
+}
