@@ -48,6 +48,7 @@
 #include "nsAutoPtr.h"
 #include "nsEmbedCID.h"
 #include "mozStoragePrivateHelpers.h"
+#include "nsIXPConnect.h"
 
 #include "sqlite3.h"
 
@@ -92,10 +93,30 @@ mozStorageService::GetSingleton()
     return gStorageService;
 }
 
+nsIXPConnect *mozStorageService::sXPConnect = nsnull;
+
+nsIXPConnect *
+mozStorageService::XPConnect()
+{
+  NS_ASSERTION(gStorageService,
+               "Can not get XPConnect without an instance of our service!");
+
+  if (!sXPConnect) {
+    (void)CallGetService(nsIXPConnect::GetCID(), &sXPConnect);
+    NS_ASSERTION(sXPConnect, "Could not get XPConnect!");
+  }
+  return sXPConnect;
+}
+
 mozStorageService::~mozStorageService()
 {
     gStorageService = nsnull;
     PR_DestroyLock(mLock);
+
+    if (sXPConnect) {
+        NS_RELEASE(sXPConnect);
+        sXPConnect = nsnull;
+    }
 }
 
 nsresult
