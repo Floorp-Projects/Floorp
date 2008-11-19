@@ -46,6 +46,8 @@ include $(topsrcdir)/config/rules.mk
 
 _TEST_FILES	= \
 		test_bug42976.html \
+		test_bug49312.html \
+		iframe_bug49312.html \
 		test_bug159849.html \
 		test_bug291377.html \
 		test_bug308856.html \
