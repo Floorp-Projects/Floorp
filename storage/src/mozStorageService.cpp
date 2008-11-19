@@ -114,7 +114,7 @@ mozStorageService::~mozStorageService()
     PR_DestroyLock(mLock);
 
     if (sXPConnect) {
-        NS_RELEASE(sXPConnect);
+        NS_IF_RELEASE(sXPConnect);
         sXPConnect = nsnull;
     }
 }
