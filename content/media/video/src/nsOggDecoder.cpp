@@ -1213,6 +1213,7 @@ private:
   nsRefPtr<nsOggDecoder> mDecoder;
 };
 
+
 void nsOggDecoder::Shutdown() 
 {
   ChangeState(PLAY_STATE_SHUTDOWN);
