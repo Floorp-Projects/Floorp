@@ -45,11 +45,6 @@ DIRS		= config
 
 include $(DEPTH)/config/autoconf.mk
 
-# This is the appropriate behavior for GNU-style 'make install'.  For
-# Mozilla in-tree behavior, leaving NSDISTMODE unset is the right
-# thing; config/js/Makefile.in takes care of that.
-NSDISTMODE	= copy
-
 MODULE		= js
 LIBRARY_NAME	= mozjs
 GRE_MODULE	= 1
@@ -621,10 +616,10 @@ js-config: js-config.in Makefile $(DEPTH)/config/autoconf.mk $(topsrcdir)/config
 SCRIPTS = js-config
 
 install:: $(INSTALLED_HEADERS)
-	$(INSTALL) $(IFLAGS1) $^ $(includedir)/$(MODULE)
+	$(SYSINSTALL) $(IFLAGS1) $^ $(includedir)/$(MODULE)
 
 install:: $(SCRIPTS) $(PROGRAM)
-	$(INSTALL) $(IFLAGS2) $^ $(bindir)
+	$(SYSINSTALL) $(IFLAGS2) $^ $(bindir)
 
 # The Mozilla top-level makefiles use install-runtime-libs directly to
 # place an additional copy of the libraries in the 'dist/bin'
@@ -632,13 +627,13 @@ install:: $(SCRIPTS) $(PROGRAM)
 install:: install-runtime-libs
 install-runtime-libs:: $(LIBRARY) $(SHARED_LIBRARY) $(IMPORT_LIBRARY)
 ifneq (,$(LIBRARY))
-	$(INSTALL) $(IFLAGS1) $(LIBRARY) $(libdir)
+	$(SYSINSTALL) $(IFLAGS1) $(LIBRARY) $(libdir)
 endif
 ifneq (,$(SHARED_LIBRARY))
-	$(INSTALL) $(IFLAGS2) $(SHARED_LIBRARY) $(libdir)
+	$(SYSINSTALL) $(IFLAGS2) $(SHARED_LIBRARY) $(libdir)
 endif
 ifneq (,$(IMPORT_LIBRARY))
-	$(INSTALL) $(IFLAGS2) $(IMPORT_LIBRARY) $(libdir)
+	$(SYSINSTALL) $(IFLAGS2) $(IMPORT_LIBRARY) $(libdir)
 endif
 
 # Extra dependancies and rules for auto-generated headers
