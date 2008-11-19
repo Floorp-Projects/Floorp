@@ -131,10 +131,6 @@ pref("browser.chrome.image_icons.max_size", 1024);
 
 pref("browser.triple_click_selects_paragraph", true);
 
-// When loading <video> or <audio>, check for Access-Control-Allow-Origin
-// header, and disallow the connection if not present or permitted.
-pref("browser.media.enforce_same_site_origin", false);
-
 // 0 = Off, 1 = Full, 2 = Tagged Images Only. 
 // See eCMSMode in gfx/thebes/public/gfxPlatform.h
 pref("gfx.color_management.mode", 2);
