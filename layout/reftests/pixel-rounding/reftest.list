@@ -32,24 +32,22 @@ random == check-image.html check-image-ref.html # bug 371232
 == background-color-width-left-6.html background-color-width-6.html
 
 
-# The cocoa failures are due to bug 379317
 != border-base-ref.html border-height-10-ref.html
-fails-if(MOZ_WIDGET_TOOLKIT=="cocoa") == border-height-4.html border-base-ref.html
-fails-if(MOZ_WIDGET_TOOLKIT=="cocoa") == border-height-5.html border-height-10-ref.html
-fails-if(MOZ_WIDGET_TOOLKIT=="cocoa") == border-height-6.html border-height-10-ref.html
+== border-height-4.html border-base-ref.html
+== border-height-5.html border-height-10-ref.html
+== border-height-6.html border-height-10-ref.html
 != border-base-ref.html border-width-10-ref.html
-fails-if(MOZ_WIDGET_TOOLKIT=="cocoa") == border-width-4.html border-base-ref.html
-fails-if(MOZ_WIDGET_TOOLKIT=="cocoa") == border-width-5.html border-width-10-ref.html
-fails-if(MOZ_WIDGET_TOOLKIT=="cocoa") == border-width-6.html border-width-10-ref.html
+== border-width-4.html border-base-ref.html
+== border-width-5.html border-width-10-ref.html
+== border-width-6.html border-width-10-ref.html
 != border-base-ref.html border-left-10-ref.html
-fails-if(MOZ_WIDGET_TOOLKIT=="cocoa") == border-left-4.html border-base-ref.html
-fails-if(MOZ_WIDGET_TOOLKIT=="cocoa") == border-left-5.html border-left-10-ref.html
-fails-if(MOZ_WIDGET_TOOLKIT=="cocoa") == border-left-6.html border-left-10-ref.html
+== border-left-4.html border-base-ref.html
+== border-left-5.html border-left-10-ref.html
+== border-left-6.html border-left-10-ref.html
 != border-base-ref.html border-top-10-ref.html
-fails-if(MOZ_WIDGET_TOOLKIT=="cocoa") == border-top-4.html border-base-ref.html
-fails-if(MOZ_WIDGET_TOOLKIT=="cocoa") == border-top-5.html border-top-10-ref.html
-fails-if(MOZ_WIDGET_TOOLKIT=="cocoa") == border-top-6.html border-top-10-ref.html
-
+== border-top-4.html border-base-ref.html
+== border-top-5.html border-top-10-ref.html
+== border-top-6.html border-top-10-ref.html
 
 != background-image-base.html background-image-height-10-ref.html
 == background-image-height-4.html background-image-base.html
