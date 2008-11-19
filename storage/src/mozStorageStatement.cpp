@@ -54,6 +54,8 @@
 #include "mozStorageValueArray.h"
 #include "mozStoragePrivateHelpers.h"
 #include "mozStorageEvents.h"
+#include "mozStorageStatementParams.h"
+#include "mozStorageStatementRow.h"
 
 #include "prlog.h"
 
@@ -289,17 +291,42 @@ mozStorageStatement::Clone(mozIStorageStatement **_retval)
 NS_IMETHODIMP
 mozStorageStatement::Finalize()
 {
-    if (mDBStatement) {
+    if (!mDBStatement)
+        return NS_OK;
+
 #ifdef PR_LOGGING
-        PR_LOG(gStorageLog, PR_LOG_NOTICE, ("Finalizing statement '%s'",
-                                            sqlite3_sql(mDBStatement)));
+    PR_LOG(gStorageLog, PR_LOG_NOTICE, ("Finalizing statement '%s'",
+                                        sqlite3_sql(mDBStatement)));
 #endif
 
-        int srv = sqlite3_finalize(mDBStatement);
-        mDBStatement = NULL;
-        return ConvertResultCode(srv);
+    int srv = sqlite3_finalize(mDBStatement);
+    mDBStatement = NULL;
+
+    // We are considered dead at this point, so any wrappers for row or params
+    // need to lose their reference to us.
+    if (mStatementParamsHolder) {
+        nsCOMPtr<nsIXPConnectWrappedNative> wrapper =
+            do_QueryInterface(mStatementParamsHolder);
+        nsCOMPtr<mozIStorageStatementParams> iParams =
+            do_QueryWrappedNative(wrapper);
+        mozStorageStatementParams *params =
+            static_cast<mozStorageStatementParams *>(iParams.get());
+        params->mStatement = nsnull;
+        mStatementParamsHolder = nsnull;
     }
-    return NS_OK;
+
+    if (mStatementRowHolder) {
+        nsCOMPtr<nsIXPConnectWrappedNative> wrapper =
+            do_QueryInterface(mStatementRowHolder);
+        nsCOMPtr<mozIStorageStatementRow> iRow =
+            do_QueryWrappedNative(wrapper);
+        mozStorageStatementRow *row =
+            static_cast<mozStorageStatementRow *>(iRow.get());
+        row->mStatement = nsnull;
+        mStatementRowHolder = nsnull;
+    }
+
+    return ConvertResultCode(srv);
 }
 
 /* readonly attribute unsigned long parameterCount; */
