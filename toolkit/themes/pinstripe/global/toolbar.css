@@ -69,14 +69,6 @@ menubar {
  min-width: 1px;
 }  
 
-toolbar[mode="icons"] .toolbarbutton-text {
-  display: none;
-}
-
-toolbar[mode="text"] .toolbarbutton-icon {
-  display: none;
-}
-
 /* ::::: toolbarseparator ::::: */
 
 toolbarseparator {
