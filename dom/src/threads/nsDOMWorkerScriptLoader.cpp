@@ -197,11 +197,11 @@ nsDOMWorkerScriptLoader::VerifyScripts(JSContext* aCx)
     ScriptLoadInfo& loadInfo = mLoadInfos[index];
     NS_ASSERTION(loadInfo.done, "Inconsistent state!");
 
-    if (NS_SUCCEEDED(loadInfo.result) && loadInfo.scriptObj) {
+    if (NS_SUCCEEDED(loadInfo.result) && loadInfo.scriptObj.ToJSObject()) {
       continue;
     }
 
-    NS_ASSERTION(!loadInfo.scriptObj, "Inconsistent state!");
+    NS_ASSERTION(!loadInfo.scriptObj.ToJSObject(), "Inconsistent state!");
 
     // Flag failure before worrying about whether or not to report an error.
     rv = NS_FAILED(loadInfo.result) ? loadInfo.result : NS_ERROR_FAILURE;
@@ -253,7 +253,7 @@ nsDOMWorkerScriptLoader::ExecuteScripts(JSContext* aCx)
     JSAutoRequest ar(aCx);
 
     JSScript* script =
-      static_cast<JSScript*>(JS_GetPrivate(aCx, loadInfo.scriptObj));
+      static_cast<JSScript*>(JS_GetPrivate(aCx, loadInfo.scriptObj.ToJSObject()));
     NS_ASSERTION(script, "This shouldn't ever be null!");
 
     JSObject* global = mWorker->mGlobal ?
@@ -691,7 +691,7 @@ nsDOMWorkerScriptLoader::ScriptCompiler::Run()
     return NS_OK;
   }
 
-  NS_ASSERTION(!mScriptObj, "Already have a script object?!");
+  NS_ASSERTION(!mScriptObj.ToJSObject(), "Already have a script object?!");
   NS_ASSERTION(mScriptObj.IsHeld(), "Not held?!");
   NS_ASSERTION(!mScriptText.IsEmpty(), "Shouldn't have empty source here!");
 
@@ -723,7 +723,7 @@ nsDOMWorkerScriptLoader::ScriptCompiler::Run()
   }
 
   mScriptObj = JS_NewScriptObject(cx, script);
-  NS_ENSURE_STATE(mScriptObj);
+  NS_ENSURE_STATE(mScriptObj.ToJSObject());
 
   return NS_OK;
 }
