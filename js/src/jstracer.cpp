@@ -1228,10 +1228,6 @@ ValueToNative(JSContext* cx, jsval v, uint8 type, double* slot)
         debug_only_v(printf("boolean<%d> ", *(JSBool*)slot);)
         return;
       case JSVAL_STRING:
-        if (v == JSVAL_VOID) {
-            *(JSString**)slot = ATOM_TO_STRING(cx->runtime->atomState.typeAtoms[JSTYPE_VOID]); 
-            return;
-        } 
         JS_ASSERT(tag == JSVAL_STRING);
         *(JSString**)slot = JSVAL_TO_STRING(v);
         debug_only_v(printf("string<%p> ", *(JSString**)slot);)
@@ -3261,7 +3257,7 @@ js_IsEntryTypeCompatible(jsval* vp, uint8* m)
         debug_only_v(printf("bool != tag%u", tag);)
         return false;
       case JSVAL_STRING:
-        if (*vp == JSVAL_VOID || tag == JSVAL_STRING)
+        if (tag == JSVAL_STRING)
             return true;
         debug_only_v(printf("string != tag%u", tag);)
         return false;
