@@ -742,7 +742,7 @@ BookmarksEngine.prototype = {
   __tracker: null,
   get _tracker() {
     if (!this.__tracker)
-      this.__tracker = new BookmarksTracker();
+      this.__tracker = new BookmarksTracker(this);
     return this.__tracker;
   }
 
@@ -906,6 +906,30 @@ BookmarksStore.prototype = {
       return this._bms.getItemIdForGUID(GUID);
     }
     return null;
+  },
+
+  _applyIncoming: function BStore__applyIncoming(record) {
+    let self = yield;
+
+    if (!this._lookup)
+      this.wrap();
+
+    yield record.decrypt(self.cb, ID.get('WeaveCryptoID').password);
+
+    this._log.trace("RECORD: " + record.id + " -> " + uneval(record.cleartext));
+
+    if (!this._lookup[record.id])
+      this._createCommand({GUID: record.id, data: record.cleartext});
+    else if (record.cleartext == "")
+      this._removeCommand({GUID: record.id});
+    else {
+      let data = Utils.deepCopy(record.cleartext);
+      delete data.GUID;
+      this._editCommand({GUID: record.id, data: data});
+    }
+  },
+  applyIncoming: function BStore_applyIncoming(onComplete, record) {
+    this._applyIncoming.async(this, onComplete, record);
   },
 
   _createCommand: function BStore__createCommand(command) {
@@ -1351,45 +1375,61 @@ BookmarksStore.prototype = {
  * because the observer methods take care of updating _score which
  * getScore returns by default.
  */
-function BookmarksTracker() {
-  this._init();
+function BookmarksTracker(engine) {
+  this._init(engine);
 }
 BookmarksTracker.prototype = {
   __proto__: Tracker.prototype,
   _logName: "BMTracker",
 
-  /* We don't care about the first three */
-  onBeginUpdateBatch: function BMT_onBeginUpdateBatch() {
+  QueryInterface: XPCOMUtils.generateQI([Ci.nsINavBookmarkObserver]),
 
-  },
-  onEndUpdateBatch: function BMT_onEndUpdateBatch() {
-
-  },
-  onItemVisited: function BMT_onItemVisited() {
-
-  },
-
-  /* Every add or remove is worth 4 points,
-   * on the basis that adding or removing 20 bookmarks
-   * means its time to sync?
-   */
-  onItemAdded: function BMT_onEndUpdateBatch() {
-    this._score += 4;
-  },
-  onItemRemoved: function BMT_onItemRemoved() {
-    this._score += 4;
-  },
-  /* Changes are worth 2 points? */
-  onItemChanged: function BMT_onItemChanged() {
-    this._score += 2;
-  },
-
-  _init: function BMT__init() {
+  _init: function BMT__init(engine) {
+    this._engine = engine;
     this._log = Log4Moz.repository.getLogger("Service." + this._logName);
     this._score = 0;
-
     Cc["@mozilla.org/browser/nav-bookmarks-service;1"].
-    getService(Ci.nsINavBookmarksService).
-    addObserver(this, false);
-  }
+      getService(Ci.nsINavBookmarksService).
+      addObserver(this, false);
+  },
+
+  // FIXME: not getting any events whatsoever!
+
+  /* Every add/remove/change is worth 10 points */
+
+  onItemAdded: function BMT_onEndUpdateBatch(itemId) {
+    this._log.debug("Adding item to queue: " + itemId);
+    this._score += 10;
+    let all = this._engine._store.wrap();
+    let record = yield this._engine._createRecord.async(this, self.cb, key, all[itemId]);
+    this._engine.outgoing.push(record);
+  },
+
+  onItemRemoved: function BMT_onItemRemoved(itemId) {
+    this._log.debug("Adding item to queue: " + itemId);
+    this._score += 10;
+    let all = this._engine._store.wrap();
+    let record = yield this._engine._createRecord.async(this, self.cb, key, all[itemId]);
+    this._engine.outgoing.push(record);
+  },
+
+  onItemChanged: function BMT_onItemChanged(itemId) {
+    this._log.debug("Adding item to queue: " + itemId);
+    this._score += 10;
+    let all = this._engine._store.wrap();
+    let record = yield this._engine._createRecord.async(this, self.cb, key, all[itemId]);
+    this._engine.outgoing.push(record);
+  },
+
+  onItemMoved: function BMT_onItemMoved(itemId) {
+    this._log.debug("Adding item to queue: " + itemId);
+    this._score += 10;
+    let all = this._engine._store.wrap();
+    let record = yield this._engine._createRecord.async(this, self.cb, key, all[itemId]);
+    this._engine.outgoing.push(record);
+  },
+
+  onBeginUpdateBatch: function BMT_onBeginUpdateBatch() {},
+  onEndUpdateBatch: function BMT_onEndUpdateBatch() {},
+  onItemVisited: function BMT_onItemVisited() {}
 };
