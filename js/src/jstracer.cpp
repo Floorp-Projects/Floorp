@@ -7819,6 +7819,10 @@ TraceRecorder::record_JSOP_CALLPROP()
         obj = JSVAL_TO_OBJECT(l);
         obj_ins = get(&l);
         this_ins = obj_ins; // |this| for subsequent call
+        if (JSVAL_IS_NULL(l))
+            ABORT_TRACE("callprop on null");
+        if (!this_ins->isconstp())
+            guard(false, lir->ins_eq0(this_ins), MISMATCH_EXIT);
     } else {
         jsint i;
         debug_only(const char* protoname = NULL;)

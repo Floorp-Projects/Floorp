@@ -1911,6 +1911,24 @@ function testBug465483() {
 testBug465483.expected = '8,aa,bb,NaN';
 test(testBug465483);
 
+function testNullCallee() {
+    try {
+        function f() {
+            var x = new Array(5);
+            for (var i = 0; i < 5; i++)
+                x[i] = a[i].toString();
+            return x.join(',');
+        }
+        f([[1],[2],[3],[4],[5]]);
+        f([null, null, null, null, null]);
+    } catch (e) {
+        return true;
+    }
+    return false;
+}
+testNullCallee.expected = true;
+test(testNullCallee);
+
 // BEGIN MANDELBROT STUFF
 // XXXbz I would dearly like to wrap it up into a function to avoid polluting
 // the global scope, but the function ends up heavyweight, and then we lose on
