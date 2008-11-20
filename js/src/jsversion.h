@@ -241,11 +241,3 @@
 
 /* Feature-test macro for evolving destructuring support. */
 #define JS_HAS_DESTRUCTURING_SHORTHAND  (JS_HAS_DESTRUCTURING == 2)
-
-#ifndef JS_HAS_OPERATION_COUNT
-# if defined(MOZILLA_VERSION) || defined(JS_THREADSAFE)
-#  define JS_HAS_OPERATION_COUNT 0
-# else
-#  define JS_HAS_OPERATION_COUNT 1
-# endif
-#endif
