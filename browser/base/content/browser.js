@@ -3862,6 +3862,8 @@ var XULBrowserWindow = {
         if (aWebProgress.DOMWindow == content) {
           if (aRequest)
             this.endDocumentLoad(aRequest, aStatus);
+          if (!gBrowser.mTabbedMode && !gBrowser.mCurrentBrowser.mIconURL)
+            gBrowser.useDefaultIcon(gBrowser.mCurrentTab);
 
           if (Components.isSuccessCode(aStatus) &&
               content.document.documentElement.getAttribute("manifest"))
@@ -3997,6 +3999,9 @@ var XULBrowserWindow = {
       } else {
         this.reloadCommand.removeAttribute("disabled");
       }
+
+      if (!gBrowser.mTabbedMode && aWebProgress.isLoadingDocument)
+        gBrowser.setIcon(gBrowser.mCurrentTab, null);
 
       if (gURLBar) {
         // Strip off "wyciwyg://" and passwords for the location bar
