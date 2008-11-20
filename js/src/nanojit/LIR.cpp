@@ -535,7 +535,13 @@ namespace nanojit
     }
 	
 	bool LIns::isQuad() const {
-		return ((u.code & LIR64) != 0 || u.code == LIR_callh);
+		#ifdef AVMPLUS_64BIT
+			// callh in 64bit cpu's means a call that returns an int64 in a single register
+			return (u.code & LIR64) != 0 || u.code == LIR_callh;
+		#else
+			// callh in 32bit cpu's means the 32bit MSW of an int64 result in 2 registers
+			return (u.code & LIR64) != 0;
+		#endif
 	}
     
 	bool LIns::isconstval(int32_t val) const
