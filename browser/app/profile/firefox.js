@@ -415,7 +415,7 @@ pref("privacy.item.offlineApps", false);
 // 2 - Last 2 Hours
 // 3 - Last 4 Hours
 // 4 - Today
-pref("privacy.sanitize.timeSpan", 0);
+pref("privacy.sanitize.timeSpan", 1);
 pref("privacy.sanitize.sanitizeOnShutdown", false);
 
 pref("network.proxy.share_proxy_settings",  false); // use the same proxy settings for all protocols
