@@ -281,8 +281,51 @@ nsXPCWrappedJSClass::CallQueryInterfaceOnJSObject(XPCCallContext& ccx,
     id = xpc_NewIDObject(cx, jsobj, aIID);
     if(id)
     {
+        // Throwing NS_NOINTERFACE is the prescribed way to fail QI from JS. It
+        // is not an exception that is ever worth reporting, but we don't want
+        // to eat all exceptions either.
+
+        uint32 oldOpts =
+          JS_SetOptions(cx, JS_GetOptions(cx) | JSOPTION_DONT_REPORT_UNCAUGHT);
+
         jsval args[1] = {OBJECT_TO_JSVAL(id)};
         success = JS_CallFunctionValue(cx, jsobj, fun, 1, args, &retval);
+
+        if(!success)
+        {
+            NS_ASSERTION(JS_IsExceptionPending(cx),
+                         "JS failed without setting an exception!");
+
+            jsval jsexception;
+            AUTO_MARK_JSVAL(ccx, jsexception);
+
+            if(JS_GetPendingException(cx, &jsexception) &&
+               JSVAL_IS_OBJECT(jsexception))
+            {
+                nsCOMPtr<nsIXPConnectWrappedNative> wrapper;
+
+                nsXPConnect::GetXPConnect()->
+                    GetWrappedNativeOfJSObject(ccx,
+                                               JSVAL_TO_OBJECT(jsexception),
+                                               getter_AddRefs(wrapper));
+
+                if(wrapper)
+                {
+                    nsresult rv;
+                    nsCOMPtr<nsIException> exception =
+                        do_QueryWrappedNative(wrapper);
+                    if(exception && NS_SUCCEEDED(exception->GetResult(&rv)) &&
+                       rv == NS_NOINTERFACE)
+                    {
+                        JS_ClearPendingException(cx);
+                    }
+                }
+            }
+
+            JS_ReportPendingException(cx);
+        }
+
+        JS_SetOptions(cx, oldOpts);
     }
 
     if(success)
