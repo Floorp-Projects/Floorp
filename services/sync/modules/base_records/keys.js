@@ -204,6 +204,7 @@ PubKeyManager.prototype = {
   },
 
   createKeypair: function KeyMgr_createKeypair(passphrase, pubkeyUri, privkeyUri) {
+    this._log.debug("Generating RSA keypair");
     let pubkey = new PubKey();
     let privkey = new PrivKey();
     privkey.salt = this._crypto.generateRandomBytes(16);
@@ -222,6 +223,7 @@ PubKeyManager.prototype = {
       pubkey.privateKeyUri = privkeyUri;
     }
 
+    this._log.debug("Generating RSA keypair... done");
     return {pubkey: pubkey, privkey: privkey};
   },
 
