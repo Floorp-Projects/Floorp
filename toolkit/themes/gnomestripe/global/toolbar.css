@@ -82,6 +82,19 @@ toolbarspacer {
   width: 15px;
 }
 
+toolbar[mode="icons"] .toolbarbutton-text {
+  display: none;
+}
+
+toolbar[mode="text"] .toolbarbutton-icon {
+  display: none;
+}
+
+toolbar[mode="text"] .toolbarbutton-text {
+  padding: 0 !important;
+  margin: 3px 5px !important;
+}
+
 /* ::::: toolbarpaletteitem ::::: */
 
 toolbarpaletteitem {
