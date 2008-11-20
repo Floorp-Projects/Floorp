@@ -155,10 +155,3 @@ toolbarbutton.tabbable {
   -moz-user-focus: normal !important;
 }
 
-toolbar[mode="icons"] .toolbarbutton-text {
-  display: none;
-}
-
-toolbar[mode="text"] .toolbarbutton-icon {
-  display: none;
-}
