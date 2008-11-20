@@ -56,17 +56,20 @@ WBORecord.prototype = {
 
   _WBORec_init: function WBORec_init(uri, authenticator) {
     this._init(uri, authenticator);
+    this.pushFilter(new WBOFilter());
     this.pushFilter(new JsonFilter());
     this.data = {
-      id: "",
-      modified: "2454725.98283", // FIXME
+      // modified: "2454725.98283", // FIXME
       payload: {}
     };
   },
 
-  get id() this.data.id,
-  set id(value) {
-    this.data.id = value;
+  // id is special because it's based on the uri
+  get id() {
+    if (this.data.id)
+      return decodeURI(this.data.id);
+    let foo = this.uri.spec.split('/');
+    return decodeURI(foo[foo.length-1]);
   },
 
   get parentid() this.data.parentid,
@@ -91,4 +94,20 @@ WBORecord.prototype = {
 
   // note: encryption is part of the CryptoWrapper object, which uses
   // a string (encrypted) payload instead of an object
+};
+
+function WBOFilter() {}
+WBOFilter.prototype = {
+  beforePUT: function(data, wbo) {
+    let self = yield;
+    let foo = wbo.uri.spec.split('/');
+    data.id = decodeURI(foo[foo.length-1]);
+    self.done(data);
+  },
+  afterGET: function(data, wbo) {
+    let self = yield;
+    let foo = wbo.uri.spec.split('/');
+    data.id = decodeURI(foo[foo.length-1]);
+    self.done(data);
+  }
 };
