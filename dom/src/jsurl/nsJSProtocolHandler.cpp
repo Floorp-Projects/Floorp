@@ -1328,6 +1328,24 @@ nsJSURI::Clone(nsIURI** aClone)
     return NS_OK;
 }
 
+NS_IMETHODIMP
+nsJSURI::Equals(nsIURI* aOther, PRBool *aResult)
+{
+    if (!aOther) {
+        *aResult = PR_FALSE;
+        return NS_OK;
+    }
+    
+    nsRefPtr<nsJSURI> otherJSUri;
+    aOther->QueryInterface(kJSURICID, getter_AddRefs(otherJSUri));
+    if (!otherJSUri) {
+        *aResult = PR_FALSE;
+        return NS_OK;
+    }
+
+    return mSimpleURI->Equals(otherJSUri->mSimpleURI, aResult);
+}
+
 // nsIClassInfo methods:
 NS_IMETHODIMP 
 nsJSURI::GetInterfaces(PRUint32 *count, nsIID * **array)
