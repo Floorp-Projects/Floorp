@@ -182,6 +182,14 @@ WeaveSvc.prototype = {
   get passphrase() { return ID.get('WeaveCryptoID').password; },
   set passphrase(value) { ID.get('WeaveCryptoID').password = value; },
 
+  // chrome-provided callbacks for when the service needs a password/passphrase
+  set onGetPassword(value) {
+    ID.get('WeaveID').onGetPassword = value;
+  },
+  set onGetPassphrase(value) {
+    ID.get('WeaveCryptoID').onGetPassword = value;
+  },
+
   get baseURL() {
     let url = Utils.prefs.getCharPref("serverURL");
     if (url && url[url.length-1] != '/')
@@ -296,7 +304,8 @@ WeaveSvc.prototype = {
            new Identity('Mozilla Services Encryption Passphrase', this.username));
 
     let url = this.baseURL + this.username;
-    PubKeys.defaultKeyUri = url + "keys/pubkey";
+    PubKeys.defaultKeyUri = url + "/keys/pubkey";
+    PrivKeys.defaultKeyUri = url + "/keys/privkey";
 
     if (Utils.prefs.getBoolPref("autoconnect") &&
         this.username && this.username != 'nobody')
@@ -489,10 +498,55 @@ WeaveSvc.prototype = {
     this._notify("server-wipe", "", this._localLock(cb)).async(this, onComplete);
   },
 
+  // stuff we need to to after login, before we can really do
+  // anything (e.g. key setup)
+  _remoteSetup: function WeaveSvc__remoteSetup() {
+    let self = yield;
+    let ret = false; // false to abort sync
+
+    // FIXME: too easy to generate a keypair.  we should be absolutely certain
+    // that the keys are not there (404) and that it's not some other
+    // transient network problem instead
+    let needKeys = true;
+    let pubkey = yield PubKeys.getDefaultKey(self.cb);
+    if (pubkey) {
+      // make sure we have a matching privkey
+      let privkey = yield PrivKeys.get(self.cb, pubkey.privateKeyUri);
+      if (privkey) {
+        needKeys = false;
+        ret = true;
+      }
+    }
+
+    if (needKeys) {
+      let pass = yield ID.get('WeaveCryptoID').getPassword(self.cb);
+      if (pass) {
+        let keys = PubKeys.createKeypair(pass, PubKeys.defaultKeyUri,
+                                         PrivKeys.defaultKeyUri);
+        try {
+          yield keys.pubkey.put(self.cb);
+          yield keys.privkey.put(self.cb);
+          ret = true;
+        } catch (e) {
+          this._log.error("Could not upload keys: " + Utils.exceptionStr(e));
+          this._log.error(keys.pubkey.lastRequest.responseText);
+        }
+      } else {
+        this._log.warn("Could not get encryption passphrase");
+      }
+    }
+
+    self.done(ret);
+  },
+
   // These are per-engine
 
   _sync: function WeaveSvc__sync() {
     let self = yield;
+
+    if (!(yield this._remoteSetup.async(this, self.cb))) {
+      throw "aborting sync, remote setup failed";
+    }
 
     //this._log.debug("Refreshing client list");
     //yield ClientData.refresh(self.cb);
