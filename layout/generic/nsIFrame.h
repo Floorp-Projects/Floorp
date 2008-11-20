@@ -696,7 +696,7 @@ public:
   NS_IMETHOD SetParent(const nsIFrame* aParent) { mParent = (nsIFrame*)aParent; return NS_OK; }
 
   /**
-   * Bounding rect of the frame. The values are in twips, and the origin is
+   * Bounding rect of the frame. The values are in app units, and the origin is
    * relative to the upper-left of the geometric parent. The size includes the
    * content area, borders, and padding.
    *
@@ -767,7 +767,7 @@ public:
 
   /**
    * Like the frame's rect (see |GetRect|), which is the border rect,
-   * other rectangles of the frame, in twips, relative to the parent.
+   * other rectangles of the frame, in app units, relative to the parent.
    *
    * Note that GetMarginRect is not meaningful for blocks (anything with
    * 'display:block', whether block frame or not) because of both the
