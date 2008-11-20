@@ -63,7 +63,7 @@ RequestException.prototype = {
   get request() { return this._request; },
   get status() { return this._request.status; },
   toString: function ReqEx_toString() {
-    return "Could not " + this._action + " resource " + this._resource.path +
+    return "Could not " + this._action + " resource " + this._resource.spec +
       " (" + this._request.status + ")";
   }
 };
@@ -108,11 +108,6 @@ Resource.prototype = {
       return this._uri.spec;
     return null;
   },
-  set spec(value) {
-    this._dirty = true;
-    this._downloaded = false;
-    this._uri.spec = value;
-  },
 
   _data: null,
   get data() this._data,
@@ -141,6 +136,8 @@ Resource.prototype = {
 
   _init: function Res__init(uri, authenticator) {
     this._log = Log4Moz.repository.getLogger(this._logName);
+    this._log.level =
+      Log4Moz.Level[Utils.prefs.getCharPref("log.logger.network.resources")];
     this.uri = uri;
     this._authenticator = authenticator;
     this._headers = {'Content-type': 'text/plain'};
@@ -189,24 +186,47 @@ Resource.prototype = {
     return timer;
   },
 
+  filterUpload: function Res_filterUpload(onComplete) {
+    let fn = function() {
+      let self = yield;
+      for each (let filter in this._filters) {
+        this._data = yield filter.beforePUT.async(filter, self.cb, this._data, this);
+      }
+    };
+    fn.async(this, onComplete);
+  },
+
+  filterDownload: function Res_filterUpload(onComplete) {
+    let fn = function() {
+      let self = yield;
+      let filters = this._filters.slice(); // reverse() mutates, so we copy
+      for each (let filter in filters.reverse()) {
+        this._data = yield filter.afterGET.async(filter, self.cb, this._data, this);
+      }
+    };
+    fn.async(this, onComplete);
+  },
+
   _request: function Res__request(action, data) {
     let self = yield;
     let listener, wait_timer;
     let iter = 0;
 
+    if ("undefined" != typeof(data))
+      this._data = data;
+
     this._log.debug(action + " request for " + this.spec);
 
-    if ("PUT" == action) {
-      for each (let filter in this._filters) {
-        data = yield filter.beforePUT.async(filter, self.cb, data, this);
-      }
+    if ("PUT" == action || "POST" == action) {
+      yield this.filterUpload(self.cb);
+      this._log.trace(action + " Body:\n" + this._data);
     }
 
     while (iter < Preferences.get(PREFS_BRANCH + "network.numRetries")) {
       let cb = self.cb; // to avoid warning because we use it twice
       let request = this._createRequest(action, cb);
       let timeout_timer = this._setupTimeout(request, cb);
-      let event = yield request.send(data);
+      let event = yield request.send(this._data);
       timeout_timer.cancel();
       this._lastRequest = event.target;
 
@@ -220,18 +240,18 @@ Resource.prototype = {
         this._log.debug(action + " request successful");
         this._dirty = false;
 
-        if ("GET" == action) {
+        if ("GET" == action || "POST" == action) {
           this._data = this._lastRequest.responseText;
-          let filters = this._filters.slice(); // reverse() mutates, so we copy
-          for each (let filter in filters.reverse()) {
-            this._data = yield filter.afterGET.async(filter, self.cb, this._data, this);
-          }
+          this._log.trace(action + " Body:\n" + this._data);
+          yield this.filterDownload(self.cb);
         }
         break;
 
-      // FIXME: this should really check a variety of permanent errors, rather than just 404s
-      } else if (action == "GET" && this._lastRequest.status == 404) {
-        this._log.debug(action + " request failed (404)");
+      // FIXME: this should really check a variety of permanent errors, rather than just >= 400
+      } else if (this._lastRequest.status >= 400) {
+        this._log.debug(action + " request failed (" + this._lastRequest.status + ")");
+        if (this._lastRequest.responseText)
+          this._log.debug("Error response: \n" + this._lastRequest.responseText);
         throw new RequestException(this, action, this._lastRequest);
 
       } else {
@@ -248,6 +268,8 @@ Resource.prototype = {
 
     if (iter >= Preferences.get(PREFS_BRANCH + "network.numRetries")) {
       this._log.debug(action + " request failed (too many errors)");
+      if (this._lastRequest && this._lastRequest.responseText)
+        this._log.debug("Error response: \n" + this._lastRequest.responseText);
       throw new RequestException(this, action, this._lastRequest);
     }
 
@@ -259,9 +281,11 @@ Resource.prototype = {
   },
 
   put: function Res_put(onComplete, data) {
-    if ("undefined" == typeof(data))
-      data = this._data;
     this._request.async(this, onComplete, "PUT", data);
+  },
+
+  post: function Res_post(onComplete, data) {
+    this._request.async(this, onComplete, "POST", data);
   },
 
   delete: function Res_delete(onComplete) {
