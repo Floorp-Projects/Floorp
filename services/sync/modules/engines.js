@@ -394,20 +394,12 @@ NewEngine.prototype = {
     }
 
     // upload new/changed items from our outgoing queue
-    /* re-enable this block after POST to server is working
     let up = new Collection(this.engineURL);
     let out;
     while ((out = this.outgoing.pop())) {
       yield up.pushRecord(self.cb, out);
     }
     yield up.post(self.cb);
-     */
-
-    // remove below block once POST is working
-    let out;
-    while ((out = this.outgoing.pop())) {
-      yield out.put(self.cb);
-    }
 
     // FIXME: hack to get the last modified timestamp.  race condition alert!
     yield newitems.get(self.cb);
