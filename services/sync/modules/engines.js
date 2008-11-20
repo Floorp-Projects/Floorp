@@ -57,7 +57,9 @@ Cu.import("resource://weave/trackers.js");
 Cu.import("resource://weave/async.js");
 
 Cu.import("resource://weave/base_records/wbo.js");
+Cu.import("resource://weave/base_records/keys.js");
 Cu.import("resource://weave/base_records/crypto.js");
+Cu.import("resource://weave/base_records/collection.js");
 
 Function.prototype.async = Async.sugar;
 
@@ -249,7 +251,19 @@ function NewEngine() {}
 NewEngine.prototype = {
   __proto__: Engine.prototype,
 
-  get lastSync() Utils.prefs.getCharPref(this.name + ".lastSync"),
+  get _snapshot() {
+    let snap = new SnapshotStore(this.name);
+    this.__defineGetter__("_snapshot", function() snap);
+    return snap;
+  },
+
+  get lastSync() {
+    try {
+      return Utils.prefs.getCharPref(this.name + ".lastSync");
+    } catch (e) {
+      return 0;
+    }
+  },
   set lastSync(value) {
     Utils.prefs.setCharPref(this.name + ".lastSync", value);
   },
@@ -268,37 +282,150 @@ NewEngine.prototype = {
     return this._outgoing;
   },
 
+  get baseURL() {
+    let url = Utils.prefs.getCharPref("serverURL");
+    if (url && url[url.length-1] != '/')
+      url = url + '/';
+    return url;
+  },
+
+  get engineURL() {
+    return this.baseURL + ID.get('WeaveID').username + '/' + this.name + '/';
+  },
+
+  get cryptoMetaURL() {
+    return this.baseURL + ID.get('WeaveID').username + '/crypto/' + this.name;
+  },
+
+  _remoteSetup: function NewEngine__remoteSetup() {
+    let self = yield;
+
+    let meta = yield CryptoMetas.get(self.cb, this.cryptoMetaURL);
+    if (!meta) {
+      let cryptoSvc = Cc["@labs.mozilla.com/Weave/Crypto;1"].
+        getService(Ci.IWeaveCrypto);
+      let symkey = cryptoSvc.generateRandomKey();
+      let pubkey = yield PubKeys.getDefaultKey(self.cb);
+      meta = new CryptoMeta(this.cryptoMetaURL);
+      meta.generateIV();
+      yield meta.addUnwrappedKey(self.cb, pubkey, symkey);
+      yield meta.put(self.cb);
+    }
+  },
+
+  _createRecord: function NewEngine__newCryptoWrapper(id, payload, encrypt) {
+    let self = yield;
+
+    let record = new CryptoWrapper();
+    record.uri = this.engineURL + id;
+    record.encryption = this.cryptoMetaURL;
+    record.cleartext = payload;
+    if (encrypt || encrypt == undefined)
+      yield record.encrypt(self.cb, ID.get('WeaveCryptoID').password);
+
+    self.done(record);
+  },
+
   _sync: function NewEngine__sync() {
     let self = yield;
-    // find new items from server, place into incoming queue
 
-    // if snapshot-based, generate outgoing queue
+    yield this._remoteSetup.async(this, self.cb);
 
-    // tmp- generate all items
-    let all = this._store.wrap();
-    for (let key in all) {
-      let record = new CryptoWrapper();
-      record.id = key;
-      record.cleartext = all[key];
-      this.outgoing.push(record);
+    // first sync case: sync all items up
+    // <strike>otherwise we expect any new items to be already in the outgoing queue</strike>
+    // otherwise we use snapshots to generate the outgoing queue
+    if (!this.lastSync) {
+      let all = this._store.wrap();
+      for (let key in all) {
+        let record = yield this._createRecord.async(this, self.cb, key, all[key]);
+        this.outgoing.push(record);
+      }
+      this._snapshot.data = all;
+
+    } else {
+      this._snapshot.load();
+      let newsnap = this._store.wrap();
+      let updates = yield this._core.detectUpdates(self.cb,
+                                                   this._snapshot.data, newsnap);
+      for each (let cmd in updates) {
+        let data = "";
+        if (cmd.action == "create" || cmd.action == "edit")
+          data = newsnap[cmd.GUID];
+        let record = yield this._createRecord.async(this, self.cb, cmd.GUID, data);
+        this.outgoing.push(record);
+      }
+      this._snapshot.data = newsnap;
     }
 
+    // find new items from server, place into incoming queue
+    let newitems = new Collection(this.engineURL);
+    newitems.modified = this.lastSync;
+    newitems.full = true;
+    yield newitems.get(self.cb);
+
+    let item;
+    while ((item = newitems.iter.next())) {
+      // server returns items with modified==this.lastSync, so skip those
+      if (item.modified > this.lastSync)
+        this.incoming.push(item);
+    }
 
     // remove from incoming queue any items also in outgoing queue
-
-    // upload new/changed items from our outgoing queue
-    // FIXME: roll these up into a single POST!
-    for each (record in this.outgoing) {
-      
-      this._log.info(uneval(record.payload));
-      //record.put(self.cb);
+    let conflicts = [];
+    for (let i = 0; i < this.incoming.length; i++) {
+      for each (let out in this.outgoing) {
+        if (this.incoming[i].id == out.id) {
+          conflicts.push({in: this.incoming[i], out: out});
+          delete this.incoming[i];
+          break;
+        }
+      }
     }
+    if (conflicts.length)
+      this._log.warn("Conflicts found.  Conflicting server changes discarded");
 
     // apply incoming queue one by one
-    for each (record in this.outgoing) {
+    // XXX may need to sort here (e.g. create parents first)
+    let inc;
+    while ((inc = this.incoming.pop())) {
+      yield this._store.applyIncoming(self.cb, inc);
+      if (inc.modified > this.lastSync)
+        this.lastSync = inc.modified;
     }
 
+    // upload new/changed items from our outgoing queue
+    /* re-enable this block after POST to server is working
+    let up = new Collection(this.engineURL);
+    let out;
+    while ((out = this.outgoing.pop())) {
+      yield up.pushRecord(self.cb, out);
+    }
+    yield up.post(self.cb);
+     */
+
+    // remove below block once POST is working
+    let out;
+    while ((out = this.outgoing.pop())) {
+      yield out.put(self.cb);
+    }
+
+    // FIXME: hack to get the last modified timestamp.  race condition alert!
+    yield newitems.get(self.cb);
+    newitems.iter.reset();
+    while ((item = newitems.iter.next())) {
+      if (item.modified > this.lastSync)
+        this.lastSync = item.modified;
+    }
+
+    this._snapshot.save();
+
     self.done();
+  },
+
+  _resetServer: function NewEngine__resetServer() {
+    let self = yield;
+    let all = new Resource(this.engineURL);
+    yield all.delete(self.cb);
   }
 };
 
