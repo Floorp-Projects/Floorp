@@ -173,16 +173,3 @@ toolbarbutton[type="menu-button"][disabled="true"]:hover:active {
 .toolbarbutton-menubutton-dropmarker[disabled="true"] {
   padding: 3px !important;
 }
-
-toolbar[mode="icons"] .toolbarbutton-text {
-  display: none;
-}
-
-toolbar[mode="text"] .toolbarbutton-icon {
-  display: none;
-}
-
-toolbar[mode="text"] .toolbarbutton-text {
-  padding: 0 !important;
-  margin: 3px 5px !important;
-}
