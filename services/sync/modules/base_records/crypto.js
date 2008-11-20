@@ -212,18 +212,19 @@ RecordManager.prototype = {
 
   _import: function RegordMgr__import(url) {
     let self = yield;
+    let rec;
 
     this._log.trace("Importing record: " + (url.spec? url.spec : url));
 
     try {
-      let rec = new this._recordType(url);
+      rec = new this._recordType(url);
       yield rec.get(self.cb);
       this.set(url, rec);
-      self.done(rec);
     } catch (e) {
       this._log.debug("Failed to import record: " + e);
-      self.done(null);
+      rec = null;
     }
+    self.done(rec);
   },
   import: function RegordMgr_import(onComplete, url) {
     this._import.async(this, onComplete, url);
