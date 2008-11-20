@@ -1828,6 +1828,8 @@
       <method name="addTabsProgressListener">
         <parameter name="aListener"/>
         <body>
+          if (!this.mTabbedMode)
+            this.enterTabbedMode();
           this.mTabsProgressListeners.push(aListener);
         </body>
       </method>
