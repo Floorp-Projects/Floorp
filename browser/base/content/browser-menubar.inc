@@ -396,7 +396,7 @@
   <menu id="bookmarksMenu" 
         label="&bookmarksMenu.label;" accesskey="&bookmarksMenu.accesskey;"
         ondragenter="PlacesMenuDNDController.onBookmarksMenuDragEnter(event);"
-        ondragdrop="nsDragAndDrop.drop(event, BookmarksMenuDropHandler);"
+        ondrop="nsDragAndDrop.drop(event, BookmarksMenuDropHandler);"
         ondragover="nsDragAndDrop.dragOver(event, BookmarksMenuDropHandler);"
         ondragexit="nsDragAndDrop.dragExit(event, BookmarksMenuDropHandler);">
     <menupopup id="bookmarksMenuPopup"
