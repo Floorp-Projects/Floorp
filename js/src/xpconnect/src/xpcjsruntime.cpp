@@ -216,7 +216,7 @@ static JSDHashOperator
 DetachedWrappedNativeProtoMarker(JSDHashTable *table, JSDHashEntryHdr *hdr,
                                  uint32 number, void *arg)
 {
-    XPCWrappedNativeProto* proto = 
+    XPCWrappedNativeProto* proto =
         (XPCWrappedNativeProto*)((JSDHashEntryStub*)hdr)->key;
 
     proto->Mark();
@@ -238,6 +238,14 @@ ContextCallback(JSContext *cx, uintN operation)
         else if(operation == JSCONTEXT_DESTROY)
         {
             delete XPCContext::GetXPCContext(cx);
+        }
+        else if(operation == JSCONTEXT_REQUEST_START)
+        {
+            // If we're called during context creation, we will assert if we
+            // try to call XPCContext::GetXPCContext.
+            if(!cx->data2)
+                return JS_TRUE;
+            self->WakeupWatchdog(cx);
         }
     }
     return JS_TRUE;
@@ -309,7 +317,7 @@ void XPCJSRuntime::TraceJS(JSTracer* trc, void* data)
     // them here.
     for(XPCRootSetElem *e = self->mObjectHolderRoots; e ; e = e->GetNextRoot())
         static_cast<XPCJSObjectHolder*>(e)->TraceJS(trc);
-        
+
     if(self->GetXPConnect()->ShouldTraceRoots())
     {
         // Only trace these if we're not cycle-collecting, the cycle collector
@@ -527,7 +535,7 @@ JSBool XPCJSRuntime::GCCallback(JSContext *cx, JSGCStatus status)
             case JSGC_MARK_END:
             {
                 NS_ASSERTION(!self->mDoingFinalization, "bad state");
-    
+
                 // mThreadRunningGC indicates that GC is running
                 { // scoped lock
                     XPCAutoLock lock(self->GetMapLock());
@@ -550,8 +558,8 @@ JSBool XPCJSRuntime::GCCallback(JSContext *cx, JSGCStatus status)
                         Enumerate(WrappedJSDyingJSObjectFinder, &data);
                 }
 
-                // Do cleanup in NativeInterfaces. This part just finds 
-                // member cloned function objects that are about to be 
+                // Do cleanup in NativeInterfaces. This part just finds
+                // member cloned function objects that are about to be
                 // collected. It does not deal with collection of interfaces or
                 // sets at this point.
                 CX_AND_XPCRT_Data data = {cx, self};
@@ -716,7 +724,7 @@ JSBool XPCJSRuntime::GCCallback(JSContext *cx, JSGCStatus status)
                     if(threadLock)
                     {
                         // Do the marking...
-                        
+
                         { // scoped lock
                             nsAutoLock lock(threadLock);
 
@@ -735,7 +743,7 @@ JSBool XPCJSRuntime::GCCallback(JSContext *cx, JSGCStatus status)
                                     // possibly be valid.
                                     if(ccxp->CanGetTearOff())
                                     {
-                                        XPCWrappedNativeTearOff* to = 
+                                        XPCWrappedNativeTearOff* to =
                                             ccxp->GetTearOff();
                                         if(to)
                                             to->Mark();
@@ -744,7 +752,7 @@ JSBool XPCJSRuntime::GCCallback(JSContext *cx, JSGCStatus status)
                                 }
                             }
                         }
-    
+
                         // Do the sweeping...
                         XPCWrappedNativeScope::SweepAllWrappedNativeTearOffs();
                     }
@@ -820,6 +828,126 @@ JSBool XPCJSRuntime::GCCallback(JSContext *cx, JSGCStatus status)
     return JS_TRUE;
 }
 
+/* static */
+void
+XPCJSRuntime::WatchdogMain(void *arg)
+{
+    XPCJSRuntime *xpcrt = (XPCJSRuntime *) arg;
+    JSRuntime *rt = xpcrt->GetJSRuntime();
+    PRStatus status;
+    PRBool isRunning;
+
+    do
+    {
+        JSContext *iter = NULL;
+        JSContext *acx;
+        PRIntervalTime newInterval = (PRIntervalTime) 0;
+        XPCContext *ccx;
+
+        PRIntervalTime ct = PR_IntervalNow();
+        PR_Lock(xpcrt->mWatchdogLock);
+        JS_LOCK_GC(rt);
+
+        while((acx = js_ContextIterator(rt, JS_FALSE, &iter)))
+        {
+            if(acx->requestDepth)
+            {
+                ccx = XPCContext::GetXPCContext(acx);
+                if(ccx->mWatchdogLimit &&
+                   ct - acx->startTime > ccx->mWatchdogLimit)
+                {
+                    JS_TriggerOperationCallback(acx);
+                }
+                if(newInterval > ccx->mWatchdogLimit || !newInterval)
+                    newInterval = ccx->mWatchdogLimit;
+            }
+        }
+        JS_UNLOCK_GC(rt);
+
+        xpcrt->mCurrentInterval = newInterval ? newInterval
+                                              : PR_INTERVAL_NO_TIMEOUT;
+        if (xpcrt->mWatchdogRunning)
+            status = PR_WaitCondVar(xpcrt->mWatchdogWakeup,
+                                    xpcrt->mCurrentInterval);
+        isRunning = xpcrt->mWatchdogRunning;
+        PR_Unlock(xpcrt->mWatchdogLock);
+    } while (isRunning && status == PR_SUCCESS);
+}
+
+PRBool
+XPCJSRuntime::SetWatchdogLimit(JSContext *cx, PRIntervalTime newWatchdogLimit)
+{
+    PRBool isRunning;
+    PRIntervalTime oldWatchdogLimit;
+    XPCContext *ccx = XPCContext::GetXPCContext(cx);
+
+    if(newWatchdogLimit == ccx->mWatchdogLimit)
+        return PR_TRUE;
+
+    oldWatchdogLimit = ccx->mWatchdogLimit;
+    ccx->mWatchdogLimit = newWatchdogLimit;
+
+    /*
+     * Start a new watchdog thread if it has not been started. If it has been
+     * started wake up the thread and cause the watchdog rescheduling.
+     */
+    PR_Lock(mWatchdogLock);
+    isRunning = !!mWatchdogThread;
+
+    if(!isRunning)
+    {
+        mWatchdogRunning = PR_TRUE;
+        mWatchdogThread =
+            PR_CreateThread(PRThreadType(PR_USER_THREAD),
+                            WatchdogMain,
+                            this,
+                            PRThreadPriority(PR_PRIORITY_NORMAL),
+                            PRThreadScope(PR_LOCAL_THREAD),
+                            PRThreadState(PR_JOINABLE_THREAD),
+                            0);
+    }
+    PR_Unlock(mWatchdogLock);
+    if(!mWatchdogThread)
+        return PR_FALSE;
+    if(isRunning &&
+       (oldWatchdogLimit > ccx->mWatchdogLimit ||
+        mCurrentInterval == PR_INTERVAL_NO_TIMEOUT))
+        WakeupWatchdog(cx);
+    return PR_TRUE;
+
+}
+
+void
+XPCJSRuntime::WakeupWatchdog(JSContext *cx)
+{
+    XPCContext *ccx = XPCContext::GetXPCContext(cx);
+    PR_Lock(mWatchdogLock);
+    if(mCurrentInterval == PR_INTERVAL_NO_TIMEOUT ||
+       (ccx && mCurrentInterval > ccx->mWatchdogLimit))
+        PR_NotifyCondVar(mWatchdogWakeup);
+    PR_Unlock(mWatchdogLock);
+}
+
+PRBool
+XPCJSRuntime::ShutdownWatchdog()
+{
+    PR_Lock(mWatchdogLock);
+    mWatchdogRunning = PR_FALSE;
+    PRThread *t = mWatchdogThread;
+    mWatchdogThread = NULL;
+    PR_NotifyCondVar(mWatchdogWakeup);
+    PR_Unlock(mWatchdogLock);
+    if(t)
+        PR_JoinThread(t);
+    return PR_TRUE;
+}
+
+PRIntervalTime
+XPCJSRuntime::GetWatchdogLimit(JSContext *cx)
+{
+    return XPCContext::GetXPCContext(cx)->mWatchdogLimit;
+}
+
 /***************************************************************************/
 
 #ifdef XPC_CHECK_WRAPPERS_AT_SHUTDOWN
@@ -850,7 +978,7 @@ static JSDHashOperator
 DetachedWrappedNativeProtoShutdownMarker(JSDHashTable *table, JSDHashEntryHdr *hdr,
                                          uint32 number, void *arg)
 {
-    XPCWrappedNativeProto* proto = 
+    XPCWrappedNativeProto* proto =
         (XPCWrappedNativeProto*)((JSDHashEntryStub*)hdr)->key;
 
     proto->SystemIsBeingShutDown((JSContext*)arg);
@@ -1011,6 +1139,12 @@ XPCJSRuntime::~XPCJSRuntime()
         mClearedGlobalObjects.ops = nsnull;
     }
 
+    ShutdownWatchdog();
+    if(mWatchdogWakeup)
+        JS_DESTROY_CONDVAR(mWatchdogWakeup);
+    if(mWatchdogLock)
+        JS_DESTROY_LOCK(mWatchdogLock);
+
     if(mJSRuntime)
     {
         JS_DestroyRuntime(mJSRuntime);
@@ -1098,6 +1232,11 @@ XPCJSRuntime::XPCJSRuntime(nsXPConnect* aXPConnect)
     if(mJSRuntime && !JS_GetGlobalDebugHooks(mJSRuntime)->debuggerHandler)
         xpc_InstallJSDebuggerKeywordHandler(mJSRuntime);
 #endif
+
+    mWatchdogLock = JS_NEW_LOCK();
+    mWatchdogWakeup = JS_NEW_CONDVAR(mWatchdogLock);
+    mWatchdogThread = NULL;
+
 }
 
 // static
@@ -1147,7 +1286,7 @@ XPCJSRuntime::OnJSContextNew(JSContext *cx)
             mStrJSVals[i] = STRING_TO_JSVAL(str);
         }
     }
-    if (!ok)
+    if(!ok)
         return JS_FALSE;
 
     XPCPerThreadData* tls = XPCPerThreadData::GetData(cx);
@@ -1155,7 +1294,7 @@ XPCJSRuntime::OnJSContextNew(JSContext *cx)
         return JS_FALSE;
 
     XPCContext* xpc = new XPCContext(this, cx);
-    if (!xpc)
+    if(!xpc)
         return JS_FALSE;
 
     JS_SetThreadStackLimit(cx, tls->GetStackLimit());
