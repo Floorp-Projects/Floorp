@@ -2164,7 +2164,7 @@ nsGlobalWindow::SetOpenerWindow(nsIDOMWindowInternal* aOpener,
                "Shouldn't set mHadOriginalOpener if aOpener is null");
 
   mOpener = do_GetWeakReference(aOpener);
-  NS_ASSERTION(mOpener, "Opener must support weak references!");
+  NS_ASSERTION(mOpener || !aOpener, "Opener must support weak references!");
 
   if (aOriginalOpener) {
     mHadOriginalOpener = PR_TRUE;
