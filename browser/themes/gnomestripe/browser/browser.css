@@ -1300,10 +1300,32 @@ tabpanels {
   opacity: 0.0;
 }
 
+%ifndef USE_TAB_PREVIEWS
+/* All tabs menupopup */
+.alltabs-item > .menu-iconic-left > .menu-iconic-icon {
+  list-style-image: url("chrome://global/skin/icons/folder-item.png");
+  -moz-image-region: rect(0px, 16px, 16px, 0px);
+}
+
+.alltabs-item[selected="true"] {
+  font-weight: bold;
+}
+
+.alltabs-item[busy] > .menu-iconic-left > .menu-iconic-icon {
+  list-style-image: url("chrome://global/skin/icons/loading_16.png");
+}
+
+.tabs-alltabs-button > .toolbarbutton-icon {
+  margin: 0px;
+}
+
+%else
+
 .tabs-alltabs-button > .toolbarbutton-icon {
   list-style-image: url("chrome://browser/skin/tabbrowser/alltabs.png");
   margin: 2px 0 2px;
 }
+%endif
 
 /* Sidebar */
 #sidebar-box .tabs-closebutton {
