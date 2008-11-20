@@ -132,8 +132,9 @@ public:
     NS_DECL_NSISERIALIZABLE
     NS_DECL_NSICLASSINFO
 
-    // Override Clone()
+    // Override Clone() and Equals()
     NS_IMETHOD Clone(nsIURI** aClone);
+    NS_IMETHOD Equals(nsIURI* aOther, PRBool *aResult);
 
     nsIURI* GetBaseURI() const {
         return mBaseURI;
