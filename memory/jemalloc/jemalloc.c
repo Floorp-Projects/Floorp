@@ -174,7 +174,7 @@
     * XXX OS X over-commits, so we should probably use mmap() instead of
     * vm_allocate(), so that MALLOC_PAGEFILE works.
     */
-#  define MALLOC_PAGEFILE
+//#  define MALLOC_PAGEFILE
 #endif
 
 #ifdef MALLOC_PAGEFILE
@@ -5099,8 +5099,9 @@ malloc_ncpus(void)
 {
 	unsigned ret;
 	int fd, nread, column;
-	char buf[1];
+	char buf[1024];
 	static const char matchstr[] = "processor\t:";
+	int i;
 
 	/*
 	 * sysconf(3) would be the preferred method for determining the number
@@ -5120,20 +5121,23 @@ malloc_ncpus(void)
 		nread = read(fd, &buf, sizeof(buf));
 		if (nread <= 0)
 			break; /* EOF or error. */
-
-		if (buf[0] == '\n')
-			column = 0;
-		else if (column != -1) {
-			if (buf[0] == matchstr[column]) {
-				column++;
-				if (column == sizeof(matchstr) - 1) {
+		for (i = 0;i < nread;i++) {
+			char c = buf[i];
+			if (c == '\n')
+				column = 0;
+			else if (column != -1) {
+				if (c == matchstr[column]) {
+					column++;
+					if (column == sizeof(matchstr) - 1) {
+						column = -1;
+						ret++;
+					}
+				} else
 					column = -1;
-					ret++;
-				}
-			} else
-				column = -1;
+			}
 		}
 	}
+
 	if (ret == 0)
 		ret = 1; /* Something went wrong in the parser. */
 	close(fd);
