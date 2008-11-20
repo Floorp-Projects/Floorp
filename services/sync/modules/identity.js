@@ -44,6 +44,9 @@ const Cu = Components.utils;
 Cu.import("resource://gre/modules/XPCOMUtils.jsm");
 Cu.import("resource://weave/constants.js");
 Cu.import("resource://weave/util.js");
+Cu.import("resource://weave/async.js");
+
+Function.prototype.async = Async.sugar;
 
 Utils.lazy(this, 'ID', IDManager);
 
@@ -94,16 +97,6 @@ function Identity(realm, username, password) {
 Identity.prototype = {
   realm   : null,
 
-  // Only the "WeaveCryptoID" realm uses these:
-  privkey        : null,
-  pubkey         : null,
-  passphraseSalt : null,
-  privkeyWrapIV  : null,
-
-  // Only the per-engine identity uses these:
-  bulkKey : null,
-  bulkIV  : null,
-
   username : null,
   get userHash() { return Utils.sha1(this.username); },
 
@@ -119,5 +112,29 @@ Identity.prototype = {
 
   setTempPassword: function Id_setTempPassword(value) {
     this._password = value;
+  },
+
+  // we'll call this if set to call out to the ui to prompt the user
+  // note:the ui is expected to set the password/setTempPassword
+  // note2: callback must be an async.js style generator function
+  onGetPassword: null,
+
+  // Attempts to get the password from the user if not set
+  _getPassword: function Id__getPassword() {
+    let self = yield;
+    let pass;
+
+    if (this.password)
+      pass = this.password;
+    else {
+      if (this.onGetPassword) {
+        yield Async.run(this, this.onGetPassword, self.cb, this);
+        pass = this.password; // retry after ui callback
+      }
+    }
+    self.done(pass);
+  },
+  getPassword: function Id_getPassword(onComplete) {
+    this._getPassword.async(this, onComplete);
   }
 };
