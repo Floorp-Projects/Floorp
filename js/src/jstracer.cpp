@@ -2364,7 +2364,8 @@ TraceRecorder::joinEdgesToEntry(Fragmento* fragmento, Fragment* peer_root)
                         for (unsigned i = 0; i < count; i++)
                             oracle.markStackSlotUndemotable(cx->fp->script, 
                                                             cx->fp->regs->pc, demotes[i]);
-                        js_TrashTree(cx, uexit->fragment->root);
+                        trashTree = true;
+                        whichTreeToTrash = uexit->fragment->root;
                         break;
                     }
                 }
