@@ -739,11 +739,7 @@ struct JSContext {
      * Operation count. It is declared early in the structure as a frequently
      * accessed field.
      */
-#if !JS_HAS_OPERATION_COUNT
-    volatile int32      operationCount;
-#else
     int32               operationCount;
-#endif
 
 #if JS_HAS_XML_SUPPORT
     /*
@@ -852,10 +848,8 @@ struct JSContext {
      * but operationCallback is not null, operationCallback stores the branch
      * callback.
      */
-#if JS_HAS_OPERATION_COUNT
     uint32              operationCallbackIsSet :    1;
     uint32              operationLimit         :    31;
-#endif
     JSOperationCallback operationCallback;
 
     /* Interpreter activation count. */
@@ -879,10 +873,6 @@ struct JSContext {
 
 #define CX_FROM_THREAD_LINKS(tl) \
     ((JSContext *)((char *)(tl) - offsetof(JSContext, threadLinks)))
-#endif
-
-#if !JS_HAS_OPERATION_COUNT
-    PRIntervalTime      startTime;          /* time when the context thread was started */
 #endif
 
     /* PDL of stack headers describing stack slots not rooted by argv, etc. */
@@ -1048,7 +1038,7 @@ js_ValidContextPointer(JSRuntime *rt, JSContext *cx);
  * If unlocked, acquire and release rt->gcLock around *iterp update; otherwise
  * the caller must be holding rt->gcLock.
  */
-extern JS_FRIEND_API(JSContext *)
+extern JSContext *
 js_ContextIterator(JSRuntime *rt, JSBool unlocked, JSContext **iterp);
 
 /*
@@ -1210,11 +1200,9 @@ extern JSErrorFormatString js_ErrorFormatString[JSErr_Limit];
  * This macro can run the full GC. Return true if it is OK to continue and
  * false otherwise.
  */
-#if JS_HAS_OPERATION_COUNT
-
-# define JS_CHECK_OPERATION_LIMIT(cx, weight)                                 \
+#define JS_CHECK_OPERATION_LIMIT(cx, weight)                                  \
     (JS_CHECK_OPERATION_WEIGHT(weight),                                       \
-    (((cx)->operationCount -= (weight)) > 0 || js_ResetOperationCount(cx)))
+     (((cx)->operationCount -= (weight)) > 0 || js_ResetOperationCount(cx)))
 
 /*
  * A version of JS_CHECK_OPERATION_LIMIT that just updates the operation count
@@ -1222,35 +1210,31 @@ extern JSErrorFormatString js_ErrorFormatString[JSErr_Limit];
  * the count to 0 when it becomes negative to prevent a wrap-around when the
  * macro is called repeatably.
  */
-# define JS_COUNT_OPERATION(cx, weight)                                       \
+#define JS_COUNT_OPERATION(cx, weight)                                        \
     ((void)(JS_CHECK_OPERATION_WEIGHT(weight),                                \
-     (cx)->operationCount = ((cx)->operationCount > 0)                        \
-                            ? (cx)->operationCount - (weight)                 \
-                            : 0))
+            (cx)->operationCount = ((cx)->operationCount > 0)                 \
+                                   ? (cx)->operationCount - (weight)          \
+                                   : 0))
 
 /*
  * The implementation of the above macros assumes that subtracting weights
  * twice from a positive number does not wrap-around INT32_MIN.
  */
-# define JS_CHECK_OPERATION_WEIGHT(weight)                                    \
+#define JS_CHECK_OPERATION_WEIGHT(weight)                                     \
     (JS_ASSERT((uint32) (weight) > 0),                                        \
      JS_ASSERT((uint32) (weight) < JS_BIT(30)))
 
 /* Relative operations weights. */
-# define JSOW_JUMP                 1
-# define JSOW_ALLOCATION           100
-# define JSOW_LOOKUP_PROPERTY      5
-# define JSOW_GET_PROPERTY         10
-# define JSOW_SET_PROPERTY         20
-# define JSOW_NEW_PROPERTY         200
-# define JSOW_DELETE_PROPERTY      30
-# define JSOW_ENTER_SHARP          JS_OPERATION_WEIGHT_BASE
-# define JSOW_SCRIPT_JUMP          JS_OPERATION_WEIGHT_BASE
-#else
-# define JS_CHECK_OPERATION_LIMIT(cx, weight)                                 \
-     (((cx)->operationCount) > 0 || js_ResetOperationCount(cx))
-# define JS_COUNT_OPERATION(cx, weight) ((void) 0)
-#endif
+#define JSOW_JUMP                   1
+#define JSOW_ALLOCATION             100
+#define JSOW_LOOKUP_PROPERTY        5
+#define JSOW_GET_PROPERTY           10
+#define JSOW_SET_PROPERTY           20
+#define JSOW_NEW_PROPERTY           200
+#define JSOW_DELETE_PROPERTY        30
+#define JSOW_ENTER_SHARP            JS_OPERATION_WEIGHT_BASE
+#define JSOW_SCRIPT_JUMP            JS_OPERATION_WEIGHT_BASE
+
 /*
  * Reset the operation count and call the operation callback assuming that the
  * operation limit is reached.
