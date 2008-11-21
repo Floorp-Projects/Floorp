@@ -2222,6 +2222,7 @@ class RegExpNativeCompiler {
         LIns* skip;
         LIns* start;
         bool oom = false;
+        RESideExit* exit;
         
         this->cx = cx;
         jschar* re_chars;
@@ -2267,7 +2268,7 @@ class RegExpNativeCompiler {
                                   re_length - sizeof(jschar));
         guard = (GuardRecord *) skip->payload();
         memset(guard, 0, sizeof(*guard));
-        RESideExit* exit = (RESideExit*)(guard+1);
+        exit = (RESideExit*)(guard+1);
         guard->exit = exit;
         guard->exit->target = fragment;
         exit->re_flags = re->flags;
