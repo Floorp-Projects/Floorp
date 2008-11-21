@@ -2815,7 +2815,7 @@ Decompile(SprintStack *ss, jsbytecode *pc, intN nb, JSOp nextop)
                     LOCAL_ASSERT(atom);
                     goto do_setname;
                 }
-                lval = GetStr(ss, i);
+                lval = GetLocal(ss, i);
                 rval = POP_STR();
                 goto do_setlval;
 
