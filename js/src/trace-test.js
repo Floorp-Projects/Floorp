@@ -1929,6 +1929,17 @@ function testNullCallee() {
 testNullCallee.expected = true;
 test(testNullCallee);
 
+//test no multitrees assert
+function testBug466128() {
+    for (let a = 0; a < 3; ++a) { 
+      for each (let b in [1, 2, "three", 4, 5, 6, 7, 8]) {
+      }
+    }
+    return true;
+}
+testBug466128.expected = true;
+test(testBug466128);
+
 // BEGIN MANDELBROT STUFF
 // XXXbz I would dearly like to wrap it up into a function to avoid polluting
 // the global scope, but the function ends up heavyweight, and then we lose on
