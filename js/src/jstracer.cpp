@@ -979,8 +979,7 @@ TraceRecorder::TraceRecorder(JSContext* cx, VMSideExit* _anchor, Fragment* _frag
     this->atoms = cx->fp->script->atomMap.vector;
     this->deepAborted = false;
     this->applyingArguments = false;
-    this->trashTree = false;
-    this->whichTreeToTrash = _fragment->root;
+    this->trashSelf = false;
     this->global_dslots = this->globalObj->dslots;
     this->terminate = false;
     this->outerToBlacklist = outerToBlacklist;
@@ -1056,8 +1055,12 @@ TraceRecorder::~TraceRecorder()
             JS_ASSERT(!fragment->root->vmprivate);
             delete treeInfo;
         }
-        if (trashTree)
-            js_TrashTree(cx, whichTreeToTrash);
+        
+        if (trashSelf)
+            js_TrashTree(cx, fragment);
+
+        for (unsigned int i = 0; i < whichTreesToTrash.length(); i++)
+            js_TrashTree(cx, whichTreesToTrash.get(i));
     } else if (wasRootFragment) {
         delete treeInfo;
     }
@@ -2045,7 +2048,7 @@ TraceRecorder::deduceTypeStability(Fragment* root_peer, Fragment** stable_peer, 
             /* If the failure was an int->double, tell the oracle. */
             if (*m == JSVAL_INT && isNumber(*vp) && !isPromoteInt(get(vp)))
                 oracle.markGlobalSlotUndemotable(cx->fp->script, gslots[n]);
-            trashTree = true;
+            trashSelf = true;
             goto checktype_fail_1;
         }
         ++m;
@@ -2078,7 +2081,7 @@ checktype_fail_1:
             set(stage_vals[i], stage_ins[i]);
         return true;
     /* If we need to trash, don't bother checking peers. */
-    } else if (trashTree) {
+    } else if (trashSelf) {
         return false;
     } else {
         CLEAR_UNDEMOTE_SLOTLIST(demotes);
@@ -2231,7 +2234,7 @@ TraceRecorder::closeLoop(Fragmento* fragmento, bool& demote, unsigned *demotes)
     if (callDepth != 0) {
         debug_only_v(printf("Stack depth mismatch, possible recursion\n");)
         js_BlacklistPC(fragmento, fragment);
-        trashTree = true;
+        trashSelf = true;
         return false;
     }
 
@@ -2246,7 +2249,7 @@ TraceRecorder::closeLoop(Fragmento* fragmento, bool& demote, unsigned *demotes)
         AUDIT(unstableLoopVariable);
     #endif
 
-    if (trashTree) {
+    if (trashSelf) {
         debug_only_v(printf("Trashing tree from type instability.\n");)
         return false;
     }
@@ -2364,8 +2367,11 @@ TraceRecorder::joinEdgesToEntry(Fragmento* fragmento, Fragment* peer_root)
                         for (unsigned i = 0; i < count; i++)
                             oracle.markStackSlotUndemotable(cx->fp->script, 
                                                             cx->fp->regs->pc, demotes[i]);
-                        trashTree = true;
-                        whichTreeToTrash = uexit->fragment->root;
+                        JS_ASSERT(peer == uexit->fragment->root);
+                        if (fragment == peer)
+                            trashSelf = true;
+                        else
+                            whichTreesToTrash.addUnique(uexit->fragment->root);
                         break;
                     }
                 }
@@ -2393,7 +2399,7 @@ TraceRecorder::endLoop(Fragmento* fragmento)
     if (callDepth != 0) {
         debug_only_v(printf("Stack depth mismatch, possible recursion\n");)
         js_BlacklistPC(fragmento, fragment);
-        trashTree = true;
+        trashSelf = true;
         return;
     }
 
