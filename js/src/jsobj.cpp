@@ -3030,10 +3030,15 @@ js_CheckForStringIndex(jsid id, const jschar *cp, const jschar *end,
             cp++;
         }
     }
-    if (cp == end &&
-        (oldIndex < (JSVAL_INT_MAX / 10) ||
-         (oldIndex == (JSVAL_INT_MAX / 10) &&
-          c <= (JSVAL_INT_MAX % 10)))) {
+
+    /*
+     * Non-integer indexes can't be represented as integers.  Also, distinguish
+     * index "-0" from "0", because JSVAL_INT cannot.
+     */
+    if (cp != end || (negative && index == 0))
+        return id;
+    if (oldIndex < JSVAL_INT_MAX / 10 ||
+        (oldIndex == JSVAL_INT_MAX / 10 && c <= (JSVAL_INT_MAX % 10))) {
         if (negative)
             index = 0 - index;
         id = INT_TO_JSID((jsint)index);
