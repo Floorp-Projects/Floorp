@@ -112,6 +112,10 @@ public:
         _len = 0;
     }
 
+    const T & get(unsigned i) const {
+        return _data[i];
+    }
+
     unsigned length() const {
         return _len;
     }
@@ -284,8 +288,8 @@ class TraceRecorder : public avmplus::GCObject {
     nanojit::LIns*          inner_sp_ins;
     bool                    deepAborted;
     bool                    applyingArguments;
-    bool                    trashTree;
-    nanojit::Fragment*      whichTreeToTrash;
+    bool                    trashSelf;
+    Queue<nanojit::Fragment*> whichTreesToTrash;
     Queue<jsbytecode*>      cfgMerges;
     jsval*                  global_dslots;
     JSTraceableNative*      pendingTraceableNative;
