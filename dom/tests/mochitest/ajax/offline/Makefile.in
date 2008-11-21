@@ -60,6 +60,13 @@ _TEST_FILES	= \
 	test_refetchManifest.html \
 	test_offlineIFrame.html \
 	test_bug445544.html \
+	test_offlineMode.html \
+	test_foreign.html \
+	test_fallback.html \
+	test_updatingManifest.html \
+	notonwhitelist.html \
+	onwhitelist.html \
+	onwhitelist.html^headers^ \
 	445544_part1.html \
 	445544_part2.html \
 	445544.cacheManifest \
