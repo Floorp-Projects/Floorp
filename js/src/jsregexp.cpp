@@ -1966,12 +1966,52 @@ typedef List<LIns*, LIST_NonGCObjects> LInsList;
 /* Dummy GC for nanojit placement new. */
 static GC gc;
 
+static void*
+HashRegExp(uint16 flags, jschar* s, size_t n)
+{
+    uint32 h;
+
+    for (h = 0; n; s++, n--)
+        h = JS_ROTATE_LEFT32(h, 4) ^ *s;
+    return (void*)(h + flags);
+}
+
+struct RESideExit : public SideExit {
+    size_t re_length;
+    uint16 re_flags;
+    jschar re_chars[1];
+};
+
+static Fragment* 
+LookupNativeRegExp(JSContext* cx, void* hash, uint16 re_flags, jschar* re_chars, size_t re_length)
+{
+    Fragmento* fragmento = JS_TRACE_MONITOR(cx).reFragmento;
+    Fragment* fragment = fragmento->getLoop(hash);
+    while (fragment) {
+        if (fragment->lastIns) {
+            RESideExit* exit = (RESideExit*)fragment->lastIns->record()->exit;
+            if (exit->re_flags == re_flags && 
+                exit->re_length == re_length &&
+                !memcmp(exit->re_chars, re_chars, re_length)) {
+                return fragment;
+            }
+        }
+        fragment = fragment->peer;
+    }
+    return NULL;
+}
+
+static JSBool
+ProcessCharSet(JSContext *cx, JSRegExp *re, RECharSet *charSet);
+
 class RegExpNativeCompiler {
  private:
-    JSRegExp*        re;   /* Careful: not fully initialized */
-    CompilerState*   cs;   /* RegExp to compile */
+    JSContext*       cx;
+    JSRegExp*        re;
+    CompilerState*   cs;            /* RegExp to compile */
     Fragment*        fragment;
     LirWriter*       lir;
+    LirBufWriter*    lirBufWriter;  /* for skip */
 
     LIns*            state;
     LIns*            gdata;
@@ -1999,14 +2039,13 @@ class RegExpNativeCompiler {
         return pos;
     }
 
-    LIns* compileFlatSingleChar(RENode* node, LIns* pos, LInsList& fails) 
+    LIns* compileFlatSingleChar(jschar ch, LIns* pos, LInsList& fails) 
     {
         /* 
          * Fast case-insensitive test for ASCII letters: convert text
          * char to lower case by bit-or-ing in 32 and compare.
          */
         JSBool useFastCI = JS_FALSE;
-        jschar ch = node->u.flat.chr; /* char to test for */
         jschar ch2 = ch;              /* 2nd char to test for if ci */
         if (cs->flags & JSREG_FOLD) {
             if ((L'A' <= ch && ch <= L'Z') || (L'a' <= ch && ch <= L'z')) {
@@ -2038,16 +2077,33 @@ class RegExpNativeCompiler {
 
     LIns* compileClass(RENode* node, LIns* pos, LInsList& fails) 
     {
-        if (!node->u.ucclass.sense) 
+        if (!node->u.ucclass.sense)
             return JS_FALSE;
+        /* 
+         * If we share generated native code, we need to make a copy
+         * of the bitmap because the original regexp's copy is destroyed
+         * when that regexp is. 
+         */
+        RECharSet *charSet = &re->classList[node->u.ucclass.index];
+        size_t bitmapLen = (charSet->length >> 3) + 1;
+        /* skip() can't hold large data blocks. */
+        if (bitmapLen > 1024)
+            return NULL;
+        /* The following line allocates charSet.u.bits if successful. */
+        if (!charSet->converted && !ProcessCharSet(cx, re, charSet))
+            return NULL;
+        LIns* skip = lirBufWriter->skip(bitmapLen);
+        if (fragment->lirbuf->outOmem())
+            return NULL;
+        void* bitmapData = skip->payload();
+        memcpy(bitmapData, charSet->u.bits, bitmapLen);
 
-        RECharSet* charSet = InitNodeCharSet(re, node);
         LIns* to_fail = lir->insBranch(LIR_jf, lir->ins2(LIR_lt, pos, cpend), 0);
         fails.add(to_fail);
         LIns* text_ch = lir->insLoad(LIR_ldcs, pos, lir->insImm(0));
         fails.add(lir->insBranch(LIR_jf, lir->ins2(LIR_le, text_ch, lir->insImm(charSet->length)), 0));
         LIns* byteIndex = lir->ins2(LIR_rsh, text_ch, lir->insImm(3));
-        LIns* bitmap = lir->insLoad(LIR_ld, lir->insImmPtr(charSet), (int) offsetof(RECharSet, u.bits));
+        LIns* bitmap = lir->insImmPtr(bitmapData);
         LIns* byte = lir->insLoad(LIR_ldcb, lir->ins2(LIR_piadd, bitmap, byteIndex), (int) 0);
         LIns* bitMask = lir->ins2(LIR_lsh, lir->insImm(1),
                                lir->ins2(LIR_and, text_ch, lir->insImm(0x7)));
@@ -2092,9 +2148,14 @@ class RegExpNativeCompiler {
                 pos = compileEmpty(node, pos, fails);
                 break;
             case REOP_FLAT:
-                if (node->u.flat.length != 1) 
-                    return JS_FALSE;
-                pos = compileFlatSingleChar(node, pos, fails);
+                if (node->u.flat.length == 1) {
+                    pos = compileFlatSingleChar(node->u.flat.chr, pos, fails);
+                } else {
+                    for (size_t i = 0; i < node->u.flat.length; ++i) {
+                        pos = compileFlatSingleChar(((jschar*) node->kid)[i], pos, fails);
+                        if (!pos) break;
+                    }
+                }
                 break;
             case REOP_ALT:
             case REOP_ALTPREREQ:
@@ -2153,7 +2214,7 @@ class RegExpNativeCompiler {
 
  public:
     RegExpNativeCompiler(JSRegExp *re, CompilerState *cs) 
-        : re(re), cs(cs), fragment(NULL) {  }
+        : re(re), cs(cs), fragment(NULL), lir(NULL), lirBufWriter(NULL) {  }
 
     JSBool compile(JSContext* cx) 
     {
@@ -2162,19 +2223,26 @@ class RegExpNativeCompiler {
         LIns* start;
         bool oom = false;
         
+        this->cx = cx;
+        jschar* re_chars;
+        size_t re_length;
+        JSSTRING_CHARS_AND_LENGTH(re->source, re_chars, re_length);
+        void* hash = HashRegExp(re->flags, re_chars, re_length);
         Fragmento* fragmento = JS_TRACE_MONITOR(cx).reFragmento;
-        fragment = fragmento->getLoop(re);
-        if (!fragment) {
-            fragment = fragmento->getAnchor(re);
+        if ((fragment = LookupNativeRegExp(cx, hash, re->flags, re_chars, re_length))) {
+            if (fragment->code()) return JS_TRUE;
+            if (fragment->isBlacklisted()) return JS_FALSE;
+        } else {
+            fragment = fragmento->getAnchor(hash);
             fragment->lirbuf = new (&gc) LirBuffer(fragmento, NULL);
-            /* Scary: required to have the onDestroy method delete the lirbuf. */
+            /* required to have the onDestroy method delete the lirbuf. */
             fragment->root = fragment;
         }
+        /* At this point we have an empty fragment. */
         LirBuffer* lirbuf = fragment->lirbuf;
-        LirBufWriter* lirb;
-        if (lirbuf->outOmem()) goto fail2;
+        if (lirbuf->outOmem()) goto fail;
         /* FIXME Use bug 463260 smart pointer when available. */
-        lir = lirb = new (&gc) LirBufWriter(lirbuf);
+        lir = lirBufWriter = new (&gc) LirBufWriter(lirbuf);
 
         /* FIXME Use bug 463260 smart pointer when available. */
         debug_only_v(fragment->lirbuf->names = new (&gc) LirNameMap(&gc, NULL, fragmento->labels);)
@@ -2194,11 +2262,17 @@ class RegExpNativeCompiler {
         }
 
         /* Create fake guard record for loop edge. */
-        skip = lirb->skip(sizeof(GuardRecord) + sizeof(SideExit));
+        skip = lirBufWriter->skip(sizeof(GuardRecord) + 
+                                  sizeof(RESideExit) + 
+                                  re_length - sizeof(jschar));
         guard = (GuardRecord *) skip->payload();
         memset(guard, 0, sizeof(*guard));
-        guard->exit = (SideExit *) guard+1;
+        RESideExit* exit = (RESideExit*)(guard+1);
+        guard->exit = exit;
         guard->exit->target = fragment;
+        exit->re_flags = re->flags;
+        exit->re_length = re_length;
+        memcpy(exit->re_chars, re_chars, re_length);
         fragment->lastIns = lir->insGuard(LIR_loop, lir->insImm(1), skip);
 
         ::compile(fragmento->assm(), fragment);
@@ -2207,15 +2281,18 @@ class RegExpNativeCompiler {
             goto fail;
         }
 
-        delete lirb;
+        delete lirBufWriter;
         debug_only_v(delete lir;)
         return JS_TRUE;
     fail:
-        delete lirb;
+        delete lirBufWriter;
         debug_only_v(delete lir;)
-    fail2:
-        if (lirbuf->outOmem() || oom) 
+        if (lirbuf->outOmem() || oom) {
             fragmento->clearFrags();
+        } else {
+            /* Don't try to compile again if non-oom error. */
+            fragment->blacklist();
+        }
         return JS_FALSE;
     }
 };
@@ -2297,15 +2374,6 @@ js_NewRegExp(JSContext *cx, JSTokenStream *ts,
         re->classList = NULL;
     }
 
-#ifdef JS_TRACER
-    /*
-     * Try compiling the native code version. For the time being we also 
-     * compile the bytecode version in case we evict the native code
-     * version from the code cache.
-     */
-    if (TRACING_ENABLED(cx))
-        js_CompileRegExpToNative(cx, re, &state);
-#endif
     /* Compile the bytecode version. */
     endPC = EmitREBytecode(&state, re, state.treeDepth, re->program, state.result);
     if (!endPC) {
@@ -2319,11 +2387,6 @@ js_NewRegExp(JSContext *cx, JSTokenStream *ts,
      * This is safe since no pointers to newly parsed regexp or its parts
      * besides re exist here.
      */
-#if 0 
-    /*
-     * FIXME: Until bug 464866 is fixed, we can't move the re object so
-     * don't shrink it for now.
-     */
     if ((size_t)(endPC - re->program) != state.progLength + 1) {
         JSRegExp *tmp;
         JS_ASSERT((size_t)(endPC - re->program) < state.progLength + 1);
@@ -2332,11 +2395,15 @@ js_NewRegExp(JSContext *cx, JSTokenStream *ts,
         if (tmp)
             re = tmp;
     }
-#endif    
 
     re->flags = flags;
     re->parenCount = state.parenCount;
     re->source = str;
+
+#ifdef JS_TRACER
+    if (TRACING_ENABLED(cx))
+        js_CompileRegExpToNative(cx, re, &state);
+#endif
 
 out:
     JS_ARENA_RELEASE(&cx->tempPool, mark);
@@ -2637,7 +2704,7 @@ AddInvertedCharacterRanges(RECharSet *charSet,
     
 /* Compile the source of the class into a RECharSet */
 static JSBool
-ProcessCharSet(REGlobalData *gData, RECharSet *charSet)
+ProcessCharSet(JSContext *cx, JSRegExp *re, RECharSet *charSet)
 {
     const jschar *src, *end;
     JSBool inRange = JS_FALSE;
@@ -2653,21 +2720,20 @@ ProcessCharSet(REGlobalData *gData, RECharSet *charSet)
      */
     JS_ASSERT(1 <= charSet->u.src.startIndex);
     JS_ASSERT(charSet->u.src.startIndex
-              < JSSTRING_LENGTH(gData->regexp->source));
-    JS_ASSERT(charSet->u.src.length <= JSSTRING_LENGTH(gData->regexp->source)
+              < JSSTRING_LENGTH(re->source));
+    JS_ASSERT(charSet->u.src.length <= JSSTRING_LENGTH(re->source)
                                        - 1 - charSet->u.src.startIndex);
 
     charSet->converted = JS_TRUE;
-    src = JSSTRING_CHARS(gData->regexp->source) + charSet->u.src.startIndex;
+    src = JSSTRING_CHARS(re->source) + charSet->u.src.startIndex;
     end = src + charSet->u.src.length;
     JS_ASSERT(src[-1] == '[');
     JS_ASSERT(end[0] == ']');
 
     byteLength = (charSet->length >> 3) + 1;
-    charSet->u.bits = (uint8 *)JS_malloc(gData->cx, byteLength);
+    charSet->u.bits = (uint8 *)JS_malloc(cx, byteLength);
     if (!charSet->u.bits) {
-        JS_ReportOutOfMemory(gData->cx);
-        gData->ok = JS_FALSE;
+        JS_ReportOutOfMemory(cx);
         return JS_FALSE;
     }
     memset(charSet->u.bits, 0, byteLength);
@@ -2806,7 +2872,7 @@ ProcessCharSet(REGlobalData *gData, RECharSet *charSet)
 
         }
         if (inRange) {
-            if (gData->regexp->flags & JSREG_FOLD) {
+            if (re->flags & JSREG_FOLD) {
                 int i;
 
                 JS_ASSERT(rangeStart <= thisCh);
@@ -2826,7 +2892,7 @@ ProcessCharSet(REGlobalData *gData, RECharSet *charSet)
             }
             inRange = JS_FALSE;
         } else {
-            if (gData->regexp->flags & JSREG_FOLD) {
+            if (re->flags & JSREG_FOLD) {
                 AddCharacterToCharSet(charSet, upcase(thisCh));
                 AddCharacterToCharSet(charSet, downcase(thisCh));
             } else {
@@ -2844,16 +2910,17 @@ ProcessCharSet(REGlobalData *gData, RECharSet *charSet)
     return JS_TRUE;
 }
 
+static inline JSBool
+MatcherProcessCharSet(REGlobalData *gData, RECharSet *charSet) {
+    JSBool rv = ProcessCharSet(gData->cx, gData->regexp, charSet);
+    if (!rv) gData->ok = JS_FALSE;
+    return rv;
+}
+
 void
 js_DestroyRegExp(JSContext *cx, JSRegExp *re)
 {
     if (JS_ATOMIC_DECREMENT(&re->nrefs) == 0) {
-#ifdef JS_TRACER
-        /* Don't reuse this compiled code for some new regexp at same addr. */
-        Fragment* fragment = JS_TRACE_MONITOR(cx).reFragmento->getLoop(re);
-        if (fragment) 
-            fragment->blacklist();
-#endif
         if (re->classList) {
             uintN i;
             for (i = 0; i < re->classCount; i++) {
@@ -3178,7 +3245,7 @@ ExecuteREBytecode(REGlobalData *gData, REMatchState *x)
                         goto doAlt;
 
                     charSet = &gData->regexp->classList[k];
-                    if (!charSet->converted && !ProcessCharSet(gData, charSet))
+                    if (!charSet->converted && !MatcherProcessCharSet(gData, charSet))
                         goto bad;
                     matchCh1 = *x->cp;
                     k = matchCh1 >> 3;
@@ -3664,9 +3731,16 @@ MatchRegExp(REGlobalData *gData, REMatchState *x)
     Fragment *fragment;
 
     /* Run with native regexp if possible. */
-    if (TRACING_ENABLED(gData->cx) &&
-        ((fragment = JS_TRACE_MONITOR(gData->cx).reFragmento->getLoop(gData->regexp)) != NULL)
-        && fragment->code() && !fragment->isBlacklisted()) {
+    jschar* re_chars;
+    size_t re_length;
+    JSContext* cx = gData->cx;
+    JSRegExp* re = gData->regexp;
+    JSSTRING_CHARS_AND_LENGTH(re->source, re_chars, re_length);
+    void* hash = HashRegExp(re->flags, re_chars, re_length);
+    if (TRACING_ENABLED(cx) && 
+        ((fragment = LookupNativeRegExp(cx, hash, re->flags, re_chars, re_length)) != NULL) &&
+        !fragment->isBlacklisted() &&
+        fragment->code()) {
         union { NIns *code; REMatchState* (FASTCALL *func)(void*, void*); } u;
         u.code = fragment->code();
         REMatchState *lr;
@@ -3756,7 +3830,7 @@ InitMatch(JSContext *cx, REGlobalData *gData, JSRegExp *re, size_t length)
 
     for (i = 0; i < re->classCount; i++) {
         if (!re->classList[i].converted &&
-            !ProcessCharSet(gData, &re->classList[i])) {
+            !MatcherProcessCharSet(gData, &re->classList[i])) {
             return NULL;
         }
     }
