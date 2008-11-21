@@ -489,6 +489,12 @@ js_FreeSlot(JSContext *cx, JSObject *obj, uint32 slot);
 /* JSVAL_INT_MAX as a string */
 #define JSVAL_INT_MAX_STRING "1073741823"
 
+/*
+ * Convert string indexes that convert to int jsvals as ints to save memory.
+ * Care must be taken to use this macro every time a property name is used, or
+ * else double-sets, incorrect property cache misses, or other mistakes could
+ * occur.
+ */
 #define CHECK_FOR_STRING_INDEX(id)                                            \
     JS_BEGIN_MACRO                                                            \
         if (JSID_IS_ATOM(id)) {                                               \
