@@ -1,0 +1,143 @@
+<?xml version="1.0"?>
+<!DOCTYPE bindings PUBLIC "-//MOZILLA//DTD XBL V1.0//EN" "http://www.mozilla.org/xbl">
+
+<bindings
+    xmlns="http://www.mozilla.org/xbl"
+    xmlns:xbl="http://www.mozilla.org/xbl"
+    xmlns:html="http://www.w3.org/1999/xhtml"
+    xmlns:xul="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
+
+  <binding id="documenttab"
+           extends="chrome://global/content/bindings/richlistbox.xml#richlistitem">
+    <content>
+      <xul:stack anonid="page" class="documenttab-container" flex="1">
+        <html:canvas anonid="canvas" class="documenttab-canvas" width="80" height="60"/>
+        <xul:vbox align="start">
+          <xul:image anonid="close" class="documenttab-close"/>
+        </xul:vbox>
+      </xul:stack>
+    </content>
+    <implementation>
+      <constructor><![CDATA[
+        let close = document.getAnonymousElementByAttribute(this, "anonid", "close");
+        let closefn = new Function("event", this.control.getAttribute("onclosetab"));
+        var self = this;
+        close.addEventListener("mousedown", function(event) { closefn.call(self, event); event.stopPropagation(); }, true);
+      ]]></constructor>
+
+      <method name="updateThumbnail">
+        <parameter name="browser"/>
+        <parameter name="srcCanvas"/>
+        <body>
+          <![CDATA[
+            const tabWidth = 80;
+            const tabHeight = 60;
+            let canvas = document.getAnonymousElementByAttribute(this, "anonid", "canvas");
+
+            let domWin = browser.contentWindow;
+            let ctx = canvas.getContext("2d");
+
+            if (srcCanvas) {
+              ctx.drawImage(srcCanvas, 0, 0, tabWidth, tabHeight)
+            }
+            else {
+              let width = domWin.innerWidth;
+              let height = domWin.innerHeight;
+              ctx.clearRect(0, 0, tabWidth, tabHeight);
+              ctx.save();
+              ctx.scale(tabWidth / width, tabHeight / height);
+              ctx.drawWindow(domWin, 0, 0, width, height, "white");
+              ctx.restore();
+            }
+          ]]>
+        </body>
+      </method>
+
+      <method name="markInvalid">
+        <parameter name="browser"/>
+        <body>
+          <![CDATA[
+            let canvas = document.getAnonymousElementByAttribute(this, "anonid", "canvas");
+            let ctx = canvas.getContext("2d");
+
+            ctx.save();
+            ctx.strokeStyle = "red";
+            ctx.moveTo(63, 43);
+            ctx.lineTo(78, 58);
+            ctx.moveTo(78, 43);
+            ctx.lineTo(63, 58);
+            ctx.stroke();
+            ctx.restore();
+          ]]>
+        </body>
+      </method>
+    </implementation>
+  </binding>
+
+  <!-- very hacky, used to display richlistitems in multiple columns -->
+  <binding id="tablist"
+           extends="chrome://global/content/bindings/richlistbox.xml#richlistbox">
+    <content>
+      <children includes="listheader"/>
+      <xul:scrollbox allowevents="true" orient="horizontal" anonid="main-box"
+                     flex="1" style="overflow: auto;">
+        <children/>
+      </xul:scrollbox>
+    </content>
+
+    <implementation>
+      <field name="tabsPerColumn">4</field>
+      <property name="children" readonly="true">
+        <getter>
+          <![CDATA[
+            var childNodes = [];
+            for (var box = this.firstChild; box; box = box.nextSibling) {
+              for (var child = box.firstChild; child; child = child.nextSibling) {
+                if (child instanceof Components.interfaces.nsIDOMXULSelectControlItemElement)
+                  childNodes.push(child);
+              }
+            }
+            return childNodes;
+          ]]>
+        </getter>
+      </property>
+      <method name="addTab">
+        <parameter name="tab"/>
+        <body>
+          <![CDATA[
+            if (this.children.length % this.tabsPerColumn == 0)
+              this.appendChild(document.createElement("vbox"));
+            this.lastChild.appendChild(tab);
+
+            return tab;
+          ]]>
+        </body>
+      </method>
+      <method name="removeTab">
+        <parameter name="tab"/>
+        <body>
+          <![CDATA[
+            var idx = this.getIndexOfItem(tab);
+            if (idx == -1)
+              return;
+
+            // remove all later tabs and readd them so that there aren't empty columns
+            var count = this.itemCount - 1;
+            var tomove = [ ];
+            for (var c = count; c >= idx; c--) {
+              var tab = this.getItemAtIndex(c);
+              tomove.push(tab.parentNode.removeChild(tab));
+              if (!this.lastChild.hasChildNodes())
+                this.removeChild(this.lastChild);
+            }
+
+            // subtract 2 because the tab to remove should not be added back again
+            for (var m = tomove.length - 2; m >= 0; m--)
+              this.addTab(tomove[m]);
+          ]]>
+        </body>
+      </method>
+    </implementation>
+  </binding>
+
+</bindings>

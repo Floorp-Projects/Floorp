@@ -25,6 +25,7 @@
  *   Mark Finkle <mfinkle@mozilla.com>
  *   Aleks Totic <a@totic.org>
  *   Johnathan Nightingale <johnath@mozilla.com>
+ *   Stuart Parmenter <stuart@mozilla.com>
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -60,13 +61,71 @@ __defineGetter__("gPrefService", function () {
 });
 
 function getBrowser() {
-  return Browser.content.browser;
+  return Browser.currentBrowser;
 }
+
+var ws = null;
+var ih = null;
 
 var Browser = {
   _content : null,
+  _tabs : [],
+  _currentTab : null,
 
-  startup : function() {
+  startup: function() {
+    var self = this;
+
+    // initalize the CanvasBrowser
+    this._content = new CanvasBrowser(document.getElementById("canvas"));
+
+    // initialize the WidgetStack
+    ws = new WidgetStack(document.getElementById("browser-container"));
+    ws.setViewportBounds({ top: 0, left: 0, right: 800, bottom: 480 });
+
+    // XXX this should live elsewhere
+    window.gSidebarVisible = false;
+    function panHandler(vr) {
+      var visibleNow = ws.isWidgetVisible("browser-controls") || ws.isWidgetVisible("tabs-container");
+
+      // XXX add code here to snap side panels fully out if they start to appear,
+      // or snap them back if they only showed up for a little bit
+
+      if (visibleNow && !gSidebarVisible) {
+        ws.freeze("toolbar-main");
+        ws.moveFrozenTo("toolbar-main", 0, 0);
+      }
+      else if (!visibleNow && gSidebarVisible) {
+        ws.unfreeze("toolbar-main");
+      }
+      gSidebarVisible = visibleNow;
+
+      // deal with checkerboard
+      /*
+      let stack = document.getElementById("browser-container");
+      stack.style.backgroundPosition =  -vr.left + "px " + -vr.top + "px";
+      */
+
+      // this is really only necessary for maemo, where we don't
+      // always repaint fast enough
+      window.QueryInterface(Ci.nsIInterfaceRequestor).getInterface(Ci.nsIDOMWindowUtils).processUpdates();
+    }
+
+    ws.setPanHandler(panHandler);
+
+    function resizeHandler() { ws.updateSize(); }
+    window.addEventListener("resize", resizeHandler, false);
+
+    setTimeout(resizeHandler, 0);
+
+    function viewportHandler(b, ob) { self._content.viewportHandler(b, ob); }
+    ws.setViewportHandler(viewportHandler);
+
+    // initialize input handling
+    ih = new InputHandler();
+
+    // Create the first tab
+    this.newTab(true);
+
     window.controllers.appendController(this);
     window.controllers.appendController(BrowserUI);
 
@@ -86,25 +145,24 @@ var Browser = {
     var styleURI = ios.newURI("chrome://browser/content/scrollbars.css", null, null);
     styleSheets.loadAndRegisterSheet(styleURI, styleSheets.AGENT_SHEET);
 
-    this._content = document.getElementById("content");
-    this._content.progressListenerCreator = function (content, browser) {
-      return new ProgressController(content, browser);
-    };
-
     var os = Cc["@mozilla.org/observer-service;1"].getService(Ci.nsIObserverService);
     os.addObserver(gXPInstallObserver, "xpinstall-install-blocked", false);
     os.addObserver(gXPInstallObserver, "xpinstall-download-started", false);
+
+    // XXX hook up memory-pressure notification to clear out tab browsers
+    //os.addObserver(function(subject, topic, data) self.destroyEarliestBrowser(), "memory-pressure", false);
 
     BrowserUI.init();
 
     window.QueryInterface(Ci.nsIDOMChromeWindow).browserDOMWindow = new nsBrowserAccess();
 
-    this._content.addEventListener("command", this._handleContentCommand, false);
-    this._content.addEventListener("DOMUpdatePageReport", gPopupBlockerObserver.onUpdatePageReport, false);
-    this._content.tabList = document.getElementById("tab-list");
-    this._content.newTab(true);
+    let browsers = document.getElementById("browsers");
+    browsers.addEventListener("command", this._handleContentCommand, false);
+    browsers.addEventListener("DOMUpdatePageReport", gPopupBlockerObserver.onUpdatePageReport, false);
 
-    var deckbrowser = this.content;
+    /* Initialize Spatial Navigation */
+    /*
+    var deckbrowser = content;
     function panCallback(aElement) {
       // SpatialNav calls commandDispatcher.advanceFocus/rewindFocus, which
       // can mess the scroll state up. Reset it.
@@ -115,12 +173,18 @@ var Browser = {
 
       deckbrowser.ensureElementIsVisible(aElement);
     }
-    SpatialNavigation.init(this.content, panCallback);
+    SpatialNavigation.init(content, panCallback);
+    */
 
+    /* Initialize Geolocation */
     this.setupGeolocationPrompt();
 
+
+    /* Login Manager */
     Cc["@mozilla.org/login-manager;1"].getService(Ci.nsILoginManager);
 
+
+    /* Command line arguments/initial homepage */
     // If this is an intial window launch (was a nsICommandLine passed via window params)
     // we execute some logic to load the initial launch page
     if (window.arguments && window.arguments[0]) {
@@ -171,13 +235,26 @@ var Browser = {
     gPrefService.setBoolPref("temporary.disablePlugins", false);
   },
 
+  updateViewportSize: function() {
+    // XXX make sure this is right, and then add a better function for it.
+    var [w,h] = this._content._contentAreaDimensions;
+    w = Math.ceil(this._content._pageToScreen(w));
+    h = Math.ceil(this._content._pageToScreen(h));
+
+    if (!this._currentViewportBounds || w != this._currentViewportBounds.width || h != this._currentViewportBounds.height) {
+      this._currentViewportBounds = {width: w, height: h};
+      let bounds = { top: 0, left: 0, right: Math.max(800, w), bottom: Math.max(480, h) }
+      //dump("setViewportBounds: " + bounds.toSource() + "\n");
+      ws.setViewportBounds(bounds);
+    }
+  },
+
   setPluginState: function(enabled)
   {
-    var phs = Components.classes["@mozilla.org/plugin/host;1"]
-                        .getService(Components.interfaces.nsIPluginHost);
+    var phs = Cc["@mozilla.org/plugin/host;1"].getService(Ci.nsIPluginHost);
     var plugins = phs.getPluginTags({ });
-     for (var i = 0; i < plugins.length; ++i)
-       plugins[i].disabled = !enabled;
+    for (var i = 0; i < plugins.length; ++i)
+      plugins[i].disabled = !enabled;
   },
 
   setupGeolocationPrompt: function() {
@@ -234,14 +311,94 @@ var Browser = {
    * have more than one
    */
   get currentBrowser() {
-    return this._content.browser;
+    return this._currentTab.browser;
   },
 
-  supportsCommand : function(cmd) {
+  get currentTab() {
+    return this._currentTab;
+  },
+
+  getTabAtIndex: function(index) {
+    if (index > this._tabs.length || index < 0)
+      return null;
+    return this._tabs[index];
+  },
+
+  getTabFromContent: function(content) {
+    for (var t = 0; t < this._tabs.length; t++) {
+      if (this._tabs[t].content == content)
+        return this._tabs[t];
+    }
+    return null;
+  },
+
+  newTab: function(bringFront) {
+    let newTab = new Tab();
+    newTab.create();
+    this._tabs.push(newTab);
+
+    let event = document.createEvent("Events");
+    event.initEvent("TabOpen", true, false);
+    newTab.content.dispatchEvent(event);
+
+    if (bringFront)
+      this.selectTab(newTab);
+
+    return newTab;
+  },
+
+  closeTab: function(tab) {
+    if (tab instanceof XULElement)
+      tab = this.getTabFromContent(tab);
+
+    if (!tab)
+      return;
+
+    let tabIndex = this._tabs.indexOf(tab);
+
+    let nextTab = this._currentTab;
+    if (this._currentTab == tab) {
+      nextTab = this.getTabAtIndex(tabIndex + 1) || this.getTabAtIndex(tabIndex - 1);
+      if (!nextTab)
+        return;
+    }
+
+    let event = document.createEvent("Events");
+    event.initEvent("TabClose", true, false);
+    tab.content.dispatchEvent(event);
+
+    tab.destroy();
+    this._tabs.splice(tabIndex, 1);
+
+    // redraw the tabs
+    for (let t = tabIndex; t < this._tabs.length; t++)
+      this._tabs[t].updateThumbnail();
+
+    this.selectTab(nextTab);
+  },
+
+  selectTab: function(tab) {
+    if (tab instanceof XULElement)
+      tab = this.getTabFromContent(tab);
+
+    if (!tab || this._currentTab == tab)
+      return;
+
+    this._currentTab = tab;
+    this._content.setCurrentBrowser(this.currentBrowser);
+    document.getElementById("tabs").selectedItem = tab.content;
+
+    ws.panTo(0,0, true);
+
+    let event = document.createEvent("Events");
+    event.initEvent("TabSelect", true, false);
+    tab.content.dispatchEvent(event);
+  },
+
+  supportsCommand: function(cmd) {
     var isSupported = false;
     switch (cmd) {
       case "cmd_fullscreen":
-      case "cmd_downloads":
         isSupported = true;
         break;
       default:
@@ -251,12 +408,12 @@ var Browser = {
     return isSupported;
   },
 
-  isCommandEnabled : function(cmd) {
+  isCommandEnabled: function(cmd) {
     return true;
   },
 
-  doCommand : function(cmd) {
-    var browser = this.content.browser;
+  doCommand: function(cmd) {
+    var browser = this.currentBrowser;
 
     switch (cmd) {
       case "cmd_fullscreen":
@@ -265,7 +422,7 @@ var Browser = {
     }
   },
 
-  getNotificationBox : function() {
+  getNotificationBox: function() {
     return document.getElementById("notifications");
   },
 
@@ -276,7 +433,7 @@ var Browser = {
     var findbar = document.getElementById("findbar");
     var browser = findbar.browser;
     if (!browser) {
-      browser = this.content.browser;
+      browser = this.currentBrowser;
       findbar.browser = browser;
     }
 
@@ -378,174 +535,26 @@ var Browser = {
   }
 };
 
-function ProgressController(aTabBrowser, aBrowser) {
-  this._tabbrowser = aTabBrowser;
-  this.init(aBrowser);
-}
-
-ProgressController.prototype = {
-  _browser : null,
-
-  init : function(aBrowser) {
-    this._browser = aBrowser;
-  },
-
-  onStateChange : function(aWebProgress, aRequest, aStateFlags, aStatus) {
-    // we currently only care about state changes for the main document,
-    // not sub-frames
-    if (aWebProgress.DOMWindow != this._browser.contentWindow) {
-      return;
-    }
-
-    if (aStateFlags & Ci.nsIWebProgressListener.STATE_IS_NETWORK) {
-      if (aStateFlags & Ci.nsIWebProgressListener.STATE_START)
-        BrowserUI.update(TOOLBARSTATE_LOADING, this._browser);
-      else if (aStateFlags & Ci.nsIWebProgressListener.STATE_STOP)
-        BrowserUI.update(TOOLBARSTATE_LOADED, this._browser);
-    }
-
-    if (aStateFlags & Ci.nsIWebProgressListener.STATE_IS_DOCUMENT) {
-      if (aStateFlags & Ci.nsIWebProgressListener.STATE_STOP) {
-        aWebProgress.DOMWindow.focus();
-
-        // update the viewport
-        this._tabbrowser.updateCanvasState();
-
-        // update the tab canvas image
-        this._tabbrowser.updateBrowser(this._browser, true);
-
-        // linkify phone numbers
-        Browser.translatePhoneNumbers();
-
-        //aWebProgress.DOMWindow.scrollbars.visible = false;
-      }
-    }
-  },
-
-  // This method is called to indicate progress changes for the currently
-  // loading page.
-  onProgressChange : function(aWebProgress, aRequest, aCurSelf, aMaxSelf, aCurTotal, aMaxTotal) {
-  },
-
-  // This method is called to indicate a change to the current location.
-  onLocationChange : function(aWebProgress, aRequest, aLocationURI) {
-
-    var location = aLocationURI ? aLocationURI.spec : "";
-    this._hostChanged = true;
-
-    // This code here does not compare uris exactly when determining
-    // whether or not the message(s) should be hidden since the message
-    // may be prematurely hidden when an install is invoked by a click
-    // on a link that looks like this:
-    //
-    // <a href="#" onclick="return install();">Install Foo</a>
-    //
-    // - which fires a onLocationChange message to uri + '#'...
-    cBrowser = Browser.currentBrowser;
-    if (cBrowser.lastURI) {
-      var oldSpec = cBrowser.lastURI.spec;
-      var oldIndexOfHash = oldSpec.indexOf("#");
-      if (oldIndexOfHash != -1)
-        oldSpec = oldSpec.substr(0, oldIndexOfHash);
-      var newSpec = location;
-      var newIndexOfHash = newSpec.indexOf("#");
-      if (newIndexOfHash != -1)
-        newSpec = newSpec.substr(0, newSpec.indexOf("#"));
-      if (newSpec != oldSpec) {
-        // Remove all the notifications, except for those which want to
-        // persist across the first location change.
-        var nBox = Browser.getNotificationBox();
-        nBox.removeTransientNotifications();
-      }
-    }
-    cBrowser.lastURI = aLocationURI;
-
-
-    if (aWebProgress.DOMWindow == this._browser.contentWindow) {
-      BrowserUI.setURI();
-      this._tabbrowser.updateBrowser(this._browser, false);
-    }
-  },
-
-  // This method is called to indicate a status changes for the currently
-  // loading page.  The message is already formatted for display.
-  onStatusChange : function(aWebProgress, aRequest, aStatus, aMessage) {
-  },
-
- // Properties used to cache security state used to update the UI
-  _state: null,
-  _host: undefined,
-  _hostChanged: false, // onLocationChange will flip this bit
-
-  // This method is called when the security state of the browser changes.
-  onSecurityChange : function(aWebProgress, aRequest, aState) {
-
-    // Don't need to do anything if the data we use to update the UI hasn't
-    // changed
-    if (this._state == aState &&
-        !this._hostChanged) {
-      return;
-    }
-    this._state = aState;
-
-    try {
-      this._host = getBrowser().contentWindow.location.host;
-    } catch(ex) {
-      this._host = null;
-    }
-
-    this._hostChanged = false;
-
-    // Don't pass in the actual location object, since it can cause us to
-    // hold on to the window object too long.  Just pass in the fields we
-    // care about. (bug 424829)
-    var location = getBrowser().contentWindow.location;
-    var locationObj = {};
-    try {
-      locationObj.host = location.host;
-      locationObj.hostname = location.hostname;
-      locationObj.port = location.port;
-    } catch (ex) {
-      // Can sometimes throw if the URL being visited has no host/hostname,
-      // e.g. about:blank. The _state for these pages means we won't need these
-      // properties anyways, though.
-    }
-    getIdentityHandler().checkIdentity(this._state, locationObj);
-
-  },
-
-  QueryInterface : function(aIID) {
-    if (aIID.equals(Components.interfaces.nsIWebProgressListener) ||
-        aIID.equals(Components.interfaces.nsISupportsWeakReference) ||
-        aIID.equals(Components.interfaces.nsISupports))
-      return this;
-
-    throw Components.results.NS_ERROR_NO_INTERFACE;
-  }
-};
-
 function nsBrowserAccess()
 {
 }
 
 nsBrowserAccess.prototype =
 {
-  QueryInterface : function(aIID)
-  {
-    if (aIID.equals(Ci.nsIBrowserDOMWindow) ||
-        aIID.equals(Ci.nsISupports))
+  QueryInterface: function(aIID) {
+    if (aIID.equals(Ci.nsIBrowserDOMWindow) || aIID.equals(Ci.nsISupports))
       return this;
     throw Components.results.NS_NOINTERFACE;
   },
 
-  openURI : function(aURI, aOpener, aWhere, aContext)
-  {
+  openURI: function(aURI, aOpener, aWhere, aContext) {
     var isExternal = (aContext == Ci.nsIBrowserDOMWindow.OPEN_EXTERNAL);
 
     if (isExternal && aURI && aURI.schemeIs("chrome")) {
       dump("use -chrome command-line option to load external chrome urls\n");
       return null;
     }
+
     var loadflags = isExternal ?
                        Ci.nsIWebNavigation.LOAD_FLAGS_FROM_EXTERNAL :
                        Ci.nsIWebNavigation.LOAD_FLAGS_NONE;
@@ -567,17 +576,10 @@ nsBrowserAccess.prototype =
                              "all,dialog=no", url, null, null, null);
     }
     else {
-      if (aWhere == Ci.nsIBrowserDOMWindow.OPEN_NEWTAB) {
-        var tab = Browser._content.newTab(true);
-        if (tab) {
-          var content = Browser._content;
-          var browser = content.getBrowserForDisplay(content.getDisplayForTab(tab));
-          newWindow = browser.contentWindow;
-        }
-      }
-      else {
+      if (aWhere == Ci.nsIBrowserDOMWindow.OPEN_NEWTAB)
+        newWindow = Browser.newTab(true).browser.contentWindow;
+      else
         newWindow = aOpener ? aOpener.top : browser.contentWindow;
-      }
     }
 
     try {
@@ -585,9 +587,8 @@ nsBrowserAccess.prototype =
       if (aURI) {
         if (aOpener) {
           location = aOpener.location;
-          referrer = Components.classes["@mozilla.org/network/io-service;1"]
-                               .getService(Components.interfaces.nsIIOService)
-                               .newURI(location, null, null);
+          referrer = Cc["@mozilla.org/network/io-service;1"].getService(Ci.nsIIOService)
+                                                            .newURI(location, null, null);
         }
         newWindow.QueryInterface(Ci.nsIInterfaceRequestor)
                  .getInterface(Ci.nsIWebNavigation)
@@ -599,8 +600,7 @@ nsBrowserAccess.prototype =
     return newWindow;
   },
 
-  isTabContentWindow : function(aWindow)
-  {
+  isTabContentWindow: function(aWindow) {
     return Browser._content.browsers.some(function (browser) browser.contentWindow == aWindow);
   }
 }
@@ -638,7 +638,7 @@ IdentityHandler.prototype = {
   /**
    * Build out a cache of the elements that we need frequently.
    */
-  _cacheElements : function() {
+  _cacheElements: function() {
     this._identityPopup = document.getElementById("identity-popup");
     this._identityBox = document.getElementById("identity-box");
     this._identityPopupContentBox = document.getElementById("identity-popup-content-box");
@@ -653,7 +653,7 @@ IdentityHandler.prototype = {
    * Handler for mouseclicks on the "More Information" button in the
    * "identity-popup" panel.
    */
-  handleMoreInfoClick : function(event) {
+  handleMoreInfoClick: function(event) {
     displaySecurityInfo();
     event.stopPropagation();
   },
@@ -662,7 +662,7 @@ IdentityHandler.prototype = {
    * Helper to parse out the important parts of _lastStatus (of the SSL cert in
    * particular) for use in constructing identity UI strings
   */
-  getIdentityData : function() {
+  getIdentityData: function() {
     var result = {};
     var status = this._lastStatus.QueryInterface(Components.interfaces.nsISSLStatus);
     var cert = status.serverCert;
@@ -700,7 +700,7 @@ IdentityHandler.prototype = {
    * @param JS Object location that mirrors an nsLocation (i.e. has .host and
    *                           .hostname and .port)
    */
-  checkIdentity : function(state, location) {
+  checkIdentity: function(state, location) {
     var currentStatus = getBrowser().securityUI
                                 .QueryInterface(Components.interfaces.nsISSLStatusProvider)
                                 .SSLStatus;
@@ -718,7 +718,7 @@ IdentityHandler.prototype = {
   /**
    * Return the eTLD+1 version of the current hostname
    */
-  getEffectiveHost : function() {
+  getEffectiveHost: function() {
     // Cache the eTLDService if this is our first time through
     if (!this._eTLDService)
       this._eTLDService = Cc["@mozilla.org/network/effective-tld-service;1"]
@@ -736,7 +736,7 @@ IdentityHandler.prototype = {
    * Update the UI to reflect the specified mode, which should be one of the
    * IDENTITY_MODE_* constants.
    */
-  setMode : function(newMode) {
+  setMode: function(newMode) {
     if (!this._identityBox) {
       // No identity box means the identity box is not visible, in which
       // case there's nothing to do.
@@ -757,7 +757,7 @@ IdentityHandler.prototype = {
    *
    * @param newMode The newly set identity mode.  Should be one of the IDENTITY_MODE_* constants.
    */
-  setIdentityMessages : function(newMode) {
+  setIdentityMessages: function(newMode) {
     if (newMode == this.IDENTITY_MODE_DOMAIN_VERIFIED) {
       var iData = this.getIdentityData();
 
@@ -807,7 +807,7 @@ IdentityHandler.prototype = {
    *
    * @param newMode The newly set identity mode.  Should be one of the IDENTITY_MODE_* constants.
    */
-  setPopupMessages : function(newMode) {
+  setPopupMessages: function(newMode) {
 
     this._identityPopup.className = newMode;
     this._identityPopupContentBox.className = newMode;
@@ -857,14 +857,14 @@ IdentityHandler.prototype = {
     this._identityPopupContentVerif.textContent = verifier;
   },
 
-  hideIdentityPopup : function() {
+  hideIdentityPopup: function() {
     this._identityPopup.hidePopup();
   },
 
   /**
    * Click handler for the identity-box element in primary chrome.
    */
-  handleIdentityButtonEvent : function(event) {
+  handleIdentityButtonEvent: function(event) {
 
     event.stopPropagation();
 
@@ -1046,4 +1046,293 @@ const gXPInstallObserver = {
 
 function getNotificationBox(aWindow) {
   return Browser.getNotificationBox();
+}
+
+
+function ProgressController(tab) {
+  this._tab = tab;
+}
+
+ProgressController.prototype = {
+  get browser() {
+    return this._tab.browser;
+  },
+
+  onStateChange: function(aWebProgress, aRequest, aStateFlags, aStatus) {
+    // ignore notification that aren't about the main document (iframes, etc)
+    if (aWebProgress.DOMWindow != this._tab.browser.contentWindow)
+      return;
+
+    if (aStateFlags & Ci.nsIWebProgressListener.STATE_IS_NETWORK) {
+      if (aStateFlags & Ci.nsIWebProgressListener.STATE_START)
+        this._networkStart();
+      else if (aStateFlags & Ci.nsIWebProgressListener.STATE_STOP)
+        this._networkStop();
+    } else if (aStateFlags & Ci.nsIWebProgressListener.STATE_IS_DOCUMENT) {
+      if (aStateFlags & Ci.nsIWebProgressListener.STATE_STOP) {
+        this._documentStop();
+      }
+    }
+  },
+
+  // This method is called to indicate progress changes for the currently
+  // loading page.
+  onProgressChange: function(aWebProgress, aRequest, aCurSelf, aMaxSelf, aCurTotal, aMaxTotal) {
+  },
+
+  // This method is called to indicate a change to the current location.
+  onLocationChange: function(aWebProgress, aRequest, aLocationURI) {
+    // XXX this code is not multiple-tab friendly.
+
+    var location = aLocationURI ? aLocationURI.spec : "";
+    this._hostChanged = true;
+
+    // This code here does not compare uris exactly when determining
+    // whether or not the message(s) should be hidden since the message
+    // may be prematurely hidden when an install is invoked by a click
+    // on a link that looks like this:
+    //
+    // <a href="#" onclick="return install();">Install Foo</a>
+    //
+    // - which fires a onLocationChange message to uri + '#'...
+    currentBrowser = Browser.currentBrowser;
+    if (currentBrowser.lastURI) {
+      var oldSpec = currentBrowser.lastURI.spec;
+      var oldIndexOfHash = oldSpec.indexOf("#");
+      if (oldIndexOfHash != -1)
+        oldSpec = oldSpec.substr(0, oldIndexOfHash);
+      var newSpec = location;
+      var newIndexOfHash = newSpec.indexOf("#");
+      if (newIndexOfHash != -1)
+        newSpec = newSpec.substr(0, newSpec.indexOf("#"));
+      if (newSpec != oldSpec) {
+        // Remove all the notifications, except for those which want to
+        // persist across the first location change.
+
+	// XXX
+        // var nBox = Browser.getNotificationBox();
+        // nBox.removeTransientNotifications();
+      }
+    }
+    currentBrowser.lastURI = aLocationURI;
+    if (aWebProgress.DOMWindow == Browser.currentBrowser.contentWindow) {
+      BrowserUI.setURI();
+    }
+  },
+
+  // This method is called to indicate a status changes for the currently
+  // loading page.  The message is already formatted for display.
+  onStatusChange: function(aWebProgress, aRequest, aStatus, aMessage) {
+  },
+
+  _networkStart: function() {
+    this._tab.setLoading(true);
+    //dump("started loading network\n");
+
+    if (Browser.currentBrowser == this.browser) {
+      Browser.content.startLoading();
+      BrowserUI.update(TOOLBARSTATE_LOADING);
+    }
+  },
+
+  _networkStop: function() {
+    this._tab.setLoading(false);
+
+    if (Browser.currentBrowser == this.browser) {
+      BrowserUI.update(TOOLBARSTATE_LOADED);
+    }
+  },
+
+  _documentStop: function() {
+    //dump("stop, hammer time\n");
+
+    // translate any phone numbers
+    Browser.translatePhoneNumbers();
+
+    if (Browser.currentBrowser == this.browser) {
+      // focus the dom window
+      this.browser.contentWindow.focus();
+
+      Browser.content.endLoading();
+    }
+    this._tab.updateThumbnail();
+  },
+
+ // Properties used to cache security state used to update the UI
+  _state: null,
+  _host: undefined,
+  _hostChanged: false, // onLocationChange will flip this bit
+
+  // This method is called when the security state of the browser changes.
+  onSecurityChange: function(aWebProgress, aRequest, aState) {
+    // Don't need to do anything if the data we use to update the UI hasn't
+    // changed
+    if (this._state == aState &&
+        !this._hostChanged) {
+      return;
+    }
+    this._state = aState;
+
+    try {
+      this._host = getBrowser().contentWindow.location.host;
+    }
+    catch(ex) {
+      this._host = null;
+    }
+
+    this._hostChanged = false;
+
+    // Don't pass in the actual location object, since it can cause us to
+    // hold on to the window object too long.  Just pass in the fields we
+    // care about. (bug 424829)
+    var location = getBrowser().contentWindow.location;
+    var locationObj = {};
+    try {
+      locationObj.host = location.host;
+      locationObj.hostname = location.hostname;
+      locationObj.port = location.port;
+    }
+    catch (ex) {
+      // Can sometimes throw if the URL being visited has no host/hostname,
+      // e.g. about:blank. The _state for these pages means we won't need these
+      // properties anyways, though.
+    }
+    getIdentityHandler().checkIdentity(this._state, locationObj);
+
+  },
+
+  QueryInterface: function(aIID) {
+    if (aIID.equals(Components.interfaces.nsIWebProgressListener) ||
+        aIID.equals(Components.interfaces.nsISupportsWeakReference) ||
+        aIID.equals(Components.interfaces.nsISupports))
+      return this;
+
+    throw Components.results.NS_ERROR_NO_INTERFACE;
+  }
+};
+
+
+function Tab() {
+}
+
+Tab.prototype = {
+  _id: null,
+  _browser: null,
+  _state: null,
+  _listener: null,
+  _loading: false,
+  _content: null,
+
+  get browser() {
+    return this._browser;
+  },
+
+  get content() {
+    return this._content;
+  },
+
+  isLoading: function() {
+    return this._loading;
+  },
+
+  setLoading: function(b) {
+    this._loading = b;
+  },
+
+  create: function() {
+    this._content = document.createElement("richlistitem");
+    this._content.setAttribute("type", "documenttab");
+    document.getElementById("tabs").addTab(this._content);
+
+    this._createBrowser();
+  },
+
+  destroy: function() {
+    this._destroyBrowser();
+    document.getElementById("tabs").removeTab(this._content);
+  },
+
+  _createBrowser: function() {
+    if (this._browser)
+      throw "Browser already exists";
+
+    let browser = this._browser = document.createElement("browser");
+    browser.className = "deckbrowser-browser";
+    browser.setAttribute("style", "overflow: hidden; visibility: hidden; width: 1024px; height: 800px;");
+    browser.setAttribute("contextmenu", document.getElementById("canvas").getAttribute("contextmenu"));
+    browser.setAttribute("autocompletepopup", document.getElementById("canvas").getAttribute("autocompletepopup"));
+    browser.setAttribute("type", "content");
+
+    document.getElementById("browsers").appendChild(browser);
+
+    this._listener = new ProgressController(this);
+    browser.addProgressListener(this._listener);
+  },
+
+  _destroyBrowser: function() {
+    document.getElementById("browsers").removeChild(this._browser);
+  },
+
+  saveState: function() {
+    let state = { };
+
+    this._url = browser.contentWindow.location.toString();
+    var browser = this.getBrowserForDisplay(display);
+    var doc = browser.contentDocument;
+    if (doc instanceof HTMLDocument) {
+      var tags = ["input", "textarea", "select"];
+
+      for (var t = 0; t < tags.length; t++) {
+        var elements = doc.getElementsByTagName(tags[t]);
+        for (var e = 0; e < elements.length; e++) {
+          var element = elements[e];
+          var id;
+          if (element.id)
+            id = "#" + element.id;
+          else if (element.name)
+            id = "$" + element.name;
+
+          if (id)
+            state[id] = element.value;
+        }
+      }
+    }
+
+    state._scrollX = browser.contentWindow.scrollX;
+    state._scrollY = browser.contentWindow.scrollY;
+
+    this._state = state;
+  },
+
+  restoreState: function() {
+    let state = this._state;
+    if (!state)
+      return;
+
+    let doc = this._browser.contentDocument;
+    for (item in state) {
+      var elem = null;
+      if (item.charAt(0) == "#") {
+        elem = doc.getElementById(item.substring(1));
+      }
+      else if (item.charAt(0) == "$") {
+        var list = doc.getElementsByName(item.substring(1));
+        if (list.length)
+          elem = list[0];
+      }
+
+      if (elem)
+        elem.value = state[item];
+    }
+
+    this._browser.contentWindow.scrollTo(state._scrollX, state._scrollY);
+  },
+
+  updateThumbnail: function() {
+    if (!this._browser)
+      return;
+
+    let srcCanvas = (Browser.currentBrowser == this._browser) ? document.getElementById("canvas") : null;
+    this._content.updateThumbnail(this._browser, srcCanvas);
+  }
 }

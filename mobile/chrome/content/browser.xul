@@ -57,13 +57,17 @@
         title="&brandShortName;"
         titlemodifier="&brandShortName;"
         titleseparator="&mainWindow.titleseparator;"
-        xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
+        xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
+        xmlns:html="http://www.w3.org/1999/xhtml">
 
   <script type="application/x-javascript" src="chrome://global/content/inlineSpellCheckUI.js"/>
   <script type="application/x-javascript" src="chrome://browser/content/commandUtil.js"/>
   <script type="application/x-javascript" src="chrome://browser/content/browser.js"/>
   <script type="application/x-javascript" src="chrome://browser/content/browser-ui.js"/>
   <script type="application/x-javascript" src="chrome://browser/content/sanitize.js"/>
+  <script type="application/x-javascript" src="chrome://browser/content/CanvasBrowser.js"/>
+  <script type="application/x-javascript" src="chrome://browser/content/WidgetStack.js"/>
+  <script type="application/x-javascript" src="chrome://browser/content/InputHandler.js"/>
 
   <stringbundleset id="stringbundleset">
     <stringbundle id="bundle_browser" src="chrome://browser/locale/browser.properties"/>
@@ -194,25 +198,72 @@
     </panel>
   </popupset>
 
-  <stack id="browser-container" flex="1" style="overflow: hidden;">
-    <vbox id="contentBox" style="-moz-stack-sizing: ignore; margin-top: 60px; margin: 0;">
-      <notificationbox id="notifications" flex="1">
-        <deckbrowser id="content"
-                     autocompletepopup="popup_autocomplete_content"
-                     flex="1"
-                     onnewtab="CommandUpdater.doCommand('cmd_newTab');"/>
-      </notificationbox>
-    </vbox>
+  <!-- stupid stack needs to be in a box. not sure why -->
+  <box>
+  <stack id="browser-container" flex="1" style="width: 800px; height: 480px; max-width: 800px; max-height: 480px; background: lightgrey; /*background-image: url('chrome://browser/content/checkerboard.png')*/">
 
-    <toolbar id="toolbar-main" style="-moz-stack-sizing: ignore; height: 60px" top="0" left="0">
+    <!-- begin: Browser View -->
+    <hbox id="canvasbox"
+	  style="-moz-stack-sizing: ignore; height: 1440px; width: 800px;"
+	  left="0" top="-480"
+	  vptargetx="0"
+	  vptargety="0"
+	  vptargetw="800"
+	  vptargeth="480"
+	  viewport="true">
+
+      <html:canvas id="canvas"
+		   moz-opaque="true"
+		   viewport="true"
+		   style="height: 1440px; width: 800px;"
+		   height="1440" width="800"
+		   autocompletepopup="popup_autocomplete_content"
+		   onnewtab="CommandUpdater.doCommand('cmd_newTab');"/>
+
+    </hbox>
+
+    <!-- end: Browser View -->
+
+    <!-- start: some barriers -->
+    <spacer style="-moz-stack-sizing: ignore; width: 1px; height: 1px;" barriertype="vertical" size="30" left="0" constraint="vp-relative"/>
+    <spacer style="-moz-stack-sizing: ignore; width: 1px; height: 1px;" barriertype="vertical" size="30" left="800" constraint="vp-relative"/>
+    <!-- end: barriers -->
+
+    <!-- begin: left bar -->
+    <vbox id="tabs-container" style="-moz-stack-sizing: ignore; width: 132px; height: 420px;"
+          left="-132" top="60"
+          constraint="ignore-y,vp-relative">
+      <richlistbox id="tabs" onselect="BrowserUI.selectTab(this.selectedItem);" onclosetab="BrowserUI.closeTab(this);"/>
+      <hbox>
+        <toolbarbutton id="newtab-button" command="cmd_newTab"/>
+        <toolbarbutton id="retrievetab-button" command="" hidden="true"/>
+      </hbox>
+    </vbox>
+    <!-- end: left bar -->
+
+    <!-- begin: right bar -->
+    <vbox id="browser-controls" style="-moz-stack-sizing: ignore; width: 80px; height: 420px;"
+          left="800" top="60"
+          constraint="ignore-y,vp-relative">
+      <toolbarbutton id="tool-star" class="browser-control-button" command="cmd_star"/>
+      <toolbarbutton id="tool-back" class="browser-control-button" command="cmd_back"/>
+      <toolbarbutton id="tool-forward" class="browser-control-button" command="cmd_forward"/>
+      <toolbarspring/>
+      <toolbarbutton id="tool-actions" class="browser-control-button" command="cmd_actions" hidden="true"/>
+      <toolbarbutton id="tool-panel" class="browser-control-button" command="cmd_panel" type="checkbox"/>
+    </vbox>
+    <!-- end: right bar -->
+
+    <!-- begin: Main Toolbar -->
+    <toolbar id="toolbar-main" style="-moz-stack-sizing: ignore; width: 800px; height: 60px" top="-60" left="0" constraint="ignore-x,vp-relative">
       <hbox id="urlbar-container" flex="1">
         <box id="identity-box"
              onclick="getIdentityHandler().handleIdentityButtonEvent(event);"
              onkeypress="getIdentityHandler().handleIdentityButtonEvent(event);">
-          <deck id="urlbar-image-deck">
+          <box id="urlbar-image-box">
             <image id="urlbar-throbber"/>
-            <image id="urlbar-favicon"/>
-          </deck>
+            <image id="urlbar-favicon" hidden="true"/>
+          </box>
         </box>
         <hbox id="urlbar-editarea" flex="1">
           <description id="urlbar-caption" crop="end" flex="1"/>
@@ -238,25 +289,17 @@
       </hbox>
       <toolbarbutton id="tool-bookmarks" class="urlbar-button" command="cmd_bookmarks"/>
     </toolbar>
+    <!-- end: Main Toolbar -->
 
-    <vbox id="browser-controls" style="-moz-stack-sizing: ignore;" top="60" left="0">
-      <toolbarbutton id="tool-star" class="browser-control-button" command="cmd_star"/>
-      <toolbarbutton id="tool-back" class="browser-control-button" command="cmd_back"/>
-      <toolbarbutton id="tool-forward" class="browser-control-button" command="cmd_forward"/>
-      <toolbarspring/>
-      <toolbarbutton id="tool-actions" class="browser-control-button" command="cmd_actions" hidden="true"/>
-      <toolbarbutton id="tool-panel" class="browser-control-button" command="cmd_panel" type="checkbox"/>
-    </vbox>
-
-    <hbox id="panel-container" style="-moz-stack-sizing: ignore;" top="0" left="0">
+    <hbox id="panel-container" hidden="true" style="-moz-stack-sizing: ignore;" top="60" left="880" constraint="ignore-y,vp-relative">
       <vbox id="panel-controls" oncommand="BrowserUI.switchPane(event.target.getAttribute('linkedpanel'));">
         <toolbarspring/>
         <toolbarbutton id="tool-addons" type="radio" group="1" class="panel-button" linkedpanel="addons-container"/>
         <toolbarbutton id="tool-downloads" type="radio" group="1" class="panel-button" linkedpanel="downloads-container"/>
-        <toolbarbutton id="tool-preferences" type="radio" group="1" class="panel-button" linkedpanel="prefs-container" checked="true"/>
+        <toolbarbutton id="tool-preferences" type="radio" group="1" class="panel-button" linkedpanel="prefs-container"/>
         <toolbarbutton id="tool-shortcuts" type="radio" group="1" class="panel-button" linkedpanel="shortcuts-container" hidden="true"/>
       </vbox>
-      <deck id="panel-items" flex="1" selectedIndex="2">
+      <deck id="panel-items" flex="1">
         <iframe id="addons-container" flex="1"/>
         <iframe id="downloads-container" flex="1"/>
 
@@ -272,8 +315,7 @@
             <richpref pref="javascript.enabled" type="bool" title="&javascript.enabled.title;">
               &javascript.enabled.description;
             </richpref>
-            <richpref pref="plugins.enabled" type="bool" title="&plugins.enabled.title;" id="plugins.enabled"
-                      onsynctopreference="Browser.setPluginState(this.value);">
+            <richpref pref="plugins.enabled" type="bool" title="&plugins.enabled.title;" onsyncfrompreference="Browser.setPluginState(this.value);">
               &plugins.enabled.description;
             </richpref>
 
@@ -304,14 +346,6 @@
         </vbox>
       </deck>
     </hbox>
-
-    <vbox id="tab-list-container" style="-moz-stack-sizing: ignore;" top="60" left="0">
-      <richlistbox id="tab-list" onselect="BrowserUI.selectTab(this.selectedItem);" onclosetab="BrowserUI.closeTab(this);"/>
-      <hbox>
-        <toolbarbutton id="newtab-button" command="cmd_newTab"/>
-        <toolbarbutton id="retrievetab-button" command="" hidden="true"/>
-      </hbox>
-    </vbox>
 
     <vbox id="urllist-container" hidden="true" style="-moz-stack-sizing: ignore;" top="0" left="0">
       <hbox id="urllist-items-container" flex="1">
@@ -355,7 +389,10 @@
         </hbox>
       </vbox>
     </vbox>
+
   </stack>
+
+  </box>
 
   <vbox id="findpanel-placeholder" sizetopopup="always">
     <panel id="findpanel" onpopupshown="Browser.doFind()">
@@ -363,4 +400,6 @@
    </panel>
   </vbox>
 
+  <!-- where all the (hidden) <browser> elements go; I wish this could be display: none -->
+  <box id="browsers"/>
 </window>

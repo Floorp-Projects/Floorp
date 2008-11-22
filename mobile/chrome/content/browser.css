@@ -1,17 +1,13 @@
-deckbrowser {
-    -moz-binding: url("chrome://browser/content/deckbrowser.xml#deckbrowser");
-}
-
 #urlbar-edit {
     -moz-binding: url("chrome://browser/content/urlbar.xml#autocomplete-aligned");
 }
 
-#tab-list {
-    -moz-binding: url("chrome://browser/content/deckbrowser.xml#tablist");
+#tabs {
+    -moz-binding: url("chrome://browser/content/tabs.xml#tablist");
 }
 
 richlistitem[type="documenttab"] {
-    -moz-binding: url("chrome://browser/content/deckbrowser.xml#documenttab");
+    -moz-binding: url("chrome://browser/content/tabs.xml#documenttab");
 }
 
 #prefs-container > scrollbox

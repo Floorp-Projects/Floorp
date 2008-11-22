@@ -177,7 +177,7 @@ toolbarbutton.urlbar-cap-button {
 }
 
 /* favicon images are 16x16 */
-#urlbar-image-deck {
+#urlbar-image-box {
   max-width: 24px;
   max-height: 24px;
   min-width: 24px;
@@ -187,6 +187,11 @@ toolbarbutton.urlbar-cap-button {
 
 #urlbar-throbber[loading] {
   list-style-image: url("chrome://browser/skin/images/throbber.png");
+}
+
+#urlbar-favicon {
+  width: 24px;
+  height: 24px;
 }
 
 #urlbar-editarea {
@@ -466,12 +471,12 @@ toolbarbutton.panel-button {
 }
 
 /* Left sidebar (tabs)  ---------------------------------------------------- */
-#tab-list-container {
+#tabs-container {
   background: url("images/left_sidebar_middle.png") rgb(87,87,87) top right repeat-y;
   min-width: 132px;
 }
 
-#tab-list {
+#tabs {
   -moz-appearance: none;
   margin: 0;
   padding: 4px;
