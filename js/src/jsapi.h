@@ -45,6 +45,7 @@
  */
 #include <stddef.h>
 #include <stdio.h>
+#include "jsversion.h"
 #include "js-config.h"
 #include "jspubtd.h"
 #include "jsutil.h"
@@ -2166,6 +2167,13 @@ extern JS_PUBLIC_API(JSBool)
 JS_CallFunctionValue(JSContext *cx, JSObject *obj, jsval fval, uintN argc,
                      jsval *argv, jsval *rval);
 
+extern JS_PUBLIC_API(void)
+JS_ClearOperationCallback(JSContext *cx);
+
+extern JS_PUBLIC_API(JSOperationCallback)
+JS_GetOperationCallback(JSContext *cx);
+
+#if JS_HAS_OPERATION_COUNT
 /*
  * The maximum value of the operation limit to pass to JS_SetOperationCallback
  * and JS_SetOperationLimit.
@@ -2189,12 +2197,6 @@ JS_CallFunctionValue(JSContext *cx, JSObject *obj, jsval fval, uintN argc,
 extern JS_PUBLIC_API(void)
 JS_SetOperationCallback(JSContext *cx, JSOperationCallback callback,
                         uint32 operationLimit);
-
-extern JS_PUBLIC_API(void)
-JS_ClearOperationCallback(JSContext *cx);
-
-extern JS_PUBLIC_API(JSOperationCallback)
-JS_GetOperationCallback(JSContext *cx);
 
 /*
  * Get the operation limit associated with the operation callback. This API
@@ -2223,6 +2225,18 @@ JS_SetOperationLimit(JSContext *cx, uint32 operationLimit);
  */
 extern JS_PUBLIC_API(JSBranchCallback)
 JS_SetBranchCallback(JSContext *cx, JSBranchCallback cb);
+#else
+/*
+ * Set the operation callback that the engine calls while resetting
+ * context.
+ */
+extern JS_PUBLIC_API(void)
+JS_SetOperationCallback(JSContext *cx, JSOperationCallback callback);
+
+#endif
+
+extern JS_PUBLIC_API(void)
+JS_TriggerOperationCallback(JSContext *cx);
 
 extern JS_PUBLIC_API(JSBool)
 JS_IsRunning(JSContext *cx);
