@@ -1940,6 +1940,14 @@ function testBug466128() {
 testBug466128.expected = true;
 test(testBug466128);
 
+//test no assert
+function testBug465688() {
+    for each (let d in [-0x80000000, -0x80000000]) - -d;
+    return true;
+}
+testBug465688.expected = true;
+test(testBug465688);
+
 // BEGIN MANDELBROT STUFF
 // XXXbz I would dearly like to wrap it up into a function to avoid polluting
 // the global scope, but the function ends up heavyweight, and then we lose on
