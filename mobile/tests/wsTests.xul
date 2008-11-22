@@ -1,0 +1,25 @@
+<?xml version="1.0"?>
+
+<window id="w"
+        width="800" height="800"
+        onload="handleLoad();"
+        xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
+        xmlns:html="http://www.w3.org/1999/xhtml">
+
+  <script type="text/javascript" src="../chrome/content/WidgetStack.js"/>
+  <script type="text/javascript" src="wsTests.js"/>
+
+  <vbox>
+    <spacer style="height: 50px;"/>
+    <hbox>
+      <spacer style="width: 50px;"/>
+      <box id="testroot" style="width: 50px; height: 50px; background: gray; -moz-stack-sizing: ignore;"/>
+      <spacer flex="1"/>
+    </hbox>
+    <spacer style="height: 400px;" flex="1"/>
+    <hbox>
+      <spacer style="width: 400px;"/>
+      <html:div style="font: 9px sans-serif;" id="logdiv"></html:div>
+    </hbox>
+  </vbox>
+</window>

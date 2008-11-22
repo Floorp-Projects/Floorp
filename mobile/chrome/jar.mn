@@ -16,7 +16,7 @@ browser.jar:
   content/browser-ui.js                (content/browser-ui.js)
   content/commandUtil.js               (content/commandUtil.js)
   content/urlbar.xml                   (content/urlbar.xml)
-  content/deckbrowser.xml              (content/deckbrowser.xml)
+  content/tabs.xml                     (content/tabs.xml)
   content/notification.xml             (content/notification.xml)
   content/browser.css                  (content/browser.css)
   content/scrollbars.css               (content/scrollbars.css)
@@ -28,6 +28,9 @@ browser.jar:
   content/preferences/richpref.xml     (content/preferences/richpref.xml)
 * content/sanitize.xul                 (content/sanitize.xul)
 * content/sanitize.js                  (content/sanitize.js)
+  content/WidgetStack.js               (content/WidgetStack.js)
+  content/CanvasBrowser.js             (content/CanvasBrowser.js)
+  content/InputHandler.js              (content/InputHandler.js)
 
 classic.jar:
 % skin browser classic/1.0 %
