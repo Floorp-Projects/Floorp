@@ -1960,6 +1960,47 @@ EmitREBytecode(CompilerState *state, JSRegExp *re, size_t treeDepth,
     goto cleanup;
 }
 
+static JSBool
+CompileRegExpToAST(JSContext* cx, JSTokenStream* ts,
+                   JSString* str, uintN flags, CompilerState& state)
+{
+    uintN i;
+    size_t len;
+
+    len = JSSTRING_LENGTH(str);
+
+    state.context = cx;
+    state.tokenStream = ts;
+    state.cp = js_UndependString(cx, str);
+    if (!state.cp)
+        return JS_FALSE;
+    state.cpbegin = state.cp;
+    state.cpend = state.cp + len;
+    state.flags = flags;
+    state.parenCount = 0;
+    state.classCount = 0;
+    state.progLength = 0;
+    state.treeDepth = 0;
+    state.classBitmapsMem = 0;
+    for (i = 0; i < CLASS_CACHE_SIZE; i++)
+        state.classCache[i].start = NULL;
+
+    if (len != 0 && (flags & JSREG_FLAT)) {
+        state.result = NewRENode(&state, REOP_FLAT);
+        if (!state.result)
+            return JS_FALSE;
+        state.result->u.flat.chr = *state.cpbegin;
+        state.result->u.flat.length = len;
+        state.result->kid = (void *) state.cpbegin;
+        /* Flat bytecode: REOP_FLAT compact(string_offset) compact(len). */
+        state.progLength += 1 + GetCompactIndexWidth(0)
+                          + GetCompactIndexWidth(len);
+        return JS_TRUE;
+    }
+    
+    return ParseRegExp(&state);
+}
+
 #ifdef JS_TRACER
 typedef List<LIns*, LIST_NonGCObjects> LInsList;
 
@@ -1982,8 +2023,10 @@ struct RESideExit : public SideExit {
     jschar re_chars[1];
 };
 
+/* Return the cached fragment for the given regexp, or NULL. */
 static Fragment* 
-LookupNativeRegExp(JSContext* cx, void* hash, uint16 re_flags, jschar* re_chars, size_t re_length)
+LookupNativeRegExp(JSContext* cx, void* hash, uint16 re_flags, 
+                   jschar* re_chars, size_t re_length)
 {
     Fragmento* fragmento = JS_TRACE_MONITOR(cx).reFragmento;
     Fragment* fragment = fragmento->getLoop(hash);
@@ -2212,36 +2255,54 @@ class RegExpNativeCompiler {
         return ins;
     }
 
+    /*
+     * Insert the side exit and guard record for a compiled regexp. Most
+     * of the fields are not used. The important part is the regexp source
+     * and flags, which we use as the fragment lookup key.
+     */
+    GuardRecord* insertGuard(jschar* re_chars, size_t re_length)
+    {
+        LIns* skip = lirBufWriter->skip(sizeof(GuardRecord) + 
+                                        sizeof(RESideExit) + 
+                                        re_length - sizeof(jschar));
+        GuardRecord* guard = (GuardRecord *) skip->payload();
+        memset(guard, 0, sizeof(*guard));
+        RESideExit* exit = (RESideExit*)(guard+1);
+        guard->exit = exit;
+        guard->exit->target = fragment;
+        exit->re_flags = re->flags;
+        exit->re_length = re_length;
+        memcpy(exit->re_chars, re_chars, re_length);
+        fragment->lastIns = lir->insGuard(LIR_loop, lir->insImm(1), skip);
+        return guard;
+    }
+
  public:
-    RegExpNativeCompiler(JSRegExp *re, CompilerState *cs) 
-        : re(re), cs(cs), fragment(NULL), lir(NULL), lirBufWriter(NULL) {  }
+ RegExpNativeCompiler(JSRegExp* re, CompilerState* cs, Fragment* fragment) 
+        : re(re), cs(cs), fragment(fragment), lir(NULL), lirBufWriter(NULL) {  }
 
     JSBool compile(JSContext* cx) 
     {
-        GuardRecord* guard;
-        LIns* skip;
+        GuardRecord* guard = NULL;
         LIns* start;
         bool oom = false;
-        RESideExit* exit;
-        
-        this->cx = cx;
         jschar* re_chars;
         size_t re_length;
-        JSSTRING_CHARS_AND_LENGTH(re->source, re_chars, re_length);
-        void* hash = HashRegExp(re->flags, re_chars, re_length);
         Fragmento* fragmento = JS_TRACE_MONITOR(cx).reFragmento;
-        if ((fragment = LookupNativeRegExp(cx, hash, re->flags, re_chars, re_length))) {
-            if (fragment->code()) return JS_TRUE;
-            if (fragment->isBlacklisted()) return JS_FALSE;
-        } else {
-            fragment = fragmento->getAnchor(hash);
-            fragment->lirbuf = new (&gc) LirBuffer(fragmento, NULL);
-            /* required to have the onDestroy method delete the lirbuf. */
-            fragment->root = fragment;
-        }
+
+        JSSTRING_CHARS_AND_LENGTH(re->source, re_chars, re_length);
+        /* 
+         * If the regexp is too long nanojit will assert when we
+         * try to insert the guard record.
+         */
+        if (re_length > 1024)
+            return JS_FALSE;
+
+        this->cx = cx;
         /* At this point we have an empty fragment. */
         LirBuffer* lirbuf = fragment->lirbuf;
-        if (lirbuf->outOmem()) goto fail;
+        if (lirbuf->outOmem()) 
+            goto fail;
         /* FIXME Use bug 463260 smart pointer when available. */
         lir = lirBufWriter = new (&gc) LirBufWriter(lirbuf);
 
@@ -2257,24 +2318,14 @@ class RegExpNativeCompiler {
         cpend = addName(lirbuf, lir->insLoad(LIR_ldp, lirbuf->param1, offsetof(REGlobalData, cpend)), "cpend");
 
         if (cs->flags & JSREG_STICKY) {
-            if (!compileSticky(cs->result, start)) goto fail;
+            if (!compileSticky(cs->result, start)) 
+                goto fail;
         } else {
-            if (!compileAnchoring(cs->result, start)) goto fail;
+            if (!compileAnchoring(cs->result, start)) 
+                goto fail;
         }
 
-        /* Create fake guard record for loop edge. */
-        skip = lirBufWriter->skip(sizeof(GuardRecord) + 
-                                  sizeof(RESideExit) + 
-                                  re_length - sizeof(jschar));
-        guard = (GuardRecord *) skip->payload();
-        memset(guard, 0, sizeof(*guard));
-        exit = (RESideExit*)(guard+1);
-        guard->exit = exit;
-        guard->exit->target = fragment;
-        exit->re_flags = re->flags;
-        exit->re_length = re_length;
-        memcpy(exit->re_chars, re_chars, re_length);
-        fragment->lastIns = lir->insGuard(LIR_loop, lir->insImm(1), skip);
+        guard = insertGuard(re_chars, re_length);
 
         ::compile(fragmento->assm(), fragment);
         if (fragmento->assm()->error() != nanojit::None) {
@@ -2286,23 +2337,78 @@ class RegExpNativeCompiler {
         debug_only_v(delete lir;)
         return JS_TRUE;
     fail:
-        delete lirBufWriter;
-        debug_only_v(delete lir;)
         if (lirbuf->outOmem() || oom) {
             fragmento->clearFrags();
         } else {
-            /* Don't try to compile again if non-oom error. */
+            if (!guard) insertGuard(re_chars, re_length);
             fragment->blacklist();
         }
+        delete lirBufWriter;
+        debug_only_v(delete lir;)
         return JS_FALSE;
     }
 };
 
+/*
+ * Compile a regexp to native code in the given fragment.
+ */
 static inline JSBool
-js_CompileRegExpToNative(JSContext *cx, JSRegExp *re, CompilerState *cs)
+CompileRegExpToNative(JSContext* cx, JSRegExp* re, Fragment* fragment)
 {
-    RegExpNativeCompiler rc(re, cs);
-    return rc.compile(cx);
+    JSBool rv = JS_FALSE;
+    void* mark;
+    CompilerState state;
+    RegExpNativeCompiler rc(re, &state, fragment);
+
+    JS_ASSERT(!fragment->code());
+    JS_ASSERT(!fragment->isBlacklisted());
+
+    mark = JS_ARENA_MARK(&cx->tempPool);
+    if (!CompileRegExpToAST(cx, NULL, re->source, re->flags, state)) {
+        goto out;
+    }
+    rv = rc.compile(cx);
+ out:
+    JS_ARENA_RELEASE(&cx->tempPool, mark);
+    return rv;
+}
+
+/* Function type for a compiled native regexp. */
+typedef REMatchState* (FASTCALL *NativeRegExp)(REMatchState*, REGlobalData*);
+
+/*
+ * Return a compiled native regexp if one already exists or can be created
+ * now, or NULL otherwise.
+ */
+static NativeRegExp
+GetNativeRegExp(JSContext* cx, JSRegExp* re)
+{
+    Fragment *fragment;
+    jschar* re_chars;
+    size_t re_length;
+    Fragmento* fragmento = JS_TRACE_MONITOR(cx).reFragmento;
+
+    JSSTRING_CHARS_AND_LENGTH(re->source, re_chars, re_length);
+    void* hash = HashRegExp(re->flags, re_chars, re_length);
+    fragment = LookupNativeRegExp(cx, hash, re->flags, re_chars, re_length);
+    if (fragment) {
+        if (fragment->code())
+            goto ok;
+        if (fragment->isBlacklisted())
+            return NULL;
+    } else {
+        fragment = fragmento->getAnchor(hash);
+        fragment->lirbuf = new (&gc) LirBuffer(fragmento, NULL);
+        /* required to have the onDestroy method delete the lirbuf. */
+        fragment->root = fragment;
+    }
+        
+    if (!CompileRegExpToNative(cx, re, fragment))
+        return NULL;
+ ok:
+    union { NIns *code; NativeRegExp func; } u;
+    u.code = fragment->code();
+    return u.func;
 }
 #endif
 
@@ -2316,42 +2422,18 @@ js_NewRegExp(JSContext *cx, JSTokenStream *ts,
     size_t resize;
     jsbytecode *endPC;
     uintN i;
-    size_t len;
 
     re = NULL;
     mark = JS_ARENA_MARK(&cx->tempPool);
-    len = JSSTRING_LENGTH(str);
 
-    state.context = cx;
-    state.tokenStream = ts;
-    state.cp = js_UndependString(cx, str);
-    if (!state.cp)
+    /*
+     * Parsing the string as flat is now expressed internally using
+     * a flag, so that we keep this information in the JSRegExp, but
+     * we keep the 'flat' parameter for now for compatibility.
+     */
+    if (flat) flags |= JSREG_FLAT;
+    if (!CompileRegExpToAST(cx, ts, str, flags, state))
         goto out;
-    state.cpbegin = state.cp;
-    state.cpend = state.cp + len;
-    state.flags = flags;
-    state.parenCount = 0;
-    state.classCount = 0;
-    state.progLength = 0;
-    state.treeDepth = 0;
-    state.classBitmapsMem = 0;
-    for (i = 0; i < CLASS_CACHE_SIZE; i++)
-        state.classCache[i].start = NULL;
-
-    if (len != 0 && flat) {
-        state.result = NewRENode(&state, REOP_FLAT);
-        if (!state.result)
-            goto out;
-        state.result->u.flat.chr = *state.cpbegin;
-        state.result->u.flat.length = len;
-        state.result->kid = (void *) state.cpbegin;
-        /* Flat bytecode: REOP_FLAT compact(string_offset) compact(len). */
-        state.progLength += 1 + GetCompactIndexWidth(0)
-                          + GetCompactIndexWidth(len);
-    } else {
-        if (!ParseRegExp(&state))
-            goto out;
-    }
 
     resize = offsetof(JSRegExp, program) + state.progLength + 1;
     re = (JSRegExp *) JS_malloc(cx, resize);
@@ -2400,11 +2482,6 @@ js_NewRegExp(JSContext *cx, JSTokenStream *ts,
     re->flags = flags;
     re->parenCount = state.parenCount;
     re->source = str;
-
-#ifdef JS_TRACER
-    if (TRACING_ENABLED(cx))
-        js_CompileRegExpToNative(cx, re, &state);
-#endif
 
 out:
     JS_ARENA_RELEASE(&cx->tempPool, mark);
@@ -3729,40 +3806,29 @@ MatchRegExp(REGlobalData *gData, REMatchState *x)
     const jschar *cp2;
     uintN j;
 #ifdef JS_TRACER
-    Fragment *fragment;
+    NativeRegExp native;
 
     /* Run with native regexp if possible. */
-    jschar* re_chars;
-    size_t re_length;
-    JSContext* cx = gData->cx;
-    JSRegExp* re = gData->regexp;
-    JSSTRING_CHARS_AND_LENGTH(re->source, re_chars, re_length);
-    void* hash = HashRegExp(re->flags, re_chars, re_length);
-    if (TRACING_ENABLED(cx) && 
-        ((fragment = LookupNativeRegExp(cx, hash, re->flags, re_chars, re_length)) != NULL) &&
-        !fragment->isBlacklisted() &&
-        fragment->code()) {
-        union { NIns *code; REMatchState* (FASTCALL *func)(void*, void*); } u;
-        u.code = fragment->code();
-        REMatchState *lr;
+    if (TRACING_ENABLED(gData->cx) && 
+        (native = GetNativeRegExp(gData->cx, gData->regexp))) {
         gData->skipped = (ptrdiff_t) x->cp;
 
         debug_only_v(printf("entering REGEXP trace at %s:%u@%u, code: %p\n",
                             gData->cx->fp->script->filename,
                             js_FramePCToLineNumber(gData->cx, gData->cx->fp),
                             FramePCOffset(gData->cx->fp),
-                            fragment->code()););
+                            native););
 
 #if defined(JS_NO_FASTCALL) && defined(NANOJIT_IA32)
-        SIMULATE_FASTCALL(lr, x, gData, u.func);
+        SIMULATE_FASTCALL(result, x, gData, native);
 #else
-        lr = u.func(x, gData);
+        result = native(x, gData);
 #endif
 
         debug_only_v(printf("leaving REGEXP trace\n"));
 
         gData->skipped = ((const jschar *) gData->skipped) - cp;
-        return lr;
+        return result;
     }
 #endif
     /*
