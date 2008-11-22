@@ -1057,7 +1057,7 @@ TraceRecorder::~TraceRecorder()
         }
         
         if (trashSelf)
-            js_TrashTree(cx, fragment);
+            js_TrashTree(cx, fragment->root);
 
         for (unsigned int i = 0; i < whichTreesToTrash.length(); i++)
             js_TrashTree(cx, whichTreesToTrash.get(i));

@@ -1948,6 +1948,19 @@ function testBug465688() {
 testBug465688.expected = true;
 test(testBug465688);
 
+//test no assert
+function testBug466262() {
+	var e = 1;
+	for (var d = 0; d < 3; ++d) {
+	  if (d == 2) {
+		e = "";
+	  }
+	}
+	return true;
+}
+testBug466262.expected = true;
+test(testBug466262);
+
 // BEGIN MANDELBROT STUFF
 // XXXbz I would dearly like to wrap it up into a function to avoid polluting
 // the global scope, but the function ends up heavyweight, and then we lose on
