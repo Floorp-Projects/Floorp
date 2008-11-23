@@ -155,9 +155,9 @@ function Barrier(x, y, type, vpr) {
 function checkInnerBoundsInner(ws, x, y, w, h) {
   let vwib = ws._viewport.viewportInnerBounds;
   if (!((vwib.x != x ||
-	 vwib.y != y ||
-	 (w != undefined && vwib.width != w) ||
-	 (h != undefined && vwib.height != h))))
+         vwib.y != y ||
+         (w != undefined && vwib.width != w) ||
+         (h != undefined && vwib.height != h))))
     return null;
 
   return [ vwib.x, vwib.y, vwib.width, vwib.height ];
@@ -186,9 +186,9 @@ function checkRectInner(ws, id, x, y, w, h) {
   var wsb = ws._el.getBoundingClientRect();
 
   if (!((bb.left - wsb.left) != x ||
-	(bb.top - wsb.left) != y ||
-	(w != undefined && (bb.right - bb.left) != w) ||
-	(h != undefined && (bb.bottom - bb.top) != h)))
+        (bb.top - wsb.left) != y ||
+        (w != undefined && (bb.right - bb.left) != w) ||
+        (h != undefined && (bb.bottom - bb.top) != h)))
     return null;
 
   return [(bb.left - wsb.left), (bb.top - wsb.left), (bb.right - bb.left), (bb.bottom - bb.top)];
