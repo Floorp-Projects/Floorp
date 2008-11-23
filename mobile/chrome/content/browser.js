@@ -1109,7 +1109,7 @@ ProgressController.prototype = {
         // Remove all the notifications, except for those which want to
         // persist across the first location change.
 
-	// XXX
+        // XXX
         // var nBox = Browser.getNotificationBox();
         // nBox.removeTransientNotifications();
       }

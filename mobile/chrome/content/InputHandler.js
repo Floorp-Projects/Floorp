@@ -159,7 +159,7 @@ KineticPanningModule.prototype = {
     reset: function() {
       if (this.kineticHandle != -1) {
         window.clearInterval(this.kineticHandle);
-	this.kineticHandle = -1;
+        this.kineticHandle = -1;
       }
 
       this.momentumBuffer = [];
@@ -294,7 +294,7 @@ KineticPanningModule.prototype = {
     for (let i = 0; i < kineticData.momentumBufferSize; i++) {
       let me = kineticData.momentumBuffer[(kineticData.momentumBufferIndex + i) % kineticData.momentumBufferSize];
       if (!me)
-	return false;
+        return false;
 
       dx += me.dx;
       dy += me.dy;
@@ -558,7 +558,7 @@ ClickingModule.prototype = {
     function optimalElementForPoint(cX, cY) {
       var element = Browser.content.elementFromPoint(cX, cY);
       if (!element)
-	return null;
+        return null;
 
       // Find the nearest non-inline ancestor
       while (element.parentNode) {
@@ -577,13 +577,13 @@ ClickingModule.prototype = {
 
     if (zoomElement) {
       if (this._zoomed) {
-	// zoom out
-	this._zoomed = false;
-	Browser.content.zoomFromElement(zoomElement);
+        // zoom out
+        this._zoomed = false;
+        Browser.content.zoomFromElement(zoomElement);
       } else {
-	// zoom in
-	this._zoomed = true;
-	Browser.content.zoomToElement(zoomElement);
+        // zoom in
+        this._zoomed = true;
+        Browser.content.zoomToElement(zoomElement);
       }
 
     }
