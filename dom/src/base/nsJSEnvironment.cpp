@@ -850,9 +850,6 @@ PrintWinCodebase(nsGlobalWindow *win)
 }
 #endif
 
-// The accumulated operation weight before we call MaybeGC
-const PRUint32 MAYBE_GC_OPERATION_WEIGHT = 5000 * JS_OPERATION_WEIGHT_BASE;
-
 static void
 MaybeGC(JSContext *cx)
 {
@@ -932,24 +929,24 @@ nsJSContext::DOMOperationCallback(JSContext *cx)
 
         if (nsContentUtils::GetBoolPref("dom.prevent_oom_dialog", PR_FALSE))
           return JS_FALSE;
-        
+
         nsCOMPtr<nsIPrompt> prompt = GetPromptFromContext(ctx);
-        
+
         nsXPIDLString title, msg;
         rv = nsContentUtils::GetLocalizedString(nsContentUtils::eDOM_PROPERTIES,
                                                 "LowMemoryTitle",
                                                 title);
-        
+
         rv |= nsContentUtils::GetLocalizedString(nsContentUtils::eDOM_PROPERTIES,
                                                  "LowMemoryMessage",
                                                  msg);
-        
+
         //GetStringFromName can return NS_OK and still give NULL string
         if (NS_FAILED(rv) || !title || !msg) {
           NS_ERROR("Failed to get localized strings.");
           return JS_FALSE;
         }
-        
+
         prompt->Alert(title, msg);
         return JS_FALSE;
       }
@@ -1236,9 +1233,8 @@ nsJSContext::nsJSContext(JSRuntime *aRuntime) : mGCOnDestruction(PR_TRUE)
     nsContentUtils::RegisterPrefCallback(js_options_dot_str,
                                          JSOptionChangedCallback,
                                          this);
-
-    ::JS_SetOperationCallback(mContext, DOMOperationCallback,
-                              MAYBE_GC_OPERATION_WEIGHT);
+    ::JS_SetOperationCallback(mContext, DOMOperationCallback);
+    nsContentUtils::XPConnect()->SetWatchdogLimit(mContext, PR_TicksPerSecond()/10);
 
     static JSLocaleCallbacks localeCallbacks =
       {
