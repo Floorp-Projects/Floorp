@@ -96,18 +96,24 @@ WBORecord.prototype = {
   // a string (encrypted) payload instead of an object
 };
 
+// fixme: global, ugh
+let json = Cc["@mozilla.org/dom/json;1"].createInstance(Ci.nsIJSON);
+
 function WBOFilter() {}
 WBOFilter.prototype = {
   beforePUT: function(data, wbo) {
     let self = yield;
     let foo = wbo.uri.spec.split('/');
     data.id = decodeURI(foo[foo.length-1]);
+    data.payload = json.encode([data.payload]);
     self.done(data);
   },
   afterGET: function(data, wbo) {
     let self = yield;
     let foo = wbo.uri.spec.split('/');
     data.id = decodeURI(foo[foo.length-1]);
+    // data.payload = json.decode(data.payload)[0]; // fixme: server is decoding for us!
+    data.payload = data.payload[0]; // remove when above gets fixed
     self.done(data);
   }
 };
