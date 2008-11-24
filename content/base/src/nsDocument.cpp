@@ -1138,10 +1138,10 @@ NS_IMPL_ISUPPORTS1(nsExternalResourceMap::LoadgroupCallbacks,
   NS_IMPL_ISUPPORTS1(nsExternalResourceMap::LoadgroupCallbacks::_i##Shim, _i)
 
 IMPL_SHIM(nsILoadContext)
-IMPL_SHIM(nsIProgressEventSink);
-IMPL_SHIM(nsIChannelEventSink);
-IMPL_SHIM(nsISecurityEventSink);
-IMPL_SHIM(nsIApplicationCacheContainer);
+IMPL_SHIM(nsIProgressEventSink)
+IMPL_SHIM(nsIChannelEventSink)
+IMPL_SHIM(nsISecurityEventSink)
+IMPL_SHIM(nsIApplicationCacheContainer)
 
 #undef IMPL_SHIM
 
