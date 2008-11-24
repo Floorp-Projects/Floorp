@@ -330,10 +330,12 @@ NewEngine.prototype = {
     let self = yield;
 
     // STEP 0: Get our crypto records in order
+    this._log.debug("Ensuring server crypto records are there");
 
     yield this._remoteSetup.async(this, self.cb);
 
     // STEP 1: Generate outgoing items
+    this._log.debug("Calculating client changes");
 
     if (!this.lastSync) {
       // first sync: upload all items
@@ -358,6 +360,7 @@ NewEngine.prototype = {
     }
 
     // STEP 2: Find new items from server, place into incoming queue
+    this._log.debug("Downloading server changes");
 
     let newitems = new Collection(this.engineURL);
     newitems.modified = this.lastSync;
@@ -372,6 +375,7 @@ NewEngine.prototype = {
     // FIXME: need to sort incoming queue here (e.g. create parents first)
 
     // STEP 3: Reconcile
+    this._log.debug("Reconciling server/client changes");
 
     // remove from incoming queue any items also in outgoing queue
     // FIXME: should attempt to match same items with different IDs here (same
@@ -386,10 +390,12 @@ NewEngine.prototype = {
         }
       }
     }
+    this._incoming = this.incoming.filter(function(i) i); // removes any holes
     if (conflicts.length)
       this._log.warn("Conflicts found.  Conflicting server changes discarded");
 
     // STEP 4: Apply incoming items
+    this._log.debug("Applying server changes");
 
     let inc;
     while ((inc = this.incoming.pop())) {
@@ -399,6 +405,7 @@ NewEngine.prototype = {
     }
 
     // STEP 5: Upload outgoing items
+    this._log.debug("Uploading client changes");
 
     if (this.outgoing.length) {
       let up = new Collection(this.engineURL);
@@ -416,6 +423,7 @@ NewEngine.prototype = {
     }
 
     // STEP 6: Save the current snapshot so as to calculate changes at next sync
+    this._log.debug("Saving snapshot for next sync");
 
     this._snapshot.data = this._store.wrap();
     this._snapshot.save();
