@@ -329,20 +329,21 @@ NewEngine.prototype = {
   _sync: function NewEngine__sync() {
     let self = yield;
 
+    // STEP 0: Get our crypto records in order
+
     yield this._remoteSetup.async(this, self.cb);
 
-    // first sync case: sync all items up
-    // <strike>otherwise we expect any new items to be already in the outgoing queue</strike>
-    // otherwise we use snapshots to generate the outgoing queue
+    // STEP 1: Generate outgoing items
+
     if (!this.lastSync) {
+      // first sync: upload all items
       let all = this._store.wrap();
       for (let key in all) {
         let record = yield this._createRecord.async(this, self.cb, key, all[key]);
         this.outgoing.push(record);
       }
-      this._snapshot.data = all;
-
     } else {
+      // we've synced before: use snapshot to upload changes only
       this._snapshot.load();
       let newsnap = this._store.wrap();
       let updates = yield this._core.detectUpdates(self.cb,
@@ -354,10 +355,10 @@ NewEngine.prototype = {
         let record = yield this._createRecord.async(this, self.cb, cmd.GUID, data);
         this.outgoing.push(record);
       }
-      this._snapshot.data = newsnap;
     }
 
-    // find new items from server, place into incoming queue
+    // STEP 2: Find new items from server, place into incoming queue
+
     let newitems = new Collection(this.engineURL);
     newitems.modified = this.lastSync;
     newitems.full = true;
@@ -365,12 +366,16 @@ NewEngine.prototype = {
 
     let item;
     while ((item = newitems.iter.next())) {
-      // server returns items with modified==this.lastSync, so skip those
-      if (item.modified > this.lastSync)
-        this.incoming.push(item);
+      this.incoming.push(item);
     }
 
+    // FIXME: need to sort incoming queue here (e.g. create parents first)
+
+    // STEP 3: Reconcile
+
     // remove from incoming queue any items also in outgoing queue
+    // FIXME: should attempt to match same items with different IDs here (same
+    // item created on two different machines before syncing either one)
     let conflicts = [];
     for (let i = 0; i < this.incoming.length; i++) {
       for each (let out in this.outgoing) {
@@ -384,8 +389,8 @@ NewEngine.prototype = {
     if (conflicts.length)
       this._log.warn("Conflicts found.  Conflicting server changes discarded");
 
-    // apply incoming queue one by one
-    // XXX may need to sort here (e.g. create parents first)
+    // STEP 4: Apply incoming items
+
     let inc;
     while ((inc = this.incoming.pop())) {
       yield this._store.applyIncoming(self.cb, inc);
@@ -393,22 +398,26 @@ NewEngine.prototype = {
         this.lastSync = inc.modified;
     }
 
-    // upload new/changed items from our outgoing queue
-    let up = new Collection(this.engineURL);
-    let out;
-    while ((out = this.outgoing.pop())) {
-      yield up.pushRecord(self.cb, out);
-    }
-    yield up.post(self.cb);
+    // STEP 5: Upload outgoing items
 
-    // FIXME: hack to get the last modified timestamp.  race condition alert!
-    yield newitems.get(self.cb);
-    newitems.iter.reset();
-    while ((item = newitems.iter.next())) {
-      if (item.modified > this.lastSync)
-        this.lastSync = item.modified;
+    if (this.outgoing.length) {
+      let up = new Collection(this.engineURL);
+      let out;
+      while ((out = this.outgoing.pop())) {
+        yield up.pushRecord(self.cb, out);
+      }
+      yield up.post(self.cb);
+
+      // up.data now contains the post result, get the last timestamp from there
+      for each (let ts in up.data.success) {
+        if (ts > this.lastSync)
+          this.lastSync = ts;
+      }
     }
 
+    // STEP 6: Save the current snapshot so as to calculate changes at next sync
+
+    this._snapshot.data = this._store.wrap();
     this._snapshot.save();
 
     self.done();
