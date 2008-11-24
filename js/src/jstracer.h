@@ -159,12 +159,13 @@ public:
 #define ORACLE_SIZE 4096
 
 class Oracle {
-    avmplus::BitSet _dontDemote;
+    avmplus::BitSet _stackDontDemote;
+    avmplus::BitSet _globalDontDemote;
 public:
-    void markGlobalSlotUndemotable(JSScript* script, unsigned slot);
-    bool isGlobalSlotUndemotable(JSScript* script, unsigned slot) const;
-    void markStackSlotUndemotable(JSScript* script, jsbytecode* ip, unsigned slot);
-    bool isStackSlotUndemotable(JSScript* script, jsbytecode* ip, unsigned slot) const;
+    void markGlobalSlotUndemotable(JSContext* cx, unsigned slot);
+    bool isGlobalSlotUndemotable(JSContext* cx, unsigned slot) const;
+    void markStackSlotUndemotable(JSContext* cx, unsigned slot);
+    bool isStackSlotUndemotable(JSContext* cx, unsigned slot) const;
     void clear();
 };
 
