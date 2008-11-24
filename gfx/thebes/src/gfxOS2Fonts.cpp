@@ -336,40 +336,31 @@ cairo_font_face_t *gfxOS2Font::CairoFontFace()
         // finally find a matching font
         FcResult fcRes;
         FcPattern *fcMatch = FcFontMatch(NULL, fcPattern, &fcRes);
-#ifdef DEBUG_thebes
-        FcChar8 *str1, *str2;
-        int w1, w2, i1, i2;
-        double s1, s2;
-        FcPatternGetString(fcPattern, FC_FAMILY, 0, &str1);
-        FcPatternGetInteger(fcPattern, FC_WEIGHT, 0, &w1);
-        FcPatternGetInteger(fcPattern, FC_SLANT, 0, &i1);
-        FcPatternGetDouble(fcPattern, FC_PIXEL_SIZE, 0, &s1);
-        FcPatternGetString(fcMatch, FC_FAMILY, 0, &str2);
-        FcPatternGetInteger(fcMatch, FC_WEIGHT, 0, &w2);
-        FcPatternGetInteger(fcMatch, FC_SLANT, 0, &i2);
-        FcPatternGetDouble(fcMatch, FC_PIXEL_SIZE, 0, &s2);
-        printf("  input=%s,%d,%d,%f\n  fcPattern=%s,%d,%d,%f\n  fcMatch=%s,%d,%d,%f\n",
-               NS_LossyConvertUTF16toASCII(GetName()).get(),
-               GetStyle()->weight, GetStyle()->style, GetStyle()->size,
-               (char *)str1, w1, i1, s1,
-               (char *)str2, w2, i2, s2);
-#endif
         FcPatternDestroy(fcPattern);
 
-        if (GetName() == NS_LITERAL_STRING("Workplace Sans") && fcW >= FC_WEIGHT_DEMIBOLD) {
-            // if we are dealing with Workplace Sans and want a bold font, we
-            // need to artificially embolden it (no bold counterpart yet)
-            FcPatternAddBool(fcMatch, FC_EMBOLDEN, FcTrue);
+        if (fcMatch) {
+            if (fcW >= FC_WEIGHT_DEMIBOLD && GetName() == NS_LITERAL_STRING("Workplace Sans")) {
+                // if we are dealing with Workplace Sans and want a bold font, we
+                // need to artificially embolden it (no bold counterpart yet)
+                FcPatternAddBool(fcMatch, FC_EMBOLDEN, FcTrue);
+            } else {
+                // if we don't embolden, we can possibly switch off antialiasing
+                FcPatternAddBool(fcMatch, FC_ANTIALIAS, mAntialias);
+            }
+            FcPatternAddInteger(fcMatch, FC_HINT_STYLE, mHinting);
+
+            // and ask cairo to return a font face for this
+            mFontFace = cairo_ft_font_face_create_for_pattern(fcMatch);
+
+            FcPatternDestroy(fcMatch);
         } else {
-            // if we don't embolden, we can possibly switch off antialiasing
-            FcPatternAddBool(fcMatch, FC_ANTIALIAS, mAntialias);
+#ifdef DEBUG
+            printf("Could not match font for:\n"
+                   "  family=%s, weight=%d, slant=%d, size=%d\n",
+                   NS_LossyConvertUTF16toASCII(GetName()).get(),
+                   GetStyle()->weight, GetStyle()->style, GetStyle()->size);
+#endif
         }
-        FcPatternAddInteger(fcMatch, FC_HINT_STYLE, mHinting);
-
-        // and ask cairo to return a font face for this
-        mFontFace = cairo_ft_font_face_create_for_pattern(fcMatch);
-
-        FcPatternDestroy(fcMatch);
     }
 
     NS_ASSERTION(mFontFace, "Failed to make font face");
