@@ -353,44 +353,82 @@ static inline uint8 getCoercedType(jsval v)
     return isInt32(v) ? JSVAL_INT : (uint8) JSVAL_TAG(v);
 }
 
+/* 
+ * Constant seed and accumulate step borrowed from the DJB hash.
+ */
+
+#define ORACLE_MASK (ORACLE_SIZE - 1)
+
+static inline void
+hash_accum(unsigned & h, unsigned i)
+{
+    h = ((h << 5) + h + (ORACLE_MASK & i)) & ORACLE_MASK;
+}
+
+
+static inline unsigned
+stackSlotHash(JSContext *cx, unsigned slot)
+{
+    unsigned h = 5381;
+    hash_accum(h, unsigned(cx->fp->script));
+    hash_accum(h, unsigned(cx->fp->regs->pc));
+    hash_accum(h, slot);
+    return h;
+}
+
+static inline unsigned
+globalSlotHash(JSContext *cx, unsigned slot)
+{    
+    unsigned h = 5381;
+    JSStackFrame *fp = cx->fp;
+
+    while (fp->down)
+        fp = fp->down;        
+
+    hash_accum(h, unsigned(fp->script)); 
+    hash_accum(h, unsigned(cx->globalObject)); 
+    hash_accum(h, OBJ_SHAPE(cx->globalObject));
+    hash_accum(h, slot);
+    return h;
+}
+
+
 /* Tell the oracle that a certain global variable should not be demoted. */
 void
-Oracle::markGlobalSlotUndemotable(JSScript* script, unsigned slot)
+Oracle::markGlobalSlotUndemotable(JSContext *cx, unsigned slot)
 {
-    _dontDemote.set(&gc, (slot % ORACLE_SIZE));
+    _globalDontDemote.set(&gc, globalSlotHash(cx, slot));
 }
 
 /* Consult with the oracle whether we shouldn't demote a certain global variable. */
 bool
-Oracle::isGlobalSlotUndemotable(JSScript* script, unsigned slot) const
-{
-    return _dontDemote.get(slot % ORACLE_SIZE);
+Oracle::isGlobalSlotUndemotable(JSContext *cx, unsigned slot) const
+{    
+    return _globalDontDemote.get(globalSlotHash(cx, slot));
 }
 
 /* Tell the oracle that a certain slot at a certain bytecode location should not be demoted. */
 void
-Oracle::markStackSlotUndemotable(JSScript* script, jsbytecode* ip, unsigned slot)
+Oracle::markStackSlotUndemotable(JSContext *cx, unsigned slot)
 {
-    uint32 hash = uint32(intptr_t(ip)) + (slot << 5);
-    hash %= ORACLE_SIZE;
-    _dontDemote.set(&gc, hash);
+    _stackDontDemote.set(&gc, stackSlotHash(cx, slot));
 }
 
 /* Consult with the oracle whether we shouldn't demote a certain slot. */
 bool
-Oracle::isStackSlotUndemotable(JSScript* script, jsbytecode* ip, unsigned slot) const
+Oracle::isStackSlotUndemotable(JSContext *cx, unsigned slot) const
 {
-    uint32 hash = uint32(intptr_t(ip)) + (slot << 5);
-    hash %= ORACLE_SIZE;
-    return _dontDemote.get(hash);
+    return _stackDontDemote.get(stackSlotHash(cx, slot));
 }
 
 /* Clear the oracle. */
 void
 Oracle::clear()
 {
-    _dontDemote.reset();
+    _stackDontDemote.reset();
+    _globalDontDemote.reset();
 }
+
 
 #if defined(NJ_SOFTFLOAT)
 JS_DEFINE_CALLINFO_1(static, DOUBLE,    i2f, INT32,                 1, 1)
@@ -912,9 +950,10 @@ TypeMap::captureGlobalTypes(JSContext* cx, SlotList& slots)
     uint8* m = map;
     FORALL_GLOBAL_SLOTS(cx, ngslots, gslots,
         uint8 type = getCoercedType(*vp);
-        if ((type == JSVAL_INT) && oracle.isGlobalSlotUndemotable(cx->fp->script, gslots[n]))
+        if ((type == JSVAL_INT) && oracle.isGlobalSlotUndemotable(cx, gslots[n]))
             type = JSVAL_DOUBLE;
         JS_ASSERT(type != JSVAL_BOXED);
+        debug_only_v(printf("capture global type %s%d: %d=%c\n", vpname, vpnum, type, typeChar[type]);)
         *m++ = type;
     );
 }
@@ -929,10 +968,10 @@ TypeMap::captureStackTypes(JSContext* cx, unsigned callDepth)
     FORALL_SLOTS_IN_PENDING_FRAMES(cx, callDepth,
         uint8 type = getCoercedType(*vp);
         if ((type == JSVAL_INT) &&
-            oracle.isStackSlotUndemotable(cx->fp->script, cx->fp->regs->pc, unsigned(m - map))) {
+            oracle.isStackSlotUndemotable(cx, unsigned(m - map))) {
             type = JSVAL_DOUBLE;
         }
-        debug_only_v(printf("capture %s%d: %d\n", vpname, vpnum, type);)
+        debug_only_v(printf("capture stack type %s%d: %d=%c\n", vpname, vpnum, type, typeChar[type]);)
         *m++ = type;
     );
 }
@@ -1575,7 +1614,7 @@ TraceRecorder::lazilyImportGlobalSlot(unsigned slot)
     /* Add the slot to the list of interned global slots. */
     traceMonitor->globalSlots->add(slot);
     uint8 type = getCoercedType(*vp);
-    if ((type == JSVAL_INT) && oracle.isGlobalSlotUndemotable(cx->fp->script, slot))
+    if ((type == JSVAL_INT) && oracle.isGlobalSlotUndemotable(cx, slot))
         type = JSVAL_DOUBLE;
     traceMonitor->globalTypeMap->add(type);
     import(gp_ins, slot*sizeof(double), vp, type, "global", index, NULL);
@@ -1720,7 +1759,7 @@ TraceRecorder::adjustCallerTypes(Fragment* f, unsigned* demote_slots, bool& tras
         if (isPromote && *m == JSVAL_DOUBLE) 
             lir->insStorei(get(vp), gp_ins, nativeGlobalOffset(vp));
         else if (!isPromote && *m == JSVAL_INT) {
-            oracle.markGlobalSlotUndemotable(cx->fp->script, nativeGlobalOffset(vp)/sizeof(double));
+            oracle.markGlobalSlotUndemotable(cx, nativeGlobalOffset(vp)/sizeof(double));
             trash = true;
             ok = false;
         }
@@ -1748,7 +1787,7 @@ TraceRecorder::adjustCallerTypes(Fragment* f, unsigned* demote_slots, bool& tras
     /* If this isn't okay, tell the oracle. */
     if (!ok) {
         for (unsigned i = 1; i <= NUM_UNDEMOTE_SLOTS(demote_slots); i++)
-            oracle.markStackSlotUndemotable(cx->fp->script, cx->fp->regs->pc, demote_slots[i]);
+            oracle.markStackSlotUndemotable(cx, demote_slots[i]);
     }
     JS_ASSERT(f == f->root);
     return ok;
@@ -2047,7 +2086,7 @@ TraceRecorder::deduceTypeStability(Fragment* root_peer, Fragment** stable_peer, 
         if (!checkType(*vp, *m, stage_vals[stage_count], stage_ins[stage_count], stage_count)) {
             /* If the failure was an int->double, tell the oracle. */
             if (*m == JSVAL_INT && isNumber(*vp) && !isPromoteInt(get(vp)))
-                oracle.markGlobalSlotUndemotable(cx->fp->script, gslots[n]);
+                oracle.markGlobalSlotUndemotable(cx, gslots[n]);
             trashSelf = true;
             goto checktype_fail_1;
         }
@@ -2365,8 +2404,7 @@ TraceRecorder::joinEdgesToEntry(Fragmento* fragmento, Fragment* peer_root)
                     }
                     if (count) {
                         for (unsigned i = 0; i < count; i++)
-                            oracle.markStackSlotUndemotable(cx->fp->script, 
-                                                            cx->fp->regs->pc, demotes[i]);
+                            oracle.markStackSlotUndemotable(cx, demotes[i]);
                         JS_ASSERT(peer == uexit->fragment->root);
                         if (fragment == peer)
                             trashSelf = true;
@@ -2891,6 +2929,16 @@ js_SynthesizeFrame(JSContext* cx, const FrameInfo& fi)
            script->nfixed;
 }
 
+#ifdef JS_JIT_SPEW
+static void 
+js_dumpMap(TypeMap const & tm) {
+    uint8 *data = tm.data();
+    for (unsigned i = 0; i < tm.length(); ++i) {
+        printf("typemap[%d] = %c\n", i, typeChar[data[i]]);
+    }
+}
+#endif
+
 bool
 js_RecordTree(JSContext* cx, JSTraceMonitor* tm, Fragment* f, Fragment* outer, unsigned* demotes)
 {
@@ -2911,8 +2959,12 @@ js_RecordTree(JSContext* cx, JSTraceMonitor* tm, Fragment* f, Fragment* outer, u
     TypeMap current;
     current.captureGlobalTypes(cx, *tm->globalSlots);
     if (!current.matches(*tm->globalTypeMap)) {
-        js_FlushJITCache(cx);
         debug_only_v(printf("Global type map mismatch in RecordTree, flushing cache.\n");)
+        debug_only_v(printf("Current global type map:\n");)
+        debug_only_v(js_dumpMap(current));
+        debug_only_v(printf("Cached global type map:\n");)
+        debug_only_v(js_dumpMap(*tm->globalTypeMap));
+        js_FlushJITCache(cx);
         return false;
     }
 
