@@ -436,6 +436,7 @@ NS_INTERFACE_MAP_BEGIN(nsDocShell)
     NS_INTERFACE_MAP_ENTRY(nsIWebPageDescriptor)
     NS_INTERFACE_MAP_ENTRY(nsIAuthPromptProvider)
     NS_INTERFACE_MAP_ENTRY(nsIObserver)
+    NS_INTERFACE_MAP_ENTRY(nsILoadContext)
 NS_INTERFACE_MAP_END_INHERITING(nsDocLoader)
 
 ///*****************************************************************************
@@ -9532,6 +9533,52 @@ nsDocShell::Observe(nsISupports *aSubject, const char *aTopic,
         rv = NS_ERROR_UNEXPECTED;
     }
     return rv;
+}
+
+//*****************************************************************************
+// nsDocShell::nsILoadContext
+//*****************************************************************************
+NS_IMETHODIMP
+nsDocShell::GetAssociatedWindow(nsIDOMWindow** aWindow)
+{
+    return CallGetInterface(this, aWindow);
+}
+
+NS_IMETHODIMP
+nsDocShell::GetTopWindow(nsIDOMWindow** aWindow)
+{
+    nsresult rv;
+    nsCOMPtr<nsIDOMWindow> win = do_GetInterface(GetAsSupports(this), &rv);
+    NS_ENSURE_SUCCESS(rv, rv);
+    return win->GetTop(aWindow);
+}
+
+NS_IMETHODIMP
+nsDocShell::IsAppOfType(PRUint32 aAppType, PRBool *aIsOfType)
+{
+    nsCOMPtr<nsIDocShell> shell = this;
+    while (shell) {
+        PRUint32 type;
+        shell->GetAppType(&type);
+        if (type == aAppType) {
+            *aIsOfType = PR_TRUE;
+            return NS_OK;
+        }
+        nsCOMPtr<nsIDocShellTreeItem> item = do_QueryInterface(shell);
+        nsCOMPtr<nsIDocShellTreeItem> parent;
+        item->GetParent(getter_AddRefs(parent));
+        shell = do_QueryInterface(parent);
+    }
+
+    *aIsOfType = PR_FALSE;
+    return NS_OK;
+}
+
+NS_IMETHODIMP
+nsDocShell::GetIsContent(PRBool *aIsContent)
+{
+    *aIsContent = (mItemType == typeContent);
+    return NS_OK;
 }
 
 /* static */
