@@ -918,10 +918,10 @@ BookmarksStore.prototype = {
 
     this._log.trace("RECORD: " + record.id + " -> " + uneval(record.cleartext));
 
-    if (!this._lookup[record.id])
-      this._createCommand({GUID: record.id, data: record.cleartext});
-    else if (record.cleartext == "")
+    if (record.cleartext == "")
       this._removeCommand({GUID: record.id});
+    else if (!this._lookup[record.id])
+      this._createCommand({GUID: record.id, data: record.cleartext});
     else {
       let data = Utils.deepCopy(record.cleartext);
       delete data.GUID;
