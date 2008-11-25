@@ -329,17 +329,23 @@ NewEngine.prototype = {
   },
 
   _recDepth: function NewEngine__recDepth(rec) {
+    // we've calculated depth for this record already
     if (rec.depth)
       return rec.depth;
+
+    // record has no parent
     if (!rec.parentid)
       return 0;
+
+    // search for the record's parent and calculate its depth, then add one
     for each (let inc in this.incoming) {
       if (inc.id == rec.parentid) {
         rec.depth = this._recDepth(inc) + 1;
         return rec.depth;
       }
     }
-    this._log.warn("Couldn't calculate depth of item " + rec.id);
+
+    // we couldn't find the record's parent, so it's an orphan
     return 0;
   },
 
