@@ -64,6 +64,14 @@ struct gfxFontFaceSrc {
     PRUint32               mFormatFlags;
 };
 
+// subclassed by loader code to contain needed context info
+// lifetime: user font set lifetime 
+class gfxFontLoaderContext {
+public:
+  gfxFontLoaderContext() { }
+  virtual ~gfxFontLoaderContext() { }
+};
+
 // subclassed to store platform-specific code cleaned out when font entry is deleted
 // lifetime: from when platform font is created until it is deactivated 
 class gfxUserFontData {
