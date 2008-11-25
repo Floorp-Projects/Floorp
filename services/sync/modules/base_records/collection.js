@@ -137,13 +137,20 @@ CollectionIterator.prototype = {
 
   get count() { return this._coll.data.length; },
 
-  next: function CollIter_next() {
-    if (this._idx >= this.count)
-      return null;
-    let item = this._coll.data[this._idx++];
-    let wrap = new CryptoWrapper(this._coll.uri.resolve(item.id));
-    wrap.data = item;
-    return wrap;
+  next: function CollIter_next(onComplete) {
+    let fn = function CollIter__next() {
+      let self = yield;
+
+      if (this._idx >= this.count)
+        return;
+      let item = this._coll.data[this._idx++];
+      let wrap = new CryptoWrapper(this._coll.uri.resolve(item.id));
+      wrap.data = this._coll._json.encode(item); // HACK HACK HACK
+      yield wrap.filterDownload(self.cb); // XXX EEK
+
+      self.done(wrap);
+    };
+    fn.async(this, onComplete);
   },
 
   reset: function CollIter_reset() {
