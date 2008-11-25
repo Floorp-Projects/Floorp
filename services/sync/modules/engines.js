@@ -368,7 +368,7 @@ NewEngine.prototype = {
     yield newitems.get(self.cb);
 
     let item;
-    while ((item = newitems.iter.next())) {
+    while ((item = yield newitems.iter.next(self.cb))) {
       this.incoming.push(item);
     }
 
@@ -414,12 +414,8 @@ NewEngine.prototype = {
         yield up.pushRecord(self.cb, out);
       }
       yield up.post(self.cb);
-
-      // up.data now contains the post result, get the last timestamp from there
-      for each (let ts in up.data.success) {
-        if (ts > this.lastSync)
-          this.lastSync = ts;
-      }
+      if (up.data.modified > this.lastSync)
+        this.lastSync = up.data.modified;
     }
 
     // STEP 6: Save the current snapshot so as to calculate changes at next sync
