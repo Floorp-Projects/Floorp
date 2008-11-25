@@ -1,0 +1,27 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD HTML 4.01//EN"
+	"http://www.w3.org/TR/html4/strict.dtd">
+<html lang="en-US" class="reftest-wait">
+<head>
+	<title></title>
+	<meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+	<style type="text/css">
+
+	html, body, iframe { margin: 0; padding: 0; border: none; }
+
+	</style>
+	<script type="application/ecmascript">
+
+	function run() {
+		var iframe = document.getElementsByTagName("iframe")[0]
+		iframe.contentWindow.arm();
+		iframe.style.width = "100px";
+	}
+
+	</script>
+</head>
+<body onload="setTimeout(run, 20)">
+
+<iframe style="height: 5em; width: 300px" src="media-query-inner-1.html"></iframe>
+
+</body>
+</html>
