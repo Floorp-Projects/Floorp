@@ -1909,12 +1909,12 @@ NS_METHOD nsTableFrame::Reflow(nsPresContext*          aPresContext,
   // constrained initial reflow and other reflows which require either a strategy init or balance. 
   // This isn't done during an unconstrained reflow, because it will occur later when the parent 
   // reflows with a constrained width.
-  PRBool needToInitiateSpecialReflow =
-    !!(GetStateBits() & NS_FRAME_CONTAINS_RELATIVE_HEIGHT);
   if (NS_SUBTREE_DIRTY(this) ||
       aReflowState.ShouldReflowAllKids() ||
       IsGeometryDirty() ||
-      (needToInitiateSpecialReflow && aReflowState.mFlags.mVResize)) {
+      aReflowState.mFlags.mVResize) {
+    PRBool needToInitiateSpecialReflow =
+      !!(GetStateBits() & NS_FRAME_CONTAINS_RELATIVE_HEIGHT);
     // see if an extra reflow will be necessary in pagination mode when there is a specified table height 
     if (isPaginated && !GetPrevInFlow() && (NS_UNCONSTRAINEDSIZE != aReflowState.availableHeight)) {
       nscoord tableSpecifiedHeight = CalcBorderBoxHeight(aReflowState);
