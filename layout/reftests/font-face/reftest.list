@@ -16,6 +16,9 @@ fails-if(MOZ_WIDGET_TOOLKIT=="gtk2") random-if(MOZ_WIDGET_TOOLKIT=="cocoa") rand
 fails HTTP(..) == src-list-format-1.html src-list-format-1-ref.html
 fails HTTP(..) == src-list-format-2.html src-list-format-2-ref.html
 fails-if(MOZ_WIDGET_TOOLKIT=="gtk2") HTTP(..) == src-list-format-3.html src-list-format-3-ref.html
+fails-if(MOZ_WIDGET_TOOLKIT=="gtk2") HTTP(..) == src-list-format-4.html src-list-format-1-ref.html
+fails-if(MOZ_WIDGET_TOOLKIT=="gtk2") HTTP(..) == src-list-format-5.html src-list-format-2-ref.html
+fails HTTP(..) == src-list-format-6.html src-list-format-3-ref.html
 # FIXME: The behavior here is neither mandated nor specified by the spec, but
 # it really ought to be.
 HTTP(..) == order-1.html order-1-ref.html
