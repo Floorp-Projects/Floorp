@@ -36,6 +36,7 @@
 
 #include <fcntl.h>
 #include <stdio.h>
+#include <string.h>
 #include <time.h>
 #include <unistd.h>
 #ifdef _WIN32
@@ -2279,15 +2280,20 @@ bool MinidumpModuleList::Read(u_int32_t expected_size) {
          ++module_index) {
       MinidumpModule* module = &(*modules)[module_index];
 
-      if (!module->ReadAuxiliaryData()) {
-        BPLOG(INFO) << "MinidumpModuleList could not read module auxiliary "
-                       "data for module " <<
-                       module_index << "/" << module_count;
-        continue;
+      // ReadAuxiliaryData fails if any data that the module indicates should
+      // exist is missing, but we treat some such cases as valid anyway.  See
+      // issue #222: if a debugging record is of a format that's too large to
+      // handle, it shouldn't render the entire dump invalid.  Check module
+      // validity before giving up.
+      if (!module->ReadAuxiliaryData() && !module->valid()) {
+        BPLOG(ERROR) << "MinidumpModuleList could not read required module "
+                        "auxiliary data for module " <<
+                        module_index << "/" << module_count;
+        return false;
       }
 
       // It is safe to use module->code_file() after successfully calling
-      // module->ReadAuxiliaryData.
+      // module->ReadAuxiliaryData or noting that the module is valid.
 
       u_int64_t base_address = module->base_address();
       u_int64_t module_size = module->size();

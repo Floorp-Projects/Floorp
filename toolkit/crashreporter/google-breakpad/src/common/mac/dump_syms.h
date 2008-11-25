@@ -30,9 +30,14 @@
 // dump_syms.h: Interface for DumpSymbols.  This class will take a mach-o file
 // and extract the symbol information and write it to a file using the
 // breakpad symbol file format.  
-// NOTE: Only Stabs format is currently supported -- not DWARF.
 
 #import <Foundation/Foundation.h>
+#include <mach-o/loader.h>
+#include "common/mac/dwarf/dwarf2reader.h"
+
+// This will map from an architecture string to a SectionMap, which
+// will contain the offsets for all the sections in the dictionary
+typedef hash_map<string, dwarf2reader::SectionMap *> ArchSectionMap;
 
 @interface DumpSymbols : NSObject {
  @protected
@@ -43,8 +48,9 @@
   NSMutableDictionary *sources_;      // Address and Source file paths (STRONG)
   NSMutableArray *cppAddresses_;      // Addresses of C++ symbols (STRONG)
   NSMutableDictionary *headers_;      // Mach-o header information (STRONG)
-  NSMutableDictionary *sectionNumbers_; // Keyed by seg/sect name (STRONG)
+  NSMutableDictionary *sectionData_; // Keyed by seg/sect name (STRONG)
   uint32_t   lastStartAddress_;
+  ArchSectionMap *sectionsForArch_;
 }
 
 - (id)initWithContentsOfFile:(NSString *)machoFile;
@@ -59,5 +65,16 @@
 
 // Write the symbols to |symbolFilePath|.  Return YES if successful.
 - (BOOL)writeSymbolFile:(NSString *)symbolFilePath;
+
+@end
+
+@interface MachSection : NSObject {
+ @protected
+  struct section *sect_;
+  uint32_t sectionNumber_;
+}
+- (id)initWithMachSection:(struct section *)sect andNumber:(uint32_t)sectionNumber;
+- (struct section*)sectionPointer;
+- (uint32_t)sectionNumber;
 
 @end
