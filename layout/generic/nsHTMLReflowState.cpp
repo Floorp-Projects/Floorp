@@ -108,7 +108,6 @@ nsHTMLReflowState::nsHTMLReflowState(nsPresContext*       aPresContext,
   mFlags.mHeightDependsOnAncestorCell = PR_FALSE;
   mDiscoveredClearance = nsnull;
   mPercentHeightObserver = nsnull;
-  mPercentHeightReflowInitiator = nsnull;
   Init(aPresContext);
 }
 
@@ -171,7 +170,6 @@ nsHTMLReflowState::nsHTMLReflowState(nsPresContext*           aPresContext,
   mPercentHeightObserver = (aParentReflowState.mPercentHeightObserver && 
                             aParentReflowState.mPercentHeightObserver->NeedsToObserve(*this)) 
                            ? aParentReflowState.mPercentHeightObserver : nsnull;
-  mPercentHeightReflowInitiator = aParentReflowState.mPercentHeightReflowInitiator;
 
   if (aInit) {
     Init(aPresContext, aContainingBlockWidth, aContainingBlockHeight);
