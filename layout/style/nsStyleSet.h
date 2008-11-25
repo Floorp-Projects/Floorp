@@ -53,8 +53,10 @@
 #include "nsRuleNode.h"
 #include "nsTArray.h"
 #include "nsCOMArray.h"
+#include "nsAutoPtr.h"
 
 class nsIURI;
+class nsCSSFontFaceRule;
 
 // The style set object is created by the document viewer and ownership is
 // then handed off to the PresShell.  Only the PresShell should delete a
@@ -112,6 +114,11 @@ class nsStyleSet
   ProbePseudoStyleFor(nsIContent* aParentContent,
                       nsIAtom* aPseudoTag,
                       nsStyleContext* aParentContext);
+
+  // Append all the currently-active font face rules to aArray.  Return
+  // true for success and false for failure.
+  PRBool AppendFontFaceRules(nsPresContext* aPresContext,
+                             nsTArray< nsRefPtr<nsCSSFontFaceRule> >& aArray);
 
   // Begin ignoring style context destruction, to avoid lots of unnecessary
   // work on document teardown.

@@ -84,6 +84,9 @@
 #include "nsRuleNode.h"
 #include "nsEventDispatcher.h"
 #include "gfxUserFontSet.h"
+#include "gfxPlatform.h"
+#include "nsCSSRules.h"
+#include "nsFontFaceLoader.h"
 #include "nsIEventListenerManager.h"
 
 #ifdef IBMBIDI
@@ -228,6 +231,7 @@ nsPresContext::nsPresContext(nsIDocument* aDocument, nsPresContextType aType)
   }
   NS_ASSERTION(mDocument, "Null document");
   mUserFontSet = nsnull;
+  mUserFontSetDirty = PR_TRUE;
 }
 
 nsPresContext::~nsPresContext()
@@ -286,8 +290,7 @@ nsPresContext::~nsPresContext()
   NS_IF_RELEASE(mDeviceContext);
   NS_IF_RELEASE(mLookAndFeel);
   NS_IF_RELEASE(mLangGroup);
-  
-  SetUserFontSet(nsnull);
+  NS_IF_RELEASE(mUserFontSet);
 }
 
 NS_IMPL_CYCLE_COLLECTION_CLASS(nsPresContext)
@@ -1567,17 +1570,163 @@ nsPresContext::HasAuthorSpecifiedRules(nsIFrame *aFrame, PRUint32 ruleTypeMask) 
     HasAuthorSpecifiedRules(aFrame->GetStyleContext(), ruleTypeMask);
 }
 
-gfxUserFontSet* 
-nsPresContext::GetUserFontSet() {
-  return mUserFontSet;
+static void
+InsertFontFaceRule(nsCSSFontFaceRule *aRule, gfxUserFontSet* aFontSet)
+{
+  PRInt32 type;
+  NS_ABORT_IF_FALSE(NS_SUCCEEDED(aRule->GetType(type)) 
+                    && type == nsICSSRule::FONT_FACE_RULE, 
+                    "InsertFontFaceRule passed a non-fontface CSS rule");
+  
+  // aRule->List();
+  
+  nsAutoString fontfamily;
+  nsCSSValue val;
+  
+  PRUint32 unit;
+  PRUint32 weight = NS_STYLE_FONT_WEIGHT_NORMAL;
+  PRUint32 stretch = NS_STYLE_FONT_STRETCH_NORMAL;
+  PRUint32 italicStyle = FONT_STYLE_NORMAL;
+  
+  // set up family name
+  aRule->GetDesc(eCSSFontDesc_Family, val);
+  unit = val.GetUnit();
+  if (unit == eCSSUnit_String) {
+    val.GetStringValue(fontfamily);
+    fontfamily.Trim("\"");
+  } else {
+    NS_ASSERTION(unit == eCSSUnit_String, 
+                 "@font-face family name has non-string unit type");
+    return;
+  }
+  
+  // set up weight
+  aRule->GetDesc(eCSSFontDesc_Weight, val);
+  unit = val.GetUnit();
+  if (unit != eCSSUnit_Null) {
+    if (unit == eCSSUnit_Normal) {
+      weight = NS_STYLE_FONT_WEIGHT_NORMAL;
+    } else {
+      weight = val.GetIntValue();
+    }
+  }
+  
+  // set up stretch
+  aRule->GetDesc(eCSSFontDesc_Stretch, val);
+  unit = val.GetUnit();
+  if (unit != eCSSUnit_Null) {
+    if (unit == eCSSUnit_Normal) {
+      stretch = NS_STYLE_FONT_STRETCH_NORMAL;
+    } else {
+      stretch = val.GetIntValue();
+    }
+  }
+  
+  // set up font style
+  aRule->GetDesc(eCSSFontDesc_Style, val);
+  if (val.GetUnit() != eCSSUnit_Null) {
+    if (val.GetUnit() == eCSSUnit_Normal) {
+      italicStyle = FONT_STYLE_NORMAL;
+    } else {
+      italicStyle = val.GetIntValue();
+    }
+  }
+  
+  // set up src array
+  nsTArray<gfxFontFaceSrc> srcArray;
+
+  aRule->GetDesc(eCSSFontDesc_Src, val);
+  unit = val.GetUnit();
+  if (unit == eCSSUnit_Array) {
+    nsCSSValue::Array *srcArr = val.GetArrayValue();
+    PRUint32 i, numSrc = srcArr->Count();
+    
+    for (i = 0; i < numSrc; i++) {
+      val = srcArr->Item(i);
+      unit = val.GetUnit();
+      gfxFontFaceSrc *face = srcArray.AppendElements(1);
+      if (!face)
+        return;
+            
+      switch (unit) {
+       
+      case eCSSUnit_Local_Font:
+        val.GetStringValue(face->mLocalName);
+        face->mIsLocal = PR_TRUE;
+        face->mURI = nsnull;
+        face->mFormatFlags = 0;
+        break;
+      case eCSSUnit_URL:
+        face->mIsLocal = PR_FALSE;
+        face->mURI = val.GetURLValue();
+        NS_ASSERTION(face->mURI, "null url in @font-face rule");
+        face->mReferrer = val.GetURLStructValue()->mReferrer;
+        face->mLocalName.Truncate();
+        face->mFormatFlags = 0;
+        while (i + 1 < numSrc && (val = srcArr->Item(i+1), 
+                 val.GetUnit() == eCSSUnit_Font_Format)) {
+          nsDependentString valueString(val.GetStringBufferValue());
+          if (valueString.LowerCaseEqualsASCII("opentype")) {
+            face->mFormatFlags |= gfxUserFontSet::FLAG_FORMAT_OPENTYPE; 
+          } else if (valueString.LowerCaseEqualsASCII("truetype")) {
+            face->mFormatFlags |= gfxUserFontSet::FLAG_FORMAT_TRUETYPE; 
+          } else if (valueString.LowerCaseEqualsASCII("truetype-aat")) {
+            face->mFormatFlags |= gfxUserFontSet::FLAG_FORMAT_TRUETYPE_AAT; 
+          } else if (valueString.LowerCaseEqualsASCII("embedded-opentype")) {
+            face->mFormatFlags |= gfxUserFontSet::FLAG_FORMAT_EOT;   
+          } else if (valueString.LowerCaseEqualsASCII("svg")) {
+            face->mFormatFlags |= gfxUserFontSet::FLAG_FORMAT_SVG;   
+          }
+          i++;
+        }
+        break;
+      default:
+        NS_ASSERTION(unit == eCSSUnit_Local_Font || unit == eCSSUnit_URL,
+                     "strange unit type in font-face src array");
+        break;
+      }
+     }
+  }
+  
+  if (!fontfamily.IsEmpty() && srcArray.Length() > 0) {
+    aFontSet->AddFontFace(fontfamily, srcArray, weight, stretch, italicStyle);
+  }
 }
 
-void 
-nsPresContext::SetUserFontSet(gfxUserFontSet *aUserFontSet)
+gfxUserFontSet* 
+nsPresContext::GetUserFontSet()
 {
-  NS_IF_RELEASE(mUserFontSet);
-  mUserFontSet = aUserFontSet;
-  NS_IF_ADDREF(mUserFontSet);
+  if (mUserFontSetDirty) {
+    NS_IF_RELEASE(mUserFontSet);
+
+    if (gfxPlatform::GetPlatform()->DownloadableFontsEnabled()) {
+      nsTArray< nsRefPtr<nsCSSFontFaceRule> > rules;
+      if (!mShell->StyleSet()->AppendFontFaceRules(this, rules))
+        return nsnull;
+
+      if (rules.Length() > 0) {
+        nsFontFaceLoaderContext *loaderCtx =
+          new nsFontFaceLoaderContext(this);
+        if (!loaderCtx)
+          return nsnull;
+        gfxUserFontSet *fs = new gfxUserFontSet(loaderCtx);
+        // user font set owns loader context
+        if (!fs) {
+          delete loaderCtx;
+          return nsnull;
+        }
+        mUserFontSet = fs;
+        NS_ADDREF(mUserFontSet);
+
+        for (PRUint32 i = 0, i_end = rules.Length(); i < i_end; ++i) {
+          InsertFontFaceRule(rules[i], fs);
+        }
+      }
+    }
+
+    mUserFontSetDirty = PR_FALSE;
+  }
+  return mUserFontSet;
 }
 
 void
