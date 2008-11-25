@@ -1,0 +1,8 @@
+<!DOCTYPE html>
+<title>Testcase, bug 455171</title>
+<div style="-moz-transform: translate(50px, 50px);"><div id="foo" style="position: fixed;"></div></div>
+<script type="text/javascript">
+var foo = document.getElementById("foo");
+var h = foo.offsetHeight;
+foo.parentNode.removeChild(foo);
+</script>
