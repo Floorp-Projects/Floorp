@@ -7683,20 +7683,27 @@ nsCSSFrameConstructor::ReconstructDocElementHierarchyInternal()
             return rv;
           }
         }
-        
-        mInitialContainingBlock = nsnull;
-        mRootElementStyleFrame = nsnull;
+      }
+    }
+    
+    if (rootContent && NS_SUCCEEDED(rv)) {
+      mInitialContainingBlock = nsnull;
+      mRootElementStyleFrame = nsnull;
 
-        // Create the new document element hierarchy
-        nsIFrame* newChild;
-        rv = ConstructDocElementFrame(state, rootContent,
-                                      mDocElementContainingBlock, &newChild);
+      // We don't reuse the old frame constructor state because,
+      // for example, its mPopupItems may be stale
+      nsFrameConstructorState state(mPresShell, mFixedContainingBlock,
+                                    nsnull, nsnull, mTempFrameTreeState);
 
-        // newChild could be null even if |rv| is success, thanks to XBL.
-        if (NS_SUCCEEDED(rv) && newChild) {
-          rv = state.mFrameManager->InsertFrames(mDocElementContainingBlock,
-                                                 nsnull, nsnull, newChild);
-        }
+      // Create the new document element hierarchy
+      nsIFrame* newChild;
+      rv = ConstructDocElementFrame(state, rootContent,
+                                    mDocElementContainingBlock, &newChild);
+
+      // newChild could be null even if |rv| is success, thanks to XBL.
+      if (NS_SUCCEEDED(rv) && newChild) {
+        rv = state.mFrameManager->InsertFrames(mDocElementContainingBlock,
+                                               nsnull, nsnull, newChild);
       }
     }
   }
