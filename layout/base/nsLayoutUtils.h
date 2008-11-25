@@ -623,6 +623,12 @@ public:
   static nsBlockFrame* FindNearestBlockAncestor(nsIFrame* aFrame);
 
   /**
+   * Find the nearest ancestor that's not for generated content. Will return
+   * aFrame if aFrame is not for generated content.
+   */
+  static nsIFrame* GetNonGeneratedAncestor(nsIFrame* aFrame);
+
+  /**
    * Cast aFrame to an nsBlockFrame* or return null if it's not
    * an nsBlockFrame.
    */

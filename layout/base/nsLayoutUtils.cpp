@@ -1553,6 +1553,20 @@ nsLayoutUtils::FindNearestBlockAncestor(nsIFrame* aFrame)
 }
 
 nsIFrame*
+nsLayoutUtils::GetNonGeneratedAncestor(nsIFrame* aFrame)
+{
+  if (!(aFrame->GetStateBits() & NS_FRAME_GENERATED_CONTENT))
+    return aFrame;
+
+  nsFrameManager* frameManager = aFrame->PresContext()->FrameManager();
+  nsIFrame* f = aFrame;
+  do {
+    f = GetParentOrPlaceholderFor(frameManager, f);
+  } while (f->GetStateBits() & NS_FRAME_GENERATED_CONTENT);
+  return f;
+}
+
+nsIFrame*
 nsLayoutUtils::GetParentOrPlaceholderFor(nsFrameManager* aFrameManager,
                                          nsIFrame* aFrame)
 {
