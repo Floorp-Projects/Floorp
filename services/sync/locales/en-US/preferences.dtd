@@ -77,16 +77,15 @@
 
 <!ENTITY footerNotice.description           "Weave is an experimental prototype from Mozilla Labs.  Use at your own risk.">
 
-
-<!ENTITY extensions.weave.enabled.label "Enable Weave">
+<!ENTITY extensions.weave.enabled.title "Enable Weave">
 <!ENTITY extensions.weave.enabled.description "Sync your session">
-<!ENTITY extensions.weave.username.label "User name">
+<!ENTITY extensions.weave.username.title "User name">
 <!ENTITY extensions.weave.username.description "Weave will log into the server with this username">
-<!ENTITY extensions.weave.password.label "Password">
+<!ENTITY extensions.weave.password.title "Password">
 <!ENTITY extensions.weave.password.description "Weave will log into the server with this password">
-<!ENTITY extensions.weave.passphrase.label "Passphrase">
+<!ENTITY extensions.weave.passphrase.title "Passphrase">
 <!ENTITY extensions.weave.passphrase.description "Weave will encrypt your data with this passphrase">
-<!ENTITY extensions.weave.client.name.label "Client name">
+<!ENTITY extensions.weave.client.name.title "Client name">
 <!ENTITY extensions.weave.client.name.description "Distinguishes your clients from each other">
-<!ENTITY extensions.weave.serverURL.label "Server URL">
+<!ENTITY extensions.weave.serverURL.title "Server URL">
 <!ENTITY extensions.weave.serverURL.description "Sync your sessions using a different server">
