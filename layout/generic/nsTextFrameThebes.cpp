@@ -4792,7 +4792,7 @@ nsTextFrame::GetPointFromOffset(PRInt32 inOffset,
     mTextRun->GetAdvanceWidth(properties.GetStart().GetSkippedOffset(),
                               GetSkippedDistance(properties.GetStart(), iter),
                               &properties);
-  nscoord width = NSToCoordCeil(advanceWidth);
+  nscoord width = NSToCoordCeilClamped(advanceWidth);
 
   if (mTextRun->IsRightToLeft()) {
     outPoint->x = mRect.width - width;
@@ -5315,8 +5315,8 @@ nsTextFrame::AddInlineMinWidthForFlow(nsIRenderingContext *aRenderingContext,
 
     if (i > wordStart) {
       nscoord width =
-        NSToCoordCeil(mTextRun->GetAdvanceWidth(wordStart, i - wordStart, &provider));
-      aData->currentLine += width;
+        NSToCoordCeilClamped(mTextRun->GetAdvanceWidth(wordStart, i - wordStart, &provider));
+      aData->currentLine = NSCoordSaturatingAdd(aData->currentLine, width);
       aData->atStartOfLine = PR_FALSE;
 
       if (collapseWhitespace) {
@@ -5328,7 +5328,7 @@ nsTextFrame::AddInlineMinWidthForFlow(nsIRenderingContext *aRenderingContext,
         } else {
           // Some non-whitespace so the old trailingWhitespace is no longer trailing
           aData->trailingWhitespace =
-            NSToCoordCeil(mTextRun->GetAdvanceWidth(trimStart, i - trimStart, &provider));
+            NSToCoordCeilClamped(mTextRun->GetAdvanceWidth(trimStart, i - trimStart, &provider));
         }
       } else {
         aData->trailingWhitespace = 0;
@@ -5437,7 +5437,7 @@ nsTextFrame::AddInlinePrefWidthForFlow(nsIRenderingContext *aRenderingContext,
 
     if (i > lineStart) {
       nscoord width =
-        NSToCoordCeil(mTextRun->GetAdvanceWidth(lineStart, i - lineStart, &provider));
+        NSToCoordCeilClamped(mTextRun->GetAdvanceWidth(lineStart, i - lineStart, &provider));
       aData->currentLine = NSCoordSaturatingAdd(aData->currentLine, width);
 
       if (collapseWhitespace) {
@@ -5449,7 +5449,7 @@ nsTextFrame::AddInlinePrefWidthForFlow(nsIRenderingContext *aRenderingContext,
         } else {
           // Some non-whitespace so the old trailingWhitespace is no longer trailing
           aData->trailingWhitespace =
-            NSToCoordCeil(mTextRun->GetAdvanceWidth(trimStart, i - trimStart, &provider));
+            NSToCoordCeilClamped(mTextRun->GetAdvanceWidth(trimStart, i - trimStart, &provider));
         }
       } else {
         aData->trailingWhitespace = 0;
