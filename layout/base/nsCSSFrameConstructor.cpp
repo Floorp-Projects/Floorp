@@ -1782,11 +1782,7 @@ GetChildListNameFor(nsIFrame*       aChildFrame)
     if (NS_STYLE_POSITION_ABSOLUTE == disp->mPosition) {
       listName = nsGkAtoms::absoluteList;
     } else if (NS_STYLE_POSITION_FIXED == disp->mPosition) {
-      if (nsLayoutUtils::IsReallyFixedPos(aChildFrame)) {
-        listName = nsGkAtoms::fixedList;
-      } else {
-        listName = nsGkAtoms::absoluteList;
-      }
+      listName = nsGkAtoms::fixedList;
 #ifdef MOZ_XUL
     } else if (NS_STYLE_DISPLAY_POPUP == disp->mDisplay) {
       // Out-of-flows that are DISPLAY_POPUP must be kids of the root popup set
