@@ -167,7 +167,6 @@ include $(topsrcdir)/config/rules.mk
 
 LOCAL_INCLUDES += \
 		-I$(srcdir) \
-		-I$(srcdir)/../style \
 		-I$(srcdir)/../generic \
 		-I$(srcdir)/../forms \
 		-I$(srcdir)/../tables \
