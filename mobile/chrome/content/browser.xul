@@ -224,11 +224,6 @@
 
     <!-- end: Browser View -->
 
-    <!-- start: some barriers -->
-    <spacer style="-moz-stack-sizing: ignore; width: 1px; height: 1px;" barriertype="vertical" size="30" left="0" constraint="vp-relative"/>
-    <spacer style="-moz-stack-sizing: ignore; width: 1px; height: 1px;" barriertype="vertical" size="30" left="800" constraint="vp-relative"/>
-    <!-- end: barriers -->
-
     <!-- begin: left bar -->
     <vbox id="tabs-container" style="-moz-stack-sizing: ignore; width: 132px; height: 420px;"
           left="-132" top="60"
@@ -239,9 +234,14 @@
         <toolbarbutton id="retrievetab-button" command="" hidden="true"/>
       </hbox>
     </vbox>
+    <!-- barrier to the right of the left sidebar -->
+    <spacer style="-moz-stack-sizing: ignore; width: 1px; height: 1px;" barriertype="vertical" size="30" left="0" constraint="vp-relative"/>
     <!-- end: left bar -->
 
+
     <!-- begin: right bar -->
+    <!-- barrier to the left of the right bar -->
+    <spacer style="-moz-stack-sizing: ignore; width: 1px; height: 1px;" barriertype="vertical" size="30" left="800" constraint="vp-relative"/>
     <vbox id="browser-controls" style="-moz-stack-sizing: ignore; width: 80px; height: 420px;"
           left="800" top="60"
           constraint="ignore-y,vp-relative">
@@ -291,7 +291,9 @@
     </toolbar>
     <!-- end: Main Toolbar -->
 
-    <hbox id="panel-container" hidden="true" style="-moz-stack-sizing: ignore;" top="60" left="880" constraint="ignore-y,vp-relative">
+    <!-- barrier to the left of the right bar -->
+    <spacer style="-moz-stack-sizing: ignore; width: 1px; height: 1px;" barriertype="vertical" size="10" left="881" constraint="vp-relative"/>
+    <hbox id="panel-container" style="-moz-stack-sizing: ignore; width: 600px; height: 480px;" top="0" left="880" constraint="ignore-y,vp-relative">
       <vbox id="panel-controls" oncommand="BrowserUI.switchPane(event.target.getAttribute('linkedpanel'));">
         <toolbarspring/>
         <toolbarbutton id="tool-addons" type="radio" group="1" class="panel-button" linkedpanel="addons-container"/>
