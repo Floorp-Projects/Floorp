@@ -25,10 +25,11 @@ HTTP(..) == order-1.html order-1-ref.html
 fails HTTP(..) == order-2.html order-2-ref.html
 fails HTTP(..) == order-3.html order-3-ref.html
 fails-if(MOZ_WIDGET_TOOLKIT=="gtk2") fails-if(MOZ_WIDGET_TOOLKIT=="cocoa") random-if(MOZ_WIDGET_TOOLKIT=="windows") HTTP(..) == multiple-in-family-1.html multiple-in-family-1-ref.html
+fails-if(MOZ_WIDGET_TOOLKIT=="gtk2") fails-if(MOZ_WIDGET_TOOLKIT=="cocoa") random-if(MOZ_WIDGET_TOOLKIT=="windows") HTTP(..) == multiple-in-family-1b.html multiple-in-family-1-ref.html
 fails-if(MOZ_WIDGET_TOOLKIT=="gtk2") fails-if(MOZ_WIDGET_TOOLKIT=="cocoa") random-if(MOZ_WIDGET_TOOLKIT=="windows") HTTP(..) != multiple-in-family-1.html multiple-in-family-1-notref.html
-random-if(MOZ_WIDGET_TOOLKIT=="windows") HTTP(..) == prop-order-over-rule-order-1a.html prop-order-over-rule-order-2a.html
-random-if(MOZ_WIDGET_TOOLKIT=="windows") HTTP(..) == prop-order-over-rule-order-1b.html prop-order-over-rule-order-2b.html
-random-if(MOZ_WIDGET_TOOLKIT=="windows") fails-if(MOZ_WIDGET_TOOLKIT=="gtk2") HTTP(..) != prop-order-over-rule-order-1a.html prop-order-over-rule-order-1b.html
+HTTP(..) == prop-order-over-rule-order-1a.html prop-order-over-rule-order-2a.html
+HTTP(..) == prop-order-over-rule-order-1b.html prop-order-over-rule-order-2b.html
+fails-if(MOZ_WIDGET_TOOLKIT=="gtk2") HTTP(..) != prop-order-over-rule-order-1a.html prop-order-over-rule-order-1b.html
 fails-if(MOZ_WIDGET_TOOLKIT=="gtk2") HTTP(..) == cross-iframe-1.html cross-iframe-1-ref.html
 
 # Dynamic changes
