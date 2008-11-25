@@ -204,21 +204,21 @@
 
     <!-- begin: Browser View -->
     <hbox id="canvasbox"
-	  style="-moz-stack-sizing: ignore; height: 1440px; width: 800px;"
-	  left="0" top="-480"
-	  vptargetx="0"
-	  vptargety="0"
-	  vptargetw="800"
-	  vptargeth="480"
-	  viewport="true">
+          style="-moz-stack-sizing: ignore; height: 1440px; width: 800px;"
+          left="0" top="-480"
+          vptargetx="0"
+          vptargety="0"
+          vptargetw="800"
+          vptargeth="480"
+          viewport="true">
 
       <html:canvas id="canvas"
-		   moz-opaque="true"
-		   viewport="true"
-		   style="height: 1440px; width: 800px;"
-		   height="1440" width="800"
-		   autocompletepopup="popup_autocomplete_content"
-		   onnewtab="CommandUpdater.doCommand('cmd_newTab');"/>
+                   moz-opaque="true"
+                   viewport="true"
+                   style="height: 1440px; width: 800px;"
+                   height="1440" width="800"
+                   autocompletepopup="popup_autocomplete_content"
+                   onnewtab="CommandUpdater.doCommand('cmd_newTab');"/>
 
     </hbox>
 
