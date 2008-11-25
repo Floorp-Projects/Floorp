@@ -2515,8 +2515,7 @@ GetParentFrameToScroll(nsPresContext* aPresContext, nsIFrame* aFrame)
   if (!aPresContext || !aFrame)
     return nsnull;
 
-  if (aFrame->GetStyleDisplay()->mPosition == NS_STYLE_POSITION_FIXED &&
-      nsLayoutUtils::IsReallyFixedPos(aFrame))
+  if (aFrame->GetStyleDisplay()->mPosition == NS_STYLE_POSITION_FIXED)
     return aPresContext->GetPresShell()->GetRootScrollFrame();
 
   return aFrame->GetParent();
