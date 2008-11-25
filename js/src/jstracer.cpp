@@ -360,63 +360,63 @@ static inline uint8 getCoercedType(jsval v)
 #define ORACLE_MASK (ORACLE_SIZE - 1)
 
 static inline void
-hash_accum(unsigned & h, unsigned i)
+hash_accum(uintptr_t& h, uintptr_t i)
 {
     h = ((h << 5) + h + (ORACLE_MASK & i)) & ORACLE_MASK;
 }
 
 
-static inline unsigned
-stackSlotHash(JSContext *cx, unsigned slot)
+static inline int
+stackSlotHash(JSContext* cx, unsigned slot)
 {
-    unsigned h = 5381;
-    hash_accum(h, unsigned(cx->fp->script));
-    hash_accum(h, unsigned(cx->fp->regs->pc));
-    hash_accum(h, slot);
-    return h;
+    uintptr_t h = 5381;
+    hash_accum(h, uintptr_t(cx->fp->script));
+    hash_accum(h, uintptr_t(cx->fp->regs->pc));
+    hash_accum(h, uintptr_t(slot));
+    return int(h);
 }
 
-static inline unsigned
-globalSlotHash(JSContext *cx, unsigned slot)
+static inline int
+globalSlotHash(JSContext* cx, unsigned slot)
 {    
-    unsigned h = 5381;
-    JSStackFrame *fp = cx->fp;
+    uintptr_t h = 5381;
+    JSStackFrame* fp = cx->fp;
 
     while (fp->down)
         fp = fp->down;        
 
-    hash_accum(h, unsigned(fp->script)); 
-    hash_accum(h, unsigned(cx->globalObject)); 
-    hash_accum(h, OBJ_SHAPE(cx->globalObject));
-    hash_accum(h, slot);
-    return h;
+    hash_accum(h, uintptr_t(fp->script)); 
+    hash_accum(h, uintptr_t(cx->globalObject)); 
+    hash_accum(h, uintptr_t(OBJ_SHAPE(cx->globalObject)));
+    hash_accum(h, uintptr_t(slot));
+    return int(h);
 }
 
 
 /* Tell the oracle that a certain global variable should not be demoted. */
 void
-Oracle::markGlobalSlotUndemotable(JSContext *cx, unsigned slot)
+Oracle::markGlobalSlotUndemotable(JSContext* cx, unsigned slot)
 {
     _globalDontDemote.set(&gc, globalSlotHash(cx, slot));
 }
 
 /* Consult with the oracle whether we shouldn't demote a certain global variable. */
 bool
-Oracle::isGlobalSlotUndemotable(JSContext *cx, unsigned slot) const
+Oracle::isGlobalSlotUndemotable(JSContext* cx, unsigned slot) const
 {    
     return _globalDontDemote.get(globalSlotHash(cx, slot));
 }
 
 /* Tell the oracle that a certain slot at a certain bytecode location should not be demoted. */
 void
-Oracle::markStackSlotUndemotable(JSContext *cx, unsigned slot)
+Oracle::markStackSlotUndemotable(JSContext* cx, unsigned slot)
 {
     _stackDontDemote.set(&gc, stackSlotHash(cx, slot));
 }
 
 /* Consult with the oracle whether we shouldn't demote a certain slot. */
 bool
-Oracle::isStackSlotUndemotable(JSContext *cx, unsigned slot) const
+Oracle::isStackSlotUndemotable(JSContext* cx, unsigned slot) const
 {
     return _stackDontDemote.get(stackSlotHash(cx, slot));
 }
