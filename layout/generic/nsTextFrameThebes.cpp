@@ -776,10 +776,32 @@ TextContainsLineBreakerWhiteSpace(const void* aText, PRUint32 aLength,
 }
 
 struct FrameTextTraversal {
-  nsIFrame*    mFrameToDescendInto;
-  PRPackedBool mDescendIntoFrameSiblings;
+  // These fields identify which frames should be recursively scanned
+  // The first normal frame to scan (or null, if no such frame should be scanned)
+  nsIFrame*    mFrameToScan;
+  // The first overflow frame to scan (or null, if no such frame should be scanned)
+  nsIFrame*    mOverflowFrameToScan;
+  // Whether to scan the siblings of mFrameToDescendInto/mOverflowFrameToDescendInto
+  PRPackedBool mScanSiblings;
+
+  // These identify the boundaries of the context required for
+  // line breaking or textrun construction
   PRPackedBool mLineBreakerCanCrossFrameBoundary;
   PRPackedBool mTextRunCanCrossFrameBoundary;
+
+  nsIFrame* NextFrameToScan() {
+    nsIFrame* f;
+    if (mFrameToScan) {
+      f = mFrameToScan;
+      mFrameToScan = mScanSiblings ? f->GetNextSibling() : nsnull;
+    } else if (mOverflowFrameToScan) {
+      f = mOverflowFrameToScan;
+      mOverflowFrameToScan = mScanSiblings ? f->GetNextSibling() : nsnull;
+    } else {
+      f = nsnull;
+    }
+    return f;
+  }
 };
 
 static FrameTextTraversal
@@ -794,28 +816,33 @@ CanTextCrossFrameBoundary(nsIFrame* aFrame, nsIAtom* aType)
     // placeholders are "invisible", so a text run should be able to span
     // across one. But don't descend into the out-of-flow.
     result.mLineBreakerCanCrossFrameBoundary = PR_TRUE;
+    result.mOverflowFrameToScan = nsnull;
     if (continuesTextRun) {
       // ... Except for first-letter floats, which are really in-flow
       // from the point of view of capitalization etc, so we'd better
       // descend into them. But we actually need to break the textrun for
       // first-letter floats since things look bad if, say, we try to make a
       // ligature across the float boundary.
-      result.mFrameToDescendInto =
+      result.mFrameToScan =
         (static_cast<nsPlaceholderFrame*>(aFrame))->GetOutOfFlowFrame();
-      result.mDescendIntoFrameSiblings = PR_FALSE;
+      result.mScanSiblings = PR_FALSE;
       result.mTextRunCanCrossFrameBoundary = PR_FALSE;
     } else {
-      result.mFrameToDescendInto = nsnull;
+      result.mFrameToScan = nsnull;
       result.mTextRunCanCrossFrameBoundary = PR_TRUE;
     }
   } else {
     if (continuesTextRun) {
-      result.mFrameToDescendInto = aFrame->GetFirstChild(nsnull);
-      result.mDescendIntoFrameSiblings = PR_TRUE;
+      result.mFrameToScan = aFrame->GetFirstChild(nsnull);
+      result.mOverflowFrameToScan = aFrame->GetFirstChild(nsGkAtoms::overflowList);
+      NS_WARN_IF_FALSE(!result.mOverflowFrameToScan,
+                       "Scanning overflow inline frames is something we should avoid");
+      result.mScanSiblings = PR_TRUE;
       result.mTextRunCanCrossFrameBoundary = PR_TRUE;
       result.mLineBreakerCanCrossFrameBoundary = PR_TRUE;
     } else {
-      result.mFrameToDescendInto = nsnull;
+      result.mFrameToScan = nsnull;
+      result.mOverflowFrameToScan = nsnull;
       result.mTextRunCanCrossFrameBoundary = PR_FALSE;
       result.mLineBreakerCanCrossFrameBoundary = PR_FALSE;
     }
@@ -871,13 +898,11 @@ BuildTextRunsScanner::FindBoundaries(nsIFrame* aFrame, FindBoundaryState* aState
       return FB_FOUND_VALID_TEXTRUN_BOUNDARY;
   }
   
-  for (nsIFrame* f = traversal.mFrameToDescendInto; f;
-       f = f->GetNextSibling()) {
+  for (nsIFrame* f = traversal.NextFrameToScan(); f;
+       f = traversal.NextFrameToScan()) {
     FindBoundaryResult result = FindBoundaries(f, aState);
     if (result != FB_CONTINUE)
       return result;
-    if (!traversal.mDescendIntoFrameSiblings)
-      break;
   }
 
   if (!traversal.mTextRunCanCrossFrameBoundary) {
@@ -1285,11 +1310,9 @@ void BuildTextRunsScanner::ScanFrame(nsIFrame* aFrame)
     FlushFrames(PR_FALSE, PR_FALSE);
   }
 
-  for (nsIFrame* f = traversal.mFrameToDescendInto; f;
-       f = f->GetNextSibling()) {
+  for (nsIFrame* f = traversal.NextFrameToScan(); f;
+       f = traversal.NextFrameToScan()) {
     ScanFrame(f);
-    if (!traversal.mDescendIntoFrameSiblings)
-      break;
   }
 
   if (!traversal.mLineBreakerCanCrossFrameBoundary) {
