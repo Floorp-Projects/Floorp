@@ -58,13 +58,6 @@
 #include "nsIFrame.h"
 #include "nsContentUtils.h"
 
-static const nsStyleSet::sheetType gCSSSheetTypes[] = {
-  nsStyleSet::eAgentSheet,
-  nsStyleSet::eUserSheet,
-  nsStyleSet::eDocSheet,
-  nsStyleSet::eOverrideSheet
-};
-
 nsStyleSet::nsStyleSet()
   : mRuleTree(nsnull),
     mRuleWalker(nsnull),
@@ -787,21 +780,6 @@ nsStyleSet::ProbePseudoStyleFor(nsIContent* aParentContent,
   }
   
   return result;
-}
-
-PRBool
-nsStyleSet::AppendFontFaceRules(nsPresContext* aPresContext,
-                                nsTArray< nsRefPtr<nsCSSFontFaceRule> >& aArray)
-{
-  NS_ENSURE_FALSE(mInShutdown, PR_FALSE);
-
-  for (PRUint32 i = 0; i < NS_ARRAY_LENGTH(gCSSSheetTypes); ++i) {
-    nsCSSRuleProcessor *ruleProc = static_cast<nsCSSRuleProcessor*>
-                                    (mRuleProcessors[gCSSSheetTypes[i]].get());
-    if (ruleProc && !ruleProc->AppendFontFaceRules(aPresContext, aArray))
-      return PR_FALSE;
-  }
-  return PR_TRUE;
 }
 
 void
