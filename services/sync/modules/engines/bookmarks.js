@@ -920,7 +920,7 @@ BookmarksStore.prototype = {
 
     if (record.cleartext == "")
       this._removeCommand({GUID: record.id});
-    else if (!this._lookup[record.id])
+    else if (this._getItemIdForGUID(record.id) < 0)
       this._createCommand({GUID: record.id, data: record.cleartext});
     else {
       let data = Utils.deepCopy(record.cleartext);
@@ -941,7 +941,6 @@ BookmarksStore.prototype = {
       parentId = this._bms.bookmarksMenuFolder;
     }
 
-    dump( "Processing createCommand for a " + command.data.type + " type.\n");
     switch (command.data.type) {
     case "query":
     case "bookmark":
