@@ -47,6 +47,9 @@
 #import "dump_syms.h"
 #import "common/mac/file_id.h"
 #import "common/mac/macho_utilities.h"
+#import "common/mac/dwarf/dwarf2reader.h"
+#import "common/mac/dwarf/functioninfo.h"
+#import "common/mac/dwarf/bytereader.h"
 
 using google_breakpad::FileID;
 
@@ -54,6 +57,7 @@ static NSString *kAddressSymbolKey = @"symbol";
 static NSString *kAddressConvertedSymbolKey = @"converted_symbol";
 static NSString *kAddressSourceLineKey = @"line";
 static NSString *kFunctionSizeKey = @"size";
+static NSString *kFunctionFileKey = @"source_file";
 static NSString *kHeaderBaseAddressKey = @"baseAddr";
 static NSString *kHeaderSizeKey = @"size";
 static NSString *kHeaderOffsetKey = @"offset";  // Offset to the header
@@ -65,6 +69,40 @@ static NSString *kUnknownSymbol = @"???";
 // for pruning out extraneous non-function symbols.
 static const int kTextSection = 1;
 
+namespace __gnu_cxx {
+template<> 
+  struct hash<std::string> {
+    size_t operator()(const std::string& k) const {
+      return hash< const char* >()( k.c_str() );
+  }
+};
+}
+
+// Dump FunctionMap to stdout.  Print address, function name, file
+// name, line number, lowpc, and highpc if available.
+void DumpFunctionMap(const dwarf2reader::FunctionMap function_map) {
+  for (dwarf2reader::FunctionMap::const_iterator iter = function_map.begin();
+       iter != function_map.end(); ++iter) {
+    if (iter->second->name.empty()) {
+      continue;
+    }
+    printf("%08llx: %s", iter->first,
+	   iter->second->name.data());
+    if (!iter->second->file.empty()) {
+      printf(" - %s", iter->second->file.data());
+      if (iter->second->line != 0) {
+	printf(":%u", iter->second->line);
+      }
+    }
+    if (iter->second->lowpc != 0 && iter->second->highpc != 0) {
+      printf(" (%08llx - %08llx)\n",
+	     iter->second->lowpc,
+	     iter->second->highpc);
+    }
+  }
+}
+
+
 @interface DumpSymbols(PrivateMethods)
 - (NSArray *)convertCPlusPlusSymbols:(NSArray *)symbols;
 - (void)convertSymbols;
@@ -73,10 +111,17 @@ static const int kTextSection = 1;
 - (BOOL)loadSymbolInfo:(void *)base offset:(uint32_t)offset;
 - (BOOL)loadSymbolInfo64:(void *)base offset:(uint32_t)offset;
 - (BOOL)loadSymbolInfoForArchitecture;
+- (BOOL)loadDWARFSymbolInfo:(void *)base offset:(uint32_t)offset;
+- (BOOL)loadSTABSSymbolInfo:(void *)base offset:(uint32_t)offset;
 - (void)generateSectionDictionary:(struct mach_header*)header;
 - (BOOL)loadHeader:(void *)base offset:(uint32_t)offset;
 - (BOOL)loadHeader64:(void *)base offset:(uint32_t)offset;
 - (BOOL)loadModuleInfo;
+- (void)processDWARFLineNumberInfo:(dwarf2reader::LineMap*)line_map;
+- (void)processDWARFFunctionInfo:(dwarf2reader::FunctionMap*)address_to_funcinfo;
+- (void)processDWARFSourceFileInfo:(vector<dwarf2reader::SourceFileInfo>*) files;
+- (BOOL)loadSymbolInfo:(void *)base offset:(uint32_t)offset;
+- (dwarf2reader::SectionMap*)getSectionMapForArchitecture:(NSString*)architecture;
 @end
 
 @implementation DumpSymbols
@@ -241,6 +286,7 @@ static const int kTextSection = 1;
   if (line && ![dict objectForKey:kAddressSourceLineKey])
     [dict setObject:[NSNumber numberWithUnsignedInt:line]
              forKey:kAddressSourceLineKey];
+
 }
 
 //=============================================================================
@@ -277,7 +323,9 @@ static const int kTextSection = 1;
   int line = list->n_desc;
   
   // __TEXT __text section
-  uint32_t mainSection = [[sectionNumbers_ objectForKey:@"__TEXT__text" ] unsignedLongValue];
+  NSMutableDictionary *archSections = [sectionData_ objectForKey:architecture_];
+
+  uint32_t mainSection = [[archSections objectForKey:@"__TEXT__text" ] sectionNumber];
 
   // Extract debugging information:
   // Doc: http://developer.apple.com/documentation/DeveloperTools/gdb/stabs/stabs_toc.html
@@ -287,6 +335,14 @@ static const int kTextSection = 1;
     NSString *ext = [src pathExtension];
     NSNumber *address = [NSNumber numberWithUnsignedLongLong:list->n_value];
 
+    // Leopard puts .c files with no code as an offset of 0, but a
+    // crash can't happen here and it throws off our code that matches
+    // symbols to line numbers so we ignore them..
+    // Return YES because this isn't an error, just something we don't
+    // care to handle.
+    if ([address unsignedLongValue] == 0) {
+      return YES;
+    }
     // TODO(waylonis):Ensure that we get the full path for the source file
     // from the first N_SO record
     // If there is an extension, we'll consider it source code
@@ -295,7 +351,6 @@ static const int kTextSection = 1;
         sources_ = [[NSMutableDictionary alloc] init];
       // Save the source associated with an address
       [sources_ setObject:src forKey:address];
-
       result = YES;
     }
   } else if (list->n_type == N_FUN) {
@@ -313,7 +368,7 @@ static const int kTextSection = 1;
     [self addFunction:fn line:line address:list->n_value section:list->n_sect ];
 
     result = YES;
-  } else if (list->n_type == N_SLINE && list->n_sect == mainSection ) {
+  } else if (list->n_type == N_SLINE && list->n_sect == mainSection) {
     [self addFunction:nil line:line address:list->n_value section:list->n_sect ];
     result = YES;
   } else if (((list->n_type & N_TYPE) == N_SECT) && !(list->n_type & N_STAB)) {
@@ -331,8 +386,169 @@ static const int kTextSection = 1;
 #define SwapLongIfNeeded(a) (swap ? NXSwapLong(a) : (a))
 #define SwapIntIfNeeded(a) (swap ? NXSwapInt(a) : (a))
 #define SwapShortIfNeeded(a) (swap ? NXSwapShort(a) : (a))
+
 //=============================================================================
 - (BOOL)loadSymbolInfo:(void *)base offset:(uint32_t)offset {
+  NSMutableDictionary *archSections = [sectionData_ objectForKey:architecture_];
+  if ([archSections objectForKey:@"__DWARF__debug_info"]) {
+    // Treat this this as debug information
+    return [self loadDWARFSymbolInfo:base offset:offset];
+  }
+
+  return [self loadSTABSSymbolInfo:base offset:offset];
+}
+
+//=============================================================================
+- (BOOL)loadDWARFSymbolInfo:(void *)base offset:(uint32_t)offset {
+
+  struct mach_header *header = (struct mach_header *) 
+    ((uint32_t)base + offset);
+  BOOL swap = (header->magic == MH_CIGAM);
+
+  NSMutableDictionary *archSections = [sectionData_ objectForKey:architecture_];
+  assert (archSections != nil);
+  section *dbgInfoSection = [[archSections objectForKey:@"__DWARF__debug_info"] sectionPointer];
+  uint32_t debugInfoSize = SwapLongIfNeeded(dbgInfoSection->size);
+
+  // i think this will break if run on a big-endian machine
+  dwarf2reader::ByteReader byte_reader(swap ?
+                                       dwarf2reader::ENDIANNESS_BIG :
+                                       dwarf2reader::ENDIANNESS_LITTLE);
+
+  uint64_t dbgOffset = 0;
+
+  dwarf2reader::SectionMap* oneArchitectureSectionMap = [self getSectionMapForArchitecture:architecture_];
+
+  while (dbgOffset < debugInfoSize) {
+    // Prepare necessary objects.
+    dwarf2reader::FunctionMap off_to_funcinfo;
+    dwarf2reader::FunctionMap address_to_funcinfo;
+    dwarf2reader::LineMap line_map;
+    vector<dwarf2reader::SourceFileInfo> files;
+    vector<string> dirs;
+
+    dwarf2reader::CULineInfoHandler line_info_handler(&files, &dirs,
+						      &line_map);
+
+    dwarf2reader::CUFunctionInfoHandler function_info_handler(&files, &dirs,
+                                                              &line_map,
+                                                              &off_to_funcinfo,
+                                                              &address_to_funcinfo,
+							      &line_info_handler,
+                                                              *oneArchitectureSectionMap,
+                                                              &byte_reader);
+
+    dwarf2reader::CompilationUnit compilation_unit(*oneArchitectureSectionMap,
+                                                   dbgOffset,
+                                                   &byte_reader,
+                                                   &function_info_handler);
+
+    dbgOffset += compilation_unit.Start();
+
+    // The next 3 functions take the info that the dwarf reader
+    // gives and massages them into the data structures that
+    // dump_syms uses 
+    [self processDWARFSourceFileInfo:&files];
+    [self processDWARFFunctionInfo:&address_to_funcinfo];
+    [self processDWARFLineNumberInfo:&line_map];
+  }
+
+  return YES;
+}
+
+- (void)processDWARFSourceFileInfo:(vector<dwarf2reader::SourceFileInfo>*) files {
+  if (!sources_)
+    sources_ = [[NSMutableDictionary alloc] init];
+  // Save the source associated with an address
+  vector<dwarf2reader::SourceFileInfo>::const_iterator iter = files->begin();
+  for (; iter != files->end(); iter++) {
+    NSString *sourceFile = [NSString stringWithUTF8String:(*iter).name.c_str()];
+    if ((*iter).lowpc != ULLONG_MAX) {
+      NSNumber *address = [NSNumber numberWithUnsignedLongLong:(*iter).lowpc];
+      if ([address unsignedLongLongValue] == 0) {
+        continue;
+      }
+      [sources_ setObject:sourceFile forKey:address];
+    }
+  }
+}
+  
+- (void)processDWARFFunctionInfo:(dwarf2reader::FunctionMap*)address_to_funcinfo {
+  for (dwarf2reader::FunctionMap::const_iterator iter = address_to_funcinfo->begin();
+       iter != address_to_funcinfo->end(); ++iter) {
+    if (iter->second->name.empty()) {
+      continue;
+    }
+
+    if (!addresses_)
+      addresses_ = [[NSMutableDictionary alloc] init];
+
+    NSNumber *addressNum = [NSNumber numberWithUnsignedLongLong:(*iter).second->lowpc];
+	
+    [functionAddresses_ addObject:addressNum];
+
+    NSMutableDictionary *dict = [addresses_ objectForKey:addressNum];
+
+    if (!dict) {
+      dict = [[NSMutableDictionary alloc] init];
+      [addresses_ setObject:dict forKey:addressNum];
+      [dict release];
+    }
+
+    // set name of function if it isn't already set
+    if (![dict objectForKey:kAddressSymbolKey]) {
+      NSString *symbolName = [NSString stringWithUTF8String:iter->second->name.c_str()];
+      [dict setObject:symbolName forKey:kAddressSymbolKey];
+    }
+  
+    // set line number for beginning of function
+    if (iter->second->line && ![dict objectForKey:kAddressSourceLineKey])
+      [dict setObject:[NSNumber numberWithUnsignedInt:iter->second->line]
+	    forKey:kAddressSourceLineKey];
+
+    // set function size by subtracting low PC from high PC
+    if (![dict objectForKey:kFunctionSizeKey]) {
+      [dict setObject:[NSNumber numberWithUnsignedLongLong:iter->second->highpc - iter->second->lowpc]
+	    forKey:kFunctionSizeKey];
+    }
+
+    // Set the file that the function is in
+    if (![dict objectForKey:kFunctionFileKey]) {
+      [dict setObject:[NSString stringWithUTF8String:iter->second->file.c_str()]
+               forKey:kFunctionFileKey];
+    }
+  }
+}
+
+- (void)processDWARFLineNumberInfo:(dwarf2reader::LineMap*)line_map {
+  for (dwarf2reader::LineMap::const_iterator iter = line_map->begin();
+       iter != line_map->end(); 
+       ++iter) {
+
+    NSNumber *addressNum = [NSNumber numberWithUnsignedLongLong:iter->first];
+    NSMutableDictionary *dict = [addresses_ objectForKey:addressNum];
+
+    if (!dict) {
+      dict = [[NSMutableDictionary alloc] init];
+      [addresses_ setObject:dict forKey:addressNum];
+      [dict release];
+    } 
+	
+    if (iter->second.second && ![dict objectForKey:kAddressSourceLineKey]) {
+      [dict setObject:[NSNumber numberWithUnsignedInt:iter->second.second]
+	    forKey:kAddressSourceLineKey];
+    }
+
+    // Set the file that the function's address is in
+    if (![dict objectForKey:kFunctionFileKey]) {
+      [dict setObject:[NSString stringWithUTF8String:iter->second.first.c_str()]
+               forKey:kFunctionFileKey];
+    }
+  }
+}
+
+//=============================================================================
+- (BOOL)loadSTABSSymbolInfo:(void *)base offset:(uint32_t)offset {
   struct mach_header *header = (struct mach_header *)((uint32_t)base + offset);
   BOOL swap = (header->magic == MH_CIGAM);
   uint32_t count = SwapLongIfNeeded(header->ncmds);
@@ -363,6 +579,8 @@ static const int kTextSection = 1;
         nlist64.n_desc = SwapShortIfNeeded(list->n_desc);
         nlist64.n_value = (uint64_t)SwapLongIfNeeded(list->n_value);
 
+        // TODO(nealsid): is this broken? we get NO if one symbol fails
+        // but then we lose that information if another suceeeds
         if ([self processSymbolItem:&nlist64 stringTable:strtab])
           result = YES;
       }
@@ -424,6 +642,7 @@ static const int kTextSection = 1;
 - (BOOL)loadSymbolInfoForArchitecture {
   NSMutableData *data = [[NSMutableData alloc]
     initWithContentsOfMappedFile:sourcePath_];
+
   NSDictionary *headerInfo = [headers_ objectForKey:architecture_];
   void *base = [data mutableBytes];
   uint32_t offset =
@@ -436,10 +655,28 @@ static const int kTextSection = 1;
   return result;
 }
 
+- (dwarf2reader::SectionMap*)getSectionMapForArchitecture:(NSString*)architecture {
+
+  string currentArch([architecture UTF8String]);
+  dwarf2reader::SectionMap *oneArchitectureSectionMap;
+
+  ArchSectionMap::const_iterator iter = sectionsForArch_->find(currentArch);
+  
+  if (iter == sectionsForArch_->end()) {
+    oneArchitectureSectionMap = new dwarf2reader::SectionMap();
+    sectionsForArch_->insert(make_pair(currentArch, oneArchitectureSectionMap));
+  } else {
+    oneArchitectureSectionMap = iter->second;
+  }
+    
+  return oneArchitectureSectionMap;
+}
+
 //=============================================================================
 // build a dictionary of section numbers keyed off a string
 // which is the concatenation of the segment name and the section name
 - (void)generateSectionDictionary:(struct mach_header*)header {
+
   BOOL swap = (header->magic == MH_CIGAM);
   uint32_t count = SwapLongIfNeeded(header->ncmds);
   struct load_command *cmd =
@@ -447,8 +684,29 @@ static const int kTextSection = 1;
   uint32_t segmentCommand = SwapLongIfNeeded(LC_SEGMENT);
   uint32_t sectionNumber = 1;   // section numbers are counted from 1
   
-  if (!sectionNumbers_)
-    sectionNumbers_ = [[NSMutableDictionary alloc] init];
+  cpu_type_t cpu = SwapIntIfNeeded(header->cputype);
+
+  NSString *arch;
+
+  if (cpu & CPU_ARCH_ABI64)
+    arch = ((cpu & ~CPU_ARCH_ABI64) == CPU_TYPE_X86) ?
+      @"x86_64" : @"ppc64";
+  else
+    arch = (cpu == CPU_TYPE_X86) ? @"x86" : @"ppc";
+
+  NSMutableDictionary *archSections;
+
+  if (!sectionData_) {
+    sectionData_ = [[NSMutableDictionary alloc] init];
+  }
+  
+  if (![sectionData_ objectForKey:architecture_]) {
+    [sectionData_ setObject:[[NSMutableDictionary alloc] init] forKey:arch];
+  }
+
+  archSections = [sectionData_ objectForKey:arch];
+
+  dwarf2reader::SectionMap* oneArchitectureSectionMap = [self getSectionMapForArchitecture:arch];
   
   // loop through every segment command, then through every section
   // contained inside each of them
@@ -459,13 +717,18 @@ static const int kTextSection = 1;
       uint32_t nsects = SwapLongIfNeeded(seg->nsects);
       
       for (uint32_t j = 0; j < nsects; ++j) {
-        //printf("%d: %s %s\n", sectionNumber, seg->segname, sect->sectname );
         NSString *segSectName = [NSString stringWithFormat:@"%s%s",
-          seg->segname, sect->sectname ];
+          seg->segname, sect->sectname];
         
-        [sectionNumbers_ setValue:[NSNumber numberWithUnsignedLong:sectionNumber]
-          forKey:segSectName ];
-        
+        [archSections setObject:[[MachSection alloc] initWithMachSection:sect andNumber:sectionNumber]
+		      forKey:segSectName];
+
+	// filter out sections with size 0, offset 0
+	if (sect->offset != 0 && sect->size != 0) {
+	  // fill sectionmap for dwarf reader
+	  oneArchitectureSectionMap->insert(make_pair(sect->sectname,make_pair(((const char*)header) + SwapLongIfNeeded(sect->offset), (size_t)SwapLongIfNeeded(sect->size))));
+	}
+
         ++sect;
         ++sectionNumber;
       }
@@ -682,11 +945,15 @@ static BOOL WriteFormat(int fd, const char *fmt, ...) {
   // Sources ordered by address
   NSArray *sources = [[sources_ allKeys]
     sortedArrayUsingSelector:@selector(compare:)];
+  NSMutableDictionary *fileNameToFileIndex = [[NSMutableDictionary alloc] init];
   unsigned int sourceCount = [sources count];
   for (unsigned int i = 0; i < sourceCount; ++i) {
     NSString *file = [sources_ objectForKey:[sources objectAtIndex:i]];
     if (!WriteFormat(fd, "FILE %d %s\n", i + 1, [file UTF8String]))
       return NO;
+
+    [fileNameToFileIndex setObject:[NSNumber numberWithUnsignedInt:i+1]
+                            forKey:file];
   }
 
   // Symbols
@@ -696,9 +963,16 @@ static BOOL WriteFormat(int fd, const char *fmt, ...) {
   NSNumber *nextAddress;
   uint64_t nextAddressVal;
   unsigned int addressCount = [sortedAddresses count];
-
+  
+  bool insideFunction = false;
+  
   for (unsigned int i = 0; i < addressCount; ++i) {
     NSNumber *address = [sortedAddresses objectAtIndex:i];
+    // skip sources that have a starting address of 0
+    if ([address unsignedLongValue] == 0) {
+      continue;
+    }
+
     uint64_t addressVal = [address unsignedLongLongValue] - baseAddress;
 
     // Get the next address to calculate the length
@@ -734,7 +1008,7 @@ static BOOL WriteFormat(int fd, const char *fmt, ...) {
     if ([symbol hasPrefix:@"__static_initialization_and_destruction_0"])
       continue;
 
-    if ([symbol hasPrefix:@"_GLOBAL__I__"])
+    if ([symbol hasPrefix:@"_GLOBAL__I_"])
       continue;
 
     if ([symbol hasPrefix:@"__func__."])
@@ -750,6 +1024,12 @@ static BOOL WriteFormat(int fd, const char *fmt, ...) {
       continue;
 
     if ([symbol hasPrefix:@"GCC_except_table"])
+      continue;
+
+    if ([symbol hasPrefix:@"__tcf"])
+      continue;
+
+    if ([symbol hasPrefix:@"non-virtual thunk"])
       continue;
 
     // Find the source file (if any) that contains this address
@@ -770,8 +1050,10 @@ static BOOL WriteFormat(int fd, const char *fmt, ...) {
 
     if (line) {
       if (symbol && functionLength) {
+
         uint64_t functionLengthVal = [functionLength unsignedLongLongValue];
-        
+
+        insideFunction = true;
         // sanity check to make sure the length we were told does not exceed
         // the space between this function and the next
         if (nextFunctionAddress != 0) {
@@ -788,16 +1070,30 @@ static BOOL WriteFormat(int fd, const char *fmt, ...) {
           return NO;
       }
 
-      // Source line
-      uint64_t length = nextAddressVal - addressVal;
-      if (!WriteFormat(fd, "%llx %llx %d %d\n", addressVal, length,
-                       [line unsignedIntValue], fileIdx))
-        return NO;
+      // Throw out line number information that doesn't correspond to
+      // any function
+      if (insideFunction) {
+        // Source line
+        uint64_t length = nextAddressVal - addressVal;
+
+        // if fileNameToFileIndex/dict has an entry for the
+        // file/kFunctionFileKey, we're processing DWARF and have stored
+        // files for each program counter.  If there is no entry, we're
+        // processing STABS and can use the old method of mapping
+        // addresses to files(which was basically iterating over a set
+        // of addresses until we reached one that was greater than the
+        // high PC of the current file, then moving on to the next file)
+        NSNumber *fileIndex = [fileNameToFileIndex objectForKey:[dict objectForKey:kFunctionFileKey]];
+        if (!WriteFormat(fd, "%llx %llx %d %d\n", addressVal, length,
+                         [line unsignedIntValue], fileIndex ? [fileIndex unsignedIntValue] : fileIdx))
+          return NO;
+      } 
     } else {
       // PUBLIC <address> <stack-size> <name>
       if (!WriteFormat(fd, "PUBLIC %llx 0 %s\n", addressVal,
                        [symbol UTF8String]))
         return NO;
+      insideFunction = false;
     }
   }
 
@@ -814,6 +1110,50 @@ static BOOL WriteFormat(int fd, const char *fmt, ...) {
     }
 
     sourcePath_ = [path copy];
+
+    // Test for .DSYM bundle
+    NSBundle *dsymBundle = [NSBundle bundleWithPath:sourcePath_];
+
+    if (dsymBundle) {
+
+      // we need to take the DSYM bundle path and remove it's
+      // extension to get the name of the file inside the resources
+      // directory of the bundle that actually has the DWARF
+      // information
+      // But, Xcode supports something called "Wrapper extension"(see
+      // build settings), which would make the bundle name
+      // /tmp/foo/test.kext.dSYM, but the dwarf binary name would
+      // still be "test".  so, now we loop through until deleting the
+      // extension doesn't change the string
+
+      // e.g. suppose sourcepath_ is /tmp/foo/test.dSYM
+
+      NSString *dwarfBinName = [sourcePath_ lastPathComponent];
+      NSString *dwarfBinPath;
+
+      // We use a do/while loop so we can handle files without an extension
+      do {
+        dwarfBinName = [dwarfBinName stringByDeletingPathExtension];
+        // now, dwarfBinName is "test"
+        dwarfBinPath = [dsymBundle pathForResource:dwarfBinName ofType:nil inDirectory:@"DWARF"];
+        if (dwarfBinPath != nil)
+          break;
+      } while (![[dwarfBinName stringByDeletingPathExtension] isEqualToString:dwarfBinName]);
+
+      if (dwarfBinPath == nil) {
+        NSLog(@"The bundle passed on the command line does not appear to be a DWARF dSYM bundle");
+        [self autorelease];
+        return nil;
+      }
+
+      // otherwise we're good to go
+      [sourcePath_ release];
+
+      sourcePath_ = [dwarfBinPath copy];
+      NSLog(@"Loading DWARF dSYM file from %@", sourcePath_);
+    }
+
+    sectionsForArch_ = new ArchSectionMap();
 
     if (![self loadModuleInfo]) {
       [self autorelease];
@@ -858,7 +1198,8 @@ static BOOL WriteFormat(int fd, const char *fmt, ...) {
   [functionAddresses_ release];
   [sources_ release];
   [headers_ release];
-  
+  delete sectionsForArch_;
+
   [super dealloc];
 }
 
@@ -889,7 +1230,7 @@ static BOOL WriteFormat(int fd, const char *fmt, ...) {
       return NO;
 
     [architecture_ autorelease];
-    architecture_ = [architecture copy];
+    architecture_ = [normalized copy];
   }
 
   return isValid;
@@ -920,4 +1261,24 @@ static BOOL WriteFormat(int fd, const char *fmt, ...) {
   return result;
 }
 
+@end
+
+@implementation MachSection 
+
+- (id)initWithMachSection:(section *)sect andNumber:(uint32_t)sectionNumber {
+  if ((self = [super init])) {
+    sect_ = sect;
+    sectionNumber_ = sectionNumber;
+  }
+
+  return self;
+}
+
+- (section*)sectionPointer {
+  return sect_;
+}
+
+- (uint32_t)sectionNumber {
+  return sectionNumber_;
+}
 @end

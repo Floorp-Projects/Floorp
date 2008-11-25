@@ -28,59 +28,60 @@
 // OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 #include "client/windows/crash_generation/crash_generation_server.h"
-#include <Windows.h>
+#include <windows.h>
 #include <cassert>
+#include <list>
 #include "client/windows/common/auto_critical_section.h"
 #include "processor/scoped_ptr.h"
 
 namespace google_breakpad {
 
 // Output buffer size.
-const size_t kOutBufferSize = 64;
+static const size_t kOutBufferSize = 64;
 
 // Input buffer size.
-const size_t kInBufferSize = 64;
+static const size_t kInBufferSize = 64;
 
 // Access flags for the client on the dump request event.
-const DWORD kDumpRequestEventAccess = EVENT_MODIFY_STATE;
+static const DWORD kDumpRequestEventAccess = EVENT_MODIFY_STATE;
 
 // Access flags for the client on the dump generated event.
-const DWORD kDumpGeneratedEventAccess = EVENT_MODIFY_STATE |
-                                        SYNCHRONIZE;
+static const DWORD kDumpGeneratedEventAccess = EVENT_MODIFY_STATE |
+                                               SYNCHRONIZE;
 
 // Access flags for the client on the mutex.
-const DWORD kMutexAccess = SYNCHRONIZE;
+static const DWORD kMutexAccess = SYNCHRONIZE;
 
 // Attribute flags for the pipe.
-const DWORD kPipeAttr = FILE_FLAG_FIRST_PIPE_INSTANCE |
-                        PIPE_ACCESS_DUPLEX |
-                        FILE_FLAG_OVERLAPPED;
+static const DWORD kPipeAttr = FILE_FLAG_FIRST_PIPE_INSTANCE |
+                               PIPE_ACCESS_DUPLEX |
+                               FILE_FLAG_OVERLAPPED;
 
 // Mode for the pipe.
-const DWORD kPipeMode = PIPE_TYPE_MESSAGE |
-                        PIPE_READMODE_MESSAGE |
-                        PIPE_WAIT;
+static const DWORD kPipeMode = PIPE_TYPE_MESSAGE |
+                               PIPE_READMODE_MESSAGE |
+                               PIPE_WAIT;
 
 // For pipe I/O, execute the callback in the wait thread itself,
 // since the callback does very little work. The callback executes
 // the code for one of the states of the server state machine and
 // the code for all of the states perform async I/O and hence
 // finish very quickly.
-const ULONG kPipeIOThreadFlags = WT_EXECUTEINWAITTHREAD;
+static const ULONG kPipeIOThreadFlags = WT_EXECUTEINWAITTHREAD;
 
 // Dump request threads will, most likely, generate dumps. That may
 // take some time to finish, so specify WT_EXECUTELONGFUNCTION flag.
-const ULONG kDumpRequestThreadFlags = WT_EXECUTEINWAITTHREAD |
-                                      WT_EXECUTELONGFUNCTION;
+static const ULONG kDumpRequestThreadFlags = WT_EXECUTEINWAITTHREAD |
+                                             WT_EXECUTELONGFUNCTION;
 
 // Maximum delay during server shutdown if some work items
 // are still executing.
-const int kShutdownDelayMs = 10000;
+static const int kShutdownDelayMs = 10000;
 
 // Interval for each sleep during server shutdown.
-const int kShutdownSleepIntervalMs = 5;
+static const int kShutdownSleepIntervalMs = 5;
 
-static bool ValidateClientRequest(const ProtocolMessage& msg) {
+static bool IsClientRequestValid(const ProtocolMessage& msg) {
   return msg.tag == MESSAGE_TAG_REGISTRATION_REQUEST &&
          msg.pid != 0 &&
          msg.thread_id != NULL &&
@@ -89,7 +90,8 @@ static bool ValidateClientRequest(const ProtocolMessage& msg) {
 }
 
 CrashGenerationServer::CrashGenerationServer(
-    const wchar_t* pipe_name,
+    const std::wstring& pipe_name,
+    SECURITY_ATTRIBUTES* pipe_sec_attrs,
     OnClientConnectedCallback connect_callback,
     void* connect_context,
     OnClientDumpRequestCallback dump_callback,
@@ -98,23 +100,24 @@ CrashGenerationServer::CrashGenerationServer(
     void* exit_context,
     bool generate_dumps,
     const std::wstring* dump_path)
-        : pipe_name_(pipe_name),
-          pipe_(NULL),
-          pipe_wait_handle_(NULL),
-          server_alive_handle_(NULL),
-          connect_callback_(connect_callback),
-          connect_context_(connect_context),
-          dump_callback_(dump_callback),
-          dump_context_(dump_context),
-          exit_callback_(exit_callback),
-          exit_context_(exit_context),
-          generate_dumps_(generate_dumps),
-          dump_generator_(NULL),
-          server_state_(IPC_SERVER_STATE_INITIAL),
-          shutting_down_(false),
-          overlapped_(),
-          client_info_(NULL),
-          cleanup_item_count_(0) {
+    : pipe_name_(pipe_name),
+      pipe_sec_attrs_(pipe_sec_attrs),
+      pipe_(NULL),
+      pipe_wait_handle_(NULL),
+      server_alive_handle_(NULL),
+      connect_callback_(connect_callback),
+      connect_context_(connect_context),
+      dump_callback_(dump_callback),
+      dump_context_(dump_context),
+      exit_callback_(exit_callback),
+      exit_context_(exit_context),
+      generate_dumps_(generate_dumps),
+      dump_generator_(NULL),
+      server_state_(IPC_SERVER_STATE_INITIAL),
+      shutting_down_(false),
+      overlapped_(),
+      client_info_(NULL),
+      cleanup_item_count_(0) {
   InitializeCriticalSection(&clients_sync_);
 
   if (dump_path) {
@@ -216,8 +219,8 @@ bool CrashGenerationServer::Start() {
                           kOutBufferSize,
                           kInBufferSize,
                           0,
-                          NULL);
-  if (!pipe_) {
+                          pipe_sec_attrs_);
+  if (pipe_ == INVALID_HANDLE_VALUE) {
     return false;
   }
 
@@ -269,8 +272,7 @@ void CrashGenerationServer::HandleInitialState() {
     return;
   }
 
-  bool success;
-  success = ConnectNamedPipe(pipe_, &overlapped_) != FALSE;
+  bool success = ConnectNamedPipe(pipe_, &overlapped_) != FALSE;
 
   // From MSDN, it is not clear that when ConnectNamedPipe is used
   // in an overlapped mode, will it ever return non-zero value, and
@@ -337,7 +339,7 @@ void CrashGenerationServer::HandleConnectedState() {
                           &bytes_count,
                           &overlapped_) != FALSE;
 
-  // Note that the asynchronous read issued above can finish before  the
+  // Note that the asynchronous read issued above can finish before the
   // code below executes. But, it is okay to change state after issuing
   // the asynchronous read. This is because even if the asynchronous read
   // is done, the callback for it would not be executed until the current
@@ -362,7 +364,7 @@ void CrashGenerationServer::HandleReadingState() {
                                      &bytes_count,
                                      FALSE) != FALSE;
 
-  if (success && bytes_count == sizeof(ProtocolMessage)){
+  if (success && bytes_count == sizeof(ProtocolMessage)) {
     server_state_ = IPC_SERVER_STATE_READ_DONE;
     return;
   }
@@ -387,7 +389,7 @@ void CrashGenerationServer::HandleReadingState() {
 void CrashGenerationServer::HandleReadDoneState() {
   assert(server_state_ == IPC_SERVER_STATE_READ_DONE);
 
-  if (!ValidateClientRequest(msg_)) {
+  if (!IsClientRequestValid(msg_)) {
     server_state_ = IPC_SERVER_STATE_DISCONNECTING;
     return;
   }
@@ -398,7 +400,8 @@ void CrashGenerationServer::HandleReadDoneState() {
                      msg_.dump_type,
                      msg_.thread_id,
                      msg_.exception_pointers,
-                     msg_.assert_info));
+                     msg_.assert_info,
+                     msg_.custom_client_info));
 
   if (!client_info->Initialize()) {
     server_state_ = IPC_SERVER_STATE_DISCONNECTING;
@@ -493,8 +496,7 @@ void CrashGenerationServer::HandleReadingAckState() {
       connect_callback_(connect_context_, client_info_);
     }
   } else {
-    DWORD error_code;
-    error_code = GetLastError();
+    DWORD error_code = GetLastError();
 
     // We should never get an I/O incomplete since we should not execute this
     // unless the Read has finished and the overlapped event is signaled. If
@@ -592,7 +594,7 @@ bool CrashGenerationServer::CreateClientHandles(const ClientInfo& client_info,
 
   if (!DuplicateHandle(current_process,
                        server_alive_handle_,
-                       client_info.process_handle(), 
+                       client_info.process_handle(),
                        &reply->server_alive_handle,
                        kMutexAccess,
                        FALSE,
@@ -680,7 +682,7 @@ void CrashGenerationServer::HandleConnectionRequest() {
 bool CrashGenerationServer::AddClient(ClientInfo* client_info) {
   HANDLE request_wait_handle = NULL;
   if (!RegisterWaitForSingleObject(&request_wait_handle,
-                                   client_info->dump_requested_handle(), 
+                                   client_info->dump_requested_handle(),
                                    OnDumpRequest,
                                    client_info,
                                    INFINITE,
@@ -725,6 +727,7 @@ void CALLBACK CrashGenerationServer::OnPipeConnected(void* context, BOOLEAN) {
 void CALLBACK CrashGenerationServer::OnDumpRequest(void* context, BOOLEAN) {
   assert(context);
   ClientInfo* client_info = reinterpret_cast<ClientInfo*>(context);
+  client_info->PopulateCustomInfo();
 
   CrashGenerationServer* crash_server = client_info->crash_server();
   assert(crash_server);
@@ -743,8 +746,7 @@ void CALLBACK CrashGenerationServer::OnClientEnd(void* context, BOOLEAN) {
 
   InterlockedIncrement(&crash_server->cleanup_item_count_);
 
-  if (!QueueUserWorkItem(CleanupClient, context, WT_EXECUTEDEFAULT))
-  {
+  if (!QueueUserWorkItem(CleanupClient, context, WT_EXECUTEDEFAULT)) {
     InterlockedDecrement(&crash_server->cleanup_item_count_);
   }
 }
@@ -783,20 +785,23 @@ void CrashGenerationServer::HandleDumpRequest(const ClientInfo& client_info) {
   // Generate the dump only if it's explicitly requested by the
   // server application; otherwise the server might want to generate
   // dump in the callback.
+  std::wstring dump_path;
   if (generate_dumps_) {
-    if (!GenerateDump(client_info)) {
+    if (!GenerateDump(client_info, &dump_path)) {
       return;
     }
   }
 
   if (dump_callback_) {
-    dump_callback_(dump_context_, &client_info);
+    std::wstring* ptr_dump_path = (dump_path == L"") ? NULL : &dump_path;
+    dump_callback_(dump_context_, &client_info, ptr_dump_path);
   }
 
   SetEvent(client_info.dump_generated_handle());
 }
 
-bool CrashGenerationServer::GenerateDump(const ClientInfo& client) {
+bool CrashGenerationServer::GenerateDump(const ClientInfo& client,
+                                         std::wstring* dump_path) {
   assert(client.pid() != 0);
   assert(client.process_handle());
 
@@ -819,7 +824,8 @@ bool CrashGenerationServer::GenerateDump(const ClientInfo& client) {
                                         client_ex_info,
                                         client.assert_info(),
                                         client.dump_type(),
-                                        true);
+                                        true,
+                                        dump_path);
 }
 
 }  // namespace google_breakpad

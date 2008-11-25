@@ -145,6 +145,18 @@ static bool CompareFile(const char *path) {
   ASSERT_NE(fd, -1);
   ASSERT_TRUE(buffer);
   ASSERT_EQ(read(fd, buffer, expected_byte_count), expected_byte_count);
+
+  char *b1, *b2;
+  b1 = (char*)buffer;
+  b2 = (char*)expected;
+  while (*b1 == *b2) {
+    b1++;
+    b2++;
+  }
+
+  printf("%d\n",b1 - (char*)buffer);
+
+
   ASSERT_EQ(memcmp(buffer, expected, expected_byte_count), 0);
   return true;
 }
