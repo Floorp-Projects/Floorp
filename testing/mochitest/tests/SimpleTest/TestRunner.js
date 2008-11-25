@@ -162,26 +162,21 @@ TestRunner.testFinished = function(doc) {
 /**
  * Get the results.
  */
-TestRunner.countResults = function(win) {
-  var nOK = 0;
-  var nNotOK = 0;
-  var nTodo = 0;
-  var tests = win.SimpleTest._tests;
-  for (var i = 0; i < tests.length; ++i) {
-    var test = tests[i];
-    if (test.todo && !test.result) {
-      nTodo++;
-    } else if (test.result && !test.todo) {
-      nOK++;
-    } else {
-      nNotOK++;
-    }
-  }
+TestRunner.countResults = function(doc) {
+  var nOK = withDocument(doc,
+     partial(getElementsByTagAndClassName, 'div', 'test_ok')
+  ).length;
+  var nNotOK = withDocument(doc,
+     partial(getElementsByTagAndClassName, 'div', 'test_not_ok')
+  ).length;
+  var nTodo = withDocument(doc,
+     partial(getElementsByTagAndClassName, 'div', 'test_todo')
+  ).length;
   return {"OK": nOK, "notOK": nNotOK, "todo": nTodo};
 }
 
 TestRunner.updateUI = function() {
-  var results = TestRunner.countResults($('testframe').contentWindow);
+  var results = TestRunner.countResults($('testframe').contentDocument);
   var passCount = parseInt($("pass-count").innerHTML) + results.OK;
   var failCount = parseInt($("fail-count").innerHTML) + results.notOK;
   var todoCount = parseInt($("todo-count").innerHTML) + results.todo;
