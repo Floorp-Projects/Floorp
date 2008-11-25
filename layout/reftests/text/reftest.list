@@ -25,8 +25,8 @@ random-if(MOZ_WIDGET_TOOLKIT=="gtk2") == wordwrap-03.html wordwrap-03-ref.html #
 != wordwrap-09.html wordwrap-01-ref.html
 == wordwrap-09.html wordwrap-09-ref.html
 == zwnj-01.html zwnj-01-ref.html
-== zwnj-02.html zwnj-02-ref.html
-random-if(MOZ_WIDGET_TOOLKIT=="gtk2") != zwnj-01.html zwnj-02-ref.html # Bad fonts on the tinderbox -- works locally
+HTTP(..) == zwnj-02.xhtml zwnj-02-ref.xhtml # HTTP(..) for ../filters.svg
+random-if(MOZ_WIDGET_TOOLKIT=="gtk2") != zwnj-01.html zwnj-01-notref.html # Bad fonts on the tinderbox -- works locally
 fails-if(MOZ_WIDGET_TOOLKIT=="windows") == cgj-01.html cgj-01-ref.html # bug 455455
 == 444656.html 444656-ref.html
 == 449555-1.html 449555-1-ref.html
