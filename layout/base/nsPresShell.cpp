@@ -4558,11 +4558,16 @@ PresShell::DoFlushPendingNotifications(mozFlushType aType,
       mFrameConstructor->ProcessPendingRestyles();
     }
 
+
     // There might be more pending constructors now, but we're not going to
     // worry about them.  They can't be triggered during reflow, so we should
     // be good.
     
     if (aType >= Flush_Layout && !mIsDestroying) {
+      // Flush any pending update of the user font set, since that could
+      // post a style change reflow.
+      mPresContext->FlushUserFontSet();
+
       mFrameConstructor->RecalcQuotesAndCounters();
       mViewManager->FlushDelayedResize();
       ProcessReflowCommands(aInterruptibleReflow);
@@ -4777,17 +4782,21 @@ nsIPresShell::ReconstructStyleDataInternal()
 {
   mStylesHaveChanged = PR_FALSE;
 
-  if (!mDidInitialReflow) {
-    // Nothing to do here, since we have no frames yet
-    return;
-  }
-
   if (mIsDestroying) {
     // We don't want to mess with restyles at this point
     return;
   }
 
+  if (mPresContext) {
+    mPresContext->RebuildUserFontSet();
+  }
+
   nsIContent* root = mDocument->GetRootContent();
+  if (!mDidInitialReflow) {
+    // Nothing to do here, since we have no frames yet
+    return;
+  }
+
   if (!root) {
     // No content to restyle
     return;
@@ -6241,6 +6250,8 @@ PresShell::WillDoReflow()
     mCaret->InvalidateOutsideCaret();
     mCaret->UpdateCaretPosition();
   }
+
+  mPresContext->FlushUserFontSet();
 
   mFrameConstructor->BeginUpdate();
 }
