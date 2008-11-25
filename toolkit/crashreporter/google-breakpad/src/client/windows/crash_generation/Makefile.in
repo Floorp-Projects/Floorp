@@ -14,11 +14,12 @@
 # The Original Code is Mozilla Breakpad integration
 #
 # The Initial Developer of the Original Code is
-# Ted Mielczarek <ted.mielczarek@gmail.com>
-# Portions created by the Initial Developer are Copyright (C) 2007
+# The Mozilla Foundation
+# Portions created by the Initial Developer are Copyright (C) 2008
 # the Initial Developer. All Rights Reserved.
 #
 # Contributor(s):
+# Ted Mielczarek <ted.mielczarek@gmail.com>
 #
 # Alternatively, the contents of this file may be used under the terms of
 # either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -34,41 +35,24 @@
 #
 # ***** END LICENSE BLOCK *****
 
-DEPTH		= ../../../../../..
+DEPTH		= ../../../../../../..
 topsrcdir	= @top_srcdir@
 srcdir		= @srcdir@
 VPATH		= @srcdir@
 
 include $(DEPTH)/config/autoconf.mk
 
-MODULE		= breakpad_mac_common
-LIBRARY_NAME	= breakpad_mac_common_s
-HOST_LIBRARY_NAME = host_breakpad_mac_common_s
+MODULE		= crash_generation
+LIBRARY_NAME	= crash_generation_s
 
-LOCAL_INCLUDES 	= -I$(srcdir)/../..
+LOCAL_INCLUDES 	= -I$(srcdir)/../../..
+DEFINES += -DUNICODE -D_UNICODE
 
-DIRS = dwarf
-
-# This is a little weird, but we're building a host and a target lib here.
-# The host lib is used for dump_syms, and the target lib for the
-# crash reporter client.  Therefore, we don't need all the srcs in both.
-CPPSRCS	= \
-  file_id.cc \
-  macho_id.cc \
-  macho_walker.cc \
-  string_utilities.cc \
-  macho_utilities.cc \
-  $(NULL)
-
-CMSRCS = \
-  HTTPMultipartUpload.m \
-  $(NULL)
-
-HOST_CPPSRCS = $(CPPSRCS)
-
-HOST_CMMSRCS = \
-  dump_syms.mm \
-  $(NULL)
+#XXX: We're not currently building the other parts,
+# which would only be needed on the server side of the equation.
+CPPSRCS		= \
+		crash_generation_client.cc \
+		$(NULL)
 
 # need static lib
 FORCE_STATIC_LIB = 1
