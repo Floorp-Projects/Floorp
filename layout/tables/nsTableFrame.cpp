@@ -1945,14 +1945,9 @@ NS_METHOD nsTableFrame::Reflow(nsPresContext*          aPresContext,
       // distribute extra vertical space to rows
       CalcDesiredHeight(aReflowState, aDesiredSize); 
       mutable_rs.mFlags.mSpecialHeightReflow = PR_TRUE;
-      // save the previous special height reflow initiator, install us as the new one
-      nsIFrame* specialReflowInitiator = aReflowState.mPercentHeightReflowInitiator;
-      mutable_rs.mPercentHeightReflowInitiator = this;
 
       ReflowTable(aDesiredSize, aReflowState, aReflowState.availableHeight, 
                   lastChildReflowed, aStatus);
-      // restore the previous special height reflow initiator
-      mutable_rs.mPercentHeightReflowInitiator = specialReflowInitiator;
 
       if (lastChildReflowed && NS_FRAME_IS_NOT_COMPLETE(aStatus)) {
         // if there is an incomplete child, then set the desired height to include it but not the next one

@@ -314,9 +314,6 @@ public:
   // reflow for percent height calculations 
   nsIPercentHeightObserver* mPercentHeightObserver;
 
-  // a frame (e.g. nsTableFrame) which initiates a special reflow for percent height calculations 
-  nsIFrame* mPercentHeightReflowInitiator;
-
   // CSS margin collapsing sometimes requires us to reflow
   // optimistically assuming that margins collapse to see if clearance
   // is required. When we discover that clearance is required, we
