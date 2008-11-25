@@ -344,20 +344,25 @@ void
 nsStyleSet::EnableQuirkStyleSheet(PRBool aEnable)
 {
 #ifdef DEBUG
-  if (mRuleProcessors[eAgentSheet]) {
+  PRBool oldEnabled;
+  {
+    nsCOMPtr<nsIDOMCSSStyleSheet> domSheet =
+      do_QueryInterface(mQuirkStyleSheet);
+    domSheet->GetDisabled(&oldEnabled);
+    oldEnabled = !oldEnabled;
+  }
+#endif
+  mQuirkStyleSheet->SetEnabled(aEnable);
+#ifdef DEBUG
+  // This should always be OK, since SetEnabled should call
+  // ClearRuleCascades.
+  // Note that we can hit this codepath multiple times when document.open()
+  // (potentially implied) happens multiple times.
+  if (mRuleProcessors[eAgentSheet] && aEnable != oldEnabled) {
     static_cast<nsCSSRuleProcessor*>(static_cast<nsIStyleRuleProcessor*>(
       mRuleProcessors[eAgentSheet]))->AssertQuirksChangeOK();
   }
 #endif
-#ifdef DEBUG_dbaron_off // XXX Make this |DEBUG| once it stops firing.
-  PRBool applicableNow;
-  mQuirkStyleSheet->GetApplicable(applicableNow);
-  NS_ASSERTION(!mRuleProcessors[eAgentSheet] || aEnable == applicableNow,
-               "enabling/disabling quirk stylesheet too late or incomplete quirk stylesheet");
-  if (mRuleProcessors[eAgentSheet] && aEnable == applicableNow)
-    printf("WARNING: We set the quirks mode too many times.\n"); // we do!
-#endif
-  mQuirkStyleSheet->SetEnabled(aEnable);
 }
 
 static PRBool

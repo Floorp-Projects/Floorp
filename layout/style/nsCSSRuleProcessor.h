@@ -99,7 +99,8 @@ public:
 
 #ifdef DEBUG
   void AssertQuirksChangeOK() {
-    NS_ASSERTION(!mRuleCascades, "too late to set quirks style sheet");
+    NS_ASSERTION(!mRuleCascades, "can't toggle quirks style sheet without "
+                                 "clearing rule cascades");
   }
 #endif
 
