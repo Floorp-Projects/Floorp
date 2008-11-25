@@ -919,6 +919,14 @@ public:
   GetDeviceContextForScreenInfo(nsIDocShell* aDocShell);
 
   /**
+   * Some frames with 'position: fixed' (nsStylePosition::mDisplay ==
+   * NS_STYLE_POSITION_FIXED) are not really fixed positioned, since
+   * they're inside an element with -moz-transform.  This function says
+   * whether such an element is a real fixed-pos element.
+   */
+  static PRBool IsReallyFixedPos(nsIFrame* aFrame);
+
+  /**
    * Indicates if the nsIFrame::GetUsedXXX assertions in nsFrame.cpp should
    * disabled.
    */
