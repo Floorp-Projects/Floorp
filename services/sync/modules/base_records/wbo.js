@@ -112,8 +112,7 @@ WBOFilter.prototype = {
     let self = yield;
     let foo = wbo.uri.spec.split('/');
     data.id = decodeURI(foo[foo.length-1]);
-    // data.payload = json.decode(data.payload)[0]; // fixme: server is decoding for us!
-    data.payload = data.payload[0]; // remove when above gets fixed
+    data.payload = json.decode(data.payload)[0];
     self.done(data);
   }
 };
