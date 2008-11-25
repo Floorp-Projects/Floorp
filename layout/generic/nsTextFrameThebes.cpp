@@ -2995,13 +2995,6 @@ nsTextPaintStyle::InitCommonColors()
   mInitCommonColors = PR_TRUE;
 }
 
-static nsIFrame* GetNonGeneratedAncestor(nsIFrame* f) {
-  while (f->GetStateBits() & NS_FRAME_GENERATED_CONTENT) {
-    f = nsLayoutUtils::GetParentOrPlaceholderFor(f->PresContext()->FrameManager(), f);
-  }
-  return f;
-}
-
 static nsIContent*
 FindElementAncestor(nsINode* aNode)
 {
@@ -3029,7 +3022,7 @@ nsTextPaintStyle::InitSelectionColors()
 
   mInitSelectionColors = PR_TRUE;
 
-  nsIFrame* nonGeneratedAncestor = GetNonGeneratedAncestor(mFrame);
+  nsIFrame* nonGeneratedAncestor = nsLayoutUtils::GetNonGeneratedAncestor(mFrame);
   nsIContent* selectionContent = FindElementAncestor(nonGeneratedAncestor->GetContent());
 
   if (selectionContent &&
@@ -4419,7 +4412,7 @@ nsTextFrame::PaintText(nsIRenderingContext* aRenderingContext, nsPoint aPt,
   }
 
   // Fork off to the (slower) paint-with-selection path if necessary.
-  if (GetNonGeneratedAncestor(this)->GetStateBits() & NS_FRAME_SELECTED_CONTENT) {
+  if (nsLayoutUtils::GetNonGeneratedAncestor(this)->GetStateBits() & NS_FRAME_SELECTED_CONTENT) {
     if (PaintTextWithSelection(ctx, framePt, textBaselinePt,
                                dirtyRect, provider, textPaintStyle))
       return;

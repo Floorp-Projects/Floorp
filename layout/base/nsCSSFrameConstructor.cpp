@@ -11092,6 +11092,13 @@ nsCSSFrameConstructor::RecreateFramesForContent(nsIContent* aContent)
     }
   }
 
+  if (frame) {
+    nsIFrame* nonGeneratedAncestor = nsLayoutUtils::GetNonGeneratedAncestor(frame);
+    if (nonGeneratedAncestor->GetContent() != aContent) {
+      return RecreateFramesForContent(nonGeneratedAncestor->GetContent());
+    }
+  }
+
   nsresult rv = NS_OK;
 
   if (frame && MaybeRecreateContainerForIBSplitterFrame(frame, &rv)) {
