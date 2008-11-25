@@ -1438,9 +1438,6 @@ nsPresContext::RebuildAllStyleData(nsChangeHint aExtraHint)
     // We must have been torn down. Nothing to do here.
     return;
   }
-
-  RebuildUserFontSet();
-
   mShell->FrameConstructor()->RebuildAllStyleData(aExtraHint);
 }
 
@@ -1696,130 +1693,40 @@ InsertFontFaceRule(nsCSSFontFaceRule *aRule, gfxUserFontSet* aFontSet)
   }
 }
 
-gfxUserFontSet*
+gfxUserFontSet* 
 nsPresContext::GetUserFontSet()
 {
-  // We want to initialize the user font set lazily the first time the
-  // user asks for it, rather than building it too early and forcing
-  // rule cascade creation.  Thus we try to enforce the invariant that
-  // we *never* build the user font set until the first call to
-  // GetUserFontSet.  However, once it's been requested, we can't wait
-  // for somebody to call GetUserFontSet in order to rebuild it (see
-  // comments below in RebuildUserFontSet for why).
   if (mUserFontSetDirty) {
-    // If this assertion fails, and there have actually been changes to
-    // @font-face rules, then we will call StyleChangeReflow in
-    // FlushUserFontSet.  Since we're likely in the middle of reflow,
-    // that's a bad thing to do.
-    NS_ASSERTION(!mGetUserFontSetCalled,
-                 "FlushUserFontSet should have been called first");
-    FlushUserFontSet();
-  }
+    NS_IF_RELEASE(mUserFontSet);
 
-  mGetUserFontSetCalled = PR_TRUE;
-  return mUserFontSet;
-}
-
-void
-nsPresContext::FlushUserFontSet()
-{
-  if (!mShell)
-    return; // we've been torn down
-
-  if (mUserFontSetDirty) {
     if (gfxPlatform::GetPlatform()->DownloadableFontsEnabled()) {
-      nsRefPtr<gfxUserFontSet> oldUserFontSet = mUserFontSet;
-
       nsTArray< nsRefPtr<nsCSSFontFaceRule> > rules;
       if (!mShell->StyleSet()->AppendFontFaceRules(this, rules))
-        return;
+        return nsnull;
 
-      PRBool differ;
-      if (rules.Length() == mFontFaceRules.Length()) {
-        differ = PR_FALSE;
+      if (rules.Length() > 0) {
+        nsFontFaceLoaderContext *loaderCtx =
+          new nsFontFaceLoaderContext(this);
+        if (!loaderCtx)
+          return nsnull;
+        gfxUserFontSet *fs = new gfxUserFontSet(loaderCtx);
+        // user font set owns loader context
+        if (!fs) {
+          delete loaderCtx;
+          return nsnull;
+        }
+        mUserFontSet = fs;
+        NS_ADDREF(mUserFontSet);
+
         for (PRUint32 i = 0, i_end = rules.Length(); i < i_end; ++i) {
-          if (rules[i] != mFontFaceRules[i]) {
-            differ = PR_TRUE;
-            break;
-          }
+          InsertFontFaceRule(rules[i], fs);
         }
-      } else {
-        differ = PR_TRUE;
-      }
-
-      // Only rebuild things if the set of @font-face rules is different.
-      if (differ) {
-        NS_IF_RELEASE(mUserFontSet);
-
-        if (rules.Length() > 0) {
-          nsFontFaceLoaderContext *loaderCtx =
-            new nsFontFaceLoaderContext(this);
-          if (!loaderCtx)
-            return;
-          gfxUserFontSet *fs = new gfxUserFontSet(loaderCtx);
-          // user font set owns loader context
-          if (!fs) {
-            delete loaderCtx;
-            return;
-          }
-          mUserFontSet = fs;
-          NS_ADDREF(mUserFontSet);
-
-          for (PRUint32 i = 0, i_end = rules.Length(); i < i_end; ++i) {
-            InsertFontFaceRule(rules[i], fs);
-          }
-        }
-      }
-
-#ifdef DEBUG
-      PRBool success =
-#endif
-        rules.SwapElements(mFontFaceRules);
-      NS_ASSERTION(success, "should never fail given both are heap arrays");
-
-      if (mGetUserFontSetCalled && oldUserFontSet != mUserFontSet) {
-        // If we've changed, created, or destroyed a user font set, we
-        // need to trigger a style change reflow.
-        // We need to enqueue a style change reflow (for later) to
-        // reflect that we're dropping @font-face rules.  This is the
-        // same thing nsFontFaceLoader does when font downloads
-        // complete.  (However, without a reflow, nothing will happen
-        // to start any downloads that are needed.)
-        mShell->StyleChangeReflow();
       }
     }
 
     mUserFontSetDirty = PR_FALSE;
   }
-}
-
-void
-nsPresContext::RebuildUserFontSet()
-{
-  if (!mGetUserFontSetCalled) {
-    // We want to lazily build the user font set the first time it's
-    // requested (so we don't force creation of rule cascades too
-    // early), so don't do anything now.
-    return;
-  }
-
-  mUserFontSetDirty = PR_TRUE;
-
-  // Somebody has already asked for the user font set, so we need to
-  // post an event to rebuild it.  Setting the user font set to be dirty
-  // and lazily rebuilding it isn't sufficient, since it is only the act
-  // of rebuilding it that will trigger the style change reflow that
-  // calls GetUserFontSet.  (This reflow causes rebuilding of text runs,
-  // which starts font loads, whose completion causes another style
-  // change reflow).
-  if (!mPostedFlushUserFontSet) {
-    nsCOMPtr<nsIRunnable> ev =
-      new nsRunnableMethod<nsPresContext>(this,
-                                     &nsPresContext::HandleRebuildUserFontSet);
-    if (NS_SUCCEEDED(NS_DispatchToCurrentThread(ev))) {
-      mPostedFlushUserFontSet = PR_TRUE;
-    }
-  }    
+  return mUserFontSet;
 }
 
 void
