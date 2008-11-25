@@ -132,14 +132,6 @@ public: // new functions
     virtual ~gfxFT2FontGroup ();
 
     inline gfxFT2Font *GetFontAt (PRInt32 i) {
-        // If it turns out to be hard for all clients that cache font
-        // groups to call UpdateFontList at appropriate times, we could
-        // instead consider just calling UpdateFontList from someplace
-        // more central (such as here).
-        NS_ASSERTION(!mUserFontSet || mCurrGeneration == GetGeneration(),
-                     "Whoever was caching this font group should have "
-                     "called UpdateFontList on it");
-
         return static_cast <gfxFT2Font *>(static_cast <gfxFont *>(mFonts[i]));
     }
 
