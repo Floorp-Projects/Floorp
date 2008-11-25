@@ -217,22 +217,16 @@ SimpleTest.executeSoon = function(aFunc) {
 }
 
 /**
- * Talks to the TestRunner if being ran on a iframe and the parent has a
- * TestRunner object.
-**/
-SimpleTest.talkToRunner = function () {
-    if (parentRunner) {
-        parentRunner.testFinished(document);
-    }
-};
-
-/**
  * Finishes the tests. This is automatically called, except when
  * SimpleTest.waitForExplicitFinish() has been invoked.
 **/
 SimpleTest.finish = function () {
-    SimpleTest.showReport();
-    SimpleTest.talkToRunner();
+    if (parentRunner) {
+        /* We're running in an iframe, and the parent has a TestRunner */
+        parentRunner.testFinished(document);
+    } else {
+        SimpleTest.showReport();
+    }
 };
 
 
