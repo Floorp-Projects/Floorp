@@ -82,7 +82,10 @@
 #include "nsTArray.h"
 #include "nsContentUtils.h"
 #include "nsIMediaList.h"
+#include "gfxPlatform.h"
+#include "gfxUserFontSet.h"
 #include "nsCSSRules.h"
+#include "nsFontFaceLoader.h"
 
 #define VISITED_PSEUDO_PREF "layout.css.visited_links_enabled"
 
@@ -705,8 +708,6 @@ struct RuleCascadeData {
   nsVoidArray       mClassSelectors;
   nsVoidArray       mIDSelectors;
   PLDHashTable      mAttributeSelectors; // nsIAtom* -> nsVoidArray*
-
-  nsTArray< nsRefPtr<nsCSSFontFaceRule> > mFontFaceRules;
 
   // Looks up or creates the appropriate list in |mAttributeSelectors|.
   // Returns null only on allocation failure.
@@ -2146,23 +2147,6 @@ nsCSSRuleProcessor::MediumFeaturesChanged(nsPresContext* aPresContext,
   return NS_OK;
 }
 
-// Append all the currently-active font face rules to aArray.  Return
-// true for success and false for failure.
-PRBool
-nsCSSRuleProcessor::AppendFontFaceRules(
-                              nsPresContext *aPresContext,
-                              nsTArray< nsRefPtr<nsCSSFontFaceRule> >& aArray)
-{
-  RuleCascadeData* cascade = GetRuleCascade(aPresContext);
-
-  if (cascade) {
-    if (!aArray.AppendElements(cascade->mFontFaceRules))
-      return PR_FALSE;
-  }
-  
-  return PR_TRUE;
-}
-
 nsresult
 nsCSSRuleProcessor::ClearRuleCascades()
 {
@@ -2304,11 +2288,9 @@ static PLDHashTableOps gRulesByWeightOps = {
 
 struct CascadeEnumData {
   CascadeEnumData(nsPresContext* aPresContext,
-                  nsTArray< nsRefPtr<nsCSSFontFaceRule> >& aFontFaceRules,
                   nsMediaQueryResultCacheKey& aKey,
                   PLArenaPool& aArena)
     : mPresContext(aPresContext),
-      mFontFaceRules(aFontFaceRules),
       mCacheKey(aKey),
       mArena(aArena)
   {
@@ -2324,7 +2306,6 @@ struct CascadeEnumData {
   }
 
   nsPresContext* mPresContext;
-  nsTArray< nsRefPtr<nsCSSFontFaceRule> >& mFontFaceRules;
   nsMediaQueryResultCacheKey& mCacheKey;
   // Hooray, a manual PLDHashTable since nsClassHashtable doesn't
   // provide a getter that gives me a *reference* to the value.
@@ -2332,16 +2313,133 @@ struct CascadeEnumData {
   PLArenaPool& mArena;
 };
 
-/*
- * This enumerates style rules in a sheet (and recursively into any
- * grouping rules) in order to:
- *  (1) add any style rules, in order, into data->mRulesByWeight (for
- *      the primary CSS cascade), where they are separated by weight
- *      but kept in order per-weight, and
- *  (2) add any @font-face rules, in order, into data->mFontFaceRules.
- */
+static void
+InsertFontFaceRule(nsICSSRule* aRule, gfxUserFontSet* fs)
+{
+  nsCSSFontFaceRule *fontFace = static_cast<nsCSSFontFaceRule*> (aRule);
+  PRInt32 type;
+  NS_ASSERTION(NS_SUCCEEDED(aRule->GetType(type)) 
+               && type == nsICSSRule::FONT_FACE_RULE, 
+               "InsertFontFaceRule passed a non-fontface CSS rule");
+  
+  // fontFace->List();
+  
+  nsAutoString fontfamily, valueString;
+  nsCSSValue val;
+  
+  PRUint32 unit;
+  PRUint32 weight = NS_STYLE_FONT_WEIGHT_NORMAL;
+  PRUint32 stretch = NS_STYLE_FONT_STRETCH_NORMAL;
+  PRUint32 italicStyle = FONT_STYLE_NORMAL;
+  
+  // set up family name
+  fontFace->GetDesc(eCSSFontDesc_Family, val);
+  unit = val.GetUnit();
+  if (unit == eCSSUnit_String) {
+    val.GetStringValue(fontfamily);
+    fontfamily.Trim("\"");
+  } else {
+    NS_ASSERTION(unit == eCSSUnit_String, 
+                 "@font-face family name has non-string unit type");
+    return;
+  }
+  
+  // set up weight
+  fontFace->GetDesc(eCSSFontDesc_Weight, val);
+  unit = val.GetUnit();
+  if (unit != eCSSUnit_Null) {
+    if (unit == eCSSUnit_Normal) {
+      weight = NS_STYLE_FONT_WEIGHT_NORMAL;
+    } else {
+      weight = val.GetIntValue();
+    }
+  }
+  
+  // set up stretch
+  fontFace->GetDesc(eCSSFontDesc_Stretch, val);
+  unit = val.GetUnit();
+  if (unit != eCSSUnit_Null) {
+    if (unit == eCSSUnit_Normal) {
+      stretch = NS_STYLE_FONT_STRETCH_NORMAL;
+    } else {
+      stretch = val.GetIntValue();
+    }
+  }
+  
+  // set up font style
+  fontFace->GetDesc(eCSSFontDesc_Style, val);
+  if (val.GetUnit() != eCSSUnit_Null) {
+    if (val.GetUnit() == eCSSUnit_Normal) {
+      italicStyle = FONT_STYLE_NORMAL;
+    } else {
+      italicStyle = val.GetIntValue();
+    }
+  }
+  
+  // set up src array
+  nsTArray<gfxFontFaceSrc> srcArray;
+
+  fontFace->GetDesc(eCSSFontDesc_Src, val);
+  unit = val.GetUnit();
+  if (unit == eCSSUnit_Array) {
+    nsCSSValue::Array *srcArr = val.GetArrayValue();
+    PRUint32 i, numSrc = srcArr->Count(), faceIndex = 0;
+    
+    for (i = 0; i < numSrc; i++) {
+      val = srcArr->Item(i);
+      unit = val.GetUnit();
+      gfxFontFaceSrc *face = srcArray.AppendElements(1);
+      if (!face)
+        return;
+            
+      switch (unit) {
+       
+      case eCSSUnit_Local_Font:
+        val.GetStringValue(face->mLocalName);
+        face->mIsLocal = PR_TRUE;
+        face->mURI = nsnull;
+        face->mFormatFlags = 0;
+        break;
+      case eCSSUnit_URL:
+        face->mIsLocal = PR_FALSE;
+        face->mURI = val.GetURLValue();
+        NS_ASSERTION(face->mURI, "null url in @font-face rule");
+        face->mReferrer = val.GetURLStructValue()->mReferrer;
+        face->mLocalName.Truncate();
+        face->mFormatFlags = 0;
+        while (i + 1 < numSrc && (val = srcArr->Item(i+1), 
+                 val.GetUnit() == eCSSUnit_Font_Format)) {
+          nsDependentString valueString(val.GetStringBufferValue());
+          if (valueString.LowerCaseEqualsASCII("opentype")) {
+            face->mFormatFlags |= gfxUserFontSet::FLAG_FORMAT_OPENTYPE; 
+          } else if (valueString.LowerCaseEqualsASCII("truetype")) {
+            face->mFormatFlags |= gfxUserFontSet::FLAG_FORMAT_TRUETYPE; 
+          } else if (valueString.LowerCaseEqualsASCII("truetype-aat")) {
+            face->mFormatFlags |= gfxUserFontSet::FLAG_FORMAT_TRUETYPE_AAT; 
+          } else if (valueString.LowerCaseEqualsASCII("embedded-opentype")) {
+            face->mFormatFlags |= gfxUserFontSet::FLAG_FORMAT_EOT;   
+          } else if (valueString.LowerCaseEqualsASCII("svg")) {
+            face->mFormatFlags |= gfxUserFontSet::FLAG_FORMAT_SVG;   
+          }
+          i++;
+        }
+        break;
+      default:
+        NS_ASSERTION(unit == eCSSUnit_Local_Font || unit == eCSSUnit_URL,
+                     "strange unit type in font-face src array");
+        break;
+      }
+     }
+  }
+  
+  if (!fontfamily.IsEmpty() && srcArray.Length() > 0) {
+    fs->AddFontFace(fontfamily, srcArray, weight, stretch, italicStyle);
+  }
+  
+}
+
 static PRBool
-CascadeRuleEnumFunc(nsICSSRule* aRule, void* aData)
+InsertRuleByWeight(nsICSSRule* aRule, void* aData)
 {
   CascadeEnumData* data = (CascadeEnumData*)aData;
   PRInt32 type = nsICSSRule::UNKNOWN_RULE;
@@ -2370,22 +2468,33 @@ CascadeRuleEnumFunc(nsICSSRule* aRule, void* aData)
            nsICSSRule::DOCUMENT_RULE == type) {
     nsICSSGroupRule* groupRule = (nsICSSGroupRule*)aRule;
     if (groupRule->UseForPresentation(data->mPresContext, data->mCacheKey))
-      if (!groupRule->EnumerateRulesForwards(CascadeRuleEnumFunc, aData))
+      if (!groupRule->EnumerateRulesForwards(InsertRuleByWeight, aData))
         return PR_FALSE;
   }
-  else if (nsICSSRule::FONT_FACE_RULE == type) {
-    nsCSSFontFaceRule *fontFaceRule = static_cast<nsCSSFontFaceRule*>(aRule);
-    nsRefPtr<nsCSSFontFaceRule> *ptr = data->mFontFaceRules.AppendElement();
-    if (!ptr)
-      return PR_FALSE;
-    *ptr = fontFaceRule;
+  else if (nsICSSRule::FONT_FACE_RULE == type 
+             && gfxPlatform::GetPlatform()->DownloadableFontsEnabled()) {
+    nsPresContext *presContext = data->mPresContext;
+    gfxUserFontSet *fs = presContext->GetUserFontSet();
+    if (!fs) {
+      nsFontFaceLoaderContext *loaderCtx = new nsFontFaceLoaderContext(presContext);
+      if (!loaderCtx)
+        return PR_FALSE;
+      fs = new gfxUserFontSet(loaderCtx); // user font set owns loader context
+      if (!fs) {
+        delete loaderCtx;
+        return PR_FALSE;
+      }
+      presContext->SetUserFontSet(fs);
+    }
+    
+    InsertFontFaceRule(aRule, fs);
   }
 
   return PR_TRUE;
 }
 
 /* static */ PRBool
-nsCSSRuleProcessor::CascadeSheetEnumFunc(nsICSSStyleSheet* aSheet, void* aData)
+nsCSSRuleProcessor::CascadeSheetRulesInto(nsICSSStyleSheet* aSheet, void* aData)
 {
   nsCSSStyleSheet*  sheet = static_cast<nsCSSStyleSheet*>(aSheet);
   CascadeEnumData* data = static_cast<CascadeEnumData*>(aData);
@@ -2397,12 +2506,11 @@ nsCSSRuleProcessor::CascadeSheetEnumFunc(nsICSSStyleSheet* aSheet, void* aData)
       sheet->mInner) {
     nsCSSStyleSheet* child = sheet->mInner->mFirstChild;
     while (child) {
-      CascadeSheetEnumFunc(child, data);
+      CascadeSheetRulesInto(child, data);
       child = child->mNext;
     }
 
-    if (!sheet->mInner->mOrderedRules.EnumerateForwards(CascadeRuleEnumFunc,
-                                                        data))
+    if (!sheet->mInner->mOrderedRules.EnumerateForwards(InsertRuleByWeight, data))
       return PR_FALSE;
   }
   return PR_TRUE;
@@ -2484,12 +2592,11 @@ nsCSSRuleProcessor::RefreshRuleCascade(nsPresContext* aPresContext)
       new RuleCascadeData(aPresContext->Medium(),
                           eCompatibility_NavQuirks == aPresContext->CompatibilityMode()));
     if (newCascade) {
-      CascadeEnumData data(aPresContext, newCascade->mFontFaceRules,
-                           newCascade->mCacheKey,
+      CascadeEnumData data(aPresContext, newCascade->mCacheKey,
                            newCascade->mRuleHash.Arena());
       if (!data.mRulesByWeight.ops)
         return; /* out of memory */
-      if (!mSheets.EnumerateForwards(CascadeSheetEnumFunc, &data))
+      if (!mSheets.EnumerateForwards(CascadeSheetRulesInto, &data))
         return; /* out of memory */
 
       // Sort the hash table of per-weight linked lists by weight.
