@@ -51,6 +51,7 @@
 #include "nsCRT.h"
 #include "nsIRenderingContext.h"
 #include "gfxUserFontSet.h"
+#include "nsIThebesFontMetrics.h"
 
 NS_IMPL_ISUPPORTS3(DeviceContextImpl, nsIDeviceContext, nsIObserver, nsISupportsWeakReference)
 
@@ -482,7 +483,8 @@ nsFontCache::GetMetricsFor(const nsFont& aFont, nsIAtom* aLangGroup,
   PRInt32 n = mFontMetrics.Count() - 1;
   for (PRInt32 i = n; i >= 0; --i) {
     fm = static_cast<nsIFontMetrics*>(mFontMetrics[i]);
-    if (fm->Font().Equals(aFont)) {
+    nsIThebesFontMetrics* tfm = static_cast<nsIThebesFontMetrics*>(fm);
+    if (fm->Font().Equals(aFont) && tfm->GetUserFontSet() == aUserFontSet) {
       nsCOMPtr<nsIAtom> langGroup;
       fm->GetLangGroup(getter_AddRefs(langGroup));
       if (aLangGroup == langGroup.get()) {
@@ -490,6 +492,7 @@ nsFontCache::GetMetricsFor(const nsFont& aFont, nsIAtom* aLangGroup,
           // promote it to the end of the cache
           mFontMetrics.MoveElement(i, n);
         }
+        tfm->GetThebesFontGroup()->UpdateFontList();
         NS_ADDREF(aMetrics = fm);
         return NS_OK;
       }
