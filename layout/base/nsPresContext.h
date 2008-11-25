@@ -66,8 +66,6 @@
 // This also pulls in gfxTypes.h, which we cannot include directly.
 #include "gfxRect.h"
 #include "nsRegion.h"
-#include "nsTArray.h"
-#include "nsAutoPtr.h"
 
 class nsImageLoader;
 #ifdef IBMBIDI
@@ -95,7 +93,6 @@ struct nsStyleBackground;
 template <class T> class nsRunnableMethod;
 class nsIRunnable;
 class gfxUserFontSet;
-class nsCSSFontFaceRule;
 
 #ifdef MOZ_REFLOW_PERF
 class nsIRenderingContext;
@@ -746,8 +743,6 @@ public:
   PRBool           SupressingResizeReflow() const { return mSupressResizeReflow; }
   
   gfxUserFontSet* GetUserFontSet();
-  void FlushUserFontSet();
-  void RebuildUserFontSet(); // asynchronously
 
   void NotifyInvalidation(const nsRect& aRect, PRBool aIsCrossDoc);
   void FireDOMPaintEvent();
@@ -756,7 +751,7 @@ protected:
   friend class nsRunnableMethod<nsPresContext>;
   NS_HIDDEN_(void) ThemeChangedInternal();
   NS_HIDDEN_(void) SysColorChangedInternal();
-
+  
   NS_HIDDEN_(void) SetImgAnimations(nsIContent *aParent, PRUint16 aMode);
   NS_HIDDEN_(void) GetDocumentColorPreferences();
 
@@ -770,11 +765,6 @@ protected:
   NS_HIDDEN_(void) GetFontPreferences();
 
   NS_HIDDEN_(void) UpdateCharSet(const nsAFlatCString& aCharSet);
-
-  void HandleRebuildUserFontSet() {
-    mPostedFlushUserFontSet = PR_FALSE;
-    FlushUserFontSet();
-  }
 
   // IMPORTANT: The ownership implicit in the following member variables
   // has been explicitly checked.  If you add any members to this class,
@@ -822,8 +812,6 @@ protected:
 
   // container for per-context fonts (downloadable, SVG, etc.)
   gfxUserFontSet* mUserFontSet;
-  // The list of @font-face rules that we put into mUserFontSet
-  nsTArray< nsRefPtr<nsCSSFontFaceRule> > mFontFaceRules;
   
   PRInt32               mFontScaler;
   nscoord               mMinimumFontSize;
@@ -882,13 +870,7 @@ protected:
   unsigned              mPendingMediaFeatureValuesChanged : 1;
   unsigned              mPrefChangePendingNeedsReflow : 1;
   unsigned              mRenderedPositionVaryingContent : 1;
-
-  // Is the current mUserFontSet valid?
   unsigned              mUserFontSetDirty : 1;
-  // Has GetUserFontSet() been called?
-  unsigned              mGetUserFontSetCalled : 1;
-  // Do we currently have an event posted to call FlushUserFontSet?
-  unsigned              mPostedFlushUserFontSet : 1;
 
   // resize reflow is supressed when the only change has been to zoom
   // the document rather than to change the document's dimensions
