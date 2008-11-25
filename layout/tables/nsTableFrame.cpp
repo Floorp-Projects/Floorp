@@ -1880,7 +1880,16 @@ NS_METHOD nsTableFrame::Reflow(nsPresContext*          aPresContext,
   PRBool haveDesiredHeight = PR_FALSE;
   SetHaveReflowedColGroups(PR_FALSE);
 
-  if (aReflowState.ComputedHeight() != NS_UNCONSTRAINEDSIZE ||
+      // If we have a constrained computed height that is either
+      // different, or something inside us is different, or we're being
+      // reflowed at a different size, we could need to undo the effects
+      // of a previous special height reflow in order to distribute
+      // heights correctly again.
+  if ((aReflowState.ComputedHeight() != NS_UNCONSTRAINEDSIZE &&
+       (aReflowState.ComputedHeight() +
+          aReflowState.mComputedBorderPadding.TopBottom() != GetSize().height ||
+        NS_SUBTREE_DIRTY(this) ||
+        aReflowState.mFlags.mHResize)) ||
       // Also check mVResize, to handle the first Reflow preceding a
       // special height Reflow, when we've already had a special height
       // Reflow (where mComputedHeight would not be
@@ -1905,7 +1914,7 @@ NS_METHOD nsTableFrame::Reflow(nsPresContext*          aPresContext,
   if (NS_SUBTREE_DIRTY(this) ||
       aReflowState.ShouldReflowAllKids() ||
       IsGeometryDirty() ||
-      needToInitiateSpecialReflow) {
+      (needToInitiateSpecialReflow && aReflowState.mFlags.mVResize)) {
     // see if an extra reflow will be necessary in pagination mode when there is a specified table height 
     if (isPaginated && !GetPrevInFlow() && (NS_UNCONSTRAINEDSIZE != aReflowState.availableHeight)) {
       nscoord tableSpecifiedHeight = CalcBorderBoxHeight(aReflowState);
