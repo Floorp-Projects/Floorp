@@ -141,6 +141,8 @@ public:
     virtual void SetTextRunRTL(PRBool aIsRTL) { mTextRunRTL = aIsRTL; }
 
     virtual gfxFontGroup* GetThebesFontGroup() { return mFontGroup; }
+
+    virtual gfxUserFontSet* GetUserFontSet();
     
     PRBool GetRightToLeftTextRunMode() {
         return mTextRunRTL;
