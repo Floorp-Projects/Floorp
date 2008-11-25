@@ -743,7 +743,6 @@ public:
   PRBool           SupressingResizeReflow() const { return mSupressResizeReflow; }
   
   gfxUserFontSet* GetUserFontSet();
-  void SetUserFontSet(gfxUserFontSet *aUserFontSet);
 
   void NotifyInvalidation(const nsRect& aRect, PRBool aIsCrossDoc);
   void FireDOMPaintEvent();
@@ -871,6 +870,7 @@ protected:
   unsigned              mPendingMediaFeatureValuesChanged : 1;
   unsigned              mPrefChangePendingNeedsReflow : 1;
   unsigned              mRenderedPositionVaryingContent : 1;
+  unsigned              mUserFontSetDirty : 1;
 
   // resize reflow is supressed when the only change has been to zoom
   // the document rather than to change the document's dimensions
