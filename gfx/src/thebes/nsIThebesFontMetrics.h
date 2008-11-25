@@ -116,10 +116,6 @@ public:
     virtual PRInt32 GetMaxStringLength() = 0;
 
     virtual gfxFontGroup* GetThebesFontGroup() = 0;
-
-    // Needs to be virtual and at this level so that its caller in gkgfx can
-    // avoid linking against thebes.
-    virtual gfxUserFontSet* GetUserFontSet() = 0;
 };
 
 #endif /* __nsIThebesFontMetrics_h */

@@ -12,7 +12,7 @@ fails HTTP(..) == name-override-1.html name-override-1-ref.html
 HTTP(..) == multiple-descriptor-1.html multiple-descriptor-1-ref.html
 fails-if(MOZ_WIDGET_TOOLKIT=="gtk2") HTTP(..) != multiple-descriptor-1.html multiple-descriptor-1-notref.html
 fails-if(MOZ_WIDGET_TOOLKIT=="gtk2") HTTP(..) == src-list-1.html src-list-1-ref.html
-fails-if(MOZ_WIDGET_TOOLKIT=="gtk2") HTTP(..) == src-list-2.html src-list-2-ref.html
+fails-if(MOZ_WIDGET_TOOLKIT=="gtk2") random-if(MOZ_WIDGET_TOOLKIT=="cocoa") random-if(MOZ_WIDGET_TOOLKIT=="windows") HTTP(..) == src-list-2.html src-list-2-ref.html # random probably fixed by the font cache patch on bug 457821
 fails HTTP(..) == src-list-format-1.html src-list-format-1-ref.html
 fails HTTP(..) == src-list-format-2.html src-list-format-2-ref.html
 fails-if(MOZ_WIDGET_TOOLKIT=="gtk2") HTTP(..) == src-list-format-3.html src-list-format-3-ref.html
@@ -26,7 +26,7 @@ fails HTTP(..) == order-2.html order-2-ref.html
 fails HTTP(..) == order-3.html order-3-ref.html
 fails-if(MOZ_WIDGET_TOOLKIT=="gtk2") fails-if(MOZ_WIDGET_TOOLKIT=="cocoa") random-if(MOZ_WIDGET_TOOLKIT=="windows") HTTP(..) == multiple-in-family-1.html multiple-in-family-1-ref.html
 fails-if(MOZ_WIDGET_TOOLKIT=="gtk2") fails-if(MOZ_WIDGET_TOOLKIT=="cocoa") random-if(MOZ_WIDGET_TOOLKIT=="windows") HTTP(..) != multiple-in-family-1.html multiple-in-family-1-notref.html
-random-if(MOZ_WIDGET_TOOLKIT=="windows") HTTP(..) == prop-order-over-rule-order-1a.html prop-order-over-rule-order-2a.html
+random-if(MOZ_WIDGET_TOOLKIT=="windows") random-if(MOZ_WIDGET_TOOLKIT=="cocoa") HTTP(..) == prop-order-over-rule-order-1a.html prop-order-over-rule-order-2a.html # randomness on cocoa should be fixed by the font cache patch on bug 457821
 random-if(MOZ_WIDGET_TOOLKIT=="windows") HTTP(..) == prop-order-over-rule-order-1b.html prop-order-over-rule-order-2b.html
 random-if(MOZ_WIDGET_TOOLKIT=="windows") fails-if(MOZ_WIDGET_TOOLKIT=="gtk2") HTTP(..) != prop-order-over-rule-order-1a.html prop-order-over-rule-order-1b.html
 fails-if(MOZ_WIDGET_TOOLKIT=="gtk2") HTTP(..) == cross-iframe-1.html cross-iframe-1-ref.html
