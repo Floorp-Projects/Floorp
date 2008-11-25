@@ -5279,8 +5279,6 @@ nsTextFrame::AddInlineMinWidthForFlow(nsIRenderingContext *aRenderingContext,
   gfxFloat tabWidth = -1;
   PRUint32 start =
     FindStartAfterSkippingWhitespace(&provider, aData, textStyle, &iter, flowEndInTextRun);
-  if (start >= flowEndInTextRun)
-    return;
 
   // XXX Should we consider hyphenation here?
   for (PRUint32 i = start, wordStart = start; i <= flowEndInTextRun; ++i) {
@@ -5342,11 +5340,13 @@ nsTextFrame::AddInlineMinWidthForFlow(nsIRenderingContext *aRenderingContext,
     }
   }
 
-  // Check if we have collapsible whitespace at the end
-  aData->skipWhitespace =
-    IsTrimmableSpace(provider.GetFragment(),
-                     iter.ConvertSkippedToOriginal(flowEndInTextRun - 1),
-                     textStyle);
+  if (start < flowEndInTextRun) {
+    // Check if we have collapsible whitespace at the end
+    aData->skipWhitespace =
+      IsTrimmableSpace(provider.GetFragment(),
+                       iter.ConvertSkippedToOriginal(flowEndInTextRun - 1),
+                       textStyle);
+  }
 }
 
 // XXX Need to do something here to avoid incremental reflow bugs due to
@@ -5398,8 +5398,6 @@ nsTextFrame::AddInlinePrefWidthForFlow(nsIRenderingContext *aRenderingContext,
   gfxFloat tabWidth = -1;
   PRUint32 start =
     FindStartAfterSkippingWhitespace(&provider, aData, textStyle, &iter, flowEndInTextRun);
-  if (start >= flowEndInTextRun)
-    return;
 
   // XXX Should we consider hyphenation here?
   // If newlines and tabs aren't preformatted, nothing to do inside
@@ -5458,10 +5456,12 @@ nsTextFrame::AddInlinePrefWidthForFlow(nsIRenderingContext *aRenderingContext,
   }
 
   // Check if we have collapsible whitespace at the end
-  aData->skipWhitespace =
-    IsTrimmableSpace(provider.GetFragment(),
-                     iter.ConvertSkippedToOriginal(flowEndInTextRun - 1),
-                     textStyle);
+  if (start < flowEndInTextRun) {
+    aData->skipWhitespace =
+      IsTrimmableSpace(provider.GetFragment(),
+                       iter.ConvertSkippedToOriginal(flowEndInTextRun - 1),
+                       textStyle);
+  }
 }
 
 // XXX Need to do something here to avoid incremental reflow bugs due to
