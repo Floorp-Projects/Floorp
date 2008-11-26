@@ -170,9 +170,6 @@
       </hbox>
     </panel>
 
-    <!-- popup for content autocomplete -->
-    <panel type="autocomplete" id="popup_autocomplete_content" noautofocus="true"/>
-
     <!-- popup for site identity information -->
     <panel id="identity-popup" position="after_start" hidden="true" noautofocus="true"
            norestorefocus="true">
@@ -217,7 +214,6 @@
                    viewport="true"
                    style="height: 1440px; width: 800px;"
                    height="1440" width="800"
-                   autocompletepopup="popup_autocomplete_content"
                    onnewtab="CommandUpdater.doCommand('cmd_newTab');"/>
 
     </hbox>
