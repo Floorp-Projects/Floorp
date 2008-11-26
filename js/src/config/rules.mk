@@ -1813,15 +1813,14 @@ chrome::
 $(FINAL_TARGET)/chrome:
 	$(NSINSTALL) -D $@
 
-libs realchrome:: $(CHROME_DEPS) $(FINAL_TARGET)/chrome
+ifneq (,$(wildcard $(JAR_MANIFEST)))
 ifndef NO_DIST_INSTALL
-	@$(EXIT_ON_ERROR) \
-	if test -f $(JAR_MANIFEST); then \
-	  $(PYTHON) $(MOZILLA_DIR)/config/JarMaker.py \
-	    $(QUIET) -j $(FINAL_TARGET)/chrome \
-	    $(MAKE_JARS_FLAGS) $(XULPPFLAGS) $(DEFINES) $(ACDEFINES) \
-	    $(JAR_MANIFEST); \
-	fi
+libs realchrome:: $(CHROME_DEPS) $(FINAL_TARGET)/chrome
+	$(PYTHON) $(MOZILLA_DIR)/config/JarMaker.py \
+	  $(QUIET) -j $(FINAL_TARGET)/chrome \
+	  $(MAKE_JARS_FLAGS) $(XULPPFLAGS) $(DEFINES) $(ACDEFINES) \
+	  $(JAR_MANIFEST)
+endif
 endif
 
 ifneq ($(DIST_FILES),)
