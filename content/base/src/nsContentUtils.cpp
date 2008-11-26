@@ -4487,17 +4487,26 @@ nsSameOriginChecker::OnChannelRedirect(nsIChannel *aOldChannel,
                                        PRUint32    aFlags)
 {
   NS_PRECONDITION(aNewChannel, "Redirecting to null channel?");
+  if (!nsContentUtils::GetSecurityManager()) {
+    return NS_ERROR_NOT_AVAILABLE;
+  }
 
-  nsCOMPtr<nsIURI> oldURI;
-  nsresult rv = aOldChannel->GetURI(getter_AddRefs(oldURI)); // The original URI
-  NS_ENSURE_SUCCESS(rv, rv);
+  nsCOMPtr<nsIPrincipal> oldPrincipal;
+  nsContentUtils::GetSecurityManager()->
+    GetChannelPrincipal(aOldChannel, getter_AddRefs(oldPrincipal));
 
   nsCOMPtr<nsIURI> newURI;
-  rv = aNewChannel->GetURI(getter_AddRefs(newURI)); // The new URI
-  NS_ENSURE_SUCCESS(rv, rv);
+  aNewChannel->GetURI(getter_AddRefs(newURI));
+  nsCOMPtr<nsIURI> newOriginalURI;
+  aNewChannel->GetOriginalURI(getter_AddRefs(newOriginalURI));
 
-  return nsContentUtils::GetSecurityManager()->
-    CheckSameOriginURI(oldURI, newURI, PR_TRUE);
+  NS_ENSURE_STATE(oldPrincipal && newURI && newOriginalURI);
+
+  nsresult rv = oldPrincipal->CheckMayLoad(newURI, PR_FALSE);
+  if (NS_SUCCEEDED(rv) && newOriginalURI != newURI) {
+    rv = oldPrincipal->CheckMayLoad(newOriginalURI, PR_FALSE);
+  }
+  return rv;
 }
 
 NS_IMETHODIMP
