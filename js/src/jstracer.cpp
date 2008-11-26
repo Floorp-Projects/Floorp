@@ -1056,6 +1056,15 @@ TraceRecorder::TraceRecorder(JSContext* cx, VMSideExit* _anchor, Fragment* _frag
     /* read into registers all values on the stack and all globals we know so far */
     import(treeInfo, lirbuf->sp, ngslots, callDepth, globalTypeMap, stackTypeMap);
 
+#if defined(JS_HAS_OPERATION_COUNT) && !JS_HAS_OPERATION_COUNT
+    if (fragment == fragment->root) {
+        guard(false, 
+              lir->ins_eq0(lir->insLoadi(cx_ins, 
+                                         offsetof(JSContext, operationCount))), 
+              snapshot(TIMEOUT_EXIT));
+    }
+#endif
+
     /* If we are attached to a tree call guard, make sure the guard the inner tree exited from
        is what we expect it to be. */
     if (_anchor && _anchor->exitType == NESTED_EXIT) {
@@ -2341,13 +2350,6 @@ TraceRecorder::closeLoop(Fragmento* fragmento, bool& demote, unsigned *demotes)
         compile(fragmento);
     } else {
         exit->target = fragment->root;
-#if defined(JS_HAS_OPERATION_COUNT) && !JS_HAS_OPERATION_COUNT
-        exit->exitType = TIMEOUT_EXIT;
-        guard(false, 
-              lir->ins_eq0(lir->insLoadi(cx_ins, 
-                                         offsetof(JSContext, operationCount))), 
-              exitIns);
-#endif
         fragment->lastIns = lir->insGuard(LIR_loop, lir->insImm(1), exitIns);
         compile(fragmento);
     }
