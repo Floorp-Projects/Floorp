@@ -367,22 +367,30 @@ UPDATE_TITLE_libs = sed -e "s!Y!libs in $(shell $(BUILD_TOOLS)/print-depth-path.
 UPDATE_TITLE_tools = sed -e "s!Y!tools in $(shell $(BUILD_TOOLS)/print-depth-path.sh)/$*!" $(MOZILLA_DIR)/config/xterm.str;
 endif
 
+ifneq (,$(strip $(DIRS)))
 LOOP_OVER_DIRS = \
     @$(EXIT_ON_ERROR) \
-    $(foreach dir,$(DIRS),$(UPDATE_TITLE) $(MAKE) -C $(dir) $@; ) true
+    $(foreach dir,$(DIRS),$(UPDATE_TITLE) $(MAKE) -C $(dir) $@; )
+endif
 
 # we only use this for the makefiles target and other stuff that doesn't matter
+ifneq (,$(strip $(PARALLEL_DIRS)))
 LOOP_OVER_PARALLEL_DIRS = \
     @$(EXIT_ON_ERROR) \
-    $(foreach dir,$(PARALLEL_DIRS),$(UPDATE_TITLE) $(MAKE) -C $(dir) $@; ) true
+    $(foreach dir,$(PARALLEL_DIRS),$(UPDATE_TITLE) $(MAKE) -C $(dir) $@; )
+endif
 
+ifneq (,$(strip $(STATIC_DIRS)))
 LOOP_OVER_STATIC_DIRS = \
     @$(EXIT_ON_ERROR) \
-    $(foreach dir,$(STATIC_DIRS),$(UPDATE_TITLE) $(MAKE) -C $(dir) $@; ) true
+    $(foreach dir,$(STATIC_DIRS),$(UPDATE_TITLE) $(MAKE) -C $(dir) $@; )
+endif
 
+ifneq (,$(strip $(TOOL_DIRS)))
 LOOP_OVER_TOOL_DIRS = \
     @$(EXIT_ON_ERROR) \
-    $(foreach dir,$(TOOL_DIRS),$(UPDATE_TITLE) $(MAKE) -C $(dir) $@; ) true
+    $(foreach dir,$(TOOL_DIRS),$(UPDATE_TITLE) $(MAKE) -C $(dir) $@; )
+endif
 
 ifdef PARALLEL_DIRS
 # create a bunch of fake targets for order-only processing
@@ -622,8 +630,7 @@ default all alldep::
 else
 
 default all::
-	@$(EXIT_ON_ERROR) \
-	$(foreach dir,$(STATIC_DIRS),$(MAKE) -C $(dir); ) true
+	+$(LOOP_OVER_STATIC_DIRS)
 	$(MAKE) export
 	$(MAKE) libs
 	$(MAKE) tools
@@ -725,10 +732,7 @@ endif
 
 tools:: $(SUBMAKEFILES) $(MAKE_DIRS)
 	+$(LOOP_OVER_DIRS)
-ifdef TOOL_DIRS
-	@$(EXIT_ON_ERROR) \
-	$(foreach dir,$(TOOL_DIRS),$(UPDATE_TITLE) $(MAKE) -C $(dir) libs; ) true
-endif
+	+$(LOOP_OVER_TOOL_DIRS)
 
 #
 # Rule to create list of libraries for final link
