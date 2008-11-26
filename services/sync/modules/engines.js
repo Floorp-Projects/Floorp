@@ -382,7 +382,7 @@ NewEngine.prototype = {
       }
     }
 
-    // STEP 2: Find new items from server, place into incoming queue
+    // STEP 2.1: Find new items from server, place into incoming queue
     this._log.debug("Downloading server changes");
 
     let newitems = new Collection(this.engineURL);
@@ -395,9 +395,10 @@ NewEngine.prototype = {
       this.incoming.push(item);
     }
 
-    // STEP 2.5: Analyze incoming records and sort them
+    // STEP 2.2: Decrypt items, then analyze incoming records and sort them
     for each (let inc in this.incoming) {
-      this._recDepth(inc);
+      yield inc.decrypt(self.cb, ID.get('WeaveCryptoID').password);
+      this._recDepth(inc); // note: doesn't need access to payload
     }
     this.incoming.sort(function(a, b) {
       if ((typeof(a.depth) == "number" && typeof(b.depth) == "undefined") ||
@@ -408,10 +409,10 @@ NewEngine.prototype = {
           (a.depth == null && typeof(b.depth) == "number") ||
           (a.depth < b.depth))
         return -1;
-      //if (a.index > b.index)
-      //  return -1;
-      //if (a.index < b.index)
-      //  return 1;
+      if (a.cleartext.index > b.cleartext.index)
+        return 1;
+      if (a.cleartext.index < b.cleartext.index)
+        return -1;
       return 0;
     });
 
