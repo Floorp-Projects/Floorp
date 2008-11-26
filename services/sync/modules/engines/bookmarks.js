@@ -744,6 +744,22 @@ BookmarksEngine.prototype = {
     if (!this.__tracker)
       this.__tracker = new BookmarksTracker(this);
     return this.__tracker;
+  },
+
+  _changeRecordRefs: function NewEngine__changeRecordRefs(oldID, newID) {
+    let self = yield;
+    for each (let rec in this.outgoing) {
+      if (rec.parentid == oldID) {
+        rec.parentid = newID;
+        rec.cleartext.parentGUID = newID;
+        yield rec.encrypt(self.cb, ID.get('WeaveCryptoID').password);
+      }
+    }
+  },
+
+  _changeRecordID: function BSS__changeRecordID(oldID, newID) {
+    let self = yield;
+    yield this._store._changeRecordID.async(this._store, self.cb, oldID, newID);
   }
 
   // XXX for sharing, will need to re-add code to get new shares before syncing,
@@ -1087,14 +1103,6 @@ BookmarksStore.prototype = {
         // all commands have this to help in reconciliation, but it makes
         // no sense to edit it
         break;
-      case "GUID":
-        var existing = this._getItemIdForGUID(command.data.GUID);
-        if (existing < 0)
-          this._bms.setItemGUID(itemId, command.data.GUID);
-        else
-          this._log.warn("Can't change GUID " + command.GUID +
-                         " to " + command.data.GUID + ": GUID already exists.");
-        break;
       case "title":
         this._bms.setItemTitle(itemId, command.data.title);
         break;
@@ -1175,6 +1183,27 @@ BookmarksStore.prototype = {
         break;
       }
     }
+  },
+
+  _changeRecordID: function BSS__changeRecordID(oldID, newID) {
+    let self = yield;
+
+    var itemId = this._bms.getItemIdForGUID(oldID);
+    if (itemId < 0) {
+      this._log.warn("Can't change GUID " + oldID + " to " +
+                      newID + ": Item does not exist");
+      return;
+    }
+
+    var collision = this._getItemIdForGUID(newID);
+    if (collision >= 0) {
+      this._log.warn("Can't change GUID " + oldID + " to " +
+                      newID + ": new ID already in use");
+      return;
+    }
+
+    this._log.debug("Changing GUID " + oldID + " to " + newID);
+    this._bms.setItemGUID(itemId, newID);
   },
 
   _getNode: function BSS__getNode(folder) {
