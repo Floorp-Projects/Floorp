@@ -336,21 +336,14 @@ public:
 
   virtual void Paint(nsDisplayListBuilder* aBuilder, nsIRenderingContext* aCtx,
      const nsRect& aDirtyRect);
-  virtual nsRect GetBounds(nsDisplayListBuilder* aBuilder);
   NS_DISPLAY_DECL_NAME("XULTextBox")
 };
 
-void
-nsDisplayXULTextBox::Paint(nsDisplayListBuilder* aBuilder,
-                           nsIRenderingContext* aCtx, const nsRect& aDirtyRect)
+void nsDisplayXULTextBox::Paint(nsDisplayListBuilder* aBuilder,
+     nsIRenderingContext* aCtx, const nsRect& aDirtyRect)
 {
   static_cast<nsTextBoxFrame*>(mFrame)->
     PaintTitle(*aCtx, aDirtyRect, aBuilder->ToReferenceFrame(mFrame));
-}
-
-nsRect
-nsDisplayXULTextBox::GetBounds(nsDisplayListBuilder* aBuilder) {
-  return mFrame->GetOverflowRect() + aBuilder->ToReferenceFrame(mFrame);
 }
 
 NS_IMETHODIMP
@@ -957,12 +950,6 @@ nsTextBoxFrame::DoLayout(nsBoxLayoutState& aBoxLayoutState)
       FinishAndStoreOverflow(&overflowRect, GetSize());
     }
     return rv;
-}
-
-PRBool
-nsTextBoxFrame::ComputesOwnOverflowArea()
-{
-    return PR_TRUE;
 }
 
 /* virtual */ void

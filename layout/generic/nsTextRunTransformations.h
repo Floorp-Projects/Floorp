@@ -113,30 +113,22 @@ public:
     }
   }
   
-  void SetCapitalization(PRUint32 aStart, PRUint32 aLength,
-                         PRPackedBool* aCapitalization,
-                         gfxContext* aRefContext);
+  virtual void SetCapitalization(PRUint32 aStart, PRUint32 aLength,
+                                 PRPackedBool* aCapitalization,
+                                 gfxContext* aRefContext);
   virtual PRBool SetPotentialLineBreaks(PRUint32 aStart, PRUint32 aLength,
                                         PRPackedBool* aBreakBefore,
                                         gfxContext* aRefContext);
-  /**
-   * Called after SetCapitalization and SetPotentialLineBreaks
-   * are done and before we request any data from the textrun. Also always
-   * called after a Create.
-   */
-  void FinishSettingProperties(gfxContext* aRefContext)
-  {
-    if (mNeedsRebuild) {
-      mNeedsRebuild = PR_FALSE;
-      mFactory->RebuildTextRun(this, aRefContext);
-    }
-  }
+  virtual PRBool SetLineBreaks(PRUint32 aStart, PRUint32 aLength,
+                               PRBool aLineBreakBefore, PRBool aLineBreakAfter,
+                               gfxFloat* aAdvanceWidthDelta,
+                               gfxContext* aRefContext);
 
   nsTransformingTextRunFactory       *mFactory;
+  nsTArray<PRUint32>                  mLineBreaks;
   nsTArray<nsRefPtr<nsStyleContext> > mStyles;
   nsTArray<PRPackedBool>              mCapitalize;
   PRPackedBool                        mOwnsFactory;
-  PRPackedBool                        mNeedsRebuild;
 
 private:
   nsTransformedTextRun(const gfxTextRunFactory::Parameters* aParams,
@@ -146,11 +138,14 @@ private:
                        const PRUint32 aFlags, nsStyleContext** aStyles,
                        PRBool aOwnsFactory)
     : gfxTextRun(aParams, aString, aLength, aFontGroup, aFlags, sizeof(nsTransformedTextRun)),
-      mFactory(aFactory), mOwnsFactory(aOwnsFactory), mNeedsRebuild(PR_TRUE)
+      mFactory(aFactory), mOwnsFactory(aOwnsFactory)
   {
     PRUint32 i;
     for (i = 0; i < aLength; ++i) {
       mStyles.AppendElement(aStyles[i]);
+    }
+    for (i = 0; i < aParams->mInitialBreakCount; ++i) {
+      mLineBreaks.AppendElement(aParams->mInitialBreaks[i]);
     }
   }  
 };
