@@ -186,8 +186,14 @@ my_BranchCallback(JSContext *cx, JSScript *script)
         return JS_FALSE;
     }
 #ifdef JS_THREADSAFE
-    if ((gBranchCount & 0xff) == 1)
-        JS_YieldRequest(cx);
+    if ((gBranchCount & 0xff) == 1) {
+#endif
+        if ((gBranchCount & 0x3fff) == 1)
+            JS_MaybeGC(cx);
+#ifdef JS_THREADSAFE
+        else
+            JS_YieldRequest(cx);
+    }
 #endif
     return JS_TRUE;
 }
@@ -465,7 +471,7 @@ extern void js_InitJITStatsClass(JSContext *cx, JSObject *glob);
                             &jitstats_class, NULL, 0);
 #endif
             break;
-
+            
         case 'o':
             if (++i == argc)
                 return usage();
@@ -860,49 +866,24 @@ GCParameter(JSContext *cx, uintN argc, jsval *vp)
         param = JSGC_MAX_BYTES;
     } else if (strcmp(paramName, "maxMallocBytes") == 0) {
         param = JSGC_MAX_MALLOC_BYTES;
-    } else if (strcmp(paramName, "gcStackpoolLifespan") == 0) {
-        param = JSGC_STACKPOOL_LIFESPAN;
-    } else if (strcmp(paramName, "gcBytes") == 0) {
-        param = JSGC_BYTES;
-    } else if (strcmp(paramName, "gcNumber") == 0) {
-        param = JSGC_NUMBER;
-    } else if (strcmp(paramName, "gcTriggerFactor") == 0) {
-        param = JSGC_TRIGGER_FACTOR;
     } else {
         JS_ReportError(cx,
-                       "the first argument argument must be maxBytes, "
-                       "maxMallocBytes, gcStackpoolLifespan, gcBytes, "
-                       "gcNumber or gcTriggerFactor");
+                       "the first argument argument must be either maxBytes "
+                       "or maxMallocBytes");
         return JS_FALSE;
     }
 
-    if (argc == 1) {
-        value = JS_GetGCParameter(cx->runtime, param);
-        return JS_NewNumberValue(cx, value, &vp[0]);
-    }
-
-    if (param == JSGC_NUMBER ||
-        param == JSGC_BYTES) {
-        JS_ReportError(cx, "Attempt to change read-only parameter %s",
-                       paramName);
+    if (!JS_ValueToECMAUint32(cx, argc < 2 ? JSVAL_VOID : vp[3], &value))
         return JS_FALSE;
-    }
-
-    if (!JS_ValueToECMAUint32(cx, vp[3], &value)) {
+    if (value == 0) {
         JS_ReportError(cx,
-                       "the second argument must be convertable to uint32 "
-                       "with non-zero value");
-        return JS_FALSE;
-    }
-    if (param == JSGC_TRIGGER_FACTOR && value < 100) {
-        JS_ReportError(cx,
-                       "the gcTriggerFactor value must be >= 100");
+                       "the second argument must be convertable to uint32 with "
+                       "non-zero value");
         return JS_FALSE;
     }
     JS_SetGCParameter(cx->runtime, param, value);
     *vp = JSVAL_VOID;
     return JS_TRUE;
-
 }
 
 #ifdef JS_GC_ZEAL
@@ -1470,7 +1451,7 @@ DisassFile(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
     JSScript *script;
     JSBool ok;
     uint32 oldopts;
-
+    
     if (!argc)
         return JS_TRUE;
 
@@ -1490,7 +1471,7 @@ DisassFile(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
     obj = JS_NewScriptObject(cx, script);
     if (!obj)
         return JS_FALSE;
-
+    
     *rval = OBJECT_TO_JSVAL(obj); /* I like to root it, root it. */
     ok = Disassemble(cx, obj, 1, rval, rval); /* gross, but works! */
     *rval = JSVAL_VOID;
