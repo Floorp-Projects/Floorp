@@ -713,7 +713,7 @@ nsDocShell::LoadURI(nsIURI * aURI,
 {
     NS_PRECONDITION(aLoadInfo || (aLoadFlags & EXTRA_LOAD_FLAGS) == 0,
                     "Unexpected flags");
-    NS_PRECONDITION((aLoadFlags & 0xf) == 0, "Should have these flags set");
+    NS_PRECONDITION((aLoadFlags & 0xf) == 0, "Should not have these flags set");
     
     // Note: we allow loads to get through here even if mFiredUnloadEvent is
     // true; that case will get handled in LoadInternal or LoadHistoryEntry.
