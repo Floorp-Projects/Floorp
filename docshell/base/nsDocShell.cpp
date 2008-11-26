@@ -711,6 +711,10 @@ nsDocShell::LoadURI(nsIURI * aURI,
                     PRUint32 aLoadFlags,
                     PRBool aFirstParty)
 {
+    NS_PRECONDITION(aLoadInfo || (aLoadFlags & EXTRA_LOAD_FLAGS) == 0,
+                    "Unexpected flags");
+    NS_PRECONDITION((aLoadFlags & 0xf) == 0, "Should have these flags set");
+    
     // Note: we allow loads to get through here even if mFiredUnloadEvent is
     // true; that case will get handled in LoadInternal or LoadHistoryEntry.
     if (IsPrintingOrPP()) {
@@ -2889,6 +2893,8 @@ nsDocShell::LoadURI(const PRUnichar * aURI,
                     nsIInputStream * aPostStream,
                     nsIInputStream * aHeaderStream)
 {
+    NS_ASSERTION((aLoadFlags & 0xf) == 0, "Unexpected flags");
+    
     if (!IsNavigationAllowed()) {
       return NS_OK; // JS may not handle returning of an error code
     }
@@ -3356,6 +3362,8 @@ nsDocShell::Reload(PRUint32 aReloadFlags)
     nsresult rv;
     NS_ASSERTION(((aReloadFlags & 0xf) == 0),
                  "Reload command not updated to use load flags!");
+    NS_ASSERTION((aReloadFlags & EXTRA_LOAD_FLAGS) == 0,
+                 "Don't pass these flags to Reload");
 
     PRUint32 loadType = MAKE_LOAD_TYPE(LOAD_RELOAD_NORMAL, aReloadFlags);
     NS_ENSURE_TRUE(IsValidLoadType(loadType), NS_ERROR_INVALID_ARG);
