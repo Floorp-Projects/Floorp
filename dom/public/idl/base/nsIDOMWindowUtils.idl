@@ -114,8 +114,8 @@ interface nsIDOMWindowUtils : nsISupports {
    * privileges.
    *
    * @param aType event type
-   * @param aX x offset
-   * @param aY y offset
+   * @param aX x offset in CSS pixels
+   * @param aY y offset in CSS pixels
    * @param aButton button to synthesize
    * @param aClickCount number of clicks that have been performed
    * @param aModifiers modifiers pressed, using constants defined in nsIDOMNSEvent
@@ -123,8 +123,8 @@ interface nsIDOMWindowUtils : nsISupports {
    *                           during dispatch
    */
   void sendMouseEvent(in AString aType,
-                      in long aX,
-                      in long aY,
+                      in float aX,
+                      in float aY,
                       in long aButton,
                       in long aClickCount,
                       in long aModifiers,
@@ -142,8 +142,8 @@ interface nsIDOMWindowUtils : nsISupports {
    * privileges.
    *
    * @param aType event type
-   * @param aX x offset
-   * @param aY y offset
+   * @param aX x offset in CSS pixels
+   * @param aY y offset in CSS pixels
    * @param aButton button to synthesize
    * @param aScrollFlags flag bits --- see nsMouseScrollFlags in nsGUIEvent.h
    * @param aDelta the direction and amount to scroll (in lines or pixels,
@@ -151,8 +151,8 @@ interface nsIDOMWindowUtils : nsISupports {
    * @param aModifiers modifiers pressed, using constants defined in nsIDOMNSEvent
    */
   void sendMouseScrollEvent(in AString aType,
-                            in long aX,
-                            in long aY,
+                            in float aX,
+                            in float aY,
                             in long aButton,
                             in long aScrollFlags,
                             in long aDelta,
