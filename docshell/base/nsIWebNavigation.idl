@@ -107,7 +107,8 @@ interface nsIWebNavigation : nsISupports
    */
 
   /**
-   * This flags defines the range of bits that may be specified.
+   * This flags defines the range of bits that may be specified.  Flags
+   * outside this range may be used, but may not be passed to Reload().
    */
   const unsigned long LOAD_FLAGS_MASK            = 0xffff;
 
@@ -115,6 +116,11 @@ interface nsIWebNavigation : nsISupports
    * This is the default value for the load flags parameter.
    */
   const unsigned long LOAD_FLAGS_NONE            = 0x0000;
+
+  /**
+   * Flags 0x1, 0x2, 0x4, 0x8 are reserved for internal use by
+   * nsIWebNavigation implementations for now.
+   */
 
   /**
    * This flag specifies that the load should have the semantics of an HTML
@@ -179,27 +185,28 @@ interface nsIWebNavigation : nsISupports
   /**
    * This flag specifies that the URI may be submitted to a third-party
    * server for correction. This should only be applied to non-sensitive
-   * URIs entered by users.
+   * URIs entered by users.  This flag must not be passed to Reload.
    */
   const unsigned long LOAD_FLAGS_ALLOW_THIRD_PARTY_FIXUP = 0x2000;
 
   /**
    * This flag specifies that this is the first load in this object.
    * Set with care, since setting incorrectly can cause us to assume that
-   * nothing was actually loaded in this object if the load ends up being
-   * handled by an external application.
+   * nothing was actually loaded in this object if the load ends up being 
+   * handled by an external application.  This flag must not be passed to
+   * Reload.
    */
   const unsigned long LOAD_FLAGS_FIRST_LOAD = 0x4000;
 
   /**
    * This flag specifies that the load should not be subject to popup
-   * blocking checks.
+   * blocking checks.  This flag must not be passed to Reload.
    */
   const unsigned long LOAD_FLAGS_ALLOW_POPUPS = 0x8000;
 
   /**
    * This flag specifies that the URI classifier should not be checked for
-   * this load.
+   * this load.  This flag must not be passed to Reload.
    */
   const unsigned long LOAD_FLAGS_BYPASS_CLASSIFIER = 0x10000;
 
