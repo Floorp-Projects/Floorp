@@ -216,7 +216,7 @@ static JSDHashOperator
 DetachedWrappedNativeProtoMarker(JSDHashTable *table, JSDHashEntryHdr *hdr,
                                  uint32 number, void *arg)
 {
-    XPCWrappedNativeProto* proto =
+    XPCWrappedNativeProto* proto = 
         (XPCWrappedNativeProto*)((JSDHashEntryStub*)hdr)->key;
 
     proto->Mark();
@@ -309,7 +309,7 @@ void XPCJSRuntime::TraceJS(JSTracer* trc, void* data)
     // them here.
     for(XPCRootSetElem *e = self->mObjectHolderRoots; e ; e = e->GetNextRoot())
         static_cast<XPCJSObjectHolder*>(e)->TraceJS(trc);
-
+        
     if(self->GetXPConnect()->ShouldTraceRoots())
     {
         // Only trace these if we're not cycle-collecting, the cycle collector
@@ -527,7 +527,7 @@ JSBool XPCJSRuntime::GCCallback(JSContext *cx, JSGCStatus status)
             case JSGC_MARK_END:
             {
                 NS_ASSERTION(!self->mDoingFinalization, "bad state");
-
+    
                 // mThreadRunningGC indicates that GC is running
                 { // scoped lock
                     XPCAutoLock lock(self->GetMapLock());
@@ -550,8 +550,8 @@ JSBool XPCJSRuntime::GCCallback(JSContext *cx, JSGCStatus status)
                         Enumerate(WrappedJSDyingJSObjectFinder, &data);
                 }
 
-                // Do cleanup in NativeInterfaces. This part just finds
-                // member cloned function objects that are about to be
+                // Do cleanup in NativeInterfaces. This part just finds 
+                // member cloned function objects that are about to be 
                 // collected. It does not deal with collection of interfaces or
                 // sets at this point.
                 CX_AND_XPCRT_Data data = {cx, self};
@@ -716,7 +716,7 @@ JSBool XPCJSRuntime::GCCallback(JSContext *cx, JSGCStatus status)
                     if(threadLock)
                     {
                         // Do the marking...
-
+                        
                         { // scoped lock
                             nsAutoLock lock(threadLock);
 
@@ -735,7 +735,7 @@ JSBool XPCJSRuntime::GCCallback(JSContext *cx, JSGCStatus status)
                                     // possibly be valid.
                                     if(ccxp->CanGetTearOff())
                                     {
-                                        XPCWrappedNativeTearOff* to =
+                                        XPCWrappedNativeTearOff* to = 
                                             ccxp->GetTearOff();
                                         if(to)
                                             to->Mark();
@@ -744,7 +744,7 @@ JSBool XPCJSRuntime::GCCallback(JSContext *cx, JSGCStatus status)
                                 }
                             }
                         }
-
+    
                         // Do the sweeping...
                         XPCWrappedNativeScope::SweepAllWrappedNativeTearOffs();
                     }
@@ -850,7 +850,7 @@ static JSDHashOperator
 DetachedWrappedNativeProtoShutdownMarker(JSDHashTable *table, JSDHashEntryHdr *hdr,
                                          uint32 number, void *arg)
 {
-    XPCWrappedNativeProto* proto =
+    XPCWrappedNativeProto* proto = 
         (XPCWrappedNativeProto*)((JSDHashEntryStub*)hdr)->key;
 
     proto->SystemIsBeingShutDown((JSContext*)arg);
@@ -1084,9 +1084,6 @@ XPCJSRuntime::XPCJSRuntime(nsXPConnect* aXPConnect)
         JS_SetContextCallback(mJSRuntime, ContextCallback);
         JS_SetGCCallbackRT(mJSRuntime, GCCallback);
         JS_SetExtraGCRoots(mJSRuntime, TraceJS, this);
-
-        // GC will be called when gcBytes is 1600% of gcLastBytes.
-        JS_SetGCParameter(mJSRuntime, JSGC_TRIGGER_FACTOR, 1600);
     }
 
     if(!JS_DHashTableInit(&mJSHolders, JS_DHashGetStubOps(), nsnull,
