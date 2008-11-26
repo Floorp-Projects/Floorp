@@ -386,7 +386,7 @@ toolbarbutton.panel-button {
 }
 
 .tool-search {
-  list-style-image: url("chrome://browser/skin/images/navigation_magnifier.png");
+  list-style-image: url("chrome://browser/skin/images/navigation_magnifier.gif");
 }
 
 .searchengine {
