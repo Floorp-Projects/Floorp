@@ -199,15 +199,22 @@ ifeq (,$(filter-out WINNT WINCE,$(OS_ARCH)))
 ifndef GNU_CC
 
 #
-# All C++ files share a PDB file per directory. For parallel builds, this PDB
-# file is shared and locked by MSPDBSRV.EXE, starting with MSVC8 SP1. If
-# you're using MSVC 7.1 or MSVC8 without SP1, don't do parallel builds.
+# Unless we're building SIMPLE_PROGRAMS, all C++ files share a PDB file per
+# directory. For parallel builds, this PDB file is shared and locked by
+# MSPDBSRV.EXE, starting with MSVC8 SP1. If you're using MSVC 7.1 or MSVC8
+# without SP1, don't do parallel builds.
 #
 # The final PDB for libraries and programs is created by the linker and uses
 # a different name from the single PDB file created by the compiler. See
 # bug 462740.
 #
+
+ifdef SIMPLE_PROGRAMS
+COMPILE_PDBFILE = $(basename $(@F)).pdb
+else
 COMPILE_PDBFILE = generated.pdb
+endif
+
 LINK_PDBFILE = $(basename $(@F)).pdb
 ifdef MOZ_DEBUG
 CODFILE=$(basename $(@F)).cod
