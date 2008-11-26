@@ -714,14 +714,6 @@ public:
                                             aCapitalize, mContext);
     }
 
-    void Finish() {
-      if (mTextRun->GetFlags() & nsTextFrameUtils::TEXT_IS_TRANSFORMED) {
-        nsTransformedTextRun* transformedTextRun =
-          static_cast<nsTransformedTextRun*>(mTextRun);
-        transformedTextRun->FinishSettingProperties(mContext);
-      }
-    }
-
     gfxTextRun*  mTextRun;
     gfxContext*  mContext;
     PRUint32     mOffsetIntoTextRun;
@@ -784,32 +776,10 @@ TextContainsLineBreakerWhiteSpace(const void* aText, PRUint32 aLength,
 }
 
 struct FrameTextTraversal {
-  // These fields identify which frames should be recursively scanned
-  // The first normal frame to scan (or null, if no such frame should be scanned)
-  nsIFrame*    mFrameToScan;
-  // The first overflow frame to scan (or null, if no such frame should be scanned)
-  nsIFrame*    mOverflowFrameToScan;
-  // Whether to scan the siblings of mFrameToDescendInto/mOverflowFrameToDescendInto
-  PRPackedBool mScanSiblings;
-
-  // These identify the boundaries of the context required for
-  // line breaking or textrun construction
+  nsIFrame*    mFrameToDescendInto;
+  PRPackedBool mDescendIntoFrameSiblings;
   PRPackedBool mLineBreakerCanCrossFrameBoundary;
   PRPackedBool mTextRunCanCrossFrameBoundary;
-
-  nsIFrame* NextFrameToScan() {
-    nsIFrame* f;
-    if (mFrameToScan) {
-      f = mFrameToScan;
-      mFrameToScan = mScanSiblings ? f->GetNextSibling() : nsnull;
-    } else if (mOverflowFrameToScan) {
-      f = mOverflowFrameToScan;
-      mOverflowFrameToScan = mScanSiblings ? f->GetNextSibling() : nsnull;
-    } else {
-      f = nsnull;
-    }
-    return f;
-  }
 };
 
 static FrameTextTraversal
@@ -824,33 +794,28 @@ CanTextCrossFrameBoundary(nsIFrame* aFrame, nsIAtom* aType)
     // placeholders are "invisible", so a text run should be able to span
     // across one. But don't descend into the out-of-flow.
     result.mLineBreakerCanCrossFrameBoundary = PR_TRUE;
-    result.mOverflowFrameToScan = nsnull;
     if (continuesTextRun) {
       // ... Except for first-letter floats, which are really in-flow
       // from the point of view of capitalization etc, so we'd better
       // descend into them. But we actually need to break the textrun for
       // first-letter floats since things look bad if, say, we try to make a
       // ligature across the float boundary.
-      result.mFrameToScan =
+      result.mFrameToDescendInto =
         (static_cast<nsPlaceholderFrame*>(aFrame))->GetOutOfFlowFrame();
-      result.mScanSiblings = PR_FALSE;
+      result.mDescendIntoFrameSiblings = PR_FALSE;
       result.mTextRunCanCrossFrameBoundary = PR_FALSE;
     } else {
-      result.mFrameToScan = nsnull;
+      result.mFrameToDescendInto = nsnull;
       result.mTextRunCanCrossFrameBoundary = PR_TRUE;
     }
   } else {
     if (continuesTextRun) {
-      result.mFrameToScan = aFrame->GetFirstChild(nsnull);
-      result.mOverflowFrameToScan = aFrame->GetFirstChild(nsGkAtoms::overflowList);
-      NS_WARN_IF_FALSE(!result.mOverflowFrameToScan,
-                       "Scanning overflow inline frames is something we should avoid");
-      result.mScanSiblings = PR_TRUE;
+      result.mFrameToDescendInto = aFrame->GetFirstChild(nsnull);
+      result.mDescendIntoFrameSiblings = PR_TRUE;
       result.mTextRunCanCrossFrameBoundary = PR_TRUE;
       result.mLineBreakerCanCrossFrameBoundary = PR_TRUE;
     } else {
-      result.mFrameToScan = nsnull;
-      result.mOverflowFrameToScan = nsnull;
+      result.mFrameToDescendInto = nsnull;
       result.mTextRunCanCrossFrameBoundary = PR_FALSE;
       result.mLineBreakerCanCrossFrameBoundary = PR_FALSE;
     }
@@ -906,11 +871,13 @@ BuildTextRunsScanner::FindBoundaries(nsIFrame* aFrame, FindBoundaryState* aState
       return FB_FOUND_VALID_TEXTRUN_BOUNDARY;
   }
   
-  for (nsIFrame* f = traversal.NextFrameToScan(); f;
-       f = traversal.NextFrameToScan()) {
+  for (nsIFrame* f = traversal.mFrameToDescendInto; f;
+       f = f->GetNextSibling()) {
     FindBoundaryResult result = FindBoundaries(f, aState);
     if (result != FB_CONTINUE)
       return result;
+    if (!traversal.mDescendIntoFrameSiblings)
+      break;
   }
 
   if (!traversal.mTextRunCanCrossFrameBoundary) {
@@ -1162,7 +1129,6 @@ void BuildTextRunsScanner::FlushFrames(PRBool aFlushLineBreaks, PRBool aSuppress
         // TODO cause frames associated with the textrun to be reflowed, if they
         // aren't being reflowed already!
       }
-      mBreakSinks[i]->Finish();
     }
     mBreakSinks.Clear();
   }
@@ -1319,9 +1285,11 @@ void BuildTextRunsScanner::ScanFrame(nsIFrame* aFrame)
     FlushFrames(PR_FALSE, PR_FALSE);
   }
 
-  for (nsIFrame* f = traversal.NextFrameToScan(); f;
-       f = traversal.NextFrameToScan()) {
+  for (nsIFrame* f = traversal.mFrameToDescendInto; f;
+       f = f->GetNextSibling()) {
     ScanFrame(f);
+    if (!traversal.mDescendIntoFrameSiblings)
+      break;
   }
 
   if (!traversal.mLineBreakerCanCrossFrameBoundary) {
@@ -4801,7 +4769,7 @@ nsTextFrame::GetPointFromOffset(PRInt32 inOffset,
     mTextRun->GetAdvanceWidth(properties.GetStart().GetSkippedOffset(),
                               GetSkippedDistance(properties.GetStart(), iter),
                               &properties);
-  nscoord width = NSToCoordCeilClamped(advanceWidth);
+  nscoord width = NSToCoordCeil(advanceWidth);
 
   if (mTextRun->IsRightToLeft()) {
     outPoint->x = mRect.width - width;
@@ -5324,8 +5292,8 @@ nsTextFrame::AddInlineMinWidthForFlow(nsIRenderingContext *aRenderingContext,
 
     if (i > wordStart) {
       nscoord width =
-        NSToCoordCeilClamped(mTextRun->GetAdvanceWidth(wordStart, i - wordStart, &provider));
-      aData->currentLine = NSCoordSaturatingAdd(aData->currentLine, width);
+        NSToCoordCeil(mTextRun->GetAdvanceWidth(wordStart, i - wordStart, &provider));
+      aData->currentLine += width;
       aData->atStartOfLine = PR_FALSE;
 
       if (collapseWhitespace) {
@@ -5337,7 +5305,7 @@ nsTextFrame::AddInlineMinWidthForFlow(nsIRenderingContext *aRenderingContext,
         } else {
           // Some non-whitespace so the old trailingWhitespace is no longer trailing
           aData->trailingWhitespace =
-            NSToCoordCeilClamped(mTextRun->GetAdvanceWidth(trimStart, i - trimStart, &provider));
+            NSToCoordCeil(mTextRun->GetAdvanceWidth(trimStart, i - trimStart, &provider));
         }
       } else {
         aData->trailingWhitespace = 0;
@@ -5446,7 +5414,7 @@ nsTextFrame::AddInlinePrefWidthForFlow(nsIRenderingContext *aRenderingContext,
 
     if (i > lineStart) {
       nscoord width =
-        NSToCoordCeilClamped(mTextRun->GetAdvanceWidth(lineStart, i - lineStart, &provider));
+        NSToCoordCeil(mTextRun->GetAdvanceWidth(lineStart, i - lineStart, &provider));
       aData->currentLine = NSCoordSaturatingAdd(aData->currentLine, width);
 
       if (collapseWhitespace) {
@@ -5458,7 +5426,7 @@ nsTextFrame::AddInlinePrefWidthForFlow(nsIRenderingContext *aRenderingContext,
         } else {
           // Some non-whitespace so the old trailingWhitespace is no longer trailing
           aData->trailingWhitespace =
-            NSToCoordCeilClamped(mTextRun->GetAdvanceWidth(trimStart, i - trimStart, &provider));
+            NSToCoordCeil(mTextRun->GetAdvanceWidth(trimStart, i - trimStart, &provider));
         }
       } else {
         aData->trailingWhitespace = 0;
