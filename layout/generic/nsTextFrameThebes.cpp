@@ -2995,13 +2995,6 @@ nsTextPaintStyle::InitCommonColors()
   mInitCommonColors = PR_TRUE;
 }
 
-static nsIFrame* GetNonGeneratedAncestor(nsIFrame* f) {
-  while (f->GetStateBits() & NS_FRAME_GENERATED_CONTENT) {
-    f = nsLayoutUtils::GetParentOrPlaceholderFor(f->PresContext()->FrameManager(), f);
-  }
-  return f;
-}
-
 static nsIContent*
 FindElementAncestor(nsINode* aNode)
 {
@@ -3029,7 +3022,7 @@ nsTextPaintStyle::InitSelectionColors()
 
   mInitSelectionColors = PR_TRUE;
 
-  nsIFrame* nonGeneratedAncestor = GetNonGeneratedAncestor(mFrame);
+  nsIFrame* nonGeneratedAncestor = nsLayoutUtils::GetNonGeneratedAncestor(mFrame);
   nsIContent* selectionContent = FindElementAncestor(nonGeneratedAncestor->GetContent());
 
   if (selectionContent &&
@@ -4419,7 +4412,7 @@ nsTextFrame::PaintText(nsIRenderingContext* aRenderingContext, nsPoint aPt,
   }
 
   // Fork off to the (slower) paint-with-selection path if necessary.
-  if (GetNonGeneratedAncestor(this)->GetStateBits() & NS_FRAME_SELECTED_CONTENT) {
+  if (nsLayoutUtils::GetNonGeneratedAncestor(this)->GetStateBits() & NS_FRAME_SELECTED_CONTENT) {
     if (PaintTextWithSelection(ctx, framePt, textBaselinePt,
                                dirtyRect, provider, textPaintStyle))
       return;
@@ -5279,8 +5272,6 @@ nsTextFrame::AddInlineMinWidthForFlow(nsIRenderingContext *aRenderingContext,
   gfxFloat tabWidth = -1;
   PRUint32 start =
     FindStartAfterSkippingWhitespace(&provider, aData, textStyle, &iter, flowEndInTextRun);
-  if (start >= flowEndInTextRun)
-    return;
 
   // XXX Should we consider hyphenation here?
   for (PRUint32 i = start, wordStart = start; i <= flowEndInTextRun; ++i) {
@@ -5342,11 +5333,13 @@ nsTextFrame::AddInlineMinWidthForFlow(nsIRenderingContext *aRenderingContext,
     }
   }
 
-  // Check if we have collapsible whitespace at the end
-  aData->skipWhitespace =
-    IsTrimmableSpace(provider.GetFragment(),
-                     iter.ConvertSkippedToOriginal(flowEndInTextRun - 1),
-                     textStyle);
+  if (start < flowEndInTextRun) {
+    // Check if we have collapsible whitespace at the end
+    aData->skipWhitespace =
+      IsTrimmableSpace(provider.GetFragment(),
+                       iter.ConvertSkippedToOriginal(flowEndInTextRun - 1),
+                       textStyle);
+  }
 }
 
 // XXX Need to do something here to avoid incremental reflow bugs due to
@@ -5398,8 +5391,6 @@ nsTextFrame::AddInlinePrefWidthForFlow(nsIRenderingContext *aRenderingContext,
   gfxFloat tabWidth = -1;
   PRUint32 start =
     FindStartAfterSkippingWhitespace(&provider, aData, textStyle, &iter, flowEndInTextRun);
-  if (start >= flowEndInTextRun)
-    return;
 
   // XXX Should we consider hyphenation here?
   // If newlines and tabs aren't preformatted, nothing to do inside
@@ -5458,10 +5449,12 @@ nsTextFrame::AddInlinePrefWidthForFlow(nsIRenderingContext *aRenderingContext,
   }
 
   // Check if we have collapsible whitespace at the end
-  aData->skipWhitespace =
-    IsTrimmableSpace(provider.GetFragment(),
-                     iter.ConvertSkippedToOriginal(flowEndInTextRun - 1),
-                     textStyle);
+  if (start < flowEndInTextRun) {
+    aData->skipWhitespace =
+      IsTrimmableSpace(provider.GetFragment(),
+                       iter.ConvertSkippedToOriginal(flowEndInTextRun - 1),
+                       textStyle);
+  }
 }
 
 // XXX Need to do something here to avoid incremental reflow bugs due to
