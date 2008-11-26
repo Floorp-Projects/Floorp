@@ -46,8 +46,8 @@ NotificationCallbacks.prototype = {
     do_check_eq(oldChan.URI, this._origURI);
     do_check_eq(oldChan.originalURI.spec, this._origURI.spec);
     do_check_eq(oldChan.originalURI, this._origURI);
-    do_check_eq(newChan.originalURI.spec, this._origURI.spec);
-    do_check_eq(newChan.originalURI, this._origURI);
+    do_check_eq(newChan.originalURI.spec, this._newURI.spec);
+    do_check_eq(newChan.originalURI, newChan.URI);
     do_check_eq(newChan.URI.spec, this._newURI.spec);
     throw Cr.NS_ERROR_ABORT;
   }
