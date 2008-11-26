@@ -152,8 +152,6 @@ gfxOS2Platform::ResolveFontName(const nsAString& aFontName,
 #endif
     return sFontconfigUtils->ResolveFontName(aFontName, aCallback, aClosure,
                                              aAborted);
-    //aAborted = !(*aCallback)(aFontName, aClosure);
-    //return NS_OK;
 }
 
 nsresult
