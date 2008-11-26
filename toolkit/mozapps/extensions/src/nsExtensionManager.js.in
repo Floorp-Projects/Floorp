@@ -146,7 +146,7 @@ const INSTALLERROR_SUCCESS               = 0;
 const INSTALLERROR_INVALID_VERSION       = -1;
 const INSTALLERROR_INVALID_GUID          = -2;
 const INSTALLERROR_INCOMPATIBLE_VERSION  = -3;
-const INSTALLERROR_PHONED_HOME           = -4;
+const INSTALLERROR_PHONING_HOME          = -4;
 const INSTALLERROR_INCOMPATIBLE_PLATFORM = -5;
 const INSTALLERROR_BLOCKLISTED           = -6;
 const INSTALLERROR_INSECURE_UPDATE       = -7;
@@ -4302,6 +4302,9 @@ ExtensionManager.prototype = {
    *          An updated Install Manifest from the Version Update check.
    *          Can be null when invoked from callers other than the Version
    *          Update check.
+   * @returns The install result code. If this is INSTALLERROR_PHONING_HOME
+   *          then a remote update check has been started to attempt to resolve
+   *          compatibility problems.
    */
   installItemFromFileInternal: function EM_installItemFromFileInternal(aXPIFile,
                                                                        aInstallLocationKey,
@@ -4550,25 +4553,29 @@ ExtensionManager.prototype = {
 
           // Try and install again, but use the updated compatibility DB.
           // This will send out an apropriate onInstallEnded notification for us.
-          em.installItemFromFileInternal(this._xpi, aInstallLocationKey,
-                                         this._installManifest);
+          var status = em.installItemFromFileInternal(this._xpi,
+                                                      aInstallLocationKey,
+                                                      this._installManifest);
 
-          // Add the updated compatibility info to the datasource if done
-          if (StartupCache.entries[aInstallLocationKey][addon.id].op == OP_NONE) {
-            em.datasource.setTargetApplicationInfo(addon.id,
-                                                   addon.targetAppID,
-                                                   addon.minAppVersion,
-                                                   addon.maxAppVersion,
-                                                   null);
-          }
-          else { // needs a restart
-            // Add updatedMinVersion and updatedMaxVersion so it can be used
-            // to update the datasource during the installation or upgrade.
-            em.datasource.setUpdatedTargetAppInfo(addon.id,
-                                                  addon.targetAppID,
-                                                  addon.minAppVersion,
-                                                  addon.maxAppVersion,
-                                                  null);
+          // The install may still have failed at this point due to the blocklist
+          if (status == INSTALLERROR_SUCCESS) {
+            // Add the updated compatibility info to the datasource if done
+            if (StartupCache.entries[aInstallLocationKey][addon.id].op == OP_NONE) {
+              em.datasource.setTargetApplicationInfo(addon.id,
+                                                     addon.targetAppID,
+                                                     addon.minAppVersion,
+                                                     addon.maxAppVersion,
+                                                     null);
+            }
+            else { // needs a restart
+              // Add updatedMinVersion and updatedMaxVersion so it can be used
+              // to update the datasource during the installation or upgrade.
+              em.datasource.setUpdatedTargetAppInfo(addon.id,
+                                                    addon.targetAppID,
+                                                    addon.minAppVersion,
+                                                    addon.maxAppVersion,
+                                                    null);
+            }
           }
         }
         else {
@@ -4626,7 +4633,7 @@ ExtensionManager.prototype = {
             "Installation will not proceed.");
         for (var i = 0; i < this._installListeners.length; ++i)
           this._installListeners[i].onInstallEnded(addon, INSTALLERROR_INVALID_MANIFEST);
-        return;
+        return INSTALLERROR_INVALID_MANIFEST;
       }
     }
     else
@@ -4656,12 +4663,12 @@ ExtensionManager.prototype = {
       if (shouldPhoneHomeIfNecessary && installData.currentApp) {
         var installLocation = getInstallLocation(installData.id, aInstallLocationKey);
         if (!installLocation)
-          return;
+          return INSTALLERROR_INCOMPATIBLE_VERSION;
         var stagedFile = installLocation.stageFile(aXPIFile, installData.id);
         (new IncompatibleObserver(this)).checkForUpdates(addon, installManifest,
                                                          stagedFile);
         // Return early to prevent deletion of the install manifest file.
-        return;
+        return INSTALLERROR_PHONING_HOME;
       }
       else {
         // XXXben Look up XULRunnerSettingsThingy to see if there is a registered
@@ -4676,6 +4683,7 @@ ExtensionManager.prototype = {
     case INSTALLERROR_SOFTBLOCKED:
       if (!showBlocklistMessage(installData, true))
         break;
+      installData.error = INSTALLERROR_SUCCESS;
       // Fall through to continue the install
     case INSTALLERROR_SUCCESS:
       // Installation of multiple extensions / themes contained within a single xpi.
@@ -4694,7 +4702,7 @@ ExtensionManager.prototype = {
         // but that's an edge case I don't care about.
         for (var i = 0; i < this._installListeners.length; ++i)
           this._installListeners[i].onInstallEnded(addon, INSTALLERROR_RESTRICTED);
-        return;
+        return INSTALLERROR_RESTRICTED;
       }
 
       // Stage a copy of the XPI/JAR file for our own evil purposes...
@@ -4791,6 +4799,8 @@ ExtensionManager.prototype = {
     // The install of this item is complete, notify observers
     for (var i = 0; i < this._installListeners.length; ++i)
       this._installListeners[i].onInstallEnded(addon, installData.error);
+
+    return installData.error;
   },
 
   /**
@@ -6312,11 +6322,13 @@ ExtensionItemUpdater.prototype = {
    *          The already installed nsIUpdateItem that the update is for
    * @param   aRemoteItem
    *          The nsIUpdateItem we are trying to update to
+   * @param   aUpdateCheckType
+   *          The type of update check being performed
    *
    * @returns true if the item is compatible and is not blocklisted.
    *          false if the item is not compatible or is blocklisted.
    */
-  _isValidUpdate: function _isValidUpdate(aLocalItem, aRemoteItem) {
+  _isValidUpdate: function _isValidUpdate(aLocalItem, aRemoteItem, aUpdateCheckType) {
     var appExtensionsVersion = (aRemoteItem.targetAppID != TOOLKIT_ID) ?
                                this._appVersion :
                                this._platformVersion;
@@ -6331,14 +6343,17 @@ ExtensionItemUpdater.prototype = {
     if (!max || gVersionChecker.compare(appExtensionsVersion, max) > 0)
       return false;
 
-    if (!gBlocklist)
-      gBlocklist = Cc["@mozilla.org/extensions/blocklist;1"].
-                   getService(Ci.nsIBlocklistService);
-    // Denies updates that are hard blocked, soft blocked items will be warned
-    // about during the install.
-    if (gBlocklist.isAddonBlocklisted(aLocalItem.id, aRemoteItem.version,
-                                      this._appVersion, this._platformVersion))
-      return false;
+    // Ignore the blocklist for compatibility only checks.
+    if (aUpdateCheckType != Ci.nsIExtensionManager.UPDATE_CHECK_COMPATIBILITY) {
+      if (!gBlocklist)
+        gBlocklist = Cc["@mozilla.org/extensions/blocklist;1"].
+                     getService(Ci.nsIBlocklistService);
+      // Denies updates that are hard blocked, soft blocked items will be warned
+      // about during the install.
+      if (gBlocklist.isAddonBlocklisted(aLocalItem.id, aRemoteItem.version,
+                                        this._appVersion, this._platformVersion))
+        return false;
+    }
 
     return true;
   },
@@ -6920,7 +6935,7 @@ RDFItemUpdater.prototype = {
                                  aLocalItem.type,
                                  appID);
 
-      if (this._updater._isValidUpdate(aLocalItem, updatedItem)) {
+      if (this._updater._isValidUpdate(aLocalItem, updatedItem, aUpdateCheckType)) {
         if (aUpdateCheckType == Ci.nsIExtensionManager.UPDATE_CHECK_NEWVERSION) {
           var infourl = this._getPropertyFromResource(aDataSource, targetApp,
                                                       "updateInfoURL");
