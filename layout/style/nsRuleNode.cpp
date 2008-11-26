@@ -195,11 +195,11 @@ static nscoord CalcLengthWith(const nsCSSValue& aValue,
   }
   switch (unit) {
     case eCSSUnit_EM: {
-      return NSToCoordRound(aValue.GetFloatValue() * float(aFontSize));
+      return NSToCoordRoundWithClamp(aValue.GetFloatValue() * float(aFontSize));
       // XXX scale against font metrics height instead?
     }
     case eCSSUnit_EN: {
-      return NSToCoordRound((aValue.GetFloatValue() * float(aFontSize)) / 2.0f);
+      return NSToCoordRoundWithClamp((aValue.GetFloatValue() * float(aFontSize)) / 2.0f);
     }
     case eCSSUnit_XHeight: {
       nsFont font = aStyleFont->mFont;
@@ -207,12 +207,12 @@ static nscoord CalcLengthWith(const nsCSSValue& aValue,
       nsCOMPtr<nsIFontMetrics> fm = aPresContext->GetMetricsFor(font);
       nscoord xHeight;
       fm->GetXHeight(xHeight);
-      return NSToCoordRound(aValue.GetFloatValue() * float(xHeight));
+      return NSToCoordRoundWithClamp(aValue.GetFloatValue() * float(xHeight));
     }
     case eCSSUnit_CapHeight: {
       NS_NOTYETIMPLEMENTED("cap height unit");
       nscoord capHeight = ((aFontSize / 3) * 2); // XXX HACK!
-      return NSToCoordRound(aValue.GetFloatValue() * float(capHeight));
+      return NSToCoordRoundWithClamp(aValue.GetFloatValue() * float(capHeight));
     }
     case eCSSUnit_Char: {
       nsFont font = aStyleFont->mFont;
@@ -222,7 +222,7 @@ static nscoord CalcLengthWith(const nsCSSValue& aValue,
       gfxFloat zeroWidth = (tfm->GetThebesFontGroup()->GetFontAt(0)
                             ->GetMetrics().zeroOrAveCharWidth);
 
-      return NSToCoordRound(aValue.GetFloatValue() *
+      return NSToCoordRoundWithClamp(aValue.GetFloatValue() *
                             NS_ceil(aPresContext->AppUnitsPerDevPixel() *
                                     zeroWidth));
     }
