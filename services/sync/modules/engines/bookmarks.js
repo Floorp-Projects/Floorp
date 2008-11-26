@@ -914,8 +914,6 @@ BookmarksStore.prototype = {
     if (!this._lookup)
       this.wrap();
 
-    yield record.decrypt(self.cb, ID.get('WeaveCryptoID').password);
-
     this._log.trace("RECORD: " + record.id + " -> " + uneval(record.cleartext));
 
     if (record.cleartext == "")
@@ -1071,16 +1069,17 @@ BookmarksStore.prototype = {
     if (command.GUID == "menu" ||
         command.GUID == "toolbar" ||
         command.GUID == "unfiled") {
-      this._log.warn("Attempted to edit root node (" + command.GUID +
-                     ").  Skipping command.");
+      this._log.debug("Attempted to edit root node (" + command.GUID +
+                      ").  Skipping command.");
       return;
     }
 
     var itemId = this._bms.getItemIdForGUID(command.GUID);
     if (itemId < 0) {
-      this._log.warn("Item for GUID " + command.GUID + " not found.  Skipping.");
+      this._log.debug("Item for GUID " + command.GUID + " not found.  Skipping.");
       return;
     }
+    this._log.trace("Editing item " + itemId);
 
     for (let key in command.data) {
       switch (key) {
@@ -1103,15 +1102,29 @@ BookmarksStore.prototype = {
         this._bms.changeBookmarkURI(itemId, Utils.makeURI(command.data.URI));
         break;
       case "index":
-        this._bms.moveItem(itemId, this._bms.getFolderIdForItem(itemId),
-                           command.data.index);
+        let curIdx = this._bms.getItemIndex(itemId);
+        if (curIdx != command.data.index) {
+          // ignore index if we're going to move the item to another folder altogether
+          if (command.data.parentGUID &&
+              (this._bms.getFolderIdForItem(itemId) !=
+               this._getItemIdForGUID(command.data.parentGUID)))
+            break;
+          this._log.trace("Moving item (changing index)");
+          this._bms.moveItem(itemId, this._bms.getFolderIdForItem(itemId),
+                             command.data.index);
+        }
         break;
       case "parentGUID": {
-        let index = -1;
-        if (command.data.index && command.data.index >= 0)
-          index = command.data.index;
-        this._bms.moveItem(
-          itemId, this._getItemIdForGUID(command.data.parentGUID), index);
+        if (command.data.parentGUID &&
+            (this._bms.getFolderIdForItem(itemId) !=
+             this._getItemIdForGUID(command.data.parentGUID))) {
+          this._log.trace("Moving item (changing folder)");
+          let index = -1;
+          if (command.data.index && command.data.index >= 0)
+            index = command.data.index;
+          this._bms.moveItem(itemId,
+                             this._getItemIdForGUID(command.data.parentGUID), index);
+        }
       } break;
       case "tags": {
         // filter out null/undefined/empty tags
