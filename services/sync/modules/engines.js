@@ -349,6 +349,38 @@ NewEngine.prototype = {
     return 0;
   },
 
+  _recordLike: function NewEngine__recordLike(a, b) {
+    // Check that all other properties are the same
+    if (!Utils.deepEquals(a.parentid, b.parentid))
+      return false;
+    for (let key in a.cleartext) {
+      if (key == "parentGUID")
+        continue; // FIXME: bookmarks-specific
+      if (!Utils.deepEquals(a.cleartext[key], b.cleartext[key]))
+        return false;
+    }
+    for (key in b.cleartext) {
+      if (key == "parentGUID")
+        continue; // FIXME: bookmarks-specific
+      if (!Utils.deepEquals(a.cleartext[key], b.cleartext[key]))
+        return false;
+    }
+    return true;
+  },
+
+  _changeRecordRefs: function NewEngine__changeRecordRefs(oldID, newID) {
+    let self = yield;
+    for each (let rec in this.outgoing) {
+      if (rec.parentid == oldID)
+        rec.parentid = newID;
+    }
+  },
+
+  _changeRecordID: function NewEngine__changeRecordID(oldID, newID) {
+    let self = yield;
+    throw "_changeRecordID must be overridden in a subclass";
+  },
+
   _sync: function NewEngine__sync() {
     let self = yield;
 
@@ -419,9 +451,8 @@ NewEngine.prototype = {
     // STEP 3: Reconcile
     this._log.debug("Reconciling server/client changes");
 
-    // remove from incoming queue any items also in outgoing queue
-    // FIXME: should attempt to match same items with different IDs here (same
-    // item created on two different machines before syncing either one)
+    // STEP 3.1: Check for the same item (same ID) on both incoming & outgoing
+    //           queues.  Client one wins in this case.
     let conflicts = [];
     for (let i = 0; i < this.incoming.length; i++) {
       for each (let out in this.outgoing) {
@@ -434,22 +465,44 @@ NewEngine.prototype = {
     }
     this._incoming = this.incoming.filter(function(i) i); // removes any holes
     if (conflicts.length)
-      this._log.warn("Conflicts found.  Conflicting server changes discarded");
+      this._log.debug("Conflicts found.  Conflicting server changes discarded");
+
+    // STEP 3.2: Check if any incoming & outgoing items are really the same but
+    //           with different IDs
+    for (let i = 0; i < this.incoming.length; i++) {
+      for (let o = 0; o < this.outgoing.length; o++) {
+        if (this._recordLike(this.incoming[i], this.outgoing[o])) {
+          // change refs in outgoing queue
+          yield this._changeRecordRefs.async(this, self.cb,
+                                             this.outgoing[o].id,
+                                             this.incoming[i].id);
+          // change actual id of item
+          yield this._changeRecordID.async(this, self.cb,
+                                           this.outgoing[o].id,
+                                           this.incoming[i].id);
+          delete this.incoming[i];
+          delete this.outgoing[o];
+          break;
+        }
+      }
+      this._outgoing = this.outgoing.filter(function(i) i); // removes any holes
+    }
+    this._incoming = this.incoming.filter(function(i) i); // removes any holes
 
     // STEP 4: Apply incoming items
-    this._log.debug("Applying server changes");
-
-    let inc;
-    while ((inc = this.incoming.shift())) {
-      yield this._store.applyIncoming(self.cb, inc);
-      if (inc.modified > this.lastSync)
-        this.lastSync = inc.modified;
+    if (this.incoming.length) {
+      this._log.debug("Applying server changes");
+      let inc;
+      while ((inc = this.incoming.shift())) {
+        yield this._store.applyIncoming(self.cb, inc);
+        if (inc.modified > this.lastSync)
+          this.lastSync = inc.modified;
+      }
     }
 
     // STEP 5: Upload outgoing items
-    this._log.debug("Uploading client changes");
-
     if (this.outgoing.length) {
+      this._log.debug("Uploading client changes");
       let up = new Collection(this.engineURL);
       let out;
       while ((out = this.outgoing.pop())) {
@@ -462,7 +515,6 @@ NewEngine.prototype = {
 
     // STEP 6: Save the current snapshot so as to calculate changes at next sync
     this._log.debug("Saving snapshot for next sync");
-
     this._snapshot.data = this._store.wrap();
     this._snapshot.save();
 
