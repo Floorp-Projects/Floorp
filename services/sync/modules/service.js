@@ -274,7 +274,7 @@ WeaveSvc.prototype = {
       } else {
         this._log.info("Running scheduled sync");
         this._notify("sync", "",
-                     this._catchAll(this._localLock(this._syncAsNeeded))).async(this);
+                     this._catchAll(this._localLock(this._sync))).async(this);
       }
     }
   },
