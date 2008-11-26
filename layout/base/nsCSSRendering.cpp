@@ -1518,8 +1518,7 @@ nsCSSRendering::PaintBackgroundWithSC(nsPresContext* aPresContext,
   }
 
   nsRect destArea(imageTopLeft + aBorderArea.TopLeft(), imageSize);
-  nsRect fillArea;
-  fillArea.IntersectRect(destArea, bgClipArea);
+  nsRect fillArea = destArea;
   if (repeat & NS_STYLE_BG_REPEAT_X) {
     fillArea.x = bgClipArea.x;
     fillArea.width = bgClipArea.width;
@@ -1528,6 +1527,7 @@ nsCSSRendering::PaintBackgroundWithSC(nsPresContext* aPresContext,
     fillArea.y = bgClipArea.y;
     fillArea.height = bgClipArea.height;
   }
+  fillArea.IntersectRect(fillArea, bgClipArea);
 
   nsLayoutUtils::DrawImage(&aRenderingContext, image,
       destArea, fillArea, anchor + aBorderArea.TopLeft(), dirtyRect);
