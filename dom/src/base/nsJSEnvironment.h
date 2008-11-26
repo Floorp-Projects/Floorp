@@ -213,19 +213,18 @@ protected:
 
   // given an nsISupports object (presumably an event target or some other
   // DOM object), get (or create) the JSObject wrapping it.
-  nsresult JSObjectFromInterface(nsISupports *aSup, void *aScript, 
+  nsresult JSObjectFromInterface(nsISupports *aSup, void *aScript,
                                  JSObject **aRet);
 
 private:
   void Unlink();
 
   JSContext *mContext;
-  PRUint32 mNumEvaluations;
 
 protected:
   struct TerminationFuncHolder;
   friend struct TerminationFuncHolder;
-  
+
   struct TerminationFuncClosure
   {
     TerminationFuncClosure(nsScriptTerminationFunc aFunc,
@@ -240,7 +239,7 @@ protected:
     {
       delete mNext;
     }
-    
+
     nsScriptTerminationFunc mTerminationFunc;
     nsCOMPtr<nsISupports> mTerminationFuncArg;
     TerminationFuncClosure* mNext;
@@ -273,7 +272,7 @@ protected:
     nsJSContext* mContext;
     TerminationFuncClosure* mTerminations;
   };
-  
+
   TerminationFuncClosure* mTerminations;
 
 private:
@@ -319,7 +318,7 @@ public:
 
   virtual nsresult DropScriptObject(void *object);
   virtual nsresult HoldScriptObject(void *object);
-  
+
   static void Startup();
   static void Shutdown();
   // Setup all the statics etc - safe to call multiple times after Startup()
