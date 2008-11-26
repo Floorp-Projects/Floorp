@@ -379,21 +379,31 @@ cairo_scaled_font_t *gfxOS2Font::CairoScaledFont()
 #ifdef DEBUG_thebes_2
     printf("gfxOS2Font[%#x]::CairoScaledFont()\n", (unsigned)this);
 #endif
-    if (!mScaledFont) {
+    if (mScaledFont) {
+        return mScaledFont;
+    }
 #ifdef DEBUG_thebes_2
-        printf("gfxOS2Font[%#x]::CairoScaledFont(): create it for %s, %f\n",
-               (unsigned)this, NS_LossyConvertUTF16toASCII(GetName()).get(), GetStyle()->size);
+    printf("gfxOS2Font[%#x]::CairoScaledFont(): create it for %s, %f\n",
+           (unsigned)this, NS_LossyConvertUTF16toASCII(GetName()).get(), GetStyle()->size);
 #endif
 
-        double size = mAdjustedSize ? mAdjustedSize : GetStyle()->size;
-        cairo_matrix_t fontMatrix;
+    double size = mAdjustedSize ? mAdjustedSize : GetStyle()->size;
+    cairo_matrix_t identityMatrix;
+    cairo_matrix_init_identity(&identityMatrix);
+    cairo_matrix_t fontMatrix;
+    // synthetic oblique by skewing via the font matrix
+    if (!mFontEntry->mItalic &&
+        (mStyle.style & (FONT_STYLE_ITALIC | FONT_STYLE_OBLIQUE)))
+    {
+        const double kSkewFactor = 0.2126; // 12 deg skew as used in e.g. ftview
+        cairo_matrix_init(&fontMatrix, size, 0, -kSkewFactor*size, size, 0, 0);
+    } else {
         cairo_matrix_init_scale(&fontMatrix, size, size);
-        cairo_font_options_t *fontOptions = cairo_font_options_create();
-        mScaledFont = cairo_scaled_font_create(CairoFontFace(), &fontMatrix,
-                                               reinterpret_cast<cairo_matrix_t*>(&mCTM),
-                                               fontOptions);
-        cairo_font_options_destroy(fontOptions);
     }
+    cairo_font_options_t *fontOptions = cairo_font_options_create();
+    mScaledFont = cairo_scaled_font_create(CairoFontFace(), &fontMatrix,
+                                           &identityMatrix, fontOptions);
+    cairo_font_options_destroy(fontOptions);
 
     NS_ASSERTION(cairo_scaled_font_status(mScaledFont) == CAIRO_STATUS_SUCCESS,
                  "Failed to make scaled font");
