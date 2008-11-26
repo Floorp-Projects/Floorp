@@ -107,7 +107,7 @@
 toolbarbutton.bookmark-item {
   font-weight: bold;
   margin: 0 1px;
-  padding: 0 0 1px 0;
+  padding: 0;
   -moz-padding-start: 7px;
   min-width: 0;
   max-width: 13em;
@@ -161,7 +161,7 @@ toolbarbutton.bookmark-item[open="true"] {
 
 toolbarbutton.bookmark-item:not([container]):hover > .toolbarbutton-text,
 toolbarbutton.bookmark-item[container]:not([open]):hover > .toolbarbutton-menu-dropmarker {
-  background: url("chrome://global/skin/toolbar/toolbarbutton-customhover-right.png") no-repeat right center;
+  background: url("chrome://global/skin/toolbar/toolbarbutton-customhover-right.png") no-repeat right top;
 }
 
 toolbarbutton.bookmark-item[container]:hover > .toolbarbutton-text,
@@ -173,14 +173,13 @@ toolbarbutton.bookmark-item[container]:not([open]):hover > .toolbarbutton-menu-d
 
 #home-button.bookmark-item:hover[chromedir="rtl"] > .toolbarbutton-icon,
 toolbarbutton.bookmark-item[chromedir="rtl"]:hover > .toolbarbutton-text {
-  background: url("chrome://global/skin/toolbar/toolbarbutton-customhover-right.png") no-repeat right center;
+  background: url("chrome://global/skin/toolbar/toolbarbutton-customhover-right.png") no-repeat right top;
 }
 
 toolbarbutton.bookmark-item:not([container]):hover:active > .toolbarbutton-text,
 toolbarbutton.bookmark-item[open] > .toolbarbutton-menu-dropmarker,
-toolbarbutton.bookmark-item[container]:hover:active > .toolbarbutton-menu-dropmarker 
-{
-  background: url("chrome://browser/skin/bookmark-open-right.png") no-repeat right center;
+toolbarbutton.bookmark-item[container]:hover:active > .toolbarbutton-menu-dropmarker {
+  background: url("chrome://browser/skin/bookmark-open-right.png") no-repeat right top;
 }
 
 toolbarbutton.bookmark-item[container]:hover:active > .toolbarbutton-text,
@@ -195,7 +194,7 @@ toolbarbutton.bookmark-item[container][open="true"] > .toolbarbutton-menu-dropma
 toolbarbutton.bookmark-item[chromedir="rtl"][container]:hover:active > .toolbarbutton-text,
 toolbarbutton.bookmark-item[chromedir="rtl"][container][open] > .toolbarbutton-text,
 #home-button.bookmark-item[chromedir="rtl"]:hover:active > .toolbarbutton-icon {
-  background: url("chrome://browser/skin/bookmark-open-right.png") no-repeat right center !important;
+  background: url("chrome://browser/skin/bookmark-open-right.png") no-repeat right top !important;
 }
 
 toolbarbutton.bookmark-item-microsummarized {
@@ -205,11 +204,6 @@ toolbarbutton.bookmark-item-microsummarized {
 .bookmark-item > .toolbarbutton-icon {
   margin: 0px;
   display: none !important;
-}
-
-toolbarbutton.bookmark-item .toolbarbutton-text {
-  font-size: 100% !important; 
-  margin: 0px !important;
 }
 
 /* Prevent [mode="icons"] from hiding the label */
