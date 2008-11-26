@@ -846,7 +846,7 @@ GetPrincipalURIAndHost(nsIPrincipal* aPrincipal, nsIURI** aURI, nsString& aHost)
     NS_ENSURE_SUCCESS(rv, rv);
   }
 
-  if (*aURI) {
+  if (!*aURI) {
     return NS_OK;
   }
 
