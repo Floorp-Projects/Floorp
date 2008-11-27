@@ -63,6 +63,8 @@ _TEST_FILES = \
   regExpStatics_worker.js \
   test_simpleThread.html \
   simpleThread_worker.js \
+  test_terminate.html \
+  terminate_worker.js \
   test_threadErrors.html \
   threadErrors_worker1.js \
   threadErrors_worker2.js \
