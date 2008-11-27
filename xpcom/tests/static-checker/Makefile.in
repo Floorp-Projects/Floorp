@@ -130,7 +130,7 @@ check:: \
   $(STATIC_WARNING_TESTCASES:.cpp=.s-warn) \
   $(STATIC_PASS_TESTCASES:.cpp=.s-pass)
 
-%.s-fail: %.cpp $(GLOBAL_DEPS) $(DEHYDRA_SCRIPTS)
+%.s-fail: %.cpp Makefile Makefile.in $(DEHYDRA_SCRIPTS)
 	@printf "Compiling $(<F) to check that the static-analysis script is checking properly..."
 	@if $(CCC) $(OUTOPTION)/dev/null -S $(COMPILE_CXXFLAGS) $(_VPATH_SRCS) >$(*F).errlog 2>&1; then \
 	  printf "fail:\nerror: compilation of $(<F) succeeded. It shouldn't have!\n"; \
@@ -139,7 +139,7 @@ check:: \
 	  printf "ok.\n"; \
 	fi
 
-%.s-warn: %.cpp $(GLOBAL_DEPS) $(DEHYDRA_SCRIPTS)
+%.s-warn: %.cpp Makefile Makefile.in $(DEHYDRA_SCRIPTS)
 	@printf "Compiling $(<F) to check that the static-analysis script is checking properly..."
 	@if $(CCC) -Werror $(OUTOPTION)/dev/null -S $(COMPILE_CXXFLAGS) $(_VPATH_SRCS) >$(*F).errlog 2>&1; then \
 	  printf "fail:\nerror: compilation of $(<F) succeeded with -Werror. It shouldn't have!\n" \
@@ -152,7 +152,7 @@ check:: \
 	  exit 1; \
 	fi
 
-%.s-pass: %.cpp $(GLOBAL_DEPS) $(DEHYDRA_SCRIPTS)
+%.s-pass: %.cpp Makefile Makefile.in $(DEHYDRA_SCRIPTS)
 	@printf "Compiling $(<F) to check that the static-analysis script is checking properly..."
 	@if $(CCC) -Werror $(OUTOPTION)/dev/null -S $(COMPILE_CXXFLAGS) $(_VPATH_SRCS) >$(*F).errlog 2>&1; then \
 	  printf "ok.\n"; \
