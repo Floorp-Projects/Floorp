@@ -4044,8 +4044,11 @@ NS_IMPL_CYCLE_COLLECTION_TRAVERSE_BEGIN(nsGenericElement)
     PRUint32 attrs = tmp->mAttrsAndChildren.AttrCount();
     for (i = 0; i < attrs; i++) {
       const nsAttrName* name = tmp->mAttrsAndChildren.AttrNameAt(i);
-      if (!name->IsAtom())
+      if (!name->IsAtom()) {
+        NS_CYCLE_COLLECTION_NOTE_EDGE_NAME(cb,
+                                           "mAttrsAndChildren[i]->NodeInfo()");
         cb.NoteXPCOMChild(name->NodeInfo());
+      }
     }
 
     PRUint32 kids = tmp->mAttrsAndChildren.ChildCount();
