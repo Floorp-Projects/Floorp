@@ -16,7 +16,7 @@
  *
  * The Initial Developer of the Original Code is
  * Mozilla Foundation.
- * Portions created by the Initial Developer are Copyright (C) 2006
+ * Portions created by the Initial Developer are Copyright (C) 2007
  * the Initial Developer. All Rights Reserved.
  *
  * Contributor(s): Jesse Ruderman
@@ -35,10 +35,10 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-var gTestfile = 'regress-352022.js';
+var gTestfile = 'regress-420399.js';
 //-----------------------------------------------------------------------------
-var BUGNUMBER = 352022;
-var summary = 'decompilation of let, delete and parens';
+var BUGNUMBER = 420399;
+var summary = 'Let expression error involving undefined';
 var actual = '';
 var expect = '';
 
@@ -53,17 +53,17 @@ function test()
   printBugNumber(BUGNUMBER);
   printStatus (summary);
  
-  var f;
+  expect = /TypeError: let \(a = undefined\) a (is undefined|has no properties)/;
+  try
+  {
+    (let (a=undefined) a).b = 3;
+  }
+  catch(ex)
+  {
+    actual = ex + '';
+  }
 
-  f = function() { g(h) = (delete let (y) 3); }
-  actual = f + '';
-  expect = 'function () {\n    g(h) = ((let (y) 3), true);\n}';
-  compareSource(expect, actual, summary + ': 1');
-
-  f = function () {    g(h) = ((let (y) 3), true);}
-  actual = f + '';
-  expect = 'function () {\n    g(h) = ((let (y) 3), true);\n}';
-  compareSource(expect, actual, summary + ': 2');
+  reportMatch(expect, actual, summary);
 
   exitFunc ('test');
 }

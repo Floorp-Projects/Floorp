@@ -61,7 +61,7 @@ function test()
   compareSource(expect, actual, summary);
 
   f = function f(){g((let(a=b)c,d),e)}
-  expect = 'function f(){g(((let(a=b)c),d),e);}';
+  expect = 'function f(){g((let(a=b)c,d),e);}';
   actual = f + '';
   compareSource(expect, actual, summary);
 
@@ -71,7 +71,7 @@ function test()
   compareSource(expect, actual, summary);
 
   f = function() { (let(s=4){foo:"bar"}) }
-  expect = 'function() { (let(s=4)({foo:"bar"})); }';
+  expect = 'function() { let(s=4)({foo:"bar"}); }';
   actual = f + '';
   compareSource(expect, actual, summary);
 
