@@ -63,6 +63,8 @@ WeaveCrypto::WeaveCrypto() :
   mAlgorithm(SEC_OID_AES_256_CBC),
   mKeypairBits(2048)
 {
+  // Ensure that PSM (and thus NSS) is initialized.
+  nsCOMPtr<nsISupports> psm(nsGetServiceByContractID("@mozilla.org/psm;1"));
 }
 
 WeaveCrypto::~WeaveCrypto()
