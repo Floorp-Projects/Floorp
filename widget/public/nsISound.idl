@@ -57,3 +57,21 @@ interface nsISound : nsISupports
 	*/
   void init(); 
 };
+
+%{C++
+
+#include "nsString.h"
+
+#define NS_SYSSOUND_PREFIX          NS_LITERAL_STRING("_moz_")
+#define NS_SYSSOUND_MAIL_BEEP       NS_LITERAL_STRING("_moz_mailbeep")
+#define NS_SYSSOUND_ERROR_DIALOG    NS_LITERAL_STRING("_moz_errordialog")
+#define NS_SYSSOUND_INFO_DIALOG     NS_LITERAL_STRING("_moz_infodialog")
+#define NS_SYSSOUND_QUESTION_DIALOG NS_LITERAL_STRING("_moz_questiondialog")
+#define NS_SYSSOUND_WARNING_DIALOG  NS_LITERAL_STRING("_moz_warningdialog")
+
+static PRBool NS_IsMozAliasSound(const nsAString &aSoundAlias)
+{
+  return StringBeginsWith(aSoundAlias, NS_SYSSOUND_PREFIX);
+}
+
+%}
