@@ -51,6 +51,7 @@
 #include "nsDOMClassInfoID.h"
 #include "nsGlobalWindow.h"
 #include "nsJSUtils.h"
+#include "nsProxyRelease.h"
 #include "nsThreadUtils.h"
 
 #include "nsDOMThreadService.h"
@@ -252,7 +253,7 @@ nsDOMWorkerFunctions::LoadScripts(JSContext* aCx,
     return JS_FALSE;
   }
 
-  rv = loader->LoadScripts(aCx, urls);
+  rv = loader->LoadScripts(aCx, urls, PR_FALSE);
   if (NS_FAILED(rv)) {
     if (!JS_IsExceptionPending(aCx)) {
       JS_ReportError(aCx, "Failed to load scripts");
@@ -780,6 +781,21 @@ nsDOMWorker::~nsDOMWorker()
   }
 
   NS_ASSERTION(!mFeatures.Length(), "Live features!");
+
+  nsCOMPtr<nsIThread> mainThread;
+  NS_GetMainThread(getter_AddRefs(mainThread));
+
+  nsIPrincipal* principal;
+  mPrincipal.forget(&principal);
+  if (principal) {
+    NS_ProxyRelease(mainThread, principal, PR_FALSE);
+  }
+
+  nsIURI* uri;
+  mURI.forget(&uri);
+  if (uri) {
+    NS_ProxyRelease(mainThread, uri, PR_FALSE);
+  }
 }
 
 /* static */ nsresult
@@ -1111,7 +1127,7 @@ nsDOMWorker::CompileGlobalObject(JSContext* aCx)
     return PR_FALSE;
   }
 
-  rv = loader->LoadScript(aCx, mScriptURL);
+  rv = loader->LoadScript(aCx, mScriptURL, PR_TRUE);
 
   JS_ReportPendingException(aCx);
 
@@ -1120,6 +1136,8 @@ nsDOMWorker::CompileGlobalObject(JSContext* aCx)
     mInnerScope = nsnull;
     return PR_FALSE;
   }
+
+  NS_ASSERTION(mPrincipal && mURI, "Script loader didn't set our principal!");
 
   return PR_TRUE;
 }
