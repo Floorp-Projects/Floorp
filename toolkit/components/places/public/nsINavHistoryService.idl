@@ -1119,11 +1119,6 @@ interface nsINavHistoryService : nsISupports
   const unsigned short DATABASE_STATUS_CORRUPT = 2;
 
   /**
-   * Set when database is locked
-   */
-  const unsigned short DATABASE_STATUS_LOCKED = 3;
-
-  /**
    * Returns the current database status
    */
   readonly attribute unsigned short databaseStatus;
