@@ -82,6 +82,7 @@ class nsDOMThreadService : public nsIEventTarget,
   friend class nsDOMWorkerXHR;
   friend class nsDOMWorkerXHRProxy;
   friend class nsLayoutStatics;
+  friend class nsReportErrorRunnable;
 
   friend void DOMWorkerErrorReporter(JSContext* aCx,
                                      const char* aMessage,

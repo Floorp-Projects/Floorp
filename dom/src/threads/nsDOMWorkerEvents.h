@@ -72,12 +72,50 @@ public:
   virtual PRBool PreventDefaultCalled() = 0;
 };
 
+#define NS_FORWARD_NSIDOMEVENT_SPECIAL                                        \
+  NS_IMETHOD GetType(nsAString& aType)                                        \
+    { return mEvent->GetType(aType); }                                        \
+  NS_IMETHOD GetTarget(nsIDOMEventTarget** aTarget)                           \
+    { return mEvent->GetTarget(aTarget); }                                    \
+  NS_IMETHOD GetCurrentTarget(nsIDOMEventTarget** aCurrentTarget)             \
+    { return mEvent->GetCurrentTarget(aCurrentTarget); }                      \
+  NS_IMETHOD GetEventPhase(PRUint16* aEventPhase)                             \
+    { return mEvent->GetEventPhase(aEventPhase); }                            \
+  NS_IMETHOD GetBubbles(PRBool* aBubbles)                                     \
+    { return mEvent->GetBubbles(aBubbles); }                                  \
+  NS_IMETHOD GetCancelable(PRBool* aCancelable)                               \
+    { return mEvent->GetCancelable(aCancelable); }                            \
+  NS_IMETHOD GetTimeStamp(DOMTimeStamp* aTimeStamp)                           \
+    { return mEvent->GetTimeStamp(aTimeStamp); }                              \
+  NS_IMETHOD StopPropagation()                                                \
+    { return mEvent->StopPropagation(); }
+
+#define NS_FORWARD_NSIDOMPROGRESSEVENT_SPECIAL                                \
+  NS_IMETHOD GetLengthComputable(PRBool* aLengthComputable)                   \
+    { return mProgressEvent->GetLengthComputable(aLengthComputable); }        \
+  NS_IMETHOD GetLoaded(PRUint64* aLoaded)                                     \
+    { return mProgressEvent->GetLoaded(aLoaded); }                            \
+  NS_IMETHOD GetTotal(PRUint64* aTotal)                                       \
+    { return mProgressEvent->GetTotal(aTotal); }
+
+#define NS_FORWARD_NSIWORKERMESSAGEEVENT_SPECIAL                              \
+  NS_IMETHOD GetData(nsAString& aData)                                        \
+    { return mMessageEvent->GetData(aData); }                                 \
+  NS_IMETHOD GetOrigin(nsAString& aOrigin)                                    \
+    { return mMessageEvent->GetOrigin(aOrigin); }                             \
+  NS_IMETHOD GetSource(nsISupports** aSource)                                 \
+    { return mMessageEvent->GetSource(aSource); }
+
 class nsDOMWorkerPrivateEvent : public nsIDOMWorkerPrivateEvent,
+                                public nsIDOMProgressEvent,
+                                public nsIWorkerMessageEvent,
                                 public nsIClassInfo
 {
 public:
   NS_DECL_ISUPPORTS
   NS_FORWARD_NSIDOMEVENT_SPECIAL
+  NS_FORWARD_NSIWORKERMESSAGEEVENT_SPECIAL
+  NS_FORWARD_NSIDOMPROGRESSEVENT_SPECIAL
   NS_DECL_NSICLASSINFO
 
   nsDOMWorkerPrivateEvent(nsIDOMEvent* aEvent);
@@ -88,10 +126,26 @@ public:
                        PRBool aCanBubble,
                        PRBool aCancelable);
 
+  NS_IMETHOD InitProgressEvent(const nsAString& aTypeArg,
+                               PRBool aCanBubbleArg,
+                               PRBool aCancelableArg,
+                               PRBool aLengthComputableArg,
+                               PRUint64 aLoadedArg,
+                               PRUint64 aTotalArg); 
+
+  NS_IMETHOD InitMessageEvent(const nsAString& aTypeArg,
+                              PRBool aCanBubbleArg,
+                              PRBool aCancelableArg,
+                              const nsAString& aDataArg,
+                              const nsAString& aOriginArg,
+                              nsISupports* aSourceArg);
+
   virtual PRBool PreventDefaultCalled();
 
 private:
   nsCOMPtr<nsIDOMEvent> mEvent;
+  nsCOMPtr<nsIDOMProgressEvent> mProgressEvent;
+  nsCOMPtr<nsIWorkerMessageEvent> mMessageEvent;
   PRBool mPreventDefaultCalled;
 };
 

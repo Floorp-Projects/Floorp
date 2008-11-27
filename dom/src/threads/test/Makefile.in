@@ -47,6 +47,9 @@ include $(DEPTH)/config/autoconf.mk
 include $(topsrcdir)/config/rules.mk
 
 _TEST_FILES = \
+  test_errorPropagation.html \
+  errorPropagation_worker1.js \
+  errorPropagation_worker2.js \
   test_importScripts.html \
   importScripts_worker.js \
   importScripts_worker_imported1.js \
