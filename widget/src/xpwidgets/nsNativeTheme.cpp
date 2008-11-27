@@ -287,6 +287,34 @@ nsNativeTheme::IsHorizontal(nsIFrame* aFrame)
                                             eCaseMatters);
 }
 
+PRBool
+nsNativeTheme::IsNextToSelectedTab(nsIFrame* aFrame, PRInt32 aOffset)
+{
+  if (!aFrame)
+    return PR_FALSE;
+
+  if (aOffset == 0)
+    return IsSelectedTab(aFrame);
+
+  PRInt32 thisTabIndex = -1, selectedTabIndex = -1;
+
+  nsIFrame* currentTab = aFrame->GetParent()->GetFirstChild(NULL);
+  for (PRInt32 i = 0; currentTab; currentTab = currentTab->GetNextSibling()) {
+    if (currentTab->GetRect().width == 0)
+      continue;
+    if (aFrame == currentTab)
+      thisTabIndex = i;
+    if (IsSelectedTab(currentTab))
+      selectedTabIndex = i;
+    ++i;
+  }
+
+  if (thisTabIndex == -1 || selectedTabIndex == -1)
+    return PR_FALSE;
+
+  return (thisTabIndex - selectedTabIndex == aOffset);
+}
+
 // progressbar:
 PRBool
 nsNativeTheme::IsIndeterminateProgress(nsIFrame* aFrame)

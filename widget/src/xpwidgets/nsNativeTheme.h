@@ -114,6 +114,16 @@ class nsNativeTheme
   PRBool IsSelectedTab(nsIFrame* aFrame) {
     return CheckBooleanAttr(aFrame, nsWidgetAtoms::selected);
   }
+  
+  PRBool IsNextToSelectedTab(nsIFrame* aFrame, PRInt32 aOffset);
+  
+  PRBool IsBeforeSelectedTab(nsIFrame* aFrame) {
+    return IsNextToSelectedTab(aFrame, -1);
+  }
+  
+  PRBool IsAfterSelectedTab(nsIFrame* aFrame) {
+    return IsNextToSelectedTab(aFrame, 1);
+  }
 
   // toolbarbutton:
   PRBool IsCheckedButton(nsIFrame* aFrame) {
