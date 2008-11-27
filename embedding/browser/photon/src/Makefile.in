@@ -197,7 +197,7 @@ embed-link-comp-modules: embed-link-comp-names
 		done \
 		> $@
 
-EmbedComponents.cpp: EmbedComponents.cpp.in $(GLOBAL_DEPS) $(EMBED_LINK_COMP_MODULES)
+EmbedComponents.cpp: EmbedComponents.cpp.in Makefile Makefile.in $(EMBED_LINK_COMP_MODULES)
 	cat $< | \
 	sed -e "s|%DECL_NSGETMODULES%|$(foreach m,$(shell cat $(EMBED_LINK_COMP_MODULES)),DECL_NSGETMODULE($(m)))|" | \
 	sed -e "s|%MODULE_LIST%|$(foreach m, $(shell cat $(EMBED_LINK_COMP_MODULES)),MODULE($(m)),)|" \
