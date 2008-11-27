@@ -2219,13 +2219,7 @@ nsXMLHttpRequest::OnStopRequest(nsIRequest *request, nsISupports *ctxt, nsresult
     return NS_OK;
   }
 
-  // Don't do anything if we have been aborted
-  if (mState & XML_HTTP_REQUEST_UNINITIALIZED)
-    return NS_OK;
-
   nsresult rv = NS_OK;
-
-  nsCOMPtr<nsIParser> parser;
 
   // If we're loading a multipart stream of XML documents, we'll get
   // an OnStopRequest() for the last part in the stream, and then
@@ -2233,14 +2227,6 @@ nsXMLHttpRequest::OnStopRequest(nsIRequest *request, nsISupports *ctxt, nsresult
   // "multipart/x-mixed-replace" stream too. So we must check that we
   // still have an xml parser stream listener before accessing it
   // here.
-
-  // Is this good enough here?
-  if (mState & XML_HTTP_REQUEST_PARSEBODY && mXMLParserStreamListener) {
-    parser = do_QueryInterface(mXMLParserStreamListener);
-    NS_ABORT_IF_FALSE(parser, "stream listener was expected to be a parser");
-    rv = mXMLParserStreamListener->OnStopRequest(request, ctxt, status);
-  }
-
   nsCOMPtr<nsIMultiPartChannel> mpChannel = do_QueryInterface(request);
   if (mpChannel) {
     PRBool last;
@@ -2252,6 +2238,25 @@ nsXMLHttpRequest::OnStopRequest(nsIRequest *request, nsISupports *ctxt, nsresult
   }
   else {
     mState |= XML_HTTP_REQUEST_GOT_FINAL_STOP;
+  }
+
+  if (mRequestObserver && mState & XML_HTTP_REQUEST_GOT_FINAL_STOP) {
+    NS_ASSERTION(mFirstStartRequestSeen, "Inconsistent state!");
+    mFirstStartRequestSeen = PR_FALSE;
+    mRequestObserver->OnStopRequest(request, ctxt, status);
+  }
+
+  // Don't do anything if we have been aborted
+  if (mState & XML_HTTP_REQUEST_UNINITIALIZED)
+    return NS_OK;
+
+  nsCOMPtr<nsIParser> parser;
+
+  // Is this good enough here?
+  if (mState & XML_HTTP_REQUEST_PARSEBODY && mXMLParserStreamListener) {
+    parser = do_QueryInterface(mXMLParserStreamListener);
+    NS_ABORT_IF_FALSE(parser, "stream listener was expected to be a parser");
+    rv = mXMLParserStreamListener->OnStopRequest(request, ctxt, status);
   }
 
   mXMLParserStreamListener = nsnull;
@@ -2300,12 +2305,6 @@ nsXMLHttpRequest::OnStopRequest(nsIRequest *request, nsISupports *ctxt, nsresult
   }
 
   mState &= ~XML_HTTP_REQUEST_SYNCLOOPING;
-
-  if (mRequestObserver && mState & XML_HTTP_REQUEST_GOT_FINAL_STOP) {
-    NS_ASSERTION(mFirstStartRequestSeen, "Inconsistent state!");
-    mFirstStartRequestSeen = PR_FALSE;
-    mRequestObserver->OnStopRequest(request, ctxt, status);
-  }
 
   return rv;
 }

@@ -130,7 +130,6 @@ public:
   NS_DECL_ISUPPORTS_INHERITED
   NS_FORWARD_NSIDOMEVENT(nsDOMWorkerEvent::)
   NS_DECL_NSIWORKERMESSAGEEVENT
-  NS_FORWARD_NSICLASSINFO_NOGETINTERFACES(nsDOMWorkerEvent::)
   NS_DECL_NSICLASSINFO_GETINTERFACES
 
 protected:
@@ -139,45 +138,98 @@ protected:
   nsCOMPtr<nsISupports> mSource;
 };
 
-class nsDOMWorkerXHREvent : public nsDOMWorkerEvent,
-                            public nsIRunnable,
-                            public nsIDOMProgressEvent
+class nsDOMWorkerProgressEvent : public nsDOMWorkerEvent,
+                                 public nsIDOMProgressEvent
+{
+public:
+  NS_DECL_ISUPPORTS_INHERITED
+  NS_FORWARD_NSIDOMEVENT(nsDOMWorkerEvent::)
+  NS_DECL_NSIDOMPROGRESSEVENT
+  NS_DECL_NSICLASSINFO_GETINTERFACES
+
+  nsDOMWorkerProgressEvent()
+  : mLoaded(0), mTotal(0), mLengthComputable(PR_FALSE) { }
+
+protected:
+  PRUint64 mLoaded;
+  PRUint64 mTotal;
+  PRBool mLengthComputable;
+};
+
+class nsDOMWorkerXHRState
+{
+public:
+  nsDOMWorkerXHRState()
+  : responseTextResult(NS_OK), statusTextResult(NS_OK), status(NS_OK),
+    statusResult(NS_OK), readyState(0), readyStateResult(NS_OK) { }
+
+  NS_IMETHOD_(nsrefcnt) AddRef();
+  NS_IMETHOD_(nsrefcnt) Release();
+
+  nsString responseText;
+  nsresult responseTextResult;
+
+  nsCString statusText;
+  nsresult statusTextResult;
+
+  nsresult status;
+  nsresult statusResult;
+
+  PRInt32 readyState;
+  nsresult readyStateResult;
+
+protected:
+  virtual ~nsDOMWorkerXHRState() { }
+
+  nsAutoRefCnt mRefCnt;
+};
+
+enum SnapshotChoice {
+  WANT_SNAPSHOT,
+  NO_SNAPSHOT
+};
+
+class nsDOMWorkerXHREvent : public nsDOMWorkerProgressEvent,
+                            public nsIRunnable
 {
   friend class nsDOMWorkerXHRProxy;
-  friend class nsDOMWorkerXHREventTargetProxy;
 
 public:
   NS_DECL_ISUPPORTS_INHERITED
   NS_DECL_NSIRUNNABLE
-  NS_FORWARD_NSIDOMEVENT(nsDOMWorkerEvent::)
-  NS_DECL_NSIDOMPROGRESSEVENT
-  NS_FORWARD_NSICLASSINFO_NOGETINTERFACES(nsDOMWorkerEvent::)
   NS_DECL_NSICLASSINFO_GETINTERFACES
+
+  enum SnapshotChoice {
+    SNAPSHOT,
+    NO_SNAPSHOT
+  };
 
   nsDOMWorkerXHREvent(nsDOMWorkerXHRProxy* aXHRProxy);
 
   nsresult Init(PRUint32 aXHREventType,
                 const nsAString& aType,
-                nsIDOMEvent* aEvent);
+                nsIDOMEvent* aEvent,
+                SnapshotChoice = SNAPSHOT);
 
-  nsresult SnapshotXHRState(nsIXMLHttpRequest* aXHR);
+  static void SnapshotXHRState(nsIXMLHttpRequest* aXHR,
+                               nsDOMWorkerXHRState* aState);
 
-  void EventHandled();
+  already_AddRefed<nsDOMWorkerXHRState> ForgetState() {
+    return mState.forget();
+  }
 
 protected:
+  nsDOMWorkerXHRState* GetState() {
+    return mState;
+  }
+
   nsRefPtr<nsDOMWorkerXHRProxy> mXHRProxy;
-  nsCOMPtr<nsIXPConnectWrappedNative> mWorkerWN;
+  nsCOMPtr<nsIXPConnectWrappedNative> mXHRWN;
+  nsRefPtr<nsDOMWorkerXHRState> mState;
   PRUint32 mXHREventType;
-  nsString mResponseText;
-  nsCString mStatusText;
-  nsresult mStatus;
-  PRInt32 mReadyState;
-  PRUint64 mLoaded;
-  PRUint64 mTotal;
   PRInt32 mChannelID;
   PRPackedBool mUploadEvent;
   PRPackedBool mProgressEvent;
-  PRPackedBool mLengthComputable;
 };
 
 #endif /* __NSDOMWORKEREVENTS_H__ */
