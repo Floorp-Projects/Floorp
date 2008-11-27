@@ -221,23 +221,67 @@ nsDOMWorkerMessageEvent::InitMessageEvent(const nsAString& aTypeArg,
   return nsDOMWorkerEvent::InitEvent(aTypeArg, aCanBubbleArg, aCancelableArg);
 }
 
+NS_IMPL_ISUPPORTS_INHERITED1(nsDOMWorkerProgressEvent, nsDOMWorkerEvent,
+                                                       nsIDOMProgressEvent)
+
+NS_IMPL_CI_INTERFACE_GETTER2(nsDOMWorkerProgressEvent, nsIDOMEvent,
+                                                       nsIDOMProgressEvent)
+
+NS_IMPL_THREADSAFE_DOM_CI_GETINTERFACES(nsDOMWorkerProgressEvent)
+
+NS_IMETHODIMP
+nsDOMWorkerProgressEvent::GetLengthComputable(PRBool* aLengthComputable)
+{
+  NS_ENSURE_ARG_POINTER(aLengthComputable);
+  *aLengthComputable = mLengthComputable;
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsDOMWorkerProgressEvent::GetLoaded(PRUint64* aLoaded)
+{
+  NS_ENSURE_ARG_POINTER(aLoaded);
+  *aLoaded = mLoaded;
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsDOMWorkerProgressEvent::GetTotal(PRUint64* aTotal)
+{
+  NS_ENSURE_ARG_POINTER(aTotal);
+  *aTotal = mTotal;
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsDOMWorkerProgressEvent::InitProgressEvent(const nsAString_internal& aTypeArg,
+                                            PRBool aCanBubbleArg,
+                                            PRBool aCancelableArg,
+                                            PRBool aLengthComputableArg,
+                                            PRUint64 aLoadedArg,
+                                            PRUint64 aTotalArg)
+{
+  mLengthComputable = aLengthComputableArg;
+  mLoaded = aLoadedArg;
+  mTotal = aTotalArg;
+  return nsDOMWorkerEvent::InitEvent(aTypeArg, aCanBubbleArg, aCancelableArg);
+}
+
+NS_IMPL_THREADSAFE_ADDREF(nsDOMWorkerXHRState)
+NS_IMPL_THREADSAFE_RELEASE(nsDOMWorkerXHRState)
+
 nsDOMWorkerXHREvent::nsDOMWorkerXHREvent(nsDOMWorkerXHRProxy* aXHRProxy)
 : mXHRProxy(aXHRProxy),
   mXHREventType(PR_UINT32_MAX),
-  mStatus(NS_OK),
-  mReadyState(0),
-  mLoaded(0),
-  mTotal(0),
   mChannelID(-1),
   mUploadEvent(PR_FALSE),
-  mProgressEvent(PR_FALSE),
-  mLengthComputable(PR_FALSE)
+  mProgressEvent(PR_FALSE)
 {
   NS_ASSERTION(aXHRProxy, "Can't be null!");
 }
 
-NS_IMPL_ADDREF_INHERITED(nsDOMWorkerXHREvent, nsDOMWorkerEvent)
-NS_IMPL_RELEASE_INHERITED(nsDOMWorkerXHREvent, nsDOMWorkerEvent)
+NS_IMPL_ADDREF_INHERITED(nsDOMWorkerXHREvent, nsDOMWorkerProgressEvent)
+NS_IMPL_RELEASE_INHERITED(nsDOMWorkerXHREvent, nsDOMWorkerProgressEvent)
 
 NS_INTERFACE_MAP_BEGIN(nsDOMWorkerXHREvent)
   NS_INTERFACE_MAP_ENTRY(nsIRunnable)
@@ -267,19 +311,22 @@ nsDOMWorkerXHREvent::GetInterfaces(PRUint32* aCount,
 nsresult
 nsDOMWorkerXHREvent::Init(PRUint32 aXHREventType,
                           const nsAString& aType,
-                          nsIDOMEvent* aEvent)
+                          nsIDOMEvent* aEvent,
+                          SnapshotChoice aSnapshot)
 {
   NS_ASSERTION(NS_IsMainThread(), "Wrong thread!");
   NS_ASSERTION(aEvent, "Don't pass null here!");
 
   mXHREventType = aXHREventType;
-  mChannelID = mXHRProxy->ChannelID();
+
+  // Only set a channel id if we're not going to be run immediately.
+  mChannelID = mXHRProxy->mSyncEventQueue ? -1 : mXHRProxy->ChannelID();
 
   mTarget = static_cast<nsDOMWorkerMessageHandler*>(mXHRProxy->mWorkerXHR);
   NS_ENSURE_TRUE(mTarget, NS_ERROR_UNEXPECTED);
 
-  mWorkerWN = mXHRProxy->mWorkerXHR->mWorker->GetWrappedNative();
-  NS_ENSURE_STATE(mWorkerWN);
+  mXHRWN = mXHRProxy->mWorkerXHR->GetWrappedNative();
+  NS_ENSURE_STATE(mXHRWN);
 
   nsCOMPtr<nsIDOMEventTarget> mainThreadTarget;
   nsresult rv = aEvent->GetTarget(getter_AddRefs(mainThreadTarget));
@@ -336,87 +383,42 @@ nsDOMWorkerXHREvent::Init(PRUint32 aXHREventType,
   else {
     mProgressEvent = PR_FALSE;
 
-    rv = nsDOMWorkerEvent::InitEvent(aType, bubbles, cancelable);
+    rv = InitEvent(aType, bubbles, cancelable);
     NS_ENSURE_SUCCESS(rv, rv);
   }
 
-  rv = SnapshotXHRState(mXHRProxy->mXHR);
-  NS_ENSURE_SUCCESS(rv, rv);
+  mState = new nsDOMWorkerXHRState();
+  NS_ENSURE_TRUE(mState, NS_ERROR_OUT_OF_MEMORY);
+
+  if (aSnapshot == SNAPSHOT) {
+    SnapshotXHRState(mXHRProxy->mXHR, mState);
+  }
 
   return NS_OK;
 }
 
-nsresult
-nsDOMWorkerXHREvent::SnapshotXHRState(nsIXMLHttpRequest* aXHR)
+/* static */
+void
+nsDOMWorkerXHREvent::SnapshotXHRState(nsIXMLHttpRequest* aXHR,
+                                      nsDOMWorkerXHRState* aState)
 {
   NS_ASSERTION(NS_IsMainThread(), "Wrong thread!");
-  NS_ASSERTION(aXHR, "Don't pass null here!");
+  NS_ASSERTION(aXHR && aState, "Don't pass null here!");
 
-  nsresult rv = aXHR->GetResponseText(mResponseText);
-  NS_ENSURE_SUCCESS(rv, rv);
-
-  rv = aXHR->GetStatusText(mStatusText);
-  NS_ENSURE_SUCCESS(rv, rv);
-
-  rv = aXHR->GetStatus(&mStatus);
-  NS_ENSURE_SUCCESS(rv, rv);
-
-  rv = aXHR->GetReadyState(&mReadyState);
-  NS_ENSURE_SUCCESS(rv, rv);
-
-  return NS_OK;
-}
-
-void
-nsDOMWorkerXHREvent::EventHandled()
-{
-  // Prevent reference cycles by releasing these here.
-  mXHRProxy = nsnull;
+  aState->responseTextResult = aXHR->GetResponseText(aState->responseText);
+  aState->statusTextResult = aXHR->GetStatusText(aState->statusText);
+  aState->statusResult = aXHR->GetStatus(&aState->status);
+  aState->readyStateResult = aXHR->GetReadyState(&aState->readyState);
 }
 
 NS_IMETHODIMP
 nsDOMWorkerXHREvent::Run()
 {
   nsresult rv = mXHRProxy->HandleWorkerEvent(this, mUploadEvent);
-  EventHandled();
+
+  // Prevent reference cycles by releasing this here.
+  mXHRProxy = nsnull;
+
   NS_ENSURE_SUCCESS(rv, rv);
   return NS_OK;
-}
-
-NS_IMETHODIMP
-nsDOMWorkerXHREvent::GetLengthComputable(PRBool* aLengthComputable)
-{
-  NS_ENSURE_ARG_POINTER(aLengthComputable);
-  *aLengthComputable = mLengthComputable;
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-nsDOMWorkerXHREvent::GetLoaded(PRUint64* aLoaded)
-{
-  NS_ENSURE_ARG_POINTER(aLoaded);
-  *aLoaded = mLoaded;
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-nsDOMWorkerXHREvent::GetTotal(PRUint64* aTotal)
-{
-  NS_ENSURE_ARG_POINTER(aTotal);
-  *aTotal = mTotal;
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-nsDOMWorkerXHREvent::InitProgressEvent(const nsAString_internal& aTypeArg,
-                                       PRBool aCanBubbleArg,
-                                       PRBool aCancelableArg,
-                                       PRBool aLengthComputableArg,
-                                       PRUint64 aLoadedArg,
-                                       PRUint64 aTotalArg)
-{
-  mLengthComputable = aLengthComputableArg;
-  mLoaded = aLoadedArg;
-  mTotal = aTotalArg;
-  return nsDOMWorkerEvent::InitEvent(aTypeArg, aCanBubbleArg, aCancelableArg);
 }

@@ -1109,7 +1109,6 @@ nsDOMWorker::AddFeature(nsDOMWorkerFeature* aFeature,
   NS_ASSERTION(aFeature, "Null pointer!");
 
   PRBool shouldSuspend;
-
   {
     // aCx may be null.
     JSAutoSuspendRequest asr(aCx);
