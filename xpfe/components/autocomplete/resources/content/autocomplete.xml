@@ -1628,7 +1628,6 @@
             this.tree.view = aInput.controller;
             this.view = this.tree.view;
             this.showCommentColumn = aInput.showCommentColumn;
-            this.input = aInput;
             this.invalidate();
 
             var viewer = aElement
@@ -1647,6 +1646,8 @@
               ? nsIPopupBoxObject.ROLLUP_CONSUME
               : nsIPopupBoxObject.ROLLUP_NO_CONSUME);
             this.openPopup(aElement, "after_start", 0, 0, false, false);
+            if (this.state != "closed")
+              this.input = aInput;
           }
         ]]></body>
       </method>
