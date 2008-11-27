@@ -35,10 +35,10 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-var gTestfile = 'regress-352022.js';
+var gTestfile = 'regress-353249.js';
 //-----------------------------------------------------------------------------
-var BUGNUMBER = 352022;
-var summary = 'decompilation of let, delete and parens';
+var BUGNUMBER = 353249;
+var summary = 'regression test for bug 353249';
 var actual = '';
 var expect = '';
 
@@ -53,17 +53,15 @@ function test()
   printBugNumber(BUGNUMBER);
   printStatus (summary);
  
-  var f;
+  var f = (function () { let (x) <x/>.(1) < let (z) eval('3');
+	     for (x in this) {} });
 
-  f = function() { g(h) = (delete let (y) 3); }
+  expect = 'function () { let (x) <x/>.((1)) < (let (z) eval("3")); ' +
+    'for (x in this) {} }';
   actual = f + '';
-  expect = 'function () {\n    g(h) = ((let (y) 3), true);\n}';
-  compareSource(expect, actual, summary + ': 1');
+  compareSource(expect, actual, summary);
 
-  f = function () {    g(h) = ((let (y) 3), true);}
-  actual = f + '';
-  expect = 'function () {\n    g(h) = ((let (y) 3), true);\n}';
-  compareSource(expect, actual, summary + ': 2');
-
+  // do not crash()
+  f();
   exitFunc ('test');
 }
