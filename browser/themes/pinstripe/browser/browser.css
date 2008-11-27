@@ -1015,23 +1015,23 @@ richlistitem[selected="true"][current="true"] > hbox > .ac-result-type-bookmark,
 
 #editBookmarkPanel {
   -moz-appearance: none;
-  background-color: rgba(68,68,68,0.9);
-  border: 1px solid rgba(255,255,255,0.15);
-  -moz-border-radius: 8px;
-  -moz-border-radius-topright: 0px ;
-  padding: 10px 8px 6px 8px;
-  margin-top: 4px;
+  -moz-window-shadow: none;
+  -moz-border-image: url(chrome://browser/skin/hud-panel.png) 26 50 22 18 / 26px 50px 22px 18px repeat;
+  margin-right: 27px;
+  margin-top: 1px;
+  padding-top: 8px;
   color: #ffffff;
 }
 
 #editBookmarkPanelTitle {
   font-size: 130%;
   font-weight: bold;
-  margin: 8px 12px 0px 9px;
+  margin: 2px 12px 0px 9px;
 }
 
-#editBookmarkPanel > hbox {
-  -moz-padding-end: 1px;
+#editBookmarkPanel > hbox,
+#editBookmarkPanel > vbox {
+  margin-right: -30px;
 }
 
 /**** HUD style buttons ****/
@@ -2093,20 +2093,22 @@ tabpanels.plain {
 /* Popup Bounding Box */
 #identity-popup {
   -moz-appearance: none;
-  background-color: rgba(68,68,68,0.9);
-  border: 1px solid rgba(255,255,255,0.15);
-  -moz-border-radius: 8px;
-  -moz-border-radius-topleft: 0px;
-  padding: 10px 8px 6px 8px;
-  margin-top: -3px;
-  -moz-margin-start: 11px;
-  color:  #ffffff;
+  -moz-window-shadow: none;
+  background-color: transparent;
+  margin-top: -4px;
+  margin-left: -13px;
   min-width: 280px;
+  -moz-border-image: url(chrome://browser/skin/hud-panel.png) 26 18 22 50 / 26px 18px 22px 50px repeat; 
 }
 
 #identity-popup-container {
   -moz-appearance: none;
+  margin: 4px 3px 2px -30px;
   color:  #ffffff;
+}
+
+#identity-popup-content-box {
+  margin-top: 4px;
 }
 
 /* Popup Buttons */
@@ -2120,7 +2122,7 @@ tabpanels.plain {
   -moz-border-left-colors: rgba(0,0,0,0.35) rgba(26,26,26,0.5) rgba(255,255,255,0.4);
   -moz-border-radius: 20px;
   padding: 1px 9px;
-  margin: 6px;
+  margin: 10px 0 0;
   min-height: 0px;
   color:  #ffffff;	
 }
