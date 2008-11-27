@@ -128,6 +128,7 @@ var gABI        = null;
 var gOSVersion  = null;
 var gLocale     = null;
 var gConsole    = null;
+var gCanUpdate  = null;
 var gLogEnabled = { };
 
 // shared code for suppressing bad cert dialogs
@@ -1073,8 +1074,6 @@ function UpdateService() {
   // Observe xpcom-shutdown to unhook pref branch observers above to avoid
   // shutdown leaks.
   os.addObserver(this, "xpcom-shutdown", false);
-
-  os.addObserver(this, "final-ui-startup", false);
 }
 
 UpdateService.prototype = {
@@ -1628,6 +1627,9 @@ UpdateService.prototype = {
    * See nsIUpdateService.idl
    */
   get canUpdate() {
+    if (gCanUpdate !== null)
+      return gCanUpdate;
+
     try {
       var appDirFile = getUpdateFile([FILE_PERMS_TEST]);
       LOG("UpdateService", "canUpdate - testing " + appDirFile.path);
@@ -1723,7 +1725,7 @@ UpdateService.prototype = {
     catch (e) {
        LOG("UpdateService", "canUpdate - unable to update. Exception: " + e);
       // No write privileges to install directory
-      return false;
+      return gCanUpdate = false;
     }
     // If the administrator has locked the app update functionality
     // OFF - this is not just a user setting, so disable the manual
@@ -1731,23 +1733,23 @@ UpdateService.prototype = {
     var enabled = getPref("getBoolPref", PREF_APP_UPDATE_ENABLED, true);
     if (!enabled && gPref.prefIsLocked(PREF_APP_UPDATE_ENABLED)) {
       LOG("UpdateService", "canUpdate - unable to update, disabled by pref");
-      return false;
+      return gCanUpdate = false;
     }
 
     // If we don't know the binary platform we're updating, we can't update.
     if (!gABI) {
       LOG("UpdateService", "canUpdate - unable tp update, unknown ABI");
-      return false;
+      return gCanUpdate = false;
     }
 
     // If we don't know the OS version we're updating, we can't update.
     if (!gOSVersion) {
       LOG("UpdateService", "canUpdate unable to update, unknown OS version");
-      return false;
+      return gCanUpdate = false;
     }
 
     LOG("UpdateService", "canUpdate - able to update");
-    return true;
+    return gCanUpdate = true;
   },
 
   /**
