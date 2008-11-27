@@ -670,6 +670,24 @@ protected:
 
 NS_IMPL_ISUPPORTS_INHERITED0(nsDOMFireEventRunnable, nsWorkerHoldingRunnable)
 
+class nsCancelDOMWorkerRunnable : public nsWorkerHoldingRunnable
+{
+  NS_DECL_ISUPPORTS_INHERITED
+
+  nsCancelDOMWorkerRunnable(nsDOMWorker* aWorker)
+  : nsWorkerHoldingRunnable(aWorker) { }
+
+  NS_IMETHOD Run() {
+    NS_ASSERTION(NS_IsMainThread(), "Wrong thread!");
+    if (!mWorker->IsCanceled()) {
+      mWorker->Cancel();
+    }
+    return NS_OK;
+  }
+};
+
+NS_IMPL_ISUPPORTS_INHERITED0(nsCancelDOMWorkerRunnable, nsWorkerHoldingRunnable)
+
 // Standard NS_IMPL_THREADSAFE_ADDREF without the logging stuff (since this
 // class is made to be inherited anyway).
 NS_IMETHODIMP_(nsrefcnt)
@@ -742,7 +760,8 @@ nsDOMWorker::nsDOMWorker(nsDOMWorker* aParent,
   mWrappedNative(nsnull),
   mCanceled(PR_FALSE),
   mSuspended(PR_FALSE),
-  mCompileAttempted(PR_FALSE)
+  mCompileAttempted(PR_FALSE),
+  mTerminated(PR_FALSE)
 {
 #ifdef DEBUG
   PRBool mainThread = NS_IsMainThread();
@@ -1291,6 +1310,10 @@ NS_IMETHODIMP
 nsDOMWorker::PostMessage(const nsAString& aMessage,
                          nsIWorkerMessagePort* aMessagePort)
 {
+  if (mTerminated) {
+    return NS_OK;
+  }
+
   if (aMessagePort) {
     return NS_ERROR_NOT_IMPLEMENTED;
   }
@@ -1345,4 +1368,19 @@ nsDOMWorker::SetOnmessage(nsIDOMEventListener* aOnmessage)
 {
   return mOuterHandler->SetOnXListener(NS_LITERAL_STRING("message"),
                                        aOnmessage);
+}
+
+NS_IMETHODIMP
+nsDOMWorker::Terminate()
+{
+  if (mCanceled || mTerminated) {
+    return NS_OK;
+  }
+
+  mTerminated = PR_TRUE;
+
+  nsCOMPtr<nsIRunnable> runnable = new nsCancelDOMWorkerRunnable(this);
+  NS_ENSURE_TRUE(runnable, NS_ERROR_OUT_OF_MEMORY);
+
+  return NS_DispatchToMainThread(runnable, NS_DISPATCH_NORMAL);
 }
