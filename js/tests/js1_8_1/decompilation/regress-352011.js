@@ -1,5 +1,4 @@
-/* -*- Mode: java; tab-width:8; indent-tabs-mode: nil; c-basic-offset: 4 -*- */
-
+/* -*- Mode: C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
 /* ***** BEGIN LICENSE BLOCK *****
  * Version: MPL 1.1/GPL 2.0/LGPL 2.1
  *
@@ -20,7 +19,8 @@
  * Portions created by the Initial Developer are Copyright (C) 2006
  * the Initial Developer. All Rights Reserved.
  *
- * Contributor(s): Jesse Ruderman
+ * Contributor(s): Brendan Eich
+ *                 Jesse Ruderman
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -36,30 +36,40 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-gTestfile = 'regress-350238.js';
+var gTestfile = 'regress-352011.js';
+//-----------------------------------------------------------------------------
+var BUGNUMBER = 352011;
+var summary = 'decompilation of statements that begin with object literals';
+var actual = '';
+var expect = '';
 
-var BUGNUMBER = 350238;
-var summary = 'Do not assert <x/>.@*++';
-var actual = 'No Crash';
-var expect = 'No Crash';
 
-printBugNumber(BUGNUMBER);
-START(summary);
+//-----------------------------------------------------------------------------
+test();
+//-----------------------------------------------------------------------------
 
-if (typeof document != 'undefined' && 'addEventListener' in document)
+function test()
 {
-    document.addEventListener('load',
-                              (function () {
-                                  var iframe = document.createElement('iframe');
-                                  document.body.appendChild(iframe);
-                                  iframe.contentDocument.location.href='javascript:<x/>.@*++;';
-                              }), true);
-}
-else
-{
-    <x/>.@*++;
-}
+  enterFunc ('test');
+  printBugNumber(BUGNUMBER);
+  printStatus (summary);
+ 
+  var f;
 
-TEST(1, expect, actual);
+  f = function() { ({}.y = i); }
+  expect = 'function() { ({}.y = i); }';
+  actual = f + '';
+  compareSource(expect, actual, summary);
 
-END();
+  f = function() { let(x) ({t:x}) }
+  expect = 'function() { let(x) ({t:x}); }';
+  actual = f + '';
+  compareSource(expect, actual, summary);
+
+  f = function() { (let(x) {y: z}) }
+  expect = 'function() { let(x) ({y: z}); }';
+  actual = f + '';
+  compareSource(expect, actual, summary);
+
+  exitFunc ('test');
+}

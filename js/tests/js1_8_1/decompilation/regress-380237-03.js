@@ -137,7 +137,7 @@ function test()
   reportCompare(expect, actual, summary + ': Do not Assert: *pc == JSOP_CALL');
 
   f = (function() { ([yield] for (x in [])); });
-  expect = 'function() { ([yield] for (x in [])); }';
+  expect = 'function() { ([(yield)] for (x in [])); }';
   actual = f + '';
   compareSource(expect, actual, summary);
 
