@@ -81,12 +81,12 @@ function selectDialogOnLoad() {
   numItems = param.GetInt( 2 );
 
   var i;
-  for ( i = 3; i <= numItems+2; i++ ) {
+  for ( i = 2; i <= numItems+1; i++ ) {
     var newString = param.GetString( i );
     if (newString == "") {
       newString = "<>";
     }
-    elements[i-3] = AppendStringToListbox(list, newString);
+    elements[i-2] = AppendStringToListbox(list, newString);
   }
   list.selectItem(elements[0]);
   list.focus();
@@ -98,16 +98,6 @@ function selectDialogOnLoad() {
   moveToAlertPosition();
   param.SetInt(0, 1 );
   centerWindowOnScreen();
-
-  // play sound
-  try {
-    var sound = param.GetString(2);
-    if (sound) {
-      var soundService = Components.classes["@mozilla.org/sound;1"].
-                           createInstance(Components.interfaces.nsISound);
-      soundService.playSystemSound(sound);
-    }
-  } catch (e) { }
 }
 
 function commonDialogOnOK() {
