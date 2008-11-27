@@ -54,14 +54,20 @@ class gfxMixedFontFamily;
 // lifetime: from when @font-face rule processed until font is loaded
 struct gfxFontFaceSrc {
     PRPackedBool           mIsLocal;       // url or local
-    nsString               mLocalName;     // full font name if local
-    nsCOMPtr<nsIURI>       mURI;           // uri if url 
-    nsCOMPtr<nsIURI>       mReferrer;      // referrer url if url
+
+    // if url, whether to use the origin principal or not
+    PRPackedBool           mUseOriginPrincipal;
 
     // format hint flags, union of all possible formats
     // (e.g. TrueType, EOT, SVG, etc.)
     // see FLAG_FORMAT_* enum values below
     PRUint32               mFormatFlags;
+
+    nsString               mLocalName;     // full font name if local
+    nsCOMPtr<nsIURI>       mURI;           // uri if url 
+    nsCOMPtr<nsIURI>       mReferrer;      // referrer url if url
+    nsCOMPtr<nsISupports>  mOriginPrincipal; // principal if url 
+    
 };
 
 // subclassed to store platform-specific code cleaned out when font entry is deleted
@@ -139,9 +145,8 @@ class THEBES_API gfxUserFontSet {
 
 public:
     class LoaderContext;
-    typedef nsresult (*LoaderCallback) (gfxFontEntry *aFontToLoad, 
-                                        nsIURI *aSrcURL,
-                                        nsIURI *aReferrerURI,
+    typedef nsresult (*LoaderCallback) (gfxFontEntry *aFontToLoad,
+                                        const gfxFontFaceSrc *aFontFaceSrc,
                                         LoaderContext *aContextData);
 
     class LoaderContext {

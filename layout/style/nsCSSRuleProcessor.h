@@ -67,7 +67,8 @@ class nsCSSFontFaceRule;
 
 class nsCSSRuleProcessor: public nsIStyleRuleProcessor {
 public:
-  nsCSSRuleProcessor(const nsCOMArray<nsICSSStyleSheet>& aSheets);
+  nsCSSRuleProcessor(const nsCOMArray<nsICSSStyleSheet>& aSheets, 
+                     PRUint8 aSheetType);
   virtual ~nsCSSRuleProcessor();
 
   NS_DECL_ISUPPORTS
@@ -103,7 +104,7 @@ public:
   // Append all the currently-active font face rules to aArray.  Return
   // true for success and false for failure.
   PRBool AppendFontFaceRules(nsPresContext* aPresContext,
-                             nsTArray< nsRefPtr<nsCSSFontFaceRule> >& aArray);
+                             nsTArray<nsFontFaceRuleContainer>& aArray);
 
 #ifdef DEBUG
   void AssertQuirksChangeOK() {
@@ -126,6 +127,9 @@ private:
 
   // The last pres context for which GetRuleCascades was called.
   nsPresContext *mLastPresContext;
+  
+  // type of stylesheet using this processor
+  PRUint8 mSheetType;  // == nsStyleSet::sheetType
 };
 
 #endif /* nsCSSRuleProcessor_h_ */

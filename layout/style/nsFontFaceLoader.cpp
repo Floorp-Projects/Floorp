@@ -143,8 +143,7 @@ nsFontFaceLoader::OnStreamComplete(nsIStreamLoader* aLoader,
 
 nsresult
 nsFontFaceLoader::CreateHandler(gfxFontEntry *aFontToLoad, 
-                                nsIURI *aFontURI,
-                                nsIURI *aReferrerURI,
+                                const gfxFontFaceSrc *aFontFaceSrc,
                                 gfxUserFontSet::LoaderContext *aContext)
 {
   nsresult rv;
@@ -157,27 +156,41 @@ nsFontFaceLoader::CreateHandler(gfxFontEntry *aFontToLoad,
   if (!ps)
     return NS_ERROR_FAILURE;
     
-  NS_ASSERTION(aFontURI, "null font uri");
-  if (!aFontURI)
+  NS_ASSERTION(aFontFaceSrc && !aFontFaceSrc->mIsLocal, 
+               "bad font face url passed to fontloader");
+  NS_ASSERTION(aFontFaceSrc->mURI, "null font uri");
+  if (!aFontFaceSrc->mURI)
     return NS_ERROR_FAILURE;
 
-  // xxx - need to detect system principal here
+  // use document principal, original principal if flag set
+  // this enables user stylesheets to load font files via
+  // @font-face rules
   nsCOMPtr<nsIPrincipal> principal = ps->GetDocument()->NodePrincipal();
 
-  rv = CheckLoadAllowed(principal, aFontURI, ps->GetDocument());
+  NS_ASSERTION(aFontFaceSrc->mOriginPrincipal, 
+               "null origin principal in @font-face rule");
+  if (aFontFaceSrc->mUseOriginPrincipal) {
+    principal = do_QueryInterface(aFontFaceSrc->mOriginPrincipal);
+  }
+  
+  rv = CheckLoadAllowed(principal, aFontFaceSrc->mURI, ps->GetDocument());
   if (NS_FAILED(rv)) {
-    nsCAutoString fontURI, referrerURI;
-    aFontURI->GetSpec(fontURI);
-    if (aReferrerURI)
-      aReferrerURI->GetSpec(referrerURI);
-    LOG(("fontdownloader download blocked - font uri: (%s) "
-         "referrer uri: (%s) err: %8.8x\n", 
-        fontURI.get(), referrerURI.get(), rv));
+#ifdef PR_LOGGING
+    if (LOG_ENABLED()) {
+      nsCAutoString fontURI, referrerURI;
+      aFontFaceSrc->mURI->GetSpec(fontURI);
+      if (aFontFaceSrc->mReferrer)
+        aFontFaceSrc->mReferrer->GetSpec(referrerURI);
+      LOG(("fontdownloader download blocked - font uri: (%s) "
+           "referrer uri: (%s) err: %8.8x\n", 
+          fontURI.get(), referrerURI.get(), rv));
+    }
+#endif    
     return rv;
   }
     
   nsRefPtr<nsFontFaceLoader> fontLoader = new nsFontFaceLoader(aFontToLoad, 
-                                                               aFontURI, 
+                                                               aFontFaceSrc->mURI, 
                                                                aContext);
   if (!fontLoader)
     return NS_ERROR_OUT_OF_MEMORY;
@@ -185,9 +198,9 @@ nsFontFaceLoader::CreateHandler(gfxFontEntry *aFontToLoad,
 #ifdef PR_LOGGING
   if (LOG_ENABLED()) {
     nsCAutoString fontURI, referrerURI;
-    aFontURI->GetSpec(fontURI);
-    if (aReferrerURI)
-      aReferrerURI->GetSpec(referrerURI);
+    aFontFaceSrc->mURI->GetSpec(fontURI);
+    if (aFontFaceSrc->mReferrer)
+      aFontFaceSrc->mReferrer->GetSpec(referrerURI);
     LOG(("fontdownloader (%p) download start - font uri: (%s) "
          "referrer uri: (%s)\n", 
          fontLoader.get(), fontURI.get(), referrerURI.get()));
@@ -199,7 +212,7 @@ nsFontFaceLoader::CreateHandler(gfxFontEntry *aFontToLoad,
 
   nsCOMPtr<nsIChannel> channel;
   rv = NS_NewChannel(getter_AddRefs(channel),
-                     aFontURI,
+                     aFontFaceSrc->mURI,
                      nsnull,
                      loadGroup,
                      nsnull,
@@ -209,13 +222,16 @@ nsFontFaceLoader::CreateHandler(gfxFontEntry *aFontToLoad,
 
   nsCOMPtr<nsIHttpChannel> httpChannel(do_QueryInterface(channel));
   if (httpChannel)
-    httpChannel->SetReferrer(aReferrerURI);
+    httpChannel->SetReferrer(aFontFaceSrc->mReferrer);
   rv = NS_NewStreamLoader(getter_AddRefs(streamLoader), fontLoader);
   NS_ENSURE_SUCCESS(rv, rv);
   
-  // unless data url, open with cross-site listener
-  PRBool isData = PR_FALSE;
-  if (NS_SUCCEEDED(aFontURI->SchemeIs("data", &isData)) && isData) {
+  PRBool inherits = PR_FALSE;
+  rv = NS_URIChainHasFlags(aFontFaceSrc->mURI,
+                           nsIProtocolHandler::URI_INHERITS_SECURITY_CONTEXT,
+                           &inherits);
+  if (NS_SUCCEEDED(rv) && inherits) {
+    // allow data, javascript, etc URI's
     rv = channel->AsyncOpen(streamLoader, nsnull);
   } else {
     nsCOMPtr<nsIStreamListener> listener =

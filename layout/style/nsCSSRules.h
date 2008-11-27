@@ -278,6 +278,13 @@ protected:
   nsCSSFontFaceStyleDecl mDecl;
 };
 
+// nsFontFaceRuleContainer - used for associating sheet type with 
+// specific @font-face rules
+struct nsFontFaceRuleContainer {
+  nsRefPtr<nsCSSFontFaceRule> mRule;
+  PRUint8 mSheetType;
+};
+
 inline nsCSSFontFaceRule*
 nsCSSFontFaceStyleDecl::ContainingRule()
 {
