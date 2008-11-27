@@ -74,12 +74,26 @@ function BrowserGlue() {
 }
 
 BrowserGlue.prototype = {
-  __prefs: null,
   get _prefs() {
-    if (!this.__prefs)
-      this.__prefs = Cc["@mozilla.org/preferences-service;1"].
-                     getService(Ci.nsIPrefBranch);
-    return this.__prefs;
+    var prefs = Cc["@mozilla.org/preferences-service;1"].
+                getService(Ci.nsIPrefBranch);
+    this.__defineGetter__("_prefs", function() prefs);
+    return this._prefs;
+  },
+
+  get _placesBundle() {
+    var strings = Cc["@mozilla.org/intl/stringbundle;1"].
+                  getService(Ci.nsIStringBundleService).
+                  createBundle("chrome://browser/locale/places/places.properties");
+    this.__defineGetter__("_placesBundle", function() strings);
+    return this._placesBundle;
+  },
+
+  get _idleService() {
+    var idleSvc = Cc["@mozilla.org/widget/idleservice;1"].
+                    getService(Ci.nsIIdleService);
+    this.__defineGetter__("_idleService", function() idleSvc);
+    return this._idleService;
   },
 
   _saveSession: false,
@@ -132,7 +146,7 @@ BrowserGlue.prototype = {
         this._initPlaces();
         break;
       case "idle":
-        if (this.idleService.idleTime > BOOKMARKS_ARCHIVE_IDLE_TIME * 1000) {
+        if (this._idleService.idleTime > BOOKMARKS_ARCHIVE_IDLE_TIME * 1000) {
           // Back up bookmarks.
           this._archiveBookmarks();
         }
@@ -215,7 +229,7 @@ BrowserGlue.prototype = {
   _onProfileShutdown: function() 
   {
     this._shutdownPlaces();
-    this.idleService.removeIdleObserver(this, BOOKMARKS_ARCHIVE_IDLE_TIME);
+    this._idleService.removeIdleObserver(this, BOOKMARKS_ARCHIVE_IDLE_TIME);
     this.Sanitizer.onShutdown();
   },
 
@@ -244,6 +258,17 @@ BrowserGlue.prototype = {
                getService(Ci.nsIWindowWatcher);
       ww.openWindow(null, EMURL, "_blank", EMFEATURES, args);
       this._prefs.clearUserPref(PREF_EM_NEW_ADDONS_LIST);
+    }
+
+    // Load the "more info" page for a locked places.sqlite
+    if (this._showPlacesLockedPage) {
+      var helpTopic = "places-locked";
+      var url = Cc["@mozilla.org/toolkit/URLFormatterService;1"].
+                getService(Components.interfaces.nsIURLFormatter).
+                formatURLPref("app.support.baseURL");
+      url += helpTopic;
+      var browser = this.getMostRecentBrowserWindow().gBrowser;
+      browser.selectedTab = browser.addTab(url);
     }
   },
 
@@ -448,14 +473,6 @@ BrowserGlue.prototype = {
     return Sanitizer;
   },
 
-  _idleService: null,
-  get idleService() {
-    if (!this._idleService)
-      this._idleService = Cc["@mozilla.org/widget/idleservice;1"].
-                          getService(Ci.nsIIdleService);
-    return this._idleService;
-  },
-
   /**
    * Initialize Places
    * - imports the bookmarks html file if bookmarks database is empty, try to
@@ -484,9 +501,15 @@ BrowserGlue.prototype = {
                   getService(Ci.nsINavHistoryService);
     var databaseStatus = histsvc.databaseStatus;
 
+    if (databaseStatus == histsvc.DATABASE_STATUS_LOCKED) {
+      this._showPlacesLockedAlert();
+      return;
+    }
+
     // If the database is corrupt or has been newly created we should
     // import bookmarks.
-    var importBookmarks = databaseStatus != histsvc.DATABASE_STATUS_OK;
+    var importBookmarks = databaseStatus == histsvc.DATABASE_STATUS_CREATE ||
+      histsvc.DATABASE_STATUS_CORRUPT;
 
     // Check if user or an extension has required to import bookmarks.html
     var importBookmarksHTML = false;
@@ -577,7 +600,7 @@ BrowserGlue.prototype = {
 
     // Initialize bookmark archiving on idle.
     // Once a day, either on idle or shutdown, bookmarks are backed up.
-    this.idleService.addIdleObserver(this, BOOKMARKS_ARCHIVE_IDLE_TIME);
+    this._idleService.addIdleObserver(this, BOOKMARKS_ARCHIVE_IDLE_TIME);
   },
 
   /**
@@ -627,6 +650,29 @@ BrowserGlue.prototype = {
 
       PlacesUtils.archiveBookmarksFile(maxBackups, false /* don't force */);
     }
+  },
+
+  /**
+   * Show the alert for a locked places database.
+   */
+  _showPlacesLockedAlert: function nsBrowserGlue__showPlacesLockedAlert() {
+    // notify the user
+    var title = this._placesBundle.GetStringFromName("lockPromptTitle");
+    var text = this._placesBundle.GetStringFromName("lockPromptText");
+    var buttonText = this._placesBundle.GetStringFromName("lockPromptInfoButtonText");
+
+    var promptService = Cc["@mozilla.org/embedcomp/prompt-service;1"].
+                        getService(Ci.nsIPromptService);
+    var flags = promptService.BUTTON_POS_0 * promptService.BUTTON_TITLE_IS_STRING +
+                promptService.BUTTON_POS_1 * promptService.BUTTON_TITLE_CANCEL;
+
+    var buttonChoice = promptService.confirmEx(null, title, text, flags,
+                                               buttonText, null , null, null,
+                                               {value:false});
+
+    // Show "more info" page once the browser has loaded
+    if (buttonChoice == 0)
+      this._showPlacesLockedPage = true;
   },
 
   _migrateUI: function bg__migrateUI() {
@@ -737,11 +783,10 @@ BrowserGlue.prototype = {
                 getService(Ci.nsINavBookmarksService);
     var annosvc = Cc["@mozilla.org/browser/annotation-service;1"].
                   getService(Ci.nsIAnnotationService);
+    var strings = this._placesBundle;
 
     var callback = {
-      _placesBundle: Cc["@mozilla.org/intl/stringbundle;1"].
-                     getService(Ci.nsIStringBundleService).
-                     createBundle("chrome://browser/locale/places/places.properties"),
+      _placesBundle: strings,
 
       _uri: function(aSpec) {
         return Cc["@mozilla.org/network/io-service;1"].

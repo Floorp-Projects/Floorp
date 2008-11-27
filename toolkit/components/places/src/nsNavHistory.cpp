@@ -626,8 +626,11 @@ nsNavHistory::InitDBFile(PRBool aForceInit)
     NS_ENSURE_SUCCESS(rv, rv);
     rv = mDBService->OpenUnsharedDatabase(mDBFile, getter_AddRefs(mDBConn));
   }
+  else if (rv == NS_ERROR_FILE_IS_LOCKED) {
+    mDatabaseStatus = DATABASE_STATUS_LOCKED;
+  }
   NS_ENSURE_SUCCESS(rv, rv);
-
+  
   return NS_OK;
 }
 
