@@ -694,8 +694,9 @@ let gGestureSupport = {
   },
 
   /**
-   * Dispatch events based on the type of mouse gesture event.
-   * For now, make sure to stop propagation of every gesture event
+   * Dispatch events based on the type of mouse gesture event. For now, make
+   * sure to stop propagation of every gesture event so that web content cannot
+   * receive gesture events.
    *
    * @param aEvent
    *        The gesture event to handle
@@ -703,36 +704,73 @@ let gGestureSupport = {
   handleEvent: function GS_handleEvent(aEvent) {
     aEvent.stopPropagation();
 
+    // Create a preference object with some defaults
+    let def = function(aThreshold, aLatched)
+      ({ threshold: aThreshold, latched: !!aLatched });
+
     switch (aEvent.type) {
       case "MozSwipeGesture":
         return this.onSwipe(aEvent);
       case "MozMagnifyGestureStart":
+        return this._setupGesture(aEvent, "pinch", def(150, 1), "out", "in");
       case "MozRotateGestureStart":
-        return this.onStart(aEvent);
+        return this._setupGesture(aEvent, "twist", def(25, 0), "right", "left");
       case "MozMagnifyGestureUpdate":
-        return this._handleUpdate(aEvent, 100, "pinch.out", "pinch.in");
       case "MozRotateGestureUpdate":
-        return this._handleUpdate(aEvent, 22.5, "twist.right", "twist.left");
+        return this._doUpdate(aEvent);
     }
   },
 
   /**
-   * Convert a gesture and pressed keys into the corresponding command action.
-   * The preference must have "shift" before "alt" before "ctrl" before "meta"
-   * with each separated by periods.
+   * Called at the start of "pinch" and "twist" gestures to setup all of the
+   * information needed to process the gesture
    *
-   * @param aGestureKeys
-   *        An array that has the gesture type as the first element and
-   *        additional elements for each key pressed
-   * @return Id of the command to execute
+   * @param aEvent
+   *        The continual motion start event to handle
+   * @param aGesture
+   *        Name of the gesture to handle
+   * @param aPref
+   *        Preference object with the names of preferences and defaults
+   * @param aInc
+   *        Command to trigger for increasing motion (without gesture name)
+   * @param aDec
+   *        Command to trigger for decreasing motion (without gesture name)
    */
-  _getCommand: function GS__getCommand(aGestureKeys) {
-    const gestureBranch = "browser.gesture."
-    try {
-      return gPrefService.getCharPref(gestureBranch + aGestureKeys.join("."));
-    }
-    // No preference is set, so don't give a command
-    catch (e) {}
+  _setupGesture: function GS__setupGesture(aEvent, aGesture, aPref, aInc, aDec) {
+    // Try to load user-set values from preferences
+    for (let [pref, def] in Iterator(aPref))
+      aPref[pref] = this._getPref(aGesture + "." + pref, def);
+
+    // Keep track of the total deltas and latching behavior
+    let offset = 0;
+    let latchDir = aEvent.delta > 0 ? 1 : -1;
+    let isLatched = false;
+
+    // Create the update function here to capture closure state
+    this._doUpdate = function GS__doUpdate(aEvent) {
+      // Update the offset with new event data
+      offset += aEvent.delta;
+
+      // Check if the cumulative deltas exceed the threshold
+      if (Math.abs(offset) > aPref["threshold"]) {
+        // Trigger the action if we don't care about latching; otherwise, make
+        // sure either we're not latched and going the same direction of the
+        // initial motion; or we're latched and going the opposite way
+        let sameDir = (latchDir ^ offset) >= 0;
+        if (!aPref["latched"] || (isLatched ^ sameDir)) {
+          this._doAction(aEvent, [aGesture, offset > 0 ? aInc : aDec]);
+
+          // We must be getting latched or leaving it, so just toggle
+          isLatched = !isLatched;
+        }
+
+        // Reset motion counter to prepare for more of the same gesture
+        offset = 0;
+      }
+    };
+
+    // The start event also contains deltas, so handle an update right away
+    this._doUpdate(aEvent);
   },
 
   /**
@@ -762,7 +800,9 @@ let gGestureSupport = {
    * @param aEvent
    *        The original gesture event to convert into a fake click event
    * @param aGesture
-   *        Name of the gesture
+   *        Array of gesture name parts (to be joined by periods)
+   * @return Name of the command found for the event's keys and gesture. If no
+   *         command is found, no value is returned (undefined).
    */
   _doAction: function GS__doAction(aEvent, aGesture) {
     // Create a fake event that pretends the gesture is a button click
@@ -775,25 +815,32 @@ let gGestureSupport = {
     let keyCombos = [];
     const keys = ["shift", "alt", "ctrl", "meta"];
     for each (let key in keys)
-      if (aEvent[key + "Key"]) 
+      if (aEvent[key + "Key"])
         keyCombos.push(key);
 
     try {
       // Try each combination of key presses in decreasing order for commands
       for (let subCombo in this._power(keyCombos)) {
-        let command = this._getCommand([aGesture].concat(subCombo));
+        // Convert a gesture and pressed keys into the corresponding command
+        // action where the preference has the gesture before "shift" before
+        // "alt" before "ctrl" before "meta" all separated by periods
+        let command = this._getPref(aGesture.concat(subCombo).join("."));
+
         // Do the command if we found one to do
         if (command) {
           let node = document.getElementById(command);
           // Use the command element if it exists
-          if (node && node.hasAttribute("oncommand"))
+          if (node && node.hasAttribute("oncommand")) {
             // XXX: Use node.oncommand(event) once bug 246720 is fixed
-            return node.getAttribute("disabled") == "true" ? true :
+            if (node.getAttribute("disabled") != "true")
               new Function("event", node.getAttribute("oncommand")).
-              call(node, fakeEvent);
-
+                call(node, fakeEvent);
+          }
           // Otherwise it should be a "standard" command
-          return goDoCommand(command);
+          else
+            goDoCommand(command);
+
+          return command;
         }
       }
     }
@@ -802,59 +849,49 @@ let gGestureSupport = {
   },
 
   /**
+   * Convert continual motion events into an action if it exceeds a threshold
+   * in a given direction. This function will be set by _setupGesture to
+   * capture state that needs to be shared across multiple gesture updates.
+   *
+   * @param aEvent
+   *        The continual motion update event to handle
+   */
+  _doUpdate: function(aEvent) {},
+
+  /**
    * Convert the swipe gesture into a browser action based on the direction
    *
    * @param aEvent
    *        The swipe event to handle
    */
   onSwipe: function GS_onSwipe(aEvent) {
-    switch (aEvent.direction) {
-      case SimpleGestureEvent.DIRECTION_LEFT:
-        return this._doAction(aEvent, "swipe.left");
-      case SimpleGestureEvent.DIRECTION_RIGHT:
-        return this._doAction(aEvent, "swipe.right");
-      case SimpleGestureEvent.DIRECTION_UP:
-        return this._doAction(aEvent, "swipe.up");
-      case SimpleGestureEvent.DIRECTION_DOWN:
-        return this._doAction(aEvent, "swipe.down");
+    // Figure out which one (and only one) direction was triggered 
+    for each (let dir in ["UP", "RIGHT", "DOWN", "LEFT"])
+      if (aEvent.direction == aEvent["DIRECTION_" + dir])
+        return this._doAction(aEvent, ["swipe", dir.toLowerCase()]);
+  },
+
+  /**
+   * Get a gesture preference or use a default if it doesn't exist
+   *
+   * @param aPref
+   *        Name of the preference to load under the gesture branch
+   * @param aDef
+   *        Default value if the preference doesn't exist
+   */
+  _getPref: function GS__getPref(aPref, aDef) {
+    // Preferences branch under which all gestures preferences are stored
+    const branch = "browser.gesture.";
+
+    try {
+      // Determine what type of data to load based on default value's type
+      let type = typeof aDef;
+      let getFunc = "get" + (type == "boolean" ? "Bool" : 
+                             type == "number" ? "Int" : "Char") + "Pref";
+      return gPrefService[getFunc](branch + aPref);
     }
-  },
-
-  // Keep track of offsets for continual motion events, e.g., zoom and rotate
-  _lastOffset: 0,
-
-  /**
-   * Handle the beginning of a continual motion event
-   *
-   * @param aEvent
-   *        The continual motion event
-   */
-  onStart: function GS_onStart(aEvent) {
-    this._lastOffset = 0;
-  },
-
-  /**
-   * Helper function to determine if a continual motion event has passed some
-   * threshold and should trigger some action. If the action is triggered, the
-   * tracking of the motion is reset as if a new motion has started.
-   *
-   * @param aEvent
-   *        The continual motion event to handle
-   * @param aThreshold
-   *        Minimum positive/negative difference before the action is triggered
-   * @param aInc
-   *        Name of the gesture for increasing motion
-   * @param aDec
-   *        Name of the gesture for decreasing motion
-   */
-  _handleUpdate: function GS__handleUpdate(aEvent, aThreshold, aInc, aDec) {
-    // Update the offset with new event data
-    this._lastOffset += aEvent.delta;
-
-    // Do the gesture action when we pass the threshold and then reset motion
-    if (Math.abs(this._lastOffset) > aThreshold) {
-      this._doAction(aEvent, this._lastOffset > 0 ? aInc : aDec);
-      this.onStart(aEvent);
+    catch (e) {
+      return aDef;
     }
   },
 };
