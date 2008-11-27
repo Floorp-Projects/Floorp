@@ -126,15 +126,15 @@ nsDOMWorkerTimeout::FunctionCallback::Run(nsDOMWorkerTimeout* aTimeout,
   JSObject* global = JS_GetGlobalObject(aCx);
   NS_ENSURE_TRUE(global, NS_ERROR_FAILURE);
 
-  jsval argv[mCallbackArgsLength];
+  nsTArray<jsval> argv(mCallbackArgsLength);
   for (PRUint32 index = 0; index < mCallbackArgsLength; index++) {
-    argv[index] = mCallbackArgs[index];
+    argv.AppendElement(mCallbackArgs[index]);
   }
 
   jsval rval;
   JSBool ok =
     JS_CallFunctionValue(aCx, global, mCallback, mCallbackArgsLength,
-                         argv, &rval);
+                         argv.Elements(), &rval);
   NS_ENSURE_TRUE(ok, NS_ERROR_FAILURE);
 
   return NS_OK;
