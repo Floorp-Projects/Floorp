@@ -51,7 +51,7 @@ if (typeof document != 'undefined' && 'addEventListener' in document)
     document.addEventListener('load',
                               (function () {
                                   var iframe = document.createElement('iframe');
-                                  document.body.appendChild('iframe');
+                                  document.body.appendChild(iframe);
                                   iframe.contentDocument.location.href='javascript:<x/>.@*++;';
                               }), true);
 }
