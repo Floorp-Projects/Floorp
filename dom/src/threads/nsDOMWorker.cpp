@@ -55,6 +55,7 @@
 
 #include "nsDOMThreadService.h"
 #include "nsDOMWorkerEvents.h"
+#include "nsDOMWorkerNavigator.h"
 #include "nsDOMWorkerPool.h"
 #include "nsDOMWorkerScriptLoader.h"
 #include "nsDOMWorkerTimeout.h"
@@ -431,6 +432,8 @@ public:
 
 private:
   nsDOMWorker* mWorker;
+
+  nsRefPtr<nsDOMWorkerNavigator> mNavigator;
 };
 
 NS_IMPL_THREADSAFE_ISUPPORTS5(nsDOMWorkerScope, nsIWorkerScope,
@@ -489,6 +492,18 @@ nsDOMWorkerScope::GetSelf(nsIWorkerGlobalScope** aSelf)
   }
 
   NS_ADDREF(*aSelf = this);
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsDOMWorkerScope::GetNavigator(nsIWorkerNavigator** _retval)
+{
+  if (!mNavigator) {
+    mNavigator = new nsDOMWorkerNavigator();
+    NS_ENSURE_TRUE(mNavigator, NS_ERROR_OUT_OF_MEMORY);
+  }
+
+  NS_ADDREF(*_retval = mNavigator);
   return NS_OK;
 }
 
@@ -786,6 +801,9 @@ NS_INTERFACE_MAP_END
 #define XPC_MAP_WANT_FINALIZE
 
 #define XPC_MAP_FLAGS                                      \
+  nsIXPCScriptable::USE_JSSTUB_FOR_ADDPROPERTY           | \
+  nsIXPCScriptable::USE_JSSTUB_FOR_DELPROPERTY           | \
+  nsIXPCScriptable::USE_JSSTUB_FOR_SETPROPERTY           | \
   nsIXPCScriptable::DONT_ENUM_QUERY_INTERFACE            | \
   nsIXPCScriptable::CLASSINFO_INTERFACES_ONLY            | \
   nsIXPCScriptable::DONT_REFLECT_INTERFACE_NAMES

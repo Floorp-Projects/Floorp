@@ -43,6 +43,8 @@
 #include "nsIComponentManager.h"
 #include "nsIDocument.h"
 #include "nsIDOMDocument.h"
+#include "nsIDOMNavigator.h"
+#include "nsIDOMWindowInternal.h"
 #include "nsIEventTarget.h"
 #include "nsIGenericFactory.h"
 #include "nsIJSContextStack.h"
@@ -462,7 +464,8 @@ DOMWorkerErrorReporter(JSContext* aCx,
  */
 
 nsDOMThreadService::nsDOMThreadService()
-: mMonitor(nsnull)
+: mMonitor(nsnull),
+  mNavigatorStringsLoaded(PR_FALSE)
 {
   NS_ASSERTION(NS_IsMainThread(), "Wrong thread!");
 #ifdef PR_LOGGING
@@ -1013,6 +1016,29 @@ nsDOMThreadService::RegisterWorker(nsDOMWorker* aWorker,
   if (!pool) {
     NS_ASSERTION(NS_IsMainThread(), "Wrong thread!");
 
+    if (!mNavigatorStringsLoaded) {
+      nsCOMPtr<nsIDOMWindowInternal> internal(do_QueryInterface(aGlobalObject));
+      NS_ENSURE_TRUE(internal, NS_ERROR_NO_INTERFACE);
+
+      nsCOMPtr<nsIDOMNavigator> navigator;
+      rv = internal->GetNavigator(getter_AddRefs(navigator));
+      NS_ENSURE_SUCCESS(rv, rv);
+
+      rv = navigator->GetAppName(mAppName);
+      NS_ENSURE_SUCCESS(rv, rv);
+
+      rv = navigator->GetAppVersion(mAppVersion);
+      NS_ENSURE_SUCCESS(rv, rv);
+
+      rv = navigator->GetPlatform(mPlatform);
+      NS_ENSURE_SUCCESS(rv, rv);
+
+      rv = navigator->GetUserAgent(mUserAgent);
+      NS_ENSURE_SUCCESS(rv, rv);
+
+      mNavigatorStringsLoaded = PR_TRUE;
+    }
+
     nsCOMPtr<nsPIDOMWindow> domWindow(do_QueryInterface(aGlobalObject));
     NS_ENSURE_TRUE(domWindow, NS_ERROR_NO_INTERFACE);
 
@@ -1039,4 +1065,36 @@ nsDOMThreadService::RegisterWorker(nsDOMWorker* aWorker,
 
   aWorker->SetPool(pool);
   return NS_OK;
+}
+
+void
+nsDOMThreadService::GetAppName(nsAString& aAppName)
+{
+  NS_ASSERTION(mNavigatorStringsLoaded,
+               "Shouldn't call this before we have loaded strings!");
+  aAppName.Assign(mAppName);
+}
+
+void
+nsDOMThreadService::GetAppVersion(nsAString& aAppVersion)
+{
+  NS_ASSERTION(mNavigatorStringsLoaded,
+               "Shouldn't call this before we have loaded strings!");
+  aAppVersion.Assign(mAppVersion);
+}
+
+void
+nsDOMThreadService::GetPlatform(nsAString& aPlatform)
+{
+  NS_ASSERTION(mNavigatorStringsLoaded,
+               "Shouldn't call this before we have loaded strings!");
+  aPlatform.Assign(mPlatform);
+}
+
+void
+nsDOMThreadService::GetUserAgent(nsAString& aUserAgent)
+{
+  NS_ASSERTION(mNavigatorStringsLoaded,
+               "Shouldn't call this before we have loaded strings!");
+  aUserAgent.Assign(mUserAgent);
 }

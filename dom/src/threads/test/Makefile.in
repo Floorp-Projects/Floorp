@@ -55,6 +55,8 @@ _TEST_FILES = \
   importScripts_worker_imported4.js \
   test_longThread.html \
   longThread_worker.js \
+  test_navigator.html \
+  navigator_worker.js \
   test_recursion.html \
   recursion_worker.js \
   test_regExpStatics.html \
