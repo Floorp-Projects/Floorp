@@ -206,7 +206,7 @@ endif
 
 ifneq (,$(filter-out OS2 WINCE WINNT Darwin BeOS,$(OS_ARCH)))
 
-xulrunner:: mozilla.in $(GLOBAL_DEPS)
+xulrunner:: mozilla.in Makefile.in Makefile $(DEPTH)/config/autoconf.mk
 	cat $< | sed -e "s|%MOZAPPDIR%|$(mozappdir)|" \
                 -e "s|%MOZ_USER_DIR%|.mozilla/xulrunner|" \
 		-e "s|%MREDIR%|$(mredir)|" > $@
