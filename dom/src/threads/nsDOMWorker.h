@@ -148,8 +148,6 @@ private:
   ~nsDOMWorker();
 
   nsresult PostMessageInternal(const nsAString& aMessage,
-                               PRBool aIsJSON,
-                               PRBool aIsPrimitive,
                                PRBool aToInner);
 
   PRBool CompileGlobalObject(JSContext* aCx);
