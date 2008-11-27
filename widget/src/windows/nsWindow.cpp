@@ -669,6 +669,7 @@ nsWindow::nsWindow() : nsBaseWidget()
   mPainting           = 0;
   mOldIMC             = NULL;
   mIMEEnabled         = nsIWidget::IME_STATUS_ENABLED;
+  mIsPluginWindow     = PR_FALSE;
 
   mLeadByte = '\0';
   mBlurEventSuppressionLevel = 0;
@@ -2753,9 +2754,10 @@ NS_IMETHODIMP nsWindow::Update()
 void* nsWindow::GetNativeData(PRUint32 aDataType)
 {
   switch (aDataType) {
+    case NS_NATIVE_PLUGIN_PORT:
+      mIsPluginWindow = 1;
     case NS_NATIVE_WIDGET:
     case NS_NATIVE_WINDOW:
-    case NS_NATIVE_PLUGIN_PORT:
       return (void*)mWnd;
     case NS_NATIVE_GRAPHIC:
       // XXX:  This is sleezy!!  Remember to Release the DC after using it!
@@ -7715,11 +7717,24 @@ LRESULT CALLBACK nsWindow::MozSpecialMsgFilter(int code, WPARAM wParam, LPARAM l
 LRESULT CALLBACK nsWindow::MozSpecialMouseProc(int code, WPARAM wParam, LPARAM lParam)
 {
   if (gProcessHook) {
-    MOUSEHOOKSTRUCT* ms = (MOUSEHOOKSTRUCT*)lParam;
-    if (wParam == WM_LBUTTONDOWN) {
-      nsIWidget* mozWin = (nsIWidget*)GetNSWindowPtr(ms->hwnd);
-      if (mozWin == NULL) {
-        ScheduleHookTimer(ms->hwnd, (UINT)wParam);
+    switch (wParam) {
+      case WM_LBUTTONDOWN:
+      case WM_RBUTTONDOWN:
+      case WM_MBUTTONDOWN:
+      case WM_MOUSEWHEEL:
+      case WM_MOUSEHWHEEL:
+      {
+        MOUSEHOOKSTRUCT* ms = (MOUSEHOOKSTRUCT*)lParam;
+        nsIWidget* mozWin = (nsIWidget*)GetNSWindowPtr(ms->hwnd);
+        if (mozWin) {
+          // If this window is windowed plugin window, the mouse events are not
+          // sent to us.
+          if (static_cast<nsWindow*>(mozWin)->mIsPluginWindow)
+            ScheduleHookTimer(ms->hwnd, (UINT)wParam);
+        } else {
+          ScheduleHookTimer(ms->hwnd, (UINT)wParam);
+        }
+        break;
       }
     }
   }
@@ -7859,6 +7874,11 @@ VOID CALLBACK nsWindow::HookTimerForPopups(HWND hwnd, UINT uMsg, UINT idEvent, D
 }
 #endif // WinCE
 
+static PRBool IsDifferentThreadWindow(HWND aWnd)
+{
+  return ::GetCurrentThreadId() != ::GetWindowThreadProcessId(aWnd, NULL);
+}
+
 //
 // DealWithPopups
 //
@@ -7871,7 +7891,8 @@ nsWindow :: DealWithPopups ( HWND inWnd, UINT inMsg, WPARAM inWParam, LPARAM inL
   if (gRollupListener && gRollupWidget && ::IsWindowVisible(inWnd)) {
 
     if (inMsg == WM_LBUTTONDOWN || inMsg == WM_RBUTTONDOWN || inMsg == WM_MBUTTONDOWN ||
-        inMsg == WM_MOUSEWHEEL || inMsg == WM_MOUSEHWHEEL || inMsg == WM_ACTIVATE
+        inMsg == WM_MOUSEWHEEL || inMsg == WM_MOUSEHWHEEL || inMsg == WM_ACTIVATE ||
+        (inMsg == WM_KILLFOCUS && IsDifferentThreadWindow((HWND)inWParam))
 #ifndef WINCE
         || 
         inMsg == WM_NCRBUTTONDOWN || 

@@ -458,6 +458,7 @@ protected:
   PRPackedBool  mIsInMouseCapture;
   PRPackedBool  mIsInMouseWheelProcessing;
   PRPackedBool  mUnicodeWidget;
+  PRPackedBool  mIsPluginWindow;
 
   PRPackedBool  mPainting;
   char          mLeadByte;
