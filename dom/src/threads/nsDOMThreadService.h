@@ -50,6 +50,7 @@
 #include "nsAutoPtr.h"
 #include "nsCOMPtr.h"
 #include "nsRefPtrHashtable.h"
+#include "nsStringGlue.h"
 #include "nsTPtrArray.h"
 #include "prmon.h"
 
@@ -73,6 +74,7 @@ class nsDOMThreadService : public nsIEventTarget,
                            public nsIThreadPoolListener
 {
   friend class nsDOMWorker;
+  friend class nsDOMWorkerNavigator;
   friend class nsDOMWorkerPool;
   friend class nsDOMWorkerRunnable;
   friend class nsDOMWorkerThread;
@@ -80,6 +82,7 @@ class nsDOMThreadService : public nsIEventTarget,
   friend class nsDOMWorkerXHR;
   friend class nsDOMWorkerXHRProxy;
   friend class nsLayoutStatics;
+  friend class nsReportErrorRunnable;
 
   friend void DOMWorkerErrorReporter(JSContext* aCx,
                                      const char* aMessage,
@@ -138,6 +141,11 @@ private:
   nsresult RegisterWorker(nsDOMWorker* aWorker,
                           nsIScriptGlobalObject* aGlobalObject);
 
+  void GetAppName(nsAString& aAppName);
+  void GetAppVersion(nsAString& aAppVersion);
+  void GetPlatform(nsAString& aPlatform);
+  void GetUserAgent(nsAString& aUserAgent);
+
   // Our internal thread pool.
   nsCOMPtr<nsIThreadPool> mThreadPool;
 
@@ -150,6 +158,13 @@ private:
 
   // A map from nsDOMWorkerThread to nsDOMWorkerRunnable.
   nsRefPtrHashtable<nsVoidPtrHashKey, nsDOMWorkerRunnable> mWorkersInProgress;
+
+  nsString mAppName;
+  nsString mAppVersion;
+  nsString mPlatform;
+  nsString mUserAgent;
+
+  PRBool mNavigatorStringsLoaded;
 };
 
 #endif /* __NSDOMTHREADSERVICE_H__ */
