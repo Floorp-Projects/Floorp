@@ -45,10 +45,10 @@
 
 interface nsIDOMEventListener;
 
-[scriptable, uuid(ab3725b8-3fca-40cc-a42c-92fb154ef01d)]
+[scriptable, uuid(6c32d0c5-6bfa-438b-ad44-be0df80cd4a8)]
 interface nsIWorkerMessagePort : nsISupports
 {
-  void postMessage(/* in JSObject aMessage */);
+  void postMessage(in DOMString aMessage);
 };
 
 [scriptable, uuid(508f2d49-e9a0-4fe8-bd33-321820173b4a)]
@@ -83,10 +83,11 @@ interface nsIWorkerGlobalScope : nsISupports
   readonly attribute nsIWorkerNavigator navigator;
 };
 
-[scriptable, uuid(d30a2f61-86e2-434e-837f-4f1985efa865)]
+[scriptable, uuid(b10cfe72-91b9-45c6-ab13-33f89c2d0e56)]
 interface nsIWorkerScope : nsIWorkerGlobalScope
 {
-  void postMessage(/* in JSObject aMessage */);
+  void postMessage(in DOMString aMessage,
+                   [optional] in nsIWorkerMessagePort aMessagePort);
 
   attribute nsIDOMEventListener onmessage;
 };
@@ -97,10 +98,11 @@ interface nsIAbstractWorker : nsIDOMEventTarget
   attribute nsIDOMEventListener onerror;
 };
 
-[scriptable, uuid(daf945c3-8d29-4724-8939-dd383f7d27a7)]
+[scriptable, uuid(3d2ca558-31f7-4893-aa6d-1db9a3cb5bb9)]
 interface nsIWorker : nsIAbstractWorker
 {
-  void postMessage(/* in JSObject aMessage */);
+  void postMessage(in DOMString aMessage,
+                   [optional] in nsIWorkerMessagePort aMessagePort);
 
   attribute nsIDOMEventListener onmessage;
 
