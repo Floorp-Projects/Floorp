@@ -3375,6 +3375,8 @@ nsBlockFrame::DoReflowInlineFrames(nsBlockReflowState& aState,
                               impactedByFloats,
                               PR_FALSE /*XXX isTopOfPage*/);
 
+  aState.SetFlag(BRS_LINE_LAYOUT_EMPTY, PR_FALSE);
+
   // XXX Unfortunately we need to know this before reflowing the first
   // inline frame in the line. FIX ME.
   if ((0 == aLineLayout.GetLineNumber()) &&
@@ -3461,6 +3463,8 @@ nsBlockFrame::DoReflowInlineFrames(nsBlockReflowState& aState,
       }
     }
   }
+
+  aState.SetFlag(BRS_LINE_LAYOUT_EMPTY, aLineLayout.LineIsEmpty());
 
   // We only need to backup if the line isn't going to be reflowed again anyway
   PRBool needsBackup = aLineLayout.NeedsBackup() &&
