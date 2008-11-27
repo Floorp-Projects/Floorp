@@ -47,14 +47,18 @@
 #include "jsdbgapi.h"
 #endif
 #include "nsAutoLock.h"
+#include "nsAXPCNativeCallContext.h"
 #include "nsContentUtils.h"
 #include "nsDOMClassInfoID.h"
 #include "nsGlobalWindow.h"
+#include "nsJSON.h"
 #include "nsJSUtils.h"
+#include "nsProxyRelease.h"
 #include "nsThreadUtils.h"
 
 #include "nsDOMThreadService.h"
 #include "nsDOMWorkerEvents.h"
+#include "nsDOMWorkerNavigator.h"
 #include "nsDOMWorkerPool.h"
 #include "nsDOMWorkerScriptLoader.h"
 #include "nsDOMWorkerTimeout.h"
@@ -251,7 +255,7 @@ nsDOMWorkerFunctions::LoadScripts(JSContext* aCx,
     return JS_FALSE;
   }
 
-  rv = loader->LoadScripts(aCx, urls);
+  rv = loader->LoadScripts(aCx, urls, PR_FALSE);
   if (NS_FAILED(rv)) {
     if (!JS_IsExceptionPending(aCx)) {
       JS_ReportError(aCx, "Failed to load scripts");
@@ -411,6 +415,113 @@ JSFunctionSpec gDOMWorkerFunctions[] = {
   { nsnull,                  nsnull,                                  0, 0, 0 }
 };
 
+static JSBool
+WriteCallback(const jschar* aBuffer,
+              uint32 aLength,
+              void* aData)
+{
+  nsJSONWriter* writer = static_cast<nsJSONWriter*>(aData);
+
+  nsresult rv = writer->Write((const PRUnichar*)aBuffer, (PRUint32)aLength);
+  return NS_SUCCEEDED(rv) ? JS_TRUE : JS_FALSE;
+}
+
+static nsresult
+GetStringForArgument(nsAString& aString,
+                     PRBool* aIsJSON,
+                     PRBool* aIsPrimitive)
+{
+  NS_ASSERTION(aIsJSON && aIsPrimitive, "Null pointer!");
+
+  nsIXPConnect* xpc = nsContentUtils::XPConnect();
+  NS_ENSURE_TRUE(xpc, NS_ERROR_UNEXPECTED);
+
+  nsAXPCNativeCallContext* cc;
+  nsresult rv = xpc->GetCurrentNativeCallContext(&cc);
+  NS_ENSURE_SUCCESS(rv, rv);
+  NS_ENSURE_TRUE(cc, NS_ERROR_UNEXPECTED);
+
+  PRUint32 argc;
+  rv = cc->GetArgc(&argc);
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  if (!argc) {
+    return NS_ERROR_XPC_NOT_ENOUGH_ARGS;
+  }
+
+  jsval* argv;
+  rv = cc->GetArgvPtr(&argv);
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  JSContext* cx;
+  rv = cc->GetJSContext(&cx);
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  JSAutoRequest ar(cx);
+
+  if (JSVAL_IS_STRING(argv[0])) {
+    aString.Assign(nsDependentJSString(JSVAL_TO_STRING(argv[0])));
+    *aIsJSON = *aIsPrimitive = PR_FALSE;
+    return NS_OK;
+  }
+
+  nsAutoJSValHolder jsonVal;
+
+  JSBool ok = jsonVal.Hold(cx);
+  NS_ENSURE_TRUE(ok, NS_ERROR_FAILURE);
+
+  if (JSVAL_IS_PRIMITIVE(argv[0])) {
+    // Only objects can be serialized through JSON, currently, so if we've been
+    // given a primitive we set it as a property on a dummy object before
+    // sending it to the serializer.
+    JSObject* obj = JS_NewObject(cx, NULL, NULL, NULL);
+    NS_ENSURE_TRUE(obj, NS_ERROR_OUT_OF_MEMORY);
+
+    jsonVal = obj;
+
+    ok = JS_DefineProperty(cx, obj, JSON_PRIMITIVE_PROPNAME, argv[0], NULL,
+                           NULL, JSPROP_ENUMERATE);
+    NS_ENSURE_TRUE(ok, NS_ERROR_UNEXPECTED);
+
+    *aIsPrimitive = PR_TRUE;
+  }
+  else {
+    jsonVal = argv[0];
+
+    *aIsPrimitive = PR_FALSE;
+  }
+
+  JSType type;
+  jsval* vp = jsonVal.ToJSValPtr();
+
+  // This may change vp if there is a 'toJSON' function on the object.
+  ok = JS_TryJSON(cx, vp);
+  if (!(ok && !JSVAL_IS_PRIMITIVE(*vp) &&
+        (type = JS_TypeOfValue(cx, *vp)) != JSTYPE_FUNCTION &&
+        type != JSTYPE_XML)) {
+    return NS_ERROR_INVALID_ARG;
+  }
+
+  // Make sure to hold the new vp in case it changed.
+  jsonVal = *vp;
+
+  nsJSONWriter writer;
+
+  ok = JS_Stringify(cx, jsonVal.ToJSValPtr(), NULL, &WriteCallback, &writer);
+  if (!ok) {
+    return NS_ERROR_XPC_BAD_CONVERT_JS;
+  }
+
+  NS_ENSURE_TRUE(writer.DidWrite(), NS_ERROR_UNEXPECTED);
+
+  writer.FlushBuffer();
+
+  aString.Assign(writer.mOutputString);
+  *aIsJSON = PR_TRUE;
+
+  return NS_OK;
+}
+
 class nsDOMWorkerScope : public nsIWorkerScope,
                          public nsIDOMEventTarget,
                          public nsIXPCScriptable,
@@ -431,6 +542,8 @@ public:
 
 private:
   nsDOMWorker* mWorker;
+
+  nsRefPtr<nsDOMWorkerNavigator> mNavigator;
 };
 
 NS_IMPL_THREADSAFE_ISUPPORTS5(nsDOMWorkerScope, nsIWorkerScope,
@@ -493,8 +606,19 @@ nsDOMWorkerScope::GetSelf(nsIWorkerGlobalScope** aSelf)
 }
 
 NS_IMETHODIMP
-nsDOMWorkerScope::PostMessage(const nsAString& aMessage,
-                              nsIWorkerMessagePort* aMessagePort)
+nsDOMWorkerScope::GetNavigator(nsIWorkerNavigator** _retval)
+{
+  if (!mNavigator) {
+    mNavigator = new nsDOMWorkerNavigator();
+    NS_ENSURE_TRUE(mNavigator, NS_ERROR_OUT_OF_MEMORY);
+  }
+
+  NS_ADDREF(*_retval = mNavigator);
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsDOMWorkerScope::PostMessage(/* JSObject aMessage */)
 {
   NS_ASSERTION(!NS_IsMainThread(), "Wrong thread!");
 
@@ -502,11 +626,13 @@ nsDOMWorkerScope::PostMessage(const nsAString& aMessage,
     return NS_ERROR_ABORT;
   }
 
-  if (aMessagePort) {
-    return NS_ERROR_NOT_IMPLEMENTED;
-  }
+  nsString message;
+  PRBool isJSON, isPrimitive;
 
-  return mWorker->PostMessageInternal(aMessage, PR_FALSE);
+  nsresult rv = GetStringForArgument(message, &isJSON, &isPrimitive);
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  return mWorker->PostMessageInternal(message, isJSON, isPrimitive, PR_FALSE);
 }
 
 NS_IMETHODIMP
@@ -655,6 +781,24 @@ protected:
 
 NS_IMPL_ISUPPORTS_INHERITED0(nsDOMFireEventRunnable, nsWorkerHoldingRunnable)
 
+class nsCancelDOMWorkerRunnable : public nsWorkerHoldingRunnable
+{
+  NS_DECL_ISUPPORTS_INHERITED
+
+  nsCancelDOMWorkerRunnable(nsDOMWorker* aWorker)
+  : nsWorkerHoldingRunnable(aWorker) { }
+
+  NS_IMETHOD Run() {
+    NS_ASSERTION(NS_IsMainThread(), "Wrong thread!");
+    if (!mWorker->IsCanceled()) {
+      mWorker->Cancel();
+    }
+    return NS_OK;
+  }
+};
+
+NS_IMPL_ISUPPORTS_INHERITED0(nsCancelDOMWorkerRunnable, nsWorkerHoldingRunnable)
+
 // Standard NS_IMPL_THREADSAFE_ADDREF without the logging stuff (since this
 // class is made to be inherited anyway).
 NS_IMETHODIMP_(nsrefcnt)
@@ -727,7 +871,8 @@ nsDOMWorker::nsDOMWorker(nsDOMWorker* aParent,
   mWrappedNative(nsnull),
   mCanceled(PR_FALSE),
   mSuspended(PR_FALSE),
-  mCompileAttempted(PR_FALSE)
+  mCompileAttempted(PR_FALSE),
+  mTerminated(PR_FALSE)
 {
 #ifdef DEBUG
   PRBool mainThread = NS_IsMainThread();
@@ -746,6 +891,21 @@ nsDOMWorker::~nsDOMWorker()
   }
 
   NS_ASSERTION(!mFeatures.Length(), "Live features!");
+
+  nsCOMPtr<nsIThread> mainThread;
+  NS_GetMainThread(getter_AddRefs(mainThread));
+
+  nsIPrincipal* principal;
+  mPrincipal.forget(&principal);
+  if (principal) {
+    NS_ProxyRelease(mainThread, principal, PR_FALSE);
+  }
+
+  nsIURI* uri;
+  mURI.forget(&uri);
+  if (uri) {
+    NS_ProxyRelease(mainThread, uri, PR_FALSE);
+  }
 }
 
 /* static */ nsresult
@@ -786,6 +946,9 @@ NS_INTERFACE_MAP_END
 #define XPC_MAP_WANT_FINALIZE
 
 #define XPC_MAP_FLAGS                                      \
+  nsIXPCScriptable::USE_JSSTUB_FOR_ADDPROPERTY           | \
+  nsIXPCScriptable::USE_JSSTUB_FOR_DELPROPERTY           | \
+  nsIXPCScriptable::USE_JSSTUB_FOR_SETPROPERTY           | \
   nsIXPCScriptable::DONT_ENUM_QUERY_INTERFACE            | \
   nsIXPCScriptable::CLASSINFO_INTERFACES_ONLY            | \
   nsIXPCScriptable::DONT_REFLECT_INTERFACE_NAMES
@@ -871,12 +1034,11 @@ nsDOMWorker::InitializeInternal(nsIScriptGlobalObject* aOwner,
                                 PRUint32 aArgc,
                                 jsval* aArgv)
 {
-  NS_ENSURE_TRUE(aArgc, NS_ERROR_INVALID_ARG);
+  NS_ENSURE_TRUE(aArgc, NS_ERROR_XPC_NOT_ENOUGH_ARGS);
   NS_ENSURE_ARG_POINTER(aArgv);
-  NS_ENSURE_TRUE(JSVAL_IS_STRING(aArgv[0]), NS_ERROR_INVALID_ARG);
 
   JSString* str = JS_ValueToString(aCx, aArgv[0]);
-  NS_ENSURE_STATE(str);
+  NS_ENSURE_TRUE(str, NS_ERROR_XPC_BAD_CONVERT_JS);
 
   mScriptURL.Assign(nsDependentJSString(str));
   NS_ENSURE_FALSE(mScriptURL.IsEmpty(), NS_ERROR_INVALID_ARG);
@@ -954,6 +1116,8 @@ nsDOMWorker::Resume()
 
 nsresult
 nsDOMWorker::PostMessageInternal(const nsAString& aMessage,
+                                 PRBool aIsJSON,
+                                 PRBool aIsPrimitive,
                                  PRBool aToInner)
 {
   nsRefPtr<nsDOMWorkerMessageEvent> message = new nsDOMWorkerMessageEvent();
@@ -963,6 +1127,8 @@ nsDOMWorker::PostMessageInternal(const nsAString& aMessage,
                                           PR_FALSE, PR_FALSE, aMessage,
                                           EmptyString(), nsnull);
   NS_ENSURE_SUCCESS(rv, rv);
+
+  message->SetJSONData(aIsJSON, aIsPrimitive);
 
   nsRefPtr<nsDOMFireEventRunnable> runnable =
     new nsDOMFireEventRunnable(this, message, aToInner);
@@ -1074,7 +1240,7 @@ nsDOMWorker::CompileGlobalObject(JSContext* aCx)
     return PR_FALSE;
   }
 
-  rv = loader->LoadScript(aCx, mScriptURL);
+  rv = loader->LoadScript(aCx, mScriptURL, PR_TRUE);
 
   JS_ReportPendingException(aCx);
 
@@ -1083,6 +1249,8 @@ nsDOMWorker::CompileGlobalObject(JSContext* aCx)
     mInnerScope = nsnull;
     return PR_FALSE;
   }
+
+  NS_ASSERTION(mPrincipal && mURI, "Script loader didn't set our principal!");
 
   return PR_TRUE;
 }
@@ -1109,7 +1277,6 @@ nsDOMWorker::AddFeature(nsDOMWorkerFeature* aFeature,
   NS_ASSERTION(aFeature, "Null pointer!");
 
   PRBool shouldSuspend;
-
   {
     // aCx may be null.
     JSAutoSuspendRequest asr(aCx);
@@ -1271,14 +1438,19 @@ nsDOMWorker::GetParent()
  * See nsIWorker
  */
 NS_IMETHODIMP
-nsDOMWorker::PostMessage(const nsAString& aMessage,
-                         nsIWorkerMessagePort* aMessagePort)
+nsDOMWorker::PostMessage(/* JSObject aMessage */)
 {
-  if (aMessagePort) {
-    return NS_ERROR_NOT_IMPLEMENTED;
+  if (mTerminated) {
+    return NS_OK;
   }
 
-  return PostMessageInternal(aMessage, PR_TRUE);
+  nsString message;
+  PRBool isJSON, isPrimitive;
+
+  nsresult rv = GetStringForArgument(message, &isJSON, &isPrimitive);
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  return PostMessageInternal(message, isJSON, isPrimitive, PR_TRUE);
 }
 
 /**
@@ -1328,4 +1500,19 @@ nsDOMWorker::SetOnmessage(nsIDOMEventListener* aOnmessage)
 {
   return mOuterHandler->SetOnXListener(NS_LITERAL_STRING("message"),
                                        aOnmessage);
+}
+
+NS_IMETHODIMP
+nsDOMWorker::Terminate()
+{
+  if (mCanceled || mTerminated) {
+    return NS_OK;
+  }
+
+  mTerminated = PR_TRUE;
+
+  nsCOMPtr<nsIRunnable> runnable = new nsCancelDOMWorkerRunnable(this);
+  NS_ENSURE_TRUE(runnable, NS_ERROR_OUT_OF_MEMORY);
+
+  return NS_DispatchToMainThread(runnable, NS_DISPATCH_NORMAL);
 }
