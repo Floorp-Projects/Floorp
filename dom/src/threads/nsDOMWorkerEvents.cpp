@@ -51,19 +51,39 @@ NS_DEFINE_STATIC_IID_ACCESSOR(nsIDOMWorkerPrivateEvent,
 
 nsDOMWorkerPrivateEvent::nsDOMWorkerPrivateEvent(nsIDOMEvent* aEvent)
 : mEvent(aEvent),
+  mProgressEvent(do_QueryInterface(aEvent)),
+  mMessageEvent(do_QueryInterface(aEvent)),
   mPreventDefaultCalled(PR_FALSE)
 {
   NS_ASSERTION(aEvent, "Null pointer!");
 }
 
-NS_IMPL_THREADSAFE_ISUPPORTS3(nsDOMWorkerPrivateEvent, nsIDOMEvent,
-                                                       nsIDOMWorkerPrivateEvent,
-                                                       nsIClassInfo)
+NS_IMPL_THREADSAFE_ADDREF(nsDOMWorkerPrivateEvent)
+NS_IMPL_THREADSAFE_RELEASE(nsDOMWorkerPrivateEvent)
 
-NS_IMPL_CI_INTERFACE_GETTER2(nsDOMWorkerPrivateEvent, nsIDOMEvent,
-                                                      nsIDOMWorkerPrivateEvent)
+NS_INTERFACE_MAP_BEGIN(nsDOMWorkerPrivateEvent)
+  NS_INTERFACE_MAP_ENTRY_AMBIGUOUS(nsISupports, nsIDOMWorkerPrivateEvent)
+  NS_INTERFACE_MAP_ENTRY_AMBIGUOUS(nsIDOMEvent, nsIDOMWorkerPrivateEvent)
+  NS_INTERFACE_MAP_ENTRY(nsIDOMWorkerPrivateEvent)
+  NS_INTERFACE_MAP_ENTRY_CONDITIONAL(nsIDOMProgressEvent, mProgressEvent)
+  NS_INTERFACE_MAP_ENTRY_CONDITIONAL(nsIWorkerMessageEvent, mMessageEvent)
+  NS_INTERFACE_MAP_ENTRY(nsIClassInfo)
+NS_INTERFACE_MAP_END
 
-NS_IMPL_THREADSAFE_DOM_CI(nsDOMWorkerPrivateEvent)
+NS_IMPL_CI_INTERFACE_GETTER1(nsDOMWorkerPrivateEvent, nsIDOMEvent)
+
+NS_IMPL_THREADSAFE_DOM_CI_HELPER(nsDOMWorkerPrivateEvent)
+NS_IMPL_THREADSAFE_DOM_CI_ALL_THE_REST(nsDOMWorkerPrivateEvent)
+
+NS_IMETHODIMP
+nsDOMWorkerPrivateEvent::GetInterfaces(PRUint32* aCount, nsIID*** aArray)
+{
+  nsCOMPtr<nsIClassInfo> ci(do_QueryInterface(mEvent));
+  if (ci) {
+    return ci->GetInterfaces(aCount, aArray);
+  }
+  return NS_CI_INTERFACE_GETTER_NAME(nsDOMWorkerPrivateEvent)(aCount, aArray);
+}
 
 NS_IMETHODIMP
 nsDOMWorkerPrivateEvent::PreventDefault()
@@ -79,6 +99,38 @@ nsDOMWorkerPrivateEvent::InitEvent(const nsAString& aEventType,
 {
   mPreventDefaultCalled = PR_FALSE;
   return mEvent->InitEvent(aEventType, aCanBubble, aCancelable);
+}
+
+NS_IMETHODIMP
+nsDOMWorkerPrivateEvent::InitProgressEvent(const nsAString& aTypeArg,
+                                           PRBool aCanBubbleArg,
+                                           PRBool aCancelableArg,
+                                           PRBool aLengthComputableArg,
+                                           PRUint64 aLoadedArg,
+                                           PRUint64 aTotalArg)
+{
+  NS_ASSERTION(mProgressEvent, "Impossible!");
+
+  mPreventDefaultCalled = PR_FALSE;
+  return mProgressEvent->InitProgressEvent(aTypeArg, aCanBubbleArg,
+                                           aCancelableArg, aLengthComputableArg,
+                                           aLoadedArg, aTotalArg);
+}
+
+NS_IMETHODIMP
+nsDOMWorkerPrivateEvent::InitMessageEvent(const nsAString& aTypeArg,
+                                          PRBool aCanBubbleArg,
+                                          PRBool aCancelableArg,
+                                          const nsAString& aDataArg,
+                                          const nsAString& aOriginArg,
+                                          nsISupports* aSourceArg)
+{
+  NS_ASSERTION(mMessageEvent, "Impossible!");
+
+  mPreventDefaultCalled = PR_FALSE;
+  return mMessageEvent->InitMessageEvent(aTypeArg, aCanBubbleArg,
+                                         aCancelableArg, aDataArg, aOriginArg,
+                                         aSourceArg);
 }
 
 PRBool
