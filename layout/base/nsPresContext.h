@@ -95,7 +95,7 @@ struct nsStyleBackground;
 template <class T> class nsRunnableMethod;
 class nsIRunnable;
 class gfxUserFontSet;
-class nsCSSFontFaceRule;
+struct nsFontFaceRuleContainer;
 
 #ifdef MOZ_REFLOW_PERF
 class nsIRenderingContext;
@@ -823,7 +823,7 @@ protected:
   // container for per-context fonts (downloadable, SVG, etc.)
   gfxUserFontSet* mUserFontSet;
   // The list of @font-face rules that we put into mUserFontSet
-  nsTArray< nsRefPtr<nsCSSFontFaceRule> > mFontFaceRules;
+  nsTArray<nsFontFaceRuleContainer> mFontFaceRules;
   
   PRInt32               mFontScaler;
   nscoord               mMinimumFontSize;
