@@ -62,7 +62,6 @@
 #include "nsContentUtils.h"
 #include "nsDeque.h"
 #include "nsIClassInfoImpl.h"
-#include "nsProxyRelease.h"
 #include "nsThreadUtils.h"
 #include "nsXPCOM.h"
 #include "nsXPCOMCID.h"

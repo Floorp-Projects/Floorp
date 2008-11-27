@@ -70,6 +70,8 @@ _TEST_FILES = \
   threadTimeouts_worker.js \
   test_xhr.html \
   xhr_worker.js \
+  test_xhrAbort.html \
+  xhrAbort_worker.js \
   testXHR.txt \
   test_fibonacci.html \
   fibonacci_worker.js \
