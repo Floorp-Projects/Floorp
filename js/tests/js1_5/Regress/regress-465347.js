@@ -1,5 +1,4 @@
-/* -*- Mode: java; tab-width:8; indent-tabs-mode: nil; c-basic-offset: 4 -*- */
-
+/* -*- Mode: C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
 /* ***** BEGIN LICENSE BLOCK *****
  * Version: MPL 1.1/GPL 2.0/LGPL 2.1
  *
@@ -17,10 +16,10 @@
  *
  * The Initial Developer of the Original Code is
  * Mozilla Foundation.
- * Portions created by the Initial Developer are Copyright (C) 2006
+ * Portions created by the Initial Developer are Copyright (C) 2008
  * the Initial Developer. All Rights Reserved.
  *
- * Contributor(s): Jesse Ruderman
+ * Contributor(s): Brendan Eich
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -36,30 +35,51 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-gTestfile = 'regress-350238.js';
+var gTestfile = 'regress-465347.js';
+//-----------------------------------------------------------------------------
+var BUGNUMBER = 465347;
+var summary = 'Test integer to id in js_Int32ToId';
+var actual = '';
+var expect = '';
 
-var BUGNUMBER = 350238;
-var summary = 'Do not assert <x/>.@*++';
-var actual = 'No Crash';
-var expect = 'No Crash';
 
-printBugNumber(BUGNUMBER);
-START(summary);
+//-----------------------------------------------------------------------------
+test();
+//-----------------------------------------------------------------------------
 
-if (typeof document != 'undefined' && 'addEventListener' in document)
+function test()
 {
-    document.addEventListener('load',
-                              (function () {
-                                  var iframe = document.createElement('iframe');
-                                  document.body.appendChild(iframe);
-                                  iframe.contentDocument.location.href='javascript:<x/>.@*++;';
-                              }), true);
-}
-else
-{
-    <x/>.@*++;
-}
+  enterFunc ('test');
+  printBugNumber(BUGNUMBER);
+  printStatus (summary);
+ 
+  var o;
 
-TEST(1, expect, actual);
+  o = new Array();
 
-END();
+  expect = undefined;
+  o[0xffffffff] = 'end';
+  actual = o[-1];  
+  reportCompare(expect, actual, summary + ': 1');
+
+  expect = 42;
+  o['42'] = 42;
+  actual = o[42];  
+  reportCompare(expect, actual, summary + ': 2');
+
+  //
+
+  o = new Object();
+
+  expect = undefined;
+  o[0xffffffff] = 'end';
+  actual = o[-1];  
+  reportCompare(expect, actual, summary + ': 3');
+
+  expect = 42;
+  o['42'] = 42;
+  actual = o[42];  
+  reportCompare(expect, actual, summary + ': 4');
+
+  exitFunc ('test');
+}

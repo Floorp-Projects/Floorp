@@ -1,5 +1,4 @@
-/* -*- Mode: java; tab-width:8; indent-tabs-mode: nil; c-basic-offset: 4 -*- */
-
+/* -*- Mode: C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
 /* ***** BEGIN LICENSE BLOCK *****
  * Version: MPL 1.1/GPL 2.0/LGPL 2.1
  *
@@ -36,30 +35,35 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-gTestfile = 'regress-350238.js';
+var gTestfile = 'regress-352022.js';
+//-----------------------------------------------------------------------------
+var BUGNUMBER = 352022;
+var summary = 'decompilation of let, delete and parens';
+var actual = '';
+var expect = '';
 
-var BUGNUMBER = 350238;
-var summary = 'Do not assert <x/>.@*++';
-var actual = 'No Crash';
-var expect = 'No Crash';
 
-printBugNumber(BUGNUMBER);
-START(summary);
+//-----------------------------------------------------------------------------
+test();
+//-----------------------------------------------------------------------------
 
-if (typeof document != 'undefined' && 'addEventListener' in document)
+function test()
 {
-    document.addEventListener('load',
-                              (function () {
-                                  var iframe = document.createElement('iframe');
-                                  document.body.appendChild(iframe);
-                                  iframe.contentDocument.location.href='javascript:<x/>.@*++;';
-                              }), true);
-}
-else
-{
-    <x/>.@*++;
-}
+  enterFunc ('test');
+  printBugNumber(BUGNUMBER);
+  printStatus (summary);
+ 
+  var f;
 
-TEST(1, expect, actual);
+  f = function() { g(h) = (delete let (y) 3); }
+  actual = f + '';
+  expect = 'function () {\n    g(h) = (let (y) 3, true);\n}';
+  compareSource(expect, actual, summary + ': 1');
 
-END();
+  f = function () {    g(h) = ((let (y) 3), true);}
+  actual = f + '';
+  expect = 'function () {\n    g(h) = (let (y) 3, true);\n}';
+  compareSource(expect, actual, summary + ': 2');
+
+  exitFunc ('test');
+}

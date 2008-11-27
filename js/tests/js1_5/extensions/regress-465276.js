@@ -1,5 +1,4 @@
-/* -*- Mode: java; tab-width:8; indent-tabs-mode: nil; c-basic-offset: 4 -*- */
-
+/* -*- Mode: C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
 /* ***** BEGIN LICENSE BLOCK *****
  * Version: MPL 1.1/GPL 2.0/LGPL 2.1
  *
@@ -17,7 +16,7 @@
  *
  * The Initial Developer of the Original Code is
  * Mozilla Foundation.
- * Portions created by the Initial Developer are Copyright (C) 2006
+ * Portions created by the Initial Developer are Copyright (C) 2008
  * the Initial Developer. All Rights Reserved.
  *
  * Contributor(s): Jesse Ruderman
@@ -36,30 +35,35 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-gTestfile = 'regress-350238.js';
+var gTestfile = 'regress-465276.js';
+//-----------------------------------------------------------------------------
+var BUGNUMBER = 465276;
+var summary = '((1 * (1))|""';
+var actual = '';
+var expect = '';
 
-var BUGNUMBER = 350238;
-var summary = 'Do not assert <x/>.@*++';
-var actual = 'No Crash';
-var expect = 'No Crash';
 
-printBugNumber(BUGNUMBER);
-START(summary);
+//-----------------------------------------------------------------------------
+test();
+//-----------------------------------------------------------------------------
 
-if (typeof document != 'undefined' && 'addEventListener' in document)
+function test()
 {
-    document.addEventListener('load',
-                              (function () {
-                                  var iframe = document.createElement('iframe');
-                                  document.body.appendChild(iframe);
-                                  iframe.contentDocument.location.href='javascript:<x/>.@*++;';
-                              }), true);
-}
-else
-{
-    <x/>.@*++;
-}
+  enterFunc ('test');
+  printBugNumber(BUGNUMBER);
+  printStatus (summary);
 
-TEST(1, expect, actual);
+  jit(true);
 
-END();
+  expect = '[1, 1, 1, 1, 1, 1, 1, 1, 1, 1]';
+  empty = [];
+  out = [];
+  for (var j=0;j<10;++j) { empty[42]; out.push((1 * (1)) | ""); }
+  print(actual = uneval(out));
+
+  jit(false);
+
+  reportCompare(expect, actual, summary);
+
+  exitFunc ('test');
+}

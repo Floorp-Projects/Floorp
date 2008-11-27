@@ -1,5 +1,4 @@
-/* -*- Mode: java; tab-width:8; indent-tabs-mode: nil; c-basic-offset: 4 -*- */
-
+/* -*- Mode: C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
 /* ***** BEGIN LICENSE BLOCK *****
  * Version: MPL 1.1/GPL 2.0/LGPL 2.1
  *
@@ -21,6 +20,7 @@
  * the Initial Developer. All Rights Reserved.
  *
  * Contributor(s): Jesse Ruderman
+ *                 Jeff Walden
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -36,30 +36,52 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-gTestfile = 'regress-350238.js';
+var gTestfile = 'regress-350991.js';
+//-----------------------------------------------------------------------------
+var BUGNUMBER = 350991;
+var summary = 'decompilation of function () { for (let...;...;}} ';
+var actual = '';
+var expect = '';
 
-var BUGNUMBER = 350238;
-var summary = 'Do not assert <x/>.@*++';
-var actual = 'No Crash';
-var expect = 'No Crash';
 
-printBugNumber(BUGNUMBER);
-START(summary);
+//-----------------------------------------------------------------------------
+test();
+//-----------------------------------------------------------------------------
 
-if (typeof document != 'undefined' && 'addEventListener' in document)
+function test()
 {
-    document.addEventListener('load',
-                              (function () {
-                                  var iframe = document.createElement('iframe');
-                                  document.body.appendChild(iframe);
-                                  iframe.contentDocument.location.href='javascript:<x/>.@*++;';
-                              }), true);
-}
-else
-{
-    <x/>.@*++;
-}
+  enterFunc ('test');
+  printBugNumber(BUGNUMBER);
+  printStatus (summary);
 
-TEST(1, expect, actual);
+  var f;
 
-END();
+  expect = 'function () {\n    for (let (y) 3;;) {\n    }\n}';
+  try
+  {
+    f = eval('(function () { for ((let (y) 3); ;) { } })');
+    actual = f + '';
+  }
+  catch(ex)
+  {
+    actual = ex + '';
+  }
+
+  compareSource(expect, actual, summary);
+
+  expect = 'function () {\n    let x = 5;\n    while (x-- > 0) {\n' +
+    '        for (let x = x, q = 5;;) {\n        }\n    }\n}';
+  try
+  {
+    f = function() { let x = 5; while (x-- > 0) { for (let x = x, q = 5;;); } }
+    actual = f + '';
+  }
+  catch(ex)
+  {
+    actual = ex + '';
+  }
+
+  compareSource(expect, actual, summary);
+
+  exitFunc ('test');
+}

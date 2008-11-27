@@ -1,5 +1,4 @@
-/* -*- Mode: java; tab-width:8; indent-tabs-mode: nil; c-basic-offset: 4 -*- */
-
+/* -*- Mode: C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
 /* ***** BEGIN LICENSE BLOCK *****
  * Version: MPL 1.1/GPL 2.0/LGPL 2.1
  *
@@ -36,30 +35,56 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-gTestfile = 'regress-350238.js';
+var gTestfile = 'regress-352609.js';
+//-----------------------------------------------------------------------------
+var BUGNUMBER = 352609;
+var summary = 'decompilation of |let| expression for |is not a function| error';
+var actual = '';
+var expect = '';
 
-var BUGNUMBER = 350238;
-var summary = 'Do not assert <x/>.@*++';
-var actual = 'No Crash';
-var expect = 'No Crash';
 
-printBugNumber(BUGNUMBER);
-START(summary);
+//-----------------------------------------------------------------------------
+test();
+//-----------------------------------------------------------------------------
 
-if (typeof document != 'undefined' && 'addEventListener' in document)
+function test()
 {
-    document.addEventListener('load',
-                              (function () {
-                                  var iframe = document.createElement('iframe');
-                                  document.body.appendChild(iframe);
-                                  iframe.contentDocument.location.href='javascript:<x/>.@*++;';
-                              }), true);
-}
-else
-{
-    <x/>.@*++;
-}
+  enterFunc ('test');
+  printBugNumber(BUGNUMBER);
+  printStatus (summary);
 
-TEST(1, expect, actual);
+  expect = /TypeError: 0 is not a function/;
+  try
+  {
+    [let (x = 3, y = 4) x].map(0);
+  }
+  catch(ex)
+  {
+    actual = ex + '';
+  }
+  reportMatch(expect, actual, '[let (x = 3, y = 4) x].map(0)');
 
-END();
+  expect = /TypeError: (p.z = \[let \(x = 3, y = 4\) x\]|.*Array.*) is not a function/;
+  try
+  {
+    var p = {}; (p.z = [let (x = 3, y = 4) x])();
+  }
+  catch(ex)
+  {
+    actual = ex + '';
+  }
+  reportMatch(expect, actual, 'p = {}; (p.z = [let (x = 3, y = 4) x])()');
+
+  expect = /TypeError: (p.z = let \(x\) x|.*Undefined.*) is not a function/;
+  try
+  {
+    var p = {}; (p.z = let(x) x)()
+  }
+  catch(ex)
+  {
+    actual = ex + '';
+  }
+  reportMatch(expect, actual, 'p = {}; (p.z = let(x) x)()');
+
+  exitFunc ('test');
+}
