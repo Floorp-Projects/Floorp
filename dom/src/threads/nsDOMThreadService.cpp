@@ -41,6 +41,7 @@
 
 // Interfaces
 #include "nsIComponentManager.h"
+#include "nsIConsoleService.h"
 #include "nsIDocument.h"
 #include "nsIDOMDocument.h"
 #include "nsIDOMNavigator.h"
@@ -159,21 +160,96 @@ class nsReportErrorRunnable : public nsIRunnable
 public:
   NS_DECL_ISUPPORTS
 
-  nsReportErrorRunnable(nsDOMWorker* aWorker, nsIWorkerMessageEvent* aEvent)
-  : mWorker(aWorker), mWorkerWN(aWorker->GetWrappedNative()), mEvent(aEvent) { }
+  nsReportErrorRunnable(nsDOMWorker* aWorker, nsIScriptError* aScriptError)
+  : mWorker(aWorker), mWorkerWN(aWorker->GetWrappedNative()),
+    mScriptError(aScriptError) {
+      NS_ASSERTION(aScriptError, "Null pointer!");
+    }
 
   NS_IMETHOD Run() {
     if (mWorker->IsCanceled()) {
       return NS_OK;
     }
 
-    return mWorker->DispatchEvent(mEvent, nsnull);
+#ifdef DEBUG
+    {
+      nsRefPtr<nsDOMWorker> parent = mWorker->GetParent();
+      if (NS_IsMainThread()) {
+        NS_ASSERTION(!parent, "Shouldn't have a parent on the main thread!");
+      }
+      else {
+        NS_ASSERTION(parent, "Should have a parent!");
+
+        JSContext* cx = nsDOMThreadService::get()->GetCurrentContext();
+        NS_ASSERTION(cx, "No context!");
+
+        nsDOMWorker* currentWorker = (nsDOMWorker*)JS_GetContextPrivate(cx);
+        NS_ASSERTION(currentWorker == parent, "Wrong worker!");
+      }
+    }
+#endif
+
+    NS_NAMED_LITERAL_STRING(errorStr, "error");
+
+    PRBool hasListener = PR_FALSE, stopPropagation = PR_FALSE;
+    nsresult rv = NS_OK;
+
+    if (mWorker->mOuterHandler->HasListeners(errorStr)) {
+      hasListener = PR_TRUE;
+      nsRefPtr<nsDOMWorkerMessageEvent> event(new nsDOMWorkerMessageEvent());
+      if (event) {
+        nsCString errorMessage;
+        rv = mScriptError->ToString(errorMessage);
+        if (NS_SUCCEEDED(rv)) {
+          rv = event->InitMessageEvent(errorStr, PR_FALSE, PR_FALSE,
+                                       NS_ConvertUTF8toUTF16(errorMessage),
+                                       EmptyString(), nsnull);
+          if (NS_SUCCEEDED(rv)) {
+            event->SetTarget(mWorker);
+            rv = mWorker->DispatchEvent(static_cast<nsDOMWorkerEvent*>(event),
+                                        &stopPropagation);
+            if (NS_FAILED(rv)) {
+              stopPropagation = PR_FALSE;
+            }
+          }
+        }
+      }
+    }
+    NS_ENSURE_SUCCESS(rv, rv);
+
+    if (stopPropagation) {
+      return NS_OK;
+    }
+
+    nsRefPtr<nsDOMWorker> parent = mWorker->GetParent();
+    if (!parent) {
+      NS_ASSERTION(NS_IsMainThread(), "Wrong thread!");
+      nsCOMPtr<nsIConsoleService> consoleService =
+        do_GetService(NS_CONSOLESERVICE_CONTRACTID);
+      if (consoleService) {
+        rv = consoleService->LogMessage(mScriptError);
+        NS_ENSURE_SUCCESS(rv, rv);
+      }
+      return NS_OK;
+    }
+
+    nsRefPtr<nsReportErrorRunnable> runnable =
+      new nsReportErrorRunnable(parent, mScriptError);
+    if (runnable) {
+      nsRefPtr<nsDOMWorker> grandparent = parent->GetParent();
+      rv = grandparent ?
+           nsDOMThreadService::get()->Dispatch(grandparent, runnable) :
+           NS_DispatchToMainThread(runnable, NS_DISPATCH_NORMAL);
+      NS_ENSURE_SUCCESS(rv, rv);
+    }
+
+    return NS_OK;
   }
 
 private:
   nsRefPtr<nsDOMWorker> mWorker;
   nsCOMPtr<nsIXPConnectWrappedNative> mWorkerWN;
-  nsCOMPtr<nsIWorkerMessageEvent> mEvent;
+  nsCOMPtr<nsIScriptError> mScriptError;
 };
 
 NS_IMPL_THREADSAFE_ISUPPORTS1(nsReportErrorRunnable, nsIRunnable)
@@ -409,7 +485,7 @@ DOMWorkerErrorReporter(JSContext* aCx,
   }
 
   nsresult rv;
-  nsCOMPtr<nsIScriptError> errorObject =
+  nsCOMPtr<nsIScriptError> scriptError =
     do_CreateInstance(NS_SCRIPTERROR_CONTRACTID, &rv);
   NS_ENSURE_SUCCESS(rv,);
 
@@ -424,25 +500,12 @@ DOMWorkerErrorReporter(JSContext* aCx,
 
   PRUint32 column = aReport->uctokenptr - aReport->uclinebuf;
 
-  rv = errorObject->Init(message, filename.get(), line, aReport->lineno,
-                        column, aReport->flags, "DOM Worker javascript");
+  rv = scriptError->Init(message, filename.get(), line, aReport->lineno,
+                         column, aReport->flags, "DOM Worker javascript");
   NS_ENSURE_SUCCESS(rv,);
 
-  nsCString finalMessage;
-  rv = errorObject->ToString(finalMessage);
-  NS_ENSURE_SUCCESS(rv,);
-
-  nsRefPtr<nsDOMWorkerMessageEvent> event(new nsDOMWorkerMessageEvent());
-  NS_ENSURE_TRUE(event,);
-
-  rv = event->InitMessageEvent(NS_LITERAL_STRING("error"), PR_FALSE, PR_FALSE,
-                               NS_ConvertUTF8toUTF16(finalMessage),
-                               EmptyString(), nsnull);
-  NS_ENSURE_SUCCESS(rv,);
-
-  event->SetTarget(worker);
-
-  nsCOMPtr<nsIRunnable> runnable(new nsReportErrorRunnable(worker, event));
+  nsCOMPtr<nsIRunnable> runnable =
+    new nsReportErrorRunnable(worker, scriptError);
   NS_ENSURE_TRUE(runnable,);
 
   nsRefPtr<nsDOMWorker> parent = worker->GetParent();
