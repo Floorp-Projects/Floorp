@@ -1107,11 +1107,7 @@ function prepareForStartup() {
   gBrowser.browsers[0].removeAttribute("disablehistory");
 
   // enable global history
-  try {
-    gBrowser.docShell.QueryInterface(Components.interfaces.nsIDocShellHistory).useGlobalHistory = true;
-  } catch(ex) {
-    Components.utils.reportError("Places database may be locked: " + ex);
-  }
+  gBrowser.docShell.QueryInterface(Components.interfaces.nsIDocShellHistory).useGlobalHistory = true;
 
   // hook up UI through progress listener
   gBrowser.addProgressListener(window.XULBrowserWindow, Components.interfaces.nsIWebProgress.NOTIFY_ALL);
