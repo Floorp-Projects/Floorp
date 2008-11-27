@@ -5041,7 +5041,7 @@ BaseStubConstructor(nsIWeakReference* aWeakOwner,
 
     rv = initializer->Initialize(currentInner, cx, obj, argc, argv);
     if (NS_FAILED(rv)) {
-      return NS_ERROR_NOT_INITIALIZED;
+      return rv;
     }
   }
 

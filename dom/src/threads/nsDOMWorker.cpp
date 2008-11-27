@@ -924,12 +924,11 @@ nsDOMWorker::InitializeInternal(nsIScriptGlobalObject* aOwner,
                                 PRUint32 aArgc,
                                 jsval* aArgv)
 {
-  NS_ENSURE_TRUE(aArgc, NS_ERROR_INVALID_ARG);
+  NS_ENSURE_TRUE(aArgc, NS_ERROR_XPC_NOT_ENOUGH_ARGS);
   NS_ENSURE_ARG_POINTER(aArgv);
-  NS_ENSURE_TRUE(JSVAL_IS_STRING(aArgv[0]), NS_ERROR_INVALID_ARG);
 
   JSString* str = JS_ValueToString(aCx, aArgv[0]);
-  NS_ENSURE_STATE(str);
+  NS_ENSURE_TRUE(str, NS_ERROR_XPC_BAD_CONVERT_JS);
 
   mScriptURL.Assign(nsDependentJSString(str));
   NS_ENSURE_FALSE(mScriptURL.IsEmpty(), NS_ERROR_INVALID_ARG);
