@@ -129,7 +129,4 @@ NS_IMPL_THREADSAFE_DOM_CI_ALL_THE_REST(_class)
   NS_IMETHOD_(nsrefcnt) AddRef(void) { return _to AddRef(); }                 \
   NS_IMETHOD_(nsrefcnt) Release(void) { return _to Release(); }
 
-#define JSON_PRIMITIVE_PROPNAME                                               \
-  "primitive"
-
 #endif /* __NSDOMWORKERMACROS_H__ */
