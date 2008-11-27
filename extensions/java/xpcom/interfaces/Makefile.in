@@ -90,7 +90,7 @@ $(_JAVA_DIR)/$(PACKAGE_DIR)/Mozilla.class: $(PACKAGE_DIR)/IXPCOMError.java
 $(PACKAGE_DIR)::
 	$(NSINSTALL) -D $@
 
-$(PACKAGE_DIR)/IXPCOMError.java: $(topsrcdir)/xpcom/base/nsError.h gen-nsError.pl $(PACKAGE_DIR) Makefile Makefile.in
+$(PACKAGE_DIR)/IXPCOMError.java: $(topsrcdir)/xpcom/base/nsError.h gen-nsError.pl $(PACKAGE_DIR) $(GLOBAL_DEPS)
 	$(PERL) $(srcdir)/gen-nsError.pl < $< > $@
 
 ##
@@ -112,7 +112,7 @@ endif
 
 # Using the temporary "java.files" avoids an "argument list too long"
 # error on Windows when using *.java
-$(IFACES_DIR)/$(JAVA_IFACES_PKG_NAME)/nsISupports.class: $(IFACES_DIR) $(wildcard $(JAVA_DIST_DIR)/default/$(JAVA_IFACES_PKG_NAME)/*.java) Makefile Makefile.in
+$(IFACES_DIR)/$(JAVA_IFACES_PKG_NAME)/nsISupports.class: $(IFACES_DIR) $(wildcard $(JAVA_DIST_DIR)/default/$(JAVA_IFACES_PKG_NAME)/*.java) $(GLOBAL_DEPS)
 	@echo Compiling Java interfaces
 	find $(JAVA_DIST_DIR)/default -name "*.java" $(IGNORE_IFACES) > java.files
 	$(CYGWIN_WRAPPER) $(JAVAC) $(JAVAC_FLAGS) -classpath $(IFACES_DIR) 		\
