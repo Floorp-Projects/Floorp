@@ -906,7 +906,7 @@ nsXPConnect::Traverse(void *p, nsCycleCollectionTraversalCallback &cb)
     {
         nsISupports *principal = nsnull;
         mScopes.Get(obj, &principal);
-        NS_CYCLE_COLLECTION_NOTE_EDGE_NAME(cb, "scope prinicpal");
+        NS_CYCLE_COLLECTION_NOTE_EDGE_NAME(cb, "scope principal");
         cb.NoteXPCOMChild(principal);
     }
 #endif
