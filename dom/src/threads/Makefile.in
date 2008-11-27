@@ -61,6 +61,7 @@ REQUIRES = \
   pref \
   string \
   thebes \
+  uconv \
   widget \
   xpcom \
   xpconnect \
@@ -82,6 +83,7 @@ CPPSRCS = \
 
 LOCAL_INCLUDES = \
   -I$(topsrcdir)/dom/src/base \
+  -I$(topsrcdir)/dom/src/json \
   -I$(topsrcdir)/content/base/src \
   -I$(topsrcdir)/content/events/src \
   $(NULL)

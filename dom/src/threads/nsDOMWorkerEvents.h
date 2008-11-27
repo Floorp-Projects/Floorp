@@ -46,6 +46,8 @@
 #include "nsIDOMWorkers.h"
 #include "nsIRunnable.h"
 
+#include "jsapi.h"
+#include "nsAutoJSValHolder.h"
 #include "nsAutoPtr.h"
 #include "nsCOMPtr.h"
 #include "nsStringGlue.h"
@@ -186,8 +188,20 @@ public:
   NS_DECL_NSIWORKERMESSAGEEVENT
   NS_DECL_NSICLASSINFO_GETINTERFACES
 
+  nsDOMWorkerMessageEvent()
+  : mIsJSON(PR_FALSE), mIsPrimitive(PR_FALSE) { }
+
+  void SetJSONData(PRBool aIsJSON, PRBool aIsPrimitive) {
+    mIsJSON = aIsJSON;
+    mIsPrimitive = aIsPrimitive;
+  }
+
 protected:
   nsString mData;
+  PRBool mIsJSON;
+  PRBool mIsPrimitive;
+  nsAutoJSValHolder mCachedJSVal;
+
   nsString mOrigin;
   nsCOMPtr<nsISupports> mSource;
 };
