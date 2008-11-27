@@ -719,6 +719,18 @@ nsNativeThemeCocoa::DrawButton(CGContextRef cgContext, ThemeButtonKind inKind,
       // leave things alone on Tiger
       drawFrame.size.height -= 1;
     }
+  } else if (inKind == kThemeListHeaderButton) {
+    CGContextClipToRect(cgContext, inBoxRect);
+    // Always remove the top border.
+    drawFrame.origin.y -= 1;
+    drawFrame.size.height += 1;
+    // Remove the left border in LTR mode and the right border in RTL mode.
+    drawFrame.size.width += 1;
+    PRBool isLast = IsLastTreeHeaderCell(aFrame);
+    if (isLast)
+      drawFrame.size.width += 1; // Also remove the other border.
+    if (!IsFrameRTL(aFrame) || isLast)
+      drawFrame.origin.x -= 1;
   }
 
   if (!needsScaling) {
@@ -1461,7 +1473,7 @@ nsNativeThemeCocoa::DrawWidgetBackground(nsIRenderingContext* aContext, nsIFrame
       TreeSortDirection sortDirection = GetTreeSortDirection(aFrame);
       DrawButton(cgContext, kThemeListHeaderButton, macRect, PR_FALSE, IsDisabled(aFrame), 
                  sortDirection == eTreeSortDirection_Natural ? kThemeButtonOff : kThemeButtonOn,
-                 sortDirection == eTreeSortDirection_Descending ?
+                 sortDirection == eTreeSortDirection_Ascending ?
                  kThemeAdornmentHeaderButtonSortUp : kThemeAdornmentNone, eventState, aFrame);      
     }
       break;
@@ -1817,7 +1829,7 @@ nsNativeThemeCocoa::GetMinimumWidgetSize(nsIRenderingContext* aContext,
     {
       SInt32 headerHeight = 0;
       ::GetThemeMetric(kThemeMetricListHeaderHeight, &headerHeight);
-      aResult->SizeTo(0, headerHeight);
+      aResult->SizeTo(0, headerHeight - 1); // We don't need the top border.
       break;
     }
 
