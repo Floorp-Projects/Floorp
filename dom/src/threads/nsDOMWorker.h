@@ -193,6 +193,7 @@ private:
   PRPackedBool mCanceled;
   PRPackedBool mSuspended;
   PRPackedBool mCompileAttempted;
+  PRPackedBool mTerminated;
 };
 
 /**

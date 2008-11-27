@@ -98,11 +98,13 @@ interface nsIAbstractWorker : nsIDOMEventTarget
   attribute nsIDOMEventListener onerror;
 };
 
-[scriptable, uuid(479c9476-0bc2-4211-8656-6627dfd82b1c)]
+[scriptable, uuid(3d2ca558-31f7-4893-aa6d-1db9a3cb5bb9)]
 interface nsIWorker : nsIAbstractWorker
 {
   void postMessage(in DOMString aMessage,
                    [optional] in nsIWorkerMessagePort aMessagePort);
 
   attribute nsIDOMEventListener onmessage;
+
+  void terminate();
 };
