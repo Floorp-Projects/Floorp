@@ -85,6 +85,9 @@ class nsNativeTheme
     return CheckBooleanAttr(aFrame, nsWidgetAtoms::disabled);
   }
 
+  // RTL chrome direction
+  PRBool IsFrameRTL(nsIFrame* aFrame);
+
   // button:
   PRBool IsDefaultButton(nsIFrame* aFrame) {
     return CheckBooleanAttr(aFrame, nsWidgetAtoms::_default);
@@ -119,6 +122,7 @@ class nsNativeTheme
 
   // treeheadercell:
   TreeSortDirection GetTreeSortDirection(nsIFrame* aFrame);
+  PRBool IsLastTreeHeaderCell(nsIFrame* aFrame);
 
   // tab:
   PRBool IsBottomTab(nsIFrame* aFrame);
