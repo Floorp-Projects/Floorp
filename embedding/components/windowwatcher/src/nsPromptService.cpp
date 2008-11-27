@@ -52,7 +52,6 @@
 #include "nsString.h"
 #include "nsIStringBundle.h"
 #include "nsXPIDLString.h"
-#include "nsISound.h"
 
 static const char kPromptURL[] = "chrome://global/content/commonDialog.xul";
 static const char kSelectPromptURL[] = "chrome://global/content/selectDialog.xul";
@@ -140,7 +139,6 @@ nsPromptService::Alert(nsIDOMWindow *parent,
   nsString url;
   NS_ConvertASCIItoUTF16 styleClass(kAlertIconClass);
   block->SetString(eIconClass, styleClass.get());
-  block->SetString(eOpeningSound, NS_SYSSOUND_WARNING_DIALOG.get());
 
   rv = DoDialog(parent, block, kPromptURL);
 
@@ -185,7 +183,6 @@ nsPromptService::AlertCheck(nsIDOMWindow *parent,
   block->SetString(eIconClass, styleClass.get());
   block->SetString(eCheckboxMsg, checkMsg);
   block->SetInt(eCheckboxState, *checkValue);
-  block->SetString(eOpeningSound, NS_SYSSOUND_WARNING_DIALOG.get());
 
   rv = DoDialog(parent, block, kPromptURL);
   if (NS_FAILED(rv))
@@ -231,8 +228,7 @@ nsPromptService::Confirm(nsIDOMWindow *parent,
 
   NS_ConvertASCIItoUTF16 styleClass(kQuestionIconClass);
   block->SetString(eIconClass, styleClass.get());
-  block->SetString(eOpeningSound, NS_SYSSOUND_QUESTION_DIALOG.get());
-
+  
   rv = DoDialog(parent, block, kPromptURL);
   if (NS_FAILED(rv))
     return rv;
@@ -281,7 +277,6 @@ nsPromptService::ConfirmCheck(nsIDOMWindow *parent,
   block->SetString(eIconClass, styleClass.get());
   block->SetString(eCheckboxMsg, checkMsg);
   block->SetInt(eCheckboxState, *checkValue);
-  block->SetString(eOpeningSound, NS_SYSSOUND_QUESTION_DIALOG.get());
 
   rv = DoDialog(parent, block, kPromptURL);
   if (NS_FAILED(rv))
@@ -381,9 +376,8 @@ nsPromptService::ConfirmEx(nsIDOMWindow *parent,
     buttonFlags >>= 8;
   }
   block->SetInt(eNumberButtons, numberButtons);
-
+  
   block->SetString(eIconClass, NS_ConvertASCIItoUTF16(kQuestionIconClass).get());
-  block->SetString(eOpeningSound, NS_SYSSOUND_QUESTION_DIALOG.get());
 
   if (checkMsg && checkValue) {
     block->SetString(eCheckboxMsg, checkMsg);
@@ -459,7 +453,6 @@ nsPromptService::Prompt(nsIDOMWindow *parent,
     block->SetString(eCheckboxMsg, checkMsg);
     block->SetInt(eCheckboxState, *checkValue);
   }
-  block->SetString(eOpeningSound, NS_SYSSOUND_QUESTION_DIALOG.get());
 
   rv = DoDialog(parent, block, kPromptURL);
   if (NS_FAILED(rv))
@@ -535,8 +528,7 @@ nsPromptService::PromptUsernameAndPassword(nsIDOMWindow *parent,
     block->SetString(eCheckboxMsg, checkMsg);
     block->SetInt(eCheckboxState, *checkValue);
   }
-  block->SetString(eOpeningSound, NS_SYSSOUND_QUESTION_DIALOG.get());
-
+  
   rv = DoDialog(parent, block, kPromptURL);
   if (NS_FAILED(rv))
     return rv;
@@ -615,7 +607,6 @@ NS_IMETHODIMP nsPromptService::PromptPassword(nsIDOMWindow *parent,
     block->SetString(eCheckboxMsg, checkMsg);
     block->SetInt(eCheckboxState, *checkValue);
   }
-  block->SetString(eOpeningSound, NS_SYSSOUND_QUESTION_DIALOG.get());
 
   rv = DoDialog(parent, block, kPromptURL);
   if (NS_FAILED(rv))
@@ -707,15 +698,14 @@ nsPromptService::Select(nsIDOMWindow *parent, const PRUnichar *dialogTitle,
   if (NS_FAILED(rv))
     return rv;
 
-  block->SetNumberStrings(count + 3);
+  block->SetNumberStrings(count + 2);
   if (dialogTitle)
     block->SetString(0, dialogTitle);
   
   block->SetString(1, text);
-  block->SetString(2, NS_SYSSOUND_QUESTION_DIALOG.get());
   block->SetInt(eSelection, count);
-  for (PRUint32 i = 3; i <= count+2; i++) {
-    nsAutoString temp(selectList[i-3]);
+  for (PRUint32 i = 2; i <= count+1; i++) {
+    nsAutoString temp(selectList[i-2]);
     const PRUnichar* text = temp.get();
     block->SetString(i, text);
   }
@@ -751,7 +741,6 @@ nsPromptService::ShowNonBlockingAlert(nsIDOMWindow *aParent,
   paramBlock->SetString(nsPIPromptService::eIconClass, NS_LITERAL_STRING("alert-icon").get());
   paramBlock->SetString(nsPIPromptService::eDialogTitle, aDialogTitle);
   paramBlock->SetString(nsPIPromptService::eMsg, aText);
-  paramBlock->SetString(eOpeningSound, NS_SYSSOUND_WARNING_DIALOG.get());
 
   nsCOMPtr<nsIDOMWindow> dialog;
   mWatcher->OpenWindow(aParent, "chrome://global/content/commonDialog.xul",
