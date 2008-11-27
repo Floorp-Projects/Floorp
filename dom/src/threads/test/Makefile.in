@@ -41,7 +41,7 @@ topsrcdir        = @top_srcdir@
 srcdir           = @srcdir@
 VPATH            = @srcdir@
 
-relativesrcdir   = dom/src/threads/tests
+relativesrcdir   = dom/src/threads/test
 
 include $(DEPTH)/config/autoconf.mk
 include $(topsrcdir)/config/rules.mk
@@ -61,6 +61,10 @@ _TEST_FILES = \
   recursion_worker.js \
   test_regExpStatics.html \
   regExpStatics_worker.js \
+  test_relativeLoad.html \
+  relativeLoad_worker.js \
+  relativeLoad_worker2.js \
+  relativeLoad_import.js \
   test_simpleThread.html \
   simpleThread_worker.js \
   test_terminate.html \
@@ -81,5 +85,14 @@ _TEST_FILES = \
   fibonacci_worker.js \
   $(NULL)
 
+_SUBDIR_TEST_FILES = \
+  relativeLoad_sub_worker.js \
+  relativeLoad_sub_worker2.js \
+  relativeLoad_sub_import.js \
+  $(NULL)
+
 libs:: $(_TEST_FILES)
 	$(INSTALL) $(foreach f,$^,"$f") $(DEPTH)/_tests/testing/mochitest/tests/$(relativesrcdir)
+
+libs:: $(_SUBDIR_TEST_FILES)
+	$(INSTALL) $(foreach f,$^,"$f") $(DEPTH)/_tests/testing/mochitest/tests/$(relativesrcdir)/subdir
