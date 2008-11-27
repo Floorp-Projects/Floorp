@@ -39,10 +39,7 @@
 #include "nsDOMWorkerEvents.h"
 
 #include "nsIXMLHttpRequest.h"
-#include "nsIXPConnect.h"
 
-#include "nsAXPCNativeCallContext.h"
-#include "nsContentUtils.h"
 #include "nsThreadUtils.h"
 
 #include "nsDOMWorkerMessageHandler.h"
@@ -243,70 +240,8 @@ NS_IMPL_THREADSAFE_DOM_CI_GETINTERFACES(nsDOMWorkerMessageEvent)
 NS_IMETHODIMP
 nsDOMWorkerMessageEvent::GetData(nsAString& aData)
 {
-  if (!mIsJSON) {
-    aData.Assign(mData);
-    return NS_OK;
-  }
-
-  nsIXPConnect* xpc = nsContentUtils::XPConnect();
-  NS_ENSURE_TRUE(xpc, NS_ERROR_UNEXPECTED);
-
-  nsAXPCNativeCallContext* cc;
-  nsresult rv = xpc->GetCurrentNativeCallContext(&cc);
-  NS_ENSURE_SUCCESS(rv, rv);
-  NS_ENSURE_TRUE(cc, NS_ERROR_UNEXPECTED);
-
-  jsval* retval;
-  rv = cc->GetRetValPtr(&retval);
-  NS_ENSURE_SUCCESS(rv, rv);
-
-  if (mCachedJSVal) {
-    *retval = mCachedJSVal;
-    return cc->SetReturnValueWasSet(PR_TRUE);
-  }
-
-  JSContext* cx;
-  rv = cc->GetJSContext(&cx);
-  NS_ENSURE_SUCCESS(rv, rv);
-
-  JSAutoRequest ar(cx);
-
-  JSBool ok = mCachedJSVal.Hold(cx);
-  NS_ENSURE_TRUE(ok, NS_ERROR_FAILURE);
-
-  JSONParser* parser = JS_BeginJSONParse(cx, mCachedJSVal.ToJSValPtr());
-  NS_ENSURE_TRUE(parser, NS_ERROR_UNEXPECTED);
-
-  // This is slightly sneaky, but now that JS_BeginJSONParse succeeded we always
-  // need call JS_FinishJSONParse even if JS_ConsumeJSONText fails. We'll report
-  // an error if either failed, though.
-  ok = JS_ConsumeJSONText(cx, parser, (jschar*)mData.get(),
-                          (uint32)mData.Length());
-
-  // Note the '&& ok' after the call here!
-  ok = JS_FinishJSONParse(cx, parser) && ok;
-  if (!ok) {
-    mCachedJSVal = JSVAL_NULL;
-    return NS_ERROR_UNEXPECTED;
-  }
-
-  NS_ASSERTION(mCachedJSVal.ToJSObject(), "Bad JSON result!");
-
-  if (mIsPrimitive) {
-    jsval primitive;
-
-    ok = JS_GetProperty(cx, mCachedJSVal.ToJSObject(), JSON_PRIMITIVE_PROPNAME,
-                        &primitive);
-    if (!ok) {
-      mCachedJSVal = JSVAL_NULL;
-      return NS_ERROR_UNEXPECTED;
-    }
-
-    mCachedJSVal = primitive;
-  }
-
-  *retval = mCachedJSVal;
-  return cc->SetReturnValueWasSet(PR_TRUE);
+  aData.Assign(mData);
+  return NS_OK;
 }
 
 NS_IMETHODIMP
