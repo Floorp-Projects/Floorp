@@ -38,7 +38,15 @@
 #ifndef _CAIRO_OS2_H_
 #define _CAIRO_OS2_H_
 
+#define INCL_DOS
+#define INCL_DOSSEMAPHORES
+#define INCL_DOSERRORS
+#define INCL_WIN
+#define INCL_GPI
+
 #include "cairo.h"
+
+#include <os2.h>
 
 CAIRO_BEGIN_DECLS
 
