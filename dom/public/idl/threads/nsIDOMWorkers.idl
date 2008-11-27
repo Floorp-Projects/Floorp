@@ -67,10 +67,20 @@ interface nsIWorkerMessageEvent : nsIDOMEvent
                         in nsISupports aSourceArg);
 };
 
-[scriptable, uuid(3e54b65e-5d25-453e-8d3f-258766fbf6fd)]
+[scriptable, uuid(74fb665a-e477-4ce2-b3c6-c58b1b28b6c3)]
+interface nsIWorkerNavigator : nsISupports
+{
+  readonly attribute DOMString appName;
+  readonly attribute DOMString appVersion;
+  readonly attribute DOMString platform;
+  readonly attribute DOMString userAgent;
+};
+
+[scriptable, uuid(a41ac154-ba18-4926-8954-cd6973ea490e)]
 interface nsIWorkerGlobalScope : nsISupports
 {
   readonly attribute nsIWorkerGlobalScope self;
+  readonly attribute nsIWorkerNavigator navigator;
 };
 
 [scriptable, uuid(b10cfe72-91b9-45c6-ab13-33f89c2d0e56)]
