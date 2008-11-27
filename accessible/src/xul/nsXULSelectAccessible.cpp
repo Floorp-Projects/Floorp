@@ -72,10 +72,20 @@ nsXULColumnsAccessible::GetStateInternal(PRUint32 *aState,
                                          PRUint32 *aExtraState)
 {
   NS_ENSURE_ARG_POINTER(aState);
-  *aState = nsIAccessibleStates::STATE_READONLY;
-  if (aExtraState) {
-    *aExtraState = mDOMNode ? 0 : nsIAccessibleStates::EXT_STATE_DEFUNCT ;
+  *aState = 0;
+
+  if (IsDefunct()) {
+    if (aExtraState)
+      *aExtraState = nsIAccessibleStates::EXT_STATE_DEFUNCT;
+
+    return NS_OK_DEFUNCT_OBJECT;
   }
+
+  *aState = nsIAccessibleStates::STATE_READONLY;
+
+  if (aExtraState)
+    *aExtraState = 0;
+
   return NS_OK;
 }
 
@@ -102,10 +112,18 @@ nsXULColumnItemAccessible::GetStateInternal(PRUint32 *aState,
                                             PRUint32 *aExtraState)
 {
   NS_ENSURE_ARG_POINTER(aState);
-  *aState = nsIAccessibleStates::STATE_READONLY;
-  if (aExtraState) {
-    *aExtraState = mDOMNode ? 0 : nsIAccessibleStates::EXT_STATE_DEFUNCT ;
+
+  if (IsDefunct()) {
+    if (aExtraState)
+      *aExtraState = nsIAccessibleStates::EXT_STATE_DEFUNCT;
+
+    return NS_OK_DEFUNCT_OBJECT;
   }
+
+  *aState = nsIAccessibleStates::STATE_READONLY;
+  if (aExtraState)
+    *aExtraState = 0;
+
   return NS_OK;
 }
 
@@ -196,10 +214,7 @@ nsXULListboxAccessible::GetStateInternal(PRUint32 *aState,
 
   // Get focus status from base class
   nsresult rv = nsAccessible::GetStateInternal(aState, aExtraState);
-  NS_ENSURE_SUCCESS(rv, rv);
-  if (!mDOMNode) {
-    return NS_OK;
-  }
+  NS_ENSURE_A11Y_SUCCESS(rv, rv);
 
 // see if we are multiple select if so set ourselves as such
   nsCOMPtr<nsIDOMElement> element (do_QueryInterface(mDOMNode));
@@ -909,12 +924,14 @@ nsXULListitemAccessible::GetStateInternal(PRUint32 *aState,
   }
 
   *aState = 0;
-  if (!mDOMNode) {
-    if (aExtraState) {
+
+  if (IsDefunct()) {
+    if (aExtraState)
       *aExtraState = nsIAccessibleStates::EXT_STATE_DEFUNCT;
-    }
-    return NS_OK;
+
+    return NS_OK_DEFUNCT_OBJECT;
   }
+
   if (aExtraState)
     *aExtraState = 0;
 
@@ -1045,10 +1062,7 @@ nsXULComboboxAccessible::GetStateInternal(PRUint32 *aState,
 {
   // Get focus status from base class
   nsresult rv = nsAccessible::GetStateInternal(aState, aExtraState);
-  NS_ENSURE_SUCCESS(rv, rv);
-  if (!mDOMNode) {
-    return NS_OK;
-  }
+  NS_ENSURE_A11Y_SUCCESS(rv, rv);
 
   nsCOMPtr<nsIDOMXULMenuListElement> menuList(do_QueryInterface(mDOMNode));
   if (menuList) {
