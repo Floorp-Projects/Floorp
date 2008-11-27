@@ -121,24 +121,6 @@ NS_IMPL_THREADSAFE_DOM_CI_ALL_THE_REST(_class)
 #define NS_DECL_NSICLASSINFO_GETINTERFACES                                    \
   NS_IMETHOD GetInterfaces(PRUint32* aCount, nsIID*** aArray);
 
-#define NS_FORWARD_NSIDOMEVENT_SPECIAL                                        \
-  NS_IMETHOD GetType(nsAString& aType)                                        \
-    { return mEvent->GetType(aType); }                                        \
-  NS_IMETHOD GetTarget(nsIDOMEventTarget** aTarget)                           \
-    { return mEvent->GetTarget(aTarget); }                                    \
-  NS_IMETHOD GetCurrentTarget(nsIDOMEventTarget** aCurrentTarget)             \
-    { return mEvent->GetCurrentTarget(aCurrentTarget); }                      \
-  NS_IMETHOD GetEventPhase(PRUint16* aEventPhase)                             \
-    { return mEvent->GetEventPhase(aEventPhase); }                            \
-  NS_IMETHOD GetBubbles(PRBool* aBubbles)                                     \
-    { return mEvent->GetBubbles(aBubbles); }                                  \
-  NS_IMETHOD GetCancelable(PRBool* aCancelable)                               \
-    { return mEvent->GetCancelable(aCancelable); }                            \
-  NS_IMETHOD GetTimeStamp(DOMTimeStamp* aTimeStamp)                           \
-    { return mEvent->GetTimeStamp(aTimeStamp); }                              \
-  NS_IMETHOD StopPropagation()                                                \
-    { return mEvent->StopPropagation(); }
-
 // Don't know why nsISupports.idl defines this out...
 #define NS_FORWARD_NSISUPPORTS(_to)                                           \
   NS_IMETHOD QueryInterface(const nsIID& uuid, void** result) {               \
@@ -146,5 +128,8 @@ NS_IMPL_THREADSAFE_DOM_CI_ALL_THE_REST(_class)
   }                                                                           \
   NS_IMETHOD_(nsrefcnt) AddRef(void) { return _to AddRef(); }                 \
   NS_IMETHOD_(nsrefcnt) Release(void) { return _to Release(); }
+
+#define JSON_PRIMITIVE_PROPNAME                                               \
+  "primitive"
 
 #endif /* __NSDOMWORKERMACROS_H__ */
