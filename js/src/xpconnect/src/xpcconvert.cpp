@@ -1054,12 +1054,12 @@ XPCConvert::NativeInterface2JSObject(XPCCallContext& ccx,
                                      nsIXPConnectJSObjectHolder** dest,
                                      nsISupports* src,
                                      const nsID* iid,
+                                     XPCNativeInterface* interface,
                                      JSObject* scope,
                                      PRBool allowNativeWrapper,
                                      PRBool isGlobal,
                                      nsresult* pErr)
 {
-    NS_ASSERTION(iid, "bad param");
     NS_ASSERTION(scope, "bad param");
 
     *d = JSVAL_NULL;
@@ -1090,7 +1090,13 @@ XPCConvert::NativeInterface2JSObject(XPCCallContext& ccx,
 
         // verify that this wrapper is for the right interface
         nsCOMPtr<nsISupports> wrapper;
-        src->QueryInterface(*iid, (void**)getter_AddRefs(wrapper));
+        if(interface)
+            src->QueryInterface(*interface->GetIID(),
+                                (void**)getter_AddRefs(wrapper));
+        else if(iid)
+            src->QueryInterface(*iid, (void**)getter_AddRefs(wrapper));
+        else
+            wrapper = do_QueryInterface(src);
         nsCOMPtr<nsIXPConnectJSObjectHolder> holder =
             do_QueryInterface(wrapper);
         JSObject* flat;
@@ -1110,10 +1116,13 @@ XPCConvert::NativeInterface2JSObject(XPCCallContext& ccx,
         if(!xpcscope)
             return JS_FALSE;
 
-        AutoMarkingNativeInterfacePtr iface(ccx);
-        iface = XPCNativeInterface::GetNewOrUsed(ccx, iid);
-        if(!iface)
-            return JS_FALSE;
+        AutoMarkingNativeInterfacePtr iface(ccx, interface);
+        if(!iface && iid)
+        {
+            iface = XPCNativeInterface::GetNewOrUsed(ccx, iid);
+            if(!iface)
+                return JS_FALSE;
+        }
 
         nsresult rv;
         XPCWrappedNative* wrapper;
@@ -1128,7 +1137,8 @@ XPCConvert::NativeInterface2JSObject(XPCCallContext& ccx,
             // rooted in that case).
             if(dest)
                 strongWrapper = wrapper;
-            wrapper->FindTearOff(ccx, iface, JS_FALSE, &rv);
+            if(iface)
+                wrapper->FindTearOff(ccx, iface, JS_FALSE, &rv);
         }
         else
         {
