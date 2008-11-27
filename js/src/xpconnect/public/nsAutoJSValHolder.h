@@ -127,10 +127,6 @@ public:
          : NULL;
   }
 
-  jsval* ToJSValPtr() {
-    return &mVal;
-  }
-
   /**
    * Pretend to be a jsval.
    */
