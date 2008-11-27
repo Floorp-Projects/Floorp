@@ -3966,16 +3966,18 @@ extern void
 js_FinishJIT(JSTraceMonitor *tm)
 {
 #ifdef JS_JIT_SPEW
-    printf("recorder: started(%llu), aborted(%llu), completed(%llu), different header(%llu), "
-           "trees trashed(%llu), slot promoted(%llu), unstable loop variable(%llu), "
-           "breaks(%llu), returns(%llu), unstableInnerCalls(%llu)\n",
-           jitstats.recorderStarted, jitstats.recorderAborted, jitstats.traceCompleted,
-           jitstats.returnToDifferentLoopHeader, jitstats.treesTrashed, jitstats.slotPromoted,
-           jitstats.unstableLoopVariable, jitstats.breakLoopExits, jitstats.returnLoopExits,
-           jitstats.noCompatInnerTrees);
-    printf("monitor: triggered(%llu), exits(%llu), type mismatch(%llu), "
-           "global mismatch(%llu)\n", jitstats.traceTriggered, jitstats.sideExitIntoInterpreter,
-           jitstats.typeMapMismatchAtEntry, jitstats.globalShapeMismatchAtEntry);
+    if (jitstats.recorderStarted) {
+        printf("recorder: started(%llu), aborted(%llu), completed(%llu), different header(%llu), "
+               "trees trashed(%llu), slot promoted(%llu), unstable loop variable(%llu), "
+               "breaks(%llu), returns(%llu), unstableInnerCalls(%llu)\n",
+               jitstats.recorderStarted, jitstats.recorderAborted, jitstats.traceCompleted,
+               jitstats.returnToDifferentLoopHeader, jitstats.treesTrashed, jitstats.slotPromoted,
+               jitstats.unstableLoopVariable, jitstats.breakLoopExits, jitstats.returnLoopExits,
+               jitstats.noCompatInnerTrees);
+        printf("monitor: triggered(%llu), exits(%llu), type mismatch(%llu), "
+               "global mismatch(%llu)\n", jitstats.traceTriggered, jitstats.sideExitIntoInterpreter,
+               jitstats.typeMapMismatchAtEntry, jitstats.globalShapeMismatchAtEntry);
+    }
 #endif
     if (tm->fragmento != NULL) {
         JS_ASSERT(tm->globalSlots && tm->globalTypeMap && tm->recoveryDoublePool);
