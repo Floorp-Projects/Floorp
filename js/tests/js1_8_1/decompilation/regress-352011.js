@@ -19,7 +19,8 @@
  * Portions created by the Initial Developer are Copyright (C) 2006
  * the Initial Developer. All Rights Reserved.
  *
- * Contributor(s): Jesse Ruderman
+ * Contributor(s): Brendan Eich
+ *                 Jesse Ruderman
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -35,10 +36,10 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-var gTestfile = 'regress-352022.js';
+var gTestfile = 'regress-352011.js';
 //-----------------------------------------------------------------------------
-var BUGNUMBER = 352022;
-var summary = 'decompilation of let, delete and parens';
+var BUGNUMBER = 352011;
+var summary = 'decompilation of statements that begin with object literals';
 var actual = '';
 var expect = '';
 
@@ -55,15 +56,20 @@ function test()
  
   var f;
 
-  f = function() { g(h) = (delete let (y) 3); }
+  f = function() { ({}.y = i); }
+  expect = 'function() { ({}.y = i); }';
   actual = f + '';
-  expect = 'function () {\n    g(h) = ((let (y) 3), true);\n}';
-  compareSource(expect, actual, summary + ': 1');
+  compareSource(expect, actual, summary);
 
-  f = function () {    g(h) = ((let (y) 3), true);}
+  f = function() { let(x) ({t:x}) }
+  expect = 'function() { let(x) ({t:x}); }';
   actual = f + '';
-  expect = 'function () {\n    g(h) = ((let (y) 3), true);\n}';
-  compareSource(expect, actual, summary + ': 2');
+  compareSource(expect, actual, summary);
+
+  f = function() { (let(x) {y: z}) }
+  expect = 'function() { let(x) ({y: z}); }';
+  actual = f + '';
+  compareSource(expect, actual, summary);
 
   exitFunc ('test');
 }

@@ -35,10 +35,10 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-var gTestfile = 'regress-352022.js';
+var gTestfile = 'regress-352609.js';
 //-----------------------------------------------------------------------------
-var BUGNUMBER = 352022;
-var summary = 'decompilation of let, delete and parens';
+var BUGNUMBER = 352609;
+var summary = 'decompilation of |let| expression for |is not a function| error';
 var actual = '';
 var expect = '';
 
@@ -52,18 +52,39 @@ function test()
   enterFunc ('test');
   printBugNumber(BUGNUMBER);
   printStatus (summary);
- 
-  var f;
 
-  f = function() { g(h) = (delete let (y) 3); }
-  actual = f + '';
-  expect = 'function () {\n    g(h) = ((let (y) 3), true);\n}';
-  compareSource(expect, actual, summary + ': 1');
+  expect = /TypeError: 0 is not a function/;
+  try
+  {
+    [let (x = 3, y = 4) x].map(0);
+  }
+  catch(ex)
+  {
+    actual = ex + '';
+  }
+  reportMatch(expect, actual, '[let (x = 3, y = 4) x].map(0)');
 
-  f = function () {    g(h) = ((let (y) 3), true);}
-  actual = f + '';
-  expect = 'function () {\n    g(h) = ((let (y) 3), true);\n}';
-  compareSource(expect, actual, summary + ': 2');
+  expect = /TypeError: (p.z = \[let \(x = 3, y = 4\) x\]|.*Array.*) is not a function/;
+  try
+  {
+    var p = {}; (p.z = [let (x = 3, y = 4) x])();
+  }
+  catch(ex)
+  {
+    actual = ex + '';
+  }
+  reportMatch(expect, actual, 'p = {}; (p.z = [let (x = 3, y = 4) x])()');
+
+  expect = /TypeError: (p.z = let \(x\) x|.*Undefined.*) is not a function/;
+  try
+  {
+    var p = {}; (p.z = let(x) x)()
+  }
+  catch(ex)
+  {
+    actual = ex + '';
+  }
+  reportMatch(expect, actual, 'p = {}; (p.z = let(x) x)()');
 
   exitFunc ('test');
 }
