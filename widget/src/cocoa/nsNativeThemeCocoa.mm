@@ -157,7 +157,11 @@ static BOOL FrameIsInActiveWindow(nsIFrame* aFrame)
   // but controls in these windows should still get the active look.
   nsWindowType windowType;
   topLevelWidget->GetWindowType(windowType);
-  return [win isKeyWindow] || (windowType == eWindowType_popup);
+  if (windowType == eWindowType_popup)
+    return YES;
+  if ([win isSheet])
+    return [win isKeyWindow];
+  return [win isMainWindow] && ![win attachedSheet];
 }
 
 NS_IMPL_ISUPPORTS1(nsNativeThemeCocoa, nsITheme)
