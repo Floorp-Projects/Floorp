@@ -1,5 +1,4 @@
-/* -*- Mode: java; tab-width:8; indent-tabs-mode: nil; c-basic-offset: 4 -*- */
-
+/* -*- Mode: C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
 /* ***** BEGIN LICENSE BLOCK *****
  * Version: MPL 1.1/GPL 2.0/LGPL 2.1
  *
@@ -17,10 +16,10 @@
  *
  * The Initial Developer of the Original Code is
  * Mozilla Foundation.
- * Portions created by the Initial Developer are Copyright (C) 2006
+ * Portions created by the Initial Developer are Copyright (C) 2008
  * the Initial Developer. All Rights Reserved.
  *
- * Contributor(s): Jesse Ruderman
+ * Contributor(s): Joachim Kuebart
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -36,30 +35,32 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-gTestfile = 'regress-350238.js';
+var gTestfile = 'regress-452786.js';
+//-----------------------------------------------------------------------------
+var BUGNUMBER = 452786;
+var summary = 'Do not crash with (new Date()).getMonth.call(new Function())';
+var actual = '';
+var expect = '';
 
-var BUGNUMBER = 350238;
-var summary = 'Do not assert <x/>.@*++';
-var actual = 'No Crash';
-var expect = 'No Crash';
 
-printBugNumber(BUGNUMBER);
-START(summary);
+//-----------------------------------------------------------------------------
+test();
+//-----------------------------------------------------------------------------
 
-if (typeof document != 'undefined' && 'addEventListener' in document)
+function test()
 {
-    document.addEventListener('load',
-                              (function () {
-                                  var iframe = document.createElement('iframe');
-                                  document.body.appendChild(iframe);
-                                  iframe.contentDocument.location.href='javascript:<x/>.@*++;';
-                              }), true);
-}
-else
-{
-    <x/>.@*++;
-}
+  enterFunc ('test');
+  printBugNumber(BUGNUMBER);
+  printStatus (summary);
+ 
+  try
+  {
+    (new Date()).getMonth.call(new Function());
+  }
+  catch(ex)
+  {
+  }
+  reportCompare(expect, actual, summary);
 
-TEST(1, expect, actual);
-
-END();
+  exitFunc ('test');
+}
