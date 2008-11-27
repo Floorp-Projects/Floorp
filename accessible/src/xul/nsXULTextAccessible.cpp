@@ -72,7 +72,7 @@ nsXULTextAccessible::GetStateInternal(PRUint32 *aState, PRUint32 *aExtraState)
 {
   nsresult rv = nsHyperTextAccessibleWrap::GetStateInternal(aState,
                                                             aExtraState);
-  NS_ENSURE_SUCCESS(rv, rv);
+  NS_ENSURE_A11Y_SUCCESS(rv, rv);
 
   // Labels and description have read only state
   // They are not focusable or selectable
@@ -128,7 +128,7 @@ nsXULTooltipAccessible::GetStateInternal(PRUint32 *aState,
                                          PRUint32 *aExtraState)
 {
   nsresult rv = nsLeafAccessible::GetStateInternal(aState, aExtraState);
-  NS_ENSURE_SUCCESS(rv, rv);
+  NS_ENSURE_A11Y_SUCCESS(rv, rv);
 
   *aState &= ~nsIAccessibleStates::STATE_FOCUSABLE;
   *aState |= nsIAccessibleStates::STATE_READONLY;
@@ -196,7 +196,7 @@ nsXULLinkAccessible::GetStateInternal(PRUint32 *aState, PRUint32 *aExtraState)
 {
   nsresult rv = nsHyperTextAccessibleWrap::GetStateInternal(aState,
                                                             aExtraState);
-  NS_ENSURE_SUCCESS(rv, rv);
+  NS_ENSURE_A11Y_SUCCESS(rv, rv);
 
   *aState |= nsIAccessibleStates::STATE_LINKED;
   return NS_OK;

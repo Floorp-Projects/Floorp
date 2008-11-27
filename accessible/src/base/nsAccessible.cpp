@@ -948,11 +948,11 @@ nsAccessible::GetStateInternal(PRUint32 *aState, PRUint32 *aExtraState)
 {
   *aState = 0;
 
-  if (!mDOMNode) {
-    if (aExtraState) {
+  if (IsDefunct()) {
+    if (aExtraState)
       *aExtraState = nsIAccessibleStates::EXT_STATE_DEFUNCT;
-    }
-    return NS_OK; // Node shut down
+
+    return NS_OK_DEFUNCT_OBJECT;
   }
 
   if (aExtraState)
@@ -2274,7 +2274,7 @@ nsAccessible::GetState(PRUint32 *aState, PRUint32 *aExtraState)
   NS_ENSURE_ARG_POINTER(aState);
 
   nsresult rv = GetStateInternal(aState, aExtraState);
-  NS_ENSURE_SUCCESS(rv, rv);
+  NS_ENSURE_A11Y_SUCCESS(rv, rv);
 
   // Apply ARIA states to be sure accessible states will be overriden.
   GetARIAState(aState);
