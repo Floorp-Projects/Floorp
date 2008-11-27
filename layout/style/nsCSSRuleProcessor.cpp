@@ -83,6 +83,8 @@
 #include "nsContentUtils.h"
 #include "nsIMediaList.h"
 #include "nsCSSRules.h"
+#include "nsIPrincipal.h"
+#include "nsStyleSet.h"
 
 #define VISITED_PSEUDO_PREF "layout.css.visited_links_enabled"
 
@@ -706,7 +708,7 @@ struct RuleCascadeData {
   nsVoidArray       mIDSelectors;
   PLDHashTable      mAttributeSelectors; // nsIAtom* -> nsVoidArray*
 
-  nsTArray< nsRefPtr<nsCSSFontFaceRule> > mFontFaceRules;
+  nsTArray<nsFontFaceRuleContainer> mFontFaceRules;
 
   // Looks up or creates the appropriate list in |mAttributeSelectors|.
   // Returns null only on allocation failure.
@@ -737,10 +739,12 @@ RuleCascadeData::AttributeListFor(nsIAtom* aAttribute)
 // CSS Style rule processor implementation
 //
 
-nsCSSRuleProcessor::nsCSSRuleProcessor(const nsCOMArray<nsICSSStyleSheet>& aSheets)
+nsCSSRuleProcessor::nsCSSRuleProcessor(const nsCOMArray<nsICSSStyleSheet>& aSheets,
+                                       PRUint8 aSheetType)
   : mSheets(aSheets)
   , mRuleCascades(nsnull)
   , mLastPresContext(nsnull)
+  , mSheetType(aSheetType)
 {
   for (PRInt32 i = mSheets.Count() - 1; i >= 0; --i)
     mSheets[i]->AddRuleProcessor(this);
@@ -2151,7 +2155,7 @@ nsCSSRuleProcessor::MediumFeaturesChanged(nsPresContext* aPresContext,
 PRBool
 nsCSSRuleProcessor::AppendFontFaceRules(
                               nsPresContext *aPresContext,
-                              nsTArray< nsRefPtr<nsCSSFontFaceRule> >& aArray)
+                              nsTArray<nsFontFaceRuleContainer>& aArray)
 {
   RuleCascadeData* cascade = GetRuleCascade(aPresContext);
 
@@ -2308,13 +2312,15 @@ static PLDHashTableOps gRulesByWeightOps = {
 
 struct CascadeEnumData {
   CascadeEnumData(nsPresContext* aPresContext,
-                  nsTArray< nsRefPtr<nsCSSFontFaceRule> >& aFontFaceRules,
+                  nsTArray<nsFontFaceRuleContainer>& aFontFaceRules,
                   nsMediaQueryResultCacheKey& aKey,
-                  PLArenaPool& aArena)
+                  PLArenaPool& aArena,
+                  PRUint8 aSheetType)
     : mPresContext(aPresContext),
       mFontFaceRules(aFontFaceRules),
       mCacheKey(aKey),
-      mArena(aArena)
+      mArena(aArena),
+      mSheetType(aSheetType)
   {
     if (!PL_DHashTableInit(&mRulesByWeight, &gRulesByWeightOps, nsnull,
                           sizeof(RuleByWeightEntry), 64))
@@ -2328,12 +2334,13 @@ struct CascadeEnumData {
   }
 
   nsPresContext* mPresContext;
-  nsTArray< nsRefPtr<nsCSSFontFaceRule> >& mFontFaceRules;
+  nsTArray<nsFontFaceRuleContainer>& mFontFaceRules;
   nsMediaQueryResultCacheKey& mCacheKey;
   // Hooray, a manual PLDHashTable since nsClassHashtable doesn't
   // provide a getter that gives me a *reference* to the value.
   PLDHashTable mRulesByWeight; // of RuleValue* linked lists (?)
   PLArenaPool& mArena;
+  PRUint8 mSheetType;
 };
 
 /*
@@ -2379,10 +2386,11 @@ CascadeRuleEnumFunc(nsICSSRule* aRule, void* aData)
   }
   else if (nsICSSRule::FONT_FACE_RULE == type) {
     nsCSSFontFaceRule *fontFaceRule = static_cast<nsCSSFontFaceRule*>(aRule);
-    nsRefPtr<nsCSSFontFaceRule> *ptr = data->mFontFaceRules.AppendElement();
+    nsFontFaceRuleContainer *ptr = data->mFontFaceRules.AppendElement();
     if (!ptr)
       return PR_FALSE;
-    *ptr = fontFaceRule;
+    ptr->mRule = fontFaceRule;
+    ptr->mSheetType = data->mSheetType;
   }
 
   return PR_TRUE;
@@ -2490,7 +2498,8 @@ nsCSSRuleProcessor::RefreshRuleCascade(nsPresContext* aPresContext)
     if (newCascade) {
       CascadeEnumData data(aPresContext, newCascade->mFontFaceRules,
                            newCascade->mCacheKey,
-                           newCascade->mRuleHash.Arena());
+                           newCascade->mRuleHash.Arena(),
+                           mSheetType);
       if (!data.mRulesByWeight.ops)
         return; /* out of memory */
       if (!mSheets.EnumerateForwards(CascadeSheetEnumFunc, &data))

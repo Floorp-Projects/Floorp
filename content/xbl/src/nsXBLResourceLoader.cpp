@@ -58,6 +58,7 @@
 #include "nsXBLPrototypeBinding.h"
 #include "nsCSSRuleProcessor.h"
 #include "nsContentUtils.h"
+#include "nsStyleSet.h"
 
 NS_IMPL_CYCLE_COLLECTION_CLASS(nsXBLResourceLoader)
 NS_IMPL_CYCLE_COLLECTION_UNLINK_BEGIN(nsXBLResourceLoader)
@@ -192,7 +193,8 @@ nsXBLResourceLoader::StyleSheetLoaded(nsICSSStyleSheet* aSheet,
   if (mPendingSheets == 0) {
     // All stylesheets are loaded.  
     mResources->mRuleProcessor =
-      new nsCSSRuleProcessor(mResources->mStyleSheetList);
+      new nsCSSRuleProcessor(mResources->mStyleSheetList, 
+                             nsStyleSet::eDocSheet);
 
     // XXX Check for mPendingScripts when scripts also come online.
     if (!mInLoadResourcesFunc)
