@@ -103,7 +103,7 @@
       <textbox id="textbox" flex="1" type="search" oncommand="FilterPrefs();"/>
     </hbox>
   
-    <tree id="configTree" flex="1" class="plain focusring" seltype="single"
+    <tree id="configTree" flex="1" seltype="single"
           onselect="updateCommands('select');"
           enableColumnDrag="true" context="configContext">
       <treecols>
