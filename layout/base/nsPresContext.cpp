@@ -1720,10 +1720,19 @@ nsPresContext::GetUserFontSet()
   if (mUserFontSetDirty) {
     // If this assertion fails, and there have actually been changes to
     // @font-face rules, then we will call StyleChangeReflow in
-    // FlushUserFontSet.  Since we're likely in the middle of reflow,
-    // that's a bad thing to do.
-    NS_ASSERTION(!mGetUserFontSetCalled,
-                 "FlushUserFontSet should have been called first");
+    // FlushUserFontSet.  If we're in the middle of reflow,
+    // that's a bad thing to do, and the caller was responsible for
+    // flushing first.  If we're not (e.g., in frame construction), it's
+    // ok.
+#ifdef DEBUG
+    {
+      PRBool inReflow;
+      NS_ASSERTION(!mGetUserFontSetCalled ||
+                   (NS_SUCCEEDED(mShell->IsReflowLocked(&inReflow)) &&
+                    !inReflow),
+                   "FlushUserFontSet should have been called first");
+    }
+#endif
     FlushUserFontSet();
   }
 
