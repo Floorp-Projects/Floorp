@@ -654,11 +654,34 @@ function jsTestDriverBrowserInit()
     jit(false);
   }
 
-  var versionmatches = /version=([.0-9]*)/.exec(value);
+  var versionmatches;
 
-  if (!versionmatches)
+  if (attribute == 'type')
   {
-    value = 'text/javascript;version=';
+    versionmatches = /version=([.0-9]+)/.exec(value);
+  }
+  else
+  {
+    versionmatches = /javascript([.0-9]+)/.exec(value);
+  }
+
+  if (versionmatches)
+  {
+    gVersion = 10*parseInt(versionmatches[1].replace(/\./g, ''));
+  }
+  else if (navigator.userAgent.indexOf('Gecko/') != -1)
+  {
+    // If the version is not specified, and the browser is Gecko,
+    // adjust the version to match the suite version.
+    if (attribute == 'type')
+    {
+      value = 'text/javascript;version=';
+    }
+    else
+    {
+      value = 'javascript';
+    }
+
     if (testpath.match(/^js1_6/))
     {
       gVersion = 160;
@@ -684,10 +707,6 @@ function jsTestDriverBrowserInit()
       gVersion = 150;
       value += '1.5';
     }
-  }
-  else
-  {
-    gVersion = 10*parseInt(versionmatches[1].replace(/\./g, ''));
   }
 
   var testpathparts = testpath.split(/\//);
