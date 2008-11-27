@@ -480,10 +480,20 @@ NS_IMETHODIMP nsSound::Init()
 
 NS_IMETHODIMP nsSound::PlaySystemSound(const nsAString &aSoundAlias)
 {
-  // We don't have a default mail sound on OS/2, so just beep.
-  // Also just beep if MMPM isn't installed.
-  if (aSoundAlias.EqualsLiteral("_moz_mailbeep") || (!sMMPMInstalled)) {
+  // Just beep if MMPM isn't installed.
+  if (!sMMPMInstalled) {
     Beep();
+    return NS_OK;
+  }
+
+  if (NS_IsMozAliasSound(aSoundAlias)) {
+    // We don't have a default mail sound on OS/2, so just beep.
+    if (aSoundAlias.Equals(NS_SYSSOUND_MAIL_BEEP))
+      Beep();
+    // XXX Should we call Beep() for NS_SYSSOUND_INFO_DIALOG,
+    // NS_SYSSOUND_QUESTION_DIALOG and NS_SYSSOUND_WARNING_DIALOG?
+    // And also should we call WinAlarm(HWND_DESKTOP, WA_ERROR) for
+    // NS_SYSSOUND_ERROR_DIALOG?
     return NS_OK;
   }
   nsCAutoString nativeSoundAlias;

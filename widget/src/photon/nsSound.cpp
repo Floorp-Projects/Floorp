@@ -117,9 +117,12 @@ printf( "\n\n\nnsSound::PlaySystemSound aSoundAlias=%s\n\n",
 
   const char *soundfile;
 
-  if( utf8SoundAlias.Equals("_moz_mailbeep") )
-    soundfile = "/usr/share/mozilla/gotmail.wav";
-  else {
+  if( NS_IsMozAliasSound(aSoundAlias) ) {
+    if ( aSoundAlias.Equals(NS_SYSSOUND_MAIL_BEEP) )
+      soundfile = "/usr/share/mozilla/gotmail.wav";
+    else
+      return NS_OK;
+  } else {
     /* the aSoundAlias is the fullpath to the soundfile */
     if( !access( utf8SoundAlias.get(), F_OK ) )
       soundfile = utf8SoundAlias.get();

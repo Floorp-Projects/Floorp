@@ -164,12 +164,26 @@ NS_IMETHODIMP nsSound::PlaySystemSound(const nsAString &aSoundAlias)
 {
   PurgeLastSound();
 
-  if (aSoundAlias.EqualsLiteral("_moz_mailbeep")) {
-    ::PlaySoundW(L"MailBeep", nsnull, SND_ALIAS | SND_ASYNC);
+  if (!NS_IsMozAliasSound(aSoundAlias)) {
+    ::PlaySoundW(PromiseFlatString(aSoundAlias).get(), nsnull,
+                 SND_ALIAS | SND_ASYNC);
+    return NS_OK;
   }
-  else {
-    ::PlaySoundW(PromiseFlatString(aSoundAlias).get(), nsnull, SND_ALIAS | SND_ASYNC);
-  }
+
+  const wchar_t *sound = nsnull;
+  if (aSoundAlias.Equals(NS_SYSSOUND_MAIL_BEEP))
+    sound = L"MailBeep";
+  else if (aSoundAlias.Equals(NS_SYSSOUND_ERROR_DIALOG))
+    sound = L"SystemHand";
+  else if (aSoundAlias.Equals(NS_SYSSOUND_INFO_DIALOG))
+    sound = L"SystemAsterisk";
+  else if (aSoundAlias.Equals(NS_SYSSOUND_QUESTION_DIALOG))
+    sound = L"SystemQuestion";
+  else if (aSoundAlias.Equals(NS_SYSSOUND_WARNING_DIALOG))
+    sound = L"SystemExclamation";
+
+  if (sound)
+    ::PlaySoundW(sound, nsnull, SND_ALIAS | SND_ASYNC);
 
   return NS_OK;
 }
