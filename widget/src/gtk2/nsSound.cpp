@@ -366,10 +366,8 @@ NS_METHOD nsSound::Play(nsIURL *aURL)
 
 NS_IMETHODIMP nsSound::PlaySystemSound(const nsAString &aSoundAlias)
 {
-    if (NS_IsMozAliasSound(aSoundAlias)) {
-        if (aSoundAlias.Equals(NS_SYSSOUND_MAIL_BEEP))
-            return Beep();
-        return NS_OK;
+    if (aSoundAlias.EqualsLiteral("_moz_mailbeep")) {
+        return Beep();
     }
 
     nsresult rv;
