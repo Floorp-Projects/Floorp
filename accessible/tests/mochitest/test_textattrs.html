@@ -82,8 +82,12 @@
           testTextAttrs(ID, 17, attrs, 17, 18);
           testTextAttrs(ID, 18, misspelledAttrs, 18, 22);
 
-          is(gA11yEventObserver.mTextAttrChangedEventCounter, 2,
-             "Wrong count of 'text attribute changed' events for " + ID);
+          if (navigator.platform == "Win32")
+            is(gA11yEventObserver.mTextAttrChangedEventCounter, 2,
+               "Wrong count of 'text attribute changed' events for " + ID);
+          else
+            todo(gA11yEventObserver.mTextAttrChangedEventCounter, 2,
+                 "Wrong count of 'text attribute changed' events for " + ID);
 
           // Remove a11y events listener
           gObserverService.removeObserver(gA11yEventObserver,
