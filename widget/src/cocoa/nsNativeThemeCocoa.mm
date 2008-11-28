@@ -157,7 +157,11 @@ static BOOL FrameIsInActiveWindow(nsIFrame* aFrame)
   // but controls in these windows should still get the active look.
   nsWindowType windowType;
   topLevelWidget->GetWindowType(windowType);
-  return [win isKeyWindow] || (windowType == eWindowType_popup);
+  if (windowType == eWindowType_popup)
+    return YES;
+  if ([win isSheet])
+    return [win isKeyWindow];
+  return [win isMainWindow] && ![win attachedSheet];
 }
 
 NS_IMPL_ISUPPORTS1(nsNativeThemeCocoa, nsITheme)
@@ -719,6 +723,18 @@ nsNativeThemeCocoa::DrawButton(CGContextRef cgContext, ThemeButtonKind inKind,
       // leave things alone on Tiger
       drawFrame.size.height -= 1;
     }
+  } else if (inKind == kThemeListHeaderButton) {
+    CGContextClipToRect(cgContext, inBoxRect);
+    // Always remove the top border.
+    drawFrame.origin.y -= 1;
+    drawFrame.size.height += 1;
+    // Remove the left border in LTR mode and the right border in RTL mode.
+    drawFrame.size.width += 1;
+    PRBool isLast = IsLastTreeHeaderCell(aFrame);
+    if (isLast)
+      drawFrame.size.width += 1; // Also remove the other border.
+    if (!IsFrameRTL(aFrame) || isLast)
+      drawFrame.origin.x -= 1;
   }
 
   if (!needsScaling) {
@@ -888,10 +904,11 @@ nsNativeThemeCocoa::DrawTabPanel(CGContextRef cgContext, const HIRect& inBoxRect
 
   HIThemeTabPaneDrawInfo tpdi;
 
-  tpdi.version = 0;
+  tpdi.version = 1;
   tpdi.state = FrameIsInActiveWindow(aFrame) ? kThemeStateActive : kThemeStateInactive;
   tpdi.direction = kThemeTabNorth;
   tpdi.size = kHIThemeTabSizeNormal;
+  tpdi.kind = kHIThemeTabKindNormal;
 
   HIThemeDrawTabPane(&inBoxRect, &tpdi, cgContext, HITHEME_ORIENTATION);
 
@@ -936,25 +953,29 @@ nsNativeThemeCocoa::DrawScale(CGContextRef cgContext, const HIRect& inBoxRect,
 }
 
 
+#define NATURAL_MINI_TAB_BUTTON_HEIGHT    17
+#define NATURAL_SMALL_TAB_BUTTON_HEIGHT   20
+#define NATURAL_REGULAR_TAB_BUTTON_HEIGHT 23
+
+
 void
-nsNativeThemeCocoa::DrawTab(CGContextRef cgContext, const HIRect& inBoxRect,
-                            PRBool inIsDisabled, PRBool inIsFrontmost,
-                            PRBool inIsHorizontal, PRBool inTabBottom,
+nsNativeThemeCocoa::DrawTab(CGContextRef cgContext, HIRect inBoxRect,
                             PRInt32 inState, nsIFrame* aFrame)
 {
   NS_OBJC_BEGIN_TRY_ABORT_BLOCK;
 
   HIThemeTabDrawInfo tdi;
+  tdi.version = 1;
 
-  tdi.version = 0;
-
-  if (inIsFrontmost) {
-    if (inIsDisabled) 
+  PRBool isSelected = IsSelectedTab(aFrame);
+  PRBool isDisabled = IsDisabled(aFrame);
+  if (isSelected) {
+    if (isDisabled) 
       tdi.style = kThemeTabFrontUnavailable;
     else
       tdi.style = FrameIsInActiveWindow(aFrame) ? kThemeTabFront : kThemeTabFrontInactive;
   } else {
-    if (inIsDisabled)
+    if (isDisabled)
       tdi.style = kThemeTabNonFrontUnavailable;
     else if ((inState & NS_EVENT_STATE_ACTIVE) && (inState & NS_EVENT_STATE_HOVER))
       tdi.style = kThemeTabNonFrontPressed;
@@ -962,10 +983,55 @@ nsNativeThemeCocoa::DrawTab(CGContextRef cgContext, const HIRect& inBoxRect,
       tdi.style = FrameIsInActiveWindow(aFrame) ? kThemeTabNonFront : kThemeTabNonFrontInactive;
   }
 
-  // don't yet support vertical tabs
-  tdi.direction = inTabBottom ? kThemeTabSouth : kThemeTabNorth;
+  tdi.direction = kThemeTabNorth;
   tdi.size = kHIThemeTabSizeNormal;
-  tdi.adornment = kThemeAdornmentNone;
+  if (inBoxRect.size.height < NATURAL_REGULAR_TAB_BUTTON_HEIGHT)
+    tdi.size = kHIThemeTabSizeSmall;
+  if (inBoxRect.size.height < NATURAL_SMALL_TAB_BUTTON_HEIGHT)
+    tdi.size = kHIThemeTabSizeMini;
+
+  PRBool isRTL = IsFrameRTL(aFrame);
+  PRBool isFirst = isRTL ? IsLastTab(aFrame) : IsFirstTab(aFrame);
+  PRBool isLast = isRTL ? IsFirstTab(aFrame) : IsLastTab(aFrame);
+
+  if (isFirst && isLast)
+    tdi.position = kHIThemeTabPositionOnly;
+  else if (isFirst)
+    tdi.position = kHIThemeTabPositionFirst;
+  else if (isLast)
+    tdi.position = kHIThemeTabPositionLast;
+  else
+    tdi.position = kHIThemeTabPositionMiddle;
+
+  // Tab separator management:
+  // Normal tabs only draw their left separator, in the leftmost pixel row of
+  // their frame. Selected tabs additionally draw their right separator, outside
+  // of their frame. To prevent overlapping, the tab to the right of the
+  // selected tab shouldn't draw its left separator.
+  tdi.adornment = kHIThemeTabAdornmentNone;
+  if (isRTL ? IsBeforeSelectedTab(aFrame) : IsAfterSelectedTab(aFrame)) {
+    if (nsToolkit::OnLeopardOrLater()) {
+      // On Leopard, the tab's left edge must be shifted 1px to the right.
+      // On Tiger, this happens automatically when no leading separator is drawn.
+      inBoxRect.origin.x += 1;
+      inBoxRect.size.width -= 1;
+    }
+  }
+  else {
+    tdi.adornment = kHIThemeTabAdornmentLeadingSeparator;
+  }
+
+  if (isSelected && !isLast) {
+    tdi.adornment |= kHIThemeTabAdornmentTrailingSeparator;
+    if (nsToolkit::OnLeopardOrLater()) {
+      // On Tiger, the right separator is drawn outside of the frame.
+      // On Leopard, the right edge must be shifted 1px to the right.
+      inBoxRect.size.width += 1;
+    }
+  }
+  
+  if (inState & NS_EVENT_STATE_FOCUS)
+    tdi.adornment |= kThemeAdornmentFocus;
 
   HIThemeDrawTab(&inBoxRect, &tdi, cgContext, HITHEME_ORIENTATION, NULL);
 
@@ -1461,7 +1527,7 @@ nsNativeThemeCocoa::DrawWidgetBackground(nsIRenderingContext* aContext, nsIFrame
       TreeSortDirection sortDirection = GetTreeSortDirection(aFrame);
       DrawButton(cgContext, kThemeListHeaderButton, macRect, PR_FALSE, IsDisabled(aFrame), 
                  sortDirection == eTreeSortDirection_Natural ? kThemeButtonOff : kThemeButtonOn,
-                 sortDirection == eTreeSortDirection_Descending ?
+                 sortDirection == eTreeSortDirection_Ascending ?
                  kThemeAdornmentHeaderButtonSortUp : kThemeAdornmentNone, eventState, aFrame);      
     }
       break;
@@ -1580,12 +1646,8 @@ nsNativeThemeCocoa::DrawWidgetBackground(nsIRenderingContext* aContext, nsIFrame
                 (IsDisabled(aFrame) || IsReadOnly(aFrame)), eventState);
       break;
     
-    case NS_THEME_TAB: {
-      DrawTab(cgContext, macRect,
-              IsDisabled(aFrame), IsSelectedTab(aFrame),
-              PR_TRUE, IsBottomTab(aFrame),
-              eventState, aFrame);
-    }
+    case NS_THEME_TAB:
+      DrawTab(cgContext, macRect, eventState, aFrame);
       break;
 
     case NS_THEME_TAB_PANELS:
@@ -1727,6 +1789,7 @@ nsNativeThemeCocoa::GetWidgetOverflow(nsIDeviceContext* aContext, nsIFrame* aFra
     case NS_THEME_DROPDOWN_BUTTON:
     case NS_THEME_CHECKBOX:
     case NS_THEME_RADIO:
+    case NS_THEME_TAB:
     {
       // We assume that the above widgets can draw a focus ring that will be less than
       // or equal to 4 pixels thick.
@@ -1817,7 +1880,13 @@ nsNativeThemeCocoa::GetMinimumWidgetSize(nsIRenderingContext* aContext,
     {
       SInt32 headerHeight = 0;
       ::GetThemeMetric(kThemeMetricListHeaderHeight, &headerHeight);
-      aResult->SizeTo(0, headerHeight);
+      aResult->SizeTo(0, headerHeight - 1); // We don't need the top border.
+      break;
+    }
+
+    case NS_THEME_TAB:
+    {
+      aResult->SizeTo(0, NATURAL_MINI_TAB_BUTTON_HEIGHT);
       break;
     }
 
@@ -2060,8 +2129,6 @@ nsNativeThemeCocoa::ThemeSupportsWidget(nsPresContext* aPresContext, nsIFrame* a
     
     case NS_THEME_TAB_PANELS:
     case NS_THEME_TAB:
-    case NS_THEME_TAB_LEFT_EDGE:
-    case NS_THEME_TAB_RIGHT_EDGE:
     
     case NS_THEME_TREEVIEW_TWISTY:
     case NS_THEME_TREEVIEW_TWISTY_OPEN:

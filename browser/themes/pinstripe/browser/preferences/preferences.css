@@ -218,6 +218,10 @@ prefpane .groupbox-title {
   margin-bottom: 4px;
 }
 
+tabpanels {
+  padding: 20px 7px 7px;
+}
+
 caption {
   border-bottom: 1px solid #ECECEC;
   padding: 4px 4px 0px 0px !important;
