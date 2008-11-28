@@ -10,7 +10,6 @@ EXPORTS
     cmsSmoothGamma               = cmsSmoothGamma
     cmsBuildRGB2XYZtransferMatrix= cmsBuildRGB2XYZtransferMatrix
     cmsPrecacheProfile           = cmsPrecacheProfile
-    cmsProfileIsBogus            = cmsProfileIsBogus
     cmsCloseProfile              = cmsCloseProfile
     cmsCreateProofingTransform   = cmsCreateProofingTransform
     cmsCreateRGBProfile          = cmsCreateRGBProfile
