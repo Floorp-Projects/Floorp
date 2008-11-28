@@ -72,6 +72,7 @@ function run_test() {
   httpserver = new nsHttpServer();
   httpserver.registerPathHandler("/auth", authHandler);
   httpserver.registerPathHandler("/range", rangeHandler);
+  httpserver.registerPathHandler("/acceptranges", acceptRangesHandler);
   httpserver.registerPathHandler("/redir", redirHandler);
 
   var entityID;
@@ -100,6 +101,82 @@ function run_test() {
   function try_resume_zero(request, data, ctx) {
     do_check_true(request.nsIHttpChannel.requestSucceeded);
     do_check_eq(data, rangeBody.substring(1));
+
+    // Try a server which doesn't support range requests
+    var chan = make_channel("http://localhost:4444/acceptranges");
+    chan.nsIResumableChannel.resumeAt(0, entityID);
+    chan.nsIHttpChannel.setRequestHeader("X-Range-Type", "none", false);
+    chan.asyncOpen(new ChannelListener(try_no_range, null, CL_EXPECT_FAILURE), null);
+  }
+
+  function try_no_range(request, data, ctx) {
+    do_check_true(request.nsIHttpChannel.requestSucceeded);
+    do_check_eq(request.status, NS_ERROR_NOT_RESUMABLE);
+
+    // Try a server which supports "bytes" range requests
+    var chan = make_channel("http://localhost:4444/acceptranges");
+    chan.nsIResumableChannel.resumeAt(0, entityID);
+    chan.nsIHttpChannel.setRequestHeader("X-Range-Type", "bytes", false);
+    chan.asyncOpen(new ChannelListener(try_bytes_range, null), null);
+  }
+
+  function try_bytes_range(request, data, ctx) {
+    do_check_true(request.nsIHttpChannel.requestSucceeded);
+    do_check_eq(data, rangeBody);
+
+    // Try a server which supports "foo" and "bar" range requests
+    var chan = make_channel("http://localhost:4444/acceptranges");
+    chan.nsIResumableChannel.resumeAt(0, entityID);
+    chan.nsIHttpChannel.setRequestHeader("X-Range-Type", "foo, bar", false);
+    chan.asyncOpen(new ChannelListener(try_foo_bar_range, null, CL_EXPECT_FAILURE), null);
+  }
+
+  function try_foo_bar_range(request, data, ctx) {
+    do_check_true(request.nsIHttpChannel.requestSucceeded);
+    do_check_eq(request.status, NS_ERROR_NOT_RESUMABLE);
+
+    // Try a server which supports "foobar" range requests
+    var chan = make_channel("http://localhost:4444/acceptranges");
+    chan.nsIResumableChannel.resumeAt(0, entityID);
+    chan.nsIHttpChannel.setRequestHeader("X-Range-Type", "foobar", false);
+    chan.asyncOpen(new ChannelListener(try_foobar_range, null, CL_EXPECT_FAILURE), null);
+  }
+
+  function try_foobar_range(request, data, ctx) {
+    do_check_true(request.nsIHttpChannel.requestSucceeded);
+    do_check_eq(request.status, NS_ERROR_NOT_RESUMABLE);
+
+    // Try a server which supports "bytes" and "foobar" range requests
+    var chan = make_channel("http://localhost:4444/acceptranges");
+    chan.nsIResumableChannel.resumeAt(0, entityID);
+    chan.nsIHttpChannel.setRequestHeader("X-Range-Type", "bytes, foobar", false);
+    chan.asyncOpen(new ChannelListener(try_bytes_foobar_range, null), null);
+  }
+
+  function try_bytes_foobar_range(request, data, ctx) {
+    do_check_true(request.nsIHttpChannel.requestSucceeded);
+    do_check_eq(data, rangeBody);
+
+    // Try a server which supports "bytesfoo" and "bar" range requests
+    var chan = make_channel("http://localhost:4444/acceptranges");
+    chan.nsIResumableChannel.resumeAt(0, entityID);
+    chan.nsIHttpChannel.setRequestHeader("X-Range-Type", "bytesfoo, bar", false);
+    chan.asyncOpen(new ChannelListener(try_bytesfoo_bar_range, null, CL_EXPECT_FAILURE), null);
+  }
+
+  function try_bytesfoo_bar_range(request, data, ctx) {
+    do_check_true(request.nsIHttpChannel.requestSucceeded);
+    do_check_eq(request.status, NS_ERROR_NOT_RESUMABLE);
+
+    // Try a server which doesn't send Accept-Ranges header at all
+    var chan = make_channel("http://localhost:4444/acceptranges");
+    chan.nsIResumableChannel.resumeAt(0, entityID);
+    chan.asyncOpen(new ChannelListener(try_no_accept_ranges, null), null);
+  }
+
+  function try_no_accept_ranges(request, data, ctx) {
+    do_check_true(request.nsIHttpChannel.requestSucceeded);
+    do_check_eq(data, rangeBody);
 
     // Try a successful resume from 0
     var chan = make_channel("http://localhost:4444/range");
@@ -268,6 +345,14 @@ function rangeHandler(metadata, response) {
   }
 
   response.bodyOutputStream.write(body, body.length);
+}
+
+// /acceptranges
+function acceptRangesHandler(metadata, response) {
+  response.setHeader("Content-Type", "text/html", false);
+  if (metadata.hasHeader("X-Range-Type"))
+    response.setHeader("Accept-Ranges", metadata.getHeader("X-Range-Type"), false);
+  response.bodyOutputStream.write(rangeBody, rangeBody.length);
 }
 
 // /redir
