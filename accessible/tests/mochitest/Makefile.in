@@ -73,6 +73,7 @@ _TEST_FILES =\
 		test_nsIAccessible_editabledoc.html \
 		test_nsIAccessible_name.html \
 		test_nsIAccessible_name_button.html \
+		test_nsIAccessible_name_link.html \
 		$(warning test_nsIAccessible_name.xul temporarily disabled) \
  		test_nsIAccessible_selects.html \
 		test_nsIAccessible_states.html \
