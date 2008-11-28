@@ -126,8 +126,6 @@ LCMSBOOL LCMSEXPORT cmsBuildRGB2XYZtransferMatrix(LPMAT3 r, LPcmsCIExyY WhitePt,
 
         xn = WhitePt -> x;
         yn = WhitePt -> y;
-        if (yn == 0.0)
-           return FALSE;
         xr = Primrs -> Red.x;
         yr = Primrs -> Red.y;
         xg = Primrs -> Green.x;
@@ -143,7 +141,7 @@ LCMSBOOL LCMSEXPORT cmsBuildRGB2XYZtransferMatrix(LPMAT3 r, LPcmsCIExyY WhitePt,
 
 
         // Result = Primaries ^ (-1) inverse matrix
-        if (MAT3inverse(&Primaries, &Result) < 0)
+        if (!MAT3inverse(&Primaries, &Result))
                         return FALSE;
 
 
