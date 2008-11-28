@@ -2892,7 +2892,10 @@ nsDownload::OpenWithApplication()
 #endif
   }
 
-  if (deleteTempFileOnExit) {
+  // Always schedule files to be deleted at the end of the private browsing
+  // mode, regardless of the value of the pref.
+  if (deleteTempFileOnExit ||
+      nsDownloadManager::gDownloadManagerService->mInPrivateBrowsing) {
     // Use the ExternalHelperAppService to push the temporary file to the list
     // of files to be deleted on exit.
     nsCOMPtr<nsPIExternalAppLauncher> appLauncher(do_GetService
