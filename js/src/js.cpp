@@ -2341,6 +2341,9 @@ split_outerObject(JSContext *cx, JSObject *obj)
     return cpx->isInner ? cpx->outer : obj;
 }
 
+static JSBool
+split_equality(JSContext *cx, JSObject *obj, jsval v, JSBool *bp);
+
 static JSObject *
 split_innerObject(JSContext *cx, JSObject *obj)
 {
@@ -2365,9 +2368,30 @@ static JSExtendedClass split_global_class = {
     JS_ConvertStub, split_finalize,
     NULL, NULL, NULL, NULL, NULL, NULL,
     split_mark, NULL},
-    NULL, split_outerObject, split_innerObject,
+    split_equality, split_outerObject, split_innerObject,
     NULL, NULL, NULL, NULL, NULL
 };
+
+static JSBool
+split_equality(JSContext *cx, JSObject *obj, jsval v, JSBool *bp)
+{
+    *bp = JS_FALSE;
+    if (JSVAL_IS_PRIMITIVE(v))
+        return JS_TRUE;
+
+    JSObject *obj2 = JSVAL_TO_OBJECT(v);
+    if (JS_GET_CLASS(cx, obj2) != &split_global_class.base)
+        return JS_TRUE;
+
+    ComplexObject *cpx = (ComplexObject *) JS_GetPrivate(cx, obj2);
+    JS_ASSERT(!cpx->isInner);
+
+    ComplexObject *ourCpx = (ComplexObject *) JS_GetPrivate(cx, obj);
+    JS_ASSERT(!ourCpx->isInner);
+
+    *bp = (cpx == ourCpx);
+    return JS_TRUE;
+}
 
 JSObject *
 split_create_outer(JSContext *cx)
