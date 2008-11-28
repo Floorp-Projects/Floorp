@@ -2523,47 +2523,7 @@ cmsHPROFILE LCMSEXPORT cmsOpenProfileFromMem(LPVOID MemPtr, DWORD dwSize)
 
 }
 
-// Checks a profile for obvious inconsistencies and returns
-// TRUE if the profile looks bogus and should probably be
-// ignored.
-LCMSBOOL LCMSEXPORT cmsProfileIsBogus(cmsHPROFILE hProfile)
-{
 
-       cmsCIEXYZTRIPLE primaries;
-       VEC3 sum, target, tolerance;
-       unsigned i;
-
-       // Read the primaries
-       cmsTakeColorants(&primaries, hProfile);
-
-       // Sum the values
-       sum.n[0] = primaries.Red.X + primaries.Green.X + primaries.Blue.X;
-       sum.n[1] = primaries.Red.Y + primaries.Green.Y + primaries.Blue.Y;
-       sum.n[2] = primaries.Red.Z + primaries.Green.Z + primaries.Blue.Z;
-
-       // Build our target vector (see mozilla bug 460629)
-       target.n[0] = 0.96420;
-       target.n[1] = 1.00000;
-       target.n[2] = 0.82491;
-
-       // Our tolerance vector - Recommended by Chris Murphy based on
-       // conversion from the LAB space criterion of no more than 3 in any one
-       // channel. This is similar to, but slightly more tolerant than Adobe's
-       // criterion.
-       tolerance.n[0] = 0.02;
-       tolerance.n[1] = 0.02;
-       tolerance.n[2] = 0.04;
-
-       // Compare with our tolerance
-       for (i = 0; i < 3; ++i) {
-           if (!(((sum.n[i] - tolerance.n[i]) <= target.n[i]) &&
-                 ((sum.n[i] + tolerance.n[i]) >= target.n[i])))
-               return TRUE;
-       }
-
-       // All Good
-       return FALSE;
-}
 
 LCMSBOOL LCMSEXPORT cmsCloseProfile(cmsHPROFILE hProfile)
 {
