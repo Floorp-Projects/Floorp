@@ -169,6 +169,12 @@ nsNativeTheme::IsWidgetStyled(nsPresContext* aPresContext, nsIFrame* aFrame,
                                                NS_AUTHOR_SPECIFIED_BACKGROUND);
 }
 
+PRBool
+nsNativeTheme::IsFrameRTL(nsIFrame* aFrame)
+{
+  return aFrame && aFrame->GetStyleVisibility()->mDirection == NS_STYLE_DIRECTION_RTL;
+}
+
 // scrollbar button:
 PRInt32
 nsNativeTheme::GetScrollbarButtonType(nsIFrame* aFrame)
@@ -212,6 +218,34 @@ nsNativeTheme::GetTreeSortDirection(nsIFrame* aFrame)
   return eTreeSortDirection_Natural;
 }
 
+PRBool
+nsNativeTheme::IsLastTreeHeaderCell(nsIFrame* aFrame)
+{
+  if (!aFrame)
+    return PR_FALSE;
+
+  // A tree column picker is always the last header cell.
+  if (aFrame->GetContent()->Tag() == nsWidgetAtoms::treecolpicker)
+    return PR_TRUE;
+
+  // Find the parent tree.
+  nsIContent* parent = aFrame->GetContent()->GetParent();
+  while (parent && parent->Tag() != nsWidgetAtoms::tree) {
+    parent = parent->GetParent();
+  }
+
+  // If the column picker is visible, this can't be the last column.
+  if (parent && !parent->AttrValueIs(kNameSpaceID_None, nsWidgetAtoms::hidecolumnpicker,
+                                     NS_LITERAL_STRING("true"), eCaseMatters))
+    return PR_FALSE;
+
+  while ((aFrame = aFrame->GetNextSibling())) {
+    if (aFrame->GetRect().width > 0)
+      return PR_FALSE;
+  }
+  return PR_TRUE;
+}
+
 // tab:
 PRBool
 nsNativeTheme::IsBottomTab(nsIFrame* aFrame)
@@ -251,6 +285,34 @@ nsNativeTheme::IsHorizontal(nsIFrame* aFrame)
   return !aFrame->GetContent()->AttrValueIs(kNameSpaceID_None, nsWidgetAtoms::orient,
                                             nsWidgetAtoms::vertical, 
                                             eCaseMatters);
+}
+
+PRBool
+nsNativeTheme::IsNextToSelectedTab(nsIFrame* aFrame, PRInt32 aOffset)
+{
+  if (!aFrame)
+    return PR_FALSE;
+
+  if (aOffset == 0)
+    return IsSelectedTab(aFrame);
+
+  PRInt32 thisTabIndex = -1, selectedTabIndex = -1;
+
+  nsIFrame* currentTab = aFrame->GetParent()->GetFirstChild(NULL);
+  for (PRInt32 i = 0; currentTab; currentTab = currentTab->GetNextSibling()) {
+    if (currentTab->GetRect().width == 0)
+      continue;
+    if (aFrame == currentTab)
+      thisTabIndex = i;
+    if (IsSelectedTab(currentTab))
+      selectedTabIndex = i;
+    ++i;
+  }
+
+  if (thisTabIndex == -1 || selectedTabIndex == -1)
+    return PR_FALSE;
+
+  return (thisTabIndex - selectedTabIndex == aOffset);
 }
 
 // progressbar:
