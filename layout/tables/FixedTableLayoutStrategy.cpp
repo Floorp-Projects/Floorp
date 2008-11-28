@@ -188,6 +188,14 @@ FixedTableLayoutStrategy::ComputeColumnWidths(const nsHTMLReflowState& aReflowSt
 
     // border-spacing isn't part of the basis for percentages.
     tableWidth -= spacing * (colCount + 1);
+    
+    // store the old column widths. We might call multiple times SetFinalWidth
+    // on the columns, due to this we can't compare at the last call that the
+    // width has changed with the respect to the last call to
+    // ComputeColumnWidths. In order to overcome this we store the old values
+    // in this array. A single call to SetFinalWidth would make it possible to
+    // call GetFinalWidth before and to compare when setting the final width.
+    nsTArray<nscoord> oldColWidths;
 
     // XXX This ignores the 'min-width' and 'max-width' properties
     // throughout.  Then again, that's what the CSS spec says to do.
@@ -210,9 +218,11 @@ FixedTableLayoutStrategy::ComputeColumnWidths(const nsHTMLReflowState& aReflowSt
     for (PRInt32 col = 0; col < colCount; ++col) {
         nsTableColFrame *colFrame = mTableFrame->GetColFrame(col);
         if (!colFrame) {
+            oldColWidths.AppendElement(0);
             NS_ERROR("column frames out of sync with cell map");
             continue;
         }
+        oldColWidths.AppendElement(colFrame->GetFinalWidth());
         colFrame->ResetPrefPercent();
         const nsStyleCoord *styleWidth =
             &colFrame->GetStylePosition()->mWidth;
@@ -403,5 +413,16 @@ FixedTableLayoutStrategy::ComputeColumnWidths(const nsHTMLReflowState& aReflowSt
                 --colsLeft;
             }
         }
+    }
+    for (PRInt32 col = 0; col < colCount; ++col) {
+        nsTableColFrame *colFrame = mTableFrame->GetColFrame(col);
+        if (!colFrame) {
+            NS_ERROR("column frames out of sync with cell map");
+            continue;
+        }
+        if (oldColWidths.ElementAt(col) != colFrame->GetFinalWidth()) {
+            mTableFrame->DidResizeColumns();
+        }
+            break;
     }
 }
