@@ -47,12 +47,23 @@ function test() {
            getService(Ci.nsIPrivateBrowsingService);
   let consoleService = Cc["@mozilla.org/consoleservice;1"].
                        getService(Ci.nsIConsoleService);
+  const kExitMessage = "Message to signal the end of the test";
   waitForExplicitFinish();
 
   let consoleObserver = {
     observe: function (aMessage) {
       if (!aMessage.message)
         this.gotNull = true;
+      else if (aMessage.message == kExitMessage) {
+        // make sure that the null message was received
+        ok(this.gotNull, "Console should be cleared after leaving the private mode");
+        // make sure the console does not contain kTestMessage
+        ok(!messageExists(), "Message should not exist after leaving the private mode");
+
+        consoleService.unregisterListener(consoleObserver);
+        prefBranch.clearUserPref("browser.privatebrowsing.keep_current_session");
+        finish();
+      }
     },
     gotNull: false
   };
@@ -84,18 +95,6 @@ function test() {
   ok(messageExists(), "Message should exist after entering the private mode");
   pb.privateBrowsingEnabled = false;
 
-  let timer = Cc["@mozilla.org/timer;1"].
-              createInstance(Ci.nsITimer);
-  timer.initWithCallback({
-    notify: function(timer) {
-      // make sure that the null message was received
-      ok(consoleObserver.gotNull, "Console should be cleared after leaving the private mode");
-      // make sure the console does not contain kTestMessage
-      ok(!messageExists(), "Message should not exist after leaving the private mode");
-
-      consoleService.unregisterListener(consoleObserver);
-      prefBranch.clearUserPref("browser.privatebrowsing.keep_current_session");
-      finish();
-    }
-  }, 1000, Ci.nsITimer.TYPE_ONE_SHOT);
+  // signal the end of the test
+  consoleService.logStringMessage(kExitMessage);
 }
