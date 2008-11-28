@@ -1,0 +1,20 @@
+<!DOCTYPE svg:svg [<!ATTLIST transform id ID #IMPLIED>]>
+<?xml-stylesheet type="application/xml" href="#transform"?>
+<svg:svg xmlns="http://www.w3.org/1999/XSL/Transform"
+		xmlns:svg="http://www.w3.org/2000/svg">
+	<svg:defs>
+		<transform id="transform" version="1.0">
+			<template match="node()|@*">
+				<copy>
+					<apply-templates select="@*"/>
+					<apply-templates/>
+				</copy>
+			</template>
+			<template match="svg:defs"/>
+			<template match="@fill">
+				<attribute name="fill">lime</attribute>
+			</template>
+		</transform>
+	</svg:defs>
+	<svg:rect width="100%" height="100%" fill="red"/>
+</svg:svg>
