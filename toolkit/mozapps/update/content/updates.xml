@@ -107,6 +107,10 @@
           return this.getAttribute("url");
         ]]></getter>
         <setter><![CDATA[
+          if (this._remoteProgressListener) 
+            this._content.webProgress
+                .removeProgressListener(this._remoteProgressListener);
+
           var self = this;
 
           this._remoteProgressListener = {
