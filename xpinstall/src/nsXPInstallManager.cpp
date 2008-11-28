@@ -67,6 +67,8 @@
 #include "nsIWindowWatcher.h"
 #include "nsIAuthPrompt.h"
 #include "nsIWindowMediator.h"
+#include "nsIDocument.h"
+#include "nsIDOMDocument.h"
 #include "nsIDOMWindowInternal.h"
 #include "nsDirectoryService.h"
 #include "nsDirectoryServiceDefs.h"
@@ -232,6 +234,17 @@ nsXPInstallManager::InitManager(nsIDOMWindowInternal* aParentWindow, nsXPITrigge
 
     mParentWindow = aParentWindow;
 
+    // Attempt to find a load group, continue if we can't find one though
+    if (aParentWindow) {
+        nsCOMPtr<nsIDOMDocument> domdoc;
+        rv = aParentWindow->GetDocument(getter_AddRefs(domdoc));
+        if (NS_SUCCEEDED(rv) && domdoc) {
+            nsCOMPtr<nsIDocument> doc = do_QueryInterface(domdoc);
+            if (doc)
+                mLoadGroup = doc->GetDocumentLoadGroup();
+        }
+    }
+
     // Start downloading initial chunks looking for signatures,
     mOutstandingCertLoads = mTriggers->Size();
 
@@ -241,7 +254,7 @@ nsXPInstallManager::InitManager(nsIDOMWindowInternal* aParentWindow, nsXPITrigge
     NS_NewURI(getter_AddRefs(uri), NS_ConvertUTF16toUTF8(item->mURL));
     nsCOMPtr<nsIStreamListener> listener = new CertReader(uri, nsnull, this);
     if (listener)
-        rv = NS_OpenURI(listener, nsnull, uri);
+        rv = NS_OpenURI(listener, nsnull, uri, nsnull, mLoadGroup);
     else
         rv = NS_ERROR_OUT_OF_MEMORY;
 
@@ -880,7 +893,7 @@ NS_IMETHODIMP nsXPInstallManager::DownloadNext()
                 {
                     nsCOMPtr<nsIChannel> channel;
 
-                    rv = NS_NewChannel(getter_AddRefs(channel), pURL, nsnull, nsnull, this);
+                    rv = NS_NewChannel(getter_AddRefs(channel), pURL, nsnull, mLoadGroup, this);
                     if (NS_SUCCEEDED(rv))
                     {
                         rv = channel->AsyncOpen(this, nsnull);
@@ -1371,7 +1384,7 @@ nsXPInstallManager::OnCertAvailable(nsIURI *aURI,
         return OnCertAvailable(uri, context, NS_ERROR_FAILURE, nsnull);
 
     NS_ADDREF(listener);
-    nsresult rv = NS_OpenURI(listener, nsnull, uri);
+    nsresult rv = NS_OpenURI(listener, nsnull, uri, nsnull, mLoadGroup);
 
     NS_ASSERTION(NS_SUCCEEDED(rv), "OpenURI failed");
     NS_RELEASE(listener);
