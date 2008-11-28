@@ -41,6 +41,7 @@
 /* Per JSRuntime object */
 
 #include "xpcprivate.h"
+#include "dom_quickstubs.h"
 
 /***************************************************************************/
 
@@ -605,6 +606,8 @@ JSBool XPCJSRuntime::GCCallback(JSContext *cx, JSGCStatus status)
                 self->mDetachedWrappedNativeProtoMap->
                     Enumerate(DetachedWrappedNativeProtoMarker, nsnull);
 
+                DOM_MarkInterfaces();
+
                 // Mark the sets used in the call contexts. There is a small
                 // chance that a wrapper's set will change *while* a call is
                 // happening which uses that wrapper's old interfface set. So,
@@ -999,6 +1002,8 @@ XPCJSRuntime::~XPCJSRuntime()
     XPCStringConvert::ShutdownDOMStringFinalizer();
 
     XPCConvert::RemoveXPCOMUCStringFinalizer();
+
+    DOM_ClearInterfaces();
 
     if(mJSHolders.ops)
     {
