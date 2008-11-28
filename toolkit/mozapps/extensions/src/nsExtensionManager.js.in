@@ -2680,9 +2680,11 @@ ExtensionManager.prototype = {
 
     // Release strongly held services.
     gOS = null;
-    if (this._ptr && gRDF) {
+    if (this._ds) {
       gRDF.UnregisterDataSource(this._ptr);
       this._ptr = null;
+      this._ds.shutdown();
+      this._ds = null;
     }
     gRDF = null;
     if (gPref) {
@@ -5937,7 +5939,7 @@ ExtensionManager.prototype = {
    */
   get datasource() {
     this._ensureDS();
-    return this._ds.QueryInterface(Ci.nsIRDFDataSource);
+    return this._ds;
   },
 
   // nsIClassInfo
@@ -7118,6 +7120,17 @@ ExtensionsDataSource.prototype = {
   _em       : null,
   _itemRoot     : null,
   _defaultTheme : null,
+
+  /**
+   * Called during application shutdown to clear any references held.
+   * The ExtensionsDataSource is unusable after calling this.
+   */
+  shutdown: function EMDS_shutdown() {
+    this._inner = null;
+    this._em = null;
+    this._itemRoot = null;
+    this._defaultTheme = null;
+  },
 
   /**
    * Determines if an item's dependencies are satisfied. An item's dependencies
@@ -8882,6 +8895,13 @@ ExtensionsDataSource.prototype = {
   FlushTo: function EMDS_FlushTo(uri) {
   },
 
+  classDescription: "Extension Manager Data Source",
+  contractID: "@mozilla.org/rdf/datasource;1?name=extensions",
+  classID: Components.ID("{69BB8313-2D4F-45EC-97E0-D39DA58ECCE9}"),
+  _xpcom_factory: {
+    createInstance: function() Cc[ExtensionManager.prototype.contractID].
+                               getService(Ci.nsIExtensionManager).datasource
+  },
   QueryInterface: XPCOMUtils.generateQI([Ci.nsIRDFDataSource,
                                          Ci.nsIRDFRemoteDataSource])
 };
@@ -8952,20 +8972,8 @@ UpdateItem.prototype = {
   QueryInterface: XPCOMUtils.generateQI([Ci.nsIUpdateItem])
 };
 
-function DatasourceModule() {}
-DatasourceModule.prototype = {
-  classDescription: "Extension Manager Data Source",
-  contractID: "@mozilla.org/rdf/datasource;1?name=extensions",
-  classID: Components.ID("{69BB8313-2D4F-45EC-97E0-D39DA58ECCE9}"),
-  _xpcom_factory: {
-    createInstance: function() Cc[ExtensionManager.prototype.contractID].
-                               getService(Ci.nsIExtensionManager).datasource
-  }
-};
-
-
 function NSGetModule(compMgr, fileSpec)
-  XPCOMUtils.generateModule([ExtensionManager, DatasourceModule, UpdateItem]);
+  XPCOMUtils.generateModule([ExtensionManager, ExtensionsDataSource, UpdateItem]);
 
 #if 0
 /**
