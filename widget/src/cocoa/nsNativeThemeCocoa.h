@@ -101,10 +101,8 @@ protected:
   void DrawProgress(CGContextRef context, const HIRect& inBoxRect,
                     PRBool inIsIndeterminate, PRBool inIsHorizontal,
                     PRInt32 inValue, PRInt32 inMaxValue, nsIFrame* aFrame);
-  void DrawTab(CGContextRef context, const HIRect& inBoxRect,
-               PRBool inIsDisabled, PRBool inIsFrontmost, 
-               PRBool inIsHorizontal, PRBool inTabBottom,
-               PRInt32 inState, nsIFrame* aFrame);
+  void DrawTab(CGContextRef context, HIRect inBoxRect, PRInt32 inState,
+               nsIFrame* aFrame);
   void DrawTabPanel(CGContextRef context, const HIRect& inBoxRect, nsIFrame* aFrame);
   void DrawScale(CGContextRef context, const HIRect& inBoxRect,
                  PRBool inIsDisabled, PRInt32 inState,
