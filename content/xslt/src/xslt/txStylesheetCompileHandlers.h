@@ -58,7 +58,7 @@ typedef nsresult (*HandleTextFn)  (const nsAString& aStr,
 
 struct txElementHandler {
     PRInt32 mNamespaceID;
-    char* mLocalName;
+    const char* mLocalName;
     HandleStartFn mStartFunction;
     HandleEndFn mEndFunction;
 };
