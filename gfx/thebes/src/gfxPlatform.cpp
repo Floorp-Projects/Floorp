@@ -598,6 +598,10 @@ gfxPlatform::GetCMSOutputProfile()
                                         getter_Copies(fname));
                 if (NS_SUCCEEDED(rv) && !fname.IsEmpty()) {
                     gCMSOutputProfile = cmsOpenProfileFromFile(fname, "r");
+                    if (gCMSOutputProfile)
+                        fprintf(stderr,
+                                "ICM profile read from %s successfully\n",
+                                fname.get());
                 }
             }
         }
@@ -605,15 +609,6 @@ gfxPlatform::GetCMSOutputProfile()
         if (!gCMSOutputProfile) {
             gCMSOutputProfile =
                 gfxPlatform::GetPlatform()->GetPlatformCMSOutputProfile();
-        }
-
-        /* Determine if the profile looks bogus. If so, close the profile
-         * and use sRGB instead. See bug 460629, */
-        if (gCMSOutputProfile && cmsProfileIsBogus(gCMSOutputProfile)) {
-            NS_ASSERTION(gCMSOutputProfile != GetCMSsRGBProfile(),
-                         "Builtin sRGB profile tagged as bogus!!!");
-            cmsCloseProfile(gCMSOutputProfile);
-            gCMSOutputProfile = nsnull;
         }
 
         if (!gCMSOutputProfile) {
