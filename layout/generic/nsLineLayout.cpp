@@ -1523,8 +1523,8 @@ nsLineLayout::PlaceTopBottomFrames(PerSpanData* psd,
   }
 }
 
-#define VERTICAL_ALIGN_FRAMES_NO_MINIMUM 32767
-#define VERTICAL_ALIGN_FRAMES_NO_MAXIMUM -32768
+#define VERTICAL_ALIGN_FRAMES_NO_MINIMUM nscoord_MAX
+#define VERTICAL_ALIGN_FRAMES_NO_MAXIMUM nscoord_MIN
 
 // Vertically place frames within a given span. Note: this doesn't
 // place top/bottom aligned frames as those have to wait until the
