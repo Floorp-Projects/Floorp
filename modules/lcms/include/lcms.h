@@ -855,7 +855,6 @@ LCMSAPI LPcmsCIExyY LCMSEXPORT cmsD50_xyY(void);
 LCMSAPI cmsHPROFILE   LCMSEXPORT cmsOpenProfileFromFile(const char *ICCProfile, const char *sAccess);
 LCMSAPI cmsHPROFILE   LCMSEXPORT cmsOpenProfileFromMem(LPVOID MemPtr, DWORD dwSize);
 LCMSAPI LCMSBOOL      LCMSEXPORT cmsCloseProfile(cmsHPROFILE hProfile);
-LCMSAPI LCMSBOOL      LCMSEXPORT cmsProfileIsBogus(cmsHPROFILE hProfile);
 
 // Predefined run-time profiles
 
