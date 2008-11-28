@@ -202,7 +202,15 @@ function wrapToolbarItems()
 #endif
 
         if (isToolbarItem(item)) {
+          var nextSibling = item.nextSibling;
+          
           var wrapper = wrapToolbarItem(item);
+          
+          if (nextSibling)
+            toolbar.insertBefore(wrapper, nextSibling);
+          else
+            toolbar.appendChild(wrapper);
+
           cleanupItemForToolbar(item, wrapper);
         }
       }
@@ -234,9 +242,9 @@ function unwrapToolbarItems()
  * Creates a wrapper that can be used to contain a toolbaritem and prevent
  * it from receiving UI events.
  */
-function createWrapper(aId, aDocument)
+function createWrapper(aId)
 {
-  var wrapper = aDocument.createElementNS("http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul",
+  var wrapper = document.createElementNS("http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul",
                                          "toolbarpaletteitem");
 
   wrapper.id = "wrapper-"+aId;  
@@ -249,7 +257,7 @@ function createWrapper(aId, aDocument)
  */
 function wrapPaletteItem(aPaletteItem, aCurrentRow, aSpacer)
 {
-  var wrapper = createWrapper(aPaletteItem.id, document);
+  var wrapper = createWrapper(aPaletteItem.id);
 
   wrapper.setAttribute("flex", 1);
   wrapper.setAttribute("align", "center");
@@ -257,6 +265,7 @@ function wrapPaletteItem(aPaletteItem, aCurrentRow, aSpacer)
   wrapper.setAttribute("minheight", "0");
   wrapper.setAttribute("minwidth", "0");
 
+  document.adoptNode(aPaletteItem);
   wrapper.appendChild(aPaletteItem);
   
   // XXX We need to call this AFTER the palette item has been appended
@@ -278,11 +287,13 @@ function wrapPaletteItem(aPaletteItem, aCurrentRow, aSpacer)
  */
 function wrapToolbarItem(aToolbarItem)
 {
-  var wrapper = createWrapper(aToolbarItem.id, gToolboxDocument);
+  var wrapper = createWrapper(aToolbarItem.id);
+  gToolboxDocument.adoptNode(wrapper);
 
   wrapper.flex = aToolbarItem.flex;
 
-  aToolbarItem.parentNode.replaceChild(wrapper, aToolbarItem);
+  if (aToolbarItem.parentNode)
+    aToolbarItem.parentNode.removeChild(aToolbarItem);
   
   wrapper.appendChild(aToolbarItem);
   
@@ -350,7 +361,7 @@ function buildPalette()
   while (templateNode) {
     // Check if the item is already in a toolbar before adding it to the palette.
     if (!(templateNode.id in currentItems)) {
-      var paletteItem = document.importNode(templateNode, true);
+      var paletteItem = templateNode.cloneNode(true);
 
       if (rowSlot == kRowMax) {
         // Append the old row.
@@ -435,8 +446,7 @@ function cleanUpItemForPalette(aItem, aWrapper)
     aWrapper.setAttribute("title", aItem.getAttribute("title"));
   else if (isSpecialItem(aItem)) {
     var stringBundle = document.getElementById("stringBundle");
-    // Remove the common "toolbar" prefix to generate the string name.
-    var title = stringBundle.getString(aItem.localName.slice(7) + "Title");
+    var title = stringBundle.getString(aItem.id + "Title");
     aWrapper.setAttribute("title", title);
   }
   
@@ -575,8 +585,9 @@ function addNewToolbar()
  */
 function restoreDefaultSet()
 {
-  // Unwrap the items on the toolbar.
-  unwrapToolbarItems();
+  // Save disabled/command states, because we're
+  // going to recreate the wrappers and lose this
+  var savedAttributes = saveItemAttributes(["itemdisabled", "itemcommand"]);
 
   // Remove all of the customized toolbars.
   var child = gToolbox.lastChild;
@@ -584,7 +595,6 @@ function restoreDefaultSet()
     if (child.hasAttribute("customindex")) {
       var thisChild = child;
       child = child.previousSibling;
-      thisChild.currentSet = "__empty";
       gToolbox.removeChild(thisChild);
     } else {
       child = child.previousSibling;
@@ -617,7 +627,47 @@ function restoreDefaultSet()
   // Now re-wrap the items on the toolbar.
   wrapToolbarItems();
 
+  // Restore the disabled and command states
+  restoreItemAttributes(["itemdisabled", "itemcommand"], savedAttributes);
+
   toolboxChanged();
+}
+
+function saveItemAttributes(aAttributeList)
+{
+  var items = [];
+  var paletteItems = gToolbox.getElementsByTagName("toolbarpaletteitem");
+  for (var i = 0; i < paletteItems.length; i++) {
+    var paletteItem = paletteItems.item(i);
+    for (var j = 0; j < aAttributeList.length; j++) {
+      var attr = aAttributeList[j];
+      if (paletteItem.hasAttribute(attr)) {
+        items.push([paletteItem.id, attr, paletteItem.getAttribute(attr)]);
+      }
+    }
+  }
+  return items;
+}
+
+function restoreItemAttributes(aAttributeList, aSavedAttrList)
+{
+  var paletteItems = gToolbox.getElementsByTagName("toolbarpaletteitem");
+
+  for (var i = 0; i < paletteItems.length; i++) {
+    var paletteItem = paletteItems.item(i);
+
+    // if the item is supposed to have this, it'll get
+    // restored from the saved list
+    for (var j = 0; j < aAttributeList.length; j++)
+      paletteItem.removeAttribute(aAttributeList[j]);
+
+    for (var j = 0; j < aSavedAttrList.length; j++) {
+      var savedAttr = aSavedAttrList[j];
+      if (paletteItem.id == savedAttr[0]) {
+        paletteItem.setAttribute(savedAttr[1], savedAttr[2]);
+      }
+    }
+  }
 }
 
 function updateIconSize(aUseSmallIcons, localDefault)
@@ -831,7 +881,8 @@ var toolbarDNDObserver =
       // The item has been dragged from the palette
       
       // Create a new wrapper for the item. We don't know the id yet.
-      var wrapper = createWrapper("", gToolboxDocument);
+      var wrapper = createWrapper("");
+      gToolboxDocument.adoptNode(wrapper);
 
       // Ask the toolbar to clone the item's template, place it inside the wrapper, and insert it in the toolbar.
       var newItem = toolbar.insertItem(draggedItemId, gCurrentDragOverItem == toolbar ? null : gCurrentDragOverItem, wrapper);
@@ -923,16 +974,27 @@ var paletteDNDObserver =
       if (wrapper.parentNode.lastPermanentChild && wrapper.parentNode.lastPermanentChild.id == wrapper.firstChild.id)
         return;
 
+      // The item was dragged out of the toolbar.
+      wrapper.parentNode.removeChild(wrapper);
+      
       var wrapperType = wrapper.getAttribute("type");
       if (wrapperType != "separator" &&
           wrapperType != "spacer" &&
           wrapperType != "spring") {
-        appendPaletteItem(document.importNode(wrapper.firstChild, true));
+        // Find the template node in the toolbox palette
+        var templateNode = gToolbox.palette.firstChild;
+        while (templateNode) {
+          if (templateNode.id == itemId)
+            break;
+          templateNode = templateNode.nextSibling;
+        }
+        if (!templateNode)
+          return;
+        
+        // Clone the template and add it to our palette.
+        var paletteItem = templateNode.cloneNode(true);
+        appendPaletteItem(paletteItem);
       }
-
-      // The item was dragged out of the toolbar.
-      gToolbox.palette.appendChild(wrapper.firstChild);
-      wrapper.parentNode.removeChild(wrapper);
     }
     
     toolboxChanged();
