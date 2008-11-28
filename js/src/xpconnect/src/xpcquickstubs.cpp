@@ -743,7 +743,7 @@ xpc_qsStringToJsval(JSContext *cx, const nsAString &str, jsval *rval)
 
 JSBool
 xpc_qsXPCOMObjectToJsval(XPCCallContext &ccx, nsISupports *p,
-                         XPCNativeInterface *interface, jsval *rval)
+                         const nsIID &iid, jsval *rval)
 {
     // From the T_INTERFACE case in XPCConvert::NativeData2JS.
     // This is one of the slowest things quick stubs do.
@@ -751,18 +751,14 @@ xpc_qsXPCOMObjectToJsval(XPCCallContext &ccx, nsISupports *p,
     JSObject *scope = ccx.GetCurrentJSObject();
     NS_ASSERTION(scope, "bad ccx");
 
-    if(!interface)
-        return xpc_qsThrow(ccx, NS_ERROR_XPC_BAD_CONVERT_NATIVE);
-
     // XXX The OBJ_IS_NOT_GLOBAL here is not really right. In
     // fact, this code is depending on the fact that the
     // global object will not have been collected, and
     // therefore this NativeInterface2JSObject will not end up
     // creating a new XPCNativeScriptableShared.
     nsresult rv;
-    if(!XPCConvert::NativeInterface2JSObject(ccx, rval, nsnull, p, nsnull,
-                                             interface, scope, PR_TRUE,
-                                             OBJ_IS_NOT_GLOBAL, &rv))
+    if(!XPCConvert::NativeInterface2JSObject(ccx, rval, nsnull, p, &iid, scope,
+                                             PR_TRUE, OBJ_IS_NOT_GLOBAL, &rv))
     {
         // I can't tell if NativeInterface2JSObject throws JS exceptions
         // or not.  This is a sloppy stab at the right semantics; the
