@@ -1346,16 +1346,13 @@ nsXPCWrappedJSClass::CallMethod(nsXPCWrappedJS* wrapper, uint16 methodIndex,
                                     newWrapperIID =
                                         const_cast<nsIID*>
                                                   (&NS_GET_IID(nsISupports));
-                                nsCOMPtr<nsIXPConnectJSObjectHolder> holder;
                                 JSBool ok =
                                   XPCConvert::NativeInterface2JSObject(ccx,
-                                        getter_AddRefs(holder), newThis,
-                                        newWrapperIID, obj, PR_FALSE, PR_FALSE,
-                                        nsnull);
+                                        &thisObj, newThis, newWrapperIID, obj,
+                                        PR_FALSE, PR_FALSE, nsnull);
                                 if(newWrapperIID != &NS_GET_IID(nsISupports))
                                     nsMemory::Free(newWrapperIID);
-                                if(!ok ||
-                                    NS_FAILED(holder->GetJSObject(&thisObj)))
+                                if(!ok)
                                 {
                                     goto pre_call_clean_up;
                                 }

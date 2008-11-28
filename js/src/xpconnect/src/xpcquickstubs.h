@@ -398,7 +398,7 @@ xpc_qsUnwrapArg(JSContext *cx, jsval v, T **ppArg)
 JSBool
 xpc_qsXPCOMObjectToJsval(XPCCallContext &ccx,
                          nsISupports *p,
-                         const nsIID &iid,
+                         XPCNativeInterface *interface,
                          jsval *rval);
 
 /**
@@ -431,5 +431,15 @@ xpc_qsAssertContextOK(JSContext *cx);
 #else
 #define XPC_QS_ASSERT_CONTEXT_OK(cx) ((void) 0)
 #endif
+
+#define XPC_QS_DEFINE_XPCNATIVEINTERFACE_GETTER(_iface, _iface_cache)         \
+inline XPCNativeInterface*                                                    \
+_iface##_Interface(XPCCallContext& ccx)                                       \
+{                                                                             \
+    if(!(_iface_cache))                                                       \
+        (_iface_cache) =                                                      \
+            XPCNativeInterface::GetNewOrUsed(ccx, &NS_GET_IID(_iface));       \
+    return (_iface_cache);                                                    \
+}
 
 #endif /* xpcquickstubs_h___ */
