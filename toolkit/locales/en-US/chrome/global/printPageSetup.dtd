@@ -7,17 +7,22 @@
 <!ENTITY formatGroup.label   "Format">
 
 <!ENTITY orientation.label   "Orientation:">
-<!ENTITY portrait            "Portrait">
-<!ENTITY landscape           "Landscape">
+<!ENTITY portrait.label      "Portrait">
+<!ENTITY portrait.accesskey  "P">
+<!ENTITY landscape.label     "Landscape">
+<!ENTITY landscape.accesskey "L">
 
 <!ENTITY scale.label         "Scale:">
+<!ENTITY scale.accesskey     "S">
 <!ENTITY scalePercent        "&#037;">
 
-<!ENTITY shrinkToFit.label   "Shrink To Fit Page Width">
+<!ENTITY shrinkToFit.label   "Shrink to fit Page Width">
+<!ENTITY shrinkToFit.accesskey "W">
 
 <!ENTITY optionsGroup.label  "Options">
 
 <!ENTITY printBG.label       "Print Background (colors &amp; images)">
+<!ENTITY printBG.accesskey   "B">
 
 <!ENTITY advanced.tab        "Margins &amp; Header/Footer">
 
@@ -25,9 +30,13 @@
 <!ENTITY marginUnits.inches  "inches">
 <!ENTITY marginUnits.metric  "millimeters">
 <!ENTITY marginTop.label     "Top:">
+<!ENTITY marginTop.accesskey "T">
 <!ENTITY marginBottom.label  "Bottom:">
+<!ENTITY marginBottom.accesskey "B">
 <!ENTITY marginLeft.label    "Left:">
+<!ENTITY marginLeft.accesskey "L">
 <!ENTITY marginRight.label   "Right:">
+<!ENTITY marginRight.accesskey "R">
 
 <!ENTITY headerFooter.label  "Headers &amp; Footers">
 
