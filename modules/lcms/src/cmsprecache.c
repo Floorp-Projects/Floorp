@@ -190,12 +190,6 @@ LCMSBOOL LCMSEXPORT cmsPrecacheProfile(cmsHPROFILE hProfile,
                      break;
        }
 
-       // Free the gamma tables
-       if (hasGammaTables) {
-              CMSASSERT(GTables[0] != NULL);
-              cmsFreeGammaTriple(GTables);
-       }
-
        // Success
        return TRUE;
 }
