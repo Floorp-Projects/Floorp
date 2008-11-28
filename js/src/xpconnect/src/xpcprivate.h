@@ -2765,7 +2765,6 @@ public:
                                            nsIXPConnectJSObjectHolder** dest,
                                            nsISupports* src,
                                            const nsID* iid,
-                                           XPCNativeInterface* interface,
                                            JSObject* scope,
                                            PRBool allowNativeWrapper,
                                            PRBool isGlobal,
@@ -2780,9 +2779,9 @@ public:
                                            nsresult* pErr)
     {
         jsval v;
-        JSBool ok = NativeInterface2JSObject(ccx, &v, nsnull, src, iid, nsnull,
-                                             scope, allowNativeWrapper,
-                                             isGlobal, pErr);
+        JSBool ok = NativeInterface2JSObject(ccx, &v, nsnull, src, iid, scope,
+                                             allowNativeWrapper, isGlobal,
+                                             pErr);
         *dest = JSVAL_TO_OBJECT(v);
         return ok;
     }
