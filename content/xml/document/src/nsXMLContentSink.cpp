@@ -1374,10 +1374,9 @@ nsXMLContentSink::HandleProcessingInstruction(const PRUnichar *aTarget,
 
   nsAutoString href, title, media;
   PRBool isAlternate = PR_FALSE;
-  ParsePIData(data, href, title, media, isAlternate);
 
   // If there was no href, we can't do anything with this PI
-  if (href.IsEmpty()) {
+  if (!ParsePIData(data, href, title, media, isAlternate)) {
       return DidProcessATokenImpl();
   }
 
@@ -1386,16 +1385,14 @@ nsXMLContentSink::HandleProcessingInstruction(const PRUnichar *aTarget,
 }
 
 /* static */
-void
+PRBool
 nsXMLContentSink::ParsePIData(const nsString &aData, nsString &aHref,
                               nsString &aTitle, nsString &aMedia,
                               PRBool &aIsAlternate)
 {
-  nsParserUtils::GetQuotedAttributeValue(aData, nsGkAtoms::href, aHref);
-
   // If there was no href, we can't do anything with this PI
-  if (aHref.IsEmpty()) {
-    return;
+  if (!nsParserUtils::GetQuotedAttributeValue(aData, nsGkAtoms::href, aHref)) {
+    return PR_FALSE;
   }
 
   nsParserUtils::GetQuotedAttributeValue(aData, nsGkAtoms::title, aTitle);
@@ -1406,6 +1403,8 @@ nsXMLContentSink::ParsePIData(const nsString &aData, nsString &aHref,
   nsParserUtils::GetQuotedAttributeValue(aData, nsGkAtoms::alternate, alternate);
 
   aIsAlternate = alternate.EqualsLiteral("yes");
+
+  return PR_TRUE;
 }
 
 /*
