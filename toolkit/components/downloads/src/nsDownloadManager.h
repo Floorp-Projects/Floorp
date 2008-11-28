@@ -107,6 +107,7 @@ protected:
     DATABASE_MEMORY
   };
 
+  nsresult InitDB();
   nsresult InitFileDB(PRBool *aDoImport);
   nsresult InitMemoryDB();
   already_AddRefed<mozIStorageConnection> GetFileDBConnection(nsIFile *dbFile) const;
