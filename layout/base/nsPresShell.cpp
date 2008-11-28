@@ -5660,12 +5660,12 @@ PresShell::HandleEvent(nsIView         *aView,
     nsIFrame* targetFrame;
     {
       nsAutoDisableGetUsedXAssertions disableAssert;
-      PRBool ignoreScrollFrame = PR_FALSE;
+      PRBool ignoreRootScrollFrame = PR_FALSE;
       if (aEvent->eventStructType == NS_MOUSE_EVENT) {
-        ignoreScrollFrame = static_cast<nsMouseEvent*>(aEvent)->ignoreScrollFrame;
+        ignoreRootScrollFrame = static_cast<nsMouseEvent*>(aEvent)->ignoreRootScrollFrame;
       }
       targetFrame = nsLayoutUtils::GetFrameForPoint(frame, eventPoint,
-                                                    PR_FALSE, ignoreScrollFrame);
+                                                    PR_FALSE, ignoreRootScrollFrame);
     }
 
     if (targetFrame) {
