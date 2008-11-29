@@ -2327,6 +2327,8 @@ class RegExpNativeCompiler {
 
         guard = insertGuard(re_chars, re_length);
 
+        if (lirbuf->outOmem()) 
+            goto fail;
         ::compile(fragmento->assm(), fragment);
         if (fragmento->assm()->error() != nanojit::None) {
             oom = fragmento->assm()->error() == nanojit::OutOMem;
