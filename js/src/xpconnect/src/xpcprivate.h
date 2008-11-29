@@ -2761,7 +2761,6 @@ public:
      * @param pErr [out] relevant error code, if any.
      */
     static JSBool NativeInterface2JSObject(XPCCallContext& ccx,
-                                           jsval* d,
                                            nsIXPConnectJSObjectHolder** dest,
                                            nsISupports* src,
                                            const nsID* iid,
@@ -2769,22 +2768,6 @@ public:
                                            PRBool allowNativeWrapper,
                                            PRBool isGlobal,
                                            nsresult* pErr);
-    static JSBool NativeInterface2JSObject(XPCCallContext& ccx,
-                                           JSObject** dest,
-                                           nsISupports* src,
-                                           const nsID* iid,
-                                           JSObject* scope,
-                                           PRBool allowNativeWrapper,
-                                           PRBool isGlobal,
-                                           nsresult* pErr)
-    {
-        jsval v;
-        JSBool ok = NativeInterface2JSObject(ccx, &v, nsnull, src, iid, scope,
-                                             allowNativeWrapper, isGlobal,
-                                             pErr);
-        *dest = JSVAL_TO_OBJECT(v);
-        return ok;
-    }
 
     static JSBool GetNativeInterfaceFromJSObject(XPCCallContext& ccx,
                                                  void** dest, JSObject* src,
