@@ -7,4 +7,3 @@ fails == lreas_selflink_dtd_id.svg pass.svg
 == lreas_selflink_empty_href.svg pass.svg
 == lreas_selflink_relative_href.svg pass.svg
 == xslt_relative_href.svg pass.svg
-fails-if(MOZ_WIDGET_TOOLKIT=="gtk2") == xslt_selflink_empty_href.xslt pass.svg
