@@ -47,6 +47,11 @@ MODULE		= libreg
 LIBRARY_NAME	= mozreg_s
 DIST_INSTALL = 1
 
+# MacOSX requires the MoreFiles module
+ifeq ($(OS_ARCH),Darwin)
+REQUIRES = macmorefiles
+endif
+
 CSRCS		= $(MODULES_LIBREG_SRC_LCSRCS) nr_bufio.c
 
 BIN_SRCS	= VerReg.c reg.c vr_stubs.c
@@ -64,6 +69,10 @@ EXPORT_LIBRARY = 1
 USE_STATIC_LIBS = 1
 
 SDK_LIBRARY = $(LIBRARY)
+
+ifeq (cocoa,$(MOZ_WIDGET_TOOLKIT))
+SHARED_LIBRARY_LIBS += $(DEPTH)/xpcom/MoreFiles/libmacmorefiles_s.a
+endif
 
 include $(topsrcdir)/config/config.mk
 
