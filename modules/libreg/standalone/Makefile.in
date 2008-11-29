@@ -47,6 +47,11 @@ include $(srcdir)/../src/objs.mk
 MODULE		= libreg
 LIBRARY_NAME	= mozregsa_s
 
+# MacOSX requires the MoreFiles module
+ifeq ($(OS_ARCH),Darwin)
+REQUIRES = macmorefiles
+endif
+
 ifeq ($(OS_ARCH),WINNT)
 USE_STATIC_LIBS = 1
 endif
