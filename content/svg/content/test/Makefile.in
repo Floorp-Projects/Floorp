@@ -47,6 +47,8 @@ include $(topsrcdir)/config/rules.mk
 _TEST_FILES = \
 		test_bbox.xhtml \
 		bbox-helper.svg \
+		bounds-helper.svg \
+		test_bounds.html \
 		test_dataTypes.html \
 		dataTypes-helper.svg \
 		test_getSubStringLength.xhtml \
