@@ -64,6 +64,7 @@ public:
 
   nsresult InstallField(nsIScriptContext* aContext,
                         JSObject* aBoundNode,
+                        nsIPrincipal* aPrincipal,
                         nsIURI* aBindingDocURI,
                         PRBool* aDidInstall) const;
 
