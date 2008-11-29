@@ -94,6 +94,7 @@ nsXBLProtoImplField::AppendFieldText(const nsAString& aText)
 nsresult
 nsXBLProtoImplField::InstallField(nsIScriptContext* aContext,
                                   JSObject* aBoundNode,
+                                  nsIPrincipal* aPrincipal,
                                   nsIURI* aBindingDocURI,
                                   PRBool* aDidInstall) const
 {
@@ -131,7 +132,7 @@ nsXBLProtoImplField::InstallField(nsIScriptContext* aContext,
   rv = context->EvaluateStringWithValue(nsDependentString(mFieldText,
                                                           mFieldTextLength), 
                                         aBoundNode,
-                                        nsnull, uriSpec.get(),
+                                        aPrincipal, uriSpec.get(),
                                         mLineNumber, JSVERSION_LATEST,
                                         (void*) &result, &undefined);
   if (NS_FAILED(rv))
