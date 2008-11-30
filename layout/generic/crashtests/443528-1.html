@@ -1,0 +1,19 @@
+<!DOCTYPE html>
+<html>
+<head>
+<script type="text/javascript">
+
+function boom()
+{
+  var s = document.getElementById("s");
+  document.body.insertBefore(document.createTextNode("\n   "), s);
+  document.body.offsetHeight;
+  s.appendChild(document.createElement("span"));
+}
+
+</script>
+</head>
+
+<body onload="boom();" style="-moz-column-count: 2; font-size: 1500px; white-space: pre-wrap;"><span id="s" style="display: inline-block"></span><div style="height: 100px;"></div></body>
+
+</html>
