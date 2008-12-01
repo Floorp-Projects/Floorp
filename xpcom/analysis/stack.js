@@ -184,7 +184,7 @@ function process_cp_pre_genericize(fndecl)
 
           let r = isStack(destType);
           if (r)
-            error("constructed object of type '%s' not on the stack: %s".format(destType.name, r), getLocation());
+            warning("constructed object of type '%s' not on the stack: %s".format(destType.name, r), getLocation());
         }
       }
     }
