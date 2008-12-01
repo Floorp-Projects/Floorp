@@ -453,8 +453,6 @@ WeaveSvc.prototype = {
   _login: function WeaveSvc__login(username, password, passphrase) {
     let self = yield;
 
-    this._log.debug("Logging in user " + this.username);
-
     if (typeof(username) != 'undefined')
       this.username = username;
     if (typeof(password) != 'undefined')
@@ -466,6 +464,8 @@ WeaveSvc.prototype = {
       throw "No username set, login failed";
     if (!this.password)
       throw "No password given or found in password manager";
+
+    this._log.debug("Logging in user " + this.username);
 
     yield this._verifyLogin.async(this, self.cb, this.username, this.password);
 
