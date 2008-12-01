@@ -101,10 +101,11 @@ function check(desc, actual, expected, oldJITstats, expectedJITstats)
                        }
                      });
   }
-  print(desc, ": FAILED: expected", typeof(expected), "(", expected, ")",
+  print(desc, ": FAILED: expected", typeof(expected),
+        "(", uneval(expected), ")",
 	(expectedStats ? " [" + expectedStats + "] " : ""),
 	"!= actual",
-	typeof(actual), "(", actual, ")",
+	typeof(actual), "(", uneval(actual), ")",
 	(actualStats ? " [" + actualStats + "] " : ""));
 }
 
