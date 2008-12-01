@@ -63,9 +63,41 @@ function map_test(t, cases)
   }
 }
 
+// Use this function to compare expected and actual test results.
+// Types must match.
+// For numbers, treat NaN as matching NaN, distinguish 0 and -0, and
+// tolerate a certain degree of error for other values.
+//
+// These are the same criteria used by the tests in js/tests, except that
+// we distinguish 0 and -0.
+function close_enough(expected, actual)
+{
+  if (typeof expected != typeof actual)
+    return false;
+  if (typeof expected != 'number')
+    return actual == expected;
+
+  // Distinguish NaN from other values.  Using x != x comparisons here
+  // works even if tests redefine isNaN.
+  if (actual != actual)
+    return expected != expected
+  if (expected != expected)
+    return false;
+
+  // Tolerate a certain degree of error.
+  if (actual != expected)
+    return Math.abs(actual - expected) <= 1E-10;
+
+  // Distinguish 0 and -0.
+  if (actual == 0)
+    return (1 / actual > 0) == (1 / expected > 0);
+
+  return true;
+}
+
 function check(desc, actual, expected, oldJITstats, expectedJITstats)
 {
-  if (expected == actual) {
+  if (close_enough(expected, actual)) {
     var pass = true;
     jitstatHandler(function(prop) {
                      if (expectedJITstats && prop in expectedJITstats &&
