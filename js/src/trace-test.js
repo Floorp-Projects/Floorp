@@ -53,6 +53,16 @@ function test(f)
   }
 }
 
+function map_test(t, cases)
+{
+  for (var i = 0; i < cases.length; i++) {
+    function c() { return t(cases[i].input); }
+    c.expected = cases[i].expected;
+    c.name = t.name + "(" + uneval(cases[i].input) + ")";
+    test(c);
+  }
+}
+
 function check(desc, actual, expected, oldJITstats, expectedJITstats)
 {
   if (expected == actual) {
@@ -235,12 +245,11 @@ function lsh_inner(n)
     r = 0x1 << n;
   return r;
 }
-function lsh()
-{
-  return [lsh_inner(15),lsh_inner(55),lsh_inner(1),lsh_inner(0)];
-}
-lsh.expected = "32768,8388608,2,1";
-test(lsh);
+map_test (lsh_inner,
+          [{input: 15, expected: 32768},
+           {input: 55, expected: 8388608},
+           {input: 1,  expected: 2},
+           {input: 0,  expected: 1}]);
 
 function rsh_inner(n)
 {
@@ -249,12 +258,11 @@ function rsh_inner(n)
     r = 0x11010101 >> n;
   return r;
 }
-function rsh()
-{
-  return [rsh_inner(8),rsh_inner(5),rsh_inner(35),rsh_inner(-1)];
-}
-rsh.expected = "1114369,8914952,35659808,0";
-test(rsh);
+map_test (rsh_inner,
+          [{input: 8,  expected: 1114369},
+           {input: 5,  expected: 8914952},
+           {input: 35, expected: 35659808},
+           {input: -1, expected: 0}]);
 
 function ursh_inner(n)
 {
@@ -263,12 +271,12 @@ function ursh_inner(n)
     r = -55 >>> n;
   return r;
 }
-function ursh() {
-  return [ursh_inner(8),ursh_inner(33),ursh_inner(0),ursh_inner(1)];
-}
-ursh.expected = "16777215,2147483620,4294967241,2147483620";
-test(ursh);
-
+map_test (ursh_inner,
+          [{input: 8,  expected: 16777215},
+           {input: 33, expected: 2147483620},
+           {input: 0,  expected: 4294967241},
+           {input: 1,  expected: 2147483620}]);
+           
 function doMath_inner(cos)
 {
     var s = 0;
@@ -370,7 +378,7 @@ function call()
       q4 += o.f();
       q5 += glob_f2();
   }
-  var ret = [q1, q2, q3, q4, q5];
+  var ret = String([q1, q2, q3, q4, q5]);
   return ret;
 }
 call.expected =  "100,100,100,100,100";
@@ -398,7 +406,7 @@ function testif() {
 	}
     return q;
 }
-testif.expected = "0";
+testif.expected = 0;
 test(testif);
 
 var globalinc = 0;
@@ -434,7 +442,7 @@ function trees() {
     else if ((i & 2) == 0) o[1]++;
     else o[2]++;
   }
-  return o;
+  return String(o);
 }
 trees.expected = "50,25,25";
 test(trees);
@@ -446,7 +454,7 @@ function unboxint() {
 	q = o[0] << 1;
     return q;
 }
-unboxint.expected = "8";
+unboxint.expected = 8;
 test(unboxint);
 
 function strings()
@@ -519,10 +527,10 @@ var orNaNTest1, orNaNTest2;
 
 orNaNTest1 = new Function("return orTestHelper(NaN, NaN, 10);");
 orNaNTest1.name = 'orNaNTest1';
-orNaNTest1.expected = '0';
+orNaNTest1.expected = 0;
 orNaNTest2 = new Function("return orTestHelper(NaN, 1, 10);");
 orNaNTest2.name = 'orNaNTest2';
-orNaNTest2.expected = '45';
+orNaNTest2.expected = 45;
 test(orNaNTest1);
 test(orNaNTest2);
 
@@ -733,7 +741,7 @@ function missingArgTest() {
   }
   return q;
 }
-missingArgTest.expected = "1"
+missingArgTest.expected = 1;
 test(missingArgTest);
 
 JSON = function () {
@@ -878,7 +886,7 @@ function inner_double_outer_int() {
     }
     return f(.5);
 }
-inner_double_outer_int.expected = "100";
+inner_double_outer_int.expected = 100;
 test(inner_double_outer_int);
 
 function newArrayTest()
