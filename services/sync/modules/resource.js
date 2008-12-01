@@ -237,7 +237,7 @@ Resource.prototype = {
         break;
 
       } else if (Utils.checkStatus(this._lastRequest.status)) {
-        this._log.debug(action + " request successful");
+        this._log.debug(action + " request successful (" + this._lastRequest.status  + ")");
         this._dirty = false;
 
         if ("GET" == action || "POST" == action) {
