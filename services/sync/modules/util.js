@@ -105,7 +105,7 @@ let Utils = {
     let password;
     let lm = Cc["@mozilla.org/login-manager;1"]
              .getService(Ci.nsILoginManager);
-    let logins = lm.findLogins({}, 'chrome://sync', null, realm);
+    let logins = lm.findLogins({}, 'chrome://weave', null, realm);
 
     for (let i = 0; i < logins.length; i++) {
       if (logins[i].username == username) {
@@ -120,7 +120,7 @@ let Utils = {
     // cleanup any existing passwords
     let lm = Cc["@mozilla.org/login-manager;1"]
              .getService(Ci.nsILoginManager);
-    let logins = lm.findLogins({}, 'chrome://sync', null, realm);
+    let logins = lm.findLogins({}, 'chrome://weave', null, realm);
     for (let i = 0; i < logins.length; i++)
       lm.removeLogin(logins[i]);
 
@@ -130,7 +130,7 @@ let Utils = {
     // save the new one
     let nsLoginInfo = new Components.Constructor(
       "@mozilla.org/login-manager/loginInfo;1", Ci.nsILoginInfo, "init");
-    let login = new nsLoginInfo('chrome://sync', null, realm,
+    let login = new nsLoginInfo('chrome://weave', null, realm,
                                 username, password, "", "");
     lm.addLogin(login);
   },
