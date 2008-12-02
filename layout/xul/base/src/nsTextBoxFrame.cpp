@@ -387,7 +387,8 @@ nsTextBoxFrame::PaintTitle(nsIRenderingContext& aRenderingContext,
         PaintOneShadow(aRenderingContext.ThebesContext(),
                        textRect,
                        textStyle->mTextShadow->ShadowAt(i - 1),
-                       GetStyleColor()->mColor);
+                       GetStyleColor()->mColor,
+                       aDirtyRect);
       }
     }
 
@@ -563,7 +564,8 @@ nsTextBoxFrame::DrawText(nsIRenderingContext& aRenderingContext,
 void nsTextBoxFrame::PaintOneShadow(gfxContext*      aCtx,
                                     const nsRect&    aTextRect,
                                     nsCSSShadowItem* aShadowDetails,
-                                    const nscolor&   aForegroundColor) {
+                                    const nscolor&   aForegroundColor,
+                                    const nsRect&    aDirtyRect) {
   nsPoint shadowOffset(aShadowDetails->mXOffset,
                        aShadowDetails->mYOffset);
   nscoord blurRadius = PR_MAX(aShadowDetails->mRadius, 0);
@@ -572,11 +574,12 @@ void nsTextBoxFrame::PaintOneShadow(gfxContext*      aCtx,
   shadowRect.MoveBy(shadowOffset);
 
   gfxRect shadowRectGFX(shadowRect.x, shadowRect.y, shadowRect.width, shadowRect.height);
+  gfxRect dirtyRectGFX(aDirtyRect.x, aDirtyRect.y, aDirtyRect.width, aDirtyRect.height);
 
   nsContextBoxBlur contextBoxBlur;
   gfxContext* shadowContext = contextBoxBlur.Init(shadowRectGFX, blurRadius,
                                                   PresContext()->AppUnitsPerDevPixel(),
-                                                  aCtx);
+                                                  aCtx, dirtyRectGFX);
 
   if (!shadowContext)
     return;

@@ -202,10 +202,12 @@ nsDisplayTextShadow::Paint(nsDisplayListBuilder* aBuilder,
   gfxRect shadowRect = gfxRect(pt.x, pt.y, innerWidthInAppUnits, mFrame->GetSize().height);
   gfxContext* thebesCtx = aCtx->ThebesContext();
 
+  gfxRect dirtyRect(aDirtyRect.x, aDirtyRect.y, aDirtyRect.width, aDirtyRect.height);
+
   nsContextBoxBlur contextBoxBlur;
   gfxContext* shadowCtx = contextBoxBlur.Init(shadowRect, mBlurRadius,
                                               mFrame->PresContext()->AppUnitsPerDevPixel(),
-                                              thebesCtx);
+                                              thebesCtx, dirtyRect);
   if (!shadowCtx)
     return;
 
