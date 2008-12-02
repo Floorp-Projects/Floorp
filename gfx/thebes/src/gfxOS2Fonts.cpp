@@ -363,7 +363,7 @@ cairo_font_face_t *gfxOS2Font::CairoFontFace()
         } else {
 #ifdef DEBUG
             printf("Could not match font for:\n"
-                   "  family=%s, weight=%d, slant=%d, size=%d\n",
+                   "  family=%s, weight=%d, slant=%d, size=%f\n",
                    NS_LossyConvertUTF16toASCII(GetName()).get(),
                    GetStyle()->weight, GetStyle()->style, GetStyle()->size);
 #endif
@@ -815,12 +815,13 @@ void gfxOS2FontGroup::CreateGlyphRunsFT(gfxTextRun *aTextRun, const PRUint8 *aUT
     cairo_ft_scaled_font_unlock_face(font0->CairoScaledFont());
 }
 
+// append aFontName to aClosure string array, if not already present
 PRBool gfxOS2FontGroup::FontCallback(const nsAString& aFontName,
                                      const nsACString& aGenericName,
                                      void *aClosure)
 {
     nsStringArray *sa = static_cast<nsStringArray*>(aClosure);
-    if (sa->IndexOf(aFontName) < 0) {
+    if (!aFontName.IsEmpty() && sa->IndexOf(aFontName) < 0) {
         sa->AppendString(aFontName);
     }
     return PR_TRUE;
