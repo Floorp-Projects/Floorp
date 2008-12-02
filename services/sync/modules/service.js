@@ -175,6 +175,7 @@ WeaveSvc.prototype = {
     ID.get('WeaveID').username = value;
     ID.get('WeaveCryptoID').username = value;
 
+    // FIXME: need to also call this whenever the username pref changes
     this._genKeyURLs();
   },
 
