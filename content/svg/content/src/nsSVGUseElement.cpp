@@ -478,7 +478,7 @@ nsSVGUseElement::DidChangeString(PRUint8 aAttrEnum, PRBool aDoSetAttr)
   if (aAttrEnum == HREF) {
     // we're changing our nature, clear out the clone information
     mOriginal = nsnull;
-
+    UnlinkSource();
     TriggerReclone();
   }
 }
