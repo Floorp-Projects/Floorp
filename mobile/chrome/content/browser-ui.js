@@ -113,12 +113,9 @@ var BrowserUI = {
 
   _tabSelect : function(aEvent) {
     var browser = Browser.currentBrowser;
-    this.setURI();
     this._titleChanged(browser.contentDocument);
     this._favicon.src = browser.mIconURL || kDefaultFavIconURL;
     this.updateIcon();
-
-    this.show(UIMODE_NONE);
   },
 
   _setIcon : function(aURI) {
