@@ -1004,6 +1004,15 @@ extern JSBool
 js_InitThreadPrivateIndex(void (*ptr)(void *));
 
 /*
+ * Clean up thread-private data on the current thread. NSPR automatically
+ * cleans up thread-private data for every thread except the main thread
+ * (see bug 383977) on shutdown. Thus, this function should be called for 
+ * exactly those threads that survive JS_ShutDown, including the main thread.
+ */
+extern JSBool
+js_CleanupThreadPrivateData();
+
+/*
  * Common subroutine of JS_SetVersion and js_SetVersion, to update per-context
  * data that depends on version.
  */
