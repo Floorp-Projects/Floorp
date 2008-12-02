@@ -72,7 +72,6 @@ CryptoWrapper.prototype = {
     this._WBORec_init(uri, authenticator);
     this.data.payload = {
       encryption: "",
-      cleartext: null,
       ciphertext: null
     };
   },
