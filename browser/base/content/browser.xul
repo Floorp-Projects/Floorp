@@ -233,7 +233,7 @@
     <tooltip id="urlTooltip">
       <label crop="center" flex="1" class="tooltip-label"/>
     </tooltip>
-#ifdef USE_TAB_PREVIEWS
+
     <panel id="ctrlTab-panel" class="KUI-panel" hidden="true" norestorefocus="true" ignorekeys="true">
       <hbox pack="center">
         <textbox id="ctrlTab-search"
@@ -259,7 +259,6 @@
       </hbox>
       <hbox id="ctrlTab-pages"/>
     </panel>
-#endif
   </popupset>
 
   <!-- bookmarks toolbar tooltip -->
