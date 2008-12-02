@@ -756,11 +756,9 @@ xpc_qsXPCOMObjectToJsval(XPCCallContext &ccx, nsISupports *p,
     // global object will not have been collected, and
     // therefore this NativeInterface2JSObject will not end up
     // creating a new XPCNativeScriptableShared.
-    nsCOMPtr<nsIXPConnectJSObjectHolder> holder;
     nsresult rv;
-    if(!XPCConvert::NativeInterface2JSObject(ccx, getter_AddRefs(holder),
-                                              p, &iid, scope, PR_TRUE,
-                                              OBJ_IS_NOT_GLOBAL, &rv))
+    if(!XPCConvert::NativeInterface2JSObject(ccx, rval, nsnull, p, &iid, scope,
+                                             PR_TRUE, OBJ_IS_NOT_GLOBAL, &rv))
     {
         // I can't tell if NativeInterface2JSObject throws JS exceptions
         // or not.  This is a sloppy stab at the right semantics; the
@@ -770,22 +768,13 @@ xpc_qsXPCOMObjectToJsval(XPCCallContext &ccx, nsISupports *p,
         return JS_FALSE;
     }
 
-    if(holder)
-    {
-        JSObject* jsobj;
-        if(NS_FAILED(holder->GetJSObject(&jsobj)))
-            return JS_FALSE;
 #ifdef DEBUG
-        if(!STOBJ_GET_PARENT(jsobj))
-            NS_ASSERTION(STOBJ_GET_CLASS(jsobj)->flags & JSCLASS_IS_GLOBAL,
-                         "Why did we recreate this wrapper?");
+    JSObject* jsobj = JSVAL_TO_OBJECT(*rval);
+    if(jsobj && !STOBJ_GET_PARENT(jsobj))
+        NS_ASSERTION(STOBJ_GET_CLASS(jsobj)->flags & JSCLASS_IS_GLOBAL,
+                     "Why did we recreate this wrapper?");
 #endif
-        *rval = OBJECT_TO_JSVAL(jsobj);
-    }
-    else
-    {
-        *rval = JSVAL_NULL;
-    }
+
     return JS_TRUE;
 }
 
