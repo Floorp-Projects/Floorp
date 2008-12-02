@@ -736,7 +736,7 @@ gfxFontconfigUtils::ResolveFontName(const nsAString& aFontName,
     // entire match pattern.  That info is not available here, but there
     // will be a font so leave the resolving to the gfxFontGroup.
     if (IsExistingFamily(fontname) ||
-        mAliasForMultiFonts.IndexOfIgnoreCase(fontname))
+        mAliasForMultiFonts.IndexOfIgnoreCase(fontname) != -1)
         aAborted = !(*aCallback)(aFontName, aClosure);
 
     return NS_OK;
