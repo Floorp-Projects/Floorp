@@ -173,19 +173,15 @@ public:
 
 protected:
   /**
-   * Figure out which resource to load (either the 'src' attribute or
-   * a <source> child) and create the decoder for it.
+   * Figure out which resource to load (either the 'src' attribute or a
+   * <source> child) and return the associated URI.
    */
-  nsresult PickMediaElement();
+  nsresult PickMediaElement(nsIURI** aURI);
   /**
    * Create a decoder for the given aMIMEType. Returns false if we
    * were unable to create the decoder.
    */
   PRBool CreateDecoder(const nsACString& aMIMEType);
-  /**
-   * Initialize a decoder to load the given URI.
-   */
-  nsresult InitializeDecoder(const nsAString& aURISpec);
   /**
    * Initialize a decoder to load the given channel. The decoder's stream
    * listener is returned via aListener.
@@ -193,7 +189,14 @@ protected:
   nsresult InitializeDecoderForChannel(nsIChannel *aChannel,
                                        nsIStreamListener **aListener);
 
+  /**
+   * Create a URI for the given aURISpec string.
+   */
+  nsresult NewURIFromString(const nsAutoString& aURISpec, nsIURI** aURI);
+
   nsRefPtr<nsMediaDecoder> mDecoder;
+
+  nsCOMPtr<nsIChannel> mChannel;
 
   // Error attribute
   nsCOMPtr<nsIDOMHTMLMediaError> mError;
