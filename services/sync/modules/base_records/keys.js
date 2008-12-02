@@ -65,18 +65,18 @@ PubKey.prototype = {
 
   _PubKey_init: function PubKey_init(uri, authenticator) {
     this._WBORec_init(uri, authenticator);
-    this.data.payload = {
+    this.payload = {
       type: "pubkey",
       key_data: null,
       private_key: null
     };
   },
 
-  get keyData() this.data.payload.key_data,
+  get keyData() this.payload.key_data,
   set keyData(value) {
-    this.data.payload.key_data = value;
+    this.payload.key_data = value;
   },
-  get _privateKeyUri() this.data.payload.private_key,
+  get _privateKeyUri() this.payload.private_key,
   get privateKeyUri() {
     if (!this.data)
       return null;
@@ -88,7 +88,7 @@ PubKey.prototype = {
     return Utils.makeURI(this._privateKeyUri);
   },
   set privateKeyUri(value) {
-    this.data.payload.private_key = value;
+    this.payload.private_key = value;
   },
 
   get publicKeyUri() {
@@ -105,7 +105,7 @@ PrivKey.prototype = {
 
   _PrivKey_init: function PrivKey_init(uri, authenticator) {
     this._WBORec_init(uri, authenticator);
-    this.data.payload = {
+    this.payload = {
       type: "privkey",
       salt: null,
       iv: null,
@@ -114,17 +114,17 @@ PrivKey.prototype = {
     };
   },
 
-  get salt() this.data.payload.salt,
+  get salt() this.payload.salt,
   set salt(value) {
-    this.data.payload.salt = value;
+    this.payload.salt = value;
   },
-  get iv() this.data.payload.iv,
+  get iv() this.payload.iv,
   set iv(value) {
-    this.data.payload.iv = value;
+    this.payload.iv = value;
   },
-  get keyData() this.data.payload.key_data,
+  get keyData() this.payload.key_data,
   set keyData(value) {
-    this.data.payload.key_data = value;
+    this.payload.key_data = value;
   },
 
   get publicKeyUri() {

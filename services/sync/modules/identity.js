@@ -90,8 +90,8 @@ IDManager.prototype = {
  */
 
 function Identity(realm, username, password) {
-  this.realm     = realm;
-  this.username  = username;
+  this._realm = realm;
+  this._username = username;
   this._password = password;
 }
 Identity.prototype = {
