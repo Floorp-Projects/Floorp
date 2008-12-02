@@ -255,7 +255,7 @@ NS_IMETHODIMP nsScrollPortView::ScrollTo(nscoord aDestinationX, nscoord aDestina
   mDestinationY = aDestinationY;
   ClampScrollValues(mDestinationX, mDestinationY, this);
 
-  if (!(aUpdateFlags & NS_VMREFRESH_DEFERRED)) {
+  if (!(aUpdateFlags & (NS_VMREFRESH_DEFERRED | NS_VMREFRESH_SMOOTHSCROLL))) {
     // Asynchronous scrolling is not allowed, so we'll kill any existing
     // async-scrolling process and do an instant scroll
     delete mAsyncScroll;

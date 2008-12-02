@@ -2835,7 +2835,7 @@ PresShell::ScrollPage(PRBool aForward)
 {
   nsIScrollableView* scrollView = GetViewToScroll(nsLayoutUtils::eVertical);
   if (scrollView) {
-    scrollView->ScrollByPages(0, aForward ? 1 : -1);
+    scrollView->ScrollByPages(0, aForward ? 1 : -1, NS_VMREFRESH_SMOOTHSCROLL);
   }
   return NS_OK;
 }
@@ -2848,9 +2848,9 @@ PresShell::ScrollLine(PRBool aForward)
 #ifdef MOZ_WIDGET_COCOA
     // Emulate the Mac IE behavior of scrolling a minimum of 2 lines
     // rather than 1.  This vastly improves scrolling speed.
-    scrollView->ScrollByLines(0, aForward ? 2 : -2);
+    scrollView->ScrollByLines(0, aForward ? 2 : -2, NS_VMREFRESH_SMOOTHSCROLL);
 #else
-    scrollView->ScrollByLines(0, aForward ? 1 : -1);
+    scrollView->ScrollByLines(0, aForward ? 1 : -1, NS_VMREFRESH_SMOOTHSCROLL);
 #endif
       
 //NEW FOR LINES    
@@ -2872,7 +2872,7 @@ PresShell::ScrollHorizontal(PRBool aLeft)
 {
   nsIScrollableView* scrollView = GetViewToScroll(nsLayoutUtils::eHorizontal);
   if (scrollView) {
-    scrollView->ScrollByLines(aLeft ? -1 : 1, 0);
+    scrollView->ScrollByLines(aLeft ? -1 : 1, 0, NS_VMREFRESH_SMOOTHSCROLL);
 //NEW FOR LINES    
     // force the update to happen now, otherwise multiple scrolls can
     // occur before the update is processed. (bug #7354)

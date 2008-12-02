@@ -1910,7 +1910,8 @@ void nsGfxScrollFrameInner::CurPosAttributeChanged(nsIContent* aContent)
       InternalScrollPositionDidChange(curPosX, curPosY);
       mFrameInitiatedScroll = PR_FALSE;
     }
-    ScrollbarChanged(mOuter->PresContext(), x, y, isSmooth ? NS_VMREFRESH_SMOOTHSCROLL : 0);
+    ScrollbarChanged(mOuter->PresContext(), x, y,
+                     isSmooth ? NS_VMREFRESH_SMOOTHSCROLL : NS_VMREFRESH_DEFERRED);
   }
 }
 

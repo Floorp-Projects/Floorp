@@ -2684,12 +2684,11 @@ nsEventStateManager::DoScrollText(nsPresContext* aPresContext,
     }
     
     if (aScrollQuantity == eScrollByPage)
-      scrollView->ScrollByPages(scrollX, scrollY, NS_VMREFRESH_DEFERRED);
+      scrollView->ScrollByPages(scrollX, scrollY, NS_VMREFRESH_SMOOTHSCROLL);
     else if (aScrollQuantity == eScrollByPixel)
       scrollView->ScrollByPixels(scrollX, scrollY, NS_VMREFRESH_DEFERRED);
     else
-      scrollView->ScrollByLines(scrollX, scrollY,
-                                NS_VMREFRESH_SMOOTHSCROLL | NS_VMREFRESH_DEFERRED);
+      scrollView->ScrollByLines(scrollX, scrollY, NS_VMREFRESH_SMOOTHSCROLL);
   }
   if (passToParent) {
     nsresult rv;
@@ -3158,7 +3157,8 @@ nsEventStateManager::PostHandleEvent(nsPresContext* aPresContext,
               nsIScrollableView* sv = nsLayoutUtils::GetNearestScrollingView(aView, nsLayoutUtils::eVertical);
               if (sv) {
                 nsKeyEvent * keyEvent = (nsKeyEvent *)aEvent;
-                sv->ScrollByPages(0, (keyEvent->keyCode != NS_VK_PAGE_UP) ? 1 : -1);
+                sv->ScrollByPages(0, (keyEvent->keyCode != NS_VK_PAGE_UP) ? 1 : -1,
+                                  NS_VMREFRESH_SMOOTHSCROLL);
               }
             }
             break;
@@ -3178,7 +3178,8 @@ nsEventStateManager::PostHandleEvent(nsPresContext* aPresContext,
               nsIScrollableView* sv = nsLayoutUtils::GetNearestScrollingView(aView, nsLayoutUtils::eVertical);
               if (sv) {
                 nsKeyEvent * keyEvent = (nsKeyEvent *)aEvent;
-                sv->ScrollByLines(0, (keyEvent->keyCode == NS_VK_DOWN) ? 1 : -1);
+                sv->ScrollByLines(0, (keyEvent->keyCode == NS_VK_DOWN) ? 1 : -1,
+                                  NS_VMREFRESH_SMOOTHSCROLL);
 
                 // force the update to happen now, otherwise multiple scrolls can
                 // occur before the update is processed. (bug #7354)
@@ -3197,7 +3198,8 @@ nsEventStateManager::PostHandleEvent(nsPresContext* aPresContext,
               nsIScrollableView* sv = nsLayoutUtils::GetNearestScrollingView(aView, nsLayoutUtils::eHorizontal);
               if (sv) {
                 nsKeyEvent * keyEvent = (nsKeyEvent *)aEvent;
-                sv->ScrollByLines((keyEvent->keyCode == NS_VK_RIGHT) ? 1 : -1, 0);
+                sv->ScrollByLines((keyEvent->keyCode == NS_VK_RIGHT) ? 1 : -1, 0,
+                                  NS_VMREFRESH_SMOOTHSCROLL);
 
                 // force the update to happen now, otherwise multiple scrolls can
                 // occur before the update is processed. (bug #7354)
@@ -3218,7 +3220,7 @@ nsEventStateManager::PostHandleEvent(nsPresContext* aPresContext,
               if (!mCurrentFocus) {
                 nsIScrollableView* sv = nsLayoutUtils::GetNearestScrollingView(aView, nsLayoutUtils::eVertical);
                 if (sv) {
-                  sv->ScrollByPages(0, 1);
+                  sv->ScrollByPages(0, 1, NS_VMREFRESH_SMOOTHSCROLL);
                 }
               }
             }
