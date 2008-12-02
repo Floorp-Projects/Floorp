@@ -261,12 +261,12 @@ _TEST_FILES = 	test_bug5141.html \
 		bug461735-post-redirect.js \
 		test_bug461735.html \
 		test_bug380418.html \
-                test_bug380418.html^headers^ \
-                test_elementTraversal.html \
-                test_w3element_traversal.html \
-                test_w3element_traversal.xhtml \
-                test_w3element_traversal_svg.html \
-                w3element_traversal.svg
+		test_bug380418.html^headers^ \
+		test_elementTraversal.html \
+		test_w3element_traversal.html \
+		test_w3element_traversal.xhtml \
+		test_w3element_traversal_svg.html \
+		w3element_traversal.svg \
 		$(NULL)
 
 # Disabled for now. Mochitest isn't reliable enough for these.
