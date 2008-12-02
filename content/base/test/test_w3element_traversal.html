@@ -1,0 +1,149 @@
+<!DOCTYPE HTML>
+<html>
+<!--
+-->
+<head>
+  <title>W3 Tests for Element Traversal - HTML</title>
+  <script type="text/javascript" src="/MochiKit/MochiKit.js"></script>
+  <script type="text/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>        
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
+</head>
+<body>
+
+  <p id="parentEl_count">
+    <span id="first_element_child_count">
+      <span></span> 
+      <span></span>
+    </span> 
+    <span id="middle_element_child_count"></span>
+    <span id="last_element_child_count"></span>
+  </p>
+
+
+  <p id="parentEl_nochild">
+  </p>
+
+  <p id="parentEl_null">
+  </p>
+
+  <p id="parentEl_dynamicadd">
+    <span id="first_emement_child_add"></span>
+  </p>
+
+  <p id="parentEl_dynamicremove">
+    <span id="first_emement_child_remove"></span>
+    <span id="last_emement_child_remove"></span>
+  </p>
+
+
+  <p id="parentEl_fec">
+    <span id="first_element_child_fec"></span>
+  </p>
+
+  <p id="parentEl_lec">
+    <span id="first_element_child_lec"></span>
+    <span id="last_element_child_lec"></span>
+  </p>
+
+  <p id="parentEl_namespace">
+    <pickle:span id="first_element_child_namespace"></pickle:span>
+  </p>
+
+  <p id="parentEl_nes">
+    <span id="first_element_child_nes"></span>
+    <span id="last_element_child_nes"></span>
+  </p>
+
+  <p id="parentEl_pes">
+    <span id="first_element_child_pes"></span>
+    <span id="middle_element_child_pes"></span>
+    <span id="last_element_child_pes"></span>
+  </p>
+
+  <p id="parentEl_sibnull">
+   <span id="first_element_child_sibnull"></span>
+  </p>
+
+<pre id="test">
+<script class="testbody" type="text/javascript">
+
+
+
+function runTest() {
+
+  //from et-childElementCount.html
+  var parentEl = document.getElementById("parentEl_count");
+  is(parentEl.childElementCount && 3, parentEl.childElementCount, "Child Element Count is mismatched");
+
+  //from et-childElementCount-nochild.html
+  var parentEl_nochild = document.getElementById("parentEl_nochild");
+  is(parentEl_nochild.childElementCount, 0, "Child Element count is not 0");
+
+  //from et-childElementCount-null.html
+  parentEl = document.getElementById("parentEl_null");
+  is(null == parentEl.firstElementChild, null == parentEl.lastElementChild, "firstElementChild or lastElementChild is not null");
+
+  //from et-dynamic-add.html
+  parentEl = document.getElementById("parentEl_dynamicadd");
+  var newChild = document.createElement("span")
+  parentEl.appendChild( newChild );
+  is(parentEl.childElementCount && 2, parentEl.childElementCount, "failed to add span element");
+
+  //from et-dynamic-remove.html
+  parentEl = document.getElementById("parentEl_dynamicremove");
+  var lec = parentEl.lastElementChild;
+  parentEl.removeChild( lec );
+  is(parentEl.childElementCount && 1, parentEl.childElementCount, "failed to remove span element");
+
+  //from et-firstElementChild.html
+  parentEl = document.getElementById("parentEl_fec");
+  var fec = parentEl.firstElementChild;
+  is(fec.nodeType, 1, "failed to get firstElementChild");
+  is(fec.getAttribute("id"), "first_element_child_fec", "failed to get firstElementChild");
+  isnot(fec, null, "failed to get firstElementChild");
+
+  //from et-lastElementChild.html
+  parentEl = document.getElementById("parentEl_lec");
+  var lec = parentEl.lastElementChild;
+  is(lec.nodeType, 1, "failed to get lastElementChild");
+  is(lec.getAttribute("id"), "last_element_child_lec", "failed to get lastElementChild");
+  isnot(lec, null, "failed to get lastElementChild");
+
+  //from et-namespace.html
+  parentEl = document.getElementById("parentEl_namespace");
+  var fec = parentEl.firstElementChild;
+  isnot(fec, null, "failed to get firstElementChild in namespace");
+  is(fec.getAttribute("id"), "first_element_child_namespace", "failed to get firstElementChild in namespace");
+
+  //from et-nextElementSibling.html
+  parentEl = document.getElementById("parentEl_nes");
+  var fec = parentEl.firstElementChild;
+  var nes = fec.nextElementSibling;
+  is(nes.nodeType, 1, "failed to get nextElementSibling");
+  is(nes.getAttribute("id"), "last_element_child_nes", "failed to get nextElementSibling");
+  isnot(nes, null, "failed to get nextElementSibling");
+
+  //from et-previousElementSibling.html
+  var lec = document.getElementById("last_element_child_pes");
+  var pes = lec.previousElementSibling;
+  is(pes.nodeType, 1, "failed to get previousElementSibling");
+  is(pes.getAttribute("id"), "middle_element_child_pes", "failed to get previousElementSibling");
+  isnot(pes, null, "failed to get previousElementSibling");
+
+  //from et-siblingElement-null.html
+  var fec = document.getElementById("first_element_child_sibnull");
+  var pes = fec.previousElementSibling;
+  var nes = fec.nextElementSibling;
+  is(pes, null, "got unexpected previousElementSibling");
+  is(nes, null, "got unexpected nextElementSibling");
+
+}
+
+SimpleTest.waitForExplicitFinish();
+addLoadEvent(runTest);
+addLoadEvent(SimpleTest.finish)
+</script>
+</pre>
+</body>
+</html>
+
