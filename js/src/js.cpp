@@ -343,19 +343,52 @@ usage(void)
     return 2;
 }
 
-static struct {
+/*
+ * JSContext option name to flag map. The option names are in alphabetical
+ * order for better reporting.
+ */
+static const struct {
     const char  *name;
     uint32      flag;
 } js_options[] = {
+    {"anonfunfix",      JSOPTION_ANONFUNFIX},
+    {"atline",          JSOPTION_ATLINE},
+    {"jit",             JSOPTION_JIT},
+    {"relimit",         JSOPTION_RELIMIT},
     {"strict",          JSOPTION_STRICT},
     {"werror",          JSOPTION_WERROR},
-    {"atline",          JSOPTION_ATLINE},
     {"xml",             JSOPTION_XML},
-    {"relimit",         JSOPTION_RELIMIT},
-    {"anonfunfix",      JSOPTION_ANONFUNFIX},
-    {"jit",             JSOPTION_JIT},
-    {NULL,              0}
 };
+
+static uint32
+MapContextOptionNameToFlag(JSContext* cx, const char* name)
+{
+    for (size_t i = 0; i != JS_ARRAY_LENGTH(js_options); ++i) {
+        if (strcmp(name, js_options[i].name) == 0)
+            return js_options[i].flag;
+    }
+
+    char* msg = JS_sprintf_append(NULL,
+                                  "unknown option name '%s'."
+                                  " The valid names are ", name);
+    for (size_t i = 0; i != JS_ARRAY_LENGTH(js_options); ++i) {
+        if (!msg)
+            break;
+        msg = JS_sprintf_append(msg, "%s%s", js_options[i].name,
+                                (i + 2 < JS_ARRAY_LENGTH(js_options)
+                                 ? ", "
+                                 : i + 2 == JS_ARRAY_LENGTH(js_options)
+                                 ? " and "
+                                 : "."));
+    }
+    if (!msg) {
+        JS_ReportOutOfMemory(cx);
+    } else {
+        JS_ReportError(cx, msg);
+        free(msg);
+    }
+    return 0;
+}
 
 extern JSClass global_class;
 
@@ -471,19 +504,18 @@ extern void js_InitJITStatsClass(JSContext *cx, JSObject *glob);
                             &jitstats_class, NULL, 0);
 #endif
             break;
-            
+
         case 'o':
+          {
             if (++i == argc)
                 return usage();
 
-            for (j = 0; js_options[j].name; ++j) {
-                if (strcmp(js_options[j].name, argv[i]) == 0) {
-                    JS_ToggleOptions(cx, js_options[j].flag);
-                    break;
-                }
-            }
+            uint32 flag = MapContextOptionNameToFlag(cx, argv[i]);
+            if (flag == 0)
+                return gExitCode;
+            JS_ToggleOptions(cx, flag);
             break;
-
+          }
         case 'P':
             if (JS_GET_CLASS(cx, JS_GetPrototype(cx, obj)) != &global_class) {
                 JSObject *gobj;
@@ -591,39 +623,36 @@ static JSBool
 Options(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
 {
     uint32 optset, flag;
-    uintN i, j, found;
     JSString *str;
     const char *opt;
     char *names;
+    JSBool found;
 
     optset = 0;
-    for (i = 0; i < argc; i++) {
+    for (uintN i = 0; i < argc; i++) {
         str = JS_ValueToString(cx, argv[i]);
         if (!str)
             return JS_FALSE;
+        argv[i] = STRING_TO_JSVAL(str);
         opt = JS_GetStringBytes(str);
-        for (j = 0; js_options[j].name; j++) {
-            if (strcmp(js_options[j].name, opt) == 0) {
-                optset |= js_options[j].flag;
-                break;
-            }
-        }
+        if (!opt)
+            return JS_FALSE;
+        flag = MapContextOptionNameToFlag(cx,  opt);
+        if (!flag)
+            return JS_FALSE;
+        optset |= flag;
     }
     optset = JS_ToggleOptions(cx, optset);
 
     names = NULL;
-    found = 0;
-    while (optset != 0) {
-        flag = optset;
-        optset &= optset - 1;
-        flag &= ~optset;
-        for (j = 0; js_options[j].name; j++) {
-            if (js_options[j].flag == flag) {
-                names = JS_sprintf_append(names, "%s%s",
-                                          names ? "," : "", js_options[j].name);
-                found++;
+    found = JS_FALSE;
+    for (size_t i = 0; i != JS_ARRAY_LENGTH(js_options); i++) {
+        if (js_options[i].flag & optset) {
+            found = JS_TRUE;
+            names = JS_sprintf_append(names, "%s%s",
+                                      names ? "," : "", js_options[i].name);
+            if (!names)
                 break;
-            }
         }
     }
     if (!found)
@@ -632,7 +661,6 @@ Options(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
         JS_ReportOutOfMemory(cx);
         return JS_FALSE;
     }
-
     str = JS_NewString(cx, names, strlen(names));
     if (!str) {
         free(names);
@@ -1451,7 +1479,7 @@ DisassFile(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
     JSScript *script;
     JSBool ok;
     uint32 oldopts;
-    
+
     if (!argc)
         return JS_TRUE;
 
@@ -1471,7 +1499,7 @@ DisassFile(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
     obj = JS_NewScriptObject(cx, script);
     if (!obj)
         return JS_FALSE;
-    
+
     *rval = OBJECT_TO_JSVAL(obj); /* I like to root it, root it. */
     ok = Disassemble(cx, obj, 1, rval, rval); /* gross, but works! */
     *rval = JSVAL_VOID;
