@@ -153,5 +153,5 @@ nsSVGCircleElement::ConstructPath(gfxContext *aCtx)
   GetAnimatedLengthValues(&x, &y, &r, nsnull);
 
   if (r > 0.0f)
-    aCtx->Arc(gfxPoint(x, y), r, 0, 2*M_PI);
+    aCtx->Ellipse(gfxPoint(x, y), gfxSize(r*2, r*2));
 }
