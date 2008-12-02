@@ -106,6 +106,8 @@ _TEST_FILES = 	test_bug360220.xul \
  		test_mousescroll.xul \
 		test_scrollbar.xul \
 		test_sorttemplate.xul \
+		test_videocontrols.html \
+		video.ogg \
 		$(NULL)
 
 ifeq (,$(filter mac cocoa,$(MOZ_WIDGET_TOOLKIT)))
