@@ -199,15 +199,22 @@ ifeq (,$(filter-out WINNT WINCE,$(OS_ARCH)))
 ifndef GNU_CC
 
 #
-# All C++ files share a PDB file per directory. For parallel builds, this PDB
-# file is shared and locked by MSPDBSRV.EXE, starting with MSVC8 SP1. If
-# you're using MSVC 7.1 or MSVC8 without SP1, don't do parallel builds.
+# Unless we're building SIMPLE_PROGRAMS, all C++ files share a PDB file per
+# directory. For parallel builds, this PDB file is shared and locked by
+# MSPDBSRV.EXE, starting with MSVC8 SP1. If you're using MSVC 7.1 or MSVC8
+# without SP1, don't do parallel builds.
 #
 # The final PDB for libraries and programs is created by the linker and uses
 # a different name from the single PDB file created by the compiler. See
 # bug 462740.
 #
+
+ifdef SIMPLE_PROGRAMS
+COMPILE_PDBFILE = $(basename $(@F)).pdb
+else
 COMPILE_PDBFILE = generated.pdb
+endif
+
 LINK_PDBFILE = $(basename $(@F)).pdb
 ifdef MOZ_DEBUG
 CODFILE=$(basename $(@F)).cod
@@ -360,22 +367,30 @@ UPDATE_TITLE_libs = sed -e "s!Y!libs in $(shell $(BUILD_TOOLS)/print-depth-path.
 UPDATE_TITLE_tools = sed -e "s!Y!tools in $(shell $(BUILD_TOOLS)/print-depth-path.sh)/$*!" $(MOZILLA_DIR)/config/xterm.str;
 endif
 
+ifneq (,$(strip $(DIRS)))
 LOOP_OVER_DIRS = \
     @$(EXIT_ON_ERROR) \
-    $(foreach dir,$(DIRS),$(UPDATE_TITLE) $(MAKE) -C $(dir) $@; ) true
+    $(foreach dir,$(DIRS),$(UPDATE_TITLE) $(MAKE) -C $(dir) $@; )
+endif
 
 # we only use this for the makefiles target and other stuff that doesn't matter
+ifneq (,$(strip $(PARALLEL_DIRS)))
 LOOP_OVER_PARALLEL_DIRS = \
     @$(EXIT_ON_ERROR) \
-    $(foreach dir,$(PARALLEL_DIRS),$(UPDATE_TITLE) $(MAKE) -C $(dir) $@; ) true
+    $(foreach dir,$(PARALLEL_DIRS),$(UPDATE_TITLE) $(MAKE) -C $(dir) $@; )
+endif
 
+ifneq (,$(strip $(STATIC_DIRS)))
 LOOP_OVER_STATIC_DIRS = \
     @$(EXIT_ON_ERROR) \
-    $(foreach dir,$(STATIC_DIRS),$(UPDATE_TITLE) $(MAKE) -C $(dir) $@; ) true
+    $(foreach dir,$(STATIC_DIRS),$(UPDATE_TITLE) $(MAKE) -C $(dir) $@; )
+endif
 
+ifneq (,$(strip $(TOOL_DIRS)))
 LOOP_OVER_TOOL_DIRS = \
     @$(EXIT_ON_ERROR) \
-    $(foreach dir,$(TOOL_DIRS),$(UPDATE_TITLE) $(MAKE) -C $(dir) $@; ) true
+    $(foreach dir,$(TOOL_DIRS),$(UPDATE_TITLE) $(MAKE) -C $(dir) $@; )
+endif
 
 ifdef PARALLEL_DIRS
 # create a bunch of fake targets for order-only processing
@@ -615,8 +630,7 @@ default all alldep::
 else
 
 default all::
-	@$(EXIT_ON_ERROR) \
-	$(foreach dir,$(STATIC_DIRS),$(MAKE) -C $(dir); ) true
+	+$(LOOP_OVER_STATIC_DIRS)
 	$(MAKE) export
 	$(MAKE) libs
 	$(MAKE) tools
@@ -718,10 +732,7 @@ endif
 
 tools:: $(SUBMAKEFILES) $(MAKE_DIRS)
 	+$(LOOP_OVER_DIRS)
-ifdef TOOL_DIRS
-	@$(EXIT_ON_ERROR) \
-	$(foreach dir,$(TOOL_DIRS),$(UPDATE_TITLE) $(MAKE) -C $(dir) libs; ) true
-endif
+	+$(LOOP_OVER_TOOL_DIRS)
 
 #
 # Rule to create list of libraries for final link
@@ -1805,15 +1816,14 @@ chrome::
 $(FINAL_TARGET)/chrome:
 	$(NSINSTALL) -D $@
 
-libs realchrome:: $(CHROME_DEPS) $(FINAL_TARGET)/chrome
+ifneq (,$(wildcard $(JAR_MANIFEST)))
 ifndef NO_DIST_INSTALL
-	@$(EXIT_ON_ERROR) \
-	if test -f $(JAR_MANIFEST); then \
-	  $(PYTHON) $(MOZILLA_DIR)/config/JarMaker.py \
-	    $(QUIET) -j $(FINAL_TARGET)/chrome \
-	    $(MAKE_JARS_FLAGS) $(XULPPFLAGS) $(DEFINES) $(ACDEFINES) \
-	    $(JAR_MANIFEST); \
-	fi
+libs realchrome:: $(CHROME_DEPS) $(FINAL_TARGET)/chrome
+	$(PYTHON) $(MOZILLA_DIR)/config/JarMaker.py \
+	  $(QUIET) -j $(FINAL_TARGET)/chrome \
+	  $(MAKE_JARS_FLAGS) $(XULPPFLAGS) $(DEFINES) $(ACDEFINES) \
+	  $(JAR_MANIFEST)
+endif
 endif
 
 ifneq ($(DIST_FILES),)
