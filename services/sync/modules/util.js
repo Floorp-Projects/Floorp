@@ -127,6 +127,9 @@ let Utils = {
     if (!password)
       return;
 
+    let log = Log4Moz.repository.getLogger("Service.Util");
+    log.trace("Setting '" + realm + "' password for user " + username);
+
     // save the new one
     let nsLoginInfo = new Components.Constructor(
       "@mozilla.org/login-manager/loginInfo;1", Ci.nsILoginInfo, "init");
