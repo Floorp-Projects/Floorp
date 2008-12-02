@@ -118,6 +118,7 @@ dnl ========================================================
 GLIB_VERSION=1.2.0
 LIBIDL_VERSION=0.6.3
 PERL_VERSION=5.006
+PYTHON_VERSION=2.4
 LIBART_VERSION=2.3.4
 CAIRO_VERSION=1.6.0
 PANGO_VERSION=1.14.0
@@ -610,6 +611,8 @@ case "$target" in
     AC_DEFINE_UNQUOTED(_WIN32_WINNT,0x$WINVER)
     # Require OS features provided by IE 5.0
     AC_DEFINE_UNQUOTED(_WIN32_IE,0x0500)
+    # we need Python 2.5 on Windows
+    PYTHON_VERSION=2.5
     ;;
 esac
 
@@ -677,10 +680,24 @@ else
     AC_MSG_RESULT([yes])    
 fi
 
-AC_PATH_PROGS(PYTHON, $PYTHON python)
+dnl Scratchbox ships with "python" == Python 2.3 and "python2.4".
+dnl Check for explicitly-versioned binaries first to save them some pain.
+AC_PATH_PROGS(PYTHON, $PYTHON python2.5 python2.4 python)
 if test -z "$PYTHON"; then
     AC_MSG_ERROR([python was not found in \$PATH])
 fi
+
+dnl We require version 2.4 or newer of Python to build,
+dnl and 2.5 or newer on Windows.
+AC_MSG_CHECKING([for minimum required Python version >= $PYTHON_VERSION])
+changequote(,)
+$PYTHON -c "import sys; sys.exit(sys.version[:3] < sys.argv[1])" $PYTHON_VERSION
+_python_res=$?
+changequote([,])
+if test "$_python_res" != 0; then
+    AC_MSG_ERROR([Python $PYTHON_VERSION or higher is required.])
+fi
+AC_MSG_RESULT([yes])
 
 AC_PATH_PROGS(NSINSTALL_BIN, nsinstall )
 if test -z "$COMPILE_ENVIRONMENT"; then
