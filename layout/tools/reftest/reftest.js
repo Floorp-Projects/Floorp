@@ -58,6 +58,20 @@ const LOAD_FAILURE_TIMEOUT = 10000; // ms
 var gBrowser;
 var gCanvas1, gCanvas2;
 var gURLs;
+var gTestResults = {
+  // The errors...
+  Exception: 0,
+  FailedLoad: 0,
+  UnexpectedFail: 0,
+  UnexpectedPass: 0,
+  // The successes...
+  Pass: 0,
+  KnownFail : 0,
+  Random : 0,
+  LoadOnly: 0,
+  // The unknowns.
+  Skip: 0,
+};
 var gTotalTests = 0;
 var gState;
 var gCurrentURL;
@@ -116,6 +130,7 @@ function OnRefTestLoad()
         StartCurrentTest();
     } catch (ex) {
         //gBrowser.loadURI('data:text/plain,' + ex);
+        ++gTestResults.Exception;
         dump("REFTEST TEST-FAIL | | EXCEPTION: " + ex + "\n");
         DoneTests();
     }
@@ -323,6 +338,7 @@ function StartCurrentTest()
 {
     // make sure we don't run tests that are expected to kill the browser
     while (gURLs.length > 0 && gURLs[0].expected == EXPECTED_DEATH) {
+        ++gTestResults.Skip;
         dump("REFTEST TEST-KNOWN-FAIL | " + gURLs[0].url1.spec + " | (SKIP)\n");
         gURLs.shift();
     }
@@ -353,6 +369,11 @@ function DoneTests()
 {
     dump("REFTEST FINISHED: Slowest test took " + gSlowestTestTime +
          "ms (" + gSlowestTestURL + ")\n");
+
+    dump("REFTEST INFO | Result summary:\n");
+    for (var result in gTestResults)
+      if (gTestResults[result] != 0)
+        dump("REFTEST INFO | " + result + ": " + gTestResults[result] + "\n");
 
     if (gServer)
         gServer.stop();
@@ -463,6 +484,7 @@ function DocumentLoaded()
     gFailureReason = null;
 
     if (gURLs[0].expected == EXPECTED_LOAD) {
+        ++gTestResults.LoadOnly;
         dump("REFTEST TEST-PASS | " + gURLs[0].prettyPath + " | (LOAD ONLY)\n");
         gURLs.shift();
         StartCurrentTest();
@@ -527,19 +549,28 @@ function DocumentLoaded()
             
             var outputs = {};
             const randomMsg = "(EXPECTED RANDOM)";
-            outputs[EXPECTED_PASS] = {true: "TEST-PASS",
-                                      false: "TEST-UNEXPECTED-FAIL"};
-            outputs[EXPECTED_FAIL] = {true: "TEST-UNEXPECTED-PASS",
-                                      false: "TEST-KNOWN-FAIL"};
-            outputs[EXPECTED_RANDOM] = {true: "TEST-PASS" + randomMsg,
-                                        false: "TEST-KNOWN-FAIL" + randomMsg};
-            
-            var result = "REFTEST " + outputs[expected][test_passed] + " | ";
-            result += gURLs[0].prettyPath + " | "; // the URL being tested
+            outputs[EXPECTED_PASS] = {
+              true:  {s: "TEST-PASS"                  , n: "Pass"},
+              false: {s: "TEST-UNEXPECTED-FAIL"       , n: "UnexpectedFail"}
+            };
+            outputs[EXPECTED_FAIL] = {
+              true:  {s: "TEST-UNEXPECTED-PASS"       , n: "UnexpectedPass"},
+              false: {s: "TEST-KNOWN-FAIL"            , n: "KnownFail"}
+            };
+            outputs[EXPECTED_RANDOM] = {
+              true:  {s: "TEST-PASS" + randomMsg      , n: "Random"},
+              false: {s: "TEST-KNOWN-FAIL" + randomMsg, n: "Random"}
+            };
+
+            ++gTestResults[outputs[expected][test_passed].n];
+
+            var result = "REFTEST " + outputs[expected][test_passed].s + " | " +
+                         gURLs[0].prettyPath + " | "; // the URL being tested
             if (!gURLs[0].equal) {
                 result += "(!=) ";
             }
             dump(result + "\n");
+
             if (!test_passed && expected == EXPECTED_PASS ||
                 test_passed && expected == EXPECTED_FAIL) {
                 if (!equal) {
@@ -561,6 +592,7 @@ function DocumentLoaded()
 
 function LoadFailed()
 {
+    ++gTestResults.FailedLoad;
     dump("REFTEST TEST-UNEXPECTED-FAIL | " +
          gURLs[0]["url" + gState].spec + " | " + gFailureReason + "\n");
     gURLs.shift();
