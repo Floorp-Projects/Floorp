@@ -23,26 +23,26 @@ text here
 <script class="testbody" type="text/javascript">
 
 var c = document.getElementById('content');
-var cc = c.mozChildElements;
+var cc = c.children;
 
 var contents = ["span", "div", "p1", "p2", "abcde"];
 function testContent() {
   for(i = 0, e = c.firstElementChild; e; e = e.nextElementSibling, i++) {
     is(e.textContent, contents[i], "wrong element contents");
-    is(e, c.mozChildElements[i], "wrong element");
-    is(e, c.mozChildElements.item(i), "wrong element");
+    is(e, c.children[i], "wrong element");
+    is(e, c.children.item(i), "wrong element");
   }
   is(i, contents.length, "wrong number of element siblings");
   is(i, c.childElementCount, "wrong number of child elements");
-  is(i, c.mozChildElements.length, "wrong number of child elements");
+  is(i, c.children.length, "wrong number of child elements");
 
   // Nuke all elements to retest the child list.
   c.innerHTML = c.innerHTML;
 
   for(i--, e = c.lastElementChild; e; e = e.previousElementSibling, i--) {
     is(e.textContent, contents[i], "g element contents");
-    is(e, c.mozChildElements[i], "wrong element");
-    is(e, c.mozChildElements.item(i), "wrong element");
+    is(e, c.children[i], "wrong element");
+    is(e, c.children.item(i), "wrong element");
   }
   is(i, -1, "wrong number of element siblings");
 }
