@@ -39,6 +39,9 @@
 // Disables security checking our updates which haven't been signed
 gPrefs.setBoolPref("extensions.checkUpdateSecurity", false);
 
+// Use the internal webserver for regular update pings, will just return an error
+gPrefs.setCharPref("extensions.update.url", "http://localhost:4444/");
+
 // Get the HTTP server.
 do_import_script("netwerk/test/httpserver/httpd.js");
 var testserver;
