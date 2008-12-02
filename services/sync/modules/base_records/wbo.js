@@ -59,7 +59,6 @@ WBORecord.prototype = {
     this.pushFilter(new WBOFilter());
     this.pushFilter(new JsonFilter());
     this.data = {
-      // modified: "2454725.98283", // FIXME
       payload: {}
     };
   },
@@ -82,18 +81,10 @@ WBORecord.prototype = {
     this.data.modified = value;
   },
 
-  get encoding() this.data.encoding,
-  set encoding(value) {
-    this.data.encoding = value;
-  },
-
   get payload() this.data.payload,
   set payload(value) {
     this.data.payload = value;
   }
-
-  // note: encryption is part of the CryptoWrapper object, which uses
-  // a string (encrypted) payload instead of an object
 };
 
 // fixme: global, ugh
@@ -105,14 +96,14 @@ WBOFilter.prototype = {
     let self = yield;
     let foo = wbo.uri.spec.split('/');
     data.id = decodeURI(foo[foo.length-1]);
-    data.payload = json.encode([data.payload]);
+    data.payload = json.encode(data.payload);
     self.done(data);
   },
   afterGET: function(data, wbo) {
     let self = yield;
     let foo = wbo.uri.spec.split('/');
     data.id = decodeURI(foo[foo.length-1]);
-    data.payload = json.decode(data.payload)[0];
+    data.payload = json.decode(data.payload);
     self.done(data);
   }
 };

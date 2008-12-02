@@ -70,17 +70,30 @@ CryptoWrapper.prototype = {
     // FIXME: this will add a json filter, meaning our payloads will be json
     //        encoded, even though they are already a string
     this._WBORec_init(uri, authenticator);
-    this.data.encryption = "";
-    this.data.payload = "";
+    this.data.payload = {
+      encryption: "",
+      cleartext: null,
+      ciphertext: null
+    };
   },
 
   // FIXME: we make no attempt to ensure cleartext is in sync
   //        with the encrypted payload
   cleartext: null,
 
-  get encryption() this.data.encryption,
+  get encryption() this.payload.encryption,
   set encryption(value) {
-    this.data.encryption = value;
+    this.payload.encryption = value;
+  },
+
+  get cleartext() this.payload.cleartext,
+  set cleartext(value) {
+    this.payload.cleartext = value;
+  },
+
+  get ciphertext() this.payload.ciphertext,
+  set ciphertext(value) {
+    this.payload.ciphertext = value;
   },
 
   _encrypt: function CryptoWrap__encrypt(passphrase) {
@@ -92,9 +105,7 @@ CryptoWrapper.prototype = {
     let meta = yield CryptoMetas.get(self.cb, this.encryption);
     let symkey = yield meta.getKey(self.cb, privkey, passphrase);
 
-    // note: we wrap the cleartext payload in an array because
-    // when it's a simple string nsIJSON returns null
-    this.payload = crypto.encrypt(json.encode([this.cleartext]), symkey, meta.bulkIV);
+    this.ciphertext = crypto.encrypt(json.encode([this.cleartext]), symkey, meta.bulkIV);
 
     self.done();
   },
@@ -112,7 +123,7 @@ CryptoWrapper.prototype = {
     let symkey = yield meta.getKey(self.cb, privkey, passphrase);
 
     // note: payload is wrapped in an array, see _encrypt
-    this.cleartext = json.decode(crypto.decrypt(this.payload, symkey, meta.bulkIV))[0];
+    this.cleartext = json.decode(crypto.decrypt(this.ciphertext, symkey, meta.bulkIV))[0];
 
     self.done(this.cleartext);
   },
