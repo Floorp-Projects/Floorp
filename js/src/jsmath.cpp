@@ -179,7 +179,7 @@ math_atan(JSContext *cx, uintN argc, jsval *vp)
     return js_NewNumberInRootedValue(cx, z, vp);
 }
 
-static inline jsdouble FASTCALL
+static inline jsdouble JS_FASTCALL
 math_atan2_kernel(jsdouble x, jsdouble y)
 {
 #if defined(_MSC_VER)
