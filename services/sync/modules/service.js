@@ -174,6 +174,8 @@ WeaveSvc.prototype = {
     // fixme - need to loop over all Identity objects - needs some rethinking...
     ID.get('WeaveID').username = value;
     ID.get('WeaveCryptoID').username = value;
+
+    this._genKeyURLs();
   },
 
   get password() { return ID.get('WeaveID').password; },
@@ -198,6 +200,7 @@ WeaveSvc.prototype = {
   },
   set baseURL(value) {
     Utils.prefs.setCharPref("serverURL", value);
+    this._genKeyURLs();
   },
 
   get userPath() { return ID.get('WeaveID').username; },
@@ -279,6 +282,12 @@ WeaveSvc.prototype = {
     }
   },
 
+  _genKeyURLs: function WeaveSvc__genKeyURLs() {
+    let url = this.baseURL + this.username;
+    PubKeys.defaultKeyUri = url + "/keys/pubkey";
+    PrivKeys.defaultKeyUri = url + "/keys/privkey";
+  },
+
   // one-time initialization like setting up observers and the like
   // xxx we might need to split some of this out into something we can call
   //     again when username/server/etc changes
@@ -303,9 +312,7 @@ WeaveSvc.prototype = {
     ID.set('WeaveCryptoID',
            new Identity('Mozilla Services Encryption Passphrase', this.username));
 
-    let url = this.baseURL + this.username;
-    PubKeys.defaultKeyUri = url + "/keys/pubkey";
-    PrivKeys.defaultKeyUri = url + "/keys/privkey";
+    this._genKeyURLs();
 
     if (Utils.prefs.getBoolPref("autoconnect") &&
         this.username && this.username != 'nobody')
