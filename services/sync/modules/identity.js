@@ -95,12 +95,32 @@ function Identity(realm, username, password) {
   this._password = password;
 }
 Identity.prototype = {
-  realm   : null,
+  get realm() this._realm,
+  set realm(value) {
+    let current = Utils.findPassword(this.realm, this.username);
+    if (current)
+      this.password = null;
 
-  username : null,
+    this._realm = value;
+
+    if (current)
+      this.password = current;
+  },
+
+  get username() this._username,
+  set username(value) {
+    let current = Utils.findPassword(this.realm, this.username);
+    if (current)
+      this.password = null;
+
+    this._username = value;
+
+    if (current)
+      this.password = current;
+  },
+
   get userHash() { return Utils.sha1(this.username); },
 
-  _password: null,
   get password() {
     if (!this._password)
       return Utils.findPassword(this.realm, this.username);
