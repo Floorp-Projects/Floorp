@@ -1,0 +1,31 @@
+<html xmlns="http://www.w3.org/1999/xhtml"
+      xmlns:html="http://www.w3.org/1999/xhtml"
+      xmlns:svg="http://www.w3.org/2000/svg">
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=463162
+-->
+<head>
+  <title>Test for Bug 463162</title>
+  <script type="text/javascript" src="/MochiKit/packed.js"></script>
+  <script type="text/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>        
+  <script type="text/javascript" src="/tests/SimpleTest/EventUtils.js"/>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
+</head>
+<body>
+<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=463162">Mozilla Bug 463162</a>
+<audio id='a1'><sauce type="audio/x-wav" src="r11025_s16_c1.wav"/></audio>
+<audio id='a2'><source type="audio/x-wav" src="r11025_s16_c1.wav"/></audio>
+<audio id='a3'><html:source type="audio/x-wav" src="r11025_s16_c1.wav"/></audio>
+<audio id='a4'><svg:source type="audio/x-wav" src="r11025_s16_c1.wav"/></audio>
+<pre id="test">
+<script class="testbody" type="text/javascript">
+<![CDATA[
+ok($("a1").networkState == HTMLMediaElement.EMPTY, "audio a1 with bogus child should not be loading");
+ok($("a2").networkState >= HTMLMediaElement.LOADING, "audio a2 with valid child should be loading");
+ok($("a3").networkState >= HTMLMediaElement.LOADING, "audio a3 with valid child should be loading");
+ok($("a4").networkState == HTMLMediaElement.EMPTY, "audio a4 with bogus child should not be loading");
+]]>
+</script>
+</pre>
+</body>
+</html>
