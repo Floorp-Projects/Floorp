@@ -477,6 +477,9 @@ nsThebesImage::Draw(gfxContext*        aContext,
     nsRefPtr<gfxASurface> surface;
     gfxImageSurface::gfxImageFormat format;
 
+    NS_ASSERTION(!sourceRect.Intersect(subimage).IsEmpty(),
+                 "We must be allowed to sample *some* source pixels!");
+
     PRBool doTile = !imageRect.Contains(sourceRect);
     if (doPadding || doPartialDecode) {
         gfxRect available = gfxRect(mDecoded.x, mDecoded.y, mDecoded.width, mDecoded.height) +
@@ -600,6 +603,8 @@ nsThebesImage::Draw(gfxContext*        aContext,
             gfxRect needed = subimage.Intersect(sourceRect);
             needed.RoundOut();
             gfxIntSize size(PRInt32(needed.Width()), PRInt32(needed.Height()));
+            NS_ASSERTION(size.width > 0 && size.height > 0,
+                         "We must have some needed pixels, otherwise we don't know what to sample");
             nsRefPtr<gfxASurface> temp =
                 gfxPlatform::GetPlatform()->CreateOffscreenSurface(size, format);
             if (temp && temp->CairoStatus() == 0) {
