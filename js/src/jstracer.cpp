@@ -5748,7 +5748,12 @@ TraceRecorder::functionCall(bool constructing)
     jsval& tval = stackval(0 - (argc + 1));
     LIns* this_ins = get(&tval);
 
-    if (this_ins->isconstp() && !this_ins->constvalp() && !guardShapelessCallee(fval))
+    /*
+     * If this is NULL, this is a shapeless call. If we observe a shapeless call
+     * at recording time, the call at this point will always be shapeless so we
+     * can make the decision based on recording-time introspection of this.
+     */
+    if (tval == JSVAL_NULL && !guardShapelessCallee(fval))
         return false;
 
     /*
@@ -6453,10 +6458,21 @@ TraceRecorder::record_JSOP_CALLUPVAR()
 bool
 TraceRecorder::guardShapelessCallee(jsval& callee)
 {
+    LIns* exit = snapshot(BRANCH_EXIT);
+    JSObject* callee_obj = JSVAL_TO_OBJECT(callee);
+    LIns* callee_ins = get(&callee);
     guard(true,
-          addName(lir->ins2(LIR_eq, get(&callee), INS_CONSTPTR(JSVAL_TO_OBJECT(callee))),
-                  "guard(shapeless callee)"),
-          MISMATCH_EXIT);
+          lir->ins2(LIR_eq, 
+                    lir->ins2(LIR_piand, 
+                              stobj_get_fslot(callee_ins, JSSLOT_PRIVATE),
+                              INS_CONSTPTR((void*)(~JSVAL_INT))),
+                    INS_CONSTPTR(OBJ_GET_PRIVATE(cx, callee_obj))),
+          exit);
+    guard(true,
+          lir->ins2(LIR_eq,
+                    stobj_get_fslot(callee_ins, JSSLOT_PARENT),
+                    INS_CONSTPTR(OBJ_GET_PARENT(cx, callee_obj))),
+          exit);
     return true;
 }
 
