@@ -86,11 +86,6 @@ CryptoWrapper.prototype = {
     this.payload.encryption = value;
   },
 
-  get cleartext() this.payload.cleartext,
-  set cleartext(value) {
-    this.payload.cleartext = value;
-  },
-
   get ciphertext() this.payload.ciphertext,
   set ciphertext(value) {
     this.payload.ciphertext = value;
@@ -106,6 +101,7 @@ CryptoWrapper.prototype = {
     let symkey = yield meta.getKey(self.cb, privkey, passphrase);
 
     this.ciphertext = crypto.encrypt(json.encode([this.cleartext]), symkey, meta.bulkIV);
+    this.cleartext = null;
 
     self.done();
   },
@@ -124,6 +120,7 @@ CryptoWrapper.prototype = {
 
     // note: payload is wrapped in an array, see _encrypt
     this.cleartext = json.decode(crypto.decrypt(this.ciphertext, symkey, meta.bulkIV))[0];
+    this.ciphertext = null;
 
     self.done(this.cleartext);
   },
