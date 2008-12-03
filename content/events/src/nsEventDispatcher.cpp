@@ -459,13 +459,16 @@ nsEventDispatcher::Dispatch(nsISupports* aTarget,
     NS_ENSURE_STATE(aEvent->target);
   }
   aEvent->originalTarget = aEvent->target;
+  nsCOMPtr<nsIContent> content = do_QueryInterface(aEvent->originalTarget);
+  PRBool isInAnon = (content && content->IsInAnonymousSubtree());
 
   NS_MARK_EVENT_DISPATCH_STARTED(aEvent);
 
   // Create visitor object and start event dispatching.
   // PreHandleEvent for the original target.
   nsEventStatus status = aEventStatus ? *aEventStatus : nsEventStatus_eIgnore;
-  nsEventChainPreVisitor preVisitor(aPresContext, aEvent, aDOMEvent, status);
+  nsEventChainPreVisitor preVisitor(aPresContext, aEvent, aDOMEvent, status,
+                                    isInAnon);
   targetEtci->PreHandleEvent(preVisitor);
 
   if (preVisitor.mCanHandle) {
