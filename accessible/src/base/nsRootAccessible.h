@@ -133,15 +133,15 @@ class nsRootAccessible : public nsDocAccessibleWrap,
     void GetChromeEventHandler(nsIDOMEventTarget **aChromeTarget);
 
     /**
-     * Handles 'TreeRowCountChanged' event. Used in HandleEventWithTarget().
+     * Used in HandleEventWithTarget().
      */
+    nsresult HandlePopupShownEvent(nsIAccessible *aAccessible);
+    nsresult HandlePopupHidingEvent(nsIDOMNode *aNode,
+                                    nsIAccessible *aAccessible);
+
 #ifdef MOZ_XUL
     nsresult HandleTreeRowCountChangedEvent(nsIDOMEvent *aEvent,
                                             nsIAccessibleTreeCache *aAccessible);
-
-    /**
-     * Handles 'TreeInvalidated' event. Used in HandleEventWithTarget().
-     */
     nsresult HandleTreeInvalidatedEvent(nsIDOMEvent *aEvent,
                                         nsIAccessibleTreeCache *aAccessible);
 
