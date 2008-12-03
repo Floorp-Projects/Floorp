@@ -173,6 +173,11 @@ public:
    * directly - it must be bound (and thereby cloned, and therefore have the 
    * correct principals) before use!
    *
+   * If the compilation sets a pending exception on the native context, it is
+   * this method's responsibility to report said exception immediately, without
+   * relying on callers to do so.
+   *
+   *
    * @param aName an nsIAtom pointer naming the function; it must be lowercase
    *        and ASCII, and should not be longer than 63 chars.  This bound on
    *        length is enforced only by assertions, so caveat caller!
