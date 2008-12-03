@@ -1,0 +1,194 @@
+<?xml version="1.0"?>
+
+<!-- ***** BEGIN LICENSE BLOCK *****
+   - Version: MPL 1.1/GPL 2.0/LGPL 2.1
+   -
+   - The contents of this file are subject to the Mozilla Public License Version
+   - 1.1 (the "License"); you may not use this file except in compliance with
+   - the License. You may obtain a copy of the License at
+   - http://www.mozilla.org/MPL/
+   -
+   - Software distributed under the License is distributed on an "AS IS" basis,
+   - WITHOUT WARRANTY OF ANY KIND, either express or implied. See the License
+   - for the specific language governing rights and limitations under the
+   - License.
+   -
+   - The Original Code is bug 215405 test code
+   -
+   - The Initial Developer of the Original Code is
+   - Graeme McCutcheon <graememcc_firefox@graeme-online.co.uk>.
+   - Portions created by the Initial Developer are Copyright (C) 2008
+   - the Initial Developer. All Rights Reserved.
+   -
+   - Contributor(s):
+   -
+   - Alternatively, the contents of this file may be used under the terms of
+   - either the GNU General Public License Version 2 or later (the "GPL"), or
+   - the GNU Lesser General Public License Version 2.1 or later (the "LGPL"),
+   - in which case the provisions of the GPL or the LGPL are applicable instead
+   - of those above. If you wish to allow use of your version of this file only
+   - under the terms of either the GPL or the LGPL, and not to allow others to
+   - use your version of this file under the terms of the MPL, indicate your
+   - decision by deleting the provisions above and replace them with the notice
+   - and other provisions required by the LGPL or the GPL. If you do not delete
+   - the provisions above, a recipient may use your version of this file under
+   - the terms of any one of the MPL, the GPL or the LGPL.
+   -
+   - ***** END LICENSE BLOCK ***** -->
+
+<?xml-stylesheet href="chrome://global/skin" type="text/css"?>
+
+<window id="215405Test"
+        xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
+        width="600"
+        height="600"
+        onload="onLoad();"
+        title="215405 test">
+
+  <script type="application/javascript"><![CDATA[
+    var imports = [ "SimpleTest", "is", "isnot", "ok"];
+    for each (var import in imports) {
+      window[import] = window.opener.wrappedJSObject[import];
+    }
+
+    const text="MOZILLA";
+    const nostoreURI = "http://localhost:8888/tests/docshell/test/chrome/" +
+                       "215405_nostore.html";
+    const nocacheURI = "https://example.com:443/tests/docshell/test/chrome/" +
+                       "215405_nocache.html";
+
+    var gBrowser;
+    var gTestsIterator;
+    var scrollX = 0;
+    var scrollY = 0;
+
+    function finish() {
+      gBrowser.removeEventListener("pageshow", eventListener, true);
+      window.close();
+      window.opener.wrappedJSObject.SimpleTest.finish();
+    }
+
+    function onLoad(e) {
+      gBrowser = document.getElementById("content");
+      gBrowser.addEventListener("pageshow", eventListener, true);
+       
+      gTestsIterator = testsIterator();
+      nextTest();
+    }
+
+    function eventListener(event) {
+      setTimeout(nextTest, 0);
+    }
+
+    function nextTest() {
+      try {
+        gTestsIterator.next();
+      } catch (err if err instanceof StopIteration) {
+        finish();
+      }
+    }
+
+    function testsIterator() {
+      // No-store tests
+      var testName = "[nostore]";
+
+      // Load a page with a no-store header
+      gBrowser.loadURI(nostoreURI);
+      yield;
+
+
+      // Now that the page has loaded, amend the form contents
+      var form = gBrowser.contentDocument.getElementById("inp");
+      form.value = text;
+
+      // Attempt to scroll the page
+      var originalXPosition = gBrowser.contentWindow.scrollX;
+      var originalYPosition = gBrowser.contentWindow.scrollY;
+      var scrollToX = gBrowser.contentWindow.scrollMaxX;
+      var scrollToY = gBrowser.contentWindow.scrollMaxY;
+      gBrowser.contentWindow.scrollBy(scrollToX, scrollToY);
+      
+      // Save the scroll position for future comparison
+      scrollX = gBrowser.contentWindow.scrollX;
+      scrollY = gBrowser.contentWindow.scrollY;
+      isnot(scrollX, originalXPosition,
+            testName + " failed to scroll window horizontally");
+      isnot(scrollY, originalYPosition,
+            testName + " failed to scroll window vertically");
+
+      // Load a new document into the browser
+      var simple = "data:text/html,<html><head><title>test2</title></head>" +
+                     "<body>test2</body></html>";
+      gBrowser.loadURI(simple);
+      yield;
+
+
+      // Now go back in history. First page should not have been cached.
+      gBrowser.goBack();
+      yield;
+
+
+      // First uncacheable page will now be reloaded. Check scroll position
+      // restored, and form contents not
+      is(gBrowser.contentWindow.scrollX, scrollX, testName +
+         " horizontal axis scroll position not correctly restored");
+      is(gBrowser.contentWindow.scrollY, scrollY, testName +
+         " vertical axis scroll position not correctly restored");
+      var formValue = gBrowser.contentDocument.getElementById("inp").value;
+      isnot(formValue, text, testName + " form value incorrectly restored");
+
+    
+      // https no-cache
+      testName = "[nocache]";
+
+      // Load a page with a no-cache header
+      gBrowser.loadURI(nocacheURI);
+      yield;
+
+
+      // Now that the page has loaded, amend the form contents
+      form = gBrowser.contentDocument.getElementById("inp");
+      form.value = text;
+
+      // Attempt to scroll the page
+      originalXPosition = gBrowser.contentWindow.scrollX;
+      originalYPosition = gBrowser.contentWindow.scrollY;
+      scrollToX = gBrowser.contentWindow.scrollMaxX;
+      scrollToY = gBrowser.contentWindow.scrollMaxY;
+      gBrowser.contentWindow.scrollBy(scrollToX, scrollToY);
+      
+      // Save the scroll position for future comparison
+      scrollX = gBrowser.contentWindow.scrollX;
+      scrollY = gBrowser.contentWindow.scrollY;
+      isnot(scrollX, originalXPosition,
+            testName + " failed to scroll window horizontally");
+      isnot(scrollY, originalYPosition,
+            testName + " failed to scroll window vertically");
+
+      gBrowser.loadURI(simple);
+      yield;
+
+
+      // Now go back in history. First page should not have been cached.
+      gBrowser.goBack();
+      yield;
+
+
+      // First uncacheable page will now be reloaded. Check scroll position
+      // restored, and form contents not
+      is(gBrowser.contentWindow.scrollX, scrollX, testName +
+         " horizontal axis scroll position not correctly restored");
+      is(gBrowser.contentWindow.scrollY, scrollY, testName +
+         " vertical axis scroll position not correctly restored");
+      var formValue = gBrowser.contentDocument.getElementById("inp").value;
+      isnot(formValue, text, testName + " form value incorrectly restored");
+      
+      // nextTest has to be called from here, as no events are fired in this
+      // step
+      setTimeout(nextTest, 0);
+      yield;
+    }
+  ]]></script>
+
+  <browser type="content-primary" flex="1" id="content" src="about:blank"/>
+</window>
