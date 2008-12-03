@@ -3808,7 +3808,6 @@ MOZ_ARG_HEADER(Application)
 BUILD_STATIC_LIBS=
 ENABLE_TESTS=1
 MOZ_DBGRINFO_MODULES=
-JS_STATIC_BUILD=
 
 dnl ========================================================
 dnl =
@@ -4746,23 +4745,33 @@ MOZ_ARG_ENABLE_BOOL(static,
     BUILD_STATIC_LIBS=)
 
 dnl ========================================================
-dnl = Force JS to be a static lib
+dnl = Link js shell to system readline
 dnl ========================================================
-MOZ_ARG_ENABLE_BOOL(js-static-build,
-[  --enable-js-static-build  Force js to be a static lib],
-    JS_STATIC_BUILD=1,
-    JS_STATIC_BUILD= )
+MOZ_ARG_ENABLE_BOOL(readline,
+[  --enable-readline  Link js shell to system readline library],
+    JS_WANT_READLINE=1,
+    JS_WANT_READLINE= )
 
-AC_SUBST(JS_STATIC_BUILD)
-        
-if test -n "$JS_STATIC_BUILD"; then
-    AC_DEFINE(EXPORT_JS_API)
+JS_NATIVE_EDITLINE=
+EDITLINE_LIBS=
 
-if test -z "$BUILD_STATIC_LIBS"; then
-    AC_MSG_ERROR([--enable-js-static-build is only compatible with --enable-static])
+dnl Conveniently, Win32 sets SKIP_LIBRARY_CHECKS...
+if test -z "$SKIP_LIBRARY_CHECKS"; then
+  if test -n "$JS_WANT_READLINE"; then
+    AC_CHECK_LIB(readline, readline,
+                 EDITLINE_LIBS="-lreadline",
+                 AC_MSG_ERROR([No system readline library found.]))
+  else
+    dnl By default, we use editline
+    JS_NATIVE_EDITLINE=1
+    EDITLINE_LIBS='$(DEPTH)/editline/$(LIB_PREFIX)editline.$(LIB_SUFFIX)'
+  fi
+
+  dnl Either way, we want to build with line editing support.
+  AC_DEFINE(EDITLINE)
 fi
-
-fi
+AC_SUBST(JS_NATIVE_EDITLINE)
+AC_SUBST(EDITLINE_LIBS)
 
 dnl ========================================================
 dnl =
@@ -5147,10 +5156,17 @@ mv confdefs.h.save confdefs.h
 
 MAKEFILES="
   Makefile
+  shell/Makefile
   config/Makefile
   config/autoconf.mk
   config/mkdepend/Makefile
 "
+
+if test -n "$JS_NATIVE_EDITLINE"; then
+   MAKEFILES="$MAKEFILES
+editline/Makefile
+"
+fi
 
 dnl 
 dnl Run a perl script to quickly create the makefiles.
