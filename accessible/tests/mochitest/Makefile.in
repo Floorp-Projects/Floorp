@@ -69,6 +69,7 @@ _TEST_FILES =\
 		test_nsIAccessible_actions.html \
 		$(warning test_nsIAccessible_actions.xul temporarily disabled) \
 		test_nsIAccessible_applicationAccessible.html \
+		test_nsIAccessible_comboboxes.xul \
 		test_nsIAccessible_editablebody.html \
 		test_nsIAccessible_editabledoc.html \
 		test_nsIAccessible_name.html \
