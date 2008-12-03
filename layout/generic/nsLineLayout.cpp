@@ -1007,7 +1007,7 @@ nsLineLayout::ReflowFrame(nsIFrame* aFrame,
         // parent is not this because we are executing pullup code)
         nsHTMLContainerFrame* parent = static_cast<nsHTMLContainerFrame*>
                                                   (kidNextInFlow->GetParent());
-        parent->DeleteNextInFlowChild(mPresContext, kidNextInFlow);
+        parent->DeleteNextInFlowChild(mPresContext, kidNextInFlow, PR_TRUE);
       }
     }
 

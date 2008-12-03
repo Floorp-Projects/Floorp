@@ -1062,7 +1062,7 @@ nsBlockReflowState::PlaceBelowCurrentLineFloats(nsFloatCacheFreeList& aList, PRB
         if (nextPlaceholder) {
           nsHTMLContainerFrame* parent =
             static_cast<nsHTMLContainerFrame*>(nextPlaceholder->GetParent());
-          parent->DeleteNextInFlowChild(mPresContext, nextPlaceholder);
+          parent->DeleteNextInFlowChild(mPresContext, nextPlaceholder, PR_TRUE);
         }
       }
     }
