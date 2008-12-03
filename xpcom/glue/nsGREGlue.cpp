@@ -193,6 +193,19 @@ GRE_GetGREPathWithProperties(const GREVersionRange *versions,
 #if XP_UNIX
     if (realpath(p, aBuffer))
       return NS_OK;
+#elif WINCE
+    if (p[0] != '\\') 
+    {
+      unsigned short dir[MAX_PATH];
+      unsigned short path[MAX_PATH];
+      MultiByteToWideChar(CP_ACP, 0, p, -1, path, MAX_PATH);
+      _wfullpath(dir,path,MAX_PATH);
+      WideCharToMultiByte(CP_ACP, 0, dir, -1, aBuffer, MAX_PATH, NULL, NULL);
+    }
+    else {
+      strcpy(aBuffer, p);
+    }
+    return NS_OK;
 #elif XP_WIN
     if (_fullpath(aBuffer, p, aBufLen))
       return NS_OK;
@@ -779,9 +792,13 @@ GRE_GetPathFromRegKey(HKEY aRegKey,
            !CopyWithEnvExpansion(aBuffer, pathbuf, aBufLen, pathtype))) {
         ok = PR_FALSE;
       }
-      else if (!wcsncat(aBuffer, L"\\" LXPCOM_DLL, aBufLen) ||
-               _waccess(
-                        aBuffer, R_OK)) {
+      else if (!wcsncat(aBuffer, L"\\" LXPCOM_DLL, aBufLen) 
+#ifdef WINCE
+               || (GetFileAttributesW(aBuffer) != INVALID_FILE_ATTRIBUTES)
+#else
+               || _waccess(aBuffer, R_OK)
+#endif
+               ) {
         ok = PR_FALSE;
       }
     }
