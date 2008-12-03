@@ -143,8 +143,7 @@ XPCOMGlueLoad(const char *aXpcomFile)
         
         if (ns_isRelPath(xpcomFile))
         {
-            _wfullpath
-                (xpcomDir, xpcomFile, sizeof(xpcomDir));
+            _wfullpath(xpcomDir, xpcomFile, sizeof(xpcomDir)/sizeof(wchar_t));
         } 
         else 
         {
