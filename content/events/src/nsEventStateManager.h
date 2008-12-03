@@ -312,7 +312,6 @@ protected:
                         PRInt32 aNumLines,
                         PRBool aScrollHorizontal,
                         ScrollQuantity aScrollQuantity);
-  void ForceViewUpdate(nsIView* aView);
   void DoScrollHistory(PRInt32 direction);
   void DoScrollZoom(nsIFrame *aTargetFrame, PRInt32 adjustment);
   nsresult GetMarkupDocumentViewer(nsIMarkupDocumentViewer** aMv);
