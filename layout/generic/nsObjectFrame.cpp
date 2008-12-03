@@ -487,6 +487,7 @@ private:
   // If true, destroy the widget on destruction. Used when plugin stop
   // is being delayed to a safer point in time.
   PRPackedBool                mDestroyWidget;
+  PRPackedBool                mTimerCanceled;
   PRUint16          mNumCachedAttrs;
   PRUint16          mNumCachedParams;
   char              **mCachedAttrParamNames;
@@ -2242,6 +2243,7 @@ nsPluginInstanceOwner::nsPluginInstanceOwner()
   mCachedAttrParamNames = nsnull;
   mCachedAttrParamValues = nsnull;
   mDestroyWidget = PR_FALSE;
+  mTimerCanceled = PR_TRUE;
 
   PR_LOG(nsObjectFrameLM, PR_LOG_DEBUG,
          ("nsPluginInstanceOwner %p created\n", this));
@@ -2255,9 +2257,7 @@ nsPluginInstanceOwner::~nsPluginInstanceOwner()
          ("nsPluginInstanceOwner %p deleted\n", this));
 
   // shut off the timer.
-  if (mPluginTimer != nsnull) {
-    CancelTimer();
-  }
+  CancelTimer();
 
   mOwner = nsnull;
 
@@ -4414,14 +4414,17 @@ NS_IMETHODIMP nsPluginInstanceOwner::Notify(nsITimer* /* timer */)
 void nsPluginInstanceOwner::StartTimer(unsigned int aDelay)
 {
 #ifdef XP_MACOSX
-    nsresult rv;
+  if (!mTimerCanceled)
+    return;
 
-    // start a periodic timer to provide null events to the plugin instance.
-    if (!mPluginTimer) {
-      mPluginTimer = do_CreateInstance("@mozilla.org/timer;1", &rv);
-      if (NS_SUCCEEDED(rv))
-        mPluginTimer->InitWithCallback(this, aDelay, nsITimer::TYPE_REPEATING_SLACK);
-    }
+  // start a periodic timer to provide null events to the plugin instance.
+  if (!mPluginTimer) {
+    mPluginTimer = do_CreateInstance("@mozilla.org/timer;1");
+  }
+  if (mPluginTimer) {
+    mTimerCanceled = PR_FALSE;
+    mPluginTimer->InitWithCallback(this, aDelay, nsITimer::TYPE_REPEATING_SLACK);
+  }
 #endif
 }
 
@@ -4429,8 +4432,8 @@ void nsPluginInstanceOwner::CancelTimer()
 {
   if (mPluginTimer) {
     mPluginTimer->Cancel();
-    mPluginTimer = nsnull;
   }
+  mTimerCanceled = PR_TRUE;
 }
 
 nsresult nsPluginInstanceOwner::Init(nsPresContext* aPresContext,
