@@ -631,7 +631,7 @@ nsThebesImage::Draw(gfxContext*        aContext,
         // the surface type.
         switch (currentTarget->GetType()) {
         case gfxASurface::SurfaceTypeXlib:
-        case gfxASurface::SurfaceTypeXcb:
+        case gfxASurface::SurfaceTypeXcb: {
             // See bug 324698.  This is a workaround for EXTEND_PAD not being
             // implemented correctly on linux in the X server.
             //
@@ -640,9 +640,22 @@ nsThebesImage::Draw(gfxContext*        aContext,
             // get blurry edges.  CAIRO_EXTEND_PAD would also work here, if
             // available
             //
-            // This effectively disables smooth upscaling for images.
-            pattern->SetFilter(0);
+            // But don't do this for simple downscales because it's horrible.
+            // Downscaling means that device-space coordinates are
+            // scaled *up* to find the image pixel coordinates.
+            //
+            // deviceToImage is slightly stale because up above we may
+            // have adjusted the pattern's matrix ... but the adjustment
+            // is only a translation so the scale factors in deviceToImage
+            // are still valid.
+            PRBool isDownscale =
+              deviceToImage.xx >= 1.0 && deviceToImage.yy >= 1.0 &&
+              deviceToImage.xy == 0.0 && deviceToImage.yx == 0.0;
+            if (!isDownscale) {
+                pattern->SetFilter(0);
+            }
             break;
+        }
   
         case gfxASurface::SurfaceTypeQuartz:
         case gfxASurface::SurfaceTypeQuartzImage:
