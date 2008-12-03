@@ -48,6 +48,10 @@ _HTTP_FILES =	\
 		92598_nostore.html^headers^ \
 		112564_nocache.html \
 		112564_nocache.html^headers^ \
+		215405_nostore.html \
+		215405_nostore.html^headers^ \
+		215405_nocache.html \
+		215405_nocache.html^headers^ \
 		$(NULL)
 
 _TEST_FILES =	\
@@ -58,6 +62,8 @@ _TEST_FILES =	\
 		bug112564_window.xul \
 		test_bug113934.xul \
 		bug113934_window.xul \
+		test_bug215405.xul \
+		bug215405_window.xul \
 		test_bug364461.xul \
 		bug364461_window.xul \
 		test_bug396519.xul \

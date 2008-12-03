@@ -1519,7 +1519,7 @@ nsHTMLSelectElement::RestoreState(nsPresState* aState)
   nsCOMPtr<nsISupports> state;
   nsresult rv = aState->GetStatePropertyAsSupports(NS_LITERAL_STRING("selecteditems"),
                                                    getter_AddRefs(state));
-  if (NS_SUCCEEDED(rv)) {
+  if (rv == NS_STATE_PROPERTY_EXISTS) {
     RestoreStateTo((nsSelectState*)(nsISupports*)state);
 
     // Don't flush, if the frame doesn't exist yet it doesn't care if
