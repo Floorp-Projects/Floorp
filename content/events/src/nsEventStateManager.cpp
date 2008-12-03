@@ -995,40 +995,41 @@ nsEventStateManager::PreHandleEvent(nsPresContext* aPresContext,
                                         gLastFocusedPresContextWeak,
                                         &blurevent, nsnull, &blurstatus);
 
+            nsCOMPtr<nsIEventStateManager> esm;
             if (!mCurrentFocus && gLastFocusedContent) {
               // We also need to blur the previously focused content node here,
               // if we don't have a focused content node in this document.
               // (SendFocusBlur isn't called in this case).
-
+              if (gLastFocusedContent) {
+                nsCOMPtr<nsIDocument> doc = gLastFocusedContent->GetCurrentDoc();
+                if (doc) {
+                  nsIPresShell *shell = doc->GetPrimaryShell();
+                  if (shell) {
+                    nsCOMPtr<nsPresContext> oldPresContext = shell->GetPresContext();
+                    esm = oldPresContext->EventStateManager();
+                    if (esm) {
+                      esm->SetFocusedContent(gLastFocusedContent);
+                    }
+                  }
+                }
+              }
               nsCOMPtr<nsIContent> blurContent = gLastFocusedContent;
               blurevent.target = nsnull;
               nsEventDispatcher::Dispatch(gLastFocusedContent,
                                           gLastFocusedPresContextWeak,
                                           &blurevent, nsnull, &blurstatus);
-
-              // XXX bryner this isn't quite right -- it can result in
-              // firing two blur events on the content.
-
-              nsCOMPtr<nsIDocument> doc;
-              if (gLastFocusedContent) // could have changed in Dispatch
-                doc = gLastFocusedContent->GetDocument();
-              if (doc) {
-                nsIPresShell *shell = doc->GetPrimaryShell();
-                if (shell) {
-                  nsCOMPtr<nsPresContext> oldPresContext =
-                    shell->GetPresContext();
-
-                  nsCOMPtr<nsIEventStateManager> esm;
-                  esm = oldPresContext->EventStateManager();
-                  esm->SetFocusedContent(gLastFocusedContent);
-                  nsEventDispatcher::Dispatch(gLastFocusedContent,
-                                              oldPresContext,
-                                              &blurevent, nsnull, &blurstatus);
-                  esm->SetFocusedContent(nsnull);
-                  NS_IF_RELEASE(gLastFocusedContent);
-                }
-              }
             }
+            if (ourWindow) {
+              // Clear the target so that Dispatch can set it back correctly.
+              blurevent.target = nsnull;
+              nsEventDispatcher::Dispatch(ourWindow, gLastFocusedPresContextWeak,
+                                          &blurevent, nsnull, &blurstatus);
+            }
+
+            if (esm) {
+              esm->SetFocusedContent(nsnull);
+            }
+            NS_IF_RELEASE(gLastFocusedContent);
           }
 
           if (focusController)
