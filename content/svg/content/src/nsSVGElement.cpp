@@ -994,7 +994,7 @@ nsSVGElement::DidModifySVGObservable(nsISVGValue* aObservable,
 
   return SetAttrAndNotify(attrName->NamespaceID(), attrName->LocalName(),
                           attrName->GetPrefix(), EmptyString(), newValue,
-                          modification, hasListeners, PR_TRUE);
+                          modification, hasListeners, PR_TRUE, nsnull);
 }
 
 //----------------------------------------------------------------------
