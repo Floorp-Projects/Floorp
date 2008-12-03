@@ -807,8 +807,9 @@ nsGenericDOMDataNode::GetChildAt(PRUint32 aIndex) const
 }
 
 nsIContent * const *
-nsGenericDOMDataNode::GetChildArray() const
+nsGenericDOMDataNode::GetChildArray(PRUint32* aChildCount) const
 {
+  *aChildCount = 0;
   return nsnull;
 }
 
