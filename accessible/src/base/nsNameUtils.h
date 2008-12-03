@@ -1,4 +1,6 @@
 /* -*- Mode: C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
+/* vim:expandtab:shiftwidth=2:tabstop=2:
+ */
 /* ***** BEGIN LICENSE BLOCK *****
  * Version: MPL 1.1/GPL 2.0/LGPL 2.1
  *
@@ -14,18 +16,16 @@
  *
  * The Original Code is mozilla.org code.
  *
- * The Initial Developer of the Original Code is
- * Netscape Communications Corporation.
- * Portions created by the Initial Developer are Copyright (C) 1998
+ * The Initial Developer of the Original Code is Mozilla Foundation
+ * Portions created by the Initial Developer are Copyright (C) 2008
  * the Initial Developer. All Rights Reserved.
  *
  * Contributor(s):
- *   Aaron Leventhal <aleventh@us.ibm.com> (original author)
- *   Alexander Surkov <surkov.alexander@gmail.com>
+ *   Alexander Surkov <surkov.alexander@gmail.com> (original author)
  *
  * Alternatively, the contents of this file may be used under the terms of
- * either of the GNU General Public License Version 2 or later (the "GPL"),
- * or the GNU Lesser General Public License Version 2.1 or later (the "LGPL"),
+ * either the GNU General Public License Version 2 or later (the "GPL"), or
+ * the GNU Lesser General Public License Version 2.1 or later (the "LGPL"),
  * in which case the provisions of the GPL or the LGPL are applicable instead
  * of those above. If you wish to allow use of your version of this file only
  * under the terms of either the GPL or the LGPL, and not to allow others to
@@ -37,39 +37,35 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-#ifndef _nsHTMLLinkAccessible_H_
-#define _nsHTMLLinkAccessible_H_
+#ifndef _nsNameUtils_H_
+#define _nsNameUtils_H_
 
-#include "nsHyperTextAccessibleWrap.h"
+#include "prtypes.h"
 
-class nsHTMLLinkAccessible : public nsHyperTextAccessibleWrap
+/**
+ * Name from subtree calculation rules.
+ */
+enum ENameFromSubtreeRule
 {
-public:
-  nsHTMLLinkAccessible(nsIDOMNode* aDomNode, nsIWeakReference* aShell);
- 
-  NS_DECL_ISUPPORTS_INHERITED
-
-  // nsIAccessible
-  NS_IMETHOD GetRole(PRUint32 *aRole); 
-  NS_IMETHOD GetValue(nsAString& aValue);
-
-  NS_IMETHOD GetNumActions(PRUint8 *aNumActions);
-  NS_IMETHOD GetActionName(PRUint8 aIndex, nsAString& aName);
-  NS_IMETHOD DoAction(PRUint8 aIndex);
-
-  // nsIAccessibleHyperLink
-  NS_IMETHOD GetURI(PRInt32 aIndex, nsIURI **aURI);
-
-  // nsAccessible
-  virtual nsresult GetStateInternal(PRUint32 *aState, PRUint32 *aExtraState);
-
-protected:
-  enum { eAction_Jump = 0 };
-
-  /**
-   * Returns true if the link has href attribute.
-   */
-  PRBool IsLinked();
+  // do not walk into subtree to compute the name
+  eNoRule = 0x00,
+  
+  // compute the name from the subtree
+  eFromSubtree = 0x01
 };
 
-#endif  
+/**
+ * The class provides utils methods to compute the accessible name and
+ * description.
+ */
+class nsNameUtils
+{
+public:
+
+  /**
+   * Map array from roles to name rules (bit state of ENameFromSubtreeRule).
+   */
+  static PRUint32 gRoleToNameRulesMap[];
+};
+
+#endif

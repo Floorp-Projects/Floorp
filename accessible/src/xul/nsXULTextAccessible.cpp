@@ -118,12 +118,6 @@ nsLeafAccessible(aDomNode, aShell)
 }
 
 nsresult
-nsXULTooltipAccessible::GetNameInternal(nsAString& aName)
-{
-  return GetXULName(aName, PR_TRUE);
-}
-
-nsresult
 nsXULTooltipAccessible::GetStateInternal(PRUint32 *aState,
                                          PRUint32 *aExtraState)
 {
