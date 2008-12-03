@@ -34,6 +34,8 @@ win32-ddb-dib.patch: fix for bug 455513; not upstream yet pending feebdack
 
 qpainter-type.patch: add SURFACE_TYPE_QPAINTER to cairo.h
 
+wince-fixes.patch: stubs out win32 functions we use but are not supported on win32.  Also implements ExtSelectClipRgn in terms of other functions available on wince.
+
 ==== pixman patches ====
 
 endian.patch: include cairo-platform.h for endian macros
