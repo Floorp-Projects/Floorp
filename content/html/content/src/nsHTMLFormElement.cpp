@@ -1475,7 +1475,7 @@ nsHTMLFormElement::RemoveElement(nsIFormControl* aChild,
   // Find the index of the child. This will be used later if necessary
   // to find the default submit.
   PRUint32 index = controls.IndexOf(aChild);
-  NS_ASSERTION(index != controls.NoIndex, "Child not in controls");
+  NS_ENSURE_STATE(index != controls.NoIndex);
 
   controls.RemoveElementAt(index);
 
