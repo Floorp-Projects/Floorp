@@ -704,18 +704,33 @@ protected:
       nsDelayedBroadcastUpdate(nsIDOMElement* aBroadcaster,
                                nsIDOMElement* aListener,
                                const nsAString &aAttr)
-      : mBroadcaster(aBroadcaster), mListener(aListener), mAttr(aAttr) {}
+      : mBroadcaster(aBroadcaster), mListener(aListener), mAttr(aAttr),
+        mSetAttr(PR_FALSE) {}
+
+      nsDelayedBroadcastUpdate(nsIDOMElement* aBroadcaster,
+                               nsIDOMElement* aListener,
+                               nsIAtom* aAttrName,
+                               const nsAString &aAttr,
+                               PRBool aSetAttr)
+      : mBroadcaster(aBroadcaster), mListener(aListener), mAttr(aAttr),
+        mAttrName(aAttrName), mSetAttr(aSetAttr) {}
 
       nsDelayedBroadcastUpdate(const nsDelayedBroadcastUpdate& aOther)
       : mBroadcaster(aOther.mBroadcaster), mListener(aOther.mListener),
-        mAttr(aOther.mAttr) {}
+        mAttr(aOther.mAttr), mAttrName(aOther.mAttrName),
+        mSetAttr(aOther.mSetAttr) {}
 
       nsCOMPtr<nsIDOMElement> mBroadcaster;
       nsCOMPtr<nsIDOMElement> mListener;
+      // Note if mAttrName isn't used, this is the name of the attr, otherwise
+      // this is the value of the attribute.
       nsString                mAttr;
+      nsCOMPtr<nsIAtom>       mAttrName;
+      PRBool                  mSetAttr;
     };
 
     nsTArray<nsDelayedBroadcastUpdate> mDelayedBroadcasters;
+    nsTArray<nsDelayedBroadcastUpdate> mDelayedAttrChangeBroadcasts;
 private:
     // helpers
 
