@@ -176,30 +176,6 @@ description {
   margin-bottom: 4px !important;
 }
 
-#downloadFolderIcon {
-  width: 16px;
-  height: 16px;
-}
-
-#downloadFolderContainer {
-  margin: 2px 4px 2px 27px;
-  -moz-appearance: textfield;
-}
-
-#downloadFolderContainer2 {
-  background-color: -moz-Dialog;
-  color: -moz-DialogText;
-  margin: 1px;
-  padding: 0px 0px 0px 3px;
-}
-
-#downloadFolder {
-  -moz-appearance: none;
-  background-color: transparent;
-  border: none;
-  padding: 1px 0px 0px 0px;
-}
-
 prefpane .groupbox-body {
   -moz-appearance: none;
   padding: 8px 4px 4px 4px;
