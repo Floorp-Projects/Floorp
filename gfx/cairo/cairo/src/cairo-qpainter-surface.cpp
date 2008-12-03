@@ -1388,7 +1388,7 @@ _cairo_qpainter_surface_show_glyphs (void *abstract_surface,
 	}
 
         return (cairo_int_status_t)
-               _cairo_surface_show_text_glyphs (qs->xlib_equiv, op, source, NULL, 0, glyphs, num_glyphs, NULL, 0, FALSE, scaled_font);
+               _cairo_surface_show_text_glyphs (qs->xlib_equiv, op, source, NULL, 0, glyphs, num_glyphs, NULL, 0, (cairo_text_cluster_flags_t)0, scaled_font);
     }
 #endif
 
