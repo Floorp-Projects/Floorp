@@ -195,14 +195,16 @@ nsNativeThemeCocoa::~nsNativeThemeCocoa()
   NS_OBJC_END_TRY_ABORT_BLOCK;
 }
 
-// Limit on the area of destRect (in pixels^2) in DrawCellWithScaling(),
-// above which we don't do any scaling.  This is to avoid crashes in
+// Limit on the area of the target rect (in pixels^2) in
+// DrawCellWithScaling(), DrawButton() and DrawScrollbar(), above which we
+// don't draw the object into a bitmap buffer.  This is to avoid crashes in
 // [NSGraphicsContext graphicsContextWithGraphicsPort:flipped:] and
 // CGContextDrawImage(), and also to avoid very poor drawing performance in
-// CGContextDrawImage() (particularly if xscale or yscale is less than but
-// near 1 -- e.g. 0.9).  This value was determined by trial and error, on
-// OS X 10.4.11 and 10.5.4, and on systems with different amounts of RAM.
-#define CELL_SCALING_MAX_AREA 500000
+// CGContextDrawImage() when it scales the bitmap (particularly if xscale or
+// yscale is less than but near 1 -- e.g. 0.9).  This value was determined
+// by trial and error, on OS X 10.4.11 and 10.5.4, and on systems with
+// different amounts of RAM.
+#define BITMAP_MAX_AREA 500000
 
 /*
  * Draw the given NSCell into the given cgContext.
@@ -269,8 +271,9 @@ static void DrawCellWithScaling(NSCell *cell,
     CGContextTranslateCTM(cgContext, 0.0f, -(2.0 * destRect.origin.y + destRect.size.height));
   }
 
-  // Fall back to no scaling if the area of our cell (in pixels^2) is too large.
-  BOOL noBufferOverride = (drawRect.size.width * drawRect.size.height > CELL_SCALING_MAX_AREA);
+  // Fall back to no bitmap buffer (and no scaling) if the area of our cell
+  // (in pixels^2) is too large.
+  BOOL noBufferOverride = (drawRect.size.width * drawRect.size.height > BITMAP_MAX_AREA);
 
   if ((!needsBuffer && drawRect.size.width == destRect.size.width &&
        drawRect.size.height == destRect.size.height) || noBufferOverride) {
@@ -737,7 +740,9 @@ nsNativeThemeCocoa::DrawButton(CGContextRef cgContext, ThemeButtonKind inKind,
       drawFrame.origin.x -= 1;
   }
 
-  if (!needsScaling) {
+  // Fall back to no bitmap buffer (and no scaling) if the area of our button
+  // (in pixels^2) is too large.
+  if (!needsScaling || (drawWidth * drawHeight > BITMAP_MAX_AREA)) {
     HIThemeDrawButton(&drawFrame, &bdi, cgContext, kHIThemeOrientationNormal, NULL);
   } else {
     int w = drawWidth + MAX_FOCUS_RING_WIDTH*2;
@@ -1178,7 +1183,9 @@ nsNativeThemeCocoa::DrawScrollbar(CGContextRef aCGContext, const HIRect& aBoxRec
   HIThemeTrackDrawInfo tdi;
   GetScrollbarDrawInfo(tdi, aFrame, drawRect, PR_TRUE); //True means we want the press states
 
-  if (drawDirect) {
+  // Fall back to no bitmap buffer if the area of our scrollbar (in pixels^2)
+  // is too large.
+  if (drawDirect || (aBoxRect.size.width * aBoxRect.size.height > BITMAP_MAX_AREA)) {
     ::HIThemeDrawTrack(&tdi, NULL, aCGContext, HITHEME_ORIENTATION);
   } else {
     // Note that NSScroller can draw transformed just fine, but HITheme can't.
