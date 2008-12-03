@@ -40,6 +40,7 @@
 #include "nsAccessible.h"
 #include "nsAccessibleRelation.h"
 #include "nsHyperTextAccessibleWrap.h"
+#include "nsNameUtils.h"
 
 #include "nsIAccessibleDocument.h"
 #include "nsIAccessibleHyperText.h"
@@ -1716,12 +1717,8 @@ nsresult nsAccessible::GetTextFromRelationID(nsIAtom *aIDProperty, nsString &aNa
   return NS_OK;
 }
 
-/**
-  * Only called if the element is not a nsIDOMXULControlElement. Initially walks up
-  *   the DOM tree to the form, concatonating label elements as it goes. Then checks for
-  *   labels with the for="controlID" property.
-  */
-nsresult nsAccessible::GetHTMLName(nsAString& aLabel, PRBool aCanAggregateSubtree)
+nsresult
+nsAccessible::GetHTMLName(nsAString& aLabel)
 {
   nsCOMPtr<nsIContent> content = nsCoreUtils::GetRoleContent(mDOMNode);
   if (!content) {
@@ -1742,9 +1739,10 @@ nsresult nsAccessible::GetHTMLName(nsAString& aLabel, PRBool aCanAggregateSubtre
     }
   }
 
-  PRBool canAggregateName = mRoleMapEntry ?
-                            mRoleMapEntry->nameRule == eNameOkFromChildren :
-                            aCanAggregateSubtree;
+  PRUint32 role = nsAccUtils::Role(this);
+  PRUint32 canAggregateName =
+    nsNameUtils::gRoleToNameRulesMap[role] & eFromSubtree;
+
   if (canAggregateName) {
     // Don't use AppendFlatStringFromSubtree for container widgets like menulist
     nsresult rv = AppendFlatStringFromSubtree(content, &aLabel);
@@ -1775,7 +1773,8 @@ nsresult nsAccessible::GetHTMLName(nsAString& aLabel, PRBool aCanAggregateSubtre
   *  the control that uses the control="controlID" syntax will use
   *  the child label for its Name.
   */
-nsresult nsAccessible::GetXULName(nsAString& aLabel, PRBool aCanAggregateSubtree)
+nsresult
+nsAccessible::GetXULName(nsAString& aLabel)
 {
   // CASE #1 (via label attribute) -- great majority of the cases
   nsresult rv = NS_OK;
@@ -1851,9 +1850,9 @@ nsresult nsAccessible::GetXULName(nsAString& aLabel, PRBool aCanAggregateSubtree
     parent = parent->GetParent();
   }
 
-  PRBool canAggregateName = mRoleMapEntry ?
-                            mRoleMapEntry->nameRule == eNameOkFromChildren :
-                            aCanAggregateSubtree;
+  PRUint32 role = nsAccUtils::Role(this);
+  PRUint32 canAggregateName =
+    nsNameUtils::gRoleToNameRulesMap[role] & eFromSubtree;
 
   return canAggregateName ?
          AppendFlatStringFromSubtree(content, &aLabel) : NS_OK;
@@ -3421,10 +3420,10 @@ nsAccessible::GetNameInternal(nsAString& aName)
     return NS_OK;
 
   if (content->IsNodeOfType(nsINode::eHTML))
-    return GetHTMLName(aName, PR_FALSE);
+    return GetHTMLName(aName);
 
   if (content->IsNodeOfType(nsINode::eXUL))
-    return GetXULName(aName, PR_FALSE);
+    return GetXULName(aName);
 
   return NS_OK;
 }

@@ -180,9 +180,19 @@ protected:
    */
   nsresult GetTextFromRelationID(nsIAtom *aIDProperty, nsString &aName);
 
-  // Name helpers
-  nsresult GetHTMLName(nsAString& _retval, PRBool aCanAggregateSubtree = PR_TRUE);
-  nsresult GetXULName(nsAString& aName, PRBool aCanAggregateSubtree = PR_TRUE);
+  //////////////////////////////////////////////////////////////////////////////
+  // Name helpers.
+
+  /**
+   * Compute the name of HTML node.
+   */
+  nsresult GetHTMLName(nsAString& aName);
+
+  /**
+   * Compute the name for XUL node.
+   */
+  nsresult GetXULName(nsAString& aName);
+
   // For accessibles that are not lists of choices, the name of the subtree should be the 
   // sum of names in the subtree
   nsresult AppendFlatStringFromSubtree(nsIContent *aContent, nsAString *aFlatString);

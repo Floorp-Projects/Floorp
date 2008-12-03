@@ -369,12 +369,6 @@ nsHTML4ButtonAccessible::GetStateInternal(PRUint32 *aState,
   return NS_OK;
 }
 
-nsresult
-nsHTML4ButtonAccessible::GetNameInternal(nsAString& aName)
-{
-  return GetHTMLName(aName, PR_TRUE);
-}
-
 // --- textfield -----
 
 nsHTMLTextFieldAccessible::nsHTMLTextFieldAccessible(nsIDOMNode* aNode, nsIWeakReference* aShell):
