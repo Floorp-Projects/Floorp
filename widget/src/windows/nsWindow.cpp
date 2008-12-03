@@ -3077,14 +3077,14 @@ PRBool nsWindow::DispatchKeyEvent(PRUint32 aEventType, WORD aCharCode,
 }
 
 static PRBool
-StringCaseInsensitiveEquals(const PRUint16* aChars1, const PRUint32 aNumChars1,
-                          const PRUint16* aChars2, const PRUint32 aNumChars2) 
+StringCaseInsensitiveEquals(const PRUnichar* aChars1, const PRUint32 aNumChars1,
+                            const PRUnichar* aChars2, const PRUint32 aNumChars2)
 {
   if (aNumChars1 != aNumChars2)
     return PR_FALSE;
 
   nsCaseInsensitiveStringComparator comp;
-  return comp((PRUnichar*)aChars1, (PRUnichar*)aChars2, aNumChars1) == 0;
+  return comp(aChars1, aChars2, aNumChars1) == 0;
 }
 
 /**
@@ -3245,11 +3245,11 @@ BOOL nsWindow::OnKeyDown(UINT aVirtualKeyCode, LPARAM aKeyData,
     return PR_FALSE;
 
   PRUint8 shiftStates[5];
-  PRUint16 uniChars[5];
-  PRUint16 shiftedChars[5] = {0, 0, 0, 0, 0};
-  PRUint16 unshiftedChars[5] = {0, 0, 0, 0, 0};
-  PRUint16 shiftedLatinChar = 0;
-  PRUint16 unshiftedLatinChar = 0;
+  PRUnichar uniChars[5];
+  PRUnichar shiftedChars[5] = {0, 0, 0, 0, 0};
+  PRUnichar unshiftedChars[5] = {0, 0, 0, 0, 0};
+  PRUnichar shiftedLatinChar = 0;
+  PRUnichar unshiftedLatinChar = 0;
   PRUint32 numOfUniChars = 0;
   PRUint32 numOfShiftedChars = 0;
   PRUint32 numOfUnshiftedChars = 0;
