@@ -49,15 +49,18 @@ ifdef DEHYDRA_PATH
 DIRS += analysis-tests
 endif
 
-MODULE		= js
-LIBRARY_NAME	= mozjs
-GRE_MODULE	= 1
+ifdef JS_NATIVE_EDITLINE
+DIRS += editline
+endif
 
-PROGRAM         = js$(BIN_SUFFIX)
-# The shell uses some 'HIDDEN' symbols to produce statistics, so we
-# link directly against the .o files, not against the JS shared
-# library.
-PROGOBJS	= js.$(OBJ_SUFFIX) $(OBJS)
+# editline needs to get built before the shell
+DIRS += shell
+
+MODULE		    = js
+LIBRARY_NAME	    = mozjs
+STATIC_LIBRARY_NAME = js_static
+GRE_MODULE	    = 1
+
 LIBS		= $(NSPR_LIBS)
 
 ifdef GNU_CXX
@@ -97,10 +100,12 @@ endif
 # other modules which are always built shared. Failure to do so results in
 # the js code getting copied into xpinstall and jsd as well as mozilla-bin,
 # and then the static data cells used for locking no longer work.
+#
+# In fact, we now build both a static and a shared library, as the
+# JS shell would like to link to the static library.
 
-ifndef JS_STATIC_BUILD
 FORCE_SHARED_LIB = 1
-endif
+FORCE_STATIC_LIB = 1
 
 VPATH		= $(srcdir)
 
@@ -234,9 +239,7 @@ CPPSRCS += \
 ifdef DEBUG
 CPPSRCS += TraceTreeDrawer.cpp
 endif
-
-DEFINES += -DFEATURE_NANOJIT -DJS_TRACER
-endif
+endif # ENABLE_JIT
 
 ifdef HAVE_DTRACE
 INSTALLED_HEADERS += \
