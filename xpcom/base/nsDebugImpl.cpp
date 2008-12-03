@@ -66,6 +66,11 @@
 #include <signal.h>
 #endif
 
+#if defined(XP_WIN)
+#include <tchar.h>
+#include "nsString.h"
+#endif
+
 static void
 Abort(const char *aMsg);
 
@@ -97,7 +102,7 @@ PRBool InDebugger()
 #ifndef WINCE
    PRBool fReturn = PR_FALSE;
    LPFNISDEBUGGERPRESENT lpfnIsDebuggerPresent = NULL;
-   HINSTANCE hKernel = LoadLibrary("Kernel32.dll");
+   HINSTANCE hKernel = LoadLibraryW(L"Kernel32.dll");
 
    if(hKernel)
       {
@@ -402,9 +407,9 @@ Break(const char *aMsg)
      * See http://bugzilla.mozilla.org/show_bug.cgi?id=54792
      */
     PROCESS_INFORMATION pi;
-    STARTUPINFO si;
-    char executable[MAX_PATH];
-    char* pName;
+    STARTUPINFOW si;
+    PRUnichar executable[MAX_PATH];
+    PRUnichar* pName;
 
     memset(&pi, 0, sizeof(pi));
 
@@ -413,13 +418,15 @@ Break(const char *aMsg)
     si.wShowWindow = SW_SHOW;
 
     // 2nd arg of CreateProcess is in/out
-    char *msgCopy = (char*) _alloca(strlen(aMsg) + 1); 
-    strcpy(msgCopy, aMsg);
+    PRUnichar *msgCopy = (PRUnichar*) _alloca((strlen(aMsg) + 1)*sizeof(PRUnichar));
+    wcscpy(msgCopy  , (PRUnichar*)NS_ConvertUTF8toUTF16(aMsg).get());
 
-    if(GetModuleFileName(GetModuleHandle("xpcom.dll"), executable, MAX_PATH) &&
-       NULL != (pName = strrchr(executable, '\\')) &&
-       NULL != strcpy(pName+1, "windbgdlg.exe") &&
-       CreateProcess(executable, msgCopy, NULL, NULL, PR_FALSE,
+    if(GetModuleFileNameW(GetModuleHandleW(L"xpcom.dll"), (LPWCH)executable, MAX_PATH) &&
+       NULL != (pName = wcsrchr(executable, '\\')) &&
+       NULL != 
+       wcscpy((WCHAR*)
+       pName+1, L"windbgdlg.exe") &&
+       CreateProcessW((LPCWSTR)executable, (LPWSTR)msgCopy, NULL, NULL, PR_FALSE,
                      DETACHED_PROCESS | NORMAL_PRIORITY_CLASS,
                      NULL, NULL, &si, &pi)) {
       WaitForSingleObject(pi.hProcess, INFINITE);
