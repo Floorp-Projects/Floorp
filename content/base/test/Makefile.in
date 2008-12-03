@@ -241,6 +241,7 @@ _TEST_FILES = 	test_bug5141.html \
 		file_bug391728_2.html \
 		test_bug456262.html \
 		test_bug368972.html \
+		test_bug448993.html \
 		test_bug450160.html \
 		test_bug454326.html \
 		test_bug457746.html \
