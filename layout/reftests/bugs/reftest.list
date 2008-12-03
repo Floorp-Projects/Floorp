@@ -827,6 +827,8 @@ skip-if(MOZ_WIDGET_TOOLKIT=="cocoa") == 413292-1.html 413292-1-ref.html # disabl
 == 417178-1.html 417178-1-ref.html
 == 417246-1.html 417246-1-ref.html
 == 417676.html 417676-ref.html
+== 418574-1.html 418574-1-ref.html
+== 418574-2.html 418574-2-ref.html
 == 418766-1a.html 418766-1-ref.html
 == 418766-1b.html 418766-1-ref.html
 == 419285-1.html 419285-1-ref.html
