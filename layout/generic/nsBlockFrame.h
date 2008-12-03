@@ -423,7 +423,7 @@ public:
    * given)
    * 
    * PRESERVE_REMOVED_FRAMES does NOT work on out of flow frames so
-   * always use PR_TRUE for out of flows.
+   * don't use it for out of flows.
    */
   enum {
     PERSERVE_REMOVED_FRAMES    = 0x01,
