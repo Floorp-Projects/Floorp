@@ -262,6 +262,7 @@ _TEST_FILES = 	test_bug5141.html \
 		bug461735-post-redirect.js \
 		test_bug461735.html \
 		test_bug380418.html \
+		test_bug465767.html \
 		test_bug380418.html^headers^ \
 		test_elementTraversal.html \
 		test_w3element_traversal.html \
