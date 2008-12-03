@@ -649,24 +649,13 @@ nsresult nsRootAccessible::HandleEventWithTarget(nsIDOMEvent* aEvent,
     return NS_OK;
   }
 
-  if (eventType.EqualsLiteral("popuphiding")) {
-    // If accessible focus was on or inside popup that closes,
-    // then restore it to true current focus.
-    // This is the case when we've been getting DOMMenuItemActive events
-    // inside of a combo box that closes. The real focus is on the combo box.
-    // It's also the case when a popup gets focus in ATK -- when it closes
-    // we need to fire an event to restore focus to where it was
-    if (!gLastFocusedNode ||
-        !nsCoreUtils::IsAncestorOf(aTargetNode, gLastFocusedNode)) {
-      return NS_OK;  // And was not focused on an item inside the popup
-    }
-    // Focus was on or inside of a popup that's being hidden
-    FireCurrentFocusEvent();
-  }
-
   nsCOMPtr<nsIAccessible> accessible;
   accService->GetAccessibleInShell(aTargetNode, eventShell,
                                    getter_AddRefs(accessible));
+
+  if (eventType.EqualsLiteral("popuphiding"))
+    return HandlePopupHidingEvent(aTargetNode, accessible);
+
   nsCOMPtr<nsPIAccessible> privAcc(do_QueryInterface(accessible));
   if (!privAcc)
     return NS_OK;
@@ -831,22 +820,7 @@ nsresult nsRootAccessible::HandleEventWithTarget(nsIDOMEvent* aEvent,
     nsAccUtils::FireAccEvent(nsIAccessibleEvent::EVENT_ALERT, accessible);
   }
   else if (eventType.EqualsLiteral("popupshown")) {
-    // Don't fire menupopup events for combobox and autocomplete lists
-    PRUint32 role = nsAccUtils::Role(accessible);
-    PRInt32 event = 0;
-    if (role == nsIAccessibleRole::ROLE_MENUPOPUP) {
-      event = nsIAccessibleEvent::EVENT_MENUPOPUP_START;
-    }
-    else if (role == nsIAccessibleRole::ROLE_TOOLTIP) {
-      // There is a single <xul:tooltip> node which Mozilla moves around.
-      // The accessible for it stays the same no matter where it moves. 
-      // AT's expect to get an EVENT_SHOW for the tooltip. 
-      // In event callback the tooltip's accessible will be ready.
-      event = nsIAccessibleEvent::EVENT_ASYNCH_SHOW;
-    }
-    if (event) {
-      nsAccUtils::FireAccEvent(event, accessible);
-    }
+    HandlePopupShownEvent(accessible);
   }
   else if (eventType.EqualsLiteral("DOMMenuInactive")) {
     if (nsAccUtils::Role(accessible) == nsIAccessibleRole::ROLE_MENUPOPUP) {
@@ -1099,6 +1073,94 @@ NS_IMETHODIMP nsRootAccessible::FireDocLoadEvents(PRUint32 aEventType)
   // Root chrome: don't fire event
   mIsContentLoaded = (aEventType == nsIAccessibleEvent::EVENT_DOCUMENT_LOAD_COMPLETE ||
                       aEventType == nsIAccessibleEvent::EVENT_DOCUMENT_LOAD_STOPPED);
+
+  return NS_OK;
+}
+
+nsresult
+nsRootAccessible::HandlePopupShownEvent(nsIAccessible *aAccessible)
+{
+  PRUint32 role = nsAccUtils::Role(aAccessible);
+
+  if (role == nsIAccessibleRole::ROLE_MENUPOPUP) {
+    // Don't fire menupopup events for combobox and autocomplete lists.
+    return nsAccUtils::FireAccEvent(nsIAccessibleEvent::EVENT_MENUPOPUP_START,
+                                    aAccessible);
+  }
+
+  if (role == nsIAccessibleRole::ROLE_TOOLTIP) {
+    // There is a single <xul:tooltip> node which Mozilla moves around.
+    // The accessible for it stays the same no matter where it moves. 
+    // AT's expect to get an EVENT_SHOW for the tooltip. 
+    // In event callback the tooltip's accessible will be ready.
+    return nsAccUtils::FireAccEvent(nsIAccessibleEvent::EVENT_ASYNCH_SHOW,
+                                    aAccessible);
+  }
+
+  if (role == nsIAccessibleRole::ROLE_COMBOBOX_LIST) {
+    // Fire expanded state change event for comboboxes and autocompeletes.
+    nsCOMPtr<nsIAccessible> comboboxAcc;
+    nsresult rv = aAccessible->GetParent(getter_AddRefs(comboboxAcc));
+    NS_ENSURE_SUCCESS(rv, rv);
+
+    PRUint32 comboboxRole = nsAccUtils::Role(comboboxAcc);
+    if (comboboxRole == nsIAccessibleRole::ROLE_COMBOBOX ||
+        comboboxRole == nsIAccessibleRole::ROLE_AUTOCOMPLETE) {
+      nsCOMPtr<nsIAccessibleStateChangeEvent> event =
+        new nsAccStateChangeEvent(comboboxAcc,
+                                  nsIAccessibleStates::STATE_EXPANDED,
+                                  PR_FALSE, PR_TRUE);
+      NS_ENSURE_TRUE(event, NS_ERROR_OUT_OF_MEMORY);
+
+      nsCOMPtr<nsPIAccessible> pComboboxAcc(do_QueryInterface(comboboxAcc));
+
+      return pComboboxAcc->FireAccessibleEvent(event);
+    }
+  }
+
+  return NS_OK;
+}
+
+nsresult
+nsRootAccessible::HandlePopupHidingEvent(nsIDOMNode *aNode,
+                                         nsIAccessible *aAccessible)
+{
+  // If accessible focus was on or inside popup that closes, then restore it
+  // to true current focus. This is the case when we've been getting
+  // DOMMenuItemActive events inside of a combo box that closes. The real focus
+  // is on the combo box. It's also the case when a popup gets focus in ATK --
+  // when it closes we need to fire an event to restore focus to where it was.
+  if (gLastFocusedNode &&
+      nsCoreUtils::IsAncestorOf(aNode, gLastFocusedNode)) {
+    // Focus was on or inside of a popup that's being hidden
+    FireCurrentFocusEvent();
+  }
+
+  // Fire expanded state change event for comboboxes and autocompletes.
+  if (!aAccessible)
+    return NS_OK;
+
+  PRUint32 role = nsAccUtils::Role(aAccessible);
+  if (role != nsIAccessibleRole::ROLE_COMBOBOX_LIST)
+    return NS_OK;
+
+  nsCOMPtr<nsIAccessible> comboboxAcc;
+  nsresult rv = aAccessible->GetParent(getter_AddRefs(comboboxAcc));
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  PRUint32 comboboxRole = nsAccUtils::Role(comboboxAcc);
+  if (comboboxRole == nsIAccessibleRole::ROLE_COMBOBOX ||
+      comboboxRole == nsIAccessibleRole::ROLE_AUTOCOMPLETE) {
+    nsCOMPtr<nsIAccessibleStateChangeEvent> event =
+      new nsAccStateChangeEvent(comboboxAcc,
+                                nsIAccessibleStates::STATE_EXPANDED,
+                                PR_FALSE, PR_FALSE);
+    NS_ENSURE_TRUE(event, NS_ERROR_OUT_OF_MEMORY);
+
+    nsCOMPtr<nsPIAccessible> pComboboxAcc(do_QueryInterface(comboboxAcc));
+
+    return pComboboxAcc->FireAccessibleEvent(event);
+  }
 
   return NS_OK;
 }
