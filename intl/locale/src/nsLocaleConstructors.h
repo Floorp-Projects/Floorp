@@ -69,6 +69,8 @@
 #endif
 
 #ifdef USE_MAC_LOCALE
+// We currently do not define USE_UCCOLLATIONKEY because it causes crashes.
+// See bug 128323 and bug 255192
 #ifdef USE_UCCOLLATIONKEY
 #include "nsCollationMacUC.h"
 #else
