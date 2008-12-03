@@ -1,0 +1,53 @@
+<!DOCTYPE HTML>
+<html>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=448993
+-->
+<head>
+  <title>Test for Bug 448993</title>
+  <script type="application/javascript" src="/MochiKit/MochiKit.js"></script>
+  <script type="application/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
+</head>
+<body>
+<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=448993">Mozilla Bug 448993</a>
+<p id="display"></p>
+<div id="content" style="display: none">
+  
+</div>
+<pre id="test">
+<script type="application/javascript">
+
+/** Test for Bug 448993 **/
+
+function gc() {
+  netscape.security.PrivilegeManager.enablePrivilege("UniversalXPConnect");
+  window.QueryInterface(Components.interfaces.nsIInterfaceRequestor)
+        .getInterface(Components.interfaces.nsIDOMWindowUtils)
+        .garbageCollect();
+}
+
+function runTest() {
+  var a = document.getElementById("a");
+  var b = document.getElementById("b");
+  var c = document.getElementById("c")
+  var r = document.createRange();
+  r.setStart(b, 0); 
+  r.setEnd(a, 2); 
+  c.appendChild(b);
+  r.extractContents();
+  var s = document.createRange();
+  s.setEnd(b, 0); 
+  gc();
+  s.deleteContents();
+  SimpleTest.finish();
+}
+
+SimpleTest.waitForExplicitFinish();
+addLoadEvent(runTest);
+
+</script>
+</pre>
+<div id="a"><span id="b"></span><span id="c"></span></div>
+</body>
+</html>

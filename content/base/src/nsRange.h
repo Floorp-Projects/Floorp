@@ -110,7 +110,6 @@ public:
                               nsIContent* aContainer,
                               nsIContent* aChild,
                               PRInt32 aIndexInContainer);
-  virtual void NodeWillBeDestroyed(const nsINode* aNode);
   virtual void ParentChainChanged(nsIContent *aContent);
 
 private:
