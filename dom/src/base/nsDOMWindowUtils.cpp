@@ -57,6 +57,11 @@
 
 #include "nsIViewManager.h"
 
+#include "nsIDOMHTMLCanvasElement.h"
+#include "nsICanvasElement.h"
+#include "gfxContext.h"
+#include "gfxImageSurface.h"
+
 #if defined(MOZ_X11) && defined(MOZ_WIDGET_GTK2)
 #include <gdk/gdk.h>
 #include <gdk/gdkx.h>
@@ -564,4 +569,107 @@ nsDOMWindowUtils::ElementFromPoint(PRInt32 aX, PRInt32 aY,
   
   return doc->ElementFromPointHelper(aX, aY, aIgnoreRootScrollFrame, aFlushLayout,
                                      aReturn);
+}
+
+static already_AddRefed<gfxImageSurface>
+CanvasToImageSurface(nsIDOMHTMLCanvasElement *canvas)
+{
+  PRUint32 w, h;
+  nsresult rv;
+
+  nsCOMPtr<nsICanvasElement> elt = do_QueryInterface(canvas);
+  rv = elt->GetSize(&w, &h);
+  if (NS_FAILED(rv))
+    return nsnull;
+
+  nsRefPtr<gfxImageSurface> img = new gfxImageSurface(gfxIntSize(w, h), gfxASurface::ImageFormatARGB32);
+  if (img == nsnull)
+    return nsnull;
+
+  nsRefPtr<gfxContext> ctx = new gfxContext(img);
+  if (ctx == nsnull)
+    return nsnull;
+
+  ctx->SetOperator(gfxContext::OPERATOR_CLEAR);
+  ctx->Paint();
+
+  ctx->SetOperator(gfxContext::OPERATOR_OVER);
+  rv = elt->RenderContexts(ctx);
+  if (NS_FAILED(rv))
+    return nsnull;
+
+  ctx = nsnull;
+
+  return img.forget();
+}
+
+NS_IMETHODIMP
+nsDOMWindowUtils::CompareCanvases(nsIDOMHTMLCanvasElement *aCanvas1,
+                                  nsIDOMHTMLCanvasElement *aCanvas2,
+                                  PRUint32* aMaxDifference,
+                                  PRUint32* retVal)
+{
+  PRBool hasCap = PR_FALSE;
+  if (NS_FAILED(nsContentUtils::GetSecurityManager()->IsCapabilityEnabled("UniversalXPConnect", &hasCap)) || !hasCap)
+    return NS_ERROR_DOM_SECURITY_ERR;
+
+  if (aCanvas1 == nsnull ||
+      aCanvas2 == nsnull ||
+      retVal == nsnull)
+    return NS_ERROR_FAILURE;
+
+  nsRefPtr<gfxImageSurface> img1 = CanvasToImageSurface(aCanvas1);
+  nsRefPtr<gfxImageSurface> img2 = CanvasToImageSurface(aCanvas2);
+
+  if (img1 == nsnull || img2 == nsnull ||
+      img1->GetSize() != img2->GetSize() ||
+      img1->Stride() != img2->Stride())
+    return NS_ERROR_FAILURE;
+
+  int v;
+  gfxIntSize size = img1->GetSize();
+  PRUint32 stride = img1->Stride();
+
+  // we can optimize for the common all-pass case
+  if (stride == (PRUint32) size.width * 4) {
+    v = memcmp(img1->Data(), img2->Data(), size.width * size.height * 4);
+    if (v == 0) {
+      if (aMaxDifference)
+        *aMaxDifference = 0;
+      *retVal = 0;
+      return NS_OK;
+    }
+  }
+
+  PRUint32 dc = 0;
+  PRUint32 different = 0;
+
+  for (int j = 0; j < size.height; j++) {
+    unsigned char *p1 = img1->Data() + j*stride;
+    unsigned char *p2 = img2->Data() + j*stride;
+    v = memcmp(p1, p2, stride);
+
+    if (v) {
+      for (int i = 0; i < size.width; i++) {
+        if (*(PRUint32*) p1 != *(PRUint32*) p2) {
+
+          different++;
+
+          dc = PR_MAX(abs(p1[0] - p2[0]), dc);
+          dc = PR_MAX(abs(p1[1] - p2[1]), dc);
+          dc = PR_MAX(abs(p1[2] - p2[2]), dc);
+          dc = PR_MAX(abs(p1[3] - p2[3]), dc);
+        }
+
+        p1 += 4;
+        p2 += 4;
+      }
+    }
+  }
+
+  if (aMaxDifference)
+    *aMaxDifference = dc;
+
+  *retVal = different;
+  return NS_OK;
 }

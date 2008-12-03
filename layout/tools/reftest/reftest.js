@@ -81,7 +81,7 @@ var gServer;
 var gCount = 0;
 
 var gIOService;
-var gReftestHelper;
+var gWindowUtils;
 
 var gCurrentTestStartTime;
 var gSlowestTestTime = 0;
@@ -102,10 +102,12 @@ function OnRefTestLoad()
 
     gBrowser.addEventListener("load", OnDocumentLoad, true);
 
-     try {
-        gReftestHelper = CC[NS_REFTESTHELPER_CONTRACTID].getService(CI.nsIReftestHelper);
+    try {
+        gWindowUtils = window.QueryInterface(CI.nsIInterfaceRequestor).getInterface(CI.nsIDOMWindowUtils);
+        if (gWindowUtils && !gWindowUtils.compareCanvases)
+            gWindowUtils = null;
     } catch (e) {
-        gReftestHelper = null;
+        gWindowUtils = null;
     }
 
     var windowElem = document.documentElement;
@@ -532,8 +534,8 @@ function DocumentLoaded()
             // whether the two renderings match:
             var equal;
 
-            if (gReftestHelper) {
-                differences = gReftestHelper.compareCanvas(gCanvas1, gCanvas2);
+            if (gWindowUtils) {
+                differences = gWindowUtils.compareCanvases(gCanvas1, gCanvas2, {});
                 equal = (differences == 0);
             } else {
                 differences = -1;

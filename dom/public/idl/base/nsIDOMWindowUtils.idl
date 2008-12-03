@@ -46,6 +46,7 @@
  */
 
 interface nsIDOMElement;
+interface nsIDOMHTMLCanvasElement;
 
 [scriptable, uuid(440D036F-0879-4497-9364-35DE49F6849F)]
 interface nsIDOMWindowUtils : nsISupports {
@@ -275,4 +276,15 @@ interface nsIDOMWindowUtils : nsISupports {
                                  in long aY,
                                  in boolean aIgnoreRootScrollFrame,
                                  in boolean aFlushLayout);
+
+  /**
+   * Compare the two canvases, returning the number of differing pixels and
+   * the maximum difference in a channel.  This will throw an error if
+   * the dimensions of the two canvases are different.
+   *
+   * This method requires UniversalXPConnect privileges.
+   */
+  PRUint32 compareCanvases(in nsIDOMHTMLCanvasElement aCanvas1,
+                           in nsIDOMHTMLCanvasElement aCanvas2,
+                           out unsigned long aMaxDifference);
 };
