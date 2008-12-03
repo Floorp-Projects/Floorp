@@ -997,8 +997,9 @@ nsXULDocument::AttributeChanged(nsIDocument* aDocument,
     nsresult rv;
 
     // Synchronize broadcast listeners
-    if (mBroadcasterMap && CanBroadcast(aNameSpaceID, aAttribute)) {
-        nsCOMPtr<nsIDOMElement> domele = do_QueryInterface(aElement);
+    nsCOMPtr<nsIDOMElement> domele = do_QueryInterface(aElement);
+    if (domele && mBroadcasterMap &&
+        CanBroadcast(aNameSpaceID, aAttribute)) {
         BroadcasterMapEntry* entry =
             static_cast<BroadcasterMapEntry*>
                        (PL_DHashTableOperate(mBroadcasterMap, domele.get(),
@@ -1009,7 +1010,6 @@ nsXULDocument::AttributeChanged(nsIDocument* aDocument,
             nsAutoString value;
             PRBool attrSet = aElement->GetAttr(kNameSpaceID_None, aAttribute, value);
 
-            nsCOMArray<nsIContent> listenerArray;
             PRInt32 i;
             for (i = entry->mListeners.Count() - 1; i >= 0; --i) {
                 BroadcastListener* bl =
@@ -1017,26 +1017,17 @@ nsXULDocument::AttributeChanged(nsIDocument* aDocument,
 
                 if ((bl->mAttribute == aAttribute) ||
                     (bl->mAttribute == nsGkAtoms::_asterix)) {
-                    nsCOMPtr<nsIContent> listener
+                    nsCOMPtr<nsIDOMElement> listenerEl
                         = do_QueryReferent(bl->mListener);
-                    if (listener) {
-                      listenerArray.AppendObject(listener);
+                    if (listenerEl) {
+                      nsDelayedBroadcastUpdate delayedUpdate(domele,
+                                                             listenerEl,
+                                                             aAttribute,
+                                                             value,
+                                                             attrSet);
+                      mDelayedAttrChangeBroadcasts.AppendElement(delayedUpdate);
                     }
                 }
-            }
-
-            for (i = 0; i < listenerArray.Count(); ++i) {
-                nsIContent* listener = listenerArray[i];
-                if (attrSet) {
-                    listener->SetAttr(kNameSpaceID_None, aAttribute, value,
-                                      PR_TRUE);
-                }
-                else {
-                    listener->UnsetAttr(kNameSpaceID_None, aAttribute,
-                                        PR_TRUE);
-                }
-                nsCOMPtr<nsIDOMElement> listenerEl = do_QueryInterface(listener);
-                ExecuteOnBroadcastHandlerFor(aElement, listenerEl, aAttribute);
             }
         }
     }
@@ -3284,7 +3275,33 @@ nsXULDocument::EndUpdate(nsUpdateType aUpdateType)
 {
     nsXMLDocument::EndUpdate(aUpdateType);
     if (mUpdateNestLevel == 0) {
-        PRUint32 length = mDelayedBroadcasters.Length();
+        PRUint32 length = mDelayedAttrChangeBroadcasts.Length();
+        if (length) {
+          nsTArray<nsDelayedBroadcastUpdate> delayedAttrChangeBroadcasts;
+            mDelayedAttrChangeBroadcasts.SwapElements(
+                                             delayedAttrChangeBroadcasts);
+            for (PRUint32 i = 0; i < length; ++i) {
+                nsCOMPtr<nsIContent> listener =
+                    do_QueryInterface(delayedAttrChangeBroadcasts[i].mListener);
+                nsIAtom* attrName = delayedAttrChangeBroadcasts[i].mAttrName;
+                nsString value = delayedAttrChangeBroadcasts[i].mAttr;
+                if (delayedAttrChangeBroadcasts[i].mSetAttr) {
+                    listener->SetAttr(kNameSpaceID_None, attrName, value,
+                                      PR_TRUE);
+                }
+                else {
+                    listener->UnsetAttr(kNameSpaceID_None, attrName,
+                                        PR_TRUE);
+                }
+                nsCOMPtr<nsIContent> broadcaster =
+                    do_QueryInterface(delayedAttrChangeBroadcasts[i].mBroadcaster);
+                ExecuteOnBroadcastHandlerFor(broadcaster,
+                                             delayedAttrChangeBroadcasts[i].mListener,
+                                             attrName);
+            }
+        }
+
+        length = mDelayedBroadcasters.Length();
         if (length) {
             nsTArray<nsDelayedBroadcastUpdate> delayedBroadcasters;
             mDelayedBroadcasters.SwapElements(delayedBroadcasters);
