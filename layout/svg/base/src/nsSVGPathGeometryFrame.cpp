@@ -255,14 +255,13 @@ nsSVGPathGeometryFrame::UpdateCoveredRegion()
 
   static_cast<nsSVGPathGeometryElement*>(mContent)->ConstructPath(&context);
 
-  gfxRect extent;
+  gfxRect extent = gfxRect(0, 0, 0, 0);
 
   if (SetupCairoStrokeGeometry(&context)) {
     extent = context.GetUserStrokeExtent();
-  } else if (GetStyleSVG()->mFill.mType != eStyleSVGPaintType_None) {
-    extent = context.GetUserPathExtent();
-  } else {
-    extent = gfxRect(0, 0, 0, 0);
+  }
+  if (GetStyleSVG()->mFill.mType != eStyleSVGPaintType_None) {
+    extent = extent.Union(context.GetUserPathExtent());
   }
 
   if (!extent.IsEmpty()) {
