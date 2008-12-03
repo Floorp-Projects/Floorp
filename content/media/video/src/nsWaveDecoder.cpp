@@ -379,7 +379,10 @@ nsWaveStateMachine::Seek(float aTime)
 {
   nsAutoMonitor monitor(mMonitor);
   mNextState = mState;
-  mTimeOffset = aTime;
+  mTimeOffset = NS_MIN(aTime, BytesToTime(mWaveLength));
+  if (mTimeOffset < 0.0) {
+    mTimeOffset = 0.0;
+  }
   ChangeState(STATE_SEEKING);
 }
 
@@ -570,6 +573,7 @@ nsWaveStateMachine::Run()
         }
 
         PRInt64 position = RoundDownToSample(TimeToBytes(mTimeOffset)) + mWavePCMOffset;
+        NS_ABORT_IF_FALSE(position >= 0 && position <= mWaveLength + mWavePCMOffset, "Invalid seek position");
 
         monitor.Exit();
         nsresult rv = mStream->Seek(nsISeekableStream::NS_SEEK_SET, position);
@@ -606,7 +610,7 @@ nsWaveStateMachine::Run()
         monitor.Exit();
         mAudioStream->Drain();
         monitor.Enter();
-        mTimeOffset = mAudioStream->GetTime();
+        mTimeOffset += mAudioStream->GetTime();
       }
 
       // Dispose the audio stream early (before SHUTDOWN) so that
@@ -635,7 +639,7 @@ nsWaveStateMachine::Run()
 
     case STATE_SHUTDOWN:
       if (mAudioStream) {
-        mTimeOffset = mAudioStream->GetTime();
+        mTimeOffset += mAudioStream->GetTime();
       }
       CloseAudioStream();
       return NS_OK;
@@ -951,7 +955,7 @@ nsWaveDecoder::GetCurrentTime()
 nsresult
 nsWaveDecoder::Seek(float aTime)
 {
-  if (mPlaybackStateMachine && aTime >= 0.0) {
+  if (mPlaybackStateMachine) {
     mPlaybackStateMachine->Seek(aTime);
     return NS_OK;
   }
