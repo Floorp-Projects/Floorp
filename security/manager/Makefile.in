@@ -55,7 +55,12 @@ SMIME3_LIB = $(DLL_PREFIX)smime3$(DLL_SUFFIX)
 SSL3_LIB =  $(DLL_PREFIX)ssl3$(DLL_SUFFIX)
 SOFTOKEN3_LIB = $(DLL_PREFIX)softokn3$(DLL_SUFFIX)
 SOFTOKEN3_CHK = $(DLL_PREFIX)softokn3.chk
+
+ifndef NSS_DISABLE_DBM
 NSSDBM3_LIB = $(DLL_PREFIX)nssdbm3$(DLL_SUFFIX)
+else
+NSSDBM3_LIB = 
+endif
 
 ifndef MOZ_NATIVE_NSS
 ifneq (,$(filter OS2 WINCE WINNT,$(OS_ARCH)))
@@ -163,6 +168,9 @@ DEFAULT_GMAKE_FLAGS += NSPR_LIB_DIR=$(NSPR_LIB_DIR)
 DEFAULT_GMAKE_FLAGS += MOZILLA_CLIENT=1
 DEFAULT_GMAKE_FLAGS += NO_MDUPDATE=1
 DEFAULT_GMAKE_FLAGS += NSS_ENABLE_ECC=1
+ifdef NSS_DISABLE_DBM 
+DEFAULT_GMAKE_FLAGS += NSS_DISABLE_DBM=1
+endif
 ABS_topsrcdir   := $(shell cd $(topsrcdir); pwd)
 ifneq ($(ABS_topsrcdir),$(MOZ_BUILD_ROOT))
 DEFAULT_GMAKE_FLAGS += BUILD_TREE=$(MOZ_BUILD_ROOT)
@@ -263,7 +271,9 @@ endif
 libs::
 ifndef MOZ_NATIVE_NSS
 	$(MAKE) -C $(topsrcdir)/security/coreconf $(DEFAULT_GMAKE_FLAGS)
+ifndef NSS_DISABLE_DBM
 	$(MAKE) -C $(topsrcdir)/security/dbm $(DEFAULT_GMAKE_FLAGS) 
+endif
 	$(MAKE) -C $(topsrcdir)/security/nss/lib $(DEFAULT_GMAKE_FLAGS)
 ifdef ENABLE_TESTS
 	# Need certutil binary for mochitest certificates generation
@@ -282,7 +292,9 @@ ifndef SKIP_CHK
 	$(INSTALL) -m 644 $(DIST)/lib/$(SOFTOKEN3_CHK) $(DIST)/bin
 endif
 	$(INSTALL) -m 755 $(DIST)/lib/$(SOFTOKEN3_LIB) $(DIST)/bin
+ifndef NSS_DISABLE_DBM
 	$(INSTALL) -m 755 $(DIST)/lib/$(NSSDBM3_LIB) $(DIST)/bin
+endif
 	$(INSTALL) -m 755 $(DIST)/lib/$(NSS3_LIB) $(DIST)/bin
 	$(INSTALL) -m 755 $(DIST)/lib/$(NSSUTIL3_LIB) $(DIST)/bin
 	$(INSTALL) -m 755 $(DIST)/lib/$(SSL3_LIB) $(DIST)/bin
