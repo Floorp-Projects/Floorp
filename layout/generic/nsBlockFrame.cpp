@@ -4235,7 +4235,7 @@ nsBlockFrame::HandleOverflowPlaceholdersForPulledFrame(
 #ifdef DEBUG
   nsresult rv =
 #endif
-    parent->DoRemoveFrame(frame, PR_FALSE);
+    parent->DoRemoveFrame(frame, PERSERVE_REMOVED_FRAMES);
   NS_ASSERTION(NS_SUCCEEDED(rv), "frame should be in parent's lists");
   
   nsIFrame* lastOverflowPlace = aState.mOverflowPlaceholders.LastChild();
@@ -5029,7 +5029,7 @@ nsBlockFrame::RemoveFrame(nsIAtom*  aListName,
 
   if (nsnull == aListName) {
     PRBool hasFloats = BlockHasAnyFloats(aOldFrame);
-    rv = DoRemoveFrame(aOldFrame, PR_TRUE, PR_FALSE);
+    rv = DoRemoveFrame(aOldFrame, REMOVE_FIXED_CONTINUATIONS);
     if (hasFloats) {
       MarkSameSpaceManagerLinesDirty(this);
     }
@@ -5053,7 +5053,7 @@ nsBlockFrame::RemoveFrame(nsIAtom*  aListName,
 #ifdef IBMBIDI
   else if (nsGkAtoms::nextBidi == aListName) {
     // Skip the call to |FrameNeedsReflow| below by returning now.
-    return DoRemoveFrame(aOldFrame, PR_TRUE, PR_FALSE);
+    return DoRemoveFrame(aOldFrame, REMOVE_FIXED_CONTINUATIONS);
   }
 #endif // IBMBIDI
   else {
@@ -5270,8 +5270,9 @@ static nsresult RemoveBlockChild(nsIFrame* aFrame, PRBool aDestroyFrames,
   nsBlockFrame* nextBlock = nsLayoutUtils::GetAsBlock(aFrame->GetParent());
   NS_ASSERTION(nextBlock,
                "Our child's continuation's parent is not a block?");
-  return nextBlock->DoRemoveFrame(aFrame, aDestroyFrames,
-                                  aRemoveOnlyFluidContinuations);
+  return nextBlock->DoRemoveFrame(aFrame,
+      (aDestroyFrames ? 0 : nsBlockFrame::PERSERVE_REMOVED_FRAMES) |
+      (aRemoveOnlyFluidContinuations ? 0 : nsBlockFrame::REMOVE_FIXED_CONTINUATIONS));
 }
 
 // This function removes aDeletedFrame and all its continuations.  It
@@ -5282,19 +5283,19 @@ static nsresult RemoveBlockChild(nsIFrame* aFrame, PRBool aDestroyFrames,
 // start by locating aDeletedFrame and then scanning from that point
 // on looking for continuations.
 nsresult
-nsBlockFrame::DoRemoveFrame(nsIFrame* aDeletedFrame, PRBool aDestroyFrames,
-                            PRBool aRemoveOnlyFluidContinuations)
+nsBlockFrame::DoRemoveFrame(nsIFrame* aDeletedFrame, PRUint32 aFlags)
 {
   // Clear our line cursor, since our lines may change.
   ClearLineCursor();
 
   nsPresContext* presContext = PresContext();
   if (NS_FRAME_IS_OVERFLOW_CONTAINER & aDeletedFrame->GetStateBits()) {
-    if (aDestroyFrames) {
+    if (!(aFlags & PERSERVE_REMOVED_FRAMES)) {
       nsIFrame* nif = aDeletedFrame->GetNextInFlow();
       if (nif)
         static_cast<nsContainerFrame*>(nif->GetParent())
-          ->nsContainerFrame::DeleteNextInFlowChild(presContext, nif);
+          ->nsContainerFrame::DeleteNextInFlowChild(presContext, nif,
+              (aFlags & FRAMES_ARE_EMPTY) != 0);
       nsresult rv = nsContainerFrame::StealFrame(presContext, aDeletedFrame);
       NS_ENSURE_SUCCESS(rv, rv);
       aDeletedFrame->Destroy();
@@ -5311,7 +5312,8 @@ nsBlockFrame::DoRemoveFrame(nsIFrame* aDeletedFrame, PRBool aDestroyFrames,
   }
 
   if (aDeletedFrame->GetStateBits() & NS_FRAME_OUT_OF_FLOW) {
-    NS_ASSERTION(aDestroyFrames, "We can't not destroy out of flows");
+    NS_ASSERTION(!(aFlags & PERSERVE_REMOVED_FRAMES),
+                 "We can't not destroy out of flows");
     DoRemoveOutOfFlowFrame(aDeletedFrame);
     return NS_OK;
   }
@@ -5323,13 +5325,13 @@ nsBlockFrame::DoRemoveFrame(nsIFrame* aDeletedFrame, PRBool aDestroyFrames,
     nsFrameList* overflowPlaceholders = GetOverflowPlaceholders();
     if (overflowPlaceholders && overflowPlaceholders->RemoveFrame(aDeletedFrame)) {
       nsIFrame* nif = aDeletedFrame->GetNextInFlow();
-      if (aDestroyFrames) {
+      if (!(aFlags & PERSERVE_REMOVED_FRAMES)) {
         aDeletedFrame->Destroy();
       } else {
         aDeletedFrame->SetNextSibling(nsnull);
       }
-      return RemoveBlockChild(nif, aDestroyFrames,
-                              aRemoveOnlyFluidContinuations);
+      return RemoveBlockChild(nif, !(aFlags & PERSERVE_REMOVED_FRAMES),
+                              !(aFlags & REMOVE_FIXED_CONTINUATIONS));
     }
   }
   
@@ -5362,11 +5364,13 @@ found_frame:;
     return NS_ERROR_FAILURE;
   }
   
-  if (line != line_start) {
-    line.prev()->SetInvalidateTextRuns(PR_TRUE);
-  }
-  else if (searchingOverflowList && !mLines.empty()) {
-    mLines.back()->SetInvalidateTextRuns(PR_TRUE);
+  if (!(aFlags & FRAMES_ARE_EMPTY)) {
+    if (line != line_start) {
+      line.prev()->SetInvalidateTextRuns(PR_TRUE);
+    }
+    else if (searchingOverflowList && !mLines.empty()) {
+      mLines.back()->SetInvalidateTextRuns(PR_TRUE);
+    }
   }
 
   if (prevSibling && !prevSibling->GetNextSibling()) {
@@ -5380,7 +5384,9 @@ found_frame:;
     NS_ASSERTION(this == aDeletedFrame->GetParent(), "messed up delete code");
     NS_ASSERTION(line->Contains(aDeletedFrame), "frame not in line");
 
-    line->SetInvalidateTextRuns(PR_TRUE);
+    if (!(aFlags & FRAMES_ARE_EMPTY)) {
+      line->SetInvalidateTextRuns(PR_TRUE);
+    }
 
     // If the frame being deleted is the last one on the line then
     // optimize away the line->Contains(next-in-flow) call below.
@@ -5420,8 +5426,8 @@ found_frame:;
 
     // Destroy frame; capture its next continuation first in case we need
     // to destroy that too.
-    nsIFrame* deletedNextContinuation = aRemoveOnlyFluidContinuations ?
-      aDeletedFrame->GetNextInFlow() : aDeletedFrame->GetNextContinuation();
+    nsIFrame* deletedNextContinuation = (aFlags & REMOVE_FIXED_CONTINUATIONS) ?
+        aDeletedFrame->GetNextContinuation() : aDeletedFrame->GetNextInFlow();
 #ifdef NOISY_REMOVE_FRAME
     printf("DoRemoveFrame: %s line=%p frame=",
            searchingOverflowList?"overflow":"normal", line.get());
@@ -5429,10 +5435,10 @@ found_frame:;
     printf(" prevSibling=%p deletedNextContinuation=%p\n", prevSibling, deletedNextContinuation);
 #endif
 
-    if (aDestroyFrames) {
-      aDeletedFrame->Destroy();
-    } else {
+    if (aFlags & PERSERVE_REMOVED_FRAMES) {
       aDeletedFrame->SetNextSibling(nsnull);
+    } else {
+      aDeletedFrame->Destroy();
     }
     aDeletedFrame = deletedNextContinuation;
 
@@ -5489,8 +5495,9 @@ found_frame:;
       // Continuations for placeholder frames don't always appear in
       // consecutive lines. So for placeholders, just continue the slow easy way.
       if (isPlaceholder) {
-        return RemoveBlockChild(deletedNextContinuation, aDestroyFrames,
-                                aRemoveOnlyFluidContinuations);
+        return RemoveBlockChild(deletedNextContinuation,
+                                !(aFlags & PERSERVE_REMOVED_FRAMES),
+                                !(aFlags & REMOVE_FIXED_CONTINUATIONS));
       }
 
       // See if we should keep looking in the current flow's line list.
@@ -5529,8 +5536,8 @@ found_frame:;
       }
     }
   }
-  
-  if (line.next() != line_end) {
+
+  if (!(aFlags & FRAMES_ARE_EMPTY) && line.next() != line_end) {
     line.next()->SetInvalidateTextRuns(PR_TRUE);
   }
 
@@ -5539,8 +5546,8 @@ found_frame:;
 #endif
 
   // Advance to next flow block if the frame has more continuations
-  return RemoveBlockChild(aDeletedFrame, aDestroyFrames,
-                          aRemoveOnlyFluidContinuations);
+  return RemoveBlockChild(aDeletedFrame, !(aFlags & PERSERVE_REMOVED_FRAMES),
+                          !(aFlags & REMOVE_FIXED_CONTINUATIONS));
 }
 
 nsresult
@@ -5618,15 +5625,18 @@ nsBlockFrame::StealFrame(nsPresContext* aPresContext,
 
 void
 nsBlockFrame::DeleteNextInFlowChild(nsPresContext* aPresContext,
-                                    nsIFrame*       aNextInFlow)
+                                    nsIFrame*      aNextInFlow,
+                                    PRBool         aDeletingEmptyFrames)
 {
   NS_PRECONDITION(aNextInFlow->GetPrevInFlow(), "bad next-in-flow");
 
   if (NS_FRAME_IS_OVERFLOW_CONTAINER & aNextInFlow->GetStateBits()) {
-    nsContainerFrame::DeleteNextInFlowChild(aPresContext, aNextInFlow);
+    nsContainerFrame::DeleteNextInFlowChild(aPresContext,
+        aNextInFlow, aDeletingEmptyFrames);
   }
   else {
-    DoRemoveFrame(aNextInFlow);
+    DoRemoveFrame(aNextInFlow,
+        aDeletingEmptyFrames ? FRAMES_ARE_EMPTY : 0);
   }
 }
 
@@ -5770,7 +5780,7 @@ nsBlockFrame::ReflowFloat(nsBlockReflowState& aState,
     nsIFrame* nextInFlow = aPlaceholder->GetNextInFlow();
     if (nextInFlow) {
       static_cast<nsHTMLContainerFrame*>(nextInFlow->GetParent())
-        ->DeleteNextInFlowChild(aState.mPresContext, nextInFlow);
+        ->DeleteNextInFlowChild(aState.mPresContext, nextInFlow, PR_TRUE);
       // that takes care of all subsequent nextinflows too
     }
   }
