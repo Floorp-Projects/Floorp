@@ -232,16 +232,33 @@ if test "$COMPILE_ENVIRONMENT"; then
 dnl Do some special WinCE toolchain stuff
 case "$target" in
 *wince)
+
+    MOZ_ARG_WITH_STRING(wince-sdk,
+    [  --with-wince-sdk=WINCE_SDK
+                        The path to the windows mobile sdk],
+    WINCE_SDK=$withval)
+
+    export WINCE=1
+    mk_add_options WINCE=1
+
     echo -----------------------------------------------------------------------------
     echo Building Windows CE Shunt Library and Tool Chain
-    echo -----------------------------------------------------------------------------
+    echo Using SDK in:
+    echo $WINCE_SDK
 
     ac_exeext=.exe
+
+    
+    rm -f $srcdir/build/wince/shunt/include/windows.h
 
     echo -n "#define TOPSRCDIR \"" > $srcdir/build/wince/tools/topsrcdir.h
     echo `cd "$_topsrcdir" && pwd -W | tr '\n' '\"'` >> $srcdir/build/wince/tools/topsrcdir.h
     make -C $srcdir/build/wince/tools
+    
+    echo "#include \"$WINCE_SDK/windows.h\"" > $srcdir/build/wince/shunt/include/windows.h
+    echo "#define GetProcAddress GetProcAddressA" >> $srcdir/build/wince/shunt/include/windows.h
     echo -----------------------------------------------------------------------------
+
     ;;
 esac
 
@@ -7892,6 +7909,7 @@ AC_SUBST(MOZ_POST_DSO_LIB_COMMAND)
 AC_SUBST(MOZ_POST_PROGRAM_COMMAND)
 AC_SUBST(MOZ_TIMELINE)
 AC_SUBST(WINCE)
+AC_SUBST(WINCE_SDK)
 AC_SUBST(TARGET_DEVICE)
 
 AC_SUBST(MOZ_APP_NAME)
