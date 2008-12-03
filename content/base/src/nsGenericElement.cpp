@@ -2802,7 +2802,9 @@ nsGenericElement::doPreHandleEvent(nsIContent* aContent,
     }
   }
 
-  nsCOMPtr<nsIContent> parent = aContent->GetParent();
+  nsIContent* parent = aContent->GetParent();
+  // Event may need to be retargeted if aContent is the root of a native
+  // anonymous content subtree or event is dispatched somewhere inside XBL.
   if (isAnonForEvents) {
     // If a DOM event is explicitly dispatched using node.dispatchEvent(), then
     // all the events are allowed even in the native anonymous content..
@@ -2810,7 +2812,7 @@ nsGenericElement::doPreHandleEvent(nsIContent* aContent,
                  aVisitor.mDOMEvent,
                  "Mutation event dispatched in native anonymous content!?!");
     aVisitor.mEventTargetAtParent = parent;
-  } else if (parent) {
+  } else if (parent && aVisitor.mOriginalTargetIsInAnon) {
     nsCOMPtr<nsIContent> content(do_QueryInterface(aVisitor.mEvent->target));
     if (content && content->GetBindingParent() == parent) {
       aVisitor.mEventTargetAtParent = parent;
