@@ -5155,6 +5155,14 @@ MOZ_ARG_DISABLE_BOOL(plugins,
     MOZ_PLUGINS=1)
 
 dnl ========================================================
+dnl = Disable building dbm
+dnl ========================================================
+MOZ_ARG_DISABLE_BOOL(dbm,
+[  --disable-dbm       Disable building dbm],
+    NSS_DISABLE_DBM=1,
+    NSS_DISABLE_DBM=)
+
+dnl ========================================================
 dnl = Open JVM Interface (OJI) support
 dnl ========================================================
 MOZ_ARG_DISABLE_BOOL(oji,
@@ -7987,6 +7995,7 @@ AC_SUBST(NSS_CFLAGS)
 AC_SUBST(NSS_LIBS)
 AC_SUBST(NSS_DEP_LIBS)
 AC_SUBST(MOZ_NATIVE_NSS)
+AC_SUBST(NSS_DISABLE_DBM)
 
 AC_SUBST(CFLAGS)
 AC_SUBST(CXXFLAGS)
