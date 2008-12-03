@@ -351,7 +351,7 @@ nsBlockReflowContext::ReflowBlock(const nsRect&       aSpace,
 /* XXX promote DeleteChildsNextInFlow to nsIFrame to elminate this cast */
         aState.mOverflowTracker.Finish(mFrame);
         static_cast<nsHTMLContainerFrame*>(kidNextInFlow->GetParent())
-          ->DeleteNextInFlowChild(mPresContext, kidNextInFlow);
+          ->DeleteNextInFlowChild(mPresContext, kidNextInFlow, PR_TRUE);
       }
     }
   }
