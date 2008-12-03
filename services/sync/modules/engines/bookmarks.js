@@ -1438,39 +1438,30 @@ BookmarksTracker.prototype = {
 
   /* Every add/remove/change is worth 10 points */
 
-  onItemAdded: function BMT_onEndUpdateBatch(itemId) {
-    this._log.debug("Adding item to queue: " + itemId);
+  onItemAdded: function BMT_onEndUpdateBatch(itemId, folder, index) {
+    this._log.debug("Item " + itemId + " added, adding to queue");
     this._score += 10;
-    let all = this._engine._store.wrap();
-    let record = yield this._engine._createRecord.async(this, self.cb, key, all[itemId]);
-    this._engine.outgoing.push(record);
+    //let all = this._engine._store.wrap();
+    //let record = yield this._engine._createRecord.async(this, self.cb, key, all[itemId]);
+    //this._engine.outgoing.push(record);
   },
 
-  onItemRemoved: function BMT_onItemRemoved(itemId) {
-    this._log.debug("Adding item to queue: " + itemId);
+  onItemRemoved: function BMT_onItemRemoved(itemId, folder, index) {
+    this._log.debug("Item " + itemId + " removed, adding to queue");
     this._score += 10;
-    let all = this._engine._store.wrap();
-    let record = yield this._engine._createRecord.async(this, self.cb, key, all[itemId]);
-    this._engine.outgoing.push(record);
   },
 
-  onItemChanged: function BMT_onItemChanged(itemId) {
-    this._log.debug("Adding item to queue: " + itemId);
+  onItemChanged: function BMT_onItemChanged(itemId, property, isAnnotationProperty, value) {
+    this._log.debug("Item " + itemId + " changed, adding to queue");
     this._score += 10;
-    let all = this._engine._store.wrap();
-    let record = yield this._engine._createRecord.async(this, self.cb, key, all[itemId]);
-    this._engine.outgoing.push(record);
   },
 
-  onItemMoved: function BMT_onItemMoved(itemId) {
-    this._log.debug("Adding item to queue: " + itemId);
+  onItemMoved: function BMT_onItemMoved(itemId, oldParent, oldIndex, newParent, newIndex) {
+    this._log.debug("Item " + itemId + " moved, adding to queue");
     this._score += 10;
-    let all = this._engine._store.wrap();
-    let record = yield this._engine._createRecord.async(this, self.cb, key, all[itemId]);
-    this._engine.outgoing.push(record);
   },
 
   onBeginUpdateBatch: function BMT_onBeginUpdateBatch() {},
   onEndUpdateBatch: function BMT_onEndUpdateBatch() {},
-  onItemVisited: function BMT_onItemVisited() {}
+  onItemVisited: function BMT_onItemVisited(itemId, aVisitID, time) {}
 };
