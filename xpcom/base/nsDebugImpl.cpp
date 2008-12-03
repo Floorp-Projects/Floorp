@@ -369,8 +369,11 @@ static void
 Abort(const char *aMsg)
 {
 #if defined(_WIN32)
+
+#ifndef WINCE
   //This should exit us
   raise(SIGABRT);
+#endif
   //If we are ignored exit this way..
   _exit(3);
 #elif defined(XP_UNIX)

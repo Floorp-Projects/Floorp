@@ -173,6 +173,9 @@ static nsresult GetKnownFolder(GUID* guid, nsILocalFile** aFile)
 static nsresult GetWindowsFolder(int folder, nsILocalFile** aFile)
 //----------------------------------------------------------------------------------------
 {
+#ifdef WINCE
+#define SHGetSpecialFolderPathW SHGetSpecialFolderPath
+#endif
     WCHAR path[MAX_PATH + 2];
     HRESULT result = SHGetSpecialFolderPathW(NULL, path, folder, true);
     
@@ -490,7 +493,13 @@ GetSpecialSystemDirectory(SystemDirectories aSystemSystemDirectory,
 #endif
 
         case OS_DriveDirectory:
-#if defined (XP_WIN)
+#if defined (WINCE)
+        {
+            return NS_NewLocalFile(nsDependentString(L"\\"),
+                                   PR_TRUE, 
+                                   aFile);
+        }
+#elif defined (XP_WIN)
         {
             PRInt32 len = ::GetWindowsDirectoryW(path, MAX_PATH);
             if (len == 0)
@@ -578,6 +587,15 @@ GetSpecialSystemDirectory(SystemDirectories aSystemSystemDirectory,
 #if defined (XP_WIN)
         case Win_SystemDirectory:
         {    
+#ifdef WINCE
+            PRUnichar winDirBuf[MAX_PATH];
+            nsAutoString winDir;
+            if (SHGetSpecialFolderPath(NULL, winDirBuf, CSIDL_WINDOWS, PR_TRUE))
+                winDir.Assign(winDirBuf);
+            else
+                winDir.Assign(L"\\Windows");
+            return NS_NewLocalFile(winDir, PR_TRUE, aFile);
+#else
             PRInt32 len = ::GetSystemDirectoryW(path, MAX_PATH);
         
             // Need enough space to add the trailing backslash
@@ -589,10 +607,20 @@ GetSpecialSystemDirectory(SystemDirectories aSystemSystemDirectory,
             return NS_NewLocalFile(nsDependentString(path, len), 
                                    PR_TRUE, 
                                    aFile);
+#endif
         }
 
         case Win_WindowsDirectory:
         {    
+#ifdef WINCE
+            PRUnichar winDirBuf[MAX_PATH];
+            nsAutoString winDir;
+            if (SHGetSpecialFolderPath(NULL, winDirBuf, CSIDL_WINDOWS, PR_TRUE))
+                winDir.Assign(winDirBuf);
+            else
+                winDir.Assign(L"\\Windows");
+            return NS_NewLocalFile(winDir, PR_TRUE, aFile);
+#else
             PRInt32 len = ::GetWindowsDirectoryW(path, MAX_PATH);
             
             // Need enough space to add the trailing backslash
@@ -605,6 +633,7 @@ GetSpecialSystemDirectory(SystemDirectories aSystemSystemDirectory,
             return NS_NewLocalFile(nsDependentString(path, len), 
                                    PR_TRUE, 
                                    aFile);
+#endif
         }
 
         case Win_ProgramFiles:

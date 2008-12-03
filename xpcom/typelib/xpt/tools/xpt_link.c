@@ -46,6 +46,11 @@
 #include <string.h>
 #include "prlong.h"
 
+#ifdef WINCE
+#include "windows.h"
+static void perror(const char* a) {}
+#endif
+
 #ifndef NULL
 #define NULL (void *) 0
 #endif
@@ -97,12 +102,28 @@ PRUint8 minor_version     = XPT_MINOR_VERSION;
 
 static size_t get_file_length(const char* filename)
 {
+#ifndef WINCE
     struct stat file_stat;
     if (stat(filename, &file_stat) != 0) {
         perror("FAILED: get_file_length");
         exit(1);
     }
     return file_stat.st_size;
+#else
+    DWORD fileSize;
+    HANDLE hFile = CreateFile(filename, 
+                              GENERIC_READ,
+                              0, 
+                              NULL,
+                              OPEN_EXISTING, 
+                              FILE_ATTRIBUTE_NORMAL, 
+                              NULL);
+    if (hFile == INVALID_HANDLE_VALUE)
+        return -1;
+    fileSize = GetFileSize(hFile,  NULL);
+    CloseHandle(hFile);
+    return fileSize;
+#endif
 }
 
 int 
