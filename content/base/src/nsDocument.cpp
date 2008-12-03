@@ -3197,9 +3197,9 @@ nsDocument::GetChildCount() const
 }
 
 nsIContent * const *
-nsDocument::GetChildArray() const
+nsDocument::GetChildArray(PRUint32* aChildCount) const
 {
-  return mChildren.GetChildArray();
+  return mChildren.GetChildArray(aChildCount);
 }
   
 

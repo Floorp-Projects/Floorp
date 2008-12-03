@@ -1039,8 +1039,8 @@ RuleProcessorData::GetNthIndex(PRBool aIsOfType, PRBool aIsFromEnd,
   PRInt32 result = 1;
   nsIContent* parent = mParentContent;
 
-  PRUint32 childCount = parent->GetChildCount();
-  nsIContent * const * curChildPtr = parent->GetChildArray();
+  PRUint32 childCount;
+  nsIContent * const * curChildPtr = parent->GetChildArray(&childCount);
 
 #ifdef DEBUG
   nsMutationGuard debugMutationGuard;
