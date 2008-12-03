@@ -4624,6 +4624,23 @@ nsTreeBodyFrame::FireInvalidateEvent(PRInt32 aStartRowIdx, PRInt32 aEndRowIdx,
 }
 #endif
 
+class nsOverflowChecker : public nsRunnable
+{
+public:
+  nsOverflowChecker(nsTreeBodyFrame* aFrame) : mFrame(aFrame) {}
+  NS_IMETHOD Run()
+  {
+    if (mFrame.IsAlive()) {
+      nsTreeBodyFrame* tree = static_cast<nsTreeBodyFrame*>(mFrame.GetFrame());
+      nsTreeBodyFrame::ScrollParts parts = tree->GetScrollParts();
+      tree->CheckOverflow(parts);
+    }
+    return NS_OK;
+  }
+private:
+  nsWeakFrame mFrame;
+};
+
 PRBool
 nsTreeBodyFrame::FullScrollbarsUpdate(PRBool aNeedsFullInvalidation)
 {
@@ -4636,6 +4653,6 @@ nsTreeBodyFrame::FullScrollbarsUpdate(PRBool aNeedsFullInvalidation)
   }
   InvalidateScrollbars(parts);
   NS_ENSURE_TRUE(weakFrame.IsAlive(), PR_FALSE);
-  CheckOverflow(parts);
+  nsContentUtils::AddScriptRunner(new nsOverflowChecker(this));
   return weakFrame.IsAlive();
 }
