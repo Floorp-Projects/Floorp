@@ -151,8 +151,8 @@ inline nsINode* NODE_FROM(C& aContent, D& aDocument)
 
 // IID for the nsINode interface
 #define NS_INODE_IID \
-{ 0x0f7b2557, 0xa09d, 0x468f, \
-  { 0x93, 0x92, 0xf1, 0xf1, 0xd1, 0xfa, 0x31, 0x78 } }
+{ 0xb4125da4, 0x6f86, 0x45aa, \
+ { 0xbb, 0x55, 0x80, 0x70, 0x44, 0x24, 0xe2, 0x47 } }
 
 /**
  * An internal interface that abstracts some DOMNode-related parts that both
@@ -244,9 +244,10 @@ public:
    * mutates (no attribute changes, not DOM tree changes, no script execution,
    * NOTHING), and will never ever peform an out-of-bounds access here.  This
    * method may return null if there are no children, or it may return a
-   * garbage pointer..
+   * garbage pointer.  In all cases the out param will be set to the number of
+   * children.
    */
-  virtual nsIContent * const * GetChildArray() const = 0;
+  virtual nsIContent * const * GetChildArray(PRUint32* aChildCount) const = 0;
 
   /**
    * Get the index of a child within this content
