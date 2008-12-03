@@ -45,6 +45,10 @@
 #include "nanojit/nanojit.h"
 #include "jstracer.h"
 
+#ifdef THIS
+#undef THIS
+#endif
+
 enum JSTNErrType { INFALLIBLE, FAIL_NULL, FAIL_NEG, FAIL_VOID, FAIL_JSVAL };
 enum { JSTN_ERRTYPE_MASK = 7, JSTN_MORE = 8 };
 

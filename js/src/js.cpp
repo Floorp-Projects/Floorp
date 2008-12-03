@@ -251,6 +251,8 @@ Process(JSContext *cx, JSObject *obj, char *filename, JSBool forceTTY)
 
     SetContextOptions(cx);
 
+#ifndef WINCE
+    /* windows mobile (and possibly other os's) does not have a TTY */
     if (!forceTTY && !isatty(fileno(file))) {
         /*
          * It's not interactive - just execute it.
@@ -283,6 +285,7 @@ Process(JSContext *cx, JSObject *obj, char *filename, JSBool forceTTY)
             fclose(file);
         return;
     }
+#endif /* WINCE */
 
     /* It's an interactive filehandle; drop into read-eval-print loop. */
     lineno = 1;
@@ -3966,8 +3969,9 @@ main(int argc, char **argv, char **envp)
 #endif /* JSDEBUGGER */
 
     CheckHelpMessages();
+#ifndef WINCE
     setlocale(LC_ALL, "");
-
+#endif
     gStackBase = (jsuword)&stackDummy;
 
 #ifdef XP_OS2
