@@ -425,6 +425,8 @@ nsIFrame*
 nsFrameIterator::GetFirstChild(nsIFrame* aFrame)
 {
   nsIFrame* result = GetFirstChildInner(aFrame);
+  if (mLockScroll && result && result->GetType() == nsGkAtoms::scrollFrame)
+    return nsnull;
   if (result && mFollowOOFs) {
     result = nsPlaceholderFrame::GetRealFrameFor(result);
     
@@ -438,6 +440,8 @@ nsIFrame*
 nsFrameIterator::GetLastChild(nsIFrame* aFrame)
 {
   nsIFrame* result = GetLastChildInner(aFrame);
+  if (mLockScroll && result && result->GetType() == nsGkAtoms::scrollFrame)
+    return nsnull;
   if (result && mFollowOOFs) {
     result = nsPlaceholderFrame::GetRealFrameFor(result);
     
