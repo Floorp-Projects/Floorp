@@ -18,6 +18,7 @@ classic.jar:
 +  skin/classic/global/customizeToolbar.css
 +  skin/classic/global/dialog.css
 +  skin/classic/global/dropmarker.css
++  skin/classic/global/filefield.css
 +  skin/classic/global/filepicker.css
 +  skin/classic/global/findBar.css
 +  skin/classic/global/global.css

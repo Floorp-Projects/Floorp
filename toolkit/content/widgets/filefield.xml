@@ -6,6 +6,9 @@
           xmlns:xul="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
 
   <binding id="filefield" extends="chrome://global/content/bindings/general.xml#basetext">
+    <resources>
+      <stylesheet src="chrome://global/skin/filefield.css"/>
+    </resources>
     <content>
       <xul:stringbundle anonid="bundle" src="chrome://global/locale/filefield.properties"/>
       <xul:hbox class="fileFieldContentBox" align="center" flex="1" xbl:inherits="disabled">
