@@ -431,7 +431,7 @@ nsSVGGlyphFrame::UpdateCoveredRegion()
   SetMatrixPropagation(PR_FALSE);
   CharacterIterator iter(this, PR_TRUE);
   
-  gfxRect extent;
+  gfxRect extent = gfxRect(0, 0, 0, 0);
 
   if (SetupCairoStrokeGeometry(tmpCtx)) {
     gfxFloat strokeWidth = tmpCtx->CurrentLineWidth();
@@ -439,12 +439,11 @@ nsSVGGlyphFrame::UpdateCoveredRegion()
     tmpCtx->SetLineWidth(strokeWidth);
     tmpCtx->IdentityMatrix();
     extent = tmpCtx->GetUserStrokeExtent();
-  } else if (GetStyleSVG()->mFill.mType != eStyleSVGPaintType_None) {
+  }
+  if (GetStyleSVG()->mFill.mType != eStyleSVGPaintType_None) {
     AddBoundingBoxesToPath(&iter, tmpCtx);
     tmpCtx->IdentityMatrix();
-    extent = tmpCtx->GetUserPathExtent();
-  } else {
-    extent = gfxRect(0, 0, 0, 0);
+    extent = extent.Union(tmpCtx->GetUserPathExtent());
   }
   SetMatrixPropagation(PR_TRUE);
 
