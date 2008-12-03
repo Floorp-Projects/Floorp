@@ -2,3 +2,6 @@
 != boxshadow-blur.html boxshadow-blur-notref.html
 == boxshadow-multiple.html boxshadow-multiple-ref.html
 == boxshadow-spread.html boxshadow-spread-ref.html
+== tableboxshadow-basic.html tableboxshadow-basic-ref.html
+== tableboxshadow-trshadow.html tableboxshadow-trshadow-ref.html
+== tableboxshadow-tdshadow.html tableboxshadow-tdshadow-ref.html
