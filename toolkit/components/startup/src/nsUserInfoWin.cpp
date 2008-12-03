@@ -56,6 +56,7 @@ NS_IMPL_ISUPPORTS1(nsUserInfo,nsIUserInfo)
 NS_IMETHODIMP
 nsUserInfo::GetUsername(char **aUsername)
 {
+#ifndef WINCE
     *aUsername = nsnull;
 
     PRUnichar username[256];
@@ -66,7 +67,7 @@ nsUserInfo::GetUsername(char **aUsername)
 
     *aUsername = ToNewUTF8String(nsDependentString(username));
     if (*aUsername) return NS_OK;
-
+#endif
     return NS_ERROR_FAILURE;
 }
 
