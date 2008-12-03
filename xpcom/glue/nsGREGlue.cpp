@@ -46,6 +46,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <wchar.h>
 
 #ifdef XP_WIN32
 # include <windows.h>
@@ -101,10 +102,17 @@ static PRBool safe_strncat(char *dest, const char *append, PRUint32 count)
   return *append == '\0';
 }
 
+#ifdef XP_WIN
+static PRBool
+CheckVersion(const PRUnichar* toCheck,
+             const GREVersionRange *versions,
+             PRUint32 versionsLength);
+#endif
 static PRBool
 CheckVersion(const char* toCheck,
              const GREVersionRange *versions,
              PRUint32 versionsLength);
+
 
 #if defined(XP_MACOSX)
 
@@ -142,7 +150,7 @@ GRE_GetPathFromRegKey(HKEY aRegKey,
                       PRUint32 versionsLength,
                       const GREProperty *properties,
                       PRUint32 propertiesLength,
-                      char* buffer, PRUint32 buflen);
+                      PRUnichar* buffer, PRUint32 buflen);
 
 #endif
 
@@ -421,28 +429,28 @@ GRE_GetGREPathWithProperties(const GREVersionRange *versions,
   // Please see http://www.mozilla.org/projects/embedding/GRE.html for
   // more info.
   //
-  if (::RegOpenKeyEx(HKEY_CURRENT_USER, GRE_WIN_REG_LOC, 0,
-                     KEY_READ, &hRegKey) == ERROR_SUCCESS) {
-    PRBool ok = GRE_GetPathFromRegKey(hRegKey,
-                                      versions, versionsLength,
-                                      allProperties, allPropertiesLength,
-                                      aBuffer, aBufLen);
-    ::RegCloseKey(hRegKey);
+  if (::RegOpenKeyExW(HKEY_CURRENT_USER, GRE_WIN_REG_LOC, 0,
+                      KEY_READ, &hRegKey) == ERROR_SUCCESS) {
+      PRBool ok = GRE_GetPathFromRegKey(hRegKey,
+                                        versions, versionsLength,
+                                        allProperties, allPropertiesLength,
+                                        (WCHAR*) NS_ConvertUTF8toUTF16(aBuffer).get(), aBufLen);
+      ::RegCloseKey(hRegKey);
 
-    if (ok)
-      return NS_OK;
+      if (ok)
+          return NS_OK;
   }
 
-  if (::RegOpenKeyEx(HKEY_LOCAL_MACHINE, GRE_WIN_REG_LOC, 0,
-                     KEY_ENUMERATE_SUB_KEYS, &hRegKey) == ERROR_SUCCESS) {
-    PRBool ok = GRE_GetPathFromRegKey(hRegKey,
-                                      versions, versionsLength,
-                                      allProperties, allPropertiesLength,
-                                      aBuffer, aBufLen);
-    ::RegCloseKey(hRegKey);
+  if (::RegOpenKeyExW(HKEY_LOCAL_MACHINE, GRE_WIN_REG_LOC, 0,
+                      KEY_ENUMERATE_SUB_KEYS, &hRegKey) == ERROR_SUCCESS) {
+      PRBool ok = GRE_GetPathFromRegKey(hRegKey,
+                                        versions, versionsLength,
+                                        allProperties, allPropertiesLength,
+                                        (WCHAR*) NS_ConvertUTF8toUTF16(aBuffer).get(), aBufLen);
+      ::RegCloseKey(hRegKey);
 
-    if (ok)
-      return NS_OK;
+      if (ok)
+          return NS_OK;
   }
 #endif
 
@@ -477,6 +485,38 @@ CheckVersion(const char* toCheck,
 
   return PR_FALSE;
 }
+
+#ifdef XP_WIN
+static PRBool
+CheckVersion(const PRUnichar* toCheck,
+             const GREVersionRange *versions,
+             PRUint32 versionsLength)
+{
+  
+  for (const GREVersionRange *versionsEnd = versions + versionsLength;
+       versions < versionsEnd;
+       ++versions) {
+      PRInt32 c = NS_CompareVersions(toCheck, NS_ConvertUTF8toUTF16(versions->lower).get());
+      if (c < 0)
+        continue;
+
+      if (!c && !versions->lowerInclusive)
+        continue;
+
+      c = NS_CompareVersions(toCheck, NS_ConvertUTF8toUTF16(versions->upper).get());
+      if (c > 0)
+        continue;
+
+      if (!c && !versions->upperInclusive)
+        continue;
+
+      return PR_TRUE;
+  }
+
+  return PR_FALSE;
+}
+#endif
+
 
 #ifdef XP_MACOSX
 PRBool
@@ -641,19 +681,19 @@ GRE_GetPathFromConfigFile(const char* filename,
 #elif defined(XP_WIN)
 
 static PRBool
-CopyWithEnvExpansion(char* aDest, const char* aSource, PRUint32 aBufLen,
+CopyWithEnvExpansion(PRUnichar* aDest, const PRUnichar* aSource, PRUint32 aBufLen,
                      DWORD aType)
 {
   switch (aType) {
   case REG_SZ:
-    if (strlen(aSource) >= aBufLen)
+    if (wcslen(aSource) >= aBufLen)
       return PR_FALSE;
 
-    strcpy(aDest, aSource);
+    wcscpy(aDest, aSource);
     return PR_TRUE;
 
   case REG_EXPAND_SZ:
-    if (ExpandEnvironmentStrings(aSource, aDest, aBufLen) > aBufLen)
+    if (ExpandEnvironmentStringsW(aSource, aDest, aBufLen) > aBufLen)
       return PR_FALSE;
 
     return PR_TRUE;
@@ -670,7 +710,7 @@ GRE_GetPathFromRegKey(HKEY aRegKey,
                       PRUint32 versionsLength,
                       const GREProperty *properties,
                       PRUint32 propertiesLength,
-                      char* aBuffer, PRUint32 aBufLen)
+                      PRUnichar* aBuffer, PRUint32 aBufLen)
 {
   // Formerly, GREs were registered at the registry key
   // HKLM/Software/mozilla.org/GRE/<version> valuepair GreHome=Path.
@@ -694,30 +734,30 @@ GRE_GetPathFromRegKey(HKEY aRegKey,
   DWORD i = 0;
 
   while (PR_TRUE) {
-    char name[MAXPATHLEN + 1];
+    PRUnichar name[MAXPATHLEN + 1];
     DWORD nameLen = MAXPATHLEN;
-    if (::RegEnumKeyEx(aRegKey, i, name, &nameLen, NULL, NULL, NULL, NULL) !=
-        ERROR_SUCCESS) {
-      break;
+    if (::RegEnumKeyExW(aRegKey, i, name, &nameLen, NULL, NULL, NULL, NULL) !=
+          ERROR_SUCCESS) {
+        break;
     }
 
     HKEY subKey = NULL;
-    if (::RegOpenKeyEx(aRegKey, name, 0, KEY_QUERY_VALUE, &subKey) !=
-        ERROR_SUCCESS) {
-      continue;
+    if (::RegOpenKeyExW(aRegKey, name, 0, KEY_QUERY_VALUE, &subKey) !=
+          ERROR_SUCCESS) {
+        continue;
     }
 
-    char version[40];
+    PRUnichar version[40];
     DWORD versionlen = 40;
-    char pathbuf[MAXPATHLEN];
+    PRUnichar pathbuf[MAXPATHLEN];
     DWORD pathlen;
     DWORD pathtype;
 
     PRBool ok = PR_FALSE;
 
-    if (::RegQueryValueEx(subKey, "Version", NULL, NULL,
-                          (BYTE*) version, &versionlen) == ERROR_SUCCESS &&
-        CheckVersion(version, versions, versionsLength)) {
+    if (::RegQueryValueExW(subKey, L"Version", NULL, NULL,
+                           (BYTE*) version, &versionlen) == ERROR_SUCCESS &&
+          CheckVersion(version, versions, versionsLength)) {
 
       ok = PR_TRUE;
       const GREProperty *props = properties;
@@ -725,22 +765,23 @@ GRE_GetPathFromRegKey(HKEY aRegKey,
       for (; ok && props < propsEnd; ++props) {
         pathlen = sizeof(pathbuf);
 
-        if (::RegQueryValueEx(subKey, props->property, NULL, &pathtype,
-                              (BYTE*) pathbuf, &pathlen) != ERROR_SUCCESS ||
-            strcmp(pathbuf, props->value))
-          ok = PR_FALSE;
+        if (::RegQueryValueExW(subKey, NS_ConvertUTF8toUTF16(props->property).get(), NULL, &pathtype,
+                               (BYTE*) pathbuf, &pathlen) != ERROR_SUCCESS ||
+              wcscmp(pathbuf,  NS_ConvertUTF8toUTF16(props->value).get()))
+            ok = PR_FALSE;
       }
 
       pathlen = sizeof(pathbuf);
       if (ok &&
-          (!::RegQueryValueEx(subKey, "GreHome", NULL, &pathtype,
+          (!::RegQueryValueExW(subKey, L"GreHome", NULL, &pathtype,
                               (BYTE*) pathbuf, &pathlen) == ERROR_SUCCESS ||
            !*pathbuf ||
            !CopyWithEnvExpansion(aBuffer, pathbuf, aBufLen, pathtype))) {
         ok = PR_FALSE;
       }
-      else if (!safe_strncat(aBuffer, "\\" XPCOM_DLL, aBufLen) ||
-               access(aBuffer, R_OK)) {
+      else if (!wcsncat(aBuffer, L"\\" LXPCOM_DLL, aBufLen) ||
+               _waccess(
+                        aBuffer, R_OK)) {
         ok = PR_FALSE;
       }
     }
