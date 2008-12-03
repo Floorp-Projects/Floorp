@@ -679,6 +679,18 @@ CanBroadcast(PRInt32 aNameSpaceID, nsIAtom* aAttribute)
     return PR_TRUE;
 }
 
+struct nsAttrNameInfo
+{
+  nsAttrNameInfo(PRInt32 aNamespaceID, nsIAtom* aName, nsIAtom* aPrefix) :
+    mNamespaceID(aNamespaceID), mName(aName), mPrefix(aPrefix) {}
+  nsAttrNameInfo(const nsAttrNameInfo& aOther) :
+    mNamespaceID(aOther.mNamespaceID), mName(aOther.mName),
+    mPrefix(aOther.mPrefix) {}
+  PRInt32           mNamespaceID;
+  nsCOMPtr<nsIAtom> mName;
+  nsCOMPtr<nsIAtom> mPrefix;
+};
+
 void
 nsXULDocument::SynchronizeBroadcastListener(nsIDOMElement   *aBroadcaster,
                                             nsIDOMElement   *aListener,
@@ -699,8 +711,9 @@ nsXULDocument::SynchronizeBroadcastListener(nsIDOMElement   *aBroadcaster,
 
     if (aAttr.EqualsLiteral("*")) {
         PRUint32 count = broadcaster->GetAttrCount();
-        while (count-- > 0) {
-            const nsAttrName* attrName = broadcaster->GetAttrNameAt(count);
+        nsTArray<nsAttrNameInfo> attributes(count);
+        for (PRUint32 i = 0; i < count; ++i) {
+            const nsAttrName* attrName = broadcaster->GetAttrNameAt(i);
             PRInt32 nameSpaceID = attrName->NamespaceID();
             nsIAtom* name = attrName->LocalName();
 
@@ -708,10 +721,19 @@ nsXULDocument::SynchronizeBroadcastListener(nsIDOMElement   *aBroadcaster,
             if (! CanBroadcast(nameSpaceID, name))
                 continue;
 
+            attributes.AppendElement(nsAttrNameInfo(nameSpaceID, name,
+                                                    attrName->GetPrefix()));
+        }
+
+        count = attributes.Length();
+        while (count-- > 0) {
+            PRInt32 nameSpaceID = attributes[count].mNamespaceID;
+            nsIAtom* name = attributes[count].mName;
             nsAutoString value;
-            broadcaster->GetAttr(nameSpaceID, name, value);
-            listener->SetAttr(nameSpaceID, name, attrName->GetPrefix(), value, 
-                              mInitialLayoutComplete);
+            if (broadcaster->GetAttr(nameSpaceID, name, value)) {
+              listener->SetAttr(nameSpaceID, name, attributes[count].mPrefix,
+                                value, mInitialLayoutComplete);
+            }
 
 #if 0
             // XXX we don't fire the |onbroadcast| handler during
