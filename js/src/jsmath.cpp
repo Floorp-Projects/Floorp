@@ -710,9 +710,9 @@ js_InitMathClass(JSContext *cx, JSObject *obj)
     if (!Math)
         return NULL;
     if (!JS_DefineProperty(cx, obj, js_Math_str, OBJECT_TO_JSVAL(Math),
-                           JS_PropertyStub, JS_PropertyStub,
-                           JSPROP_READONLY | JSPROP_PERMANENT))
+                           JS_PropertyStub, JS_PropertyStub, 0)) {
         return NULL;
+    }
 
     if (!JS_DefineFunctions(cx, Math, math_static_methods))
         return NULL;
