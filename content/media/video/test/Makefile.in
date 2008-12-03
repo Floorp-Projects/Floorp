@@ -45,14 +45,12 @@ include $(topsrcdir)/config/rules.mk
 
 _TEST_FILES = 	test_autoplay.html \
                 test_bug461281.html \
-                test_bug463162.xhtml \
                 test_constants.html \
                 test_controls.html \
                 test_currentTime.html \
                 test_duration1.html \
                 test_ended1.html \
                 test_ended2.html \
-                test_media_selection.html \
                 test_networkState.html \
                 test_paused.html \
                 test_readyState.html \
