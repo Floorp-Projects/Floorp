@@ -2685,11 +2685,11 @@ nsLayoutUtils::GetClosestLayer(nsIFrame* aFrame)
  * @param aPt a point in the same coordinate system as the rectangle
  */
 static gfxPoint
-MapToFloatImagePixels(const nsIntSize& aSize,
-                      const nsRect& aDest, const nsPoint& aPt)
+MapToFloatImagePixels(const gfxSize& aSize,
+                      const gfxRect& aDest, const gfxPoint& aPt)
 {
-  return gfxPoint((gfxFloat(aPt.x - aDest.x)*aSize.width)/aDest.width,
-                  (gfxFloat(aPt.y - aDest.y)*aSize.height)/aDest.height);
+  return gfxPoint(((aPt.x - aDest.pos.x)*aSize.width)/aDest.size.width,
+                  ((aPt.y - aDest.pos.y)*aSize.height)/aDest.size.height);
 }
 
 /**
@@ -2701,7 +2701,7 @@ MapToFloatImagePixels(const nsIntSize& aSize,
  * @param aPt a point in image space
  */
 static gfxPoint
-MapToFloatUserPixels(const nsIntSize& aSize,
+MapToFloatUserPixels(const gfxSize& aSize,
                      const gfxRect& aDest, const gfxPoint& aPt)
 {
   return gfxPoint(aPt.x*aDest.size.width/aSize.width + aDest.pos.x,
@@ -2723,6 +2723,11 @@ nsLayoutUtils::DrawImage(nsIRenderingContext* aRenderingContext,
   aRenderingContext->GetDeviceContext(*getter_AddRefs(dc));
   gfxFloat appUnitsPerDevPixel = dc->AppUnitsPerDevPixel();
   gfxContext *ctx = aRenderingContext->ThebesContext();
+
+  gfxRect devPixelDest(aDest.x/appUnitsPerDevPixel,
+                       aDest.y/appUnitsPerDevPixel,
+                       aDest.width/appUnitsPerDevPixel,
+                       aDest.height/appUnitsPerDevPixel);
 
   // Compute the pixel-snapped area that should be drawn
   gfxRect devPixelFill(aFill.x/appUnitsPerDevPixel,
@@ -2749,17 +2754,18 @@ nsLayoutUtils::DrawImage(nsIRenderingContext* aRenderingContext,
   nsCOMPtr<nsIImage> img(do_GetInterface(imgFrame));
   if (!img) return NS_ERROR_FAILURE;
 
-  nsIntSize imageSize;
-  aImage->GetWidth(&imageSize.width);
-  aImage->GetHeight(&imageSize.height);
-  if (imageSize.width == 0 || imageSize.height == 0)
+  nsIntSize intImageSize;
+  aImage->GetWidth(&intImageSize.width);
+  aImage->GetHeight(&intImageSize.height);
+  if (intImageSize.width == 0 || intImageSize.height == 0)
     return NS_OK;
+  gfxSize imageSize(intImageSize.width, intImageSize.height);
 
   // Compute the set of pixels that would be sampled by an ideal rendering
   gfxPoint subimageTopLeft =
-    MapToFloatImagePixels(imageSize, aDest, aFill.TopLeft());
+    MapToFloatImagePixels(imageSize, devPixelDest, aFill.TopLeft());
   gfxPoint subimageBottomRight =
-    MapToFloatImagePixels(imageSize, aDest, aFill.BottomRight());
+    MapToFloatImagePixels(imageSize, devPixelDest, aFill.BottomRight());
   nsIntRect intSubimage;
   intSubimage.MoveTo(NSToIntFloor(subimageTopLeft.x),
                      NSToIntFloor(subimageTopLeft.y));
@@ -2772,7 +2778,7 @@ nsLayoutUtils::DrawImage(nsIRenderingContext* aRenderingContext,
   gfxPoint anchorPoint(aAnchor.x/appUnitsPerDevPixel,
                        aAnchor.y/appUnitsPerDevPixel);
   gfxPoint imageSpaceAnchorPoint =
-    MapToFloatImagePixels(imageSize, aDest, aAnchor);
+    MapToFloatImagePixels(imageSize, devPixelDest, aAnchor);
   gfxContextMatrixAutoSaveRestore saveMatrix(ctx);
 
   if (didSnap) {
@@ -2780,10 +2786,6 @@ nsLayoutUtils::DrawImage(nsIRenderingContext* aRenderingContext,
                  "How did we snap, then?");
     imageSpaceAnchorPoint.Round();
     anchorPoint = imageSpaceAnchorPoint;
-    gfxRect devPixelDest(aDest.x/appUnitsPerDevPixel,
-                         aDest.y/appUnitsPerDevPixel,
-                         aDest.width/appUnitsPerDevPixel,
-                         aDest.height/appUnitsPerDevPixel);
     anchorPoint = MapToFloatUserPixels(imageSize, devPixelDest, anchorPoint);
     anchorPoint = saveMatrix.Matrix().Transform(anchorPoint);
     anchorPoint.Round();
