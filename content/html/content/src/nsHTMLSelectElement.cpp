@@ -1074,9 +1074,6 @@ nsHTMLSelectElement::SetOptionsSelectedByIndex(PRInt32 aStartIndex,
   if (optionsSelected || optionsDeselected) {
     if (aChangedSomething)
       *aChangedSomething = PR_TRUE;
-
-    // Dispatch an event to notify the subcontent that the selected item has changed
-    DispatchDOMEvent(NS_LITERAL_STRING("selectedItemChanged"));
   }
 
   return NS_OK;
