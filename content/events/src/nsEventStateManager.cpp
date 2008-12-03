@@ -2689,8 +2689,6 @@ nsEventStateManager::DoScrollText(nsPresContext* aPresContext,
     else
       scrollView->ScrollByLines(scrollX, scrollY,
                                 NS_VMREFRESH_SMOOTHSCROLL | NS_VMREFRESH_DEFERRED);
-
-    ForceViewUpdate(scrollView->View());
   }
   if (passToParent) {
     nsresult rv;
@@ -5441,20 +5439,6 @@ nsEventStateManager::GetRegisteredAccessKey(nsIContent* aContent,
   aContent->GetAttr(kNameSpaceID_None, nsGkAtoms::accesskey, accessKey);
   *aKey = accessKey.First();
   return NS_OK;
-}
-
-void
-nsEventStateManager::ForceViewUpdate(nsIView* aView)
-{
-  // force the update to happen now, otherwise multiple scrolls can
-  // occur before the update is processed. (bug #7354)
-
-  nsIViewManager* vm = aView->GetViewManager();
-  if (vm) {
-    // I'd use Composite here, but it doesn't always work.
-    // vm->Composite();
-    vm->ForceUpdate();
-  }
 }
 
 void
