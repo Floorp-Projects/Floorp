@@ -1383,6 +1383,14 @@ nsTableFrame::DisplayGenericTablePart(nsDisplayListBuilder* aBuilder,
   NS_ASSERTION(currentItem, "No current table item!");
   currentItem->UpdateForFrameBackground(aFrame);
   
+  // Paint the box-shadow for the table frames
+  if (aFrame->IsVisibleForPainting(aBuilder) &&
+      aFrame->GetStyleBorder()->mBoxShadow) {
+    nsDisplayItem* item = new (aBuilder) nsDisplayBoxShadow(aFrame);
+    nsresult rv = lists->BorderBackground()->AppendNewToTop(item);
+    NS_ENSURE_SUCCESS(rv, rv);
+  }
+
   // Create dedicated background display items per-frame when we're
   // handling events.
   // XXX how to handle collapsed borders?
