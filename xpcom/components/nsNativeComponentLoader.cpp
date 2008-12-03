@@ -60,12 +60,10 @@
 #include "nsComponentManager.h"
 #include "nsCRTGlue.h"
 #include "nsModule.h"
-#include "nsThreadUtils.h"
 #include "nsTraceRefcntImpl.h"
 
 #include "nsILocalFile.h"
 #include "nsIModule.h"
-#include "nsIProxyObjectManager.h"
 
 #ifdef XP_WIN
 #include <windows.h>
@@ -100,8 +98,6 @@ NS_IMPL_RELEASE_USING_AGGREGATOR(nsNativeModuleLoader,
 nsresult
 nsNativeModuleLoader::Init()
 {
-    NS_ASSERTION(NS_IsMainThread(), "Startup not on main thread?");
-
     LOG(PR_LOG_DEBUG, ("nsNativeModuleLoader::Init()"));
 
     return mLibraries.Init() ? NS_OK : NS_ERROR_OUT_OF_MEMORY;
@@ -111,23 +107,6 @@ NS_IMETHODIMP
 nsNativeModuleLoader::LoadModule(nsILocalFile* aFile, nsIModule* *aResult)
 {
     nsresult rv;
-
-    if (!NS_IsMainThread()) {
-        // If this call is off the main thread, synchronously proxy it
-        // to the main thread.
-        
-        nsCOMPtr<nsIModuleLoader> proxythis;
-        rv = NS_GetProxyForObject(NS_PROXY_TO_MAIN_THREAD,
-                                  NS_GET_IID(nsIModuleLoader),
-                                  this, NS_PROXY_SYNC,
-                                  getter_AddRefs(proxythis));
-        if (NS_FAILED(rv))
-            return rv;
-
-        return proxythis->LoadModule(aFile, aResult);
-    }
-
-    NS_ASSERTION(NS_IsMainThread(), "LoadModule should always proxy to the main thread!");
 
     // Only load components that end in the proper dynamic library suffix
     nsCAutoString filePath;
@@ -276,8 +255,6 @@ nsNativeModuleLoader::UnloaderFunc(nsIHashable* aHashedFile,
 void
 nsNativeModuleLoader::UnloadLibraries()
 {
-    NS_ASSERTION(NS_IsMainThread(), "Shutdown not on main thread?");
-
     mLibraries.Enumerate(ReleaserFunc, nsnull);
     mLibraries.Enumerate(UnloaderFunc, nsnull);
 }
