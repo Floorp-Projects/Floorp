@@ -1818,23 +1818,32 @@ nsHTMLDocument::OpenCommon(const nsACString& aContentType, PRBool aReplace)
   // (since if it's secure, then it's presumeably trusted).
   nsCOMPtr<nsIDocument> callerDoc =
     do_QueryInterface(nsContentUtils::GetDocumentFromContext());
-  if (!callerDoc) {
-    // If we're called from C++ or in some other way without an originating
-    // document we can't do a document.open w/o changing the principal of the
-    // document to something like about:blank (as that's the only sane thing to
-    // do when we don't know the origin of this call), and since we can't
-    // change the principals of a document for security reasons we'll have to
+
+  // Grab a reference to the calling documents security info (if any)
+  // and URIs as they may be lost in the call to Reset().
+  nsCOMPtr<nsISupports> securityInfo;
+  nsCOMPtr<nsIURI> uri, baseURI;
+  if (callerDoc) {
+    securityInfo = callerDoc->GetSecurityInfo();
+    uri = callerDoc->GetDocumentURI();
+    baseURI = callerDoc->GetBaseURI();
+  }
+
+  nsCOMPtr<nsIPrincipal> callerPrincipal;
+  nsIScriptSecurityManager *secMan = nsContentUtils::GetSecurityManager();
+
+  secMan->GetSubjectPrincipal(getter_AddRefs(callerPrincipal));
+
+  if (!callerPrincipal) {
+    // If we're called from C++ we can't do a document.open w/o
+    // changing the principal of the document to something like
+    // about:blank (as that's the only sane thing to do when we don't
+    // know the origin of this call), and since we can't change the
+    // principals of a document for security reasons we'll have to
     // refuse to go ahead with this call.
 
     return NS_ERROR_DOM_SECURITY_ERR;
   }
-
-  // Grab a reference to the calling documents security info (if any)
-  // and URIs as they may be lost in the call to Reset().
-  nsCOMPtr<nsISupports> securityInfo = callerDoc->GetSecurityInfo();;
-  nsCOMPtr<nsIURI> uri = callerDoc->GetDocumentURI();
-  nsCOMPtr<nsIURI> baseURI = callerDoc->GetBaseURI();
-  nsCOMPtr<nsIPrincipal> callerPrincipal = callerDoc->NodePrincipal();
 
   // We're called from script. Make sure the script is from the same
   // origin, not just that the caller can access the document. This is
