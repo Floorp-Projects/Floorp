@@ -1,0 +1,52 @@
+<!DOCTYPE HTML>
+<html>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=457672
+-->
+<head>
+  <title>Test for Bug 457672</title>
+  <script type="application/javascript" src="/MochiKit/MochiKit.js"></script>
+  <script type="application/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
+</head>
+<body>
+<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=457672">Mozilla Bug 457672</a>
+<p id="display"></p>
+<div id="content" style="display: none">
+  
+</div>
+<pre id="test">
+<script type="application/javascript">
+
+/** Test for Bug 457672 **/
+
+var windowBlurCount = 0;
+
+function listener(evt) {
+  if (evt.type == "focus") {
+    is(windowBlurCount, 1,
+       "Window should have got blur event when opening a new tab!")
+    SimpleTest.finish();
+  } else if (evt.type == "blur") {
+    ++windowBlurCount;
+  }
+  document.getElementById('log').textContent += evt.target + ":" + evt.type + "\n";
+}
+
+function startTest() {
+  window.focus();
+  // Note, focus/blur don't bubble
+  window.addEventListener("focus", listener, false);
+  window.addEventListener("blur", listener, false);
+  window.open("bug457672.html", "", "");
+}
+
+addLoadEvent(startTest);
+SimpleTest.waitForExplicitFinish();
+
+</script>
+</pre>
+<pre id="log">
+</pre>
+</body>
+</html>
