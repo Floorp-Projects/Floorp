@@ -5141,7 +5141,7 @@ FindChildContaining(nsBlockFrame* aFrame, nsIFrame* aFindFrame)
   nsIFrame* child;
   while (PR_TRUE) {
     nsIFrame* block = aFrame;
-    while (PR_TRUE) {
+    while (block) {
       child = nsLayoutUtils::FindChildContainingDescendant(block, aFindFrame);
       if (child)
         break;
