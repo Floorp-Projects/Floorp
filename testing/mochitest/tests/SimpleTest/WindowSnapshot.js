@@ -1,13 +1,13 @@
 netscape.security.PrivilegeManager.enablePrivilege('UniversalXPConnect');
 
-var gWindowSnapshotCompareHelper;
+var gWindowUtils;
 
 try {
-  gWindowSnapshotCompareHelper =
-    Components.classes["@mozilla.org/reftest-helper;1"]
-              .getService(Components.interfaces.nsIReftestHelper);
+  gWindowUtils = window.QueryInterface(CI.nsIInterfaceRequestor).getInterface(CI.nsIDOMWindowUtils);
+  if (gWindowUtils && !gWindowUtils.compareCanvases)
+    gWindowUtils = null;
 } catch (e) {
-  gWindowSnapshotCompareHelper = null;
+  gWindowUtils = null;
 }
 
 function snapshotWindow(win) {
@@ -17,7 +17,7 @@ function snapshotWindow(win) {
 
   // drawWindow requires privileges
   netscape.security.PrivilegeManager.enablePrivilege('UniversalXPConnect');
-  
+
   el.getContext("2d").drawWindow(win, win.scrollX, win.scrollY,
 				 win.innerWidth, win.innerHeight,
 				 "rgb(255,255,255)");
@@ -30,15 +30,15 @@ function compareSnapshots(s1, s2) {
 
   var s1Str, s2Str;
   var equal = false;
-  if (gWindowSnapshotCompareHelper) {
-    equal = (gWindowSnapshotCompareHelper.compareCanvas(s1, s2) == 0);
+  if (gWindowUtils) {
+    equal = (gWindowUtils.compareCanvases(s1, s2, {}) == 0);
   }
 
   if (!equal) {
     s1Str = s1.toDataURL();
     s2Str = s2.toDataURL();
 
-    if (!gWindowSnapshotCompareHelper) {
+    if (!gWindowUtils) {
       equal = (s1Str == s2Str);
     }
   }
