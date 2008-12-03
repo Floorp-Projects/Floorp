@@ -76,8 +76,7 @@ pref("browser.download.folderList", 1); // Default to ~/Downloads
 pref("browser.download.manager.showAlertOnComplete", false);
 pref("browser.download.manager.showAlertInterval", 2000);
 pref("browser.download.manager.retention", 2);
-pref("browser.download.manager.showWhenStarting", true);
-pref("browser.download.manager.useWindow", false);
+pref("browser.download.manager.showWhenStarting", false);
 pref("browser.download.manager.closeWhenDone", true);
 pref("browser.download.manager.openDelay", 0);
 pref("browser.download.manager.focusWhenStarting", false);
