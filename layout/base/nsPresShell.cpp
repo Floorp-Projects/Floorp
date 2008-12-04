@@ -6080,8 +6080,12 @@ StopPluginInstance(PresShell *aShell, nsIContent *aContent)
 static void
 StopMediaInstance(PresShell *aShell, nsIContent *aContent)
 {
-  nsHTMLMediaElement* element = static_cast<nsHTMLMediaElement*>(aContent);
-  element->Freeze();
+  nsCOMPtr<nsIDOMHTMLMediaElement> domMediaElem(do_QueryInterface(aContent));
+  if (!domMediaElem)
+    return;
+
+  nsHTMLMediaElement* mediaElem = static_cast<nsHTMLMediaElement*>(aContent);
+  mediaElem->Freeze();
 }
 #endif
 
@@ -6133,8 +6137,12 @@ StartPluginInstance(PresShell *aShell, nsIContent *aContent)
 static void
 StartMediaInstance(PresShell *aShell, nsIContent *aContent)
 {
- nsHTMLMediaElement* element = static_cast<nsHTMLMediaElement*>(aContent);
- element->Thaw();
+  nsCOMPtr<nsIDOMHTMLMediaElement> domMediaElem(do_QueryInterface(aContent));
+  if (!domMediaElem)
+    return;
+
+  nsHTMLMediaElement* mediaElem = static_cast<nsHTMLMediaElement*>(aContent);
+  mediaElem->Thaw();
 }
 #endif
 
