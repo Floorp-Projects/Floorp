@@ -25,6 +25,7 @@ classic.jar:
 +  skin/classic/global/printPageSetup.css
 +  skin/classic/global/preferences.css
 +  skin/classic/global/filefield.css
++  skin/classic/global/alerts/alert.css                        (alerts/alert.css)
 +  skin/classic/global/console/console.css                     (console/console.css)
 +  skin/classic/global/console/console.png                     (console/console.png)
 +  skin/classic/global/console/console-toolbar.png             (console/console-toolbar.png)
