@@ -294,11 +294,6 @@ STATIC_LIBS += gtkxtbin
 endif
 endif
 
-ifdef MOZ_IPCD
-DEFINES += -DMOZ_IPCD
-COMPONENT_LIBS += ipcdc
-endif
-
 ifdef MOZ_ENABLE_POSTSCRIPT
 DEFINES += -DMOZ_ENABLE_POSTSCRIPT
 STATIC_LIBS += gfxpsshar

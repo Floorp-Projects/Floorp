@@ -89,10 +89,6 @@ tier_gecko_dirs     += widget/src/gtkxtbin
 endif
 endif
 
-ifdef MOZ_IPCD
-tier_gecko_dirs += ipc/ipcd
-endif
-
 tier_gecko_dirs	+= \
 		modules/libutil \
 		modules/libjar \

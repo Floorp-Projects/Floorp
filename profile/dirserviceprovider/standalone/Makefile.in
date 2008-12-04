@@ -48,12 +48,6 @@ REQUIRES	= xpcom \
 		  string \
 		  $(NULL)
 
-ifdef MOZ_PROFILESHARING
-REQUIRES	+= ipcd \
-		  profilesharingsetup \
-		  $(NULL)
-endif
-
 CPPSRCS		= $(MODULES_PROFILEDIRSERVICE_SRC_LCSRCS)
 
 # we don't want the shared lib

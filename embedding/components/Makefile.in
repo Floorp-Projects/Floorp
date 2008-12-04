@@ -55,10 +55,6 @@ endif
 endif
 endif
 
-ifdef MOZ_PROFILESHARING
-DIRS += profilesharingsetup
-endif
-
 DIRS += build
 
 include $(topsrcdir)/config/rules.mk
