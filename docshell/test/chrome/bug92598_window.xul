@@ -65,6 +65,10 @@
         gBrowser.removeEventListener(eventType, eventListener, true);
       }
      
+      // Work around bug 467960
+      var history = gBrowser.webNavigation.sessionHistory;
+      history.PurgeHistory(history.count);
+
       window.close();
       window.opener.wrappedJSObject.SimpleTest.finish();
     }
