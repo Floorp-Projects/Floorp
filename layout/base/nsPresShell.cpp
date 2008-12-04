@@ -6076,7 +6076,7 @@ StopPluginInstance(PresShell *aShell, nsIContent *aContent)
   objectFrame->StopPlugin();
 }
 
-#ifdef MOZ_MEDIA 
+#ifdef MOZ_MEDIA
 static void
 StopMediaInstance(PresShell *aShell, nsIContent *aContent)
 {
