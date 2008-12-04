@@ -59,12 +59,6 @@ REQUIRES	= xpcom \
 		  necko \
 		  $(NULL)
 
-ifdef MOZ_PROFILESHARING
-REQUIRES	+= ipcd \
-		  profilesharingsetup \
-		  $(NULL)
-endif
-
 ifndef MOZ_NO_XPCOM_OBSOLETE
 REQUIRES	+= xpcom_obsolete
 endif
@@ -79,20 +73,11 @@ CPPSRCS		= nsPref.cpp \
 			  prefread.cpp \
 			 $(NULL)
 
-ifdef MOZ_PROFILESHARING
-CPPSRCS	+= nsSharedPrefHandler.cpp
-SHARED_LIBRARY_LIBS	= $(DIST)/lib/$(LIB_PREFIX)ipcdutil_s.$(LIB_SUFFIX)
-endif
-
 DEFINES += -DOS_ARCH=$(OS_ARCH) \
            -DMOZ_WIDGET_TOOLKIT=$(MOZ_WIDGET_TOOLKIT) \
            $(NULL)
 
 PREF_JS_EXPORTS	= $(srcdir)/init/all.js
-
-ifdef MOZ_PROFILESHARING
-PREF_JS_EXPORTS	+= $(srcdir)/init/non-shared.txt
-endif
 
 EXTRA_DSO_LDOPTS = \
 		$(LIBS_DIR) \

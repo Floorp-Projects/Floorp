@@ -78,10 +78,6 @@ REQUIRES	= js \
 		  xuldoc \
 		  $(NULL)
 
-ifdef MOZ_PROFILESHARING
-REQUIRES += profilesharingsetup
-endif
-
 CPPSRCS		= nsEmbeddingModule.cpp
 
 SHARED_LIBRARY_LIBS = \
@@ -109,11 +105,6 @@ LOCAL_INCLUDES	= \
 	-I$(srcdir)/../webbrowserpersist/src  \
 	-I$(srcdir)/../commandhandler/src \
 	$(NULL)
-
-ifdef MOZ_PROFILESHARING
-SHARED_LIBRARY_LIBS += $(DIST)/lib/$(LIB_PREFIX)profilesharingsetup_s.$(LIB_SUFFIX)
-LOCAL_INCLUDES += -I$(srcdir)/../profilesharingsetup/src
-endif
 
 ifeq ($(MOZ_WIDGET_TOOLKIT),os2)
 LOCAL_INCLUDES += -I$(srcdir)/../printingui/src/os2 
