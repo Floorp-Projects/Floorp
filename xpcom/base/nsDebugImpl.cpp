@@ -91,38 +91,6 @@ Break(const char *aMsg);
 #include <stdlib.h>
 #endif
 
-/*
- * Determine if debugger is present in windows.
- */
-#if defined (_WIN32)
-
-typedef WINBASEAPI BOOL (WINAPI* LPFNISDEBUGGERPRESENT)();
-PRBool InDebugger()
-{
-#ifndef WINCE
-   PRBool fReturn = PR_FALSE;
-   LPFNISDEBUGGERPRESENT lpfnIsDebuggerPresent = NULL;
-   HINSTANCE hKernel = LoadLibraryW(L"Kernel32.dll");
-
-   if(hKernel)
-      {
-      lpfnIsDebuggerPresent = 
-         (LPFNISDEBUGGERPRESENT)GetProcAddress(hKernel, "IsDebuggerPresent");
-      if(lpfnIsDebuggerPresent)
-         {
-         fReturn = (*lpfnIsDebuggerPresent)();
-         }
-      FreeLibrary(hKernel);
-      }
-
-   return fReturn;
-#else
-   return PR_FALSE;
-#endif
-}
-
-#endif /* WIN32*/
-
 NS_IMPL_QUERY_INTERFACE1(nsDebugImpl, nsIDebug)
 
 NS_IMETHODIMP_(nsrefcnt)
@@ -401,7 +369,7 @@ Break(const char *aMsg)
     const char *shouldIgnoreDebugger = getenv("XPCOM_DEBUG_DLG");
     ignoreDebugger = 1 + (shouldIgnoreDebugger && !strcmp(shouldIgnoreDebugger, "1"));
   }
-  if((ignoreDebugger == 2) || !InDebugger()) {
+  if ((ignoreDebugger == 2) || !::IsDebuggerPresent()) {
     DWORD code = IDRETRY;
 
     /* Create the debug dialog out of process to avoid the crashes caused by 
