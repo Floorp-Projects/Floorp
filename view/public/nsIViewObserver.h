@@ -46,10 +46,9 @@
 class nsIRenderingContext;
 class nsGUIEvent;
 
-// cb03e6e3-9d14-4018-85f8-7d46af878c98
 #define NS_IVIEWOBSERVER_IID   \
-{ 0xcb03e6e3, 0x9d14, 0x4018, \
-  { 0x85, 0xf8, 0x7d, 0x46, 0xaf, 0x87, 0x8c, 0x98 } }
+{ 0x63ae23ee, 0xe251, 0x4005, \
+{ 0xaf, 0xe4, 0x5b, 0x0f, 0xa1, 0x5a, 0xb4, 0x99 } }
 
 class nsIViewObserver : public nsISupports
 {
@@ -121,14 +120,6 @@ public:
    * the frame associated with this view.
    */
   NS_IMETHOD_(void) InvalidateFrameForView(nsIView *aView) = 0;
-
-  /**
-   * Dispatch the given synthesized mouse move event, and if
-   * aFlushOnHoverChange is true, flush layout if :hover changes cause
-   * any restyles.
-   */
-  NS_IMETHOD_(void) DispatchSynthMouseMove(nsGUIEvent *aEvent,
-                                           PRBool aFlushOnHoverChange) = 0;
 };
 
 NS_DEFINE_STATIC_IID_ACCESSOR(nsIViewObserver, NS_IVIEWOBSERVER_IID)
