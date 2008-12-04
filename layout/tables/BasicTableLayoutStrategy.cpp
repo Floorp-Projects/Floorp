@@ -101,12 +101,10 @@ struct CellWidthInfo {
 };
 
 // Used for both column and cell calculations.  The parts needed only
-// for cells are skipped when aCellFrame is null.
+// for cells are skipped when aIsCell is false.
 static CellWidthInfo
 GetWidthInfo(nsIRenderingContext *aRenderingContext,
-             nsIFrame *aFrame,
-             PRBool aIsCell,
-             const nsStylePosition *aStylePos)
+             nsIFrame *aFrame, PRBool aIsCell)
 {
     nscoord minCoord, prefCoord;
     if (aIsCell) {
@@ -121,15 +119,16 @@ GetWidthInfo(nsIRenderingContext *aRenderingContext,
 
     // XXXldb Should we consider -moz-box-sizing?
 
-    nsStyleUnit unit = aStylePos->mWidth.GetUnit();
+    const nsStylePosition *stylePos = aFrame->GetStylePosition();
+    nsStyleUnit unit = stylePos->mWidth.GetUnit();
     if (unit == eStyleUnit_Coord) {
         hasSpecifiedWidth = PR_TRUE;
         nscoord w = nsLayoutUtils::ComputeWidthValue(aRenderingContext,
-                      aFrame, 0, 0, 0, aStylePos->mWidth);
+                      aFrame, 0, 0, 0, stylePos->mWidth);
         // Quirk: A cell with "nowrap" set and a coord value for the
         // width which is bigger than the intrinsic minimum width uses
         // that coord value as the minimum width.
-        // This is kept up-to-date with dynamic chnages to nowrap by code in
+        // This is kept up-to-date with dynamic changes to nowrap by code in
         // nsTableCellFrame::AttributeChanged
         if (aIsCell && w > minCoord &&
             aFrame->PresContext()->CompatibilityMode() ==
@@ -140,9 +139,9 @@ GetWidthInfo(nsIRenderingContext *aRenderingContext,
         }
         prefCoord = PR_MAX(w, minCoord);
     } else if (unit == eStyleUnit_Percent) {
-        prefPercent = aStylePos->mWidth.GetPercentValue();
+        prefPercent = stylePos->mWidth.GetPercentValue();
     } else if (unit == eStyleUnit_Enumerated && aIsCell) {
-        switch (aStylePos->mWidth.GetIntValue()) {
+        switch (stylePos->mWidth.GetIntValue()) {
             case NS_STYLE_WIDTH_MAX_CONTENT:
                 // 'width' only affects pref width, not min
                 // width, so don't change anything
@@ -159,7 +158,7 @@ GetWidthInfo(nsIRenderingContext *aRenderingContext,
         }
     }
 
-    nsStyleCoord maxWidth(aStylePos->mMaxWidth);
+    nsStyleCoord maxWidth(stylePos->mMaxWidth);
     if (maxWidth.GetUnit() == eStyleUnit_Enumerated) {
         if (!aIsCell || maxWidth.GetIntValue() == NS_STYLE_WIDTH_AVAILABLE)
             maxWidth.SetNoneValue();
@@ -181,12 +180,12 @@ GetWidthInfo(nsIRenderingContext *aRenderingContext,
         if (w < prefCoord)
             prefCoord = w;
     } else if (unit == eStyleUnit_Percent) {
-        float p = aStylePos->mMaxWidth.GetPercentValue();
+        float p = stylePos->mMaxWidth.GetPercentValue();
         if (p < prefPercent)
             prefPercent = p;
     }
 
-    nsStyleCoord minWidth(aStylePos->mMinWidth);
+    nsStyleCoord minWidth(stylePos->mMinWidth);
     if (minWidth.GetUnit() == eStyleUnit_Enumerated) {
         if (!aIsCell || minWidth.GetIntValue() == NS_STYLE_WIDTH_AVAILABLE)
             minWidth.SetCoordValue(0);
@@ -206,7 +205,7 @@ GetWidthInfo(nsIRenderingContext *aRenderingContext,
         if (w > prefCoord)
             prefCoord = w;
     } else if (unit == eStyleUnit_Percent) {
-        float p = aStylePos->mMinWidth.GetPercentValue();
+        float p = stylePos->mMinWidth.GetPercentValue();
         if (p > prefPercent)
             prefPercent = p;
     }
@@ -228,16 +227,14 @@ static inline CellWidthInfo
 GetCellWidthInfo(nsIRenderingContext *aRenderingContext,
                  nsTableCellFrame *aCellFrame)
 {
-    return GetWidthInfo(aRenderingContext, aCellFrame, PR_TRUE,
-                        aCellFrame->GetStylePosition());
+    return GetWidthInfo(aRenderingContext, aCellFrame, PR_TRUE);
 }
 
 static inline CellWidthInfo
 GetColWidthInfo(nsIRenderingContext *aRenderingContext,
                 nsIFrame *aFrame)
 {
-    return GetWidthInfo(aRenderingContext, aFrame, PR_FALSE,
-                        aFrame->GetStylePosition());
+    return GetWidthInfo(aRenderingContext, aFrame, PR_FALSE);
 }
 
 
