@@ -49,7 +49,10 @@ DIRS += \
 
 MODULE = content
 
-CPP_UNIT_TESTS += TestNativeXMLHttpRequest.cpp TestPlainTextSerializer.cpp
+CPP_UNIT_TESTS = \
+                 TestNativeXMLHttpRequest.cpp \
+                 TestPlainTextSerializer.cpp \
+                 $(NULL)
 
 LOCAL_INCLUDES += -I$(topsrcdir)/xpcom/tests
 
@@ -63,15 +66,6 @@ REQUIRES += \
   xpcom \
   xpconnect \
   htmlparser \
-  $(NULL)
-
-CPPSRCS += $(CPP_UNIT_TESTS)
-
-SIMPLE_PROGRAMS += $(CPP_UNIT_TESTS:.cpp=$(BIN_SUFFIX))
-
-LIBS += \
-  $(XPCOM_GLUE_LDOPTS) \
-  $(NSPR_LIBS) \
   $(NULL)
 
 XPCSHELL_TESTS = \
@@ -277,9 +271,3 @@ _TEST_FILES = 	test_bug5141.html \
 
 libs:: $(_TEST_FILES)
 	$(INSTALL) $(foreach f,$^,"$f") $(DEPTH)/_tests/testing/mochitest/tests/$(relativesrcdir)
-
-check::
-	@$(EXIT_ON_ERROR) \
-	for f in $(subst .cpp,,$(CPP_UNIT_TESTS)); do \
-	  XPCOM_DEBUG_BREAK=stack-and-abort $(RUN_TEST_PROGRAM) $(DIST)/bin/$$f; \
-	done
