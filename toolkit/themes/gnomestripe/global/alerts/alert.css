@@ -44,14 +44,13 @@
 @namespace url("http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul");
 
 .alertBox {
-  border: 2px solid #7B969C;
+  border: 1px solid ThreeDShadow;
   background-color: -moz-Dialog;
   min-height: 50px;
 }
 
 .alertBox[orient="horizontal"] > .alertImageBox {
-  -moz-margin-start: 4px;
-  -moz-margin-end: 6px;
+  margin: 0 8px;
   min-height: 46px;
 }
 
@@ -73,10 +72,6 @@
   cursor: pointer;
   color: -moz-nativehyperlinktext;
   text-decoration: underline;
-}
-
-.alertText[clickable="true"]:hover:active {
-  color: #424F63;
 }
 
 .alertBox[orient="horizontal"] > .alertTextBox {
