@@ -71,7 +71,7 @@ treechildren::-moz-tree-image(title, query) {
 }
 
 treechildren::-moz-tree-image(title, query, tagContainer),
-treechildren::-moz-tree-image(container, OrganizerQuery_Tags) {
+treechildren::-moz-tree-image(query, OrganizerQuery_Tags) {
   list-style-image: url("chrome://mozapps/skin/places/tagContainerIcon.png");
 }
 
