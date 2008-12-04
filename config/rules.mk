@@ -197,7 +197,11 @@ ifdef CPP_UNIT_TESTS
 CPPSRCS += $(CPP_UNIT_TESTS)
 SIMPLE_PROGRAMS += $(CPP_UNIT_TESTS:.cpp=$(BIN_SUFFIX))
 REQUIRES += testing xpcom
+ifndef  MOZ_ENABLE_LIBXUL
 LIBS += $(XPCOM_LIBS) $(XPCOM_GLUE_LDOPTS) $(NSPR_LIBS)
+else
+LIBS += $(XPCOM_LIBS) $(XPCOM_STANDALONE_GLUE_LDOPTS) $(NSPR_LIBS)
+endif
 
 # ...and run them the usual way
 check::
