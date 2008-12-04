@@ -113,6 +113,104 @@ ifdef EXTRA_DSO_LIBS
 EXTRA_DSO_LIBS	:= $(call EXPAND_MOZLIBNAME,$(EXTRA_DSO_LIBS))
 endif
 
+################################################################################
+# Testing frameworks support
+################################################################################
+
+ifdef ENABLE_TESTS
+
+ifdef XPCSHELL_TESTS
+ifndef MODULE
+$(error Must define MODULE when defining XPCSHELL_TESTS.)
+endif
+
+# Test file installation
+libs::
+	@$(EXIT_ON_ERROR) \
+	for testdir in $(XPCSHELL_TESTS); do \
+	  $(INSTALL) \
+	    $(srcdir)/$$testdir/*.js \
+	    $(DEPTH)/_tests/xpcshell-simple/$(MODULE)/$$testdir; \
+	done
+
+# Path formats on Windows are hard.  We require a topsrcdir formatted so that
+# it may be passed to nsILocalFile.initWithPath (in other words, an absolute
+# path of the form X:\path\to\topsrcdir), which we store in NATIVE_TOPSRCDIR.
+# We require a forward-slashed path to topsrcdir so that it may be combined
+# with a relative forward-slashed path for loading scripts, both dynamically
+# and statically for head/test/tail JS files.  Of course, on non-Windows none
+# of this matters, and things will work correctly because everything's
+# forward-slashed, everywhere, always.
+ifdef CYGWIN_WRAPPER
+NATIVE_TOPSRCDIR   := `cygpath -wa $(topsrcdir)`
+FWDSLASH_TOPSRCDIR := `cygpath -ma $(topsrcdir)`
+else
+FWDSLASH_TOPSRCDIR := $(topsrcdir)
+ifeq ($(HOST_OS_ARCH),WINNT)
+NATIVE_TOPSRCDIR   := $(subst /,\\,$(WIN_TOP_SRC))
+else 
+NATIVE_TOPSRCDIR   := $(topsrcdir)
+endif
+endif # CYGWIN_WRAPPER
+
+# Test execution
+check::
+	@$(EXIT_ON_ERROR) \
+	for testdir in $(XPCSHELL_TESTS); do \
+	  $(RUN_TEST_PROGRAM) \
+	    $(topsrcdir)/tools/test-harness/xpcshell-simple/test_all.sh \
+	      $(DIST)/bin/xpcshell \
+	      $(FWDSLASH_TOPSRCDIR) \
+	      $(NATIVE_TOPSRCDIR) \
+	      $(DEPTH)/_tests/xpcshell-simple/$(MODULE)/$$testdir; \
+	done
+
+# Test execution
+check-interactive::
+	@$(EXIT_ON_ERROR) \
+	$(RUN_TEST_PROGRAM) \
+	  $(topsrcdir)/tools/test-harness/xpcshell-simple/test_one.sh \
+	    $(DIST)/bin/xpcshell \
+	    $(FWDSLASH_TOPSRCDIR) \
+	    $(NATIVE_TOPSRCDIR) \
+	    $(DEPTH)/_tests/xpcshell-simple/$(MODULE)/$$testdir \
+	    $(SOLO_FILE) 1;
+
+# Test execution
+check-one::
+	@$(EXIT_ON_ERROR) \
+	$(RUN_TEST_PROGRAM) \
+	  $(topsrcdir)/tools/test-harness/xpcshell-simple/test_one.sh \
+	    $(DIST)/bin/xpcshell \
+	    $(FWDSLASH_TOPSRCDIR) \
+	    $(NATIVE_TOPSRCDIR) \
+	    $(DEPTH)/_tests/xpcshell-simple/$(MODULE)/$$testdir \
+	    $(SOLO_FILE) 0;
+
+endif # XPCSHELL_TESTS
+
+ifdef CPP_UNIT_TESTS
+
+# Compile the tests to $(DIST)/bin.  Make lots of niceties available by default
+# through TestHarness.h, by modifying the list of includes and the libs against
+# which stuff links.
+CPPSRCS += $(CPP_UNIT_TESTS)
+SIMPLE_PROGRAMS += $(CPP_UNIT_TESTS:.cpp=$(BIN_SUFFIX))
+REQUIRES += testing xpcom
+LIBS += $(XPCOM_LIBS) $(XPCOM_GLUE_LDOPTS) $(NSPR_LIBS)
+
+# ...and run them the usual way
+check::
+	@$(EXIT_ON_ERROR) \
+	  for f in $(subst .cpp,,$(CPP_UNIT_TESTS)); do \
+	    XPCOM_DEBUG_BREAK=stack-and-abort $(RUN_TEST_PROGRAM) $(DIST)/bin/$$f; \
+	  done
+
+endif # CPP_UNIT_TESTS
+
+endif # ENABLE_TESTS
+
+
 #
 # Library rules
 #
@@ -1908,85 +2006,6 @@ REGCHROME_INSTALL = $(PERL) -I$(MOZILLA_DIR)/config $(MOZILLA_DIR)/config/add-ch
 	$(if $(filter gtk2,$(MOZ_WIDGET_TOOLKIT)),-x) \
 	$(if $(CROSS_COMPILE),-o $(OS_ARCH)) $(DESTDIR)$(mozappdir)/chrome/installed-chrome.txt \
 	$(_JAR_REGCHROME_DISABLE_JAR)
-
-
-################################################################################
-# Testing frameworks support
-################################################################################
-
-ifdef ENABLE_TESTS
-
-ifdef XPCSHELL_TESTS
-ifndef MODULE
-$(error Must define MODULE when defining XPCSHELL_TESTS.)
-endif
-
-# Test file installation
-libs::
-	@$(EXIT_ON_ERROR) \
-	for testdir in $(XPCSHELL_TESTS); do \
-	  $(INSTALL) \
-	    $(srcdir)/$$testdir/*.js \
-	    $(DEPTH)/_tests/xpcshell-simple/$(MODULE)/$$testdir; \
-	done
-
-# Path formats on Windows are hard.  We require a topsrcdir formatted so that
-# it may be passed to nsILocalFile.initWithPath (in other words, an absolute
-# path of the form X:\path\to\topsrcdir), which we store in NATIVE_TOPSRCDIR.
-# We require a forward-slashed path to topsrcdir so that it may be combined
-# with a relative forward-slashed path for loading scripts, both dynamically
-# and statically for head/test/tail JS files.  Of course, on non-Windows none
-# of this matters, and things will work correctly because everything's
-# forward-slashed, everywhere, always.
-ifdef CYGWIN_WRAPPER
-NATIVE_TOPSRCDIR   := `cygpath -wa $(topsrcdir)`
-FWDSLASH_TOPSRCDIR := `cygpath -ma $(topsrcdir)`
-else
-FWDSLASH_TOPSRCDIR := $(topsrcdir)
-ifeq ($(HOST_OS_ARCH),WINNT)
-NATIVE_TOPSRCDIR   := $(subst /,\\,$(WIN_TOP_SRC))
-else 
-NATIVE_TOPSRCDIR   := $(topsrcdir)
-endif
-endif # CYGWIN_WRAPPER
-
-# Test execution
-check::
-	@$(EXIT_ON_ERROR) \
-	for testdir in $(XPCSHELL_TESTS); do \
-	  $(RUN_TEST_PROGRAM) \
-	    $(topsrcdir)/tools/test-harness/xpcshell-simple/test_all.sh \
-	      $(DIST)/bin/xpcshell \
-	      $(FWDSLASH_TOPSRCDIR) \
-	      $(NATIVE_TOPSRCDIR) \
-	      $(DEPTH)/_tests/xpcshell-simple/$(MODULE)/$$testdir; \
-	done
-
-# Test execution
-check-interactive::
-	@$(EXIT_ON_ERROR) \
-	$(RUN_TEST_PROGRAM) \
-	  $(topsrcdir)/tools/test-harness/xpcshell-simple/test_one.sh \
-	    $(DIST)/bin/xpcshell \
-	    $(FWDSLASH_TOPSRCDIR) \
-	    $(NATIVE_TOPSRCDIR) \
-	    $(DEPTH)/_tests/xpcshell-simple/$(MODULE)/$$testdir \
-	    $(SOLO_FILE) 1;
-
-# Test execution
-check-one::
-	@$(EXIT_ON_ERROR) \
-	$(RUN_TEST_PROGRAM) \
-	  $(topsrcdir)/tools/test-harness/xpcshell-simple/test_one.sh \
-	    $(DIST)/bin/xpcshell \
-	    $(FWDSLASH_TOPSRCDIR) \
-	    $(NATIVE_TOPSRCDIR) \
-	    $(DEPTH)/_tests/xpcshell-simple/$(MODULE)/$$testdir \
-	    $(SOLO_FILE) 0;
-
-endif # XPCSHELL_TESTS
-
-endif # ENABLE_TESTS
 
 
 #############################################################################
