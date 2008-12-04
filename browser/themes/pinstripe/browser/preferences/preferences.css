@@ -73,11 +73,11 @@ radio[pane]:active:hover {
 }
 
 radio[pane][selected="true"] {
-  -moz-border-image: url("chrome://browser/skin/preferences/prefbutton-active.png") 0 2 repeat;
+  -moz-border-image: url("chrome://browser/skin/preferences/panebutton-active.png") 0 2 repeat;
 }
 
 #BrowserPreferences:not([active="true"]) radio[pane][selected="true"] {
-  -moz-border-image: url("chrome://browser/skin/preferences/prefbutton-inactive.png") 0 2 repeat;
+  -moz-border-image: url("chrome://browser/skin/preferences/panebutton-inactive.png") 0 2 repeat;
 }
 
 .paneButtonLabel {
@@ -92,7 +92,7 @@ radio[pane=paneMain] {
 	-moz-image-region: rect(0px, 32px, 32px, 0px)
 } 
 radio[pane=paneGeneral]:active,
-radio[pane=paneMain]:active:hover{
+radio[pane=paneMain]:active:hover {
 	-moz-image-region: rect(32px, 32px, 64px, 0px)
 }
 
@@ -102,7 +102,7 @@ radio[pane=paneTabs] {
 	-moz-image-region: rect(0px, 64px, 32px, 32px);
 }
 
-radio[pane=paneTabs]:active:hover{
+radio[pane=paneTabs]:active:hover {
 	-moz-image-region: rect(32px, 64px, 64px, 32px);
 }
 
@@ -112,7 +112,7 @@ radio[pane=paneContent] {
 	-moz-image-region: rect(0px, 96px, 32px, 64px);
 }
 
-radio[pane=paneContent]:active:hover{
+radio[pane=paneContent]:active:hover {
 	-moz-image-region: rect(32px, 96px, 64px, 64px);
 }
 
@@ -122,7 +122,7 @@ radio[pane=paneApplications] {
 	-moz-image-region: rect(0px, 128px, 32px, 96px);
 }
 
-radio[pane=paneApplications]:active:hover{
+radio[pane=paneApplications]:active:hover {
 	-moz-image-region: rect(32px, 128px, 64px, 96px);
 }
 
@@ -132,7 +132,7 @@ radio[pane=panePrivacy] {
 	-moz-image-region: rect(0px, 160px, 32px, 128px);
 }
 
-radio[pane=panePrivacy]:active:hover{
+radio[pane=panePrivacy]:active:hover {
 	-moz-image-region: rect(32px, 160px, 64px, 128px);
 }
 
@@ -142,7 +142,7 @@ radio[pane=paneSecurity] {
 	-moz-image-region: rect(0px, 192px, 32px, 160px);
 }
 
-radio[pane=paneSecurity]:active:hover{
+radio[pane=paneSecurity]:active:hover {
 	-moz-image-region: rect(32px, 192px, 64px, 160px);
 }
 
@@ -152,7 +152,7 @@ radio[pane=paneAdvanced] {
 	-moz-image-region: rect(0px, 224px, 32px, 192px);
 }
 
-radio[pane=paneAdvanced]:active:hover{
+radio[pane=paneAdvanced]:active:hover {
 	-moz-image-region: rect(32px, 224px, 64px, 192px);
 }
 
