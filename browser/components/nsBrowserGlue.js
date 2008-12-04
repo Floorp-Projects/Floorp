@@ -547,8 +547,8 @@ BrowserGlue.prototype = {
       var bookmarksFile = null;
       if (restoreDefaultBookmarks) {
         // User wants to restore bookmarks.html file from default profile folder
-        bookmarksFile = dirService.get("profDef", Ci.nsILocalFile)
-                                      .append("bookmarks.html");
+        bookmarksFile = dirService.get("profDef", Ci.nsILocalFile);
+        bookmarksFile.append("bookmarks.html");
       }
       else
         bookmarksFile = dirService.get("BMarks", Ci.nsILocalFile);
