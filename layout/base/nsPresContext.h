@@ -745,7 +745,14 @@ public:
 
   PRBool           SupressingResizeReflow() const { return mSupressResizeReflow; }
   
-  gfxUserFontSet* GetUserFontSet();
+  virtual NS_HIDDEN_(gfxUserFontSet*) GetUserFontSetExternal();
+  NS_HIDDEN_(gfxUserFontSet*) GetUserFontSetInternal();
+#ifdef _IMPL_NS_LAYOUT
+  gfxUserFontSet* GetUserFontSet() { return GetUserFontSetInternal(); }
+#else
+  gfxUserFontSet* GetUserFontSet() { return GetUserFontSetExternal(); }
+#endif
+
   void FlushUserFontSet();
   void RebuildUserFontSet(); // asynchronously
 

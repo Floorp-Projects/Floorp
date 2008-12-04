@@ -1877,36 +1877,27 @@ nsListControlFrame::IsLeftButton(nsIDOMEvent* aMouseEvent)
 nscoord
 nsListControlFrame::CalcFallbackRowHeight(PRInt32 aNumOptions)
 {
-  const nsStyleFont* styleFont = nsnull;
+  nsIFrame *fontFrame = nsnull;
     
   if (aNumOptions > 0) {
     // Try the first option
     nsCOMPtr<nsIContent> option = GetOptionContent(0);
     if (option) {
-      nsIFrame * optFrame = PresContext()->PresShell()->
-        GetPrimaryFrameFor(option);
-      if (optFrame) {
-        styleFont = optFrame->GetStyleFont();
-      }
+      fontFrame = PresContext()->PresShell()->GetPrimaryFrameFor(option);
     }
   }
 
-  if (!styleFont) {
+  if (!fontFrame) {
     // Fall back to our own font
-    styleFont = GetStyleFont();
+    fontFrame = this;
   }
-
-  NS_ASSERTION(styleFont, "Must have font style by now!");
 
   nscoord rowHeight = 0;
   
   nsCOMPtr<nsIFontMetrics> fontMet;
-  nsresult result = PresContext()->DeviceContext()->
-    GetMetricsFor(styleFont->mFont, *getter_AddRefs(fontMet));
-  if (NS_SUCCEEDED(result) && fontMet) {
-    if (fontMet) {
-      fontMet->GetHeight(rowHeight);
-    }
+  nsLayoutUtils::GetFontMetricsForFrame(fontFrame, getter_AddRefs(fontMet));
+  if (fontMet) {
+    fontMet->GetHeight(rowHeight);
   }
 
   return rowHeight;
