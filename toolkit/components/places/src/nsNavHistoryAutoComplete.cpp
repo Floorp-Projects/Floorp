@@ -78,6 +78,7 @@
 #include "nsNavBookmarks.h"
 #include "nsPrintfCString.h"
 #include "nsILivemarkService.h"
+#include "mozIStoragePendingStatement.h"
 
 #define NS_AUTOCOMPLETESIMPLERESULT_CONTRACTID \
   "@mozilla.org/autocomplete/simple-result;1"
@@ -1155,7 +1156,9 @@ nsNavHistory::AutoCompleteFeedback(PRInt32 aIndex,
   rv = stmt->BindStringParameter(1, url);
   NS_ENSURE_SUCCESS(rv, rv);
 
-  rv = stmt->Execute();
+  // We do the update async and we don't care about failures
+  nsCOMPtr<mozIStoragePendingStatement> canceler;
+  rv = stmt->ExecuteAsync(nsnull, getter_AddRefs(canceler));
   NS_ENSURE_SUCCESS(rv, rv);
 
   return NS_OK;
