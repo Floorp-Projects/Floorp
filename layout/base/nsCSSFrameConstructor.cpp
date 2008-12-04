@@ -1859,7 +1859,6 @@ nsCSSFrameConstructor::nsCSSFrameConstructor(nsIDocument *aDocument,
   , mIsDestroyingFrameTree(PR_FALSE)
   , mRebuildAllStyleData(PR_FALSE)
   , mHasRootAbsPosContainingBlock(PR_FALSE)
-  , mHoverGeneration(0)
   , mRebuildAllExtraHint(nsChangeHint(0))
 {
   if (!gGotXBLFormPrefs) {
@@ -10025,10 +10024,6 @@ nsCSSFrameConstructor::DoContentStateChanged(nsIContent* aContent,
     nsReStyleHint rshint = 
       styleSet->HasStateDependentStyle(presContext, aContent, aStateMask);
       
-    if ((aStateMask & NS_EVENT_STATE_HOVER) && rshint != 0) {
-      ++mHoverGeneration;
-    }
-
     PostRestyleEvent(aContent, rshint, hint);
   }
 }
