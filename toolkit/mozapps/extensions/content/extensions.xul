@@ -48,6 +48,8 @@
 %brandDTD;
 <!ENTITY % extensionsDTD SYSTEM "chrome://mozapps/locale/extensions/extensions.dtd">
 %extensionsDTD;
+<!ENTITY % global SYSTEM "chrome://global/locale/global.dtd">
+%global;
 ]>
 
 <window xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#"
@@ -162,7 +164,8 @@
   <windowdragbox orient="vertical">
     <stack id="topStackBar">
       <radiogroup id="viewGroup" xhtml:role="listbox" persist="last-selected"
-                  class="viewSelector chromeclass-toolbar" orient="horizontal">
+                  class="viewSelector chromeclass-toolbar" orient="horizontal"
+                  chromedir="&locale.dir;">
         <radio id="search-view" label="&search.label;" oncommand="showView('search');" persist="last-selected"/>
         <radio id="extensions-view" label="&extensions.label;" oncommand="showView('extensions');" persist="last-selected"/>
         <radio id="themes-view" label="&themes.label;" oncommand="showView('themes');" persist="last-selected"/>

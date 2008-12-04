@@ -48,6 +48,8 @@
 <!DOCTYPE window [
   <!ENTITY % pageInfoDTD SYSTEM "chrome://browser/locale/pageInfo.dtd">
   %pageInfoDTD;
+  <!ENTITY % global SYSTEM "chrome://global/locale/global.dtd">
+  %global;
 ]>
 
 #ifdef XP_MACOSX
@@ -114,7 +116,8 @@
 
   <windowdragbox orient="vertical">
     <stack id="topStackBar">
-      <radiogroup id="viewGroup" class="viewSelector chromeclass-toolbar" orient="horizontal">
+      <radiogroup id="viewGroup" class="viewSelector chromeclass-toolbar" orient="horizontal"
+                  chromedir="&locale.dir;">
         <radio id="generalTab"  label="&generalTab;"  accesskey="&generalTab.accesskey;"
              oncommand="showTab('general');"/>
         <radio id="mediaTab"    label="&mediaTab;"    accesskey="&mediaTab.accesskey;"

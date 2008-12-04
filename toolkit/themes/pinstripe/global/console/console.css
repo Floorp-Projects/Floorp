@@ -39,11 +39,10 @@
   == Styles used by the Error Console window.
   ======================================================================= */
 
-@namespace url("http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul");
+/* View buttons */
+@import "chrome://global/skin/viewbuttons.css";
 
-#JSConsoleWindow:not([active="true"]) > #console-toolbox > #ToolbarMode > toolbarbutton {
-  opacity: 0.7;
-}
+@namespace url("http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul");
 
 .console-box {
   background-color: -moz-Field;
@@ -188,74 +187,37 @@ toolbarseparator {
 /* Toolbar icons */
 
 #ToolbarMode {
-  background-color: #999;
-  border-bottom: 1px solid #404040;
-  background-image: url("chrome://global/skin/toolbar/toolbar-background.gif");
-  background-repeat: repeat-x;
-  background-position: top right;
   padding: 4px 0 8px;
   -moz-box-pack: center;
 }
 
-#ToolbarMode toolbarbutton {
-  border: 1px solid #404040;
-  border-bottom-width: 2px;
-  -moz-border-start-width: 0px;
-  -moz-border-bottom-colors: #C2C2C2 #404040;
-  background-image: url("chrome://global/skin/icons/white-gray-gradient.gif");
-  background-repeat: repeat-x;
-  font: menu;
-  margin: 0;
-  padding: 0 4px;
+#ToolbarMode toolbarbutton > .toolbarbutton-icon {
+  display: none;
 }
 
-toolbar#ToolbarMode toolbarbutton[checked] {
-  background-image: none;
-  background-color: #5E5E5E;
-  color: #ffffff !important;
-}
-
-#Console\:modeAll {
-  -moz-border-start-width: 1px !important;
-  -moz-border-radius-bottomleft: 5px;
-  -moz-border-radius-topleft: 4px;
-}
-
-#console-toolbox[chromedir="rtl"] > #ToolbarMode > #Console\:modeAll {
-  -moz-border-radius-bottomleft: 0;
-  -moz-border-radius-topleft: 0;
-  -moz-border-radius-bottomright: 5px;
-  -moz-border-radius-topright: 4px;
-}
-
-#Console\:modeMessages {
-  -moz-border-radius-bottomright: 5px;
-  -moz-border-radius-topright: 4px;
-}
-
-#console-toolbox[chromedir="rtl"] > #ToolbarMode > #Console\:modeMessages {
-  -moz-border-radius-bottomright: 0;
-  -moz-border-radius-topright: 0;
-  -moz-border-radius-bottomleft: 5px;
-  -moz-border-radius-topleft: 4px;
+#viewGroup {
+  -moz-appearance: none;
+  padding: 0;
 }
 
 #Console\:clear {
-  -moz-border-start-width: 1px !important;
-  -moz-border-radius-topright: 4px;
-  -moz-border-radius-topleft: 4px;
-  -moz-border-radius-bottomright: 5px;
-  -moz-border-radius-bottomleft: 5px;
+  -moz-box-orient: vertical;
+  -moz-box-align: center;
+  font: menu;
+  text-shadow: rgba(255, 255, 255, 0.4) 0 1px;
+  margin: 0;
+  padding: 3px 0 0;
+  height: 24px;
+  border: solid transparent;
+  border-width: 0 6px;
+  -moz-border-image: url("chrome://global/skin/toolbar/roundrectbutton.png") 0 6 repeat !important;
 }
 
-#Console\:clear:hover:active {
-  background-image: none; 
-  background-color: #5E5E5E;
-  color: #ffffff !important;
+#Console\:clear:active:hover {
+  -moz-border-image: url("chrome://global/skin/toolbar/roundrectbutton-down.png") 0 6 repeat !important;
 }
 
-#ConsoleBox {
-  margin-bottom: 14px;
-  border-bottom: 1px solid #bebebe; 
+:root:not([active]) #Console\:clear {
+  color: #7C7C7C !important; /* remove this when we support click-through */
+  -moz-border-image: url("chrome://global/skin/toolbar/roundrectbutton-inactive.png") 0 6 repeat !important;
 }
-
