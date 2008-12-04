@@ -2990,8 +2990,10 @@ static
 PRBool NeedToFilterResultSet(const nsCOMArray<nsNavHistoryQuery>& aQueries, 
                              nsNavHistoryQueryOptions *aOptions)
 {
-  // Always filter bookmarks queries to avoid  the inclusion of query nodes
-  if (aOptions->QueryType() == nsINavHistoryQueryOptions::QUERY_TYPE_BOOKMARKS)
+  // Always filter bookmarks queries to avoid the inclusion of query nodes,
+  // but RESULTS AS TAG QUERY never needs to be filtered.
+  if (aOptions->QueryType() == nsINavHistoryQueryOptions::QUERY_TYPE_BOOKMARKS &&
+      aOptions->ResultType() != nsINavHistoryQueryOptions::RESULTS_AS_TAG_QUERY)
     return PR_TRUE;
 
   nsCString parentAnnotationToExclude;

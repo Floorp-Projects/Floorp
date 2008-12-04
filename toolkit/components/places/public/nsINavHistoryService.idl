@@ -939,6 +939,7 @@ interface nsINavHistoryQueryOptions : nsISupports
    * This returns nsINavHistoryQueryResultNode nodes for each tag.
    * The node contains information how to load its content:
    * - list of bookmarks with the given tag will be loaded.
+   * Setting this resultType will force queryType to QUERY_TYPE_BOOKMARKS.
    */
   const unsigned short RESULTS_AS_TAG_QUERY = 6;
 
@@ -946,6 +947,7 @@ interface nsINavHistoryQueryOptions : nsISupports
    * This is a container with an URI result type that contains the last
    * modified bookmarks for the given tag.
    * Tag folder id must be defined in the query.
+   * Setting this resultType will force queryType to QUERY_TYPE_BOOKMARKS.
    */
   const unsigned short RESULTS_AS_TAG_CONTENTS = 7;
 
