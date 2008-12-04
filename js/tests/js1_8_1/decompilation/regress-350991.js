@@ -69,7 +69,7 @@ function test()
 
   compareSource(expect, actual, summary);
 
-  expect = 'function () {\n    let x = 5;\n    while (x-- > 0) {\n' +
+  expect = 'function () {\n    var x = 5;\n    while (x-- > 0) {\n' +
     '        for (let x = x, q = 5;;) {\n        }\n    }\n}';
   try
   {
