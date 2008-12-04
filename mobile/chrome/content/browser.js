@@ -123,6 +123,8 @@ var Browser = {
     // initialize input handling
     ih = new InputHandler();
 
+    BrowserUI.init();
+
     // Create the first tab
     this.newTab(true);
 
@@ -151,8 +153,6 @@ var Browser = {
 
     // XXX hook up memory-pressure notification to clear out tab browsers
     //os.addObserver(function(subject, topic, data) self.destroyEarliestBrowser(), "memory-pressure", false);
-
-    BrowserUI.init();
 
     window.QueryInterface(Ci.nsIDOMChromeWindow).browserDOMWindow = new nsBrowserAccess();
 
