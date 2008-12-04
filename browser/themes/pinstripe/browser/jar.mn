@@ -64,7 +64,6 @@ classic.jar:
   skin/classic/browser/feeds/videoFeedIcon16.png            (feeds/videoFeedIcon16.png)
   skin/classic/browser/feeds/audioFeedIcon.png              (feeds/audioFeedIcon.png)
   skin/classic/browser/feeds/audioFeedIcon16.png            (feeds/audioFeedIcon16.png)
-  skin/classic/browser/radio-selected-bg.png
   skin/classic/browser/setDesktopBackground.css
   skin/classic/browser/monitor.png
   skin/classic/browser/monitor_16-10.png
@@ -119,6 +118,8 @@ classic.jar:
   skin/classic/browser/preferences/Options.png              (preferences/Options.png)
   skin/classic/browser/preferences/saveFile.png             (preferences/saveFile.png)
   skin/classic/browser/preferences/preferences.css          (preferences/preferences.css)
+  skin/classic/browser/preferences/prefbutton-active.png    (preferences/prefbutton-active.png)
+  skin/classic/browser/preferences/prefbutton-inactive.png  (preferences/prefbutton-inactive.png)
   skin/classic/browser/preferences/applications.css         (preferences/applications.css)
   skin/classic/browser/tabbrowser/alltabs-box-bkgnd.png                  (tabbrowser/alltabs-box-bkgnd.png)
   skin/classic/browser/tabbrowser/alltabs-box-bkgnd-icon.png             (tabbrowser/alltabs-box-bkgnd-icon.png)

@@ -39,12 +39,8 @@
 # ***** END LICENSE BLOCK *****
 */
 
-#BrowserPreferences:not([active="true"]) > .paneSelector > radio {
-  opacity: 0.7;
-}
-
 .prefWindow-dlgbuttons {
-  margin: 0 12px 8px 12px;
+  margin: 0 12px 8px;
 }
 
 #BrowserPreferences .prefWindow-dlgbuttons {
@@ -58,33 +54,35 @@
 
 .paneSelector {
   list-style-image: url("chrome://browser/skin/preferences/Options.png");
-  padding: 0 5px 2px 5px;
+  padding: 1px 4px;
   -moz-appearance: -moz-mac-unified-toolbar;
   margin: 0;
 }
 
-.paneSelector radio {
-  border-right: 2px solid transparent;
-  border-left: 2px solid transparent;
-  padding: 5px 0 3px 0;
+radio[pane] {
+  border: solid transparent;
+  border-width: 0 2px;
+  padding: 5px 4px 3px;
   margin: 0;
-  -moz-appearance: none !important;
+  -moz-appearance: none;
+  text-shadow: rgba(255, 255, 255, 0.4) 0 1px;
 }
 
-.paneButtonLabel-shadow,
-.paneButtonLabel {
-  margin: 0;
-  padding: 1px 6px 0 6px;
-}
-
-.paneButtonLabel-shadow {
-  padding-top: 2px;
+radio[pane]:active:hover {
+  text-shadow: none;
 }
 
 radio[pane][selected="true"] {
-    background: url("chrome://browser/skin/radio-selected-bg.png") repeat-x center center;
-    -moz-border-left-colors: #6a6a6a #868686;
-    -moz-border-right-colors: #6a6a6a #868686;    
+  -moz-border-image: url("chrome://browser/skin/preferences/prefbutton-active.png") 0 2 repeat;
+}
+
+#BrowserPreferences:not([active="true"]) radio[pane][selected="true"] {
+  -moz-border-image: url("chrome://browser/skin/preferences/prefbutton-inactive.png") 0 2 repeat;
+}
+
+.paneButtonLabel {
+  margin: 0;
+  padding: 0;
 }
 
 /* ----- GENERAL BUTTON ----- */
@@ -94,7 +92,7 @@ radio[pane=paneMain] {
 	-moz-image-region: rect(0px, 32px, 32px, 0px)
 } 
 radio[pane=paneGeneral]:active,
-radio[pane=paneMain]:active {
+radio[pane=paneMain]:active:hover{
 	-moz-image-region: rect(32px, 32px, 64px, 0px)
 }
 
@@ -104,7 +102,7 @@ radio[pane=paneTabs] {
 	-moz-image-region: rect(0px, 64px, 32px, 32px);
 }
 
-radio[pane=paneTabs]:active {
+radio[pane=paneTabs]:active:hover{
 	-moz-image-region: rect(32px, 64px, 64px, 32px);
 }
 
@@ -114,7 +112,7 @@ radio[pane=paneContent] {
 	-moz-image-region: rect(0px, 96px, 32px, 64px);
 }
 
-radio[pane=paneContent]:active {
+radio[pane=paneContent]:active:hover{
 	-moz-image-region: rect(32px, 96px, 64px, 64px);
 }
 
@@ -124,7 +122,7 @@ radio[pane=paneApplications] {
 	-moz-image-region: rect(0px, 128px, 32px, 96px);
 }
 
-radio[pane=paneApplications]:active {
+radio[pane=paneApplications]:active:hover{
 	-moz-image-region: rect(32px, 128px, 64px, 96px);
 }
 
@@ -134,7 +132,7 @@ radio[pane=panePrivacy] {
 	-moz-image-region: rect(0px, 160px, 32px, 128px);
 }
 
-radio[pane=panePrivacy]:active {
+radio[pane=panePrivacy]:active:hover{
 	-moz-image-region: rect(32px, 160px, 64px, 128px);
 }
 
@@ -144,7 +142,7 @@ radio[pane=paneSecurity] {
 	-moz-image-region: rect(0px, 192px, 32px, 160px);
 }
 
-radio[pane=paneSecurity]:active {
+radio[pane=paneSecurity]:active:hover{
 	-moz-image-region: rect(32px, 192px, 64px, 160px);
 }
 
@@ -154,7 +152,7 @@ radio[pane=paneAdvanced] {
 	-moz-image-region: rect(0px, 224px, 32px, 192px);
 }
 
-radio[pane=paneAdvanced]:active {
+radio[pane=paneAdvanced]:active:hover{
 	-moz-image-region: rect(32px, 224px, 64px, 192px);
 }
 
