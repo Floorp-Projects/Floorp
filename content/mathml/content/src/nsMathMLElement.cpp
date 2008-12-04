@@ -96,7 +96,7 @@ nsMathMLElement::BindToTree(nsIDocument* aDocument, nsIContent* aParent,
     nsPresShellIterator iter(aDocument);
     nsCOMPtr<nsIPresShell> shell;
     while ((shell = iter.GetNextShell()) != nsnull) {
-      shell->GetPresContext()->PostRebuildAllStyleDataEvent();
+      shell->GetPresContext()->PostRebuildAllStyleDataEvent(nsChangeHint(0));
     }
   }
 

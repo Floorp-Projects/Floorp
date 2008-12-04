@@ -213,8 +213,18 @@ public:
     { return GetPresShell()->FrameManager(); } 
 #endif
 
+  /**
+   * Rebuilds all style data by throwing out the old rule tree and
+   * building a new one, and additionally applying aExtraHint (which
+   * must not contain nsChangeHint_ReconstructFrame) to the root frame.
+   * Also rebuild the user font set.
+   */
   void RebuildAllStyleData(nsChangeHint aExtraHint);
-  void PostRebuildAllStyleDataEvent();
+  /**
+   * Just like RebuildAllStyleData, except (1) asynchronous and (2) it
+   * doesn't rebuild the user font set.
+   */
+  void PostRebuildAllStyleDataEvent(nsChangeHint aExtraHint);
 
   void MediaFeatureValuesChanged(PRBool aCallerWillRebuildStyleData);
   void PostMediaFeatureValuesChangedEvent();
