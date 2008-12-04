@@ -1242,7 +1242,10 @@ nsFrameConstructorState::nsFrameConstructorState(nsIPresShell*          aPresShe
     mFloatedItems(aFloatContainingBlock),
     mFirstLetterStyle(PR_FALSE),
     mFirstLineStyle(PR_FALSE),
-    mFixedPosIsAbsPos(PR_FALSE),
+    // See PushAbsoluteContaningBlock below
+    mFixedPosIsAbsPos(aAbsoluteContainingBlock &&
+                      aAbsoluteContainingBlock->GetStyleDisplay()->
+                        HasTransform()),
     mFrameState(aHistoryState),
     mPseudoFrames(),
     mAdditionalStateBits(0)
@@ -1266,7 +1269,10 @@ nsFrameConstructorState::nsFrameConstructorState(nsIPresShell* aPresShell,
     mFloatedItems(aFloatContainingBlock),
     mFirstLetterStyle(PR_FALSE),
     mFirstLineStyle(PR_FALSE),
-    mFixedPosIsAbsPos(PR_FALSE),
+    // See PushAbsoluteContaningBlock below
+    mFixedPosIsAbsPos(aAbsoluteContainingBlock &&
+                      aAbsoluteContainingBlock->GetStyleDisplay()->
+                        HasTransform()),
     mPseudoFrames(),
     mAdditionalStateBits(0)
 {
