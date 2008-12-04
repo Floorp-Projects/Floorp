@@ -73,12 +73,6 @@
 #define MATHML_MODULES
 #endif
 
-#ifdef MOZ_IPCD
-#define IPC_MODULE MODULE(ipcdclient)
-#else
-#define IPC_MODULE
-#endif
-
 #define GFX_MODULES MODULE(nsGfxModule)
 
 #ifdef XP_WIN
@@ -277,7 +271,6 @@
     MODULE(necko)                            \
     PERMISSIONS_MODULES                      \
     AUTH_MODULE                              \
-    IPC_MODULE                               \
     MODULE(nsJarModule)                      \
     ZIPWRITER_MODULE                         \
     MODULE(nsPrefModule)                     \
