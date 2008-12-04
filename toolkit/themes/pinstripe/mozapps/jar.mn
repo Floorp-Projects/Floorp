@@ -15,7 +15,6 @@ classic.jar:
   skin/classic/mozapps/extensions/extensionIcons.png              (extensions/extensionIcons.png)
   skin/classic/mozapps/extensions/about.css                       (extensions/about.css)
   skin/classic/mozapps/extensions/extensions.css                  (extensions/extensions.css)
-  skin/classic/mozapps/extensions/extensions.xml                  (extensions/extensions.xml)
   skin/classic/mozapps/extensions/update.css                      (extensions/update.css)
   skin/classic/mozapps/extensions/eula.css                        (extensions/eula.css)
   skin/classic/mozapps/extensions/blocklist.css                   (extensions/blocklist.css)
