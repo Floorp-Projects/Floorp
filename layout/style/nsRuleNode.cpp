@@ -198,9 +198,6 @@ static nscoord CalcLengthWith(const nsCSSValue& aValue,
       return NSToCoordRoundWithClamp(aValue.GetFloatValue() * float(aFontSize));
       // XXX scale against font metrics height instead?
     }
-    case eCSSUnit_EN: {
-      return NSToCoordRoundWithClamp((aValue.GetFloatValue() * float(aFontSize)) / 2.0f);
-    }
     case eCSSUnit_XHeight: {
       nsFont font = aStyleFont->mFont;
       font.size = aFontSize;
@@ -208,11 +205,6 @@ static nscoord CalcLengthWith(const nsCSSValue& aValue,
       nscoord xHeight;
       fm->GetXHeight(xHeight);
       return NSToCoordRoundWithClamp(aValue.GetFloatValue() * float(xHeight));
-    }
-    case eCSSUnit_CapHeight: {
-      NS_NOTYETIMPLEMENTED("cap height unit");
-      nscoord capHeight = ((aFontSize / 3) * 2); // XXX HACK!
-      return NSToCoordRoundWithClamp(aValue.GetFloatValue() * float(capHeight));
     }
     case eCSSUnit_Char: {
       nsFont font = aStyleFont->mFont;
