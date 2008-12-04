@@ -69,10 +69,6 @@
 #include "nsPrintfCString.h"
 #include "prlink.h"
 
-#ifdef MOZ_PROFILESHARING
-#include "nsSharedPrefHandler.h"
-#endif
-
 #ifdef XP_OS2
 #define INCL_DOS
 #include <os2.h>
@@ -343,14 +339,6 @@ pref_savePref(PLDHashTable *table, PLDHashEntryHdr *heh, PRUint32 i, void *arg)
     else
         // do not save default prefs that haven't changed
         return PL_DHASH_NEXT;
-
-#if MOZ_PROFILESHARING
-  if ((argData->saveTypes == SAVE_SHARED &&
-      !gSharedPrefHandler->IsPrefShared(pref->key)) ||
-      (argData->saveTypes == SAVE_NONSHARED &&
-      gSharedPrefHandler->IsPrefShared(pref->key)))
-    return PL_DHASH_NEXT;
-#endif
 
     // strings are in quotes!
     if (pref->flags & PREF_STRING) {
@@ -780,10 +768,6 @@ nsresult pref_HashPref(const char *key, PrefValue value, PrefType type, PRBool s
             if (NS_FAILED(rv2))
                 rv = rv2;
         }
-#ifdef MOZ_PROFILESHARING
-        if (gSharedPrefHandler)
-            gSharedPrefHandler->OnPrefChanged(set_default, pref, value);
-#endif
     }
     return rv;
 }
