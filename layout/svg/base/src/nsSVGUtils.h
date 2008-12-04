@@ -259,6 +259,11 @@ public:
    */
   static nsRect FindFilterInvalidation(nsIFrame *aFrame, const nsRect& aRect);
 
+  /**
+   * Invalidates the area covered by the frame
+   */
+  static void InvalidateCoveredRegion(nsIFrame *aFrame);
+
   /*
    * Update the area covered by the frame
    */

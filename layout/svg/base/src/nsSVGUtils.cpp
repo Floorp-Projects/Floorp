@@ -585,6 +585,18 @@ nsSVGUtils::FindFilterInvalidation(nsIFrame *aFrame, const nsRect& aRect)
 }
 
 void
+nsSVGUtils::InvalidateCoveredRegion(nsIFrame *aFrame)
+{
+  if (aFrame->GetStateBits() & NS_STATE_SVG_NONDISPLAY_CHILD)
+    return;
+
+  nsSVGOuterSVGFrame* outerSVGFrame = nsSVGUtils::GetOuterSVGFrame(aFrame);
+  NS_ASSERTION(outerSVGFrame, "no outer svg frame");
+  if (outerSVGFrame)
+    outerSVGFrame->InvalidateCoveredRegion(aFrame);
+}
+
+void
 nsSVGUtils::UpdateGraphic(nsISVGChildFrame *aSVGFrame)
 {
   nsIFrame *frame;
