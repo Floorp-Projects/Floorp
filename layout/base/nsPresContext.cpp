@@ -1445,13 +1445,13 @@ nsPresContext::RebuildAllStyleData(nsChangeHint aExtraHint)
 }
 
 void
-nsPresContext::PostRebuildAllStyleDataEvent()
+nsPresContext::PostRebuildAllStyleDataEvent(nsChangeHint aExtraHint)
 {
   if (!mShell) {
     // We must have been torn down. Nothing to do here.
     return;
   }
-  mShell->FrameConstructor()->PostRebuildAllStyleDataEvent();
+  mShell->FrameConstructor()->PostRebuildAllStyleDataEvent(aExtraHint);
 }
 
 void

@@ -201,10 +201,16 @@ public:
   // itself.
   void ProcessPendingRestyles();
   
+  // Rebuilds all style data by throwing out the old rule tree and
+  // building a new one, and additionally applying aExtraHint (which
+  // must not contain nsChangeHint_ReconstructFrame) to the root frame.
   void RebuildAllStyleData(nsChangeHint aExtraHint);
 
   void PostRestyleEvent(nsIContent* aContent, nsReStyleHint aRestyleHint,
                         nsChangeHint aMinChangeHint);
+private:
+  void PostRestyleEventInternal();
+public:
 
   /**
    * Asynchronously clear style data from the root frame downwards and ensure
@@ -216,7 +222,7 @@ public:
    * style data has become invalid. We assume that the root frame will not
    * need to be reframed.
    */
-  void PostRebuildAllStyleDataEvent();
+  void PostRebuildAllStyleDataEvent(nsChangeHint aExtraHint);
 
   // Request to create a continuing frame
   nsresult CreateContinuingFrame(nsPresContext* aPresContext,
@@ -1194,6 +1200,7 @@ private:
   // This is true if mDocElementContainingBlock supports absolute positioning
   PRPackedBool        mHasRootAbsPosContainingBlock : 1;
   PRUint32            mHoverGeneration;
+  nsChangeHint        mRebuildAllExtraHint;
 
   nsRevocableEventPtr<RestyleEvent> mRestyleEvent;
 
