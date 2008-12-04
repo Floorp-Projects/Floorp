@@ -100,11 +100,11 @@
 // Microsecond timeout for "recent" events such as typed and bookmark following.
 // If you typed it more than this time ago, it's not recent.
 // This is 15 minutes           m    s/m  us/s
-#define RECENT_EVENT_THRESHOLD (15 * 60 * 1000000)
+#define RECENT_EVENT_THRESHOLD (15 * 60 * PR_USEC_PER_SEC)
 
 // Microseconds ago to look for redirects when updating bookmarks. Used to
 // compute the threshold for nsNavBookmarks::AddBookmarkToHash
-#define BOOKMARK_REDIRECT_TIME_THRESHOLD (2 * 60 * 100000)
+#define BOOKMARK_REDIRECT_TIME_THRESHOLD (2 * 60 * PR_USEC_PER_SEC)
 
 // The maximum number of things that we will store in the recent events list
 // before calling ExpireNonrecentEvents. This number should be big enough so it
@@ -198,8 +198,7 @@
 #endif // LAZY_ADD
 
 // Perform expiration after 5 minutes of idle time, repeating.
-// 5 minutes = 300 seconds = 300000 milliseconds
-#define EXPIRE_IDLE_TIME_IN_MSECS (300000)
+#define EXPIRE_IDLE_TIME_IN_MSECS (5 * 60 * PR_MSEC_PER_SEC)
 
 // Amount of items to expire at idle time.
 #define MAX_EXPIRE_RECORDS_ON_IDLE 200

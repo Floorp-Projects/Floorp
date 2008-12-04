@@ -75,10 +75,10 @@ struct nsNavHistoryExpireRecord {
 // actually better. If expiration takes an unusually long period of time, it
 // will interfere with video playback in the browser, for example. Such a blip
 // is not likely to be noticable when the page has just appeared.
-#define PARTIAL_EXPIRATION_TIMEOUT 3500
+#define PARTIAL_EXPIRATION_TIMEOUT (3.5 * PR_MSEC_PER_SEC)
 
 // The time in ms to wait after the initial expiration run for additional ones
-#define SUBSEQUENT_EXPIRATION_TIMEOUT 20000
+#define SUBSEQUENT_EXPIRATION_TIMEOUT (20 * PR_MSEC_PER_SEC)
 
 // Number of expirations we'll do after the most recent page is loaded before
 // stopping. We don't want to keep the computer chugging forever expiring
