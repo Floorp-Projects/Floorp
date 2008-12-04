@@ -168,6 +168,18 @@ FixedTableLayoutStrategy::MarkIntrinsicWidthsDirty()
     mLastCalcWidth = nscoord_MIN;
 }
 
+static inline nscoord
+AllocateUnassigned(nscoord aUnassignedSpace, float aShare)
+{
+    if (aShare == 1.0f) {
+        // This happens when the numbers we're dividing to get aShare
+        // are equal.  We want to return unassignedSpace exactly, even
+        // if it can't be precisely round-tripped through float.
+        return aUnassignedSpace;
+    }
+    return NSToCoordRound(float(aUnassignedSpace) * aShare);
+}
+
 /* virtual */ void
 FixedTableLayoutStrategy::ComputeColumnWidths(const nsHTMLReflowState& aReflowState)
 {
@@ -357,8 +369,8 @@ FixedTableLayoutStrategy::ComputeColumnWidths(const nsHTMLReflowState& aReflowSt
                 if (colFrame->GetPrefPercent() == 0.0f) {
                     NS_ASSERTION(colFrame->GetFinalWidth() <= specUndist,
                                  "widths don't add up");
-                    nscoord toAdd = NSToCoordRound(float(unassignedSpace) *
-                       (float(colFrame->GetFinalWidth()) / float(specUndist)));
+                    nscoord toAdd = AllocateUnassigned(unassignedSpace,
+                       float(colFrame->GetFinalWidth()) / float(specUndist));
                     specUndist -= colFrame->GetFinalWidth();
                     colFrame->SetFinalWidth(colFrame->GetFinalWidth() + toAdd);
                     unassignedSpace -= toAdd;
@@ -386,8 +398,8 @@ FixedTableLayoutStrategy::ComputeColumnWidths(const nsHTMLReflowState& aReflowSt
                                  "widths don't add up");
                     pctUndist = colFrame->GetPrefPercent();
                 }
-                nscoord toAdd = NSToCoordRound(float(unassignedSpace) *
-                    (colFrame->GetPrefPercent() / pctUndist));
+                nscoord toAdd = AllocateUnassigned(unassignedSpace,
+                    colFrame->GetPrefPercent() / pctUndist);
                 colFrame->SetFinalWidth(colFrame->GetFinalWidth() + toAdd);
                 unassignedSpace -= toAdd;
                 pctUndist -= colFrame->GetPrefPercent();
@@ -406,12 +418,13 @@ FixedTableLayoutStrategy::ComputeColumnWidths(const nsHTMLReflowState& aReflowSt
                     continue;
                 }
                 NS_ASSERTION(colFrame->GetFinalWidth() == 0, "yikes");
-                nscoord toAdd = NSToCoordRound(float(unassignedSpace) /
-                                               float(colsLeft));
+                nscoord toAdd = AllocateUnassigned(unassignedSpace,
+                                                   1.0f / float(colsLeft));
                 colFrame->SetFinalWidth(toAdd);
                 unassignedSpace -= toAdd;
                 --colsLeft;
             }
+            NS_ASSERTION(unassignedSpace == 0, "failed to redistribute");
         }
     }
     for (PRInt32 col = 0; col < colCount; ++col) {
