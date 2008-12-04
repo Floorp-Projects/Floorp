@@ -156,10 +156,6 @@ public:
 
   void WillDestroyFrameTree();
 
-  // Get an integer that increments every time there is a style change
-  // as a result of a change to the :hover content state.
-  PRUint32 GetHoverGeneration() const { return mHoverGeneration; }
-
   // Note: It's the caller's responsibility to make sure to wrap a
   // ProcessRestyledFrames call in a view update batch.
   // This function does not call ProcessAttachedQueue() on the binding manager.
@@ -1199,7 +1195,6 @@ private:
   PRPackedBool        mRebuildAllStyleData : 1;
   // This is true if mDocElementContainingBlock supports absolute positioning
   PRPackedBool        mHasRootAbsPosContainingBlock : 1;
-  PRUint32            mHoverGeneration;
   nsChangeHint        mRebuildAllExtraHint;
 
   nsRevocableEventPtr<RestyleEvent> mRestyleEvent;
