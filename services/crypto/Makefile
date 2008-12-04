@@ -215,11 +215,15 @@ ifeq ($(os), Linux)
   libs := $(patsubst %,-l%,$(libs))
   cppflags += -pipe -Os \
               -fPIC -fno-rtti -fno-exceptions -fno-strict-aliasing \
-              -fno-common -fshort-wchar -pthread \
+              -fno-common -pthread \
               -Wall -Wconversion -Wpointer-arith -Woverloaded-virtual -Wsynth \
               -Wno-ctor-dtor-privacy -Wno-non-virtual-dtor -Wcast-align \
               -Wno-long-long \
               -include xpcom-config.h $(headers)
+ifeq ($(arch), x86)
+  cppflags += -fshort-wchar
+else
+endif
   ldflags += -pthread -pipe -DMOZILLA_STRICT_API \
              -Wl,-dead_strip \
              -Wl,-exported_symbol \
