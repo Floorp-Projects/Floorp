@@ -159,7 +159,8 @@ nsMathMLmmultiscriptsFrame::Place(nsIRenderingContext& aRenderingContext,
 
   // get x-height (an ex)
   const nsStyleFont* font = GetStyleFont();
-  aRenderingContext.SetFont(font->mFont, nsnull);
+  aRenderingContext.SetFont(font->mFont, nsnull,
+                            PresContext()->GetUserFontSet());
   nsCOMPtr<nsIFontMetrics> fm;
   aRenderingContext.GetFontMetrics(*getter_AddRefs(fm));
 

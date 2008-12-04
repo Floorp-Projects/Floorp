@@ -94,7 +94,7 @@ nsMathMLContainerFrame::ReflowError(nsIRenderingContext& aRenderingContext,
 
   ///////////////
   // Set font
-  aRenderingContext.SetFont(GetStyleFont()->mFont, nsnull);
+  nsLayoutUtils::SetFontFromStyle(&aRenderingContext, GetStyleContext());
 
   // bounding metrics
   nsAutoString errorMsg; errorMsg.AssignLiteral("invalid-markup");
@@ -144,7 +144,7 @@ void nsDisplayMathMLError::Paint(nsDisplayListBuilder* aBuilder,
      nsIRenderingContext* aCtx, const nsRect& aDirtyRect)
 {
   // Set color and font ...
-  aCtx->SetFont(mFrame->GetStyleFont()->mFont, nsnull);
+  nsLayoutUtils::SetFontFromStyle(aCtx, mFrame->GetStyleContext());
 
   nsPoint pt = aBuilder->ToReferenceFrame(mFrame);
   aCtx->SetColor(NS_RGB(255,0,0));
