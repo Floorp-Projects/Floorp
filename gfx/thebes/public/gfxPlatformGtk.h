@@ -88,6 +88,24 @@ public:
                                   const gfxFontStyle *aStyle,
                                   gfxUserFontSet *aUserFontSet);
 
+#ifdef MOZ_PANGO
+    /**
+     * Activate a platform font (needed to support @font-face src url() )
+     *
+     */
+    virtual gfxFontEntry* MakePlatformFont(const gfxProxyFontEntry *aProxyEntry,
+                                           nsISupports *aLoader,
+                                           const PRUint8 *aFontData,
+                                           PRUint32 aLength);
+
+    /**
+     * Check whether format is supported on a platform or not (if unclear,
+     * returns true).
+     */
+    virtual PRBool IsFontFormatSupported(nsIURI *aFontURI,
+                                         PRUint32 aFormatFlags);
+#endif
+
 #ifndef MOZ_PANGO
     FontFamily *FindFontFamily(const nsAString& aName);
     FontEntry *FindFontEntry(const nsAString& aFamilyName, const gfxFontStyle& aFontStyle);

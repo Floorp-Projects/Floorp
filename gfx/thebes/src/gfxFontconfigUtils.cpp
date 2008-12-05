@@ -64,17 +64,27 @@ gfxFontconfigUtils::Shutdown() {
 }
 
 /* static */ PRUint8
+gfxFontconfigUtils::FcSlantToThebesStyle(int aFcSlant)
+{
+    switch (aFcSlant) {
+        case FC_SLANT_ITALIC:
+            return FONT_STYLE_ITALIC;
+        case FC_SLANT_OBLIQUE:
+            return FONT_STYLE_OBLIQUE;
+        default:
+            return FONT_STYLE_NORMAL;
+    }
+}
+
+/* static */ PRUint8
 gfxFontconfigUtils::GetThebesStyle(FcPattern *aPattern)
 {
     int slant;
-    if (FcPatternGetInteger(aPattern, FC_SLANT, 0, &slant) == FcResultMatch) {
-        if (slant == FC_SLANT_ITALIC)
-            return FONT_STYLE_ITALIC;
-        if (slant == FC_SLANT_OBLIQUE)
-            return FONT_STYLE_OBLIQUE;
+    if (FcPatternGetInteger(aPattern, FC_SLANT, 0, &slant) != FcResultMatch) {
+        return FONT_STYLE_NORMAL;
     }
 
-    return FONT_STYLE_NORMAL;
+    return FcSlantToThebesStyle(slant);
 }
 
 /* static */ int
@@ -209,10 +219,8 @@ GuessFcWeight(const gfxFontStyle& aFontStyle)
 static void
 AddString(FcPattern *aPattern, const char *object, const char *aString)
 {
-    // Cast from signed chars used in nsString to unsigned in fontconfig
-    const FcChar8 *fcString = gfxFontconfigUtils::ToFcChar8(aString);
-    // and cast away the const for fontconfig, that will merely make a copy.
-    FcPatternAddString(aPattern, object, const_cast<FcChar8*>(fcString));
+    FcPatternAddString(aPattern, object,
+                       gfxFontconfigUtils::ToFcChar8(aString));
 }
 
 static void
@@ -229,7 +237,7 @@ AddLangGroup(FcPattern *aPattern, const nsACString& aLangGroup)
 
 
 nsReturnRef<FcPattern>
-gfxFontconfigUtils::NewPattern(const nsStringArray& aFamilies,
+gfxFontconfigUtils::NewPattern(const nsTArray<nsString>& aFamilies,
                                const gfxFontStyle& aFontStyle,
                                const char *aLang)
 {
@@ -245,8 +253,8 @@ gfxFontconfigUtils::NewPattern(const nsStringArray& aFamilies,
         AddString(pattern, FC_LANG, aLang);
     }
 
-    for (PRInt32 i = 0; i < aFamilies.Count(); ++i) {
-        NS_ConvertUTF16toUTF8 family(*aFamilies[i]);
+    for (PRUint32 i = 0; i < aFamilies.Length(); ++i) {
+        NS_ConvertUTF16toUTF8 family(aFamilies[i]);
         AddString(pattern, FC_FAMILY, family.get());
     }
 
@@ -785,16 +793,23 @@ CompareLangString(const FcChar8 *aLangA, const FcChar8 *aLangB) {
 FcLangResult
 gfxFontconfigUtils::GetLangSupport(FcPattern *aFont, const FcChar8 *aLang)
 {
-    // When fontconfig builds a pattern for the font, it will set a single
-    // LangSet property value for the font.  That value may be removed and
-    // additional string values may be added through FcConfigSubsitute with
-    // FcMatchScan.  Values that are neither LangSet nor string are considered
-    // errors in fontconfig sort and match functions.
+    // When fontconfig builds a pattern for a system font, it will set a
+    // single LangSet property value for the font.  That value may be removed
+    // and additional string values may be added through FcConfigSubsitute
+    // with FcMatchScan.  Values that are neither LangSet nor string are
+    // considered errors in fontconfig sort and match functions.
+    //
+    // If no string nor LangSet value is found, then either the font is a
+    // system font and the LangSet has been removed through FcConfigSubsitute,
+    // or the font is a web font and its language support is unknown.
+    // Returning FcLangDifferentLang for these fonts ensures that this font
+    // will not be assumed to satisfy the language, and so language will be
+    // prioritized in sorting fallback fonts.
     FcValue value;
     FcLangResult best = FcLangDifferentLang;
-    int v = 0;
-    while (FcPatternGet(aFont, FC_LANG, v, &value) == FcResultMatch) {
-        ++v;
+    for (int v = 0;
+         FcPatternGet(aFont, FC_LANG, v, &value) == FcResultMatch;
+         ++v) {
 
         FcLangResult support;
         switch (value.type) {
@@ -805,8 +820,8 @@ gfxFontconfigUtils::GetLangSupport(FcPattern *aFont, const FcChar8 *aLang)
                 support = CompareLangString(value.u.s, aLang);
                 break;
             default:
-                // error
-                return FcLangEqual;
+                // error. continue to see if there is a useful value.
+                continue;
         }
 
         if (support < best) { // lower is better
@@ -815,11 +830,6 @@ gfxFontconfigUtils::GetLangSupport(FcPattern *aFont, const FcChar8 *aLang)
             best = support;
         }        
     }
-
-    // A missing FC_LANG property is considered a match in fontconfig sort
-    // and match functions.
-    if (v == 0)
-        return FcLangEqual;        
 
     return best;
 }
