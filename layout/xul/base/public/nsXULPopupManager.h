@@ -59,11 +59,10 @@
  *     above should also be closed.
  *   - panels, which stay open until a request is made to close them. This
  *     type is used by tooltips.
- *   XXXndeakin note that panels don't work too well currently due to widget
- *              changes needed to handle activation events properly.
  *
  * When a new popup is opened, it is appended to the popup chain, stored in a
- * linked list in mCurrentMenu for dismissable menus or mPanels for panels.
+ * linked list in mPopups for dismissable menus and panels or mNoHidePanels
+ * for tooltips and panels with noautohide="true".
  * Popups are stored in this list linked from newest to oldest. When a click
  * occurs outside one of the open dismissable popups, the chain is closed by
  * calling Rollup.
@@ -498,7 +497,7 @@ public:
   /**
    * Return the frame for the topmost open popup of a given type, or null if
    * no popup of that type is open. If aType is ePopupTypeAny, a menu of any
-   * type is returned, except for popups in the mPanels list.
+   * type is returned, except for popups in the mNoHidePanels list.
    */
   nsIFrame* GetTopPopup(nsPopupType aType);
 
@@ -729,11 +728,11 @@ protected:
   // set to the currently active menu bar, if any
   nsMenuBarFrame* mActiveMenuBar;
 
-  // linked list of dismissable menus.
-  nsMenuChainItem* mCurrentMenu;
+  // linked list of normal menus and panels.
+  nsMenuChainItem* mPopups;
 
-  // linked list of panels
-  nsMenuChainItem* mPanels;
+  // linked list of noautohide panels and tooltips.
+  nsMenuChainItem* mNoHidePanels;
 
   // timer used for HidePopupAfterDelay
   nsCOMPtr<nsITimer> mCloseTimer;
