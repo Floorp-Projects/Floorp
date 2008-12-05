@@ -278,17 +278,6 @@ endif
 	$(NSINSTALL) -D $(DIST)/l10n-stage
 	cd $(DIST)/l10n-stage && \
 	  $(UNMAKE_PACKAGE)
-ifdef MOZ_PKG_PRETTYNAMES
-ifneq (,$(filter WINNT Linux,$(OS_ARCH)))
-# Linux and Windows unpack to a directory named after the MOZ_APP_NAME
-# they were built with. This is fine when when MOZ_PKG_PRETTYNAMES
-# isn't defined, because MOZ_PKG_APPNAME will be the same as MOZ_APP_NAME.
-# However, when MOZ_PKG_PRETTYNAMES is passed MOZ_PKG_APPNAME inherits
-# from MOZ_PKG_DISPLAYNAME, which is not always the same as MOZ_APP_NAME.
-	cd $(DIST)/l10n-stage && \
-      mv $(MOZ_APP_NAME) $(MOZ_PKG_APPNAME)
-endif
-endif
 	make clobber-zip AB_CD=en-US
 
 clobber-zip:
