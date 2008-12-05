@@ -36,20 +36,20 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-#ifndef nsIMenuParent_h___
-#define nsIMenuParent_h___
+#ifndef nsMenuParent_h___
+#define nsMenuParent_h___
 
 class nsMenuFrame;
 
 /*
- * nsIMenuParent is an interface implemented by nsMenuBarFrame and nsMenuPopupFrame
+ * nsMenuParent is an interface implemented by nsMenuBarFrame and nsMenuPopupFrame
  * as both serve as parent frames to nsMenuFrame.
  *
  * Don't implement this interface on other classes unless you also fix up references,
  * as this interface is directly cast to and from nsMenuBarFrame and nsMenuPopupFrame.
  */
 
-class nsIMenuParent {
+class nsMenuParent {
 
 public:
   // returns the menu frame of the currently active item within the menu

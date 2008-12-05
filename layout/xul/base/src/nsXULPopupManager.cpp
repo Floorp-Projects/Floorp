@@ -406,7 +406,7 @@ nsXULPopupManager::ShowMenu(nsIContent *aMenu,
   PRBool onMenuBar = PR_FALSE;
   PRBool onmenu = menuFrame->IsOnMenu();
 
-  nsIMenuParent* parent = menuFrame->GetMenuParent();
+  nsMenuParent* parent = menuFrame->GetMenuParent();
   if (parent && onmenu) {
     parentIsContextMenu = parent->IsContextMenu();
     onMenuBar = parent->IsMenuBar();
@@ -1133,7 +1133,7 @@ nsXULPopupManager::IsPopupOpen(nsIContent* aPopup)
 }
 
 PRBool
-nsXULPopupManager::IsPopupOpenForMenuParent(nsIMenuParent* aMenuParent)
+nsXULPopupManager::IsPopupOpenForMenuParent(nsMenuParent* aMenuParent)
 {
   nsMenuChainItem* item = GetTopVisibleMenu();
   while (item) {
@@ -1255,7 +1255,7 @@ nsXULPopupManager::MayShowPopup(nsMenuPopupFrame* aPopup)
   nsIFrame* parent = aPopup->GetParent();
   if (parent && parent->GetType() == nsGkAtoms::menuFrame) {
     nsMenuFrame* menuFrame = static_cast<nsMenuFrame *>(parent);
-    nsIMenuParent* parentPopup = menuFrame->GetMenuParent();
+    nsMenuParent* parentPopup = menuFrame->GetMenuParent();
     if (parentPopup && !parentPopup->IsOpen())
       return PR_FALSE;
   }
@@ -1514,7 +1514,7 @@ nsXULPopupManager::KillMenuTimer()
 }
 
 void
-nsXULPopupManager::CancelMenuTimer(nsIMenuParent* aMenuParent)
+nsXULPopupManager::CancelMenuTimer(nsMenuParent* aMenuParent)
 {
   if (mCloseTimer && mTimerMenu == aMenuParent) {
     mCloseTimer->Cancel();
@@ -1582,7 +1582,7 @@ nsXULPopupManager::HandleKeyboardNavigation(PRUint32 aKeyCode)
       // check to make sure that the parent is actually the parent menu. It won't
       // be if the parent is in a different frame hierarchy, for example, for a
       // context menu opened on another menu.
-      nsIMenuParent* expectedParent = static_cast<nsIMenuParent *>(nextitem->Frame());
+      nsMenuParent* expectedParent = static_cast<nsMenuParent *>(nextitem->Frame());
       nsIFrame* parent = item->Frame()->GetParent();
       if (parent && parent->GetType() == nsGkAtoms::menuFrame) {
         nsMenuFrame* menuFrame = static_cast<nsMenuFrame *>(parent);

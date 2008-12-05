@@ -72,7 +72,7 @@ class nsIPresShell;
 class nsMenuFrame;
 class nsMenuPopupFrame;
 class nsMenuBarFrame;
-class nsIMenuParent;
+class nsMenuParent;
 class nsIDOMKeyEvent;
 class nsIDocShellTreeItem;
 
@@ -492,7 +492,7 @@ public:
   /**
    * Return true if the popup for the supplied menu parent is open.
    */
-  PRBool IsPopupOpenForMenuParent(nsIMenuParent* aMenuParent);
+  PRBool IsPopupOpenForMenuParent(nsMenuParent* aMenuParent);
 
   /**
    * Return the frame for the topmost open popup of a given type, or null if
@@ -551,7 +551,7 @@ public:
    * submenu before the timer fires, we should instead cancel the timer. This
    * ensures that the user can move the mouse diagonally over a menu.
    */
-  void CancelMenuTimer(nsIMenuParent* aMenuParent);
+  void CancelMenuTimer(nsMenuParent* aMenuParent);
 
   /**
    * Handles navigation for menu accelkeys. Returns true if the key has
