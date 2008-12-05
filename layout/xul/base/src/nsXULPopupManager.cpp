@@ -136,15 +136,15 @@ NS_IMPL_ISUPPORTS5(nsXULPopupManager,
 nsXULPopupManager::nsXULPopupManager() :
   mRangeOffset(0),
   mActiveMenuBar(nsnull),
-  mCurrentMenu(nsnull),
-  mPanels(nsnull),
+  mPopups(nsnull),
+  mNoHidePanels(nsnull),
   mTimerMenu(nsnull)
 {
 }
 
 nsXULPopupManager::~nsXULPopupManager() 
 {
-  NS_ASSERTION(!mCurrentMenu && !mPanels, "XUL popups still open");
+  NS_ASSERTION(!mPopups && !mNoHidePanels, "XUL popups still open");
 }
 
 nsresult
@@ -240,10 +240,10 @@ nsXULPopupManager::GetSubmenuWidgetChain(nsTArray<nsIWidget*> *_retval)
 void
 nsXULPopupManager::AdjustPopupsOnWindowChange()
 {
-  // Panels are moved and kept aligned with the anchor when the parent window
-  // moves. We only look through the panels list, as menus are expected to
-  // roll up when a window is moved, so menus don't need to be moved.
-  nsMenuChainItem* item = mPanels;
+  // Panels with noautohide="true" are moved and kept aligned with the anchor
+  // when the parent window moves. Dismissable menus and panels are expected
+  // to roll up when a window is moved, so there is no need to check these.
+  nsMenuChainItem* item = mNoHidePanels;
   while (item) {
     // if the auto positioning has been disabled, don't move the popup
     if (item->Frame()->GetAutoPosition())
@@ -291,7 +291,7 @@ nsXULPopupManager::GetPopupFrameForContent(nsIContent* aContent)
 nsMenuChainItem*
 nsXULPopupManager::GetTopVisibleMenu()
 {
-  nsMenuChainItem* item = mCurrentMenu;
+  nsMenuChainItem* item = mPopups;
   while (item && item->Frame()->PopupState() == ePopupInvisible)
     item = item->GetParent();
   return item;
@@ -583,15 +583,15 @@ nsXULPopupManager::ShowPopupCallback(nsIContent* aPopup,
   // that the application will hide these popups manually. The tooltip
   // listener will handle closing the tooltip also.
   if (aPopupFrame->IsNoAutoHide() || popupType == ePopupTypeTooltip) {
-    item->SetParent(mPanels);
-    mPanels = item;
+    item->SetParent(mNoHidePanels);
+    mNoHidePanels = item;
   }
   else {
     nsIContent* oldmenu = nsnull;
-    if (mCurrentMenu)
-      oldmenu = mCurrentMenu->Content();
-    item->SetParent(mCurrentMenu);
-    mCurrentMenu = item;
+    if (mPopups)
+      oldmenu = mPopups->Content();
+    item->SetParent(mPopups);
+    mPopups = item;
     SetCaptureState(oldmenu);
   }
 
@@ -616,10 +616,11 @@ nsXULPopupManager::HidePopup(nsIContent* aPopup,
                              PRBool aDeselectMenu,
                              PRBool aAsynchronous)
 {
-  // if the popup is on the panels list, remove it but don't close any other panels
+  // if the popup is on the nohide panels list, remove it but don't close any
+  // other panels
   nsMenuPopupFrame* popupFrame = nsnull;
   PRBool foundPanel = PR_FALSE;
-  nsMenuChainItem* item = mPanels;
+  nsMenuChainItem* item = mNoHidePanels;
   while (item) {
     if (item->Content() == aPopup) {
       foundPanel = PR_TRUE;
@@ -631,7 +632,7 @@ nsXULPopupManager::HidePopup(nsIContent* aPopup,
 
   // when removing a menu, all of the child popups must be closed
   nsMenuChainItem* foundMenu = nsnull;
-  item = mCurrentMenu;
+  item = mPopups;
   while (item) {
     if (item->Content() == aPopup) {
       foundMenu = item;
@@ -734,20 +735,20 @@ nsXULPopupManager::HidePopupCallback(nsIContent* aPopup,
   // possible someone added another item (attempted to open another popup)
   // or removed a popup frame during the event processing so the item isn't at
   // the front anymore.
-  nsMenuChainItem* item = mPanels;
+  nsMenuChainItem* item = mNoHidePanels;
   while (item) {
     if (item->Content() == aPopup) {
-      item->Detach(&mPanels);
+      item->Detach(&mNoHidePanels);
       break;
     }
     item = item->GetParent();
   }
 
   if (!item) {
-    item = mCurrentMenu;
+    item = mPopups;
     while (item) {
       if (item->Content() == aPopup) {
-        item->Detach(&mCurrentMenu);
+        item->Detach(&mPopups);
         SetCaptureState(aPopup);
         break;
       }
@@ -770,7 +771,7 @@ nsXULPopupManager::HidePopupCallback(nsIContent* aPopup,
   // if there are more popups to close, look for the next one
   if (aNextPopup && aPopup != aLastPopup) {
     nsMenuChainItem* foundMenu = nsnull;
-    nsMenuChainItem* item = mCurrentMenu;
+    nsMenuChainItem* item = mPopups;
     while (item) {
       if (item->Content() == aNextPopup) {
         foundMenu = item;
@@ -876,13 +877,13 @@ nsXULPopupManager::HidePopupsInDocShell(nsIDocShellTreeItem* aDocShellToHide)
   nsTArray<nsMenuPopupFrame *> popupsToHide;
 
   // iterate to get the set of popup frames to hide
-  nsMenuChainItem* item = mCurrentMenu;
+  nsMenuChainItem* item = mPopups;
   while (item) {
     nsMenuChainItem* parent = item->GetParent();
     if (item->Frame()->PopupState() != ePopupInvisible &&
         IsChildOfDocShell(item->Content()->GetOwnerDoc(), aDocShellToHide)) {
       nsMenuPopupFrame* frame = item->Frame();
-      item->Detach(&mCurrentMenu);
+      item->Detach(&mPopups);
       delete item;
       popupsToHide.AppendElement(frame);
     }
@@ -890,13 +891,13 @@ nsXULPopupManager::HidePopupsInDocShell(nsIDocShellTreeItem* aDocShellToHide)
   }
 
   // now look for panels to hide
-  item = mPanels;
+  item = mNoHidePanels;
   while (item) {
     nsMenuChainItem* parent = item->GetParent();
     if (item->Frame()->PopupState() != ePopupInvisible &&
         IsChildOfDocShell(item->Content()->GetOwnerDoc(), aDocShellToHide)) {
       nsMenuPopupFrame* frame = item->Frame();
-      item->Detach(&mPanels);
+      item->Detach(&mNoHidePanels);
       delete item;
       popupsToHide.AppendElement(frame);
     }
@@ -1104,7 +1105,7 @@ nsXULPopupManager::IsPopupOpen(nsIContent* aPopup)
   // a popup is open if it is in the open list. The assertions ensure that the
   // frame is in the correct state. If the popup is in the hiding or invisible
   // state, it will still be in the open popup list until it is closed.
-  nsMenuChainItem* item = mCurrentMenu;
+  nsMenuChainItem* item = mPopups;
   while (item) {
     if (item->Content() == aPopup) {
       NS_ASSERTION(item->Frame()->IsOpen() ||
@@ -1116,7 +1117,7 @@ nsXULPopupManager::IsPopupOpen(nsIContent* aPopup)
     item = item->GetParent();
   }
 
-  item = mPanels;
+  item = mNoHidePanels;
   while (item) {
     if (item->Content() == aPopup) {
       NS_ASSERTION(item->Frame()->IsOpen() ||
@@ -1154,8 +1155,8 @@ nsXULPopupManager::IsPopupOpenForMenuParent(nsIMenuParent* aMenuParent)
 nsIFrame*
 nsXULPopupManager::GetTopPopup(nsPopupType aType)
 {
-  if (aType == ePopupTypePanel && mPanels)
-    return mPanels->Frame();
+  if (aType == ePopupTypePanel && mNoHidePanels)
+    return mNoHidePanels->Frame();
 
   nsMenuChainItem* item = GetTopVisibleMenu();
   while (item) {
@@ -1172,7 +1173,7 @@ nsXULPopupManager::GetOpenPopups()
 {
   nsTArray<nsIFrame *> popups;
 
-  nsMenuChainItem* item = mCurrentMenu;
+  nsMenuChainItem* item = mPopups;
   while (item) {
     if (item->Frame()->PopupState() != ePopupInvisible)
       popups.AppendElement(static_cast<nsIFrame*>(item->Frame()));
@@ -1274,10 +1275,10 @@ nsXULPopupManager::PopupDestroyed(nsMenuPopupFrame* aPopup)
     mTimerMenu = nsnull;
   }
 
-  nsMenuChainItem* item = mPanels;
+  nsMenuChainItem* item = mNoHidePanels;
   while (item) {
     if (item->Frame() == aPopup) {
-      item->Detach(&mPanels);
+      item->Detach(&mNoHidePanels);
       delete item;
       break;
     }
@@ -1286,7 +1287,7 @@ nsXULPopupManager::PopupDestroyed(nsMenuPopupFrame* aPopup)
 
   nsTArray<nsMenuPopupFrame *> popupsToHide;
 
-  item = mCurrentMenu;
+  item = mPopups;
   while (item) {
     nsMenuPopupFrame* frame = item->Frame();
     if (frame == aPopup) {
@@ -1317,7 +1318,7 @@ nsXULPopupManager::PopupDestroyed(nsMenuPopupFrame* aPopup)
         }
       }
 
-      item->Detach(&mCurrentMenu);
+      item->Detach(&mPopups);
       delete item;
       break;
     }
@@ -1455,14 +1456,15 @@ nsXULPopupManager::UpdateMenuItems(nsIContent* aPopup)
 //       other items, and
 //   (2) moving out from a submenu to a parent or grandparent menu.
 // In both cases, |mTimerMenu| is the menu item that might have an open submenu and
-// |mCurrentMenu| is the item the mouse is currently over, which could be none of them.
+// the first item in |mPopups| is the item the mouse is currently over, which could be
+// none of them.
 //
 // case (1):
 //  As the mouse moves from the parent item of a submenu (we'll call 'A') diagonally into the
 //  submenu, it probably passes through one or more sibilings (B). As the mouse passes
 //  through B, it becomes the current menu item and the timer is set and mTimerMenu is 
 //  set to A. Before the timer fires, the mouse leaves the menu containing A and B and
-//  enters the submenus. Now when the timer fires, |mCurrentMenu| is null (!= |mTimerMenu|)
+//  enters the submenus. Now when the timer fires, |mPopups| is null (!= |mTimerMenu|)
 //  so we have to see if anything in A's children is selected (recall that even disabled
 //  items are selected, the style just doesn't show it). If that is the case, we need to
 //  set the selected item back to A.
@@ -1471,7 +1473,7 @@ nsXULPopupManager::UpdateMenuItems(nsIContent* aPopup)
 //  Item A has an open submenu, and in it there is an item (B) which also has an open
 //  submenu (so there are 3 menus displayed right now). The mouse then leaves B's child
 //  submenu and selects an item that is a sibling of A, call it C. When the mouse enters C,
-//  the timer is set and |mTimerMenu| is A and |mCurrentMenu| is C. As the timer fires,
+//  the timer is set and |mTimerMenu| is A and |mPopups| is C. As the timer fires,
 //  the mouse is still within C. The correct behavior is to set the current item to C
 //  and close up the chain parented at A.
 //
@@ -1881,7 +1883,7 @@ nsXULPopupManager::KeyDown(nsIDOMEvent* aKeyEvent)
       if (!(ctrl || alt || shift || meta)) {
         // The access key just went down and no other
         // modifiers are already down.
-        if (mCurrentMenu)
+        if (mPopups)
           Rollup(nsnull);
         else if (mActiveMenuBar)
           mActiveMenuBar->MenuClosed();
@@ -1930,7 +1932,7 @@ nsXULPopupManager::KeyPress(nsIDOMEvent* aKeyEvent)
   }
 
   // if a menu is open or a menubar is active, it consumes the key event
-  PRBool consume = (mCurrentMenu || mActiveMenuBar);
+  PRBool consume = (mPopups || mActiveMenuBar);
 
   if (theChar == NS_VK_LEFT ||
       theChar == NS_VK_RIGHT ||
