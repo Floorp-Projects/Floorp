@@ -785,9 +785,9 @@ BookmarksEngine.prototype = {
     }
   },
 
-  _changeRecordID: function BmkEngine__changeRecordID(oldID, newID) {
+  _changeItemID: function BmkEngine__changeRecordID(oldID, newID) {
     let self = yield;
-    yield this._store._changeRecordID.async(this._store, self.cb, oldID, newID);
+    yield this._store._changeItemID.async(this._store, self.cb, oldID, newID);
   }
 
   // XXX for sharing, will need to re-add code to get new shares before syncing,
