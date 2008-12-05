@@ -378,12 +378,13 @@ void
 nsWaveStateMachine::Seek(float aTime)
 {
   nsAutoMonitor monitor(mMonitor);
-  mNextState = mState;
-  mTimeOffset = NS_MIN(aTime, BytesToTime(mWaveLength));
-  if (mTimeOffset < 0.0) {
-    mTimeOffset = 0.0;
+  mTimeOffset = aTime;
+  if (mState == STATE_LOADING_METADATA) {
+    mNextState = STATE_SEEKING;
+  } else {
+    mNextState = mState;
+    ChangeState(STATE_SEEKING);
   }
-  ChangeState(STATE_SEEKING);
 }
 
 float
@@ -443,7 +444,9 @@ nsWaveStateMachine::Run()
 
           if (loaded) {
             mMetadataValid = PR_TRUE;
-            event = NS_NEW_RUNNABLE_METHOD(nsWaveDecoder, mDecoder, MetadataLoaded);
+            if (mNextState != STATE_SEEKING) {
+              event = NS_NEW_RUNNABLE_METHOD(nsWaveDecoder, mDecoder, MetadataLoaded);
+            }
             newState = mNextState;
           } else {
             event = NS_NEW_RUNNABLE_METHOD(nsWaveDecoder, mDecoder, MediaErrorDecode);
@@ -572,6 +575,11 @@ nsWaveStateMachine::Run()
           break;
         }
 
+        mTimeOffset = NS_MIN(mTimeOffset, BytesToTime(mWaveLength));
+        if (mTimeOffset < 0.0) {
+          mTimeOffset = 0.0;
+        }
+
         PRInt64 position = RoundDownToSample(TimeToBytes(mTimeOffset)) + mWavePCMOffset;
         NS_ABORT_IF_FALSE(position >= 0 && position <= mWaveLength + mWavePCMOffset, "Invalid seek position");
 
@@ -593,7 +601,16 @@ nsWaveStateMachine::Run()
         monitor.Enter();
 
         if (mState != STATE_SHUTDOWN) {
-          ChangeState(mNextState);
+          State nextState = mNextState;
+          // Special case: if a seek was requested during metadata load,
+          // mNextState will have been clobbered.  This can only happen when
+          // we're instantiating a decoder to service a seek request after
+          // playback has ended, so we know that the clobbered mNextState
+          // was PAUSED.
+          if (nextState == STATE_SEEKING) {
+            nextState = STATE_PAUSED;
+          }
+          ChangeState(nextState);
         }
       }
       break;
@@ -955,10 +972,15 @@ nsWaveDecoder::GetCurrentTime()
 nsresult
 nsWaveDecoder::Seek(float aTime)
 {
+  if (!mPlaybackStateMachine) {
+    Load(mURI, nsnull, nsnull);
+  }
+
   if (mPlaybackStateMachine) {
     mPlaybackStateMachine->Seek(aTime);
     return NS_OK;
   }
+
   return NS_ERROR_FAILURE;
 }
 

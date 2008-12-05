@@ -45,6 +45,7 @@ include $(topsrcdir)/config/rules.mk
 
 _TEST_FILES = 	test_autoplay.html \
                 test_bug461281.html \
+                test_bug465498.html \
                 test_constants.html \
                 test_controls.html \
                 test_currentTime.html \
@@ -69,6 +70,7 @@ _TEST_FILES = 	test_autoplay.html \
                 test_volume.html \
                 test_wav_8bit.html \
                 test_wav_ended1.html \
+                test_wav_onloadedmetadata.html \
                 test_wav_seek_past_end.html \
                 test_wav_seek_then_play.html \
                 320x240.ogg \
