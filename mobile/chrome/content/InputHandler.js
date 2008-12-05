@@ -631,7 +631,7 @@ ScrollwheelModule.prototype = {
       // UI panning events
       case "DOMMouseScroll":
         this._owner.grab(this);
-        this.deckbrowser.zoom(aEvent.detail);
+        Browser.content.zoom(aEvent.detail);
         this._owner.ungrab(this);
         break;
     }
