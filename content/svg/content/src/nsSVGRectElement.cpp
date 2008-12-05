@@ -210,37 +210,7 @@ nsSVGRectElement::ConstructPath(gfxContext *aCtx)
   else if (ry > halfHeight)
     rx = ry = halfHeight;
 
-  // Conversion factor used for ellipse to bezier conversion.
-  // Gives radial error of 0.0273% in circular case.
-  // See comp.graphics.algorithms FAQ 4.04
-  const float magic = 4*(sqrt(2.)-1)/3;
-  const float magic_x = magic*rx;
-  const float magic_y = magic*ry;
-
-  aCtx->MoveTo(gfxPoint(x + rx, y));
-  aCtx->LineTo(gfxPoint(x + width - rx, y));
-
-  aCtx->CurveTo(gfxPoint(x + width - rx + magic_x, y),
-                gfxPoint(x + width, y + ry - magic_y),
-                gfxPoint(x + width, y + ry));
-
-  aCtx->LineTo(gfxPoint(x + width, y + height - ry));
-
-  aCtx->CurveTo(gfxPoint(x + width, y + height - ry + magic_y),
-                gfxPoint(x + width - rx + magic_x, y+height),
-                gfxPoint(x + width - rx, y + height));
-
-  aCtx->LineTo(gfxPoint(x + rx, y + height));
-
-  aCtx->CurveTo(gfxPoint(x + rx - magic_x, y + height),
-                gfxPoint(x, y + height - ry + magic_y),
-                gfxPoint(x, y + height - ry));
-
-  aCtx->LineTo(gfxPoint(x, y + ry));
-
-  aCtx->CurveTo(gfxPoint(x, y + ry - magic_y),
-                gfxPoint(x + rx - magic_x, y),
-                gfxPoint(x + rx, y));
-
-  aCtx->ClosePath();
+  gfxSize corner(rx, ry);
+  aCtx->RoundedRectangle(gfxRect(x, y, width, height),
+                         gfxCornerSizes(corner, corner, corner, corner));
 }
