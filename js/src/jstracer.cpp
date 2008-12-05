@@ -3179,6 +3179,11 @@ js_RecordLoopEdge(JSContext* cx, TraceRecorder* r, uintN& inlineCallCount)
     }
 #endif
     Fragmento* fragmento = JS_TRACE_MONITOR(cx).fragmento;
+    /* Process deep abort requests. */
+    if (r->wasDeepAborted()) {
+        js_AbortRecording(cx, "deep abort requested");
+        return false;
+    }
     /* If we hit our own loop header, close the loop and compile the trace. */
     if (r->isLoopHeader(cx))
         return js_CloseLoop(cx);
@@ -3805,6 +3810,12 @@ js_MonitorRecording(TraceRecorder* tr)
         return false;
     }
 
+    // Process deepAbort() requests now.
+    if (tr->wasDeepAborted()) {
+        js_AbortRecording(cx, "deep abort requested");
+        return false;
+    }
+
     if (tr->walkedOutOfLoop())
         return js_CloseLoop(cx);
 
@@ -3816,12 +3827,6 @@ js_MonitorRecording(TraceRecorder* tr)
     // In the future, handle dslots realloc by computing an offset from dslots instead.
     if (tr->global_dslots != tr->globalObj->dslots) {
         js_AbortRecording(cx, "globalObj->dslots reallocated");
-        return false;
-    }
-
-    // Process deepAbort() requests now.
-    if (tr->wasDeepAborted()) {
-        js_AbortRecording(cx, "deep abort requested");
         return false;
     }
 
