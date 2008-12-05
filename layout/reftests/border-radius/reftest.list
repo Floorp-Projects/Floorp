@@ -13,3 +13,6 @@
 != outline-square.html outline-circle.html
 != outline-square.html outline-ellips.html
 != outline-circle.html outline-ellips.html
+
+# more serious tests, using SVG reference
+== border-circle-2.html border-circle-2-ref.xhtml
