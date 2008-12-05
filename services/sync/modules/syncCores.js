@@ -88,10 +88,10 @@ SyncCore.prototype = {
   },
 
   _nodeParentsInt: function SC__nodeParentsInt(GUID, tree, parents) {
-    if (!tree[GUID] || !tree[GUID].parentGUID)
+    if (!tree[GUID] || !tree[GUID].parentid)
       return parents;
-    parents.push(tree[GUID].parentGUID);
-    return this._nodeParentsInt(tree[GUID].parentGUID, tree, parents);
+    parents.push(tree[GUID].parentid);
+    return this._nodeParentsInt(tree[GUID].parentid, tree, parents);
   },
 
   _detectUpdates: function SC__detectUpdates(a, b) {
@@ -180,9 +180,9 @@ SyncCore.prototype = {
     for (let i = 0; i < list.length; i++) {
       if (!list[i])
         continue;
-      if (list[i].data && list[i].data.parentGUID &&
-          list[i].data.parentGUID == oldGUID)
-        list[i].data.parentGUID = newGUID;
+      if (list[i].data && list[i].data.parentid &&
+          list[i].data.parentid == oldGUID)
+        list[i].data.parentid = newGUID;
       for (let j = 0; j < list[i].parents.length; j++) {
         if (list[i].parents[j] == oldGUID)
           list[i].parents[j] = newGUID;

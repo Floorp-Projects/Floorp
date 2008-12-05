@@ -226,12 +226,11 @@ HistoryStore.prototype = {
       let item = root.getChild(i);
       let guid = item.time + ":" + item.uri;
       let vType = this._getVisitType(item.uri);
-      items[guid] = {parentGUID: '',
-			 title: item.title,
-			 URI: item.uri,
-			 time: item.time,
-			 transition: vType
-			};
+      items[guid] = {parentid: '',
+		     title: item.title,
+		     URI: item.uri,
+		     time: item.time,
+		     transition: vType};
     }
     
     this._lookup = items;

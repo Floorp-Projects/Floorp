@@ -304,12 +304,8 @@ SyncEngine.prototype = {
     record.encryption = this.cryptoMetaURL;
     record.cleartext = yield this._serializeItem.async(this, self.cb, id);
 
-    if (record.cleartext) {
-      if (record.cleartext.parentid)
+    if (record.cleartext && record.cleartext.parentid)
         record.parentid = record.cleartext.parentid;
-      else if (record.cleartext.parentGUID) // FIXME: bookmarks-specific
-        record.parentid = record.cleartext.parentGUID;
-    }
 
     if (encrypt || encrypt == undefined)
       yield record.encrypt(self.cb, ID.get('WeaveCryptoID').password);
