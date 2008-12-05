@@ -219,6 +219,26 @@ DEFAULT_GMAKE_FLAGS += MACOS_SDK_DIR=$(MACOS_SDK_DIR)
 endif
 endif
 ifdef CROSS_COMPILE
+
+ifdef WINCE
+DEFAULT_GMAKE_FLAGS += \
+	NSINSTALL="$(NSINSTALL)" \
+	NATIVE_CC="$(HOST_CC)" \
+	CC="arm-wince-gcc.exe" \
+	CCC="arm-wince-gcc.exe" \
+	LINK="arm-wince-link.exe" \
+	LD="arm-wince-link.exe -DLL" \
+	AS="arm-wince-as.exe -Cp -Sn -Zi -coff $(INCLUDES)" \
+	AR='arm-wince-lib -NOLOG0 -OUT:$$@' \
+	RANLIB="echo" \
+	RC="arm-wince-res.exe $(RCFLAGS)" \
+	OS_ARCH="$(OS_ARCH)" \
+	OS_TEST="$(OS_TEST)" \
+	CPU_ARCH="ARM" \
+	USE_MSYS=1 \
+	WINCE=1 \
+	$(NULL)
+else
 DEFAULT_GMAKE_FLAGS += \
 	NSINSTALL="$(NSINSTALL)" \
 	NATIVE_CC="$(HOST_CC)" \
@@ -233,6 +253,8 @@ DEFAULT_GMAKE_FLAGS += \
 	OS_TEST="$(OS_TEST)" \
 	CPU_ARCH="$(TARGET_CPU)" \
 	$(NULL)
+endif
+
 SKIP_CHK=1
 endif
 SUBMAKEFILES = boot/Makefile ssl/Makefile pki/Makefile locales/Makefile
