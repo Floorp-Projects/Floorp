@@ -2402,8 +2402,10 @@ nsParser::OnStartRequest(nsIRequest *request, nsISupports* aContext)
 }
 
 
+#define UTF16_BOM "UTF-16"
 #define UTF16_BE "UTF-16BE"
 #define UTF16_LE "UTF-16LE"
+#define UCS4_BOM "UTF-32"
 #define UCS4_BE "UTF-32BE"
 #define UCS4_LE "UTF-32LE"
 #define UCS4_2143 "X-ISO-10646-UCS-4-2143"
@@ -2441,7 +2443,7 @@ DetectByteOrderMark(const unsigned char* aBytes, PRInt32 aLen,
         // 00 00
         if((0xFE==aBytes[2]) && (0xFF==aBytes[3])) {
            // 00 00 FE FF UCS-4, big-endian machine (1234 order)
-           oCharset.Assign(UCS4_BE);
+           oCharset.Assign(UCS4_BOM);
         } else if((0x00==aBytes[2]) && (0x3C==aBytes[3])) {
            // 00 00 00 3C UCS-4, big-endian machine (1234 order)
            oCharset.Assign(UCS4_BE);
@@ -2572,7 +2574,7 @@ DetectByteOrderMark(const unsigned char* aBytes, PRInt32 aLen,
           oCharset.Assign(UCS4_3412);
         } else {
           // FE FF UTF-16, big-endian 
-          oCharset.Assign(UTF16_BE); 
+          oCharset.Assign(UTF16_BOM); 
         }
         oCharsetSource= kCharsetFromByteOrderMark;
      }
@@ -2581,11 +2583,11 @@ DetectByteOrderMark(const unsigned char* aBytes, PRInt32 aLen,
      if(0xFE==aBytes[1]) {
         if(0x00==aBytes[2] && 0x00==aBytes[3]) 
          // FF FE 00 00  UTF-32, little-endian
-           oCharset.Assign(UCS4_LE); 
+           oCharset.Assign(UCS4_BOM); 
         else
         // FF FE
         // UTF-16, little-endian 
-           oCharset.Assign(UTF16_LE); 
+           oCharset.Assign(UTF16_BOM); 
         oCharsetSource= kCharsetFromByteOrderMark;
      }
    break;
@@ -2780,6 +2782,7 @@ ParserWriteFunc(nsIInputStream* in,
            (!preferred.EqualsLiteral("UTF-16") &&
             !preferred.EqualsLiteral("UTF-16BE") &&
             !preferred.EqualsLiteral("UTF-16LE") &&
+            !preferred.EqualsLiteral("UTF-32") &&
             !preferred.EqualsLiteral("UTF-32BE") &&
             !preferred.EqualsLiteral("UTF-32LE")))) {
         guess = preferred;
