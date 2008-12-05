@@ -36,6 +36,8 @@ qpainter-type.patch: add SURFACE_TYPE_QPAINTER to cairo.h
 
 wince-fixes.patch: stubs out win32 functions we use but are not supported on win32.  Also implements ExtSelectClipRgn in terms of other functions available on wince.
 
+ft-done-face.patch: bug 467874; only destroy FT_Faces created by cairo
+
 ==== pixman patches ====
 
 endian.patch: include cairo-platform.h for endian macros

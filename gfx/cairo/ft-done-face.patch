@@ -1,0 +1,13 @@
+diff --git a/gfx/cairo/cairo/src/cairo-ft-font.c b/gfx/cairo/cairo/src/cairo-ft-font.c
+--- a/gfx/cairo/cairo/src/cairo-ft-font.c
++++ b/gfx/cairo/cairo/src/cairo-ft-font.c
+@@ -532,7 +532,8 @@ _has_unlocked_face (void *entry)
+ {
+     cairo_ft_unscaled_font_t *unscaled = entry;
+ 
+-    return (unscaled->lock_count == 0 && unscaled->face);
++    return (unscaled->lock_count == 0 &&
++	    unscaled->face && !unscaled->from_face);
+ }
+ 
+ /* Ensures that an unscaled font has a face object. If we exceed
