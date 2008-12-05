@@ -2225,8 +2225,10 @@ TraceRecorder::compile(Fragmento* fragmento)
     ::compile(fragmento->assm(), fragment);
     if (anchor) 
         fragmento->assm()->patch(anchor);
-    if (fragmento->assm()->error() != nanojit::None)
+    if (fragmento->assm()->error() != nanojit::None) {
+        js_BlacklistPC(fragmento, fragment);
         return;
+    }
     JS_ASSERT(fragment->code());
     JS_ASSERT(!fragment->vmprivate);
     if (fragment == fragment->root)
@@ -3178,6 +3180,11 @@ js_RecordLoopEdge(JSContext* cx, TraceRecorder* r, uintN& inlineCallCount)
     }
 #endif
     Fragmento* fragmento = JS_TRACE_MONITOR(cx).fragmento;
+    /* Process deep abort requests. */
+    if (r->wasDeepAborted()) {
+        js_AbortRecording(cx, "deep abort requested");
+        return false;
+    }
     /* If we hit our own loop header, close the loop and compile the trace. */
     if (r->isLoopHeader(cx))
         return js_CloseLoop(cx);
@@ -3804,6 +3811,12 @@ js_MonitorRecording(TraceRecorder* tr)
         return false;
     }
 
+    // Process deepAbort() requests now.
+    if (tr->wasDeepAborted()) {
+        js_AbortRecording(cx, "deep abort requested");
+        return false;
+    }
+
     if (tr->walkedOutOfLoop())
         return js_CloseLoop(cx);
 
@@ -3814,12 +3827,6 @@ js_MonitorRecording(TraceRecorder* tr)
     // In the future, handle dslots realloc by computing an offset from dslots instead.
     if (tr->global_dslots != tr->globalObj->dslots) {
         js_AbortRecording(cx, "globalObj->dslots reallocated");
-        return false;
-    }
-
-    // Process deepAbort() requests now.
-    if (tr->wasDeepAborted()) {
-        js_AbortRecording(cx, "deep abort requested");
         return false;
     }
 
@@ -5005,6 +5012,15 @@ TraceRecorder::test_property_cache_direct_slot(JSObject* obj, LIns* obj_ins, uin
 }
 
 void
+TraceRecorder::stobj_set_dslot(LIns *obj_ins, unsigned slot, LIns*& dslots_ins, LIns* v_ins,
+                               const char *name)
+{
+    if (!dslots_ins)
+        dslots_ins = lir->insLoad(LIR_ldp, obj_ins, offsetof(JSObject, dslots));
+    addName(lir->insStorei(v_ins, dslots_ins, slot * sizeof(jsval)), name);
+}
+
+void
 TraceRecorder::stobj_set_slot(LIns* obj_ins, unsigned slot, LIns*& dslots_ins, LIns* v_ins)
 {
     if (slot < JS_INITIAL_NSLOTS) {
@@ -5012,11 +5028,8 @@ TraceRecorder::stobj_set_slot(LIns* obj_ins, unsigned slot, LIns*& dslots_ins, L
                                offsetof(JSObject, fslots) + slot * sizeof(jsval)),
                 "set_slot(fslots)");
     } else {
-        if (!dslots_ins)
-            dslots_ins = lir->insLoad(LIR_ldp, obj_ins, offsetof(JSObject, dslots));
-        addName(lir->insStorei(v_ins, dslots_ins,
-                               (slot - JS_INITIAL_NSLOTS) * sizeof(jsval)),
-                "set_slot(dslots");
+        stobj_set_dslot(obj_ins, slot - JS_INITIAL_NSLOTS, dslots_ins, v_ins,
+                        "set_slot(dslots)");
     }
 }
 
@@ -5728,6 +5741,61 @@ JSBool
 js_Date(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval);
 
 bool
+TraceRecorder::getClassPrototype(JSObject* ctor, LIns*& proto_ins)
+{
+    jsval pval;
+
+    if (!OBJ_GET_PROPERTY(cx, ctor,
+                          ATOM_TO_JSID(cx->runtime->atomState
+                                       .classPrototypeAtom),
+                          &pval)) {
+        ABORT_TRACE("error getting prototype from constructor");
+    }
+    if (!JSVAL_IS_OBJECT(pval))
+        ABORT_TRACE("got primitive prototype from constructor");
+    proto_ins = INS_CONSTPTR(JSVAL_TO_OBJECT(pval));
+    return true;
+}
+
+bool
+TraceRecorder::newArray(JSObject *ctor, uint32 argc, jsval *argv, jsval *rval)
+{
+    LIns *proto_ins, *arr_ins;
+    if (!getClassPrototype(ctor, proto_ins))
+        return false;
+
+    if (argc == 0) {
+        LIns *args[] = { proto_ins, cx_ins };
+        arr_ins = lir->insCall(&js_FastNewArray_ci, args);
+        guard(false, lir->ins_eq0(arr_ins), OOM_EXIT);
+    } else if (argc == 1 && (JSVAL_IS_NUMBER(argv[0]) || JSVAL_IS_STRING(argv[0]))) {
+        bool num = JSVAL_IS_NUMBER(argv[0]);
+        LIns *arg_ins = get(argv);
+        if (num)
+            arg_ins = f2i(arg_ins);
+        LIns *args[] = { arg_ins, proto_ins, cx_ins };
+        arr_ins = lir->insCall(num ? &js_FastNewArrayWithLength_ci : &js_Array_1str_ci, args);
+        guard(false, lir->ins_eq0(arr_ins), OOM_EXIT);
+    } else {
+        // arr_ins = js_NewUninitializedArray(cx, Array.prototype, argc)
+        LIns *args[] = { INS_CONST(argc), proto_ins, cx_ins };
+        arr_ins = lir->insCall(&js_NewUninitializedArray_ci, args);
+        guard(false, lir->ins_eq0(arr_ins), OOM_EXIT);
+
+        // arr->dslots[i] = box_jsval(vp[i]);  for i in 0..argc
+        LIns *dslots_ins = NULL;
+        for (uint32 i = 0; i < argc; i++) {
+            LIns *elt_ins = get(argv + i);
+            if (!box_jsval(argv[i], elt_ins))
+                return false;
+            stobj_set_dslot(arr_ins, i, dslots_ins, elt_ins, "set_array_elt");
+        }
+    }
+    set(rval, arr_ins);
+    return true;
+}
+
+bool
 TraceRecorder::functionCall(bool constructing, uintN argc)
 {
     JSStackFrame* fp = cx->fp;
@@ -5777,10 +5845,6 @@ TraceRecorder::functionCall(bool constructing, uintN argc)
         ABORT_TRACE("untraceable native");
 
     static JSTraceableNative knownNatives[] = {
-        { (JSFastNative)js_Array,  &js_FastNewArray_ci,   "pC", "",    FAIL_NULL | JSTN_MORE },
-        { (JSFastNative)js_Array,  &js_Array_1int_ci,     "pC", "i",   FAIL_NULL | JSTN_MORE },
-        { (JSFastNative)js_Array,  &js_Array_2obj_ci,     "pC", "oo",  FAIL_NULL | JSTN_MORE },
-        { (JSFastNative)js_Array,  &js_Array_3num_ci,     "pC", "ddd", FAIL_NULL | JSTN_MORE },
         { (JSFastNative)js_Object, &js_FastNewObject_ci,  "fC", "",    FAIL_NULL | JSTN_MORE },
         { (JSFastNative)js_Date,   &js_FastNewDate_ci,    "pC", "",    FAIL_NULL },
     };
@@ -5820,17 +5884,8 @@ TraceRecorder::functionCall(bool constructing, uintN argc)
             } else if (argtype == 'f') {
                 *argp = INS_CONSTPTR(JSVAL_TO_OBJECT(fval));
             } else if (argtype == 'p') {
-                JSObject* ctor = JSVAL_TO_OBJECT(fval);
-                jsval pval;
-                if (!OBJ_GET_PROPERTY(cx, ctor,
-                                      ATOM_TO_JSID(cx->runtime->atomState
-                                                   .classPrototypeAtom),
-                                      &pval)) {
-                    ABORT_TRACE("error getting prototype from constructor");
-                }
-                if (!JSVAL_IS_OBJECT(pval))
-                    ABORT_TRACE("got primitive prototype from constructor");
-                *argp = INS_CONSTPTR(JSVAL_TO_OBJECT(pval));
+                if (!getClassPrototype(JSVAL_TO_OBJECT(fval), *argp))
+                    return false;
             } else if (argtype == 'R') {
                 *argp = INS_CONSTPTR(cx->runtime);
             } else if (argtype == 'P') {
@@ -5900,6 +5955,9 @@ TraceRecorder::functionCall(bool constructing, uintN argc)
 
 next_specialization:;
     } while ((known++)->flags & JSTN_MORE);
+
+    if (FUN_SLOW_NATIVE(fun) && fun->u.n.native == js_Array)
+        return newArray(FUN_OBJECT(fun), argc, &tval + 1, &fval);
 
     if (!constructing)
         ABORT_TRACE("unknown native");
