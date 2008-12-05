@@ -65,7 +65,6 @@
 #include "nsIMenuFrame.h"
 #include "nsIHTMLDocument.h"
 #include "nsIInterfaceRequestorUtils.h"
-#include "nsIMenuParent.h"
 #include "nsIScrollableView.h"
 #include "nsISelectionPrivate.h"
 #include "nsIServiceManager.h"

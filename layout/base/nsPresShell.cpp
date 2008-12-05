@@ -195,7 +195,6 @@
 #include "nsMenuFrame.h"
 #include "nsTreeBodyFrame.h"
 #endif
-#include "nsIMenuParent.h"
 #include "nsPlaceholderFrame.h"
 
 // Content viewer interfaces
