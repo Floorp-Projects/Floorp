@@ -404,8 +404,11 @@ SyncEngine.prototype = {
     if (!this.lastSync) {
       this._log.info("First sync, uploading all items");
       let all = yield this._getAllIDs.async(this, self.cb);
-      for (let key in all)
+      this._tracker.enable();
+      for (let key in all) {
         this._tracker.addChangedID(key);
+      }
+      this._tracker.disable();
     }
 
     // generate queue from changed items list
@@ -481,16 +484,26 @@ SyncEngine.prototype = {
 
     this._log.debug("Reconciling server/client changes");
 
+    this._log.debug(this.incoming.length + " items coming in, " +
+                    this.outgoing.length + " items going out");
+
     // Check for the same item (same ID) on both incoming & outgoing queues
     let conflicts = [];
     for (let i = 0; i < this.incoming.length; i++) {
-      for each (let out in this.outgoing) {
-        if (this.incoming[i].id == out.id) {
-          conflicts.push({in: this.incoming[i], out: out});
+      for (let o = 0; o < this.outgoing.length; o++) {
+        if (this.incoming[i].id == this.outgoing[o].id) {
+          // Only consider it a conflict if there are actual differences
+          // otherwise, just remove the outgoing record as well
+          if (!Utils.deepEquals(this.incoming[i].cleartext,
+                                this.outgoing[o].cleartext))
+            conflicts.push({in: this.incoming[i], out: this.outgoing[o]});
+          else
+            delete this.outgoing[o];
           delete this.incoming[i];
           break;
         }
       }
+      this._outgoing = this.outgoing.filter(function(n) n); // removes any holes
     }
     this._incoming = this.incoming.filter(function(n) n); // removes any holes
     if (conflicts.length)
@@ -516,6 +529,10 @@ SyncEngine.prototype = {
       this._outgoing = this.outgoing.filter(function(n) n); // removes any holes
     }
     this._incoming = this.incoming.filter(function(n) n); // removes any holes
+
+    this._log.debug("Reconciliation complete");
+    this._log.debug(this.incoming.length + " items coming in, " +
+                    this.outgoing.length + " items going out");
   },
 
   // Apply incoming records
@@ -552,7 +569,7 @@ SyncEngine.prototype = {
 
   // Any cleanup necessary.
   // Save the current snapshot so as to calculate changes at next sync
-  _syncFinish: function SyncEngine__syncFinish() {
+  _syncFinish: function SyncEngine__syncFinish(error) {
     let self = yield;
     this._log.debug("Finishing up sync");
     this._tracker.resetScore();
@@ -576,12 +593,15 @@ SyncEngine.prototype = {
       // Apply incoming records, upload outgoing records
       yield this._applyIncoming.async(this, self.cb);
       yield this._uploadOutgoing.async(this, self.cb);
+
+      yield this._syncFinish.async(this, self.cb);
     }
     catch (e) {
+      this._log.warn("Sync failed");
       throw e;
     }
     finally {
-      yield this._syncFinish.async(this, self.cb);
+      this._tracker.enable();
     }
   },
 
