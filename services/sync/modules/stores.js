@@ -201,9 +201,9 @@ SnapshotStore.prototype = {
       delete this._data[oldGUID];
 
       for (let GUID in this._data) {
-        if (("parentGUID" in this._data[GUID]) &&
-            (this._data[GUID].parentGUID == oldGUID))
-          this._data[GUID].parentGUID = newGUID;
+        if (("parentid" in this._data[GUID]) &&
+            (this._data[GUID].parentid == oldGUID))
+          this._data[GUID].parentid = newGUID;
       }
     }
     for (let prop in command.data) {
@@ -261,7 +261,7 @@ SnapshotStore.prototype = {
     let json = this._json.encode(this.data);
     json = json.replace(/:{type/g, ":\n\t{type");
     json = json.replace(/}, /g, "},\n  ");
-    json = json.replace(/, parentGUID/g, ",\n\t parentGUID");
+    json = json.replace(/, parentid/g, ",\n\t parentid");
     json = json.replace(/, index/g, ",\n\t index");
     json = json.replace(/, title/g, ",\n\t title");
     json = json.replace(/, URI/g, ",\n\t URI");
