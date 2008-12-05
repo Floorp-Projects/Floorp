@@ -115,15 +115,9 @@ install::
 	    $(LOCALE_SRCDIR)/existing-profile-defaults.js > $(DESTDIR)$(mozappdir)/defaults/existing-profile-defaults.js; \
 	fi
 
-ifeq ($(OS_ARCH),OS2)
-README_FILES = \
-	os2/README.txt \
-	$(NULL)
-else
 README_FILES = \
 	README.txt \
 	$(NULL)
-endif
 
 PROFILE_FILES = \
 	bookmarks.html \
@@ -149,7 +143,9 @@ ifeq ($(OS_ARCH),WINNT)
 	  $(PERL) -pe 's/(?<!\r)\n/\r\n/g;' < $$file > $(FINAL_TARGET)/`basename $$file`; \
 	done
 else
+ifneq ($(OS_ARCH),OS2)
 	$(SYSINSTALL) $(IFLAGS1) $^ $(FINAL_TARGET)
+endif
 endif
 
 libs:: $(addprefix $(LOCALE_SRCDIR)/profile/,$(PROFILE_FILES))
