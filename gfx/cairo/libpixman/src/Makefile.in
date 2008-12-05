@@ -67,7 +67,7 @@ ifeq (86,$(findstring 86,$(OS_TEST)))
 ifeq (64,$(findstring 64,$(OS_TEST)))
 else
 USE_MMX=1
-#USE_SSE2=1
+USE_SSE2=1
 MMX_CFLAGS=
 endif
 endif
