@@ -42,7 +42,7 @@ import re
 import shutil
 import sys
 
-#expand DIST_BIN = "./" + __XPC_BIN_PATH__
+#expand DIST_BIN = __XPC_BIN_PATH__
 #expand BIN_SUFFIX = __BIN_SUFFIX__
 #expand CERTS_DIR = __CERTS_DIR__
 #expand CERTS_SRC_DIR = __CERTS_SRC_DIR__
