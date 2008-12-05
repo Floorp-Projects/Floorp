@@ -283,7 +283,9 @@ LoggerRepository.prototype = {
     let cur, parent;
 
     // find the closest parent
-    for (let i = 0; i < pieces.length; i++) {
+    // don't test for the logger name itself, as there's a chance it's already
+    // there in this._loggers
+    for (let i = 0; i < pieces.length - 1; i++) {
       if (cur)
         cur += '.' + pieces[i];
       else
@@ -292,15 +294,15 @@ LoggerRepository.prototype = {
         parent = cur;
     }
 
-    // if they are the same it has no parent
-    if (parent == name)
+    // if we didn't assign a parent above, there is no parent
+    if (!parent)
       this._loggers[name].parent = this.rootLogger;
     else
       this._loggers[name].parent = this._loggers[parent];
 
     // trigger updates for any possible descendants of this logger
     for (let logger in this._loggers) {
-      if (logger != name && name.indexOf(logger) == 0)
+      if (logger != name && logger.indexOf(name) == 0)
         this._updateParents(logger);
     }
   },
