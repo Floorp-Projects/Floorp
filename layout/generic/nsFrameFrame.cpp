@@ -86,7 +86,7 @@
 #include "nsIRenderingContext.h"
 #include "nsIFrameFrame.h"
 #include "nsAutoPtr.h"
-#include "nsIDOMNSHTMLDocument.h"
+#include "nsIHTMLDocument.h"
 #include "nsDisplayList.h"
 #include "nsUnicharUtils.h"
 #include "nsIReflowCallback.h"
@@ -975,21 +975,15 @@ nsSubDocumentFrame::ShowDocShell()
   // Trigger editor re-initialization if midas is turned on in the
   // sub-document. This shouldn't be necessary, but given the way our
   // editor works, it is. See
-  // https://bugzilla.mozilla.org/show_bug.cgi?id=284245
+  // https://bugzilla.mozilla.org/show_bug.cgi?id=284245 && 440614
   docShell->GetPresShell(getter_AddRefs(presShell));
   if (presShell) {
-    nsCOMPtr<nsIDOMNSHTMLDocument> doc =
+    nsCOMPtr<nsIHTMLDocument> doc =
       do_QueryInterface(presShell->GetDocument());
 
-    if (doc) {
-      nsAutoString designMode;
-      doc->GetDesignMode(designMode);
-
-      if (designMode.EqualsLiteral("on")) {
-        doc->SetDesignMode(NS_LITERAL_STRING("off"));
-        doc->SetDesignMode(NS_LITERAL_STRING("on"));
-      }
-    }
+    // Re-init the editor, if necessary
+    if (doc && doc->IsEditingOn())
+      doc->ReinitEditor();
   }
 
   return NS_OK;
