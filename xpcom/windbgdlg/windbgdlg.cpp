@@ -42,11 +42,10 @@
 
 #include <windows.h>
 #include <stdlib.h>
-#include <shellapi.h>
 
-int WINAPI 
-WinMain(HINSTANCE  hInstance, HINSTANCE  hPrevInstance, 
-        LPSTR  lpszCmdLine, int  nCmdShow)
+int WINAPI
+wWinMain(HINSTANCE  hInstance, HINSTANCE  hPrevInstance,
+         LPWSTR  lpszCmdLine, int  nCmdShow)
 {
     /* support for auto answering based on words in the assertion.
      * the assertion message is sent as a series of arguements (words) to the commandline.
@@ -63,13 +62,12 @@ WinMain(HINSTANCE  hInstance, HINSTANCE  hPrevInstance,
     RegOpenKeyExW(HKEY_CURRENT_USER, L"Software\\mozilla.org\\windbgdlg", 0, KEY_READ, &hkeyCU);
     RegOpenKeyExW(HKEY_LOCAL_MACHINE, L"Software\\mozilla.org\\windbgdlg", 0, KEY_READ, &hkeyLM);
     int argc =0;
-    LPWSTR *argv = CommandLineToArgvW(GetCommandLineW(), &argc);
-    for (int i = argc - 1; regValue == (DWORD)-1 && i; --i) {
+    for (int i = __argc - 1; regValue == (DWORD)-1 && i; --i) {
         bool ok = false;
         if (hkeyCU)
-            ok = RegQueryValueExW(hkeyCU, argv[i], 0, &regType, (LPBYTE)&regValue, &regLength) == ERROR_SUCCESS;
+            ok = RegQueryValueExW(hkeyCU, __wargv[i], 0, &regType, (LPBYTE)&regValue, &regLength) == ERROR_SUCCESS;
         if (!ok && hkeyLM)
-            ok = RegQueryValueExW(hkeyLM, argv[i], 0, &regType, (LPBYTE)&regValue, &regLength) == ERROR_SUCCESS;
+            ok = RegQueryValueExW(hkeyLM, __wargv[i], 0, &regType, (LPBYTE)&regValue, &regLength) == ERROR_SUCCESS;
         if (!ok)
             regValue = -1;
     }
@@ -82,12 +80,12 @@ WinMain(HINSTANCE  hInstance, HINSTANCE  hPrevInstance,
     static WCHAR msg[4048];
 
     wsprintfW(msg,
-             L"%s\n\nClick Abort to exit the Application.\n"
-             L"Click Retry to Debug the Application..\n"
-             L"Click Ignore to continue running the Application.", 
-             lpszCmdLine);
-             
+              L"%s\n\nClick Abort to exit the Application.\n"
+              L"Click Retry to Debug the Application.\n"
+              L"Click Ignore to continue running the Application.",
+              lpszCmdLine);
+
     return MessageBoxW(NULL, msg, L"NSGlue_Assertion",
-                      MB_ICONSTOP | MB_SYSTEMMODAL| 
-                      MB_ABORTRETRYIGNORE | MB_DEFBUTTON3);
+                       MB_ICONSTOP | MB_SYSTEMMODAL |
+                       MB_ABORTRETRYIGNORE | MB_DEFBUTTON3);
 }
