@@ -347,7 +347,7 @@ SyncEngine.prototype = {
     }
   },
 
-  _changeRecordID: function SyncEngine__changeRecordID(oldID, newID) {
+  _changeItemID: function SyncEngine__changeItemID(oldID, newID) {
     let self = yield;
     throw "_changeRecordID must be overridden in a subclass";
   },
@@ -390,6 +390,8 @@ SyncEngine.prototype = {
       meta.generateIV();
       yield meta.addUnwrappedKey(self.cb, pubkey, symkey);
       yield meta.put(self.cb);
+
+      this._tracker.disable();
     }
   },
 
@@ -522,14 +524,12 @@ SyncEngine.prototype = {
     let self = yield;
     if (this.incoming.length) {
       this._log.debug("Applying server changes");
-      this._tracker.disable();
       let inc;
       while ((inc = this.incoming.shift())) {
         yield this._store.applyIncoming(self.cb, inc);
         if (inc.modified > this.lastSync)
           this.lastSync = inc.modified;
       }
-      this._tracker.enable();
     }
   },
 
@@ -557,26 +557,33 @@ SyncEngine.prototype = {
     let self = yield;
     this._log.debug("Finishing up sync");
     this._tracker.resetScore();
+    this._tracker.enable();
   },
 
   _sync: function SyncEngine__sync() {
     let self = yield;
 
-    yield this._syncStartup.async(this, self.cb);
+    try {
+      yield this._syncStartup.async(this, self.cb);
 
-    // Populate incoming and outgoing queues
-    yield this._generateOutgoing.async(this, self.cb);
-    yield this._fetchIncoming.async(this, self.cb);
+      // Populate incoming and outgoing queues
+      yield this._generateOutgoing.async(this, self.cb);
+      yield this._fetchIncoming.async(this, self.cb);
 
-    // Decrypt and sort incoming records, then reconcile
-    yield this._processIncoming.async(this, self.cb);
-    yield this._reconcile.async(this, self.cb);
+      // Decrypt and sort incoming records, then reconcile
+      yield this._processIncoming.async(this, self.cb);
+      yield this._reconcile.async(this, self.cb);
 
-    // Apply incoming records, upload outgoing records
-    yield this._applyIncoming.async(this, self.cb);
-    yield this._uploadOutgoing.async(this, self.cb);
-
-    yield this._syncFinish.async(this, self.cb);
+      // Apply incoming records, upload outgoing records
+      yield this._applyIncoming.async(this, self.cb);
+      yield this._uploadOutgoing.async(this, self.cb);
+    }
+    catch (e) {
+      throw e;
+    }
+    finally {
+      yield this._syncFinish.async(this, self.cb);
+    }
   },
 
   _resetServer: function SyncEngine__resetServer() {
