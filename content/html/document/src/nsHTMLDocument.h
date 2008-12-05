@@ -231,8 +231,6 @@ public:
     mFragmentParser = aParser;
   }
 
-  virtual nsresult ReinitEditor();
-  
   virtual nsresult SetEditingState(EditingState aState);
 
   virtual nsresult Clone(nsINodeInfo *aNodeInfo, nsINode **aResult) const;

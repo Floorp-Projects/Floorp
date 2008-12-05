@@ -171,13 +171,6 @@ public:
    * SetDesignMode().
    */
   virtual nsresult SetEditingState(EditingState aState) = 0;
-  
-  /**
-   * Re-inits the editor. Editing must be on from contentEditable or designMode
-   * when calling this.
-   * Required because of the way the editor works. (bug 440614)
-   */
-  virtual nsresult ReinitEditor() = 0;
 
   /**
    * Returns the result of document.all[aID] which can either be a node
