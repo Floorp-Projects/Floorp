@@ -1556,8 +1556,6 @@ tabbrowser > tabbox {
   -moz-appearance: none;
   -moz-border-radius: 0 0 6px 6px;
   color: #222;
-  -moz-box-pack: center;
-  -moz-box-align: center;
   margin-bottom: 1px;
   -moz-margin-end: 1px;
   padding: 0 5px;
