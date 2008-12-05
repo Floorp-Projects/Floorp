@@ -7347,8 +7347,7 @@ nsDocument::CloneDocHelper(nsDocument* clone) const
   clone->nsDocument::SetDocumentURI(nsIDocument::GetDocumentURI());
   // Must set the principal first, since SetBaseURI checks it.
   clone->SetPrincipal(NodePrincipal());
-  rv = clone->SetBaseURI(nsIDocument::GetBaseURI());
-  NS_ENSURE_SUCCESS(rv, rv);
+  clone->mDocumentBaseURI = mDocumentBaseURI;
 
   // Set scripting object
   PRBool hasHadScriptObject = PR_TRUE;
