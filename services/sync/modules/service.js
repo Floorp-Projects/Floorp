@@ -600,7 +600,7 @@ WeaveSvc.prototype = {
       if (!(engine.name in this._syncThresholds))
         this._syncThresholds[engine.name] = INITIAL_THRESHOLD;
 
-      let score = engine._tracker.score;
+      let score = engine.score;
       if (score >= this._syncThresholds[engine.name]) {
         this._log.debug(engine.name + " score " + score +
                         " reaches threshold " +
@@ -641,10 +641,8 @@ WeaveSvc.prototype = {
 
   _syncEngine: function WeaveSvc__syncEngine(engine) {
     let self = yield;
-    try {
-      yield engine.sync(self.cb);
-      engine._tracker.resetScore();
-    } catch(e) {
+    try { yield engine.sync(self.cb); }
+    catch(e) {
       // FIXME: FT module is not printing out exceptions - it should be
       this._log.warn("Engine exception: " + e);
       let ok = FaultTolerance.Service.onException(e);

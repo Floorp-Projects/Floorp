@@ -665,7 +665,7 @@ BookmarksSharingManager.prototype = {
       if (serverContents[guid].type != "bookmark")
         delete serverContents[guid];
       else
-        serverContents[guid].parentGUID = mountData.rootGUID;
+        serverContents[guid].parentid = mountData.rootGUID;
     }
 
     /* Wipe old local contents of the folder, starting from the node: */
@@ -711,53 +711,81 @@ BookmarksSharingManager.prototype = {
   }
 }
 
-
-
 function BookmarksEngine(pbeId) {
   this._init(pbeId);
 }
 BookmarksEngine.prototype = {
-  __proto__: NewEngine.prototype,
-  get _super() NewEngine.prototype,
+  __proto__: SyncEngine.prototype,
+  get _super() SyncEngine.prototype,
 
-  get name() { return "bookmarks"; },
-  get displayName() { return "Bookmarks"; },
-  get logName() { return "BmkEngine"; },
-  get serverPrefix() { return "user-data/bookmarks/"; },
+  get name() "bookmarks",
+  get displayName() "Bookmarks",
+  get logName() "BmkEngine",
+  get serverPrefix() "user-data/bookmarks/",
 
-  __store: null,
   get _store() {
-    if (!this.__store)
-      this.__store = new BookmarksStore();
-    return this.__store;
+    let store = new BookmarksStore();
+    this.__defineGetter__("_store", function() store);
+    return store;
   },
 
-  __core: null,
   get _core() {
-    if (!this.__core)
-      this.__core = new BookmarksSyncCore(this._store);
-    return this.__core;
+    let core = new BookmarksSyncCore();
+    this.__defineGetter__("_core", function() core);
+    return core;
   },
 
-  __tracker: null,
   get _tracker() {
-    if (!this.__tracker)
-      this.__tracker = new BookmarksTracker(this);
-    return this.__tracker;
+    let tracker = new BookmarksTracker();
+    this.__defineGetter__("_tracker", function() tracker);
+    return tracker;
   },
 
-  _changeRecordRefs: function NewEngine__changeRecordRefs(oldID, newID) {
+  _getAllIDs: function BmkEngine__getAllIDs() {
+    let self = yield;
+    let all = this._store.wrap(); // FIXME: using store is an inefficient hack...
+    delete all["unfiled"];
+    delete all["toolbar"];
+    delete all["menu"];
+    self.done(all);
+  },
+
+  _serializeItem: function BmkEngine__serializeItem(id) {
+    let self = yield;
+    let all = this._store.wrap(); // FIXME OMG SO INEFFICIENT
+    self.done(all[id]);
+  },
+
+  _recordLike: function SyncEngine__recordLike(a, b) {
+    if (a.parentid != b.parentid)
+      return false;
+    for (let key in a.cleartext) {
+      if (key == "index")
+        continue;
+      if (!Utils.deepEquals(a.cleartext[key], b.cleartext[key]))
+        return false;
+    }
+    for (key in b.cleartext) {
+      if (key == "index")
+        continue;
+      if (!Utils.deepEquals(a.cleartext[key], b.cleartext[key]))
+        return false;
+    }
+    return true;
+  },
+
+  _changeRecordRefs: function BmkEngine__changeRecordRefs(oldID, newID) {
     let self = yield;
     for each (let rec in this.outgoing) {
       if (rec.parentid == oldID) {
         rec.parentid = newID;
-        rec.cleartext.parentGUID = newID;
+        rec.cleartext.parentid = newID;
         yield rec.encrypt(self.cb, ID.get('WeaveCryptoID').password);
       }
     }
   },
 
-  _changeRecordID: function BSS__changeRecordID(oldID, newID) {
+  _changeRecordID: function BmkEngine__changeRecordID(oldID, newID) {
     let self = yield;
     yield this._store._changeRecordID.async(this._store, self.cb, oldID, newID);
   }
@@ -809,7 +837,7 @@ BookmarksSyncCore.prototype = {
         a.action != b.action ||
         a.action != "create" ||
         a.data.type != b.data.type ||
-        a.data.parentGUID != b.data.parentGUID ||
+        a.data.parentid != b.data.parentid ||
         a.GUID == b.GUID)
       return false;
 
@@ -932,7 +960,7 @@ BookmarksStore.prototype = {
 
     this._log.trace("RECORD: " + record.id + " -> " + uneval(record.cleartext));
 
-    if (record.cleartext == "")
+    if (!record.cleartext)
       this._removeCommand({GUID: record.id});
     else if (this._getItemIdForGUID(record.id) < 0)
       this._createCommand({GUID: record.id, data: record.cleartext});
@@ -948,7 +976,7 @@ BookmarksStore.prototype = {
 
   _createCommand: function BStore__createCommand(command) {
     let newId;
-    let parentId = this._getItemIdForGUID(command.data.parentGUID);
+    let parentId = this._getItemIdForGUID(command.data.parentid);
 
     if (parentId < 0) {
       this._log.warn("Creating node with unknown parent -> reparenting to root");
@@ -1041,8 +1069,13 @@ BookmarksStore.prototype = {
       this._log.error("_createCommand: Unknown item type: " + command.data.type);
       break;
     }
-    if (newId)
+    if (newId) {
+      this._log.trace("Setting GUID of new item " + newId + " to " + command.GUID);
       this._bms.setItemGUID(newId, command.GUID);
+      let foo = this._bms.getItemGUID(command.GUID);
+      if (foo == newId)
+        this._log.debug("OK!");
+    }
   },
 
   _removeCommand: function BStore__removeCommand(command) {
@@ -1055,6 +1088,7 @@ BookmarksStore.prototype = {
     }
 
     var itemId = this._bms.getItemIdForGUID(command.GUID);
+    this._log.debug("woo: " + itemId);
     if (itemId < 0) {
       this._log.warn("Attempted to remove item " + command.GUID +
                      ", but it does not exist.  Skipping.");
@@ -1090,7 +1124,7 @@ BookmarksStore.prototype = {
       return;
     }
 
-    var itemId = this._bms.getItemIdForGUID(command.GUID);
+    var itemId = this._getItemIdForGUID(command.GUID);
     if (itemId < 0) {
       this._log.debug("Item for GUID " + command.GUID + " not found.  Skipping.");
       return;
@@ -1113,25 +1147,25 @@ BookmarksStore.prototype = {
         let curIdx = this._bms.getItemIndex(itemId);
         if (curIdx != command.data.index) {
           // ignore index if we're going to move the item to another folder altogether
-          if (command.data.parentGUID &&
+          if (command.data.parentid &&
               (this._bms.getFolderIdForItem(itemId) !=
-               this._getItemIdForGUID(command.data.parentGUID)))
+               this._getItemIdForGUID(command.data.parentid)))
             break;
           this._log.trace("Moving item (changing index)");
           this._bms.moveItem(itemId, this._bms.getFolderIdForItem(itemId),
                              command.data.index);
         }
         break;
-      case "parentGUID": {
-        if (command.data.parentGUID &&
+      case "parentid": {
+        if (command.data.parentid &&
             (this._bms.getFolderIdForItem(itemId) !=
-             this._getItemIdForGUID(command.data.parentGUID))) {
+             this._getItemIdForGUID(command.data.parentid))) {
           this._log.trace("Moving item (changing folder)");
           let index = -1;
           if (command.data.index && command.data.index >= 0)
             index = command.data.index;
           this._bms.moveItem(itemId,
-                             this._getItemIdForGUID(command.data.parentGUID), index);
+                             this._getItemIdForGUID(command.data.parentid), index);
         }
       } break;
       case "tags": {
@@ -1185,10 +1219,12 @@ BookmarksStore.prototype = {
     }
   },
 
-  _changeRecordID: function BSS__changeRecordID(oldID, newID) {
+  _changeItemID: function BSS__changeItemID(oldID, newID) {
     let self = yield;
 
-    var itemId = this._bms.getItemIdForGUID(oldID);
+    var itemId = this._getItemIdForGUID(oldID);
+    if (itemId == null) // toplevel folder
+      return;
     if (itemId < 0) {
       this._log.warn("Can't change GUID " + oldID + " to " +
                       newID + ": Item does not exist");
@@ -1212,7 +1248,7 @@ BookmarksStore.prototype = {
     return this._hsvc.executeQuery(query, this._hsvc.getNewQueryOptions()).root;
   },
 
-  __wrap: function BSS___wrap(node, items, parentGUID, index, guidOverride) {
+  __wrap: function BSS___wrap(node, items, parentid, index, guidOverride) {
     let GUID, item;
 
     // we override the guid for the root items, "menu", "toolbar", etc.
@@ -1221,7 +1257,7 @@ BookmarksStore.prototype = {
       item = {};
     } else {
       GUID = this._bms.getItemGUID(node.itemId);
-      item = {parentGUID: parentGUID, index: index};
+      item = {parentid: parentid, index: index};
     }
 
     if (node.type == node.RESULT_TYPE_FOLDER) {
@@ -1411,27 +1447,27 @@ BookmarksStore.prototype = {
  * engine. How the engine decides to set the score is upto it,
  * as long as the value between 0 and 100 actually corresponds
  * to its urgency to sync.
- *
- * Here's an example BookmarksTracker. We don't subclass getScore
- * because the observer methods take care of updating _score which
- * getScore returns by default.
  */
-function BookmarksTracker(engine) {
-  this._init(engine);
+function BookmarksTracker() {
+  this._init();
 }
 BookmarksTracker.prototype = {
   __proto__: Tracker.prototype,
-  _logName: "BMTracker",
+  _logName: "BmkTracker",
+  file: "bookmarks",
+
+  get _bms() {
+    let bms = Cc["@mozilla.org/browser/nav-bookmarks-service;1"].
+      getService(Ci.nsINavBookmarksService);
+    this.__defineGetter__("_bms", function() bms);
+    return bms;
+  },
 
   QueryInterface: XPCOMUtils.generateQI([Ci.nsINavBookmarkObserver]),
 
-  _init: function BMT__init(engine) {
-    this._engine = engine;
-    this._log = Log4Moz.repository.getLogger("Service." + this._logName);
-    this._score = 0;
-    Cc["@mozilla.org/browser/nav-bookmarks-service;1"].
-      getService(Ci.nsINavBookmarksService).
-      addObserver(this, false);
+  _init: function BMT__init() {
+    this.__proto__.__proto__._init.call(this);
+    this._bms.addObserver(this, false);
   },
 
   // FIXME: not getting any events whatsoever!
@@ -1439,25 +1475,38 @@ BookmarksTracker.prototype = {
   /* Every add/remove/change is worth 10 points */
 
   onItemAdded: function BMT_onEndUpdateBatch(itemId, folder, index) {
-    this._log.debug("Item " + itemId + " added, adding to queue");
+    if (!this.enabled)
+      return;
+    let guid = this._bms.getItemGUID(itemId);
+    this._log.debug("Item " + guid + " added, adding to queue");
+    this.addChangedID(guid);
     this._score += 10;
-    //let all = this._engine._store.wrap();
-    //let record = yield this._engine._createRecord.async(this, self.cb, key, all[itemId]);
-    //this._engine.outgoing.push(record);
   },
 
   onItemRemoved: function BMT_onItemRemoved(itemId, folder, index) {
-    this._log.debug("Item " + itemId + " removed, adding to queue");
+    if (!this.enabled)
+      return;
+    let guid = this._bms.getItemGUID(itemId);
+    this._log.debug("Item " + guid + " removed, adding to queue");
+    this.addChangedID(guid);
     this._score += 10;
   },
 
   onItemChanged: function BMT_onItemChanged(itemId, property, isAnnotationProperty, value) {
-    this._log.debug("Item " + itemId + " changed, adding to queue");
+    if (!this.enabled)
+      return;
+    let guid = this._bms.getItemGUID(itemId);
+    this._log.debug("Item " + guid + " changed, adding to queue");
+    this.addChangedID(guid);
     this._score += 10;
   },
 
   onItemMoved: function BMT_onItemMoved(itemId, oldParent, oldIndex, newParent, newIndex) {
-    this._log.debug("Item " + itemId + " moved, adding to queue");
+    if (!this.enabled)
+      return;
+    let guid = this._bms.getItemGUID(itemId);
+    this._log.debug("Item " + guid + " moved, adding to queue");
+    this.addChangedID(guid);
     this._score += 10;
   },
 

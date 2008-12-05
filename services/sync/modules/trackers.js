@@ -51,32 +51,56 @@ Function.prototype.async = Async.sugar;
 
 /*
  * Trackers are associated with a single engine and deal with
- * listening for changes to their particular data type
+ * listening for changes to their particular data type.
+ * 
+ * There are two things they keep track of:
+ * 1) A score, indicating how urgently the engine wants to sync
+ * 2) A list of IDs for all the changed items that need to be synced
  * and updating their 'score', indicating how urgently they
  * want to sync.
  *
- * 'score's range from 0 (Nothing's changed)
- * to 100 (I need to sync now!)
- * -1 is also a valid score
- * (don't sync me unless the user specifically requests it)
- *
- * Setting a score outside of this range will raise an exception.
- * Well not yet, but it will :)
  */
 function Tracker() {
   this._init();
 }
 Tracker.prototype = {
   _logName: "Tracker",
-  _score: 0,
+  file: "none",
 
-  _init: function T__init() {
-    this._log = Log4Moz.repository.getLogger("Service." + this._logName);
-    this._score = 0;
+  get _json() {
+    let json = Cc["@mozilla.org/dom/json;1"].createInstance(Ci.nsIJSON);
+    this.__defineGetter__("_json", function() json);
+    return json;
   },
 
-  /* Should be called by service periodically
-   * before deciding which engines to sync
+  _init: function T__init() {
+    this._log = Log4Moz.repository.getLogger(this._logName);
+    this._score = 0;
+    this.loadChangedIDs();
+    this.enable();
+  },
+
+  get enabled() {
+    return this._enabled;
+  },
+
+  enable: function T_enable() {
+    this._enabled = true;
+  },
+
+  disable: function T_disable() {
+    this._enabled = false;
+  },
+
+  /*
+   * Score can be called as often as desired to decide which engines to sync
+   *
+   * Valid values for score:
+   * -1: Do not sync unless the user specifically requests it (almost disabled)
+   * 0: Nothing has changed
+   * 100: Please sync me ASAP!
+   * 
+   * Setting it to other values should (but doesn't currently) throw an exception
    */
   get score() {
     if (this._score >= 100)
@@ -85,10 +109,84 @@ Tracker.prototype = {
       return this._score;
   },
 
-  /* Should be called by service everytime a sync
-   * has been done for an engine
-   */
+  // Should be called by service everytime a sync has been done for an engine
   resetScore: function T_resetScore() {
     this._score = 0;
+  },
+
+  /*
+   * Changed IDs are in an object (hash) to make it easy to check if
+   * one is already set or not.
+   * Note that it would be nice to make these methods asynchronous so
+   * as to not block when writing to disk.  However, these will often
+   * get called from observer callbacks, and so it is better to make
+   * them synchronous.
+   */
+
+  get changedIDs() {
+    let items = {};
+    this.__defineGetter__("changedIDs", function() items);
+    return items;
+  },
+
+  saveChangedIDs: function T_saveChangedIDs() {
+    this._log.trace("Saving changed IDs to disk");
+
+    let file = Utils.getProfileFile(
+      {path: "weave/changes/" + this.file + ".json",
+       autoCreate: true});
+    let out = this._json.encode(this.changedIDs);
+    let [fos] = Utils.open(file, ">");
+    fos.writeString(out);
+    fos.close();
+  },
+
+  loadChangedIDs: function T_loadChangedIDs() {
+    let file = Utils.getProfileFile("weave/changes/" + this.file + ".json");
+    if (!file.exists())
+      return;
+
+    this._log.trace("Loading previously changed IDs from disk");
+
+    try {
+      let [is] = Utils.open(file, "<");
+      let json = Utils.readStream(is);
+      is.close();
+
+      let ids = this._json.decode(json);
+      for (let id in ids) {
+        this.changedIDs[id] = 1;
+      }
+    } catch (e) {
+      this._log.warn("Could not load changed IDs from previous session");
+      this._log.debug("Exception: " + e);
+    }
+  },
+
+  addChangedID: function T_addChangedID(id) {
+    if (!this.enabled)
+      return;
+    if (!this.changedIDs[id]) {
+      this.changedIDs[id] = true;
+      this.saveChangedIDs();
+    }
+  },
+
+  removeChangedID: function T_removeChangedID(id) {
+    if (!this.enabled)
+      return;
+    if (this.changedIDs[id]) {
+      delete this.changedIDs[id];
+      this.saveChangedIDs();
+    }
+  },
+
+  clearChangedIDs: function T_clearChangedIDs() {
+    if (!this.enabled)
+      return;
+    for (let id in this.changedIDs) {
+      delete this.changedIDs[id];
+    }
+    this.saveChangedIDs();
   }
 };
