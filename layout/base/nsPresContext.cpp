@@ -1581,17 +1581,17 @@ InsertFontFaceRule(nsCSSFontFaceRule *aRule, gfxUserFontSet* aFontSet,
   NS_ABORT_IF_FALSE(NS_SUCCEEDED(aRule->GetType(type)) 
                     && type == nsICSSRule::FONT_FACE_RULE, 
                     "InsertFontFaceRule passed a non-fontface CSS rule");
-  
+
   // aRule->List();
-  
+
   nsAutoString fontfamily;
   nsCSSValue val;
-  
+
   PRUint32 unit;
   PRUint32 weight = NS_STYLE_FONT_WEIGHT_NORMAL;
   PRUint32 stretch = NS_STYLE_FONT_STRETCH_NORMAL;
   PRUint32 italicStyle = FONT_STYLE_NORMAL;
-  
+
   // set up family name
   aRule->GetDesc(eCSSFontDesc_Family, val);
   unit = val.GetUnit();
@@ -1599,43 +1599,49 @@ InsertFontFaceRule(nsCSSFontFaceRule *aRule, gfxUserFontSet* aFontSet,
     val.GetStringValue(fontfamily);
     fontfamily.Trim("\"");
   } else {
-    NS_ASSERTION(unit == eCSSUnit_String, 
-                 "@font-face family name has non-string unit type");
+    NS_ASSERTION(unit == eCSSUnit_Null,
+                 "@font-face family name has unexpected unit");
+    // If there is no family name, this rule cannot contribute a
+    // usable font, so there is no point in processing it further.
     return;
   }
-  
+
   // set up weight
   aRule->GetDesc(eCSSFontDesc_Weight, val);
   unit = val.GetUnit();
-  if (unit != eCSSUnit_Null) {
-    if (unit == eCSSUnit_Normal) {
-      weight = NS_STYLE_FONT_WEIGHT_NORMAL;
-    } else {
-      weight = val.GetIntValue();
-    }
+  if (unit == eCSSUnit_Integer || unit == eCSSUnit_Enumerated) {
+    weight = val.GetIntValue();
+  } else if (unit == eCSSUnit_Normal) {
+    weight = NS_STYLE_FONT_WEIGHT_NORMAL;
+  } else {
+    NS_ASSERTION(unit == eCSSUnit_Null,
+                 "@font-face weight has unexpected unit");
   }
-  
+
   // set up stretch
   aRule->GetDesc(eCSSFontDesc_Stretch, val);
   unit = val.GetUnit();
-  if (unit != eCSSUnit_Null) {
-    if (unit == eCSSUnit_Normal) {
-      stretch = NS_STYLE_FONT_STRETCH_NORMAL;
-    } else {
-      stretch = val.GetIntValue();
-    }
+  if (unit == eCSSUnit_Enumerated) {
+    stretch = val.GetIntValue();
+  } else if (unit == eCSSUnit_Normal) {
+    stretch = NS_STYLE_FONT_STRETCH_NORMAL;
+  } else {
+    NS_ASSERTION(unit == eCSSUnit_Null,
+                 "@font-face stretch has unexpected unit");
   }
-  
+
   // set up font style
   aRule->GetDesc(eCSSFontDesc_Style, val);
-  if (val.GetUnit() != eCSSUnit_Null) {
-    if (val.GetUnit() == eCSSUnit_Normal) {
-      italicStyle = FONT_STYLE_NORMAL;
-    } else {
-      italicStyle = val.GetIntValue();
-    }
+  unit = val.GetUnit();
+  if (unit == eCSSUnit_Enumerated) {
+    italicStyle = val.GetIntValue();
+  } else if (unit == eCSSUnit_Normal) {
+    italicStyle = FONT_STYLE_NORMAL;
+  } else {
+    NS_ASSERTION(unit == eCSSUnit_Null,
+                 "@font-face style has unexpected unit");
   }
-  
+
   // set up src array
   nsTArray<gfxFontFaceSrc> srcArray;
 
@@ -1700,6 +1706,8 @@ InsertFontFaceRule(nsCSSFontFaceRule *aRule, gfxUserFontSet* aFontSet,
         break;
       }
      }
+  } else {
+    NS_ASSERTION(unit == eCSSUnit_Null, "@font-face src has unexpected unit");
   }
   
   if (!fontfamily.IsEmpty() && srcArray.Length() > 0) {
