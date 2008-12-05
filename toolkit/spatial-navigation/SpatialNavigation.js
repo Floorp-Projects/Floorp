@@ -245,7 +245,7 @@ function _focusNextUsingCmdDispatcher(key, callback) {
     var windowMediator = Cc['@mozilla.org/appshell/window-mediator;1'].getService(Ci.nsIWindowMediator);
     var window = windowMediator.getMostRecentWindow("navigator:browser");
 
-    if (key == PrefObserver['keyCodeRight'] || key != PrefObserver['keyCodeDown']) {
+    if (key == PrefObserver['keyCodeRight'] || key == PrefObserver['keyCodeDown']) {
       window.document.commandDispatcher.advanceFocus();
     } else {
       window.document.commandDispatcher.rewindFocus();
