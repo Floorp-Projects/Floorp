@@ -86,14 +86,19 @@ const kNone  = "none";
 
 function _onInputKeyPress (event, callback) {
 
+  // Use whatever key value is available (either keyCode or charCode).
+  // It might be useful for addons or whoever wants to set different
+  // key to be used here (e.g. "a", "F1", "arrowUp", ...).
+  var key = event.which || event.keyCode;
+
   // If it isn't enabled, bail.
   if (!PrefObserver['enabled'])
     return;
 
-  if (event.keyCode != PrefObserver['keyCodeDown']  &&
-      event.keyCode != PrefObserver['keyCodeRight'] &&
-      event.keyCode != PrefObserver['keyCodeUp'] &&
-      event.keyCode != PrefObserver['keyCodeLeft'])
+  if (key != PrefObserver['keyCodeDown']  &&
+      key != PrefObserver['keyCodeRight'] &&
+      key != PrefObserver['keyCodeUp'] &&
+      key != PrefObserver['keyCodeLeft'])
     return;
 
   // If it is not using the modifiers it should, bail.
@@ -117,7 +122,7 @@ function _onInputKeyPress (event, callback) {
   // check to see if we are in a textarea or text input element, and if so,
   // ensure that we let the arrow keys work properly.
   if (target instanceof Ci.nsIDOMHTMLHtmlElement) {
-      _focusNextUsingCmdDispatcher(event, callback);
+      _focusNextUsingCmdDispatcher(key, callback);
       return;
   }
 
@@ -130,8 +135,8 @@ function _onInputKeyPress (event, callback) {
     
     // if there is no text, there is nothing special to do.
     if (target.textLength > 0) {
-      if (event.keyCode == PrefObserver['keyCodeRight'] ||
-          event.keyCode == PrefObserver['keyCodeDown'] ) {
+      if (key == PrefObserver['keyCodeRight'] ||
+          key == PrefObserver['keyCodeDown'] ) {
         // we are moving forward into the document
         if (target.textLength != target.selectionEnd)
           return;
@@ -148,12 +153,12 @@ function _onInputKeyPress (event, callback) {
   // Check to see if we are in a select
   if (target instanceof Ci.nsIDOMHTMLSelectElement)
   {
-    if (event.keyCode == PrefObserver['keyCodeDown']) {
+    if (key == PrefObserver['keyCodeDown']) {
       if (target.selectedIndex + 1 < target.length)
         return;
     }
 
-    if (event.keyCode == PrefObserver['keyCodeUp']) {
+    if (key == PrefObserver['keyCodeUp']) {
       if (target.selectedIndex > 0)
         return;
     }
@@ -196,11 +201,11 @@ function _onInputKeyPress (event, callback) {
 
     var nextRect = _inflateRect(nextNode.getBoundingClientRect(),
                                 - gRectFudge);
-    
-    if (! _isRectInDirection(event, focusedRect, nextRect))
+
+    if (! _isRectInDirection(key, focusedRect, nextRect))
       continue;
 
-    var distance = _spatialDistance(event, focusedRect, nextRect);
+    var distance = _spatialDistance(key, focusedRect, nextRect);
 
     //dump("looking at: " + nextNode + " " + distance);
     
@@ -228,19 +233,19 @@ function _onInputKeyPress (event, callback) {
     
   } else {
     // couldn't find anything.  just advance and hope.
-    _focusNextUsingCmdDispatcher(event, callback);
+    _focusNextUsingCmdDispatcher(key, callback);
   }
-  
+
   event.preventDefault();
   event.stopPropagation();
 }
 
-function _focusNextUsingCmdDispatcher(event, callback) {
+function _focusNextUsingCmdDispatcher(key, callback) {
 
     var windowMediator = Cc['@mozilla.org/appshell/window-mediator;1'].getService(Ci.nsIWindowMediator);
     var window = windowMediator.getMostRecentWindow("navigator:browser");
 
-    if (event.keyCode == PrefObserver['keyCodeRight'] || event.keyCode != PrefObserver['keyCodeDown']) {
+    if (key == PrefObserver['keyCodeRight'] || key != PrefObserver['keyCodeDown']) {
       window.document.commandDispatcher.advanceFocus();
     } else {
       window.document.commandDispatcher.rewindFocus();
@@ -250,21 +255,21 @@ function _focusNextUsingCmdDispatcher(event, callback) {
       callback(null);
 }
 
-function _isRectInDirection(event, focusedRect, anotherRect)
+function _isRectInDirection(key, focusedRect, anotherRect)
 {
-  if (event.keyCode == PrefObserver['keyCodeLeft']) {
+  if (key == PrefObserver['keyCodeLeft']) {
     return (anotherRect.left < focusedRect.left);
   }
 
-  if (event.keyCode == PrefObserver['keyCodeRight']) {
+  if (key == PrefObserver['keyCodeRight']) {
     return (anotherRect.right > focusedRect.right);
   }
 
-  if (event.keyCode == PrefObserver['keyCodeUp']) {
+  if (key == PrefObserver['keyCodeUp']) {
     return (anotherRect.top < focusedRect.top);
   }
 
-  if (event.keyCode == PrefObserver['keyCodeDown']) {
+  if (key == PrefObserver['keyCodeDown']) {
     return (anotherRect.bottom > focusedRect.bottom);
   }
     return false;
@@ -289,12 +294,12 @@ function _containsRect(a, b)
            (b.bottom >= a.top) );
 }
 
-function _spatialDistance(event, a, b)
+function _spatialDistance(key, a, b)
 {
   var inlineNavigation = false;
   var mx, my, nx, ny;
 
-  if (event.keyCode == PrefObserver['keyCodeLeft']) {
+  if (key == PrefObserver['keyCodeLeft']) {
 
     //  |---|
     //  |---|
@@ -326,7 +331,7 @@ function _spatialDistance(event, a, b)
       nx = b.right;
       ny = 0;
     }
-  } else if (event.keyCode == PrefObserver['keyCodeRight']) {
+  } else if (key == PrefObserver['keyCodeRight']) {
 
     //         |---|
     //         |---|
@@ -357,7 +362,7 @@ function _spatialDistance(event, a, b)
       nx = b.left;
       ny = 0;
     }
-  } else if (event.keyCode == PrefObserver['keyCodeUp']) {
+  } else if (key == PrefObserver['keyCodeUp']) {
 
     //  |---|  |---|  |---|
     //  |---|  |---|  |---|
@@ -385,7 +390,7 @@ function _spatialDistance(event, a, b)
       nx = 0;
       ny = b.bottom;
     }
-  } else if (event.keyCode == PrefObserver['keyCodeDown']) {
+  } else if (key == PrefObserver['keyCodeDown']) {
 
     //         |---|
     //         |---|
@@ -417,14 +422,14 @@ function _spatialDistance(event, a, b)
   
   var scopedRect = _inflateRect(a, gRectFudge);
 
-  if (event.keyCode == PrefObserver['keyCodeLeft'] ||
-      event.keyCode == PrefObserver['keyCodeRight']) {
+  if (key == PrefObserver['keyCodeLeft'] ||
+      key == PrefObserver['keyCodeRight']) {
     scopedRect.left = 0;
     scopedRect.right = Infinity;
     inlineNavigation = _containsRect(scopedRect, b);
   }
-  else if (event.keyCode == PrefObserver['keyCodeUp'] ||
-           event.keyCode == PrefObserver['keyCodeDown']) {
+  else if (key == PrefObserver['keyCodeUp'] ||
+           key == PrefObserver['keyCodeDown']) {
     scopedRect.top = 0;
     scopedRect.bottom = Infinity;
     inlineNavigation = _containsRect(scopedRect, b);
