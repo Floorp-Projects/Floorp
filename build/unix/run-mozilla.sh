@@ -340,18 +340,18 @@ fi
 ##
 ## When a shared library is a symbolic link, $ORIGIN will be replaced with
 ## the real path (i.e., what the symbolic link points to) by the runtime
-## linker.  For example, if dist/bin/libgkgfx.so is a symbolic link to
-## gfx/src/libgkgfx.so, $ORIGIN will be "gfx/src" instead of "dist/bin".
-## So the runtime linker will use "gfx/src" NOT "dist/bin" to locate the
-## other shared libraries that libgkgfx.so depends on.  This only happens
+## linker.  For example, if dist/bin/libxul.so is a symbolic link to
+## toolkit/library/libxul.so, $ORIGIN will be "toolkit/library" instead of "dist/bin".
+## So the runtime linker will use "toolkit/library" NOT "dist/bin" to locate the
+## other shared libraries that libxul.so depends on.  This only happens
 ## when a user (developer) tries to start firefox, thunderbird, or seamonkey
 ## under dist/bin. To solve the problem, we should rely on LD_LIBRARY_PATH
 ## to locate shared libraries.
 ##
 ## Note: 
-##  We choose libgkgfx.so as a representative shared library. If it is 
+##  We choose libxul.so as a representative shared library. If it is 
 ##  a symbolic link, all other shared libraries are symbolic links also.
-if [ `uname -s` != "SunOS" -o -h "$MOZ_DIST_BIN/libgkgfx.so" ]
+if [ `uname -s` != "SunOS" -o -h "$MOZ_DIST_BIN/libxul.so" ]
 then
 	LD_LIBRARY_PATH=${MOZ_DIST_BIN}:${MOZ_DIST_BIN}/plugins:${MRE_HOME}${LD_LIBRARY_PATH+":$LD_LIBRARY_PATH"}
 fi 
