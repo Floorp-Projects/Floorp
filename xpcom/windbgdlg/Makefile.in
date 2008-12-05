@@ -46,7 +46,5 @@ SIMPLE_PROGRAMS	= windbgdlg$(BIN_SUFFIX)
 
 CPPSRCS		= windbgdlg.cpp
 
-OS_LIBS += $(call EXPAND_LIBNAME, shell32)
-
 include $(topsrcdir)/config/rules.mk
 
