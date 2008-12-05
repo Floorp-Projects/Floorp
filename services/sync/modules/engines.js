@@ -390,9 +390,8 @@ SyncEngine.prototype = {
       meta.generateIV();
       yield meta.addUnwrappedKey(self.cb, pubkey, symkey);
       yield meta.put(self.cb);
-
-      this._tracker.disable();
     }
+    this._tracker.disable();
   },
 
   // Generate outgoing records
