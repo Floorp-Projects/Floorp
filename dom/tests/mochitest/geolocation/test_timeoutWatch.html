@@ -38,13 +38,13 @@ function successCallback(pos){
 function errorCallback(err) {
     removePrompt();
 
-    if (err.code == 2) {
+    if (err.code == err.POSITION_UNAVAILABLE) {
         // nothing is hooked up to test against.
         SimpleTest.finish();
         return;
     }
 
-  ok(err.code == 4, "ensure error is a timeout.");
+  ok(err.code == err.TIMEOUT, "ensure error is a timeout.");
   removePrompt();
   SimpleTest.finish();
 }
