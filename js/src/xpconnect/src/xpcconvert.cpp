@@ -467,16 +467,31 @@ XPCConvert::NativeData2JS(XPCCallContext& ccx, jsval* d, const void* s,
                     // global object will not have been collected, and
                     // therefore this NativeInterface2JSObject will not end up
                     // creating a new XPCNativeScriptableShared.
-                    if(!NativeInterface2JSObject(ccx, d, nsnull, iface, iid,
-                                                 scope, PR_TRUE,
+                    nsCOMPtr<nsIXPConnectJSObjectHolder> holder;
+                    if(!NativeInterface2JSObject(ccx, d,
+                                                 getter_AddRefs(holder), iface,
+                                                 iid, scope, PR_TRUE,
                                                  OBJ_IS_NOT_GLOBAL, pErr))
                         return JS_FALSE;
 
 #ifdef DEBUG
-                    JSObject* jsobj = JSVAL_TO_OBJECT(*d);
-                    if(jsobj && !STOBJ_GET_PARENT(jsobj))
-                        NS_ASSERTION(STOBJ_GET_CLASS(jsobj)->flags & JSCLASS_IS_GLOBAL,
-                                     "Why did we recreate this wrapper?");
+                    if(holder)
+                    {
+                        JSObject* jsobj;
+                        
+                        if(NS_SUCCEEDED(holder->GetJSObject(&jsobj)))
+                        {
+                            NS_ASSERTION(*d == OBJECT_TO_JSVAL(jsobj),
+                                         "Returned jsval is not the jsobj?");
+                            if(!STOBJ_GET_PARENT(jsobj))
+                                NS_ASSERTION(STOBJ_GET_CLASS(jsobj)->flags & JSCLASS_IS_GLOBAL,
+                                             "Why did we recreate this wrapper?");
+                        }
+                        else
+                        {
+                            NS_NOTREACHED("Got a holder without an object?");
+                        }
+                    }
 #endif
                 }
                 break;

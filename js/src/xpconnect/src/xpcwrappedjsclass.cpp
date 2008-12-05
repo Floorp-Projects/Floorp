@@ -1347,10 +1347,12 @@ nsXPCWrappedJSClass::CallMethod(nsXPCWrappedJS* wrapper, uint16 methodIndex,
                                         const_cast<nsIID*>
                                                   (&NS_GET_IID(nsISupports));
                                 jsval v;
+                                nsCOMPtr<nsIXPConnectJSObjectHolder> holder;
                                 JSBool ok =
                                   XPCConvert::NativeInterface2JSObject(ccx,
-                                        &v, nsnull, newThis, newWrapperIID, obj,
-                                        PR_FALSE, PR_FALSE, nsnull);
+                                        &v, getter_AddRefs(holder), newThis,
+                                        newWrapperIID, obj, PR_FALSE, PR_FALSE,
+                                        nsnull);
                                 if(newWrapperIID != &NS_GET_IID(nsISupports))
                                     nsMemory::Free(newWrapperIID);
                                 if(!ok)
