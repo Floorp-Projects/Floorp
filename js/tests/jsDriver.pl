@@ -43,7 +43,6 @@
 # Branched 11/01/99
 
 use strict;
-use Getopt::Mixed "nextOption";
 use File::Temp qw/ tempfile tempdir /;
 use POSIX qw(sys_wait_h);
 
@@ -84,8 +83,10 @@ my $options = "b=s bugurl>b c=s classpath>c e=s engine>e f=s file>f " .
   "h help>h i j=s javapath>j k confail>k K linefail>K R report>R l=s list>l " .
   "L=s neglist>L o=s opt>o p=s testpath>p s=s shellpath>s t trace>t " .
   "T=s timeout>T u=s lxrurl>u " .
-  "x noexitmunge>x n:s narcissus>n " .
+  "x noexitmunge>x n=s narcissus>n " .
   "Q noquitinthandler>Q";
+
+my $last_option;
 
 if ($os_type eq "MAC") {
     $opt_suite_path = `directory`;
@@ -502,15 +503,47 @@ sub write_results {
 
 }
 
+sub next_option {
+    my ($key, $val, $implied);
+
+    return if @ARGV == 0;
+
+    &dd ("ARGV is now: @ARGV\n");
+
+    $key = shift @ARGV;
+    if ($key =~ s/^--?(.*)/$1/) {
+        $implied = 0;
+    } else {
+        $implied = 1;
+        $val = $key;
+        $key = $last_option;
+    }
+
+    if ($key =~ /\w+/ and $options =~ /\b$key>(\w+)/) {
+        $key = $1;
+    }
+
+    if ($options =~ /\b$key=s\b/) {
+        if (!$implied) {
+            die "option '$key' requires an argument" if @ARGV == 0;
+            $val = shift @ARGV;
+        }
+    } elsif ($options =~ /(^|\s)$key(\s|$)/) {
+        die "option '$key' doesn't take an argument" if $implied;
+        $val = 1;
+    } else {
+        die "can't figure out option '$key'";
+    }
+    $last_option = $key;
+    return ($key, $val);
+}
+
 sub parse_args {
     my ($option, $value, $lastopt);
 
     &dd ("checking command line options.");
 
-    Getopt::Mixed::init ($options);
-    $Getopt::Mixed::order = $Getopt::Mixed::RETURN_IN_ORDER;
-
-    while (($option, $value) = nextOption()) {
+    while (($option, $value) = next_option()) {
 
         if ($option eq "b") {
             &dd ("opt: setting bugurl to '$value'.");
@@ -624,8 +657,6 @@ sub parse_args {
         $lastopt = $option;
 
     }
-
-    Getopt::Mixed::cleanup();
 
     if ($#opt_engine_list == -1) {
         die "You must select a shell to test in.\n";
