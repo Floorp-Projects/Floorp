@@ -3260,12 +3260,13 @@ void
 nsHTMLDocument::TearingDownEditor(nsIEditor *aEditor)
 {
   if (IsEditingOn()) {
+    EditingState oldState = mEditingState;
     mEditingState = eTearingDown;
 
     nsCOMPtr<nsIEditorStyleSheets> editorss = do_QueryInterface(aEditor);
     if (editorss) {
       editorss->RemoveOverrideStyleSheet(NS_LITERAL_STRING("resource://gre/res/contenteditable.css"));
-      if (mEditingState == eDesignMode)
+      if (oldState == eDesignMode)
         editorss->RemoveOverrideStyleSheet(NS_LITERAL_STRING("resource://gre/res/designmode.css"));
     }
   }
@@ -3295,6 +3296,15 @@ nsHTMLDocument::TurnEditingOff()
   mEditingState = eOff;
 
   return NS_OK;
+}
+
+nsresult
+nsHTMLDocument::ReinitEditor()
+{
+  NS_ASSERTION(mEditingState != eOff, "Editor not inited.");
+  
+  TurnEditingOff();
+  return EditingStateChanged();
 }
 
 static PRBool HasPresShell(nsPIDOMWindow *aWindow)
