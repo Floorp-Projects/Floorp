@@ -33,11 +33,6 @@ tabbox > tabs {
 
 tab {
   -moz-appearance: tab;
-  -moz-box-align: stretch;
-}
-
-tab > .tab-middle {
-  padding: 2px 6px;
 }
 
 tab[first-tab=true] {
@@ -46,6 +41,10 @@ tab[first-tab=true] {
 
 tab[last-tab=true] {
   -moz-padding-end: 2px;
+}
+
+.tab-middle {
+  padding: 2px 6px;
 }
 
 .tabs-left,
@@ -88,7 +87,6 @@ tabs.tabs-bottom > tab {
 
 tabbox.tabs-bottom > tabs > tab > .tab-middle,
 tabs.tabs-bottom > tab > .tab-middle {
-  -moz-box-align: stretch;
   padding: 1px 2px 0 2px;
 }
 
