@@ -783,7 +783,8 @@ public:
 };
 
 gfxFontEntry* 
-gfxWindowsPlatform::MakePlatformFont(const gfxFontEntry *aProxyEntry, 
+gfxWindowsPlatform::MakePlatformFont(const gfxProxyFontEntry *aProxyEntry,
+                                     nsISupports *aLoader,
                                      const PRUint8 *aFontData, PRUint32 aLength)
 {
     // if calls aren't available, bail

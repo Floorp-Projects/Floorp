@@ -116,7 +116,7 @@ nsFontFaceLoader::OnStreamComplete(nsIStreamLoader* aLoader,
   PRBool fontUpdate;
 
   // whether an error occurred or not, notify the user font set of the completion
-  fontUpdate = mLoaderContext->mUserFontSet->OnLoadComplete(mFontEntry, 
+  fontUpdate = mLoaderContext->mUserFontSet->OnLoadComplete(mFontEntry, aLoader,
                                                             aString, aStringLen,
                                                             aStatus);
 

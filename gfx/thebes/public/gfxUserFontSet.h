@@ -193,6 +193,12 @@ public:
                      PRUint32 aItalicStyle = 0, 
                      gfxSparseBitSet *aUnicodeRanges = nsnull);
 
+    // Whether there is a face with this family name
+    PRBool HasFamily(const nsAString& aFamilyName) const
+    {
+        return GetFamily(aFamilyName) != nsnull;
+    }
+
     // lookup a font entry for a given style, returns null if not loaded
     gfxFontEntry *FindFontEntry(const nsAString& aName, 
                                 const gfxFontStyle& aFontStyle, PRBool& aNeedsBold);
@@ -201,7 +207,7 @@ public:
     // aDownloadStatus == NS_OK ==> download succeeded, error otherwise
     // returns true if platform font creation sucessful (or local()
     // reference was next in line)
-    PRBool OnLoadComplete(gfxFontEntry *aFontToLoad, 
+    PRBool OnLoadComplete(gfxFontEntry *aFontToLoad, nsISupports *aLoader,
                           const PRUint8 *aFontData, PRUint32 aLength,
                           nsresult aDownloadStatus);
 
@@ -216,6 +222,8 @@ protected:
 
     // increment the generation on font load
     void IncrementGeneration();
+
+    gfxMixedFontFamily *GetFamily(const nsAString& aName) const;
 
     // remove family
     void RemoveFamily(const nsAString& aFamilyName);
@@ -235,6 +243,7 @@ class gfxProxyFontEntry : public gfxFontEntry {
 
 public:
     gfxProxyFontEntry(const nsTArray<gfxFontFaceSrc>& aFontFaceSrcList, 
+                      gfxMixedFontFamily *aFamily,
                       PRUint32 aWeight, 
                       PRUint32 aStretch, 
                       PRUint32 aItalicStyle, 
