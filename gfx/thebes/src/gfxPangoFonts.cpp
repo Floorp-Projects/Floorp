@@ -67,7 +67,9 @@
 #include <pango/pango.h>
 #include <pango/pangofc-fontmap.h>
 
+#ifdef MOZ_WIDGET_GTK2
 #include <gdk/gdkscreen.h>
+#endif
 
 #include <math.h>
 
@@ -1703,6 +1705,10 @@ gfx_pango_font_map_get_resolution(PangoFcFontMap *fcfontmap,
     return gfxPlatformGtk::DPI();
 }
 
+#ifdef MOZ_WIDGET_GTK2
+static void ApplyGdkScreenFontOptions(FcPattern *aPattern);
+#endif
+
 // Apply user settings and defaults to pattern in preparation for matching.
 static void
 PrepareSortPattern(FcPattern *aPattern, double aFallbackSize,
@@ -1718,10 +1724,13 @@ PrepareSortPattern(FcPattern *aPattern, double aFallbackSize,
     // setting for that option.  We could get the default setting by creating
     // an xlib surface once, recording its font_options, and then merging the
     // gdk options.
-    const cairo_font_options_t *options =
-        gdk_screen_get_font_options(gdk_screen_get_default());
-
-    cairo_ft_font_options_substitute(options, aPattern);
+    //
+    // Using an xlib surface would also be an option to get Screen font
+    // options for non-GTK X11 toolkits, but less efficient than using GDK to
+    // pick up dynamic changes.
+#ifdef MOZ_WIDGET_GTK2
+    ApplyGdkScreenFontOptions(aPattern);
+#endif
 
     // Protect against any fontconfig settings that may have incorrectly
     // modified the pixelsize, and consider aSizeAdjustFactor.
@@ -3396,3 +3405,36 @@ GuessPangoLanguage(const nsACString& aLangGroup)
 
     return pango_language_from_string(lang.get());
 }
+
+#ifdef MOZ_WIDGET_GTK2
+/***************************************************************************
+ *
+ * This function must be last in the file because it uses the system cairo
+ * library.  Above this point the cairo library used is the tree cairo if
+ * MOZ_TREE_CAIRO.
+ */
+
+#if MOZ_TREE_CAIRO
+// Tree cairo symbols have different names.  Disable their activation through
+// preprocessor macros.
+#undef cairo_ft_font_options_substitute
+
+// The system cairo functions are not declared because the include paths cause
+// the gdk headers to pick up the tree cairo.h.
+extern "C" {
+void
+cairo_ft_font_options_substitute (const cairo_font_options_t *options,
+                                  FcPattern                  *pattern);
+}
+#endif
+
+static void
+ApplyGdkScreenFontOptions(FcPattern *aPattern)
+{
+    const cairo_font_options_t *options =
+        gdk_screen_get_font_options(gdk_screen_get_default());
+
+    cairo_ft_font_options_substitute(options, aPattern);
+}
+
+#endif // MOZ_WIDGET_GTK2
