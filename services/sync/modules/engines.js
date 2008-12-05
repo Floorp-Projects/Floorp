@@ -100,7 +100,7 @@ EngineManagerSvc.prototype = {
   }
 };
 
-function Engine() {}
+function Engine() { /* subclasses should call this._init() */}
 Engine.prototype = {
   _notify: Wrap.notify,
 
@@ -134,7 +134,9 @@ Engine.prototype = {
     return json;
   },
 
-  // _core, _store and _tracker need to be overridden in subclasses
+  get score() this._tracker.score,
+
+  // _core, _store, and tracker need to be overridden in subclasses
   get _store() {
     let store = new Store();
     this.__defineGetter__("_store", function() store);
@@ -148,7 +150,7 @@ Engine.prototype = {
   },
 
   get _tracker() {
-    let tracker = new tracker();
+    let tracker = new Tracker();
     this.__defineGetter__("_tracker", function() tracker);
     return tracker;
   },
@@ -174,6 +176,10 @@ Engine.prototype = {
     this._log = Log4Moz.repository.getLogger("Service." + this.logName);
     this._log.level = Log4Moz.Level[level];
     this._osPrefix = "weave:" + this.name + ":";
+
+    this._tracker; // initialize tracker to load previously changed IDs
+
+    this._log.debug("Engine initialized");
   },
 
   _serializeCommands: function Engine__serializeCommands(commands) {
@@ -203,11 +209,6 @@ Engine.prototype = {
   _sync: function Engine__sync() {
     let self = yield;
     throw "_sync needs to be subclassed";
-  },
-
-  _initialUpload: function Engine__initialUpload() {
-    let self = yield;
-    throw "_initialUpload needs to be subclassed";
   },
 
   _share: function Engine__share(guid, username) {
@@ -247,40 +248,9 @@ Engine.prototype = {
   }
 };
 
-function NewEngine() {}
-NewEngine.prototype = {
+function SyncEngine() { /* subclasses should call this._init() */ }
+SyncEngine.prototype = {
   __proto__: Engine.prototype,
-
-  get _snapshot() {
-    let snap = new SnapshotStore(this.name);
-    this.__defineGetter__("_snapshot", function() snap);
-    return snap;
-  },
-
-  get lastSync() {
-    try {
-      return Utils.prefs.getCharPref(this.name + ".lastSync");
-    } catch (e) {
-      return 0;
-    }
-  },
-  set lastSync(value) {
-    Utils.prefs.setCharPref(this.name + ".lastSync", value);
-  },
-
-  _incoming: null,
-  get incoming() {
-    if (!this._incoming)
-      this._incoming = [];
-    return this._incoming;
-  },
-
-  _outgoing: null,
-  get outgoing() {
-    if (!this._outgoing)
-      this._outgoing = [];
-    return this._outgoing;
-  },
 
   get baseURL() {
     let url = Utils.prefs.getCharPref("serverURL");
@@ -297,38 +267,92 @@ NewEngine.prototype = {
     return this.baseURL + ID.get('WeaveID').username + '/crypto/' + this.name;
   },
 
-  _remoteSetup: function NewEngine__remoteSetup() {
-    let self = yield;
-
-    let meta = yield CryptoMetas.get(self.cb, this.cryptoMetaURL);
-    if (!meta) {
-      let cryptoSvc = Cc["@labs.mozilla.com/Weave/Crypto;1"].
-        getService(Ci.IWeaveCrypto);
-      let symkey = cryptoSvc.generateRandomKey();
-      let pubkey = yield PubKeys.getDefaultKey(self.cb);
-      meta = new CryptoMeta(this.cryptoMetaURL);
-      meta.generateIV();
-      yield meta.addUnwrappedKey(self.cb, pubkey, symkey);
-      yield meta.put(self.cb);
+  get lastSync() {
+    try {
+      return Utils.prefs.getCharPref(this.name + ".lastSync");
+    } catch (e) {
+      return 0;
     }
   },
+  set lastSync(value) {
+    Utils.prefs.setCharPref(this.name + ".lastSync", value);
+  },
 
-  _createRecord: function NewEngine__newCryptoWrapper(id, payload, encrypt) {
+  // XXX these two should perhaps just be a variable inside sync(), but we have
+  //     one or two other methods that use it
+
+  get incoming() {
+    if (!this._incoming)
+      this._incoming = [];
+    return this._incoming;
+  },
+
+  get outgoing() {
+    if (!this._outgoing)
+      this._outgoing = [];
+    return this._outgoing;
+  },
+
+  // Create a new record starting from an ID
+  // Calls _serializeItem to get the actual item, but sometimes needs to be
+  // overridden anyway (to alter parentid or other properties outside the payload)
+  _createRecord: function SyncEngine__newCryptoWrapper(id, encrypt) {
     let self = yield;
 
     let record = new CryptoWrapper();
     record.uri = this.engineURL + id;
     record.encryption = this.cryptoMetaURL;
-    record.cleartext = payload;
-    if (payload.parentGUID) // FIXME: should be parentid
-      record.parentid = payload.parentGUID;
+    record.cleartext = yield this._serializeItem.async(this, self.cb, id);
+
+    if (record.cleartext) {
+      if (record.cleartext.parentid)
+        record.parentid = record.cleartext.parentid;
+      else if (record.cleartext.parentGUID) // FIXME: bookmarks-specific
+        record.parentid = record.cleartext.parentGUID;
+    }
+
     if (encrypt || encrypt == undefined)
       yield record.encrypt(self.cb, ID.get('WeaveCryptoID').password);
 
     self.done(record);
   },
 
-  _recDepth: function NewEngine__recDepth(rec) {
+  // Serialize an item.  This will become the encrypted field in the payload of
+  // a record. Needs to be overridden in a subclass
+  _serializeItem: function SyncEngine__serializeItem(id) {
+    let self = yield;
+    self.done({});
+  },
+
+  _getAllIDs: function SyncEngine__getAllIDs() {
+    let self = yield;
+    self.done({});
+  },
+
+  // Check if a record is "like" another one, even though the IDs are different,
+  // in that case, we'll change the ID of the local item to match
+  // Probably needs to be overridden in a subclass, to change which criteria
+  // make two records "the same one"
+  _recordLike: function SyncEngine__recordLike(a, b) {
+    if (a.parentid != b.parentid)
+      return false;
+    return Utils.deepEquals(a.cleartext, b.cleartext);
+  },
+
+  _changeRecordRefs: function SyncEngine__changeRecordRefs(oldID, newID) {
+    let self = yield;
+    for each (let rec in this.outgoing) {
+      if (rec.parentid == oldID)
+        rec.parentid = newID;
+    }
+  },
+
+  _changeRecordID: function SyncEngine__changeRecordID(oldID, newID) {
+    let self = yield;
+    throw "_changeRecordID must be overridden in a subclass";
+  },
+
+  _recDepth: function SyncEngine__recDepth(rec) {
     // we've calculated depth for this record already
     if (rec.depth)
       return rec.depth;
@@ -349,72 +373,53 @@ NewEngine.prototype = {
     return 0;
   },
 
-  _recordLike: function NewEngine__recordLike(a, b) {
-    // Check that all other properties are the same
-    if (!Utils.deepEquals(a.parentid, b.parentid))
-      return false;
-    for (let key in a.cleartext) {
-      if (key == "parentGUID")
-        continue; // FIXME: bookmarks-specific
-      if (!Utils.deepEquals(a.cleartext[key], b.cleartext[key]))
-        return false;
-    }
-    for (key in b.cleartext) {
-      if (key == "parentGUID")
-        continue; // FIXME: bookmarks-specific
-      if (!Utils.deepEquals(a.cleartext[key], b.cleartext[key]))
-        return false;
-    }
-    return true;
-  },
-
-  _changeRecordRefs: function NewEngine__changeRecordRefs(oldID, newID) {
-    let self = yield;
-    for each (let rec in this.outgoing) {
-      if (rec.parentid == oldID)
-        rec.parentid = newID;
-    }
-  },
-
-  _changeRecordID: function NewEngine__changeRecordID(oldID, newID) {
-    let self = yield;
-    throw "_changeRecordID must be overridden in a subclass";
-  },
-
-  _sync: function NewEngine__sync() {
+  // Any setup that needs to happen at the beginning of each sync.
+  // Makes sure crypto records and keys are all set-up
+  _syncStartup: function SyncEngine__syncStartup() {
     let self = yield;
 
-    // STEP 0: Get our crypto records in order
     this._log.debug("Ensuring server crypto records are there");
 
-    yield this._remoteSetup.async(this, self.cb);
+    let meta = yield CryptoMetas.get(self.cb, this.cryptoMetaURL);
+    if (!meta) {
+      let cryptoSvc = Cc["@labs.mozilla.com/Weave/Crypto;1"].
+        getService(Ci.IWeaveCrypto);
+      let symkey = cryptoSvc.generateRandomKey();
+      let pubkey = yield PubKeys.getDefaultKey(self.cb);
+      meta = new CryptoMeta(this.cryptoMetaURL);
+      meta.generateIV();
+      yield meta.addUnwrappedKey(self.cb, pubkey, symkey);
+      yield meta.put(self.cb);
+    }
+  },
 
-    // STEP 1: Generate outgoing items
+  // Generate outgoing records
+  _generateOutgoing: function SyncEngine__generateOutgoing() {
+    let self = yield;
+
     this._log.debug("Calculating client changes");
 
+    // first sync special case: upload all items
     if (!this.lastSync) {
-      // first sync: upload all items
-      let all = this._store.wrap();
-      for (let key in all) {
-        let record = yield this._createRecord.async(this, self.cb, key, all[key]);
-        this.outgoing.push(record);
-      }
-    } else {
-      // we've synced before: use snapshot to upload changes only
-      this._snapshot.load();
-      let newsnap = this._store.wrap();
-      let updates = yield this._core.detectUpdates(self.cb,
-                                                   this._snapshot.data, newsnap);
-      for each (let cmd in updates) {
-        let data = "";
-        if (cmd.action == "create" || cmd.action == "edit")
-          data = newsnap[cmd.GUID];
-        let record = yield this._createRecord.async(this, self.cb, cmd.GUID, data);
-        this.outgoing.push(record);
-      }
+      this._log.info("First sync, uploading all items");
+      let all = yield this._getAllIDs.async(this, self.cb);
+      for (let key in all)
+        this._tracker.addChangedID(key);
     }
 
-    // STEP 2.1: Find new items from server, place into incoming queue
+    // generate queue from changed items list
+    // NOTE we want changed items -> outgoing -> server to be as atomic as
+    // possible, so we clear the changed IDs after we upload the changed records
+    // NOTE2 don't encrypt, we'll do that before uploading instead
+    for (let id in this._tracker.changedIDs) {
+      this.outgoing.push(yield this._createRecord.async(this, self.cb, id, false));
+    }
+  },
+
+  // Generate outgoing records
+  _fetchIncoming: function SyncEngine__fetchIncoming() {
+    let self = yield;
+
     this._log.debug("Downloading server changes");
 
     let newitems = new Collection(this.engineURL);
@@ -426,8 +431,15 @@ NewEngine.prototype = {
     while ((item = yield newitems.iter.next(self.cb))) {
       this.incoming.push(item);
     }
+  },
 
-    // STEP 2.2: Decrypt items, then analyze incoming records and sort them
+  // Process incoming records to get them ready for reconciliation and applying later
+  // i.e., decrypt them, and sort them
+  _processIncoming: function SyncEngine__processIncoming() {
+    let self = yield;
+
+    this._log.debug("Decrypting and sorting incoming changes");
+
     for each (let inc in this.incoming) {
       yield inc.decrypt(self.cb, ID.get('WeaveCryptoID').password);
       this._recDepth(inc); // note: doesn't need access to payload
@@ -441,18 +453,34 @@ NewEngine.prototype = {
           (a.depth == null && typeof(b.depth) == "number") ||
           (a.depth < b.depth))
         return -1;
-      if (a.cleartext.index > b.cleartext.index)
-        return 1;
-      if (a.cleartext.index < b.cleartext.index)
-        return -1;
+      if (a.cleartext && b.cleartext) {
+        if (a.cleartext.index > b.cleartext.index)
+          return 1;
+        if (a.cleartext.index < b.cleartext.index)
+          return -1;
+      }
       return 0;
     });
+  },
 
-    // STEP 3: Reconcile
+  // Reconciliation has two steps:
+  // 1) Check for the same item (same ID) on both the incoming and outgoing
+  // queues.  This means the same item was modified on this profile and another
+  // at the same time.  In this case, this client wins (which really means, the
+  // last profile you sync wins).
+  // 2) Check if any incoming & outgoing items are actually the same, even
+  // though they have different IDs.  This happens when the same item is added
+  // on two different machines at the same time.  For example, when a profile
+  // is synced for the first time after having (manually or otherwise) imported
+  // bookmarks imported, every bookmark will match this condition.
+  // When two items with different IDs are "the same" we change the local ID to
+  // match the remote one.
+  _reconcile: function SyncEngine__reconcile() {
+    let self = yield;
+
     this._log.debug("Reconciling server/client changes");
 
-    // STEP 3.1: Check for the same item (same ID) on both incoming & outgoing
-    //           queues.  Client one wins in this case.
+    // Check for the same item (same ID) on both incoming & outgoing queues
     let conflicts = [];
     for (let i = 0; i < this.incoming.length; i++) {
       for each (let out in this.outgoing) {
@@ -463,12 +491,11 @@ NewEngine.prototype = {
         }
       }
     }
-    this._incoming = this.incoming.filter(function(i) i); // removes any holes
+    this._incoming = this.incoming.filter(function(n) n); // removes any holes
     if (conflicts.length)
       this._log.debug("Conflicts found.  Conflicting server changes discarded");
 
-    // STEP 3.2: Check if any incoming & outgoing items are really the same but
-    //           with different IDs
+    // Check for items with different IDs which we think are the same one
     for (let i = 0; i < this.incoming.length; i++) {
       for (let o = 0; o < this.outgoing.length; o++) {
         if (this._recordLike(this.incoming[i], this.outgoing[o])) {
@@ -477,272 +504,85 @@ NewEngine.prototype = {
                                              this.outgoing[o].id,
                                              this.incoming[i].id);
           // change actual id of item
-          yield this._changeRecordID.async(this, self.cb,
-                                           this.outgoing[o].id,
-                                           this.incoming[i].id);
+          yield this._changeItemID.async(this, self.cb,
+                                         this.outgoing[o].id,
+                                         this.incoming[i].id);
           delete this.incoming[i];
           delete this.outgoing[o];
           break;
         }
       }
-      this._outgoing = this.outgoing.filter(function(i) i); // removes any holes
+      this._outgoing = this.outgoing.filter(function(n) n); // removes any holes
     }
-    this._incoming = this.incoming.filter(function(i) i); // removes any holes
+    this._incoming = this.incoming.filter(function(n) n); // removes any holes
+  },
 
-    // STEP 4: Apply incoming items
+  // Apply incoming records
+  _applyIncoming: function SyncEngine__applyIncoming() {
+    let self = yield;
     if (this.incoming.length) {
       this._log.debug("Applying server changes");
+      this._tracker.disable();
       let inc;
       while ((inc = this.incoming.shift())) {
         yield this._store.applyIncoming(self.cb, inc);
         if (inc.modified > this.lastSync)
           this.lastSync = inc.modified;
       }
+      this._tracker.enable();
     }
+  },
 
-    // STEP 5: Upload outgoing items
+  // Upload outgoing records
+  _uploadOutgoing: function SyncEngine__uploadOutgoing() {
+    let self = yield;
     if (this.outgoing.length) {
       this._log.debug("Uploading client changes");
       let up = new Collection(this.engineURL);
       let out;
       while ((out = this.outgoing.pop())) {
+        yield out.encrypt(self.cb, ID.get('WeaveCryptoID').password);
         yield up.pushRecord(self.cb, out);
       }
       yield up.post(self.cb);
       if (up.data.modified > this.lastSync)
         this.lastSync = up.data.modified;
     }
-
-    // STEP 6: Save the current snapshot so as to calculate changes at next sync
-    this._log.debug("Saving snapshot for next sync");
-    this._snapshot.data = this._store.wrap();
-    this._snapshot.save();
-
-    self.done();
+    this._tracker.clearChangedIDs();
   },
 
-  _resetServer: function NewEngine__resetServer() {
+  // Any cleanup necessary.
+  // Save the current snapshot so as to calculate changes at next sync
+  _syncFinish: function SyncEngine__syncFinish() {
     let self = yield;
-    let all = new Resource(this.engineURL);
-    yield all.delete(self.cb);
-  }
-};
-
-function SyncEngine() {}
-SyncEngine.prototype = {
-  __proto__: new Engine(),
-
-  get _remote() {
-    let remote = new RemoteStore(this);
-    this.__defineGetter__("_remote", function() remote);
-    return remote;
+    this._log.debug("Finishing up sync");
+    this._tracker.resetScore();
   },
-
-  get _snapshot() {
-    let snap = new SnapshotStore(this.name);
-    this.__defineGetter__("_snapshot", function() snap);
-    return snap;
-  },
-
-  _resetServer: function SyncEngine__resetServer() {
-    let self = yield;
-    yield this._remote.wipe(self.cb);
-  },
-
-  _resetClient: function SyncEngine__resetClient() {
-    let self = yield;
-    this._log.debug("Resetting client state");
-    this._snapshot.wipe();
-    this._store.wipe();
-    this._log.debug("Client reset completed successfully");
-  },
-
-  _initialUpload: function Engine__initialUpload() {
-    let self = yield;
-    this._log.info("Initial upload to server");
-    this._snapshot.data = this._store.wrap();
-    this._snapshot.version = 0;
-    this._snapshot.GUID = null; // in case there are other snapshots out there
-    yield this._remote.initialize(self.cb, this._snapshot);
-    this._snapshot.save();
-  },
-
-  //       original
-  //         / \
-  //      A /   \ B
-  //       /     \
-  // client --C-> server
-  //       \     /
-  //      D \   / C
-  //         \ /
-  //        final
-
-  // If we have a saved snapshot, original == snapshot.  Otherwise,
-  // it's the empty set {}.
-
-  // C is really the diff between server -> final, so if we determine
-  // D we can calculate C from that.  In the case where A and B have
-  // no conflicts, C == A and D == B.
-
-  // Sync flow:
-  // 1) Fetch server deltas
-  // 1.1) Construct current server status from snapshot + server deltas
-  // 1.2) Generate single delta from snapshot -> current server status ("B")
-  // 2) Generate local deltas from snapshot -> current client status ("A")
-  // 3) Reconcile client/server deltas and generate new deltas for them.
-  //    Reconciliation won't generate C directly, we will simply diff
-  //    server->final after step 3.1.
-  // 3.1) Apply local delta with server changes ("D")
-  // 3.2) Append server delta to the delta file and upload ("C")
 
   _sync: function SyncEngine__sync() {
     let self = yield;
 
-    this._log.info("Beginning sync");
-    this._os.notifyObservers(null, "weave:service:sync:engine:start", this.displayName);
+    yield this._syncStartup.async(this, self.cb);
 
-    this._snapshot.load();
+    // Populate incoming and outgoing queues
+    yield this._generateOutgoing.async(this, self.cb);
+    yield this._fetchIncoming.async(this, self.cb);
 
-    try {
-      this._remote.status.data; // FIXME - otherwise we get an error...
-      yield this._remote.openSession(self.cb, this._snapshot);
+    // Decrypt and sort incoming records, then reconcile
+    yield this._processIncoming.async(this, self.cb);
+    yield this._reconcile.async(this, self.cb);
 
-    } catch (e if e.status == 404) {
-      yield this._initialUpload.async(this, self.cb);
-      return;
-    }
+    // Apply incoming records, upload outgoing records
+    yield this._applyIncoming.async(this, self.cb);
+    yield this._uploadOutgoing.async(this, self.cb);
 
-    // 1) Fetch server deltas
+    yield this._syncFinish.async(this, self.cb);
+  },
 
-    this._os.notifyObservers(null, "weave:service:sync:status", "status.downloading-deltas");
-    let serverSnap = yield this._remote.wrap(self.cb);
-    let serverUpdates = yield this._core.detectUpdates(self.cb,
-                                                       this._snapshot.data, serverSnap);
-
-    // 2) Generate local deltas from snapshot -> current client status
-
-    this._os.notifyObservers(null, "weave:service:sync:status", "status.calculating-differences");
-    let localSnap = new SnapshotStore();
-    localSnap.data = this._store.wrap();
-    this._core.detectUpdates(self.cb, this._snapshot.data, localSnap.data);
-    let localUpdates = yield;
-
-    this._log.trace("local json:\n" + localSnap.serialize());
-    this._log.trace("Local updates: " + this._serializeCommands(localUpdates));
-    this._log.trace("Server updates: " + this._serializeCommands(serverUpdates));
-
-    if (serverUpdates.length == 0 && localUpdates.length == 0) {
-      this._os.notifyObservers(null, "weave:service:sync:status", "status.no-changes-required");
-      this._log.info("Sync complete: no changes needed on client or server");
-      this._snapshot.version = this._remote.status.data.maxVersion;
-      this._snapshot.save();
-      self.done(true);
-      return;
-    }
-
-    // 3) Reconcile client/server deltas and generate new deltas for them.
-
-    this._os.notifyObservers(null, "weave:service:sync:status", "status.reconciling-updates");
-    this._log.info("Reconciling client/server updates");
-    let ret = yield this._core.reconcile(self.cb, localUpdates, serverUpdates);
-
-    let clientChanges = ret.propagations[0];
-    let serverChanges = ret.propagations[1];
-    let clientConflicts = ret.conflicts[0];
-    let serverConflicts = ret.conflicts[1];
-
-    this._log.info("Changes for client: " + clientChanges.length);
-    this._log.info("Predicted changes for server: " + serverChanges.length);
-    this._log.info("Client conflicts: " + clientConflicts.length);
-    this._log.info("Server conflicts: " + serverConflicts.length);
-    this._log.trace("Changes for client: " + this._serializeCommands(clientChanges));
-    this._log.trace("Predicted changes for server: " + this._serializeCommands(serverChanges));
-    this._log.trace("Client conflicts: " + this._serializeConflicts(clientConflicts));
-    this._log.trace("Server conflicts: " + this._serializeConflicts(serverConflicts));
-
-    if (!(clientChanges.length || serverChanges.length ||
-          clientConflicts.length || serverConflicts.length)) {
-      this._os.notifyObservers(null, "weave:service:sync:status", "status.no-changes-required");
-      this._log.info("Sync complete: no changes needed on client or server");
-      this._snapshot.data = localSnap.data;
-      this._snapshot.version = this._remote.status.data.maxVersion;
-      this._snapshot.save();
-      self.done(true);
-      return;
-    }
-
-    if (clientConflicts.length || serverConflicts.length)
-      this._log.warn("Conflicts found!  Discarding server changes");
-
-    // 3.1) Apply server changes to local store
-
-    if (clientChanges.length) {
-      this._log.info("Applying changes locally");
-      this._os.notifyObservers(null, "weave:service:sync:status", "status.applying-changes");
-
-      // apply to real store
-      yield this._store.applyCommands.async(this._store, self.cb, clientChanges);
-
-      // get the current state
-      let newSnap = new SnapshotStore();
-      newSnap.data = this._store.wrap();
-
-      // apply to the snapshot we got in step 1, and compare with current state
-      yield localSnap.applyCommands.async(localSnap, self.cb, clientChanges);
-      let diff = yield this._core.detectUpdates(self.cb,
-                                                localSnap.data, newSnap.data);
-      if (diff.length != 0) {
-        this._log.warn("Commands did not apply correctly");
-        this._log.trace("Diff from snapshot+commands -> " +
-                        "new snapshot after commands:\n" +
-                        this._serializeCommands(diff));
-      }
-
-      // update the local snap to the current state, we'll use it below
-      localSnap.data = newSnap.data;
-      localSnap.version = this._remote.status.data.maxVersion;
-    }
-
-    // 3.2) Append server delta to the delta file and upload
-
-    // Generate a new diff, from the current server snapshot to the
-    // current client snapshot.  In the case where there are no
-    // conflicts, it should be the same as what the resolver returned
-
-    this._os.notifyObservers(null, "weave:service:sync:status",
-                             "status.calculating-differences");
-    let serverDelta = yield this._core.detectUpdates(self.cb,
-                                                     serverSnap, localSnap.data);
-
-    // Log an error if not the same
-    if (!(serverConflicts.length ||
-          Utils.deepEquals(serverChanges, serverDelta)))
-      this._log.warn("Predicted server changes differ from " +
-                     "actual server->client diff (can be ignored in many cases)");
-
-    this._log.info("Actual changes for server: " + serverDelta.length);
-    this._log.trace("Actual changes for server: " +
-                    this._serializeCommands(serverDelta));
-
-    if (serverDelta.length) {
-      this._log.info("Uploading changes to server");
-      this._os.notifyObservers(null, "weave:service:sync:status",
-                               "status.uploading-deltas");
-
-      yield this._remote.appendDelta(self.cb, localSnap, serverDelta,
-                                     {maxVersion: this._snapshot.version,
-                                      deltasEncryption: Crypto.defaultAlgorithm});
-      localSnap.version = this._remote.status.data.maxVersion;
-
-      this._log.info("Successfully updated deltas and status on server");
-    }
-
-    this._snapshot.data = localSnap.data;
-    this._snapshot.version = localSnap.version;
-    this._snapshot.save();
-
-    this._log.info("Sync complete");
-    self.done(true);
+  _resetServer: function SyncEngine__resetServer() {
+    let self = yield;
+    let all = new Resource(this.engineURL);
+    yield all.delete(self.cb);
   }
 };
 
