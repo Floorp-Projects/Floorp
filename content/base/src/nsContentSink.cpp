@@ -869,10 +869,9 @@ nsContentSink::PrefetchDNS(const nsAString &aHref)
   }
   else
     nsGenericHTMLElement::GetHostnameFromHrefString(aHref, hostname);
-      
-  nsRefPtr<nsHTMLDNSPrefetch> prefetch = new nsHTMLDNSPrefetch(hostname, mDocument);
-  if (prefetch) {
-    prefetch->PrefetchLow();
+
+  if (nsHTMLDNSPrefetch::IsAllowed(mDocument)) {
+    nsHTMLDNSPrefetch::PrefetchLow(hostname);
   }
 }
 

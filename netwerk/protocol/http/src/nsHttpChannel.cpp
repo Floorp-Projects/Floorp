@@ -4018,13 +4018,16 @@ nsHttpChannel::AsyncOpen(nsIStreamListener *listener, nsISupports *context)
     if (NS_FAILED(rv))
         return rv;
 
-    // Start a DNS lookup very early in case the real open is queued the DNS can 
-    // happen in parallel.
-    nsRefPtr<nsDNSPrefetch> prefetch = new nsDNSPrefetch(mURI);
-    if (prefetch) {
-        prefetch->PrefetchHigh();
+    if (!(mConnectionInfo && mConnectionInfo->UsingHttpProxy())) {
+        // Start a DNS lookup very early in case the real open is queued the DNS can 
+        // happen in parallel. Do not do so in the presence of an HTTP proxy as 
+        // all lookups other than for the proxy itself are done by the proxy.
+        nsRefPtr<nsDNSPrefetch> prefetch = new nsDNSPrefetch(mURI);
+        if (prefetch) {
+            prefetch->PrefetchHigh();
+        }
     }
-
+    
     // Remember the cookie header that was set, if any
     const char *cookieHeader = mRequestHead.PeekHeader(nsHttp::Cookie);
     if (cookieHeader)
