@@ -124,6 +124,9 @@ DEFINES += -DMOZ_APP_DISPLAYNAME=\"$(MOZ_APP_DISPLAYNAME)\"
 
 LOCAL_INCLUDES	= -I. -I$(srcdir)/../xpwidgets -I$(srcdir)
 
+libs::	README.$(MOZ_APP_NAME)
+	cp -f $^ $(DIST)/bin/README.txt
+
 export::
 	test -d ./res || mkdir ./res
 	test -f ./res/aliasb.ptr || cp $(srcdir)/res/*.* ./res
