@@ -250,14 +250,20 @@ namespace nanojit
 	Reservation* Assembler::reserveAlloc(LInsp i)
 	{
 		uint32_t item = _resvFree;
-        Reservation *r = &_resvTable[item];
+		/* If there are no free reservations, mark the table as full and re-use an index.
+		 * This will clobber that reservation, but the error will be caught as soon as 
+		 * the current LIR instruction returns back to gen().
+		 */
+		if (!item) {
+			setError(ResvFull); 
+			item = 1;
+		}
+		Reservation *r = &_resvTable[item];
 		_resvFree = r->arIndex;
 		r->reg = UnknownReg;
 		r->arIndex = 0;
-        r->used = 1;
-		if (!item) 
-			setError(ResvFull); 
-        i->setresv(item);
+		r->used = 1;
+		i->setresv(item);
 		return r;
 	}
 
