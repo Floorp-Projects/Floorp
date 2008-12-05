@@ -4904,6 +4904,7 @@ js_Interpret(JSContext *cx)
                 argc = applylen;
             }
             regs.sp = vp + 2 + argc;
+            TRACE_1(ApplyComplete, argc);
             goto do_call_with_specified_vp_and_argc;
           }
           
