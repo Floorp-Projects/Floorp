@@ -2226,8 +2226,10 @@ TraceRecorder::compile(Fragmento* fragmento)
     ::compile(fragmento->assm(), fragment);
     if (anchor) 
         fragmento->assm()->patch(anchor);
-    if (fragmento->assm()->error() != nanojit::None)
+    if (fragmento->assm()->error() != nanojit::None) {
+        js_BlacklistPC(fragmento, fragment);
         return;
+    }
     JS_ASSERT(fragment->code());
     JS_ASSERT(!fragment->vmprivate);
     if (fragment == fragment->root)
