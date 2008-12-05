@@ -80,7 +80,6 @@ static nsresult ConvertCommon(const PRUnichar * aSrc,
                               char * aDest, 
                               PRInt32 * aDestLength,
                               PRUnichar * aHighSurrogate,
-                              PRUnichar * aBOM,
                               PRBool aIsLE)
 {
   const PRUnichar * src = aSrc;
@@ -89,18 +88,6 @@ static nsresult ConvertCommon(const PRUnichar * aSrc,
   const char * destEnd = aDest + *aDestLength; 
   PRUint32 ucs4;
 
-  // Handle BOM if necessary 
-  if (0 != *aBOM)
-  {
-    if (*aDestLength < 4) {
-      *aSrcLength = *aDestLength = 0;
-      return NS_OK_UENC_MOREOUTPUT;
-    }
-
-    *(PRUint32*)dest = *aBOM;
-    *aBOM = 0;
-    dest += 4;
-  }
 
   // left-over high surroage code point from the prev. run.
   if (*aHighSurrogate) 
@@ -207,21 +194,21 @@ static nsresult FinishCommon(char * aDest,
 //----------------------------------------------------------------------
 // Class nsUnicodeToUTF32 [implementation]
 
-NS_IMPL_ISUPPORTS1(nsUnicodeToUTF32Base, nsIUnicodeEncoder)
+NS_IMPL_ISUPPORTS1(nsUnicodeToUTF32, nsIUnicodeEncoder)
 
 
 //----------------------------------------------------------------------
 // Subclassing of nsIUnicodeEncoder class [implementation]
 
-NS_IMETHODIMP nsUnicodeToUTF32Base::GetMaxLength(const PRUnichar * aSrc, 
-                                                 PRInt32 aSrcLength, 
-                                                 PRInt32 * aDestLength)
+NS_IMETHODIMP nsUnicodeToUTF32::GetMaxLength(const PRUnichar * aSrc, 
+                                            PRInt32 aSrcLength, 
+                                            PRInt32 * aDestLength)
 {
   *aDestLength = aSrcLength * 4;
   return NS_OK;
 }
 
-NS_IMETHODIMP nsUnicodeToUTF32Base::FillInfo(PRUint32 *aInfo)
+NS_IMETHODIMP nsUnicodeToUTF32::FillInfo(PRUint32 *aInfo)
 {
   memset(aInfo, 0xFF, (0x10000L >> 3));
   return NS_OK;
@@ -241,7 +228,7 @@ NS_IMETHODIMP nsUnicodeToUTF32BE::Convert(const PRUnichar * aSrc,
                                           PRInt32 * aDestLength)
 {
   return ConvertCommon(aSrc, aSrcLength, aDest, aDestLength, 
-                       &mHighSurrogate, &mBOM, PR_FALSE);
+                       &mHighSurrogate, PR_FALSE);
 }
 
 NS_IMETHODIMP nsUnicodeToUTF32BE::Finish(char * aDest, 
@@ -264,7 +251,7 @@ NS_IMETHODIMP nsUnicodeToUTF32LE::Convert(const PRUnichar * aSrc,
                                           PRInt32 * aDestLength)
 {
   return ConvertCommon(aSrc, aSrcLength, aDest, aDestLength, 
-                       &mHighSurrogate, &mBOM, PR_TRUE);
+                       &mHighSurrogate, PR_TRUE);
 }
 
 NS_IMETHODIMP nsUnicodeToUTF32LE::Finish(char * aDest, 
