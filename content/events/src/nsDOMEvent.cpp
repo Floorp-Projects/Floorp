@@ -400,20 +400,25 @@ nsDOMEvent::StopPropagation()
   return NS_OK;
 }
 
+static nsIDocument* GetDocumentForReport(nsEvent* aEvent)
+{
+  nsCOMPtr<nsINode> node = do_QueryInterface(aEvent->currentTarget);
+  if (node)
+    return node->GetOwnerDoc();
+
+  nsCOMPtr<nsPIDOMWindow> window = do_QueryInterface(aEvent->currentTarget);
+  if (!window)
+    return nsnull;
+
+  nsCOMPtr<nsIDocument> doc(do_QueryInterface(window->GetExtantDocument()));
+  return doc;
+}
+
 static void
 ReportUseOfDeprecatedMethod(nsEvent* aEvent, nsIDOMEvent* aDOMEvent,
                             const char* aWarning)
 {
-  nsCOMPtr<nsIDocument> doc;
-  nsCOMPtr<nsINode> node = do_QueryInterface(aEvent->currentTarget);
-  if (node) {
-    doc = node->GetOwnerDoc();
-  } else {
-    nsCOMPtr<nsPIDOMWindow> window = do_QueryInterface(aEvent->currentTarget);
-    if (window) {
-      doc = do_QueryInterface(window->GetExtantDocument());
-    }
-  }
+  nsCOMPtr<nsIDocument> doc(GetDocumentForReport(aEvent));
 
   nsAutoString type;
   aDOMEvent->GetType(type);
@@ -1533,6 +1538,25 @@ const char* nsDOMEvent::GetEventName(PRUint32 aEventType)
   // arrays in nsEventListenerManager too, since the events for which
   // this is a problem generally *are* created by nsDOMEvent.)
   return nsnull;
+}
+
+nsresult
+nsDOMEvent::ReportWrongPropertyAccessWarning(const char* aPropertyName)
+{
+  nsCOMPtr<nsIDocument> doc(GetDocumentForReport(mEvent));
+
+  nsAutoString propertyName, type;
+  GetType(type);
+  propertyName.AssignASCII(aPropertyName);
+  const PRUnichar *strings[] = { propertyName.get(), type.get() };
+
+  return nsContentUtils::ReportToConsole(nsContentUtils::eDOM_PROPERTIES,
+                                         "WrongEventPropertyAccessWarning",
+                                         strings, NS_ARRAY_LENGTH(strings),
+                                         doc ? doc->GetDocumentURI() : nsnull,
+                                         EmptyString(), 0, 0,
+                                         nsIScriptError::warningFlag,
+                                         "DOM Events");
 }
 
 nsresult NS_NewDOMEvent(nsIDOMEvent** aInstancePtrResult,
