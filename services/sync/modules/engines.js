@@ -397,14 +397,19 @@ SyncEngine.prototype = {
     this._log.debug("Calculating client changes");
 
     // first sync special case: upload all items
+    // note that we use a backdoor (of sorts) to the tracker and it
+    // won't save to disk this list
     if (!this.lastSync) {
       this._log.info("First sync, uploading all items");
+
+      // remove any old ones first
+      this._tracker.clearChangedIDs();
+
+      // now add all current ones
       let all = yield this._getAllIDs.async(this, self.cb);
-      this._tracker.enable();
-      for (let key in all) {
-        this._tracker.addChangedID(key);
+      for (let id in all) {
+        this._tracker.changedIDs[id] = true;
       }
-      this._tracker.disable();
     }
 
     // generate queue from changed items list
