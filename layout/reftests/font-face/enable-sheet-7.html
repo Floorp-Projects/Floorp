@@ -1,0 +1,46 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD HTML 4.01//EN"
+	"http://www.w3.org/TR/html4/strict.dtd">
+<html lang="en-US" class="reftest-wait">
+<head>
+	<title></title>
+	<meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+	<style type="text/css">
+
+	@font-face {
+		font-family: "One";
+		src: url(../fonts/markA.ttf);
+	}
+
+	</style>
+	<style type="text/css">
+
+	@font-face {
+		font-family: "One";
+		src: url(../fonts/markB.ttf);
+	}
+
+	</style>
+	<style type="text/css">
+
+	body { font-family: "One"; }
+
+	</style>
+	<script type="application/ecmascript">
+
+	document.getElementsByTagName("style")[1].disabled = true;
+
+	function run() {
+		// The resize-detector iframe will remove the class attribute.
+		document.getElementsByTagName("iframe")[0].contentWindow.arm_for_wider();
+
+		document.getElementsByTagName("style")[1].disabled = false;
+	}
+
+	</script>
+</head>
+<body onload="setTimeout(run, 20)">
+
+<p style="position:relative; width: -moz-max-content">ABC<iframe style="visibility:hidden;position:absolute;height:100%;width:100%" src="resize-detector-iframe.html"></iframe></p>
+
+</body>
+</html>

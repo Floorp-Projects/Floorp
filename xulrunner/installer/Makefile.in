@@ -110,7 +110,7 @@ ifndef MOZ_NATIVE_NSS
 pkg_config_files += mozilla-nss.pc
 endif
 
-%.pc: $(srcdir)/%.pc.in Makefile.in Makefile $(DEPTH)/config/autoconf.mk
+%.pc: $(srcdir)/%.pc.in $(GLOBAL_DEPS)
 	cat $< | sed \
 	-e "s|%prefix%|$(prefix)|" \
 	-e "s|%includedir%|$(includedir)|" \

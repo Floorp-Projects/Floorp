@@ -36,44 +36,83 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-#ifndef nsHMTLDNSPrefetch_h___
+#ifndef nsHTMLDNSPrefetch_h___
+#define nsHTMLDNSPrefetch_h___
 
 #include "nsCOMPtr.h"
 #include "nsString.h"
 
 #include "nsIDNSListener.h"
+#include "nsIWebProgressListener.h"
+#include "nsWeakReference.h"
 
 class nsIURI;
 class nsIDocument;
 
-class nsHTMLDNSPrefetch : public nsIDNSListener
+class nsHTMLDNSPrefetch 
 {
 public:
-  NS_DECL_ISUPPORTS
-  NS_DECL_NSIDNSLISTENER
-  
   // The required aDocument parameter is the context requesting the prefetch - under
   // certain circumstances (e.g. headers, or security context) associated with
   // the context the prefetch will not be performed. 
-
-  nsHTMLDNSPrefetch(nsAString &aHostname, nsIDocument *aDocument);
-  nsHTMLDNSPrefetch(nsIURI *aURI,         nsIDocument *aDocument);
-  
+  static PRBool   IsAllowed(nsIDocument *aDocument);
+ 
   static nsresult Initialize();
   static nsresult Shutdown();
   
-  // Call one of the following methods to start the Prefetch.
-  nsresult PrefetchHigh();
-  nsresult PrefetchMedium();
-  nsresult PrefetchLow();
-  
+  // Call one of the Prefetch* methods to start the lookup.
+  //
+  // The URI versions will defer DNS lookup until pageload is
+  // complete, while the string versions submit the lookup to 
+  // the DNS system immediately. The URI version is somewhat lighter
+  // weight, but its request is also more likely to be dropped due to a 
+  // full queue and it may only be used from the main thread.
+
+  static nsresult PrefetchHigh(nsIURI *aURI);
+  static nsresult PrefetchMedium(nsIURI *aURI);
+  static nsresult PrefetchLow(nsIURI *aURI);
+  static nsresult PrefetchHigh(nsAString &host);
+  static nsresult PrefetchMedium(nsAString &host);
+  static nsresult PrefetchLow(nsAString &host);
+
 private:
-  nsCString  mHostname;
-  PRBool     mAllowed;
+  static nsresult Prefetch(nsAString &host, PRUint16 flags);
+  static nsresult Prefetch(nsIURI *aURI, PRUint16 flags);
+  static PRBool   IsSecureBaseContext(nsIDocument *aDocument);
+  
+public:
+  class nsDeferrals : public nsIDNSListener
+                    , public nsIWebProgressListener
+                    , public nsSupportsWeakReference
+  {
+  public:
+    NS_DECL_ISUPPORTS
+    NS_DECL_NSIDNSLISTENER
+    NS_DECL_NSIWEBPROGRESSLISTENER
     
-  nsresult Prefetch(PRUint16 flags);
-  PRBool   IsSecureBaseContext(nsIDocument *aDocument);
-  PRBool   IsAllowed(nsIDocument *aDocument);
+    nsDeferrals();
+    
+    void Activate();
+    nsresult Add(PRUint16 flags, nsIURI *aURI);
+    
+  private:
+    ~nsDeferrals() {}
+    
+    void SubmitQueue();
+    
+    PRUint16                  mHead;
+    PRUint16                  mTail;
+    PRUint32                  mActiveLoaderCount;
+    
+    static const int          sMaxDeferred = 512;  // keep power of 2 for masking
+    static const int          sMaxDeferredMask = (sMaxDeferred - 1);
+    
+    struct deferred_entry
+    {
+      PRUint16                 mFlags;
+      nsCOMPtr<nsIURI>         mURI;
+    } mEntries[sMaxDeferred];
+  };
 };
 
 #endif 

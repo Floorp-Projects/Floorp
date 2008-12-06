@@ -282,10 +282,7 @@ nsXULMenuitemAccessible::GetStateInternal(PRUint32 *aState,
                                           PRUint32 *aExtraState)
 {
   nsresult rv = nsAccessible::GetStateInternal(aState, aExtraState);
-  NS_ENSURE_SUCCESS(rv, rv);
-  if (!mDOMNode) {
-    return NS_OK;
-  }
+  NS_ENSURE_A11Y_SUCCESS(rv, rv);
 
   // Focused?
   nsCOMPtr<nsIDOMElement> element(do_QueryInterface(mDOMNode));
@@ -566,10 +563,7 @@ nsXULMenuSeparatorAccessible::GetStateInternal(PRUint32 *aState,
 {
   // Isn't focusable, but can be offscreen/invisible -- only copy those states
   nsresult rv = nsXULMenuitemAccessible::GetStateInternal(aState, aExtraState);
-  NS_ENSURE_SUCCESS(rv, rv);
-  if (!mDOMNode) {
-    return NS_OK;
-  }
+  NS_ENSURE_A11Y_SUCCESS(rv, rv);
 
   *aState &= (nsIAccessibleStates::STATE_OFFSCREEN | 
               nsIAccessibleStates::STATE_INVISIBLE);
@@ -619,10 +613,7 @@ nsXULMenupopupAccessible::GetStateInternal(PRUint32 *aState,
                                            PRUint32 *aExtraState)
 {
   nsresult rv = nsAccessible::GetStateInternal(aState, aExtraState);
-  NS_ENSURE_SUCCESS(rv, rv);
-  if (!mDOMNode) {
-    return NS_OK;
-  }
+  NS_ENSURE_A11Y_SUCCESS(rv, rv);
 
 #ifdef DEBUG_A11Y
   // We are onscreen if our parent is active
@@ -737,10 +728,7 @@ nsXULMenubarAccessible::GetStateInternal(PRUint32 *aState,
                                          PRUint32 *aExtraState)
 {
   nsresult rv = nsAccessible::GetStateInternal(aState, aExtraState);
-  NS_ENSURE_SUCCESS(rv, rv);
-  if (!mDOMNode) {
-    return NS_OK;
-  }
+  NS_ENSURE_A11Y_SUCCESS(rv, rv);
 
   // Menu bar iteself is not actually focusable
   *aState &= ~nsIAccessibleStates::STATE_FOCUSABLE;

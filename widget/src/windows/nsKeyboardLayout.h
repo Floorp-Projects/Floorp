@@ -84,12 +84,12 @@ class VirtualKey
   {
     struct
     {
-      PRUint16 Chars [4];
+      PRUnichar Chars [4];
     } Normal;
     struct
     {
       const DeadKeyTable* Table;
-      PRUint16 DeadChar;
+      PRUnichar DeadChar;
     } DeadKey;
   };
 
@@ -115,12 +115,12 @@ public:
     mShiftStates [aShiftState].DeadKey.Table = aDeadKeyTable;
   }
 
-  void SetNormalChars (PRUint8 aShiftState, const PRUint16* aChars, PRUint32 aNumOfChars);
-  void SetDeadChar (PRUint8 aShiftState, PRUint16 aDeadChar);
+  void SetNormalChars (PRUint8 aShiftState, const PRUnichar* aChars, PRUint32 aNumOfChars);
+  void SetDeadChar (PRUint8 aShiftState, PRUnichar aDeadChar);
   const DeadKeyTable* MatchingDeadKeyTable (const DeadKeyEntry* aDeadKeyArray, PRUint32 aEntries) const;
-  inline PRUint16 GetCompositeChar (PRUint8 aShiftState, PRUint16 aBaseChar) const;
-  PRUint32 GetNativeUniChars (PRUint8 aShiftState, PRUint16* aUniChars = nsnull) const;
-  PRUint32 GetUniChars (PRUint8 aShiftState, PRUint16* aUniChars, PRUint8* aFinalShiftState) const;
+  inline PRUnichar GetCompositeChar (PRUint8 aShiftState, PRUnichar aBaseChar) const;
+  PRUint32 GetNativeUniChars (PRUint8 aShiftState, PRUnichar* aUniChars = nsnull) const;
+  PRUint32 GetUniChars (PRUint8 aShiftState, PRUnichar* aUniChars, PRUint8* aFinalShiftState) const;
 };
 #endif
 
@@ -144,7 +144,7 @@ class KeyboardLayout
   PRUint8 mDeadKeyShiftState;
   PRInt32 mLastVirtualKeyIndex;
   PRUint8 mLastShiftState;
-  PRUint16 mChars [5];                    // Dead-key + up to 4 characters
+  PRUnichar mChars [5];                   // Dead-key + up to 4 characters
   PRUint8 mShiftStates [5];
   PRUint8 mNumOfChars;
 
@@ -152,7 +152,7 @@ class KeyboardLayout
   static void SetShiftState (PBYTE aKbdState, PRUint8 aShiftState);
   static inline PRInt32 GetKeyIndex (PRUint8 aVirtualKey);
   static int CompareDeadKeyEntries (const void* aArg1, const void* aArg2, void* aData);
-  static PRBool AddDeadKeyEntry (PRUint16 aBaseChar, PRUint16 aCompositeChar, DeadKeyEntry* aDeadKeyArray, PRUint32 aEntries);
+  static PRBool AddDeadKeyEntry (PRUnichar aBaseChar, PRUnichar aCompositeChar, DeadKeyEntry* aDeadKeyArray, PRUint32 aEntries);
   PRBool EnsureDeadKeyActive (PRBool aIsActive, PRUint8 aDeadKey, const PBYTE aDeadKeyKbdState);
   PRUint32 GetDeadKeyCombinations (PRUint8 aDeadKey, const PBYTE aDeadKeyKbdState, PRUint16 aShiftStatesWithBaseChars,
                                    DeadKeyEntry* aDeadKeyArray, PRUint32 aMaxEntries);
@@ -179,9 +179,9 @@ public:
 
   void LoadLayout (HKL aLayout);
   void OnKeyDown (PRUint8 aVirtualKey);
-  PRUint32 GetUniChars (PRUint16* aUniChars, PRUint8* aShiftStates, PRUint32 aMaxChars) const;
+  PRUint32 GetUniChars (PRUnichar* aUniChars, PRUint8* aShiftStates, PRUint32 aMaxChars) const;
   PRUint32 GetUniCharsWithShiftState(PRUint8 aVirtualKey, PRUint8 aShiftStates,
-                                     PRUint16* aUniChars,
+                                     PRUnichar* aUniChars,
                                      PRUint32 aMaxChars) const;
 };
 

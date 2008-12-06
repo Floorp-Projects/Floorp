@@ -49,35 +49,16 @@ REQUIRES	= \
 		xpcom \
 		$(NULL)
 
-CPPSRCS		= \
-			TestCOM.cpp \
-			TestNTFSPermissions.cpp \
-			$(NULL)
-
-SIMPLE_PROGRAMS	= $(CPPSRCS:.cpp=$(BIN_SUFFIX))
-
 include $(topsrcdir)/config/config.mk
 
 CPP_UNIT_TESTS	= \
-			TestCOM \
-			$(NULL)
+                  TestCOM.cpp \
+                  $(NULL)
 
 # TestNTFSPermissions is causing oranges because it's creating directories
 # multiple times, and then leaving them in a state where they can't be cleaned
-#			TestNTFSPermissions \
+#CPP_UNIT_TESTS += TestNTFSPermissions.cpp
 
 include $(topsrcdir)/config/rules.mk
 
 OS_LIBS	= $(call EXPAND_LIBNAME,rpcrt4 uuid advapi32)
-
-LIBS = \
-	$(DIST)/lib/$(LIB_PREFIX)xpcomglue_s.$(LIB_SUFFIX) \
-	$(XPCOM_LIBS) \
-	$(NSPR_LIBS) \
-	$(NULL)
-
-check::
-	@$(EXIT_ON_ERROR) \
-	for f in $(subst .cpp,,$(CPP_UNIT_TESTS)); do \
-		XPCOM_DEBUG_BREAK=stack-and-abort $(RUN_TEST_PROGRAM) $(DIST)/bin/$$f; \
-	done

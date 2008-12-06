@@ -316,12 +316,10 @@
 #include "nsIDOMNSHTMLTextAreaElement.h"
 #include "nsIDOMHTMLTitleElement.h"
 #include "nsIDOMHTMLUListElement.h"
-#if defined(MOZ_MEDIA)
 #include "nsIDOMHTMLMediaError.h"
 #include "nsIDOMHTMLSourceElement.h"
 #include "nsIDOMHTMLVideoElement.h"
 #include "nsIDOMHTMLAudioElement.h"
-#endif
 #include "nsIDOMProgressEvent.h"
 #include "nsIDOMNSUIEvent.h"
 #include "nsIDOMCSS2Properties.h"
@@ -1272,7 +1270,6 @@ static nsDOMClassInfoData sClassInfoData[] = {
   NS_DEFINE_CLASSINFO_DATA(CSSFontFaceStyleDecl, nsCSSStyleDeclSH,
                            ARRAY_SCRIPTABLE_FLAGS)
 
-#if defined(MOZ_MEDIA) 
   NS_DEFINE_CLASSINFO_DATA(HTMLVideoElement, nsHTMLElementSH,
                            ELEMENT_SCRIPTABLE_FLAGS)
   NS_DEFINE_CLASSINFO_DATA(HTMLSourceElement, nsHTMLElementSH,
@@ -1281,7 +1278,6 @@ static nsDOMClassInfoData sClassInfoData[] = {
                            DOM_DEFAULT_SCRIPTABLE_FLAGS)
   NS_DEFINE_CLASSINFO_DATA(HTMLAudioElement, nsHTMLElementSH,
                            ELEMENT_SCRIPTABLE_FLAGS)
-#endif
 
   NS_DEFINE_CLASSINFO_DATA(ProgressEvent, nsDOMGenericSH,
                            DOM_DEFAULT_SCRIPTABLE_FLAGS)
@@ -2038,7 +2034,6 @@ nsDOMClassInfo::Init()
   DOM_CLASSINFO_MAP_BEGIN(XMLDocument, nsIDOMXMLDocument)
     DOM_CLASSINFO_MAP_ENTRY(nsIDOMDocument)
     DOM_CLASSINFO_MAP_ENTRY(nsIDOMXMLDocument)
-    DOM_CLASSINFO_MAP_ENTRY(nsIInterfaceRequestor)
     DOM_CLASSINFO_DOCUMENT_MAP_ENTRIES
   DOM_CLASSINFO_MAP_END
 
@@ -3519,7 +3514,6 @@ nsDOMClassInfo::Init()
     DOM_CLASSINFO_MAP_ENTRY(nsIDOMCSSStyleDeclaration)
   DOM_CLASSINFO_MAP_END
 
-#if defined(MOZ_MEDIA)
   DOM_CLASSINFO_MAP_BEGIN(HTMLVideoElement, nsIDOMHTMLVideoElement)
     DOM_CLASSINFO_MAP_ENTRY(nsIDOMHTMLVideoElement)
     DOM_CLASSINFO_GENERIC_HTML_MAP_ENTRIES
@@ -3540,7 +3534,6 @@ nsDOMClassInfo::Init()
     DOM_CLASSINFO_GENERIC_HTML_MAP_ENTRIES
   DOM_CLASSINFO_MAP_END
 
-#endif
   DOM_CLASSINFO_MAP_BEGIN(ProgressEvent, nsIDOMProgressEvent)
     DOM_CLASSINFO_MAP_ENTRY(nsIDOMProgressEvent)
     DOM_CLASSINFO_EVENT_MAP_ENTRIES
@@ -5042,7 +5035,7 @@ BaseStubConstructor(nsIWeakReference* aWeakOwner,
 
     rv = initializer->Initialize(currentInner, cx, obj, argc, argv);
     if (NS_FAILED(rv)) {
-      return NS_ERROR_NOT_INITIALIZED;
+      return rv;
     }
   }
 

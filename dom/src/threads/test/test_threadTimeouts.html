@@ -30,6 +30,9 @@ Tests of DOM Worker Threads (Bug 437152)
         event.target.postMessage("cancelInterval");
         break;
       case "intervalCanceled":
+        worker.postMessage("startExpression");
+        break;
+      case "expressionFinished":
         SimpleTest.finish();
         break;
       default:

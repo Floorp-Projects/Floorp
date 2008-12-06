@@ -162,12 +162,10 @@ static NS_DEFINE_CID(kDOMEventGroupCID, NS_DOMEVENTGROUP_CID);
 #include "nsIDocumentLoaderFactory.h"
 #include "nsIContentViewer.h"
 #include "nsIXMLContentSink.h"
-#include "nsIChannelEventSink.h"
 #include "nsContentErrors.h"
 #include "nsIXULDocument.h"
-#include "nsIProgressEventSink.h"
-#include "nsISecurityEventSink.h"
 #include "nsIPrompt.h"
+#include "nsIPropertyBag2.h"
 
 #include "nsFrameLoader.h"
 
@@ -1119,46 +1117,73 @@ nsExternalResourceMap::PendingLoad::StartLoad(nsIURI* aURI,
     return NS_ERROR_NOT_AVAILABLE;
   }
 
+  nsCOMPtr<nsIInterfaceRequestor> req = nsContentUtils::GetSameOriginChecker();
+  NS_ENSURE_TRUE(req, NS_ERROR_OUT_OF_MEMORY);
+
   nsCOMPtr<nsILoadGroup> loadGroup = doc->GetDocumentLoadGroup();
   nsCOMPtr<nsIChannel> channel;
-  rv = NS_NewChannel(getter_AddRefs(channel), aURI, nsnull, loadGroup);
+  rv = NS_NewChannel(getter_AddRefs(channel), aURI, nsnull, loadGroup, req);
   NS_ENSURE_SUCCESS(rv, rv);
 
   mURI = aURI;
 
-  nsCOMPtr<nsIInterfaceRequestor> req = nsContentUtils::GetSameOriginChecker();
-  NS_ENSURE_TRUE(req, NS_ERROR_OUT_OF_MEMORY);
-
-  channel->SetNotificationCallbacks(req);
   return channel->AsyncOpen(this, nsnull);
 }
 
 NS_IMPL_ISUPPORTS1(nsExternalResourceMap::LoadgroupCallbacks,
                    nsIInterfaceRequestor)
 
+#define IMPL_SHIM(_i) \
+  NS_IMPL_ISUPPORTS1(nsExternalResourceMap::LoadgroupCallbacks::_i##Shim, _i)
+
+IMPL_SHIM(nsILoadContext)
+IMPL_SHIM(nsIProgressEventSink)
+IMPL_SHIM(nsIChannelEventSink)
+IMPL_SHIM(nsISecurityEventSink)
+IMPL_SHIM(nsIApplicationCacheContainer)
+
+#undef IMPL_SHIM
+
+#define IID_IS(_i) aIID.Equals(NS_GET_IID(_i))
+
+#define TRY_SHIM(_i)                                                       \
+  PR_BEGIN_MACRO                                                           \
+    if (IID_IS(_i)) {                                                      \
+      nsCOMPtr<_i> real = do_GetInterface(mCallbacks);                     \
+      if (!real) {                                                         \
+        return NS_NOINTERFACE;                                             \
+      }                                                                    \
+      nsCOMPtr<_i> shim = new _i##Shim(this, real);                        \
+      if (!shim) {                                                         \
+        return NS_ERROR_OUT_OF_MEMORY;                                     \
+      }                                                                    \
+      *aSink = shim.forget().get();                                        \
+      return NS_OK;                                                        \
+    }                                                                      \
+  PR_END_MACRO
+
 NS_IMETHODIMP
 nsExternalResourceMap::LoadgroupCallbacks::GetInterface(const nsIID & aIID,
                                                         void **aSink)
 {
-#define IID_IS(_i) aIID.Equals(NS_GET_IID(_i))
   if (mCallbacks &&
-      (IID_IS(nsIProgressEventSink) ||
-       IID_IS(nsIChannelEventSink) ||
-       IID_IS(nsISecurityEventSink) ||
-       IID_IS(nsIPrompt) ||
-       IID_IS(nsIAuthPrompt) ||
-       IID_IS(nsIAuthPrompt2) ||
-       IID_IS(nsIApplicationCacheContainer) ||
-       // XXXbz evil hack for cookies for now
-       IID_IS(nsIDOMWindow) ||
-       IID_IS(nsIDocShellTreeItem))) {
+      (IID_IS(nsIPrompt) || IID_IS(nsIAuthPrompt) || IID_IS(nsIAuthPrompt2))) {
     return mCallbacks->GetInterface(aIID, aSink);
   }
-#undef IID_IS
 
   *aSink = nsnull;
+
+  TRY_SHIM(nsILoadContext);
+  TRY_SHIM(nsIProgressEventSink);
+  TRY_SHIM(nsIChannelEventSink);
+  TRY_SHIM(nsISecurityEventSink);
+  TRY_SHIM(nsIApplicationCacheContainer);
+    
   return NS_NOINTERFACE;
 }
+
+#undef TRY_SHIM
+#undef IID_IS
 
 nsExternalResourceMap::ExternalResource::~ExternalResource()
 {
@@ -1879,6 +1904,16 @@ nsDocument::Reset(nsIChannel* aChannel, nsILoadGroup* aLoadGroup)
   }
 
   ResetToURI(uri, aLoadGroup, principal);
+
+  nsCOMPtr<nsIPropertyBag2> bag = do_QueryInterface(aChannel);
+  if (bag) {
+    nsCOMPtr<nsIURI> baseURI;
+    bag->GetPropertyAsInterface(NS_LITERAL_STRING("baseURI"),
+                                NS_GET_IID(nsIURI), getter_AddRefs(baseURI));
+    if (baseURI) {
+      mDocumentBaseURI = baseURI;
+    }
+  }
 
   mChannel = aChannel;
 }
@@ -3162,9 +3197,9 @@ nsDocument::GetChildCount() const
 }
 
 nsIContent * const *
-nsDocument::GetChildArray() const
+nsDocument::GetChildArray(PRUint32* aChildCount) const
 {
-  return mChildren.GetChildArray();
+  return mChildren.GetChildArray(aChildCount);
 }
   
 
@@ -3569,6 +3604,10 @@ nsDocument::GetWindow()
 nsPIDOMWindow *
 nsDocument::GetInnerWindow()
 {
+  if (!mRemovedFromDocShell) {
+    return mWindow;
+  }
+
   nsCOMPtr<nsPIDOMWindow> win(do_QueryInterface(GetScriptGlobalObject()));
 
   return win;
@@ -7308,8 +7347,7 @@ nsDocument::CloneDocHelper(nsDocument* clone) const
   clone->nsDocument::SetDocumentURI(nsIDocument::GetDocumentURI());
   // Must set the principal first, since SetBaseURI checks it.
   clone->SetPrincipal(NodePrincipal());
-  rv = clone->SetBaseURI(nsIDocument::GetBaseURI());
-  NS_ENSURE_SUCCESS(rv, rv);
+  clone->mDocumentBaseURI = mDocumentBaseURI;
 
   // Set scripting object
   PRBool hasHadScriptObject = PR_TRUE;

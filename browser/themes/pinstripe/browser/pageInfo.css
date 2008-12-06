@@ -39,35 +39,8 @@
 
 @import "chrome://global/skin/";
 
-#main-window:not([active="true"]) > #topStackBar > #viewGroup {
-  opacity: 0.7;
-}
-
-#topStackBar {
-  display: -moz-box;
-  -moz-appearance: -moz-mac-unified-toolbar;
-  padding: 4px 0 8px;
-  -moz-box-pack: center;
-}
-
 /* View buttons */
-
-#viewGroup {
-  border: 1px solid #404040;
-  border-bottom: 2px solid;
-  -moz-border-bottom-colors: #C2C2C2 #404040;
-  -moz-border-radius: 4px;
-  -moz-border-radius-bottomright: 5px;
-  -moz-border-radius-bottomleft: 5px;
-  background-image: url("chrome://global/skin/icons/white-gray-gradient.gif");
-  background-repeat: repeat-x;
-}
-
-#viewGroup radio {
-  -moz-box-orient: vertical;
-  -moz-box-align: center;
-  -moz-appearance: none;
-}
+@import "chrome://global/skin/viewbuttons.css";
 
 /* Extensions will provide icons because the view buttons have icons
    on the winstripe and gnomestripe themes. We don't want to display them */

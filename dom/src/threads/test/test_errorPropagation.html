@@ -1,0 +1,108 @@
+<!DOCTYPE HTML>
+<html>
+<!--
+Tests of DOM Worker Threads
+-->
+<head>
+  <title>Test for DOM Worker Threads</title>
+  <script type="text/javascript" src="/MochiKit/MochiKit.js"></script>
+  <script type="text/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
+</head>
+<body>
+<pre id="test">
+<script class="testbody" type="text/javascript">
+
+  netscape.security.PrivilegeManager.enablePrivilege('UniversalXPConnect');
+
+  const Cc = Components.classes;
+  const Ci = Components.interfaces;
+  const Cr = Components.results;
+
+  var consoleService =
+    Cc["@mozilla.org/consoleservice;1"].getService(Ci.nsIConsoleService);
+
+  var errors = [
+    "This exception should show up in the JS console",
+    "This exception should make it to onerror",
+    "This exception should too",
+    "This exception should should show up in onmessage"
+  ];
+
+  var errorIndex = -1;
+
+  var worker = new Worker("errorPropagation_worker1.js");
+
+  worker.onmessage = function(event) {
+    is(event.target, worker);
+    ok(event.data.indexOf(errors[errorIndex]) != -1,
+       "Wrong message!");
+    ok(errorIndex == errors.length - 1, "Wrong number of errors seen!");
+    SimpleTest.finish();
+  }
+
+  function nextError() {
+    worker.postMessage(errors[++errorIndex]);
+  }
+
+  function errorHandler(event) {
+    netscape.security.PrivilegeManager.enablePrivilege('UniversalXPConnect');
+
+    is(event.target, worker);
+    ok(event.data.indexOf(errors[errorIndex]) != -1,
+       "Wrong message!");
+
+    switch (errorIndex) {
+      case 1:
+        consoleService.unregisterListener(consoleListener);
+        consoleService.reset();
+        consoleListener = null;
+        nextError();
+        break;
+      case 2:
+        nextError();
+        break;
+      default:
+        ok(false, "Too many errors!");
+    }
+  }
+
+  var consoleListener = {
+    count: 0,
+
+    observe: function(message) {
+      netscape.security.PrivilegeManager.enablePrivilege('UniversalXPConnect');
+
+      if (this.count++) {
+        ok(false, "Seen too many errors!");
+        SimpleTest.finish();
+        return;
+      }
+
+      ok(message.message.indexOf(errors[errorIndex]) != -1, "Wrong message!");
+      worker.onerror = errorHandler;
+      nextError();
+    },
+
+    QueryInterface: function(iid) {
+      netscape.security.PrivilegeManager.enablePrivilege('UniversalXPConnect');
+      if (iid.equals(Ci.nsIConsoleListener) ||
+          iid.equals(Ci.nsISupports)) {
+        return this;
+      }
+      throw Cr.NS_NOINTERFACE;
+    }
+  };
+
+  consoleService.reset();
+  consoleService.registerListener(consoleListener);
+
+  nextError();
+
+  SimpleTest.waitForExplicitFinish();
+
+</script>
+</pre>
+</body>
+</html>
+

@@ -693,48 +693,30 @@ if (typeof options == 'function')
 
 function getTestCaseResult(expected, actual)
 {
-  var expected_t = typeof expected;
-  var actual_t = typeof actual;
-  var passed = true;
- 
-  // because ( NaN == NaN ) always returns false, need to do
-  // a special compare to see if we got the right result.
-  if ( actual != actual ) 
-  {
-    if ( actual_t == "object" ) 
-    {
-      actual = "NaN object";
-    } 
-    else 
-    {
-      actual = "NaN number";
-    }
-  }
-  if ( expected != expected ) 
-  {
-    if ( expected_t == "object" ) 
-    {
-      expected = "NaN object";
-    } 
-    else 
-    {
-      expected = "NaN number";
-    }
-  }
+  if (typeof expected != typeof actual)
+    return false;
+  if (typeof expected != 'number')
+    // Note that many tests depend on the use of '==' here, not '==='.
+    return actual == expected;
 
-  if (expected_t != actual_t)
-  {
-    passed = false;
-  }
-  else if (expected != actual)
-  {
-    if (expected_t != 'number' || (Math.abs(actual - expected) > 1E-10))
-    {
-      passed = false;
-    }
-  }
- 
-  return passed;
+  // Distinguish NaN from other values.  Using x != x comparisons here
+  // works even if tests redefine isNaN.
+  if (actual != actual)
+    return expected != expected;
+  if (expected != expected)
+    return false;
+
+  // Tolerate a certain degree of error.
+  if (actual != expected)
+    return Math.abs(actual - expected) <= 1E-10;
+
+  // Here would be a good place to distinguish 0 and -0, if we wanted
+  // to.  However, doing so would introduce a number of failures in
+  // areas where they don't seem important.  For example, the WeekDay
+  // function in ECMA-262 returns -0 for Sundays before the epoch, but
+  // the Date functions in SpiderMonkey specified in terms of WeekDay
+  // often don't.  This seems unimportant.
+  return true;
 }
 
 if (typeof dump == 'undefined')

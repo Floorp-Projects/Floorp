@@ -52,7 +52,7 @@ interface nsIHttpServerIdentity;
 /**
  * An interface which represents an HTTP server.
  */
-[scriptable, uuid(9049C469-8402-4FA6-883C-826B0FE9CAF9)]
+[scriptable, uuid(ED95D475-3DFB-4995-AF27-8091337C8463)]
 interface nsIHttpServer : nsISupports
 {
   /**
@@ -187,6 +187,17 @@ interface nsIHttpServer : nsISupports
 
   /** Represents the locations at which this server is reachable. */
   readonly attribute nsIHttpServerIdentity identity;
+
+  /**
+   * Retrieves the string associated with the given key in this.  All keys are
+   * initially associated with the empty string.
+   */
+  AString getState(in AString key);
+
+  /**
+   * Sets the string associated with the given key in this.
+   */
+  void setState(in AString key, in AString value);
 };
 
 /**

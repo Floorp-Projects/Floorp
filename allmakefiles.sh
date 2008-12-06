@@ -96,11 +96,3 @@ done
 if test -z "$LIBXUL_SDK"; then
   . "${srcdir}/toolkit/toolkit-makefiles.sh"
 fi
-
-if test -n "$MOZ_BRANDING_DIRECTORY"; then
-  add_makefiles "
-    $MOZ_BRANDING_DIRECTORY/Makefile
-    $MOZ_BRANDING_DIRECTORY/content/Makefile
-    $MOZ_BRANDING_DIRECTORY/locales/Makefile
-  "
-fi

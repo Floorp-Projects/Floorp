@@ -1,7 +1,7 @@
 @namespace url("http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul");
 
 notification {
-  min-height: 24px;
+  padding: 4px 3px 5px;
 }
 
 notification[type="info"] {
@@ -28,7 +28,7 @@ notification[type="critical"] {
 .messageImage {
   width: 16px;
   height: 16px;
-  margin: 0px 1px 0px 6px;
+  margin: 0 4px;
 }
 
 /* Default icons for notifications */
@@ -45,45 +45,30 @@ notification[type="critical"] .messageImage {
   list-style-image: url("chrome://global/skin/icons/error-16.png");
 }
 
-.messageText {
-  margin-top: 2px;
-  font-weight: bold;
-  -moz-margin-start: 5px;
-}
-
-button {
-  -moz-appearance: none;
-  background: url("chrome://global/skin/icons/white-gray-gradient.gif") transparent repeat-x center center;
-  -moz-background-clip: padding;
-  border: 1px solid;
-  border-bottom-width: 2px;
-  -moz-border-radius: 10px;
-  -moz-border-top-colors: rgba(0,0,0,0.5);
-  -moz-border-right-colors: rgba(0,0,0,0.5);
-  -moz-border-bottom-colors: rgba(255,255,255,0.35) rgba(0,0,0,0.5);
-  -moz-border-left-colors: rgba(0,0,0,0.5);
-  padding: 0 5px;
-  min-width: 79px;
-  min-height: 17px;
-}
-
-button:hover:active {
-  background-image: url("chrome://global/skin/icons/white-gray-gradient-active.gif");
-}
-
 .notification-inner {
   border: 0 !important;
 }
 
+.messageText {
+  margin: 0 3px !important;
+  padding: 0;
+  font-weight: bold;
+}
+
 .messageCloseButton {
   -moz-appearance: none;
-  -moz-padding-end: 4px;
+  padding: 0;
+  margin: 0 2px;
   list-style-image: url("chrome://global/skin/icons/closetab.png") !important;
   border: none;
 }
 
 .messageCloseButton > .toolbarbutton-text {
   display: none;
+}
+
+.messageCloseButton > .toolbarbutton-icon {
+  padding: 0;
 }
 
 .messageCloseButton:hover {

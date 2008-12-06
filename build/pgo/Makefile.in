@@ -86,7 +86,7 @@ endif
 
 AUTOMATION_PPARGS = 	\
 			-DBROWSER_PATH=$(browser_path) \
-			-DXPC_BIN_PATH=\"$(DIST)/bin\" \
+			-DXPC_BIN_PATH=\"$(LIBXUL_DIST)/bin\" \
 			-DBIN_SUFFIX=\"$(BIN_SUFFIX)\" \
 			-DCERTS_DIR=\"$(_CERTS_DIR)\" \
 			-DCERTS_SRC_DIR=\"$(_CERTS_SRC_DIR)\" \

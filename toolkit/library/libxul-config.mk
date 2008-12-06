@@ -41,7 +41,7 @@ CPPSRCS += \
 	nsStaticXULComponents.cpp \
 	$(NULL)
 
-ifeq ($(OS_ARCH),WINNT)
+ifeq (,$(filter-out WINCE WINNT,$(OS_ARCH)))
 REQUIRES += libreg widget gfx
 CPPSRCS += \
 	nsDllMain.cpp \
@@ -292,11 +292,6 @@ ifdef MOZ_ENABLE_GTK2
 ifdef MOZ_X11
 STATIC_LIBS += gtkxtbin
 endif
-endif
-
-ifdef MOZ_IPCD
-DEFINES += -DMOZ_IPCD
-COMPONENT_LIBS += ipcdc
 endif
 
 ifdef MOZ_ENABLE_POSTSCRIPT

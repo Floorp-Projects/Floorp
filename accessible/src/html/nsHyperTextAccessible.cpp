@@ -173,8 +173,9 @@ nsresult
 nsHyperTextAccessible::GetStateInternal(PRUint32 *aState, PRUint32 *aExtraState)
 {
   nsresult rv = nsAccessibleWrap::GetStateInternal(aState, aExtraState);
-  NS_ENSURE_SUCCESS(rv, rv);
-  if (!mDOMNode || !aExtraState)
+  NS_ENSURE_A11Y_SUCCESS(rv, rv);
+
+  if (!aExtraState)
     return NS_OK;
 
   nsCOMPtr<nsIEditor> editor;
@@ -270,16 +271,6 @@ nsIntRect nsHyperTextAccessible::GetBoundsForString(nsIFrame *aFrame, PRUint32 a
 
   nsCOMPtr<nsIPresShell> shell = GetPresShell();
   NS_ENSURE_TRUE(shell, screenRect);
-
-  nsCOMPtr<nsIRenderingContext> rc;
-  shell->CreateRenderingContext(frame, getter_AddRefs(rc));
-  NS_ENSURE_TRUE(rc, screenRect);
-
-  const nsStyleFont *font = frame->GetStyleFont();
-  const nsStyleVisibility *visibility = frame->GetStyleVisibility();
-
-  rv = rc->SetFont(font->mFont, visibility->mLangGroup);
-  NS_ENSURE_SUCCESS(rv, screenRect);
 
   nsPresContext *context = shell->GetPresContext();
 

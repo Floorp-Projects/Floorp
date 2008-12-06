@@ -43,11 +43,6 @@
 
 #include <float.h>
 #ifdef BUILD_CAIRO_DLL
-# define INCL_WIN
-# define INCL_GPI
-# define INCL_DOS
-# define INCL_DOSERRORS
-# include <os2emx.h>
 # include "cairo-os2.h"
 # ifndef __WATCOMC__
 #  include <emx/startup.h>

@@ -88,11 +88,7 @@ nsSVGPathGeometryFrame::DidSetStyleContext(nsStyleContext* aOldStyleContext)
 {
   nsSVGPathGeometryFrameBase::DidSetStyleContext(aOldStyleContext);
 
-  nsSVGOuterSVGFrame *outerSVGFrame = nsSVGUtils::GetOuterSVGFrame(this);
-  if (outerSVGFrame) {
-    // invalidate here while we still have the filter information
-    outerSVGFrame->InvalidateCoveredRegion(this);
-  }
+  nsSVGUtils::InvalidateCoveredRegion(this);
 
   // XXX: we'd like to use the style_hint mechanism and the
   // ContentStateChanged/AttributeChanged functions for style changes
@@ -255,14 +251,13 @@ nsSVGPathGeometryFrame::UpdateCoveredRegion()
 
   static_cast<nsSVGPathGeometryElement*>(mContent)->ConstructPath(&context);
 
-  gfxRect extent;
+  gfxRect extent = gfxRect(0, 0, 0, 0);
 
   if (SetupCairoStrokeGeometry(&context)) {
     extent = context.GetUserStrokeExtent();
-  } else if (GetStyleSVG()->mFill.mType != eStyleSVGPaintType_None) {
-    extent = context.GetUserPathExtent();
-  } else {
-    extent = gfxRect(0, 0, 0, 0);
+  }
+  if (GetStyleSVG()->mFill.mType != eStyleSVGPaintType_None) {
+    extent = extent.Union(context.GetUserPathExtent());
   }
 
   if (!extent.IsEmpty()) {

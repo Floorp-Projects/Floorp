@@ -269,7 +269,7 @@ endif
 
 ifneq (,$(filter-out OS2 WINNT,$(OS_ARCH)))
 
-$(MOZ_APP_NAME):: mozilla.in Makefile.in Makefile $(DEPTH)/config/autoconf.mk
+$(MOZ_APP_NAME):: mozilla.in $(GLOBAL_DEPS)
 	cat $< | sed -e "s|%MOZAPPDIR%|$(installdir)|" > $@
 	chmod +x $@
 

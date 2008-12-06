@@ -281,8 +281,69 @@ nsXPCWrappedJSClass::CallQueryInterfaceOnJSObject(XPCCallContext& ccx,
     id = xpc_NewIDObject(cx, jsobj, aIID);
     if(id)
     {
+        // Throwing NS_NOINTERFACE is the prescribed way to fail QI from JS. It
+        // is not an exception that is ever worth reporting, but we don't want
+        // to eat all exceptions either.
+
+        uint32 oldOpts =
+          JS_SetOptions(cx, JS_GetOptions(cx) | JSOPTION_DONT_REPORT_UNCAUGHT);
+
         jsval args[1] = {OBJECT_TO_JSVAL(id)};
         success = JS_CallFunctionValue(cx, jsobj, fun, 1, args, &retval);
+
+        JS_SetOptions(cx, oldOpts);
+
+        if(!success)
+        {
+            NS_ASSERTION(JS_IsExceptionPending(cx),
+                         "JS failed without setting an exception!");
+
+            jsval jsexception;
+            AUTO_MARK_JSVAL(ccx, jsexception);
+
+            if(JS_GetPendingException(cx, &jsexception))
+            {
+                nsresult rv;
+                if(JSVAL_IS_OBJECT(jsexception))
+                {
+                    // XPConnect may have constructed an object to represent a
+                    // C++ QI failure. See if that is the case.
+                    nsCOMPtr<nsIXPConnectWrappedNative> wrapper;
+
+                    nsXPConnect::GetXPConnect()->
+                        GetWrappedNativeOfJSObject(ccx,
+                                                   JSVAL_TO_OBJECT(jsexception),
+                                                   getter_AddRefs(wrapper));
+
+                    if(wrapper)
+                    {
+                        nsCOMPtr<nsIException> exception =
+                            do_QueryWrappedNative(wrapper);
+                        if(exception &&
+                           NS_SUCCEEDED(exception->GetResult(&rv)) &&
+                           rv == NS_NOINTERFACE)
+                        {
+                            JS_ClearPendingException(cx);
+                        }
+                    }
+                }
+                else if(JSVAL_IS_NUMBER(jsexception))
+                {
+                    // JS often throws an nsresult.
+                    if(JSVAL_IS_DOUBLE(jsexception))
+                        rv = (nsresult)(*JSVAL_TO_DOUBLE(jsexception));
+                    else
+                        rv = (nsresult)(JSVAL_TO_INT(jsexception));
+
+                    if(rv == NS_NOINTERFACE)
+                        JS_ClearPendingException(cx);
+                }
+            }
+
+            // Don't report if reporting was disabled by someone else.
+            if(!(oldOpts & JSOPTION_DONT_REPORT_UNCAUGHT))
+                JS_ReportPendingException(cx);
+        }
     }
 
     if(success)

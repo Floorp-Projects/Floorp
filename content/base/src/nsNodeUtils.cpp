@@ -520,14 +520,15 @@ nsNodeUtils::CloneAndAdopt(nsINode *aNode, PRBool aClone, PRBool aDeep,
     // Don't allow importing/adopting nodes from non-privileged "scriptable"
     // documents to "non-scriptable" documents.
     nsIDocument* newDoc = nodeInfoManager->GetDocument();
-    nsIDocument* currentDoc = aNode->GetOwnerDoc();
-    NS_ENSURE_STATE(newDoc && currentDoc);
+    NS_ENSURE_STATE(newDoc);
     PRBool hasHadScriptHandlingObject = PR_FALSE;
     if (!newDoc->GetScriptHandlingObject(hasHadScriptHandlingObject) &&
         !hasHadScriptHandlingObject) {
-      NS_ENSURE_STATE(nsContentUtils::IsChromeDoc(currentDoc) ||
-                      (!currentDoc->GetScriptHandlingObject(hasHadScriptHandlingObject) &&
-                       !hasHadScriptHandlingObject));
+      nsIDocument* currentDoc = aNode->GetOwnerDoc();
+      NS_ENSURE_STATE(currentDoc &&
+                      (nsContentUtils::IsChromeDoc(currentDoc) ||
+                       (!currentDoc->GetScriptHandlingObject(hasHadScriptHandlingObject) &&
+                        !hasHadScriptHandlingObject)));
     }
 
     newNodeInfo = nodeInfoManager->GetNodeInfo(nodeInfo->NameAtom(),

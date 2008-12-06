@@ -74,6 +74,20 @@ class nsIDocShellTreeItem;
 typedef nsInterfaceHashtable<nsVoidPtrHashKey, nsIAccessNode>
         nsAccessNodeHashtable;
 
+#define NS_OK_DEFUNCT_OBJECT \
+NS_ERROR_GENERATE_SUCCESS(NS_ERROR_MODULE_GENERAL, 0x22)
+
+#define NS_ENSURE_A11Y_SUCCESS(res, ret)                                  \
+  PR_BEGIN_MACRO                                                          \
+    nsresult __rv = res; /* Don't evaluate |res| more than once */        \
+    if (NS_FAILED(__rv)) {                                                \
+      NS_ENSURE_SUCCESS_BODY(res, ret)                                    \
+      return ret;                                                         \
+    }                                                                     \
+    if (__rv == NS_OK_DEFUNCT_OBJECT)                                     \
+      return ret;                                                         \
+  PR_END_MACRO
+
 #define NS_ACCESSNODE_IMPL_CID                          \
 {  /* 13555f6e-0c0f-4002-84f6-558d47b8208e */           \
   0x13555f6e,                                           \

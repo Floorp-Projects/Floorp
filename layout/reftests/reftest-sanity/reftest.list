@@ -32,3 +32,6 @@ HTTP == default.html data:text/html,<div>Text</div>
 HTTP == data:text/html,<div>Text</div> default.html
 != blank.html default.html
 HTTP != blank.html default.html
+
+HTTP(..) == filter-1.xhtml filter-1-ref.xhtml
+HTTP(..) == filter-2.xhtml filter-2-ref.xhtml

@@ -118,13 +118,13 @@
 #include "nsPIDOMWindow.h"
 #include "nsJSEnvironment.h"
 #include "nsIFocusController.h"
-#include "nsIMenuParent.h"
 
 #include "nsIScrollableView.h"
 #include "nsIHTMLDocument.h"
 #include "nsITimelineService.h"
 #include "nsGfxCIID.h"
 #include "nsStyleSheetService.h"
+#include "ImageErrors.h"
 
 #include "nsIPrompt.h"
 #include "imgIContainer.h" // image animation mode constants
@@ -963,7 +963,12 @@ DocumentViewerImpl::LoadComplete(nsresult aStatus)
 
   // Now, fire either an OnLoad or OnError event to the document...
   PRBool restoring = PR_FALSE;
-  if(NS_SUCCEEDED(aStatus) && window) {
+  // XXXbz imagelib kills off the document load for a full-page image with
+  // NS_IMAGELIB_ERROR_LOAD_ABORTED if it's in the cache.  So we want to treat
+  // that one as a success code; otherwise whether we fire onload for the image
+  // will depend on whether it's cached!
+  if(window &&
+     (NS_SUCCEEDED(aStatus) || aStatus == NS_IMAGELIB_ERROR_LOAD_ABORTED)) {
     nsEventStatus status = nsEventStatus_eIgnore;
     nsEvent event(PR_TRUE, NS_LOAD);
     event.flags |= NS_EVENT_FLAG_CANT_BUBBLE;
@@ -1961,12 +1966,8 @@ DocumentViewerImpl::Hide(void)
 
   nsCOMPtr<nsIDocShell> docShell(do_QueryReferent(mContainer));
   if (docShell) {
-    PRBool saveLayoutState = PR_FALSE;
-    docShell->GetShouldSaveLayoutState(&saveLayoutState);
-    if (saveLayoutState) {
-      nsCOMPtr<nsILayoutHistoryState> layoutState;
-      mPresShell->CaptureHistoryState(getter_AddRefs(layoutState), PR_TRUE);
-    }
+    nsCOMPtr<nsILayoutHistoryState> layoutState;
+    mPresShell->CaptureHistoryState(getter_AddRefs(layoutState), PR_TRUE);
   }
 
   mPresShell->Destroy();

@@ -90,4 +90,22 @@ private:
     HWND mWnd;
 };
 
+#ifdef WINCE
+
+// These are the required stubs for windows mobile
+#define ETO_GLYPH_INDEX 0
+#define ETO_PDY 0
+#define HALFTONE COLORONCOLOR
+#define GM_ADVANCED 2
+#define MWT_IDENTITY 1
+
+inline int SetGraphicsMode(HDC hdc, int iMode) {return 1;}
+inline int GetGraphicsMode(HDC hdc)            {return 1;} /*GM_COMPATIBLE*/
+inline void GdiFlush()                         {}
+inline BOOL SetWorldTransform(HDC hdc, CONST XFORM *lpXform) { return FALSE; }
+inline BOOL GetWorldTransform(HDC hdc, LPXFORM lpXform )     { return FALSE; }
+inline BOOL ModifyWorldTransform(HDC hdc, CONST XFORM * lpxf, DWORD mode) { return 1; }
+
+#endif
+
 #endif /* GFX_WINDOWSSURFACE_H */

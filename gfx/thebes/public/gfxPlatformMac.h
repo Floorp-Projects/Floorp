@@ -71,7 +71,10 @@ public:
 
     gfxFontEntry* LookupLocalFont(const nsAString& aFontName);
 
-    gfxFontEntry* MakePlatformFont(const gfxFontEntry *aProxyEntry, const PRUint8 *aFontData, PRUint32 aLength);
+    virtual gfxFontEntry* MakePlatformFont(const gfxProxyFontEntry *aProxyEntry,
+                                           nsISupports *aLoader,
+                                           const PRUint8 *aFontData,
+                                           PRUint32 aLength);
 
     PRBool IsFontFormatSupported(nsIURI *aFontURI, PRUint32 aFormatFlags);
 

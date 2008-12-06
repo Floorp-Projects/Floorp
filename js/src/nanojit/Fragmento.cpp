@@ -142,7 +142,9 @@ namespace nanojit
 			trackFree(-1);
 		}
 		//fprintf(stderr, "Fragmento::pageAlloc %X,  %d free pages of %d\n", (int)page, _stats.freePages, _stats.pages);
+#ifdef NJ_VERBOSE
 		NanoAssert(pageCount()==_stats.freePages);
+#endif
 		return page;
 	}
 	
@@ -154,7 +156,9 @@ namespace nanojit
 		page->next = _pageList;
 		_pageList = page;
 		trackFree(+1);
+#ifdef NJ_VERBOSE
 		NanoAssert(pageCount()==_stats.freePages);
+#endif
 	}
 
 	void Fragmento::pagesGrow(int32_t count)
@@ -203,7 +207,9 @@ namespace nanojit
 				page = next; 
 			}
 			page->next = 0;
+#ifdef NJ_VERBOSE
 			NanoAssert(pageCount()==_stats.freePages);
+#endif
 			//fprintf(stderr,"Fragmento::pageGrow adding page %x ; %d\n", (intptr_t)page, count);
 		}
 	}

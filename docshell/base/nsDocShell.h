@@ -107,6 +107,7 @@
 #include "nsPIDOMEventTarget.h"
 #include "nsIURIClassifier.h"
 #include "nsIChannelClassifier.h"
+#include "nsILoadContext.h"
 
 class nsIScrollableView;
 class nsDocShell;
@@ -185,7 +186,8 @@ class nsDocShell : public nsDocLoader,
                    public nsIEditorDocShell,
                    public nsIWebPageDescriptor,
                    public nsIAuthPromptProvider,
-                   public nsIObserver
+                   public nsIObserver,
+                   public nsILoadContext
 {
 friend class nsDSURIContentListener;
 
@@ -214,6 +216,7 @@ public:
     NS_DECL_NSIWEBPAGEDESCRIPTOR
     NS_DECL_NSIAUTHPROMPTPROVIDER
     NS_DECL_NSIOBSERVER
+    NS_DECL_NSILOADCONTEXT
 
     NS_IMETHOD Stop() {
         // Need this here because otherwise nsIWebNavigation::Stop

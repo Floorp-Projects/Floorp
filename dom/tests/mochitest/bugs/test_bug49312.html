@@ -1,0 +1,48 @@
+<!DOCTYPE HTML>
+<html>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=49312
+-->
+<head>
+  <title>Test for Bug 49312</title>
+  <script type="application/javascript" src="/MochiKit/MochiKit.js"></script>
+  <script type="application/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
+  <script>
+    // Hack to set things up so that parent.fakeOpener works the same way for
+    // both test subframes.
+    var framesToLoad = 2;
+    function subframeLoaded(win) {
+      is(win.location.href
+            .replace(/iframe_bug49312\.html$/, "test_bug49312.html"),
+         window.location.href,
+         "Unexpected subframe href");
+      if (win == opened) {
+        opened.close();
+      }
+      if (--framesToLoad == 0) {
+        SimpleTest.finish();
+      }
+    }
+         
+  </script>
+</head>
+<body>
+<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=49312">Mozilla Bug 49312</a>
+<p id="display">
+  <iframe src="javascript:'<script>location=\'iframe_bug49312.html\'</script>'"></iframe>
+</p>
+<div id="content" style="display: none">
+  
+</div>
+<pre id="test">
+<script type="application/javascript">
+
+/** Test for Bug 49312 **/
+SimpleTest.waitForExplicitFinish();
+var opened = window.open("javascript:'<script>location=\\\'iframe_bug49312.html\\\'</" + "script>'", "", "width=100,height=100")
+
+</script>
+</pre>
+</body>
+</html>

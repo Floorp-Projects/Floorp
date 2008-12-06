@@ -46,6 +46,7 @@
  */
 
 interface nsIDOMElement;
+interface nsIDOMHTMLCanvasElement;
 
 [scriptable, uuid(440D036F-0879-4497-9364-35DE49F6849F)]
 interface nsIDOMWindowUtils : nsISupports {
@@ -114,21 +115,21 @@ interface nsIDOMWindowUtils : nsISupports {
    * privileges.
    *
    * @param aType event type
-   * @param aX x offset
-   * @param aY y offset
+   * @param aX x offset in CSS pixels
+   * @param aY y offset in CSS pixels
    * @param aButton button to synthesize
    * @param aClickCount number of clicks that have been performed
    * @param aModifiers modifiers pressed, using constants defined in nsIDOMNSEvent
-   * @param aIgnoreScrollFrame whether the event should ignore viewport bounds
+   * @param aIgnoreRootScrollFrame whether the event should ignore viewport bounds
    *                           during dispatch
    */
   void sendMouseEvent(in AString aType,
-                      in long aX,
-                      in long aY,
+                      in float aX,
+                      in float aY,
                       in long aButton,
                       in long aClickCount,
                       in long aModifiers,
-                      [optional] in boolean aIgnoreScrollFrame);
+                      [optional] in boolean aIgnoreRootScrollFrame);
 
   /** Synthesize a mouse scroll event for a window. The event types supported
    *  are: 
@@ -142,8 +143,8 @@ interface nsIDOMWindowUtils : nsISupports {
    * privileges.
    *
    * @param aType event type
-   * @param aX x offset
-   * @param aY y offset
+   * @param aX x offset in CSS pixels
+   * @param aY y offset in CSS pixels
    * @param aButton button to synthesize
    * @param aScrollFlags flag bits --- see nsMouseScrollFlags in nsGUIEvent.h
    * @param aDelta the direction and amount to scroll (in lines or pixels,
@@ -151,8 +152,8 @@ interface nsIDOMWindowUtils : nsISupports {
    * @param aModifiers modifiers pressed, using constants defined in nsIDOMNSEvent
    */
   void sendMouseScrollEvent(in AString aType,
-                            in long aX,
-                            in long aY,
+                            in float aX,
+                            in float aY,
                             in long aButton,
                             in long aScrollFlags,
                             in long aDelta,
@@ -275,4 +276,15 @@ interface nsIDOMWindowUtils : nsISupports {
                                  in long aY,
                                  in boolean aIgnoreRootScrollFrame,
                                  in boolean aFlushLayout);
+
+  /**
+   * Compare the two canvases, returning the number of differing pixels and
+   * the maximum difference in a channel.  This will throw an error if
+   * the dimensions of the two canvases are different.
+   *
+   * This method requires UniversalXPConnect privileges.
+   */
+  PRUint32 compareCanvases(in nsIDOMHTMLCanvasElement aCanvas1,
+                           in nsIDOMHTMLCanvasElement aCanvas2,
+                           out unsigned long aMaxDifference);
 };

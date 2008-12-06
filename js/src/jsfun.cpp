@@ -53,6 +53,7 @@
 #include "jscntxt.h"
 #include "jsversion.h"
 #include "jsdbgapi.h"
+#include "jsemit.h"
 #include "jsfun.h"
 #include "jsgc.h"
 #include "jsinterp.h"
@@ -2037,10 +2038,11 @@ js_InitFunctionClass(JSContext *cx, JSObject *obj)
     fun = js_NewFunction(cx, proto, NULL, 0, JSFUN_INTERPRETED, obj, NULL);
     if (!fun)
         goto bad;
-    fun->u.i.script = js_NewScript(cx, 1, 0, 0, 0, 0, 0, 0);
+    fun->u.i.script = js_NewScript(cx, 1, 1, 0, 0, 0, 0, 0);
     if (!fun->u.i.script)
         goto bad;
     fun->u.i.script->code[0] = JSOP_STOP;
+    *SCRIPT_NOTES(fun->u.i.script) = SRC_NULL;
 #ifdef CHECK_SCRIPT_OWNER
     fun->u.i.script->owner = NULL;
 #endif

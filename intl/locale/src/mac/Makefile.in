@@ -55,10 +55,13 @@ REQUIRES	= xpcom \
 
 CPPSRCS		= \
 		nsCollationMac.cpp \
-		nsCollationMacUC.cpp \
 		nsDateTimeFormatMac.cpp \
 		nsMacLocale.cpp \
 		$(NULL)
+
+ifdef USE_UCCOLLATIONKEY
+CPPSRCS		+= nsCollationMacUC.cpp
+endif
 
 include $(topsrcdir)/config/rules.mk
 

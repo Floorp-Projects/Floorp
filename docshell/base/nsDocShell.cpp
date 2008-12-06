@@ -436,6 +436,7 @@ NS_INTERFACE_MAP_BEGIN(nsDocShell)
     NS_INTERFACE_MAP_ENTRY(nsIWebPageDescriptor)
     NS_INTERFACE_MAP_ENTRY(nsIAuthPromptProvider)
     NS_INTERFACE_MAP_ENTRY(nsIObserver)
+    NS_INTERFACE_MAP_ENTRY(nsILoadContext)
 NS_INTERFACE_MAP_END_INHERITING(nsDocLoader)
 
 ///*****************************************************************************
@@ -710,6 +711,10 @@ nsDocShell::LoadURI(nsIURI * aURI,
                     PRUint32 aLoadFlags,
                     PRBool aFirstParty)
 {
+    NS_PRECONDITION(aLoadInfo || (aLoadFlags & EXTRA_LOAD_FLAGS) == 0,
+                    "Unexpected flags");
+    NS_PRECONDITION((aLoadFlags & 0xf) == 0, "Should not have these flags set");
+    
     // Note: we allow loads to get through here even if mFiredUnloadEvent is
     // true; that case will get handled in LoadInternal or LoadHistoryEntry.
     if (IsPrintingOrPP()) {
@@ -2888,6 +2893,8 @@ nsDocShell::LoadURI(const PRUnichar * aURI,
                     nsIInputStream * aPostStream,
                     nsIInputStream * aHeaderStream)
 {
+    NS_ASSERTION((aLoadFlags & 0xf) == 0, "Unexpected flags");
+    
     if (!IsNavigationAllowed()) {
       return NS_OK; // JS may not handle returning of an error code
     }
@@ -3355,6 +3362,8 @@ nsDocShell::Reload(PRUint32 aReloadFlags)
     nsresult rv;
     NS_ASSERTION(((aReloadFlags & 0xf) == 0),
                  "Reload command not updated to use load flags!");
+    NS_ASSERTION((aReloadFlags & EXTRA_LOAD_FLAGS) == 0,
+                 "Don't pass these flags to Reload");
 
     PRUint32 loadType = MAKE_LOAD_TYPE(LOAD_RELOAD_NORMAL, aReloadFlags);
     NS_ENSURE_TRUE(IsValidLoadType(loadType), NS_ERROR_INVALID_ARG);
@@ -8481,11 +8490,6 @@ NS_IMETHODIMP nsDocShell::PersistLayoutHistoryState()
     nsresult  rv = NS_OK;
     
     if (mOSHE) {
-        PRBool shouldSave;
-        GetShouldSaveLayoutState(&shouldSave);
-        if (!shouldSave)
-            return NS_OK;
-
         nsCOMPtr<nsIPresShell> shell;
         rv = GetPresShell(getter_AddRefs(shell));
         if (NS_SUCCEEDED(rv) && shell) {
@@ -9532,6 +9536,52 @@ nsDocShell::Observe(nsISupports *aSubject, const char *aTopic,
         rv = NS_ERROR_UNEXPECTED;
     }
     return rv;
+}
+
+//*****************************************************************************
+// nsDocShell::nsILoadContext
+//*****************************************************************************
+NS_IMETHODIMP
+nsDocShell::GetAssociatedWindow(nsIDOMWindow** aWindow)
+{
+    return CallGetInterface(this, aWindow);
+}
+
+NS_IMETHODIMP
+nsDocShell::GetTopWindow(nsIDOMWindow** aWindow)
+{
+    nsresult rv;
+    nsCOMPtr<nsIDOMWindow> win = do_GetInterface(GetAsSupports(this), &rv);
+    NS_ENSURE_SUCCESS(rv, rv);
+    return win->GetTop(aWindow);
+}
+
+NS_IMETHODIMP
+nsDocShell::IsAppOfType(PRUint32 aAppType, PRBool *aIsOfType)
+{
+    nsCOMPtr<nsIDocShell> shell = this;
+    while (shell) {
+        PRUint32 type;
+        shell->GetAppType(&type);
+        if (type == aAppType) {
+            *aIsOfType = PR_TRUE;
+            return NS_OK;
+        }
+        nsCOMPtr<nsIDocShellTreeItem> item = do_QueryInterface(shell);
+        nsCOMPtr<nsIDocShellTreeItem> parent;
+        item->GetParent(getter_AddRefs(parent));
+        shell = do_QueryInterface(parent);
+    }
+
+    *aIsOfType = PR_FALSE;
+    return NS_OK;
+}
+
+NS_IMETHODIMP
+nsDocShell::GetIsContent(PRBool *aIsContent)
+{
+    *aIsContent = (mItemType == typeContent);
+    return NS_OK;
 }
 
 /* static */

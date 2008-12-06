@@ -85,8 +85,8 @@ protected:
 
 class nsDOMWorkerXHRUpload;
 
-class nsDOMWorkerXHR : public nsDOMWorkerXHREventTarget,
-                       public nsDOMWorkerFeature,
+class nsDOMWorkerXHR : public nsDOMWorkerFeature,
+                       public nsDOMWorkerXHREventTarget,
                        public nsIXMLHttpRequest,
                        public nsIXPCScriptable
 {
@@ -112,14 +112,15 @@ public:
                                   nsIDOMEventListener* aListener);
 
 private:
-  virtual ~nsDOMWorkerXHR() { }
+  virtual ~nsDOMWorkerXHR();
 
   PRLock* Lock() {
     return mWorker->Lock();
   }
 
-  nsIXPConnectWrappedNative* GetWrappedNative() {
-    return mWrappedNative;
+  already_AddRefed<nsIXPConnectWrappedNative> GetWrappedNative() {
+    nsCOMPtr<nsIXPConnectWrappedNative> wrappedNative(mWrappedNative);
+    return wrappedNative.forget();
   }
 
   nsRefPtr<nsDOMWorkerXHRProxy> mXHRProxy;

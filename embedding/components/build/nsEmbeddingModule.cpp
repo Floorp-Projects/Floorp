@@ -128,11 +128,6 @@ NS_GENERIC_FACTORY_CONSTRUCTOR_INIT(nsPrintingPromptService, Init)
 #endif
 #endif
 
-#ifdef MOZ_PROFILESHARING
-#include "nsProfileSharingSetup.h"
-NS_GENERIC_FACTORY_CONSTRUCTOR(nsProfileSharingSetup)
-#endif
-
 static const nsModuleComponentInfo gComponents[] = {
 
 #ifdef MOZ_XUL
@@ -158,9 +153,6 @@ static const nsModuleComponentInfo gComponents[] = {
   { "Base Command Controller", NS_BASECOMMANDCONTROLLER_CID, NS_BASECOMMANDCONTROLLER_CONTRACTID, nsBaseCommandControllerConstructor },
   { NS_DEFAULTPROMPT_CLASSNAME, NS_DEFAULTPROMPT_CID, NS_DEFAULTPROMPT_CONTRACTID, nsDefaultPromptConstructor },
   { NS_DEFAULTAUTHPROMPT_CLASSNAME, NS_DEFAULTAUTHPROMPT_CID, NS_DEFAULTAUTHPROMPT_CONTRACTID, nsDefaultAuthPromptConstructor }
-#ifdef MOZ_PROFILESHARING
-  ,{ "Profile Sharing Setup", NS_PROFILESHARINGSETUP_CID, NS_PROFILESHARINGSETUP_CONTRACTID, nsProfileSharingSetupConstructor }
-#endif
 };
 
 NS_IMPL_NSGETMODULE(embedcomponents, gComponents)

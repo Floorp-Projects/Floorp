@@ -273,10 +273,8 @@ nsDocAccessible::GetDescription(nsAString& aDescription)
 nsresult
 nsDocAccessible::GetStateInternal(PRUint32 *aState, PRUint32 *aExtraState)
 {
-  // nsAccessible::GetStateInternal() always fail for document accessible.
-  nsAccessible::GetStateInternal(aState, aExtraState);
-  if (!mDOMNode)
-    return NS_OK;
+  nsresult rv = nsAccessible::GetStateInternal(aState, aExtraState);
+  NS_ENSURE_A11Y_SUCCESS(rv, rv);
 
 #ifdef MOZ_XUL
   nsCOMPtr<nsIXULDocument> xulDoc(do_QueryInterface(mDocument));

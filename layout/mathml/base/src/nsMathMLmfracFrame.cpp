@@ -305,7 +305,8 @@ nsMathMLmfracFrame::Place(nsIRenderingContext& aRenderingContext,
   nsPresContext* presContext = PresContext();
   nscoord onePixel = nsPresContext::CSSPixelsToAppUnits(1);
 
-  aRenderingContext.SetFont(GetStyleFont()->mFont, nsnull);
+  aRenderingContext.SetFont(GetStyleFont()->mFont, nsnull,
+                            presContext->GetUserFontSet());
   nsCOMPtr<nsIFontMetrics> fm;
   aRenderingContext.GetFontMetrics(*getter_AddRefs(fm));
 

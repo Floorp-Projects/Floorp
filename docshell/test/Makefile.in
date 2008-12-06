@@ -56,6 +56,8 @@ include $(topsrcdir)/config/rules.mk
 _TEST_FILES = \
 		test_bug94514.html \
 		bug94514-postpage.html \
+		test_bug123696.html \
+		bug123696-subframe.html \
 		test_bug344861.html \
 		test_bug369814.html \
 		bug369814.zip       \

@@ -66,6 +66,7 @@ nsresult XPCOMGlueStartup(const char* xpcomFile)
 
     if (!xpcomFile)
         xpcomFile = XPCOM_DLL;
+    
 
     func = XPCOMGlueLoad(xpcomFile);
 

@@ -36,8 +36,8 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-#ifndef nsLocalFileMac_h__
-#define nsLocalFileMac_h__
+#ifndef nsLocalFileMac_h_
+#define nsLocalFileMac_h_
 
 #include "nsILocalFileMac.h"
 #include "nsString.h"
@@ -46,71 +46,66 @@
 
 class nsDirEnumerator;
 
-//*****************************************************************************
-//  nsLocalFile
-//
 // The native charset of this implementation is UTF-8. The Unicode used by the
 // Mac OS file system is decomposed, so "Native" versions of these routines will
 // always use decomposed Unicode (NFD). Their "non-Native" counterparts are 
 // intended to be simple wrappers which call the "Native" version and convert 
 // between UTF-8 and UTF-16. All the work is done on the "Native" side except
 // for the conversion to NFC (composed Unicode) done in "non-Native" getters.
-//*****************************************************************************
 
 class NS_COM nsLocalFile : public nsILocalFileMac,
                            public nsIHashable
 {
-    friend class nsDirEnumerator;
+  friend class nsDirEnumerator;
     
 public:
-    NS_DEFINE_STATIC_CID_ACCESSOR(NS_LOCAL_FILE_CID)
-    
-                        nsLocalFile();
+  NS_DEFINE_STATIC_CID_ACCESSOR(NS_LOCAL_FILE_CID)
 
-    static NS_METHOD    nsLocalFileConstructor(nsISupports* outer, const nsIID& aIID, void* *aInstancePtr);
+  nsLocalFile();
 
-    NS_DECL_ISUPPORTS
-    NS_DECL_NSIFILE
-    NS_DECL_NSILOCALFILE
-    NS_DECL_NSILOCALFILEMAC
-    NS_DECL_NSIHASHABLE
+  static NS_METHOD nsLocalFileConstructor(nsISupports* outer, const nsIID& aIID, void* *aInstancePtr);
+
+  NS_DECL_ISUPPORTS
+  NS_DECL_NSIFILE
+  NS_DECL_NSILOCALFILE
+  NS_DECL_NSILOCALFILEMAC
+  NS_DECL_NSIHASHABLE
 
 public:
+  static void GlobalInit();
+  static void GlobalShutdown();
 
-    static void         GlobalInit();
-    static void         GlobalShutdown();
-    
 private:
-                        ~nsLocalFile();
+  ~nsLocalFile();
 
 protected:
-                        nsLocalFile(const nsLocalFile& src);
-    
-    nsresult            SetBaseRef(CFURLRef aCFURLRef); // Does CFRetain on aCFURLRef
-    nsresult            UpdateTargetRef();
-    
-    nsresult            GetFSRefInternal(FSRef& aFSSpec);
-    nsresult            GetPathInternal(nsACString& path);  // Returns path WRT mFollowLinks
-    nsresult            EqualsInternal(nsISupports* inFile, PRBool *_retval);
+  nsLocalFile(const nsLocalFile& src);
 
-    nsresult            CopyInternal(nsIFile* newParentDir,
-                                     const nsAString& newName,
-                                     PRBool followLinks);
+  nsresult SetBaseRef(CFURLRef aCFURLRef); // Does CFRetain on aCFURLRef
+  nsresult UpdateTargetRef();
 
-    static PRInt64      HFSPlustoNSPRTime(const UTCDateTime& utcTime);
-    static void         NSPRtoHFSPlusTime(PRInt64 nsprTime, UTCDateTime& utcTime);
-    static nsresult     CFStringReftoUTF8(CFStringRef aInStrRef, nsACString& aOutStr);
+  nsresult GetFSRefInternal(FSRef& aFSSpec);
+  nsresult GetPathInternal(nsACString& path); // Returns path WRT mFollowLinks
+  nsresult EqualsInternal(nsISupports* inFile, PRBool *_retval);
+
+  nsresult CopyInternal(nsIFile* newParentDir,
+                        const nsAString& newName,
+                        PRBool followLinks);
+
+  static PRInt64  HFSPlustoNSPRTime(const UTCDateTime& utcTime);
+  static void     NSPRtoHFSPlusTime(PRInt64 nsprTime, UTCDateTime& utcTime);
+  static nsresult CFStringReftoUTF8(CFStringRef aInStrRef, nsACString& aOutStr);
 
 protected:
-    CFURLRef            mBaseRef;           // The FS object we represent
-    CFURLRef            mTargetRef;         // If mBaseRef is an alias, its target
+  CFURLRef mBaseRef;   // The FS object we represent
+  CFURLRef mTargetRef; // If mBaseRef is an alias, its target
 
-    PRPackedBool        mFollowLinks;
-    PRPackedBool        mFollowLinksDirty;
+  PRPackedBool mFollowLinks;
+  PRPackedBool mFollowLinksDirty;
 
-    static const char         kPathSepChar;
-    static const PRUnichar    kPathSepUnichar;
-    static const PRInt64      kJanuaryFirst1970Seconds;    
+  static const char      kPathSepChar;
+  static const PRUnichar kPathSepUnichar;
+  static const PRInt64   kJanuaryFirst1970Seconds;    
 };
 
-#endif // nsLocalFileMac_h__
+#endif // nsLocalFileMac_h_

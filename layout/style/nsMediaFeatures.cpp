@@ -59,11 +59,24 @@ static const PRInt32 kScanKeywords[] = {
   eCSSKeyword_UNKNOWN,                  -1
 };
 
+// A helper for three features below
+static nsSize
+GetSize(nsPresContext* aPresContext)
+{
+    nsSize size;
+    if (aPresContext->IsRootPaginatedDocument())
+        // We want the page size, including unprintable areas and margins.
+        size = aPresContext->GetPageSize();
+    else
+        size = aPresContext->GetVisibleArea().Size();
+    return size;
+}
+
 static nsresult
 GetWidth(nsPresContext* aPresContext, nsCSSValue& aResult)
 {
-    nscoord width = aPresContext->GetVisibleArea().width;
-    float pixelWidth = aPresContext->AppUnitsToFloatCSSPixels(width);
+    nsSize size = GetSize(aPresContext);
+    float pixelWidth = aPresContext->AppUnitsToFloatCSSPixels(size.width);
     aResult.SetFloatValue(pixelWidth, eCSSUnit_Pixel);
     return NS_OK;
 }
@@ -71,8 +84,8 @@ GetWidth(nsPresContext* aPresContext, nsCSSValue& aResult)
 static nsresult
 GetHeight(nsPresContext* aPresContext, nsCSSValue& aResult)
 {
-    nscoord height = aPresContext->GetVisibleArea().height;
-    float pixelHeight = aPresContext->AppUnitsToFloatCSSPixels(height);
+    nsSize size = GetSize(aPresContext);
+    float pixelHeight = aPresContext->AppUnitsToFloatCSSPixels(size.height);
     aResult.SetFloatValue(pixelHeight, eCSSUnit_Pixel);
     return NS_OK;
 }
@@ -93,15 +106,27 @@ GetDeviceContextFor(nsPresContext* aPresContext)
   return ctx;
 }
 
+// A helper for three features below.
+static nsSize
+GetDeviceSize(nsPresContext* aPresContext)
+{
+    nsSize size;
+    if (aPresContext->IsRootPaginatedDocument())
+        // We want the page size, including unprintable areas and margins.
+        // XXX The spec actually says we want the "page sheet size", but
+        // how is that different?
+        size = aPresContext->GetPageSize();
+    else
+        GetDeviceContextFor(aPresContext)->
+            GetDeviceSurfaceDimensions(size.width, size.height);
+    return size;
+}
+
 static nsresult
 GetDeviceWidth(nsPresContext* aPresContext, nsCSSValue& aResult)
 {
-    // XXX: I'm not sure if this is really the right thing for print:
-    // do we want to include unprintable areas / page margins?
-    nsIDeviceContext *dx = GetDeviceContextFor(aPresContext);
-    nscoord width, height;
-    dx->GetDeviceSurfaceDimensions(width, height);
-    float pixelWidth = aPresContext->AppUnitsToFloatCSSPixels(width);
+    nsSize size = GetDeviceSize(aPresContext);
+    float pixelWidth = aPresContext->AppUnitsToFloatCSSPixels(size.width);
     aResult.SetFloatValue(pixelWidth, eCSSUnit_Pixel);
     return NS_OK;
 }
@@ -109,12 +134,8 @@ GetDeviceWidth(nsPresContext* aPresContext, nsCSSValue& aResult)
 static nsresult
 GetDeviceHeight(nsPresContext* aPresContext, nsCSSValue& aResult)
 {
-    // XXX: I'm not sure if this is really the right thing for print:
-    // do we want to include unprintable areas / page margins?
-    nsIDeviceContext *dx = GetDeviceContextFor(aPresContext);
-    nscoord width, height;
-    dx->GetDeviceSurfaceDimensions(width, height);
-    float pixelHeight = aPresContext->AppUnitsToFloatCSSPixels(height);
+    nsSize size = GetDeviceSize(aPresContext);
+    float pixelHeight = aPresContext->AppUnitsToFloatCSSPixels(size.height);
     aResult.SetFloatValue(pixelHeight, eCSSUnit_Pixel);
     return NS_OK;
 }
@@ -135,36 +156,30 @@ GetOrientation(nsPresContext* aPresContext, nsCSSValue& aResult)
     return NS_OK;
 }
 
+// Helper for two features below
 static nsresult
-GetAspectRatio(nsPresContext* aPresContext, nsCSSValue& aResult)
+MakeArray(const nsSize& aSize, nsCSSValue& aResult)
 {
     nsRefPtr<nsCSSValue::Array> a = nsCSSValue::Array::Create(2);
     NS_ENSURE_TRUE(a, NS_ERROR_OUT_OF_MEMORY);
 
-    nsSize size = aPresContext->GetVisibleArea().Size();
-    a->Item(0).SetIntValue(size.width, eCSSUnit_Integer);
-    a->Item(1).SetIntValue(size.height, eCSSUnit_Integer);
+    a->Item(0).SetIntValue(aSize.width, eCSSUnit_Integer);
+    a->Item(1).SetIntValue(aSize.height, eCSSUnit_Integer);
 
     aResult.SetArrayValue(a, eCSSUnit_Array);
     return NS_OK;
 }
 
 static nsresult
+GetAspectRatio(nsPresContext* aPresContext, nsCSSValue& aResult)
+{
+    return MakeArray(GetSize(aPresContext), aResult);
+}
+
+static nsresult
 GetDeviceAspectRatio(nsPresContext* aPresContext, nsCSSValue& aResult)
 {
-    nsRefPtr<nsCSSValue::Array> a = nsCSSValue::Array::Create(2);
-    NS_ENSURE_TRUE(a, NS_ERROR_OUT_OF_MEMORY);
-
-    // XXX: I'm not sure if this is really the right thing for print:
-    // do we want to include unprintable areas / page margins?
-    nsIDeviceContext *dx = GetDeviceContextFor(aPresContext);
-    nscoord width, height;
-    dx->GetDeviceSurfaceDimensions(width, height);
-    a->Item(0).SetIntValue(width, eCSSUnit_Integer);
-    a->Item(1).SetIntValue(height, eCSSUnit_Integer);
-
-    aResult.SetArrayValue(a, eCSSUnit_Array);
-    return NS_OK;
+    return MakeArray(GetDeviceSize(aPresContext), aResult);
 }
 
 

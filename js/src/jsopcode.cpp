@@ -2815,7 +2815,7 @@ Decompile(SprintStack *ss, jsbytecode *pc, intN nb, JSOp nextop)
                     LOCAL_ASSERT(atom);
                     goto do_setname;
                 }
-                lval = GetStr(ss, i);
+                lval = GetLocal(ss, i);
                 rval = POP_STR();
                 goto do_setlval;
 
@@ -4948,7 +4948,7 @@ js_DecompileValueGenerator(JSContext *cx, intN spindex, jsval v,
 
     for (fp = cx->fp; fp && !fp->script; fp = fp->down)
         continue;
-    if (!fp || !fp->regs)
+    if (!fp || !fp->regs || !fp->regs->sp)
         goto do_fallback;
 
     script = fp->script;

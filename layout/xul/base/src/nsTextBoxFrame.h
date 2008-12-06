@@ -87,6 +87,8 @@ public:
                   const nsRect&        aDirtyRect,
                   nsPoint              aPt);
 
+  virtual PRBool ComputesOwnOverflowArea();
+
 protected:
   friend class nsAsyncAccesskeyUpdate;
   // Should be called only by nsAsyncAccesskeyUpdate.
@@ -132,7 +134,8 @@ private:
   void PaintOneShadow(gfxContext *     aCtx,
                       const nsRect&    aTextRect,
                       nsCSSShadowItem* aShadowDetails,
-                      const nscolor&   aForegroundColor);
+                      const nscolor&   aForegroundColor,
+                      const nsRect&    aDirtyRect);
 
 
   CroppingStyle mCropType;

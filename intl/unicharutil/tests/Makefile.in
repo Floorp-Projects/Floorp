@@ -42,6 +42,9 @@ VPATH		= @srcdir@
 
 include $(DEPTH)/config/autoconf.mk
 
+MODULE		= test_intl_unicharutil
+XPCSHELL_TESTS	= unit
+
 REQUIRES	= xpcom \
 		  string \
 		  unicharutil \
