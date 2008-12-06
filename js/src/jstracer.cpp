@@ -4709,6 +4709,7 @@ TraceRecorder::relational(LOpcode op, int flags)
     LIns* l_ins = get(&l);
     LIns* r_ins = get(&r);
     bool fp = false;
+    jsdouble lnum, rnum;
 
     /*
      * 11.8.5 if either argument is an object with a function-valued valueOf
@@ -4735,10 +4736,7 @@ TraceRecorder::relational(LOpcode op, int flags)
     }
 
     /* 11.8.5 steps 4-5. */
-    jsval lnum = l;
-    jsval rnum = r;
     if (!JSVAL_IS_NUMBER(l)) {
-        jsval tmp = l;
         LIns* args[] = { l_ins, cx_ins };
         switch (JSVAL_TAG(l)) {
           case JSVAL_BOOLEAN:
@@ -4755,12 +4753,8 @@ TraceRecorder::relational(LOpcode op, int flags)
                            "have been handled at start of method");
             ABORT_TRACE("safety belt");
         }
-
-        JSAutoTempValueRooter tvr(cx, tmp);
-        lnum = js_ValueToNumber(cx, &tmp);
-    }
+    }    
     if (!JSVAL_IS_NUMBER(r)) {
-        jsval tmp = r;
         LIns* args[] = { r_ins, cx_ins };
         switch (JSVAL_TAG(r)) {
           case JSVAL_BOOLEAN:
@@ -4777,8 +4771,14 @@ TraceRecorder::relational(LOpcode op, int flags)
                            "have been handled at start of method");
             ABORT_TRACE("safety belt");
         }
+    }
+    {
+        jsval tmp = JSVAL_NULL;
+        JSAutoTempValueRooter tvr(cx, 1, &tmp);
 
-        JSAutoTempValueRooter tvr(cx, tmp);
+        tmp = l;
+        lnum = js_ValueToNumber(cx, &tmp);
+        tmp = r;
         rnum = js_ValueToNumber(cx, &tmp);
     }
     cond = evalCmp(op, lnum, rnum);
