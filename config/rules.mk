@@ -853,7 +853,7 @@ HOST_LIBS_DEPS = $(filter %.$(LIB_SUFFIX), $(HOST_LIBS))
 DSO_LDOPTS_DEPS = $(EXTRA_DSO_LIBS) $(filter %.$(LIB_SUFFIX), $(EXTRA_DSO_LDOPTS))
 
 # Dependancies which, if modified, should cause everything to rebuild
-GLOBAL_DEPS += Makefile Makefile.in $(DEPTH)/config/autoconf.mk
+GLOBAL_DEPS += Makefile Makefile.in $(DEPTH)/config/autoconf.mk $(DEPTH)/config/config.mk
 
 ##############################################
 ifdef PARALLEL_DIRS
