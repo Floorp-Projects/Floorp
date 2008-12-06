@@ -1254,6 +1254,8 @@ nsresult nsOggDecoder::Load(nsIURI* aURI, nsIChannel* aChannel,
     NS_ENSURE_SUCCESS(rv, rv);
   }
 
+  StartProgress();
+
   RegisterShutdownObserver();
 
   mReader = new nsChannelReader();
@@ -1387,13 +1389,6 @@ void nsOggDecoder::MetadataLoaded()
   if (mElement) {
     mElement->MetadataLoaded();
   }
-
-  // Start progress events if we have bytes left to download.
-  // Need to check this as it's possible the entire file has been
-  // downloaded before the metadata is decoded.
-  if (mBytesDownloaded != mContentLength) {
-    StartProgress();
-  }
 }
 
 void nsOggDecoder::FirstFrameLoaded()
@@ -1419,25 +1414,10 @@ void nsOggDecoder::FirstFrameLoaded()
 
 void nsOggDecoder::ResourceLoaded()
 {
-  {
-    // If we are seeking or loading then the resource loaded notification we get
-    // should be ignored, since it represents the end of the seek request.
-    nsAutoMonitor mon(mMonitor);
-    if (mPlayState == PLAY_STATE_SEEKING || mPlayState == PLAY_STATE_LOADING)
-      return;
-  }
-
-  mBytesDownloaded = mContentLength;
-  StopProgress();
-
-  // Ensure the final progress event gets fired
-  if (mElement) {
-    mElement->DispatchProgressEvent(NS_LITERAL_STRING("progress"));
-  }
-
   if (mElement) {
     mElement->ResourceLoaded();
   }
+  StopProgress();
 }
 
 void nsOggDecoder::NetworkError()
@@ -1492,16 +1472,7 @@ void nsOggDecoder::SetTotalBytes(PRInt64 aBytes)
 
 void nsOggDecoder::UpdateBytesDownloaded(PRUint64 aBytes)
 {
-  nsAutoMonitor mon(mMonitor);
-
-  // Don't update bytes downloaded if we are in the LOADING
-  // play state. The value of aBytes is unreliable at this
-  // stage due to seeking to get the duration done during
-  // metadata loading. This prevents the progress bar from
-  // jumping around from 0 to 100% back to 0.
-  if (mPlayState != PLAY_STATE_LOADING) {
-    mBytesDownloaded = aBytes;
-  }
+  mBytesDownloaded = aBytes;
 }
 
 void nsOggDecoder::BufferingStopped()
@@ -1536,8 +1507,6 @@ void nsOggDecoder::SeekingStopped()
   if (mElement) {
     mElement->SeekCompleted();
   }
-
-  StartProgress();
 }
 
 void nsOggDecoder::SeekingStarted()
@@ -1547,11 +1516,6 @@ void nsOggDecoder::SeekingStarted()
     if (mPlayState == PLAY_STATE_SHUTDOWN)
       return;
   }
-
-  // Don't do progress events while seeking
-  // due to the rapid change in loaded position
-  // that occurs.
-  StopProgress();
 
   if (mElement) {
     mElement->SeekStarted();
