@@ -6603,20 +6603,22 @@ TraceRecorder::record_JSOP_APPLY()
     }
     
     LIns** argv;
-    if (!apply) {
-        --argc;
-        argv = (LIns**)alloca(sizeof(LIns*) * argc);
-        for (jsuint n = 0; n < argc; ++n)
-            argv[n] = get(&vp[3 + n]); /* skip over the this parameter */
-    } else {
-        if (argc >= 2) {
+    if (argc >= 2) {
+        if (!apply) {
+            --argc;
+            JS_ASSERT(argc >= 0);
+            argv = (LIns**) alloca(sizeof(LIns*) * argc);
+            for (jsuint n = 0; n < argc; ++n)
+                argv[n] = get(&vp[3 + n]); /* skip over the this parameter */
+        } else {
             /*
              * We already established that argments is a dense array
              * and we know its length and we know dslots is not NULL
              * and the length is not beyond the dense array's capacity. 
              */
             argc = length;
-            argv = (LIns**)alloca(sizeof(LIns*) * argc);
+            JS_ASSERT(argc >= 0);
+            argv = (LIns**) alloca(sizeof(LIns*) * argc);
             for (unsigned n = 0; n < argc; ++n) {
                 /* Load the value and guard on its type to unbox it. */
                 LIns* v_ins = lir->insLoadi(dslots_ins, n * sizeof(jsval));
@@ -6637,9 +6639,9 @@ TraceRecorder::record_JSOP_APPLY()
                 }
                 argv[n] = v_ins;
             }
-        } else {
-            argc = 0;
         }
+    } else {
+        argc = 0;
     }
     /*
      * We have all arguments unpacked and we are now ready to modify the
