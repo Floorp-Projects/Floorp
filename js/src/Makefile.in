@@ -544,19 +544,6 @@ endif
 ifdef CROSS_COMPILE
 # jscpucfg needs to know when it's supposed to produce a config for the target
 JSCPUCFG_DEFINES = $(ACDEFINES)
-
-# This is incredibly hacky.  Darwin NSPR uses the same MDCPUCFG for multiple
-# processors, and determines which processor to configure for based on
-# #ifdef i386.  This macro is among the NSPR defines, but is also automatically
-# defined by the compiler when building for i386.  It therefore needs to be
-# defined here if targeting i386, and explicitly undefined otherwise.
-ifeq ($(OS_ARCH),Darwin)
-ifeq ($(TARGET_CPU),powerpc)
-JSCPUCFG_DEFINES += -Ui386
-else
-JSCPUCFG_DEFINES += -Di386=1
-endif
-endif
 endif
 
 ifeq ($(OS_ARCH),QNX)
