@@ -189,7 +189,7 @@
     <vbox id="extensionsBox" flex="1">
       <hbox id="searchPanel" align="center">
         <textbox id="searchfield" emptytext="&searchAddons.label;"
-                 type="search" searchbutton="true"
+                 type="search" searchbutton="true" cocoa-size="small"
                  oncommand="retrieveRepositoryAddons(this.value);"/>
         <spacer flex="1"/>
         <label id="browseAddons" class="text-link" value="&browseAddons.label;"
