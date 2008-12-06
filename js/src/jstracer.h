@@ -1,4 +1,4 @@
-/* -*- Mode: C; tab-width: 8; indent-tabs-mode: nil; c-basic-offset: 4 -*-
+/* -*- Mode: C; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 4 -*-
  * vim: set ts=8 sw=4 et tw=99 ft=cpp:
  *
  * ***** BEGIN LICENSE BLOCK *****
@@ -354,8 +354,10 @@ class TraceRecorder : public avmplus::GCObject {
     bool incElem(jsint incr, bool pre = true);
     bool incName(jsint incr, bool pre = true);
 
-    enum { CMP_NEGATE = 1, CMP_TRY_BRANCH_AFTER_COND = 2, CMP_CASE = 4, CMP_STRICT = 8 };
-    bool cmp(nanojit::LOpcode op, int flags = 0);
+    enum { CMP_NEGATE = 1, CMP_TRY_BRANCH_AFTER_COND = 2, CMP_CASE = 4 };
+    void strictEquality(bool equal);
+    bool equality(int flags);
+    bool relational(nanojit::LOpcode op, int flags);
 
     bool unary(nanojit::LOpcode op);
     bool binary(nanojit::LOpcode op);
