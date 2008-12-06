@@ -189,7 +189,7 @@
             accesskey="&cmd.clearList.accesskey;"
             tooltiptext="&cmd.clearList.tooltip;"/>
     <spacer flex="1"/>
-    <textbox type="search" id="searchbox"
+    <textbox type="search" id="searchbox" cocoa-size="small"
              oncommand="buildDownloadList();" emptytext="&searchBox.label;"/>
   </windowdragbox>
 
