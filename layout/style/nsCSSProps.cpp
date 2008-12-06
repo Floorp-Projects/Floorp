@@ -139,11 +139,16 @@ nsCSSProps::ReleaseTable(void)
 }
 
 struct CSSPropertyAlias {
-  char name[sizeof("")];
+  char name[sizeof("-moz-outline-offset")];
   nsCSSProperty id;
 };
 
 static const CSSPropertyAlias gAliases[] = {
+  { "-moz-outline", eCSSProperty_outline },
+  { "-moz-outline-color", eCSSProperty_outline_color },
+  { "-moz-outline-style", eCSSProperty_outline_style },
+  { "-moz-outline-width", eCSSProperty_outline_width },
+  { "-moz-outline-offset", eCSSProperty_outline_offset }
   // Don't forget to update the sizeof in CSSPropertyAlias above with the
   // longest string when you add stuff here.
 };
