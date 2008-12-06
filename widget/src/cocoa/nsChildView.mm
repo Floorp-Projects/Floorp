@@ -2873,6 +2873,22 @@ NSEvent* gLastDragEvent = nil;
 }
 
 
+// Needed to deal with the consequences of calling [NSCell
+// drawWithFrame:inView:] with a ChildView object as the inView parameter
+// (this can happen in nsNativeThemeCocoa.mm):  drawWithFrame:inView:
+// expects an NSControl as its inView parameter, and may call [NSControl
+// currentEditor] on it.  But since a ChildView object (like an NSView object)
+// isn't a control, it doesn't have a "current editor", or a currentEditor
+// method.  So calling currentEditor on it will trigger a Objective-C
+// "unrecognized selector" exception.  To prevent this, ChildView needs its
+// own currentEditor method.  Since a ChildView object never has a "current
+// editor", it should always return nil.
+- (NSText*)currentEditor
+{
+  return nil;
+}
+
+
 - (void)scrollRect:(NSRect)aRect by:(NSSize)offset
 {
   NS_OBJC_BEGIN_TRY_ABORT_BLOCK;
