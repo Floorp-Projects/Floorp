@@ -137,6 +137,8 @@ class KeyboardLayout
   #define NUM_OF_KEYS   50
 
   HKL mKeyboardLayout;
+  UINT mCodePage;
+  DWORD mIMEProperty;
 
   VirtualKey mVirtualKeys [NUM_OF_KEYS];
   DeadKeyTableListEntry* mDeadKeyTableListHead;
@@ -183,6 +185,10 @@ public:
   PRUint32 GetUniCharsWithShiftState(PRUint8 aVirtualKey, PRUint8 aShiftStates,
                                      PRUnichar* aUniChars,
                                      PRUint32 aMaxChars) const;
+
+  HKL GetLayout() { return mKeyboardLayout; }
+  UINT GetCodePage() { return mCodePage; }
+  DWORD GetIMEProperty() { return mIMEProperty; }
 };
 
 #endif
