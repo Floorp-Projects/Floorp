@@ -821,8 +821,10 @@ nsresult nsHTMLMediaElement::DispatchProgressEvent(const nsAString& aName)
   
   nsCOMPtr<nsIDOMProgressEvent> progressEvent(do_QueryInterface(event));
   NS_ENSURE_TRUE(progressEvent, NS_ERROR_FAILURE);
-  
-  rv = progressEvent->InitProgressEvent(aName, PR_TRUE, PR_TRUE, PR_FALSE, mDecoder->GetBytesLoaded(), mDecoder->GetTotalBytes());
+
+  PRInt64 length = mDecoder->GetTotalBytes();
+  rv = progressEvent->InitProgressEvent(aName, PR_TRUE, PR_TRUE,
+                                        length >= 0, mDecoder->GetBytesLoaded(), length);
   NS_ENSURE_SUCCESS(rv, rv);
 
   PRBool dummy;
