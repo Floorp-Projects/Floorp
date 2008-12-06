@@ -291,6 +291,7 @@ const PRInt32 nsCSSProps::kAppearanceKTable[] = {
   eCSSKeyword_textfield,              NS_THEME_TEXTFIELD,
   eCSSKeyword_textfield_multiline,    NS_THEME_TEXTFIELD_MULTILINE,
   eCSSKeyword_caret,                  NS_THEME_TEXTFIELD_CARET,
+  eCSSKeyword_searchfield,            NS_THEME_SEARCHFIELD,
   eCSSKeyword_menulist,               NS_THEME_DROPDOWN,
   eCSSKeyword_menulistbutton,         NS_THEME_DROPDOWN_BUTTON,
   eCSSKeyword_menulisttext,           NS_THEME_DROPDOWN_TEXT,
