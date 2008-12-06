@@ -53,8 +53,6 @@ _TEST_FILES = 	test_autoplay.html \
                 test_ended2.html \
                 test_networkState.html \
                 test_paused.html \
-                test_progress1.html \
-                test_progress2.html \
                 test_readyState.html \
                 test_seek1.html \
                 test_seek2.html \
@@ -76,8 +74,7 @@ _TEST_FILES = 	test_autoplay.html \
                 320x240.ogg \
                 bug461281.ogg \
                 seek.ogg \
-								big.wav \
-								r11025_s16_c1.wav \
+                r11025_s16_c1.wav \
                 r11025_u8_c1.wav \
 #                test_bug448534.html \
                 $(NULL)
