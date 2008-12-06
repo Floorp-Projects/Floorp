@@ -265,6 +265,18 @@ nsSVGForeignObjectFrame::PaintSVG(nsSVGRenderState *aContext,
     return NS_ERROR_FAILURE;
   }
 
+  /* Check if we need to draw anything. */
+  if (aDirtyRect) {
+    gfxRect extent = matrix.TransformBounds(
+                       gfxRect(kid->GetRect().x, kid->GetRect().y, 
+                               kid->GetRect().width, kid->GetRect().height));
+    extent.RoundOut();
+    nsIntRect rect;
+    if (NS_SUCCEEDED(nsSVGUtils::GfxRectToIntRect(extent, &rect)) &&
+        !aDirtyRect->Intersects(rect))
+      return NS_OK;
+  }
+
   gfxContext *gfx = aContext->GetGfxContext();
 
   gfx->Save();
