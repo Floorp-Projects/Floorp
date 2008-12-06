@@ -130,7 +130,7 @@ Tracker.prototype = {
   },
 
   saveChangedIDs: function T_saveChangedIDs() {
-    this._log.trace("Saving changed IDs to disk");
+    this._log.debug("Saving changed IDs to disk");
 
     let file = Utils.getProfileFile(
       {path: "weave/changes/" + this.file + ".json",
@@ -146,7 +146,7 @@ Tracker.prototype = {
     if (!file.exists())
       return;
 
-    this._log.trace("Loading previously changed IDs from disk");
+    this._log.debug("Loading previously changed IDs from disk");
 
     try {
       let [is] = Utils.open(file, "<");
@@ -166,6 +166,7 @@ Tracker.prototype = {
   addChangedID: function T_addChangedID(id) {
     if (!this.enabled)
       return;
+    this._log.debug("Adding changed ID " + id);
     if (!this.changedIDs[id]) {
       this.changedIDs[id] = true;
       this.saveChangedIDs();
@@ -175,6 +176,7 @@ Tracker.prototype = {
   removeChangedID: function T_removeChangedID(id) {
     if (!this.enabled)
       return;
+    this._log.debug("Removing changed ID " + id);
     if (this.changedIDs[id]) {
       delete this.changedIDs[id];
       this.saveChangedIDs();
@@ -182,8 +184,7 @@ Tracker.prototype = {
   },
 
   clearChangedIDs: function T_clearChangedIDs() {
-    if (!this.enabled)
-      return;
+    this._log.debug("Clearing changed ID list");
     for (let id in this.changedIDs) {
       delete this.changedIDs[id];
     }
