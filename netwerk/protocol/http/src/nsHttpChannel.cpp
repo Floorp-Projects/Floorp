@@ -222,7 +222,14 @@ nsHttpChannel::Init(nsIURI *uri,
     if (strchr(host.get(), ':')) {
         // host is an IPv6 address literal and must be encapsulated in []'s
         hostLine.Assign('[');
-        hostLine.Append(host);
+        // scope id is not needed for Host header.
+        int scopeIdPos = host.FindChar('%');
+        if (scopeIdPos == kNotFound)
+            hostLine.Append(host);
+        else if (scopeIdPos > 0)
+            hostLine.Append(Substring(host, 0, scopeIdPos));
+        else
+          return NS_ERROR_MALFORMED_URI;
         hostLine.Append(']');
     }
     else
