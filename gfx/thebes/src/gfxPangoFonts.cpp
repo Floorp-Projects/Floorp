@@ -3422,7 +3422,7 @@ GuessPangoLanguage(const nsACString& aLangGroup)
 // The system cairo functions are not declared because the include paths cause
 // the gdk headers to pick up the tree cairo.h.
 extern "C" {
-void
+NS_VISIBILITY_DEFAULT void
 cairo_ft_font_options_substitute (const cairo_font_options_t *options,
                                   FcPattern                  *pattern);
 }
