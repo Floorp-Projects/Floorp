@@ -67,8 +67,7 @@
 }
 
 #placesToolbar {
-  margin-top: -3px;
-  padding: 0 4px;
+  padding: 0 4px 3px;
 }
 
 #placesView {
