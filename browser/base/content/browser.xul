@@ -30,6 +30,7 @@
 #   Dean Tessman <dean_tessman@hotmail.com>
 #   Johnathan Nightingale <johnath@mozilla.com>
 #   Dão Gottwald <dao@mozilla.com>
+#   Ehsan Akhgari <ehsan.akhgari@gmail.com>
 #
 # Alternatively, the contents of this file may be used under the terms of
 # either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -67,10 +68,18 @@
         onload="BrowserStartup()" onunload="BrowserShutdown()" onclose="return WindowIsClosing();"
         title="&mainWindow.title;"
         title_normal="&mainWindow.title;"
-        title_privatebrowsing="&mainWindowPrivateBrowsing.titlemodifier;"
+#ifdef XP_MACOSX
+        title_privatebrowsing="&mainWindow.title;&mainWindow.titlemodifiermenuseparator;&mainWindow.titlePrivateBrowsingSuffix;"
+        titledefault="&mainWindow.title;"
+        titlemodifier=""
+        titlemodifier_normal=""
+        titlemodifier_privatebrowsing="&mainWindow.titlePrivateBrowsingSuffix;"
+#else
+        title_privatebrowsing="&mainWindow.titlemodifierPrivateBrowsing;"
         titlemodifier="&mainWindow.titlemodifier;"
         titlemodifier_normal="&mainWindow.titlemodifier;"
-        titlemodifier_privatebrowsing="&mainWindowPrivateBrowsing.titlemodifier;"
+        titlemodifier_privatebrowsing="&mainWindow.titlemodifierPrivateBrowsing;"
+#endif
         titlemenuseparator="&mainWindow.titlemodifiermenuseparator;"
         windowtype="navigator:browser"
         screenX="4" screenY="4"
