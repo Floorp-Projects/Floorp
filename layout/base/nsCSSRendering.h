@@ -327,8 +327,6 @@ protected:
   gfxAlphaBoxBlur blur;
   nsRefPtr<gfxContext> mContext;
   gfxContext* mDestinationCtx;
-
-  gfxRect mRequiredShadowArea;
   
 };
 
