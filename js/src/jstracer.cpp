@@ -1,4 +1,4 @@
-/* -*- Mode: C++; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 4 -*-
+/* -*- Mode: C++; tab-width: 8; indent-tabs-mode: nil; c-basic-offset: 4 -*-
  * vim: set ts=4 sw=4 et tw=99:
  *
  * ***** BEGIN LICENSE BLOCK *****
@@ -4541,45 +4541,8 @@ static struct {
 
 JS_STATIC_ASSERT(sizeof(binary_imacros) < IMACRO_PC_ADJ_LIMIT);
 
-void
-TraceRecorder::strictEquality(bool equal)
-{
-    jsval& r = stackval(-1);
-    jsval& l = stackval(-2);
-    LIns* l_ins = get(&l);
-    LIns* r_ins = get(&r);
-
-    uint8 ltag = getPromotedType(l);
-    if (ltag != getPromotedType(r)) {
-        set(&l, lir->insImm(!equal));
-        return;
-    }
-
-    LIns* x;
-    if (ltag == JSVAL_STRING) {
-        LIns* args[] = { r_ins, l_ins };
-        /*
-         * FIXME: js_EqualStrings returns 0/1, so we really shouldn't have to
-         *        always compare to 0.  The problem is there are assertions
-         *        that require the instruction here to be a condition; this is
-         *        easily fixable by stealing a bit from CallInfo to return
-         *        condition-ness and making sure such calls set the right
-         *        condition flags for a comparison to immediately follow.  See
-         *        bug 467995.
-         */
-        x = lir->ins_eq0(lir->insCall(&js_EqualStrings_ci, args));
-    } else {
-        LOpcode op = (ltag != JSVAL_DOUBLE) ? LIR_eq : LIR_feq;
-        x = lir->ins2(op, l_ins, r_ins);
-    }
-    if (!equal)
-        x = lir->ins_eq0(x);
-
-    set(&l, x);
-}
-
 bool
-TraceRecorder::equality(int flags)
+TraceRecorder::cmp(LOpcode op, int flags)
 {
     jsval& r = stackval(-1);
     jsval& l = stackval(-2);
@@ -4590,10 +4553,28 @@ TraceRecorder::equality(int flags)
     LIns* r_ins = get(&r);
     bool fp = false;
 
-    if (JSVAL_IS_STRING(l) || JSVAL_IS_STRING(r)) {
+    if (op != LIR_feq) {
+        if (JSVAL_IS_OBJECT(l) && hasValueOfMethod(l)) {
+            if (JSVAL_IS_OBJECT(r) && hasValueOfMethod(r))
+                return call_imacro(binary_imacros.obj_obj);
+            return call_imacro(binary_imacros.obj_any);
+        }
+        if (JSVAL_IS_OBJECT(r) && hasValueOfMethod(r))
+            return call_imacro(binary_imacros.any_obj);
+    }
+
+    // CMP_STRICT is set only for JSOP_STRICTEQ and JSOP_STRICTNE, which correspond to the
+    // === and !== operators. negate is true for !== and false for ===. The strict equality
+    // operators produce false if the types of the operands differ, i.e. if only one of 
+    // them is a number. 
+    if ((flags & CMP_STRICT) && getPromotedType(l) != getPromotedType(r)) {
+        x = INS_CONST(negate);
+        cond = negate;
+    } else if (JSVAL_IS_STRING(l) || JSVAL_IS_STRING(r)) {
         // Comparing equality of a string against null always produces false.
-        if ((JSVAL_IS_NULL(l) && l_ins->isconst()) ||
-            (JSVAL_IS_NULL(r) && r_ins->isconst())) {
+        if (op == LIR_feq &&
+            ((JSVAL_IS_NULL(l) && l_ins->isconst()) ||
+             (JSVAL_IS_NULL(r) && r_ins->isconst()))) {
             x = INS_CONST(negate);
             cond = negate;
         } else {
@@ -4601,9 +4582,12 @@ TraceRecorder::equality(int flags)
                 ABORT_TRACE("unsupported type for cmp vs string");
 
             LIns* args[] = { r_ins, l_ins };
-            l_ins = lir->ins_eq0(lir->insCall(&js_EqualStrings_ci, args));
+            if (op == LIR_feq)
+                l_ins = lir->ins_eq0(lir->insCall(&js_EqualStrings_ci, args));
+            else
+                l_ins = lir->insCall(&js_CompareStrings_ci, args);
             r_ins = lir->insImm(0);
-            cond = js_EqualStrings(JSVAL_TO_STRING(l), JSVAL_TO_STRING(r));
+            cond = evalCmp(op, JSVAL_TO_STRING(l), JSVAL_TO_STRING(r));
         }
     } else if (isNumber(l) || isNumber(r)) {
         jsval tmp[2] = {l, r};
@@ -4617,7 +4601,7 @@ TraceRecorder::equality(int flags)
         LIns* args[] = { l_ins, cx_ins };
         if (l == JSVAL_NULL && l_ins->isconst()) {
             jsdpun u;
-            u.d = js_NaN;
+            u.d = (op == LIR_feq) ? js_NaN : 0.0;
             l_ins = lir->insImmq(u.u64);
         } else if (JSVAL_IS_STRING(l)) {
             l_ins = lir->insCall(&js_StringToNumber_ci, args);
@@ -4639,7 +4623,7 @@ TraceRecorder::equality(int flags)
         args[1] = cx_ins;
         if (r == JSVAL_NULL && r_ins->isconst()) {
             jsdpun u;
-            u.d = js_NaN;
+            u.d = (op == LIR_feq) ? js_NaN : 0.0;
             r_ins = lir->insImmq(u.u64);
         } else if (JSVAL_IS_STRING(r)) {
             r_ins = lir->insCall(&js_StringToNumber_ci, args);
@@ -4650,13 +4634,21 @@ TraceRecorder::equality(int flags)
             ABORT_TRACE("unsupported RHS type for cmp vs number");
         }
         rnum = js_ValueToNumber(cx, &tmp[1]);
-        cond = (lnum == rnum);
-    } else if (JSVAL_TAG(l) == JSVAL_BOOLEAN && JSVAL_TAG(r) == JSVAL_BOOLEAN) {
+        cond = evalCmp(op, lnum, rnum);
+    } else if ((JSVAL_TAG(l) == JSVAL_BOOLEAN) && (JSVAL_TAG(r) == JSVAL_BOOLEAN)) {
         // The well-known values of JSVAL_TRUE and JSVAL_FALSE make this very easy.
         // In particular: JSVAL_TO_BOOLEAN(0) < JSVAL_TO_BOOLEAN(1) so all of these comparisons do
         // the right thing.
-        cond = (l == r);
+        cond = evalCmp(op, l, r);
+        // For ==, !=, ===, and !=== the result is magically correct even if undefined (2) is
+        // involved. For the relational operations we need some additional cmov magic to make
+        // the result always false (since undefined becomes NaN per ECMA and that doesn't
+        // compare to anything, even itself). The code for this is emitted a few lines down.
     } else if (JSVAL_IS_OBJECT(l) && JSVAL_IS_OBJECT(r)) {
+        if (op != LIR_feq) {
+            JS_NOT_REACHED("we should have converted to numbers already");
+            return false;
+        }
         cond = (l == r); 
     } else {
         ABORT_TRACE("unsupported operand types for cmp");
@@ -4665,160 +4657,52 @@ TraceRecorder::equality(int flags)
     /* If we didn't generate a constant result yet, then emit the comparison now. */
     if (!x) {
         /* If the result is not a number or it's not a quad, we must use an integer compare. */
-        LOpcode op = fp ? LIR_feq : LIR_eq;
+        if (!fp) {
+            JS_ASSERT(op >= LIR_feq && op <= LIR_fge);
+            op = LOpcode(op + (LIR_eq - LIR_feq));
+        }
         x = lir->ins2(op, l_ins, r_ins);
         if (negate) {
             x = lir->ins_eq0(x);
             cond = !cond;
         }
+        // For boolean comparison we need a bit post-processing to make the result false if
+        // either side is undefined.
+        if (op != LIR_eq && (JSVAL_TAG(l) == JSVAL_BOOLEAN) && (JSVAL_TAG(r) == JSVAL_BOOLEAN)) {
+            x = lir->ins_choose(lir->ins2i(LIR_eq, 
+                                           lir->ins2i(LIR_and, 
+                                                      lir->ins2(LIR_or, l_ins, r_ins),
+                                                      JSVAL_TO_BOOLEAN(JSVAL_VOID)),
+                                           JSVAL_TO_BOOLEAN(JSVAL_VOID)),
+                                lir->insImm(JSVAL_TO_BOOLEAN(JSVAL_FALSE)),
+                                x);
+            x = lir->ins_eq0(lir->ins_eq0(x));
+            if ((l == JSVAL_VOID) || (r == JSVAL_VOID))
+                cond = false;
+        }
     }
     
-    if (flags & CMP_CASE) {
-        /* Only guard if the same path may not always be taken. */
-        if (!x->isconst())
+    /* Don't guard if the same path is always taken. */
+    if (!x->isconst()) {
+        if (flags & CMP_CASE) {
             guard(cond, x, BRANCH_EXIT);
+            return true;
+        }
+
+        /* The interpreter fuses comparisons and the following branch,
+           so we have to do that here as well. */
+        if (flags & CMP_TRY_BRANCH_AFTER_COND) {
+            fuseIf(cx->fp->regs->pc + 1, cond, x);
+        }
+    } else if (flags & CMP_CASE) {
         return true;
     }
 
-    /*
-     * Don't guard if the same path is always taken.  If it isn't, we have to
-     * fuse comparisons and the following branch, because the interpreter does
-     * that.
-     */
-    if ((flags & CMP_TRY_BRANCH_AFTER_COND) && !x->isconst())
-        fuseIf(cx->fp->regs->pc + 1, cond, x);
-
-    /*
-     * We update the stack after the guard. This is safe since the guard bails
-     * out at the comparison and the interpreter will therefore re-execute the
-     * comparison. This way the value of the condition doesn't have to be 
-     * calculated and saved on the stack in most cases.
-     */
-    set(&l, x);
-    return true;
-}
-
-bool
-TraceRecorder::relational(LOpcode op, int flags)
-{
-    jsval& r = stackval(-1);
-    jsval& l = stackval(-2);
-    LIns* x = NULL;
-    bool negate = !!(flags & CMP_NEGATE);
-    bool cond;
-    LIns* l_ins = get(&l);
-    LIns* r_ins = get(&r);
-    bool fp = false;
-    jsdouble lnum, rnum;
-
-    /*
-     * 11.8.5 if either argument is an object with a function-valued valueOf
-     * property; if both arguments are objects with non-function-valued valueOf
-     * properties, abort.
-     */
-    if (JSVAL_IS_OBJECT(l) && hasValueOfMethod(l)) {
-        if (JSVAL_IS_OBJECT(r) && hasValueOfMethod(r))
-            return call_imacro(binary_imacros.obj_obj);
-        return call_imacro(binary_imacros.obj_any);
-    }
-    if (JSVAL_IS_OBJECT(r) && hasValueOfMethod(r))
-        return call_imacro(binary_imacros.any_obj);
-    if (JSVAL_IS_OBJECT(l) || JSVAL_IS_OBJECT(r))
-        ABORT_TRACE("comparing two objects with non-function valueOf");
-
-    /* 11.8.5 steps 3, 16-21. */
-    if (JSVAL_IS_STRING(l) && JSVAL_IS_STRING(r)) {
-        LIns* args[] = { r_ins, l_ins };
-        l_ins = lir->insCall(&js_CompareStrings_ci, args);
-        r_ins = lir->insImm(0);
-        cond = evalCmp(op, JSVAL_TO_STRING(l), JSVAL_TO_STRING(r));
-        goto do_comparison;
-    }
-
-    /* 11.8.5 steps 4-5. */
-    if (!JSVAL_IS_NUMBER(l)) {
-        LIns* args[] = { l_ins, cx_ins };
-        switch (JSVAL_TAG(l)) {
-          case JSVAL_BOOLEAN:
-            l_ins = lir->insCall(&js_BooleanOrUndefinedToNumber_ci, args);
-            break;
-          case JSVAL_STRING:
-            l_ins = lir->insCall(&js_StringToNumber_ci, args);
-            break;
-          case JSVAL_INT:
-          case JSVAL_DOUBLE:
-          case JSVAL_OBJECT:
-          default:
-            JS_NOT_REACHED("JSVAL_IS_NUMBER if int/double, objects should "
-                           "have been handled at start of method");
-            ABORT_TRACE("safety belt");
-        }
-    }    
-    if (!JSVAL_IS_NUMBER(r)) {
-        LIns* args[] = { r_ins, cx_ins };
-        switch (JSVAL_TAG(r)) {
-          case JSVAL_BOOLEAN:
-            r_ins = lir->insCall(&js_BooleanOrUndefinedToNumber_ci, args);
-            break;
-          case JSVAL_STRING:
-            r_ins = lir->insCall(&js_StringToNumber_ci, args);
-            break;
-          case JSVAL_INT:
-          case JSVAL_DOUBLE:
-          case JSVAL_OBJECT:
-          default:
-            JS_NOT_REACHED("JSVAL_IS_NUMBER if int/double, objects should "
-                           "have been handled at start of method");
-            ABORT_TRACE("safety belt");
-        }
-    }
-    {
-        jsval tmp = JSVAL_NULL;
-        JSAutoTempValueRooter tvr(cx, 1, &tmp);
-
-        tmp = l;
-        lnum = js_ValueToNumber(cx, &tmp);
-        tmp = r;
-        rnum = js_ValueToNumber(cx, &tmp);
-    }
-    cond = evalCmp(op, lnum, rnum);
-    fp = true;
-
-    /* 11.8.5 steps 6-15. */
-  do_comparison:
-    /* If the result is not a number or it's not a quad, we must use an integer compare. */
-    if (!fp) {
-        JS_ASSERT(op >= LIR_feq && op <= LIR_fge);
-        op = LOpcode(op + (LIR_eq - LIR_feq));
-    }
-    if (negate) {
-        JS_STATIC_ASSERT((LIR_flt ^ 3) == LIR_fge);
-        JS_STATIC_ASSERT((LIR_fgt ^ 3) == LIR_fle);
-        JS_STATIC_ASSERT((LIR_lt ^ 3) == LIR_ge);
-        JS_STATIC_ASSERT((LIR_gt ^ 3) == LIR_le);
-        JS_STATIC_ASSERT((LIR_ult ^ 3) == LIR_uge);
-        JS_STATIC_ASSERT((LIR_ugt ^ 3) == LIR_ule);
-
-        x = lir->ins2(LOpcode(op ^ 3), l_ins, r_ins);
-        cond = !cond;
-    } else {
-        x = lir->ins2(op, l_ins, r_ins);
-    }
-
-    /*
-     * Don't guard if the same path is always taken.  If it isn't, we have to
-     * fuse comparisons and the following branch, because the interpreter does
-     * that.
-     */
-    if ((flags & CMP_TRY_BRANCH_AFTER_COND) && !x->isconst())
-        fuseIf(cx->fp->regs->pc + 1, cond, x);
-
-    /*
-     * We update the stack after the guard. This is safe since the guard bails
-     * out at the comparison and the interpreter will therefore re-execute the
-     * comparison. This way the value of the condition doesn't have to be
-     * calculated and saved on the stack in most cases.
-     */
+    /* We update the stack after the guard. This is safe since
+       the guard bails out at the comparison and the interpreter
+       will therefore re-execute the comparison. This way the
+       value of the condition doesn't have to be calculated and
+       saved on the stack in most cases. */
     set(&l, x);
     return true;
 }
@@ -5622,37 +5506,37 @@ TraceRecorder::record_JSOP_BITAND()
 bool
 TraceRecorder::record_JSOP_EQ()
 {
-    return equality(CMP_TRY_BRANCH_AFTER_COND);
+    return cmp(LIR_feq, CMP_TRY_BRANCH_AFTER_COND);
 }
 
 bool
 TraceRecorder::record_JSOP_NE()
 {
-    return equality(CMP_NEGATE | CMP_TRY_BRANCH_AFTER_COND);
+    return cmp(LIR_feq, CMP_NEGATE | CMP_TRY_BRANCH_AFTER_COND);
 }
 
 bool
 TraceRecorder::record_JSOP_LT()
 {
-    return relational(LIR_flt, CMP_TRY_BRANCH_AFTER_COND);
+    return cmp(LIR_flt, CMP_TRY_BRANCH_AFTER_COND);
 }
 
 bool
 TraceRecorder::record_JSOP_LE()
 {
-    return relational(LIR_fle, CMP_TRY_BRANCH_AFTER_COND);
+    return cmp(LIR_fle, CMP_TRY_BRANCH_AFTER_COND);
 }
 
 bool
 TraceRecorder::record_JSOP_GT()
 {
-    return relational(LIR_fgt, CMP_TRY_BRANCH_AFTER_COND);
+    return cmp(LIR_fgt, CMP_TRY_BRANCH_AFTER_COND);
 }
 
 bool
 TraceRecorder::record_JSOP_GE()
 {
-    return relational(LIR_fge, CMP_TRY_BRANCH_AFTER_COND);
+    return cmp(LIR_fge, CMP_TRY_BRANCH_AFTER_COND);
 }
 
 bool
@@ -7117,15 +7001,13 @@ TraceRecorder::record_JSOP_LOOKUPSWITCH()
 bool
 TraceRecorder::record_JSOP_STRICTEQ()
 {
-    strictEquality(true);
-    return true;
+    return cmp(LIR_feq, CMP_STRICT);
 }
 
 bool
 TraceRecorder::record_JSOP_STRICTNE()
 {
-    strictEquality(false);
-    return true;
+    return cmp(LIR_feq, CMP_STRICT | CMP_NEGATE);
 }
 
 bool
@@ -7623,7 +7505,7 @@ TraceRecorder::record_JSOP_CONDSWITCH()
 bool
 TraceRecorder::record_JSOP_CASE()
 {
-    return equality(CMP_CASE);
+    return cmp(LIR_feq, CMP_CASE);
 }
 
 bool
@@ -7816,7 +7698,7 @@ TraceRecorder::record_JSOP_GOSUBX()
 bool
 TraceRecorder::record_JSOP_CASEX()
 {
-    return equality(CMP_CASE);
+    return cmp(LIR_feq, CMP_CASE);
 }
 
 bool
