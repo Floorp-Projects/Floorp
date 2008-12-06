@@ -131,7 +131,6 @@ function run_test() {
   gBlocklist = Components.classes["@mozilla.org/extensions/blocklist;1"]
                          .getService(Components.interfaces.nsIBlocklistService)
                          .QueryInterface(Components.interfaces.nsIObserver);
-  gBlocklist.observe(null, "app-startup", "");
   gBlocklist.observe(null, "profile-after-change", "");
 
   do_check_true(timerService.hasTimer(BLOCKLIST_TIMER));

@@ -150,6 +150,12 @@ public:
   virtual NS_HIDDEN_(nsresult) OSProtocolHandlerExists(const char *aScheme,
                                                        PRBool *aExists) = 0;
 
+  /**
+   * Simple accessor to let nsExternalAppHandler know if we are currently
+   * inside the private browsing mode.
+   */
+  PRBool InPrivateBrowsing() const { return mInPrivateBrowsing; }
+
 protected:
   /**
    * Searches the "extra" array of MIMEInfo objects for an object

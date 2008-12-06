@@ -84,6 +84,9 @@
 #include "nsRuleNode.h"
 #include "nsEventDispatcher.h"
 #include "gfxUserFontSet.h"
+#include "gfxPlatform.h"
+#include "nsCSSRules.h"
+#include "nsFontFaceLoader.h"
 #include "nsIEventListenerManager.h"
 
 #ifdef IBMBIDI
@@ -228,6 +231,7 @@ nsPresContext::nsPresContext(nsIDocument* aDocument, nsPresContextType aType)
   }
   NS_ASSERTION(mDocument, "Null document");
   mUserFontSet = nsnull;
+  mUserFontSetDirty = PR_TRUE;
 }
 
 nsPresContext::~nsPresContext()
@@ -286,8 +290,7 @@ nsPresContext::~nsPresContext()
   NS_IF_RELEASE(mDeviceContext);
   NS_IF_RELEASE(mLookAndFeel);
   NS_IF_RELEASE(mLangGroup);
-  
-  SetUserFontSet(nsnull);
+  NS_IF_RELEASE(mUserFontSet);
 }
 
 NS_IMPL_CYCLE_COLLECTION_CLASS(nsPresContext)
@@ -1101,7 +1104,7 @@ already_AddRefed<nsIFontMetrics>
 nsPresContext::GetMetricsFor(const nsFont& aFont)
 {
   nsIFontMetrics* metrics = nsnull;
-  mDeviceContext->GetMetricsFor(aFont, mLangGroup, metrics);
+  mDeviceContext->GetMetricsFor(aFont, mLangGroup, GetUserFontSet(), metrics);
   return metrics;
 }
 
@@ -1435,17 +1438,20 @@ nsPresContext::RebuildAllStyleData(nsChangeHint aExtraHint)
     // We must have been torn down. Nothing to do here.
     return;
   }
+
+  RebuildUserFontSet();
+
   mShell->FrameConstructor()->RebuildAllStyleData(aExtraHint);
 }
 
 void
-nsPresContext::PostRebuildAllStyleDataEvent()
+nsPresContext::PostRebuildAllStyleDataEvent(nsChangeHint aExtraHint)
 {
   if (!mShell) {
     // We must have been torn down. Nothing to do here.
     return;
   }
-  mShell->FrameConstructor()->PostRebuildAllStyleDataEvent();
+  mShell->FrameConstructor()->PostRebuildAllStyleDataEvent(aExtraHint);
 }
 
 void
@@ -1567,17 +1573,288 @@ nsPresContext::HasAuthorSpecifiedRules(nsIFrame *aFrame, PRUint32 ruleTypeMask) 
     HasAuthorSpecifiedRules(aFrame->GetStyleContext(), ruleTypeMask);
 }
 
-gfxUserFontSet* 
-nsPresContext::GetUserFontSet() {
+static void
+InsertFontFaceRule(nsCSSFontFaceRule *aRule, gfxUserFontSet* aFontSet,
+                   PRUint8 aSheetType)
+{
+  PRInt32 type;
+  NS_ABORT_IF_FALSE(NS_SUCCEEDED(aRule->GetType(type)) 
+                    && type == nsICSSRule::FONT_FACE_RULE, 
+                    "InsertFontFaceRule passed a non-fontface CSS rule");
+
+  // aRule->List();
+
+  nsAutoString fontfamily;
+  nsCSSValue val;
+
+  PRUint32 unit;
+  PRUint32 weight = NS_STYLE_FONT_WEIGHT_NORMAL;
+  PRUint32 stretch = NS_STYLE_FONT_STRETCH_NORMAL;
+  PRUint32 italicStyle = FONT_STYLE_NORMAL;
+
+  // set up family name
+  aRule->GetDesc(eCSSFontDesc_Family, val);
+  unit = val.GetUnit();
+  if (unit == eCSSUnit_String) {
+    val.GetStringValue(fontfamily);
+    fontfamily.Trim("\"");
+  } else {
+    NS_ASSERTION(unit == eCSSUnit_Null,
+                 "@font-face family name has unexpected unit");
+    // If there is no family name, this rule cannot contribute a
+    // usable font, so there is no point in processing it further.
+    return;
+  }
+
+  // set up weight
+  aRule->GetDesc(eCSSFontDesc_Weight, val);
+  unit = val.GetUnit();
+  if (unit == eCSSUnit_Integer || unit == eCSSUnit_Enumerated) {
+    weight = val.GetIntValue();
+  } else if (unit == eCSSUnit_Normal) {
+    weight = NS_STYLE_FONT_WEIGHT_NORMAL;
+  } else {
+    NS_ASSERTION(unit == eCSSUnit_Null,
+                 "@font-face weight has unexpected unit");
+  }
+
+  // set up stretch
+  aRule->GetDesc(eCSSFontDesc_Stretch, val);
+  unit = val.GetUnit();
+  if (unit == eCSSUnit_Enumerated) {
+    stretch = val.GetIntValue();
+  } else if (unit == eCSSUnit_Normal) {
+    stretch = NS_STYLE_FONT_STRETCH_NORMAL;
+  } else {
+    NS_ASSERTION(unit == eCSSUnit_Null,
+                 "@font-face stretch has unexpected unit");
+  }
+
+  // set up font style
+  aRule->GetDesc(eCSSFontDesc_Style, val);
+  unit = val.GetUnit();
+  if (unit == eCSSUnit_Enumerated) {
+    italicStyle = val.GetIntValue();
+  } else if (unit == eCSSUnit_Normal) {
+    italicStyle = FONT_STYLE_NORMAL;
+  } else {
+    NS_ASSERTION(unit == eCSSUnit_Null,
+                 "@font-face style has unexpected unit");
+  }
+
+  // set up src array
+  nsTArray<gfxFontFaceSrc> srcArray;
+
+  aRule->GetDesc(eCSSFontDesc_Src, val);
+  unit = val.GetUnit();
+  if (unit == eCSSUnit_Array) {
+    nsCSSValue::Array *srcArr = val.GetArrayValue();
+    PRUint32 i, numSrc = srcArr->Count();
+    
+    for (i = 0; i < numSrc; i++) {
+      val = srcArr->Item(i);
+      unit = val.GetUnit();
+      gfxFontFaceSrc *face = srcArray.AppendElements(1);
+      if (!face)
+        return;
+            
+      switch (unit) {
+       
+      case eCSSUnit_Local_Font:
+        val.GetStringValue(face->mLocalName);
+        face->mIsLocal = PR_TRUE;
+        face->mURI = nsnull;
+        face->mFormatFlags = 0;
+        break;
+      case eCSSUnit_URL:
+        face->mIsLocal = PR_FALSE;
+        face->mURI = val.GetURLValue();
+        NS_ASSERTION(face->mURI, "null url in @font-face rule");
+        face->mReferrer = val.GetURLStructValue()->mReferrer;
+        face->mOriginPrincipal = val.GetURLStructValue()->mOriginPrincipal;
+        NS_ASSERTION(face->mOriginPrincipal, "null origin principal in @font-face rule");
+        
+        // agent and user stylesheets are treated slightly differently,
+        // the same-site origin check and access control headers are
+        // enforced against the sheet principal rather than the document
+        // principal to allow user stylesheets to include @font-face rules
+        face->mUseOriginPrincipal = (aSheetType == nsStyleSet::eUserSheet ||
+                                     aSheetType == nsStyleSet::eAgentSheet);
+                                     
+        face->mLocalName.Truncate();
+        face->mFormatFlags = 0;
+        while (i + 1 < numSrc && (val = srcArr->Item(i+1), 
+                 val.GetUnit() == eCSSUnit_Font_Format)) {
+          nsDependentString valueString(val.GetStringBufferValue());
+          if (valueString.LowerCaseEqualsASCII("opentype")) {
+            face->mFormatFlags |= gfxUserFontSet::FLAG_FORMAT_OPENTYPE; 
+          } else if (valueString.LowerCaseEqualsASCII("truetype")) {
+            face->mFormatFlags |= gfxUserFontSet::FLAG_FORMAT_TRUETYPE; 
+          } else if (valueString.LowerCaseEqualsASCII("truetype-aat")) {
+            face->mFormatFlags |= gfxUserFontSet::FLAG_FORMAT_TRUETYPE_AAT; 
+          } else if (valueString.LowerCaseEqualsASCII("embedded-opentype")) {
+            face->mFormatFlags |= gfxUserFontSet::FLAG_FORMAT_EOT;   
+          } else if (valueString.LowerCaseEqualsASCII("svg")) {
+            face->mFormatFlags |= gfxUserFontSet::FLAG_FORMAT_SVG;   
+          }
+          i++;
+        }
+        break;
+      default:
+        NS_ASSERTION(unit == eCSSUnit_Local_Font || unit == eCSSUnit_URL,
+                     "strange unit type in font-face src array");
+        break;
+      }
+     }
+  } else {
+    NS_ASSERTION(unit == eCSSUnit_Null, "@font-face src has unexpected unit");
+  }
+  
+  if (!fontfamily.IsEmpty() && srcArray.Length() > 0) {
+    aFontSet->AddFontFace(fontfamily, srcArray, weight, stretch, italicStyle);
+  }
+}
+
+gfxUserFontSet*
+nsPresContext::GetUserFontSetInternal()
+{
+  // We want to initialize the user font set lazily the first time the
+  // user asks for it, rather than building it too early and forcing
+  // rule cascade creation.  Thus we try to enforce the invariant that
+  // we *never* build the user font set until the first call to
+  // GetUserFontSet.  However, once it's been requested, we can't wait
+  // for somebody to call GetUserFontSet in order to rebuild it (see
+  // comments below in RebuildUserFontSet for why).
+  if (mUserFontSetDirty) {
+    // If this assertion fails, and there have actually been changes to
+    // @font-face rules, then we will call StyleChangeReflow in
+    // FlushUserFontSet.  If we're in the middle of reflow,
+    // that's a bad thing to do, and the caller was responsible for
+    // flushing first.  If we're not (e.g., in frame construction), it's
+    // ok.
+#ifdef DEBUG
+    {
+      PRBool inReflow;
+      NS_ASSERTION(!mGetUserFontSetCalled ||
+                   (NS_SUCCEEDED(mShell->IsReflowLocked(&inReflow)) &&
+                    !inReflow),
+                   "FlushUserFontSet should have been called first");
+    }
+#endif
+    FlushUserFontSet();
+  }
+
+  mGetUserFontSetCalled = PR_TRUE;
   return mUserFontSet;
 }
 
-void 
-nsPresContext::SetUserFontSet(gfxUserFontSet *aUserFontSet)
+gfxUserFontSet*
+nsPresContext::GetUserFontSetExternal()
 {
-  NS_IF_RELEASE(mUserFontSet);
-  mUserFontSet = aUserFontSet;
-  NS_IF_ADDREF(mUserFontSet);
+  return GetUserFontSetInternal();
+}
+
+void
+nsPresContext::FlushUserFontSet()
+{
+  if (!mShell)
+    return; // we've been torn down
+
+  if (mUserFontSetDirty) {
+    if (gfxPlatform::GetPlatform()->DownloadableFontsEnabled()) {
+      nsRefPtr<gfxUserFontSet> oldUserFontSet = mUserFontSet;
+
+      nsTArray<nsFontFaceRuleContainer> rules;
+      if (!mShell->StyleSet()->AppendFontFaceRules(this, rules))
+        return;
+
+      PRBool differ;
+      if (rules.Length() == mFontFaceRules.Length()) {
+        differ = PR_FALSE;
+        for (PRUint32 i = 0, i_end = rules.Length(); i < i_end; ++i) {
+          if (rules[i].mRule != mFontFaceRules[i].mRule ||
+              rules[i].mSheetType != mFontFaceRules[i].mSheetType) {
+            differ = PR_TRUE;
+            break;
+          }
+        }
+      } else {
+        differ = PR_TRUE;
+      }
+
+      // Only rebuild things if the set of @font-face rules is different.
+      if (differ) {
+        NS_IF_RELEASE(mUserFontSet);
+
+        if (rules.Length() > 0) {
+          nsFontFaceLoaderContext *loaderCtx =
+            new nsFontFaceLoaderContext(this);
+          if (!loaderCtx)
+            return;
+          gfxUserFontSet *fs = new gfxUserFontSet(loaderCtx);
+          // user font set owns loader context
+          if (!fs) {
+            delete loaderCtx;
+            return;
+          }
+          mUserFontSet = fs;
+          NS_ADDREF(mUserFontSet);
+
+          for (PRUint32 i = 0, i_end = rules.Length(); i < i_end; ++i) {
+            InsertFontFaceRule(rules[i].mRule, fs, rules[i].mSheetType);
+          }
+        }
+      }
+
+#ifdef DEBUG
+      PRBool success =
+#endif
+        rules.SwapElements(mFontFaceRules);
+      NS_ASSERTION(success, "should never fail given both are heap arrays");
+
+      if (mGetUserFontSetCalled && oldUserFontSet != mUserFontSet) {
+        // If we've changed, created, or destroyed a user font set, we
+        // need to trigger a style change reflow.
+        // We need to enqueue a style change reflow (for later) to
+        // reflect that we're dropping @font-face rules.  This is the
+        // same thing nsFontFaceLoader does when font downloads
+        // complete.  (However, without a reflow, nothing will happen
+        // to start any downloads that are needed.)
+        mShell->StyleChangeReflow();
+      }
+    }
+
+    mUserFontSetDirty = PR_FALSE;
+  }
+}
+
+void
+nsPresContext::RebuildUserFontSet()
+{
+  if (!mGetUserFontSetCalled) {
+    // We want to lazily build the user font set the first time it's
+    // requested (so we don't force creation of rule cascades too
+    // early), so don't do anything now.
+    return;
+  }
+
+  mUserFontSetDirty = PR_TRUE;
+
+  // Somebody has already asked for the user font set, so we need to
+  // post an event to rebuild it.  Setting the user font set to be dirty
+  // and lazily rebuilding it isn't sufficient, since it is only the act
+  // of rebuilding it that will trigger the style change reflow that
+  // calls GetUserFontSet.  (This reflow causes rebuilding of text runs,
+  // which starts font loads, whose completion causes another style
+  // change reflow).
+  if (!mPostedFlushUserFontSet) {
+    nsCOMPtr<nsIRunnable> ev =
+      new nsRunnableMethod<nsPresContext>(this,
+                                     &nsPresContext::HandleRebuildUserFontSet);
+    if (NS_SUCCEEDED(NS_DispatchToCurrentThread(ev))) {
+      mPostedFlushUserFontSet = PR_TRUE;
+    }
+  }    
 }
 
 void

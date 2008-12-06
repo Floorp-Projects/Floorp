@@ -2200,7 +2200,7 @@ nsresult nsExternalAppHandler::OpenWithApplication()
 
     // make the tmp file readonly so users won't edit it and lose the changes
     // only if we're going to delete the file
-    if (deleteTempFileOnExit)
+    if (deleteTempFileOnExit || gExtProtSvc->InPrivateBrowsing())
       mFinalFileDestination->SetPermissions(0400);
 
     rv = mMimeInfo->LaunchWithFile(mFinalFileDestination);        
@@ -2212,7 +2212,9 @@ nsresult nsExternalAppHandler::OpenWithApplication()
       SendStatusChange(kLaunchError, rv, nsnull, path);
       Cancel(rv); // Cancel, and clean up temp file.
     }
-    else if (deleteTempFileOnExit) {
+    // Always schedule files to be deleted at the end of the private browsing
+    // mode, regardless of the value of the pref.
+    else if (deleteTempFileOnExit || gExtProtSvc->InPrivateBrowsing()) {
       NS_ASSERTION(gExtProtSvc, "Service gone away!?");
       gExtProtSvc->DeleteTemporaryFileOnExit(mFinalFileDestination);
     }

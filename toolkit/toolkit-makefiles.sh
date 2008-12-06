@@ -878,42 +878,6 @@ if test -n "$MOZ_PSM"; then
   "
 fi
 
-if test -n "$MOZ_IPCD"; then
-  add_makefiles "
-    ipc/ipcd/Makefile
-    ipc/ipcd/daemon/public/Makefile
-    ipc/ipcd/daemon/src/Makefile
-    ipc/ipcd/client/public/Makefile
-    ipc/ipcd/client/src/Makefile
-    ipc/ipcd/shared/src/Makefile
-    ipc/ipcd/test/Makefile
-    ipc/ipcd/test/module/Makefile
-    ipc/ipcd/extensions/Makefile
-    ipc/ipcd/extensions/lock/Makefile
-    ipc/ipcd/extensions/lock/public/Makefile
-    ipc/ipcd/extensions/lock/src/Makefile
-    ipc/ipcd/extensions/lock/src/module/Makefile
-    ipc/ipcd/util/Makefile
-    ipc/ipcd/util/public/Makefile
-    ipc/ipcd/util/src/Makefile
-  "
-fi
-
-if test -n "$MOZ_PROFILESHARING"; then
-  add_makefiles "
-    ipc/ipcd/extensions/transmngr/Makefile
-    ipc/ipcd/extensions/transmngr/public/Makefile
-    ipc/ipcd/extensions/transmngr/src/Makefile
-    ipc/ipcd/extensions/transmngr/build/Makefile
-    ipc/ipcd/extensions/transmngr/test/Makefile
-    ipc/ipcd/extensions/transmngr/common/Makefile
-    ipc/ipcd/extensions/transmngr/module/Makefile
-    embedding/components/profilesharingsetup/Makefile
-    embedding/components/profilesharingsetup/public/Makefile
-    embedding/components/profilesharingsetup/src/Makefile
-  "
-fi
-
 if [ ! "$SYSTEM_JPEG" ]; then
   add_makefiles "
     jpeg/Makefile

@@ -68,7 +68,7 @@ __all__ = [
           ]
 
 # These are generated in mozilla/build/Makefile.in
-#expand DIST_BIN = "./" + __XPC_BIN_PATH__
+#expand DIST_BIN = __XPC_BIN_PATH__
 #expand IS_WIN32 = len("__WIN32__") != 0
 #expand IS_MAC = __IS_MAC__ != 0
 #ifdef IS_CYGWIN

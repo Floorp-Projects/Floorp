@@ -42,9 +42,12 @@ VPATH		= @srcdir@
 
 include $(DEPTH)/config/autoconf.mk
 
+ifndef NSS_DISABLE_DBM
 ifdef MOZ_MORK
 DIRS		= mdb mork
 endif
+endif 
+
 ifdef MOZ_MORKREADER
 DIRS		+= morkreader
 endif

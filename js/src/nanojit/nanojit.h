@@ -131,12 +131,12 @@ namespace nanojit
 	#define verbose_output						if (verbose_enabled()) Assembler::output
 	#define verbose_outputf						if (verbose_enabled()) Assembler::outputf
 	#define verbose_enabled()					(_verbose)
-	#define verbose_only(...)					__VA_ARGS__
+	#define verbose_only(x)						x
 #else
 	#define verbose_output
 	#define verbose_outputf
 	#define verbose_enabled()
-	#define verbose_only(...)
+	#define verbose_only(x)
 #endif /*NJ_VERBOSE*/
 
 #ifdef _DEBUG

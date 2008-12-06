@@ -82,7 +82,7 @@ NS_IMPL_CYCLE_COLLECTION_TRAVERSE_END
 NS_IMPL_ADDREF_INHERITED(nsSVGUseElement,nsSVGUseElementBase)
 NS_IMPL_RELEASE_INHERITED(nsSVGUseElement,nsSVGUseElementBase)
 
-NS_INTERFACE_TABLE_HEAD(nsSVGUseElement)
+NS_INTERFACE_TABLE_HEAD_CYCLE_COLLECTION_INHERITED(nsSVGUseElement)
   NS_NODE_INTERFACE_TABLE6(nsSVGUseElement, nsIDOMNode, nsIDOMElement,
                            nsIDOMSVGElement, nsIDOMSVGURIReference,
                            nsIDOMSVGUseElement, nsIMutationObserver)
@@ -478,7 +478,7 @@ nsSVGUseElement::DidChangeString(PRUint8 aAttrEnum, PRBool aDoSetAttr)
   if (aAttrEnum == HREF) {
     // we're changing our nature, clear out the clone information
     mOriginal = nsnull;
-
+    UnlinkSource();
     TriggerReclone();
   }
 }

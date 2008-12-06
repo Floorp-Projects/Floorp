@@ -1,0 +1,30 @@
+<?xml version="1.0"?>
+<svg xmlns="http://www.w3.org/2000/svg" width="750"
+     xmlns:xlink="http://www.w3.org/1999/xlink" version="1.1">
+  <style type="text/css">
+text { font: 20px monospace; }
+  </style>
+
+<g id="g">
+  <text id="text1" x="25" y="25">abc</text>
+  <rect id="rect1" x="50" y="50" width="50" height="50" fill="green"/>
+  <rect id="rect1a" x="50" y="50" width="50" height="50" fill="none" stroke-width="2" stroke="yellow"/>
+  <text id="text2" x="125" y="25">abc</text>
+  <g transform="rotate(45 175 75)">
+    <rect id="rect2" x="150" y="50" width="50" height="50" fill="yellow"/>
+    <rect id="rect2a" x="150" y="50" width="50" height="50" fill="none" stroke-width="2" stroke="blue"/>
+    <text id="text3" x="150" y="50" text-anchor="middle">abc</text>
+  </g>
+  <g transform="scale(2)">
+    <rect id="rect3" x="25" y="80" width="50" height="50" fill="green"/>
+    <rect id="rect3a" x="25" y="80" width="50" height="50" fill="none" stroke-width="2" stroke="blue"/>
+  </g>
+  <g transform="scale(2) rotate(45 175 75)">
+    <rect id="rect4" x="150" y="50" width="50" height="50" fill="yellow"/>
+    <rect id="rect4a" x="150" y="50" width="50" height="50" fill="none" stroke-width="2" stroke="blue"/>
+    <text id="text4" x="125" y="125">abc</text>
+  </g>
+  <text id="text1a" x="85" y="25" stroke="black" stroke-width="1">M</text>
+  <text id="text2a" x="185" y="25" stroke="black" stroke-width="10">M</text>
+</g>
+</svg>

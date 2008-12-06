@@ -433,7 +433,8 @@ BrowserGlue.prototype = {
     var currentVersion = this._prefs.getIntPref("browser.rights.version");
     this._prefs.setBoolPref("browser.rights." + currentVersion + ".shown", true);
 
-    notifyBox.appendNotification(notifyText, "about-rights", null, notifyBox.PRIORITY_INFO_LOW, buttons);
+    var box = notifyBox.appendNotification(notifyText, "about-rights", null, notifyBox.PRIORITY_INFO_LOW, buttons);
+    box.persistence = 3; // arbitrary number, just so bar sticks around for a bit
   },
 
   // returns the (cached) Sanitizer constructor
@@ -546,8 +547,8 @@ BrowserGlue.prototype = {
       var bookmarksFile = null;
       if (restoreDefaultBookmarks) {
         // User wants to restore bookmarks.html file from default profile folder
-        bookmarksFile = dirService.get("profDef", Ci.nsILocalFile)
-                                      .append("bookmarks.html");
+        bookmarksFile = dirService.get("profDef", Ci.nsILocalFile);
+        bookmarksFile.append("bookmarks.html");
       }
       else
         bookmarksFile = dirService.get("BMarks", Ci.nsILocalFile);

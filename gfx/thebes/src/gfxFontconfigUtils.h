@@ -125,6 +125,7 @@ public:
         return reinterpret_cast<const char*>(aChar8Ptr);
     }
 
+    static PRUint8 FcSlantToThebesStyle(int aFcSlant);
     static PRUint8 GetThebesStyle(FcPattern *aPattern); // slant
     static PRUint16 GetThebesWeight(FcPattern *aPattern);
 
@@ -135,8 +136,8 @@ public:
     // This doesn't consider which faces exist, and so initializes the pattern
     // using a guessed weight, and doesn't consider sizeAdjust.
     static nsReturnRef<FcPattern>
-    NewPattern(const nsStringArray& aFamilies, const gfxFontStyle& aFontStyle,
-               const char *aLang);
+    NewPattern(const nsTArray<nsString>& aFamilies,
+               const gfxFontStyle& aFontStyle, const char *aLang);
 
     /**
      * @param aLangGroup [in] a Mozilla langGroup.

@@ -26,12 +26,6 @@ window.addEventListener("message", function(e) {
 gen = runTest();
 
 function runTest() {
-  if (navigator.platform == "MacIntel") {
-    todo(false, "httpd.js fails on Mac");
-    SimpleTest.finish();
-    yield;
-  }
-
   var loader = document.getElementById('loader');
   var loaderWindow = loader.contentWindow;
   loader.onload = function () { gen.next() };

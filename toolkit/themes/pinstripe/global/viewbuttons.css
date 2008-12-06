@@ -1,0 +1,195 @@
+/* ***** BEGIN LICENSE BLOCK *****
+ * Version: MPL 1.1/GPL 2.0/LGPL 2.1
+ *
+ * The contents of this file are subject to the Mozilla Public License Version
+ * 1.1 (the "License"); you may not use this file except in compliance with
+ * the License. You may obtain a copy of the License at
+ * http://www.mozilla.org/MPL/
+ *
+ * Software distributed under the License is distributed on an "AS IS" basis,
+ * WITHOUT WARRANTY OF ANY KIND, either express or implied. See the License
+ * for the specific language governing rights and limitations under the
+ * License.
+ *
+ * The Original Code is the nsSessionStore component.
+ *
+ * The Initial Developer of the Original Code is
+ * Markus Stange <mstange@themasta.com>
+ * Portions created by the Initial Developer are Copyright (C) 2008
+ * the Initial Developer. All Rights Reserved.
+ *
+ * Contributor(s):
+ *
+ * Alternatively, the contents of this file may be used under the terms of
+ * either the GNU General Public License Version 2 or later (the "GPL"), or
+ * the GNU Lesser General Public License Version 2.1 or later (the "LGPL"),
+ * in which case the provisions of the GPL or the LGPL are applicable instead
+ * of those above. If you wish to allow use of your version of this file only
+ * under the terms of either the GPL or the LGPL, and not to allow others to
+ * use your version of this file under the terms of the MPL, indicate your
+ * decision by deleting the provisions above and replace them with the notice
+ * and other provisions required by the GPL or the LGPL. If you do not delete
+ * the provisions above, a recipient may use your version of this file under
+ * the terms of any one of the MPL, the GPL or the LGPL.
+ *
+ * ***** END LICENSE BLOCK ***** */
+
+#viewGroup {
+  -moz-appearance: -moz-mac-unified-toolbar;
+  padding: 4px 0 8px;
+  margin: 0;
+  -moz-box-pack: center;
+}
+
+#viewGroup > * {
+  -moz-box-orient: vertical;
+  -moz-box-align: center;
+  -moz-appearance: none;
+  font: menu;
+  text-shadow: rgba(255, 255, 255, 0.4) 0 1px;
+  margin: 0;
+  padding: 3px 0 0;
+  height: 24px;
+  background-color: transparent;
+  border: solid transparent;
+  border-width: 0 4px 0 5px;
+  -moz-border-image: url("chrome://global/skin/toolbar/viewbutton-middle.png") 0 4 0 5 repeat;
+}
+
+#viewGroup > :active:hover {
+  -moz-border-image: url("chrome://global/skin/toolbar/viewbutton-middle-down.png") 0 4 0 5 repeat;
+}
+
+#viewGroup > radio[selected=true],
+#viewGroup > toolbarbutton[checked=true] {
+  color: #FFF !important;
+  text-shadow: rgba(0, 0, 0, 0.4) 0 1px;
+  -moz-border-image: url("chrome://global/skin/toolbar/viewbutton-middle-selected.png") 0 4 0 5 repeat;
+}
+
+#viewGroup > radio[selected=true]:active:hover,
+#viewGroup > toolbarbutton[checked=true]:active:hover {
+  -moz-border-image: url("chrome://global/skin/toolbar/viewbutton-middle-selected-down.png") 0 4 0 5 repeat;
+}
+
+:root:not([active]) #viewGroup > * {
+  color: #7C7C7C !important; /* remove this when we support click-through */
+  -moz-border-image: url("chrome://global/skin/toolbar/viewbutton-middle-inactive.png") 0 4 0 5 repeat;
+}
+
+:root:not([active]) #viewGroup > radio[selected=true],
+:root:not([active]) #viewGroup > toolbarbutton[checked=true] {
+  color: #C5C5C5 !important; /* remove this when we support click-through */
+  -moz-border-image: url("chrome://global/skin/toolbar/viewbutton-middle-selected-inactive.png") 0 4 0 5 repeat;
+}
+
+#viewGroup > :first-child,
+#viewGroup > [first-visible],
+#viewGroup[chromedir=rtl] > :last-child,
+#viewGroup[chromedir=rtl] > [last-visible] {
+  border-width: 0 4px 0 6px;
+  -moz-border-image: url("chrome://global/skin/toolbar/viewbutton-left.png") 0 4 0 6 repeat;
+}
+
+#viewGroup > :first-child:active:hover,
+#viewGroup > [first-visible]:active:hover,
+#viewGroup[chromedir=rtl] > :last-child:active:hover,
+#viewGroup[chromedir=rtl] > [last-visible]:active:hover {
+  -moz-border-image: url("chrome://global/skin/toolbar/viewbutton-left-down.png") 0 4 0 6 repeat;
+}
+
+#viewGroup > radio:first-child[selected=true],
+#viewGroup > radio[first-visible][selected=true],
+#viewGroup[chromedir=rtl] > radio:last-child[selected=true],
+#viewGroup[chromedir=rtl] > radio[last-visible][selected=true],
+#viewGroup > toolbarbutton:first-child[checked=true],
+#viewGroup > toolbarbutton[first-visible][checked=true],
+#viewGroup[chromedir=rtl] > toolbarbutton:last-child[checked=true],
+#viewGroup[chromedir=rtl] > toolbarbutton[last-visible][checked=true] {
+  -moz-border-image: url("chrome://global/skin/toolbar/viewbutton-left-selected.png") 0 4 0 6 repeat;
+}
+
+#viewGroup > radio:first-child[selected=true]:active:hover,
+#viewGroup > radio[first-visible][selected=true]:active:hover,
+#viewGroup[chromedir=rtl] > radio:last-child[selected=true]:active:hover,
+#viewGroup[chromedir=rtl] > radio[last-visible][selected=true]:active:hover,
+#viewGroup > toolbarbutton:first-child[checked=true]:active:hover,
+#viewGroup > toolbarbutton[first-visible][checked=true]:active:hover,
+#viewGroup[chromedir=rtl] > toolbarbutton:last-child[checked=true]:active:hover,
+#viewGroup[chromedir=rtl] > toolbarbutton[last-visible][checked=true]:active:hover {
+  -moz-border-image: url("chrome://global/skin/toolbar/viewbutton-left-selected-down.png") 0 4 0 6 repeat;
+}
+
+:root:not([active]) #viewGroup > :first-child,
+:root:not([active]) #viewGroup > [first-visible],
+:root:not([active]) #viewGroup[chromedir=rtl] > :last-child,
+:root:not([active]) #viewGroup[chromedir=rtl] > [last-visible] {
+  -moz-border-image: url("chrome://global/skin/toolbar/viewbutton-left-inactive.png") 0 4 0 6 repeat;
+}
+
+:root:not([active]) #viewGroup > radio:first-child[selected=true],
+:root:not([active]) #viewGroup > radio[first-visible][selected=true],
+:root:not([active]) #viewGroup[chromedir=rtl] > radio:last-child[selected=true],
+:root:not([active]) #viewGroup[chromedir=rtl] > radio[last-visible][selected=true],
+:root:not([active]) #viewGroup > toolbarbutton:first-child[checked=true],
+:root:not([active]) #viewGroup > toolbarbutton[first-visible][checked=true],
+:root:not([active]) #viewGroup[chromedir=rtl] > toolbarbutton:last-child[checked=true],
+:root:not([active]) #viewGroup[chromedir=rtl] > toolbarbutton[last-visible][checked=true] {
+  -moz-border-image: url("chrome://global/skin/toolbar/viewbutton-left-selected-inactive.png") 0 4 0 6 repeat;
+}
+
+#viewGroup > :last-child,
+#viewGroup > [last-visible],
+#viewGroup[chromedir=rtl] > :first-child,
+#viewGroup[chromedir=rtl] > [first-visible] {
+  border-width: 0 6px 0 5px;
+  -moz-border-image: url("chrome://global/skin/toolbar/viewbutton-right.png") 0 6 0 5 repeat;
+}
+
+#viewGroup > :last-child:active:hover,
+#viewGroup > [last-visible]:active:hover,
+#viewGroup[chromedir=rtl] > :first-child:active:hover,
+#viewGroup[chromedir=rtl] > [first-visible]:active:hover {
+  -moz-border-image: url("chrome://global/skin/toolbar/viewbutton-right-down.png") 0 6 0 5 repeat;
+}
+
+#viewGroup > radio:last-child[selected=true],
+#viewGroup > radio[last-visible][selected=true],
+#viewGroup[chromedir=rtl] > radio:first-child[selected=true],
+#viewGroup[chromedir=rtl] > radio[first-visible][selected=true],
+#viewGroup > toolbarbutton:last-child[checked=true],
+#viewGroup > toolbarbutton[last-visible][checked=true],
+#viewGroup[chromedir=rtl] > toolbarbutton:first-child[checked=true],
+#viewGroup[chromedir=rtl] > toolbarbutton[first-visible][checked=true] {
+  -moz-border-image: url("chrome://global/skin/toolbar/viewbutton-right-selected.png") 0 6 0 5 repeat;
+}
+
+#viewGroup > radio:last-child[selected=true]:active:hover,
+#viewGroup > radio[last-visible][selected=true]:active:hover,
+#viewGroup[chromedir=rtl] > radio:first-child[selected=true]:active:hover,
+#viewGroup[chromedir=rtl] > radio[first-visible][selected=true]:active:hover,
+#viewGroup > toolbarbutton:last-child[checked=true]:active:hover,
+#viewGroup > toolbarbutton[last-visible][checked=true]:active:hover,
+#viewGroup[chromedir=rtl] > toolbarbutton:first-child[checked=true]:active:hover,
+#viewGroup[chromedir=rtl] > toolbarbutton[first-visible][checked=true]:active:hover {
+  -moz-border-image: url("chrome://global/skin/toolbar/viewbutton-right-selected-down.png") 0 6 0 5 repeat;
+}
+
+:root:not([active]) #viewGroup > :last-child,
+:root:not([active]) #viewGroup > [last-visible],
+:root:not([active]) #viewGroup[chromedir=rtl] > :first-child,
+:root:not([active]) #viewGroup[chromedir=rtl] > [first-visible] {
+  -moz-border-image: url("chrome://global/skin/toolbar/viewbutton-right-inactive.png") 0 6 0 5 repeat;
+}
+
+:root:not([active]) #viewGroup > radio:last-child[selected=true],
+:root:not([active]) #viewGroup > radio[last-visible][selected=true],
+:root:not([active]) #viewGroup[chromedir=rtl] > radio:first-child[selected=true],
+:root:not([active]) #viewGroup[chromedir=rtl] > radio[first-visible][selected=true],
+:root:not([active]) #viewGroup > toolbarbutton:last-child[checked=true],
+:root:not([active]) #viewGroup > toolbarbutton[last-visible][checked=true],
+:root:not([active]) #viewGroup[chromedir=rtl] > toolbarbutton:first-child[checked=true],
+:root:not([active]) #viewGroup[chromedir=rtl] > toolbarbutton[first-visible][checked=true] {
+  -moz-border-image: url("chrome://global/skin/toolbar/viewbutton-right-selected-inactive.png") 0 6 0 5 repeat;
+}
+

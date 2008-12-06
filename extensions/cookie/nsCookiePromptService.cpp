@@ -90,16 +90,16 @@ nsCookiePromptService::CookieDialog(nsIDOMWindow *aParent,
   nsCOMPtr<nsIWindowWatcher> wwatcher = do_GetService(NS_WINDOWWATCHER_CONTRACTID, &rv);
   if (NS_FAILED(rv)) return rv;
 
-  nsCOMPtr<nsIDOMWindow> parent = aParent;
-  if (!parent) {
-    wwatcher->GetActiveWindow(getter_AddRefs(parent));
-  }
-
   nsCOMPtr<nsISupports> arguments = do_QueryInterface(block);
   nsCOMPtr<nsIDOMWindow> dialog;
-  rv = wwatcher->OpenWindow(parent, "chrome://cookie/content/cookieAcceptDialog.xul", "_blank",
-                             "centerscreen,chrome,modal,titlebar", arguments,
-                             getter_AddRefs(dialog));
+
+  // Given the nature of this dialog and the frequency of it popping
+  // up for those few users that have it enabled we do not want this
+  // dialog to be parented at a window. Pass in nsnull as the
+  // parent. See bug 405239 for more details.
+  rv = wwatcher->OpenWindow(nsnull, "chrome://cookie/content/cookieAcceptDialog.xul", "_blank",
+                            "centerscreen,chrome,modal,titlebar", arguments,
+                            getter_AddRefs(dialog));
 
   if (NS_FAILED(rv)) return rv;
 

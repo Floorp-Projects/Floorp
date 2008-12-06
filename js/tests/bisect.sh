@@ -99,7 +99,12 @@ usage: bisect.sh -p product -b branch -e extra\\
        If the bad revision (test failed) occurred prior to the good revision 
        (test passed), the script will search for the first good revision which 
        fixed the failing test.
-    
+
+    -D By default, clobber builds will be used. For mercurial based builds
+       on branch 1.9.1 and later, you may specify -D to use depends builds.
+       This may achieve significant speed advantages by eliminating the need
+       to perform clobber builds for each bisection.
+
     -J javascriptoptions  optional. Set JavaScript options:
          -Z n Set gczeal to n. Currently, only valid for 
               debug builds of Gecko 1.8.1.15, 1.9.0 and later.
@@ -112,7 +117,7 @@ EOF
 
 verbose=0
 
-while getopts "p:b:T:e:t:S:G:B:J:" optname;
+while getopts "p:b:T:e:t:S:G:B:J:D" optname;
 do
     case $optname in
         p) bisect_product=$OPTARG;;
@@ -125,6 +130,7 @@ do
         G) bisect_good="$OPTARG";;
         B) bisect_bad="$OPTARG";;
         J) javascriptoptions=$OPTARG;;
+        D) bisect_depends=1;;
     esac
 done
 
@@ -356,7 +362,9 @@ EOF
         fi
 
         echo "checking that the test fails in the bad revision $localbad:$bisect_bad"
-        eval $TEST_DIR/bin/builder.sh -p $bisect_product -b $bisect_branch $bisect_extraflag -T $bisect_buildtype -B "clobber" > /dev/null
+        if [[ -z "$bisect_depends" ]]; then
+            eval $TEST_DIR/bin/builder.sh -p $bisect_product -b $bisect_branch $bisect_extraflag -T $bisect_buildtype -B "clobber" > /dev/null
+        fi
         hg -R $REPO update -C -r $bisect_bad
         bisect_log=`eval $TEST_JSDIR/runtests.sh -p $bisect_product -b $bisect_branch $bisect_extraflag -T $bisect_buildtype -I $bisect_test -B "build" -c -t -X /dev/null 2>&1 | grep '_js.log $' | sed 's|log: \([^ ]*\) |\1|'`
         if [[ -z "$bisect_log" ]]; then
@@ -375,7 +383,9 @@ EOF
         fi
         
         echo "checking that the test passes in the good revision $localgood:$bisect_good"
-        eval $TEST_DIR/bin/builder.sh -p $bisect_product -b $bisect_branch $bisect_extraflag -T $bisect_buildtype -B "clobber" > /dev/null
+        if [[ -z "$bisect_depends" ]]; then
+            eval $TEST_DIR/bin/builder.sh -p $bisect_product -b $bisect_branch $bisect_extraflag -T $bisect_buildtype -B "clobber" > /dev/null
+        fi
         hg -R $REPO update -C -r $bisect_good
         bisect_log=`eval $TEST_JSDIR/runtests.sh -p $bisect_product -b $bisect_branch $bisect_extraflag -T $bisect_buildtype -I $bisect_test -B "build" -c -t -X /dev/null 2>&1 | grep '_js.log $' | sed 's|log: \([^ ]*\) |\1|'`
         if [[ -z "$bisect_log" ]]; then
@@ -402,7 +412,13 @@ EOF
             unset result
 
             # clobber before setting new changeset.
-            eval $TEST_DIR/bin/builder.sh -p $bisect_product -b $bisect_branch $bisect_extraflag -T $bisect_buildtype -B "clobber" > /dev/null
+            if [[ -z "$bisect_depends" ]]; then
+                eval $TEST_DIR/bin/builder.sh -p $bisect_product -b $bisect_branch $bisect_extraflag -T $bisect_buildtype -B "clobber" > /dev/null
+            fi
+
+            # remove extraneous in-tree changes
+            # nsprpub/configure I'm looking at you!
+            hg -R $REPO update -C
 
             hg -R $REPO bisect
             bisect_log=`eval $TEST_JSDIR/runtests.sh -p $bisect_product -b $bisect_branch $bisect_extraflag -T $bisect_buildtype -I $bisect_test -B "build" -c -t -X /dev/null 2>&1 | grep '_js.log $' | sed 's|log: \([^ ]*\) |\1|'`

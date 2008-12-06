@@ -1,0 +1,32 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg"
+     xmlns:xlink="http://www.w3.org/1999/xlink"
+     version="1.1">
+
+  <!-- use an empty g to force filters.svg to load before onload -->
+  <use xlink:href="../filters.svg#empty" />
+
+  <foreignObject filter="url(../filters.svg#NonWhiteToBlack)"
+                 x="0" y="0" height="100%" width="100%">
+<html xmlns="http://www.w3.org/1999/xhtml">
+<!-- Reference rendering for zwnj-02.html. No spans, no ZWNJs. Everything
+  should connect -->
+ <head>
+  <title>ZWNJ test</title>
+  <style type="text/css">
+  html, body { margin: 0; background: white; color: black; height: 100%; width: 100%; }
+  body {   
+    font-size: 36px;
+  }
+  </style>
+ </head>
+ <body lang="ar">
+  <p>&#x647;&#x641;&#x62A;&#x647;&#x647;&#x627;</p>
+  <p>&#x645;&#x648;&#x632;&#x647;&#x647;&#x627;</p>
+  <p>&#x633;&#x647;&#x634;&#x646;&#x628;&#x647;</p>
+  <p>&#x631;&#x627;&#x647;&#x622;&#x647;&#x646;</p>
+  <p>&#x646;&#x631;&#x645;&#x627;&#x641;&#x632;&#x627;&#x631;</p>
+ </body>
+</html>
+</foreignObject>
+</svg>

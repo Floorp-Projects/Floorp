@@ -1,0 +1,48 @@
+<!DOCTYPE HTML>
+<html>
+<!--
+Tests of DOM Worker Navigator
+-->
+<head>
+  <title>Test for DOM Worker Navigator</title>
+  <script type="text/javascript" src="/MochiKit/MochiKit.js"></script>
+  <script type="text/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
+</head>
+<body>
+<p id="display"></p>
+<div id="content" style="display: none">
+
+</div>
+<pre id="test">
+<script class="testbody" language="javascript">
+
+  var worker = new Worker("navigator_worker.js");
+
+  worker.onmessage = function(event) {
+    var args = JSON.parse(event.data);
+
+    if (args.name == "testFinished") {
+      SimpleTest.finish();
+      return;
+    }
+
+    if (typeof navigator[args.name] == "undefined") {
+      ok(false, "Navigator has no '" + args.name + "' property!");
+      return;
+    }
+
+    is(navigator[args.name], args.value, "Mismatched navigator string!");
+  };
+
+  worker.onerror = function(event) {
+    ok(false, "Worker had an error: " + event.data);
+    SimpleTest.finish();
+  }
+
+  SimpleTest.waitForExplicitFinish();
+
+</script>
+</pre>
+</body>
+</html>

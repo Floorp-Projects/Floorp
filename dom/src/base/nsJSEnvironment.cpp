@@ -423,10 +423,12 @@ NS_ScriptErrorReporter(JSContext *cx,
                        const char *message,
                        JSErrorReport *report)
 {
-  JSStackFrame * fp = nsnull;
-  while ((fp = JS_FrameIterator(cx, &fp))) {
-    if (!JS_IsNativeFrame(cx, fp)) {
-      return;
+  { // Scope for |fp|
+    JSStackFrame * fp = nsnull;
+    while ((fp = JS_FrameIterator(cx, &fp))) {
+      if (!JS_IsNativeFrame(cx, fp)) {
+        return;
+      }
     }
   }
 
@@ -1819,6 +1821,9 @@ nsJSContext::CompileEventHandler(nsIAtom *aName,
 {
   NS_ENSURE_TRUE(mIsInitialized, NS_ERROR_NOT_INITIALIZED);
 
+  NS_PRECONDITION(!::JS_IsExceptionPending(mContext),
+                  "Why are we being called with a pending exception?");
+
   if (!sSecurityManager) {
     NS_ERROR("Huh, we need a script security manager to compile "
              "an event handler!");
@@ -1849,6 +1854,11 @@ nsJSContext::CompileEventHandler(nsIAtom *aName,
                                           aURL, aLineNo);
 
   if (!fun) {
+    // Set aside the frame chain on cx while reporting, since it has
+    // nothing to do with the error we just hit.
+    JSStackFrame* frame = JS_SaveFrameChain(mContext);
+    ReportPendingException();
+    JS_RestoreFrameChain(mContext, frame);
     return NS_ERROR_ILLEGAL_VALUE;
   }
 

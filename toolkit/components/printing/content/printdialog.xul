@@ -71,18 +71,28 @@
       <rows>
         <row align="center">
           <hbox align="center" pack="end">
-            <label id="printerLabel" control="printerList" value="&printerInput.label;"/>
+            <label id="printerLabel"
+                   value="&printerInput.label;"
+                   accesskey="&printerInput.accesskey;"
+                   control="printerList"/>
           </hbox>
           <menulist id="printerList" flex="1" type="description" oncommand="setPrinterDefaultsForSelectedPrinter();"/>
-          <button id="properties" label="&propertiesButton.label;"
-                  icon="properties" oncommand="displayPropertiesDialog();"/>
+          <button id="properties"
+                  label="&propertiesButton.label;"
+                  accesskey="&propertiesButton.accesskey;"
+                  icon="properties"
+                  oncommand="displayPropertiesDialog();"/>
         </row>
         <row align="center">
           <hbox align="center" pack="end">
             <label id="descTextLabel" control="descText" value="&descText.label;"/>
           </hbox>
           <label id="descText"/>
-          <checkbox id="fileCheck" checked="false" label="&fileCheck.label;" pack="end"/>
+          <checkbox id="fileCheck"
+                    checked="false"
+                    label="&fileCheck.label;"
+                    accesskey="&fileCheck.accesskey;"
+                    pack="end"/>
         </row>
       </rows>
     </grid>
@@ -93,22 +103,39 @@
       <caption label="&printrangeGroup.label;"/>
 
       <radiogroup id="printrangeGroup">
-        <radio id="allpagesRadio" label="&allpagesRadio.label;" oncommand="doPrintRange(0)"/>
+        <radio id="allpagesRadio"
+               label="&allpagesRadio.label;"
+               accesskey="&allpagesRadio.accesskey;"
+               oncommand="doPrintRange(0)"/>
         <hbox align="center">
-          <radio id="rangeRadio" label="&rangeRadio.label;" oncommand="doPrintRange(1)"/>
-          <label id="frompageLabel" control="frompageInput" value="&frompageInput.label;" />
+          <radio id="rangeRadio"
+                 label="&rangeRadio.label;"
+                 accesskey="&rangeRadio.accesskey;"
+                 oncommand="doPrintRange(1)"/>
+          <label id="frompageLabel"
+                 control="frompageInput"
+                 value="&frompageInput.label;"
+                 accesskey="&frompageInput.accesskey;"/>
           <textbox id="frompageInput" style="width:5em;" onkeyup="checkInteger(this)"/>
-          <label id="topageLabel" control="topageInput" value="&topageInput.label;" />
+          <label id="topageLabel"
+                 control="topageInput"
+                 value="&topageInput.label;"
+                 accesskey="&topageInput.accesskey;"/>
           <textbox id="topageInput" style="width:5em;" onkeyup="checkInteger(this)"/>
         </hbox>
-        <radio id="selectionRadio" label="&selectionRadio.label;" oncommand="doPrintRange(2)"/>
+        <radio id="selectionRadio"
+               label="&selectionRadio.label;"
+               accesskey="&selectionRadio.accesskey;"
+               oncommand="doPrintRange(2)"/>
       </radiogroup>
     </groupbox>
 
     <groupbox flex="1">
       <caption label="&copies.label;"/>
       <hbox align="center">
-        <label control="numCopiesInput" value="&numCopies.label;"/>  
+        <label control="numCopiesInput"
+               value="&numCopies.label;"
+               accesskey="&numCopies.accesskey;"/>
         <textbox id="numCopiesInput" style="width:5em;" onkeyup="checkInteger(this)"/>
       </hbox>
     </groupbox>
@@ -117,9 +144,15 @@
   <groupbox flex="1">
     <caption label="&printframeGroup.label;" id="printframeGroupLabel"/>
     <radiogroup id="printframeGroup">
-      <radio id="aslaidoutRadio" label="&aslaidoutRadio.label;" />
-      <radio id="selectedframeRadio" label="&selectedframeRadio.label;" />
-      <radio id="eachframesepRadio" label="&eachframesepRadio.label;" />
+      <radio id="aslaidoutRadio"
+             label="&aslaidoutRadio.label;"
+             accesskey="&aslaidoutRadio.accesskey;"/>
+      <radio id="selectedframeRadio"
+             label="&selectedframeRadio.label;"
+             accesskey="&selectedframeRadio.accesskey;"/>
+      <radio id="eachframesepRadio"
+             label="&eachframesepRadio.label;"
+             accesskey="&eachframesepRadio.accesskey;"/>
     </radiogroup>
   </groupbox>
 

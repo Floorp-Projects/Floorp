@@ -114,6 +114,9 @@ public:
   void AddLocator(nsGeolocation* locator);
   void RemoveLocator(nsGeolocation* locator);
 
+  void SetCachedPosition(nsIDOMGeoPosition* aPosition);
+  nsIDOMGeoPosition* GetCachedPosition();
+
   // Returns true if there is a geolocation provider registered.
   PRBool   HasGeolocationProvider();
 
@@ -148,6 +151,9 @@ private:
   // addes them to this list, and their destructor removes
   // them from this list.
   nsTArray<nsGeolocation*> mGeolocators;
+
+  // This is the last geo position that we have seen.
+  nsCOMPtr<nsIDOMGeoPosition> mLastPosition;
 };
 
 

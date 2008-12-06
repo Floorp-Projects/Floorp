@@ -57,3 +57,7 @@ DEFINES += \
 ifneq (,$(filter windows gtk2 mac cocoa, $(MOZ_WIDGET_TOOLKIT)))
 DEFINES += -DHAVE_SHELL_SERVICE=1
 endif
+
+ifdef MOZ_UPDATER
+DEFINES += -DMOZ_UPDATER=1
+endif

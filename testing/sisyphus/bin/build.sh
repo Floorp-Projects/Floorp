@@ -109,25 +109,7 @@ case $product in
         ;;
     js)
 
-        if [[ -e "$BUILDTREE/mozilla/js/src/Makefile.ref" ]]; then
-
-            # use the old-style Makefile.ref build environment for spidermonkey
-
-            if [[ $buildtype == "debug" ]]; then
-                export JSBUILDOPT=
-            else
-                export JSBUILDOPT=BUILD_OPT=1
-            fi
-
-            if ! $buildbash $bashlogin -c "cd $BUILDTREE/mozilla/js/src; make -f Makefile.ref ${JSBUILDOPT} clean" 2>&1; then
-                error "during js/src clean" $LINENO
-            fi 
-
-            if ! $buildbash $bashlogin -c "cd $BUILDTREE/mozilla/js/src; make -f Makefile.ref ${JSBUILDOPT}" 2>&1; then
-                error "during js/src build" $LINENO
-            fi
-
-        else
+        if [[ -e "$BUILDTREE/mozilla/js/src/configure.in" ]]; then
 
             # use the new fangled autoconf build environment for spidermonkey
 
@@ -185,6 +167,28 @@ case $product in
             if ! $buildbash $bashlogin -c "cd $BUILDTREE/mozilla/js/src/$JS_OBJDIR; make install" 2>&1; then
                 error "during js/src install" $LINENO
             fi
+
+        elif [[ -e "$BUILDTREE/mozilla/js/src/Makefile.ref" ]]; then
+
+            # use the old-style Makefile.ref build environment for spidermonkey
+
+            if [[ $buildtype == "debug" ]]; then
+                export JSBUILDOPT=
+            else
+                export JSBUILDOPT=BUILD_OPT=1
+            fi
+
+            if ! $buildbash $bashlogin -c "cd $BUILDTREE/mozilla/js/src; make -f Makefile.ref ${JSBUILDOPT} clean" 2>&1; then
+                error "during js/src clean" $LINENO
+            fi 
+
+            if ! $buildbash $bashlogin -c "cd $BUILDTREE/mozilla/js/src; make -f Makefile.ref ${JSBUILDOPT}" 2>&1; then
+                error "during js/src build" $LINENO
+            fi
+
+        else
+
+            error "Neither Makefile.ref or autoconf builds available"
 
         fi
         ;;

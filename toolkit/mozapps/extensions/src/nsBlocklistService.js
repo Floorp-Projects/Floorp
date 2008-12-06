@@ -382,10 +382,6 @@ Blocklist.prototype = {
 
   observe: function (aSubject, aTopic, aData) {
     switch (aTopic) {
-    case "app-startup":
-      gOS.addObserver(this, "profile-after-change", false);
-      gOS.addObserver(this, "quit-application", false);
-      break;
     case "profile-after-change":
       gLoggingEnabled = getPref("getBoolPref", PREF_EM_LOGGING_ENABLED, false);
       gBlocklistEnabled = getPref("getBoolPref", PREF_BLOCKLIST_ENABLED, true);
@@ -397,14 +393,10 @@ Blocklist.prototype = {
       var interval = getPref("getIntPref", PREF_BLOCKLIST_INTERVAL, 86400);
       tm.registerTimer("blocklist-background-update-timer", this, interval);
       break;
-    case "quit-application":
-      gOS.removeObserver(this, "profile-after-change");
-      gOS.removeObserver(this, "quit-application");
-      gPref.removeObserver("extensions.blocklist.", this);
-      break;
     case "xpcom-shutdown":
       gOS.removeObserver(this, "xpcom-shutdown");
       gOS = null;
+      gPref.removeObserver("extensions.blocklist.", this);
       gPref = null;
       gConsole = null;
       gVersionChecker = null;
@@ -927,10 +919,7 @@ Blocklist.prototype = {
   QueryInterface: XPCOMUtils.generateQI([Ci.nsIObserver,
                                          Ci.nsIBlocklistService,
                                          Ci.nsITimerCallback]),
-  _xpcom_categories: [{
-    category: "app-startup",
-    service: true
-  }]
+  _xpcom_categories: [{ category: "profile-after-change" }]
 };
 
 /**

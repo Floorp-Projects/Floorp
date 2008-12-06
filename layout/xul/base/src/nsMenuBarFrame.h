@@ -51,19 +51,19 @@
 #include "nsBoxFrame.h"
 #include "nsMenuFrame.h"
 #include "nsMenuBarListener.h"
-#include "nsIMenuParent.h"
+#include "nsMenuParent.h"
 #include "nsIWidget.h"
 
 class nsIContent;
 
 nsIFrame* NS_NewMenuBarFrame(nsIPresShell* aPresShell, nsStyleContext* aContext);
 
-class nsMenuBarFrame : public nsBoxFrame, public nsIMenuParent
+class nsMenuBarFrame : public nsBoxFrame, public nsMenuParent
 {
 public:
   nsMenuBarFrame(nsIPresShell* aShell, nsStyleContext* aContext);
 
-  // nsIMenuParentInterface
+  // nsMenuParent interface
   virtual nsMenuFrame* GetCurrentMenuItem();
   NS_IMETHOD SetCurrentMenuItem(nsMenuFrame* aMenuItem);
   virtual void CurrentMenuIsBeingDestroyed();

@@ -40,6 +40,7 @@
 #include "nsAccessible.h"
 #include "nsAccessibleRelation.h"
 #include "nsHyperTextAccessibleWrap.h"
+#include "nsNameUtils.h"
 
 #include "nsIAccessibleDocument.h"
 #include "nsIAccessibleHyperText.h"
@@ -282,7 +283,36 @@ nsAccessible::GetName(nsAString& aName)
   if (!aName.IsEmpty())
     return NS_OK;
 
-  return GetNameInternal(aName);
+  nsresult rv = GetNameInternal(aName);
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  if (!aName.IsEmpty())
+    return NS_OK;
+
+  // In the end get the name from tooltip.
+  nsCOMPtr<nsIContent> content = nsCoreUtils::GetRoleContent(mDOMNode);
+  if (!content)
+    return NS_OK;
+
+  nsIAtom *tooltipAttr = nsnull;
+
+  if (content->IsNodeOfType(nsINode::eHTML))
+    tooltipAttr = nsAccessibilityAtoms::title;
+  else if (content->IsNodeOfType(nsINode::eXUL))
+    tooltipAttr = nsAccessibilityAtoms::tooltiptext;
+  else
+    return NS_OK;
+
+  // XXX: if CompressWhiteSpace worked on nsAString we could avoid a copy.
+  nsAutoString name;
+  if (content->GetAttr(kNameSpaceID_None, tooltipAttr, name)) {
+    name.CompressWhitespace();
+    aName = name;
+  } else {
+    aName.SetIsVoid(PR_TRUE);
+  }
+
+  return NS_OK;
 }
 
 NS_IMETHODIMP nsAccessible::GetDescription(nsAString& aDescription)
@@ -948,11 +978,11 @@ nsAccessible::GetStateInternal(PRUint32 *aState, PRUint32 *aExtraState)
 {
   *aState = 0;
 
-  if (!mDOMNode) {
-    if (aExtraState) {
+  if (IsDefunct()) {
+    if (aExtraState)
       *aExtraState = nsIAccessibleStates::EXT_STATE_DEFUNCT;
-    }
-    return NS_OK; // Node shut down
+
+    return NS_OK_DEFUNCT_OBJECT;
   }
 
   if (aExtraState)
@@ -1716,12 +1746,8 @@ nsresult nsAccessible::GetTextFromRelationID(nsIAtom *aIDProperty, nsString &aNa
   return NS_OK;
 }
 
-/**
-  * Only called if the element is not a nsIDOMXULControlElement. Initially walks up
-  *   the DOM tree to the form, concatonating label elements as it goes. Then checks for
-  *   labels with the for="controlID" property.
-  */
-nsresult nsAccessible::GetHTMLName(nsAString& aLabel, PRBool aCanAggregateSubtree)
+nsresult
+nsAccessible::GetHTMLName(nsAString& aLabel)
 {
   nsCOMPtr<nsIContent> content = nsCoreUtils::GetRoleContent(mDOMNode);
   if (!content) {
@@ -1742,9 +1768,10 @@ nsresult nsAccessible::GetHTMLName(nsAString& aLabel, PRBool aCanAggregateSubtre
     }
   }
 
-  PRBool canAggregateName = mRoleMapEntry ?
-                            mRoleMapEntry->nameRule == eNameOkFromChildren :
-                            aCanAggregateSubtree;
+  PRUint32 role = nsAccUtils::Role(this);
+  PRUint32 canAggregateName =
+    nsNameUtils::gRoleToNameRulesMap[role] & eFromSubtree;
+
   if (canAggregateName) {
     // Don't use AppendFlatStringFromSubtree for container widgets like menulist
     nsresult rv = AppendFlatStringFromSubtree(content, &aLabel);
@@ -1752,12 +1779,6 @@ nsresult nsAccessible::GetHTMLName(nsAString& aLabel, PRBool aCanAggregateSubtre
 
     if (!aLabel.IsEmpty())
       return NS_OK;
-  }
-
-  // Still try the title as as fallback method in that case.
-  if (!content->GetAttr(kNameSpaceID_None, nsAccessibilityAtoms::title,
-                        aLabel)) {
-    aLabel.SetIsVoid(PR_TRUE);
   }
 
   return NS_OK;
@@ -1775,7 +1796,8 @@ nsresult nsAccessible::GetHTMLName(nsAString& aLabel, PRBool aCanAggregateSubtre
   *  the control that uses the control="controlID" syntax will use
   *  the child label for its Name.
   */
-nsresult nsAccessible::GetXULName(nsAString& aLabel, PRBool aCanAggregateSubtree)
+nsresult
+nsAccessible::GetXULName(nsAString& aLabel)
 {
   // CASE #1 (via label attribute) -- great majority of the cases
   nsresult rv = NS_OK;
@@ -1830,13 +1852,6 @@ nsresult nsAccessible::GetXULName(nsAString& aLabel, PRBool aCanAggregateSubtree
     return NS_OK;
   }
 
-  content->GetAttr(kNameSpaceID_None, nsAccessibilityAtoms::tooltiptext, label);
-  label.CompressWhitespace();
-  if (!label.IsEmpty()) {
-    aLabel = label;
-    return NS_OK;
-  }
-
   // Can get text from title of <toolbaritem> if we're a child of a <toolbaritem>
   nsIContent *bindingParent = content->GetBindingParent();
   nsIContent *parent = bindingParent? bindingParent->GetParent() :
@@ -1851,9 +1866,9 @@ nsresult nsAccessible::GetXULName(nsAString& aLabel, PRBool aCanAggregateSubtree
     parent = parent->GetParent();
   }
 
-  PRBool canAggregateName = mRoleMapEntry ?
-                            mRoleMapEntry->nameRule == eNameOkFromChildren :
-                            aCanAggregateSubtree;
+  PRUint32 role = nsAccUtils::Role(this);
+  PRUint32 canAggregateName =
+    nsNameUtils::gRoleToNameRulesMap[role] & eFromSubtree;
 
   return canAggregateName ?
          AppendFlatStringFromSubtree(content, &aLabel) : NS_OK;
@@ -2274,7 +2289,7 @@ nsAccessible::GetState(PRUint32 *aState, PRUint32 *aExtraState)
   NS_ENSURE_ARG_POINTER(aState);
 
   nsresult rv = GetStateInternal(aState, aExtraState);
-  NS_ENSURE_SUCCESS(rv, rv);
+  NS_ENSURE_A11Y_SUCCESS(rv, rv);
 
   // Apply ARIA states to be sure accessible states will be overriden.
   GetARIAState(aState);
@@ -3421,10 +3436,10 @@ nsAccessible::GetNameInternal(nsAString& aName)
     return NS_OK;
 
   if (content->IsNodeOfType(nsINode::eHTML))
-    return GetHTMLName(aName, PR_FALSE);
+    return GetHTMLName(aName);
 
   if (content->IsNodeOfType(nsINode::eXUL))
-    return GetXULName(aName, PR_FALSE);
+    return GetXULName(aName);
 
   return NS_OK;
 }

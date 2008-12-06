@@ -586,7 +586,8 @@ void
 nsMenuFrame::PopupClosed(PRBool aDeselectMenu)
 {
   nsWeakFrame weakFrame(this);
-  mContent->UnsetAttr(kNameSpaceID_None, nsGkAtoms::open, PR_TRUE);
+  nsContentUtils::AddScriptRunner(
+    new nsUnsetAttrRunnable(mContent, nsGkAtoms::open));
   if (!weakFrame.IsAlive())
     return;
 

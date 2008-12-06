@@ -66,8 +66,8 @@ function popupShowingEventOccured(event)
 
   var trigger = document.getElementById(event.target.id == "outerpopup" ? "outer" : "inner");
   var rect = trigger.getBoundingClientRect();
-  is(event.clientX, Math.floor(rect.left) + 4, testname + "clientX");
-  is(event.clientY, Math.floor(rect.top) + 5, testname + "clientY");
+  is(event.clientX, Math.round(rect.left + 4), testname + "clientX");
+  is(event.clientY, Math.round(rect.top + 5), testname + "clientY");
   // rangeOffset should be just after the trigger element. As rangeOffset
   // considers the zeroth position to be before the first element, the value
   // should be one higher than its index within its parent.

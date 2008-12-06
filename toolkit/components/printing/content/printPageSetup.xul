@@ -78,25 +78,37 @@
               <label control="orientation" value="&orientation.label;"/>
               <radiogroup id="orientation" oncommand="setOrientation()">
                 <hbox align="center">
-                  <radio id="portrait"  class="portrait-page"  label="&portrait;"/>
-                  <radio id="landscape" class="landscape-page" label="&landscape;"/>
+                  <radio id="portrait"
+                         class="portrait-page"
+                         label="&portrait.label;"
+                         accesskey="&portrait.accesskey;"/>
+                  <radio id="landscape"
+                         class="landscape-page"
+                         label="&landscape.label;"
+                         accesskey="&landscape.accesskey;"/>
                 </hbox>
               </radiogroup>
             </hbox>
             <separator/>
             <hbox align="center">
-              <label control="scalingInput" value="&scale.label;"/>
+              <label control="scalingInput"
+                     value="&scale.label;"
+                     accesskey="&scale.accesskey;"/>
               <textbox id="scalingInput" size="4" oninput="checkDouble(this)"/>
               <label value="&scalePercent;"/>
               <separator/>
-              <checkbox id="shrinkToFit" label="&shrinkToFit.label;"
+              <checkbox id="shrinkToFit"
+                        label="&shrinkToFit.label;"
+                        accesskey="&shrinkToFit.accesskey;"
                         oncommand="gDialog.scalingInput.disabled=gDialog.scalingLabel.disabled=this.checked"/>
             </hbox>
           </vbox>
         </groupbox>
         <groupbox>
           <caption label="&optionsGroup.label;"/>
-          <checkbox id="printBG" label="&printBG.label;"/>
+          <checkbox id="printBG"
+                    label="&printBG.label;"
+                    accesskey="&printBG.accesskey;"/>
         </groupbox>
       </vbox>
       <vbox>
@@ -105,7 +117,9 @@
           <vbox>
             <hbox align="center">
               <spacer flex="1"/>
-              <label control="topInput" value="&marginTop.label;"/>
+              <label control="topInput"
+                     value="&marginTop.label;"
+                     accesskey="&marginTop.accesskey;"/>
               <textbox id="topInput" size="5" oninput="changeMargin(this)"/>
               <!-- This invisible label (with same content as the visible one!) is used
                    to ensure that the <textbox> is centered above the page.  The same
@@ -117,7 +131,9 @@
               <spacer flex="1"/>
               <vbox>
                 <spacer flex="1"/>
-                <label control="leftInput" value="&marginLeft.label;"/>
+                <label control="leftInput"
+                       value="&marginLeft.label;"
+                       accesskey="&marginLeft.accesskey;"/>
                 <textbox id="leftInput" size="5" oninput="changeMargin(this)"/>
                 <label value="&marginLeft.label;" style="visibility: hidden;"/>
                 <spacer flex="1"/>
@@ -137,7 +153,9 @@
               </vbox>
               <vbox>
                 <spacer flex="1"/>
-                <label control="rightInput" value="&marginRight.label;"/>
+                <label control="rightInput"
+                       value="&marginRight.label;"
+                       accesskey="&marginRight.accesskey;"/>
                 <textbox id="rightInput" size="5" oninput="changeMargin(this)"/>
                 <label value="&marginRight.label;" style="visibility: hidden;"/>
                 <spacer flex="1"/>
@@ -146,7 +164,9 @@
             </hbox>
             <hbox align="center">
               <spacer flex="1"/>
-              <label control="bottomInput" value="&marginBottom.label;"/>
+              <label control="bottomInput"
+                     value="&marginBottom.label;"
+                     accesskey="&marginBottom.accesskey;"/>
               <textbox id="bottomInput" size="5" oninput="changeMargin(this)"/>
               <label value="&marginBottom.label;" style="visibility: hidden;"/>
               <spacer flex="1"/>

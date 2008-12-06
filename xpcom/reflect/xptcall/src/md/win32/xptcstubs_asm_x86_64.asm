@@ -38,18 +38,14 @@ extrn PrepareAndDispatch:PROC
 
 .code
 
-SharedStub PROC
+SharedStub PROC FRAME
+    sub     rsp, 104
+    .ALLOCSTACK 104
+    .ENDPROLOG
 
-   ;
-   ; store 4 parameters to stack
-   ;
+   ; rcx is this pointer.  Need backup for optimized build
 
-    mov     [rsp+40], r9
-    mov     [rsp+32], r8
-    mov     [rsp+24], rdx
-    mov     [rsp+16], rcx
-
-    sub     rsp, 112
+   mov      qword ptr [rsp+88], rcx
 
    ;
    ; fist 4 parameters (1st is "this" pointer) are passed in registers.
@@ -57,15 +53,15 @@ SharedStub PROC
 
    ; for floating value
 
-    movsd   [rsp+64], xmm1
-    movsd   [rsp+72], xmm2
-    movsd   [rsp+80], xmm3
+    movsd   qword ptr [rsp+64], xmm1
+    movsd   qword ptr [rsp+72], xmm2
+    movsd   qword ptr [rsp+80], xmm3
 
    ; for integer value
 
-    mov     [rsp+40], rdx
-    mov     [rsp+48], r8
-    mov     [rsp+56], r9
+    mov     qword ptr [rsp+40], rdx
+    mov     qword ptr [rsp+48], r8
+    mov     qword ptr [rsp+56], r9
 
     ;
     ; Call PrepareAndDispatch function
@@ -73,40 +69,38 @@ SharedStub PROC
 
     ; 5th parameter (floating parameters) of PrepareAndDispatch
 
-    lea     r9, [rsp+64]
-    mov     [rsp+32], r9
+    lea     r9, qword ptr [rsp+64]
+    mov     qword ptr [rsp+32], r9
 
     ; 4th parameter (normal parameters) of PrepareAndDispatch
 
-    lea     r9, [rsp+40]
+    lea     r9, qword ptr [rsp+40]
 
     ; 3rd parameter (pointer to args on stack)
 
-    lea     r8, [rsp+48+112]
+    lea     r8, qword ptr [rsp+40+104]
 
     ; 2nd parameter (vtbl_index)
 
-    mov     rdx, rbx
+    mov     rdx, r11
 
-    ; 1st parameter (this) (not need re-assign)
-
-    ;mov     rcx, [rsp+16+112]
+    ; 1st parameter (this) (rcx)
 
     call    PrepareAndDispatch
+
+    ; restore rcx
+
+    mov     rcx, qword ptr [rsp+88]
 
     ;
     ; clean up register
     ;
 
-    add     rsp, 112+16
+    add     rsp, 104+8
 
     ; set return address
 
-    mov     rdx, [rsp+8-16]
-
-    ; restore rbx
-
-    mov     rbx, [rsp-16]
+    mov     rdx, qword ptr [rsp-8]
 
     ; simulate __stdcall return
 
@@ -115,1733 +109,259 @@ SharedStub PROC
 SharedStub ENDP
 
 
-?Stub3@nsXPTCStubBase@@UEAAIXZ PROC EXPORT
-    push    rbx
-    mov     rbx, 3
-    jmp     SharedStub
-?Stub3@nsXPTCStubBase@@UEAAIXZ ENDP
-
-
-?Stub4@nsXPTCStubBase@@UEAAIXZ PROC EXPORT
-    push    rbx
-    mov     rbx, 4
-    jmp     SharedStub
-?Stub4@nsXPTCStubBase@@UEAAIXZ ENDP
-
-
-?Stub5@nsXPTCStubBase@@UEAAIXZ PROC EXPORT
-    push    rbx
-    mov     rbx, 5
-    jmp     SharedStub
-?Stub5@nsXPTCStubBase@@UEAAIXZ ENDP
-
-
-?Stub6@nsXPTCStubBase@@UEAAIXZ PROC EXPORT
-    push    rbx
-    mov     rbx, 6
-    jmp     SharedStub
-?Stub6@nsXPTCStubBase@@UEAAIXZ ENDP
-
-
-?Stub7@nsXPTCStubBase@@UEAAIXZ PROC EXPORT
-    push    rbx
-    mov     rbx, 7
-    jmp     SharedStub
-?Stub7@nsXPTCStubBase@@UEAAIXZ ENDP
-
-
-?Stub8@nsXPTCStubBase@@UEAAIXZ PROC EXPORT
-    push    rbx
-    mov     rbx, 8
-    jmp     SharedStub
-?Stub8@nsXPTCStubBase@@UEAAIXZ ENDP
-
-
-?Stub9@nsXPTCStubBase@@UEAAIXZ PROC EXPORT
-    push    rbx
-    mov     rbx, 9
-    jmp     SharedStub
-?Stub9@nsXPTCStubBase@@UEAAIXZ ENDP
-
-
-?Stub10@nsXPTCStubBase@@UEAAIXZ PROC EXPORT
-    push    rbx
-    mov     rbx, 10
-    jmp     SharedStub
-?Stub10@nsXPTCStubBase@@UEAAIXZ ENDP
-
-
-?Stub11@nsXPTCStubBase@@UEAAIXZ PROC EXPORT
-    push    rbx
-    mov     rbx, 11
-    jmp     SharedStub
-?Stub11@nsXPTCStubBase@@UEAAIXZ ENDP
-
-
-?Stub12@nsXPTCStubBase@@UEAAIXZ PROC EXPORT
-    push    rbx
-    mov     rbx, 12
-    jmp     SharedStub
-?Stub12@nsXPTCStubBase@@UEAAIXZ ENDP
-
-
-?Stub13@nsXPTCStubBase@@UEAAIXZ PROC EXPORT
-    push    rbx
-    mov     rbx, 13
-    jmp     SharedStub
-?Stub13@nsXPTCStubBase@@UEAAIXZ ENDP
-
-
-?Stub14@nsXPTCStubBase@@UEAAIXZ PROC EXPORT
-    push    rbx
-    mov     rbx, 14
-    jmp     SharedStub
-?Stub14@nsXPTCStubBase@@UEAAIXZ ENDP
-
-
-?Stub15@nsXPTCStubBase@@UEAAIXZ PROC EXPORT
-    push    rbx
-    mov     rbx, 15
-    jmp     SharedStub
-?Stub15@nsXPTCStubBase@@UEAAIXZ ENDP
-
-
-?Stub16@nsXPTCStubBase@@UEAAIXZ PROC EXPORT
-    push    rbx
-    mov     rbx, 16
-    jmp     SharedStub
-?Stub16@nsXPTCStubBase@@UEAAIXZ ENDP
-
-
-?Stub17@nsXPTCStubBase@@UEAAIXZ PROC EXPORT
-    push    rbx
-    mov     rbx, 17
-    jmp     SharedStub
-?Stub17@nsXPTCStubBase@@UEAAIXZ ENDP
-
-
-?Stub18@nsXPTCStubBase@@UEAAIXZ PROC EXPORT
-    push    rbx
-    mov     rbx, 18
-    jmp     SharedStub
-?Stub18@nsXPTCStubBase@@UEAAIXZ ENDP
-
-
-?Stub19@nsXPTCStubBase@@UEAAIXZ PROC EXPORT
-    push    rbx
-    mov     rbx, 19
-    jmp     SharedStub
-?Stub19@nsXPTCStubBase@@UEAAIXZ ENDP
-
-
-?Stub20@nsXPTCStubBase@@UEAAIXZ PROC EXPORT
-    push    rbx
-    mov     rbx, 20
-    jmp     SharedStub
-?Stub20@nsXPTCStubBase@@UEAAIXZ ENDP
-
-
-?Stub21@nsXPTCStubBase@@UEAAIXZ PROC EXPORT
-    push    rbx
-    mov     rbx, 21
-    jmp     SharedStub
-?Stub21@nsXPTCStubBase@@UEAAIXZ ENDP
-
-
-?Stub22@nsXPTCStubBase@@UEAAIXZ PROC EXPORT
-    push    rbx
-    mov     rbx, 22
-    jmp     SharedStub
-?Stub22@nsXPTCStubBase@@UEAAIXZ ENDP
-
-
-?Stub23@nsXPTCStubBase@@UEAAIXZ PROC EXPORT
-    push    rbx
-    mov     rbx, 23
-    jmp     SharedStub
-?Stub23@nsXPTCStubBase@@UEAAIXZ ENDP
-
-
-?Stub24@nsXPTCStubBase@@UEAAIXZ PROC EXPORT
-    push    rbx
-    mov     rbx, 24
-    jmp     SharedStub
-?Stub24@nsXPTCStubBase@@UEAAIXZ ENDP
-
-
-?Stub25@nsXPTCStubBase@@UEAAIXZ PROC EXPORT
-    push    rbx
-    mov     rbx, 25
-    jmp     SharedStub
-?Stub25@nsXPTCStubBase@@UEAAIXZ ENDP
-
-
-?Stub26@nsXPTCStubBase@@UEAAIXZ PROC EXPORT
-    push    rbx
-    mov     rbx, 26
-    jmp     SharedStub
-?Stub26@nsXPTCStubBase@@UEAAIXZ ENDP
-
-
-?Stub27@nsXPTCStubBase@@UEAAIXZ PROC EXPORT
-    push    rbx
-    mov     rbx, 27
-    jmp     SharedStub
-?Stub27@nsXPTCStubBase@@UEAAIXZ ENDP
-
-
-?Stub28@nsXPTCStubBase@@UEAAIXZ PROC EXPORT
-    push    rbx
-    mov     rbx, 28
-    jmp     SharedStub
-?Stub28@nsXPTCStubBase@@UEAAIXZ ENDP
-
-
-?Stub29@nsXPTCStubBase@@UEAAIXZ PROC EXPORT
-    push    rbx
-    mov     rbx, 29
-    jmp     SharedStub
-?Stub29@nsXPTCStubBase@@UEAAIXZ ENDP
-
-
-?Stub30@nsXPTCStubBase@@UEAAIXZ PROC EXPORT
-    push    rbx
-    mov     rbx, 30
-    jmp     SharedStub
-?Stub30@nsXPTCStubBase@@UEAAIXZ ENDP
-
-
-?Stub31@nsXPTCStubBase@@UEAAIXZ PROC EXPORT
-    push    rbx
-    mov     rbx, 31
-    jmp     SharedStub
-?Stub31@nsXPTCStubBase@@UEAAIXZ ENDP
-
-
-?Stub32@nsXPTCStubBase@@UEAAIXZ PROC EXPORT
-    push    rbx
-    mov     rbx, 32
-    jmp     SharedStub
-?Stub32@nsXPTCStubBase@@UEAAIXZ ENDP
-
-
-?Stub33@nsXPTCStubBase@@UEAAIXZ PROC EXPORT
-    push    rbx
-    mov     rbx, 33
-    jmp     SharedStub
-?Stub33@nsXPTCStubBase@@UEAAIXZ ENDP
-
-
-?Stub34@nsXPTCStubBase@@UEAAIXZ PROC EXPORT
-    push    rbx
-    mov     rbx, 34
-    jmp     SharedStub
-?Stub34@nsXPTCStubBase@@UEAAIXZ ENDP
-
-
-?Stub35@nsXPTCStubBase@@UEAAIXZ PROC EXPORT
-    push    rbx
-    mov     rbx, 35
-    jmp     SharedStub
-?Stub35@nsXPTCStubBase@@UEAAIXZ ENDP
-
-
-?Stub36@nsXPTCStubBase@@UEAAIXZ PROC EXPORT
-    push    rbx
-    mov     rbx, 36
-    jmp     SharedStub
-?Stub36@nsXPTCStubBase@@UEAAIXZ ENDP
-
-
-?Stub37@nsXPTCStubBase@@UEAAIXZ PROC EXPORT
-    push    rbx
-    mov     rbx, 37
-    jmp     SharedStub
-?Stub37@nsXPTCStubBase@@UEAAIXZ ENDP
-
-
-?Stub38@nsXPTCStubBase@@UEAAIXZ PROC EXPORT
-    push    rbx
-    mov     rbx, 38
-    jmp     SharedStub
-?Stub38@nsXPTCStubBase@@UEAAIXZ ENDP
-
-
-?Stub39@nsXPTCStubBase@@UEAAIXZ PROC EXPORT
-    push    rbx
-    mov     rbx, 39
-    jmp     SharedStub
-?Stub39@nsXPTCStubBase@@UEAAIXZ ENDP
-
-
-?Stub40@nsXPTCStubBase@@UEAAIXZ PROC EXPORT
-    push    rbx
-    mov     rbx, 40
-    jmp     SharedStub
-?Stub40@nsXPTCStubBase@@UEAAIXZ ENDP
-
-
-?Stub41@nsXPTCStubBase@@UEAAIXZ PROC EXPORT
-    push    rbx
-    mov     rbx, 41
-    jmp     SharedStub
-?Stub41@nsXPTCStubBase@@UEAAIXZ ENDP
-
-
-?Stub42@nsXPTCStubBase@@UEAAIXZ PROC EXPORT
-    push    rbx
-    mov     rbx, 42
-    jmp     SharedStub
-?Stub42@nsXPTCStubBase@@UEAAIXZ ENDP
-
-
-?Stub43@nsXPTCStubBase@@UEAAIXZ PROC EXPORT
-    push    rbx
-    mov     rbx, 43
-    jmp     SharedStub
-?Stub43@nsXPTCStubBase@@UEAAIXZ ENDP
-
-
-?Stub44@nsXPTCStubBase@@UEAAIXZ PROC EXPORT
-    push    rbx
-    mov     rbx, 44
-    jmp     SharedStub
-?Stub44@nsXPTCStubBase@@UEAAIXZ ENDP
-
-
-?Stub45@nsXPTCStubBase@@UEAAIXZ PROC EXPORT
-    push    rbx
-    mov     rbx, 45
-    jmp     SharedStub
-?Stub45@nsXPTCStubBase@@UEAAIXZ ENDP
-
-
-?Stub46@nsXPTCStubBase@@UEAAIXZ PROC EXPORT
-    push    rbx
-    mov     rbx, 46
-    jmp     SharedStub
-?Stub46@nsXPTCStubBase@@UEAAIXZ ENDP
-
-
-?Stub47@nsXPTCStubBase@@UEAAIXZ PROC EXPORT
-    push    rbx
-    mov     rbx, 47
-    jmp     SharedStub
-?Stub47@nsXPTCStubBase@@UEAAIXZ ENDP
-
-
-?Stub48@nsXPTCStubBase@@UEAAIXZ PROC EXPORT
-    push    rbx
-    mov     rbx, 48
-    jmp     SharedStub
-?Stub48@nsXPTCStubBase@@UEAAIXZ ENDP
-
-
-?Stub49@nsXPTCStubBase@@UEAAIXZ PROC EXPORT
-    push    rbx
-    mov     rbx, 49
-    jmp     SharedStub
-?Stub49@nsXPTCStubBase@@UEAAIXZ ENDP
-
-
-?Stub50@nsXPTCStubBase@@UEAAIXZ PROC EXPORT
-    push    rbx
-    mov     rbx, 50
-    jmp     SharedStub
-?Stub50@nsXPTCStubBase@@UEAAIXZ ENDP
-
-
-?Stub51@nsXPTCStubBase@@UEAAIXZ PROC EXPORT
-    push    rbx
-    mov     rbx, 51
-    jmp     SharedStub
-?Stub51@nsXPTCStubBase@@UEAAIXZ ENDP
-
-
-?Stub52@nsXPTCStubBase@@UEAAIXZ PROC EXPORT
-    push    rbx
-    mov     rbx, 52
-    jmp     SharedStub
-?Stub52@nsXPTCStubBase@@UEAAIXZ ENDP
-
-
-?Stub53@nsXPTCStubBase@@UEAAIXZ PROC EXPORT
-    push    rbx
-    mov     rbx, 53
-    jmp     SharedStub
-?Stub53@nsXPTCStubBase@@UEAAIXZ ENDP
-
-
-?Stub54@nsXPTCStubBase@@UEAAIXZ PROC EXPORT
-    push    rbx
-    mov     rbx, 54
-    jmp     SharedStub
-?Stub54@nsXPTCStubBase@@UEAAIXZ ENDP
-
-
-?Stub55@nsXPTCStubBase@@UEAAIXZ PROC EXPORT
-    push    rbx
-    mov     rbx, 55
-    jmp     SharedStub
-?Stub55@nsXPTCStubBase@@UEAAIXZ ENDP
-
-
-?Stub56@nsXPTCStubBase@@UEAAIXZ PROC EXPORT
-    push    rbx
-    mov     rbx, 56
-    jmp     SharedStub
-?Stub56@nsXPTCStubBase@@UEAAIXZ ENDP
-
-
-?Stub57@nsXPTCStubBase@@UEAAIXZ PROC EXPORT
-    push    rbx
-    mov     rbx, 57
-    jmp     SharedStub
-?Stub57@nsXPTCStubBase@@UEAAIXZ ENDP
-
-
-?Stub58@nsXPTCStubBase@@UEAAIXZ PROC EXPORT
-    push    rbx
-    mov     rbx, 58
-    jmp     SharedStub
-?Stub58@nsXPTCStubBase@@UEAAIXZ ENDP
-
-
-?Stub59@nsXPTCStubBase@@UEAAIXZ PROC EXPORT
-    push    rbx
-    mov     rbx, 59
-    jmp     SharedStub
-?Stub59@nsXPTCStubBase@@UEAAIXZ ENDP
-
-
-?Stub60@nsXPTCStubBase@@UEAAIXZ PROC EXPORT
-    push    rbx
-    mov     rbx, 60
-    jmp     SharedStub
-?Stub60@nsXPTCStubBase@@UEAAIXZ ENDP
-
-
-?Stub61@nsXPTCStubBase@@UEAAIXZ PROC EXPORT
-    push    rbx
-    mov     rbx, 61
-    jmp     SharedStub
-?Stub61@nsXPTCStubBase@@UEAAIXZ ENDP
-
-
-?Stub62@nsXPTCStubBase@@UEAAIXZ PROC EXPORT
-    push    rbx
-    mov     rbx, 62
-    jmp     SharedStub
-?Stub62@nsXPTCStubBase@@UEAAIXZ ENDP
-
-
-?Stub63@nsXPTCStubBase@@UEAAIXZ PROC EXPORT
-    push    rbx
-    mov     rbx, 63
-    jmp     SharedStub
-?Stub63@nsXPTCStubBase@@UEAAIXZ ENDP
-
-
-?Stub64@nsXPTCStubBase@@UEAAIXZ PROC EXPORT
-    push    rbx
-    mov     rbx, 64
-    jmp     SharedStub
-?Stub64@nsXPTCStubBase@@UEAAIXZ ENDP
-
-
-?Stub65@nsXPTCStubBase@@UEAAIXZ PROC EXPORT
-    push    rbx
-    mov     rbx, 65
-    jmp     SharedStub
-?Stub65@nsXPTCStubBase@@UEAAIXZ ENDP
-
-
-?Stub66@nsXPTCStubBase@@UEAAIXZ PROC EXPORT
-    push    rbx
-    mov     rbx, 66
-    jmp     SharedStub
-?Stub66@nsXPTCStubBase@@UEAAIXZ ENDP
-
-
-?Stub67@nsXPTCStubBase@@UEAAIXZ PROC EXPORT
-    push    rbx
-    mov     rbx, 67
-    jmp     SharedStub
-?Stub67@nsXPTCStubBase@@UEAAIXZ ENDP
-
-
-?Stub68@nsXPTCStubBase@@UEAAIXZ PROC EXPORT
-    push    rbx
-    mov     rbx, 68
-    jmp     SharedStub
-?Stub68@nsXPTCStubBase@@UEAAIXZ ENDP
-
-
-?Stub69@nsXPTCStubBase@@UEAAIXZ PROC EXPORT
-    push    rbx
-    mov     rbx, 69
-    jmp     SharedStub
-?Stub69@nsXPTCStubBase@@UEAAIXZ ENDP
-
-
-?Stub70@nsXPTCStubBase@@UEAAIXZ PROC EXPORT
-    push    rbx
-    mov     rbx, 70
-    jmp     SharedStub
-?Stub70@nsXPTCStubBase@@UEAAIXZ ENDP
-
-
-?Stub71@nsXPTCStubBase@@UEAAIXZ PROC EXPORT
-    push    rbx
-    mov     rbx, 71
-    jmp     SharedStub
-?Stub71@nsXPTCStubBase@@UEAAIXZ ENDP
-
-
-?Stub72@nsXPTCStubBase@@UEAAIXZ PROC EXPORT
-    push    rbx
-    mov     rbx, 72
-    jmp     SharedStub
-?Stub72@nsXPTCStubBase@@UEAAIXZ ENDP
-
-
-?Stub73@nsXPTCStubBase@@UEAAIXZ PROC EXPORT
-    push    rbx
-    mov     rbx, 73
-    jmp     SharedStub
-?Stub73@nsXPTCStubBase@@UEAAIXZ ENDP
-
-
-?Stub74@nsXPTCStubBase@@UEAAIXZ PROC EXPORT
-    push    rbx
-    mov     rbx, 74
-    jmp     SharedStub
-?Stub74@nsXPTCStubBase@@UEAAIXZ ENDP
-
-
-?Stub75@nsXPTCStubBase@@UEAAIXZ PROC EXPORT
-    push    rbx
-    mov     rbx, 75
-    jmp     SharedStub
-?Stub75@nsXPTCStubBase@@UEAAIXZ ENDP
-
-
-?Stub76@nsXPTCStubBase@@UEAAIXZ PROC EXPORT
-    push    rbx
-    mov     rbx, 76
-    jmp     SharedStub
-?Stub76@nsXPTCStubBase@@UEAAIXZ ENDP
-
-
-?Stub77@nsXPTCStubBase@@UEAAIXZ PROC EXPORT
-    push    rbx
-    mov     rbx, 77
-    jmp     SharedStub
-?Stub77@nsXPTCStubBase@@UEAAIXZ ENDP
-
-
-?Stub78@nsXPTCStubBase@@UEAAIXZ PROC EXPORT
-    push    rbx
-    mov     rbx, 78
-    jmp     SharedStub
-?Stub78@nsXPTCStubBase@@UEAAIXZ ENDP
-
-
-?Stub79@nsXPTCStubBase@@UEAAIXZ PROC EXPORT
-    push    rbx
-    mov     rbx, 79
-    jmp     SharedStub
-?Stub79@nsXPTCStubBase@@UEAAIXZ ENDP
-
-
-?Stub80@nsXPTCStubBase@@UEAAIXZ PROC EXPORT
-    push    rbx
-    mov     rbx, 80
-    jmp     SharedStub
-?Stub80@nsXPTCStubBase@@UEAAIXZ ENDP
-
-
-?Stub81@nsXPTCStubBase@@UEAAIXZ PROC EXPORT
-    push    rbx
-    mov     rbx, 81
-    jmp     SharedStub
-?Stub81@nsXPTCStubBase@@UEAAIXZ ENDP
-
-
-?Stub82@nsXPTCStubBase@@UEAAIXZ PROC EXPORT
-    push    rbx
-    mov     rbx, 82
-    jmp     SharedStub
-?Stub82@nsXPTCStubBase@@UEAAIXZ ENDP
-
-
-?Stub83@nsXPTCStubBase@@UEAAIXZ PROC EXPORT
-    push    rbx
-    mov     rbx, 83
-    jmp     SharedStub
-?Stub83@nsXPTCStubBase@@UEAAIXZ ENDP
-
-
-?Stub84@nsXPTCStubBase@@UEAAIXZ PROC EXPORT
-    push    rbx
-    mov     rbx, 84
-    jmp     SharedStub
-?Stub84@nsXPTCStubBase@@UEAAIXZ ENDP
-
-
-?Stub85@nsXPTCStubBase@@UEAAIXZ PROC EXPORT
-    push    rbx
-    mov     rbx, 85
-    jmp     SharedStub
-?Stub85@nsXPTCStubBase@@UEAAIXZ ENDP
-
-
-?Stub86@nsXPTCStubBase@@UEAAIXZ PROC EXPORT
-    push    rbx
-    mov     rbx, 86
-    jmp     SharedStub
-?Stub86@nsXPTCStubBase@@UEAAIXZ ENDP
-
-
-?Stub87@nsXPTCStubBase@@UEAAIXZ PROC EXPORT
-    push    rbx
-    mov     rbx, 87
-    jmp     SharedStub
-?Stub87@nsXPTCStubBase@@UEAAIXZ ENDP
-
-
-?Stub88@nsXPTCStubBase@@UEAAIXZ PROC EXPORT
-    push    rbx
-    mov     rbx, 88
-    jmp     SharedStub
-?Stub88@nsXPTCStubBase@@UEAAIXZ ENDP
-
-
-?Stub89@nsXPTCStubBase@@UEAAIXZ PROC EXPORT
-    push    rbx
-    mov     rbx, 89
-    jmp     SharedStub
-?Stub89@nsXPTCStubBase@@UEAAIXZ ENDP
-
-
-?Stub90@nsXPTCStubBase@@UEAAIXZ PROC EXPORT
-    push    rbx
-    mov     rbx, 90
-    jmp     SharedStub
-?Stub90@nsXPTCStubBase@@UEAAIXZ ENDP
-
-
-?Stub91@nsXPTCStubBase@@UEAAIXZ PROC EXPORT
-    push    rbx
-    mov     rbx, 91
-    jmp     SharedStub
-?Stub91@nsXPTCStubBase@@UEAAIXZ ENDP
-
-
-?Stub92@nsXPTCStubBase@@UEAAIXZ PROC EXPORT
-    push    rbx
-    mov     rbx, 92
-    jmp     SharedStub
-?Stub92@nsXPTCStubBase@@UEAAIXZ ENDP
-
-
-?Stub93@nsXPTCStubBase@@UEAAIXZ PROC EXPORT
-    push    rbx
-    mov     rbx, 93
-    jmp     SharedStub
-?Stub93@nsXPTCStubBase@@UEAAIXZ ENDP
-
-
-?Stub94@nsXPTCStubBase@@UEAAIXZ PROC EXPORT
-    push    rbx
-    mov     rbx, 94
-    jmp     SharedStub
-?Stub94@nsXPTCStubBase@@UEAAIXZ ENDP
-
-
-?Stub95@nsXPTCStubBase@@UEAAIXZ PROC EXPORT
-    push    rbx
-    mov     rbx, 95
-    jmp     SharedStub
-?Stub95@nsXPTCStubBase@@UEAAIXZ ENDP
-
-
-?Stub96@nsXPTCStubBase@@UEAAIXZ PROC EXPORT
-    push    rbx
-    mov     rbx, 96
-    jmp     SharedStub
-?Stub96@nsXPTCStubBase@@UEAAIXZ ENDP
-
-
-?Stub97@nsXPTCStubBase@@UEAAIXZ PROC EXPORT
-    push    rbx
-    mov     rbx, 97
-    jmp     SharedStub
-?Stub97@nsXPTCStubBase@@UEAAIXZ ENDP
-
-
-?Stub98@nsXPTCStubBase@@UEAAIXZ PROC EXPORT
-    push    rbx
-    mov     rbx, 98
-    jmp     SharedStub
-?Stub98@nsXPTCStubBase@@UEAAIXZ ENDP
-
-
-?Stub99@nsXPTCStubBase@@UEAAIXZ PROC EXPORT
-    push    rbx
-    mov     rbx, 99
-    jmp     SharedStub
-?Stub99@nsXPTCStubBase@@UEAAIXZ ENDP
-
-
-?Stub100@nsXPTCStubBase@@UEAAIXZ PROC EXPORT
-    push    rbx
-    mov     rbx, 100
-    jmp     SharedStub
-?Stub100@nsXPTCStubBase@@UEAAIXZ ENDP
-
-
-?Stub101@nsXPTCStubBase@@UEAAIXZ PROC EXPORT
-    push    rbx
-    mov     rbx, 101
-    jmp     SharedStub
-?Stub101@nsXPTCStubBase@@UEAAIXZ ENDP
-
-
-?Stub102@nsXPTCStubBase@@UEAAIXZ PROC EXPORT
-    push    rbx
-    mov     rbx, 102
-    jmp     SharedStub
-?Stub102@nsXPTCStubBase@@UEAAIXZ ENDP
-
-
-?Stub103@nsXPTCStubBase@@UEAAIXZ PROC EXPORT
-    push    rbx
-    mov     rbx, 103
-    jmp     SharedStub
-?Stub103@nsXPTCStubBase@@UEAAIXZ ENDP
-
-
-?Stub104@nsXPTCStubBase@@UEAAIXZ PROC EXPORT
-    push    rbx
-    mov     rbx, 104
-    jmp     SharedStub
-?Stub104@nsXPTCStubBase@@UEAAIXZ ENDP
-
-
-?Stub105@nsXPTCStubBase@@UEAAIXZ PROC EXPORT
-    push    rbx
-    mov     rbx, 105
-    jmp     SharedStub
-?Stub105@nsXPTCStubBase@@UEAAIXZ ENDP
-
-
-?Stub106@nsXPTCStubBase@@UEAAIXZ PROC EXPORT
-    push    rbx
-    mov     rbx, 106
-    jmp     SharedStub
-?Stub106@nsXPTCStubBase@@UEAAIXZ ENDP
-
-
-?Stub107@nsXPTCStubBase@@UEAAIXZ PROC EXPORT
-    push    rbx
-    mov     rbx, 107
-    jmp     SharedStub
-?Stub107@nsXPTCStubBase@@UEAAIXZ ENDP
-
-
-?Stub108@nsXPTCStubBase@@UEAAIXZ PROC EXPORT
-    push    rbx
-    mov     rbx, 108
-    jmp     SharedStub
-?Stub108@nsXPTCStubBase@@UEAAIXZ ENDP
-
-
-?Stub109@nsXPTCStubBase@@UEAAIXZ PROC EXPORT
-    push    rbx
-    mov     rbx, 109
-    jmp     SharedStub
-?Stub109@nsXPTCStubBase@@UEAAIXZ ENDP
-
-
-?Stub110@nsXPTCStubBase@@UEAAIXZ PROC EXPORT
-    push    rbx
-    mov     rbx, 110
-    jmp     SharedStub
-?Stub110@nsXPTCStubBase@@UEAAIXZ ENDP
-
-
-?Stub111@nsXPTCStubBase@@UEAAIXZ PROC EXPORT
-    push    rbx
-    mov     rbx, 111
-    jmp     SharedStub
-?Stub111@nsXPTCStubBase@@UEAAIXZ ENDP
-
-
-?Stub112@nsXPTCStubBase@@UEAAIXZ PROC EXPORT
-    push    rbx
-    mov     rbx, 112
-    jmp     SharedStub
-?Stub112@nsXPTCStubBase@@UEAAIXZ ENDP
-
-
-?Stub113@nsXPTCStubBase@@UEAAIXZ PROC EXPORT
-    push    rbx
-    mov     rbx, 113
-    jmp     SharedStub
-?Stub113@nsXPTCStubBase@@UEAAIXZ ENDP
-
-
-?Stub114@nsXPTCStubBase@@UEAAIXZ PROC EXPORT
-    push    rbx
-    mov     rbx, 114
-    jmp     SharedStub
-?Stub114@nsXPTCStubBase@@UEAAIXZ ENDP
-
-
-?Stub115@nsXPTCStubBase@@UEAAIXZ PROC EXPORT
-    push    rbx
-    mov     rbx, 115
-    jmp     SharedStub
-?Stub115@nsXPTCStubBase@@UEAAIXZ ENDP
-
-
-?Stub116@nsXPTCStubBase@@UEAAIXZ PROC EXPORT
-    push    rbx
-    mov     rbx, 116
-    jmp     SharedStub
-?Stub116@nsXPTCStubBase@@UEAAIXZ ENDP
-
-
-?Stub117@nsXPTCStubBase@@UEAAIXZ PROC EXPORT
-    push    rbx
-    mov     rbx, 117
-    jmp     SharedStub
-?Stub117@nsXPTCStubBase@@UEAAIXZ ENDP
-
-
-?Stub118@nsXPTCStubBase@@UEAAIXZ PROC EXPORT
-    push    rbx
-    mov     rbx, 118
-    jmp     SharedStub
-?Stub118@nsXPTCStubBase@@UEAAIXZ ENDP
-
-
-?Stub119@nsXPTCStubBase@@UEAAIXZ PROC EXPORT
-    push    rbx
-    mov     rbx, 119
-    jmp     SharedStub
-?Stub119@nsXPTCStubBase@@UEAAIXZ ENDP
-
-
-?Stub120@nsXPTCStubBase@@UEAAIXZ PROC EXPORT
-    push    rbx
-    mov     rbx, 120
-    jmp     SharedStub
-?Stub120@nsXPTCStubBase@@UEAAIXZ ENDP
-
-
-?Stub121@nsXPTCStubBase@@UEAAIXZ PROC EXPORT
-    push    rbx
-    mov     rbx, 121
-    jmp     SharedStub
-?Stub121@nsXPTCStubBase@@UEAAIXZ ENDP
-
-
-?Stub122@nsXPTCStubBase@@UEAAIXZ PROC EXPORT
-    push    rbx
-    mov     rbx, 122
-    jmp     SharedStub
-?Stub122@nsXPTCStubBase@@UEAAIXZ ENDP
-
-
-?Stub123@nsXPTCStubBase@@UEAAIXZ PROC EXPORT
-    push    rbx
-    mov     rbx, 123
-    jmp     SharedStub
-?Stub123@nsXPTCStubBase@@UEAAIXZ ENDP
-
-
-?Stub124@nsXPTCStubBase@@UEAAIXZ PROC EXPORT
-    push    rbx
-    mov     rbx, 124
-    jmp     SharedStub
-?Stub124@nsXPTCStubBase@@UEAAIXZ ENDP
-
-
-?Stub125@nsXPTCStubBase@@UEAAIXZ PROC EXPORT
-    push    rbx
-    mov     rbx, 125
-    jmp     SharedStub
-?Stub125@nsXPTCStubBase@@UEAAIXZ ENDP
-
-
-?Stub126@nsXPTCStubBase@@UEAAIXZ PROC EXPORT
-    push    rbx
-    mov     rbx, 126
-    jmp     SharedStub
-?Stub126@nsXPTCStubBase@@UEAAIXZ ENDP
-
-
-?Stub127@nsXPTCStubBase@@UEAAIXZ PROC EXPORT
-    push    rbx
-    mov     rbx, 127
-    jmp     SharedStub
-?Stub127@nsXPTCStubBase@@UEAAIXZ ENDP
-
-
-?Stub128@nsXPTCStubBase@@UEAAIXZ PROC EXPORT
-    push    rbx
-    mov     rbx, 128
-    jmp     SharedStub
-?Stub128@nsXPTCStubBase@@UEAAIXZ ENDP
-
-
-?Stub129@nsXPTCStubBase@@UEAAIXZ PROC EXPORT
-    push    rbx
-    mov     rbx, 129
-    jmp     SharedStub
-?Stub129@nsXPTCStubBase@@UEAAIXZ ENDP
-
-
-?Stub130@nsXPTCStubBase@@UEAAIXZ PROC EXPORT
-    push    rbx
-    mov     rbx, 130
-    jmp     SharedStub
-?Stub130@nsXPTCStubBase@@UEAAIXZ ENDP
-
-
-?Stub131@nsXPTCStubBase@@UEAAIXZ PROC EXPORT
-    push    rbx
-    mov     rbx, 131
-    jmp     SharedStub
-?Stub131@nsXPTCStubBase@@UEAAIXZ ENDP
-
-
-?Stub132@nsXPTCStubBase@@UEAAIXZ PROC EXPORT
-    push    rbx
-    mov     rbx, 132
-    jmp     SharedStub
-?Stub132@nsXPTCStubBase@@UEAAIXZ ENDP
-
-
-?Stub133@nsXPTCStubBase@@UEAAIXZ PROC EXPORT
-    push    rbx
-    mov     rbx, 133
-    jmp     SharedStub
-?Stub133@nsXPTCStubBase@@UEAAIXZ ENDP
-
-
-?Stub134@nsXPTCStubBase@@UEAAIXZ PROC EXPORT
-    push    rbx
-    mov     rbx, 134
-    jmp     SharedStub
-?Stub134@nsXPTCStubBase@@UEAAIXZ ENDP
-
-
-?Stub135@nsXPTCStubBase@@UEAAIXZ PROC EXPORT
-    push    rbx
-    mov     rbx, 135
-    jmp     SharedStub
-?Stub135@nsXPTCStubBase@@UEAAIXZ ENDP
-
-
-?Stub136@nsXPTCStubBase@@UEAAIXZ PROC EXPORT
-    push    rbx
-    mov     rbx, 136
-    jmp     SharedStub
-?Stub136@nsXPTCStubBase@@UEAAIXZ ENDP
-
-
-?Stub137@nsXPTCStubBase@@UEAAIXZ PROC EXPORT
-    push    rbx
-    mov     rbx, 137
-    jmp     SharedStub
-?Stub137@nsXPTCStubBase@@UEAAIXZ ENDP
-
-
-?Stub138@nsXPTCStubBase@@UEAAIXZ PROC EXPORT
-    push    rbx
-    mov     rbx, 138
-    jmp     SharedStub
-?Stub138@nsXPTCStubBase@@UEAAIXZ ENDP
-
-
-?Stub139@nsXPTCStubBase@@UEAAIXZ PROC EXPORT
-    push    rbx
-    mov     rbx, 139
-    jmp     SharedStub
-?Stub139@nsXPTCStubBase@@UEAAIXZ ENDP
-
-
-?Stub140@nsXPTCStubBase@@UEAAIXZ PROC EXPORT
-    push    rbx
-    mov     rbx, 140
-    jmp     SharedStub
-?Stub140@nsXPTCStubBase@@UEAAIXZ ENDP
-
-
-?Stub141@nsXPTCStubBase@@UEAAIXZ PROC EXPORT
-    push    rbx
-    mov     rbx, 141
-    jmp     SharedStub
-?Stub141@nsXPTCStubBase@@UEAAIXZ ENDP
-
-
-?Stub142@nsXPTCStubBase@@UEAAIXZ PROC EXPORT
-    push    rbx
-    mov     rbx, 142
-    jmp     SharedStub
-?Stub142@nsXPTCStubBase@@UEAAIXZ ENDP
-
-
-?Stub143@nsXPTCStubBase@@UEAAIXZ PROC EXPORT
-    push    rbx
-    mov     rbx, 143
-    jmp     SharedStub
-?Stub143@nsXPTCStubBase@@UEAAIXZ ENDP
-
-
-?Stub144@nsXPTCStubBase@@UEAAIXZ PROC EXPORT
-    push    rbx
-    mov     rbx, 144
-    jmp     SharedStub
-?Stub144@nsXPTCStubBase@@UEAAIXZ ENDP
-
-
-?Stub145@nsXPTCStubBase@@UEAAIXZ PROC EXPORT
-    push    rbx
-    mov     rbx, 145
-    jmp     SharedStub
-?Stub145@nsXPTCStubBase@@UEAAIXZ ENDP
-
-
-?Stub146@nsXPTCStubBase@@UEAAIXZ PROC EXPORT
-    push    rbx
-    mov     rbx, 146
-    jmp     SharedStub
-?Stub146@nsXPTCStubBase@@UEAAIXZ ENDP
-
-
-?Stub147@nsXPTCStubBase@@UEAAIXZ PROC EXPORT
-    push    rbx
-    mov     rbx, 147
-    jmp     SharedStub
-?Stub147@nsXPTCStubBase@@UEAAIXZ ENDP
-
-
-?Stub148@nsXPTCStubBase@@UEAAIXZ PROC EXPORT
-    push    rbx
-    mov     rbx, 148
-    jmp     SharedStub
-?Stub148@nsXPTCStubBase@@UEAAIXZ ENDP
-
-
-?Stub149@nsXPTCStubBase@@UEAAIXZ PROC EXPORT
-    push    rbx
-    mov     rbx, 149
-    jmp     SharedStub
-?Stub149@nsXPTCStubBase@@UEAAIXZ ENDP
-
-
-?Stub150@nsXPTCStubBase@@UEAAIXZ PROC EXPORT
-    push    rbx
-    mov     rbx, 150
-    jmp     SharedStub
-?Stub150@nsXPTCStubBase@@UEAAIXZ ENDP
-
-
-?Stub151@nsXPTCStubBase@@UEAAIXZ PROC EXPORT
-    push    rbx
-    mov     rbx, 151
-    jmp     SharedStub
-?Stub151@nsXPTCStubBase@@UEAAIXZ ENDP
-
-
-?Stub152@nsXPTCStubBase@@UEAAIXZ PROC EXPORT
-    push    rbx
-    mov     rbx, 152
-    jmp     SharedStub
-?Stub152@nsXPTCStubBase@@UEAAIXZ ENDP
-
-
-?Stub153@nsXPTCStubBase@@UEAAIXZ PROC EXPORT
-    push    rbx
-    mov     rbx, 153
-    jmp     SharedStub
-?Stub153@nsXPTCStubBase@@UEAAIXZ ENDP
-
-
-?Stub154@nsXPTCStubBase@@UEAAIXZ PROC EXPORT
-    push    rbx
-    mov     rbx, 154
-    jmp     SharedStub
-?Stub154@nsXPTCStubBase@@UEAAIXZ ENDP
-
-
-?Stub155@nsXPTCStubBase@@UEAAIXZ PROC EXPORT
-    push    rbx
-    mov     rbx, 155
-    jmp     SharedStub
-?Stub155@nsXPTCStubBase@@UEAAIXZ ENDP
-
-
-?Stub156@nsXPTCStubBase@@UEAAIXZ PROC EXPORT
-    push    rbx
-    mov     rbx, 156
-    jmp     SharedStub
-?Stub156@nsXPTCStubBase@@UEAAIXZ ENDP
-
-
-?Stub157@nsXPTCStubBase@@UEAAIXZ PROC EXPORT
-    push    rbx
-    mov     rbx, 157
-    jmp     SharedStub
-?Stub157@nsXPTCStubBase@@UEAAIXZ ENDP
-
-
-?Stub158@nsXPTCStubBase@@UEAAIXZ PROC EXPORT
-    push    rbx
-    mov     rbx, 158
-    jmp     SharedStub
-?Stub158@nsXPTCStubBase@@UEAAIXZ ENDP
-
-
-?Stub159@nsXPTCStubBase@@UEAAIXZ PROC EXPORT
-    push    rbx
-    mov     rbx, 159
-    jmp     SharedStub
-?Stub159@nsXPTCStubBase@@UEAAIXZ ENDP
-
-
-?Stub160@nsXPTCStubBase@@UEAAIXZ PROC EXPORT
-    push    rbx
-    mov     rbx, 160
-    jmp     SharedStub
-?Stub160@nsXPTCStubBase@@UEAAIXZ ENDP
-
-
-?Stub161@nsXPTCStubBase@@UEAAIXZ PROC EXPORT
-    push    rbx
-    mov     rbx, 161
-    jmp     SharedStub
-?Stub161@nsXPTCStubBase@@UEAAIXZ ENDP
-
-
-?Stub162@nsXPTCStubBase@@UEAAIXZ PROC EXPORT
-    push    rbx
-    mov     rbx, 162
-    jmp     SharedStub
-?Stub162@nsXPTCStubBase@@UEAAIXZ ENDP
-
-
-?Stub163@nsXPTCStubBase@@UEAAIXZ PROC EXPORT
-    push    rbx
-    mov     rbx, 163
-    jmp     SharedStub
-?Stub163@nsXPTCStubBase@@UEAAIXZ ENDP
-
-
-?Stub164@nsXPTCStubBase@@UEAAIXZ PROC EXPORT
-    push    rbx
-    mov     rbx, 164
-    jmp     SharedStub
-?Stub164@nsXPTCStubBase@@UEAAIXZ ENDP
-
-
-?Stub165@nsXPTCStubBase@@UEAAIXZ PROC EXPORT
-    push    rbx
-    mov     rbx, 165
-    jmp     SharedStub
-?Stub165@nsXPTCStubBase@@UEAAIXZ ENDP
-
-
-?Stub166@nsXPTCStubBase@@UEAAIXZ PROC EXPORT
-    push    rbx
-    mov     rbx, 166
-    jmp     SharedStub
-?Stub166@nsXPTCStubBase@@UEAAIXZ ENDP
-
-
-?Stub167@nsXPTCStubBase@@UEAAIXZ PROC EXPORT
-    push    rbx
-    mov     rbx, 167
-    jmp     SharedStub
-?Stub167@nsXPTCStubBase@@UEAAIXZ ENDP
-
-
-?Stub168@nsXPTCStubBase@@UEAAIXZ PROC EXPORT
-    push    rbx
-    mov     rbx, 168
-    jmp     SharedStub
-?Stub168@nsXPTCStubBase@@UEAAIXZ ENDP
-
-
-?Stub169@nsXPTCStubBase@@UEAAIXZ PROC EXPORT
-    push    rbx
-    mov     rbx, 169
-    jmp     SharedStub
-?Stub169@nsXPTCStubBase@@UEAAIXZ ENDP
-
-
-?Stub170@nsXPTCStubBase@@UEAAIXZ PROC EXPORT
-    push    rbx
-    mov     rbx, 170
-    jmp     SharedStub
-?Stub170@nsXPTCStubBase@@UEAAIXZ ENDP
-
-
-?Stub171@nsXPTCStubBase@@UEAAIXZ PROC EXPORT
-    push    rbx
-    mov     rbx, 171
-    jmp     SharedStub
-?Stub171@nsXPTCStubBase@@UEAAIXZ ENDP
-
-
-?Stub172@nsXPTCStubBase@@UEAAIXZ PROC EXPORT
-    push    rbx
-    mov     rbx, 172
-    jmp     SharedStub
-?Stub172@nsXPTCStubBase@@UEAAIXZ ENDP
-
-
-?Stub173@nsXPTCStubBase@@UEAAIXZ PROC EXPORT
-    push    rbx
-    mov     rbx, 173
-    jmp     SharedStub
-?Stub173@nsXPTCStubBase@@UEAAIXZ ENDP
-
-
-?Stub174@nsXPTCStubBase@@UEAAIXZ PROC EXPORT
-    push    rbx
-    mov     rbx, 174
-    jmp     SharedStub
-?Stub174@nsXPTCStubBase@@UEAAIXZ ENDP
-
-
-?Stub175@nsXPTCStubBase@@UEAAIXZ PROC EXPORT
-    push    rbx
-    mov     rbx, 175
-    jmp     SharedStub
-?Stub175@nsXPTCStubBase@@UEAAIXZ ENDP
-
-
-?Stub176@nsXPTCStubBase@@UEAAIXZ PROC EXPORT
-    push    rbx
-    mov     rbx, 176
-    jmp     SharedStub
-?Stub176@nsXPTCStubBase@@UEAAIXZ ENDP
-
-
-?Stub177@nsXPTCStubBase@@UEAAIXZ PROC EXPORT
-    push    rbx
-    mov     rbx, 177
-    jmp     SharedStub
-?Stub177@nsXPTCStubBase@@UEAAIXZ ENDP
-
-
-?Stub178@nsXPTCStubBase@@UEAAIXZ PROC EXPORT
-    push    rbx
-    mov     rbx, 178
-    jmp     SharedStub
-?Stub178@nsXPTCStubBase@@UEAAIXZ ENDP
-
-
-?Stub179@nsXPTCStubBase@@UEAAIXZ PROC EXPORT
-    push    rbx
-    mov     rbx, 179
-    jmp     SharedStub
-?Stub179@nsXPTCStubBase@@UEAAIXZ ENDP
-
-
-?Stub180@nsXPTCStubBase@@UEAAIXZ PROC EXPORT
-    push    rbx
-    mov     rbx, 180
-    jmp     SharedStub
-?Stub180@nsXPTCStubBase@@UEAAIXZ ENDP
-
-
-?Stub181@nsXPTCStubBase@@UEAAIXZ PROC EXPORT
-    push    rbx
-    mov     rbx, 181
-    jmp     SharedStub
-?Stub181@nsXPTCStubBase@@UEAAIXZ ENDP
-
-
-?Stub182@nsXPTCStubBase@@UEAAIXZ PROC EXPORT
-    push    rbx
-    mov     rbx, 182
-    jmp     SharedStub
-?Stub182@nsXPTCStubBase@@UEAAIXZ ENDP
-
-
-?Stub183@nsXPTCStubBase@@UEAAIXZ PROC EXPORT
-    push    rbx
-    mov     rbx, 183
-    jmp     SharedStub
-?Stub183@nsXPTCStubBase@@UEAAIXZ ENDP
-
-
-?Stub184@nsXPTCStubBase@@UEAAIXZ PROC EXPORT
-    push    rbx
-    mov     rbx, 184
-    jmp     SharedStub
-?Stub184@nsXPTCStubBase@@UEAAIXZ ENDP
-
-
-?Stub185@nsXPTCStubBase@@UEAAIXZ PROC EXPORT
-    push    rbx
-    mov     rbx, 185
-    jmp     SharedStub
-?Stub185@nsXPTCStubBase@@UEAAIXZ ENDP
-
-
-?Stub186@nsXPTCStubBase@@UEAAIXZ PROC EXPORT
-    push    rbx
-    mov     rbx, 186
-    jmp     SharedStub
-?Stub186@nsXPTCStubBase@@UEAAIXZ ENDP
-
-
-?Stub187@nsXPTCStubBase@@UEAAIXZ PROC EXPORT
-    push    rbx
-    mov     rbx, 187
-    jmp     SharedStub
-?Stub187@nsXPTCStubBase@@UEAAIXZ ENDP
-
-
-?Stub188@nsXPTCStubBase@@UEAAIXZ PROC EXPORT
-    push    rbx
-    mov     rbx, 188
-    jmp     SharedStub
-?Stub188@nsXPTCStubBase@@UEAAIXZ ENDP
-
-
-?Stub189@nsXPTCStubBase@@UEAAIXZ PROC EXPORT
-    push    rbx
-    mov     rbx, 189
-    jmp     SharedStub
-?Stub189@nsXPTCStubBase@@UEAAIXZ ENDP
-
-
-?Stub190@nsXPTCStubBase@@UEAAIXZ PROC EXPORT
-    push    rbx
-    mov     rbx, 190
-    jmp     SharedStub
-?Stub190@nsXPTCStubBase@@UEAAIXZ ENDP
-
-
-?Stub191@nsXPTCStubBase@@UEAAIXZ PROC EXPORT
-    push    rbx
-    mov     rbx, 191
-    jmp     SharedStub
-?Stub191@nsXPTCStubBase@@UEAAIXZ ENDP
-
-
-?Stub192@nsXPTCStubBase@@UEAAIXZ PROC EXPORT
-    push    rbx
-    mov     rbx, 192
-    jmp     SharedStub
-?Stub192@nsXPTCStubBase@@UEAAIXZ ENDP
-
-
-?Stub193@nsXPTCStubBase@@UEAAIXZ PROC EXPORT
-    push    rbx
-    mov     rbx, 193
-    jmp     SharedStub
-?Stub193@nsXPTCStubBase@@UEAAIXZ ENDP
-
-
-?Stub194@nsXPTCStubBase@@UEAAIXZ PROC EXPORT
-    push    rbx
-    mov     rbx, 194
-    jmp     SharedStub
-?Stub194@nsXPTCStubBase@@UEAAIXZ ENDP
-
-
-?Stub195@nsXPTCStubBase@@UEAAIXZ PROC EXPORT
-    push    rbx
-    mov     rbx, 195
-    jmp     SharedStub
-?Stub195@nsXPTCStubBase@@UEAAIXZ ENDP
-
-
-?Stub196@nsXPTCStubBase@@UEAAIXZ PROC EXPORT
-    push    rbx
-    mov     rbx, 196
-    jmp     SharedStub
-?Stub196@nsXPTCStubBase@@UEAAIXZ ENDP
-
-
-?Stub197@nsXPTCStubBase@@UEAAIXZ PROC EXPORT
-    push    rbx
-    mov     rbx, 197
-    jmp     SharedStub
-?Stub197@nsXPTCStubBase@@UEAAIXZ ENDP
-
-
-?Stub198@nsXPTCStubBase@@UEAAIXZ PROC EXPORT
-    push    rbx
-    mov     rbx, 198
-    jmp     SharedStub
-?Stub198@nsXPTCStubBase@@UEAAIXZ ENDP
-
-
-?Stub199@nsXPTCStubBase@@UEAAIXZ PROC EXPORT
-    push    rbx
-    mov     rbx, 199
-    jmp     SharedStub
-?Stub199@nsXPTCStubBase@@UEAAIXZ ENDP
-
-
-?Stub200@nsXPTCStubBase@@UEAAIXZ PROC EXPORT
-    push    rbx
-    mov     rbx, 200
-    jmp     SharedStub
-?Stub200@nsXPTCStubBase@@UEAAIXZ ENDP
-
-
-?Stub201@nsXPTCStubBase@@UEAAIXZ PROC EXPORT
-    push    rbx
-    mov     rbx, 201
-    jmp     SharedStub
-?Stub201@nsXPTCStubBase@@UEAAIXZ ENDP
-
-
-?Stub202@nsXPTCStubBase@@UEAAIXZ PROC EXPORT
-    push    rbx
-    mov     rbx, 202
-    jmp     SharedStub
-?Stub202@nsXPTCStubBase@@UEAAIXZ ENDP
-
-
-?Stub203@nsXPTCStubBase@@UEAAIXZ PROC EXPORT
-    push    rbx
-    mov     rbx, 203
-    jmp     SharedStub
-?Stub203@nsXPTCStubBase@@UEAAIXZ ENDP
-
-
-?Stub204@nsXPTCStubBase@@UEAAIXZ PROC EXPORT
-    push    rbx
-    mov     rbx, 204
-    jmp     SharedStub
-?Stub204@nsXPTCStubBase@@UEAAIXZ ENDP
-
-
-?Stub205@nsXPTCStubBase@@UEAAIXZ PROC EXPORT
-    push    rbx
-    mov     rbx, 205
-    jmp     SharedStub
-?Stub205@nsXPTCStubBase@@UEAAIXZ ENDP
-
-
-?Stub206@nsXPTCStubBase@@UEAAIXZ PROC EXPORT
-    push    rbx
-    mov     rbx, 206
-    jmp     SharedStub
-?Stub206@nsXPTCStubBase@@UEAAIXZ ENDP
-
-
-?Stub207@nsXPTCStubBase@@UEAAIXZ PROC EXPORT
-    push    rbx
-    mov     rbx, 207
-    jmp     SharedStub
-?Stub207@nsXPTCStubBase@@UEAAIXZ ENDP
-
-
-?Stub208@nsXPTCStubBase@@UEAAIXZ PROC EXPORT
-    push    rbx
-    mov     rbx, 208
-    jmp     SharedStub
-?Stub208@nsXPTCStubBase@@UEAAIXZ ENDP
-
-
-?Stub209@nsXPTCStubBase@@UEAAIXZ PROC EXPORT
-    push    rbx
-    mov     rbx, 209
-    jmp     SharedStub
-?Stub209@nsXPTCStubBase@@UEAAIXZ ENDP
-
-
-?Stub210@nsXPTCStubBase@@UEAAIXZ PROC EXPORT
-    push    rbx
-    mov     rbx, 210
-    jmp     SharedStub
-?Stub210@nsXPTCStubBase@@UEAAIXZ ENDP
-
-
-?Stub211@nsXPTCStubBase@@UEAAIXZ PROC EXPORT
-    push    rbx
-    mov     rbx, 211
-    jmp     SharedStub
-?Stub211@nsXPTCStubBase@@UEAAIXZ ENDP
-
-
-?Stub212@nsXPTCStubBase@@UEAAIXZ PROC EXPORT
-    push    rbx
-    mov     rbx, 212
-    jmp     SharedStub
-?Stub212@nsXPTCStubBase@@UEAAIXZ ENDP
-
-
-?Stub213@nsXPTCStubBase@@UEAAIXZ PROC EXPORT
-    push    rbx
-    mov     rbx, 213
-    jmp     SharedStub
-?Stub213@nsXPTCStubBase@@UEAAIXZ ENDP
-
-
-?Stub214@nsXPTCStubBase@@UEAAIXZ PROC EXPORT
-    push    rbx
-    mov     rbx, 214
-    jmp     SharedStub
-?Stub214@nsXPTCStubBase@@UEAAIXZ ENDP
-
-
-?Stub215@nsXPTCStubBase@@UEAAIXZ PROC EXPORT
-    push    rbx
-    mov     rbx, 215
-    jmp     SharedStub
-?Stub215@nsXPTCStubBase@@UEAAIXZ ENDP
-
-
-?Stub216@nsXPTCStubBase@@UEAAIXZ PROC EXPORT
-    push    rbx
-    mov     rbx, 216
-    jmp     SharedStub
-?Stub216@nsXPTCStubBase@@UEAAIXZ ENDP
-
-
-?Stub217@nsXPTCStubBase@@UEAAIXZ PROC EXPORT
-    push    rbx
-    mov     rbx, 217
-    jmp     SharedStub
-?Stub217@nsXPTCStubBase@@UEAAIXZ ENDP
-
-
-?Stub218@nsXPTCStubBase@@UEAAIXZ PROC EXPORT
-    push    rbx
-    mov     rbx, 218
-    jmp     SharedStub
-?Stub218@nsXPTCStubBase@@UEAAIXZ ENDP
-
-
-?Stub219@nsXPTCStubBase@@UEAAIXZ PROC EXPORT
-    push    rbx
-    mov     rbx, 219
-    jmp     SharedStub
-?Stub219@nsXPTCStubBase@@UEAAIXZ ENDP
-
-
-?Stub220@nsXPTCStubBase@@UEAAIXZ PROC EXPORT
-    push    rbx
-    mov     rbx, 220
-    jmp     SharedStub
-?Stub220@nsXPTCStubBase@@UEAAIXZ ENDP
-
-
-?Stub221@nsXPTCStubBase@@UEAAIXZ PROC EXPORT
-    push    rbx
-    mov     rbx, 221
-    jmp     SharedStub
-?Stub221@nsXPTCStubBase@@UEAAIXZ ENDP
-
-
-?Stub222@nsXPTCStubBase@@UEAAIXZ PROC EXPORT
-    push    rbx
-    mov     rbx, 222
-    jmp     SharedStub
-?Stub222@nsXPTCStubBase@@UEAAIXZ ENDP
-
-
-?Stub223@nsXPTCStubBase@@UEAAIXZ PROC EXPORT
-    push    rbx
-    mov     rbx, 223
-    jmp     SharedStub
-?Stub223@nsXPTCStubBase@@UEAAIXZ ENDP
-
-
-?Stub224@nsXPTCStubBase@@UEAAIXZ PROC EXPORT
-    push    rbx
-    mov     rbx, 224
-    jmp     SharedStub
-?Stub224@nsXPTCStubBase@@UEAAIXZ ENDP
-
-
-?Stub225@nsXPTCStubBase@@UEAAIXZ PROC EXPORT
-    push    rbx
-    mov     rbx, 225
-    jmp     SharedStub
-?Stub225@nsXPTCStubBase@@UEAAIXZ ENDP
-
-
-?Stub226@nsXPTCStubBase@@UEAAIXZ PROC EXPORT
-    push    rbx
-    mov     rbx, 226
-    jmp     SharedStub
-?Stub226@nsXPTCStubBase@@UEAAIXZ ENDP
-
-
-?Stub227@nsXPTCStubBase@@UEAAIXZ PROC EXPORT
-    push    rbx
-    mov     rbx, 227
-    jmp     SharedStub
-?Stub227@nsXPTCStubBase@@UEAAIXZ ENDP
-
-
-?Stub228@nsXPTCStubBase@@UEAAIXZ PROC EXPORT
-    push    rbx
-    mov     rbx, 228
-    jmp     SharedStub
-?Stub228@nsXPTCStubBase@@UEAAIXZ ENDP
-
-
-?Stub229@nsXPTCStubBase@@UEAAIXZ PROC EXPORT
-    push    rbx
-    mov     rbx, 229
-    jmp     SharedStub
-?Stub229@nsXPTCStubBase@@UEAAIXZ ENDP
-
-
-?Stub230@nsXPTCStubBase@@UEAAIXZ PROC EXPORT
-    push    rbx
-    mov     rbx, 230
-    jmp     SharedStub
-?Stub230@nsXPTCStubBase@@UEAAIXZ ENDP
-
-
-?Stub231@nsXPTCStubBase@@UEAAIXZ PROC EXPORT
-    push    rbx
-    mov     rbx, 231
-    jmp     SharedStub
-?Stub231@nsXPTCStubBase@@UEAAIXZ ENDP
-
-
-?Stub232@nsXPTCStubBase@@UEAAIXZ PROC EXPORT
-    push    rbx
-    mov     rbx, 232
-    jmp     SharedStub
-?Stub232@nsXPTCStubBase@@UEAAIXZ ENDP
-
-
-?Stub233@nsXPTCStubBase@@UEAAIXZ PROC EXPORT
-    push    rbx
-    mov     rbx, 233
-    jmp     SharedStub
-?Stub233@nsXPTCStubBase@@UEAAIXZ ENDP
-
-
-?Stub234@nsXPTCStubBase@@UEAAIXZ PROC EXPORT
-    push    rbx
-    mov     rbx, 234
-    jmp     SharedStub
-?Stub234@nsXPTCStubBase@@UEAAIXZ ENDP
-
-
-?Stub235@nsXPTCStubBase@@UEAAIXZ PROC EXPORT
-    push    rbx
-    mov     rbx, 235
-    jmp     SharedStub
-?Stub235@nsXPTCStubBase@@UEAAIXZ ENDP
-
-
-?Stub236@nsXPTCStubBase@@UEAAIXZ PROC EXPORT
-    push    rbx
-    mov     rbx, 236
-    jmp     SharedStub
-?Stub236@nsXPTCStubBase@@UEAAIXZ ENDP
-
-
-?Stub237@nsXPTCStubBase@@UEAAIXZ PROC EXPORT
-    push    rbx
-    mov     rbx, 237
-    jmp     SharedStub
-?Stub237@nsXPTCStubBase@@UEAAIXZ ENDP
-
-
-?Stub238@nsXPTCStubBase@@UEAAIXZ PROC EXPORT
-    push    rbx
-    mov     rbx, 238
-    jmp     SharedStub
-?Stub238@nsXPTCStubBase@@UEAAIXZ ENDP
-
-
-?Stub239@nsXPTCStubBase@@UEAAIXZ PROC EXPORT
-    push    rbx
-    mov     rbx, 239
-    jmp     SharedStub
-?Stub239@nsXPTCStubBase@@UEAAIXZ ENDP
-
-
-?Stub240@nsXPTCStubBase@@UEAAIXZ PROC EXPORT
-    push    rbx
-    mov     rbx, 240
-    jmp     SharedStub
-?Stub240@nsXPTCStubBase@@UEAAIXZ ENDP
-
-
-?Stub241@nsXPTCStubBase@@UEAAIXZ PROC EXPORT
-    push    rbx
-    mov     rbx, 241
-    jmp     SharedStub
-?Stub241@nsXPTCStubBase@@UEAAIXZ ENDP
-
-
-?Stub242@nsXPTCStubBase@@UEAAIXZ PROC EXPORT
-    push    rbx
-    mov     rbx, 242
-    jmp     SharedStub
-?Stub242@nsXPTCStubBase@@UEAAIXZ ENDP
-
-
-?Stub243@nsXPTCStubBase@@UEAAIXZ PROC EXPORT
-    push    rbx
-    mov     rbx, 243
-    jmp     SharedStub
-?Stub243@nsXPTCStubBase@@UEAAIXZ ENDP
-
-
-?Stub244@nsXPTCStubBase@@UEAAIXZ PROC EXPORT
-    push    rbx
-    mov     rbx, 244
-    jmp     SharedStub
-?Stub244@nsXPTCStubBase@@UEAAIXZ ENDP
-
-
-?Stub245@nsXPTCStubBase@@UEAAIXZ PROC EXPORT
-    push    rbx
-    mov     rbx, 245
-    jmp     SharedStub
-?Stub245@nsXPTCStubBase@@UEAAIXZ ENDP
-
-
-?Stub246@nsXPTCStubBase@@UEAAIXZ PROC EXPORT
-    push    rbx
-    mov     rbx, 246
-    jmp     SharedStub
-?Stub246@nsXPTCStubBase@@UEAAIXZ ENDP
-
-
-?Stub247@nsXPTCStubBase@@UEAAIXZ PROC EXPORT
-    push    rbx
-    mov     rbx, 247
-    jmp     SharedStub
-?Stub247@nsXPTCStubBase@@UEAAIXZ ENDP
-
-
-?Stub248@nsXPTCStubBase@@UEAAIXZ PROC EXPORT
-    push    rbx
-    mov     rbx, 248
-    jmp     SharedStub
-?Stub248@nsXPTCStubBase@@UEAAIXZ ENDP
-
-
-?Stub249@nsXPTCStubBase@@UEAAIXZ PROC EXPORT
-    push    rbx
-    mov     rbx, 249
-    jmp     SharedStub
-?Stub249@nsXPTCStubBase@@UEAAIXZ ENDP
-
+STUBENTRY MACRO functionname, paramcount
+functionname PROC EXPORT
+    mov     r11, paramcount
+    jmp     SharedStub
+functionname ENDP
+ENDM
+
+    STUBENTRY ?Stub3@nsXPTCStubBase@@UEAAIXZ, 3
+    STUBENTRY ?Stub4@nsXPTCStubBase@@UEAAIXZ, 4
+    STUBENTRY ?Stub5@nsXPTCStubBase@@UEAAIXZ, 5
+    STUBENTRY ?Stub6@nsXPTCStubBase@@UEAAIXZ, 6
+    STUBENTRY ?Stub7@nsXPTCStubBase@@UEAAIXZ, 7
+    STUBENTRY ?Stub8@nsXPTCStubBase@@UEAAIXZ, 8
+    STUBENTRY ?Stub9@nsXPTCStubBase@@UEAAIXZ, 9
+    STUBENTRY ?Stub10@nsXPTCStubBase@@UEAAIXZ, 10
+    STUBENTRY ?Stub11@nsXPTCStubBase@@UEAAIXZ, 11
+    STUBENTRY ?Stub12@nsXPTCStubBase@@UEAAIXZ, 12
+    STUBENTRY ?Stub13@nsXPTCStubBase@@UEAAIXZ, 13
+    STUBENTRY ?Stub14@nsXPTCStubBase@@UEAAIXZ, 14
+    STUBENTRY ?Stub15@nsXPTCStubBase@@UEAAIXZ, 15
+    STUBENTRY ?Stub16@nsXPTCStubBase@@UEAAIXZ, 16
+    STUBENTRY ?Stub17@nsXPTCStubBase@@UEAAIXZ, 17
+    STUBENTRY ?Stub18@nsXPTCStubBase@@UEAAIXZ, 18
+    STUBENTRY ?Stub19@nsXPTCStubBase@@UEAAIXZ, 19
+    STUBENTRY ?Stub20@nsXPTCStubBase@@UEAAIXZ, 20
+    STUBENTRY ?Stub21@nsXPTCStubBase@@UEAAIXZ, 21
+    STUBENTRY ?Stub22@nsXPTCStubBase@@UEAAIXZ, 22
+    STUBENTRY ?Stub23@nsXPTCStubBase@@UEAAIXZ, 23
+    STUBENTRY ?Stub24@nsXPTCStubBase@@UEAAIXZ, 24
+    STUBENTRY ?Stub25@nsXPTCStubBase@@UEAAIXZ, 25
+    STUBENTRY ?Stub26@nsXPTCStubBase@@UEAAIXZ, 26
+    STUBENTRY ?Stub27@nsXPTCStubBase@@UEAAIXZ, 27
+    STUBENTRY ?Stub28@nsXPTCStubBase@@UEAAIXZ, 28
+    STUBENTRY ?Stub29@nsXPTCStubBase@@UEAAIXZ, 29
+    STUBENTRY ?Stub30@nsXPTCStubBase@@UEAAIXZ, 30
+    STUBENTRY ?Stub31@nsXPTCStubBase@@UEAAIXZ, 31
+    STUBENTRY ?Stub32@nsXPTCStubBase@@UEAAIXZ, 32
+    STUBENTRY ?Stub33@nsXPTCStubBase@@UEAAIXZ, 33
+    STUBENTRY ?Stub34@nsXPTCStubBase@@UEAAIXZ, 34
+    STUBENTRY ?Stub35@nsXPTCStubBase@@UEAAIXZ, 35
+    STUBENTRY ?Stub36@nsXPTCStubBase@@UEAAIXZ, 36
+    STUBENTRY ?Stub37@nsXPTCStubBase@@UEAAIXZ, 37
+    STUBENTRY ?Stub38@nsXPTCStubBase@@UEAAIXZ, 38
+    STUBENTRY ?Stub39@nsXPTCStubBase@@UEAAIXZ, 39
+    STUBENTRY ?Stub40@nsXPTCStubBase@@UEAAIXZ, 40
+    STUBENTRY ?Stub41@nsXPTCStubBase@@UEAAIXZ, 41
+    STUBENTRY ?Stub42@nsXPTCStubBase@@UEAAIXZ, 42
+    STUBENTRY ?Stub43@nsXPTCStubBase@@UEAAIXZ, 43
+    STUBENTRY ?Stub44@nsXPTCStubBase@@UEAAIXZ, 44
+    STUBENTRY ?Stub45@nsXPTCStubBase@@UEAAIXZ, 45
+    STUBENTRY ?Stub46@nsXPTCStubBase@@UEAAIXZ, 46
+    STUBENTRY ?Stub47@nsXPTCStubBase@@UEAAIXZ, 47
+    STUBENTRY ?Stub48@nsXPTCStubBase@@UEAAIXZ, 48
+    STUBENTRY ?Stub49@nsXPTCStubBase@@UEAAIXZ, 49
+    STUBENTRY ?Stub50@nsXPTCStubBase@@UEAAIXZ, 50
+    STUBENTRY ?Stub51@nsXPTCStubBase@@UEAAIXZ, 51
+    STUBENTRY ?Stub52@nsXPTCStubBase@@UEAAIXZ, 52
+    STUBENTRY ?Stub53@nsXPTCStubBase@@UEAAIXZ, 53
+    STUBENTRY ?Stub54@nsXPTCStubBase@@UEAAIXZ, 54
+    STUBENTRY ?Stub55@nsXPTCStubBase@@UEAAIXZ, 55
+    STUBENTRY ?Stub56@nsXPTCStubBase@@UEAAIXZ, 56
+    STUBENTRY ?Stub57@nsXPTCStubBase@@UEAAIXZ, 57
+    STUBENTRY ?Stub58@nsXPTCStubBase@@UEAAIXZ, 58
+    STUBENTRY ?Stub59@nsXPTCStubBase@@UEAAIXZ, 59
+    STUBENTRY ?Stub60@nsXPTCStubBase@@UEAAIXZ, 60
+    STUBENTRY ?Stub61@nsXPTCStubBase@@UEAAIXZ, 61
+    STUBENTRY ?Stub62@nsXPTCStubBase@@UEAAIXZ, 62
+    STUBENTRY ?Stub63@nsXPTCStubBase@@UEAAIXZ, 63
+    STUBENTRY ?Stub64@nsXPTCStubBase@@UEAAIXZ, 64
+    STUBENTRY ?Stub65@nsXPTCStubBase@@UEAAIXZ, 65
+    STUBENTRY ?Stub66@nsXPTCStubBase@@UEAAIXZ, 66
+    STUBENTRY ?Stub67@nsXPTCStubBase@@UEAAIXZ, 67
+    STUBENTRY ?Stub68@nsXPTCStubBase@@UEAAIXZ, 68
+    STUBENTRY ?Stub69@nsXPTCStubBase@@UEAAIXZ, 69
+    STUBENTRY ?Stub70@nsXPTCStubBase@@UEAAIXZ, 70
+    STUBENTRY ?Stub71@nsXPTCStubBase@@UEAAIXZ, 71
+    STUBENTRY ?Stub72@nsXPTCStubBase@@UEAAIXZ, 72
+    STUBENTRY ?Stub73@nsXPTCStubBase@@UEAAIXZ, 73
+    STUBENTRY ?Stub74@nsXPTCStubBase@@UEAAIXZ, 74
+    STUBENTRY ?Stub75@nsXPTCStubBase@@UEAAIXZ, 75
+    STUBENTRY ?Stub76@nsXPTCStubBase@@UEAAIXZ, 76
+    STUBENTRY ?Stub77@nsXPTCStubBase@@UEAAIXZ, 77
+    STUBENTRY ?Stub78@nsXPTCStubBase@@UEAAIXZ, 78
+    STUBENTRY ?Stub79@nsXPTCStubBase@@UEAAIXZ, 79
+    STUBENTRY ?Stub80@nsXPTCStubBase@@UEAAIXZ, 80
+    STUBENTRY ?Stub81@nsXPTCStubBase@@UEAAIXZ, 81
+    STUBENTRY ?Stub82@nsXPTCStubBase@@UEAAIXZ, 82
+    STUBENTRY ?Stub83@nsXPTCStubBase@@UEAAIXZ, 83
+    STUBENTRY ?Stub84@nsXPTCStubBase@@UEAAIXZ, 84
+    STUBENTRY ?Stub85@nsXPTCStubBase@@UEAAIXZ, 85
+    STUBENTRY ?Stub86@nsXPTCStubBase@@UEAAIXZ, 86
+    STUBENTRY ?Stub87@nsXPTCStubBase@@UEAAIXZ, 87
+    STUBENTRY ?Stub88@nsXPTCStubBase@@UEAAIXZ, 88
+    STUBENTRY ?Stub89@nsXPTCStubBase@@UEAAIXZ, 89
+    STUBENTRY ?Stub90@nsXPTCStubBase@@UEAAIXZ, 90
+    STUBENTRY ?Stub91@nsXPTCStubBase@@UEAAIXZ, 91
+    STUBENTRY ?Stub92@nsXPTCStubBase@@UEAAIXZ, 92
+    STUBENTRY ?Stub93@nsXPTCStubBase@@UEAAIXZ, 93
+    STUBENTRY ?Stub94@nsXPTCStubBase@@UEAAIXZ, 94
+    STUBENTRY ?Stub95@nsXPTCStubBase@@UEAAIXZ, 95
+    STUBENTRY ?Stub96@nsXPTCStubBase@@UEAAIXZ, 96
+    STUBENTRY ?Stub97@nsXPTCStubBase@@UEAAIXZ, 97
+    STUBENTRY ?Stub98@nsXPTCStubBase@@UEAAIXZ, 98
+    STUBENTRY ?Stub99@nsXPTCStubBase@@UEAAIXZ, 99
+    STUBENTRY ?Stub100@nsXPTCStubBase@@UEAAIXZ, 100
+    STUBENTRY ?Stub101@nsXPTCStubBase@@UEAAIXZ, 101
+    STUBENTRY ?Stub102@nsXPTCStubBase@@UEAAIXZ, 102
+    STUBENTRY ?Stub103@nsXPTCStubBase@@UEAAIXZ, 103
+    STUBENTRY ?Stub104@nsXPTCStubBase@@UEAAIXZ, 104
+    STUBENTRY ?Stub105@nsXPTCStubBase@@UEAAIXZ, 105
+    STUBENTRY ?Stub106@nsXPTCStubBase@@UEAAIXZ, 106
+    STUBENTRY ?Stub107@nsXPTCStubBase@@UEAAIXZ, 107
+    STUBENTRY ?Stub108@nsXPTCStubBase@@UEAAIXZ, 108
+    STUBENTRY ?Stub109@nsXPTCStubBase@@UEAAIXZ, 109
+    STUBENTRY ?Stub110@nsXPTCStubBase@@UEAAIXZ, 110
+    STUBENTRY ?Stub111@nsXPTCStubBase@@UEAAIXZ, 111
+    STUBENTRY ?Stub112@nsXPTCStubBase@@UEAAIXZ, 112
+    STUBENTRY ?Stub113@nsXPTCStubBase@@UEAAIXZ, 113
+    STUBENTRY ?Stub114@nsXPTCStubBase@@UEAAIXZ, 114
+    STUBENTRY ?Stub115@nsXPTCStubBase@@UEAAIXZ, 115
+    STUBENTRY ?Stub116@nsXPTCStubBase@@UEAAIXZ, 116
+    STUBENTRY ?Stub117@nsXPTCStubBase@@UEAAIXZ, 117
+    STUBENTRY ?Stub118@nsXPTCStubBase@@UEAAIXZ, 118
+    STUBENTRY ?Stub119@nsXPTCStubBase@@UEAAIXZ, 119
+    STUBENTRY ?Stub120@nsXPTCStubBase@@UEAAIXZ, 120
+    STUBENTRY ?Stub121@nsXPTCStubBase@@UEAAIXZ, 121
+    STUBENTRY ?Stub122@nsXPTCStubBase@@UEAAIXZ, 122
+    STUBENTRY ?Stub123@nsXPTCStubBase@@UEAAIXZ, 123
+    STUBENTRY ?Stub124@nsXPTCStubBase@@UEAAIXZ, 124
+    STUBENTRY ?Stub125@nsXPTCStubBase@@UEAAIXZ, 125
+    STUBENTRY ?Stub126@nsXPTCStubBase@@UEAAIXZ, 126
+    STUBENTRY ?Stub127@nsXPTCStubBase@@UEAAIXZ, 127
+    STUBENTRY ?Stub128@nsXPTCStubBase@@UEAAIXZ, 128
+    STUBENTRY ?Stub129@nsXPTCStubBase@@UEAAIXZ, 129
+    STUBENTRY ?Stub130@nsXPTCStubBase@@UEAAIXZ, 130
+    STUBENTRY ?Stub131@nsXPTCStubBase@@UEAAIXZ, 131
+    STUBENTRY ?Stub132@nsXPTCStubBase@@UEAAIXZ, 132
+    STUBENTRY ?Stub133@nsXPTCStubBase@@UEAAIXZ, 133
+    STUBENTRY ?Stub134@nsXPTCStubBase@@UEAAIXZ, 134
+    STUBENTRY ?Stub135@nsXPTCStubBase@@UEAAIXZ, 135
+    STUBENTRY ?Stub136@nsXPTCStubBase@@UEAAIXZ, 136
+    STUBENTRY ?Stub137@nsXPTCStubBase@@UEAAIXZ, 137
+    STUBENTRY ?Stub138@nsXPTCStubBase@@UEAAIXZ, 138
+    STUBENTRY ?Stub139@nsXPTCStubBase@@UEAAIXZ, 139
+    STUBENTRY ?Stub140@nsXPTCStubBase@@UEAAIXZ, 140
+    STUBENTRY ?Stub141@nsXPTCStubBase@@UEAAIXZ, 141
+    STUBENTRY ?Stub142@nsXPTCStubBase@@UEAAIXZ, 142
+    STUBENTRY ?Stub143@nsXPTCStubBase@@UEAAIXZ, 143
+    STUBENTRY ?Stub144@nsXPTCStubBase@@UEAAIXZ, 144
+    STUBENTRY ?Stub145@nsXPTCStubBase@@UEAAIXZ, 145
+    STUBENTRY ?Stub146@nsXPTCStubBase@@UEAAIXZ, 146
+    STUBENTRY ?Stub147@nsXPTCStubBase@@UEAAIXZ, 147
+    STUBENTRY ?Stub148@nsXPTCStubBase@@UEAAIXZ, 148
+    STUBENTRY ?Stub149@nsXPTCStubBase@@UEAAIXZ, 149
+    STUBENTRY ?Stub150@nsXPTCStubBase@@UEAAIXZ, 150
+    STUBENTRY ?Stub151@nsXPTCStubBase@@UEAAIXZ, 151
+    STUBENTRY ?Stub152@nsXPTCStubBase@@UEAAIXZ, 152
+    STUBENTRY ?Stub153@nsXPTCStubBase@@UEAAIXZ, 153
+    STUBENTRY ?Stub154@nsXPTCStubBase@@UEAAIXZ, 154
+    STUBENTRY ?Stub155@nsXPTCStubBase@@UEAAIXZ, 155
+    STUBENTRY ?Stub156@nsXPTCStubBase@@UEAAIXZ, 156
+    STUBENTRY ?Stub157@nsXPTCStubBase@@UEAAIXZ, 157
+    STUBENTRY ?Stub158@nsXPTCStubBase@@UEAAIXZ, 158
+    STUBENTRY ?Stub159@nsXPTCStubBase@@UEAAIXZ, 159
+    STUBENTRY ?Stub160@nsXPTCStubBase@@UEAAIXZ, 160
+    STUBENTRY ?Stub161@nsXPTCStubBase@@UEAAIXZ, 161
+    STUBENTRY ?Stub162@nsXPTCStubBase@@UEAAIXZ, 162
+    STUBENTRY ?Stub163@nsXPTCStubBase@@UEAAIXZ, 163
+    STUBENTRY ?Stub164@nsXPTCStubBase@@UEAAIXZ, 164
+    STUBENTRY ?Stub165@nsXPTCStubBase@@UEAAIXZ, 165
+    STUBENTRY ?Stub166@nsXPTCStubBase@@UEAAIXZ, 166
+    STUBENTRY ?Stub167@nsXPTCStubBase@@UEAAIXZ, 167
+    STUBENTRY ?Stub168@nsXPTCStubBase@@UEAAIXZ, 168
+    STUBENTRY ?Stub169@nsXPTCStubBase@@UEAAIXZ, 169
+    STUBENTRY ?Stub170@nsXPTCStubBase@@UEAAIXZ, 170
+    STUBENTRY ?Stub171@nsXPTCStubBase@@UEAAIXZ, 171
+    STUBENTRY ?Stub172@nsXPTCStubBase@@UEAAIXZ, 172
+    STUBENTRY ?Stub173@nsXPTCStubBase@@UEAAIXZ, 173
+    STUBENTRY ?Stub174@nsXPTCStubBase@@UEAAIXZ, 174
+    STUBENTRY ?Stub175@nsXPTCStubBase@@UEAAIXZ, 175
+    STUBENTRY ?Stub176@nsXPTCStubBase@@UEAAIXZ, 176
+    STUBENTRY ?Stub177@nsXPTCStubBase@@UEAAIXZ, 177
+    STUBENTRY ?Stub178@nsXPTCStubBase@@UEAAIXZ, 178
+    STUBENTRY ?Stub179@nsXPTCStubBase@@UEAAIXZ, 179
+    STUBENTRY ?Stub180@nsXPTCStubBase@@UEAAIXZ, 180
+    STUBENTRY ?Stub181@nsXPTCStubBase@@UEAAIXZ, 181
+    STUBENTRY ?Stub182@nsXPTCStubBase@@UEAAIXZ, 182
+    STUBENTRY ?Stub183@nsXPTCStubBase@@UEAAIXZ, 183
+    STUBENTRY ?Stub184@nsXPTCStubBase@@UEAAIXZ, 184
+    STUBENTRY ?Stub185@nsXPTCStubBase@@UEAAIXZ, 185
+    STUBENTRY ?Stub186@nsXPTCStubBase@@UEAAIXZ, 186
+    STUBENTRY ?Stub187@nsXPTCStubBase@@UEAAIXZ, 187
+    STUBENTRY ?Stub188@nsXPTCStubBase@@UEAAIXZ, 188
+    STUBENTRY ?Stub189@nsXPTCStubBase@@UEAAIXZ, 189
+    STUBENTRY ?Stub190@nsXPTCStubBase@@UEAAIXZ, 190
+    STUBENTRY ?Stub191@nsXPTCStubBase@@UEAAIXZ, 191
+    STUBENTRY ?Stub192@nsXPTCStubBase@@UEAAIXZ, 192
+    STUBENTRY ?Stub193@nsXPTCStubBase@@UEAAIXZ, 193
+    STUBENTRY ?Stub194@nsXPTCStubBase@@UEAAIXZ, 194
+    STUBENTRY ?Stub195@nsXPTCStubBase@@UEAAIXZ, 195
+    STUBENTRY ?Stub196@nsXPTCStubBase@@UEAAIXZ, 196
+    STUBENTRY ?Stub197@nsXPTCStubBase@@UEAAIXZ, 197
+    STUBENTRY ?Stub198@nsXPTCStubBase@@UEAAIXZ, 198
+    STUBENTRY ?Stub199@nsXPTCStubBase@@UEAAIXZ, 199
+    STUBENTRY ?Stub200@nsXPTCStubBase@@UEAAIXZ, 200
+    STUBENTRY ?Stub201@nsXPTCStubBase@@UEAAIXZ, 201
+    STUBENTRY ?Stub202@nsXPTCStubBase@@UEAAIXZ, 202
+    STUBENTRY ?Stub203@nsXPTCStubBase@@UEAAIXZ, 203
+    STUBENTRY ?Stub204@nsXPTCStubBase@@UEAAIXZ, 204
+    STUBENTRY ?Stub205@nsXPTCStubBase@@UEAAIXZ, 205
+    STUBENTRY ?Stub206@nsXPTCStubBase@@UEAAIXZ, 206
+    STUBENTRY ?Stub207@nsXPTCStubBase@@UEAAIXZ, 207
+    STUBENTRY ?Stub208@nsXPTCStubBase@@UEAAIXZ, 208
+    STUBENTRY ?Stub209@nsXPTCStubBase@@UEAAIXZ, 209
+    STUBENTRY ?Stub210@nsXPTCStubBase@@UEAAIXZ, 210
+    STUBENTRY ?Stub211@nsXPTCStubBase@@UEAAIXZ, 211
+    STUBENTRY ?Stub212@nsXPTCStubBase@@UEAAIXZ, 212
+    STUBENTRY ?Stub213@nsXPTCStubBase@@UEAAIXZ, 213
+    STUBENTRY ?Stub214@nsXPTCStubBase@@UEAAIXZ, 214
+    STUBENTRY ?Stub215@nsXPTCStubBase@@UEAAIXZ, 215
+    STUBENTRY ?Stub216@nsXPTCStubBase@@UEAAIXZ, 216
+    STUBENTRY ?Stub217@nsXPTCStubBase@@UEAAIXZ, 217
+    STUBENTRY ?Stub218@nsXPTCStubBase@@UEAAIXZ, 218
+    STUBENTRY ?Stub219@nsXPTCStubBase@@UEAAIXZ, 219
+    STUBENTRY ?Stub220@nsXPTCStubBase@@UEAAIXZ, 220
+    STUBENTRY ?Stub221@nsXPTCStubBase@@UEAAIXZ, 221
+    STUBENTRY ?Stub222@nsXPTCStubBase@@UEAAIXZ, 222
+    STUBENTRY ?Stub223@nsXPTCStubBase@@UEAAIXZ, 223
+    STUBENTRY ?Stub224@nsXPTCStubBase@@UEAAIXZ, 224
+    STUBENTRY ?Stub225@nsXPTCStubBase@@UEAAIXZ, 225
+    STUBENTRY ?Stub226@nsXPTCStubBase@@UEAAIXZ, 226
+    STUBENTRY ?Stub227@nsXPTCStubBase@@UEAAIXZ, 227
+    STUBENTRY ?Stub228@nsXPTCStubBase@@UEAAIXZ, 228
+    STUBENTRY ?Stub229@nsXPTCStubBase@@UEAAIXZ, 229
+    STUBENTRY ?Stub230@nsXPTCStubBase@@UEAAIXZ, 230
+    STUBENTRY ?Stub231@nsXPTCStubBase@@UEAAIXZ, 231
+    STUBENTRY ?Stub232@nsXPTCStubBase@@UEAAIXZ, 232
+    STUBENTRY ?Stub233@nsXPTCStubBase@@UEAAIXZ, 233
+    STUBENTRY ?Stub234@nsXPTCStubBase@@UEAAIXZ, 234
+    STUBENTRY ?Stub235@nsXPTCStubBase@@UEAAIXZ, 235
+    STUBENTRY ?Stub236@nsXPTCStubBase@@UEAAIXZ, 236
+    STUBENTRY ?Stub237@nsXPTCStubBase@@UEAAIXZ, 237
+    STUBENTRY ?Stub238@nsXPTCStubBase@@UEAAIXZ, 238
+    STUBENTRY ?Stub239@nsXPTCStubBase@@UEAAIXZ, 239
+    STUBENTRY ?Stub240@nsXPTCStubBase@@UEAAIXZ, 240
+    STUBENTRY ?Stub241@nsXPTCStubBase@@UEAAIXZ, 241
+    STUBENTRY ?Stub242@nsXPTCStubBase@@UEAAIXZ, 242
+    STUBENTRY ?Stub243@nsXPTCStubBase@@UEAAIXZ, 243
+    STUBENTRY ?Stub244@nsXPTCStubBase@@UEAAIXZ, 244
+    STUBENTRY ?Stub245@nsXPTCStubBase@@UEAAIXZ, 245
+    STUBENTRY ?Stub246@nsXPTCStubBase@@UEAAIXZ, 246
+    STUBENTRY ?Stub247@nsXPTCStubBase@@UEAAIXZ, 247
+    STUBENTRY ?Stub248@nsXPTCStubBase@@UEAAIXZ, 248
+    STUBENTRY ?Stub249@nsXPTCStubBase@@UEAAIXZ, 249
 
 END

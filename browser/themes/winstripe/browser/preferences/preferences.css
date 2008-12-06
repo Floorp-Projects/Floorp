@@ -109,43 +109,6 @@ radio[pane=paneAdvanced][selected="true"] {
   -moz-box-flex: 1;
 }
 
-/* File Field Widget */
-filefield {
-  margin: 2px 4px;
-  -moz-appearance: textfield;
-}
-
-.fileFieldContentBox {
-  background-color: -moz-Dialog;
-  color: -moz-DialogText;
-  margin: 1px;
-}
-
-.fileFieldContentBox[disabled="true"] {
-  opacity: 0.5;
-}
-
-.fileFieldIcon[disabled="true"] {
-  opacity: 0.2;
-}
-
-.fileFieldIcon {
-  width: 16px;
-  height: 16px;
-  margin-top: 2px;
-  margin-bottom: 2px;
-  -moz-margin-start: 2px;
-  -moz-margin-end: 4px;
-}
-
-.fileFieldLabel {
-  -moz-appearance: none;
-  background-color: transparent;
-  border: none;
-  padding: 1px 0px 0px 0px;
-  margin: 0px;
-}
-
 /* Modeless Window Dialogs */
 .windowDialog,
 .windowDialog prefpane {

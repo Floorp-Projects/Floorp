@@ -1596,7 +1596,7 @@ var PlacesUtils = {
       // old backups with a localized name (bug 445704).
       var localizedFilename = this.getFormattedString("bookmarksArchiveFilename", [date]);
       var localizedFilenamePrefix = localizedFilename.substr(0, localizedFilename.indexOf("-"));
-      var rx = new RegExp("^(bookmarks|" + localizedFilenamePrefix + ")-.+\.json");
+      var rx = new RegExp("^(bookmarks|" + localizedFilenamePrefix + ")-.+\.(json|html)");
 
       var entries = bookmarksBackupDir.directoryEntries;
       while (entries.hasMoreElements()) {

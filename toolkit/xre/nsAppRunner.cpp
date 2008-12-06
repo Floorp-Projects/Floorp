@@ -149,8 +149,10 @@
 #endif //XP_BEOS
 
 #ifdef XP_WIN
+#ifndef WINCE
 #include <process.h>
 #include <shlobj.h>
+#endif
 #include "nsThreadUtils.h"
 #endif
 
@@ -1594,6 +1596,7 @@ static nsresult LaunchChild(nsINativeAppSupport* aNative,
   PR_SetEnv("MOZ_LAUNCHED_CHILD=1");
 
 #if defined(XP_MACOSX)
+  SetupMacCommandLine(gRestartArgc, gRestartArgv);
   LaunchChildMac(gRestartArgc, gRestartArgv);
 #else
   nsCOMPtr<nsILocalFile> lf;
@@ -2536,8 +2539,10 @@ XRE_main(int argc, char* argv[], const nsXREAppData* aAppData)
   }
 #endif
 
+#ifndef WINCE
   // Unbuffer stdout, needed for tinderbox tests.
   setbuf(stdout, 0);
+#endif
 
 #if defined(FREEBSD)
   // Disable all SIGFPE's on FreeBSD, as it has non-IEEE-conformant fp

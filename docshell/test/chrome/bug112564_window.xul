@@ -1,0 +1,150 @@
+<?xml version="1.0"?>
+
+<!-- ***** BEGIN LICENSE BLOCK *****
+   - Version: MPL 1.1/GPL 2.0/LGPL 2.1
+   -
+   - The contents of this file are subject to the Mozilla Public License Version
+   - 1.1 (the "License"); you may not use this file except in compliance with
+   - the License. You may obtain a copy of the License at
+   - http://www.mozilla.org/MPL/
+   -
+   - Software distributed under the License is distributed on an "AS IS" basis,
+   - WITHOUT WARRANTY OF ANY KIND, either express or implied. See the License
+   - for the specific language governing rights and limitations under the
+   - License.
+   -
+   - The Original Code is bug 112564 test code
+   -
+   - The Initial Developer of the Original Code is
+   - Graeme McCutcheon <graememcc_firefox@graeme-online.co.uk>.
+   - Portions created by the Initial Developer are Copyright (C) 2008
+   - the Initial Developer. All Rights Reserved.
+   -
+   - Contributor(s):
+   -
+   - Alternatively, the contents of this file may be used under the terms of
+   - either the GNU General Public License Version 2 or later (the "GPL"), or
+   - the GNU Lesser General Public License Version 2.1 or later (the "LGPL"),
+   - in which case the provisions of the GPL or the LGPL are applicable instead
+   - of those above. If you wish to allow use of your version of this file only
+   - under the terms of either the GPL or the LGPL, and not to allow others to
+   - use your version of this file under the terms of the MPL, indicate your
+   - decision by deleting the provisions above and replace them with the notice
+   - and other provisions required by the LGPL or the GPL. If you do not delete
+   - the provisions above, a recipient may use your version of this file under
+   - the terms of any one of the MPL, the GPL or the LGPL.
+   -
+   - ***** END LICENSE BLOCK ***** -->
+
+<?xml-stylesheet href="chrome://global/skin" type="text/css"?>
+
+<window id="112564Test"
+        xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
+        width="600"
+        height="600"
+        onload="onLoad();"
+        title="112564 test">
+
+  <script type="application/javascript"><![CDATA[
+    const LISTEN_EVENTS = ["load", "unload", "pageshow", "pagehide"];
+
+    var gBrowser;
+    var gTestsIterator;
+    var gExpected = [];
+
+    function ok(condition, message) {
+      window.opener.wrappedJSObject.SimpleTest.ok(condition, message);
+    }
+
+    function is(a, b, message) {
+      window.opener.wrappedJSObject.SimpleTest.is(a, b, message);
+    }
+
+    function finish() {
+      for each (let eventType in LISTEN_EVENTS) {
+        gBrowser.removeEventListener(eventType, eventListener, true);
+      }
+
+      // Work around bug 467960
+      var history = gBrowser.webNavigation.sessionHistory;
+      history.PurgeHistory(history.count);
+
+      window.close();
+      window.opener.wrappedJSObject.SimpleTest.finish();
+    }
+
+    function onLoad() {
+      gBrowser = document.getElementById("content");
+      for each (let eventType in LISTEN_EVENTS) {
+        gBrowser.addEventListener(eventType, eventListener, true);
+      }
+             
+      gTestsIterator = testsIterator();
+      nextTest();
+    }
+
+    function eventListener(event) {
+      ok(gExpected.length >= 1, "Unexpected event " + event.type);
+      if (gExpected.length == 0) {
+        // in case of unexpected event, try to continue anyway
+        setTimeout(nextTest, 0);
+        return;
+      }
+
+      var exp = gExpected.shift();
+      is(event.type, exp.type, "Invalid event received");
+      if (typeof(exp.persisted) != "undefined") {
+        is(event.persisted, exp.persisted, "Invalid persisted state");
+      }
+      if (exp.title) {
+        ok(event.originalTarget instanceof HTMLDocument,
+           "originalTarget not a HTMLDocument");
+        is(event.originalTarget.title, exp.title, "titles don't match");
+      }
+
+      if (gExpected.length == 0) {
+        setTimeout(nextTest, 0);
+      }
+    }
+
+    function nextTest() {
+      try {
+        gTestsIterator.next();
+      } catch (err if err instanceof StopIteration) {
+        finish();
+      }
+    }
+
+    function testsIterator() {
+      // Load a secure page with a no-store header, followed by a simple page
+      // On pagehide, first page should report it is not being persisted
+      var test1DocURI = "https://example.com:443/tests/docshell/test/chrome/112564_nocache.html";
+
+      gExpected = [{type: "pagehide", persisted: true},
+                   {type: "load", title: "test1"},
+                   {type: "pageshow", title: "test1", persisted: false}];
+      gBrowser.loadURI(test1DocURI);
+      yield;
+
+      var test2Doc = "data:text/html,<html><head><title>test2</title></head>" +
+                     "<body>test2</body></html>";
+
+      gExpected = [{type: "pagehide", title: "test1", persisted: false},
+                   {type: "unload", title: "test1"},
+                   {type: "load", title: "test2"},
+                   {type: "pageshow", title: "test2", persisted: false}];
+      gBrowser.loadURI(test2Doc);
+      yield;
+
+      // Now go back in history. First page should not have been cached.
+      // Check persisted property to confirm
+      gExpected = [{type: "pagehide", title: "test2", persisted: true},
+                   {type: "load", title: "test1"},
+                   {type: "pageshow", title: "test1", persisted: false}];
+      gBrowser.goBack();
+      yield;
+    }
+  ]]></script>
+
+  <browser type="content-primary" flex="1" id="content" src="about:blank"/>
+</window>

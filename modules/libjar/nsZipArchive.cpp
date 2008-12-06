@@ -103,6 +103,23 @@ char * strdup(const char *src)
 }
 #endif
 
+#ifdef WINCE
+int remove(const char* inPath)
+{
+  unsigned short wPath[MAX_PATH];
+  MultiByteToWideChar(CP_ACP,
+                      0,
+                      inPath,
+                      -1,
+                      wPath,
+                      MAX_PATH);
+  
+  if(FALSE != DeleteFileW(wPath))
+    return 0;
+  return -1;
+}
+#endif
+
 #endif /* STANDALONE */
 
 #ifdef XP_UNIX

@@ -297,6 +297,23 @@ description {
   -moz-user-focus: ignore !important;
 }
 
+notification > button {
+  -moz-appearance: none;
+  background: url("chrome://global/skin/icons/white-gray-gradient.gif") transparent repeat-x center center;
+  -moz-background-clip: padding;
+  border: 1px solid rgba(0, 0, 0, 0.5);
+  -moz-border-radius: 10px;
+  -moz-box-shadow: rgba(255, 255, 255, 0.4) 0 1px 0;
+  padding: 0 5px;
+  margin: 0 3px;
+  min-width: 79px;
+  min-height: 16px;
+}
+
+notification > button:hover:active {
+  background-image: url("chrome://global/skin/icons/white-gray-gradient-active.gif");
+}
+
 /* ::::: XXX - stuff that should live elsewhere ::::: */
 
 /* embedding/components/ui/progressDlg/nsProgressDialog.xul */

@@ -104,10 +104,6 @@ SDK_XPIDLSRCS =					\
 	nsIDOMHTMLTextAreaElement.idl		\
 	nsIDOMHTMLTitleElement.idl		\
 	nsIDOMHTMLUListElement.idl		\
-	$(NULL)
-
-ifdef MOZ_MEDIA
-SDK_XPIDLSRCS +=				\
 	nsIDOMHTMLMediaError.idl		\
 	nsIDOMHTMLTimeRanges.idl		\
 	nsIDOMHTMLByteRanges.idl		\
@@ -117,7 +113,6 @@ SDK_XPIDLSRCS +=				\
 	nsIDOMHTMLAudioElement.idl		\
 	nsIDOMHTMLVoidCallback.idl		\
 	$(NULL)
-endif
 
 XPIDLSRCS = 					\
 	nsIDOMHTMLCanvasElement.idl		\

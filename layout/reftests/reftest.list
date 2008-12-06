@@ -126,6 +126,9 @@ include text-transform/reftest.list
 # -moz-transform/
 include transform/reftest.list
 
+# xml-stylesheet/
+include ../../content/test/reftest/xml-stylesheet/reftest.list
+
 # xul-document-load/
 include xul-document-load/reftest.list
 

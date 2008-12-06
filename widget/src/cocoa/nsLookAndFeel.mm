@@ -53,6 +53,14 @@ nsLookAndFeel::~nsLookAndFeel()
 {
 }
 
+static nscolor GetColorFromNSColor(NSColor* aColor)
+{
+  NSColor* deviceColor = [aColor colorUsingColorSpaceName:NSDeviceRGBColorSpace];
+  return NS_RGB((unsigned int)([deviceColor redComponent] * 255.0),
+                (unsigned int)([deviceColor greenComponent] * 255.0),
+                (unsigned int)([deviceColor blueComponent] * 255.0));
+}
+
 nsresult nsLookAndFeel::NativeGetColor(const nsColorID aID, nscolor &aColor)
 {
   nsresult res = NS_OK;
@@ -209,7 +217,7 @@ nsresult nsLookAndFeel::NativeGetColor(const nsColorID aID, nscolor &aColor)
       res = GetMacBrushColor(kThemeBrushButtonActiveDarkShadow, aColor, NS_RGB(0x77,0x77,0x77));
       break;
     case eColor_graytext:
-      res = GetMacTextColor(kThemeTextColorDialogInactive, aColor, NS_RGB(0x77,0x77,0x77));
+      aColor = GetColorFromNSColor([NSColor disabledControlTextColor]);
       break;
     case eColor_inactiveborder:
       //ScrollBar DelimiterInactive looks like an odd constant to use, but gives the right colour in most themes, 

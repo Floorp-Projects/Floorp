@@ -916,6 +916,9 @@ nsXREDirProvider::GetUpdateRootDir(nsIFile* *aResult)
   PRUint32 bufLength = longPath.GetMutableData(&buf, MAXPATHLEN);
   NS_ENSURE_TRUE(bufLength >= MAXPATHLEN, NS_ERROR_OUT_OF_MEMORY);
 
+#ifdef WINCE
+  longPath.Assign(appPath);
+#else
   DWORD len = GetLongPathNameW(appPath.get(), buf, bufLength);
 
   // Failing GetLongPathName() is not fatal.
@@ -923,7 +926,7 @@ nsXREDirProvider::GetUpdateRootDir(nsIFile* *aResult)
     longPath.Assign(appPath);
   else
     longPath.SetLength(len);
-
+#endif
   // Use <UserLocalDataDir>\updates\<relative path to app dir from
   // Program Files> if app dir is under Program Files to avoid the
   // folder virtualization mess on Windows Vista

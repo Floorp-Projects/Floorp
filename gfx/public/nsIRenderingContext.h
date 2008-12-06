@@ -60,6 +60,7 @@ class nsIAtom;
 
 struct nsFont;
 struct nsTextDimensions;
+class gfxUserFontSet;
 #ifdef MOZ_MATHML
 struct nsBoundingMetrics;
 #endif
@@ -97,10 +98,10 @@ typedef enum
 
 
 // IID for the nsIRenderingContext interface
-// 3a6209e8-d80d-42ab-ad6a-b8832f7fb09f
+// 37762dd8-8df0-48cd-a5d6-24573ffdb5b6
 #define NS_IRENDERING_CONTEXT_IID \
-{ 0x3a6209e8, 0xd80d, 0x42ab, \
-  { 0xad, 0x6a, 0xb8, 0x83, 0x2f, 0x7f, 0xb0, 0x9f } }
+{ 0x37762dd8, 0x8df0, 0x48cd, \
+  { 0xa5, 0xd6, 0x24, 0x57, 0x3f, 0xfd, 0xb5, 0xb6 } }
 
 //----------------------------------------------------------------------
 
@@ -202,7 +203,8 @@ public:
    * Sets the font for the RenderingContext
    * @param aFont The font to use in the RenderingContext
    */
-  NS_IMETHOD SetFont(const nsFont& aFont, nsIAtom* aLangGroup) = 0;
+  NS_IMETHOD SetFont(const nsFont& aFont, nsIAtom* aLangGroup,
+                     gfxUserFontSet *aUserFontSet) = 0;
 
   /**
    * Sets the font for the RenderingContext

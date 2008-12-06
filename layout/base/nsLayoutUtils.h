@@ -407,10 +407,12 @@ public:
    * @param aPt the point, relative to the frame origin
    * @param aShouldIgnoreSuppression a boolean to control if the display
    * list builder should ignore paint suppression or not
+   * @param aIgnoreRootScrollFrame whether or not the display list builder
+   * should ignore the root scroll frame.
    */
   static nsIFrame* GetFrameForPoint(nsIFrame* aFrame, nsPoint aPt,
                                     PRBool aShouldIgnoreSuppression = PR_FALSE,
-                                    PRBool aIgnoreScrollFrame = PR_FALSE);
+                                    PRBool aIgnoreRootScrollFrame = PR_FALSE);
 
   /**
    * Given a point in the global coordinate space, returns that point expressed
@@ -621,6 +623,12 @@ public:
    * Find the nearest ancestor that's a block
    */
   static nsBlockFrame* FindNearestBlockAncestor(nsIFrame* aFrame);
+
+  /**
+   * Find the nearest ancestor that's not for generated content. Will return
+   * aFrame if aFrame is not for generated content.
+   */
+  static nsIFrame* GetNonGeneratedAncestor(nsIFrame* aFrame);
 
   /**
    * Cast aFrame to an nsBlockFrame* or return null if it's not
@@ -917,6 +925,14 @@ public:
    */
   static nsIDeviceContext*
   GetDeviceContextForScreenInfo(nsIDocShell* aDocShell);
+
+  /**
+   * Some frames with 'position: fixed' (nsStylePosition::mDisplay ==
+   * NS_STYLE_POSITION_FIXED) are not really fixed positioned, since
+   * they're inside an element with -moz-transform.  This function says
+   * whether such an element is a real fixed-pos element.
+   */
+  static PRBool IsReallyFixedPos(nsIFrame* aFrame);
 
   /**
    * Indicates if the nsIFrame::GetUsedXXX assertions in nsFrame.cpp should

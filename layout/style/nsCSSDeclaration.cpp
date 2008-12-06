@@ -489,9 +489,7 @@ nsCSSDeclaration::AppendCSSValueToString(nsCSSProperty aProperty,
     case eCSSUnit_Cicero:       aResult.AppendLiteral("cc");   break;
 
     case eCSSUnit_EM:           aResult.AppendLiteral("em");   break;
-    case eCSSUnit_EN:           aResult.AppendLiteral("en");   break;
     case eCSSUnit_XHeight:      aResult.AppendLiteral("ex");   break;
-    case eCSSUnit_CapHeight:    aResult.AppendLiteral("cap");  break;
     case eCSSUnit_Char:         aResult.AppendLiteral("ch");   break;
 
     case eCSSUnit_Pixel:        aResult.AppendLiteral("px");   break;

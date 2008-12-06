@@ -1017,7 +1017,7 @@ gfxFontGroup::ForEachFontInternal(const nsAString& aFamilies,
             NS_LossyConvertUTF16toASCII gf(genericFamily);
             if (aResolveFontName) {
                 ResolveData data(fc, gf, closure);
-                PRBool aborted, needsBold;
+                PRBool aborted = PR_FALSE, needsBold;
                 nsresult rv;
 
                 if (mUserFontSet && mUserFontSet->FindFontEntry(family, mStyle, needsBold)) {
@@ -1120,10 +1120,6 @@ gfxFontGroup::FindFontForChar(PRUint32 aCh, PRUint32 aPrevCh, PRUint32 aNextCh, 
         if (font->HasCharacter(aCh))
             return font.forget();
     }
-
-    // if match, return
-    if (selectedFont)
-        return selectedFont.forget();
 
     // if character is in Private Use Area, don't do matching against pref or system fonts
     if ((aCh >= 0xE000  && aCh <= 0xF8FF) || (aCh >= 0xF0000 && aCh <= 0x10FFFD))

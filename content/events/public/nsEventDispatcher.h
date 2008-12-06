@@ -129,11 +129,13 @@ public:
   nsEventChainPreVisitor(nsPresContext* aPresContext,
                          nsEvent* aEvent,
                          nsIDOMEvent* aDOMEvent,
-                         nsEventStatus aEventStatus = nsEventStatus_eIgnore)
+                         nsEventStatus aEventStatus,
+                         PRBool aIsInAnon)
   : nsEventChainVisitor(aPresContext, aEvent, aDOMEvent, aEventStatus),
     mCanHandle(PR_TRUE), mForceContentDispatch(PR_FALSE),
-    mRelatedTargetIsInAnon(PR_FALSE), mWantsWillHandleEvent(PR_FALSE),
-    mParentTarget(nsnull), mEventTargetAtParent(nsnull) {}
+    mRelatedTargetIsInAnon(PR_FALSE), mOriginalTargetIsInAnon(aIsInAnon),
+    mWantsWillHandleEvent(PR_FALSE), mParentTarget(nsnull),
+    mEventTargetAtParent(nsnull) {}
 
   void Reset() {
     mItemFlags = 0;
@@ -165,7 +167,12 @@ public:
    * element which is anonymous for events.
    */
   PRPackedBool          mRelatedTargetIsInAnon;
-  
+
+  /**
+   * PR_TRUE if the original target of the event is inside anonymous content.
+   * This is set before calling PreHandleEvent on event targets.
+   */
+  PRPackedBool          mOriginalTargetIsInAnon;
 
   /**
    * Whether or not nsPIDOMEventTarget::WillHandleEvent will be

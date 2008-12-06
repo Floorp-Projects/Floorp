@@ -428,19 +428,24 @@ nsSVGGlyphFrame::UpdateCoveredRegion()
   mRect.Empty();
 
   nsRefPtr<gfxContext> tmpCtx = MakeTmpCtx();
+  SetMatrixPropagation(PR_FALSE);
   CharacterIterator iter(this, PR_TRUE);
   
-  gfxRect extent;
+  gfxRect extent = gfxRect(0, 0, 0, 0);
 
   if (SetupCairoStrokeGeometry(tmpCtx)) {
+    gfxFloat strokeWidth = tmpCtx->CurrentLineWidth();
     AddCharactersToPath(&iter, tmpCtx);
+    tmpCtx->SetLineWidth(strokeWidth);
+    tmpCtx->IdentityMatrix();
     extent = tmpCtx->GetUserStrokeExtent();
-  } else if (GetStyleSVG()->mFill.mType != eStyleSVGPaintType_None) {
-    AddBoundingBoxesToPath(&iter, tmpCtx);
-    extent = tmpCtx->GetUserPathExtent();
-  } else {
-    extent = gfxRect(0, 0, 0, 0);
   }
+  if (GetStyleSVG()->mFill.mType != eStyleSVGPaintType_None) {
+    AddBoundingBoxesToPath(&iter, tmpCtx);
+    tmpCtx->IdentityMatrix();
+    extent = extent.Union(tmpCtx->GetUserPathExtent());
+  }
+  SetMatrixPropagation(PR_TRUE);
 
   if (!extent.IsEmpty()) {
     gfxMatrix matrix;
@@ -1173,6 +1178,11 @@ nsSVGGlyphFrame::ContainsPoint(const nsPoint &aPoint)
 PRBool
 nsSVGGlyphFrame::GetGlobalTransform(gfxMatrix *aMatrix)
 {
+  if (!GetMatrixPropagation()) {
+    aMatrix->Reset();
+    return PR_TRUE;
+  }
+
   nsCOMPtr<nsIDOMSVGMatrix> ctm;
   GetCanvasTM(getter_AddRefs(ctm));
   if (!ctm)

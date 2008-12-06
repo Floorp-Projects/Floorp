@@ -1,0 +1,32 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+	<title>Resize-notifying IFRAME</title>
+	<script type="application/ecmascript">
+
+	var gTarget;
+
+	/* the test is done after the next resize */
+	function arm() {
+		gTarget = -1;
+		window.addEventListener("resize", got_resize, false);
+	}
+
+	/* the test is done after the next resize to wider than the current width */
+	function arm_for_wider() {
+		gTarget = window.innerWidth;
+		window.addEventListener("resize", got_resize, false);
+	}
+
+	function got_resize() {
+		if (window.innerWidth > gTarget) {
+			// Remove the class="reftest-wait" from the top window
+			window.top.document.documentElement.removeAttribute("class");
+		}
+	}
+
+	</script>
+</head>
+<body>
+</body>
+</html>
