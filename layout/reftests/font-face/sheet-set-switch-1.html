@@ -1,0 +1,49 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD HTML 4.01//EN"
+	"http://www.w3.org/TR/html4/strict.dtd">
+<html lang="en-US" class="reftest-wait">
+<head>
+	<title></title>
+	<meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+	<style type="text/css" title="Set A">
+
+	@font-face {
+		font-family: "MarkA";
+		src: url(../fonts/markA.ttf);
+	}
+
+	</style>
+	<style type="text/css" title="Set B">
+
+	@font-face {
+		font-family: "Mark2B";
+		src: url(../fonts/mark2B.ttf);
+	}
+
+	</style>
+	<style type="text/css">
+
+	@font-face {
+		font-family: "MarkC";
+		src: url(../fonts/markC.ttf);
+	}
+
+	body { font-family: "MarkA", "Mark2B", "MarkC"; }
+
+	</style>
+	<script type="application/ecmascript">
+
+	function run() {
+		// The resize-detector iframe will remove the class attribute.
+		document.getElementsByTagName("iframe")[0].contentWindow.arm_for_wider();
+
+		document.selectedStyleSheetSet = "Set B";
+	}
+
+	</script>
+</head>
+<body onload="setTimeout(run, 20)">
+
+<p style="position:relative; width: -moz-max-content">ABC<iframe style="visibility:hidden;position:absolute;height:100%;width:100%" src="resize-detector-iframe.html"></iframe></p>
+
+</body>
+</html>

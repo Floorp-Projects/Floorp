@@ -133,7 +133,7 @@ nsStyledElement::SetInlineStyleRule(nsICSSStyleRule* aStyleRule, PRBool aNotify)
 
   return SetAttrAndNotify(kNameSpaceID_None, nsGkAtoms::style, nsnull,
                           oldValueStr, attrValue, modification, hasListeners,
-                          aNotify);
+                          aNotify, nsnull);
 }
 
 nsICSSStyleRule*

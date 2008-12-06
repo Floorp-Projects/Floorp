@@ -77,9 +77,6 @@ function test() {
   };
 
   let continueTest = function() {
-    // Remove the load listener so it doesn't get called for the sub-document.
-    testBrowser.removeEventListener("load", continueTest, true);
-
     // Change the zoom level and then save it so we can compare it to the level
     // after loading the sub-document.
     FullZoom.enlarge();
@@ -97,7 +94,12 @@ function test() {
   // Note: in order for the sub-document load to trigger a location change
   // the way it does under real world usage scenarios, we have to continue
   // the test in a timeout for some unknown reason.
-  let continueListener = function() { window.setTimeout(continueTest, 0) };
+  let continueListener = function() {
+    window.setTimeout(continueTest, 0);
+    
+    // Remove the load listener so it doesn't get called for the sub-document.
+    testBrowser.removeEventListener("load", continueListener, true);
+  };
   testBrowser.addEventListener("load", continueListener, true);
 
   // Start the test by loading the test page.

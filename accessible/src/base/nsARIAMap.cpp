@@ -63,7 +63,6 @@ nsRoleMapEntry nsARIAMap::gWAIRoleMap[] =
   {
     "alert",
     nsIAccessibleRole::ROLE_ALERT,
-    eNameLabelOrTitle,
     eNoValue,
     eNoAction,
     kNoReqStates,
@@ -72,7 +71,6 @@ nsRoleMapEntry nsARIAMap::gWAIRoleMap[] =
   {
     "alertdialog",
     nsIAccessibleRole::ROLE_ALERT,
-    eNameOkFromChildren,
     eNoValue,
     eNoAction,
     kNoReqStates,
@@ -81,7 +79,6 @@ nsRoleMapEntry nsARIAMap::gWAIRoleMap[] =
   {
     "application",
     nsIAccessibleRole::ROLE_APPLICATION,
-    eNameLabelOrTitle,
     eNoValue,
     eNoAction,
     kNoReqStates,
@@ -90,7 +87,6 @@ nsRoleMapEntry nsARIAMap::gWAIRoleMap[] =
   {
     "article",
     nsIAccessibleRole::ROLE_DOCUMENT,
-    eNameLabelOrTitle,
     eNoValue,
     eNoAction,
     kNoReqStates,
@@ -99,7 +95,6 @@ nsRoleMapEntry nsARIAMap::gWAIRoleMap[] =
   {
     "button",
     nsIAccessibleRole::ROLE_PUSHBUTTON,
-    eNameOkFromChildren,
     eNoValue,
     eClickAction,
     kNoReqStates,
@@ -110,7 +105,6 @@ nsRoleMapEntry nsARIAMap::gWAIRoleMap[] =
   {
     "checkbox",
     nsIAccessibleRole::ROLE_CHECKBUTTON,
-    eNameOkFromChildren,
     eNoValue,
     eCheckUncheckAction,
     nsIAccessibleStates::STATE_CHECKABLE,
@@ -122,7 +116,6 @@ nsRoleMapEntry nsARIAMap::gWAIRoleMap[] =
   {
     "columnheader",
     nsIAccessibleRole::ROLE_COLUMNHEADER,
-    eNameOkFromChildren,
     eNoValue,
     eNoAction,
     kNoReqStates,
@@ -134,7 +127,6 @@ nsRoleMapEntry nsARIAMap::gWAIRoleMap[] =
   {
     "combobox",
     nsIAccessibleRole::ROLE_COMBOBOX,
-    eNameLabelOrTitle,
     eHasValueMinMax,
     eOpenCloseAction,
     nsIAccessibleStates::STATE_COLLAPSED | nsIAccessibleStates::STATE_HASPOPUP,
@@ -146,7 +138,6 @@ nsRoleMapEntry nsARIAMap::gWAIRoleMap[] =
   {
     "description",
     nsIAccessibleRole::ROLE_TEXT_CONTAINER,
-    eNameOkFromChildren,
     eNoValue,
     eNoAction,
     kNoReqStates,
@@ -155,7 +146,6 @@ nsRoleMapEntry nsARIAMap::gWAIRoleMap[] =
   {
     "dialog",
     nsIAccessibleRole::ROLE_DIALOG,
-    eNameLabelOrTitle,
     eNoValue,
     eNoAction,
     kNoReqStates,
@@ -164,7 +154,6 @@ nsRoleMapEntry nsARIAMap::gWAIRoleMap[] =
   {
     "document",
     nsIAccessibleRole::ROLE_DOCUMENT,
-    eNameLabelOrTitle,
     eNoValue,
     eNoAction,
     kNoReqStates,
@@ -173,7 +162,6 @@ nsRoleMapEntry nsARIAMap::gWAIRoleMap[] =
   {
     "grid",
     nsIAccessibleRole::ROLE_TABLE,
-    eNameLabelOrTitle,
     eNoValue,
     eNoAction,
     nsIAccessibleStates::STATE_FOCUSABLE,
@@ -184,7 +172,6 @@ nsRoleMapEntry nsARIAMap::gWAIRoleMap[] =
   {
     "gridcell",
     nsIAccessibleRole::ROLE_CELL,
-    eNameOkFromChildren,
     eNoValue,
     eNoAction,
     kNoReqStates,
@@ -198,7 +185,6 @@ nsRoleMapEntry nsARIAMap::gWAIRoleMap[] =
   {
     "group",
     nsIAccessibleRole::ROLE_GROUPING,
-    eNameLabelOrTitle,
     eNoValue,
     eNoAction,
     kNoReqStates,
@@ -207,7 +193,6 @@ nsRoleMapEntry nsARIAMap::gWAIRoleMap[] =
   {
     "heading",
     nsIAccessibleRole::ROLE_HEADING,
-    eNameLabelOrTitle,
     eNoValue,
     eNoAction,
     kNoReqStates,
@@ -216,7 +201,6 @@ nsRoleMapEntry nsARIAMap::gWAIRoleMap[] =
   {
     "img",
     nsIAccessibleRole::ROLE_GRAPHIC,
-    eNameLabelOrTitle,
     eNoValue,
     eNoAction,
     kNoReqStates,
@@ -225,7 +209,6 @@ nsRoleMapEntry nsARIAMap::gWAIRoleMap[] =
   {
     "label",
     nsIAccessibleRole::ROLE_LABEL,
-    eNameOkFromChildren,
     eNoValue,
     eNoAction,
     kNoReqStates,
@@ -234,7 +217,6 @@ nsRoleMapEntry nsARIAMap::gWAIRoleMap[] =
   {
     "link",
     nsIAccessibleRole::ROLE_LINK,
-    eNameOkFromChildren,
     eNoValue,
     eJumpAction,
     nsIAccessibleStates::STATE_LINKED,
@@ -243,7 +225,6 @@ nsRoleMapEntry nsARIAMap::gWAIRoleMap[] =
   {
     "list",
     nsIAccessibleRole::ROLE_LIST,
-    eNameLabelOrTitle,
     eNoValue,
     eNoAction,
     nsIAccessibleStates::STATE_READONLY,
@@ -253,7 +234,6 @@ nsRoleMapEntry nsARIAMap::gWAIRoleMap[] =
   {
     "listbox",
     nsIAccessibleRole::ROLE_LISTBOX,
-    eNameLabelOrTitle,
     eNoValue,
     eNoAction,
     kNoReqStates,
@@ -264,7 +244,6 @@ nsRoleMapEntry nsARIAMap::gWAIRoleMap[] =
   {
     "listitem",
     nsIAccessibleRole::ROLE_LISTITEM,
-    eNameOkFromChildren,
     eNoValue,
     eNoAction, // XXX: should depend on state, parent accessible
     nsIAccessibleStates::STATE_READONLY,
@@ -278,7 +257,6 @@ nsRoleMapEntry nsARIAMap::gWAIRoleMap[] =
   {
     "math",
     nsIAccessibleRole::ROLE_FLAT_EQUATION,
-    eNameLabelOrTitle,
     eNoValue,
     eNoAction,
     kNoReqStates,
@@ -287,7 +265,6 @@ nsRoleMapEntry nsARIAMap::gWAIRoleMap[] =
   {
     "menu",
     nsIAccessibleRole::ROLE_MENUPOPUP,
-    eNameLabelOrTitle,
     eNoValue,
     eNoAction, // XXX: technically accessibles of menupopup role haven't
                // any action, but menu can be open or close.
@@ -297,7 +274,6 @@ nsRoleMapEntry nsARIAMap::gWAIRoleMap[] =
   {
     "menubar",
     nsIAccessibleRole::ROLE_MENUBAR,
-    eNameLabelOrTitle,
     eNoValue,
     eNoAction,
     kNoReqStates,
@@ -306,7 +282,6 @@ nsRoleMapEntry nsARIAMap::gWAIRoleMap[] =
   {
     "menuitem",
     nsIAccessibleRole::ROLE_MENUITEM,
-    eNameOkFromChildren,
     eNoValue,
     eClickAction,
     kNoReqStates,
@@ -318,7 +293,6 @@ nsRoleMapEntry nsARIAMap::gWAIRoleMap[] =
   {
     "menuitemcheckbox",
     nsIAccessibleRole::ROLE_CHECK_MENU_ITEM,
-    eNameOkFromChildren,
     eNoValue,
     eClickAction,
     nsIAccessibleStates::STATE_CHECKABLE,
@@ -329,7 +303,6 @@ nsRoleMapEntry nsARIAMap::gWAIRoleMap[] =
   {
     "menuitemradio",
     nsIAccessibleRole::ROLE_RADIO_MENU_ITEM,
-    eNameOkFromChildren,
     eNoValue,
     eClickAction,
     nsIAccessibleStates::STATE_CHECKABLE,
@@ -339,7 +312,6 @@ nsRoleMapEntry nsARIAMap::gWAIRoleMap[] =
   {
     "option",
     nsIAccessibleRole::ROLE_OPTION,
-    eNameOkFromChildren,
     eNoValue,
     eSelectAction,
     kNoReqStates,
@@ -353,7 +325,6 @@ nsRoleMapEntry nsARIAMap::gWAIRoleMap[] =
   {
     "presentation",
     nsIAccessibleRole::ROLE_NOTHING,
-    eNameLabelOrTitle,
     eNoValue,
     eNoAction,
     kNoReqStates,
@@ -362,7 +333,6 @@ nsRoleMapEntry nsARIAMap::gWAIRoleMap[] =
   {
     "progressbar",
     nsIAccessibleRole::ROLE_PROGRESSBAR,
-    eNameLabelOrTitle,
     eHasValueMinMax,
     eNoAction,
     nsIAccessibleStates::STATE_READONLY,
@@ -371,7 +341,6 @@ nsRoleMapEntry nsARIAMap::gWAIRoleMap[] =
   {
     "radio",
     nsIAccessibleRole::ROLE_RADIOBUTTON,
-    eNameOkFromChildren,
     eNoValue,
     eSelectAction,
     kNoReqStates,
@@ -381,7 +350,6 @@ nsRoleMapEntry nsARIAMap::gWAIRoleMap[] =
   {
     "radiogroup",
     nsIAccessibleRole::ROLE_GROUPING,
-    eNameLabelOrTitle,
     eNoValue,
     eNoAction,
     kNoReqStates,
@@ -390,7 +358,6 @@ nsRoleMapEntry nsARIAMap::gWAIRoleMap[] =
   {
     "region",
     nsIAccessibleRole::ROLE_PANE,
-    eNameLabelOrTitle,
     eNoValue,
     eNoAction,
     kNoReqStates,
@@ -399,7 +366,6 @@ nsRoleMapEntry nsARIAMap::gWAIRoleMap[] =
   {
     "row",
     nsIAccessibleRole::ROLE_ROW,
-    eNameOkFromChildren,
     eNoValue,
     eNoAction,
     kNoReqStates,
@@ -412,7 +378,6 @@ nsRoleMapEntry nsARIAMap::gWAIRoleMap[] =
   {
     "rowheader",
     nsIAccessibleRole::ROLE_ROWHEADER,
-    eNameOkFromChildren,
     eNoValue,
     eNoAction,
     kNoReqStates,
@@ -424,7 +389,6 @@ nsRoleMapEntry nsARIAMap::gWAIRoleMap[] =
   {
     "section",
     nsIAccessibleRole::ROLE_SECTION,
-    eNameLabelOrTitle,
     eNoValue,
     eNoAction,
     kNoReqStates,
@@ -433,7 +397,6 @@ nsRoleMapEntry nsARIAMap::gWAIRoleMap[] =
   {
     "separator",
     nsIAccessibleRole::ROLE_SEPARATOR,
-    eNameLabelOrTitle,
     eNoValue,
     eNoAction,
     kNoReqStates,
@@ -442,7 +405,6 @@ nsRoleMapEntry nsARIAMap::gWAIRoleMap[] =
   {
     "slider",
     nsIAccessibleRole::ROLE_SLIDER,
-    eNameLabelOrTitle,
     eHasValueMinMax,
     eNoAction,
     kNoReqStates,
@@ -452,7 +414,6 @@ nsRoleMapEntry nsARIAMap::gWAIRoleMap[] =
   {
     "spinbutton",
     nsIAccessibleRole::ROLE_SPINBUTTON,
-    eNameLabelOrTitle,
     eHasValueMinMax,
     eNoAction,
     kNoReqStates,
@@ -462,7 +423,6 @@ nsRoleMapEntry nsARIAMap::gWAIRoleMap[] =
   {
     "status",
     nsIAccessibleRole::ROLE_STATUSBAR,
-    eNameLabelOrTitle,
     eNoValue,
     eNoAction,
     kNoReqStates,
@@ -471,7 +431,6 @@ nsRoleMapEntry nsARIAMap::gWAIRoleMap[] =
   {
     "tab",
     nsIAccessibleRole::ROLE_PAGETAB,
-    eNameOkFromChildren,
     eNoValue,
     eSwitchAction,
     kNoReqStates,
@@ -480,7 +439,6 @@ nsRoleMapEntry nsARIAMap::gWAIRoleMap[] =
   {
     "tablist",
     nsIAccessibleRole::ROLE_PAGETABLIST,
-    eNameLabelOrTitle,
     eNoValue,
     eNoAction,
     kNoReqStates,
@@ -489,7 +447,6 @@ nsRoleMapEntry nsARIAMap::gWAIRoleMap[] =
   {
     "tabpanel",
     nsIAccessibleRole::ROLE_PROPERTYPAGE,
-    eNameLabelOrTitle,
     eNoValue,
     eNoAction,
     kNoReqStates,
@@ -498,7 +455,6 @@ nsRoleMapEntry nsARIAMap::gWAIRoleMap[] =
   {
     "textbox",
     nsIAccessibleRole::ROLE_ENTRY,
-    eNameLabelOrTitle,
     eNoValue,
     eActivateAction,
     kNoReqStates,
@@ -512,7 +468,6 @@ nsRoleMapEntry nsARIAMap::gWAIRoleMap[] =
   {
     "toolbar",
     nsIAccessibleRole::ROLE_TOOLBAR,
-    eNameLabelOrTitle,
     eNoValue,
     eNoAction,
     kNoReqStates,
@@ -521,7 +476,6 @@ nsRoleMapEntry nsARIAMap::gWAIRoleMap[] =
   {
     "tooltip",
     nsIAccessibleRole::ROLE_TOOLTIP,
-    eNameOkFromChildren,
     eNoValue,
     eNoAction,
     kNoReqStates,
@@ -530,7 +484,6 @@ nsRoleMapEntry nsARIAMap::gWAIRoleMap[] =
   {
     "tree",
     nsIAccessibleRole::ROLE_OUTLINE,
-    eNameLabelOrTitle,
     eNoValue,
     eNoAction,
     kNoReqStates,
@@ -541,7 +494,6 @@ nsRoleMapEntry nsARIAMap::gWAIRoleMap[] =
   {
     "treegrid",
     nsIAccessibleRole::ROLE_TREE_TABLE,
-    eNameLabelOrTitle,
     eNoValue,
     eNoAction,
     kNoReqStates,
@@ -552,7 +504,6 @@ nsRoleMapEntry nsARIAMap::gWAIRoleMap[] =
   {
     "treeitem",
     nsIAccessibleRole::ROLE_OUTLINEITEM,
-    eNameOkFromChildren,
     eNoValue,
     eActivateAction, // XXX: should expose second 'expand/collapse' action based
                      // on states
@@ -572,7 +523,6 @@ PRUint32 nsARIAMap::gWAIRoleMapLength = NS_ARRAY_LENGTH(nsARIAMap::gWAIRoleMap);
 nsRoleMapEntry nsARIAMap::gLandmarkRoleMap = {
   "",
   nsIAccessibleRole::ROLE_NOTHING,
-  eNameLabelOrTitle,
   eNoValue,
   eNoAction,
   kNoReqStates,
@@ -582,7 +532,6 @@ nsRoleMapEntry nsARIAMap::gLandmarkRoleMap = {
 nsRoleMapEntry nsARIAMap::gEmptyRoleMap = {
   "",
   nsIAccessibleRole::ROLE_NOTHING,
-  eNameLabelOrTitle,
   eNoValue,
   eNoAction,
   kNoReqStates,

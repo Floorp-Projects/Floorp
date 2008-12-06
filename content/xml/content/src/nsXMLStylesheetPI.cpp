@@ -171,8 +171,7 @@ nsXMLStylesheetPI::GetStyleSheetURL(PRBool* aIsInline,
   *aURI = nsnull;
 
   nsAutoString href;
-  GetAttrValue(nsGkAtoms::href, href);
-  if (href.IsEmpty()) {
+  if (!GetAttrValue(nsGkAtoms::href, href)) {
     return;
   }
 

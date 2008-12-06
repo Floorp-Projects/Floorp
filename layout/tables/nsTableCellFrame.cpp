@@ -446,6 +446,12 @@ nsTableCellFrame::BuildDisplayList(nsDisplayListBuilder*   aBuilder,
       currentItem->UpdateForFrameBackground(this);
     }
 
+    if (GetStyleBorder()->mBoxShadow) {
+      nsDisplayItem* item = new (aBuilder) nsDisplayBoxShadow(this);
+      nsresult rv = aLists.BorderBackground()->AppendNewToTop(item);
+      NS_ENSURE_SUCCESS(rv, rv);
+    }
+
     // display background if we need to.
     if (aBuilder->IsForEventDelivery() ||
         (((!tableFrame->IsBorderCollapse() || isRoot) &&

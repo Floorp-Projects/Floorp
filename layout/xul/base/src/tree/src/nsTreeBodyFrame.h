@@ -63,6 +63,8 @@
 #include "nsIScrollbarFrame.h"
 #include "nsThreadUtils.h"
 
+class nsOverflowChecker;
+
 // An entry in the tree's image cache
 struct nsTreeImageCacheEntry
 {
@@ -189,6 +191,8 @@ public:
   nsITreeBoxObject* GetTreeBoxObject() const { return mTreeBoxObject; }
 
 protected:
+  friend class nsOverflowChecker;
+
   // This method paints a specific column background of the tree.
   void PaintColumn(nsTreeColumn*        aColumn,
                    const nsRect&        aColumnRect,

@@ -1,0 +1,33 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg"
+     xmlns:xlink="http://www.w3.org/1999/xlink"
+     version="1.1">
+
+  <!-- use an empty g to force filters.svg to load before onload -->
+  <use xlink:href="../filters.svg#empty" />
+
+  <foreignObject filter="url(../filters.svg#NonWhiteToBlack)"
+                 x="0" y="0" height="100%" width="100%">
+<html xmlns="http://www.w3.org/1999/xhtml">
+<!-- ZWNJ test #2. The words from zwnj-01.html with the ZWNJs replaced by
+ span boundaries. Correct behaviour is for the letters to connect across the
+ spans -->
+ <head>
+  <title>ZWNJ test</title>
+  <style type="text/css">
+  html, body { margin: 0; background: white; color: black; height: 100%; width: 100%; }
+  body {   
+    font-size: 36px;
+  }
+  </style>
+ </head>
+ <body lang="ar">
+  <p><span>&#x647;&#x641;&#x62A;&#x647;</span><span>&#x647;&#x627;</span></p>
+  <p><span>&#x645;&#x648;&#x632;&#x647;</span><span>&#x647;&#x627;</span></p>
+  <p><span>&#x633;&#x647;</span><span>&#x634;&#x646;&#x628;&#x647;</span></p>
+  <p><span>&#x631;&#x627;&#x647;</span><span>&#x622;&#x647;&#x646;</span></p>
+  <p><span>&#x646;&#x631;&#x645;</span><span>&#x627;&#x641;&#x632;&#x627;&#x631;</span></p>
+ </body>
+</html>
+</foreignObject>
+</svg>

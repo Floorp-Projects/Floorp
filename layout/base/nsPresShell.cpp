@@ -195,7 +195,6 @@
 #include "nsMenuFrame.h"
 #include "nsTreeBodyFrame.h"
 #endif
-#include "nsIMenuParent.h"
 #include "nsPlaceholderFrame.h"
 
 // Content viewer interfaces
@@ -2835,7 +2834,7 @@ PresShell::ScrollPage(PRBool aForward)
 {
   nsIScrollableView* scrollView = GetViewToScroll(nsLayoutUtils::eVertical);
   if (scrollView) {
-    scrollView->ScrollByPages(0, aForward ? 1 : -1);
+    scrollView->ScrollByPages(0, aForward ? 1 : -1, NS_VMREFRESH_SMOOTHSCROLL);
   }
   return NS_OK;
 }
@@ -2848,9 +2847,9 @@ PresShell::ScrollLine(PRBool aForward)
 #ifdef MOZ_WIDGET_COCOA
     // Emulate the Mac IE behavior of scrolling a minimum of 2 lines
     // rather than 1.  This vastly improves scrolling speed.
-    scrollView->ScrollByLines(0, aForward ? 2 : -2);
+    scrollView->ScrollByLines(0, aForward ? 2 : -2, NS_VMREFRESH_SMOOTHSCROLL);
 #else
-    scrollView->ScrollByLines(0, aForward ? 1 : -1);
+    scrollView->ScrollByLines(0, aForward ? 1 : -1, NS_VMREFRESH_SMOOTHSCROLL);
 #endif
       
 //NEW FOR LINES    
@@ -2872,7 +2871,7 @@ PresShell::ScrollHorizontal(PRBool aLeft)
 {
   nsIScrollableView* scrollView = GetViewToScroll(nsLayoutUtils::eHorizontal);
   if (scrollView) {
-    scrollView->ScrollByLines(aLeft ? -1 : 1, 0);
+    scrollView->ScrollByLines(aLeft ? -1 : 1, 0, NS_VMREFRESH_SMOOTHSCROLL);
 //NEW FOR LINES    
     // force the update to happen now, otherwise multiple scrolls can
     // occur before the update is processed. (bug #7354)
@@ -4558,11 +4557,16 @@ PresShell::DoFlushPendingNotifications(mozFlushType aType,
       mFrameConstructor->ProcessPendingRestyles();
     }
 
+
     // There might be more pending constructors now, but we're not going to
     // worry about them.  They can't be triggered during reflow, so we should
     // be good.
     
     if (aType >= Flush_Layout && !mIsDestroying) {
+      // Flush any pending update of the user font set, since that could
+      // post a style change reflow.
+      mPresContext->FlushUserFontSet();
+
       mFrameConstructor->RecalcQuotesAndCounters();
       mViewManager->FlushDelayedResize();
       ProcessReflowCommands(aInterruptibleReflow);
@@ -4777,17 +4781,21 @@ nsIPresShell::ReconstructStyleDataInternal()
 {
   mStylesHaveChanged = PR_FALSE;
 
-  if (!mDidInitialReflow) {
-    // Nothing to do here, since we have no frames yet
-    return;
-  }
-
   if (mIsDestroying) {
     // We don't want to mess with restyles at this point
     return;
   }
 
+  if (mPresContext) {
+    mPresContext->RebuildUserFontSet();
+  }
+
   nsIContent* root = mDocument->GetRootContent();
+  if (!mDidInitialReflow) {
+    // Nothing to do here, since we have no frames yet
+    return;
+  }
+
   if (!root) {
     // No content to restyle
     return;
@@ -5651,12 +5659,12 @@ PresShell::HandleEvent(nsIView         *aView,
     nsIFrame* targetFrame;
     {
       nsAutoDisableGetUsedXAssertions disableAssert;
-      PRBool ignoreScrollFrame = PR_FALSE;
+      PRBool ignoreRootScrollFrame = PR_FALSE;
       if (aEvent->eventStructType == NS_MOUSE_EVENT) {
-        ignoreScrollFrame = static_cast<nsMouseEvent*>(aEvent)->ignoreScrollFrame;
+        ignoreRootScrollFrame = static_cast<nsMouseEvent*>(aEvent)->ignoreRootScrollFrame;
       }
       targetFrame = nsLayoutUtils::GetFrameForPoint(frame, eventPoint,
-                                                    PR_FALSE, ignoreScrollFrame);
+                                                    PR_FALSE, ignoreRootScrollFrame);
     }
 
     if (targetFrame) {
@@ -6071,8 +6079,12 @@ StopPluginInstance(PresShell *aShell, nsIContent *aContent)
 static void
 StopMediaInstance(PresShell *aShell, nsIContent *aContent)
 {
-  nsHTMLMediaElement* element = static_cast<nsHTMLMediaElement*>(aContent);
-  element->Freeze();
+  nsCOMPtr<nsIDOMHTMLMediaElement> domMediaElem(do_QueryInterface(aContent));
+  if (!domMediaElem)
+    return;
+
+  nsHTMLMediaElement* mediaElem = static_cast<nsHTMLMediaElement*>(aContent);
+  mediaElem->Freeze();
 }
 #endif
 
@@ -6124,8 +6136,12 @@ StartPluginInstance(PresShell *aShell, nsIContent *aContent)
 static void
 StartMediaInstance(PresShell *aShell, nsIContent *aContent)
 {
- nsHTMLMediaElement* element = static_cast<nsHTMLMediaElement*>(aContent);
- element->Thaw();
+  nsCOMPtr<nsIDOMHTMLMediaElement> domMediaElem(do_QueryInterface(aContent));
+  if (!domMediaElem)
+    return;
+
+  nsHTMLMediaElement* mediaElem = static_cast<nsHTMLMediaElement*>(aContent);
+  mediaElem->Thaw();
 }
 #endif
 
@@ -6241,6 +6257,8 @@ PresShell::WillDoReflow()
     mCaret->InvalidateOutsideCaret();
     mCaret->UpdateCaretPosition();
   }
+
+  mPresContext->FlushUserFontSet();
 
   mFrameConstructor->BeginUpdate();
 }

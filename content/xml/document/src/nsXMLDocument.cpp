@@ -236,8 +236,6 @@ nsXMLDocument::~nsXMLDocument()
 // QueryInterface implementation for nsXMLDocument
 NS_INTERFACE_TABLE_HEAD(nsXMLDocument)
   NS_DOCUMENT_INTERFACE_TABLE_BEGIN(nsXMLDocument)
-    NS_INTERFACE_TABLE_ENTRY(nsXMLDocument, nsIInterfaceRequestor)
-    NS_INTERFACE_TABLE_ENTRY(nsXMLDocument, nsIChannelEventSink)
     NS_INTERFACE_TABLE_ENTRY(nsXMLDocument, nsIDOMXMLDocument)
   NS_OFFSET_AND_INTERFACE_TABLE_END
   NS_OFFSET_AND_INTERFACE_TABLE_TO_MAP_SEGUE
@@ -275,35 +273,6 @@ nsXMLDocument::ResetToURI(nsIURI *aURI, nsILoadGroup *aLoadGroup,
   }
 
   nsDocument::ResetToURI(aURI, aLoadGroup, aPrincipal);
-}
-
-/////////////////////////////////////////////////////
-// nsIInterfaceRequestor methods:
-//
-NS_IMETHODIMP
-nsXMLDocument::GetInterface(const nsIID& aIID, void** aSink)
-{
-  return QueryInterface(aIID, aSink);
-}
-
-// nsIChannelEventSink
-NS_IMETHODIMP
-nsXMLDocument::OnChannelRedirect(nsIChannel *aOldChannel,
-                                 nsIChannel *aNewChannel,
-                                 PRUint32 aFlags)
-{
-  NS_PRECONDITION(aNewChannel, "Redirecting to null channel?");
-
-  nsCOMPtr<nsIURI> oldURI;
-  nsresult rv = aOldChannel->GetURI(getter_AddRefs(oldURI));
-  NS_ENSURE_SUCCESS(rv, rv);
-
-  nsCOMPtr<nsIURI> newURI;
-  rv = aNewChannel->GetURI(getter_AddRefs(newURI));
-  NS_ENSURE_SUCCESS(rv, rv);
-
-  return nsContentUtils::GetSecurityManager()->
-    CheckSameOriginURI(oldURI, newURI, PR_TRUE);
 }
 
 NS_IMETHODIMP
@@ -438,11 +407,13 @@ nsXMLDocument::Load(const nsAString& aUrl, PRBool *aReturn)
   mListenerManager = elm;
 
   // Create a channel
+  nsCOMPtr<nsIInterfaceRequestor> req = nsContentUtils::GetSameOriginChecker();
+  NS_ENSURE_TRUE(req, NS_ERROR_OUT_OF_MEMORY);  
 
   nsCOMPtr<nsIChannel> channel;
   // nsIRequest::LOAD_BACKGROUND prevents throbber from becoming active,
   // which in turn keeps STOP button from becoming active  
-  rv = NS_NewChannel(getter_AddRefs(channel), uri, nsnull, loadGroup, this, 
+  rv = NS_NewChannel(getter_AddRefs(channel), uri, nsnull, loadGroup, req, 
                      nsIRequest::LOAD_BACKGROUND);
   if (NS_FAILED(rv)) {
     return rv;

@@ -44,9 +44,11 @@
 
 // Other includes
 #include "jsapi.h"
+#include "nsAutoJSValHolder.h"
 #include "nsAutoPtr.h"
 #include "nsCOMPtr.h"
 #include "nsStringGlue.h"
+#include "nsTArray.h"
 
 // DOMWorker includes
 #include "nsDOMWorker.h"
@@ -145,10 +147,9 @@ private:
     virtual nsresult Run(nsDOMWorkerTimeout* aTimeout,
                          JSContext* aCx);
   protected:
-    jsval mCallback;
-    jsval* mCallbackArgs;
+    nsAutoJSValHolder mCallback;
+    nsTArray<nsAutoJSValHolder> mCallbackArgs;
     PRUint32 mCallbackArgsLength;
-    JSRuntime* mRuntime;
   };
 
   class ExpressionCallback : public CallbackBase
@@ -162,10 +163,9 @@ private:
     virtual nsresult Run(nsDOMWorkerTimeout* aTimeout,
                          JSContext* aCx);
   protected:
-    JSString* mExpression;
-    nsString mFileName;
+    nsAutoJSValHolder mExpression;
+    nsCString mFileName;
     PRUint32 mLineNumber;
-    JSRuntime* mRuntime;
   };
 
   // Hold this object alive!

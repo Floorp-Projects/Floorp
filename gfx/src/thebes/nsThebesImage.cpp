@@ -477,6 +477,9 @@ nsThebesImage::Draw(gfxContext*        aContext,
     nsRefPtr<gfxASurface> surface;
     gfxImageSurface::gfxImageFormat format;
 
+    NS_ASSERTION(!sourceRect.Intersect(subimage).IsEmpty(),
+                 "We must be allowed to sample *some* source pixels!");
+
     PRBool doTile = !imageRect.Contains(sourceRect);
     if (doPadding || doPartialDecode) {
         gfxRect available = gfxRect(mDecoded.x, mDecoded.y, mDecoded.width, mDecoded.height) +
@@ -600,6 +603,8 @@ nsThebesImage::Draw(gfxContext*        aContext,
             gfxRect needed = subimage.Intersect(sourceRect);
             needed.RoundOut();
             gfxIntSize size(PRInt32(needed.Width()), PRInt32(needed.Height()));
+            NS_ASSERTION(size.width > 0 && size.height > 0,
+                         "We must have some needed pixels, otherwise we don't know what to sample");
             nsRefPtr<gfxASurface> temp =
                 gfxPlatform::GetPlatform()->CreateOffscreenSurface(size, format);
             if (temp && temp->CairoStatus() == 0) {
@@ -626,7 +631,7 @@ nsThebesImage::Draw(gfxContext*        aContext,
         // the surface type.
         switch (currentTarget->GetType()) {
         case gfxASurface::SurfaceTypeXlib:
-        case gfxASurface::SurfaceTypeXcb:
+        case gfxASurface::SurfaceTypeXcb: {
             // See bug 324698.  This is a workaround for EXTEND_PAD not being
             // implemented correctly on linux in the X server.
             //
@@ -635,9 +640,22 @@ nsThebesImage::Draw(gfxContext*        aContext,
             // get blurry edges.  CAIRO_EXTEND_PAD would also work here, if
             // available
             //
-            // This effectively disables smooth upscaling for images.
-            pattern->SetFilter(0);
+            // But don't do this for simple downscales because it's horrible.
+            // Downscaling means that device-space coordinates are
+            // scaled *up* to find the image pixel coordinates.
+            //
+            // deviceToImage is slightly stale because up above we may
+            // have adjusted the pattern's matrix ... but the adjustment
+            // is only a translation so the scale factors in deviceToImage
+            // are still valid.
+            PRBool isDownscale =
+              deviceToImage.xx >= 1.0 && deviceToImage.yy >= 1.0 &&
+              deviceToImage.xy == 0.0 && deviceToImage.yx == 0.0;
+            if (!isDownscale) {
+                pattern->SetFilter(0);
+            }
             break;
+        }
   
         case gfxASurface::SurfaceTypeQuartz:
         case gfxASurface::SurfaceTypeQuartzImage:
@@ -675,7 +693,12 @@ nsThebesImage::Draw(gfxContext*        aContext,
 PRBool
 nsThebesImage::ShouldUseImageSurfaces()
 {
-#ifdef XP_WIN
+#if defined(WINCE)
+    // There is no test on windows mobile to check for Gui resources.
+    // Allocate, until we run out of memory.
+    return PR_TRUE;
+
+#elif defined(XP_WIN)
     static const DWORD kGDIObjectsHighWaterMark = 7000;
 
     // at 7000 GDI objects, stop allocating normal images to make sure

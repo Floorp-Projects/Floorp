@@ -113,14 +113,14 @@ nsresult BackwardsAllocator::Init(PRUint32 count, size_t size)
 {
   if (mMemory)
   {
-    printf("FAIL allocator already initialized!\n");
+    fail("allocator already initialized!");
     return NS_ERROR_ALREADY_INITIALIZED;
   }
 
   mMemory = new PRUint8[count * size + count];
   if (!mMemory)
   {
-    printf("FAIL failed to allocate mMemory!\n");
+    fail("failed to allocate mMemory!");
     return NS_ERROR_OUT_OF_MEMORY;
   }
   memset(mMemory, 0, count * size + count);
@@ -188,7 +188,7 @@ nsresult TestBackwardsAllocator()
   nsRefPtr<BackwardsAllocator> allocator = new BackwardsAllocator();
   if (!allocator)
   {
-    printf("Allocation of BackwardsAllocator failed!\n");
+    fail("Allocation of BackwardsAllocator failed!");
     return NS_ERROR_OUT_OF_MEMORY;
   }
   nsresult rv = allocator->Init(SEGMENT_COUNT, SEGMENT_SIZE);
@@ -222,7 +222,7 @@ nsresult TestBackwardsAllocator()
     "9123456789"; // not just a memset, to ensure the allocator works correctly
   if (sizeof(written) < BUFFER_LENGTH)
   {
-    printf("FAIL test error with string size\n");
+    fail("test error with string size");
     return NS_ERROR_FAILURE;
   }
 
@@ -230,8 +230,8 @@ nsresult TestBackwardsAllocator()
   rv = output->Write(written, BUFFER_LENGTH, &writeCount);
   if (NS_FAILED(rv) || writeCount != BUFFER_LENGTH)
   {
-    printf("FAIL writing %d bytes (wrote %d bytes) to output failed: %x\n",
-           BUFFER_LENGTH, writeCount, rv);
+    fail("writing %d bytes (wrote %d bytes) to output failed: %x",
+         BUFFER_LENGTH, writeCount, rv);
     return rv;
   }
 
@@ -240,18 +240,18 @@ nsresult TestBackwardsAllocator()
   rv = input->Read(read, BUFFER_LENGTH, &readCount);
   if (NS_FAILED(rv) || readCount != BUFFER_LENGTH)
   {
-    printf("FAIL reading %d bytes (got %d bytes) from input failed: %x\n",
-           BUFFER_LENGTH, readCount,  rv);
+    fail("reading %d bytes (got %d bytes) from input failed: %x",
+         BUFFER_LENGTH, readCount,  rv);
     return rv;
   }
 
   if (0 != memcmp(written, read, BUFFER_LENGTH))
   {
-    printf("FAIL didn't read the written data correctly!\n");
+    fail("didn't read the written data correctly!");
     return NS_ERROR_FAILURE;
   }
 
-  printf("TestBackwardsAllocator PASSED!\n");
+  passed("TestBackwardsAllocator");
   return NS_OK;
 }
 

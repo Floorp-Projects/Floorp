@@ -1,0 +1,19 @@
+<!DOCTYPE HTML>
+<title>Testcase for side issue in bug 467084</title>
+<style type="text/css">
+
+div { background: yellow; padding-bottom: 3px; }
+select {
+    margin: 2em 0; /* be bigger than the line-height */
+    visibility: hidden;
+}
+option { height: 0; min-height: 0; }
+
+</style>
+<div>
+<select size="3">
+  <option>One</option>
+  <option>Two</option>
+  <option>Three</option>
+</select>
+</div>

@@ -1,0 +1,16 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+<style>
+div:after { content: 'X'; border:1px solid red; }
+div.foo:after { content: 'Y'; }
+</style>
+</head>
+<body>
+<div id="d"></div>
+<script>
+document.body.offsetTop;
+document.getElementById("d").setAttribute("class", "foo");
+</script>
+</body>
+</html>

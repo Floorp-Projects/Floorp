@@ -96,6 +96,7 @@ _TEST_FILES =	test_acid3_test46.html \
 		test_bug405818.html \
 		test_bug412901.html \
 		test_bug437915.html \
+		test_bug450191.html \
 		test_bug453896_deck.html \
 		test_cascade.html \
 		test_compute_data_with_start_struct.html \

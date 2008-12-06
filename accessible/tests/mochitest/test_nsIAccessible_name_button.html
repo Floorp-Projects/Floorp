@@ -43,8 +43,8 @@
       // html:input, html:label
       testName("input_labelled", "label");
 
-      // html:input, @title
-      testName("input_title", "title");
+      // html:input, @value
+      testName("input_value0", "1");
 
       // html:input, @value
       testName("input_value", "1");
@@ -57,6 +57,9 @@
 
       // html:input, @data
       testName("input_data", "data");
+
+      // html:input, @title
+      testName("input_title", "title");
 
       SimpleTest.finish();
     }
@@ -124,8 +127,8 @@
   <label for="input_labelled">label</label>
   <input type="button" id="input_labelled" value="1" title="title"/>
 
-  <!-- name from @title, prefered to @value -->
-  <input type="button" id="input_title" title="title" value="1"/>
+  <!-- name from @value, prefered to @title -->
+  <input type="button" id="input_value0" title="title" value="1"/>
 
   <!-- name from @value, prefered to @alt -->
   <input type="button" id="input_value" value="1" alt="alt"/>
@@ -138,5 +141,8 @@
 
   <!-- name from @data -->
   <input type="button" id="input_data" data="data"/>
+
+  <!-- name from @title -->
+  <input type="button" id="input_title" title="title"/>
 </body>
 </html>

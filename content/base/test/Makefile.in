@@ -49,7 +49,10 @@ DIRS += \
 
 MODULE = content
 
-CPP_UNIT_TESTS += TestNativeXMLHttpRequest.cpp TestPlainTextSerializer.cpp
+CPP_UNIT_TESTS = \
+                 TestNativeXMLHttpRequest.cpp \
+                 TestPlainTextSerializer.cpp \
+                 $(NULL)
 
 LOCAL_INCLUDES += -I$(topsrcdir)/xpcom/tests
 
@@ -63,15 +66,6 @@ REQUIRES += \
   xpcom \
   xpconnect \
   htmlparser \
-  $(NULL)
-
-CPPSRCS += $(CPP_UNIT_TESTS)
-
-SIMPLE_PROGRAMS += $(CPP_UNIT_TESTS:.cpp=$(BIN_SUFFIX))
-
-LIBS += \
-  $(XPCOM_GLUE_LDOPTS) \
-  $(NSPR_LIBS) \
   $(NULL)
 
 XPCSHELL_TESTS = \
@@ -91,6 +85,8 @@ _TEST_FILES = 	test_bug5141.html \
 		test_bug254337.html \
 		test_bug276037-1.html \
 		test_bug276037-2.xhtml \
+		test_bug298064.html \
+		bug298064-subframe.html \
 		test_bug308484.html \
 		test_bug311681.xml \
 		test_bug322317.html \
@@ -239,6 +235,7 @@ _TEST_FILES = 	test_bug5141.html \
 		file_bug391728_2.html \
 		test_bug456262.html \
 		test_bug368972.html \
+		test_bug448993.html \
 		test_bug450160.html \
 		test_bug454326.html \
 		test_bug457746.html \
@@ -259,7 +256,13 @@ _TEST_FILES = 	test_bug5141.html \
 		bug461735-post-redirect.js \
 		test_bug461735.html \
 		test_bug380418.html \
+		test_bug465767.html \
 		test_bug380418.html^headers^ \
+		test_elementTraversal.html \
+		test_w3element_traversal.html \
+		test_w3element_traversal.xhtml \
+		test_w3element_traversal_svg.html \
+		w3element_traversal.svg \
 		$(NULL)
 
 # Disabled for now. Mochitest isn't reliable enough for these.
@@ -268,9 +271,3 @@ _TEST_FILES = 	test_bug5141.html \
 
 libs:: $(_TEST_FILES)
 	$(INSTALL) $(foreach f,$^,"$f") $(DEPTH)/_tests/testing/mochitest/tests/$(relativesrcdir)
-
-check::
-	@$(EXIT_ON_ERROR) \
-	for f in $(subst .cpp,,$(CPP_UNIT_TESTS)); do \
-	  XPCOM_DEBUG_BREAK=stack-and-abort $(RUN_TEST_PROGRAM) $(DIST)/bin/$$f; \
-	done

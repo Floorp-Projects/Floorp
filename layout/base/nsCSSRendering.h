@@ -64,7 +64,8 @@ struct nsCSSRendering {
   static void PaintBoxShadow(nsPresContext* aPresContext,
                              nsIRenderingContext& aRenderingContext,
                              nsIFrame* aForFrame,
-                             const nsPoint& aForFramePt);
+                             const nsPoint& aForFramePt,
+                             const nsRect& aDirtyRect);
 
   /**
    * Render the border for an element using css rendering rules
@@ -288,6 +289,9 @@ public:
    *                             set the color on this context before
    *                             calling Init().
    *
+   * @param aDirtyRect           The absolute dirty rect in app units. Used to
+   *                             optimize the temporary surface size and speed up blur.
+   *
    * @return            A blank 8-bit alpha-channel-only graphics context to
    *                    draw on, or null on error. Must not be freed. The
    *                    context has a device offset applied to it given by
@@ -302,7 +306,8 @@ public:
    * directly on it instead of any temporary surface created in this class.
    */
   gfxContext* Init(const gfxRect& aRect, nscoord aBlurRadius,
-                   PRInt32 aAppUnitsPerDevPixel, gfxContext* aDestinationCtx);
+                   PRInt32 aAppUnitsPerDevPixel, gfxContext* aDestinationCtx,
+                   const gfxRect& aDirtyRect);
 
   /**
    * Does the actual blurring and mask applying. Users of this object *must*
@@ -322,6 +327,8 @@ protected:
   gfxAlphaBoxBlur blur;
   nsRefPtr<gfxContext> mContext;
   gfxContext* mDestinationCtx;
+
+  gfxRect mRequiredShadowArea;
   
 };
 

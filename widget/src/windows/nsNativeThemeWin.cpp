@@ -168,11 +168,6 @@ static SIZE GetGutterSize(HANDLE theme, HDC hdc)
     return ret;
 }
 
-static inline PRBool IsFrameRTL(nsIFrame *frame)
-{
-  return frame->GetStyleVisibility()->mDirection == NS_STYLE_DIRECTION_RTL;
-}
-
 static HRESULT DrawThemeBGRTLAware(HANDLE theme, HDC hdc, int part, int state,
                                    const RECT *widgetRect, const RECT *clipRect,
                                    PRBool isRTL)

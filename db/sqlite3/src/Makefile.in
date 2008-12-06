@@ -93,7 +93,7 @@ CSRCS = \
 # -DSQLITE_CORE=1 statically links that module into the SQLite library.
 DEFINES = \
   -DSQLITE_SECURE_DELETE=1 \
-  -DTHREADSAFE=1 \
+  -DSQLITE_THREADSAFE=1 \
   -DSQLITE_CORE=1 \
   -DSQLITE_ENABLE_FTS3=1 \
   $(NULL)

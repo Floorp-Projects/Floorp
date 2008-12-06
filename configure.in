@@ -132,7 +132,7 @@ LIBGNOME_VERSION=2.0
 STARTUP_NOTIFICATION_VERSION=0.8
 DBUS_VERSION=0.60
 LCMS_VERSION=1.17
-SQLITE_VERSION=3.6.4
+SQLITE_VERSION=3.6.6.2
 
 MSMANIFEST_TOOL=
 
@@ -232,16 +232,33 @@ if test "$COMPILE_ENVIRONMENT"; then
 dnl Do some special WinCE toolchain stuff
 case "$target" in
 *wince)
+
+    MOZ_ARG_WITH_STRING(wince-sdk,
+    [  --with-wince-sdk=WINCE_SDK
+                        The path to the windows mobile sdk],
+    WINCE_SDK=$withval)
+
+    export WINCE=1
+    mk_add_options WINCE=1
+
     echo -----------------------------------------------------------------------------
     echo Building Windows CE Shunt Library and Tool Chain
-    echo -----------------------------------------------------------------------------
+    echo Using SDK in:
+    echo $WINCE_SDK
 
     ac_exeext=.exe
+
+    
+    rm -f $srcdir/build/wince/shunt/include/windows.h
 
     echo -n "#define TOPSRCDIR \"" > $srcdir/build/wince/tools/topsrcdir.h
     echo `cd "$_topsrcdir" && pwd -W | tr '\n' '\"'` >> $srcdir/build/wince/tools/topsrcdir.h
     make -C $srcdir/build/wince/tools
+    
+    echo "#include \"$WINCE_SDK/windows.h\"" > $srcdir/build/wince/shunt/include/windows.h
+    echo "#define GetProcAddress GetProcAddressA" >> $srcdir/build/wince/shunt/include/windows.h
     echo -----------------------------------------------------------------------------
+
     ;;
 esac
 
@@ -4299,7 +4316,6 @@ MOZ_ENABLE_CANVAS=1
 MOZ_FEEDS=1
 MOZ_IMG_DECODERS_DEFAULT="png gif jpeg bmp xbm icon"
 MOZ_IMG_ENCODERS_DEFAULT="png jpeg"
-MOZ_IPCD=
 MOZ_JAVAXPCOM=
 MOZ_JSDEBUGGER=1
 MOZ_JSLOADER=1
@@ -4324,7 +4340,6 @@ MOZ_PLAINTEXT_EDITOR_ONLY=
 MOZ_PLUGINS=1
 MOZ_PREF_EXTENSIONS=1
 MOZ_PROFILELOCKING=1
-MOZ_PROFILESHARING=1
 MOZ_PSM=1
 MOZ_PYTHON_EXTENSIONS="xpcom dom"
 MOZ_PYTHON=
@@ -4439,7 +4454,6 @@ basic)
 #  MOZ_PLUGINS=
   MOZ_PREF_EXTENSIONS=
   MOZ_PROFILELOCKING=
-  MOZ_PROFILESHARING=
   MOZ_SPELLCHECK=
   MOZ_SVG=
   MOZ_UNIVERSALCHARDET=
@@ -4484,7 +4498,6 @@ minimal)
   MOZ_PLUGINS=
   MOZ_PREF_EXTENSIONS=
   MOZ_PROFILELOCKING=
-  MOZ_PROFILESHARING=
   MOZ_SPELLCHECK=
   MOZ_STORAGE=1
   MOZ_PLACES=
@@ -4603,7 +4616,6 @@ AC_SUBST(MOZ_XULRUNNER)
 AC_DEFINE_UNQUOTED(MOZ_BUILD_APP,$MOZ_BUILD_APP)
 
 if test "$MOZ_XUL_APP"; then
-  MOZ_PROFILESHARING=
   AC_DEFINE(MOZ_XUL_APP)
 fi
 
@@ -5136,6 +5148,14 @@ MOZ_ARG_DISABLE_BOOL(plugins,
 [  --disable-plugins       Disable plugins support],
     MOZ_PLUGINS=,
     MOZ_PLUGINS=1)
+
+dnl ========================================================
+dnl = Disable building dbm
+dnl ========================================================
+MOZ_ARG_DISABLE_BOOL(dbm,
+[  --disable-dbm       Disable building dbm],
+    NSS_DISABLE_DBM=1,
+    NSS_DISABLE_DBM=)
 
 dnl ========================================================
 dnl = Open JVM Interface (OJI) support
@@ -7623,26 +7643,6 @@ AC_SUBST(MOZ_PYTHON_DEBUG_SUFFIX)
 AC_SUBST(MOZ_PYTHON_DLL_SUFFIX)
 
 dnl ========================================================
-dnl disable profile sharing
-dnl ========================================================
-MOZ_ARG_DISABLE_BOOL(profilesharing,
-[  --disable-profilesharing           Disable profile sharing],
-    MOZ_PROFILESHARING=,
-    MOZ_PROFILESHARING=1 )
-if test "$MOZ_PROFILESHARING"; then
-  MOZ_IPCD=1
-  AC_DEFINE(MOZ_PROFILESHARING)
-fi
-
-dnl ========================================================
-dnl enable ipc/ipcd
-dnl ========================================================
-MOZ_ARG_ENABLE_BOOL(ipcd,
-[  --enable-ipcd                      Enable IPC daemon],
-    MOZ_IPCD=1,
-    MOZ_IPCD= )
-
-dnl ========================================================
 dnl disable profile locking
 dnl   do no use this in applications that can have more than
 dnl   one process accessing the profile directory.
@@ -7845,10 +7845,7 @@ AC_SUBST(JAVA)
 AC_SUBST(JAVAC)
 AC_SUBST(JAR)
 
-AC_SUBST(MOZ_PROFILESHARING)
 AC_SUBST(MOZ_PROFILELOCKING)
-
-AC_SUBST(MOZ_IPCD)
 
 AC_SUBST(HAVE_XIE)
 AC_SUBST(MOZ_XIE_LIBS)
@@ -7892,6 +7889,7 @@ AC_SUBST(MOZ_POST_DSO_LIB_COMMAND)
 AC_SUBST(MOZ_POST_PROGRAM_COMMAND)
 AC_SUBST(MOZ_TIMELINE)
 AC_SUBST(WINCE)
+AC_SUBST(WINCE_SDK)
 AC_SUBST(TARGET_DEVICE)
 
 AC_SUBST(MOZ_APP_NAME)
@@ -7969,6 +7967,7 @@ AC_SUBST(NSS_CFLAGS)
 AC_SUBST(NSS_LIBS)
 AC_SUBST(NSS_DEP_LIBS)
 AC_SUBST(MOZ_NATIVE_NSS)
+AC_SUBST(NSS_DISABLE_DBM)
 
 AC_SUBST(CFLAGS)
 AC_SUBST(CXXFLAGS)

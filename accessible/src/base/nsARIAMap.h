@@ -43,26 +43,6 @@
 #include "prtypes.h"
 #include "nsAccessibilityAtoms.h"
 
-// Name mapping rule: can the name be computed from descendants?
-enum ENameRule
-{
-  // eNameLabelOrTitle:
-  // Collect name from:
-  //   1) The content subtrees pointed to by labelledby
-  //      which contains the IDs for the label content, or if unspecified
-  //   2) The title attribute if specified
-  eNameLabelOrTitle,
-  
-  // eNameOkFromChildren
-  // Collect name from:
-  //   1) The content subtrees pointed to by labelledby
-  //      which contains the IDs for the label content, or if un specified
-  //   2) The text and text equivalents from descendents,
-  //      as well as the value of controls, collected in depth-first order, or if empty
-  //   3) The title attribute if specified
-  eNameOkFromChildren
-};
-
 // Is nsIAccessible value supported for this role or not?
 enum EValueRule
 {
@@ -106,9 +86,6 @@ struct nsRoleMapEntry
   
   // Role mapping rule: maps to this nsIAccessibleRole
   PRUint32 role;
-  
-  // Name mapping rule: how to compute nsIAccessible name
-  ENameRule nameRule;
   
   // Value mapping rule: how to compute nsIAccessible value
   EValueRule valueRule;

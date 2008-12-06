@@ -42,6 +42,8 @@
 #include "nsIDOMEventTarget.h"
 #include "nsIDOMWorkers.h"
 #include "nsIJSNativeInitializer.h"
+#include "nsIPrincipal.h"
+#include "nsIURI.h"
 #include "nsIXPCScriptable.h"
 
 #include "jsapi.h"
@@ -75,6 +77,7 @@ class nsDOMWorker : public nsIWorker,
   friend class nsDOMWorkerScriptLoader;
   friend class nsDOMWorkerTimeout;
   friend class nsDOMWorkerXHR;
+  friend class nsReportErrorRunnable;
 
   friend JSBool DOMWorkerOperationCallback(JSContext* aCx);
   friend void DOMWorkerErrorReporter(JSContext* aCx,
@@ -162,6 +165,22 @@ private:
   void ResumeFeatures();
   void CancelFeatures();
 
+  nsIPrincipal* GetPrincipal() {
+    return mPrincipal;
+  }
+
+  void SetPrincipal(nsIPrincipal* aPrincipal) {
+    mPrincipal = aPrincipal;
+  }
+
+  nsIURI* GetURI() {
+    return mURI;
+  }
+
+  void SetURI(nsIURI* aURI) {
+    mURI = aURI;
+  }
+
 private:
 
   // mParent will live as long as mParentWN but only mParentWN will keep the JS
@@ -190,9 +209,13 @@ private:
 
   nsIXPConnectWrappedNative* mWrappedNative;
 
+  nsCOMPtr<nsIPrincipal> mPrincipal;
+  nsCOMPtr<nsIURI> mURI;
+
   PRPackedBool mCanceled;
   PRPackedBool mSuspended;
   PRPackedBool mCompileAttempted;
+  PRPackedBool mTerminated;
 };
 
 /**

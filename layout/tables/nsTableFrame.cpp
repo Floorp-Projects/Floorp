@@ -1383,6 +1383,14 @@ nsTableFrame::DisplayGenericTablePart(nsDisplayListBuilder* aBuilder,
   NS_ASSERTION(currentItem, "No current table item!");
   currentItem->UpdateForFrameBackground(aFrame);
   
+  // Paint the box-shadow for the table frames
+  if (aFrame->IsVisibleForPainting(aBuilder) &&
+      aFrame->GetStyleBorder()->mBoxShadow) {
+    nsDisplayItem* item = new (aBuilder) nsDisplayBoxShadow(aFrame);
+    nsresult rv = lists->BorderBackground()->AppendNewToTop(item);
+    NS_ENSURE_SUCCESS(rv, rv);
+  }
+
   // Create dedicated background display items per-frame when we're
   // handling events.
   // XXX how to handle collapsed borders?
@@ -1880,32 +1888,33 @@ NS_METHOD nsTableFrame::Reflow(nsPresContext*          aPresContext,
   PRBool haveDesiredHeight = PR_FALSE;
   SetHaveReflowedColGroups(PR_FALSE);
 
-  if (aReflowState.ComputedHeight() != NS_UNCONSTRAINEDSIZE ||
-      // Also check mVResize, to handle the first Reflow preceding a
-      // special height Reflow, when we've already had a special height
-      // Reflow (where mComputedHeight would not be
-      // NS_UNCONSTRAINEDSIZE, but without a style change in between).
-      aReflowState.mFlags.mVResize) {
-    // XXX Eventually, we should modify DistributeHeightToRows to use
-    // nsTableRowFrame::GetHeight instead of nsIFrame::GetSize().height.
-    // That way, it will make its calculations based on internal table
-    // frame heights as they are before they ever had any extra height
-    // distributed to them.  In the meantime, this reflows all the
-    // internal table frames, which restores them to their state before
-    // DistributeHeightToRows was called.
-    SetGeometryDirty();
-  }
-
   // Reflow the entire table (pass 2 and possibly pass 3). This phase is necessary during a 
   // constrained initial reflow and other reflows which require either a strategy init or balance. 
   // This isn't done during an unconstrained reflow, because it will occur later when the parent 
   // reflows with a constrained width.
-  PRBool needToInitiateSpecialReflow =
-    !!(GetStateBits() & NS_FRAME_CONTAINS_RELATIVE_HEIGHT);
   if (NS_SUBTREE_DIRTY(this) ||
       aReflowState.ShouldReflowAllKids() ||
       IsGeometryDirty() ||
-      needToInitiateSpecialReflow) {
+      aReflowState.mFlags.mVResize) {
+
+    if (aReflowState.ComputedHeight() != NS_UNCONSTRAINEDSIZE ||
+        // Also check mVResize, to handle the first Reflow preceding a
+        // special height Reflow, when we've already had a special height
+        // Reflow (where mComputedHeight would not be
+        // NS_UNCONSTRAINEDSIZE, but without a style change in between).
+        aReflowState.mFlags.mVResize) {
+      // XXX Eventually, we should modify DistributeHeightToRows to use
+      // nsTableRowFrame::GetHeight instead of nsIFrame::GetSize().height.
+      // That way, it will make its calculations based on internal table
+      // frame heights as they are before they ever had any extra height
+      // distributed to them.  In the meantime, this reflows all the
+      // internal table frames, which restores them to their state before
+      // DistributeHeightToRows was called.
+      SetGeometryDirty();
+    }
+
+    PRBool needToInitiateSpecialReflow =
+      !!(GetStateBits() & NS_FRAME_CONTAINS_RELATIVE_HEIGHT);
     // see if an extra reflow will be necessary in pagination mode when there is a specified table height 
     if (isPaginated && !GetPrevInFlow() && (NS_UNCONSTRAINEDSIZE != aReflowState.availableHeight)) {
       nscoord tableSpecifiedHeight = CalcBorderBoxHeight(aReflowState);
@@ -1945,14 +1954,9 @@ NS_METHOD nsTableFrame::Reflow(nsPresContext*          aPresContext,
       // distribute extra vertical space to rows
       CalcDesiredHeight(aReflowState, aDesiredSize); 
       mutable_rs.mFlags.mSpecialHeightReflow = PR_TRUE;
-      // save the previous special height reflow initiator, install us as the new one
-      nsIFrame* specialReflowInitiator = aReflowState.mPercentHeightReflowInitiator;
-      mutable_rs.mPercentHeightReflowInitiator = this;
 
       ReflowTable(aDesiredSize, aReflowState, aReflowState.availableHeight, 
                   lastChildReflowed, aStatus);
-      // restore the previous special height reflow initiator
-      mutable_rs.mPercentHeightReflowInitiator = specialReflowInitiator;
 
       if (lastChildReflowed && NS_FRAME_IS_NOT_COMPLETE(aStatus)) {
         // if there is an incomplete child, then set the desired height to include it but not the next one

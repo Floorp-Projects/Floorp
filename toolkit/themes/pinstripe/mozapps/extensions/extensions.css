@@ -1,6 +1,5 @@
-#extensionsManager:not([active="true"]) > #topStackBar > #viewGroup > .radiogroupWrapper {
-  opacity: 0.7;
-}
+/* View buttons */
+@import "chrome://global/skin/viewbuttons.css";
 
 #extensionsBox {
   padding: 0;
@@ -357,52 +356,11 @@ vbox[typeName="status"][type="header-recommended"] {
 
 #progressBox {
   padding: 5px 5px 5px 5px;
+  -moz-appearance: -moz-mac-unified-toolbar;
 }
 
 #progressBox > hbox {
   -moz-box-align: center;
-}
-
-/* View buttons */
-.viewSelector {
-  -moz-appearance: -moz-mac-unified-toolbar;
-  padding: 4px 0 8px;
-  margin: 0;
-  -moz-box-pack: center;
-}
-
-#viewGroup {
-  -moz-binding: url("chrome://mozapps/skin/extensions/extensions.xml#radiogroupWrapper");
-}
-
-.radiogroupWrapper {
-  border: 1px solid #404040;
-  border-bottom-width: 2px;
-  -moz-border-bottom-colors: #C2C2C2 #404040;
-  -moz-border-radius: 4px;
-  -moz-border-radius-bottomright: 5px;
-  -moz-border-radius-bottomleft: 5px;
-  background-image: url("chrome://global/skin/icons/white-gray-gradient.gif");
-  background-repeat: repeat-x;
-}
-
-
-#viewGroup radio {
-  padding: 0px 4px;
-  margin: 0;
-  -moz-appearance: none !important;
-  font: menu;
-  -moz-border-start: 1px solid #404040;
-}
-
-#viewGroup radio:first-child {
-  -moz-border-start: none;
-}
-
-
-#viewGroup radio[selected="true"] {
-  background-color: #5E5E5E;
-  color: #ffffff !important;
 }
 
 /* Update view checkbox */

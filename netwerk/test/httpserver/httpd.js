@@ -525,6 +525,22 @@ nsHttpServer.prototype =
     return this._identity;
   },
 
+  //
+  // see nsIHttpServer.getState
+  //
+  getState: function(k)
+  {
+    return this._handler._getState(k);
+  },
+
+  //
+  // see nsIHttpServer.setState
+  //
+  setState: function(k, v)
+  {
+    return this._handler._setState(k, v);
+  },
+
   // NSISUPPORTS
 
   //
@@ -1938,6 +1954,11 @@ function ServerHandler(server)
    * when no index file is present.
    */
   this._indexHandler = defaultIndexHandler;
+
+  /**
+   * State storage for the server.
+   */
+  this._state = {};
 }
 ServerHandler.prototype =
 {
@@ -2351,6 +2372,12 @@ ServerHandler.prototype =
         var s = Cu.Sandbox(gGlobalObject);
         s.importFunction(dump, "dump");
 
+        // Define a basic key-value state-preservation API across requests, with
+        // keys initially corresponding to the empty string.
+        var self = this;
+        s.importFunction(function getState(k) { return self._getState(k); });
+        s.importFunction(function setState(k, v) { self._setState(k, v); });
+
         try
         {
           // Alas, the line number in errors dumped to console when calling the
@@ -2422,6 +2449,39 @@ ServerHandler.prototype =
       
       maybeAddHeaders(file, metadata, response);
     }
+  },
+
+  /**
+   * Get the value corresponding to a given key for SJS state preservation
+   * across requests.
+   *
+   * @param k : string
+   *   the key whose corresponding value is to be returned
+   * @returns string
+   *   the corresponding value, which is initially the empty string
+   */
+  _getState: function(k)
+  {
+    NS_ASSERT(typeof k == "string");
+    var state = this._state;
+    if (k in state)
+      return state[k];
+    return state[k] = "";
+  },
+
+  /**
+   * Set the value corresponding to a given key for SJS state preservation
+   * across requests.
+   *
+   * @param k : string
+   *   the key whose corresponding value is to be set
+   * @param v : string
+   *   the value to be set
+   */
+  _setState: function(k, v)
+  {
+    NS_ASSERT(typeof v == "string");
+    this._state[k] = String(v);
   },
 
   /**

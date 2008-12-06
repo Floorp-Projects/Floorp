@@ -119,12 +119,12 @@ public:
   }
 
   /**
-   * Pretend to be a JSObject*.
+   * Explicit JSObject* conversion.
    */
-  operator JSObject*() const {
+  JSObject* ToJSObject() const {
     return JSVAL_IS_OBJECT(mVal)
          ? JSVAL_TO_OBJECT(mVal)
-         : JSVAL_NULL;
+         : NULL;
   }
 
   /**

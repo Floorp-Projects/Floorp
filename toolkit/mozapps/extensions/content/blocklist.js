@@ -67,6 +67,12 @@ function init() {
     document.getElementById("hardBlockMessage").hidden = false;
   else
     document.getElementById("softBlockMessage").hidden = false;
+
+  var formatter = Components.classes["@mozilla.org/toolkit/URLFormatterService;1"]
+                            .getService(Components.interfaces.nsIURLFormatter);
+  var url = formatter.formatURLPref("extensions.blocklist.detailsURL");
+  var link = document.getElementById("moreInfo");
+  link.setAttribute("href", url);
 }
 
 function accept() {

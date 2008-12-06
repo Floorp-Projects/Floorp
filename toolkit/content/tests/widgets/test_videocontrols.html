@@ -1,0 +1,98 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+  <title>Video controls test</title>
+  <script type="text/javascript" src="/MochiKit/MochiKit.js"></script>
+  <script type="text/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>  
+  <script type="text/javascript" src="/tests/SimpleTest/EventUtils.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
+</head>
+<body>
+<p id="display"></p>
+
+<div id="content">
+  <video width="320" height="240" id="video" src="video.ogg" controls></video>
+</div>
+
+<pre id="test">
+<script class="testbody" type="text/javascript">
+
+var testnum = 1;
+var video = document.getElementById("video");
+
+function runTest(event) {
+  ok(true, "----- test #" + testnum + " -----");
+
+  switch (testnum) {
+    case 1:
+      // Check initial state upon load
+      is(event.type, "load", "checking event type");
+      is(video.paused, true, "checking video play state");
+      is(video.muted, false, "checking video mute state");
+
+      // Let the fadein happen
+      synthesizeMouse(video, 12, 228, { type : "mouseover" });
+      setTimeout(runTest, 0, { type: "setTimeout" });
+      break;
+
+    case 2:
+      is(event.type, "setTimeout", "checking event type");
+      // Click the play button
+      synthesizeMouse(video, 12, 228, { });
+      break;
+
+    case 3:
+      is(event.type, "play",  "checking event type");
+      is(video.paused, false, "checking video play state");
+      is(video.muted, false,  "checking video mute state");
+
+      // Click the pause button
+      synthesizeMouse(video, 12, 228, { });
+      break;
+
+    case 4:
+      is(event.type, "pause", "checking event type");
+      is(video.paused, true,  "checking video play state");
+      is(video.muted, false,  "checking video mute state");
+
+      // Click the mute button
+      // XXX volume event is sent synchronously, so do this in a timeout
+      setTimeout("synthesizeMouse(video, 308, 228, { });", 0);
+      break;
+
+    case 5:
+      is(event.type, "volumechange", "checking event type");
+      is(video.paused, true,  "checking video play state");
+      is(video.muted,  true,  "checking video mute state");
+
+      // Click the unmute button
+      // XXX volume event is sent synchronously, so do this in a timeout
+      setTimeout("synthesizeMouse(video, 308, 228, { });", 0);
+      break;
+
+    case 6:
+      is(event.type, "volumechange", "checking event type");
+      is(video.paused, true,  "checking video play state");
+      is(video.muted,  false, "checking video mute state");
+
+      SimpleTest.finish();
+      break;
+
+    default:
+      throw "unexpected test #" + testnum + " w/ event " + event.name;
+  }
+
+  testnum++;
+}
+
+window.onload = runTest;
+video.addEventListener("play",  runTest, false);
+video.addEventListener("pause", runTest, false);
+video.addEventListener("volumechange", runTest, false);
+
+SimpleTest.waitForExplicitFinish();
+
+</script>
+</pre>
+</body>
+</html>

@@ -1487,15 +1487,6 @@ NS_IMETHODIMP nsDocLoader::OnChannelRedirect(nsIChannel *aOldChannel,
 {
   if (aOldChannel)
   {
-    nsresult rv;
-    nsCOMPtr<nsIURI> oldURI, newURI;
-
-    rv = aOldChannel->GetOriginalURI(getter_AddRefs(oldURI));
-    if (NS_FAILED(rv)) return rv;
-
-    rv = aNewChannel->GetURI(getter_AddRefs(newURI));
-    if (NS_FAILED(rv)) return rv;
-
     nsLoadFlags loadFlags = 0;
     PRInt32 stateFlags = nsIWebProgressListener::STATE_REDIRECTING |
                          nsIWebProgressListener::STATE_IS_REQUEST;

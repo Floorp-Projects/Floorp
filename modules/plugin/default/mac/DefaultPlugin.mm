@@ -228,12 +228,6 @@ void drawPlugin(NPP instance)
   CGContextSetGrayFillColor(cgContext, 1.0, 1.0);
   CGContextDrawPath(cgContext, kCGPathFill);
 
-  // draw a blue frame around the plugin
-  CGContextAddRect(cgContext, CGRectMake(0, 0, windowWidth, windowHeight));
-  CGContextSetRGBStrokeColor(cgContext, 0.0, 0.0, 0.5, 1.0);
-  CGContextSetLineWidth(cgContext, 2.0);
-  CGContextStrokePath(cgContext);
-
   // draw the broken plugin icon
   CFBundleRef bundle = ::CFBundleGetBundleWithIdentifier(CFSTR("org.mozilla.DefaultPlugin"));
   CFURLRef imageURL = ::CFBundleCopyResourceURL(bundle, CFSTR("plugin"), CFSTR("png"), NULL);
@@ -246,6 +240,12 @@ void drawPlugin(NPP instance)
   CGRect drawRect = ::CGRectMake(windowWidth / 2 - imageWidth / 2, windowHeight / 2 - imageHeight / 2, imageWidth, imageHeight);
   ::CGContextDrawImage(cgContext, drawRect, imageRef);
   ::CGImageRelease(imageRef);
+
+  // draw a blue frame around the plugin
+  CGContextAddRect(cgContext, CGRectMake(0, 0, windowWidth, windowHeight));
+  CGContextSetRGBStrokeColor(cgContext, 0.0, 0.0, 0.5, 1.0);
+  CGContextSetLineWidth(cgContext, 2.0);
+  CGContextStrokePath(cgContext);
 
   // restore the cgcontext gstate
   CGContextRestoreGState(cgContext);

@@ -92,6 +92,8 @@ NS_IMETHODIMP
 mozStorageStatementRow::GetProperty(nsIXPConnectWrappedNative *wrapper, JSContext * cx,
                          JSObject * obj, jsval id, jsval * vp, PRBool *_retval)
 {
+    NS_ENSURE_TRUE(mStatement, NS_ERROR_NOT_INITIALIZED);
+
     if (JSVAL_IS_STRING(id)) {
         nsDependentCString jsid(::JS_GetStringBytes(JSVAL_TO_STRING(id)));
 
@@ -201,6 +203,8 @@ NS_IMETHODIMP
 mozStorageStatementRow::NewResolve(nsIXPConnectWrappedNative *wrapper, JSContext * cx,
                                    JSObject * obj, jsval id, PRUint32 flags, JSObject * *objp, PRBool *_retval)
 {
+    NS_ENSURE_TRUE(mStatement, NS_ERROR_NOT_INITIALIZED);
+
     if (JSVAL_IS_STRING(id)) {
         JSString *str = JSVAL_TO_STRING(id);
         nsDependentCString name(::JS_GetStringBytes(str));

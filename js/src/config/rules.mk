@@ -113,6 +113,104 @@ ifdef EXTRA_DSO_LIBS
 EXTRA_DSO_LIBS	:= $(call EXPAND_MOZLIBNAME,$(EXTRA_DSO_LIBS))
 endif
 
+################################################################################
+# Testing frameworks support
+################################################################################
+
+ifdef ENABLE_TESTS
+
+ifdef XPCSHELL_TESTS
+ifndef MODULE
+$(error Must define MODULE when defining XPCSHELL_TESTS.)
+endif
+
+# Test file installation
+libs::
+	@$(EXIT_ON_ERROR) \
+	for testdir in $(XPCSHELL_TESTS); do \
+	  $(INSTALL) \
+	    $(srcdir)/$$testdir/*.js \
+	    $(DEPTH)/_tests/xpcshell-simple/$(MODULE)/$$testdir; \
+	done
+
+# Path formats on Windows are hard.  We require a topsrcdir formatted so that
+# it may be passed to nsILocalFile.initWithPath (in other words, an absolute
+# path of the form X:\path\to\topsrcdir), which we store in NATIVE_TOPSRCDIR.
+# We require a forward-slashed path to topsrcdir so that it may be combined
+# with a relative forward-slashed path for loading scripts, both dynamically
+# and statically for head/test/tail JS files.  Of course, on non-Windows none
+# of this matters, and things will work correctly because everything's
+# forward-slashed, everywhere, always.
+ifdef CYGWIN_WRAPPER
+NATIVE_TOPSRCDIR   := `cygpath -wa $(topsrcdir)`
+FWDSLASH_TOPSRCDIR := `cygpath -ma $(topsrcdir)`
+else
+FWDSLASH_TOPSRCDIR := $(topsrcdir)
+ifeq ($(HOST_OS_ARCH),WINNT)
+NATIVE_TOPSRCDIR   := $(subst /,\\,$(WIN_TOP_SRC))
+else 
+NATIVE_TOPSRCDIR   := $(topsrcdir)
+endif
+endif # CYGWIN_WRAPPER
+
+# Test execution
+check::
+	@$(EXIT_ON_ERROR) \
+	for testdir in $(XPCSHELL_TESTS); do \
+	  $(RUN_TEST_PROGRAM) \
+	    $(topsrcdir)/tools/test-harness/xpcshell-simple/test_all.sh \
+	      $(DIST)/bin/xpcshell \
+	      $(FWDSLASH_TOPSRCDIR) \
+	      $(NATIVE_TOPSRCDIR) \
+	      $(DEPTH)/_tests/xpcshell-simple/$(MODULE)/$$testdir; \
+	done
+
+# Test execution
+check-interactive::
+	@$(EXIT_ON_ERROR) \
+	$(RUN_TEST_PROGRAM) \
+	  $(topsrcdir)/tools/test-harness/xpcshell-simple/test_one.sh \
+	    $(DIST)/bin/xpcshell \
+	    $(FWDSLASH_TOPSRCDIR) \
+	    $(NATIVE_TOPSRCDIR) \
+	    $(DEPTH)/_tests/xpcshell-simple/$(MODULE)/$$testdir \
+	    $(SOLO_FILE) 1;
+
+# Test execution
+check-one::
+	@$(EXIT_ON_ERROR) \
+	$(RUN_TEST_PROGRAM) \
+	  $(topsrcdir)/tools/test-harness/xpcshell-simple/test_one.sh \
+	    $(DIST)/bin/xpcshell \
+	    $(FWDSLASH_TOPSRCDIR) \
+	    $(NATIVE_TOPSRCDIR) \
+	    $(DEPTH)/_tests/xpcshell-simple/$(MODULE)/$$testdir \
+	    $(SOLO_FILE) 0;
+
+endif # XPCSHELL_TESTS
+
+ifdef CPP_UNIT_TESTS
+
+# Compile the tests to $(DIST)/bin.  Make lots of niceties available by default
+# through TestHarness.h, by modifying the list of includes and the libs against
+# which stuff links.
+CPPSRCS += $(CPP_UNIT_TESTS)
+SIMPLE_PROGRAMS += $(CPP_UNIT_TESTS:.cpp=$(BIN_SUFFIX))
+REQUIRES += testing xpcom
+LIBS += $(XPCOM_GLUE_LDOPTS) $(NSPR_LIBS)
+
+# ...and run them the usual way
+check::
+	@$(EXIT_ON_ERROR) \
+	  for f in $(subst .cpp,,$(CPP_UNIT_TESTS)); do \
+	    XPCOM_DEBUG_BREAK=stack-and-abort $(RUN_TEST_PROGRAM) $(DIST)/bin/$$f; \
+	  done
+
+endif # CPP_UNIT_TESTS
+
+endif # ENABLE_TESTS
+
+
 #
 # Library rules
 #
@@ -199,15 +297,22 @@ ifeq (,$(filter-out WINNT WINCE,$(OS_ARCH)))
 ifndef GNU_CC
 
 #
-# All C++ files share a PDB file per directory. For parallel builds, this PDB
-# file is shared and locked by MSPDBSRV.EXE, starting with MSVC8 SP1. If
-# you're using MSVC 7.1 or MSVC8 without SP1, don't do parallel builds.
+# Unless we're building SIMPLE_PROGRAMS, all C++ files share a PDB file per
+# directory. For parallel builds, this PDB file is shared and locked by
+# MSPDBSRV.EXE, starting with MSVC8 SP1. If you're using MSVC 7.1 or MSVC8
+# without SP1, don't do parallel builds.
 #
 # The final PDB for libraries and programs is created by the linker and uses
 # a different name from the single PDB file created by the compiler. See
 # bug 462740.
 #
+
+ifdef SIMPLE_PROGRAMS
+COMPILE_PDBFILE = $(basename $(@F)).pdb
+else
 COMPILE_PDBFILE = generated.pdb
+endif
+
 LINK_PDBFILE = $(basename $(@F)).pdb
 ifdef MOZ_DEBUG
 CODFILE=$(basename $(@F)).cod
@@ -747,6 +852,9 @@ LIBS_DEPS = $(filter %.$(LIB_SUFFIX), $(LIBS))
 HOST_LIBS_DEPS = $(filter %.$(LIB_SUFFIX), $(HOST_LIBS))
 DSO_LDOPTS_DEPS = $(EXTRA_DSO_LIBS) $(filter %.$(LIB_SUFFIX), $(EXTRA_DSO_LDOPTS))
 
+# Dependancies which, if modified, should cause everything to rebuild
+GLOBAL_DEPS += Makefile Makefile.in $(DEPTH)/config/autoconf.mk $(DEPTH)/config/config.mk
+
 ##############################################
 ifdef PARALLEL_DIRS
 libs:: $(PARALLEL_DIRS_libs)
@@ -890,7 +998,7 @@ alltags:
 # PROGRAM = Foo
 # creates OBJS, links with LIBS to create Foo
 #
-$(PROGRAM): $(PROGOBJS) $(LIBS_DEPS) $(EXTRA_DEPS) $(EXE_DEF_FILE) $(RESFILE) Makefile Makefile.in
+$(PROGRAM): $(PROGOBJS) $(LIBS_DEPS) $(EXTRA_DEPS) $(EXE_DEF_FILE) $(RESFILE) $(GLOBAL_DEPS)
 ifeq (WINCE,$(OS_ARCH))
 	$(LD) -NOLOGO -OUT:$@ $(WIN32_EXE_LDFLAGS) $(LDFLAGS) $(PROGOBJS) $(RESFILE) $(LIBS) $(EXTRA_LIBS) $(OS_LIBS)
 else
@@ -928,7 +1036,7 @@ ifdef BEOS_PROGRAM_RESOURCE
 endif
 endif # BeOS
 
-$(HOST_PROGRAM): $(HOST_PROGOBJS) $(HOST_LIBS_DEPS) $(HOST_EXTRA_DEPS) Makefile Makefile.in
+$(HOST_PROGRAM): $(HOST_PROGOBJS) $(HOST_LIBS_DEPS) $(HOST_EXTRA_DEPS) $(GLOBAL_DEPS)
 ifeq (WINCE,$(OS_ARCH))
 	$(HOST_LD) -NOLOGO -OUT:$@ $(HOST_OBJS) $(WIN32_EXE_LDFLAGS) $(HOST_LIBS) $(HOST_EXTRA_LIBS)
 else
@@ -957,7 +1065,7 @@ endif
 # SIMPLE_PROGRAMS = Foo Bar
 # creates Foo.o Bar.o, links with LIBS to create Foo, Bar.
 #
-$(SIMPLE_PROGRAMS): %$(BIN_SUFFIX): %.$(OBJ_SUFFIX) $(LIBS_DEPS) $(EXTRA_DEPS) Makefile Makefile.in
+$(SIMPLE_PROGRAMS): %$(BIN_SUFFIX): %.$(OBJ_SUFFIX) $(LIBS_DEPS) $(EXTRA_DEPS) $(GLOBAL_DEPS)
 ifeq (WINCE,$(OS_ARCH))
 	$(LD) -nologo  -entry:main -out:$@ $< $(WIN32_EXE_LDFLAGS) $(LDFLAGS) $(LIBS) $(EXTRA_LIBS) $(OS_LIBS)
 else
@@ -985,7 +1093,7 @@ ifdef MOZ_POST_PROGRAM_COMMAND
 	$(MOZ_POST_PROGRAM_COMMAND) $@
 endif
 
-$(HOST_SIMPLE_PROGRAMS): host_%$(HOST_BIN_SUFFIX): host_%.$(OBJ_SUFFIX) $(HOST_LIBS_DEPS) $(HOST_EXTRA_DEPS) Makefile Makefile.in
+$(HOST_SIMPLE_PROGRAMS): host_%$(HOST_BIN_SUFFIX): host_%.$(OBJ_SUFFIX) $(HOST_LIBS_DEPS) $(HOST_EXTRA_DEPS) $(GLOBAL_DEPS)
 ifeq (WINCE,$(OS_ARCH))
 	$(HOST_LD) -NOLOGO -OUT:$@ $(WIN32_EXE_LDFLAGS) $< $(HOST_LIBS) $(HOST_EXTRA_LIBS)
 else
@@ -1051,7 +1159,7 @@ ifdef DTRACE_PROBE_OBJ
 EXTRA_DEPS += $(DTRACE_PROBE_OBJ)
 endif
 
-$(LIBRARY): $(OBJS) $(LOBJS) $(SHARED_LIBRARY_LIBS) $(EXTRA_DEPS) Makefile Makefile.in
+$(LIBRARY): $(OBJS) $(LOBJS) $(SHARED_LIBRARY_LIBS) $(EXTRA_DEPS) $(GLOBAL_DEPS)
 	rm -f $@
 ifneq (,$(GNU_LD)$(filter-out OS2 WINNT WINCE, $(OS_ARCH)))
 ifdef SHARED_LIBRARY_LIBS
@@ -1125,7 +1233,7 @@ endif
 # symlinks back to the originals. The symlinks are a no-op for stabs debugging,
 # so no need to conditionalize on OS version or debugging format.
 
-$(SHARED_LIBRARY): $(OBJS) $(LOBJS) $(DEF_FILE) $(RESFILE) $(SHARED_LIBRARY_LIBS) $(EXTRA_DEPS) $(DSO_LDOPTS_DEPS) Makefile Makefile.in
+$(SHARED_LIBRARY): $(OBJS) $(LOBJS) $(DEF_FILE) $(RESFILE) $(SHARED_LIBRARY_LIBS) $(EXTRA_DEPS) $(DSO_LDOPTS_DEPS) $(GLOBAL_DEPS)
 ifndef INCREMENTAL_LINKER
 	rm -f $@
 endif
@@ -1252,62 +1360,62 @@ endif
 endif
 
 # Rules for building native targets must come first because of the host_ prefix
-host_%.$(OBJ_SUFFIX): %.c Makefile Makefile.in
+host_%.$(OBJ_SUFFIX): %.c $(GLOBAL_DEPS)
 	$(REPORT_BUILD)
 	$(ELOG) $(HOST_CC) $(HOST_OUTOPTION)$@ -c $(HOST_CFLAGS) $(INCLUDES) $(NSPR_CFLAGS) $(_VPATH_SRCS)
 
-host_%.$(OBJ_SUFFIX): %.cpp Makefile Makefile.in
+host_%.$(OBJ_SUFFIX): %.cpp $(GLOBAL_DEPS)
 	$(REPORT_BUILD)
 	$(ELOG) $(HOST_CXX) $(HOST_OUTOPTION)$@ -c $(HOST_CXXFLAGS) $(INCLUDES) $(NSPR_CFLAGS) $(_VPATH_SRCS)
 
-host_%.$(OBJ_SUFFIX): %.cc Makefile Makefile.in
+host_%.$(OBJ_SUFFIX): %.cc $(GLOBAL_DEPS)
 	$(REPORT_BUILD)
 	$(ELOG) $(HOST_CXX) $(HOST_OUTOPTION)$@ -c $(HOST_CXXFLAGS) $(INCLUDES) $(NSPR_CFLAGS) $(_VPATH_SRCS)
 
-host_%.$(OBJ_SUFFIX): %.m Makefile Makefile.in
+host_%.$(OBJ_SUFFIX): %.m $(GLOBAL_DEPS)
 	$(REPORT_BUILD)
 	$(ELOG) $(HOST_CC) $(HOST_OUTOPTION)$@ -c $(HOST_CFLAGS) $(HOST_CMFLAGS) $(INCLUDES) $(NSPR_CFLAGS) $(_VPATH_SRCS)
 
-host_%.$(OBJ_SUFFIX): %.mm Makefile Makefile.in
+host_%.$(OBJ_SUFFIX): %.mm $(GLOBAL_DEPS)
 	$(REPORT_BUILD)
 	$(ELOG) $(HOST_CXX) $(HOST_OUTOPTION)$@ -c $(HOST_CXXFLAGS) $(HOST_CMMFLAGS) $(INCLUDES) $(NSPR_CFLAGS) $(_VPATH_SRCS)
 
-%: %.c Makefile Makefile.in
+%: %.c $(GLOBAL_DEPS)
 	$(REPORT_BUILD)
 	@$(MAKE_DEPS_AUTO_CC)
 	$(ELOG) $(CC) $(CFLAGS) $(LDFLAGS) $(OUTOPTION)$@ $(_VPATH_SRCS)
 
-%.$(OBJ_SUFFIX): %.c Makefile Makefile.in
+%.$(OBJ_SUFFIX): %.c $(GLOBAL_DEPS)
 	$(REPORT_BUILD)
 	@$(MAKE_DEPS_AUTO_CC)
 	$(ELOG) $(CC) $(OUTOPTION)$@ -c $(COMPILE_CFLAGS) $(_VPATH_SRCS)
 
-moc_%.cpp: %.h Makefile Makefile.in
+moc_%.cpp: %.h $(GLOBAL_DEPS)
 	$(MOC) $< $(OUTOPTION)$@ 
 
 ifdef ASFILES
 # The AS_DASH_C_FLAG is needed cause not all assemblers (Solaris) accept
 # a '-c' flag.
-%.$(OBJ_SUFFIX): %.$(ASM_SUFFIX) Makefile Makefile.in
+%.$(OBJ_SUFFIX): %.$(ASM_SUFFIX) $(GLOBAL_DEPS)
 	$(AS) -o $@ $(ASFLAGS) $(AS_DASH_C_FLAG) $(_VPATH_SRCS)
 endif
 
-%.$(OBJ_SUFFIX): %.S Makefile Makefile.in
+%.$(OBJ_SUFFIX): %.S $(GLOBAL_DEPS)
 	$(AS) -o $@ $(ASFLAGS) -c $<
 
-%: %.cpp Makefile Makefile.in
+%: %.cpp $(GLOBAL_DEPS)
 	@$(MAKE_DEPS_AUTO_CXX)
 	$(CCC) $(OUTOPTION)$@ $(CXXFLAGS) $(_VPATH_SRCS) $(LDFLAGS)
 
 #
 # Please keep the next two rules in sync.
 #
-%.$(OBJ_SUFFIX): %.cc Makefile Makefile.in
+%.$(OBJ_SUFFIX): %.cc $(GLOBAL_DEPS)
 	$(REPORT_BUILD)
 	@$(MAKE_DEPS_AUTO_CXX)
 	$(ELOG) $(CCC) $(OUTOPTION)$@ -c $(COMPILE_CXXFLAGS) $(_VPATH_SRCS)
 
-%.$(OBJ_SUFFIX): %.cpp Makefile Makefile.in
+%.$(OBJ_SUFFIX): %.cpp $(GLOBAL_DEPS)
 	$(REPORT_BUILD)
 	@$(MAKE_DEPS_AUTO_CXX)
 ifdef STRICT_CPLUSPLUS_SUFFIX
@@ -1318,12 +1426,12 @@ else
 	$(ELOG) $(CCC) $(OUTOPTION)$@ -c $(COMPILE_CXXFLAGS) $(_VPATH_SRCS)
 endif #STRICT_CPLUSPLUS_SUFFIX
 
-$(OBJ_PREFIX)%.$(OBJ_SUFFIX): %.mm Makefile Makefile.in
+$(OBJ_PREFIX)%.$(OBJ_SUFFIX): %.mm $(GLOBAL_DEPS)
 	$(REPORT_BUILD)
 	@$(MAKE_DEPS_AUTO_CXX)
 	$(ELOG) $(CCC) -o $@ -c $(COMPILE_CXXFLAGS) $(COMPILE_CMMFLAGS) $(_VPATH_SRCS)
 
-$(OBJ_PREFIX)%.$(OBJ_SUFFIX): %.m Makefile Makefile.in
+$(OBJ_PREFIX)%.$(OBJ_SUFFIX): %.m $(GLOBAL_DEPS)
 	$(REPORT_BUILD)
 	@$(MAKE_DEPS_AUTO_CC)
 	$(ELOG) $(CC) -o $@ -c $(COMPILE_CFLAGS) $(COMPILE_CMFLAGS) $(_VPATH_SRCS)
@@ -1431,11 +1539,11 @@ _JAVA_DIR = _java
 $(_JAVA_DIR)::
 	$(NSINSTALL) -D $@
 
-$(_JAVA_DIR)/%.class: %.java Makefile Makefile.in $(_JAVA_DIR)
+$(_JAVA_DIR)/%.class: %.java $(GLOBAL_DEPS) $(_JAVA_DIR)
 	$(CYGWIN_WRAPPER) $(JAVAC) $(JAVAC_FLAGS) -classpath $(_JAVA_CLASSPATH) \
 			-sourcepath $(_JAVA_SOURCEPATH) -d $(_JAVA_DIR) $(_VPATH_SRCS)
 
-$(JAVA_LIBRARY): $(addprefix $(_JAVA_DIR)/,$(JAVA_SRCS:.java=.class)) Makefile Makefile.in
+$(JAVA_LIBRARY): $(addprefix $(_JAVA_DIR)/,$(JAVA_SRCS:.java=.class)) $(GLOBAL_DEPS)
 	$(JAR) cf $@ -C $(_JAVA_DIR) .
 
 GARBAGE_DIRS += $(_JAVA_DIR)
@@ -1601,7 +1709,7 @@ $(XPIDL_GEN_DIR)/%.xpt: %.idl $(XPIDL_COMPILE) $(XPIDL_GEN_DIR)/.done
 
 # no need to link together if XPIDLSRCS contains only XPIDL_MODULE
 ifneq ($(XPIDL_MODULE).idl,$(strip $(XPIDLSRCS)))
-$(XPIDL_GEN_DIR)/$(XPIDL_MODULE).xpt: $(patsubst %.idl,$(XPIDL_GEN_DIR)/%.xpt,$(XPIDLSRCS) $(SDK_XPIDLSRCS)) Makefile.in Makefile $(XPIDL_LINK)
+$(XPIDL_GEN_DIR)/$(XPIDL_MODULE).xpt: $(patsubst %.idl,$(XPIDL_GEN_DIR)/%.xpt,$(XPIDLSRCS) $(SDK_XPIDLSRCS)) $(GLOBAL_DEPS) $(XPIDL_LINK)
 	$(XPIDL_LINK) $(XPIDL_GEN_DIR)/$(XPIDL_MODULE).xpt $(patsubst %.idl,$(XPIDL_GEN_DIR)/%.xpt,$(XPIDLSRCS) $(SDK_XPIDLSRCS)) 
 endif # XPIDL_MODULE.xpt != XPIDLSRCS
 
@@ -1802,15 +1910,14 @@ chrome::
 $(FINAL_TARGET)/chrome:
 	$(NSINSTALL) -D $@
 
-libs realchrome:: $(CHROME_DEPS) $(FINAL_TARGET)/chrome
+ifneq (,$(wildcard $(JAR_MANIFEST)))
 ifndef NO_DIST_INSTALL
-	@$(EXIT_ON_ERROR) \
-	if test -f $(JAR_MANIFEST); then \
-	  $(PYTHON) $(MOZILLA_DIR)/config/JarMaker.py \
-	    $(QUIET) -j $(FINAL_TARGET)/chrome \
-	    $(MAKE_JARS_FLAGS) $(XULPPFLAGS) $(DEFINES) $(ACDEFINES) \
-	    $(JAR_MANIFEST); \
-	fi
+libs realchrome:: $(CHROME_DEPS) $(FINAL_TARGET)/chrome
+	$(PYTHON) $(MOZILLA_DIR)/config/JarMaker.py \
+	  $(QUIET) -j $(FINAL_TARGET)/chrome \
+	  $(MAKE_JARS_FLAGS) $(XULPPFLAGS) $(DEFINES) $(ACDEFINES) \
+	  $(JAR_MANIFEST)
+endif
 endif
 
 ifneq ($(DIST_FILES),)
@@ -1899,85 +2006,6 @@ REGCHROME_INSTALL = $(PERL) -I$(MOZILLA_DIR)/config $(MOZILLA_DIR)/config/add-ch
 	$(if $(filter gtk2,$(MOZ_WIDGET_TOOLKIT)),-x) \
 	$(if $(CROSS_COMPILE),-o $(OS_ARCH)) $(DESTDIR)$(mozappdir)/chrome/installed-chrome.txt \
 	$(_JAR_REGCHROME_DISABLE_JAR)
-
-
-################################################################################
-# Testing frameworks support
-################################################################################
-
-ifdef ENABLE_TESTS
-
-ifdef XPCSHELL_TESTS
-ifndef MODULE
-$(error Must define MODULE when defining XPCSHELL_TESTS.)
-endif
-
-# Test file installation
-libs::
-	@$(EXIT_ON_ERROR) \
-	for testdir in $(XPCSHELL_TESTS); do \
-	  $(INSTALL) \
-	    $(srcdir)/$$testdir/*.js \
-	    $(DEPTH)/_tests/xpcshell-simple/$(MODULE)/$$testdir; \
-	done
-
-# Path formats on Windows are hard.  We require a topsrcdir formatted so that
-# it may be passed to nsILocalFile.initWithPath (in other words, an absolute
-# path of the form X:\path\to\topsrcdir), which we store in NATIVE_TOPSRCDIR.
-# We require a forward-slashed path to topsrcdir so that it may be combined
-# with a relative forward-slashed path for loading scripts, both dynamically
-# and statically for head/test/tail JS files.  Of course, on non-Windows none
-# of this matters, and things will work correctly because everything's
-# forward-slashed, everywhere, always.
-ifdef CYGWIN_WRAPPER
-NATIVE_TOPSRCDIR   := `cygpath -wa $(topsrcdir)`
-FWDSLASH_TOPSRCDIR := `cygpath -ma $(topsrcdir)`
-else
-FWDSLASH_TOPSRCDIR := $(topsrcdir)
-ifeq ($(HOST_OS_ARCH),WINNT)
-NATIVE_TOPSRCDIR   := $(subst /,\\,$(WIN_TOP_SRC))
-else 
-NATIVE_TOPSRCDIR   := $(topsrcdir)
-endif
-endif # CYGWIN_WRAPPER
-
-# Test execution
-check::
-	@$(EXIT_ON_ERROR) \
-	for testdir in $(XPCSHELL_TESTS); do \
-	  $(RUN_TEST_PROGRAM) \
-	    $(topsrcdir)/tools/test-harness/xpcshell-simple/test_all.sh \
-	      $(DIST)/bin/xpcshell \
-	      $(FWDSLASH_TOPSRCDIR) \
-	      $(NATIVE_TOPSRCDIR) \
-	      $(DEPTH)/_tests/xpcshell-simple/$(MODULE)/$$testdir; \
-	done
-
-# Test execution
-check-interactive::
-	@$(EXIT_ON_ERROR) \
-	$(RUN_TEST_PROGRAM) \
-	  $(topsrcdir)/tools/test-harness/xpcshell-simple/test_one.sh \
-	    $(DIST)/bin/xpcshell \
-	    $(FWDSLASH_TOPSRCDIR) \
-	    $(NATIVE_TOPSRCDIR) \
-	    $(DEPTH)/_tests/xpcshell-simple/$(MODULE)/$$testdir \
-	    $(SOLO_FILE) 1;
-
-# Test execution
-check-one::
-	@$(EXIT_ON_ERROR) \
-	$(RUN_TEST_PROGRAM) \
-	  $(topsrcdir)/tools/test-harness/xpcshell-simple/test_one.sh \
-	    $(DIST)/bin/xpcshell \
-	    $(FWDSLASH_TOPSRCDIR) \
-	    $(NATIVE_TOPSRCDIR) \
-	    $(DEPTH)/_tests/xpcshell-simple/$(MODULE)/$$testdir \
-	    $(SOLO_FILE) 0;
-
-endif # XPCSHELL_TESTS
-
-endif # ENABLE_TESTS
 
 
 #############################################################################

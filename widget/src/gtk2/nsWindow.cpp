@@ -2213,6 +2213,11 @@ nsWindow::OnExposeEvent(GtkWidget *aWidget, GdkEventExpose *aEvent)
             depth = gdk_drawable_get_depth(GDK_DRAWABLE(mDrawingarea->inner_window));
         }
 
+        // Make sure we won't create something that will overload the X server
+        nsSize safeSize = GetSafeWindowSize(boundsRect.Size());
+        boundsRect.width = safeSize.width;
+        boundsRect.height = safeSize.height;
+
         if (!gUseBufferPixmap ||
             boundsRect.width > gBufferPixmapMaxSize.width ||
             boundsRect.height > gBufferPixmapMaxSize.height)
@@ -4498,6 +4503,9 @@ nsWindow::GrabPointer(void)
                                              GDK_BUTTON_RELEASE_MASK |
                                              GDK_ENTER_NOTIFY_MASK |
                                              GDK_LEAVE_NOTIFY_MASK |
+#ifdef HAVE_GTK_MOTION_HINTS
+                                             GDK_POINTER_MOTION_HINT_MASK |
+#endif
                                              GDK_POINTER_MOTION_MASK),
                               (GdkWindow *)NULL, NULL, GDK_CURRENT_TIME);
 
@@ -5328,6 +5336,9 @@ motion_notify_event_cb(GtkWidget *widget, GdkEventMotion *event)
 
     window->OnMotionNotifyEvent(widget, event);
 
+#ifdef HAVE_GTK_MOTION_HINTS
+    gdk_event_request_motions(event);
+#endif
     return TRUE;
 }
 

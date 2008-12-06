@@ -1,0 +1,32 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+	<title>Resize-notifying IFRAME</title>
+	<script type="application/ecmascript">
+
+	var gTarget;
+
+	/*
+	 * the test is done after the width becomes narrower (immediately)
+	 * and then comes back to the same size.  However, the two things
+	 * might happen at once.
+	 */
+	function arm() {
+		gTarget = window.innerWidth;
+		window.addEventListener("resize", got_resize, false);
+		setTimeout(got_resize, 200);
+	}
+
+	function got_resize() {
+		if (window.innerWidth == gTarget) {
+			gTarget = -1;
+			// Remove the class="reftest-wait" from the top window
+			window.top.document.documentElement.removeAttribute("class");
+		}
+	}
+
+	</script>
+</head>
+<body>
+</body>
+</html>

@@ -251,7 +251,7 @@ __try {
 
   nsIFrame *frame = GetFrame();
   nsCOMPtr<nsIPresShell> presShell = GetPresShell();
-  if (!frame || !presShell) {
+  if (!frame || !presShell || !presShell->GetPresContext()) {
     return E_FAIL;
   }
 
@@ -265,7 +265,8 @@ __try {
 
   const nsStyleVisibility *visibility = frame->GetStyleVisibility();
 
-  if (NS_FAILED(rc->SetFont(font->mFont, visibility->mLangGroup))) {
+  if (NS_FAILED(rc->SetFont(font->mFont, visibility->mLangGroup,
+                            presShell->GetPresContext()->GetUserFontSet()))) {
     return E_FAIL;
   }
 

@@ -336,14 +336,21 @@ public:
 
   virtual void Paint(nsDisplayListBuilder* aBuilder, nsIRenderingContext* aCtx,
      const nsRect& aDirtyRect);
+  virtual nsRect GetBounds(nsDisplayListBuilder* aBuilder);
   NS_DISPLAY_DECL_NAME("XULTextBox")
 };
 
-void nsDisplayXULTextBox::Paint(nsDisplayListBuilder* aBuilder,
-     nsIRenderingContext* aCtx, const nsRect& aDirtyRect)
+void
+nsDisplayXULTextBox::Paint(nsDisplayListBuilder* aBuilder,
+                           nsIRenderingContext* aCtx, const nsRect& aDirtyRect)
 {
   static_cast<nsTextBoxFrame*>(mFrame)->
     PaintTitle(*aCtx, aDirtyRect, aBuilder->ToReferenceFrame(mFrame));
+}
+
+nsRect
+nsDisplayXULTextBox::GetBounds(nsDisplayListBuilder* aBuilder) {
+  return mFrame->GetOverflowRect() + aBuilder->ToReferenceFrame(mFrame);
 }
 
 NS_IMETHODIMP
@@ -380,7 +387,8 @@ nsTextBoxFrame::PaintTitle(nsIRenderingContext& aRenderingContext,
         PaintOneShadow(aRenderingContext.ThebesContext(),
                        textRect,
                        textStyle->mTextShadow->ShadowAt(i - 1),
-                       GetStyleColor()->mColor);
+                       GetStyleColor()->mColor,
+                       aDirtyRect);
       }
     }
 
@@ -556,7 +564,8 @@ nsTextBoxFrame::DrawText(nsIRenderingContext& aRenderingContext,
 void nsTextBoxFrame::PaintOneShadow(gfxContext*      aCtx,
                                     const nsRect&    aTextRect,
                                     nsCSSShadowItem* aShadowDetails,
-                                    const nscolor&   aForegroundColor) {
+                                    const nscolor&   aForegroundColor,
+                                    const nsRect&    aDirtyRect) {
   nsPoint shadowOffset(aShadowDetails->mXOffset,
                        aShadowDetails->mYOffset);
   nscoord blurRadius = PR_MAX(aShadowDetails->mRadius, 0);
@@ -565,11 +574,12 @@ void nsTextBoxFrame::PaintOneShadow(gfxContext*      aCtx,
   shadowRect.MoveBy(shadowOffset);
 
   gfxRect shadowRectGFX(shadowRect.x, shadowRect.y, shadowRect.width, shadowRect.height);
+  gfxRect dirtyRectGFX(aDirtyRect.x, aDirtyRect.y, aDirtyRect.width, aDirtyRect.height);
 
   nsContextBoxBlur contextBoxBlur;
   gfxContext* shadowContext = contextBoxBlur.Init(shadowRectGFX, blurRadius,
                                                   PresContext()->AppUnitsPerDevPixel(),
-                                                  aCtx);
+                                                  aCtx, dirtyRectGFX);
 
   if (!shadowContext)
     return;
@@ -950,6 +960,12 @@ nsTextBoxFrame::DoLayout(nsBoxLayoutState& aBoxLayoutState)
       FinishAndStoreOverflow(&overflowRect, GetSize());
     }
     return rv;
+}
+
+PRBool
+nsTextBoxFrame::ComputesOwnOverflowArea()
+{
+    return PR_TRUE;
 }
 
 /* virtual */ void
