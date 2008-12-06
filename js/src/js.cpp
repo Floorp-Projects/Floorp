@@ -2505,6 +2505,7 @@ EvalInContext(JSContext *cx, JSObject *obj, uintN argc, jsval *argv,
         JS_ReportOutOfMemory(cx);
         return JS_FALSE;
     }
+    JS_SetOptions(scx, JS_GetOptions(cx));
 
 #ifdef JS_THREADSAFE
     JS_BeginRequest(scx);
