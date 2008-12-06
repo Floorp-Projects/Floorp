@@ -3171,7 +3171,7 @@ nsContentUtils::ConvertStringFromCharset(const nsACString& aCharset,
 /* static */
 PRBool
 nsContentUtils::CheckForBOM(const unsigned char* aBuffer, PRUint32 aLength,
-                            nsACString& aCharset)
+                            nsACString& aCharset, PRBool *bigEndian)
 {
   PRBool found = PR_TRUE;
   aCharset.Truncate();
@@ -3186,22 +3186,30 @@ nsContentUtils::CheckForBOM(const unsigned char* aBuffer, PRUint32 aLength,
            aBuffer[1] == 0x00 &&
            aBuffer[2] == 0xFE &&
            aBuffer[3] == 0xFF) {
-    aCharset = "UTF-32BE";
+    aCharset = "UTF-32";
+    if (bigEndian)
+      *bigEndian = PR_TRUE;
   }
   else if (aLength >= 4 &&
            aBuffer[0] == 0xFF &&
            aBuffer[1] == 0xFE &&
            aBuffer[2] == 0x00 &&
            aBuffer[3] == 0x00) {
-    aCharset = "UTF-32LE";
+    aCharset = "UTF-32";
+    if (bigEndian)
+      *bigEndian = PR_FALSE;
   }
   else if (aLength >= 2 &&
            aBuffer[0] == 0xFE && aBuffer[1] == 0xFF) {
-    aCharset = "UTF-16BE";
+    aCharset = "UTF-16";
+    if (bigEndian)
+      *bigEndian = PR_TRUE;
   }
   else if (aLength >= 2 &&
            aBuffer[0] == 0xFF && aBuffer[1] == 0xFE) {
-    aCharset = "UTF-16LE";
+    aCharset = "UTF-16";
+    if (bigEndian)
+      *bigEndian = PR_FALSE;
   } else {
     found = PR_FALSE;
   }
