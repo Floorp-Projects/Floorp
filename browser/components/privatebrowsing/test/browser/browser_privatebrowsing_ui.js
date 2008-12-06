@@ -56,11 +56,10 @@ function test() {
            getService(Ci.nsIObserverService);
   os.addObserver(observer, "private-browsing", false);
   let pbMenuItem = document.getElementById("privateBrowsingItem");
-  // add a new blank tab to ensure the title
+  // add a new blank tab to ensure the title can be meaningfully compared later
   let blankTab = gBrowser.addTab();
   gBrowser.selectedTab = blankTab;
   let originalTitle = document.title;
-  let privateBrowsingTitle = document.documentElement.getAttribute("titlemodifier_privatebrowsing");
 
   // test the gPrivateBrowsingUI object
   ok(gPrivateBrowsingUI, "The gPrivateBrowsingUI object exists");
@@ -83,7 +82,7 @@ function test() {
   // check to see if the Private Browsing mode was activated successfully
   is(observer.data, "enter", "Private Browsing mode was activated using the command object");
   // check to see that the window title has been changed correctly
-  is(document.title, privateBrowsingTitle, "Private browsing mode has correctly changed the title");
+  isnot(document.title, originalTitle, "Private browsing mode has correctly changed the title");
   func.call(cmd);
   // check to see if the Private Browsing mode was deactivated successfully
   is(observer.data, "exit", "Private Browsing mode was deactivated using the command object");
