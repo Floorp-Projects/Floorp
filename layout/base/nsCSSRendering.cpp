@@ -2567,22 +2567,11 @@ nsContextBoxBlur::Init(const gfxRect& aRect, nscoord aBlurRadius,
 
   gfxRect dirtyRect = aDirtyRect;
   dirtyRect.ScaleInverse(aAppUnitsPerDevPixel);
-  gfxRect rectWithBlur = rect;
-  rectWithBlur.Outset(blurRadius);
-
-  // Determine the area of the shadow we need.
-  mRequiredShadowArea = dirtyRect.Intersect(rectWithBlur);
 
   mDestinationCtx = aDestinationCtx;
 
- // XXX the temporary surface will be the mRequiredShadowArea inflated by
- // blurRadius in each direction so that the required shadow pixels are computed
- // correctly. We could actually use a smaller temporary surface by observing
- // that where the temporary surface is outside the rectWithBlur, the pixel
- // values are guaranteed to be fully transparent, so we could intersect the
- // inflated mRequiredShadowArea with rectWithBlur to compute the temporary
- // surface area. But we're not doing that right now because it's more complex to do.
-  mContext = blur.Init(mRequiredShadowArea, gfxIntSize(blurRadius, blurRadius));
+  // Create the temporary surface for blurring
+  mContext = blur.Init(rect, gfxIntSize(blurRadius, blurRadius), &dirtyRect);
   return mContext;
 }
 
@@ -2592,12 +2581,7 @@ nsContextBoxBlur::DoPaint()
   if (mContext == mDestinationCtx)
     return;
 
-  mDestinationCtx->Save();
-  mDestinationCtx->NewPath();
-  mDestinationCtx->Rectangle(mRequiredShadowArea);
-  mDestinationCtx->Clip();
   blur.Paint(mDestinationCtx);
-  mDestinationCtx->Restore();
 }
 
 gfxContext*
