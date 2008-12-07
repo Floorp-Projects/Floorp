@@ -654,9 +654,9 @@ void MatrixShaperXFORMFloat(_LPcmsTRANSFORM p,
               {
                      if (MatShaper->L2_Precache != NULL) 
                      {
-                     FloatVals->n[VX] = MatShaper->L2_Precache->Impl.LI16F_FORWARD.Cache[0][In[0]];
-                     FloatVals->n[VY] = MatShaper->L2_Precache->Impl.LI16F_FORWARD.Cache[1][In[1]];
-                     FloatVals->n[VZ] = MatShaper->L2_Precache->Impl.LI16F_FORWARD.Cache[2][In[2]];
+                     FloatVals->n[VX] = MatShaper->L2_Precache->Impl.LI8F_FORWARD.Cache[0][In[0]];
+                     FloatVals->n[VY] = MatShaper->L2_Precache->Impl.LI8F_FORWARD.Cache[1][In[1]];
+                     FloatVals->n[VZ] = MatShaper->L2_Precache->Impl.LI8F_FORWARD.Cache[2][In[2]];
                      }
                      else
                      {
@@ -1066,7 +1066,7 @@ LCMSBOOL cmsBuildSmeltMatShaper(_LPcmsTRANSFORM p)
 
         // Check for the relevant precaches
         if (p -> dwOriginalFlags & cmsFLAGS_FLOATSHAPER) {
-               InPrecache = ((LPLCMSICCPROFILE)p->InputProfile)->Precache[CMS_PRECACHE_LI16F_FORWARD];
+               InPrecache = ((LPLCMSICCPROFILE)p->InputProfile)->Precache[CMS_PRECACHE_LI8F_FORWARD];
                OutPrecache = ((LPLCMSICCPROFILE)p->OutputProfile)->Precache[CMS_PRECACHE_LI168_REVERSE];
         }
         else {
