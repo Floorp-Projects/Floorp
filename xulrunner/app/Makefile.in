@@ -232,7 +232,7 @@ ICON_FILES	= \
 		$(NULL)
 
 libs:: $(ICON_FILES)
-	$(INSTALL) ($IFLAGS1) $^ $(DIST)/bin/icons
+	$(INSTALL) $(IFLAGS1) $^ $(DIST)/bin/icons
 
 install::
 	$(SYSINSTALL) $(IFLAGS1) $(ICON_FILES) $(DESTDIR)$(mozappdir)/icons
