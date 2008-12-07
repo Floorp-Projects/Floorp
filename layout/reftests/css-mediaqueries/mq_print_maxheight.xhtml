@@ -1,0 +1,57 @@
+<?xml version="1.0" encoding="iso-8859-1" ?>
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.1//EN" "http://www.w3.org/TR/xhtml11/DTD/xhtml11.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml" class="reftest-print">
+<head>
+  <title>Media Query - Print mode test - max-height</title>
+  <style type="text/css"><![CDATA[
+    p {height: 10px; width: 100px; color: yellow; }
+    @media print { .a { color: aqua; } }
+    @media screen { .b { color: aqua; } }
+
+    /* we set the height to 3 inches/216pt/76mm in the reftest-print class*/
+    @media (max-height: 3in) { .c { color: aqua; } }    /* y */
+    @media (max-height: 216pt) { .d { color: aqua; } }  /* y */ 
+    @media (max-height: 76.2mm) { .e { color: aqua; } }  /* y */
+
+    @media print and (max-height: 3in) { .f {color: aqua; } }  /* y */ 
+    @media print and (max-height: 216pt) { .g {color: aqua; } }/* y */
+    @media print and (max-height: 76.2mm) { .h {color: aqua; } }/* y */
+
+    @media all and (max-height: 3in) { .i { color: aqua; } } /* y */
+
+
+    /* negative cases - values < set values */
+    @media all and (max-height: 2in) { .j { color: aqua; } } /* n */
+
+    @media (max-height: 50mm) { .k { color: aqua; } } /* n */ 
+    @media (max-height: 1.57in) { .l { color: aqua; } }  /* n */
+    @media (max-height: 157pt) { .m { color: aqua; } } /* n */
+
+    @media screen and (max-height: 3in) { .n {color: aqua; } }   /* n */ 
+    @media screen and (max-height: 216pt) { .o {color: aqua; } } /* n */
+    @media screen and (max-height: 76.2mm) { .p {color: aqua; } } /* n */
+
+  ]]></style>
+</head>
+
+<body>
+  <p class="a">a</p>
+  <p class="b">b</p>
+
+  <p class="c">c</p>
+  <p class="d">d</p>
+  <p class="e">e</p>
+  <p class="f">f</p>
+  <p class="g">g</p>
+  <p class="h">h</p>
+  <p class="i">i</p>
+
+  <p class="j">j</p>
+  <p class="k">k</p>
+  <p class="l">l</p>
+  <p class="m">m</p>
+  <p class="n">n</p>
+  <p class="o">o</p>
+  <p class="p">p</p>
+</body>
+</html>
