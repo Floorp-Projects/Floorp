@@ -1,0 +1,11 @@
+<!DOCTYPE xslt:transform [<!ATTLIST xslt:transform id ID #IMPLIED>]>
+<?xml-stylesheet type="application/xml" href="#transform"?>
+<xslt:transform xmlns:xslt="http://www.w3.org/1999/XSL/Transform"
+		xmlns="http://www.w3.org/2000/svg"
+		id="transform" version="1.0">
+	<xslt:template match="/xslt:transform">
+		<svg>
+			<rect width="100%" height="100%" fill="lime"/>
+		</svg>
+	</xslt:template>
+</xslt:transform>
