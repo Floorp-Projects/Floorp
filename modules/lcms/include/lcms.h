@@ -77,7 +77,7 @@
 // It is safer to leve it commented out
 // #define HONOR_BLACK_POINT_TAG    1
 
-#ifdef CMS_DEBUG
+#ifdef DEBUG
 #include <stdio.h>
 #define CMSASSERT(x) \
 {   if (!(x)) { \
