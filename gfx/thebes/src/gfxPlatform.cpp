@@ -223,6 +223,16 @@ gfxPlatform::Init()
     if (prefs)
         prefs->AddObserver(CMForceSRGBPrefName, gPlatform->overrideObserver, PR_TRUE);
 
+    /* By default, LCMS calls exit() on error, which isn't what we want. If
+       cms is enabled, change the error functionality. */
+    if (GetCMSMode() != eCMSMode_Off) {
+#ifdef DEBUG
+        cmsErrorAction(LCMS_ERROR_SHOW);
+#else
+        cmsErrorAction(LCMS_ERROR_IGNORE);
+#endif
+    }
+
     return NS_OK;
 }
 
@@ -569,12 +579,6 @@ cmsHPROFILE
 gfxPlatform::GetCMSOutputProfile()
 {
     if (!gCMSOutputProfile) {
-        /* Default lcms error action is to abort on error - change */
-#ifdef DEBUG_tor
-        cmsErrorAction(LCMS_ERROR_SHOW);
-#else
-        cmsErrorAction(LCMS_ERROR_IGNORE);
-#endif
 
         nsCOMPtr<nsIPrefBranch> prefs = do_GetService(NS_PREFSERVICE_CONTRACTID);
         if (prefs) {
