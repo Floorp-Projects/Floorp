@@ -1,5 +1,5 @@
 <!ENTITY restorepage.tabtitle       "Restore Session">
-<!ENTITY restorepage.pagetitle      "Would You Like to Restore Your Session?">
+<!ENTITY restorepage.pagetitle      "Would you like to restore your session?">
 <!-- LOCALIZATION NOTE: If "closed unexpectedly" sounds too awkward in the translation,
                         you may translate "crash" instead (even though it's IT-speak) -->
 <!ENTITY restorepage.issueDesc      "Your previous &brandShortName; session closed unexpectedly. We sincerely apologize for the inconvenience. You can restore the tabs and windows from your previous session, or start a new session if they are no longer needed.">
