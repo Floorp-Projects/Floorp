@@ -1023,8 +1023,14 @@ LPMATSHAPER cmsBuildOutputMatrixShaper(cmsHPROFILE OutputProfile)
        InverseShapes[0] = cmsReadICCGammaReversed(OutputProfile, icSigRedTRCTag);
        InverseShapes[1] = cmsReadICCGammaReversed(OutputProfile, icSigGreenTRCTag);
        InverseShapes[2] = cmsReadICCGammaReversed(OutputProfile, icSigBlueTRCTag);
-       
-       OutMatSh = cmsAllocMatShaper(&DoubleInv, InverseShapes, MATSHAPER_OUTPUT);
+
+       if (InverseShapes[0] &&
+           InverseShapes[1] &&
+           InverseShapes[2]) {
+               OutMatSh = cmsAllocMatShaper(&DoubleInv, InverseShapes, MATSHAPER_OUTPUT);
+       } else {
+               OutMatSh = NULL; 
+       } 
 
        cmsFreeGammaTriple(InverseShapes);
        
