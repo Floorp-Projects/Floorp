@@ -62,6 +62,10 @@ _TEST_FILES = 	test_bug288789.html \
 		test_bug405178.html \
 		test_bug416168.html \
 		test_bug421436.html \
+		bug421839-1-iframe.html \
+		test_bug421839-1.html \
+		bug421839-2-iframe.html \
+		test_bug421839-2.html \
 		test_bug448860.html \
 		test_bug460532.html \
 		test_bug468167.html \
