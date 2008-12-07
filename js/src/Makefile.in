@@ -87,7 +87,6 @@ endif
 
 ifeq (,$(filter-out WINNT WINCE,$(OS_ARCH)))
 LIBRARY_NAME	= js$(MOZ_BITS)$(VERSION_NUMBER)
-RESFILE		= js$(MOZ_BITS)40.res
 endif
 
 # JavaScript must be built shared, even for static builds, as it is used by
