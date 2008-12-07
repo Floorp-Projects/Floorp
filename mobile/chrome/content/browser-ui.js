@@ -40,7 +40,6 @@ Components.utils.import("resource://gre/modules/utils.js");
 
 const TOOLBARSTATE_LOADING        = 1;
 const TOOLBARSTATE_LOADED         = 2;
-const TOOLBARSTATE_INDETERMINATE  = 3;
 
 const UIMODE_NONE              = 0;
 const UIMODE_URLVIEW           = 1;
@@ -115,6 +114,10 @@ var BrowserUI = {
     var browser = Browser.currentBrowser;
     this._titleChanged(browser.contentDocument);
     this._favicon.src = browser.mIconURL || kDefaultFavIconURL;
+
+    // for new tabs, _tabSelect & update(TOOLBARSTATE_LOADED) are called when
+    // about:blank is loaded. set _faviconLink here so it is not overriden in update
+    this._faviconLink = this._favicon.src;
     this.updateIcon();
   },
 
@@ -321,11 +324,6 @@ var BrowserUI = {
     var toolbar = document.getElementById("toolbar-main");
 
     switch (aState) {
-      case TOOLBARSTATE_INDETERMINATE:
-        this._faviconAdded = false;
-        aState = TOOLBARSTATE_LOADED;
-        this.setURI();
-
       case TOOLBARSTATE_LOADED:
         toolbar.setAttribute("mode", "view");
 
@@ -334,6 +332,7 @@ var BrowserUI = {
         }
         this._setIcon(this._faviconLink);
         this.updateIcon();
+        this._faviconLink = null;
         break;
 
       case TOOLBARSTATE_LOADING:

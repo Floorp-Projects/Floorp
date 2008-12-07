@@ -44,6 +44,8 @@ pref("browser.startup.homepage", "about:firstrun");
 pref("browser.ui.cursor", false);
 pref("browser.ui.panning.kinetic", true);
 
+pref("javascript.options.showInConsole", false);
+
 /* cache prefs */
 pref("browser.cache.disk.enable", false);
 pref("browser.cache.disk.capacity", 0);
