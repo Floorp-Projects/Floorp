@@ -1764,14 +1764,26 @@ void nsViewManager::UpdateWidgetsForView(nsView* aView)
 {
   NS_PRECONDITION(aView, "Must have view!");
 
+  nsWeakView parentWeakView = aView;
   if (aView->HasWidget()) {
-    aView->GetWidget()->Update();
+    aView->GetWidget()->Update();  // Flushes Layout!
+    if (!parentWeakView.IsAlive()) {
+      return;
+    }
   }
 
-  for (nsView* childView = aView->GetFirstChild();
-       childView;
-       childView = childView->GetNextSibling()) {
+  nsView* childView = aView->GetFirstChild();
+  while (childView) {
+    nsWeakView childWeakView = childView;
     UpdateWidgetsForView(childView);
+    if (NS_LIKELY(childWeakView.IsAlive())) {
+      childView = childView->GetNextSibling();
+    }
+    else {
+      // The current view was destroyed - restart at the first child if the
+      // parent is still alive.
+      childView = parentWeakView.IsAlive() ? aView->GetFirstChild() : nsnull;
+    }
   }
 }
 
