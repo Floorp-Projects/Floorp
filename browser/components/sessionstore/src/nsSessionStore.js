@@ -1772,8 +1772,12 @@ SessionStoreService.prototype = {
       tabData.entries = [];
     }
     if (tabData.extData) {
-      tab.__SS_extdata = tabData.extData;
+      tab.__SS_extdata = {};
+      for (let key in tabData.extData)
+        tab.__SS_extdata[key] = tabData.extData[key];
     }
+    else
+      delete tab.__SS_extdata;
     
     for (var i = 0; i < tabData.entries.length; i++) {
       history.addEntry(this._deserializeHistoryEntry(tabData.entries[i], aIdMap), true);
