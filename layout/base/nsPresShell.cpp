@@ -913,6 +913,8 @@ public:
   NS_IMETHOD_(PRBool) IsVisible();
   NS_IMETHOD_(void) WillPaint();
   NS_IMETHOD_(void) InvalidateFrameForView(nsIView *view);
+  NS_IMETHOD_(void) DispatchSynthMouseMove(nsGUIEvent *aEvent,
+                                           PRBool aFlushOnHoverChange);
 
   // caret handling
   NS_IMETHOD GetCaret(nsCaret **aOutCaret);
@@ -4172,6 +4174,21 @@ PresShell::InvalidateFrameForView(nsIView *aView)
   nsIFrame* frame = nsLayoutUtils::GetFrameFor(aView);
   if (frame)
     frame->InvalidateOverflowRect();
+}
+
+NS_IMETHODIMP_(void)
+PresShell::DispatchSynthMouseMove(nsGUIEvent *aEvent,
+                                  PRBool aFlushOnHoverChange)
+{
+  PRUint32 hoverGenerationBefore = mFrameConstructor->GetHoverGeneration();
+  nsEventStatus status;
+  mViewManager->DispatchEvent(aEvent, &status);
+  if (aFlushOnHoverChange &&
+      hoverGenerationBefore != mFrameConstructor->GetHoverGeneration()) {
+    // Flush so that the resulting reflow happens now so that our caller
+    // can suppress any synthesized mouse moves caused by that reflow.
+    FlushPendingNotifications(Flush_Layout);
+  }
 }
 
 NS_IMETHODIMP
