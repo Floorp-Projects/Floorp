@@ -156,6 +156,8 @@ MOZ_WINCONSOLE = 0
 endif
 endif
 
+# This switches $(INSTALL) to copy mode, like $(SYSINSTALL), so things that
+# shouldn't get 755 perms need $(IFLAGS1) for either way of caling nsinstall.
 NSDISTMODE = copy
 
 include $(topsrcdir)/config/config.mk
@@ -296,7 +298,7 @@ ICON_FILES	= \
 		$(NULL)
 
 libs:: $(ICON_FILES)
-	$(INSTALL) $^ $(DIST)/bin/icons
+	$(INSTALL) $(IFLAGS1) $^ $(DIST)/bin/icons
 
 install::
 	$(SYSINSTALL) $(IFLAGS1) $(ICON_FILES) $(DESTDIR)$(mozappdir)/icons
@@ -304,9 +306,9 @@ endif
 
 ifeq ($(MOZ_WIDGET_TOOLKIT),gtk2)
 libs::
-	$(INSTALL) $(DIST)/branding/default16.png $(DIST)/bin/chrome/icons/default
-	$(INSTALL) $(DIST)/branding/default32.png $(DIST)/bin/chrome/icons/default
-	$(INSTALL) $(DIST)/branding/default48.png $(DIST)/bin/chrome/icons/default
+	$(INSTALL) $(IFLAGS1) $(DIST)/branding/default16.png $(DIST)/bin/chrome/icons/default
+	$(INSTALL) $(IFLAGS1) $(DIST)/branding/default32.png $(DIST)/bin/chrome/icons/default
+	$(INSTALL) $(IFLAGS1) $(DIST)/branding/default48.png $(DIST)/bin/chrome/icons/default
 endif
 
 export::
@@ -346,10 +348,10 @@ libs::
 	touch $(DIST)/bin/.autoreg
 
 libs:: $(srcdir)/profile/prefs.js
-	$(INSTALL) $^ $(DIST)/bin/defaults/profile
+	$(INSTALL) $(IFLAGS1) $^ $(DIST)/bin/defaults/profile
 
 libs:: $(srcdir)/blocklist.xml
-	$(INSTALL) $^ $(DIST)/bin
+	$(INSTALL) $(IFLAGS1) $^ $(DIST)/bin
 
 ifneq (,$(filter mac cocoa,$(MOZ_WIDGET_TOOLKIT)))
 
@@ -408,7 +410,7 @@ libs::
 ifeq ($(OS_ARCH),WINNT)
 	$(PERL) -pe 's/(?<!\r)\n/\r\n/g;' < $(topsrcdir)/LICENSE > $(DIST)/bin/LICENSE
 else
-	$(INSTALL) $(topsrcdir)/LICENSE	$(DIST)/bin
+	$(INSTALL) $(IFLAGS1) $(topsrcdir)/LICENSE $(DIST)/bin
 endif
 
 ifdef LIBXUL_SDK
