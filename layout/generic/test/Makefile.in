@@ -64,6 +64,7 @@ _TEST_FILES = 	test_bug288789.html \
 		test_bug421436.html \
 		test_bug448860.html \
 		test_bug460532.html \
+		test_bug468167.html \
 		test_character_movement.html \
 		test_word_movement.html \
 		test_backspace_delete.html \
