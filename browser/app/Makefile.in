@@ -157,7 +157,7 @@ endif
 endif
 
 # This switches $(INSTALL) to copy mode, like $(SYSINSTALL), so things that
-# shouldn't get 755 perms need $(IFLAGS1) for either way of caling nsinstall.
+# shouldn't get 755 perms need $(IFLAGS1) for either way of calling nsinstall.
 NSDISTMODE = copy
 
 include $(topsrcdir)/config/config.mk
