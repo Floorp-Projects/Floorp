@@ -138,6 +138,8 @@ endif
 endif
 DEFINES += -DMOZ_WINCONSOLE=$(MOZ_WINCONSOLE)
 
+# This switches $(INSTALL) to copy mode, like $(SYSINSTALL), so things that
+# shouldn't get 755 perms need $(IFLAGS1) for either way of calling nsinstall.
 NSDISTMODE = copy
 
 include $(topsrcdir)/config/config.mk
@@ -230,7 +232,7 @@ ICON_FILES	= \
 		$(NULL)
 
 libs:: $(ICON_FILES)
-	$(SYSINSTALL) $^ $(DIST)/bin/icons
+	$(INSTALL) ($IFLAGS1) $^ $(DIST)/bin/icons
 
 install::
 	$(SYSINSTALL) $(IFLAGS1) $(ICON_FILES) $(DESTDIR)$(mozappdir)/icons
@@ -238,9 +240,9 @@ endif
 
 ifeq ($(MOZ_WIDGET_TOOLKIT),gtk2)
 libs::
-	$(INSTALL) $(DIST)/branding/default16.png $(DIST)/bin/chrome/icons/default
-	$(INSTALL) $(DIST)/branding/default32.png $(DIST)/bin/chrome/icons/default
-	$(INSTALL) $(DIST)/branding/default48.png $(DIST)/bin/chrome/icons/default
+	$(INSTALL) $(IFLAGS1) $(DIST)/branding/default16.png $(DIST)/bin/chrome/icons/default
+	$(INSTALL) $(IFLAGS1) $(DIST)/branding/default32.png $(DIST)/bin/chrome/icons/default
+	$(INSTALL) $(IFLAGS1) $(DIST)/branding/default48.png $(DIST)/bin/chrome/icons/default
 endif
 
 # XXX applications would need to supply this file
@@ -299,5 +301,5 @@ endif
 README_FILE = $(topsrcdir)/README.txt
 
 libs::
-	$(SYSINSTALL) $(README_FILE) $(DIST)/bin
-	$(SYSINSTALL) $(topsrcdir)/LICENSE	$(DIST)/bin
+	$(INSTALL) $(IFLAGS1) $(README_FILE) $(DIST)/bin
+	$(INSTALL) $(IFLAGS1) $(topsrcdir)/LICENSE	$(DIST)/bin
