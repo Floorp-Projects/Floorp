@@ -642,7 +642,7 @@ gfxPlatform::GetCMSsRGBProfile()
 
         /* Precache the Fixed-point Interpolations for sRGB as an input
            profile. See bug 444661 for details. */
-        cmsPrecacheProfile(gCMSsRGBProfile, CMS_PRECACHE_LI16F_FORWARD);
+        cmsPrecacheProfile(gCMSsRGBProfile, CMS_PRECACHE_LI8F_FORWARD);
     }
     return gCMSsRGBProfile;
 }

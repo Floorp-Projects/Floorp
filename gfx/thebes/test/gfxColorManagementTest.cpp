@@ -308,7 +308,7 @@ RunTest(struct TestContext *ctx, struct TestParams *params,
 
     /* Precache. */
     cmsPrecacheProfile(inProfile, CMS_PRECACHE_LI16W_FORWARD);
-    cmsPrecacheProfile(inProfile, CMS_PRECACHE_LI16F_FORWARD);
+    cmsPrecacheProfile(inProfile, CMS_PRECACHE_LI8F_FORWARD);
     cmsPrecacheProfile(outProfile, CMS_PRECACHE_LI1616_REVERSE);
     cmsPrecacheProfile(outProfile, CMS_PRECACHE_LI168_REVERSE);
 
