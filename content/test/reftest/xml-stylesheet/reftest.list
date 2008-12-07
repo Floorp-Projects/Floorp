@@ -7,3 +7,6 @@ fails == lreas_selflink_dtd_id.svg pass.svg
 == lreas_selflink_empty_href.svg pass.svg
 == lreas_selflink_relative_href.svg pass.svg
 == xslt_relative_href.svg pass.svg
+== xslt_selflink_dtd_id.xml pass.svg
+== xslt_selflink_empty_href.xml pass.svg
+== xslt_selflink_relative_href.xml pass.svg
