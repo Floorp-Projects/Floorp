@@ -1,0 +1,44 @@
+diff --git a/gfx/cairo/cairo/src/cairo-win32-surface.c b/gfx/cairo/cairo/src/cairo-win32-surface.c
+--- a/gfx/cairo/cairo/src/cairo-win32-surface.c
++++ b/gfx/cairo/cairo/src/cairo-win32-surface.c
+@@ -928,16 +928,19 @@ _cairo_win32_surface_composite_inner (ca
+   	return _composite_alpha_blend (dst, src, alpha,
+ 				       src_r.x, src_r.y, src_r.width, src_r.height,
+ 				       dst_r.x, dst_r.y, dst_r.width, dst_r.height);
+     }
+ 
+     return CAIRO_STATUS_SUCCESS;
+ }
+ 
++/* from pixman-private.h */
++#define MOD(a,b) ((a) < 0 ? ((b) - ((-(a) - 1) % (b))) - 1 : (a) % (b))
++
+ static cairo_int_status_t
+ _cairo_win32_surface_composite (cairo_operator_t	op,
+ 				cairo_pattern_t       	*pattern,
+ 				cairo_pattern_t		*mask_pattern,
+ 				void			*abstract_dst,
+ 				int			src_x,
+ 				int			src_y,
+ 				int			mask_x,
+@@ -1209,18 +1212,18 @@ _cairo_win32_surface_composite (cairo_op
+     /* If we need to repeat, we turn the repeated blit into
+      * a bunch of piece-by-piece blits.
+      */
+     if (needs_repeat) {
+ 	cairo_rectangle_int_t piece_src_r, piece_dst_r;
+ 	uint32_t rendered_width = 0, rendered_height = 0;
+ 	uint32_t to_render_height, to_render_width;
+ 	int32_t piece_x, piece_y;
+-	int32_t src_start_x = src_r.x % src_extents.width;
+-	int32_t src_start_y = src_r.y % src_extents.height;
++	int32_t src_start_x = MOD(src_r.x, src_extents.width);
++	int32_t src_start_y = MOD(src_r.y, src_extents.height);
+ 
+ 	if (needs_scale)
+ 	    goto UNSUPPORTED;
+ 
+ 	/* If both the src and dest have an image, we may as well fall
+ 	 * back, because it will be faster than our separate blits.
+ 	 * Our blit code will be fastest when the src is a DDB and the
+ 	 * destination is a DDB.

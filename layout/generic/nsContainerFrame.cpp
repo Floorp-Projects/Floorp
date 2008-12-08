@@ -1133,9 +1133,6 @@ nsContainerFrame::DeleteNextInFlowChild(nsPresContext* aPresContext,
 
   aNextInFlow->Invalidate(aNextInFlow->GetOverflowRect());
 
-  // Disconnect the next-in-flow from the flow list
-  nsSplittableFrame::BreakFromPrevFlow(aNextInFlow);
-
   // Take the next-in-flow out of the parent's child list
 #ifdef DEBUG
   nsresult rv = 
@@ -1143,7 +1140,8 @@ nsContainerFrame::DeleteNextInFlowChild(nsPresContext* aPresContext,
     StealFrame(aPresContext, aNextInFlow);
   NS_ASSERTION(NS_SUCCEEDED(rv), "StealFrame failure");
 
-  // Delete the next-in-flow frame and its descendants.
+  // Delete the next-in-flow frame and its descendants. This will also
+  // remove it from its next-in-flow/prev-in-flow chain.
   aNextInFlow->Destroy();
 
   NS_POSTCONDITION(!prevInFlow->GetNextInFlow(), "non null next-in-flow");
