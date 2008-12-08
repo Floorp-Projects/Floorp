@@ -140,15 +140,22 @@ void ExceptionHandler::Initialize(const wstring& dump_path,
     // context outside of an exception.
     InitializeCriticalSection(&handler_critical_section_);
     handler_start_semaphore_ = CreateSemaphore(NULL, 0, 1, NULL);
-    handler_finish_semaphore_ = CreateSemaphore(NULL, 0, 1, NULL);
+    assert(handler_start_semaphore_ != NULL);
 
-    DWORD thread_id;
-    handler_thread_ = CreateThread(NULL,         // lpThreadAttributes
-                                   kExceptionHandlerThreadInitialStackSize,
-                                   ExceptionHandlerThreadMain,
-                                   this,         // lpParameter
-                                   0,            // dwCreationFlags
-                                   &thread_id);
+    handler_finish_semaphore_ = CreateSemaphore(NULL, 0, 1, NULL);
+    assert(handler_finish_semaphore_ != NULL);
+
+    // Don't attempt to create the thread if we could not create the semaphores.
+    if (handler_finish_semaphore_ != NULL && handler_start_semaphore_ != NULL) {
+      DWORD thread_id;
+      handler_thread_ = CreateThread(NULL,         // lpThreadAttributes
+                                     kExceptionHandlerThreadInitialStackSize,
+                                     ExceptionHandlerThreadMain,
+                                     this,         // lpParameter
+                                     0,            // dwCreationFlags
+                                     &thread_id);
+      assert(handler_thread_ != NULL);
+    }
 
     dbghelp_module_ = LoadLibrary(L"dbghelp.dll");
     if (dbghelp_module_) {
@@ -264,6 +271,8 @@ ExceptionHandler::~ExceptionHandler() {
 DWORD ExceptionHandler::ExceptionHandlerThreadMain(void* lpParameter) {
   ExceptionHandler* self = reinterpret_cast<ExceptionHandler *>(lpParameter);
   assert(self);
+  assert(self->handler_start_semaphore_ != NULL);
+  assert(self->handler_finish_semaphore_ != NULL);
 
   while (true) {
     if (WaitForSingleObject(self->handler_start_semaphore_, INFINITE) ==
@@ -518,6 +527,17 @@ void ExceptionHandler::HandlePureVirtualCall() {
 bool ExceptionHandler::WriteMinidumpOnHandlerThread(
     EXCEPTION_POINTERS* exinfo, MDRawAssertionInfo* assertion) {
   EnterCriticalSection(&handler_critical_section_);
+
+  // There isn't much we can do if the handler thread
+  // was not successfully created.
+  if (handler_thread_ == NULL) {
+    LeaveCriticalSection(&handler_critical_section_);
+    return false;
+  }
+
+  // The handler thread should only be created when the semaphores are valid.
+  assert(handler_start_semaphore_ != NULL);
+  assert(handler_finish_semaphore_ != NULL);
 
   // Set up data to be passed in to the handler thread.
   requesting_thread_id_ = GetCurrentThreadId();
