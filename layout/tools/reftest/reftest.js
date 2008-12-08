@@ -151,7 +151,7 @@ function OnRefTestLoad()
     } catch (ex) {
         //gBrowser.loadURI('data:text/plain,' + ex);
         ++gTestResults.Exception;
-        dump("REFTEST TEST-FAIL | | EXCEPTION: " + ex + "\n");
+        dump("REFTEST TEST-UNEXPECTED-FAIL | | EXCEPTION: " + ex + "\n");
         DoneTests();
     }
 }
