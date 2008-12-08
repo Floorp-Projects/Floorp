@@ -150,7 +150,7 @@ namespace nanojit
 
 			AvmCore*			_core;
 			DWB(Assembler*)		_assm;
-			DWB(FragmentMap*)	_frags;		/* map from ip -> Fragment ptr  */
+			FragmentMap 	_frags;		/* map from ip -> Fragment ptr  */
 			Page*			_pageList;
 
 			/* unmanaged mem */
