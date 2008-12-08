@@ -280,7 +280,6 @@ namespace nanojit
         f->anchor = f;
         f->root = f;
         f->kind = LoopTrace;
-        f->mergeCounts = new (_core->gc) BlockHist(_core->gc);
         verbose_only( addLabel(f, "T", _frags->size()); )
         return f;
 	}
@@ -574,7 +573,6 @@ namespace nanojit
 		Fragment *f = newFrag(ip);
 		f->anchor = from->anchor;
 		f->root = from->root;
-		f->mergeCounts = from->anchor->mergeCounts;
         f->xjumpCount = from->xjumpCount;
 		/*// prepend
 		f->nextbranch = from->branches;
