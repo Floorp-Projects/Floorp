@@ -126,7 +126,10 @@ nsDOMWorkerTimeout::FunctionCallback::Run(nsDOMWorkerTimeout* aTimeout,
   JSObject* global = JS_GetGlobalObject(aCx);
   NS_ENSURE_TRUE(global, NS_ERROR_FAILURE);
 
-  nsTArray<jsval> argv(mCallbackArgsLength);
+  nsTArray<jsval> argv;
+  PRBool success = argv.SetCapacity(mCallbackArgsLength);
+  NS_ENSURE_TRUE(success, NS_ERROR_OUT_OF_MEMORY);
+
   for (PRUint32 index = 0; index < mCallbackArgsLength; index++) {
     argv.AppendElement(mCallbackArgs[index]);
   }
