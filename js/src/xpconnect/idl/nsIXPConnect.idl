@@ -425,6 +425,7 @@ interface nsIXPConnect : nsISupports
 
     const PRUint32 INIT_JS_STANDARD_CLASSES  = 1 << 0;
     const PRUint32 FLAG_SYSTEM_GLOBAL_OBJECT = 1 << 1;
+    const PRUint32 OMIT_COMPONENTS_OBJECT    = 1 << 2;
 
     /**
     * wrapNative will create a new JSObject or return an existing one.

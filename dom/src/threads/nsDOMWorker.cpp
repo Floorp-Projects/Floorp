@@ -1197,11 +1197,13 @@ nsDOMWorker::CompileGlobalObject(JSContext* aCx)
 
   nsIXPConnect* xpc = nsContentUtils::XPConnect();
 
+  const PRUint32 flags = nsIXPConnect::INIT_JS_STANDARD_CLASSES |
+                         nsIXPConnect::OMIT_COMPONENTS_OBJECT;
+
   nsCOMPtr<nsIXPConnectJSObjectHolder> globalWrapper;
   nsresult rv =
     xpc->InitClassesWithNewWrappedGlobal(aCx, scopeSupports,
-                                         NS_GET_IID(nsISupports),
-                                         nsIXPConnect::INIT_JS_STANDARD_CLASSES,
+                                         NS_GET_IID(nsISupports), flags,
                                          getter_AddRefs(globalWrapper));
   NS_ENSURE_SUCCESS(rv, PR_FALSE);
 
@@ -1211,12 +1213,18 @@ nsDOMWorker::CompileGlobalObject(JSContext* aCx)
 
   NS_ASSERTION(JS_GetGlobalObject(aCx) == global, "Global object mismatch!");
 
-  // XXX Fix this!
-  PRBool success = JS_DeleteProperty(aCx, global, "Components");
-  NS_ENSURE_TRUE(success, PR_FALSE);
+#ifdef DEBUG
+  {
+    jsval components;
+    if (JS_GetProperty(aCx, global, "Components", &components)) {
+      NS_ASSERTION(components == JSVAL_VOID,
+                   "Components property still defined!");
+    }
+  }
+#endif
 
   // Set up worker thread functions
-  success = JS_DefineFunctions(aCx, global, gDOMWorkerFunctions);
+  PRBool success = JS_DefineFunctions(aCx, global, gDOMWorkerFunctions);
   NS_ENSURE_TRUE(success, PR_FALSE);
 
   // From here on out we have to remember to null mGlobal and mInnerScope if
