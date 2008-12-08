@@ -68,6 +68,7 @@ MOCHI_TESTS = \
 		test_bug_360493_2.html \
 		test_bug_391514.html \
 		test_bug_427033.html \
+		test_bug_444968.html \
 		test_notifications.html \
 		test_prompt.html \
 		test_xhr.html \
