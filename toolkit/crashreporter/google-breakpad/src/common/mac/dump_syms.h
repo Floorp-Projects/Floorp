@@ -46,7 +46,6 @@ typedef hash_map<string, dwarf2reader::SectionMap *> ArchSectionMap;
   NSMutableDictionary *addresses_;    // Addresses and symbols (STRONG)
   NSMutableSet *functionAddresses_;   // Function addresses (STRONG)
   NSMutableDictionary *sources_;      // Address and Source file paths (STRONG)
-  NSMutableArray *cppAddresses_;      // Addresses of C++ symbols (STRONG)
   NSMutableDictionary *headers_;      // Mach-o header information (STRONG)
   NSMutableDictionary *sectionData_; // Keyed by seg/sect name (STRONG)
   uint32_t   lastStartAddress_;
