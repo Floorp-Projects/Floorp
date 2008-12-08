@@ -2682,7 +2682,6 @@ void
 nanojit::Fragment::onDestroy()
 {
     if (root == this) {
-        delete mergeCounts;
         delete lirbuf;
     }
     delete (TreeInfo *)vmprivate;
