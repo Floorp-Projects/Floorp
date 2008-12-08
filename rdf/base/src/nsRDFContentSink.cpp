@@ -994,8 +994,12 @@ RDFContentSinkImpl::GetResourceAttribute(const PRUnichar** aAttributes,
       mNodeIDMap.Get(nodeID,aResource);
 
       if (!*aResource) {
+          nsresult rv;
+          rv = gRDFService->GetAnonymousResource(aResource);
+          if (NS_FAILED(rv)) {
+              return rv;
+          }
           mNodeIDMap.Put(nodeID,*aResource);
-          return gRDFService->GetAnonymousResource(aResource);
       }
       return NS_OK;
   }
