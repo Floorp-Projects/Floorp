@@ -373,7 +373,6 @@ protected:
   virtual HBRUSH          OnControlColor();
 
   static LRESULT CALLBACK WindowProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam);
-  static LRESULT CALLBACK DefaultWindowProc(HWND hWns, UINT msg, WPARAM wParam, LPARAM lParam);
 
   // Convert nsEventStatus value to a windows boolean
   static PRBool ConvertStatus(nsEventStatus aStatus)

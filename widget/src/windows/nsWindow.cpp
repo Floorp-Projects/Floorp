@@ -1167,22 +1167,8 @@ LRESULT CALLBACK nsWindow::WindowProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM
     }
   }
 
-#if defined(STRICT)
-  return ::CallWindowProcW((WNDPROC)someWindow->GetPrevWindowProc(), hWnd,
-                                    msg, wParam, lParam);
-#else
-  return ::CallWindowProcW((FARPROC)someWindow->GetPrevWindowProc(), hWnd,
-                                    msg, wParam, lParam);
-#endif
-}
-
-//
-// Default Window procedure for AIMM support.
-//
-LRESULT CALLBACK nsWindow::DefaultWindowProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam)
-{
-  //XXX nsWindow::DefaultWindowProc still ever required?
-  return ::DefWindowProcW(hWnd, msg, wParam, lParam);
+  return ::CallWindowProcW(someWindow->GetPrevWindowProc(),
+                           hWnd, msg, wParam, lParam);
 }
 
 //WINOLEAPI oleStatus;
@@ -5204,8 +5190,8 @@ PRBool nsWindow::ProcessMessage(UINT msg, WPARAM wParam, LPARAM lParam, LRESULT 
           break;
         }
 
-        LONG proc = ::GetWindowLongW(destWnd, GWL_WNDPROC);
-        if (proc != (LONG)&nsWindow::WindowProc) {
+        nsWindow* destWindow = GetNSWindowPtr(destWnd);
+        if (!destWindow || destWindow->mIsPluginWindow) {
           // Some other app, or a plugin window.
           // Windows directs WM_MOUSEWHEEL to the focused window.
           // However, Mozilla does not like plugins having focus, so a
@@ -5217,8 +5203,8 @@ PRBool nsWindow::ProcessMessage(UINT msg, WPARAM wParam, LPARAM lParam, LRESULT 
           // we find a parent matching our wndproc.
           HWND parentWnd = ::GetParent(destWnd);
           while (parentWnd) {
-            LONG parentWndProc = ::GetClassLongW(parentWnd, GCL_WNDPROC);
-            if (parentWndProc == (LONG)&nsWindow::DefaultWindowProc || parentWndProc == (LONG)&nsWindow::WindowProc) {
+            nsWindow* parentWindow = GetNSWindowPtr(parentWnd);
+            if (parentWindow) {
               // We have a child window - quite possibly a plugin window.
               // However, not all plugins are created equal - some will handle this message themselves,
               // some will forward directly back to us, while others will call DefWndProc, which
@@ -5226,6 +5212,7 @@ PRBool nsWindow::ProcessMessage(UINT msg, WPARAM wParam, LPARAM lParam, LRESULT 
               // So if we have sent it once, we need to handle it ourself.
               if (mIsInMouseWheelProcessing) {
                 destWnd = parentWnd;
+                destWindow = parentWindow;
               } else {
                 // First time we have seen this message.
                 // Call the child - either it will consume it, or
@@ -5246,7 +5233,6 @@ PRBool nsWindow::ProcessMessage(UINT msg, WPARAM wParam, LPARAM lParam, LRESULT 
         if (destWnd == nsnull)
           break; // done with this message.
         if (destWnd != mWnd) {
-          nsWindow* destWindow = GetNSWindowPtr(destWnd);
           if (destWindow) {
             return destWindow->ProcessMessage(msg, wParam, lParam, aRetValue);
           }
@@ -5353,12 +5339,11 @@ LPCWSTR nsWindow::WindowClassW()
 
 //    wc.style         = CS_HREDRAW | CS_VREDRAW | CS_DBLCLKS;
     wc.style         = CS_DBLCLKS;
-    wc.lpfnWndProc   = nsWindow::DefaultWindowProc;
+    wc.lpfnWndProc   = ::DefWindowProcW;
     wc.cbClsExtra    = 0;
     wc.cbWndExtra    = 0;
     wc.hInstance     = nsToolkit::mDllInstance;
-    // XXX : we don't need LoadIconW for now (see bug 171349, comment 181)
-    wc.hIcon         = ::LoadIcon(::GetModuleHandle(NULL), IDI_APPLICATION);
+    wc.hIcon         = ::LoadIconW(NULL, (LPWSTR)IDI_APPLICATION);
     wc.hCursor       = NULL;
     wc.hbrBackground = mBrush;
     wc.lpszMenuName  = NULL;
@@ -5421,12 +5406,11 @@ LPCWSTR nsWindow::WindowPopupClassW()
     WNDCLASSW wc;
 
     wc.style = CS_DBLCLKS | CS_XP_DROPSHADOW;
-    wc.lpfnWndProc   = nsWindow::DefaultWindowProc;
+    wc.lpfnWndProc   = ::DefWindowProcW;
     wc.cbClsExtra    = 0;
     wc.cbWndExtra    = 0;
     wc.hInstance     = nsToolkit::mDllInstance;
-    // XXX : we don't need LoadIconW for now (see bug 171349, comment 181)
-    wc.hIcon         = ::LoadIcon(::GetModuleHandle(NULL), IDI_APPLICATION);
+    wc.hIcon         = ::LoadIconW(NULL, (LPWSTR)IDI_APPLICATION);
     wc.hCursor       = NULL;
     wc.hbrBackground = mBrush;
     wc.lpszMenuName  = NULL;
