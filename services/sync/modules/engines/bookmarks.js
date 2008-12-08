@@ -118,11 +118,6 @@ BookmarksEngine.prototype = {
         yield rec.encrypt(self.cb, ID.get('WeaveCryptoID').password);
       }
     }
-  },
-
-  _changeItemID: function BmkEngine__changeRecordID(oldID, newID) {
-    let self = yield;
-    yield this._store._changeItemID.async(this._store, self.cb, oldID, newID);
   }
 
   // XXX for sharing, will need to re-add code to get new shares before syncing,
@@ -458,9 +453,7 @@ BookmarksStore.prototype = {
     }
   },
 
-  _changeItemID: function BSS__changeItemID(oldID, newID) {
-    let self = yield;
-
+  changeItemID: function BStore_changeItemID(oldID, newID) {
     var itemId = this._getItemIdForGUID(oldID);
     if (itemId == null) // toplevel folder
       return;
