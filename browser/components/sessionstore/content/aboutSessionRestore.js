@@ -49,8 +49,10 @@ window.onload = function() {
   if (!sessionData.value) {
     var ss = Cc["@mozilla.org/browser/sessionstartup;1"].getService(Ci.nsISessionStartup);
     sessionData.value = ss.state;
-    if (!sessionData.value)
+    if (!sessionData.value) {
+      document.getElementById("errorTryAgain").disabled = true;
       return;
+    }
   }
   // make sure the data is tracked to be restored in case of a subsequent crash
   var event = document.createEvent("UIEvents");
@@ -102,6 +104,8 @@ function initTreeView() {
 // User actions
 
 function restoreSession() {
+  document.getElementById("errorTryAgain").disabled = true;
+  
   // remove all unselected tabs from the state before restoring it
   var ix = gStateObject.windows.length - 1;
   for (var t = gTreeData.length - 1; t >= 0; t--) {
