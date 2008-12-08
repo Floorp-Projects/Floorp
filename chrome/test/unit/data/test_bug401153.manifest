@@ -4,6 +4,9 @@ resource test1 test1/
 # Duplicates should be ignored
 resource test1 foo/
 
+# Mapping off file system should work
+resource test2 http://www.mozilla.org/
+
 # Mapping into jar files should work
 resource test3 jar:test3.jar!/resources/
 
