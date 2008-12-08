@@ -58,16 +58,11 @@ REQUIRES	= xpcom \
 		  dom \
 		  content \
 		  uriloader \
+		  places \
 		  pref \
 		  webbrwsr \
 		  windowwatcher \
 		  $(NULL)
-
-ifdef MOZ_PLACES
-REQUIRES +=	  places
-else
-REQUIRES +=	  history
-endif
 
 ifneq (,$(MOZ_PHOENIX)$(MOZ_XULRUNNER))
 REQUIRES += toolkitcomps
