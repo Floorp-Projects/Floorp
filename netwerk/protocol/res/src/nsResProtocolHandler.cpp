@@ -215,7 +215,7 @@ nsResProtocolHandler::GetProtocolFlags(PRUint32 *result)
 {
     // XXXbz Is this really true for all resource: URIs?  Could we
     // somehow give different flags to some of them?
-    *result = URI_STD | URI_IS_UI_RESOURCE | URI_IS_LOCAL_RESOURCE;
+    *result = URI_STD | URI_IS_UI_RESOURCE;
     return NS_OK;
 }
 

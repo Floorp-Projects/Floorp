@@ -87,8 +87,7 @@ nsAnnoProtocolHandler::GetDefaultPort(PRInt32 *aDefaultPort)
 NS_IMETHODIMP
 nsAnnoProtocolHandler::GetProtocolFlags(PRUint32 *aProtocolFlags)
 {
-  *aProtocolFlags = (URI_NORELATIVE | URI_NOAUTH | URI_DANGEROUS_TO_LOAD |
-                     URI_IS_LOCAL_RESOURCE);
+  *aProtocolFlags = (URI_NORELATIVE | URI_NOAUTH | URI_DANGEROUS_TO_LOAD);
   return NS_OK;
 }
 
