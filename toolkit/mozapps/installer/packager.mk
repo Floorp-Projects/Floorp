@@ -259,6 +259,7 @@ NO_PKG_FILES += \
 	components/xpti.dat \
 	content_unit_tests \
 	necko_unit_tests \
+	*.dSYM \
 	$(NULL)
 
 # browser/locales/Makefile uses this makefile for its variable defs, but
