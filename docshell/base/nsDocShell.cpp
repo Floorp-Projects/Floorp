@@ -9705,12 +9705,6 @@ nsClassifierCallback::Run()
     NS_ENSURE_SUCCESS(rv, rv);
     if (hasFlags) return NS_OK;
 
-    rv = NS_URIChainHasFlags(uri,
-                             nsIProtocolHandler::URI_IS_LOCAL_RESOURCE,
-                             &hasFlags);
-    NS_ENSURE_SUCCESS(rv, rv);
-    if (hasFlags) return NS_OK;
-
     nsCOMPtr<nsIURIClassifier> uriClassifier =
         do_GetService(NS_URICLASSIFIERSERVICE_CONTRACTID, &rv);
     if (NS_FAILED(rv)) return rv;
