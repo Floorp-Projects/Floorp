@@ -59,8 +59,7 @@ function Store() {
   this._init();
 }
 Store.prototype = {
-  _logName: "Store",
-  _yieldDuringApply: true,
+  _logName: "BaseClass",
 
   // set this property in child object's wrap()!
   _lookup: null,
@@ -82,19 +81,21 @@ Store.prototype = {
   },
 
   _init: function Store__init() {
-    this._log = Log4Moz.repository.getLogger("Service." + this._logName);
+    this._log = Log4Moz.repository.getLogger("Store." + this._logName);
   },
 
-  applyCommands: function Store_applyCommands(commandList) {
+  _applyCommands: function Store__applyCommands(commandList) {
     let self = yield;
 
     for (var i = 0; i < commandList.length; i++) {
-      if (this._yieldDuringApply) {
+      if (i % 5) {
         Utils.makeTimerForCall(self.cb);
         yield; // Yield to main loop
       }
+
       var command = commandList[i];
-      this._log.trace("Processing command: " + this._json.encode(command));
+      if (this._log.level <= Log4Moz.Level.Trace)
+        this._log.trace("Processing command: " + this._json.encode(command));
       switch (command["action"]) {
       case "create":
         this._createCommand(command);
@@ -110,7 +111,9 @@ Store.prototype = {
         break;
       }
     }
-    self.done();
+  },
+  applyCommands: function Store_applyCommands(onComplete, commandList) {
+    this._applyCommands.async(this, onComplete, commandList);
   },
 
   // override only if neccessary
@@ -121,23 +124,30 @@ Store.prototype = {
       return false;
   },
 
+  cacheItemsHint: function Store_cacheItemsHint() {
+    this._itemCache = this.wrap();
+  },
+
+  clearItemCacheHint: function Store_clearItemCacheHint() {
+    this._itemCache = null;
+  },
+
   // override these in derived objects
 
-  // wrap MUST save the wrapped store in the _lookup property!
   wrap: function Store_wrap() {
-    throw "wrap needs to be subclassed";
+    throw "override wrap in a subclass";
+  },
+
+  wrapItem: function Store_wrapItem() {
+    throw "override wrapItem in a subclass";
+  },
+
+  getAllIDs: function Store_getAllIDs() {
+    throw "override getAllIDs in a subclass";
   },
 
   wipe: function Store_wipe() {
-    throw "wipe needs to be subclassed";
-  },
-
-  _resetGUIDs: function Store__resetGUIDs() {
-    let self = yield;
-    // default to do nothing
-  },
-  resetGUIDs: function Store_resetGUIDs(onComplete) {
-    this._resetGUIDs.async(this, onComplete);
+    throw "override wipe in a subclass";
   }
 };
 
