@@ -136,14 +136,6 @@ function OnRefTestLoad()
 
     var windowElem = document.documentElement;
 
-    gCanvas1 = document.createElementNS(XHTML_NS, "canvas");
-    gCanvas1.setAttribute("width", windowElem.getAttribute("width"));
-    gCanvas1.setAttribute("height", windowElem.getAttribute("height"));
-
-    gCanvas2 = document.createElementNS(XHTML_NS, "canvas");
-    gCanvas2.setAttribute("width", windowElem.getAttribute("width"));
-    gCanvas2.setAttribute("height", windowElem.getAttribute("height"));
-
     gIOService = CC[IO_SERVICE_CONTRACTID].getService(CI.nsIIOService);
 
     try {
