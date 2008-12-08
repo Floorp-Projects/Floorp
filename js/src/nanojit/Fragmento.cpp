@@ -58,7 +58,8 @@ namespace nanojit
 	 * This is the main control center for creating and managing fragments.
 	 */
 	Fragmento::Fragmento(AvmCore* core, uint32_t cacheSizeLog2) 
-		: _allocList(core->GetGC()),
+		: _frags(core->GetGC()),
+		  _allocList(core->GetGC()),
 			_max_pages(1 << (calcSaneCacheSize(cacheSizeLog2) - NJ_LOG2_PAGE_SIZE)),
 			_pagesGrowth(1)
 	{
@@ -88,7 +89,6 @@ namespace nanojit
 		NanoAssert(_max_pages > _pagesGrowth); // shrink growth if needed 
 		_core = core;
 		GC *gc = core->GetGC();
-		_frags = new (gc) FragmentMap(gc, 128);
 		_assm = new (gc) nanojit::Assembler(this);
 		verbose_only( enterCounts = new (gc) BlockHist(gc); )
 		verbose_only( mergeCounts = new (gc) BlockHist(gc); )
@@ -99,7 +99,7 @@ namespace nanojit
         AllocEntry *entry;
 
 		clearFrags();
-        _frags->clear();		
+        _frags.clear();		
 		while( _allocList.size() > 0 )
 		{
 			//fprintf(stderr,"dealloc %x\n", (intptr_t)_allocList.get(_allocList.size()-1));
@@ -110,7 +110,6 @@ namespace nanojit
 			_gcHeap->Free( entry->page, entry->allocSize );
             delete entry;
 		}
-        delete _frags;
         delete _assm;
 #if defined(NJ_VERBOSE)
         delete enterCounts;
@@ -231,8 +230,8 @@ namespace nanojit
 
 	void Fragmento::clearFrag(const void* ip)
 	{
-		if (_frags->containsKey(ip)) {
-			clearFragment(_frags->remove(ip));
+		if (_frags.containsKey(ip)) {
+			clearFragment(_frags.remove(ip));
 		}
 	}
 
@@ -241,8 +240,8 @@ namespace nanojit
 		// reclaim any dangling native pages
 		_assm->pageReset();
 
-        while (!_frags->isEmpty()) {
-            clearFragment(_frags->removeLast());
+        while (!_frags.isEmpty()) {
+            clearFragment(_frags.removeLast());
 		}
 
 		verbose_only( enterCounts->clear();)
@@ -265,7 +264,7 @@ namespace nanojit
     Fragment* Fragmento::getAnchor(const void* ip)
 	{
         Fragment *f = newFrag(ip);
-        Fragment *p = _frags->get(ip);
+        Fragment *p = _frags.get(ip);
         if (p) {
             f->first = p;
             /* append at the end of the peer list */
@@ -275,18 +274,18 @@ namespace nanojit
             p->peer = f;
         } else {
             f->first = f;
-            _frags->put(ip, f); /* this is the first fragment */
+            _frags.put(ip, f); /* this is the first fragment */
         }
         f->anchor = f;
         f->root = f;
         f->kind = LoopTrace;
-        verbose_only( addLabel(f, "T", _frags->size()); )
+        verbose_only( addLabel(f, "T", _frags.size()); )
         return f;
 	}
 	
     Fragment* Fragmento::getLoop(const void* ip)
 	{
-        return _frags->get(ip);
+        return _frags.get(ip);
 	}
 
 #ifdef NJ_VERBOSE
@@ -436,7 +435,7 @@ namespace nanojit
 			_stats.abcsize + _stats.ilsize,
 			double(_stats.abcsize+_stats.ilsize)/_stats.abcsize);
 
-		int32_t count = _frags->size();
+		int32_t count = _frags.size();
 		int32_t pages =  _stats.pages;
 		int32_t maxPageUse =  _stats.maxPageUse;
 		int32_t free = _stats.freePages;
@@ -461,7 +460,7 @@ namespace nanojit
 		fragstats totalstat = { 0,0,0,0,0 };
         for (int32_t i=0; i<count; i++)
         {
-            Fragment *f = _frags->at(i);
+            Fragment *f = _frags.at(i);
             while (true) {
                 fragstats stat = { 0,0,0,0,0 };
                 dumpFragStats(f, 0, stat);
@@ -591,8 +590,8 @@ namespace nanojit
 
 	void Fragmento::disconnectLoops()
 	{
-		for (int i = 0; i < _frags->size(); ++i) {
-			Fragment* frag = _frags->at(i);
+		for (int i = 0; i < _frags.size(); ++i) {
+			Fragment* frag = _frags.at(i);
 			if (frag->lastIns->isop(LIR_loop))
 				_assm->disconnectLoop(frag->lastIns->record());
 		}
@@ -600,8 +599,8 @@ namespace nanojit
 
 	void Fragmento::reconnectLoops()
 	{
-		for (int i = 0; i < _frags->size(); ++i) {
-			Fragment* frag = _frags->at(i);
+		for (int i = 0; i < _frags.size(); ++i) {
+			Fragment* frag = _frags.at(i);
 			if (frag->lastIns->isop(LIR_loop))
 				_assm->reconnectLoop(frag->lastIns->record());
 		}
