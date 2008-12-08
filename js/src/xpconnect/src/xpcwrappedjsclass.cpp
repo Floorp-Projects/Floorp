@@ -298,8 +298,8 @@ nsXPCWrappedJSClass::CallQueryInterfaceOnJSObject(XPCCallContext& ccx,
             NS_ASSERTION(JS_IsExceptionPending(cx),
                          "JS failed without setting an exception!");
 
-            jsval jsexception;
-            AUTO_MARK_JSVAL(ccx, jsexception);
+            jsval jsexception = JSVAL_NULL;
+            AUTO_MARK_JSVAL(ccx, &jsexception);
 
             if(JS_GetPendingException(cx, &jsexception))
             {
