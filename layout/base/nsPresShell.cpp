@@ -4554,6 +4554,11 @@ PresShell::DoFlushPendingNotifications(mozFlushType aType,
     if (!mIsDestroying) {
       mPresContext->FlushPendingMediaFeatureValuesChanged();
 
+      // Flush any pending update of the user font set, since that could
+      // cause style changes (for updating ex/ch units, and to cause a
+      // reflow).
+      mPresContext->FlushUserFontSet();
+
       mFrameConstructor->ProcessPendingRestyles();
     }
 
@@ -4580,10 +4585,6 @@ PresShell::DoFlushPendingNotifications(mozFlushType aType,
     // be good.
     
     if (aType >= Flush_Layout && !mIsDestroying) {
-      // Flush any pending update of the user font set, since that could
-      // post a style change reflow.
-      mPresContext->FlushUserFontSet();
-
       mFrameConstructor->RecalcQuotesAndCounters();
       mViewManager->FlushDelayedResize();
       ProcessReflowCommands(aInterruptibleReflow);
