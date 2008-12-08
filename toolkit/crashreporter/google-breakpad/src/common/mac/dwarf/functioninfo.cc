@@ -51,6 +51,25 @@ namespace __gnu_cxx
 
 namespace dwarf2reader {
 
+// Given an offset value, its form, and the base offset of the
+// compilation unit containing this value, return an absolute offset
+// within the .debug_info section.
+uint64 GetAbsoluteOffset(uint64 offset,
+                         enum DwarfForm form,
+                         uint64 compilation_unit_base) {
+  switch (form) {
+    case DW_FORM_ref1:
+    case DW_FORM_ref2:
+    case DW_FORM_ref4:
+    case DW_FORM_ref8:
+    case DW_FORM_ref_udata:
+      return offset + compilation_unit_base;
+    case DW_FORM_ref_addr:
+    default:
+      return offset;
+  }
+}
+
 CULineInfoHandler::CULineInfoHandler(vector<SourceFileInfo>* files,
                                      vector<string>* dirs,
                                      LineMap* linemap):linemap_(linemap),
@@ -117,6 +136,7 @@ bool CUFunctionInfoHandler::StartCompilationUnit(uint64 offset,
                                                  uint8 offset_size,
                                                  uint64 cu_length,
                                                  uint8 dwarf_version) {
+  current_compilation_unit_offset_ = offset;
   return true;
 }
 
@@ -152,8 +172,12 @@ void CUFunctionInfoHandler::ProcessAttributeString(uint64 offset,
                                                    enum DwarfAttribute attr,
                                                    enum DwarfForm form,
                                                    const string &data) {
-  if (attr == DW_AT_name && current_function_info_)
-    current_function_info_->name = data;
+  if (current_function_info_) {
+    if (attr == DW_AT_name)
+      current_function_info_->name = data;
+    else if(attr == DW_AT_MIPS_linkage_name)
+      current_function_info_->mangled_name = data;
+  }
 }
 
 void CUFunctionInfoHandler::ProcessAttributeUnsigned(uint64 offset,
@@ -183,6 +207,24 @@ void CUFunctionInfoHandler::ProcessAttributeUnsigned(uint64 offset,
       case DW_AT_decl_file:
         current_function_info_->file = files_->at(data).name;
         break;
+      case DW_AT_specification: {
+        // Some functions have a "specification" attribute
+        // which means they were defined elsewhere. The name
+        // attribute is not repeated, and must be taken from
+        // the specification DIE. Here we'll assume that
+        // any DIE referenced in this manner will already have
+        // been seen, but that's not really required by the spec.
+        uint64 abs_offset = GetAbsoluteOffset(data, form, current_compilation_unit_offset_);
+        FunctionMap::iterator iter = offset_to_funcinfo_->find(abs_offset);
+        if (iter != offset_to_funcinfo_->end()) {
+          current_function_info_->name = iter->second->name;
+          current_function_info_->mangled_name = iter->second->mangled_name;
+        } else {
+          // If you hit this, this code probably needs to be rewritten.
+          fprintf(stderr, "Error: DW_AT_specification was seen before the referenced DIE! (Looking for DIE at offset %08llx, in DIE at offset %08llx)\n", abs_offset, offset);
+        }
+        break;
+      }
       default:
         break;
     }

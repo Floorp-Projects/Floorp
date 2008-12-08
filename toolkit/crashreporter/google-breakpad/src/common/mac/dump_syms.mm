@@ -63,7 +63,6 @@ static NSString *kHeaderSizeKey = @"size";
 static NSString *kHeaderOffsetKey = @"offset";  // Offset to the header
 static NSString *kHeaderIs64BitKey = @"is64";
 static NSString *kHeaderCPUTypeKey = @"cpuType";
-static NSString *kUnknownSymbol = @"???";
 
 // The section for __TEXT, __text seems to be always 1.  This is useful
 // for pruning out extraneous non-function symbols.
@@ -104,8 +103,7 @@ void DumpFunctionMap(const dwarf2reader::FunctionMap function_map) {
 
 
 @interface DumpSymbols(PrivateMethods)
-- (NSArray *)convertCPlusPlusSymbols:(NSArray *)symbols;
-- (void)convertSymbols;
+- (NSString *)convertCPlusPlusSymbol:(NSString *)symbol;
 - (void)addFunction:(NSString *)name line:(int)line address:(uint64_t)address section:(int)section;
 - (BOOL)processSymbolItem:(struct nlist_64 *)list stringTable:(char *)table;
 - (BOOL)loadSymbolInfo:(void *)base offset:(uint32_t)offset;
@@ -126,86 +124,20 @@ void DumpFunctionMap(const dwarf2reader::FunctionMap function_map) {
 
 @implementation DumpSymbols
 //=============================================================================
-- (NSArray *)convertCPlusPlusSymbols:(NSArray *)symbols {
-  NSMutableArray *symbols_demangled = [[NSMutableArray alloc]
-					initWithCapacity:[symbols count]];
+- (NSString *)convertCPlusPlusSymbol:(NSString *)symbol {
   // __cxa_demangle will realloc this if needed
   char *buffer = (char *)malloc(1024);
   size_t buffer_size = 1024;
   int result;
 
-  NSEnumerator *enumerator = [symbols objectEnumerator];
-  id symbolObject;
-  while ((symbolObject = [enumerator nextObject])) {
-    const char *symbol = [symbolObject UTF8String];
-    buffer = abi::__cxa_demangle(symbol, buffer, &buffer_size, &result);
-    if (result == 0) {
-      [symbols_demangled addObject:[NSString stringWithUTF8String:buffer]];
-    } else {
-      // unable to demangle - use mangled name instead
-      [symbols_demangled addObject:symbolObject];
-    }
+  const char *sym = [symbol UTF8String];
+  NSString *demangled = nil;
+  buffer = abi::__cxa_demangle(sym, buffer, &buffer_size, &result);
+  if (result == 0) {
+    demangled = [NSString stringWithUTF8String:buffer];
   }
   free(buffer);
-
-  return symbols_demangled;
-}
-
-//=============================================================================
-- (void)convertSymbols {
-  unsigned int count = [cppAddresses_ count];
-  NSMutableArray *symbols = [[NSMutableArray alloc] initWithCapacity:count];
-
-  // Sort addresses for processing
-  NSArray *addresses = [cppAddresses_ sortedArrayUsingSelector:
-    @selector(compare:)];
-
-  for (unsigned int i = 0; i < count; ++i) {
-    NSMutableDictionary *dict = [addresses_ objectForKey:
-      [addresses objectAtIndex:i]];
-    NSString *symbol = [dict objectForKey:kAddressSymbolKey];
-
-    // Make sure that the symbol is valid
-    if ([symbol length] < 1)
-      symbol = kUnknownSymbol;
-
-    [symbols addObject:symbol];
-  }
-
-  // In order to deal with crashing problems in c++filt, we setup
-  // a while loop to handle the case where convertCPlusPlusSymbols
-  // only returns partial results.
-  // We then attempt to continue from the point where c++filt failed
-  // and add the partial results to the total results until we're
-  // completely done.
-  
-  unsigned int totalIndex = 0;
-  unsigned int totalCount = count;
-  
-  while (totalIndex < totalCount) {
-    NSRange range = NSMakeRange(totalIndex, totalCount - totalIndex);
-    NSArray *subarray = [symbols subarrayWithRange:range];
-    NSArray *converted = [self convertCPlusPlusSymbols:subarray];
-    unsigned int convertedCount = [converted count];
-
-    if (convertedCount == 0) {
-      break; // we give up at this point
-    }
-    
-    for (unsigned int convertedIndex = 0;
-      convertedIndex < convertedCount && totalIndex < totalCount;
-       ++totalIndex, ++convertedIndex) {
-      NSMutableDictionary *dict = [addresses_ objectForKey:
-        [addresses objectAtIndex:totalIndex]];
-      NSString *symbol = [converted objectAtIndex:convertedIndex];
-
-      // Only add if this is a non-zero length symbol
-      if ([symbol length])
-        [dict setObject:symbol forKey:kAddressConvertedSymbolKey];
-    }
-  }
-  
-  [symbols release];
+  return demangled;
 }
 
 //=============================================================================
@@ -215,8 +147,7 @@ void DumpFunctionMap(const dwarf2reader::FunctionMap function_map) {
   if (!address)
     return;
 
-  // If the function starts with "_Z" or "__Z" then add it to the list of
-  // addresses to run through the c++filt
+  // If the function starts with "_Z" or "__Z" then demangle it.
   BOOL isCPP = NO;
 
   if ([name hasPrefix:@"__Z"]) {
@@ -255,12 +186,6 @@ void DumpFunctionMap(const dwarf2reader::FunctionMap function_map) {
     NSRange emptyRange = { NSNotFound, 0 };
     NSRange objcppRange = [name rangeOfCharacterFromSet:objcppCharSet];
     isCPP = NSEqualRanges(objcppRange, emptyRange);
-  }
-  
-  if (isCPP) {
-    if (!cppAddresses_)
-      cppAddresses_ = [[NSMutableArray alloc] init];
-    [cppAddresses_ addObject:addressNum];
   } else if ([name characterAtIndex:0] == '_') {
     // Remove the leading underscore
     name = [name substringFromIndex:1];
@@ -281,6 +206,13 @@ void DumpFunctionMap(const dwarf2reader::FunctionMap function_map) {
 
     // only functions, not line number addresses
     [functionAddresses_ addObject:addressNum];
+  }
+
+  if (isCPP) {
+    // try demangling
+    NSString *demangled = [self convertCPlusPlusSymbol:name];
+    if (demangled != nil)
+      [dict setObject:demangled forKey:kAddressConvertedSymbolKey];
   }
   
   if (line && ![dict objectForKey:kAddressSourceLineKey])
@@ -499,6 +431,15 @@ void DumpFunctionMap(const dwarf2reader::FunctionMap function_map) {
     if (![dict objectForKey:kAddressSymbolKey]) {
       NSString *symbolName = [NSString stringWithUTF8String:iter->second->name.c_str()];
       [dict setObject:symbolName forKey:kAddressSymbolKey];
+    }
+
+    // try demangling function name if we have a mangled name
+    if (![dict objectForKey:kAddressConvertedSymbolKey] &&
+        !iter->second->mangled_name.empty()) {
+      NSString *mangled = [NSString stringWithUTF8String:iter->second->mangled_name.c_str()];
+      NSString *demangled = [self convertCPlusPlusSymbol:mangled];
+      if (demangled != nil)
+        [dict setObject:demangled forKey:kAddressConvertedSymbolKey];
     }
   
     // set line number for beginning of function
@@ -920,7 +861,6 @@ static BOOL WriteFormat(int fd, const char *fmt, ...) {
 
   // Gather the information
   [self loadSymbolInfoForArchitecture];
-  [self convertSymbols];
 
   NSArray *sortedAddresses = [[addresses_ allKeys]
     sortedArrayUsingSelector:@selector(compare:)];
