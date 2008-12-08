@@ -269,7 +269,7 @@ nsXULTooltipListener::HandleEvent(nsIDOMEvent* aEvent)
 {
   nsAutoString type;
   aEvent->GetType(type);
-  if (type.EqualsLiteral("DOMMouseScroll"))
+  if (type.EqualsLiteral("DOMMouseScroll") || type.EqualsLiteral("dragstart"))
     HideTooltip();
   return NS_OK;
 }
@@ -310,6 +310,7 @@ nsXULTooltipListener::AddTooltipSupport(nsIContent* aNode)
   nsCOMPtr<nsIDOMEventTarget> evtTarget(do_QueryInterface(aNode));
   evtTarget->AddEventListener(NS_LITERAL_STRING("mouseout"), static_cast<nsIDOMMouseListener*>(this), PR_FALSE);
   evtTarget->AddEventListener(NS_LITERAL_STRING("mousemove"), static_cast<nsIDOMMouseListener*>(this), PR_FALSE);
+  evtTarget->AddEventListener(NS_LITERAL_STRING("dragstart"), static_cast<nsIDOMMouseListener*>(this), PR_FALSE);
   
   return NS_OK;
 }
@@ -323,6 +324,7 @@ nsXULTooltipListener::RemoveTooltipSupport(nsIContent* aNode)
   nsCOMPtr<nsIDOMEventTarget> evtTarget(do_QueryInterface(aNode));
   evtTarget->RemoveEventListener(NS_LITERAL_STRING("mouseout"), static_cast<nsIDOMMouseListener*>(this), PR_FALSE);
   evtTarget->RemoveEventListener(NS_LITERAL_STRING("mousemove"), static_cast<nsIDOMMouseListener*>(this), PR_FALSE);
+  evtTarget->RemoveEventListener(NS_LITERAL_STRING("dragstart"), static_cast<nsIDOMMouseListener*>(this), PR_FALSE);
 
   return NS_OK;
 }
