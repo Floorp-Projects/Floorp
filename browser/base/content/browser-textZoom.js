@@ -287,7 +287,8 @@ var FullZoom = {
    * one.
    **/
   _applyPrefToSetting: function FullZoom__applyPrefToSetting(aValue) {
-    if (!this.siteSpecific || gInPrintPreviewMode)
+    if (!this.siteSpecific || gInPrintPreviewMode ||
+        content.document instanceof Ci.nsIImageDocument)
       return;
 
     try {
@@ -302,7 +303,8 @@ var FullZoom = {
   },
 
   _applySettingToPref: function FullZoom__applySettingToPref() {
-    if (!this.siteSpecific || gInPrintPreviewMode)
+    if (!this.siteSpecific || gInPrintPreviewMode ||
+        content.document instanceof Ci.nsIImageDocument)
       return;
 
     var zoomLevel = ZoomManager.zoom;
@@ -310,7 +312,8 @@ var FullZoom = {
   },
 
   _removePref: function FullZoom__removePref() {
-    this._cps.removePref(gBrowser.currentURI, this.name);
+    if (!(content.document instanceof Ci.nsIImageDocument))
+      this._cps.removePref(gBrowser.currentURI, this.name);
   },
 
 

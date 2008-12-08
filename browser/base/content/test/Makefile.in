@@ -80,6 +80,8 @@ _BROWSER_FILES = browser_bug321000.js \
                  plugin_both2.html \
                  browser_alltabslistener.js \
                  alltabslistener.html \
+                 zoom_test.html \
+                 browser_bug416661.js \
     $(NULL)
 
 ifneq (,$(filter mac cocoa,$(MOZ_WIDGET_TOOLKIT)))
