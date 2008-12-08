@@ -125,17 +125,10 @@ nsFontFaceLoader::OnStreamComplete(nsIStreamLoader* aLoader,
     nsFontFaceLoaderContext *loaderCtx 
                        = static_cast<nsFontFaceLoaderContext*> (mLoaderContext);
 
-    nsIPresShell *ps = loaderCtx->mPresContext->PresShell();
-    if (ps) {
-      // Update layout for the presence of the new font.  Since this is
-      // asynchronous, reflows will coalesce.
-      // nsPresContext::FlushUserFontSet does the same thing when we
-      // remove a user font set, for fonts becoming unavailable, or when
-      // we add one, because if we change it dynamically we need to
-      // trigger reflow to cause gfx to request the fonts.
-      ps->StyleChangeReflow();
-      LOG(("fontdownloader (%p) reflow\n", this));
-    }
+    // Update layout for the presence of the new font.  Since this is
+    // asynchronous, reflows will coalesce.
+    loaderCtx->mPresContext->UserFontSetUpdated();
+    LOG(("fontdownloader (%p) reflow\n", this));
   }
 
   return aStatus;
