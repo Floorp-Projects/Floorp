@@ -307,7 +307,13 @@ endif
 	$(NSINSTALL) -D $(DIST)/l10n-stage/$(PKG_PATH)
 	cd $(DIST)/l10n-stage; \
 	  $(MAKE_PACKAGE)
-	# packaging done, undo l10n stuff
+ifdef MOZ_MAKE_COMPLETE_MAR
+	$(MAKE) -C $(DEPTH)/tools/update-packaging full-update AB_CD=$(AB_CD) \
+	  MOZ_PKG_PRETTYNAMES=$(MOZ_PKG_PRETTYNAMES) \
+	  PACKAGE_BASE_DIR="$(_ABS_DIST)/l10n-stage" \
+	  DIST="$(_ABS_DIST)"
+endif
+# packaging done, undo l10n stuff
 ifneq (en,$(AB))
 ifneq (,$(filter mac cocoa,$(MOZ_WIDGET_TOOLKIT)))
 	mv $(_ABS_DIST)/l10n-stage/$(MOZ_PKG_APPNAME)/$(_APPNAME)/Contents/Resources/$(AB).lproj $(_ABS_DIST)/l10n-stage/$(MOZ_PKG_APPNAME)/$(_APPNAME)/Contents/Resources/en.lproj
@@ -334,10 +340,6 @@ langpack-%: libs-%
 # This is a generic target that will make a langpack, repack ZIP (+tarball)
 # builds, and repack an installer if applicable. It is called from the
 # tinderbox scripts. Alter it with caution.
-#
-# Note: the last target called here should be repackage-zip-$* as the l10n build
-# systems rely on dist/l10n-stage/<product> to be in place in order to package
-# the complete MAR files.
 
 installers-%: clobber-% langpack-% repackage-win32-installer-% repackage-zip-%
 	@echo "repackaging done"
