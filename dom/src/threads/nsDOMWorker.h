@@ -155,7 +155,7 @@ private:
   PRBool CompileGlobalObject(JSContext* aCx);
 
   PRUint32 NextTimeoutId() {
-    return mNextTimeoutId++;
+    return ++mNextTimeoutId;
   }
 
   nsresult AddFeature(nsDOMWorkerFeature* aFeature,
