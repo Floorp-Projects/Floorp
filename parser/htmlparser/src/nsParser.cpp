@@ -794,6 +794,7 @@ nsParser::Initialize(PRBool aConstructor)
     // nsCOMPtrs
     mObserver = nsnull;
     mParserFilter = nsnull;
+    mUnusedInput.Truncate();
   }
 
   mContinueEvent = nsnull;
@@ -3014,6 +3015,8 @@ nsresult nsParser::Tokenize(PRBool aIsFinalChunk)
 
     mParserContext->mNumConsumed = 0;
 
+    PRBool killSink = PR_FALSE;
+
     WillTokenize(aIsFinalChunk);
     while (NS_SUCCEEDED(result)) {
       mParserContext->mNumConsumed += mParserContext->mScanner->Mark();
@@ -3025,6 +3028,7 @@ nsresult nsParser::Tokenize(PRBool aIsFinalChunk)
           break;
         }
         if (NS_ERROR_HTMLPARSER_STOPPARSING == result) {
+          killSink = PR_TRUE;
           result = Terminate();
           break;
         }
@@ -3040,6 +3044,10 @@ nsresult nsParser::Tokenize(PRBool aIsFinalChunk)
     DidTokenize(aIsFinalChunk);
 
     MOZ_TIMER_STOP(mTokenizeTime);
+
+    if (killSink) {
+      mSink = nsnull;
+    }
   } else {
     result = mInternalState = NS_ERROR_HTMLPARSER_BADTOKENIZER;
   }
