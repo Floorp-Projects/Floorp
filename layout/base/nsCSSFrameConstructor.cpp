@@ -11867,9 +11867,6 @@ nsCSSFrameConstructor::CreateLetterFrame(nsFrameConstructorState& aState,
         // content for a non-text frame (because we want its primary frame to
         // be a text frame).  So use its parent for the first-letter.
         nsIContent* letterContent = aTextContent->GetParent();
-        NS_ASSERTION(!letterContent->IsRootOfNativeAnonymousSubtree(),
-                     "Reframes of this letter frame will mess with the root "
-                     "of a native anonymous content subtree!");
         letterFrame->Init(letterContent, aParentFrame, nsnull);
 
         InitAndRestoreFrame(aState, aTextContent, letterFrame, nsnull,
