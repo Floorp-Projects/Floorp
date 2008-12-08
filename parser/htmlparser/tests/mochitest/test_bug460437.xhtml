@@ -1,0 +1,38 @@
+<html xmlns="http://www.w3.org/1999/xhtml">
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=460437
+-->
+<head>
+  <title>Test for Bug 460437</title>
+  <script type="application/javascript" src="/MochiKit/packed.js"></script>
+  <script type="application/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
+</head>
+<body>
+<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=460437">Mozilla Bug 460437</a>
+<p id="display"><b id="test460437">orig</b></p>
+<div id="content" style="display: none">
+  
+</div>
+<pre id="test">
+<script type="application/javascript">
+<![CDATA[
+
+/** Test for Bug 460437 **/
+
+var s = '<i>invalid</i';
+try {
+  document.getElementById('test460437').innerHTML = s;
+} catch (e) {
+}
+is(document.getElementById('test460437').innerHTML, "", "setting invalid innerHTML should clear it");
+s = '<i>valid</i>';
+document.getElementById('test460437').innerHTML = s;
+is(document.getElementById('test460437').innerHTML, "<i xmlns=\"http://www.w3.org/1999/xhtml\">valid</i>", "failed to set valid innerHTML");
+
+
+]]>
+</script>
+</pre>
+</body>
+</html>
