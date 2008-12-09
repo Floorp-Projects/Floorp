@@ -52,11 +52,85 @@ var db = Cc["@mozilla.org/browser/nav-history-service;1"].
 var prefs = Cc["@mozilla.org/preferences-service;1"].
             getService(Ci.nsIPrefService).
             getBranch("places.");
+var os = Cc["@mozilla.org/observer-service;1"].
+         getService(Ci.nsIObserverService);
 
 const TEST_URI = "http://test.com/";
 
 const kSyncPrefName = "syncDBTableIntervalInSecs";
 const SYNC_INTERVAL = 1;
+const kSyncFinished = "places-sync-finished";
+
+var observer = {
+  visitId: -1,
+  _runCount: 0,
+  _placeId: -1,
+  _lastVisitId: -1,
+  observe: function(aSubject, aTopic, aData) {
+    if (aTopic == kSyncFinished && this.visitId != -1) {
+      // Check the visit
+      new_test_visit_uri_event(this.visitId, TEST_URI, true);
+
+      // sanity check: visitId set by history observer should be the same we
+      // have added
+      do_check_eq(this.visitId, visitIds[this._runCount]);
+
+      if (++this._runCount == 1) {
+        // Get the place_id and pass it on
+        let stmt = db.createStatement(
+          "SELECT place_id " +
+          "FROM moz_historyvisits " +
+          "WHERE id = :visit_id"
+        );
+        stmt.params["visit_id"] = this.visitId;
+        do_check_true(stmt.executeStep());
+        this._placeId = stmt.getInt64(0);
+        this._lastVisitId = this.visitId;
+        stmt.finalize();
+        stmt = null;
+
+        // clear cached value before continue test
+        this.visitId = -1;
+        continue_test();
+      }
+      else if (this._runCount == 2) {
+        do_check_neq(this.visitId, this._lastVisitId);
+        // Get the place_id and check for equality
+        let stmt = db.createStatement(
+          "SELECT place_id " +
+          "FROM moz_historyvisits " +
+          "WHERE id = :visit_id"
+        );
+        stmt.params["visit_id"] = this.visitId;
+        do_check_true(stmt.executeStep());
+        do_check_eq(this._placeId, stmt.getInt64(0));
+        stmt.finalize();
+        stmt = null;
+
+        // remove the observers
+        os.removeObserver(this, kSyncFinished);
+        hs.removeObserver(historyObserver, false);
+        do_test_finished();
+      }
+      else
+        do_throw("bad runCount!");
+    }
+  }
+}
+os.addObserver(observer, kSyncFinished, false);
+
+// Used to update observer visitId
+var historyObserver = {
+  onVisit: function(aURI, aVisitId, aTime, aSessionId, aReferringId,
+                    aTransitionType, aAdded) {
+    do_check_true(aVisitId > 0);
+    observer.visitId = aVisitId;
+  }
+}
+hs.addObserver(historyObserver, false);
+
+// used for sanity checks
+var visitIds = [];
 
 function run_test()
 {
@@ -64,64 +138,15 @@ function run_test()
   prefs.setIntPref(kSyncPrefName, SYNC_INTERVAL);
 
   // Now add the first visit
-  let id = hs.addVisit(uri(TEST_URI), Date.now() * 1000, null,
-                       hs.TRANSITION_TYPED, false, 0);
+  visitIds[0] = hs.addVisit(uri(TEST_URI), Date.now() * 1000, null,
+                            hs.TRANSITION_TYPED, false, 0);
 
-  // Check the visit, but after enough time has passed for the DB flush service
-  // to have fired it's timer.
-  let timer = Cc["@mozilla.org/timer;1"].createInstance(Ci.nsITimer);
-  timer.initWithCallback({
-    notify: function(aTimer)
-    {
-      new_test_visit_uri_event(id, TEST_URI, true);
-
-      // Get the place_id and pass it on
-      let db = hs.QueryInterface(Ci.nsPIPlacesDatabase).DBConnection;
-      let stmt = db.createStatement(
-        "SELECT place_id " +
-        "FROM moz_historyvisits " +
-        "WHERE id = ?"
-      );
-      stmt.bindInt64Parameter(0, id);
-      do_check_true(stmt.executeStep());
-      continue_test(id, stmt.getInt64(0));
-      stmt.finalize();
-      stmt = null;
-    }
-  }, (SYNC_INTERVAL * 1000) * 2, Ci.nsITimer.TYPE_ONE_SHOT);
   do_test_pending();
 }
 
-function continue_test(aLastVisitId, aPlaceId)
+function continue_test()
 {
   // Now we add another visit
-  let id = hs.addVisit(uri(TEST_URI), Date.now() * 1000, null,
-                       hs.TRANSITION_TYPED, false, 0);
-  do_check_neq(aLastVisitId, id);
-
-  // Check the visit, but after enough time has passed for the DB flush service
-  // to have fired it's timer.
-  let timer = Cc["@mozilla.org/timer;1"].createInstance(Ci.nsITimer);
-  timer.initWithCallback({
-    notify: function(aTimer)
-    {
-      new_test_visit_uri_event(id, TEST_URI, true);
-
-      // Check to make sure we have the same place_id
-      let db = hs.QueryInterface(Ci.nsPIPlacesDatabase).DBConnection;
-      let stmt = db.createStatement(
-        "SELECT * " +
-        "FROM moz_historyvisits " +
-        "WHERE id = ?1 " +
-        "AND place_id = ?2"
-      );
-      stmt.bindInt64Parameter(0, id);
-      stmt.bindInt64Parameter(1, aPlaceId);
-      do_check_true(stmt.executeStep());
-      stmt.finalize();
-      stmt = null;
-
-      finish_test();
-    }
-  }, (SYNC_INTERVAL * 1000) * 2, Ci.nsITimer.TYPE_ONE_SHOT);
+  visitIds[1] = hs.addVisit(uri(TEST_URI), Date.now() * 1000, null,
+                            hs.TRANSITION_TYPED, false, 0);
 }
