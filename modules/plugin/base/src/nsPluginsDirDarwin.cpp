@@ -75,29 +75,29 @@ typedef NS_NPAPIPLUGIN_CALLBACK(OSErr, BP_GETSUPPORTEDMIMETYPES) (BPSupportedMIM
 */
 static CFBundleRef getPluginBundle(const char* path)
 {
-    CFBundleRef bundle = NULL;
-    CFStringRef pathRef = CFStringCreateWithCString(NULL, path, kCFStringEncodingUTF8);
-    if (pathRef) {
-        CFURLRef bundleURL = CFURLCreateWithFileSystemPath(NULL, pathRef, kCFURLPOSIXPathStyle, true);
-        if (bundleURL) {
-            bundle = CFBundleCreate(NULL, bundleURL);
-            CFRelease(bundleURL);
-        }
-        CFRelease(pathRef);
+  CFBundleRef bundle = NULL;
+  CFStringRef pathRef = ::CFStringCreateWithCString(NULL, path, kCFStringEncodingUTF8);
+  if (pathRef) {
+    CFURLRef bundleURL = ::CFURLCreateWithFileSystemPath(NULL, pathRef, kCFURLPOSIXPathStyle, true);
+    if (bundleURL) {
+      bundle = ::CFBundleCreate(NULL, bundleURL);
+      ::CFRelease(bundleURL);
     }
-    return bundle;
+    ::CFRelease(pathRef);
+  }
+  return bundle;
 }
 
 static OSErr toFSSpec(nsIFile* file, FSSpec& outSpec)
 {
-    nsCOMPtr<nsILocalFileMac> lfm = do_QueryInterface(file);
-    if (!lfm)
-        return -1;
-    FSSpec foo;
-    lfm->GetFSSpec(&foo);
-    outSpec = foo;
+  nsCOMPtr<nsILocalFileMac> lfm = do_QueryInterface(file);
+  if (!lfm)
+    return -1;
+  FSSpec foo;
+  lfm->GetFSSpec(&foo);
+  outSpec = foo;
 
-    return NS_OK;
+  return NS_OK;
 }
 
 static nsresult toCFURLRef(nsIFile* file, CFURLRef& outURL)
@@ -166,10 +166,10 @@ PRBool nsPluginsDir::IsPluginFile(nsIFile* file)
       CFURLRef executableURL = CFBundleCopyExecutableURL(pluginBundle);
       if (executableURL) {
         isPluginFile = IsLoadablePlugin(executableURL);
-        CFRelease(executableURL);
+        ::CFRelease(executableURL);
       }
     }
-    CFRelease(pluginBundle);
+    ::CFRelease(pluginBundle);
   }
   else {
     LSItemInfoRecord info;
@@ -183,7 +183,7 @@ PRBool nsPluginsDir::IsPluginFile(nsIFile* file)
     }
   }
   
-  CFRelease(pluginURL);
+  ::CFRelease(pluginURL);
   return isPluginFile;
 }
 
@@ -279,35 +279,35 @@ nsPluginFile::~nsPluginFile() {}
  */
 nsresult nsPluginFile::LoadPlugin(PRLibrary* &outLibrary)
 {
-    const char* path;
+  const char* path;
 
-    if (!mPlugin)
-        return NS_ERROR_NULL_POINTER;
+  if (!mPlugin)
+    return NS_ERROR_NULL_POINTER;
 
-    nsCAutoString temp;
-    mPlugin->GetNativePath(temp);
-    path = temp.get();
+  nsCAutoString temp;
+  mPlugin->GetNativePath(temp);
+  path = temp.get();
 
-    outLibrary = PR_LoadLibrary(path);
-    pLibrary = outLibrary;
-    if (!outLibrary) {
-        return NS_ERROR_FAILURE;
-    }
+  outLibrary = PR_LoadLibrary(path);
+  pLibrary = outLibrary;
+  if (!outLibrary) {
+    return NS_ERROR_FAILURE;
+  }
 #ifdef DEBUG
-    printf("[loaded plugin %s]\n", path);
+  printf("[loaded plugin %s]\n", path);
 #endif
-    return NS_OK;
+  return NS_OK;
 }
 
 static char* p2cstrdup(StringPtr pstr)
 {
-    int len = pstr[0];
-    char* cstr = static_cast<char*>(NS_Alloc(len + 1));
-    if (cstr) {
-        ::BlockMoveData(pstr + 1, cstr, len);
-        cstr[len] = '\0';
-    }
-    return cstr;
+  int len = pstr[0];
+  char* cstr = static_cast<char*>(NS_Alloc(len + 1));
+  if (cstr) {
+    ::BlockMoveData(pstr + 1, cstr, len);
+    cstr[len] = '\0';
+  }
+  return cstr;
 }
 
 static char* GetNextPluginStringFromHandle(Handle h, short *index)
@@ -319,9 +319,9 @@ static char* GetNextPluginStringFromHandle(Handle h, short *index)
 
 static char* GetPluginString(short id, short index)
 {
-    Str255 str;
-    ::GetIndString(str, id, index);
-    return p2cstrdup(str);
+  Str255 str;
+  ::GetIndString(str, id, index);
+  return p2cstrdup(str);
 }
 
 // Opens the resource fork for the plugin
@@ -339,7 +339,7 @@ static short OpenPluginResourceFork(nsIFile *pluginFile)
     CFBundleRef bundle = getPluginBundle(path.get());
     if (bundle) {
       refNum = CFBundleOpenBundleResourceMap(bundle);
-      CFRelease(bundle);
+      ::CFRelease(bundle);
     }
   }
   return refNum;
