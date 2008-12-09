@@ -78,13 +78,6 @@ Cu.import("resource://weave/oauth.js");
 Cu.import("resource://weave/identity.js");
 Cu.import("resource://weave/async.js");
 Cu.import("resource://weave/clientData.js");
-Cu.import("resource://weave/engines/bookmarks.js");
-/*Cu.import("resource://weave/engines/cookies.js");
-Cu.import("resource://weave/engines/history.js");
-Cu.import("resource://weave/engines/passwords.js");
-Cu.import("resource://weave/engines/forms.js");
-Cu.import("resource://weave/engines/tabs.js");
-Cu.import("resource://weave/engines/input.js");*/
 
 Function.prototype.async = Async.sugar;
 
@@ -104,14 +97,7 @@ Cu.import("resource://weave/stores.js", Weave);
 Cu.import("resource://weave/syncCores.js", Weave);
 Cu.import("resource://weave/engines.js", Weave);
 Cu.import("resource://weave/oauth.js", Weave);
-Cu.import("resource://weave/service.js", Weave);
-Cu.import("resource://weave/engines/bookmarks.js", Weave);
-/*Cu.import("resource://weave/engines/cookies.js", Weave);
-Cu.import("resource://weave/engines/passwords.js", Weave);
-Cu.import("resource://weave/engines/history.js", Weave);
-Cu.import("resource://weave/engines/forms.js", Weave);
-Cu.import("resource://weave/engines/tabs.js", Weave);
-Cu.import("resource://weave/engines/input.js", Weave);*/
+Cu.import("resource://weave/service.js", Weave); // ??
 
 Utils.lazy(Weave, 'Service', WeaveSvc);
 
@@ -560,16 +546,16 @@ WeaveSvc.prototype = {
     //yield ClientData.refresh(self.cb);
 
     let engines = Engines.getAll();
-    for (let i = 0; i < engines.length; i++) {
+    for each (let engine in engines) {
       if (this.cancelRequested)
         continue;
 
-      if (!engines[i].enabled)
+      if (!engine.enabled)
         continue;
 
-      this._log.debug("Syncing engine " + engines[i].name);
-      yield this._notify(engines[i].name + "-engine:sync", "",
-                         this._syncEngine, engines[i]).async(this, self.cb);
+      this._log.debug("Syncing engine " + engine.name);
+      yield this._notify(engine.name + "-engine:sync", "",
+                         this._syncEngine, engine).async(this, self.cb);
     }
 
     if (this._syncError) {

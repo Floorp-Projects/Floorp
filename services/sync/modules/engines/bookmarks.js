@@ -67,8 +67,8 @@ Cu.import("resource://weave/resource.js");
 
 Function.prototype.async = Async.sugar;
 
-function BookmarksEngine(pbeId) {
-  this._init(pbeId);
+function BookmarksEngine() {
+  this._init();
 }
 BookmarksEngine.prototype = {
   __proto__: SyncEngine.prototype,
@@ -76,7 +76,7 @@ BookmarksEngine.prototype = {
 
   get name() "bookmarks",
   get displayName() "Bookmarks",
-  get logName() "BmkEngine",
+  get logName() "Bookmarks",
   get serverPrefix() "user-data/bookmarks/",
 
   get _store() {

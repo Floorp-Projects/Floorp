@@ -166,7 +166,7 @@ Engine.prototype = {
     try { level = Utils.prefs.getCharPref(levelPref); }
     catch (e) { /* ignore unset prefs */ }
 
-    this._log = Log4Moz.repository.getLogger("Service." + this.logName);
+    this._log = Log4Moz.repository.getLogger("Engine." + this.logName);
     this._log.level = Log4Moz.Level[level];
     this._osPrefix = "weave:" + this.name + ":";
 
