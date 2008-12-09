@@ -1,0 +1,32 @@
+# package used only for valid overlaying and overrides
+content good-package bar/
+
+# UI Resource URIs (should not work)
+content moz-protocol-ui-resource moz-protocol-ui-resource://foo/
+locale moz-protocol-ui-resource en-us moz-protocol-ui-resource://foo/
+skin moz-protocol-ui-resource skin1 moz-protocol-ui-resource://foo/
+override chrome://good-package/content/override-moz-protocol-ui-resource.xul moz-protocol-ui-resource://foo/
+resource moz-protocol-ui-resource moz-protocol-ui-resource://foo/
+
+# Local file URIs (should not work)
+content moz-protocol-local-file moz-protocol-local-file://foo/
+locale moz-protocol-local-file en-us moz-protocol-local-file://foo/
+skin moz-protocol-local-file skin1 moz-protocol-local-file://foo/
+override chrome://good-package/content/override-moz-protocol-local-file.xul moz-protocol-local-file://foo/
+resource moz-protocol-local-file moz-protocol-local-file://foo/
+
+# Loadable by anyone URIs (should not work)
+content moz-protocol-loadable-by-anyone moz-protocol-loadable-by-anyone://foo/
+locale moz-protocol-loadable-by-anyone en-us moz-protocol-loadable-by-anyone://foo/
+skin moz-protocol-loadable-by-anyone skin1 moz-protocol-loadable-by-anyone://foo/
+override chrome://good-package/content/override-moz-protocol-loadable-by-anyone.xul moz-protocol-loadable-by-anyone://foo/
+resource moz-protocol-loadable-by-anyone moz-protocol-loadable-by-anyone://foo/
+
+# Working protocols should be after this point.  Failing ones should be before.
+
+# Local resource (should work)
+content moz-protocol-local-resource moz-protocol-local-resource://foo/
+locale moz-protocol-local-resource en-us moz-protocol-local-resource://foo/
+skin moz-protocol-local-resource skin1 moz-protocol-local-resource://foo/
+override chrome://good-package/content/override-moz-protocol-local-resource.xul moz-protocol-local-resource://foo/
+resource moz-protocol-local-resource moz-protocol-local-resource://foo/
