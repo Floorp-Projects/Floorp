@@ -74,6 +74,14 @@ try {
   do_throw("Could not get tagging service\n");
 }
 
+// Get annotations service
+try {
+  var annosvc = Cc["@mozilla.org/browser/annotation-service;1"].
+                getService(Ci.nsIAnnotationService);
+} catch(ex) {
+  do_throw("Could not get annotations service\n");
+}
+
 // create and add bookmarks observer
 var observer = {
   onBeginUpdateBatch: function() {
@@ -130,20 +138,18 @@ function run_test() {
 
   const DESCRIPTION_ANNO = "bookmarkProperties/description";
   var testDescription = "this is my test description";
-  var annotationService = Cc["@mozilla.org/browser/annotation-service;1"].
-                          getService(Ci.nsIAnnotationService);
 
   //Test creating a folder with a description
   var annos = [{ name: DESCRIPTION_ANNO,
-                 type: Ci.nsIAnnotationService.TYPE_STRING,
+                 type: annosvc.TYPE_STRING,
                 flags: 0,
                 value: testDescription,
-              expires: Ci.nsIAnnotationService.EXPIRE_NEVER }];
+              expires: annosvc.EXPIRE_NEVER }];
   var txn1 = ptSvc.createFolder("Testing folder", root, bmStartIndex, annos);
   txn1.doTransaction();
   var folderId = bmsvc.getChildFolder(root, "Testing folder");
   do_check_eq(testDescription, 
-              annotationService.getItemAnnotation(folderId, DESCRIPTION_ANNO));
+              annosvc.getItemAnnotation(folderId, DESCRIPTION_ANNO));
   do_check_eq(observer._itemAddedIndex, bmStartIndex);
   do_check_eq(observer._itemAddedParent, root);
   do_check_eq(observer._itemAddedId, folderId);
@@ -408,34 +414,83 @@ function run_test() {
   do_check_eq(observer._itemChangedProperty, "keyword");
   do_check_eq(observer._itemChangedValue, ""); 
 
-  var txn12 = ptSvc.createLivemark(uri("http://feeduri.com"), uri("http://siteuri.com"), "Livemark1", root);
+  // Testing create livemark
+  var txn12 = ptSvc.createLivemark(uri("http://feeduri.com"),
+                                   uri("http://siteuri.com"),
+                                   "Livemark1", root);
   txn12.doTransaction();
-  do_check_true(lmsvc.isLivemark(observer._itemAddedId));
-  do_check_eq(lmsvc.getSiteURI(observer._itemAddedId).spec, "http://siteuri.com/");
-  do_check_eq(lmsvc.getFeedURI(observer._itemAddedId).spec, "http://feeduri.com/");
   var lvmkId = observer._itemAddedId;
+  do_check_true(lmsvc.isLivemark(lvmkId));
+  do_check_eq(lmsvc.getSiteURI(lvmkId).spec, "http://siteuri.com/");
+  do_check_eq(lmsvc.getFeedURI(lvmkId).spec, "http://feeduri.com/");
+  txn12.undoTransaction();
+  do_check_false(lmsvc.isLivemark(lvmkId));
+  txn12.redoTransaction();
+  lvmkId = observer._itemAddedId;
+  do_check_true(lmsvc.isLivemark(lvmkId));
+  do_check_eq(lmsvc.getSiteURI(lvmkId).spec, "http://siteuri.com/");
+  do_check_eq(lmsvc.getFeedURI(lvmkId).spec, "http://feeduri.com/");
 
   // editLivemarkSiteURI
-  var txn13 = ptSvc.editLivemarkSiteURI(lvmkId, uri("http://NEWsiteuri.com/"));
+  var txn13 = ptSvc.editLivemarkSiteURI(lvmkId, uri("http://new-siteuri.com/"));
   txn13.doTransaction();
   do_check_eq(observer._itemChangedId, lvmkId);
   do_check_eq(observer._itemChangedProperty, "livemark/siteURI");
-
+  do_check_eq(lmsvc.getSiteURI(lvmkId).spec, "http://new-siteuri.com/");
   txn13.undoTransaction();
   do_check_eq(observer._itemChangedId, lvmkId);
   do_check_eq(observer._itemChangedProperty, "livemark/siteURI");
   do_check_eq(observer._itemChangedValue, "");
+  do_check_eq(lmsvc.getSiteURI(lvmkId).spec, "http://siteuri.com/");
+  txn13.redoTransaction();
+  do_check_eq(observer._itemChangedId, lvmkId);
+  do_check_eq(observer._itemChangedProperty, "livemark/siteURI");
+  do_check_eq(lmsvc.getSiteURI(lvmkId).spec, "http://new-siteuri.com/");
+  txn13.undoTransaction();
+  do_check_eq(observer._itemChangedId, lvmkId);
+  do_check_eq(observer._itemChangedProperty, "livemark/siteURI");
+  do_check_eq(observer._itemChangedValue, "");
+  do_check_eq(lmsvc.getSiteURI(lvmkId).spec, "http://siteuri.com/");
 
   // editLivemarkFeedURI
-  var txn14 = ptSvc.editLivemarkFeedURI(lvmkId, uri("http://NEWfeeduri.com/"));
+  var txn14 = ptSvc.editLivemarkFeedURI(lvmkId, uri("http://new-feeduri.com/"));
   txn14.doTransaction();
   do_check_eq(observer._itemChangedId, lvmkId);
   do_check_eq(observer._itemChangedProperty, "livemark/feedURI");
-
+  do_check_eq(lmsvc.getFeedURI(lvmkId).spec, "http://new-feeduri.com/");
   txn14.undoTransaction();
   do_check_eq(observer._itemChangedId, lvmkId);
   do_check_eq(observer._itemChangedProperty, "livemark/feedURI");
   do_check_eq(observer._itemChangedValue, "");
+  do_check_eq(lmsvc.getFeedURI(lvmkId).spec, "http://feeduri.com/");
+  txn14.redoTransaction();
+  do_check_eq(observer._itemChangedId, lvmkId);
+  do_check_eq(observer._itemChangedProperty, "livemark/feedURI");
+  do_check_eq(observer._itemChangedValue, "");
+  do_check_eq(lmsvc.getFeedURI(lvmkId).spec, "http://new-feeduri.com/");
+  txn14.undoTransaction();
+  do_check_eq(observer._itemChangedId, lvmkId);
+  do_check_eq(observer._itemChangedProperty, "livemark/feedURI");
+  do_check_eq(observer._itemChangedValue, "");
+  do_check_eq(lmsvc.getFeedURI(lvmkId).spec, "http://feeduri.com/");
+
+  // Testing remove livemark
+  // Set an annotation and check that we don't lose it on undo
+  annosvc.setItemAnnotation(lvmkId, "livemark/testAnno", "testAnno",
+                            0, annosvc.EXPIRE_NEVER);
+  var txn15 = ptSvc.removeItem(lvmkId);
+  txn15.doTransaction();
+  do_check_false(lmsvc.isLivemark(lvmkId));
+  do_check_eq(observer._itemRemovedId, lvmkId);
+  txn15.undoTransaction();
+  lvmkId = observer._itemAddedId;
+  do_check_true(lmsvc.isLivemark(lvmkId));
+  do_check_eq(lmsvc.getSiteURI(lvmkId).spec, "http://siteuri.com/");
+  do_check_eq(lmsvc.getFeedURI(lvmkId).spec, "http://feeduri.com/");
+  do_check_eq(annosvc.getItemAnnotation(lvmkId, "livemark/testAnno"), "testAnno");
+  txn15.redoTransaction();
+  do_check_false(lmsvc.isLivemark(lvmkId));
+  do_check_eq(observer._itemRemovedId, lvmkId);
 
   // Test setLoadInSidebar
   var txn16 = ptSvc.setLoadInSidebar(bkmk1Id, true);
@@ -505,10 +560,10 @@ function run_test() {
   var postDataId = (bmsvc.getBookmarkIdsForURI(postDataURI,{}))[0];
   var postDataTxn = ptSvc.editBookmarkPostData(postDataId, postData);
   postDataTxn.doTransaction();
-  do_check_true(annotationService.itemHasAnnotation(postDataId, POST_DATA_ANNO))
-  do_check_eq(annotationService.getItemAnnotation(postDataId, POST_DATA_ANNO), postData);
+  do_check_true(annosvc.itemHasAnnotation(postDataId, POST_DATA_ANNO))
+  do_check_eq(annosvc.getItemAnnotation(postDataId, POST_DATA_ANNO), postData);
   postDataTxn.undoTransaction();
-  do_check_false(annotationService.itemHasAnnotation(postDataId, POST_DATA_ANNO))
+  do_check_false(annosvc.itemHasAnnotation(postDataId, POST_DATA_ANNO))
 
   // Test editing item date added
   var oldAdded = bmsvc.getItemDateAdded(bkmk1Id);
