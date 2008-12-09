@@ -30,7 +30,7 @@ function firstTimeThrough(request, buffer)
 {
   do_check_eq(buffer, responseBody);
   var chan = make_channel(randomURI);
-  chan.loadFlags |= Ci.nsICachingChannel.LOAD_ONLY_FROM_CACHE;
+  chan.loadFlags |= Ci.nsICachingChannel.LOAD_FROM_CACHE;
   chan.asyncOpen(new ChannelListener(finish_test, null), null);
 }
 
