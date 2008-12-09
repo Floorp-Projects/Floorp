@@ -35,7 +35,9 @@ function testBrokenCert() {
 function testExpertPref() {
   
   var expertDiv = gBrowser.contentWindow.document.getElementById("expertContent");
+  var technicalDiv = gBrowser.contentWindow.document.getElementById("technicalContent");
   ok(!expertDiv.hasAttribute("collapsed"), "Expert content should not be collapsed with the expert mode pref set");
+  ok(!technicalDiv.hasAttribute("collapsed"), "Technical content should not be collapsed with the expert mode pref set");
   
   // Clean up
   gBrowser.removeCurrentTab();
