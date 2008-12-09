@@ -230,7 +230,7 @@ script_compile_sub(JSContext *cx, JSObject *obj, uintN argc, jsval *argv,
     }
 
     /* Compile using the caller's scope chain, which js_Invoke passes to fp. */
-    caller = JS_GetScriptedCaller(cx, cx->fp);
+    caller = js_GetScriptedCaller(cx, NULL);
     JS_ASSERT(!caller || cx->fp->scopeChain == caller->scopeChain);
 
     if (caller) {
@@ -311,7 +311,7 @@ script_exec_sub(JSContext *cx, JSObject *obj, uintN argc, jsval *argv,
                 jsval *rval)
 {
     JSObject *scopeobj, *parent;
-    JSStackFrame *fp, *caller;
+    JSStackFrame *caller;
     JSPrincipals *principals;
     JSScript *script;
     JSBool ok;
@@ -338,8 +338,7 @@ script_exec_sub(JSContext *cx, JSObject *obj, uintN argc, jsval *argv,
      * a lightweight function, we will need to get a Call object representing
      * its frame, to act as the var object and scope chain head.
      */
-    fp = cx->fp;
-    caller = JS_GetScriptedCaller(cx, fp);
+    caller = js_GetScriptedCaller(cx, NULL);
     if (caller && !caller->varobj) {
         /* Called from a lightweight function. */
         JS_ASSERT(caller->fun && !JSFUN_HEAVYWEIGHT_TEST(caller->fun->flags));
@@ -903,7 +902,7 @@ static JSBool
 Script(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
 {
     /* If not constructing, replace obj with a new Script object. */
-    if (!(cx->fp->flags & JSFRAME_CONSTRUCTING)) {
+    if (!JS_IsConstructing(cx)) {
         obj = js_NewObject(cx, &js_ScriptClass, NULL, NULL, 0);
         if (!obj)
             return JS_FALSE;
@@ -1601,7 +1600,9 @@ js_DestroyScript(JSContext *cx, JSScript *script)
 #endif
 
     if (!cx->runtime->gcRunning) {
-        if (!(cx->fp && (cx->fp->flags & JSFRAME_EVAL))) {
+        JSStackFrame *fp = js_GetTopStackFrame(cx);
+
+        if (!(fp && (fp->flags & JSFRAME_EVAL))) {
 #ifdef CHECK_SCRIPT_OWNER
             JS_ASSERT(script->owner == cx->thread);
 #endif

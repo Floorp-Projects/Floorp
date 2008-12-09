@@ -345,7 +345,7 @@ XPCCallContext::~XPCCallContext()
             // Don't clear newborns if JS frames (compilation or execution)
             // are active!  Doing so violates ancient invariants in the JS
             // engine, and it's not necessary to fix JS component leaks.
-            if(!mJSContext->fp)
+            if(!JS_IsRunning(mJSContext))
                 JS_ClearNewbornRoots(mJSContext);
         }
     }
