@@ -146,6 +146,7 @@ CSS_KEY(-moz-mac-menuselect, _moz_mac_menuselect)
 CSS_KEY(-moz-mac-menushadow, _moz_mac_menushadow)
 CSS_KEY(-moz-mac-menutextdisable, _moz_mac_menutextdisable)
 CSS_KEY(-moz-mac-menutextselect, _moz_mac_menutextselect)
+CSS_KEY(-moz-mac-disabledtoolbartext, _moz_mac_disabledtoolbartext)
 CSS_KEY(-moz-mac-secondaryhighlight, _moz_mac_secondaryhighlight)
 CSS_KEY(-moz-malayalam, _moz_malayalam)
 CSS_KEY(-moz-marker, _moz_marker) // Disabled because not supported correctly.
