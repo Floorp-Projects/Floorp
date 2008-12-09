@@ -115,6 +115,11 @@ placesTransactionsService.prototype = {
       var uri = PlacesUtils.bookmarks.getBookmarkURI(id);
       return this.untagURI(uri, [parent]);
     }
+    
+    // if the item is a livemark container we will not save its children and
+    // will use createLivemark to undo.
+    if (PlacesUtils.livemarks.isLivemark(id))
+      return new placesRemoveLivemarkTransaction(id);
 
     return new placesRemoveItemTransaction(id);
   },
@@ -423,6 +428,7 @@ placesCreateSeparatorTransactions.prototype = {
 function placesCreateLivemarkTransactions(aFeedURI, aSiteURI, aName,
                                           aContainer, aIndex,
                                           aAnnotations) {
+  this.redoTransaction = this.doTransaction;
   this._feedURI = aFeedURI;
   this._siteURI = aSiteURI;
   this._name = aName;
@@ -448,6 +454,48 @@ placesCreateLivemarkTransactions.prototype = {
 
   undoTransaction: function PCLT_undoTransaction() {
     PlacesUtils.bookmarks.removeFolder(this._id);
+  }
+};
+
+function placesRemoveLivemarkTransaction(aFolderId) {
+  this.redoTransaction = this.doTransaction;
+  this._id = aFolderId;
+  this._title = PlacesUtils.bookmarks.getItemTitle(this._id);
+  this._container = PlacesUtils.bookmarks.getFolderIdForItem(this._id);
+  var annos = PlacesUtils.getAnnotationsForItem(this._id);
+  // Exclude livemark service annotations, those will be recreated automatically
+  var annosToExclude = ["livemark/feedURI",
+                        "livemark/siteURI",
+                        "livemark/expiration",
+                        "livemark/loadfailed",
+                        "livemark/loading"];
+  this._annotations = annos.filter(function(aValue, aIndex, aArray) {
+      return annosToExclude.indexOf(aValue.name) == -1;
+    });
+  this._feedURI = PlacesUtils.livemarks.getFeedURI(this._id);
+  this._siteURI = PlacesUtils.livemarks.getSiteURI(this._id);
+  this._dateAdded = PlacesUtils.bookmarks.getItemDateAdded(this._id);
+  this._lastModified = PlacesUtils.bookmarks.getItemLastModified(this._id);
+}
+
+placesRemoveLivemarkTransaction.prototype = {
+  __proto__: placesBaseTransaction.prototype,
+
+  doTransaction: function PRLT_doTransaction() {
+    this._index = PlacesUtils.bookmarks.getItemIndex(this._id);
+    PlacesUtils.bookmarks.removeItem(this._id);
+  },
+
+  undoTransaction: function PRLT_undoTransaction() {
+    this._id = PlacesUtils.livemarks.createLivemark(this._container,
+                                                    this._title,
+                                                    this._siteURI,
+                                                    this._feedURI,
+                                                    this._index);
+    PlacesUtils.bookmarks.setItemDateAdded(this._id, this._dateAdded);
+    PlacesUtils.bookmarks.setItemLastModified(this._id, this._lastModified);
+    // Restore annotations
+    PlacesUtils.setAnnotationsForItem(this._id, this._annotations);
   }
 };
 
