@@ -89,12 +89,12 @@ function test_succeeded_mapping(namespace, target)
 {
   try {
     do_check_true(rph.hasSubstitution(namespace));
-    var thistarget = target + "/test.js";
-    var uri = gIOS.newURI("resource://" + namespace + "/test.js",
-                          null, null);
-    do_check_eq(rph.resolveURI(uri), thistarget);
+    var uri = gIOS.newURI("resource://" + namespace, null, null);
+    dump("### checking for " + target + ", getting " + rph.resolveURI(uri) + "\n");
+    do_check_eq(rph.resolveURI(uri), target);
   }
   catch (ex) {
+    dump(ex + "\n");
     do_throw(namespace);
   }
 }
@@ -107,9 +107,8 @@ function test_failed_mapping(namespace)
 function run_test()
 {
   var data = gIOS.newFileURI(do_get_file("chrome/test/unit/data")).spec;
-  test_succeeded_mapping("test1", data + "test1");
-  test_succeeded_mapping("test2", "http://www.mozilla.org");
-  test_succeeded_mapping("test3", "jar:" + data + "test3.jar!/resources");
+  test_succeeded_mapping("test1", data + "test1/");
+  test_succeeded_mapping("test3", "jar:" + data + "test3.jar!/resources/");
   test_failed_mapping("test4");
-  test_succeeded_mapping("test5", data + "test5");
+  test_succeeded_mapping("test5", data + "test5/");
 }
