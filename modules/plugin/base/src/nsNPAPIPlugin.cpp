@@ -2110,8 +2110,16 @@ _setvalue(NPP npp, NPPVariable variable, void *result)
     // actual pointer value is checked rather than its content
     // when passing booleans
     case NPPVpluginWindowBool: {
+#ifdef XP_MACOSX
+      // This setting doesn't apply to OS X (only to Windows and Unix/Linux).
+      // See https://developer.mozilla.org/En/NPN_SetValue#section_5.  Return
+      // NPERR_NO_ERROR here to conform to other browsers' behavior on OS X
+      // (e.g. Safari and Opera).
+      return NPERR_NO_ERROR;
+#else
       NPBool bWindowless = (result == nsnull);
       return inst->SetWindowless(bWindowless);
+#endif
     }
 
     case NPPVpluginTransparentBool: {
