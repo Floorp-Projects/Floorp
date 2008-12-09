@@ -375,10 +375,7 @@ private:
 nsresult nsPluginFile::GetPluginInfo(nsPluginInfo& info)
 {
   // clear out the info, except for the first field.
-  memset(&info.fName, 0, sizeof(info) - sizeof(PRUint32));
-
-  if (info.fPluginInfoSize < sizeof(nsPluginInfo))
-    return NS_ERROR_FAILURE;
+  memset(&info, 0, sizeof(info));
 
   // First open up resource we can use to get plugin info.
 
@@ -492,9 +489,6 @@ nsresult nsPluginFile::GetPluginInfo(nsPluginInfo& info)
     }
   }
 
-  //XXX FIXME: past this point some (unlikely) error cases will leak memory
-  // (leak is bug 462023)
-
   // Fill in the info struct based on the data in the BPSupportedMIMETypes struct
   int variantCount = info.fVariantCount;
   info.fMimeTypeArray = static_cast<char**>(NS_Alloc(variantCount * sizeof(char*)));
@@ -529,22 +523,20 @@ nsresult nsPluginFile::GetPluginInfo(nsPluginInfo& info)
 
 nsresult nsPluginFile::FreePluginInfo(nsPluginInfo& info)
 {
-  if (info.fPluginInfoSize <= sizeof(nsPluginInfo)) {
-    NS_Free(info.fName);
-    NS_Free(info.fDescription);
-    int variantCount = info.fVariantCount;
-    for (int i = 0; i < variantCount; i++) {
-      NS_Free(info.fMimeTypeArray[i]);
-      NS_Free(info.fExtensionArray[i]);
-      NS_Free(info.fMimeDescriptionArray[i]);
-    }
-    NS_Free(info.fMimeTypeArray);
-    NS_Free(info.fMimeDescriptionArray);
-    NS_Free(info.fExtensionArray);
-    NS_Free(info.fFileName);
-    NS_Free(info.fFullPath);
-    NS_Free(info.fVersion);
+  NS_Free(info.fName);
+  NS_Free(info.fDescription);
+  int variantCount = info.fVariantCount;
+  for (int i = 0; i < variantCount; i++) {
+    NS_Free(info.fMimeTypeArray[i]);
+    NS_Free(info.fExtensionArray[i]);
+    NS_Free(info.fMimeDescriptionArray[i]);
   }
+  NS_Free(info.fMimeTypeArray);
+  NS_Free(info.fMimeDescriptionArray);
+  NS_Free(info.fExtensionArray);
+  NS_Free(info.fFileName);
+  NS_Free(info.fFullPath);
+  NS_Free(info.fVersion);
 
   return NS_OK;
 }
