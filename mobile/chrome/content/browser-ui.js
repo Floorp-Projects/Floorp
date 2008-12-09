@@ -273,15 +273,11 @@ var BrowserUI = {
     if (window != aEvent.target) {
       return
     }
-    var rect = document.getElementById("browser-container").getBoundingClientRect();
-    var containerW = rect.right - rect.left;
-    var containerH = rect.bottom - rect.top;
 
-    var toolbar = document.getElementById("toolbar-main");
-    var toolbarH = toolbar.boxObject.height;
-
+    var toolbarH = document.getElementById("toolbar-main").boxObject.height;
     var popup = document.getElementById("popup_autocomplete");
-    popup.height = containerH - toolbarH;
+    popup.height = window.innerHeight - toolbarH;
+    popup.width = window.innerWidth;
 
     // XXX need to handle make some of these work again
 /*
@@ -303,7 +299,6 @@ var BrowserUI = {
     this._edit = document.getElementById("urlbar-edit");
     this._edit.addEventListener("blur", this, false);
     this._edit.addEventListener("keypress", this, true);
-    this._edit.addEventListener("input", this, false);
     this._throbber = document.getElementById("urlbar-throbber");
     this._favicon = document.getElementById("urlbar-favicon");
     this._favicon.addEventListener("error", this, false);
@@ -425,10 +420,9 @@ var BrowserUI = {
     this.show(UIMODE_URLVIEW);
   },
 
-  updateAutoComplete : function(showDefault) {
+  showAutoComplete : function(showDefault) {
     this.updateSearchEngines();
-    if (showDefault || this._edit.getAttribute("nomatch"))
-      this._edit.showHistoryPopup();
+    this._edit.showHistoryPopup();
   },
 
   doButtonSearch : function(button) {
@@ -629,9 +623,6 @@ var BrowserUI = {
       case "click":
         this.doCommand("cmd_openLocation");
         break;
-      case "input":
-        this.updateAutoComplete(false);
-        break;
       case "keypress":
         if (aEvent.keyCode == aEvent.DOM_VK_ESCAPE) {
           this._edit.reallyClosePopup();
@@ -705,7 +696,7 @@ var BrowserUI = {
         break;
       case "cmd_openLocation":
         this.show(UIMODE_URLEDIT);
-        setTimeout(function () {BrowserUI.updateAutoComplete(true)}, 0);
+        setTimeout(function () { BrowserUI.showAutoComplete(); }, 0);
         break;
       case "cmd_star":
       {
