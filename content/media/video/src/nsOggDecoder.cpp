@@ -916,7 +916,7 @@ nsresult nsOggDecodeStateMachine::Run()
             OggPlayErrorCode r = DecodeFrame();
             mon.Enter();
 
-            if (mState == DECODER_STATE_SHUTDOWN)
+            if (mState != DECODER_STATE_DECODING)
               continue;
 
             // Get the decoded frame and store it in our queue of decoded frames
@@ -1030,7 +1030,7 @@ nsresult nsOggDecodeStateMachine::Run()
 
     case DECODER_STATE_COMPLETED:
       {
-        while (mState != DECODER_STATE_SHUTDOWN &&
+        while (mState == DECODER_STATE_COMPLETED &&
                !mDecodedFrames.IsEmpty()) {
           PlayFrame();
           if (mState != DECODER_STATE_SHUTDOWN) {
@@ -1041,7 +1041,7 @@ nsresult nsOggDecodeStateMachine::Run()
           }
         }
 
-        if (mState == DECODER_STATE_SHUTDOWN)
+        if (mState != DECODER_STATE_COMPLETED)
           continue;
 
         nsCOMPtr<nsIRunnable> event =
