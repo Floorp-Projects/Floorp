@@ -1543,7 +1543,7 @@ nsHttpChannel::OpenCacheEntry(PRBool offline, PRBool *delayed)
 
     // Set the desired cache access mode accordingly...
     nsCacheAccessMode accessRequested;
-    if (offline || (mLoadFlags & INHIBIT_CACHING)) {
+    if (mLoadFlags & (LOAD_ONLY_FROM_CACHE | INHIBIT_CACHING)) {
         // If we have been asked to bypass the cache and not write to the
         // cache, then don't use the cache at all.  Unless we're actually
         // offline, which takes precedence over BYPASS_LOCAL_CACHE.
@@ -1914,11 +1914,12 @@ nsHttpChannel::CheckCache()
     NS_ENSURE_SUCCESS(rv, rv);
     buf.Adopt(0);
 
+    // Don't bother to validate LOAD_ONLY_FROM_CACHE items.
     // Don't bother to validate items that are read-only,
     // unless they are read-only because of INHIBIT_CACHING or because
     // we're updating the offline cache.
     // Don't bother to validate if this is a fallback entry.
-    if (mLoadedFromApplicationCache ||
+    if (mLoadFlags & LOAD_ONLY_FROM_CACHE ||
         (mCacheAccess == nsICache::ACCESS_READ &&
          !((mLoadFlags & INHIBIT_CACHING) || mCacheForOfflineUse)) ||
         mFallbackChannel) {
