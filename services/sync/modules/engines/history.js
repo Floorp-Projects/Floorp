@@ -11,7 +11,7 @@
  * for the specific language governing rights and limitations under the
  * License.
  *
- * The Original Code is Bookmarks Sync.
+ * The Original Code is Weave
  *
  * The Initial Developer of the Original Code is Mozilla.
  * Portions created by the Initial Developer are Copyright (C) 2008
@@ -50,102 +50,58 @@ Cu.import("resource://weave/async.js");
 
 Function.prototype.async = Async.sugar;
 
-function HistoryEngine(pbeId) {
-  this._init(pbeId);
-}
-HistoryEngine.prototype = {
-  __proto__: new SyncEngine(),
-
-  get name() { return "history"; },
-  get displayName() { return "Browsing History"; },
-  get logName() { return "HistEngine"; },
-  get serverPrefix() { return "user-data/history/"; },
-
-  __store: null,
-  get _store() {
-    if (!this.__store)
-      this.__store = new HistoryStore();
-    return this.__store;
-  },
-
-  __core: null,
-  get _core() {
-    if (!this.__core)
-      this.__core = new HistorySyncCore(this._store);
-    return this.__core;
-  },
-
-  __tracker: null,
-  get _tracker() {
-    if (!this.__tracker)
-      this.__tracker = new HistoryTracker();
-    return this.__tracker;
-  }
-};
-
-function HistorySyncCore(store) {
-  this._store = store;
+function HistoryEngine() {
   this._init();
 }
-HistorySyncCore.prototype = {
-  _logName: "HistSync",
-  _store: null,
+HistoryEngine.prototype = {
+  __proto__: SyncEngine.prototype,
+  get _super() SyncEngine.prototype,
 
-  _commandLike: function HSC_commandLike(a, b) {
-    // History commands never qualify for likeness.  We will always
-    // take the union of all client/server items.  We use the URL as
-    // the GUID, so the same sites will map to the same item (same
-    // GUID), without our intervention.
-    return false;
+  get name() "history",
+  get displayName() "History",
+  get logName() "History",
+  get serverPrefix() "user-data/history/",
+
+  get _store() {
+    let store = new HistoryStore();
+    this.__defineGetter__("_store", function() store);
+    return store;
   },
 
-  /**
-   * Determine the differences between two snapshots.  This method overrides
-   * the one in its superclass so it can ignore removes, since removes don't
-   * matter for history (and would cause deltas to grow too large too fast).
-   */
-  _detectUpdates: function HSC__detectUpdates(a, b) {
-    let self = yield;
-
-    this.__proto__.__proto__._detectUpdates.async(this, self.cb, a, b);
-    let cmds = yield;
-    cmds = cmds.filter(function (v) v.action != "remove");
-
-    self.done(cmds);
+  get _tracker() {
+    let tracker = new HistoryTracker();
+    this.__defineGetter__("_tracker", function() tracker);
+    return tracker;
   }
 };
-HistorySyncCore.prototype.__proto__ = new SyncCore();
 
 function HistoryStore() {
   this._init();
 }
 HistoryStore.prototype = {
+  __proto__: Store.prototype,
   _logName: "HistStore",
   _lookup: null,
 
-  __hsvc: null,
   get _hsvc() {
-    if (!this.__hsvc) {
-      this.__hsvc = Cc["@mozilla.org/browser/nav-history-service;1"].
-                    getService(Ci.nsINavHistoryService);
-      this.__hsvc.QueryInterface(Ci.nsIGlobalHistory2);
-      this.__hsvc.QueryInterface(Ci.nsIBrowserHistory);
-    }
-    return this.__hsvc;
+    let hsvc = Cc["@mozilla.org/browser/nav-history-service;1"].
+      getService(Ci.nsINavHistoryService);
+    hsvc.QueryInterface(Ci.nsIGlobalHistory2);
+    hsvc.QueryInterface(Ci.nsIBrowserHistory);
+    this.__defineGetter__("_hsvc", function() hsvc);
+    return hsvc;
   },
 
-  __histDB: null,
   get _histDB() {
-    if (!this.__histDB) {
-      let file = Cc["@mozilla.org/file/directory_service;1"].
-                 getService(Ci.nsIProperties).
-                 get("ProfD", Ci.nsIFile);
-      file.append("places.sqlite");
-      let stor = Cc["@mozilla.org/storage/service;1"].
-                 getService(Ci.mozIStorageService);
-      this.__histDB = stor.openDatabase(file);
-    }
-    return this.__histDB;
+    let file = Cc["@mozilla.org/file/directory_service;1"].
+      getService(Ci.nsIProperties).
+      get("ProfD", Ci.nsIFile);
+    file.append("places.sqlite");
+    let stor = Cc["@mozilla.org/storage/service;1"].
+      getService(Ci.mozIStorageService);
+    let db = stor.openDatabase(file);
+    this.__defineGetter__("_histDB", function() db);
+    return db;
   },
 
   _itemExists: function HistStore__itemExists(GUID) {
@@ -246,13 +202,25 @@ HistoryStore.prototype = {
     // Not needed.
   }
 };
-HistoryStore.prototype.__proto__ = new Store();
 
 function HistoryTracker() {
   this._init();
 }
 HistoryTracker.prototype = {
+  __proto__: Tracker.prototype,
   _logName: "HistoryTracker",
+
+  get _hsvc() {
+    let hsvc = Cc["@mozilla.org/browser/nav-history-service;1"].
+      getService(Ci.nsINavHistoryService);
+    this.__defineGetter__("_hsvc", function() hsvc);
+    return hsvc;
+  },
+
+  _init: function HT__init() {
+    this.__proto__.__proto__._init.call(this);
+    this._hsvc.addObserver(this, false);
+  },
 
   /* We don't care about the first four */
   onBeginUpdateBatch: function HT_onBeginUpdateBatch() {
@@ -284,15 +252,5 @@ HistoryTracker.prototype = {
   },
   onClearHistory: function HT_onClearHistory() {
     this._score += 50;
-  },
-
-  _init: function HT__init() {
-    this._log = Log4Moz.Service.getLogger("Service." + this._logName);
-    this._score = 0;
-
-    Cc["@mozilla.org/browser/nav-history-service;1"].
-    getService(Ci.nsINavHistoryService).
-    addObserver(this, false);
   }
-}
-HistoryTracker.prototype.__proto__ = new Tracker();
+};

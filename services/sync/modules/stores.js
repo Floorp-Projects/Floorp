@@ -142,6 +142,10 @@ Store.prototype = {
     throw "override wrapItem in a subclass";
   },
 
+  changeItemID: function Store_changeItemID(oldID, newID) {
+    throw "override changeItemID in a subclass";
+  },
+
   getAllIDs: function Store_getAllIDs() {
     throw "override getAllIDs in a subclass";
   },
