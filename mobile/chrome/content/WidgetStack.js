@@ -711,6 +711,16 @@ WidgetStack.prototype = {
         h = parseInt(this._viewport.widget.getAttribute("widgetheight"));
       }
 
+      if (this._viewport.widget.hasAttribute("vptargetw") &&
+          this._viewport.widget.hasAttribute("vptargeth"))
+      {
+        let ww = parseInt(this._viewport.widget.getAttribute("vptargetw"));
+        let wh = parseInt(this._viewport.widget.getAttribute("vptargeth"));
+
+        w = ww;
+        h = wh;
+      }
+
       // the amount the viewport size changed by
       let dw = w - vws.rect.width;
       let dh = h - vws.rect.height;
