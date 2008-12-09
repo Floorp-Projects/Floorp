@@ -119,6 +119,7 @@
         replaceWithHost(intro);
         
         if (getCSSClass() == "expertBadCert") {
+          toggle('technicalContent');
           toggle('expertContent');
         }
         
@@ -206,7 +207,7 @@
           
         // If we set a link, meaning there's something helpful for
         // the user here, expand the section by default
-        if (link.href)
+        if (link.href && getCSSClass() != "expertBadCert")
           toggle("technicalContent");
       }
       
@@ -249,13 +250,13 @@
           </div>
         </div>
         
+        <!-- The following sections can be unhidden by default by setting the
+             "browser.xul.error_pages.expert_bad_cert" pref to true -->
         <div id="technicalContent" collapsed="true">
           <h2 onclick="toggle('technicalContent');" id="technicalContentHeading">&certerror.technical.heading;</h2>
           <p id="technicalContentText"/>
         </div>
         
-        <!-- This section can be unhidden by default by setting the
-        "browser.xul.error_pages.expert_bad_cert" pref to true -->
         <div id="expertContent" collapsed="true">
           <h2 onclick="toggle('expertContent');" id="expertContentHeading">&certerror.expert.heading;</h2>
           <div>
