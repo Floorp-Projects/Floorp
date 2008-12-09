@@ -162,14 +162,6 @@
   </keyset>
 
   <popupset id="mainPopupSet">
-    <panel type="autocomplete-richlistbox" id="popup_autocomplete"
-           noautofocus="true" onpopupshowing="BrowserUI.sizeAutocompletePopup()">
-      <hbox id="autocomplete_navbuttons" align="center" flex="1"
-            oncommand="BrowserUI.doButtonSearch(event.target);">
-        <image class="tool-search"/>
-      </hbox>
-    </panel>
-
     <!-- popup for site identity information -->
     <panel id="identity-popup" position="after_start" hidden="true" noautofocus="true"
            norestorefocus="true">
@@ -266,15 +258,13 @@
           <textbox id="urlbar-edit"
                    type="autocomplete"
                    autocompletesearch="history"
+                   autocompletepopup="popup_autocomplete"
                    enablehistory="false"
                    maxrows="6"
                    completeselectedindex="true"
-                   minresultsforpopup="0"
                    flex="1"
                    hidden="true"
-                   autocompletepopup="popup_autocomplete"
                    ontextentered="BrowserUI.goToURI();"
-                   onsearchcomplete="BrowserUI.updateAutoComplete(false);"
                    clickSelectsAll="true"/>
         </hbox>
         <hbox id="urlbar-icons">
@@ -352,6 +342,13 @@
       </hbox>
       <hbox pack="end">
         <button id="urllist-close" oncommand="BrowserUI.show(UIMODE_NONE)"/>
+      </hbox>
+    </vbox>
+
+    <vbox id="popup_autocomplete" style="-moz-stack-sizing: ignore;" top="60" left="0" constraint="ignore-x,vp-relative">
+      <hbox id="autocomplete_navbuttons" align="center" flex="1"
+            oncommand="BrowserUI.doButtonSearch(event.target);">
+        <image class="tool-search"/>
       </hbox>
     </vbox>
 

@@ -34,3 +34,7 @@ notification {
 notification button {
     -moz-binding: url("chrome://browser/content/notification.xml#notification-button");
 }
+
+#popup_autocomplete {
+  -moz-binding: url("chrome://browser/content/urlbar.xml#popup_autocomplete");
+}

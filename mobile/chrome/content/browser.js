@@ -1270,7 +1270,9 @@ Tab.prototype = {
     browser.className = "deckbrowser-browser";
     browser.setAttribute("style", "overflow: hidden; visibility: hidden; width: 1024px; height: 800px;");
     browser.setAttribute("contextmenu", document.getElementById("canvas").getAttribute("contextmenu"));
-    browser.setAttribute("autocompletepopup", document.getElementById("canvas").getAttribute("autocompletepopup"));
+    let autocompletepopup = document.getElementById("canvas").getAttribute("autocompletepopup");
+    if (autocompletepopup)
+      browser.setAttribute("autocompletepopup", autocompletepopup);
     browser.setAttribute("type", "content");
 
     document.getElementById("browsers").appendChild(browser);

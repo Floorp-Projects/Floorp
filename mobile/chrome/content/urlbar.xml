@@ -26,5 +26,201 @@
       </method>
     </implementation>
   </binding>
+  
+  <binding id="popup_autocomplete">
+    <content hidden="true">
+      <xul:vbox class="autocomplete-box" flex="1">
+        <xul:vbox class="autocomplete-items" anonid="autocomplete-items" flex="1000">
+          <xul:label/>
+          <xul:label/>
+          <xul:label/>
+          <xul:label/>
+          <xul:label/>
+          <xul:label/>
+          <xul:label/>
+        </xul:vbox>
+        <children/>
+      </xul:vbox>
+    </content>
+
+    <implementation implements="nsIAutoCompletePopup, nsIDOMEventListener">
+      <constructor><![CDATA[
+        window.addEventListener("click", this, true);
+        window.addEventListener("blur", this, true);
+      ]]></constructor>
+
+      <!-- nsIAutocompleteInput -->
+      <property name="overrideValue"
+                readonly="true"
+                onget="return null;"/>
+
+      <field name="_input"/>
+      <property name="input"
+                readonly="true"
+                onget="return this._input;"/>
+
+      <field name="_selectedIndex">-1</field>
+      <field name="_selectedItem"/>
+      <property name="selectedIndex"
+                onget="return this._selectedIndex;">
+        <setter><![CDATA[
+          // Ignore invalid indices
+          if (val < -1 ||
+              val > this._matchCount - 1)
+            return val;
+
+          if (this._selectedItem)
+            this._styleItem(this._selectedItem, false);
+
+          // highlight the selected item
+          let item = this._items.childNodes.item(val);
+          if (item) {
+            this._selectedItem = item;
+            this._styleItem(this._selectedItem, true);
+          }
+          
+          return this._selectedIndex = val;
+        ]]></setter>
+      </property>
+
+      <field name="_popupOpen">false</field>
+      <property name="popupOpen"
+                readonly="true"
+                onget="return this._popupOpen;"/>
+
+      <method name="openAutocompletePopup">
+        <parameter name="aInput"/>
+        <parameter name="aElement"/>
+        <body><![CDATA[
+          if (this._popupOpen)
+            return;
+
+          this._input = aInput;
+
+          this.hidden = false;
+          this._popupOpen = true;
+
+          this.invalidate();
+        ]]></body>
+      </method>
+
+      <method name="closePopup">
+        <body><![CDATA[
+          if (!this._popupOpen)
+            return;
+
+          this.selectedIndex = -1;
+          this.input.controller.stopSearch();
+
+          this.hidden = true;
+          this._popupOpen = false;
+        ]]></body>
+      </method>
+
+      <method name="invalidate">
+        <body><![CDATA[
+          // Don't bother doing work if we're not even open
+          if (!this.popupOpen)
+            return;
+
+          let controller = this.input.controller;
+          let searchString = controller.searchString;
+
+          let matchCount = this._matchCount;
+          let children = this._items.childNodes.length;
+          for (let i = 0; i < children; ++i) {
+            let label = this._items.childNodes[i];
+            label._index = i;
+
+            // Check whether there's an entry to fill
+            if (i > matchCount - 1) {
+              // Just clear out the old item
+              label.setAttribute("class", "");
+              label.setAttribute("value", "");
+
+              continue;
+            }
+
+            let url = controller.getValueAt(i);
+            let title = controller.getCommentAt(i);
+            let type = controller.getStyleAt(i);
+            let image = controller.getImageAt(i);
+
+            let typeClass = "ac-result-type-" + type;
+            label.setAttribute("class", "autocomplete-item " + typeClass);
+            label.setAttribute("value", title || url);
+          }
+        ]]></body>
+      </method>
+
+      <method name="selectBy">
+        <parameter name="aReverse"/>
+        <parameter name="aPage"/>
+        <body><![CDATA[
+          let newIndex;
+          let lastIndex = this._matchCount - 1;
+
+          if (this._selectedIndex == -1)
+            newIndex = aReverse ? lastIndex : 0;
+          else
+            newIndex = this._selectedIndex + (aReverse ? -1 : 1);
+
+          // Deal with rollover
+          if (newIndex > lastIndex)
+            newIndex = 0;
+          else if (newIndex < 0)
+            newIndex = lastIndex;
+
+          this.selectedIndex = newIndex;
+        ]]></body>
+      </method>
+      
+      <!-- Helpers -->
+      <field name="_items">
+        document.getAnonymousElementByAttribute(this,
+                        "anonid", "autocomplete-items");
+      </field>
+
+      <property name="_matchCount"
+                readonly="true">
+        <getter><![CDATA[
+          return Math.min(this.input.controller.matchCount, this._items.childNodes.length);
+        ]]></getter>
+      </property>
+
+      <!-- Handles click/blur events on the window while the popup is open. -->
+      <method name="handleEvent">
+        <parameter name="aEvent"/>
+        <body><![CDATA[
+          this.closePopup();
+        ]]></body>
+      </method>
+      
+      <method name="_styleItem">
+        <parameter name="aItem"/>
+        <parameter name="aAddStyle"/>
+        <body><![CDATA[
+          if (aAddStyle)
+            aItem.className = "autocomplete-item-selected";
+          else
+            aItem.className = "autocomplete-item";
+        ]]></body>
+      </method>
+    </implementation>
+
+    <handlers>
+      <handler event="click">
+        <![CDATA[
+          let originalTarget = event.originalTarget;
+          if (event.button == 0 &&
+              originalTarget.localName == "label") {
+            this._selectedIndex = originalTarget._index;
+            this.input.controller.handleEnter(true);
+          } else
+            this.closePopup();
+        ]]>
+      </handler>
+    </handlers>
+  </binding>
 
 </bindings>

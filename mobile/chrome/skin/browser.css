@@ -382,7 +382,10 @@ toolbarbutton.panel-button {
 #popup_autocomplete {
   background: url(images/navigation_background.png) repeat-x;
   -moz-appearance: none;
-  padding-top: 8px !important;
+}
+
+.autocomplete-box {
+  padding: 5px;
 }
 
 .tool-search {
@@ -415,30 +418,24 @@ toolbarbutton.panel-button {
 #autocomplete_navbuttons {
   -moz-border-image: url(images/navigation_search_caps.png) 0 23 0 23;
   border-width: 0 23px;
-  margin-top: 12px;
+  margin-top: 10px;
   min-height: 50px;
 }
 
-#PopupAutoCompleteRichResult {
-  direction: ltr !important;
-}
-
-#popup_autocomplete scrollbox {
-  background: rgb(46,45,45);
-}
-
-.autocomplete-richlistbox {
-  -moz-appearance: none !important;
+.autocomplete-items {
+  overflow: hidden;
   -moz-border-image: url(images/navigation_url_caps.png) 25 24 25 24 stretch stretch;
   border-width: 26px 25px;
 }
 
-.autocomplete-richlistitem {
-  border-bottom: 0; /* override toolkit style */
-  padding: 16px;
-  padding-top: 0px;
-  padding-left: 0px;
+.autocomplete-item,
+.autocomplete-item-selected {
+  padding: 5px 2px;
   color: white;
+}
+
+.autocomplete-item-selected {
+  background-color: grey;
 }
 
 .ac-result-type-bookmark {
@@ -451,23 +448,6 @@ toolbarbutton.panel-button {
   list-style-image: url("chrome://browser/skin/images/tag.png");
   width: 16px;
   height: 16px;
-}
-
-.ac-comment {
-  font-size: 16pt !important;
-}
-
-.ac-extra > .ac-comment {
-  font-size: inherit !important;
-}
-
-.ac-comment[selected="true"] {
-  color: inherit !important;
-}
-
-/* Hide URL box */
-.ac-url-box {
-  display: none;
 }
 
 /* Left sidebar (tabs)  ---------------------------------------------------- */
