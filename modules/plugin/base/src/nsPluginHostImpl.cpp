@@ -6632,7 +6632,8 @@ nsPluginHostImpl::ScanForRealInComponentsFolder(nsIComponentManager * aCompManag
 
   // try to get the mime info and descriptions out of the plugin
   nsPluginFile pluginFile(localfile);
-  nsPluginInfo info = { sizeof(info) };
+  nsPluginInfo info;
+  memset(&info, 0, sizeof(info));
   if (NS_FAILED(pluginFile.GetPluginInfo(info)))
     return rv;
 
