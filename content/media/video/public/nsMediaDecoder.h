@@ -223,6 +223,18 @@ protected:
   // Framerate of video being displayed in the element
   // expressed in numbers of frames per second.
   float mFramerate;
+
+  // True if the decoder is being shutdown. At this point all events that
+  // are currently queued need to return immediately to prevent javascript
+  // being run that operates on the element and decoder during shutdown.
+  // Read/Write from the main thread only.
+  PRPackedBool mShuttingDown;
+
+  // True if the decoder is currently in the Stop() method. This is used to
+  // prevent recursive calls into Stop while it is spinning the event loop
+  // waiting for the playback event loop to shutdown. Read/Write from the
+  // main thread only.
+  PRPackedBool mStopping;
 };
 
 #endif
