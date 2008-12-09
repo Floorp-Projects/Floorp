@@ -307,7 +307,7 @@ static const PRUint16 gPair[MAX_CLASSES] = {
       18  0000 1111 1101 1111  = 0x0FDF
  COMPLEX  0000 1111 1100 0010  = 0x0FC2
       [c] 0000 1111 1111 1111  = 0x0FFF
-      [d] 0000 1111 1101 1111  = 0x0FDF
+      [d] 0000 1111 1101 1111  = 0x0EDF
       [e] 0000 1111 1111 1111  = 0x0FFF
 */
 
@@ -322,7 +322,7 @@ static const PRUint16 gPairConservative[MAX_CLASSES] = {
   0x0FDF,
   0x0FC2,
   0x0FFF,
-  0x0FDF,
+  0x0EDF,
   0x0FFF
 };
 
@@ -384,19 +384,13 @@ static const PRUint16 gPairConservative[MAX_CLASSES] = {
 #define U_AMPERSAND PRUnichar('&')
 #define U_SEMICOLON PRUnichar(';')
 #define U_BACKSLASH PRUnichar('\\')
-#define U_OPEN_SINGLE_QUOTE PRUnichar(0x2018)
-#define U_OPEN_DOUBLE_QUOTE PRUnichar(0x201C)
-#define U_OPEN_GUILLEMET    PRUnichar(0x00AB)
 
 #define NEED_CONTEXTUAL_ANALYSIS(c) (IS_HYPHEN(c) || \
                                      (c) == U_SLASH || \
                                      (c) == U_PERCENT || \
                                      (c) == U_AMPERSAND || \
                                      (c) == U_SEMICOLON || \
-                                     (c) == U_BACKSLASH || \
-                                     (c) == U_OPEN_SINGLE_QUOTE || \
-                                     (c) == U_OPEN_DOUBLE_QUOTE || \
-                                     (c) == U_OPEN_GUILLEMET)
+                                     (c) == U_BACKSLASH)
 
 #define IS_ASCII_DIGIT(u) (0x0030 <= (u) && (u) <= 0x0039)
 
@@ -725,14 +719,6 @@ ContextualAnalysis(PRUnichar prev, PRUnichar cur, PRUnichar next,
     if (!aState.UseConservativeBreaking(1) &&
         aState.HasCharacterAlready(U_EQUAL))
       return CLASS_CLOSE;
-  } else if (cur == U_OPEN_SINGLE_QUOTE ||
-             cur == U_OPEN_DOUBLE_QUOTE ||
-             cur == U_OPEN_GUILLEMET) {
-    // for CJK usage, we treat these as openers to allow a break before them,
-    // but otherwise treat them as normal characters because quote mark usage
-    // in various Western languages varies too much; see bug #450088 discussion.
-    if (!aState.UseConservativeBreaking() && IS_CJK_CHAR(next))
-      return CLASS_OPEN;
   } else {
     NS_ERROR("Forgot to handle the current character!");
   }
