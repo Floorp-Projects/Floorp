@@ -132,18 +132,6 @@ static PRBool IsLoadablePlugin(CFURLRef aURL)
       if (read(f, &magic, sizeof(magic)) == sizeof(magic)) {
         if ((magic == MH_MAGIC) || (PR_ntohl(magic) == FAT_MAGIC))
           isLoadable = PR_TRUE;
-#ifdef __POWERPC__
-        // if we're on ppc, we can use CFM plugins
-        if (isLoadable == PR_FALSE) {
-          UInt32 magic2;
-          if (read(f, &magic2, sizeof(magic2)) == sizeof(magic2)) {
-            UInt32 cfm_header1 = 0x4A6F7921; // 'Joy!'
-            UInt32 cfm_header2 = 0x70656666; // 'peff'
-            if (cfm_header1 == magic && cfm_header2 == magic2)
-              isLoadable = PR_TRUE;
-          }
-        }
-#endif
       }
       close(f);
     }

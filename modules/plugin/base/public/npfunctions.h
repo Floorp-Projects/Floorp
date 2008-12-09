@@ -42,10 +42,6 @@
 #pragma pack(1)
 #endif
 
-#ifndef GENERATINGCFM
-#define GENERATINGCFM 0
-#endif
-
 #include "npapi.h"
 #include "npruntime.h"
 
