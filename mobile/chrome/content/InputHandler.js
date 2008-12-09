@@ -56,7 +56,7 @@ function InputHandler() {
   let stack = document.getElementById("browser-container");
   stack.addEventListener("DOMMouseScroll", this, true);
 
-  let content = document.getElementById("canvas");
+  let content = document.getElementById("browser-canvas");
   content.addEventListener("mouseout", this, true);
   content.addEventListener("mousedown", this, true);
   content.addEventListener("mouseup", this, true);
@@ -556,7 +556,7 @@ ClickingModule.prototype = {
     // XXX disable zooming until it works properly.
 
     function optimalElementForPoint(cX, cY) {
-      var element = Browser.content.elementFromPoint(cX, cY);
+      var element = Browser.canvasBrowser.elementFromPoint(cX, cY);
       if (!element)
         return null;
 
@@ -579,11 +579,11 @@ ClickingModule.prototype = {
       if (this._zoomed) {
         // zoom out
         this._zoomed = false;
-        Browser.content.zoomFromElement(zoomElement);
+        Browser.canvasBrowser.zoomFromElement(zoomElement);
       } else {
         // zoom in
         this._zoomed = true;
-        Browser.content.zoomToElement(zoomElement);
+        Browser.canvasBrowser.zoomToElement(zoomElement);
       }
 
     }
@@ -600,7 +600,7 @@ ClickingModule.prototype = {
       return;
     }
 
-    var [x, y] = Browser.content._clientToContentCoords(aEvent.clientX, aEvent.clientY);
+    var [x, y] = Browser.canvasBrowser._clientToContentCoords(aEvent.clientX, aEvent.clientY);
     //dump("sending mouse event to: " + x + " " + y + "\n");
 
     var cwin = Browser.currentBrowser.contentWindow;
@@ -631,7 +631,7 @@ ScrollwheelModule.prototype = {
       // UI panning events
       case "DOMMouseScroll":
         this._owner.grab(this);
-        Browser.content.zoom(aEvent.detail);
+        Browser.canvasBrowser.zoom(aEvent.detail);
         this._owner.ungrab(this);
         break;
     }
