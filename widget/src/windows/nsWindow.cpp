@@ -5343,7 +5343,7 @@ LPCWSTR nsWindow::WindowClassW()
     wc.cbClsExtra    = 0;
     wc.cbWndExtra    = 0;
     wc.hInstance     = nsToolkit::mDllInstance;
-    wc.hIcon         = ::LoadIconW(NULL, (LPWSTR)IDI_APPLICATION);
+    wc.hIcon         = ::LoadIconW(::GetModuleHandleW(NULL), (LPWSTR)IDI_APPLICATION);
     wc.hCursor       = NULL;
     wc.hbrBackground = mBrush;
     wc.lpszMenuName  = NULL;
@@ -5410,7 +5410,7 @@ LPCWSTR nsWindow::WindowPopupClassW()
     wc.cbClsExtra    = 0;
     wc.cbWndExtra    = 0;
     wc.hInstance     = nsToolkit::mDllInstance;
-    wc.hIcon         = ::LoadIconW(NULL, (LPWSTR)IDI_APPLICATION);
+    wc.hIcon         = ::LoadIconW(::GetModuleHandleW(NULL), (LPWSTR)IDI_APPLICATION);
     wc.hCursor       = NULL;
     wc.hbrBackground = mBrush;
     wc.lpszMenuName  = NULL;
