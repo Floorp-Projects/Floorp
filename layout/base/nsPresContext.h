@@ -427,7 +427,7 @@ public:
 
   /**
    * Get the visible area associated with this presentation context.
-   * This is the size of the visiable area that is used for
+   * This is the size of the visible area that is used for
    * presenting the document. The returned value is in the standard
    * nscoord units (as scaled by the device context).
    */
