@@ -104,9 +104,13 @@ OPDEF(ji,       25, 2) // jump indirect
 OPDEF(ldcs, 26, 2) // non-volatile 16-bit load
 
 /*
- * feq though fge must only be used on float arguments.  They
- * return integers.  NB: These opcodes must remain continuous
- * so that comparison-opcode detection works correctly.
+ * feq though fge must only be used on float arguments.  They return integers.
+ * For all except feq, (op ^ 1) is the op which flips the
+ * left and right sides of the comparison, so (lt ^ 1) == gt, or the operator
+ * "<" is xored with 1 to get ">".  Similarly, (op ^ 3) is the complement of
+ * op, so (lt ^ 1) == ge, or the complement of the operator "<" is ">=" xored
+ * with 3.  NB: These opcodes must remain continuous so that comparison-opcode
+ * detection works correctly.
  */
 OPDEF(feq,      27, 2) // floating-point equality [2 float inputs]
 OPDEF(flt,      28, 2) // floating-point less than: arg1 < arg2
