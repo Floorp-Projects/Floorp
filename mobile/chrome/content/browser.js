@@ -68,7 +68,7 @@ var ws = null;
 var ih = null;
 
 var Browser = {
-  _content : null,
+  _canvasBrowser : null,
   _tabs : [],
   _currentTab : null,
 
@@ -76,7 +76,7 @@ var Browser = {
     var self = this;
 
     // initalize the CanvasBrowser
-    this._content = new CanvasBrowser(document.getElementById("canvas"));
+    this._canvasBrowser = new CanvasBrowser(document.getElementById("browser-canvas"));
 
     // initialize the WidgetStack
     ws = new WidgetStack(document.getElementById("browser-container"));
@@ -117,7 +117,7 @@ var Browser = {
 
     setTimeout(resizeHandler, 0);
 
-    function viewportHandler(b, ob) { self._content.viewportHandler(b, ob); }
+    function viewportHandler(b, ob) { self._canvasBrowser.viewportHandler(b, ob); }
     ws.setViewportHandler(viewportHandler);
 
     // initialize input handling
@@ -237,9 +237,9 @@ var Browser = {
 
   updateViewportSize: function() {
     // XXX make sure this is right, and then add a better function for it.
-    var [w,h] = this._content._contentAreaDimensions;
-    w = Math.ceil(this._content._pageToScreen(w));
-    h = Math.ceil(this._content._pageToScreen(h));
+    var [w,h] = this._canvasBrowser._contentAreaDimensions;
+    w = Math.ceil(this._canvasBrowser._pageToScreen(w));
+    h = Math.ceil(this._canvasBrowser._pageToScreen(h));
 
     if (!this._currentViewportBounds || w != this._currentViewportBounds.width || h != this._currentViewportBounds.height) {
       this._currentViewportBounds = {width: w, height: h};
@@ -302,8 +302,8 @@ var Browser = {
     }
   },
 
-  get content() {
-    return this._content;
+  get canvasBrowser() {
+    return this._canvasBrowser;
   },
 
   /**
@@ -385,7 +385,7 @@ var Browser = {
       return;
 
     this._currentTab = tab;
-    this._content.setCurrentBrowser(this.currentBrowser);
+    this._canvasBrowser.setCurrentBrowser(this.currentBrowser);
     document.getElementById("tabs").selectedItem = tab.content;
 
     ws.panTo(0,0, true);
@@ -613,7 +613,7 @@ nsBrowserAccess.prototype =
   },
 
   isTabContentWindow: function(aWindow) {
-    return Browser._content.browsers.some(function (browser) browser.contentWindow == aWindow);
+    return Browser._canvasBrowser.browsers.some(function (browser) browser.contentWindow == aWindow);
   }
 }
 
@@ -1142,7 +1142,7 @@ ProgressController.prototype = {
     //dump("started loading network\n");
 
     if (Browser.currentBrowser == this.browser) {
-      Browser.content.startLoading();
+      Browser.canvasBrowser.startLoading();
       BrowserUI.update(TOOLBARSTATE_LOADING);
     }
   },
@@ -1165,7 +1165,7 @@ ProgressController.prototype = {
       // focus the dom window
       this.browser.contentWindow.focus();
 
-      Browser.content.endLoading();
+      Browser.canvasBrowser.endLoading();
     }
     this._tab.updateThumbnail();
   },
@@ -1269,8 +1269,9 @@ Tab.prototype = {
     let browser = this._browser = document.createElement("browser");
     browser.className = "deckbrowser-browser";
     browser.setAttribute("style", "overflow: hidden; visibility: hidden; width: 1024px; height: 800px;");
-    browser.setAttribute("contextmenu", document.getElementById("canvas").getAttribute("contextmenu"));
-    let autocompletepopup = document.getElementById("canvas").getAttribute("autocompletepopup");
+    let canvas = document.getElementById("browser-canvas");
+    browser.setAttribute("contextmenu", canvas.getAttribute("contextmenu"));
+    let autocompletepopup = canvas.getAttribute("autocompletepopup");
     if (autocompletepopup)
       browser.setAttribute("autocompletepopup", autocompletepopup);
     browser.setAttribute("type", "content");
@@ -1344,7 +1345,7 @@ Tab.prototype = {
     if (!this._browser)
       return;
 
-    let srcCanvas = (Browser.currentBrowser == this._browser) ? document.getElementById("canvas") : null;
+    let srcCanvas = (Browser.currentBrowser == this._browser) ? document.getElementById("browser-canvas") : null;
     this._content.updateThumbnail(this._browser, srcCanvas);
   }
 }

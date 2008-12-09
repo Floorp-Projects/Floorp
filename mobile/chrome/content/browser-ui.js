@@ -212,7 +212,7 @@ var BrowserUI = {
     let sidebar = document.getElementById("browser-controls");
     let panelUI = document.getElementById("panel-container");
     let toolbar = document.getElementById("toolbar-main");
-    let canvas = document.getElementById("canvas");
+    let canvas = document.getElementById("browser-canvas");
 
     let tabbarW = tabbar.boxObject.width;
     let sidebarW = sidebar.boxObject.width;
@@ -742,10 +742,10 @@ var BrowserUI = {
         break;
       }
       case "cmd_zoomin":
-        Browser.content.zoom(-1);
+        Browser.canvasBrowser.zoom(-1);
         break;
       case "cmd_zoomout":
-        Browser.content.zoom(1);
+        Browser.canvasBrowser.zoom(1);
         break;
     }
   }

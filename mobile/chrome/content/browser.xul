@@ -201,7 +201,7 @@
           vptargeth="480"
           viewport="true">
 
-      <html:canvas id="canvas"
+      <html:canvas id="browser-canvas"
                    moz-opaque="true"
                    viewport="true"
                    style="height: 1440px; width: 800px;"
