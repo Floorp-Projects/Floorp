@@ -300,56 +300,20 @@ nsNPAPIPlugin::nsNPAPIPlugin(NPPluginFuncs* callbacks, PRLibrary* aLibrary,
   memset((void*) &np_callbacks, 0, sizeof(np_callbacks));
   np_callbacks.size = sizeof(np_callbacks);
 
-/*  Since WebKit supports getting function pointers via NP_GetEntryPoints and
- *  sending function pointers via NP_Initialize, it would be nice if we
- *  supported that too. We can't do it on PPC because there is no standard for
- *  whether or not function pointers returned via NP_GetEntryPoints or sent
- *  via NP_Initialize are supposed to be wrapped with tvector glue. However,
- *  since there are no tvectors on Intel we can do it on that arch.
- */
-#ifndef __POWERPC__
   fShutdownEntry = (NP_PLUGINSHUTDOWN)PR_FindSymbol(aLibrary, "NP_Shutdown");
   NP_GETENTRYPOINTS pfnGetEntryPoints = (NP_GETENTRYPOINTS)PR_FindSymbol(aLibrary, "NP_GetEntryPoints");
   NP_PLUGININIT pfnInitialize = (NP_PLUGININIT)PR_FindSymbol(aLibrary, "NP_Initialize");
-  if (pfnGetEntryPoints && pfnInitialize && fShutdownEntry) {
-    // we call NP_Initialize before getting function pointers to match
-    // WebKit's behavior. They implemented this first on Mac OS X.
-    if (pfnInitialize(&(nsNPAPIPlugin::CALLBACKS)) != NPERR_NO_ERROR)
-      return;
-    if (pfnGetEntryPoints(&np_callbacks) != NPERR_NO_ERROR)
-      return;
+  if (!pfnGetEntryPoints || !pfnInitialize || !fShutdownEntry) {
+    NS_WARNING("Not all necessary functions exposed by plugin, it will not load.");
+    return;
   }
-  else
-#endif
-  {
-    // call into the entry point
-    NP_MAIN pfnMain = (NP_MAIN)PR_FindSymbol(aLibrary, "main");
-    if (!pfnMain)
-      return;
 
-    NPError error;
-    NPP_ShutdownProcPtr pfnMainShutdown;
-    NS_TRY_SAFE_CALL_RETURN(error,
-                            (*pfnMain)(&(nsNPAPIPlugin::CALLBACKS),
-                                       &np_callbacks,
-                                       &pfnMainShutdown),
-                            aLibrary,
-                            nsnull);
-    
-    NPP_PLUGIN_LOG(PLUGIN_LOG_BASIC,
-                   ("NPP MainEntryProc called: return=%d\n",error));
-    
-    if (error != NPERR_NO_ERROR)
-      return;
-    
-    fShutdownEntry = (NP_PLUGINSHUTDOWN)pfnMainShutdown;
-    
-    // version is a uint16_t so cast to int to avoid an invalid
-    // comparison due to limited range of the data type
-    int cb_version = np_callbacks.version;
-    if ((cb_version >> 8) < NP_VERSION_MAJOR)
-      return;
-  }
+  // we call NP_Initialize before getting function pointers to match
+  // WebKit's behavior. They implemented this first on Mac OS X.
+  if (pfnInitialize(&(nsNPAPIPlugin::CALLBACKS)) != NPERR_NO_ERROR)
+    return;
+  if (pfnGetEntryPoints(&np_callbacks) != NPERR_NO_ERROR)
+    return;
 
   fCallbacks.size = sizeof(fCallbacks);
   fCallbacks.version = np_callbacks.version;
