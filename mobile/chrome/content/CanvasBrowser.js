@@ -135,7 +135,7 @@ CanvasBrowser.prototype = {
           ctx.drawWindow(this._browser.contentWindow,
                          pageBounds.x, pageBounds.y, pageBounds.width, pageBounds.height,
                          "white",
-                         ctx.DRAWWINDOW_DO_NOT_FLUSH);
+                         ctx.DRAWWINDOW_DO_NOT_FLUSH | ctx.DRAWWINDOW_DRAW_CARET);
         } catch (e) {
           dump("DRAWWINDOW FAILED\n");
         }
@@ -232,7 +232,7 @@ CanvasBrowser.prototype = {
                      scaledRect.x, scaledRect.y,
                      scaledRect.width, scaledRect.height,
                      "white",
-                     ctx.DRAWWINDOW_DO_NOT_FLUSH);
+                     ctx.DRAWWINDOW_DO_NOT_FLUSH | ctx.DRAWWINDOW_DRAW_CARET);
 
       // for testing
       //ctx.fillStyle = "rgba(255,0,0,0.5)";
@@ -350,7 +350,7 @@ CanvasBrowser.prototype = {
                    dest.x, dest.y,
                    dest.width, dest.height,
                    "white",
-                   ctx.DRAWWINDOW_DO_NOT_FLUSH);
+                   ctx.DRAWWINDOW_DO_NOT_FLUSH | ctx.DRAWWINDOW_DRAW_CARET);
 
     ctx.restore();
   },
