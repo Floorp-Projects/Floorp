@@ -81,10 +81,13 @@ private:
 nsresult
 XPCJSStack::CreateStack(JSContext* cx, nsIStackFrame** stack)
 {
-    if(!cx || !cx->fp)
+    if(!cx)
         return NS_ERROR_FAILURE;
 
-    return XPCJSStackFrame::CreateStack(cx, cx->fp, (XPCJSStackFrame**) stack);
+    JSStackFrame *fp = NULL;
+    if (!JS_FrameIterator(cx, &fp))
+        return NS_ERROR_FAILURE;
+    return XPCJSStackFrame::CreateStack(cx, fp, (XPCJSStackFrame**) stack);
 }
 
 // static

@@ -1148,16 +1148,11 @@ XPCConvert::NativeInterface2JSObject(XPCCallContext& ccx,
                     // JSObject to said JS, so look for the script we want on
                     // the stack.
                     JSContext* cx = ccx;
-                    JSStackFrame* fp = cx->fp;
-                    while(fp)
+                    JSStackFrame* fp = JS_GetScriptedCaller(cx, NULL);
+                    if(fp)
                     {
                         script = fp->script;
-                        if(script)
-                        {
-                            callee = fp->callee;
-                            break;
-                        }
-                        fp = fp->down;
+                        callee = fp->callee;
                     }
                 }
                 else if(ccx.GetXPCContext()->CallerTypeIsNative())

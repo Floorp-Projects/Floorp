@@ -4791,7 +4791,7 @@ static JSFunctionSpec regexp_methods[] = {
 static JSBool
 RegExp(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
 {
-    if (!(cx->fp->flags & JSFRAME_CONSTRUCTING)) {
+    if (!JS_IsConstructing(cx)) {
         /*
          * If first arg is regexp and no flags are given, just return the arg.
          * (regexp_compile_sub detects the regexp + flags case and throws a
