@@ -1345,6 +1345,11 @@ function delayedStartup(isLoadingBlank, mustLoadSidebar) {
     DownloadMonitorPanel.init();
   }, 10000);
 
+  // Delayed initialization of PlacesDBUtils.
+  // This component checks for database coherence once per day, on
+  // an idle timer, taking corrective actions where needed.
+  setTimeout(function() PlacesUtils.startPlacesDBUtils(), 15000);
+
 #ifndef XP_MACOSX
   updateEditUIVisibility();
   let placesContext = document.getElementById("placesContext");
