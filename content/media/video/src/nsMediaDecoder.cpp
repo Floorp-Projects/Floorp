@@ -63,7 +63,9 @@ nsMediaDecoder::nsMediaDecoder() :
   mRGBHeight(-1),
   mSizeChanged(PR_FALSE),
   mVideoUpdateLock(nsnull),
-  mFramerate(0.0)
+  mFramerate(0.0),
+  mShuttingDown(PR_FALSE),
+  mStopping(PR_FALSE)
 {
   MOZ_COUNT_CTOR(nsMediaDecoder);
 }
