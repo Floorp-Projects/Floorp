@@ -347,7 +347,7 @@ extern JSClass  js_BlockClass;
  * When popping the stack across this object's "with" statement, client code
  * must call JS_SetPrivate(cx, withobj, NULL).
  */
-extern JSObject *
+extern JS_REQUIRES_STACK JSObject *
 js_NewWithObject(JSContext *cx, JSObject *proto, JSObject *parent, jsint depth);
 
 /*
@@ -363,7 +363,7 @@ extern JSObject *
 js_CloneBlockObject(JSContext *cx, JSObject *proto, JSObject *parent,
                     JSStackFrame *fp);
 
-extern JSBool
+extern JS_REQUIRES_STACK JSBool
 js_PutBlockObject(JSContext *cx, JSBool normalUnwind);
 
 struct JSSharpObjectMap {
@@ -584,7 +584,7 @@ extern JS_FRIEND_API(JSBool)
 js_FindProperty(JSContext *cx, jsid id, JSObject **objp, JSObject **pobjp,
                 JSProperty **propp);
 
-extern JSObject *
+extern JS_REQUIRES_STACK JSObject *
 js_FindIdentifierBase(JSContext *cx, jsid id, JSPropCacheEntry *entry);
 
 extern JSObject *

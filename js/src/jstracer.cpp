@@ -694,7 +694,7 @@ public:
     {
     }
 
-    LInsp ins2(LOpcode v, LInsp s0, LInsp s1)
+    JS_REQUIRES_STACK LInsp ins2(LOpcode v, LInsp s0, LInsp s1)
     {
         if (s0 == s1 && v == LIR_feq) {
             if (isPromote(s0)) {
@@ -907,7 +907,7 @@ public:
 
 /* Calculate the total number of native frame slots we need from this frame
    all the way back to the entry frame, including the current stack usage. */
-unsigned
+JS_REQUIRES_STACK unsigned
 js_NativeStackSlots(JSContext *cx, unsigned callDepth)
 {
     JSStackFrame* fp = cx->fp;
@@ -940,7 +940,7 @@ js_NativeStackSlots(JSContext *cx, unsigned callDepth)
 }
 
 /* Capture the type map for the selected slots of the global object. */
-void
+JS_REQUIRES_STACK void
 TypeMap::captureGlobalTypes(JSContext* cx, SlotList& slots)
 {
     unsigned ngslots = slots.length();
@@ -959,7 +959,7 @@ TypeMap::captureGlobalTypes(JSContext* cx, SlotList& slots)
 }
 
 /* Capture the type map for the currently pending stack frames. */
-void
+JS_REQUIRES_STACK void
 TypeMap::captureStackTypes(JSContext* cx, unsigned callDepth)
 {
     setLength(js_NativeStackSlots(cx, callDepth));
@@ -1001,6 +1001,7 @@ mergeTypeMaps(uint8** partial, unsigned* plength, uint8* complete, unsigned clen
 static void
 js_TrashTree(JSContext* cx, Fragment* f);
 
+JS_REQUIRES_STACK
 TraceRecorder::TraceRecorder(JSContext* cx, VMSideExit* _anchor, Fragment* _fragment,
         TreeInfo* ti, unsigned ngslots, uint8* globalTypeMap, uint8* stackTypeMap,
         VMSideExit* innermostNestedGuard, Fragment* outerToBlacklist)
@@ -1164,7 +1165,7 @@ TraceRecorder::isGlobal(jsval* p) const
 }
 
 /* Determine the offset in the native stack for a jsval we track */
-ptrdiff_t
+JS_REQUIRES_STACK ptrdiff_t
 TraceRecorder::nativeStackOffset(jsval* p) const
 {
 #ifdef DEBUG
@@ -1410,7 +1411,7 @@ NativeToValue(JSContext* cx, jsval& v, uint8 type, double* slot)
 }
 
 /* Attempt to unbox the given list of interned globals onto the native global frame. */
-static void
+static JS_REQUIRES_STACK void
 BuildNativeGlobalFrame(JSContext* cx, unsigned ngslots, uint16* gslots, uint8* mp, double* np)
 {
     debug_only_v(printf("global: ");)
@@ -1422,7 +1423,7 @@ BuildNativeGlobalFrame(JSContext* cx, unsigned ngslots, uint16* gslots, uint8* m
 }
 
 /* Attempt to unbox the given JS frame onto a native frame. */
-static void
+static JS_REQUIRES_STACK void
 BuildNativeStackFrame(JSContext* cx, unsigned callDepth, uint8* mp, double* np)
 {
     debug_only_v(printf("stack: ");)
@@ -1436,7 +1437,7 @@ BuildNativeStackFrame(JSContext* cx, unsigned callDepth, uint8* mp, double* np)
 
 /* Box the given native frame into a JS frame. This only fails due to a hard error
    (out of memory for example). */
-static int
+static JS_REQUIRES_STACK int
 FlushNativeGlobalFrame(JSContext* cx, unsigned ngslots, uint16* gslots, uint8* mp, double* np)
 {
     uint8* mp_base = mp;
@@ -1464,7 +1465,7 @@ FlushNativeGlobalFrame(JSContext* cx, unsigned ngslots, uint16* gslots, uint8* m
  *                  be restored.
  * @return the number of things we popped off of np.
  */
-static int
+static JS_REQUIRES_STACK int
 FlushNativeStackFrame(JSContext* cx, unsigned callDepth, uint8* mp, double* np,
                       JSStackFrame* stopFrame)
 {
@@ -1508,7 +1509,7 @@ skip:
 }
 
 /* Emit load instructions onto the trace that read the initial stack state. */
-void
+JS_REQUIRES_STACK void
 TraceRecorder::import(LIns* base, ptrdiff_t offset, jsval* p, uint8& t,
                       const char *prefix, uintN index, JSStackFrame *fp)
 {
@@ -1570,7 +1571,7 @@ TraceRecorder::import(LIns* base, ptrdiff_t offset, jsval* p, uint8& t,
 #endif
 }
 
-void
+JS_REQUIRES_STACK void
 TraceRecorder::import(TreeInfo* treeInfo, LIns* sp, unsigned ngslots, unsigned callDepth,
                       uint8* globalTypeMap, uint8* stackTypeMap)
 {
@@ -1607,7 +1608,7 @@ TraceRecorder::import(TreeInfo* treeInfo, LIns* sp, unsigned ngslots, unsigned c
 }
 
 /* Lazily import a global slot if we don't already have it in the tracker. */
-bool
+JS_REQUIRES_STACK bool
 TraceRecorder::lazilyImportGlobalSlot(unsigned slot)
 {
     if (slot != uint16(slot)) /* we use a table of 16-bit ints, bail out if that's not enough */
@@ -1642,7 +1643,7 @@ TraceRecorder::writeBack(LIns* i, LIns* base, ptrdiff_t offset)
 }
 
 /* Update the tracker, then issue a write back store. */
-void
+JS_REQUIRES_STACK void
 TraceRecorder::set(jsval* p, LIns* i, bool initializing)
 {
     JS_ASSERT(initializing || tracker.has(p));
@@ -1676,7 +1677,7 @@ TraceRecorder::set(jsval* p, LIns* i, bool initializing)
 #undef ASSERT_VALID_CACHE_HIT
 }
 
-LIns*
+JS_REQUIRES_STACK LIns*
 TraceRecorder::get(jsval* p) const
 {
     return tracker.get(p);
@@ -1732,7 +1733,7 @@ js_IsLoopExit(jsbytecode* pc, jsbytecode* header)
 }
 
 /* Determine whether the current branch is a loop edge (taken or not taken). */
-static bool
+static JS_REQUIRES_STACK bool
 js_IsLoopEdge(jsbytecode* pc, jsbytecode* header)
 {
     switch (*pc) {
@@ -1751,7 +1752,7 @@ js_IsLoopEdge(jsbytecode* pc, jsbytecode* header)
 
 /* Promote slots if necessary to match the called tree' type map and report error if thats
    impossible. */
-bool
+JS_REQUIRES_STACK bool
 TraceRecorder::adjustCallerTypes(Fragment* f, unsigned* demote_slots, bool& trash)
 {
     JSTraceMonitor* tm = traceMonitor;
@@ -1801,7 +1802,7 @@ TraceRecorder::adjustCallerTypes(Fragment* f, unsigned* demote_slots, bool& tras
     return ok;
 }
 
-uint8 
+JS_REQUIRES_STACK uint8
 TraceRecorder::determineSlotType(jsval* vp) const
 {
     uint8 m;
@@ -1848,7 +1849,7 @@ TraceRecorder::determineSlotType(jsval* vp) const
 
 static jsbytecode* imacro_code[JSOP_LIMIT];
 
-LIns*
+JS_REQUIRES_STACK LIns*
 TraceRecorder::snapshot(ExitType exitType)
 {
     JSStackFrame* fp = cx->fp;
@@ -1977,7 +1978,7 @@ TraceRecorder::guard(bool expected, LIns* cond, LIns* exit)
 
 /* Emit a guard for condition (cond), expecting to evaluate to boolean result (expected)
    and generate a side exit with type exitType to jump to if the condition does not hold. */
-LIns*
+JS_REQUIRES_STACK LIns*
 TraceRecorder::guard(bool expected, LIns* cond, ExitType exitType)
 {
     return guard(expected, cond, snapshot(exitType));
@@ -1993,7 +1994,7 @@ TraceRecorder::guard(bool expected, LIns* cond, ExitType exitType)
  * @param stage_count   Outparam for set() buffer count.
  * @return              True if types are compatible, false otherwise.
  */
-bool
+JS_REQUIRES_STACK bool
 TraceRecorder::checkType(jsval& v, uint8 t, jsval*& stage_val, LIns*& stage_ins, 
                          unsigned& stage_count)
 {
@@ -2057,7 +2058,7 @@ TraceRecorder::checkType(jsval& v, uint8 t, jsval*& stage_val, LIns*& stage_ins,
  * @param demotes           Array to store demotable stack slots.
  * @return                  True if type stable, false otherwise.
  */
-bool
+JS_REQUIRES_STACK bool
 TraceRecorder::deduceTypeStability(Fragment* root_peer, Fragment** stable_peer, unsigned* demotes)
 {
     uint8* m;
@@ -2202,14 +2203,14 @@ checktype_fail_2:
 }
 
 /* Check whether the current pc location is the loop header of the loop this recorder records. */
-bool
+JS_REQUIRES_STACK bool
 TraceRecorder::isLoopHeader(JSContext* cx) const
 {
     return cx->fp->regs->pc == fragment->root->ip;
 }
 
 /* Compile the current fragment. */
-void
+JS_REQUIRES_STACK void
 TraceRecorder::compile(Fragmento* fragmento)
 {
     if (treeInfo->maxNativeStackSlots >= MAX_NATIVE_STACK_SLOTS) {
@@ -2266,7 +2267,7 @@ js_JoinPeersIfCompatible(Fragmento* frago, Fragment* stableFrag, TreeInfo* stabl
 }
 
 /* Complete and compile a trace and link it to the existing tree if appropriate. */
-bool
+JS_REQUIRES_STACK bool
 TraceRecorder::closeLoop(Fragmento* fragmento, bool& demote, unsigned *demotes)
 {
     bool stable;
@@ -2367,7 +2368,7 @@ TraceRecorder::closeLoop(Fragmento* fragmento, bool& demote, unsigned *demotes)
     return true;
 }
 
-void
+JS_REQUIRES_STACK void
 TraceRecorder::joinEdgesToEntry(Fragmento* fragmento, Fragment* peer_root)
 {
     if (fragment->kind == LoopTrace) {
@@ -2432,7 +2433,7 @@ TraceRecorder::joinEdgesToEntry(Fragmento* fragmento, Fragment* peer_root)
 }
 
 /* Emit an always-exit guard and compile the tree (used for break statements. */
-void
+JS_REQUIRES_STACK void
 TraceRecorder::endLoop(Fragmento* fragmento)
 {
     LIns* exitIns = snapshot(LOOP_EXIT);
@@ -2459,7 +2460,7 @@ TraceRecorder::endLoop(Fragmento* fragmento)
 }
 
 /* Emit code to adjust the stack to match the inner tree's stack expectations. */
-void
+JS_REQUIRES_STACK void
 TraceRecorder::prepareTreeCall(Fragment* inner)
 {
     TreeInfo* ti = (TreeInfo*)inner->vmprivate;
@@ -2499,7 +2500,7 @@ TraceRecorder::prepareTreeCall(Fragment* inner)
 }
 
 /* Record a call to an inner tree. */
-void
+JS_REQUIRES_STACK void
 TraceRecorder::emitTreeCall(Fragment* inner, VMSideExit* exit)
 {
     TreeInfo* ti = (TreeInfo*)inner->vmprivate;
@@ -2522,7 +2523,7 @@ TraceRecorder::emitTreeCall(Fragment* inner, VMSideExit* exit)
 }
 
 /* Add a if/if-else control-flow merge point to the list of known merge points. */
-void
+JS_REQUIRES_STACK void
 TraceRecorder::trackCfgMerges(jsbytecode* pc)
 {
     /* If we hit the beginning of an if/if-else, then keep track of the merge point after it. */
@@ -2540,7 +2541,7 @@ TraceRecorder::trackCfgMerges(jsbytecode* pc)
 
 /* Invert the direction of the guard if this is a loop edge that is not 
    taken (thin loop). */
-void
+JS_REQUIRES_STACK void
 TraceRecorder::flipIf(jsbytecode* pc, bool& cond)
 {
     if (js_IsLoopEdge(pc, (jsbytecode*)fragment->root->ip)) {
@@ -2576,7 +2577,7 @@ TraceRecorder::flipIf(jsbytecode* pc, bool& cond)
 }
 
 /* Emit code for a fused IFEQ/IFNE. */
-void
+JS_REQUIRES_STACK void
 TraceRecorder::fuseIf(jsbytecode* pc, bool cond, LIns* x)
 {
     if (x->isconst()) // no need to guard if condition is constant
@@ -2716,7 +2717,7 @@ js_CheckGlobalObjectShape(JSContext* cx, JSTraceMonitor* tm, JSObject* globalObj
     return true;
 }
 
-static bool
+static JS_REQUIRES_STACK bool
 js_StartRecorder(JSContext* cx, VMSideExit* anchor, Fragment* f, TreeInfo* ti,
                  unsigned ngslots, uint8* globalTypeMap, uint8* stackTypeMap, 
                  VMSideExit* expectedInnerExit, Fragment* outer)
@@ -2769,6 +2770,8 @@ js_TrashTree(JSContext* cx, Fragment* f)
 static int
 js_SynthesizeFrame(JSContext* cx, const FrameInfo& fi)
 {
+    VOUCH_DOES_NOT_REQUIRE_STACK();
+
     JS_ASSERT(HAS_FUNCTION_CLASS(fi.callee));
 
     JSFunction* fun = GET_FUNCTION_PRIVATE(cx, fi.callee);
@@ -2941,7 +2944,7 @@ js_dumpMap(TypeMap const & tm) {
 }
 #endif
 
-bool
+JS_REQUIRES_STACK bool
 js_RecordTree(JSContext* cx, JSTraceMonitor* tm, Fragment* f, Fragment* outer, unsigned* demotes)
 {
     JS_ASSERT(cx->fp->regs->pc == f->ip && f->root == f);
@@ -3044,7 +3047,7 @@ js_RecordTree(JSContext* cx, JSTraceMonitor* tm, Fragment* f, Fragment* outer, u
     return true;
 }
 
-static bool
+JS_REQUIRES_STACK static bool
 js_AttemptToStabilizeTree(JSContext* cx, VMSideExit* exit, Fragment* outer)
 {
     JSTraceMonitor* tm = &JS_TRACE_MONITOR(cx);
@@ -3073,7 +3076,7 @@ js_AttemptToStabilizeTree(JSContext* cx, VMSideExit* exit, Fragment* outer)
     return true;
 }
 
-static bool
+static JS_REQUIRES_STACK bool
 js_AttemptToExtendTree(JSContext* cx, VMSideExit* anchor, VMSideExit* exitedFrom, Fragment* outer)
 {
     Fragment* f = anchor->from->root;
@@ -3127,14 +3130,14 @@ js_AttemptToExtendTree(JSContext* cx, VMSideExit* anchor, VMSideExit* exitedFrom
     return false;
 }
 
-static VMSideExit*
+static JS_REQUIRES_STACK VMSideExit*
 js_ExecuteTree(JSContext* cx, Fragment* f, uintN& inlineCallCount, 
                VMSideExit** innermostNestedGuardp);
 
-static Fragment*
+static JS_REQUIRES_STACK Fragment*
 js_FindVMCompatiblePeer(JSContext* cx, Fragment* f);
 
-static bool
+static JS_REQUIRES_STACK bool
 js_CloseLoop(JSContext* cx)
 {
     JSTraceMonitor* tm = &JS_TRACE_MONITOR(cx);
@@ -3169,7 +3172,7 @@ js_CloseLoop(JSContext* cx)
     return false;
 }
 
-bool
+JS_REQUIRES_STACK bool
 js_RecordLoopEdge(JSContext* cx, TraceRecorder* r, uintN& inlineCallCount)
 {
 #ifdef JS_THREADSAFE
@@ -3336,7 +3339,8 @@ js_IsEntryTypeCompatible(jsval* vp, uint8* m)
     }
 }
 
-Fragment* TraceRecorder::findNestedCompatiblePeer(Fragment* f, Fragment** empty)
+JS_REQUIRES_STACK Fragment*
+TraceRecorder::findNestedCompatiblePeer(Fragment* f, Fragment** empty)
 {
     Fragment* demote;
     JSTraceMonitor* tm;
@@ -3421,7 +3425,7 @@ check_fail:
  * @param ti            Tree info of peer we're testing.
  * @return              True if compatible (with or without demotions), false otherwise.
  */
-static bool
+static JS_REQUIRES_STACK bool
 js_CheckEntryTypes(JSContext* cx, TreeInfo* ti)
 {
     JSTraceMonitor* tm;
@@ -3464,7 +3468,7 @@ check_fail:
  * @param f             First peer fragment.
  * @param nodemote      If true, will try to find a peer that does not require demotion.
  */
-static Fragment*
+static JS_REQUIRES_STACK Fragment*
 js_FindVMCompatiblePeer(JSContext* cx, Fragment* f)
 {
     for (; f != NULL; f = f->peer) {
@@ -3720,7 +3724,7 @@ js_ExecuteTree(JSContext* cx, Fragment* f, uintN& inlineCallCount,
     return innermost;
 }
 
-bool
+JS_REQUIRES_STACK bool
 js_MonitorLoopEdge(JSContext* cx, uintN& inlineCallCount)
 {
     JSTraceMonitor* tm = &JS_TRACE_MONITOR(cx);
@@ -3799,7 +3803,7 @@ monitor_loop:
     }
 }
 
-bool
+JS_REQUIRES_STACK bool
 js_MonitorRecording(TraceRecorder* tr)
 {
     JSContext* cx = tr->cx;
@@ -3864,7 +3868,7 @@ js_BlacklistPC(Fragmento* frago, Fragment* frag)
     frag->blacklist();
 }
 
-void
+JS_REQUIRES_STACK void
 js_AbortRecording(JSContext* cx, const char* reason)
 {
     JSTraceMonitor* tm = &JS_TRACE_MONITOR(cx);
@@ -4031,7 +4035,7 @@ js_FlushJITOracle(JSContext* cx)
     oracle.clear();
 }
 
-extern void
+extern JS_REQUIRES_STACK void
 js_FlushJITCache(JSContext* cx)
 {
     if (!TRACING_ENABLED(cx))
@@ -4062,28 +4066,44 @@ js_FlushJITCache(JSContext* cx)
     }
 }
 
-jsval&
+JS_FORCES_STACK JSStackFrame *
+js_GetTopStackFrame(JSContext *cx)
+{
+    if (JS_EXECUTING_TRACE(cx)) {
+        /*
+         * TODO: If executing a tree, synthesize stack frames and bail off
+         * trace. See bug 462027.
+         */
+        debug_only_v(printf("Internal error: getting top stack frame on trace.\n"));
+#ifdef DEBUG_jason
+        JS_ASSERT(0);
+#endif
+    }
+    return cx->fp;
+}
+
+JS_REQUIRES_STACK jsval&
 TraceRecorder::argval(unsigned n) const
 {
     JS_ASSERT(n < cx->fp->fun->nargs);
     return cx->fp->argv[n];
 }
 
-jsval&
+JS_REQUIRES_STACK jsval&
 TraceRecorder::varval(unsigned n) const
 {
     JS_ASSERT(n < cx->fp->script->nslots);
     return cx->fp->slots[n];
 }
 
-jsval&
+JS_REQUIRES_STACK jsval&
 TraceRecorder::stackval(int n) const
 {
     jsval* sp = cx->fp->regs->sp;
     return sp[n];
 }
 
-LIns*
+JS_REQUIRES_STACK LIns*
 TraceRecorder::scopeChain() const
 {
     return lir->insLoad(LIR_ldp,
@@ -4103,7 +4123,7 @@ FrameInRange(JSStackFrame* fp, JSStackFrame *target, unsigned callDepth)
     return true;
 }
 
-bool
+JS_REQUIRES_STACK bool
 TraceRecorder::activeCallOrGlobalSlot(JSObject* obj, jsval*& vp)
 {
     JS_ASSERT(obj != globalObj);
@@ -4156,37 +4176,37 @@ TraceRecorder::activeCallOrGlobalSlot(JSObject* obj, jsval*& vp)
     ABORT_TRACE("fp->scopeChain is not global or active call object");
 }
 
-LIns*
+JS_REQUIRES_STACK LIns*
 TraceRecorder::arg(unsigned n)
 {
     return get(&argval(n));
 }
 
-void
+JS_REQUIRES_STACK void
 TraceRecorder::arg(unsigned n, LIns* i)
 {
     set(&argval(n), i);
 }
 
-LIns*
+JS_REQUIRES_STACK LIns*
 TraceRecorder::var(unsigned n)
 {
     return get(&varval(n));
 }
 
-void
+JS_REQUIRES_STACK void
 TraceRecorder::var(unsigned n, LIns* i)
 {
     set(&varval(n), i);
 }
 
-LIns*
+JS_REQUIRES_STACK LIns*
 TraceRecorder::stack(int n)
 {
     return get(&stackval(n));
 }
 
-void
+JS_REQUIRES_STACK void
 TraceRecorder::stack(int n, LIns* i)
 {
     set(&stackval(n), i, n >= 0);
@@ -4248,7 +4268,7 @@ TraceRecorder::f2i(LIns* f)
     return lir->insCall(&js_DoubleToInt32_ci, &f);
 }
 
-LIns*
+JS_REQUIRES_STACK LIns*
 TraceRecorder::makeNumberInt32(LIns* f)
 {
     JS_ASSERT(f->isQuad());
@@ -4299,7 +4319,7 @@ TraceRecorder::call_imacro(jsbytecode* imacro)
     return false;
 }
 
-bool
+JS_REQUIRES_STACK bool
 TraceRecorder::ifop()
 {
     jsval& v = stackval(-1);
@@ -4345,7 +4365,7 @@ TraceRecorder::ifop()
     return true;
 }
 
-bool
+JS_REQUIRES_STACK bool
 TraceRecorder::switchop()
 {
     jsval& v = stackval(-1);
@@ -4378,7 +4398,7 @@ TraceRecorder::switchop()
     return true;
 }
 
-bool
+JS_REQUIRES_STACK bool
 TraceRecorder::inc(jsval& v, jsint incr, bool pre)
 {
     LIns* v_ins = get(&v);
@@ -4392,7 +4412,7 @@ TraceRecorder::inc(jsval& v, jsint incr, bool pre)
  * On exit, v_ins is the incremented unboxed value, and the appropriate
  * value (pre- or post-increment as described by pre) is stacked.
  */
-bool
+JS_REQUIRES_STACK bool
 TraceRecorder::inc(jsval& v, LIns*& v_ins, jsint incr, bool pre)
 {
     if (!isNumber(v))
@@ -4410,7 +4430,7 @@ TraceRecorder::inc(jsval& v, LIns*& v_ins, jsint incr, bool pre)
     return true;
 }
 
-bool
+JS_REQUIRES_STACK bool
 TraceRecorder::incProp(jsint incr, bool pre)
 {
     jsval& l = stackval(-1);
@@ -4440,7 +4460,7 @@ TraceRecorder::incProp(jsint incr, bool pre)
     return true;
 }
 
-bool
+JS_REQUIRES_STACK bool
 TraceRecorder::incElem(jsint incr, bool pre)
 {
     jsval& r = stackval(-1);
@@ -4540,7 +4560,7 @@ static struct {
 
 JS_STATIC_ASSERT(sizeof(binary_imacros) < IMACRO_PC_ADJ_LIMIT);
 
-bool
+JS_REQUIRES_STACK bool
 TraceRecorder::cmp(LOpcode op, int flags)
 {
     jsval& r = stackval(-1);
@@ -4706,7 +4726,7 @@ TraceRecorder::cmp(LOpcode op, int flags)
     return true;
 }
 
-bool
+JS_REQUIRES_STACK bool
 TraceRecorder::unary(LOpcode op)
 {
     jsval& v = stackval(-1);
@@ -4724,7 +4744,7 @@ TraceRecorder::unary(LOpcode op)
     return false;
 }
 
-bool
+JS_REQUIRES_STACK bool
 TraceRecorder::binary(LOpcode op)
 {
     jsval& r = stackval(-1);
@@ -4814,7 +4834,7 @@ TraceRecorder::map_is_native(JSObjectMap* map, LIns* map_ins, LIns*& ops_ins, si
     ABORT_TRACE("non-native map");
 }
 
-bool
+JS_REQUIRES_STACK bool
 TraceRecorder::test_property_cache(JSObject* obj, LIns* obj_ins, JSObject*& obj2, jsuword& pcval)
 {
     jsbytecode* pc = cx->fp->regs->pc;
@@ -4967,7 +4987,7 @@ TraceRecorder::test_property_cache(JSObject* obj, LIns* obj_ins, JSObject*& obj2
     return true;
 }
 
-bool
+JS_REQUIRES_STACK bool
 TraceRecorder::test_property_cache_direct_slot(JSObject* obj, LIns* obj_ins, uint32& slot)
 {
     JSObject* obj2;
@@ -5077,7 +5097,7 @@ TraceRecorder::native_get(LIns* obj_ins, LIns* pobj_ins, JSScopeProperty* sprop,
 // So box_jsval can emit no LIR_or at all to tag an object jsval.
 JS_STATIC_ASSERT(JSVAL_OBJECT == 0);
 
-bool
+JS_REQUIRES_STACK bool
 TraceRecorder::box_jsval(jsval v, LIns*& v_ins)
 {
     if (isNumber(v)) {
@@ -5100,7 +5120,7 @@ TraceRecorder::box_jsval(jsval v, LIns*& v_ins)
     return false;
 }
 
-bool
+JS_REQUIRES_STACK bool
 TraceRecorder::unbox_jsval(jsval v, LIns*& v_ins)
 {
     if (isNumber(v)) {
@@ -5146,7 +5166,7 @@ TraceRecorder::unbox_jsval(jsval v, LIns*& v_ins)
     return false;
 }
 
-bool
+JS_REQUIRES_STACK bool
 TraceRecorder::getThis(LIns*& this_ins)
 {
     if (cx->fp->callee) { /* in a function */
@@ -5160,7 +5180,7 @@ TraceRecorder::getThis(LIns*& this_ins)
     return true;
 }
 
-bool
+JS_REQUIRES_STACK bool
 TraceRecorder::guardClass(JSObject* obj, LIns* obj_ins, JSClass* clasp, ExitType exitType)
 {
     bool cond = STOBJ_GET_CLASS(obj) == clasp;
@@ -5174,13 +5194,13 @@ TraceRecorder::guardClass(JSObject* obj, LIns* obj_ins, JSClass* clasp, ExitType
     return cond;
 }
 
-bool
+JS_REQUIRES_STACK bool
 TraceRecorder::guardDenseArray(JSObject* obj, LIns* obj_ins, ExitType exitType)
 {
     return guardClass(obj, obj_ins, &js_ArrayClass, exitType);
 }
 
-bool
+JS_REQUIRES_STACK bool
 TraceRecorder::guardDenseArrayIndex(JSObject* obj, jsint idx, LIns* obj_ins,
                                     LIns* dslots_ins, LIns* idx_ins, ExitType exitType)
 {
@@ -5238,7 +5258,7 @@ TraceRecorder::guardDenseArrayIndex(JSObject* obj, jsint idx, LIns* obj_ins,
  * out obj's shape being the global object's shape at recording time. This is
  * safe because the global shape cannot change on trace.
  */
-bool
+JS_REQUIRES_STACK bool
 TraceRecorder::guardElemOp(JSObject* obj, LIns* obj_ins, jsid id, size_t op_offset, jsval* vp)
 {
     LIns* map_ins = lir->insLoad(LIR_ldp, obj_ins, (int)offsetof(JSObject, map));
@@ -5288,7 +5308,7 @@ TraceRecorder::guardElemOp(JSObject* obj, LIns* obj_ins, jsid id, size_t op_offs
     return true;
 }
 
-void
+JS_REQUIRES_STACK void
 TraceRecorder::clearFrameSlotsFromCache()
 {
     /* Clear out all slots of this frame in the nativeFrameTracker. Different locations on the
@@ -5310,7 +5330,7 @@ TraceRecorder::clearFrameSlotsFromCache()
         nativeFrameTracker.set(vp++, (LIns*)0);
 }
 
-bool
+JS_REQUIRES_STACK bool
 TraceRecorder::record_EnterFrame()
 {
     JSStackFrame* fp = cx->fp;
@@ -5342,7 +5362,7 @@ TraceRecorder::record_EnterFrame()
     return true;
 }
 
-bool
+JS_REQUIRES_STACK bool
 TraceRecorder::record_LeaveFrame()
 {
     debug_only_v(
@@ -5361,20 +5381,20 @@ TraceRecorder::record_LeaveFrame()
     return true;
 }
 
-bool
+JS_REQUIRES_STACK bool
 TraceRecorder::record_JSOP_INTERRUPT()
 {
     return false;
 }
 
-bool
+JS_REQUIRES_STACK bool
 TraceRecorder::record_JSOP_PUSH()
 {
     stack(0, INS_CONST(JSVAL_TO_BOOLEAN(JSVAL_VOID)));
     return true;
 }
 
-bool
+JS_REQUIRES_STACK bool
 TraceRecorder::record_JSOP_POPV()
 {
     jsval& rval = stackval(-1);
@@ -5390,19 +5410,19 @@ TraceRecorder::record_JSOP_POPV()
     return true;
 }
 
-bool
+JS_REQUIRES_STACK bool
 TraceRecorder::record_JSOP_ENTERWITH()
 {
     return false;
 }
 
-bool
+JS_REQUIRES_STACK bool
 TraceRecorder::record_JSOP_LEAVEWITH()
 {
     return false;
 }
 
-bool
+JS_REQUIRES_STACK bool
 TraceRecorder::record_JSOP_RETURN()
 {
     jsval& rval = stackval(-1);
@@ -5418,26 +5438,26 @@ TraceRecorder::record_JSOP_RETURN()
     return true;
 }
 
-bool
+JS_REQUIRES_STACK bool
 TraceRecorder::record_JSOP_GOTO()
 {
     return true;
 }
 
-bool
+JS_REQUIRES_STACK bool
 TraceRecorder::record_JSOP_IFEQ()
 {
     trackCfgMerges(cx->fp->regs->pc);
     return ifop();
 }
 
-bool
+JS_REQUIRES_STACK bool
 TraceRecorder::record_JSOP_IFNE()
 {
     return ifop();
 }
 
-bool
+JS_REQUIRES_STACK bool
 TraceRecorder::record_JSOP_ARGUMENTS()
 {
 #if 1
@@ -5451,14 +5471,14 @@ TraceRecorder::record_JSOP_ARGUMENTS()
 #endif
 }
 
-bool
+JS_REQUIRES_STACK bool
 TraceRecorder::record_JSOP_DUP()
 {
     stack(0, get(&stackval(-1)));
     return true;
 }
 
-bool
+JS_REQUIRES_STACK bool
 TraceRecorder::record_JSOP_DUP2()
 {
     stack(0, get(&stackval(-2)));
@@ -5466,7 +5486,7 @@ TraceRecorder::record_JSOP_DUP2()
     return true;
 }
 
-bool
+JS_REQUIRES_STACK bool
 TraceRecorder::record_JSOP_SWAP()
 {
     jsval& l = stackval(-2);
@@ -5478,79 +5498,79 @@ TraceRecorder::record_JSOP_SWAP()
     return true;
 }
 
-bool
+JS_REQUIRES_STACK bool
 TraceRecorder::record_JSOP_SETCONST()
 {
     return false;
 }
 
-bool
+JS_REQUIRES_STACK bool
 TraceRecorder::record_JSOP_BITOR()
 {
     return binary(LIR_or);
 }
 
-bool
+JS_REQUIRES_STACK bool
 TraceRecorder::record_JSOP_BITXOR()
 {
     return binary(LIR_xor);
 }
 
-bool
+JS_REQUIRES_STACK bool
 TraceRecorder::record_JSOP_BITAND()
 {
     return binary(LIR_and);
 }
 
-bool
+JS_REQUIRES_STACK bool
 TraceRecorder::record_JSOP_EQ()
 {
     return cmp(LIR_feq, CMP_TRY_BRANCH_AFTER_COND);
 }
 
-bool
+JS_REQUIRES_STACK bool
 TraceRecorder::record_JSOP_NE()
 {
     return cmp(LIR_feq, CMP_NEGATE | CMP_TRY_BRANCH_AFTER_COND);
 }
 
-bool
+JS_REQUIRES_STACK bool
 TraceRecorder::record_JSOP_LT()
 {
     return cmp(LIR_flt, CMP_TRY_BRANCH_AFTER_COND);
 }
 
-bool
+JS_REQUIRES_STACK bool
 TraceRecorder::record_JSOP_LE()
 {
     return cmp(LIR_fle, CMP_TRY_BRANCH_AFTER_COND);
 }
 
-bool
+JS_REQUIRES_STACK bool
 TraceRecorder::record_JSOP_GT()
 {
     return cmp(LIR_fgt, CMP_TRY_BRANCH_AFTER_COND);
 }
 
-bool
+JS_REQUIRES_STACK bool
 TraceRecorder::record_JSOP_GE()
 {
     return cmp(LIR_fge, CMP_TRY_BRANCH_AFTER_COND);
 }
 
-bool
+JS_REQUIRES_STACK bool
 TraceRecorder::record_JSOP_LSH()
 {
     return binary(LIR_lsh);
 }
 
-bool
+JS_REQUIRES_STACK bool
 TraceRecorder::record_JSOP_RSH()
 {
     return binary(LIR_rsh);
 }
 
-bool
+JS_REQUIRES_STACK bool
 TraceRecorder::record_JSOP_URSH()
 {
     return binary(LIR_ush);
@@ -5591,7 +5611,7 @@ static struct {
 
 JS_STATIC_ASSERT(sizeof(add_imacros) < IMACRO_PC_ADJ_LIMIT);
 
-bool
+JS_REQUIRES_STACK bool
 TraceRecorder::record_JSOP_ADD()
 {
     jsval& r = stackval(-1);
@@ -5618,25 +5638,25 @@ TraceRecorder::record_JSOP_ADD()
     return binary(LIR_fadd);
 }
 
-bool
+JS_REQUIRES_STACK bool
 TraceRecorder::record_JSOP_SUB()
 {
     return binary(LIR_fsub);
 }
 
-bool
+JS_REQUIRES_STACK bool
 TraceRecorder::record_JSOP_MUL()
 {
     return binary(LIR_fmul);
 }
 
-bool
+JS_REQUIRES_STACK bool
 TraceRecorder::record_JSOP_DIV()
 {
     return binary(LIR_fdiv);
 }
 
-bool
+JS_REQUIRES_STACK bool
 TraceRecorder::record_JSOP_MOD()
 {
     jsval& r = stackval(-1);
@@ -5670,7 +5690,7 @@ TraceRecorder::record_JSOP_MOD()
     return false;
 }
 
-bool
+JS_REQUIRES_STACK bool
 TraceRecorder::record_JSOP_NOT()
 {
     jsval& v = stackval(-1);
@@ -5695,13 +5715,13 @@ TraceRecorder::record_JSOP_NOT()
     return true;
 }
 
-bool
+JS_REQUIRES_STACK bool
 TraceRecorder::record_JSOP_BITNOT()
 {
     return unary(LIR_not);
 }
 
-bool
+JS_REQUIRES_STACK bool
 TraceRecorder::record_JSOP_NEG()
 {
     jsval& v = stackval(-1);
@@ -5794,7 +5814,7 @@ TraceRecorder::newArray(JSObject *ctor, uint32 argc, jsval *argv, jsval *rval)
     return true;
 }
 
-bool
+JS_REQUIRES_STACK bool
 TraceRecorder::functionCall(bool constructing, uintN argc)
 {
     JSStackFrame* fp = cx->fp;
@@ -6003,31 +6023,31 @@ success:
     return true;
 }
 
-bool
+JS_REQUIRES_STACK bool
 TraceRecorder::record_JSOP_NEW()
 {
     return functionCall(true, GET_ARGC(cx->fp->regs->pc));
 }
 
-bool
+JS_REQUIRES_STACK bool
 TraceRecorder::record_JSOP_DELNAME()
 {
     return false;
 }
 
-bool
+JS_REQUIRES_STACK bool
 TraceRecorder::record_JSOP_DELPROP()
 {
     return false;
 }
 
-bool
+JS_REQUIRES_STACK bool
 TraceRecorder::record_JSOP_DELELEM()
 {
     return false;
 }
 
-bool
+JS_REQUIRES_STACK bool
 TraceRecorder::record_JSOP_TYPEOF()
 {
     jsval& r = stackval(-1);
@@ -6052,50 +6072,50 @@ TraceRecorder::record_JSOP_TYPEOF()
     return true;
 }
 
-bool
+JS_REQUIRES_STACK bool
 TraceRecorder::record_JSOP_VOID()
 {
     stack(-1, INS_CONST(JSVAL_TO_BOOLEAN(JSVAL_VOID)));
     return true;
 }
 
-bool
+JS_REQUIRES_STACK bool
 TraceRecorder::record_JSOP_INCNAME()
 {
     return incName(1);
 }
 
-bool
+JS_REQUIRES_STACK bool
 TraceRecorder::record_JSOP_INCPROP()
 {
     return incProp(1);
 }
 
-bool
+JS_REQUIRES_STACK bool
 TraceRecorder::record_JSOP_INCELEM()
 {
     return incElem(1);
 }
 
-bool
+JS_REQUIRES_STACK bool
 TraceRecorder::record_JSOP_DECNAME()
 {
     return incName(-1);
 }
 
-bool
+JS_REQUIRES_STACK bool
 TraceRecorder::record_JSOP_DECPROP()
 {
     return incProp(-1);
 }
 
-bool
+JS_REQUIRES_STACK bool
 TraceRecorder::record_JSOP_DECELEM()
 {
     return incElem(-1);
 }
 
-bool
+JS_REQUIRES_STACK bool
 TraceRecorder::incName(jsint incr, bool pre)
 {
     jsval* vp;
@@ -6108,50 +6128,50 @@ TraceRecorder::incName(jsint incr, bool pre)
     return true;
 }
 
-bool
+JS_REQUIRES_STACK bool
 TraceRecorder::record_JSOP_NAMEINC()
 {
     return incName(1, false);
 }
 
-bool
+JS_REQUIRES_STACK bool
 TraceRecorder::record_JSOP_PROPINC()
 {
     return incProp(1, false);
 }
 
 // XXX consolidate with record_JSOP_GETELEM code...
-bool
+JS_REQUIRES_STACK bool
 TraceRecorder::record_JSOP_ELEMINC()
 {
     return incElem(1, false);
 }
 
-bool
+JS_REQUIRES_STACK bool
 TraceRecorder::record_JSOP_NAMEDEC()
 {
     return incName(-1, false);
 }
 
-bool
+JS_REQUIRES_STACK bool
 TraceRecorder::record_JSOP_PROPDEC()
 {
     return incProp(-1, false);
 }
 
-bool
+JS_REQUIRES_STACK bool
 TraceRecorder::record_JSOP_ELEMDEC()
 {
     return incElem(-1, false);
 }
 
-bool
+JS_REQUIRES_STACK bool
 TraceRecorder::record_JSOP_GETPROP()
 {
     return getProp(stackval(-1));
 }
 
-bool
+JS_REQUIRES_STACK bool
 TraceRecorder::record_JSOP_SETPROP()
 {
     jsval& l = stackval(-2);
@@ -6164,7 +6184,7 @@ TraceRecorder::record_JSOP_SETPROP()
     return true;
 }
 
-bool
+JS_REQUIRES_STACK bool
 TraceRecorder::record_SetPropHit(JSPropCacheEntry* entry, JSScopeProperty* sprop)
 {
     if (sprop->setter == js_watch_set)
@@ -6222,7 +6242,7 @@ TraceRecorder::record_SetPropHit(JSPropCacheEntry* entry, JSScopeProperty* sprop
     return true;
 }
 
-bool
+JS_REQUIRES_STACK bool
 TraceRecorder::record_SetPropMiss(JSPropCacheEntry* entry)
 {
     if (entry->kpc != cx->fp->regs->pc || !PCVAL_IS_SPROP(entry->vword))
@@ -6242,7 +6262,7 @@ TraceRecorder::record_SetPropMiss(JSPropCacheEntry* entry)
     return record_SetPropHit(entry, sprop);
 }
 
-bool
+JS_REQUIRES_STACK bool
 TraceRecorder::record_JSOP_GETELEM()
 {
     jsval& idx = stackval(-1);
@@ -6326,7 +6346,7 @@ TraceRecorder::record_JSOP_GETELEM()
     return true;
 }
 
-bool
+JS_REQUIRES_STACK bool
 TraceRecorder::record_JSOP_SETELEM()
 {
     jsval& v = stackval(-1);
@@ -6385,7 +6405,7 @@ TraceRecorder::record_JSOP_SETELEM()
     return true;
 }
 
-bool
+JS_REQUIRES_STACK bool
 TraceRecorder::record_JSOP_CALLNAME()
 {
     JSObject* obj = cx->fp->scopeChain;
@@ -6413,19 +6433,19 @@ TraceRecorder::record_JSOP_CALLNAME()
     return true;
 }
 
-bool
+JS_REQUIRES_STACK bool
 TraceRecorder::record_JSOP_GETUPVAR()
 {
     ABORT_TRACE("GETUPVAR");
 }
 
-bool
+JS_REQUIRES_STACK bool
 TraceRecorder::record_JSOP_CALLUPVAR()
 {
     ABORT_TRACE("CALLUPVAR");
 }
 
-bool
+JS_REQUIRES_STACK bool
 TraceRecorder::guardCallee(jsval& callee)
 {
     LIns* exit = snapshot(BRANCH_EXIT);
@@ -6446,7 +6466,7 @@ TraceRecorder::guardCallee(jsval& callee)
     return true;
 }
 
-bool
+JS_REQUIRES_STACK bool
 TraceRecorder::interpretedFunctionCall(jsval& fval, JSFunction* fun, uintN argc, bool constructing)
 {
     if (JS_GetGlobalForObject(cx, JSVAL_TO_OBJECT(fval)) != globalObj)
@@ -6499,13 +6519,13 @@ TraceRecorder::interpretedFunctionCall(jsval& fval, JSFunction* fun, uintN argc,
     return true;
 }
 
-bool
+JS_REQUIRES_STACK bool
 TraceRecorder::record_JSOP_CALL()
 {
     return functionCall(false, GET_ARGC(cx->fp->regs->pc));
 }
 
-bool
+JS_REQUIRES_STACK bool
 TraceRecorder::record_JSOP_APPLY()
 {
     JSStackFrame* fp = cx->fp;
@@ -6654,13 +6674,13 @@ TraceRecorder::record_JSOP_APPLY()
     return true;
 }
 
-bool
+JS_REQUIRES_STACK bool
 TraceRecorder::record_ApplyComplete(uintN argc)
 {
     return functionCall(false, argc);
 }
 
-bool
+JS_REQUIRES_STACK bool
 TraceRecorder::record_FastNativeCallComplete()
 {
     JS_ASSERT(pendingTraceableNative);
@@ -6706,7 +6726,7 @@ TraceRecorder::record_FastNativeCallComplete()
     return ok;
 }
 
-bool
+JS_REQUIRES_STACK bool
 TraceRecorder::name(jsval*& vp)
 {
     JSObject* obj = cx->fp->scopeChain;
@@ -6729,7 +6749,7 @@ TraceRecorder::name(jsval*& vp)
     return true;
 }
 
-bool
+JS_REQUIRES_STACK bool
 TraceRecorder::prop(JSObject* obj, LIns* obj_ins, uint32& slot, LIns*& v_ins)
 {
     /*
@@ -6818,7 +6838,7 @@ TraceRecorder::prop(JSObject* obj, LIns* obj_ins, uint32& slot, LIns*& v_ins)
     return true;
 }
 
-bool
+JS_REQUIRES_STACK bool
 TraceRecorder::elem(jsval& oval, jsval& idx, jsval*& vp, LIns*& v_ins, LIns*& addr_ins)
 {
     /* no guards for type checks, trace specialized this already */
@@ -6872,7 +6892,7 @@ TraceRecorder::elem(jsval& oval, jsval& idx, jsval*& vp, LIns*& v_ins, LIns*& ad
     return true;
 }
 
-bool
+JS_REQUIRES_STACK bool
 TraceRecorder::getProp(JSObject* obj, LIns* obj_ins)
 {
     uint32 slot;
@@ -6886,7 +6906,7 @@ TraceRecorder::getProp(JSObject* obj, LIns* obj_ins)
     return true;
 }
 
-bool
+JS_REQUIRES_STACK bool
 TraceRecorder::getProp(jsval& v)
 {
     if (JSVAL_IS_PRIMITIVE(v))
@@ -6895,7 +6915,7 @@ TraceRecorder::getProp(jsval& v)
     return getProp(JSVAL_TO_OBJECT(v), get(&v));
 }
 
-bool
+JS_REQUIRES_STACK bool
 TraceRecorder::record_JSOP_NAME()
 {
     jsval* vp;
@@ -6905,7 +6925,7 @@ TraceRecorder::record_JSOP_NAME()
     return true;
 }
 
-bool
+JS_REQUIRES_STACK bool
 TraceRecorder::record_JSOP_DOUBLE()
 {
     jsval v = jsval(atoms[GET_INDEX(cx->fp->regs->pc)]);
@@ -6915,7 +6935,7 @@ TraceRecorder::record_JSOP_DOUBLE()
     return true;
 }
 
-bool
+JS_REQUIRES_STACK bool
 TraceRecorder::record_JSOP_STRING()
 {
     JSAtom* atom = atoms[GET_INDEX(cx->fp->regs->pc)];
@@ -6924,7 +6944,7 @@ TraceRecorder::record_JSOP_STRING()
     return true;
 }
 
-bool
+JS_REQUIRES_STACK bool
 TraceRecorder::record_JSOP_ZERO()
 {
     jsdpun u;
@@ -6933,7 +6953,7 @@ TraceRecorder::record_JSOP_ZERO()
     return true;
 }
 
-bool
+JS_REQUIRES_STACK bool
 TraceRecorder::record_JSOP_ONE()
 {
     jsdpun u;
@@ -6942,14 +6962,14 @@ TraceRecorder::record_JSOP_ONE()
     return true;
 }
 
-bool
+JS_REQUIRES_STACK bool
 TraceRecorder::record_JSOP_NULL()
 {
     stack(0, INS_CONSTPTR(NULL));
     return true;
 }
 
-bool
+JS_REQUIRES_STACK bool
 TraceRecorder::record_JSOP_THIS()
 {
     LIns* this_ins;
@@ -6959,57 +6979,57 @@ TraceRecorder::record_JSOP_THIS()
     return true;
 }
 
-bool
+JS_REQUIRES_STACK bool
 TraceRecorder::record_JSOP_FALSE()
 {
     stack(0, lir->insImm(0));
     return true;
 }
 
-bool
+JS_REQUIRES_STACK bool
 TraceRecorder::record_JSOP_TRUE()
 {
     stack(0, lir->insImm(1));
     return true;
 }
 
-bool
+JS_REQUIRES_STACK bool
 TraceRecorder::record_JSOP_OR()
 {
     return ifop();
 }
 
-bool
+JS_REQUIRES_STACK bool
 TraceRecorder::record_JSOP_AND()
 {
     return ifop();
 }
 
-bool
+JS_REQUIRES_STACK bool
 TraceRecorder::record_JSOP_TABLESWITCH()
 {
     return switchop();
 }
 
-bool
+JS_REQUIRES_STACK bool
 TraceRecorder::record_JSOP_LOOKUPSWITCH()
 {
     return switchop();
 }
 
-bool
+JS_REQUIRES_STACK bool
 TraceRecorder::record_JSOP_STRICTEQ()
 {
     return cmp(LIR_feq, CMP_STRICT);
 }
 
-bool
+JS_REQUIRES_STACK bool
 TraceRecorder::record_JSOP_STRICTNE()
 {
     return cmp(LIR_feq, CMP_STRICT | CMP_NEGATE);
 }
 
-bool
+JS_REQUIRES_STACK bool
 TraceRecorder::record_JSOP_OBJECT()
 {
     JSStackFrame* fp = cx->fp;
@@ -7022,54 +7042,54 @@ TraceRecorder::record_JSOP_OBJECT()
     return true;
 }
 
-bool
+JS_REQUIRES_STACK bool
 TraceRecorder::record_JSOP_POP()
 {
     return true;
 }
 
-bool
+JS_REQUIRES_STACK bool
 TraceRecorder::record_JSOP_POS()
 {
     jsval& r = stackval(-1);
     return isNumber(r);
 }
 
-bool
+JS_REQUIRES_STACK bool
 TraceRecorder::record_JSOP_TRAP()
 {
     return false;
 }
 
-bool
+JS_REQUIRES_STACK bool
 TraceRecorder::record_JSOP_GETARG()
 {
     stack(0, arg(GET_ARGNO(cx->fp->regs->pc)));
     return true;
 }
 
-bool
+JS_REQUIRES_STACK bool
 TraceRecorder::record_JSOP_SETARG()
 {
     arg(GET_ARGNO(cx->fp->regs->pc), stack(-1));
     return true;
 }
 
-bool
+JS_REQUIRES_STACK bool
 TraceRecorder::record_JSOP_GETLOCAL()
 {
     stack(0, var(GET_SLOTNO(cx->fp->regs->pc)));
     return true;
 }
 
-bool
+JS_REQUIRES_STACK bool
 TraceRecorder::record_JSOP_SETLOCAL()
 {
     var(GET_SLOTNO(cx->fp->regs->pc), stack(-1));
     return true;
 }
 
-bool
+JS_REQUIRES_STACK bool
 TraceRecorder::record_JSOP_UINT16()
 {
     jsdpun u;
@@ -7078,7 +7098,7 @@ TraceRecorder::record_JSOP_UINT16()
     return true;
 }
 
-bool
+JS_REQUIRES_STACK bool
 TraceRecorder::record_JSOP_NEWINIT()
 {
     JSProtoKey key = JSProtoKey(GET_INT8(cx->fp->regs->pc));
@@ -7104,7 +7124,7 @@ TraceRecorder::record_JSOP_NEWINIT()
     return true;
 }
 
-bool
+JS_REQUIRES_STACK bool
 TraceRecorder::record_JSOP_ENDINIT()
 {
     jsval& v = stackval(-1);
@@ -7124,80 +7144,80 @@ TraceRecorder::record_JSOP_ENDINIT()
     return true;
 }
 
-bool
+JS_REQUIRES_STACK bool
 TraceRecorder::record_JSOP_INITPROP()
 {
     // All the action is in record_SetPropHit.
     return true;
 }
 
-bool
+JS_REQUIRES_STACK bool
 TraceRecorder::record_JSOP_INITELEM()
 {
     return record_JSOP_SETELEM();
 }
 
-bool
+JS_REQUIRES_STACK bool
 TraceRecorder::record_JSOP_DEFSHARP()
 {
     return false;
 }
 
-bool
+JS_REQUIRES_STACK bool
 TraceRecorder::record_JSOP_USESHARP()
 {
     return false;
 }
 
-bool
+JS_REQUIRES_STACK bool
 TraceRecorder::record_JSOP_INCARG()
 {
     return inc(argval(GET_ARGNO(cx->fp->regs->pc)), 1);
 }
 
-bool
+JS_REQUIRES_STACK bool
 TraceRecorder::record_JSOP_INCLOCAL()
 {
     return inc(varval(GET_SLOTNO(cx->fp->regs->pc)), 1);
 }
 
-bool
+JS_REQUIRES_STACK bool
 TraceRecorder::record_JSOP_DECARG()
 {
     return inc(argval(GET_ARGNO(cx->fp->regs->pc)), -1);
 }
 
-bool
+JS_REQUIRES_STACK bool
 TraceRecorder::record_JSOP_DECLOCAL()
 {
     return inc(varval(GET_SLOTNO(cx->fp->regs->pc)), -1);
 }
 
-bool
+JS_REQUIRES_STACK bool
 TraceRecorder::record_JSOP_ARGINC()
 {
     return inc(argval(GET_ARGNO(cx->fp->regs->pc)), 1, false);
 }
 
-bool
+JS_REQUIRES_STACK bool
 TraceRecorder::record_JSOP_LOCALINC()
 {
     return inc(varval(GET_SLOTNO(cx->fp->regs->pc)), 1, false);
 }
 
-bool
+JS_REQUIRES_STACK bool
 TraceRecorder::record_JSOP_ARGDEC()
 {
     return inc(argval(GET_ARGNO(cx->fp->regs->pc)), -1, false);
 }
 
-bool
+JS_REQUIRES_STACK bool
 TraceRecorder::record_JSOP_LOCALDEC()
 {
     return inc(varval(GET_SLOTNO(cx->fp->regs->pc)), -1, false);
 }
 
-bool
+JS_REQUIRES_STACK bool
 TraceRecorder::record_JSOP_IMACOP()
 {
     JS_ASSERT(cx->fp->imacpc);
@@ -7227,7 +7247,7 @@ static struct {
 
 JS_STATIC_ASSERT(sizeof(iter_imacros) < IMACRO_PC_ADJ_LIMIT);
 
-bool
+JS_REQUIRES_STACK bool
 TraceRecorder::record_JSOP_ITER()
 {
     jsval& v = stackval(-1);
@@ -7274,7 +7294,7 @@ static jsbytecode nextiter_imacro[] = {
 
 JS_STATIC_ASSERT(sizeof(nextiter_imacro) < IMACRO_PC_ADJ_LIMIT);
 
-bool
+JS_REQUIRES_STACK bool
 TraceRecorder::record_JSOP_NEXTITER()
 {
     jsval& iterobj_val = stackval(-2);
@@ -7301,7 +7321,7 @@ TraceRecorder::record_JSOP_NEXTITER()
     ABORT_TRACE("for-in on a primitive value");
 }
 
-bool
+JS_REQUIRES_STACK bool
 TraceRecorder::record_IteratorNextComplete()
 {
     JS_ASSERT(*cx->fp->regs->pc == JSOP_NEXTITER);
@@ -7316,7 +7336,7 @@ TraceRecorder::record_IteratorNextComplete()
     return false;
 }
 
-bool
+JS_REQUIRES_STACK bool
 TraceRecorder::record_JSOP_ENDITER()
 {
     LIns* args[] = { stack(-2), cx_ins };
@@ -7325,7 +7345,7 @@ TraceRecorder::record_JSOP_ENDITER()
     return true;
 }
 
-bool
+JS_REQUIRES_STACK bool
 TraceRecorder::record_JSOP_FORNAME()
 {
     jsval* vp;
@@ -7336,37 +7356,37 @@ TraceRecorder::record_JSOP_FORNAME()
     return false;
 }
 
-bool
+JS_REQUIRES_STACK bool
 TraceRecorder::record_JSOP_FORPROP()
 {
     return false;
 }
 
-bool
+JS_REQUIRES_STACK bool
 TraceRecorder::record_JSOP_FORELEM()
 {
     return record_JSOP_DUP();
 }
 
-bool
+JS_REQUIRES_STACK bool
 TraceRecorder::record_JSOP_FORARG()
 {
     return record_JSOP_SETARG();
 }
 
-bool
+JS_REQUIRES_STACK bool
 TraceRecorder::record_JSOP_FORLOCAL()
 {
     return record_JSOP_SETLOCAL();
 }
 
-bool
+JS_REQUIRES_STACK bool
 TraceRecorder::record_JSOP_POPN()
 {
     return true;
 }
 
-bool
+JS_REQUIRES_STACK bool
 TraceRecorder::record_JSOP_BINDNAME()
 {
     JSObject* obj = cx->fp->scopeChain;
@@ -7385,7 +7405,7 @@ TraceRecorder::record_JSOP_BINDNAME()
     return true;
 }
 
-bool
+JS_REQUIRES_STACK bool
 TraceRecorder::record_JSOP_SETNAME()
 {
     jsval& l = stackval(-2);
@@ -7403,13 +7423,13 @@ TraceRecorder::record_JSOP_SETNAME()
     return true;
 }
 
-bool
+JS_REQUIRES_STACK bool
 TraceRecorder::record_JSOP_THROW()
 {
     return false;
 }
 
-bool
+JS_REQUIRES_STACK bool
 TraceRecorder::record_JSOP_IN()
 {
     jsval& rval = stackval(-1);
@@ -7459,97 +7479,97 @@ TraceRecorder::record_JSOP_IN()
     return true;
 }
 
-bool
+JS_REQUIRES_STACK bool
 TraceRecorder::record_JSOP_INSTANCEOF()
 {
     return false;
 }
 
-bool
+JS_REQUIRES_STACK bool
 TraceRecorder::record_JSOP_DEBUGGER()
 {
     return false;
 }
 
-bool
+JS_REQUIRES_STACK bool
 TraceRecorder::record_JSOP_GOSUB()
 {
     return false;
 }
 
-bool
+JS_REQUIRES_STACK bool
 TraceRecorder::record_JSOP_RETSUB()
 {
     return false;
 }
 
-bool
+JS_REQUIRES_STACK bool
 TraceRecorder::record_JSOP_EXCEPTION()
 {
     return false;
 }
 
-bool
+JS_REQUIRES_STACK bool
 TraceRecorder::record_JSOP_LINENO()
 {
     return true;
 }
 
-bool
+JS_REQUIRES_STACK bool
 TraceRecorder::record_JSOP_CONDSWITCH()
 {
     return true;
 }
 
-bool
+JS_REQUIRES_STACK bool
 TraceRecorder::record_JSOP_CASE()
 {
     return cmp(LIR_feq, CMP_CASE);
 }
 
-bool
+JS_REQUIRES_STACK bool
 TraceRecorder::record_JSOP_DEFAULT()
 {
     return true;
 }
 
-bool
+JS_REQUIRES_STACK bool
 TraceRecorder::record_JSOP_EVAL()
 {
     return false;
 }
 
-bool
+JS_REQUIRES_STACK bool
 TraceRecorder::record_JSOP_ENUMELEM()
 {
     return false;
 }
 
-bool
+JS_REQUIRES_STACK bool
 TraceRecorder::record_JSOP_GETTER()
 {
     return false;
 }
 
-bool
+JS_REQUIRES_STACK bool
 TraceRecorder::record_JSOP_SETTER()
 {
     return false;
 }
 
-bool
+JS_REQUIRES_STACK bool
 TraceRecorder::record_JSOP_DEFFUN()
 {
     return false;
 }
 
-bool
+JS_REQUIRES_STACK bool
 TraceRecorder::record_JSOP_DEFCONST()
 {
     return false;
 }
 
-bool
+JS_REQUIRES_STACK bool
 TraceRecorder::record_JSOP_DEFVAR()
 {
     return false;
@@ -7565,7 +7585,7 @@ TraceRecorder::record_JSOP_DEFVAR()
 #define LOAD_FUNCTION(PCOFF)                                                  \
     JS_GET_SCRIPT_FUNCTION(script, GET_FULL_INDEX(PCOFF), fun)
 
-bool
+JS_REQUIRES_STACK bool
 TraceRecorder::record_JSOP_ANONFUNOBJ()
 {
     JSFunction* fun;
@@ -7581,44 +7601,44 @@ TraceRecorder::record_JSOP_ANONFUNOBJ()
     return true;
 }
 
-bool
+JS_REQUIRES_STACK bool
 TraceRecorder::record_JSOP_NAMEDFUNOBJ()
 {
     return false;
 }
 
-bool
+JS_REQUIRES_STACK bool
 TraceRecorder::record_JSOP_SETLOCALPOP()
 {
     var(GET_SLOTNO(cx->fp->regs->pc), stack(-1));
     return true;
 }
 
-bool
+JS_REQUIRES_STACK bool
 TraceRecorder::record_JSOP_SETCALL()
 {
     return false;
 }
 
-bool
+JS_REQUIRES_STACK bool
 TraceRecorder::record_JSOP_TRY()
 {
     return true;
 }
 
-bool
+JS_REQUIRES_STACK bool
 TraceRecorder::record_JSOP_FINALLY()
 {
     return true;
 }
 
-bool
+JS_REQUIRES_STACK bool
 TraceRecorder::record_JSOP_NOP()
 {
     return true;
 }
 
-bool
+JS_REQUIRES_STACK bool
 TraceRecorder::record_JSOP_ARGSUB()
 {
     JSStackFrame* fp = cx->fp;
@@ -7632,7 +7652,7 @@ TraceRecorder::record_JSOP_ARGSUB()
     ABORT_TRACE("can't trace JSOP_ARGSUB hard case");
 }
 
-bool
+JS_REQUIRES_STACK bool
 TraceRecorder::record_JSOP_ARGCNT()
 {
     if (!(cx->fp->fun->flags & JSFUN_HEAVYWEIGHT)) {
@@ -7644,112 +7664,112 @@ TraceRecorder::record_JSOP_ARGCNT()
     ABORT_TRACE("can't trace heavyweight JSOP_ARGCNT");
 }
 
-bool
+JS_REQUIRES_STACK bool
 TraceRecorder::record_DefLocalFunSetSlot(uint32 slot, JSObject* obj)
 {
     var(slot, INS_CONSTPTR(obj));
     return true;
 }
 
-bool
+JS_REQUIRES_STACK bool
 TraceRecorder::record_JSOP_DEFLOCALFUN()
 {
     return true;
 }
 
-bool
+JS_REQUIRES_STACK bool
 TraceRecorder::record_JSOP_GOTOX()
 {
     return true;
 }
 
-bool
+JS_REQUIRES_STACK bool
 TraceRecorder::record_JSOP_IFEQX()
 {
     trackCfgMerges(cx->fp->regs->pc);
     return record_JSOP_IFEQ();
 }
 
-bool
+JS_REQUIRES_STACK bool
 TraceRecorder::record_JSOP_IFNEX()
 {
     return record_JSOP_IFNE();
 }
 
-bool
+JS_REQUIRES_STACK bool
 TraceRecorder::record_JSOP_ORX()
 {
     return record_JSOP_OR();
 }
 
-bool
+JS_REQUIRES_STACK bool
 TraceRecorder::record_JSOP_ANDX()
 {
     return record_JSOP_AND();
 }
 
-bool
+JS_REQUIRES_STACK bool
 TraceRecorder::record_JSOP_GOSUBX()
 {
     return record_JSOP_GOSUB();
 }
 
-bool
+JS_REQUIRES_STACK bool
 TraceRecorder::record_JSOP_CASEX()
 {
     return cmp(LIR_feq, CMP_CASE);
 }
 
-bool
+JS_REQUIRES_STACK bool
 TraceRecorder::record_JSOP_DEFAULTX()
 {
     return true;
 }
 
-bool
+JS_REQUIRES_STACK bool
 TraceRecorder::record_JSOP_TABLESWITCHX()
 {
     return switchop();
 }
 
-bool
+JS_REQUIRES_STACK bool
 TraceRecorder::record_JSOP_LOOKUPSWITCHX()
 {
     return switchop();
 }
 
-bool
+JS_REQUIRES_STACK bool
 TraceRecorder::record_JSOP_BACKPATCH()
 {
     return true;
 }
 
-bool
+JS_REQUIRES_STACK bool
 TraceRecorder::record_JSOP_BACKPATCH_POP()
 {
     return true;
 }
 
-bool
+JS_REQUIRES_STACK bool
 TraceRecorder::record_JSOP_THROWING()
 {
     return false;
 }
 
-bool
+JS_REQUIRES_STACK bool
 TraceRecorder::record_JSOP_SETRVAL()
 {
     // If we implement this, we need to update JSOP_STOP.
     return false;
 }
 
-bool
+JS_REQUIRES_STACK bool
 TraceRecorder::record_JSOP_RETRVAL()
 {
     return false;
 }
 
-bool
+JS_REQUIRES_STACK bool
 TraceRecorder::record_JSOP_GETGVAR()
 {
     jsval slotval = cx->fp->slots[GET_SLOTNO(cx->fp->regs->pc)];
@@ -7765,7 +7785,7 @@ TraceRecorder::record_JSOP_GETGVAR()
     return true;
 }
 
-bool
+JS_REQUIRES_STACK bool
 TraceRecorder::record_JSOP_SETGVAR()
 {
     jsval slotval = cx->fp->slots[GET_SLOTNO(cx->fp->regs->pc)];
@@ -7781,7 +7801,7 @@ TraceRecorder::record_JSOP_SETGVAR()
     return true;
 }
 
-bool
+JS_REQUIRES_STACK bool
 TraceRecorder::record_JSOP_INCGVAR()
 {
     jsval slotval = cx->fp->slots[GET_SLOTNO(cx->fp->regs->pc)];
@@ -7796,7 +7816,7 @@ TraceRecorder::record_JSOP_INCGVAR()
     return inc(STOBJ_GET_SLOT(globalObj, slot), 1);
 }
 
-bool
+JS_REQUIRES_STACK bool
 TraceRecorder::record_JSOP_DECGVAR()
 {
     jsval slotval = cx->fp->slots[GET_SLOTNO(cx->fp->regs->pc)];
@@ -7811,7 +7831,7 @@ TraceRecorder::record_JSOP_DECGVAR()
     return inc(STOBJ_GET_SLOT(globalObj, slot), -1);
 }
 
-bool
+JS_REQUIRES_STACK bool
 TraceRecorder::record_JSOP_GVARINC()
 {
     jsval slotval = cx->fp->slots[GET_SLOTNO(cx->fp->regs->pc)];
@@ -7826,7 +7846,7 @@ TraceRecorder::record_JSOP_GVARINC()
     return inc(STOBJ_GET_SLOT(globalObj, slot), 1, false);
 }
 
-bool
+JS_REQUIRES_STACK bool
 TraceRecorder::record_JSOP_GVARDEC()
 {
     jsval slotval = cx->fp->slots[GET_SLOTNO(cx->fp->regs->pc)];
@@ -7841,7 +7861,7 @@ TraceRecorder::record_JSOP_GVARDEC()
     return inc(STOBJ_GET_SLOT(globalObj, slot), -1, false);
 }
 
-bool
+JS_REQUIRES_STACK bool
 TraceRecorder::record_JSOP_REGEXP()
 {
     return false;
@@ -7849,157 +7869,157 @@ TraceRecorder::record_JSOP_REGEXP()
 
 // begin JS_HAS_XML_SUPPORT
 
-bool
+JS_REQUIRES_STACK bool
 TraceRecorder::record_JSOP_DEFXMLNS()
 {
     return false;
 }
 
-bool
+JS_REQUIRES_STACK bool
 TraceRecorder::record_JSOP_ANYNAME()
 {
     return false;
 }
 
-bool
+JS_REQUIRES_STACK bool
 TraceRecorder::record_JSOP_QNAMEPART()
 {
     return false;
 }
 
-bool
+JS_REQUIRES_STACK bool
 TraceRecorder::record_JSOP_QNAMECONST()
 {
     return false;
 }
 
-bool
+JS_REQUIRES_STACK bool
 TraceRecorder::record_JSOP_QNAME()
 {
     return false;
 }
 
-bool
+JS_REQUIRES_STACK bool
 TraceRecorder::record_JSOP_TOATTRNAME()
 {
     return false;
 }
 
-bool
+JS_REQUIRES_STACK bool
 TraceRecorder::record_JSOP_TOATTRVAL()
 {
     return false;
 }
 
-bool
+JS_REQUIRES_STACK bool
 TraceRecorder::record_JSOP_ADDATTRNAME()
 {
     return false;
 }
 
-bool
+JS_REQUIRES_STACK bool
 TraceRecorder::record_JSOP_ADDATTRVAL()
 {
     return false;
 }
 
-bool
+JS_REQUIRES_STACK bool
 TraceRecorder::record_JSOP_BINDXMLNAME()
 {
     return false;
 }
 
-bool
+JS_REQUIRES_STACK bool
 TraceRecorder::record_JSOP_SETXMLNAME()
 {
     return false;
 }
 
-bool
+JS_REQUIRES_STACK bool
 TraceRecorder::record_JSOP_XMLNAME()
 {
     return false;
 }
 
-bool
+JS_REQUIRES_STACK bool
 TraceRecorder::record_JSOP_DESCENDANTS()
 {
     return false;
 }
 
-bool
+JS_REQUIRES_STACK bool
 TraceRecorder::record_JSOP_FILTER()
 {
     return false;
 }
 
-bool
+JS_REQUIRES_STACK bool
 TraceRecorder::record_JSOP_ENDFILTER()
 {
     return false;
 }
 
-bool
+JS_REQUIRES_STACK bool
 TraceRecorder::record_JSOP_TOXML()
 {
     return false;
 }
 
-bool
+JS_REQUIRES_STACK bool
 TraceRecorder::record_JSOP_TOXMLLIST()
 {
     return false;
 }
 
-bool
+JS_REQUIRES_STACK bool
 TraceRecorder::record_JSOP_XMLTAGEXPR()
 {
     return false;
 }
 
-bool
+JS_REQUIRES_STACK bool
 TraceRecorder::record_JSOP_XMLELTEXPR()
 {
     return false;
 }
 
-bool
+JS_REQUIRES_STACK bool
 TraceRecorder::record_JSOP_XMLOBJECT()
 {
     return false;
 }
 
-bool
+JS_REQUIRES_STACK bool
 TraceRecorder::record_JSOP_XMLCDATA()
 {
     return false;
 }
 
-bool
+JS_REQUIRES_STACK bool
 TraceRecorder::record_JSOP_XMLCOMMENT()
 {
     return false;
 }
 
-bool
+JS_REQUIRES_STACK bool
 TraceRecorder::record_JSOP_XMLPI()
 {
     return false;
 }
 
-bool
+JS_REQUIRES_STACK bool
 TraceRecorder::record_JSOP_GETFUNNS()
 {
     return false;
 }
 
-bool
+JS_REQUIRES_STACK bool
 TraceRecorder::record_JSOP_STARTXML()
 {
     return false;
 }
 
-bool
+JS_REQUIRES_STACK bool
 TraceRecorder::record_JSOP_STARTXMLEXPR()
 {
     return false;
@@ -8007,7 +8027,7 @@ TraceRecorder::record_JSOP_STARTXMLEXPR()
 
 // end JS_HAS_XML_SUPPORT
 
-bool
+JS_REQUIRES_STACK bool
 TraceRecorder::record_JSOP_CALLPROP()
 {
     jsval& l = stackval(-1);
@@ -8070,13 +8090,13 @@ TraceRecorder::record_JSOP_CALLPROP()
     return true;
 }
 
-bool
+JS_REQUIRES_STACK bool
 TraceRecorder::record_JSOP_DELDESC()
 {
     return false;
 }
 
-bool
+JS_REQUIRES_STACK bool
 TraceRecorder::record_JSOP_UINT24()
 {
     jsdpun u;
@@ -8085,34 +8105,34 @@ TraceRecorder::record_JSOP_UINT24()
     return true;
 }
 
-bool
+JS_REQUIRES_STACK bool
 TraceRecorder::record_JSOP_INDEXBASE()
 {
     atoms += GET_INDEXBASE(cx->fp->regs->pc);
     return true;
 }
 
-bool
+JS_REQUIRES_STACK bool
 TraceRecorder::record_JSOP_RESETBASE()
 {
     atoms = cx->fp->script->atomMap.vector;
     return true;
 }
 
-bool
+JS_REQUIRES_STACK bool
 TraceRecorder::record_JSOP_RESETBASE0()
 {
     atoms = cx->fp->script->atomMap.vector;
     return true;
 }
 
-bool
+JS_REQUIRES_STACK bool
 TraceRecorder::record_JSOP_CALLELEM()
 {
     return false;
 }
 
-bool
+JS_REQUIRES_STACK bool
 TraceRecorder::record_JSOP_STOP()
 {
     JSStackFrame *fp = cx->fp;
@@ -8143,7 +8163,7 @@ TraceRecorder::record_JSOP_STOP()
     return true;
 }
 
-bool
+JS_REQUIRES_STACK bool
 TraceRecorder::record_JSOP_GETXPROP()
 {
     jsval& l = stackval(-1);
@@ -8161,31 +8181,31 @@ TraceRecorder::record_JSOP_GETXPROP()
     return true;
 }
 
-bool
+JS_REQUIRES_STACK bool
 TraceRecorder::record_JSOP_CALLXMLNAME()
 {
     return false;
 }
 
-bool
+JS_REQUIRES_STACK bool
 TraceRecorder::record_JSOP_TYPEOFEXPR()
 {
     return record_JSOP_TYPEOF();
 }
 
-bool
+JS_REQUIRES_STACK bool
 TraceRecorder::record_JSOP_ENTERBLOCK()
 {
     return false;
 }
 
-bool
+JS_REQUIRES_STACK bool
 TraceRecorder::record_JSOP_LEAVEBLOCK()
 {
     return false;
 }
 
-bool
+JS_REQUIRES_STACK bool
 TraceRecorder::record_JSOP_GENERATOR()
 {
     return false;
@@ -8214,31 +8234,31 @@ TraceRecorder::record_JSOP_GENERATOR()
 #endif
 }
 
-bool
+JS_REQUIRES_STACK bool
 TraceRecorder::record_JSOP_YIELD()
 {
     return false;
 }
 
-bool
+JS_REQUIRES_STACK bool
 TraceRecorder::record_JSOP_ARRAYPUSH()
 {
     return false;
 }
 
-bool
+JS_REQUIRES_STACK bool
 TraceRecorder::record_JSOP_ENUMCONSTELEM()
 {
     return false;
 }
 
-bool
+JS_REQUIRES_STACK bool
 TraceRecorder::record_JSOP_LEAVEBLOCKEXPR()
 {
     return false;
 }
 
-bool
+JS_REQUIRES_STACK bool
 TraceRecorder::record_JSOP_GETTHISPROP()
 {
     LIns* this_ins;
@@ -8248,40 +8268,40 @@ TraceRecorder::record_JSOP_GETTHISPROP()
     return getThis(this_ins) && getProp(cx->fp->thisp, this_ins);
 }
 
-bool
+JS_REQUIRES_STACK bool
 TraceRecorder::record_JSOP_GETARGPROP()
 {
     return getProp(argval(GET_ARGNO(cx->fp->regs->pc)));
 }
 
-bool
+JS_REQUIRES_STACK bool
 TraceRecorder::record_JSOP_GETLOCALPROP()
 {
     return getProp(varval(GET_SLOTNO(cx->fp->regs->pc)));
 }
 
-bool
+JS_REQUIRES_STACK bool
 TraceRecorder::record_JSOP_INDEXBASE1()
 {
     atoms += 1 << 16;
     return true;
 }
 
-bool
+JS_REQUIRES_STACK bool
 TraceRecorder::record_JSOP_INDEXBASE2()
 {
     atoms += 2 << 16;
     return true;
 }
 
-bool
+JS_REQUIRES_STACK bool
 TraceRecorder::record_JSOP_INDEXBASE3()
 {
     atoms += 3 << 16;
     return true;
 }
 
-bool
+JS_REQUIRES_STACK bool
 TraceRecorder::record_JSOP_CALLGVAR()
 {
     jsval slotval = cx->fp->slots[GET_SLOTNO(cx->fp->regs->pc)];
@@ -8299,7 +8319,7 @@ TraceRecorder::record_JSOP_CALLGVAR()
     return true;
 }
 
-bool
+JS_REQUIRES_STACK bool
 TraceRecorder::record_JSOP_CALLLOCAL()
 {
     uintN slot = GET_SLOTNO(cx->fp->regs->pc);
@@ -8308,7 +8328,7 @@ TraceRecorder::record_JSOP_CALLLOCAL()
     return true;
 }
 
-bool
+JS_REQUIRES_STACK bool
 TraceRecorder::record_JSOP_CALLARG()
 {
     uintN slot = GET_ARGNO(cx->fp->regs->pc);
@@ -8317,14 +8337,14 @@ TraceRecorder::record_JSOP_CALLARG()
     return true;
 }
 
-bool
+JS_REQUIRES_STACK bool
 TraceRecorder::record_JSOP_NULLTHIS()
 {
     stack(0, INS_CONSTPTR(NULL));
     return true;
 }
 
-bool
+JS_REQUIRES_STACK bool
 TraceRecorder::record_JSOP_INT8()
 {
     jsdpun u;
@@ -8333,7 +8353,7 @@ TraceRecorder::record_JSOP_INT8()
     return true;
 }
 
-bool
+JS_REQUIRES_STACK bool
 TraceRecorder::record_JSOP_INT32()
 {
     jsdpun u;
@@ -8342,7 +8362,7 @@ TraceRecorder::record_JSOP_INT32()
     return true;
 }
 
-bool
+JS_REQUIRES_STACK bool
 TraceRecorder::record_JSOP_LENGTH()
 {
     jsval& l = stackval(-1);
@@ -8383,13 +8403,13 @@ TraceRecorder::record_JSOP_LENGTH()
     return true;
 }
 
-bool
+JS_REQUIRES_STACK bool
 TraceRecorder::record_JSOP_NEWARRAY()
 {
     return false;
 }
 
-bool
+JS_REQUIRES_STACK bool
 TraceRecorder::record_JSOP_HOLE()
 {
     stack(0, INS_CONST(JSVAL_TO_BOOLEAN(JSVAL_HOLE)));
@@ -8459,7 +8479,7 @@ InitIMacroCode()
     imacro_code[JSOP_NEXTITER] = nextiter_imacro - 1;
 }
 
-#define UNUSED(n) bool TraceRecorder::record_JSOP_UNUSED##n() { return false; }
+#define UNUSED(n) JS_REQUIRES_STACK bool TraceRecorder::record_JSOP_UNUSED##n() { return false; }
 
 UNUSED(131)
 UNUSED(201)
