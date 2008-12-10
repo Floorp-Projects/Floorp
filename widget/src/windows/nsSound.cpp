@@ -179,6 +179,10 @@ NS_IMETHODIMP nsSound::PlaySystemSound(const nsAString &aSoundAlias)
     sound = L"SystemQuestion";
   else if (aSoundAlias.Equals(NS_SYSSOUND_ALERT_DIALOG))
     sound = L"SystemExclamation";
+  else if (aSoundAlias.Equals(NS_SYSSOUND_MENU_EXECUTE))
+    sound = L"MenuCommand";
+  else if (aSoundAlias.Equals(NS_SYSSOUND_MENU_POPUP))
+    sound = L"MenuPopup";
 
   if (sound)
     ::PlaySoundW(sound, nsnull, SND_NODEFAULT | SND_ALIAS | SND_ASYNC);

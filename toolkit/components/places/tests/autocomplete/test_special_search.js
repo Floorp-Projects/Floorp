@@ -135,15 +135,21 @@ let gTests = [
   ["20: foo @ + -> in url, is tag",
    "foo @ +", [10,11]],
 
-  // Test default usage by making the special search empty
+  // Test default usage by setting certain bits of default.behavior to 1
   ["21: foo -> default history",
-   "foo", [1,2,3,5,10], function() makeDefault("restrict.history")],
+   "foo", [1,2,3,5,10], function() makeDefault(1)],
   ["22: foo -> default history, is star",
-   "foo", [5,10], function() makeDefault("restrict.bookmark")],
+   "foo", [5,10], function() makeDefault(3)],
   ["23: foo -> default history, is star, in url",
-   "foo", [10], function() makeDefault("match.url")],
+   "foo", [10], function() makeDefault(19)],
+
+  // Change the default to be less restrictive to make sure we find more
+  ["24: foo -> default is star, in url",
+   "foo", [6,7,10,11], function() makeDefault(18)],
+  ["25: foo -> default in url",
+   "foo", [2,3,6,7,10,11], function() makeDefault(16)],
 ];
 
-function makeDefault(pref) {
-  prefs.setCharPref("browser.urlbar." + pref, "");
+function makeDefault(aDefault) {
+  prefs.setIntPref("browser.urlbar.default.behavior", aDefault);
 }

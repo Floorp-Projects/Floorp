@@ -83,9 +83,7 @@
 #include "nsBindingManager.h"
 #include "nsIDocShellTreeOwner.h"
 #include "nsIBaseWindow.h"
-#ifdef XP_WIN
 #include "nsISound.h"
-#endif
 
 const PRInt32 kMaxZ = 0x7fffffff; //XXX: Shouldn't there be a define somewhere for MaxInt for PRInt32
 
@@ -624,6 +622,11 @@ nsMenuPopupFrame::ShowPopup(PRBool aIsContextMenu, PRBool aSelectFirstItem)
       PresContext()->PresShell()->
         FrameNeedsReflow(this, nsIPresShell::eTreeChange,
                          NS_FRAME_HAS_DIRTY_CHILDREN);
+    }
+    if (mPopupType == ePopupTypeMenu) {
+      nsCOMPtr<nsISound> sound(do_CreateInstance("@mozilla.org/sound;1"));
+      if (sound)
+        sound->PlaySystemSound(NS_SYSSOUND_MENU_POPUP);
     }
   }
 

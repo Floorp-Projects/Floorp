@@ -174,7 +174,7 @@
     * XXX OS X over-commits, so we should probably use mmap() instead of
     * vm_allocate(), so that MALLOC_PAGEFILE works.
     */
-//#  define MALLOC_PAGEFILE
+#define MALLOC_PAGEFILE
 #endif
 
 #ifdef MALLOC_PAGEFILE
