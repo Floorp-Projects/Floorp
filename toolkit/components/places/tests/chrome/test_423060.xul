@@ -20,7 +20,7 @@
 
     var wccrID = "@mozilla.org/embeddor.implemented/web-content-handler-registrar;1";
     /* abort the test if web feed handlers are not available */
-    if (!Cc[wccrID]) {
+    if (!Cc[wccrID])
       SimpleTest.finish()
 
     /* Turn off the first run UI */
