@@ -1101,8 +1101,10 @@ let observer = {
         current_test.setup();
         PlacesDBUtils.maintenanceOnIdle();
       }
-      else
+      else {
+        os.removeObserver(this, FINISHED_MAINTANANCE_NOTIFICATION_TOPIC);
         do_test_finished();
+      }
     }
   }
 }
