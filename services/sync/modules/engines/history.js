@@ -88,11 +88,23 @@ HistoryStore.prototype = {
       getService(Ci.nsINavHistoryService);
     hsvc.QueryInterface(Ci.nsIGlobalHistory2);
     hsvc.QueryInterface(Ci.nsIBrowserHistory);
+    hsvc.QueryInterface(Ci.nsPIPlacesDatabase);
     this.__defineGetter__("_hsvc", function() hsvc);
     return hsvc;
   },
 
-  get _histDB() {
+  get _anno() {
+    let anno = Cc["@mozilla.org/browser/annotation-service;1"].
+      getService(Ci.nsIAnnotationService);
+    this.__defineGetter__("_ans", function() anno);
+    return anno;
+  },
+
+  get _histDB_31() {
+    return this._hsvc.DBConnection;
+  },
+
+  get _histDB_30() {
     let file = Cc["@mozilla.org/file/directory_service;1"].
       getService(Ci.nsIProperties).
       get("ProfD", Ci.nsIFile);
@@ -100,13 +112,44 @@ HistoryStore.prototype = {
     let stor = Cc["@mozilla.org/storage/service;1"].
       getService(Ci.mozIStorageService);
     let db = stor.openDatabase(file);
-    this.__defineGetter__("_histDB", function() db);
+    this.__defineGetter__("_histDB_30", function() db);
     return db;
   },
 
-  _itemExists: function HistStore__itemExists(GUID) {
-    // we don't care about already-existing items; just try to re-add them
-    return false;
+  get _db() {
+    // FIXME
+    //if (fx3.0)
+    //  return this._histDB_30;
+    //else
+      return this._histDB_31;
+  },
+
+  get _visitStm() {
+    let stmt = this._db.createStatement(
+      "SELECT visit_type FROM moz_historyvisits WHERE place_id = ?1");
+    this.__defineGetter__("_visitStm", function() stmt);
+    return stmt;
+  },
+
+  get _pidStm() {
+    let stmt = this._db.createStatement(
+      "SELECT id FROM moz_places WHERE url = ?1");
+    this.__defineGetter__("_pidStm", function() stmt);
+    return stmt;
+  },
+
+  get _urlStm() {
+    let stmt = this._db.createStatement(
+      "SELECT url FROM moz_places WHERE id = ?1");
+    this.__defineGetter__("_urlStm", function() stmt);
+    return stmt;
+  },
+
+  get _findPidByAnnoStm() {
+    let stmt = this._db.createStatement(
+      "SELECT place_id FROM moz_annos WHERE type = ?1 AND content = ?2");
+    this.__defineGetter__("_findPidByAnnoStm", function() stmt);
+    return stmt;
   },
 
   _createCommand: function HistStore__createCommand(command) {
@@ -138,68 +181,79 @@ HistoryStore.prototype = {
     // FIXME: implement!
   },
 
-  _historyRoot: function HistStore__historyRoot() {
+  // See bug 320831 for why we use SQL here
+  _getVisitType: function HistStore__getVisitType(uri) {
+    this._pidStm.bindUTF8StringParameter(0, uri);
+    if (this._pidStm.executeStep()) {
+      let placeId = this._pidStm.getInt32(0);
+      this._visitStm.bindInt32Parameter(0, placeId);
+      if (this._visitStm.executeStep())
+        return this._visitStm.getInt32(0);
+    }
+    return null;
+  },
+
+  _getGUID: function HistStore__getAnno(uri) {
+    try {
+      return this._anno.getPageAnnotation(uri, "weave/guid");
+    } catch (e) {
+      // FIXME
+      // if (e != NS_ERROR_NOT_AVAILABLE)
+      // throw e;
+    }
+    let guid = Utils.makeGUID();
+    this._anno.setPageAnnotation(uri, "weave/guid", guid, 0, 0);
+    return guid;
+  },
+
+  // See bug 468732 for why we use SQL here
+  _findURLByGUID: function HistStore__findByGUID(guid) {
+    this._findPidByAnnoStm.bindUTF8Parameter(0, "weave/guid");
+    this._findPidByAnnoStm.bindUTF8Parameter(1, guid);
+    if (this._findPidByAnnoStm.executeStep()) {
+      let placeId = this._findPidByAnnoStm.getInt32(0);
+      this._urlStm.bindInt32Parameter(0, placeId);
+      if (this._urlStm.executeStep()) {
+        return this._urlStm.getString(0);
+      }
+    }
+    return null;
+  },
+
+  wrap: function HistStore_wrap() {
     let query = this._hsvc.getNewQuery(),
         options = this._hsvc.getNewQueryOptions();
 
     query.minVisits = 1;
-    options.maxResults = 1000;
-    options.resultType = options.RESULTS_AS_VISIT; // FULL_VISIT does not work
-    options.sortingMode = options.SORT_BY_DATE_DESCENDING;
-    options.queryType = options.QUERY_TYPE_HISTORY;
 
     let root = this._hsvc.executeQuery(query, options).root;
     root.QueryInterface(Ci.nsINavHistoryQueryResultNode);
-    return root;
-  },
-
-  /* UGLY, UGLY way of syncing visit type !
-     We'll just have to wait for bug #320831 */
-  _getVisitType: function HistStore__getVisitType(uri) {
-    let visitStmnt = this._histDB.createStatement("SELECT visit_type FROM moz_historyvisits WHERE place_id = ?1");
-    let pidStmnt = this._histDB.createStatement("SELECT id FROM moz_places WHERE url = ?1");
-    
-    pidStmnt.bindUTF8StringParameter(0, uri);
-    
-    let placeID = null;
-    if (pidStmnt.executeStep()) {
-      placeID = pidStmnt.getInt32(0);
-    }
-
-    if (placeID) {
-      visitStmnt.bindInt32Parameter(0, placeID);
-      if (visitStmnt.executeStep())
-        return visitStmnt.getInt32(0);
-    }
-    return null;
-  },
-  
-  wrap: function HistStore_wrap() {
-    let root = this._historyRoot();
     root.containerOpen = true;
+
     let items = {};
     for (let i = 0; i < root.childCount; i++) {
       let item = root.getChild(i);
-      let guid = item.time + ":" + item.uri;
+      let guid = this._getGUID(item.uri);
       let vType = this._getVisitType(item.uri);
-      items[guid] = {parentid: '',
-		     title: item.title,
+      items[guid] = {title: item.title,
 		     URI: item.uri,
-		     time: item.time,
 		     transition: vType};
+      // FIXME: get last 10 visit times (& transitions ?)
     }
-    
-    this._lookup = items;
+
     return items;
+  },
+
+  wrapItem: function HistStore_wrapItem(id) {
+    // FIXME: use findURLByGUID! (not so important b/c of cache hints though)
+    if (this._itemCache)
+      return this._itemCache[id];
+    let all = this._wrap();
+    return all[id];
   },
 
   wipe: function HistStore_wipe() {
     this._hsvc.removeAllPages();
-  },
-
-  _resetGUIDs: function FormStore__resetGUIDs() {
-    let self = yield;
-    // Not needed.
   }
 };
 
