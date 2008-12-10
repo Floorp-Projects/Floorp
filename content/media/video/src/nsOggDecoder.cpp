@@ -1386,12 +1386,16 @@ void nsOggDecoder::MetadataLoaded()
   if (mShuttingDown)
     return;
 
+  // Only inform the element of MetadataLoaded if not doing a load() in order
+  // to fulfill a seek, otherwise we'll get multiple metadataloaded events.
+  PRBool notifyElement = PR_TRUE;
   {
     nsAutoMonitor mon(mMonitor);
     mDuration = mDecodeStateMachine ? mDecodeStateMachine->GetDuration() : -1;
+    notifyElement = mNextState != PLAY_STATE_SEEKING;
   }
 
-  if (mElement) {
+  if (mElement && notifyElement) {
     mElement->MetadataLoaded();
   }
 }
@@ -1400,8 +1404,16 @@ void nsOggDecoder::FirstFrameLoaded()
 {
   if (mShuttingDown)
     return;
+ 
+  // Only inform the element of FirstFrameLoaded if not doing a load() in order
+  // to fulfill a seek, otherwise we'll get multiple loadedfirstframe events.
+  PRBool notifyElement = PR_TRUE;
+  {
+    nsAutoMonitor mon(mMonitor);
+    notifyElement = mNextState != PLAY_STATE_SEEKING;
+  }  
 
-  if (mElement) {
+  if (mElement && notifyElement) {
     mElement->FirstFrameLoaded();
   }
 
