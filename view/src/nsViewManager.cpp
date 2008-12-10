@@ -2415,7 +2415,10 @@ nsViewManager::ProcessSynthMouseMoveEvent(PRBool aFromScroll)
   event.time = PR_IntervalNow();
   // XXX set event.isShift, event.isControl, event.isAlt, event.isMeta ?
 
-  pointVM->GetViewObserver()->DispatchSynthMouseMove(&event, !aFromScroll);
+  nsCOMPtr<nsIViewObserver> observer = pointVM->GetViewObserver();
+  if (observer) {
+    observer->DispatchSynthMouseMove(&event, !aFromScroll);
+  }
 
   if (!aFromScroll)
     mSynthMouseMoveEvent.Forget();
