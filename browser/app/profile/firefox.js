@@ -244,6 +244,14 @@ pref("browser.urlbar.restrict.tag", "+");
 pref("browser.urlbar.match.title", "#");
 pref("browser.urlbar.match.url", "@");
 
+// The default behavior for the urlbar can be configured to use any combination
+// of the restrict or match filters with each additional filter restricting
+// more (intersection). Add the following values to set the behavior as the
+// default: 1: history, 2: bookmark, 4: tag, 8: title, 16: url
+// E.g., 0 = show all results (no filtering), 1 = only visited pages in history,
+// 2 = only bookmarks, 3 = visited bookmarks, 1+16 = history matching in the url
+pref("browser.urlbar.default.behavior", 0);
+
 // Number of milliseconds to wait for the http headers (and thus
 // the Content-Disposition filename) before giving up and falling back to 
 // picking a filename without that info in hand so that the user sees some
