@@ -48,12 +48,13 @@ LOCAL_INCLUDES 	= \
   -I$(srcdir)/../../../common/mac \
   $(NULL)
 
-HOST_CMSRCS = \
-  dump_syms_tool.m \
+HOST_CMMSRCS = \
+  dump_syms_tool.mm \
   $(NULL)
 
 HOST_LIBS += \
   $(DEPTH)/toolkit/crashreporter/google-breakpad/src/common/mac/$(LIB_PREFIX)host_breakpad_mac_common_s.$(LIB_SUFFIX) \
+  $(DEPTH)/toolkit/crashreporter/google-breakpad/src/common/mac/dwarf/$(LIB_PREFIX)host_breakpad_mac_dwarf_s.$(LIB_SUFFIX) \
   $(DEPTH)/toolkit/crashreporter/google-breakpad/src/common/$(LIB_PREFIX)host_breakpad_common_s.$(LIB_SUFFIX) \
   $(NULL)
 

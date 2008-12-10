@@ -84,6 +84,7 @@
 #include "nsISSLStatusProvider.h"
 #include "nsISSLStatus.h"
 #include "nsIX509Cert.h"
+#include "nsIX509Cert3.h"
 
 #include "nsIPrefService.h"
 #include "nsIPrefBranch.h"
@@ -1101,11 +1102,16 @@ nsXPInstallManager::CheckCert(nsIChannel* aChannel)
     }
 
     if (issuer) {
-        nsAutoString tokenName;
-        rv = issuer->GetTokenName(tokenName);
+        PRUint32 length;
+        PRUnichar** tokenNames;
+        nsCOMPtr<nsIX509Cert3> issuer2(do_QueryInterface(issuer));
+        NS_ENSURE_TRUE(status, NS_ERROR_FAILURE);
+        rv = issuer2->GetAllTokenNames(&length, &tokenNames);
         NS_ENSURE_SUCCESS(rv ,rv);
-        if (tokenName.Equals(NS_LITERAL_STRING("Builtin Object Token")))
-            return NS_OK;
+        for (PRUint32 i = 0; i < length; i++) {
+            if (nsDependentString(tokenNames[i]).Equals(NS_LITERAL_STRING("Builtin Object Token")))
+                return NS_OK;
+        }
     }
     return NS_ERROR_FAILURE;
 }

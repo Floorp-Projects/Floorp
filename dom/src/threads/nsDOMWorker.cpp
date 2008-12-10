@@ -47,9 +47,11 @@
 #include "jsdbgapi.h"
 #endif
 #include "nsAutoLock.h"
+#include "nsAXPCNativeCallContext.h"
 #include "nsContentUtils.h"
 #include "nsDOMClassInfoID.h"
 #include "nsGlobalWindow.h"
+#include "nsJSON.h"
 #include "nsJSUtils.h"
 #include "nsProxyRelease.h"
 #include "nsThreadUtils.h"
@@ -413,6 +415,113 @@ JSFunctionSpec gDOMWorkerFunctions[] = {
   { nsnull,                  nsnull,                                  0, 0, 0 }
 };
 
+static JSBool
+WriteCallback(const jschar* aBuffer,
+              uint32 aLength,
+              void* aData)
+{
+  nsJSONWriter* writer = static_cast<nsJSONWriter*>(aData);
+
+  nsresult rv = writer->Write((const PRUnichar*)aBuffer, (PRUint32)aLength);
+  return NS_SUCCEEDED(rv) ? JS_TRUE : JS_FALSE;
+}
+
+static nsresult
+GetStringForArgument(nsAString& aString,
+                     PRBool* aIsJSON,
+                     PRBool* aIsPrimitive)
+{
+  NS_ASSERTION(aIsJSON && aIsPrimitive, "Null pointer!");
+
+  nsIXPConnect* xpc = nsContentUtils::XPConnect();
+  NS_ENSURE_TRUE(xpc, NS_ERROR_UNEXPECTED);
+
+  nsAXPCNativeCallContext* cc;
+  nsresult rv = xpc->GetCurrentNativeCallContext(&cc);
+  NS_ENSURE_SUCCESS(rv, rv);
+  NS_ENSURE_TRUE(cc, NS_ERROR_UNEXPECTED);
+
+  PRUint32 argc;
+  rv = cc->GetArgc(&argc);
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  if (!argc) {
+    return NS_ERROR_XPC_NOT_ENOUGH_ARGS;
+  }
+
+  jsval* argv;
+  rv = cc->GetArgvPtr(&argv);
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  JSContext* cx;
+  rv = cc->GetJSContext(&cx);
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  JSAutoRequest ar(cx);
+
+  if (JSVAL_IS_STRING(argv[0])) {
+    aString.Assign(nsDependentJSString(JSVAL_TO_STRING(argv[0])));
+    *aIsJSON = *aIsPrimitive = PR_FALSE;
+    return NS_OK;
+  }
+
+  nsAutoJSValHolder jsonVal;
+
+  JSBool ok = jsonVal.Hold(cx);
+  NS_ENSURE_TRUE(ok, NS_ERROR_FAILURE);
+
+  if (JSVAL_IS_PRIMITIVE(argv[0])) {
+    // Only objects can be serialized through JSON, currently, so if we've been
+    // given a primitive we set it as a property on a dummy object before
+    // sending it to the serializer.
+    JSObject* obj = JS_NewObject(cx, NULL, NULL, NULL);
+    NS_ENSURE_TRUE(obj, NS_ERROR_OUT_OF_MEMORY);
+
+    jsonVal = obj;
+
+    ok = JS_DefineProperty(cx, obj, JSON_PRIMITIVE_PROPNAME, argv[0], NULL,
+                           NULL, JSPROP_ENUMERATE);
+    NS_ENSURE_TRUE(ok, NS_ERROR_UNEXPECTED);
+
+    *aIsPrimitive = PR_TRUE;
+  }
+  else {
+    jsonVal = argv[0];
+
+    *aIsPrimitive = PR_FALSE;
+  }
+
+  JSType type;
+  jsval* vp = jsonVal.ToJSValPtr();
+
+  // This may change vp if there is a 'toJSON' function on the object.
+  ok = JS_TryJSON(cx, vp);
+  if (!(ok && !JSVAL_IS_PRIMITIVE(*vp) &&
+        (type = JS_TypeOfValue(cx, *vp)) != JSTYPE_FUNCTION &&
+        type != JSTYPE_XML)) {
+    return NS_ERROR_INVALID_ARG;
+  }
+
+  // Make sure to hold the new vp in case it changed.
+  jsonVal = *vp;
+
+  nsJSONWriter writer;
+
+  ok = JS_Stringify(cx, jsonVal.ToJSValPtr(), NULL, &WriteCallback, &writer);
+  if (!ok) {
+    return NS_ERROR_XPC_BAD_CONVERT_JS;
+  }
+
+  NS_ENSURE_TRUE(writer.DidWrite(), NS_ERROR_UNEXPECTED);
+
+  writer.FlushBuffer();
+
+  aString.Assign(writer.mOutputString);
+  *aIsJSON = PR_TRUE;
+
+  return NS_OK;
+}
+
 class nsDOMWorkerScope : public nsIWorkerScope,
                          public nsIDOMEventTarget,
                          public nsIXPCScriptable,
@@ -509,8 +618,7 @@ nsDOMWorkerScope::GetNavigator(nsIWorkerNavigator** _retval)
 }
 
 NS_IMETHODIMP
-nsDOMWorkerScope::PostMessage(const nsAString& aMessage,
-                              nsIWorkerMessagePort* aMessagePort)
+nsDOMWorkerScope::PostMessage(/* JSObject aMessage */)
 {
   NS_ASSERTION(!NS_IsMainThread(), "Wrong thread!");
 
@@ -518,11 +626,13 @@ nsDOMWorkerScope::PostMessage(const nsAString& aMessage,
     return NS_ERROR_ABORT;
   }
 
-  if (aMessagePort) {
-    return NS_ERROR_NOT_IMPLEMENTED;
-  }
+  nsString message;
+  PRBool isJSON, isPrimitive;
 
-  return mWorker->PostMessageInternal(aMessage, PR_FALSE);
+  nsresult rv = GetStringForArgument(message, &isJSON, &isPrimitive);
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  return mWorker->PostMessageInternal(message, isJSON, isPrimitive, PR_FALSE);
 }
 
 NS_IMETHODIMP
@@ -1006,6 +1116,8 @@ nsDOMWorker::Resume()
 
 nsresult
 nsDOMWorker::PostMessageInternal(const nsAString& aMessage,
+                                 PRBool aIsJSON,
+                                 PRBool aIsPrimitive,
                                  PRBool aToInner)
 {
   nsRefPtr<nsDOMWorkerMessageEvent> message = new nsDOMWorkerMessageEvent();
@@ -1015,6 +1127,8 @@ nsDOMWorker::PostMessageInternal(const nsAString& aMessage,
                                           PR_FALSE, PR_FALSE, aMessage,
                                           EmptyString(), nsnull);
   NS_ENSURE_SUCCESS(rv, rv);
+
+  message->SetJSONData(aIsJSON, aIsPrimitive);
 
   nsRefPtr<nsDOMFireEventRunnable> runnable =
     new nsDOMFireEventRunnable(this, message, aToInner);
@@ -1083,11 +1197,13 @@ nsDOMWorker::CompileGlobalObject(JSContext* aCx)
 
   nsIXPConnect* xpc = nsContentUtils::XPConnect();
 
+  const PRUint32 flags = nsIXPConnect::INIT_JS_STANDARD_CLASSES |
+                         nsIXPConnect::OMIT_COMPONENTS_OBJECT;
+
   nsCOMPtr<nsIXPConnectJSObjectHolder> globalWrapper;
   nsresult rv =
     xpc->InitClassesWithNewWrappedGlobal(aCx, scopeSupports,
-                                         NS_GET_IID(nsISupports),
-                                         nsIXPConnect::INIT_JS_STANDARD_CLASSES,
+                                         NS_GET_IID(nsISupports), flags,
                                          getter_AddRefs(globalWrapper));
   NS_ENSURE_SUCCESS(rv, PR_FALSE);
 
@@ -1097,12 +1213,18 @@ nsDOMWorker::CompileGlobalObject(JSContext* aCx)
 
   NS_ASSERTION(JS_GetGlobalObject(aCx) == global, "Global object mismatch!");
 
-  // XXX Fix this!
-  PRBool success = JS_DeleteProperty(aCx, global, "Components");
-  NS_ENSURE_TRUE(success, PR_FALSE);
+#ifdef DEBUG
+  {
+    jsval components;
+    if (JS_GetProperty(aCx, global, "Components", &components)) {
+      NS_ASSERTION(components == JSVAL_VOID,
+                   "Components property still defined!");
+    }
+  }
+#endif
 
   // Set up worker thread functions
-  success = JS_DefineFunctions(aCx, global, gDOMWorkerFunctions);
+  PRBool success = JS_DefineFunctions(aCx, global, gDOMWorkerFunctions);
   NS_ENSURE_TRUE(success, PR_FALSE);
 
   // From here on out we have to remember to null mGlobal and mInnerScope if
@@ -1324,18 +1446,19 @@ nsDOMWorker::GetParent()
  * See nsIWorker
  */
 NS_IMETHODIMP
-nsDOMWorker::PostMessage(const nsAString& aMessage,
-                         nsIWorkerMessagePort* aMessagePort)
+nsDOMWorker::PostMessage(/* JSObject aMessage */)
 {
   if (mTerminated) {
     return NS_OK;
   }
 
-  if (aMessagePort) {
-    return NS_ERROR_NOT_IMPLEMENTED;
-  }
+  nsString message;
+  PRBool isJSON, isPrimitive;
 
-  return PostMessageInternal(aMessage, PR_TRUE);
+  nsresult rv = GetStringForArgument(message, &isJSON, &isPrimitive);
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  return PostMessageInternal(message, isJSON, isPrimitive, PR_TRUE);
 }
 
 /**

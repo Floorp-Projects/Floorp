@@ -148,12 +148,14 @@ private:
   ~nsDOMWorker();
 
   nsresult PostMessageInternal(const nsAString& aMessage,
+                               PRBool aIsJSON,
+                               PRBool aIsPrimitive,
                                PRBool aToInner);
 
   PRBool CompileGlobalObject(JSContext* aCx);
 
   PRUint32 NextTimeoutId() {
-    return mNextTimeoutId++;
+    return ++mNextTimeoutId;
   }
 
   nsresult AddFeature(nsDOMWorkerFeature* aFeature,

@@ -49,7 +49,11 @@
 
 <html xmlns="http://www.w3.org/1999/xhtml">
   <head>
+#ifdef XP_MACOSX
+    <title></title>
+#else
     <title>&privatebrowsingpage.tabtitle;</title>
+#endif
     <link rel="stylesheet" href="chrome://global/skin/netError.css" type="text/css" media="all"/>
     <link rel="stylesheet" href="chrome://browser/skin/aboutPrivateBrowsing.css" type="text/css" media="all"/>
     <link rel="icon" type="image/png" href="chrome://browser/skin/Privacy-16.png"/>

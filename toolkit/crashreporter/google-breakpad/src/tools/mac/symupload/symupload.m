@@ -56,10 +56,25 @@ static NSArray *ModuleDataForSymbolFile(NSString *file) {
   NSString *str = [[NSString alloc] initWithData:data encoding:NSUTF8StringEncoding];
   NSScanner *scanner = [NSScanner scannerWithString:str];
   NSString *line;
-  NSArray *parts = nil;
+  NSMutableArray *parts = nil;
+  const int MODULE_ID_INDEX = 3;
+  
+  if ([scanner scanUpToString:@"\n" intoString:&line]) {
+    parts = [[NSMutableArray alloc] init];
+    NSScanner *moduleInfoScanner = [NSScanner scannerWithString:line];
+    NSString *moduleInfo;
+    // Get everything BEFORE the module name.  None of these properties
+    // can have spaces.
+    for (int i = 0; i <= MODULE_ID_INDEX; i++) {
+      [moduleInfoScanner scanUpToString:@" " intoString:&moduleInfo];
+      [parts addObject:moduleInfo];
+    }
 
-  if ([scanner scanUpToString:@"\n" intoString:&line])
-    parts = [line componentsSeparatedByString:@" "];
+    // Now get the module name. This can have a space so we scan to
+    // the end of the line.
+    [moduleInfoScanner scanUpToString:@"\n" intoString:&moduleInfo];
+    [parts addObject:moduleInfo];
+  }
 
   [str release];
 

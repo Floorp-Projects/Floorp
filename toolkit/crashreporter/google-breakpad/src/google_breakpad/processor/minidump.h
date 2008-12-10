@@ -109,6 +109,8 @@ class MinidumpObject {
  public:
   virtual ~MinidumpObject() {}
 
+  bool valid() const { return valid_; }
+
  protected:
   explicit MinidumpObject(Minidump* minidump);
 

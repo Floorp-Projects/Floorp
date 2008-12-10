@@ -820,7 +820,7 @@ JS_DestroyRuntime(JSRuntime *rt)
         while ((cx = js_ContextIterator(rt, JS_TRUE, &iter)) != NULL) {
             fprintf(stderr,
 "JS API usage error: found live context at %p\n",
-                    cx);
+                    (void *) cx);
             cxcount++;
         }
         fprintf(stderr,
@@ -3044,6 +3044,9 @@ JS_SealObject(JSContext *cx, JSObject *obj, JSBool deep)
     JSIdArray *ida;
     uint32 nslots, i;
     jsval v;
+
+    if (OBJ_IS_DENSE_ARRAY(cx, obj) && !js_MakeArraySlow(cx, obj))
+        return JS_FALSE;
 
     if (!OBJ_IS_NATIVE(obj)) {
         JS_ReportErrorNumber(cx, js_GetErrorMessage, NULL,

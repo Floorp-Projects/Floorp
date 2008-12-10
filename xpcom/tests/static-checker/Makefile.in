@@ -66,9 +66,7 @@ STACK_PASS_TESTCASES = \
 
 OUTPARAMS_WARNING_TESTCASES = \
   e1.cpp \
-  e2.cpp \
   e4.cpp \
-  e5.cpp \
   e6.cpp \
   e7.cpp \
   e8.cpp \
@@ -77,6 +75,11 @@ OUTPARAMS_WARNING_TESTCASES = \
   e11.cpp \
   e12.cpp \
   e13.cpp \
+  $(NULL)
+
+OUTPARAMS_NS_FAILED_TESTCASES = \
+  e2.cpp \
+  e5.cpp \
   $(NULL)
 
 OUTPARAMS_PASS_TESTCASES = \
@@ -117,6 +120,7 @@ STATIC_WARNING_TESTCASES = \
   $(NULL)
 
 STATIC_PASS_TESTCASES = \
+  $(OUTPARAMS_NS_FAILED_TESTCASES) \
   $(OUTPARAMS_PASS_TESTCASES) \
   $(STACK_PASS_TESTCASES) \
   $(FLOW_PASS_TESTCASES) \

@@ -36,4 +36,5 @@ rm ./src/liboggplay/oggplay_private.h1
 sed s/\#ifdef\ HAVE_INTTYPES_H/\#if\ HAVE_INTTYPES_H/g $1/src/liboggplay/oggplay_data.c >./src/liboggplay/oggplay_data.c
 cd ./src/liboggplay
 patch <../../yuv2rgb-vanilla-fix.patch
+patch <../../yuv_disable_optimized.patch
 cd ../..

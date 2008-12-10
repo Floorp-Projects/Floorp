@@ -51,9 +51,9 @@
     * Check that Download-B is not accessible.
     * Create a new download (Download-C) with specific details.
       Start it and enter private browsing mode immediately after.
-    * Check that Download-C doesn't finish in a reasonable time (3 seconds).
+    * Check that Download-C has been paused.
     * Exit the private browsing mode.
-    * Verify that Download-C finishes correctly now. 
+    * Verify that Download-C resumes and finishes correctly now. 
 **/
 
 this.__defineGetter__("pb", function () {
@@ -148,41 +148,36 @@ function run_test() {
         // won't be resumable, so the private browsing mode won't correctly pause it.
         case dm.DOWNLOAD_DOWNLOADING:
           if (aDownload.id == downloadC && !this.handledC && this.phase == 2) {
+            // Sanity check: Download-C must be resumable
+            do_check_true(dlC.resumable);
+
             // Enter private browsing mode immediately
             pb.privateBrowsingEnabled = true;
             do_check_true(pb.privateBrowsingEnabled);
 
-            // Check that Download-C is not accessible
+            // Check that Download-C is paused and not accessible
+            do_check_eq(dlC.state, dm.DOWNLOAD_PAUSED);
             do_check_eq(dm.activeDownloadCount, 0);
             do_check_false(is_download_available(downloadC, downloadCSource,
               fileC, downloadCName));
 
-            // wait for Download-C to finish (which shouldn't happen)
-            ++this.phase;
+            // Exit private browsing mode
+            pb.privateBrowsingEnabled = false;
+            do_check_false(pb.privateBrowsingEnabled);
 
-            // wait for 3 seconds at most
-            let timer = Cc["@mozilla.org/timer;1"].
-                        createInstance(Ci.nsITimer);
-            timer.initWithCallback(function (aTimer) {
-              // Exit private browsing mode
-              pb.privateBrowsingEnabled = false;
-              do_check_false(pb.privateBrowsingEnabled);
+            // Check that Download-A is accessible
+            do_check_true(is_download_available(downloadA, downloadASource,
+              fileA, downloadAName));
 
-              // Check that Download-A is accessible
-              do_check_true(is_download_available(downloadA, downloadASource,
-                fileA, downloadAName));
+            // Check that Download-B is not accessible
+            do_check_false(is_download_available(downloadB, downloadBSource,
+              fileB, downloadBName));
 
-              // Check that Download-B is not accessible
-              do_check_false(is_download_available(downloadB, downloadBSource,
-                fileB, downloadBName));
+            // Check that Download-C is accessible
+            do_check_true(is_download_available(downloadC, downloadCSource,
+              fileC, downloadCName));
 
-              // Check that Download-C is accessible
-              do_check_true(is_download_available(downloadC, downloadCSource,
-                fileC, downloadCName));
-
-              // wait for Download-C to finish
-              ++listener.phase;
-            }, 3000, Ci.nsITimer.TYPE_ONE_SHOT);
+            // only perform these checks the first time that Download-C is started
             this.handledC = true;
           }
           break;
@@ -247,7 +242,7 @@ function run_test() {
             fileB, downloadBName));
 
           // Create Download-C
-          let dlC = addDownload({
+          dlC = addDownload({
             targetFile: fileC,
             sourceURI: downloadCSource,
             downloadName: downloadCName,
@@ -262,16 +257,12 @@ function run_test() {
           });
           downloadC = dlC.id;
 
-          // Wait until Download-C has started before entering the private mode
+          // wait for Download-C to finish
+          ++this.phase;
         }
         break;
 
-        case 3:
-          // If we reach here, then Download-C has been finished inside the private mode
-          do_throw("Download-C has been finished inside private browsing mode");
-          break;
-
-        case 4: {
+        case 3: {
           do_check_eq(dm.activeDownloadCount, 0);
 
           // Check that Download-A is accessible
@@ -332,6 +323,9 @@ function run_test() {
   let fileC = tmpDir.clone();
   fileC.append(downloadCDest);
   fileC.createUnique(Ci.nsIFile.NORMAL_FILE_TYPE, 0666);
+
+  // use js closures to access dlC
+  let dlC;
 
   // Create Download-A
   let dlA = addDownload({

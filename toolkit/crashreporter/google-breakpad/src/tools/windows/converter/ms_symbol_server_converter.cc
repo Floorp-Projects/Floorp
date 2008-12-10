@@ -285,6 +285,12 @@ MSSymbolServerConverter::LocateSymbolFile(const MissingSymbolInfo &missing,
 
       // This is an authoritiative file-not-found message.
       if (fail_not_found_) {
+        fprintf(stderr,
+                "LocateSymbolFile: SymFindFileInPath: LOCATE_NOT_FOUND error "
+                "for %s %s %s\n",
+                missing.debug_file.c_str(),
+                missing.debug_identifier.c_str(),
+                missing.version.c_str());
         return LOCATE_NOT_FOUND;
       }
 

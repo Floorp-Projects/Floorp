@@ -49,8 +49,10 @@ window.onload = function() {
   if (!sessionData.value) {
     var ss = Cc["@mozilla.org/browser/sessionstartup;1"].getService(Ci.nsISessionStartup);
     sessionData.value = ss.state;
-    if (!sessionData.value)
+    if (!sessionData.value) {
+      document.getElementById("errorTryAgain").disabled = true;
       return;
+    }
   }
   // make sure the data is tracked to be restored in case of a subsequent crash
   var event = document.createEvent("UIEvents");
@@ -79,10 +81,14 @@ function initTreeView() {
     };
     winState.tabs = aWinData.tabs.map(function(aTabData) {
       var entry = aTabData.entries[aTabData.index - 1] || { url: "about:blank" };
+      var iconURL = aTabData.attributes && aTabData.attributes.image || null;
+      // don't initiate a connection just to fetch a favicon (see bug 462863)
+      if (/^https?:/.test(iconURL))
+        iconURL = "moz-anno:favicon:" + iconURL;
       return {
         label: entry.title || entry.url,
         checked: true,
-        src: aTabData.attributes.image || null,
+        src: iconURL,
         parent: winState
       };
     });
@@ -98,6 +104,8 @@ function initTreeView() {
 // User actions
 
 function restoreSession() {
+  document.getElementById("errorTryAgain").disabled = true;
+  
   // remove all unselected tabs from the state before restoring it
   var ix = gStateObject.windows.length - 1;
   for (var t = gTreeData.length - 1; t >= 0; t--) {

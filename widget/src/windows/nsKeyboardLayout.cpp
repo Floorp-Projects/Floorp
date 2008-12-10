@@ -209,7 +209,8 @@ PRUint32 VirtualKey::GetNativeUniChars (PRUint8 aShiftState, PRUnichar* aUniChar
 
 
 
-KeyboardLayout::KeyboardLayout ()
+KeyboardLayout::KeyboardLayout () :
+  mKeyboardLayout(0), mCodePage(0)
 {
 #ifndef WINCE
   mDeadKeyTableListHead = nsnull;
@@ -361,7 +362,18 @@ KeyboardLayout::GetUniCharsWithShiftState(PRUint8 aVirtualKey,
 
 void KeyboardLayout::LoadLayout (HKL aLayout)
 {
+  if (mKeyboardLayout == aLayout)
+    return;
+
+  mKeyboardLayout = aLayout;
+  mIMEProperty = ::ImmGetProperty(aLayout, IGP_PROPERTY);
+
 #ifndef WINCE
+  WORD langID = LOWORD(aLayout);
+  ::GetLocaleInfoA(MAKELCID(langID, SORT_DEFAULT),
+                   LOCALE_IDEFAULTANSICODEPAGE | LOCALE_RETURN_NUMBER,
+                   (PSTR)&mCodePage, sizeof(mCodePage));
+
   PRUint32 shiftState;
   BYTE kbdState [256];
   BYTE originalKbdState [256];
@@ -372,7 +384,6 @@ void KeyboardLayout::LoadLayout (HKL aLayout)
 
   mActiveDeadKey = -1;
   mNumOfChars = 0;
-  mKeyboardLayout = aLayout;
 
   ReleaseDeadKeyTables ();
 
@@ -452,6 +463,8 @@ void KeyboardLayout::LoadLayout (HKL aLayout)
   }
 
   ::SetKeyboardState (originalKbdState);
+#else
+  mCodePage = ::GetACP();
 #endif
 }
 

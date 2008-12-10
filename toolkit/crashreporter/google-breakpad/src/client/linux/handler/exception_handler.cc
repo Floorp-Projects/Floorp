@@ -118,7 +118,9 @@ ExceptionHandler::~ExceptionHandler() {
 }
 
 bool ExceptionHandler::WriteMinidump() {
-  return InternalWriteMinidump(0, 0, NULL);
+  bool success = InternalWriteMinidump(0, 0, NULL);
+  UpdateNextID();
+  return success;
 }
 
 // static
@@ -226,41 +228,49 @@ bool ExceptionHandler::InternalWriteMinidump(int signo,
   if (filter_ && !filter_(callback_context_))
     return false;
 
+  bool success = false;
+  // Block all the signals we want to process when writting minidump.
+  // We don't want it to be interrupted.
+  sigset_t sig_blocked, sig_old;
+  bool blocked = true;
+  sigfillset(&sig_blocked);
+  for (size_t i = 0; i < sizeof(SigTable) / sizeof(SigTable[0]); ++i)
+    sigdelset(&sig_blocked, SigTable[i]);
+  if (sigprocmask(SIG_BLOCK, &sig_blocked, &sig_old) != 0) {
+    blocked = false;
+    fprintf(stderr, "google_breakpad::ExceptionHandler::HandleException: "
+                    "failed to block signals.\n");
+  }
+
+  success = minidump_generator_.WriteMinidumpToFile(
+                     next_minidump_path_c_, signo, sighandler_ebp, sig_ctx);
+
+  // Unblock the signals.
+  if (blocked) {
+    sigprocmask(SIG_SETMASK, &sig_old, &sig_old);
+  }
+
+  if (callback_)
+    success = callback_(dump_path_c_, next_minidump_id_c_,
+                          callback_context_, success);
+  return success;
+}
+
+void ExceptionHandler::UpdateNextID() {
   GUID guid;
-  bool success = false;;
   char guid_str[kGUIDStringLength + 1];
   if (CreateGUID(&guid) && GUIDToString(&guid, guid_str, sizeof(guid_str))) {
+    next_minidump_id_ = guid_str;
+    next_minidump_id_c_ = next_minidump_id_.c_str();
+
     char minidump_path[PATH_MAX];
     snprintf(minidump_path, sizeof(minidump_path), "%s/%s.dmp",
              dump_path_c_,
              guid_str);
 
-    // Block all the signals we want to process when writting minidump.
-    // We don't want it to be interrupted.
-    sigset_t sig_blocked, sig_old;
-    bool blocked = true;
-    sigfillset(&sig_blocked);
-    for (size_t i = 0; i < sizeof(SigTable) / sizeof(SigTable[0]); ++i)
-      sigdelset(&sig_blocked, SigTable[i]);
-    if (sigprocmask(SIG_BLOCK, &sig_blocked, &sig_old) != 0) {
-      blocked = false;
-      fprintf(stderr, "google_breakpad::ExceptionHandler::HandleException: "
-                      "failed to block signals.\n");
-    }
-
-    success = minidump_generator_.WriteMinidumpToFile(
-                       minidump_path, signo, sighandler_ebp, sig_ctx);
-
-    // Unblock the signals.
-    if (blocked) {
-      sigprocmask(SIG_SETMASK, &sig_old, &sig_old);
-    }
-
-    if (callback_)
-      success = callback_(dump_path_c_, guid_str,
-                          callback_context_, success);
+    next_minidump_path_ = minidump_path;
+    next_minidump_path_c_ = next_minidump_path_.c_str();
   }
-  return success;
 }
 
 }  // namespace google_breakpad

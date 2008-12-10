@@ -240,6 +240,17 @@ mozStorageConnection::Close()
         }
     }
 
+#ifdef DEBUG
+    // Notify about any non-finalized statements.
+    sqlite3_stmt *stmt = NULL;
+    while (stmt = sqlite3_next_stmt(mDBConn, stmt)) {
+        char *msg = PR_smprintf("SQL statement '%s' was not finalized",
+                                sqlite3_sql(stmt));
+        NS_WARNING(msg);
+        PR_smprintf_free(msg);
+    }
+#endif
+
     {
         nsAutoLock mutex(mProgressHandlerMutex);
         if (mProgressHandler)
@@ -248,7 +259,7 @@ mozStorageConnection::Close()
 
     int srv = sqlite3_close(mDBConn);
     if (srv != SQLITE_OK)
-        NS_WARNING("sqlite3_close failed. There are probably outstanding statements!");
+        NS_WARNING("sqlite3_close failed. There are probably outstanding statements that are listed above!");
 
     mDBConn = NULL;
     return ConvertResultCode(srv);

@@ -114,6 +114,7 @@ EXPORTS
         sqlite3_mutex_leave
         sqlite3_mutex_try
         sqlite3_mprintf
+        sqlite3_next_stmt
         sqlite3_open
         sqlite3_open_v2
         sqlite3_open16

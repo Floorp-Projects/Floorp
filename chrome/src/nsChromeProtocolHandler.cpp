@@ -418,7 +418,7 @@ nsChromeProtocolHandler::AllowPort(PRInt32 port, const char *scheme, PRBool *_re
 NS_IMETHODIMP
 nsChromeProtocolHandler::GetProtocolFlags(PRUint32 *result)
 {
-    *result = URI_STD | URI_IS_UI_RESOURCE;
+    *result = URI_STD | URI_IS_UI_RESOURCE | URI_IS_LOCAL_RESOURCE;
     return NS_OK;
 }
 
@@ -465,7 +465,7 @@ nsChromeProtocolHandler::NewChannel(nsIURI* aURI,
 
     NS_ENSURE_ARG_POINTER(aURI);
     NS_PRECONDITION(aResult, "Null out param");
-    
+
 #ifdef DEBUG
     // Check that the uri we got is already canonified
     nsresult debug_rv;
@@ -554,38 +554,6 @@ nsChromeProtocolHandler::NewChannel(nsIURI* aURI,
         rv = ioServ->NewChannelFromURI(resolvedURI, getter_AddRefs(result));
         if (NS_FAILED(rv)) return rv;
 
-        // XXX Will be removed someday when we handle remote chrome.
-        nsCOMPtr<nsIFileChannel> fileChan
-            (do_QueryInterface(result));
-        if (fileChan) {
-#ifdef DEBUG
-            nsCOMPtr<nsIFile> file;
-            fileChan->GetFile(getter_AddRefs(file));
-
-            PRBool exists = PR_FALSE;
-            file->Exists(&exists);
-            if (!exists) {
-                nsCAutoString path;
-                file->GetNativePath(path);
-                printf("Chrome file doesn't exist: %s\n", path.get());
-            }
-#endif
-        }
-        else {
-            nsCOMPtr<nsIJARChannel> jarChan
-                (do_QueryInterface(result));
-            if (!jarChan) {
-                nsRefPtr<nsCachedChromeChannel> cachedChannel;
-                if (NS_FAILED(CallQueryInterface(result.get(),
-                        static_cast<nsCachedChromeChannel**>(
-                            getter_AddRefs(cachedChannel))))) {
-                    NS_WARNING("Remote chrome not allowed! Only file:, resource:, jar:, and cached chrome channels are valid.\n");
-                    result = nsnull;
-                    return NS_ERROR_FAILURE;
-                }
-            }
-        }
-
         // Make sure that the channel remembers where it was
         // originally loaded from.
         rv = result->SetOriginalURI(aURI);
@@ -627,24 +595,15 @@ nsChromeProtocolHandler::NewChannel(nsIURI* aURI,
             if (objectOutput) {
                 nsCOMPtr<nsIFile> file;
 
-                if (fileChan) {
-                    fileChan->GetFile(getter_AddRefs(file));
-                } else {
-                    nsCOMPtr<nsIURI> uri;
-                    result->GetURI(getter_AddRefs(uri));
+                nsCOMPtr<nsIURI> uri;
+                result->GetURI(getter_AddRefs(uri));
+                uri = NS_GetInnermostURI(uri);
 
-                    // Loop, jar URIs can nest (e.g. jar:jar:A.jar!B.jar!C.xml).
-                    // Often, however, we have jar:resource:/chrome/A.jar!C.xml.
-                    nsCOMPtr<nsIJARURI> jarURI;
-                    while ((jarURI = do_QueryInterface(uri)) != nsnull)
-                        jarURI->GetJARFile(getter_AddRefs(uri));
-
-                    // Here we have a URL of the form resource:/chrome/A.jar
-                    // or file:/some/path/to/A.jar.
-                    nsCOMPtr<nsIFileURL> fileURL(do_QueryInterface(uri));
-                    if (fileURL)
-                        fileURL->GetFile(getter_AddRefs(file));
-                }
+                // Here we have a URL of the form resource:/chrome/A.jar
+                // or file:/some/path/to/A.jar.
+                nsCOMPtr<nsIFileURL> fileURL(do_QueryInterface(uri));
+                if (fileURL)
+                    fileURL->GetFile(getter_AddRefs(file));
 
                 if (file) {
                     rv = fastLoadServ->AddDependency(file);

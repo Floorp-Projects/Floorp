@@ -259,6 +259,7 @@ NO_PKG_FILES += \
 	components/xpti.dat \
 	content_unit_tests \
 	necko_unit_tests \
+	*.dSYM \
 	$(NULL)
 
 # browser/locales/Makefile uses this makefile for its variable defs, but
@@ -400,7 +401,7 @@ ifdef NO_PKG_FILES
 	cd $(DIST)/$(STAGEPATH)$(MOZ_PKG_DIR)$(_BINPATH); rm -rf $(NO_PKG_FILES)
 endif
 ifdef MOZ_PKG_REMOVALS
-	$(SYSINSTALL) $(MOZ_PKG_REMOVALS_GEN) $(DIST)/$(STAGEPATH)$(MOZ_PKG_DIR)$(_BINPATH)
+	$(SYSINSTALL) $(IFLAGS1) $(MOZ_PKG_REMOVALS_GEN) $(DIST)/$(STAGEPATH)$(MOZ_PKG_DIR)$(_BINPATH)
 endif # MOZ_PKG_REMOVALS
 
 make-package: stage-package

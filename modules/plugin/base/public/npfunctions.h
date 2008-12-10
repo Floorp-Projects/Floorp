@@ -42,10 +42,6 @@
 #pragma pack(1)
 #endif
 
-#ifndef GENERATINGCFM
-#define GENERATINGCFM 0
-#endif
-
 #include "npapi.h"
 #include "npruntime.h"
 
@@ -181,8 +177,6 @@ typedef struct _NPNetscapeFuncs {
 } NPNetscapeFuncs;
 
 #ifdef XP_MACOSX
-/* Don't use this, it is going away. */
-typedef NPError (* NPP_MainEntryProcPtr)(NPNetscapeFuncs*, NPPluginFuncs*, NPP_ShutdownProcPtr*);
 /*
  * Mac OS X version(s) of NP_GetMIMEDescription(const char *)
  * These can be called to retreive MIME information from the plugin dynamically
@@ -267,6 +261,7 @@ NP_EXPORT(char*)   NP_GetPluginVersion();
 NP_EXPORT(char*)   NP_GetMIMEDescription();
 #ifdef XP_MACOSX
 NP_EXPORT(NPError) NP_Initialize(NPNetscapeFuncs* bFuncs);
+NP_EXPORT(NPError) NP_GetEntryPoints(NPPluginFuncs* pFuncs);
 #else
 NP_EXPORT(NPError) NP_Initialize(NPNetscapeFuncs* bFuncs, NPPluginFuncs* pFuncs);
 #endif

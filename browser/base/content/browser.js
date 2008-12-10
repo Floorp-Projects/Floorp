@@ -1345,6 +1345,11 @@ function delayedStartup(isLoadingBlank, mustLoadSidebar) {
     DownloadMonitorPanel.init();
   }, 10000);
 
+  // Delayed initialization of PlacesDBUtils.
+  // This component checks for database coherence once per day, on
+  // an idle timer, taking corrective actions where needed.
+  setTimeout(function() PlacesUtils.startPlacesDBUtils(), 15000);
+
 #ifndef XP_MACOSX
   updateEditUIVisibility();
   let placesContext = document.getElementById("placesContext");
@@ -6204,8 +6209,13 @@ HistoryMenu.populateUndoSubmenu = function PHM_populateUndoSubmenu() {
   for (var i = 0; i < undoItems.length; i++) {
     var m = document.createElement("menuitem");
     m.setAttribute("label", undoItems[i].title);
-    if (undoItems[i].image)
-      m.setAttribute("image", undoItems[i].image);
+    if (undoItems[i].image) {
+      let iconURL = undoItems[i].image;
+      // don't initiate a connection just to fetch a favicon (see bug 467828)
+      if (/^https?:/.test(iconURL))
+        iconURL = "moz-anno:favicon:" + iconURL;
+      m.setAttribute("image", iconURL);
+    }
     m.setAttribute("class", "menuitem-iconic bookmark-item");
     m.setAttribute("value", i);
     m.setAttribute("oncommand", "undoCloseTab(" + i + ");");
@@ -6911,16 +6921,10 @@ let gPrivateBrowsingUI = {
     if (!this._privateBrowsingAutoStarted) {
       // Adjust the window's title
       let docElement = document.documentElement;
-#ifdef XP_MACOSX // see bug 411929 comment 38 for the reason behind this
-      docElement.setAttribute("titlemodifier",
-        docElement.getAttribute("titlemodifier_privatebrowsing"));
-      docElement.setAttribute("titledefault", "");
-#else
       docElement.setAttribute("title",
         docElement.getAttribute("title_privatebrowsing"));
       docElement.setAttribute("titlemodifier",
         docElement.getAttribute("titlemodifier_privatebrowsing"));
-#endif
       docElement.setAttribute("browsingmode", "private");
     }
     else {
@@ -6945,16 +6949,10 @@ let gPrivateBrowsingUI = {
     if (!this._privateBrowsingAutoStarted) {
       // Adjust the window's title
       let docElement = document.documentElement;
-#ifdef XP_MACOSX // see bug 411929 comment 38 for the reason behind this
-      docElement.setAttribute("titlemodifier", "");
-      docElement.setAttribute("titledefault",
-        docElement.getAttribute("titlemodifier_normal"));
-#else
       docElement.setAttribute("title",
         docElement.getAttribute("title_normal"));
       docElement.setAttribute("titlemodifier",
         docElement.getAttribute("titlemodifier_normal"));
-#endif
       docElement.setAttribute("browsingmode", "normal");
     }
     else

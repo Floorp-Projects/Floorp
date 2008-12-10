@@ -1021,6 +1021,12 @@ nsWaveDecoder::Play()
 void
 nsWaveDecoder::Stop()
 {
+  if (mStopping) {
+    return;
+  }
+
+  mStopping = PR_TRUE;
+
   StopProgress();
 
   if (mPlaybackStateMachine) {
@@ -1047,6 +1053,8 @@ nsWaveDecoder::Stop()
 nsresult
 nsWaveDecoder::Load(nsIURI* aURI, nsIChannel* aChannel, nsIStreamListener** aStreamListener)
 {
+  mStopping = PR_FALSE;
+
   if (aStreamListener) {
     *aStreamListener = nsnull;
   }
@@ -1086,6 +1094,10 @@ nsWaveDecoder::Load(nsIURI* aURI, nsIChannel* aChannel, nsIStreamListener** aStr
 void
 nsWaveDecoder::MetadataLoaded()
 {
+  if (mShuttingDown) {
+    return;
+  }
+
   if (mElement) {
     mElement->MetadataLoaded();
     mElement->FirstFrameLoaded();
@@ -1095,6 +1107,10 @@ nsWaveDecoder::MetadataLoaded()
 void
 nsWaveDecoder::PlaybackEnded()
 {
+  if (mShuttingDown) {
+    return;
+  }
+
   Stop();
   if (mElement) {
     mElement->PlaybackEnded();
@@ -1104,6 +1120,9 @@ nsWaveDecoder::PlaybackEnded()
 void
 nsWaveDecoder::ResourceLoaded()
 {
+  if (mShuttingDown) {
+    return;
+  }
   if (mElement) {
     mElement->ResourceLoaded();
   }
@@ -1116,6 +1135,9 @@ nsWaveDecoder::ResourceLoaded()
 void
 nsWaveDecoder::NetworkError()
 {
+  if (mShuttingDown) {
+    return;
+  }
   if (mElement) {
     mElement->NetworkError();
   }
@@ -1185,6 +1207,8 @@ private:
 void
 nsWaveDecoder::Shutdown()
 {
+  mShuttingDown = PR_TRUE;
+
   nsMediaDecoder::Shutdown();
 
   nsCOMPtr<nsIRunnable> event = new nsWaveDecoderShutdown(this);
@@ -1203,6 +1227,10 @@ nsWaveDecoder::Observe(nsISupports* aSubject, const char* aTopic, const PRUnicha
 void
 nsWaveDecoder::BufferingStarted()
 {
+  if (mShuttingDown) {
+    return;
+  }
+
   if (mElement) {
     mElement->ChangeReadyState(nsIDOMHTMLMediaElement::DATA_UNAVAILABLE);
   }
@@ -1211,6 +1239,10 @@ nsWaveDecoder::BufferingStarted()
 void
 nsWaveDecoder::BufferingStopped()
 {
+  if (mShuttingDown) {
+    return;
+  }
+
   if (mElement) {
     mElement->ChangeReadyState(nsIDOMHTMLMediaElement::CAN_SHOW_CURRENT_FRAME);
   }
@@ -1219,6 +1251,10 @@ nsWaveDecoder::BufferingStopped()
 void
 nsWaveDecoder::SeekingStarted()
 {
+  if (mShuttingDown) {
+    return;
+  }
+
   if (mElement) {
     mElement->SeekStarted();
   }
@@ -1227,6 +1263,10 @@ nsWaveDecoder::SeekingStarted()
 void
 nsWaveDecoder::SeekingStopped()
 {
+  if (mShuttingDown) {
+    return;
+  }
+
   if (mElement) {
     mElement->SeekCompleted();
   }
@@ -1265,6 +1305,9 @@ nsWaveDecoder::UnregisterShutdownObserver()
 void
 nsWaveDecoder::MediaErrorDecode()
 {
+  if (mShuttingDown) {
+    return;
+  }
 #if 0
   if (mElement) {
     mElement->MediaErrorDecode();
