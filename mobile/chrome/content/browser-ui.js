@@ -331,8 +331,8 @@ var BrowserUI = {
         break;
 
       case TOOLBARSTATE_LOADING:
-        toolbar.setAttribute("mode", "loading");
         this.show(UIMODE_URLVIEW);
+        toolbar.setAttribute("mode", "loading");
 
         ws.panTo(0,0, true);
 
