@@ -699,9 +699,6 @@ protected:
   nsCOMPtr<nsIDOMCrypto>        mCrypto;
   nsCOMPtr<nsIDOMPkcs11>        mPkcs11;
 
-
-  nsCOMPtr<nsIDOMStorageList>   gGlobalStorageList;
-
   nsCOMPtr<nsISupports>         mInnerWindowHolders[NS_STID_ARRAY_UBOUND];
   nsCOMPtr<nsIPrincipal> mOpenerScriptPrincipal; // strong; used to determine
                                                  // whether to clear scope
@@ -740,6 +737,7 @@ protected:
   friend class nsDOMWindowUtils;
   friend class PostMessageEvent;
   static nsIFactory *sComputedDOMStyleFactory;
+  static nsIDOMStorageList* sGlobalStorageList;
 };
 
 /*
