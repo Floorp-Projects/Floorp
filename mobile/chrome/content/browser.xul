@@ -238,7 +238,7 @@
       <toolbarbutton id="tool-forward" class="browser-control-button" command="cmd_forward"/>
       <toolbarspring/>
       <toolbarbutton id="tool-actions" class="browser-control-button" command="cmd_actions" hidden="true"/>
-      <toolbarbutton id="tool-panel" class="browser-control-button" command="cmd_panel" type="checkbox"/>
+      <toolbarbutton id="tool-panel-open" class="browser-control-button" command="cmd_panel"/>
     </vbox>
     <!-- end: right bar -->
 
@@ -278,14 +278,14 @@
     <!-- end: Main Toolbar -->
 
     <!-- barrier to the left of the right bar -->
-    <spacer style="-moz-stack-sizing: ignore; width: 1px; height: 1px;" barriertype="vertical" size="10" left="881" constraint="vp-relative"/>
-    <hbox id="panel-container" style="-moz-stack-sizing: ignore; width: 600px; height: 480px;" top="0" left="880" constraint="ignore-y,vp-relative">
+    <hbox id="panel-container" hidden="true" style="-moz-stack-sizing: ignore;" top="0" left="0">
       <vbox id="panel-controls" oncommand="BrowserUI.switchPane(event.target.getAttribute('linkedpanel'));">
         <toolbarspring/>
         <toolbarbutton id="tool-addons" type="radio" group="1" class="panel-button" linkedpanel="addons-container"/>
         <toolbarbutton id="tool-downloads" type="radio" group="1" class="panel-button" linkedpanel="downloads-container"/>
         <toolbarbutton id="tool-preferences" type="radio" group="1" class="panel-button" linkedpanel="prefs-container"/>
         <toolbarbutton id="tool-shortcuts" type="radio" group="1" class="panel-button" linkedpanel="shortcuts-container" hidden="true"/>
+        <toolbarbutton id="tool-panel-close" class="browser-control-button" command="cmd_panel"/>
       </vbox>
       <deck id="panel-items" flex="1">
         <iframe id="addons-container" flex="1"/>

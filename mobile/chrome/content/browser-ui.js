@@ -207,54 +207,6 @@ var BrowserUI = {
     }
   },
 
-  _showPanel : function(aMode) {
-    let tabbar = document.getElementById("tabs-container");
-    let sidebar = document.getElementById("browser-controls");
-    let panelUI = document.getElementById("panel-container");
-    let toolbar = document.getElementById("toolbar-main");
-    let canvas = document.getElementById("browser-canvas");
-
-    let tabbarW = tabbar.boxObject.width;
-    let sidebarW = sidebar.boxObject.width;
-    let contentW = canvas.width;
-
-    let newLeft = -tabbarW;
-    switch (aMode) {
-      case UIMODE_NONE:
-        Shortcuts.deinit();
-        break;
-      case UIMODE_PANEL:
-        newLeft = -contentW;
-        this._initPanel();
-        break;
-      case UIMODE_CONTROLS:
-        newLeft = -(tabbarW + sidebarW);
-        break;
-      case UIMODE_TABS:
-        newLeft = 0;
-        break;
-    }
-
-// XXX some form of this code should be in Browser.panHandler so the UIMODE is
-// set correctly when panning.
-// OR maybe we should try to removing as much of UIMODE as possible
-/*
-      tabbar.left = newLeft;
-
-      let newToolbarLeft = newLeft;
-      if (newToolbarLeft < 0 && aMode != UIMODE_PANEL)
-        newToolbarLeft = 0;
-      else if (newToolbarLeft < 0 && aMode == UIMODE_PANEL)
-        newToolbarLeft += tabbarW + sidebarW;
-      toolbar.left = newToolbarLeft;
-
-      this._setContentPosition("left", newLeft + tabbarW);
-      sidebar.left = newLeft + tabbarW + contentW;
-      panelUI.left = newLeft + tabbarW + contentW + sidebarW;
-      panelUI.width = contentW;
-*/
-  },
-
   _initPanel : function() {
     let addons = document.getElementById("addons-container");
     if (!addons.hasAttribute("src"))
@@ -471,10 +423,11 @@ var BrowserUI = {
 
     this.mode = aMode;
 
-    var toolbar = document.getElementById("toolbar-main");
-    var bookmark = document.getElementById("bookmark-container");
-    var urllist = document.getElementById("urllist-container");
-    var container = document.getElementById("browser-container");
+    let toolbar = document.getElementById("toolbar-main");
+    let bookmark = document.getElementById("bookmark-container");
+    let urllist = document.getElementById("urllist-container");
+    let container = document.getElementById("browser-container");
+    let panelUI = document.getElementById("panel-container");
 
     if (aMode == UIMODE_URLVIEW) {
       this._showToolbar(true);
@@ -482,8 +435,7 @@ var BrowserUI = {
 
       bookmark.hidden = true;
       urllist.hidden = true;
-
-      this._showPanel(UIMODE_NONE);
+      panelUI.hidden = true;
     }
     else if (aMode == UIMODE_URLEDIT) {
       this._showToolbar(true);
@@ -491,18 +443,16 @@ var BrowserUI = {
 
       bookmark.hidden = true;
       urllist.hidden = true;
-
-      this._showPanel(UIMODE_NONE);
+      panelUI.hidden = true;
     }
     else if (aMode == UIMODE_BOOKMARK) {
       this._showToolbar(true);
       this._editToolbar(false);
 
       urllist.hidden = true;
+      panelUI.hidden = true;
       bookmark.hidden = false;
       bookmark.width = container.boxObject.width;
-
-      this._showPanel(UIMODE_NONE);
     }
     else if (aMode == UIMODE_BOOKMARKLIST) {
       this._showToolbar(false);
@@ -511,29 +461,31 @@ var BrowserUI = {
       window.addEventListener("keypress", this.closePopup, false);
 
       bookmark.hidden = true;
+      panelUI.hidden = true;
       urllist.hidden = false;
       urllist.width = container.boxObject.width;
       urllist.height = container.boxObject.height;
-
-      this._showPanel(UIMODE_NONE);
     }
     else if (aMode == UIMODE_PANEL) {
       this._showToolbar(true);
       this._editToolbar(false);
 
       bookmark.hidden = true;
-
-      this._showPanel(aMode);
+      urllist.hidden = true;
+      panelUI.hidden = false;
+      panelUI.width = container.boxObject.width;
+      panelUI.height = container.boxObject.height;
+      this._initPanel();
     }
     else if (aMode == UIMODE_TABS || aMode == UIMODE_CONTROLS) {
-      this._showPanel(aMode);
+      panelUI.hidden = true;
     }
     else if (aMode == UIMODE_NONE) {
       this._showToolbar(false);
       this._edit.reallyClosePopup();
       urllist.hidden = true;
       bookmark.hidden = true;
-      this._showPanel(aMode);
+      panelUI.hidden = true;
     }
   },
 

@@ -294,16 +294,8 @@ toolbarbutton.panel-button {
   -moz-image-region: rect(160px 96px 208px 48px);
 }
 
-#tool-panel {
+#tool-panel-open, #tool-panel-close {
   -moz-image-region: rect(208px 48px 256px 0px);
-}
-
-#tool-panel:hover:active, #tool-panel[checked] {
-  -moz-image-region: rect(208px 96px 256px 48px);
-
-  /* override checked style */
-  background: none !important;
-  border-color: transparent !important;
 }
 
 /* "extras" panel UI   ----------------------------------------------------- */
