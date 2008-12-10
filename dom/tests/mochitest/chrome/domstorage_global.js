@@ -1,3 +1,6 @@
+ok(globalStorage === this["globalStorage"], "globalStorage is global check 1")
+ok(globalStorage === window["globalStorage"], "globalStorage is global check 2")
+
 function test_DOMStorage_global()
 {
   var currentDomain = "mozilla.com";
@@ -157,4 +160,9 @@ function test_DOMStorage_global_Item(storage, key, expectedvalue, expectedlength
 function is(left, right, str)
 {
   window.opener.wrappedJSObject.SimpleTest.is(left, right, str);
+}
+
+function ok(val, str)
+{
+  window.opener.wrappedJSObject.SimpleTest.ok(val, str);
 }
