@@ -66,6 +66,8 @@ interface nsISound : nsISupports
 #define NS_SYSSOUND_CONFIRM_DIALOG  NS_LITERAL_STRING("_moz_confirmdialog")
 #define NS_SYSSOUND_PROMPT_DIALOG   NS_LITERAL_STRING("_moz_promptdialog")
 #define NS_SYSSOUND_SELECT_DIALOG   NS_LITERAL_STRING("_moz_selectdialog")
+#define NS_SYSSOUND_MENU_EXECUTE    NS_LITERAL_STRING("_moz_menucommand")
+#define NS_SYSSOUND_MENU_POPUP      NS_LITERAL_STRING("_moz_menupopup")
 
 #define NS_IsMozAliasSound(aSoundAlias) \
           StringBeginsWith(aSoundAlias, NS_SYSSOUND_PREFIX)
