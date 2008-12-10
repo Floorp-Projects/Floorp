@@ -52,6 +52,7 @@ _TEST_FILES = 	test_autoplay.html \
                 test_ended1.html \
                 test_ended2.html \
                 test_networkState.html \
+                test_onloadedmetadata.html \
                 test_paused.html \
                 test_readyState.html \
                 test_seek1.html \
