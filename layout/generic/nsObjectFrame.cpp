@@ -3737,6 +3737,8 @@ nsEventStatus nsPluginInstanceOwner::ProcessEvent(const nsGUIEvent& anEvent)
         NS_ASSERTION(anEvent.message == NS_MOUSE_BUTTON_DOWN ||
                      anEvent.message == NS_MOUSE_BUTTON_UP ||
                      anEvent.message == NS_MOUSE_DOUBLECLICK ||
+                     anEvent.message == NS_MOUSE_ENTER_SYNTH ||
+                     anEvent.message == NS_MOUSE_EXIT_SYNTH ||
                      anEvent.message == NS_MOUSE_MOVE,
                      "Incorrect event type for coordinate translation");
         nsPoint pt = nsLayoutUtils::GetEventCoordinatesRelativeTo(&anEvent, mOwner);
