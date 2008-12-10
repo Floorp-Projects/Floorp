@@ -13,7 +13,7 @@
 # for the specific language governing rights and limitations under the
 # License.
 #
-# The Original Code is mozilla.org Code.
+# The Original Code is mozilla.org code.
 #
 # The Initial Developer of the Original Code is
 # Netscape Communications Corporation.
@@ -36,17 +36,15 @@
 #
 # ***** END LICENSE BLOCK *****
 
-## $Id: mozilla.in,v 1.16 2007/10/05 07:29:26 reed%reedloden.com Exp $
 ## 
 ## Usage:
 ##
 ## $ mozilla [args]
 ##
-## This script is meant to run the mozilla-bin binary from either 
-## mozilla/xpfe/bootstrap or mozilla/dist/bin.
+## This script is meant to run the application binary from mozilla/dist/bin.
 ##
 ## The script will setup all the environment voodoo needed to make
-## the mozilla-bin binary to work.
+## the application binary to work.
 ##
 
 #uncomment for debugging
@@ -90,8 +88,9 @@ if [ $found = 0 ]; then
   # Check default compile-time libdir
   if [ -x "$moz_libdir/run-mozilla.sh" ]; then
     dist_bin="$moz_libdir"
-  else 
-    echo "Cannot find mozilla runtime directory. Exiting."
+    run_moz="$moz_libdir/run-mozilla.sh"
+  else
+    echo "Cannot find %MOZ_APP_DISPLAYNAME% runtime directory. Exiting."
     exit 1
   fi
 fi

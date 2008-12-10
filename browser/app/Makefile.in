@@ -271,8 +271,9 @@ endif
 
 ifneq (,$(filter-out OS2 WINNT,$(OS_ARCH)))
 
-$(MOZ_APP_NAME):: mozilla.in $(GLOBAL_DEPS)
-	cat $< | sed -e "s|%MOZAPPDIR%|$(installdir)|" > $@
+$(MOZ_APP_NAME):: $(topsrcdir)/build/unix/mozilla.in $(GLOBAL_DEPS)
+	cat $< | sed -e "s|%MOZAPPDIR%|$(installdir)|" \
+		-e "s|%MOZ_APP_DISPLAYNAME%|$(MOZ_APP_DISPLAYNAME)|" > $@
 	chmod +x $@
 
 libs:: $(MOZ_APP_NAME)
