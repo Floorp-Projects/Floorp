@@ -144,18 +144,18 @@ toolbarbutton.urlbar-cap-button {
   -moz-image-region: rect(24px 120px 48px 96px);
 }
 
-#toolbar-main[mode="loading"] > #urlbar-container > #urlbar-icons > #tool-go,
-#toolbar-main[mode="loading"] > #urlbar-container > #urlbar-icons > #tool-reload {
+#urlbar-icons[mode="loading"] > #tool-go,
+#urlbar-icons[mode="loading"] > #tool-reload {
   visibility: collapse;
 }
 
-#toolbar-main[mode="view"] > #urlbar-container > #urlbar-icons > #tool-go,
-#toolbar-main[mode="view"] > #urlbar-container > #urlbar-icons > #tool-stop {
+#urlbar-icons[mode="view"] > #tool-go,
+#urlbar-icons[mode="view"] > #tool-stop {
   visibility: collapse;
 }
 
-#toolbar-main[mode="edit"] > #urlbar-container > #urlbar-icons > #tool-reload,
-#toolbar-main[mode="edit"] > #urlbar-container > #urlbar-icons > #tool-stop {
+#urlbar-icons[mode="edit"] > #tool-reload,
+#urlbar-icons[mode="edit"] > #tool-stop {
   visibility: collapse;
 }
 
