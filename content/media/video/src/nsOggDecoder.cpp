@@ -961,6 +961,15 @@ nsresult nsOggDecodeStateMachine::Run()
         
         oggplay_seek(mPlayer, ogg_int64_t(seekTime * 1000));
 
+        // Reactivate all tracks. Liboggplay deactivates tracks when it
+        // reads to the end of stream, but they must be reactivated in order
+        // to start reading from them again.
+        for (int i = 0; i < oggplay_get_num_tracks(mPlayer); ++i) {
+         if (oggplay_set_track_active(mPlayer, i) < 0)  {
+            LOG(PR_LOG_ERROR, ("Could not set track %d active", i));
+          }
+        }
+
         mon.Enter();
         if (mState == DECODER_STATE_SHUTDOWN)
           continue;
@@ -982,6 +991,7 @@ nsresult nsOggDecodeStateMachine::Run()
 
         mLastFrameTime = 0;
         FrameData* frame = NextFrame();
+        NS_ASSERTION(frame != nsnull, "No frame after seek!");
         if (frame) {
           mDecodedFrames.Push(frame);
           UpdatePlaybackPosition(frame->mDecodedFrameTime);
