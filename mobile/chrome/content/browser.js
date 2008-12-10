@@ -161,20 +161,16 @@ var Browser = {
     browsers.addEventListener("DOMUpdatePageReport", gPopupBlockerObserver.onUpdatePageReport, false);
 
     /* Initialize Spatial Navigation */
-    /*
-    var deckbrowser = content;
+    var canvasBrowser = this.canvasBrowser;
     function panCallback(aElement) {
-      // SpatialNav calls commandDispatcher.advanceFocus/rewindFocus, which
-      // can mess the scroll state up. Reset it.
-      deckbrowser.browser.contentWindow.scrollTo(0, 0);
-
       if (!aElement)
         return;
 
-      deckbrowser.ensureElementIsVisible(aElement);
+      canvasBrowser.ensureElementIsVisible(aElement);
     }
-    SpatialNavigation.init(content, panCallback);
-    */
+    // Init it with the "browsers" element, which will receive keypress events
+    // for all of our <browser>s
+    SpatialNavigation.init(browsers, panCallback);
 
     /* Initialize Geolocation */
     this.setupGeolocationPrompt();
