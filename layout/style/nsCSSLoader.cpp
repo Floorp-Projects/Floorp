@@ -456,6 +456,7 @@ static nsresult GetCharsetFromData(const unsigned char* aStyleSheetData,
     return NS_ERROR_NOT_AVAILABLE;
   PRUint32 step = 1;
   PRUint32 pos = 0;
+  PRBool bigEndian = PR_FALSE;
   // Determine the encoding type.  If we have a BOM, set aCharset to the
   // charset listed for that BOM in http://www.w3.org/TR/REC-xml#sec-guessing;
   // that way even if we don't have a valid @charset rule we can use the BOM to
@@ -489,26 +490,18 @@ static nsresult GetCharsetFromData(const unsigned char* aStyleSheetData,
     aCharset = "UTF-32";
   }
   else if (nsContentUtils::CheckForBOM(aStyleSheetData,
-                                       aDataLength, aCharset)) {
+                                       aDataLength, aCharset, &bigEndian)) {
     if (aCharset.Equals("UTF-8")) {
       step = 1;
       pos = 3;
     }
-    else if (aCharset.Equals("UTF-32BE")) {
+    else if (aCharset.Equals("UTF-32")) {
       step = 4;
-      pos = 7;
+      pos = bigEndian ? 7 : 4;
     }
-    else if (aCharset.Equals("UTF-32LE")) {
-      step = 4;
-      pos = 4;
-    }
-    else if (aCharset.Equals("UTF-16BE")) {
+    else if (aCharset.Equals("UTF-16")) {
       step = 2;
-      pos = 3;
-    }
-    else if (aCharset.Equals("UTF-16LE")) {
-      step = 2;
-      pos = 2;
+      pos = bigEndian ? 3 : 2;
     }
   }
   else if (aStyleSheetData[0] == 0x00 &&

@@ -427,6 +427,10 @@ class Dumper:
     def ShouldProcess(self, file):
         return False
 
+    # and can override this
+    def ShouldSkipDir(self, dir):
+        return False
+
     def RunFileCommand(self, file):
         """Utility function, returns the output of file(1)"""
         try:
@@ -450,7 +454,7 @@ class Dumper:
 
     def Process(self, file_or_dir):
         "Process a file or all the (valid) files in a directory."
-        if os.path.isdir(file_or_dir):
+        if os.path.isdir(file_or_dir) and not self.ShouldSkipDir(file_or_dir):
             return self.ProcessDir(file_or_dir)
         elif os.path.isfile(file_or_dir):
             return self.ProcessFile(file_or_dir)
@@ -462,6 +466,9 @@ class Dumper:
         are determined by calling ShouldProcess."""
         result = True
         for root, dirs, files in os.walk(dir):
+            for d in dirs[:]:
+                if self.ShouldSkipDir(d):
+                    dirs.remove(d)
             for f in files:
                 fullpath = os.path.join(root, f)
                 if self.ShouldProcess(fullpath):
@@ -665,6 +672,27 @@ class Dumper_Mac(Dumper):
         if file.endswith(".dylib") or os.access(file, os.X_OK):
             return self.RunFileCommand(file).startswith("Mach-O")
         return False
+
+    def ShouldSkipDir(self, dir):
+        """We create .dSYM bundles on the fly, but if someone runs
+        buildsymbols twice, we should skip any bundles we created
+        previously, otherwise we'll recurse into them and try to 
+        dump the inner bits again."""
+        if dir.endswith(".dSYM"):
+            return True
+        return False
+
+    def ProcessFile(self, file):
+        """dump_syms on Mac needs to be run on a dSYM bundle produced
+        by dsymutil(1), so run dsymutil here and pass the bundle name
+        down to the superclass method instead."""
+        dsymbundle = file + ".dSYM"
+        if os.path.exists(dsymbundle):
+            shutil.rmtree(dsymbundle)
+        # dsymutil takes --arch=foo instead of -a foo like everything else
+        os.system("dsymutil %s %s >/dev/null" % (' '.join([a.replace('-a ', '--arch=') for a in self.archs]),
+                                      file))
+        return Dumper.ProcessFile(self, dsymbundle)
 
 # Entry point if called as a standalone program
 def main():

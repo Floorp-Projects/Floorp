@@ -933,6 +933,9 @@ _cairo_win32_surface_composite_inner (cairo_win32_surface_t *src,
     return CAIRO_STATUS_SUCCESS;
 }
 
+/* from pixman-private.h */
+#define MOD(a,b) ((a) < 0 ? ((b) - ((-(a) - 1) % (b))) - 1 : (a) % (b))
+
 static cairo_int_status_t
 _cairo_win32_surface_composite (cairo_operator_t	op,
 				cairo_pattern_t       	*pattern,
@@ -1214,8 +1217,8 @@ _cairo_win32_surface_composite (cairo_operator_t	op,
 	uint32_t rendered_width = 0, rendered_height = 0;
 	uint32_t to_render_height, to_render_width;
 	int32_t piece_x, piece_y;
-	int32_t src_start_x = src_r.x % src_extents.width;
-	int32_t src_start_y = src_r.y % src_extents.height;
+	int32_t src_start_x = MOD(src_r.x, src_extents.width);
+	int32_t src_start_y = MOD(src_r.y, src_extents.height);
 
 	if (needs_scale)
 	    goto UNSUPPORTED;

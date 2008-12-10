@@ -81,6 +81,30 @@ extern "C" {
 - (int)_realControlTint { return [self controlTint]; }
 @end
 
+// On 10.4, NSSearchFieldCells can't draw focus rings.
+@interface SearchFieldCellWithFocusRing : NSSearchFieldCell {} @end
+
+@implementation SearchFieldCellWithFocusRing
+
+- (void) drawWithFrame:(NSRect)rect inView:(NSView*)controlView
+{
+  [super drawWithFrame:rect inView:controlView];
+  if (!nsToolkit::OnLeopardOrLater() && [self showsFirstResponder]) {
+    NSSetFocusRingStyle(NSFocusRingOnly);
+    NSBezierPath* path = [NSBezierPath bezierPath];
+    float radius = NSHeight(rect) / 2;
+    rect = NSInsetRect(rect, radius, radius);
+    [path appendBezierPathWithArcWithCenter:NSMakePoint(NSMinX(rect), NSMinY(rect)) radius:radius startAngle:180.0 endAngle:270.0];
+    [path appendBezierPathWithArcWithCenter:NSMakePoint(NSMaxX(rect), NSMinY(rect)) radius:radius startAngle:270.0 endAngle:360.0];
+    [path appendBezierPathWithArcWithCenter:NSMakePoint(NSMaxX(rect), NSMaxY(rect)) radius:radius startAngle:  0.0 endAngle: 90.0];
+    [path appendBezierPathWithArcWithCenter:NSMakePoint(NSMinX(rect), NSMaxY(rect)) radius:radius startAngle: 90.0 endAngle:180.0];
+    [path closePath];
+    [path fill];
+  }
+}
+
+@end
+
 // Copied from nsLookAndFeel.h
 // Apple hasn't defined a constant for scollbars with two arrows on each end, so we'll use this one.
 static const int kThemeScrollBarArrowsBoth = 2;
@@ -127,6 +151,18 @@ static void InflateControlRect(NSRect* rect, NSControlSize cocoaControlSize, con
   rect->origin.y -= buttonMargins[bottomMargin];
   rect->size.width += buttonMargins[leftMargin] + buttonMargins[rightMargin];
   rect->size.height += buttonMargins[bottomMargin] + buttonMargins[topMargin];
+}
+
+static NSView* NativeViewForFrame(nsIFrame* aFrame)
+{
+  if (!aFrame)
+    return nil;  
+
+  nsIWidget* widget = aFrame->GetWindow();
+  if (!widget)
+    return nil;
+
+  return (NSView*)widget->GetNativeData(NS_NATIVE_WIDGET);
 }
 
 static NSWindow* NativeWindowForFrame(nsIFrame* aFrame, int* aLevelsUp = NULL,
@@ -181,6 +217,12 @@ nsNativeThemeCocoa::nsNativeThemeCocoa()
   mCheckboxCell = [[NSButtonCell alloc] initTextCell:nil];
   [mCheckboxCell setButtonType:NSSwitchButton];
 
+  mSearchFieldCell = [[SearchFieldCellWithFocusRing alloc] initTextCell:@""];
+  [mSearchFieldCell setBezelStyle:NSTextFieldRoundedBezel];
+  [mSearchFieldCell setBezeled:YES];
+  [mSearchFieldCell setEditable:YES];
+  [mSearchFieldCell setFocusRingType:NSFocusRingTypeExterior];
+
   NS_OBJC_END_TRY_ABORT_BLOCK;
 }
 
@@ -191,6 +233,7 @@ nsNativeThemeCocoa::~nsNativeThemeCocoa()
   [mPushButtonCell release];
   [mRadioButtonCell release];
   [mCheckboxCell release];
+  [mSearchFieldCell release];
 
   NS_OBJC_END_TRY_ABORT_BLOCK;
 }
@@ -227,9 +270,9 @@ nsNativeThemeCocoa::~nsNativeThemeCocoa()
  *  the second being the control size (mini, small, regular), and the third
  *  being the 4 margin values (left, top, right, bottom).
  * flip - Whether to draw the control mirrored
- * needsBuffer - Set this to false if no buffer should be used. Bypassing the
- *  buffer is faster but it can lead to painting problems with accumulating
- *  focus rings.
+ * view - The NSView that we're drawing into. As far as I can tell, it doesn't
+ *  matter if this is really the right view; it just has to return YES when
+ *  asked for isFlipped. Otherwise we'll get drawing bugs on 10.4.
  */
 static void DrawCellWithScaling(NSCell *cell,
                                 CGContextRef cgContext,
@@ -238,8 +281,7 @@ static void DrawCellWithScaling(NSCell *cell,
                                 NSSize naturalSize,
                                 NSSize minimumSize,
                                 const float marginSet[][3][4],
-                                PRBool flip,
-                                PRBool needsBuffer = PR_TRUE)
+                                NSView* view)
 {
   NS_OBJC_BEGIN_TRY_ABORT_BLOCK;
 
@@ -264,38 +306,22 @@ static void DrawCellWithScaling(NSCell *cell,
 
   [NSGraphicsContext saveGraphicsState];
 
-  if (flip) {
-    // This flips the image in place and is necessary to work around a bug in the way
-    // NSButtonCell draws buttons.
-    CGContextScaleCTM(cgContext, 1.0f, -1.0f);
-    CGContextTranslateCTM(cgContext, 0.0f, -(2.0 * destRect.origin.y + destRect.size.height));
-  }
-
-  // Fall back to no bitmap buffer (and no scaling) if the area of our cell
-  // (in pixels^2) is too large.
-  BOOL noBufferOverride = (drawRect.size.width * drawRect.size.height > BITMAP_MAX_AREA);
-
-  if ((!needsBuffer && drawRect.size.width == destRect.size.width &&
-       drawRect.size.height == destRect.size.height) || noBufferOverride) {
+  // Only skip the buffer if the area of our cell (in pixels^2) is too large.
+  if (drawRect.size.width * drawRect.size.height > BITMAP_MAX_AREA) {
     // Inflate the rect Gecko gave us by the margin for the control.
     InflateControlRect(&drawRect, controlSize, marginSet);
 
     NSGraphicsContext* savedContext = [NSGraphicsContext currentContext];
-
-    // Set up the graphics context we've been asked to draw to.
     [NSGraphicsContext setCurrentContext:[NSGraphicsContext graphicsContextWithGraphicsPort:cgContext flipped:YES]];
 
-    // [NSView focusView] may return nil here, but
-    // [NSCell drawWithFrame:inView:] can deal with that.
-    [cell drawWithFrame:drawRect inView:[NSView focusView]];
+    [cell drawWithFrame:drawRect inView:view];
 
     [NSGraphicsContext setCurrentContext:savedContext];
   }
   else {
     float w = ceil(drawRect.size.width);
     float h = ceil(drawRect.size.height);
-
-    NSRect tmpRect = NSMakeRect(0.0f, 0.0f, w, h);
+    NSRect tmpRect = NSMakeRect(MAX_FOCUS_RING_WIDTH, MAX_FOCUS_RING_WIDTH, w, h);
 
     // inflate to figure out the frame we need to tell NSCell to draw in, to get something that's 0,0,w,h
     InflateControlRect(&tmpRect, controlSize, marginSet);
@@ -311,15 +337,19 @@ static void DrawCellWithScaling(NSCell *cell,
                                              rgb, kCGImageAlphaPremultipliedFirst);
     CGColorSpaceRelease(rgb);
 
-    CGContextTranslateCTM(ctx, MAX_FOCUS_RING_WIDTH, MAX_FOCUS_RING_WIDTH);
+    // We need to flip the image twice in order to avoid drawing bugs on 10.4, see bug 465069.
+    // This is the first flip transform, applied to cgContext.
+    CGContextScaleCTM(cgContext, 1.0f, -1.0f);
+    CGContextTranslateCTM(cgContext, 0.0f, -(2.0 * destRect.origin.y + destRect.size.height));
 
     NSGraphicsContext* savedContext = [NSGraphicsContext currentContext];
-
     [NSGraphicsContext setCurrentContext:[NSGraphicsContext graphicsContextWithGraphicsPort:ctx flipped:YES]];
 
-    // [NSView focusView] may return nil here, but
-    // [NSCell drawWithFrame:inView:] can deal with that.
-    [cell drawWithFrame:tmpRect inView:[NSView focusView]];
+    // This is the second flip transform, applied to ctx.
+    CGContextScaleCTM(ctx, 1.0f, -1.0f);
+    CGContextTranslateCTM(ctx, 0.0f, -(2.0 * tmpRect.origin.y + tmpRect.size.height));
+
+    [cell drawWithFrame:tmpRect inView:view];
 
     [NSGraphicsContext setCurrentContext:savedContext];
 
@@ -383,9 +413,8 @@ static void DrawCellWithSnapping(NSCell *cell,
                                  CGContextRef cgContext,
                                  const HIRect& destRect,
                                  const CellRenderSettings settings,
-                                 PRBool flip,
                                  float verticalAlignFactor,
-                                 PRBool needsBuffer = PR_TRUE)
+                                 NSView* view)
 {
   NS_OBJC_BEGIN_TRY_ABORT_BLOCK;
 
@@ -416,8 +445,9 @@ static void DrawCellWithSnapping(NSCell *cell,
     EnumSizeForCocoaSize(controlSizeX) < EnumSizeForCocoaSize(controlSizeY) ?
     controlSizeX : controlSizeY;
   const int smallerControlSizeIndex = EnumSizeForCocoaSize(smallerControlSize);
-  float diffWidth = rectWidth - sizes[smallerControlSizeIndex].width;
-  float diffHeight = rectHeight - sizes[smallerControlSizeIndex].height;
+  const NSSize size = sizes[smallerControlSizeIndex];
+  float diffWidth = size.width ? rectWidth - size.width : 0.0f;
+  float diffHeight = size.height ? rectHeight - size.height : 0.0f;
   if (diffWidth >= 0.0f && diffHeight >= 0.0f &&
       diffWidth <= sSnapTolerance && diffHeight <= sSnapTolerance) {
     // Snap to the smaller control size.
@@ -443,7 +473,7 @@ static void DrawCellWithSnapping(NSCell *cell,
 
   NSSize minimumSize = settings.minimumSizes ? settings.minimumSizes[sizeIndex] : NSZeroSize;
   DrawCellWithScaling(cell, cgContext, drawRect, controlSize, sizes[sizeIndex],
-                      minimumSize, settings.margins, flip, needsBuffer);
+                      minimumSize, settings.margins, view);
 
   NS_OBJC_END_TRY_ABORT_BLOCK;
 }
@@ -546,8 +576,49 @@ nsNativeThemeCocoa::DrawCheckboxOrRadio(CGContextRef cgContext, PRBool inCheckbo
  
   DrawCellWithSnapping(cell, cgContext, inBoxRect,
                        inCheckbox ? checkboxSettings : radioSettings,
-                       nsToolkit::OnLeopardOrLater(),  // Tiger doesn't need flipping
-                       VerticalAlignFactor(aFrame));
+                       VerticalAlignFactor(aFrame),
+                       NativeViewForFrame(aFrame));
+
+  NS_OBJC_END_TRY_ABORT_BLOCK;
+}
+
+static const CellRenderSettings searchFieldSettings = {
+  {
+    NSMakeSize(0, 16), // mini
+    NSMakeSize(0, 19), // small
+    NSMakeSize(0, 22)  // regular
+  },
+  {
+    NSMakeSize(32, 0), // mini
+    NSMakeSize(38, 0), // small
+    NSMakeSize(44, 0)  // regular
+  },
+  {
+    { // Tiger
+      {0, 0, 0, 0},     // mini
+      {0, 0, 0, 0},     // small
+      {0, 0, 0, 0}      // regular
+    },
+    { // Leopard
+      {0, 0, 0, 0},     // mini
+      {0, 0, 0, 0},     // small
+      {0, 0, 0, 0}      // regular
+    }
+  }
+};
+
+void
+nsNativeThemeCocoa::DrawSearchField(CGContextRef cgContext, const HIRect& inBoxRect,
+                                    nsIFrame* aFrame)
+{
+  NS_OBJC_BEGIN_TRY_ABORT_BLOCK;
+
+  NSSearchFieldCell* cell = mSearchFieldCell;
+  [cell setEnabled:!IsDisabled(aFrame)];
+  [cell setShowsFirstResponder:IsFocused(aFrame)];
+
+  DrawCellWithSnapping(cell, cgContext, inBoxRect, searchFieldSettings,
+                       VerticalAlignFactor(aFrame), NativeViewForFrame(aFrame));
 
   NS_OBJC_END_TRY_ABORT_BLOCK;
 }
@@ -605,7 +676,7 @@ nsNativeThemeCocoa::DrawPushButton(CGContextRef cgContext, const HIRect& inBoxRe
   if (drawRect.size.height > DO_SQUARE_BUTTON_HEIGHT) {
     [mPushButtonCell setBezelStyle:NSShadowlessSquareBezelStyle];
     DrawCellWithScaling(mPushButtonCell, cgContext, inBoxRect, NSRegularControlSize,
-                        NSZeroSize, NSMakeSize(14, 0), NULL, PR_TRUE);
+                        NSZeroSize, NSMakeSize(14, 0), NULL, NativeViewForFrame(aFrame));
   } else {
     [mPushButtonCell setBezelStyle:NSRoundedBezelStyle];
 
@@ -630,8 +701,8 @@ nsNativeThemeCocoa::DrawPushButton(CGContextRef cgContext, const HIRect& inBoxRe
 
     DrawCellWithScaling(mPushButtonCell, cgContext, inBoxRect, controlSize,
                         NSMakeSize(0.0f, naturalHeight),
-                        NSMakeSize(minWidth, 0.0f),
-                        pushButtonMargins, PR_TRUE);
+                        NSMakeSize(minWidth, 0.0f), pushButtonMargins,
+                        NativeViewForFrame(aFrame));
   }
 
 #if DRAW_IN_FRAME_DEBUG
@@ -1503,6 +1574,10 @@ nsNativeThemeCocoa::DrawWidgetBackground(nsIRenderingContext* aContext, nsIFrame
                 macRect, (IsDisabled(aFrame) || IsReadOnly(aFrame)), eventState);
       break;
       
+    case NS_THEME_SEARCHFIELD:
+      DrawSearchField(cgContext, macRect, aFrame);
+      break;
+
     case NS_THEME_PROGRESSBAR:
       DrawProgress(cgContext, macRect, IsIndeterminateProgress(aFrame),
                    PR_TRUE, GetProgressValue(aFrame),
@@ -1713,6 +1788,10 @@ nsNativeThemeCocoa::GetWidgetBorder(nsIDeviceContext* aContext,
       aResult->SizeTo(1, 1, 1, 1);
       break;
 
+    case NS_THEME_SEARCHFIELD:
+      aResult->SizeTo(4, 2, 4, 2);
+      break;
+
     case NS_THEME_LISTBOX:
     {
       SInt32 frameOutset = 0;
@@ -1791,6 +1870,7 @@ nsNativeThemeCocoa::GetWidgetOverflow(nsIDeviceContext* aContext, nsIFrame* aFra
     case NS_THEME_BUTTON:
     case NS_THEME_TEXTFIELD:
     case NS_THEME_TEXTFIELD_MULTILINE:
+    case NS_THEME_SEARCHFIELD:
     case NS_THEME_LISTBOX:
     case NS_THEME_DROPDOWN:
     case NS_THEME_DROPDOWN_BUTTON:
@@ -1855,6 +1935,7 @@ nsNativeThemeCocoa::GetMinimumWidgetSize(nsIRenderingContext* aContext,
  
     case NS_THEME_TEXTFIELD:
     case NS_THEME_TEXTFIELD_MULTILINE:
+    case NS_THEME_SEARCHFIELD:
     {
       // at minimum, we should be tall enough for 9pt text.
       // I'm using hardcoded values here because the appearance manager
@@ -2126,6 +2207,7 @@ nsNativeThemeCocoa::ThemeSupportsWidget(nsPresContext* aPresContext, nsIFrame* a
     case NS_THEME_STATUSBAR:
     case NS_THEME_TEXTFIELD:
     case NS_THEME_TEXTFIELD_MULTILINE:
+    case NS_THEME_SEARCHFIELD:
     //case NS_THEME_TOOLBOX:
     //case NS_THEME_TOOLBAR_BUTTON:
     case NS_THEME_PROGRESSBAR:

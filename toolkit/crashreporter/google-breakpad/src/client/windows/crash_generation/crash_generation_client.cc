@@ -29,6 +29,7 @@
 
 #include "client/windows/crash_generation/crash_generation_client.h"
 #include <cassert>
+#include <utility>
 #include "client/windows/common/ipc_protocol.h"
 
 namespace google_breakpad {
@@ -89,17 +90,23 @@ static bool TransactNamedPipeDebugHelper(HANDLE pipe,
 }
 **/
 
-CrashGenerationClient::CrashGenerationClient(const wchar_t* pipe_name,
-                                             MINIDUMP_TYPE dump_type)
-    : pipe_name_(pipe_name),
-      dump_type_(dump_type),
-      thread_id_(0),
-      server_process_id_(0),
-      crash_event_(NULL),
-      crash_generated_(NULL),
-      server_alive_(NULL),
-      exception_pointers_(NULL) {
+CrashGenerationClient::CrashGenerationClient(
+    const wchar_t* pipe_name,
+    MINIDUMP_TYPE dump_type,
+    const CustomClientInfo* custom_info)
+        : pipe_name_(pipe_name),
+          dump_type_(dump_type),
+          thread_id_(0),
+          server_process_id_(0),
+          crash_event_(NULL),
+          crash_generated_(NULL),
+          server_alive_(NULL),
+          exception_pointers_(NULL),
+          custom_info_() {
   memset(&assert_info_, 0, sizeof(assert_info_));
+  if (custom_info) {
+    custom_info_ = *custom_info;
+  }
 }
 
 CrashGenerationClient::~CrashGenerationClient() {
@@ -184,6 +191,7 @@ bool CrashGenerationClient::RegisterClient(HANDLE pipe) {
                       &thread_id_,
                       &exception_pointers_,
                       &assert_info_,
+                      custom_info_,
                       NULL,
                       NULL,
                       NULL);

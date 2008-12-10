@@ -45,25 +45,24 @@
 // Class nsUnicodeToUTF32 [declaration]  
 
 /**
- * A character set converter from UTF32 to Unicode.
- * The base class for UTF32BE/UTF32LE to Unicode converters.
+ * A character set converter from UTF-32 family to Unicode.
+ * The base class for UTF-32/UTF-32BE/UTF-32LE to Unicode converters.
  * @created         08/Dec/2002
  * @author  Jungshik Shin
  */
 
-class nsUnicodeToUTF32 : public nsIUnicodeEncoder
+class nsUnicodeToUTF32Base : public nsIUnicodeEncoder
 {
    NS_DECL_ISUPPORTS
 
-public:
+protected:
 
  /**
-   * Class constructor.
+   * Class constructor. accessible only by child classes
    */
-  nsUnicodeToUTF32() {mHighSurrogate = 0;}
-  virtual ~nsUnicodeToUTF32() {}
+  nsUnicodeToUTF32Base() {mBOM = 0; mHighSurrogate = 0;}
+  virtual ~nsUnicodeToUTF32Base() {}
 
-protected:
   PRUnichar  mHighSurrogate;
 
   NS_IMETHOD GetMaxLength(const PRUnichar * aSrc, PRInt32 aSrcLength, 
@@ -72,26 +71,28 @@ protected:
   //--------------------------------------------------------------------
   // Subclassing of nsIUnicodeEncoder class [declaration]
 
-  NS_IMETHOD Reset() {mHighSurrogate = 0; return NS_OK;}
+  NS_IMETHOD Reset() {mBOM = 0; mHighSurrogate = 0; return NS_OK;}
   NS_IMETHOD FillInfo(PRUint32* aInfo);
   NS_IMETHOD SetOutputErrorBehavior(PRInt32 aBehavior, 
                                     nsIUnicharEncoder * aEncoder, 
                                     PRUnichar aChar) 
                                     {return NS_OK;}
 
+protected:
+  PRUnichar mBOM;
 };
 
 //----------------------------------------------------------------------
 // Class nsUnicodeToUTF32BE [declaration]  
 
 /**
- * A character set converter from Unicode to UTF32BE.
- * A subclass of UnicodeToUTF32.
+ * A character set converter from Unicode to UTF-32BE.
+ * A subclass of UnicodeToUTF32Base.
  * @created         08/Dec/2002
  * @author  Jungshik Shin
  */
 
-class nsUnicodeToUTF32BE : public nsUnicodeToUTF32
+class nsUnicodeToUTF32BE : public nsUnicodeToUTF32Base
 {
 public:
 
@@ -109,13 +110,13 @@ public:
 // Class nsUnicodeToUTF32LE [declaration]  
 
 /**
- * A character set converter from Unicode to UTF32LE.
- * A subclass of UnicodeToUTF32.
+ * A character set converter from Unicode to UTF-32LE.
+ * A subclass of UnicodeToUTF32Base.
  * @created         08/Dec/2002
  * @author  Jungshik Shin
  */
 
-class nsUnicodeToUTF32LE : public nsUnicodeToUTF32
+class nsUnicodeToUTF32LE : public nsUnicodeToUTF32Base
 {
 public:
 
@@ -124,6 +125,32 @@ public:
   NS_IMETHOD Convert(const PRUnichar * aSrc, PRInt32 * aSrcLength, 
                      char * aDest, PRInt32 * aDestLength);
   NS_IMETHOD Finish(char * aDest, PRInt32 * aDestLength);
+
+};
+
+//----------------------------------------------------------------------
+// Class nsUnicodeToUTF32 [declaration]  
+
+/**
+ * A character set converter from Unicode to UTF-32.
+ * A subclass of UnicodeToUTF32Base.
+ * @created         08/Dec/2002
+ * @author  Jungshik Shin
+ */
+#ifdef IS_LITTLE_ENDIAN
+class nsUnicodeToUTF32 : public nsUnicodeToUTF32LE
+#elif defined(IS_BIG_ENDIAN)
+class nsUnicodeToUTF32 : public nsUnicodeToUTF32BE
+#else
+#error "Unknown endianness"
+#endif
+{
+public:
+  nsUnicodeToUTF32() {mBOM = 0xFEFF; mHighSurrogate = 0;};
+
+  //--------------------------------------------------------------------
+  // Subclassing of nsUnicodeToUTF32Base class [declaration]
+  NS_IMETHOD Reset() {mBOM = 0xFEFF; mHighSurrogate = 0; return NS_OK;};
 
 };
 

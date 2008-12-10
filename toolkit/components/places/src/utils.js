@@ -1087,7 +1087,7 @@ var PlacesUtils = {
                   // automatically, but this does not work if they contain some
                   // not-uri node, so we remove them manually.
                   // XXX this is a temporary workaround until we implement
-                  // preventive database maintainance in bug 431558.
+                  // preventive database maintenance in bug 431558.
                   bogusTagContainer = true;
                 }
                 for (let j in tagURIs)
@@ -1678,5 +1678,13 @@ var PlacesUtils = {
     var backupFile = bookmarksBackupDir.clone();
     backupFile.append(filename);
     return backupFile;
+  },
+
+  /**
+   * Starts the database coherence check and executes update tasks on a timer,
+   * this method is called by browser.js in delayed startup.
+   */
+  startPlacesDBUtils: function PU_startPlacesDBUtils() {
+    Components.utils.import("resource://gre/modules/PlacesDBUtils.jsm");
   }
 };

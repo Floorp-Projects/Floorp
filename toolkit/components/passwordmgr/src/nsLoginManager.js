@@ -1109,34 +1109,31 @@ LoginManager.prototype = {
         if (usernameField && usernameField.value) {
             // If username was specified in the form, only fill in the
             // password if we find a matching login.
-
             var username = usernameField.value.toLowerCase();
 
-            var matchingLogin;
-            var found = logins.some(function(l) {
-                                matchingLogin = l;
-                                return (l.username.toLowerCase() == username);
-                            });
-            if (found)
-                selectedLogin = matchingLogin;
+            let matchingLogins = logins.filter(function(l)
+                                     l.username.toLowerCase() == username);
+            if (matchingLogins.length)
+                selectedLogin = matchingLogins[0];
             else
                 this.log("Password not filled. None of the stored " +
                          "logins match the username already present.");
-
-        } else if (usernameField && logins.length == 2) {
-            // Special case, for sites which have a normal user+pass
-            // login *and* a password-only login (eg, a PIN)...
-            // When we have a username field and 1 of 2 available
-            // logins is password-only, go ahead and prefill the
-            // one with a username.
-            if (!logins[0].username && logins[1].username)
-                selectedLogin = logins[1];
-            else if (!logins[1].username && logins[0].username)
-                selectedLogin = logins[0];
         } else if (logins.length == 1) {
             selectedLogin = logins[0];
         } else {
-            this.log("Multiple logins for form, so not filling any.");
+            // We have multiple logins. Handle a special case here, for sites
+            // which have a normal user+pass login *and* a password-only login
+            // (eg, a PIN). Prefer the login that matches the type of the form
+            // (user+pass or pass-only) when there's exactly one that matches.
+            let matchingLogins;
+            if (usernameField)
+                matchingLogins = logins.filter(function(l) l.username);
+            else
+                matchingLogins = logins.filter(function(l) !l.username);
+            if (matchingLogins.length == 1)
+                selectedLogin = matchingLogins[0];
+            else
+                this.log("Multiple logins for form, so not filling any.");
         }
 
         var didFillForm = false;

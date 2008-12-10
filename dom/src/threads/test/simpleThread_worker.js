@@ -2,6 +2,9 @@ function messageListener(event) {
   switch (event.data) {
     case "no-op":
       break;
+    case "components":
+      postMessage(Components.toString());
+      break;
     case "start":
       for (var i = 0; i < 1000; i++) { }
       postMessage("started");

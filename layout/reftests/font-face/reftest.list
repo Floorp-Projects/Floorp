@@ -56,3 +56,5 @@ HTTP(..) == media-query-remove-1.html media-query-remove-1-ref.html
 HTTP(..) != media-query-add-1-ref.html media-query-remove-1-ref.html
 
 HTTP(..) == ahem-metrics-1.html ahem-metrics-1-ref.html
+HTTP(..) == ex-unit-1.html ex-unit-1-ref.html
+HTTP(..) == ex-unit-1-dynamic.html ex-unit-1-ref.html

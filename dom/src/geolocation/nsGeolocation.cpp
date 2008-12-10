@@ -245,7 +245,7 @@ nsGeolocationRequest::Allow()
     DOMTimeStamp cachedPositionTime;
     lastPosition->GetTimestamp(&cachedPositionTime);
     
-    if ( PR_Now() - (maximumAge * PR_MSEC_PER_SEC) >= cachedPositionTime )
+    if ( PR_Now() - maximumAge >= cachedPositionTime )
     {
       // okay, we can return a cached position
       mAllowed = PR_TRUE;

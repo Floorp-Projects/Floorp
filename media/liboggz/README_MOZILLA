@@ -12,3 +12,6 @@ The warning.patch addresses a printf in liboggz that is not wrapped
 in a DEBUG #ifdef. See Mozilla bug 450891 and Annodex ticket 431:
 
 http://trac.annodex.net/ticket/431
+
+The oggz_off_t.patch fixes a compile error on Solaris see bug 449754
+for details

@@ -190,14 +190,20 @@ FindNextTextNode(nsIDOMNode* aNode, PRInt32 aOffset, nsIDOMNode* aRoot)
   if (child) {
     checkNode = child;
   } else {
-    // aOffset was beyond the end of the child list. Start checking at the next
-    // node after the last child, or aNode if there are no children.
-    aNode->GetLastChild(getter_AddRefs(child));
-    if (child) {
-      checkNode = FindNextNode(child, aRoot);
-    } else {
-      checkNode = FindNextNode(aNode, aRoot);
+    // aOffset was beyond the end of the child list. 
+    // goto next node in a preorder DOM traversal.
+    nsCOMPtr<nsIDOMNode> next;
+    aNode->GetNextSibling(getter_AddRefs(next));
+    while (!next) {
+      // Go up
+      aNode->GetParentNode(getter_AddRefs(next));
+      if (next == aRoot || !next) {
+        return nsnull;
+      }
+      aNode = next;
+      aNode->GetNextSibling(getter_AddRefs(next));
     }
+    checkNode = next;
   }
   
   while (checkNode && !IsTextNode(checkNode)) {

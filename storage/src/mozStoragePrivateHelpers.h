@@ -73,6 +73,8 @@ ConvertResultCode(int srv)
             return NS_ERROR_FILE_IS_LOCKED;
         case SQLITE_READONLY:
             return NS_ERROR_FILE_READ_ONLY;
+        case SQLITE_IOERR:
+            return NS_ERROR_STORAGE_IOERR;
         case SQLITE_FULL:
         case SQLITE_TOOBIG:
             return NS_ERROR_FILE_NO_DEVICE_SPACE;

@@ -46,10 +46,13 @@
 @namespace url("http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul");
 @namespace html url("http://www.w3.org/1999/xhtml");
 
-#main-window[chromehidden~="toolbar"][chromehidden~="location"][chromehidden~="directories"] {
-  border-top: 1px solid rgba(0,0,0,0.65);
+#main-window {
   -moz-appearance: none;
   background-color: #eeeeee;
+}
+
+#main-window[chromehidden~="toolbar"][chromehidden~="location"][chromehidden~="directories"] {
+  border-top: 1px solid rgba(0,0,0,0.65);
 }
 
 /* ----- INACTIVE WINDOW ----- */

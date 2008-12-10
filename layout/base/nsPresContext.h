@@ -427,7 +427,7 @@ public:
 
   /**
    * Get the visible area associated with this presentation context.
-   * This is the size of the visiable area that is used for
+   * This is the size of the visible area that is used for
    * presenting the document. The returned value is in the standard
    * nscoord units (as scaled by the device context).
    */
@@ -765,6 +765,11 @@ public:
 
   void FlushUserFontSet();
   void RebuildUserFontSet(); // asynchronously
+
+  // Should be called whenever the set of fonts available in the user
+  // font set changes (e.g., because a new font loads, or because the
+  // user font set is changed and fonts become unavailable).
+  void UserFontSetUpdated();
 
   void NotifyInvalidation(const nsRect& aRect, PRBool aIsCrossDoc);
   void FireDOMPaintEvent();

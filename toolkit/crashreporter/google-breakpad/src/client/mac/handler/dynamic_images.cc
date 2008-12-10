@@ -33,11 +33,14 @@ extern "C" { // needed to compile on Leopard
   #include <stdio.h>
 }
 
+#include "breakpad_nlist_64.h"
+#include <dlfcn.h>
+#include <mach/mach_vm.h>
 #include <algorithm>
 #include "client/mac/handler/dynamic_images.h"
 
 namespace google_breakpad {
-  
+
 //==============================================================================
 // Returns the size of the memory region containing |address| and the
 // number of bytes from |address| to the end of the region.
@@ -46,27 +49,30 @@ namespace google_breakpad {
 // first in order to handle cases when we're reading strings and they
 // straddle two vm regions.
 //
-static vm_size_t GetMemoryRegionSize(task_port_t target_task,
-                                     const void* address,
-                                     vm_size_t *size_to_end) {
-  vm_address_t region_base = (vm_address_t)address;
-  vm_size_t region_size;
+static mach_vm_size_t GetMemoryRegionSize(task_port_t target_task,
+                                          const void* address,
+                                          mach_vm_size_t *size_to_end) {
+  mach_vm_address_t region_base = (mach_vm_address_t)address;
+  mach_vm_size_t region_size;
   natural_t nesting_level = 0;
-  vm_region_submap_info submap_info;
-  mach_msg_type_number_t info_count = VM_REGION_SUBMAP_INFO_COUNT;
-  
+  vm_region_submap_info_64 submap_info;
+  mach_msg_type_number_t info_count = VM_REGION_SUBMAP_INFO_COUNT_64;
+
   // Get information about the vm region containing |address|
-  kern_return_t result = 
-    vm_region_recurse(target_task,
-                      &region_base,
-                      &region_size,
-                      &nesting_level, 
-                      reinterpret_cast<vm_region_recurse_info_t>(&submap_info),
-                      &info_count);
-  
+  vm_region_recurse_info_t region_info;
+  region_info = reinterpret_cast<vm_region_recurse_info_t>(&submap_info);
+
+  kern_return_t result =
+    mach_vm_region_recurse(target_task,
+                           &region_base,
+                           &region_size,
+                           &nesting_level,
+                           region_info,
+                           &info_count);
+
   if (result == KERN_SUCCESS) {
     // Get distance from |address| to the end of this region
-    *size_to_end = region_base + region_size -(vm_address_t)address;
+    *size_to_end = region_base + region_size -(mach_vm_address_t)address;
 
     // If we want to handle strings as long as 4096 characters we may need
     // to check if there's a vm region immediately following the first one.
@@ -74,20 +80,19 @@ static vm_size_t GetMemoryRegionSize(task_port_t target_task,
     // of the second region.
     if (*size_to_end < 4096) {
       // Second region starts where the first one ends
-      vm_address_t region_base2 =
-        (vm_address_t)(region_base + region_size);
-      vm_size_t region_size2;
+      mach_vm_address_t region_base2 =
+        (mach_vm_address_t)(region_base + region_size);
+      mach_vm_size_t region_size2;
 
       // Get information about the following vm region
-      result = 
-        vm_region_recurse(
-                      target_task,
-                      &region_base2,
-                      &region_size2,
-                      &nesting_level, 
-                      reinterpret_cast<vm_region_recurse_info_t>(&submap_info),
-                      &info_count);
-      
+      result =
+        mach_vm_region_recurse(target_task,
+                               &region_base2,
+                               &region_size2,
+                               &nesting_level,
+                               region_info,
+                               &info_count);
+
       // Extend region_size to go all the way to the end of the 2nd region
       if (result == KERN_SUCCESS
           && region_base2 == region_base + region_size) {
@@ -95,13 +100,13 @@ static vm_size_t GetMemoryRegionSize(task_port_t target_task,
       }
     }
 
-    *size_to_end = region_base + region_size -(vm_address_t)address;
+    *size_to_end = region_base + region_size -(mach_vm_address_t)address;
   } else {
     region_size = 0;
     *size_to_end = 0;
   }
-  
-  return region_size;   
+
+  return region_size;
 }
 
 #define kMaxStringLength 8192
@@ -115,17 +120,18 @@ static void* ReadTaskString(task_port_t target_task,
   // The problem is we don't know how much to read until we know how long
   // the string is. And we don't know how long the string is, until we've read
   // the memory!  So, we'll try to read kMaxStringLength bytes
-  // (or as many bytes as we can until we reach the end of the vm region).  
-  vm_size_t size_to_end;
+  // (or as many bytes as we can until we reach the end of the vm region).
+  mach_vm_size_t size_to_end;
   GetMemoryRegionSize(target_task, address, &size_to_end);
-  
+
   if (size_to_end > 0) {
-    vm_size_t size_to_read =
+    mach_vm_size_t size_to_read =
       size_to_end > kMaxStringLength ? kMaxStringLength : size_to_end;
 
-    return ReadTaskMemory(target_task, address, size_to_read);
+    kern_return_t kr;
+    return ReadTaskMemory(target_task, address, size_to_read, &kr);
   }
-  
+
   return NULL;
 }
 
@@ -134,29 +140,46 @@ static void* ReadTaskString(task_port_t target_task,
 // and should be freed by the caller.
 void* ReadTaskMemory(task_port_t target_task,
                      const void* address,
-                     size_t length) {
+                     size_t length,
+                     kern_return_t *kr) {
   void* result = NULL;
-  vm_address_t page_address = reinterpret_cast<vm_address_t>(address) & (-4096);
-  vm_address_t last_page_address =
-    (reinterpret_cast<vm_address_t>(address) + length + 4095) & (-4096);
-  vm_size_t page_size = last_page_address - page_address;
+  int systemPageSize = getpagesize();
+
+  // use the negative of the page size for the mask to find the page address
+  mach_vm_address_t page_address =
+      reinterpret_cast<mach_vm_address_t>(address) & (-systemPageSize);
+
+  mach_vm_address_t last_page_address =
+      (reinterpret_cast<mach_vm_address_t>(address) + length +
+       (systemPageSize - 1)) & (-systemPageSize);
+
+  mach_vm_size_t page_size = last_page_address - page_address;
   uint8_t* local_start;
   uint32_t local_length;
 
-  kern_return_t r = vm_read(target_task,
-                            page_address,
-                            page_size,
-                            reinterpret_cast<vm_offset_t*>(&local_start),
-                            &local_length);
+  kern_return_t r;
+
+  r = mach_vm_read(target_task,
+                   page_address,
+                   page_size,
+                   reinterpret_cast<vm_offset_t*>(&local_start),
+                   &local_length);
+
+
+  if (kr != NULL) {
+    *kr = r;
+  }
 
   if (r == KERN_SUCCESS) {
     result = malloc(length);
     if (result != NULL) {
-      memcpy(result, &local_start[(uint32_t)address - page_address], length);
+      memcpy(result,
+             &local_start[(mach_vm_address_t)address - page_address],
+             length);
     }
-    vm_deallocate(mach_task_self(), (uintptr_t)local_start, local_length);
+    mach_vm_deallocate(mach_task_self(), (uintptr_t)local_start, local_length);
   }
-  
+
   return result;
 }
 
@@ -164,37 +187,75 @@ void* ReadTaskMemory(task_port_t target_task,
 
 //==============================================================================
 // Initializes vmaddr_, vmsize_, and slide_
-void DynamicImage::CalculateMemoryInfo() {
-  mach_header *header = GetMachHeader();
+void DynamicImage::CalculateMemoryAndVersionInfo() {
+  breakpad_mach_header *header = GetMachHeader();
+
+  // unless we can process the header, ensure that calls to
+  // IsValid() will return false
+  vmaddr_ = 0;
+  vmsize_ = 0;
+  slide_ = 0;
+  version_ = 0;
+
+  bool foundTextSection = false;
+  bool foundDylibIDCommand = false;
+  
+#if __LP64__
+  if(header->magic != MH_MAGIC_64) {
+    return;
+  }
+#else
+  if(header->magic != MH_MAGIC) {
+    return;
+  }
+#endif
+
+#ifdef __LP64__
+  const uint32_t segmentLoadCommand = LC_SEGMENT_64;
+#else
+  const uint32_t segmentLoadCommand = LC_SEGMENT;
+#endif
 
   const struct load_command *cmd =
     reinterpret_cast<const struct load_command *>(header + 1);
 
   for (unsigned int i = 0; cmd && (i < header->ncmds); ++i) {
-    if (cmd->cmd == LC_SEGMENT) {
-      const struct segment_command *seg =
-        reinterpret_cast<const struct segment_command *>(cmd);
+    if (!foundTextSection) {
+      if (cmd->cmd == segmentLoadCommand) {
+        const breakpad_mach_segment_command *seg =
+            reinterpret_cast<const breakpad_mach_segment_command *>(cmd);
 
-      if (!strcmp(seg->segname, "__TEXT")) {
-        vmaddr_ = seg->vmaddr;
-        vmsize_ = seg->vmsize;
-        slide_ = 0;
-        
-        if (seg->fileoff == 0  &&  seg->filesize != 0) {
-          slide_ = (uintptr_t)GetLoadAddress() - (uintptr_t)seg->vmaddr;
+        if (!strcmp(seg->segname, "__TEXT")) {
+          vmaddr_ = seg->vmaddr;
+          vmsize_ = seg->vmsize;
+          slide_ = 0;
+
+          if (seg->fileoff == 0  &&  seg->filesize != 0) {
+            slide_ = (uintptr_t)GetLoadAddress() - (uintptr_t)seg->vmaddr;
+          }
+          foundTextSection = true;
         }
-        return;
       }
+    }
+
+    if (!foundDylibIDCommand) {
+      if (cmd->cmd == LC_ID_DYLIB) {
+        const struct dylib_command *dc =
+            reinterpret_cast<const struct dylib_command *>(cmd);
+
+        version_ = dc->dylib.current_version;
+        foundDylibIDCommand = true;
+      }
+    }
+
+    if (foundDylibIDCommand && foundTextSection) {
+      return;
     }
 
     cmd = reinterpret_cast<const struct load_command *>
       (reinterpret_cast<const char *>(cmd) + cmd->cmdsize);
   }
-  
-  // we failed - a call to IsValid() will return false
-  vmaddr_ = 0;
-  vmsize_ = 0;
-  slide_ = 0;
+
 }
 
 void DynamicImage::Print() {
@@ -203,11 +264,11 @@ void DynamicImage::Print() {
     path = "(unknown)";
   }
   printf("%p: %s\n", GetLoadAddress(), path);
-  mach_header *header = GetMachHeader();
+  breakpad_mach_header *header = GetMachHeader();
   MachHeader(*header).Print();
   printf("vmaddr\t\t: %p\n", reinterpret_cast<void*>(GetVMAddr()));
-  printf("vmsize\t\t: %d\n", GetVMSize());
-  printf("slide\t\t: %d\n", GetVMAddrSlide());
+  printf("vmsize\t\t: %llu\n", GetVMSize());
+  printf("slide\t\t: %td\n", GetVMAddrSlide());
 }
 
 #pragma mark -
@@ -219,9 +280,12 @@ DynamicImages::DynamicImages(mach_port_t task)
   ReadImageInfoForTask();
 }
 
-//==============================================================================
-// This code was written using dyld_debug.c (from Darwin) as a guide.
-void DynamicImages::ReadImageInfoForTask() {
+void* DynamicImages::GetDyldAllImageInfosPointer()
+{
+
+  const char *imageSymbolName = "_dyld_all_image_infos";
+  const char *dyldPath = "/usr/lib/dyld";
+#ifndef __LP64__
   struct nlist l[8];
   memset(l, 0, sizeof(l) );
 
@@ -229,10 +293,38 @@ void DynamicImages::ReadImageInfoForTask() {
   // which lives in "dyld".  This structure contains information about all
   // of the loaded dynamic images.
   struct nlist &list = l[0];
-  list.n_un.n_name = const_cast<char *>("_dyld_all_image_infos");
-  nlist("/usr/lib/dyld", &list);
-  
-  if (list.n_value) {
+  list.n_un.n_name = const_cast<char *>(imageSymbolName);
+  nlist(dyldPath,&list);
+  if(list.n_value) {
+    return reinterpret_cast<void*>(list.n_value);
+  }
+
+  return NULL;
+#else
+  struct nlist_64 l[8];
+  struct nlist_64 &list = l[0];
+
+  memset(l, 0, sizeof(l) );
+
+  const char *symbolNames[2] = { imageSymbolName, "\0" };
+
+  int invalidEntriesCount = breakpad_nlist_64(dyldPath,&list,symbolNames);
+
+  if(invalidEntriesCount != 0) {
+    return NULL;
+  }
+  assert(list.n_value);
+  return reinterpret_cast<void*>(list.n_value);
+#endif
+
+}
+//==============================================================================
+// This code was written using dyld_debug.c (from Darwin) as a guide.
+void DynamicImages::ReadImageInfoForTask() {
+  void *imageList = GetDyldAllImageInfosPointer();
+
+  if (imageList) {
+    kern_return_t kr;
     // Read the structure inside of dyld that contains information about
     // loaded images.  We're reading from the desired task's address space.
 
@@ -241,8 +333,8 @@ void DynamicImages::ReadImageInfoForTask() {
     // "dyld_debug.c" and is said to be nearly always valid.
     dyld_all_image_infos *dyldInfo = reinterpret_cast<dyld_all_image_infos*>
       (ReadTaskMemory(task_,
-                      reinterpret_cast<void*>(list.n_value),
-                      sizeof(dyld_all_image_infos)));
+                      reinterpret_cast<void*>(imageList),
+                      sizeof(dyld_all_image_infos), &kr));
 
     if (dyldInfo) {
       // number of loaded images
@@ -253,7 +345,7 @@ void DynamicImages::ReadImageInfoForTask() {
       dyld_image_info *infoArray = reinterpret_cast<dyld_image_info*>
         (ReadTaskMemory(task_,
                         dyldInfo->infoArray,
-                        count*sizeof(dyld_image_info)));
+                        count*sizeof(dyld_image_info), &kr));
 
       image_list_.reserve(count);
 
@@ -261,20 +353,24 @@ void DynamicImages::ReadImageInfoForTask() {
         dyld_image_info &info = infoArray[i];
 
         // First read just the mach_header from the image in the task.
-        mach_header *header = reinterpret_cast<mach_header*>
-          (ReadTaskMemory(task_, info.load_address_, sizeof(mach_header)));
+        breakpad_mach_header *header = reinterpret_cast<breakpad_mach_header*>
+          (ReadTaskMemory(task_,
+                          info.load_address_,
+                          sizeof(breakpad_mach_header), &kr));
 
         if (!header)
           break;   // bail on this dynamic image
-		
+
         // Now determine the total amount we really want to read based on the
-        // size of the load commands.  We need the header plus all of the 
+        // size of the load commands.  We need the header plus all of the
         // load commands.
-        unsigned int header_size = sizeof(mach_header) + header->sizeofcmds;
+        unsigned int header_size =
+            sizeof(breakpad_mach_header) + header->sizeofcmds;
+
         free(header);
 
-        header = reinterpret_cast<mach_header*>
-          (ReadTaskMemory(task_, info.load_address_, header_size));
+        header = reinterpret_cast<breakpad_mach_header*>
+          (ReadTaskMemory(task_, info.load_address_, header_size, &kr));
 
         // Read the file name from the task's memory space.
         char *file_path = NULL;
@@ -285,43 +381,52 @@ void DynamicImages::ReadImageInfoForTask() {
           file_path = reinterpret_cast<char*>
             (ReadTaskString(task_, info.file_path_));
         }
- 
+
         // Create an object representing this image and add it to our list.
-        DynamicImage *new_image = new DynamicImage(header,
-                                                   header_size,
-                                                   info.load_address_,
-                                                   file_path,
-                                                   info.file_mod_date_,
-                                                   task_);
+        DynamicImage *new_image;
+        new_image = new DynamicImage(header,
+                                     header_size,
+                                     (breakpad_mach_header*)info.load_address_,
+                                     file_path,
+                                     info.file_mod_date_,
+                                     task_);
 
         if (new_image->IsValid()) {
           image_list_.push_back(DynamicImageRef(new_image));
         } else {
           delete new_image;
         }
-        
+
         if (file_path) {
           free(file_path);
         }
       }
-      
+
       free(dyldInfo);
       free(infoArray);
-      
+
       // sorts based on loading address
       sort(image_list_.begin(), image_list_.end() );
+      // remove duplicates - this happens in certain strange cases
+      // You can see it in DashboardClient when Google Gadgets plugin
+      // is installed.  Apple's crash reporter log and gdb "info shared"
+      // both show the same library multiple times at the same address
+
+      vector<DynamicImageRef>::iterator it = unique(image_list_.begin(),
+                                                    image_list_.end() );
+      image_list_.erase(it, image_list_.end());
     }
-  }  
+  }
 }
 
 //==============================================================================
 DynamicImage  *DynamicImages::GetExecutableImage() {
   int executable_index = GetExecutableImageIndex();
-  
+
   if (executable_index >= 0) {
     return GetImage(executable_index);
   }
-  
+
   return NULL;
 }
 

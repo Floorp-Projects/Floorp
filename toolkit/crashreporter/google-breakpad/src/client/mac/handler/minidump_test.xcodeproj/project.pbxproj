@@ -49,6 +49,24 @@
 		D2F6511E0BEF973600920385 /* macho_id.cc in Sources */ = {isa = PBXBuildFile; fileRef = D2F650FC0BEF947200920385 /* macho_id.cc */; };
 		D2F6511F0BEF973900920385 /* macho_utilities.cc in Sources */ = {isa = PBXBuildFile; fileRef = D2F650FE0BEF947200920385 /* macho_utilities.cc */; };
 		D2F651210BEF975400920385 /* macho_walker.cc in Sources */ = {isa = PBXBuildFile; fileRef = D2F6510C0BEF94EB00920385 /* macho_walker.cc */; };
+		F93A887D0E8B4C8C0026AF89 /* macho_walker.cc in Sources */ = {isa = PBXBuildFile; fileRef = D2F6510C0BEF94EB00920385 /* macho_walker.cc */; };
+		F93A887E0E8B4C8C0026AF89 /* macho_id.cc in Sources */ = {isa = PBXBuildFile; fileRef = D2F650FC0BEF947200920385 /* macho_id.cc */; };
+		F93A887F0E8B4C8C0026AF89 /* macho_utilities.cc in Sources */ = {isa = PBXBuildFile; fileRef = D2F650FE0BEF947200920385 /* macho_utilities.cc */; };
+		F93A88800E8B4C8C0026AF89 /* file_id.cc in Sources */ = {isa = PBXBuildFile; fileRef = D2F650FA0BEF947200920385 /* file_id.cc */; };
+		F93A88860E8B4C9A0026AF89 /* dwarftests.mm in Sources */ = {isa = PBXBuildFile; fileRef = F9721F310E8B07E800D7E813 /* dwarftests.mm */; };
+		F93A88870E8B4C9A0026AF89 /* dump_syms.mm in Sources */ = {isa = PBXBuildFile; fileRef = F9721F390E8B0D0D00D7E813 /* dump_syms.mm */; };
+		F93A88880E8B4C9A0026AF89 /* bytereader.cc in Sources */ = {isa = PBXBuildFile; fileRef = F9721F760E8B0DC700D7E813 /* bytereader.cc */; };
+		F93A88890E8B4C9A0026AF89 /* dwarf2reader.cc in Sources */ = {isa = PBXBuildFile; fileRef = F9721F770E8B0DC700D7E813 /* dwarf2reader.cc */; };
+		F93A888A0E8B4C9A0026AF89 /* functioninfo.cc in Sources */ = {isa = PBXBuildFile; fileRef = F9721F780E8B0DC700D7E813 /* functioninfo.cc */; };
+		F93A888B0E8B4C9A0026AF89 /* md5.c in Sources */ = {isa = PBXBuildFile; fileRef = F9721FA80E8B0E4800D7E813 /* md5.c */; };
+		F9721F6C0E8B0D7000D7E813 /* Cocoa.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = F9721F6B0E8B0D7000D7E813 /* Cocoa.framework */; };
+		F9721FA20E8B0E2300D7E813 /* SenTestingKit.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = F9721FA10E8B0E2300D7E813 /* SenTestingKit.framework */; };
+		F982089C0DB3280D0017AECA /* breakpad_nlist_test.cc in Sources */ = {isa = PBXBuildFile; fileRef = F982089B0DB3280D0017AECA /* breakpad_nlist_test.cc */; };
+		F98208A30DB32CAE0017AECA /* breakpad_nlist_64.cc in Sources */ = {isa = PBXBuildFile; fileRef = F98208A10DB32CAE0017AECA /* breakpad_nlist_64.cc */; };
+		F9AE5B390DBFDBDB00505983 /* dynamic_images.cc in Sources */ = {isa = PBXBuildFile; fileRef = D2F651070BEF949A00920385 /* dynamic_images.cc */; };
+		F9AE5B3A0DBFDBDB00505983 /* DynamicImagesTests.cc in Sources */ = {isa = PBXBuildFile; fileRef = F9C5A4210DB82DD800209C76 /* DynamicImagesTests.cc */; };
+		F9B34E870DBC1E1600306484 /* dynamic_images.cc in Sources */ = {isa = PBXBuildFile; fileRef = D2F651070BEF949A00920385 /* dynamic_images.cc */; };
+		F9C5A4220DB82DD800209C76 /* DynamicImagesTests.cc in Sources */ = {isa = PBXBuildFile; fileRef = F9C5A4210DB82DD800209C76 /* DynamicImagesTests.cc */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXCopyFilesBuildPhase section */
@@ -106,6 +124,30 @@
 		D2F651080BEF949A00920385 /* dynamic_images.h */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.c.h; path = dynamic_images.h; sourceTree = "<group>"; };
 		D2F6510C0BEF94EB00920385 /* macho_walker.cc */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.cpp.cpp; name = macho_walker.cc; path = ../../../common/mac/macho_walker.cc; sourceTree = SOURCE_ROOT; };
 		D2F6510D0BEF94EB00920385 /* macho_walker.h */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.c.h; name = macho_walker.h; path = ../../../common/mac/macho_walker.h; sourceTree = SOURCE_ROOT; };
+		F917C4F70E03265A00F86017 /* breakpad_exc_server.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = breakpad_exc_server.c; sourceTree = "<group>"; };
+		F917C4F80E03265A00F86017 /* breakpad_exc_server.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = breakpad_exc_server.h; sourceTree = "<group>"; };
+		F93A88750E8B4C700026AF89 /* octestcases.octest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = octestcases.octest; sourceTree = BUILT_PRODUCTS_DIR; };
+		F93A88760E8B4C700026AF89 /* obj-cTestCases-Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = "obj-cTestCases-Info.plist"; sourceTree = "<group>"; };
+		F9721F300E8B07E800D7E813 /* dwarftests.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = dwarftests.h; sourceTree = "<group>"; };
+		F9721F310E8B07E800D7E813 /* dwarftests.mm */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.objcpp; path = dwarftests.mm; sourceTree = "<group>"; };
+		F9721F380E8B0CFC00D7E813 /* dump_syms.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = dump_syms.h; path = ../../../common/mac/dump_syms.h; sourceTree = SOURCE_ROOT; };
+		F9721F390E8B0D0D00D7E813 /* dump_syms.mm */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.objcpp; name = dump_syms.mm; path = ../../../common/mac/dump_syms.mm; sourceTree = SOURCE_ROOT; };
+		F9721F6B0E8B0D7000D7E813 /* Cocoa.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = Cocoa.framework; path = /System/Library/Frameworks/Cocoa.framework; sourceTree = "<absolute>"; };
+		F9721F760E8B0DC700D7E813 /* bytereader.cc */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = bytereader.cc; path = ../../../common/mac/dwarf/bytereader.cc; sourceTree = SOURCE_ROOT; };
+		F9721F770E8B0DC700D7E813 /* dwarf2reader.cc */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = dwarf2reader.cc; path = ../../../common/mac/dwarf/dwarf2reader.cc; sourceTree = SOURCE_ROOT; };
+		F9721F780E8B0DC700D7E813 /* functioninfo.cc */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = functioninfo.cc; path = ../../../common/mac/dwarf/functioninfo.cc; sourceTree = SOURCE_ROOT; };
+		F9721FA10E8B0E2300D7E813 /* SenTestingKit.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = SenTestingKit.framework; path = /System/Library/Frameworks/SenTestingKit.framework; sourceTree = "<absolute>"; };
+		F9721FA80E8B0E4800D7E813 /* md5.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; name = md5.c; path = ../../../common/md5.c; sourceTree = SOURCE_ROOT; };
+		F982089A0DB3280D0017AECA /* breakpad_nlist_test.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = breakpad_nlist_test.h; sourceTree = "<group>"; };
+		F982089B0DB3280D0017AECA /* breakpad_nlist_test.cc */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = breakpad_nlist_test.cc; sourceTree = "<group>"; };
+		F98208A10DB32CAE0017AECA /* breakpad_nlist_64.cc */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = breakpad_nlist_64.cc; sourceTree = "<group>"; };
+		F98208A20DB32CAE0017AECA /* breakpad_nlist_64.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = breakpad_nlist_64.h; sourceTree = "<group>"; };
+		F9AE19B50DB040E300C98454 /* minidump_tests32-Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = "minidump_tests32-Info.plist"; sourceTree = "<group>"; };
+		F9AE19C30DB04A9500C98454 /* minidump_tests64.cptest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = minidump_tests64.cptest; sourceTree = BUILT_PRODUCTS_DIR; };
+		F9AE5B330DBFDBA300505983 /* minidump_tests32.cptest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = minidump_tests32.cptest; sourceTree = BUILT_PRODUCTS_DIR; };
+		F9AE5B340DBFDBA300505983 /* minidump_tests64-Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = "minidump_tests64-Info.plist"; sourceTree = "<group>"; };
+		F9C5A4200DB82DD800209C76 /* DynamicImagesTests.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = DynamicImagesTests.h; sourceTree = "<group>"; };
+		F9C5A4210DB82DD800209C76 /* DynamicImagesTests.cc */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = DynamicImagesTests.cc; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -132,12 +174,45 @@
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
+		F93A88720E8B4C700026AF89 /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		F9AE19C00DB04A9500C98454 /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		F9AE5B300DBFDBA300505983 /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				F9721F6C0E8B0D7000D7E813 /* Cocoa.framework in Frameworks */,
+				F9721FA20E8B0E2300D7E813 /* SenTestingKit.framework in Frameworks */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
 /* End PBXFrameworksBuildPhase section */
 
 /* Begin PBXGroup section */
 		08FB7794FE84155DC02AAC07 /* MinidumpWriter */ = {
 			isa = PBXGroup;
 			children = (
+				F9721FA80E8B0E4800D7E813 /* md5.c */,
+				F9721F760E8B0DC700D7E813 /* bytereader.cc */,
+				F9721F770E8B0DC700D7E813 /* dwarf2reader.cc */,
+				F9721F780E8B0DC700D7E813 /* functioninfo.cc */,
+				F9721F390E8B0D0D00D7E813 /* dump_syms.mm */,
+				F9721F380E8B0CFC00D7E813 /* dump_syms.h */,
+				F917C4F70E03265A00F86017 /* breakpad_exc_server.c */,
+				F917C4F80E03265A00F86017 /* breakpad_exc_server.h */,
+				F98208A10DB32CAE0017AECA /* breakpad_nlist_64.cc */,
+				F98208A20DB32CAE0017AECA /* breakpad_nlist_64.h */,
 				D2F6510C0BEF94EB00920385 /* macho_walker.cc */,
 				D2F6510D0BEF94EB00920385 /* macho_walker.h */,
 				D2F651070BEF949A00920385 /* dynamic_images.cc */,
@@ -148,10 +223,14 @@
 				D2F650FD0BEF947200920385 /* macho_id.h */,
 				D2F650FE0BEF947200920385 /* macho_utilities.cc */,
 				D2F650FF0BEF947200920385 /* macho_utilities.h */,
+				F9C5A41F0DB82DB000209C76 /* testcases */,
 				9BD82C040B0133420055103E /* Breakpad */,
 				08FB7795FE84155DC02AAC07 /* Source */,
 				9B37CEEA0AF98EB600FA4BD4 /* Frameworks */,
 				1AB674ADFE9D54B511CA2CBB /* Products */,
+				F9AE19B50DB040E300C98454 /* minidump_tests32-Info.plist */,
+				F9AE5B340DBFDBA300505983 /* minidump_tests64-Info.plist */,
+				F93A88760E8B4C700026AF89 /* obj-cTestCases-Info.plist */,
 			);
 			name = MinidumpWriter;
 			sourceTree = "<group>";
@@ -172,6 +251,9 @@
 				8DD76F6C0486A84900D96B5E /* generator_test */,
 				9BD82A9B0B00267E0055103E /* handler_test */,
 				9B7CA84E0B1297F200CD3A1D /* unit_test */,
+				F9AE19C30DB04A9500C98454 /* minidump_tests64.cptest */,
+				F9AE5B330DBFDBA300505983 /* minidump_tests32.cptest */,
+				F93A88750E8B4C700026AF89 /* octestcases.octest */,
 			);
 			name = Products;
 			sourceTree = "<group>";
@@ -179,6 +261,8 @@
 		9B37CEEA0AF98EB600FA4BD4 /* Frameworks */ = {
 			isa = PBXGroup;
 			children = (
+				F9721FA10E8B0E2300D7E813 /* SenTestingKit.framework */,
+				F9721F6B0E8B0D7000D7E813 /* Cocoa.framework */,
 				9B37CEEB0AF98ECD00FA4BD4 /* CoreFoundation.framework */,
 			);
 			name = Frameworks;
@@ -202,6 +286,19 @@
 				9BD82C2C0B01345E0055103E /* string_utilities.h */,
 			);
 			name = Breakpad;
+			sourceTree = "<group>";
+		};
+		F9C5A41F0DB82DB000209C76 /* testcases */ = {
+			isa = PBXGroup;
+			children = (
+				F982089A0DB3280D0017AECA /* breakpad_nlist_test.h */,
+				F982089B0DB3280D0017AECA /* breakpad_nlist_test.cc */,
+				F9C5A4200DB82DD800209C76 /* DynamicImagesTests.h */,
+				F9C5A4210DB82DD800209C76 /* DynamicImagesTests.cc */,
+				F9721F300E8B07E800D7E813 /* dwarftests.h */,
+				F9721F310E8B07E800D7E813 /* dwarftests.mm */,
+			);
+			path = testcases;
 			sourceTree = "<group>";
 		};
 /* End PBXGroup section */
@@ -257,22 +354,147 @@
 			productReference = 9BD82A9B0B00267E0055103E /* handler_test */;
 			productType = "com.apple.product-type.tool";
 		};
+		F93A88740E8B4C700026AF89 /* obj-c_TestCases */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = F93A88790E8B4C700026AF89 /* Build configuration list for PBXNativeTarget "obj-c_TestCases" */;
+			buildPhases = (
+				F93A88700E8B4C700026AF89 /* Resources */,
+				F93A88710E8B4C700026AF89 /* Sources */,
+				F93A88720E8B4C700026AF89 /* Frameworks */,
+				F93A88730E8B4C700026AF89 /* ShellScript */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+			);
+			name = "obj-c_TestCases";
+			productName = octestcases;
+			productReference = F93A88750E8B4C700026AF89 /* octestcases.octest */;
+			productType = "com.apple.product-type.bundle";
+		};
+		F9AE19C20DB04A9500C98454 /* minidump_tests64 */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = F9AE19C70DB04AA200C98454 /* Build configuration list for PBXNativeTarget "minidump_tests64" */;
+			buildPhases = (
+				F9AE19BE0DB04A9500C98454 /* Resources */,
+				F9AE19BF0DB04A9500C98454 /* Sources */,
+				F9AE19C00DB04A9500C98454 /* Frameworks */,
+				F9AE19C10DB04A9500C98454 /* ShellScript */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+			);
+			name = minidump_tests64;
+			productName = minidump_tests;
+			productReference = F9AE19C30DB04A9500C98454 /* minidump_tests64.cptest */;
+			productType = "com.apple.product-type.bundle";
+		};
+		F9AE5B320DBFDBA300505983 /* minidump_tests32 */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = F9AE5B380DBFDBA300505983 /* Build configuration list for PBXNativeTarget "minidump_tests32" */;
+			buildPhases = (
+				F9AE5B2E0DBFDBA300505983 /* Resources */,
+				F9AE5B2F0DBFDBA300505983 /* Sources */,
+				F9AE5B300DBFDBA300505983 /* Frameworks */,
+				F9AE5B310DBFDBA300505983 /* ShellScript */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+			);
+			name = minidump_tests32;
+			productName = Untitled;
+			productReference = F9AE5B330DBFDBA300505983 /* minidump_tests32.cptest */;
+			productType = "com.apple.product-type.bundle";
+		};
 /* End PBXNativeTarget section */
 
 /* Begin PBXProject section */
 		08FB7793FE84155DC02AAC07 /* Project object */ = {
 			isa = PBXProject;
 			buildConfigurationList = 1DEB923508733DC60010E9CD /* Build configuration list for PBXProject "minidump_test" */;
+			compatibilityVersion = "Xcode 2.4";
 			hasScannedForEncodings = 1;
 			mainGroup = 08FB7794FE84155DC02AAC07 /* MinidumpWriter */;
 			projectDirPath = "";
+			projectRoot = "";
 			targets = (
 				8DD76F620486A84900D96B5E /* generator_test */,
 				9BD82A9A0B00267E0055103E /* handler_test */,
 				9B7CA84D0B1297F200CD3A1D /* unit_test */,
+				F9AE19C20DB04A9500C98454 /* minidump_tests64 */,
+				F9AE5B320DBFDBA300505983 /* minidump_tests32 */,
+				F93A88740E8B4C700026AF89 /* obj-c_TestCases */,
 			);
 		};
 /* End PBXProject section */
+
+/* Begin PBXResourcesBuildPhase section */
+		F93A88700E8B4C700026AF89 /* Resources */ = {
+			isa = PBXResourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		F9AE19BE0DB04A9500C98454 /* Resources */ = {
+			isa = PBXResourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		F9AE5B2E0DBFDBA300505983 /* Resources */ = {
+			isa = PBXResourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXResourcesBuildPhase section */
+
+/* Begin PBXShellScriptBuildPhase section */
+		F93A88730E8B4C700026AF89 /* ShellScript */ = {
+			isa = PBXShellScriptBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			inputPaths = (
+			);
+			outputPaths = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+			shellPath = /bin/sh;
+			shellScript = "# Run the unit tests in this test bundle.\n\"${SYSTEM_DEVELOPER_DIR}/Tools/RunUnitTests\"\n";
+		};
+		F9AE19C10DB04A9500C98454 /* ShellScript */ = {
+			isa = PBXShellScriptBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			inputPaths = (
+			);
+			outputPaths = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+			shellPath = /bin/sh;
+			shellScript = "# Run the unit tests in this test bundle.\n\"${SYSTEM_DEVELOPER_DIR}/Tools/RunUnitTests\"\n# Run gcov on the framework getting tested\nif [ \"${CONFIGURATION}\" = 'Coverage' ];\nthen\n     FRAMEWORK_NAME=minidump_tests64\n     FRAMEWORK_OBJ_DIR=${OBJROOT}/${PROJECT_NAME}.build/${CONFIGURATION}/${FRAMEWORK_NAME}.build/Objects-normal/${NATIVE_ARCH_ACTUAL}\n     mkdir -p coverage\n     pushd coverage\n     echo find ${OBJROOT} -name *.gcda -exec gcov -o ${FRAMEWORK_OBJ_DIR} {} \\;\n     find ${OBJROOT} -name *.gcda -exec gcov -o ${FRAMEWORK_OBJ_DIR} {} \\;\n     popd\nfi ";
+		};
+		F9AE5B310DBFDBA300505983 /* ShellScript */ = {
+			isa = PBXShellScriptBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			inputPaths = (
+			);
+			outputPaths = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+			shellPath = /bin/sh;
+			shellScript = "# Run the unit tests in this test bundle.\n\"${SYSTEM_DEVELOPER_DIR}/Tools/RunUnitTests\"\n\n";
+		};
+/* End PBXShellScriptBuildPhase section */
 
 /* Begin PBXSourcesBuildPhase section */
 		8DD76F640486A84900D96B5E /* Sources */ = {
@@ -321,6 +543,43 @@
 				D2F6511E0BEF973600920385 /* macho_id.cc in Sources */,
 				D2F6511F0BEF973900920385 /* macho_utilities.cc in Sources */,
 				D2F651210BEF975400920385 /* macho_walker.cc in Sources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		F93A88710E8B4C700026AF89 /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				F93A88860E8B4C9A0026AF89 /* dwarftests.mm in Sources */,
+				F93A88870E8B4C9A0026AF89 /* dump_syms.mm in Sources */,
+				F93A88880E8B4C9A0026AF89 /* bytereader.cc in Sources */,
+				F93A88890E8B4C9A0026AF89 /* dwarf2reader.cc in Sources */,
+				F93A888A0E8B4C9A0026AF89 /* functioninfo.cc in Sources */,
+				F93A888B0E8B4C9A0026AF89 /* md5.c in Sources */,
+				F93A887D0E8B4C8C0026AF89 /* macho_walker.cc in Sources */,
+				F93A887E0E8B4C8C0026AF89 /* macho_id.cc in Sources */,
+				F93A887F0E8B4C8C0026AF89 /* macho_utilities.cc in Sources */,
+				F93A88800E8B4C8C0026AF89 /* file_id.cc in Sources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		F9AE19BF0DB04A9500C98454 /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				F9B34E870DBC1E1600306484 /* dynamic_images.cc in Sources */,
+				F982089C0DB3280D0017AECA /* breakpad_nlist_test.cc in Sources */,
+				F98208A30DB32CAE0017AECA /* breakpad_nlist_64.cc in Sources */,
+				F9C5A4220DB82DD800209C76 /* DynamicImagesTests.cc in Sources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		F9AE5B2F0DBFDBA300505983 /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				F9AE5B390DBFDBDB00505983 /* dynamic_images.cc in Sources */,
+				F9AE5B3A0DBFDBDB00505983 /* DynamicImagesTests.cc in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -456,6 +715,182 @@
 			};
 			name = Release;
 		};
+		F93A88770E8B4C700026AF89 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ALWAYS_SEARCH_USER_PATHS = NO;
+				COPY_PHASE_STRIP = NO;
+				FRAMEWORK_SEARCH_PATHS = "$(DEVELOPER_LIBRARY_DIR)/Frameworks";
+				GCC_CHAR_IS_UNSIGNED_CHAR = YES;
+				GCC_DYNAMIC_NO_PIC = NO;
+				GCC_ENABLE_FIX_AND_CONTINUE = NO;
+				GCC_ENABLE_OBJC_EXCEPTIONS = YES;
+				GCC_MODEL_TUNING = G5;
+				GCC_OPTIMIZATION_LEVEL = 0;
+				INFOPLIST_FILE = "obj-cTestCases-Info.plist";
+				INSTALL_PATH = "$(USER_LIBRARY_DIR)/Bundles";
+				OTHER_LDFLAGS = (
+					"-lcrypto",
+					"-framework",
+					Cocoa,
+					"-framework",
+					SenTestingKit,
+				);
+				PREBINDING = NO;
+				PRODUCT_NAME = octestcases;
+				USER_HEADER_SEARCH_PATHS = "../../../..//**";
+				WRAPPER_EXTENSION = octest;
+			};
+			name = Debug;
+		};
+		F93A88780E8B4C700026AF89 /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ALWAYS_SEARCH_USER_PATHS = NO;
+				COPY_PHASE_STRIP = YES;
+				DEBUG_INFORMATION_FORMAT = "dwarf-with-dsym";
+				FRAMEWORK_SEARCH_PATHS = "$(DEVELOPER_LIBRARY_DIR)/Frameworks";
+				GCC_CHAR_IS_UNSIGNED_CHAR = YES;
+				GCC_ENABLE_FIX_AND_CONTINUE = NO;
+				GCC_ENABLE_OBJC_EXCEPTIONS = YES;
+				GCC_MODEL_TUNING = G5;
+				INFOPLIST_FILE = "obj-cTestCases-Info.plist";
+				INSTALL_PATH = "$(USER_LIBRARY_DIR)/Bundles";
+				OTHER_LDFLAGS = (
+					"-lcrypto",
+					"-framework",
+					Cocoa,
+					"-framework",
+					SenTestingKit,
+				);
+				PREBINDING = NO;
+				PRODUCT_NAME = octestcases;
+				USER_HEADER_SEARCH_PATHS = "../../../..//**";
+				WRAPPER_EXTENSION = octest;
+				ZERO_LINK = NO;
+			};
+			name = Release;
+		};
+		F9AE19C40DB04A9500C98454 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ARCHS = (
+					"$(NATIVE_ARCH_64_BIT)",
+					ppc64,
+				);
+				COPY_PHASE_STRIP = NO;
+				FRAMEWORK_SEARCH_PATHS = "$(DEVELOPER_LIBRARY_DIR)/Frameworks";
+				GCC_DYNAMIC_NO_PIC = NO;
+				GCC_ENABLE_FIX_AND_CONTINUE = NO;
+				GCC_MODEL_TUNING = G5;
+				GCC_OPTIMIZATION_LEVEL = 0;
+				GCC_PRECOMPILE_PREFIX_HEADER = YES;
+				GCC_PREFIX_HEADER = "$(SYSTEM_LIBRARY_DIR)/Frameworks/Carbon.framework/Headers/Carbon.h";
+				INFOPLIST_FILE = "minidump_tests64-Info.plist";
+				INSTALL_PATH = "$(USER_LIBRARY_DIR)/Bundles";
+				MACOSX_DEPLOYMENT_TARGET = 10.5;
+				OTHER_LDFLAGS = (
+					"-framework",
+					Carbon,
+					"-framework",
+					CPlusTest,
+				);
+				PREBINDING = NO;
+				PRODUCT_NAME = minidump_tests64;
+				SDKROOT = /Developer/SDKs/MacOSX10.5.sdk;
+				USER_HEADER_SEARCH_PATHS = "../../../**";
+				WRAPPER_EXTENSION = cptest;
+			};
+			name = Debug;
+		};
+		F9AE19C50DB04A9500C98454 /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ARCHS = (
+					"$(NATIVE_ARCH_64_BIT)",
+					ppc64,
+				);
+				COPY_PHASE_STRIP = YES;
+				DEBUG_INFORMATION_FORMAT = "dwarf-with-dsym";
+				FRAMEWORK_SEARCH_PATHS = "$(DEVELOPER_LIBRARY_DIR)/Frameworks";
+				GCC_ENABLE_FIX_AND_CONTINUE = NO;
+				GCC_MODEL_TUNING = G5;
+				GCC_PRECOMPILE_PREFIX_HEADER = YES;
+				GCC_PREFIX_HEADER = "$(SYSTEM_LIBRARY_DIR)/Frameworks/Carbon.framework/Headers/Carbon.h";
+				INFOPLIST_FILE = "minidump_tests64-Info.plist";
+				INSTALL_PATH = "$(USER_LIBRARY_DIR)/Bundles";
+				MACOSX_DEPLOYMENT_TARGET = 10.5;
+				OTHER_LDFLAGS = (
+					"-framework",
+					Carbon,
+					"-framework",
+					CPlusTest,
+				);
+				PREBINDING = NO;
+				PRODUCT_NAME = minidump_tests64;
+				SDKROOT = /Developer/SDKs/MacOSX10.5.sdk;
+				USER_HEADER_SEARCH_PATHS = "../../../**";
+				WRAPPER_EXTENSION = cptest;
+				ZERO_LINK = NO;
+			};
+			name = Release;
+		};
+		F9AE5B350DBFDBA300505983 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ARCHS = "$(NATIVE_ARCH)";
+				COPY_PHASE_STRIP = NO;
+				FRAMEWORK_SEARCH_PATHS = "$(DEVELOPER_LIBRARY_DIR)/Frameworks";
+				GCC_DYNAMIC_NO_PIC = NO;
+				GCC_ENABLE_FIX_AND_CONTINUE = NO;
+				GCC_MODEL_TUNING = G5;
+				GCC_OPTIMIZATION_LEVEL = 0;
+				GCC_PRECOMPILE_PREFIX_HEADER = YES;
+				GCC_PREFIX_HEADER = "$(SYSTEM_LIBRARY_DIR)/Frameworks/Carbon.framework/Headers/Carbon.h";
+				INFOPLIST_FILE = "minidump_tests32-Info.plist";
+				INSTALL_PATH = "$(USER_LIBRARY_DIR)/Bundles";
+				OTHER_LDFLAGS = (
+					"-framework",
+					Carbon,
+					"-framework",
+					CPlusTest,
+					"-lcrypto",
+				);
+				PREBINDING = NO;
+				PRODUCT_NAME = minidump_tests32;
+				USER_HEADER_SEARCH_PATHS = "../../../**";
+				WRAPPER_EXTENSION = cptest;
+			};
+			name = Debug;
+		};
+		F9AE5B370DBFDBA300505983 /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ARCHS = "$(NATIVE_ARCH)";
+				COPY_PHASE_STRIP = YES;
+				DEBUG_INFORMATION_FORMAT = "dwarf-with-dsym";
+				FRAMEWORK_SEARCH_PATHS = "$(DEVELOPER_LIBRARY_DIR)/Frameworks";
+				GCC_ENABLE_FIX_AND_CONTINUE = NO;
+				GCC_MODEL_TUNING = G5;
+				GCC_PRECOMPILE_PREFIX_HEADER = YES;
+				GCC_PREFIX_HEADER = "$(SYSTEM_LIBRARY_DIR)/Frameworks/Carbon.framework/Headers/Carbon.h";
+				INFOPLIST_FILE = "minidump_tests32-Info.plist";
+				INSTALL_PATH = "$(USER_LIBRARY_DIR)/Bundles";
+				OTHER_LDFLAGS = (
+					"-lcrypto",
+					"-framework",
+					Carbon,
+					"-framework",
+					CPlusTest,
+				);
+				PREBINDING = NO;
+				PRODUCT_NAME = minidump_tests32;
+				USER_HEADER_SEARCH_PATHS = "../../../**";
+				WRAPPER_EXTENSION = cptest;
+				ZERO_LINK = NO;
+			};
+			name = Release;
+		};
 /* End XCBuildConfiguration section */
 
 /* Begin XCConfigurationList section */
@@ -491,6 +926,33 @@
 			buildConfigurations = (
 				9BD82AA70B0026BF0055103E /* Debug */,
 				9BD82AA80B0026BF0055103E /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
+		F93A88790E8B4C700026AF89 /* Build configuration list for PBXNativeTarget "obj-c_TestCases" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				F93A88770E8B4C700026AF89 /* Debug */,
+				F93A88780E8B4C700026AF89 /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
+		F9AE19C70DB04AA200C98454 /* Build configuration list for PBXNativeTarget "minidump_tests64" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				F9AE19C40DB04A9500C98454 /* Debug */,
+				F9AE19C50DB04A9500C98454 /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
+		F9AE5B380DBFDBA300505983 /* Build configuration list for PBXNativeTarget "minidump_tests32" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				F9AE5B350DBFDBA300505983 /* Debug */,
+				F9AE5B370DBFDBA300505983 /* Release */,
 			);
 			defaultConfigurationIsVisible = 0;
 			defaultConfigurationName = Release;

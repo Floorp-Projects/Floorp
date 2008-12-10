@@ -2525,20 +2525,6 @@ XRE_main(int argc, char* argv[], const nsXREAppData* aAppData)
   InstallUnixSignalHandlers(argv[0]);
 #endif
 
-#ifdef MOZ_ACCESSIBILITY_ATK
-  // Reset GTK_MODULES, strip atk-bridge if exists
-  // Mozilla will load libatk-bridge.so later if necessary
-  const char* gtkModules = PR_GetEnv("GTK_MODULES");
-  if (gtkModules && *gtkModules) {
-    nsCString gtkModulesStr(gtkModules);
-    gtkModulesStr.ReplaceSubstring("atk-bridge", "");
-    char* expr = PR_smprintf("GTK_MODULES=%s", gtkModulesStr.get());
-    if (expr)
-      PR_SetEnv(expr);
-    // We intentionally leak |expr| here since it is required by PR_SetEnv.
-  }
-#endif
-
 #ifndef WINCE
   // Unbuffer stdout, needed for tinderbox tests.
   setbuf(stdout, 0);
@@ -2931,6 +2917,34 @@ XRE_main(int argc, char* argv[], const nsXREAppData* aAppData)
       PR_fprintf(PR_STDERR, "Error: cannot open display: %s\n", display_name);
       return 1;
     }
+
+#ifdef MOZ_ACCESSIBILITY_ATK
+    // Reset GTK_MODULES, strip atk-bridge if exists
+    // Mozilla will load libatk-bridge.so later if necessary
+    const char* gtkModules = PR_GetEnv("GTK_MODULES");
+    if (gtkModules && *gtkModules) {
+      nsCString gtkModulesStr(gtkModules);
+      gtkModulesStr.ReplaceSubstring("atk-bridge", "");
+      char* expr = PR_smprintf("GTK_MODULES=%s", gtkModulesStr.get());
+      if (expr)
+        PR_SetEnv(expr);
+      // We intentionally leak |expr| here since it is required by PR_SetEnv.
+    }
+
+    // Reset gtk-modules setting from gtk settings, strip atk-bridge if exists
+    // Mozilla will load libatk-bridge.so later if necessary
+    GtkSettings* settings =
+      gtk_settings_get_for_screen(gdk_display_get_default_screen(display));
+    gchar* gtk_modules_setting = nsnull;
+    g_object_get(settings, "gtk-modules", &gtk_modules_setting, NULL);
+    if (gtk_modules_setting) {
+      nsCString gtkModulesSettingStr(gtkModules);
+      gtkModulesSettingStr.ReplaceSubstring("atk-bridge", "");
+      g_object_set(settings, "gtk-modules", gtkModulesSettingStr.get(), NULL);
+      g_free(gtk_modules_setting);
+    }
+#endif
+
     gdk_display_manager_set_default_display (gdk_display_manager_get(),
                                              display);
     

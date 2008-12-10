@@ -11,3 +11,4 @@ cp $1/README ./README
 cp $1/src/bitwise.c ./src/ogg_bitwise.c
 cp $1/src/framing.c ./src/ogg_framing.c
 cp $1/AUTHORS ./AUTHORS
+patch -p0 < int-types.patch

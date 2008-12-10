@@ -138,37 +138,12 @@ nsCSSProps::ReleaseTable(void)
   }
 }
 
-struct CSSPropertyAlias {
-  char name[sizeof("-moz-outline-offset")];
-  nsCSSProperty id;
-};
-
-static const CSSPropertyAlias gAliases[] = {
-  { "-moz-outline", eCSSProperty_outline },
-  { "-moz-outline-color", eCSSProperty_outline_color },
-  { "-moz-outline-style", eCSSProperty_outline_style },
-  { "-moz-outline-width", eCSSProperty_outline_width },
-  { "-moz-outline-offset", eCSSProperty_outline_offset }
-  // Don't forget to update the sizeof in CSSPropertyAlias above with the
-  // longest string when you add stuff here.
-};
-
 nsCSSProperty 
 nsCSSProps::LookupProperty(const nsACString& aProperty)
 {
   NS_ASSERTION(gPropertyTable, "no lookup table, needs addref");
 
   nsCSSProperty res = nsCSSProperty(gPropertyTable->Lookup(aProperty));
-  if (res == eCSSProperty_UNKNOWN) {
-    const nsCString& prop = PromiseFlatCString(aProperty);
-    for (const CSSPropertyAlias *alias = gAliases,
-                            *alias_end = gAliases + NS_ARRAY_LENGTH(gAliases);
-         alias < alias_end; ++alias)
-      if (nsCRT::strcasecmp(prop.get(), alias->name) == 0) {
-        res = alias->id;
-        break;
-      }
-  }
   return res;
 }
 
@@ -180,16 +155,6 @@ nsCSSProps::LookupProperty(const nsAString& aProperty)
   // converting and avoid a PromiseFlatCString() call.
   NS_ASSERTION(gPropertyTable, "no lookup table, needs addref");
   nsCSSProperty res = nsCSSProperty(gPropertyTable->Lookup(aProperty));
-  if (res == eCSSProperty_UNKNOWN) {
-    NS_ConvertUTF16toUTF8 prop(aProperty);
-    for (const CSSPropertyAlias *alias = gAliases,
-                            *alias_end = gAliases + NS_ARRAY_LENGTH(gAliases);
-         alias < alias_end; ++alias)
-      if (nsCRT::strcasecmp(prop.get(), alias->name) == 0) {
-        res = alias->id;
-        break;
-      }
-  }
   return res;
 }
 
@@ -291,6 +256,7 @@ const PRInt32 nsCSSProps::kAppearanceKTable[] = {
   eCSSKeyword_textfield,              NS_THEME_TEXTFIELD,
   eCSSKeyword_textfield_multiline,    NS_THEME_TEXTFIELD_MULTILINE,
   eCSSKeyword_caret,                  NS_THEME_TEXTFIELD_CARET,
+  eCSSKeyword_searchfield,            NS_THEME_SEARCHFIELD,
   eCSSKeyword_menulist,               NS_THEME_DROPDOWN,
   eCSSKeyword_menulistbutton,         NS_THEME_DROPDOWN_BUTTON,
   eCSSKeyword_menulisttext,           NS_THEME_DROPDOWN_TEXT,
@@ -511,6 +477,7 @@ const PRInt32 nsCSSProps::kColorKTable[] = {
   eCSSKeyword__moz_mac_menushadow, nsILookAndFeel::eColor__moz_mac_menushadow,
   eCSSKeyword__moz_mac_menutextdisable, nsILookAndFeel::eColor__moz_mac_menutextdisable,
   eCSSKeyword__moz_mac_menutextselect, nsILookAndFeel::eColor__moz_mac_menutextselect,
+  eCSSKeyword__moz_mac_disabledtoolbartext, nsILookAndFeel::eColor__moz_mac_disabledtoolbartext,
   eCSSKeyword__moz_mac_accentlightesthighlight, nsILookAndFeel::eColor__moz_mac_accentlightesthighlight,
   eCSSKeyword__moz_mac_accentregularhighlight, nsILookAndFeel::eColor__moz_mac_accentregularhighlight,
   eCSSKeyword__moz_mac_accentface, nsILookAndFeel::eColor__moz_mac_accentface,

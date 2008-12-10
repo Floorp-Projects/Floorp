@@ -43,6 +43,9 @@
 		9BE650B50B52FE3000611104 /* macho_id.h in CopyFiles */ = {isa = PBXBuildFile; fileRef = 9BE650AF0B52FE3000611104 /* macho_id.h */; };
 		9BE650B60B52FE3000611104 /* macho_walker.cc in Sources */ = {isa = PBXBuildFile; fileRef = 9BE650B00B52FE3000611104 /* macho_walker.cc */; };
 		9BE650B70B52FE3000611104 /* macho_walker.h in CopyFiles */ = {isa = PBXBuildFile; fileRef = 9BE650B10B52FE3000611104 /* macho_walker.h */; };
+		F9C7ECE50E8ABCA600E953AD /* bytereader.cc in Sources */ = {isa = PBXBuildFile; fileRef = F9C7ECE20E8ABCA600E953AD /* bytereader.cc */; };
+		F9C7ECE60E8ABCA600E953AD /* dwarf2reader.cc in Sources */ = {isa = PBXBuildFile; fileRef = F9C7ECE30E8ABCA600E953AD /* dwarf2reader.cc */; };
+		F9C7ECE70E8ABCA600E953AD /* functioninfo.cc in Sources */ = {isa = PBXBuildFile; fileRef = F9C7ECE40E8ABCA600E953AD /* functioninfo.cc */; };
 		FD6625CD0CF4D45C004AC844 /* stackwalker_amd64.cc in Sources */ = {isa = PBXBuildFile; fileRef = FD6625C40CF4D438004AC844 /* stackwalker_amd64.cc */; };
 		FD8EDEAE0CADDAD400A5EDF1 /* stackwalker_sparc.cc in Sources */ = {isa = PBXBuildFile; fileRef = FD8EDEAC0CADDAD400A5EDF1 /* stackwalker_sparc.cc */; };
 		FD8EDEAF0CADDAD400A5EDF1 /* stackwalker_sparc.h in CopyFiles */ = {isa = PBXBuildFile; fileRef = FD8EDEAD0CADDAD400A5EDF1 /* stackwalker_sparc.h */; };
@@ -127,6 +130,9 @@
 		9BE650AF0B52FE3000611104 /* macho_id.h */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.c.h; name = macho_id.h; path = ../../../common/mac/macho_id.h; sourceTree = SOURCE_ROOT; };
 		9BE650B00B52FE3000611104 /* macho_walker.cc */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.cpp.cpp; name = macho_walker.cc; path = ../../../common/mac/macho_walker.cc; sourceTree = SOURCE_ROOT; };
 		9BE650B10B52FE3000611104 /* macho_walker.h */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.c.h; name = macho_walker.h; path = ../../../common/mac/macho_walker.h; sourceTree = SOURCE_ROOT; };
+		F9C7ECE20E8ABCA600E953AD /* bytereader.cc */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = bytereader.cc; path = ../../../common/mac/dwarf/bytereader.cc; sourceTree = SOURCE_ROOT; };
+		F9C7ECE30E8ABCA600E953AD /* dwarf2reader.cc */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = dwarf2reader.cc; path = ../../../common/mac/dwarf/dwarf2reader.cc; sourceTree = SOURCE_ROOT; };
+		F9C7ECE40E8ABCA600E953AD /* functioninfo.cc */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = functioninfo.cc; path = ../../../common/mac/dwarf/functioninfo.cc; sourceTree = SOURCE_ROOT; };
 		FD6625C40CF4D438004AC844 /* stackwalker_amd64.cc */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = stackwalker_amd64.cc; path = ../../../processor/stackwalker_amd64.cc; sourceTree = SOURCE_ROOT; };
 		FD6625C50CF4D438004AC844 /* stackwalker_amd64.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = stackwalker_amd64.h; path = ../../../processor/stackwalker_amd64.h; sourceTree = SOURCE_ROOT; };
 		FD8EDEAC0CADDAD400A5EDF1 /* stackwalker_sparc.cc */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.cpp.cpp; name = stackwalker_sparc.cc; path = ../../../processor/stackwalker_sparc.cc; sourceTree = SOURCE_ROOT; };
@@ -148,6 +154,7 @@
 		08FB7794FE84155DC02AAC07 /* crash_report */ = {
 			isa = PBXGroup;
 			children = (
+				F9C7ECE10E8ABC7F00E953AD /* DWARF */,
 				5578003E0BE1F28500EC23E0 /* macho_utilities.cc */,
 				5578003F0BE1F28500EC23E0 /* macho_utilities.h */,
 				9BDF192D0B1BC15D00F8391B /* dump_syms.h */,
@@ -269,6 +276,16 @@
 			name = common;
 			sourceTree = "<group>";
 		};
+		F9C7ECE10E8ABC7F00E953AD /* DWARF */ = {
+			isa = PBXGroup;
+			children = (
+				F9C7ECE20E8ABCA600E953AD /* bytereader.cc */,
+				F9C7ECE30E8ABCA600E953AD /* dwarf2reader.cc */,
+				F9C7ECE40E8ABCA600E953AD /* functioninfo.cc */,
+			);
+			name = DWARF;
+			sourceTree = "<group>";
+		};
 /* End PBXGroup section */
 
 /* Begin PBXNativeTarget section */
@@ -332,6 +349,9 @@
 				8B40BDC00C0638E4009535AF /* logging.cc in Sources */,
 				FD8EDEAE0CADDAD400A5EDF1 /* stackwalker_sparc.cc in Sources */,
 				FD6625CD0CF4D45C004AC844 /* stackwalker_amd64.cc in Sources */,
+				F9C7ECE50E8ABCA600E953AD /* bytereader.cc in Sources */,
+				F9C7ECE60E8ABCA600E953AD /* dwarf2reader.cc in Sources */,
+				F9C7ECE70E8ABCA600E953AD /* functioninfo.cc in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};

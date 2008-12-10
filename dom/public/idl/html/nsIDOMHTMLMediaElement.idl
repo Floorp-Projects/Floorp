@@ -49,7 +49,7 @@
  * @status UNDER_DEVELOPMENT
  */
 
-[scriptable, uuid(d95c02ac-92dc-4fff-ad52-41e125340fab)]
+[scriptable, uuid(e3e2a8c1-4b56-4154-8ef2-fc4b2bb42e97)]
 interface nsIDOMHTMLMediaElement : nsIDOMHTMLElement
 {
   // error state
@@ -64,7 +64,6 @@ interface nsIDOMHTMLMediaElement : nsIDOMHTMLElement
   const unsigned short LOADED_FIRST_FRAME = 3;
   const unsigned short LOADED = 4;
   readonly attribute unsigned short networkState;
-  readonly attribute unsigned long totalBytes;
   void load();
 
   // ready state
