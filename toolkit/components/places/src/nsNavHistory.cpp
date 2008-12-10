@@ -124,6 +124,7 @@
 #define PREF_AUTOCOMPLETE_FILTER_JAVASCRIPT     "urlbar.filter.javascript"
 #define PREF_AUTOCOMPLETE_ENABLED               "urlbar.autocomplete.enabled"
 #define PREF_AUTOCOMPLETE_MAX_RICH_RESULTS      "urlbar.maxRichResults"
+#define PREF_AUTOCOMPLETE_DEFAULT_BEHAVIOR      "urlbar.default.behavior"
 #define PREF_AUTOCOMPLETE_RESTRICT_HISTORY      "urlbar.restrict.history"
 #define PREF_AUTOCOMPLETE_RESTRICT_BOOKMARK     "urlbar.restrict.bookmark"
 #define PREF_AUTOCOMPLETE_RESTRICT_TAG          "urlbar.restrict.tag"
@@ -320,6 +321,12 @@ const PRInt32 nsNavHistory::kAutoCompleteIndex_BookmarkTitle = 4;
 const PRInt32 nsNavHistory::kAutoCompleteIndex_Tags = 5;
 const PRInt32 nsNavHistory::kAutoCompleteIndex_VisitCount = 6;
 
+const PRInt32 nsNavHistory::kAutoCompleteBehaviorHistory = 1 << 0;
+const PRInt32 nsNavHistory::kAutoCompleteBehaviorBookmark = 1 << 1;
+const PRInt32 nsNavHistory::kAutoCompleteBehaviorTag = 1 << 2;
+const PRInt32 nsNavHistory::kAutoCompleteBehaviorTitle = 1 << 3;
+const PRInt32 nsNavHistory::kAutoCompleteBehaviorUrl = 1 << 4;
+
 static const char* gQuitApplicationMessage = "quit-application";
 static const char* gXpcomShutdown = "xpcom-shutdown";
 static const char* gAutoCompleteFeedback = "autocomplete-will-enter-text";
@@ -372,11 +379,8 @@ nsNavHistory::nsNavHistory() : mBatchLevel(0),
                                mAutoCompleteMatchUrl(NS_LITERAL_STRING("@")),
                                mAutoCompleteSearchChunkSize(100),
                                mAutoCompleteSearchTimeout(100),
-                               mRestrictHistory(PR_FALSE),
-                               mRestrictBookmark(PR_FALSE),
-                               mRestrictTag(PR_FALSE),
-                               mMatchTitle(PR_FALSE),
-                               mMatchUrl(PR_FALSE),
+                               mAutoCompleteDefaultBehavior(0),
+                               mAutoCompleteCurrentBehavior(0),
                                mPreviousChunkOffset(-1),
                                mAutoCompleteFinishedSearch(PR_FALSE),
                                mExpireDaysMin(0),
@@ -502,6 +506,7 @@ nsNavHistory::Init()
     pbi->AddObserver(PREF_AUTOCOMPLETE_SEARCH_SOURCES, this, PR_FALSE);
     pbi->AddObserver(PREF_AUTOCOMPLETE_FILTER_JAVASCRIPT, this, PR_FALSE);
     pbi->AddObserver(PREF_AUTOCOMPLETE_MAX_RICH_RESULTS, this, PR_FALSE);
+    pbi->AddObserver(PREF_AUTOCOMPLETE_DEFAULT_BEHAVIOR, this, PR_FALSE);
     pbi->AddObserver(PREF_AUTOCOMPLETE_RESTRICT_HISTORY, this, PR_FALSE);
     pbi->AddObserver(PREF_AUTOCOMPLETE_RESTRICT_BOOKMARK, this, PR_FALSE);
     pbi->AddObserver(PREF_AUTOCOMPLETE_RESTRICT_TAG, this, PR_FALSE);
@@ -2068,6 +2073,8 @@ nsNavHistory::LoadPrefs(PRBool aInitializing)
                           &mAutoCompleteSearchChunkSize);
   mPrefBranch->GetIntPref(PREF_AUTOCOMPLETE_SEARCH_TIMEOUT,
                           &mAutoCompleteSearchTimeout);
+  mPrefBranch->GetIntPref(PREF_AUTOCOMPLETE_DEFAULT_BEHAVIOR,
+                          &mAutoCompleteDefaultBehavior);
   nsXPIDLCString prefStr;
   mPrefBranch->GetCharPref(PREF_AUTOCOMPLETE_RESTRICT_HISTORY,
                            getter_Copies(prefStr));
