@@ -81,7 +81,6 @@ endif
 
 EXPORTS		= \
 		nsAgg.h \
-		nsAutoPtr.h \
 		nsAutoRef.h \
 		nsCom.h \
 		nsDebugImpl.h \
@@ -112,6 +111,7 @@ SDK_XPIDLSRCS   = \
 		nsrootidl.idl
 
 SDK_HEADERS     = \
+		nsAutoPtr.h \
 		nsError.h \
 		nsISupportsBase.h \
 		nscore.h \
