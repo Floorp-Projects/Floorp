@@ -961,6 +961,15 @@ nsresult nsOggDecodeStateMachine::Run()
         
         oggplay_seek(mPlayer, ogg_int64_t(seekTime * 1000));
 
+        // Reactivate all tracks. Liboggplay deactivates tracks when it
+        // reads to the end of stream, but they must be reactivated in order
+        // to start reading from them again.
+        for (int i = 0; i < oggplay_get_num_tracks(mPlayer); ++i) {
+         if (oggplay_set_track_active(mPlayer, i) < 0)  {
+            LOG(PR_LOG_ERROR, ("Could not set track %d active", i));
+          }
+        }
+
         mon.Enter();
         if (mState == DECODER_STATE_SHUTDOWN)
           continue;
@@ -982,6 +991,7 @@ nsresult nsOggDecodeStateMachine::Run()
 
         mLastFrameTime = 0;
         FrameData* frame = NextFrame();
+        NS_ASSERTION(frame != nsnull, "No frame after seek!");
         if (frame) {
           mDecodedFrames.Push(frame);
           UpdatePlaybackPosition(frame->mDecodedFrameTime);
@@ -1386,12 +1396,16 @@ void nsOggDecoder::MetadataLoaded()
   if (mShuttingDown)
     return;
 
+  // Only inform the element of MetadataLoaded if not doing a load() in order
+  // to fulfill a seek, otherwise we'll get multiple metadataloaded events.
+  PRBool notifyElement = PR_TRUE;
   {
     nsAutoMonitor mon(mMonitor);
     mDuration = mDecodeStateMachine ? mDecodeStateMachine->GetDuration() : -1;
+    notifyElement = mNextState != PLAY_STATE_SEEKING;
   }
 
-  if (mElement) {
+  if (mElement && notifyElement) {
     mElement->MetadataLoaded();
   }
 }
@@ -1400,8 +1414,16 @@ void nsOggDecoder::FirstFrameLoaded()
 {
   if (mShuttingDown)
     return;
+ 
+  // Only inform the element of FirstFrameLoaded if not doing a load() in order
+  // to fulfill a seek, otherwise we'll get multiple loadedfirstframe events.
+  PRBool notifyElement = PR_TRUE;
+  {
+    nsAutoMonitor mon(mMonitor);
+    notifyElement = mNextState != PLAY_STATE_SEEKING;
+  }  
 
-  if (mElement) {
+  if (mElement && notifyElement) {
     mElement->FirstFrameLoaded();
   }
 
