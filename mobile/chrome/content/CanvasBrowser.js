@@ -42,10 +42,6 @@
 
 function CanvasBrowser(canvas) {
   this._canvas = canvas;
-  this._zoomLevel = 1;
-  this._browser = null;
-  this._pageX = 0;
-  this._pageY = 0;
 }
 
 CanvasBrowser.prototype = {
@@ -57,20 +53,29 @@ CanvasBrowser.prototype = {
   _screenX: 0,
   _screenY: 0,
 
-  get viewportDimensions() {
-    var rect = this._canvas.getBoundingClientRect();
-    return [rect.width, rect.height];
+  get canvasDimensions() {
+    return [this.canvasRect.width, this.canvasRect.height];
   },
-
-  get _effectiveViewportDimensions() {
-    var [w, h] = this.viewportDimensions;
-    return [this._screenToPage(w), this._screenToPage(h)];
+  
+  get canvasRect() {
+    if (!this._canvasRect) {
+      let canvasRect = this._canvas.getBoundingClientRect();
+      this._canvasRect = {
+        width: canvasRect.width,
+        height: canvasRect.height,
+        left: canvasRect.left,
+        top: canvasRect.top
+      }
+    }
+    return this._canvasRect;
   },
 
   get _effectiveCanvasDimensions() {
-          let canvasRect = this._canvas.getBoundingClientRect();
-          return [this._screenToPage(canvasRect.width),
-                  this._screenToPage(canvasRect.height)];
+    return this.canvasDimensions.map(this._screenToPage, this);
+  },
+
+  get _effectiveViewportDimensions() {
+    // XXX
   },
 
   setCurrentBrowser: function(browser) {
@@ -152,41 +157,31 @@ CanvasBrowser.prototype = {
       this._pageX = pageBounds.x;
       this._pageY = pageBounds.y;
 
-      return this._redrawRect(pageBounds.x, pageBounds.y,
-                              pageBounds.width, pageBounds.height);
+      this._redrawRect(pageBounds.x, pageBounds.y,
+                       pageBounds.width, pageBounds.height);
+      return;
     }
 
     let dx = this._screenX - bounds.x;
     let dy = this._screenY - bounds.y;
-
-    let [soffX, soffY] = this._canvasPageOffset;
 
     this._screenX = bounds.x;
     this._screenY = bounds.y;
     this._pageX = pageBounds.x;
     this._pageY = pageBounds.y;
 
-    let [offX, offY] = this._drawOffset;
-
-    // take in to account the canvas offset when we blit
-    let [eoffX, eoffY] = this._canvasPageOffset;
-    let [coffX, coffY] = [Math.floor(this._pageToScreen(eoffX - soffX)),
-                          Math.floor(this._pageToScreen(eoffY - soffY))];
-
     //dump("viewportHandler: " + bounds.toSource() + " " + oldBounds.toSource() + "\n");
-
-    //dump("page offset " + eoffX + " " + eoffY + "\n");
 
     // deal with repainting
     let srcRect = { x: 0, y: 0,
                     width: this._canvas.width, height: this._canvas.height };
-    let dstRect = { x: dx - coffX, y: dy - coffY,
+    let dstRect = { x: dx, y: dy,
                     width: this._canvas.width, height: this._canvas.height };
 
     // we don't need to do anything if the source and destination are the same
     if (srcRect.x == dstRect.x && srcRect.y == dstRect.y &&
         srcRect.width == dstRect.width && srcRect.height == dstRect.height) {
-      dump("avoiding dumb paint\n");
+      //dump("avoiding dumb paint\n");
       return;
     }
 
@@ -220,7 +215,7 @@ CanvasBrowser.prototype = {
       ctx.translate(dstRect.x, dstRect.y);
       ctx.scale(this._zoomLevel, this._zoomLevel);
 
-      var [offX, offY] = this._drawOffset;
+      let [offX, offY] = this._pageOffset;
       let scaledRect = { x: offX + this._screenToPage(dstRect.x),
                          y: offY + this._screenToPage(dstRect.y),
                          width: this._screenToPage(dstRect.width),
@@ -240,39 +235,6 @@ CanvasBrowser.prototype = {
 
       ctx.restore();
     }
-  },
-
-  get _canvasPageOffset() {
-    /*
-    let [canvasW, canvasH] = this._effectiveCanvasDimensions;
-    let [viewportW, viewportH] = this._effectiveViewportDimensions;
-    let offscreenCanvasW = (canvasW - viewportW);
-    let offscreenCanvasH = (canvasH - viewportH);
-    let [contentWidth, contentHeight] = this._contentAreaDimensions;
-
-    let [pageX, pageY] = this._pageOffset();
-
-    let left = Math.max(-pageX, -(offscreenCanvasW / 2));
-    let rightMost = (contentWidth - canvasW);
-    if (left > rightMost && rightMost > 0)
-      left = rightMost;
-
-    let top = Math.max(-pageY, -(offscreenCanvasH / 2));
-    let bottomMost = (contentHeight - canvasH);
-    if (top > bottomMost && bottomMost > 0)
-      top = bottomMost;
-
-    return [left, top];
-    */
-    return [0, 0];
-  },
-
-  get _drawOffset() {
-    let [offX, offY] = this._canvasPageOffset;
-    let [pageX, pageY] = this._pageOffset();
-
-    //dump(offX + " " + offY + " " + pageX + " " + pageY + "\n");
-    return [pageX + offX, pageY + offY];
   },
 
   _handleMozAfterPaint: function(aEvent) {
@@ -322,7 +284,7 @@ CanvasBrowser.prototype = {
                width : width,
                height: height };
 
-    // check to see if the input coordinates are inside the visiable destination
+    // check to see if the input coordinates are inside the visible destination
     let [canvasW, canvasH] = this._effectiveCanvasDimensions;
     let r2 = { x : this._pageX,
                y : this._pageY,
@@ -341,8 +303,7 @@ CanvasBrowser.prototype = {
     ctx.save();
     ctx.scale(this._zoomLevel, this._zoomLevel);
 
-    var [offX, offY] = this._drawOffset;
-    //dump("offx, offy: " + offX + " " + offY + "\n");
+    let [offX, offY] = this._pageOffset;
     ctx.translate(dest.x - offX, dest.y - offY);
 
     //dump("drawWindow#2: " + dest.x + " " + dest.y + " " + dest.width + " " + dest.height + " @ " + (dest.x - offX) + " " + (dest.y - offY) + "\n");
@@ -387,10 +348,10 @@ CanvasBrowser.prototype = {
     // Adjust the zoomLevel to fit the page contents in our window
     // width
     let [contentW, ] = this._contentAreaDimensions;
-    let [viewportW, ] = this.viewportDimensions;
+    let [canvasW, ] = this.canvasDimensions;
 
-    if (contentW > viewportW)
-      this.zoomLevel = viewportW / contentW;
+    if (contentW > canvasW)
+      this.zoomLevel = canvasW / contentW;
   },
 
   zoomToElement: function(aElement) {
@@ -402,10 +363,10 @@ CanvasBrowser.prototype = {
     ws.panTo(0, 0);
 
     // scale to the element's width
-    let [viewportW, ] = this.viewportDimensions;
+    let [canvasW, ] = this.canvasDimensions;
 
     let elRect = this._getPagePosition(aElement);
-    let zoomLevel = viewportW / (elRect.width + (2 * margin));
+    let zoomLevel = canvasW / (elRect.width + (2 * margin));
     this.zoomLevel = Math.min(zoomLevel, 10);
 
     // pan to the element
@@ -463,7 +424,7 @@ CanvasBrowser.prototype = {
     return retVal;
   },
 
-  _pageOffset: function() {
+  get _pageOffset() {
     //    return [this._screenToPage(ws._viewport.viewportInnerBounds.x),
     //            this._screenToPage(ws._viewport.viewportInnerBounds.y)];
     return [this._pageX, this._pageY];
@@ -477,9 +438,8 @@ CanvasBrowser.prototype = {
     // Need to adjust for the deckbrowser not being at 0,0
     // (e.g. due to other browser UI)
 
-    let browserRect = this._canvas.getBoundingClientRect();
-    let clickOffsetX = this._screenToPage(aClientX - browserRect.left) + this._pageX;
-    let clickOffsetY = this._screenToPage(aClientY - browserRect.top) + this._pageY;
+    let clickOffsetX = this._screenToPage(aClientX - this.canvasRect.left) + this._pageX;
+    let clickOffsetY = this._screenToPage(aClientY - this.canvasRect.top) + this._pageY;
 
     // Take scroll offset into account to return coordinates relative to the viewport
     let cwin = this._browser.contentWindow;
@@ -523,6 +483,10 @@ CanvasBrowser.prototype = {
 
   /* ensures that a given content element is visible */
   ensureElementIsVisible: function(aElement) {
+    // XXX
+    // this method is broken because viewportDimensions getters are broken
+    return;
+
     let elRect = this._getPagePosition(aElement);
     let [viewportW, viewportH] = this._effectiveViewportDimensions;
     let curRect = {
