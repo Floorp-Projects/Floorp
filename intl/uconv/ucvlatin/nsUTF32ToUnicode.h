@@ -42,29 +42,27 @@
 #define nsUTF32ToUnicode_h___
 
 //----------------------------------------------------------------------
-// Class nsUTF32ToUnicode [declaration]  
+// Class nsUTF32ToUnicodeBase [declaration]  
 
 /**
- * A character set converter from UTF32 to Unicode.
- * The base class for UTF32BE/UTF32LE to Unicode converters.
+ * A character set converter from UTF-32 family to Unicode.
+ * The base class for UTF-32BE/UTF-32LE/UTF-32 to Unicode converters.
  * @created         08/Dec/2002
  * @author  Jungshik Shin
  */
 
-class nsUTF32ToUnicode : public nsBasicDecoderSupport
+class nsUTF32ToUnicodeBase : public nsBasicDecoderSupport
 {
-
-public:
-
-  /**
-   * Class constructor.
-   */
-  nsUTF32ToUnicode();
 
 protected:
 
+  /**
+   * Class constructor. accessible only by child classes
+   */
+  nsUTF32ToUnicodeBase();
+
   // the number of additional bytes to read to complete an incomplete UTF-32 4byte seq.
-  PRUint16 mState;  
+  PRUint16 mState;
   // buffer for an incomplete UTF-32 sequence. 
   PRUint8  mBufferInc[4];
 
@@ -82,13 +80,13 @@ protected:
 // Class nsUTF32BEToUnicode [declaration]  
 
 /**
- * A character set converter from UTF32BE to Unicode.
- * A subclass of UTF32ToUnicode.
+ * A character set converter from UTF-32BE to Unicode.
+ * A subclass of UTF32ToUnicodeBase.
  * @created         08/Dec/2002
  * @author  Jungshik Shin
  */
 
-class nsUTF32BEToUnicode : public nsUTF32ToUnicode
+class nsUTF32BEToUnicode : public nsUTF32ToUnicodeBase
 {
 public:
 
@@ -106,13 +104,13 @@ public:
 // Class nsUTF32LEToUnicode [declaration]  
 
 /**
- * A character set converter from UTF32LE to Unicode.
- * A subclass of UTF32ToUnicode.
+ * A character set converter from UTF-32LE to Unicode.
+ * A subclass of UTF32ToUnicodeBase.
  * @created         08/Dec/2002
  * @author  Jungshik Shin
  */
 
-class nsUTF32LEToUnicode : public nsUTF32ToUnicode
+class nsUTF32LEToUnicode : public nsUTF32ToUnicodeBase
 {
 public:
 
@@ -123,6 +121,43 @@ public:
   NS_IMETHOD Convert(const char * aSrc, PRInt32 * aSrcLength, 
                      PRUnichar * aDest, PRInt32 * aDestLength);
 
+};
+
+//----------------------------------------------------------------------
+// Class nsUTF32ToUnicode [declaration]  
+
+/**
+ * A character set converter from UTF-32 to Unicode.
+ * A subclass of UTF32ToUnicodeBase.
+ * @created         08/Dec/2002
+ * @author  Jungshik Shin
+ */
+
+class nsUTF32ToUnicode : public nsUTF32ToUnicodeBase
+{
+public:
+
+  /**
+   * Class constructor.
+   */
+  nsUTF32ToUnicode() { Reset(); }
+
+  //--------------------------------------------------------------------
+  // Subclassing of nsBasicDecoderSupport class [declaration]
+
+  NS_IMETHOD Convert(const char * aSrc, PRInt32 * aSrcLength, 
+                     PRUnichar * aDest, PRInt32 * aDestLength);
+
+  //--------------------------------------------------------------------
+  // Subclassing of nsUTF32ToUnicodeBase class [declaration]
+
+  NS_IMETHOD Reset();
+
+private:
+
+  enum Endian {kUnknown, kBigEndian, kLittleEndian};
+  Endian  mEndian; 
+  PRBool  mFoundBOM;
 };
 
 #endif /* nsUTF32ToUnicode_h___ */

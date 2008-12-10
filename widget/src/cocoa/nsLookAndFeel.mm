@@ -314,6 +314,9 @@ nsresult nsLookAndFeel::NativeGetColor(const nsColorID aID, nscolor &aColor)
     case eColor__moz_mac_menutextselect:
       res = GetMacTextColor(kThemeTextColorMenuItemSelected, aColor, NS_RGB(0xFF,0xFF,0xFF));
       break;      
+    case eColor__moz_mac_disabledtoolbartext:
+      aColor = NS_RGB(0x3F,0x3F,0x3F);
+      break;
     case eColor__moz_mac_accentlightesthighlight:
       //get this colour by querying variation table, ows. default to Platinum/Lavendar
       res = GetMacAccentColor(eColorOffset_mac_accentlightesthighlight, aColor, NS_RGB(0xEE,0xEE,0xEE));

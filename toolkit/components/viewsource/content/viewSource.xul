@@ -98,8 +98,10 @@
   <command id="cmd_textZoomEnlarge" oncommand="ZoomManager.enlarge();"/>
   <command id="cmd_textZoomReset" oncommand="ZoomManager.reset();"/>
 
-  <command id="Browser:Back" oncommand="BrowserBack();"/>
-  <command id="Browser:Forward" oncommand="BrowserForward();"/>
+  <command id="Browser:Back" oncommand="BrowserBack();" observes="viewSourceNavigation"/>
+  <command id="Browser:Forward" oncommand="BrowserForward();" observes="viewSourceNavigation"/>
+
+  <broadcaster id="viewSourceNavigation"/>
 
   <keyset id="editMenuKeys"/>
   <keyset id="viewSourceKeys">
@@ -146,12 +148,14 @@
     <menuitem id="context-back"
               label="&backCmd.label;"
               accesskey="&backCmd.accesskey;"
-              command="Browser:Back"/>
+              command="Browser:Back"
+              observes="viewSourceNavigation"/>
     <menuitem id="context-forward"
               label="&forwardCmd.label;"
               accesskey="&forwardCmd.accesskey;"
-              command="Browser:Forward"/>
-    <menuseparator/>
+              command="Browser:Forward"
+              observes="viewSourceNavigation"/>
+    <menuseparator observes="viewSourceNavigation"/>
     <menuitem id="cMenu_findAgain"/>
     <menuseparator/>
     <menuitem id="cMenu_copy"/>

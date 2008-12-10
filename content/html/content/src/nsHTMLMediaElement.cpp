@@ -143,13 +143,6 @@ NS_IMETHODIMP nsHTMLMediaElement::GetNetworkState(PRUint16 *aNetworkState)
   return NS_OK;
 }
 
-/* readonly attribute unsigned long totalBytes; */
-NS_IMETHODIMP nsHTMLMediaElement::GetTotalBytes(PRUint32 *aTotalBytes)
-{
-  *aTotalBytes = mDecoder ? PRUint32(mDecoder->GetTotalBytes()) : 0;
-  return NS_OK;
-}
-
 /* void load (); */
 NS_IMETHODIMP nsHTMLMediaElement::Load()
 {

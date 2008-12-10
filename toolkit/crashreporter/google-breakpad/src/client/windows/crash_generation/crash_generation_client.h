@@ -30,10 +30,16 @@
 #ifndef CLIENT_WINDOWS_CRASH_GENERATION_CRASH_GENERATION_CLIENT_H__
 #define CLIENT_WINDOWS_CRASH_GENERATION_CRASH_GENERATION_CLIENT_H__
 
+#include <windows.h>
+#include <dbghelp.h>
 #include <string>
+#include <utility>
 #include "client/windows/common/ipc_protocol.h"
+#include "processor/scoped_ptr.h"
 
 namespace google_breakpad {
+
+struct CustomClientInfo;
 
 // Abstraction of client-side implementation of out of process
 // crash generation.
@@ -57,7 +63,8 @@ namespace google_breakpad {
 class CrashGenerationClient {
  public:
   CrashGenerationClient(const wchar_t* pipe_name,
-                        MINIDUMP_TYPE dump_type);
+                        MINIDUMP_TYPE dump_type,
+                        const CustomClientInfo* custom_info);
 
   ~CrashGenerationClient();
 
@@ -112,6 +119,9 @@ class CrashGenerationClient {
 
   // Pipe name to use to talk to server.
   std::wstring pipe_name_;
+
+  // Custom client information
+  CustomClientInfo custom_info_;
 
   // Type of dump to generate.
   MINIDUMP_TYPE dump_type_;

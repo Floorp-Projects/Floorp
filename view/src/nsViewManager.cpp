@@ -1764,14 +1764,26 @@ void nsViewManager::UpdateWidgetsForView(nsView* aView)
 {
   NS_PRECONDITION(aView, "Must have view!");
 
+  nsWeakView parentWeakView = aView;
   if (aView->HasWidget()) {
-    aView->GetWidget()->Update();
+    aView->GetWidget()->Update();  // Flushes Layout!
+    if (!parentWeakView.IsAlive()) {
+      return;
+    }
   }
 
-  for (nsView* childView = aView->GetFirstChild();
-       childView;
-       childView = childView->GetNextSibling()) {
+  nsView* childView = aView->GetFirstChild();
+  while (childView) {
+    nsWeakView childWeakView = childView;
     UpdateWidgetsForView(childView);
+    if (NS_LIKELY(childWeakView.IsAlive())) {
+      childView = childView->GetNextSibling();
+    }
+    else {
+      // The current view was destroyed - restart at the first child if the
+      // parent is still alive.
+      childView = parentWeakView.IsAlive() ? aView->GetFirstChild() : nsnull;
+    }
   }
 }
 
@@ -2312,6 +2324,10 @@ nsViewManager::SynthesizeMouseMove(PRBool aFromScroll)
  */
 static nsView* FindFloatingViewContaining(nsView* aView, nsPoint aPt)
 {
+  if (aView->GetVisibility() == nsViewVisibility_kHide)
+    // No need to look into descendants.
+    return nsnull;
+
   for (nsView* v = aView->GetFirstChild(); v; v = v->GetNextSibling()) {
     nsView* r = FindFloatingViewContaining(v, aPt - v->GetOffsetTo(aView));
     if (r)
@@ -2319,9 +2335,33 @@ static nsView* FindFloatingViewContaining(nsView* aView, nsPoint aPt)
   }
 
   if (aView->GetFloating() && aView->HasWidget() &&
-      aView->GetDimensions().Contains(aPt) && IsViewVisible(aView))
+      aView->GetDimensions().Contains(aPt))
     return aView;
     
+  return nsnull;
+}
+
+/*
+ * This finds the first view containing the given point in a postorder
+ * traversal of the view tree that contains the point, assuming that the
+ * point is not in a floating view.  It assumes that only floating views
+ * extend outside the bounds of their parents.
+ *
+ * This methods should only be called if FindFloatingViewContaining
+ * returns null.
+ */
+static nsView* FindViewContaining(nsView* aView, nsPoint aPt)
+{
+  for (nsView* v = aView->GetFirstChild(); v; v = v->GetNextSibling()) {
+    if (aView->GetDimensions().Contains(aPt) &&
+        aView->GetVisibility() != nsViewVisibility_kHide) {
+      nsView* r = FindViewContaining(v, aPt - v->GetOffsetTo(aView));
+      if (r)
+        return r;
+      return v;
+    }
+  }
+
   return nsnull;
 }
 
@@ -2357,12 +2397,17 @@ nsViewManager::ProcessSynthMouseMoveEvent(PRBool aFromScroll)
   // but it's OK to do it once per synthetic mouse event
   nsView* view = FindFloatingViewContaining(mRootView, pt);
   nsPoint offset(0, 0);
+  nsViewManager *pointVM;
   if (!view) {
     view = mRootView;
+    nsView *pointView = FindViewContaining(mRootView, pt);
+    // pointView can be null in situations related to mouse capture
+    pointVM = (pointView ? pointView : view)->GetViewManager();
   } else {
     offset = view->GetOffsetTo(mRootView);
     offset.x = NSAppUnitsToIntPixels(offset.x, p2a);
     offset.y = NSAppUnitsToIntPixels(offset.y, p2a);
+    pointVM = view->GetViewManager();
   }
   nsMouseEvent event(PR_TRUE, NS_MOUSE_MOVE, view->GetWidget(),
                      nsMouseEvent::eSynthesized);
@@ -2370,8 +2415,7 @@ nsViewManager::ProcessSynthMouseMoveEvent(PRBool aFromScroll)
   event.time = PR_IntervalNow();
   // XXX set event.isShift, event.isControl, event.isAlt, event.isMeta ?
 
-  nsEventStatus status;
-  view->GetViewManager()->DispatchEvent(&event, &status);
+  pointVM->GetViewObserver()->DispatchSynthMouseMove(&event, !aFromScroll);
 
   if (!aFromScroll)
     mSynthMouseMoveEvent.Forget();

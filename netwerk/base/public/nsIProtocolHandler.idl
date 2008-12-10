@@ -221,7 +221,14 @@ interface nsIProtocolHandler : nsISupports
      * do not return any data that we can use.
      */
     const unsigned long URI_DOES_NOT_RETURN_DATA = (1<<11);
-    
+
+    /**
+     * URIs for this protocol are considered to be local resources.  This could
+     * be a local file (URI_IS_LOCAL_FILE), a UI resource (URI_IS_UI_RESOURCE),
+     * or something else that would not hit the network.
+     */
+    const unsigned long URI_IS_LOCAL_RESOURCE = (1<<12);
+
     /**
      * This protocol handler can be proxied via a proxy (socks or http)
      * (e.g., irc, smtp, http, etc.).  If the protocol supports transparent

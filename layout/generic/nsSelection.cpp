@@ -246,6 +246,7 @@ public:
                              SelectionDetails **aReturnDetails, SelectionType aType, PRBool aSlowCheck);
   NS_IMETHOD   Repaint(nsPresContext* aPresContext);
 
+  // Note: StartAutoScrollTimer might destroy arbitrary frames, views etc.
   nsresult     StartAutoScrollTimer(nsPresContext *aPresContext,
                                     nsIView *aView,
                                     nsPoint& aPoint,
@@ -257,12 +258,15 @@ public:
 private:
   friend class nsAutoScrollTimer;
 
+  // Note: DoAutoScrollView might destroy arbitrary frames, views etc.
   nsresult DoAutoScrollView(nsPresContext *aPresContext,
                             nsIView *aView,
                             nsPoint& aPoint,
                             PRBool aScrollParentViews);
 
+  // Note: ScrollPointIntoClipView might destroy arbitrary frames, views etc.
   nsresult     ScrollPointIntoClipView(nsPresContext *aPresContext, nsIView *aView, nsPoint& aPoint, PRBool *aDidScroll);
+  // Note: ScrollPointIntoView might destroy arbitrary frames, views etc.
   nsresult     ScrollPointIntoView(nsPresContext *aPresContext, nsIView *aView, nsPoint& aPoint, PRBool aScrollParentViews, PRBool *aDidScroll);
   nsresult     GetViewAncestorOffset(nsIView *aView, nsIView *aAncestorView, nscoord *aXOffset, nscoord *aYOffset);
 
@@ -5084,10 +5088,25 @@ nsTypedSelection::ScrollPointIntoClipView(nsPresContext *aPresContext, nsIView *
 
   if (dx != 0 || dy != 0)
   {
-    // Make sure latest bits are available before we scroll them.
-    aPresContext->GetViewManager()->Composite();
+    nsCOMPtr<nsIPresShell> presShell;
+    GetPresShell(getter_AddRefs(presShell));
+    NS_ASSERTION(presShell, "no pres shell");
 
-    // Now scroll the view!
+    nsWeakView weakView = scrollableView->View();
+
+    // Make sure latest bits are available before we scroll them. This flushes
+    // pending notifications and thus might destroy stuff (bug 421839).
+    // We need to hold a strong ref on the view manager to keep it alive.
+    nsCOMPtr<nsIViewManager> viewManager = aPresContext->GetViewManager();
+    viewManager->Composite();
+
+    if (!weakView.IsAlive()) {
+      return NS_ERROR_NULL_POINTER;
+    }
+
+    if (presShell->IsDestroying()) {
+      return NS_ERROR_NULL_POINTER;
+    }
 
     result = scrollableView->ScrollTo(bounds.x + dx, bounds.y + dy, 0);
 

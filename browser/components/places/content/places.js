@@ -645,6 +645,10 @@ var PlacesOrganizer = {
   _fillDetailsPane: function PO__fillDetailsPane(aNodeList) {
     var infoBox = document.getElementById("infoBox");
     var detailsDeck = document.getElementById("detailsDeck");
+
+    // Make sure the infoBox UI is visible if we need to use it, we hide it
+    // below when we don't.
+    infoBox.hidden = false;
     var aSelectedNode = aNodeList.length == 1 ? aNodeList[0] : null;
     // If a textbox within a panel is focused, force-blur it so its contents
     // are saved
@@ -695,6 +699,7 @@ var PlacesOrganizer = {
           itemsCountLabel.value =
             PlacesUIUtils.getFormattedString("detailsPane.multipleItems",
                                              [aNodeList.length]);
+          infoBox.hidden = true;
           return;
         }
         itemIds[i] = aNodeList[i].itemId != -1 ? aNodeList[i].itemId :
@@ -712,6 +717,7 @@ var PlacesOrganizer = {
     }
     else {
       detailsDeck.selectedIndex = 0;
+      infoBox.hidden = true;
       var selectItemDesc = document.getElementById("selectItemDescription");
       var itemsCountLabel = document.getElementById("itemsCountText");
       var rowCount = this._content.treeBoxObject.view.rowCount;

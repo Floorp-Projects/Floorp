@@ -71,9 +71,9 @@ ReportResult CrashReportSender::SendCrashReport(
   bool result = HTTPUpload::SendRequest(
     url, parameters, dump_file_name, L"upload_file_minidump", report_code,
     &http_response);
-  ReportSent(today);
 
   if (result) {
+    ReportSent(today);
     return RESULT_SUCCEEDED;
   } else if (http_response == 400) {  // TODO: update if/when the server
                                       //       switches to a different code

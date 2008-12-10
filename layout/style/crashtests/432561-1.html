@@ -1,0 +1,17 @@
+<html>
+<head>
+<title>Testcase, Bug 432561</title>
+</head>
+<body>
+<script>
+var str = '{';
+for (var i=0;i<22;i++)
+ str+=str;
+document.write('<style type="text/css">div '+str+'</style>');
+str = '{{[('
+for (var i=0;i<20;i++)
+ str+=str;
+document.write('<style type="text/css">div '+str+'</style>');
+</script>
+</body>
+</html>

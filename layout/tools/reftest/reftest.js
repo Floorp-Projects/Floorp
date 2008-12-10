@@ -58,6 +58,10 @@ const LOAD_FAILURE_TIMEOUT = 10000; // ms
 var gBrowser;
 var gCanvas1, gCanvas2;
 var gURLs;
+// Map from URI spec to the number of times it remains to be used
+var gURIUseCounts;
+// Map from URI spec to the canvas rendered for that URI
+var gURICanvases;
 var gTestResults = {
   // The errors...
   Exception: 0,
@@ -96,6 +100,26 @@ const EXPECTED_LOAD = 4; // test without a reference (just test that it does
 
 const HTTP_SERVER_PORT = 4444;
 
+var gRecycledCanvases = new Array();
+
+function AllocateCanvas()
+{
+    var windowElem = document.documentElement;
+
+    if (gRecycledCanvases.length > 0)
+        return gRecycledCanvases.shift();
+
+    var canvas = document.createElementNS(XHTML_NS, "canvas");
+    canvas.setAttribute("width", windowElem.getAttribute("width"));
+    canvas.setAttribute("height", windowElem.getAttribute("height"));
+    return canvas;
+}
+
+function ReleaseCanvas(canvas)
+{
+    gRecycledCanvases.push(canvas);
+}
+
 function OnRefTestLoad()
 {
     gBrowser = document.getElementById("browser");
@@ -112,28 +136,22 @@ function OnRefTestLoad()
 
     var windowElem = document.documentElement;
 
-    gCanvas1 = document.createElementNS(XHTML_NS, "canvas");
-    gCanvas1.setAttribute("width", windowElem.getAttribute("width"));
-    gCanvas1.setAttribute("height", windowElem.getAttribute("height"));
-
-    gCanvas2 = document.createElementNS(XHTML_NS, "canvas");
-    gCanvas2.setAttribute("width", windowElem.getAttribute("width"));
-    gCanvas2.setAttribute("height", windowElem.getAttribute("height"));
-
     gIOService = CC[IO_SERVICE_CONTRACTID].getService(CI.nsIIOService);
 
     try {
         ReadTopManifest(window.arguments[0]);
+        BuildUseCounts();
         if (gServer) {
             gServer.registerContentType("sjs", "sjs");
             gServer.start(HTTP_SERVER_PORT);
         }
         gTotalTests = gURLs.length;
+        gURICanvases = {};
         StartCurrentTest();
     } catch (ex) {
         //gBrowser.loadURI('data:text/plain,' + ex);
         ++gTestResults.Exception;
-        dump("REFTEST TEST-FAIL | | EXCEPTION: " + ex + "\n");
+        dump("REFTEST TEST-UNEXPECTED-FAIL | | EXCEPTION: " + ex + "\n");
         DoneTests();
     }
 }
@@ -294,6 +312,31 @@ function ReadManifest(aURL)
     } while (more);
 }
 
+function AddURIUseCount(uri)
+{
+    if (uri == null)
+        return;
+
+    var spec = uri.spec;
+    if (spec in gURIUseCounts) {
+        gURIUseCounts[spec]++;
+    } else {
+        gURIUseCounts[spec] = 1;
+    }
+}
+
+function BuildUseCounts()
+{
+    gURIUseCounts = {};
+    for (var i = 0; i < gURLs.length; ++i) {
+        var expected = gURLs[i].expected;
+        if (expected != EXPECTED_DEATH && expected != EXPECTED_LOAD) {
+            AddURIUseCount(gURLs[i].url1);
+            AddURIUseCount(gURLs[i].url2);
+        }
+    }
+}
+
 function ServeFiles(manifestURL, depth, directory, files)
 {
     if (!gServer)
@@ -364,7 +407,14 @@ function StartCurrentURI(aState)
 
     gState = aState;
     gCurrentURL = gURLs[0]["url" + aState].spec;
-    gBrowser.loadURI(gCurrentURL);
+
+    if (gURICanvases[gCurrentURL] && gURLs[0].expected != EXPECTED_LOAD) {
+        // Pretend the document loaded --- DocumentLoaded will notice
+        // there's already a canvas for this URL
+        setTimeout(DocumentLoaded, 0);
+    } else {
+        gBrowser.loadURI(gCurrentURL);
+    }
 }
 
 function DoneTests()
@@ -376,6 +426,8 @@ function DoneTests()
     for (var result in gTestResults)
       if (gTestResults[result] != 0)
         dump("REFTEST INFO | " + result + ": " + gTestResults[result] + "\n");
+
+    dump("REFTEST INFO | Total canvas count = " + gRecycledCanvases.length + "\n");
 
     if (gServer)
         gServer.stop();
@@ -473,13 +525,28 @@ function OnDocumentLoad(event)
     }
 }
 
+function UpdateCanvasCache(url, canvas)
+{
+    var spec = url.spec;
+
+    --gURIUseCounts[spec];
+    if (gURIUseCounts[spec] == 0) {
+        ReleaseCanvas(canvas);
+        delete gURICanvases[spec];
+    } else if (gURIUseCounts[spec] > 0) {
+        gURICanvases[spec] = canvas;
+    } else {
+        throw "Use counts were computed incorrectly";
+    }
+}
+
 function DocumentLoaded()
 {
     // Keep track of which test was slowest, and how long it took.
     var currentTestRunTime = Date.now() - gCurrentTestStartTime;
     if (currentTestRunTime > gSlowestTestTime) {
         gSlowestTestTime = currentTestRunTime;
-        gSlowestTestURL  = gURLs[0]["url" + gState].spec;
+        gSlowestTestURL  = gCurrentURL;
     }
 
     clearTimeout(gFailureTimeout);
@@ -494,26 +561,32 @@ function DocumentLoaded()
     }
 
     var canvas;
+    if (gURICanvases[gCurrentURL]) {
+        canvas = gURICanvases[gCurrentURL];
+    } else {
+        canvas = AllocateCanvas();
 
-    if (gState == 1)
-        canvas = gCanvas1;
-    else
-        canvas = gCanvas2;
+        /* XXX This needs to be rgb(255,255,255) because otherwise we get
+         * black bars at the bottom of every test that are different size
+         * for the first test and the rest (scrollbar-related??) */
+        var win = gBrowser.contentWindow;
+        var ctx = canvas.getContext("2d");
+        var scale = gBrowser.markupDocumentViewer.fullZoom;
+        ctx.save();
+        // drawWindow always draws one canvas pixel for each CSS pixel in the source
+        // window, so scale the drawing to show the zoom (making each canvas pixel be one
+        // device pixel instead)
+        ctx.scale(scale, scale);
+        ctx.drawWindow(win, win.scrollX, win.scrollY,
+                       canvas.width, canvas.height, "rgb(255,255,255)");
+        ctx.restore();
+    }
 
-    /* XXX This needs to be rgb(255,255,255) because otherwise we get
-     * black bars at the bottom of every test that are different size
-     * for the first test and the rest (scrollbar-related??) */
-    var win = gBrowser.contentWindow;
-    var ctx = canvas.getContext("2d");
-    var scale = gBrowser.markupDocumentViewer.fullZoom;
-    ctx.save();
-    // drawWindow always draws one canvas pixel for each CSS pixel in the source
-    // window, so scale the drawing to show the zoom (making each canvas pixel be one
-    // device pixel instead)
-    ctx.scale(scale, scale);
-    ctx.drawWindow(win, win.scrollX, win.scrollY,
-                   canvas.width, canvas.height, "rgb(255,255,255)");
-    ctx.restore();
+    if (gState == 1) {
+        gCanvas1 = canvas;
+    } else {
+        gCanvas2 = canvas;
+    }
 
     resetZoom();
 
@@ -583,6 +656,9 @@ function DocumentLoaded()
                     dump("REFTEST   IMAGE: " + gCanvas1.toDataURL() + "\n");
                 }
             }
+
+            UpdateCanvasCache(gURLs[0].url1, gCanvas1);
+            UpdateCanvasCache(gURLs[0].url2, gCanvas2);
 
             gURLs.shift();
             StartCurrentTest();
