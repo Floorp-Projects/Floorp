@@ -186,6 +186,11 @@ var tests = [
  * Test history autocomplete
  */
 function run_test() {
+  // always search in history + bookmarks, no matter what the default is
+  var prefs = Cc["@mozilla.org/preferences-service;1"].
+              getService(Ci.nsIPrefBranch);
+  prefs.setIntPref("browser.urlbar.search.sources", 3);
+
   tagssvc.tagURI(uri1, ["foo"]);
   tagssvc.tagURI(uri2, ["bar"]);
   tagssvc.tagURI(uri3, ["cheese"]);
