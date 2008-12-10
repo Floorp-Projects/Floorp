@@ -191,16 +191,16 @@ var BrowserUI = {
   },
 
   _editToolbar : function(aEdit) {
-    var toolbar = document.getElementById("toolbar-main");
+    var icons = document.getElementById("urlbar-icons");
     if (aEdit) {
-      toolbar.setAttribute("mode", "edit");
+      icons.setAttribute("mode", "edit");
       this._caption.hidden = true;
       this._edit.hidden = false;
       this._edit.inputField.focus();
       this._edit.editor.selectAll();
     }
     else {
-      toolbar.setAttribute("mode", "view");
+      icons.setAttribute("mode", "view");
       this._edit.hidden = true;
       this._edit.reallyClosePopup();
       this._caption.hidden = false;
@@ -268,11 +268,11 @@ var BrowserUI = {
   },
 
   update : function(aState) {
-    var toolbar = document.getElementById("toolbar-main");
+    var icons = document.getElementById("urlbar-icons");
 
     switch (aState) {
       case TOOLBARSTATE_LOADED:
-        toolbar.setAttribute("mode", "view");
+        icons.setAttribute("mode", "view");
 
         if (!this._faviconLink) {
           this._faviconLink = Browser.currentBrowser.currentURI.prePath + "/favicon.ico";
@@ -284,7 +284,7 @@ var BrowserUI = {
 
       case TOOLBARSTATE_LOADING:
         this.show(UIMODE_URLVIEW);
-        toolbar.setAttribute("mode", "loading");
+        icons.setAttribute("mode", "loading");
 
         ws.panTo(0,0, true);
 
