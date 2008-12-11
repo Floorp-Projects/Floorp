@@ -96,7 +96,6 @@ imgRequest::~imgRequest()
 }
 
 nsresult imgRequest::Init(nsIURI *aURI,
-                          nsIURI *aKeyURI,
                           nsIRequest *aRequest,
                           nsIChannel *aChannel,
                           imgCacheEntry *aCacheEntry,
@@ -115,7 +114,6 @@ nsresult imgRequest::Init(nsIURI *aURI,
     return NS_ERROR_OUT_OF_MEMORY;
 
   mURI = aURI;
-  mKeyURI = aKeyURI;
   mRequest = aRequest;
   mChannel = aChannel;
   mChannel->GetNotificationCallbacks(getter_AddRefs(mPrevChannelSink));
@@ -319,19 +317,6 @@ nsresult imgRequest::GetURI(nsIURI **aURI)
   if (mURI) {
     *aURI = mURI;
     NS_ADDREF(*aURI);
-    return NS_OK;
-  }
-
-  return NS_ERROR_FAILURE;
-}
-
-nsresult imgRequest::GetKeyURI(nsIURI **aKeyURI)
-{
-  LOG_FUNC(gImgLog, "imgRequest::GetKeyURI");
-
-  if (mKeyURI) {
-    *aKeyURI = mKeyURI;
-    NS_ADDREF(*aKeyURI);
     return NS_OK;
   }
 
@@ -1026,11 +1011,12 @@ imgRequest::OnChannelRedirect(nsIChannel *oldChannel, nsIChannel *newChannel, PR
 
   mChannel = newChannel;
 
-  newChannel->GetOriginalURI(getter_AddRefs(mKeyURI));
+  nsCOMPtr<nsIURI> uri;
+  newChannel->GetOriginalURI(getter_AddRefs(uri));
 
   // If we don't still have a cache entry, we don't want to refresh the cache.
-  if (mKeyURI && mCacheEntry)
-    imgLoader::PutIntoCache(mKeyURI, mCacheEntry);
+  if (uri && mCacheEntry)
+    imgLoader::PutIntoCache(uri, mCacheEntry);
 
   return rv;
 }
