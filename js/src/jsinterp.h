@@ -96,14 +96,12 @@ struct JSStackFrame {
 #endif
 };
 
-#ifdef DEBUG
 #ifdef __cplusplus
 static JS_INLINE uintN
 FramePCOffset(JSStackFrame* fp)
 {
     return uintN((fp->imacpc ? fp->imacpc : fp->regs->pc) - fp->script->code);
 }
-#endif
 #endif
 
 static JS_INLINE jsval *
