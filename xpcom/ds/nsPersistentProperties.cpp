@@ -575,6 +575,9 @@ nsPersistentProperties::SetStringProperty(const nsACString& aKey,
                                "the property %s already exists\n",
                                flatKey.get()).get());
   }
+  else {
+    aOldValue.Truncate();
+  }
 
   entry->mKey = ArenaStrdup(flatKey, &mArena);
   entry->mValue = ArenaStrdup(PromiseFlatString(aNewValue), &mArena);
