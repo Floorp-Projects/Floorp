@@ -460,7 +460,7 @@ def maybeForceLeakThreshold(options):
     elif options.browserChrome:
       # We still leak a nondeterministic amount running browser-chrome tests.
       # But we are close to 0 (bug), so start to prevent/detect regressions. (Bug 460548)
-      options.leakThreshold = 75000
+      options.leakThreshold = 74000
     else:
       # Normal Mochitests: no leaks.
       options.leakThreshold = 0
