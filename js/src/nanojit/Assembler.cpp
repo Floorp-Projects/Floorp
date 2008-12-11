@@ -70,7 +70,7 @@ namespace nanojit
 	        return ins->resv() == 0;
 	    }
 
-	public:		
+	public:
 		DeadCodeFilter(LirFilter *in, const CallInfo *f) : LirFilter(in), functions(f) {}
 		LInsp read() {
 			for (;;) {
@@ -145,7 +145,7 @@ namespace nanojit
 	 */
     Assembler::Assembler(Fragmento* frago)
         : hasLoop(0)
-		, _frago(frago)
+        , _frago(frago)
         , _gc(frago->core()->gc)
         , _labels(_gc)
         , _patches(_gc)
@@ -257,12 +257,12 @@ namespace nanojit
 			setError(ResvFull); 
 			item = 1;
 		}
-		Reservation *r = &_resvTable[item];
+        Reservation *r = &_resvTable[item];
 		_resvFree = r->arIndex;
 		r->reg = UnknownReg;
 		r->arIndex = 0;
-		r->used = 1;
-		i->setresv(item);
+        r->used = 1;
+        i->setresv(item);
 		return r;
 	}
 
@@ -925,7 +925,7 @@ namespace nanojit
 		NanoAssertMsgf(error() || _fpuStkDepth == 0,"_fpuStkDepth %d",_fpuStkDepth);
 
 		internalReset();  // clear the reservation tables and regalloc
-		NanoAssert(!_branchStateMap || _branchStateMap->isEmpty());
+		NanoAssert( !_branchStateMap || _branchStateMap->isEmpty());
 		_branchStateMap = 0;
 
 #ifdef AVMPLUS_ARM
@@ -1319,7 +1319,6 @@ namespace nanojit
                         NanoAssert(label->addr == 0 && label->regs.isValid());
                         //evictRegs(~_allocator.free);
                         intersectRegisterState(label->regs);
-                        //asm_align_code();
                         label->addr = _nIns;
                     }
 					verbose_only( if (_verbose) { outputAddr=true; asm_output("[%s]", _thisfrag->lirbuf->names->formatRef(ins)); } )

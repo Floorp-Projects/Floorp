@@ -331,7 +331,6 @@ namespace nanojit
 			};
 			
 			// platform specific implementation (see NativeXXX.cpp file)
-			void		nInit(uint32_t flags);
 			void		nInit(AvmCore *);
 			Register	nRegisterAllocFromSet(int32_t set);
 			void		nRegisterResetAll(RegAlloc& a);

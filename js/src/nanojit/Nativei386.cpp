@@ -93,6 +93,7 @@ namespace nanojit
 
 	void Assembler::nInit(AvmCore* core)
 	{
+		(void) core;
         OSDep::getDate();
 	}
 
