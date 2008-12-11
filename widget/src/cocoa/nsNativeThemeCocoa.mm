@@ -1439,8 +1439,10 @@ nsNativeThemeCocoa::DrawWidgetBackground(nsIRenderingContext* aContext, nsIFrame
         version: 0,
         menuType: IsDisabled(aFrame) ? kThemeMenuTypeInactive : kThemeMenuTypePopUp
       };
-
-      HIThemeDrawMenuBackground(&macRect, &mdi, cgContext, HITHEME_ORIENTATION);
+      // The rounded corners draw outside the frame.
+      CGRect deflatedRect = CGRectMake(macRect.origin.x, macRect.origin.y + 4,
+                                       macRect.size.width, macRect.size.height - 8);
+      HIThemeDrawMenuBackground(&deflatedRect, &mdi, cgContext, HITHEME_ORIENTATION);
     }
       break;
 
@@ -2287,4 +2289,13 @@ PRBool
 nsNativeThemeCocoa::ThemeNeedsComboboxDropmarker()
 {
   return PR_FALSE;
+}
+
+nsTransparencyMode
+nsNativeThemeCocoa::GetWidgetTransparency(PRUint8 aWidgetType)
+{
+  if (aWidgetType == NS_THEME_MENUPOPUP)
+    return eTransparencyTransparent;
+
+  return eTransparencyOpaque;
 }
