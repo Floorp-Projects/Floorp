@@ -2109,21 +2109,6 @@ namespace nanojit
             JMP(eip);
         }
     }
-
-    void Assembler::asm_ret(LInsp ins)
-    {
-        if (_nIns != _epilogue) {
-            JMP(_epilogue);
-        }
-        assignSavedRegs();
-        LIns *val = ins->oprnd1();
-        if (ins->isop(LIR_ret)) {
-            findSpecificRegFor(val, retRegs[0]);
-        } else {
-            findSpecificRegFor(val, FST0);
-            fpu_pop();
-        }
-    }
 	
 	#endif /* FEATURE_NANOJIT */
 }
