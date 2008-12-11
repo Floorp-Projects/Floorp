@@ -131,6 +131,13 @@ typedef struct JSTraceMonitor {
     jsval                   *recoveryDoublePool;
     jsval                   *recoveryDoublePoolPtr;
 
+    /*
+     * reservedObjects is a linked list (via fslots[0]) of preallocated JSObjects.
+     * The JIT uses this to ensure that leaving a trace tree can't fail.
+     */
+    JSObject                *reservedObjects;
+    JSBool                  useReservedObjects;
+
     /* Fragmento for the regular expression compiler. This is logically
      * a distinct compiler but needs to be managed in exactly the same
      * way as the real tracing Fragmento. */
