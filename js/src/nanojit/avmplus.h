@@ -403,6 +403,7 @@ namespace avmplus {
         static GC* gc;
         static String* k_str[];
 
+#if defined (AVMPLUS_IA32) || defined(AVMPLUS_AMD64)
         static inline bool
         use_sse2()
         {
@@ -414,6 +415,7 @@ namespace avmplus {
         {
             return config.use_cmov;
         }
+#endif
 
         static inline bool
         quiet_opt()
