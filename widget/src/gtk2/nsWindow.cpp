@@ -398,7 +398,6 @@ nsWindow::nsWindow()
     mDragMotionY = 0;
     mDragMotionTime = 0;
     mDragMotionTimerID = 0;
-    mLastMotionPressure = 0;
 
 #ifdef USE_XIM
     mIMEData = nsnull;
@@ -2535,15 +2534,6 @@ nsWindow::OnMotionNotifyEvent(GtkWidget *aWidget, GdkEventMotion *aEvent)
 
     nsMouseEvent event(PR_TRUE, NS_MOUSE_MOVE, this, nsMouseEvent::eReal);
 
-    // should we move this into !synthEvent?
-    gdouble pressure = 0;
-    gdk_event_get_axis ((GdkEvent*)aEvent, GDK_AXIS_PRESSURE, &pressure);
-    // Sometime gdk generate 0 pressure value between normal values
-    // We have to ignore that and use last valid value
-    if (pressure)
-      mLastMotionPressure = pressure;
-    event.pressure = mLastMotionPressure;
-
     nsRect windowRect;
     ScreenToWidget(nsRect(nscoord(cursorX), nscoord(cursorY), 1, 1), windowRect);
 
@@ -2596,14 +2586,6 @@ nsWindow::OnMotionNotifyEvent(GtkWidget *aWidget, GdkEventMotion *aEvent)
 #endif /* MOZ_X11 */
 
     nsMouseEvent event(PR_TRUE, NS_MOUSE_MOVE, this, nsMouseEvent::eReal);
-
-    gdouble pressure = 0;
-    gdk_event_get_axis ((GdkEvent*)aEvent, GDK_AXIS_PRESSURE, &pressure);
-    // Sometime gdk generate 0 pressure value between normal values
-    // We have to ignore that and use last valid value
-    if (pressure)
-      mLastMotionPressure = pressure;
-    event.pressure = mLastMotionPressure;
 
     if (synthEvent) {
 #ifdef MOZ_X11
@@ -2733,10 +2715,6 @@ nsWindow::OnButtonPressEvent(GtkWidget *aWidget, GdkEventButton *aEvent)
     if (gConsumeRollupEvent && rolledUp)
             return;
 
-    gdouble pressure = 0;
-    gdk_event_get_axis ((GdkEvent*)aEvent, GDK_AXIS_PRESSURE, &pressure);
-    mLastMotionPressure = pressure;
-
     PRUint16 domButton;
     switch (aEvent->button) {
     case 1:
@@ -2753,7 +2731,6 @@ nsWindow::OnButtonPressEvent(GtkWidget *aWidget, GdkEventButton *aEvent)
     case 7:
         {
             nsMouseScrollEvent event(PR_TRUE, NS_MOUSE_SCROLL, this);
-            event.pressure = mLastMotionPressure;
             event.scrollFlags = nsMouseScrollEvent::kIsHorizontal;
             event.refPoint.x = nscoord(aEvent->x);
             event.refPoint.y = nscoord(aEvent->y);
@@ -2784,7 +2761,6 @@ nsWindow::OnButtonPressEvent(GtkWidget *aWidget, GdkEventButton *aEvent)
     nsMouseEvent event(PR_TRUE, NS_MOUSE_BUTTON_DOWN, this, nsMouseEvent::eReal);
     event.button = domButton;
     InitButtonEvent(event, aEvent);
-    event.pressure = mLastMotionPressure;
 
     DispatchEvent(&event, status);
 
@@ -2794,7 +2770,6 @@ nsWindow::OnButtonPressEvent(GtkWidget *aWidget, GdkEventButton *aEvent)
         nsMouseEvent contextMenuEvent(PR_TRUE, NS_CONTEXTMENU, this,
                                       nsMouseEvent::eReal);
         InitButtonEvent(contextMenuEvent, aEvent);
-        contextMenuEvent.pressure = mLastMotionPressure;
         DispatchEvent(&contextMenuEvent, status);
     }
 }
@@ -2822,13 +2797,9 @@ nsWindow::OnButtonReleaseEvent(GtkWidget *aWidget, GdkEventButton *aEvent)
     nsMouseEvent event(PR_TRUE, NS_MOUSE_BUTTON_UP, this, nsMouseEvent::eReal);
     event.button = domButton;
     InitButtonEvent(event, aEvent);
-    gdouble pressure = 0;
-    gdk_event_get_axis ((GdkEvent*)aEvent, GDK_AXIS_PRESSURE, &pressure);
-    event.pressure = pressure ? pressure : mLastMotionPressure;
 
     nsEventStatus status;
     DispatchEvent(&event, status);
-    mLastMotionPressure = pressure;
 }
 
 void
