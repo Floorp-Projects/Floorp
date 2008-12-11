@@ -31,14 +31,16 @@ function runTest(event) {
       is(video.muted, false, "checking video mute state");
 
       // Let the fadein happen
+      video.addEventListener("mouseover", runTest, false);
       synthesizeMouse(video, 12, 228, { type : "mouseover" });
-      setTimeout(runTest, 0, { type: "setTimeout" });
       break;
 
     case 2:
-      is(event.type, "setTimeout", "checking event type");
-      // Click the play button
-      synthesizeMouse(video, 12, 228, { });
+      is(event.type, "mouseover", "checking event type");
+      video.removeEventListener("mouseover", runTest, false);
+      // Click the play button. Do this from a timeout, lest the test's
+      // mouseover handler fire before the video control's handler.
+      setTimeout("synthesizeMouse(video, 12, 228, { });", 0);
       break;
 
     case 3:
@@ -79,7 +81,7 @@ function runTest(event) {
       break;
 
     default:
-      throw "unexpected test #" + testnum + " w/ event " + event.name;
+      throw "unexpected test #" + testnum + " w/ event " + event.type;
   }
 
   testnum++;
