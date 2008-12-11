@@ -128,8 +128,7 @@ namespace nanojit
 			else {
                 if (flushnext)
                     flush();
-				block.add(i);
-                //flush_add(i);
+				block.add(i);//flush_add(i);
                 if (i->isop(LIR_label))
                     flushnext = true;
 			}
@@ -1038,10 +1037,34 @@ namespace nanojit
                     break;
                 }
 
-                case LIR_fret:
                 case LIR_ret:  {
                     countlir_ret();
-                    asm_ret(ins);
+                    if (_nIns != _epilogue) {
+                        JMP(_epilogue);
+                    }
+                    assignSavedRegs();
+#ifdef NANOJIT_ARM
+                    // the epilogue moves R2 to R0; we may want to do this
+                    // after assignSavedRegs
+                    findSpecificRegFor(ins->oprnd1(), R2);
+#else
+                    findSpecificRegFor(ins->oprnd1(), retRegs[0]);
+#endif
+                    break;
+                }
+
+                case LIR_fret: {
+                    countlir_ret();
+                    if (_nIns != _epilogue) {
+                        JMP(_epilogue);
+                    }
+                    assignSavedRegs();
+#ifdef NANOJIT_IA32
+                    findSpecificRegFor(ins->oprnd1(), FST0);
+#else
+                    NanoAssert(false);
+#endif
+                    fpu_pop();
                     break;
                 }
 
