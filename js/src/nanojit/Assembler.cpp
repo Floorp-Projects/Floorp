@@ -150,6 +150,7 @@ namespace nanojit
         , _labels(_gc)
         , _patches(_gc)
         , pending_lives(_gc)
+		, config(frago->core()->config)
 	{
         AvmCore *core = frago->core();
 		nInit(core);

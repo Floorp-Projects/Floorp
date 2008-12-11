@@ -362,6 +362,7 @@ namespace nanojit
 			// modified so we can flush the instruction cache.
 			void* _endJit2Addr;
 	#endif // AVMPLUS_PORTING_API
+			avmplus::Config &config;
 	};
 
 	inline int32_t disp(Reservation* r) 
