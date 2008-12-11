@@ -73,7 +73,6 @@ const kDefaultFavIconURL = "chrome://browser/skin/images/default-favicon.png";
 
 var BrowserUI = {
   _panel : null,
-  _caption : null,
   _edit : null,
   _throbber : null,
   _autocompleteNavbuttons : null,
@@ -91,7 +90,7 @@ var BrowserUI = {
       if (caption == "about:blank")
         caption = "";
     }
-    this._caption.value = caption;
+    this._edit.value = caption;
 
     var docElem = document.documentElement;
     var title = "";
@@ -194,16 +193,20 @@ var BrowserUI = {
     var icons = document.getElementById("urlbar-icons");
     if (aEdit) {
       icons.setAttribute("mode", "edit");
-      this._caption.hidden = true;
-      this._edit.hidden = false;
+      this._edit.readOnly = false;
+
+      let urlString = this.getDisplayURI(Browser.currentBrowser);
+      if (urlString == "about:blank")
+        urlString = "";
+      this._edit.value = urlString;
+
       this._edit.inputField.focus();
       this._edit.editor.selectAll();
     }
     else {
       icons.setAttribute("mode", "view");
-      this._edit.hidden = true;
+      this._edit.readOnly = true;
       this._edit.reallyClosePopup();
-      this._caption.hidden = false;
     }
   },
 
@@ -246,9 +249,8 @@ var BrowserUI = {
   },
 
   init : function() {
-    this._caption = document.getElementById("urlbar-caption");
-    this._caption.addEventListener("click", this, false);
     this._edit = document.getElementById("urlbar-edit");
+    this._edit.addEventListener("click", this, false);
     this._edit.addEventListener("blur", this, false);
     this._edit.addEventListener("keypress", this, true);
     this._throbber = document.getElementById("urlbar-throbber");
@@ -350,7 +352,6 @@ var BrowserUI = {
       this.show(UIMODE_URLEDIT);
     }
 
-    this._caption.value = urlString;
     this._edit.value = urlString;
   },
 

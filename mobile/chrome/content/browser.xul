@@ -254,7 +254,6 @@
           </box>
         </box>
         <hbox id="urlbar-editarea" flex="1">
-          <description id="urlbar-caption" crop="end" flex="1"/>
           <textbox id="urlbar-edit"
                    type="autocomplete"
                    autocompletesearch="history"
@@ -263,7 +262,6 @@
                    maxrows="6"
                    completeselectedindex="true"
                    flex="1"
-                   hidden="true"
                    ontextentered="BrowserUI.goToURI();"
                    clickSelectsAll="true"/>
         </hbox>
