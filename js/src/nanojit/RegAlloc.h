@@ -79,7 +79,7 @@ namespace nanojit
 			debug_only( void		checkCount(); )
 			debug_only( bool		isConsistent(Register r, LIns* v); )
 			debug_only( uint32_t	count; )
-			debug_only( RegisterMask managed; )    // bitfield of 0..NJ_MAX_REGISTERS denoting which are under our management                     
+			debug_only( RegisterMask managed; )    // bitfield denoting which are under our management                     
 
 			LIns*	active[LastReg + 1];  // active[r] = OP that defines r
 			int32_t usepri[LastReg + 1]; // used priority. lower = more likely to spill.

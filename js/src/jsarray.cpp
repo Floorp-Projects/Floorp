@@ -3029,7 +3029,7 @@ js_Array(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
     jsval *vector;
 
     /* If called without new, replace obj with a new Array object. */
-    if (!(cx->fp->flags & JSFRAME_CONSTRUCTING)) {
+    if (!JS_IsConstructing(cx)) {
         obj = js_NewObject(cx, &js_ArrayClass, NULL, NULL, 0);
         if (!obj)
             return JS_FALSE;
@@ -3089,12 +3089,21 @@ js_FastNewArray(JSContext* cx, JSObject* proto)
 }
 
 JSObject* FASTCALL
-js_Array_1int(JSContext* cx, JSObject* proto, int32 i)
+js_FastNewArrayWithLength(JSContext* cx, JSObject* proto, uint32 i)
 {
     JS_ASSERT(JS_ON_TRACE(cx));
     JSObject* obj = js_FastNewArray(cx, proto);
     if (obj)
         obj->fslots[JSSLOT_ARRAY_LENGTH] = i;
+    return obj;
+}
+
+JSObject* FASTCALL
+js_NewUninitializedArray(JSContext* cx, JSObject* proto, uint32 len)
+{
+    JSObject *obj = js_FastNewArrayWithLength(cx, proto, len);
+    if (!obj || !ResizeSlots(cx, obj, 0, JS_MAX(len, ARRAY_GROWBY)))
+        return NULL;
     return obj;
 }
 
@@ -3120,26 +3129,6 @@ JSObject* FASTCALL
 js_Array_1str(JSContext* cx, JSObject* proto, JSString *str)
 {
     ARRAY_CTOR_GUTS(1, *++newslots = STRING_TO_JSVAL(str);)
-}
-
-JSObject* FASTCALL
-js_Array_2obj(JSContext* cx, JSObject* proto, JSObject *obj1, JSObject* obj2)
-{
-    ARRAY_CTOR_GUTS(2,
-        *++newslots = OBJECT_TO_JSVAL(obj1);
-        *++newslots = OBJECT_TO_JSVAL(obj2);)
-}
-
-JSObject* FASTCALL
-js_Array_3num(JSContext* cx, JSObject* proto, jsdouble n1, jsdouble n2, jsdouble n3)
-{
-    ARRAY_CTOR_GUTS(3,
-        if (!js_NewDoubleInRootedValue(cx, n1, ++newslots))
-            return NULL;
-        if (!js_NewDoubleInRootedValue(cx, n2, ++newslots))
-            return NULL;
-        if (!js_NewDoubleInRootedValue(cx, n3, ++newslots))
-            return NULL;)
 }
 
 #endif /* JS_TRACER */
@@ -3420,7 +3409,6 @@ js_ArrayToJSDoubleBuffer(JSContext *cx, JSObject *obj, jsuint offset, jsuint cou
 
 JS_DEFINE_CALLINFO_4(extern, BOOL,   js_Array_dense_setelem, CONTEXT, OBJECT, INT32, JSVAL,   0, 0)
 JS_DEFINE_CALLINFO_2(extern, OBJECT, js_FastNewArray, CONTEXT, OBJECT,                        0, 0)
-JS_DEFINE_CALLINFO_3(extern, OBJECT, js_Array_1int, CONTEXT, OBJECT, INT32,                   0, 0)
+JS_DEFINE_CALLINFO_3(extern, OBJECT, js_NewUninitializedArray, CONTEXT, OBJECT, UINT32,       0, 0)
+JS_DEFINE_CALLINFO_3(extern, OBJECT, js_FastNewArrayWithLength, CONTEXT, OBJECT, UINT32,      0, 0)
 JS_DEFINE_CALLINFO_3(extern, OBJECT, js_Array_1str, CONTEXT, OBJECT, STRING,                  0, 0)
-JS_DEFINE_CALLINFO_4(extern, OBJECT, js_Array_2obj, CONTEXT, OBJECT, OBJECT, OBJECT,          0, 0)
-JS_DEFINE_CALLINFO_5(extern, OBJECT, js_Array_3num, CONTEXT, OBJECT, DOUBLE, DOUBLE, DOUBLE,  0, 0)

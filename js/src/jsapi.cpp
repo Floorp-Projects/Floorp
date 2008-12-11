@@ -79,6 +79,7 @@
 #include "jsscope.h"
 #include "jsscript.h"
 #include "jsstr.h"
+#include "jsdbgapi.h"
 #include "prmjtime.h"
 #include "jsstaticcheck.h"
 
@@ -881,6 +882,7 @@ JS_ShutDown(void)
 
     js_FinishDtoa();
 #ifdef JS_THREADSAFE
+    js_CleanupThreadPrivateData();  /* Fixes bug 464828. */
     js_CleanupLocks();
 #endif
     PRMJ_NowShutdown();
@@ -1802,7 +1804,7 @@ JS_GetScopeChain(JSContext *cx)
     JSStackFrame *fp;
 
     CHECK_REQUEST(cx);
-    fp = cx->fp;
+    fp = js_GetTopStackFrame(cx);
     if (!fp) {
         /*
          * There is no code active on this context. In place of an actual
@@ -4577,10 +4579,10 @@ js_generic_native_method_dispatcher(JSContext *cx, JSObject *obj,
      * Follow Function.prototype.apply and .call by using the global object as
      * the 'this' param if no args.
      */
-    JS_ASSERT(cx->fp->argv == argv);
     if (!js_ComputeThis(cx, JS_TRUE, argv))
         return JS_FALSE;
-    cx->fp->thisp = JSVAL_TO_OBJECT(argv[-1]);
+    js_GetTopStackFrame(cx)->thisp = JSVAL_TO_OBJECT(argv[-1]);
+    JS_ASSERT(cx->fp->argv == argv);
 
     /*
      * Protect against argc underflowing. By calling js_ComputeThis, we made
@@ -4727,7 +4729,7 @@ JS_CompileUCScript(JSContext *cx, JSObject *obj,
 
 #define LAST_FRAME_CHECKS(cx,result)                                          \
     JS_BEGIN_MACRO                                                            \
-        if (!(cx)->fp) {                                                      \
+        if (!JS_IsRunning(cx)) {                                              \
             (cx)->weakRoots.lastInternalResult = JSVAL_NULL;                  \
             LAST_FRAME_EXCEPTION_CHECK(cx, result);                           \
         }                                                                     \
@@ -5326,13 +5328,19 @@ JS_SetBranchCallback(JSContext *cx, JSBranchCallback cb)
 JS_PUBLIC_API(JSBool)
 JS_IsRunning(JSContext *cx)
 {
-    return cx->fp != NULL;
+    /* The use of cx->fp below is safe: if we're on trace, it is skipped. */
+    VOUCH_DOES_NOT_REQUIRE_STACK();
+
+    return JS_ON_TRACE(cx) || cx->fp != NULL;
 }
 
 JS_PUBLIC_API(JSBool)
 JS_IsConstructing(JSContext *cx)
 {
-    return cx->fp && (cx->fp->flags & JSFRAME_CONSTRUCTING);
+    JSStackFrame *fp;
+
+    fp = js_GetTopStackFrame(cx);
+    return fp && (fp->flags & JSFRAME_CONSTRUCTING);
 }
 
 JS_FRIEND_API(JSBool)
@@ -5340,8 +5348,7 @@ JS_IsAssigning(JSContext *cx)
 {
     JSStackFrame *fp;
 
-    for (fp = cx->fp; fp && !fp->script; fp = fp->down)
-        continue;
+    fp = js_GetScriptedCaller(cx, NULL);
     if (!fp || !fp->regs)
         return JS_FALSE;
     return (js_CodeSpec[*fp->regs->pc].format & JOF_ASSIGNING) != 0;
@@ -5361,7 +5368,7 @@ JS_SaveFrameChain(JSContext *cx)
 {
     JSStackFrame *fp;
 
-    fp = cx->fp;
+    fp = js_GetTopStackFrame(cx);
     if (!fp)
         return fp;
 
@@ -5375,6 +5382,8 @@ JS_SaveFrameChain(JSContext *cx)
 JS_PUBLIC_API(void)
 JS_RestoreFrameChain(JSContext *cx, JSStackFrame *fp)
 {
+    JS_ASSERT(!JS_ON_TRACE(cx));
+    VOUCH_DOES_NOT_REQUIRE_STACK();
     JS_ASSERT(!cx->fp);
     if (!fp)
         return;
@@ -5986,7 +5995,7 @@ JS_PUBLIC_API(JSBool)
 JS_ThrowReportedError(JSContext *cx, const char *message,
                       JSErrorReport *reportp)
 {
-    return cx->fp && js_ErrorToException(cx, message, reportp);
+    return JS_IsRunning(cx) && js_ErrorToException(cx, message, reportp);
 }
 
 JS_PUBLIC_API(JSBool)

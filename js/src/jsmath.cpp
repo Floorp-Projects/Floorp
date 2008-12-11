@@ -179,10 +179,40 @@ math_atan(JSContext *cx, uintN argc, jsval *vp)
     return js_NewNumberInRootedValue(cx, z, vp);
 }
 
+static inline jsdouble JS_FASTCALL
+math_atan2_kernel(jsdouble x, jsdouble y)
+{
+#if defined(_MSC_VER)
+    /*
+     * MSVC's atan2 does not yield the result demanded by ECMA when both x
+     * and y are infinite.
+     * - The result is a multiple of pi/4.
+     * - The sign of x determines the sign of the result.
+     * - The sign of y determines the multiplicator, 1 or 3.
+     */
+    if (JSDOUBLE_IS_INFINITE(x) && JSDOUBLE_IS_INFINITE(y)) {
+        jsdouble z = js_copysign(M_PI / 4, x);
+        if (y < 0)
+            z *= 3;
+        return z;
+    }
+#endif
+
+#if defined(SOLARIS) && defined(__GNUC__)
+    if (x == 0) {
+        if (JSDOUBLE_IS_NEGZERO(y))
+            return js_copysign(M_PI, x);
+        if (y == 0)
+            return x;
+    }
+#endif
+    return atan2(x, y);
+}
+
 static JSBool
 math_atan2(JSContext *cx, uintN argc, jsval *vp)
 {
-    jsdouble x, y, z;
+    jsdouble x, y;
 
     if (argc <= 1) {
         *vp = DOUBLE_TO_JSVAL(cx->runtime->jsNaN);
@@ -194,36 +224,7 @@ math_atan2(JSContext *cx, uintN argc, jsval *vp)
     y = js_ValueToNumber(cx, &vp[3]);
     if (JSVAL_IS_NULL(vp[3]))
         return JS_FALSE;
-#if defined(_MSC_VER)
-    /*
-     * MSVC's atan2 does not yield the result demanded by ECMA when both x
-     * and y are infinite.
-     * - The result is a multiple of pi/4.
-     * - The sign of x determines the sign of the result.
-     * - The sign of y determines the multiplicator, 1 or 3.
-     */
-    if (JSDOUBLE_IS_INFINITE(x) && JSDOUBLE_IS_INFINITE(y)) {
-        z = js_copysign(M_PI / 4, x);
-        if (y < 0)
-            z *= 3;
-        return js_NewDoubleInRootedValue(cx, z, vp);
-    }
-#endif
-
-#if defined(SOLARIS) && defined(__GNUC__)
-    if (x == 0) {
-        if (JSDOUBLE_IS_NEGZERO(y)) {
-            z = js_copysign(M_PI, x);
-            return js_NewDoubleInRootedValue(cx, z, vp);
-        }
-        if (y == 0) {
-            z = x;
-            return js_NewDoubleInRootedValue(cx, z, vp);
-        }
-    }
-#endif
-    z = atan2(x, y);
-    return js_NewNumberInRootedValue(cx, z, vp);
+    return js_NewNumberInRootedValue(cx, math_atan2_kernel (x, y), vp);
 }
 
 static JSBool
@@ -709,9 +710,9 @@ js_InitMathClass(JSContext *cx, JSObject *obj)
     if (!Math)
         return NULL;
     if (!JS_DefineProperty(cx, obj, js_Math_str, OBJECT_TO_JSVAL(Math),
-                           JS_PropertyStub, JS_PropertyStub,
-                           JSPROP_READONLY | JSPROP_PERMANENT))
+                           JS_PropertyStub, JS_PropertyStub, 0)) {
         return NULL;
+    }
 
     if (!JS_DefineFunctions(cx, Math, math_static_methods))
         return NULL;
