@@ -1,6 +1,6 @@
 @namespace url("http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul");
 
-#controlsBackground {
+#controlBar {
     height: 24px;
     background-color: #656363;
 }
