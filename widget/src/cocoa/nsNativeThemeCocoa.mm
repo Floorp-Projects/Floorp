@@ -408,7 +408,7 @@ struct CellRenderSettings {
  * it snaps to the next smaller control size without scaling because unscaled
  * controls look nicer.
  */
-static const float sSnapTolerance = 1.0f;
+static const float sSnapTolerance = 2.0f;
 static void DrawCellWithSnapping(NSCell *cell,
                                  CGContextRef cgContext,
                                  const HIRect& destRect,
@@ -427,14 +427,14 @@ static void DrawCellWithSnapping(NSCell *cell,
   NSControlSize controlSizeX = NSRegularControlSize, controlSizeY = NSRegularControlSize;
   HIRect drawRect = destRect;
 
-  if (rectWidth <= miniSize.width + sSnapTolerance)
+  if (rectWidth <= miniSize.width + sSnapTolerance && rectWidth < smallSize.width)
     controlSizeX = NSMiniControlSize;
-  else if(rectWidth <= smallSize.width + sSnapTolerance)
+  else if(rectWidth <= smallSize.width + sSnapTolerance && rectWidth < regularSize.width)
     controlSizeX = NSSmallControlSize;
 
-  if (rectHeight <= miniSize.height + sSnapTolerance)
+  if (rectHeight <= miniSize.height + sSnapTolerance && rectHeight < smallSize.height)
     controlSizeY = NSMiniControlSize;
-  else if(rectHeight <= smallSize.height + sSnapTolerance)
+  else if(rectHeight <= smallSize.height + sSnapTolerance && rectHeight < regularSize.height)
     controlSizeY = NSSmallControlSize;
 
   NSControlSize controlSize = NSRegularControlSize;
@@ -573,8 +573,14 @@ nsNativeThemeCocoa::DrawCheckboxOrRadio(CGContextRef cgContext, PRBool inCheckbo
   [cell setState:(inSelected ? NSOnState : NSOffState)];
   [cell setHighlighted:((inState & NS_EVENT_STATE_ACTIVE) && (inState & NS_EVENT_STATE_HOVER))];
   [cell setControlTint:(FrameIsInActiveWindow(aFrame) ? [NSColor currentControlTint] : NSClearControlTint)];
- 
-  DrawCellWithSnapping(cell, cgContext, inBoxRect,
+
+  // Ensure that the control is square.
+  float length = PR_MIN(inBoxRect.size.width, inBoxRect.size.height);
+  HIRect drawRect = CGRectMake(inBoxRect.origin.x + (int)((inBoxRect.size.width - length) / 2.0f),
+                               inBoxRect.origin.y + (int)((inBoxRect.size.height - length) / 2.0f),
+                               length, length);
+
+  DrawCellWithSnapping(cell, cgContext, drawRect,
                        inCheckbox ? checkboxSettings : radioSettings,
                        VerticalAlignFactor(aFrame),
                        NativeViewForFrame(aFrame));
@@ -1783,6 +1789,15 @@ nsNativeThemeCocoa::GetWidgetBorder(nsIDeviceContext* aContext,
     case NS_THEME_BUTTON:
     {
       aResult->SizeTo(7, 1, 7, 3);
+      break;
+    }
+
+    case NS_THEME_CHECKBOX:
+    case NS_THEME_RADIO:
+    {
+      // nsFormControlFrame::GetIntrinsicWidth and nsFormControlFrame::GetIntrinsicHeight
+      // assume a border width of 2px.
+      aResult->SizeTo(2, 2, 2, 2);
       break;
     }
 
