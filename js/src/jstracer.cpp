@@ -111,6 +111,11 @@ static const char tagChar[]  = "OIDISIBI";
 /* Max call stack size. */
 #define MAX_CALL_STACK_ENTRIES 64
 
+/* Max memory needed to rebuild the interpreter stack when falling off trace. */
+#define MAX_INTERP_STACK_BYTES                                                \
+    (MAX_NATIVE_STACK_SLOTS * sizeof(jsval) +                                 \
+     MAX_CALL_STACK_ENTRIES * sizeof(JSInlineFrame))
+
 /* Max number of branches per tree. */
 #define MAX_BRANCHES 16
 
@@ -2830,11 +2835,9 @@ js_SynthesizeFrame(JSContext* cx, const FrameInfo& fi)
         a->avail += nbytes;
         JS_ASSERT(missing == 0);
     } else {
+        /* This allocation is infallible: js_ExecuteTree reserved enough stack. */
         JS_ARENA_ALLOCATE_CAST(newsp, jsval *, &cx->stackPool, nbytes);
-        if (!newsp) {
-            js_ReportOutOfScriptQuota(cx);
-            return -1;
-        }
+        JS_ASSERT(newsp);
 
         /*
          * Move args if the missing ones overflow arena a, then push
@@ -3522,6 +3525,13 @@ js_ExecuteTree(JSContext* cx, Fragment* f, uintN& inlineCallCount,
     /* Make sure our caller replenished the double pool. */
     JS_ASSERT(tm->recoveryDoublePoolPtr >= tm->recoveryDoublePool + MAX_NATIVE_STACK_SLOTS);
 
+    /* Reserve stack space now, to keep LeaveTree infallible. */
+    void *reserve;
+    void *stackMark = JS_ARENA_MARK(&cx->stackPool);
+    JS_ARENA_ALLOCATE(reserve, &cx->stackPool, MAX_INTERP_STACK_BYTES);
+    if (!reserve)
+        return NULL;  /* do not report OOM, just bail */
+
 #ifdef DEBUG
     memset(stack_buffer, 0xCD, sizeof(stack_buffer));
     memset(global, 0xCD, (globalFrameSize+1)*sizeof(double));
@@ -3626,11 +3636,11 @@ js_ExecuteTree(JSContext* cx, Fragment* f, uintN& inlineCallCount,
         JS_ASSERT(state.lastTreeExitGuard->exitType != NESTED_EXIT);
     }
 
+    JS_ARENA_RELEASE(&cx->stackPool, stackMark);
     while (callstack < rp) {
         /* Synthesize a stack frame and write out the values in it using the type map pointer
            on the native call stack. */
-        if (js_SynthesizeFrame(cx, **callstack) < 0)
-            return NULL;
+        js_SynthesizeFrame(cx, **callstack);
         int slots = FlushNativeStackFrame(cx, 1/*callDepth*/, (uint8*)(*callstack+1), stack, cx->fp);
 #ifdef DEBUG
         JSStackFrame* fp = cx->fp;
@@ -3653,17 +3663,14 @@ js_ExecuteTree(JSContext* cx, Fragment* f, uintN& inlineCallCount,
     unsigned calldepth = innermost->calldepth;
     unsigned calldepth_slots = 0;
     for (unsigned n = 0; n < calldepth; ++n) {
-        int nslots = js_SynthesizeFrame(cx, *callstack[n]);
-        if (nslots < 0)
-            return NULL;
-        calldepth_slots += nslots;
+        calldepth_slots += js_SynthesizeFrame(cx, *callstack[n]);
         ++inlineCallCount;
-#ifdef DEBUG        
+#ifdef DEBUG
         JSStackFrame* fp = cx->fp;
         debug_only_v(printf("synthesized shallow frame for %s:%u@%u\n",
                             fp->script->filename, js_FramePCToLineNumber(cx, fp),
                             FramePCOffset(fp));)
-#endif        
+#endif
     }
 
     /* Adjust sp and pc relative to the tree we exited from (not the tree we entered into).
