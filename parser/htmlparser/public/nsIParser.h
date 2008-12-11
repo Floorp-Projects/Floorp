@@ -53,11 +53,10 @@
 #include "nsStringGlue.h"
 #include "nsTArray.h"
 
-// {506527cc-d832-420b-ba3a-80c05aa105f4}
+// 3007e9c0-4d3e-4c80-8cae-fbb4723d88f2
 #define NS_IPARSER_IID \
-{ 0x506527cc, 0xd832, 0x420b, \
-  { 0xba, 0x3a, 0x80, 0xc0, 0x5a, 0xa1, 0x05, 0xf4 } }
-
+{ 0x3007e9c0, 0x4d3e, 0x4c80, \
+  { 0x8c, 0xae, 0xfb, 0xb4, 0x72, 0x3d, 0x88, 0xf2 } }
 
 // {41421C60-310A-11d4-816F-000064657374}
 #define NS_IDEBUG_DUMP_CONTENT_IID \
@@ -288,6 +287,19 @@ class nsIParser : public nsISupports {
     NS_IMETHOD CancelParsingEvents() = 0;
 
     virtual void Reset() = 0;
+
+    /**
+     * Tells the parser that a script is now executing. The only data we
+     * should resume parsing for is document.written data. We'll deal with any
+     * data that comes in over the network later.
+     */
+    virtual void ScriptExecuting() = 0;
+
+    /**
+     * Tells the parser that the script is done executing. We should now
+     * continue the regular parsing process.
+     */
+    virtual void ScriptDidExecute() = 0;
 };
 
 NS_DEFINE_STATIC_IID_ACCESSOR(nsIParser, NS_IPARSER_IID)
