@@ -64,6 +64,7 @@ _TEST_FILES = \
 		test_bug447736.html \
 		test_bug456273.html \
 		test_bug457672.html \
+		test_bug428988.html \
 		bug457672.html \
 		test_draggableprop.html \
 		test_dragstart.html \
