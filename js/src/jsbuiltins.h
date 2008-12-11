@@ -343,10 +343,9 @@ js_BooleanOrUndefinedToNumber(JSContext* cx, int32 unboxed);
 /* Defined in jsarray.cpp */
 JS_DECLARE_CALLINFO(js_Array_dense_setelem)
 JS_DECLARE_CALLINFO(js_FastNewArray)
-JS_DECLARE_CALLINFO(js_Array_1int)
+JS_DECLARE_CALLINFO(js_NewUninitializedArray)
+JS_DECLARE_CALLINFO(js_FastNewArrayWithLength)
 JS_DECLARE_CALLINFO(js_Array_1str)
-JS_DECLARE_CALLINFO(js_Array_2obj)
-JS_DECLARE_CALLINFO(js_Array_3num)
 
 /* Defined in jsdate.cpp */
 JS_DECLARE_CALLINFO(js_FastNewDate)

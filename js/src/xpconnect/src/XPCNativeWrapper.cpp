@@ -144,12 +144,8 @@ ShouldBypassNativeWrapper(JSContext *cx, JSObject *obj)
     return JS_FALSE;
 
   // Check what the script calling us looks like
-  JSScript *script = nsnull;
-  JSStackFrame *fp = cx->fp;
-  while(!script && fp) {
-    script = fp->script;
-    fp = fp->down;
-  }
+  JSStackFrame *fp = JS_GetScriptedCaller(cx, NULL);
+  JSScript *script = fp ? fp->script : NULL;
 
   // If there's no script, bypass for now because that's what the old code did.
   // XXX FIXME: bug 341477 covers figuring out what we _should_ do.

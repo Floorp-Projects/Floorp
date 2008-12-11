@@ -221,6 +221,7 @@ INSTALLED_HEADERS = \
 		jsscan.h \
 		jsscope.h \
 		jsscript.h \
+		jsstaticcheck.h \
 		jsstddef.h \
 		jsstr.h \
 		jstracer.h \

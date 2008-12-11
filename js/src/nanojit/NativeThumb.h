@@ -48,7 +48,6 @@ namespace nanojit
 	const int NJ_MAX_STACK_ENTRY = 256;
 	const int NJ_MAX_PARAMETERS = 1;
 	const int NJ_ALIGN_STACK = 8;
-	const int NJ_STACK_OFFSET = 8;
 
 	#define NJ_CONSTANT_POOLS
     const int NJ_MAX_CPOOL_OFFSET = 1024;
@@ -58,7 +57,8 @@ namespace nanojit
 	#define NJ_STACK_GROWTH_UP
 	#define NJ_THUMB_JIT
 
-	
+	const int LARGEST_UNDERRUN_PROT = 32;  // largest value passed to underrunProtect
+
 	typedef unsigned short NIns;
 
 	/* ARM registers */
@@ -158,9 +158,9 @@ namespace nanojit
 #define BX(r)		do {\
 	underrunProtect(2); \
 	*(--_nIns) = (NIns)(0x4700 | ((r)<<3));\
-	asm_output1("bx %s",gpn(r)); } while(0)
+	asm_output("bx %s",gpn(r)); } while(0)
 
-#define OR(l,r)		do {underrunProtect(2); *(--_nIns) = (NIns)(0x4300 | (r<<3) | l); asm_output2("or %s,%s",gpn(l),gpn(r)); } while(0)
+#define OR(l,r)		do {underrunProtect(2); *(--_nIns) = (NIns)(0x4300 | (r<<3) | l); asm_output("or %s,%s",gpn(l),gpn(r)); } while(0)
 #define ORi(r,i)	do {										\
 	if (isS8(i)) {												\
 		underrunProtect(4); 									\
@@ -172,9 +172,9 @@ namespace nanojit
 		*(--_nIns) = (NIns)(0x4240 | ((Scratch)<<3) | (Scratch));		\
 		*(--_nIns) = (NIns)(0x2000 | ((Scratch)<<8) | ((-(i))&0xFF) );}	\
 	else NanoAssert(0);													\
-	asm_output2("or %s,%d",gpn(r), i); } while(0)
+	asm_output("or %s,%d",gpn(r), i); } while(0)
 
-#define AND(l,r)	do {underrunProtect(2); *(--_nIns) = (NIns)(0x4000 | ((r)<<3) | (l)); asm_output2("and %s,%s",gpn(l),gpn(r)); } while(0)
+#define AND(l,r)	do {underrunProtect(2); *(--_nIns) = (NIns)(0x4000 | ((r)<<3) | (l)); asm_output("and %s,%s",gpn(l),gpn(r)); } while(0)
 
 #define ANDi(_r,_i) do {													\
 	if (isU8(_i)) {														\
@@ -190,10 +190,10 @@ namespace nanojit
 		underrunProtect(2);										\
 		*(--_nIns) = (NIns)(0x4000 |  ((Scratch)<<3) | (_r));	\
 		LDi(Scratch, (_i));}											\
-	asm_output2("and %s,%d",gpn(_r),(_i)); } while (0)
+	asm_output("and %s,%d",gpn(_r),(_i)); } while (0)
 
 
-#define XOR(l,r)	do {underrunProtect(2); *(--_nIns) = (NIns)(0x4040 | ((r)<<3) | (l)); asm_output2("eor %s,%s",gpn(l),gpn(r)); } while(0)
+#define XOR(l,r)	do {underrunProtect(2); *(--_nIns) = (NIns)(0x4040 | ((r)<<3) | (l)); asm_output("eor %s,%s",gpn(l),gpn(r)); } while(0)
 #define XORi(r,i)	do {	\
 	if (isS8(i)){	\
 		underrunProtect(4);		\
@@ -205,45 +205,45 @@ namespace nanojit
 		*(--_nIns) = (NIns)(0x4240 | ((Scratch)<<3) | (Scratch));		\
 		*(--_nIns) = (NIns)(0x2000 | ((Scratch)<<8) | ((-(i))&0xFF) );}	\
 	else NanoAssert(0);													\
-	asm_output2("eor %s,%d",gpn(r),(i)); } while(0)
+	asm_output("eor %s,%d",gpn(r),(i)); } while(0)
 
-#define ADD3(d,l,r) do {underrunProtect(2); *(--_nIns) = (NIns)(0x1800 | ((r)<<6) | ((l)<<3) | (d)); asm_output3("add %s,%s,%s",gpn(d),gpn(l),gpn(r)); } while(0)
+#define ADD3(d,l,r) do {underrunProtect(2); *(--_nIns) = (NIns)(0x1800 | ((r)<<6) | ((l)<<3) | (d)); asm_output("add %s,%s,%s",gpn(d),gpn(l),gpn(r)); } while(0)
 #define ADD(l,r)    ADD3(l,l,r)
 
-#define SUB(l,r)	do {underrunProtect(2); *(--_nIns) = (NIns)(0x1A00 | ((r)<<6) | ((l)<<3) | (l)); asm_output2("sub %s,%s",gpn(l),gpn(r)); } while(0)
-#define MUL(l,r)	do {underrunProtect(2); *(--_nIns) = (NIns)(0x4340 | ((r)<<3) | (l)); asm_output2("mul %s,%s",gpn(l),gpn(r)); } while(0)
+#define SUB(l,r)	do {underrunProtect(2); *(--_nIns) = (NIns)(0x1A00 | ((r)<<6) | ((l)<<3) | (l)); asm_output("sub %s,%s",gpn(l),gpn(r)); } while(0)
+#define MUL(l,r)	do {underrunProtect(2); *(--_nIns) = (NIns)(0x4340 | ((r)<<3) | (l)); asm_output("mul %s,%s",gpn(l),gpn(r)); } while(0)
 
 #define NEG(r)		do {\
 	underrunProtect(2);\
 	*(--_nIns) = (NIns)(0x4240 | ((r)<<3) | (r) );\
-	asm_output1("neg %s",gpn(r));\
+	asm_output("neg %s",gpn(r));\
  } while(0)
 
-#define NOT(r)		do {underrunProtect(2);	*(--_nIns) = (NIns)(0x43C0 | ((r)<<3) | (r) ); asm_output1("mvn %s",gpn(r)); } while(0)
+#define NOT(r)		do {underrunProtect(2);	*(--_nIns) = (NIns)(0x43C0 | ((r)<<3) | (r) ); asm_output("mvn %s",gpn(r)); } while(0)
 
-#define SHR(r,s)	do {underrunProtect(2); *(--_nIns) = (NIns)(0x40C0 | ((s)<<3) | (r)); asm_output2("shr %s,%s",gpn(r),gpn(s)); } while(0)
-#define SHRi(r,i)	do {underrunProtect(2); *(--_nIns) = (NIns)(0x0800 | ((i)<<6) | ((r)<<3) | (r)); asm_output2("shr %s,%d",gpn(r),i); } while(0)
+#define SHR(r,s)	do {underrunProtect(2); *(--_nIns) = (NIns)(0x40C0 | ((s)<<3) | (r)); asm_output("shr %s,%s",gpn(r),gpn(s)); } while(0)
+#define SHRi(r,i)	do {underrunProtect(2); *(--_nIns) = (NIns)(0x0800 | ((i)<<6) | ((r)<<3) | (r)); asm_output("shr %s,%d",gpn(r),i); } while(0)
 
-#define SAR(r,s)	do {underrunProtect(2); *(--_nIns) = (NIns)(0x4100 | ((s)<<3) | (r)); asm_output2("asr %s,%s",gpn(r),gpn(s)); } while(0)
-#define SARi(r,i)	do {underrunProtect(2); *(--_nIns) = (NIns)(0x1000 | ((i)<<6) | ((r)<<3) | (r)); asm_output2("asr %s,%d",gpn(r),i); } while(0)
+#define SAR(r,s)	do {underrunProtect(2); *(--_nIns) = (NIns)(0x4100 | ((s)<<3) | (r)); asm_output("asr %s,%s",gpn(r),gpn(s)); } while(0)
+#define SARi(r,i)	do {underrunProtect(2); *(--_nIns) = (NIns)(0x1000 | ((i)<<6) | ((r)<<3) | (r)); asm_output("asr %s,%d",gpn(r),i); } while(0)
 
 #define SHL(r,s)	do {\
 	underrunProtect(2); \
 	*(--_nIns) = (NIns)(0x4080 | ((s)<<3) | (r)); \
-	asm_output2("lsl %s,%s",gpn(r),gpn(s));\
+	asm_output("lsl %s,%s",gpn(r),gpn(s));\
  } while(0)
 
 #define SHLi(r,i)	do {\
 	underrunProtect(2);\
 	NanoAssert((i)>=0 && (i)<32);\
 	*(--_nIns) = (NIns)(0x0000 | ((i)<<6) | ((r)<<3) | (r)); \
-	asm_output2("lsl %s,%d",gpn(r),(i));\
+	asm_output("lsl %s,%d",gpn(r),(i));\
  } while(0)
 					
 
 					
-#define TEST(d,s)	do{underrunProtect(2); *(--_nIns) = (NIns)(0x4200 | ((d)<<3) | (s)); asm_output2("test %s,%s",gpn(d),gpn(s));} while(0)
-#define CMP(l,r)	do{underrunProtect(2); *(--_nIns) = (NIns)(0x4280 | ((r)<<3) | (l)); asm_output2("cmp %s,%s",gpn(l),gpn(r));} while(0)
+#define TEST(d,s)	do{underrunProtect(2); *(--_nIns) = (NIns)(0x4200 | ((d)<<3) | (s)); asm_output("test %s,%s",gpn(d),gpn(s));} while(0)
+#define CMP(l,r)	do{underrunProtect(2); *(--_nIns) = (NIns)(0x4280 | ((r)<<3) | (l)); asm_output("cmp %s,%s",gpn(l),gpn(r));} while(0)
 
 #define CMPi(_r,_i)	do{													\
 	if (_i<0) {															\
@@ -251,42 +251,42 @@ namespace nanojit
 		if ((_i)>-256)	{													\
 			underrunProtect(4);													\
 			*(--_nIns) = (NIns)(0x42C0 | ((Scratch)<<3) | (_r));					\
-			asm_output2("cmn %s,%s",gpn(_r),gpn(Scratch));						\
+			asm_output("cmn %s,%s",gpn(_r),gpn(Scratch));						\
 			*(--_nIns) = (NIns)(0x2000 | (Scratch<<8) | ((-(_i))&0xFF) );		\
-			asm_output2("mov %s,%d",gpn(Scratch),(_i));}					\
+			asm_output("mov %s,%d",gpn(Scratch),(_i));}					\
 		else {																\
 			NanoAssert(!((_i)&3));											\
 			underrunProtect(10);											\
 			*(--_nIns) = (NIns)(0x42C0 | ((Scratch)<<3) | (_r));			\
-			asm_output2("cmn %s,%s",gpn(_r),gpn(Scratch));					\
+			asm_output("cmn %s,%s",gpn(_r),gpn(Scratch));					\
 			*(--_nIns) = (NIns)(0x0000 | (2<<6) | (Scratch<<3) | (Scratch) );\
-			asm_output2("lsl %s,%d",gpn(Scratch),2);						\
+			asm_output("lsl %s,%d",gpn(Scratch),2);						\
 			*(--_nIns) = (NIns)(0x2000 | (Scratch<<8) | ((-(_i)/4)&0xFF) );	\
-			asm_output2("mov %s,%d",gpn(Scratch),(_i));}				\
+			asm_output("mov %s,%d",gpn(Scratch),(_i));}				\
 	} else {																\
 		if ((_i)>255) {														\
 			int pad=0;														\
 			underrunProtect(2*(7));										\
 			*(--_nIns) = (NIns)(0x4280 | ((Scratch)<<3) | (_r));			\
-			asm_output2("cmp %s,%X",gpn(_r),(_i));							\
+			asm_output("cmp %s,%X",gpn(_r),(_i));							\
 			if ( (((int)(_nIns-2))%4) != 0)	pad=1;							\
 			if (pad) {														\
 				*(--_nIns) = 0xBAAD;										\
 				asm_output("PAD 0xBAAD"); }									\
 			*(--_nIns) = (short)((_i) >> 16);								\
 			*(--_nIns) = (short)((_i) & 0xFFFF);							\
-			asm_output1("imm %d", (_i));									\
+			asm_output("imm %d", (_i));									\
 			*(--_nIns) = 0xBAAD;											\
 			asm_output("PAD 0xBAAD");										\
 			if (pad) *(--_nIns) = (NIns)(0xE000 | (6>>1));					\
 			else *(--_nIns) = (NIns)(0xE000 | (4>>1));						\
-			asm_output1("b %X", (int)_nIns+(pad?6:4)+4);					\
+			asm_output("b %X", (int)_nIns+(pad?6:4)+4);					\
 			*(--_nIns) = (NIns)(0x4800 | ((Scratch)<<8) | (1));}			\
 		else {																\
 			NanoAssert((_i)<256);											\
 			underrunProtect(2);												\
 			*(--_nIns) = (NIns)(0x2800 | ((_r)<<8) | ((_i)&0xFF));			\
-			asm_output2("cmp %s,%X",gpn(_r),(_i));}							\
+			asm_output("cmp %s,%X",gpn(_r),(_i));}							\
 	} } while(0)
 
 #define MR(d,s)	do {											\
@@ -296,7 +296,7 @@ namespace nanojit
 	else {														\
 		if (d<8) *(--_nIns) = (NIns)(0x4600 | ((s)<<3) | ((d)&7));	\
 		else *(--_nIns) = (NIns)(0x4600 | (1<<7) | ((s)<<3) | ((d)&7));\
-	} asm_output2("mov %s,%s",gpn(d),gpn(s)); } while (0)
+	} asm_output("mov %s,%s",gpn(d),gpn(s)); } while (0)
 
 // Thumb doesn't support conditional-move
 #define MREQ(d,s)	do { NanoAssert(0); } while (0)
@@ -318,7 +318,7 @@ namespace nanojit
 		underrunProtect(2);													\
 		NanoAssert(off>=0 && off<256);												\
 		*(--_nIns) = (NIns)(0x4800 | ((reg)<<8) | (off&0xFF));				\
-		asm_output3("ld %s,%d(%s)",gpn(reg),(offset),gpn(base));			\
+		asm_output("ld %s,%d(%s)",gpn(reg),(offset),gpn(base));			\
 	} else if (base==SP) {													\
 		NanoAssert(off>=0);													\
 		if (off<256){														\
@@ -329,31 +329,31 @@ namespace nanojit
 			int rem = (offset) - 1020; NanoAssert(rem<125);					\
 			*(--_nIns) = (NIns)(0x6800 | (rem&0x1F)<<6 | (reg)<<3 | (reg));	\
 			*(--_nIns) = (NIns)(0xA800 | ((reg)<<8) | (0xFF));}				\
-		asm_output3("ld %s,%d(%s)",gpn(reg),(offset),gpn(base));			\
+		asm_output("ld %s,%d(%s)",gpn(reg),(offset),gpn(base));			\
 	} else if ((offset)<0) {												\
 		underrunProtect(8);													\
 		*(--_nIns) = (NIns)(0x5800 | (Scratch<<6) | (base<<3) | (reg));		\
-		asm_output3("ld %s,%d(%s)",gpn(reg),(offset),gpn(Scratch));			\
+		asm_output("ld %s,%d(%s)",gpn(reg),(offset),gpn(Scratch));			\
 		*(--_nIns) = (NIns)(0x4240 | (Scratch<<3) | Scratch);				\
-		asm_output2("neg %s,%s",gpn(Scratch),gpn(Scratch));					\
+		asm_output("neg %s,%s",gpn(Scratch),gpn(Scratch));					\
 		if ((offset)<-255){												\
 			NanoAssert( (offset)>=-1020);											\
 			*(--_nIns) = (NIns)(0x0000 | (2<<6) | (Scratch<<3) | (Scratch) );	\
-			asm_output2("lsl %s,%d",gpn(Scratch),2);					\
+			asm_output("lsl %s,%d",gpn(Scratch),2);					\
 			*(--_nIns) = (NIns)(0x2000 | (Scratch<<8) | ((-(off))&0xFF) );	\
-			asm_output2("mov %s,%d",gpn(Scratch),(offset));}					\
+			asm_output("mov %s,%d",gpn(Scratch),(offset));}					\
 		else {																\
 			*(--_nIns) = (NIns)(0x2000 | (Scratch<<8) | ((-(offset))&0xFF) );	\
-			asm_output2("mov %s,%d",gpn(Scratch),(offset));}					\
+			asm_output("mov %s,%d",gpn(Scratch),(offset));}					\
 	} else {																		\
 		if ((off)<32) {																\
 			underrunProtect(2);														\
 			*(--_nIns) = (NIns)(0x6800 | ((off&0x1F)<<6) | ((base)<<3) | (reg));	\
-			asm_output3("ld %s,%d(%s)",gpn(reg),(offset),gpn(base));}				\
+			asm_output("ld %s,%d(%s)",gpn(reg),(offset),gpn(base));}				\
 		else {																		\
 			underrunProtect(2);														\
 			*(--_nIns) = (NIns)(0x5800 | (Scratch<<6) | (base<<3) | (reg));			\
-			asm_output3("ld %s,%d(%s)",gpn(reg),(offset),gpn(Scratch));				\
+			asm_output("ld %s,%d(%s)",gpn(reg),(offset),gpn(Scratch));				\
 			LDi(Scratch, (offset));}}											\
 	} while(0)
 
@@ -364,7 +364,7 @@ namespace nanojit
     NanoAssert((_d)>=0 && (_d)<=31);\
     underrunProtect(2);\
     *(--_nIns) = (NIns)(0x7800 | (((_d)&31)<<6) | ((_b)<<3) | (_r) ); \
-    asm_output3("ldrb %s,%d(%s)", gpn(_r),(_d),gpn(_b));\
+    asm_output("ldrb %s,%d(%s)", gpn(_r),(_d),gpn(_b));\
     } while(0)
 
 
@@ -379,7 +379,7 @@ namespace nanojit
 		int rem = (_d) - 1020; NanoAssert(rem<256);				\
 		*(--_nIns) = (NIns)(0x3000 | ((_r)<<8) | ((rem)&0xFF));	\
 		*(--_nIns) = (NIns)(0xA800 | ((_r)<<8) | (0xFF));}		\
-	asm_output2("lea %s, %d(SP)", gpn(_r), _d);					\
+	asm_output("lea %s, %d(SP)", gpn(_r), _d);					\
 	} while(0)
 
 
@@ -387,7 +387,7 @@ namespace nanojit
 #define JMP_long_nochk_offset(t) do {								\
 	*(--_nIns) = (NIns)(0xF800 | (((t)&0xFFF)>>1) );	\
 	*(--_nIns) = (NIns)(0xF000 | (((t)>>12)&0x7FF) );	\
-	asm_output1("BL offset=%d",int(t));} while (0)
+	asm_output("BL offset=%d",int(t));} while (0)
 
 #define JMP_long_placeholder()	BL(_nIns)
 
@@ -447,17 +447,17 @@ enum {
 	*(--_nIns) = (NIns)(0x4040 | (r<<3) | r);		\
 	*(--_nIns) = (NIns)(0xD000 | ((cond)<<8) | (1) );
 
-#define SETE(r)		do {SET(r,EQ); asm_output1("sete %s",gpn(r)); } while(0)
-#define SETL(r)		do {SET(r,LT); asm_output1("setl %s",gpn(r)); } while(0)
-#define SETLE(r)	do {SET(r,LE); asm_output1("setle %s",gpn(r)); } while(0)
-#define SETG(r)		do {SET(r,GT); asm_output1("setg %s",gpn(r)); } while(0)
-#define SETGE(r)	do {SET(r,GE); asm_output1("setge %s",gpn(r)); } while(0)
-#define SETB(r)		do {SET(r,CCLO); asm_output1("setb %s",gpn(r)); } while(0)
-#define SETBE(r)	do {SET(r,LS); asm_output1("setbe %s",gpn(r)); } while(0)
-#define SETAE(r)	do {SET(r,CSHS); asm_output1("setae %s",gpn(r)); } while(0) /* warning, untested */
-#define SETA(r)		do {SET(r,HI); asm_output1("seta %s",gpn(r)); } while(0) /* warning, untested */
-#define SETC(r)		do {SET(r,CSHS); asm_output1("setc %s",gpn(r)); } while(0) /* warning, untested */
-#define SETO(r)		do {SET(r,VS); asm_output1("seto %s",gpn(r)); } while(0) /* warning, untested */
+#define SETE(r)		do {SET(r,EQ); asm_output("sete %s",gpn(r)); } while(0)
+#define SETL(r)		do {SET(r,LT); asm_output("setl %s",gpn(r)); } while(0)
+#define SETLE(r)	do {SET(r,LE); asm_output("setle %s",gpn(r)); } while(0)
+#define SETG(r)		do {SET(r,GT); asm_output("setg %s",gpn(r)); } while(0)
+#define SETGE(r)	do {SET(r,GE); asm_output("setge %s",gpn(r)); } while(0)
+#define SETB(r)		do {SET(r,CCLO); asm_output("setb %s",gpn(r)); } while(0)
+#define SETBE(r)	do {SET(r,LS); asm_output("setbe %s",gpn(r)); } while(0)
+#define SETAE(r)	do {SET(r,CSHS); asm_output("setae %s",gpn(r)); } while(0) /* warning, untested */
+#define SETA(r)		do {SET(r,HI); asm_output("seta %s",gpn(r)); } while(0) /* warning, untested */
+#define SETC(r)		do {SET(r,CSHS); asm_output("setc %s",gpn(r)); } while(0) /* warning, untested */
+#define SETO(r)		do {SET(r,VS); asm_output("seto %s",gpn(r)); } while(0) /* warning, untested */
 
 // This zero-extends a reg that has been set using one of the SET macros,
 // but is a NOOP on ARM/Thumb
@@ -514,7 +514,7 @@ enum {
 			*(--_nIns) = (NIns)(0x5E00 | (Scratch<<6) | ((_b)<<3) | (_r));			\
 			*(--_nIns) = (NIns)(0x3000 | (Scratch<<8) | (rem&0xFF));				\
 			*(--_nIns) = (NIns)(0x2000 | (Scratch<<8) | 0xFF );}					\
-	} asm_output3("movsx %s, %d(%s)", gpn(_r), (_d), gpn(_b)); } while(0)
+	} asm_output("movsx %s, %d(%s)", gpn(_r), (_d), gpn(_b)); } while(0)
 
 	//*(--_nIns) = (NIns)(0x8800 | (((_d)>>1)<<6) | (Scratch<<3) | (_r));\
 	//*(--_nIns) = (NIns)(0x4600 | (SP<<3) | Scratch );}				\

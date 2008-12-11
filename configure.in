@@ -8334,7 +8334,7 @@ fi
 ac_configure_args="$ac_configure_args --includedir=$dist/include"
 ac_configure_args="$ac_configure_args --bindir=$dist/bin"
 ac_configure_args="$ac_configure_args --libdir=$dist/lib"
-ac_configure_args="$ac_configure_args --with-sync-build-files=$srcdir"
+ac_configure_args="$ac_configure_args --with-sync-build-files=$_topsrcdir"
 if test "$MOZ_MEMORY"; then
    ac_configure_args="$ac_configure_args --enable-jemalloc"  
 fi

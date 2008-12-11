@@ -1913,8 +1913,7 @@ Decompile(SprintStack *ss, jsbytecode *pc, intN nb, JSOp nextop)
              * the bytecode at pc, so we don't decompile more than the error
              * expression.
              */
-            for (fp = cx->fp; fp && !fp->script; fp = fp->down)
-                continue;
+            fp = js_GetScriptedCaller(cx, NULL);
             format = cs->format;
             if (((fp && fp->regs && pc == fp->regs->pc) ||
                  (pc == startpc && cs->nuses != 0)) &&
@@ -2765,7 +2764,7 @@ Decompile(SprintStack *ss, jsbytecode *pc, intN nb, JSOp nextop)
                      * object that's not a constructor, causing us to be
                      * called with an intervening frame on the stack.
                      */
-                    JSStackFrame *fp = cx->fp;
+                    JSStackFrame *fp = js_GetTopStackFrame(cx);
                     if (fp) {
                         while (!(fp->flags & JSFRAME_EVAL))
                             fp = fp->down;

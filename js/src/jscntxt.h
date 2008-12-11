@@ -139,9 +139,11 @@ typedef struct JSTraceMonitor {
 } JSTraceMonitor;
 
 #ifdef JS_TRACER
-# define JS_ON_TRACE(cx)   (JS_TRACE_MONITOR(cx).onTrace)
+# define JS_ON_TRACE(cx)            (JS_TRACE_MONITOR(cx).onTrace)
+# define JS_EXECUTING_TRACE(cx)     (JS_ON_TRACE(cx) && !JS_TRACE_MONITOR(cx).recorder)
 #else
-# define JS_ON_TRACE(cx)   JS_FALSE
+# define JS_ON_TRACE(cx)            JS_FALSE
+# define JS_EXECUTING_TRACE(cx)     JS_FALSE
 #endif
 
 #ifdef JS_THREADSAFE
@@ -814,6 +816,8 @@ struct JSContext {
 
     /* Stack arena pool and frame pointer register. */
     JSArenaPool         stackPool;
+
+    JS_REQUIRES_STACK
     JSStackFrame        *fp;
 
     /* Temporary arena pool used while compiling and decompiling. */
@@ -1002,6 +1006,15 @@ class JSAutoResolveFlags
  */
 extern JSBool
 js_InitThreadPrivateIndex(void (*ptr)(void *));
+
+/*
+ * Clean up thread-private data on the current thread. NSPR automatically
+ * cleans up thread-private data for every thread except the main thread
+ * (see bug 383977) on shutdown. Thus, this function should be called for 
+ * exactly those threads that survive JS_ShutDown, including the main thread.
+ */
+extern JSBool
+js_CleanupThreadPrivateData();
 
 /*
  * Common subroutine of JS_SetVersion and js_SetVersion, to update per-context
@@ -1241,6 +1254,18 @@ extern JSErrorFormatString js_ErrorFormatString[JSErr_Limit];
  */
 extern JSBool
 js_ResetOperationCount(JSContext *cx);
+
+/*
+ * Get the current cx->fp, first lazily instantiating stack frames if needed.
+ * (Do not access cx->fp directly except in JS_REQUIRES_STACK code.)
+ *
+ * Defined in jstracer.cpp if JS_TRACER is defined.
+ */
+extern JS_FORCES_STACK JSStackFrame *
+js_GetTopStackFrame(JSContext *cx);
+
+extern JSStackFrame *
+js_GetScriptedCaller(JSContext *cx, JSStackFrame *fp);
 
 JS_END_EXTERN_C
 

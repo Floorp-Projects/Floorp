@@ -53,9 +53,51 @@ function test(f)
   }
 }
 
+function map_test(t, cases)
+{
+  for (var i = 0; i < cases.length; i++) {
+    function c() { return t(cases[i].input); }
+    c.expected = cases[i].expected;
+    c.name = t.name + "(" + uneval(cases[i].input) + ")";
+    test(c);
+  }
+}
+
+// Use this function to compare expected and actual test results.
+// Types must match.
+// For numbers, treat NaN as matching NaN, distinguish 0 and -0, and
+// tolerate a certain degree of error for other values.
+//
+// These are the same criteria used by the tests in js/tests, except that
+// we distinguish 0 and -0.
+function close_enough(expected, actual)
+{
+  if (typeof expected != typeof actual)
+    return false;
+  if (typeof expected != 'number')
+    return actual == expected;
+
+  // Distinguish NaN from other values.  Using x != x comparisons here
+  // works even if tests redefine isNaN.
+  if (actual != actual)
+    return expected != expected
+  if (expected != expected)
+    return false;
+
+  // Tolerate a certain degree of error.
+  if (actual != expected)
+    return Math.abs(actual - expected) <= 1E-10;
+
+  // Distinguish 0 and -0.
+  if (actual == 0)
+    return (1 / actual > 0) == (1 / expected > 0);
+
+  return true;
+}
+
 function check(desc, actual, expected, oldJITstats, expectedJITstats)
 {
-  if (expected == actual) {
+  if (close_enough(expected, actual)) {
     var pass = true;
     jitstatHandler(function(prop) {
                      if (expectedJITstats && prop in expectedJITstats &&
@@ -91,10 +133,11 @@ function check(desc, actual, expected, oldJITstats, expectedJITstats)
                        }
                      });
   }
-  print(desc, ": FAILED: expected", typeof(expected), "(", expected, ")",
+  print(desc, ": FAILED: expected", typeof(expected),
+        "(", uneval(expected), ")",
 	(expectedStats ? " [" + expectedStats + "] " : ""),
 	"!= actual",
-	typeof(actual), "(", actual, ")",
+	typeof(actual), "(", uneval(actual), ")",
 	(actualStats ? " [" + actualStats + "] " : ""));
 }
 
@@ -235,12 +278,11 @@ function lsh_inner(n)
     r = 0x1 << n;
   return r;
 }
-function lsh()
-{
-  return [lsh_inner(15),lsh_inner(55),lsh_inner(1),lsh_inner(0)];
-}
-lsh.expected = "32768,8388608,2,1";
-test(lsh);
+map_test (lsh_inner,
+          [{input: 15, expected: 32768},
+           {input: 55, expected: 8388608},
+           {input: 1,  expected: 2},
+           {input: 0,  expected: 1}]);
 
 function rsh_inner(n)
 {
@@ -249,12 +291,11 @@ function rsh_inner(n)
     r = 0x11010101 >> n;
   return r;
 }
-function rsh()
-{
-  return [rsh_inner(8),rsh_inner(5),rsh_inner(35),rsh_inner(-1)];
-}
-rsh.expected = "1114369,8914952,35659808,0";
-test(rsh);
+map_test (rsh_inner,
+          [{input: 8,  expected: 1114369},
+           {input: 5,  expected: 8914952},
+           {input: 35, expected: 35659808},
+           {input: -1, expected: 0}]);
 
 function ursh_inner(n)
 {
@@ -263,12 +304,12 @@ function ursh_inner(n)
     r = -55 >>> n;
   return r;
 }
-function ursh() {
-  return [ursh_inner(8),ursh_inner(33),ursh_inner(0),ursh_inner(1)];
-}
-ursh.expected = "16777215,2147483620,4294967241,2147483620";
-test(ursh);
-
+map_test (ursh_inner,
+          [{input: 8,  expected: 16777215},
+           {input: 33, expected: 2147483620},
+           {input: 0,  expected: 4294967241},
+           {input: 1,  expected: 2147483620}]);
+           
 function doMath_inner(cos)
 {
     var s = 0;
@@ -370,7 +411,7 @@ function call()
       q4 += o.f();
       q5 += glob_f2();
   }
-  var ret = [q1, q2, q3, q4, q5];
+  var ret = String([q1, q2, q3, q4, q5]);
   return ret;
 }
 call.expected =  "100,100,100,100,100";
@@ -398,7 +439,7 @@ function testif() {
 	}
     return q;
 }
-testif.expected = "0";
+testif.expected = 0;
 test(testif);
 
 var globalinc = 0;
@@ -434,7 +475,7 @@ function trees() {
     else if ((i & 2) == 0) o[1]++;
     else o[2]++;
   }
-  return o;
+  return String(o);
 }
 trees.expected = "50,25,25";
 test(trees);
@@ -446,7 +487,7 @@ function unboxint() {
 	q = o[0] << 1;
     return q;
 }
-unboxint.expected = "8";
+unboxint.expected = 8;
 test(unboxint);
 
 function strings()
@@ -519,10 +560,10 @@ var orNaNTest1, orNaNTest2;
 
 orNaNTest1 = new Function("return orTestHelper(NaN, NaN, 10);");
 orNaNTest1.name = 'orNaNTest1';
-orNaNTest1.expected = '0';
+orNaNTest1.expected = 0;
 orNaNTest2 = new Function("return orTestHelper(NaN, 1, 10);");
 orNaNTest2.name = 'orNaNTest2';
-orNaNTest2.expected = '45';
+orNaNTest2.expected = 45;
 test(orNaNTest1);
 test(orNaNTest2);
 
@@ -733,7 +774,7 @@ function missingArgTest() {
   }
   return q;
 }
-missingArgTest.expected = "1"
+missingArgTest.expected = 1;
 test(missingArgTest);
 
 JSON = function () {
@@ -846,6 +887,15 @@ function matchInLoop() {
 matchInLoop.expected = true;
 test(matchInLoop);
 
+function testMatchAsCondition() {
+    var a = ['0', '0', '0', '0'];
+    var r = /0/;
+    "x".q;
+    for (var z = 0; z < 4; z++)
+        a[z].match(r) ? 1 : 2;
+}
+test(testMatchAsCondition);
+
 function deep1(x) {
     if (x > 90)
 	return 1;
@@ -878,7 +928,7 @@ function inner_double_outer_int() {
     }
     return f(.5);
 }
-inner_double_outer_int.expected = "100";
+inner_double_outer_int.expected = 100;
 test(inner_double_outer_int);
 
 function newArrayTest()
@@ -1929,6 +1979,38 @@ function testNullCallee() {
 testNullCallee.expected = true;
 test(testNullCallee);
 
+//test no multitrees assert
+function testBug466128() {
+    for (let a = 0; a < 3; ++a) { 
+      for each (let b in [1, 2, "three", 4, 5, 6, 7, 8]) {
+      }
+    }
+    return true;
+}
+testBug466128.expected = true;
+test(testBug466128);
+
+//test no assert
+function testBug465688() {
+    for each (let d in [-0x80000000, -0x80000000]) - -d;
+    return true;
+}
+testBug465688.expected = true;
+test(testBug465688);
+
+//test no assert
+function testBug466262() {
+	var e = 1;
+	for (var d = 0; d < 3; ++d) {
+	  if (d == 2) {
+		e = "";
+	  }
+	}
+	return true;
+}
+testBug466262.expected = true;
+test(testBug466262);
+
 // BEGIN MANDELBROT STUFF
 // XXXbz I would dearly like to wrap it up into a function to avoid polluting
 // the global scope, but the function ends up heavyweight, and then we lose on
@@ -2644,6 +2726,15 @@ function testIncDec() {
 }
 testIncDec.expected = "0,0,0,0,0,0,1,1,1,1,1,1,2,2,2,2,2,2,3,3,3,3,3,3,4,4,4,4,4,4";
 test(testIncDec);
+
+function testApply() {
+    var q = [];
+    for (var i = 0; i < 10; ++i)
+        Array.prototype.push.apply(q, [5]);
+    return q.join(",");
+}
+testApply.expected = "5,5,5,5,5,5,5,5,5,5";
+test(testApply);
 
 /* NOTE: Keep this test last, since it screws up all for...in loops after it. */
 function testGlobalProtoAccess() {
