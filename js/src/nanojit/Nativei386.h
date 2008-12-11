@@ -463,7 +463,7 @@ namespace nanojit
 	
 
 #define LDi(r,i) do { \
-	count_ld();                 \
+	count_ld();\
 	underrunProtect(5);			\
 	IMM32(i);					\
 	NanoAssert(((unsigned)r)<8); \

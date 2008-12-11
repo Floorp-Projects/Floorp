@@ -3945,8 +3945,8 @@ js_InitJIT(JSTraceMonitor *tm)
 {
 #if defined NANOJIT_IA32
     if (!did_we_check_sse2) {
-        avmplus::AvmCore::cmov_available =
-        avmplus::AvmCore::sse2_available = js_CheckForSSE2();
+        avmplus::AvmCore::config.use_cmov =
+        avmplus::AvmCore::config.sse2 = js_CheckForSSE2();
         did_we_check_sse2 = true;
     }
 #endif

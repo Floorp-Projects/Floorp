@@ -94,10 +94,6 @@ namespace nanojit
 	void Assembler::nInit(AvmCore* core)
 	{
         OSDep::getDate();
-#ifdef NANOJIT_AMD64
-        avmplus::AvmCore::cmov_available =
-        avmplus::AvmCore::sse2_available = true;
-#endif
 	}
 
 	NIns* Assembler::genPrologue()
@@ -419,7 +415,7 @@ namespace nanojit
 		a.used = 0;
 		a.free = SavedRegs | ScratchRegs;
 #if defined NANOJIT_IA32
-        if (!avmplus::AvmCore::use_sse2())
+        if (!config.sse2)
             a.free &= ~XmmRegs;
 #endif
 		debug_only( a.managed = a.free; )
@@ -725,7 +721,7 @@ namespace nanojit
 			// the side exit, copying a non-double.
 			// c) maybe its a double just being stored.  oh well.
 
-			if (avmplus::AvmCore::use_sse2()) {
+			if (config.sse2) {
                 Register rv = findRegFor(value, XmmRegs);
 		Register rb;
 		if (base->isop(LIR_alloc)) {
@@ -764,7 +760,7 @@ namespace nanojit
 		Register rv;
 		int pop = !rA || rA->reg==UnknownReg;
 		if (pop) {
-		    rv = findRegFor(value, avmplus::AvmCore::use_sse2() ? XmmRegs : FpRegs);
+		    rv = findRegFor(value, config.sse2 ? XmmRegs : FpRegs);
 		} else {
 		    rv = rA->reg;
 		}
@@ -820,7 +816,7 @@ namespace nanojit
         // that isn't live in an FPU reg.  Either way, don't
         // put it in an FPU reg just to load & store it.
 #if defined NANOJIT_IA32
-        if (avmplus::AvmCore::use_sse2())
+        if (config.sse2)
         {
 #endif
             // use SSE to load+store 64bits
@@ -1447,7 +1443,7 @@ namespace nanojit
 		LIns *q = ins->oprnd1();
 
 #if defined NANOJIT_IA32
-		if (!avmplus::AvmCore::use_sse2())
+		if (!config.sse2)
 		{
 			Register rr = prepResultReg(ins, GpRegs);
 			int d = findMemFor(q);
@@ -1475,7 +1471,7 @@ namespace nanojit
 	void Assembler::asm_fneg(LInsp ins)
 	{
 #if defined NANOJIT_IA32
-		if (avmplus::AvmCore::use_sse2())
+		if (config.sse2)
 		{
 #endif
 			LIns *lhs = ins->oprnd1();
@@ -1638,7 +1634,7 @@ namespace nanojit
 	{
 		LOpcode op = ins->opcode();
 #if defined NANOJIT_IA32
-		if (avmplus::AvmCore::use_sse2()) 
+		if (config.sse2)
 		{
 #endif
 			LIns *lhs = ins->oprnd1();
@@ -1864,7 +1860,7 @@ namespace nanojit
     NIns * Assembler::asm_jmpcc(bool branchOnFalse, LIns *cond, NIns *targ)
     {
         LOpcode c = cond->opcode();
-        if (avmplus::AvmCore::use_sse2() && c != LIR_feq) {
+        if (config.sse2 && c != LIR_feq) {
             LIns *lhs = cond->oprnd1();
             LIns *rhs = cond->oprnd2();
             if (c == LIR_flt) {
@@ -1901,7 +1897,7 @@ namespace nanojit
     void Assembler::asm_setcc(Register r, LIns *cond)
     {
         LOpcode c = cond->opcode();
-        if (avmplus::AvmCore::use_sse2() && c != LIR_feq) {
+        if (config.sse2 && c != LIR_feq) {
     		MOVZX8(r,r);
             LIns *lhs = cond->oprnd1();
             LIns *rhs = cond->oprnd2();
@@ -1957,7 +1953,7 @@ namespace nanojit
         }
 
 #if defined NANOJIT_IA32
-        if (avmplus::AvmCore::use_sse2())
+        if (config.sse2)
         {
 #endif
             // UNORDERED:    ZF,PF,CF <- 111;
