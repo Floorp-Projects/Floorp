@@ -1533,7 +1533,26 @@ nsNativeThemeCocoa::DrawWidgetBackground(nsIRenderingContext* aContext, nsIFrame
       DrawUnifiedToolbar(cgContext, macRect, aFrame);
       break;
 
-    case NS_THEME_TOOLBAR:
+    case NS_THEME_TOOLBAR: {
+      BOOL isMain = [NativeWindowForFrame(aFrame) isMainWindow];
+
+      // top border
+      [NativeGreyColorAsNSColor(toolbarTopBorderGrey, isMain) set];
+      NSRectFill(NSMakeRect(macRect.origin.x, macRect.origin.y,
+                            macRect.size.width, 1.0f));
+
+      // background
+      [NativeGreyColorAsNSColor(headerEndGrey, isMain) set];
+      NSRectFill(NSMakeRect(macRect.origin.x, macRect.origin.y + 1.0f,
+                            macRect.size.width, macRect.size.height - 2.0f));
+
+      // bottom border
+      [NativeGreyColorAsNSColor(headerBorderGrey, isMain) set];
+      NSRectFill(NSMakeRect(macRect.origin.x, macRect.origin.y +
+                            macRect.size.height - 1.0f, macRect.size.width, 1.0f));
+    }
+      break;
+
     case NS_THEME_TOOLBOX:
     case NS_THEME_STATUSBAR: {
       HIThemeHeaderDrawInfo hdi = { 0, kThemeStateActive, kHIThemeHeaderKindWindow };
