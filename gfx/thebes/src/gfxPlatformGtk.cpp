@@ -496,7 +496,8 @@ gfxPlatformGtk::GetStandardFamilyName(const nsAString& aFontName, nsAString& aFa
 
 gfxFontGroup *
 gfxPlatformGtk::CreateFontGroup(const nsAString &aFamilies,
-                               const gfxFontStyle *aStyle)
+                               const gfxFontStyle *aStyle,
+                                gfxUserFontSet * /*aUserFontSet*/)
 {
     return new gfxFT2FontGroup(aFamilies, aStyle);
 }
