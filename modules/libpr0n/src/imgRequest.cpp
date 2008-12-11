@@ -1026,10 +1026,10 @@ imgRequest::OnChannelRedirect(nsIChannel *oldChannel, nsIChannel *newChannel, PR
 
   mChannel = newChannel;
 
-  newChannel->GetOriginalURI(mKeyURI);
+  newChannel->GetOriginalURI(getter_AddRefs(mKeyURI));
 
   // If we don't still have a cache entry, we don't want to refresh the cache.
-  if (uri && mCacheEntry)
+  if (mKeyURI && mCacheEntry)
     imgLoader::PutIntoCache(mKeyURI, mCacheEntry);
 
   return rv;
