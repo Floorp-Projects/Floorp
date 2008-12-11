@@ -311,17 +311,21 @@ namespace avmplus {
 
     typedef String* Stringp;
 
-    class AvmConfiguration
+    class Config
     {
     public:
-        AvmConfiguration() {
-            memset(this, 0, sizeof(AvmConfiguration));
+        Config() {
+            memset(this, 0, sizeof(Config));
 #ifdef DEBUG
             verbose = getenv("TRACEMONKEY") && strstr(getenv("TRACEMONKEY"), "verbose");
             verbose_addrs = 1;
             verbose_exits = 1;
             verbose_live = 1;
             show_stats = 1;
+#endif
+#if defined (AVMPLUS_AMD64)
+            sse2 = true;
+            use_cmov = true;
 #endif
             tree_opt = 0;
         }
@@ -333,6 +337,11 @@ namespace avmplus {
         uint32_t verbose_live:1;
         uint32_t verbose_exits:1;
         uint32_t show_stats:1;
+
+        #if defined (AVMPLUS_IA32) || defined(AVMPLUS_AMD64)
+		bool sse2;
+		bool use_cmov;
+		#endif
     };
 
     static const int kstrconst_emptyString = 0;
@@ -375,23 +384,21 @@ namespace avmplus {
     public:
         AvmInterpreter interp;
         AvmConsole console;
-
-        static AvmConfiguration config;
+        
+        static Config config;
         static GC* gc;
         static String* k_str[];
-        static bool sse2_available;
-        static bool cmov_available;
 
         static inline bool
         use_sse2()
         {
-            return sse2_available;
+            return config.sse2;
         }
         
         static inline bool
         use_cmov()
         {
-            return cmov_available;
+            return config.use_cmov;
         }
 
         static inline bool
