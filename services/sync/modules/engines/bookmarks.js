@@ -53,6 +53,8 @@ const SHARED_BOOKMARK_FILE_NAME = "shared_bookmarks";
 const INCOMING_SHARE_ROOT_ANNO = "weave/mounted-shares-folder";
 const INCOMING_SHARE_ROOT_NAME = "Shared Folders";
 
+const SERVICE_NOT_SUPPORTED = "Service not supported on this platform";
+
 Cu.import("resource://gre/modules/XPCOMUtils.jsm");
 Cu.import("resource://weave/log4moz.js");
 Cu.import("resource://weave/util.js");
@@ -159,8 +161,13 @@ BookmarksStore.prototype = {
   __ms: null,
   get _ms() {
     if (!this.__ms)
-      this.__ms = Cc["@mozilla.org/microsummary/service;1"].
-        getService(Ci.nsIMicrosummaryService);
+      try {
+        this.__ms = Cc["@mozilla.org/microsummary/service;1"].
+          getService(Ci.nsIMicrosummaryService);
+      } catch( e ) {
+	this.__ms = SERVICE_NOT_SUPPORTED;
+	this._log.warn("There is no Microsummary service.");
+      }
     return this.__ms;
   },
 
@@ -240,11 +247,15 @@ BookmarksStore.prototype = {
         this._ans.setItemAnnotation(newId, "bookmarks/staticTitle",
                                     command.data.staticTitle || "", 0, this._ans.EXPIRE_NEVER);
         let genURI = Utils.makeURI(command.data.generatorURI);
-        try {
-          let micsum = this._ms.createMicrosummary(URI, genURI);
-          this._ms.setMicrosummary(newId, micsum);
-        }
-        catch(ex) { /* ignore "missing local generator" exceptions */ }
+	if (this._ms == SERVICE_NOT_SUPPORTED) {
+	  this._log.warn("Can't create microsummary -- not supported.");
+	} else {
+          try {
+            let micsum = this._ms.createMicrosummary(URI, genURI);
+            this._ms.setMicrosummary(newId, micsum);
+          }
+          catch(ex) { /* ignore "missing local generator" exceptions */ }
+	}
       }
     } break;
     case "folder":
@@ -422,8 +433,12 @@ BookmarksStore.prototype = {
       case "generatorURI": {
         let micsumURI = Utils.makeURI(this._bms.getBookmarkURI(itemId));
         let genURI = Utils.makeURI(command.data.generatorURI);
-        let micsum = this._ms.createMicrosummary(micsumURI, genURI);
-        this._ms.setMicrosummary(itemId, micsum);
+	if (this._ms == SERVICE_NOT_SUPPORTED) {
+	  this._log.warn("Can't create microsummary -- not supported.");
+	} else {
+          let micsum = this._ms.createMicrosummary(micsumURI, genURI);
+          this._ms.setMicrosummary(itemId, micsum);
+	}
       } break;
       case "siteURI":
         this._ls.setSiteURI(itemId, Utils.makeURI(command.data.siteURI));
@@ -533,7 +548,8 @@ BookmarksStore.prototype = {
 
     } else if (node.type == node.RESULT_TYPE_URI ||
                node.type == node.RESULT_TYPE_QUERY) {
-      if (this._ms.hasMicrosummary(node.itemId)) {
+      if (this._ms != SERVICE_NOT_SUPPORTED &&
+	  this._ms.hasMicrosummary(node.itemId)) {
         item.type = "microsummary";
         let micsum = this._ms.getMicrosummary(node.itemId);
         item.generatorURI = micsum.generator.uri.spec; // breaks local generators
