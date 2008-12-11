@@ -174,7 +174,7 @@ Iterator(JSContext *cx, JSObject *iterobj, uintN argc, jsval *argv, jsval *rval)
     keyonly = js_ValueToBoolean(argv[1]);
     flags = keyonly ? 0 : JSITER_FOREACH;
 
-    if (cx->fp->flags & JSFRAME_CONSTRUCTING) {
+    if (JS_IsConstructing(cx)) {
         /* XXX work around old valueOf call hidden beneath js_ValueToObject */
         if (!JSVAL_IS_PRIMITIVE(argv[0])) {
             obj = JSVAL_TO_OBJECT(argv[0]);
@@ -863,7 +863,7 @@ SendToGenerator(JSContext *cx, JSGeneratorOp op, JSObject *obj,
     cx->stackPool.current = arena->next = &gen->arena;
 
     /* Push gen->frame around the interpreter activation. */
-    fp = cx->fp;
+    fp = js_GetTopStackFrame(cx);
     cx->fp = &gen->frame;
     gen->frame.down = fp;
     ok = js_Interpret(cx);

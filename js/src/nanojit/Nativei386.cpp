@@ -43,9 +43,10 @@
 #include <CoreServices/CoreServices.h>
 #endif
 
-#if defined AVMPLUS_UNIX
+#if defined AVMPLUS_UNIX || defined AVMPLUS_MAC
 #include <sys/mman.h>
 #include <errno.h>
+#include <stdlib.h>
 #endif
 #include "nanojit.h"
 
@@ -92,11 +93,8 @@ namespace nanojit
 
 	void Assembler::nInit(AvmCore* core)
 	{
+		(void) core;
         OSDep::getDate();
-#ifdef NANOJIT_AMD64
-        avmplus::AvmCore::cmov_available =
-        avmplus::AvmCore::sse2_available = true;
-#endif
 	}
 
 	NIns* Assembler::genPrologue()
@@ -127,8 +125,7 @@ namespace nanojit
 #endif
 		}
 
-		verbose_only( verbose_outputf("        %p:",_nIns); )
-		verbose_only( verbose_output("        frag entry:"); )
+		verbose_only( outputAddr=true; asm_output("[frag entry]"); )
         NIns *fragEntry = _nIns;
 		MR(FP, SP); // Establish our own FP.
         PUSHr(FP); // Save caller's FP.
@@ -162,7 +159,7 @@ namespace nanojit
             underrunProtect(n);
             _nIns -= n;
             memcpy(_nIns, nop[n-1], n);
-            asm_output1("nop%d", n);
+            asm_output("nop%d", n);
         }
     }
 
@@ -173,7 +170,7 @@ namespace nanojit
         Fragment *frag = exit->target;
         GuardRecord *lr = 0;
 		bool destKnown = (frag && frag->fragEntry);
-		if (destKnown && !trees && !guard->isop(LIR_loop))
+		if (destKnown && !trees)
 		{
 			// already exists, emit jump now.  no patching required.
 			JMP(frag->fragEntry);
@@ -188,11 +185,11 @@ namespace nanojit
             underrunProtect(14);
             _nIns -= 8;
             *(intptr_t *)_nIns = intptr_t(_epilogue);
-            lr->jmpToTarget = _nIns;
+            lr->jmp = _nIns;
             JMPm_nochk(0);
 #else
             JMP_long(_epilogue);
-            lr->jmpToTarget = _nIns;
+            lr->jmp = _nIns;
 #endif
 		}
 		// first restore ESP from EBP, undoing SUBi(SP,amt) from genPrologue
@@ -261,9 +258,6 @@ namespace nanojit
 
         bool indirect = false;
         if (ins->isop(LIR_call) || ins->isop(LIR_fcall)) {
-            verbose_only(if (_verbose)
-                outputf("        %p:", _nIns);
-            )
     		CALL(call);
         }
         else {
@@ -341,25 +335,50 @@ namespace nanojit
 	}
 #endif
 	
-	void Assembler::nMarkExecute(Page* page, int32_t count, bool enable)
+	void Assembler::nMarkExecute(Page* page, int flags)
 	{
+		NanoAssert(sizeof(Page) == NJ_PAGE_SIZE);
 		#if defined WIN32 || defined WIN64
 			DWORD dwIgnore;
-			VirtualProtect(&page->code, count*NJ_PAGE_SIZE, PAGE_EXECUTE_READWRITE, &dwIgnore);
-		#elif defined AVMPLUS_UNIX
-			intptr_t addr = (intptr_t)&page->code;
+			static const DWORD kProtFlags[4] = 
+			{
+				PAGE_READONLY,			// 0
+				PAGE_READWRITE,			// PAGE_WRITE
+				PAGE_EXECUTE_READ,		// PAGE_EXEC
+				PAGE_EXECUTE_READWRITE	// PAGE_EXEC|PAGE_WRITE
+			};
+			DWORD prot = kProtFlags[flags & (PAGE_WRITE|PAGE_EXEC)];
+			BOOL res = VirtualProtect(page, NJ_PAGE_SIZE, prot, &dwIgnore);
+			if (!res)
+			{
+				// todo: we can't abort or assert here, we have to fail gracefully.
+				NanoAssertMsg(false, "FATAL ERROR: VirtualProtect() failed\n");
+			}
+		#elif defined AVMPLUS_UNIX || defined AVMPLUS_MAC
+			static const int kProtFlags[4] = 
+			{
+				PROT_READ,						// 0
+				PROT_READ|PROT_WRITE,			// PAGE_WRITE
+				PROT_READ|PROT_EXEC,			// PAGE_EXEC
+				PROT_READ|PROT_WRITE|PROT_EXEC	// PAGE_EXEC|PAGE_WRITE
+			};
+			int prot = kProtFlags[flags & (PAGE_WRITE|PAGE_EXEC)];
+			intptr_t addr = (intptr_t)page;
 			addr &= ~((uintptr_t)NJ_PAGE_SIZE - 1);
+			NanoAssert(addr == (intptr_t)page);
 			#if defined SOLARIS
-			if (mprotect((char *)addr, count*NJ_PAGE_SIZE, PROT_READ|PROT_WRITE|PROT_EXEC) == -1) {
+			if (mprotect((char *)addr, NJ_PAGE_SIZE, prot) == -1) 
 			#else
-			if (mprotect((void *)addr, count*NJ_PAGE_SIZE, PROT_READ|PROT_WRITE|PROT_EXEC) == -1) {
+			if (mprotect((void *)addr, NJ_PAGE_SIZE, prot) == -1) 
 			#endif
+			{
 				// todo: we can't abort or assert here, we have to fail gracefully.
 				NanoAssertMsg(false, "FATAL ERROR: mprotect(PROT_EXEC) failed\n");
                 abort();
             }
+        #else
+			(void)page;
 		#endif
-			(void)enable;
 	}
 			
 	Register Assembler::nRegisterAllocFromSet(int set)
@@ -397,7 +416,7 @@ namespace nanojit
 		a.used = 0;
 		a.free = SavedRegs | ScratchRegs;
 #if defined NANOJIT_IA32
-        if (!avmplus::AvmCore::use_sse2())
+        if (!config.sse2)
             a.free &= ~XmmRegs;
 #endif
 		debug_only( a.managed = a.free; )
@@ -522,10 +541,8 @@ namespace nanojit
 	void Assembler::asm_restore(LInsp i, Reservation *resv, Register r)
 	{
         if (i->isop(LIR_alloc)) {
+			verbose_only( if (_verbose) { outputForEOL("  <= remat %s size %d", _thisfrag->lirbuf->names->formatRef(i), i->size()); } )
             LEA(r, disp(resv), FP);
-            verbose_only(if (_verbose) {
-                outputf("        remat %s size %d", _thisfrag->lirbuf->names->formatRef(i), i->size());
-            })
         }
         else if (i->isconst()) {
             if (!resv->arIndex) {
@@ -535,10 +552,8 @@ namespace nanojit
         }
         else {
             int d = findMemFor(i);
+			verbose_only( if (_verbose) { outputForEOL("  <= restore %s", _thisfrag->lirbuf->names->formatRef(i)); } )
 			asm_load(d,r);
-			verbose_only(if (_verbose) {
-				outputf("        restore %s", _thisfrag->lirbuf->names->formatRef(i));
-			})
         }
 	}
 
@@ -707,7 +722,7 @@ namespace nanojit
 			// the side exit, copying a non-double.
 			// c) maybe its a double just being stored.  oh well.
 
-			if (avmplus::AvmCore::use_sse2()) {
+			if (config.sse2) {
                 Register rv = findRegFor(value, XmmRegs);
 		Register rb;
 		if (base->isop(LIR_alloc)) {
@@ -746,7 +761,7 @@ namespace nanojit
 		Register rv;
 		int pop = !rA || rA->reg==UnknownReg;
 		if (pop) {
-		    rv = findRegFor(value, avmplus::AvmCore::use_sse2() ? XmmRegs : FpRegs);
+		    rv = findRegFor(value, config.sse2 ? XmmRegs : FpRegs);
 		} else {
 		    rv = rA->reg;
 		}
@@ -802,7 +817,7 @@ namespace nanojit
         // that isn't live in an FPU reg.  Either way, don't
         // put it in an FPU reg just to load & store it.
 #if defined NANOJIT_IA32
-        if (avmplus::AvmCore::use_sse2())
+        if (config.sse2)
         {
 #endif
             // use SSE to load+store 64bits
@@ -948,22 +963,12 @@ namespace nanojit
 
 	void Assembler::asm_loop(LInsp ins, NInsList& loopJumps)
 	{
-		GuardRecord* guard = ins->record();
-		SideExit* exit = guard->exit;
-
-		// Emit an exit stub that the loop may be patched to jump to (for example if we
-		// want to terminate the loop because a timeout fires).
-		asm_exit(ins);
-
-		// Emit the patchable jump itself.
 		JMP_long(0);
-
         loopJumps.add(_nIns);
-		guard->jmpToStub = _nIns;
 
 		// If the target we are looping to is in a different fragment, we have to restore
 		// SP since we will target fragEntry and not loopEntry.
-		if (exit->target != _thisfrag)
+	    if (ins->record()->exit->target != _thisfrag)
 	        MR(SP,FP);
 	}	
 
@@ -1429,7 +1434,7 @@ namespace nanojit
 		LIns *q = ins->oprnd1();
 
 #if defined NANOJIT_IA32
-		if (!avmplus::AvmCore::use_sse2())
+		if (!config.sse2)
 		{
 			Register rr = prepResultReg(ins, GpRegs);
 			int d = findMemFor(q);
@@ -1457,7 +1462,7 @@ namespace nanojit
 	void Assembler::asm_fneg(LInsp ins)
 	{
 #if defined NANOJIT_IA32
-		if (avmplus::AvmCore::use_sse2())
+		if (config.sse2)
 		{
 #endif
 			LIns *lhs = ins->oprnd1();
@@ -1604,6 +1609,11 @@ namespace nanojit
 			SSE_STQ(0, SP, r); 
 		} else {
 			FSTPQ(0, SP);
+			/* It's possible that the same LIns* with r=FST0 will appear in the argument list more 
+			 * than once.  In this case FST0 will not have been evicted and the multiple pop 
+			 * actions will unbalance the FPU stack.  A quick fix is to always evict FST0 manually.
+			 */
+			evict(FST0);
 		}
         SUBi(ESP,8);
 		//PUSHr(ECX); // 2*pushr is smaller than sub
@@ -1615,7 +1625,7 @@ namespace nanojit
 	{
 		LOpcode op = ins->opcode();
 #if defined NANOJIT_IA32
-		if (avmplus::AvmCore::use_sse2()) 
+		if (config.sse2)
 		{
 #endif
 			LIns *lhs = ins->oprnd1();
@@ -1841,7 +1851,7 @@ namespace nanojit
     NIns * Assembler::asm_jmpcc(bool branchOnFalse, LIns *cond, NIns *targ)
     {
         LOpcode c = cond->opcode();
-        if (avmplus::AvmCore::use_sse2() && c != LIR_feq) {
+        if (config.sse2 && c != LIR_feq) {
             LIns *lhs = cond->oprnd1();
             LIns *rhs = cond->oprnd2();
             if (c == LIR_flt) {
@@ -1878,7 +1888,7 @@ namespace nanojit
     void Assembler::asm_setcc(Register r, LIns *cond)
     {
         LOpcode c = cond->opcode();
-        if (avmplus::AvmCore::use_sse2() && c != LIR_feq) {
+        if (config.sse2 && c != LIR_feq) {
     		MOVZX8(r,r);
             LIns *lhs = cond->oprnd1();
             LIns *rhs = cond->oprnd2();
@@ -1934,7 +1944,7 @@ namespace nanojit
         }
 
 #if defined NANOJIT_IA32
-        if (avmplus::AvmCore::use_sse2())
+        if (config.sse2)
         {
 #endif
             // UNORDERED:    ZF,PF,CF <- 111;
@@ -2090,12 +2100,28 @@ namespace nanojit
 	// enough room for n bytes
     void Assembler::underrunProtect(int n)
     {
+		NanoAssertMsg(n<=LARGEST_UNDERRUN_PROT, "constant LARGEST_UNDERRUN_PROT is too small"); 
         NIns *eip = this->_nIns;
         Page *p = (Page*)pageTop(eip-1);
         NIns *top = (NIns*) &p->code[0];
         if (eip - n < top) {
 			_nIns = pageAlloc(_inExit);
             JMP(eip);
+        }
+    }
+
+    void Assembler::asm_ret(LInsp ins)
+    {
+        if (_nIns != _epilogue) {
+            JMP(_epilogue);
+        }
+        assignSavedRegs();
+        LIns *val = ins->oprnd1();
+        if (ins->isop(LIR_ret)) {
+            findSpecificRegFor(val, retRegs[0]);
+        } else {
+            findSpecificRegFor(val, FST0);
+            fpu_pop();
         }
     }
 	

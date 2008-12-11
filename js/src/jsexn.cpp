@@ -280,7 +280,7 @@ InitExnPrivate(JSContext *cx, JSObject *exnObject, JSString *message,
     callerid = ATOM_KEY(cx->runtime->atomState.callerAtom);
     stackDepth = 0;
     valueCount = 0;
-    for (fp = cx->fp; fp; fp = fp->down) {
+    for (fp = js_GetTopStackFrame(cx); fp; fp = fp->down) {
         if (fp->fun && fp->argv) {
             v = JSVAL_NULL;
             if (checkAccess &&
@@ -321,7 +321,7 @@ InitExnPrivate(JSContext *cx, JSObject *exnObject, JSString *message,
 
     values = GetStackTraceValueBuffer(priv);
     elem = priv->stackElems;
-    for (fp = cx->fp; fp != fpstop; fp = fp->down) {
+    for (fp = js_GetTopStackFrame(cx); fp != fpstop; fp = fp->down) {
         if (!fp->fun) {
             elem->funName = NULL;
             elem->argc = 0;
@@ -742,7 +742,7 @@ Exception(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
     JSString *message, *filename;
     JSStackFrame *fp;
 
-    if (!(cx->fp->flags & JSFRAME_CONSTRUCTING)) {
+    if (!JS_IsConstructing(cx)) {
         /*
          * ECMA ed. 3, 15.11.1 requires Error, etc., to construct even when
          * called as functions, without operator new.  But as we do not give
@@ -786,7 +786,7 @@ Exception(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
         argv[1] = STRING_TO_JSVAL(filename);
         fp = NULL;
     } else {
-        fp = JS_GetScriptedCaller(cx, NULL);
+        fp = js_GetScriptedCaller(cx, NULL);
         if (fp) {
             filename = FilenameToString(cx, fp->script->filename);
             if (!filename)
@@ -803,7 +803,7 @@ Exception(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
             return JS_FALSE;
     } else {
         if (!fp)
-            fp = JS_GetScriptedCaller(cx, NULL);
+            fp = js_GetScriptedCaller(cx, NULL);
         lineno = (fp && fp->regs) ? js_FramePCToLineNumber(cx, fp) : 0;
     }
 

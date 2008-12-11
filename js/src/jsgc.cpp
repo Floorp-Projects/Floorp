@@ -2930,7 +2930,7 @@ js_TraceContext(JSTracer *trc, JSContext *acx)
      *
      * (NB: see comment on this whole "dormant" thing in js_Execute.)
      */
-    fp = acx->fp;
+    fp = js_GetTopStackFrame(acx);
     nextChain = acx->dormantFrameChain;
     if (!fp)
         goto next_chain;

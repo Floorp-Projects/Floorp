@@ -640,7 +640,7 @@ js_watch_set(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
                     frame.callee = closure;
                     frame.fun = fun;
                     frame.argv = argv + 2;
-                    frame.down = cx->fp;
+                    frame.down = js_GetTopStackFrame(cx);
                     frame.scopeChain = OBJ_GET_PARENT(cx, closure);
 
                     cx->fp = &frame;
@@ -975,7 +975,7 @@ JS_GetScriptPrincipals(JSContext *cx, JSScript *script)
 JS_PUBLIC_API(JSStackFrame *)
 JS_FrameIterator(JSContext *cx, JSStackFrame **iteratorp)
 {
-    *iteratorp = (*iteratorp == NULL) ? cx->fp : (*iteratorp)->down;
+    *iteratorp = (*iteratorp == NULL) ? js_GetTopStackFrame(cx) : (*iteratorp)->down;
     return *iteratorp;
 }
 
@@ -994,14 +994,7 @@ JS_GetFramePC(JSContext *cx, JSStackFrame *fp)
 JS_PUBLIC_API(JSStackFrame *)
 JS_GetScriptedCaller(JSContext *cx, JSStackFrame *fp)
 {
-    if (!fp)
-        fp = cx->fp;
-    while (fp) {
-        if (fp->script)
-            return fp;
-        fp = fp->down;
-    }
-    return NULL;
+    return js_GetScriptedCaller(cx, fp);
 }
 
 JS_PUBLIC_API(JSPrincipals *)
@@ -1124,7 +1117,7 @@ JS_GetFrameThis(JSContext *cx, JSStackFrame *fp)
         return fp->thisp;
 
     /* js_ComputeThis gets confused if fp != cx->fp, so set it aside. */
-    if (cx->fp != fp) {
+    if (js_GetTopStackFrame(cx) != fp) {
         afp = cx->fp;
         if (afp) {
             afp->dormantNext = cx->dormantFrameChain;
@@ -1633,7 +1626,7 @@ JS_PUBLIC_API(uint32)
 JS_GetTopScriptFilenameFlags(JSContext *cx, JSStackFrame *fp)
 {
     if (!fp)
-        fp = cx->fp;
+        fp = js_GetTopStackFrame(cx);
     while (fp) {
         if (fp->script)
             return JS_GetScriptFilenameFlags(fp->script);
