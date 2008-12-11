@@ -131,6 +131,12 @@
 
                     if (!this.fadeTimer)
                         this.fadeTimer = setInterval(this.fadeControls, this.FADE_TIME_STEP, this);
+
+                    // If we're fading in, immediately made the controls clickable.
+                    // Otherwise they might not activate until the first fadeTimer
+                    // fires, which is hard to test reliably.
+                    if (this.fadingIn)
+                        this.controlBar.style.visibility = "visible";
                 },
 
                 fadeControls : function (self, lateness) {
