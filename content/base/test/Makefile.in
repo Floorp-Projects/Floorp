@@ -263,6 +263,9 @@ _TEST_FILES = 	test_bug5141.html \
 		test_w3element_traversal.xhtml \
 		test_w3element_traversal_svg.html \
 		w3element_traversal.svg \
+		test_bug444322.html \
+		bug444322.txt \
+		bug444322.js \
 		$(NULL)
 
 # Disabled for now. Mochitest isn't reliable enough for these.
