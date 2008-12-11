@@ -299,8 +299,9 @@ TaggingService.prototype = {
     if (!this.__tagFolders) {
       this.__tagFolders = [];
       var options = this._history.getNewQueryOptions();
+      options.resultType = Ci.nsINavHistoryQueryOptions.RESULTS_AS_TAG_QUERY;
+      options.expandQueries = 0;
       var query = this._history.getNewQuery();
-      query.setFolders([this._bms.tagsFolder], 1);
       var tagsResult = this._history.executeQuery(query, options);
       var root = tagsResult.root;
       root.containerOpen = true;
