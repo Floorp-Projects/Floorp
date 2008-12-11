@@ -253,10 +253,24 @@ namespace avmplus {
         static GCHeap heap;
         
     public:
+		/**
+		* flags to be passed as second argument to alloc
+		*/
+		enum AllocFlags
+		{
+			kZero=1,
+			kContainsPointers=2,
+			kFinalize=4,
+			kRCObject=8
+		};
+
         static inline void*
-        Alloc(uint32_t bytes)
+        Alloc(uint32_t bytes, int flags=kZero)
         {
+          if (flags & kZero)
             return calloc(1, bytes);
+          else
+            return malloc(bytes);
         }
     
         static inline void

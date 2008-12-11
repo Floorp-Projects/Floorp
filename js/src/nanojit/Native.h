@@ -100,7 +100,7 @@ namespace nanojit {
 			if (verbose_enabled()) {\
 				outline[0]='\0';\
 				if (outputAddr) sprintf(outline, "  %10p  ",_nIns);\
-				else sprintf(outline, "            ");\
+				else sprintf(outline, "              ");\
 				sprintf(&outline[14], ##__VA_ARGS__);\
 				Assembler::outputAlign(outline, 45);\
 				RegAlloc::formatRegisters(_allocator, outline, _thisfrag);\
