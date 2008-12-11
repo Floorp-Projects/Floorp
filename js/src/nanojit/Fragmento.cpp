@@ -72,6 +72,8 @@ namespace nanojit
 			NanoStaticAssert((LIR_le ^ 3) == LIR_gt);
 			NanoStaticAssert((LIR_ult ^ 3) == LIR_uge);
 			NanoStaticAssert((LIR_ule ^ 3) == LIR_ugt);
+			NanoStaticAssert((LIR_flt ^ 3) == LIR_fge);
+			NanoStaticAssert((LIR_fle ^ 3) == LIR_fgt);
 
 			/* Opcodes must be strictly increasing without holes. */
 			uint32_t count = 0;
