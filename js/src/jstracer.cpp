@@ -1358,7 +1358,7 @@ oom:
 /* Box a value from the native stack back into the jsval format. Integers
    that are too large to fit into a jsval are automatically boxed into
    heap-allocated doubles. */
-static bool
+static void
 NativeToValue(JSContext* cx, jsval& v, uint8 type, double* slot)
 {
     jsint i;
@@ -1392,12 +1392,12 @@ NativeToValue(JSContext* cx, jsval& v, uint8 type, double* slot)
 #endif
                 js_NewDoubleInRootedValue(cx, d, &v);
             JS_ASSERT(ok);
-            return true;
+            return;
         }
         v = AllocateDoubleFromRecoveryPool(cx);
         JS_ASSERT(JSVAL_IS_DOUBLE(v) && *JSVAL_TO_DOUBLE(v) == 0.0);
         *JSVAL_TO_DOUBLE(v) = d;
-        return true;
+        return;
       }
       case JSVAL_STRING:
         v = STRING_TO_JSVAL(*(JSString**)slot);
@@ -1423,7 +1423,6 @@ NativeToValue(JSContext* cx, jsval& v, uint8 type, double* slot)
                             : STOBJ_GET_CLASS(JSVAL_TO_OBJECT(v))->name);)
         break;
     }
-    return true;
 }
 
 /* Attempt to unbox the given list of interned globals onto the native global frame. */
@@ -1451,15 +1450,13 @@ BuildNativeStackFrame(JSContext* cx, unsigned callDepth, uint8* mp, double* np)
     debug_only_v(printf("\n");)
 }
 
-/* Box the given native frame into a JS frame. This only fails due to a hard error
-   (out of memory for example). */
+/* Box the given native frame into a JS frame. This is infallible. */
 static JS_REQUIRES_STACK int
 FlushNativeGlobalFrame(JSContext* cx, unsigned ngslots, uint16* gslots, uint8* mp, double* np)
 {
     uint8* mp_base = mp;
     FORALL_GLOBAL_SLOTS(cx, ngslots, gslots,
-        if (!NativeToValue(cx, *vp, *mp, np + gslots[n]))
-            return -1;
+        NativeToValue(cx, *vp, *mp, np + gslots[n]);
         ++mp;
     );
     debug_only_v(printf("\n");)
@@ -1467,8 +1464,8 @@ FlushNativeGlobalFrame(JSContext* cx, unsigned ngslots, uint16* gslots, uint8* m
 }
 
 /**
- * Box the given native stack frame into the virtual machine stack. This fails
- * only due to a hard error (out of memory for example).
+ * Box the given native stack frame into the virtual machine stack. This
+ * is infallible.
  *
  * @param callDepth the distance between the entry frame into our trace and
  *                  cx->fp when we make this call.  If this is not called as a
@@ -1491,8 +1488,7 @@ FlushNativeStackFrame(JSContext* cx, unsigned callDepth, uint8* mp, double* np,
     FORALL_SLOTS_IN_PENDING_FRAMES(cx, callDepth,
         if (vp == stopAt) goto skip;
         debug_only_v(printf("%s%u=", vpname, vpnum);)
-        if (!NativeToValue(cx, *vp, *mp, np))
-            return -1;
+        NativeToValue(cx, *vp, *mp, np);
         ++mp; ++np
     );
 skip:
@@ -2837,7 +2833,7 @@ js_SynthesizeFrame(JSContext* cx, const FrameInfo& fi)
         JS_ARENA_ALLOCATE_CAST(newsp, jsval *, &cx->stackPool, nbytes);
         if (!newsp) {
             js_ReportOutOfScriptQuota(cx);
-            return 0;
+            return -1;
         }
 
         /*
@@ -3643,9 +3639,7 @@ js_ExecuteTree(JSContext* cx, Fragment* f, uintN& inlineCallCount,
                             js_FramePCToLineNumber(cx, fp),
                             FramePCOffset(fp),
                             slots);)
-#endif        
-        if (slots < 0)
-            return NULL;
+#endif
         /* Keep track of the additional frames we put on the interpreter stack and the native
            stack slots we consumed. */
         ++inlineCallCount;
@@ -3721,18 +3715,17 @@ js_ExecuteTree(JSContext* cx, Fragment* f, uintN& inlineCallCount,
     JS_ASSERT(exit_gslots == tm->globalTypeMap->length());
 
     /* write back interned globals */
-    int slots = FlushNativeGlobalFrame(cx, exit_gslots, gslots, globalTypeMap, global);
-    if (slots < 0)
-        return NULL;
+    FlushNativeGlobalFrame(cx, exit_gslots, gslots, globalTypeMap, global);
     JS_ASSERT_IF(ngslots != 0, globalFrameSize == STOBJ_NSLOTS(globalObj));
     JS_ASSERT(*(uint64*)&global[globalFrameSize] == 0xdeadbeefdeadbeefLL);
 
     /* write back native stack frame */
-    slots = FlushNativeStackFrame(cx, innermost->calldepth,
-                                  getTypeMap(innermost) + innermost->numGlobalSlots,
-                                  stack, NULL);
-    if (slots < 0)
-        return NULL;
+#ifdef DEBUG
+    int slots =
+#endif
+        FlushNativeStackFrame(cx, innermost->calldepth,
+                              getTypeMap(innermost) + innermost->numGlobalSlots,
+                              stack, NULL);
     JS_ASSERT(unsigned(slots) == innermost->numStackSlots);
 
 #ifdef DEBUG
