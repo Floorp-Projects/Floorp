@@ -91,6 +91,7 @@ namespace nanojit
 {
 	const int NJ_LOG2_PAGE_SIZE	= 12;		// 4K
 	const int NJ_MAX_REGISTERS = 24; // gpregs, x87 regs, xmm regs
+	const int NJ_STACK_OFFSET = 0;
 	
 	#define NJ_MAX_STACK_ENTRY 256
 	#define NJ_MAX_PARAMETERS 1
@@ -181,7 +182,6 @@ namespace nanojit
 		void nativePageSetup();\
         void underrunProtect(int);\
         void asm_farg(LInsp);\
-		void asm_pusharg(LInsp);\
         void asm_align_code();
 		
 	#define swapptrs()  { NIns* _tins = _nIns; _nIns=_nExitIns; _nExitIns=_tins; }

@@ -12,7 +12,7 @@ include('unstable/esp.js');
 let Zero_NonZero = {};
 include('unstable/zero_nonzero.js', Zero_NonZero);
 
-include('mayreturn.js');
+include('xpcom/analysis/mayreturn.js');
 
 function safe_location_of(t) {
   if (t === undefined)

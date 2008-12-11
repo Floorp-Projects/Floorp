@@ -13,8 +13,6 @@ function treehydra_enabled() {
 include('unstable/getopt.js');
 [options, args] = getopt();
 
-// XXXbugfix: when you pass arguments to -fplugin-arg, include_path[0] is bad
-sys.include_path[0] = options.topsrcdir + "/xpcom/analysis";
 sys.include_path.push(options.topsrcdir);
 
 include('string-format.js');
