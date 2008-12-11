@@ -1108,11 +1108,11 @@ Assembler::asm_prep_fcall(Reservation*, LInsp)
 }
 
 NIns*
-Assembler::asm_branch(bool branchOnFalse, LInsp cond, NIns* targ, bool /*far*/)
+Assembler::asm_branch(bool branchOnFalse, LInsp cond, NIns* targ, bool far)
 {
     // ignore far -- we figure this out on our own.
     // XXX noone actually uses the far param in nj anyway... (always false)
-    
+    (void)far;
 
     NIns* at = 0;
     LOpcode condop = cond->opcode();

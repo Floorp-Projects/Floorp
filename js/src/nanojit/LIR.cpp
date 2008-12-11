@@ -95,7 +95,7 @@ namespace nanojit
 		if (start)
 			_unused = &start->lir[0];
 		//buffer_count++;
-		//fprintf(stderr, "LirBuffer %x start %x\n", (int)this, (int)_start);
+		//fprintf(stderr, "LirBuffer %x unused %x\n", (int)this, (int)_unused);
 	}
 
 	LirBuffer::~LirBuffer()
@@ -126,6 +126,7 @@ namespace nanojit
 		// doesn't include embedded constants nor LIR_skip payload
 		return _stats.lir;
 	}
+
 	int32_t LirBuffer::byteCount() 
 	{
 		return ((_pages.size() ? _pages.size()-1 : 0) * sizeof(Page)) +
@@ -138,9 +139,7 @@ namespace nanojit
 		if (page)
 			_pages.add(page);
 		else
-		{
 			_noMem = 1;
-		}
 		return page;
 	}
 	
@@ -1093,8 +1092,8 @@ namespace nanojit
 			op = LIR_callh;
 		LInsp args2[MAXARGS*2]; // arm could require 2 args per double
 		int32_t j = 0;
-		int32_t i = 0;
-		while (j < argc) {
+        int32_t i = 0;
+        while (j < argc) {
 			argt >>= 2;
 			ArgSize a = ArgSize(argt&3);
 			if (a == ARGSIZE_F) {
@@ -1249,7 +1248,7 @@ namespace nanojit
 #ifdef MEMORY_INFO
 //		m_list.set_meminfo_name("LInsHashSet.list");
 #endif
-        LInsp *list = (LInsp*) gc->Alloc(sizeof(LInsp)*m_cap);
+        LInsp *list = (LInsp*) gc->Alloc(sizeof(LInsp)*m_cap, GC::kZero);
         WB(gc, this, &m_list, list);
 	}
 
@@ -1343,7 +1342,7 @@ namespace nanojit
 	void FASTCALL LInsHashSet::grow()
 	{
 		const uint32_t newcap = m_cap << 1;
-        LInsp *newlist = (LInsp*) m_gc->Alloc(newcap * sizeof(LInsp));
+        LInsp *newlist = (LInsp*) m_gc->Alloc(newcap * sizeof(LInsp), GC::kZero);
         LInsp *list = m_list;
 #ifdef MEMORY_INFO
 //		newlist.set_meminfo_name("LInsHashSet.list");
@@ -1550,7 +1549,7 @@ namespace nanojit
         }
 		void add(LInsp i, LInsp use) {
             if (!i->isconst() && !i->isconstq() && !live.containsKey(i)) {
-                NanoAssert(unsigned(i->opcode()) < sizeof(lirNames) / sizeof(lirNames[0]));
+                NanoAssert(size_t(i->opcode()) < sizeof(lirNames) / sizeof(lirNames[0]));
                 live.put(i,use);
             }
 		}
@@ -1583,7 +1582,7 @@ namespace nanojit
         LirReader br(lirbuf);
 		StackFilter sf(&br, gc, lirbuf, lirbuf->sp);
 		StackFilter r(&sf, gc, lirbuf, lirbuf->rp);
-		int total = 0;
+        int total = 0;
         if (lirbuf->state)
             live.add(lirbuf->state, r.pos());
 		for (LInsp i = r.read(); i != 0; i = r.read())
@@ -1602,7 +1601,7 @@ namespace nanojit
 			if (live.contains(i))
 			{
 				live.retire(i,gc);
-                NanoAssert(unsigned(i->opcode()) < sizeof(operandCount) / sizeof(operandCount[0]));
+                NanoAssert(size_t(i->opcode()) < sizeof(operandCount) / sizeof(operandCount[0]));
 				if (i->isStore()) {
 					live.add(i->oprnd2(),i); // base
 					live.add(i->oprnd1(),i); // val
@@ -1742,7 +1741,7 @@ namespace nanojit
 				}
 #endif
 			} else {
-                NanoAssert(unsigned(ref->opcode()) < sizeof(lirNames) / sizeof(lirNames[0]));
+                NanoAssert(size_t(ref->opcode()) < sizeof(lirNames) / sizeof(lirNames[0]));
 				copyName(ref, lirNames[ref->opcode()], lircounts.add(ref->opcode()));
 			}
 			StringNullTerminatedUTF8 cname(gc, names.get(ref)->name);
@@ -2165,11 +2164,11 @@ namespace nanojit
         return out->insStorei(v, b, d);
     }
 
-    LInsp LoadFilter::insCall(const CallInfo *call, LInsp args[])
+    LInsp LoadFilter::insCall(const CallInfo *ci, LInsp args[])
     {
-        if (!call->_cse)
+        if (!ci->_cse)
             exprs.clear();
-        return out->insCall(call, args);
+        return out->insCall(ci, args);
     }
 
     LInsp LoadFilter::ins0(LOpcode op)

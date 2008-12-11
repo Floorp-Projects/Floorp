@@ -121,7 +121,6 @@ namespace nanojit
                 }
 			}
 		}
-
         NanoAssert(a != 0);
         return a;
 	}

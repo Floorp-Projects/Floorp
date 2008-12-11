@@ -235,7 +235,7 @@ namespace nanojit
 		 *      
 		 *    For pointing to instructions further than this range LIR_tramp is used.
 		 */
-		union 
+		union
 		{
 			u_type u;
 			c_type c;
@@ -246,12 +246,7 @@ namespace nanojit
 		};
 
 		enum {
-			callInfoWords =
-#ifdef NANOJIT_64BIT
-			    2
-#else
-			    1
-#endif
+			callInfoWords = sizeof(LIns*)/sizeof(u_type)
 		};
 
 		uint32_t reference(LIns*) const;
@@ -500,7 +495,7 @@ namespace nanojit
 	class LirNameMap MMGC_SUBCLASS_DECL
 	{
 		template <class Key>
-		class CountMap : public avmplus::SortedMap<Key, int, avmplus::LIST_NonGCObjects> {
+		class CountMap: public avmplus::SortedMap<Key, int, avmplus::LIST_NonGCObjects> {
 		public:
 			CountMap(avmplus::GC*gc) : avmplus::SortedMap<Key, int, avmplus::LIST_NonGCObjects>(gc) {}
 			int add(Key k) {
@@ -553,12 +548,12 @@ namespace nanojit
 		DWB(LirNameMap*) names;
     public:
 		VerboseWriter(avmplus::GC *gc, LirWriter *out, LirNameMap* names) 
-			: LirWriter(out), code(gc), names(names) 
+			: LirWriter(out), code(gc), names(names)
 		{}
 
 		LInsp add(LInsp i) {
-			if (i)
-				code.add(i);
+            if (i)
+                code.add(i);
 			return i;
 		}
 
@@ -588,7 +583,6 @@ namespace nanojit
 			return add_flush(out->insBranch(v, condition, to));
 		}
 
-
 		LIns* ins0(LOpcode v) {
             if (v == LIR_label || v == LIR_start) {
                 flush();
@@ -597,7 +591,7 @@ namespace nanojit
 		}
 
 		LIns* ins1(LOpcode v, LInsp a) {
-			return isRet(v) ? add_flush(out->ins1(v, a)) : add(out->ins1(v, a));
+            return isRet(v) ? add_flush(out->ins1(v, a)) : add(out->ins1(v, a));
 		}
 		LIns* ins2(LOpcode v, LInsp a, LInsp b) {
 			return v == LIR_2 ? out->ins2(v,a,b) : add(out->ins2(v, a, b));
@@ -714,7 +708,6 @@ namespace nanojit
 			struct 
 			{
 				uint32_t lir;	// # instructions
-				uint32_t pages;	// pages consumed
 			}
 			_stats;
 
@@ -760,7 +753,7 @@ namespace nanojit
 		    LInsp	insCall(const CallInfo *call, LInsp args[]);
 			LInsp	insGuard(LOpcode op, LInsp cond, LIns *x);
 			LInsp	insBranch(LOpcode v, LInsp condition, LInsp to);
-			LInsp   insAlloc(int32_t size);
+            LInsp   insAlloc(int32_t size);
 
 			// buffer mgmt
 			LInsp	skip(size_t);
@@ -783,7 +776,7 @@ namespace nanojit
 	public:
 		LirFilter *in;
 		LirFilter(LirFilter *in) : in(in) {}
-		virtual ~LirFilter() {}
+        virtual ~LirFilter(){}
 
 		virtual LInsp read() {
 			return in->read();
