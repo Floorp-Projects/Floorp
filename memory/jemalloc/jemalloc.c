@@ -1162,7 +1162,7 @@ static size_t	opt_chunk_2pow = CHUNK_2POW_DEFAULT;
 static int	opt_reserve_min_lshift = 0;
 static int	opt_reserve_range_lshift = 0;
 #ifdef MALLOC_PAGEFILE
-static bool	opt_pagefile = true;
+static bool	opt_pagefile = false;
 #endif
 #ifdef MALLOC_UTRACE
 static bool	opt_utrace = false;
