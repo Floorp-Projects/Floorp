@@ -822,6 +822,7 @@ NS_METHOD nsDOMEvent::DuplicatePrivateData()
       mouseEvent->context = oldMouseEvent->context;
       mouseEvent->relatedTarget = oldMouseEvent->relatedTarget;
       mouseEvent->button = oldMouseEvent->button;
+      mouseEvent->pressure = oldMouseEvent->pressure;
       newEvent = mouseEvent;
       break;
     }
