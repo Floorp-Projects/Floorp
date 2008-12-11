@@ -4716,6 +4716,7 @@ cairo-qt)
     MOZ_ENABLE_QT=1
     MOZ_ENABLE_XREMOTE=1
     USE_ELF_DYNSTR_GC=
+    NS_PRINTING=
 
     AC_DEFINE(MOZ_X11)
     MOZ_X11=1
@@ -5242,6 +5243,11 @@ MOZ_ARG_DISABLE_BOOL(printing,
 [  --disable-printing  Disable printing support],
     NS_PRINTING=,
     NS_PRINTING=1 )
+
+if test "$MOZ_WIDGET_TOOLKIT" == "qt"; then
+    AC_MSG_WARN([Printing does not work with Qt at this time. Omitting printing support.])
+    NS_PRINTING=
+fi
 
 if test "$NS_PRINTING"; then
     AC_DEFINE(NS_PRINTING)
