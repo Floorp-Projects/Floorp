@@ -46,7 +46,9 @@
 #include "imgIDecoder.h"
 #include "imgIDecoderObserver.h"
 
+#include "nsIChannelEventSink.h"
 #include "nsIContentSniffer.h"
+#include "nsIInterfaceRequestor.h"
 #include "nsIRequest.h"
 #include "nsIProperties.h"
 #include "nsIStreamListener.h"
@@ -76,7 +78,9 @@ enum {
 class imgRequest : public imgILoad,
                    public imgIDecoderObserver,
                    public nsIStreamListener,
-                   public nsSupportsWeakReference
+                   public nsSupportsWeakReference,
+                   public nsIChannelEventSink,
+                   public nsIInterfaceRequestor
 {
 public:
   imgRequest();
@@ -86,6 +90,7 @@ public:
 
   nsresult Init(nsIURI *aURI,
                 nsIRequest *aRequest,
+                nsIChannel *aChannel,
                 imgCacheEntry *aCacheEntry,
                 void *aCacheId,
                 void *aLoadId);
@@ -150,6 +155,8 @@ public:
   NS_DECL_IMGICONTAINEROBSERVER
   NS_DECL_NSISTREAMLISTENER
   NS_DECL_NSIREQUESTOBSERVER
+  NS_DECL_NSICHANNELEVENTSINK
+  NS_DECL_NSIINTERFACEREQUESTOR
 
 private:
   nsCOMPtr<nsIRequest> mRequest;
@@ -159,6 +166,8 @@ private:
   nsCOMPtr<imgIDecoder> mDecoder;
   nsCOMPtr<nsIProperties> mProperties;
   nsCOMPtr<nsISupports> mSecurityInfo;
+  nsCOMPtr<nsIChannel> mChannel;
+  nsCOMPtr<nsIInterfaceRequestor> mPrevChannelSink;
 
   nsTObserverArray<imgRequestProxy*> mObservers;
 
