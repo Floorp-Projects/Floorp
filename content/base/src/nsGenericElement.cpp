@@ -3415,12 +3415,9 @@ nsGenericElement::DispatchClickEvent(nsPresContext* aPresContext,
                      aSourceEvent->widget, nsMouseEvent::eReal);
   event.refPoint = aSourceEvent->refPoint;
   PRUint32 clickCount = 1;
-  float pressure = 0;
   if (aSourceEvent->eventStructType == NS_MOUSE_EVENT) {
     clickCount = static_cast<nsMouseEvent*>(aSourceEvent)->clickCount;
-    pressure = static_cast<nsMouseEvent*>(aSourceEvent)->pressure;
   }
-  event.pressure = pressure;
   event.clickCount = clickCount;
   event.isShift = aSourceEvent->isShift;
   event.isControl = aSourceEvent->isControl;
