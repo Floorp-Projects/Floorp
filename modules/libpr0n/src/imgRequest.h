@@ -89,6 +89,7 @@ public:
   NS_DECL_ISUPPORTS
 
   nsresult Init(nsIURI *aURI,
+                nsIURI *aKeyURI,
                 nsIRequest *aRequest,
                 nsIChannel *aChannel,
                 imgCacheEntry *aCacheEntry,
@@ -127,6 +128,7 @@ private:
   inline nsresult GetResultFromImageStatus(PRUint32 aStatus) const;
   void Cancel(nsresult aStatus);
   nsresult GetURI(nsIURI **aURI);
+  nsresult GetKeyURI(nsIURI **aURI);
   nsresult GetPrincipal(nsIPrincipal **aPrincipal);
   nsresult GetSecurityInfo(nsISupports **aSecurityInfo);
   void RemoveFromCache();
@@ -160,7 +162,10 @@ public:
 
 private:
   nsCOMPtr<nsIRequest> mRequest;
+  // The original URI we were loaded with.
   nsCOMPtr<nsIURI> mURI;
+  // The URI we are keyed on in the cache.
+  nsCOMPtr<nsIURI> mKeyURI;
   nsCOMPtr<nsIPrincipal> mPrincipal;
   nsCOMPtr<imgIContainer> mImage;
   nsCOMPtr<imgIDecoder> mDecoder;
