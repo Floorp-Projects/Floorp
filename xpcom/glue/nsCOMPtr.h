@@ -757,7 +757,7 @@ nsCOMPtr
         }
 
       void
-      forget( T** rhs )
+      forget( T** rhs NS_OUTPARAM )
           // Set the target of rhs to the value of mRawPtr and null out mRawPtr.
           // Useful to avoid unnecessary AddRef/Release pairs with "out"
           // parameters.
@@ -1066,7 +1066,7 @@ class nsCOMPtr<nsISupports>
         }
 
       void
-      forget( nsISupports** rhs )
+      forget( nsISupports** rhs NS_OUTPARAM )
           // Set the target of rhs to the value of mRawPtr and null out mRawPtr.
           // Useful to avoid unnecessary AddRef/Release pairs with "out"
           // parameters.
