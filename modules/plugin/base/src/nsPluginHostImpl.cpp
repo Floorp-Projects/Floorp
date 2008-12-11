@@ -718,7 +718,7 @@ nsPluginTag::nsPluginTag(nsPluginInfo* aPluginInfo)
     mLibrary(nsnull),
     mEntryPoint(nsnull),
 #ifdef XP_MACOSX
-    mCanUnloadLibrary(!aPluginInfo->fBundle),
+    mCanUnloadLibrary(PR_FALSE),
 #else
     mCanUnloadLibrary(PR_TRUE),
 #endif
