@@ -191,8 +191,6 @@ namespace nanojit
 			void		releaseRegisters();
             void        patch(GuardRecord *lr);
             void        patch(SideExit *exit);
-			void        disconnectLoop(GuardRecord *lr);
-			void        reconnectLoop(GuardRecord *lr);
 			AssmError   error()	{ return _err; }
 			void		setError(AssmError e) { _err = e; }
 			void		setCallTable(const CallInfo *functions);

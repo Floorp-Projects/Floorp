@@ -65,9 +65,7 @@ namespace nanojit {
     
     struct GuardRecord 
     {
-        void* jmpToStub;
-        void* stubEntry;
-        void* jmpToTarget;
+        void* jmp;
         GuardRecord* next;
         SideExit* exit;
     };
