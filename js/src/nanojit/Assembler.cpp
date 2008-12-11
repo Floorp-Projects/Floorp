@@ -664,9 +664,9 @@ namespace nanojit
     {
         Fragment *frag = lr->exit->target;
 		NanoAssert(frag->fragEntry != 0);
-		NIns* was = nPatchBranch((NIns*)lr->jmpToTarget, frag->fragEntry);
+		NIns* was = nPatchBranch((NIns*)lr->jmp, frag->fragEntry);
 		verbose_only(verbose_outputf("patching jump at %p to target %p (was %p)\n",
-			lr->jmpToTarget, frag->fragEntry, was);)
+			lr->jmp, frag->fragEntry, was);)
 		(void)was;
     }
 
@@ -680,24 +680,6 @@ namespace nanojit
         }
     }
 
-	void Assembler::disconnectLoop(GuardRecord *lr)
-	{
-        NanoAssert(lr->stubEntry);
-        NIns* was = nPatchBranch((NIns*)lr->jmpToStub, (NIns*)lr->stubEntry);
-        verbose_only(verbose_outputf("disconnected loop-jump at %p: exiting to %p (was looping to %p)\n",
-                                     lr->jmpToStub, lr->stubEntry, was);)
-        NanoAssert(lr->exit->from->loopEntry == was);
-	}
-
-	void Assembler::reconnectLoop(GuardRecord *lr)
-	{
-        NanoAssert(lr->exit->from->loopEntry);
-        NIns* was = nPatchBranch((NIns*)lr->jmpToStub, lr->exit->from->loopEntry);
-        verbose_only(verbose_outputf("reconnected loop-jump at %p: looping to %p (was exiting to %p)\n",
-                                     lr->jmpToStub, lr->exit->from->loopEntry, was);)
-        NanoAssert(lr->stubEntry == was);
-	}
-    
     NIns* Assembler::asm_exit(LInsp guard)
     {
 		SideExit *exit = guard->record()->exit;
@@ -755,14 +737,14 @@ namespace nanojit
 		//NOP();
 
 		// we are done producing the exit logic for the guard so demark where our exit block code begins
-		guard->record()->stubEntry = _nIns;	 // target in exit path for our mainline conditional jump 
+		NIns* jmpTarget = _nIns;	 // target in exit path for our mainline conditional jump 
 
 		// swap back pointers, effectively storing the last location used in the exit path
 		swapptrs();
 		_inExit = false;
 		
 		//verbose_only( verbose_outputf("         LIR_xt/xf swapptrs, _nIns is now %08X(%08X), _nExitIns is now %08X(%08X)",_nIns, *_nIns,_nExitIns,*_nExitIns) );
-		verbose_only( verbose_outputf("        %p:",guard->record()->stubEntry);)
+		verbose_only( verbose_outputf("        %p:",jmpTarget);)
 		verbose_only( verbose_outputf("--------------------------------------- exit block (LIR_xt|LIR_xf)") );
 
 #ifdef NANOJIT_IA32
@@ -773,7 +755,7 @@ namespace nanojit
         verbose_only( _verbose = priorVerbose; )
         verbose_only(_stats.exitnative += (_stats.native-nativeSave));
 
-        return (NIns*) guard->record()->stubEntry;
+        return jmpTarget;
     }
 	
 	void Assembler::beginAssembly(Fragment *frag, RegAllocMap* branchStateMap)

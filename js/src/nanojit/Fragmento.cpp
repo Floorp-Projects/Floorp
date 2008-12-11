@@ -566,24 +566,6 @@ namespace nanojit
 		return f;
 	}
 
-	void Fragmento::disconnectLoops()
-	{
-		for (int i = 0; i < _frags.size(); ++i) {
-			Fragment* frag = _frags.at(i);
-			if (frag->lastIns->isop(LIR_loop))
-				_assm->disconnectLoop(frag->lastIns->record());
-		}
-	}
-
-	void Fragmento::reconnectLoops()
-	{
-		for (int i = 0; i < _frags.size(); ++i) {
-			Fragment* frag = _frags.at(i);
-			if (frag->lastIns->isop(LIR_loop))
-				_assm->reconnectLoop(frag->lastIns->record());
-		}
-	}
-
 	void Fragment::releaseLirBuffer()
 	{
 		lastIns = 0;	
