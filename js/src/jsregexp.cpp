@@ -2251,7 +2251,9 @@ class RegExpNativeCompiler {
     inline LIns*
     addName(LirBuffer* lirbuf, LIns* ins, const char* name)
     {
+#ifdef NJ_VERBOSE
         debug_only_v(lirbuf->names->addName(ins, name);)
+#endif
         return ins;
     }
 
@@ -2307,9 +2309,13 @@ class RegExpNativeCompiler {
         lir = lirBufWriter = new (&gc) LirBufWriter(lirbuf);
 
         /* FIXME Use bug 463260 smart pointer when available. */
+#ifdef NJ_VERBOSE
         debug_only_v(fragment->lirbuf->names = new (&gc) LirNameMap(&gc, NULL, fragmento->labels);)
+#endif
         /* FIXME Use bug 463260 smart pointer when available. */
+#ifdef NJ_VERBOSE
         debug_only_v(lir = new (&gc) VerboseWriter(&gc, lir, lirbuf->names);)
+#endif
 
         lir->ins0(LIR_start);
         lirbuf->state = state = addName(lirbuf, lir->insParam(0, 0), "state");
@@ -2336,7 +2342,9 @@ class RegExpNativeCompiler {
         }
 
         delete lirBufWriter;
+#ifdef NJ_VERBOSE
         debug_only_v(delete lir;)
+#endif
         return JS_TRUE;
     fail:
         if (lirbuf->outOMem() || oom) {
@@ -2346,7 +2354,9 @@ class RegExpNativeCompiler {
             fragment->blacklist();
         }
         delete lirBufWriter;
+#ifdef NJ_VERBOSE
         debug_only_v(delete lir;)
+#endif
         return JS_FALSE;
     }
 };
