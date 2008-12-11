@@ -550,7 +550,6 @@ private:
     guint              mDragMotionTime;
     guint              mDragMotionTimerID;
     nsCOMPtr<nsITimer> mDragLeaveTimer;
-    float              mLastMotionPressure;
 
     static PRBool      sIsDraggingOutOf;
     // drag in progress
