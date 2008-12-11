@@ -1826,11 +1826,13 @@ js_NewGCThing(JSContext *cx, uintN flags, size_t nbytes)
     doGC = (rt->gcMallocBytes >= rt->gcMaxMallocBytes && rt->gcPoke);
 #ifdef JS_GC_ZEAL
     doGC = doGC || rt->gcZeal >= 2 || (rt->gcZeal >= 1 && rt->gcPoke);
+    if (rt->gcZeal >= 1 && JS_TRACE_MONITOR(cx).useReservedObjects)
+        goto testReservedObjects;
 #endif
 
     arenaList = &rt->gcArenaList[flindex];
     for (;;) {
-        if (doGC && !JS_ON_TRACE(cx)) {
+        if (doGC && !JS_ON_TRACE(cx) && !JS_TRACE_MONITOR(cx).useReservedObjects) {
             /*
              * Keep rt->gcLock across the call into js_GC so we don't starve
              * and lose to racing threads who deplete the heap just after
@@ -1895,6 +1897,21 @@ js_NewGCThing(JSContext *cx, uintN flags, size_t nbytes)
             JS_ASSERT(arenaList->lastCount < thingsLimit);
             a = arenaList->last;
         } else {
+#ifdef JS_TRACER
+            if (JS_TRACE_MONITOR(cx).useReservedObjects) {
+#ifdef JS_GC_ZEAL
+testReservedObjects:
+#endif
+                JSTraceMonitor *tm = &JS_TRACE_MONITOR(cx);
+
+                thing = (JSGCThing *) tm->reservedObjects;
+                flagp = GetGCThingFlags(thing);
+                JS_ASSERT(thing);
+                tm->reservedObjects = JSVAL_TO_OBJECT(tm->reservedObjects->fslots[0]);
+                break;
+            }
+#endif
+
             a = NewGCArena(rt);
             if (!a) {
                 if (doGC || JS_ON_TRACE(cx))
@@ -2199,6 +2216,33 @@ js_NewWeaklyRootedDouble(JSContext *cx, jsdouble d)
     }
     return dp;
 }
+
+#ifdef JS_TRACER
+JSBool
+js_ReserveObjects(JSContext *cx, size_t nobjects)
+{
+    /*
+     * Ensure at least nobjects objects are in the list. fslots[1] of each
+     * object on the reservedObjects list is the length of the list from there.
+     */
+    JSObject *&head = JS_TRACE_MONITOR(cx).reservedObjects;
+    size_t i = head ? JSVAL_TO_INT(head->fslots[1]) : 0;
+    while (i < nobjects) {
+        JSObject *obj = (JSObject *) js_NewGCThing(cx, GCX_OBJECT, sizeof(JSObject));
+        if (!obj)
+            return JS_FALSE;
+        memset(obj, 0, sizeof(JSObject));
+        /* The class must be set to something for finalization. */
+        obj->classword = (jsuword) &js_ObjectClass;
+        obj->fslots[0] = OBJECT_TO_JSVAL(head);
+        i++;
+        obj->fslots[1] = INT_TO_JSVAL(i);
+        head = obj;
+    }
+
+    return JS_TRUE;
+}
+#endif JS_TRACER
 
 JSBool
 js_AddAsGCBytes(JSContext *cx, size_t sz)
@@ -3020,9 +3064,18 @@ js_TraceTraceMonitor(JSTracer *trc, JSTraceMonitor *tm)
 {
     if (IS_GC_MARKING_TRACER(trc)) {
         tm->recoveryDoublePoolPtr = tm->recoveryDoublePool;
+
         /* Make sure the global shape changes and will force a flush
            of the code cache. */
-        tm->globalShape = -1; 
+        tm->globalShape = -1;
+
+        /* Keep the reserved objects. */
+        for (JSObject *obj = tm->reservedObjects; obj; obj = JSVAL_TO_OBJECT(obj->fslots[0])) {
+            uint8 *flagp = GetGCThingFlags(obj);
+            JS_ASSERT((*flagp & GCF_TYPEMASK) == GCX_OBJECT);
+            JS_ASSERT(*flagp != GCF_FINAL);
+            *flagp |= GCF_MARK;
+        }
     }
 }
 
