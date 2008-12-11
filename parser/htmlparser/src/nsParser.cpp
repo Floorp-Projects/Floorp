@@ -2192,7 +2192,6 @@ nsParser::ResumeParse(PRBool allowIteration, PRBool aIsFinalChunk,
     NS_ASSERTION(!mSpeculativeScriptThread || !mSpeculativeScriptThread->Parsing(),
                  "Bad races happening, expect to crash!");
 
-    CParserContext *originalContext = mParserContext;
     result = WillBuildModel(mParserContext->mScanner->GetFilename());
     if (NS_FAILED(result)) {
       mFlags &= ~NS_PARSER_FLAG_CAN_TOKENIZE;
@@ -2241,13 +2240,9 @@ nsParser::ResumeParse(PRBool allowIteration, PRBool aIsFinalChunk,
             mParserContext->mDTD->WillInterruptParse(mSink);
           }
 
-          BlockParser();
-
-          // If our context has changed, then someone did a document.write of
-          // an asynchronous script that blocked a sub context. Since *that*
-          // block already might have started a speculative parse, we don't
-          // have to.
-          if (mParserContext == originalContext) {
+          if (mFlags & NS_PARSER_FLAG_PARSER_ENABLED) {
+            // If we were blocked by a recursive invocation, don't re-block.
+            BlockParser();
             SpeculativelyParse();
           }
           return NS_OK;
