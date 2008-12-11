@@ -170,7 +170,7 @@ namespace nanojit
         Fragment *frag = exit->target;
         GuardRecord *lr = 0;
 		bool destKnown = (frag && frag->fragEntry);
-		if (destKnown && !trees && !guard->isop(LIR_loop))
+		if (destKnown && !trees)
 		{
 			// already exists, emit jump now.  no patching required.
 			JMP(frag->fragEntry);
@@ -185,11 +185,11 @@ namespace nanojit
             underrunProtect(14);
             _nIns -= 8;
             *(intptr_t *)_nIns = intptr_t(_epilogue);
-            lr->jmpToTarget = _nIns;
+            lr->jmp = _nIns;
             JMPm_nochk(0);
 #else
             JMP_long(_epilogue);
-            lr->jmpToTarget = _nIns;
+            lr->jmp = _nIns;
 #endif
 		}
 		// first restore ESP from EBP, undoing SUBi(SP,amt) from genPrologue
@@ -963,22 +963,12 @@ namespace nanojit
 
 	void Assembler::asm_loop(LInsp ins, NInsList& loopJumps)
 	{
-		GuardRecord* guard = ins->record();
-		SideExit* exit = guard->exit;
-
-		// Emit an exit stub that the loop may be patched to jump to (for example if we
-		// want to terminate the loop because a timeout fires).
-		asm_exit(ins);
-
-		// Emit the patchable jump itself.
 		JMP_long(0);
-
         loopJumps.add(_nIns);
-		guard->jmpToStub = _nIns;
 
 		// If the target we are looping to is in a different fragment, we have to restore
 		// SP since we will target fragEntry and not loopEntry.
-		if (exit->target != _thisfrag)
+	    if (ins->record()->exit->target != _thisfrag)
 	        MR(SP,FP);
 	}	
 

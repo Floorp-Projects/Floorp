@@ -128,7 +128,7 @@ Assembler::nFragExit(LInsp guard)
         JMP_far(_epilogue);
 
         // stick the jmp pointer to the start of the sequence
-        lr->jmpToTarget = _nIns;
+        lr->jmp = _nIns;
     }
 
     // pop the stack frame first
@@ -1223,24 +1223,14 @@ Assembler::asm_cmp(LIns *cond)
 void
 Assembler::asm_loop(LInsp ins, NInsList& loopJumps)
 {
-    GuardRecord* guard = ins->record();
-    SideExit* exit = guard->exit;
-
     // XXX asm_loop should be in Assembler.cpp!
 
-    // Emit an exit stub that the loop may be patched to jump to (for example if we
-    // want to terminate the loop because a timeout fires).
-    asm_exit(ins);
-
-    // Emit the patchable jump itself.
     JMP_far(0);
-
     loopJumps.add(_nIns);
-    guard->jmpToStub = _nIns;
 
     // If the target we are looping to is in a different fragment, we have to restore
     // SP since we will target fragEntry and not loopEntry.
-    if (exit->target != _thisfrag)
+    if (ins->record()->exit->target != _thisfrag)
         MR(SP,FP);
 }
 
