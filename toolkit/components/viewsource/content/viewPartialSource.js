@@ -352,7 +352,8 @@ function viewPartialSourceForFragment(node, context)
   var title = getViewSourceBundle().getString("viewMathMLSourceTitle");
   var wrapClass = gWrapLongLines ? ' class="wrap"' : '';
   var source =
-    '<html>'
+    '<!DOCTYPE html>'
+  + '<html>'
   + '<head><title>' + title + '</title>'
   + '<link rel="stylesheet" type="text/css" href="' + gViewSourceCSS + '">'
   + '<style type="text/css">'
@@ -367,10 +368,7 @@ function viewPartialSourceForFragment(node, context)
   ; // end
 
   // display
-  var doc = getBrowser().contentDocument.wrappedJSObject;
-  doc.open("text/html", "replace");
-  doc.write(source);
-  doc.close();
+  getBrowser().loadURI("data:text/html;charset=utf-8," + encodeURIComponent(source));
 }
 
 ////////////////////////////////////////////////////////////////////////////////
