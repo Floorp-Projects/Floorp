@@ -322,7 +322,10 @@ protected:
     // In this case it is the caller's responsibility to ensure
     // FireOnLocationChange is called.
     // In all other cases PR_FALSE is returned.
-    PRBool OnNewURI(nsIURI * aURI, nsIChannel * aChannel, PRUint32 aLoadType,
+    // Either aChannel or aOwner must be null.  If aChannel is
+    // present, the owner should be gotten from it.
+    PRBool OnNewURI(nsIURI * aURI, nsIChannel * aChannel, nsISupports* aOwner,
+                    PRUint32 aLoadType,
                     PRBool aFireOnLocationChange,
                     PRBool aAddToGlobalHistory = PR_TRUE);
 
@@ -330,8 +333,11 @@ protected:
 
     // Session History
     virtual PRBool ShouldAddToSessionHistory(nsIURI * aURI);
+    // Either aChannel or aOwner must be null.  If aChannel is
+    // present, the owner should be gotten from it.
     virtual nsresult AddToSessionHistory(nsIURI * aURI, nsIChannel * aChannel,
-        nsISHEntry ** aNewEntry);
+                                         nsISupports* aOwner,
+                                         nsISHEntry ** aNewEntry);
     nsresult DoAddChildSHEntry(nsISHEntry* aNewEntry, PRInt32 aChildOffset);
 
     NS_IMETHOD LoadHistoryEntry(nsISHEntry * aEntry, PRUint32 aLoadType);
