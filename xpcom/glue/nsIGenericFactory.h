@@ -187,8 +187,8 @@ typedef NS_CALLBACK(NSFactoryDestructorProcPtr)(void);
  * 
  * @see nsIClassInfo.idl
  **/
-typedef NS_CALLBACK(NSGetInterfacesProcPtr)(PRUint32 *countp,
-                                            nsIID* **array);
+typedef NS_CALLBACK(NSGetInterfacesProcPtr)(PRUint32 * NS_OUTPARAM countp,
+                                            nsIID* ** NS_OUTPARAM array);
 
 /** 
  * NSGetLanguageHelperProcPtr

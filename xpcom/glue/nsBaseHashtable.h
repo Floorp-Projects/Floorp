@@ -121,7 +121,7 @@ public:
    * @return PR_TRUE if the key exists. If key does not exist, pData is not
    *   modified.
    */
-  PRBool Get(KeyType aKey, UserDataType* pData) const
+  PRBool Get(KeyType aKey, UserDataType* pData NS_OUTPARAM) const
   {
     EntryType* ent = GetEntry(aKey);
 
