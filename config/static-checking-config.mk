@@ -1,7 +1,7 @@
 # The entire tree should be subject to static analysis using the XPCOM
 # script. Additional scripts may be added by specific subdirectories.
 
-DEHYDRA_SCRIPT = $(topsrcdir)/xpcom/analysis/static-checking.js
+DEHYDRA_SCRIPT = $(topsrcdir)/config/static-checking.js
 
 DEHYDRA_MODULES = \
   $(topsrcdir)/xpcom/analysis/final.js \
@@ -11,7 +11,7 @@ TREEHYDRA_MODULES = \
   $(topsrcdir)/xpcom/analysis/outparams.js \
   $(topsrcdir)/xpcom/analysis/stack.js \
   $(topsrcdir)/xpcom/analysis/flow.js \
-  $(topsrcdir)/xpcom/analysis/jsstack.js \
+  $(topsrcdir)/js/src/jsstack.js \
   $(NULL)
 
 DEHYDRA_ARGS = \
