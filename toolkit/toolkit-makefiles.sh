@@ -352,6 +352,10 @@ MAKEFILES_plugin="
   modules/plugin/sdk/samples/winless/windows/Makefile
 "
 
+MAKEFILES_freetype2="
+  modules/freetype2/Makefile
+"
+
 MAKEFILES_netwerk="
   netwerk/Makefile
   netwerk/base/Makefile
@@ -1085,5 +1089,11 @@ fi
 if [ "$MOZ_SYDNEYAUDIO" ]; then
  add_makefiles "
    $MAKEFILES_libsydneyaudio
+ "
+fi
+
+if [ "$MOZ_TREE_FREETYPE" ]; then
+ add_makefiles "
+   $MAKEFILES_freetype2
  "
 fi
