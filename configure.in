@@ -1244,6 +1244,9 @@ Darwin)
     i*86*)
         OS_TEST=i386 
         ;;
+    x86_64)
+        OS_TEST=x86_64
+        ;;
     *)
         if test -z "$CROSS_COMPILE" ; then
             OS_TEST=`uname -p`
