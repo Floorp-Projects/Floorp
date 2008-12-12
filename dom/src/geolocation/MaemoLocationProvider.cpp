@@ -38,6 +38,8 @@
 
 #include "MaemoLocationProvider.h"
 #include "nsGeolocation.h"
+#include "nsIClassInfo.h"
+#include "nsDOMClassInfoID.h"
 
 
 ////////////////////////////////////////////////////
