@@ -693,13 +693,6 @@ BookmarksStore.prototype = {
   }
 };
 
-/*
- * Tracker objects for each engine may need to subclass the
- * getScore routine, which returns the current 'score' for that
- * engine. How the engine decides to set the score is upto it,
- * as long as the value between 0 and 100 actually corresponds
- * to its urgency to sync.
- */
 function BookmarksTracker() {
   this._init();
 }
