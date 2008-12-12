@@ -84,6 +84,20 @@ Store.prototype = {
     this._log = Log4Moz.repository.getLogger("Store." + this._logName);
   },
 
+  applyIncoming: function BStore_applyIncoming(onComplete, record) {
+    let fn = function(rec) {
+      let self = yield;
+      if (!record.cleartext)
+        this.remove(record);
+      else if (!this.itemExists(record.id))
+        this.create(record);
+      else
+        this.update(record);
+    };
+    fn.async(this, onComplete, record);
+  },
+
+  // FIXME unused now
   _applyCommands: function Store__applyCommands(commandList) {
     let self = yield;
 
