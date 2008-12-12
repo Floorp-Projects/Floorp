@@ -1,0 +1,67 @@
+<!DOCTYPE HTML>
+<html>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=345339
+-->
+<head>
+  <title>Test for Bug 345339</title>
+  <script type="text/javascript" src="/MochiKit/MochiKit.js"></script>
+  <script type="text/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
+</head>
+<body>
+<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=345339">Mozilla Bug 345339</a>
+<p id="display"></p>
+<div id="content" style="display: none">
+</div>
+ <iframe id="testframe"
+         src="http://localhost:8888/tests/content/base/test/345339_iframe.html">
+ </iframe>
+<pre id="test">
+<script class="testbody" type="text/javascript">
+/** Test for Bug 345339 **/
+SimpleTest.waitForExplicitFinish();
+
+function afterLoad() {
+    var iframeDoc = $("testframe").contentDocument;
+
+    /* change all the form controls */
+    iframeDoc.getElementById("select").selectedIndex = 1;
+    iframeDoc.getElementById("radio2").checked = true;
+    iframeDoc.getElementById("password").value = "123456";
+    iframeDoc.getElementById("hidden").value = "gecko";
+
+    netscape.security.PrivilegeManager.enablePrivilege("UniversalFileRead");
+    iframeDoc.getElementById("file").value = "dummyfile.txt";
+
+    /* Reload the page */
+    $("testframe").setAttribute("onload", "afterReload()");
+    iframeDoc.location.reload();
+}
+
+addLoadEvent(afterLoad);
+
+function afterReload() {
+    var iframeDoc = $("testframe").contentDocument;
+
+    is(iframeDoc.getElementById("select").selectedIndex, 1,
+       "select element selected index preserved");
+    is(iframeDoc.getElementById("radio1").checked, false,
+       "radio button #1 value preserved");
+    is(iframeDoc.getElementById("radio2").checked, true,
+       "radio button #2 value preserved");
+    isnot(iframeDoc.getElementById("password").value, "123456",
+       "password field value forgotten");
+    is(iframeDoc.getElementById("hidden").value, "gecko",
+       "hidden field value preserved");
+    netscape.security.PrivilegeManager.enablePrivilege("UniversalFileRead");
+    is(iframeDoc.getElementById("file").value, "dummyfile.txt",
+       "file field value preserved");
+
+    SimpleTest.finish();
+}
+</script>
+</pre>
+</body>
+</html>
+

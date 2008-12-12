@@ -145,6 +145,66 @@ static NS_DEFINE_CID(kXULControllersCID,  NS_XULCONTROLLERS_CID);
 
 static const char kWhitespace[] = "\n\r\t\b";
 
+#define NS_INPUT_ELEMENT_STATE_IID                 \
+{ /* dc3b3d14-23e2-4479-b513-7b369343e3a0 */       \
+  0xdc3b3d14,                                      \
+  0x23e2,                                          \
+  0x4479,                                          \
+  {0xb5, 0x13, 0x7b, 0x36, 0x93, 0x43, 0xe3, 0xa0} \
+}
+
+class nsHTMLInputElementState : public nsISupports
+{
+  public:
+    NS_DECLARE_STATIC_IID_ACCESSOR(NS_INPUT_ELEMENT_STATE_IID)
+    NS_DECL_ISUPPORTS
+
+    PRBool IsCheckedSet() {
+      return mCheckedSet;
+    }
+
+    PRBool GetChecked() {
+      return mChecked;
+    }
+
+    void SetChecked(PRBool aChecked) {
+      mChecked = aChecked;
+      mCheckedSet = PR_TRUE;
+    }
+
+    const nsString& GetValue() {
+      return mValue;
+    }
+
+    void SetValue(const nsAString &aValue) {
+      mValue = aValue;
+    }
+
+    const nsString& GetFilename() {
+      return mFilename;
+    }
+
+    void SetFilename(const nsAString &aFilename) {
+      mFilename = aFilename;
+    }
+
+    nsHTMLInputElementState()
+      : mValue()
+      , mFilename()
+      , mChecked(PR_FALSE)
+      , mCheckedSet(PR_FALSE)
+    {};
+ 
+  protected:
+    nsString mValue;
+    nsString mFilename;
+    PRPackedBool mChecked;
+    PRPackedBool mCheckedSet;
+};
+
+NS_IMPL_ISUPPORTS1(nsHTMLInputElementState, nsHTMLInputElementState)
+NS_DEFINE_STATIC_IID_ACCESSOR(nsHTMLInputElementState, NS_INPUT_ELEMENT_STATE_IID)
+
 class nsHTMLInputElement : public nsGenericHTMLFormElement,
                            public nsImageLoadingContent,
                            public nsIDOMHTMLInputElement,
@@ -2544,7 +2604,8 @@ nsHTMLInputElement::SaveState()
 {
   nsresult rv = NS_OK;
 
-  nsPresState *state = nsnull;
+  nsRefPtr<nsHTMLInputElementState> inputState = nsnull;
+
   switch (mType) {
     case NS_FORM_INPUT_CHECKBOX:
     case NS_FORM_INPUT_RADIO:
@@ -2557,17 +2618,12 @@ nsHTMLInputElement::SaveState()
         // (always save if it's a radio button so that the checked
         // state of all radio buttons is restored)
         if (mType == NS_FORM_INPUT_RADIO || checked != defaultChecked) {
-          rv = GetPrimaryPresState(this, &state);
-          if (state) {
-            if (checked) {
-              rv = state->SetStateProperty(NS_LITERAL_STRING("checked"),
-                                           NS_LITERAL_STRING("t"));
-            } else {
-              rv = state->SetStateProperty(NS_LITERAL_STRING("checked"),
-                                           NS_LITERAL_STRING("f"));
-            }
-            NS_ASSERTION(NS_SUCCEEDED(rv), "checked save failed!");
+          inputState = new nsHTMLInputElementState();
+          if (!inputState) {
+            return NS_ERROR_OUT_OF_MEMORY;
           }
+
+          inputState->SetChecked(checked);
         }
         break;
       }
@@ -2579,47 +2635,50 @@ nsHTMLInputElement::SaveState()
     case NS_FORM_INPUT_HIDDEN:
       {
         if (GET_BOOLBIT(mBitField, BF_VALUE_CHANGED)) {
-          rv = GetPrimaryPresState(this, &state);
-          if (state) {
-            nsAutoString value;
-            GetValue(value);
-            rv = nsLinebreakConverter::ConvertStringLineBreaks(
-                     value,
-                     nsLinebreakConverter::eLinebreakPlatform,
-                     nsLinebreakConverter::eLinebreakContent);
-            NS_ASSERTION(NS_SUCCEEDED(rv), "Converting linebreaks failed!");
-            rv = state->SetStateProperty(NS_LITERAL_STRING("v"), value);
-            NS_ASSERTION(NS_SUCCEEDED(rv), "value save failed!");
+          inputState = new nsHTMLInputElementState();
+          if (!inputState) {
+            return NS_ERROR_OUT_OF_MEMORY;
           }
-        }
-        break;
-      }
+
+          nsAutoString value;
+          GetValue(value);
+          rv = nsLinebreakConverter::ConvertStringLineBreaks(
+                 value,
+                 nsLinebreakConverter::eLinebreakPlatform,
+                 nsLinebreakConverter::eLinebreakContent);
+          NS_ASSERTION(NS_SUCCEEDED(rv), "Converting linebreaks failed!");
+          inputState->SetValue(value);
+       }
+      break;
+    }
     case NS_FORM_INPUT_FILE:
       {
         if (mFileName) {
-          rv = GetPrimaryPresState(this, &state);
-          if (state) {
-            rv = state->SetStateProperty(NS_LITERAL_STRING("f"), *mFileName);
-            NS_ASSERTION(NS_SUCCEEDED(rv), "value save failed!");
+          inputState = new nsHTMLInputElementState();
+          if (!inputState) {
+            return NS_ERROR_OUT_OF_MEMORY;
           }
+
+          inputState->SetFilename(*mFileName);
         }
         break;
       }
   }
   
+  nsPresState* state = nsnull;
+  if (inputState) {
+    rv = GetPrimaryPresState(this, &state);
+    if (state) {
+      state->SetStateProperty(inputState);
+    }
+  }
+
   if (GET_BOOLBIT(mBitField, BF_DISABLED_CHANGED)) {
     rv |= GetPrimaryPresState(this, &state);
     if (state) {
       PRBool disabled;
       GetDisabled(&disabled);
-      if (disabled) {
-        rv |= state->SetStateProperty(NS_LITERAL_STRING("disabled"),
-                                     NS_LITERAL_STRING("t"));
-      } else {
-        rv |= state->SetStateProperty(NS_LITERAL_STRING("disabled"),
-                                     NS_LITERAL_STRING("f"));
-      }
-      NS_ASSERTION(NS_SUCCEEDED(rv), "disabled save failed!");
+      state->SetDisabled(disabled);
     }
   }
 
@@ -2685,50 +2744,37 @@ nsHTMLInputElement::RestoreState(nsPresState* aState)
 {
   PRBool restoredCheckedState = PR_FALSE;
 
-  nsresult rv;
-  
-  switch (mType) {
-    case NS_FORM_INPUT_CHECKBOX:
-    case NS_FORM_INPUT_RADIO:
-      {
-        nsAutoString checked;
-        rv = aState->GetStateProperty(NS_LITERAL_STRING("checked"), checked);
-        NS_ASSERTION(NS_SUCCEEDED(rv), "checked restore failed!");
-        if (rv == NS_STATE_PROPERTY_EXISTS) {
-          restoredCheckedState = PR_TRUE;
-          DoSetChecked(checked.EqualsLiteral("t"), PR_FALSE);
-        }
-        break;
-      }
+  nsCOMPtr<nsHTMLInputElementState> inputState
+    (do_QueryInterface(aState->GetStateProperty()));
 
-    case NS_FORM_INPUT_TEXT:
-    case NS_FORM_INPUT_HIDDEN:
-      {
-        nsAutoString value;
-        rv = aState->GetStateProperty(NS_LITERAL_STRING("v"), value);
-        NS_ASSERTION(NS_SUCCEEDED(rv), "value restore failed!");
-        if (rv == NS_STATE_PROPERTY_EXISTS) {
-          SetValueInternal(value, nsnull, PR_FALSE);
+  if (inputState) {
+    switch (mType) {
+      case NS_FORM_INPUT_CHECKBOX:
+      case NS_FORM_INPUT_RADIO:
+        {
+          if (inputState->IsCheckedSet()) {
+            restoredCheckedState = PR_TRUE;
+            DoSetChecked(inputState->GetChecked());
+          }
+          break;
         }
-        break;
-      }
-    case NS_FORM_INPUT_FILE:
-      {
-        nsAutoString value;
-        rv = aState->GetStateProperty(NS_LITERAL_STRING("f"), value);
-        NS_ASSERTION(NS_SUCCEEDED(rv), "value restore failed!");
-        if (rv == NS_STATE_PROPERTY_EXISTS) {
-          SetFileName(value);
+
+      case NS_FORM_INPUT_TEXT:
+      case NS_FORM_INPUT_HIDDEN:
+        {
+          SetValueInternal(inputState->GetValue(), nsnull, PR_FALSE);
+          break;
         }
-        break;
-      }
+      case NS_FORM_INPUT_FILE:
+        {
+          SetFileName(inputState->GetFilename());
+          break;
+        }
+    }
   }
-  
-  nsAutoString disabled;
-  rv = aState->GetStateProperty(NS_LITERAL_STRING("disabled"), disabled);
-  NS_ASSERTION(NS_SUCCEEDED(rv), "disabled restore failed!");
-  if (rv == NS_STATE_PROPERTY_EXISTS) {
-    SetDisabled(disabled.EqualsLiteral("t"));
+
+  if (aState->IsDisabledSet()) {
+    SetDisabled(aState->GetDisabled());
   }
 
   return restoredCheckedState;
