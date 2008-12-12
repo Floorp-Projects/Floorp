@@ -376,7 +376,7 @@ namespace nanojit
 		}
 	}
 
-	NIns* Assembler::asm_branch(bool branchOnFalse, LInsp cond, NIns* targ)
+	NIns* Assembler::asm_branch(bool branchOnFalse, LInsp cond, NIns* targ, bool isfar)
 	{
 		NIns* at = 0;
 		LOpcode condop = cond->opcode();
