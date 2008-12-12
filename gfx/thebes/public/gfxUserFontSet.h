@@ -144,24 +144,10 @@ class gfxProxyFontEntry;
 class THEBES_API gfxUserFontSet {
 
 public:
-    class LoaderContext;
-    typedef nsresult (*LoaderCallback) (gfxFontEntry *aFontToLoad,
-                                        const gfxFontFaceSrc *aFontFaceSrc,
-                                        LoaderContext *aContextData);
-
-    class LoaderContext {
-    public:
-        LoaderContext(LoaderCallback aLoader)
-            : mUserFontSet(nsnull), mLoaderProc(aLoader) { }
-        virtual ~LoaderContext() { }
-
-        gfxUserFontSet* mUserFontSet;
-        LoaderCallback  mLoaderProc;
-    };
 
     THEBES_INLINE_DECL_REFCOUNTING(gfxUserFontSet)
 
-    gfxUserFontSet(LoaderContext *aContext);
+    gfxUserFontSet();
     virtual ~gfxUserFontSet();
 
     enum {
@@ -201,7 +187,13 @@ public:
 
     // lookup a font entry for a given style, returns null if not loaded
     gfxFontEntry *FindFontEntry(const nsAString& aName, 
-                                const gfxFontStyle& aFontStyle, PRBool& aNeedsBold);
+                                const gfxFontStyle& aFontStyle, 
+                                PRBool& aNeedsBold);
+                                
+    // initialize the process that loads external font data, which upon 
+    // completion will call OnLoadComplete method
+    virtual nsresult StartLoad(gfxFontEntry *aFontToLoad, 
+                               const gfxFontFaceSrc *aFontFaceSrc) = 0;
 
     // when download has been completed, pass back data here
     // aDownloadStatus == NS_OK ==> download succeeded, error otherwise
@@ -232,9 +224,6 @@ protected:
     nsRefPtrHashtable<nsStringHashKey, gfxMixedFontFamily> mFontFamilies;
 
     PRUint64        mGeneration;
-
-    // owned by user font set obj, deleted within destructor
-    nsAutoPtr<LoaderContext> mLoaderContext;
 };
 
 // acts a placeholder until the real font is downloaded
