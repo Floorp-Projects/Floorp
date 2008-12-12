@@ -48,6 +48,7 @@ _TEST_FILES = 	test_autoplay.html \
                 test_constants.html \
                 test_controls.html \
                 test_currentTime.html \
+                test_decoder_disable.html \
                 test_duration1.html \
                 test_ended1.html \
                 test_ended2.html \
