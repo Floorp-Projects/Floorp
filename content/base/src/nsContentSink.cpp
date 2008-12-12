@@ -779,7 +779,7 @@ nsContentSink::ProcessStyleLink(nsIContent* aElement,
 nsresult
 nsContentSink::ProcessMETATag(nsIContent* aContent)
 {
-  NS_ASSERTION(aContent, "missing base-element");
+  NS_ASSERTION(aContent, "missing meta-element");
 
   nsresult rv = NS_OK;
 
@@ -794,6 +794,16 @@ nsContentSink::ProcessMETATag(nsIContent* aContent)
       nsCOMPtr<nsIAtom> fieldAtom(do_GetAtom(header));
       rv = ProcessHeaderData(fieldAtom, result, aContent); 
     }
+  }
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  /* Look for the viewport meta tag. If we find it, process it and put the
+   * data into the document header. */
+  if (aContent->AttrValueIs(kNameSpaceID_None, nsGkAtoms::name,
+                            nsGkAtoms::viewport, eIgnoreCase)) {
+    nsAutoString value;
+    aContent->GetAttr(kNameSpaceID_None, nsGkAtoms::content, value);
+    rv = nsContentUtils::ProcessViewportInfo(mDocument, value);
   }
 
   return rv;

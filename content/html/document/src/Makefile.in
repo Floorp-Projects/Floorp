@@ -75,6 +75,7 @@ REQUIRES	= xpcom \
 		  editor \
 		  plugin \
 		  txtsvc \
+		  html5 \
 		  $(NULL)
 
 CPPSRCS		= \
