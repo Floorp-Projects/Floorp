@@ -470,7 +470,7 @@ nsEditor::GetDesiredSpellCheckState()
 }
 
 NS_IMETHODIMP
-nsEditor::PreDestroy()
+nsEditor::PreDestroy(PRBool aDestroyingFrames)
 {
   if (mDidPreDestroy)
     return NS_OK;
@@ -482,7 +482,7 @@ nsEditor::PreDestroy()
   // object that is still in use! It will be freed when the editor is
   // destroyed.
   if (mInlineSpellChecker)
-    mInlineSpellChecker->Cleanup();
+    mInlineSpellChecker->Cleanup(aDestroyingFrames);
 
   // tell our listeners that the doc is going away
   NotifyDocumentListeners(eDocumentToBeDestroyed);
