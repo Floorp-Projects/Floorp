@@ -58,16 +58,7 @@ CanvasBrowser.prototype = {
   },
   
   get canvasRect() {
-    if (!this._canvasRect) {
-      let canvasRect = this._canvas.getBoundingClientRect();
-      this._canvasRect = {
-        width: canvasRect.width,
-        height: canvasRect.height,
-        left: canvasRect.left,
-        top: canvasRect.top
-      }
-    }
-    return this._canvasRect;
+    return this._canvas.getBoundingClientRect();
   },
 
   get _effectiveCanvasDimensions() {
