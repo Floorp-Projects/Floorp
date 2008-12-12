@@ -11777,9 +11777,6 @@ nsCSSFrameConstructor::CreateFloatingLetterFrame(
   // its primary frame to be a text frame).  So use its parent for the
   // first-letter.
   nsIContent* letterContent = aTextContent->GetParent();
-  NS_ASSERTION(!letterContent->IsRootOfNativeAnonymousSubtree(),
-               "Reframes of this letter frame will mess with the root of a "
-               "native anonymous content subtree!");
   InitAndRestoreFrame(aState, letterContent,
                       aState.GetGeometricParent(aStyleContext->GetStyleDisplay(),
                                                 aParentFrame),
