@@ -231,7 +231,8 @@ js_FillPropertyCache(JSContext *cx, JSObject *obj, jsuword kshape,
 #endif
                         SCOPE_MAKE_UNIQUE_SHAPE(cx, scope);
                         SCOPE_SET_BRANDED(scope);
-                        kshape = scope->shape;
+                        if (OBJ_SCOPE(obj) == scope)
+                            kshape = scope->shape;
                     }
                     vword = JSVAL_OBJECT_TO_PCVAL(v);
                     break;
@@ -2647,7 +2648,9 @@ js_Interpret(JSContext *cx)
             ENABLE_TRACER(js_MonitorLoopEdge(cx, inlineCallCount));           \
             fp = cx->fp;                                                      \
             script = fp->script;                                              \
-            atoms = script->atomMap.vector;                                   \
+            atoms = fp->imacpc                                                \
+                    ? COMMON_ATOMS_START(&rt->atomState)                      \
+                    : script->atomMap.vector;                                 \
             currentVersion = (JSVersion) script->version;                     \
             JS_ASSERT(fp->regs == &regs);                                     \
             if (cx->throwing)                                                 \
@@ -3074,7 +3077,9 @@ js_Interpret(JSContext *cx)
 
                 /* Restore the calling script's interpreter registers. */
                 script = fp->script;
-                atoms = script->atomMap.vector;
+                atoms = fp->imacpc
+                        ? COMMON_ATOMS_START(&rt->atomState)
+                        : script->atomMap.vector;
 
                 /* Resume execution in the calling frame. */
                 inlineCallCount--;
@@ -6482,6 +6487,19 @@ js_Interpret(JSContext *cx)
             fp->slots[slot] = POP_OPND();
           END_CASE(JSOP_SETLOCALPOP)
 
+          BEGIN_CASE(JSOP_IFPRIMTOP)
+            /*
+             * If the top of stack is of primitive type, jump to our target.
+             * Otherwise advance to the next opcode.
+             */
+            JS_ASSERT(regs.sp > StackBase(fp));
+            rval = FETCH_OPND(-1);
+            if (JSVAL_IS_PRIMITIVE(rval)) {
+                len = GET_JUMP_OFFSET(regs.pc);
+                BRANCH(len);
+            }
+          END_CASE(JSOP_IFPRIMTOP)
+
           BEGIN_CASE(JSOP_INSTANCEOF)
             rval = FETCH_OPND(-1);
             if (JSVAL_IS_PRIMITIVE(rval) ||
@@ -6933,7 +6951,6 @@ js_Interpret(JSContext *cx)
           L_JSOP_DEFXMLNS:
 # endif
 
-          L_JSOP_UNUSED131:
           L_JSOP_UNUSED201:
           L_JSOP_UNUSED202:
           L_JSOP_UNUSED203:

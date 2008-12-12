@@ -157,18 +157,22 @@ UpdateDepth(JSContext *cx, JSCodeGenerator *cg, ptrdiff_t target)
     jsbytecode *pc;
     JSOp op;
     const JSCodeSpec *cs;
-    uintN depth;
+    uintN extra, depth;
     intN nuses, ndefs;
+    extern uint8 js_opcode2extra[];
 
     pc = CG_CODE(cg, target);
     op = (JSOp) *pc;
     cs = &js_CodeSpec[op];
-    if (cs->format & JOF_TMPSLOT_MASK) {
+    extra = js_opcode2extra[op];
+    if ((cs->format & JOF_TMPSLOT_MASK) || extra) {
         depth = (uintN) cg->stackDepth +
-                ((cs->format & JOF_TMPSLOT_MASK) >> JOF_TMPSLOT_SHIFT);
+                ((cs->format & JOF_TMPSLOT_MASK) >> JOF_TMPSLOT_SHIFT) +
+                extra;
         if (depth > cg->maxStackDepth)
             cg->maxStackDepth = depth;
     }
+
     nuses = cs->nuses;
     if (nuses < 0)
         nuses = js_GetVariableStackUseLength(op, pc);

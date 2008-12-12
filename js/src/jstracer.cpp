@@ -70,6 +70,7 @@
 #include "jstracer.h"
 
 #include "jsautooplen.h"        // generated headers last
+#include "imacros.c.out"
 
 /* Never use JSVAL_IS_BOOLEAN because it restricts the value (true, false) and 
    the type. What you want to use is JSVAL_TAG(x) == JSVAL_BOOLEAN and then 
@@ -81,8 +82,12 @@
    range since we only use JSVAL_INT to indicate integers. */
 #define JSVAL_BOXED 3
 
+/* Another fake jsval tag, used to distinguish null from object values. */
+#define JSVAL_TNULL 5
+
 /* Map to translate a type tag into a printable representation. */
-static const char typeChar[] = "OIDVS?B?";
+static const char typeChar[] = "OIDVSNB?";
+static const char tagChar[]  = "OIDISIBI";
 
 /* Number of iterations of a loop where we start tracing.  That is, we don't
    start tracing until the beginning of the HOTLOOP-th iteration. */
@@ -344,13 +349,13 @@ static inline bool isInt32(jsval v)
 /* Return JSVAL_DOUBLE for all numbers (int and double) and the tag otherwise. */
 static inline uint8 getPromotedType(jsval v) 
 {
-    return JSVAL_IS_INT(v) ? JSVAL_DOUBLE : uint8(JSVAL_TAG(v));
+    return JSVAL_IS_INT(v) ? JSVAL_DOUBLE : JSVAL_IS_NULL(v) ? JSVAL_TNULL : uint8(JSVAL_TAG(v));
 }
 
 /* Return JSVAL_INT for all whole numbers that fit into signed 32-bit and the tag otherwise. */
 static inline uint8 getCoercedType(jsval v)
 {
-    return isInt32(v) ? JSVAL_INT : (uint8) JSVAL_TAG(v);
+    return isInt32(v) ? JSVAL_INT : JSVAL_IS_NULL(v) ? JSVAL_TNULL : uint8(JSVAL_TAG(v));
 }
 
 /* 
@@ -1283,6 +1288,10 @@ ValueToNative(JSContext* cx, jsval v, uint8 type, double* slot)
         *(JSString**)slot = JSVAL_TO_STRING(v);
         debug_only_v(printf("string<%p> ", *(JSString**)slot);)
         return;
+      case JSVAL_TNULL:
+        JS_ASSERT(tag == JSVAL_OBJECT);
+        *(JSObject**)slot = NULL;
+        return;
       default:
         /* Note: we should never see JSVAL_BOXED in an entry type map. */
         JS_ASSERT(type == JSVAL_OBJECT);
@@ -1396,6 +1405,11 @@ NativeToValue(JSContext* cx, jsval& v, uint8 type, double* slot)
       case JSVAL_BOXED:
         v = *(jsval*)slot;
         debug_only_v(printf("box<%lx> ", v));
+        break;
+      case JSVAL_TNULL:
+        JS_ASSERT(*(JSObject**)slot == NULL);
+        v = JSVAL_NULL;
+        debug_only_v(printf("null<%p> ", *(JSObject**)slot));
         break;
       default:
         JS_ASSERT(type == JSVAL_OBJECT);
@@ -1809,11 +1823,18 @@ TraceRecorder::determineSlotType(jsval* vp) const
     LIns* i = get(vp);
     m = isNumber(*vp)
         ? (isPromoteInt(i) ? JSVAL_INT : JSVAL_DOUBLE)
+        : JSVAL_IS_NULL(*vp)
+        ? JSVAL_TNULL
         : JSVAL_TAG(*vp);
     JS_ASSERT((m != JSVAL_INT) || isInt32(*vp));
     return m;
 }
 
+/*
+ * Combine fp->imacpc and fp->regs->pc into one word, with 8 bits for the pc
+ * adjustment from one byte before the imacro's start (so a 0 high byte means
+ * we're not in an imacro), and 24 for the pc adjustment from script->code.
+ */
 #define IMACRO_PC_ADJ_BITS   8
 #define SCRIPT_PC_ADJ_BITS   (32 - IMACRO_PC_ADJ_BITS)
 
@@ -1848,6 +1869,9 @@ TraceRecorder::determineSlotType(jsval* vp) const
                               : (fp)->regs->pc = (fp)->script->code + (ip))
 
 static jsbytecode* imacro_code[JSOP_LIMIT];
+
+JS_STATIC_ASSERT(sizeof(binary_imacros) < IMACRO_PC_ADJ_LIMIT);
+JS_STATIC_ASSERT(sizeof(add_imacros) < IMACRO_PC_ADJ_LIMIT);
 
 JS_REQUIRES_STACK LIns*
 TraceRecorder::snapshot(ExitType exitType)
@@ -2036,16 +2060,19 @@ TraceRecorder::checkType(jsval& v, uint8 t, jsval*& stage_val, LIns*& stage_ins,
         }
         return true;
     }
+    if (t == JSVAL_TNULL && JSVAL_IS_NULL(v))
+        return true;
     /* for non-number types we expect a precise match of the type */
+    uint8 vt = getCoercedType(v);
 #ifdef DEBUG
-    if (JSVAL_TAG(v) != t) {
-        debug_only_v(printf("Type mismatch: val %c, map %c ", typeChar[JSVAL_TAG(v)],
+    if (vt != t) {
+        debug_only_v(printf("Type mismatch: val %c, map %c ", typeChar[vt],
                             typeChar[t]);)
     }
 #endif
-    debug_only_v(printf("checkType(tag=%d, t=%d) stage_count=%d\n",
-                        (int) JSVAL_TAG(v), t, stage_count);)
-    return JSVAL_TAG(v) == t;
+    debug_only_v(printf("checkType(vt=%d, t=%d) stage_count=%d\n",
+                        (int) vt, t, stage_count);)
+    return vt == t;
 }
 
 /**
@@ -2192,7 +2219,7 @@ checktype_fail_2:
                 JS_ASSERT(isNumber(*vp));
                 ADD_UNDEMOTE_SLOT(demotes, unsigned(m - typemap));
             } else {
-                JS_ASSERT(*m == JSVAL_TAG(*vp));
+                JS_ASSERT((*m == JSVAL_TNULL) ? JSVAL_IS_NULL(*vp) : *m == JSVAL_TAG(*vp));
             }
             m++;
         );
@@ -2624,22 +2651,6 @@ TraceRecorder::hasMethod(JSObject* obj, jsid id)
 
     OBJ_DROP_PROPERTY(cx, pobj, prop);
     return found;
-}
-
-bool
-TraceRecorder::hasToStringMethod(JSObject* obj)
-{
-    JS_ASSERT(cx->fp->regs->sp + 1 <= cx->fp->slots + cx->fp->script->nslots);
-
-    return hasMethod(obj, ATOM_TO_JSID(cx->runtime->atomState.toStringAtom));
-}
-
-bool
-TraceRecorder::hasValueOfMethod(JSObject* obj)
-{
-    JS_ASSERT(cx->fp->regs->sp + 2 <= cx->fp->slots + cx->fp->script->nslots);
-
-    return hasMethod(obj, ATOM_TO_JSID(cx->runtime->atomState.valueOfAtom));
 }
 
 bool
@@ -3304,7 +3315,7 @@ js_IsEntryTypeCompatible(jsval* vp, uint8* m)
 {
     unsigned tag = JSVAL_TAG(*vp);
 
-    debug_only_v(printf("%c/%c ", "OIDISIBI"[tag], "OID?S?B?"[*m]);)
+    debug_only_v(printf("%c/%c ", tagChar[tag], typeChar[*m]);)
 
     switch (*m) {
       case JSVAL_INT:
@@ -3330,9 +3341,11 @@ js_IsEntryTypeCompatible(jsval* vp, uint8* m)
             return true;
         debug_only_v(printf("string != tag%u", tag);)
         return false;
+      case JSVAL_TNULL:
+        return JSVAL_IS_NULL(*vp);
       default:
         JS_ASSERT(*m == JSVAL_OBJECT);
-        if (tag == JSVAL_OBJECT)
+        if (tag == JSVAL_OBJECT && !JSVAL_IS_NULL(*vp))
             return true;
         debug_only_v(printf("object != tag%u", tag);)
         return false;
@@ -4333,7 +4346,7 @@ TraceRecorder::ifop()
         /* test for boolean is true, negate later if we are testing for false */
         cond = JSVAL_TO_BOOLEAN(v) == 1;
         x = lir->ins2i(LIR_eq, v_ins, 1);
-    } else if (JSVAL_IS_OBJECT(v)) {
+    } else if (JSVAL_TAG(v) == JSVAL_OBJECT) {
         cond = !JSVAL_IS_NULL(v);
         x = v_ins;
     } else if (isNumber(v)) {
@@ -4521,45 +4534,6 @@ evalCmp(LOpcode op, JSString* l, JSString* r)
     return evalCmp(op, js_CompareStrings(l, r));
 }
 
-static struct {
-    jsbytecode obj_any[13];
-    jsbytecode any_obj[11];
-    jsbytecode obj_obj[22];
-} binary_imacros = {
-    {
-        JSOP_SWAP,
-        JSOP_CALLPROP, 0, COMMON_ATOM_INDEX(valueOf),
-        JSOP_STRING, 0, COMMON_TYPE_ATOM_INDEX(JSTYPE_NUMBER),
-        JSOP_CALL, 0, 1,
-        JSOP_SWAP,
-        JSOP_IMACOP,
-        JSOP_STOP
-    },
-
-    {
-        JSOP_CALLPROP, 0, COMMON_ATOM_INDEX(valueOf),
-        JSOP_STRING, 0, COMMON_TYPE_ATOM_INDEX(JSTYPE_NUMBER),
-        JSOP_CALL, 0, 1,
-        JSOP_IMACOP,
-        JSOP_STOP
-    },
-
-    {
-        JSOP_SWAP,
-        JSOP_CALLPROP, 0, COMMON_ATOM_INDEX(valueOf),
-        JSOP_STRING, 0, COMMON_TYPE_ATOM_INDEX(JSTYPE_NUMBER),
-        JSOP_CALL, 0, 1,
-        JSOP_SWAP,
-        JSOP_CALLPROP, 0, COMMON_ATOM_INDEX(valueOf),
-        JSOP_STRING, 0, COMMON_TYPE_ATOM_INDEX(JSTYPE_NUMBER),
-        JSOP_CALL, 0, 1,
-        JSOP_IMACOP,
-        JSOP_STOP
-    }
-};
-
-JS_STATIC_ASSERT(sizeof(binary_imacros) < IMACRO_PC_ADJ_LIMIT);
-
 JS_REQUIRES_STACK void
 TraceRecorder::strictEquality(bool equal)
 {
@@ -4660,7 +4634,7 @@ TraceRecorder::equality(int flags)
         jsdouble rnum = js_ValueToNumber(cx, &tmp[1]);
         cond = (lnum == rnum);
     } else if ((JSVAL_TAG(l) == JSVAL_BOOLEAN && JSVAL_TAG(r) == JSVAL_BOOLEAN) ||
-               (JSVAL_IS_OBJECT(l) && JSVAL_IS_OBJECT(r))) {
+               (JSVAL_TAG(l) == JSVAL_OBJECT && JSVAL_TAG(r) == JSVAL_OBJECT)) {
         cond = (l == r); 
     } else {
         ABORT_TRACE("unsupported operand types for cmp");
@@ -4719,15 +4693,13 @@ TraceRecorder::relational(LOpcode op, int flags)
      * property; if both arguments are objects with non-function-valued valueOf
      * properties, abort.
      */
-    if (JSVAL_IS_OBJECT(l) && hasValueOfMethod(l)) {
-        if (JSVAL_IS_OBJECT(r) && hasValueOfMethod(r))
+    if (!JSVAL_IS_PRIMITIVE(l)) {
+        if (!JSVAL_IS_PRIMITIVE(r))
             return call_imacro(binary_imacros.obj_obj);
         return call_imacro(binary_imacros.obj_any);
     }
-    if (JSVAL_IS_OBJECT(r) && hasValueOfMethod(r))
+    if (!JSVAL_IS_PRIMITIVE(r))
         return call_imacro(binary_imacros.any_obj);
-    if (JSVAL_IS_OBJECT(l) || JSVAL_IS_OBJECT(r))
-        ABORT_TRACE("comparing two objects with non-function valueOf");
 
     /* 11.8.5 steps 3, 16-21. */
     if (JSVAL_IS_STRING(l) && JSVAL_IS_STRING(r)) {
@@ -4748,9 +4720,14 @@ TraceRecorder::relational(LOpcode op, int flags)
           case JSVAL_STRING:
             l_ins = lir->insCall(&js_StringToNumber_ci, args);
             break;
+          case JSVAL_OBJECT:
+            if (JSVAL_IS_NULL(l)) {
+                l_ins = lir->insImmq(0);
+                break;
+            }
+            // FALL THROUGH
           case JSVAL_INT:
           case JSVAL_DOUBLE:
-          case JSVAL_OBJECT:
           default:
             JS_NOT_REACHED("JSVAL_IS_NUMBER if int/double, objects should "
                            "have been handled at start of method");
@@ -4766,9 +4743,14 @@ TraceRecorder::relational(LOpcode op, int flags)
           case JSVAL_STRING:
             r_ins = lir->insCall(&js_StringToNumber_ci, args);
             break;
+          case JSVAL_OBJECT:
+            if (JSVAL_IS_NULL(r)) {
+                r_ins = lir->insImmq(0);
+                break;
+            }
+            // FALL THROUGH
           case JSVAL_INT:
           case JSVAL_DOUBLE:
-          case JSVAL_OBJECT:
           default:
             JS_NOT_REACHED("JSVAL_IS_NUMBER if int/double, objects should "
                            "have been handled at start of method");
@@ -4838,12 +4820,12 @@ TraceRecorder::binary(LOpcode op)
     jsval& r = stackval(-1);
     jsval& l = stackval(-2);
 
-    if (JSVAL_IS_OBJECT(l) && hasValueOfMethod(l)) {
-        if (JSVAL_IS_OBJECT(r) && hasValueOfMethod(r))
+    if (!JSVAL_IS_PRIMITIVE(l)) {
+        if (!JSVAL_IS_PRIMITIVE(r))
             return call_imacro(binary_imacros.obj_obj);
         return call_imacro(binary_imacros.obj_any);
     }
-    if (JSVAL_IS_OBJECT(r) && hasValueOfMethod(r))
+    if (!JSVAL_IS_PRIMITIVE(r))
         return call_imacro(binary_imacros.any_obj);
 
     bool intop = !(op & LIR64);
@@ -5039,7 +5021,7 @@ TraceRecorder::test_property_cache(JSObject* obj, LIns* obj_ins, JSObject*& obj2
         JS_ASSERT(entry->kpc == (jsbytecode*) atoms[index]);
         JS_ASSERT(entry->kshape == jsuword(aobj));
 #endif
-        if (aobj != globalObj) {
+        if (aobj != globalObj && !obj_ins->isconstp()) {
             guard(true, addName(lir->ins2i(LIR_eq, obj_ins, entry->kshape), "guard(kobj)"),
                   MISMATCH_EXIT);
         }
@@ -5234,12 +5216,20 @@ TraceRecorder::unbox_jsval(jsval v, LIns*& v_ins)
               MISMATCH_EXIT);
          v_ins = lir->ins2i(LIR_ush, v_ins, JSVAL_TAGBITS);
          return true;
-       case JSVAL_OBJECT:
-        guard(true,
-              lir->ins2i(LIR_eq,
-                         lir->ins2(LIR_piand, v_ins, INS_CONST(JSVAL_TAGMASK)),
-                         JSVAL_OBJECT),
-              MISMATCH_EXIT);
+      case JSVAL_OBJECT:
+        if (JSVAL_IS_NULL(v)) {
+            // JSVAL_NULL maps to type JSVAL_TNULL, so insist that v_ins == 0 here.
+            guard(true, lir->ins_eq0(v_ins), MISMATCH_EXIT);
+        } else {
+            // We must guard that v_ins has JSVAL_OBJECT tag but is not JSVAL_NULL.
+            LIns* exit = snapshot(MISMATCH_EXIT);
+            guard(true,
+                  lir->ins2i(LIR_eq,
+                             lir->ins2(LIR_piand, v_ins, INS_CONST(JSVAL_TAGMASK)),
+                             JSVAL_OBJECT),
+                  exit);
+            guard(false, lir->ins_eq0(v_ins), exit);
+        }
         return true;
       case JSVAL_STRING:
         guard(true,
@@ -5664,53 +5654,18 @@ TraceRecorder::record_JSOP_URSH()
     return binary(LIR_ush);
 }
 
-static struct {
-    jsbytecode obj_any[10];
-    jsbytecode any_obj[8];
-    jsbytecode obj_obj[16];
-} add_imacros = {
-    {
-        JSOP_SWAP,
-        JSOP_CALLPROP, 0, COMMON_ATOM_INDEX(toString),
-        JSOP_CALL, 0, 0,
-        JSOP_SWAP,
-        JSOP_ADD,
-        JSOP_STOP
-    },
-
-    {
-        JSOP_CALLPROP, 0, COMMON_ATOM_INDEX(toString),
-        JSOP_CALL, 0, 0,
-        JSOP_ADD,
-        JSOP_STOP
-    },
-
-    {
-        JSOP_SWAP,
-        JSOP_CALLPROP, 0, COMMON_ATOM_INDEX(toString),
-        JSOP_CALL, 0, 0,
-        JSOP_SWAP,
-        JSOP_CALLPROP, 0, COMMON_ATOM_INDEX(toString),
-        JSOP_CALL, 0, 0,
-        JSOP_ADD,
-        JSOP_STOP
-    }
-};
-
-JS_STATIC_ASSERT(sizeof(add_imacros) < IMACRO_PC_ADJ_LIMIT);
-
 JS_REQUIRES_STACK bool
 TraceRecorder::record_JSOP_ADD()
 {
     jsval& r = stackval(-1);
     jsval& l = stackval(-2);
 
-    if (JSVAL_IS_OBJECT(l) && hasToStringMethod(l)) {
-        if (JSVAL_IS_OBJECT(r) && hasToStringMethod(r))
+    if (!JSVAL_IS_PRIMITIVE(l)) {
+        if (!JSVAL_IS_PRIMITIVE(r))
             return call_imacro(add_imacros.obj_obj);
         return call_imacro(add_imacros.obj_any);
     }
-    if (JSVAL_IS_OBJECT(r) && hasToStringMethod(r))
+    if (!JSVAL_IS_PRIMITIVE(r))
         return call_imacro(add_imacros.any_obj);
 
     if (JSVAL_IS_STRING(l) || JSVAL_IS_STRING(r)) {
@@ -5750,12 +5705,12 @@ TraceRecorder::record_JSOP_MOD()
     jsval& r = stackval(-1);
     jsval& l = stackval(-2);
 
-    if (JSVAL_IS_OBJECT(l) && hasValueOfMethod(l)) {
-        if (JSVAL_IS_OBJECT(r) && hasValueOfMethod(r))
+    if (!JSVAL_IS_PRIMITIVE(l)) {
+        if (!JSVAL_IS_PRIMITIVE(r))
             return call_imacro(binary_imacros.obj_obj);
         return call_imacro(binary_imacros.obj_any);
     }
-    if (JSVAL_IS_OBJECT(r) && hasValueOfMethod(r))
+    if (!JSVAL_IS_PRIMITIVE(r))
         return call_imacro(binary_imacros.any_obj);
 
     if (isNumber(l) && isNumber(r)) {
@@ -5792,7 +5747,7 @@ TraceRecorder::record_JSOP_NOT()
                                   lir->ins_eq0(lir->ins2(LIR_feq, v_ins, v_ins))));
         return true;
     } 
-    if (JSVAL_IS_OBJECT(v)) {
+    if (JSVAL_TAG(v) == JSVAL_OBJECT) {
         set(&v, lir->ins_eq0(get(&v)));
         return true;
     }
@@ -5858,7 +5813,7 @@ TraceRecorder::getClassPrototype(JSObject* ctor, LIns*& proto_ins)
                           &pval)) {
         ABORT_TRACE("error getting prototype from constructor");
     }
-    if (!JSVAL_IS_OBJECT(pval))
+    if (JSVAL_TAG(pval) != JSVAL_OBJECT)
         ABORT_TRACE("got primitive prototype from constructor");
     proto_ins = INS_CONSTPTR(JSVAL_TO_OBJECT(pval));
     return true;
@@ -5981,7 +5936,7 @@ TraceRecorder::functionCall(bool constructing, uintN argc)
             if (argtype == 'C') {
                 *argp = cx_ins;
             } else if (argtype == 'T') {   /* this, as an object */
-                if (!JSVAL_IS_OBJECT(tval))
+                if (JSVAL_IS_PRIMITIVE(tval))
                     goto next_specialization;
                 *argp = this_ins;
             } else if (argtype == 'S') {   /* this, as a string */
@@ -6018,7 +5973,7 @@ TraceRecorder::functionCall(bool constructing, uintN argc)
                 if (argtype == 'i')
                     *argp = f2i(*argp);
             } else if (argtype == 'o') {
-                if (!JSVAL_IS_OBJECT(arg))
+                if (JSVAL_IS_PRIMITIVE(arg))
                     goto next_specialization;
             } else if (argtype == 's') {
                 if (!JSVAL_IS_STRING(arg))
@@ -6152,7 +6107,7 @@ TraceRecorder::record_JSOP_TYPEOF()
             JS_ASSERT(JSVAL_TO_BOOLEAN(r) <= 2);
             type = lir->insCall(&js_TypeOfBoolean_ci, args);
         } else {
-            JS_ASSERT(JSVAL_IS_OBJECT(r));
+            JS_ASSERT(JSVAL_TAG(r) == JSVAL_OBJECT);
             type = lir->insCall(&js_TypeOfObject_ci, args);
         }
     }
@@ -6524,13 +6479,13 @@ TraceRecorder::record_JSOP_CALLNAME()
 JS_REQUIRES_STACK bool
 TraceRecorder::record_JSOP_GETUPVAR()
 {
-    ABORT_TRACE("GETUPVAR");
+    return false;
 }
 
 JS_REQUIRES_STACK bool
 TraceRecorder::record_JSOP_CALLUPVAR()
 {
-    ABORT_TRACE("CALLUPVAR");
+    return false;
 }
 
 JS_REQUIRES_STACK bool
@@ -7344,7 +7299,7 @@ TraceRecorder::record_JSOP_ITER()
     if (!JSVAL_IS_PRIMITIVE(v)) {
         jsuint flags = cx->fp->regs->pc[1];
 
-        if (!hasIteratorMethod(v)) {
+        if (!hasIteratorMethod(JSVAL_TO_OBJECT(v))) {
             LIns* args[] = { get(&v), INS_CONST(flags), cx_ins };
             LIns* v_ins = lir->insCall(&js_FastValueToIterator_ci, args);
             guard(false, lir->ins_eq0(v_ins), MISMATCH_EXIT);
@@ -7701,6 +7656,16 @@ JS_REQUIRES_STACK bool
 TraceRecorder::record_JSOP_SETLOCALPOP()
 {
     var(GET_SLOTNO(cx->fp->regs->pc), stack(-1));
+    return true;
+}
+
+JS_REQUIRES_STACK bool
+TraceRecorder::record_JSOP_IFPRIMTOP()
+{
+    // Traces are type-specialized, including null vs. object, so we need do
+    // nothing here. The upstream unbox_jsval called after valueOf or toString
+    // from an imacro (e.g.) will fork the trace for us, allowing us to just
+    // follow along mindlessly :-).
     return true;
 }
 
@@ -8571,7 +8536,6 @@ InitIMacroCode()
 
 #define UNUSED(n) JS_REQUIRES_STACK bool TraceRecorder::record_JSOP_UNUSED##n() { return false; }
 
-UNUSED(131)
 UNUSED(201)
 UNUSED(202)
 UNUSED(203)

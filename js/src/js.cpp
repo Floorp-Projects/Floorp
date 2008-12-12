@@ -310,10 +310,18 @@ Process(JSContext *cx, JSObject *obj, char *filename, JSBool forceTTY)
             lineno++;
         } while (!JS_BufferIsCompilableUnit(cx, obj, buffer, strlen(buffer)));
 
-        /* Clear any pending exception from previous failed compiles.  */
+        /* Clear any pending exception from previous failed compiles. */
         JS_ClearPendingException(cx);
+
+        /* Even though we're interactive, we have a compile-n-go opportunity. */
+        oldopts = JS_GetOptions(cx);
+        if (!compileOnly)
+            JS_SetOptions(cx, oldopts | JSOPTION_COMPILE_N_GO);
         script = JS_CompileScript(cx, obj, buffer, strlen(buffer), "typein",
                                   startline);
+        if (!compileOnly)
+            JS_SetOptions(cx, oldopts);
+
         if (script) {
             if (!compileOnly) {
                 ok = JS_ExecuteScript(cx, obj, script, &result);
@@ -2901,6 +2909,131 @@ fail:
 JS_DEFINE_TRCINFO_1(Print, (2, (static, JSVAL_FAIL, Print_tn, CONTEXT, STRING, 0, 0)))
 JS_DEFINE_TRCINFO_1(ShapeOf, (1, (static, INT32, ShapeOf_tn, OBJECT, 0, 0)))
 
+#ifdef XP_UNIX
+
+#include <fcntl.h>
+#include <sys/stat.h>
+
+/*
+ * Returns a JS_malloc'd string (that the caller needs to JS_free)
+ * containing the directory (non-leaf) part of |from| prepended to |leaf|.
+ * If |from| is empty or a leaf, MakeAbsolutePathname returns a copy of leaf.
+ * Returns NULL to indicate an error.
+ */
+static char *
+MakeAbsolutePathname(JSContext *cx, const char *from, const char *leaf)
+{
+    size_t dirlen;
+    char *dir;
+    const char *slash = NULL, *cp;
+
+    cp = from;
+    while (*cp) {
+        if (*cp == '/'
+#ifdef XP_WIN
+            || *cp == '\\'
+#endif
+           ) {
+            slash = cp;
+        }
+
+        ++cp;
+    }
+
+    if (!slash) {
+        /* We were given a leaf or |from| was empty. */
+        return JS_strdup(cx, leaf);
+    }
+
+    /* Else, we were given a real pathname, return that + the leaf. */
+    dirlen = slash - from + 1;
+    dir = (char*) JS_malloc(cx, dirlen + strlen(leaf) + 1);
+    if (!dir)
+        return NULL;
+
+    strncpy(dir, from, dirlen);
+    strcpy(dir + dirlen, leaf); /* Note: we can't use strcat here. */
+
+    return dir;
+}
+
+#endif // XP_UNIX
+
+static JSBool
+Snarf(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
+{
+    JSString *str;
+    const char *filename;
+    char *pathname;
+    JSStackFrame *fp;
+    JSBool ok;
+    off_t cc, len;
+    char *buf;
+    FILE *file;
+
+    str = JS_ValueToString(cx, argv[0]);
+    if (!str)
+        return JS_FALSE;
+    filename = JS_GetStringBytes(str);
+
+    /* Get the currently executing script's name. */
+    fp = JS_GetScriptedCaller(cx, NULL);
+    JS_ASSERT(fp && fp->script->filename);
+#ifdef XP_UNIX
+    pathname = MakeAbsolutePathname(cx, fp->script->filename, filename);
+    if (!pathname)
+        return JS_FALSE;
+#else
+    pathname = filename;
+#endif
+
+    ok = JS_FALSE;
+    len = 0;
+    buf = NULL;
+    file = fopen(pathname, "rb");
+    if (!file) {
+        JS_ReportError(cx, "can't open %s: %s", pathname, strerror(errno));
+    } else {
+        if (fseek(file, 0, SEEK_END) == EOF) {
+            JS_ReportError(cx, "can't seek end of %s", pathname);
+        } else {
+            len = ftell(file);
+            if (len == -1 || fseek(file, 0, SEEK_SET) == EOF) {
+                JS_ReportError(cx, "can't seek start of %s", pathname);
+            } else {
+                buf = (char*) JS_malloc(cx, len + 1);
+                if (buf) {
+                    cc = fread(buf, 1, len, file);
+                    if (cc != len) {
+                        JS_free(cx, buf);
+                        JS_ReportError(cx, "can't read %s: %s", pathname,
+                                       (cc < 0) ? strerror(errno)
+                                                : "short read");
+                    } else {
+                        len = (size_t)cc;
+                        ok = JS_TRUE;
+                    }
+                }
+            }
+        }
+        fclose(file);
+    }
+    JS_free(cx, pathname);
+    if (!ok) {
+        JS_free(cx, buf);
+        return ok;
+    }
+
+    buf[len] = '\0';
+    str = JS_NewString(cx, buf, len);
+    if (!str) {
+        JS_free(cx, buf);
+        return JS_FALSE;
+    }
+    *rval = STRING_TO_JSVAL(str);
+    return JS_TRUE;
+}
+
 /* We use a mix of JS_FS and JS_FN to test both kinds of natives. */
 static JSFunctionSpec shell_functions[] = {
     JS_FS("version",        Version,        0,0,0),
@@ -2947,29 +3080,30 @@ static JSFunctionSpec shell_functions[] = {
     JS_FS("evalcx",         EvalInContext,  1,0,0),
     JS_TN("shapeOf",        ShapeOf,        1,0, ShapeOf_trcinfo),
 #ifdef MOZ_SHARK
-    JS_FS("startShark",      js_StartShark,      0,0,0),
-    JS_FS("stopShark",       js_StopShark,       0,0,0),
-    JS_FS("connectShark",    js_ConnectShark,    0,0,0),
-    JS_FS("disconnectShark", js_DisconnectShark, 0,0,0),
+    JS_FS("startShark",     js_StartShark,      0,0,0),
+    JS_FS("stopShark",      js_StopShark,       0,0,0),
+    JS_FS("connectShark",   js_ConnectShark,    0,0,0),
+    JS_FS("disconnectShark",js_DisconnectShark, 0,0,0),
 #endif
 #ifdef MOZ_CALLGRIND
-    JS_FS("startCallgrind",  js_StartCallgrind,  0,0,0),
-    JS_FS("stopCallgrind",   js_StopCallgrind,   0,0,0),
-    JS_FS("dumpCallgrind",   js_DumpCallgrind,   1,0,0),
+    JS_FS("startCallgrind", js_StartCallgrind,  0,0,0),
+    JS_FS("stopCallgrind",  js_StopCallgrind,   0,0,0),
+    JS_FS("dumpCallgrind",  js_DumpCallgrind,   1,0,0),
 #endif
 #ifdef MOZ_VTUNE
-    JS_FS("startVtune",      js_StartVtune,    1,0,0),
-    JS_FS("stopVtune",       js_StopVtune,     0,0,0),
-    JS_FS("pauseVtune",      js_PauseVtune,    0,0,0),
-    JS_FS("resumeVtune",     js_ResumeVtune,   0,0,0),
+    JS_FS("startVtune",     js_StartVtune,  1,0,0),
+    JS_FS("stopVtune",      js_StopVtune,   0,0,0),
+    JS_FS("pauseVtune",     js_PauseVtune,  0,0,0),
+    JS_FS("resumeVtune",    js_ResumeVtune, 0,0,0),
 #endif
 #ifdef DEBUG_ARRAYS
-    JS_FS("arrayInfo",       js_ArrayInfo,       1,0,0),
+    JS_FS("arrayInfo",      js_ArrayInfo,   1,0,0),
 #endif
 #ifdef JS_THREADSAFE
     JS_FN("sleep",          Sleep_fn,       1,0),
     JS_FN("scatter",        Scatter,        1,0),
 #endif
+    JS_FS("snarf",          Snarf,        0,0,0),
     JS_FS_END
 };
 
@@ -3057,6 +3191,7 @@ static const char *const shell_help_messages[] = {
 "sleep(dt)                Sleep for dt seconds",
 "scatter(fns)             Call functions concurrently (ignoring errors)",
 #endif
+"snarf(filename)          Read filename into returned string"
 };
 
 /* Help messages must match shell functions. */
@@ -3820,123 +3955,6 @@ Evaluate(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
     return ok;
 }
 
-#include <fcntl.h>
-#include <sys/stat.h>
-
-/*
- * Returns a JS_malloc'd string (that the caller needs to JS_free)
- * containing the directory (non-leaf) part of |from| prepended to |leaf|.
- * If |from| is empty or a leaf, MakeAbsolutePathname returns a copy of leaf.
- * Returns NULL to indicate an error.
- */
-static char *
-MakeAbsolutePathname(JSContext *cx, const char *from, const char *leaf)
-{
-    size_t dirlen;
-    char *dir;
-    const char *slash = NULL, *cp;
-
-    cp = from;
-    while (*cp) {
-        if (*cp == '/'
-#ifdef XP_WIN
-            || *cp == '\\'
-#endif
-           ) {
-            slash = cp;
-        }
-
-        ++cp;
-    }
-
-    if (!slash) {
-        /* We were given a leaf or |from| was empty. */
-        return JS_strdup(cx, leaf);
-    }
-
-    /* Else, we were given a real pathname, return that + the leaf. */
-    dirlen = slash - from + 1;
-    dir = (char*) JS_malloc(cx, dirlen + strlen(leaf) + 1);
-    if (!dir)
-        return NULL;
-
-    strncpy(dir, from, dirlen);
-    strcpy(dir + dirlen, leaf); /* Note: we can't use strcat here. */
-
-    return dir;
-}
-
-static JSBool
-snarf(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
-{
-    JSString *str;
-    const char *filename;
-    char *pathname;
-    JSStackFrame *fp;
-    JSBool ok;
-    off_t cc, len;
-    char *buf;
-    FILE *file;
-
-    str = JS_ValueToString(cx, argv[0]);
-    if (!str)
-        return JS_FALSE;
-    filename = JS_GetStringBytes(str);
-
-    /* Get the currently executing script's name. */
-    fp = JS_GetScriptedCaller(cx, NULL);
-    JS_ASSERT(fp && fp->script->filename);
-    pathname = MakeAbsolutePathname(cx, fp->script->filename, filename);
-    if (!pathname)
-        return JS_FALSE;
-
-    ok = JS_FALSE;
-    len = 0;
-    buf = NULL;
-    file = fopen(pathname, "rb");
-    if (!file) {
-        JS_ReportError(cx, "can't open %s: %s", pathname, strerror(errno));
-    } else {
-        if (fseek(file, 0, SEEK_END) == EOF) {
-            JS_ReportError(cx, "can't seek end of %s", pathname);
-        } else {
-            len = ftell(file);
-            if (len == -1 || fseek(file, 0, SEEK_SET) == EOF) {
-                JS_ReportError(cx, "can't seek start of %s", pathname);
-            } else {
-                buf = (char*) JS_malloc(cx, len + 1);
-                if (buf) {
-                    cc = fread(buf, 1, len, file);
-                    if (cc != len) {
-                        JS_free(cx, buf);
-                        JS_ReportError(cx, "can't read %s: %s", pathname,
-                                       (cc < 0) ? strerror(errno)
-                                                : "short read");
-                    } else {
-                        len = (size_t)cc;
-                        ok = JS_TRUE;
-                    }
-                }
-            }
-        }
-        fclose(file);
-    }
-    JS_free(cx, pathname);
-    if (!ok) {
-        JS_free(cx, buf);
-        return ok;
-    }
-
-    buf[len] = '\0';
-    str = JS_NewString(cx, buf, len);
-    if (!str) {
-        JS_free(cx, buf);
-        return JS_FALSE;
-    }
-    *rval = STRING_TO_JSVAL(str);
-    return JS_TRUE;
-}
-
 #endif /* NARCISSUS */
 
 static JSBool
@@ -4070,8 +4088,6 @@ main(int argc, char **argv, char **envp)
         jsval v;
         static const char Object_prototype[] = "Object.prototype";
 
-        if (!JS_DefineFunction(cx, glob, "snarf", snarf, 1, 0))
-            return 1;
         if (!JS_DefineFunction(cx, glob, "evaluate", Evaluate, 3, 0))
             return 1;
 
