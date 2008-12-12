@@ -110,7 +110,7 @@ CanvasBrowser.prototype = {
     ctx.fillStyle = "rgb(0,0,0)";
     ctx.fillText("Loading...", 20, 20);
 
-    this._resizeInterval = setInterval(function(self) { self.zoomToPage(); }, 1000, this);
+    this._resizeInterval = setInterval(function(self) { self.zoomToPage(); }, 2000, this);
   },
 
   endLoading: function() {
