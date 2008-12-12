@@ -288,14 +288,14 @@ CSS_PROP_BORDER(-moz-border-radius-topright, _moz_border_radius_topRight, MozBor
 CSS_PROP_BORDER(-moz-border-radius-bottomright, _moz_border_radius_bottomRight, MozBorderRadiusBottomright, CSS_PROPERTY_APPLIES_TO_FIRST_LETTER_AND_FIRST_LINE, Margin, mBorderRadius.mBottomRight, eCSSType_ValuePair, nsnull)
 CSS_PROP_BORDER(-moz-border-radius-bottomleft, _moz_border_radius_bottomLeft, MozBorderRadiusBottomleft, CSS_PROPERTY_APPLIES_TO_FIRST_LETTER_AND_FIRST_LINE, Margin, mBorderRadius.mBottomLeft, eCSSType_ValuePair, nsnull)
 CSS_PROP_SHORTHAND(-moz-outline-radius, _moz_outline_radius, MozOutlineRadius, 0)
-CSS_PROP_OUTLINE(-moz-outline-radius-topleft, _moz_outline_radius_topLeft, MozOutlineRadiusTopleft, CSS_PROPERTY_APPLIES_TO_FIRST_LETTER_AND_FIRST_LINE, Margin, mOutlineRadius.mTopLeft, eCSSType_ValuePair, nsnull)
-CSS_PROP_OUTLINE(-moz-outline-radius-topright, _moz_outline_radius_topRight, MozOutlineRadiusTopright, CSS_PROPERTY_APPLIES_TO_FIRST_LETTER_AND_FIRST_LINE, Margin, mOutlineRadius.mTopRight, eCSSType_ValuePair, nsnull)
-CSS_PROP_OUTLINE(-moz-outline-radius-bottomright, _moz_outline_radius_bottomRight, MozOutlineRadiusBottomright, CSS_PROPERTY_APPLIES_TO_FIRST_LETTER_AND_FIRST_LINE, Margin, mOutlineRadius.mBottomRight, eCSSType_ValuePair, nsnull)
-CSS_PROP_OUTLINE(-moz-outline-radius-bottomleft, _moz_outline_radius_bottomLeft, MozOutlineRadiusBottomleft, CSS_PROPERTY_APPLIES_TO_FIRST_LETTER_AND_FIRST_LINE, Margin, mOutlineRadius.mBottomLeft, eCSSType_ValuePair, nsnull)
+CSS_PROP_OUTLINE(-moz-outline-radius-topleft, _moz_outline_radius_topLeft, MozOutlineRadiusTopleft, 0, Margin, mOutlineRadius.mTopLeft, eCSSType_ValuePair, nsnull)
+CSS_PROP_OUTLINE(-moz-outline-radius-topright, _moz_outline_radius_topRight, MozOutlineRadiusTopright, 0, Margin, mOutlineRadius.mTopRight, eCSSType_ValuePair, nsnull)
+CSS_PROP_OUTLINE(-moz-outline-radius-bottomright, _moz_outline_radius_bottomRight, MozOutlineRadiusBottomright, 0, Margin, mOutlineRadius.mBottomRight, eCSSType_ValuePair, nsnull)
+CSS_PROP_OUTLINE(-moz-outline-radius-bottomleft, _moz_outline_radius_bottomLeft, MozOutlineRadiusBottomleft, 0, Margin, mOutlineRadius.mBottomLeft, eCSSType_ValuePair, nsnull)
 #ifndef CSS_PROP_LIST_EXCLUDE_INTERNAL
 CSS_PROP_FONT(-x-system-font, _x_system_font, X, CSS_PROPERTY_APPLIES_TO_FIRST_LETTER_AND_FIRST_LINE, Font, mSystemFont, eCSSType_Value, kFontKTable)
 #endif
-CSS_PROP_BACKENDONLY(azimuth, azimuth, Azimuth, CSS_PROPERTY_APPLIES_TO_FIRST_LETTER_AND_FIRST_LINE, Aural, mAzimuth, eCSSType_Value, kAzimuthKTable)
+CSS_PROP_BACKENDONLY(azimuth, azimuth, Azimuth, 0, Aural, mAzimuth, eCSSType_Value, kAzimuthKTable)
 CSS_PROP_SHORTHAND(background, background, Background, 0)
 CSS_PROP_BACKGROUND(background-attachment, background_attachment, BackgroundAttachment, CSS_PROPERTY_APPLIES_TO_FIRST_LETTER_AND_FIRST_LINE, Color, mBackAttachment, eCSSType_Value, kBackgroundAttachmentKTable)
 CSS_PROP_BACKGROUND(-moz-background-clip, _moz_background_clip, MozBackgroundClip, CSS_PROPERTY_APPLIES_TO_FIRST_LETTER_AND_FIRST_LINE, Color, mBackClip, eCSSType_Value, kBackgroundClipKTable)
@@ -308,11 +308,11 @@ CSS_PROP_BACKGROUND(background-repeat, background_repeat, BackgroundRepeat, CSS_
 CSS_PROP_DISPLAY(-moz-binding, binding, MozBinding, 0, Display, mBinding, eCSSType_Value, nsnull) // XXX bug 3935
 CSS_PROP_SHORTHAND(border, border, Border, 0)
 CSS_PROP_SHORTHAND(border-bottom, border_bottom, BorderBottom, 0)
-CSS_PROP_BORDER(border-bottom-color, border_bottom_color, BorderBottomColor, CSS_PROPERTY_APPLIES_TO_FIRST_LETTER_AND_FIRST_LINE, Margin, mBorderColor.mBottom, eCSSType_Value, kBorderColorKTable)
-CSS_PROP_BORDER(-moz-border-bottom-colors, border_bottom_colors, MozBorderBottomColors, CSS_PROPERTY_APPLIES_TO_FIRST_LETTER_AND_FIRST_LINE, Margin, mBorderColors.mBottom, eCSSType_ValueList, nsnull)
+CSS_PROP_BORDER(border-bottom-color, border_bottom_color, BorderBottomColor, CSS_PROPERTY_APPLIES_TO_FIRST_LETTER, Margin, mBorderColor.mBottom, eCSSType_Value, kBorderColorKTable)
+CSS_PROP_BORDER(-moz-border-bottom-colors, border_bottom_colors, MozBorderBottomColors, CSS_PROPERTY_APPLIES_TO_FIRST_LETTER, Margin, mBorderColors.mBottom, eCSSType_ValueList, nsnull)
 CSS_PROP_BORDER(border-bottom-style, border_bottom_style, BorderBottomStyle, CSS_PROPERTY_APPLIES_TO_FIRST_LETTER, Margin, mBorderStyle.mBottom, eCSSType_Value, kBorderStyleKTable)  // on/off will need reflow
-CSS_PROP_BORDER(border-bottom-width, border_bottom_width, BorderBottomWidth, CSS_PROPERTY_APPLIES_TO_FIRST_LETTER_AND_FIRST_LINE, Margin, mBorderWidth.mBottom, eCSSType_Value, kBorderWidthKTable)
-CSS_PROP_TABLEBORDER(border-collapse, border_collapse, BorderCollapse, CSS_PROPERTY_APPLIES_TO_FIRST_LETTER_AND_FIRST_LINE, Table, mBorderCollapse, eCSSType_Value, kBorderCollapseKTable)
+CSS_PROP_BORDER(border-bottom-width, border_bottom_width, BorderBottomWidth, CSS_PROPERTY_APPLIES_TO_FIRST_LETTER, Margin, mBorderWidth.mBottom, eCSSType_Value, kBorderWidthKTable)
+CSS_PROP_TABLEBORDER(border-collapse, border_collapse, BorderCollapse, 0, Table, mBorderCollapse, eCSSType_Value, kBorderCollapseKTable)
 CSS_PROP_SHORTHAND(border-color, border_color, BorderColor, 0)
 CSS_PROP_SHORTHAND(-moz-border-end, border_end, MozBorderEnd, 0)
 CSS_PROP_SHORTHAND(-moz-border-end-color, border_end_color, MozBorderEndColor, 0)
@@ -331,11 +331,11 @@ CSS_PROP_BORDER(-moz-border-image, border_image, MozBorderImage, CSS_PROPERTY_AP
 CSS_PROP_SHORTHAND(border-left, border_left, BorderLeft, 0)
 CSS_PROP_SHORTHAND(border-left-color, border_left_color, BorderLeftColor, 0)
 #ifndef CSS_PROP_LIST_EXCLUDE_INTERNAL
-CSS_PROP_BORDER(border-left-color-value, border_left_color_value, X, CSS_PROPERTY_APPLIES_TO_FIRST_LETTER_AND_FIRST_LINE, Margin, mBorderColor.mLeft, eCSSType_Value, kBorderColorKTable)
+CSS_PROP_BORDER(border-left-color-value, border_left_color_value, X, CSS_PROPERTY_APPLIES_TO_FIRST_LETTER, Margin, mBorderColor.mLeft, eCSSType_Value, kBorderColorKTable)
 CSS_PROP_BORDER(border-left-color-ltr-source, border_left_color_ltr_source, X, CSS_PROPERTY_APPLIES_TO_FIRST_LETTER_AND_FIRST_LINE | CSS_PROPERTY_DIRECTIONAL_SOURCE, Margin, mBorderLeftColorLTRSource, eCSSType_Value, kBoxPropSourceKTable)
 CSS_PROP_BORDER(border-left-color-rtl-source, border_left_color_rtl_source, X, CSS_PROPERTY_APPLIES_TO_FIRST_LETTER_AND_FIRST_LINE | CSS_PROPERTY_DIRECTIONAL_SOURCE, Margin, mBorderLeftColorRTLSource, eCSSType_Value, kBoxPropSourceKTable)
 #endif
-CSS_PROP_BORDER(-moz-border-left-colors, border_left_colors, MozBorderLeftColors, CSS_PROPERTY_APPLIES_TO_FIRST_LETTER_AND_FIRST_LINE, Margin, mBorderColors.mLeft, eCSSType_ValueList, nsnull)
+CSS_PROP_BORDER(-moz-border-left-colors, border_left_colors, MozBorderLeftColors, CSS_PROPERTY_APPLIES_TO_FIRST_LETTER, Margin, mBorderColors.mLeft, eCSSType_ValueList, nsnull)
 CSS_PROP_SHORTHAND(border-left-style, border_left_style, BorderLeftStyle, 0) // on/off will need reflow
 #ifndef CSS_PROP_LIST_EXCLUDE_INTERNAL
 CSS_PROP_BORDER(border-left-style-value, border_left_style_value, X, CSS_PROPERTY_APPLIES_TO_FIRST_LETTER, Margin, mBorderStyle.mLeft, eCSSType_Value, kBorderStyleKTable)
@@ -344,18 +344,18 @@ CSS_PROP_BORDER(border-left-style-rtl-source, border_left_style_rtl_source, X, C
 #endif
 CSS_PROP_SHORTHAND(border-left-width, border_left_width, BorderLeftWidth, 0)
 #ifndef CSS_PROP_LIST_EXCLUDE_INTERNAL
-CSS_PROP_BORDER(border-left-width-value, border_left_width_value, X, CSS_PROPERTY_APPLIES_TO_FIRST_LETTER_AND_FIRST_LINE, Margin, mBorderWidth.mLeft, eCSSType_Value, kBorderWidthKTable)
+CSS_PROP_BORDER(border-left-width-value, border_left_width_value, X, CSS_PROPERTY_APPLIES_TO_FIRST_LETTER, Margin, mBorderWidth.mLeft, eCSSType_Value, kBorderWidthKTable)
 CSS_PROP_BORDER(border-left-width-ltr-source, border_left_width_ltr_source, X, CSS_PROPERTY_APPLIES_TO_FIRST_LETTER_AND_FIRST_LINE | CSS_PROPERTY_DIRECTIONAL_SOURCE, Margin, mBorderLeftWidthLTRSource, eCSSType_Value, kBoxPropSourceKTable)
 CSS_PROP_BORDER(border-left-width-rtl-source, border_left_width_rtl_source, X, CSS_PROPERTY_APPLIES_TO_FIRST_LETTER_AND_FIRST_LINE | CSS_PROPERTY_DIRECTIONAL_SOURCE, Margin, mBorderLeftWidthRTLSource, eCSSType_Value, kBoxPropSourceKTable)
 #endif
 CSS_PROP_SHORTHAND(border-right, border_right, BorderRight, 0)
 CSS_PROP_SHORTHAND(border-right-color, border_right_color, BorderRightColor, 0)
 #ifndef CSS_PROP_LIST_EXCLUDE_INTERNAL
-CSS_PROP_BORDER(border-right-color-value, border_right_color_value, X, CSS_PROPERTY_APPLIES_TO_FIRST_LETTER_AND_FIRST_LINE, Margin, mBorderColor.mRight, eCSSType_Value, kBorderColorKTable)
+CSS_PROP_BORDER(border-right-color-value, border_right_color_value, X, CSS_PROPERTY_APPLIES_TO_FIRST_LETTER, Margin, mBorderColor.mRight, eCSSType_Value, kBorderColorKTable)
 CSS_PROP_BORDER(border-right-color-ltr-source, border_right_color_ltr_source, X, CSS_PROPERTY_APPLIES_TO_FIRST_LETTER_AND_FIRST_LINE | CSS_PROPERTY_DIRECTIONAL_SOURCE, Margin, mBorderRightColorLTRSource, eCSSType_Value, kBoxPropSourceKTable)
 CSS_PROP_BORDER(border-right-color-rtl-source, border_right_color_rtl_source, X, CSS_PROPERTY_APPLIES_TO_FIRST_LETTER_AND_FIRST_LINE | CSS_PROPERTY_DIRECTIONAL_SOURCE, Margin, mBorderRightColorRTLSource, eCSSType_Value, kBoxPropSourceKTable)
 #endif
-CSS_PROP_BORDER(-moz-border-right-colors, border_right_colors, MozBorderRightColors, CSS_PROPERTY_APPLIES_TO_FIRST_LETTER_AND_FIRST_LINE, Margin, mBorderColors.mRight, eCSSType_ValueList, nsnull)
+CSS_PROP_BORDER(-moz-border-right-colors, border_right_colors, MozBorderRightColors, CSS_PROPERTY_APPLIES_TO_FIRST_LETTER, Margin, mBorderColors.mRight, eCSSType_ValueList, nsnull)
 CSS_PROP_SHORTHAND(border-right-style, border_right_style, BorderRightStyle, 0) // on/off will need reflow
 #ifndef CSS_PROP_LIST_EXCLUDE_INTERNAL
 CSS_PROP_BORDER(border-right-style-value, border_right_style_value, X, CSS_PROPERTY_APPLIES_TO_FIRST_LETTER, Margin, mBorderStyle.mRight, eCSSType_Value, kBorderStyleKTable)
@@ -364,11 +364,11 @@ CSS_PROP_BORDER(border-right-style-rtl-source, border_right_style_rtl_source, X,
 #endif
 CSS_PROP_SHORTHAND(border-right-width, border_right_width, BorderRightWidth, 0)
 #ifndef CSS_PROP_LIST_EXCLUDE_INTERNAL
-CSS_PROP_BORDER(border-right-width-value, border_right_width_value, X, CSS_PROPERTY_APPLIES_TO_FIRST_LETTER_AND_FIRST_LINE, Margin, mBorderWidth.mRight, eCSSType_Value, kBorderWidthKTable)
+CSS_PROP_BORDER(border-right-width-value, border_right_width_value, X, CSS_PROPERTY_APPLIES_TO_FIRST_LETTER, Margin, mBorderWidth.mRight, eCSSType_Value, kBorderWidthKTable)
 CSS_PROP_BORDER(border-right-width-ltr-source, border_right_width_ltr_source, X, CSS_PROPERTY_APPLIES_TO_FIRST_LETTER_AND_FIRST_LINE | CSS_PROPERTY_DIRECTIONAL_SOURCE, Margin, mBorderRightWidthLTRSource, eCSSType_Value, kBoxPropSourceKTable)
 CSS_PROP_BORDER(border-right-width-rtl-source, border_right_width_rtl_source, X, CSS_PROPERTY_APPLIES_TO_FIRST_LETTER_AND_FIRST_LINE | CSS_PROPERTY_DIRECTIONAL_SOURCE, Margin, mBorderRightWidthRTLSource, eCSSType_Value, kBoxPropSourceKTable)
 #endif
-CSS_PROP_TABLEBORDER(border-spacing, border_spacing, BorderSpacing, CSS_PROPERTY_APPLIES_TO_FIRST_LETTER_AND_FIRST_LINE, Table, mBorderSpacing, eCSSType_ValuePair, nsnull) // XXX bug 3935
+CSS_PROP_TABLEBORDER(border-spacing, border_spacing, BorderSpacing, 0, Table, mBorderSpacing, eCSSType_ValuePair, nsnull) // XXX bug 3935
 CSS_PROP_SHORTHAND(-moz-border-start, border_start, MozBorderStart, 0)
 CSS_PROP_SHORTHAND(-moz-border-start-color, border_start_color, MozBorderStartColor, 0)
 #ifndef CSS_PROP_LIST_EXCLUDE_INTERNAL
@@ -384,15 +384,15 @@ CSS_PROP_BORDER(border-start-width-value, border_start_width_value, X, CSS_PROPE
 #endif
 CSS_PROP_SHORTHAND(border-style, border_style, BorderStyle, 0)  // on/off will need reflow
 CSS_PROP_SHORTHAND(border-top, border_top, BorderTop, 0)
-CSS_PROP_BORDER(border-top-color, border_top_color, BorderTopColor, CSS_PROPERTY_APPLIES_TO_FIRST_LETTER_AND_FIRST_LINE, Margin, mBorderColor.mTop, eCSSType_Value, kBorderColorKTable)
-CSS_PROP_BORDER(-moz-border-top-colors, border_top_colors, MozBorderTopColors, CSS_PROPERTY_APPLIES_TO_FIRST_LETTER_AND_FIRST_LINE, Margin, mBorderColors.mTop, eCSSType_ValueList, nsnull)
+CSS_PROP_BORDER(border-top-color, border_top_color, BorderTopColor, CSS_PROPERTY_APPLIES_TO_FIRST_LETTER, Margin, mBorderColor.mTop, eCSSType_Value, kBorderColorKTable)
+CSS_PROP_BORDER(-moz-border-top-colors, border_top_colors, MozBorderTopColors, CSS_PROPERTY_APPLIES_TO_FIRST_LETTER, Margin, mBorderColors.mTop, eCSSType_ValueList, nsnull)
 CSS_PROP_BORDER(border-top-style, border_top_style, BorderTopStyle, CSS_PROPERTY_APPLIES_TO_FIRST_LETTER, Margin, mBorderStyle.mTop, eCSSType_Value, kBorderStyleKTable)  // on/off will need reflow
-CSS_PROP_BORDER(border-top-width, border_top_width, BorderTopWidth, CSS_PROPERTY_APPLIES_TO_FIRST_LETTER_AND_FIRST_LINE, Margin, mBorderWidth.mTop, eCSSType_Value, kBorderWidthKTable)
+CSS_PROP_BORDER(border-top-width, border_top_width, BorderTopWidth, CSS_PROPERTY_APPLIES_TO_FIRST_LETTER, Margin, mBorderWidth.mTop, eCSSType_Value, kBorderWidthKTable)
 CSS_PROP_SHORTHAND(border-width, border_width, BorderWidth, 0)
 CSS_PROP_POSITION(bottom, bottom, Bottom, 0, Position, mOffset.mBottom, eCSSType_Value, nsnull)
 CSS_PROP_BORDER(-moz-box-shadow, box_shadow, MozBoxShadow, CSS_PROPERTY_APPLIES_TO_FIRST_LETTER_AND_FIRST_LINE | CSS_PROPERTY_VALUE_LIST_USES_COMMAS, Margin, mBoxShadow, eCSSType_ValueList, nsnull)
 CSS_PROP_POSITION(-moz-box-sizing, box_sizing, MozBoxSizing, 0, Position, mBoxSizing, eCSSType_Value, kBoxSizingKTable) // XXX bug 3935
-CSS_PROP_TABLEBORDER(caption-side, caption_side, CaptionSide, CSS_PROPERTY_APPLIES_TO_FIRST_LETTER_AND_FIRST_LINE, Table, mCaptionSide, eCSSType_Value, kCaptionSideKTable)
+CSS_PROP_TABLEBORDER(caption-side, caption_side, CaptionSide, 0, Table, mCaptionSide, eCSSType_Value, kCaptionSideKTable)
 CSS_PROP_DISPLAY(clear, clear, Clear, 0, Display, mClear, eCSSType_Value, kClearKTable)
 CSS_PROP_DISPLAY(clip, clip, Clip, 0, Display, mClip, eCSSType_Rect, nsnull)
 CSS_PROP_COLOR(color, color, Color, CSS_PROPERTY_APPLIES_TO_FIRST_LETTER_AND_FIRST_LINE, Color, mColor, eCSSType_Value, nsnull)
@@ -403,17 +403,17 @@ CSS_PROP_SHORTHAND(-moz-column-rule, _moz_column_rule, MozColumnRule, 0)
 CSS_PROP_COLUMN(-moz-column-rule-color, _moz_column_rule_color, MozColumnRuleColor, CSS_PROPERTY_APPLIES_TO_FIRST_LETTER_AND_FIRST_LINE, Column, mColumnRuleColor, eCSSType_Value, nsnull)
 CSS_PROP_COLUMN(-moz-column-rule-style, _moz_column_rule_style, MozColumnRuleStyle, CSS_PROPERTY_APPLIES_TO_FIRST_LETTER_AND_FIRST_LINE, Column, mColumnRuleStyle, eCSSType_Value, kBorderStyleKTable)
 CSS_PROP_COLUMN(-moz-column-rule-width, _moz_column_rule_width, MozColumnRuleWidth, CSS_PROPERTY_APPLIES_TO_FIRST_LETTER_AND_FIRST_LINE, Column, mColumnRuleWidth, eCSSType_Value, kBorderWidthKTable)
-CSS_PROP_CONTENT(content, content, Content, CSS_PROPERTY_APPLIES_TO_FIRST_LETTER_AND_FIRST_LINE, Content, mContent, eCSSType_ValueList, kContentKTable)
+CSS_PROP_CONTENT(content, content, Content, 0, Content, mContent, eCSSType_ValueList, kContentKTable)
 CSS_PROP_CONTENT(counter-increment, counter_increment, CounterIncrement, 0, Content, mCounterIncrement, eCSSType_ValuePairList, nsnull) // XXX bug 137285
 CSS_PROP_CONTENT(counter-reset, counter_reset, CounterReset, 0, Content, mCounterReset, eCSSType_ValuePairList, nsnull) // XXX bug 137285
 CSS_PROP_SHORTHAND(cue, cue, Cue, 0)
-CSS_PROP_BACKENDONLY(cue-after, cue_after, CueAfter, CSS_PROPERTY_APPLIES_TO_FIRST_LETTER_AND_FIRST_LINE, Aural, mCueAfter, eCSSType_Value, nsnull)
-CSS_PROP_BACKENDONLY(cue-before, cue_before, CueBefore, CSS_PROPERTY_APPLIES_TO_FIRST_LETTER_AND_FIRST_LINE, Aural, mCueBefore, eCSSType_Value, nsnull)
+CSS_PROP_BACKENDONLY(cue-after, cue_after, CueAfter, 0, Aural, mCueAfter, eCSSType_Value, nsnull)
+CSS_PROP_BACKENDONLY(cue-before, cue_before, CueBefore, 0, Aural, mCueBefore, eCSSType_Value, nsnull)
 CSS_PROP_USERINTERFACE(cursor, cursor, Cursor, CSS_PROPERTY_VALUE_LIST_USES_COMMAS, UserInterface, mCursor, eCSSType_ValueList, kCursorKTable)
 CSS_PROP_VISIBILITY(direction, direction, Direction, 0, Display, mDirection, eCSSType_Value, kDirectionKTable)
 CSS_PROP_DISPLAY(display, display, Display, 0, Display, mDisplay, eCSSType_Value, kDisplayKTable)
-CSS_PROP_BACKENDONLY(elevation, elevation, Elevation, CSS_PROPERTY_APPLIES_TO_FIRST_LETTER_AND_FIRST_LINE, Aural, mElevation, eCSSType_Value, kElevationKTable)
-CSS_PROP_TABLEBORDER(empty-cells, empty_cells, EmptyCells, CSS_PROPERTY_APPLIES_TO_FIRST_LETTER_AND_FIRST_LINE, Table, mEmptyCells, eCSSType_Value, kEmptyCellsKTable)
+CSS_PROP_BACKENDONLY(elevation, elevation, Elevation, 0, Aural, mElevation, eCSSType_Value, kElevationKTable)
+CSS_PROP_TABLEBORDER(empty-cells, empty_cells, EmptyCells, 0, Table, mEmptyCells, eCSSType_Value, kEmptyCellsKTable)
 CSS_PROP_DISPLAY(float, float, CssFloat, CSS_PROPERTY_APPLIES_TO_FIRST_LETTER, Display, mFloat, eCSSType_Value, kFloatKTable)
 CSS_PROP_BORDER(-moz-float-edge, float_edge, MozFloatEdge, CSS_PROPERTY_APPLIES_TO_FIRST_LETTER_AND_FIRST_LINE, Margin, mFloatEdge, eCSSType_Value, kFloatEdgeKTable) // XXX bug 3935
 CSS_PROP_SHORTHAND(font, font, Font, 0)
@@ -424,17 +424,17 @@ CSS_PROP_BACKENDONLY(font-stretch, font_stretch, FontStretch, CSS_PROPERTY_APPLI
 CSS_PROP_FONT(font-style, font_style, FontStyle, CSS_PROPERTY_APPLIES_TO_FIRST_LETTER_AND_FIRST_LINE, Font, mStyle, eCSSType_Value, kFontStyleKTable)
 CSS_PROP_FONT(font-variant, font_variant, FontVariant, CSS_PROPERTY_APPLIES_TO_FIRST_LETTER_AND_FIRST_LINE, Font, mVariant, eCSSType_Value, kFontVariantKTable)
 CSS_PROP_FONT(font-weight, font_weight, FontWeight, CSS_PROPERTY_APPLIES_TO_FIRST_LETTER_AND_FIRST_LINE, Font, mWeight, eCSSType_Value, kFontWeightKTable)
-CSS_PROP_UIRESET(-moz-force-broken-image-icon, force_broken_image_icon, MozForceBrokenImageIcon, CSS_PROPERTY_APPLIES_TO_FIRST_LETTER_AND_FIRST_LINE, UserInterface, mForceBrokenImageIcon, eCSSType_Value, nsnull) // bug 58646
+CSS_PROP_UIRESET(-moz-force-broken-image-icon, force_broken_image_icon, MozForceBrokenImageIcon, 0, UserInterface, mForceBrokenImageIcon, eCSSType_Value, nsnull) // bug 58646
 CSS_PROP_POSITION(height, height, Height, 0, Position, mHeight, eCSSType_Value, nsnull)
-CSS_PROP_LIST(-moz-image-region, image_region, MozImageRegion, CSS_PROPERTY_APPLIES_TO_FIRST_LETTER_AND_FIRST_LINE, List, mImageRegion, eCSSType_Rect, nsnull)
+CSS_PROP_LIST(-moz-image-region, image_region, MozImageRegion, 0, List, mImageRegion, eCSSType_Rect, nsnull)
 CSS_PROP_UIRESET(ime-mode, ime_mode, ImeMode, CSS_PROPERTY_APPLIES_TO_FIRST_LETTER_AND_FIRST_LINE, UserInterface, mIMEMode, eCSSType_Value, kIMEModeKTable)
 CSS_PROP_POSITION(left, left, Left, 0, Position, mOffset.mLeft, eCSSType_Value, nsnull)
 CSS_PROP_TEXT(letter-spacing, letter_spacing, LetterSpacing, CSS_PROPERTY_APPLIES_TO_FIRST_LETTER_AND_FIRST_LINE, Text, mLetterSpacing, eCSSType_Value, nsnull)
 CSS_PROP_TEXT(line-height, line_height, LineHeight, CSS_PROPERTY_APPLIES_TO_FIRST_LETTER_AND_FIRST_LINE, Text, mLineHeight, eCSSType_Value, nsnull)
 CSS_PROP_SHORTHAND(list-style, list_style, ListStyle, 0)
-CSS_PROP_LIST(list-style-image, list_style_image, ListStyleImage, CSS_PROPERTY_APPLIES_TO_FIRST_LETTER_AND_FIRST_LINE, List, mImage, eCSSType_Value, nsnull)
-CSS_PROP_LIST(list-style-position, list_style_position, ListStylePosition, CSS_PROPERTY_APPLIES_TO_FIRST_LETTER_AND_FIRST_LINE, List, mPosition, eCSSType_Value, kListStylePositionKTable)
-CSS_PROP_LIST(list-style-type, list_style_type, ListStyleType, CSS_PROPERTY_APPLIES_TO_FIRST_LETTER_AND_FIRST_LINE, List, mType, eCSSType_Value, kListStyleKTable)
+CSS_PROP_LIST(list-style-image, list_style_image, ListStyleImage, 0, List, mImage, eCSSType_Value, nsnull)
+CSS_PROP_LIST(list-style-position, list_style_position, ListStylePosition, 0, List, mPosition, eCSSType_Value, kListStylePositionKTable)
+CSS_PROP_LIST(list-style-type, list_style_type, ListStyleType, 0, List, mType, eCSSType_Value, kListStyleKTable)
 CSS_PROP_SHORTHAND(margin, margin, Margin, 0)
 CSS_PROP_MARGIN(margin-bottom, margin_bottom, MarginBottom, CSS_PROPERTY_APPLIES_TO_FIRST_LETTER, Margin, mMargin.mBottom, eCSSType_Value, nsnull)
 CSS_PROP_SHORTHAND(-moz-margin-end, margin_end, MozMarginEnd, 0)
@@ -459,18 +459,18 @@ CSS_PROP_MARGIN(margin-start-value, margin_start_value, X, CSS_PROPERTY_APPLIES_
 #endif
 CSS_PROP_MARGIN(margin-top, margin_top, MarginTop, CSS_PROPERTY_APPLIES_TO_FIRST_LETTER, Margin, mMargin.mTop, eCSSType_Value, nsnull)
 CSS_PROP_CONTENT(marker-offset, marker_offset, MarkerOffset, 0, Content, mMarkerOffset, eCSSType_Value, nsnull)
-CSS_PROP_BACKENDONLY(marks, marks, Marks, CSS_PROPERTY_APPLIES_TO_FIRST_LETTER_AND_FIRST_LINE, Page, mMarks, eCSSType_Value, kPageMarksKTable)
+CSS_PROP_BACKENDONLY(marks, marks, Marks, 0, Page, mMarks, eCSSType_Value, kPageMarksKTable)
 CSS_PROP_POSITION(max-height, max_height, MaxHeight, 0, Position, mMaxHeight, eCSSType_Value, nsnull)
 CSS_PROP_POSITION(max-width, max_width, MaxWidth, 0, Position, mMaxWidth, eCSSType_Value, kWidthKTable)
 CSS_PROP_POSITION(min-height, min_height, MinHeight, 0, Position, mMinHeight, eCSSType_Value, nsnull)
 CSS_PROP_POSITION(min-width, min_width, MinWidth, 0, Position, mMinWidth, eCSSType_Value, kWidthKTable)
 CSS_PROP_DISPLAY(opacity, opacity, Opacity, 0, Display, mOpacity, eCSSType_Value, nsnull) // XXX bug 3935
-CSS_PROP_BACKENDONLY(orphans, orphans, Orphans, CSS_PROPERTY_APPLIES_TO_FIRST_LETTER_AND_FIRST_LINE, Breaks, mOrphans, eCSSType_Value, nsnull)
+CSS_PROP_BACKENDONLY(orphans, orphans, Orphans, 0, Breaks, mOrphans, eCSSType_Value, nsnull)
 CSS_PROP_SHORTHAND(outline, outline, Outline, 0)
-CSS_PROP_OUTLINE(outline-color, outline_color, OutlineColor, CSS_PROPERTY_APPLIES_TO_FIRST_LETTER_AND_FIRST_LINE, Margin, mOutlineColor, eCSSType_Value, kOutlineColorKTable)
+CSS_PROP_OUTLINE(outline-color, outline_color, OutlineColor, 0, Margin, mOutlineColor, eCSSType_Value, kOutlineColorKTable)
 CSS_PROP_OUTLINE(outline-style, outline_style, OutlineStyle, 0, Margin, mOutlineStyle, eCSSType_Value, kBorderStyleKTable)
-CSS_PROP_OUTLINE(outline-width, outline_width, OutlineWidth, CSS_PROPERTY_APPLIES_TO_FIRST_LETTER_AND_FIRST_LINE, Margin, mOutlineWidth, eCSSType_Value, kBorderWidthKTable)
-CSS_PROP_OUTLINE(outline-offset, outline_offset, OutlineOffset, CSS_PROPERTY_APPLIES_TO_FIRST_LETTER_AND_FIRST_LINE, Margin, mOutlineOffset, eCSSType_Value, nsnull)
+CSS_PROP_OUTLINE(outline-width, outline_width, OutlineWidth, 0, Margin, mOutlineWidth, eCSSType_Value, kBorderWidthKTable)
+CSS_PROP_OUTLINE(outline-offset, outline_offset, OutlineOffset, 0, Margin, mOutlineOffset, eCSSType_Value, nsnull)
 CSS_PROP_SHORTHAND(overflow, overflow, Overflow, 0)
 CSS_PROP_DISPLAY(overflow-x, overflow_x, OverflowX, 0, Display, mOverflowX, eCSSType_Value, kOverflowSubKTable)
 CSS_PROP_DISPLAY(overflow-y, overflow_y, OverflowY, 0, Display, mOverflowY, eCSSType_Value, kOverflowSubKTable)
@@ -497,30 +497,30 @@ CSS_PROP_SHORTHAND(-moz-padding-start, padding_start, MozPaddingStart, 0)
 CSS_PROP_PADDING(padding-start-value, padding_start_value, X, CSS_PROPERTY_APPLIES_TO_FIRST_LETTER_AND_FIRST_LINE, Margin, mPaddingStart, eCSSType_Value, nsnull)
 #endif
 CSS_PROP_PADDING(padding-top, padding_top, PaddingTop, CSS_PROPERTY_APPLIES_TO_FIRST_LETTER, Margin, mPadding.mTop, eCSSType_Value, nsnull)
-CSS_PROP_BACKENDONLY(page, page, Page, CSS_PROPERTY_APPLIES_TO_FIRST_LETTER_AND_FIRST_LINE, Breaks, mPage, eCSSType_Value, nsnull)
+CSS_PROP_BACKENDONLY(page, page, Page, 0, Breaks, mPage, eCSSType_Value, nsnull)
 CSS_PROP_DISPLAY(page-break-after, page_break_after, PageBreakAfter, CSS_PROPERTY_APPLIES_TO_FIRST_LETTER_AND_FIRST_LINE, Display, mBreakAfter, eCSSType_Value, kPageBreakKTable) // temp fix for bug 24000
 CSS_PROP_DISPLAY(page-break-before, page_break_before, PageBreakBefore, CSS_PROPERTY_APPLIES_TO_FIRST_LETTER_AND_FIRST_LINE, Display, mBreakBefore, eCSSType_Value, kPageBreakKTable) // temp fix for bug 24000
-CSS_PROP_BACKENDONLY(page-break-inside, page_break_inside, PageBreakInside, CSS_PROPERTY_APPLIES_TO_FIRST_LETTER_AND_FIRST_LINE, Breaks, mPageBreakInside, eCSSType_Value, kPageBreakInsideKTable)
+CSS_PROP_BACKENDONLY(page-break-inside, page_break_inside, PageBreakInside, 0, Breaks, mPageBreakInside, eCSSType_Value, kPageBreakInsideKTable)
 CSS_PROP_SHORTHAND(pause, pause, Pause, 0)
-CSS_PROP_BACKENDONLY(pause-after, pause_after, PauseAfter, CSS_PROPERTY_APPLIES_TO_FIRST_LETTER_AND_FIRST_LINE, Aural, mPauseAfter, eCSSType_Value, nsnull)
-CSS_PROP_BACKENDONLY(pause-before, pause_before, PauseBefore, CSS_PROPERTY_APPLIES_TO_FIRST_LETTER_AND_FIRST_LINE, Aural, mPauseBefore, eCSSType_Value, nsnull)
-CSS_PROP_BACKENDONLY(pitch, pitch, Pitch, CSS_PROPERTY_APPLIES_TO_FIRST_LETTER_AND_FIRST_LINE, Aural, mPitch, eCSSType_Value, kPitchKTable)
-CSS_PROP_BACKENDONLY(pitch-range, pitch_range, PitchRange, CSS_PROPERTY_APPLIES_TO_FIRST_LETTER_AND_FIRST_LINE, Aural, mPitchRange, eCSSType_Value, nsnull)
+CSS_PROP_BACKENDONLY(pause-after, pause_after, PauseAfter, 0, Aural, mPauseAfter, eCSSType_Value, nsnull)
+CSS_PROP_BACKENDONLY(pause-before, pause_before, PauseBefore, 0, Aural, mPauseBefore, eCSSType_Value, nsnull)
+CSS_PROP_BACKENDONLY(pitch, pitch, Pitch, 0, Aural, mPitch, eCSSType_Value, kPitchKTable)
+CSS_PROP_BACKENDONLY(pitch-range, pitch_range, PitchRange, 0, Aural, mPitchRange, eCSSType_Value, nsnull)
 CSS_PROP_DISPLAY(position, position, Position, 0, Display, mPosition, eCSSType_Value, kPositionKTable)
 CSS_PROP_QUOTES(quotes, quotes, Quotes, 0, Content, mQuotes, eCSSType_ValuePairList, nsnull)
-CSS_PROP_BACKENDONLY(richness, richness, Richness, CSS_PROPERTY_APPLIES_TO_FIRST_LETTER_AND_FIRST_LINE, Aural, mRichness, eCSSType_Value, nsnull)
+CSS_PROP_BACKENDONLY(richness, richness, Richness, 0, Aural, mRichness, eCSSType_Value, nsnull)
 CSS_PROP_POSITION(right, right, Right, 0, Position, mOffset.mRight, eCSSType_Value, nsnull)
-CSS_PROP_BACKENDONLY(size, size, Size, CSS_PROPERTY_APPLIES_TO_FIRST_LETTER_AND_FIRST_LINE, Page, mSize, eCSSType_ValuePair, kPageSizeKTable)
-CSS_PROP_BACKENDONLY(speak, speak, Speak, CSS_PROPERTY_APPLIES_TO_FIRST_LETTER_AND_FIRST_LINE, Aural, mSpeak, eCSSType_Value, kSpeakKTable)
-CSS_PROP_BACKENDONLY(speak-header, speak_header, SpeakHeader, CSS_PROPERTY_APPLIES_TO_FIRST_LETTER_AND_FIRST_LINE, Aural, mSpeakHeader, eCSSType_Value, kSpeakHeaderKTable)
-CSS_PROP_BACKENDONLY(speak-numeral, speak_numeral, SpeakNumeral, CSS_PROPERTY_APPLIES_TO_FIRST_LETTER_AND_FIRST_LINE, Aural, mSpeakNumeral, eCSSType_Value, kSpeakNumeralKTable)
-CSS_PROP_BACKENDONLY(speak-punctuation, speak_punctuation, SpeakPunctuation, CSS_PROPERTY_APPLIES_TO_FIRST_LETTER_AND_FIRST_LINE, Aural, mSpeakPunctuation, eCSSType_Value, kSpeakPunctuationKTable)
-CSS_PROP_BACKENDONLY(speech-rate, speech_rate, SpeechRate, CSS_PROPERTY_APPLIES_TO_FIRST_LETTER_AND_FIRST_LINE, Aural, mSpeechRate, eCSSType_Value, kSpeechRateKTable)
-CSS_PROP_BACKENDONLY(stress, stress, Stress, CSS_PROPERTY_APPLIES_TO_FIRST_LETTER_AND_FIRST_LINE, Aural, mStress, eCSSType_Value, nsnull)
-CSS_PROP_TABLE(table-layout, table_layout, TableLayout, CSS_PROPERTY_APPLIES_TO_FIRST_LETTER_AND_FIRST_LINE, Table, mLayout, eCSSType_Value, kTableLayoutKTable)
-CSS_PROP_TEXT(text-align, text_align, TextAlign, CSS_PROPERTY_APPLIES_TO_FIRST_LETTER_AND_FIRST_LINE, Text, mTextAlign, eCSSType_Value, kTextAlignKTable)
+CSS_PROP_BACKENDONLY(size, size, Size, 0, Page, mSize, eCSSType_ValuePair, kPageSizeKTable)
+CSS_PROP_BACKENDONLY(speak, speak, Speak, 0, Aural, mSpeak, eCSSType_Value, kSpeakKTable)
+CSS_PROP_BACKENDONLY(speak-header, speak_header, SpeakHeader, 0, Aural, mSpeakHeader, eCSSType_Value, kSpeakHeaderKTable)
+CSS_PROP_BACKENDONLY(speak-numeral, speak_numeral, SpeakNumeral, 0, Aural, mSpeakNumeral, eCSSType_Value, kSpeakNumeralKTable)
+CSS_PROP_BACKENDONLY(speak-punctuation, speak_punctuation, SpeakPunctuation, 0, Aural, mSpeakPunctuation, eCSSType_Value, kSpeakPunctuationKTable)
+CSS_PROP_BACKENDONLY(speech-rate, speech_rate, SpeechRate, 0, Aural, mSpeechRate, eCSSType_Value, kSpeechRateKTable)
+CSS_PROP_BACKENDONLY(stress, stress, Stress, 0, Aural, mStress, eCSSType_Value, nsnull)
+CSS_PROP_TABLE(table-layout, table_layout, TableLayout, 0, Table, mLayout, eCSSType_Value, kTableLayoutKTable)
+CSS_PROP_TEXT(text-align, text_align, TextAlign, 0, Text, mTextAlign, eCSSType_Value, kTextAlignKTable)
 CSS_PROP_TEXTRESET(text-decoration, text_decoration, TextDecoration, CSS_PROPERTY_APPLIES_TO_FIRST_LETTER_AND_FIRST_LINE, Text, mDecoration, eCSSType_Value, kTextDecorationKTable)
-CSS_PROP_TEXT(text-indent, text_indent, TextIndent, CSS_PROPERTY_APPLIES_TO_FIRST_LETTER_AND_FIRST_LINE, Text, mTextIndent, eCSSType_Value, nsnull)
+CSS_PROP_TEXT(text-indent, text_indent, TextIndent, 0, Text, mTextIndent, eCSSType_Value, nsnull)
 CSS_PROP_TEXT(text-shadow, text_shadow, TextShadow, CSS_PROPERTY_APPLIES_TO_FIRST_LETTER_AND_FIRST_LINE | CSS_PROPERTY_VALUE_LIST_USES_COMMAS, Text, mTextShadow, eCSSType_ValueList, nsnull)
 CSS_PROP_TEXT(text-transform, text_transform, TextTransform, CSS_PROPERTY_APPLIES_TO_FIRST_LETTER_AND_FIRST_LINE, Text, mTextTransform, eCSSType_Value, kTextTransformKTable)
 CSS_PROP_DISPLAY(-moz-transform, _moz_transform, MozTransform, 0, Display, mTransform, eCSSType_ValueList, kDisplayKTable)
@@ -530,26 +530,29 @@ CSS_PROP_TEXTRESET(unicode-bidi, unicode_bidi, UnicodeBidi, 0, Text, mUnicodeBid
 CSS_PROP_USERINTERFACE(-moz-user-focus, user_focus, MozUserFocus, 0, UserInterface, mUserFocus, eCSSType_Value, kUserFocusKTable) // XXX bug 3935
 CSS_PROP_USERINTERFACE(-moz-user-input, user_input, MozUserInput, 0, UserInterface, mUserInput, eCSSType_Value, kUserInputKTable) // XXX ??? // XXX bug 3935
 CSS_PROP_USERINTERFACE(-moz-user-modify, user_modify, MozUserModify, 0, UserInterface, mUserModify, eCSSType_Value, kUserModifyKTable) // XXX bug 3935
-CSS_PROP_UIRESET(-moz-user-select, user_select, MozUserSelect, CSS_PROPERTY_APPLIES_TO_FIRST_LETTER_AND_FIRST_LINE, UserInterface, mUserSelect, eCSSType_Value, kUserSelectKTable) // XXX bug 3935
+CSS_PROP_UIRESET(-moz-user-select, user_select, MozUserSelect, 0, UserInterface, mUserSelect, eCSSType_Value, kUserSelectKTable) // XXX bug 3935
+// NOTE: vertical-align is only supposed to apply to :first-letter when
+// 'float' is 'none', but we don't worry about that since it has no
+// effect otherwise
 CSS_PROP_TEXTRESET(vertical-align, vertical_align, VerticalAlign, CSS_PROPERTY_APPLIES_TO_FIRST_LETTER_AND_FIRST_LINE, Text, mVerticalAlign, eCSSType_Value, kVerticalAlignKTable)
 CSS_PROP_VISIBILITY(visibility, visibility, Visibility, 0, Display, mVisibility, eCSSType_Value, kVisibilityKTable)  // reflow for collapse
-CSS_PROP_BACKENDONLY(voice-family, voice_family, VoiceFamily, CSS_PROPERTY_APPLIES_TO_FIRST_LETTER_AND_FIRST_LINE, Aural, mVoiceFamily, eCSSType_Value, nsnull)
-CSS_PROP_BACKENDONLY(volume, volume, Volume, CSS_PROPERTY_APPLIES_TO_FIRST_LETTER_AND_FIRST_LINE, Aural, mVolume, eCSSType_Value, kVolumeKTable)
+CSS_PROP_BACKENDONLY(voice-family, voice_family, VoiceFamily, 0, Aural, mVoiceFamily, eCSSType_Value, nsnull)
+CSS_PROP_BACKENDONLY(volume, volume, Volume, 0, Aural, mVolume, eCSSType_Value, kVolumeKTable)
 CSS_PROP_TEXT(white-space, white_space, WhiteSpace, CSS_PROPERTY_APPLIES_TO_FIRST_LETTER_AND_FIRST_LINE, Text, mWhiteSpace, eCSSType_Value, kWhitespaceKTable)
-CSS_PROP_BACKENDONLY(widows, widows, Widows, CSS_PROPERTY_APPLIES_TO_FIRST_LETTER_AND_FIRST_LINE, Breaks, mWidows, eCSSType_Value, nsnull)
+CSS_PROP_BACKENDONLY(widows, widows, Widows, 0, Breaks, mWidows, eCSSType_Value, nsnull)
 CSS_PROP_POSITION(width, width, Width, 0, Position, mWidth, eCSSType_Value, kWidthKTable)
 CSS_PROP_UIRESET(-moz-window-shadow, _moz_window_shadow, MozWindowShadow, CSS_PROPERTY_APPLIES_TO_FIRST_LETTER_AND_FIRST_LINE, UserInterface, mWindowShadow, eCSSType_Value, kWindowShadowKTable)
 CSS_PROP_TEXT(word-spacing, word_spacing, WordSpacing, CSS_PROPERTY_APPLIES_TO_FIRST_LETTER_AND_FIRST_LINE, Text, mWordSpacing, eCSSType_Value, nsnull)
 CSS_PROP_TEXT(word-wrap, word_wrap, WordWrap, CSS_PROPERTY_APPLIES_TO_FIRST_LETTER_AND_FIRST_LINE, Text, mWordWrap, eCSSType_Value, kWordwrapKTable)
 CSS_PROP_POSITION(z-index, z_index, ZIndex, 0, Position, mZIndex, eCSSType_Value, nsnull)
 
-CSS_PROP_XUL(-moz-box-align, box_align, MozBoxAlign, CSS_PROPERTY_APPLIES_TO_FIRST_LETTER_AND_FIRST_LINE, XUL, mBoxAlign, eCSSType_Value, kBoxAlignKTable) // XXX bug 3935
-CSS_PROP_XUL(-moz-box-direction, box_direction, MozBoxDirection, CSS_PROPERTY_APPLIES_TO_FIRST_LETTER_AND_FIRST_LINE, XUL, mBoxDirection, eCSSType_Value, kBoxDirectionKTable) // XXX bug 3935
-CSS_PROP_XUL(-moz-box-flex, box_flex, MozBoxFlex, CSS_PROPERTY_APPLIES_TO_FIRST_LETTER_AND_FIRST_LINE, XUL, mBoxFlex, eCSSType_Value, nsnull) // XXX bug 3935
-CSS_PROP_XUL(-moz-box-orient, box_orient, MozBoxOrient, CSS_PROPERTY_APPLIES_TO_FIRST_LETTER_AND_FIRST_LINE, XUL, mBoxOrient, eCSSType_Value, kBoxOrientKTable) // XXX bug 3935
-CSS_PROP_XUL(-moz-box-pack, box_pack, MozBoxPack, CSS_PROPERTY_APPLIES_TO_FIRST_LETTER_AND_FIRST_LINE, XUL, mBoxPack, eCSSType_Value, kBoxPackKTable) // XXX bug 3935
-CSS_PROP_XUL(-moz-box-ordinal-group, box_ordinal_group, MozBoxOrdinalGroup, CSS_PROPERTY_APPLIES_TO_FIRST_LETTER_AND_FIRST_LINE, XUL, mBoxOrdinal, eCSSType_Value, nsnull)
-CSS_PROP_XUL(-moz-stack-sizing, stack_sizing, MozStackSizing, CSS_PROPERTY_APPLIES_TO_FIRST_LETTER_AND_FIRST_LINE, XUL, mStackSizing, eCSSType_Value, kStackSizingKTable)
+CSS_PROP_XUL(-moz-box-align, box_align, MozBoxAlign, 0, XUL, mBoxAlign, eCSSType_Value, kBoxAlignKTable) // XXX bug 3935
+CSS_PROP_XUL(-moz-box-direction, box_direction, MozBoxDirection, 0, XUL, mBoxDirection, eCSSType_Value, kBoxDirectionKTable) // XXX bug 3935
+CSS_PROP_XUL(-moz-box-flex, box_flex, MozBoxFlex, 0, XUL, mBoxFlex, eCSSType_Value, nsnull) // XXX bug 3935
+CSS_PROP_XUL(-moz-box-orient, box_orient, MozBoxOrient, 0, XUL, mBoxOrient, eCSSType_Value, kBoxOrientKTable) // XXX bug 3935
+CSS_PROP_XUL(-moz-box-pack, box_pack, MozBoxPack, 0, XUL, mBoxPack, eCSSType_Value, kBoxPackKTable) // XXX bug 3935
+CSS_PROP_XUL(-moz-box-ordinal-group, box_ordinal_group, MozBoxOrdinalGroup, 0, XUL, mBoxOrdinal, eCSSType_Value, nsnull)
+CSS_PROP_XUL(-moz-stack-sizing, stack_sizing, MozStackSizing, 0, XUL, mStackSizing, eCSSType_Value, kStackSizingKTable)
 
 #ifdef MOZ_MATHML
 #ifndef CSS_PROP_LIST_EXCLUDE_INTERNAL
@@ -563,37 +566,37 @@ CSS_PROP_FONT(-moz-script-min-size, script_min_size, ScriptMinSize, CSS_PROPERTY
 // XXX treat SVG's CSS Properties as internal for now.
 // Do we want to create an nsIDOMSVGCSS2Properties interface?
 #ifndef CSS_PROP_LIST_EXCLUDE_INTERNAL
-CSS_PROP_SVGRESET(clip-path, clip_path, ClipPath, CSS_PROPERTY_APPLIES_TO_FIRST_LETTER_AND_FIRST_LINE, SVG, mClipPath, eCSSType_Value, nsnull)
-CSS_PROP_SVG(clip-rule, clip_rule, ClipRule, CSS_PROPERTY_APPLIES_TO_FIRST_LETTER_AND_FIRST_LINE, SVG, mClipRule, eCSSType_Value, kFillRuleKTable)
-CSS_PROP_SVG(color-interpolation, color_interpolation, ColorInterpolation, CSS_PROPERTY_APPLIES_TO_FIRST_LETTER_AND_FIRST_LINE, SVG, mColorInterpolation, eCSSType_Value, kColorInterpolationKTable)
-CSS_PROP_SVG(color-interpolation-filters, color_interpolation_filters, ColorInterpolationFilters, CSS_PROPERTY_APPLIES_TO_FIRST_LETTER_AND_FIRST_LINE, SVG, mColorInterpolationFilters, eCSSType_Value, kColorInterpolationKTable)
-CSS_PROP_SVGRESET(dominant-baseline, dominant_baseline, DominantBaseline, CSS_PROPERTY_APPLIES_TO_FIRST_LETTER_AND_FIRST_LINE, SVG, mDominantBaseline, eCSSType_Value, kDominantBaselineKTable)
-CSS_PROP_SVG(fill, fill, Fill, CSS_PROPERTY_APPLIES_TO_FIRST_LETTER_AND_FIRST_LINE, SVG, mFill, eCSSType_ValuePair, nsnull)
-CSS_PROP_SVG(fill-opacity, fill_opacity, FillOpacity, CSS_PROPERTY_APPLIES_TO_FIRST_LETTER_AND_FIRST_LINE, SVG, mFillOpacity, eCSSType_Value, nsnull)
-CSS_PROP_SVG(fill-rule, fill_rule, FillRule, CSS_PROPERTY_APPLIES_TO_FIRST_LETTER_AND_FIRST_LINE, SVG, mFillRule, eCSSType_Value, kFillRuleKTable)
-CSS_PROP_SVGRESET(filter, filter, Filter, CSS_PROPERTY_APPLIES_TO_FIRST_LETTER_AND_FIRST_LINE, SVG, mFilter, eCSSType_Value, nsnull)
-CSS_PROP_SVGRESET(flood-color, flood_color, FloodColor, CSS_PROPERTY_APPLIES_TO_FIRST_LETTER_AND_FIRST_LINE, SVG, mFloodColor, eCSSType_Value, nsnull)
-CSS_PROP_SVGRESET(flood-opacity, flood_opacity, FloodOpacity, CSS_PROPERTY_APPLIES_TO_FIRST_LETTER_AND_FIRST_LINE, SVG, mFloodOpacity, eCSSType_Value, nsnull)
-CSS_PROP_SVGRESET(lighting-color, lighting_color, LightingColor, CSS_PROPERTY_APPLIES_TO_FIRST_LETTER_AND_FIRST_LINE, SVG, mLightingColor, eCSSType_Value, nsnull)
+CSS_PROP_SVGRESET(clip-path, clip_path, ClipPath, 0, SVG, mClipPath, eCSSType_Value, nsnull)
+CSS_PROP_SVG(clip-rule, clip_rule, ClipRule, 0, SVG, mClipRule, eCSSType_Value, kFillRuleKTable)
+CSS_PROP_SVG(color-interpolation, color_interpolation, ColorInterpolation, 0, SVG, mColorInterpolation, eCSSType_Value, kColorInterpolationKTable)
+CSS_PROP_SVG(color-interpolation-filters, color_interpolation_filters, ColorInterpolationFilters, 0, SVG, mColorInterpolationFilters, eCSSType_Value, kColorInterpolationKTable)
+CSS_PROP_SVGRESET(dominant-baseline, dominant_baseline, DominantBaseline, 0, SVG, mDominantBaseline, eCSSType_Value, kDominantBaselineKTable)
+CSS_PROP_SVG(fill, fill, Fill, 0, SVG, mFill, eCSSType_ValuePair, nsnull)
+CSS_PROP_SVG(fill-opacity, fill_opacity, FillOpacity, 0, SVG, mFillOpacity, eCSSType_Value, nsnull)
+CSS_PROP_SVG(fill-rule, fill_rule, FillRule, 0, SVG, mFillRule, eCSSType_Value, kFillRuleKTable)
+CSS_PROP_SVGRESET(filter, filter, Filter, 0, SVG, mFilter, eCSSType_Value, nsnull)
+CSS_PROP_SVGRESET(flood-color, flood_color, FloodColor, 0, SVG, mFloodColor, eCSSType_Value, nsnull)
+CSS_PROP_SVGRESET(flood-opacity, flood_opacity, FloodOpacity, 0, SVG, mFloodOpacity, eCSSType_Value, nsnull)
+CSS_PROP_SVGRESET(lighting-color, lighting_color, LightingColor, 0, SVG, mLightingColor, eCSSType_Value, nsnull)
 CSS_PROP_SHORTHAND(marker, marker, Marker, 0)
-CSS_PROP_SVG(marker-end, marker_end, MarkerEnd, CSS_PROPERTY_APPLIES_TO_FIRST_LETTER_AND_FIRST_LINE, SVG, mMarkerEnd, eCSSType_Value, nsnull)
-CSS_PROP_SVG(marker-mid, marker_mid, MarkerMid, CSS_PROPERTY_APPLIES_TO_FIRST_LETTER_AND_FIRST_LINE, SVG, mMarkerMid, eCSSType_Value, nsnull)
-CSS_PROP_SVG(marker-start, marker_start, MarkerStart, CSS_PROPERTY_APPLIES_TO_FIRST_LETTER_AND_FIRST_LINE, SVG, mMarkerStart, eCSSType_Value, nsnull)
-CSS_PROP_SVGRESET(mask, mask, Mask, CSS_PROPERTY_APPLIES_TO_FIRST_LETTER_AND_FIRST_LINE, SVG, mMask, eCSSType_Value, nsnull)
-CSS_PROP_SVG(pointer-events, pointer_events, PointerEvents, CSS_PROPERTY_APPLIES_TO_FIRST_LETTER_AND_FIRST_LINE, SVG, mPointerEvents, eCSSType_Value, kPointerEventsKTable)
-CSS_PROP_SVG(shape-rendering, shape_rendering, ShapeRendering, CSS_PROPERTY_APPLIES_TO_FIRST_LETTER_AND_FIRST_LINE, SVG, mShapeRendering, eCSSType_Value, kShapeRenderingKTable)
-CSS_PROP_SVGRESET(stop-color, stop_color, StopColor, CSS_PROPERTY_APPLIES_TO_FIRST_LETTER_AND_FIRST_LINE, SVG, mStopColor, eCSSType_Value, nsnull)
-CSS_PROP_SVGRESET(stop-opacity, stop_opacity, StopOpacity, CSS_PROPERTY_APPLIES_TO_FIRST_LETTER_AND_FIRST_LINE, SVG, mStopOpacity, eCSSType_Value, nsnull)
-CSS_PROP_SVG(stroke, stroke, Stroke, CSS_PROPERTY_APPLIES_TO_FIRST_LETTER_AND_FIRST_LINE, SVG, mStroke, eCSSType_ValuePair, nsnull)
-CSS_PROP_SVG(stroke-dasharray, stroke_dasharray, StrokeDasharray, CSS_PROPERTY_APPLIES_TO_FIRST_LETTER_AND_FIRST_LINE | CSS_PROPERTY_VALUE_LIST_USES_COMMAS, SVG, mStrokeDasharray, eCSSType_ValueList, nsnull)
-CSS_PROP_SVG(stroke-dashoffset, stroke_dashoffset, StrokeDashoffset, CSS_PROPERTY_APPLIES_TO_FIRST_LETTER_AND_FIRST_LINE, SVG, mStrokeDashoffset, eCSSType_Value, nsnull)
-CSS_PROP_SVG(stroke-linecap, stroke_linecap, StrokeLinecap, CSS_PROPERTY_APPLIES_TO_FIRST_LETTER_AND_FIRST_LINE, SVG, mStrokeLinecap, eCSSType_Value, kStrokeLinecapKTable)
-CSS_PROP_SVG(stroke-linejoin, stroke_linejoin, StrokeLinejoin, CSS_PROPERTY_APPLIES_TO_FIRST_LETTER_AND_FIRST_LINE, SVG, mStrokeLinejoin, eCSSType_Value, kStrokeLinejoinKTable)
-CSS_PROP_SVG(stroke-miterlimit, stroke_miterlimit, StrokeMiterlimit, CSS_PROPERTY_APPLIES_TO_FIRST_LETTER_AND_FIRST_LINE, SVG, mStrokeMiterlimit, eCSSType_Value, nsnull)
-CSS_PROP_SVG(stroke-opacity, stroke_opacity, StrokeOpacity, CSS_PROPERTY_APPLIES_TO_FIRST_LETTER_AND_FIRST_LINE, SVG, mStrokeOpacity, eCSSType_Value, nsnull)
-CSS_PROP_SVG(stroke-width, stroke_width, StrokeWidth, CSS_PROPERTY_APPLIES_TO_FIRST_LETTER_AND_FIRST_LINE, SVG, mStrokeWidth, eCSSType_Value, nsnull)
-CSS_PROP_SVG(text-anchor, text_anchor, TextAnchor, CSS_PROPERTY_APPLIES_TO_FIRST_LETTER_AND_FIRST_LINE, SVG, mTextAnchor, eCSSType_Value, kTextAnchorKTable)
-CSS_PROP_SVG(text-rendering, text_rendering, TextRendering, CSS_PROPERTY_APPLIES_TO_FIRST_LETTER_AND_FIRST_LINE, SVG, mTextRendering, eCSSType_Value, kTextRenderingKTable)
+CSS_PROP_SVG(marker-end, marker_end, MarkerEnd, 0, SVG, mMarkerEnd, eCSSType_Value, nsnull)
+CSS_PROP_SVG(marker-mid, marker_mid, MarkerMid, 0, SVG, mMarkerMid, eCSSType_Value, nsnull)
+CSS_PROP_SVG(marker-start, marker_start, MarkerStart, 0, SVG, mMarkerStart, eCSSType_Value, nsnull)
+CSS_PROP_SVGRESET(mask, mask, Mask, 0, SVG, mMask, eCSSType_Value, nsnull)
+CSS_PROP_SVG(pointer-events, pointer_events, PointerEvents, 0, SVG, mPointerEvents, eCSSType_Value, kPointerEventsKTable)
+CSS_PROP_SVG(shape-rendering, shape_rendering, ShapeRendering, 0, SVG, mShapeRendering, eCSSType_Value, kShapeRenderingKTable)
+CSS_PROP_SVGRESET(stop-color, stop_color, StopColor, 0, SVG, mStopColor, eCSSType_Value, nsnull)
+CSS_PROP_SVGRESET(stop-opacity, stop_opacity, StopOpacity, 0, SVG, mStopOpacity, eCSSType_Value, nsnull)
+CSS_PROP_SVG(stroke, stroke, Stroke, 0, SVG, mStroke, eCSSType_ValuePair, nsnull)
+CSS_PROP_SVG(stroke-dasharray, stroke_dasharray, StrokeDasharray, 0 | CSS_PROPERTY_VALUE_LIST_USES_COMMAS, SVG, mStrokeDasharray, eCSSType_ValueList, nsnull)
+CSS_PROP_SVG(stroke-dashoffset, stroke_dashoffset, StrokeDashoffset, 0, SVG, mStrokeDashoffset, eCSSType_Value, nsnull)
+CSS_PROP_SVG(stroke-linecap, stroke_linecap, StrokeLinecap, 0, SVG, mStrokeLinecap, eCSSType_Value, kStrokeLinecapKTable)
+CSS_PROP_SVG(stroke-linejoin, stroke_linejoin, StrokeLinejoin, 0, SVG, mStrokeLinejoin, eCSSType_Value, kStrokeLinejoinKTable)
+CSS_PROP_SVG(stroke-miterlimit, stroke_miterlimit, StrokeMiterlimit, 0, SVG, mStrokeMiterlimit, eCSSType_Value, nsnull)
+CSS_PROP_SVG(stroke-opacity, stroke_opacity, StrokeOpacity, 0, SVG, mStrokeOpacity, eCSSType_Value, nsnull)
+CSS_PROP_SVG(stroke-width, stroke_width, StrokeWidth, 0, SVG, mStrokeWidth, eCSSType_Value, nsnull)
+CSS_PROP_SVG(text-anchor, text_anchor, TextAnchor, 0, SVG, mTextAnchor, eCSSType_Value, kTextAnchorKTable)
+CSS_PROP_SVG(text-rendering, text_rendering, TextRendering, 0, SVG, mTextRendering, eCSSType_Value, kTextRenderingKTable)
 #endif /* !defined (CSS_PROP_LIST_EXCLUDE_INTERNAL) */
 #endif
 
@@ -604,11 +607,11 @@ CSS_PROP_SVG(text-rendering, text_rendering, TextRendering, CSS_PROPERTY_APPLIES
 // The first 3 parameters don't matter, but some compilers don't like
 // empty arguments to macros.
 #ifdef CSS_PROP_INCLUDE_NOT_CSS
-CSS_PROP_VISIBILITY(X, X, X, CSS_PROPERTY_APPLIES_TO_FIRST_LETTER_AND_FIRST_LINE, Display, mLang, eCSSType_Value, nsnull)
-CSS_PROP_TABLE(X, X, X, CSS_PROPERTY_APPLIES_TO_FIRST_LETTER_AND_FIRST_LINE, Table, mFrame, eCSSType_Value, nsnull)
-CSS_PROP_TABLE(X, X, X, CSS_PROPERTY_APPLIES_TO_FIRST_LETTER_AND_FIRST_LINE, Table, mRules, eCSSType_Value, nsnull)
-CSS_PROP_TABLE(X, X, X, CSS_PROPERTY_APPLIES_TO_FIRST_LETTER_AND_FIRST_LINE, Table, mCols, eCSSType_Value, nsnull)
-CSS_PROP_TABLE(X, X, X, CSS_PROPERTY_APPLIES_TO_FIRST_LETTER_AND_FIRST_LINE, Table, mSpan, eCSSType_Value, nsnull)
+CSS_PROP_VISIBILITY(X, X, X, 0, Display, mLang, eCSSType_Value, nsnull)
+CSS_PROP_TABLE(X, X, X, 0, Table, mFrame, eCSSType_Value, nsnull)
+CSS_PROP_TABLE(X, X, X, 0, Table, mRules, eCSSType_Value, nsnull)
+CSS_PROP_TABLE(X, X, X, 0, Table, mCols, eCSSType_Value, nsnull)
+CSS_PROP_TABLE(X, X, X, 0, Table, mSpan, eCSSType_Value, nsnull)
 #endif /* defined(CSS_PROP_INCLUDE_NOT_CSS) */
 
 #ifdef USED_CSS_PROP
