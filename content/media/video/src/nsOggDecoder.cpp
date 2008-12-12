@@ -1197,32 +1197,6 @@ PRBool nsOggDecoder::Init()
   return mMonitor && nsMediaDecoder::Init();
 }
 
-// An event that gets posted to the main thread, when the media
-// element is being destroyed, to destroy the decoder. Since the
-// decoder shutdown can block and post events this cannot be done
-// inside destructor calls. So this event is posted asynchronously to
-// the main thread to perform the shutdown. It keeps a strong
-// reference to the decoder to ensure it does not get deleted when the
-// element is deleted.
-class nsOggDecoderShutdown : public nsRunnable
-{
-public:
-  nsOggDecoderShutdown(nsOggDecoder* aDecoder) :
-    mDecoder(aDecoder)
-  {
-  }
-
-  NS_IMETHOD Run()
-  {
-    mDecoder->Stop();
-    return NS_OK;
-  }
-
-private:
-  nsRefPtr<nsOggDecoder> mDecoder;
-};
-
-
 void nsOggDecoder::Shutdown() 
 {
   mShuttingDown = PR_TRUE;
@@ -1230,8 +1204,7 @@ void nsOggDecoder::Shutdown()
   ChangeState(PLAY_STATE_SHUTDOWN);
   nsMediaDecoder::Shutdown();
 
-  nsCOMPtr<nsIRunnable> event = new nsOggDecoderShutdown(this);
-  NS_DispatchToMainThread(event, NS_DISPATCH_NORMAL);
+  Stop();
 }
 
 nsOggDecoder::~nsOggDecoder()
@@ -1246,6 +1219,10 @@ nsresult nsOggDecoder::Load(nsIURI* aURI, nsIChannel* aChannel,
   // Reset Stop guard flag flag, else shutdown won't occur properly when
   // reusing decoder.
   mStopping = PR_FALSE;
+
+  NS_ASSERTION(!mReader, "Didn't shutdown properly!");
+  NS_ASSERTION(!mDecodeStateMachine, "Didn't shutdown properly!");
+  NS_ASSERTION(!mDecodeThread, "Didn't shutdown properly!");
 
   if (aStreamListener) {
     *aStreamListener = nsnull;
@@ -1332,6 +1309,42 @@ nsresult nsOggDecoder::PlaybackRateChanged()
   return NS_ERROR_NOT_IMPLEMENTED;
 }
 
+// Postpones destruction of nsOggDecoder's objects, so they can be safely
+// performed later, when events can't interfere.
+class nsDestroyStateMachine : public nsRunnable {
+public:
+  nsDestroyStateMachine(nsOggDecoder *aDecoder,
+                        nsOggDecodeStateMachine *aMachine,
+                        nsChannelReader *aReader,
+                        nsIThread *aThread)
+  : mDecoder(aDecoder),
+    mDecodeStateMachine(aMachine),
+    mReader(aReader),
+    mDecodeThread(aThread)
+  {
+  }
+
+  NS_IMETHOD Run() {
+    NS_ASSERTION(NS_IsMainThread(), "Should be called on main thread");
+    // The decode thread must die before the state machine can die.
+    // The state machine must die before the reader.
+    // The state machine must die before the decoder.
+    if (mDecodeThread)
+      mDecodeThread->Shutdown();
+    mDecodeThread = nsnull;
+    mDecodeStateMachine = nsnull;
+    mReader = nsnull;
+    mDecoder = nsnull;
+    return NS_OK;
+  }
+
+private:
+  nsRefPtr<nsOggDecoder> mDecoder;
+  nsCOMPtr<nsOggDecodeStateMachine> mDecodeStateMachine;
+  nsAutoPtr<nsChannelReader> mReader;
+  nsCOMPtr<nsIThread> mDecodeThread;
+};
+
 void nsOggDecoder::Stop()
 {
   NS_ASSERTION(NS_IsMainThread(), 
@@ -1359,16 +1372,28 @@ void nsOggDecoder::Stop()
     mDecodeStateMachine->Shutdown();
   }
 
-  // The state machines must be Shutdown() before the thread is
-  // Shutdown. The Shutdown() on the state machine unblocks any
-  // blocking calls preventing the thread Shutdown from deadlocking.
-  if (mDecodeThread) {
-    mDecodeThread->Shutdown();
-    mDecodeThread = nsnull;
-  }
+  // mDecodeThread holds a ref to mDecodeStateMachine, so we can't destroy
+  // mDecodeStateMachine until mDecodeThread is destroyed. We can't destroy
+  // mReader until mDecodeStateMachine is destroyed because mDecodeStateMachine
+  // uses mReader in its destructor. In addition, it's unsafe to Shutdown() the
+  // decode thread here, as nsIThread::Shutdown() may run events, such as JS
+  // event handlers, which could kick off a new Load().
+  // mDecodeStateMachine::Run() may also be holding a reference to the decoder
+  // in an event runner object on its stack, so the decoder must outlive the
+  // state machine, else we may destroy the decoder on a non-main thread,
+  // and its monitor doesn't like that. So we need to create a new event which
+  // holds references the decoder, reader, thread, and state machine, and
+  // releases them safely later on the main thread when events can't interfere.
+  // See bug 468721.
+  nsCOMPtr<nsIRunnable> event = new nsDestroyStateMachine(this,
+                                                          mDecodeStateMachine,
+                                                          mReader.forget(),
+                                                          mDecodeThread);
+  NS_DispatchToMainThread(event, NS_DISPATCH_NORMAL);
 
+  // Null data fields. They can be reinitialized in future Load()s safely now.
+  mDecodeThread = nsnull;
   mDecodeStateMachine = nsnull;
-  mReader = nsnull;
   UnregisterShutdownObserver();
 }
 
