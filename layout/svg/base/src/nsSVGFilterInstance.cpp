@@ -479,8 +479,7 @@ nsSVGFilterInstance::Render(gfxASurface** aOutput)
       if (!input->mImage.mImage) {
         // This image data is not really going to be used, but we'd better
         // have an image object here so the filter primitive doesn't die.
-        input->mImage.mImage =
-          new gfxImageSurface(gfxIntSize(1, 1), gfxASurface::ImageFormatARGB32);
+        input->mImage.mImage = CreateImage();
         if (!input->mImage.mImage)
           return NS_ERROR_OUT_OF_MEMORY;
       }
