@@ -143,3 +143,4 @@ include z-index/reftest.list
 
 # reftest(s) to verify content bugfixes
 include ../../content/html/document/reftests/reftests.list
+include ../../content/html/content/reftests/reftest.list
