@@ -89,3 +89,6 @@
 <!ENTITY extensions.weave.client.name.description "Distinguishes your clients from each other">
 <!ENTITY extensions.weave.serverURL.title "Server URL">
 <!ENTITY extensions.weave.serverURL.description "Sync your sessions using a different server">
+
+<!ENTITY openPrefsCmd.label "Open Weave Preferences">
+<!ENTITY openPrefsButton.label "Preferences...">
