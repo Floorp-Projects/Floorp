@@ -1,3 +1,4 @@
+
 /* -*- Mode: C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
 /* ***** BEGIN LICENSE BLOCK *****
  * Version: MPL 1.1/GPL 2.0/LGPL 2.1
@@ -43,6 +44,7 @@
 #include "nsSVGMaskFrame.h"
 #include "nsSVGTextPathFrame.h"
 #include "nsCSSFrameConstructor.h"
+#include "nsFrameManager.h"
 
 NS_IMPL_ISUPPORTS1(nsSVGRenderingObserver, nsIMutationObserver)
 
@@ -81,13 +83,16 @@ nsSVGRenderingObserver::GetReferencedFrame()
   }
 
   if (mElement.get()) {
-    nsIFrame *frame =
-      static_cast<nsGenericElement*>(mElement.get())->GetPrimaryFrame();
-    if (frame) {
-      mReferencedFrame = frame;
-      mReferencedFramePresShell = mReferencedFrame->PresContext()->PresShell();
-      nsSVGEffects::AddRenderingObserver(mReferencedFrame, this);
-      return frame;
+    nsIDocument* doc = mElement.get()->GetCurrentDoc();
+    nsIPresShell* shell = doc ? doc->GetPrimaryShell() : nsnull;
+    if (shell && !shell->FrameManager()->IsDestroyingFrames()) {
+      nsIFrame* frame = shell->GetPrimaryFrameFor(mElement.get());
+      if (frame) {
+        mReferencedFrame = frame;
+        mReferencedFramePresShell = shell;
+        nsSVGEffects::AddRenderingObserver(mReferencedFrame, this);
+        return frame;
+      }
     }
   }
   return nsnull;
