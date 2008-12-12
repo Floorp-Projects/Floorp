@@ -83,6 +83,7 @@
 #include "nsXMLHttpRequest.h"
 #include "nsIFocusEventSuppressor.h"
 #include "nsDOMThreadService.h"
+#include "nsHtml5Module.h"
 
 #ifdef MOZ_XUL
 #include "nsXULPopupManager.h"
@@ -262,6 +263,8 @@ nsLayoutStatics::Initialize()
   }
 #endif
 
+  nsHtml5Module::InitializeStatics();
+  
   return NS_OK;
 }
 
@@ -347,6 +350,8 @@ nsLayoutStatics::Shutdown()
 #endif
 
   nsXMLHttpRequest::ShutdownACCache();
+  
+  nsHtml5Module::ReleaseStatics();
 }
 
 void
