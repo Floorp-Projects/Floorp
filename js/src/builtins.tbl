@@ -94,4 +94,5 @@ BUILTIN2(extern, STRING,    js_TypeOfObject, CONTEXT, OBJECT,                   
 BUILTIN2(extern, STRING,    js_TypeOfBoolean, CONTEXT, INT32,                   1, 1)
 BUILTIN2(extern, DOUBLE,    js_BooleanOrUndefinedToNumber, CONTEXT, INT32,      1, 1)
 BUILTIN2(extern, STRING,    js_BooleanOrUndefinedToString, CONTEXT, INT32,      1, 1)
+BUILTIN2(extern, STRING,    js_ObjectToString, CONTEXT, OBJECT,                 0, 0)
 BUILTIN1(extern, OBJECT,    js_Arguments, CONTEXT,                              0, 0)
