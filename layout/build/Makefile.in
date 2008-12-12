@@ -97,6 +97,7 @@ REQUIRES	= xpcom \
 		  uconv \
 		  txtsvc \
 		  thebes \
+		  html5 \
 		  $(NULL)
 
 CPPSRCS		= \
@@ -123,6 +124,7 @@ SHARED_LIBRARY_LIBS = \
 	$(DEPTH)/content/events/src/$(LIB_PREFIX)gkconevents_s.$(LIB_SUFFIX) \
 	$(DEPTH)/content/html/content/src/$(LIB_PREFIX)gkconhtmlcon_s.$(LIB_SUFFIX) \
 	$(DEPTH)/content/html/document/src/$(LIB_PREFIX)gkconhtmldoc_s.$(LIB_SUFFIX) \
+	$(DEPTH)/content/html/parser/src/$(LIB_PREFIX)html5p.$(LIB_SUFFIX) \
 	$(DEPTH)/content/xml/content/src/$(LIB_PREFIX)gkconxmlcon_s.$(LIB_SUFFIX) \
 	$(DEPTH)/content/xml/document/src/$(LIB_PREFIX)gkconxmldoc_s.$(LIB_SUFFIX) \
 	$(DEPTH)/content/xslt/src/base/$(LIB_PREFIX)txbase_s.$(LIB_SUFFIX) \
