@@ -526,9 +526,14 @@ SyncEngine.prototype = {
       this._log.debug("Applying server changes");
       let inc;
       while ((inc = this.incoming.shift())) {
-        yield this._store.applyIncoming(self.cb, inc);
-        if (inc.modified > this.lastSync)
-          this.lastSync = inc.modified;
+        try {
+          yield this._store.applyIncoming(self.cb, inc);
+          if (inc.modified > this.lastSync)
+            this.lastSync = inc.modified;
+        } catch (e) {
+          this._log.warn("Error while applying incoming record: " +
+                         (e.message? e.message : e));
+        }
       }
     }
   },
