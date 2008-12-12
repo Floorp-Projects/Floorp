@@ -719,6 +719,18 @@ public:
                                             aCapitalize, mContext);
     }
 
+    void Finish() {
+      NS_ASSERTION(!(mTextRun->GetFlags() &
+                     (gfxTextRunWordCache::TEXT_UNUSED_FLAGS |
+                      nsTextFrameUtils::TEXT_UNUSED_FLAG)),
+                   "Flag set that should never be set! (memory safety error?)");
+      if (mTextRun->GetFlags() & nsTextFrameUtils::TEXT_IS_TRANSFORMED) {
+        nsTransformedTextRun* transformedTextRun =
+          static_cast<nsTransformedTextRun*>(mTextRun);
+        transformedTextRun->FinishSettingProperties(mContext);
+      }
+    }
+
     gfxTextRun*  mTextRun;
     gfxContext*  mContext;
     PRUint32     mOffsetIntoTextRun;
@@ -730,6 +742,7 @@ private:
   nsAutoTArray<MappedFlow,10>   mMappedFlows;
   nsAutoTArray<nsTextFrame*,50> mLineBreakBeforeFrames;
   nsAutoTArray<nsAutoPtr<BreakSink>,10> mBreakSinks;
+  nsAutoTArray<gfxTextRun*,5>   mTextRunsToDelete;
   nsLineBreaker                 mLineBreaker;
   gfxTextRun*                   mCurrentFramesAllSameTextRun;
   gfxContext*                   mContext;
@@ -1153,14 +1166,22 @@ void BuildTextRunsScanner::FlushFrames(PRBool aFlushLineBreaks, PRBool aSuppress
     if (NS_SUCCEEDED(rv) && trailingLineBreak && textRun && !aSuppressTrailingBreak) {
       textRun->SetFlagBits(nsTextFrameUtils::TEXT_HAS_TRAILING_BREAK);
     }
+
     PRUint32 i;
     for (i = 0; i < mBreakSinks.Length(); ++i) {
       if (!mBreakSinks[i]->mExistingTextRun || mBreakSinks[i]->mChangedBreaks) {
         // TODO cause frames associated with the textrun to be reflowed, if they
         // aren't being reflowed already!
       }
+      mBreakSinks[i]->Finish();
     }
     mBreakSinks.Clear();
+
+    for (i = 0; i < mTextRunsToDelete.Length(); ++i) {
+      gfxTextRun* textRun = mTextRunsToDelete[i];
+      gTextRuns->RemoveFromCache(textRun);
+      delete textRun;
+    }
   }
 
   mCanStopOnThisLine = PR_TRUE;
@@ -1476,15 +1497,18 @@ BuildTextRunsScanner::BuildTextRunForFrames(void* aTextBuffer)
   TextRunMappedFlow dummyMappedFlow;
 
   TextRunUserData* userData;
+  TextRunUserData* userDataToDestroy;
   // If the situation is particularly simple (and common) we don't need to
   // allocate userData.
   if (mMappedFlows.Length() == 1 && !mMappedFlows[0].mEndFrame &&
       mMappedFlows[0].mStartFrame->GetContentOffset() == 0) {
     userData = &dummyData;
+    userDataToDestroy = nsnull;
     dummyData.mMappedFlows = &dummyMappedFlow;
   } else {
     userData = static_cast<TextRunUserData*>
       (nsMemory::Alloc(sizeof(TextRunUserData) + mMappedFlows.Length()*sizeof(TextRunMappedFlow)));
+    userDataToDestroy = userData;
     userData->mMappedFlows = reinterpret_cast<TextRunMappedFlow*>(userData + 1);
   }
   userData->mMappedFlowCount = mMappedFlows.Length();
@@ -1556,7 +1580,7 @@ BuildTextRunsScanner::BuildTextRunForFrames(void* aTextBuffer)
         // then expand.
         nsAutoTArray<PRUint8,BIG_TEXT_NODE_SIZE> tempBuf;
         if (!tempBuf.AppendElements(contentLength)) {
-          DestroyUserData(userData);
+          DestroyUserData(userDataToDestroy);
           return nsnull;
         }
         PRUint8* bufStart = tempBuf.Elements();
@@ -1586,7 +1610,7 @@ BuildTextRunsScanner::BuildTextRunForFrames(void* aTextBuffer)
 
   // Check for out-of-memory in gfxSkipCharsBuilder
   if (!builder.IsOK()) {
-    DestroyUserData(userData);
+    DestroyUserData(userDataToDestroy);
     return nsnull;
   }
 
@@ -1621,7 +1645,7 @@ BuildTextRunsScanner::BuildTextRunForFrames(void* aTextBuffer)
   nsTextFrame* firstFrame = mMappedFlows[0].mStartFrame;
   gfxFontGroup* fontGroup = GetFontGroupForFrame(firstFrame);
   if (!fontGroup) {
-    DestroyUserData(userData);
+    DestroyUserData(userDataToDestroy);
     return nsnull;
   }
 
@@ -1728,7 +1752,7 @@ BuildTextRunsScanner::BuildTextRunForFrames(void* aTextBuffer)
     }
   }
   if (!textRun) {
-    DestroyUserData(userData);
+    DestroyUserData(userDataToDestroy);
     return nsnull;
   }
 
@@ -1741,11 +1765,10 @@ BuildTextRunsScanner::BuildTextRunForFrames(void* aTextBuffer)
   if (mSkipIncompleteTextRuns) {
     mSkipIncompleteTextRuns = !TextContainsLineBreakerWhiteSpace(textPtr,
         transformedLength, mDoubleByteText);
-    
-    // Nuke the textrun
-    gTextRuns->RemoveFromCache(textRun);
-    delete textRun;
-    DestroyUserData(userData);
+    // Arrange for this textrun to be deleted the next time the linebreaker
+    // is flushed out
+    mTextRunsToDelete.AppendElement(textRun);
+    DestroyUserData(userDataToDestroy);
     return nsnull;
   }
 
