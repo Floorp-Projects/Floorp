@@ -54,8 +54,12 @@
 
 // A property that is a *-ltr-source or *-rtl-source property for one of
 // the directional pseudo-shorthand properties.
-#define CSS_PROPERTY_DIRECTIONAL_SOURCE (1<<0)
-#define CSS_PROPERTY_VALUE_LIST_USES_COMMAS (1<<1) /* otherwise spaces */
+#define CSS_PROPERTY_DIRECTIONAL_SOURCE           (1<<0)
+#define CSS_PROPERTY_VALUE_LIST_USES_COMMAS       (1<<1) /* otherwise spaces */
+#define CSS_PROPERTY_APPLIES_TO_FIRST_LETTER      (1<<2)
+#define CSS_PROPERTY_APPLIES_TO_FIRST_LINE        (1<<3)
+#define CSS_PROPERTY_APPLIES_TO_FIRST_LETTER_AND_FIRST_LINE \
+  (CSS_PROPERTY_APPLIES_TO_FIRST_LETTER | CSS_PROPERTY_APPLIES_TO_FIRST_LINE)
 
 class nsCSSProps {
 public:
