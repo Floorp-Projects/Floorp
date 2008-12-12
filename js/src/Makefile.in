@@ -656,11 +656,3 @@ $(CURDIR)/javascript-trace.h: $(srcdir)/javascript-trace.d
 
 $(CPPSRCS:%.cpp=%.$(OBJ_SUFFIX)): $(CURDIR)/javascript-trace.h
 endif
-
-imacro_asm.js: imacro_asm.js.in
-	$(CC) -c -x c -E -P -I$(srcdir) $? > $@
-
-GARBAGE += imacro_asm.js
-
-%.c.out: %.jsasm $(PROGRAM) imacro_asm.js
-	./$(PROGRAM) imacro_asm.js $< > $@
