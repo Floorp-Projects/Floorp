@@ -81,6 +81,7 @@ public:
 #endif
 protected:
   nsCSSValueList mInheritList;
+  nsCSSValueList mNoneList;
   nsCSSValuePairList mInheritQuotes;
   nsCSSValuePairList mNoneCounter;
 };
@@ -89,6 +90,7 @@ CSSDisablePropsRule::CSSDisablePropsRule()
 {
   nsCSSValue none(eCSSUnit_None);
   mNoneCounter.mXValue = none;
+  mNoneList.mValue = none;
   nsCSSValue inherit(eCSSUnit_Inherit);
   mInheritList.mValue = inherit;
   mInheritQuotes.mXValue = inherit;
@@ -185,6 +187,12 @@ CSSDisablePropsRule::CommonMapRuleInfoInto(nsRuleData* aData)
     aData->mDisplayData->mOverflowY = visible;
 
     aData->mDisplayData->mClear = none;
+
+    aData->mDisplayData->mTransform = &mNoneList;
+
+    nsCSSValue fiftyPercent(0.5f, eCSSUnit_Percent);
+    aData->mDisplayData->mTransformOrigin.mXValue = fiftyPercent;
+    aData->mDisplayData->mTransformOrigin.mYValue = fiftyPercent;
 
     // Nobody will care about 'break-before' or 'break-after', since
     // they only apply to blocks (assuming we implement them correctly).
