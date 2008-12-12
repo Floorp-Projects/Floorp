@@ -116,7 +116,7 @@ function lotsOfLeadingBlankLines(request, response)
   response.setStatusLine(request.httpVersion, 200, "TEST PASSED");
 }
 var blankLines = "\r\n";
-for (var i = 0; i < 13; i++)
+for (var i = 0; i < 14; i++)
   blankLines += blankLines;
 str = blankLines +
       "GET /lots-of-leading-blank-lines HTTP/1.1\r\n" +
