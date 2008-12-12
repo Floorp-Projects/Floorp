@@ -126,14 +126,14 @@ HistoryStore.prototype = {
 
   get _visitStm() {
     let stmt = this._db.createStatement(
-      "SELECT visit_type FROM moz_historyvisits WHERE place_id = ?1");
+      "SELECT visit_type AS type FROM moz_historyvisits WHERE place_id = :placeid");
     this.__defineGetter__("_visitStm", function() stmt);
     return stmt;
   },
 
   get _pidStm() {
     let stmt = this._db.createStatement(
-      "SELECT id FROM moz_places WHERE url = ?1");
+      "SELECT id FROM moz_places WHERE url = :url");
     this.__defineGetter__("_pidStm", function() stmt);
     return stmt;
   },
@@ -152,48 +152,50 @@ HistoryStore.prototype = {
     return stmt;
   },
 
-  _createCommand: function HistStore__createCommand(command) {
-    this._log.debug("  -> creating history entry: " + command.GUID);
-    try {
-      let uri = Utils.makeURI(command.data.URI);
-      let redirect = false;
-      if (command.data.transition == 5 || command.data.transition == 6)
-        redirect = true;
+  create: function HistStore_create(record) {
+    this._log.debug("  -> creating history entry: " + record.id);
+    let uri = Utils.makeURI(record.cleartext.URI);
+    let redirect = false;
+    if (record.cleartext.transition == 5 || record.cleartext.transition == 6)
+      redirect = true;
 
-      this._hsvc.addVisit(uri, command.data.time, null,
-                          command.data.transition, redirect, 0);
-      this._hsvc.setPageTitle(uri, command.data.title);
-    } catch (e) {
-      this._log.error("Exception caught: " + (e.message? e.message : e));
-    }
+    this._hsvc.addVisit(uri, record.cleartext.time, null,
+                        record.cleartext.transition, redirect, 0);
+    this._hsvc.setPageTitle(uri, record.cleartext.title);
   },
 
-  _removeCommand: function HistStore__removeCommand(command) {
-    this._log.trace("  -> NOT removing history entry: " + command.GUID);
-    // we can't remove because we only sync the last 1000 items, not
-    // the whole store.  So we don't know if remove commands were
-    // generated due to the user removing an entry or because it
-    // dropped past the 1000 item mark.
+  remove: function HistStore_remove(record) {
+    this._log.trace("  -> NOT removing history entry: " + record.id);
+    // FIXME: implement!
   },
 
-  _editCommand: function HistStore__editCommand(command) {
-    this._log.trace("  -> FIXME: NOT editing history entry: " + command.GUID);
+  update: function HistStore_update(record) {
+    this._log.trace("  -> FIXME: NOT editing history entry: " + record.id);
     // FIXME: implement!
   },
 
   // See bug 320831 for why we use SQL here
   _getVisitType: function HistStore__getVisitType(uri) {
-    this._pidStm.bindUTF8StringParameter(0, uri);
-    if (this._pidStm.executeStep()) {
-      let placeId = this._pidStm.getInt32(0);
-      this._visitStm.bindInt32Parameter(0, placeId);
-      if (this._visitStm.executeStep())
-        return this._visitStm.getInt32(0);
+    if (typeof(uri) != "string")
+      uri = uri.spec;
+    try {
+      this._pidStm.params.url = uri;
+      if (this._pidStm.step()) {
+        let placeId = this._pidStm.row.id;
+        this._visitStm.params.placeid = placeId;
+        if (this._visitStm.step())
+          return this._visitStm.row.type;
+      }
+    } finally {
+      this._pidStm.reset();
+      this._visitStm.reset();
     }
     return null;
   },
 
-  _getGUID: function HistStore__getAnno(uri) {
+  _getGUID: function HistStore__getGUID(uri) {
+    if (typeof(uri) == "string")
+      uri = Utils.makeURI(uri);
     try {
       return this._anno.getPageAnnotation(uri, "weave/guid");
     } catch (e) {
@@ -218,6 +220,12 @@ HistoryStore.prototype = {
       }
     }
     return null;
+  },
+
+  // XXX need a better way to query Places for all GUIDs
+  getAllIDs: function BStore_getAllIDs() {
+    let all = this.wrap();
+    return all;
   },
 
   wrap: function HistStore_wrap() {
@@ -271,40 +279,49 @@ HistoryTracker.prototype = {
     return hsvc;
   },
 
+  // FIXME: hack!
+  get _store() {
+    let store = new HistoryStore();
+    this.__defineGetter__("_store", function() store);
+    return store;
+  },
+
   _init: function HT__init() {
     this.__proto__.__proto__._init.call(this);
     this._hsvc.addObserver(this, false);
   },
 
-  /* We don't care about the first four */
-  onBeginUpdateBatch: function HT_onBeginUpdateBatch() {
-
-  },
-  onEndUpdateBatch: function HT_onEndUpdateBatch() {
-
-  },
-  onPageChanged: function HT_onPageChanged() {
-
-  },
-  onTitleChanged: function HT_onTitleChanged() {
-
-  },
+  onBeginUpdateBatch: function HT_onBeginUpdateBatch() {},
+  onEndUpdateBatch: function HT_onEndUpdateBatch() {},
+  onPageChanged: function HT_onPageChanged() {},
+  onTitleChanged: function HT_onTitleChanged() {},
 
   /* Every add or remove is worth 1 point.
-   * Clearing the whole history is worth 50 points,
-   * to ensure we're above the cutoff for syncing
-   * ASAP.
+   * Clearing the whole history is worth 50 points (see below)
    */
-  onVisit: function HT_onVisit(uri, vid, time, session, referrer, trans) {
+  _upScore: function BMT__upScore() {
+    if (!this.enabled)
+      return;
     this._score += 1;
+  },
+
+  onVisit: function HT_onVisit(uri, vid, time, session, referrer, trans) {
+    this._log.trace("onVisit: " + itemId);
+    this.addChangedID(this._store._getGUID(uri));
+    this._upScore();
   },
   onPageExpired: function HT_onPageExpired(uri, time, entry) {
-    this._score += 1;
+    this._log.trace("onPageExpired: " + itemId);
+    this.addChangedID(this._store._getGUID(uri)); // XXX eek ?
+    this._upScore();
   },
   onDeleteURI: function HT_onDeleteURI(uri) {
-    this._score += 1;
+    this._log.trace("onDeleteURI: " + itemId);
+    this.addChangedID(this._store._getGUID(uri)); // FIXME eek
+    this._upScore();
   },
   onClearHistory: function HT_onClearHistory() {
+    this._log.trace("onClearHistory");
     this._score += 50;
   }
 };
