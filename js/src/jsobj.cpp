@@ -1082,6 +1082,14 @@ obj_valueOf(JSContext *cx, uintN argc, jsval *vp)
     return !JSVAL_IS_NULL(*vp);
 }
 
+#ifdef JS_TRACER
+static jsval FASTCALL
+Object_p_valueOf(JSContext* cx, JSObject* obj, JSString *hint)
+{
+    return OBJECT_TO_JSVAL(obj);
+}
+#endif
+
 /*
  * Check whether principals subsumes scopeobj's principals, and return true
  * if so (or if scopeobj has no principals, for backward compatibility with
@@ -1810,6 +1818,8 @@ const char js_lookupGetter_str[] = "__lookupGetter__";
 const char js_lookupSetter_str[] = "__lookupSetter__";
 #endif
 
+JS_DEFINE_TRCINFO_1(obj_valueOf,
+    (3, (static, JSVAL, Object_p_valueOf, CONTEXT, THIS, STRING,                  0, 0)))
 JS_DEFINE_TRCINFO_1(obj_hasOwnProperty,
     (3, (static, BOOL_FAIL, Object_p_hasOwnProperty, CONTEXT, THIS, STRING,       0, 0)))
 JS_DEFINE_TRCINFO_1(obj_propertyIsEnumerable,
@@ -1821,7 +1831,8 @@ static JSFunctionSpec object_methods[] = {
 #endif
     JS_FN(js_toString_str,             obj_toString,                0,0),
     JS_FN(js_toLocaleString_str,       obj_toLocaleString,          0,0),
-    JS_FN(js_valueOf_str,              obj_valueOf,                 0,0),
+    JS_TN(js_valueOf_str,              obj_valueOf,                 0,0,
+          obj_valueOf_trcinfo),
 #if JS_HAS_OBJ_WATCHPOINT
     JS_FN(js_watch_str,                obj_watch,                   2,0),
     JS_FN(js_unwatch_str,              obj_unwatch,                 1,0),
