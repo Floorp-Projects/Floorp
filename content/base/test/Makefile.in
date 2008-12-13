@@ -186,6 +186,7 @@ _TEST_FILES = 	test_bug5141.html \
 		file_htmlserializer_1_no_body.html \
 		test_bug424359-2.html \
 		file_htmlserializer_2.html \
+		test_bug431082.html \
 		file_htmlserializer_2_basic.html \
 		file_htmlserializer_2_enthtml.html \
 		file_htmlserializer_2_entw3c.html \
