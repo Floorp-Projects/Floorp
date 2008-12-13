@@ -714,7 +714,7 @@ call_enumerate(JSContext *cx, JSObject *obj)
     JSProperty *prop;
 
     fun = js_GetCallObjectFunction(obj);
-    n = JS_GET_LOCAL_NAME_COUNT(fun);
+    n = fun ? JS_GET_LOCAL_NAME_COUNT(fun) : 0;
     if (n == 0)
         return JS_TRUE;
 
