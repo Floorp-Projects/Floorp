@@ -100,6 +100,12 @@ ifeq ($(OS_ARCH)$(OS_TEST),OpenBSDx86_64)
 CPPSRCS		:= xptcinvoke_amd64_openbsd.cpp xptcstubs_amd64_openbsd.cpp
 endif
 #
+# FreeBSD/amd64
+#
+ifeq ($(OS_ARCH)$(OS_TEST),FreeBSDx86_64)
+CPPSRCS		:= xptcinvoke_amd64_linux.cpp xptcstubs_amd64_linux.cpp
+endif
+#
 # BeOS/Intel (uses the same unixish_x86 code)
 #
 ifeq ($(OS_ARCH)$(OS_TEST),BeOSBePC)
