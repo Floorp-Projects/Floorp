@@ -381,6 +381,7 @@ pref("capability.policy.mailnews.*.substringData.get", "noAccess");
 pref("capability.policy.mailnews.*.text.get", "noAccess");
 pref("capability.policy.mailnews.*.textContent", "noAccess");
 pref("capability.policy.mailnews.*.title.get", "noAccess");
+pref("capability.policy.mailnews.*.wholeText", "noAccess");
 pref("capability.policy.mailnews.DOMException.toString", "noAccess");
 pref("capability.policy.mailnews.HTMLAnchorElement.toString", "noAccess");
 pref("capability.policy.mailnews.HTMLDocument.domain", "noAccess");
