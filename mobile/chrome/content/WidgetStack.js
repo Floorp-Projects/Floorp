@@ -232,6 +232,30 @@ wsRect.prototype = {
               other._b <= this._b);
   },
 
+  intersect: function(r2) {
+    let xmost1 = this.x + this.width;
+    let ymost1 = this.y + this.height;
+    let xmost2 = r2.x + r2.width;
+    let ymost2 = r2.y + r2.height;
+
+    let x = Math.max(this.x, r2.x);
+    let y = Math.max(this.y, r2.y);
+
+    let temp = Math.min(xmost1, xmost2);
+    if (temp <= x)
+      return null;
+
+    let width = temp - x;
+
+    temp = Math.min(ymost1, ymost2);
+    if (temp <= y)
+      return null;
+
+    let height = temp - y;
+
+    return new wsRect(x, y, width, height);
+  },
+
   intersects: function(other) {
     let xok = (other._l > this._l && other._l < this._r) ||
       (other._r > this._l && other._r < this._r) ||
@@ -454,6 +478,18 @@ WidgetStack.prototype = {
     let visibleStackRect = new wsRect(0, 0, this._viewingRect.width, this._viewingRect.height);
 
     return visibleStackRect.intersects(state.rect);
+  },
+
+  // getWidgetVisibility: returns the percentage that the widget is visible
+  getWidgetVisibility: function (wid) {
+    let state = this._getState(wid);
+    let visibleStackRect = new wsRect(0, 0, this._viewingRect.width, this._viewingRect.height);
+
+    let visibleRect = visibleStackRect.intersect(state.rect);
+    if (visibleRect)
+      return [visibleRect.width / state.rect.width, visibleRect.height / state.rect.height]
+
+    return [0, 0];
   },
 
   // offsetAll: add an offset to all widgets
