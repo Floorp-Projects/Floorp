@@ -166,8 +166,6 @@ public:
   virtual nsresult DropScriptObject(void *object);
   virtual nsresult HoldScriptObject(void *object);
 
-  virtual void ReportPendingException();
-
   NS_DECL_NSIXPCSCRIPTNOTIFY
 
   NS_DECL_NSITIMERCALLBACK
@@ -216,6 +214,11 @@ protected:
   nsresult JSObjectFromInterface(nsISupports *aSup, void *aScript, 
                                  JSObject **aRet);
 
+  // Report the pending exception on our mContext, if any
+  // If aSetAsideFrameChain is true, set aside the frame chain on mContext
+  // before reporting.  True should be passed if the frame chain isn't really
+  // related to our exception.
+  void ReportPendingException(PRBool aSetAsideFrameChain);
 private:
   void Unlink();
 
