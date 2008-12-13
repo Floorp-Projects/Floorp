@@ -20,91 +20,102 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=463934
 <script class="testbody" type="application/javascript">
 SimpleTest.waitForExplicitFinish();
 
-var doc;
-
-function Rect(left, top, width, height) {
-  this.left=left;
-  this.top=top;
-  this.width=width;
-  this.height=height;
-  this.roundOut=roundOut;
-  this.isApproximately=isApproximately;
-}
-
-function roundOut() {
-  with (this) {
-    var right = Math.ceil(left + width);
-    var bottom = Math.ceil(top + height);
-    left = Math.floor(left);
-	top = Math.floor(top);
-	width = right - left;
-	height = bottom - top;   
-  }
-}
-
-function isApproximately(rectId) {
-  this.roundOut();
-  var rect = doc.getElementById(rectId).getBoundingClientRect();
-  with (this) {
-    ok ((Math.abs(left - rect.left) <= 1), rectId + ".getBoundingClientRect().left is " + left + " should be approximately " + rect.left);
-    ok ((Math.abs(top - rect.top) <= 1), rectId + ".getBoundingClientRect().top is " + top + " should be approximately " + rect.top);
-    ok ((Math.abs(width - rect.width) <= 1), rectId + ".getBoundingClientRect().width is " + width + " should be approximately " + rect.width);
-    ok ((Math.abs(height - rect.height) <= 1), rectId + ".getBoundingClientRect().height is " + height + " should be approximately " + rect.height);
-  }
-}
-
 function runTest()
 {
-  doc = $("svg").contentWindow.document;
+  function isRounded(a, b, message) {
+    is (Math.round(a), Math.round(b), message);
+  }
+
+  var doc = $("svg").contentWindow.document;
   
-  var len1 = doc.getElementById("text1").getComputedTextLength();
+  var text1 = doc.getElementById("text1");
   
+  var len = text1.getComputedTextLength();
+  
+  var text1Bounds = text1.getBoundingClientRect();
+  var text2Bounds = doc.getElementById("text2").getBoundingClientRect();
+  var text3Bounds = doc.getElementById("text3").getBoundingClientRect();
+  var text4Bounds = doc.getElementById("text4").getBoundingClientRect();
+
   var sin45 = Math.sin(Math.PI / 4);
 
-  var rect = new Rect(25, 8, len1, 21);
-  rect.isApproximately("text1");		
+  isRounded(text1Bounds.left, 25, "text1.getBoundingClientRect().left");
+  isRounded(text1Bounds.width, len, "text1.getBoundingClientRect().width");
 
-  rect = new Rect(25 + 100, 8, len1, 21);
-  rect.isApproximately("text2");
-		
-  rect = new Rect(158, 14, (len1 + 21) * sin45, (21  + len1) * sin45);
-  rect.isApproximately("text3");
-		
-  rect = new Rect(200, 128, 2 * (len1 + 21) * sin45, 2 * (21 + len1) * sin45);
-  rect.isApproximately("text4");
-		
-  rect = new Rect(50, 50, 50, 50);
-  rect.isApproximately("rect1")
+  isRounded(text2Bounds.left, text1Bounds.left + 100, "text2.getBoundingClientRect().left");
+  isRounded(text2Bounds.top, text1Bounds.top, "text2.getBoundingClientRect().top");
+  isRounded(text2Bounds.width, text1Bounds.width, "text2.getBoundingClientRect().width");
+  isRounded(text2Bounds.height, text1Bounds.height, "text2.getBoundingClientRect().height");
 
-  rect = new Rect(175 - 50 * sin45, 75 - 50 * sin45 , 50 * sin45 * 2, 50 * sin45 * 2);
-  rect.isApproximately("rect2")
+  isRounded(text3Bounds.width, (text1Bounds.width + text1Bounds.height) * sin45 + .5, "text3.getBoundingClientRect().width");
+  isRounded(text3Bounds.height, (text1Bounds.height  + text1Bounds.width) * sin45 + .5, "text3.getBoundingClientRect().height");
 
-  rect = new Rect(50, 160 , 100, 100);
-  rect.isApproximately("rect3");		
+  isRounded(text4Bounds.width, 2 * (text1Bounds.width + text1Bounds.height) * sin45, "text4.getBoundingClientRect().width");
+  isRounded(text4Bounds.height, 2 * ((text1Bounds.height  + text1Bounds.width) * sin45 - .5), "text4.getBoundingClientRect().height");
 
-  rect = new Rect(350 - 100 * sin45, 150 - 100 * sin45, 100 * sin45 * 2, 100 * sin45 * 2);
-  rect.isApproximately("rect4");		
-
-  rect = new Rect(49, 49, 52, 52);
-  rect.isApproximately("rect1a");		
-
-  rect = new Rect(175 - 52 * sin45, 75 - 52 * sin45, 52 * sin45 * 2, 52 * sin45 * 2);
-  rect.isApproximately("rect2a");		
-
-  rect = new Rect(48, 158, 104, 104);
-  rect.isApproximately("rect3a");
-
-  rect = new Rect(350 - 104 * sin45, 150 - 104 * sin45, 104 * sin45 * 2, 104 * sin45 * 2);
-  rect.isApproximately("rect4a");		
-
-  var len1a = doc.getElementById("text1a").getComputedTextLength();
-
-  rect = new Rect(85 - 1, 8, len1a + 1, 22);
-  rect.isApproximately("text1a");		
+  var rect1Bounds = doc.getElementById("rect1").getBoundingClientRect();
+  var rect2Bounds = doc.getElementById("rect2").getBoundingClientRect();
+  var rect3Bounds = doc.getElementById("rect3").getBoundingClientRect();
+  var rect4Bounds = doc.getElementById("rect4").getBoundingClientRect();
   
-  rect = new Rect(85 - 5 + 100, 8, len1a + 9, 25);
-  rect.isApproximately("text2a");		
+  isRounded(rect1Bounds.left, 50, "rect1.getBoundingClientRect().left");
+  isRounded(rect1Bounds.top, 50, "rect1.getBoundingClientRect().top");
+  isRounded(rect1Bounds.width, 50, "rect1.getBoundingClientRect().width");
+  isRounded(rect1Bounds.height, 50, "rect1.getBoundingClientRect().height");
+
+  isRounded(rect2Bounds.left, 175 - 50 * sin45 - .5, "rect2.getBoundingClientRect().left");
+  isRounded(rect2Bounds.top, 75 - 50 * sin45 - .5, "rect2.getBoundingClientRect().top");
+  isRounded(rect2Bounds.width, (50 * sin45 + .5) * 2, "rect2.getBoundingClientRect().width");
+  isRounded(rect2Bounds.height, (50 * sin45 + .5) * 2, "rect2.getBoundingClientRect().height");
+
+  isRounded(rect3Bounds.left, 50, "rect3.getBoundingClientRect().left");
+  isRounded(rect3Bounds.top, 160, "rect3.getBoundingClientRect().top");
+  isRounded(rect3Bounds.width, 100, "rect3.getBoundingClientRect().width");
+  isRounded(rect3Bounds.height, 100, "rect3.getBoundingClientRect().height");
+
+  isRounded(rect4Bounds.left, 350 - 100 * sin45 - .5, "rect4.getBoundingClientRect().left");
+  isRounded(rect4Bounds.top, 150 - 100 * sin45 - .5, "rect4.getBoundingClientRect().top");
+  isRounded(rect4Bounds.width, (100 * sin45 + .5) * 2, "rect4.getBoundingClientRect().width");
+  isRounded(rect4Bounds.height, (100 * sin45 + .5) * 2, "rect4.getBoundingClientRect().height");
+
+  var rect1aBounds = doc.getElementById("rect1a").getBoundingClientRect();
+  var rect2aBounds = doc.getElementById("rect2a").getBoundingClientRect();
+  var rect3aBounds = doc.getElementById("rect3a").getBoundingClientRect();
+  var rect4aBounds = doc.getElementById("rect4a").getBoundingClientRect();
   
+  isRounded(rect1aBounds.left, 49, "rect1a.getBoundingClientRect().left");
+  isRounded(rect1aBounds.top, 49, "rect1a.getBoundingClientRect().top");
+  isRounded(rect1aBounds.width, 52, "rect1a.getBoundingClientRect().width");
+  isRounded(rect1aBounds.height, 52, "rect1a.getBoundingClientRect().height");
+
+  isRounded(rect2aBounds.left, 175 - 52 * sin45 - .5, "rect2a.getBoundingClientRect().left");
+  isRounded(rect2aBounds.top, 75 - 52 * sin45 - .5, "rect2a.getBoundingClientRect().top");
+  isRounded(rect2aBounds.width, 52 * sin45 * 2, "rect2a.getBoundingClientRect().width");
+  isRounded(rect2aBounds.height, 52 * sin45 * 2, "rect2a.getBoundingClientRect().height");
+
+  isRounded(rect3aBounds.left, 48, "rect3a.getBoundingClientRect().left");
+  isRounded(rect3aBounds.top, 158, "rect3a.getBoundingClientRect().top");
+  isRounded(rect3aBounds.width, 104, "rect3a.getBoundingClientRect().width");
+  isRounded(rect3aBounds.height, 104, "rect3a.getBoundingClientRect().height");
+
+  isRounded(rect4aBounds.left, 350 - 104 * sin45 - .5, "rect4a.getBoundingClientRect().left");
+  isRounded(rect4aBounds.top, 150 - 104 * sin45 - .5, "rect4a.getBoundingClientRect().top");
+  isRounded(rect4aBounds.width, (104 * sin45 + .5) * 2, "rect4a.getBoundingClientRect().width");
+  isRounded(rect4aBounds.height, (104 * sin45 + .5) * 2, "rect4a.getBoundingClientRect().height");
+
+  var text1a = doc.getElementById("text1a");
+  
+  var text1aBounds = text1a.getBoundingClientRect();
+  var text2aBounds = doc.getElementById("text2a").getBoundingClientRect();
+
+  var len = text1a.getComputedTextLength();
+
+  isRounded(text1aBounds.left, 85 - 1, "text1a.getBoundingClientRect().width");
+  isRounded(text1aBounds.width, len + 1, "text1a.getBoundingClientRect().width");
+  
+  isRounded(text2aBounds.left, text1aBounds.left + 100 - 4, "text2a.getBoundingClientRect().left");
+  isRounded(text2aBounds.width, text1aBounds.width + 9, "text2a.getBoundingClientRect().width");
+
   SimpleTest.finish();
 }
 
