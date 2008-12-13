@@ -365,6 +365,13 @@
       <!-- nsIPlacesView -->
       <method name="getRemovableSelectionRanges">
         <body><![CDATA[
+          // On static content the current selectedNode would be the selection's
+          // parent node. We don't want to allow removing a node when the
+          // selection is not explicit.
+          if (document.popupNode &&
+              (document.popupNode == "menupopup" || !document.popupNode.node))
+            return [];
+
           return [this.getSelectionNodes()];
         ]]></body>
       </method>
@@ -708,19 +715,12 @@
         <parameter name="aPopup"/>
         <body><![CDATA[
           this._contextMenuShown = true;
+          // Activate the controller
           this.focus();
-          // The above call to focus activates the controller, but it may not
-          // always fire a consumable event for commandUpdater, so we force a
-          // command update.
+          // The above call may not always fire a consumable event for
+          // commandUpdater, so we force a command update.
           window.updateCommands("focus");
-          var show = this.controller.buildContextMenu(aPopup);
-          if (show) {
-            // disable the Delete command if the selection isn't explicit
-            if (document.popupNode && document.popupNode.localName == "menupopup")
-              document.getElementById("cmd_delete").setAttribute("disabled", "true");
-            return true;
-          }
-          return false;
+          return this.controller.buildContextMenu(aPopup);
         ]]></body>
       </method>
 
