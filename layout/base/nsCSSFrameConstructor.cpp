@@ -1854,6 +1854,7 @@ nsCSSFrameConstructor::nsCSSFrameConstructor(nsIDocument *aDocument,
   , mGfxScrollFrame(nsnull)
   , mPageSequenceFrame(nsnull)
   , mUpdateCount(0)
+  , mFocusSuppressCount(0)
   , mQuotesDirty(PR_FALSE)
   , mCountersDirty(PR_FALSE)
   , mIsDestroyingFrameTree(PR_FALSE)
@@ -7674,7 +7675,7 @@ nsCSSFrameConstructor::ReconstructDocElementHierarchyInternal()
           // RemoveMappingsForFrameSubtree() which would otherwise lead to a
           // crash since we cleared the placeholder map above (bug 398982).
           PRBool wasDestroyingFrameTree = mIsDestroyingFrameTree;
-          WillDestroyFrameTree();
+          WillDestroyFrameTree(PR_FALSE);
 
           rv = state.mFrameManager->RemoveFrame(docElementFrame->GetParent(),
                     GetChildListNameFor(docElementFrame), docElementFrame);
@@ -10164,6 +10165,7 @@ nsCSSFrameConstructor::AttributeChanged(nsIContent* aContent,
 void
 nsCSSFrameConstructor::BeginUpdate() {
   NS_SuppressFocusEvent();
+  ++mFocusSuppressCount;
   ++mUpdateCount;
 }
 
@@ -10177,8 +10179,10 @@ nsCSSFrameConstructor::EndUpdate()
     RecalcQuotesAndCounters();
     NS_ASSERTION(mUpdateCount == 1, "Odd update count");
   }
-  NS_UnsuppressFocusEvent();
-  --mUpdateCount;
+  if (mFocusSuppressCount) {
+    NS_UnsuppressFocusEvent();
+    --mFocusSuppressCount;
+  }
 }
 
 void
@@ -10198,8 +10202,25 @@ nsCSSFrameConstructor::RecalcQuotesAndCounters()
   NS_ASSERTION(!mCountersDirty, "Counter updates will be lost");  
 }
 
+class nsFocusUnsuppressEvent : public nsRunnable {
+  public:
+    NS_DECL_NSIRUNNABLE
+    nsFocusUnsuppressEvent(PRUint32 aCount) : mCount(aCount) {}
+  private:
+    PRUint32 mCount;
+  };
+
+NS_IMETHODIMP nsFocusUnsuppressEvent::Run()
+{
+  while (mCount) {
+    --mCount;
+    NS_UnsuppressFocusEvent();
+  }
+  return NS_OK;
+}
+
 void
-nsCSSFrameConstructor::WillDestroyFrameTree()
+nsCSSFrameConstructor::WillDestroyFrameTree(PRBool aDestroyingPresShell)
 {
 #if defined(DEBUG_dbaron_off)
   mCounterManager.Dump();
@@ -10213,6 +10234,14 @@ nsCSSFrameConstructor::WillDestroyFrameTree()
 
   // Cancel all pending re-resolves
   mRestyleEvent.Revoke();
+
+  if (mFocusSuppressCount && aDestroyingPresShell) {
+    nsRefPtr<nsFocusUnsuppressEvent> ev =
+      new nsFocusUnsuppressEvent(mFocusSuppressCount);
+    if (NS_SUCCEEDED(NS_DispatchToCurrentThread(ev))) {
+      mFocusSuppressCount = 0;
+    }
+  }
 }
 
 //STATIC
