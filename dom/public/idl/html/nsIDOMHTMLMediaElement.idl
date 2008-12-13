@@ -49,6 +49,13 @@
  * @status UNDER_DEVELOPMENT
  */
 
+// undef the GetCurrentTime macro defined in WinBase.h from the MS Platform SDK
+%{C++
+#ifdef GetCurrentTime
+#undef GetCurrentTime
+#endif
+%}
+
 [scriptable, uuid(e3e2a8c1-4b56-4154-8ef2-fc4b2bb42e97)]
 interface nsIDOMHTMLMediaElement : nsIDOMHTMLElement
 {
