@@ -2069,6 +2069,9 @@ nsJSContext::BindCompiledEventHandler(nsISupports* aTarget, void *aScope,
       !::JS_DefineProperty(mContext, target, charName,
                            OBJECT_TO_JSVAL(funobj), nsnull, nsnull,
                            JSPROP_ENUMERATE | JSPROP_PERMANENT)) {
+    JSStackFrame* frame = JS_SaveFrameChain(mContext);
+    ReportPendingException();
+    JS_RestoreFrameChain(mContext, frame);
     rv = NS_ERROR_FAILURE;
   }
 
