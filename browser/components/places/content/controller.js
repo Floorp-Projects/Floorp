@@ -297,31 +297,38 @@ PlacesController.prototype = {
    *          false otherwise.
    */
   _hasRemovableSelection: function PC__hasRemovableSelection(aIsMoveCommand) {
-    var nodes = this._view.getSelectionNodes();
+    var ranges = this._view.getRemovableSelectionRanges();
+    if (!ranges.length)
+      return false;
+
     var root = this._view.getResultNode();
 
-    for (var i = 0; i < nodes.length; ++i) {
-      // Disallow removing the view's root node
-      if (nodes[i] == root)
-        return false;
+    for (var j = 0; j < ranges.length; j++) {
+      var nodes = ranges[j];
+      for (var i = 0; i < nodes.length; ++i) {
+        // Disallow removing the view's root node
+        if (nodes[i] == root)
+          return false;
 
-      if (PlacesUtils.nodeIsFolder(nodes[i]) &&
-          !PlacesControllerDragHelper.canMoveNode(nodes[i]))
-        return false;
+        if (PlacesUtils.nodeIsFolder(nodes[i]) &&
+            !PlacesControllerDragHelper.canMoveNode(nodes[i]))
+          return false;
 
-      // We don't call nodeIsReadOnly here, because nodeIsReadOnly means that
-      // a node has children that cannot be edited, reordered or removed. Here,
-      // we don't care if a node's children can't be reordered or edited, just
-      // that they're removable. All history results have removable children
-      // (based on the principle that any URL in the history table should be
-      // removable), but some special bookmark folders may have non-removable
-      // children, e.g. live bookmark folder children. It doesn't make sense
-      // to delete a child of a live bookmark folder, since when the folder
-      // refreshes, the child will return.
-      var parent = nodes[i].parent || root;
-      if (PlacesUtils.isReadonlyFolder(parent))
-        return false;
+        // We don't call nodeIsReadOnly here, because nodeIsReadOnly means that
+        // a node has children that cannot be edited, reordered or removed. Here,
+        // we don't care if a node's children can't be reordered or edited, just
+        // that they're removable. All history results have removable children
+        // (based on the principle that any URL in the history table should be
+        // removable), but some special bookmark folders may have non-removable
+        // children, e.g. live bookmark folder children. It doesn't make sense
+        // to delete a child of a live bookmark folder, since when the folder
+        // refreshes, the child will return.
+        var parent = nodes[i].parent || root;
+        if (PlacesUtils.isReadonlyFolder(parent))
+          return false;
+      }
     }
+
     return true;
   },
 
