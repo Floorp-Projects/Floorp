@@ -55,7 +55,7 @@ HOST_CSRCS	= nsinstall.c pathsub.c
 endif
 endif
 
-PLSRCS		= nfspwd.pl revdepth.pl
+PLSRCS		= nfspwd.pl
 
 TARGETS		= $(HOST_PROGRAM) $(PLSRCS:.pl=) $(SIMPLE_PROGRAMS)
 
