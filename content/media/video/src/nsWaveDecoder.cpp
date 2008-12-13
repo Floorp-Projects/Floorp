@@ -1076,7 +1076,7 @@ nsWaveDecoder::Load(nsIURI* aURI, nsIChannel* aChannel, nsIStreamListener** aStr
   mStream = new nsMediaStream();
   NS_ENSURE_TRUE(mStream, NS_ERROR_OUT_OF_MEMORY);
 
-  nsresult rv = mStream->Open(this, aURI, aChannel, aStreamListener);
+  nsresult rv = mStream->Open(this, mURI, aChannel, aStreamListener);
   NS_ENSURE_SUCCESS(rv, rv);
 
   rv = NS_NewThread(getter_AddRefs(mPlaybackThread));

@@ -50,14 +50,10 @@ toolbox {
 
 /* ::::: toolbar & menubar ::::: */
 
-toolbar,
-toolbarpalette {
+toolbar {
   min-width: 1px;
   min-height: 20px !important;
-  color: #000000;
-  border-top: 1px solid rgba(255,255,255,0.45);
-  border-bottom: 1px solid rgba(0,0,0,0.35);
-  background-color: #9E9E9E;
+  -moz-appearance: toolbar;
 }
 
 menubar {

@@ -96,7 +96,7 @@ public:
     nsresult Add(PRUint16 flags, nsIURI *aURI);
     
   private:
-    ~nsDeferrals() {}
+    ~nsDeferrals();
     
     void SubmitQueue();
     

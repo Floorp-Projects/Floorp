@@ -472,7 +472,7 @@ nsGenericModule::CanUnload(nsIComponentManager *aCompMgr, PRBool *okToUnload)
         return NS_ERROR_INVALID_POINTER;
     }
     *okToUnload = PR_FALSE;
-    return NS_ERROR_FAILURE;
+    return NS_OK;
 }
 
 NS_COM_GLUE nsresult

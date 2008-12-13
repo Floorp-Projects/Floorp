@@ -1143,6 +1143,14 @@ nsXBLBinding::ChangeDocument(nsIDocument* aOldDocument, nsIDocument* aNewDocumen
 #endif
 
       nsAutoScriptBlocker scriptBlocker;
+      // Unbind the _kids_ of the anonymous content, not just the anonymous
+      // content itself, since they are bound to some other parent.  Basically
+      // we want to undo the mess that InstallAnonymousContent created.
+      PRUint32 childCount = anonymous->GetChildCount();
+      for (PRUint32 i = 0; i < childCount; i++) {
+        anonymous->GetChildAt(i)->UnbindFromTree();
+      }
+      
       anonymous->UnbindFromTree(); // Kill it.
 
 #ifdef MOZ_XUL

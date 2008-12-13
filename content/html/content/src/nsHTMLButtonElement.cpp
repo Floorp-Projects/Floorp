@@ -591,14 +591,7 @@ nsHTMLButtonElement::SaveState()
   if (state) {
     PRBool disabled;
     GetDisabled(&disabled);
-    if (disabled) {
-      rv |= state->SetStateProperty(NS_LITERAL_STRING("disabled"),
-                                    NS_LITERAL_STRING("t"));
-    } else {
-      rv |= state->SetStateProperty(NS_LITERAL_STRING("disabled"),
-                                    NS_LITERAL_STRING("f"));
-    }
-    NS_ASSERTION(NS_SUCCEEDED(rv), "disabled save failed!");
+    state->SetDisabled(disabled);
   }
 
   return rv;
@@ -607,12 +600,10 @@ nsHTMLButtonElement::SaveState()
 PRBool
 nsHTMLButtonElement::RestoreState(nsPresState* aState)
 {
-  nsAutoString disabled;
-  nsresult rv =
-    aState->GetStateProperty(NS_LITERAL_STRING("disabled"), disabled);
-  NS_ASSERTION(NS_SUCCEEDED(rv), "disabled restore failed!");
-  if (rv == NS_STATE_PROPERTY_EXISTS) {
-    SetDisabled(disabled.EqualsLiteral("t"));
+  NS_ENSURE_ARG_POINTER(aState);
+
+  if (aState->IsDisabledSet()) {
+    SetDisabled(aState->GetDisabled());
   }
 
   return PR_FALSE;

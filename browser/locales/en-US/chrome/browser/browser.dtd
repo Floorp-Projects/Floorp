@@ -403,7 +403,6 @@ you can use these alternative items. Otherwise, their values should be empty.  -
 
 <!ENTITY editBookmark.done.label                     "Done">
 <!ENTITY editBookmark.cancel.label                   "Cancel">
-<!ENTITY editBookmark.removeBookmark.label           "Remove Bookmark">
 <!ENTITY editBookmark.removeBookmark.accessKey       "R">
 <!ENTITY editBookmark.undo.label                     "Undo">
 <!ENTITY editBookmark.undo.accessKey                 "U">

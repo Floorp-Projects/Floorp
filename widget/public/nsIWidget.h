@@ -46,6 +46,7 @@
 #include "prthread.h"
 #include "nsEvent.h"
 #include "nsCOMPtr.h"
+#include "nsITheme.h"
 
 // forward declarations
 class   nsIAppShell;
@@ -235,12 +236,6 @@ enum nsTopLevelWidgetZPlacement { // for PlaceBehind()
   eZPlacementBottom = 0,  // bottom of the window stack
   eZPlacementBelow,       // just below another widget
   eZPlacementTop          // top of the window stack
-};
-
-enum nsTransparencyMode {
-  eTransparencyOpaque = 0,  // Fully opaque
-  eTransparencyTransparent, // Parts of the window may be transparent
-  eTransparencyGlass        // Transparent parts of the window have Vista AeroGlass effect applied
 };
 
 /**

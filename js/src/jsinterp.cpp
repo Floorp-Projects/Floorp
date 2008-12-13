@@ -849,8 +849,10 @@ ComputeThis(JSContext *cx, JSBool lazy, jsval *argv)
         thisp = JSVAL_TO_OBJECT(argv[-1]);
     } else {
         thisp = JSVAL_TO_OBJECT(argv[-1]);
-        if (OBJ_GET_CLASS(cx, thisp) == &js_CallClass)
+        if (OBJ_GET_CLASS(cx, thisp) == &js_CallClass ||
+            OBJ_GET_CLASS(cx, thisp) == &js_BlockClass) {
             return js_ComputeGlobalThis(cx, lazy, argv);
+        }
 
         if (thisp->map->ops->thisObject) {
             /* Some objects (e.g., With) delegate 'this' to another object. */
