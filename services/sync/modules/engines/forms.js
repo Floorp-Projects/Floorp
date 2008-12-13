@@ -50,156 +50,149 @@ Cu.import("resource://weave/trackers.js");
 
 Function.prototype.async = Async.sugar;
 
-function FormEngine(pbeId) {
-  this._init(pbeId);
-}
-FormEngine.prototype = {
-  __proto__: new SyncEngine(),
-
-  get name() { return "forms"; },
-  get displayName() { return "Saved Form Data"; },
-  get logName() { return "FormEngine"; },
-  get serverPrefix() { return "user-data/forms/"; },
-
-  __store: null,
-  get _store() {
-    if (!this.__store)
-      this.__store = new FormStore();
-    return this.__store;
-  },
-
-  __core: null,
-  get _core() {
-    if (!this.__core)
-      this.__core = new FormSyncCore(this._store);
-    return this.__core;
-  },
-
-  __tracker: null,
-  get _tracker() {
-    if (!this.__tracker)
-      this.__tracker = new FormsTracker();
-    return this.__tracker;
-  }
-};
-
-function FormSyncCore(store) {
-  this._store = store;
+function FormEngine() {
   this._init();
 }
-FormSyncCore.prototype = {
-  _logName: "FormSync",
-  _store: null,
+FormEngine.prototype = {
+  __proto__: SyncEngine.prototype,
+  get _super() SyncEngine.prototype,
+  
+  get name() "forms",
+  get displayName() "Forms",
+  get logName() "Forms",
+  get serverPrefix() "user-data/forms/",
 
-  _commandLike: function FSC_commandLike(a, b) {
-    /* Not required as GUIDs for similar data sets will be the same */
-    return false;
+  get _store() {
+    let store = new FormStore();
+    this.__defineGetter__("_store", function() store);
+    return store;
+  },
+
+  get _tracker() {
+    let tracker = new FormsTracker();
+    this.__defineGetter__("_tracker", function() tracker);
+    return tracker;
   }
 };
-FormSyncCore.prototype.__proto__ = new SyncCore();
+
 
 function FormStore() {
   this._init();
 }
 FormStore.prototype = {
+  __proto__: Store.prototype,
   _logName: "FormStore",
   _lookup: null,
 
-  __formDB: null,
   get _formDB() {
-    if (!this.__formDB) {
-      var file = Cc["@mozilla.org/file/directory_service;1"].
-                 getService(Ci.nsIProperties).
-                 get("ProfD", Ci.nsIFile);
-      file.append("formhistory.sqlite");
-      var stor = Cc["@mozilla.org/storage/service;1"].
-                 getService(Ci.mozIStorageService);
-      this.__formDB = stor.openDatabase(file);
-    }
-    return this.__formDB;
+    let file = Cc["@mozilla.org/file/directory_service;1"].
+      getService(Ci.nsIProperties).
+      get("ProfD", Ci.nsIFile);
+    file.append("formhistory.sqlite");
+    let stor = Cc["@mozilla.org/storage/service;1"].
+      getService(Ci.mozIStorageService);
+    let formDB = stor.openDatabase(file);
+      
+    this.__defineGetter__("_formDB", function() formDB);
+    return formDB;
   },
 
-  __formHistory: null,
   get _formHistory() {
-    if (!this.__formHistory)
-      this.__formHistory = Cc["@mozilla.org/satchel/form-history;1"].
-                           getService(Ci.nsIFormHistory2);
-    return this.__formHistory;
+    let formHistory = Cc["@mozilla.org/satchel/form-history;1"].
+      getService(Ci.nsIFormHistory2);
+    this.__defineGetter__("_formHistory", function() formHistory);
+    return formHistory;
+  },
+  
+  get _formStatement() {
+    let stmnt = this._formDB.createStatement("SELECT * FROM moz_formhistory");
+    this.__defineGetter__("_formStatement", function() stmnt);
+    return stmnt;
   },
 
-  _createCommand: function FormStore__createCommand(command) {
-    this._log.info("FormStore got createCommand: " + command);
-    this._formHistory.addEntry(command.data.name, command.data.value);
+  create: function FormStore_create(record) {
+    this._log.debug("Got create record: " + record.id);
+    this._formHistory.addEntry(record.cleartext.name, record.cleartext.value);
   },
 
-  _removeCommand: function FormStore__removeCommand(command) {
-    this._log.info("FormStore got removeCommand: " + command);
-
-    var data;
-    if (command.GUID in this._lookup) {
-      data = this._lookup[command.GUID];
+  remove: function FormStore_remove(record) {
+    this._log.debug("Got remove record: " + record.id);
+    
+    if (record.id in this._lookup) {
+      let data = this._lookup[record.id];
     } else {
       this._log.warn("Invalid GUID found, ignoring remove request.");
       return;
     }
 
-    var nam = data.name;
-    var val = data.value;
-    this._formHistory.removeEntry(nam, val);
-
-    delete this._lookup[command.GUID];
+    this._formHistory.removeEntry(data.name, data.value);
+    delete this._lookup[record.id];
   },
 
-  _editCommand: function FormStore__editCommand(command) {
-    this._log.info("FormStore got editCommand: " + command);
-    this._log.warn("Form syncs are expected to only be create/remove!");
+  update: function FormStore__editCommand(record) {
+    this._log.debug("Got update record: " + record.id);
+    this._log.warn("Ignoring update request");
   },
 
   wrap: function FormStore_wrap() {
     this._lookup = {};
-    var stmnt = this._formDB.createStatement("SELECT * FROM moz_formhistory");
+    let stmnt = this._formStatement;
 
     while (stmnt.executeStep()) {
-      var nam = stmnt.getUTF8String(1);
-      var val = stmnt.getUTF8String(2);
-      var key = Utils.sha1(nam + val);
+      let nam = stmnt.getUTF8String(1);
+      let val = stmnt.getUTF8String(2);
+      let key = Utils.sha1(nam + val);
 
       this._lookup[key] = { name: nam, value: val };
     }
-
+    stmnt.reset();
+    
     return this._lookup;
   },
 
-  wipe: function FormStore_wipe() {
-    this._formHistory.removeAllEntries();
+  wrapItem: function FormStore_wrapItem(id) {
+    if (!this._lookup)
+      this._lookup = this.wrap();
+    return this._lookup[id];
   },
 
-  _resetGUIDs: function FormStore__resetGUIDs() {
-    let self = yield;
-    // Not needed.
+  getAllIDs: function FormStore_getAllIDs() {
+    if (!this._lookup)
+      this._lookup = this.wrap();
+    return this._lookup;
+  },
+  
+  wipe: function FormStore_wipe() {
+    this._formHistory.removeAllEntries();
   }
 };
-FormStore.prototype.__proto__ = new Store();
 
 function FormsTracker() {
   this._init();
 }
 FormsTracker.prototype = {
+  __proto__: Tracker.prototype,
   _logName: "FormsTracker",
 
-  __formDB: null,
   get _formDB() {
-    if (!this.__formDB) {
-      var file = Cc["@mozilla.org/file/directory_service;1"].
+    let file = Cc["@mozilla.org/file/directory_service;1"].
       getService(Ci.nsIProperties).
       get("ProfD", Ci.nsIFile);
-      file.append("formhistory.sqlite");
-      var stor = Cc["@mozilla.org/storage/service;1"].
+      
+    file.append("formhistory.sqlite");
+    let stor = Cc["@mozilla.org/storage/service;1"].
       getService(Ci.mozIStorageService);
-      this.__formDB = stor.openDatabase(file);
-    }
-
-    return this.__formDB;
+    
+    let formDB = stor.openDatabase(file);
+    this.__defineGetter__("_formDB", function() formDB);
+    return formDB;
+  },
+  
+  get _formStatement() {
+    let stmnt = this._formDB.
+      createStatement("SELECT COUNT(fieldname) FROM moz_formhistory");
+    this.__defineGetter__("_formStatement", function() stmnt);
+    return stmnt;
   },
 
   /* nsIFormSubmitObserver is not available in JS.
@@ -217,13 +210,13 @@ FormsTracker.prototype = {
    */
   _rowCount: 0,
   get score() {
-    var stmnt = this._formDB.createStatement("SELECT COUNT(fieldname) FROM moz_formhistory");
+    let stmnt = this._formStatement;
     stmnt.executeStep();
-    var count = stmnt.getInt32(0);
-    stmnt.reset();
-
+    
+    let count = stmnt.getInt32(0);
     this._score = Math.abs(this._rowCount - count) * 2;
-
+    stmnt.reset();
+    
     if (this._score >= 100)
       return 100;
     else
@@ -231,21 +224,22 @@ FormsTracker.prototype = {
   },
 
   resetScore: function FormsTracker_resetScore() {
-    var stmnt = this._formDB.createStatement("SELECT COUNT(fieldname) FROM moz_formhistory");
-    stmnt.executeStep();
+    let stmnt = this._formStatement;
+    stmnt.executeStep();    
+    
     this._rowCount = stmnt.getInt32(0);
-    stmnt.reset();
     this._score = 0;
+    stmnt.reset();
   },
 
   _init: function FormsTracker__init() {
-    this._log = Log4Moz.Service.getLogger("Service." + this._logName);
-    this._score = 0;
+    this.__proto__.__proto__._init.call(this);
 
-    var stmnt = this._formDB.createStatement("SELECT COUNT(fieldname) FROM moz_formhistory");
+    let stmnt = this._formStatement;
     stmnt.executeStep();
+    
     this._rowCount = stmnt.getInt32(0);
     stmnt.reset();
   }
 };
-FormsTracker.prototype.__proto__ = new Tracker();
+

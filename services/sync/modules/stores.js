@@ -89,7 +89,7 @@ Store.prototype = {
       let self = yield;
       if (!record.cleartext)
         this.remove(record);
-      else if (!this.itemExists(record.id))
+      else if (!this._itemExists(record.id))
         this.create(record);
       else
         this.update(record);
