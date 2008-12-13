@@ -263,6 +263,7 @@ _TEST_FILES = 	test_bug5141.html \
 		test_elementTraversal.html \
 		test_w3element_traversal.html \
 		test_w3element_traversal.xhtml \
+		test_bug469020.html \
 		test_w3element_traversal_svg.html \
 		w3element_traversal.svg \
 		test_bug444322.html \
