@@ -356,6 +356,26 @@ KineticPanningModule.prototype = {
     this._owner.ungrab(this);
     this._dragData.reset();
     this._kineticData.reset();
+
+    // Make sure that sidebars don't stay partially open
+    // XXX this might should live somewhere else
+    let [leftVis,] = ws.getWidgetVisibility("tabs-container", false);
+    if (leftVis != 0 && leftVis != 1) {
+      let w = document.getElementById("tabs-container").getBoundingClientRect().width;
+      if (leftVis >= 0.6666)
+	ws.panBy(w, 0, true);
+      else
+	ws.panBy(-leftVis * w, 0, true); // XXX don't hardcode the width
+    } else {
+      let [rightVis,] = ws.getWidgetVisibility("browser-controls", false);
+      if (rightVis != 0 && rightVis != 1) {
+	let w = document.getElementById("browser-controls").getBoundingClientRect().width;
+	if (rightVis >= 0.6666)
+	  ws.panBy(-w, 0, true);
+	else
+	  ws.panBy(rightVis * w, 0, true); // XXX don't hardcode the width
+      }
+    }
   },
 };
 
