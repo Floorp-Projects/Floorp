@@ -203,6 +203,14 @@ nsHTMLDNSPrefetch::nsDeferrals::nsDeferrals()
 {
 }
 
+nsHTMLDNSPrefetch::nsDeferrals::~nsDeferrals()
+{
+  while (mHead != mTail) {
+    mEntries[mTail].mURI = nsnull;
+    mTail = (mTail + 1) & sMaxDeferredMask;
+  }
+}
+
 NS_IMPL_THREADSAFE_ISUPPORTS3(nsHTMLDNSPrefetch::nsDeferrals,
                               nsIDNSListener,
                               nsIWebProgressListener,

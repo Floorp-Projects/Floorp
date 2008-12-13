@@ -74,7 +74,7 @@ void
 nsDocShellEditorData::TearDownEditor()
 {
   if (mEditor) {
-    mEditor->PreDestroy();
+    mEditor->PreDestroy(PR_FALSE);
     mEditor = nsnull;
   }
   mEditingSession = nsnull;
@@ -99,7 +99,7 @@ nsDocShellEditorData::MakeEditable(PRBool inWaitForUriLoad)
   {
     NS_WARNING("Destroying existing editor on frame");
     
-    mEditor->PreDestroy();
+    mEditor->PreDestroy(PR_FALSE);
     mEditor = nsnull;
   }
   
@@ -186,7 +186,7 @@ nsDocShellEditorData::SetEditor(nsIEditor *inEditor)
   {
     if (mEditor)
     {
-      mEditor->PreDestroy();
+      mEditor->PreDestroy(PR_FALSE);
       mEditor = nsnull;
     }
       

@@ -473,8 +473,15 @@ static const char gOggTypes[][16] = {
   "application/ogg"
 };
 
+static PRBool IsOggEnabled()
+{
+  return nsContentUtils::GetBoolPref("media.ogg.enabled");
+}
+
 static PRBool IsOggType(const nsACString& aType)
 {
+  if (!IsOggEnabled())
+    return PR_FALSE;
   for (PRUint32 i = 0; i < NS_ARRAY_LENGTH(gOggTypes); ++i) {
     if (aType.EqualsASCII(gOggTypes[i]))
       return PR_TRUE;
@@ -491,8 +498,15 @@ static const char gWaveTypes[][16] = {
   "audio/x-pn-wav"
 };
 
+static PRBool IsWaveEnabled()
+{
+  return nsContentUtils::GetBoolPref("media.wave.enabled");
+}
+
 static PRBool IsWaveType(const nsACString& aType)
 {
+  if (!IsWaveEnabled())
+    return PR_FALSE;
   for (PRUint32 i = 0; i < NS_ARRAY_LENGTH(gWaveTypes); ++i) {
     if (aType.EqualsASCII(gWaveTypes[i]))
       return PR_TRUE;
@@ -522,17 +536,21 @@ void nsHTMLMediaElement::InitMediaTypes()
   nsCOMPtr<nsICategoryManager> catMan(do_GetService(NS_CATEGORYMANAGER_CONTRACTID, &rv));
   if (NS_SUCCEEDED(rv)) {
 #ifdef MOZ_OGG
-    for (PRUint32 i = 0; i < NS_ARRAY_LENGTH(gOggTypes); i++) {
-      catMan->AddCategoryEntry("Gecko-Content-Viewers", gOggTypes[i],
-                               "@mozilla.org/content/document-loader-factory;1",
-                               PR_FALSE, PR_TRUE, nsnull);
+    if (IsOggEnabled()) {
+      for (PRUint32 i = 0; i < NS_ARRAY_LENGTH(gOggTypes); i++) {
+        catMan->AddCategoryEntry("Gecko-Content-Viewers", gOggTypes[i],
+                                 "@mozilla.org/content/document-loader-factory;1",
+                                 PR_FALSE, PR_TRUE, nsnull);
+      }
     }
 #endif
 #ifdef MOZ_WAVE
-    for (PRUint32 i = 0; i < NS_ARRAY_LENGTH(gWaveTypes); i++) {
-      catMan->AddCategoryEntry("Gecko-Content-Viewers", gWaveTypes[i],
-                               "@mozilla.org/content/document-loader-factory;1",
-                               PR_FALSE, PR_TRUE, nsnull);
+    if (IsWaveEnabled()) {
+      for (PRUint32 i = 0; i < NS_ARRAY_LENGTH(gWaveTypes); i++) {
+        catMan->AddCategoryEntry("Gecko-Content-Viewers", gWaveTypes[i],
+                                 "@mozilla.org/content/document-loader-factory;1",
+                                 PR_FALSE, PR_TRUE, nsnull);
+      }
     }
 #endif
   }
@@ -608,9 +626,11 @@ nsresult nsHTMLMediaElement::PickMediaElement()
       mDecoder = nsnull;
     }
 
-    mDecoder = new nsOggDecoder();
-    if (mDecoder && !mDecoder->Init()) {
-      mDecoder = nsnull;
+    if (IsOggEnabled()) {
+      mDecoder = new nsOggDecoder();
+      if (mDecoder && !mDecoder->Init()) {
+        mDecoder = nsnull;
+      }
     }
 #endif
     return InitializeDecoder(src);

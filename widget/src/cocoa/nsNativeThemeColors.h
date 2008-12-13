@@ -43,7 +43,8 @@
 enum ColorName {
   headerStartGrey,
   headerEndGrey,
-  headerBorderGrey
+  headerBorderGrey,
+  toolbarTopBorderGrey
 };
 
 static const int sLeopardThemeColors[][2] = {
@@ -51,7 +52,8 @@ static const int sLeopardThemeColors[][2] = {
   // unified titlebar and toolbar gradient:
   { 0xC5, 0xE9 }, // start grey
   { 0x96, 0xCA }, // end grey
-  { 0x42, 0x89 }  // separator line
+  { 0x42, 0x89 }, // separator line
+  { 0xC0, 0xE2 }  // top separator line of a toolbar
 };
 
 

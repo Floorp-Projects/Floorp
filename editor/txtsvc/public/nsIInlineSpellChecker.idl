@@ -43,14 +43,14 @@ interface nsISelection;
 interface nsIEditor;
 interface nsIEditorSpellCheck;
 
-[scriptable, uuid(f5d1ec9e-4d30-11d8-8053-da0cc7df1f20)]
+[scriptable, uuid(074cd6ff-9118-4164-8da7-3c2d4b3ed38b)]
 
 interface nsIInlineSpellChecker : nsISupports
 {
   readonly attribute nsIEditorSpellCheck spellChecker;
 
   [noscript] void init(in nsIEditor aEditor);
-  [noscript] void cleanup(); 
+  [noscript] void cleanup(in boolean aDestroyingFrames);
 
   attribute boolean enableRealTimeSpell;
 

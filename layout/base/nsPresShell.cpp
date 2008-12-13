@@ -5955,7 +5955,7 @@ PresShell::HandleEventInternal(nsEvent* aEvent, nsIView *aView,
                                  aStatus, aView);
 
     // 2. Give event to the DOM for third party and JS use.
-    if ((GetCurrentEventFrame()) && NS_SUCCEEDED(rv)) {
+    if (GetCurrentEventFrame() && NS_SUCCEEDED(rv)) {
       // We want synthesized mouse moves to cause mouseover and mouseout
       // DOM events (PreHandleEvent above), but not mousemove DOM events.
       if (!IsSynthesizedMouseMove(aEvent)) {
@@ -5980,7 +5980,7 @@ PresShell::HandleEventInternal(nsEvent* aEvent, nsIView *aView,
 
       // 3. Give event to event manager for post event state changes and
       //    generation of synthetic events.
-      if (NS_SUCCEEDED(rv)) {
+      if (!mIsDestroying && NS_SUCCEEDED(rv)) {
         rv = manager->PostHandleEvent(mPresContext, aEvent,
                                       GetCurrentEventFrame(), aStatus,
                                       weakView.GetView());

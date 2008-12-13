@@ -62,7 +62,9 @@
 }
 
 #main-window:not([active="true"]) > #navigator-toolbox > #PersonalToolbar {
+  border-top-color: rgba(255, 255, 255, 0.48);
   background-color: -moz-mac-chrome-inactive;
+  border-bottom-color: rgba(0, 0, 0, 0.32);
 }
 
 #main-window:not([active="true"]) > #navigator-toolbox > toolbar > toolbaritem,
@@ -97,11 +99,11 @@
 /* ----- BOOKMARK TOOLBAR ----- */
 
 #PersonalToolbar {
+  -moz-appearance: none;
   background: url("chrome://browser/skin/bookmark_toolbar_background.png") repeat-x center center -moz-mac-chrome-active;
-  border-top: 1px solid rgba(255,255,255,0.25);
-  border-bottom: 2px solid;
-  -moz-border-bottom-colors: rgba(0,0,0,0.35) transparent;
-  padding: 2px 0;
+  border-top: 1px solid rgba(255, 255, 255, 0.4);
+  border-bottom: 1px solid rgba(0, 0, 0, 0.57);
+  padding: 2px 0 3px;
 }
 
 

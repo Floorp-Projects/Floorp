@@ -344,15 +344,6 @@ nsNPAPIPlugin::~nsNPAPIPlugin(void)
   memset((void*) &fCallbacks, 0, sizeof(fCallbacks));
 }
 
-
-#if defined(XP_MACOSX)
-void
-nsNPAPIPlugin::SetPluginRefNum(short aRefNum)
-{
-  fPluginRefNum = aRefNum;
-}
-#endif
-
 // Creates the nsNPAPIPlugin object. One nsNPAPIPlugin object exists per plugin (not instance).
 nsresult
 nsNPAPIPlugin::CreatePlugin(const char* aFileName, const char* aFullPath,
@@ -511,18 +502,13 @@ nsNPAPIPlugin::CreatePlugin(const char* aFileName, const char* aFullPath,
 #endif
 
 #if defined(XP_MACOSX)
-  short appRefNum = ::CurResFile();
-  short pluginRefNum;
-
   nsCOMPtr<nsILocalFile> pluginPath;
   NS_NewNativeLocalFile(nsDependentCString(aFullPath), PR_TRUE,
                         getter_AddRefs(pluginPath));
 
   nsPluginFile pluginFile(pluginPath);
-  pluginRefNum = pluginFile.OpenPluginResource();
 
   nsNPAPIPlugin* plugin = new nsNPAPIPlugin(nsnull, aLibrary, nsnull);
-  ::UseResFile(appRefNum);
   if (!plugin)
     return NS_ERROR_OUT_OF_MEMORY;
 
@@ -533,8 +519,6 @@ nsNPAPIPlugin::CreatePlugin(const char* aFileName, const char* aFullPath,
     NS_RELEASE(*aResult);
     return NS_ERROR_FAILURE;
   }
-
-  plugin->SetPluginRefNum(pluginRefNum);
 #endif
 
 #ifdef XP_BEOS
@@ -629,8 +613,6 @@ nsNPAPIPlugin::Shutdown(void)
   if (fShutdownEntry) {
 #if defined(XP_MACOSX)
     (*fShutdownEntry)();
-    if (fPluginRefNum > 0)
-      ::CloseResFile(fPluginRefNum);
 #else
     NS_TRY_SAFE_CALL_VOID(fShutdownEntry(), fLibrary, nsnull);
 #endif

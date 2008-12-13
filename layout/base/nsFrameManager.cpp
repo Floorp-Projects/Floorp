@@ -692,10 +692,9 @@ nsFrameManager::RemoveFrame(nsIFrame*       aParentFrame,
                             nsIAtom*        aListName,
                             nsIFrame*       aOldFrame)
 {
-#ifdef DEBUG  
   PRBool wasDestroyingFrames = mIsDestroyingFrames;
   mIsDestroyingFrames = PR_TRUE;
-#endif
+
   // In case the reflow doesn't invalidate anything since it just leaves
   // a gap where the old frame was, we invalidate it here.  (This is
   // reasonably likely to happen when removing a last child in a way
@@ -705,9 +704,9 @@ nsFrameManager::RemoveFrame(nsIFrame*       aParentFrame,
   aOldFrame->Invalidate(aOldFrame->GetOverflowRect());
 
   nsresult rv = aParentFrame->RemoveFrame(aListName, aOldFrame);
-#ifdef DEBUG  
+
   mIsDestroyingFrames = wasDestroyingFrames;
-#endif
+
   return rv;
 }
 

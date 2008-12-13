@@ -499,6 +499,8 @@ nsImageLoadingContent::LoadImage(const nsAString& aNewURI,
     // and then incurring the significant cost of establishing a new TCP channel.
     // This is generally triggered from <img src=""> 
     // In light of that, just skip loading it..
+    // Do make sure to drop our existing image, if any
+    CancelImageRequests(aNotify);
     return NS_OK;
   }
 
@@ -683,10 +685,9 @@ void
 nsImageLoadingContent::CancelImageRequests(PRBool aNotify)
 {
   // Make sure to null out mCurrentURI here, so we no longer look like an image
+  AutoStateChanger changer(this, aNotify);
   mCurrentURI = nsnull;
   CancelImageRequests(NS_BINDING_ABORTED, PR_TRUE, nsIContentPolicy::ACCEPT);
-  NS_ASSERTION(!mStartingLoad, "Whence a state changer here?");
-  UpdateImageState(aNotify);
 }
 
 void
@@ -740,6 +741,8 @@ nsImageLoadingContent::UseAsPrimaryRequest(imgIRequest* aRequest,
 {
   // Use an AutoStateChanger so that the clone call won't
   // automatically notify from inside OnStopDecode.
+  // Also, make sure to use the CancelImageRequests which doesn't
+  // notify, so that the changer is handling the notifications.
   NS_PRECONDITION(aRequest, "Must have a request here!");
   AutoStateChanger changer(this, aNotify);
   mCurrentURI = nsnull;

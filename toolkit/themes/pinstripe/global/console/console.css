@@ -149,6 +149,7 @@
 /* ::::: toolbars ::::: */
 
 #ToolbarEval {
+  -moz-appearance: none;
   background: url("chrome://global/skin/icons/find-bar-background.png") repeat-x top center #D0D0D0;
   border-bottom: 1px solid #686868;
   padding: 2px;
