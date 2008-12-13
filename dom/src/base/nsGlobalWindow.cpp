@@ -208,6 +208,7 @@ static PRLogModuleInfo* gDOMLeakPRLog;
 #endif
 
 nsIFactory *nsGlobalWindow::sComputedDOMStyleFactory   = nsnull;
+nsIDOMStorageList *nsGlobalWindow::sGlobalStorageList  = nsnull;
 
 static nsIEntropyCollector *gEntropyCollector          = nsnull;
 static PRInt32              gRefCnt                    = 0;
@@ -780,6 +781,7 @@ void
 nsGlobalWindow::ShutDown()
 {
   NS_IF_RELEASE(sComputedDOMStyleFactory);
+  NS_IF_RELEASE(sGlobalStorageList);
 }
 
 // static
@@ -1003,8 +1005,6 @@ NS_IMPL_CYCLE_COLLECTION_TRAVERSE_BEGIN(nsGlobalWindow)
     NS_IMPL_CYCLE_COLLECTION_TRAVERSE_NSCOMPTR(mScriptContexts[i])
   }
 
-  NS_IMPL_CYCLE_COLLECTION_TRAVERSE_NSCOMPTR(gGlobalStorageList)
-
   for (PRUint32 i = 0; i < NS_STID_ARRAY_UBOUND; ++i) {      
     NS_IMPL_CYCLE_COLLECTION_TRAVERSE_NSCOMPTR(mInnerWindowHolders[i])
   }
@@ -1035,8 +1035,6 @@ NS_IMPL_CYCLE_COLLECTION_UNLINK_BEGIN(nsGlobalWindow)
   for (PRUint32 i = 0; i < NS_STID_ARRAY_UBOUND; ++i) {      
     NS_IMPL_CYCLE_COLLECTION_UNLINK_NSCOMPTR(mScriptContexts[i])
   }
-
-  NS_IMPL_CYCLE_COLLECTION_UNLINK_NSCOMPTR(gGlobalStorageList)
 
   for (PRUint32 i = 0; i < NS_STID_ARRAY_UBOUND; ++i) {      
     NS_IMPL_CYCLE_COLLECTION_UNLINK_NSCOMPTR(mInnerWindowHolders[i])
@@ -6700,12 +6698,12 @@ nsGlobalWindow::GetGlobalStorage(nsIDOMStorageList ** aGlobalStorage)
   NS_ENSURE_ARG_POINTER(aGlobalStorage);
 
 #ifdef MOZ_STORAGE
-  if (!gGlobalStorageList) {
-    nsresult rv = NS_NewDOMStorageList(getter_AddRefs(gGlobalStorageList));
+  if (!sGlobalStorageList) {
+    nsresult rv = NS_NewDOMStorageList(&sGlobalStorageList);
     NS_ENSURE_SUCCESS(rv, rv);
   }
 
-  *aGlobalStorage = gGlobalStorageList;
+  *aGlobalStorage = sGlobalStorageList;
   NS_IF_ADDREF(*aGlobalStorage);
 
   return NS_OK;
@@ -9401,7 +9399,8 @@ nsNavigator::MozIsLocallyAvailable(const nsAString &aURI,
 
   if (aWhenOffline) {
     loadFlags |= nsICachingChannel::LOAD_CHECK_OFFLINE_CACHE |
-                 nsICachingChannel::LOAD_ONLY_FROM_CACHE;
+                 nsICachingChannel::LOAD_ONLY_FROM_CACHE |
+                 nsIRequest::LOAD_FROM_CACHE;
   }
 
   nsCOMPtr<nsIChannel> channel;

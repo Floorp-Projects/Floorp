@@ -93,6 +93,7 @@ NS_IMPL_RELEASE_INHERITED(nsDOMMouseEvent, nsDOMUIEvent)
 
 NS_INTERFACE_MAP_BEGIN(nsDOMMouseEvent)
   NS_INTERFACE_MAP_ENTRY(nsIDOMMouseEvent)
+  NS_INTERFACE_MAP_ENTRY(nsIDOMNSMouseEvent)
   NS_INTERFACE_MAP_ENTRY_CONTENT_CLASSINFO(MouseEvent)
 NS_INTERFACE_MAP_END_INHERITING(nsDOMUIEvent)
 
@@ -135,6 +136,24 @@ nsDOMMouseEvent::InitMouseEvent(const nsAString & aType, PRBool aCanBubble, PRBo
 
   return NS_OK;
 }   
+
+NS_IMETHODIMP
+nsDOMMouseEvent::InitNSMouseEvent(const nsAString & aType, PRBool aCanBubble, PRBool aCancelable,
+                                  nsIDOMAbstractView *aView, PRInt32 aDetail, PRInt32 aScreenX,
+                                  PRInt32 aScreenY, PRInt32 aClientX, PRInt32 aClientY,
+                                  PRBool aCtrlKey, PRBool aAltKey, PRBool aShiftKey,
+                                  PRBool aMetaKey, PRUint16 aButton, nsIDOMEventTarget *aRelatedTarget,
+                                  float aPressure)
+{
+  nsresult rv = nsDOMMouseEvent::InitMouseEvent(aType, aCanBubble, aCancelable,
+                                                aView, aDetail, aScreenX, aScreenY,
+                                                aClientX, aClientY, aCtrlKey, aAltKey, aShiftKey,
+                                                aMetaKey, aButton, aRelatedTarget);
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  static_cast<nsMouseEvent_base*>(mEvent)->pressure = aPressure;
+  return NS_OK;
+}
 
 NS_IMETHODIMP
 nsDOMMouseEvent::GetButton(PRUint16* aButton)
@@ -246,6 +265,14 @@ nsDOMMouseEvent::GetWhich(PRUint32* aWhich)
   PRUint16 button;
   (void) GetButton(&button);
   *aWhich = button + 1;
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsDOMMouseEvent::GetMozPressure(float* aPressure)
+{
+  NS_ENSURE_ARG_POINTER(aPressure);
+  *aPressure = static_cast<nsMouseEvent_base*>(mEvent)->pressure;
   return NS_OK;
 }
 

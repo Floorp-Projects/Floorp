@@ -60,6 +60,7 @@
 /* used with esd_open_sound */
 static int esdref = -1;
 static PRLibrary *elib = nsnull;
+static PRLibrary *libcanberra = nsnull;
 
 // the following from esd.h
 
@@ -80,6 +81,24 @@ typedef int  (*EsdPlayStreamType) (int, int, const char *, const char *);
 typedef int  (*EsdAudioOpenType)  (void);
 typedef int  (*EsdAudioWriteType) (const void *, int);
 typedef void (*EsdAudioCloseType) (void);
+
+/* used to find and play common system event sounds.
+   this interfaces with libcanberra.
+ */
+typedef struct _ca_context ca_context;
+
+typedef int (*ca_context_create_fn) (ca_context **);
+typedef int (*ca_context_destroy_fn) (ca_context *);
+typedef int (*ca_context_play_fn) (ca_context *c,
+                                   uint32_t id,
+                                   ...);
+typedef int (*ca_context_change_props_fn) (ca_context *c,
+                                           ...);
+
+static ca_context_create_fn ca_context_create;
+static ca_context_destroy_fn ca_context_destroy;
+static ca_context_play_fn ca_context_play;
+static ca_context_change_props_fn ca_context_change_props;
 
 NS_IMPL_ISUPPORTS2(nsSound, nsISound, nsIStreamLoaderObserver)
 
@@ -103,30 +122,49 @@ nsSound::~nsSound()
 NS_IMETHODIMP
 nsSound::Init()
 {
-    /* we don't need to do esd_open_sound if we are only going to play files
-       but we will if we want to do things like streams, etc
-    */
+    // This function is designed so that no library is compulsory, and
+    // one library missing doesn't cause the other(s) to not be used.
     if (mInited) 
         return NS_OK;
-    if (elib) 
-        return NS_OK;
-
-    EsdOpenSoundType EsdOpenSound;
-
-    elib = PR_LoadLibrary("libesd.so.0");
-    if (!elib) return NS_ERROR_FAILURE;
-
-    EsdOpenSound = (EsdOpenSoundType) PR_FindFunctionSymbol(elib, "esd_open_sound");
-
-    if (!EsdOpenSound)
-        return NS_ERROR_FAILURE;
-
-    esdref = (*EsdOpenSound)("localhost");
-
-    if (!esdref)
-        return NS_ERROR_FAILURE;
 
     mInited = PR_TRUE;
+
+    if (!elib) {
+        /* we don't need to do esd_open_sound if we are only going to play files
+           but we will if we want to do things like streams, etc */
+        EsdOpenSoundType EsdOpenSound;
+
+        elib = PR_LoadLibrary("libesd.so.0");
+        if (elib) {
+            EsdOpenSound = (EsdOpenSoundType) PR_FindFunctionSymbol(elib, "esd_open_sound");
+            if (!EsdOpenSound) {
+                PR_UnloadLibrary(elib);
+                elib = nsnull;
+            } else {
+                esdref = (*EsdOpenSound)("localhost");
+                if (!esdref) {
+                    PR_UnloadLibrary(elib);
+                    elib = nsnull;
+                }
+            }
+        }
+    }
+
+    if (!libcanberra) {
+        libcanberra = PR_LoadLibrary("libcanberra.so.0");
+        if (libcanberra) {
+            ca_context_create = (ca_context_create_fn) PR_FindFunctionSymbol(libcanberra, "ca_context_create");
+            if (!ca_context_create) {
+                PR_UnloadLibrary(libcanberra);
+                libcanberra = nsnull;
+            } else {
+                // at this point we know we have a good libcanberra library
+                ca_context_destroy = (ca_context_destroy_fn) PR_FindFunctionSymbol(libcanberra, "ca_context_destroy");
+                ca_context_play = (ca_context_play_fn) PR_FindFunctionSymbol(libcanberra, "ca_context_play");
+                ca_context_change_props = (ca_context_change_props_fn) PR_FindFunctionSymbol(libcanberra, "ca_context_change_props");
+            }
+        }
+    }
 
     return NS_OK;
 }
@@ -137,6 +175,10 @@ nsSound::Shutdown()
     if (elib) {
         PR_UnloadLibrary(elib);
         elib = nsnull;
+    }
+    if (libcanberra) {
+        PR_UnloadLibrary(libcanberra);
+        libcanberra = nsnull;
     }
 }
 
@@ -365,13 +407,66 @@ NS_METHOD nsSound::Play(nsIURL *aURL)
     return rv;
 }
 
+nsresult nsSound::PlaySystemEventSound(const nsAString &aSoundAlias)
+{
+    if (!libcanberra)
+        return NS_ERROR_FAILURE;
+
+    // Do we even want alert sounds?
+    // If so, what sound theme are we using?
+    GtkSettings* settings = gtk_settings_get_default();
+    gchar* sound_theme_name = nsnull;
+
+    if (g_object_class_find_property(G_OBJECT_GET_CLASS(settings), "gtk-sound-theme-name") &&
+        g_object_class_find_property(G_OBJECT_GET_CLASS(settings), "gtk-enable-event-sounds")) {
+        gboolean enable_sounds = TRUE;
+        g_object_get(settings, "gtk-enable-event-sounds", &enable_sounds,
+                               "gtk-sound-theme-name", &sound_theme_name,
+                               NULL);
+
+        if (!enable_sounds) {
+            g_free(sound_theme_name);
+            return NS_OK;
+        }
+    }
+
+    // This allows us to avoid race conditions with freeing the context by handing that
+    // responsibility to Glib, and still use one context at a time
+    ca_context* ctx = nsnull;
+    static GStaticPrivate ctx_static_private = G_STATIC_PRIVATE_INIT;
+    ctx = (ca_context*) g_static_private_get(&ctx_static_private);
+    if (!ctx) {
+        ca_context_create(&ctx);
+        if (!ctx) {
+            g_free(sound_theme_name);
+            return NS_ERROR_OUT_OF_MEMORY;
+        }
+
+        g_static_private_set(&ctx_static_private, ctx, (GDestroyNotify) ca_context_destroy);
+    }
+
+    if (sound_theme_name) {
+        ca_context_change_props(ctx, "canberra.xdg-theme.name", sound_theme_name, NULL);
+        g_free(sound_theme_name);
+    }
+
+    if (aSoundAlias.Equals(NS_SYSSOUND_ALERT_DIALOG))
+        ca_context_play(ctx, 0, "event.id", "dialog-warning", NULL);
+    else if (aSoundAlias.Equals(NS_SYSSOUND_CONFIRM_DIALOG))
+        ca_context_play(ctx, 0, "event.id", "dialog-question", NULL);
+    else if (aSoundAlias.Equals(NS_SYSSOUND_MAIL_BEEP))
+        ca_context_play(ctx, 0, "event.id", "message-new-email", NULL);
+
+    return NS_OK;
+}
+
 NS_IMETHODIMP nsSound::PlaySystemSound(const nsAString &aSoundAlias)
 {
-    if (NS_IsMozAliasSound(aSoundAlias)) {
-        if (aSoundAlias.Equals(NS_SYSSOUND_MAIL_BEEP))
-            return Beep();
-        return NS_OK;
-    }
+    if (!mInited)
+        Init();
+
+    if (NS_IsMozAliasSound(aSoundAlias))
+        return PlaySystemEventSound(aSoundAlias);
 
     nsresult rv;
     nsCOMPtr <nsIURI> fileURI;

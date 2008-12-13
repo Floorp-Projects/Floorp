@@ -1364,10 +1364,12 @@ nsGenericHTMLElement::GetPrimaryPresState(nsGenericHTMLElement* aContent,
     // Get the pres state for this key, if it doesn't exist, create one
     result = history->GetState(key, aPresState);
     if (!*aPresState) {
-      result = NS_NewPresState(aPresState);
-      if (NS_SUCCEEDED(result)) {
-        result = history->AddState(key, *aPresState);
+      *aPresState = new nsPresState();
+      if (!*aPresState) {
+        return NS_ERROR_OUT_OF_MEMORY;
       }
+        
+      result = history->AddState(key, *aPresState);
     }
   }
 

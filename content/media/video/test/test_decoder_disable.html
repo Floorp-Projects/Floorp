@@ -1,0 +1,66 @@
+<!DOCTYPE HTML>
+<html>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=448600
+-->
+<head>
+  <title>Test for Bug 448600</title>
+  <script type="application/javascript" src="/MochiKit/MochiKit.js"></script>
+  <script type="application/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
+</head>
+<body>
+<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=448600">Mozilla Bug 448600</a>
+<p id="display"></p>
+<div id="content" style="display: none">
+</div>
+
+<pre id="test">
+<script type="application/javascript">
+
+netscape.security.PrivilegeManager.enablePrivilege("UniversalXPConnect");
+var prefService = Components.classes["@mozilla.org/preferences-service;1"]
+               .getService(Components.interfaces.nsIPrefService);
+var branch = prefService.getBranch("media.");
+var gOldOggPref = branch.getBoolPref("ogg.enabled");
+var gOldWavePref = branch.getBoolPref("wave.enabled");
+
+branch.setBoolPref("ogg.enabled", false);
+branch.setBoolPref("wave.enabled", false);
+
+</script>
+
+<video id="video1">
+  <source type="video/ogg" src="320x240.ogg"/>
+  <source type="audio/wave" src="r11025_u8_c1.wav"/>
+</video>
+
+<video id="video2" src="320x240.ogg"></video>
+<video id="video3" src="r11025_u8_c1.wav"></video>
+
+<script>
+
+SimpleTest.waitForExplicitFinish();
+
+function doTest() {
+  is(document.getElementById('video1').currentSrc, "");
+  is(document.getElementById('video2').currentSrc, "");
+  is(document.getElementById('video3').currentSrc, "");
+
+  netscape.security.PrivilegeManager.enablePrivilege("UniversalXPConnect");
+
+  branch.setBoolPref("ogg.enabled", gOldOggPref);
+  branch.setBoolPref("wave.enabled", gOldWavePref);
+
+  SimpleTest.finish();
+}
+
+// Using a timeout here sucks, but we currently have no way
+// to be notified that the element couldn't load. At least if this timeout
+// happens "too early", the test will pass instead of failing.
+setTimeout(doTest, 1000);
+
+</script>
+</pre>
+</body>
+</html>

@@ -55,6 +55,13 @@ vpath crashreporter%.ini $(LOCALE_SRCDIR)/crashreporter
 ifdef LOCALE_MERGEDIR
 vpath crashreporter%.ini @srcdir@/en-US/crashreporter
 endif
+ifdef LOCALE_MERGEDIR
+vpath book%.inc $(LOCALE_MERGEDIR)/browser/profile
+endif
+vpath book%.inc $(LOCALE_SRCDIR)/profile
+ifdef LOCALE_MERGEDIR
+vpath book%.inc @srcdir@/en-US/profile
+endif
 
 
 run_for_effects := $(shell if ! test -d $(DIST); then $(NSINSTALL) -D $(DIST); fi; if ! test -d $(DIST)/branding; then $(NSINSTALL) -D $(DIST)/branding; fi)
@@ -120,19 +127,9 @@ README_FILES = \
 	$(NULL)
 
 PROFILE_FILES = \
-	bookmarks.html \
 	localstore.rdf \
+	mimeTypes.rdf \
 	$(NULL)
-
-ifeq ($(OS_ARCH),WINNT)
-PROFILE_FILES += win/mimeTypes.rdf
-else
-ifneq (,$(filter mac cocoa,$(MOZ_WIDGET_TOOLKIT)))
-PROFILE_FILES += mac/mimeTypes.rdf
-else
-PROFILE_FILES += unix/mimeTypes.rdf
-endif
-endif
 
 PROFILE_CHROME = userChrome-example.css userContent-example.css
 
@@ -148,13 +145,27 @@ ifneq ($(OS_ARCH),OS2)
 endif
 endif
 
-libs:: $(addprefix $(LOCALE_SRCDIR)/profile/,$(PROFILE_FILES))
+NO_JA_JP_MAC_AB_CD := $(if $(filter ja-JP-mac, $(AB_CD)),ja,$(AB_CD))
+
+%/defaults/profile/bookmarks.html: bookmarks.inc generic/profile/bookmarks.html.in
+	$(SYSINSTALL) -D $(dir $@)
+	$(PYTHON) $(topsrcdir)/config/Preprocessor.py \
+	  -I $< \
+	  -DAB_CD=$(NO_JA_JP_MAC_AB_CD) \
+	  $(srcdir)/generic/profile/bookmarks.html.in \
+	  > $@
+
+libs:: $(FINAL_TARGET)/defaults/profile/bookmarks.html ;
+
+libs:: $(addprefix generic/profile/,$(PROFILE_FILES))
 	$(SYSINSTALL) $(IFLAGS1) $^ $(FINAL_TARGET)/defaults/profile
 
 libs:: $(addprefix $(LOCALE_SRCDIR)/profile/chrome/,$(PROFILE_CHROME))
 	$(SYSINSTALL) $(IFLAGS1) $^ $(FINAL_TARGET)/defaults/profile/chrome
 
-install:: $(addprefix $(LOCALE_SRCDIR)/profile/,$(PROFILE_FILES))
+install:: $(DESTDIR)$(mozappdir)/defaults/profile/bookmarks.html ;
+
+install:: $(addprefix generic/profile/,$(PROFILE_FILES))
 	$(SYSINSTALL) $(IFLAGS1) $^ $(DESTDIR)$(mozappdir)/defaults/profile
 
 install:: $(addprefix $(LOCALE_SRCDIR)/profile/chrome/,$(PROFILE_CHROME))
@@ -167,21 +178,6 @@ libs:: $(addsuffix .xml,$(SEARCH_PLUGINS))
 
 install:: $(addsuffix .xml,$(SEARCH_PLUGINS))
 	$(SYSINSTALL) $(IFLAGS1) $^ $(DESTDIR)$(mozappdir)/searchplugins
-
-MICROSUMMARY_GENERATORS = $(shell cat $(LOCALE_SRCDIR)/microsummary-generators/list.txt)
-MICROSUMMARY_GENERATOR_PREFIX = $(addprefix $(LOCALE_SRCDIR)/microsummary-generators/,$(MICROSUMMARY_GENERATORS))
-
-libs::
-ifneq (,$(strip $(MICROSUMMARY_GENERATORS)))
-        $(addsuffix .xml,$(MICROSUMMARY_GENERATOR_PREFIX))
-	$(SYSINSTALL) $(IFLAGS1) $^ $(FINAL_TARGET)/microsummary-generators
-endif
-
-install::
-ifneq (,$(strip $(MICROSUMMARY_GENERATORS)))
-        $(addsuffix .xml,$(MICROSUMMARY_GENERATOR_PREFIX))
-	$(SYSINSTALL) $(IFLAGS1) $^ $(DESTDIR)$(mozappdir)/microsummary-generators
-endif
 
 tests:
 ifneq (en-US, $(AB_CD))
@@ -280,8 +276,7 @@ clobber-zip:
 	$(RM) $(STAGEDIST)/chrome/$(AB_CD).jar \
 	  $(STAGEDIST)/chrome/$(AB_CD).manifest \
 	  $(STAGEDIST)/defaults/pref/firefox-l10n.js
-	$(RM) -r $(STAGEDIST)/microsummary-generators \
-	  $(STAGEDIST)/searchplugins \
+	$(RM) -rf  $(STAGEDIST)/searchplugins \
 	  $(STAGEDIST)/dictionaries \
 	  $(STAGEDIST)/defaults/profile \
 	  $(STAGEDIST)/chrome/$(AB_CD)

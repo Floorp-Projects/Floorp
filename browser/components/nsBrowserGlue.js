@@ -544,10 +544,6 @@ BrowserGlue.prototype = {
       this.ensurePlacesDefaultQueriesInitialized();
     }
     else {
-      // Create a new Organizer left pane folder root, the old will not be
-      // valid anymore.
-      this._prefs.setIntPref("browser.places.leftPaneFolderId", -1);
-
       // ensurePlacesDefaultQueriesInitialized() is called by import.
       this._prefs.setIntPref("browser.places.smartBookmarksVersion", 0);
 

@@ -58,17 +58,17 @@ inline size_t Distance( const nsReadingIterator<char>& start, const nsReadingIte
     return end.get() - start.get();
   }
 
-NS_COM void LossyCopyUTF16toASCII( const nsAString& aSource, nsACString& aDest );
-NS_COM void CopyASCIItoUTF16( const nsACString& aSource, nsAString& aDest );
+NS_COM void LossyCopyUTF16toASCII( const nsAString& aSource, nsACString& aDest NS_OUTPARAM );
+NS_COM void CopyASCIItoUTF16( const nsACString& aSource, nsAString& aDest NS_OUTPARAM );
 
-NS_COM void LossyCopyUTF16toASCII( const PRUnichar* aSource, nsACString& aDest );
-NS_COM void CopyASCIItoUTF16( const char* aSource, nsAString& aDest );
+NS_COM void LossyCopyUTF16toASCII( const PRUnichar* aSource, nsACString& aDest NS_OUTPARAM );
+NS_COM void CopyASCIItoUTF16( const char* aSource, nsAString& aDest NS_OUTPARAM );
 
-NS_COM void CopyUTF16toUTF8( const nsAString& aSource, nsACString& aDest );
-NS_COM void CopyUTF8toUTF16( const nsACString& aSource, nsAString& aDest );
+NS_COM void CopyUTF16toUTF8( const nsAString& aSource, nsACString& aDest NS_OUTPARAM );
+NS_COM void CopyUTF8toUTF16( const nsACString& aSource, nsAString& aDest NS_OUTPARAM );
 
-NS_COM void CopyUTF16toUTF8( const PRUnichar* aSource, nsACString& aDest );
-NS_COM void CopyUTF8toUTF16( const char* aSource, nsAString& aDest );
+NS_COM void CopyUTF16toUTF8( const PRUnichar* aSource, nsACString& aDest NS_OUTPARAM );
+NS_COM void CopyUTF8toUTF16( const char* aSource, nsAString& aDest NS_OUTPARAM );
 
 NS_COM void LossyAppendUTF16toASCII( const nsAString& aSource, nsACString& aDest );
 NS_COM void AppendASCIItoUTF16( const nsACString& aSource, nsAString& aDest );

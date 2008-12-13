@@ -159,6 +159,40 @@ function expectLines(iter, expectedLines)
   }
 }
 
+/**
+ * Spew a bunch of HTTP metadata from request into the body of response.
+ *
+ * @param request : nsIHttpRequestMetadata
+ *   the request whose metadata should be output
+ * @param response : nsIHttpResponse
+ *   the response to which the metadata is written
+ */
+function writeDetails(request, response)
+{
+  response.write("Method:  " + request.method + "\r\n");
+  response.write("Path:    " + request.path + "\r\n");
+  response.write("Query:   " + request.queryString + "\r\n");
+  response.write("Version: " + request.httpVersion + "\r\n");
+  response.write("Scheme:  " + request.scheme + "\r\n");
+  response.write("Host:    " + request.host + "\r\n");
+  response.write("Port:    " + request.port);
+}
+
+/**
+ * Advances iter past all non-blank lines and a single blank line, after which
+ * point the body of the response will be returned next from the iterator.
+ *
+ * @param iter : Iterator
+ *   an iterator over the CRLF-delimited lines in an HTTP response, currently
+ *   just after the Request-Line
+ */
+function skipHeaders(iter)
+{
+  var line = iter.next();
+  while (line !== "")
+    line = iter.next();
+}
+
 
 /*******************************************************
  * SIMPLE SUPPORT FOR LOADING/TESTING A SERIES OF URLS *
@@ -296,9 +330,11 @@ function runHttpTests(testArray, done)
  *   the host to which a connection should be made
  * @param port : PRUint16
  *   the port to use for the connection
- * @param data : string
- *   the raw data to send, as a string of characters with codes in the range
- *   0-255
+ * @param data : string or [string...]
+ *   either:
+ *     - the raw data to send, as a string of characters with codes in the
+ *       range 0-255, or
+ *     - an array of such strings whose concatenation forms the raw data
  * @param responseCheck : function(string) : void
  *   a function which is provided with the data sent by the remote host which
  *   conducts whatever tests it wants on that data; useful for tweaking the test
@@ -308,8 +344,12 @@ function RawTest(host, port, data, responseCheck)
 {
   if (0 > port || 65535 < port || port % 1 !== 0)
     throw "bad port";
-  if (!/^[\x00-\xff]*$/.test(data))
-    throw "bad data contains non-byte-valued character";
+  if (!(data instanceof Array))
+    data = [data];
+  if (data.length <= 0)
+    throw "bad data length";
+  if (!data.every(function(v) { return /^[\x00-\xff]*$/.test(data); }))
+    throw "bad data contained non-byte-valued character";
 
   this.host = host;
   this.port = port;
@@ -372,14 +412,17 @@ function runRawTests(testArray, done)
 
   function waitToWriteOutput(stream)
   {
-    stream.asyncWait(writer, 0, testArray[testIndex].data.length - dataIndex,
+    stream.asyncWait(writer, 0, testArray[testIndex].data[dataIndex].length,
                      currentThread);
   }
 
   /** Index of the test being run. */
   var testIndex = -1;
 
-  /** Index of remaining data to be written to the socket in current test. */
+  /**
+   * Index of remaining data strings to be written to the socket in current
+   * test.
+   */
   var dataIndex = 0;
 
   /** Data received so far from the server. */
@@ -428,13 +471,16 @@ function runRawTests(testArray, done)
     {
       onOutputStreamReady: function(stream)
       {
-        var data = testArray[testIndex].data.substring(dataIndex);
+        var data = testArray[testIndex].data[dataIndex];
 
         var written = 0;
         try
         {
           written = stream.write(data, data.length);
-          dataIndex += written;
+          if (written == data.length)
+            dataIndex++;
+          else
+            testArray[testIndex].data = data.substring(written);
         }
         catch (e) { /* stream could have been closed, just ignore */ }
 
