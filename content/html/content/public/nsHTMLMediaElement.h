@@ -214,9 +214,6 @@ protected:
   // Set to false when completed, or not yet started.
   PRPackedBool mBegun;
 
-  // If truen then the video playback has completed.
-  PRPackedBool mEnded;
-
   // True when the decoder has loaded enough data to display the
   // first frame of the content.
   PRPackedBool mLoadedFirstFrame;

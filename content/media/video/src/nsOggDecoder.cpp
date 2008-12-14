@@ -1490,7 +1490,12 @@ void nsOggDecoder::NetworkError()
 
 PRBool nsOggDecoder::IsSeeking() const
 {
-  return mPlayState == PLAY_STATE_SEEKING;
+  return mPlayState == PLAY_STATE_SEEKING || mNextState == PLAY_STATE_SEEKING;
+}
+
+PRBool nsOggDecoder::IsEnded() const
+{
+  return mPlayState == PLAY_STATE_ENDED || mPlayState == PLAY_STATE_SHUTDOWN;
 }
 
 void nsOggDecoder::PlaybackEnded()
