@@ -173,6 +173,9 @@ class nsWaveDecoder : public nsMediaDecoder
   // Report whether the decoder is currently seeking.
   virtual PRBool IsSeeking() const;
 
+  // Report whether the decoder has reached end of playback.
+  virtual PRBool IsEnded() const;
+
   // Start downloading the media at the specified URI.  The media's metadata
   // will be parsed and made available as the load progresses.
   virtual nsresult Load(nsIURI* aURI, nsIChannel* aChannel, nsIStreamListener** aStreamListener);
@@ -259,11 +262,12 @@ private:
   // state machine will validate the offset against the current media.
   float mTimeOffset;
 
-  // Copy of the current time and duration when the state machine was
-  // disposed.  Used to respond to time and duration queries with sensible
-  // values after playback has ended.
+  // Copy of the current time, duration, and ended state when the state
+  // machine was disposed.  Used to respond to time and duration queries
+  // with sensible values after the state machine is destroyed.
   float mEndedCurrentTime;
   float mEndedDuration;
+  PRPackedBool mEnded;
 
   // True if we have registered a shutdown observer.
   PRPackedBool mNotifyOnShutdown;

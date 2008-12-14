@@ -134,6 +134,10 @@ class nsMediaDecoder : public nsIObserver
   // seeking in the media resource.
   virtual PRBool IsSeeking() const = 0;
 
+  // Return PR_TRUE if the decoder has reached the end of playback.
+  // Call in the main thread only.
+  virtual PRBool IsEnded() const = 0;
+
   // Return the current number of bytes loaded from the video file.
   // This is used for progress events.
   virtual PRUint64 GetBytesLoaded() = 0;
