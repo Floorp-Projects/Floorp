@@ -2479,13 +2479,16 @@ nsListControlFrame::DropDownToggleKey(nsIDOMEvent* aKeyEvent)
   // dropdowns there.
   if (IsInDropDownMode() && !nsComboboxControlFrame::ToolkitHasNativePopup()) {
     aKeyEvent->PreventDefault();
-    nsIFrame* comboFrame;
-    CallQueryInterface(mComboboxFrame, &comboFrame);
-    nsWeakFrame weakFrame(comboFrame);
-    mComboboxFrame->ShowDropDown(!mComboboxFrame->IsDroppedDown());
-    if (!weakFrame.IsAlive())
-      return;
-    mComboboxFrame->RedisplaySelectedText();
+    if (!mComboboxFrame->IsDroppedDown()) {
+      mComboboxFrame->ShowDropDown(PR_TRUE);
+    } else {
+      nsWeakFrame weakFrame(this);
+      // mEndSelectionIndex is the last item that got selected.
+      ComboboxFinish(mEndSelectionIndex);
+      if (weakFrame.IsAlive()) {
+        FireOnChange();
+      }
+    }
   }
 }
 
