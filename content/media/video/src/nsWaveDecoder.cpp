@@ -145,6 +145,9 @@ public:
   // Returns true if the state machine is seeking.  Threadsafe.
   PRBool IsSeeking();
 
+  // Returns true if the state machine has reached the end of playback.  Threadsafe.
+  PRBool IsEnded();
+
   // Called by the decoder to indicate that the media stream has closed.
   void StreamEnded();
 
@@ -428,7 +431,14 @@ PRBool
 nsWaveStateMachine::IsSeeking()
 {
   nsAutoMonitor monitor(mMonitor);
-  return mState == STATE_SEEKING;
+  return mState == STATE_SEEKING || mNextState == STATE_SEEKING;
+}
+
+PRBool
+nsWaveStateMachine::IsEnded()
+{
+  nsAutoMonitor monitor(mMonitor);
+  return mState == STATE_ENDED || mState == STATE_SHUTDOWN;
 }
 
 void
@@ -467,7 +477,9 @@ nsWaveStateMachine::Run()
             newState = STATE_ERROR;
           }
 
-          NS_DispatchToMainThread(event, NS_DISPATCH_NORMAL);
+          if (event) {
+            NS_DispatchToMainThread(event, NS_DISPATCH_NORMAL);
+          }
           ChangeState(newState);
         }
       }
@@ -952,6 +964,7 @@ nsWaveDecoder::nsWaveDecoder()
     mTimeOffset(0.0),
     mEndedCurrentTime(0.0),
     mEndedDuration(std::numeric_limits<float>::quiet_NaN()),
+    mEnded(PR_FALSE),
     mNotifyOnShutdown(PR_FALSE),
     mSeekable(PR_TRUE)
 {
@@ -1075,9 +1088,13 @@ nsWaveDecoder::Stop()
   }
 
   if (mPlaybackThread) {
+    mPlaybackThread->Shutdown();
+  }
+
+  if (mPlaybackStateMachine) {
     mEndedCurrentTime = mPlaybackStateMachine->GetCurrentTime();
     mEndedDuration = mPlaybackStateMachine->GetDuration();
-    mPlaybackThread->Shutdown();
+    mEnded = mPlaybackStateMachine->IsEnded();
   }
 
   mPlaybackThread = nsnull;
@@ -1191,6 +1208,15 @@ nsWaveDecoder::IsSeeking() const
     return mPlaybackStateMachine->IsSeeking();
   }
   return PR_FALSE;
+}
+
+PRBool
+nsWaveDecoder::IsEnded() const
+{
+  if (mPlaybackStateMachine) {
+    return mPlaybackStateMachine->IsEnded();
+  }
+  return mEnded;
 }
 
 PRUint64
