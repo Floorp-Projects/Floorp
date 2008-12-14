@@ -390,12 +390,16 @@ void
 nsWaveStateMachine::Seek(float aTime)
 {
   nsAutoMonitor monitor(mMonitor);
-  mNextState = mState;
-  mSeekTime = NS_MIN(aTime, BytesToTime(mWaveLength));
+  mSeekTime = aTime;
   if (mSeekTime < 0.0) {
     mSeekTime = 0.0;
   }
-  ChangeState(STATE_SEEKING);
+  if (mState == STATE_LOADING_METADATA) {
+    mNextState = STATE_SEEKING;
+  } else if (mState != STATE_SEEKING) {
+    mNextState = mState;
+    ChangeState(STATE_SEEKING);
+  }
 }
 
 float
@@ -470,7 +474,9 @@ nsWaveStateMachine::Run()
 
           if (loaded) {
             mMetadataValid = PR_TRUE;
-            event = NS_NEW_RUNNABLE_METHOD(nsWaveDecoder, mDecoder, MetadataLoaded);
+            if (mNextState != STATE_SEEKING) {
+              event = NS_NEW_RUNNABLE_METHOD(nsWaveDecoder, mDecoder, MetadataLoaded);
+            }
             newState = mNextState;
           } else {
             event = NS_NEW_RUNNABLE_METHOD(nsWaveDecoder, mDecoder, MediaErrorDecode);
@@ -629,7 +635,16 @@ nsWaveStateMachine::Run()
         monitor.Enter();
 
         if (mState == STATE_SEEKING && mSeekTime == seekTime) {
-          ChangeState(mNextState);
+          // Special case: if a seek was requested during metadata load,
+          // mNextState will have been clobbered.  This can only happen when
+          // we're instantiating a decoder to service a seek request after
+          // playback has ended, so we know that the clobbered mNextState
+          // was PAUSED.
+          State nextState = mNextState;
+          if (nextState == STATE_SEEKING) {
+            nextState = STATE_PAUSED;
+          }
+          ChangeState(nextState);
         }
       }
       break;
@@ -1005,10 +1020,15 @@ nsWaveDecoder::Seek(float aTime)
 {
   mTimeOffset = aTime;
 
+  if (!mPlaybackStateMachine) {
+    Load(mURI, nsnull, nsnull);
+  }
+
   if (mPlaybackStateMachine) {
     mPlaybackStateMachine->Seek(mTimeOffset);
     return NS_OK;
   }
+
   return NS_ERROR_FAILURE;
 }
 
