@@ -1,0 +1,71 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+  <title>Wave Media test: seek test 5</title>
+  <script type="text/javascript" src="/MochiKit/MochiKit.js"></script>
+  <script type="text/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
+</head>
+<body>
+<audio id='v'
+       onloadedmetadata='return startTest();'
+       onseeking='return seekStarted();'
+       onseeked='return seekEnded();'>
+  <source type='audio/x-wav' src='r11025_s16_c1.wav'>
+</audio>
+<pre id="test">
+<script class="testbody" type="text/javascript">
+// Test for a seek, followed by another seek before the first is complete.
+var startPassed = false;
+var seek1Passed = false;
+var seek2Passed = false;
+var seekCount = 0;
+var completed = false;
+
+function startTest() {
+  if (completed)
+    return false;
+
+  var v = document.getElementById('v');
+  v.currentTime=0.8;
+  return false;
+}
+
+function seekStarted() {
+  if (completed)
+    return false;
+
+  startPassed = true;
+  var v = document.getElementById('v');
+  v.currentTime=0.5;
+  return false;
+}
+
+function seekEnded() {
+  if (completed)
+    return false;
+  var v = document.getElementById('v');
+  seekCount++;
+  if(seekCount == 1) {
+    if (v.currentTime >= 0.7 && v.currentTime <= 0.9)
+      seek1Passed = true;
+  }
+
+  if(seekCount == 2) {
+    if (v.currentTime >= 0.4 && v.currentTime <= 0.6)
+      seek2Passed = true;
+
+    ok(seek1Passed, "First seek");
+    ok(seek2Passed, "Second seek");
+    completed = true;
+    SimpleTest.finish();
+  }
+
+  return false;
+}
+
+SimpleTest.waitForExplicitFinish();
+</script>
+</pre>
+</body>
+</html>

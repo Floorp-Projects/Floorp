@@ -252,6 +252,13 @@ private:
   // underlying channel type.
   nsAutoPtr<nsMediaStream> mStream;
 
+  // The media time of the last requested seek.  This has not been validated
+  // against the current media, so may be out of bounds.  Set when
+  // Seek(float) is called, and passed to the state machine when the
+  // SeekStarted event fires to tell it to update its time offset.  The
+  // state machine will validate the offset against the current media.
+  float mTimeOffset;
+
   // Copy of the current time and duration when the state machine was
   // disposed.  Used to respond to time and duration queries with sensible
   // values after playback has ended.

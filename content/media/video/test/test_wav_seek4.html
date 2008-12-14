@@ -1,0 +1,54 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+  <title>Wave Media test: seek test 4</title>
+  <script type="text/javascript" src="/MochiKit/MochiKit.js"></script>
+  <script type="text/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
+</head>
+<body>
+<audio id='v'
+       onloadedmetadata='return startTest();'
+       onseeking='return seekStarted();'
+       onseeked='return seekEnded();'>
+  <source type='audio/x-wav' src='r11025_s16_c1.wav'>
+</audio>
+<pre id="test">
+<script class="testbody" type="text/javascript">
+// Test seeking works if current time is set but audio is not played.
+var startPassed = false;
+var completed = false;
+
+function startTest() {
+  if (completed)
+    return false;
+
+  var v = document.getElementById('v');
+  v.currentTime=0.5;
+  return false;
+}
+
+function seekStarted() {
+  if (completed)
+    return false;
+
+  startPassed = true;
+  return false;
+}
+
+function seekEnded() {
+  if (completed)
+    return false;
+
+  var t = document.getElementById('v').currentTime;
+  ok(t >= 0.4 && t<= 0.6, "Video currentTime should be around 0.5: " + t);
+  completed = true;
+  SimpleTest.finish();
+  return false;
+}
+
+SimpleTest.waitForExplicitFinish();
+</script>
+</pre>
+</body>
+</html>
