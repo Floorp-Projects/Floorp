@@ -77,6 +77,7 @@ NS_IMPL_THREADSAFE_ISUPPORTS1(mozStorageConnection, mozIStorageConnection)
 mozStorageConnection::mozStorageConnection(mozIStorageService* aService) :
     mDBConn(nsnull)
 ,   mAsyncExecutionMutex(nsAutoLock::NewLock("AsyncExecutionMutex"))
+,   mAsyncExecutionThreadShuttingDown(PR_FALSE)
 ,   mTransactionMutex(nsAutoLock::NewLock("TransactionMutex"))
 ,   mTransactionInProgress(PR_FALSE)
 ,   mFunctionsMutex(nsAutoLock::NewLock("FunctionsMutex"))
@@ -230,14 +231,18 @@ mozStorageConnection::Close()
                                         leafName.get()));
 #endif
 
-    // The shutdown call runs any pending events to completion, so we want to
-    // do this before closing the connection.
+    // Flag that we are shutting down the async thread, so that
+    // getAsyncExecutionTarget knows not to expose/create the async thread.
     {
         nsAutoLock mutex(mAsyncExecutionMutex);
-        if (mAsyncExecutionThread) {
-            mAsyncExecutionThread->Shutdown();
-            mAsyncExecutionThread = nsnull;
-        }
+        mAsyncExecutionThreadShuttingDown = PR_TRUE;
+    }
+    // Shutdown the async thread if it exists.  (Because we just set the flag,
+    // we are the only code that is going to be touching this variable from here
+    // on out.)
+    if (mAsyncExecutionThread) {
+        mAsyncExecutionThread->Shutdown();
+        mAsyncExecutionThread = nsnull;
     }
 
 #ifdef DEBUG
@@ -950,6 +955,11 @@ already_AddRefed<nsIEventTarget>
 mozStorageConnection::getAsyncExecutionTarget()
 {
     nsAutoLock mutex(mAsyncExecutionMutex);
+    
+    // If we are shutting down the asynchronous thread, don't hand out any more
+    // references to the thread. 
+    if (mAsyncExecutionThreadShuttingDown)
+        return nsnull;
 
     if (!mAsyncExecutionThread) {
         nsresult rv = NS_NewThread(getter_AddRefs(mAsyncExecutionThread));
