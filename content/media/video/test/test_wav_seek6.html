@@ -1,78 +1,57 @@
 <!DOCTYPE HTML>
 <html>
 <head>
-  <title>Media test: seek test 1</title>
+  <title>Wave Media test: seek test 6</title>
   <script type="text/javascript" src="/MochiKit/MochiKit.js"></script>
   <script type="text/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
   <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
 </head>
 <body>
-<video id='v'
-       src='seek.ogg'
-       onended='return playbackEnded();'
+<audio id='v'
        onloadedmetadata='return startTest();'
+       onended='return playbackEnded();'
        onseeking='return seekStarted();'
-       onseeked='return seekEnded();'></video>
+       onseeked='return seekEnded();'>
+  <source type='audio/x-wav' src='r11025_s16_c1.wav'>
+</audio>
 <pre id="test">
 <script class="testbody" type="text/javascript">
+// Test for a seek, followed by a play before the seek completes, ensure we play at the end of the seek.
 var startPassed = false;
-var endPassed = false;
-var seekFlagStart = false;
-var seekFlagEnd = false;
-var readonly = true;
 var completed = false;
-
-var v = document.getElementById('v');
-ok(!v.seeking, "seeking should default to false");
-try {
-  v.seeking = 1;
-  readonly = false;
-}
-catch(e) {
-  readonly = true;
-}
-ok(readonly, "seeking should be readonly");
+var seekCount = 0;
 
 function startTest() {
   if (completed)
     return false;
+
   var v = document.getElementById('v');
-  v.play();
-  v.currentTime=2;
+  v.currentTime=0.5;
   return false;
 }
 
 function seekStarted() {
   if (completed)
     return false;
-
-  var v = document.getElementById('v');
   startPassed = true;
-  seekFlagStart = v.seeking;
+  var v = document.getElementById('v');
+  v.play();
   return false;
 }
 
 function seekEnded() {
   if (completed)
     return false;
-
   var v = document.getElementById('v');
-  var t = v.currentTime;
-  ok(t >= 2 && t <= 3, "Video currentTime should be around 2: " + t);
-  endPassed = true;
-  seekFlagEnd = v.seeking;
+  ok(v.currentTime>=0.4 && v.currentTime<=0.6, "First seek");
   return false;
 }
 
 function playbackEnded() {
   if (completed)
     return false;
-
+  ok(true, "Playback ended");
   completed = true;
-  ok(startPassed, "seeking event");
-  ok(endPassed, "seeked event");
-  ok(seekFlagStart, "seeking flag on start should be true");
-  ok(!seekFlagEnd, "seeking flag on end should be false");
   SimpleTest.finish();
   return false;
 }
