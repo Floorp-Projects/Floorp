@@ -1037,6 +1037,11 @@ pref("bidi.edit.delete_immediately", false);
 // 2 = visual, but logical during selection
 pref("bidi.edit.caret_movement_style", 2);
 
+// Setting this pref to |true| forces Bidi UI menu items and keyboard shortcuts
+// to be exposed, and enables the directional caret hook. By default, only
+// expose it for bidi-associated system locales.
+pref("bidi.browser.ui", false);
+
 // used for double-click word selection behavior. Win will override.
 pref("layout.word_select.eat_space_to_next_word", false);
 pref("layout.word_select.stop_at_punctuation", true);
