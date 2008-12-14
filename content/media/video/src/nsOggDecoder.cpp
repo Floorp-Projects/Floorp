@@ -1059,7 +1059,7 @@ nsresult nsOggDecodeStateMachine::Run()
         NS_DispatchToMainThread(event, NS_DISPATCH_NORMAL);
         do {
           mon.Wait();
-        } while (mState != DECODER_STATE_SHUTDOWN);
+        } while (mState == DECODER_STATE_COMPLETED);
       }
       break;
     }
@@ -1495,7 +1495,7 @@ PRBool nsOggDecoder::IsSeeking() const
 
 void nsOggDecoder::PlaybackEnded()
 {
-  if (mShuttingDown)
+  if (mShuttingDown || mPlayState == nsOggDecoder::PLAY_STATE_SEEKING)
     return;
 
   Stop();
