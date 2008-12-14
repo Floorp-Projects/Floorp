@@ -71,12 +71,23 @@ _TEST_FILES = 	test_autoplay.html \
                 test_volume.html \
                 test_wav_8bit.html \
                 test_wav_ended1.html \
+                test_wav_seek3.html \
+                test_wav_seek4.html \
+                test_wav_seek5.html \
+                test_wav_seek6.html \
+                test_wav_seek7.html \
+                test_wav_seek8.html \
                 test_wav_seek_past_end.html \
                 test_wav_seek_then_play.html \
+                test_wav_trailing.html \
+                test_wav_trunc.html \
+                test_wav_trunc_seek.html \
                 320x240.ogg \
                 bug461281.ogg \
                 seek.ogg \
                 r11025_s16_c1.wav \
+                r11025_s16_c1_trailing.wav \
+                r11025_s16_c1_trunc.wav \
                 r11025_u8_c1.wav \
 #                test_bug448534.html \
                 $(NULL)

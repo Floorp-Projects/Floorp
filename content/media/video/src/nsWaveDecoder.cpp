@@ -151,6 +151,11 @@ public:
   // Main state machine loop.  Runs forever, until shutdown state is reached.
   NS_IMETHOD Run();
 
+  // Called by the decoder when the SeekStarted event runs.  This ensures
+  // the current time offset of the state machine is updated to the new seek
+  // position at the appropriate time.
+  void UpdateTimeOffset(float aTime);
+
 private:
   // Change the current state and wake the playback thread if it is waiting
   // on mMonitor.  Used by public member functions called from both threads,
@@ -281,7 +286,7 @@ private:
   float mInitialVolume;
 
   // Time position (in seconds) to offset current time from audio stream.
-  // Set by calling Seek(float) when seeking, and when the stream is closed
+  // Set when the seek started event runs and when the stream is closed
   // during shutdown.
   float mTimeOffset;
 
@@ -289,6 +294,9 @@ private:
   // any more data from mStream than what is already buffered (i.e. what
   // Available() reports).
   PRPackedBool mExpectMoreData;
+
+  // Time position (in seconds) to seek to.  Set by Seek(float).
+  float mSeekTime;
 
   // True once metadata has been parsed and validated. Users of mSampleRate,
   // mChannels, mSampleSize, mSampleFormat, mWaveLength, mWavePCMOffset must
@@ -316,6 +324,7 @@ nsWaveStateMachine::nsWaveStateMachine(nsWaveDecoder* aDecoder, nsMediaStream* a
     mInitialVolume(aInitialVolume),
     mTimeOffset(0.0),
     mExpectMoreData(PR_TRUE),
+    mSeekTime(0.0),
     mMetadataValid(PR_FALSE)
 {
   mMonitor = nsAutoMonitor::NewMonitor("nsWaveStateMachine");
@@ -379,9 +388,9 @@ nsWaveStateMachine::Seek(float aTime)
 {
   nsAutoMonitor monitor(mMonitor);
   mNextState = mState;
-  mTimeOffset = NS_MIN(aTime, BytesToTime(mWaveLength));
-  if (mTimeOffset < 0.0) {
-    mTimeOffset = 0.0;
+  mSeekTime = NS_MIN(aTime, BytesToTime(mWaveLength));
+  if (mSeekTime < 0.0) {
+    mSeekTime = 0.0;
   }
   ChangeState(STATE_SEEKING);
 }
@@ -391,7 +400,15 @@ nsWaveStateMachine::GetDuration()
 {
   nsAutoMonitor monitor(mMonitor);
   if (mMetadataValid) {
-    return BytesToTime(mWaveLength);
+    PRUint32 length = mWaveLength;
+    PRInt64 contentLength = mDecoder->GetTotalBytes();
+    // If the decoder has a valid content length, and it's shorter than the
+    // expected length of the PCM data, calculate the playback duration from
+    // the content length rather than the expected PCM data length.
+    if (contentLength >= 0 && contentLength - mWavePCMOffset < length) {
+      length = contentLength - mWavePCMOffset;
+    }
+    return BytesToTime(length);
   }
   return std::numeric_limits<float>::quiet_NaN();
 }
@@ -562,6 +579,9 @@ nsWaveStateMachine::Run()
       {
         CloseAudioStream();
 
+        mSeekTime = NS_MIN(mSeekTime, GetDuration());
+        float seekTime = mSeekTime;
+
         monitor.Exit();
         nsCOMPtr<nsIRunnable> startEvent =
           NS_NEW_RUNNABLE_METHOD(nsWaveDecoder, mDecoder, SeekingStarted);
@@ -572,8 +592,12 @@ nsWaveStateMachine::Run()
           break;
         }
 
-        PRInt64 position = RoundDownToSample(TimeToBytes(mTimeOffset)) + mWavePCMOffset;
-        NS_ABORT_IF_FALSE(position >= 0 && position <= mWaveLength + mWavePCMOffset, "Invalid seek position");
+        // Calculate relative offset within PCM data.
+        PRInt64 position = RoundDownToSample(TimeToBytes(seekTime));
+        NS_ABORT_IF_FALSE(position >= 0 && position <= mWaveLength, "Invalid seek position");
+
+        // Convert to absolute offset within stream.
+        position += mWavePCMOffset;
 
         monitor.Exit();
         nsresult rv = mStream->Seek(nsISeekableStream::NS_SEEK_SET, position);
@@ -592,7 +616,7 @@ nsWaveStateMachine::Run()
         NS_DispatchToMainThread(stopEvent, NS_DISPATCH_SYNC);
         monitor.Enter();
 
-        if (mState != STATE_SHUTDOWN) {
+        if (mState == STATE_SEEKING && mSeekTime == seekTime) {
           ChangeState(mNextState);
         }
       }
@@ -647,6 +671,16 @@ nsWaveStateMachine::Run()
   }
 
   return NS_OK;
+}
+
+void
+nsWaveStateMachine::UpdateTimeOffset(float aTime)
+{
+  nsAutoMonitor monitor(mMonitor);
+  mTimeOffset = NS_MIN(aTime, GetDuration());
+  if (mTimeOffset < 0.0) {
+    mTimeOffset = 0.0;
+  }
 }
 
 void
@@ -915,6 +949,7 @@ nsWaveDecoder::nsWaveDecoder()
   : mBytesDownloaded(0),
     mInitialVolume(1.0),
     mStream(nsnull),
+    mTimeOffset(0.0),
     mEndedCurrentTime(0.0),
     mEndedDuration(std::numeric_limits<float>::quiet_NaN()),
     mNotifyOnShutdown(PR_FALSE),
@@ -955,8 +990,10 @@ nsWaveDecoder::GetCurrentTime()
 nsresult
 nsWaveDecoder::Seek(float aTime)
 {
+  mTimeOffset = aTime;
+
   if (mPlaybackStateMachine) {
-    mPlaybackStateMachine->Seek(aTime);
+    mPlaybackStateMachine->Seek(mTimeOffset);
     return NS_OK;
   }
   return NS_ERROR_FAILURE;
@@ -1253,6 +1290,10 @@ nsWaveDecoder::SeekingStarted()
 {
   if (mShuttingDown) {
     return;
+  }
+
+  if (mPlaybackStateMachine) {
+    mPlaybackStateMachine->UpdateTimeOffset(mTimeOffset);
   }
 
   if (mElement) {
