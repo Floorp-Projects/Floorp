@@ -110,6 +110,12 @@ mozStorageService::XPConnect()
 
 mozStorageService::~mozStorageService()
 {
+    // Shutdown the sqlite3 API.  Warn if shutdown did not turn out okay, but
+    // there is nothing actionable we can do in that case.
+    int rc = sqlite3_shutdown();
+    if (rc != SQLITE_OK)
+        NS_WARNING("sqlite3 did not shutdown cleanly.");
+    
     gStorageService = nsnull;
     PR_DestroyLock(mLock);
 
@@ -123,12 +129,27 @@ mozStorageService::Init()
     mLock = PR_NewLock();
     if (!mLock)
         return NS_ERROR_OUT_OF_MEMORY;
+    
+    // Disable memory allocation statistic collection, improving performance.
+    // This must be done prior to a call to sqlite3_initialize to have any
+    // effect.
+    int rc = sqlite3_config(SQLITE_CONFIG_MEMSTATUS, 0);
+    if (rc != SQLITE_OK)
+        return ConvertResultCode(rc);
+    
+    // Explicitly initialize sqlite3.  Although this is implicitly called by
+    // various sqlite3 functions (and the sqlite3_open calls in our case),
+    // the documentation suggests calling this directly.  So we do.
+    rc = sqlite3_initialize();
+    if (rc != SQLITE_OK)
+        return ConvertResultCode(rc);
 
     // This makes multiple connections to the same database share the same pager
     // cache.  We do not need to lock here with mLock because this function is
     // only ever called from mozStorageService::GetSingleton, which will only
     // call this function once, and will not return until this function returns.
-    int rc = sqlite3_enable_shared_cache(1);
+    // (It does not matter where this is called relative to sqlite3_initialize.)
+    rc = sqlite3_enable_shared_cache(1);
     if (rc != SQLITE_OK)
         return ConvertResultCode(rc);
 
