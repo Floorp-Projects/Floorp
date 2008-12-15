@@ -392,6 +392,11 @@ class nsHashKey;
 #define NS_SIMPLE_GESTURE_ROTATE_UPDATE  (NS_SIMPLE_GESTURE_EVENT_START+5)
 #define NS_SIMPLE_GESTURE_ROTATE         (NS_SIMPLE_GESTURE_EVENT_START+6)
 
+// Plug-in event. This is used when a plug-in has focus and when the native
+// event needs to be passed to the focused plug-in directly.
+#define NS_PLUGIN_EVENT_START   3600
+#define NS_PLUGIN_EVENT         (NS_PLUGIN_EVENT_START)
+
 /**
  * Return status for event processors, nsEventStatus, is defined in
  * nsEvent.h.
@@ -1227,6 +1232,9 @@ enum nsDragDropEventStatus {
         ((evnt)->message == NS_QUERY_CHARACTER_RECT) || \
         ((evnt)->message == NS_QUERY_CARET_RECT))
 
+#define NS_IS_PLUGIN_EVENT(evnt) \
+       (((evnt)->message == NS_PLUGIN_EVENT))
+
 #define NS_IS_TRUSTED_EVENT(event) \
   (((event)->flags & NS_EVENT_FLAG_TRUSTED) != 0)
 
@@ -1407,7 +1415,8 @@ inline PRBool NS_TargetUnfocusedEventToLastFocusedContent(nsEvent* aEvent)
   // doesn't have focus and event is key event or IME event, we should
   // send the events to pre-focused element.
 
-  return NS_IS_KEY_EVENT(aEvent) || NS_IS_IME_EVENT(aEvent);
+  return NS_IS_KEY_EVENT(aEvent) || NS_IS_IME_EVENT(aEvent) ||
+         NS_IS_PLUGIN_EVENT(aEvent);
 #else
   return PR_FALSE;
 #endif

@@ -2224,6 +2224,7 @@ NS_IMETHODIMP nsChildView::SetIMEEnabled(PRUint32 aState)
 
   switch (aState) {
     case nsIWidget::IME_STATUS_ENABLED:
+    case nsIWidget::IME_STATUS_PLUGIN:
       nsTSMManager::SetRomanKeyboardsOnly(PR_FALSE);
       nsTSMManager::EnableIME(PR_TRUE);
       break;
