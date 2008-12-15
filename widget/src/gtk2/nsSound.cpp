@@ -410,7 +410,7 @@ NS_METHOD nsSound::Play(nsIURL *aURL)
 nsresult nsSound::PlaySystemEventSound(const nsAString &aSoundAlias)
 {
     if (!libcanberra)
-        return NS_ERROR_FAILURE;
+        return NS_OK;
 
     // Do we even want alert sounds?
     // If so, what sound theme are we using?
