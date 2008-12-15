@@ -5536,6 +5536,32 @@ key_press_event_cb(GtkWidget *widget, GdkEventKey *event)
 
     nsRefPtr<nsWindow> focusWindow = gFocusWindow ? gFocusWindow : window;
 
+#ifdef MOZ_X11
+    // Keyboard repeat can cause key press events to queue up when there are
+    // slow event handlers (bug 301029).  Throttle these events by removing
+    // consecutive pending duplicate KeyPress events to the same window.
+    // We use the event time of the last one.
+    // Note: GDK calls XkbSetDetectableAutorepeat so that KeyRelease events
+    // are generated only when the key is physically released.
+#define NS_GDKEVENT_MATCH_MASK 0x1FFF /* GDK_SHIFT_MASK .. GDK_BUTTON5_MASK */
+    GdkDisplay* gdkDisplay = gtk_widget_get_display(widget);
+    Display* dpy = GDK_DISPLAY_XDISPLAY(gdkDisplay);
+    while (XPending(dpy)) {
+        XEvent next_event;
+        XPeekEvent(dpy, &next_event);
+        GdkWindow* nextGdkWindow =
+            gdk_window_lookup_for_display(gdkDisplay, next_event.xany.window);
+        if (nextGdkWindow != event->window ||
+            next_event.type != KeyPress ||
+            next_event.xkey.keycode != event->hardware_keycode ||
+            next_event.xkey.state != (event->state & NS_GDKEVENT_MATCH_MASK)) {
+            break;
+        }
+        XNextEvent(dpy, &next_event);
+        event->time = next_event.xkey.time;
+    }
+#endif
+
     return focusWindow->OnKeyPressEvent(widget, event);
 }
 
