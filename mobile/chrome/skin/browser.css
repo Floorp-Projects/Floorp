@@ -353,7 +353,7 @@ toolbarbutton.panel-button {
   padding: 8px;
 }
 
-#urllist-close {
+.close-button {
   -moz-appearance: none;
   border: none;
   margin: 0;

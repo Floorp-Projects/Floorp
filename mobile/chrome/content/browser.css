@@ -1,5 +1,5 @@
 #urlbar-edit {
-    -moz-binding: url("chrome://browser/content/urlbar.xml#autocomplete-aligned");
+    -moz-binding: url("chrome://browser/content/bindings.xml#autocomplete-aligned");
 }
 
 #tabs {
@@ -36,5 +36,9 @@ notification button {
 }
 
 #popup_autocomplete {
-  -moz-binding: url("chrome://browser/content/urlbar.xml#popup_autocomplete");
+  -moz-binding: url("chrome://browser/content/bindings.xml#popup_autocomplete");
+}
+
+editbookmark {
+  -moz-binding: url("chrome://browser/content/bindings.xml#editbookmark");
 }
