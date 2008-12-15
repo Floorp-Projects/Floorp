@@ -6381,7 +6381,8 @@ nsWindow::IMEGetContext()
 static PRBool
 IsIMEEnabledState(PRUint32 aState)
 {
-    return aState == nsIWidget::IME_STATUS_ENABLED;
+    return aState == nsIWidget::IME_STATUS_ENABLED ||
+           aState == nsIWidget::IME_STATUS_PLUGIN;
 }
 
 PRBool
@@ -6394,6 +6395,7 @@ static PRBool
 IsIMEEditableState(PRUint32 aState)
 {
     return aState == nsIWidget::IME_STATUS_ENABLED ||
+           aState == nsIWidget::IME_STATUS_PLUGIN ||
            aState == nsIWidget::IME_STATUS_PASSWORD;
 }
 
@@ -6943,7 +6945,8 @@ IM_get_input_context(nsWindow *aWindow)
     nsWindow::nsIMEData *data = aWindow->mIMEData;
     if (!data)
         return nsnull;
-    if (data->mEnabled == nsIWidget::IME_STATUS_ENABLED)
+    if (data->mEnabled == nsIWidget::IME_STATUS_ENABLED ||
+        data->mEnabled == nsIWidget::IME_STATUS_PLUGIN)
         return data->mContext;
     if (data->mEnabled == nsIWidget::IME_STATUS_PASSWORD)
         return data->mSimpleContext;

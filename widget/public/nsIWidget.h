@@ -1206,7 +1206,14 @@ class nsIWidget : public nsISupports {
        * keyboard layouts at getting focus. Thus, the password editor may have
        * special rules on some platforms.
        */
-      IME_STATUS_PASSWORD = 2
+      IME_STATUS_PASSWORD = 2,
+      /*
+       * This state is used when a plugin is focused.
+       * When a plug-in is focused content, we should send native events
+       * directly. Because we don't process some native events, but they may
+       * be needed by the plug-in.
+       */
+      IME_STATUS_PLUGIN = 3
     };
 
     /*
