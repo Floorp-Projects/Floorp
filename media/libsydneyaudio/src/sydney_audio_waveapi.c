@@ -45,7 +45,7 @@
 
 // FIX ME: block size and block should be determined based on the OggPlay offset 
 // for audio track
-#define BLOCK_SIZE  2560
+#define BLOCK_SIZE  1024
 #define BLOCK_COUNT 32
 #define DEFAULT_DEVICE_NAME "Default WAVE Device"
 #define DEFAULT_DEVICE WAVE_MAPPER
@@ -203,7 +203,7 @@ int sa_stream_get_write_size(sa_stream_t *s, size_t *size) {
   ERROR_IF_NO_INIT(s);
 
   EnterCriticalSection(&(s->waveCriticalSection));
-  avail = s->waveFreeBlockCount * BLOCK_SIZE;
+  avail = (s->waveFreeBlockCount-1) * BLOCK_SIZE;
   if (s->waveFreeBlockCount != BLOCK_COUNT) {
     current = &(s->waveBlocks[s->waveCurrentBlock]);
     avail += BLOCK_SIZE - current->dwUser;
@@ -490,8 +490,14 @@ int writeAudio(sa_stream_t *s, LPSTR data, int bytes) {
   int remain;
 
   current = &(s->waveBlocks[s->waveCurrentBlock]);
-  
+
   while(bytes > 0) {
+     /*
+     * wait for a block to become free
+     */
+    while (!(s->waveFreeBlockCount))
+      WaitForSingleObject(s->callbackEvent, INFINITE);
+
     /* first make sure the header we're going to use is unprepared */
     if(current->dwFlags & WHDR_PREPARED) {      
         status = waveOutUnprepareHeader(s->hWaveOut, current, sizeof(WAVEHDR));         
@@ -503,7 +509,7 @@ int writeAudio(sa_stream_t *s, LPSTR data, int bytes) {
       current->dwUser += bytes;
       break;
     }
-	
+
     /* remain is even as BLOCK_SIZE and dwUser are even too */
     remain = BLOCK_SIZE - current->dwUser;      
   	memcpy(current->lpData + current->dwUser, data, remain);
@@ -518,15 +524,7 @@ int writeAudio(sa_stream_t *s, LPSTR data, int bytes) {
     EnterCriticalSection(&(s->waveCriticalSection));
     s->waveFreeBlockCount--;
     LeaveCriticalSection(&(s->waveCriticalSection));
-    /*
-     * wait for a block to become free
-     */
-    while (!(s->waveFreeBlockCount)) {
-        //printf("All audio buffer blocks empty\n");        
-      WaitForSingleObject(s->callbackEvent, INFINITE);
-        //Sleep(10);
-    }		  
-		
+
     /*
      * point to the next block
      */
