@@ -537,8 +537,9 @@ nsWaveStateMachine::Run()
         // completely fill the audio backend's buffers with data.  This
         // allows us plenty of time to wake up and refill the buffers
         // without an underrun occurring.
+        PRUint32 sampleSize = mSampleFormat == nsAudioStream::FORMAT_U8 ? 1 : 2;
         PRUint32 len = RoundDownToSample(NS_MIN(mStream->Available(),
-                                                PRUint32(mAudioStream->Available() * sizeof(short))));
+                                                PRUint32(mAudioStream->Available() * sampleSize)));
         if (len) {
           nsAutoArrayPtr<char> buf(new char[len]);
           PRUint32 got = 0;
