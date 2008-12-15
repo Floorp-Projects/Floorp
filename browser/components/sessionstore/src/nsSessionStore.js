@@ -1633,8 +1633,8 @@ SessionStoreService.prototype = {
       this.restoreCookies(winData.cookies);
     }
     if (winData.extData) {
-      if (!this._windows[aWindow.__SSi].extData) {
-        this._windows[aWindow.__SSi].extData = {}
+      if (aOverwriteTabs  || !this._windows[aWindow.__SSi].extData) {
+        this._windows[aWindow.__SSi].extData = {};
       }
       for (var key in winData.extData) {
         this._windows[aWindow.__SSi].extData[key] = winData.extData[key];
