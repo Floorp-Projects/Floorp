@@ -141,6 +141,15 @@ public:
       MOZ_COUNT_DTOR(FrameData);
     }
 
+    // Write the audio data from the frame to the Audio stream.
+    void Write(nsAudioStream* aStream)
+    {
+      PRUint32 length = mAudioData.Length();
+      if (length == 0)
+        return;
+
+      aStream->Write(mAudioData.Elements(), length);
+    }
 
     nsAutoArrayPtr<unsigned char> mVideoData;
     nsTArray<float> mAudioData;
@@ -260,9 +269,8 @@ public:
   void PlayVideo(FrameData* aFrame);
 
   // Play the audio data from the given frame. The decode monitor must
-  // be locked when calling this method. Returns PR_FALSE if unable to
-  // write to the audio device without blocking.
-  PRBool PlayAudio(FrameData* aFrame);
+  // be locked when calling this method.
+  void PlayAudio(FrameData* aFrame);
 
   // Called from the main thread to get the current frame time. The decoder
   // monitor must be obtained before calling this.
@@ -629,13 +637,13 @@ void nsOggDecodeStateMachine::PlayFrame() {
 
       double time = (PR_IntervalToMilliseconds(PR_IntervalNow()-mPlayStartTime-mPauseDuration)/1000.0);
       if (time >= frame->mTime) {
-        mDecodedFrames.Pop();
         // Audio for the current frame is played, but video for the next frame
         // is displayed, to account for lag from the time the audio is written
         // to when it is played. This will go away when we move to a/v sync
         // using the audio hardware clock.
-        PlayVideo(mDecodedFrames.IsEmpty() ? frame : mDecodedFrames.Peek());
         PlayAudio(frame);
+        mDecodedFrames.Pop();
+        PlayVideo(mDecodedFrames.IsEmpty() ? frame : mDecodedFrames.Peek());
         UpdatePlaybackPosition(frame->mDecodedFrameTime);
         delete frame;
       }
@@ -677,17 +685,13 @@ void nsOggDecodeStateMachine::PlayVideo(FrameData* aFrame)
   }
 }
 
-PRBool nsOggDecodeStateMachine::PlayAudio(FrameData* aFrame)
+void nsOggDecodeStateMachine::PlayAudio(FrameData* aFrame)
 {
   //  NS_ASSERTION(PR_InMonitor(mDecoder->GetMonitor()), "PlayAudio() called without acquiring decoder monitor");
-  if (mAudioStream && aFrame && !aFrame->mAudioData.IsEmpty()) {
-    if (PRUint32(mAudioStream->Available()) < aFrame->mAudioData.Length())
-      return PR_FALSE;
+  if (!mAudioStream)
+    return;
 
-    mAudioStream->Write(aFrame->mAudioData.Elements(), aFrame->mAudioData.Length());
-  }
-
-  return PR_TRUE;
+  aFrame->Write(mAudioStream);
 }
 
 void nsOggDecodeStateMachine::OpenAudioStream()
@@ -1053,6 +1057,14 @@ nsresult nsOggDecodeStateMachine::Run()
 
         if (mState != DECODER_STATE_COMPLETED)
           continue;
+
+        if (mAudioStream) {
+          mon.Exit();
+          mAudioStream->Drain();
+          mon.Enter();
+          if (mState != DECODER_STATE_COMPLETED)
+            continue;
+        }
 
         nsCOMPtr<nsIRunnable> event =
           NS_NEW_RUNNABLE_METHOD(nsOggDecoder, mDecoder, PlaybackEnded);
