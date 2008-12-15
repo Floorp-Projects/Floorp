@@ -1,0 +1,43 @@
+<html>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=450876
+-->
+<head>
+  <title>Test for Bug 450876 - Crash [@ nsEventStateManager::GetNextTabbableMapArea] with img usemap and tabindex</title>
+  <script type="text/javascript" src="/MochiKit/MochiKit.js"></script>
+  <script type="text/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
+</head>
+<body>
+<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=450876">Mozilla Bug 450876</a>
+<p id="display"><a href="#" id="a">link to focus from</a><img usemap="#a" tabindex="1"></p>
+<div id="content" style="display: none">
+  
+</div>
+
+<pre id="test">
+<script class="testbody" type="text/javascript">
+
+/** Test for Bug 450876 **/
+
+function doTest() {
+  netscape.security.PrivilegeManager.enablePrivilege("UniversalXPConnect");
+  is(document.activeElement, document.body, "body element should be focused");
+  document.getElementById('a').focus();
+  is(document.activeElement, document.getElementById('a'), "link should have focus");
+  var wu =  window.QueryInterface(Components.interfaces.nsIInterfaceRequestor)
+                .getInterface(Components.interfaces.nsIDOMWindowUtils);
+  wu.sendKeyEvent('keypress',  9, 0, 0);
+  is(document.activeElement, document.body, "body element should be focused");
+
+  SimpleTest.finish();
+}
+
+SimpleTest.waitForExplicitFinish();
+addLoadEvent(doTest);
+
+</script>
+</pre>
+</body>
+</html>
+
