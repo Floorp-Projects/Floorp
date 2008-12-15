@@ -338,14 +338,23 @@ MOZCE_SHUNT_API unsigned short *_wfullpath( unsigned short *absPath, const unsig
   if(absPath == NULL){
     absPath = (unsigned short *)malloc(maxLength*sizeof(unsigned short));
   }
-  _wgetcwd( absPath, maxLength);
-  unsigned long len = wcslen(absPath);
-  if(!(absPath[len-1] == TCHAR('/') || absPath[len-1] == TCHAR('\\'))&& len< maxLength){
-    absPath[len] = TCHAR('\\');
-    absPath[++len] = TCHAR('\0');
+  unsigned short cwd[MAX_PATH];
+  if (NULL == _wgetcwd( cwd, MAX_PATH))
+    return NULL;
+
+  unsigned long len = wcslen(cwd);
+  if(!(cwd[len-1] == TCHAR('/') || cwd[len-1] == TCHAR('\\'))&& len< maxLength){
+    cwd[len] = TCHAR('\\');
+    cwd[++len] = TCHAR('\0');
   }
   if(len+wcslen(relPath) < maxLength){
-    return wcscat(absPath,relPath);
+#if (_WIN32_WCE > 300)
+    if ( 0 < CeGetCanonicalPathName(wcscat(cwd,relPath), absPath, maxLength, 0) )
+      return absPath;
+#else
+    #error Need CeGetCanonicalPathName to build.
+    // NO ACTUAL CeGetCanonicalPathName function in earlier versions of WinCE
+#endif
   }
   return NULL;
 }
