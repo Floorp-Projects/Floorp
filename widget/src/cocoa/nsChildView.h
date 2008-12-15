@@ -20,7 +20,7 @@
  * the Initial Developer. All Rights Reserved.
  *
  * Contributor(s):
- *   Thomas K. Dyas <tdyas@zecador.org> (simple gestures support)
+ *   Thomas K. Dyas <tdyas@zecador.org>
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -204,6 +204,9 @@ enum {
   float mCumulativeMagnification;
   float mCumulativeRotation;
 }
+
+// class initialization
++ (void)initialize;
 
 // these are sent to the first responder when the window key status changes
 - (void)viewsWindowDidBecomeKey;
