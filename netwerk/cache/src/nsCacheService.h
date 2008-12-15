@@ -150,9 +150,11 @@ public:
     static void      OnProfileChanged();
 
     static void      SetDiskCacheEnabled(PRBool  enabled);
+    // Sets the disk cache capacity (in kilobytes)
     static void      SetDiskCacheCapacity(PRInt32  capacity);
 
     static void      SetOfflineCacheEnabled(PRBool  enabled);
+    // Sets the offline cache capacity (in kilobytes)
     static void      SetOfflineCacheCapacity(PRInt32  capacity);
 
     static void      SetMemoryCache();

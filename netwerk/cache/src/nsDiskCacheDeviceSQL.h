@@ -266,7 +266,7 @@ private:
   nsCOMPtr<mozIStorageStatement>  mStatement_FindClientByNamespace;
 
   nsCOMPtr<nsILocalFile>          mCacheDirectory;
-  PRUint32                        mCacheCapacity;
+  PRUint32                        mCacheCapacity; // in bytes
   PRInt32                         mDeltaCounter;
 
   nsInterfaceHashtable<nsCStringHashKey, nsIWeakReference> mCaches;
