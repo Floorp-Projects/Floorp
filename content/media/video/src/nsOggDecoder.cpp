@@ -1287,10 +1287,6 @@ nsresult nsOggDecoder::Seek(float aTime)
   if (aTime < 0.0)
     return NS_ERROR_FAILURE;
 
-  if (mPlayState == PLAY_STATE_LOADING && aTime == 0.0) {
-    return NS_OK;
-  }
-
   mRequestedSeekTime = aTime;
 
   // If we are already in the seeking state, then setting mRequestedSeekTime

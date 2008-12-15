@@ -688,8 +688,6 @@ void nsHTMLMediaElement::MetadataLoaded()
   mNetworkState = nsIDOMHTMLMediaElement::LOADED_METADATA;
   DispatchAsyncSimpleEvent(NS_LITERAL_STRING("durationchange"));
   DispatchAsyncSimpleEvent(NS_LITERAL_STRING("loadedmetadata"));
-  // TODO: Seek to the start time, as set in the start attribute.
-  mDecoder->Seek(0.0);
 }
 
 void nsHTMLMediaElement::FirstFrameLoaded()
