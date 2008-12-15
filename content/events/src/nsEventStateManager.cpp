@@ -4497,6 +4497,8 @@ nsEventStateManager::GetNextTabbableMapArea(PRBool aForward,
   nsCOMPtr<nsIDocument> doc = aImageContent->GetDocument();
   if (doc) {
     nsCOMPtr<nsIDOMHTMLMapElement> imageMap = nsImageMapUtils::FindImageMap(doc, useMap);
+    if (!imageMap)
+      return nsnull;
     nsCOMPtr<nsIContent> mapContent = do_QueryInterface(imageMap);
     PRUint32 count = mapContent->GetChildCount();
     // First see if mCurrentFocus is in this map
