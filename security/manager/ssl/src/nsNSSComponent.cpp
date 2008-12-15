@@ -120,6 +120,10 @@
 #include "secerr.h"
 #include "sslerr.h"
 
+#ifdef XP_WIN
+#include "nsILocalFileWin.h"
+#endif
+
 extern "C" {
 #include "pkcs12.h"
 #include "p12plcy.h"
@@ -1573,7 +1577,15 @@ nsNSSComponent::InitializeNSS(PRBool showWarningBox)
       return rv;
   #endif
 
+  #if defined(XP_WIN)
+    // Native path will drop Unicode characters that cannot be mapped to system's
+    // codepage, using short (canonical) path as workaround.
+    nsCOMPtr<nsILocalFileWin> profilePathWin(do_QueryInterface(profilePath, &rv));
+    if (profilePathWin)
+      rv = profilePathWin->GetNativeCanonicalPath(profileStr);
+  #else
     rv = profilePath->GetNativePath(profileStr);
+  #endif
     if (NS_FAILED(rv)) 
       return rv;
 
