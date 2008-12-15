@@ -112,7 +112,7 @@ NS_IMETHODIMP nsHTMLMediaElement::GetError(nsIDOMHTMLMediaError * *aError)
 /* readonly attribute boolean ended; */
 NS_IMETHODIMP nsHTMLMediaElement::GetEnded(PRBool *aEnded)
 {
-  *aEnded = mEnded;
+  *aEnded = mDecoder ? mDecoder->IsEnded() : PR_FALSE;
 
   return NS_OK;
 }
@@ -191,7 +191,6 @@ nsresult nsHTMLMediaElement::LoadWithChannel(nsIChannel *aChannel,
   NS_ENSURE_SUCCESS(rv, rv);
 
   mBegun = PR_TRUE;
-  mEnded = PR_FALSE;
 
   DispatchAsyncProgressEvent(NS_LITERAL_STRING("loadstart"));
 
@@ -343,7 +342,6 @@ nsHTMLMediaElement::nsHTMLMediaElement(nsINodeInfo *aNodeInfo, PRBool aFromParse
     mMutedVolume(0.0),
     mMediaSize(-1,-1),
     mBegun(PR_FALSE),
-    mEnded(PR_FALSE),
     mLoadedFirstFrame(PR_FALSE),
     mAutoplaying(PR_TRUE),
     mPaused(PR_TRUE),
@@ -374,8 +372,7 @@ nsHTMLMediaElement::Play(void)
     NS_ENSURE_SUCCESS(rv, rv);
   }
 
-  if (mEnded) {
-    mEnded = PR_FALSE;
+  if (mDecoder->IsEnded()) {
     SetCurrentTime(0);
   }
 
@@ -691,8 +688,6 @@ void nsHTMLMediaElement::MetadataLoaded()
   mNetworkState = nsIDOMHTMLMediaElement::LOADED_METADATA;
   DispatchAsyncSimpleEvent(NS_LITERAL_STRING("durationchange"));
   DispatchAsyncSimpleEvent(NS_LITERAL_STRING("loadedmetadata"));
-  // TODO: Seek to the start time, as set in the start attribute.
-  mDecoder->Seek(0.0);
 }
 
 void nsHTMLMediaElement::FirstFrameLoaded()
@@ -707,7 +702,6 @@ void nsHTMLMediaElement::FirstFrameLoaded()
 void nsHTMLMediaElement::ResourceLoaded()
 {
   mBegun = PR_FALSE;
-  mEnded = PR_FALSE;
   mNetworkState = nsIDOMHTMLMediaElement::LOADED;
   ChangeReadyState(nsIDOMHTMLMediaElement::CAN_PLAY_THROUGH);
 
@@ -725,8 +719,8 @@ void nsHTMLMediaElement::NetworkError()
 
 void nsHTMLMediaElement::PlaybackEnded()
 {
+  NS_ASSERTION(mDecoder->IsEnded(), "Decoder fired ended, but not in ended state");
   mBegun = PR_FALSE;
-  mEnded = PR_TRUE;
   mPaused = PR_TRUE;
   DispatchSimpleEvent(NS_LITERAL_STRING("ended"));
 }
@@ -871,13 +865,15 @@ PRBool nsHTMLMediaElement::IsActivelyPlaying() const
      mReadyState == nsIDOMHTMLMediaElement::CAN_PLAY_THROUGH) &&
     !IsPlaybackEnded();
 }
+
 PRBool nsHTMLMediaElement::IsPlaybackEnded() const
 {
   // TODO:
   //   the current playback position is equal to the effective end of the media resource, 
   //   and the currentLoop attribute is equal to playCount-1. 
   //   See bug 449157.
-  return mNetworkState >= nsIDOMHTMLMediaElement::LOADED_METADATA && mEnded;
+  return mNetworkState >= nsIDOMHTMLMediaElement::LOADED_METADATA &&
+    mDecoder ? mDecoder->IsEnded() : PR_FALSE;
 }
 
 nsIPrincipal*

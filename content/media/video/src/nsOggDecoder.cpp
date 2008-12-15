@@ -1059,7 +1059,7 @@ nsresult nsOggDecodeStateMachine::Run()
         NS_DispatchToMainThread(event, NS_DISPATCH_NORMAL);
         do {
           mon.Wait();
-        } while (mState != DECODER_STATE_SHUTDOWN);
+        } while (mState == DECODER_STATE_COMPLETED);
       }
       break;
     }
@@ -1287,10 +1287,6 @@ nsresult nsOggDecoder::Seek(float aTime)
   if (aTime < 0.0)
     return NS_ERROR_FAILURE;
 
-  if (mPlayState == PLAY_STATE_LOADING && aTime == 0.0) {
-    return NS_OK;
-  }
-
   mRequestedSeekTime = aTime;
 
   // If we are already in the seeking state, then setting mRequestedSeekTime
@@ -1490,12 +1486,17 @@ void nsOggDecoder::NetworkError()
 
 PRBool nsOggDecoder::IsSeeking() const
 {
-  return mPlayState == PLAY_STATE_SEEKING;
+  return mPlayState == PLAY_STATE_SEEKING || mNextState == PLAY_STATE_SEEKING;
+}
+
+PRBool nsOggDecoder::IsEnded() const
+{
+  return mPlayState == PLAY_STATE_ENDED || mPlayState == PLAY_STATE_SHUTDOWN;
 }
 
 void nsOggDecoder::PlaybackEnded()
 {
-  if (mShuttingDown)
+  if (mShuttingDown || mPlayState == nsOggDecoder::PLAY_STATE_SEEKING)
     return;
 
   Stop();

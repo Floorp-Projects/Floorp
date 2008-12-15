@@ -167,7 +167,13 @@ namespace nanojit
 #define NJ_PROFILE 1
 #endif
 
-#ifdef NJ_VERBOSE
+#if defined(_MSC_VER) && _MSC_VER < 1400
+	#include <stdio.h>
+	#define verbose_output						if (verbose_enabled()) Assembler::output
+	#define verbose_outputf						if (verbose_enabled()) Assembler::outputf
+	#define verbose_enabled()					(_verbose)
+	#define verbose_only(x)						x
+#elif defined(NJ_VERBOSE)
 	#include <stdio.h>
 	#define verbose_output						if (verbose_enabled()) Assembler::output
 	#define verbose_outputf						if (verbose_enabled()) Assembler::outputf

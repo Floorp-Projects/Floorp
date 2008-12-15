@@ -115,6 +115,13 @@ protected:
      * field.
      */
     nsCOMPtr<nsIThread> mAsyncExecutionThread;
+    /**
+     * Set to true by Close() prior to actually shutting down the thread.  This
+     * lets getAsyncExecutionTarget() know not to hand out any more thread
+     * references (or to create the thread in the first place).  This variable
+     * should be accessed while holding the mAsyncExecutionMutex.
+     */
+    PRBool mAsyncExecutionThreadShuttingDown;
 
     PRLock *mTransactionMutex;
     PRBool mTransactionInProgress;

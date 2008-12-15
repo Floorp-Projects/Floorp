@@ -21,11 +21,9 @@ function boom()
   f2.appendChild(span);
   b.appendChild(f2)
   document.documentElement.appendChild(b);
-  dump('aaa');
   b.contentEditable = "true";
   document.execCommand("indent", false, null);
   b.contentEditable = "false";
-  dump('bbb');
   span.appendChild(i);
   i.parentNode.removeChild(i);
 }

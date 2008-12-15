@@ -154,7 +154,7 @@ public:
   void EndUpdate();
   void RecalcQuotesAndCounters();
 
-  void WillDestroyFrameTree();
+  void WillDestroyFrameTree(PRBool aDestroyingPresShell);
 
   // Get an integer that increments every time there is a style change
   // as a result of a change to the :hover content state.
@@ -1193,6 +1193,7 @@ private:
   nsQuoteList         mQuoteList;
   nsCounterManager    mCounterManager;
   PRUint16            mUpdateCount;
+  PRUint32            mFocusSuppressCount;
   PRPackedBool        mQuotesDirty : 1;
   PRPackedBool        mCountersDirty : 1;
   PRPackedBool        mIsDestroyingFrameTree : 1;

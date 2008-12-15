@@ -671,4 +671,6 @@ function run_test() {
   do_check_eq(bmsvc.getFolderIdForItem(newBkmk3_3Id), newBkmk3Id);
   do_check_eq(bmsvc.getItemType(newBkmk3_3Id), bmsvc.TYPE_FOLDER);
   do_check_eq(bmsvc.getItemTitle(newBkmk3_3Id), "folder");
+
+  bmsvc.removeObserver(observer, false);
 }
