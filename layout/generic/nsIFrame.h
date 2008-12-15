@@ -853,8 +853,9 @@ public:
     nsITheme *theme = pc->GetTheme();
     if(!theme || !theme->ThemeSupportsWidget(pc, this, aDisp->mAppearance))
       return PR_FALSE;
-    if (aTransparencyMode)
+    if (aTransparencyMode) {
       *aTransparencyMode = theme->GetWidgetTransparency(aDisp->mAppearance);
+    }
     return PR_TRUE;
   }
   
