@@ -138,9 +138,9 @@ public:
   // events can be fired.
   void ChangeReadyState(nsMediaReadyState aState);
 
-  // Is the media element actively playing as defined by the HTML 5 specification.
-  // http://www.whatwg.org/specs/web-apps/current-work/#actively
-  PRBool IsActivelyPlaying() const;
+  // Is the media element potentially playing as defined by the HTML 5 specification.
+  // http://www.whatwg.org/specs/web-apps/current-work/#potentially-playing
+  PRBool IsPotentiallyPlaying() const;
 
   // Has playback ended as defined by the HTML 5 specification.
   // http://www.whatwg.org/specs/web-apps/current-work/#ended

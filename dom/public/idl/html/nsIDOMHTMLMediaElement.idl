@@ -56,7 +56,7 @@
 #endif
 %}
 
-[scriptable, uuid(e3e2a8c1-4b56-4154-8ef2-fc4b2bb42e97)]
+[scriptable, uuid(c19f04dc-f09a-4b1f-b354-af65a12aa8bc)]
 interface nsIDOMHTMLMediaElement : nsIDOMHTMLElement
 {
   // error state
@@ -65,19 +65,19 @@ interface nsIDOMHTMLMediaElement : nsIDOMHTMLElement
   // network state
            attribute DOMString src;
   readonly attribute DOMString currentSrc;
-  const unsigned short EMPTY = 0;
-  const unsigned short LOADING = 1;
-  const unsigned short LOADED_METADATA = 2;
-  const unsigned short LOADED_FIRST_FRAME = 3;
-  const unsigned short LOADED = 4;
+  const unsigned short NETWORK_EMPTY = 0;
+  const unsigned short NETWORK_IDLE = 1;
+  const unsigned short NETWORK_LOADING = 2;
+  const unsigned short NETWORK_LOADED = 3;
   readonly attribute unsigned short networkState;
   void load();
 
   // ready state
-  const unsigned short DATA_UNAVAILABLE = 0;
-  const unsigned short CAN_SHOW_CURRENT_FRAME = 1;
-  const unsigned short CAN_PLAY = 2;
-  const unsigned short CAN_PLAY_THROUGH = 3;
+  const unsigned short HAVE_NOTHING = 0;
+  const unsigned short HAVE_METADATA = 1;
+  const unsigned short HAVE_CURRENT_DATA = 2;
+  const unsigned short HAVE_FUTURE_DATA = 3;
+  const unsigned short HAVE_ENOUGH_DATA = 4;
   readonly attribute unsigned short readyState;
   readonly attribute boolean seeking;
 
