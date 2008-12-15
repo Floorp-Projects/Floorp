@@ -296,6 +296,21 @@ protected:
 
   void                    DispatchPendingEvents();
   virtual PRBool          ProcessMessage(UINT msg, WPARAM wParam, LPARAM lParam, LRESULT *aRetValue);
+
+  /**
+   * The result means whether this method processed the native event for
+   * plugin. If false, the native event should be processed by the caller self.
+   */
+  PRBool                  ProcessMessageForPlugin(const MSG &aMsg,
+                            LRESULT *aRetValue, PRBool &aCallDefWndProc);
+
+  LRESULT                 ProcessCharMessage(const MSG &aMsg,
+                                             PRBool *aEventDispatched);
+  LRESULT                 ProcessKeyUpMessage(const MSG &aMsg,
+                                              PRBool *aEventDispatched);
+  LRESULT                 ProcessKeyDownMessage(const MSG &aMsg,
+                                                PRBool *aEventDispatched);
+
   virtual PRBool          DispatchWindowEvent(nsGUIEvent* event);
   virtual PRBool          DispatchWindowEvent(nsGUIEvent*event, nsEventStatus &aStatus);
 
@@ -317,19 +332,28 @@ protected:
   virtual PRBool          OnResize(nsRect &aWindowRect);
   
   void                    SetupModKeyState();
-  BOOL                    OnChar(UINT charCode, UINT aScanCode, PRUint32 aFlags = 0);
-  BOOL                    OnKeyDown( UINT aVirtualKeyCode, LPARAM aKeyCode,
-                                     nsFakeCharMessage* aFakeCharMessage);
-  BOOL                    OnKeyUp( UINT aVirtualKeyCode, LPARAM aKeyCode);
+  void                    RemoveMessageAndDispatchPluginEvent(UINT aFirstMsg, UINT aLastMsg);
+
+  LRESULT                 OnChar(const MSG &aMsg, PRBool *aEventDispatched,
+                                 PRUint32 aFlags = 0);
+  LRESULT                 OnKeyDown(const MSG &aMsg, PRBool *aEventDispatched,
+                                    nsFakeCharMessage* aFakeCharMessage);
+  LRESULT                 OnKeyUp(const MSG &aMsg, PRBool *aEventDispatched);
+
+  LRESULT                 OnCharRaw(UINT charCode, UINT aScanCode,
+                                    PRUint32 aFlags = 0,
+                                    const MSG *aMsg = nsnull,
+                                    PRBool *aEventDispatched = nsnull);
+
   UINT                    MapFromNativeToDOM(UINT aNativeKeyCode);
 
 
   BOOL                    OnInputLangChange(HKL aHKL);
-  BOOL                    OnIMEChar(BYTE aByte1, BYTE aByte2, LPARAM aKeyState);
+  BOOL                    OnIMEChar(wchar_t uniChar, LPARAM aKeyState);
   BOOL                    OnIMEComposition(LPARAM  aGCS);
   BOOL                    OnIMECompositionFull();
   BOOL                    OnIMEEndComposition();
-  BOOL                    OnIMENotify(WPARAM  aIMN, LPARAM aData, LRESULT *oResult);
+  BOOL                    OnIMENotify(WPARAM  aIMN, LPARAM aData);
   BOOL                    OnIMERequest(WPARAM  aIMR, LPARAM aData, LRESULT *oResult);
   BOOL                    OnIMESelect(BOOL  aSelected, WORD aLangID);
   BOOL                    OnIMESetContext(BOOL aActive, LPARAM& aISC);
@@ -365,8 +389,10 @@ protected:
 
   virtual PRBool          DispatchKeyEvent(PRUint32 aEventType, WORD aCharCode,
                             const nsTArray<nsAlternativeCharCode>* aAlternativeChars,
-                            UINT aVirtualCharCode, LPARAM aKeyCode,
+                            UINT aVirtualCharCode, const MSG *aMsg,
                             PRUint32 aFlags = 0);
+
+  PRBool                  DispatchPluginEvent(const MSG &aMsg);
 
   virtual PRBool          DispatchFocus(PRUint32 aEventType, PRBool isMozWindowTakingFocus);
   virtual PRBool          OnScroll(UINT scrollCode, int cPos);
@@ -401,6 +427,19 @@ protected:
                                             const nsAString& aCharacters,
                                             const nsAString& aUnmodifiedCharacters);
 
+  PRBool PluginHasFocus()
+  {
+    return mIMEEnabled == nsIWidget::IME_STATUS_PLUGIN;
+  }
+
+  MSG InitMSG(UINT aMessage, WPARAM wParam, LPARAM lParam)
+  {
+    MSG msg;
+    msg.message = aMessage;
+    msg.wParam  = wParam;
+    msg.lParam  = lParam;
+    return msg;
+  }
 private:
 
 
