@@ -16,7 +16,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=467972
        src="320x240.ogg"
        onloadedmetadata="return loadedMetaData();"
        onended="playbackEnded();"
-       onloadedfirstframe="return loadedFirstFrame();"       
+       onloadeddata="return loadedData();"       
        onseeking="seekStarted();"
        onseeked="seekEnded();"       
        controls></video>
@@ -34,7 +34,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=467972
 var gEnded = false;
 var gSeekStarted = false;
 var gSeekEnded = false;
-var gLoadedFirstFrameCount = 0;
+var gLoadedDataCount = 0;
 var gLoadedMetaDataCount = 0;
 
 function get(id) {
@@ -54,9 +54,9 @@ function seekEnded() {
   video().play();
 }
 
-function loadedFirstFrame() {
-  gLoadedFirstFrameCount++;
-  ok(gLoadedFirstFrameCount <= 1, "No more than 1 onloadedfirstframe events");
+function loadedData() {
+  gLoadedDataCount++;
+  ok(gLoadedDataCount <= 1, "No more than 1 onloaddata events");
 }
 
 function loadedMetaData() {
@@ -73,8 +73,8 @@ function playbackEnded() {
   } else {
     ok(gSeekEnded, "Should have received seekended");
     ok(gSeekStarted, "Should have received seekstarted");
-    ok(gLoadedFirstFrameCount == 1, "Should have 1 onloadedfirstframe event");
-    ok(gLoadedMetaDataCount == 1, "Should have 1 onloadedmetadata event");
+    is(gLoadedDataCount, 1, "Should have 1 onloadeddata event");
+    is(gLoadedMetaDataCount, 1, "Should have 1 onloadedmetadata event");
     SimpleTest.finish();    
   }  
   return false;

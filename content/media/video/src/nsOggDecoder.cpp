@@ -1546,7 +1546,7 @@ void nsOggDecoder::BufferingStopped()
     return;
 
   if (mElement) {
-    mElement->ChangeReadyState(nsIDOMHTMLMediaElement::CAN_SHOW_CURRENT_FRAME);
+    mElement->ChangeReadyState(nsIDOMHTMLMediaElement::HAVE_FUTURE_DATA);
   }
 }
 
@@ -1556,7 +1556,7 @@ void nsOggDecoder::BufferingStarted()
     return;
 
   if (mElement) {
-    mElement->ChangeReadyState(nsIDOMHTMLMediaElement::DATA_UNAVAILABLE);
+    mElement->ChangeReadyState(nsIDOMHTMLMediaElement::HAVE_CURRENT_DATA);
   }
 }
 
