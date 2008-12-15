@@ -579,9 +579,6 @@ MAKEFILES_xpfe="
   xpfe/components/find/public/Makefile
   xpfe/components/find/src/Makefile
   xpfe/components/intl/Makefile
-  xpfe/components/related/Makefile
-  xpfe/components/related/src/Makefile
-  xpfe/components/related/public/Makefile
   xpfe/components/autocomplete/Makefile
   xpfe/components/autocomplete/public/Makefile
   xpfe/components/autocomplete/src/Makefile
