@@ -72,18 +72,7 @@
   <stringbundleset id="stringbundleset">
     <stringbundle id="bundle_browser" src="chrome://browser/locale/browser.properties"/>
     <stringbundle id="bundle_brand" src="chrome://branding/locale/brand.properties"/>
-    <stringbundle id="bundle_keys" src="chrome://global/locale/keys.properties"/>
-    <stringbundle id="bundle_platformKeys" src="chrome://global-platform/locale/platformKeys.properties"/>
   </stringbundleset>
-
-  <!-- if your extension adds a new command, overlay a new string
-  bundle into this set, and the shortcut editor will look in it for a
-  proper name to call the command. -->
-  <stringbundleset id="shortcut-bundles">
-    <stringbundle src="chrome://browser/locale/shortcuts.properties"/>
-  </stringbundleset>
-
-  <script type="application/x-javascript;version=1.8" src="chrome://browser/content/shortcuts.js"/>
 
   <commandset id="cmdset_main">
     <!-- basic navigation -->
@@ -282,7 +271,6 @@
         <toolbarbutton id="tool-addons" type="radio" group="1" class="panel-button" linkedpanel="addons-container"/>
         <toolbarbutton id="tool-downloads" type="radio" group="1" class="panel-button" linkedpanel="downloads-container"/>
         <toolbarbutton id="tool-preferences" type="radio" group="1" class="panel-button" linkedpanel="prefs-container"/>
-        <toolbarbutton id="tool-shortcuts" type="radio" group="1" class="panel-button" linkedpanel="shortcuts-container" hidden="true"/>
         <toolbarbutton id="tool-panel-close" class="browser-control-button" command="cmd_panel"/>
       </vbox>
       <deck id="panel-items" flex="1">
@@ -319,16 +307,6 @@
               <button label="&clear.private.data.button;" command="cmd_sanitize"/>
             </richpref>
           </scrollbox>
-        </vbox>
-
-        <vbox id="shortcuts-container" flex="1">
-          <tree id="shortcuts" flex="1" seltype="cell" hidecolumnpicker="true" editable="true" textboxtype="clearable">
-            <treecols>
-              <treecol id="name" flex="5" hideheader="true"/>
-              <treecol id="value" flex="3" hideheader="true" editable="true" primary="true"/>
-            </treecols>
-            <treechildren id="shortcuts-children"/>
-          </tree>
         </vbox>
       </deck>
     </hbox>
