@@ -1,0 +1,52 @@
+<!DOCTYPE HTML>
+<html>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=431082
+-->
+<head>
+  <title>Test for Bug 431082</title>
+  <script type="text/javascript" src="/MochiKit/MochiKit.js"></script>
+  <script type="text/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
+</head>
+<body>
+<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=431082">Mozilla Bug 431082</a>
+<p id="display"></p>
+<div id="content" style="display: none">
+  
+</div>
+<pre id="test">
+<script class="testbody" type="text/javascript">
+
+/** Test for Bug 431082 **/
+
+SimpleTest.waitForExplicitFinish();
+addLoadEvent(function() { ok(true, "browser should not crash."); });
+addLoadEvent(SimpleTest.finish);
+
+</script>
+</pre>
+<!--
+<window xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
+<box  id="a" observes="b">
+  <box id="b"/>
+</box>
+
+<box  id="a"  src="javascript:"/>
+<box id="b" src="javascript://"/>
+<editor observes="a"/>
+
+<script> 
+function doe() {
+window.addEventListener('DOMAttrModified', function()
+{window.frameElement.parentNode.removeChild(window.frameElement);}, true);
+document.documentElement.appendChild(document.getElementsByTagName('box')[0]);
+}
+setTimeout(doe,0);
+</script>
+</window>
+-->
+<iframe src="data:application/vnd.mozilla.xul+xml;charset=utf-8,%3Cwindow%20xmlns%3D%22http%3A//www.mozilla.org/keymaster/gatekeeper/there.is.only.xul%22%3E%0A%3Cbox%20%20id%3D%22a%22%20observes%3D%22b%22%3E%0A%20%20%3Cbox%20id%3D%22b%22/%3E%0A%3C/box%3E%0A%0A%3Cbox%20%20id%3D%22a%22%20%20src%3D%22javascript%3A%22/%3E%0A%3Cbox%20id%3D%22b%22%20src%3D%22javascript%3A//%22/%3E%0A%3Ceditor%20observes%3D%22a%22/%3E%0A%0A%3Cscript%3E%20%0Afunction%20doe%28%29%20%7B%0Awindow.addEventListener%28%27DOMAttrModified%27%2C%20function%28%29%20%7Bwindow.frameElement.parentNode.removeChild%28window.frameElement%29%3B%7D%2C%20true%29%3B%0Adocument.documentElement.appendChild%28document.getElementsByTagName%28%27box%27%29%5B0%5D%29%3B%0A%7D%0AsetTimeout%28doe%2C0%29%3B%0A%3C/script%3E%0A%3C/window%3E" style="width:1000px;height: 300px;"></iframe>
+</body>
+</html>
+

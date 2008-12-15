@@ -292,6 +292,14 @@ protected:
     PRPackedBool          mReadOnly;          // it the caret in readonly state (draws differently)      
     PRPackedBool          mShowDuringSelection; // show when text is selected
 
+    PRPackedBool          mIgnoreUserModify;
+
+#ifdef IBMBIDI
+    PRPackedBool          mKeyboardRTL;       // is the keyboard language right-to-left
+    PRPackedBool          mBidiUI;            // is bidi UI turned on
+    nsRect                mHookRect;          // directional hook on the caret
+    PRUint8               mLastBidiLevel;     // saved bidi level of the last draw request, to use when we erase
+#endif
     nsRect                mCaretRect;         // the last caret rect, in the coodinates of the last frame.
 
     nsCOMPtr<nsIContent>  mLastContent;       // store the content the caret was last requested to be drawn
@@ -303,13 +311,6 @@ protected:
     nsFrameSelection::HINT mLastHint;        // the hint associated with the last request, see also
                                               // mLastBidiLevel below
 
-    PRPackedBool          mIgnoreUserModify;
-
-#ifdef IBMBIDI
-    nsRect                mHookRect;          // directional hook on the caret
-    PRUint8               mLastBidiLevel;     // saved bidi level of the last draw request, to use when we erase
-    PRPackedBool          mKeyboardRTL;       // is the keyboard language right-to-left
-#endif
 };
 
 nsresult

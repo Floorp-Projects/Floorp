@@ -1592,7 +1592,7 @@ nsJSContext::EvaluateString(const nsAString& aScript,
       // to avoid dropping JS exceptions in case we got here through
       // nested calls through XPConnect.
 
-      JS_ReportPendingException(mContext);
+      ReportPendingException(PR_FALSE);
     }
   }
 
@@ -1856,9 +1856,7 @@ nsJSContext::CompileEventHandler(nsIAtom *aName,
   if (!fun) {
     // Set aside the frame chain on cx while reporting, since it has
     // nothing to do with the error we just hit.
-    JSStackFrame* frame = JS_SaveFrameChain(mContext);
-    ReportPendingException();
-    JS_RestoreFrameChain(mContext, frame);
+    ReportPendingException(PR_TRUE);
     return NS_ERROR_ILLEGAL_VALUE;
   }
 
@@ -1993,9 +1991,7 @@ nsJSContext::CallEventHandler(nsISupports* aTarget, void *aScope, void *aHandler
       // to avoid dropping JS exceptions in case we got here through
       // nested calls through XPConnect.
 
-      if (JS_IsExceptionPending(mContext)) {
-        JS_ReportPendingException(mContext);
-      }
+      ReportPendingException(PR_FALSE);
 
       // Don't pass back results from failed calls.
       rval = JSVAL_VOID;
@@ -2069,6 +2065,7 @@ nsJSContext::BindCompiledEventHandler(nsISupports* aTarget, void *aScope,
       !::JS_DefineProperty(mContext, target, charName,
                            OBJECT_TO_JSVAL(funobj), nsnull, nsnull,
                            JSPROP_ENUMERATE | JSPROP_PERMANENT)) {
+    ReportPendingException(PR_TRUE);
     rv = NS_ERROR_FAILURE;
   }
 
@@ -3615,10 +3612,15 @@ nsJSContext::DropScriptObject(void* aScriptObject)
 }
 
 void
-nsJSContext::ReportPendingException()
+nsJSContext::ReportPendingException(PRBool aSetAsideFrameChain)
 {
+  JSStackFrame* frame =
+    aSetAsideFrameChain ? JS_SaveFrameChain(mContext) : nsnull;
   if (mIsInitialized && ::JS_IsExceptionPending(mContext)) {
     ::JS_ReportPendingException(mContext);
+  }
+  if (aSetAsideFrameChain) {
+    JS_RestoreFrameChain(mContext, frame);
   }
 }
 
