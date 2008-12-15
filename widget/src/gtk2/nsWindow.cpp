@@ -6594,6 +6594,18 @@ nsWindow::SetIMEEnabled(PRUint32 aState)
         focusedWin->IMESetFocus();
 #ifdef MOZ_PLATFORM_HILDON
         if (mIMEData->mEnabled) {
+            // It is not desired that the hildon's autocomplete mechanism displays
+            // user previous entered passwds, so lets make completions invisible
+            // in these cases.
+            int mode;
+            g_object_get (G_OBJECT(focusedIm), "hildon-input-mode", &mode, NULL);
+
+            if (mIMEData->mEnabled == IME_STATUS_ENABLED)
+                mode &= ~HILDON_GTK_INPUT_MODE_INVISIBLE;
+            else if (mIMEData->mEnabled == nsIWidget::IME_STATUS_PASSWORD)
+               mode |= HILDON_GTK_INPUT_MODE_INVISIBLE;
+
+            g_object_set (G_OBJECT(focusedIm), "hildon-input-mode", (HildonGtkInputMode)mode, NULL);
             gIMEVirtualKeyboardOpened = PR_TRUE;
             hildon_gtk_im_context_show (focusedIm);
         } else {
