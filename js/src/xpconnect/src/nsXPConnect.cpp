@@ -373,8 +373,13 @@ static JSBool
 XPCCycleCollectGCCallback(JSContext *cx, JSGCStatus status)
 {
     // Launch the cycle collector.
-    if(status == JSGC_MARK_END)
+    switch(status)
     {
+      case JSGC_BEGIN:
+        nsXPConnect::GetRuntimeInstance()->UnrootContextGlobals();
+        break;
+
+      case JSGC_MARK_END:
         // This is the hook between marking and sweeping in the JS GC. Do cycle
         // collection.
         if(!gDidCollection)
@@ -388,24 +393,22 @@ XPCCycleCollectGCCallback(JSContext *cx, JSGCStatus status)
         // Mark JS objects that are held by XPCOM objects that are in cycles
         // that will not be collected.
         nsXPConnect::GetRuntimeInstance()->
-            TraceXPConnectRoots(cx->runtime->gcMarkingTracer);
-    }
-    else if(status == JSGC_END)
-    {
+            TraceXPConnectRoots(cx->runtime->gcMarkingTracer, JS_TRUE);
+        break;
+
+      case JSGC_END:
         if(gInCollection)
         {
             gInCollection = PR_FALSE;
             gCollected = nsCycleCollector_finishCollection();
         }
-        nsXPConnect::GetRuntimeInstance()->RestoreContextGlobals();
+        break;
+
+      default:
+        break;
     }
 
-    PRBool ok = gOldJSGCCallback ? gOldJSGCCallback(cx, status) : JS_TRUE;
-
-    if(status == JSGC_BEGIN)
-        nsXPConnect::GetRuntimeInstance()->UnsetContextGlobals();
-
-    return ok;
+    return gOldJSGCCallback ? gOldJSGCCallback(cx, status) : JS_TRUE;
 }
 
 PRBool
@@ -960,13 +963,8 @@ public:
 #else
         cb.DescribeNode(RefCounted, refCount);
 #endif
-
-        void* globalObject = (cx->globalObject)
-                             ? cx->globalObject
-                             : nsXPConnect::GetRuntimeInstance()->
-                                 GetUnsetContextGlobal(cx);
-
-        cb.NoteScriptChild(nsIProgrammingLanguage::JAVASCRIPT, globalObject);
+        cb.NoteScriptChild(nsIProgrammingLanguage::JAVASCRIPT,
+                           cx->globalObject);
 
         return NS_OK;
     }
