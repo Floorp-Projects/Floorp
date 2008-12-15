@@ -334,12 +334,14 @@
     </hbox>
 
     <vbox id="urllist-container" hidden="true" style="-moz-stack-sizing: ignore;" top="0" left="0">
-      <hbox id="urllist-items-container" flex="1">
+      <vbox id="urllist-items-container" flex="1">
         <richlistbox id="urllist-items" flex="1"
-                     onkeypress="if (event.keyCode == event.DOM_VK_RETURN) BrowserUI.goToURI(this.selectedItem.value)"/>
-      </hbox>
+                     onkeypress="if (event.target == this &amp;&amp; event.keyCode == event.DOM_VK_RETURN)
+                                   BrowserUI.goToBookmark(this)"
+                     onclose="BrowserUI.stopEditBookmark()"/>
+      </vbox>
       <hbox pack="end">
-        <button id="urllist-close" oncommand="BrowserUI.show(UIMODE_NONE)"/>
+        <button class="close-button" oncommand="BrowserUI.closeBookmarks(event)"/>
       </hbox>
     </vbox>
 
@@ -351,36 +353,11 @@
     </vbox>
 
     <vbox id="bookmark-container" hidden="true" style="-moz-stack-sizing: ignore;" top="60" left="0">
-      <vbox id="bookmark-form">
-        <hbox align="start">
-          <image id="bookmark-image" src="chrome://browser/skin/images/starred48.png"/>
-          <grid id="bookmark-grid" flex="1">
-            <columns>
-              <column/>
-              <column flex="1"/>
-            </columns>
-            <rows>
-              <row>
-                <label value="&bookmarkName.label;" for="bookmark-name"/>
-                <textbox id="bookmark-name"/>
-              </row>
-              <row>
-                <label value="&bookmarkFolder.label;" for="bookmark-folder"/>
-                <textbox id="bookmark-folder"/>
-              </row>
-              <row>
-                <label value="&bookmarkTags.label;" for="bookmark-tags"/>
-                <textbox id="bookmark-tags"/>
-              </row>
-            </rows>
-          </grid>
-        </hbox>
-        <hbox id="bookmark-buttons">
-          <button label="&bookmarkRemove.label;" oncommand="BookmarkHelper.remove()"/>
-          <spacer flex="1"/>
-          <button id="bookmark-close" oncommand="BookmarkHelper.close()"/>
-        </hbox>
-      </vbox>
+      <hbox id="bookmark-form" align="start">
+        <image id="bookmark-image" src="chrome://browser/skin/images/starred48.png"/>
+        <editbookmark id="bookmark-edit" flex="1" onclose="BookmarkHelper.close()"
+                      onchange="this.save()"/>
+      </hbox>
     </vbox>
 
   </stack>

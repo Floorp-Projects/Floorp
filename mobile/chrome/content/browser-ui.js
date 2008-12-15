@@ -78,6 +78,7 @@ var BrowserUI = {
   _autocompleteNavbuttons : null,
   _favicon : null,
   _faviconLink : null,
+  _editingBookmark : null,
 
   _titleChanged : function(aDocument) {
     var browser = Browser.currentBrowser;
@@ -338,13 +339,7 @@ var BrowserUI = {
     forward.setAttribute("disabled", !browser.canGoForward);
 
     // Check for a bookmarked page
-    var star = document.getElementById("tool-star");
-    if (PlacesUtils.getMostRecentBookmarkForURI(browser.currentURI) != -1) {
-      star.setAttribute("starred", "true");
-    }
-    else {
-      star.removeAttribute("starred");
-    }
+    this.updateStar();
 
     var urlString = this.getDisplayURI(browser);
     if (urlString == "about:blank") {
@@ -459,7 +454,7 @@ var BrowserUI = {
       this._showToolbar(false);
       this._editToolbar(false);
 
-      window.addEventListener("keypress", this.closePopup, false);
+      window.addEventListener("keypress", this.closeBookmarks, false);
 
       bookmark.hidden = true;
       panelUI.hidden = true;
@@ -502,33 +497,116 @@ var BrowserUI = {
     for (var i=0; i<aItems.length; i++) {
       let node = aItems[i];
       let listItem = document.createElement("richlistitem");
-      listItem.setAttribute("class", "urllist-item");
+      listItem.align = "center";
+      listItem.className = "urllist-item";
       listItem.setAttribute("value", node.uri);
 
-      let box = document.createElement("vbox");
-      box.setAttribute("pack", "center");
       let image = document.createElement("image");
       image.setAttribute("class", "urllist-image");
       let icon = node.icon ? node.icon.spec : fis.getFaviconImageForPage(ios.newURI(node.uri, null, null)).spec
       image.setAttribute("src", icon);
-      box.appendChild(image);
-      listItem.appendChild(box);
+      listItem.appendChild(image);
+
+      let box = document.createElement("hbox");
+      box.align = "center";
+      box.flex = 1;
 
       let label = document.createElement("label");
-      label.setAttribute("class", "urllist-text");
+      label.className = "urllist-text";
       label.setAttribute("value", node.title);
-      label.setAttribute("flex", "1");
       label.setAttribute("crop", "end");
-      listItem.appendChild(label);
+      label.flex = 1;
+      box.appendChild(label);
+
+      let button = document.createElement("button");
+      button.setAttribute("label", "Edit");
+      box.appendChild(button);
+
+      listItem.appendChild(box);
       list.appendChild(listItem);
-      listItem.addEventListener("click", function() { BrowserUI.goToURI(node.uri); }, true);
+
+      button.addEventListener("command", BrowserUI.editBookmark, false);
+      box.addEventListener("click", BrowserUI.goToBookmark, false);
     }
 
     list.focus();
   },
 
-  closePopup : function(aEvent)
-  {
+  updateStar : function() {
+    var star = document.getElementById("tool-star");
+    if (PlacesUtils.getMostRecentBookmarkForURI(Browser.currentBrowser.currentURI) != -1)
+      star.setAttribute("starred", "true");
+    else
+      star.removeAttribute("starred");
+  },
+
+  goToBookmark : function(aEvent) {
+    if (aEvent.originalTarget.localName == "button")
+      return;
+
+    var list = document.getElementById("urllist-items")
+    BrowserUI.goToURI(list.selectedItem.value)
+  },
+
+  editBookmark : function(aEvent) {
+    var selectedItem = document.getElementById("urllist-items").selectedItem;
+    if (!selectedItem)
+      return;
+
+    if (BrowserUI._editingBookmark)
+      BrowserUI._editingBookmark.lastChild.stopEditing(true);
+    BrowserUI._editingBookmark = selectedItem;
+
+    selectedItem.childNodes[1].collapsed = true; // the hbox
+
+    var bookmarkEdit = document.createElement("editbookmark");
+    selectedItem.appendChild(bookmarkEdit);
+
+    var ios = Cc["@mozilla.org/network/io-service;1"].getService(Ci.nsIIOService);
+    var uri = ios.newURI(selectedItem.value, null, null);
+
+    bookmarkEdit.startEditing(uri);
+    bookmarkEdit.addEventListener("RemoveBookmark", BrowserUI.removeBookmark, false);
+  },
+
+  stopEditBookmark : function() {
+    var item = this._editingBookmark;
+    if (!item)
+      return;
+
+    var edititem = item.lastChild;
+    edititem.removeEventListener("RemoveBookmark", BrowserUI.removeBookmark, false);
+    item.value = edititem.uri;
+
+    item.childNodes[1].firstChild.value = edititem.name; // the bookmark title label
+    item.childNodes[1].collapsed = false;  // the hbox
+    this._editingBookmark.removeChild(edititem);
+    this._editingBookmark = null;
+
+    this.updateStar();
+    document.getElementById("urllist-items").focus();
+  },
+
+  removeBookmark : function() {
+    if (BrowserUI._editingBookmark) {
+      var list = document.getElementById("urllist-items");
+      list.removeItemAt(list.getIndexOfItem(BrowserUI._editingBookmark));
+      BrowserUI._editingBookmark = null;
+    }
+    BrowserUI.updateStar();
+  },
+
+  closeBookmarks : function(aEvent) {
+    if (aEvent.type == "keypress" && aEvent.keyCode != aEvent.DOM_VK_ESCAPE)
+      return;
+
+    if (BrowserUI._editingBookmark)
+      BrowserUI._editingBookmark.lastChild.stopEditing(true);
+    BrowserUI.show(UIMODE_NONE);
+    document.getElementById("urllist-items").blur();
+  },
+
+  closePopup : function(aEvent) {
     if (aEvent.keyCode == aEvent.DOM_VK_ESCAPE)
       BrowserUI.show(UIMODE_NONE);
   },
@@ -658,7 +736,7 @@ var BrowserUI = {
 
         if (PlacesUtils.getMostRecentBookmarkForURI(bookmarkURI) == -1) {
           var bookmarkId = PlacesUtils.bookmarks.insertBookmark(PlacesUtils.bookmarks.bookmarksMenuFolder, bookmarkURI, PlacesUtils.bookmarks.DEFAULT_INDEX, bookmarkTitle);
-          document.getElementById("tool-star").setAttribute("starred", "true");
+          BrowserUI.updateStar();
 
           var ios = Cc["@mozilla.org/network/io-service;1"].getService(Ci.nsIIOService);
           var favicon = document.getElementById("urlbar-favicon");
@@ -705,108 +783,21 @@ var BrowserUI = {
 };
 
 var BookmarkHelper = {
-  _item : null,
-  _uri : null,
-
-  _getTagsArrayFromTagField : function() {
-    // we don't require the leading space (after each comma)
-    var tags = document.getElementById("bookmark-tags").value.split(",");
-    for (var i=0; i<tags.length; i++) {
-      // remove trailing and leading spaces
-      tags[i] = tags[i].replace(/^\s+/, "").replace(/\s+$/, "");
-
-      // remove empty entries from the array.
-      if (tags[i] == "") {
-        tags.splice(i, 1);
-        i--;
-      }
-    }
-    return tags;
-  },
-
   edit : function(aURI) {
-    this._uri = aURI;
-    this._item = PlacesUtils.getMostRecentBookmarkForURI(this._uri);
-
-    if (this._item != -1) {
-      document.getElementById("bookmark-name").value = PlacesUtils.bookmarks.getItemTitle(this._item);
-      var currentTags = PlacesUtils.tagging.getTagsForURI(this._uri, {});
-      document.getElementById("bookmark-tags").value = currentTags.join(", ");
-      document.getElementById("bookmark-folder").value = ""; // XXX either use this or remove it
-    }
-    document.getElementById("bookmark-name").focus();
-
+    var bookmarkEdit = document.getElementById("bookmark-edit");
+    bookmarkEdit.startEditing(aURI);
     window.addEventListener("keypress", this, true);
-    document.getElementById("bookmark-form").addEventListener("change", this, true);
-  },
-
-  remove : function() {
-    if (this._item) {
-      // Remove bookmark itself
-      PlacesUtils.bookmarks.removeItem(this._item);
-
-      // If this was the last bookmark (excluding tag-items and livemark
-      // children, see getMostRecentBookmarkForURI) for the bookmark's url,
-      // remove the url from tag containers as well.
-      if (PlacesUtils.getMostRecentBookmarkForURI(this._uri) == -1) {
-        var tags = PlacesUtils.tagging.getTagsForURI(this._uri, {});
-        PlacesUtils.tagging.untagURI(this._uri, tags);
-      }
-
-      document.getElementById("tool-star").removeAttribute("starred");
-    }
-    this.close();
-  },
-
-  save : function() {
-    if (this._item) {
-      // Update the name
-      PlacesUtils.bookmarks.setItemTitle(this._item, document.getElementById("bookmark-name").value);
-
-      // Update the tags
-      var tags = this._getTagsArrayFromTagField();
-      var currentTags = PlacesUtils.tagging.getTagsForURI(this._uri, {});
-      if (tags.length > 0 || currentTags.length > 0) {
-        var tagsToRemove = [];
-        var tagsToAdd = [];
-        var i;
-        for (i=0; i<currentTags.length; i++) {
-          if (tags.indexOf(currentTags[i]) == -1)
-            tagsToRemove.push(currentTags[i]);
-        }
-        for (i=0; i<tags.length; i++) {
-          if (currentTags.indexOf(tags[i]) == -1)
-            tagsToAdd.push(tags[i]);
-        }
-
-        if (tagsToAdd.length > 0)
-          PlacesUtils.tagging.tagURI(this._uri, tagsToAdd);
-        if (tagsToRemove.length > 0)
-          PlacesUtils.tagging.untagURI(this._uri, tagsToRemove);
-      }
-
-    }
   },
 
   close : function() {
+    var bookmarkEdit = document.getElementById("bookmark-edit");
     window.removeEventListener("keypress", this, true);
-    document.getElementById("bookmark-form").removeEventListener("change", this, true);
-
-    this._item = null;
     BrowserUI.show(UIMODE_NONE);
+    BrowserUI.updateStar();
   },
 
   handleEvent: function (aEvent) {
-    switch (aEvent.type) {
-      case "keypress":
-        if (aEvent.keyCode == aEvent.DOM_VK_ESCAPE) {
-          document.getElementById("bookmark-close").focus();
-          this.close();
-        }
-        break;
-      case "change":
-        this.save();
-        break;
-    }
+    if (aEvent.keyCode == aEvent.DOM_VK_ESCAPE)
+      document.getElementById("bookmark-edit").stopEditing(true);
   }
 };
