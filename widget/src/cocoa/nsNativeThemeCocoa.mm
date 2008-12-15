@@ -1453,6 +1453,9 @@ nsNativeThemeCocoa::DrawWidgetBackground(nsIRenderingContext* aContext, nsIFrame
       break;
 
     case NS_THEME_MENUITEM: {
+      // Clear the background to get correct transparency.
+      CGContextClearRect(cgContext, macRect);
+
       // maybe use kThemeMenuItemHierBackground or PopUpBackground instead of just Plain?
       HIThemeMenuItemDrawInfo drawInfo = {
         version: 0,
