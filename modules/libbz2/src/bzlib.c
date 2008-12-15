@@ -1371,7 +1371,7 @@ const char * BZ_API(BZ2_bzlibVersion)(void)
 #ifndef BZ_NO_STDIO
 /*---------------------------------------------------*/
 
-#if defined(_WIN32) || defined(OS2) || defined(MSDOS)
+#if (defined(_WIN32) || defined(OS2) || defined(MSDOS)) && !defined(WINCE)
 #   include <fcntl.h>
 #   include <io.h>
 #   define SET_BINARY_MODE(file) setmode(fileno(file),O_BINARY)
