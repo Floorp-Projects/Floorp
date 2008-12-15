@@ -1683,4 +1683,17 @@ inline NS_HIDDEN_(PRBool) NS_FloatIsFinite(jsdouble f) {
     return (rv);                                                              \
   }
 
+// Deletes a linked list iteratively to avoid blowing up the stack (bug 460444).
+#define NS_CONTENT_DELETE_LIST_MEMBER(type_, ptr_, member_)                   \
+  {                                                                           \
+    type_ *cur = (ptr_)->member_;                                             \
+    (ptr_)->member_ = nsnull;                                                 \
+    while (cur) {                                                             \
+      type_ *next = cur->member_;                                             \
+      cur->member_ = nsnull;                                                  \
+      delete cur;                                                             \
+      cur = next;                                                             \
+    }                                                                         \
+  }
+
 #endif /* nsContentUtils_h___ */
