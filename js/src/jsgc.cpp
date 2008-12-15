@@ -2950,7 +2950,7 @@ js_TraceContext(JSTracer *trc, JSContext *acx)
     }
 
     /* Mark other roots-by-definition in acx. */
-    if (acx->globalObject)
+    if (acx->globalObject && !JS_HAS_OPTION(acx, JSOPTION_UNROOTED_GLOBAL))
         JS_CALL_OBJECT_TRACER(trc, acx->globalObject, "global object");
     TraceWeakRoots(trc, &acx->weakRoots);
     if (acx->throwing) {
