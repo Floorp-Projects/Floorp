@@ -22,7 +22,6 @@ browser.jar:
   content/scrollbars.css               (content/scrollbars.css)
   content/content.css                  (content/content.css)
   content/checkerboard.png             (content/checkerboard.png)
-* content/shortcuts.js                 (content/shortcuts.js)
 % content branding %content/branding/
 % style chrome://mozapps/content/extensions/extensions.xul chrome://browser/skin/extensions.css
   content/preferences/richpref.xml     (content/preferences/richpref.xml)

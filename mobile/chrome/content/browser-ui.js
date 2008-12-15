@@ -218,7 +218,6 @@ var BrowserUI = {
     let dloads = document.getElementById("downloads-container");
     if (!dloads.hasAttribute("src"))
       dloads.setAttribute("src", "chrome://mozapps/content/downloads/downloads.xul");
-    Shortcuts.init();
   },
 
   switchPane : function(id) {
@@ -267,7 +266,6 @@ var BrowserUI = {
     document.getElementById("tabs").addEventListener("TabSelect", this, true);
 
     window.addEventListener("resize", this, false);
-    Shortcuts.restore();
   },
 
   update : function(aState) {

@@ -339,14 +339,6 @@ toolbarbutton.panel-button {
   -moz-image-region: rect(0px 96px 48px 48px);
 }
 
-#tool-shortcuts {
-  -moz-image-region: rect(0px 48px 48px 0px);
-}
-
-#tool-shortcuts:hover:active, #tool-shortcuts[checked] {
-  -moz-image-region: rect(0px 96px 48px 48px);
-}
-
 /* URL List and autocomplete navigation popup ------------------------------ */
 #urllist-container {
   background-color: rgb(123,125,123);
