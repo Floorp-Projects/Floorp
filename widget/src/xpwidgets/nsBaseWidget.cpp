@@ -296,7 +296,7 @@ nsIWidget* nsBaseWidget::GetParent(void)
 //-------------------------------------------------------------------------
 nsIWidget* nsBaseWidget::GetTopLevelWidget(PRInt32* aLevelsUp)
 {
-  nsIWidget *topLevelWidget, *widget = this;
+  nsIWidget *topLevelWidget = nsnull, *widget = this;
   if (aLevelsUp)
     *aLevelsUp = -1;
   while (widget) {
