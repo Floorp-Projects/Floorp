@@ -57,7 +57,7 @@ toolbar {
 }
 
 menubar {
-  -moz-appearance: toolbar;
+  -moz-appearance: dialog; /* For content menubars, "toolbar" is too dark, so we use "dialog". */
   min-width: 1px;
 }
 
