@@ -445,11 +445,6 @@ CanvasBrowser.prototype = {
   get _contentAreaDimensions() {
     var cdoc = this._browser.contentDocument;
 
-    // Return the document width/height for XUL documents (which is
-    // essentially the same as the viewport width/height).
-    if (cdoc instanceof XULDocument)
-      return [cdoc.width, cdoc.height];
-
     if (cdoc instanceof SVGDocument) {
       let rect = cdoc.rootElement.getBoundingClientRect();
       return [rect.width, rect.height];
