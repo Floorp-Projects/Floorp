@@ -2229,9 +2229,6 @@ NP_DEF_ID(kRefreshURIIID, NS_IREFRESHURI_IID);
 #ifdef NS_IREGISTRY_IID
 NP_DEF_ID(kRegistryIID, NS_IREGISTRY_IID);
 #endif
-#ifdef NS_IRELATEDLINKSHANDLER_IID
-NP_DEF_ID(kRelatedLinksHandlerIID, NS_IRELATEDLINKSHANDLER_IID);
-#endif
 #ifdef NS_IRELATIVEFILEPREF_IID
 NP_DEF_ID(kRelativeFilePrefIID, NS_IRELATIVEFILEPREF_IID);
 #endif
@@ -5149,9 +5146,6 @@ static struct nsIDNameLookupEntry
 #ifdef NS_IREGISTRY_IID
     { &kRegistryIID, "NS_IREGISTRY_IID" },
 #endif
-#ifdef NS_IRELATEDLINKSHANDLER_IID
-    { &kRelatedLinksHandlerIID, "NS_IRELATEDLINKSHANDLER_IID" },
-#endif
 #ifdef NS_IRELATIVEFILEPREF_IID
     { &kRelativeFilePrefIID, "NS_IRELATIVEFILEPREF_IID" },
 #endif
@@ -8068,9 +8062,6 @@ static struct nsLookupStrIDEntry
 #endif
 #ifdef NS_IREGISTRY_IID_STR
     { &kRegistryIID, NS_IREGISTRY_IID_STR },
-#endif
-#ifdef NS_IRELATEDLINKSHANDLER_IID_STR
-    { &kRelatedLinksHandlerIID, NS_IRELATEDLINKSHANDLER_IID_STR },
 #endif
 #ifdef NS_IRELATIVEFILEPREF_IID_STR
     { &kRelativeFilePrefIID, NS_IRELATIVEFILEPREF_IID_STR },
