@@ -1341,8 +1341,12 @@ SessionStoreService.prototype = {
     let data = {};
     do {
       let id = node.id ? "#" + node.id : XPathHelper.generate(node);
-      if (node instanceof Ci.nsIDOMHTMLInputElement)
-        data[id] = node.type == "checkbox" || node.type == "radio" ? node.checked : node.value;
+      if (node instanceof Ci.nsIDOMHTMLInputElement) {
+        if (node.type != "file")
+          data[id] = node.type == "checkbox" || node.type == "radio" ? node.checked : node.value;
+        else
+          data[id] = { type: "file", value: node.value };
+      }
       else if (node instanceof Ci.nsIDOMHTMLTextAreaElement)
         data[id] = node.value;
       else if (!node.multiple)
@@ -1969,7 +1973,7 @@ SessionStoreService.prototype = {
             RegExp.$1 == aPrefix && hasExpectedURL(aContent.document, aURL)) {
           var document = aContent.document;
           var node = RegExp.$2 ? document.getElementById(RegExp.$3) : document.getElementsByName(RegExp.$3)[0] || null;
-          if (node && "value" in node) {
+          if (node && "value" in node && node.type != "file") {
             node.value = decodeURI(RegExp.$4);
             
             var event = document.createEvent("UIEvents");
@@ -1991,7 +1995,7 @@ SessionStoreService.prototype = {
           continue;
         
         let value = aData[key];
-        if (typeof value == "string") {
+        if (typeof value == "string" && node.type != "file") {
           node.value = value;
           
           let event = aDocument.createEvent("UIEvents");
@@ -2004,6 +2008,8 @@ SessionStoreService.prototype = {
           try {
             node.selectedIndex = value;
           } catch (ex) { /* throws for invalid indices */ }
+        else if (value && value.type && value.type == node.type)
+          node.value = value.value;
         else if (value && typeof value.indexOf == "function" && node.options) {
           Array.forEach(node.options, function(aOpt, aIx) {
             aOpt.selected = value.indexOf(aIx) > -1;
