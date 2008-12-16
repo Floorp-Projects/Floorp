@@ -1523,14 +1523,14 @@ _evaluate(NPP npp, NPObject* npobj, NPString *script, NPVariant *result)
     VOID_TO_NPVARIANT(*result);
   }
 
-  if (!script || !script->UTF8Length || !script->UTF8Characters) {
+  if (!script || !script->utf8length || !script->utf8characters) {
     // Nothing to evaluate.
 
     return true;
   }
 
-  NS_ConvertUTF8toUTF16 utf16script(script->UTF8Characters,
-                                    script->UTF8Length);
+  NS_ConvertUTF8toUTF16 utf16script(script->utf8characters,
+                                    script->utf8length);
 
   nsCOMPtr<nsIScriptContext> scx = GetScriptContextFromJSContext(cx);
   NS_ENSURE_TRUE(scx, false);
@@ -1568,7 +1568,7 @@ _evaluate(NPP npp, NPObject* npobj, NPString *script, NPVariant *result)
 
   NPN_PLUGIN_LOG(PLUGIN_LOG_NOISY,
                  ("NPN_Evaluate(npp %p, npobj %p, script <<<%s>>>) called\n",
-                  npp, npobj, script->UTF8Characters));
+                  npp, npobj, script->utf8characters));
 
   nsresult rv = scx->EvaluateStringWithValue(utf16script, obj, principal,
                                              spec, 0, 0, rval, nsnull);
@@ -1763,12 +1763,12 @@ _releasevariantvalue(NPVariant* variant)
     {
       const NPString *s = &NPVARIANT_TO_STRING(*variant);
 
-      if (s->UTF8Characters) {
+      if (s->utf8characters) {
 #ifdef MOZ_MEMORY_WINDOWS
-        if (malloc_usable_size((void *)s->UTF8Characters) != 0) {
-          PR_Free((void *)s->UTF8Characters);
+        if (malloc_usable_size((void *)s->utf8characters) != 0) {
+          PR_Free((void *)s->utf8characters);
         } else {
-          void *p = (void *)s->UTF8Characters;
+          void *p = (void *)s->utf8characters;
           DWORD nheaps = 0;
           nsAutoTArray<HANDLE, 50> heaps;
           nheaps = GetProcessHeaps(0, heaps.Elements());
@@ -1782,7 +1782,7 @@ _releasevariantvalue(NPVariant* variant)
           }
         }
 #else
-        PR_Free((void *)s->UTF8Characters);
+        PR_Free((void *)s->utf8characters);
 #endif
       }
       break;

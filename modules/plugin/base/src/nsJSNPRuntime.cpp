@@ -354,7 +354,7 @@ NPVariantToJSVal(NPP npp, JSContext *cx, const NPVariant *variant)
   case NPVariantType_String :
     {
       const NPString *s = &NPVARIANT_TO_STRING(*variant);
-      NS_ConvertUTF8toUTF16 utf16String(s->UTF8Characters, s->UTF8Length);
+      NS_ConvertUTF8toUTF16 utf16String(s->utf8characters, s->utf8length);
 
       JSString *str =
         ::JS_NewUCStringCopyN(cx, reinterpret_cast<const jschar*>

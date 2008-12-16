@@ -54,25 +54,12 @@ REQUIRES = \
 NO_DIST_INSTALL	= 1
 NO_INSTALL = 1
 
-CPPSRCS   =  \
-  nptest.cpp \
-  nptest_utils.cpp \
-  $(NULL)
-
-ifeq ($(MOZ_WIDGET_TOOLKIT),cocoa)
-CMMSRCS = nptest_macosx.mm
-endif
-
-ifeq ($(MOZ_WIDGET_TOOLKIT),gtk2)
-CPPSRCS += nptest_gtk2.cpp
-endif
-
-ifeq ($(MOZ_WIDGET_TOOLKIT),windows)
-CPPSRCS  += nptest_windows.cpp
+ifeq ($(OS_ARCH),WINNT)
 RCFILE    = nptest.rc
 RESFILE   = nptest.res
-DEFFILE   = $(win_srcdir)/nptest.def
 endif
+
+CPPSRCS   = nptest.cpp
 
 include $(topsrcdir)/config/rules.mk
 
