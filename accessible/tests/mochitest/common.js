@@ -6,6 +6,8 @@ const nsIAccessibleRetrieval = Components.interfaces.nsIAccessibleRetrieval;
 const nsIAccessibleEvent = Components.interfaces.nsIAccessibleEvent;
 const nsIAccessibleStateChangeEvent =
   Components.interfaces.nsIAccessibleStateChangeEvent;
+const nsIAccessibleCaretMoveEvent =
+  Components.interfaces.nsIAccessibleCaretMoveEvent;
 
 const nsIAccessibleStates = Components.interfaces.nsIAccessibleStates;
 const nsIAccessibleRole = Components.interfaces.nsIAccessibleRole;
@@ -73,7 +75,29 @@ const EXT_STATE_EXPANDABLE = nsIAccessibleStates.EXT_STATE_EXPANDABLE;
 var gAccRetrieval = null;
 
 /**
- * Return accessible for the given ID attribute or DOM element.
+ * Return the DOM node.
+ */
+function getNode(aNodeOrID)
+{
+  if (!aNodeOrID)
+    return null;
+
+  var node = aNodeOrID;
+
+  if (!(aNodeOrID instanceof nsIDOMNode)) {
+    node = document.getElementById(aNodeOrID);
+
+    if (!node) {
+      ok(false, "Can't get DOM element for " + aNodeOrID);
+      return null;
+    }
+  }
+
+  return node;
+}
+
+/**
+ * Return accessible for the given ID attribute or DOM element or accessible.
  *
  * @param aAccOrElmOrID  [in] DOM element or ID attribute to get an accessible
  *                        for or an accessible to query additional interfaces.
@@ -210,6 +234,7 @@ function unregisterA11yEventListener(aEventType, aEventHandler)
  *     invoke: function(){}, // generates event for the DOM node
  *     check: function(aEvent){}, // checks event for correctness
  *     DOMNode getter() {} // DOM node event is generated for
+ *     getID: function(){} // returns invoker ID
  *   };
  *
  * @param  aEventType     the given event type
@@ -235,8 +260,11 @@ function eventQueue(aEventType)
         if (aQueue.mIndex == aQueue.mInvokers.length - 1) {
           unregisterA11yEventListener(aQueue.mEventType, aQueue.mEventHandler);
 
-          for (var idx = 0; idx < aQueue.mInvokers.length; idx++)
-            ok(aQueue.mInvokers[idx].wasCaught, "test " + idx + " failed.");
+          for (var idx = 0; idx < aQueue.mInvokers.length; idx++) {
+            var invoker = aQueue.mInvokers[idx];
+            ok(invoker.wasCaught,
+               "test with ID = '" + invoker.getID() + "' failed.");
+          }
 
           SimpleTest.finish();
           return;
@@ -246,7 +274,7 @@ function eventQueue(aEventType)
 
         aQueue.invoke();
       },
-      100, this
+      200, this
     );
   }
 
@@ -309,6 +337,12 @@ function eventHandlerForEventQueue(aQueue)
   this.handleEvent = function eventHandlerForEventQueue_handleEvent(aEvent)
   {
     var invoker = this.mQueue.getInvoker();
+    if (!invoker) // skip events before test was started
+      return;
+
+    if ("debugCheck" in invoker)
+      invoker.debugCheck(aEvent);
+
     if (aEvent.DOMNode == invoker.DOMNode) {
       invoker.check(aEvent);
       invoker.wasCaught = true;
