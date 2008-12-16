@@ -370,9 +370,7 @@ nsHttpServer.prototype =
    */
   onSocketAccepted: function(socket, trans)
   {
-    dumpn("*** onSocketAccepted(socket=" + socket + ", trans=" + trans + ") " +
-          "on thread " + gThreadManager.currentThread +
-          " (main is " + gThreadManager.mainThread + ")");
+    dumpn("*** onSocketAccepted(socket=" + socket + ", trans=" + trans + ")");
 
     dumpn(">>> new connection on " + trans.host + ":" + trans.port);
 
@@ -942,7 +940,13 @@ Connection.prototype =
     this.server._handler.handleError(code, this, metadata);
   },
 
-  /** Ends this connection, destroying the resources it uses. */
+  /**
+   * Ends this connection, destroying the resources it uses.  This function
+   * should only be called after a response has been completely constructed,
+   * response headers have been sent, and the response body remains to be set,
+   * which all happens before ServerHandler._pendingRequests is incremented,
+   * because it handles the corresponding decrement of that value.
+   */
   end: function()
   {
     this.server._endConnection(this);
@@ -1056,7 +1060,28 @@ RequestReader.prototype =
     if (!data)
       return;
 
-    data.appendBytes(readBytes(input, input.available()));
+    try
+    {
+      data.appendBytes(readBytes(input, input.available()));
+    }
+    catch (e)
+    {
+      if (e.result !== Cr.NS_ERROR_BASE_STREAM_CLOSED)
+      {
+        dumpn("*** WARNING: unexpected error when reading from socket; will " +
+              "be treated as if the input stream had been closed");
+      }
+
+      // We've lost a race -- input has been closed, but we're still expecting
+      // to read more data.  available() will throw in this case, and since
+      // we're dead in the water now, destroy the connection.  NB: we don't use
+      // end() here because that has interesting interactions with
+      // ServerHandler._pendingRequests.
+      dumpn("*** onInputStreamReady called on a closed input, destroying " +
+            "connection");
+      this._connection.destroy();
+      return;
+    }
 
     switch (this._state)
     {
@@ -2630,6 +2655,7 @@ ServerHandler.prototype =
     }
     catch (e)
     {
+      dumpn("*** error in handleError: " + e);
       connection.close();
       connection.server.stop();
     }
