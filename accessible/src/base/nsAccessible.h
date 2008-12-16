@@ -66,8 +66,13 @@ class nsIDOMNode;
 class nsIAtom;
 class nsIView;
 
+// see nsAccessible::GetAttrValue
 #define NS_OK_NO_ARIA_VALUE \
 NS_ERROR_GENERATE_SUCCESS(NS_ERROR_MODULE_GENERAL, 0x21)
+
+// see nsAccessible::GetNameInternal
+#define NS_OK_EMPTY_NAME \
+NS_ERROR_GENERATE_SUCCESS(NS_ERROR_MODULE_GENERAL, 0x23)
 
 // Saves a data member -- if child count equals this value we haven't
 // cached children or child count yet
@@ -135,7 +140,13 @@ public:
 
   /**
    * Returns the accessible name provided by native markup. It doesn't take
-   * into account ARIA stuffs used to specify the name.
+   * into account ARIA markup used to specify the name.
+   *
+   * @param  aName             [out] the accessible name
+   *
+   * @return NS_OK_EMPTY_NAME  points empty name was specified by native markup
+   *                           explicitly (see nsIAccessible::name attribute for
+   *                           details)
    */
   virtual nsresult GetNameInternal(nsAString& aName);
 
