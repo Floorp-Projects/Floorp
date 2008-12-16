@@ -1005,7 +1005,7 @@ def writeStubFile(filename, headerFilename, conf, interfaces):
         for iface in interfaces:
             resulttypes.extend(writeIncludesForInterface(iface))
         f.write("\n\n")
-        writeResultXPCInterfacesArray(f, conf, frozenset(resulttypes))
+        writeResultXPCInterfacesArray(f, conf, sets.ImmutableSet(resulttypes))
         for iface in interfaces:
             writeStubsForInterface(f, iface)
         writeDefiner(f, conf, interfaces)
