@@ -405,7 +405,7 @@ interface nsIXPCFunctionThisTranslator : nsISupports
     { 0xbd, 0xd6, 0x0, 0x0, 0x64, 0x65, 0x73, 0x74 } }
 %}
 
-[uuid(d4c6bc06-2a4f-4315-90ec-d12904aca046)]
+[uuid(f8bf005e-3700-411c-ba0c-e018075f22a4)]
 interface nsIXPConnect : nsISupports
 {
 %{ C++
@@ -467,6 +467,19 @@ interface nsIXPConnect : nsISupports
                in JSObjectPtr  aScope,
                in nsISupports  aCOMObj,
                in nsIIDRef     aIID);
+
+    /**
+     * Same as wrapNative, but also returns the JSObject in aVal. C++ callers
+     * can pass in null for the aHolder argument, but in that case they must
+     * ensure that aVal is rooted.
+     */
+    void
+    wrapNativeToJSVal(in JSContextPtr aJSContext,
+                      in JSObjectPtr  aScope,
+                      in nsISupports  aCOMObj,
+                      in nsIIDRef     aIID,
+                      out JSVal       aVal,
+                      out nsIXPConnectJSObjectHolder aHolder);
 
     /**
     * wrapJS will yield a new or previously existing xpcom interface pointer
