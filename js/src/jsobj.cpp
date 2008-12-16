@@ -1311,6 +1311,7 @@ obj_eval(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
             ok = JS_FALSE;
             goto out;
         }
+        argv[1] = OBJECT_TO_JSVAL(scopeobj);
     }
 
     /* Ensure we compile this eval with the right object in the scope chain. */
