@@ -98,8 +98,8 @@ _TEST_FILES += \
 		test_wav_trunc_seek.html \
 		r11025_s16_c1.wav \
 		r11025_s16_c1_trailing.wav \
-		r11025_s16_c1_trunc.wav \
 		r11025_u8_c1.wav \
+		r11025_u8_c1_trunc.wav \
 		$(NULL)
 endif
 
