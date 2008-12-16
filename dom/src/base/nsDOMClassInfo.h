@@ -130,11 +130,22 @@ public:
   }
 
   static nsresult WrapNative(JSContext *cx, JSObject *scope,
-                             nsISupports *native, const nsIID& aIID,
+                             nsISupports *native, const nsIID* aIID,
                              jsval *vp,
                              // If non-null aHolder will keep the jsval alive
                              // while there's a ref to it
                              nsIXPConnectJSObjectHolder** aHolder = nsnull);
+
+  // Same as the WrapNative above, but use this one if aIID is nsISupports' IID.
+  static nsresult WrapNative(JSContext *cx, JSObject *scope,
+                             nsISupports *native, jsval *vp,
+                             // If non-null aHolder will keep the jsval alive
+                             // while there's a ref to it
+                             nsIXPConnectJSObjectHolder** aHolder = nsnull)
+  {
+    return WrapNative(cx, scope, native, nsnull, vp, aHolder);
+  }
+
   static nsresult ThrowJSException(JSContext *cx, nsresult aResult);
 
   static nsresult InitDOMJSClass(JSContext *cx, JSObject *obj);
