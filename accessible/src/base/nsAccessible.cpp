@@ -308,7 +308,7 @@ nsAccessible::GetName(nsAString& aName)
   if (content->GetAttr(kNameSpaceID_None, tooltipAttr, name)) {
     name.CompressWhitespace();
     aName = name;
-  } else {
+  } else if (rv != NS_OK_EMPTY_NAME) {
     aName.SetIsVoid(PR_TRUE);
   }
 
