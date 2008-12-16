@@ -468,7 +468,7 @@ XPCConvert::NativeData2JS(XPCCallContext& ccx, jsval* d, const void* s,
                     // therefore this NativeInterface2JSObject will not end up
                     // creating a new XPCNativeScriptableShared.
                     if(!NativeInterface2JSObject(ccx, d, nsnull, iface, iid,
-                                                 scope, PR_TRUE,
+                                                 nsnull, scope, PR_TRUE,
                                                  OBJ_IS_NOT_GLOBAL, pErr))
                         return JS_FALSE;
 
@@ -1052,12 +1052,12 @@ XPCConvert::NativeInterface2JSObject(XPCCallContext& ccx,
                                      nsIXPConnectJSObjectHolder** dest,
                                      nsISupports* src,
                                      const nsID* iid,
+                                     XPCNativeInterface* Interface,
                                      JSObject* scope,
                                      PRBool allowNativeWrapper,
                                      PRBool isGlobal,
                                      nsresult* pErr)
 {
-    NS_ASSERTION(iid, "bad param");
     NS_ASSERTION(scope, "bad param");
 
     *d = JSVAL_NULL;
@@ -1086,7 +1086,13 @@ XPCConvert::NativeInterface2JSObject(XPCCallContext& ccx,
 
         // verify that this wrapper is for the right interface
         nsCOMPtr<nsISupports> wrapper;
-        src->QueryInterface(*iid, (void**)getter_AddRefs(wrapper));
+        if(Interface)
+            src->QueryInterface(*Interface->GetIID(),
+                                (void**)getter_AddRefs(wrapper));
+        else if(iid)
+            src->QueryInterface(*iid, (void**)getter_AddRefs(wrapper));
+        else
+            wrapper = do_QueryInterface(src);
         nsCOMPtr<nsIXPConnectJSObjectHolder> holder =
             do_QueryInterface(wrapper);
         JSObject* flat;
@@ -1106,10 +1112,13 @@ XPCConvert::NativeInterface2JSObject(XPCCallContext& ccx,
         if(!xpcscope)
             return JS_FALSE;
 
-        AutoMarkingNativeInterfacePtr iface(ccx);
-        iface = XPCNativeInterface::GetNewOrUsed(ccx, iid);
-        if(!iface)
-            return JS_FALSE;
+        AutoMarkingNativeInterfacePtr iface(ccx, Interface);
+        if(!iface && iid)
+        {
+            iface = XPCNativeInterface::GetNewOrUsed(ccx, iid);
+            if(!iface)
+                return JS_FALSE;
+        }
 
         nsresult rv;
         XPCWrappedNative* wrapper;
@@ -1124,7 +1133,10 @@ XPCConvert::NativeInterface2JSObject(XPCCallContext& ccx,
             // rooted in that case).
             if(dest)
                 strongWrapper = wrapper;
-            wrapper->FindTearOff(ccx, iface, JS_FALSE, &rv);
+            if(iface)
+                wrapper->FindTearOff(ccx, iface, JS_FALSE, &rv);
+            else
+                rv = NS_OK;
         }
         else
         {

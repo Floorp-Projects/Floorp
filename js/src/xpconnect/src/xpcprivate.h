@@ -2763,6 +2763,7 @@ public:
                                            nsIXPConnectJSObjectHolder** dest,
                                            nsISupports* src,
                                            const nsID* iid,
+                                           XPCNativeInterface* Interface,
                                            JSObject* scope,
                                            PRBool allowNativeWrapper,
                                            PRBool isGlobal,
