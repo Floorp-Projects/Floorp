@@ -107,13 +107,28 @@ function RedGreenCheck(fndecl, trace) {
       // to check for later.
       isn.redInfo = undefined;
       walk_tree(isn, function(t, stack) {
+        function getLocation(skiptop) {
+          if (!skiptop) {
+            let loc = location_of(t);
+            if (loc !== undefined)
+              return loc;
+          }
+          
+          for (let i = stack.length - 1; i >= 0; --i) {
+            loc = location_of(stack[i]);
+            if (loc !== undefined)
+              return loc;
+          }
+          return location_of(DECL_SAVED_TREE(fndecl));
+        }
+                  
         switch (TREE_CODE(t)) {
           case FIELD_DECL:
             if (isRed(t)) {
               let varName = dehydra_convert(t).name;
               // location_of(t) is the location of the declaration.
               isn.redInfo = ["cannot access JS_REQUIRES_STACK variable " + varName,
-                             location_of(stack[stack.length - 1])];
+                             getLocation(true)];
               self.hasRed = true;
             }
             break;
@@ -124,7 +139,7 @@ function RedGreenCheck(fndecl, trace) {
               if (isRed(callee)) {
                 let calleeName = dehydra_convert(callee).name;
                 isn.redInfo = ["cannot call JS_REQUIRES_STACK function " + calleeName,
-                              location_of(t)];
+                              getLocation(false)];
                 self.hasRed = true;
               } else if (isTurnRed(callee)) {
                 isn.turnRed = true;
