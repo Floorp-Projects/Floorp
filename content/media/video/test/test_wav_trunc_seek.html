@@ -11,7 +11,7 @@
        onloadedmetadata='return startTest();'
        onseeked='return endSeek();'
        onended='return endTest();'>
-  <source type='audio/x-wav' src='r11025_s16_c1_trunc.wav'>
+  <source type='audio/x-wav' src='r11025_u8_c1_trunc.wav'>
 </audio>
 <pre id="test">
 <script class="testbody" type="text/javascript">
@@ -24,9 +24,9 @@ function startTest() {
   if (completed)
     return false;
 
-  ok(v.duration > 0.3 && v.duration < 0.5, "Duration should be around 0.4: " + v.duration);
+  ok(v.duration > 1.7 && v.duration < 1.9, "Duration should be around 1.8: " + v.duration);
 
-  v.currentTime = 1.0;
+  v.currentTime = 3.0;
   return false;
 }
 
@@ -41,7 +41,7 @@ function endSeek() {
     return false
 
   completed = true;
-  ok(v.currentTime >= 0.3 && v.currentTime <= 0.5,
+  ok(v.currentTime >= 1.7 && v.currentTime <= 1.9,
      "Checking currentTime at end: " + v.currentTime);
   v.play();
   return false;
