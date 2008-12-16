@@ -1,6 +1,6 @@
 /* -*- Mode: C; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 4 -*- */
 /*
- * Copyright (c) 2004, Apple Computer, Inc. and The Mozilla Foundation. 
+ * Copyright © 2004, Apple Computer, Inc. and The Mozilla Foundation. 
  * All rights reserved.
  * 
  * Redistribution and use in source and binary forms, with or without
@@ -115,8 +115,8 @@ typedef struct NPClass NPClass;
 
 typedef char NPUTF8;
 typedef struct _NPString {
-    const NPUTF8 *UTF8Characters;
-    uint32_t UTF8Length;
+    const NPUTF8 *utf8characters;
+    uint32_t utf8length;
 } NPString;
 
 typedef enum {
@@ -218,25 +218,25 @@ NP_END_MACRO
 
 
 /*
-  Type mappings (JavaScript types have been used for illustration
+	Type mappings (JavaScript types have been used for illustration
     purposes):
 
-  JavaScript       to             C (NPVariant with type:)
-  undefined                       NPVariantType_Void
-  null                            NPVariantType_Null
-  Boolean                         NPVariantType_Bool
-  Number                          NPVariantType_Double or NPVariantType_Int32
-  String                          NPVariantType_String
-  Object                          NPVariantType_Object
+	JavaScript       to             C (NPVariant with type:)
+	undefined                       NPVariantType_Void
+	null                            NPVariantType_Null
+	Boolean                         NPVariantType_Bool
+	Number                          NPVariantType_Double or NPVariantType_Int32
+	String                          NPVariantType_String
+	Object                          NPVariantType_Object
 
-  C (NPVariant with type:)   to   JavaScript
-  NPVariantType_Void              undefined
-  NPVariantType_Null              null
-  NPVariantType_Bool              Boolean
-  NPVariantType_Int32             Number
-  NPVariantType_Double            Number
-  NPVariantType_String            String
-  NPVariantType_Object            Object
+	C (NPVariant with type:)   to   JavaScript
+	NPVariantType_Void              undefined
+	NPVariantType_Null              null
+	NPVariantType_Bool              Boolean	
+	NPVariantType_Int32             Number
+	NPVariantType_Double            Number
+	NPVariantType_String            String
+	NPVariantType_Object            Object
 */
 
 typedef void *NPIdentifier;
@@ -248,9 +248,7 @@ typedef void *NPIdentifier;
     methods and properties can be identified by either strings or
     integers (i.e. foo["bar"] vs foo[1]). NPIdentifiers can be
     compared using ==.  In case of any errors, the requested
-    NPIdentifier(s) will be NULL. NPIdentifier lifetime is controlled
-    by the browser. Plugins do not need to worry about memory management
-    with regards to NPIdentifiers.
+    NPIdentifier(s) will be NULL.
 */
 NPIdentifier NPN_GetStringIdentifier(const NPUTF8 *name);
 void NPN_GetStringIdentifiers(const NPUTF8 **names, int32_t nameCount,
