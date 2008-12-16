@@ -57,8 +57,6 @@ private:
   nsEventTargetChainItem(nsPIDOMEventTarget* aTarget,
                          nsEventTargetChainItem* aChild = nsnull);
 
-  void Destroy(nsFixedSizeAllocator* aAllocator);
-
 public:
   static nsEventTargetChainItem* Create(nsFixedSizeAllocator* aAllocator, 
                                         nsPIDOMEventTarget* aTarget,
@@ -73,9 +71,18 @@ public:
   static void Destroy(nsFixedSizeAllocator* aAllocator,
                       nsEventTargetChainItem* aItem)
   {
-    aItem->Destroy(aAllocator);
-    aItem->~nsEventTargetChainItem();
-    aAllocator->Free(aItem, sizeof(nsEventTargetChainItem));
+    // ::Destroy deletes ancestor chain.
+    nsEventTargetChainItem* item = aItem;
+    if (item->mChild) {
+      item->mChild->mParent = nsnull;
+      item->mChild = nsnull;
+    }
+    while (item) {
+      nsEventTargetChainItem* parent = item->mParent;
+      item->~nsEventTargetChainItem();
+      aAllocator->Free(item, sizeof(nsEventTargetChainItem));
+      item = parent;
+    }
   }
 
   PRBool IsValid()
@@ -179,22 +186,6 @@ nsEventTargetChainItem::nsEventTargetChainItem(nsPIDOMEventTarget* aTarget,
   if (mChild) {
     mChild->mParent = this;
   }
-}
-
-void
-nsEventTargetChainItem::Destroy(nsFixedSizeAllocator* aAllocator)
-{
-  if (mChild) {
-    mChild->mParent = nsnull;
-    mChild = nsnull;
-  }
-
-  if (mParent) {
-    Destroy(aAllocator, mParent);
-    mParent = nsnull;
-  }
-
-  mTarget = nsnull;
 }
 
 nsresult
