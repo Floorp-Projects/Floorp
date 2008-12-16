@@ -40,245 +40,275 @@
 
 const BASE = "http://localhost:4444";
 
-var paths =
-  [
-/* 0*/ BASE + "/test_registerdirectory.js", // without a base path
-/* 1*/ BASE + "/test_registerdirectory.js", // with a base path
-/* 2*/ BASE + "/test_registerdirectory.js", // without a base path
+var tests = [];
+var test;
 
-/* 3*/ BASE + "/test_registerdirectory.js", // no registered path handler
-/* 4*/ BASE + "/test_registerdirectory.js", // registered path handler
-/* 5*/ BASE + "/test_registerdirectory.js", // removed path handler
 
-/* 6*/ BASE + "/test_registerdirectory.js", // with a base path
-/* 7*/ BASE + "/test_registerdirectory.js", // ...and a path handler
-/* 8*/ BASE + "/test_registerdirectory.js", // removed base handler
-/* 9*/ BASE + "/test_registerdirectory.js",  // removed path handler
-
-/*10*/ BASE + "/foo/test_registerdirectory.js", // mapping set up, works
-/*11*/ BASE + "/foo/test_registerdirectory.js/test_registerdirectory.js", // no mapping, fails
-/*12*/ BASE + "/foo/test_registerdirectory.js/test_registerdirectory.js", // mapping, works
-/*13*/ BASE + "/foo/test_registerdirectory.js", // two mappings set up, still works
-/*14*/ BASE + "/foo/test_registerdirectory.js", // mapping was removed
-/*15*/ BASE + "/foo/test_registerdirectory.js/test_registerdirectory.js", // mapping still present, works
-/*16*/ BASE + "/foo/test_registerdirectory.js/test_registerdirectory.js", // mapping removed
-  ];
-var currPathIndex = 0;
-
-var listener =
-  {
-    // NSISTREAMLISTENER
-    onDataAvailable: function(request, cx, inputStream, offset, count)
-    {
-      makeBIS(inputStream).readByteArray(count); // required by API
-    },
-    // NSIREQUESTOBSERVER
-    onStartRequest: function(request, cx)
-    {
-      var ch = request.QueryInterface(Ci.nsIHttpChannel);
-
-      switch (currPathIndex)
-      {
-        case 0:
-          do_check_eq(ch.responseStatus, 404);
-          do_check_false(ch.requestSucceeded);
-          break;
-
-        case 1:
-          do_check_eq(ch.responseStatus, 200);
-          do_check_true(ch.requestSucceeded);
-
-          var actualFile = serverBasePath.clone();
-          actualFile.append("test_registerdirectory.js");
-          do_check_eq(ch.getResponseHeader("Content-Length"),
-                      actualFile.fileSize.toString());
-          break;
-
-        case 2:
-          do_check_eq(ch.responseStatus, 404);
-          do_check_false(ch.requestSucceeded);
-          break;
-
-        case 3:
-          do_check_eq(ch.responseStatus, 404);
-          do_check_false(ch.requestSucceeded);
-          break;
-
-        case 4:
-          do_check_eq(ch.responseStatus, 200);
-          do_check_eq(ch.responseStatusText, "OK");
-          do_check_true(ch.requestSucceeded);
-          do_check_eq(ch.getResponseHeader("Override-Succeeded"), "yes");
-          break;
-
-        case 5:
-          do_check_eq(ch.responseStatus, 404);
-          do_check_false(ch.requestSucceeded);
-          break;
-
-        case 6:
-          do_check_eq(ch.responseStatus, 200);
-          do_check_true(ch.requestSucceeded);
-
-          var actualFile = serverBasePath.clone();
-          actualFile.append("test_registerdirectory.js");
-          do_check_eq(ch.getResponseHeader("Content-Length"),
-                      actualFile.fileSize.toString());
-          break;
-
-        case 7:
-        case 8:
-          do_check_eq(ch.responseStatus, 200);
-          do_check_eq(ch.responseStatusText, "OK");
-          do_check_true(ch.requestSucceeded);
-          do_check_eq(ch.getResponseHeader("Override-Succeeded"), "yes");
-          break;
-
-        case 9:
-          do_check_eq(ch.responseStatus, 404);
-          do_check_false(ch.requestSucceeded);
-          break;
-
-        case 10:
-          do_check_eq(ch.responseStatus, 200);
-          do_check_eq(ch.responseStatusText, "OK");
-          break;
-
-        case 11:
-          do_check_eq(ch.responseStatus, 404);
-          do_check_false(ch.requestSucceeded);
-          break;
-
-        case 12:
-        case 13:
-          do_check_eq(ch.responseStatus, 200);
-          do_check_eq(ch.responseStatusText, "OK");
-          break;
-
-        case 14:
-          do_check_eq(ch.responseStatus, 404);
-          do_check_false(ch.requestSucceeded);
-          break;
-
-        case 15:
-          do_check_eq(ch.responseStatus, 200);
-          do_check_eq(ch.responseStatusText, "OK");
-          break;
-
-        case 16:
-          do_check_eq(ch.responseStatus, 404);
-          do_check_false(ch.requestSucceeded);
-          break;
-      }
-    },
-    onStopRequest: function(request, cx, status)
-    {
-      switch (currPathIndex)
-      {
-        case 0:
-          // now set a base path
-          serverBasePath = testsDirectory.clone();
-          srv.registerDirectory("/", serverBasePath);
-          break;
-
-        case 1:
-          // remove base path
-          serverBasePath = null;
-          srv.registerDirectory("/", serverBasePath);
-          break;
-
-        case 3:
-          // register overriding path
-          srv.registerPathHandler("/test_registerdirectory.js",
-                                  override_test_registerdirectory);
-          break;
-
-        case 4:
-          // unregister overriding path
-          srv.registerPathHandler("/test_registerdirectory.js", null);
-          break;
-
-        case 5:
-          // set the base path again
-          serverBasePath = testsDirectory.clone();
-          srv.registerDirectory("/", serverBasePath);
-          break;
-
-        case 6:
-          // register overriding path
-          srv.registerPathHandler("/test_registerdirectory.js",
-                                  override_test_registerdirectory);
-          break;
-
-        case 7:
-          // remove base path
-          serverBasePath = null;
-          srv.registerDirectory("/", serverBasePath);
-          break;
-
-        case 8:
-          // unregister overriding path
-          srv.registerPathHandler("/test_registerdirectory.js", null);
-          break;
-
-        case 9:
-          // register /foo/ as a base path
-          serverBasePath = testsDirectory.clone();
-          srv.registerDirectory("/foo/", serverBasePath);
-          break;
-
-        case 10:
-          // do nothing
-          break;
-
-        case 11:
-          // now register an overriding path to handle the URL that just failed
-          srv.registerDirectory("/foo/test_registerdirectory.js/", serverBasePath);
-          break;
-
-        case 12:
-          // do nothing
-          break;
-
-        case 13:
-          srv.registerDirectory("/foo/", null);
-          break;
-
-        case 14:
-          // do nothing
-          break;
-
-        case 15:
-          srv.registerDirectory("/foo/test_registerdirectory.js/", null);
-          break;
-      }
-
-      if (!paths[++currPathIndex])
-        srv.stop();
-      else
-        performNextTest();
-
-      do_test_finished();
-    },
-    // NSISUPPORTS
-    QueryInterface: function(aIID)
-    {
-      if (aIID.equals(Ci.nsIStreamListener) ||
-          aIID.equals(Ci.nsIRequestObserver) ||
-          aIID.equals(Ci.nsISupports))
-        return this;
-      throw Cr.NS_ERROR_NO_INTERFACE;
-    }
-  };
-
-function performNextTest()
+function nocache(ch)
 {
-  do_test_pending();
-
-  var ch = makeChannel(paths[currPathIndex]);
   ch.loadFlags |= Ci.nsIRequest.LOAD_BYPASS_CACHE; // important!
-  ch.asyncOpen(listener, null);
 }
+
+function notFound(ch)
+{
+  do_check_eq(ch.responseStatus, 404);
+  do_check_false(ch.requestSucceeded);
+}
+
+function checkOverride(ch)
+{
+  do_check_eq(ch.responseStatus, 200);
+  do_check_eq(ch.responseStatusText, "OK");
+  do_check_true(ch.requestSucceeded);
+  do_check_eq(ch.getResponseHeader("Override-Succeeded"), "yes");
+}
+
+function check200(ch)
+{
+  do_check_eq(ch.responseStatus, 200);
+  do_check_eq(ch.responseStatusText, "OK");
+}
+
+function checkFile(ch)
+{
+  do_check_eq(ch.responseStatus, 200);
+  do_check_true(ch.requestSucceeded);
+
+  var actualFile = serverBasePath.clone();
+  actualFile.append("test_registerdirectory.js");
+  do_check_eq(ch.getResponseHeader("Content-Length"),
+              actualFile.fileSize.toString());
+}
+
+
+/***********************
+ * without a base path *
+ ***********************/
+
+test = new Test(BASE + "/test_registerdirectory.js",
+                nocache, notFound, null),
+tests.push(test);
+
+
+/********************
+ * with a base path *
+ ********************/
+
+test = new Test(BASE + "/test_registerdirectory.js",
+                function(ch)
+                {
+                  nocache(ch);
+                  serverBasePath = testsDirectory.clone();
+                  srv.registerDirectory("/", serverBasePath);
+                },
+                checkFile,
+                null);
+tests.push(test);
+
+
+/*****************************
+ * without a base path again *
+ *****************************/
+
+test = new Test(BASE + "/test_registerdirectory.js",
+                function(ch)
+                {
+                  nocache(ch);
+                  serverBasePath = null;
+                  srv.registerDirectory("/", serverBasePath);
+                },
+                notFound,
+                null);
+tests.push(test);
+
+
+/***************************
+ * registered path handler *
+ ***************************/
+
+test = new Test(BASE + "/test_registerdirectory.js",
+                function(ch)
+                {
+                  nocache(ch);
+                  srv.registerPathHandler("/test_registerdirectory.js",
+                                          override_test_registerdirectory);
+                },
+                checkOverride,
+                null);
+tests.push(test);
+
+
+/************************
+ * removed path handler *
+ ************************/
+
+test = new Test(BASE + "/test_registerdirectory.js",
+                function init_registerDirectory6(ch)
+                {
+                  nocache(ch);
+                  srv.registerPathHandler("/test_registerdirectory.js", null);
+                },
+                notFound,
+                null);
+tests.push(test);
+
+
+/********************
+ * with a base path *
+ ********************/
+
+test = new Test(BASE + "/test_registerdirectory.js",
+                function(ch)
+                {
+                  nocache(ch);
+
+                  // set the base path again
+                  serverBasePath = testsDirectory.clone();
+                  srv.registerDirectory("/", serverBasePath);
+                },
+                checkFile,
+                null);
+tests.push(test);
+
+
+/*************************
+ * ...and a path handler *
+ *************************/
+
+test = new Test(BASE + "/test_registerdirectory.js",
+                function(ch)
+                {
+                  nocache(ch);
+                  srv.registerPathHandler("/test_registerdirectory.js",
+                                          override_test_registerdirectory);
+                },
+                checkOverride,
+                null);
+tests.push(test);
+
+
+/************************
+ * removed base handler *
+ ************************/
+
+test = new Test(BASE + "/test_registerdirectory.js",
+                function(ch)
+                {
+                  nocache(ch);
+                  serverBasePath = null;
+                  srv.registerDirectory("/", serverBasePath);
+                },
+                checkOverride,
+                null);
+tests.push(test);
+
+
+/************************
+ * removed path handler *
+ ************************/
+
+test = new Test(BASE + "/test_registerdirectory.js",
+                function(ch)
+                {
+                  nocache(ch);
+                  srv.registerPathHandler("/test_registerdirectory.js", null);
+                },
+                notFound,
+                null);
+tests.push(test);
+
+
+/*************************
+ * mapping set up, works *
+ *************************/
+
+test = new Test(BASE + "/foo/test_registerdirectory.js",
+                function(ch)
+                {
+                  nocache(ch);
+                  serverBasePath = testsDirectory.clone();
+                  srv.registerDirectory("/foo/", serverBasePath);
+                },
+                check200,
+                null);
+tests.push(test);
+
+
+/*********************
+ * no mapping, fails *
+ *********************/
+
+test = new Test(BASE + "/foo/test_registerdirectory.js/test_registerdirectory.js",
+                nocache,
+                notFound,
+                null);
+tests.push(test);
+
+
+/******************
+ * mapping, works *
+ ******************/
+
+test = new Test(BASE + "/foo/test_registerdirectory.js/test_registerdirectory.js",
+                function(ch)
+                {
+                  nocache(ch);
+                  srv.registerDirectory("/foo/test_registerdirectory.js/",
+                                        serverBasePath);
+                },
+                checkFile,
+                null);
+tests.push(test);
+
+
+/************************************
+ * two mappings set up, still works *
+ ************************************/
+
+test = new Test(BASE + "/foo/test_registerdirectory.js",
+                nocache, checkFile, null);
+tests.push(test);
+
+
+/**************************
+ * remove topmost mapping *
+ **************************/
+
+test = new Test(BASE + "/foo/test_registerdirectory.js",
+                function(ch)
+                {
+                  nocache(ch);
+                  srv.registerDirectory("/foo/", null);
+                },
+                notFound,
+                null);
+tests.push(test);
+
+
+/**************************************
+ * lower mapping still present, works *
+ **************************************/
+
+test = new Test(BASE + "/foo/test_registerdirectory.js/test_registerdirectory.js",
+                nocache, checkFile, null);
+tests.push(test);
+
+
+/*******************
+ * mapping removed *
+ *******************/
+
+test = new Test(BASE + "/foo/test_registerdirectory.js/test_registerdirectory.js",
+                function(ch)
+                {
+                  nocache(ch);
+                  srv.registerDirectory("/foo/test_registerdirectory.js/", null);
+                },
+                notFound,
+                null);
+tests.push(test);
+
+
 
 var srv;
 var serverBasePath;
@@ -291,8 +321,9 @@ function run_test()
   srv = createServer();
   srv.start(4444);
 
-  performNextTest();
+  runHttpTests(tests, function() { srv.stop(); });
 }
+
 
 // PATH HANDLERS
 
