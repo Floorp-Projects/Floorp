@@ -1,0 +1,81 @@
+<!DOCTYPE HTML>
+<html>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=462787
+-->
+<head>
+  <title>Test for Bug 462787</title>
+  <script type="application/javascript" src="/MochiKit/MochiKit.js"></script>
+  <script type="application/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
+</head>
+<body>
+<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=462787">Mozilla Bug 462787</a>
+<p id="display"></p>
+<div id="content" style="display: none">
+  
+</div>
+<pre id="test">
+<script type="application/javascript">
+
+/** Test for Bug 462787 **/
+
+function do_test() {
+  const INVALID_POINTER = 0x80004003;
+  
+  netscape.security.PrivilegeManager.enablePrivilege("UniversalXPConnect");
+  var utils = Components.classes["@mozilla.org/inspector/dom-utils;1"]
+                             .getService(Components.interfaces.inIDOMUtils);
+  try {
+    utils.getCSSStyleRules(null); 
+    ok(false, "expected an exception"); 
+  }
+  catch(e) { is(e.result, INVALID_POINTER, "got the expected exception"); }
+
+  try {
+    utils.getRuleLine(null); 
+    ok(false, "expected an exception"); 
+  }
+  catch(e) { is(e.result, INVALID_POINTER, "got the expected exception"); }
+
+  try {
+    utils.isIgnorableWhitespace(null);
+    ok(false, "expected an exception");
+  }
+  catch(e) { is(e.result, INVALID_POINTER, "got the expected exception"); }
+
+  try {
+    utils.getParentForNode(null, true); 
+    ok(false, "expected an exception");
+  }
+  catch(e) { is(e.result, INVALID_POINTER, "got the expected exception"); }
+
+  try {
+    utils.getBindingURLs(null); 
+    ok(false, "expected an exception"); 
+  }
+  catch(e) { is(e.result, INVALID_POINTER, "got the expected exception"); }
+
+  try {
+    utils.getContentState(null); 
+    ok(false, "expected an exception"); 
+  }
+  catch(e) { is(e.result, INVALID_POINTER, "got the expected exception"); }
+
+  try {
+    utils.setContentState(null, false); 
+    ok(false, "expected an exception"); 
+  }
+  catch(e) { is(e.result, INVALID_POINTER, "got the expected exception"); }
+
+  SimpleTest.finish();
+}
+
+SimpleTest.waitForExplicitFinish();
+addLoadEvent(do_test);
+
+
+</script>
+</pre>
+</body>
+</html>
