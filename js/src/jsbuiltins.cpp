@@ -402,7 +402,7 @@ JSBool FASTCALL
 js_HasNamedProperty(JSContext* cx, JSObject* obj, JSString* idstr)
 {
     jsid id;
-    if (!obj || !js_ValueToStringId(cx, STRING_TO_JSVAL(idstr), &id))
+    if (!js_ValueToStringId(cx, STRING_TO_JSVAL(idstr), &id))
         return JSVAL_TO_BOOLEAN(JSVAL_VOID);
 
     JSObject* obj2;
@@ -418,7 +418,7 @@ JSBool FASTCALL
 js_HasNamedPropertyInt32(JSContext* cx, JSObject* obj, int32 index)
 {
     jsid id;
-    if (!obj || !js_Int32ToId(cx, index, &id))
+    if (!js_Int32ToId(cx, index, &id))
         return JSVAL_TO_BOOLEAN(JSVAL_VOID);
 
     JSObject* obj2;
@@ -469,18 +469,6 @@ js_BooleanOrUndefinedToString(JSContext *cx, int32 unboxed)
 {
     JS_ASSERT(uint32(unboxed) <= 2);
     return ATOM_TO_STRING(cx->runtime->atomState.booleanAtoms[unboxed]);
-}
-
-JSString* FASTCALL
-js_ObjectToString(JSContext* cx, JSObject* obj)
-{
-    if (!obj)
-        return ATOM_TO_STRING(cx->runtime->atomState.nullAtom);
-    jsval v;
-    if (!OBJ_DEFAULT_VALUE(cx, obj, JSTYPE_STRING, &v))
-        return NULL;
-    JS_ASSERT(JSVAL_IS_STRING(v));
-    return JSVAL_TO_STRING(v);
 }
 
 JSObject* FASTCALL
