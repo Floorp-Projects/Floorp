@@ -100,6 +100,26 @@ static ca_context_destroy_fn ca_context_destroy;
 static ca_context_play_fn ca_context_play;
 static ca_context_change_props_fn ca_context_change_props;
 
+/* we provide a blank error handler to silence ALSA's stderr
+   messages on computers with no sound devices */
+typedef void (*snd_lib_error_handler_t) (const char* file,
+                                         int         line,
+                                         const char* function,
+                                         int         err,
+                                         const char* format,
+                                         ...);
+typedef int (*snd_lib_error_set_handler_fn) (snd_lib_error_handler_t handler);
+
+static void
+quiet_error_handler(const char* file,
+                    int         line,
+                    const char* function,
+                    int         err,
+                    const char* format,
+                    ...)
+{
+}
+
 NS_IMPL_ISUPPORTS2(nsSound, nsISound, nsIStreamLoaderObserver)
 
 ////////////////////////////////////////////////////////////////////////
@@ -164,6 +184,16 @@ nsSound::Init()
                 ca_context_change_props = (ca_context_change_props_fn) PR_FindFunctionSymbol(libcanberra, "ca_context_change_props");
             }
         }
+    }
+
+    PRLibrary* libasound = PR_LoadLibrary("libasound.so.2");
+    if (libasound) {
+        snd_lib_error_set_handler_fn snd_lib_error_set_handler =
+             (snd_lib_error_set_handler_fn) PR_FindFunctionSymbol(libasound, "snd_lib_error_set_handler");
+        if (snd_lib_error_set_handler)
+            snd_lib_error_set_handler(quiet_error_handler);
+
+        PR_UnloadLibrary(libasound);
     }
 
     return NS_OK;
