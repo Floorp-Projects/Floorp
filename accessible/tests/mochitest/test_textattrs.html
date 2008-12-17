@@ -21,37 +21,24 @@
 
     var gComputedStyle = null;
 
-    var gObserverService = null;
-    var gA11yEventObserver = null;
+    var gTextAttrChangedEventHandler = {
+      handleEvent: function gTextAttrChangedEventHandler_handleEvent(aEvent)
+      {
+        this.eventNumber++;
+      },
+
+      eventNumber: 0
+    };
 
     function testSpellTextAttrs()
     {
-      gA11yEventObserver = {
-        observe: function observe(aSubject, aTopic, aData)
-        {
-          if (aTopic != "accessible-event")
-            return;
-
-          
-          var event = aSubject.QueryInterface(nsIAccessibleEvent);
-
-          if (event.eventType == nsIAccessibleEvent.EVENT_TEXT_ATTRIBUTE_CHANGED)
-            this.mTextAttrChangedEventCounter++;
-        },
-
-        mTextAttrChangedEventCounter: 0
-      };
-
-      // Add accessibility event listeners
-      var gObserverService = Components.classes["@mozilla.org/observer-service;1"].
-                             getService(nsIObserverService);
-
-      gObserverService.addObserver(gA11yEventObserver, "accessible-event",
-                                  false);
+      registerA11yEventListener(nsIAccessibleEvent.EVENT_TEXT_ATTRIBUTE_CHANGED,
+                                gTextAttrChangedEventHandler);
 
       ID = "area8";
   
       var node = document.getElementById(ID);
+      node.setAttribute("value", "valid text inalid tixt");
       node.focus();
 
       var editor = node.QueryInterface(nsIDOMNSEditableElement).editor;
@@ -82,16 +69,11 @@
           testTextAttrs(ID, 17, attrs, 17, 18);
           testTextAttrs(ID, 18, misspelledAttrs, 18, 22);
 
-          if (navigator.platform == "Win32")
-            is(gA11yEventObserver.mTextAttrChangedEventCounter, 2,
-               "Wrong count of 'text attribute changed' events for " + ID);
-          else
-            todo(gA11yEventObserver.mTextAttrChangedEventCounter, 2,
-                 "Wrong count of 'text attribute changed' events for " + ID);
+          is(gTextAttrChangedEventHandler.eventNumber, 2,
+             "Wrong count of 'text attribute changed' events for " + ID);
 
-          // Remove a11y events listener
-          gObserverService.removeObserver(gA11yEventObserver,
-                                          "accessible-event");
+          unregisterA11yEventListener(nsIAccessibleEvent.EVENT_TEXT_ATTRIBUTE_CHANGED,
+                                      gTextAttrChangedEventHandler);
 
           SimpleTest.finish();
         }, 0);
@@ -383,7 +365,7 @@
     }
 
     SimpleTest.waitForExplicitFinish();
-    addLoadEvent(doTest);
+    addA11yLoadEvent(doTest);
   </script>
 </head>
 <body>
@@ -439,7 +421,7 @@
     </span>
   </p>
 
-  <input id="area8" value="valid text inalid tixt"/>
+  <input id="area8"/>
 
   <p id="output"/>
 </body>
