@@ -55,6 +55,7 @@
 #include "nsXPCOMStrings.h"
 #include "prlock.h"
 #include "nsThreadUtils.h"
+#include "nsContentUtils.h"
 
 #include "nsIScriptSecurityManager.h"
 #include "nsIXPConnect.h"
@@ -68,6 +69,7 @@
 #include "nsIDOMProgressEvent.h"
 #include "nsHTMLMediaError.h"
 #include "nsICategoryManager.h"
+#include "nsCommaSeparatedTokenizer.h"
 
 #ifdef MOZ_OGG
 #include "nsOggDecoder.h"
@@ -592,11 +594,23 @@ void nsHTMLMediaElement::UnbindFromTree(PRBool aDeep,
 }
 
 #ifdef MOZ_OGG
+// See http://www.rfc-editor.org/rfc/rfc5334.txt for the definitions
+// of Ogg media types and codec types
 static const char gOggTypes[][16] = {
   "video/ogg",
   "audio/ogg",
   "application/ogg"
 };
+
+static const char* gOggCodecs[] = {
+  "vorbis",
+  "theora",
+  nsnull
+};
+
+static const char* gOggMaybeCodecs[] = {
+  nsnull
+}; 
 
 static PRBool IsOggEnabled()
 {
@@ -616,11 +630,24 @@ static PRBool IsOggType(const nsACString& aType)
 #endif
 
 #ifdef MOZ_WAVE
+// See http://www.rfc-editor.org/rfc/rfc2361.txt for the definitions
+// of WAVE media types and codec types. However, the audio/vnd.wave
+// MIME type described there is not used.
 static const char gWaveTypes[][16] = {
   "audio/x-wav",
   "audio/wav",
   "audio/wave",
   "audio/x-pn-wav"
+};
+
+static const char* gWaveCodecs[] = {
+  "1", // Microsoft PCM Format
+  nsnull
+};
+
+static const char* gWaveMaybeCodecs[] = {
+  "0", // Microsoft Unknown Wave Format
+  nsnull
 };
 
 static PRBool IsWaveEnabled()
@@ -641,17 +668,97 @@ static PRBool IsWaveType(const nsACString& aType)
 #endif
 
 /* static */
-PRBool nsHTMLMediaElement::CanHandleMediaType(const char* aMIMEType)
+PRBool nsHTMLMediaElement::CanHandleMediaType(const char* aMIMEType,
+                                              const char*** aCodecList,
+                                              const char*** aMaybeCodecList)
 {
 #ifdef MOZ_OGG
-  if (IsOggType(nsDependentCString(aMIMEType)))
+  if (IsOggType(nsDependentCString(aMIMEType))) {
+    *aCodecList = gOggCodecs;
+    *aMaybeCodecList = gOggMaybeCodecs;
     return PR_TRUE;
+  }
 #endif
 #ifdef MOZ_WAVE
-  if (IsWaveType(nsDependentCString(aMIMEType)))
+  if (IsWaveType(nsDependentCString(aMIMEType))) {
+    *aCodecList = gWaveCodecs;
+    *aMaybeCodecList = gWaveMaybeCodecs;
     return PR_TRUE;
+  }
 #endif
   return PR_FALSE;
+}
+
+static PRBool
+CodecListContains(const char** aCodecs, const nsAString& aCodec)
+{
+  for (PRInt32 i = 0; aCodecs[i]; ++i) {
+    if (aCodec.EqualsASCII(aCodecs[i]))
+      return PR_TRUE;
+  }
+  return PR_FALSE;
+}
+
+enum CanPlayStatus {
+  CANPLAY_NO,
+  CANPLAY_MAYBE,
+  CANPLAY_YES
+};
+
+static CanPlayStatus GetCanPlay(const nsAString& aType)
+{
+  nsContentTypeParser parser(aType);
+  nsAutoString mimeType;
+  nsresult rv = parser.GetType(mimeType);
+  if (NS_FAILED(rv))
+    return CANPLAY_NO;
+
+  NS_ConvertUTF16toUTF8 mimeTypeUTF8(mimeType);
+  const char** supportedCodecs;
+  const char** maybeSupportedCodecs;
+  if (!nsHTMLMediaElement::CanHandleMediaType(mimeTypeUTF8.get(),
+          &supportedCodecs, &maybeSupportedCodecs))
+    return CANPLAY_NO;
+
+  nsAutoString codecs;
+  rv = parser.GetParameter("codecs", codecs);
+  if (NS_FAILED(rv))
+    // Parameter not found or whatever
+    return CANPLAY_MAYBE;
+
+  CanPlayStatus result = CANPLAY_YES;
+  // See http://www.rfc-editor.org/rfc/rfc4281.txt for the description
+  // of the 'codecs' parameter
+  nsCommaSeparatedTokenizer tokenizer(codecs);
+  PRBool expectMoreTokens = PR_FALSE;
+  while (tokenizer.hasMoreTokens()) {
+    const nsSubstring& token = tokenizer.nextToken();
+
+    if (CodecListContains(maybeSupportedCodecs, token)) {
+      result = CANPLAY_MAYBE;
+    } else if (!CodecListContains(supportedCodecs, token)) {
+      // Totally unsupported codec
+      return CANPLAY_NO;
+    }
+    expectMoreTokens = tokenizer.lastTokenEndedWithComma();
+  }
+  if (expectMoreTokens) {
+    // Last codec name was empty
+    return CANPLAY_NO;
+  }
+  return result;
+}
+
+NS_IMETHODIMP
+nsHTMLMediaElement::CanPlayType(const nsAString& aType, nsAString& aResult)
+{
+  switch (GetCanPlay(aType)) {
+  case CANPLAY_NO: aResult.AssignLiteral("no"); break;
+  case CANPLAY_YES: aResult.AssignLiteral("probably"); break;
+  default:
+  case CANPLAY_MAYBE: aResult.AssignLiteral("maybe"); break;
+  }
+  return NS_OK;
 }
 
 /* static */
@@ -796,9 +903,8 @@ nsresult nsHTMLMediaElement::PickMediaElement(nsIURI** aURI)
       nsAutoString src;
       if (source->GetAttr(kNameSpaceID_None, nsGkAtoms::src, src)) {
         if (source->GetAttr(kNameSpaceID_None, nsGkAtoms::type, type)) {
-          if (CanHandleMediaType(NS_ConvertUTF16toUTF8(type).get())) {
+          if (GetCanPlay(type) != CANPLAY_NO)
             return NewURIFromString(src, aURI);
-          }
         } else if (i + 1 == count) {
           // The last source element is permitted to omit the type
           // attribute, in which case we need to open the URI and examine

@@ -44,7 +44,10 @@ include $(DEPTH)/config/autoconf.mk
 include $(topsrcdir)/config/rules.mk
 
 _TEST_FILES = \
+		can_play_type_ogg.js \
+		can_play_type_wave.js \
 		test_autoplay.html \
+		test_can_play_type.html \
 		test_constants.html \
 		test_controls.html \
 		test_currentTime.html \
@@ -59,6 +62,7 @@ ifdef MOZ_OGG
 _TEST_FILES += \
 		test_bug448534.html \
 		test_bug461281.html \
+		test_can_play_type_ogg.html \
 		test_duration1.html \
 		test_ended1.html \
 		test_ended2.html \
@@ -78,11 +82,16 @@ _TEST_FILES += \
 		bug461281.ogg \
 		seek.ogg \
 		$(NULL)
+else
+_TEST_FILES += \
+		test_can_play_type_no_ogg.html \
+		$(NULL)
 endif
 
 ifdef MOZ_WAVE
 _TEST_FILES += \
 		test_bug463162.xhtml \
+		test_can_play_type_wave.html \
 		test_wav_8bit.html \
 		test_wav_ended1.html \
 		test_wav_seek3.html \
@@ -100,6 +109,10 @@ _TEST_FILES += \
 		r11025_s16_c1_trailing.wav \
 		r11025_u8_c1.wav \
 		r11025_u8_c1_trunc.wav \
+		$(NULL)
+else
+_TEST_FILES += \
+		test_can_play_type_no_wave.html \
 		$(NULL)
 endif
 

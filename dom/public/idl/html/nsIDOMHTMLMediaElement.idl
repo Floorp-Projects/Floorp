@@ -71,6 +71,7 @@ interface nsIDOMHTMLMediaElement : nsIDOMHTMLElement
   const unsigned short NETWORK_LOADED = 3;
   readonly attribute unsigned short networkState;
   void load();
+  DOMString canPlayType(in DOMString type);
 
   // ready state
   const unsigned short HAVE_NOTHING = 0;

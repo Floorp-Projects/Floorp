@@ -161,6 +161,7 @@ static NS_DEFINE_CID(kXTFServiceCID, NS_XTFSERVICE_CID);
 #include "nsIOfflineCacheUpdate.h"
 #include "nsCPrefetchService.h"
 #include "nsIChromeRegistry.h"
+#include "nsIMIMEHeaderParam.h"
 
 #ifdef IBMBIDI
 #include "nsIBidiKeyboard.h"
@@ -4522,3 +4523,22 @@ nsSameOriginChecker::GetInterface(const nsIID & aIID, void **aResult)
   return QueryInterface(aIID, aResult);
 }
 
+nsContentTypeParser::nsContentTypeParser(const nsAString& aString)
+  : mString(aString), mService(nsnull)
+{
+  CallGetService("@mozilla.org/network/mime-hdrparam;1", &mService);
+}
+
+nsContentTypeParser::~nsContentTypeParser()
+{
+  NS_IF_RELEASE(mService);
+}
+
+nsresult
+nsContentTypeParser::GetParameter(const char* aParameterName, nsAString& aResult)
+{
+  NS_ENSURE_TRUE(mService, NS_ERROR_FAILURE);
+  return mService->GetParameter(mString, aParameterName,
+                                EmptyCString(), PR_FALSE, nsnull,
+                                aResult);
+}
