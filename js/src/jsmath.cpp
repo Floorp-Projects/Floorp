@@ -227,7 +227,7 @@ math_atan2(JSContext *cx, uintN argc, jsval *vp)
     return js_NewNumberInRootedValue(cx, math_atan2_kernel (x, y), vp);
 }
 
-static inline jsdouble FASTCALL
+static inline jsdouble JS_FASTCALL
 math_ceil_kernel(jsdouble x)
 {
 #if defined(XP_MACOSX) || defined(DARWIN)
