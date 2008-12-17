@@ -75,6 +75,38 @@ const EXT_STATE_EXPANDABLE = nsIAccessibleStates.EXT_STATE_EXPANDABLE;
 var gAccRetrieval = null;
 
 /**
+ * Invokes the given function when document is loaded. Preferable to mochitests
+ * 'addLoadEvent' function -- additionally ensures state of the document
+ * accessible is not busy.
+ *
+ * @param aFunc  the function to invoke
+ */
+function addA11yLoadEvent(aFunc)
+{
+  function waitForDocLoad()
+  {
+    window.setTimeout(
+      function()
+      {
+        var accDoc = getAccessible(document);
+        var state = {};
+        accDoc.getState(state, {});
+        if (state.value & nsIAccessibleStates.STATE_BUSY)
+          return waitForDocLoad();
+
+        aFunc.call();
+      },
+      0
+    );
+  }
+
+  addLoadEvent(waitForDocLoad);
+}
+
+////////////////////////////////////////////////////////////////////////////////
+// Get DOM node/accesible helpers
+
+/**
  * Return the DOM node.
  */
 function getNode(aNodeOrID)
