@@ -3017,7 +3017,7 @@ Snarf(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
         }
         fclose(file);
     }
-    JS_free(cx, pathname);
+    JS_free(cx, (void*)pathname);
     if (!ok) {
         JS_free(cx, buf);
         return ok;
