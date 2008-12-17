@@ -89,7 +89,7 @@ Store.prototype = {
       let self = yield;
       if (!record.cleartext)
         this.remove(record);
-      else if (!this._itemExists(record.id))
+      else if (!this.itemExists(record.id))
         this.create(record);
       else
         this.update(record);
@@ -97,41 +97,8 @@ Store.prototype = {
     fn.async(this, onComplete, record);
   },
 
-  // FIXME unused now
-  _applyCommands: function Store__applyCommands(commandList) {
-    let self = yield;
-
-    for (var i = 0; i < commandList.length; i++) {
-      if (i % 5) {
-        Utils.makeTimerForCall(self.cb);
-        yield; // Yield to main loop
-      }
-
-      var command = commandList[i];
-      if (this._log.level <= Log4Moz.Level.Trace)
-        this._log.trace("Processing command: " + this._json.encode(command));
-      switch (command["action"]) {
-      case "create":
-        this._createCommand(command);
-        break;
-      case "remove":
-        this._removeCommand(command);
-        break;
-      case "edit":
-        this._editCommand(command);
-        break;
-      default:
-        this._log.error("unknown action in command: " + command["action"]);
-        break;
-      }
-    }
-  },
-  applyCommands: function Store_applyCommands(onComplete, commandList) {
-    this._applyCommands.async(this, onComplete, commandList);
-  },
-
   // override only if neccessary
-  _itemExists: function Store__itemExists(GUID) {
+  itemExists: function Store_itemExists(GUID) {
     if (GUID in this._lookup)
       return true;
     else
