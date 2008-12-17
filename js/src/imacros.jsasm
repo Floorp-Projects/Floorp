@@ -1,0 +1,210 @@
+# vim: set sw=4 ts=8 et tw=78 ft=asm:
+# ***** BEGIN LICENSE BLOCK *****
+# Version: MPL 1.1/GPL 2.0/LGPL 2.1
+#
+# The contents of this file are subject to the Mozilla Public License Version
+# 1.1 (the "License"); you may not use this file except in compliance with
+# the License. You may obtain a copy of the License at
+# http://www.mozilla.org/MPL/
+#
+# Software distributed under the License is distributed on an "AS IS" basis,
+# WITHOUT WARRANTY OF ANY KIND, either express or implied. See the License
+# for the specific language governing rights and limitations under the
+# License.
+#
+# The Original Code is the TraceMonkey IMacro Assembler.
+#
+# The Initial Developer of the Original Code is
+# Brendan Eich <brendan@mozilla.org>.
+# Portions created by the Initial Developer are Copyright (C) 2008
+# the Initial Developer. All Rights Reserved.
+#
+# Contributor(s):
+#
+# Alternatively, the contents of this file may be used under the terms of
+# either the GNU General Public License Version 2 or later (the "GPL"), or
+# the GNU Lesser General Public License Version 2.1 or later (the "LGPL"),
+# in which case the provisions of the GPL or the LGPL are applicable instead
+# of those above. If you wish to allow use of your version of this file only
+# under the terms of either the GPL or the LGPL, and not to allow others to
+# use your version of this file under the terms of the MPL, indicate your
+# decision by deleting the provisions above and replace them with the notice
+# and other provisions required by the GPL or the LGPL. If you do not delete
+# the provisions above, a recipient may use your version of this file under
+# the terms of any one of the MPL, the GPL or the LGPL.
+#
+# ***** END LICENSE BLOCK *****
+
+.igroup binary JSOP_BITOR-JSOP_MOD
+
+    .imacro any_obj                     # any obj
+        dup                             # any obj obj
+        dup                             # any obj obj obj
+        getprop valueOf                 # any obj obj valueOf
+        ifprimtop 1                     # any obj obj valueOf
+        swap                            # any obj valueOf obj
+        string number                   # any obj valueOf obj "number"
+        call 1                          # any obj rval
+        ifprimtop 3                     # any obj rval
+        goto 2
+1:      pop                             # any obj obj
+2:      pop                             # any obj
+        callprop toString               # any toString obj
+        call 0                          # any rval
+        goto 4                          # any rval
+3:      swap                            # any rval obj
+        pop                             # any rval
+4:      imacop                          # bval
+        stop
+    .end
+
+    .imacro obj_any                     # obj any
+        swap                            # any obj
+        dup                             # any obj obj
+        dup                             # any obj obj obj
+        getprop valueOf                 # any obj obj valueOf
+        ifprimtop 1                     # any obj obj valueOf
+        swap                            # any obj valueOf obj
+        string number                   # any obj valueOf obj "number"
+        call 1                          # any obj lval
+        ifprimtop 3                     # any obj lval
+        goto 2
+1:      pop                             # any obj obj
+2:      pop                             # any obj
+        callprop toString               # any toString obj
+        call 0                          # any lval
+        goto 4                          # any lval
+3:      swap                            # any lval obj
+        pop                             # any lval
+4:      swap                            # lval any
+        imacop                          # bval
+        stop
+    .end
+
+    .imacro obj_obj                     # obj1 obj2
+        swap                            # obj2 obj1
+        dup                             # obj2 obj1 obj1
+        dup                             # obj2 obj1 obj1 obj1
+        getprop valueOf                 # obj2 obj1 obj1 valueOf
+        ifprimtop 1                     # obj2 obj1 obj1 valueOf
+        swap                            # obj2 obj1 valueOf obj1
+        string number                   # obj2 obj1 valueOf obj1 "number"
+        call 1                          # obj2 obj1 lval
+        ifprimtop 3                     # obj2 obj1 lval
+        goto 2
+1:      pop                             # obj2 obj1 obj1
+2:      pop                             # obj2 obj1
+        callprop toString               # obj2 toString obj1
+        call 0                          # obj2 lval
+        goto 4                          # obj2 lval
+3:      swap                            # obj2 lval obj1
+        pop                             # obj2 lval
+4:      swap                            # lval obj2
+        dup                             # lval obj1 obj1
+        dup                             # lval obj obj obj
+        getprop valueOf                 # lval obj obj valueOf
+        ifprimtop 5                     # lval obj obj valueOf
+        swap                            # lval obj valueOf obj
+        string number                   # lval obj valueOf obj "number"
+        call 1                          # lval obj rval
+        ifprimtop 7                     # lval obj rval
+        goto 6
+5:      pop                             # lval obj obj
+6:      pop                             # lval obj
+        callprop toString               # lval toString obj
+        call 0                          # lval rval
+        goto 8                          # lval rval
+7:      swap                            # lval rval obj
+        pop                             # lval rval
+8:      imacop                          # bval
+        stop
+    .end
+
+.end
+
+.igroup add JSOP_ADD
+
+    .imacro any_obj                     # any obj
+        dup                             # any obj obj
+        dup                             # any obj obj obj
+        getprop valueOf                 # any obj obj valueOf
+        ifprimtop 1                     # any obj obj valueOf
+        swap                            # any obj valueOf obj
+        string void                     # lval obj valueOf obj "void"
+        call 1                          # any obj rval
+        ifprimtop 3                     # any obj rval
+        goto 2
+1:      pop                             # any obj obj
+2:      pop                             # any obj
+        callprop toString               # any toString obj
+        call 0                          # any rval
+        goto 4                          # any rval
+3:      swap                            # any rval obj
+        pop                             # any rval
+4:      add                             # aval
+        stop
+    .end
+
+    .imacro obj_any                     # obj any
+        swap                            # any obj
+        dup                             # any obj obj
+        dup                             # any obj obj obj
+        getprop valueOf                 # any obj obj valueOf
+        ifprimtop 1                     # any obj obj valueOf
+        swap                            # any obj valueOf obj
+        string void                     # lval obj valueOf obj "void"
+        call 1                          # any obj lval
+        ifprimtop 3                     # any obj lval
+        goto 2
+1:      pop                             # any obj obj
+2:      pop                             # any obj
+        callprop toString               # any toString obj
+        call 0                          # any lval
+        goto 4                          # any lval
+3:      swap                            # any lval obj
+        pop                             # any lval
+4:      swap                            # lval any
+        add                             # aval
+        stop
+    .end
+
+    .imacro obj_obj                     # obj1 obj2
+        swap                            # obj2 obj1
+        dup                             # obj2 obj1 obj1
+        dup                             # obj2 obj1 obj1 obj1
+        getprop valueOf                 # obj2 obj1 obj1 valueOf
+        ifprimtop 1                     # obj2 obj1 obj1 valueOf
+        swap                            # obj2 obj1 valueOf obj1
+        string void                     # lval obj valueOf obj "void"
+        call 1                          # obj2 obj1 lval
+        ifprimtop 3                     # obj2 obj1 lval
+        goto 2
+1:      pop                             # obj2 obj1 obj1
+2:      pop                             # obj2 obj1
+        callprop toString               # obj2 toString obj1
+        call 0                          # obj2 lval
+        goto 4                          # obj2 lval
+3:      swap                            # obj2 lval obj1
+        pop                             # obj2 lval
+4:      swap                            # lval obj2
+        dup                             # lval obj1 obj1
+        dup                             # lval obj obj obj
+        getprop valueOf                 # lval obj obj valueOf
+        ifprimtop 5                     # lval obj obj valueOf
+        swap                            # lval obj valueOf obj
+        string void                     # lval obj valueOf obj "void"
+        call 1                          # lval obj rval
+        ifprimtop 7                     # lval obj rval
+        goto 6
+5:      pop                             # lval obj obj
+6:      pop                             # lval obj
+        callprop toString               # lval toString obj
+        call 0                          # lval rval
+        goto 8                          # lval rval
+7:      swap                            # lval rval obj
+        pop                             # lval rval
+8:      add                             # aval
+        stop
+    .end
+
+.end
