@@ -118,8 +118,6 @@ public:
 
     virtual PRBool SetPixelScale(float aScale);
 
-    PRBool IsPrinterSurface(void);
-
     nsNativeWidget GetWidget() { return mWidget; }
 #if defined(XP_WIN) || defined(XP_OS2)
     HDC GetPrintHDC();
