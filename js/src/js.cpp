@@ -3007,7 +3007,7 @@ Snarf(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
                     if (cc != len) {
                         JS_free(cx, buf);
                         JS_ReportError(cx, "can't read %s: %s", pathname,
-                                       (ssize_t(cc) < 0) ? strerror(errno) : "short read");
+                                       (ptrdiff_t(cc) < 0) ? strerror(errno) : "short read");
                     } else {
                         len = (size_t)cc;
                         ok = JS_TRUE;
