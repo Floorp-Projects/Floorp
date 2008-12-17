@@ -67,7 +67,7 @@ public:
                    const nsRect& aDirtyRect, nsPoint aPt);
                               
   /* get the size of the video's display */
-  nsSize GetVideoSize();
+  nsSize GetIntrinsicSize(nsIRenderingContext *aRenderingContext);
   virtual nsSize GetIntrinsicRatio();
   virtual nsSize ComputeSize(nsIRenderingContext *aRenderingContext,
                              nsSize aCBSize, nscoord aAvailableWidth,
@@ -101,6 +101,10 @@ public:
 #endif
 
 protected:
+  // Returns true if there is video data to render. Can return false
+  // when we're the frame for an audio element.
+  PRBool HasVideoData();
+
   virtual ~nsVideoFrame();
 
   nsMargin mBorderPadding;
