@@ -986,19 +986,14 @@ toolbar[iconsize="small"] #paste-button[disabled="true"] {
   background-color: transparent;
 }
 
-#feed-button > hbox > .button-menu-dropmarker,
-#feed-button > hbox > .button-text {
+#feed-button > .button-box > .button-menu-dropmarker {
   display: none;
 }
 
 #feed-button {
-  -moz-binding: url("chrome://global/content/bindings/button.xml#menu");
   -moz-appearance: none; 
   min-width: 0px; 
   margin-right: 1px !important;
-}
-
-#feed-button[feeds] {
   list-style-image: url("chrome://browser/skin/page-livemarks.png");
 }
 

@@ -31,9 +31,14 @@ toolbar[printpreview="true"] {
   display: none;
 }
 
+#feed-button > .button-box > .box-inherit > .button-text {
+  display: none;
+}
+
 #urlbar[pageproxystate="invalid"] > #urlbar-icons > :not(#go-button) ,
 #urlbar[pageproxystate="valid"] > #urlbar-icons > #go-button ,
-#urlbar[empty="true"] > #urlbar-icons > #go-button {
+#urlbar[empty="true"] > #urlbar-icons > #go-button,
+#feed-button:not([feeds]) {
   visibility: collapse;
 }
 
