@@ -201,7 +201,7 @@ BookmarksStore.prototype = {
     return null;
   },
 
-  itemExists: function BStore_itemExists(id) {
+  _itemExists: function BStore__itemExists(id) {
     return this._getItemIdForGUID(record.id) >= 0;
   },
 
