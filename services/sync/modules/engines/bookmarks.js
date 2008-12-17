@@ -201,21 +201,13 @@ BookmarksStore.prototype = {
     return null;
   },
 
-  applyIncoming: function BStore_applyIncoming(onComplete, record) {
-    let fn = function(rec) {
-      let self = yield;
-      if (!record.cleartext)
-        this._removeCommand({GUID: record.id});
-      else if (this._getItemIdForGUID(record.id) < 0)
-        this._createCommand({GUID: record.id, data: record.cleartext});
-      else
-        this._editCommand({GUID: record.id, data: record.cleartext});
-    };
-    fn.async(this, onComplete, record);
+  itemExists: function BStore_itemExists(id) {
+    return this._getItemIdForGUID(record.id) >= 0;
   },
 
-  _createCommand: function BStore__createCommand(command) {
+  create: function BStore_create(record) {
     let newId;
+    let command = {GUID: record.id, data: record.cleartext};
     let parentId = this._getItemIdForGUID(command.data.parentid);
 
     if (parentId < 0) {
@@ -239,7 +231,7 @@ BookmarksStore.prototype = {
       if (command.data.description) {
         this._ans.setItemAnnotation(newId, "bookmarkProperties/description",
                                     command.data.description, 0,
-                                    this._ans.EXPIRE_NEVER);
+                                   this._ans.EXPIRE_NEVER);
       }
 
       if (command.data.type == "microsummary") {
@@ -325,42 +317,44 @@ BookmarksStore.prototype = {
     }
   },
 
-  _removeCommand: function BStore__removeCommand(command) {
-    if (command.GUID == "menu" ||
-        command.GUID == "toolbar" ||
-        command.GUID == "unfiled") {
-      this._log.warn("Attempted to remove root node (" + command.GUID +
-                     ").  Skipping command.");
+  remove: function BStore_remove(record) {
+    if (record.id == "menu" ||
+        record.id == "toolbar" ||
+        record.id == "unfiled") {
+      this._log.warn("Attempted to remove root node (" + record.id +
+                     ").  Skipping record removal.");
       return;
     }
 
-    var itemId = this._bms.getItemIdForGUID(command.GUID);
+    var itemId = this._bms.getItemIdForGUID(record.id);
     if (itemId < 0) {
-      this._log.debug("Item " + command.GUID + "already removed");
+      this._log.debug("Item " + record.id + "already removed");
       return;
     }
     var type = this._bms.getItemType(itemId);
 
     switch (type) {
     case this._bms.TYPE_BOOKMARK:
-      this._log.debug("  -> removing bookmark " + command.GUID);
+      this._log.debug("  -> removing bookmark " + record.id);
       this._bms.removeItem(itemId);
       break;
     case this._bms.TYPE_FOLDER:
-      this._log.debug("  -> removing folder " + command.GUID);
+      this._log.debug("  -> removing folder " + record.id);
       this._bms.removeFolder(itemId);
       break;
     case this._bms.TYPE_SEPARATOR:
-      this._log.debug("  -> removing separator " + command.GUID);
+      this._log.debug("  -> removing separator " + record.id);
       this._bms.removeItem(itemId);
       break;
     default:
-      this._log.error("removeCommand: Unknown item type: " + type);
+      this._log.error("remove: Unknown item type: " + type);
       break;
     }
   },
 
-  _editCommand: function BStore__editCommand(command) {
+  update: function BStore_update(record) {
+    let command = {GUID: record.id, data: record.cleartext};
+
     if (command.GUID == "menu" ||
         command.GUID == "toolbar" ||
         command.GUID == "unfiled") {
