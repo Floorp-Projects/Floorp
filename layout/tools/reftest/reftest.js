@@ -56,7 +56,7 @@ const NS_NETWORK_PROTOCOL_CONTRACTID_PREFIX =
 const LOAD_FAILURE_TIMEOUT = 10000; // ms
 
 var gBrowser;
-var gCanvas1, gCanvas2;
+var gCanvasTest, gCanvasRef;
 var gURLs;
 // Map from URI spec to the number of times it remains to be used
 var gURIUseCounts;
@@ -284,8 +284,8 @@ function ReadManifest(aURL)
             gURLs.push( { equal: true /* meaningless */,
                           expected: expected_status,
                           prettyPath: prettyPath,
-                          url1: testURI,
-                          url2: null } );
+                          urltest: testURI,
+                          urlref: null } );
         } else if (items[0] == "==" || items[0] == "!=") {
             if (items.length != 3)
                 throw "Error in manifest file " + aURL.spec + " line " + lineNo;
@@ -304,20 +304,20 @@ function ReadManifest(aURL)
             gURLs.push( { equal: (items[0] == "=="),
                           expected: expected_status,
                           prettyPath: prettyPath,
-                          url1: testURI,
-                          url2: refURI } );
+                          urltest: testURI,
+                          urlref: refURI } );
         } else {
             throw "Error in manifest file " + aURL.spec + " line " + lineNo;
         }
     } while (more);
 }
 
-function AddURIUseCount(uri)
+function AddURIUseCount(which, uri)
 {
     if (uri == null)
         return;
 
-    var spec = uri.spec;
+    var spec = which + "-" + uri.spec;
     if (spec in gURIUseCounts) {
         gURIUseCounts[spec]++;
     } else {
@@ -331,8 +331,8 @@ function BuildUseCounts()
     for (var i = 0; i < gURLs.length; ++i) {
         var expected = gURLs[i].expected;
         if (expected != EXPECTED_DEATH && expected != EXPECTED_LOAD) {
-            AddURIUseCount(gURLs[i].url1);
-            AddURIUseCount(gURLs[i].url2);
+            AddURIUseCount("test", gURLs[i].urltest);
+            AddURIUseCount("ref", gURLs[i].urlref);
         }
     }
 }
@@ -384,7 +384,7 @@ function StartCurrentTest()
     // make sure we don't run tests that are expected to kill the browser
     while (gURLs.length > 0 && gURLs[0].expected == EXPECTED_DEATH) {
         ++gTestResults.Skip;
-        dump("REFTEST TEST-KNOWN-FAIL | " + gURLs[0].url1.spec + " | (SKIP)\n");
+        dump("REFTEST TEST-KNOWN-FAIL | " + gURLs[0].urltest.spec + " | (SKIP)\n");
         gURLs.shift();
     }
 
@@ -395,7 +395,7 @@ function StartCurrentTest()
         var currentTest = gTotalTests - gURLs.length;
         document.title = "reftest: " + currentTest + " / " + gTotalTests +
             " (" + Math.floor(100 * (currentTest / gTotalTests)) + "%)";
-        StartCurrentURI(1);
+        StartCurrentURI("test");
     }
 }
 
@@ -408,7 +408,8 @@ function StartCurrentURI(aState)
     gState = aState;
     gCurrentURL = gURLs[0]["url" + aState].spec;
 
-    if (gURICanvases[gCurrentURL] && gURLs[0].expected != EXPECTED_LOAD) {
+    if (gURICanvases[aState + "-" + gCurrentURL] &&
+        gURLs[0].expected != EXPECTED_LOAD) {
         // Pretend the document loaded --- DocumentLoaded will notice
         // there's already a canvas for this URL
         setTimeout(DocumentLoaded, 0);
@@ -538,9 +539,9 @@ function OnDocumentLoad(event)
     }
 }
 
-function UpdateCanvasCache(url, canvas)
+function UpdateCanvasCache(which, url, canvas)
 {
-    var spec = url.spec;
+    var spec = which + "-" + url.spec;
 
     --gURIUseCounts[spec];
     if (gURIUseCounts[spec] == 0) {
@@ -573,46 +574,82 @@ function DocumentLoaded()
         return;
     }
 
+    // To catch cases where page rendering doesn't paint opaque color
+    // over the entire viewport (e.g. bug 453566), we avoid having
+    // drawWindow erase the requested rectangle before rendering.
+    // Instead, we manually erase the canvas to white, then fill the
+    // bounding box reported by the document's root with different
+    // colors for test and reference.
+    //
+    // We can't just fill the canvas with different colors for the
+    // test and reference, because the viewport can be smaller than
+    // the rectangle requested in the drawWindow call; the bounding
+    // box reported by the document root is the closest approximation
+    // to the viewport rectangle that's available in the DOM.
+
     var canvas;
-    if (gURICanvases[gCurrentURL]) {
-        canvas = gURICanvases[gCurrentURL];
+    var bgcolor;
+    var cachespec = gState + "-" + gCurrentURL;
+    if (gURICanvases[cachespec]) {
+        canvas = gURICanvases[cachespec];
     } else {
         canvas = AllocateCanvas();
 
-        /* XXX This needs to be rgb(255,255,255) because otherwise we get
-         * black bars at the bottom of every test that are different size
-         * for the first test and the rest (scrollbar-related??) */
+        if (gState == "test") {
+            bgcolor = "rgb(255,0,123)";
+        } else {
+            bgcolor = "rgb(255,74,0)";
+        }
+
         var win = gBrowser.contentWindow;
         var ctx = canvas.getContext("2d");
+        var bbox = gBrowser.contentDocument.documentElement.getBoundingClientRect();
         var scale = gBrowser.markupDocumentViewer.fullZoom;
         ctx.save();
-        // drawWindow always draws one canvas pixel for each CSS pixel in the source
-        // window, so scale the drawing to show the zoom (making each canvas pixel be one
-        // device pixel instead)
+        ctx.fillStyle = "white";
+        ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+        // drawWindow always draws one canvas pixel for each CSS pixel
+        // in the source window, so scale the drawing to show the zoom
+        // (making each canvas pixel be one device pixel instead).
+        // Fill all pixels that should be *fully* painted by the
+        // drawWindow call with bgcolor.  This fill is scaled manually
+        // so we can snap it to pixel boundaries.
+        ctx.fillStyle = bgcolor;
+        var bbtop = Math.ceil(bbox.top * scale);
+        var bbleft = Math.ceil(bbox.left * scale);
+        var bbright = Math.floor(bbox.right * scale);
+        var bbbottom = Math.floor(bbox.bottom * scale);
+        ctx.fillRect(bbleft, bbtop, bbright - bbleft, bbbottom - bbtop);
+
         ctx.scale(scale, scale);
+
+        // Using "transparent" for the last argument prevents
+        // drawWindow from clearing the canvas, which would negate all
+        // of the setup above.
         ctx.drawWindow(win, win.scrollX, win.scrollY,
                        Math.ceil(canvas.width / scale),
                        Math.ceil(canvas.height / scale),
-                       "rgb(255,255,255)");
+                       "transparent");
         ctx.restore();
     }
 
-    if (gState == 1) {
-        gCanvas1 = canvas;
+    if (gState == "test") {
+        gCanvasTest = canvas;
     } else {
-        gCanvas2 = canvas;
+        gCanvasRef = canvas;
     }
 
     resetZoom();
 
     switch (gState) {
-        case 1:
+        case "test":
             // First document has been loaded.
             // Proceed to load the second document.
 
-            StartCurrentURI(2);
+            StartCurrentURI("ref");
             break;
-        case 2:
+        case "ref":
             // Both documents have been loaded. Compare the renderings and see
             // if the comparison result matches the expected result specified
             // in the manifest.
@@ -623,12 +660,12 @@ function DocumentLoaded()
             var equal;
 
             if (gWindowUtils) {
-                differences = gWindowUtils.compareCanvases(gCanvas1, gCanvas2, {});
+                differences = gWindowUtils.compareCanvases(gCanvasTest, gCanvasRef, {});
                 equal = (differences == 0);
             } else {
                 differences = -1;
-                var k1 = gCanvas1.toDataURL();
-                var k2 = gCanvas2.toDataURL();
+                var k1 = gCanvasTest.toDataURL();
+                var k2 = gCanvasRef.toDataURL();
                 equal = (k1 == k2);
             }
 
@@ -664,16 +701,16 @@ function DocumentLoaded()
             if (!test_passed && expected == EXPECTED_PASS ||
                 test_passed && expected == EXPECTED_FAIL) {
                 if (!equal) {
-                    dump("REFTEST   IMAGE 1 (TEST): " + gCanvas1.toDataURL() + "\n");
-                    dump("REFTEST   IMAGE 2 (REFERENCE): " + gCanvas2.toDataURL() + "\n");
+                    dump("REFTEST   IMAGE 1 (TEST): " + gCanvasTest.toDataURL() + "\n");
+                    dump("REFTEST   IMAGE 2 (REFERENCE): " + gCanvasRef.toDataURL() + "\n");
                     dump("REFTEST number of differing pixels: " + differences + "\n");
                 } else {
-                    dump("REFTEST   IMAGE: " + gCanvas1.toDataURL() + "\n");
+                    dump("REFTEST   IMAGE: " + gCanvasTest.toDataURL() + "\n");
                 }
             }
 
-            UpdateCanvasCache(gURLs[0].url1, gCanvas1);
-            UpdateCanvasCache(gURLs[0].url2, gCanvas2);
+            UpdateCanvasCache("test", gURLs[0].urltest, gCanvasTest);
+            UpdateCanvasCache("ref", gURLs[0].urlref, gCanvasRef);
 
             gURLs.shift();
             StartCurrentTest();
