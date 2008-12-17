@@ -227,6 +227,16 @@ math_atan2(JSContext *cx, uintN argc, jsval *vp)
     return js_NewNumberInRootedValue(cx, math_atan2_kernel (x, y), vp);
 }
 
+static inline jsdouble FASTCALL
+math_ceil_kernel(jsdouble x)
+{
+#if defined(XP_MACOSX) || defined(DARWIN)
+    if (x < 0 && x > -1.0) 
+        return js_copysign(0, -1);
+#endif    
+    return ceil(x);
+}
+
 static JSBool
 math_ceil(JSContext *cx, uintN argc, jsval *vp)
 {
@@ -239,7 +249,7 @@ math_ceil(JSContext *cx, uintN argc, jsval *vp)
     x = js_ValueToNumber(cx, &vp[2]);
     if (JSVAL_IS_NULL(vp[2]))
         return JS_FALSE;
-    z = ceil(x);
+    z = math_ceil_kernel(x);
     return js_NewNumberInRootedValue(cx, z, vp);
 }
 
@@ -606,7 +616,6 @@ MATH_BUILTIN_1(sin)
 MATH_BUILTIN_1(cos)
 MATH_BUILTIN_1(sqrt)
 MATH_BUILTIN_1(floor)
-MATH_BUILTIN_1(ceil)
 MATH_BUILTIN_1(tan)
 
 static jsdouble FASTCALL
@@ -722,6 +731,12 @@ math_round_tn(jsdouble x)
     return js_copysign(floor(x + 0.5), x);
 }
 
+static jsdouble FASTCALL
+math_ceil_tn(jsdouble x)
+{
+    return math_ceil_kernel(x);
+}
+
 JS_DEFINE_TRCINFO_1(math_acos,
     (1, (static, DOUBLE, math_acos_tn, DOUBLE,          1, 1)))
 JS_DEFINE_TRCINFO_1(math_asin,
@@ -740,6 +755,8 @@ JS_DEFINE_TRCINFO_1(math_random,
     (1, (static, DOUBLE, math_random_tn, RUNTIME,       0, 0)))
 JS_DEFINE_TRCINFO_1(math_round,
     (1, (static, DOUBLE, math_round_tn, DOUBLE,         1, 1)))
+JS_DEFINE_TRCINFO_1(math_ceil,
+    (1, (static, DOUBLE, math_ceil_tn, DOUBLE,          1, 1)))
 
 #endif /* JS_TRACER */
 
