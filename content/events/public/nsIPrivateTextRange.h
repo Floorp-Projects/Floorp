@@ -49,6 +49,9 @@
 class nsIPrivateTextRange : public nsISupports {
 public:
   NS_DECLARE_STATIC_IID_ACCESSOR(NS_IPRIVATETEXTRANGE_IID)
+
+  // Note that the range array may not specify a caret position; in that
+  // case there will be no range of type TEXTRANGE_CARETPOSITION in the array.
   enum {
     TEXTRANGE_CARETPOSITION = 1,
     TEXTRANGE_RAWINPUT = 2,
