@@ -78,7 +78,8 @@ struct THEBES_API gfxFontStyle {
     gfxFontStyle(PRUint8 aStyle, PRUint16 aWeight, gfxFloat aSize,
                  const nsACString& aLangGroup,
                  float aSizeAdjust, PRPackedBool aSystemFont,
-                 PRPackedBool aFamilyNameQuirks);
+                 PRPackedBool aFamilyNameQuirks,
+                 PRPackedBool aPrinterFont);
     gfxFontStyle(const gfxFontStyle& aStyle);
 
     // The style of font (normal, italic, oblique)
@@ -88,6 +89,9 @@ struct THEBES_API gfxFontStyle {
     // require certain fixup that we do for fonts from untrusted
     // sources.
     PRPackedBool systemFont : 1;
+
+    // Say that this font is used for print or print preview.
+    PRPackedBool printerFont : 1;
 
     // True if the character set quirks (for treatment of "Symbol",
     // "Wingdings", etc.) should be applied.
@@ -133,6 +137,7 @@ struct THEBES_API gfxFontStyle {
         return (size == other.size) &&
             (style == other.style) &&
             (systemFont == other.systemFont) &&
+            (printerFont == other.printerFont) &&
             (familyNameQuirks == other.familyNameQuirks) &&
             (weight == other.weight) &&
             (langGroup.Equals(other.langGroup)) &&
