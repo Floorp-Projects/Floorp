@@ -100,10 +100,6 @@ HistoryStore.prototype = {
     return anno;
   },
 
-  get _histDB_31() {
-    return this._hsvc.DBConnection;
-  },
-
   get _histDB_30() {
     let file = Cc["@mozilla.org/file/directory_service;1"].
       getService(Ci.nsIProperties).
@@ -121,7 +117,7 @@ HistoryStore.prototype = {
     //if (fx3.0)
     //  return this._histDB_30;
     //else
-      return this._histDB_31;
+      return this._hsvc.DBConnection;
   },
 
   get _visitStm() {
