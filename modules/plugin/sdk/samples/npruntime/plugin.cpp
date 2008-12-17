@@ -507,8 +507,8 @@ CPlugin::CPlugin(NPP pNPInstance) :
 
   if (!NPN_IdentifierIsString(n)) {
     NPString str;
-    str.utf8characters = "alert('NPN_IdentifierIsString() test failed!');";
-    str.utf8length = strlen(str.utf8characters);
+    str.UTF8Characters = "alert('NPN_IdentifierIsString() test failed!');";
+    str.UTF8Length = strlen(str.UTF8Characters);
 
     NPN_Evaluate(m_pNPInstance, sWindowObj, &str, NULL);
   }
@@ -523,7 +523,7 @@ CPlugin::CPlugin(NPP pNPInstance) :
     NPN_GetProperty(m_pNPInstance, doc, n, &rval);
 
     if (NPVARIANT_IS_STRING(rval)) {
-      printf ("title = %s\n", NPVARIANT_TO_STRING(rval).utf8characters);
+      printf ("title = %s\n", NPVARIANT_TO_STRING(rval).UTF8Characters);
 
       NPN_ReleaseVariantValue(&rval);
     }
@@ -534,8 +534,8 @@ CPlugin::CPlugin(NPP pNPInstance) :
     NPN_SetProperty(m_pNPInstance, sWindowObj, n, &v);
 
     NPString str;
-    str.utf8characters = "document.getElementById('result').innerHTML += '<p>' + 'NPN_Evaluate() test, document = ' + this + '</p>';";
-    str.utf8length = strlen(str.utf8characters);
+    str.UTF8Characters = "document.getElementById('result').innerHTML += '<p>' + 'NPN_Evaluate() test, document = ' + this + '</p>';";
+    str.UTF8Length = strlen(str.UTF8Characters);
 
     NPN_Evaluate(m_pNPInstance, doc, &str, NULL);
 
@@ -572,7 +572,7 @@ CPlugin::CPlugin(NPP pNPInstance) :
   NPN_Invoke(sWindowObj, n, vars, 3, &rval);
 
   if (NPVARIANT_IS_STRING(rval)) {
-    printf ("prompt returned '%s'\n", NPVARIANT_TO_STRING(rval).utf8characters);
+    printf ("prompt returned '%s'\n", NPVARIANT_TO_STRING(rval).UTF8Characters);
   }
 
   NPN_ReleaseVariantValue(&rval);
