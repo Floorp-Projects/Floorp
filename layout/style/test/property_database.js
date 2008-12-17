@@ -116,8 +116,8 @@ var gCSSProperties = {
 		inherited: false,
 		type: CSS_TYPE_TRUE_SHORTHAND,
 		subproperties: [ "-moz-border-end-color", "-moz-border-end-style", "-moz-border-end-width" ],
-		initial_values: [ "none", "medium", "currentColor", "none medium currentcolor" ],
-		other_values: [ "solid", "thin", "green", "medium solid", "green solid", "10px solid", "thick solid", "5px green none" ],
+		initial_values: [ "none", "medium", "currentColor", "thin", "none medium currentcolor" ],
+		other_values: [ "solid", "green", "medium solid", "green solid", "10px solid", "thick solid", "5px green none" ],
 		invalid_values: [ "5%" ]
 	},
 	"-moz-border-end-color": {
@@ -238,8 +238,8 @@ var gCSSProperties = {
 		inherited: false,
 		type: CSS_TYPE_TRUE_SHORTHAND,
 		subproperties: [ "-moz-border-start-color", "-moz-border-start-style", "-moz-border-start-width" ],
-		initial_values: [ "none", "medium", "currentColor", "none medium currentcolor" ],
-		other_values: [ "solid", "thin", "green", "medium solid", "green solid", "10px solid", "thick solid", "5px green none" ],
+		initial_values: [ "none", "medium", "currentColor", "thin", "none medium currentcolor" ],
+		other_values: [ "solid", "green", "medium solid", "green solid", "10px solid", "thick solid", "5px green none" ],
 		invalid_values: [ "5%" ]
 	},
 	"-moz-border-start-color": {
@@ -665,7 +665,7 @@ var gCSSProperties = {
 		inherited: false,
 		type: CSS_TYPE_TRUE_SHORTHAND,
 		subproperties: [ "border-bottom-color", "border-bottom-style", "border-bottom-width", "border-left-color", "border-left-style", "border-left-width", "border-right-color", "border-right-style", "border-right-width", "border-top-color", "border-top-style", "border-top-width" ],
-		initial_values: [ "none", "medium", "currentColor", "none medium currentcolor" ],
+		initial_values: [ "none", "medium", "currentColor", "thin", "none medium currentcolor" ],
 		other_values: [ "solid", "medium solid", "green solid", "10px solid", "thick solid" ],
 		invalid_values: [ "5%" ]
 	},
@@ -674,8 +674,8 @@ var gCSSProperties = {
 		inherited: false,
 		type: CSS_TYPE_TRUE_SHORTHAND,
 		subproperties: [ "border-bottom-color", "border-bottom-style", "border-bottom-width" ],
-		initial_values: [ "none", "medium", "currentColor", "none medium currentcolor" ],
-		other_values: [ "solid", "thin", "green", "medium solid", "green solid", "10px solid", "thick solid", "5px green none" ],
+		initial_values: [ "none", "medium", "currentColor", "thin", "none medium currentcolor" ],
+		other_values: [ "solid", "green", "medium solid", "green solid", "10px solid", "thick solid", "5px green none" ],
 		invalid_values: [ "5%" ]
 	},
 	"border-bottom-color": {
@@ -727,8 +727,8 @@ var gCSSProperties = {
 		inherited: false,
 		type: CSS_TYPE_TRUE_SHORTHAND,
 		subproperties: [ "border-left-color", "border-left-style", "border-left-width" ],
-		initial_values: [ "none", "medium", "currentColor", "none medium currentcolor" ],
-		other_values: [ "solid", "thin", "green", "medium solid", "green solid", "10px solid", "thick solid", "5px green none" ],
+		initial_values: [ "none", "medium", "currentColor", "thin", "none medium currentcolor" ],
+		other_values: [ "solid", "green", "medium solid", "green solid", "10px solid", "thick solid", "5px green none" ],
 		invalid_values: [ "5%" ]
 	},
 	"border-left-color": {
@@ -763,8 +763,8 @@ var gCSSProperties = {
 		inherited: false,
 		type: CSS_TYPE_TRUE_SHORTHAND,
 		subproperties: [ "border-right-color", "border-right-style", "border-right-width" ],
-		initial_values: [ "none", "medium", "currentColor", "none medium currentcolor" ],
-		other_values: [ "solid", "thin", "green", "medium solid", "green solid", "10px solid", "thick solid", "5px green none" ],
+		initial_values: [ "none", "medium", "currentColor", "thin", "none medium currentcolor" ],
+		other_values: [ "solid", "green", "medium solid", "green solid", "10px solid", "thick solid", "5px green none" ],
 		invalid_values: [ "5%" ]
 	},
 	"border-right-color": {
@@ -817,8 +817,8 @@ var gCSSProperties = {
 		inherited: false,
 		type: CSS_TYPE_TRUE_SHORTHAND,
 		subproperties: [ "border-top-color", "border-top-style", "border-top-width" ],
-		initial_values: [ "none", "medium", "currentColor", "none medium currentcolor" ],
-		other_values: [ "solid", "thin", "green", "medium solid", "green solid", "10px solid", "thick solid", "5px green none" ],
+		initial_values: [ "none", "medium", "currentColor", "thin", "none medium currentcolor" ],
+		other_values: [ "solid", "green", "medium solid", "green solid", "10px solid", "thick solid", "5px green none" ],
 		invalid_values: [ "5%" ]
 	},
 	"border-top-color": {
@@ -1281,7 +1281,7 @@ var gCSSProperties = {
 		type: CSS_TYPE_TRUE_SHORTHAND,
 		subproperties: [ "outline-color", "outline-style", "outline-width" ],
 		initial_values: [
-			"none", "medium",
+			"none", "medium", "thin",
 			// XXX Should be invert, but currently currentcolor.
 			//"invert", "none medium invert"
 			"currentColor", "none medium currentcolor"
