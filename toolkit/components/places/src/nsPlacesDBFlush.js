@@ -257,7 +257,28 @@ nsPlacesDBFlush.prototype = {
     // Delete all the data in the temp table.
     // We have triggers setup that ensure that the data is transferred over
     // upon deletion.
-    return this._db.createStatement("DELETE FROM moz_" + aTableName + "_temp");
+    let condition = "";
+    switch(aTableName) {
+      case "historyvisits":
+        // For history table we want to leave embed visits in memory, since
+        // those are expired with current session, so we are filtering them out.
+        condition = "WHERE visit_type <> " + Ci.nsINavHistoryService.TRANSITION_EMBED;
+        break;
+      case "places":
+        // For places table we want to leave places associated with embed visits
+        // in memory, they usually have hidden = 1 and at least an embed visit
+        // in historyvisits_temp table.
+        condition = "WHERE id IN (SELECT id FROM moz_places_temp h " +
+                                  "WHERE h.hidden <> 1 OR NOT EXISTS ( " +
+                                    "SELECT id FROM moz_historyvisits_temp " +
+                                    "WHERE place_id = h.id AND visit_type = " +
+                                    Ci.nsINavHistoryService.TRANSITION_EMBED +
+                                    " LIMIT 1) " +
+                                  ")";
+        break;
+    }
+
+    return this._db.createStatement("DELETE FROM moz_" + aTableName + "_temp " + condition);
   },
 
   /**
