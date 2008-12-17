@@ -865,6 +865,9 @@ public:
   const PRUnichar*  theText;
   nsTextEventReply  theReply;
   PRUint32          rangeCount;
+  // Note that the range array may not specify a caret position; in that
+  // case there will be no range of type NS_TEXTRANGE_CARETPOSITION in the
+  // array.
   nsTextRangeArray  rangeArray;
   PRBool            isChar;
 };
@@ -1385,12 +1388,12 @@ enum nsDragDropEventStatus {
 
 #define NS_VK_META           nsIDOMKeyEvent::DOM_VK_META
 
-// IME Constants  -- keep in synch with nsIDOMTextRange.h
-#define NS_TEXTRANGE_CARETPOSITION				0x01
-#define NS_TEXTRANGE_RAWINPUT					0X02
-#define NS_TEXTRANGE_SELECTEDRAWTEXT			0x03
-#define NS_TEXTRANGE_CONVERTEDTEXT				0x04
-#define NS_TEXTRANGE_SELECTEDCONVERTEDTEXT		0x05
+// IME Constants  -- keep in synch with nsIPrivateTextRange.h
+#define NS_TEXTRANGE_CARETPOSITION         0x01
+#define NS_TEXTRANGE_RAWINPUT              0x02
+#define NS_TEXTRANGE_SELECTEDRAWTEXT       0x03
+#define NS_TEXTRANGE_CONVERTEDTEXT         0x04
+#define NS_TEXTRANGE_SELECTEDCONVERTEDTEXT 0x05
 
 inline PRBool NS_TargetUnfocusedEventToLastFocusedContent(nsEvent* aEvent)
 {
