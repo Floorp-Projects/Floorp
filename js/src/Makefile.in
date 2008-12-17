@@ -41,9 +41,13 @@ DEPTH		= .
 topsrcdir	= @top_srcdir@
 srcdir		= @srcdir@
 
+include $(DEPTH)/config/autoconf.mk
+
 DIRS		= config
 
-include $(DEPTH)/config/autoconf.mk
+ifdef DEHYDRA_PATH
+DIRS += analysis-tests
+endif
 
 ifndef JS_MOZ_INSTALL
 # This is the appropriate behavior for GNU-style 'make install'.  For
