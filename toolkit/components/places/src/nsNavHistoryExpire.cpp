@@ -97,12 +97,6 @@ const PRTime EXPIRATION_POLICY_DAYS = ((PRTime)7 * 86400 * PR_USEC_PER_SEC);
 const PRTime EXPIRATION_POLICY_WEEKS = ((PRTime)30 * 86400 * PR_USEC_PER_SEC);
 const PRTime EXPIRATION_POLICY_MONTHS = ((PRTime)180 * 86400 * PR_USEC_PER_SEC);
 
-// Expiration policy for embedded links (bug #401722)
-const PRTime EMBEDDED_LINK_LIFETIME = ((PRTime)1 * 86400 * PR_USEC_PER_SEC);
-
-// Expiration cap for embedded visits
-#define EXPIRATION_CAP_EMBEDDED 500
-
 // Expiration cap for dangling moz_places records
 #define EXPIRATION_CAP_PLACES 500
 
@@ -200,13 +194,6 @@ nsNavHistoryExpire::OnQuit()
   nsresult rv = ExpireForDegenerateRuns();
   if (NS_FAILED(rv))
     NS_WARNING("ExpireForDegenerateRuns failed.");
-
-  // Expire embedded links
-  // NOTE: This must come before ExpireHistoryParanoid, or the moz_places
-  // records won't be immediately deleted.
-  rv = ExpireEmbeddedLinks(connection);
-  if (NS_FAILED(rv))
-    NS_WARNING("ExpireEmbeddedLinks failed.");
 
   // Determine whether we can skip partially expiration of dangling entries
   // because we be doing a full expiration on shutdown in ClearHistory()
@@ -895,48 +882,6 @@ nsNavHistoryExpire::ExpireAnnotations(mozIStorageConnection* aConnection)
 
   return NS_OK;
 }
-
-
-// nsNavHistoryExpire::ExpireEmbeddedLinks
-
-nsresult
-nsNavHistoryExpire::ExpireEmbeddedLinks(mozIStorageConnection* aConnection)
-{
-  PRTime maxEmbeddedAge = PR_Now() - EMBEDDED_LINK_LIFETIME;
-  nsCOMPtr<mozIStorageStatement> expireEmbeddedLinksStatement;
-  // Note: This query also removes visit_type = 0 entries, for bug #375777.
-  nsresult rv = aConnection->CreateStatement(NS_LITERAL_CSTRING(
-      "DELETE FROM moz_historyvisits_view WHERE id IN ("
-        "SELECT * FROM ( "
-          "SELECT id FROM moz_historyvisits_temp "
-          "WHERE visit_date < ?1 "
-          "AND visit_type IN (") +
-            nsPrintfCString("%d", nsINavHistoryService::TRANSITION_EMBED) +
-            NS_LITERAL_CSTRING(", 0) "
-          "LIMIT ?2 "
-        ") "
-        "UNION ALL "
-        "SELECT * FROM ( "
-          "SELECT id FROM moz_historyvisits "
-          "WHERE visit_date < ?1 "
-          "AND visit_type IN (") +
-            nsPrintfCString("%d", nsINavHistoryService::TRANSITION_EMBED) +
-            NS_LITERAL_CSTRING(", 0) "
-          "LIMIT ?2 "
-        ") "
-        "LIMIT ?2 "
-      ")"),
-    getter_AddRefs(expireEmbeddedLinksStatement));
-  NS_ENSURE_SUCCESS(rv, rv);
-  rv = expireEmbeddedLinksStatement->BindInt64Parameter(0, maxEmbeddedAge);
-  NS_ENSURE_SUCCESS(rv, rv);
-  rv = expireEmbeddedLinksStatement->BindInt32Parameter(1, EXPIRATION_CAP_EMBEDDED);
-  NS_ENSURE_SUCCESS(rv, rv);
-  rv = expireEmbeddedLinksStatement->Execute();
-  NS_ENSURE_SUCCESS(rv, rv);
-  return NS_OK;
-}
-
 
 // nsNavHistoryExpire::ExpireHistoryParanoid
 //
