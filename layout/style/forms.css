@@ -599,12 +599,6 @@ input[type="file"] > input[type="text"] {
   input[type="file"] { height: 2em; }
 }
 
-video > xul|videocontrols {
-  display: -moz-box;
-  -moz-box-orient: vertical;
-  -moz-binding: url("chrome://global/content/bindings/videocontrols.xml#videoControls");
-}
-
 %if OSARCH==OS2
 input {
   font: medium serif; font-family: inherit
