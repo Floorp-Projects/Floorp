@@ -591,7 +591,9 @@ function DocumentLoaded()
         // device pixel instead)
         ctx.scale(scale, scale);
         ctx.drawWindow(win, win.scrollX, win.scrollY,
-                       canvas.width, canvas.height, "rgb(255,255,255)");
+                       Math.ceil(canvas.width / scale),
+                       Math.ceil(canvas.height / scale),
+                       "rgb(255,255,255)");
         ctx.restore();
     }
 
