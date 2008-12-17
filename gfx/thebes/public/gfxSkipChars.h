@@ -314,16 +314,24 @@ public:
      * string if there is no such character.
      */
     PRUint32 GetSkippedOffset() const { return mSkippedStringOffset; }
-  
+
+    PRInt32 GetOriginalEnd() const {
+        return mSkipChars->GetOriginalCharCount() -
+            mOriginalStringToSkipCharsOffset;
+    }
+
 private:
     void SetOffsets(PRUint32 aOffset, PRBool aInOriginalString);
   
     const gfxSkipChars* mSkipChars;
     PRInt32 mOriginalStringOffset;
     PRUint32 mSkippedStringOffset;
-    
-    PRUint32 mOriginalStringToSkipCharsOffset;
-    
+
+    // This offset is added to map from "skipped+unskipped characters in
+    // the original DOM string" character space to "skipped+unskipped
+    // characters in the textrun's gfxSkipChars" character space
+    PRInt32 mOriginalStringToSkipCharsOffset;
+
     /*
      * This is used to speed up cursor-style traversal. The invariant is that
      * the first mListPrefixLength bytes of mSkipChars.mList sum to
