@@ -240,7 +240,8 @@ toolbarbutton.browser-control-button {
 }
 
 toolbarbutton.browser-control-button,
-toolbarbutton.panel-button {
+toolbarbutton.panel-button,
+toolbarbutton.page-button {
   /* space out the buttons a bit vertically */
   padding: 0;
   padding-top: 8px;
@@ -294,8 +295,19 @@ toolbarbutton.panel-button {
   -moz-image-region: rect(160px 96px 208px 48px);
 }
 
-#tool-panel-open, #tool-panel-close {
-  -moz-image-region: rect(208px 48px 256px 0px);
+
+toolbarbutton.page-button {
+  list-style-image: url("chrome://browser/skin/images/page_buttons.png");
+}
+
+#tool-panel-open {
+  -moz-image-region: rect(0px 62px 48px 0px);
+  margin-right: -14px;
+}
+
+#tool-panel-close {
+  -moz-image-region: rect(48px 62px 96px 0px);
+  margin-left: -14px;
 }
 
 /* "extras" panel UI   ----------------------------------------------------- */
