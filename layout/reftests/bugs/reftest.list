@@ -943,6 +943,9 @@ fails == 441259-2.html 441259-2-ref.html # bug 441400
 == 446100-1h.html about:blank
 # == 448193.html 448193-ref.html  # Fails due to 2 small single-pixel differences
 # == 448987.html 448987-ref.html  # Disabled for now - it needs privileges
+!= 449149-1a.html about:blank
+!= 449149-1b.html about:blank
+== 449149-2.html 449149-2-ref.html
 == 449171-1.html 449171-ref.html
 == 449519-1.html 449519-1-ref.html
 # == 449653-1.html 449653-1-ref.html # Disabled for now - it needs privileges
