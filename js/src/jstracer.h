@@ -420,21 +420,7 @@ class TraceRecorder : public avmplus::GCObject {
     JS_REQUIRES_STACK void fuseIf(jsbytecode* pc, bool cond, nanojit::LIns* x);
 
     bool hasMethod(JSObject* obj, jsid id);
-    bool hasToStringMethod(JSObject* obj);
-    bool hasToStringMethod(jsval v) {
-        JS_ASSERT(JSVAL_IS_OBJECT(v));
-        return hasToStringMethod(JSVAL_TO_OBJECT(v));
-    }
-    bool hasValueOfMethod(JSObject* obj);
-    bool hasValueOfMethod(jsval v) {
-        JS_ASSERT(JSVAL_IS_OBJECT(v));
-        return hasValueOfMethod(JSVAL_TO_OBJECT(v));
-    }
     bool hasIteratorMethod(JSObject* obj);
-    bool hasIteratorMethod(jsval v) {
-        JS_ASSERT(JSVAL_IS_OBJECT(v));
-        return hasIteratorMethod(JSVAL_TO_OBJECT(v));
-    }
 
 public:
     friend JS_REQUIRES_STACK bool js_MonitorRecording(TraceRecorder* tr);

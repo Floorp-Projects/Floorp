@@ -1,0 +1,308 @@
+/* vim: set sw=4 ts=8 et tw=78 ft=javascript: */
+/* ***** BEGIN LICENSE BLOCK *****
+ * Version: MPL 1.1/GPL 2.0/LGPL 2.1
+ *
+ * The contents of this file are subject to the Mozilla Public License Version
+ * 1.1 (the "License"); you may not use this file except in compliance with
+ * the License. You may obtain a copy of the License at
+ * http://www.mozilla.org/MPL/
+ *
+ * Software distributed under the License is distributed on an "AS IS" basis,
+ * WITHOUT WARRANTY OF ANY KIND, either express or implied. See the License
+ * for the specific language governing rights and limitations under the
+ * License.
+ *
+ * The Original Code is the TraceMonkey IMacro Assembler.
+ *
+ * The Initial Developer of the Original Code is
+ * Brendan Eich <brendan@mozilla.org>.
+ * Portions created by the Initial Developer are Copyright (C) 2008
+ * the Initial Developer. All Rights Reserved.
+ *
+ * Contributor(s):
+ *
+ * Alternatively, the contents of this file may be used under the terms of
+ * either the GNU General Public License Version 2 or later (the "GPL"), or
+ * the GNU Lesser General Public License Version 2.1 or later (the "LGPL"),
+ * in which case the provisions of the GPL or the LGPL are applicable instead
+ * of those above. If you wish to allow use of your version of this file only
+ * under the terms of either the GPL or the LGPL, and not to allow others to
+ * use your version of this file under the terms of the MPL, indicate your
+ * decision by deleting the provisions above and replace them with the notice
+ * and other provisions required by the GPL or the LGPL. If you do not delete
+ * the provisions above, a recipient may use your version of this file under
+ * the terms of any one of the MPL, the GPL or the LGPL.
+ *
+ * ***** END LICENSE BLOCK ***** */
+
+/*
+ * An imacro (interpreter-macro) assembler in JS, with a light dusting of C
+ * pre-processor. We depend on the snarf function from the js shell, defined
+ * originally for the Narcissus metacircular evaluator, now unconditionally
+ * compiled into the shell.
+ *
+ * Filename suffix conventions, used by Makefile.in rules:
+ *   .js.in     C-pre-processed JS source
+ *   .jsasm     SpiderMonkey JS assembly source, which could be input to other
+ *              assemblers than imacro_asm.js, hence the generic suffix!
+ *   .c.out     C source output by imacro_asm.js
+ */
+
+#define ASSERT(cond)    _ASSERT(cond, #cond)
+
+function _ASSERT(cond, message) {
+    if (!cond)
+        throw new Error("Assertion failed: " + message);
+}
+
+const js_arguments_str  = "arguments";
+const js_new_str        = "new";
+const js_typeof_str     = "typeof";
+const js_void_str       = "void";
+const js_null_str       = "null";
+const js_this_str       = "this";
+const js_false_str      = "false";
+const js_true_str       = "true";
+const js_throw_str      = "throw";
+const js_in_str         = "in";
+const js_instanceof_str = "instanceof";
+const js_getter_str     = "getter";
+const js_setter_str     = "setter";
+
+#define OPDEF(op,val,name,token,length,nuses,ndefs,prec,format)               \
+    {jsop: #op, opcode: val, opname: name, opsrc: token, oplen: length,       \
+     pops: nuses, pushes: ndefs, precedence: prec, flags: #format},
+
+const NULL = null;
+
+const opinfo = [
+#include "jsopcode.tbl"
+];
+
+const opname2info = {};
+const jsop2opcode = {};
+
+for (let i = 0; i < opinfo.length; i++) {
+    let info = opinfo[i];
+    ASSERT(info.opcode == i);
+    opname2info[info.opname] = info;
+    jsop2opcode[info.jsop] = info.opcode;
+}
+
+function formatoffset(n, w) {
+    let s = n.toString();
+    while (s.length < w)
+        s = ' ' + s;
+    return s;
+}
+
+function immediate(op) {
+    let info = op.info;
+    if (info.flags.indexOf("JOF_ATOM") >= 0) {
+        if (/^(?:void|object|function|string|number|boolean)$/.test(op.imm1))
+            return "0, COMMON_TYPE_ATOM_INDEX(JSTYPE_" + op.imm1.toUpperCase() + ")";
+        return "0, COMMON_ATOM_INDEX(" + op.imm1 + ")";
+    }
+    if (info.flags.indexOf("JOF_JUMP") >= 0)
+        return ((op.target >> 8) & 0xff) + ", " + (op.target & 0xff);
+    if (info.flags.indexOf("JOF_UINT16") >= 0)
+        return ((op.imm1 & 0xff00) >> 8) + ", " + (op.imm1 & 0xff);
+    throw new Error(info.jsop + " format not yet implemented");
+}
+
+/*
+ * Syntax (spaces are significant only to delimit tokens):
+ *
+ *   Assembly   ::= (Directive? '\n')*
+ *   Directive  ::= (name ':')? Operation
+ *   Operation  ::= opname Operands?
+ *   Operands   ::= Operand (',' Operand)*
+ *   Operand    ::= name | number
+ *
+ * We simplify given line structure and the maximum of one immediate operand,
+ * by parsing using split and regexps.
+ *
+ * Pseudo-ops start with . and include .igroup and .imacro, terminated by .end.
+ * .imacro must nest in .igroup, neither nests in itself. See imacros.jsasm for
+ * examples.
+ */
+function assemble(filename) {
+    let igroup = null, imacro = null;
+    let opcode2extra = [];
+
+    print("/* GENERATED BY imacro_asm.js from " + filename + " -- DO NOT EDIT!!! */");
+
+    let s = snarf(filename);
+    let a = s.split('\n');
+    for (let i = 0; i < a.length; i++) {
+        if (/^\s*(?:#.*)?$/.test(a[i]))
+            continue;
+        let m = /(?:(\w+):)?\s*(\.?\w+)(?:\s+(\w+))?(?:\s+([\w-]+))?(?:\s*(?:#.*))?$/.exec(a[i]);
+        if (!m)
+            throw new Error(a[i]);
+
+        let [, label, opname, imm1, imm2] = m;
+
+        if (opname[0] == '.') {
+            if (label)
+                throw new Error("invalid label " + label + " before " + opname);
+
+            switch (opname) {
+              case ".igroup":
+                if (!imm1)
+                    throw new Error("missing .igroup name");
+                if (igroup)
+                    throw new Error("nested .igroup " + imm1);
+                let oprange = imm2.match(/^(\w+)(?:-(\w+))?$/);
+                if (!oprange)
+                    throw new Error("invalid igroup operator range " + imm2);
+                let firstop = jsop2opcode[oprange[1]];
+                igroup = {
+                    name:    imm1,
+                    firstop: firstop,
+                    lastop:  oprange[2] ? jsop2opcode[oprange[2]] : firstop,
+                    imacros: []
+                };
+                break;
+
+              case ".imacro":
+                if (!igroup)
+                    throw new Error(".imacro outside of .igroup");
+                if (!imm1)
+                    throw new Error("missing .imacro name");
+                if (imacro)
+                    throw new Error("nested .imacro " + imm1);
+                imacro = {
+                    name:      imm1,
+                    offset:    0,
+                    code:      [],
+                    labeldefs: {},
+                    labelrefs: {}
+                };
+                break;
+
+              case ".end":
+                if (!imacro) {
+                    if (!igroup)
+                        throw new Error(".end without prior .igroup or .imacro");
+                    if (imm1 && (imm1 != igroup.name || imm2))
+                        throw new Error(".igroup/.end name mismatch");
+
+                    let maxdepth = 0;
+
+                    print("static struct {");
+                    for (let j = 0; j < igroup.imacros.length; j++) {
+                        imacro = igroup.imacros[j];
+                        print("    jsbytecode " + imacro.name + "[" + imacro.offset + "];");
+                    }
+                    print("} " + igroup.name + "_imacros = {");
+
+                    for (let j = 0; j < igroup.imacros.length; j++) {
+                        let depth = 0;
+
+                        imacro = igroup.imacros[j];
+                        print("    {");
+                        for (let k = 0; k < imacro.code.length; k++) {
+                            let op = imacro.code[k];
+
+                            print("/*" + formatoffset(op.offset,2) + "*/  " + op.info.jsop +
+                                  (op.imm1 ? ", " + immediate(op) : "") + ",");
+
+                            depth -= (op.info.pops < 0) ? 2 + op.imm1 : op.info.pops;
+                            depth += op.info.pushes;
+                            if (depth > maxdepth)
+                                maxdepth = depth;
+                        }
+                        print("    },");
+                    }
+
+                    print("};");
+
+                    let opcode = igroup.firstop;
+                    let oplast = igroup.lastop;
+                    do {
+                        opcode2extra[opcode] = maxdepth;
+                    } while (opcode++ != oplast);
+                    igroup = null;
+                } else {
+                    ASSERT(igroup);
+
+                    if (imm1 && imm1 != imacro.name)
+                        throw new Error(".imacro/.end name mismatch");
+
+                    // Backpatch the forward references to labels that must now be defined.
+                    for (label in imacro.labelrefs) {
+                        if (!imacro.labelrefs.hasOwnProperty(label))
+                            continue;
+                        if (!imacro.labeldefs.hasOwnProperty(label))
+                            throw new Error("label " + label + " used but not defined");
+                        let link = imacro.labelrefs[label];
+                        ASSERT(link >= 0);
+                        for (;;) {
+                            let op = imacro.code[link];
+                            ASSERT(op);
+                            ASSERT(op.hasOwnProperty('target'));
+                            let next = op.target;
+                            op.target = imacro.labeldefs[label] - op.offset;
+                            if (next < 0)
+                                break;
+                            link = next;
+                        }
+                    }
+
+                    igroup.imacros.push(imacro);
+                }
+                imacro = null;
+                break;
+
+              default:
+                throw new Error("unknown pseudo-op " + opname);
+            }
+            continue;
+        }
+
+        if (!opname2info.hasOwnProperty(opname))
+            throw new Error("unknown opcode " + opname + (label ? " (label " + label + ")" : ""));
+
+        let info = opname2info[opname];
+        if (info.oplen == -1)
+            throw new Error("unimplemented opcode " + opname);
+
+        if (label) {
+            if (!imacro)
+                throw new Error("label " + label + " outside of .imacro");
+            imacro.labeldefs[label] = imacro.offset;
+        }
+
+        let op = {offset: imacro.offset, info: info, imm1: imm1, imm2: imm2};
+        if (info.flags.indexOf("JOF_JUMP") >= 0) {
+            if (imacro.labeldefs.hasOwnProperty(imm1)) {
+                // Backward reference can be resolved right away, no backpatching needed.
+                op.target = imacro.labeldefs[imm1] - op.offset;
+            } else {
+                // Link op into the .target-linked backpatch chain at labelrefs[imm1].
+                // The linked list terminates with a -1 sentinel.
+                op.target = imacro.labelrefs.hasOwnProperty(imm1) ? imacro.labelrefs[imm1] : -1;
+                imacro.labelrefs[imm1] = imacro.code.length;
+            }
+        }
+
+        imacro.code.push(op);
+        imacro.offset += info.oplen;
+    }
+
+    print("uint8 js_opcode2extra[JSOP_LIMIT] = {");
+    for (let i = 0; i < opinfo.length; i++) {
+        print("    " + ((i in opcode2extra) ? opcode2extra[i] : "0") +
+              ",  /* " + opinfo[i].jsop + " */");
+    }
+    print("};");
+}
+
+for (let i = 0; i < arguments.length; i++) {
+    try {
+        assemble(arguments[i]);
+    } catch (e) {
+        print(e.name + ": " + e.message + "\n" + e.stack);
+    }
+}

@@ -1460,26 +1460,26 @@ str_match(JSContext *cx, uintN argc, jsval *vp)
 }
 
 #ifdef JS_TRACER
-static JSObject* FASTCALL
+static jsval FASTCALL
 String_p_match(JSContext* cx, JSString* str, jsbytecode *pc, JSObject* regexp)
 {
     /* arbitrary object in vp[0] */
     jsval vp[3] = { OBJECT_TO_JSVAL(regexp), STRING_TO_JSVAL(str), OBJECT_TO_JSVAL(regexp) };
     if (!StringMatchHelper(cx, 1, vp, pc))
-        return (JSObject*) JSVAL_TO_BOOLEAN(JSVAL_VOID);
+        return JSVAL_ERROR_COOKIE;
     JS_ASSERT(JSVAL_IS_OBJECT(vp[0]));
-    return JSVAL_TO_OBJECT(vp[0]);
+    return vp[0];
 }
 
-static JSObject* FASTCALL
+static jsval FASTCALL
 String_p_match_obj(JSContext* cx, JSObject* str, jsbytecode *pc, JSObject* regexp)
 {
     /* arbitrary object in vp[0] */
     jsval vp[3] = { OBJECT_TO_JSVAL(regexp), OBJECT_TO_JSVAL(str), OBJECT_TO_JSVAL(regexp) };
     if (!StringMatchHelper(cx, 1, vp, pc))
-        return (JSObject*) JSVAL_TO_BOOLEAN(JSVAL_VOID);
+        return JSVAL_ERROR_COOKIE;
     JS_ASSERT(JSVAL_IS_OBJECT(vp[0]));
-    return JSVAL_TO_OBJECT(vp[0]);
+    return vp[0];
 }
 #endif
 
@@ -2508,8 +2508,8 @@ JS_DEFINE_TRCINFO_4(str_concat,
     (4, (static, STRING_FAIL,      String_p_concat_2str, CONTEXT, THIS_STRING, STRING, STRING, 1, 1)),
     (5, (static, STRING_FAIL,      String_p_concat_3str, CONTEXT, THIS_STRING, STRING, STRING, STRING, 1, 1)))
 JS_DEFINE_TRCINFO_2(str_match,
-    (4, (static, OBJECT_FAIL_VOID, String_p_match, CONTEXT, THIS_STRING, PC, REGEXP,         1, 1)),
-    (4, (static, OBJECT_FAIL_VOID, String_p_match_obj, CONTEXT, THIS, PC, REGEXP,            1, 1)))
+    (4, (static, JSVAL_FAIL,       String_p_match, CONTEXT, THIS_STRING, PC, REGEXP,         1, 1)),
+    (4, (static, JSVAL_FAIL,       String_p_match_obj, CONTEXT, THIS, PC, REGEXP,            1, 1)))
 JS_DEFINE_TRCINFO_3(str_replace,
     (4, (static, STRING_FAIL,      String_p_replace_str, CONTEXT, THIS_STRING, REGEXP, STRING, 1, 1)),
     (4, (static, STRING_FAIL,      String_p_replace_str2, CONTEXT, THIS_STRING, STRING, STRING, 1, 1)),
