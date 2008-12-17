@@ -159,8 +159,14 @@ public:
   void Thaw();
 
   // Returns true if we can handle this MIME type in a <video> or <audio>
-  // element
-  static PRBool CanHandleMediaType(const char* aMIMEType);
+  // element.
+  // If it returns true, then it also returns a null-terminated list
+  // of supported codecs in *aSupportedCodecs, and a null-terminated list
+  // of codecs that *may* be supported in *aMaybeSupportedCodecs. These
+  // lists should not be freed, they area static data.
+  static PRBool CanHandleMediaType(const char* aMIMEType,
+                                   const char*** aSupportedCodecs,
+                                   const char*** aMaybeSupportedCodecs);
 
   /**
    * Initialize data for available media types
