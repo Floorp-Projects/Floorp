@@ -122,80 +122,85 @@ HistoryStore.prototype = {
       return this._hsvc.DBConnection;
   },
 
+  _fetchRow: function HistStore__fetchRow(stm, params, retparams) {
+    try {
+      for (let key in params) {
+        stm.params[key] = params[key];
+      }
+      if (!stm.step())
+        return null;
+      if (retparams.length == 1)
+        return stm.row[retparams[0]];
+      let ret = {};
+      for each (let key in retparams) {
+        ret[key] = stm.row[key];
+      }
+      return ret;
+    } finally {
+      stm.reset();
+    }
+  },
+
+  _defineStm: function HistStore__defineStm(prop, sql) {
+    let stm = this._db.createStatement(sql);
+    this.__defineGetter__(prop, function() stm);
+    return stm;
+  },
+
   get _visitStm() {
-    let stmt = this._db.createStatement(
-      "SELECT visit_type AS type FROM moz_historyvisits WHERE place_id = :placeid");
-    this.__defineGetter__("_visitStm", function() stmt);
-    return stmt;
+    let stm = this._defineStm(
+      "_visitStm",
+      "SELECT visit_type AS type, visit_date AS date " +
+        "FROM moz_historyvisits " +
+        "WHERE place_id = :placeid " +
+        "ORDER BY visit_date DESC");
+    return stm;
   },
 
   get _pidStm() {
-    let stmt = this._db.createStatement(
-      "SELECT id FROM moz_places WHERE url = :url");
-    this.__defineGetter__("_pidStm", function() stmt);
-    return stmt;
+    let stm = this._defineStm(
+      "_pidStm", "SELECT id FROM moz_places WHERE url = :url");
+    return stm;
   },
 
   get _urlStm() {
-    let stmt = this._db.createStatement(
-      "SELECT url FROM moz_places WHERE id = :id");
-    this.__defineGetter__("_urlStm", function() stmt);
-    return stmt;
+    let stm = this._defineStm(
+      "_urlStm", "SELECT url FROM moz_places WHERE id = :id");
+    return stm;
   },
 
   get _annoAttrIdStm() {
-    let stmt = this._db.createStatement(
+    let stm = this._defineStm(
+      "_annoAttrIdStm",
       "SELECT id from moz_anno_attributes WHERE name = :name");
-    this.__defineGetter__("_annoAttrIdStm", function() stmt);
-    return stmt;
+    return stm;
   },
 
   get _findPidByAnnoStm() {
-    let stmt = this._db.createStatement(
-      "SELECT place_id AS id FROM moz_annos WHERE anno_attribute_id = :attr AND content = :content");
-    this.__defineGetter__("_findPidByAnnoStm", function() stmt);
-    return stmt;
-  },
-
-  create: function HistStore_create(record) {
-    this._log.debug("  -> creating history entry: " + record.id);
-    let uri = Utils.makeURI(record.cleartext.URI);
-    let redirect = false;
-    if (record.cleartext.transition == 5 || record.cleartext.transition == 6)
-      redirect = true;
-
-    this._hsvc.addVisit(uri, record.cleartext.time, null,
-                        record.cleartext.transition, redirect, 0);
-    this._hsvc.setPageTitle(uri, record.cleartext.title);
-  },
-
-  remove: function HistStore_remove(record) {
-    this._log.trace("  -> NOT removing history entry: " + record.id);
-    // FIXME: implement!
-  },
-
-  update: function HistStore_update(record) {
-    this._log.trace("  -> FIXME: NOT editing history entry: " + record.id);
-    // FIXME: implement!
+    let stm = this._defineStm(
+      "_findPidByAnnoStm",
+      "SELECT place_id AS id FROM moz_annos " +
+        "WHERE anno_attribute_id = :attr AND content = :content");
+    return stm;
   },
 
   // See bug 320831 for why we use SQL here
-  _getVisitType: function HistStore__getVisitType(uri) {
+  _getVisits: function HistStore__getVisits(uri) {
     if (typeof(uri) != "string")
       uri = uri.spec;
-    try {
-      this._pidStm.params.url = uri;
-      if (this._pidStm.step()) {
-        let placeId = this._pidStm.row.id;
-        this._visitStm.params.placeid = placeId;
-        if (this._visitStm.step())
-          return this._visitStm.row.type;
-      }
-    } finally {
-      this._pidStm.reset();
-      this._visitStm.reset();
+    let placeid = this._fetchRow(this._pidStm, {url: uri}, ['id']);
+
+    this._visitStm.params.placeid = placeid;
+    let i = 0;
+    let visits = [];
+    while (this._visitStm.step()) {
+      visits.push({date: this._visitStm.row.date,
+                   type: this._visitStm.row.type});
+      if (++i > 10)
+        break;
     }
-    return null;
+    this._visitStm.reset();
+    return visits;
   },
 
   _getGUID: function HistStore__getGUID(uri) {
@@ -250,12 +255,36 @@ HistoryStore.prototype = {
     return all;
   },
 
+  create: function HistStore_create(record) {
+    this._log.debug("  -> creating history entry: " + record.cleartext.URI);
+
+    let uri = Utils.makeURI(record.cleartext.URI);
+
+    let visit;
+    while ((visit = record.cleartext.visits.pop())) {
+      this._log.debug("     visit " + visit.time);
+      this._hsvc.addVisit(uri, visit.time, null, visit.type,
+                          (visit.type == 5 || visit.type == 6), 0);
+    }
+    this._hsvc.setPageTitle(uri, record.cleartext.title);
+  },
+
+  remove: function HistStore_remove(record) {
+    this._log.trace("  -> NOT removing history entry: " + record.id);
+    // FIXME: implement!
+  },
+
+  update: function HistStore_update(record) {
+    this._log.trace("  -> FIXME: NOT editing history entry: " + record.id);
+    // FIXME: implement!
+  },
+
   wrap: function HistStore_wrap() {
     let query = this._hsvc.getNewQuery(),
         options = this._hsvc.getNewQueryOptions();
 
     query.minVisits = 1;
-    options.maxResults = 150;
+    options.maxResults = 100;
     options.sortingMode = options.SORT_BY_DATE_DESCENDING;
     options.queryType = options.QUERY_TYPE_HISTORY;
 
@@ -267,11 +296,9 @@ HistoryStore.prototype = {
     for (let i = 0; i < root.childCount; i++) {
       let item = root.getChild(i);
       let guid = this._getGUID(item.uri);
-      let vType = this._getVisitType(item.uri);
       items[guid] = {title: item.title,
 		     URI: item.uri,
-		     transition: vType};
-      // FIXME: get last 10 visit times (& transitions ?)
+                     visits: this._getVisits(item.uri)};
     }
 
     return items;
