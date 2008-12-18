@@ -1198,7 +1198,8 @@ nsOggDecoder::nsOggDecoder() :
   mReader(0),
   mMonitor(0),
   mPlayState(PLAY_STATE_PAUSED),
-  mNextState(PLAY_STATE_PAUSED)
+  mNextState(PLAY_STATE_PAUSED),
+  mResourceLoaded(PR_FALSE)
 {
   MOZ_COUNT_CTOR(nsOggDecoder);
 }
@@ -1232,6 +1233,11 @@ nsresult nsOggDecoder::Load(nsIURI* aURI, nsIChannel* aChannel,
   // reusing decoder.
   mStopping = PR_FALSE;
 
+  // Reset progress member variables
+  mIgnoreProgressData = PR_TRUE;
+  mBytesDownloaded = 0;
+  mResourceLoaded = PR_FALSE;
+
   NS_ASSERTION(!mReader, "Didn't shutdown properly!");
   NS_ASSERTION(!mDecodeStateMachine, "Didn't shutdown properly!");
   NS_ASSERTION(!mDecodeThread, "Didn't shutdown properly!");
@@ -1253,8 +1259,6 @@ nsresult nsOggDecoder::Load(nsIURI* aURI, nsIChannel* aChannel,
     nsresult rv = NS_GetFinalChannelURI(aChannel, getter_AddRefs(mURI));
     NS_ENSURE_SUCCESS(rv, rv);
   }
-
-  StartProgress();
 
   RegisterShutdownObserver();
 
@@ -1365,6 +1369,7 @@ void nsOggDecoder::Stop()
 
   ChangeState(PLAY_STATE_ENDED);
 
+  mIgnoreProgressData = PR_TRUE;
   StopProgress();
 
   // Force any outstanding seek and byterange requests to complete
@@ -1441,6 +1446,11 @@ void nsOggDecoder::MetadataLoaded()
   if (mElement && notifyElement) {
     mElement->MetadataLoaded();
   }
+
+  if (!mResourceLoaded) {
+    StartProgress();
+  }
+  mIgnoreProgressData = PR_FALSE;
 }
 
 void nsOggDecoder::FirstFrameLoaded()
@@ -1477,13 +1487,39 @@ void nsOggDecoder::FirstFrameLoaded()
 
 void nsOggDecoder::ResourceLoaded()
 {
-  if (mShuttingDown)
+  // Don't handle ResourceLoaded if we are shutting down, or if
+  // we need to ignore progress data due to seeking (in the case
+  // that the seek results in reaching end of file, we get a bogus call
+  // to ResourceLoaded).
+  if (mShuttingDown || mIgnoreProgressData)
     return;
+
+  Progress(PR_FALSE);
+  {
+    // If we are seeking or loading then the resource loaded notification we get
+    // should be ignored, since it represents the end of the seek request.
+    nsAutoMonitor mon(mMonitor);
+    if (mPlayState == PLAY_STATE_SEEKING || mPlayState == PLAY_STATE_LOADING)
+      return;
+  }
+
+  // If we know the content length, set the bytes downloaded to this
+  // so the final progress event gets the correct final value.
+  if (mContentLength >= 0) {
+    mBytesDownloaded = mContentLength;
+  }
+
+  mResourceLoaded = PR_TRUE;
+  StopProgress();
+
+  // Ensure the final progress event gets fired
+  if (mElement && !mIgnoreProgressData) {
+    mElement->DispatchProgressEvent(NS_LITERAL_STRING("progress"));
+  }
 
   if (mElement) {
     mElement->ResourceLoaded();
   }
-  StopProgress();
 }
 
 void nsOggDecoder::NetworkError()
@@ -1549,7 +1585,11 @@ void nsOggDecoder::SetTotalBytes(PRInt64 aBytes)
 
 void nsOggDecoder::UpdateBytesDownloaded(PRUint64 aBytes)
 {
-  mBytesDownloaded = aBytes;
+  nsAutoMonitor mon(mMonitor);
+
+  if (!mIgnoreProgressData) {
+    mBytesDownloaded = aBytes;
+  }
 }
 
 void nsOggDecoder::BufferingStopped()
@@ -1577,6 +1617,8 @@ void nsOggDecoder::SeekingStopped()
   if (mShuttingDown)
     return;
 
+  mIgnoreProgressData = PR_FALSE;
+
   {
     nsAutoMonitor mon(mMonitor);
 
@@ -1597,6 +1639,8 @@ void nsOggDecoder::SeekingStarted()
 {
   if (mShuttingDown)
     return;
+
+  mIgnoreProgressData = PR_TRUE;
 
   if (mElement) {
     mElement->SeekStarted();
@@ -1731,4 +1775,3 @@ PRBool nsOggDecoder::GetSeekable()
 {
   return mSeekable;
 }
-

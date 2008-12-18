@@ -1,0 +1,36 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+  <title>Media test: progress events</title>
+  <script type="text/javascript" src="/MochiKit/MochiKit.js"></script>
+  <script type="text/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
+</head>
+<body>
+<pre id="test">
+<script class="testbody" type="text/javascript">
+// Test progress events with wav backend
+var v = document.getElementById('v');
+var completed = false;
+
+function do_progress(e) {
+  if (completed)
+    return false;
+
+  ok(e.lengthComputable, "Check progress lengthComputable");
+  ok(e.loaded >= 0 && e.loaded <= e.total, "Check progress loaded: " + e.loaded);
+  ok(e.total == 102444, "Check progress total: " + e.total);
+  if (e.loaded == 102444) {
+    completed = true;
+    SimpleTest.finish();
+  }
+}
+
+SimpleTest.waitForExplicitFinish();
+</script>
+</pre>
+<video id='v' controls onprogress='do_progress(event)'>
+  <source src='big.wav' type="audio/wav"></source>
+</video>
+</body>
+</html>
