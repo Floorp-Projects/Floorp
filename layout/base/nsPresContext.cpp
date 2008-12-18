@@ -21,6 +21,7 @@
  *
  * Contributor(s):
  *   L. David Baron <dbaron@dbaron.org>, Mozilla Corporation
+ *   Ehsan Akhgari <ehsan.akhgari@gmail.com>
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either of the GNU General Public License Version 2 or later (the "GPL"),
@@ -765,6 +766,13 @@ nsPresContext::PreferenceChanged(const char* aPrefName)
     // probably also requires clearing the text run cache, so don't
     // bother (yet, anyway).
     mPrefChangePendingNeedsReflow = PR_TRUE;
+  }
+  if (StringBeginsWith(prefName, NS_LITERAL_CSTRING("bidi."))) {
+    // Changes to bidi prefs need to trigger a reflow (see bug 443629)
+    mPrefChangePendingNeedsReflow = PR_TRUE;
+
+    // Changes to bidi.numeral also needs to empty the text run cache.
+    // This is handled in gfxTextRunWordCache.cpp.
   }
   // we use a zero-delay timer to coalesce multiple pref updates
   if (!mPrefChangedTimer)
