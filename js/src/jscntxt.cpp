@@ -295,21 +295,7 @@ js_NewContext(JSRuntime *rt, size_t stackChunkSize)
                        1024,  /* FIXME: bug 421435 */
                        sizeof(jsdouble), &cx->scriptStackQuota);
 
-    /*
-     * To avoid multiple allocations in InitMatch() (in jsregexp.c), the arena
-     * size parameter should be at least as big as:
-     *   INITIAL_BACKTRACK
-     *   + (sizeof(REProgState) * INITIAL_STATESTACK)
-     *   + (offsetof(REMatchState, parens) + avgParanSize * sizeof(RECapture))
-     */
-    JS_INIT_ARENA_POOL(&cx->regexpPool, "regexp",
-                       12 * 1024 - 40,  /* FIXME: bug 421435 */
-                       sizeof(void *), &cx->scriptStackQuota);
-
-    if (!js_InitRegExpStatics(cx, &cx->regExpStatics)) {
-        js_DestroyContext(cx, JSDCM_NEW_FAILED);
-        return NULL;
-    }
+    js_InitRegExpStatics(cx);
 
     cx->resolveFlags = 0;
 
@@ -428,13 +414,8 @@ js_DestroyContext(JSContext *cx, JSDestroyContextMode mode)
         JS_ClearAllWatchPoints(cx);
     }
 
-    /*
-     * Remove more GC roots in regExpStatics, then collect garbage.
-     * XXX anti-modularity alert: we rely on the call to js_RemoveRoot within
-     * XXX this function call to wait for any racing GC to complete, in the
-     * XXX case where JS_DestroyContext is called outside of a request on cx
-     */
-    js_FreeRegExpStatics(cx, &cx->regExpStatics);
+    /* Remove more GC roots in regExpStatics, then collect garbage. */
+    JS_ClearRegExpRoots(cx);
 
 #ifdef JS_THREADSAFE
     /*
@@ -475,9 +456,9 @@ js_DestroyContext(JSContext *cx, JSDestroyContextMode mode)
     }
 
     /* Free the stuff hanging off of cx. */
+    js_FreeRegExpStatics(cx);
     JS_FinishArenaPool(&cx->stackPool);
     JS_FinishArenaPool(&cx->tempPool);
-    JS_FinishArenaPool(&cx->regexpPool);
 
     if (cx->lastMessage)
         free(cx->lastMessage);
