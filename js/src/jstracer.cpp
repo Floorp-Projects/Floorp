@@ -1835,9 +1835,9 @@ TraceRecorder::determineSlotType(jsval* vp) const
 /*
  * Combine fp->imacpc and fp->regs->pc into one word, with 8 bits for the pc
  * adjustment from one byte before the imacro's start (so a 0 high byte means
- * we're not in an imacro), and 24 for the pc adjustment from script->code.
+ * we're not in an imacro), and 22 for the pc adjustment from script->code.
  */
-#define IMACRO_PC_ADJ_BITS   8
+#define IMACRO_PC_ADJ_BITS   10
 #define SCRIPT_PC_ADJ_BITS   (32 - IMACRO_PC_ADJ_BITS)
 
 // The stored imacro_pc_adj byte offset is biased by 1.
@@ -1874,6 +1874,7 @@ static jsbytecode* imacro_code[JSOP_LIMIT];
 
 JS_STATIC_ASSERT(sizeof(binary_imacros) < IMACRO_PC_ADJ_LIMIT);
 JS_STATIC_ASSERT(sizeof(add_imacros) < IMACRO_PC_ADJ_LIMIT);
+JS_STATIC_ASSERT(sizeof(apply_imacros) < IMACRO_PC_ADJ_LIMIT);
 
 JS_REQUIRES_STACK LIns*
 TraceRecorder::snapshot(ExitType exitType)
@@ -5582,6 +5583,19 @@ TraceRecorder::record_JSOP_SWAP()
 }
 
 JS_REQUIRES_STACK bool
+TraceRecorder::record_JSOP_PICK()
+{
+    jsval* sp = cx->fp->regs->sp;
+    jsuint n = cx->fp->regs->pc[1];
+    JS_ASSERT(sp - (n+1) >= StackBase(cx->fp));
+    LIns* top = tracker.get(sp - (n+1));
+    for (jsint i = 0; i < n; ++i)
+        tracker.set(sp - (n+1) + i, tracker.get(sp - n + i));
+    tracker.set(&sp[-1], top);
+    return true;
+}
+
+JS_REQUIRES_STACK bool
 TraceRecorder::record_JSOP_SETCONST()
 {
     return false;
@@ -6579,6 +6593,30 @@ TraceRecorder::record_JSOP_CALL()
     return functionCall(false, GET_ARGC(cx->fp->regs->pc));
 }
 
+static jsbytecode* apply_imacro_table[] = {
+    apply_imacros.apply0,
+    apply_imacros.apply1,
+    apply_imacros.apply2,
+    apply_imacros.apply3,
+    apply_imacros.apply4,
+    apply_imacros.apply5,
+    apply_imacros.apply6,
+    apply_imacros.apply7,
+    apply_imacros.apply8
+};
+
+static jsbytecode* call_imacro_table[] = {
+    apply_imacros.call0,
+    apply_imacros.call1,
+    apply_imacros.call2,
+    apply_imacros.call3,
+    apply_imacros.call4,
+    apply_imacros.call5,
+    apply_imacros.call6,
+    apply_imacros.call7,
+    apply_imacros.call8
+};
+
 JS_REQUIRES_STACK bool
 TraceRecorder::record_JSOP_APPLY()
 {
@@ -6590,7 +6628,8 @@ TraceRecorder::record_JSOP_APPLY()
     jsuint length = 0;
     JSObject* aobj = NULL;
     LIns* aobj_ins = NULL;
-    LIns* dslots_ins = NULL;
+    
+    JS_ASSERT(!fp->imacpc);
     
     if (!VALUE_IS_FUNCTION(cx, vp[0]))
         return record_JSOP_CALL();
@@ -6604,138 +6643,58 @@ TraceRecorder::record_JSOP_APPLY()
     if (!apply && (JSFastNative)fun->u.n.native != js_fun_call)
         return record_JSOP_CALL();
 
-    /* 
-     * If this is apply, and the argument is too long and would need
-     * a separate stack chunk, do a heavy-weight apply. 
+    /*
+     * We don't trace apply and call with a primitive 'this', which is the
+     * first positional parameter.
      */
+    if (argc > 0 && JSVAL_IS_PRIMITIVE(vp[2]))
+        return record_JSOP_CALL();
+    
+    /*
+     * Guard on the identity of this, which is the function we are applying.
+     */
+    if (!guardCallee(vp[1]))
+        return false;
+
     if (apply && argc >= 2) {
+        if (argc != 2)
+            ABORT_TRACE("apply with excess arguments");
         if (JSVAL_IS_PRIMITIVE(vp[3]))
             ABORT_TRACE("arguments parameter of apply is primitive");
         aobj = JSVAL_TO_OBJECT(vp[3]);
         aobj_ins = get(&vp[3]);
-        
+
         /* 
          * We expect a dense array for the arguments (the other
          * frequent case is the arguments object, but that we
          * don't trace at the moment). 
          */
-        guard(false, lir->ins_eq0(aobj_ins), MISMATCH_EXIT);
         if (!guardDenseArray(aobj, aobj_ins))
             ABORT_TRACE("arguments parameter of apply is not a dense array");
         
         /*
-         * Make sure the array has the same length at runtime.
+         * We trace only apply calls with a certain number of arguments.
          */
         length = jsuint(aobj->fslots[JSSLOT_ARRAY_LENGTH]);
-        guard(true, lir->ins2i(LIR_eq,
-                               stobj_get_fslot(aobj_ins, JSSLOT_ARRAY_LENGTH),
-                               length), 
-                               BRANCH_EXIT);
- 
-        /* 
-         * Make sure dslots is not NULL and guard the array's capacity.
-         */
-        dslots_ins = lir->insLoad(LIR_ldp, aobj_ins, offsetof(JSObject, dslots));
-        guard(false,
-              lir->ins_eq0(dslots_ins),
-              MISMATCH_EXIT);
-        guard(true,
-              lir->ins2(LIR_ult,
-                        lir->insImm(length),
-                        lir->insLoad(LIR_ldp, dslots_ins, 0 - (int)sizeof(jsval))),
-              MISMATCH_EXIT);
+        if (length >= JS_ARRAY_LENGTH(apply_imacro_table))
+            ABORT_TRACE("too many arguments to apply");
         
         /*
-         * The interpreter deoptimizes if we are about to cross a stack chunk by
-         * re-entering itself indirectly from js_Invoke, and we can't trace that 
-         * case.
+         * Make sure the array has the same length at runtime.
          */
-        length = (uintN)JS_MIN(length, ARRAY_INIT_LIMIT - 1);
-        jsval* newsp = vp + 2 + length;
-        JS_ASSERT(newsp >= vp + 2);
-        JSArena *a = cx->stackPool.current;
-        if (jsuword(newsp) > a->limit)
-            ABORT_TRACE("apply or call across stack-chunks");
-    }
-
-    /* Protect against a non-function callee. */
-    if (!VALUE_IS_FUNCTION(cx, vp[1]))
-        ABORT_TRACE("apply on a non-function");
-
-    /*
-     * Guard on the identity of this, which is the function we
-     * are applying.
-     */
-    if (!guardCallee(vp[1]))
-        return false;
-
-    LIns* callee_ins = get(&vp[1]);
-    LIns* this_ins = NULL;
-    if (argc > 0) {
-        this_ins = get(&vp[2]);
-        if (JSVAL_IS_PRIMITIVE(vp[2]))
-            ABORT_TRACE("apply with primitive this");
-    } else {
-        this_ins = lir->insImm(0);
+        guard(true, 
+              lir->ins2i(LIR_eq,
+                         stobj_get_fslot(aobj_ins, JSSLOT_ARRAY_LENGTH),
+                         length), 
+              BRANCH_EXIT);
+        
+        return call_imacro(apply_imacro_table[length]);
     }
     
-    LIns** argv;
-    if (argc >= 2) {
-        if (!apply) {
-            --argc;
-            JS_ASSERT(argc >= 0);
-            argv = (LIns**) alloca(sizeof(LIns*) * argc);
-            for (jsuint n = 0; n < argc; ++n)
-                argv[n] = get(&vp[3 + n]); /* skip over the this parameter */
-        } else {
-            /*
-             * We already established that argments is a dense array
-             * and we know its length and we know dslots is not NULL
-             * and the length is not beyond the dense array's capacity. 
-             */
-            argc = length;
-            JS_ASSERT(argc >= 0);
-            argv = (LIns**) alloca(sizeof(LIns*) * argc);
-            for (unsigned n = 0; n < argc; ++n) {
-                /* Load the value and guard on its type to unbox it. */
-                LIns* v_ins = lir->insLoadi(dslots_ins, n * sizeof(jsval));
-                /* 
-                 * We can't "see through" a hole to a possible Array.prototype property, so
-                 * we abort here and guard below (after unboxing).
-                 */
-                jsval* dp = &aobj->dslots[n];
-                if (*dp == JSVAL_HOLE)
-                    ABORT_TRACE("can't see through hole in dense array");
-                if (!unbox_jsval(*dp, v_ins))
-                    return false;
-                if (JSVAL_TAG(*dp) == JSVAL_BOOLEAN) {
-                    // Optimize to guard for a hole only after untagging, so we know that
-                    // we have a boolean, to avoid an extra guard for non-boolean values.
-                    guard(false, lir->ins2(LIR_eq, v_ins, INS_CONST(JSVAL_TO_BOOLEAN(JSVAL_HOLE))),
-                          MISMATCH_EXIT);
-                }
-                argv[n] = v_ins;
-            }
-        }
-    } else {
-        argc = 0;
-    }
-    /*
-     * We have all arguments unpacked and we are now ready to modify the
-     * tracker.
-     */
-    tracker.set(&vp[0], callee_ins);
-    tracker.set(&vp[1], this_ins);
-    for (unsigned n = 0; n < argc; ++n)
-        tracker.set(&vp[2 + n], argv[n]);
-
-    return true;
-}
-
-JS_REQUIRES_STACK bool
-TraceRecorder::record_ApplyComplete(uintN argc)
-{
-    return functionCall(false, argc);
+    if (argc >= JS_ARRAY_LENGTH(call_imacro_table))
+        ABORT_TRACE("too many arguments to call");
+    
+    return call_imacro(call_imacro_table[argc]);
 }
 
 JS_REQUIRES_STACK bool
@@ -8558,11 +8517,11 @@ InitIMacroCode()
 
     imacro_code[JSOP_ITER] = (jsbytecode*)&iter_imacros - 1;
     imacro_code[JSOP_NEXTITER] = nextiter_imacro - 1;
+    imacro_code[JSOP_APPLY] = (jsbytecode*)&apply_imacros - 1;
 }
 
 #define UNUSED(n) JS_REQUIRES_STACK bool TraceRecorder::record_JSOP_UNUSED##n() { return false; }
 
-UNUSED(201)
 UNUSED(202)
 UNUSED(203)
 UNUSED(204)
