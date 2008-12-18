@@ -397,6 +397,8 @@
                     class="plain urlbar-icon"
                     id="feed-button"
                     chromedir="&locale.dir;"
+                    collapsed="true"
+                    tooltiptext="&feedButton.tooltip;"
                     onclick="return FeedHandler.onFeedButtonClick(event);">
               <menupopup position="after_end"
                          onpopupshowing="return FeedHandler.buildFeedList(this);"
@@ -573,6 +575,7 @@
                       ondblclick="if (event.button == 0) displaySecurityInfo();"/>
       <statusbarpanel id="page-report-button" type="menu"
                       class="statusbarpanel-menu-iconic"
+                      hidden="true"
                       tooltiptext="&pageReportIcon.tooltip;">
         <menupopup onpopupshowing="gPopupBlockerObserver.fillPopupList(event);">
           <menuitem observes="blockedPopupAllowSite"/>
