@@ -61,6 +61,7 @@
 static int esdref = -1;
 static PRLibrary *elib = nsnull;
 static PRLibrary *libcanberra = nsnull;
+static PRLibrary* libasound = nsnull;
 
 // the following from esd.h
 
@@ -99,6 +100,26 @@ static ca_context_create_fn ca_context_create;
 static ca_context_destroy_fn ca_context_destroy;
 static ca_context_play_fn ca_context_play;
 static ca_context_change_props_fn ca_context_change_props;
+
+/* we provide a blank error handler to silence ALSA's stderr
+   messages on computers with no sound devices */
+typedef void (*snd_lib_error_handler_t) (const char* file,
+                                         int         line,
+                                         const char* function,
+                                         int         err,
+                                         const char* format,
+                                         ...);
+typedef int (*snd_lib_error_set_handler_fn) (snd_lib_error_handler_t handler);
+
+static void
+quiet_error_handler(const char* file,
+                    int         line,
+                    const char* function,
+                    int         err,
+                    const char* format,
+                    ...)
+{
+}
 
 NS_IMPL_ISUPPORTS2(nsSound, nsISound, nsIStreamLoaderObserver)
 
@@ -150,6 +171,16 @@ nsSound::Init()
         }
     }
 
+    if (!libasound) {
+        PRFuncPtr func = PR_FindFunctionSymbolAndLibrary("snd_lib_error_set_handler",
+                                                         &libasound);
+        if (libasound) {
+            snd_lib_error_set_handler_fn snd_lib_error_set_handler =
+                 (snd_lib_error_set_handler_fn) func;
+            snd_lib_error_set_handler(quiet_error_handler);
+        }
+    }
+
     if (!libcanberra) {
         libcanberra = PR_LoadLibrary("libcanberra.so.0");
         if (libcanberra) {
@@ -179,6 +210,10 @@ nsSound::Shutdown()
     if (libcanberra) {
         PR_UnloadLibrary(libcanberra);
         libcanberra = nsnull;
+    }
+    if (libasound) {
+        PR_UnloadLibrary(libasound);
+        libasound = nsnull;
     }
 }
 
@@ -410,7 +445,7 @@ NS_METHOD nsSound::Play(nsIURL *aURL)
 nsresult nsSound::PlaySystemEventSound(const nsAString &aSoundAlias)
 {
     if (!libcanberra)
-        return NS_ERROR_FAILURE;
+        return NS_OK;
 
     // Do we even want alert sounds?
     // If so, what sound theme are we using?

@@ -5536,6 +5536,32 @@ key_press_event_cb(GtkWidget *widget, GdkEventKey *event)
 
     nsRefPtr<nsWindow> focusWindow = gFocusWindow ? gFocusWindow : window;
 
+#ifdef MOZ_X11
+    // Keyboard repeat can cause key press events to queue up when there are
+    // slow event handlers (bug 301029).  Throttle these events by removing
+    // consecutive pending duplicate KeyPress events to the same window.
+    // We use the event time of the last one.
+    // Note: GDK calls XkbSetDetectableAutorepeat so that KeyRelease events
+    // are generated only when the key is physically released.
+#define NS_GDKEVENT_MATCH_MASK 0x1FFF /* GDK_SHIFT_MASK .. GDK_BUTTON5_MASK */
+    GdkDisplay* gdkDisplay = gtk_widget_get_display(widget);
+    Display* dpy = GDK_DISPLAY_XDISPLAY(gdkDisplay);
+    while (XPending(dpy)) {
+        XEvent next_event;
+        XPeekEvent(dpy, &next_event);
+        GdkWindow* nextGdkWindow =
+            gdk_window_lookup_for_display(gdkDisplay, next_event.xany.window);
+        if (nextGdkWindow != event->window ||
+            next_event.type != KeyPress ||
+            next_event.xkey.keycode != event->hardware_keycode ||
+            next_event.xkey.state != (event->state & NS_GDKEVENT_MATCH_MASK)) {
+            break;
+        }
+        XNextEvent(dpy, &next_event);
+        event->time = next_event.xkey.time;
+    }
+#endif
+
     return focusWindow->OnKeyPressEvent(widget, event);
 }
 
@@ -6381,7 +6407,8 @@ nsWindow::IMEGetContext()
 static PRBool
 IsIMEEnabledState(PRUint32 aState)
 {
-    return aState == nsIWidget::IME_STATUS_ENABLED;
+    return aState == nsIWidget::IME_STATUS_ENABLED ||
+           aState == nsIWidget::IME_STATUS_PLUGIN;
 }
 
 PRBool
@@ -6394,6 +6421,7 @@ static PRBool
 IsIMEEditableState(PRUint32 aState)
 {
     return aState == nsIWidget::IME_STATUS_ENABLED ||
+           aState == nsIWidget::IME_STATUS_PLUGIN ||
            aState == nsIWidget::IME_STATUS_PASSWORD;
 }
 
@@ -6592,6 +6620,18 @@ nsWindow::SetIMEEnabled(PRUint32 aState)
         focusedWin->IMESetFocus();
 #ifdef MOZ_PLATFORM_HILDON
         if (mIMEData->mEnabled) {
+            // It is not desired that the hildon's autocomplete mechanism displays
+            // user previous entered passwds, so lets make completions invisible
+            // in these cases.
+            int mode;
+            g_object_get (G_OBJECT(focusedIm), "hildon-input-mode", &mode, NULL);
+
+            if (mIMEData->mEnabled == IME_STATUS_ENABLED)
+                mode &= ~HILDON_GTK_INPUT_MODE_INVISIBLE;
+            else if (mIMEData->mEnabled == nsIWidget::IME_STATUS_PASSWORD)
+               mode |= HILDON_GTK_INPUT_MODE_INVISIBLE;
+
+            g_object_set (G_OBJECT(focusedIm), "hildon-input-mode", (HildonGtkInputMode)mode, NULL);
             gIMEVirtualKeyboardOpened = PR_TRUE;
             hildon_gtk_im_context_show (focusedIm);
         } else {
@@ -6943,7 +6983,8 @@ IM_get_input_context(nsWindow *aWindow)
     nsWindow::nsIMEData *data = aWindow->mIMEData;
     if (!data)
         return nsnull;
-    if (data->mEnabled == nsIWidget::IME_STATUS_ENABLED)
+    if (data->mEnabled == nsIWidget::IME_STATUS_ENABLED ||
+        data->mEnabled == nsIWidget::IME_STATUS_PLUGIN)
         return data->mContext;
     if (data->mEnabled == nsIWidget::IME_STATUS_PASSWORD)
         return data->mSimpleContext;

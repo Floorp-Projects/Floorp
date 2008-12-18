@@ -595,6 +595,9 @@ JS_StringToVersion(const char *string);
                                                    that a null rval out-param
                                                    will be passed to each call
                                                    to JS_ExecuteScript. */
+#define JSOPTION_UNROOTED_GLOBAL JS_BIT(13)     /* The GC will not root the
+                                                   global objects leaving
+                                                   that up to the embedding. */
 
 extern JS_PUBLIC_API(uint32)
 JS_GetOptions(JSContext *cx);

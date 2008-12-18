@@ -503,13 +503,15 @@ nsFileControlFrame::AttributeChanged(PRInt32         aNameSpaceID,
                                      PRInt32         aModType)
 {
   // propagate disabled to text / button inputs
-  if (aNameSpaceID == kNameSpaceID_None &&
-      aAttribute == nsGkAtoms::disabled) {
-    SyncAttr(aNameSpaceID, aAttribute, SYNC_BOTH);
-  // propagate size to text
-  } else if (aNameSpaceID == kNameSpaceID_None &&
-             aAttribute == nsGkAtoms::size) {
-    SyncAttr(aNameSpaceID, aAttribute, SYNC_TEXT);
+  if (aNameSpaceID == kNameSpaceID_None) {
+    if (aAttribute == nsGkAtoms::disabled) {
+      SyncAttr(aNameSpaceID, aAttribute, SYNC_BOTH);
+    // propagate size to text
+    } else if (aAttribute == nsGkAtoms::size) {
+      SyncAttr(aNameSpaceID, aAttribute, SYNC_TEXT);
+    } else if (aAttribute == nsGkAtoms::tabindex) {
+      SyncAttr(aNameSpaceID, aAttribute, SYNC_BUTTON);
+    }
   }
 
   return nsAreaFrame::AttributeChanged(aNameSpaceID, aAttribute, aModType);

@@ -193,6 +193,121 @@ MOZCE_SHUNT_API char SetEnvironmentVariableW( const unsigned short * name, const
   return map_put(key,val);
 }
 
+
+typedef struct MOZCE_SHUNT_SPECIAL_FOLDER_INFO
+{
+  int   nFolder;
+  char *folderEnvName;
+} MozceShuntSpecialFolderInfo;
+
+// TAKEN DIRECTLY FROM MICROSOFT SHELLAPI.H HEADER FILE 
+// supported SHGetSpecialFolderPath nFolder ids
+#define CSIDL_DESKTOP            0x0000
+#define CSIDL_PROGRAMS           0x0002      // \Windows\Start Menu\Programs
+#define CSIDL_PERSONAL           0x0005
+#define CSIDL_WINDOWS            0x0024      // \Windows
+#define CSIDL_PROGRAM_FILES      0x0026      // \Program Files
+
+#define CSIDL_APPDATA            0x001A      // NOT IN SHELLAPI.H header file
+#define CSIDL_PROFILE            0x0028      // NOT IN SHELLAPI.H header file
+
+MozceShuntSpecialFolderInfo mozceSpecialFoldersToEnvVars[] = {
+  { CSIDL_APPDATA,  "APPDATA" },
+  { CSIDL_PROGRAM_FILES, "ProgramFiles" },
+  { CSIDL_WINDOWS,  "windir" },
+
+  //  { CSIDL_PROFILE,  "HOMEPATH" },     // No return on WinMobile 6 Pro
+  //  { CSIDL_PROFILE,  "USERPROFILE" },  // No return on WinMobile 6 Pro
+  //  { int, "ALLUSERSPROFILE" },         // Only one profile on WinCE
+  //  { int, "CommonProgramFiles" },
+  //  { int, "COMPUTERNAME" },
+  //  { int, "HOMEDRIVE" },
+  //  { int, "SystemDrive" },
+  //  { int, "SystemRoot" },
+  //  { int, "TEMP" },
+
+  { NULL, NULL }
+};
+
+
+static void InitializeSpecialFolderEnvVars()
+{
+  MozceShuntSpecialFolderInfo *p = mozceSpecialFoldersToEnvVars;
+  while ( p && p->nFolder && p->folderEnvName ) {
+    WCHAR wPath[MAX_PATH];
+    char  cPath[MAX_PATH];
+    if ( SHGetSpecialFolderPath(NULL, wPath, p->nFolder, FALSE) )
+      if ( 0 != WideCharToMultiByte(CP_ACP, 0, wPath, -1, cPath, MAX_PATH, 0, 0) )
+        map_put(p->folderEnvName, cPath);
+    p++;
+  }
+}
+
+
+
+MOZCE_SHUNT_API unsigned int ExpandEnvironmentStringsW(const unsigned short* lpSrc,
+                                                       unsigned short* lpDst,
+                                                       unsigned int nSize)
+{
+  if ( NULL == lpDst )
+    return 0;
+  
+  unsigned int size = 0;
+  unsigned int index = 0;
+  unsigned int origLen = wcslen(lpSrc);
+
+  const unsigned short *pIn = lpSrc;
+  unsigned short *pOut = lpDst;
+  
+  while ( index < origLen ) {
+	
+    if (*pIn != L'%') {  // Regular char, copy over
+      if ( size < nSize ) *pOut = *pIn, pOut++;
+      index++, size++, pIn++;
+      continue;
+    }
+	
+    // Have a starting '%' - look for matching '%'
+    int envlen = 0;
+    const unsigned short *pTmp = ++pIn;                    // Move past original '%'
+    while ( L'%' != *pTmp ) {
+      envlen++, pTmp++;
+      if ( origLen < index + envlen ) {    // Ran past end of original
+        SetLastError(ERROR_INVALID_PARAMETER); // buffer without matching '%'
+        return -1;
+      }
+    }
+	
+    if ( 0 == envlen ) {  // Encountered a "%%" - mapping to "%"
+      size++;
+      if ( size < nSize ) *pOut = *pIn, pOut++;
+      pIn++;
+      index += 2;
+    } else {
+      // Encountered a "%something%" - mapping "something"
+      char key[250];
+      WideCharToMultiByte( CP_ACP, 0, pIn, envlen, key, 250, NULL, NULL );
+      key[envlen] = 0;
+      char *pC = map_get(key);
+      if ( NULL != pC ) {
+        int n = MultiByteToWideChar( CP_ACP, 0, pC, -1, pOut, nSize - size );
+        if ( n > 0 ) {
+          size += n - 1;  // Account for trailing zero
+          pOut += n - 1;
+        }
+      }
+      index += envlen + 2;
+      pIn = ++pTmp;
+    }
+  }
+  
+  if ( size < nSize ) lpDst[size] = 0;
+  return size;
+}
+
+
+
+
 ////////////////////////////////////////////////////////
 //  errno
 ////////////////////////////////////////////////////////
@@ -223,14 +338,23 @@ MOZCE_SHUNT_API unsigned short *_wfullpath( unsigned short *absPath, const unsig
   if(absPath == NULL){
     absPath = (unsigned short *)malloc(maxLength*sizeof(unsigned short));
   }
-  _wgetcwd( absPath, maxLength);
-  unsigned long len = wcslen(absPath);
-  if(!(absPath[len-1] == TCHAR('/') || absPath[len-1] == TCHAR('\\'))&& len< maxLength){
-    absPath[len] = TCHAR('\\');
-    absPath[++len] = TCHAR('\0');
+  unsigned short cwd[MAX_PATH];
+  if (NULL == _wgetcwd( cwd, MAX_PATH))
+    return NULL;
+
+  unsigned long len = wcslen(cwd);
+  if(!(cwd[len-1] == TCHAR('/') || cwd[len-1] == TCHAR('\\'))&& len< maxLength){
+    cwd[len] = TCHAR('\\');
+    cwd[++len] = TCHAR('\0');
   }
   if(len+wcslen(relPath) < maxLength){
-    return wcscat(absPath,relPath);
+#if (_WIN32_WCE > 300)
+    if ( 0 < CeGetCanonicalPathName(wcscat(cwd,relPath), absPath, maxLength, 0) )
+      return absPath;
+#else
+    #error Need CeGetCanonicalPathName to build.
+    // NO ACTUAL CeGetCanonicalPathName function in earlier versions of WinCE
+#endif
   }
   return NULL;
 }
@@ -459,6 +583,35 @@ MOZCE_SHUNT_API struct lconv * localeconv(void)
   return &s_locale_conv;
 }
  
+
+
+BOOL WINAPI DllMain(HANDLE hinstDLL, DWORD fdwReason, LPVOID lpReserved)
+{
+  // Perform actions based on the reason for calling.
+  switch( fdwReason ) 
+  { 
+    case DLL_PROCESS_ATTACH:
+      // Initialize once for each new process.
+      // Return FALSE to fail DLL load.
+      InitializeSpecialFolderEnvVars();
+      break;
+
+    case DLL_THREAD_ATTACH:
+      // Do thread-specific initialization.
+      break;
+
+    case DLL_THREAD_DETACH:
+      // Do thread-specific cleanup.
+      break;
+
+    case DLL_PROCESS_DETACH:
+      // Perform any necessary cleanup.
+      break;
+  }
+  return TRUE;  // Successful DLL_PROCESS_ATTACH.
+}
+
+
  #if 0
  {
  #endif

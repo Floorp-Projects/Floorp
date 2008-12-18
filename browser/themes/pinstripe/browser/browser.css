@@ -983,6 +983,7 @@ richlistitem[selected="true"][current="true"] > hbox > .ac-result-type-bookmark,
 /* STAR BUTTON */
 #star-button {
   padding: 1px;
+  -moz-padding-start: 4px;
   list-style-image: url("chrome://browser/skin/places/star-icons.png");
   -moz-image-region: rect(0px, 16px, 16px, 0px);  
 }
@@ -1433,46 +1434,25 @@ sidebarheader > .tabs-closebutton > .toolbarbutton-text {
 /* ----- PAGE REPORT DISPLAY ----- */
 
 #page-report-button {
-  display: none;
-}
-
-#page-report-button[blocked] {
-  display: -moz-box;
   list-style-image: url("chrome://browser/skin/Popup-blocked.png");
   padding: 0px 3px 0px 3px;
 }
 
 /* ----- FEED CONTENT DISPLAY ---- */
 
-#feed-button, #feed-button > .button-box,
-#feed-button:hover:active > .button-box {
-  padding: 0px;
-  margin: -1px;
-  border: 0px; 
-  background-color: transparent;
-}
-
-#feed-button .button-menu-dropmarker,
-#feed-button .button-text {
-  display: none;
-}
-
 #feed-button {
-  -moz-binding: url("chrome://global/content/bindings/button.xml#menu");
   -moz-appearance: none; 
   min-width: 0;
   min-height: 0;
-  margin-right: 1px !important;
-}
-
-#feed-button[feeds] {
+  -moz-padding-start: 4px !important;
   list-style-image: url("chrome://browser/skin/feed-icons.png");
   -moz-image-region: rect(0px, 16px, 16px, 0px);
 }
-#feed-button[feeds]:hover {
+#feed-button:hover {
   -moz-image-region: rect(0px, 32px, 16px, 16px);
 }
-#feed-button[feeds]:active {
+#feed-button[open="true"],
+#feed-button:hover:active {
   -moz-image-region: rect(0px, 48px, 16px, 32px);
 }
 

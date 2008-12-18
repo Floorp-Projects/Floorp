@@ -658,7 +658,9 @@ $(CURDIR)/javascript-trace.h: $(srcdir)/javascript-trace.d
 	sed 's/if _DTRACE_VERSION/ifdef INCLUDE_MOZILLA_DTRACE/' \
 	    javascript-trace.h.in > javascript-trace.h
 
-$(CPPSRCS:%.cpp=%.$(OBJ_SUFFIX)): $(CURDIR)/javascript-trace.h
+# We can't automatically generate dependencies on auto-generated headers;
+# we have to list them explicitly.
+$(addsuffix .$(OBJ_SUFFIX),jsdtracef jsinterp jsobj): $(CURDIR)/javascript-trace.h
 endif
 
 imacro_asm.js: imacro_asm.js.in

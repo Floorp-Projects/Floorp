@@ -43,8 +43,6 @@ function seekEnded() {
   if (completed)
     return false;
 
-  var t = document.getElementById('v').currentTime;
-  ok(t >= 2 && t <= 3, "Video currentTime should be around 2: " + t);
   endPassed = true;
   return false;
 }

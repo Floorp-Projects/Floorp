@@ -85,8 +85,6 @@ extern BOOL                gSomeMenuBarPainted;
 
 #define NS_APPSHELLSERVICE_CONTRACTID "@mozilla.org/appshell/appShellService;1"
 
-#define POPUP_DEFAULT_TRANSPARENCY 0.95
-
 NS_IMPL_ISUPPORTS_INHERITED1(nsCocoaWindow, Inherited, nsPIWidgetCocoa)
 
 
@@ -359,7 +357,6 @@ nsresult nsCocoaWindow::StandardCreate(nsIWidget *aParent,
                                    backing:NSBackingStoreBuffered defer:YES];
     
     if (mWindowType == eWindowType_popup) {
-      [mWindow setAlphaValue:POPUP_DEFAULT_TRANSPARENCY];
       [mWindow setLevel:NSPopUpMenuWindowLevel];
       [mWindow setHasShadow:YES];
 
@@ -790,10 +787,6 @@ void nsCocoaWindow::MakeBackgroundTransparent(PRBool aTransparent)
 
   BOOL currentTransparency = ![mWindow isOpaque];
   if (aTransparent != currentTransparency) {
-    // Popups have an alpha value we need to toggle.
-    if (mWindowType == eWindowType_popup) {
-      [mWindow setAlphaValue:(aTransparent ? 1.0 : POPUP_DEFAULT_TRANSPARENCY)];
-    }
     [mWindow setOpaque:!aTransparent];
     [mWindow setBackgroundColor:(aTransparent ? [NSColor clearColor] : [NSColor whiteColor])];
   }
