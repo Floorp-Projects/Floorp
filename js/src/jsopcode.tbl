@@ -194,7 +194,7 @@ OPDEF(JSOP_STRICTEQ,  72, "stricteq",   "===",        1,  2,  1, 10,  JOF_BYTE|J
 OPDEF(JSOP_STRICTNE,  73, "strictne",   "!==",        1,  2,  1, 10,  JOF_BYTE|JOF_DETECTING|JOF_LEFTASSOC)
 
 /* Variant of JSOP_NULL for default (global) |this| parameter pushing. */
-OPDEF(JSOP_NULLTHIS,  74, "nullthis",   "nullthis",   1,  0,  1, 19,  JOF_BYTE)
+OPDEF(JSOP_NULLTHIS,  74, js_null_str,  js_null_str,  1,  0,  1, 19,  JOF_BYTE)
 
 /*
  * JSOP_ITER sets up a for-in or for-each-in loop using the JSITER_* flag bits
@@ -484,12 +484,7 @@ OPDEF(JSOP_TYPEOFEXPR,    198,"typeofexpr",  NULL,    1,  1,  1, 15,  JOF_BYTE|J
  */
 OPDEF(JSOP_ENTERBLOCK,    199,"enterblock",  NULL,    3,  0, -1,  0,  JOF_OBJECT)
 OPDEF(JSOP_LEAVEBLOCK,    200,"leaveblock",  NULL,    3, -1,  0,  0,  JOF_UINT16)
-
-/*
- * Pick an element from the stack.
- */
-OPDEF(JSOP_PICK,          201,"pick",        NULL,    2,  1,  0,  0,  JOF_UINT8)
-
+OPDEF(JSOP_UNUSED201,     201,"unused201",   NULL,    1,  0,  0,  0,  JOF_BYTE)
 OPDEF(JSOP_UNUSED202,     202,"unused202",   NULL,    1,  0,  0,  0,  JOF_BYTE)
 OPDEF(JSOP_UNUSED203,     203,"unused203",   NULL,    1,  0,  0,  0,  JOF_BYTE)
 OPDEF(JSOP_UNUSED204,     204,"unused204",   NULL,    1,  0,  0,  0,  JOF_BYTE)
