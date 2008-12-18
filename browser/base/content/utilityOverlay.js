@@ -353,7 +353,7 @@ function getShellService()
 
 function isBidiEnabled() {
   // first check the pref.
-  if (getBoolPref("browser.bidi.ui", false))
+  if (getBoolPref("bidi.browser.ui", false))
     return true;
 
   // if the pref isn't set, check for an RTL locale and force the pref to true
