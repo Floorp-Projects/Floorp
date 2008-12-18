@@ -74,13 +74,9 @@ ifneq (,$(MOZ_THUNDERBIRD)$(MOZ_SUITE)$(MOZ_SUNBIRD))
 DIRS += autocomplete
 endif
 
-ifdef MOZ_SUITE
-DIRS += related
-
 ifdef SUITE_USING_XPFE_DM
 DIRS += download-manager
 endif
-endif # MOZ_SUITE
 
 ifdef MOZ_HAVE_BROWSER
 DIRS += \

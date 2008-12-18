@@ -74,7 +74,6 @@
 #include "nsNetUtil.h"
 #include "nsRDFCID.h"
 #include "nsParserUtils.h"
-#include "nsIMIMEHeaderParam.h"
 #include "nsXPIDLString.h"
 #include "nsReadableUtils.h"
 #include "nsXULElement.h"
@@ -983,16 +982,10 @@ XULContentSinkImpl::OpenScript(const PRUnichar** aAttributes,
           src.Assign(aAttributes[1]);
       }
       else if (key.EqualsLiteral("type")) {
-          nsCOMPtr<nsIMIMEHeaderParam> mimeHdrParser =
-              do_GetService("@mozilla.org/network/mime-hdrparam;1");
-          NS_ENSURE_TRUE(mimeHdrParser, NS_ERROR_FAILURE);
-
-          NS_ConvertUTF16toUTF8 typeAndParams(aAttributes[1]);
-
+          nsDependentString str(aAttributes[1]);
+          nsContentTypeParser parser(str);
           nsAutoString mimeType;
-          rv = mimeHdrParser->GetParameter(typeAndParams, nsnull,
-                                           EmptyCString(), PR_FALSE, nsnull,
-                                           mimeType);
+          rv = parser.GetType(mimeType);
           if (NS_FAILED(rv)) {
               if (rv == NS_ERROR_INVALID_ARG) {
                   // Might as well bail out now instead of setting langID to
@@ -1043,9 +1036,7 @@ XULContentSinkImpl::OpenScript(const PRUnichar** aAttributes,
           if (langID != nsIProgrammingLanguage::UNKNOWN) {
             // Get the version string, and ensure the language supports it.
             nsAutoString versionName;
-            rv = mimeHdrParser->GetParameter(typeAndParams, "version",
-                                             EmptyCString(), PR_FALSE, nsnull,
-                                             versionName);
+            rv = parser.GetParameter("version", versionName);
             if (NS_FAILED(rv)) {
               if (rv != NS_ERROR_INVALID_ARG)
                 return rv;
@@ -1071,9 +1062,7 @@ XULContentSinkImpl::OpenScript(const PRUnichar** aAttributes,
               version |= JSVERSION_HAS_XML;
 
               nsAutoString value;
-              rv = mimeHdrParser->GetParameter(typeAndParams, "e4x",
-                                               EmptyCString(), PR_FALSE, nsnull,
-                                               value);
+              rv = parser.GetParameter("e4x", value);
               if (NS_FAILED(rv)) {
                   if (rv != NS_ERROR_INVALID_ARG)
                       return rv;

@@ -563,11 +563,14 @@ nsSVGRadialGradientFrame::CreateGradient()
     // The focal point (fFx and fFy) must be clamped to be *inside* - not on -
     // the circumference of the gradient or we'll get rendering anomalies. We
     // calculate the distance from the focal point to the gradient center and
-    // make sure it is *less* than the gradient radius. 0.999 is used as the
+    // make sure it is *less* than the gradient radius. 0.99 is used as the
     // factor of the radius because it's close enough to 1 that we won't get a
     // fringe at the edge of the gradient if we clamp, but not so close to 1
     // that rounding error will give us the same results as using fR itself.
-    double dMax = 0.999 * r;
+    // Also note that .99 < 255/256/2 which is the limit of the fractional part
+    // of cairo's 24.8 fixed point representation divided by 2 to ensure that
+    // we get different cairo fractions
+    double dMax = 0.99 * r;
     float dx = fx - cx;
     float dy = fy - cy;
     double d = sqrt((dx * dx) + (dy * dy));

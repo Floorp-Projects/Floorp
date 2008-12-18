@@ -5637,7 +5637,8 @@ PresShell::HandleEvent(nsIView         *aView,
 
   PRBool dispatchUsingCoordinates =
       !NS_IS_KEY_EVENT(aEvent) && !NS_IS_IME_EVENT(aEvent) &&
-      !NS_IS_CONTEXT_MENU_KEY(aEvent) && !NS_IS_FOCUS_EVENT(aEvent);
+      !NS_IS_CONTEXT_MENU_KEY(aEvent) && !NS_IS_FOCUS_EVENT(aEvent) &&
+      !NS_IS_PLUGIN_EVENT(aEvent);
 
   // if this event has no frame, we need to retarget it at a parent
   // view that has a frame.
@@ -5735,7 +5736,7 @@ PresShell::HandleEvent(nsIView         *aView,
     nsIEventStateManager *esm = mPresContext->EventStateManager();
 
     if (NS_IS_KEY_EVENT(aEvent) || NS_IS_IME_EVENT(aEvent) ||
-        NS_IS_CONTEXT_MENU_KEY(aEvent)) {
+        NS_IS_CONTEXT_MENU_KEY(aEvent) || NS_IS_PLUGIN_EVENT(aEvent)) {
       esm->GetFocusedFrame(&mCurrentEventFrame);
       if (mCurrentEventFrame) {
         esm->GetFocusedContent(getter_AddRefs(mCurrentEventContent));

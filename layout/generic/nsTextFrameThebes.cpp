@@ -33,6 +33,7 @@
  *   Uri Bernstein <uriber@gmail.com>
  *   Stephen Blackheath <entangled.mooched.stephen@blacksapphire.com>
  *   Michael Ventnor <m.ventnor@gmail.com>
+ *   Ehsan Akhgari <ehsan.akhgari@gmail.com>
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either of the GNU General Public License Version 2 or later (the "GPL"),
@@ -164,6 +165,9 @@
 #define TEXT_WHITESPACE_FLAGS      0x18000000
 // This bit is set while the frame is registered as a blinking frame.
 #define TEXT_BLINK_ON              0x20000000
+
+// Set when this text frame is mentioned in the userdata for a textrun
+#define TEXT_IN_TEXTRUN_USER_DATA  0x40000000
 
 // nsTextFrame.h has
 // #define TEXT_HAS_NONCOLLAPSED_CHARACTERS 0x80000000
@@ -319,7 +323,10 @@ DestroyUserData(void* aUserData)
 static void
 ClearAllTextRunReferences(nsTextFrame* aFrame, gfxTextRun* aTextRun)
 {
+  aFrame->RemoveStateBits(TEXT_IN_TEXTRUN_USER_DATA);
   while (aFrame) {
+    NS_ASSERTION(aFrame->GetType() == nsGkAtoms::textFrame,
+                 "Bad frame");
     if (aFrame->GetTextRun() != aTextRun)
       break;
     aFrame->SetTextRun(nsnull);
@@ -603,7 +610,8 @@ public:
     mContext(aContext),
     mLineContainer(aLineContainer),
     mBidiEnabled(aPresContext->BidiEnabled()),    
-    mTrimNextRunLeadingWhitespace(PR_FALSE),
+    mNextRunContextInfo(nsTextFrameUtils::INCOMING_NONE),
+    mCurrentRunContextInfo(nsTextFrameUtils::INCOMING_NONE),
     mSkipIncompleteTextRuns(PR_FALSE) {
     ResetRunInfo();
   }
@@ -743,10 +751,10 @@ private:
   PRPackedBool                  mDoubleByteText;
   PRPackedBool                  mBidiEnabled;
   PRPackedBool                  mStartOfLine;
-  PRPackedBool                  mTrimNextRunLeadingWhitespace;
-  PRPackedBool                  mCurrentRunTrimLeadingWhitespace;
   PRPackedBool                  mSkipIncompleteTextRuns;
   PRPackedBool                  mCanStopOnThisLine;
+  PRUint8                       mNextRunContextInfo;
+  PRUint8                       mCurrentRunContextInfo;
 };
 
 static nsIFrame*
@@ -1127,16 +1135,23 @@ void BuildTextRunsScanner::FlushFrames(PRBool aFlushLineBreaks, PRBool aSuppress
   gfxTextRun* textRun;
   if (!mSkipIncompleteTextRuns && mCurrentFramesAllSameTextRun &&
       ((mCurrentFramesAllSameTextRun->GetFlags() & nsTextFrameUtils::TEXT_INCOMING_WHITESPACE) != 0) ==
-      mCurrentRunTrimLeadingWhitespace &&
+      ((mCurrentRunContextInfo & nsTextFrameUtils::INCOMING_WHITESPACE) != 0) &&
+      ((mCurrentFramesAllSameTextRun->GetFlags() & nsTextFrameUtils::TEXT_INCOMING_ARABICCHAR) != 0) ==
+      ((mCurrentRunContextInfo & nsTextFrameUtils::INCOMING_ARABICCHAR) != 0) &&
       IsTextRunValidForMappedFlows(mCurrentFramesAllSameTextRun)) {
     // Optimization: We do not need to (re)build the textrun.
     textRun = mCurrentFramesAllSameTextRun;
 
     // Feed this run's text into the linebreaker to provide context. This also
-    // updates mTrimNextRunLeadingWhitespace appropriately.
+    // updates mNextRunContextInfo appropriately.
     SetupBreakSinksForTextRun(textRun, PR_TRUE, PR_FALSE);
-    mTrimNextRunLeadingWhitespace =
-      (textRun->GetFlags() & nsTextFrameUtils::TEXT_TRAILING_WHITESPACE) != 0;
+    mNextRunContextInfo = nsTextFrameUtils::INCOMING_NONE;
+    if (textRun->GetFlags() & nsTextFrameUtils::TEXT_TRAILING_WHITESPACE) {
+      mNextRunContextInfo |= nsTextFrameUtils::INCOMING_WHITESPACE;
+    }
+    if (textRun->GetFlags() & nsTextFrameUtils::TEXT_TRAILING_ARABICCHAR) {
+      mNextRunContextInfo |= nsTextFrameUtils::INCOMING_ARABICCHAR;
+    }
   } else {
     nsAutoTArray<PRUint8,BIG_TEXT_NODE_SIZE> buffer;
     if (!buffer.AppendElements(mMaxTextLength*(mDoubleByteText ? 2 : 1)))
@@ -1296,7 +1311,7 @@ void BuildTextRunsScanner::ScanFrame(nsIFrame* aFrame)
     AccumulateRunInfo(frame);
     if (mMappedFlows.Length() == 1) {
       mCurrentFramesAllSameTextRun = frame->GetTextRun();
-      mCurrentRunTrimLeadingWhitespace = mTrimNextRunLeadingWhitespace;
+      mCurrentRunContextInfo = mNextRunContextInfo;
     }
     return;
   }
@@ -1309,7 +1324,7 @@ void BuildTextRunsScanner::ScanFrame(nsIFrame* aFrame)
     // before a BR frame.
     FlushFrames(PR_TRUE, isBR);
     mCommonAncestorWithLastFrame = aFrame;
-    mTrimNextRunLeadingWhitespace = PR_FALSE;
+    mNextRunContextInfo &= ~nsTextFrameUtils::INCOMING_WHITESPACE;
     mStartOfLine = PR_FALSE;
   } else if (!traversal.mTextRunCanCrossFrameBoundary) {
     FlushFrames(PR_FALSE, PR_FALSE);
@@ -1325,7 +1340,7 @@ void BuildTextRunsScanner::ScanFrame(nsIFrame* aFrame)
     // false. In fact this whole "if" statement should move into the descendInto.
     FlushFrames(PR_TRUE, isBR);
     mCommonAncestorWithLastFrame = aFrame;
-    mTrimNextRunLeadingWhitespace = PR_FALSE;
+    mNextRunContextInfo &= ~nsTextFrameUtils::INCOMING_WHITESPACE;
   } else if (!traversal.mTextRunCanCrossFrameBoundary) {
     FlushFrames(PR_FALSE, PR_FALSE);
   }
@@ -1467,8 +1482,11 @@ BuildTextRunsScanner::BuildTextRunForFrames(void* aTextBuffer)
   PRInt32 endOfLastContent = 0;
   PRUint32 textFlags = nsTextFrameUtils::TEXT_NO_BREAKS;
 
-  if (mCurrentRunTrimLeadingWhitespace) {
+  if (mCurrentRunContextInfo & nsTextFrameUtils::INCOMING_WHITESPACE) {
     textFlags |= nsTextFrameUtils::TEXT_INCOMING_WHITESPACE;
+  }
+  if (mCurrentRunContextInfo & nsTextFrameUtils::INCOMING_ARABICCHAR) {
+    textFlags |= nsTextFrameUtils::TEXT_INCOMING_ARABICCHAR;
   }
 
   nsAutoTArray<PRInt32,50> textBreakPoints;
@@ -1532,6 +1550,11 @@ BuildTextRunsScanner::BuildTextRunForFrames(void* aTextBuffer)
 
     TextRunMappedFlow* newFlow = &userData->mMappedFlows[i];
     newFlow->mStartFrame = mappedFlow->mStartFrame;
+    if (!mSkipIncompleteTextRuns) {
+      // If mSkipIncompleteTextRuns is set, then we're just going to
+      // throw away the userData.
+      newFlow->mStartFrame->AddStateBits(TEXT_IN_TEXTRUN_USER_DATA);
+    }
     newFlow->mDOMOffsetToBeforeTransformOffset = builder.GetCharCount() -
       mappedFlow->mStartFrame->GetContentOffset();
     newFlow->mContentLength = contentLength;
@@ -1548,7 +1571,7 @@ BuildTextRunsScanner::BuildTextRunForFrames(void* aTextBuffer)
       PRUnichar* bufStart = static_cast<PRUnichar*>(aTextBuffer);
       PRUnichar* bufEnd = nsTextFrameUtils::TransformText(
           frag->Get2b() + contentStart, contentLength, bufStart,
-          compression, &mTrimNextRunLeadingWhitespace, &builder, &analysisFlags);
+          compression, &mNextRunContextInfo, &builder, &analysisFlags);
       aTextBuffer = bufEnd;
     } else {
       if (mDoubleByteText) {
@@ -1562,16 +1585,14 @@ BuildTextRunsScanner::BuildTextRunForFrames(void* aTextBuffer)
         PRUint8* bufStart = tempBuf.Elements();
         PRUint8* end = nsTextFrameUtils::TransformText(
             reinterpret_cast<const PRUint8*>(frag->Get1b()) + contentStart, contentLength,
-            bufStart, compression, &mTrimNextRunLeadingWhitespace,
-            &builder, &analysisFlags);
+            bufStart, compression, &mNextRunContextInfo, &builder, &analysisFlags);
         aTextBuffer = ExpandBuffer(static_cast<PRUnichar*>(aTextBuffer),
                                    tempBuf.Elements(), end - tempBuf.Elements());
       } else {
         PRUint8* bufStart = static_cast<PRUint8*>(aTextBuffer);
         PRUint8* end = nsTextFrameUtils::TransformText(
             reinterpret_cast<const PRUint8*>(frag->Get1b()) + contentStart, contentLength,
-            bufStart,
-            compression, &mTrimNextRunLeadingWhitespace, &builder, &analysisFlags);
+            bufStart, compression, &mNextRunContextInfo, &builder, &analysisFlags);
         aTextBuffer = end;
       }
     }
@@ -1634,8 +1655,11 @@ BuildTextRunsScanner::BuildTextRunForFrames(void* aTextBuffer)
   if (mBidiEnabled && (NS_GET_EMBEDDING_LEVEL(firstFrame) & 1)) {
     textFlags |= gfxTextRunFactory::TEXT_IS_RTL;
   }
-  if (mTrimNextRunLeadingWhitespace) {
+  if (mNextRunContextInfo & nsTextFrameUtils::INCOMING_WHITESPACE) {
     textFlags |= nsTextFrameUtils::TEXT_TRAILING_WHITESPACE;
+  }
+  if (mNextRunContextInfo & nsTextFrameUtils::INCOMING_ARABICCHAR) {
+    textFlags |= nsTextFrameUtils::TEXT_TRAILING_ARABICCHAR;
   }
   // ContinueTextRunAcrossFrames guarantees that it doesn't matter which
   // frame's style is used, so use the last frame's
@@ -3389,10 +3413,21 @@ nsContinuingTextFrame::Init(nsIContent* aContent,
 void
 nsContinuingTextFrame::Destroy()
 {
-  ClearTextRun();
-  if (mPrevContinuation || mNextContinuation) {
-    nsSplittableFrame::RemoveFromFlow(this);
+  // The text associated with this frame will become associated with our
+  // prev-continuation. If that means the text has changed style, then
+  // we need to wipe out the text run for the text.
+  // Note that mPrevContinuation can be null if we're destroying the whole
+  // frame chain from the start to the end.
+  // If this frame is mentioned in the userData for a textrun (say
+  // because there's a direction change at the start of this frame), then
+  // we have to clear the textrun because we're going away and the
+  // textrun had better not keep a dangling reference to us.
+  if ((GetStateBits() & TEXT_IN_TEXTRUN_USER_DATA) ||
+      !mPrevContinuation ||
+      mPrevContinuation->GetStyleContext() != GetStyleContext()) {
+    ClearTextRun();
   }
+  nsSplittableFrame::RemoveFromFlow(this);
   // Let the base class destroy the frame
   nsFrame::Destroy();
 }
@@ -5766,10 +5801,7 @@ nsTextFrame::Reflow(nsPresContext*           aPresContext,
   gfxSkipCharsIterator iter =
     EnsureTextRun(ctx, lineContainer, lineLayout.GetLine(), &flowEndInTextRun);
 
-  PRInt32 skippedRunLength;
-  if (mTextRun && mTextRun->GetLength() == iter.GetSkippedOffset() &&
-      length > 0 &&
-      (!iter.IsOriginalCharSkipped(&skippedRunLength) || skippedRunLength < length)) {
+  if (mTextRun && iter.GetOriginalEnd() < offset + length) {
     // The textrun does not map enough text for this frame. This can happen
     // when the textrun was ended in the middle of a text node because a
     // preformatted newline was encountered, and prev-in-flow frames have

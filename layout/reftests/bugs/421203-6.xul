@@ -1,0 +1,23 @@
+<window xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
+        xmlns:html="http://www.w3.org/1999/xhtml"
+        class="reftest-wait">
+  <script type="text/javascript"><![CDATA[
+    function run() {
+      const XUL_NS = "http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul";
+      const HTML_NS = "http://www.w3.org/1999/xhtml";
+      var span = document.getElementsByTagNameNS(HTML_NS, "span")[0];
+      span.parentNode.removeChild(span);
+      setTimeout(finish, 0);
+    }
+    function finish() {
+      document.documentElement.removeAttribute("class");
+    }
+    function load(event) {
+      setTimeout(run, 0);
+    }
+    window.addEventListener("load", load, false);
+  ]]></script>
+    <html:span style="display:inline" flex="1" /> <!-- causes block wrapping -->
+    <box flex="1" />
+    <label value="hello world" />
+</window>

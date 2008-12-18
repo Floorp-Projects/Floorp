@@ -59,6 +59,7 @@
 #include "nsIDOMEvent.h"
 #include "nsTArray.h"
 #include "nsTextFragment.h"
+#include "nsReadableUtils.h"
 
 struct nsNativeKeyEvent; // Don't include nsINativeKeyBindings.h here: it will force strange compilation error!
 
@@ -112,6 +113,7 @@ class nsIXTFService;
 #ifdef IBMBIDI
 class nsIBidiKeyboard;
 #endif
+class nsIMIMEHeaderParam;
 
 extern const char kLoadAsData[];
 
@@ -1682,5 +1684,34 @@ inline NS_HIDDEN_(PRBool) NS_FloatIsFinite(jsdouble f) {
   if (!NS_FloatIsFinite((f1)+(f2)+(f3)+(f4)+(f5)+(f6))) {                     \
     return (rv);                                                              \
   }
+
+// Deletes a linked list iteratively to avoid blowing up the stack (bug 460444).
+#define NS_CONTENT_DELETE_LIST_MEMBER(type_, ptr_, member_)                   \
+  {                                                                           \
+    type_ *cur = (ptr_)->member_;                                             \
+    (ptr_)->member_ = nsnull;                                                 \
+    while (cur) {                                                             \
+      type_ *next = cur->member_;                                             \
+      cur->member_ = nsnull;                                                  \
+      delete cur;                                                             \
+      cur = next;                                                             \
+    }                                                                         \
+  }
+
+class nsContentTypeParser {
+public:
+  nsContentTypeParser(const nsAString& aString);
+  ~nsContentTypeParser();
+
+  nsresult GetParameter(const char* aParameterName, nsAString& aResult);
+  nsresult GetType(nsAString& aResult)
+  {
+    return GetParameter(nsnull, aResult);
+  }
+
+private:
+  NS_ConvertUTF16toUTF8 mString;
+  nsIMIMEHeaderParam*   mService;
+};
 
 #endif /* nsContentUtils_h___ */

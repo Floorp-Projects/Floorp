@@ -344,6 +344,15 @@ nsNPAPIPlugin::~nsNPAPIPlugin(void)
   memset((void*) &fCallbacks, 0, sizeof(fCallbacks));
 }
 
+
+#if defined(XP_MACOSX)
+void
+nsNPAPIPlugin::SetPluginRefNum(short aRefNum)
+{
+  fPluginRefNum = aRefNum;
+}
+#endif
+
 // Creates the nsNPAPIPlugin object. One nsNPAPIPlugin object exists per plugin (not instance).
 nsresult
 nsNPAPIPlugin::CreatePlugin(const char* aFileName, const char* aFullPath,
@@ -502,13 +511,18 @@ nsNPAPIPlugin::CreatePlugin(const char* aFileName, const char* aFullPath,
 #endif
 
 #if defined(XP_MACOSX)
+  short appRefNum = ::CurResFile();
+  short pluginRefNum;
+
   nsCOMPtr<nsILocalFile> pluginPath;
   NS_NewNativeLocalFile(nsDependentCString(aFullPath), PR_TRUE,
                         getter_AddRefs(pluginPath));
 
   nsPluginFile pluginFile(pluginPath);
+  pluginRefNum = pluginFile.OpenPluginResource();
 
   nsNPAPIPlugin* plugin = new nsNPAPIPlugin(nsnull, aLibrary, nsnull);
+  ::UseResFile(appRefNum);
   if (!plugin)
     return NS_ERROR_OUT_OF_MEMORY;
 
@@ -519,6 +533,8 @@ nsNPAPIPlugin::CreatePlugin(const char* aFileName, const char* aFullPath,
     NS_RELEASE(*aResult);
     return NS_ERROR_FAILURE;
   }
+
+  plugin->SetPluginRefNum(pluginRefNum);
 #endif
 
 #ifdef XP_BEOS
@@ -613,6 +629,8 @@ nsNPAPIPlugin::Shutdown(void)
   if (fShutdownEntry) {
 #if defined(XP_MACOSX)
     (*fShutdownEntry)();
+    if (fPluginRefNum > 0)
+      ::CloseResFile(fPluginRefNum);
 #else
     NS_TRY_SAFE_CALL_VOID(fShutdownEntry(), fLibrary, nsnull);
 #endif
@@ -1505,14 +1523,14 @@ _evaluate(NPP npp, NPObject* npobj, NPString *script, NPVariant *result)
     VOID_TO_NPVARIANT(*result);
   }
 
-  if (!script || !script->utf8length || !script->utf8characters) {
+  if (!script || !script->UTF8Length || !script->UTF8Characters) {
     // Nothing to evaluate.
 
     return true;
   }
 
-  NS_ConvertUTF8toUTF16 utf16script(script->utf8characters,
-                                    script->utf8length);
+  NS_ConvertUTF8toUTF16 utf16script(script->UTF8Characters,
+                                    script->UTF8Length);
 
   nsCOMPtr<nsIScriptContext> scx = GetScriptContextFromJSContext(cx);
   NS_ENSURE_TRUE(scx, false);
@@ -1550,7 +1568,7 @@ _evaluate(NPP npp, NPObject* npobj, NPString *script, NPVariant *result)
 
   NPN_PLUGIN_LOG(PLUGIN_LOG_NOISY,
                  ("NPN_Evaluate(npp %p, npobj %p, script <<<%s>>>) called\n",
-                  npp, npobj, script->utf8characters));
+                  npp, npobj, script->UTF8Characters));
 
   nsresult rv = scx->EvaluateStringWithValue(utf16script, obj, principal,
                                              spec, 0, 0, rval, nsnull);
@@ -1745,12 +1763,12 @@ _releasevariantvalue(NPVariant* variant)
     {
       const NPString *s = &NPVARIANT_TO_STRING(*variant);
 
-      if (s->utf8characters) {
+      if (s->UTF8Characters) {
 #ifdef MOZ_MEMORY_WINDOWS
-        if (malloc_usable_size((void *)s->utf8characters) != 0) {
-          PR_Free((void *)s->utf8characters);
+        if (malloc_usable_size((void *)s->UTF8Characters) != 0) {
+          PR_Free((void *)s->UTF8Characters);
         } else {
-          void *p = (void *)s->utf8characters;
+          void *p = (void *)s->UTF8Characters;
           DWORD nheaps = 0;
           nsAutoTArray<HANDLE, 50> heaps;
           nheaps = GetProcessHeaps(0, heaps.Elements());
@@ -1764,7 +1782,7 @@ _releasevariantvalue(NPVariant* variant)
           }
         }
 #else
-        PR_Free((void *)s->utf8characters);
+        PR_Free((void *)s->UTF8Characters);
 #endif
       }
       break;

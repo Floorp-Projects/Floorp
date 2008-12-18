@@ -100,5 +100,22 @@ _TEST_FILES =	\
 # the "You can't print-preview while the page is loading" dialog.
 # (See bug 407080)
 
+# Tests for bug 441782 don't pass reliably on Windows, because of bug 469208
+ifneq (,$(filter windows,$(MOZ_WIDGET_TOOLKIT)))
+_TEST_FILES += \
+		test_bug441782.html \
+		bug441782-1.html \
+		bug441782-1-ref.html \
+		bug441782-2.html \
+		bug441782-2-ref.html \
+		bug441782-3.html \
+		bug441782-3-ref.html \
+		bug441782-4.html \
+		bug441782-4-ref.html \
+		bug441782-5.html \
+		bug441782-5-ref.html \
+		$(NULL)
+endif
+
 libs:: $(_TEST_FILES)
 	$(INSTALL) $(foreach f,$^,"$f") $(DEPTH)/_tests/testing/mochitest/tests/$(relativesrcdir)

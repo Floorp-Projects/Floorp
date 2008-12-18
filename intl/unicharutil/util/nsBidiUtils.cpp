@@ -25,6 +25,7 @@
  *   Lina Kemmel <lkemmel@il.ibm.com>
  *   Simon Montagu <smontagu@netscape.com>
  *   Roozbeh Pournader <roozbeh@sharif.edu>
+ *   Ehsan Akhgari <ehsan.akhgari@gmail.com>
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either of the GNU General Public License Version 2 or later (the "GPL"),
@@ -546,9 +547,8 @@ nsresult Conv_06_FE_WithReverse(const nsString& aSrc,
   return NS_OK;
 }
 
-nsresult HandleNumbers(PRUnichar* aBuffer, PRUint32 aSize, PRUint32 aNumFlag)
+PRUnichar HandleNumberInChar(PRUnichar aChar, PRBool aPrevCharArabic, PRUint32 aNumFlag)
 {
-  PRUint32 i;
   // IBMBIDI_NUMERAL_NOMINAL *
   // IBMBIDI_NUMERAL_REGULAR
   // IBMBIDI_NUMERAL_HINDICONTEXT
@@ -557,23 +557,36 @@ nsresult HandleNumbers(PRUnichar* aBuffer, PRUint32 aSize, PRUint32 aNumFlag)
 
   switch (aNumFlag) {
     case IBMBIDI_NUMERAL_HINDI:
-      for (i=0;i<aSize;i++)
-        aBuffer[i] = NUM_TO_HINDI(aBuffer[i]);
-      break;
+      return NUM_TO_HINDI(aChar);
     case IBMBIDI_NUMERAL_ARABIC:
-      for (i=0;i<aSize;i++)
-        aBuffer[i] = NUM_TO_ARABIC(aBuffer[i]);
-      break;
+      return NUM_TO_ARABIC(aChar);
     case IBMBIDI_NUMERAL_REGULAR:
     case IBMBIDI_NUMERAL_HINDICONTEXT:
-        // for clipboard handling
-        //XXX do we really want to convert numerals when copying text?
-      for (i=1;i<aSize;i++) {
-        if (IS_ARABIC_CHAR(aBuffer[i-1])) 
-          aBuffer[i] = NUM_TO_HINDI(aBuffer[i]);
-        else 
-          aBuffer[i] = NUM_TO_ARABIC(aBuffer[i]);
-      }
+      // for clipboard handling
+      //XXX do we really want to convert numerals when copying text?
+      if (aPrevCharArabic) 
+        return NUM_TO_HINDI(aChar);
+      else 
+        return NUM_TO_ARABIC(aChar);
+    case IBMBIDI_NUMERAL_NOMINAL:
+    default:
+      return aChar;
+  }
+}
+
+nsresult HandleNumbers(PRUnichar* aBuffer, PRUint32 aSize, PRUint32 aNumFlag)
+{
+  PRUint32 i;
+  PRUnichar prev = 0;
+
+  switch (aNumFlag) {
+    case IBMBIDI_NUMERAL_HINDI:
+    case IBMBIDI_NUMERAL_ARABIC:
+    case IBMBIDI_NUMERAL_REGULAR:
+    case IBMBIDI_NUMERAL_HINDICONTEXT:
+      for (i=0;i<aSize;i++)
+        aBuffer[i] = HandleNumberInChar(aBuffer[i], i>0 ? aBuffer[i-1] : 0, aNumFlag);
+      break;
     case IBMBIDI_NUMERAL_NOMINAL:
     default:
       break;

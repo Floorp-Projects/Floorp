@@ -558,18 +558,23 @@ public:
    *         IME_STATUS_PASSWORD should be returned only from password editor,
    *         this value has a special meaning. It is used as alternative of
    *         IME_STATUS_DISABLED.
+   *         IME_STATUS_PLUGIN should be returned only when plug-in has focus.
+   *         When a plug-in is focused content, we should send native events
+   *         directly. Because we don't process some native events, but they may
+   *         be needed by the plug-in.
    */
   enum {
     IME_STATUS_NONE     = 0x0000,
     IME_STATUS_ENABLE   = 0x0001,
     IME_STATUS_DISABLE  = 0x0002,
     IME_STATUS_PASSWORD = 0x0004,
-    IME_STATUS_OPEN     = 0x0008,
-    IME_STATUS_CLOSE    = 0x0010
+    IME_STATUS_PLUGIN   = 0x0008,
+    IME_STATUS_OPEN     = 0x0010,
+    IME_STATUS_CLOSE    = 0x0020
   };
   enum {
     IME_STATUS_MASK_ENABLED = IME_STATUS_ENABLE | IME_STATUS_DISABLE |
-                              IME_STATUS_PASSWORD,
+                              IME_STATUS_PASSWORD | IME_STATUS_PLUGIN,
     IME_STATUS_MASK_OPENED  = IME_STATUS_OPEN | IME_STATUS_CLOSE
   };
   virtual PRUint32 GetDesiredIMEState()

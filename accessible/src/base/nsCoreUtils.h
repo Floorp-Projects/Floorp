@@ -87,6 +87,11 @@ public:
   static already_AddRefed<nsIDOMElement> GetDOMElementFor(nsIDOMNode *aNode);
 
   /**
+   * Return DOM node for the given DOM point.
+   */
+  static already_AddRefed<nsIDOMNode> GetDOMNodeFromDOMPoint(nsIDOMNode *aNode,
+                                                             PRUint32 aOffset);
+  /**
    * Return the nsIContent* to check for ARIA attributes on -- this may not
    * always be the DOM node for the accessible. Specifically, for doc
    * accessibles, it is not the document node, but either the root element or

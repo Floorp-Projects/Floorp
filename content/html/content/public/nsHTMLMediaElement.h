@@ -138,9 +138,9 @@ public:
   // events can be fired.
   void ChangeReadyState(nsMediaReadyState aState);
 
-  // Is the media element actively playing as defined by the HTML 5 specification.
-  // http://www.whatwg.org/specs/web-apps/current-work/#actively
-  PRBool IsActivelyPlaying() const;
+  // Is the media element potentially playing as defined by the HTML 5 specification.
+  // http://www.whatwg.org/specs/web-apps/current-work/#potentially-playing
+  PRBool IsPotentiallyPlaying() const;
 
   // Has playback ended as defined by the HTML 5 specification.
   // http://www.whatwg.org/specs/web-apps/current-work/#ended
@@ -159,8 +159,14 @@ public:
   void Thaw();
 
   // Returns true if we can handle this MIME type in a <video> or <audio>
-  // element
-  static PRBool CanHandleMediaType(const char* aMIMEType);
+  // element.
+  // If it returns true, then it also returns a null-terminated list
+  // of supported codecs in *aSupportedCodecs, and a null-terminated list
+  // of codecs that *may* be supported in *aMaybeSupportedCodecs. These
+  // lists should not be freed, they area static data.
+  static PRBool CanHandleMediaType(const char* aMIMEType,
+                                   const char*** aSupportedCodecs,
+                                   const char*** aMaybeSupportedCodecs);
 
   /**
    * Initialize data for available media types
@@ -172,28 +178,38 @@ public:
   static void ShutdownMediaTypes();
 
 protected:
+  class nsMediaLoadListener;
+
   /**
-   * Figure out which resource to load (either the 'src' attribute or
-   * a <source> child) and create the decoder for it.
+   * Figure out which resource to load (either the 'src' attribute or a
+   * <source> child) and return the associated URI.
    */
-  nsresult PickMediaElement();
+  nsresult PickMediaElement(nsIURI** aURI);
   /**
    * Create a decoder for the given aMIMEType. Returns false if we
    * were unable to create the decoder.
    */
   PRBool CreateDecoder(const nsACString& aMIMEType);
   /**
-   * Initialize a decoder to load the given URI.
-   */
-  nsresult InitializeDecoder(const nsAString& aURISpec);
-  /**
    * Initialize a decoder to load the given channel. The decoder's stream
    * listener is returned via aListener.
    */
   nsresult InitializeDecoderForChannel(nsIChannel *aChannel,
                                        nsIStreamListener **aListener);
+  /**
+   * Execute the initial steps of the load algorithm that ensure existing
+   * loads are aborted and the element is emptied.  Returns true if aborted,
+   * false if emptied.
+   */
+  PRBool AbortExistingLoads();
+  /**
+   * Create a URI for the given aURISpec string.
+   */
+  nsresult NewURIFromString(const nsAutoString& aURISpec, nsIURI** aURI);
 
   nsRefPtr<nsMediaDecoder> mDecoder;
+
+  nsCOMPtr<nsIChannel> mChannel;
 
   // Error attribute
   nsCOMPtr<nsIDOMHTMLMediaError> mError;
@@ -250,4 +266,8 @@ protected:
   // to ensure that the playstate doesn't change when the user goes Forward/Back
   // from the bfcache.
   PRPackedBool mPausedBeforeFreeze;
+
+  // True if playback was requested before a decoder was available to begin
+  // playback with.
+  PRPackedBool mPlayRequested;
 };

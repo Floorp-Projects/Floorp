@@ -85,14 +85,17 @@ var gEditItemOverlay = {
     this._element("nameRow").collapsed = this._hiddenRows.indexOf("name") != -1;
     this._element("folderRow").collapsed =
       this._hiddenRows.indexOf("folderPicker") != -1 || this._readOnly;
-
     this._element("tagsRow").collapsed = !this._uri ||
       this._hiddenRows.indexOf("tags") != -1 || isQuery;
+    // Collapse the tag selector if the item does not accept tags.
+    if (!this._element("tagsSelector").collapsed &&
+        this._element("tagsRow").collapsed)
+      this.toggleTagsSelector();
     this._element("descriptionRow").collapsed =
       this._hiddenRows.indexOf("description") != -1 || this._readOnly;
     this._element("keywordRow").collapsed = !isBookmark || this._readOnly ||
       this._hiddenRows.indexOf("keyword") != -1 || isQuery;
-    this._element("locationRow").collapsed = !isBookmark || isQuery ||
+    this._element("locationRow").collapsed = !(this._uri && !isQuery) ||
       this._hiddenRows.indexOf("location") != -1;
     this._element("loadInSidebarCheckbox").collapsed = !isBookmark || isQuery ||
       this._readOnly || this._hiddenRows.indexOf("loadInSidebar") != -1;

@@ -94,7 +94,7 @@ RunTest (TestEntry *test, gfxContext *ctx) {
                                               16.0,
                                               nsDependentCString("x-western"),
                                               0.0,
-                                              PR_FALSE, PR_FALSE);
+                                              PR_FALSE, PR_FALSE, PR_FALSE);
 
         fontGroup = gfxPlatform::GetPlatform()->CreateFontGroup(NS_ConvertUTF8toUTF16(test->mFamilies), &style_western_normal_16, nsnull);
     }

@@ -81,6 +81,7 @@ random-if(MOZ_WIDGET_TOOLKIT=="cocoa") == opacity-and-gradient-01.svg pass.svg
 == pseudo-classes-02.svg pseudo-classes-02-ref.svg
 == radialGradient-basic-01.svg pass.svg
 == radialGradient-basic-02.svg pass.svg
+== radialGradient-basic-03.svg radialGradient-basic-03-ref.svg
 == rect-01.svg pass.svg
 == rect-with-rx-and-ry-01.svg pass.svg
 == rect-with-rx-or-ry-01.svg rect-with-rx-or-ry-01-ref.svg
