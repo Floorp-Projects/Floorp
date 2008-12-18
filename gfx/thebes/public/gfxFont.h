@@ -1418,6 +1418,9 @@ public:
 #ifdef DEBUG
     // number of entries referencing this textrun in the gfxTextRunWordCache
     PRUint32 mCachedWords;
+    // generation of gfxTextRunWordCache that refers to this textrun;
+    // if the cache gets cleared, then mCachedWords is no longer meaningful
+    PRUint32 mCacheGeneration;
     
     void Dump(FILE* aOutput);
 #endif

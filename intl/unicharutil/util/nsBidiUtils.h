@@ -23,6 +23,7 @@
  *   Maha Abou El Rous <mahar@eg.ibm.com>
  *   Lina Kemmel <lkemmel@il.ibm.com>
  *   Simon Montagu <smontagu@netscape.com>
+ *   Ehsan Akhgari <ehsan.akhgari@gmail.com>
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either of the GNU General Public License Version 2 or later (the "GPL"),
@@ -154,6 +155,19 @@ typedef enum nsCharType nsCharType;
    *        IBMBIDI_TEXTDIRECTION_RTL: reverse the string
    */
   nsresult Conv_06_FE_WithReverse(const nsString& aSrc, nsString& aDst, PRUint32 aDir);
+
+  /**
+   * Inspects a Unichar, converting numbers to Arabic or Hindi forms and returning them
+   * @param aChar is the character
+   * @param aPrevCharArabic is true if the previous character in the string is an Arabic char
+   * @param aNumFlag specifies the conversion to perform:
+   *        IBMBIDI_NUMERAL_NOMINAL:      don't do any conversion
+   *        IBMBIDI_NUMERAL_HINDI:        convert to Hindi forms (Unicode 0660-0669)
+   *        IBMBIDI_NUMERAL_ARABIC:       convert to Arabic forms (Unicode 0030-0039)
+   *        IBMBIDI_NUMERAL_HINDICONTEXT: convert numbers in Arabic text to Hindi, otherwise to Arabic
+   * @return the converted Unichar
+   */
+  PRUnichar HandleNumberInChar(PRUnichar aChar, PRBool aPrevCharArabic, PRUint32 aNumFlag);
 
   /**
    * Scan a Unichar string, converting numbers to Arabic or Hindi forms in place

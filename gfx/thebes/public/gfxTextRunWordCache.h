@@ -46,7 +46,15 @@
   */
 class THEBES_API gfxTextRunWordCache {
 public:
-    enum { TEXT_IN_CACHE = 0x10000000 };
+    enum {
+      TEXT_IN_CACHE = 0x10000000,
+      /**
+       * When set, the previous character for this textrun was an Arabic
+       * character.  This is used for the context detection necessary for
+       * bidi.numeral implementation.
+       */
+      TEXT_INCOMING_ARABICCHAR = 0x10000000
+    };
 
     /**
      * Create a textrun using cached words.
