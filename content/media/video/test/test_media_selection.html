@@ -95,11 +95,11 @@ function check_wav(e) {
 
 var nextTest  = 0;
 var subTests = [
-                maketest(true, set_src, '320x240.ogv', null, check_ogg),
-                maketest(true, add_source, '320x240.ogv', null, check_ogg),
-                maketest(true, add_source, '320x240.ogv', 'application/ogg', check_ogg),
-                maketest(true, add_sources_last, '320x240.ogv', null, check_ogg),
-                maketest(true, add_sources_first, '320x240.ogv', 'application/ogg', check_ogg),
+                maketest(true, set_src, '320x240.ogg', null, check_ogg),
+                maketest(true, add_source, '320x240.ogg', null, check_ogg),
+                maketest(true, add_source, '320x240.ogg', 'application/ogg', check_ogg),
+                maketest(true, add_sources_last, '320x240.ogg', null, check_ogg),
+                maketest(true, add_sources_first, '320x240.ogg', 'application/ogg', check_ogg),
                 maketest(true, set_src, 'r11025_u8_c1.wav', null, check_wav),
                 maketest(true, add_source, 'r11025_u8_c1.wav', null, check_wav),
                 maketest(true, add_source, 'r11025_u8_c1.wav', 'audio/x-wav', check_wav),
@@ -107,11 +107,11 @@ var subTests = [
                 maketest(true, add_sources_first, 'r11025_u8_c1.wav', 'audio/x-wav', check_wav),
 
                 // type hint matches a decoder, actual type matches different decoder
-                maketest(true, add_source, '320x240.ogv', 'audio/x-wav', check_ogg),
+                maketest(true, add_source, '320x240.ogg', 'audio/x-wav', check_ogg),
                 maketest(true, add_source, 'r11025_u8_c1.wav', 'application/ogg', check_wav),
 
                 // should not start loading, type excludes it from media candiate list
-                maketest(false, add_source, '320x240.ogv', 'bogus/type', null),
+                maketest(false, add_source, '320x240.ogg', 'bogus/type', null),
                 maketest(false, add_source, 'r11025_u8_c1.wav', 'bogus/type', null),
                 maketest(false, add_source, 'unknown.raw', 'bogus/type', null),
 
@@ -120,8 +120,8 @@ var subTests = [
                 // maketest(true, add_source, 'unknown.raw', 'audio/x-wav', null),
 
                 // element doesn't notice source children attached later, needs bug 462455 fixed
-                // maketest(true, late_add_sources_last, '320x240.ogv', null, 0.2, 0.4),
-                // maketest(true, late_add_sources_first, '320x240.ogv', 'application/ogg', 0.2, 0.4),
+                // maketest(true, late_add_sources_last, '320x240.ogg', null, 0.2, 0.4),
+                // maketest(true, late_add_sources_first, '320x240.ogg', 'application/ogg', 0.2, 0.4),
                 // maketest(true, late_add_sources_last, 'r11025_u8_c1.wav', null, 0.2, 0.4),
                 // maketest(true, late_add_sources_first, 'r11025_u8_c1.wav', 'audio/x-wav', 0.2, 0.4),
 

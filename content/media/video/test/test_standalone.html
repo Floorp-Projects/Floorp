@@ -8,7 +8,7 @@
 </head>
 <body onload="doTest()">
 
-<iframe id="i" src="320x240.ogv"></iframe>
+<iframe id="i" src="320x240.ogg"></iframe>
 
 <pre id="test">
 <script class="testbody" type="text/javascript">
@@ -18,7 +18,7 @@ function doTest()
 {
   var elem = document.getElementById("i").contentDocument.body.firstChild;
   is(elem.tagName.toLowerCase(), "video", "Is video element");
-  is(elem.currentSrc.substring(elem.currentSrc.length - 11), "320x240.ogv", "currentSrc");
+  is(elem.currentSrc.substring(elem.currentSrc.length - 11), "320x240.ogg", "currentSrc");
   is(elem.controls, true, "Controls set");
   is(elem.autoplay, true, "Autoplay set");
   SimpleTest.finish();

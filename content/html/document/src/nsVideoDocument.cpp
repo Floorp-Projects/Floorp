@@ -40,8 +40,6 @@
 #include "nsNodeInfoManager.h"
 #include "nsContentCreatorFunctions.h"
 #include "nsHTMLMediaElement.h"
-#include "nsIMIMEService.h"
-#include "nsIMIMEInfo.h"
 
 class nsVideoDocument : public nsMediaDocument
 {
@@ -55,10 +53,6 @@ public:
                                      nsIContentSink*     aSink = nsnull);
 
 protected:
-
-  // Sets document <title> to reflect the file name and description.
-  void UpdateTitle(nsIChannel* aChannel);
-
   nsresult CreateSyntheticVideoDocument(nsIChannel* aChannel,
                                         nsIStreamListener** aListener);
 
@@ -117,46 +111,12 @@ nsVideoDocument::CreateSyntheticVideoDocument(nsIChannel* aChannel,
     static_cast<nsHTMLMediaElement*>(NS_NewHTMLVideoElement(nodeInfo, PR_FALSE));
   if (!element)
     return NS_ERROR_OUT_OF_MEMORY;
+
   element->SetAutoplay(PR_TRUE);
   element->SetControls(PR_TRUE);
   element->LoadWithChannel(aChannel, aListener);
-  UpdateTitle(aChannel);
+
   return body->AppendChildTo(element, PR_FALSE);
-}
-
-void
-nsVideoDocument::UpdateTitle(nsIChannel* aChannel)
-{
-  if (!aChannel)
-    return;
-
-  nsCOMPtr<nsIMIMEService> mimeService(do_GetService("@mozilla.org/mime;1"));
-  if (!mimeService)
-    return;
-
-  nsCAutoString contentType;
-  if (NS_FAILED(aChannel->GetContentType(contentType)))
-    return;
-
-  nsCOMPtr<nsIMIMEInfo> mimeInfo;
-  mimeService->GetFromTypeAndExtension(contentType,
-                                       EmptyCString(),
-                                       getter_AddRefs(mimeInfo));
-  nsAutoString description;
-  mimeInfo->GetDescription(description);
-
-  static const char* const formatNames[4] = {
-    "VideoFileNameWithTypeAndDimensions",
-    "VideoFileNameWithType",
-    "VideoFileNameWithDimensions",
-    "VideoFileNameWithNeitherDimensionsNorFile",
-  };
-  nsXPIDLString status;
-  nsMediaDocument::UpdateTitleAndCharset(NS_ConvertUTF16toUTF8(description),
-                                         formatNames,
-                                         0,
-                                         0,
-                                         status);
 }
 
 nsresult
