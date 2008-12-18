@@ -230,10 +230,10 @@ math_atan2(JSContext *cx, uintN argc, jsval *vp)
 static inline jsdouble JS_FASTCALL
 math_ceil_kernel(jsdouble x)
 {
-#if defined(XP_MACOSX) || defined(DARWIN)
+#ifdef __APPLE__
     if (x < 0 && x > -1.0) 
         return js_copysign(0, -1);
-#endif    
+#endif
     return ceil(x);
 }
 
