@@ -305,9 +305,17 @@ toolbarbutton.page-button {
   margin-right: -14px;
 }
 
+#tool-panel-open:active {
+  -moz-image-region: rect(0px 124px 48px 62px);
+}
+
 #tool-panel-close {
-  -moz-image-region: rect(48px 62px 96px 0px);
+  -moz-image-region: rect(48px 124px 96px 62px);
   margin-left: -14px;
+}
+
+#tool-panel-close:active {
+  -moz-image-region: rect(48px 62px 96px 0px);
 }
 
 /* "extras" panel UI   ----------------------------------------------------- */
