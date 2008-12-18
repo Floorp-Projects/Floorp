@@ -61,6 +61,7 @@
 static int esdref = -1;
 static PRLibrary *elib = nsnull;
 static PRLibrary *libcanberra = nsnull;
+static PRLibrary* libasound = nsnull;
 
 // the following from esd.h
 
@@ -170,6 +171,20 @@ nsSound::Init()
         }
     }
 
+    if (!libasound) {
+        libasound = PR_LoadLibrary("libasound.so.2");
+        if (libasound) {
+            snd_lib_error_set_handler_fn snd_lib_error_set_handler =
+                 (snd_lib_error_set_handler_fn) PR_FindFunctionSymbol(libasound, "snd_lib_error_set_handler");
+            if (snd_lib_error_set_handler) {
+                snd_lib_error_set_handler(quiet_error_handler);
+            } else {
+                PR_UnloadLibrary(libasound);
+                libasound = nsnull;
+            }
+        }
+    }
+
     if (!libcanberra) {
         libcanberra = PR_LoadLibrary("libcanberra.so.0");
         if (libcanberra) {
@@ -186,16 +201,6 @@ nsSound::Init()
         }
     }
 
-    PRLibrary* libasound = PR_LoadLibrary("libasound.so.2");
-    if (libasound) {
-        snd_lib_error_set_handler_fn snd_lib_error_set_handler =
-             (snd_lib_error_set_handler_fn) PR_FindFunctionSymbol(libasound, "snd_lib_error_set_handler");
-        if (snd_lib_error_set_handler)
-            snd_lib_error_set_handler(quiet_error_handler);
-
-        PR_UnloadLibrary(libasound);
-    }
-
     return NS_OK;
 }
 
@@ -209,6 +214,10 @@ nsSound::Shutdown()
     if (libcanberra) {
         PR_UnloadLibrary(libcanberra);
         libcanberra = nsnull;
+    }
+    if (libasound) {
+        PR_UnloadLibrary(libasound);
+        libasound = nsnull;
     }
 }
 
