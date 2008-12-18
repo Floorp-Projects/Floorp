@@ -274,10 +274,6 @@ private:
 
   // True if the media resource is seekable.
   PRPackedBool mSeekable;
-
-  // True when the media resource has completely loaded. Accessed on
-  // the main thread only.
-  PRPackedBool mResourceLoaded;
 };
 
 #endif
