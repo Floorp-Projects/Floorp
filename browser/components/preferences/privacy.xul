@@ -63,6 +63,11 @@
                   name="pref.privacy.disable_button.view_cookies"
                   type="bool"/>
 
+      <!-- Location Bar -->
+      <preference id="browser.urlbar.search.sources"
+                  name="browser.urlbar.search.sources"
+                  type="int"/>
+
       <!-- History -->
       <preference id="browser.history_expire_days"
                   name="browser.history_expire_days"
@@ -103,6 +108,22 @@
     <!-- History -->
     <groupbox id="historyGroup">
       <caption label="&history.label;"/>
+
+      <hbox align="center">
+        <label id="locationBarSuggestionLabel"
+               control="locationBarSuggestion"
+               accesskey="&locbar.pre.accessKey;">&locbar.pre.label;</label>
+        <menulist id="locationBarSuggestion"
+                  preference="browser.urlbar.search.sources">
+          <menupopup>
+            <menuitem label="&locbar.both.label;" value="3"/>
+            <menuitem label="&locbar.history.label;" value="1"/>
+            <menuitem label="&locbar.bookmarks.label;" value="2"/>
+            <menuitem label="&locbar.nothing.label;" value="0"/>
+          </menupopup>
+        </menulist>
+        <label>&locbar.post.label;</label>
+      </hbox>
 
       <hbox align="center">
         <checkbox id="rememberHistoryDays"
