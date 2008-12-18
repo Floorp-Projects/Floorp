@@ -458,8 +458,15 @@ nsSyncLoadService::PushSyncStreamToListener(nsIInputStream* aIn,
     nsresult rv;
     nsCOMPtr<nsIInputStream> bufferedStream;
     if (!NS_InputStreamIsBuffered(aIn)) {
+        PRInt32 chunkSize;
+        rv = aChannel->GetContentLength(&chunkSize);
+        if (NS_FAILED(rv)) {
+            chunkSize = 4096;
+        }
+        chunkSize = PR_MIN(PR_UINT16_MAX, chunkSize);
+
         rv = NS_NewBufferedInputStream(getter_AddRefs(bufferedStream), aIn,
-                                       4096);
+                                       chunkSize);
         NS_ENSURE_SUCCESS(rv, rv);
 
         aIn = bufferedStream;
