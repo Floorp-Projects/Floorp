@@ -87,12 +87,12 @@ Store.prototype = {
   applyIncoming: function BStore_applyIncoming(onComplete, record) {
     let fn = function(rec) {
       let self = yield;
-      if (!record.cleartext)
-        this.remove(record);
-      else if (!this.itemExists(record.id))
-        this.create(record);
+      if (!rec.cleartext)
+        this.remove(rec);
+      else if (!this.itemExists(rec.id))
+        this.create(rec);
       else
-        this.update(record);
+        this.update(rec);
     };
     fn.async(this, onComplete, record);
   },
