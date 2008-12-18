@@ -123,40 +123,22 @@ nsVideoFrame::IsLeaf() const
   return PR_TRUE;
 }
 
-// Return the largest rectangle that fits in aRect and has the
-// same aspect ratio as aRatio, centered at the center of aRect
-static gfxRect
-CorrectForAspectRatio(const gfxRect& aRect, const nsIntSize& aRatio)
-{
-  NS_ASSERTION(aRatio.width > 0 && aRatio.height > 0 && !aRect.IsEmpty(),
-               "Nothing to draw");
-  // Choose scale factor that scales aRatio to just fit into aRect
-  gfxFloat scale =
-    PR_MIN(aRect.Width()/aRatio.width, aRect.Height()/aRatio.height);
-  gfxSize scaledRatio(scale*aRatio.width, scale*aRatio.height);
-  gfxPoint topLeft((aRect.Width() - scaledRatio.width)/2,
-                   (aRect.Height() - scaledRatio.height)/2);
-  return gfxRect(aRect.TopLeft() + topLeft, scaledRatio);
-}
-
 void
 nsVideoFrame::PaintVideo(nsIRenderingContext& aRenderingContext,
                          const nsRect& aDirtyRect, nsPoint aPt) 
 {
-  nsRect area = GetContentRect() - GetPosition() + aPt;
-  nsHTMLVideoElement* element = static_cast<nsHTMLVideoElement*>(GetContent());
-  nsIntSize videoSize = element->GetVideoSize(nsIntSize(0, 0));
-  if (videoSize.width <= 0 || videoSize.height <= 0 || area.IsEmpty())
-    return;
-
   gfxContext* ctx = static_cast<gfxContext*>(aRenderingContext.GetNativeGraphicData(nsIRenderingContext::NATIVE_THEBES_CONTEXT));
+  // TODO: handle the situation where the frame size is not the same as the
+  // video size, by drawing to the largest rectangle that fits in the frame
+  // whose aspect ratio equals the video's aspect ratio
+  nsRect area = GetContentRect() - GetPosition() + aPt;
   nsPresContext* presContext = PresContext();
   gfxRect r = gfxRect(presContext->AppUnitsToGfxUnits(area.x), 
                       presContext->AppUnitsToGfxUnits(area.y), 
                       presContext->AppUnitsToGfxUnits(area.width), 
                       presContext->AppUnitsToGfxUnits(area.height));
 
-  r = CorrectForAspectRatio(r, videoSize);
+  nsHTMLVideoElement* element = static_cast<nsHTMLVideoElement*>(GetContent());
   element->Paint(ctx, r);
 }
 
