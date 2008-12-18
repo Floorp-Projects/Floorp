@@ -986,10 +986,6 @@ toolbar[iconsize="small"] #paste-button[disabled="true"] {
   background-color: transparent;
 }
 
-#feed-button > .button-box > .button-menu-dropmarker {
-  display: none;
-}
-
 #feed-button {
   -moz-appearance: none; 
   min-width: 0px; 
@@ -1125,14 +1121,8 @@ statusbarpanel#statusbar-display {
 }
 
 #page-report-button {
-  list-style-image: none;
-  width: 20px;
-  display: none;
-}
-
-#page-report-button[blocked] {
   list-style-image: url("chrome://browser/skin/Info.png");
-  display: -moz-box;
+  width: 20px;
 }
 
 /* Throbber */

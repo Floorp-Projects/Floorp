@@ -983,7 +983,7 @@ richlistitem[selected="true"][current="true"] > hbox > .ac-result-type-bookmark,
 /* STAR BUTTON */
 #star-button {
   padding: 1px;
-  -moz-padding-start: 4px !important;
+  -moz-padding-start: 4px;
   list-style-image: url("chrome://browser/skin/places/star-icons.png");
   -moz-image-region: rect(0px, 16px, 16px, 0px);  
 }
@@ -1434,20 +1434,11 @@ sidebarheader > .tabs-closebutton > .toolbarbutton-text {
 /* ----- PAGE REPORT DISPLAY ----- */
 
 #page-report-button {
-  display: none;
-}
-
-#page-report-button[blocked] {
-  display: -moz-box;
   list-style-image: url("chrome://browser/skin/Popup-blocked.png");
   padding: 0px 3px 0px 3px;
 }
 
 /* ----- FEED CONTENT DISPLAY ---- */
-
-#feed-button > .button-box > .button-menu-dropmarker {
-  display: none;
-}
 
 #feed-button {
   -moz-appearance: none; 
