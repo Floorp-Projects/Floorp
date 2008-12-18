@@ -46,7 +46,8 @@
   */
 class THEBES_API gfxTextRunWordCache {
 public:
-    enum { TEXT_IN_CACHE = 0x10000000 };
+    enum { TEXT_IN_CACHE     = 0x10000000,
+           TEXT_UNUSED_FLAGS = 0xE0000000 };
 
     /**
      * Create a textrun using cached words.
