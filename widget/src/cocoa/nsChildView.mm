@@ -1797,17 +1797,13 @@ nsChildView::OnPaint(nsPaintEvent &event)
 }
 
 
-// this is handled for us by UpdateWidget
+// The OS manages repaints well enough on its own, so we don't have to
+// flush them out here.  In other words, the OS will automatically call
+// displayIfNeeded at the appropriate times, so we don't need to do it
+// ourselves.  See bmo bug 459319.
 NS_IMETHODIMP nsChildView::Update()
 {
-  NS_OBJC_BEGIN_TRY_ABORT_BLOCK_NSRESULT;
-
-  // Update means "Flush any pending changes right now."  It does *not* mean
-  // repaint the world. :) -- dwh
-  [mView displayIfNeeded];
   return NS_OK;
-
-  NS_OBJC_END_TRY_ABORT_BLOCK_NSRESULT;
 }
 
 
