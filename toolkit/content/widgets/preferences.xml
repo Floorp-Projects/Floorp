@@ -1,6 +1,11 @@
 <?xml version="1.0"?>
 
-<!DOCTYPE bindings SYSTEM "chrome://global/locale/preferences.dtd">
+<!DOCTYPE bindings [
+  <!ENTITY % preferencesDTD SYSTEM "chrome://global/locale/preferences.dtd">
+  %preferencesDTD;
+  <!ENTITY % globalKeysDTD SYSTEM "chrome://global/locale/globalKeys.dtd">
+  %globalKeysDTD;
+]>
 
 <bindings id="preferencesBindings"
           xmlns="http://www.mozilla.org/xbl"
@@ -1103,6 +1108,16 @@
       <handler event="keypress" key="&windowClose.key;" modifiers="accel" phase="capturing">
         if (this.instantApply)
           window.close();
+      </handler>
+
+      <handler event="keypress"
+#ifdef XP_MACOSX
+               key="&openHelpMac.commandkey;" modifiers="accel"
+#else
+               keycode="&openHelp.commandkey;"
+#endif
+               phase="capturing">
+        this._fireEvent("dialoghelp", this);
       </handler>
     </handlers>
   </binding>
