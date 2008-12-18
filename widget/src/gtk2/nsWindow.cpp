@@ -3916,10 +3916,6 @@ nsWindow::NativeCreate(nsIWidget        *aParent,
     g_object_set_data(G_OBJECT(mDrawingarea->inner_window), "mozdrawingarea",
                       mDrawingarea);
 
-    gdk_input_set_extension_events(mDrawingarea->inner_window,
-                                   gdk_window_get_events(mDrawingarea->inner_window),
-                                   GDK_EXTENSION_EVENTS_CURSOR);
-
     if (mContainer)
         g_object_set_data(G_OBJECT(mContainer), "nsWindow", this);
 
