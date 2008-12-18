@@ -3477,6 +3477,27 @@ function testComparisons()
 testComparisons.expected = "no failures reported!";
 test(testComparisons);
 
+function testCaseAbort()
+{
+  var four = "4";
+  var r = 0;
+  for (var i = 0; i < 5; i++)
+  {
+    switch (i)
+    {
+      case four: r += 1; break;
+      default: r += 2; break;
+    }
+  }
+
+  return "" + r;
+}
+testCaseAbort.expected = "10";
+testCaseAbort.jitstats = {
+  recorderAborted: 0
+};
+test(testCaseAbort);
+
 load("trace-test-math.js");
 
 // BEGIN MANDELBROT STUFF
