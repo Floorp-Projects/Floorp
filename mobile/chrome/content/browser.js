@@ -91,11 +91,10 @@ var Browser = {
       // or snap them back if they only showed up for a little bit
 
       if (visibleNow && !gSidebarVisible) {
-        ws.freeze("toolbar-main");
-        ws.moveFrozenTo("toolbar-main", 0, 0);
+        BrowserUI._showToolbar(true);
       }
       else if (!visibleNow && gSidebarVisible) {
-        ws.unfreeze("toolbar-main");
+        BrowserUI._showToolbar(false);
       }
       gSidebarVisible = visibleNow;
 

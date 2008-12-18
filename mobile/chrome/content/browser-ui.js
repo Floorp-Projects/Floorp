@@ -287,7 +287,7 @@ var BrowserUI = {
         this.show(UIMODE_URLVIEW);
         icons.setAttribute("mode", "loading");
 
-        ws.panTo(0,0, true);
+        ws.panTo(0, -60, true);
 
         this._favicon.src = "";
         this._faviconLink = null;
@@ -424,7 +424,7 @@ var BrowserUI = {
     let panelUI = document.getElementById("panel-container");
 
     if (aMode == UIMODE_URLVIEW) {
-      this._showToolbar(true);
+      this._showToolbar(false);
       this._editToolbar(false);
 
       bookmark.hidden = true;
@@ -461,9 +461,6 @@ var BrowserUI = {
       urllist.height = container.boxObject.height;
     }
     else if (aMode == UIMODE_PANEL) {
-      this._showToolbar(true);
-      this._editToolbar(false);
-
       bookmark.hidden = true;
       urllist.hidden = true;
       panelUI.hidden = false;
@@ -621,7 +618,7 @@ var BrowserUI = {
   },
 
   newTab : function() {
-    ws.panTo(0,0, true);
+    ws.panTo(0, -60, true);
     Browser.newTab(true);
     this.show(UIMODE_URLEDIT);
   },
