@@ -4540,7 +4540,7 @@ evalCmp(LOpcode op, JSString* l, JSString* r)
 }
 
 JS_REQUIRES_STACK void
-TraceRecorder::strictEquality(bool equal)
+TraceRecorder::strictEquality(bool equal, bool cmpCase)
 {
     jsval& r = stackval(-1);
     jsval& l = stackval(-2);
@@ -4554,26 +4554,36 @@ TraceRecorder::strictEquality(bool equal)
     }
 
     LIns* x;
+    bool cond;
     if (ltag == JSVAL_STRING) {
         LIns* args[] = { r_ins, l_ins };
         x = lir->ins2i(LIR_eq, lir->insCall(&js_EqualStrings_ci, args), equal);
+        cond = js_EqualStrings(JSVAL_TO_STRING(l), JSVAL_TO_STRING(r));
     } else {
         LOpcode op = (ltag != JSVAL_DOUBLE) ? LIR_eq : LIR_feq;
         x = lir->ins2(op, l_ins, r_ins);
         if (!equal)
             x = lir->ins_eq0(x);
+        cond = (l == r);
+    }
+    cond = (cond == equal);
+
+    if (cmpCase) {
+        /* Only guard if the same path may not always be taken. */
+        if (!x->isconst())
+            guard(cond, x, BRANCH_EXIT);
+        return;
     }
 
     set(&l, x);
 }
 
 JS_REQUIRES_STACK bool
-TraceRecorder::equality(int flags)
+TraceRecorder::equality(bool negate, bool tryBranchAfterCond)
 {
     jsval& r = stackval(-1);
     jsval& l = stackval(-2);
     LIns* x = NULL;
-    bool negate = !!(flags & CMP_NEGATE);
     bool cond;
     LIns* l_ins = get(&l);
     LIns* r_ins = get(&r);
@@ -4656,19 +4666,12 @@ TraceRecorder::equality(int flags)
         }
     }
 
-    if (flags & CMP_CASE) {
-        /* Only guard if the same path may not always be taken. */
-        if (!x->isconst())
-            guard(cond, x, BRANCH_EXIT);
-        return true;
-    }
-
     /*
      * Don't guard if the same path is always taken.  If it isn't, we have to
      * fuse comparisons and the following branch, because the interpreter does
      * that.
      */
-    if ((flags & CMP_TRY_BRANCH_AFTER_COND) && !x->isconst())
+    if (tryBranchAfterCond && !x->isconst())
         fuseIf(cx->fp->regs->pc + 1, cond, x);
 
     /*
@@ -4682,7 +4685,7 @@ TraceRecorder::equality(int flags)
 }
 
 JS_REQUIRES_STACK bool
-TraceRecorder::relational(LOpcode op, int flags)
+TraceRecorder::relational(LOpcode op, bool tryBranchAfterCond)
 {
     jsval& r = stackval(-1);
     jsval& l = stackval(-2);
@@ -4788,7 +4791,7 @@ TraceRecorder::relational(LOpcode op, int flags)
      * fuse comparisons and the following branch, because the interpreter does
      * that.
      */
-    if ((flags & CMP_TRY_BRANCH_AFTER_COND) && !x->isconst())
+    if (tryBranchAfterCond && !x->isconst())
         fuseIf(cx->fp->regs->pc + 1, cond, x);
 
     /*
@@ -5610,37 +5613,37 @@ TraceRecorder::record_JSOP_BITAND()
 JS_REQUIRES_STACK bool
 TraceRecorder::record_JSOP_EQ()
 {
-    return equality(CMP_TRY_BRANCH_AFTER_COND);
+    return equality(false, true);
 }
 
 JS_REQUIRES_STACK bool
 TraceRecorder::record_JSOP_NE()
 {
-    return equality(CMP_NEGATE | CMP_TRY_BRANCH_AFTER_COND);
+    return equality(true, true);
 }
 
 JS_REQUIRES_STACK bool
 TraceRecorder::record_JSOP_LT()
 {
-    return relational(LIR_flt, CMP_TRY_BRANCH_AFTER_COND);
+    return relational(LIR_flt, true);
 }
 
 JS_REQUIRES_STACK bool
 TraceRecorder::record_JSOP_LE()
 {
-    return relational(LIR_fle, CMP_TRY_BRANCH_AFTER_COND);
+    return relational(LIR_fle, true);
 }
 
 JS_REQUIRES_STACK bool
 TraceRecorder::record_JSOP_GT()
 {
-    return relational(LIR_fgt, CMP_TRY_BRANCH_AFTER_COND);
+    return relational(LIR_fgt, true);
 }
 
 JS_REQUIRES_STACK bool
 TraceRecorder::record_JSOP_GE()
 {
-    return relational(LIR_fge, CMP_TRY_BRANCH_AFTER_COND);
+    return relational(LIR_fge, true);
 }
 
 JS_REQUIRES_STACK bool
@@ -7085,14 +7088,14 @@ TraceRecorder::record_JSOP_LOOKUPSWITCH()
 JS_REQUIRES_STACK bool
 TraceRecorder::record_JSOP_STRICTEQ()
 {
-    strictEquality(true);
+    strictEquality(true, false);
     return true;
 }
 
 JS_REQUIRES_STACK bool
 TraceRecorder::record_JSOP_STRICTNE()
 {
-    strictEquality(false);
+    strictEquality(false, false);
     return true;
 }
 
@@ -7591,7 +7594,8 @@ TraceRecorder::record_JSOP_CONDSWITCH()
 JS_REQUIRES_STACK bool
 TraceRecorder::record_JSOP_CASE()
 {
-    return equality(CMP_CASE);
+    strictEquality(true, true);
+    return true;
 }
 
 JS_REQUIRES_STACK bool
@@ -7794,7 +7798,8 @@ TraceRecorder::record_JSOP_GOSUBX()
 JS_REQUIRES_STACK bool
 TraceRecorder::record_JSOP_CASEX()
 {
-    return equality(CMP_CASE);
+    strictEquality(true, true);
+    return true;
 }
 
 JS_REQUIRES_STACK bool
