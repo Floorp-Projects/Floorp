@@ -460,7 +460,6 @@ public:
     JS_REQUIRES_STACK bool record_DefLocalFunSetSlot(uint32 slot, JSObject* obj);
     JS_REQUIRES_STACK bool record_FastNativeCallComplete();
     JS_REQUIRES_STACK bool record_IteratorNextComplete();
-    JS_REQUIRES_STACK bool record_ApplyComplete(uintN argc);
 
     nanojit::Fragment* getOuterToBlacklist() { return outerToBlacklist; }
     void deepAbort() { deepAborted = true; }
@@ -499,7 +498,7 @@ public:
             TRACE_ARGS_(x, args,                                              \
                 if ((fp->flags & JSFRAME_IMACRO_START) &&                     \
                     (x == JSOP_ITER || x == JSOP_NEXTITER ||                  \
-                    JSOP_IS_BINARY(x))) {                                     \
+                     x == JSOP_APPLY || JSOP_IS_BINARY(x))) {                 \
                     fp->flags &= ~JSFRAME_IMACRO_START;                       \
                     atoms = COMMON_ATOMS_START(&rt->atomState);               \
                     op = JSOp(*regs.pc);                                      \

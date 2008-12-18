@@ -208,3 +208,286 @@
     .end
 
 .end
+
+.igroup apply JSOP_APPLY
+    .imacro apply0                          # apply fun this arr
+        pick 3                              # fun this arr apply
+        pop                                 # fun this arr
+        pop                                 # fun this
+        call 0                              #
+        stop                                #
+    .end                                    #
+
+    .imacro apply1                          # apply fun this arr
+        pick 3                              # fun this arr apply
+        pop                                 # fun this arr
+        dup                                 # fun this arr arr
+        zero                                # fun this arr arr 0
+        getelem                             # fun this arr arg0
+        swap                                # fun this arg0 arr
+        pop                                 # fun this arg0
+        call 1                              #
+        stop                                #
+    .end                                    #
+
+    .imacro apply2                          # apply fun this arr
+        pick 3                              # fun this arr apply
+        pop                                 # fun this arr
+        dup                                 # fun this arr arr
+        zero                                # fun this arr arr 0
+        getelem                             # fun this arr arg0
+        swap                                # fun this arg0 arr
+        dup                                 # fun this arg0 arr arr
+        one                                 # fun this arg0 arr arr 1
+        getelem                             # fun this arg0 arr arg1
+        swap                                # fun this arg0 arg1 arr
+        pop                                 # fun this arg0 arg1
+        call 2                              #
+        stop                                #
+    .end                                    #
+
+    .imacro apply3                          # apply fun this arr
+        pick 3                              # fun this arr apply
+        pop                                 # fun this arr
+        dup                                 # fun this arr arr
+        zero                                # fun this arr arr 0
+        getelem                             # fun this arr arg0
+        swap                                # fun this arg0 arr
+        dup                                 # fun this arg0 arr arr
+        one                                 # fun this arg0 arr arr 1
+        getelem                             # fun this arg0 arr arg1
+        swap                                # fun this arg0 arg1 arr
+        dup                                 # fun this arg0 arg1 arr arr
+        int8 2                              # fun this arg0 arg1 arr arr 2
+        getelem                             # fun this arg0 arg1 arr arg2
+        swap                                # fun this arg0 arg1 arg2 arr
+        pop                                 # fun this arg0 arg1 arg2
+        call 3                              #
+        stop                                #
+    .end                                    #
+
+    .imacro apply4                          # apply fun this arr
+        pick 3                              # fun this arr apply
+        pop                                 # fun this arr
+        dup                                 # fun this arr arr
+        zero                                # fun this arr arr 0
+        getelem                             # fun this arr arg0
+        swap                                # fun this arg0 arr
+        dup                                 # fun this arg0 arr arr
+        one                                 # fun this arg0 arr arr 1
+        getelem                             # fun this arg0 arr arg1
+        swap                                # fun this arg0 arg1 arr
+        dup                                 # fun this arg0 arg1 arr arr
+        int8 2                              # fun this arg0 arg1 arr arr 2
+        getelem                             # fun this arg0 arg1 arr arg2
+        swap                                # fun this arg0 arg1 arg2 arr
+        dup                                 # fun this arg0 arg1 arg2 arr arr
+        int8 3                              # fun this arg0 arg1 arg2 arr arr 3
+        getelem                             # fun this arg0 arg1 arg2 arr arg3
+        swap                                # fun this arg0 arg1 arg2 arg3 arr
+        pop                                 # fun this arg0 arg1 arg2 arg3
+        call 4                              #
+        stop                                #
+    .end                                    #
+
+    .imacro apply5                          # apply fun this arr
+        pick 3                              # fun this arr apply
+        pop                                 # fun this arr
+        dup                                 # fun this arr arr
+        zero                                # fun this arr arr 0
+        getelem                             # fun this arr arg0
+        swap                                # fun this arg0 arr
+        dup                                 # fun this arg0 arr arr
+        one                                 # fun this arg0 arr arr 1
+        getelem                             # fun this arg0 arr arg1
+        swap                                # fun this arg0 arg1 arr
+        dup                                 # fun this arg0 arg1 arr arr
+        int8 2                              # fun this arg0 arg1 arr arr 2
+        getelem                             # fun this arg0 arg1 arr arg2
+        swap                                # fun this arg0 arg1 arg2 arr
+        dup                                 # fun this arg0 arg1 arg2 arr arr
+        int8 3                              # fun this arg0 arg1 arg2 arr arr 3
+        getelem                             # fun this arg0 arg1 arg2 arr arg3
+        swap                                # fun this arg0 arg1 arg2 arg3 arr
+        dup                                 # fun this arg0 arg1 arg2 arg3 arr arr
+        int8 4                              # fun this arg0 arg1 arg2 arg3 arr arr 4
+        getelem                             # fun this arg0 arg1 arg2 arg3 arr arg4
+        swap                                # fun this arg0 arg1 arg2 arg3 arg4 arr
+        pop                                 # fun this arg0 arg1 arg2 arg3 arg4
+        call 5                              #
+        stop                                #
+    .end                                    #
+
+    .imacro apply6                          # apply fun this arr
+        pick 3                              # fun this arr apply
+        pop                                 # fun this arr
+        dup                                 # fun this arr arr
+        zero                                # fun this arr arr 0
+        getelem                             # fun this arr arg0
+        swap                                # fun this arg0 arr
+        dup                                 # fun this arg0 arr arr
+        one                                 # fun this arg0 arr arr 1
+        getelem                             # fun this arg0 arr arg1
+        swap                                # fun this arg0 arg1 arr
+        dup                                 # fun this arg0 arg1 arr arr
+        int8 2                              # fun this arg0 arg1 arr arr 2
+        getelem                             # fun this arg0 arg1 arr arg2
+        swap                                # fun this arg0 arg1 arg2 arr
+        dup                                 # fun this arg0 arg1 arg2 arr arr
+        int8 3                              # fun this arg0 arg1 arg2 arr arr 3
+        getelem                             # fun this arg0 arg1 arg2 arr arg3
+        swap                                # fun this arg0 arg1 arg2 arg3 arr
+        dup                                 # fun this arg0 arg1 arg2 arg3 arr arr
+        int8 4                              # fun this arg0 arg1 arg2 arg3 arr arr 4
+        getelem                             # fun this arg0 arg1 arg2 arg3 arr arg4
+        swap                                # fun this arg0 arg1 arg2 arg3 arg4 arr
+        dup                                 # fun this arg0 arg1 arg2 arg3 arg4 arr arr
+        int8 5                              # fun this arg0 arg1 arg2 arg3 arg4 arr arr 5
+        getelem                             # fun this arg0 arg1 arg2 arg3 arg4 arr arg5
+        swap                                # fun this arg0 arg1 arg2 arg3 arg4 arg5 arr
+        pop                                 # fun this arg0 arg1 arg2 arg3 arg4 arg5
+        call 6                              #
+        stop                                #
+    .end                                    #
+
+    .imacro apply7                          # apply fun this arr
+        pick 3                              # fun this arr apply
+        pop                                 # fun this arr
+        dup                                 # fun this arr arr
+        zero                                # fun this arr arr 0
+        getelem                             # fun this arr arg0
+        swap                                # fun this arg0 arr
+        dup                                 # fun this arg0 arr arr
+        one                                 # fun this arg0 arr arr 1
+        getelem                             # fun this arg0 arr arg1
+        swap                                # fun this arg0 arg1 arr
+        dup                                 # fun this arg0 arg1 arr arr
+        int8 2                              # fun this arg0 arg1 arr arr 2
+        getelem                             # fun this arg0 arg1 arr arg2
+        swap                                # fun this arg0 arg1 arg2 arr
+        dup                                 # fun this arg0 arg1 arg2 arr arr
+        int8 3                              # fun this arg0 arg1 arg2 arr arr 3
+        getelem                             # fun this arg0 arg1 arg2 arr arg3
+        swap                                # fun this arg0 arg1 arg2 arg3 arr
+        dup                                 # fun this arg0 arg1 arg2 arg3 arr arr
+        int8 4                              # fun this arg0 arg1 arg2 arg3 arr arr 4
+        getelem                             # fun this arg0 arg1 arg2 arg3 arr arg4
+        swap                                # fun this arg0 arg1 arg2 arg3 arg4 arr
+        dup                                 # fun this arg0 arg1 arg2 arg3 arg4 arr arr
+        int8 5                              # fun this arg0 arg1 arg2 arg3 arg4 arr arr 5
+        getelem                             # fun this arg0 arg1 arg2 arg3 arg4 arr arg5
+        swap                                # fun this arg0 arg1 arg2 arg3 arg4 arg5 arr
+        dup                                 # fun this arg0 arg1 arg2 arg3 arg4 arg5 arr arr
+        int8 6                              # fun this arg0 arg1 arg2 arg3 arg4 arg5 arr arr 6
+        getelem                             # fun this arg0 arg1 arg2 arg3 arg4 arg5 arr arg6
+        swap                                # fun this arg0 arg1 arg2 arg3 arg4 arg5 arg6 arr
+        pop                                 # fun this arg0 arg1 arg2 arg3 arg4 arg5 arg6
+        call 7                              #
+        stop                                #
+    .end                                    #
+
+    .imacro apply8                          # apply fun this arr
+        pick 3                              # fun this arr apply
+        pop                                 # fun this arr
+        dup                                 # fun this arr arr
+        zero                                # fun this arr arr 0
+        getelem                             # fun this arr arg0
+        swap                                # fun this arg0 arr
+        dup                                 # fun this arg0 arr arr
+        one                                 # fun this arg0 arr arr 1
+        getelem                             # fun this arg0 arr arg1
+        swap                                # fun this arg0 arg1 arr
+        dup                                 # fun this arg0 arg1 arr arr
+        int8 2                              # fun this arg0 arg1 arr arr 2
+        getelem                             # fun this arg0 arg1 arr arg2
+        swap                                # fun this arg0 arg1 arg2 arr
+        dup                                 # fun this arg0 arg1 arg2 arr arr
+        int8 3                              # fun this arg0 arg1 arg2 arr arr 3
+        getelem                             # fun this arg0 arg1 arg2 arr arg3
+        swap                                # fun this arg0 arg1 arg2 arg3 arr
+        dup                                 # fun this arg0 arg1 arg2 arg3 arr arr
+        int8 4                              # fun this arg0 arg1 arg2 arg3 arr arr 4
+        getelem                             # fun this arg0 arg1 arg2 arg3 arr arg4
+        swap                                # fun this arg0 arg1 arg2 arg3 arg4 arr
+        dup                                 # fun this arg0 arg1 arg2 arg3 arg4 arr arr
+        int8 5                              # fun this arg0 arg1 arg2 arg3 arg4 arr arr 5
+        getelem                             # fun this arg0 arg1 arg2 arg3 arg4 arr arg5
+        swap                                # fun this arg0 arg1 arg2 arg3 arg4 arg5 arr
+        dup                                 # fun this arg0 arg1 arg2 arg3 arg4 arg5 arr arr
+        int8 6                              # fun this arg0 arg1 arg2 arg3 arg4 arg5 arr arr 6
+        getelem                             # fun this arg0 arg1 arg2 arg3 arg4 arg5 arr arg6
+        swap                                # fun this arg0 arg1 arg2 arg3 arg4 arg5 arg6 arr
+        dup                                 # fun this arg0 arg1 arg2 arg3 arg4 arg5 arg6 arr arr
+        int8 7                              # fun this arg0 arg1 arg2 arg3 arg4 arg5 arg6 arr arr 7
+        getelem                             # fun this arg0 arg1 arg2 arg3 arg4 arg5 arg6 arr arg7
+        swap                                # fun this arg0 arg1 arg2 arg3 arg4 arg5 arg6 arg7 arr
+        pop                                 # fun this arg0 arg1 arg2 arg3 arg4 arg5 arg6 arg7
+        call 8                              #
+        stop                                #
+    .end                                    #
+
+    .imacro call0                           # call fun
+        swap                                # fun call
+        pop                                 # fun
+        nullthis                            # fun this
+        call 0                              #
+        stop                                #
+    .end                                    #
+
+    .imacro call1                           # call fun this
+        pick 2                              # fun this call
+        pop                                 # fun this
+        call 0                              #
+        stop                                #
+    .end                                    #
+
+    .imacro call2                           # call fun this arg0
+        pick 3                              # fun this arg0 call
+        pop                                 # fun this arg0
+        call 1                              #
+        stop                                #
+    .end                                    #
+
+    .imacro call3                           # call fun this arg0 arg1
+        pick 4                              # fun this arg0 arg1 call
+        pop                                 # fun this arg0 arg1
+        call 2                              #
+        stop                                #
+    .end                                    #
+
+    .imacro call4                           # call fun this arg0 arg1 arg2
+        pick 5                              # fun this arg0 arg1 arg2 call
+        pop                                 # fun this arg0 arg1 arg2
+        call 3                              #
+        stop                                #
+    .end                                    #
+
+    .imacro call5                           # call fun this arg0 arg1 arg2 arg3
+        pick 6                              # fun this arg0 arg1 arg2 arg3 call
+        pop                                 # fun this arg0 arg1 arg2 arg3
+        call 4                              #
+        stop                                #
+    .end                                    #
+
+    .imacro call6                           # call fun this arg0 arg1 arg2 arg3 arg4
+        pick 7                              # fun this arg0 arg1 arg2 arg3 arg4 call
+        pop                                 # fun this arg0 arg1 arg2 arg3 arg4
+        call 5                              #
+        stop                                #
+    .end                                    #
+
+    .imacro call7                           # call fun this arg0 arg1 arg2 arg3 arg4 arg5
+        pick 8                              # fun this arg0 arg1 arg2 arg3 arg4 arg5 call
+        pop                                 # fun this arg0 arg1 arg2 arg3 arg4 arg5
+        call 6                              #
+        stop                                #
+    .end                                    #
+
+    .imacro call8                           # call fun this arg0 arg1 arg2 arg3 arg4 arg5 arg6
+        pick 9                              # fun this arg0 arg1 arg2 arg3 arg4 arg5 arg6 call
+        pop                                 # fun this arg0 arg1 arg2 arg3 arg4 arg5 arg6
+        call 7                              #
+        stop                                #
+    .end                                    #
+
+.end
