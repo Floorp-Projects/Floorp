@@ -202,7 +202,7 @@ BookmarksStore.prototype = {
   },
 
   _itemExists: function BStore__itemExists(id) {
-    return this._getItemIdForGUID(record.id) >= 0;
+    return this._getItemIdForGUID(id) >= 0;
   },
 
   create: function BStore_create(record) {
