@@ -1395,6 +1395,10 @@ gfxTextRun::~gfxTextRun()
 #ifdef DEBUG_TEXT_RUN_STORAGE_METRICS
     AccountStorageForTextRun(this, -1);
 #endif
+#ifdef DEBUG
+    // Make it easy to detect a dead text run
+    mFlags = 0xFFFFFFFF;
+#endif
     NS_RELEASE(mFontGroup);
     MOZ_COUNT_DTOR(gfxTextRun);
 }

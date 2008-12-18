@@ -78,7 +78,10 @@ public:
     // We normally don't use this break opportunity because the following text
     // will have a break opportunity at the start, but it's useful for line
     // layout to know about it in case the following content is not text
-    TEXT_HAS_TRAILING_BREAK  = 0x4000000
+    TEXT_HAS_TRAILING_BREAK  = 0x4000000,
+
+    // We don't currently use these flgas
+    TEXT_UNUSED_FLAG         = 0x8000000
   };
 
   /**
