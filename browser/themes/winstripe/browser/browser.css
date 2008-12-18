@@ -1261,14 +1261,8 @@ statusbarpanel#statusbar-display {
 }
 
 #page-report-button {
-  list-style-image: none;
   width: 20px;
-  display: none;
-}
-
-#page-report-button[blocked] {
   list-style-image: url("chrome://browser/skin/Info.png");
-  display: -moz-box;
 }
 
 /* ::::: throbber ::::: */
@@ -1661,10 +1655,6 @@ toolbar[mode="text"] > #window-controls > toolbarbutton > .toolbarbutton-text {
   margin: 0px;
   border: 0px; 
   background-color: transparent;
-}
-
-#feed-button > .button-box > .button-menu-dropmarker {
-  display: none;
 }
 
 #feed-button {
