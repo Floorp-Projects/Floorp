@@ -2960,7 +2960,7 @@ js_dumpMap(TypeMap const & tm) {
 JS_REQUIRES_STACK bool
 js_RecordTree(JSContext* cx, JSTraceMonitor* tm, Fragment* f, Fragment* outer, unsigned* demotes)
 {
-    JS_ASSERT(cx->fp->regs->pc == f->ip && f->root == f);
+    JS_ASSERT(f->root == f);
     
     /* Avoid recording loops in overlarge scripts. */
     if (cx->fp->script->length >= SCRIPT_PC_ADJ_LIMIT) {
