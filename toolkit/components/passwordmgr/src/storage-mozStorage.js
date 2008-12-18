@@ -289,14 +289,8 @@ LoginManagerStorage_mozStorage.prototype = {
         // Throws if there are bogus values.
         this._checkLoginValues(login);
 
-        let userCanceled, encUsername, encPassword;
         // Get the encrypted value of the username and password.
-        [encUsername, userCanceled] = this._encrypt(login.username);
-        if (userCanceled)
-            throw "User canceled master password entry, login not added.";
-
-        [encPassword, userCanceled] = this._encrypt(login.password);
-        // Probably can't hit this case, but for completeness...
+        let [encUsername, encPassword, userCanceled] = this._encryptLogin(login);
         if (userCanceled)
             throw "User canceled master password entry, login not added.";
 
@@ -337,29 +331,7 @@ LoginManagerStorage_mozStorage.prototype = {
     removeLogin : function (login) {
         this._checkInitializationState();
 
-        let [logins, ids] =
-            this._queryLogins(login.hostname, login.formSubmitURL, login.httpRealm);
-        let idToDelete;
-
-        // The specified login isn't encrypted, so we need to ensure
-        // the logins we're comparing with are decrypted. We decrypt one entry
-        // at a time, lest _decryptLogins return fewer entries and screw up
-        // indices between the two.
-        for (let i = 0; i < logins.length; i++) {
-            let [[decryptedLogin], userCanceled] =
-                        this._decryptLogins([logins[i]]);
-
-            if (userCanceled)
-                throw "User canceled master password entry, login not removed.";
-
-            if (!decryptedLogin || !decryptedLogin.equals(login))
-                continue;
-
-            // We've found a match, set id and break
-            idToDelete = ids[i];
-            break;
-        }
-
+        let idToDelete = this._getIdForLogin(login);
         if (!idToDelete)
             throw "No matching logins";
 
@@ -389,21 +361,47 @@ LoginManagerStorage_mozStorage.prototype = {
         // Throws if there are bogus values.
         this._checkLoginValues(newLogin);
 
-        // Begin a transaction to wrap remove and add
-        // This will throw if there is a transaction in progress
-        this._dbConnection.beginTransaction();
+        let idToModify = this._getIdForLogin(oldLogin);
+        if (!idToModify)
+            throw "No matching logins";
 
-        // Wrap add/remove in try-catch so we can rollback on error
+        // Get the encrypted value of the username and password.
+        let [encUsername, encPassword, userCanceled] = this._encryptLogin(newLogin);
+        if (userCanceled)
+            throw "User canceled master password entry, login not modified.";
+
+        let query =
+            "UPDATE moz_logins " +
+            "SET hostname = :hostname, " +
+                "httpRealm = :httpRealm, " +
+                "formSubmitURL = :formSubmitURL, " +
+                "usernameField = :usernameField, " +
+                "passwordField = :passwordField, " +
+                "encryptedUsername = :encryptedUsername, " +
+                "encryptedPassword = :encryptedPassword " +
+            "WHERE id = :id";
+
+        let params = {
+            hostname:          newLogin.hostname,
+            httpRealm:         newLogin.httpRealm,
+            formSubmitURL:     newLogin.formSubmitURL,
+            usernameField:     newLogin.usernameField,
+            passwordField:     newLogin.passwordField,
+            encryptedUsername: encUsername,
+            encryptedPassword: encPassword,
+            id:                idToModify
+        };
+
+        let stmt;
         try {
-            this.removeLogin(oldLogin);
-            this.addLogin(newLogin);
+            stmt = this._dbCreateStatement(query, params);
+            stmt.execute();
         } catch (e) {
-            this._dbConnection.rollbackTransaction();
-            throw e;
+            this.log("modifyLogin failed: " + e.name + " : " + e.message);
+            throw "Couldn't write to database, login not modified.";
+        } finally {
+            stmt.reset();
         }
-
-        // Commit the transaction
-        this._dbConnection.commitTransaction();
     },
 
 
@@ -582,6 +580,40 @@ LoginManagerStorage_mozStorage.prototype = {
 
         this.log("_countLogins: counted logins: " + numLogins);
         return numLogins;
+    },
+
+
+    /*
+     * _getIdForLogin
+     *
+     * Returns the |id| for the specified login, or null if the login was not
+     * found.
+     */
+    _getIdForLogin : function (login) {
+        let [logins, ids] =
+            this._queryLogins(login.hostname, login.formSubmitURL, login.httpRealm);
+        let id = null;
+
+        // The specified login isn't encrypted, so we need to ensure
+        // the logins we're comparing with are decrypted. We decrypt one entry
+        // at a time, lest _decryptLogins return fewer entries and screw up
+        // indices between the two.
+        for (let i = 0; i < logins.length; i++) {
+            let [[decryptedLogin], userCanceled] =
+                        this._decryptLogins([logins[i]]);
+
+            if (userCanceled)
+                throw "User canceled master password entry.";
+
+            if (!decryptedLogin || !decryptedLogin.equals(login))
+                continue;
+
+            // We've found a match, set id and break
+            id = ids[i];
+            break;
+        }
+
+        return id;
     },
 
 
@@ -818,6 +850,28 @@ LoginManagerStorage_mozStorage.prototype = {
                 }
             }
         }
+    },
+
+
+    /*
+     * _encryptLogin
+     *
+     * Returns the encrypted username and password for the specified login,
+     * and a boolean indicating if the user canceled the master password entry
+     * (in which case no encrypted values are returned).
+     */
+    _encryptLogin : function (login) {
+        let encUsername, encPassword, userCanceled;
+        [encUsername, userCanceled] = this._encrypt(login.username);
+        if (userCanceled)
+            return [null, null, true];
+
+        [encPassword, userCanceled] = this._encrypt(login.password);
+        // Probably can't hit this case, but for completeness...
+        if (userCanceled)
+            return [null, null, true];
+
+        return [encUsername, encPassword, false];
     },
 
 

@@ -97,6 +97,10 @@ protected:
   // Ensures that the static CALLBACKS is properly initialized
   static void CheckClassInitialized(void);
 
+#ifdef XP_MACOSX
+  short fPluginRefNum;
+#endif
+
   // The plugin-side callbacks that the browser calls. One set of
   // plugin callbacks for each plugin.
   NPPluginFuncs fCallbacks;

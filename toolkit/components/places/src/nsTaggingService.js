@@ -163,36 +163,42 @@ TaggingService.prototype = {
     if (!aURI || !aTags)
       throw Cr.NS_ERROR_INVALID_ARG;
 
-    for (var i=0; i < aTags.length; i++) {
-      var tag = aTags[i];
-      var tagId = null;
-      if (typeof(tag) == "number") {
-        // is it a tag folder id?
-        if (this._tagFolders[tag]) {
-          tagId = tag;
-          tag = this._tagFolders[tagId];
+    this._bms.runInBatchMode({
+      _self: this,
+      runBatched: function(aUserData) {
+        for (var i = 0; i < aTags.length; i++) {
+          var tag = aTags[i];
+          var tagId = null;
+          if (typeof(tag) == "number") {
+            // is it a tag folder id?
+            if (this._self._tagFolders[tag]) {
+              tagId = tag;
+              tag = this._self._tagFolders[tagId];
+            }
+            else
+              throw Cr.NS_ERROR_INVALID_ARG;
+          }
+          else {
+            tagId = this._self._getItemIdForTag(tag);
+            if (tagId == -1)
+              tagId = this._self._createTag(tag);
+          }
+
+          var itemId = this._self._getItemIdForTaggedURI(aURI, tag);
+          if (itemId == -1)
+            this._self._bms.insertBookmark(tagId, aURI,
+                                           this._self._bms.DEFAULT_INDEX, null);
+
+          // Rename the tag container so the Places view would match the
+          // most-recent user-typed values.
+          var currentTagTitle = this._self._bms.getItemTitle(tagId);
+          if (currentTagTitle != tag) {
+            this._self._bms.setItemTitle(tagId, tag);
+            this._self._tagFolders[tagId] = tag;
+          }
         }
-        else
-          throw Cr.NS_ERROR_INVALID_ARG;
       }
-      else {
-        tagId = this._getItemIdForTag(tag);
-        if (tagId == -1)
-          tagId = this._createTag(tag);
-      }
-
-      var itemId = this._getItemIdForTaggedURI(aURI, tag);
-      if (itemId == -1)
-        this._bms.insertBookmark(tagId, aURI, this._bms.DEFAULT_INDEX, null);
-
-      // Rename the tag container so the Places view would match the
-      // most-recent user-typed values.
-      var currentTagTitle = this._bms.getItemTitle(tagId);
-      if (currentTagTitle != tag) {
-        this._bms.setItemTitle(tagId, tag);
-        this._tagFolders[tagId] = tag;
-      }
-    }
+    }, null);
   },
 
   /**
@@ -225,29 +231,34 @@ TaggingService.prototype = {
       aTags = this.getTagsForURI(aURI, { });
     }
 
-    for (var i=0; i < aTags.length; i++) {
-      var tag = aTags[i];
-      var tagId = null;
-      if (typeof(tag) == "number") {
-        // is it a tag folder id?
-        if (this._tagFolders[tag]) {
-          tagId = tag;
-          tag = this._tagFolders[tagId];
-        }
-        else
-          throw Cr.NS_ERROR_INVALID_ARG;
-      }
-      else
-        tagId = this._getItemIdForTag(tag);
+    this._bms.runInBatchMode({
+      _self: this,
+      runBatched: function(aUserData) {
+        for (var i = 0; i < aTags.length; i++) {
+          var tag = aTags[i];
+          var tagId = null;
+          if (typeof(tag) == "number") {
+            // is it a tag folder id?
+            if (this._self._tagFolders[tag]) {
+              tagId = tag;
+              tag = this._self._tagFolders[tagId];
+            }
+            else
+              throw Cr.NS_ERROR_INVALID_ARG;
+          }
+          else
+            tagId = this._self._getItemIdForTag(tag);
 
-      if (tagId != -1) {
-        var itemId = this._getItemIdForTaggedURI(aURI, tag);
-        if (itemId != -1) {
-          this._bms.removeItem(itemId);
-          this._removeTagIfEmpty(tagId);
+          if (tagId != -1) {
+            var itemId = this._self._getItemIdForTaggedURI(aURI, tag);
+            if (itemId != -1) {
+              this._self._bms.removeItem(itemId);
+              this._self._removeTagIfEmpty(tagId);
+            }
+          }
         }
       }
-    }
+    }, null);
   },
 
   // nsITaggingService

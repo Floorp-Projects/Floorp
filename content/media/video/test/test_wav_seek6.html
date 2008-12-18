@@ -18,6 +18,7 @@
 <script class="testbody" type="text/javascript">
 // Test for a seek, followed by a play before the seek completes, ensure we play at the end of the seek.
 var startPassed = false;
+var endPassed = false;
 var completed = false;
 var seekCount = 0;
 
@@ -42,15 +43,15 @@ function seekStarted() {
 function seekEnded() {
   if (completed)
     return false;
-  var v = document.getElementById('v');
-  ok(v.currentTime>=0.4 && v.currentTime<=0.6, "First seek");
+  endPassed = true;
   return false;
 }
 
 function playbackEnded() {
   if (completed)
     return false;
-  ok(true, "Playback ended");
+  ok(startPassed, "Got seeking event");
+  ok(endPassed, "Got seeked event");
   completed = true;
   SimpleTest.finish();
   return false;

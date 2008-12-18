@@ -71,6 +71,7 @@
 <!ENTITY addCurPagesCmd.label "Bookmark All Tabs…">
 <!ENTITY organizeBookmarks.label "Organize Bookmarks…">
 <!ENTITY bookmarkAllCmd.label "Bookmark All Tabs…">
+<!ENTITY bookmarksToolbarChevron.tooltip "Show more bookmarks">
 
 <!ENTITY backCmd.label                "Back">
 <!ENTITY backCmd.accesskey            "B">
@@ -87,6 +88,7 @@
 <!ENTITY stopCmd.macCommandKey        ".">
 <!ENTITY stopButton.tooltip           "Stop loading this page">
 <!ENTITY goEndCap.tooltip             "Go to the address in the Location Bar">
+<!ENTITY feedButton.tooltip           "Subscribe to this page…">
 <!ENTITY printButton.label            "Print">
 <!ENTITY printButton.tooltip          "Print this page">
 

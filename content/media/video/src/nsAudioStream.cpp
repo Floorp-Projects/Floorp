@@ -122,49 +122,63 @@ void nsAudioStream::Write(const void* aBuf, PRUint32 aCount)
                     "Buffer size must be divisible by channel count");
 
   mSamplesBuffered += aCount;
+  PRUint32 offset = mBufferOverflow.Length();
+  PRInt32 count = aCount + offset;
 
   if (!mAudioHandle)
     return;
 
-  nsAutoArrayPtr<short> s_data(new short[aCount]);
+  nsAutoArrayPtr<short> s_data(new short[count]);
 
   if (s_data) {
+    for (PRUint32 i=0; i < offset; ++i) {
+      s_data[i] = mBufferOverflow.ElementAt(i);
+    }
+    mBufferOverflow.Clear();
+
     switch (mFormat) {
-    case FORMAT_U8: {
-      const PRUint8* buf = static_cast<const PRUint8*>(aBuf);
-      PRInt32 volume = PRInt32((1 << 16) * mVolume);
-      for (PRUint32 i = 0; i < aCount; ++i) {
-        s_data[i] = short(((PRInt32(buf[i]) - 128) * volume) >> 8);
-      }
-      break;
-    }
-    case FORMAT_S16_LE: {
-      const short* buf = static_cast<const short*>(aBuf);
-      PRInt32 volume = PRInt32((1 << 16) * mVolume);
-      for (PRUint32 i = 0; i < aCount; ++i) {
-        s_data[i] = short((PRInt32(buf[i]) * volume) >> 16);
-      }
-      break;
-    }
-    case FORMAT_FLOAT32_LE: {
-      const float* buf = static_cast<const float*>(aBuf);
-      for (PRUint32 i= 0; i <  aCount; ++i) {
-        float scaled_value = floorf(0.5 + 32768 * buf[i] * mVolume);
-        if (buf[i] < 0.0) {
-          s_data[i] = (scaled_value < -32768.0) ?
-            -32768 :
-            short(scaled_value);
-        } else {
-          s_data[i] = (scaled_value > 32767.0) ?
-            32767 :
-            short(scaled_value);
+      case FORMAT_U8: {
+        const PRUint8* buf = static_cast<const PRUint8*>(aBuf);
+        PRInt32 volume = PRInt32((1 << 16) * mVolume);
+        for (PRUint32 i = 0; i < aCount; ++i) {
+          s_data[i + offset] = short(((PRInt32(buf[i]) - 128) * volume) >> 8);
         }
+        break;
       }
-      break;
-    }
+      case FORMAT_S16_LE: {
+        const short* buf = static_cast<const short*>(aBuf);
+        PRInt32 volume = PRInt32((1 << 16) * mVolume);
+        for (PRUint32 i = 0; i < aCount; ++i) {
+          s_data[i + offset] = short((PRInt32(buf[i]) * volume) >> 16);
+        }
+        break;
+      }
+      case FORMAT_FLOAT32_LE: {
+        const float* buf = static_cast<const float*>(aBuf);
+        for (PRUint32 i = 0; i <  aCount; ++i) {
+          float scaled_value = floorf(0.5 + 32768 * buf[i] * mVolume);
+          if (buf[i] < 0.0) {
+            s_data[i + offset] = (scaled_value < -32768.0) ?
+              -32768 :
+              short(scaled_value);
+          } else {
+            s_data[i+offset] = (scaled_value > 32767.0) ?
+              32767 :
+              short(scaled_value);
+          }
+        }
+        break;
+      }
     }
 
-    if (sa_stream_write(static_cast<sa_stream_t*>(mAudioHandle), s_data.get(), aCount * sizeof(short)) != SA_SUCCESS) {
+    PRInt32 available = Available();
+    if (available < count) {
+      mBufferOverflow.AppendElements(s_data.get() + available, (count - available));
+      count = available;
+    }
+
+    if (sa_stream_write(static_cast<sa_stream_t*>(mAudioHandle),
+       s_data.get(), count * sizeof(short)) != SA_SUCCESS) {
       PR_LOG(gAudioStreamLog, PR_LOG_ERROR, ("nsAudioStream: sa_stream_write error"));
       Shutdown();
     }
@@ -197,9 +211,19 @@ void nsAudioStream::SetVolume(float aVolume)
 void nsAudioStream::Drain()
 {
   if (!mAudioHandle) {
+    // mSamplesBuffered already accounts for the data in the
+    // mBufferOverflow array.
     PRUint32 drainTime = (float(mSamplesBuffered) / mRate / mChannels - GetTime()) * 1000.0;
     PR_Sleep(PR_MillisecondsToInterval(drainTime));
     return;
+  }
+
+  // Write any remaining unwritten sound data in the overflow buffer
+  if (!mBufferOverflow.IsEmpty()) {
+    if (sa_stream_write(static_cast<sa_stream_t*>(mAudioHandle),
+                        mBufferOverflow.Elements(),
+                        mBufferOverflow.Length() * sizeof(short)) != SA_SUCCESS)
+      return;
   }
 
   if (sa_stream_drain(static_cast<sa_stream_t*>(mAudioHandle)) != SA_SUCCESS) {

@@ -47,6 +47,7 @@ function seekStarted() {
     return false;
 
   var v = document.getElementById('v');
+  v.pause();
   startPassed = true;
   seekFlagStart = v.seeking;
   return false;
@@ -59,6 +60,7 @@ function seekEnded() {
   var v = document.getElementById('v');
   var t = v.currentTime;
   ok(t >= 2 && t <= 3, "Video currentTime should be around 2: " + t);
+  v.play();
   endPassed = true;
   seekFlagEnd = v.seeking;
   return false;

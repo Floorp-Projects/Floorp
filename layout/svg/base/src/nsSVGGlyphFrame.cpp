@@ -1263,9 +1263,12 @@ nsSVGGlyphFrame::EnsureTextRun(float *aDrawScale, float *aMetricsScale,
     }
 
     const nsFont& font = fontData->mFont;
+    PRBool printerFont = (presContext->Type() == nsPresContext::eContext_PrintPreview ||
+                          presContext->Type() == nsPresContext::eContext_Print);
     gfxFontStyle fontStyle(font.style, font.weight, textRunSize, langGroup,
                            font.sizeAdjust, font.systemFont,
-                           font.familyNameQuirks);
+                           font.familyNameQuirks,
+                           printerFont);
 
     nsRefPtr<gfxFontGroup> fontGroup =
       gfxPlatform::GetPlatform()->CreateFontGroup(font.name, &fontStyle, presContext->GetUserFontSet());

@@ -114,6 +114,10 @@ var nsDefaultCLH = {
       dump(out + "\n");
       Components.utils.reportError(out);
     }
+    
+    if (cmdLine.handleFlag("silent", false)) {
+      cmdLine.preventDefault = true;
+    }
 
     if (cmdLine.preventDefault)
       return;

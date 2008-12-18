@@ -359,7 +359,7 @@ class nsHashKey;
 #define NS_LOADSTART           (NS_MEDIA_EVENT_START)
 #define NS_PROGRESS            (NS_MEDIA_EVENT_START+1)
 #define NS_LOADEDMETADATA      (NS_MEDIA_EVENT_START+2)
-#define NS_LOADEDFIRSTFRAME    (NS_MEDIA_EVENT_START+3)
+#define NS_LOADEDDATA          (NS_MEDIA_EVENT_START+3)
 #define NS_EMPTIED             (NS_MEDIA_EVENT_START+4)
 #define NS_STALLED             (NS_MEDIA_EVENT_START+5)
 #define NS_PLAY                (NS_MEDIA_EVENT_START+6)
@@ -369,15 +369,13 @@ class nsHashKey;
 #define NS_SEEKED              (NS_MEDIA_EVENT_START+10)
 #define NS_TIMEUPDATE          (NS_MEDIA_EVENT_START+11)
 #define NS_ENDED               (NS_MEDIA_EVENT_START+12)
-#define NS_DATAUNAVAILABLE     (NS_MEDIA_EVENT_START+13)
-#define NS_CANSHOWCURRENTFRAME (NS_MEDIA_EVENT_START+14)
-#define NS_CANPLAY             (NS_MEDIA_EVENT_START+15)
-#define NS_CANPLAYTHROUGH      (NS_MEDIA_EVENT_START+16)
-#define NS_RATECHANGE          (NS_MEDIA_EVENT_START+17)
-#define NS_DURATIONCHANGE      (NS_MEDIA_EVENT_START+18)
-#define NS_VOLUMECHANGE        (NS_MEDIA_EVENT_START+19)
-#define NS_MEDIA_ABORT         (NS_MEDIA_EVENT_START+20)
-#define NS_MEDIA_ERROR         (NS_MEDIA_EVENT_START+21)
+#define NS_CANPLAY             (NS_MEDIA_EVENT_START+13)
+#define NS_CANPLAYTHROUGH      (NS_MEDIA_EVENT_START+14)
+#define NS_RATECHANGE          (NS_MEDIA_EVENT_START+15)
+#define NS_DURATIONCHANGE      (NS_MEDIA_EVENT_START+16)
+#define NS_VOLUMECHANGE        (NS_MEDIA_EVENT_START+17)
+#define NS_MEDIA_ABORT         (NS_MEDIA_EVENT_START+18)
+#define NS_MEDIA_ERROR         (NS_MEDIA_EVENT_START+19)
 #endif // MOZ_MEDIA
 
 // paint notification events
@@ -393,6 +391,11 @@ class nsHashKey;
 #define NS_SIMPLE_GESTURE_ROTATE_START   (NS_SIMPLE_GESTURE_EVENT_START+4)
 #define NS_SIMPLE_GESTURE_ROTATE_UPDATE  (NS_SIMPLE_GESTURE_EVENT_START+5)
 #define NS_SIMPLE_GESTURE_ROTATE         (NS_SIMPLE_GESTURE_EVENT_START+6)
+
+// Plug-in event. This is used when a plug-in has focus and when the native
+// event needs to be passed to the focused plug-in directly.
+#define NS_PLUGIN_EVENT_START   3600
+#define NS_PLUGIN_EVENT         (NS_PLUGIN_EVENT_START)
 
 /**
  * Return status for event processors, nsEventStatus, is defined in
@@ -862,6 +865,9 @@ public:
   const PRUnichar*  theText;
   nsTextEventReply  theReply;
   PRUint32          rangeCount;
+  // Note that the range array may not specify a caret position; in that
+  // case there will be no range of type NS_TEXTRANGE_CARETPOSITION in the
+  // array.
   nsTextRangeArray  rangeArray;
   PRBool            isChar;
 };
@@ -1229,6 +1235,9 @@ enum nsDragDropEventStatus {
         ((evnt)->message == NS_QUERY_CHARACTER_RECT) || \
         ((evnt)->message == NS_QUERY_CARET_RECT))
 
+#define NS_IS_PLUGIN_EVENT(evnt) \
+       (((evnt)->message == NS_PLUGIN_EVENT))
+
 #define NS_IS_TRUSTED_EVENT(event) \
   (((event)->flags & NS_EVENT_FLAG_TRUSTED) != 0)
 
@@ -1379,12 +1388,12 @@ enum nsDragDropEventStatus {
 
 #define NS_VK_META           nsIDOMKeyEvent::DOM_VK_META
 
-// IME Constants  -- keep in synch with nsIDOMTextRange.h
-#define NS_TEXTRANGE_CARETPOSITION				0x01
-#define NS_TEXTRANGE_RAWINPUT					0X02
-#define NS_TEXTRANGE_SELECTEDRAWTEXT			0x03
-#define NS_TEXTRANGE_CONVERTEDTEXT				0x04
-#define NS_TEXTRANGE_SELECTEDCONVERTEDTEXT		0x05
+// IME Constants  -- keep in synch with nsIPrivateTextRange.h
+#define NS_TEXTRANGE_CARETPOSITION         0x01
+#define NS_TEXTRANGE_RAWINPUT              0x02
+#define NS_TEXTRANGE_SELECTEDRAWTEXT       0x03
+#define NS_TEXTRANGE_CONVERTEDTEXT         0x04
+#define NS_TEXTRANGE_SELECTEDCONVERTEDTEXT 0x05
 
 inline PRBool NS_TargetUnfocusedEventToLastFocusedContent(nsEvent* aEvent)
 {
@@ -1409,7 +1418,8 @@ inline PRBool NS_TargetUnfocusedEventToLastFocusedContent(nsEvent* aEvent)
   // doesn't have focus and event is key event or IME event, we should
   // send the events to pre-focused element.
 
-  return NS_IS_KEY_EVENT(aEvent) || NS_IS_IME_EVENT(aEvent);
+  return NS_IS_KEY_EVENT(aEvent) || NS_IS_IME_EVENT(aEvent) ||
+         NS_IS_PLUGIN_EVENT(aEvent);
 #else
   return PR_FALSE;
 #endif

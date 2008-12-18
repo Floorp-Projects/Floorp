@@ -317,7 +317,7 @@ PRUint32
 nsHTMLSharedObjectElement::GetDesiredIMEState()
 {
   if (Type() == eType_Plugin) {
-    return nsIContent::IME_STATUS_ENABLE;
+    return nsIContent::IME_STATUS_PLUGIN;
   }
    
   return nsGenericHTMLElement::GetDesiredIMEState();

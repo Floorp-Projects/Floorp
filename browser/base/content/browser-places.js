@@ -22,6 +22,7 @@
 #   Annie Sullivan <annie.sullivan@gmail.com>
 #   Joe Hughes <joe@retrovirus.com>
 #   Asaf Romano <mano@mozilla.com>
+#   Ehsan Akhgari <ehsan.akhgari@gmail.com>
 #
 # Alternatively, the contents of this file may be used under the terms of
 # either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -166,6 +167,9 @@ var StarUI = {
 
   _doShowEditBookmarkPanel:
   function SU__doShowEditBookmarkPanel(aItemId, aAnchorElement, aPosition) {
+    if (this.panel.state != "closed")
+      return;
+
     this._blockCommands(); // un-done in the popuphiding handler
 
     var bundle = this._element("bundle_browser");
@@ -216,17 +220,10 @@ var StarUI = {
                                       isTransient: false,
                                       merge: function() { return false; } });
 
-    if (this.panel.state == "closed") {
-      // Consume dismiss clicks, see bug 400924
-      this.panel.popupBoxObject
-          .setConsumeRollupEvent(Ci.nsIPopupBoxObject.ROLLUP_CONSUME);
-      this.panel.openPopup(aAnchorElement, aPosition, -1, -1);
-    }
-    else {
-      var namePicker = this._element("editBMPanel_namePicker");
-      namePicker.focus();
-      namePicker.editor.selectAll();
-    }
+    // Consume dismiss clicks, see bug 400924
+    this.panel.popupBoxObject
+        .setConsumeRollupEvent(Ci.nsIPopupBoxObject.ROLLUP_CONSUME);
+    this.panel.openPopup(aAnchorElement, aPosition, -1, -1);
 
     gEditItemOverlay.initPanel(this._itemId,
                                { hiddenRows: ["description", "location",

@@ -225,6 +225,17 @@ testdesc = "Initialize with signons-06.txt (1 disabled, 1 login); test modifyLog
 storage = LoginTest.initStorage(INDIR, "signons-06.txt", OUTDIR, "signons-06-3.sqlite");
 LoginTest.checkStorageData(storage, ["https://www.site.net"], [testuser1]);
 
+// Try modifying a non-existant login
+var err = null;
+try {
+    storage.modifyLogin(testuser2, testuser1);
+} catch (e) {
+    err = e;
+}
+LoginTest.checkExpectedError(/No matching logins/, err);
+LoginTest.checkStorageData(storage, ["https://www.site.net"], [testuser1]);
+
+// Really modify the login.
 storage.modifyLogin(testuser1, testuser2);
 LoginTest.checkStorageData(storage, ["https://www.site.net"], [testuser2]);
 

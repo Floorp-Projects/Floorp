@@ -155,15 +155,15 @@ private:
     PRBool                  mHaveProfile;
     
     PRBool                  mDiskCacheEnabled;
-    PRInt32                 mDiskCacheCapacity;
+    PRInt32                 mDiskCacheCapacity; // in kilobytes
     nsCOMPtr<nsILocalFile>  mDiskCacheParentDirectory;
 
     PRBool                  mOfflineCacheEnabled;
-    PRInt32                 mOfflineCacheCapacity;
+    PRInt32                 mOfflineCacheCapacity; // in kilobytes
     nsCOMPtr<nsILocalFile>  mOfflineCacheParentDirectory;
     
     PRBool                  mMemoryCacheEnabled;
-    PRInt32                 mMemoryCacheCapacity;
+    PRInt32                 mMemoryCacheCapacity; // in kilobytes
 
     PRBool                  mInPrivateBrowsing;
 };

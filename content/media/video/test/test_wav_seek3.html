@@ -44,8 +44,6 @@ function seekEnded() {
   if (completed)
     return false;
 
-  var t = document.getElementById('v').currentTime;
-  ok(t >= 0.4 && t <= 0.6, "Video currentTime should be around 0.5: " + t);
   endPassed = true;
   return false;
 }

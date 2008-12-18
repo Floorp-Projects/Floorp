@@ -1712,7 +1712,7 @@ static void ApplyGdkScreenFontOptions(FcPattern *aPattern);
 // Apply user settings and defaults to pattern in preparation for matching.
 static void
 PrepareSortPattern(FcPattern *aPattern, double aFallbackSize,
-                   double aSizeAdjustFactor)
+                   double aSizeAdjustFactor, PRBool aIsPrinterFont)
 {
     FcConfigSubstitute(NULL, aPattern, FcMatchPattern);
 
@@ -1728,8 +1728,17 @@ PrepareSortPattern(FcPattern *aPattern, double aFallbackSize,
     // Using an xlib surface would also be an option to get Screen font
     // options for non-GTK X11 toolkits, but less efficient than using GDK to
     // pick up dynamic changes.
+    if(aIsPrinterFont) {
+       cairo_font_options_t *options = cairo_font_options_create();
+       cairo_font_options_set_hint_style (options, CAIRO_HINT_STYLE_NONE);
+       cairo_font_options_set_antialias (options, CAIRO_ANTIALIAS_GRAY);
+       cairo_ft_font_options_substitute(options, aPattern);
+       cairo_font_options_destroy(options);
+    }
 #ifdef MOZ_WIDGET_GTK2
-    ApplyGdkScreenFontOptions(aPattern);
+    else {
+       ApplyGdkScreenFontOptions(aPattern);
+    }
 #endif
 
     // Protect against any fontconfig settings that may have incorrectly
@@ -1752,7 +1761,9 @@ gfx_pango_font_map_context_substitute(PangoFcFontMap *fontmap,
     // owned by the context
     PangoFontDescription *desc = pango_context_get_font_description(context);
     double size = pango_font_description_get_size(desc) / FLOAT_PANGO_SCALE;
-    PrepareSortPattern(pattern, size, 1.0);
+    gfxPangoFontGroup *fontGroup = GetFontGroup(context);
+    PRBool usePrinterFont = fontGroup && fontGroup->GetStyle()->printerFont;
+    PrepareSortPattern(pattern, size, 1.0, usePrinterFont);
 }
 
 static PangoFcFont *
@@ -1968,7 +1979,7 @@ gfxPangoFontGroup::MakeFontSet(PangoLanguage *aLang, gfxFloat aSizeAdjustFactor,
     nsAutoRef<FcPattern> pattern
         (gfxFontconfigUtils::NewPattern(fcFamilyList, mStyle, lang));
 
-    PrepareSortPattern(pattern, mStyle.size, aSizeAdjustFactor);
+    PrepareSortPattern(pattern, mStyle.size, aSizeAdjustFactor, mStyle.printerFont);
 
     nsRefPtr<gfxFcPangoFontSet> fontset =
         new gfxFcPangoFontSet(pattern, mUserFontSet);
@@ -2144,7 +2155,7 @@ gfxFcFont::GetOrMakeFont(FcPattern *aPattern)
         // string through FcNameUnparse() is more trouble than it's worth.
         NS_NAMED_LITERAL_CSTRING(langGroup, "x-unicode");
         gfxFontStyle fontStyle(style, weight, size, langGroup, 0.0,
-                               PR_TRUE, PR_FALSE);
+                               PR_TRUE, PR_FALSE, PR_FALSE);
 
         nsRefPtr<gfxFontEntry> fe;
         FcChar8 *fc_file;

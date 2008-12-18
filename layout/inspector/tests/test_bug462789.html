@@ -1,0 +1,93 @@
+<!DOCTYPE HTML>
+<html>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=462789
+-->
+<head>
+  <title>Test for Bug 462789</title>
+  <script type="application/javascript" src="/MochiKit/MochiKit.js"></script>
+  <script type="application/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
+</head>
+<body>
+<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=462789">Mozilla Bug 462789</a>
+<p id="display"><iframe id="bug462789_iframe" src="data:text/html,<html><head><style>*{color:black;}</style></head><body>xxx" style="display: none;"></iframe></p>
+<div id="content" style="display: none">
+  
+</div>
+<pre id="test">
+<script type="application/javascript">
+
+/** Test for Bug 462789 **/
+
+function do_test() {
+  const ERROR_FAILURE = 0x80004005;
+  const DOCUMENT_NODE_TYPE = 9;
+
+  netscape.security.PrivilegeManager.enablePrivilege("UniversalXPConnect");
+  var utils = Components.classes["@mozilla.org/inspector/dom-utils;1"]
+                             .getService(Components.interfaces.inIDOMUtils);
+
+  var iframe = document.getElementById("bug462789_iframe");
+  var docElement = iframe.contentDocument.documentElement;
+  var body = docElement.children[1];
+  var rule = iframe.contentDocument.styleSheets[0].cssRules[0];
+  var text = body.firstChild;
+
+  try {
+    var res = utils.getCSSStyleRules(docElement);
+    is(res, null, "getCSSStyleRules");
+    res = utils.getCSSStyleRules(body);
+    is(res, null, "getCSSStyleRules");
+  }
+  catch(e) { ok(false, "got an unexpected exception:" + e); }
+
+  try {
+    var res = utils.getRuleLine(rule);
+    is(res, 1, "getRuleLine");
+  }
+  catch(e) { ok(false, "got an unexpected exception:" + e); }
+
+  try {
+    var res = utils.isIgnorableWhitespace(text);
+    is(res, false, "isIgnorableWhitespace");
+  }
+  catch(e) { ok(false, "got an unexpected exception:" + e); }
+
+  try {
+    var res = utils.getParentForNode(docElement, true);
+    is(res.nodeType, DOCUMENT_NODE_TYPE, "getParentForNode(docElement, true)");
+    res = utils.getParentForNode(text, true);
+    is(res.tagName, "BODY", "getParentForNode(text, true)");
+  }
+  catch(e) { ok(false, "got an unexpected exception:" + e); }
+
+  try {
+    var res = utils.getBindingURLs(docElement);
+    is(res instanceof Components.interfaces["nsIArray"], true, "getBindingURLs result type");
+    is(res.length, 0, "getBindingURLs array length");
+  }
+  catch(e) { ok(false, "got an unexpected exception:" + e); }
+
+  try {
+    utils.getContentState(docElement);
+    ok(false, "expected an exception"); 
+  }
+  catch(e) { is(e.result, ERROR_FAILURE, "got the expected exception"); }
+
+  try {
+    utils.setContentState(docElement, false);
+    ok(false, "expected an exception"); 
+  }
+  catch(e) { is(e.result, ERROR_FAILURE, "got the expected exception"); }
+
+  SimpleTest.finish();
+}
+
+SimpleTest.waitForExplicitFinish();
+addLoadEvent(do_test);
+
+</script>
+</pre>
+</body>
+</html>

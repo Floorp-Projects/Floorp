@@ -77,11 +77,10 @@ static const char* const sEventNames[] = {
   "SVGZoom",
 #endif // MOZ_SVG
 #ifdef MOZ_MEDIA
-  "loadstart", "progress", "loadedmetadata", "loadedfirstframe",
+  "loadstart", "progress", "loadedmetadata", "loadeddata",
   "emptied", "stalled", "play", "pause",
-  "waiting", "seeking", "seeked", "timeupdate", "ended", "dataunavailable",
-  "canshowcurrentframe", "canplay", "canplaythrough", "ratechange",
-  "durationchange", "volumechange",
+  "waiting", "seeking", "seeked", "timeupdate", "ended",
+  "canplay", "canplaythrough", "ratechange", "durationchange", "volumechange",
 #endif // MOZ_MEDIA
   "MozAfterPaint",
   "MozSwipeGesture",
@@ -616,8 +615,8 @@ nsDOMEvent::SetEventType(const nsAString& aEventTypeArg)
       mEvent->message = NS_PROGRESS;
     else if (atom == nsGkAtoms::onloadedmetadata)
       mEvent->message = NS_LOADEDMETADATA;
-    else if (atom == nsGkAtoms::onloadedfirstframe)
-      mEvent->message = NS_LOADEDFIRSTFRAME;
+    else if (atom == nsGkAtoms::onloadeddata)
+      mEvent->message = NS_LOADEDDATA;
     else if (atom == nsGkAtoms::onemptied)
       mEvent->message = NS_EMPTIED;
     else if (atom == nsGkAtoms::onstalled)
@@ -636,10 +635,6 @@ nsDOMEvent::SetEventType(const nsAString& aEventTypeArg)
       mEvent->message = NS_TIMEUPDATE;
     else if (atom == nsGkAtoms::onended)
       mEvent->message = NS_ENDED;
-    else if (atom == nsGkAtoms::ondataunavailable)
-      mEvent->message = NS_DATAUNAVAILABLE;
-    else if (atom == nsGkAtoms::oncanshowcurrentframe)
-      mEvent->message = NS_CANSHOWCURRENTFRAME;
     else if (atom == nsGkAtoms::oncanplay)
       mEvent->message = NS_CANPLAY;
     else if (atom == nsGkAtoms::oncanplaythrough)
@@ -1479,8 +1474,8 @@ const char* nsDOMEvent::GetEventName(PRUint32 aEventType)
     return sEventNames[eDOMEvents_progress];
   case NS_LOADEDMETADATA:
     return sEventNames[eDOMEvents_loadedmetadata];
-  case NS_LOADEDFIRSTFRAME:
-    return sEventNames[eDOMEvents_loadedfirstframe];
+  case NS_LOADEDDATA:
+    return sEventNames[eDOMEvents_loadeddata];
   case NS_EMPTIED:
     return sEventNames[eDOMEvents_emptied];
   case NS_STALLED:
@@ -1499,10 +1494,6 @@ const char* nsDOMEvent::GetEventName(PRUint32 aEventType)
     return sEventNames[eDOMEvents_timeupdate];
   case NS_ENDED:
     return sEventNames[eDOMEvents_ended];
-  case NS_DATAUNAVAILABLE:
-    return sEventNames[eDOMEvents_dataunavailable];
-  case NS_CANSHOWCURRENTFRAME:
-    return sEventNames[eDOMEvents_canshowcurrentframe];
   case NS_CANPLAY:
     return sEventNames[eDOMEvents_canplay];
   case NS_CANPLAYTHROUGH:
