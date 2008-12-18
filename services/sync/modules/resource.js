@@ -19,6 +19,7 @@
  *
  * Contributor(s):
  *  Dan Mills <thunder@mozilla.com>
+ *  Anant Narayanan <anant@kix.in>
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -64,7 +65,7 @@ RequestException.prototype = {
   get status() { return this._request.status; },
   toString: function ReqEx_toString() {
     return "Could not " + this._action + " resource " + this._resource.spec +
-      " (" + this._request.status + ")";
+      " (" + this._request.responseStatus + ")";
   }
 };
 
@@ -144,14 +145,11 @@ Resource.prototype = {
     this._filters = [];
   },
 
-  _createRequest: function Res__createRequest(op, onRequestFinished) {
-    let request = Cc["@mozilla.org/xmlextras/xmlhttprequest;1"].
-      createInstance(Ci.nsIXMLHttpRequest);
-    request.onload = onRequestFinished;
-    request.onerror = onRequestFinished;
-    request.onprogress = Utils.bind2(this, this._onProgress);
-    request.mozBackgroundRequest = true;
-    request.open(op, this.spec, true);
+  _createRequest: function Res__createRequest() {
+    let ios = Cc["@mozilla.org/network/io-service;1"].
+      getService(Ci.nsIIOService);
+    let channel = ios.newChannel(this.spec, null, null).
+      QueryInterface(Ci.nsIHttpChannel);
 
     let headers = this.headers; // avoid calling the authorizer more than once
     for (let key in headers) {
@@ -159,31 +157,13 @@ Resource.prototype = {
         this._log.trace("HTTP Header " + key + ": ***** (suppressed)");
       else
         this._log.trace("HTTP Header " + key + ": " + headers[key]);
-      request.setRequestHeader(key, headers[key]);
+      channel.setRequestHeader(key, headers[key], true);
     }
-    return request;
+    return channel;
   },
 
   _onProgress: function Res__onProgress(event) {
     this._lastProgress = Date.now();
-  },
-
-  _setupTimeout: function Res__setupTimeout(request, callback) {
-    let _request = request;
-    let _callback = callback;
-    let onTimer = function() {
-      if (Date.now() - this._lastProgress > CONNECTION_TIMEOUT) {
-        this._log.warn("Connection timed out");
-        _request.abort();
-        _callback({target:{status:-1}});
-      }
-    };
-    let listener = new Utils.EventListener(onTimer);
-    let timer = Cc["@mozilla.org/timer;1"].createInstance(Ci.nsITimer);
-    timer.initWithCallback(listener, CONNECTION_TIMEOUT,
-                           timer.TYPE_REPEATING_SLACK);
-    this._lastProgress = Date.now();
-    return timer;
   },
 
   filterUpload: function Res_filterUpload(onComplete) {
@@ -209,70 +189,58 @@ Resource.prototype = {
 
   _request: function Res__request(action, data) {
     let self = yield;
-    let listener, wait_timer;
     let iter = 0;
-
+    
+    let cb = self.cb;
+    let channel = this._createRequest();
+    
     if ("undefined" != typeof(data))
       this._data = data;
-
-    this._log.debug(action + " request for " + this.spec);
 
     if ("PUT" == action || "POST" == action) {
       yield this.filterUpload(self.cb);
       this._log.trace(action + " Body:\n" + this._data);
+      
+      let upload = channel.QueryInterface(Ci.nsIUploadChannel);
+      let iStream = Cc["@mozilla.org/io/string-input-stream;1"].
+        createInstance(Ci.nsIStringInputStream);
+      iStream.setData(this._data, this._data.length);
+
+      upload.setUploadStream(iStream, 'text/plain', this._data.length);
     }
 
-    while (iter < Preferences.get(PREFS_BRANCH + "network.numRetries")) {
-      let cb = self.cb; // to avoid warning because we use it twice
-      let request = this._createRequest(action, cb);
-      let timeout_timer = this._setupTimeout(request, cb);
-      let event = yield request.send(this._data);
-      timeout_timer.cancel();
-      this._lastRequest = event.target;
+    let listener = new ChannelListener(cb, this._onProgress, this._log);
+    channel.requestMethod = action;
+    this._data = yield channel.asyncOpen(listener, null);
 
-      if (action == "DELETE" &&
-          Utils.checkStatus(this._lastRequest.status, null, [[200,300],404])) {
-        this._dirty = false;
-        this._data = null;
-        break;
+    // FIXME: this should really check a variety of permanent errors,
+    // rather than just >= 400
+    if (channel.responseStatus >= 400) {
+      this._log.debug(action + " request failed (" +
+        channel.responseStatus + ")");
+      if (this._data)
+        this._log.debug("Error response: \n" + this._data);
+      throw new RequestException(this, action, channel);
+    } else {
+      this._log.debug(channel.requestMethod + " request successful (" + 
+      channel.responseStatus  + ")");
 
-      } else if (Utils.checkStatus(this._lastRequest.status)) {
-        this._log.debug(action + " request successful (" + this._lastRequest.status  + ")");
-        this._dirty = false;
-
-        if ("GET" == action || "POST" == action) {
-          this._data = this._lastRequest.responseText;
-          this._log.trace(action + " Body:\n" + this._data);
-          yield this.filterDownload(self.cb);
+      switch (action) {
+      case "DELETE":
+        if (Utils.checkStatus(channel.responseStatus, null, [[200,300],404])){
+          this._dirty = false;
+          this._data = null;
         }
         break;
-
-      // FIXME: this should really check a variety of permanent errors, rather than just >= 400
-      } else if (this._lastRequest.status >= 400) {
-        this._log.debug(action + " request failed (" + this._lastRequest.status + ")");
-        if (this._lastRequest.responseText)
-          this._log.debug("Error response: \n" + this._lastRequest.responseText);
-        throw new RequestException(this, action, this._lastRequest);
-
-      } else {
-        // wait for a bit and try again
-        this._log.debug(action + " request failed (" +
-                        this._lastRequest.status + "), retrying...");
-        listener = new Utils.EventListener(self.cb);
-        wait_timer = Cc["@mozilla.org/timer;1"].createInstance(Ci.nsITimer);
-        yield wait_timer.initWithCallback(listener, iter * iter * 1000,
-                                          wait_timer.TYPE_ONE_SHOT);
-        iter++;
+      case "GET":
+      case "PUT":
+      case "POST":
+        this._log.trace(action + " Body:\n" + this._data);
+        yield this.filterDownload(self.cb);
+        break;
       }
     }
-
-    if (iter >= Preferences.get(PREFS_BRANCH + "network.numRetries")) {
-      this._log.debug(action + " request failed (too many errors)");
-      if (this._lastRequest && this._lastRequest.responseText)
-        this._log.debug("Error response: \n" + this._lastRequest.responseText);
-      throw new RequestException(this, action, this._lastRequest);
-    }
-
+    
     self.done(this._data);
   },
 
@@ -293,6 +261,35 @@ Resource.prototype = {
   }
 };
 
+function ChannelListener(onComplete, onProgress, logger) {
+  this._onComplete = onComplete;
+  this._onProgress = onProgress;
+  this._log = logger;
+}
+ChannelListener.prototype = {
+  onStartRequest: function Channel_onStartRequest(channel) {
+    this._log.debug(channel.requestMethod + " request for " +
+      channel.URI.spec);
+    this._data = '';
+  },
+
+  onStopRequest: function Channel_onStopRequest(channel, ctx, time) {
+    if (this._data == '')
+      this._data = null;
+
+    this._onComplete(this._data);
+  },
+
+  onDataAvailable: function Channel_onDataAvail(req, cb, stream, off, count) {
+    this._onProgress();
+
+    let siStream = Cc["@mozilla.org/scriptableinputstream;1"].
+      createInstance(Ci.nsIScriptableInputStream);
+    siStream.init(stream);
+
+    this._data += siStream.read(count);
+  }
+};
 
 function JsonFilter() {
   this._log = Log4Moz.repository.getLogger("Net.JsonFilter");
