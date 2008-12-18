@@ -734,14 +734,14 @@ JS_STATIC_ASSERT(sizeof(JSTempValueUnion) == sizeof(void *));
 #define JSRESOLVE_INFER         0xffff  /* infer bits from current bytecode */
 
 struct JSContext {
-    /* JSRuntime contextList linkage. */
-    JSCList             links;
-
     /*
-     * Operation count. It is declared early in the structure as a frequently
-     * accessed field.
+     * Operation count. It is declared as the first field in the struct to
+     * ensure the fastest possible access.
      */
     int32               operationCount;
+
+    /* JSRuntime contextList linkage. */
+    JSCList             link;
 
 #if JS_HAS_XML_SUPPORT
     /*
@@ -1046,6 +1046,13 @@ js_DestroyContext(JSContext *cx, JSDestroyContextMode mode);
  */
 extern JSBool
 js_ValidContextPointer(JSRuntime *rt, JSContext *cx);
+
+static JS_INLINE JSContext *
+js_ContextFromLinkField(JSCList *link)
+{
+    JS_ASSERT(link);
+    return (JSContext *) ((uint8 *) link - offsetof(JSContext, link));
+}
 
 /*
  * If unlocked, acquire and release rt->gcLock around *iterp update; otherwise
