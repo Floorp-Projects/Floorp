@@ -5089,13 +5089,15 @@ TraceRecorder::test_property_cache_direct_slot(JSObject* obj, LIns* obj_ins, uin
     if (PCVAL_IS_SPROP(pcval)) {
         JSScopeProperty* sprop = PCVAL_TO_SPROP(pcval);
 
-        uint32 setflags = (js_CodeSpec[*cx->fp->regs->pc].format & (JOF_SET | JOF_INCDEC));
+        uint32 setflags = (js_CodeSpec[*cx->fp->regs->pc].format & (JOF_SET | JOF_INCDEC | JOF_FOR));
         if (setflags && !SPROP_HAS_STUB_SETTER(sprop))
             ABORT_TRACE("non-stub setter");
         if (setflags != JOF_SET && !SPROP_HAS_STUB_GETTER(sprop))
             ABORT_TRACE("non-stub getter");
         if (!SPROP_HAS_VALID_SLOT(sprop, OBJ_SCOPE(obj)))
             ABORT_TRACE("no valid slot");
+        if (setflags && (sprop->attrs & JSPROP_READONLY))
+            ABORT_TRACE("writing to a readonly property");
         slot = sprop->slot;
     } else {
         if (!PCVAL_IS_SLOT(pcval))
@@ -6246,6 +6248,9 @@ TraceRecorder::record_SetPropHit(JSPropCacheEntry* entry, JSScopeProperty* sprop
     JSObject* obj = JSVAL_TO_OBJECT(l);
     LIns* obj_ins = get(&l);
 
+    if (sprop->attrs & JSPROP_READONLY)
+        ABORT_TRACE("SetPropHit on readonly prop");
+
     if (obj == globalObj) {
         JS_ASSERT(SPROP_HAS_VALID_SLOT(sprop, OBJ_SCOPE(obj)));
         uint32 slot = sprop->slot;
@@ -6838,7 +6843,7 @@ TraceRecorder::prop(JSObject* obj, LIns* obj_ins, uint32& slot, LIns*& v_ins)
     }
 
     /* Insist if setting on obj being the directly addressed object. */
-    uint32 setflags = (cs.format & (JOF_SET | JOF_INCDEC));
+    uint32 setflags = (cs.format & (JOF_SET | JOF_INCDEC | JOF_FOR));
     LIns* dslots_ins = NULL;
     if (obj2 != obj) {
         if (setflags)
@@ -6861,6 +6866,8 @@ TraceRecorder::prop(JSObject* obj, LIns* obj_ins, uint32& slot, LIns*& v_ins)
 
         if (setflags && !SPROP_HAS_STUB_SETTER(sprop))
             ABORT_TRACE("non-stub setter");
+        if (setflags && (sprop->attrs & JSPROP_READONLY))
+            ABORT_TRACE("writing to a readonly property");
         if (setflags != JOF_SET && !SPROP_HAS_STUB_GETTER(sprop)) {
             // FIXME 450335: generalize this away from regexp built-in getters.
             if (setflags == 0 &&
