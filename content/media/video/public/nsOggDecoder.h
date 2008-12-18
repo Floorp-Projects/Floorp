@@ -512,10 +512,6 @@ private:
   // when writing to the state, or when reading from a non-main thread.
   // Any change to the state must call NotifyAll on the monitor.
   PlayState mNextState;	
-
-  // True when the media resource has completely loaded. Accessed on
-  // the main thread only.
-  PRPackedBool mResourceLoaded;
 };
 
 #endif
