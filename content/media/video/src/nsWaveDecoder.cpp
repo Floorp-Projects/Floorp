@@ -1205,11 +1205,6 @@ nsWaveDecoder::ResourceLoaded()
     mPlaybackStateMachine->StreamEnded();
   }
   StopProgress();
-
-  // Ensure the final progress event gets fired
-  if (mElement) {
-    mElement->DispatchProgressEvent(NS_LITERAL_STRING("progress"));
-  }
 }
 
 void
