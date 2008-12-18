@@ -71,7 +71,6 @@ REQUIRES	= xpcom \
 		  xpconnect \
 		  unicharutil \
 		  commandhandler \
-		  mimetype \
 		  composer \
 		  editor \
 		  plugin \

@@ -96,8 +96,6 @@
 #define APPLICATION_XPINSTALL               "application/x-xpinstall"
 
 #define AUDIO_BASIC                         "audio/basic"
-#define AUDIO_OGG                           "audio/ogg"
-#define AUDIO_WAV                           "audio/x-wav"
 
 #define IMAGE_GIF                           "image/gif"
 #define IMAGE_JPG                           "image/jpeg"
@@ -145,7 +143,6 @@
 #define TEXT_XUL                            "application/vnd.mozilla.xul+xml"
 
 #define VIDEO_MPEG                          "video/mpeg"
-#define VIDEO_OGG                           "video/ogg"
 
 /* x-uuencode-apple-single. QuickMail made me do this. */
 #define UUENCODE_APPLE_SINGLE               "x-uuencode-apple-single"
