@@ -3655,6 +3655,7 @@ Variables(JSContext *cx, JSTokenStream *ts, JSTreeContext *tc)
             pn2->pn_op = (!let && data.op == JSOP_DEFCONST)
                          ? JSOP_SETCONST
                          : JSOP_SETNAME;
+            pn2->pn_pos.end = pn2->pn_expr->pn_pos.end;
             if (!let && atom == cx->runtime->atomState.argumentsAtom)
                 tc->flags |= TCF_FUN_HEAVYWEIGHT;
         }
