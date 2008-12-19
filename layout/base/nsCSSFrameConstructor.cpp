@@ -10143,6 +10143,7 @@ nsCSSFrameConstructor::EndUpdate()
     RecalcQuotesAndCounters();
     NS_ASSERTION(mUpdateCount == 1, "Odd update count");
   }
+  --mUpdateCount;
   if (mFocusSuppressCount) {
     NS_UnsuppressFocusEvent();
     --mFocusSuppressCount;
