@@ -61,6 +61,17 @@ function logbase() {
   }
 }
 
+function dumpJSStack(stopAtNamedFunction) {
+  let caller = Components.stack.caller;
+  dump("\tStack: " + caller.name);
+  while ((caller = caller.caller)) {
+    dump(" <- " + caller.name);
+    if (stopAtNamedFunction && caller.name != "anonymous")
+      break;
+  }
+  dump("\n");
+}
+
 function log() {
   return;
   logbase.apply(window, arguments);
@@ -371,11 +382,11 @@ WidgetStack.prototype = {
   // panBy: pan the entire set of widgets by the given x and y amounts.
   // This does the same thing as if the user dragged by the given amount.
   // If this is called with an outstanding drag, weirdness might happen,
-  // but it also might work, so not isabling that.
+  // but it also might work, so not disabling that.
   //
   // if ignoreBarriers is true, then barriers are ignored for the pan.
-  panBy: function (dx, dy, ignoreBarriers) {
-    let needsDragWrap = !this._dragging();
+  panBy: function panBy(dx, dy, ignoreBarriers) {
+    let needsDragWrap = !this._dragging;
 
     //log2("tlc rect.x start", this._widgetState['tab-list-container'].rect.x, needsDragWrap);
 
@@ -475,7 +486,7 @@ WidgetStack.prototype = {
   //
   // setViewportBounds will move all the viewport-relative widgets into
   // place based on the new viewport bounds.
-  setViewportBounds: function () {
+  setViewportBounds: function setViewportBounds() {
     let oldBounds = this._viewportBounds.clone();
     let oldInner = this._viewport.viewportInnerBounds.clone();
 
@@ -561,18 +572,7 @@ WidgetStack.prototype = {
 
     log2("viewingRect old", this._viewingRect.toString());
 
-    if (!this._pannableBounds.contains(this._viewingRect)) {
-      let dx = dright - dleft;
-      let dy = dbottom - dtop;
-
-      //console.log("panBy: ", -dx, -dy);
-
-      this._rectSanityCheck = false;
-
-      this.panBy(-dx, -dy, true);
-
-      this._rectSanityCheck = true;
-    }
+    this._adjustViewingRect();
 
     log2("viewingRect new", this._viewingRect.toString());
     log2("finished, inner bounds old:", oldInner, " new:", this._viewport.viewportInnerBounds);
@@ -648,7 +648,7 @@ WidgetStack.prototype = {
   dragStop: function () {
     log("(dragStop)");
 
-    if (!this._dragging())
+    if (!this._dragging)
       return;
 
     if (this._viewportUpdateTimeout != -1)
@@ -661,8 +661,8 @@ WidgetStack.prototype = {
   },
 
   // dragMove: process a mouse move to clientX,clientY for an ongoing drag
-  dragMove: function (clientX, clientY) {
-    if (!this._dragging())
+  dragMove: function dragStop(clientX, clientY) {
+    if (!this._dragging)
       return;
 
     log("(dragMove)", clientX, clientY);
@@ -681,16 +681,13 @@ WidgetStack.prototype = {
 
   // updateSize: tell the WidgetStack to update its size, because it
   // was either resized or some other event took place.
-  updateSize: function() {
-    let rect = this._el.getBoundingClientRect();
-    let oldw = this._viewingRect.width;
-    let oldh = this._viewingRect.height;
-    let width = rect.right - rect.left;
-    let height = rect.bottom - rect.top;
-
+  updateSize: function updateSize() {
     // XXX assumes we can only be resized from the bottom left/bottom right
-    this._viewingRect.width = width;
-    this._viewingRect.height = height;
+    let rect = this._el.getBoundingClientRect();
+    this._viewingRect.width = rect.width;
+    this._viewingRect.height = rect.height;
+
+    this._adjustViewingRect();
 
     // If the viewport changed size (the only thing that's allowed to for now),
     // update its internal sizes
@@ -701,8 +698,8 @@ WidgetStack.prototype = {
 
       let newViewportRect = this._viewport.widget.getBoundingClientRect();
 
-      let w = newViewportRect.right - newViewportRect.left;
-      let h = newViewportRect.bottom - newViewportRect.top;
+      let w = newViewportRect.width;
+      let h = newViewportRect.height;
 
       if (this._viewport.widget.hasAttribute("widgetwidth") &&
           this._viewport.widget.hasAttribute("widgetheight"))
@@ -796,6 +793,39 @@ WidgetStack.prototype = {
   // Internal code
   //
 
+  _dumpRects: function () {
+    dump("WidgetStack:\n");
+    //dump("\tthis._viewportBounds: " + this._viewportBounds + "\n");
+    dump("\tthis._viewingRect: " + this._viewingRect + "\n");
+    dump("\tthis._viewport.viewportInnerBounds: " + this._viewport.viewportInnerBounds + "\n");
+    dump("\tthis._viewport.rect: " + this._viewport.rect + "\n");
+    //dump("\tthis._pannableBounds: " + this._pannableBounds + "\n");
+  },
+
+  // Ensures that _viewingRect is within _pannableBounds (call this when either
+  // one is resized)
+  _adjustViewingRect: function _adjustViewingRect() {
+
+    if (this._pannableBounds.contains(this._viewingRect))
+      return; // nothing to do here
+
+    this._rectSanityCheck = false;
+
+    let vr = this._viewingRect;
+    let pb = this._pannableBounds;
+    if (vr.right > pb.right)
+      this.panBy(pb.right - vr.right, 0, true);
+    else if (vr.left < pb.left)
+      this.panBy(pb.left - vr.left, 0, true);
+    
+    if (vr.bottom > pb.bottom)
+      this.panBy(0, pb.bottom - vr.bottom, true);
+    else if(vr.top < pb.top)
+      this.panBy(0, pb.top - vr.top, true);
+
+    this._rectSanityCheck = true;
+  },
+
   _getState: function (wid) {
     if (!(wid in this._widgetState))
       throw "Unknown widget id '" + wid + "'; widget not in stack";
@@ -831,25 +861,25 @@ WidgetStack.prototype = {
   },
 
   _onMouseMove: function (ev) {
-    if (!this._dragging())
+    if (!this._dragging)
       return;
 
     this._dragCoordsFromClient(ev.screenX, ev.screenY);
 
-    if (!this._dragging() && this._dragState.outerDistSquared > 100)
+    if (!this._dragging && this._dragState.outerDistSquared > 100)
       this._delayedDragStart();
 
     this.dragMove(ev.screenX, ev.screenY);
   },
 
-  _dragging: function () {
+  get _dragging() {
     return this._dragState && this._dragState.dragging;
   },
 
   // dragStart: a drag was started, either by distance or by time.
   _delayedDragStart: function () {
     log("(dragStart)");
-    if (this._dragging())
+    if (this._dragging)
       return;
 
     if (this._dragState.dragStartTimeout != -1)
@@ -888,7 +918,7 @@ WidgetStack.prototype = {
     return [ioffsetx, ioffsety];
   },
 
-  _viewportUpdate: function (force) {
+  _viewportUpdate: function _viewportUpdate(force) {
     if (!this._viewport)
       return;
 
@@ -901,13 +931,12 @@ WidgetStack.prototype = {
 
 //    log2("viewportUpdate start", vws.rect.toString(), this._viewingRect.toString(), vws.originX, vws.originY);
 
-    let ioffsetx, ioffsety;
-    [ioffsetx, ioffsety] = this._panRegionOffsets();
+    let [ioffsetx, ioffsety] = this._panRegionOffsets();
 
     // recover the amount the inner bounds moved by the amount the viewport widget moved.
     // the rects are in screen space though, so we have to convert them to the virtual
     // coordinate space.
-    if (this._dragging()) {
+    if (this._dragging) {
       let idx = (vws.dragStartRect.x - vws.dragStartOffsets[0]) - (vws.rect.x - ioffsetx);
       let idy = (vws.dragStartRect.y - vws.dragStartOffsets[1]) - (vws.rect.y - ioffsety);
 
@@ -933,8 +962,8 @@ WidgetStack.prototype = {
     }
 
     // if we're dragging, update this so that we can call this function again
-    // durig the same drag and get the right values.
-    if (this._dragging()) {
+    // during the same drag and get the right values.
+    if (this._dragging) {
       vws.dragStartOffsets = [ioffsetx, ioffsety];
       vws.dragStartRect = vws.rect.clone();
     }
@@ -1106,7 +1135,7 @@ WidgetStack.prototype = {
     return [dx, dy];
   },
 
-  _panBy: function (dx, dy, ignoreBarriers) {
+  _panBy: function _panBy(dx, dy, ignoreBarriers) {
     // initially we work in viewingRect coords, so the direction
     // of the move is opposite from the direction of the pan
     dx = -dx;
