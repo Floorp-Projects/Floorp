@@ -65,6 +65,10 @@ richlistitem {
   font-size: 16.75pt !important;
 }
 
+#browser-container {
+  background-image: url('chrome://browser/content/checkerboard.png');
+}
+
 /* main toolbar (URL bar) -------------------------------------------------- */
 #toolbar-main {
   -moz-appearance: none;

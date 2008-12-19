@@ -178,11 +178,11 @@
 
   <!-- stupid stack needs to be in a box. not sure why -->
   <box>
-  <stack id="browser-container" flex="1" style="width: 800px; height: 480px; max-width: 800px; max-height: 480px; background: lightgrey; /*background-image: url('chrome://browser/content/checkerboard.png')*/">
+  <stack id="browser-container" flex="1">
 
     <!-- begin: Browser View -->
     <hbox id="canvasbox"
-          style="-moz-stack-sizing: ignore; height: 1440px; width: 800px;"
+          style="-moz-stack-sizing: ignore;"
           left="0" top="-480"
           vptargetx="0"
           vptargety="0"
@@ -192,8 +192,6 @@
 
       <html:canvas id="browser-canvas"
                    moz-opaque="true"
-                   viewport="true"
-                   style="height: 1440px; width: 800px;"
                    height="1440" width="800"
                    onnewtab="CommandUpdater.doCommand('cmd_newTab');"/>
 

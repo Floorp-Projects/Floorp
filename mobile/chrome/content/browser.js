@@ -79,7 +79,8 @@ var Browser = {
     this._canvasBrowser = new CanvasBrowser(document.getElementById("browser-canvas"));
 
     // initialize the WidgetStack
-    ws = new WidgetStack(document.getElementById("browser-container"));
+    let browserContainer = document.getElementById("browser-container");
+    ws = new WidgetStack(browserContainer);
     ws.setViewportBounds({ top: 0, left: 0, right: 800, bottom: 480 });
 
     // XXX this should live elsewhere
@@ -98,11 +99,9 @@ var Browser = {
       }
       gSidebarVisible = visibleNow;
 
-      // deal with checkerboard
-      /*
+      // move checkerboard
       let stack = document.getElementById("browser-container");
       stack.style.backgroundPosition =  -vr.left + "px " + -vr.top + "px";
-      */
 
       // this is really only necessary for maemo, where we don't
       // always repaint fast enough
@@ -111,10 +110,20 @@ var Browser = {
 
     ws.setPanHandler(panHandler);
 
-    function resizeHandler() { ws.updateSize(); }
-    window.addEventListener("resize", resizeHandler, false);
+    function resizeHandler(e) {
+      if (e.target != window)
+        return;
 
-    setTimeout(resizeHandler, 0);
+      // resize our container...
+      let w = window.innerWidth;
+      let h = window.innerHeight;
+      let containerStyle = browserContainer.style;
+      containerStyle.width = containerStyle.maxWidth = w + "px";
+      containerStyle.height = containerStyle.maxHeight = h + "px";
+
+      ws.updateSize();
+    }
+    window.addEventListener("resize", resizeHandler, false);
 
     function viewportHandler(b, ob) { self._canvasBrowser.viewportHandler(b, ob); }
     ws.setViewportHandler(viewportHandler);
@@ -231,12 +240,11 @@ var Browser = {
   },
 
   updateViewportSize: function() {
-    // XXX make sure this is right, and then add a better function for it.
-    var [w,h] = this._canvasBrowser._contentAreaDimensions;
-    w = Math.ceil(this._canvasBrowser._pageToScreen(w));
-    h = Math.ceil(this._canvasBrowser._pageToScreen(h));
+    var [w, h] = this._canvasBrowser._effectiveContentAreaDimensions.map(Math.ceil);
 
-    if (!this._currentViewportBounds || w != this._currentViewportBounds.width || h != this._currentViewportBounds.height) {
+    if (!this._currentViewportBounds ||
+        w != this._currentViewportBounds.width ||
+        h != this._currentViewportBounds.height) {
       this._currentViewportBounds = {width: w, height: h};
       let bounds = { top: 0, left: 0, right: Math.max(800, w), bottom: Math.max(480, h) }
       //dump("setViewportBounds: " + bounds.toSource() + "\n");

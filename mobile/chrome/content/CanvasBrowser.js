@@ -442,6 +442,10 @@ CanvasBrowser.prototype = {
             clickOffsetY - cwin.scrollY];
   },
 
+  get _effectiveContentAreaDimensions() {
+    return this._contentAreaDimensions.map(this._pageToScreen, this);
+  },
+
   get _contentAreaDimensions() {
     var cdoc = this._browser.contentDocument;
 
