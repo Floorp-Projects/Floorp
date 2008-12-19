@@ -4141,6 +4141,15 @@ FrameInRange(JSStackFrame* fp, JSStackFrame *target, unsigned callDepth)
 JS_REQUIRES_STACK bool
 TraceRecorder::activeCallOrGlobalSlot(JSObject* obj, jsval*& vp)
 {
+    // Lookup a name in the scope chain, arriving at a property either in the
+    // global object or some call object's fp->slots, and import that property
+    // into the trace's native stack frame. This could theoretically do *lookup*
+    // through the property cache, but there is little performance to be gained
+    // by doing so since at trace-execution time the underlying object (call
+    // object or global object) will not be consulted at all: the jsval*
+    // returned from this function will map (in the tracker) to a LIns* directly
+    // defining a slot in the trace's native stack.
+    
     JS_ASSERT(obj != globalObj);
 
     JSAtom* atom = atoms[GET_INDEX(cx->fp->regs->pc)];
@@ -4149,8 +4158,14 @@ TraceRecorder::activeCallOrGlobalSlot(JSObject* obj, jsval*& vp)
     if (js_FindProperty(cx, ATOM_TO_JSID(atom), &obj, &obj2, &prop) < 0 || !prop)
         ABORT_TRACE("failed to find name in non-global scope chain");
 
+    uint32 setflags = (js_CodeSpec[*cx->fp->regs->pc].format & (JOF_SET | JOF_INCDEC | JOF_FOR));
+
     if (obj == globalObj) {
         JSScopeProperty* sprop = (JSScopeProperty*) prop;
+
+        if (setflags && (sprop->attrs & JSPROP_READONLY))
+            ABORT_TRACE("writing to a readonly property");
+
         if (obj2 != obj || !SPROP_HAS_VALID_SLOT(sprop, OBJ_SCOPE(obj))) {
             OBJ_DROP_PROPERTY(cx, obj2, prop);
             ABORT_TRACE("prototype or slotless globalObj property");
@@ -4172,6 +4187,9 @@ TraceRecorder::activeCallOrGlobalSlot(JSObject* obj, jsval*& vp)
             JSScopeProperty* sprop = (JSScopeProperty*) prop;
             uintN slot = sprop->shortid;
 
+            if (setflags && (sprop->attrs & JSPROP_READONLY))
+                ABORT_TRACE("writing to a readonly property");
+            
             vp = NULL;
             if (sprop->getter == js_GetCallArg) {
                 JS_ASSERT(slot < cfp->fun->nargs);
