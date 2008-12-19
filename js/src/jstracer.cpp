@@ -5624,7 +5624,7 @@ JS_REQUIRES_STACK bool
 TraceRecorder::record_JSOP_PICK()
 {
     jsval* sp = cx->fp->regs->sp;
-    jsuint n = cx->fp->regs->pc[1];
+    jsint n = cx->fp->regs->pc[1];
     JS_ASSERT(sp - (n+1) >= StackBase(cx->fp));
     LIns* top = tracker.get(sp - (n+1));
     for (jsint i = 0; i < n; ++i)
