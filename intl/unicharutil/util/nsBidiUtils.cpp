@@ -577,7 +577,6 @@ PRUnichar HandleNumberInChar(PRUnichar aChar, PRBool aPrevCharArabic, PRUint32 a
 nsresult HandleNumbers(PRUnichar* aBuffer, PRUint32 aSize, PRUint32 aNumFlag)
 {
   PRUint32 i;
-  PRUnichar prev = 0;
 
   switch (aNumFlag) {
     case IBMBIDI_NUMERAL_HINDI:

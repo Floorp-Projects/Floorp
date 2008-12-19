@@ -609,10 +609,10 @@ public:
     mCurrentFramesAllSameTextRun(nsnull),
     mContext(aContext),
     mLineContainer(aLineContainer),
-    mBidiEnabled(aPresContext->BidiEnabled()),    
+    mBidiEnabled(aPresContext->BidiEnabled()),
+    mSkipIncompleteTextRuns(PR_FALSE),
     mNextRunContextInfo(nsTextFrameUtils::INCOMING_NONE),
-    mCurrentRunContextInfo(nsTextFrameUtils::INCOMING_NONE),
-    mSkipIncompleteTextRuns(PR_FALSE) {
+    mCurrentRunContextInfo(nsTextFrameUtils::INCOMING_NONE) {
     ResetRunInfo();
   }
 
