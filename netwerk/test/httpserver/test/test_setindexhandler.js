@@ -38,67 +38,6 @@
 
 // Make sure setIndexHandler works as expected
 
-var paths =
-  [
-   "http://localhost:4444/",
-   "http://localhost:4444/"
-  ];
-var currPathIndex = 0;
-
-var listener =
-  {
-    // NSISTREAMLISTENER
-    onDataAvailable: function(request, cx, inputStream, offset, count)
-    {
-      makeBIS(inputStream).readByteArray(count); // required by API
-    },
-    // NSIREQUESTOBSERVER
-    onStartRequest: function(request, cx)
-    {
-      var ch = request.QueryInterface(Ci.nsIHttpChannel)
-                      .QueryInterface(Ci.nsIHttpChannelInternal);
-
-      switch (currPathIndex)
-      {
-        case 0:
-          do_check_eq(ch.getResponseHeader("Content-Length"), "10");
-          srv.setIndexHandler(null);
-          break;
-
-        case 1:
-          do_check_eq(ch.responseStatus, 200); // default index handler
-          break;
-      }
-    },
-    onStopRequest: function(request, cx, status)
-    {
-      do_check_true(Components.isSuccessCode(status));
-      if (++currPathIndex == paths.length)
-        srv.stop();
-      else
-        performNextTest();
-      do_test_finished();
-    },
-    // NSISUPPORTS
-    QueryInterface: function(aIID)
-    {
-      if (aIID.equals(Ci.nsIStreamListener) ||
-          aIID.equals(Ci.nsIRequestObserver) ||
-          aIID.equals(Ci.nsISupports))
-        return this;
-      throw Cr.NS_ERROR_NO_INTERFACE;
-    }
-  };
-
-function performNextTest()
-{
-  do_test_pending();
-
-  var ch = makeChannel(paths[currPathIndex]);
-  ch.loadFlags |= Ci.nsIRequest.LOAD_BYPASS_CACHE; // important!
-  ch.asyncOpen(listener, null);
-}
-
 var srv, serverBasePath;
 
 function run_test()
@@ -109,7 +48,41 @@ function run_test()
   srv.setIndexHandler(myIndexHandler);
   srv.start(4444);
 
-  performNextTest();
+  runHttpTests(tests, function() { srv.stop(); });
+}
+
+
+var tests = [];
+var test;
+
+test = new Test("http://localhost:4444/",
+                init, startCustomIndexHandler, stopCustomIndexHandler);
+tests.push(test);
+function init(ch)
+{
+  ch.loadFlags |= Ci.nsIRequest.LOAD_BYPASS_CACHE; // important!
+}
+function startCustomIndexHandler(ch, cx)
+{
+  do_check_eq(ch.getResponseHeader("Content-Length"), "10");
+  srv.setIndexHandler(null);
+}
+function stopCustomIndexHandler(ch, cx, status, data)
+{
+  do_check_true(Components.isSuccessCode(status));
+  do_check_eq(String.fromCharCode.apply(null, data), "directory!");
+}
+
+test = new Test("http://localhost:4444/",
+                init, startDefaultIndexHandler, stopDefaultIndexHandler);
+tests.push(test);
+function startDefaultIndexHandler(ch, cx)
+{
+  do_check_eq(ch.responseStatus, 200);
+}
+function stopDefaultIndexHandler(ch, cx, status, data)
+{
+  do_check_true(Components.isSuccessCode(status));
 }
 
 // PATH HANDLERS
