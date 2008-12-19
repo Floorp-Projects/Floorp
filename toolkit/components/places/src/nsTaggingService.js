@@ -538,9 +538,8 @@ TagAutoCompleteSearch.prototype = {
         if (self._stopped)
           yield false;
         // for each match, prepend what the user has typed so far
-        var pattern = new RegExp("(^" + searchResults[i] + "$|" + searchResults[i] + "(,|;))");
         if (searchResults[i].indexOf(searchString) == 0 &&
-            !pattern.test(before)) {
+            comments.indexOf(searchResults[i]) == -1) {
           results.push(before + searchResults[i]);
           comments.push(searchResults[i]);
         }
@@ -577,12 +576,15 @@ TagAutoCompleteSearch.prototype = {
     driveGenerator();
   },
 
+  /**
+   * nsITimer callback
+   */
   notify: function PTACS_notify(timer) {
     if (this._callback) 
       this._callback();
   },
 
-  /*
+  /**
    * Stop an asynchronous search that is in progress
    */
   stopSearch: function PTACS_stopSearch() {

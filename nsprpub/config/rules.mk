@@ -106,13 +106,13 @@ endif
 #
 
 ifdef LIBRARY_NAME
-ifeq (,$(filter-out WINNT OS2,$(OS_ARCH)))
+ifeq (,$(filter-out WINNT WINCE OS2,$(OS_ARCH)))
 
 #
 # Win95, Win16, and OS/2 require library names conforming to the 8.3 rule.
 # other platforms do not.
 #
-ifeq (,$(filter-out WIN95 OS2,$(OS_TARGET)))
+ifeq (,$(filter-out WIN95 WINCE OS2,$(OS_TARGET)))
 LIBRARY		= $(OBJDIR)/$(LIBRARY_NAME)$(LIBRARY_VERSION)_s.$(LIB_SUFFIX)
 SHARED_LIBRARY	= $(OBJDIR)/$(LIBRARY_NAME)$(LIBRARY_VERSION).$(DLL_SUFFIX)
 IMPORT_LIBRARY	= $(OBJDIR)/$(LIBRARY_NAME)$(LIBRARY_VERSION).$(LIB_SUFFIX)
@@ -139,7 +139,7 @@ endif
 endif
 
 ifndef TARGETS
-ifeq (,$(filter-out WINNT OS2,$(OS_ARCH)))
+ifeq (,$(filter-out WINNT WINCE OS2,$(OS_ARCH)))
 TARGETS		= $(LIBRARY) $(SHARED_LIBRARY) $(IMPORT_LIBRARY)
 ifndef BUILD_OPT
 ifdef MSC_VER
@@ -409,10 +409,14 @@ $(OBJDIR)/%.$(OBJ_SUFFIX): %.cpp
 ifeq ($(NS_USE_GCC)_$(OS_ARCH),_WINNT)
 	$(CCC) -Fo$@ -c $(CCCFLAGS) $(call abspath,$<)
 else
+ifeq ($(NS_USE_GCC)_$(OS_ARCH),_WINCE)
+	$(CCC) -Fo$@ -c $(CCCFLAGS) $<
+else
 ifdef NEED_ABSOLUTE_PATH
 	$(CCC) -o $@ -c $(CCCFLAGS) $(call abspath,$<)
 else
 	$(CCC) -o $@ -c $(CCCFLAGS) $<
+endif
 endif
 endif
 
@@ -424,10 +428,14 @@ $(OBJDIR)/%.$(OBJ_SUFFIX): %.c
 ifeq ($(NS_USE_GCC)_$(OS_ARCH),_WINNT)
 	$(CC) -Fo$@ -c $(CFLAGS) $(call abspath,$<)
 else
+ifeq ($(NS_USE_GCC)_$(OS_ARCH),_WINCE)
+	$(CC) -Fo$@ -c $(CFLAGS) $<
+else
 ifdef NEED_ABSOLUTE_PATH
 	$(CC) -o $@ -c $(CFLAGS) $(call abspath,$<)
 else
 	$(CC) -o $@ -c $(CFLAGS) $<
+endif
 endif
 endif
 
