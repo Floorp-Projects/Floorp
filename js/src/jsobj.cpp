@@ -1259,7 +1259,7 @@ obj_eval(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
             }
             if (obj != callerScopeChain) {
                 ok = js_CheckPrincipalsAccess(cx, obj,
-                                              caller->script->principals,
+                                              JS_StackFramePrincipals(cx, caller),
                                               cx->runtime->atomState.evalAtom);
                 if (!ok)
                     goto out;
