@@ -3990,7 +3990,7 @@ main(int argc, char **argv, char **envp)
 #endif /* JSDEBUGGER */
 
     CheckHelpMessages();
-#ifndef WINCE
+#ifdef HAVE_SETLOCALE
     setlocale(LC_ALL, "");
 #endif
     gStackBase = (jsuword)&stackDummy;

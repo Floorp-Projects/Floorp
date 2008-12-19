@@ -333,7 +333,8 @@ Are you executing $objdir/_tests/testing/mochitest/runtests.py?"""
 
   # allow relative paths for logFile
   if options.logFile:
-    options.logFile = os.path.normpath(os.path.join(oldcwd, options.logFile))
+    logpath = os.path.join(oldcwd, os.path.expanduser(options.logFile))
+    options.logFile = os.path.normpath(logpath)
   if options.browserChrome:
     makeTestConfig(options)
   else:

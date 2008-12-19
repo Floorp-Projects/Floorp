@@ -42,15 +42,7 @@ VPATH		= @srcdir@
 
 include $(DEPTH)/config/autoconf.mk
 
-include $(topsrcdir)/config/config.mk
-
-default alldep all::
-	$(RM) -rf $(DIST)/sdk
-	$(RM) -rf $(DIST)/include
-	$(RM) -rf $(DIST)/private
-	$(RM) -rf $(DIST)/public
-	$(RM) -rf $(DIST)/bin/components
-	$(RM) -rf _tests
+default::
 
 TIERS += base
 
@@ -67,11 +59,6 @@ ifdef MOZ_MEMORY
 tier_base_dirs += memory/jemalloc
 endif
 
-ifdef ENABLE_TESTS
-# Additional makefile targets to call automated test suites
-include $(topsrcdir)/testing/testsuite-targets.mk
-endif
-
 include $(topsrcdir)/$(MOZ_BUILD_APP)/build.mk
 
 TIERS += testharness
@@ -81,6 +68,8 @@ ifdef ENABLE_TESTS
 tier_testharness_dirs += tools/test-harness
 endif
 
+include $(topsrcdir)/config/config.mk
+
 GARBAGE_DIRS += dist _javagen _profile _tests staticlib
 DIST_GARBAGE = config.cache config.log config.status config-defs.h \
    dependencies.beos config/autoconf.mk config/myrules.mk config/myconfig.mk \
@@ -88,11 +77,24 @@ DIST_GARBAGE = config.cache config.log config.status config-defs.h \
    netwerk/necko-config.h xpcom/xpcom-config.h xpcom/xpcom-private.h \
    $(topsrcdir)/.mozconfig.mk $(topsrcdir)/.mozconfig.out
 
+default alldep all::
+	$(RM) -rf $(DIST)/sdk
+	$(RM) -rf $(DIST)/include
+	$(RM) -rf $(DIST)/private
+	$(RM) -rf $(DIST)/public
+	$(RM) -rf $(DIST)/bin/components
+	$(RM) -rf _tests
+
 # Build pseudo-external modules first when export is explicitly called
 export::
 	$(RM) -rf $(DIST)/sdk
 	$(MAKE) -C config export
 	$(MAKE) tier_nspr
+
+ifdef ENABLE_TESTS
+# Additional makefile targets to call automated test suites
+include $(topsrcdir)/testing/testsuite-targets.mk
+endif
 
 include $(topsrcdir)/config/rules.mk
 
