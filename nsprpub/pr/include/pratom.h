@@ -110,7 +110,7 @@ NSPR_API(PRInt32)	PR_AtomicAdd(PRInt32 *ptr, PRInt32 val);
 **    the macros and functions won't be compatible and can't be used
 **    interchangeably.
 */
-#if defined(_WIN32) && (_MSC_VER >= 1310)
+#if defined(_WIN32) && !defined(_WIN32_WCE) && (_MSC_VER >= 1310)
 
 long __cdecl _InterlockedIncrement(long volatile *Addend);
 #pragma intrinsic(_InterlockedIncrement)

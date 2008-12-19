@@ -392,7 +392,7 @@ NSPR_API(PRStatus) PR_GetProtoByNumber(
 /***********************************************************************
 ** FUNCTION:
 ** DESCRIPTION: PR_GetAddrInfoByName()
-**  Lookup a host by name. Equivalent to getaddrinfo(host, NULL, ...) of
+**  Look up a host by name. Equivalent to getaddrinfo(host, NULL, ...) of
 **  RFC 3493.
 **
 ** INPUTS:
@@ -438,7 +438,7 @@ NSPR_API(void) PR_FreeAddrInfo(PRAddrInfo *addrInfo);
 ** INPUTS:
 **  void *enumPtr       Index pointer of the enumeration. The enumeration
 **                      starts and ends with a value of NULL.
-**  PRAddrInfo *addrInfo
+**  const PRAddrInfo *addrInfo
 **                      The PRAddrInfo handle returned by a successful
 **                      call to PR_GetAddrInfoByName().
 **  PRUint16 port       The port number to be assigned as part of the
@@ -446,11 +446,11 @@ NSPR_API(void) PR_FreeAddrInfo(PRAddrInfo *addrInfo);
 ** OUTPUTS:
 **  PRNetAddr *result   A pointer to an address structure that will be
 **                      filled in by the call to the enumeration if the
-**                      result of the call is greater than zero.
+**                      result of the call is not NULL.
 ** RETURN:
 **  void*               The value that should be used for the next call
 **                      of the enumerator ('enumPtr'). The enumeration
-**                      is ended if this value is returned NULL.
+**                      is ended if this value is NULL.
 ***********************************************************************/
 NSPR_API(void *) PR_EnumerateAddrInfo(
     void *enumPtr, const PRAddrInfo *addrInfo, PRUint16 port, PRNetAddr *result);
@@ -462,7 +462,7 @@ NSPR_API(void *) PR_EnumerateAddrInfo(
 **  PR_GetAddrInfoByName().
 **
 ** INPUTS:
-**  PRAddrInfo *addrInfo 
+**  const PRAddrInfo *addrInfo 
 **                      The PRAddrInfo handle returned by a successful
 **                      call to PR_GetAddrInfoByName().
 ** RETURN:
