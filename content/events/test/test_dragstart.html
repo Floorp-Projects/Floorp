@@ -54,12 +54,14 @@ function afterDragTests()
   var evt = document.createEvent("dragevent");
   ok(evt instanceof DragEvent, "synthetic dragevent class")
   ok(evt instanceof MouseEvent, "synthetic event inherits from MouseEvent")
-  evt.initDragEvent("dragstart", true, true, window, 1, null);
+  evt.initDragEvent("dragstart", true, true, window, 1, 40, 35, 20, 15,
+                    false, true, false, false, 0, null, null);
   $("synthetic").dispatchEvent(evt);
 
   var evt = document.createEvent("dragevents");
   ok(evt instanceof DragEvent, "synthetic dragevents class")
-  evt.initDragEvent("dragover", true, true, window, 0, null);
+  evt.initDragEvent("dragover", true, true, window, 0, 40, 35, 20, 15,
+                    true, false, true, true, 2, document.documentElement, null);
   $("synthetic2").dispatchEvent(evt);
 
   // next, dragging links and images
@@ -434,13 +436,22 @@ function doDragStartInput(event)
 function doDragStartSynthetic(event)
 {
   is(event.type, "dragstart", "synthetic dragstart event type");
-return;
-  var dt = event.dataTransfer;
-  ok(dt instanceof DataTransfer, "synthetic dragstart dataTransfer is DataTransfer");
 
-  checkTypes(dt, [], 0, "synthetic dragstart");
+  var dt = event.dataTransfer;
+//  ok(dt instanceof DataTransfer, "synthetic dragstart dataTransfer is DataTransfer");
+//  checkTypes(dt, [], 0, "synthetic dragstart");
 
   is(event.detail, 1, "synthetic dragstart detail");
+  is(event.screenX, 40, "synthetic dragstart screenX");
+  is(event.screenY, 35, "synthetic dragstart screenY");
+  is(event.clientX, 20, "synthetic dragstart clientX");
+  is(event.clientY, 15, "synthetic dragstart clientY");
+  is(event.ctrlKey, false, "synthetic dragstart ctrlKey");
+  is(event.altKey, true, "synthetic dragstart altKey");
+  is(event.shiftKey, false, "synthetic dragstart shiftKey");
+  is(event.metaKey, false, "synthetic dragstart metaKey");
+  is(event.button, 0, "synthetic dragstart button ");
+  is(event.relatedTarget, null, "synthetic dragstart relatedTarget");
 
   dt.setData("text/plain", "Text");
   is(dt.getData("text/plain"), "Text", "synthetic dragstart data is set after adding");
@@ -449,12 +460,22 @@ return;
 function doDragOverSynthetic(event)
 {
   is(event.type, "dragover", "synthetic dragover event type");
-return;
 
   var dt = event.dataTransfer;
-  ok(dt instanceof DataTransfer, "synthetic dragover dataTransfer is DataTransfer");
+//  ok(dt instanceof DataTransfer, "synthetic dragover dataTransfer is DataTransfer");
+// checkTypes(dt, [], 0, "synthetic dragover");
 
-  checkTypes(dt, [], 0, "synthetic dragover");
+  is(event.detail, 0, "synthetic dragover detail");
+  is(event.screenX, 40, "synthetic dragover screenX");
+  is(event.screenY, 35, "synthetic dragover screenY");
+  is(event.clientX, 20, "synthetic dragover clientX");
+  is(event.clientY, 15, "synthetic dragover clientY");
+  is(event.ctrlKey, true, "synthetic dragover ctrlKey");
+  is(event.altKey, false, "synthetic dragover altKey");
+  is(event.shiftKey, true, "synthetic dragover shiftKey");
+  is(event.metaKey, true, "synthetic dragover metaKey");
+  is(event.button, 2, "synthetic dragover button");
+  is(event.relatedTarget, document.documentElement, "synthetic dragover relatedTarget");
 
   dt.setData("text/plain", "Text");
   is(dt.getData("text/plain"), "Text", "synthetic dragover data is set after adding");
