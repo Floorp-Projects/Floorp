@@ -79,6 +79,8 @@ Collection.prototype = {
       args.push('modified=' + this.modified);
     if (this.full)
       args.push('full=1');
+    if (this.sort)
+      args.push('sort=' + this.sort);
 
     this.uri.query = (args.length > 0)? '?' + args.join('&') : '';
   },
@@ -94,6 +96,16 @@ Collection.prototype = {
   get modified() { return this._modified; },
   set modified(value) {
     this._modified = value;
+    this._rebuildURL();
+  },
+
+  // get items sorted by some criteria
+  // date
+  // index
+  // depthindex
+  get sort() { return this._sort; },
+  set sort(value) {
+    this._sort = value;
     this._rebuildURL();
   },
 

@@ -406,50 +406,31 @@ SyncEngine.prototype = {
   },
 
   // Generate outgoing records
-  _fetchIncoming: function SyncEngine__fetchIncoming() {
+  _processIncoming: function SyncEngine__processIncoming() {
     let self = yield;
 
-    this._log.debug("Downloading server changes");
+    this._log.debug("Downloading & applying server changes");
 
     let newitems = new Collection(this.engineURL);
     newitems.modified = this.lastSync;
     newitems.full = true;
+    newitems.sort = "depthindex";
     yield newitems.get(self.cb);
 
+    this._lastSyncTmp = 0;
     let item;
     while ((item = yield newitems.iter.next(self.cb))) {
-      this.incoming.push(item);
+      yield item.decrypt(self.cb, ID.get('WeaveCryptoID').password);
+      if (yield this._reconcile.async(this, self.cb, item))
+        yield this._applyIncoming.async(this, self.cb, item);
+      else
+        this._log.debug("Skipping reconciled incoming item");
     }
-  },
+    if (this.lastSync < this._lastSyncTmp)
+        this.lastSync = this._lastSyncTmp;
 
-  // Process incoming records to get them ready for reconciliation and applying later
-  // i.e., decrypt them, and sort them
-  _processIncoming: function SyncEngine__processIncoming() {
-    let self = yield;
-
-    this._log.debug("Decrypting and sorting incoming changes");
-
-    for each (let inc in this.incoming) {
-      yield inc.decrypt(self.cb, ID.get('WeaveCryptoID').password);
-      this._recDepth(inc); // note: doesn't need access to payload
-    }
-    this.incoming.sort(function(a, b) {
-      if ((typeof(a.depth) == "number" && typeof(b.depth) == "undefined") ||
-          (typeof(a.depth) == "number" && b.depth == null) ||
-          (a.depth > b.depth))
-        return 1;
-      if ((typeof(a.depth) == "undefined" && typeof(b.depth) == "number") ||
-          (a.depth == null && typeof(b.depth) == "number") ||
-          (a.depth < b.depth))
-        return -1;
-      if (a.cleartext && b.cleartext) {
-        if (a.cleartext.index > b.cleartext.index)
-          return 1;
-        if (a.cleartext.index < b.cleartext.index)
-          return -1;
-      }
-      return 0;
-    });
+    // removes any holes caused by reconciliation above:
+    this._outgoing = this.outgoing.filter(function(n) n);
   },
 
   // Reconciliation has two steps:
@@ -464,78 +445,65 @@ SyncEngine.prototype = {
   // bookmarks imported, every bookmark will match this condition.
   // When two items with different IDs are "the same" we change the local ID to
   // match the remote one.
-  _reconcile: function SyncEngine__reconcile() {
+  _reconcile: function SyncEngine__reconcile(item) {
     let self = yield;
+    let ret = true;
 
-    this._log.debug("Reconciling server/client changes");
-
-    this._log.debug(this.incoming.length + " items coming in, " +
-                    this.outgoing.length + " items going out");
+    this._log.debug("Reconciling incoming item");
 
     // Check for the same item (same ID) on both incoming & outgoing queues
     let conflicts = [];
-    for (let i = 0; i < this.incoming.length; i++) {
-      for (let o = 0; o < this.outgoing.length; o++) {
-        if (this.incoming[i].id == this.outgoing[o].id) {
-          // Only consider it a conflict if there are actual differences
-          // otherwise, just remove the outgoing record as well
-          if (!Utils.deepEquals(this.incoming[i].cleartext,
-                                this.outgoing[o].cleartext))
-            conflicts.push({in: this.incoming[i], out: this.outgoing[o]});
-          else
-            delete this.outgoing[o];
-          delete this.incoming[i];
-          break;
-        }
+    for (let o = 0; o < this.outgoing.length; o++) {
+      if (!this.outgoing[o])
+        continue; // skip previously removed items
+      if (item.id == this.outgoing[o].id) {
+        // Only consider it a conflict if there are actual differences
+        // otherwise, just ignore the outgoing record as well
+        if (!Utils.deepEquals(item.cleartext, this.outgoing[o].cleartext))
+          conflicts.push({in: item, out: this.outgoing[o]});
+        else
+          delete this.outgoing[o];
+
+        self.done(false);
+        return;
       }
-      this._outgoing = this.outgoing.filter(function(n) n); // removes any holes
     }
-    this._incoming = this.incoming.filter(function(n) n); // removes any holes
     if (conflicts.length)
       this._log.debug("Conflicts found.  Conflicting server changes discarded");
 
     // Check for items with different IDs which we think are the same one
-    for (let i = 0; i < this.incoming.length; i++) {
-      for (let o = 0; o < this.outgoing.length; o++) {
-        if (this._recordLike(this.incoming[i], this.outgoing[o])) {
-          // change refs in outgoing queue
-          yield this._changeRecordRefs.async(this, self.cb,
-                                             this.outgoing[o].id,
-                                             this.incoming[i].id);
-          // change actual id of item
-          this._store.changeItemID(this.outgoing[o].id,
-                                   this.incoming[i].id);
-          delete this.incoming[i];
-          delete this.outgoing[o];
-          break;
-        }
-      }
-      this._outgoing = this.outgoing.filter(function(n) n); // removes any holes
-    }
-    this._incoming = this.incoming.filter(function(n) n); // removes any holes
+    for (let o = 0; o < this.outgoing.length; o++) {
+      if (!this.outgoing[o])
+        continue; // skip previously removed items
 
-    this._log.debug("Reconciliation complete");
-    this._log.debug(this.incoming.length + " items coming in, " +
-                    this.outgoing.length + " items going out");
+      if (this._recordLike(item, this.outgoing[o])) {
+        // change refs in outgoing queue
+        yield this._changeRecordRefs.async(this, self.cb,
+                                           this.outgoing[o].id,
+                                           item.id);
+        // change actual id of item
+        this._store.changeItemID(this.outgoing[o].id,
+                                 item.id);
+        delete this.outgoing[o];
+        self.done(false);
+        return;
+      }
+    }
+    self.done(true);
   },
 
   // Apply incoming records
-  _applyIncoming: function SyncEngine__applyIncoming() {
+  _applyIncoming: function SyncEngine__applyIncoming(item) {
     let self = yield;
-    if (this.incoming.length) {
-      this._log.debug("Applying server changes");
-      let inc;
-      while ((inc = this.incoming.shift())) {
-        this._log.trace("Incoming record: " + this._json.encode(inc.cleartext));
-        try {
-          yield this._store.applyIncoming(self.cb, inc);
-          if (inc.modified > this.lastSync)
-            this.lastSync = inc.modified;
-        } catch (e) {
-          this._log.warn("Error while applying incoming record: " +
-                         (e.message? e.message : e));
-        }
-      }
+    this._log.debug("Applying incoming record");
+    this._log.trace("Incoming record: " + this._json.encode(item.cleartext));
+    try {
+      yield this._store.applyIncoming(self.cb, item);
+      if (item.modified > this._lastSyncTmp)
+        this._lastSyncTmp = item.modified;
+    } catch (e) {
+      this._log.warn("Error while applying incoming record: " +
+                     (e.message? e.message : e));
     }
   },
 
@@ -573,16 +541,13 @@ SyncEngine.prototype = {
     try {
       yield this._syncStartup.async(this, self.cb);
 
-      // Populate incoming and outgoing queues
+      // Populate outgoing queue
       yield this._generateOutgoing.async(this, self.cb);
-      yield this._fetchIncoming.async(this, self.cb);
 
-      // Decrypt and sort incoming records, then reconcile
+      // Fetch incoming records and apply them
       yield this._processIncoming.async(this, self.cb);
-      yield this._reconcile.async(this, self.cb);
 
-      // Apply incoming records, upload outgoing records
-      yield this._applyIncoming.async(this, self.cb);
+      // Upload outgoing records
       yield this._uploadOutgoing.async(this, self.cb);
 
       yield this._syncFinish.async(this, self.cb);
