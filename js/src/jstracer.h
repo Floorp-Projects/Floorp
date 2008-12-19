@@ -191,6 +191,7 @@ enum ExitType {
 
 struct VMSideExit : public nanojit::SideExit
 {
+    JSObject* block;
     intptr_t ip_adj;
     intptr_t sp_adj;
     intptr_t rp_adj;
@@ -248,7 +249,8 @@ public:
 
 struct FrameInfo {
     JSObject*       callee;     // callee function object
-    intptr_t        ip_adj;     // callee script-based pc index and imacro pc
+    JSObject*       block;      // caller block chain head
+    intptr_t        ip_adj;     // caller script-based pc index and imacro pc
     uint8*          typemap;    // typemap for the stack frame
     union {
         struct {
