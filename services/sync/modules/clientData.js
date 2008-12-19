@@ -109,12 +109,24 @@ ClientDataSvc.prototype = {
   _refresh: function ClientData__refresh() {
     let self = yield;
 
-    let ret = yield DAV.MKCOL("meta", self.cb);
+   // No more such thing as DAV.  I think this is making a directory.
+    // Will the directory now be handled automatically? (YES)
+   /* let ret = yield DAV.MKCOL("meta", self.cb);
     if(!ret)
-      throw "Could not create meta information directory";
+      throw "Could not create meta information directory";*/
 
+    // This fails horribly because this._remote._uri.spec is null. What's
+    // that mean?
+    // Spec is supposed to be just a string?
+
+    // Probably problem has to do with Resource getting intialized by
+    // relative, not absolute, path?
+    // Use WBORecord (Weave Basic Object) from wbo.js?
+    this._log.debug("The URI is " + this._remote._uri);
+    this._log.debug("The URI.spec is " + this._remote._uri.spec);
     try { yield this._remote.get(self.cb); }
     catch (e if e.status == 404) {
+      this._log.debug("404ed.  Using empty for remote data.");
       this._remote.data = {};
     }
 
