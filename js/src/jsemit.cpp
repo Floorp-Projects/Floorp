@@ -1697,6 +1697,7 @@ EmitIndexOp(JSContext *cx, JSOp op, uintN index, JSCodeGenerator *cg)
             return JS_FALSE;                                                  \
     JS_END_MACRO
 
+
 static JSBool
 EmitAtomOp(JSContext *cx, JSParseNode *pn, JSOp op, JSCodeGenerator *cg)
 {
@@ -2324,23 +2325,11 @@ EmitXMLName(JSContext *cx, JSParseNode *pn, JSOp op, JSCodeGenerator *cg)
 #endif
 
 static JSBool
-EmitElemOp(JSContext *cx, JSParseNode *pn, JSOp op, JSCodeGenerator *cg);
-
-static JSBool
 EmitPropOp(JSContext *cx, JSParseNode *pn, JSOp op, JSCodeGenerator *cg,
            JSBool callContext)
 {
     JSParseNode *pn2, *pndot, *pnup, *pndown;
     ptrdiff_t top;
-
-    /*
-     * Special case obj.__proto__ to deoptimize away from fast paths in the
-     * interpreter and trace recorder, which skip dense array instances by
-     * skipping over the directly referenced object to Array.prototype before
-     * looking up the property name. See bug 450274.
-     */
-    if (pn->pn_atom == cx->runtime->atomState.protoAtom)
-        return EmitElemOp(cx, pn, callContext ? JSOP_CALLELEM : JSOP_GETELEM, cg);
 
     pn2 = pn->pn_expr;
     if (callContext) {
@@ -5331,11 +5320,6 @@ js_EmitTree(JSContext *cx, JSCodeGenerator *cg, JSParseNode *pn)
                     return JS_FALSE;
                 if (pn2->pn_atom == cx->runtime->atomState.lengthAtom) {
                     if (js_Emit1(cx, cg, JSOP_LENGTH) < 0)
-                        return JS_FALSE;
-                } else if (pn2->pn_atom == cx->runtime->atomState.protoAtom) {
-                    if (!EmitIndexOp(cx, JSOP_QNAMEPART, atomIndex, cg))
-                        return JS_FALSE;
-                    if (js_Emit1(cx, cg, JSOP_GETELEM) < 0)
                         return JS_FALSE;
                 } else {
                     EMIT_INDEX_OP(JSOP_GETPROP, atomIndex);
