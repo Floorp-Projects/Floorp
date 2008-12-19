@@ -67,6 +67,7 @@
 #include "nsXULContentUtils.h"
 #include "nsString.h"
 #include "nsQuickSort.h"
+#include "nsWhitespaceTokenizer.h"
 #include "nsXULSortService.h"
 #include "nsIDOMXULElement.h"
 #include "nsIXULTemplateBuilder.h"
@@ -414,26 +415,14 @@ XULSortServiceImpl::InitializeSortState(nsIContent* aRootElement,
         aSortState->sortKeys.AppendObject(sortkeyatom2);
         sort.AppendLiteral(" ");
         sort.Append(sortResource2);
+      }
     }
   }
-    }
-    else {
-    PRInt32 start = 0, end = 0;
-    while ((end = sort.FindChar(' ',start)) >= 0) {
-      if (end > start) {
-        nsCOMPtr<nsIAtom> keyatom = do_GetAtom(Substring(sort, start, end - start));
-        if (!keyatom)
-          return NS_ERROR_OUT_OF_MEMORY;
-
-        aSortState->sortKeys.AppendObject(keyatom);
-      }
-      start = end + 1;
-    }
-    if (start < (PRInt32)sort.Length()) {
-      nsCOMPtr<nsIAtom> keyatom = do_GetAtom(Substring(sort, start));
-      if (!keyatom)
-        return NS_ERROR_OUT_OF_MEMORY;
-
+  else {
+    nsWhitespaceTokenizer tokenizer(sort);
+    while (tokenizer.hasMoreTokens()) {
+      nsCOMPtr<nsIAtom> keyatom = do_GetAtom(tokenizer.nextToken());
+      NS_ENSURE_TRUE(keyatom, NS_ERROR_OUT_OF_MEMORY);
       aSortState->sortKeys.AppendObject(keyatom);
     }
   }
