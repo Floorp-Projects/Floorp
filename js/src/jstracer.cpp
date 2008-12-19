@@ -7763,6 +7763,7 @@ TraceRecorder::record_JSOP_GOTOX()
 JS_REQUIRES_STACK bool
 TraceRecorder::record_JSOP_IFEQX()
 {
+    trackCfgMerges(cx->fp->regs->pc);
     return record_JSOP_IFEQ();
 }
 
@@ -8456,7 +8457,7 @@ TraceRecorder::record_JSOP_LENGTH()
     jsval& l = stackval(-1);
     if (JSVAL_IS_PRIMITIVE(l)) {
         if (!JSVAL_IS_STRING(l))
-            ABORT_TRACE("non-string primitive JSOP_LENGTH unsupported");
+            ABORT_TRACE("non-string primitives unsupported");
         LIns* str_ins = get(&l);
         LIns* len_ins = lir->insLoad(LIR_ldp, str_ins, (int)offsetof(JSString, length));
 
