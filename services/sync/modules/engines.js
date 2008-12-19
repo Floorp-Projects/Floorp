@@ -526,6 +526,7 @@ SyncEngine.prototype = {
       this._log.debug("Applying server changes");
       let inc;
       while ((inc = this.incoming.shift())) {
+        this._log.trace("Incoming record: " + this._json.encode(inc.cleartext));
         try {
           yield this._store.applyIncoming(self.cb, inc);
           if (inc.modified > this.lastSync)
@@ -546,6 +547,7 @@ SyncEngine.prototype = {
       let up = new Collection(this.engineURL);
       let out;
       while ((out = this.outgoing.pop())) {
+        this._log.trace("Outgoing record: " + this._json.encode(out.cleartext));
         yield out.encrypt(self.cb, ID.get('WeaveCryptoID').password);
         yield up.pushRecord(self.cb, out);
       }

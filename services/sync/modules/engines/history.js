@@ -150,22 +150,53 @@ HistoryStore.prototype = {
   get _visitStm() {
     let stm = this._defineStm(
       "_visitStm",
-      "SELECT visit_type AS type, visit_date AS date " +
+      "SELECT * FROM ( " +
+        "SELECT visit_type AS type, visit_date AS date " +
+        "FROM moz_historyvisits_temp " +
+        "WHERE place_id = :placeid " +
+        "ORDER BY visit_date DESC " +
+        "LIMIT 10 " +
+      ") " +
+      "UNION ALL " +
+      "SELECT * FROM ( " +
+        "SELECT visit_type AS type, visit_date AS date " +
         "FROM moz_historyvisits " +
         "WHERE place_id = :placeid " +
-        "ORDER BY visit_date DESC");
+        "AND id NOT IN (SELECT id FROM moz_historyvisits_temp) " +
+        "ORDER BY visit_date DESC " +
+        "LIMIT 10 " +
+      ") " +
+      "ORDER BY 2 DESC LIMIT 10"); /* 2 is visit_date */
     return stm;
   },
 
   get _pidStm() {
     let stm = this._defineStm(
-      "_pidStm", "SELECT id FROM moz_places WHERE url = :url");
+      "_pidStm",
+      "SELECT * FROM " + 
+        "(SELECT id FROM moz_places_temp WHERE url = :url LIMIT 1) " +
+      "UNION ALL " +
+      "SELECT * FROM ( " +
+        "SELECT id FROM moz_places WHERE url = :url " +
+        "AND id NOT IN (SELECT id from moz_places_temp) " +
+        "LIMIT 1 " +
+      ") " +
+      "LIMIT 1");
     return stm;
   },
 
   get _urlStm() {
     let stm = this._defineStm(
-      "_urlStm", "SELECT url FROM moz_places WHERE id = :id");
+      "_urlStm",
+      "SELECT * FROM " +
+        "(SELECT url FROM moz_places_temp WHERE id = :id LIMIT 1) " +
+      "UNION ALL " +
+      "SELECT * FROM ( " +
+        "SELECT url FROM moz_places WHERE ud = :id " +
+        "AND id NOT IN (SELECT id from moz_places_temp) " +
+        "LIMIT 1 " +
+      ") " +
+      "LIMIT 1");
     return stm;
   },
 
@@ -186,18 +217,20 @@ HistoryStore.prototype = {
 
   // See bug 320831 for why we use SQL here
   _getVisits: function HistStore__getVisits(uri) {
+    let visits = [];
     if (typeof(uri) != "string")
       uri = uri.spec;
+
     let placeid = this._fetchRow(this._pidStm, {url: uri}, ['id']);
+    if (!placeid) {
+      this._log.debug("Could not find place ID for history URL: " + placeid);
+      return visits;
+    }
 
     this._visitStm.params.placeid = placeid;
-    let i = 0;
-    let visits = [];
     while (this._visitStm.step()) {
       visits.push({date: this._visitStm.row.date,
                    type: this._visitStm.row.type});
-      if (++i > 10)
-        break;
     }
     this._visitStm.reset();
     return visits;
@@ -262,8 +295,8 @@ HistoryStore.prototype = {
 
     let visit;
     while ((visit = record.cleartext.visits.pop())) {
-      this._log.debug("     visit " + visit.time);
-      this._hsvc.addVisit(uri, visit.time, null, visit.type,
+      this._log.debug("     visit " + visit.date);
+      this._hsvc.addVisit(uri, visit.date, null, visit.type,
                           (visit.type == 5 || visit.type == 6), 0);
     }
     this._hsvc.setPageTitle(uri, record.cleartext.title);
