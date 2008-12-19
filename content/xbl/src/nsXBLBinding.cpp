@@ -725,6 +725,21 @@ nsXBLBinding::GenerateAnonymousContent()
                 if (ni->NamespaceID() != kNameSpaceID_XUL ||
                     (localName != nsGkAtoms::observes &&
                      localName != nsGkAtoms::_template)) {
+                  // Undo InstallAnonymousContent
+                  PRUint32 childCount = mContent->GetChildCount();
+#ifdef MOZ_XUL
+                  nsCOMPtr<nsIXULDocument> xuldoc(do_QueryInterface(doc));
+#endif
+                  for (PRUint32 k = 0; k < childCount; ++k) {
+                    nsIContent* child = mContent->GetChildAt(k);
+                    child->UnbindFromTree();
+#ifdef MOZ_XUL
+                    if (xuldoc) {
+                      xuldoc->RemoveSubtreeFromDocument(child);
+                    }
+#endif
+                  }
+
                   // Kill all anonymous content.
                   mContent = nsnull;
                   bindingManager->SetContentListFor(mBoundElement, nsnull);
