@@ -468,7 +468,7 @@ FileAppender.prototype = {
     if (message === null || message.length <= 0)
       return;
     try {
-      this._fos().write(message, message.length);
+      this._fos.write(message, message.length);
     } catch(e) {
       dump("Error writing file:\n" + e);
     }
