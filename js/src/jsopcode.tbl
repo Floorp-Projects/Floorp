@@ -541,7 +541,6 @@ OPDEF(JSOP_INDEXBASE3,    222,"atombase3",     NULL,  1,  0,  0,  0,  JOF_BYTE |
 OPDEF(JSOP_CALLGVAR,      223, "callgvar",     NULL,  3,  0,  2, 19,  JOF_ATOM|JOF_NAME|JOF_CALLOP)
 OPDEF(JSOP_CALLLOCAL,     224, "calllocal",    NULL,  3,  0,  2, 19,  JOF_LOCAL|JOF_NAME|JOF_CALLOP)
 OPDEF(JSOP_CALLARG,       225, "callarg",      NULL,  3,  0,  2, 19,  JOF_QARG |JOF_NAME|JOF_CALLOP)
-
 OPDEF(JSOP_UNUSED226,     226, "unused226",    NULL,  1,  0,  1,  1,  JOF_BYTE)
 
 /*
