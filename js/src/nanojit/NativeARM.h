@@ -61,7 +61,9 @@ const int NJ_LOG2_PAGE_SIZE = 12;       // 4K
 // If NJ_ARM_VFP is defined, then VFP is assumed to
 // be present.  If it's not defined, then softfloat
 // is used, and NJ_SOFTFLOAT is defined.
-#define NJ_ARM_VFP
+// When nanojit is used as part of Mozilla's JavaScript engine, this is
+// #defined or left #undefined by js/src/configure.in.
+//#define NJ_ARM_VFP
 
 #ifdef NJ_ARM_VFP
 
