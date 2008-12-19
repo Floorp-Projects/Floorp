@@ -54,6 +54,7 @@ _TEST_FILES =	test_feed_discovery.html \
 
 # browser_bug423833.js disabled temporarily since it's unreliable: bug 428712
 # browser_sanitize-download-history.js disabled temporarily since it's unreliable: bug 432425
+# browser_pluginnotification.js disabled because it leaks when it can actually load a plugin instance
 _BROWSER_FILES = browser_bug321000.js \
                  browser_sanitize-timespans.js \
                  browser_bug405137.js \
@@ -74,7 +75,6 @@ _BROWSER_FILES = browser_bug321000.js \
                  browser_gestureSupport.js \
                  browser_feed_tab.js \
                  feed_tab.html \
-                 browser_pluginnotification.js \
                  plugin_unknown.html \
                  plugin_test.html \
                  plugin_both.html \
