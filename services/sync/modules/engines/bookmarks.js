@@ -328,7 +328,7 @@ BookmarksStore.prototype = {
 
     var itemId = this._bms.getItemIdForGUID(record.id);
     if (itemId < 0) {
-      this._log.debug("Item " + record.id + "already removed");
+      this._log.debug("Item " + record.id + " already removed");
       return;
     }
     var type = this._bms.getItemType(itemId);
@@ -748,24 +748,26 @@ BookmarksTracker.prototype = {
   },
 
   onItemAdded: function BMT_onEndUpdateBatch(itemId, folder, index) {
-    this._log.trace("onItemAdded: " + itemId);
-
     this._all[itemId] = this._bms.getItemGUID(itemId);
+    //if (!this.enabled)
+      //return;
+    this._log.trace("onItemAdded: " + itemId);
     this.addChangedID(this._all[itemId]);
-
     this._upScore();
   },
 
   onItemRemoved: function BMT_onItemRemoved(itemId, folder, index) {
-    this._log.trace("onItemRemoved: " + itemId);
-
-    this.addChangedID(this._all[itemId]);
     delete this._all[itemId];
-
+    if (!this.enabled)
+      return;
+    this._log.trace("onItemRemoved: " + itemId);
+    this.addChangedID(this._all[itemId]);
     this._upScore();
   },
 
   onItemChanged: function BMT_onItemChanged(itemId, property, isAnnotationProperty, value) {
+    if (!this.enabled)
+      return;
     this._log.trace("onItemChanged: " + itemId + ", property: " + property +
                     ", isAnno: " + isAnnotationProperty + ", value: " + value);
 
@@ -786,6 +788,8 @@ BookmarksTracker.prototype = {
   },
 
   onItemMoved: function BMT_onItemMoved(itemId, oldParent, oldIndex, newParent, newIndex) {
+    if (!this.enabled)
+      return;
     this._log.trace("onItemMoved: " + itemId);
     this.addChangedID(this._all[itemId]);
     this._upScore();
