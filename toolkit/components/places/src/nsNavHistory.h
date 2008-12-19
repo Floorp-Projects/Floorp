@@ -122,7 +122,6 @@
 #define PRIVATEBROWSING_NOTINITED (PRBool(0xffffffff))
 
 #define PLACES_INIT_COMPLETE_EVENT_TOPIC "places-init-complete"
-#define PLACES_DB_LOCKED_EVENT_TOPIC "places-database-locked"
 
 struct AutoCompleteIntermediateResult;
 class AutoCompleteResultComparator;
