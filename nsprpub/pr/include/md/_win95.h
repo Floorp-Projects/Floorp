@@ -56,6 +56,8 @@
 #define _PR_SI_ARCHITECTURE   "x86-64"
 #elif defined(_IA64_)
 #define _PR_SI_ARCHITECTURE   "ia64"
+#elif defined(_ARM_)
+#define _PR_SI_ARCHITECTURE   "arm"
 #else
 #error unknown processor architecture
 #endif

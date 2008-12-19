@@ -1981,6 +1981,7 @@ TraceRecorder::snapshot(ExitType exitType)
         : 0;
     exit->exitType = exitType;
     exit->addGuard(rec);
+    exit->block = fp->blockChain;
     exit->ip_adj = ip_adj;
     exit->sp_adj = (stackSlots * sizeof(double)) - treeInfo->nativeStackBase;
     exit->rp_adj = exit->calldepth * sizeof(FrameInfo);
@@ -2792,9 +2793,10 @@ js_SynthesizeFrame(JSContext* cx, const FrameInfo& fi)
     JS_ASSERT(FUN_INTERPRETED(fun));
 
     /* Assert that we have a correct sp distance from cx->fp->slots in fi. */
-    JS_ASSERT_IF(!FI_IMACRO_PC(fi, cx->fp),
-                 js_ReconstructStackDepth(cx, cx->fp->script, FI_SCRIPT_PC(fi, cx->fp))
-                 == uintN(fi.s.spdist - cx->fp->script->nfixed));
+    JSStackFrame* fp = cx->fp;
+    JS_ASSERT_IF(!FI_IMACRO_PC(fi, fp),
+                 js_ReconstructStackDepth(cx, fp->script, FI_SCRIPT_PC(fi, fp))
+                 == uintN(fi.s.spdist - fp->script->nfixed));
 
     uintN nframeslots = JS_HOWMANY(sizeof(JSInlineFrame), sizeof(jsval));
     JSScript* script = fun->u.i.script;
@@ -2804,12 +2806,12 @@ js_SynthesizeFrame(JSContext* cx, const FrameInfo& fi)
     JSArena* a = cx->stackPool.current;
     void* newmark = (void*) a->avail;
     uintN argc = fi.s.argc & 0x7fff;
-    jsval* vp = cx->fp->slots + fi.s.spdist - (2 + argc);
+    jsval* vp = fp->slots + fi.s.spdist - (2 + argc);
     uintN missing = 0;
     jsval* newsp;
 
     if (fun->nargs > argc) {
-        const JSFrameRegs& regs = *cx->fp->regs;
+        const JSFrameRegs& regs = *fp->regs;
 
         newsp = vp + 2 + fun->nargs;
         JS_ASSERT(newsp > regs.sp);
@@ -2867,11 +2869,20 @@ js_SynthesizeFrame(JSContext* cx, const FrameInfo& fi)
     bool constructing = fi.s.argc & 0x8000;
     newifp->frame.argc = argc;
 
-    jsbytecode* imacro_pc = FI_IMACRO_PC(fi, cx->fp);
-    jsbytecode* script_pc = FI_SCRIPT_PC(fi, cx->fp);
+    jsbytecode* imacro_pc = FI_IMACRO_PC(fi, fp);
+    jsbytecode* script_pc = FI_SCRIPT_PC(fi, fp);
     newifp->callerRegs.pc = imacro_pc ? imacro_pc : script_pc;
-    newifp->callerRegs.sp = cx->fp->slots + fi.s.spdist;
-    cx->fp->imacpc = imacro_pc ? script_pc : NULL;
+    newifp->callerRegs.sp = fp->slots + fi.s.spdist;
+    fp->imacpc = imacro_pc ? script_pc : NULL;
+
+    JS_ASSERT(!(fp->flags & JSFRAME_POP_BLOCKS));
+#ifdef DEBUG
+    if (fi.block != fp->blockChain) {
+        for (JSObject* obj = fi.block; obj != fp->blockChain; obj = STOBJ_GET_PARENT(obj))
+            JS_ASSERT(obj);
+    }
+#endif
+    fp->blockChain = fi.block;
 
     newifp->frame.argv = newifp->callerRegs.sp - argc;
     JS_ASSERT(newifp->frame.argv);
@@ -2880,10 +2891,10 @@ js_SynthesizeFrame(JSContext* cx, const FrameInfo& fi)
     // someone forgets to initialize it later.
     newifp->frame.argv[-1] = JSVAL_HOLE;
 #endif
-    JS_ASSERT(newifp->frame.argv >= StackBase(cx->fp) + 2);
+    JS_ASSERT(newifp->frame.argv >= StackBase(fp) + 2);
 
     newifp->frame.rval = JSVAL_VOID;
-    newifp->frame.down = cx->fp;
+    newifp->frame.down = fp;
     newifp->frame.annotation = NULL;
     newifp->frame.scopeChain = OBJ_GET_PARENT(cx, fi.callee);
     newifp->frame.sharpDepth = 0;
@@ -2895,7 +2906,7 @@ js_SynthesizeFrame(JSContext* cx, const FrameInfo& fi)
     newifp->mark = newmark;
     newifp->frame.thisp = NULL; // will be set by js_ExecuteTree -> FlushNativeStackFrame
 
-    newifp->frame.regs = cx->fp->regs;
+    newifp->frame.regs = fp->regs;
     newifp->frame.regs->pc = script->code;
     newifp->frame.regs->sp = newsp + script->nfixed;
     newifp->frame.imacpc = NULL;
@@ -2910,13 +2921,14 @@ js_SynthesizeFrame(JSContext* cx, const FrameInfo& fi)
 #endif
 
     /*
-     * Note that cx->fp->script is still the caller's script; set the callee
+     * Note that fp->script is still the caller's script; set the callee
      * inline frame's idea of caller version from its version.
      */
-    newifp->callerVersion = (JSVersion) cx->fp->script->version;
+    newifp->callerVersion = (JSVersion) fp->script->version;
 
-    cx->fp->regs = &newifp->callerRegs;
-    cx->fp = &newifp->frame;
+    // After this paragraph, fp and cx->fp point to the newly synthesized frame.
+    fp->regs = &newifp->callerRegs;
+    fp = cx->fp = &newifp->frame;
 
     if (fun->flags & JSFUN_HEAVYWEIGHT) {
         /*
@@ -2943,8 +2955,8 @@ js_SynthesizeFrame(JSContext* cx, const FrameInfo& fi)
     // FIXME? we must count stack slots from caller's operand stack up to (but not including)
     // callee's, including missing arguments. Could we shift everything down to the caller's
     // fp->slots (where vars start) and avoid some of the complexity?
-    return (fi.s.spdist - cx->fp->down->script->nfixed) +
-           ((fun->nargs > cx->fp->argc) ? fun->nargs - cx->fp->argc : 0) +
+    return (fi.s.spdist - fp->down->script->nfixed) +
+           ((fun->nargs > fp->argc) ? fun->nargs - fp->argc : 0) +
            script->nfixed;
 }
 
@@ -3669,8 +3681,12 @@ js_ExecuteTree(JSContext* cx, Fragment* f, uintN& inlineCallCount,
 
     /* Adjust sp and pc relative to the tree we exited from (not the tree we entered into).
        These are our final values for sp and pc since js_SynthesizeFrame has already taken
-       care of all frames in between. */
+       care of all frames in between. But first we recover fp->blockChain, which comes from
+       the side exit struct. */
     JSStackFrame* fp = cx->fp;
+
+    JS_ASSERT(!(fp->flags & JSFRAME_POP_BLOCKS));
+    fp->blockChain = innermost->block;
 
     /* If we are not exiting from an inlined frame the state->sp is spbase, otherwise spbase
        is whatever slots frames around us consume. */
@@ -3679,7 +3695,6 @@ js_ExecuteTree(JSContext* cx, Fragment* f, uintN& inlineCallCount,
     JS_ASSERT_IF(!fp->imacpc,
                  fp->slots + fp->script->nfixed +
                  js_ReconstructStackDepth(cx, fp->script, fp->regs->pc) == fp->regs->sp);
-                                              
 
 #if defined(JS_JIT_SPEW) && (defined(NANOJIT_IA32) || (defined(NANOJIT_AMD64) && defined(__GNUC__)))
     uint64 cycles = rdtsc() - start;
@@ -6591,6 +6606,7 @@ TraceRecorder::interpretedFunctionCall(jsval& fval, JSFunction* fun, uintN argc,
 
     FrameInfo fi = {
         JSVAL_TO_OBJECT(fval),
+        fp->blockChain,
         ENCODE_IP_ADJ(fp, fp->regs->pc),
         typemap,
         { { fp->regs->sp - fp->slots, argc | (constructing ? 0x8000 : 0) } }
@@ -6600,14 +6616,17 @@ TraceRecorder::interpretedFunctionCall(jsval& fval, JSFunction* fun, uintN argc,
     if (callDepth >= treeInfo->maxCallDepth)
         treeInfo->maxCallDepth = callDepth + 1;
 
-    lir->insStorei(INS_CONSTPTR(fi.callee), lirbuf->rp,
-                   callDepth * sizeof(FrameInfo) + offsetof(FrameInfo, callee));
-    lir->insStorei(INS_CONSTPTR(fi.ip_adj), lirbuf->rp,
-                   callDepth * sizeof(FrameInfo) + offsetof(FrameInfo, ip_adj));
-    lir->insStorei(INS_CONSTPTR(fi.typemap), lirbuf->rp,
-                   callDepth * sizeof(FrameInfo) + offsetof(FrameInfo, typemap));
-    lir->insStorei(INS_CONST(fi.word), lirbuf->rp,
-                   callDepth * sizeof(FrameInfo) + offsetof(FrameInfo, word));
+#define STORE_AT_RP(name)                                                     \
+    lir->insStorei(INS_CONSTPTR(fi.name), lirbuf->rp,                         \
+                   callDepth * sizeof(FrameInfo) + offsetof(FrameInfo, name))
+
+    STORE_AT_RP(callee);
+    STORE_AT_RP(block);
+    STORE_AT_RP(ip_adj);
+    STORE_AT_RP(typemap);
+    STORE_AT_RP(word);
+
+#undef STORE_AT_RP
 
     atoms = fun->u.i.script->atomMap.vector;
     return true;
