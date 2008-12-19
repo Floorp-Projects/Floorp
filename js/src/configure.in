@@ -5045,6 +5045,12 @@ done
 AC_SUBST(LIBS_PATH)
 
 dnl ========================================================
+dnl JavaScript shell
+dnl ========================================================
+
+AC_HAVE_FUNCS(setlocale)
+
+dnl ========================================================
 dnl Use cygwin wrapper for win32 builds, except MSYS/MinGW
 dnl ========================================================
 case "$host_os" in
