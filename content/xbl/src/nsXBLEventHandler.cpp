@@ -103,7 +103,7 @@ PRBool
 nsXBLMouseEventHandler::EventMatched(nsIDOMEvent* aEvent)
 {
   nsCOMPtr<nsIDOMMouseEvent> mouse(do_QueryInterface(aEvent));
-  return mProtoHandler->MouseEventMatched(mouse);
+  return mouse && mProtoHandler->MouseEventMatched(mouse);
 }
 
 nsXBLKeyEventHandler::nsXBLKeyEventHandler(nsIAtom* aEventType, PRUint8 aPhase,
