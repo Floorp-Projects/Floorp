@@ -68,7 +68,13 @@ MOZ_PKG_MANIFEST_P = $(srcdir)/unix/packages-static
 endif
 endif
 else
-$(error you need a "--enable-static or --enable-libxul" build to package a build)
+define message
+Please don't package debug builds.
+Your build was configured without --enable-static or --enable-libxul.
+This is probably because it's a debug build
+endef
+default libs installer::
+	$(error $(message))
 endif
 
 MOZ_NONLOCALIZED_PKG_LIST = \
@@ -106,7 +112,7 @@ endif
 
 include $(topsrcdir)/toolkit/mozapps/installer/packager.mk
 
-installer: removed-files
+installer:: removed-files
 ifdef INSTALLER_DIR
 	$(MAKE) -C $(INSTALLER_DIR)
 endif
