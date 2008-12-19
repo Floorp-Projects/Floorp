@@ -5247,7 +5247,7 @@ MOZ_ARG_DISABLE_BOOL(printing,
     NS_PRINTING=,
     NS_PRINTING=1 )
 
-if test "$MOZ_WIDGET_TOOLKIT" == "qt"; then
+if test "$MOZ_WIDGET_TOOLKIT" = "qt"; then
     AC_MSG_WARN([Printing does not work with Qt at this time. Omitting printing support.])
     NS_PRINTING=
 fi
