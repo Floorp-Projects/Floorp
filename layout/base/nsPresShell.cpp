@@ -879,8 +879,7 @@ public:
 
   virtual nsIFrame* GetFrameForPoint(nsIFrame* aFrame, nsPoint aPt);
 
-  NS_IMETHOD RenderDocument(const nsRect& aRect, PRBool aUntrusted,
-                            PRBool aIgnoreViewportScrolling,
+  NS_IMETHOD RenderDocument(const nsRect& aRect, PRUint32 aFlags,
                             nscolor aBackgroundColor,
                             gfxContext* aThebesContext);
 
@@ -4935,12 +4934,11 @@ PresShell::ComputeRepaintRegionForCopy(nsIView*      aRootView,
 }
 
 NS_IMETHODIMP
-PresShell::RenderDocument(const nsRect& aRect, PRBool aUntrusted,
-                          PRBool aIgnoreViewportScrolling,
+PresShell::RenderDocument(const nsRect& aRect, PRUint32 aFlags,
                           nscolor aBackgroundColor,
                           gfxContext* aThebesContext)
 {
-  NS_ENSURE_TRUE(!aUntrusted, NS_ERROR_NOT_IMPLEMENTED);
+  NS_ENSURE_TRUE(!(aFlags & RENDER_IS_UNTRUSTED), NS_ERROR_NOT_IMPLEMENTED);
 
   gfxRect r(0, 0,
             nsPresContext::AppUnitsToFloatCSSPixels(aRect.width),
@@ -4986,12 +4984,13 @@ PresShell::RenderDocument(const nsRect& aRect, PRBool aUntrusted,
 
   nsIFrame* rootFrame = FrameManager()->GetRootFrame();
   if (rootFrame) {
-    nsDisplayListBuilder builder(rootFrame, PR_FALSE, PR_FALSE);
+    nsDisplayListBuilder builder(rootFrame, PR_FALSE,
+        (aFlags & RENDER_CARET) != 0);
     nsDisplayList list;
 
     nsRect rect(aRect);
     nsIFrame* rootScrollFrame = GetRootScrollFrame();
-    if (aIgnoreViewportScrolling && rootScrollFrame) {
+    if ((aFlags & RENDER_IGNORE_VIEWPORT_SCROLLING) && rootScrollFrame) {
       nsPoint pos = GetRootScrollFrameAsScrollable()->GetScrollPosition();
       rect.MoveBy(-pos);
       builder.SetIgnoreScrollFrame(rootScrollFrame);
@@ -7118,8 +7117,7 @@ DumpToPNG(nsIPresShell* shell, nsAString& name) {
   nsRefPtr<gfxContext> context = new gfxContext(surface);
   NS_ENSURE_TRUE(context, NS_ERROR_OUT_OF_MEMORY);
 
-  nsresult rv = shell->RenderDocument(r, PR_FALSE, PR_FALSE,
-                                      NS_RGB(255, 255, 0), context);
+  nsresult rv = shell->RenderDocument(r, 0, NS_RGB(255, 255, 0), context);
   NS_ENSURE_SUCCESS(rv, rv);
 
   imgContext->DrawSurface(surface, gfxSize(width, height));
