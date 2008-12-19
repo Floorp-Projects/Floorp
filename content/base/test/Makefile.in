@@ -232,6 +232,7 @@ _TEST_FILES = 	test_bug5141.html \
 		file_bug445225_multipart.txt^headers^ \
 		test_title.html \
 		test_bug453521.html \
+		test_bug391728.html \
 		file_bug391728.html \
 		test_bug454325.html \
 		file_bug391728_2.html \
@@ -274,10 +275,6 @@ _TEST_FILES = 	test_bug5141.html \
 # Disabled for now. Mochitest isn't reliable enough for these.
 # test_bug444546.html \
 # bug444546.sjs \
-
-# Disabled because of a leak that occurs when the test plugin can actually load
-# instances.
-# test_bug391728.html \
 
 libs:: $(_TEST_FILES)
 	$(INSTALL) $(foreach f,$^,"$f") $(DEPTH)/_tests/testing/mochitest/tests/$(relativesrcdir)
