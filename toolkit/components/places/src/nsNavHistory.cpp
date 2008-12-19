@@ -282,25 +282,21 @@ protected:
   nsNavHistory& mNavHistory;
 };
 
-class PlacesEvent : public nsRunnable {
+class PlacesInitCompleteEvent : public nsRunnable {
   public:
-  PlacesEvent(const char* aTopic) {
-    mTopic = aTopic;
-  }
-
   NS_IMETHOD Run() {
     nsresult rv;
     nsCOMPtr<nsIObserverService> observerService =
       do_GetService("@mozilla.org/observer-service;1", &rv);
     NS_ENSURE_SUCCESS(rv, rv);
 
-    rv = observerService->NotifyObservers(nsnull, mTopic, nsnull);
+    rv = observerService->NotifyObservers(nsnull,
+                                          PLACES_INIT_COMPLETE_EVENT_TOPIC,
+                                          nsnull);
     NS_ENSURE_SUCCESS(rv, rv);
 
     return NS_OK;
   }
-  protected:
-  const char* mTopic;
 };
 
 // if adding a new one, be sure to update nsNavBookmarks statements and
@@ -451,7 +447,7 @@ nsNavHistory::Init()
   // Notify we have finished database initialization
   // Enqueue the notification, so if we init another service that requires
   // nsNavHistoryService we don't recursive try to get it.
-  nsCOMPtr<PlacesEvent> completeEvent = new PlacesEvent(PLACES_INIT_COMPLETE_EVENT_TOPIC);
+  nsCOMPtr<PlacesInitCompleteEvent> completeEvent = new PlacesInitCompleteEvent();
   rv = NS_DispatchToMainThread(completeEvent);
   NS_ENSURE_SUCCESS(rv, rv);
 
@@ -633,14 +629,6 @@ nsNavHistory::InitDBFile(PRBool aForceInit)
     rv = mDBFile->Append(DB_FILENAME);
     NS_ENSURE_SUCCESS(rv, rv);
     rv = mDBService->OpenUnsharedDatabase(mDBFile, getter_AddRefs(mDBConn));
-  }
- 
-  if (rv != NS_OK && rv != NS_ERROR_FILE_CORRUPTED) {
-    // If the database cannot be opened for any reason other than corruption,
-    // send out a notification and do not continue initialization.
-    // Note: We swallow errors here, since we want service init to fail anyway.
-    nsCOMPtr<PlacesEvent> lockedEvent = new PlacesEvent(PLACES_DB_LOCKED_EVENT_TOPIC);
-    (void)NS_DispatchToMainThread(lockedEvent);
   }
   NS_ENSURE_SUCCESS(rv, rv);
 
