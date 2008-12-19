@@ -856,3 +856,8 @@ JAVAC_FLAGS += -source 1.4
 ifdef MOZ_DEBUG
 JAVAC_FLAGS += -g
 endif
+
+ifdef TIERS
+DIRS += $(foreach tier,$(TIERS),$(tier_$(tier)_dirs))
+STATIC_DIRS += $(foreach tier,$(TIERS),$(tier_$(tier)_staticdirs))
+endif

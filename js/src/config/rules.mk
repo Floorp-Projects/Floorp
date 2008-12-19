@@ -465,22 +465,30 @@ UPDATE_TITLE_libs = sed -e "s!Y!libs in $(shell $(BUILD_TOOLS)/print-depth-path.
 UPDATE_TITLE_tools = sed -e "s!Y!tools in $(shell $(BUILD_TOOLS)/print-depth-path.sh)/$*!" $(MOZILLA_DIR)/config/xterm.str;
 endif
 
+ifneq (,$(strip $(DIRS)))
 LOOP_OVER_DIRS = \
     @$(EXIT_ON_ERROR) \
-    $(foreach dir,$(DIRS),$(UPDATE_TITLE) $(MAKE) -C $(dir) $@; ) true
+    $(foreach dir,$(DIRS),$(UPDATE_TITLE) $(MAKE) -C $(dir) $@; )
+endif
 
 # we only use this for the makefiles target and other stuff that doesn't matter
+ifneq (,$(strip $(PARALLEL_DIRS)))
 LOOP_OVER_PARALLEL_DIRS = \
     @$(EXIT_ON_ERROR) \
-    $(foreach dir,$(PARALLEL_DIRS),$(UPDATE_TITLE) $(MAKE) -C $(dir) $@; ) true
+    $(foreach dir,$(PARALLEL_DIRS),$(UPDATE_TITLE) $(MAKE) -C $(dir) $@; )
+endif
 
+ifneq (,$(strip $(STATIC_DIRS)))
 LOOP_OVER_STATIC_DIRS = \
     @$(EXIT_ON_ERROR) \
-    $(foreach dir,$(STATIC_DIRS),$(UPDATE_TITLE) $(MAKE) -C $(dir) $@; ) true
+    $(foreach dir,$(STATIC_DIRS),$(UPDATE_TITLE) $(MAKE) -C $(dir) $@; )
+endif
 
+ifneq (,$(strip $(TOOL_DIRS)))
 LOOP_OVER_TOOL_DIRS = \
     @$(EXIT_ON_ERROR) \
-    $(foreach dir,$(TOOL_DIRS),$(UPDATE_TITLE) $(MAKE) -C $(dir) $@; ) true
+    $(foreach dir,$(TOOL_DIRS),$(UPDATE_TITLE) $(MAKE) -C $(dir) $@; )
+endif
 
 ifdef PARALLEL_DIRS
 # create a bunch of fake targets for order-only processing
@@ -709,10 +717,6 @@ SUBMAKEFILES += $(addsuffix /Makefile, $(DIRS) $(TOOL_DIRS) $(PARALLEL_DIRS))
 # default rule before including rules.mk
 ifndef SUPPRESS_DEFAULT_RULES
 ifdef TIERS
-
-DIRS += $(foreach tier,$(TIERS),$(tier_$(tier)_dirs))
-STATIC_DIRS += $(foreach tier,$(TIERS),$(tier_$(tier)_staticdirs))
-
 default all alldep::
 	$(EXIT_ON_ERROR) \
 	$(foreach tier,$(TIERS),$(MAKE) tier_$(tier); ) true
@@ -720,8 +724,9 @@ default all alldep::
 else
 
 default all::
-	@$(EXIT_ON_ERROR) \
-	$(foreach dir,$(STATIC_DIRS),$(MAKE) -C $(dir); ) true
+ifneq (,$(strip $(STATIC_DIRS)))
+	$(foreach dir,$(STATIC_DIRS),$(MAKE) -C $(dir); )
+endif
 	$(MAKE) export
 	$(MAKE) libs
 	$(MAKE) tools
@@ -823,9 +828,9 @@ endif
 
 tools:: $(SUBMAKEFILES) $(MAKE_DIRS)
 	+$(LOOP_OVER_DIRS)
-ifdef TOOL_DIRS
+ifneq (,$(strip $(TOOL_DIRS)))
 	@$(EXIT_ON_ERROR) \
-	$(foreach dir,$(TOOL_DIRS),$(UPDATE_TITLE) $(MAKE) -C $(dir) libs; ) true
+	$(foreach dir,$(TOOL_DIRS),$(UPDATE_TITLE) $(MAKE) -C $(dir) libs; )
 endif
 
 #
@@ -2170,7 +2175,7 @@ TAGS: $(SUBMAKEFILES) $(CSRCS) $(CPPSRCS) $(wildcard *.h)
 	+$(LOOP_OVER_DIRS)
 
 echo-variable-%:
-	@echo $($*)
+	@echo "$($*)"
 
 echo-tiers:
 	@echo $(TIERS)
