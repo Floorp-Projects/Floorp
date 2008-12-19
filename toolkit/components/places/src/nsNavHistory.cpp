@@ -5265,6 +5265,10 @@ nsNavHistory::AddDownload(nsIURI* aSource, nsIURI* aReferrer,
 {
   NS_ASSERTION(NS_IsMainThread(), "This can only be called on the main thread");
 
+  // don't add when history is disabled and silently fail
+  if (IsHistoryDisabled())
+    return NS_OK;
+
   PRInt64 visitID;
   return AddVisit(aSource, aStartTime, aReferrer, TRANSITION_DOWNLOAD, PR_FALSE,
                   0, &visitID);

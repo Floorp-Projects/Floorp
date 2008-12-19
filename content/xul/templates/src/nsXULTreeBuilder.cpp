@@ -1400,8 +1400,6 @@ nsXULTreeBuilder::GetTemplateActionRowFor(PRInt32 aRow, nsIContent** aResult)
     // generate text
     nsTreeRows::Row& row = *(mRows[aRow]);
 
-    nsCOMPtr<nsIContent> action;
-
     // The match stores the indices of the rule and query to use. Use these
     // to look up the right nsTemplateRule and use that rule's action to get
     // the treerow in the template.
@@ -1410,10 +1408,8 @@ nsXULTreeBuilder::GetTemplateActionRowFor(PRInt32 aRow, nsIContent** aResult)
         nsTemplateQuerySet* qs = mQuerySets[row.mMatch->QuerySetPriority()];
         nsTemplateRule* rule = qs->GetRuleAt(ruleindex);
         if (rule) {
-            rule->GetAction(getter_AddRefs(action));
-
             nsCOMPtr<nsIContent> children;
-            nsXULContentUtils::FindChildByTag(action, kNameSpaceID_XUL,
+            nsXULContentUtils::FindChildByTag(rule->GetAction(), kNameSpaceID_XUL,
                                               nsGkAtoms::treechildren,
                                               getter_AddRefs(children));
             if (children) {

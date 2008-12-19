@@ -315,14 +315,6 @@ nsTemplateRule::~nsTemplateRule()
 }
 
 nsresult
-nsTemplateRule::GetAction(nsIContent** aAction) const
-{
-    *aAction = mAction;
-    NS_IF_ADDREF(*aAction);
-    return NS_OK;
-}
-
-nsresult
 nsTemplateRule::GetRuleNode(nsIDOMNode** aRuleNode) const
 {
     *aRuleNode = mRuleNode;

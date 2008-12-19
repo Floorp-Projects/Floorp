@@ -1019,12 +1019,24 @@ nsXULDocument::AttributeChanged(nsIDocument* aDocument,
                     (bl->mAttribute == nsGkAtoms::_asterix)) {
                     nsCOMPtr<nsIDOMElement> listenerEl
                         = do_QueryReferent(bl->mListener);
-                    if (listenerEl) {
+                    nsCOMPtr<nsIContent> l = do_QueryInterface(listenerEl);
+                    if (l) {
+                      nsAutoString currentValue;
+                      PRBool hasAttr = l->GetAttr(kNameSpaceID_None,
+                                                  aAttribute,
+                                                  currentValue);
+                      // We need to update listener only if we're
+                      // (1) removing an existing attribute,
+                      // (2) adding a new attribute or
+                      // (3) changing the value of an attribute.
+                      PRBool needsAttrChange =
+                          attrSet != hasAttr || !value.Equals(currentValue);
                       nsDelayedBroadcastUpdate delayedUpdate(domele,
                                                              listenerEl,
                                                              aAttribute,
                                                              value,
-                                                             attrSet);
+                                                             attrSet,
+                                                             needsAttrChange);
                       mDelayedAttrChangeBroadcasts.AppendElement(delayedUpdate);
                     }
                 }
@@ -3283,17 +3295,18 @@ nsXULDocument::EndUpdate(nsUpdateType aUpdateType)
             mDelayedAttrChangeBroadcasts.SwapElements(
                                              delayedAttrChangeBroadcasts);
             for (PRUint32 i = 0; i < length; ++i) {
-                nsCOMPtr<nsIContent> listener =
-                    do_QueryInterface(delayedAttrChangeBroadcasts[i].mListener);
                 nsIAtom* attrName = delayedAttrChangeBroadcasts[i].mAttrName;
-                nsString value = delayedAttrChangeBroadcasts[i].mAttr;
-                if (delayedAttrChangeBroadcasts[i].mSetAttr) {
-                    listener->SetAttr(kNameSpaceID_None, attrName, value,
-                                      PR_TRUE);
-                }
-                else {
-                    listener->UnsetAttr(kNameSpaceID_None, attrName,
-                                        PR_TRUE);
+                if (delayedAttrChangeBroadcasts[i].mNeedsAttrChange) {
+                    nsCOMPtr<nsIContent> listener =
+                        do_QueryInterface(delayedAttrChangeBroadcasts[i].mListener);
+                    nsString value = delayedAttrChangeBroadcasts[i].mAttr;
+                    if (delayedAttrChangeBroadcasts[i].mSetAttr) {
+                        listener->SetAttr(kNameSpaceID_None, attrName, value,
+                                          PR_TRUE);
+                    } else {
+                        listener->UnsetAttr(kNameSpaceID_None, attrName,
+                                            PR_TRUE);
+                    }
                 }
                 nsCOMPtr<nsIContent> broadcaster =
                     do_QueryInterface(delayedAttrChangeBroadcasts[i].mBroadcaster);
