@@ -924,7 +924,7 @@
           <xul:image class="addonIcon" xbl:inherits="src=iconURL"/>
         </xul:vbox>
         <xul:vbox flex="1" class="addonTextBox">
-          <xul:hbox class="addon-name-version" xbl:inherits="name, version"/>
+          <xul:hbox class="addon-name-version" xbl:inherits="name, version=newVersion"/>
           <xul:progressmeter class="extension-item-progress" xbl:inherits="value=progress"/>
           <xul:label class="extension-item-status" xbl:inherits="value=status" value="&installWaiting.label;"/>
         </xul:vbox>

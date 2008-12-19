@@ -5782,12 +5782,17 @@ ExtensionManager.prototype = {
       // being updated during an install.
       if (!manager) {
         var id = currItem.id
-        ds.setItemProperties(id, {
+        var props = {
           availableUpdateURL: null,
           availableUpdateHash: null,
           availableUpdateVersion: null,
           availableUpdateInfo: null
-        });
+        };
+        var updateVersion = ds.getItemProperty(id, "availableUpdateVersion");
+        var updateURL = ds.getItemProperty(id, "availableUpdateURL");
+        if (updateVersion && (updateURL == currItem.xpiURL))
+          props.newVersion = EM_L(updateVersion);
+        ds.setItemProperties(id, props);
         ds.updateProperty(id, "availableUpdateURL");
         ds.updateProperty(id, "updateable");
       }
