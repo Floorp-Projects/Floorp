@@ -74,39 +74,12 @@ function BrowserGlue() {
 }
 
 BrowserGlue.prototype = {
+  __prefs: null,
   get _prefs() {
-    var prefs = Cc["@mozilla.org/preferences-service;1"].
-                getService(Ci.nsIPrefBranch);
-    this.__defineGetter__("_prefs", function() prefs);
-    return this._prefs;
-  },
-
-  get _bundleService() {
-    var bundleService = Cc["@mozilla.org/intl/stringbundle;1"].
-                        getService(Ci.nsIStringBundleService);
-    this.__defineGetter__("_bundleService", function() bundleService);
-    return this._bundleService;
-  },
-
-  get _placesBundle() {
-    var strings = this._bundleService.
-                       createBundle("chrome://browser/locale/places/places.properties");
-    this.__defineGetter__("_placesBundle", function() strings);
-    return this._placesBundle;
-  },
-
-  get _idleService() {
-    var idleSvc = Cc["@mozilla.org/widget/idleservice;1"].
-                    getService(Ci.nsIIdleService);
-    this.__defineGetter__("_idleService", function() idleSvc);
-    return this._idleService;
-  },
-
-  get _observerService() {
-    const obssvc = Cc['@mozilla.org/observer-service;1'].
-                   getService(Ci.nsIObserverService);
-    this.__defineGetter__("_observerService", function() obssvc);
-    return this._observerService;
+    if (!this.__prefs)
+      this.__prefs = Cc["@mozilla.org/preferences-service;1"].
+                     getService(Ci.nsIPrefBranch);
+    return this.__prefs;
   },
 
   _saveSession: false,
@@ -157,18 +130,9 @@ BrowserGlue.prototype = {
         break;
       case "places-init-complete":
         this._initPlaces();
-        this._observerService.removeObserver(this, "places-init-complete");
-        // no longer needed, since history was initialized completely.
-        this._observerService.removeObserver(this, "places-database-locked");
-        break;
-      case "places-database-locked":
-        this._isPlacesDatabaseLocked = true;
-        // stop observing, so further attempts to load history service
-        // do not show the prompt.
-        this._observerService.removeObserver(this, "places-database-locked");
         break;
       case "idle":
-        if (this._idleService.idleTime > BOOKMARKS_ARCHIVE_IDLE_TIME * 1000) {
+        if (this.idleService.idleTime > BOOKMARKS_ARCHIVE_IDLE_TIME * 1000) {
           // Back up bookmarks.
           this._archiveBookmarks();
         }
@@ -180,7 +144,8 @@ BrowserGlue.prototype = {
   _init: function() 
   {
     // observer registration
-    const osvr = this._observerService;
+    const osvr = Cc['@mozilla.org/observer-service;1'].
+                 getService(Ci.nsIObserverService);
     osvr.addObserver(this, "quit-application", false);
     osvr.addObserver(this, "xpcom-shutdown", false);
     osvr.addObserver(this, "prefservice:after-app-defaults", false);
@@ -191,14 +156,14 @@ BrowserGlue.prototype = {
     osvr.addObserver(this, "quit-application-granted", false);
     osvr.addObserver(this, "session-save", false);
     osvr.addObserver(this, "places-init-complete", false);
-    osvr.addObserver(this, "places-database-locked", false);
   },
 
   // cleanup (called on application shutdown)
   _dispose: function() 
   {
     // observer removal 
-    const osvr = this._observerService;
+    const osvr = Cc['@mozilla.org/observer-service;1'].
+                 getService(Ci.nsIObserverService);
     osvr.removeObserver(this, "quit-application");
     osvr.removeObserver(this, "xpcom-shutdown");
     osvr.removeObserver(this, "prefservice:after-app-defaults");
@@ -208,6 +173,7 @@ BrowserGlue.prototype = {
     osvr.removeObserver(this, "quit-application-requested");
     osvr.removeObserver(this, "quit-application-granted");
     osvr.removeObserver(this, "session-save");
+    osvr.removeObserver(this, "places-init-complete");
   },
 
   _onAppDefaults: function()
@@ -240,14 +206,16 @@ BrowserGlue.prototype = {
     // handle any UI migration
     this._migrateUI();
 
-    this._observerService.notifyObservers(null, "browser-ui-startup-complete", "");
+    const osvr = Cc['@mozilla.org/observer-service;1'].
+                 getService(Ci.nsIObserverService);
+    osvr.notifyObservers(null, "browser-ui-startup-complete", "");
   },
 
   // profile shutdown handler (contains profile cleanup routines)
   _onProfileShutdown: function() 
   {
     this._shutdownPlaces();
-    this._idleService.removeIdleObserver(this, BOOKMARKS_ARCHIVE_IDLE_TIME);
+    this.idleService.removeIdleObserver(this, BOOKMARKS_ARCHIVE_IDLE_TIME);
     this.Sanitizer.onShutdown();
   },
 
@@ -276,15 +244,6 @@ BrowserGlue.prototype = {
                getService(Ci.nsIWindowWatcher);
       ww.openWindow(null, EMURL, "_blank", EMFEATURES, args);
       this._prefs.clearUserPref(PREF_EM_NEW_ADDONS_LIST);
-    }
-
-    // Load the "more info" page for a locked places.sqlite
-    // This property is set earlier in the startup process:
-    // nsPlacesDBFlush loads after profile-after-change and initializes
-    // the history service, which sends out places-database-locked
-    // which sets this property.
-    if (this._isPlacesDatabaseLocked) {
-      this._showPlacesLockedNotificationBox();
     }
   },
 
@@ -336,12 +295,14 @@ BrowserGlue.prototype = {
       return false;
 
     var buttonChoice = 0;
-    var quitBundle = this._bundleService.createBundle("chrome://browser/locale/quitDialog.properties");
-    var brandBundle = this._bundleService.createBundle("chrome://branding/locale/brand.properties");
+    var bundleService = Cc["@mozilla.org/intl/stringbundle;1"].
+                        getService(Ci.nsIStringBundleService);
+    var quitBundle = bundleService.createBundle("chrome://browser/locale/quitDialog.properties");
+    var brandBundle = bundleService.createBundle("chrome://branding/locale/brand.properties");
 
     var appName = brandBundle.GetStringFromName("brandShortName");
     var quitDialogTitle = quitBundle.formatStringFromName(aQuitType + "DialogTitle",
-                                                          [appName], 1);
+                                                            [appName], 1);
 
     var message;
     if (aQuitType == "restart")
@@ -447,8 +408,10 @@ BrowserGlue.prototype = {
     var browser = win.gBrowser; // for closure in notification bar callback
     var notifyBox = browser.getNotificationBox();
 
-    var brandBundle  = this._bundleService.createBundle("chrome://branding/locale/brand.properties");
-    var rightsBundle = this._bundleService.createBundle("chrome://browser/locale/aboutRights.properties");
+    var bundleService = Cc["@mozilla.org/intl/stringbundle;1"].
+                        getService(Ci.nsIStringBundleService);
+    var brandBundle  = bundleService.createBundle("chrome://branding/locale/brand.properties");
+    var rightsBundle = bundleService.createBundle("chrome://browser/locale/aboutRights.properties");
 
     var buttonLabel     = rightsBundle.GetStringFromName("buttonLabel");
     var buttonAccessKey = rightsBundle.GetStringFromName("buttonAccessKey");
@@ -485,6 +448,14 @@ BrowserGlue.prototype = {
     return Sanitizer;
   },
 
+  _idleService: null,
+  get idleService() {
+    if (!this._idleService)
+      this._idleService = Cc["@mozilla.org/widget/idleservice;1"].
+                          getService(Ci.nsIIdleService);
+    return this._idleService;
+  },
+
   /**
    * Initialize Places
    * - imports the bookmarks html file if bookmarks database is empty, try to
@@ -511,12 +482,11 @@ BrowserGlue.prototype = {
     // forced migration (due to a major schema change).
     var histsvc = Cc["@mozilla.org/browser/nav-history-service;1"].
                   getService(Ci.nsINavHistoryService);
+    var databaseStatus = histsvc.databaseStatus;
 
     // If the database is corrupt or has been newly created we should
     // import bookmarks.
-    var databaseStatus = histsvc.databaseStatus;
-    var importBookmarks = databaseStatus == histsvc.DATABASE_STATUS_CREATE ||
-                          databaseStatus == histsvc.DATABASE_STATUS_CORRUPT;
+    var importBookmarks = databaseStatus != histsvc.DATABASE_STATUS_OK;
 
     // Check if user or an extension has required to import bookmarks.html
     var importBookmarksHTML = false;
@@ -614,7 +584,7 @@ BrowserGlue.prototype = {
 
     // Initialize bookmark archiving on idle.
     // Once a day, either on idle or shutdown, bookmarks are backed up.
-    this._idleService.addIdleObserver(this, BOOKMARKS_ARCHIVE_IDLE_TIME);
+    this.idleService.addIdleObserver(this, BOOKMARKS_ARCHIVE_IDLE_TIME);
   },
 
   /**
@@ -664,43 +634,6 @@ BrowserGlue.prototype = {
 
       PlacesUtils.archiveBookmarksFile(maxBackups, false /* don't force */);
     }
-  },
-
-  /**
-   * Show the notificationBox for a locked places database.
-   */
-  _showPlacesLockedNotificationBox: function nsBrowserGlue__showPlacesLockedNotificationBox() {
-    var brandBundle  = this._bundleService.createBundle("chrome://branding/locale/brand.properties");
-    var applicationName = brandBundle.GetStringFromName("brandShortName");
-    var title = this._placesBundle.GetStringFromName("lockPrompt.title");
-    var text = this._placesBundle.formatStringFromName("lockPrompt.text", [applicationName], 1);
-    var buttonText = this._placesBundle.GetStringFromName("lockPromptInfoButton.label");
-    var accessKey = this._placesBundle.GetStringFromName("lockPromptInfoButton.accessKey");
-
-    var helpTopic = "places-locked";
-    var url = Cc["@mozilla.org/toolkit/URLFormatterService;1"].
-              getService(Components.interfaces.nsIURLFormatter).
-              formatURLPref("app.support.baseURL");
-    url += helpTopic;
-
-    var browser = this.getMostRecentBrowserWindow().gBrowser;
-
-    var buttons = [
-                    {
-                      label:     buttonText,
-                      accessKey: accessKey,
-                      popup:     null,
-                      callback:  function(aNotificationBar, aButton) {
-                        browser.selectedTab = browser.addTab(url);
-                      }
-                    }
-                  ];
-
-    var notifyBox = browser.getNotificationBox();
-    var box = notifyBox.appendNotification(text, title, null,
-                                           notifyBox.PRIORITY_CRITICAL_MEDIUM,
-                                           buttons);
-    box.persistence = -1; // Until user closes it
   },
 
   _migrateUI: function bg__migrateUI() {
@@ -811,10 +744,11 @@ BrowserGlue.prototype = {
                 getService(Ci.nsINavBookmarksService);
     var annosvc = Cc["@mozilla.org/browser/annotation-service;1"].
                   getService(Ci.nsIAnnotationService);
-    var strings = this._placesBundle;
 
     var callback = {
-      _placesBundle: strings,
+      _placesBundle: Cc["@mozilla.org/intl/stringbundle;1"].
+                     getService(Ci.nsIStringBundleService).
+                     createBundle("chrome://browser/locale/places/places.properties"),
 
       _uri: function(aSpec) {
         return Cc["@mozilla.org/network/io-service;1"].
