@@ -2872,6 +2872,14 @@ if test ! "$GNU_CXX"; then
 fi
 AC_CHECK_LIB(socket, socket)
 
+dnl Enable VFP support on ARM
+MOZ_ARG_DISABLE_BOOL(arm-vfp,
+[  --disable-arm-vfp       Disable ARM VFP instructions in JavaScript JIT],
+   MOZ_ARM_VFP=, MOZ_ARM_VFP=1, MOZ_ARM_VFP=1)
+if test "$MOZ_ARM_VFP"; then
+   AC_DEFINE(NJ_ARM_VFP)
+fi
+
 dnl ========================================================
 dnl = pthread support
 dnl = Start by checking whether the system support pthreads
