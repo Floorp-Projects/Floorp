@@ -51,9 +51,9 @@ WeaveService.prototype = {
     case "app-startup":
       let os = Components.classes["@mozilla.org/observer-service;1"].
         getService(Components.interfaces.nsIObserverService);
-      os.addObserver(this, "sessionstore-windows-restored", true);
+      os.addObserver(this, "profile-after-change", true);
       break;
-    case "sessionstore-windows-restored":
+    case "profile-after-change":
       Components.utils.import("resource://weave/service.js");
       Weave.Service.onStartup();
       break;
