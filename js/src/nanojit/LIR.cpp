@@ -154,6 +154,12 @@ namespace nanojit
 		LInsp after = before+count+LIR_FAR_SLOTS;
 		if (!samepage(before,after+LirBuffer::LIR_BUF_THRESHOLD))
 		{
+			if (!_buf->_thresholdPage)
+			{
+				// LIR_BUF_THRESHOLD away from a new page but pre-alloc it, setting noMem for early OOM detection
+				_buf->_thresholdPage = _buf->pageAlloc();
+				NanoAssert(_buf->_thresholdPage || _buf->_noMem);
+			}
 			// transition to the next page?
 			if (!samepage(before,after))
 			{
@@ -163,12 +169,6 @@ namespace nanojit
 
 				// link LIR stream back to prior instruction (careful insLink relies on _unused...)
 				insLinkTo(LIR_skip, before-1);
-			}
-			else if (!_buf->_thresholdPage)
-			{
-				// LIR_BUF_THRESHOLD away from a new page but pre-alloc it, setting noMem for early OOM detection
-				_buf->_thresholdPage = _buf->pageAlloc();
-				NanoAssert(_buf->_thresholdPage || _buf->_noMem);
 			}
 		}
 	}
