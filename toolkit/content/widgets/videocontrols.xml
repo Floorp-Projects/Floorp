@@ -14,11 +14,11 @@
 
     <xbl:content xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
         <spacer flex="1"/>
-        <hbox id="controlBar">
-            <image id="playButton"
+        <hbox class="controlBar">
+            <image class="playButton"
                    onclick="if (event.button == 0) this.parentNode.parentNode.Utils.togglePause();"/>
-            <box id="controlsMiddle" flex="1"/>
-            <image id="muteButton"
+            <box class="controlsMiddle" flex="1"/>
+            <image class="muteButton"
                    onclick="if (event.button == 0) this.parentNode.parentNode.Utils.toggleMute();"/>
         </hbox>
     </xbl:content>
@@ -226,9 +226,9 @@
             var video = this.parentNode;
             this.Utils.video = video;
 
-            this.Utils.controlBar = document.getAnonymousElementByAttribute(this, "id", "controlBar");
-            this.Utils.playButton = document.getAnonymousElementByAttribute(this, "id", "playButton");
-            this.Utils.muteButton = document.getAnonymousElementByAttribute(this, "id", "muteButton");
+            this.Utils.controlBar = document.getAnonymousElementByAttribute(this, "class", "controlBar");
+            this.Utils.playButton = document.getAnonymousElementByAttribute(this, "class", "playButton");
+            this.Utils.muteButton = document.getAnonymousElementByAttribute(this, "class", "muteButton");
 
             // Set initial state of play/pause button.
             this.Utils.playButton.setAttribute("paused", video.paused);

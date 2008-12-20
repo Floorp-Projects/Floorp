@@ -1,23 +1,23 @@
 @namespace url("http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul");
 
-#controlBar {
+.controlBar {
     height: 24px;
     background-color: #656363;
 }
 
-#playButton {
+.playButton {
     list-style-image: url(chrome://global/skin/media/videocontrols.png);
     -moz-image-region: rect(0px, 48px, 24px, 24px);
 }
-#playButton[paused="true"] {
+.playButton[paused="true"] {
     -moz-image-region: rect(0px, 24px, 24px, 0px);
 }
 
-#muteButton{
+.muteButton {
     list-style-image: url(chrome://global/skin/media/videocontrols.png);
     -moz-image-region: rect(24px, 24px, 48px, 0px);
 }
-#muteButton[muted="true"] {
+.muteButton[muted="true"] {
     -moz-image-region: rect(24px, 48px, 48px, 24px);
 }
 
