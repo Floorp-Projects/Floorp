@@ -158,7 +158,8 @@ _compute_transform (cairo_win32_scaled_font_t *scaled_font,
 {
     cairo_status_t status;
 
-    if (NEARLY_ZERO (sc->yx) && NEARLY_ZERO (sc->xy)) {
+    if (NEARLY_ZERO (sc->yx) && NEARLY_ZERO (sc->xy) &&
+	!NEARLY_ZERO (sc->xx) && !NEARLY_ZERO (sc->yy)) {
 	scaled_font->preserve_axes = TRUE;
 	scaled_font->x_scale = sc->xx;
 	scaled_font->swap_x = (sc->xx < 0);
@@ -166,7 +167,8 @@ _compute_transform (cairo_win32_scaled_font_t *scaled_font,
 	scaled_font->swap_y = (sc->yy < 0);
 	scaled_font->swap_axes = FALSE;
 
-    } else if (NEARLY_ZERO (sc->xx) && NEARLY_ZERO (sc->yy)) {
+    } else if (NEARLY_ZERO (sc->xx) && NEARLY_ZERO (sc->yy) &&
+	!NEARLY_ZERO (sc->yx) && !NEARLY_ZERO (sc->xy)) {
 	scaled_font->preserve_axes = TRUE;
 	scaled_font->x_scale = sc->yx;
 	scaled_font->swap_x = (sc->yx < 0);
