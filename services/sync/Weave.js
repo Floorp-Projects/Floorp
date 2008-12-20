@@ -53,9 +53,10 @@ WeaveService.prototype = {
         getService(Components.interfaces.nsIObserverService);
       os.addObserver(this, "profile-after-change", true);
       break;
-   /* The events "final-ui-startup" and "sessionstore-windows-restored"
-    * would be better but unfortunately neither one exists in Fennec. */
-    case "profile-after-change":
+   /* The following event doesn't exist on Fennec; for Fennec loading, see
+    * fennec-weave-overlay.js.
+    */
+    case "sessionstore-windows-restored":
       Components.utils.import("resource://weave/service.js");
       Weave.Service.onStartup();
       break;
