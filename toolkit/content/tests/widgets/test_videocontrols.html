@@ -11,14 +11,11 @@
 <p id="display"></p>
 
 <div id="content">
-  <video width="320" height="240" id="video" src="video.ogg" controls></video>
+  <video width="320" height="240" id="video" src="video.ogg" controls mozNoDynamicControls></video>
 </div>
 
 <pre id="test">
 <script class="testbody" type="text/javascript">
-
-var testnum = 1;
-var video = document.getElementById("video");
 
 function runTest(event) {
   ok(true, "----- test #" + testnum + " -----");
@@ -26,22 +23,15 @@ function runTest(event) {
   switch (testnum) {
     case 1:
       // Check initial state upon load
-      is(event.type, "load", "checking event type");
+      is(event.type, "loadeddata", "checking event type");
       is(video.paused, true, "checking video play state");
       is(video.muted, false, "checking video mute state");
 
-      // Let the fadein happen
-      synthesizeMouse(video, 12, 228, { type : "mouseover" });
-      setTimeout(runTest, 0, { type: "setTimeout" });
-      break;
-
-    case 2:
-      is(event.type, "setTimeout", "checking event type");
       // Click the play button
       synthesizeMouse(video, 12, 228, { });
       break;
 
-    case 3:
+    case 2:
       is(event.type, "play",  "checking event type");
       is(video.paused, false, "checking video play state");
       is(video.muted, false,  "checking video mute state");
@@ -50,7 +40,7 @@ function runTest(event) {
       synthesizeMouse(video, 12, 228, { });
       break;
 
-    case 4:
+    case 3:
       is(event.type, "pause", "checking event type");
       is(video.paused, true,  "checking video play state");
       is(video.muted, false,  "checking video mute state");
@@ -60,7 +50,7 @@ function runTest(event) {
       setTimeout("synthesizeMouse(video, 308, 228, { });", 0);
       break;
 
-    case 5:
+    case 4:
       is(event.type, "volumechange", "checking event type");
       is(video.paused, true,  "checking video play state");
       is(video.muted,  true,  "checking video mute state");
@@ -70,7 +60,7 @@ function runTest(event) {
       setTimeout("synthesizeMouse(video, 308, 228, { });", 0);
       break;
 
-    case 6:
+    case 5:
       is(event.type, "volumechange", "checking event type");
       is(video.paused, true,  "checking video play state");
       is(video.muted,  false, "checking video mute state");
@@ -79,13 +69,19 @@ function runTest(event) {
       break;
 
     default:
-      throw "unexpected test #" + testnum + " w/ event " + event.name;
+      throw "unexpected test #" + testnum + " w/ event " + event.type;
   }
 
   testnum++;
 }
 
-window.onload = runTest;
+var testnum = 1;
+var video = document.getElementById("video");
+
+// Kick off test once we've got enough to do something.
+video.addEventListener("loadeddata",  runTest, false);
+
+// Other events expected by the test.
 video.addEventListener("play",  runTest, false);
 video.addEventListener("pause", runTest, false);
 video.addEventListener("volumechange", runTest, false);
