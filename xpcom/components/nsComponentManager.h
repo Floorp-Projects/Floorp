@@ -213,9 +213,6 @@ public:
     nsFactoryEntry *GetFactoryEntry(const nsCID &aClass);
 
     nsresult SyncComponentsInDir(PRInt32 when, nsIFile *dirSpec);
-
-    // NOTE: HashContractID operates on the hash table with ContractIDs,
-    // for thread-safety it should only be invoked from inside mMon.
     nsresult HashContractID(const char *acontractID, PRUint32 aContractIDLen,
                             nsFactoryEntry *fe_ptr);
 
