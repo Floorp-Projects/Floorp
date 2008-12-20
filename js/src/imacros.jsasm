@@ -209,6 +209,31 @@
 
 .end
 
+.igroup unary JSOP_NEG-JSOP_POS
+
+    .imacro sign                        # obj
+        dup                             # obj obj
+        dup                             # obj obj obj
+        getprop valueOf                 # obj obj valueOf
+        ifprimtop 2                     # obj obj valueOf
+        swap                            # obj valueOf obj
+        call 0                          # obj lval
+        ifprimtop 1                     # obj lval
+        goto 3                          # obj lval
+1:      swap                            # lval obj
+        pop                             # lval
+        goto 4                          # lval
+2:      pop                             # obj obj
+3:      pop                             # obj
+        callprop toString               # toString obj
+        call 0                          # lval
+        primtop                         # lval
+4:      imacop                          # aval
+        stop
+    .end
+
+.end
+
 .igroup apply JSOP_APPLY
     .imacro apply0                          # apply fun this arr
         pick 3                              # fun this arr apply

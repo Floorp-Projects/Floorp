@@ -147,7 +147,7 @@ OPDEF(JSOP_MOD,       31, "mod",        "%",          1,  2,  1, 14,  JOF_BYTE|J
 OPDEF(JSOP_NOT,       32, "not",        "!",          1,  1,  1, 15,  JOF_BYTE|JOF_DETECTING)
 OPDEF(JSOP_BITNOT,    33, "bitnot",     "~",          1,  1,  1, 15,  JOF_BYTE)
 OPDEF(JSOP_NEG,       34, "neg",        "- ",         1,  1,  1, 15,  JOF_BYTE)
-OPDEF(JSOP_NEW,       35, js_new_str,   NULL,         3, -1,  1, 17,  JOF_UINT16|JOF_INVOKE)
+OPDEF(JSOP_POS,       35, "pos",        "+ ",         1,  1,  1, 15,  JOF_BYTE)
 OPDEF(JSOP_DELNAME,   36, "delname",    NULL,         3,  0,  1, 15,  JOF_ATOM|JOF_NAME|JOF_DEL)
 OPDEF(JSOP_DELPROP,   37, "delprop",    NULL,         3,  1,  1, 15,  JOF_ATOM|JOF_PROP|JOF_DEL)
 OPDEF(JSOP_DELELEM,   38, "delelem",    NULL,         1,  2,  1, 15,  JOF_BYTE |JOF_ELEM|JOF_DEL)
@@ -222,7 +222,7 @@ OPDEF(JSOP_OBJECT,    80, "object",     NULL,         3,  0,  1, 19,  JOF_OBJECT
 OPDEF(JSOP_POP,       81, "pop",        NULL,         1,  1,  0,  2,  JOF_BYTE)
 
 /* Convert value to number, for unary +. */
-OPDEF(JSOP_POS,       82, "pos",        "+ ",         1,  1,  1, 15,  JOF_BYTE)
+OPDEF(JSOP_NEW,       82, js_new_str,   NULL,         3, -1,  1, 17,  JOF_UINT16|JOF_INVOKE)
 
 /* Trap into debugger for breakpoint, etc. */
 OPDEF(JSOP_TRAP,      83, "trap",       NULL,         1,  0,  0,  0,  JOF_BYTE)
@@ -490,7 +490,10 @@ OPDEF(JSOP_LEAVEBLOCK,    200,"leaveblock",  NULL,    3, -1,  0,  0,  JOF_UINT16
  */
 OPDEF(JSOP_PICK,          201,"pick",        NULL,    2,  1,  0,  0,  JOF_UINT8)
 
-OPDEF(JSOP_UNUSED202,     202,"unused202",   NULL,    1,  0,  0,  0,  JOF_BYTE)
+
+/* Throws a TypeError if the value at the top of the stack is not primitive. */
+OPDEF(JSOP_PRIMTOP,       202, "primtop",    NULL,    1,  1,  1,  0,  JOF_BYTE)
+
 OPDEF(JSOP_UNUSED203,     203,"unused203",   NULL,    1,  0,  0,  0,  JOF_BYTE)
 OPDEF(JSOP_UNUSED204,     204,"unused204",   NULL,    1,  0,  0,  0,  JOF_BYTE)
 OPDEF(JSOP_UNUSED205,     205,"unused205",   NULL,    1,  0,  0,  0,  JOF_BYTE)

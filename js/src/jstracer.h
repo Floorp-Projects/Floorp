@@ -479,6 +479,7 @@ public:
 #define SET_TRACE_RECORDER(cx,tr) (JS_TRACE_MONITOR(cx).recorder = (tr))
 
 #define JSOP_IS_BINARY(op) ((uintN)((op) - JSOP_BITOR) <= (uintN)(JSOP_MOD - JSOP_BITOR))
+#define JSOP_IS_UNARY(op) ((uintN)((op) - JSOP_NEG) <= (uintN)(JSOP_POS - JSOP_NEG))
 
 /*
  * See jsinterp.cpp for the ENABLE_TRACER definition. Also note how comparing x
@@ -499,7 +500,8 @@ public:
             TRACE_ARGS_(x, args,                                              \
                 if ((fp->flags & JSFRAME_IMACRO_START) &&                     \
                     (x == JSOP_ITER || x == JSOP_NEXTITER ||                  \
-                     x == JSOP_APPLY || JSOP_IS_BINARY(x))) {                 \
+                     x == JSOP_APPLY || JSOP_IS_BINARY(x) ||                  \
+                     JSOP_IS_UNARY(op))) {                                    \
                     fp->flags &= ~JSFRAME_IMACRO_START;                       \
                     atoms = COMMON_ATOMS_START(&rt->atomState);               \
                     op = JSOp(*regs.pc);                                      \
