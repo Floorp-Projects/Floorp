@@ -1107,12 +1107,36 @@ namespace nanojit
 		args = args2;
         NanoAssert(j == argc);
 #endif
+		//
+		// An example of the what we're trying to serialize:
+		//
+		// byte                                             word
+		// ----                                             ----
+		//    N  [ arg tramp #0 ------------------------ ]  K
+		//  N+4  [ arg tramp #1 ------------------------ ]  K+1
+		//  N+8  [ arg tramp #2 ------------------------ ]  K+2
+		// N+12  [ arg tramp #3 ------------------------ ]  K+3
+		// N+16  [ argoff3 | argoff2 | argoff1 | argoff0 ]  K+4
+		// N+20  [ CallInfo* --------------------------- ]  K+5
+		// N+24  [ LIR_call ---------| imm8a=0 | imm8b=4 ]  K+6
+		//
+		// In this example:
+		//    32 bit words
+		//    'argc' = 4
+		//    'words' = argwords(argc) = 1  (word K+4       )
+		//    'LIR_CALL_SLOTS' = 2          (words K+5 - K+6)
+		//    'insSz' = 1+2 = 3             (words K+4 - K+6)
+		//    'from' = next + (insSz - 1)   (word K+6       )
+		//
 
 		NanoAssert(argc <= (int)MAXARGS);
 		uint32_t words = argwords(argc);
 		int32_t insSz = words + LIR_CALL_SLOTS; // words need for offsets + size of instruction
-		ensureRoom(argc+insSz);  // argc=# possible tramps for args
-		LInsp from = _buf->next()+argc+words; // assuming all args need a tramp, offsets are written here
+		ensureRoom(argc + insSz);  // argc=# possible tramps for args
+
+		// Argument deltas are calculated relative to the final LIns,
+		// which is the last word in the cluster.
+		LInsp from = _buf->next() + argc + insSz - 1; 
 		for (int32_t i=0; i < argc; i++)
 			makeReachable(args[i], from);
 
