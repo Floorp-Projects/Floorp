@@ -200,11 +200,6 @@ struct nsCSSBorderRenderer {
 
   // draw the entire border
   void DrawBorders ();
-
-  // utility function used for background painting as well as borders
-  static void ComputeInnerRadii(const gfxCornerSizes& aRadii,
-                                const gfxFloat *aBorderSizes,
-                                gfxCornerSizes *aInnerRadiiRet);
 };
 
 #ifdef DEBUG_NEW_BORDERS
