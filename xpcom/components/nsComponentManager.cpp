@@ -1298,7 +1298,7 @@ nsComponentManagerImpl::HashContractID(const char *aContractID,
     if(!aContractID || !aContractIDLen)
         return NS_ERROR_NULL_POINTER;
 
-    nsAutoMonitor mon(mMon);
+    NS_ASSERTION(PR_GetMonitorEntryCount(mMon), "called from outside mMon");
 
     nsContractIDTableEntry* contractIDTableEntry =
         static_cast<nsContractIDTableEntry*>
