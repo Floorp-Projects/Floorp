@@ -3575,6 +3575,43 @@ function testCallPick() {
 testCallPick.expected = true;
 test(testCallPick);
 
+function testInvertNullAfterNegateNull()
+{
+  for (var i = 0; i < 5; i++) !null;
+  for (var i = 0; i < 5; i++) -null;
+  return "no assertion";
+}
+testInvertNullAfterNegateNull.expected = "no assertion";
+test(testInvertNullAfterNegateNull);
+
+function testUnaryImacros()
+{
+  function checkArg(x)
+  {
+    return 1;
+  }
+
+  var o = { valueOf: checkArg, toString: null };
+  var count = 0;
+  var v = 0;
+  for (var i = 0; i < 5; i++)
+    v += +o + -(-o);
+
+  var results = [v === 10 ? "valueOf passed" : "valueOf failed"];
+
+  o.valueOf = null;
+  o.toString = checkArg;
+
+  for (var i = 0; i < 5; i++)
+    v += +o + -(-o);
+
+  results.push(v === 20 ? "toString passed" : "toString failed");
+
+  return results.join(", ");
+}
+testUnaryImacros.expected = "valueOf passed, toString passed";
+test(testUnaryImacros);
+
 /*****************************************************************************
  *                                                                           *
  *  _____ _   _  _____ ______ _____ _______                                  *

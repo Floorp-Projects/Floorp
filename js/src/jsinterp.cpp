@@ -6397,6 +6397,17 @@ js_Interpret(JSContext *cx)
             }
           END_CASE(JSOP_IFPRIMTOP)
 
+          BEGIN_CASE(JSOP_PRIMTOP)
+            JS_ASSERT(regs.sp > StackBase(fp));
+            lval = FETCH_OPND(-1);
+            if (!JSVAL_IS_PRIMITIVE(lval)) {
+                js_ReportValueError2(cx, JSMSG_CANT_CONVERT_TO,
+                                    JSDVG_SEARCH_STACK, lval, NULL,
+                                    "primitive type");
+                goto error;
+            }
+          END_CASE(JSOP_PRIMTOP)
+
           BEGIN_CASE(JSOP_INSTANCEOF)
             rval = FETCH_OPND(-1);
             if (JSVAL_IS_PRIMITIVE(rval) ||
@@ -6848,7 +6859,6 @@ js_Interpret(JSContext *cx)
           L_JSOP_DEFXMLNS:
 # endif
 
-          L_JSOP_UNUSED202:
           L_JSOP_UNUSED203:
           L_JSOP_UNUSED204:
           L_JSOP_UNUSED205:
