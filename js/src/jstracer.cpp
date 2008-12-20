@@ -5825,6 +5825,10 @@ JS_REQUIRES_STACK bool
 TraceRecorder::record_JSOP_NEG()
 {
     jsval& v = stackval(-1);
+
+    if (!JSVAL_IS_PRIMITIVE(v))
+        return call_imacro(unary_imacros.sign);
+
     if (isNumber(v)) {
         LIns* a = get(&v);
 
@@ -5847,7 +5851,55 @@ TraceRecorder::record_JSOP_NEG()
         set(&v, a);
         return true;
     }
-    return false;
+
+    if (JSVAL_IS_NULL(v)) {
+        jsdpun u;
+        u.d = -0.0;
+        set(&v, lir->insImmq(u.u64));
+        return true;
+    }
+
+    LIns* args[] = { get(&v), cx_ins };
+    if (JSVAL_IS_STRING(v)) {
+        set(&v, lir->ins1(LIR_fneg, lir->insCall(&js_StringToNumber_ci, args)));
+        return true;
+    }
+
+    JS_ASSERT(JSVAL_TAG(v) == JSVAL_BOOLEAN);
+    set(&v, lir->ins1(LIR_fneg, lir->insCall(&js_BooleanOrUndefinedToNumber_ci, args)));
+    return true;
+}
+
+JS_REQUIRES_STACK bool
+TraceRecorder::record_JSOP_POS()
+{
+    jsval& r = stackval(-1);
+
+    if (!JSVAL_IS_PRIMITIVE(r))
+        return call_imacro(unary_imacros.sign);
+
+    if (isNumber(r))
+        return true;
+
+    if (JSVAL_IS_NULL(r)) {
+        set(&r, lir->insImmq(0));
+        return true;
+    }
+
+    LIns* args[] = { get(&r), cx_ins };
+    set(&r, lir->insCall(JSVAL_IS_STRING(r)
+                         ? &js_StringToNumber_ci
+                         : &js_BooleanOrUndefinedToNumber_ci,
+                         args));
+    return true;
+}
+
+JS_REQUIRES_STACK bool
+TraceRecorder::record_JSOP_PRIMTOP()
+{
+    // Either this opcode does nothing or we couldn't have traced here, because
+    // we'd have thrown an exception -- so do nothing if we actually hit this.
+    return true;
 }
 
 JSBool
@@ -7112,13 +7164,6 @@ JS_REQUIRES_STACK bool
 TraceRecorder::record_JSOP_POP()
 {
     return true;
-}
-
-JS_REQUIRES_STACK bool
-TraceRecorder::record_JSOP_POS()
-{
-    jsval& r = stackval(-1);
-    return isNumber(r);
 }
 
 JS_REQUIRES_STACK bool
@@ -8567,11 +8612,18 @@ InitIMacroCode()
     imacro_code[JSOP_ITER] = (jsbytecode*)&iter_imacros - 1;
     imacro_code[JSOP_NEXTITER] = nextiter_imacro - 1;
     imacro_code[JSOP_APPLY] = (jsbytecode*)&apply_imacros - 1;
+
+    imacro_code[JSOP_NEG] = (jsbytecode*)&unary_imacros - 1;
+    imacro_code[JSOP_POS] = (jsbytecode*)&unary_imacros - 1;
 }
 
-#define UNUSED(n) JS_REQUIRES_STACK bool TraceRecorder::record_JSOP_UNUSED##n() { return false; }
+#define UNUSED(n)                                                             \
+    JS_REQUIRES_STACK bool                                                    \
+    TraceRecorder::record_JSOP_UNUSED##n() {                                  \
+        JS_NOT_REACHED("JSOP_UNUSED" # n);                                    \
+        return false;                                                         \
+    }
 
-UNUSED(202)
 UNUSED(203)
 UNUSED(204)
 UNUSED(205)
