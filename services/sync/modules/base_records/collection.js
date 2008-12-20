@@ -99,8 +99,9 @@ Collection.prototype = {
     this._rebuildURL();
   },
 
-  // get items sorted by some criteria
-  // date
+  // get items sorted by some criteria. valid values:
+  // oldest (oldest first)
+  // newest (newest first)
   // index
   // depthindex
   get sort() { return this._sort; },
