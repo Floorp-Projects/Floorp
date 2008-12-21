@@ -1003,6 +1003,9 @@ ProcessGeneralName(PRArenaPool *arena,
   nsXPIDLString value;
   nsresult rv = NS_OK;
 
+  if (!current)
+    return NS_ERROR_NULL_POINTER;
+
   switch (current->type) {
   case certOtherName: {
     SECOidTag oidTag = SECOID_FindOIDTag(&current->name.OthName.oid);
