@@ -516,13 +516,6 @@ WeaveSvc.prototype = {
       }
     }
 
-    if (this._keyGenEnabled) {
-    // TODO: do not try the following if we're on Fennec:
-      this._log.warn("Key generation is enabled.");
-    } else {
-      this._log.warn("Key generation is disabled.");
-    }
-
     if (needKeys && this._keyGenEnabled) {
       let pass = yield ID.get('WeaveCryptoID').getPassword(self.cb);
       if (pass) {
