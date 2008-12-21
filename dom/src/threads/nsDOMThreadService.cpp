@@ -794,8 +794,8 @@ nsDOMThreadService::CreateJSContext()
 
   JS_SetErrorReporter(cx, DOMWorkerErrorReporter);
 
-  JS_SetOperationCallback(cx, DOMWorkerOperationCallback,
-                          100 * JS_OPERATION_WEIGHT_BASE);
+  JS_SetOperationCallback(cx, DOMWorkerOperationCallback);
+  nsContentUtils::XPConnect()->SetWatchdogLimit(cx, PR_TicksPerSecond()/100);
 
   static JSSecurityCallbacks securityCallbacks = {
     nsDOMWorkerSecurityManager::JSCheckAccess,

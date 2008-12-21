@@ -114,6 +114,12 @@ else
 AUTOMATION_PPARGS += -DIS_TEST_BUILD=0
 endif
 
+ifeq ($(MOZ_DEBUG), 1)
+AUTOMATION_PPARGS += -DIS_DEBUG_BUILD=1
+else
+AUTOMATION_PPARGS += -DIS_DEBUG_BUILD=0
+endif
+
 automation.py: automation.py.in
 	$(PYTHON) $(topsrcdir)/config/Preprocessor.py \
 	$(AUTOMATION_PPARGS) $(DEFINES) $(ACDEFINES) $^ > $@
