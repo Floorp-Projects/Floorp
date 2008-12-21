@@ -3834,97 +3834,60 @@ monitor_loop:
     }
 }
 
-JS_REQUIRES_STACK JSMonitorRecordingStatus
-TraceRecorder::monitorRecording(JSOp op)
+JS_REQUIRES_STACK bool
+js_MonitorRecording(TraceRecorder* tr)
 {
-    if (lirbuf->outOMem()) {
+    JSContext* cx = tr->cx;
+
+    if (tr->lirbuf->outOMem()) {
         js_AbortRecording(cx, "no more LIR memory");
         js_FlushJITCache(cx);
-        return JSMRS_STOP;
+        return false;
     }
 
-    /* Process deepAbort() requests now. */
-    if (wasDeepAborted()) {
+    // Process deepAbort() requests now.
+    if (tr->wasDeepAborted()) {
         js_AbortRecording(cx, "deep abort requested");
-        return JSMRS_STOP;
+        return false;
     }
 
-    if (walkedOutOfLoop()) {
-        if (!js_CloseLoop(cx))
-            return JSMRS_STOP;
-    } else {
-        // Clear one-shot state used to communicate between record_JSOP_CALL and post-
-        // opcode-case-guts record hook (record_FastNativeCallComplete).
-        pendingTraceableNative = NULL;
+    if (tr->walkedOutOfLoop())
+        return js_CloseLoop(cx);
 
-        // In the future, handle dslots realloc by computing an offset from dslots instead.
-        if (global_dslots != globalObj->dslots) {
-            js_AbortRecording(cx, "globalObj->dslots reallocated");
-            return JSMRS_STOP;
-        }
+    // Clear one-shot state used to communicate between record_JSOP_CALL and post-                                                                                            
+    // opcode-case-guts record hook (record_FastNativeCallComplete).
+    tr->pendingTraceableNative = NULL;
 
-        jsbytecode* pc = cx->fp->regs->pc;
+    // In the future, handle dslots realloc by computing an offset from dslots instead.
+    if (tr->global_dslots != tr->globalObj->dslots) {
+        js_AbortRecording(cx, "globalObj->dslots reallocated");
+        return false;
+    }
 
-        /* If we hit a break, end the loop and generate an always taken loop exit guard. For other
-           downward gotos (like if/else) continue recording. */
-        if (*pc == JSOP_GOTO || *pc == JSOP_GOTOX) {
-            jssrcnote* sn = js_GetSrcNote(cx->fp->script, pc);
-            if (sn && SN_TYPE(sn) == SRC_BREAK) {
-                AUDIT(breakLoopExits);
-                endLoop(JS_TRACE_MONITOR(cx).fragmento);
-                js_DeleteRecorder(cx);
-                return JSMRS_STOP; /* done recording */
-            }
-        }
+    jsbytecode* pc = cx->fp->regs->pc;
 
-        /* An explicit return from callDepth 0 should end the loop, not abort it. */
-        if (*pc == JSOP_RETURN && callDepth == 0) {
-            AUDIT(returnLoopExits);
-            endLoop(JS_TRACE_MONITOR(cx).fragmento);
+    /* If we hit a break, end the loop and generate an always taken loop exit guard. For other
+       downward gotos (like if/else) continue recording. */
+    if (*pc == JSOP_GOTO || *pc == JSOP_GOTOX) {
+        jssrcnote* sn = js_GetSrcNote(cx->fp->script, pc);
+        if (sn && SN_TYPE(sn) == SRC_BREAK) {
+            AUDIT(breakLoopExits);
+            tr->endLoop(JS_TRACE_MONITOR(cx).fragmento);
             js_DeleteRecorder(cx);
-            return JSMRS_STOP; /* done recording */
+            return false; /* done recording */
         }
+    }
+
+    /* An explicit return from callDepth 0 should end the loop, not abort it. */
+    if (*pc == JSOP_RETURN && tr->callDepth == 0) {
+        AUDIT(returnLoopExits);
+        tr->endLoop(JS_TRACE_MONITOR(cx).fragmento);
+        js_DeleteRecorder(cx);
+        return false; /* done recording */
     }
 
     /* If it's not a break or a return from a loop, continue recording and follow the trace. */
-
-    /* We check for imacro-calling bytecodes inside the switch cases to resolve
-       the "if" condition at the compile time. */
-    bool flag;
-    switch (op) {
-      default: goto abort_recording;
-# define OPDEF(x,val,name,token,length,nuses,ndefs,prec,format)               \
-        case x:                                                               \
-          flag = record_##x();                                                \
-          if (x == JSOP_ITER || x == JSOP_NEXTITER || x == JSOP_APPLY ||      \
-              JSOP_IS_BINARY(x) || x == JSOP_IS_UNARY(op)) {                  \
-              goto imacro;                                                    \
-          }                                                                   \
-        break;
-# include "jsopcode.tbl"
-# undef OPDEF
-    }
-
-    if (flag)
-        return JSMRS_CONTINUE;
-    goto abort_recording;
-
-  imacro:
-    /* We save macro-generated code size also via bool TraceRecorder::record_JSOP_*
-       return type, instead of a three-state: OK, ABORTED, IMACRO_STARTED. But the
-       price of this is the JSFRAME_IMACRO_START frame flag. We need one more bit
-       to detect that TraceRecorder::call_imacro was invoked by the record_JSOP_
-       method. */
-    if (flag)
-        return JSMRS_CONTINUE;
-    if (cx->fp->flags & JSFRAME_IMACRO_START) {
-        cx->fp->flags &= ~JSFRAME_IMACRO_START;
-        return JSMRS_IMACRO;
-    }
-
-  abort_recording:
-    js_AbortRecording(cx, js_CodeName[op]);
-    return JSMRS_STOP;
+    return true;
 }
 
 /* If used on a loop trace, blacklists the root peer instead of the given fragment. */
@@ -5541,6 +5504,12 @@ TraceRecorder::record_LeaveFrame()
 }
 
 JS_REQUIRES_STACK bool
+TraceRecorder::record_JSOP_INTERRUPT()
+{
+    return false;
+}
+
+JS_REQUIRES_STACK bool
 TraceRecorder::record_JSOP_PUSH()
 {
     stack(0, INS_CONST(JSVAL_TO_BOOLEAN(JSVAL_VOID)));
@@ -6866,7 +6835,7 @@ TraceRecorder::record_FastNativeCallComplete()
         }
     }
 
-    // We'll null pendingTraceableNative in monitorRecording, on the next op cycle.
+    // We'll null pendingTraceableNative in js_MonitorRecording, on the next op cycle.
     // There must be a next op since the stack is non-empty.
     return ok;
 }
@@ -8655,7 +8624,6 @@ InitIMacroCode()
         return false;                                                         \
     }
 
-UNUSED(135)
 UNUSED(203)
 UNUSED(204)
 UNUSED(205)

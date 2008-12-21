@@ -242,8 +242,8 @@ js_FillPropertyCache(JSContext *cx, JSObject *obj, jsuword kshape,
 
         /* If getting a value via a stub getter, we can cache the slot. */
         if (!(cs->format & JOF_SET) &&
-            !((cs->format & (JOF_INCDEC | JOF_FOR)) &&
-              (sprop->attrs & JSPROP_READONLY)) &&
+            !((cs->format & (JOF_INCDEC | JOF_FOR)) && 
+              (sprop->attrs & JSPROP_READONLY)) && 
             SPROP_HAS_STUB_GETTER(sprop) &&
             SPROP_HAS_VALID_SLOT(sprop, scope)) {
             /* Great, let's cache sprop's slot and use it on cache hit. */
@@ -2416,6 +2416,12 @@ JS_STATIC_ASSERT(!CAN_DO_FAST_INC_DEC(INT_TO_JSVAL(JSVAL_INT_MAX)));
 #endif
 
 /*
+ * Interpreter assumes the following to implement condition-free interrupt
+ * implementation when !JS_THREADED_INTERP.
+ */
+JS_STATIC_ASSERT(JSOP_INTERRUPT == 0);
+
+/*
  * Ensure that the intrepreter switch can close call-bytecode cases in the
  * same way as non-call bytecodes.
  */
@@ -2471,6 +2477,12 @@ js_Interpret(JSContext *cx)
     JSClass *clasp;
     JSFunction *fun;
     JSType type;
+#if JS_THREADED_INTERP
+    register void * const *jumpTable;
+#else
+    register uint32 switchMask;
+    uintN switchOp;
+#endif
     jsint low, high, off, npairs;
     JSBool match;
 #if JS_HAS_GETTER_SETTER
@@ -2494,22 +2506,29 @@ js_Interpret(JSContext *cx)
 # undef OPDEF
     };
 
+#ifdef JS_TRACER
+    static void *const recordingJumpTable[] = {
+# define OPDEF(op,val,name,token,length,nuses,ndefs,prec,format) \
+        JS_EXTENSION &&R_##op,
+# include "jsopcode.tbl"
+# undef OPDEF
+    };
+#endif /* JS_TRACER */
+
     static void *const interruptJumpTable[] = {
 # define OPDEF(op,val,name,token,length,nuses,ndefs,prec,format)              \
-        JS_EXTENSION &&interrupt,
+        JS_EXTENSION &&L_JSOP_INTERRUPT,
 # include "jsopcode.tbl"
 # undef OPDEF
     };
 
-    register void * const *jumpTable = normalJumpTable;
-
     METER_OP_INIT(op);      /* to nullify first METER_OP_PAIR */
 
-# define ENABLE_INTERRUPTS() ((void) (jumpTable = interruptJumpTable))
-
 # ifdef JS_TRACER
-#  define CHECK_RECORDER()                                                    \
-    JS_ASSERT_IF(TRACE_RECORDER(cx), jumpTable == interruptJumpTable)
+#  define CHECK_RECORDER()  JS_BEGIN_MACRO                                    \
+                                JS_ASSERT(!TRACE_RECORDER(cx) ^               \
+                                          (jumpTable == recordingJumpTable)); \
+                            JS_END_MACRO
 # else
 #  define CHECK_RECORDER()  ((void)0)
 # endif
@@ -2524,7 +2543,8 @@ js_Interpret(JSContext *cx)
                                 DO_OP();                                      \
                             JS_END_MACRO
 
-# define BEGIN_CASE(OP)     L_##OP: CHECK_RECORDER();
+# define BEGIN_CASE(OP)     L_##OP:                                           \
+                                CHECK_RECORDER();
 # define END_CASE(OP)       DO_NEXT_OP(OP##_LENGTH);
 # define END_VARLEN_CASE    DO_NEXT_OP(len);
 # define ADD_EMPTY_CASE(OP) BEGIN_CASE(OP)                                    \
@@ -2536,25 +2556,13 @@ js_Interpret(JSContext *cx)
 
 #else /* !JS_THREADED_INTERP */
 
-    register intN switchMask = 0;
-    intN switchOp;
-
-# define ENABLE_INTERRUPTS() ((void) (switchMask = -1))
-
-# ifdef JS_TRACER
-#  define CHECK_RECORDER()                                                    \
-    JS_ASSERT_IF(TRACE_RECORDER(cx), switchMask == -1)
-# else
-#  define CHECK_RECORDER()  ((void)0)
-# endif
-
 # define DO_OP()            goto do_op
 # define DO_NEXT_OP(n)      JS_BEGIN_MACRO                                    \
                                 JS_ASSERT((n) == len);                        \
                                 goto advance_pc;                              \
                             JS_END_MACRO
 
-# define BEGIN_CASE(OP)     case OP: CHECK_RECORDER();
+# define BEGIN_CASE(OP)     case OP:
 # define END_CASE(OP)       END_CASE_LEN(OP##_LENGTH)
 # define END_CASE_LEN(n)    END_CASE_LENX(n)
 # define END_CASE_LENX(n)   END_CASE_LEN##n
@@ -2641,10 +2649,7 @@ js_Interpret(JSContext *cx)
 #define MONITOR_BRANCH()                                                      \
     JS_BEGIN_MACRO                                                            \
         if (TRACING_ENABLED(cx)) {                                            \
-            if (js_MonitorLoopEdge(cx, inlineCallCount)) {                    \
-                JS_ASSERT(TRACE_RECORDER(cx));                                \
-                ENABLE_INTERRUPTS();                                          \
-            }                                                                 \
+            ENABLE_TRACER(js_MonitorLoopEdge(cx, inlineCallCount));           \
             fp = cx->fp;                                                      \
             script = fp->script;                                              \
             atoms = fp->imacpc                                                \
@@ -2713,19 +2718,53 @@ js_Interpret(JSContext *cx)
     fp->pcDisabledSave = JS_PROPERTY_CACHE(cx).disabled;
 #endif
 
-# define CHECK_INTERRUPT_HANDLER()                                            \
-    JS_BEGIN_MACRO                                                            \
-        if (cx->debugHooks->interruptHandler)                                 \
-            ENABLE_INTERRUPTS();                                              \
-    JS_END_MACRO
-
     /*
      * Load the debugger's interrupt hook here and after calling out to native
      * functions (but not to getters, setters, or other native hooks), so we do
      * not have to reload it each time through the interpreter loop -- we hope
      * the compiler can keep it in a register when it is non-null.
      */
-    CHECK_INTERRUPT_HANDLER();
+#if JS_THREADED_INTERP
+#ifdef JS_TRACER
+# define LOAD_INTERRUPT_HANDLER(cx)                                           \
+    ((void) (jumpTable = (cx)->debugHooks->interruptHandler                   \
+                         ? interruptJumpTable                                 \
+                         : TRACE_RECORDER(cx)                                 \
+                         ? recordingJumpTable                                 \
+                         : normalJumpTable))
+# define ENABLE_TRACER(flag)                                                  \
+    JS_BEGIN_MACRO                                                            \
+        bool flag_ = (flag);                                                  \
+        JS_ASSERT(flag_ == !!TRACE_RECORDER(cx));                             \
+        jumpTable = flag_ ? recordingJumpTable : normalJumpTable;             \
+    JS_END_MACRO
+#else /* !JS_TRACER */
+# define LOAD_INTERRUPT_HANDLER(cx)                                           \
+    ((void) (jumpTable = (cx)->debugHooks->interruptHandler                   \
+                         ? interruptJumpTable                                 \
+                         : normalJumpTable))
+# define ENABLE_TRACER(flag) ((void)0)
+#endif /* !JS_TRACER */
+#else /* !JS_THREADED_INTERP */
+#ifdef JS_TRACER
+# define LOAD_INTERRUPT_HANDLER(cx)                                           \
+    ((void) (switchMask = ((cx)->debugHooks->interruptHandler ||              \
+                           TRACE_RECORDER(cx)) ? 0 : 255))
+# define ENABLE_TRACER(flag)                                                  \
+    JS_BEGIN_MACRO                                                            \
+        bool flag_ = (flag);                                                  \
+        JS_ASSERT(flag_ == !!TRACE_RECORDER(cx));                             \
+        switchMask = flag_ ? 0 : 255;                                         \
+    JS_END_MACRO
+#else /* !JS_TRACER */
+# define LOAD_INTERRUPT_HANDLER(cx)                                           \
+    ((void) (switchMask = ((cx)->debugHooks->interruptHandler                 \
+                           ? 0 : 255)))
+# define ENABLE_TRACER(flag) ((void)0)
+#endif /* !JS_TRACER */
+#endif /* !JS_THREADED_INTERP */
+
+    LOAD_INTERRUPT_HANDLER(cx);
 
 #if !JS_HAS_GENERATORS
     JS_ASSERT(!fp->regs);
@@ -2781,12 +2820,11 @@ js_Interpret(JSContext *cx)
      * This is a loop, but it does not look like a loop. The loop-closing
      * jump is distributed throughout goto *jumpTable[op] inside of DO_OP.
      * When interrupts are enabled, jumpTable is set to interruptJumpTable
-     * where all jumps point to the interrupt label. The latter, after
+     * where all jumps point to the JSOP_INTERRUPT case. The latter, after
      * calling the interrupt handler, dispatches through normalJumpTable to
      * continue the normal bytecode processing.
      */
-  interrupt:
-#else /* !JS_THREADED_INTERP */
+#else
     for (;;) {
       advance_pc_by_one:
         JS_ASSERT(js_CodeSpec[op].length == 1);
@@ -2794,27 +2832,23 @@ js_Interpret(JSContext *cx)
       advance_pc:
         regs.pc += len;
         op = (JSOp) *regs.pc;
-# ifdef DEBUG
+#ifdef DEBUG
         if (cx->tracefp)
             js_TraceOpcode(cx, len);
-# endif
+#endif
 
       do_op:
-        CHECK_RECORDER();
-        switchOp = intN(op) | switchMask;
+        switchOp = op & switchMask;
       do_switch:
         switch (switchOp) {
-          case -1:
-            JS_ASSERT(switchMask == -1);
 #endif /* !JS_THREADED_INTERP */
+
+          BEGIN_CASE(JSOP_INTERRUPT)
           {
-            bool moreInterrupts = false;
-            JSTrapHandler handler = cx->debugHooks->interruptHandler;
+            JSTrapHandler handler;
+
+            handler = cx->debugHooks->interruptHandler;
             if (handler) {
-#ifdef JS_TRACER
-                if (TRACE_RECORDER(cx))
-                    js_AbortRecording(cx, "interrupt handler");
-#endif
                 switch (handler(cx, script, regs.pc, &rval,
                                 cx->debugHooks->interruptHandlerData)) {
                   case JSTRAP_ERROR:
@@ -2831,31 +2865,20 @@ js_Interpret(JSContext *cx)
                     goto error;
                   default:;
                 }
-                moreInterrupts = true;
+#if !JS_THREADED_INTERP
+            } else {
+                /* this was not a real interrupt, the tracer is trying to
+                   record a trace */
+                switchOp = op + 256;
+                goto do_switch;
+#endif
             }
-
-#ifdef JS_TRACER
-            TraceRecorder* tr = TRACE_RECORDER(cx);
-            if (tr) {
-                JSMonitorRecordingStatus status = tr->monitorRecording(op);
-                if (status == JSMRS_CONTINUE) {
-                    moreInterrupts = true;
-                } else if (status == JSMRS_IMACRO) {
-                    atoms = COMMON_ATOMS_START(&rt->atomState);
-                    op = JSOp(*regs.pc);
-                    DO_OP();    /* keep interrupting for op. */
-                } else {
-                    JS_ASSERT(status == JSMRS_STOP);
-                }
-            }
-#endif /* !JS_TRACER */
+            LOAD_INTERRUPT_HANDLER(cx);
 
 #if JS_THREADED_INTERP
-            jumpTable = moreInterrupts ? interruptJumpTable : normalJumpTable;
             JS_EXTENSION_(goto *normalJumpTable[op]);
 #else
-            switchMask = moreInterrupts ? -1 : 0;
-            switchOp = intN(op);
+            switchOp = op;
             goto do_switch;
 #endif
           }
@@ -3001,7 +3024,7 @@ js_Interpret(JSContext *cx)
                         status = ok;
                         hook(cx, fp, JS_FALSE, &status, hookData);
                         ok = status;
-                        CHECK_INTERRUPT_HANDLER();
+                        LOAD_INTERRUPT_HANDLER(cx);
                     }
                 }
 
@@ -3216,7 +3239,7 @@ js_Interpret(JSContext *cx)
             flags = regs.pc[1];
             if (!js_ValueToIterator(cx, flags, &regs.sp[-1]))
                 goto error;
-            CHECK_INTERRUPT_HANDLER();
+            LOAD_INTERRUPT_HANDLER(cx);
             JS_ASSERT(!JSVAL_IS_PRIMITIVE(regs.sp[-1]));
             PUSH(JSVAL_VOID);
           END_CASE(JSOP_ITER)
@@ -3226,7 +3249,7 @@ js_Interpret(JSContext *cx)
             JS_ASSERT(!JSVAL_IS_PRIMITIVE(regs.sp[-2]));
             if (!js_CallIteratorNext(cx, JSVAL_TO_OBJECT(regs.sp[-2]), &regs.sp[-1]))
                 goto error;
-            CHECK_INTERRUPT_HANDLER();
+            LOAD_INTERRUPT_HANDLER(cx);
             rval = BOOLEAN_TO_JSVAL(regs.sp[-1] != JSVAL_HOLE);
             PUSH(rval);
             TRACE_0(IteratorNextComplete);
@@ -4632,8 +4655,10 @@ js_Interpret(JSContext *cx)
                         goto error;
                 }
 #ifdef JS_TRACER
-                if (!entry && TRACE_RECORDER(cx))
+                if (!entry && TRACE_RECORDER(cx)) {
                     js_AbortRecording(cx, "SetPropUncached");
+                    ENABLE_TRACER(0);
+                }
 #endif
             } while (0);
           END_SET_CASE_STORE_RVAL(JSOP_SETPROP, 2);
@@ -4783,7 +4808,7 @@ js_Interpret(JSContext *cx)
             if (!js_InvokeConstructor(cx, argc, JS_FALSE, vp))
                 goto error;
             regs.sp = vp + 1;
-            CHECK_INTERRUPT_HANDLER();
+            LOAD_INTERRUPT_HANDLER(cx);
           END_CASE(JSOP_NEW)
           
           BEGIN_CASE(JSOP_CALL)
@@ -4923,7 +4948,7 @@ js_Interpret(JSContext *cx)
                     if (hook) {
                         newifp->hookData = hook(cx, &newifp->frame, JS_TRUE, 0,
                                                 cx->debugHooks->callHookData);
-                        CHECK_INTERRUPT_HANDLER();
+                        LOAD_INTERRUPT_HANDLER(cx);
                     } else {
                         newifp->hookData = NULL;
                     }
@@ -5021,7 +5046,7 @@ js_Interpret(JSContext *cx)
             }
 #endif
             regs.sp = vp + 1;
-            CHECK_INTERRUPT_HANDLER();
+            LOAD_INTERRUPT_HANDLER(cx);
             if (!ok)
                 goto error;
             JS_RUNTIME_METER(rt, nonInlineCalls);
@@ -5059,7 +5084,7 @@ js_Interpret(JSContext *cx)
             vp = regs.sp - argc - 2;
             ok = js_Invoke(cx, argc, vp, 0);
             regs.sp = vp + 1;
-            CHECK_INTERRUPT_HANDLER();
+            LOAD_INTERRUPT_HANDLER(cx);
             if (!ok)
                 goto error;
             if (!cx->rval2set) {
@@ -5497,7 +5522,7 @@ js_Interpret(JSContext *cx)
                 break;
             }
             JS_ASSERT(status == JSTRAP_CONTINUE);
-            CHECK_INTERRUPT_HANDLER();
+            LOAD_INTERRUPT_HANDLER(cx);
             JS_ASSERT(JSVAL_IS_INT(rval));
             op = (JSOp) JSVAL_TO_INT(rval);
             JS_ASSERT((uintN)op < (uintN)JSOP_LIMIT);
@@ -5829,7 +5854,7 @@ js_Interpret(JSContext *cx)
             }
 
             TRACE_2(DefLocalFunSetSlot, slot, obj);
-
+            
             fp->slots[slot] = OBJECT_TO_JSVAL(obj);
           END_CASE(JSOP_DEFLOCALFUN)
 
@@ -6054,7 +6079,7 @@ js_Interpret(JSContext *cx)
                 goto error;
             PUSH_OPND(OBJECT_TO_JSVAL(obj));
             fp->sharpDepth++;
-            CHECK_INTERRUPT_HANDLER();
+            LOAD_INTERRUPT_HANDLER(cx);
           END_CASE(JSOP_NEWINIT)
 
           BEGIN_CASE(JSOP_ENDINIT)
@@ -6420,7 +6445,7 @@ js_Interpret(JSContext *cx)
                     goto error;
                   default:;
                 }
-                CHECK_INTERRUPT_HANDLER();
+                LOAD_INTERRUPT_HANDLER(cx);
             }
           }
           END_CASE(JSOP_DEBUGGER)
@@ -6834,7 +6859,6 @@ js_Interpret(JSContext *cx)
           L_JSOP_DEFXMLNS:
 # endif
 
-          L_JSOP_UNUSED135:
           L_JSOP_UNUSED203:
           L_JSOP_UNUSED204:
           L_JSOP_UNUSED205:
@@ -6856,9 +6880,24 @@ js_Interpret(JSContext *cx)
             goto error;
           }
 
+#ifdef JS_TRACER
+
+#if JS_THREADED_INTERP
+# define OPDEF(x,val,name,token,length,nuses,ndefs,prec,format)               \
+    R_##x: RECORD(x); goto L_##x;
+#else
+# define OPDEF(x,val,name,token,length,nuses,ndefs,prec,format)               \
+    case 256 + x: RECORD(x); op = x; switchOp = x; goto do_switch;
+#endif
+#include "jsopcode.tbl"
+#undef OPDEF
+
+#endif /* JS_TRACER */
+
 #if !JS_THREADED_INTERP
+
         } /* switch (op) */
-    } /* for (;;) */
+    }
 #endif /* !JS_THREADED_INTERP */
 
   error:
@@ -6908,7 +6947,7 @@ js_Interpret(JSContext *cx)
               case JSTRAP_CONTINUE:
               default:;
             }
-            CHECK_INTERRUPT_HANDLER();
+            LOAD_INTERRUPT_HANDLER(cx);
         }
 
         /*
