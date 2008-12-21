@@ -512,6 +512,7 @@ WeaveSvc.prototype = {
       }
     }
 
+    // TODO: do not try the following if we're on Fennec:
     if (needKeys) {
       let pass = yield ID.get('WeaveCryptoID').getPassword(self.cb);
       if (pass) {
