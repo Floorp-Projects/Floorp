@@ -47,7 +47,6 @@
 
 class nsIWidget;
 class nsILocalFile;
-class PRLibrary;
 
 class nsFilePicker : public nsBaseFilePicker
 {
@@ -58,7 +57,6 @@ public:
   NS_DECL_ISUPPORTS
 
   // nsIFilePicker (less what's in nsBaseFilePicker)
-  NS_IMETHODIMP Init(nsIDOMWindow *aParent, const nsAString &aTitle, PRInt16 aMode);
   NS_IMETHODIMP AppendFilters(PRInt32 aFilterMask);
   NS_IMETHODIMP AppendFilter(const nsAString& aTitle, const nsAString& aFilter);
   NS_IMETHODIMP SetDefaultString(const nsAString& aString);
@@ -77,7 +75,6 @@ public:
   static void Shutdown();
 
 protected:
-  static nsresult LoadSymbolsGTK24();
 
   void ReadValuesFromFileChooser(GtkWidget *file_chooser);
 
@@ -97,7 +94,6 @@ protected:
 
 private:
   static nsILocalFile *mPrevDisplayDirectory;
-  static PRLibrary *mGTK24;
 };
 
 #endif

@@ -304,6 +304,8 @@ gtk/gtkclipboard.h
 gtk/gtkcontainer.h
 gtk/gtkdialog.h
 gtk/gtkentry.h
+gtk/gtkfilechooser.h
+gtk/gtkfilechooserdialog.h
 gtk/gtkfixed.h
 gtk/gtk.h
 gtk/gtkiconfactory.h
@@ -312,6 +314,7 @@ gtk/gtkimmulticontext.h
 gtk/gtkinvisible.h
 gtk/gtkmain.h
 gtk/gtkmessagedialog.h
+gtk/gtkmisc.h
 gtk/gtkobject.h
 gtk/gtkprinter.h
 gtk/gtkprintjob.h
