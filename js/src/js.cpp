@@ -104,10 +104,11 @@ static size_t gMaxStackSize = 500000;
 static jsuword gStackBase;
 
 static size_t gScriptStackQuota = JS_DEFAULT_SCRIPT_STACK_QUOTA;
-
+#if JS_HAS_OPERATION_COUNT
 static JSBool gEnableBranchCallback = JS_FALSE;
 static uint32 gBranchCount;
 static uint32 gBranchLimit;
+#endif
 
 int gExitCode = 0;
 JSBool gQuitting = JS_FALSE;
@@ -116,6 +117,18 @@ FILE *gOutFile = NULL;
 
 static JSBool reportWarnings = JS_TRUE;
 static JSBool compileOnly = JS_FALSE;
+
+#if !JS_HAS_OPERATION_COUNT
+/*
+ * Variables to support watchdog thread.
+ */
+static PRLock *gWatchdogLock;
+static PRCondVar *gWatchdogWakeup;
+static PRBool gWatchdogRunning;
+static PRThread *gWatchdogThread;
+static PRIntervalTime gCurrentInterval;
+static PRIntervalTime gWatchdogLimit;
+#endif
 
 typedef enum JSShellErrNum {
 #define MSG_DEF(name, number, count, exception, format) \
@@ -169,6 +182,7 @@ GetLine(JSContext *cx, char *bufp, FILE *file, const char *prompt) {
     return JS_TRUE;
 }
 
+#if JS_HAS_OPERATION_COUNT
 static JSBool
 my_BranchCallback(JSContext *cx, JSScript *script)
 {
@@ -197,6 +211,132 @@ my_BranchCallback(JSContext *cx, JSScript *script)
 #endif
     return JS_TRUE;
 }
+#endif
+
+#if !JS_HAS_OPERATION_COUNT
+static void
+ShutdownWatchdog()
+{
+    PRThread *t;
+
+    PR_Lock(gWatchdogLock);
+    gWatchdogRunning = PR_FALSE;
+    t = gWatchdogThread;
+    gWatchdogThread = NULL;
+    PR_NotifyCondVar(gWatchdogWakeup);
+    PR_Unlock(gWatchdogLock);
+    if (t)
+        PR_JoinThread(t);
+}
+
+static void
+WakeupWatchdog()
+{
+    PR_Lock(gWatchdogLock);
+    if (gWatchdogThread && gWatchdogLimit &&
+        (gCurrentInterval == PR_INTERVAL_NO_TIMEOUT ||
+         gCurrentInterval > gWatchdogLimit)) {
+        PR_NotifyCondVar(gWatchdogWakeup);
+    }
+    PR_Unlock(gWatchdogLock);
+
+}
+
+static JSBool
+ShellOperationCallback(JSContext *cx)
+{
+    if (gWatchdogLimit) {
+        fprintf(stderr, "Error: Script is running too long\n");
+        return JS_FALSE;
+    }
+    return JS_TRUE;
+}
+
+static void
+WatchdogMain(void *arg)
+{
+    JSRuntime *rt = (JSRuntime *) arg;
+    PRStatus status;
+    PRBool isRunning;
+
+    do {
+        JSContext *iter = NULL;
+        JSContext *acx;
+        JSBool isContextRunning = JS_FALSE;
+        PRIntervalTime ct = PR_IntervalNow();
+
+        PR_Lock(gWatchdogLock);
+        if (gWatchdogLimit) {
+            JS_LOCK_GC(rt);
+            while ((acx = js_ContextIterator(rt, JS_FALSE, &iter))) {
+                if (acx->requestDepth) {
+                    if (ct - acx->startTime > gWatchdogLimit)
+                        JS_TriggerOperationCallback(acx);
+                    if (!isContextRunning)
+                        isContextRunning = JS_TRUE;
+                }
+            }
+            JS_UNLOCK_GC(rt);
+        }
+        gCurrentInterval = (isContextRunning && gWatchdogLimit)
+                           ? gWatchdogLimit
+                           : PR_INTERVAL_NO_TIMEOUT;
+        if (gWatchdogRunning)
+            status = PR_WaitCondVar(gWatchdogWakeup, gCurrentInterval);
+        isRunning = gWatchdogRunning;
+        PR_Unlock(gWatchdogLock);
+    } while (isRunning && status == PR_SUCCESS);
+}
+
+/*
+ * Get the watchdog limit associated with the watchdog callback.
+ */
+static PRIntervalTime
+GetWatchdogLimit(JSContext *cx)
+{
+    return gWatchdogLimit;
+}
+
+/*
+ * Change the watchdog limit associated with the watchdog callback. This API
+ * function may be called only when the result of JS_GetOperationCallback(cx)
+ * is not null.
+ */
+static JSBool
+SetWatchdogLimit(JSContext *cx, PRIntervalTime newWatchdogLimit)
+{
+    if (newWatchdogLimit == gWatchdogLimit)
+        return JS_TRUE;
+
+    gWatchdogLimit = newWatchdogLimit;
+
+    /*
+     * Start a new watchdog thread if it has not been started. If it has been
+     * started wake up the thread and cause the watchdog rescheduling.
+     */
+    PR_Lock(gWatchdogLock);
+    if (!gWatchdogThread) {
+        gWatchdogRunning = PR_TRUE;
+        gWatchdogThread =
+            PR_CreateThread(PRThreadType(PR_USER_THREAD),
+                            WatchdogMain,
+                            cx->runtime,
+                            PRThreadPriority(PR_PRIORITY_NORMAL),
+                            PRThreadScope(PR_LOCAL_THREAD),
+                            PRThreadState(PR_JOINABLE_THREAD),
+                            0);
+    }
+    PR_Unlock(gWatchdogLock);
+    if (!gWatchdogThread) {
+        JS_ReportError(cx, "Failed to create watchdog thread");
+        return JS_FALSE;
+    }
+
+    WakeupWatchdog();
+    return JS_TRUE;
+}
+
+#endif
 
 static void
 SetContextOptions(JSContext *cx)
@@ -217,10 +357,12 @@ SetContextOptions(JSContext *cx)
     }
     JS_SetThreadStackLimit(cx, stackLimit);
     JS_SetScriptStackQuota(cx, gScriptStackQuota);
+#if JS_HAS_OPERATION_COUNT
     if (gEnableBranchCallback) {
         JS_SetBranchCallback(cx, my_BranchCallback);
         JS_ToggleOptions(cx, JSOPTION_NATIVE_BRANCH_CALLBACK);
     }
+#endif
 }
 
 static void
@@ -424,7 +566,9 @@ ProcessArgs(JSContext *cx, JSObject *obj, char **argv, int argc)
             break;
         }
         switch (argv[i][1]) {
+#if JS_HAS_OPERATION_COUNT
           case 'b':
+#endif
           case 'c':
           case 'f':
           case 'e':
@@ -544,6 +688,7 @@ extern void js_InitJITStatsClass(JSContext *cx, JSObject *glob);
             }
             break;
 
+#if JS_HAS_OPERATION_COUNT
         case 'b':
             if (++i == argc)
                 return usage();
@@ -551,6 +696,7 @@ extern void js_InitJITStatsClass(JSContext *cx, JSObject *glob);
             gBranchLimit = atoi(argv[i]);
             gEnableBranchCallback = (gBranchLimit != 0);
             break;
+#endif
 
         case 'c':
             /* set stack chunk size */
@@ -2166,6 +2312,38 @@ ThrowError(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
     return JS_FALSE;
 }
 
+#if !JS_HAS_OPERATION_COUNT
+
+static JSBool
+WatchdogInterval(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
+{
+    if (argc > 1) {
+        JS_ReportError(cx, "Wrong number of arguments");
+        return JS_FALSE;
+    }
+
+    if (argc == 0)
+        return JS_NewDoubleValue(cx, GetWatchdogLimit(cx), rval);
+
+    jsdouble interval;
+    if (!JS_ValueToNumber(cx, argv[0], &interval))
+        return JS_FALSE;
+
+    /* NB: The next condition take negative values and NaNs into account. */
+    if (!(interval >= 0.0)) {
+        JS_ReportError(cx, "Negative or NaN argument value");
+        return JS_FALSE;
+    }
+    if (interval > 1800.0) {
+        JS_ReportError(cx, "Excessive argument value");
+        return JS_FALSE;
+    }
+
+    return SetWatchdogLimit(cx, (PRIntervalTime) (interval * PR_TicksPerSecond()));
+}
+
+#endif
+
 #define LAZY_STANDARD_CLASSES
 
 /* A class for easily testing the inner/outer object callbacks. */
@@ -2751,12 +2929,14 @@ Scatter(JSContext *cx, uintN argc, jsval *vp)
     JSBool ok;
     jsrefcount rc;
 
+#if JS_HAS_OPERATION_COUNT
     if (!gEnableBranchCallback) {
         /* Enable the branch callback, for periodic scope-sharing. */
         gEnableBranchCallback = JS_TRUE;
         JS_SetBranchCallback(cx, my_BranchCallback);
         JS_ToggleOptions(cx, JSOPTION_NATIVE_BRANCH_CALLBACK);
     }
+#endif
 
     sd.lock = NULL;
     sd.cvar = NULL;
@@ -3056,6 +3236,9 @@ static JSFunctionSpec shell_functions[] = {
     JS_FS("stringsAreUTF8", StringsAreUTF8, 0,0,0),
     JS_FS("testUTF8",       TestUTF8,       1,0,0),
     JS_FS("throwError",     ThrowError,     0,0,0),
+#if !JS_HAS_OPERATION_COUNT
+    JS_FS("watchint",       WatchdogInterval,     1,0,0),
+#endif
 #ifdef DEBUG
     JS_FS("dis",            Disassemble,    1,0,0),
     JS_FS("disfile",        DisassFile,     1,0,0),
@@ -3138,6 +3321,11 @@ static const char *const shell_help_messages[] = {
 "stringsAreUTF8()         Check if strings are UTF-8 encoded",
 "testUTF8(mode)           Perform UTF-8 tests (modes are 1 to 4)",
 "throwError()             Throw an error from JS_ReportError",
+#if !JS_HAS_OPERATION_COUNT
+"watchint(interval)       Set watchdog interval to the specified number"
+" of seconds. If parameters are not specified it returns watchdog interval"
+" in seconds",
+#endif
 #ifdef DEBUG
 "dis([fun])               Disassemble functions into bytecodes",
 "disfile('foo.js')        Disassemble script file into bytecodes",
@@ -3963,7 +4151,14 @@ ContextCallback(JSContext *cx, uintN contextOp)
         JS_SetErrorReporter(cx, my_ErrorReporter);
         JS_SetVersion(cx, JSVERSION_LATEST);
         SetContextOptions(cx);
+#if !JS_HAS_OPERATION_COUNT
+        JS_SetOperationCallback(cx, ShellOperationCallback);
+    } else if (contextOp == JSCONTEXT_REQUEST_START &&
+               cx->runtime->state != JSRTS_LANDING) {
+        WakeupWatchdog();
+#endif
     }
+
     return JS_TRUE;
 }
 
@@ -4011,6 +4206,18 @@ main(int argc, char **argv, char **envp)
     rt = JS_NewRuntime(64L * 1024L * 1024L);
     if (!rt)
         return 1;
+
+#if !JS_HAS_OPERATION_COUNT
+    gWatchdogLock = JS_NEW_LOCK();
+    if (!gWatchdogLock)
+        return 1;
+    gWatchdogWakeup = JS_NEW_CONDVAR(gWatchdogLock);
+    if (!gWatchdogWakeup)
+        return 1;
+    gWatchdogLimit = 0;
+    gWatchdogThread = NULL;
+#endif
+
     JS_SetContextCallback(rt, ContextCallback);
 
     cx = JS_NewContext(rt, gStackChunkSize);
@@ -4118,8 +4325,20 @@ main(int argc, char **argv, char **envp)
     JS_EndRequest(cx);
 #endif
 
+#if !JS_HAS_OPERATION_COUNT
+    ShutdownWatchdog();
+#endif
+
+#if !JS_HAS_OPERATION_COUNT
+    if (gWatchdogWakeup)
+        JS_DESTROY_CONDVAR(gWatchdogWakeup);
+    if (gWatchdogLock)
+        JS_DESTROY_LOCK(gWatchdogLock);
+#endif
+
     JS_DestroyContext(cx);
     JS_DestroyRuntime(rt);
     JS_ShutDown();
+
     return result;
 }
