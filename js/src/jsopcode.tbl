@@ -105,8 +105,12 @@
 
 /* legend: op         val name          image       len use def prec  format */
 
+/*
+ * Generic nop for the decompiler.
+ */
+OPDEF(JSOP_NOP,       0,  "nop",        NULL,         1,  0,  0,  0,  JOF_BYTE)
+
 /* Longstanding JavaScript bytecodes. */
-OPDEF(JSOP_INTERRUPT, 0,  "interrupt",  NULL,         1,  0,  0,  0,  JOF_BYTE)
 OPDEF(JSOP_PUSH,      1,  "push",       NULL,         1,  0,  1,  0,  JOF_BYTE)
 OPDEF(JSOP_POPV,      2,  "popv",       NULL,         1,  1,  0,  2,  JOF_BYTE)
 OPDEF(JSOP_ENTERWITH, 3,  "enterwith",  NULL,         1,  1,  1,  0,  JOF_BYTE|JOF_PARENHEAD)
@@ -349,10 +353,7 @@ OPDEF(JSOP_SETCALL,     132, "setcall",     NULL,     3, -1,  2, 18,  JOF_UINT16
 OPDEF(JSOP_TRY,         133,"try",        NULL,       1,  0,  0,  0,  JOF_BYTE)
 OPDEF(JSOP_FINALLY,     134,"finally",    NULL,       1,  0,  2,  0,  JOF_BYTE)
 
-/*
- * Generic nop for the decompiler.
- */
-OPDEF(JSOP_NOP,         135,"nop",        NULL,       1,  0,  0,  0,  JOF_BYTE)
+OPDEF(JSOP_UNUSED135,   135,"unused135",  NULL,       1,  0,  0,  0,  JOF_BYTE)
 
 /*
  * Bytecodes that avoid making an arguments object in most cases:
