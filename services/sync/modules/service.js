@@ -117,6 +117,7 @@ WeaveSvc.prototype = {
   _isQuitting: false,
   _loggedIn: false,
   _syncInProgress: false,
+  _keyGenEnabled: true,
 
   __os: null,
   get _os() {
@@ -199,6 +200,9 @@ WeaveSvc.prototype = {
 
   get cancelRequested() this._cancelRequested,
   set cancelRequested(value) { this._cancelRequested = value; },
+
+  get keyGenEnabled() this._keyGenEnabled,
+  set keyGenEnabled(value) { this._keyGenEnabled = value; },
 
   get enabled() Utils.prefs.getBoolPref("enabled"),
 
@@ -512,8 +516,14 @@ WeaveSvc.prototype = {
       }
     }
 
+    if (this._keyGenEnabled) {
     // TODO: do not try the following if we're on Fennec:
-    if (needKeys) {
+      this._log.warn("Key generation is enabled.");
+    } else {
+      this._log.warn("Key generation is disabled.");
+    }
+
+    if (needKeys && this._keyGenEnabled) {
       let pass = yield ID.get('WeaveCryptoID').getPassword(self.cb);
       if (pass) {
         let keys = PubKeys.createKeypair(pass, PubKeys.defaultKeyUri,
@@ -529,6 +539,10 @@ WeaveSvc.prototype = {
       } else {
         this._log.warn("Could not get encryption passphrase");
       }
+    }
+
+    if (needKeys && !this._keyGenEnabled) {
+      this._log.warn("Can't get keys from server and local keygen disabled.");
     }
 
     self.done(ret);
