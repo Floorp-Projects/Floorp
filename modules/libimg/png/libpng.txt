@@ -1,15 +1,15 @@
-libpng.txt - A description on how to use and modify libpng
-
- libpng version 1.2.31 - August 21, 2008
+  libpng.txt - A description on how to use and modify libpng
+  
+ libpng version 1.2.34 - December 18, 2008
  Updated and distributed by Glenn Randers-Pehrson
  <glennrp at users.sourceforge.net>
  Copyright (c) 1998-2008 Glenn Randers-Pehrson
  For conditions of distribution and use, see copyright
  notice in png.h.
-
+  
  Based on:
-
- libpng versions 0.97, January 1998, through 1.2.31 - August 21, 2008
+  
+ libpng versions 0.97, January 1998, through 1.2.34 - December 18, 2008
  Updated and distributed by Glenn Randers-Pehrson
  Copyright (c) 1998-2008 Glenn Randers-Pehrson
 
