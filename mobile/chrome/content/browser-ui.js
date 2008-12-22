@@ -234,6 +234,8 @@ var BrowserUI = {
     popup.height = window.innerHeight - toolbarH;
     popup.width = window.innerWidth;
 
+    document.getElementById("notifications").width = window.innerWidth;
+    
     // XXX need to handle make some of these work again
 /*
     var sidebar = document.getElementById("browser-controls");
@@ -417,7 +419,6 @@ var BrowserUI = {
 
     this.mode = aMode;
 
-    let toolbar = document.getElementById("toolbar-main");
     let bookmark = document.getElementById("bookmark-container");
     let urllist = document.getElementById("urllist-container");
     let container = document.getElementById("browser-container");

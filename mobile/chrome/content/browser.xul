@@ -262,6 +262,8 @@
     </toolbar>
     <!-- end: Main Toolbar -->
 
+    <notificationbox id="notifications" style="-moz-stack-sizing: ignore;" top="0" left="0"/>
+
     <!-- barrier to the left of the right bar -->
     <hbox id="panel-container" hidden="true" style="-moz-stack-sizing: ignore;" top="0" left="0">
       <vbox id="panel-controls" oncommand="BrowserUI.switchPane(event.target.getAttribute('linkedpanel'));">

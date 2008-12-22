@@ -24,6 +24,10 @@
             <children/>
           </xul:hbox>
         </xul:vbox>
+        <xul:toolbarbutton ondblclick="event.stopPropagation();"
+                           class="messageCloseButton tabbable"
+                           xbl:inherits="hidden=hideclose"
+                           oncommand="document.getBindingParent(this).close();"/>
       </xul:hbox>
     </content>
   </binding>
