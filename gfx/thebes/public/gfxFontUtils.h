@@ -333,17 +333,23 @@ public:
     // for use with Windows T2Embed API AddFontResource type API's
     // effectively hide existing fonts with matching names aHeaderLen is
     // the size of the header buffer on input, the actual size of the
-    // EOT header on output aIsCFF returns whether the font has PS style
-    // glyphs or not (as opposed to TrueType glyphs)
+    // EOT header on output
     static nsresult
     MakeEOTHeader(const PRUint8 *aFontData, PRUint32 aFontDataLength,
-                            nsTArray<PRUint8> *aHeader, PRBool *aIsCFF);
+                  nsTArray<PRUint8> *aHeader);
 #endif
 
     // checks for valid SFNT table structure, returns true if valid
     // does *not* guarantee that all font data is valid
     static PRBool
-    ValidateSFNTHeaders(const PRUint8 *aFontData, PRUint32 aFontDataLength);
+    ValidateSFNTHeaders(const PRUint8 *aFontData, PRUint32 aFontDataLength,
+                        PRBool *aIsCFF = nsnull);
+    
+    // create a new name table and build a new font with that name table
+    // appended on the end, returns true on success
+    static nsresult
+    RenameFont(const nsAString& aName, const PRUint8 *aFontData, 
+               PRUint32 aFontDataLength, nsTArray<PRUint8> *aNewFont);
     
     static inline bool IsJoiner(PRUint32 ch) {
         return (ch == 0x200C ||
