@@ -633,21 +633,15 @@ gfxWindowsPlatform::LookupLocalFont(const nsAString& aFontName)
     return data.mFontEntry;
 }
 
-// make a unique font name, limited on Windows to 31 two-byte characters
-static void MakeUniqueFontName(PRUnichar aName[LF_FACESIZE])
+static void MakeUniqueFontName(nsAString& aName)
 {
+    char buf[50];
+
     static PRUint32 fontCount = 0;
     ++fontCount;
 
-    char buf[LF_FACESIZE];
-
     sprintf(buf, "mozfont%8.8x%8.8x", ::GetTickCount(), fontCount);  // slightly retarded, figure something better later...
-
-    nsCAutoString fontName(buf);
-
-    PRUint32 nameLen = PR_MIN(fontName.Length(), LF_FACESIZE - 1);
-    memcpy(aName, nsPromiseFlatString(NS_ConvertUTF8toUTF16(fontName)).get(), nameLen * 2);
-    aName[nameLen] = 0;
+    aName.AssignASCII(buf);
 }
 
 // from t2embapi.h, included in Platform SDK 6.1 but not 6.0
@@ -705,17 +699,22 @@ static void InitializeFontEmbeddingProcs()
 
 class WinUserFontData : public gfxUserFontData {
 public:
-    WinUserFontData(HANDLE aFontRef)
-        : mFontRef(aFontRef)
+    WinUserFontData(HANDLE aFontRef, PRBool aIsCFF)
+        : mFontRef(aFontRef), mIsCFF(aIsCFF)
     { }
 
     virtual ~WinUserFontData()
     {
-        ULONG pulStatus;
-        TTDeleteEmbeddedFontPtr(mFontRef, 0, &pulStatus);
+        if (mIsCFF) {
+            RemoveFontMemResourceEx(mFontRef);
+        } else {
+            ULONG pulStatus;
+            TTDeleteEmbeddedFontPtr(mFontRef, 0, &pulStatus);
+        }
     }
     
     HANDLE mFontRef;
+    PRPackedBool mIsCFF;
 };
 
 // used to control stream read by Windows TTLoadEmbeddedFont API
@@ -791,22 +790,55 @@ gfxWindowsPlatform::MakePlatformFont(const gfxProxyFontEntry *aProxyEntry,
     if (!TTLoadEmbeddedFontPtr || !TTDeleteEmbeddedFontPtr)
         return nsnull;
 
-    if (!gfxFontUtils::ValidateSFNTHeaders(aFontData, aLength))
+    PRBool isCFF;
+    if (!gfxFontUtils::ValidateSFNTHeaders(aFontData, aLength, &isCFF))
         return nsnull;
         
-    // create an eot header
-    nsAutoTArray<PRUint8,2048> eotHeader;
-    PRUint8 *buffer;
-    PRUint32 eotlen;
-    PRUnichar fontName[LF_FACESIZE];
-    PRBool isCFF;
-    
     nsresult rv;
     HANDLE fontRef;
-    PRInt32 ret;
 
-    {
-        rv = gfxFontUtils::MakeEOTHeader(aFontData, aLength, &eotHeader, &isCFF);
+    nsAutoString uniqueName;
+    MakeUniqueFontName(uniqueName);
+
+    if (isCFF) {
+        // Postscript-style glyphs, swizzle name table, load directly
+        nsTArray<PRUint8> newFontData;
+
+        rv = gfxFontUtils::RenameFont(uniqueName, aFontData, aLength, &newFontData);
+
+        if (NS_FAILED(rv))
+            return nsnull;
+        
+        DWORD numFonts = 0;
+
+        PRUint8 *fontData = reinterpret_cast<PRUint8*> (newFontData.Elements());
+        PRUint32 fontLength = newFontData.Length();
+        NS_ASSERTION(fontData, "null font data after renaming");
+
+        // http://msdn.microsoft.com/en-us/library/ms533942(VS.85).aspx
+        // "A font that is added by AddFontMemResourceEx is always private 
+        //  to the process that made the call and is not enumerable."
+        fontRef = AddFontMemResourceEx(fontData, fontLength, 
+                                       0 /* reserved */, &numFonts);
+
+        if (!fontRef)
+            return nsnull;
+
+        // only load fonts with a single face contained in the data
+        if (fontRef && numFonts != 1) {
+            RemoveFontMemResourceEx(fontRef);
+            return nsnull;
+        }
+    } else {
+        // TrueType-style glyphs, use EOT library
+        nsAutoTArray<PRUint8,2048> eotHeader;
+        PRUint8 *buffer;
+        PRUint32 eotlen;
+
+        PRUint32 nameLen = PR_MIN(uniqueName.Length(), LF_FACESIZE - 1);
+        nsPromiseFlatString fontName(Substring(uniqueName, 0, nameLen));
+
+        rv = gfxFontUtils::MakeEOTHeader(aFontData, aLength, &eotHeader);
         if (NS_FAILED(rv))
             return nsnull;
 
@@ -814,27 +846,32 @@ gfxWindowsPlatform::MakePlatformFont(const gfxProxyFontEntry *aProxyEntry,
         eotlen = eotHeader.Length();
         buffer = reinterpret_cast<PRUint8*> (eotHeader.Elements());
         
+        PRInt32 ret;
         ULONG privStatus, pulStatus;
-        MakeUniqueFontName(fontName);
         EOTFontStreamReader eotReader(aFontData, aLength, buffer, eotlen);
 
         ret = TTLoadEmbeddedFontPtr(&fontRef, TTLOAD_PRIVATE, &privStatus, 
                                    LICENSE_PREVIEWPRINT, &pulStatus, 
                                    EOTFontStreamReader::ReadEOTStream, 
-                                   &eotReader, fontName, 0, 0);
+                                   &eotReader, (PRUnichar*)(fontName.get()), 0, 0);
+        if (ret != E_NONE)
+            return nsnull;
     }
 
-    if (ret != E_NONE)
-        return nsnull;
     
     // make a new font entry using the unique name
-    WinUserFontData *winUserFontData = new WinUserFontData(fontRef);
+    WinUserFontData *winUserFontData = new WinUserFontData(fontRef, isCFF);
     PRUint16 w = (aProxyEntry->mWeight == 0 ? 400 : aProxyEntry->mWeight);
 
-    return FontEntry::CreateFontEntry(nsDependentString(fontName), 
+    FontEntry *fe = FontEntry::CreateFontEntry(uniqueName, 
         gfxWindowsFontType(isCFF ? GFX_FONT_TYPE_PS_OPENTYPE : GFX_FONT_TYPE_TRUETYPE) /*type*/, 
         PRUint32(aProxyEntry->mItalic ? FONT_STYLE_ITALIC : FONT_STYLE_NORMAL), 
         w, winUserFontData);
+
+    if (fe && isCFF)
+        fe->mForceGDI = PR_TRUE;
+
+    return fe;
 }
 
 PRBool
