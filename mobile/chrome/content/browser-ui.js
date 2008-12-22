@@ -207,6 +207,7 @@ var BrowserUI = {
     else {
       icons.setAttribute("mode", "view");
       this._edit.readOnly = true;
+      this._edit.inputField.blur();
       this._edit.reallyClosePopup();
     }
   },
