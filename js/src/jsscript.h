@@ -158,7 +158,8 @@ StackDepth(JSScript *script)
 
 #define JS_GET_SCRIPT_ATOM(script_, index, atom)                              \
     JS_BEGIN_MACRO                                                            \
-        if (cx->fp && cx->fp->imacpc && cx->fp->script == script_) {          \
+        JSStackFrame *fp_ = js_GetTopStackFrame(cx);                          \
+        if (fp_ && fp_->imacpc && fp_->script == script_) {                   \
             JS_ASSERT((size_t)(index) < js_common_atom_count);                \
             (atom) = COMMON_ATOMS_START(&cx->runtime->atomState)[index];      \
         } else {                                                              \
