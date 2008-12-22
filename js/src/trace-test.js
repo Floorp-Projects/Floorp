@@ -3868,6 +3868,24 @@ testCaseTypeMismatchBadness.jitstats = {
 };
 test(testCaseTypeMismatchBadness);
 
+function testDoubleComparison()
+{
+  for (var i = 0; i < 500000; ++i)
+  {
+    switch (1 / 0)
+    {
+      case Infinity:
+    }
+  }
+
+  return "finished";
+}
+testDoubleComparison.expected = "finished";
+testDoubleComparison.jitstats = {
+  sideExitIntoInterpreter: 1
+};
+test(testDoubleComparison);
+
 /*****************************************************************************
  *                                                                           *
  *  _____ _   _  _____ ______ _____ _______                                  *
