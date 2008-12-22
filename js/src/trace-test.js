@@ -3612,6 +3612,238 @@ function testUnaryImacros()
 testUnaryImacros.expected = "valueOf passed, toString passed";
 test(testUnaryImacros);
 
+function testAddAnyInconvertibleObject()
+{
+  var count = 0;
+  function toString() { ++count; if (count == 5) return {}; return "" + count; }
+
+  var threw = false;
+  try
+  {
+    for (var i = 0; i < 10; i++)
+    {
+        var o = {valueOf: undefined, toString: toString};
+        var q = 5 + o;
+    }
+  }
+  catch (e)
+  {
+    threw = true;
+    if (i !== 4)
+      return "expected i === 4, got " + i;
+    if (q !== "54")
+      return "expected q === '54', got " + q + " (type " + typeof q + ")";
+    if (count !== 5)
+      return "expected count === 5, got " + count;
+  }
+  if (!threw)
+    return "expected throw with 5 + o"; // hey, a rhyme!
+
+  return "pass";
+}
+testAddAnyInconvertibleObject.expected = "pass";
+testAddAnyInconvertibleObject.jitstats = {
+  recorderStarted: 1,
+  recorderAborted: 0,
+  sideExits: 1
+};
+test(testAddAnyInconvertibleObject);
+
+function testAddInconvertibleObjectAny()
+{
+  var count = 0;
+  function toString() { ++count; if (count == 5) return {}; return "" + count; }
+
+  var threw = false;
+  try
+  {
+    for (var i = 0; i < 10; i++)
+    {
+        var o = {valueOf: undefined, toString: toString};
+        var q = o + 5;
+    }
+  }
+  catch (e)
+  {
+    threw = true;
+    if (i !== 4)
+      return "expected i === 4, got " + i;
+    if (q !== "45")
+      return "expected q === '54', got " + q + " (type " + typeof q + ")";
+    if (count !== 5)
+      return "expected count === 5, got " + count;
+  }
+  if (!threw)
+    return "expected throw with o + 5";
+
+  return "pass";
+}
+testAddInconvertibleObjectAny.expected = "pass";
+testAddInconvertibleObjectAny.jitstats = {
+  recorderStarted: 1,
+  recorderAborted: 0,
+  sideExits: 1
+};
+test(testAddInconvertibleObjectAny);
+
+function testAddInconvertibleObjectInconvertibleObject()
+{
+  var count1 = 0;
+  function toString1() { ++count1; if (count1 == 5) return {}; return "" + count1; }
+  var count2 = 0;
+  function toString2() { ++count2; if (count2 == 5) return {}; return "" + count2; }
+
+  var threw = false;
+  try
+  {
+    for (var i = 0; i < 10; i++)
+    {
+        var o1 = {valueOf: undefined, toString: toString1};
+        var o2 = {valueOf: undefined, toString: toString2};
+        var q = o1 + o2;
+    }
+  }
+  catch (e)
+  {
+    threw = true;
+    if (i !== 4)
+      return "expected i === 4, got " + i;
+    if (q !== "44")
+      return "expected q === '44', got " + q + " (type " + typeof q + ")";
+    if (count1 !== 5)
+      return "expected count1 === 5, got " + count1;
+    if (count2 !== 4)
+      return "expected count2 === 5, got " + count2;
+  }
+  if (!threw)
+    return "expected throw with o1 + o2";
+
+  return "pass";
+}
+testAddInconvertibleObjectInconvertibleObject.expected = "pass";
+testAddInconvertibleObjectInconvertibleObject.jitstats = {
+  recorderStarted: 1,
+  recorderAborted: 0,
+  sideExits: 1
+};
+test(testAddInconvertibleObjectInconvertibleObject);
+
+function testBitOrAnyInconvertibleObject()
+{
+  var count = 0;
+  function toString() { ++count; if (count == 5) return {}; return count; }
+
+  var threw = false;
+  try
+  {
+    for (var i = 0; i < 10; i++)
+    {
+        var o = {valueOf: undefined, toString: toString};
+        var q = 2 | o;
+    }
+  }
+  catch (e)
+  {
+    threw = true;
+    if (i !== 4)
+      return "expected i === 4, got " + i;
+    if (q !== 6)
+      return "expected q === 6, got " + q;
+    if (count !== 5)
+      return "expected count === 5, got " + count;
+  }
+  if (!threw)
+    return "expected throw with 2 | o"; // hey, a rhyme!
+
+  return "pass";
+}
+testBitOrAnyInconvertibleObject.expected = "pass";
+testBitOrAnyInconvertibleObject.jitstats = {
+  recorderStarted: 1,
+  recorderAborted: 0,
+  sideExits: 1
+};
+test(testBitOrAnyInconvertibleObject);
+
+function testBitOrInconvertibleObjectAny()
+{
+  var count = 0;
+  function toString() { ++count; if (count == 5) return {}; return count; }
+
+  var threw = false;
+  try
+  {
+    for (var i = 0; i < 10; i++)
+    {
+        var o = {valueOf: undefined, toString: toString};
+        var q = o | 2;
+    }
+  }
+  catch (e)
+  {
+    threw = true;
+    if (i !== 4)
+      return "expected i === 4, got " + i;
+    if (q !== 6)
+      return "expected q === 6, got " + q;
+    if (count !== 5)
+      return "expected count === 5, got " + count;
+  }
+  if (!threw)
+    return "expected throw with o | 2";
+
+  return "pass";
+}
+testBitOrInconvertibleObjectAny.expected = "pass";
+testBitOrInconvertibleObjectAny.jitstats = {
+  recorderStarted: 1,
+  recorderAborted: 0,
+  sideExits: 1
+};
+test(testBitOrInconvertibleObjectAny);
+
+function testBitOrInconvertibleObjectInconvertibleObject()
+{
+  var count1 = 0;
+  function toString1() { ++count1; if (count1 == 5) return {}; return count1; }
+  var count2 = 0;
+  function toString2() { ++count2; if (count2 == 5) return {}; return count2; }
+
+  var threw = false;
+  try
+  {
+    for (var i = 0; i < 10; i++)
+    {
+        var o1 = {valueOf: undefined, toString: toString1};
+        var o2 = {valueOf: undefined, toString: toString2};
+        var q = o1 | o2;
+    }
+  }
+  catch (e)
+  {
+    threw = true;
+    if (i !== 4)
+      return "expected i === 4, got " + i;
+    if (q !== 4)
+      return "expected q === 4, got " + q;
+    if (count1 !== 5)
+      return "expected count1 === 5, got " + count1;
+    if (count2 !== 4)
+      return "expected count2 === 5, got " + count2;
+  }
+  if (!threw)
+    return "expected throw with o1 | o2";
+
+  return "pass";
+}
+testBitOrInconvertibleObjectInconvertibleObject.expected = "pass";
+testBitOrInconvertibleObjectInconvertibleObject.jitstats = {
+  recorderStarted: 1,
+  recorderAborted: 0,
+  sideExits: 1
+};
+test(testBitOrInconvertibleObjectInconvertibleObject);
+
 /*****************************************************************************
  *                                                                           *
  *  _____ _   _  _____ ______ _____ _______                                  *
