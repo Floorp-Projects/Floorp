@@ -1012,8 +1012,8 @@ NS_IMETHODIMP imgLoader::LoadImage(nsIURI *aURI,
     // for correctly dealing with image load requests that are a result
     // of post data.
     imgCacheTable &cache = GetCache(aURI);
-    nsCAutoString spec;
 
+    nsCAutoString spec;
     aURI->GetSpec(spec);
 
     if (cache.Get(spec, getter_AddRefs(entry)) && entry) {
@@ -1061,12 +1061,12 @@ NS_IMETHODIMP imgLoader::LoadImage(nsIURI *aURI,
     newChannel->SetLoadGroup(loadGroup);
 
     void *cacheId = NS_GetCurrentThread();
-    request->Init(aURI, loadGroup, entry, cacheId, aCX);
+    request->Init(aURI, loadGroup, newChannel, entry, cacheId, aCX);
 
     // create the proxy listener
     ProxyListener *pl = new ProxyListener(static_cast<nsIStreamListener *>(request.get()));
     if (!pl) {
-      request->Cancel(NS_ERROR_OUT_OF_MEMORY);
+      request->CancelAndAbort(NS_ERROR_OUT_OF_MEMORY);
       return NS_ERROR_OUT_OF_MEMORY;
     }
 
@@ -1083,7 +1083,7 @@ NS_IMETHODIMP imgLoader::LoadImage(nsIURI *aURI,
       PR_LOG(gImgLog, PR_LOG_DEBUG,
              ("[this=%p] imgLoader::LoadImage -- AsyncOpen() failed: 0x%x\n",
               this, openRes));
-      request->Cancel(openRes);
+      request->CancelAndAbort(openRes);
       return openRes;
     }
 
@@ -1193,19 +1193,12 @@ NS_IMETHODIMP imgLoader::LoadImageWithChannel(nsIChannel *channel, imgIDecoderOb
 
     *listener = nsnull; // give them back a null nsIStreamListener
   } else {
-
-    // Get the current Thread...  This is used as a cacheId to prevent
-    // sharing requests which are being loaded across multiple threads...
-    nsIThread *thread = NS_GetCurrentThread();
-
     NewRequestAndEntry(uri, getter_AddRefs(request), getter_AddRefs(entry));
 
-    // XXX(darin):  I'm not sure that using the original URI is correct here.
-    // Perhaps we should use the same URI that indexes the cache?  Or, perhaps
-    // the cache should use the original URI?  See bug 89419.
+    // We use originalURI here to fulfil the imgIRequest contract on GetURI.
     nsCOMPtr<nsIURI> originalURI;
     channel->GetOriginalURI(getter_AddRefs(originalURI));
-    request->Init(originalURI, channel, entry, thread, aCX);
+    request->Init(originalURI, channel, channel, entry, NS_GetCurrentThread(), aCX);
 
     ProxyListener *pl = new ProxyListener(static_cast<nsIStreamListener *>(request.get()));
     if (!pl)
@@ -1475,12 +1468,10 @@ NS_IMETHODIMP imgCacheValidator::OnStartRequest(nsIRequest *aRequest, nsISupport
   if (!NewRequestAndEntry(uri, &request, getter_AddRefs(entry)))
       return NS_ERROR_OUT_OF_MEMORY;
 
-  // XXX(darin):  I'm not sure that using the original URI is correct here.
-  // Perhaps we should use the same URI that indexes the cache?  Or, perhaps
-  // the cache should use the original URI?  See bug 89419.
+  // We use originalURI here to fulfil the imgIRequest contract on GetURI.
   nsCOMPtr<nsIURI> originalURI;
   channel->GetOriginalURI(getter_AddRefs(originalURI));
-  request->Init(originalURI, channel, entry, NS_GetCurrentThread(), mContext);
+  request->Init(originalURI, channel, channel, entry, NS_GetCurrentThread(), mContext);
 
   ProxyListener *pl = new ProxyListener(static_cast<nsIStreamListener *>(request));
   if (!pl) {
