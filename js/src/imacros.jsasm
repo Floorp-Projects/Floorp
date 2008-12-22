@@ -51,6 +51,7 @@
 2:      pop                             # any obj
         callprop toString               # any toString obj
         call 0                          # any rval
+        primtop                         # any rval
         goto 4                          # any rval
 3:      swap                            # any rval obj
         pop                             # any rval
@@ -73,6 +74,7 @@
 2:      pop                             # any obj
         callprop toString               # any toString obj
         call 0                          # any lval
+        primtop                         # any rval
         goto 4                          # any lval
 3:      swap                            # any lval obj
         pop                             # any lval
@@ -96,6 +98,7 @@
 2:      pop                             # obj2 obj1
         callprop toString               # obj2 toString obj1
         call 0                          # obj2 lval
+        primtop                         # obj2 lval
         goto 4                          # obj2 lval
 3:      swap                            # obj2 lval obj1
         pop                             # obj2 lval
@@ -113,6 +116,7 @@
 6:      pop                             # lval obj
         callprop toString               # lval toString obj
         call 0                          # lval rval
+        primtop                         # lval rval
         goto 8                          # lval rval
 7:      swap                            # lval rval obj
         pop                             # lval rval
@@ -138,6 +142,7 @@
 2:      pop                             # any obj
         callprop toString               # any toString obj
         call 0                          # any rval
+        primtop                         # any rval
         goto 4                          # any rval
 3:      swap                            # any rval obj
         pop                             # any rval
@@ -160,6 +165,7 @@
 2:      pop                             # any obj
         callprop toString               # any toString obj
         call 0                          # any lval
+        primtop                         # any lval
         goto 4                          # any lval
 3:      swap                            # any lval obj
         pop                             # any lval
@@ -183,6 +189,7 @@
 2:      pop                             # obj2 obj1
         callprop toString               # obj2 toString obj1
         call 0                          # obj2 lval
+        primtop                         # obj2 lval
         goto 4                          # obj2 lval
 3:      swap                            # obj2 lval obj1
         pop                             # obj2 lval
@@ -200,6 +207,7 @@
 6:      pop                             # lval obj
         callprop toString               # lval toString obj
         call 0                          # lval rval
+        primtop                         # lval rval
         goto 8                          # lval rval
 7:      swap                            # lval rval obj
         pop                             # lval rval
