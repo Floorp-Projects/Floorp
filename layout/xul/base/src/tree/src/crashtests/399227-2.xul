@@ -17,6 +17,8 @@
     selection.currentColumn = treecolumn0;
     tree.parentNode.removeChild(tree);
     selection.currentColumn = treecolumn1;
+
+    document.documentElement.removeAttribute("class");
   }
   </script>
 
