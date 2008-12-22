@@ -4633,7 +4633,9 @@ TraceRecorder::strictEquality(bool equal, bool cmpCase)
         x = lir->ins2(op, l_ins, r_ins);
         if (!equal)
             x = lir->ins_eq0(x);
-        cond = (l == r);
+        cond = (ltag == JSVAL_DOUBLE)
+               ? asNumber(l) == asNumber(r);
+               : l == r;
     }
     cond = (cond == equal);
 
