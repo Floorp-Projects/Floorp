@@ -217,8 +217,9 @@
     <!-- begin: right bar -->
     <!-- barrier to the left of the right bar -->
     <spacer style="-moz-stack-sizing: ignore; width: 1px; height: 1px;" barriertype="vertical" size="30" left="800" constraint="vp-relative"/>
-    <vbox id="browser-controls" style="-moz-stack-sizing: ignore; width: 80px; height: 420px;"
+    <vbox id="browser-controls" style="-moz-stack-sizing: ignore;"
           left="800" top="60"
+          width="80" height="420"
           constraint="ignore-y,vp-relative">
       <toolbarbutton id="tool-star" class="browser-control-button" command="cmd_star"/>
       <toolbarbutton id="tool-back" class="browser-control-button" command="cmd_back"/>
