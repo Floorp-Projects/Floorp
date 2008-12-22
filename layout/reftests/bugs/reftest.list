@@ -138,6 +138,7 @@ fails == 25888-3r.html 25888-3r-ref.html # bug 25888
 == 210876-1.html 210876-1-ref.html
 == 212563-1.html 212563-1-ref.html
 == 212563-2.html 212563-2-ref.html
+== 213834-1.html 213834-1-ref.html
 == 214077-1a.html 214077-1-ref.html
 == 214077-1b.html 214077-1-ref.html
 == 218473-1.html 218473-1-ref.html
