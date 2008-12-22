@@ -3844,6 +3844,30 @@ testBitOrInconvertibleObjectInconvertibleObject.jitstats = {
 };
 test(testBitOrInconvertibleObjectInconvertibleObject);
 
+function testCaseTypeMismatchBadness()
+{
+  for (var z = 0; z < 3; ++z)
+  {
+    switch ("")
+    {
+      default:
+      case 9:
+        break;
+
+      case "":
+      case <x/>:
+        break;
+    }
+  }
+
+  return "no crash";
+}
+testCaseTypeMismatchBadness.expected = "no crash";
+testCaseTypeMismatchBadness.jitstats = {
+    recorderAborted: 0
+};
+test(testCaseTypeMismatchBadness);
+
 /*****************************************************************************
  *                                                                           *
  *  _____ _   _  _____ ______ _____ _______                                  *

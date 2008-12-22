@@ -4617,16 +4617,14 @@ TraceRecorder::strictEquality(bool equal, bool cmpCase)
     jsval& l = stackval(-2);
     LIns* l_ins = get(&l);
     LIns* r_ins = get(&r);
+    LIns* x;
+    bool cond;
 
     uint8 ltag = getPromotedType(l);
     if (ltag != getPromotedType(r)) {
-        set(&l, lir->insImm(!equal));
-        return;
-    }
-
-    LIns* x;
-    bool cond;
-    if (ltag == JSVAL_STRING) {
+        cond = !equal;
+        x = lir->insImm(cond);
+    } else if (ltag == JSVAL_STRING) {
         LIns* args[] = { r_ins, l_ins };
         x = lir->ins2i(LIR_eq, lir->insCall(&js_EqualStrings_ci, args), equal);
         cond = js_EqualStrings(JSVAL_TO_STRING(l), JSVAL_TO_STRING(r));
