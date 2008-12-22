@@ -1,0 +1,37 @@
+<?xml version="1.0"?>
+
+<?xml-stylesheet href="chrome://global/skin/" type="text/css"?>
+
+<window xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul" class="reftest-wait" onload="setTimeout(boom, 30)">
+
+
+  <script>
+  function boom()
+  {
+    var tree = document.getElementById("thetree");
+    var selection = tree.view.selection;
+
+    selection.select(0);
+    tree.parentNode.removeChild(tree);
+    selection.rangedSelect(1, 1, false);
+  }
+  </script>
+
+<tree flex="1" id="thetree">
+    <treecols>
+      <treecol label="Name"/>
+    </treecols>
+    <treechildren id="TC">
+      <treeitem id="TI1">
+        <treerow>
+          <treecell label="First treecell"/>
+        </treerow>
+      </treeitem>
+      <treeitem id="TI2">
+        <treerow>
+          <treecell label="Second treecell"/>
+        </treerow>
+      </treeitem>
+    </treechildren>
+  </tree>
+</window>
