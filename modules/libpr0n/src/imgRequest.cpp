@@ -58,6 +58,7 @@
 #include "nsIHttpChannel.h"
 
 #include "nsIComponentManager.h"
+#include "nsIInterfaceRequestorUtils.h"
 #include "nsIProxyObjectManager.h"
 #include "nsIServiceManager.h"
 #include "nsISupportsPrimitives.h"
@@ -73,10 +74,12 @@
 PRLogModuleInfo *gImgLog = PR_NewLogModule("imgRequest");
 #endif
 
-NS_IMPL_ISUPPORTS6(imgRequest, imgILoad,
+NS_IMPL_ISUPPORTS8(imgRequest, imgILoad,
                    imgIDecoderObserver, imgIContainerObserver,
                    nsIStreamListener, nsIRequestObserver,
-                   nsISupportsWeakReference)
+                   nsISupportsWeakReference,
+                   nsIChannelEventSink,
+                   nsIInterfaceRequestor)
 
 imgRequest::imgRequest() : 
   mLoading(PR_FALSE), mProcessing(PR_FALSE), mHadLastPart(PR_FALSE),
@@ -94,6 +97,7 @@ imgRequest::~imgRequest()
 
 nsresult imgRequest::Init(nsIURI *aURI,
                           nsIRequest *aRequest,
+                          nsIChannel *aChannel,
                           imgCacheEntry *aCacheEntry,
                           void *aCacheId,
                           void *aLoadId)
@@ -103,6 +107,7 @@ nsresult imgRequest::Init(nsIURI *aURI,
   NS_ASSERTION(!mImage, "Multiple calls to init");
   NS_ASSERTION(aURI, "No uri");
   NS_ASSERTION(aRequest, "No request");
+  NS_ASSERTION(aChannel, "No channel");
 
   mProperties = do_CreateInstance("@mozilla.org/properties;1");
   if (!mProperties)
@@ -110,6 +115,13 @@ nsresult imgRequest::Init(nsIURI *aURI,
 
   mURI = aURI;
   mRequest = aRequest;
+  mChannel = aChannel;
+  mChannel->GetNotificationCallbacks(getter_AddRefs(mPrevChannelSink));
+
+  NS_ASSERTION(mPrevChannelSink != this,
+               "Initializing with a channel that already calls back to us!");
+
+  mChannel->SetNotificationCallbacks(this);
 
   /* set our loading flag to true here.
      Setting it here lets checks to see if the load is in progress
@@ -294,8 +306,21 @@ void imgRequest::Cancel(nsresult aStatus)
     RemoveFromCache();
   }
 
-  if (mRequest && mLoading)
-    mRequest->Cancel(aStatus);
+  if (mChannel && mLoading)
+    mChannel->Cancel(aStatus);
+}
+
+void imgRequest::CancelAndAbort(nsresult aStatus)
+{
+  Cancel(aStatus);
+
+  // It's possible for the channel to fail to open after we've set our
+  // notification callbacks. In that case, make sure to break the cycle between
+  // the channel and us, because it won't.
+  if (mChannel) {
+    mChannel->SetNotificationCallbacks(mPrevChannelSink);
+    mPrevChannelSink = nsnull;
+  }
 }
 
 nsresult imgRequest::GetURI(nsIURI **aURI)
@@ -737,13 +762,19 @@ NS_IMETHODIMP imgRequest::OnStopRequest(nsIRequest *aRequest, nsISupports *ctxt,
   }
 
   // XXXldb What if this is a non-last part of a multipart request?
-  // xxx before we release our reference to mChannel, lets
+  // xxx before we release our reference to mRequest, lets
   // save the last status that we saw so that the
   // imgRequestProxy will have access to it.
-  if (mRequest)
-  {
+  if (mRequest) {
     mRequest->GetStatus(&mNetworkStatus);
     mRequest = nsnull;  // we no longer need the request
+  }
+
+  // stop holding a ref to the channel, since we don't need it anymore
+  if (mChannel) {
+    mChannel->SetNotificationCallbacks(mPrevChannelSink);
+    mPrevChannelSink = nsnull;
+    mChannel = nsnull;
   }
 
   // If mImage is still null, we didn't properly load the image.
@@ -956,4 +987,49 @@ imgRequest::GetNetworkStatus()
     status = mNetworkStatus;
 
   return status;
+}
+
+/** nsIInterfaceRequestor methods **/
+
+NS_IMETHODIMP
+imgRequest::GetInterface(const nsIID & aIID, void **aResult)
+{
+  if (!mPrevChannelSink || aIID.Equals(NS_GET_IID(nsIChannelEventSink)))
+    return QueryInterface(aIID, aResult);
+
+  NS_ASSERTION(mPrevChannelSink != this, 
+               "Infinite recursion - don't keep track of channel sinks that are us!");
+  return mPrevChannelSink->GetInterface(aIID, aResult);
+}
+
+/** nsIChannelEventSink methods **/
+
+/* void onChannelRedirect (in nsIChannel oldChannel, in nsIChannel newChannel, in unsigned long flags); */
+NS_IMETHODIMP
+imgRequest::OnChannelRedirect(nsIChannel *oldChannel, nsIChannel *newChannel, PRUint32 flags)
+{
+  NS_ASSERTION(mRequest && mChannel, "Got an OnChannelRedirect after we nulled out mRequest!");
+  NS_ASSERTION(mChannel == oldChannel, "Got a channel redirect for an unknown channel!");
+  NS_ASSERTION(newChannel, "Got a redirect to a NULL channel!");
+
+  nsresult rv = NS_OK;
+  nsCOMPtr<nsIChannelEventSink> sink(do_GetInterface(mPrevChannelSink));
+  if (sink) {
+    rv = sink->OnChannelRedirect(oldChannel, newChannel, flags);
+    if (NS_FAILED(rv))
+      return rv;
+  }
+
+  RemoveFromCache();
+
+  mChannel = newChannel;
+
+  nsCOMPtr<nsIURI> uri;
+  newChannel->GetOriginalURI(getter_AddRefs(uri));
+
+  // If we don't still have a cache entry, we don't want to refresh the cache.
+  if (uri && mCacheEntry)
+    imgLoader::PutIntoCache(uri, mCacheEntry);
+
+  return rv;
 }
