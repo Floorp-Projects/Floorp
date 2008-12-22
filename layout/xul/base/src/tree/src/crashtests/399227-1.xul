@@ -13,7 +13,12 @@
 
     selection.select(0);
     tree.parentNode.removeChild(tree);
-    selection.rangedSelect(1, 1, false);
+
+    // This is expected to throw an error (it used to crash).
+    try {
+      selection.rangedSelect(1, 1, false);
+    }
+    catch (ex) {}
 
     document.documentElement.removeAttribute("class");
   }
