@@ -73,28 +73,28 @@ public:
   void SetNumber(float aValue)
   {
     Reset();
-    mValue.mFloat = double(aValue);
+    mValue.mFloat = aValue;
     mType = CSS_NUMBER;
   }
 
   void SetNumber(PRInt32 aValue)
   {
     Reset();
-    mValue.mFloat = double(aValue);
+    mValue.mFloat = float(aValue);
     mType = CSS_NUMBER;
   }
 
   void SetNumber(PRUint32 aValue)
   {
     Reset();
-    mValue.mFloat = double(aValue);
+    mValue.mFloat = float(aValue);
     mType = CSS_NUMBER;
   }
 
   void SetPercent(float aValue)
   {
     Reset();
-    mValue.mFloat = double(aValue);
+    mValue.mFloat = aValue;
     mType = CSS_PERCENTAGE;
   }
 
@@ -230,11 +230,10 @@ private:
   void GetEscapedURI(nsIURI *aURI, PRUnichar **aReturn);
 
   PRUint16 mType;
-  PRInt32 mAppUnitsPerInch;
 
   union {
     nscoord         mAppUnits;
-    double          mFloat;
+    float           mFloat;
     nsDOMCSSRGBColor* mColor;
     nsIDOMRect*     mRect;
     PRUnichar*      mString;
@@ -242,6 +241,7 @@ private:
     nsIAtom*        mAtom; // FIXME use nsCSSKeyword instead
   } mValue;
   
+  PRInt32 mAppUnitsPerInch;
 };
 
 #endif /* nsROCSSPrimitiveValue_h___ */
