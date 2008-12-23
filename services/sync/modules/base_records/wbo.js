@@ -81,9 +81,25 @@ WBORecord.prototype = {
     this.data.modified = value;
   },
 
+  get depth() this.data.depth,
+  set depth(value) {
+    this.data.depth = value;
+  },
+
+  get sortindex() this.data.sortindex,
+  set sortindex(value) {
+    this.data.sortindex = value;
+  },
+
   get payload() this.data.payload,
   set payload(value) {
     this.data.payload = value;
+  },
+
+  toString: function WBORec_toString() {
+    return "{id: " + this.id + ", depth: " + this.depth +
+      ", sortindex: " + this.sortindex + ",\nmodified: " + this.modified +
+      ", payload: " + json.encode(this.cleartext) + "}";
   }
 };
 
