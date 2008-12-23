@@ -91,37 +91,7 @@ BookmarksEngine.prototype = {
     let tracker = new BookmarksTracker();
     this.__defineGetter__("_tracker", function() tracker);
     return tracker;
-  },
-
-  _recordLike: function SyncEngine__recordLike(a, b) {
-    if (a.parentid != b.parentid)
-      return false;
-    for (let key in a.cleartext) {
-      if (key == "index")
-        continue;
-      if (!Utils.deepEquals(a.cleartext[key], b.cleartext[key]))
-        return false;
-    }
-    for (key in b.cleartext) {
-      if (key == "index")
-        continue;
-      if (!Utils.deepEquals(a.cleartext[key], b.cleartext[key]))
-        return false;
-    }
-    return true;
-  },
-
-  _changeRecordRefs: function BmkEngine__changeRecordRefs(oldID, newID) {
-    let self = yield;
-    for each (let rec in this.outgoing) {
-      if (rec.parentid == oldID) {
-        rec.parentid = newID;
-        rec.cleartext.parentid = newID;
-        yield rec.encrypt(self.cb, ID.get('WeaveCryptoID').password);
-      }
-    }
   }
-
   // XXX for sharing, will need to re-add code to get new shares before syncing,
   //     and updating incoming/outgoing shared folders after syncing
 };
@@ -207,38 +177,35 @@ BookmarksStore.prototype = {
 
   create: function BStore_create(record) {
     let newId;
-    let command = {GUID: record.id, data: record.cleartext};
-    let parentId = this._getItemIdForGUID(command.data.parentid);
+    let parentId = this._getItemIdForGUID(record.parentid);
 
     if (parentId < 0) {
       this._log.warn("Creating node with unknown parent -> reparenting to root");
       parentId = this._bms.bookmarksMenuFolder;
     }
 
-    switch (command.data.type) {
+    switch (record.cleartext.type) {
     case "query":
     case "bookmark":
     case "microsummary": {
-      this._log.debug(" -> creating bookmark \"" + command.data.title + "\"");
-      let URI = Utils.makeURI(command.data.URI);
-      newId = this._bms.insertBookmark(parentId,
-                                       URI,
-                                       command.data.index,
-                                       command.data.title);
+      this._log.debug(" -> creating bookmark \"" + record.cleartext.title + "\"");
+      let URI = Utils.makeURI(record.cleartext.URI);
+      newId = this._bms.insertBookmark(parentId, URI, record.sortindex,
+                                       record.cleartext.title);
       this._ts.untagURI(URI, null);
-      this._ts.tagURI(URI, command.data.tags);
-      this._bms.setKeywordForBookmark(newId, command.data.keyword);
-      if (command.data.description) {
+      this._ts.tagURI(URI, record.cleartext.tags);
+      this._bms.setKeywordForBookmark(newId, record.cleartext.keyword);
+      if (record.cleartext.description) {
         this._ans.setItemAnnotation(newId, "bookmarkProperties/description",
-                                    command.data.description, 0,
+                                    record.cleartext.description, 0,
                                    this._ans.EXPIRE_NEVER);
       }
 
-      if (command.data.type == "microsummary") {
+      if (record.cleartext.type == "microsummary") {
         this._log.debug("   \-> is a microsummary");
         this._ans.setItemAnnotation(newId, "bookmarks/staticTitle",
-                                    command.data.staticTitle || "", 0, this._ans.EXPIRE_NEVER);
-        let genURI = Utils.makeURI(command.data.generatorURI);
+                                    record.cleartext.staticTitle || "", 0, this._ans.EXPIRE_NEVER);
+        let genURI = Utils.makeURI(record.cleartext.generatorURI);
 	if (this._ms == SERVICE_NOT_SUPPORTED) {
 	  this._log.warn("Can't create microsummary -- not supported.");
 	} else {
@@ -251,68 +218,68 @@ BookmarksStore.prototype = {
       }
     } break;
     case "folder":
-      this._log.debug(" -> creating folder \"" + command.data.title + "\"");
+      this._log.debug(" -> creating folder \"" + record.cleartext.title + "\"");
       newId = this._bms.createFolder(parentId,
-                                     command.data.title,
-                                     command.data.index);
+                                     record.cleartext.title,
+                                     record.sortindex);
       // If folder is an outgoing share, put the annotations on it:
-      if ( command.data.outgoingSharedAnno != undefined ) {
+      if ( record.cleartext.outgoingSharedAnno != undefined ) {
 	this._ans.setItemAnnotation(newId,
 				    OUTGOING_SHARED_ANNO,
-                                    command.data.outgoingSharedAnno,
+                                    record.cleartext.outgoingSharedAnno,
 				    0,
 				    this._ans.EXPIRE_NEVER);
 	this._ans.setItemAnnotation(newId,
 				    SERVER_PATH_ANNO,
-                                    command.data.serverPathAnno,
+                                    record.cleartext.serverPathAnno,
 				    0,
 				    this._ans.EXPIRE_NEVER);
 
       }
       break;
     case "livemark":
-      this._log.debug(" -> creating livemark \"" + command.data.title + "\"");
+      this._log.debug(" -> creating livemark \"" + record.cleartext.title + "\"");
       newId = this._ls.createLivemark(parentId,
-                                      command.data.title,
-                                      Utils.makeURI(command.data.siteURI),
-                                      Utils.makeURI(command.data.feedURI),
-                                      command.data.index);
+                                      record.cleartext.title,
+                                      Utils.makeURI(record.cleartext.siteURI),
+                                      Utils.makeURI(record.cleartext.feedURI),
+                                      record.sortindex);
       break;
     case "incoming-share":
       /* even though incoming shares are folders according to the
        * bookmarkService, _wrap() wraps them as type=incoming-share, so we
        * handle them separately, like so: */
-      this._log.debug(" -> creating incoming-share \"" + command.data.title + "\"");
+      this._log.debug(" -> creating incoming-share \"" + record.cleartext.title + "\"");
       newId = this._bms.createFolder(parentId,
-                                     command.data.title,
-                                     command.data.index);
+                                     record.cleartext.title,
+                                     record.sortindex);
       this._ans.setItemAnnotation(newId,
 				  INCOMING_SHARED_ANNO,
-                                  command.data.incomingSharedAnno,
+                                  record.cleartext.incomingSharedAnno,
 				  0,
 				  this._ans.EXPIRE_NEVER);
       this._ans.setItemAnnotation(newId,
 				  SERVER_PATH_ANNO,
-                                  command.data.serverPathAnno,
+                                  record.cleartext.serverPathAnno,
 				  0,
 				  this._ans.EXPIRE_NEVER);
       break;
     case "separator":
       this._log.debug(" -> creating separator");
-      newId = this._bms.insertSeparator(parentId, command.data.index);
+      newId = this._bms.insertSeparator(parentId, record.sortindex);
       break;
     default:
-      this._log.error("_createCommand: Unknown item type: " + command.data.type);
+      this._log.error("_create: Unknown item type: " + record.cleartext.type);
       break;
     }
     if (newId) {
-      this._log.trace("Setting GUID of new item " + newId + " to " + command.GUID);
+      this._log.trace("Setting GUID of new item " + newId + " to " + record.id);
       let cur = this._bms.getItemGUID(newId);
-      if (cur == command.GUID)
-        this._log.warn("Item " + newId + " already has GUID " + command.GUID);
+      if (cur == record.id)
+        this._log.warn("Item " + newId + " already has GUID " + record.id);
       else {
-        this._bms.setItemGUID(newId, command.GUID);
-        Engines.get("bookmarks")._tracker._all[newId] = command.GUID; // HACK - see tracker
+        this._bms.setItemGUID(newId, record.id);
+        Engines.get("bookmarks")._tracker._all[newId] = record.id; // HACK - see tracker
       }
     }
   },
@@ -353,80 +320,55 @@ BookmarksStore.prototype = {
   },
 
   update: function BStore_update(record) {
-    let command = {GUID: record.id, data: record.cleartext};
+    let itemId = this._getItemIdForGUID(record.id);
 
-    if (command.GUID == "menu" ||
-        command.GUID == "toolbar" ||
-        command.GUID == "unfiled") {
-      this._log.debug("Attempted to edit root node (" + command.GUID +
-                      ").  Skipping command.");
+    if (record.id == "menu" ||
+        record.id == "toolbar" ||
+        record.id == "unfiled") {
+      this._log.debug("Skipping update for root node.");
       return;
     }
-
-    var itemId = this._getItemIdForGUID(command.GUID);
     if (itemId < 0) {
-      this._log.debug("Item for GUID " + command.GUID + " not found.  Skipping.");
+      this._log.debug("Skipping update for unknown item: " + record.id);
       return;
     }
-    this._log.trace("Editing item " + itemId);
 
-    for (let key in command.data) {
+    this._log.trace("Updating " + record.id + " (" + itemId + ")");
+
+    if ((this._bms.getItemIndex(itemId) != record.sortindex) ||
+        (this._bms.getFolderIdForItem(itemId) !=
+         this._getItemIdForGUID(record.parentid))) {
+      this._log.trace("Moving item (changing folder/index)");
+      let parentid = this._getItemIdForGUID(record.parentid);
+      this._bms.moveItem(itemId, parentid, record.sortindex);
+    }
+
+    for (let key in record.cleartext) {
       switch (key) {
-      case "type":
-        // all commands have this to help in reconciliation, but it makes
-        // no sense to edit it
-        break;
       case "title":
-        this._bms.setItemTitle(itemId, command.data.title);
+        this._bms.setItemTitle(itemId, record.cleartext.title);
         break;
       case "URI":
-        this._bms.changeBookmarkURI(itemId, Utils.makeURI(command.data.URI));
+        this._bms.changeBookmarkURI(itemId, Utils.makeURI(record.cleartext.URI));
         break;
-      case "index":
-        let curIdx = this._bms.getItemIndex(itemId);
-        if (curIdx != command.data.index) {
-          // ignore index if we're going to move the item to another folder altogether
-          if (command.data.parentid &&
-              (this._bms.getFolderIdForItem(itemId) !=
-               this._getItemIdForGUID(command.data.parentid)))
-            break;
-          this._log.trace("Moving item (changing index)");
-          this._bms.moveItem(itemId, this._bms.getFolderIdForItem(itemId),
-                             command.data.index);
-        }
-        break;
-      case "parentid": {
-        if (command.data.parentid &&
-            (this._bms.getFolderIdForItem(itemId) !=
-             this._getItemIdForGUID(command.data.parentid))) {
-          this._log.trace("Moving item (changing folder)");
-          let index = -1;
-          if (command.data.index && command.data.index >= 0)
-            index = command.data.index;
-          this._bms.moveItem(itemId,
-                             this._getItemIdForGUID(command.data.parentid), index);
-        }
-      } break;
       case "tags": {
         // filter out null/undefined/empty tags
-        let tags = command.data.tags.filter(function(t) t);
+        let tags = record.cleartext.tags.filter(function(t) t);
         let tagsURI = this._bms.getBookmarkURI(itemId);
         this._ts.untagURI(tagsURI, null);
         this._ts.tagURI(tagsURI, tags);
       } break;
       case "keyword":
-        this._bms.setKeywordForBookmark(itemId, command.data.keyword);
+        this._bms.setKeywordForBookmark(itemId, record.cleartext.keyword);
         break;
       case "description":
-        if (command.data.description) {
-          this._ans.setItemAnnotation(itemId, "bookmarkProperties/description",
-                                      command.data.description, 0,
-                                      this._ans.EXPIRE_NEVER);
-        }
+        this._ans.setItemAnnotation(itemId, "bookmarkProperties/description",
+                                    record.cleartext.description, 0,
+                                    this._ans.EXPIRE_NEVER);
         break;
       case "generatorURI": {
         let micsumURI = Utils.makeURI(this._bms.getBookmarkURI(itemId));
-        let genURI = Utils.makeURI(command.data.generatorURI);
+        let genURI = Utils.makeURI(record.cleartext.generatorURI);
 	if (this._ms == SERVICE_NOT_SUPPORTED) {
 	  this._log.warn("Can't create microsummary -- not supported.");
 	} else {
@@ -435,29 +377,26 @@ BookmarksStore.prototype = {
 	}
       } break;
       case "siteURI":
-        this._ls.setSiteURI(itemId, Utils.makeURI(command.data.siteURI));
+        this._ls.setSiteURI(itemId, Utils.makeURI(record.cleartext.siteURI));
         break;
       case "feedURI":
-        this._ls.setFeedURI(itemId, Utils.makeURI(command.data.feedURI));
+        this._ls.setFeedURI(itemId, Utils.makeURI(record.cleartext.feedURI));
         break;
       case "outgoingSharedAnno":
 	this._ans.setItemAnnotation(itemId, OUTGOING_SHARED_ANNO,
-				    command.data.outgoingSharedAnno, 0,
+				    record.cleartext.outgoingSharedAnno, 0,
 				    this._ans.EXPIRE_NEVER);
 	break;
       case "incomingSharedAnno":
 	this._ans.setItemAnnotation(itemId, INCOMING_SHARED_ANNO,
-				    command.data.incomingSharedAnno, 0,
+				    record.cleartext.incomingSharedAnno, 0,
 				    this._ans.EXPIRE_NEVER);
 	break;
       case "serverPathAnno":
 	this._ans.setItemAnnotation(itemId, SERVER_PATH_ANNO,
-				    command.data.serverPathAnno, 0,
+				    record.cleartext.serverPathAnno, 0,
 				    this._ans.EXPIRE_NEVER);
 	break;
-      default:
-        this._log.warn("Can't change item property: " + key);
-        break;
       }
     }
   },
@@ -490,16 +429,16 @@ BookmarksStore.prototype = {
     return this._hsvc.executeQuery(query, this._hsvc.getNewQueryOptions()).root;
   },
 
-  __wrap: function BSS___wrap(node, items, parentid, index, guidOverride) {
+  __wrap: function BSS___wrap(node, items, parentid, index, depth, guidOverride) {
     let GUID, item;
 
     // we override the guid for the root items, "menu", "toolbar", etc.
     if (guidOverride) {
       GUID = guidOverride;
-      item = {};
+      item = {sortindex: index, depth: depth};
     } else {
       GUID = this._bms.getItemGUID(node.itemId);
-      item = {parentid: parentid, index: index};
+      item = {parentid: parentid, sortindex: index, depth: depth};
     }
 
     if (node.type == node.RESULT_TYPE_FOLDER) {
@@ -534,7 +473,7 @@ BookmarksStore.prototype = {
 	}
 
         for (var i = 0; i < node.childCount; i++) {
-          this.__wrap(node.getChild(i), items, GUID, i);
+          this.__wrap(node.getChild(i), items, GUID, i, depth + 1);
         }
       }
       if (!guidOverride)
@@ -601,47 +540,7 @@ BookmarksStore.prototype = {
 
   // helper
   _wrap: function BStore__wrap(node, items, rootName) {
-    return this.__wrap(node, items, null, null, rootName);
-  },
-
-  _wrapMountOutgoing: function BStore__wrapById( itemId ) {
-    let node = this._getNode(itemId);
-    if (node.type != node.RESULT_TYPE_FOLDER)
-      throw "Trying to wrap a non-folder mounted share";
-
-    let GUID = this._bms.getItemGUID(itemId);
-    let snapshot = {};
-    node.QueryInterface(Ci.nsINavHistoryQueryResultNode);
-    node.containerOpen = true;
-    for (var i = 0; i < node.childCount; i++) {
-      this.__wrap(node.getChild(i), snapshot, GUID, i);
-    }
-
-    // remove any share mountpoints
-    for (let guid in snapshot) {
-      // TODO decide what to do with this...
-      if (snapshot[guid].type == "incoming-share")
-        delete snapshot[guid];
-    }
-    return snapshot;
-  },
-
-  findIncomingShares: function BStore_findIncomingShares() {
-    /* Returns list of mount data structures, each of which
-       represents one incoming shared-bookmark folder. */
-    let ret = [];
-    let a = this._ans.getItemsWithAnnotation(INCOMING_SHARED_ANNO, {});
-    for (let i = 0; i < a.length; i++) {
-      /* The value of the incoming-shared annotation is the id of the
-       person who has shared it with us.  Get that value: */
-      let userId = this._ans.getItemAnnotation(a[i], INCOMING_SHARED_ANNO);
-      let node = this._getNode(a[i]);
-      let GUID = this._bms.getItemGUID(a[i]);
-      let path = this._ans.getItemAnnotation(a[i], SERVER_PATH_ANNO);
-      let dat = {rootGUID: GUID, userid: userId, serverPath: path, node: node};
-      ret.push(dat);
-    }
-    return ret;
+    return this.__wrap(node, items, null, 0, 0, rootName);
   },
 
   wrap: function BStore_wrap() {
