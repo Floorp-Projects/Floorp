@@ -248,7 +248,8 @@ SyncEngine.prototype = {
   get baseURL() {
     let url = Utils.prefs.getCharPref("serverURL");
     if (url && url[url.length-1] != '/')
-      url = url + '/';
+      url += '/';
+    url += "0.3/user/";
     return url;
   },
 
