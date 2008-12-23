@@ -621,10 +621,6 @@ nsCSSDeclaration::GetValue(nsCSSProperty aProperty,
     return NS_OK;
   }
 
-
-  // XXX What about checking the consistency of '!important'?
-  // XXX What about checking that we don't serialize inherit,
-  // -moz-initial, or other illegal values?
   // XXXldb Can we share shorthand logic with ToString?
   switch (aProperty) {
     case eCSSProperty_margin: 
