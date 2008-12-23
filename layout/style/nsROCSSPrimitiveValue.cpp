@@ -372,12 +372,12 @@ nsROCSSPrimitiveValue::GetFloatValue(PRUint16 aUnitType, float* aReturn)
     case CSS_PERCENTAGE :
       if (mType != CSS_PERCENTAGE)
         return NS_ERROR_DOM_INVALID_ACCESS_ERR;
-      *aReturn = mValue.mFloat * 100;
+      *aReturn = float(mValue.mFloat * 100);
       break;
     case CSS_NUMBER :
       if (mType != CSS_NUMBER)
         return NS_ERROR_DOM_INVALID_ACCESS_ERR;
-      *aReturn = mValue.mFloat;
+      *aReturn = float(mValue.mFloat);
       break;
     case CSS_UNKNOWN :
     case CSS_EMS :
