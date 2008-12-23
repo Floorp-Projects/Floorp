@@ -5431,8 +5431,10 @@ CSSParserImpl::ParseSingleValueProperty(nsCSSValue& aValue,
     return ParseVariant(aValue, VARIANT_HK,
                         nsCSSProps::kStrokeLinejoinKTable);
   case eCSSProperty_stroke_miterlimit:
-    return ParsePositiveVariant(aValue, VARIANT_HN,
-                                nsnull);
+    return ParseVariant(aValue, VARIANT_HN, nsnull) &&
+           // Enforce the restriction that the value is greater than 1.
+           (aValue.GetUnit() != eCSSUnit_Number || 
+            aValue.GetFloatValue() >= 1.0f);
   case eCSSProperty_stroke_opacity:
     return ParseVariant(aValue, VARIANT_HN,
                         nsnull);
