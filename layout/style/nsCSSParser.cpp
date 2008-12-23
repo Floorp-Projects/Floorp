@@ -7627,7 +7627,12 @@ CSSParserImpl::ParseTextDecoration(nsCSSValue& aValue)
       PRInt32 index;
       for (index = 0; index < 3; index++) {
         if (ParseEnum(keyword, nsCSSProps::kTextDecorationKTable)) {
-          intValue |= keyword.GetIntValue();
+          PRInt32 newValue = keyword.GetIntValue();
+          if (newValue & intValue) {
+            // duplicate keyword is not allowed
+            return PR_FALSE;
+          }
+          intValue |= newValue;
         }
         else {
           break;
