@@ -730,11 +730,23 @@ nsCSSDeclaration::GetValue(nsCSSProperty aProperty,
                    nsCSSProps::kTypeTable[subprops[1]] == eCSSType_Value &&
                    nsCSSProps::kTypeTable[subprops[2]] == eCSSType_Value,
                    "type mismatch");
+      NS_ASSERTION(StringEndsWith(nsCSSProps::GetStringValue(subprops[2]),
+                                  NS_LITERAL_CSTRING("-color")) ||
+                   StringEndsWith(nsCSSProps::GetStringValue(subprops[2]),
+                                  NS_LITERAL_CSTRING("-color-value")),
+                   "third subprop must be the color property");
+      const nsCSSValue *colorValue =
+        static_cast<const nsCSSValue*>(data->StorageFor(subprops[2]));
+      PRBool isMozUseTextColor =
+        colorValue->GetUnit() == eCSSUnit_Enumerated &&
+        colorValue->GetIntValue() == NS_STYLE_COLOR_MOZ_USE_TEXT_COLOR;
       if (!AppendValueToString(subprops[0], aValue) ||
           !(aValue.Append(PRUnichar(' ')),
             AppendValueToString(subprops[1], aValue)) ||
-          !(aValue.Append(PRUnichar(' ')),
-            AppendValueToString(subprops[2], aValue))) {
+          // Don't output a third value when it's -moz-use-text-color.
+          !(isMozUseTextColor ||
+            (aValue.Append(PRUnichar(' ')),
+             AppendValueToString(subprops[2], aValue)))) {
         aValue.Truncate();
       }
       break;
@@ -1033,11 +1045,11 @@ nsCSSDeclaration::TryBorderShorthand(nsAString & aString, PRUint32 aPropertiesSe
     aString.Append(PRUnichar(' '));
 
     AppendValueToString(eCSSProperty_border_top_style, aString);
-    aString.Append(PRUnichar(' '));
 
     nsAutoString valueString;
     AppendValueToString(eCSSProperty_border_top_color, valueString);
     if (!valueString.EqualsLiteral("-moz-use-text-color")) {
+      aString.Append(PRUnichar(' '));
       /* don't output this value, it's proprietary Mozilla and  */
       /* not intended to be exposed ; we can remove it from the */
       /* values of the shorthand since this value represents the */

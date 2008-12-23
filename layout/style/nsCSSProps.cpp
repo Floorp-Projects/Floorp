@@ -1349,6 +1349,7 @@ static const nsCSSProperty gBorderSubpropTable[] = {
 
 static const nsCSSProperty gBorderBottomSubpropTable[] = {
   // nsCSSDeclaration.cpp outputs the subproperties in this order.
+  // It also depends on the color being third.
   eCSSProperty_border_bottom_width,
   eCSSProperty_border_bottom_style,
   eCSSProperty_border_bottom_color,
@@ -1403,6 +1404,7 @@ static const nsCSSProperty gMozBorderStartColorSubpropTable[] = {
 
 static const nsCSSProperty gMozBorderEndSubpropTable[] = {
   // nsCSSDeclaration.cpp output the subproperties in this order.
+  // It also depends on the color being third.
   eCSSProperty_border_end_width_value,
   eCSSProperty_border_end_style_value,
   eCSSProperty_border_end_color_value,
@@ -1418,6 +1420,7 @@ static const nsCSSProperty gMozBorderEndSubpropTable[] = {
 
 static const nsCSSProperty gBorderLeftSubpropTable[] = {
   // nsCSSDeclaration.cpp outputs the subproperties in this order.
+  // It also depends on the color being third.
   eCSSProperty_border_left_width_value,
   eCSSProperty_border_left_style_value,
   eCSSProperty_border_left_color_value,
@@ -1433,6 +1436,7 @@ static const nsCSSProperty gBorderLeftSubpropTable[] = {
 
 static const nsCSSProperty gBorderRightSubpropTable[] = {
   // nsCSSDeclaration.cpp outputs the subproperties in this order.
+  // It also depends on the color being third.
   eCSSProperty_border_right_width_value,
   eCSSProperty_border_right_style_value,
   eCSSProperty_border_right_color_value,
@@ -1448,6 +1452,7 @@ static const nsCSSProperty gBorderRightSubpropTable[] = {
 
 static const nsCSSProperty gMozBorderStartSubpropTable[] = {
   // nsCSSDeclaration.cpp outputs the subproperties in this order.
+  // It also depends on the color being third.
   eCSSProperty_border_start_width_value,
   eCSSProperty_border_start_style_value,
   eCSSProperty_border_start_color_value,
@@ -1509,6 +1514,7 @@ static const nsCSSProperty gMozBorderEndStyleSubpropTable[] = {
 
 static const nsCSSProperty gBorderTopSubpropTable[] = {
   // nsCSSDeclaration.cpp outputs the subproperties in this order.
+  // It also depends on the color being third.
   eCSSProperty_border_top_width,
   eCSSProperty_border_top_style,
   eCSSProperty_border_top_color,
@@ -1636,13 +1642,16 @@ static const nsCSSProperty gMozMarginEndSubpropTable[] = {
 
 static const nsCSSProperty gOutlineSubpropTable[] = {
   // nsCSSDeclaration.cpp outputs the subproperties in this order.
-  eCSSProperty_outline_color,
-  eCSSProperty_outline_style,
+  // It also depends on the color being third.
   eCSSProperty_outline_width,
+  eCSSProperty_outline_style,
+  eCSSProperty_outline_color,
   eCSSProperty_UNKNOWN
 };
 
 static const nsCSSProperty gMozColumnRuleSubpropTable[] = {
+  // nsCSSDeclaration.cpp outputs the subproperties in this order.
+  // It also depends on the color being third.
   eCSSProperty__moz_column_rule_width,
   eCSSProperty__moz_column_rule_style,
   eCSSProperty__moz_column_rule_color,
