@@ -96,6 +96,25 @@ e.setAttribute("style", "border-style: ridge none none none");
 is(e.style.borderStyle, "ridge none none", "should condense");
 is(e.style.cssText, "border-style: ridge none none;", "should condense");
 
+// Test that we refuse to serialize the 'background' and 'font'
+// shorthands when some subproperties that can't be expressed in the
+// shorthand syntax are present.
+e.setAttribute("style", "font: medium serif");
+isnot(e.style.font, "", "should have font shorthand");
+e.setAttribute("style", "font: medium serif; font-size-adjust: 0.45");
+is(e.style.font, "", "should not have font shorthand");
+e.setAttribute("style", "font: medium serif; font-stretch: condensed");
+is(e.style.font, "", "should not have font shorthand");
+
+e.setAttribute("style", "background: red");
+isnot(e.style.background, "", "should have background shorthand");
+e.setAttribute("style", "background: red; -moz-background-origin: border");
+is(e.style.background, "", "should not have background shorthand");
+e.setAttribute("style", "background: red; -moz-background-clip: padding");
+is(e.style.background, "", "should not have background shorthand");
+e.setAttribute("style", "background: red; -moz-background-inline-policy: each-box");
+is(e.style.background, "", "should not have background shorthand");
+
 </script>
 </pre>
 </body>
