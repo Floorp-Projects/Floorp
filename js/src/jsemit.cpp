@@ -1876,7 +1876,8 @@ BindNameToSlot(JSContext *cx, JSCodeGenerator *cg, JSParseNode *pn)
     if (tc->flags & TCF_FUN_CLOSURE_VS_VAR)
         return JS_TRUE;
 
-    if (!(tc->flags & TCF_IN_FUNCTION)) {
+    /* Don't generate upvars on the left side of a for loop. See bug 470758. */
+    if (!(tc->flags & (TCF_IN_FUNCTION | TCF_IN_FOR_INIT))) {
         JSStackFrame *caller;
 
         caller = tc->parseContext->callerFrame;
