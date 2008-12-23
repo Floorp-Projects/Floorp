@@ -51,7 +51,7 @@ WeaveService.prototype = {
     case "app-startup":
       let os = Components.classes["@mozilla.org/observer-service;1"].
         getService(Components.interfaces.nsIObserverService);
-      os.addObserver(this, "profile-after-change", true);
+      os.addObserver(this, "sessionstore-windows-restored", true);
       break;
    /* The following event doesn't exist on Fennec; for Fennec loading, see
     * fennec-weave-overlay.js.
