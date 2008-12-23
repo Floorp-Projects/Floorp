@@ -6363,37 +6363,36 @@ PRBool
 CSSParserImpl::ParseBorderColors(nsCSSValueList** aResult,
                                  nsCSSProperty aProperty)
 {
-  nsCSSValue value;
-  if (ParseVariant(value, VARIANT_HCK|VARIANT_NONE, nsCSSProps::kBorderColorKTable)) {
-    nsCSSValueList* listHead = new nsCSSValueList();
-    nsCSSValueList* list = listHead;
-    if (!list) {
+  nsCSSValueList *list = nsnull;
+  for (nsCSSValueList **curp = &list, *cur; ; curp = &cur->mNext) {
+    cur = *curp = new nsCSSValueList();
+    if (!cur) {
       mScanner.SetLowLevelError(NS_ERROR_OUT_OF_MEMORY);
-      return PR_FALSE;
+      break;
     }
-    list->mValue = value;
-
-    while (list) {
-      if (ExpectEndProperty()) {
-        mTempData.SetPropertyBit(aProperty);
-        *aResult = listHead;
-        return PR_TRUE;
-      }
-      // FIXME Bug 389404: We should not accept inherit, -moz-initial,
-      // or none as anything other than the first value.
-      if (ParseVariant(value, VARIANT_HCK|VARIANT_NONE, nsCSSProps::kBorderColorKTable)) {
-        list->mNext = new nsCSSValueList();
-        list = list->mNext;
-        if (list)
-          list->mValue = value;
-        else
-          mScanner.SetLowLevelError(NS_ERROR_OUT_OF_MEMORY);
-      }
-      else
-        break;
+    if (!ParseVariant(cur->mValue,
+                      (cur == list)
+                        ? (VARIANT_HCK | VARIANT_NONE)
+                        : (VARIANT_COLOR | VARIANT_KEYWORD),
+                      nsCSSProps::kBorderColorKTable)) {
+      break;
     }
-    delete listHead;
+    if (ExpectEndProperty()) {
+      // Only success case here, since having the failure case at the
+      // end allows more sharing of code.
+      mTempData.SetPropertyBit(aProperty);
+      *aResult = list;
+      return PR_TRUE;
+    }
+    if (cur->mValue.GetUnit() == eCSSUnit_Inherit ||
+        cur->mValue.GetUnit() == eCSSUnit_Initial ||
+        cur->mValue.GetUnit() == eCSSUnit_None) {
+      // 'inherit', 'initial', and 'none' are only allowed on their own
+      break;
+    }
   }
+  // Have failure case at the end so we can |break| to get to it.
+  delete list;
   return PR_FALSE;
 }
 

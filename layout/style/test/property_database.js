@@ -109,7 +109,7 @@ var gCSSProperties = {
 		type: CSS_TYPE_LONGHAND,
 		initial_values: [ "none" ],
 		other_values: [ "red green", "red #fc3", "#ff00cc", "currentColor", "blue currentColor orange currentColor" ],
-		invalid_values: [ "red none", "red inherit", "red, green" ]
+		invalid_values: [ "red none", "red inherit", "red, green", "none red", "inherit red" ]
 	},
 	"-moz-border-end": {
 		domProp: "MozBorderEnd",
@@ -172,7 +172,7 @@ var gCSSProperties = {
 		type: CSS_TYPE_LONGHAND,
 		initial_values: [ "none" ],
 		other_values: [ "red green", "red #fc3", "#ff00cc", "currentColor", "blue currentColor orange currentColor" ],
-		invalid_values: [ "red none", "red inherit", "red, green" ]
+		invalid_values: [ "red none", "red inherit", "red, green", "none red", "inherit red" ]
 	},
 	"-moz-border-radius": {
 		domProp: "MozBorderRadius",
@@ -231,7 +231,7 @@ var gCSSProperties = {
 		type: CSS_TYPE_LONGHAND,
 		initial_values: [ "none" ],
 		other_values: [ "red green", "red #fc3", "#ff00cc", "currentColor", "blue currentColor orange currentColor" ],
-		invalid_values: [ "red none", "red inherit", "red, green" ]
+		invalid_values: [ "red none", "red inherit", "red, green", "none red", "inherit red" ]
 	},
 	"-moz-border-start": {
 		domProp: "MozBorderStart",
@@ -277,7 +277,7 @@ var gCSSProperties = {
 		type: CSS_TYPE_LONGHAND,
 		initial_values: [ "none" ],
 		other_values: [ "red green", "red #fc3", "#ff00cc", "currentColor", "blue currentColor orange currentColor" ],
-		invalid_values: [ "red none", "red inherit", "red, green" ]
+		invalid_values: [ "red none", "red inherit", "red, green", "none red", "inherit red" ]
 	},
 	"-moz-box-align": {
 		domProp: "MozBoxAlign",
