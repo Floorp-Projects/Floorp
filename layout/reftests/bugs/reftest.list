@@ -997,3 +997,4 @@ fails == 461512-1.html 461512-1-ref.html # Bug 461512
 == 467084-1.html 467084-1-ref.html
 == 467084-2.html 467084-2-ref.html
 == 467460-1.html 467460-1-ref.html
+== 468473-1.xul 468473-1-ref.xul
