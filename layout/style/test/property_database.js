@@ -308,8 +308,8 @@ var gCSSProperties = {
 		inherited: false,
 		type: CSS_TYPE_LONGHAND,
 		initial_values: [ "1" ],
-		other_values: [ "0", "-1", "100", "-1000" ],
-		invalid_values: [ "1.0" ]
+		other_values: [ "0", "100" ],
+		invalid_values: [ "1.0", "-1", "-1000" ]
 	},
 	"-moz-box-orient": {
 		domProp: "MozBoxOrient",
