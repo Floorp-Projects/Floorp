@@ -82,7 +82,6 @@ _TEST_FILES =	test_acid3_test46.html \
 		test_bug365932.html \
 		test_bug372770.html \
 		test_bug373293.html \
-		test_bug373875.html \
 		test_bug377947.html \
 		test_bug379440.html \
 		test_bug379741.html \
