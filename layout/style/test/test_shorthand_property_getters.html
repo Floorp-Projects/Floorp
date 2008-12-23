@@ -64,6 +64,37 @@ ok(e.style.cssText == "border-right: medium solid;" ||
    e.style.cssText == "border-right: solid medium;",
    "implied default color omitted serializing declaration");
 
+// Test that we shorten box properties to the shortest possible.
+e.setAttribute("style", "margin: 7px");
+is(e.style.margin, "7px", "should condense to shortest possible");
+is(e.style.cssText, "margin: 7px;", "should condense to shortest possible");
+e.setAttribute("style", "padding: 7px 7px 7px");
+is(e.style.padding, "7px", "should condense to shortest possible");
+is(e.style.cssText, "padding: 7px;", "should condense to shortest possible");
+e.setAttribute("style", "border-width: 7px 7px 7px 7px");
+is(e.style.borderWidth, "7px", "should condense to shortest possible");
+is(e.style.cssText, "border-width: 7px;", "should condense to shortest possible");
+e.setAttribute("style", "margin: 7px 7px 7px 6px");
+is(e.style.margin, "7px 7px 7px 6px", "should not condense");
+is(e.style.cssText, "margin: 7px 7px 7px 6px;", "should not condense");
+e.setAttribute("style", "border-style: solid dotted none dotted");
+is(e.style.borderStyle, "solid dotted none", "should condense");
+is(e.style.cssText, "border-style: solid dotted none;", "should condense");
+e.setAttribute("style", "border-color: green blue");
+is(e.style.borderColor, "green blue", "should condense");
+is(e.style.cssText, "border-color: green blue;", "should condense");
+e.setAttribute("style", "border-color: green blue green");
+is(e.style.borderColor, "green blue", "should condense");
+is(e.style.cssText, "border-color: green blue;", "should condense");
+e.setAttribute("style", "border-color: green blue green blue");
+is(e.style.borderColor, "green blue", "should condense");
+is(e.style.cssText, "border-color: green blue;", "should condense");
+e.setAttribute("style", "border-color: currentColor currentColor currentcolor CURRENTcolor");
+is(e.style.borderColor, "currentcolor", "should condense to canonical case");
+is(e.style.cssText, "border-color: currentcolor;", "should condense to canonical case");
+e.setAttribute("style", "border-style: ridge none none none");
+is(e.style.borderStyle, "ridge none none", "should condense");
+is(e.style.cssText, "border-style: ridge none none;", "should condense");
 
 </script>
 </pre>
