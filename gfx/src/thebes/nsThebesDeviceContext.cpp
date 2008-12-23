@@ -240,7 +240,7 @@ nsThebesDeviceContext::SetDPI()
         dpi = 96;
 
 #elif defined(MOZ_WIDGET_QT)
-		// TODO: get real DPI here with Qt methods
+        // TODO: get real DPI here with Qt methods
         dpi = 96;
 #else
 #error undefined platform dpi
@@ -445,8 +445,8 @@ nsThebesDeviceContext::CheckFontExistence(const nsString& aFaceName)
 NS_IMETHODIMP
 nsThebesDeviceContext::GetDepth(PRUint32& aDepth)
 {
-    nsCOMPtr<nsIScreen> primaryScreen;
     if (mDepth == 0) {
+        nsCOMPtr<nsIScreen> primaryScreen;
         mScreenManager->GetPrimaryScreen(getter_AddRefs(primaryScreen));
         primaryScreen->GetColorDepth(reinterpret_cast<PRInt32 *>(&mDepth));
     }
