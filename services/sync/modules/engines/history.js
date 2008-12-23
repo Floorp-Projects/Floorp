@@ -193,9 +193,7 @@ HistoryStore.prototype = {
         "LIMIT 1 " +
       ") " +
       "LIMIT 1");
-    this._log.trace("_urlStm 1");
     this.__defineGetter__("_urlStm", function() stm);
-    this._log.trace("_urlStm 2");
     return stm;
   },
 
