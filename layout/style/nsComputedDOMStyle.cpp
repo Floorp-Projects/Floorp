@@ -3383,7 +3383,7 @@ nsComputedDOMStyle::SetValueToCoord(nsROCSSPrimitiveValue* aValue,
       break;
       
     case eStyleUnit_Integer:
-      aValue->SetNumber(aCoord.GetIntValue()); // XXX This should really be integer
+      aValue->SetNumber(aCoord.GetIntValue());
       break;
       
     case eStyleUnit_Enumerated:
