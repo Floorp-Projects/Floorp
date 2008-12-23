@@ -76,11 +76,6 @@ var gBadCompute = {
   "-moz-box-ordinal-group": [ "-1", "-1000" ],
 };
 
-var gShortenableValues = {
-  "border-color": [ "currentColor currentColor currentcolor CURRENTcolor" ],
-  "border-style": [ "none none none none", "groove none none none", "none none double none" ],
-};
-
 function xfail_accepted(property, value)
 {
   if (property in gNotAccepted &&
@@ -107,15 +102,6 @@ function xfail_ser_val(property, value)
     return false;
 
   if (property in gShorthandsWithoutCondensingSerialize)
-    return true;
-
-  // We condense multiple values in the serialization, but not in the
-  // value getter.
-  if (property.match(/^(border-(color|style|width)|margin|padding)$/) &&
-      value.split(" ").length != 4)
-    return true;
-  if (property in gShortenableValues &&
-      gShortenableValues[property].indexOf(value) != -1)
     return true;
 
   return false;
