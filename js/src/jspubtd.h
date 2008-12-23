@@ -106,8 +106,8 @@ typedef enum JSAccessMode {
     JSACC_PROTO  = 0,           /* XXXbe redundant w.r.t. id */
     JSACC_PARENT = 1,           /* XXXbe redundant w.r.t. id */
 
-                                /*
-                                 * enum value #2 formerly called JSACC_IMPORT,
+                                /* 
+                                 * enum value #2 formerly called JSACC_IMPORT, 
                                  * gap preserved for liveconnect ABI compatibility.
                                  */
 
@@ -594,25 +594,21 @@ typedef JSBool
 
 typedef enum JSContextOp {
     JSCONTEXT_NEW,
-    JSCONTEXT_DESTROY,
-    JSCONTEXT_REQUEST_START
+    JSCONTEXT_DESTROY
 } JSContextOp;
 
 /*
  * The possible values for contextOp when the runtime calls the callback are:
- *  JSCONTEXT_NEW           JS_NewContext successfully created a new JSContext
- *                          instance. The callback can initialize the instance as
- *                          required. If the callback returns false, the instance
- *                          will be destroyed and JS_NewContext returns null. In
- *                          this case the callback is not called again.
- *  JSCONTEXT_DESTROY       One of JS_DestroyContext* methods is called. The
- *                          callback may perform its own cleanup and must always
- *                          return true.
- *  JSCONTEXT_REQUEST_START JS_BeginRequest was called with requestDepth == 0.
- *                          This callback can be used to notify other components
- *                          that execution has begun on this context.
- *  Any other value         For future compatibility the callback must do nothing
- *                          and return true in this case.
+ *   JSCONTEXT_NEW      JS_NewContext successfully created a new JSContext
+ *                      instance. The callback can initialize the instance as
+ *                      required. If the callback returns false, the instance
+ *                      will be destroyed and JS_NewContext returns null. In
+ *                      this case the callback is not called again.
+ *   JSCONTEXT_DESTROY  One of JS_DestroyContext* methods is called. The
+ *                      callback may perform its own cleanup and must always
+ *                      return true.
+ *   Any other value    For future compatibility the callback must do nothing
+ *                      and return true in this case.
  */
 typedef JSBool
 (* JSContextCallback)(JSContext *cx, uintN contextOp);
