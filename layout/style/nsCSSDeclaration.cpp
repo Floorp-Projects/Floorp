@@ -636,14 +636,40 @@ nsCSSDeclaration::GetValue(nsCSSProperty aProperty,
                    nsCSSProps::kTypeTable[subprops[2]] == eCSSType_Value &&
                    nsCSSProps::kTypeTable[subprops[3]] == eCSSType_Value,
                    "type mismatch");
-      if (!AppendValueToString(subprops[0], aValue) ||
-          !(aValue.Append(PRUnichar(' ')),
-            AppendValueToString(subprops[1], aValue)) ||
-          !(aValue.Append(PRUnichar(' ')),
-            AppendValueToString(subprops[2], aValue)) ||
-          !(aValue.Append(PRUnichar(' ')),
-            AppendValueToString(subprops[3], aValue))) {
-        aValue.Truncate();
+      NS_ASSERTION(nsCSSProps::GetStringValue(subprops[0]).Find("-top") !=
+                     kNotFound, "first subprop must be top");
+      NS_ASSERTION(nsCSSProps::GetStringValue(subprops[1]).Find("-right") !=
+                     kNotFound, "second subprop must be right");
+      NS_ASSERTION(nsCSSProps::GetStringValue(subprops[2]).Find("-bottom") !=
+                     kNotFound, "third subprop must be bottom");
+      NS_ASSERTION(nsCSSProps::GetStringValue(subprops[3]).Find("-left") !=
+                     kNotFound, "fourth subprop must be left");
+      const nsCSSValue &topValue =
+        *static_cast<const nsCSSValue*>(data->StorageFor(subprops[0]));
+      const nsCSSValue &rightValue =
+        *static_cast<const nsCSSValue*>(data->StorageFor(subprops[1]));
+      const nsCSSValue &bottomValue =
+        *static_cast<const nsCSSValue*>(data->StorageFor(subprops[2]));
+      const nsCSSValue &leftValue =
+        *static_cast<const nsCSSValue*>(data->StorageFor(subprops[3]));
+      PRBool haveValue;
+      haveValue = AppendCSSValueToString(subprops[0], topValue, aValue);
+      NS_ASSERTION(haveValue, "should have bailed before");
+      if (topValue != rightValue || topValue != leftValue ||
+          topValue != bottomValue) {
+        aValue.Append(PRUnichar(' '));
+        haveValue = AppendCSSValueToString(subprops[1], rightValue, aValue);
+        NS_ASSERTION(haveValue, "should have bailed before");
+        if (topValue != bottomValue || rightValue != leftValue) {
+          aValue.Append(PRUnichar(' '));
+          haveValue = AppendCSSValueToString(subprops[2], bottomValue, aValue);
+          NS_ASSERTION(haveValue, "should have bailed before");
+          if (rightValue != leftValue) {
+            aValue.Append(PRUnichar(' '));
+            haveValue = AppendCSSValueToString(subprops[3], leftValue, aValue);
+            NS_ASSERTION(haveValue, "should have bailed before");
+          }
+        }
       }
       break;
     }
@@ -861,7 +887,7 @@ nsCSSDeclaration::GetValue(nsCSSProperty aProperty,
       GetValueOrImportantValue(eCSSProperty_overflow_x, xValue);
       GetValueOrImportantValue(eCSSProperty_overflow_y, yValue);
       if (xValue == yValue)
-        AppendValueToString(eCSSProperty_overflow_x, aValue);
+        AppendCSSValueToString(eCSSProperty_overflow_x, xValue, aValue);
       break;
     }
     case eCSSProperty_pause: {
