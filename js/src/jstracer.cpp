@@ -1063,7 +1063,7 @@ TraceRecorder::TraceRecorder(JSContext* cx, VMSideExit* _anchor, Fragment* _frag
     /* read into registers all values on the stack and all globals we know so far */
     import(treeInfo, lirbuf->sp, ngslots, callDepth, globalTypeMap, stackTypeMap);
 
-#if defined(JS_HAS_OPERATION_COUNT) && !JS_HAS_OPERATION_COUNT
+#if 0 && defined(JS_HAS_OPERATION_COUNT) && !JS_HAS_OPERATION_COUNT
     if (fragment == fragment->root) {
         guard(false, 
               lir->ins_eq0(lir->insLoadi(cx_ins, 
