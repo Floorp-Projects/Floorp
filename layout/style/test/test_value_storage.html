@@ -46,17 +46,6 @@
  * cserialize.
  */
 
-var gShorthandsWithoutCondensingSerialize = {
-  "-moz-border-radius": true,
-  "-moz-outline-radius": true,
-  "background": true, // really there, but not complete
-  "cue": true,
-  "font": true,
-  "list-style": true,
-  "outline": true,
-  "pause": true,
-};
-
 var gNotAccepted = {
   "-moz-column-width": [ "50%" ],
   "list-style": [ "none disc outside" ],
@@ -89,19 +78,6 @@ function xfail_accepted_split(property, subprop, value)
 {
   if (property in gNotAccepted &&
       gNotAccepted[property].indexOf(value) != -1)
-    return true;
-
-  return false;
-}
-
-function xfail_ser_val(property, value)
-{
-  if (property != "font" && xfail_accepted(property, value))
-    // We already failed the first test, which will make us always pass this
-    // one.
-    return false;
-
-  if (property in gShorthandsWithoutCondensingSerialize)
     return true;
 
   return false;
@@ -188,12 +164,11 @@ function test_property(property)
 
     // We don't care particularly about the whitespace or the placement of
     // semicolons, but for simplicity we'll test the current behavior.
-    func = xfail_ser_val(property, value) ? todo_is : is;
     var expected_serialization = "";
     if (step1val != "")
       expected_serialization = property + ": " + step1val + ";";
-    func(step1ser, expected_serialization,
-         "serialization should match property value");
+    is(step1ser, expected_serialization,
+       "serialization should match property value");
 
     gDeclaration.removeProperty(property);
     gDeclaration.setProperty(property, step1val, "");

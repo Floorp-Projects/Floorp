@@ -105,9 +105,19 @@ public:
   static const nsCSSType       kTypeTable[eCSSProperty_COUNT_no_shorthands];
   static const nsStyleStructID kSIDTable[eCSSProperty_COUNT_no_shorthands];
   static const PRInt32* const  kKeywordTableTable[eCSSProperty_COUNT_no_shorthands];
+
 private:
   static const PRUint32        kFlagsTable[eCSSProperty_COUNT];
 
+public:
+  static inline PRBool PropHasFlags(nsCSSProperty aProperty, PRUint32 aFlags)
+  {
+    NS_ASSERTION(0 <= aProperty && aProperty < eCSSProperty_COUNT,
+                 "out of range");
+    return (nsCSSProps::kFlagsTable[aProperty] & aFlags) == aFlags;
+  }
+
+private:
   // A table for shorthand properties.  The appropriate index is the
   // property ID minus eCSSProperty_COUNT_no_shorthands.
   static const nsCSSProperty *const
@@ -115,7 +125,7 @@ private:
 
 public:
   static inline
-  const nsCSSProperty *const SubpropertyEntryFor(nsCSSProperty aProperty) {
+  const nsCSSProperty * SubpropertyEntryFor(nsCSSProperty aProperty) {
     NS_ASSERTION(eCSSProperty_COUNT_no_shorthands <= aProperty &&
                  aProperty < eCSSProperty_COUNT,
                  "out of range");
@@ -123,10 +133,26 @@ public:
                                          eCSSProperty_COUNT_no_shorthands];
   }
 
-  static inline PRBool PropHasFlags(nsCSSProperty aProperty, PRUint32 aFlags)
-  {
-    return (nsCSSProps::kFlagsTable[aProperty] & aFlags) == aFlags;
+  // Returns an eCSSProperty_UNKNOWN-terminated array of the shorthand
+  // properties containing |aProperty|, sorted from those that contain
+  // the most properties to those that contain the least.
+  static const nsCSSProperty * ShorthandsContaining(nsCSSProperty aProperty) {
+    NS_ASSERTION(gShorthandsContainingPool, "uninitialized");
+    NS_ASSERTION(0 <= aProperty && aProperty < eCSSProperty_COUNT_no_shorthands,
+                 "out of range");
+    return gShorthandsContainingTable[aProperty];
   }
+private:
+  // gShorthandsContainingTable is an array of the return values for
+  // ShorthandsContaining (arrays of nsCSSProperty terminated by
+  // eCSSProperty_UNKNOWN) pointing into memory in
+  // gShorthandsContainingPool (which contains all of those arrays in a
+  // single allocation, and is the one pointer that should be |free|d).
+  static nsCSSProperty *gShorthandsContainingTable[eCSSProperty_COUNT_no_shorthands];
+  static nsCSSProperty* gShorthandsContainingPool;
+  static PRBool BuildShorthandsContainingTable();
+
+public:
 
 #define CSSPROPS_FOR_SHORTHAND_SUBPROPERTIES(iter_, prop_)                    \
   for (const nsCSSProperty* iter_ = nsCSSProps::SubpropertyEntryFor(prop_);   \
