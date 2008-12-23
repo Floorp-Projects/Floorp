@@ -622,6 +622,7 @@ nsCSSDeclaration::GetValue(nsCSSProperty aProperty,
   }
 
   // XXXldb Can we share shorthand logic with ToString?
+  nsCSSCompressedDataBlock *data = importantCount ? mImportantData : mData;
   switch (aProperty) {
     case eCSSProperty_margin: 
     case eCSSProperty_padding: 
@@ -655,8 +656,6 @@ nsCSSDeclaration::GetValue(nsCSSProperty aProperty,
                    nsCSSProps::kTypeTable[subprops[2]] == eCSSType_ValuePair &&
                    nsCSSProps::kTypeTable[subprops[3]] == eCSSType_ValuePair,
                    "type mismatch");
-      nsCSSCompressedDataBlock *data = GetValueIsImportant(aProperty)
-                                     ? mImportantData : mData;
       const nsCSSValuePair* vals[4] = {
         static_cast<const nsCSSValuePair*>(data->StorageFor(subprops[0])),
         static_cast<const nsCSSValuePair*>(data->StorageFor(subprops[1])),
@@ -689,9 +688,34 @@ nsCSSDeclaration::GetValue(nsCSSProperty aProperty,
       }
       break;
     }
-    case eCSSProperty_border:
-      // XXX More consistency checking needed before falling through.
+    case eCSSProperty_border: {
+      const nsCSSProperty* subproptables[3] = {
+        nsCSSProps::SubpropertyEntryFor(eCSSProperty_border_color),
+        nsCSSProps::SubpropertyEntryFor(eCSSProperty_border_style),
+        nsCSSProps::SubpropertyEntryFor(eCSSProperty_border_width)
+      };
+      PRBool match = PR_TRUE;
+      for (const nsCSSProperty** subprops = subproptables,
+               **subprops_end = subproptables + NS_ARRAY_LENGTH(subproptables);
+           subprops < subprops_end; ++subprops) {
+        // Check only the first four subprops in each table, since the
+        // others are extras for dimensional box properties.
+        const nsCSSValue *firstSide =
+          static_cast<const nsCSSValue*>(data->StorageFor((*subprops)[0]));
+        for (PRInt32 side = 1; side < 4; ++side) {
+          const nsCSSValue *otherSide =
+            static_cast<const nsCSSValue*>(data->StorageFor((*subprops)[side]));
+          if (*firstSide != *otherSide)
+            match = PR_FALSE;
+        }
+      }
+      if (!match) {
+        // We can't express what we have in the border shorthand
+        break;
+      }
+      // tweak aProperty and fall through
       aProperty = eCSSProperty_border_top;
+    }
     case eCSSProperty_border_top:
     case eCSSProperty_border_right:
     case eCSSProperty_border_bottom:
