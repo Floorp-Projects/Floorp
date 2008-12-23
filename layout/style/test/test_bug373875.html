@@ -1,0 +1,32 @@
+<!DOCTYPE HTML>
+<html>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=373875
+-->
+<head>
+  <title>Test for Bug 373875</title>
+  <script type="application/javascript" src="/MochiKit/MochiKit.js"></script>
+  <script type="application/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
+</head>
+<body>
+<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=373875">Mozilla Bug 373875</a>
+<p id="display"></p>
+<div id="content" style="display: none">
+  
+</div>
+<pre id="test">
+<script type="application/javascript">
+
+/** Test for Bug 373875 **/
+
+var e = document.getElementById("display");
+e.setAttribute("style", "z-index: 2147483647"); // maximum signed 32-bit
+is(e.style.zIndex, "2147483647", "element.style should roundtrip correctly");
+is(window.getComputedStyle(e, "").zIndex, "2147483647",
+   "element.style should roundtrip correctly");
+
+</script>
+</pre>
+</body>
+</html>
