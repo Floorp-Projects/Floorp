@@ -42,6 +42,28 @@ is(e.style.border, "", "should not be able to serialize border");
 e.setAttribute("style", "border-width: 3px 3px 3px 3px; border-style: solid dashed; border-color: green");
 is(e.style.border, "", "should not be able to serialize border");
 
+// Test suppression of -moz-use-text-color in border shorthands.
+e.setAttribute("style", "border: medium solid");
+ok(e.style.border == "medium solid" ||
+   e.style.border == "solid medium",
+   "implied default color omitted serializing border");
+ok(e.style.borderLeft == "medium solid" ||
+   e.style.borderLeft == "solid medium",
+   "implied default color omitted serializing border-left");
+ok(e.style.cssText == "border: medium solid;" ||
+   e.style.cssText == "border: solid medium;",
+   "implied default color omitted serializing declaration");
+e.setAttribute("style", "border-right: medium solid");
+ok(e.style.borderRight == "medium solid" ||
+   e.style.borderRight == "solid medium",
+   "implied default color omitted serializing border-right");
+ok(e.style.borderRight == "medium solid" ||
+   e.style.borderRight == "solid medium",
+   "implied default color omitted serializing border-right");
+ok(e.style.cssText == "border-right: medium solid;" ||
+   e.style.cssText == "border-right: solid medium;",
+   "implied default color omitted serializing declaration");
+
 
 </script>
 </pre>

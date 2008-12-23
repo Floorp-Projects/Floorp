@@ -109,15 +109,6 @@ function xfail_ser_val(property, value)
   if (property in gShorthandsWithoutCondensingSerialize)
     return true;
 
-  // We output unneeded -moz-use-text-color only in the value getter and
-  // not the serialization.
-  // XXXbz is there any way we could actually filter for that, so that colors
-  // other than green could be used in the property database here?
-  if ((property.match(/^border(|-bottom|-left|-right|-top)$/) ||
-       property.match(/^-moz-border(|-start|-end)$/)) &&
-      !value.match(/(green|currentcolor)/i))
-    return true;
-
   // We condense multiple values in the serialization, but not in the
   // value getter.
   if (property.match(/^(border-(color|style|width)|margin|padding)$/) &&
