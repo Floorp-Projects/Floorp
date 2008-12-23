@@ -251,11 +251,7 @@ js_NewContext(JSRuntime *rt, size_t stackChunkSize)
     memset(cx, 0, sizeof *cx);
 
     cx->runtime = rt;
-#if JS_OPERATION_COUNT
     JS_ClearOperationCallback(cx);
-#else
-    cx->operationCount = 1;
-#endif
     cx->debugHooks = &rt->globalDebugHooks;
 #if JS_STACK_GROWTH_DIRECTION > 0
     cx->stackLimit = (jsuword)-1;
@@ -511,7 +507,7 @@ js_ValidContextPointer(JSRuntime *rt, JSContext *cx)
     return JS_FALSE;
 }
 
-JS_FRIEND_API(JSContext *)
+JSContext *
 js_ContextIterator(JSRuntime *rt, JSBool unlocked, JSContext **iterp)
 {
     JSContext *cx = *iterp;
@@ -1352,11 +1348,11 @@ js_GetErrorMessage(void *userRef, const char *locale, const uintN errorNumber)
 JSBool
 js_ResetOperationCount(JSContext *cx)
 {
-    JS_ASSERT(cx->operationCount <= 0);
-
-#if JS_HAS_OPERATION_COUNT
     JSScript *script;
     JSStackFrame *fp;
+
+    JS_ASSERT(cx->operationCount <= 0);
+    JS_ASSERT(cx->operationLimit > 0);
 
     cx->operationCount = (int32) cx->operationLimit;
     if (cx->operationCallbackIsSet)
@@ -1373,14 +1369,6 @@ js_ResetOperationCount(JSContext *cx)
         if (script || JS_HAS_OPTION(cx, JSOPTION_NATIVE_BRANCH_CALLBACK))
             return ((JSBranchCallback) cx->operationCallback)(cx, script);
     }
-#else
-    JSOperationCallback operationCallback;
-
-    cx->operationCount = 1;
-    operationCallback = cx->operationCallback;
-    if (operationCallback)
-        return operationCallback(cx);
-#endif
     return JS_TRUE;
 }
 
