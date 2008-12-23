@@ -805,6 +805,26 @@ nsCSSDeclaration::GetValue(nsCSSProperty aProperty,
       break;
     }
     case eCSSProperty_background: {
+      // The -moz-background-clip, -moz-background-origin, and
+      // -moz-background-inline-policy properties are reset by this
+      // shorthand property to their initial values, but can't be
+      // represented in its syntax.
+      const nsCSSValue *clipValue = static_cast<const nsCSSValue*>(
+        data->StorageFor(eCSSProperty__moz_background_clip));
+      const nsCSSValue *originValue = static_cast<const nsCSSValue*>(
+        data->StorageFor(eCSSProperty__moz_background_origin));
+      const nsCSSValue *inlinePolicyValue = static_cast<const nsCSSValue*>(
+        data->StorageFor(eCSSProperty__moz_background_inline_policy));
+      if (*clipValue !=
+            nsCSSValue(NS_STYLE_BG_CLIP_BORDER, eCSSUnit_Enumerated) ||
+          *originValue !=
+            nsCSSValue(NS_STYLE_BG_ORIGIN_PADDING, eCSSUnit_Enumerated) ||
+          *inlinePolicyValue !=
+            nsCSSValue(NS_STYLE_BG_INLINE_POLICY_CONTINUOUS,
+                       eCSSUnit_Enumerated)) {
+        return NS_OK;
+      }
+      
       PRBool appendedSomething = PR_FALSE;
       if (AppendValueToString(eCSSProperty_background_color, aValue)) {
         appendedSomething = PR_TRUE;
@@ -853,6 +873,18 @@ nsCSSDeclaration::GetValue(nsCSSProperty aProperty,
           systemFont.GetUnit() != eCSSUnit_Null) {
         AppendCSSValueToString(eCSSProperty__x_system_font, systemFont, aValue);
       } else {
+        // The font-stretch and font-size-adjust
+        // properties are reset by this shorthand property to their
+        // initial values, but can't be represented in its syntax.
+        const nsCSSValue *stretchValue = static_cast<const nsCSSValue*>(
+          data->StorageFor(eCSSProperty_font_stretch));
+        const nsCSSValue *sizeAdjustValue = static_cast<const nsCSSValue*>(
+          data->StorageFor(eCSSProperty_font_size_adjust));
+        if (*stretchValue != nsCSSValue(eCSSUnit_Normal) ||
+            *sizeAdjustValue != nsCSSValue(eCSSUnit_None)) {
+          return NS_OK;
+        }
+
         if (style.GetUnit() != eCSSUnit_Normal) {
           AppendCSSValueToString(eCSSProperty_font_style, style, aValue);
           aValue.Append(PRUnichar(' '));
