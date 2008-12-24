@@ -18,7 +18,7 @@
 void /* PRIVATE */
 png_do_write_transformations(png_structp png_ptr)
 {
-   png_debug(1, "in png_do_write_transformations\n");
+   png_debug(1, "in png_do_write_transformations");
 
    if (png_ptr == NULL)
       return;
@@ -86,7 +86,7 @@ png_do_write_transformations(png_structp png_ptr)
 void /* PRIVATE */
 png_do_pack(png_row_infop row_info, png_bytep row, png_uint_32 bit_depth)
 {
-   png_debug(1, "in png_do_pack\n");
+   png_debug(1, "in png_do_pack");
    if (row_info->bit_depth == 8 &&
 #if defined(PNG_USELESS_TESTS_SUPPORTED)
        row != NULL && row_info != NULL &&
@@ -212,7 +212,7 @@ png_do_pack(png_row_infop row_info, png_bytep row, png_uint_32 bit_depth)
 void /* PRIVATE */
 png_do_shift(png_row_infop row_info, png_bytep row, png_color_8p bit_depth)
 {
-   png_debug(1, "in png_do_shift\n");
+   png_debug(1, "in png_do_shift");
 #if defined(PNG_USELESS_TESTS_SUPPORTED)
    if (row != NULL && row_info != NULL &&
 #else
@@ -336,7 +336,7 @@ png_do_shift(png_row_infop row_info, png_bytep row, png_color_8p bit_depth)
 void /* PRIVATE */
 png_do_write_swap_alpha(png_row_infop row_info, png_bytep row)
 {
-   png_debug(1, "in png_do_write_swap_alpha\n");
+   png_debug(1, "in png_do_write_swap_alpha");
 #if defined(PNG_USELESS_TESTS_SUPPORTED)
    if (row != NULL && row_info != NULL)
 #endif
@@ -424,7 +424,7 @@ png_do_write_swap_alpha(png_row_infop row_info, png_bytep row)
 void /* PRIVATE */
 png_do_write_invert_alpha(png_row_infop row_info, png_bytep row)
 {
-   png_debug(1, "in png_do_write_invert_alpha\n");
+   png_debug(1, "in png_do_write_invert_alpha");
 #if defined(PNG_USELESS_TESTS_SUPPORTED)
    if (row != NULL && row_info != NULL)
 #endif
@@ -514,7 +514,7 @@ png_do_write_invert_alpha(png_row_infop row_info, png_bytep row)
 void /* PRIVATE */
 png_do_write_intrapixel(png_row_infop row_info, png_bytep row)
 {
-   png_debug(1, "in png_do_write_intrapixel\n");
+   png_debug(1, "in png_do_write_intrapixel");
    if (
 #if defined(PNG_USELESS_TESTS_SUPPORTED)
        row != NULL && row_info != NULL &&

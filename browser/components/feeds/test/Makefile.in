@@ -45,6 +45,10 @@ include $(DEPTH)/config/autoconf.mk
 MODULE		= test_browser_feeds
 XPCSHELL_TESTS	= unit
 
+DIRS = \
+	chrome \
+	$(NULL)
+
 include $(topsrcdir)/config/rules.mk
 
 _TEST_FILES =	test_bug408328.html \

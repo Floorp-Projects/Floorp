@@ -229,7 +229,6 @@ void HandleConnection(void* data)
 {
   connection_info_t* ci = static_cast<connection_info_t*>(data);
   PRIntervalTime connect_timeout = PR_SecondsToInterval(2);
-  PRIntervalTime short_timeout = PR_MillisecondsToInterval(250);
 
   AutoFD other_sock(PR_NewTCPSocket());
   bool client_done = false;
@@ -489,7 +488,7 @@ char* password_func(PK11SlotInfo* slot, PRBool retry, void* arg)
   if (retry)
     return NULL;
 
-  return "";
+  return PL_strdup("");
 }
 
 server_info_t* findServerInfo(int portnumber)
