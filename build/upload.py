@@ -57,6 +57,7 @@
 
 import sys, os
 from optparse import OptionParser
+from subprocess import Popen, PIPE
 from util import check_call
 
 def RequireEnvironmentVariable(v):
@@ -104,7 +105,10 @@ def AppendOptionalArgsToSSHCommandline(cmdline, port, ssh_key):
     if port is not None:
         cmdline.append("-P%d" % port)
     if ssh_key is not None:
-        cmdline.extend(["-i", WindowsPathToMsysPath(ssh_key)])
+        # Don't interpret ~ paths - ssh can handle that on its own
+        if not ssh_key.startswith('~'):
+            ssh_key = WindowsPathToMsysPath(ssh_key)
+        cmdline.extend(["-o", "IdentityFile=%s" % ssh_key])
 
 def DoSSHCommand(command, user, host, port=None, ssh_key=None):
     """Execute command on user@host using ssh. Optionally use
@@ -112,7 +116,12 @@ def DoSSHCommand(command, user, host, port=None, ssh_key=None):
     cmdline = ["ssh"]
     AppendOptionalArgsToSSHCommandline(cmdline, port, ssh_key)
     cmdline.extend(["%s@%s" % (user, host), command])
-    check_call(cmdline)
+    cmd = Popen(cmdline, stdout=PIPE)
+    retcode = cmd.wait()
+    if retcode != 0:
+        raise Exception("Command %s returned non-zero exit code: %i" % \
+          (cmdline, retcode))
+    return cmd.stdout.read().strip()
 
 def DoSCPFile(file, remote_path, user, host, port=None, ssh_key=None):
     """Upload file to user@host:remote_path using scp. Optionally use
@@ -135,13 +144,19 @@ def GetRemotePath(path, local_file, base_path):
     dir = dir[len(base_path)+1:].replace('\\','/')
     return path + dir
 
-def UploadFiles(user, host, path, files, verbose=False, port=None, ssh_key=None, base_path=None, post_upload_command=None):
+def UploadFiles(user, host, path, files, verbose=False, port=None, ssh_key=None, base_path=None, upload_to_temp_dir=False, post_upload_command=None):
     """Upload each file in the list files to user@host:path. Optionally pass
     port and ssh_key to the ssh commands. If base_path is not None, upload
-    files including their path relative to base_path. If post_upload_command
-    is not None, execute that command on the remote host after uploading
-    all files, passing it the upload path, and the full paths to all files
-    uploaded. If verbose is True, print status updates while working."""
+    files including their path relative to base_path. If upload_to_temp_dir is
+    True files will be uploaded to a temporary directory on the remote server.
+    Generally, you should have a post upload command specified in these cases
+    that can move them around to their correct location(s).
+    If post_upload_command is not None, execute that command on the remote host
+    after uploading all files, passing it the upload path, and the full paths to
+    all files uploaded.
+    If verbose is True, print status updates while working."""
+    if upload_to_temp_dir:
+        path = DoSSHCommand("mktemp -d", user, host, port=port, ssh_key=ssh_key)
     if not path.endswith("/"):
         path += "/"
     if base_path is not None:
@@ -163,20 +178,28 @@ def UploadFiles(user, host, path, files, verbose=False, port=None, ssh_key=None,
             print "Running post-upload command: " + post_upload_command
         file_list = '"' + '" "'.join(remote_files) + '"'
         DoSSHCommand('%s "%s" %s' % (post_upload_command, path, file_list), user, host, port=port, ssh_key=ssh_key)
+    if upload_to_temp_dir:
+        DoSSHCommand("rm -rf %s" % path, user, host, port=port, ssh_key=ssh_key)
     if verbose:
         print "Upload complete"
 
 if __name__ == '__main__':
     host = RequireEnvironmentVariable('UPLOAD_HOST')
     user = RequireEnvironmentVariable('UPLOAD_USER')
-    path = RequireEnvironmentVariable('UPLOAD_PATH')
+    path = OptionalEnvironmentVariable('UPLOAD_PATH')
+    upload_to_temp_dir = OptionalEnvironmentVariable('UPLOAD_TO_TEMP')
     port = OptionalEnvironmentVariable('UPLOAD_PORT')
     if port is not None:
         port = int(port)
     key = OptionalEnvironmentVariable('UPLOAD_SSH_KEY')
     post_upload_command = OptionalEnvironmentVariable('POST_UPLOAD_CMD')
+    if (not path and not upload_to_temp_dir) or (path and upload_to_temp_dir):
+        print "One (and only one of UPLOAD_PATH or UPLOAD_TO_TEMP must be " + \
+              "defined."
+        sys.exit(1)
     if sys.platform == 'win32':
-        path = FixupMsysPath(path)
+        if path is not None:
+            path = FixupMsysPath(path)
         if post_upload_command is not None:
             post_upload_command = FixupMsysPath(post_upload_command)
 
@@ -190,10 +213,10 @@ if __name__ == '__main__':
         sys.exit(1)
     try:
         UploadFiles(user, host, path, args, base_path=options.base_path,
-                    port=port, ssh_key=key, post_upload_command=post_upload_command,
+                    port=port, ssh_key=key, upload_to_temp_dir=upload_to_temp_dir,
+                    post_upload_command=post_upload_command,
                     verbose=True)
     except IOError, (strerror):
         print strerror
     except Exception, (err):
         print err
-
