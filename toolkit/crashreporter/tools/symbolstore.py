@@ -691,7 +691,10 @@ class Dumper_Mac(Dumper):
         # dsymutil takes --arch=foo instead of -a foo like everything else
         os.system("dsymutil %s %s >/dev/null" % (' '.join([a.replace('-a ', '--arch=') for a in self.archs]),
                                       file))
-        return Dumper.ProcessFile(self, dsymbundle)
+        res = Dumper.ProcessFile(self, dsymbundle)
+        if not self.copy_debug:
+            shutil.rmtree(dsymbundle)
+        return res
 
 # Entry point if called as a standalone program
 def main():
