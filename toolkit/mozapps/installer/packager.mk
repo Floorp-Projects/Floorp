@@ -74,8 +74,6 @@ endif # MOZ_PKG_FORMAT
 
 PACKAGE       = $(PKG_PATH)$(PKG_BASENAME)$(PKG_SUFFIX)
 
-MOZ_PKG_DIR   = $(MOZ_APP_NAME)
-
 # By default, the SDK uses the same packaging type as the main bundle,
 # but on mac it is a .tar.bz2
 SDK_SUFFIX    = $(PKG_SUFFIX)
