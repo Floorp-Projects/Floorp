@@ -1294,7 +1294,7 @@ nsresult nsCharsetMenu::InitMoreSubmenus(nsCStringArray& aDecs)
   res = NewRDFContainer(mInner, kNC_BrowserUnicodeCharsetMenuRoot, 
     getter_AddRefs(containerU));
   if (NS_FAILED(res)) return res;
-  AddFromPrefsToMenu(NULL, containerU, keyU, aDecs, NULL);
+  AddFromNolocPrefsToMenu(NULL, containerU, keyU, aDecs, NULL);
 
   NS_TIMELINE_STOP_TIMER("nsCharsetMenu::InitMoreSubmenus");
   NS_TIMELINE_MARK_TIMER("nsCharsetMenu::InitMoreSubmenus");
