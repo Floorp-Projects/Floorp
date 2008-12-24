@@ -165,58 +165,9 @@ private:
   // May be called only for properties whose type is eCSSType_Value.
   nsresult GetValueOrImportantValue(nsCSSProperty aProperty, nsCSSValue& aValue) const;
 
-  void   PropertyIsSet(PRInt32 & aPropertyIndex, PRInt32 aIndex, PRUint32 & aSet, PRUint32 aValue) const;
-  PRBool TryBorderShorthand(nsAString & aString, PRUint32 aPropertiesSet,
-                            PRInt32 aBorderTopWidth,
-                            PRInt32 aBorderTopStyle,
-                            PRInt32 aBorderTopColor,
-                            PRInt32 aBorderBottomWidth,
-                            PRInt32 aBorderBottomStyle,
-                            PRInt32 aBorderBottomColor,
-                            PRInt32 aBorderLeftWidth,
-                            PRInt32 aBorderLeftStyle,
-                            PRInt32 aBorderLeftColor,
-                            PRInt32 aBorderRightWidth,
-                            PRInt32 aBorderRightStyle,
-                            PRInt32 aBorderRightColor) const;
-  PRBool  TryBorderSideShorthand(nsAString & aString,
-                                 nsCSSProperty  aShorthand,
-                                 PRInt32 aBorderWidth,
-                                 PRInt32 aBorderStyle,
-                                 PRInt32 aBorderColor) const;
-  PRBool  TryFourSidesShorthand(nsAString & aString,
-                                nsCSSProperty aShorthand,
-                                PRInt32 & aTop,
-                                PRInt32 & aBottom,
-                                PRInt32 & aLeft,
-                                PRInt32 & aRight,
-                                PRBool aClearIndexes) const;
-  void  TryBackgroundShorthand(nsAString & aString,
-                               PRInt32 & aBgColor, PRInt32 & aBgImage,
-                               PRInt32 & aBgRepeat, PRInt32 & aBgAttachment,
-                               PRInt32 & aBgPosition) const;
-  void  TryOverflowShorthand(nsAString & aString,
-                             PRInt32 & aOverflowX, PRInt32 & aOverflowY) const;
-#ifdef MOZ_SVG
-  void  TryMarkerShorthand(nsAString & aString,
-                           PRInt32 & aMarkerEnd,
-                           PRInt32 & aMarkerMid,
-                           PRInt32 & aMarkerStart) const;
-#endif
-
-  PRBool   AllPropertiesSameImportance(PRInt32 aFirst, PRInt32 aSecond,
-                                       PRInt32 aThird, PRInt32 aFourth,
-                                       PRInt32 aFifth,
-                                       PRBool & aImportance) const;
-  PRBool   AllPropertiesSameValue(PRInt32 aFirst, PRInt32 aSecond,
-                                  PRInt32 aThird, PRInt32 aFourth) const;
+  // Helper for ToString with strange semantics regarding aValue.
   void     AppendPropertyAndValueToString(nsCSSProperty aProperty,
-                                          nsAString& aResult) const
-  {
-    AppendPropertyAndValueToString(aProperty, aProperty, aResult);
-  }
-  void     AppendPropertyAndValueToString(nsCSSProperty aProperty,
-                                          nsCSSProperty aPropertyName,
+                                          nsAutoString& aValue,
                                           nsAString& aResult) const;
 
 private:

@@ -2958,17 +2958,6 @@ dnl NB - later gcc versions require -mmmx for this header to be successfully
 dnl included (or another option which implies it, such as -march=pentium-mmx)
 AC_CHECK_HEADERS(mmintrin.h)
 
-AC_MSG_CHECKING(for ARM SIMD support)
-AC_TRY_COMPILE([],
-               [asm("uqadd8 r1, r1, r2");],
-               result="yes", result="no")
-AC_MSG_RESULT("$result")
-if test "$result" = "yes"; then
-    AC_DEFINE(HAVE_ARM_SIMD)
-    HAVE_ARM_SIMD=1
-fi
-AC_SUBST(HAVE_ARM_SIMD)
-
 dnl Check whether the compiler supports the new-style C++ standard
 dnl library headers (i.e. <new>) or needs the old "new.h"
 AC_LANG_CPLUSPLUS
@@ -3157,6 +3146,17 @@ AC_SUBST(XCFLAGS)
 AC_SUBST(XLDFLAGS)
 AC_SUBST(XLIBS)
 AC_SUBST(XT_LIBS)
+
+AC_MSG_CHECKING(for ARM SIMD support)
+AC_TRY_COMPILE([],
+               [asm("uqadd8 r1, r1, r2");],
+               result="yes", result="no")
+AC_MSG_RESULT("$result")
+if test "$result" = "yes"; then
+    AC_DEFINE(HAVE_ARM_SIMD)
+    HAVE_ARM_SIMD=1
+fi
+AC_SUBST(HAVE_ARM_SIMD)
 
 dnl ========================================================
 dnl = pthread support
@@ -8334,6 +8334,7 @@ if test -z "$MOZ_NATIVE_NSPR"; then
     ac_configure_args="$ac_configure_args --with-nspr-cflags='$NSPR_CFLAGS'"
     ac_configure_args="$ac_configure_args --with-nspr-libs='$NSPR_LIBS'"
 fi
+ac_configure_args="$ac_configure_args --with-dist-dir=../../dist"
 ac_configure_args="$ac_configure_args --includedir=$dist/include"
 ac_configure_args="$ac_configure_args --bindir=$dist/bin"
 ac_configure_args="$ac_configure_args --libdir=$dist/lib"

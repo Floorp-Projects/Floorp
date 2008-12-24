@@ -46,7 +46,9 @@
 #include "imgIDecoder.h"
 #include "imgIDecoderObserver.h"
 
+#include "nsIChannelEventSink.h"
 #include "nsIContentSniffer.h"
+#include "nsIInterfaceRequestor.h"
 #include "nsIRequest.h"
 #include "nsIProperties.h"
 #include "nsIStreamListener.h"
@@ -76,7 +78,9 @@ enum {
 class imgRequest : public imgILoad,
                    public imgIDecoderObserver,
                    public nsIStreamListener,
-                   public nsSupportsWeakReference
+                   public nsSupportsWeakReference,
+                   public nsIChannelEventSink,
+                   public nsIInterfaceRequestor
 {
 public:
   imgRequest();
@@ -85,7 +89,9 @@ public:
   NS_DECL_ISUPPORTS
 
   nsresult Init(nsIURI *aURI,
+                nsIURI *aKeyURI,
                 nsIRequest *aRequest,
+                nsIChannel *aChannel,
                 imgCacheEntry *aCacheEntry,
                 void *aCacheId,
                 void *aLoadId);
@@ -108,6 +114,11 @@ public:
   // internal nsIChannel.
   nsresult GetNetworkStatus();
 
+  // Cancel, but also ensure that all work done in Init() is undone. Call this
+  // only when the channel has failed to open, and so calling Cancel() on it
+  // won't be sufficient.
+  void CancelAndAbort(nsresult aStatus);
+
 private:
   friend class imgCacheEntry;
   friend class imgRequestProxy;
@@ -122,6 +133,7 @@ private:
   inline nsresult GetResultFromImageStatus(PRUint32 aStatus) const;
   void Cancel(nsresult aStatus);
   nsresult GetURI(nsIURI **aURI);
+  nsresult GetKeyURI(nsIURI **aURI);
   nsresult GetPrincipal(nsIPrincipal **aPrincipal);
   nsresult GetSecurityInfo(nsISupports **aSecurityInfo);
   void RemoveFromCache();
@@ -150,15 +162,22 @@ public:
   NS_DECL_IMGICONTAINEROBSERVER
   NS_DECL_NSISTREAMLISTENER
   NS_DECL_NSIREQUESTOBSERVER
+  NS_DECL_NSICHANNELEVENTSINK
+  NS_DECL_NSIINTERFACEREQUESTOR
 
 private:
   nsCOMPtr<nsIRequest> mRequest;
+  // The original URI we were loaded with.
   nsCOMPtr<nsIURI> mURI;
+  // The URI we are keyed on in the cache.
+  nsCOMPtr<nsIURI> mKeyURI;
   nsCOMPtr<nsIPrincipal> mPrincipal;
   nsCOMPtr<imgIContainer> mImage;
   nsCOMPtr<imgIDecoder> mDecoder;
   nsCOMPtr<nsIProperties> mProperties;
   nsCOMPtr<nsISupports> mSecurityInfo;
+  nsCOMPtr<nsIChannel> mChannel;
+  nsCOMPtr<nsIInterfaceRequestor> mPrevChannelSink;
 
   nsTObserverArray<imgRequestProxy*> mObservers;
 

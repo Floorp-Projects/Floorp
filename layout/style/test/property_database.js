@@ -109,7 +109,7 @@ var gCSSProperties = {
 		type: CSS_TYPE_LONGHAND,
 		initial_values: [ "none" ],
 		other_values: [ "red green", "red #fc3", "#ff00cc", "currentColor", "blue currentColor orange currentColor" ],
-		invalid_values: [ "red none", "red inherit", "red, green" ]
+		invalid_values: [ "red none", "red inherit", "red, green", "none red", "inherit red" ]
 	},
 	"-moz-border-end": {
 		domProp: "MozBorderEnd",
@@ -172,7 +172,7 @@ var gCSSProperties = {
 		type: CSS_TYPE_LONGHAND,
 		initial_values: [ "none" ],
 		other_values: [ "red green", "red #fc3", "#ff00cc", "currentColor", "blue currentColor orange currentColor" ],
-		invalid_values: [ "red none", "red inherit", "red, green" ]
+		invalid_values: [ "red none", "red inherit", "red, green", "none red", "inherit red" ]
 	},
 	"-moz-border-radius": {
 		domProp: "MozBorderRadius",
@@ -231,7 +231,7 @@ var gCSSProperties = {
 		type: CSS_TYPE_LONGHAND,
 		initial_values: [ "none" ],
 		other_values: [ "red green", "red #fc3", "#ff00cc", "currentColor", "blue currentColor orange currentColor" ],
-		invalid_values: [ "red none", "red inherit", "red, green" ]
+		invalid_values: [ "red none", "red inherit", "red, green", "none red", "inherit red" ]
 	},
 	"-moz-border-start": {
 		domProp: "MozBorderStart",
@@ -277,7 +277,7 @@ var gCSSProperties = {
 		type: CSS_TYPE_LONGHAND,
 		initial_values: [ "none" ],
 		other_values: [ "red green", "red #fc3", "#ff00cc", "currentColor", "blue currentColor orange currentColor" ],
-		invalid_values: [ "red none", "red inherit", "red, green" ]
+		invalid_values: [ "red none", "red inherit", "red, green", "none red", "inherit red" ]
 	},
 	"-moz-box-align": {
 		domProp: "MozBoxAlign",
@@ -308,8 +308,8 @@ var gCSSProperties = {
 		inherited: false,
 		type: CSS_TYPE_LONGHAND,
 		initial_values: [ "1" ],
-		other_values: [ "0", "-1", "100", "-1000" ],
-		invalid_values: [ "1.0" ]
+		other_values: [ "0", "100" ],
+		invalid_values: [ "1.0", "-1", "-1000" ]
 	},
 	"-moz-box-orient": {
 		domProp: "MozBoxOrient",
@@ -1957,8 +1957,8 @@ var gCSSProperties = {
 		inherited: true,
 		type: CSS_TYPE_LONGHAND,
 		initial_values: [ "4" ],
-		other_values: [ "1", "7", "5000" ],
-		invalid_values: [ "0.9", "0", "-1", "3px" ]
+		other_values: [ "1", "7", "5000", "1.1" ],
+		invalid_values: [ "0.9", "0", "-1", "3px", "-0.3" ]
 	},
 	"stroke-opacity": {
 		domProp: null,

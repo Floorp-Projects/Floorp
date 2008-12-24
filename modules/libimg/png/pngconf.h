@@ -1,7 +1,7 @@
 
 /* pngconf.h - machine configurable file for libpng
  *
- * libpng version 1.2.31 - August 21, 2008
+ * libpng version 1.2.34 - December 18, 2008
  * For conditions of distribution and use, see copyright notice in png.h
  * Copyright (c) 1998-2008 Glenn Randers-Pehrson
  * (Version 0.96 Copyright (c) 1996, 1997 Andreas Dilger)
@@ -798,6 +798,12 @@
 #endif
 #ifndef PNG_USER_HEIGHT_MAX
 #  define PNG_USER_HEIGHT_MAX 1000000L
+#endif
+
+
+/* Added at libpng-1.2.34 and 1.4.0 */
+#ifndef PNG_STRING_NEWLINE
+#define PNG_STRING_NEWLINE "\n"
 #endif
 
 /* These are currently experimental features, define them if you want */

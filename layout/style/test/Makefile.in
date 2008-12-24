@@ -98,6 +98,7 @@ _TEST_FILES =	test_acid3_test46.html \
 		test_bug437915.html \
 		test_bug450191.html \
 		test_bug453896_deck.html \
+		test_bug470769.html \
 		test_cascade.html \
 		test_compute_data_with_start_struct.html \
 		test_css_eof_handling.html \
@@ -117,6 +118,7 @@ _TEST_FILES =	test_acid3_test46.html \
 		test_property_syntax_errors.html \
 		test_selectors.html \
 		test_selectors_on_anonymous_content.html \
+		test_shorthand_property_getters.html \
 		test_style_struct_copy_constructors.html \
 		test_value_computation.html \
 		test_value_storage.html \

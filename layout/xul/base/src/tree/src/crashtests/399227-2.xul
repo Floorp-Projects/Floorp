@@ -1,0 +1,50 @@
+<?xml version="1.0"?>
+
+<?xml-stylesheet href="chrome://global/skin/" type="text/css"?>
+
+<window xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul" class="reftest-wait" onload="setTimeout(boom, 30);">
+
+
+  <script>
+  function boom()
+  {
+    var tree = document.getElementById("thetree");
+    var selection = tree.view.selection;
+    var treecolumn0 = tree.columns[0];
+    var treecolumn1 = tree.columns[1];
+
+    selection.select(0);
+    selection.currentColumn = treecolumn0;
+    tree.parentNode.removeChild(tree);
+
+    // This is expected to throw an error (it used to crash).
+    try {
+      selection.currentColumn = treecolumn1;
+    }
+    catch (ex) {}
+
+    document.documentElement.removeAttribute("class");
+  }
+  </script>
+
+<tree flex="1" id="thetree" seltype="cell">
+    <treecols>
+      <treecol label="Name"/>
+      <treecol label="Test"/>
+    </treecols>
+    <treechildren id="TC">
+      <treeitem id="TI1">
+        <treerow>
+          <treecell label="First treecell"/>
+          <treecell label="Second treecell"/>
+        </treerow>
+      </treeitem>
+      <treeitem id="TI2">
+        <treerow>
+          <treecell label="Third treecell"/>
+          <treecell label="Fourth treecell"/>
+        </treerow>
+      </treeitem>
+    </treechildren>
+  </tree>
+</window>
