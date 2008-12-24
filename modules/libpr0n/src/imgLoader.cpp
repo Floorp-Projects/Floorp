@@ -255,7 +255,7 @@ void imgCacheEntry::TouchWithSize(PRInt32 diff)
 
   if (!Evicted()) {
     nsCOMPtr<nsIURI> uri;
-    mRequest->GetURI(getter_AddRefs(uri));
+    mRequest->GetKeyURI(getter_AddRefs(uri));
     imgLoader::CacheEntriesChanged(uri, diff);
   }
 }
@@ -269,7 +269,7 @@ void imgCacheEntry::Touch(PRBool updateTime /* = PR_TRUE */)
 
   if (!Evicted()) {
     nsCOMPtr<nsIURI> uri;
-    mRequest->GetURI(getter_AddRefs(uri));
+    mRequest->GetKeyURI(getter_AddRefs(uri));
     imgLoader::CacheEntriesChanged(uri);
   }
 }
@@ -909,7 +909,7 @@ PRBool imgLoader::RemoveFromCache(imgCacheEntry *entry)
   nsRefPtr<imgRequest> request(getter_AddRefs(entry->GetRequest()));
   if (request) {
     nsCOMPtr<nsIURI> key;
-    if (NS_SUCCEEDED(request->GetURI(getter_AddRefs(key))) && key)
+    if (NS_SUCCEEDED(request->GetKeyURI(getter_AddRefs(key))) && key)
       ret = RemoveFromCache(key);
   }
 
@@ -1061,7 +1061,7 @@ NS_IMETHODIMP imgLoader::LoadImage(nsIURI *aURI,
     newChannel->SetLoadGroup(loadGroup);
 
     void *cacheId = NS_GetCurrentThread();
-    request->Init(aURI, loadGroup, newChannel, entry, cacheId, aCX);
+    request->Init(aURI, aURI, loadGroup, newChannel, entry, cacheId, aCX);
 
     // create the proxy listener
     ProxyListener *pl = new ProxyListener(static_cast<nsIStreamListener *>(request.get()));
@@ -1198,7 +1198,7 @@ NS_IMETHODIMP imgLoader::LoadImageWithChannel(nsIChannel *channel, imgIDecoderOb
     // We use originalURI here to fulfil the imgIRequest contract on GetURI.
     nsCOMPtr<nsIURI> originalURI;
     channel->GetOriginalURI(getter_AddRefs(originalURI));
-    request->Init(originalURI, channel, channel, entry, NS_GetCurrentThread(), aCX);
+    request->Init(originalURI, uri, channel, channel, entry, NS_GetCurrentThread(), aCX);
 
     ProxyListener *pl = new ProxyListener(static_cast<nsIStreamListener *>(request.get()));
     if (!pl)
@@ -1471,7 +1471,7 @@ NS_IMETHODIMP imgCacheValidator::OnStartRequest(nsIRequest *aRequest, nsISupport
   // We use originalURI here to fulfil the imgIRequest contract on GetURI.
   nsCOMPtr<nsIURI> originalURI;
   channel->GetOriginalURI(getter_AddRefs(originalURI));
-  request->Init(originalURI, channel, channel, entry, NS_GetCurrentThread(), mContext);
+  request->Init(originalURI, uri, channel, channel, entry, NS_GetCurrentThread(), mContext);
 
   ProxyListener *pl = new ProxyListener(static_cast<nsIStreamListener *>(request));
   if (!pl) {
