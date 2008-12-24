@@ -15,11 +15,9 @@
     <xbl:content xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
         <spacer flex="1"/>
         <hbox class="controlBar">
-            <image class="playButton"
-                   onclick="if (event.button == 0) this.parentNode.parentNode.Utils.togglePause();"/>
+            <button class="playButton" oncommand="this.parentNode.parentNode.Utils.togglePause();"/>
             <box class="controlsMiddle" flex="1"/>
-            <image class="muteButton"
-                   onclick="if (event.button == 0) this.parentNode.parentNode.Utils.toggleMute();"/>
+            <button class="muteButton" oncommand="this.parentNode.parentNode.Utils.toggleMute();"/>
         </hbox>
     </xbl:content>
 

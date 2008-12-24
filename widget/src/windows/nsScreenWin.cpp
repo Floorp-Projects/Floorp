@@ -147,7 +147,14 @@ nsScreenWin :: GetPixelDepth(PRInt32 *aPixelDepth)
   HDC hDCScreen = ::GetDC(nsnull);
   NS_ASSERTION(hDCScreen,"GetDC Failure");
 
-  *aPixelDepth = ::GetDeviceCaps(hDCScreen, BITSPIXEL);
+  PRInt32 depth = ::GetDeviceCaps(hDCScreen, BITSPIXEL);
+  if (depth == 32) {
+    // If a device uses 32 bits per pixel, it's still only using 8 bits
+    // per color component, which is what our callers want to know.
+    // (Some devices report 32 and some devices report 24.)
+    depth = 24;
+  }
+  *aPixelDepth = depth;
 
   ::ReleaseDC(nsnull, hDCScreen);
   return NS_OK;

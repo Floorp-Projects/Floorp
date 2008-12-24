@@ -6,18 +6,28 @@
 }
 
 .playButton {
-    list-style-image: url(chrome://global/skin/media/videocontrols.png);
-    -moz-image-region: rect(0px, 48px, 24px, 24px);
+    background: url(chrome://global/skin/media/pauseButton.png) no-repeat center;
+    /* Remove the native button appearance and styling */
+    -moz-appearance: none;
+    margin: 0px;
+    padding: 0px;
+    min-height: 24px;
+    min-width: 24px;
 }
 .playButton[paused="true"] {
-    -moz-image-region: rect(0px, 24px, 24px, 0px);
+    background: url(chrome://global/skin/media/playButton.png) no-repeat center;
 }
 
 .muteButton {
-    list-style-image: url(chrome://global/skin/media/videocontrols.png);
-    -moz-image-region: rect(24px, 24px, 48px, 0px);
+    background: url(chrome://global/skin/media/muteButton.png) no-repeat center;
+    /* Remove the native button appearance and styling */
+    -moz-appearance: none;
+    margin: 0px;
+    padding: 0px;
+    min-height: 24px;
+    min-width: 24px;
 }
 .muteButton[muted="true"] {
-    -moz-image-region: rect(24px, 48px, 48px, 24px);
+    background: url(chrome://global/skin/media/unmuteButton.png) no-repeat center;
 }
 
