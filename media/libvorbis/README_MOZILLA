@@ -9,3 +9,5 @@ file names with other Mozilla libraries.
 BUG 455372 - WinCE LibVorbis No FPU Support on WinMobile, removed FPU
 support for builds with WINCE defined.
 
+BUG 469639 - Failed to build firefox trunk on OpenSolaris
+
