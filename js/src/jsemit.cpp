@@ -1876,8 +1876,7 @@ BindNameToSlot(JSContext *cx, JSCodeGenerator *cg, JSParseNode *pn)
     if (tc->flags & TCF_FUN_CLOSURE_VS_VAR)
         return JS_TRUE;
 
-    /* Don't generate upvars on the left side of a for loop. See bug 470758. */
-    if (!(tc->flags & (TCF_IN_FUNCTION | TCF_IN_FOR_INIT))) {
+    if (!(tc->flags & TCF_IN_FUNCTION)) {
         JSStackFrame *caller;
 
         caller = tc->parseContext->callerFrame;
@@ -1897,6 +1896,13 @@ BindNameToSlot(JSContext *cx, JSCodeGenerator *cg, JSParseNode *pn)
                 goto arguments_check;
             localKind = js_LookupLocal(cx, caller->fun, atom, &index);
             if (localKind == JSLOCAL_NONE)
+                goto arguments_check;
+
+            /*
+             * Don't generate upvars on the left side of a for loop. See
+             * bug 470758.
+             */
+            if (tc->flags & TCF_IN_FOR_INIT)
                 goto arguments_check;
 
             ATOM_LIST_SEARCH(ale, &cg->upvarList, atom);
