@@ -49,6 +49,9 @@
 #include "nsIURI.h"
 #include "nsIInputStreamPump.h"
 #include "nsIStreamListener.h"
+#include "nsIIconURI.h"
+
+#include <windows.h>
 
 class nsIFile;
 
@@ -78,7 +81,14 @@ protected:
   nsCOMPtr<nsIStreamListener>  mListener;
 
   nsresult ExtractIconInfoFromUrl(nsIFile ** aLocalFile, PRUint32 * aDesiredImageSize, nsCString &aContentType, nsCString &aFileExtension);
+  nsresult GetHIconFromFile(HICON *hIcon);
   nsresult MakeInputStream(nsIInputStream** _retval, PRBool nonBlocking);
+
+  // Functions specific to Vista and above
+#ifndef MOZ_DISABLE_VISTA_SDK_REQUIREMENTS
+protected:
+  nsresult GetStockHIcon(nsIMozIconURI *aIconURI, HICON *hIcon);
+#endif
 };
 
 #endif /* nsIconChannel_h___ */

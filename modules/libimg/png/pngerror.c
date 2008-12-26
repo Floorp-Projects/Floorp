@@ -1,7 +1,7 @@
 
 /* pngerror.c - stub functions for i/o and memory allocation
  *
- * Last changed in libpng 1.2.30 [August 13, 2008]
+ * Last changed in libpng 1.2.34 [December 18, 2008]
  * For conditions of distribution and use, see copyright notice in png.h
  * Copyright (c) 1998-2008 Glenn Randers-Pehrson
  * (Version 0.96 Copyright (c) 1996, 1997 Andreas Dilger)
@@ -116,9 +116,9 @@ png_warning(png_structp png_ptr, png_const_charp warning_message)
                   break;
        }
      }
-     if (png_ptr != NULL && png_ptr->warning_fn != NULL)
-        (*(png_ptr->warning_fn))(png_ptr, warning_message + offset);
    }
+   if (png_ptr != NULL && png_ptr->warning_fn != NULL)
+      (*(png_ptr->warning_fn))(png_ptr, warning_message + offset);
    else
       png_default_warning(png_ptr, warning_message + offset);
 }

@@ -52,7 +52,8 @@ RequestExecutionLevel user
 
 !addplugindir ./
 
-; USE_UAC_PLUGIN is temporary until Thunderbird has been updated to use the UAC plugin
+; USE_UAC_PLUGIN is temporary until all applications have been updated to use
+; the UAC plugin
 !define USE_UAC_PLUGIN
 
 ; prevents compiling of the reg write logging.
@@ -65,7 +66,6 @@ Var TmpVal
 !include FileFunc.nsh
 !include LogicLib.nsh
 !include MUI.nsh
-!include TextFunc.nsh
 !include WinMessages.nsh
 !include WinVer.nsh
 !include WordFunc.nsh

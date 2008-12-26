@@ -85,7 +85,10 @@ class nsCSSFrameConstructor
 {
 public:
   nsCSSFrameConstructor(nsIDocument *aDocument, nsIPresShell* aPresShell);
-  ~nsCSSFrameConstructor(void) { }
+  ~nsCSSFrameConstructor(void) {
+    NS_ASSERTION(mUpdateCount == 0, "Dying in the middle of our own update?");
+    NS_ASSERTION(mFocusSuppressCount == 0, "Focus suppression will be wrong");
+  }
 
   // Maintain global objects - gXBLService
   static nsIXBLService * GetXBLService();

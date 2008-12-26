@@ -270,6 +270,8 @@ _TEST_FILES = 	test_bug5141.html \
 		test_bug444322.html \
 		bug444322.txt \
 		bug444322.js \
+		test_bug455629.html \
+		bug455629-helper.svg \
 		$(NULL)
 
 # Disabled for now. Mochitest isn't reliable enough for these.

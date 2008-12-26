@@ -193,11 +193,6 @@ GetColor(nsPresContext* aPresContext, nsCSSValue& aResult)
     nsIDeviceContext *dx = GetDeviceContextFor(aPresContext);
     PRUint32 depth;
     dx->GetDepth(depth);
-    // Some graphics backends may claim 32-bit depth when it's really 24
-    // (because they're counting the Alpha component).
-    if (depth == 32) {
-        depth = 24;
-    }
     // The spec says to use bits *per color component*, so divide by 3,
     // and round down, since the spec says to use the smallest when the
     // color components differ.

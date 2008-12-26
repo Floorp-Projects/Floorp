@@ -1,7 +1,7 @@
 
 /* png.c - location for general purpose libpng functions
  *
- * Last changed in libpng 1.2.30 [August 13, 2008]
+ * Last changed in libpng 1.2.34 [December 18, 2008]
  * For conditions of distribution and use, see copyright notice in png.h
  * Copyright (c) 1998-2008 Glenn Randers-Pehrson
  * (Version 0.96 Copyright (c) 1996, 1997 Andreas Dilger)
@@ -13,7 +13,7 @@
 #include "png.h"
 
 /* Generate a compiler error if there is an old png.h in the search path. */
-typedef version_1_2_31 Your_png_h_is_not_version_1_2_31;
+typedef version_1_2_34 Your_png_h_is_not_version_1_2_34;
 
 /* Version information for C files.  This had better match the version
  * string defined in png.h.  */
@@ -96,7 +96,7 @@ void PNGAPI
 png_set_sig_bytes(png_structp png_ptr, int num_bytes)
 {
    if (png_ptr == NULL) return;
-   png_debug(1, "in png_set_sig_bytes\n");
+   png_debug(1, "in png_set_sig_bytes");
    if (num_bytes > 8)
       png_error(png_ptr, "Too many bytes for PNG signature.");
 
@@ -243,7 +243,7 @@ png_create_info_struct(png_structp png_ptr)
 {
    png_infop info_ptr;
 
-   png_debug(1, "in png_create_info_struct\n");
+   png_debug(1, "in png_create_info_struct");
    if (png_ptr == NULL) return (NULL);
 #ifdef PNG_USER_MEM_SUPPORTED
    info_ptr = (png_infop)png_create_struct_2(PNG_STRUCT_INFO,
@@ -268,7 +268,7 @@ png_destroy_info_struct(png_structp png_ptr, png_infopp info_ptr_ptr)
    png_infop info_ptr = NULL;
    if (png_ptr == NULL) return;
 
-   png_debug(1, "in png_destroy_info_struct\n");
+   png_debug(1, "in png_destroy_info_struct");
    if (info_ptr_ptr != NULL)
       info_ptr = *info_ptr_ptr;
 
@@ -307,7 +307,7 @@ png_info_init_3(png_infopp ptr_ptr, png_size_t png_info_struct_size)
 
    if (info_ptr == NULL) return;
 
-   png_debug(1, "in png_info_init_3\n");
+   png_debug(1, "in png_info_init_3");
 
    if (png_sizeof(png_info) > png_info_struct_size)
      {
@@ -325,7 +325,7 @@ void PNGAPI
 png_data_freer(png_structp png_ptr, png_infop info_ptr,
    int freer, png_uint_32 mask)
 {
-   png_debug(1, "in png_data_freer\n");
+   png_debug(1, "in png_data_freer");
    if (png_ptr == NULL || info_ptr == NULL)
       return;
    if (freer == PNG_DESTROY_WILL_FREE_DATA)
@@ -342,7 +342,7 @@ void PNGAPI
 png_free_data(png_structp png_ptr, png_infop info_ptr, png_uint_32 mask,
    int num)
 {
-   png_debug(1, "in png_free_data\n");
+   png_debug(1, "in png_free_data");
    if (png_ptr == NULL || info_ptr == NULL)
       return;
 
@@ -596,7 +596,7 @@ if (mask & PNG_FREE_ROWS)
 void /* PRIVATE */
 png_info_destroy(png_structp png_ptr, png_infop info_ptr)
 {
-   png_debug(1, "in png_info_destroy\n");
+   png_debug(1, "in png_info_destroy");
 
    png_free_data(png_ptr, info_ptr, PNG_FREE_ALL, -1);
 
@@ -635,7 +635,7 @@ png_get_io_ptr(png_structp png_ptr)
 void PNGAPI
 png_init_io(png_structp png_ptr, png_FILE_p fp)
 {
-   png_debug(1, "in png_init_io\n");
+   png_debug(1, "in png_init_io");
    if (png_ptr == NULL) return;
    png_ptr->io_ptr = (png_voidp)fp;
 }
@@ -697,7 +697,7 @@ png_charp PNGAPI
 png_get_copyright(png_structp png_ptr)
 {
    png_ptr = png_ptr;  /* silence compiler warning about unused png_ptr */
-   return ((png_charp) "\n libpng version 1.2.31 - August 21, 2008\n\
+   return ((png_charp) "\n libpng version 1.2.34 - December 18, 2008\n\
    Copyright (c) 1998-2008 Glenn Randers-Pehrson\n\
    Copyright (c) 1996-1997 Andreas Dilger\n\
    Copyright (c) 1995-1996 Guy Eric Schalnat, Group 42, Inc.\n");
@@ -799,4 +799,116 @@ png_convert_size(size_t size)
   return ((png_size_t)size);
 }
 #endif /* PNG_SIZE_T */
+
+/* Added at libpng version 1.2.34 and 1.4.0 (moved from pngset.c) */
+#if defined(PNG_cHRM_SUPPORTED)
+#if !defined(PNG_NO_CHECK_cHRM)
+/*
+ Multiply two 32-bit numbers, V1 and V2, using 32-bit
+ arithmetic, to produce a 64 bit result in the HI/LO words.
+
+          A B
+        x C D
+       ------
+      AD || BD
+AC || CB || 0
+
+ where A and B are the high and low 16-bit words of V1,
+ C and D are the 16-bit words of V2, AD is the product of
+ A and D, and X || Y is (X << 16) + Y.
+*/
+
+void png_64bit_product (long v1, long v2, unsigned long *hi_product,
+   unsigned long *lo_product)
+{
+ int a, b, c, d;
+ long lo, hi, x, y;
+
+ a = (v1 >> 16) & 0xffff;
+ b = v1 & 0xffff;
+ c = (v2 >> 16) & 0xffff;
+ d = v2 & 0xffff;
+
+ lo = b * d;                   /* BD */
+ x = a * d + c * b;            /* AD + CB */
+ y = ((lo >> 16) & 0xffff) + x;
+
+ lo = (lo & 0xffff) | ((y & 0xffff) << 16);
+ hi = (y >> 16) & 0xffff;
+
+ hi += a * c;                  /* AC */
+
+ *hi_product = (unsigned long)hi;
+ *lo_product = (unsigned long)lo;
+}
+int /* private */
+png_check_cHRM_fixed(png_structp png_ptr,
+   png_fixed_point white_x, png_fixed_point white_y, png_fixed_point red_x,
+   png_fixed_point red_y, png_fixed_point green_x, png_fixed_point green_y,
+   png_fixed_point blue_x, png_fixed_point blue_y)
+{
+   int ret = 1;
+   unsigned long xy_hi,xy_lo,yx_hi,yx_lo;
+
+   png_debug(1, "in function png_check_cHRM_fixed");
+   if (png_ptr == NULL)
+      return 0;
+
+   if (white_x < 0 || white_y <= 0 ||
+         red_x < 0 ||   red_y <  0 ||
+       green_x < 0 || green_y <  0 ||
+        blue_x < 0 ||  blue_y <  0)
+   {
+      png_warning(png_ptr,
+        "Ignoring attempt to set negative chromaticity value");
+      ret = 0;
+   }
+   if (white_x > (png_fixed_point) PNG_UINT_31_MAX ||
+       white_y > (png_fixed_point) PNG_UINT_31_MAX ||
+         red_x > (png_fixed_point) PNG_UINT_31_MAX ||
+         red_y > (png_fixed_point) PNG_UINT_31_MAX ||
+       green_x > (png_fixed_point) PNG_UINT_31_MAX ||
+       green_y > (png_fixed_point) PNG_UINT_31_MAX ||
+        blue_x > (png_fixed_point) PNG_UINT_31_MAX ||
+        blue_y > (png_fixed_point) PNG_UINT_31_MAX )
+   {
+      png_warning(png_ptr,
+        "Ignoring attempt to set chromaticity value exceeding 21474.83");
+      ret = 0;
+   }
+   if (white_x > 100000L - white_y)
+   {
+      png_warning(png_ptr, "Invalid cHRM white point");
+      ret = 0;
+   }
+   if (red_x > 100000L - red_y)
+   {
+      png_warning(png_ptr, "Invalid cHRM red point");
+      ret = 0;
+   }
+   if (green_x > 100000L - green_y)
+   {
+      png_warning(png_ptr, "Invalid cHRM green point");
+      ret = 0;
+   }
+   if (blue_x > 100000L - blue_y)
+   {
+      png_warning(png_ptr, "Invalid cHRM blue point");
+      ret = 0;
+   }
+
+   png_64bit_product(green_x - red_x, blue_y - red_y, &xy_hi, &xy_lo);
+   png_64bit_product(green_y - red_y, blue_x - red_x, &yx_hi, &yx_lo);
+
+   if (xy_hi == yx_hi && xy_lo == yx_lo)
+   {
+      png_warning(png_ptr,
+         "Ignoring attempt to set cHRM RGB triangle with zero area");
+      ret = 0;
+   }
+
+   return ret;
+}
+#endif /* NO_PNG_CHECK_cHRM */
+#endif /* PNG_cHRM_SUPPORTED */
 #endif /* defined(PNG_READ_SUPPORTED) || defined(PNG_WRITE_SUPPORTED) */
