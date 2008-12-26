@@ -3819,17 +3819,19 @@ nsRuleNode::ComputeBorderData(void* aStartStruct,
                       Margin, marginData)
 
   // -moz-box-shadow: none, list, inherit, initial
-  nsCSSValueList* list = marginData.mBoxShadow;
-  if (list) {
-    // This handles 'none' and 'initial'
-    border->mBoxShadow = nsnull;
+  {
+    nsCSSValueList* list = marginData.mBoxShadow;
+    if (list) {
+      // This handles 'none' and 'initial'
+      border->mBoxShadow = nsnull;
 
-    if (eCSSUnit_Inherit == list->mValue.GetUnit()) {
-      inherited = PR_TRUE;
-      border->mBoxShadow = parentBorder->mBoxShadow;
-    } else if (eCSSUnit_Array == list->mValue.GetUnit()) {
-      // List of arrays
-      border->mBoxShadow = GetShadowData(list, aContext, PR_TRUE, inherited);
+      if (eCSSUnit_Inherit == list->mValue.GetUnit()) {
+        inherited = PR_TRUE;
+        border->mBoxShadow = parentBorder->mBoxShadow;
+      } else if (eCSSUnit_Array == list->mValue.GetUnit()) {
+        // List of arrays
+        border->mBoxShadow = GetShadowData(list, aContext, PR_TRUE, inherited);
+      }
     }
   }
 
@@ -3918,7 +3920,7 @@ nsRuleNode::ComputeBorderData(void* aStartStruct,
     }
   }
 
-  // -moz-border-*-colors: color, string, enum
+  // -moz-border-*-colors: color, string, enum, none, inherit/initial
   nscolor borderColor;
   nscolor unused = NS_RGB(0,0,0);
   
@@ -3926,17 +3928,38 @@ nsRuleNode::ComputeBorderData(void* aStartStruct,
     NS_FOR_CSS_SIDES(side) {
       nsCSSValueList* list =
           marginData.mBorderColors.*(nsCSSValueListRect::sides[side]);
-      // FIXME Bug 389404: Implement inherit and -moz-initial.
       if (list) {
-        // Some composite border color information has been specified for this
-        // border side.
-        border->EnsureBorderColors();
-        border->ClearBorderColors(side);
-        while (list) {
-          if (SetColor(list->mValue, unused, mPresContext,
-                       aContext, borderColor, inherited))
-            border->AppendBorderColor(side, borderColor);
-          list = list->mNext;
+        if (eCSSUnit_Initial == list->mValue.GetUnit() ||
+            eCSSUnit_None == list->mValue.GetUnit()) {
+          NS_ASSERTION(!list->mNext, "should have only one item");
+          border->ClearBorderColors(side);
+        }
+        else if (eCSSUnit_Inherit == list->mValue.GetUnit()) {
+          NS_ASSERTION(!list->mNext, "should have only one item");
+          nsBorderColors *parentColors;
+          parentBorder->GetCompositeColors(side, &parentColors);
+          if (parentColors) {
+            border->EnsureBorderColors();
+            border->ClearBorderColors(side);
+            border->mBorderColors[side] = parentColors->Clone();
+          } else {
+            border->ClearBorderColors(side);
+          }
+        }
+        else {
+          // Some composite border color information has been specified for this
+          // border side.
+          border->EnsureBorderColors();
+          border->ClearBorderColors(side);
+          while (list) {
+            if (SetColor(list->mValue, unused, mPresContext,
+                         aContext, borderColor, inherited))
+              border->AppendBorderColor(side, borderColor);
+            else {
+              NS_NOTREACHED("unexpected item in -moz-border-*-colors list");
+            }
+            list = list->mNext;
+          }
         }
       }
     }

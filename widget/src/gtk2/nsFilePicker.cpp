@@ -40,6 +40,9 @@
 #include <gtk/gtkstock.h>
 #include <gtk/gtkmessagedialog.h>
 #include <gtk/gtkimage.h>
+#include <gtk/gtkfilechooser.h>
+#include <gtk/gtkfilechooserdialog.h>
+#include <gtk/gtkmisc.h>
 
 #include "nsIFileURL.h"
 #include "nsIURI.h"
@@ -60,83 +63,9 @@
 #include "nsFilePicker.h"
 #include "nsAccessibilityHelper.h"
 
-#define DECL_FUNC_PTR(func) static _##func##_fn _##func
-#define GTK_FILE_CHOOSER(widget) ((GtkFileChooser*) widget)
-
 #define MAX_PREVIEW_SIZE 180
 
-PRLibrary    *nsFilePicker::mGTK24 = nsnull;
 nsILocalFile *nsFilePicker::mPrevDisplayDirectory = nsnull;
-
-// XXX total ass.  We should really impose a build-time requirement on gtk2.4
-// and then check at run-time whether the user is actually running gtk2.4.
-// We should then decide to load the component (or not) from the component mgr.
-// We don't really have a mechanism to do that, though....
-
-typedef struct _GtkFileChooser GtkFileChooser;
-typedef struct _GtkFileFilter GtkFileFilter;
-
-/* Copied from gtkfilechooser.h */
-typedef enum
-{
-  GTK_FILE_CHOOSER_ACTION_OPEN,
-  GTK_FILE_CHOOSER_ACTION_SAVE,
-  GTK_FILE_CHOOSER_ACTION_SELECT_FOLDER,
-  GTK_FILE_CHOOSER_ACTION_CREATE_FOLDER
-} GtkFileChooserAction;
-
-
-typedef gchar* (*_gtk_file_chooser_get_filename_fn)(GtkFileChooser *chooser);
-typedef GSList* (*_gtk_file_chooser_get_filenames_fn)(GtkFileChooser *chooser);
-typedef gchar* (*_gtk_file_chooser_get_uri_fn)(GtkFileChooser *chooser);
-typedef GSList* (*_gtk_file_chooser_get_uris_fn)(GtkFileChooser *chooser);
-typedef GtkWidget* (*_gtk_file_chooser_dialog_new_fn)(const gchar *title,
-                                                      GtkWindow *parent,
-                                                      GtkFileChooserAction action,
-                                                      const gchar *first_button_text,
-                                                      ...);
-typedef void (*_gtk_file_chooser_set_select_multiple_fn)(GtkFileChooser* chooser, gboolean truth);
-typedef void (*_gtk_file_chooser_set_do_overwrite_confirmation_fn)(GtkFileChooser* chooser, gboolean do_confirm);
-typedef void (*_gtk_file_chooser_set_current_name_fn)(GtkFileChooser* chooser, const gchar* name);
-typedef void (*_gtk_file_chooser_set_current_folder_fn)(GtkFileChooser* chooser, const gchar* folder);
-typedef void (*_gtk_file_chooser_add_filter_fn)(GtkFileChooser* chooser, GtkFileFilter* filter);
-typedef void (*_gtk_file_chooser_set_filter_fn)(GtkFileChooser* chooser, GtkFileFilter* filter);
-typedef GtkFileFilter* (*_gtk_file_chooser_get_filter_fn)(GtkFileChooser* chooser);
-typedef GSList* (*_gtk_file_chooser_list_filters_fn)(GtkFileChooser* chooser);
-typedef GtkFileFilter* (*_gtk_file_filter_new_fn)();
-typedef void (*_gtk_file_filter_add_pattern_fn)(GtkFileFilter* filter, const gchar* pattern);
-typedef void (*_gtk_file_filter_set_name_fn)(GtkFileFilter* filter, const gchar* name);
-typedef char* (*_gtk_file_chooser_get_preview_filename_fn)(GtkFileChooser *chooser);
-typedef void (*_gtk_file_chooser_set_preview_widget_active_fn)(GtkFileChooser *chooser, gboolean active);
-typedef void (*_gtk_image_set_from_pixbuf_fn)(GtkImage *image, GdkPixbuf *pixbuf);
-typedef void (*_gtk_file_chooser_set_preview_widget_fn)(GtkFileChooser *chooser, GtkWidget *preview_widget);
-typedef GtkWidget* (*_gtk_image_new_fn)();
-typedef void (*_gtk_misc_set_padding_fn)(GtkMisc *misc, gint xpad, gint ypad);
-typedef void (*_gtk_file_chooser_set_local_only_fn)(GtkFileChooser *chooser, gboolean local_only);
-
-DECL_FUNC_PTR(gtk_file_chooser_get_filename);
-DECL_FUNC_PTR(gtk_file_chooser_get_filenames);
-DECL_FUNC_PTR(gtk_file_chooser_get_uri);
-DECL_FUNC_PTR(gtk_file_chooser_get_uris);
-DECL_FUNC_PTR(gtk_file_chooser_dialog_new);
-DECL_FUNC_PTR(gtk_file_chooser_set_select_multiple);
-DECL_FUNC_PTR(gtk_file_chooser_set_do_overwrite_confirmation);
-DECL_FUNC_PTR(gtk_file_chooser_set_current_name);
-DECL_FUNC_PTR(gtk_file_chooser_set_current_folder);
-DECL_FUNC_PTR(gtk_file_chooser_add_filter);
-DECL_FUNC_PTR(gtk_file_chooser_set_filter);
-DECL_FUNC_PTR(gtk_file_chooser_get_filter);
-DECL_FUNC_PTR(gtk_file_chooser_list_filters);
-DECL_FUNC_PTR(gtk_file_filter_new);
-DECL_FUNC_PTR(gtk_file_filter_add_pattern);
-DECL_FUNC_PTR(gtk_file_filter_set_name);
-DECL_FUNC_PTR(gtk_file_chooser_get_preview_filename);
-DECL_FUNC_PTR(gtk_file_chooser_set_preview_widget_active);
-DECL_FUNC_PTR(gtk_image_set_from_pixbuf);
-DECL_FUNC_PTR(gtk_file_chooser_set_preview_widget);
-DECL_FUNC_PTR(gtk_image_new);
-DECL_FUNC_PTR(gtk_misc_set_padding);
-DECL_FUNC_PTR(gtk_file_chooser_set_local_only);
 
 // XXXdholbert -- this function is duplicated in nsPrintDialogGTK.cpp
 // and needs to be unified in some generic utility class.
@@ -163,94 +92,11 @@ get_gtk_window_for_nsiwidget(nsIWidget *widget)
   return GTK_WINDOW(gtk_widget_get_toplevel(GTK_WIDGET(parent_container)));
 }
 
-static PRLibrary *
-LoadVersionedLibrary(const char* libName, const char* libVersion)
-{
-  char *platformLibName = PR_GetLibraryName(nsnull, libName);
-  nsCAutoString versionLibName(platformLibName);
-  versionLibName.Append(libVersion);
-  PR_FreeLibraryName(platformLibName);
-  return PR_LoadLibrary(versionLibName.get());
-}
-
-/* static */
-nsresult
-nsFilePicker::LoadSymbolsGTK24()
-{
-  static PRBool initialized;
-  if (initialized) {
-    return NS_OK;
-  }
-
-  #define GET_LIBGTK_FUNC_BASE(func, onerr)                  \
-    PR_BEGIN_MACRO \
-    _##func = (_##func##_fn) PR_FindFunctionSymbol(mGTK24, #func); \
-    if (!_##func) { \
-      NS_WARNING("Can't load gtk symbol " #func); \
-      onerr \
-    } \
-    PR_END_MACRO
-
-  #define GET_LIBGTK_FUNC(func) \
-    GET_LIBGTK_FUNC_BASE(func, return NS_ERROR_NOT_AVAILABLE;)
-
-  #define GET_LIBGTK_FUNC_OPT(func) \
-    GET_LIBGTK_FUNC_BASE(func, ;)
-
-  PRFuncPtr func = PR_FindFunctionSymbolAndLibrary("gtk_file_chooser_get_filename",
-                                                   &mGTK24);
-  if (mGTK24) {
-    _gtk_file_chooser_get_filename = (_gtk_file_chooser_get_filename_fn)func;
-  } else {
-    // XXX hmm, this seems to fail when gtk 2.4 is already loaded...
-    mGTK24 = LoadVersionedLibrary("gtk-2", ".4");
-    if (!mGTK24) {
-      return NS_ERROR_NOT_AVAILABLE;
-    }
-    GET_LIBGTK_FUNC(gtk_file_chooser_get_filename);
-  }
-
-  GET_LIBGTK_FUNC(gtk_file_chooser_get_filenames);
-  GET_LIBGTK_FUNC(gtk_file_chooser_get_uri);
-  GET_LIBGTK_FUNC(gtk_file_chooser_get_uris);
-  GET_LIBGTK_FUNC(gtk_file_chooser_dialog_new);
-  GET_LIBGTK_FUNC(gtk_file_chooser_set_select_multiple);
-  GET_LIBGTK_FUNC_OPT(gtk_file_chooser_set_do_overwrite_confirmation);
-  GET_LIBGTK_FUNC(gtk_file_chooser_set_current_name);
-  GET_LIBGTK_FUNC(gtk_file_chooser_set_current_folder);
-  GET_LIBGTK_FUNC(gtk_file_chooser_add_filter);
-  GET_LIBGTK_FUNC(gtk_file_chooser_set_filter);
-  GET_LIBGTK_FUNC(gtk_file_chooser_get_filter);
-  GET_LIBGTK_FUNC(gtk_file_chooser_list_filters);
-  GET_LIBGTK_FUNC(gtk_file_filter_new);
-  GET_LIBGTK_FUNC(gtk_file_filter_add_pattern);
-  GET_LIBGTK_FUNC(gtk_file_filter_set_name);
-  GET_LIBGTK_FUNC(gtk_file_chooser_get_preview_filename);
-  GET_LIBGTK_FUNC(gtk_file_chooser_set_preview_widget_active);
-  GET_LIBGTK_FUNC(gtk_image_set_from_pixbuf);
-  GET_LIBGTK_FUNC(gtk_file_chooser_set_preview_widget);
-  GET_LIBGTK_FUNC(gtk_image_new);
-  GET_LIBGTK_FUNC(gtk_misc_set_padding);
-  GET_LIBGTK_FUNC(gtk_file_chooser_set_local_only);
-
-  initialized = PR_TRUE;
-
-  // Woot.
-  return NS_OK;
-}
-
 void
 nsFilePicker::Shutdown()
 {
-  if (mGTK24) {
-    PR_UnloadLibrary(mGTK24);
-    mGTK24 = nsnull;
-  }
-
   NS_IF_RELEASE(mPrevDisplayDirectory);
 }
-
-// Ok, lib loading crap is done... the real code starts here:
 
 static GtkFileChooserAction
 GetGtkFileChooserAction(PRInt16 aMode)
@@ -285,10 +131,10 @@ UpdateFilePreviewWidget(GtkFileChooser *file_chooser,
                         gpointer preview_widget_voidptr)
 {
   GtkImage *preview_widget = GTK_IMAGE(preview_widget_voidptr);
-  char *image_filename = _gtk_file_chooser_get_preview_filename(file_chooser);
+  char *image_filename = gtk_file_chooser_get_preview_filename(file_chooser);
 
   if (!image_filename) {
-    _gtk_file_chooser_set_preview_widget_active(file_chooser, FALSE);
+    gtk_file_chooser_set_preview_widget_active(file_chooser, FALSE);
     return;
   }
 
@@ -296,7 +142,7 @@ UpdateFilePreviewWidget(GtkFileChooser *file_chooser,
   GdkPixbuf *preview_pixbuf = gdk_pixbuf_new_from_file(image_filename, NULL);
   if (!preview_pixbuf) {
     g_free(image_filename);
-    _gtk_file_chooser_set_preview_widget_active(file_chooser, FALSE);
+    gtk_file_chooser_set_preview_widget_active(file_chooser, FALSE);
     return;
   }
   if (gdk_pixbuf_get_width(preview_pixbuf) > MAX_PREVIEW_SIZE || gdk_pixbuf_get_height(preview_pixbuf) > MAX_PREVIEW_SIZE) {
@@ -306,18 +152,18 @@ UpdateFilePreviewWidget(GtkFileChooser *file_chooser,
 
   g_free(image_filename);
   if (!preview_pixbuf) {
-    _gtk_file_chooser_set_preview_widget_active(file_chooser, FALSE);
+    gtk_file_chooser_set_preview_widget_active(file_chooser, FALSE);
     return;
   }
 
   // This is the easiest way to do center alignment without worrying about containers
   // Minimum 3px padding each side (hence the 6) just to make things nice
   gint x_padding = (MAX_PREVIEW_SIZE + 6 - gdk_pixbuf_get_width(preview_pixbuf)) / 2;
-  _gtk_misc_set_padding(GTK_MISC(preview_widget), x_padding, 0);
+  gtk_misc_set_padding(GTK_MISC(preview_widget), x_padding, 0);
 
-  _gtk_image_set_from_pixbuf(preview_widget, preview_pixbuf);
+  gtk_image_set_from_pixbuf(preview_widget, preview_pixbuf);
   g_object_unref(preview_pixbuf);
-  _gtk_file_chooser_set_preview_widget_active(file_chooser, TRUE);
+  gtk_file_chooser_set_preview_widget_active(file_chooser, TRUE);
 }
 
 static nsCAutoString
@@ -381,19 +227,19 @@ nsFilePicker::ReadValuesFromFileChooser(GtkWidget *file_chooser)
   if (mMode == nsIFilePicker::modeOpenMultiple) {
     mFileURL.Truncate();
 
-    GSList *list = _gtk_file_chooser_get_filenames (GTK_FILE_CHOOSER(file_chooser));
+    GSList *list = gtk_file_chooser_get_filenames(GTK_FILE_CHOOSER(file_chooser));
     g_slist_foreach(list, ReadMultipleFiles, static_cast<gpointer>(&mFiles));
     g_slist_free(list);
   } else {
-    gchar *filename = _gtk_file_chooser_get_uri (GTK_FILE_CHOOSER(file_chooser));
+    gchar *filename = gtk_file_chooser_get_uri(GTK_FILE_CHOOSER(file_chooser));
     mFileURL.Assign(filename);
     g_free(filename);
   }
 
-  GtkFileFilter *filter = _gtk_file_chooser_get_filter (GTK_FILE_CHOOSER(file_chooser));
-  GSList *filter_list = _gtk_file_chooser_list_filters (GTK_FILE_CHOOSER(file_chooser));
+  GtkFileFilter *filter = gtk_file_chooser_get_filter(GTK_FILE_CHOOSER(file_chooser));
+  GSList *filter_list = gtk_file_chooser_list_filters(GTK_FILE_CHOOSER(file_chooser));
 
-  mSelectedType = static_cast<PRInt16>(g_slist_index (filter_list, filter));
+  mSelectedType = static_cast<PRInt16>(g_slist_index(filter_list, filter));
   g_slist_free(filter_list);
 
   // Remember last used directory.
@@ -407,17 +253,6 @@ nsFilePicker::ReadValuesFromFileChooser(GtkWidget *file_chooser)
       localDir.swap(mPrevDisplayDirectory);
     }
   }
-}
-
-NS_IMETHODIMP
-nsFilePicker::Init(nsIDOMWindow *aParent, const nsAString &aTitle, PRInt16 aMode)
-{
-  nsresult rv = LoadSymbolsGTK24();
-  if (NS_FAILED(rv)) {
-    return rv;
-  }
-
-  return nsBaseFilePicker::Init(aParent, aTitle, aMode);
 }
 
 void
@@ -543,7 +378,7 @@ nsFilePicker::GetFiles(nsISimpleEnumerator **aFiles)
 }
 
 PRBool
-confirm_overwrite_file (GtkWidget *parent, nsILocalFile* file)
+confirm_overwrite_file(GtkWidget *parent, nsILocalFile* file)
 {
   nsCOMPtr<nsIStringBundleService> sbs = do_GetService(NS_STRINGBUNDLE_CONTRACTID);
   nsCOMPtr<nsIStringBundle> bundle;
@@ -580,9 +415,9 @@ confirm_overwrite_file (GtkWidget *parent, nsILocalFile* file)
     gtk_window_group_add_window(parent_window->group, GTK_WINDOW(dialog));
   }
 
-  PRBool result = (RunDialog(GTK_DIALOG (dialog)) == GTK_RESPONSE_YES);
+  PRBool result = (RunDialog(GTK_DIALOG(dialog)) == GTK_RESPONSE_YES);
 
-  gtk_widget_destroy (dialog);
+  gtk_widget_destroy(dialog);
 
   return result;
 }
@@ -601,17 +436,17 @@ nsFilePicker::Show(PRInt16 *aReturn)
   const gchar *accept_button = (mMode == GTK_FILE_CHOOSER_ACTION_SAVE)
                                ? GTK_STOCK_SAVE : GTK_STOCK_OPEN;
   GtkWidget *file_chooser =
-      _gtk_file_chooser_dialog_new(title, parent_widget, action,
-                                   GTK_STOCK_CANCEL, GTK_RESPONSE_CANCEL,
-                                   accept_button, GTK_RESPONSE_ACCEPT,
-                                   NULL);
+      gtk_file_chooser_dialog_new(title, parent_widget, action,
+                                  GTK_STOCK_CANCEL, GTK_RESPONSE_CANCEL,
+                                  accept_button, GTK_RESPONSE_ACCEPT,
+                                  NULL);
   if (mAllowURLs) {
-    _gtk_file_chooser_set_local_only(GTK_FILE_CHOOSER(file_chooser), FALSE);
+    gtk_file_chooser_set_local_only(GTK_FILE_CHOOSER(file_chooser), FALSE);
   }
 
   if (mMode == GTK_FILE_CHOOSER_ACTION_OPEN || mMode == GTK_FILE_CHOOSER_ACTION_SAVE) {
-    GtkWidget *img_preview = _gtk_image_new();
-    _gtk_file_chooser_set_preview_widget(GTK_FILE_CHOOSER(file_chooser), img_preview);
+    GtkWidget *img_preview = gtk_image_new();
+    gtk_file_chooser_set_preview_widget(GTK_FILE_CHOOSER(file_chooser), img_preview);
     g_signal_connect(file_chooser, "update-preview", G_CALLBACK(UpdateFilePreviewWidget), img_preview);
   }
 
@@ -620,11 +455,11 @@ nsFilePicker::Show(PRInt16 *aReturn)
   }
 
   if (mMode == nsIFilePicker::modeOpenMultiple) {
-    _gtk_file_chooser_set_select_multiple (GTK_FILE_CHOOSER(file_chooser), TRUE);
+    gtk_file_chooser_set_select_multiple(GTK_FILE_CHOOSER(file_chooser), TRUE);
   } else if (mMode == nsIFilePicker::modeSave) {
     char *default_filename = ToNewUTF8String(mDefault);
-    _gtk_file_chooser_set_current_name(GTK_FILE_CHOOSER(file_chooser),
-                                       static_cast<const gchar*>(default_filename));
+    gtk_file_chooser_set_current_name(GTK_FILE_CHOOSER(file_chooser),
+                                      static_cast<const gchar*>(default_filename));
     nsMemory::Free(default_filename);
   }
 
@@ -638,8 +473,8 @@ nsFilePicker::Show(PRInt16 *aReturn)
   }
 
   if (!directory.IsEmpty()) {
-    _gtk_file_chooser_set_current_folder(GTK_FILE_CHOOSER(file_chooser),
-                                         directory.get());
+    gtk_file_chooser_set_current_folder(GTK_FILE_CHOOSER(file_chooser),
+                                        directory.get());
   }
 
   PRInt32 count = mFilters.Count();
@@ -652,10 +487,10 @@ nsFilePicker::Show(PRInt16 *aReturn)
       return NS_ERROR_OUT_OF_MEMORY;
     }
 
-    GtkFileFilter *filter = _gtk_file_filter_new ();
+    GtkFileFilter *filter = gtk_file_filter_new();
     for (int j = 0; patterns[j] != NULL; ++j) {
       nsCAutoString caseInsensitiveFilter = MakeCaseInsensitiveShellGlob(g_strstrip(patterns[j]));
-      _gtk_file_filter_add_pattern (filter, caseInsensitiveFilter.get());
+      gtk_file_filter_add_pattern(filter, caseInsensitiveFilter.get());
     }
 
     g_strfreev(patterns);
@@ -663,29 +498,23 @@ nsFilePicker::Show(PRInt16 *aReturn)
     if (!mFilterNames[i]->IsEmpty()) {
       // If we have a name for our filter, let's use that.
       const char *filter_name = mFilterNames[i]->get();
-      _gtk_file_filter_set_name (filter, filter_name);
+      gtk_file_filter_set_name(filter, filter_name);
     } else {
       // If we don't have a name, let's just use the filter pattern.
       const char *filter_pattern = mFilters[i]->get();
-      _gtk_file_filter_set_name (filter, filter_pattern);
+      gtk_file_filter_set_name(filter, filter_pattern);
     }
 
-    _gtk_file_chooser_add_filter (GTK_FILE_CHOOSER (file_chooser), filter);
+    gtk_file_chooser_add_filter(GTK_FILE_CHOOSER(file_chooser), filter);
 
     // Set the initially selected filter
     if (mSelectedType == i) {
-      _gtk_file_chooser_set_filter (GTK_FILE_CHOOSER(file_chooser), filter);
+      gtk_file_chooser_set_filter(GTK_FILE_CHOOSER(file_chooser), filter);
     }
   }
 
-  PRBool checkForOverwrite = PR_TRUE;
-  if (_gtk_file_chooser_set_do_overwrite_confirmation) {
-    checkForOverwrite = PR_FALSE;
-    // Only available in GTK 2.8
-    _gtk_file_chooser_set_do_overwrite_confirmation(GTK_FILE_CHOOSER(file_chooser), PR_TRUE);
-  }
-
-  gint response = RunDialog(GTK_DIALOG (file_chooser));
+  gtk_file_chooser_set_do_overwrite_confirmation(GTK_FILE_CHOOSER(file_chooser), PR_TRUE);
+  gint response = RunDialog(GTK_DIALOG(file_chooser));
 
   switch (response) {
     case GTK_RESPONSE_ACCEPT:
@@ -697,16 +526,9 @@ nsFilePicker::Show(PRInt16 *aReturn)
       if (file) {
         PRBool exists = PR_FALSE;
         file->Exists(&exists);
-        if (exists) {
-          PRBool overwrite = !checkForOverwrite ||
-            confirm_overwrite_file (file_chooser, file);
+        if (exists)
+          *aReturn = nsIFilePicker::returnReplace;
 
-          if (overwrite) {
-            *aReturn = nsIFilePicker::returnReplace;
-          } else {
-            *aReturn = nsIFilePicker::returnCancel;
-          }
-        }
       }
     }
     break;

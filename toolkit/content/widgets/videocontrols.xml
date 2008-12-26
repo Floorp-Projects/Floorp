@@ -14,12 +14,10 @@
 
     <xbl:content xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
         <spacer flex="1"/>
-        <hbox id="controlsBackground">
-            <image id="playButton"
-                   onclick="if (event.button == 0) this.parentNode.parentNode.Utils.togglePause();"/>
-            <box id="controlsMiddle" flex="1"/>
-            <image id="muteButton"
-                   onclick="if (event.button == 0) this.parentNode.parentNode.Utils.toggleMute();"/>
+        <hbox class="controlBar">
+            <button class="playButton" oncommand="this.parentNode.parentNode.Utils.togglePause();"/>
+            <box class="controlsMiddle" flex="1"/>
+            <button class="muteButton" oncommand="this.parentNode.parentNode.Utils.toggleMute();"/>
         </hbox>
     </xbl:content>
 
@@ -77,16 +75,29 @@
             <![CDATA[ ({
                 debug : false,
                 video : null,
-                controls : null,
+                controlBar : null,
                 playButton : null,
                 muteButton : null,
 
-                animationSteps : 8,
-                animationStep : 0,
-                animationDirection : 1,
-                animationTimer : null,
-                dynamicHideControls : true,
+                FADE_TIME_MAX  : 200, // ms
+                FADE_TIME_STEP : 30,  // ms
 
+                fadeTime : 0,         // duration of active fade animation
+                fadingIn: true,       // are we fading in, or fading out?
+                fadeTimer : null,
+                controlsVisible : false,
+
+                get dynamicControls() {
+                    // Don't fade controls for <audio> elements.
+                    var enabled = this.video instanceof HTMLVideoElement;
+
+                    // Allow tests to explicitly suppress the fading of controls.
+                    if (this.video.hasAttribute("mozNoDynamicControls"))
+                        enabled = false;
+
+                    return enabled;
+                },
+                
                 handleEvent : function (aEvent) {
                     this.log("Got " + aEvent.type + " media event");
                     switch (aEvent.type) {
@@ -105,22 +116,71 @@
                     }
                 },
 
-                fadeControls : function (self) {
-                    self.log("fadeControls @" + self.animationStep);
-                    self.animationStep += self.animationDirection;
+                onMouseInOut : function (event) {
+                    if (!this.dynamicControls)
+                        return;
 
-                    if (self.animationStep <= 0) {
-                        self.animationStep = 0;
-                        clearInterval(self.animationTimer);
-                        self.animationTimer = null;
-                    } else if (self.animationStep >= self.animationSteps) {
-                        self.animationStep = self.animationSteps;
-                        clearInterval(self.animationTimer);
-                        self.animationTimer = null;
+                    var isMouseOver = (event.type == "mouseover");
+
+                    // Ignore events caused by transitions between child nodes.
+                    if (this.isChildNode(event.target) &&
+                        this.isChildNode(event.relatedTarget))
+                        return;
+
+                    // Don't show controls when they're disabled, but do allow a
+                    // mouseout to hide controls that were disabled after being shown.
+                    if (!this.video.controls && (isMouseOver || !this.controlsVisible))
+                        return;
+
+                    this.log("Fading controls " + (isMouseOver ? "in" : "out"));
+
+                    var directionChange = (isMouseOver != this.fadingIn);
+                    this.fadingIn = isMouseOver;
+
+                    // When switching direction mid-fade, adjust fade time for current fade state.
+                    if (directionChange && this.fadeTime)
+                        this.fadeTime = this.FADE_TIME_MAX - this.fadeTime;
+
+                    if (!this.fadeTimer)
+                        this.fadeTimer = setInterval(this.fadeControls, this.FADE_TIME_STEP, this);
+
+                    // If we're fading in, immediately make the controls clickable.
+                    // Otherwise they might not activate until the first fadeTimer
+                    // fires, which is hard to test reliably.
+                    if (this.fadingIn)
+                        this.controlBar.style.visibility = "visible";
+                },
+
+                fadeControls : function (self, lateness) {
+                    // Update elapsed time, and compute position as a percent
+                    // of total. Last frame could run over, so clamp to 1.
+                    self.fadeTime += self.FADE_TIME_STEP + lateness;
+                    var pos = self.fadeTime / self.FADE_TIME_MAX;
+                    if (pos > 1)
+                        pos = 1;
+                    
+                    // Calculate the opacity for our position in the animation.
+                    var opacity;
+                    if (self.fadingIn)
+                        opacity = Math.pow(pos, 0.5);
+                    else
+                        opacity = Math.pow(1 - pos, 0.5);
+                    self.controlsVisible = (opacity ? true : false);
+
+                    self.controlBar.style.opacity = opacity;
+
+                    // Use .visibility to ignore mouse clicks when hidden.
+                    if (self.controlsVisible)
+                        self.controlBar.style.visibility = "visible";
+                    else
+                        self.controlBar.style.visibility = "hidden";
+
+                    // Is the animation done?
+                    if (pos == 1) {
+                        clearInterval(self.fadeTimer);
+                        self.fadeTimer = null;
+                        self.fadeTime = 0;
                     }
-
-                    // XXX might be good to do logarithmic steps, maybe use timer error too (for smoothness)?
-                    self.controls.style.opacity = self.animationStep / self.animationSteps;
                 },
 
                 togglePause : function () {
@@ -144,11 +204,11 @@
 
                 isChildNode : function (node) {
                     while (node) {
-                        if (node == this.controls)
+                        if (node == this.video)
                             break;
                         node = node.parentNode;
                     }
-                    return (node == this);
+                    return (node == this.video);
                 },
 
                 log : function (msg) {
@@ -163,18 +223,17 @@
             <![CDATA[
             var video = this.parentNode;
             this.Utils.video = video;
-            this.Utils.controls = this;
-            // We shouldn't dynamically hide the controls for audio elements
-            this.Utils.dynamicHideControls = video instanceof HTMLVideoElement;
 
-            this.Utils.playButton = document.getAnonymousElementByAttribute(this, "id", "playButton");
-            this.Utils.muteButton = document.getAnonymousElementByAttribute(this, "id", "muteButton");
+            this.Utils.controlBar = document.getAnonymousElementByAttribute(this, "class", "controlBar");
+            this.Utils.playButton = document.getAnonymousElementByAttribute(this, "class", "playButton");
+            this.Utils.muteButton = document.getAnonymousElementByAttribute(this, "class", "muteButton");
 
             // Set initial state of play/pause button.
             this.Utils.playButton.setAttribute("paused", video.paused);
-
-            if (this.Utils.dynamicHideControls) {
-                this.style.opacity = 0;
+            // Controls are initially faded out and hidden (to ignore mouse clicks)
+            if (this.Utils.dynamicControls) {
+                this.Utils.controlBar.style.opacity = 0;
+                this.Utils.controlBar.style.visibility = "hidden";
             }
 
             // Use Utils.handleEvent() callback for all media events.
@@ -192,35 +251,10 @@
 
     <handlers>
         <handler event="mouseover">
-            <![CDATA[
-            if (!this.Utils.dynamicHideControls)
-                return;
-
-            // Ignore events caused by transitions between child nodes.
-            if (this.Utils.isChildNode(event.relatedTarget))
-                return;
-
-            // XXX add support for dynamically hiding controls w/o waiting for mouseout?
-
-            this.Utils.animationDirection = 1;
-            if (!this.Utils.animationTimer)
-                this.Utils.animationTimer = setInterval(this.Utils.fadeControls, 50, this.Utils);
-            ]]>
+            this.Utils.onMouseInOut(event);
         </handler>
-
         <handler event="mouseout">
-            <![CDATA[
-            if (!this.Utils.dynamicHideControls)
-                return;
-
-            // Ignore events caused by transitions between child nodes.
-            if (this.Utils.isChildNode(event.relatedTarget))
-                return;
-
-            this.Utils.animationDirection = -1;
-            if (!this.Utils.animationTimer)
-                this.Utils.animationTimer = setInterval(this.Utils.fadeControls, 50, this.Utils);
-            ]]>
+            this.Utils.onMouseInOut(event);
         </handler>
     </handlers>
   </binding>

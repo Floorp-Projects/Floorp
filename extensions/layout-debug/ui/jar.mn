@@ -1,4 +1,6 @@
 layoutdebug.jar:
+% content layoutdebug %content/layoutdebug/
+% locale layoutdebug en-US %locale/en-US/layoutdebug/
   content/layoutdebug/contents.rdf                 (content/contents.rdf)
   content/layoutdebug/layoutdebug.xul              (content/layoutdebug.xul)
   content/layoutdebug/layoutdebug.js               (content/layoutdebug.js)
