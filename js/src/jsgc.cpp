@@ -2929,24 +2929,33 @@ js_TraceContext(JSTracer *trc, JSContext *acx)
      * Iterate frame chain and dormant chains.
      *
      * (NB: see comment on this whole "dormant" thing in js_Execute.)
+     *
+     * Since js_GetTopStackFrame needs to dereference cx->thread to check for
+     * JIT frames, we check for non-null thread here and avoid null checks
+     * there. See bug 471197.
      */
-    fp = js_GetTopStackFrame(acx);
-    nextChain = acx->dormantFrameChain;
-    if (!fp)
-        goto next_chain;
+#ifdef JS_THREADSAFE
+    if (acx->thread)
+#endif
+    {
+        fp = js_GetTopStackFrame(acx);
+        nextChain = acx->dormantFrameChain;
+        if (!fp)
+            goto next_chain;
 
-    /* The top frame must not be dormant. */
-    JS_ASSERT(!fp->dormantNext);
-    for (;;) {
-        do {
-            js_TraceStackFrame(trc, fp);
-        } while ((fp = fp->down) != NULL);
+        /* The top frame must not be dormant. */
+        JS_ASSERT(!fp->dormantNext);
+        for (;;) {
+            do {
+                js_TraceStackFrame(trc, fp);
+            } while ((fp = fp->down) != NULL);
 
-      next_chain:
-        if (!nextChain)
-            break;
-        fp = nextChain;
-        nextChain = nextChain->dormantNext;
+          next_chain:
+            if (!nextChain)
+                break;
+            fp = nextChain;
+            nextChain = nextChain->dormantNext;
+        }
     }
 
     /* Mark other roots-by-definition in acx. */
