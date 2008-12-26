@@ -59,6 +59,13 @@
 #include "nsCExternalHandlerService.h"
 #include "nsDirectoryServiceDefs.h"
 
+#ifndef MOZ_DISABLE_VISTA_SDK_REQUIREMENTS
+#ifdef _WIN32_WINNT
+#undef _WIN32_WINNT
+#endif
+#define _WIN32_WINNT 0x0600
+#endif
+
 // we need windows.h to read out registry information...
 #include <windows.h>
 #include <shellapi.h>
@@ -81,6 +88,20 @@ struct ICONENTRY {
   PRUint32 ieSizeImage;
   PRUint32 ieFileOffset;
 };
+
+#ifndef MOZ_DISABLE_VISTA_SDK_REQUIREMENTS
+typedef HRESULT (WINAPI*SHGetStockIconInfoPtr) (SHSTOCKICONID siid, UINT uFlags, SHSTOCKICONINFO *psii);
+
+// Match stock icons with names
+static SHSTOCKICONID GetStockIconIDForName(const nsACString &aStockName)
+{
+  // UAC shield icon
+  if (aStockName == NS_LITERAL_CSTRING("uac-shield"))
+    return SIID_SHIELD;
+
+  return SIID_INVALID;
+}
+#endif
 
 // nsIconChannel methods
 nsIconChannel::nsIconChannel()
@@ -272,7 +293,20 @@ static DWORD GetSpecialFolderIcon(nsIFile* aFile, int aFolder, SHFILEINFOW* aSFI
   return shellResult;
 }
 
-nsresult nsIconChannel::MakeInputStream(nsIInputStream** _retval, PRBool nonBlocking)
+static UINT GetSizeInfoFlag(PRUint32 aDesiredImageSize)
+{
+  UINT infoFlag;
+#ifndef WINCE
+  if (aDesiredImageSize > 16)
+    infoFlag = SHGFI_SHELLICONSIZE;
+  else
+#endif
+    infoFlag = SHGFI_SMALLICON;
+
+  return infoFlag;
+}
+
+nsresult nsIconChannel::GetHIconFromFile(HICON *hIcon)
 {
   nsXPIDLCString contentType;
   nsCString fileExt;
@@ -309,12 +343,7 @@ nsresult nsIconChannel::MakeInputStream(nsIInputStream** _retval, PRBool nonBloc
   if (!fileExists)
    infoFlags |= SHGFI_USEFILEATTRIBUTES;
 
-#ifndef WINCE
-  if (desiredImageSize > 16)
-    infoFlags |= SHGFI_SHELLICONSIZE;
-  else
-#endif
-    infoFlags |= SHGFI_SMALLICON;
+  infoFlags |= GetSizeInfoFlag(desiredImageSize);
 
   // if we have a content type... then use it! but for existing files, we want
   // to show their real icon.
@@ -330,8 +359,6 @@ nsresult nsIconChannel::MakeInputStream(nsIInputStream** _retval, PRBool nonBloc
     // In any case, we need to insert a '.' before the extension.
     filePath = NS_LITERAL_CSTRING(".") + defFileExt;
   }
-
-  rv = NS_ERROR_NOT_AVAILABLE;
 
   // Is this the "Desktop" folder?
   DWORD shellResult = GetSpecialFolderIcon(localFile, CSIDL_DESKTOP, &sfi, infoFlags);
@@ -351,10 +378,83 @@ nsresult nsIconChannel::MakeInputStream(nsIInputStream** _retval, PRBool nonBloc
                                    FILE_ATTRIBUTE_ARCHIVE, &sfi, sizeof(sfi), infoFlags);
 
   if (shellResult && sfi.hIcon)
+    *hIcon = sfi.hIcon;
+  else
+    rv = NS_ERROR_NOT_AVAILABLE;
+
+  return rv;
+}
+
+#ifndef MOZ_DISABLE_VISTA_SDK_REQUIREMENTS
+nsresult nsIconChannel::GetStockHIcon(nsIMozIconURI *aIconURI, HICON *hIcon)
+{
+  nsresult rv = NS_OK;
+
+  // We can only do this on Vista or above
+  HMODULE hShellDLL = ::LoadLibraryW(L"shell32.dll");
+  SHGetStockIconInfoPtr pSHGetStockIconInfo =
+    (SHGetStockIconInfoPtr) ::GetProcAddress(hShellDLL, "SHGetStockIconInfo");
+
+  if (pSHGetStockIconInfo)
+  {
+    PRUint32 desiredImageSize;
+    aIconURI->GetImageSize(&desiredImageSize);
+    nsCAutoString stockIcon;
+    aIconURI->GetStockIcon(stockIcon);
+
+    SHSTOCKICONID stockIconID = GetStockIconIDForName(stockIcon);
+    if (stockIconID == SIID_INVALID)
+      return NS_ERROR_NOT_AVAILABLE;
+
+    UINT infoFlags = SHGSI_ICON;
+    infoFlags |= GetSizeInfoFlag(desiredImageSize);
+
+    SHSTOCKICONINFO sii = {0};
+    sii.cbSize = sizeof(sii);
+    HRESULT hr = pSHGetStockIconInfo(stockIconID, infoFlags, &sii);
+
+    if (SUCCEEDED(hr))
+      *hIcon = sii.hIcon;
+    else
+      rv = NS_ERROR_FAILURE;
+  }
+  else
+  {
+    rv = NS_ERROR_NOT_AVAILABLE;
+  }
+
+  if (hShellDLL)
+    ::FreeLibrary(hShellDLL);
+
+  return rv;
+}
+#endif
+
+nsresult nsIconChannel::MakeInputStream(nsIInputStream** _retval, PRBool nonBlocking)
+{
+  // Check whether the icon requested's a file icon or a stock icon
+  nsresult rv;
+  HICON hIcon = NULL;
+
+#ifndef MOZ_DISABLE_VISTA_SDK_REQUIREMENTS
+  nsCOMPtr<nsIMozIconURI> iconURI(do_QueryInterface(mUrl, &rv));
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  nsCAutoString stockIcon;
+  iconURI->GetStockIcon(stockIcon);
+  if (!stockIcon.IsEmpty())
+    rv = GetStockHIcon(iconURI, &hIcon);
+  else
+#endif
+    rv = GetHIconFromFile(&hIcon);
+
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  if (hIcon)
   {
     // we got a handle to an icon. Now we want to get a bitmap for the icon using GetIconInfo....
     ICONINFO iconInfo;
-    if (GetIconInfo(sfi.hIcon, &iconInfo))
+    if (GetIconInfo(hIcon, &iconInfo))
     {
       // we got the bitmaps, first find out their size
       HDC hDC = CreateCompatibleDC(NULL); // get a device context for the screen.
@@ -419,8 +519,8 @@ nsresult nsIconChannel::MakeInputStream(nsIInputStream** _retval, PRBool nonBloc
       DeleteObject(iconInfo.hbmColor);
       DeleteObject(iconInfo.hbmMask);
     } // if we got icon info
-    DestroyIcon(sfi.hIcon);
-  } // if we got sfi
+    DestroyIcon(hIcon);
+  } // if we got an hIcon
 
   return rv;
 }

@@ -46,6 +46,7 @@ DIRS	+= \
 	dom-level0 \
 	dom-level1-core \
 	dom-level2-core \
+	dom-level2-html \
 	ajax \
 	bugs \
 	chrome \
@@ -53,10 +54,6 @@ DIRS	+= \
 	whatwg \
 	geolocation \
 	$(NULL)
-
-# dom-level2-html disabled due to failures on multiple platforms
-# (bug 427878)
-#	dom-level2-html \
 
 include $(topsrcdir)/config/rules.mk
 

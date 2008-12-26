@@ -46,7 +46,7 @@
 #include "nsIPrefLocalizedString.h"
 #include "nsISupportsPrimitives.h"
 #include "nsIStreamBufferAccess.h"
-#include "nsILocalFile.h"
+#include "nsMemory.h"
 
 #define NO_RANGE_FOUND 126 // bit 126 in the font unicode ranges is required to be 0
 
@@ -477,6 +477,7 @@ void gfxFontUtils::GetPrefsFontList(const char *aPrefName, nsTArray<nsString>& a
 #pragma pack(1)
 
 struct AutoSwap_PRUint16 {
+    AutoSwap_PRUint16(PRUint16 aValue) { value = NS_SWAP16(aValue); }
     operator PRUint16() const { return NS_SWAP16(value); }
     operator PRUint32() const { return NS_SWAP16(value); }
     operator PRUint64() const { return NS_SWAP16(value); }
@@ -484,17 +485,20 @@ struct AutoSwap_PRUint16 {
 };
 
 struct AutoSwap_PRInt16 {
+    AutoSwap_PRInt16(PRInt16 aValue) { value = NS_SWAP16(aValue); }
     operator PRInt16() const { return NS_SWAP16(value); }
     operator PRUint32() const { return NS_SWAP16(value); }
     PRInt16  value;
 };
 
 struct AutoSwap_PRUint32 {
+    AutoSwap_PRUint32(PRUint32 aValue) { value = NS_SWAP32(aValue); }
     operator PRUint32() const { return NS_SWAP32(value); }
     PRUint32  value;
 };
 
 struct AutoSwap_PRUint64 {
+    AutoSwap_PRUint64(PRUint64 aValue) { value = NS_SWAP64(aValue); }
     operator PRUint64() const { return NS_SWAP64(value); }
     PRUint64  value;
 };
@@ -557,8 +561,10 @@ struct NameRecord {
     enum {
         NAME_ID_FAMILY = 1,
         NAME_ID_STYLE = 2,
+        NAME_ID_UNIQUE = 3,
         NAME_ID_FULL = 4,
         NAME_ID_VERSION = 5,
+        NAME_ID_POSTSCRIPT = 6,
         PLATFORM_ID_UNICODE = 0,                 // Mac OS uses this typically
         PLATFORM_ID_MICROSOFT = 3,
         ENCODING_ID_MICROSOFT_UNICODEBMP = 1,    // with Microsoft platformID, BMP-only Unicode encoding
@@ -637,7 +643,9 @@ CopySwapUTF16(const PRUint16 *aInBuf, PRUint16 *aOutBuf, PRUint32 aLen)
 }
 
 PRBool
-gfxFontUtils::ValidateSFNTHeaders(const PRUint8 *aFontData, PRUint32 aFontDataLength)
+gfxFontUtils::ValidateSFNTHeaders(const PRUint8 *aFontData, 
+                                  PRUint32 aFontDataLength, 
+                                  PRBool *aIsCFF)
 {
     NS_ASSERTION(aFontData && aFontDataLength != 0, "null font data");
 
@@ -655,6 +663,9 @@ gfxFontUtils::ValidateSFNTHeaders(const PRUint8 *aFontData, PRUint32 aFontDataLe
         NS_WARNING("invalid font (SFNT version)");
         return PR_FALSE;
     }
+    
+    if (aIsCFF)
+        *aIsCFF = (sfntVersion == 'OTTO');
 
     // iterate through the table headers to find the head, name and OS/2 tables
     PRBool foundHead = PR_FALSE, foundOS2 = PR_FALSE, foundName = PR_FALSE;
@@ -670,11 +681,13 @@ gfxFontUtils::ValidateSFNTHeaders(const PRUint8 *aFontData, PRUint32 aFontDataLe
     }
     
     // table directory entries begin immediately following SFNT header
-    const TableDirEntry *dirEntry = reinterpret_cast<const TableDirEntry*>(aFontData + sizeof(SFNTHeader));
+    const TableDirEntry *dirEntry = 
+        reinterpret_cast<const TableDirEntry*>(aFontData + sizeof(SFNTHeader));
     PRUint32 checksum = 0;
     
     // checksum for font = (checksum of header) + (checksum of tables)
-    const AutoSwap_PRUint32 *headerData = reinterpret_cast<const AutoSwap_PRUint32*>(aFontData);
+    const AutoSwap_PRUint32 *headerData = 
+        reinterpret_cast<const AutoSwap_PRUint32*>(aFontData);
 
     // header length is in bytes, checksum calculated in longwords
     for (i = 0; i < (headerLen >> 2); i++, headerData++) {
@@ -798,6 +811,149 @@ gfxFontUtils::ValidateSFNTHeaders(const PRUint8 *aFontData, PRUint32 aFontDataLe
     return PR_TRUE;
 }
 
+nsresult
+gfxFontUtils::RenameFont(const nsAString& aName, const PRUint8 *aFontData, 
+                         PRUint32 aFontDataLength, nsTArray<PRUint8> *aNewFont)
+{
+    NS_ASSERTION(aNewFont, "null font data array");
+    
+    PRUint64 dataLength(aFontDataLength);
+
+    // new name table
+    static const PRUint32 neededNameIDs[] = {NameRecord::NAME_ID_FAMILY, 
+                                             NameRecord::NAME_ID_STYLE,
+                                             NameRecord::NAME_ID_UNIQUE,
+                                             NameRecord::NAME_ID_FULL,
+                                             NameRecord::NAME_ID_POSTSCRIPT};
+
+    // calculate new name table size
+    PRUint16 nameCount = NS_ARRAY_LENGTH(neededNameIDs);
+
+    // leave room for null-terminator
+    PRUint16 nameStrLength = (aName.Length() + 1) * sizeof(PRUnichar); 
+
+    // round name table size up to 4-byte multiple
+    PRUint32 nameTableSize = (sizeof(NameHeader) +
+                              sizeof(NameRecord) * nameCount +
+                              nameStrLength +
+                              3) & ~3;
+                              
+    if (dataLength + nameTableSize > PR_UINT32_MAX)
+        return NS_ERROR_FAILURE;
+        
+    PRUint32 adjFontDataSize = aFontDataLength + nameTableSize;
+    
+    // create new buffer: old font data plus new name table
+    if (!aNewFont->AppendElements(adjFontDataSize))
+        return NS_ERROR_OUT_OF_MEMORY;
+
+    // copy the old font data
+    PRUint8 *newFontData = reinterpret_cast<PRUint8*>(aNewFont->Elements());
+    
+    memcpy(newFontData, aFontData, aFontDataLength);
+    
+    // null out the last 4 bytes for checksum calculations
+    memset(newFontData + adjFontDataSize - 4, 0, 4);
+    
+    NameHeader *nameHeader = reinterpret_cast<NameHeader*>(newFontData +
+                                                            aFontDataLength);
+    
+    // -- name header
+    nameHeader->format = 0;
+    nameHeader->count = nameCount;
+    nameHeader->stringOffset = sizeof(NameHeader) + nameCount * sizeof(NameRecord);
+    
+    // -- name records
+    PRUint32 i;
+    NameRecord *nameRecord = reinterpret_cast<NameRecord*>(nameHeader + 1);
+    
+    for (i = 0; i < nameCount; i++, nameRecord++) {
+        nameRecord->platformID = NameRecord::PLATFORM_ID_MICROSOFT;
+        nameRecord->encodingID = NameRecord::ENCODING_ID_MICROSOFT_UNICODEBMP;
+        nameRecord->languageID = NameRecord::LANG_ID_MICROSOFT_EN_US;
+        nameRecord->nameID = neededNameIDs[i];
+        nameRecord->offset = 0;
+        nameRecord->length = nameStrLength;
+    }
+    
+    // -- string data, located after the name records, stored in big-endian form
+    PRUnichar *strData = reinterpret_cast<PRUnichar*>(nameRecord);
+
+    const PRUnichar *nameStr = aName.BeginReading();
+    const PRUnichar *nameStrEnd = aName.EndReading();
+    while (nameStr < nameStrEnd) {
+        PRUnichar ch = *nameStr++;
+        *strData++ = NS_SWAP16(ch);
+    }
+    *strData = 0; // add null termination
+    
+    // adjust name table header to point to the new name table
+    SFNTHeader *sfntHeader = reinterpret_cast<SFNTHeader*>(newFontData);
+
+    // table directory entries begin immediately following SFNT header
+    TableDirEntry *dirEntry = 
+        reinterpret_cast<TableDirEntry*>(newFontData + sizeof(SFNTHeader));
+
+    PRUint32 numTables = sfntHeader->numTables;
+    PRBool foundName = PR_FALSE;
+    
+    for (i = 0; i < numTables; i++, dirEntry++) {
+        if (dirEntry->tag == 'name') {
+            foundName = PR_TRUE;
+            break;
+        }
+    }
+    
+    // function only called if font validates, so this should always be true
+    NS_ASSERTION(foundName, "attempt to rename font with no name table");
+
+    // note: dirEntry now points to name record
+    
+    // recalculate name table checksum
+    PRUint32 checkSum = 0;
+    AutoSwap_PRUint32 *nameData = reinterpret_cast<AutoSwap_PRUint32*> (nameHeader);
+    AutoSwap_PRUint32 *nameDataEnd = nameData + (nameTableSize >> 2);
+    
+    while (nameData < nameDataEnd)
+        checkSum = checkSum + *nameData++;
+    
+    // adjust name table entry to point to new name table
+    dirEntry->offset = aFontDataLength;
+    dirEntry->length = nameTableSize;
+    dirEntry->checkSum = checkSum;
+    
+    // fix up checksums
+    PRUint32 checksum = 0;
+    
+    // checksum for font = (checksum of header) + (checksum of tables)
+    PRUint32 headerLen = sizeof(SFNTHeader) + sizeof(TableDirEntry) * numTables;
+    const AutoSwap_PRUint32 *headerData = 
+        reinterpret_cast<const AutoSwap_PRUint32*>(newFontData);
+
+    // header length is in bytes, checksum calculated in longwords
+    for (i = 0; i < (headerLen >> 2); i++, headerData++) {
+        checksum += *headerData;
+    }
+    
+    PRUint32 headOffset = 0;
+    dirEntry = reinterpret_cast<TableDirEntry*>(newFontData + sizeof(SFNTHeader));
+
+    for (i = 0; i < numTables; i++, dirEntry++) {
+        if (dirEntry->tag == 'head') {
+            headOffset = dirEntry->offset;
+        }
+        checksum += dirEntry->checkSum;
+    }
+    
+    NS_ASSERTION(headOffset != 0, "no head table for font");
+    
+    HeadTable *headData = reinterpret_cast<HeadTable*>(newFontData + headOffset);
+
+    headData->checkSumAdjustment = HeadTable::HEAD_CHECKSUM_CALC_CONST - checksum;
+
+    return NS_OK;
+}
+
 // Embedded OpenType (EOT) handling
 // needed for dealing with downloadable fonts on Windows
 //
@@ -892,21 +1048,17 @@ DumpEOTHeader(PRUint8 *aHeader, PRUint32 aHeaderLen)
 
 nsresult
 gfxFontUtils::MakeEOTHeader(const PRUint8 *aFontData, PRUint32 aFontDataLength,
-                            nsTArray<PRUint8> *aHeader, PRBool *aIsCFF)
+                            nsTArray<PRUint8> *aHeader)
 {
 
     NS_ASSERTION(aFontData && aFontDataLength != 0, "null font data");
     NS_ASSERTION(aHeader, "null header");
     NS_ASSERTION(aHeader->Length() == 0, "non-empty header passed in");
-    NS_ASSERTION(aIsCFF, "null boolean ptr");
-
-    // assume TrueType
-    *aIsCFF = PR_FALSE;
 
     if (!aHeader->AppendElements(sizeof(EOTFixedHeader)))
         return NS_ERROR_OUT_OF_MEMORY;
 
-    EOTFixedHeader *eotHeader = reinterpret_cast<EOTFixedHeader*> (aHeader->Elements());
+    EOTFixedHeader *eotHeader = reinterpret_cast<EOTFixedHeader*>(aHeader->Elements());
     memset(eotHeader, 0, sizeof(EOTFixedHeader));
 
     PRUint32 fontDataSize = aFontDataLength;
@@ -975,7 +1127,6 @@ gfxFontUtils::MakeEOTHeader(const PRUint8 *aFontData, PRUint32 aFontDataLength,
 
         case 'CFF ':  // PS-style cubic glyph table
             foundGlyphs = PR_TRUE;
-            *aIsCFF = PR_TRUE;
             break;
 
         default:

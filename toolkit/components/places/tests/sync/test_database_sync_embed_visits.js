@@ -74,10 +74,7 @@ var observer = {
     if (aTopic == kSyncFinished && this.visitId != -1) {
       // remove the observer, we don't need to observe sync on quit
       os.removeObserver(this, kSyncFinished);
-      dump("\n\n");
-      dump_table("moz_places_temp");
-      dump_table("moz_places");
-      dump("\n\n");
+
       // Check that moz_places table has been correctly synced
       var stmt = dbConn.createStatement(
         "SELECT id FROM moz_places WHERE url = :url");
@@ -135,7 +132,7 @@ var observer = {
       do_check_false(stmt.executeStep());
       stmt.finalize();
 
-      do_test_finished();
+      finish_test();
     }
   }
 }

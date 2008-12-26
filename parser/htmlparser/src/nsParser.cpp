@@ -1704,6 +1704,13 @@ nsParser::ContinueParsing()
 NS_IMETHODIMP
 nsParser::ContinueInterruptedParsing()
 {
+  // If there are scripts executing, then the content sink is jumping the gun
+  // (probably due to a synchronous XMLHttpRequest) and will re-enable us
+  // later, see bug 460706.
+  if (mScriptsExecuting) {
+    return NS_OK;
+  }
+
   // If the stream has already finished, there's a good chance
   // that we might start closing things down when the parser
   // is reenabled. To make sure that we're not deleted across
