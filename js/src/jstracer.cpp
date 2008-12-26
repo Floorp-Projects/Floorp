@@ -1872,8 +1872,10 @@ TraceRecorder::determineSlotType(jsval* vp) const
 
 static jsbytecode* imacro_code[JSOP_LIMIT];
 
+JS_STATIC_ASSERT(sizeof(equality_imacros) < IMACRO_PC_ADJ_LIMIT);
 JS_STATIC_ASSERT(sizeof(binary_imacros) < IMACRO_PC_ADJ_LIMIT);
 JS_STATIC_ASSERT(sizeof(add_imacros) < IMACRO_PC_ADJ_LIMIT);
+JS_STATIC_ASSERT(sizeof(unary_imacros) < IMACRO_PC_ADJ_LIMIT);
 JS_STATIC_ASSERT(sizeof(apply_imacros) < IMACRO_PC_ADJ_LIMIT);
 
 JS_REQUIRES_STACK LIns*
@@ -3897,7 +3899,8 @@ TraceRecorder::monitorRecording(JSOp op)
         case x:                                                               \
           flag = record_##x();                                                \
           if (x == JSOP_ITER || x == JSOP_NEXTITER || x == JSOP_APPLY ||      \
-              JSOP_IS_BINARY(x) || JSOP_IS_UNARY(x)) {                       \
+              JSOP_IS_BINARY(x) || JSOP_IS_UNARY(x) ||                        \
+              JSOP_IS_EQUALITY(x)) {                                          \
               goto imacro;                                                    \
           }                                                                   \
         break;
@@ -4652,89 +4655,99 @@ TraceRecorder::strictEquality(bool equal, bool cmpCase)
 JS_REQUIRES_STACK bool
 TraceRecorder::equality(bool negate, bool tryBranchAfterCond)
 {
-    jsval& r = stackval(-1);
-    jsval& l = stackval(-2);
-    LIns* x = NULL;
-    bool cond;
-    LIns* l_ins = get(&l);
-    LIns* r_ins = get(&r);
+    jsval& rval = stackval(-1);
+    jsval& lval = stackval(-2);
+    LIns* l_ins = get(&lval);
+    LIns* r_ins = get(&rval);
+
+    return equalityHelper(lval, rval, l_ins, r_ins, negate, tryBranchAfterCond, lval);
+}
+
+JS_REQUIRES_STACK bool
+TraceRecorder::equalityHelper(jsval l, jsval r, LIns* l_ins, LIns* r_ins,
+                              bool negate, bool tryBranchAfterCond,
+                              jsval& rval)
+{
     bool fp = false;
+    bool cond;
+    LIns* args[] = { NULL, NULL };
 
-    if (JSVAL_IS_STRING(l) || JSVAL_IS_STRING(r)) {
-        // Comparing equality of a string against null always produces false.
-        if ((JSVAL_IS_NULL(l) && l_ins->isconst()) ||
-            (JSVAL_IS_NULL(r) && r_ins->isconst())) {
-            x = INS_CONST(negate);
-            cond = negate;
-        } else {
-            if (!JSVAL_IS_STRING(l) || !JSVAL_IS_STRING(r))
-                ABORT_TRACE("unsupported type for cmp vs string");
+    /*
+     * The if chain below closely mirrors that found in 11.9.3, in general
+     * deviating from that ordering of ifs only to account for SpiderMonkey's
+     * conflation of booleans and undefined and for the possibility of
+     * confusing objects and null.  Note carefully the spec-mandated recursion
+     * in the final else clause, which terminates because Number == T recurs
+     * only if T is Object, but that must recur again to convert Object to
+     * primitive, and ToPrimitive throws if the object cannot be converted to
+     * a primitive value (which would terminate recursion).
+     */
 
-            LIns* args[] = { r_ins, l_ins };
-            l_ins = lir->ins_eq0(lir->insCall(&js_EqualStrings_ci, args));
-            r_ins = lir->insImm(0);
-            cond = js_EqualStrings(JSVAL_TO_STRING(l), JSVAL_TO_STRING(r));
-        }
-    } else if (isNumber(l) || isNumber(r)) {
-        jsval tmp[2] = {l, r};
-        JSAutoTempValueRooter tvr(cx, 2, tmp);
-        
-        fp = true;
-
-        // TODO: coerce non-numbers to numbers if it's not string-on-string above
-        LIns* args[] = { l_ins, cx_ins };
-        if (l == JSVAL_NULL && l_ins->isconst()) {
-            jsdpun u;
-            u.d = js_NaN;
-            l_ins = lir->insImmq(u.u64);
+    if (getPromotedType(l) == getPromotedType(r)) {
+        if (JSVAL_TAG(l) == JSVAL_OBJECT || JSVAL_TAG(l) == JSVAL_BOOLEAN) {
+            cond = (l == r);
         } else if (JSVAL_IS_STRING(l)) {
-            l_ins = lir->insCall(&js_StringToNumber_ci, args);
-        } else if (JSVAL_TAG(l) == JSVAL_BOOLEAN) {
-            /*
-             * What I really want here is for undefined to be type-specialized
-             * differently from real booleans.  Failing that, I want to be able
-             * to cmov on quads.  Failing that, I want to have small forward
-             * branches.  Failing that, I want to be able to ins_choose on quads
-             * without cmov.  Failing that, eat flaming builtin!
-             */
-            l_ins = lir->insCall(&js_BooleanOrUndefinedToNumber_ci, args);
-        } else if (!isNumber(l)) {
-            ABORT_TRACE("unsupported LHS type for cmp vs number");
+            args[0] = r_ins, args[1] = l_ins;
+            l_ins = lir->insCall(&js_EqualStrings_ci, args);
+            r_ins = lir->insImm(1);
+            cond = js_EqualStrings(JSVAL_TO_STRING(l), JSVAL_TO_STRING(r));
+        } else {
+            JS_ASSERT(isNumber(l) && isNumber(r));
+            cond = (asNumber(l) == asNumber(r));
+            fp = true;
         }
-        jsdouble lnum = js_ValueToNumber(cx, &tmp[0]);
-
-        args[0] = r_ins;
-        args[1] = cx_ins;
-        if (r == JSVAL_NULL && r_ins->isconst()) {
-            jsdpun u;
-            u.d = js_NaN;
-            r_ins = lir->insImmq(u.u64);
-        } else if (JSVAL_IS_STRING(r)) {
-            r_ins = lir->insCall(&js_StringToNumber_ci, args);
-        } else if (JSVAL_TAG(r) == JSVAL_BOOLEAN) {
-            // See above for the sob story.
-            r_ins = lir->insCall(&js_BooleanOrUndefinedToNumber_ci, args);
-        } else if (!isNumber(r)) {
-            ABORT_TRACE("unsupported RHS type for cmp vs number");
-        }
-        jsdouble rnum = js_ValueToNumber(cx, &tmp[1]);
-        cond = (lnum == rnum);
-    } else if ((JSVAL_TAG(l) == JSVAL_BOOLEAN && JSVAL_TAG(r) == JSVAL_BOOLEAN) ||
-               (JSVAL_TAG(l) == JSVAL_OBJECT && JSVAL_TAG(r) == JSVAL_OBJECT)) {
-        cond = (l == r); 
+    } else if (JSVAL_IS_NULL(l) && JSVAL_TAG(r) == JSVAL_BOOLEAN) {
+        l_ins = lir->insImm(JSVAL_TO_BOOLEAN(JSVAL_VOID));
+        cond = (r == JSVAL_VOID);
+    } else if (JSVAL_TAG(l) == JSVAL_BOOLEAN && JSVAL_IS_NULL(r)) {
+        r_ins = lir->insImm(JSVAL_TO_BOOLEAN(JSVAL_VOID));
+        cond = (l == JSVAL_VOID);
+    } else if (isNumber(l) && JSVAL_IS_STRING(r)) {
+        args[0] = r_ins, args[1] = cx_ins;
+        r_ins = lir->insCall(&js_StringToNumber_ci, args);
+        cond = (asNumber(l) == js_StringToNumber(cx, JSVAL_TO_STRING(r)));
+        fp = true;
+    } else if (JSVAL_IS_STRING(l) && isNumber(r)) {
+        args[0] = l_ins, args[1] = cx_ins;
+        l_ins = lir->insCall(&js_StringToNumber_ci, args);
+        cond = (js_StringToNumber(cx, JSVAL_TO_STRING(l)) == asNumber(r));
+        fp = true;
     } else {
-        ABORT_TRACE("unsupported operand types for cmp");
+        if (JSVAL_TAG(l) == JSVAL_BOOLEAN) {
+            args[0] = l_ins, args[1] = cx_ins;
+            l_ins = lir->insCall(&js_BooleanOrUndefinedToNumber_ci, args);
+            l = (l == JSVAL_VOID)
+                ? DOUBLE_TO_JSVAL(&cx->runtime->jsNaN)
+                : INT_TO_JSVAL(l == JSVAL_TRUE);
+            return equalityHelper(l, r, l_ins, r_ins, negate,
+                                  tryBranchAfterCond, rval);
+        }
+        if (JSVAL_TAG(r) == JSVAL_BOOLEAN) {
+            args[0] = r_ins, args[1] = cx_ins;
+            r_ins = lir->insCall(&js_BooleanOrUndefinedToNumber_ci, args);
+            r = (r == JSVAL_VOID)
+                ? DOUBLE_TO_JSVAL(&cx->runtime->jsNaN)
+                : INT_TO_JSVAL(r == JSVAL_TRUE);
+            return equalityHelper(l, r, l_ins, r_ins, negate,
+                                  tryBranchAfterCond, rval);
+        }
+        
+        if ((JSVAL_IS_STRING(l) || isNumber(l)) && !JSVAL_IS_PRIMITIVE(r))
+            return call_imacro(equality_imacros.any_obj);
+        if (!JSVAL_IS_PRIMITIVE(l) && (JSVAL_IS_STRING(r) || isNumber(r)))
+            return call_imacro(equality_imacros.obj_any);
+
+        l_ins = lir->insImm(0);
+        r_ins = lir->insImm(1);
+        cond = false;
     }
 
-    /* If we didn't generate a constant result yet, then emit the comparison now. */
-    if (!x) {
-        /* If the result is not a number or it's not a quad, we must use an integer compare. */
-        LOpcode op = fp ? LIR_feq : LIR_eq;
-        x = lir->ins2(op, l_ins, r_ins);
-        if (negate) {
-            x = lir->ins_eq0(x);
-            cond = !cond;
-        }
+    /* If the operands aren't numbers, compare them as integers. */
+    LOpcode op = fp ? LIR_feq : LIR_eq;
+    LIns* x = lir->ins2(op, l_ins, r_ins);
+    if (negate) {
+        x = lir->ins_eq0(x);
+        cond = !cond;
     }
 
     /*
@@ -4751,7 +4764,7 @@ TraceRecorder::equality(bool negate, bool tryBranchAfterCond)
      * comparison. This way the value of the condition doesn't have to be 
      * calculated and saved on the stack in most cases.
      */
-    set(&l, x);
+    set(&rval, x);
     return true;
 }
 
@@ -8646,6 +8659,9 @@ InitIMacroCode()
 
     imacro_code[JSOP_NEG] = (jsbytecode*)&unary_imacros - 1;
     imacro_code[JSOP_POS] = (jsbytecode*)&unary_imacros - 1;
+
+    imacro_code[JSOP_EQ] = (jsbytecode*)&equality_imacros - 1;
+    imacro_code[JSOP_NE] = (jsbytecode*)&equality_imacros - 1;
 }
 
 #define UNUSED(n)                                                             \
