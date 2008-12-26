@@ -52,18 +52,15 @@ ifndef JS_MOZ_INSTALL
 NSDISTMODE	= copy
 endif
 
-ifdef JS_NATIVE_EDITLINE
-DIRS += editline
-endif
+MODULE		= js
+LIBRARY_NAME	= mozjs
+GRE_MODULE	= 1
 
-# editline needs to get built before the shell
-DIRS += shell
-
-MODULE		    = js
-LIBRARY_NAME	    = mozjs
-STATIC_LIBRARY_NAME = js_static
-GRE_MODULE	    = 1
-
+PROGRAM         = js$(BIN_SUFFIX)
+# The shell uses some 'HIDDEN' symbols to produce statistics, so we
+# link directly against the .o files, not against the JS shared
+# library.
+PROGOBJS	= js.$(OBJ_SUFFIX) $(OBJS)
 LIBS		= $(NSPR_LIBS)
 
 ifdef GNU_CXX
@@ -103,12 +100,10 @@ endif
 # other modules which are always built shared. Failure to do so results in
 # the js code getting copied into xpinstall and jsd as well as mozilla-bin,
 # and then the static data cells used for locking no longer work.
-#
-# In fact, we now build both a static and a shared library, as the
-# JS shell would like to link to the static library.
 
+ifndef JS_STATIC_BUILD
 FORCE_SHARED_LIB = 1
-FORCE_STATIC_LIB = 1
+endif
 
 ifeq (86,$(findstring 86,$(OS_TEST)))
 ifeq (64,$(findstring 64,$(OS_TEST)))
@@ -620,21 +615,19 @@ install:: $(INSTALLED_HEADERS)
 install:: $(SCRIPTS) $(PROGRAM)
 	$(INSTALL) $(IFLAGS2) $^ $(bindir)
 
-install:: $(LIBRARY)
-ifneq (,$(LIBRARY))
-	$(INSTALL) $(IFLAGS1) $(LIBRARY) $(libdir)
-endif
-ifneq (,$(IMPORT_LIBRARY))
-	$(INSTALL) $(IFLAGS2) $(IMPORT_LIBRARY) $(libdir)
-endif
-
 # The Mozilla top-level makefiles use install-runtime-libs directly to
 # place an additional copy of the libraries in the 'dist/bin'
 # directory.
 install:: install-runtime-libs
 install-runtime-libs:: $(LIBRARY) $(SHARED_LIBRARY) $(IMPORT_LIBRARY)
+ifneq (,$(LIBRARY))
+	$(INSTALL) $(IFLAGS1) $(LIBRARY) $(libdir)
+endif
 ifneq (,$(SHARED_LIBRARY))
 	$(INSTALL) $(IFLAGS2) $(SHARED_LIBRARY) $(libdir)
+endif
+ifneq (,$(IMPORT_LIBRARY))
+	$(INSTALL) $(IFLAGS2) $(IMPORT_LIBRARY) $(libdir)
 endif
 
 # Extra dependancies and rules for auto-generated headers
