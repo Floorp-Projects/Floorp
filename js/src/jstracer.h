@@ -366,6 +366,10 @@ class TraceRecorder : public avmplus::GCObject {
 
     JS_REQUIRES_STACK void strictEquality(bool equal, bool cmpCase);
     JS_REQUIRES_STACK bool equality(bool negate, bool tryBranchAfterCond);
+    JS_REQUIRES_STACK bool equalityHelper(jsval l, jsval r,
+                                          nanojit::LIns* l_ins, nanojit::LIns* r_ins,
+                                          bool negate, bool tryBranchAfterCond,
+                                          jsval& rval);
     JS_REQUIRES_STACK bool relational(nanojit::LOpcode op, bool tryBranchAfterCond);
 
     JS_REQUIRES_STACK bool unary(nanojit::LOpcode op);
@@ -487,6 +491,7 @@ public:
 
 #define JSOP_IS_BINARY(op) ((uintN)((op) - JSOP_BITOR) <= (uintN)(JSOP_MOD - JSOP_BITOR))
 #define JSOP_IS_UNARY(op) ((uintN)((op) - JSOP_NEG) <= (uintN)(JSOP_POS - JSOP_NEG))
+#define JSOP_IS_EQUALITY(op) ((uintN)((op) - JSOP_EQ) <= (uintN)(JSOP_NE - JSOP_EQ))
 
 #define TRACE_ARGS_(x,args)                                                   \
     JS_BEGIN_MACRO                                                            \

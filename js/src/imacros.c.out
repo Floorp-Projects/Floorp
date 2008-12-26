@@ -2,6 +2,55 @@
 static struct {
     jsbytecode any_obj[37];
     jsbytecode obj_any[39];
+} equality_imacros = {
+    {
+/* 0*/  JSOP_DUP,
+/* 1*/  JSOP_DUP,
+/* 2*/  JSOP_GETPROP, 0, COMMON_ATOM_INDEX(valueOf),
+/* 5*/  JSOP_IFPRIMTOP, 0, 16,
+/* 8*/  JSOP_SWAP,
+/* 9*/  JSOP_STRING, 0, COMMON_TYPE_ATOM_INDEX(JSTYPE_VOID),
+/*12*/  JSOP_CALL, 0, 1,
+/*15*/  JSOP_IFPRIMTOP, 0, 18,
+/*18*/  JSOP_GOTO, 0, 4,
+/*21*/  JSOP_POP,
+/*22*/  JSOP_POP,
+/*23*/  JSOP_CALLPROP, 0, COMMON_ATOM_INDEX(toString),
+/*26*/  JSOP_CALL, 0, 0,
+/*29*/  JSOP_PRIMTOP,
+/*30*/  JSOP_GOTO, 0, 5,
+/*33*/  JSOP_SWAP,
+/*34*/  JSOP_POP,
+/*35*/  JSOP_IMACOP,
+/*36*/  JSOP_STOP,
+    },
+    {
+/* 0*/  JSOP_SWAP,
+/* 1*/  JSOP_DUP,
+/* 2*/  JSOP_DUP,
+/* 3*/  JSOP_GETPROP, 0, COMMON_ATOM_INDEX(valueOf),
+/* 6*/  JSOP_IFPRIMTOP, 0, 16,
+/* 9*/  JSOP_SWAP,
+/*10*/  JSOP_STRING, 0, COMMON_TYPE_ATOM_INDEX(JSTYPE_VOID),
+/*13*/  JSOP_CALL, 0, 1,
+/*16*/  JSOP_IFPRIMTOP, 0, 18,
+/*19*/  JSOP_GOTO, 0, 4,
+/*22*/  JSOP_POP,
+/*23*/  JSOP_POP,
+/*24*/  JSOP_CALLPROP, 0, COMMON_ATOM_INDEX(toString),
+/*27*/  JSOP_CALL, 0, 0,
+/*30*/  JSOP_PRIMTOP,
+/*31*/  JSOP_GOTO, 0, 5,
+/*34*/  JSOP_SWAP,
+/*35*/  JSOP_POP,
+/*36*/  JSOP_SWAP,
+/*37*/  JSOP_IMACOP,
+/*38*/  JSOP_STOP,
+    },
+};
+static struct {
+    jsbytecode any_obj[37];
+    jsbytecode obj_any[39];
     jsbytecode obj_obj[74];
 } binary_imacros = {
     {

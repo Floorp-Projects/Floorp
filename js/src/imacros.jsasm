@@ -35,6 +35,56 @@
 #
 # ***** END LICENSE BLOCK *****
 
+.igroup equality JSOP_EQ-JSOP_NE
+
+    .imacro any_obj                     # any obj
+        dup                             # any obj obj
+        dup                             # any obj obj obj
+        getprop valueOf                 # any obj obj valueOf
+        ifprimtop 1                     # any obj obj valueOf
+        swap                            # any obj valueOf obj
+        string void                     # any obj valueOf obj "void"
+        call 1                          # any obj rval
+        ifprimtop 3                     # any obj rval
+        goto 2
+1:      pop                             # any obj obj
+2:      pop                             # any obj
+        callprop toString               # any toString obj
+        call 0                          # any rval
+        primtop                         # any rval
+        goto 4                          # any rval
+3:      swap                            # any rval obj
+        pop                             # any rval
+4:      imacop                          # eqval
+        stop
+    .end
+
+    .imacro obj_any                     # obj any
+        swap                            # any obj
+        dup                             # any obj obj
+        dup                             # any obj obj obj
+        getprop valueOf                 # any obj obj valueOf
+        ifprimtop 1                     # any obj obj valueOf
+        swap                            # any obj valueOf obj
+        string void                     # any obj valueOf obj "void"
+        call 1                          # any obj lval
+        ifprimtop 3                     # any obj lval
+        goto 2
+1:      pop                             # any obj obj
+2:      pop                             # any obj
+        callprop toString               # any toString obj
+        call 0                          # any lval
+        primtop                         # any rval
+        goto 4                          # any lval
+3:      swap                            # any lval obj
+        pop                             # any lval
+4:      swap                            # lval any
+        imacop                          # eqval
+        stop
+    .end
+
+.end
+
 .igroup binary JSOP_BITOR-JSOP_MOD
 
     .imacro any_obj                     # any obj
