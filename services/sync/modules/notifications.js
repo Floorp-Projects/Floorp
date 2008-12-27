@@ -91,6 +91,16 @@ let Notifications = {
     }
 
     // XXX Should we notify observers about weave:notification:replaced?
+  },
+
+  // replaces all existing notifications with the same title as the new one
+  // FIXME not working?
+  replaceTitle: function Notifications_replaceTitle(notification) {
+    for each (let old in this.notifications) {
+      if (old.title == notification.title)
+        this.remove(old);
+    }
+    this.add(notification);
   }
 
 };
