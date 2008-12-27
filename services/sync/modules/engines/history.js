@@ -115,11 +115,7 @@ HistoryStore.prototype = {
   },
 
   get _db() {
-    // FIXME
-    //if (fx3.0)
-    //  return this._histDB_30;
-    //else
-      return this._hsvc.DBConnection;
+    return this._hsvc.DBConnection;
   },
 
   _fetchRow: function HistStore__fetchRow(stm, params, retparams) {
