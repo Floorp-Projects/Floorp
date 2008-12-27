@@ -414,17 +414,18 @@ WeaveSvc.prototype = {
 
   // These are global (for all engines)
 
-  _verifyLogin: function WeaveSvc__verifyLogin(username, password) {
-    let self = yield;
-    this._log.debug("Verifying login for user " + username);
-    let res = new Resource(this.baseURL + username);
-    yield res.get(self.cb);
-    if (res.data != "1")
-      throw "Login failed";
-  },
   verifyLogin: function WeaveSvc_verifyLogin(onComplete, username, password) {
-    this._localLock(this._notify("verify-login", "", this._verifyLogin,
-                                 username, password)).async(this, onComplete);
+    let user = username, pass = password;
+
+    let fn = function WeaveSvc__verifyLogin() {
+      let self = yield;
+      this._log.debug("Verifying login for user " + user);
+      let res = new Resource(this.baseURL + user);
+      yield res.get(self.cb);
+      if (res.data != "\"1\"")
+        throw "Login failed";
+    };
+    this._notify("verify-login", "", fn).async(this, onComplete);
   },
 
   _verifyPassphrase: function WeaveSvc__verifyPassphrase(username, password,
@@ -451,33 +452,36 @@ WeaveSvc.prototype = {
       async(this, onComplete);
   },
 
-  _login: function WeaveSvc__login(username, password, passphrase) {
-    let self = yield;
-
-    if (typeof(username) != 'undefined')
-      this.username = username;
-    if (typeof(password) != 'undefined')
-      ID.get('WeaveID').setTempPassword(password);
-    if (typeof(passphrase) != 'undefined')
-      ID.get('WeaveCryptoID').setTempPassword(passphrase);
-
-    if (!this.username)
-      throw "No username set, login failed";
-    if (!this.password)
-      throw "No password given or found in password manager";
-
-    this._log.debug("Logging in user " + this.username);
-
-    yield this._verifyLogin.async(this, self.cb, this.username, this.password);
-
-    this._loggedIn = true;
-    self.done(true);
-  },
   login: function WeaveSvc_login(onComplete, username, password, passphrase) {
+    let user = username, pass = password, passp = passphrase;
+
+    let fn = function WeaveSvc__login() {
+      let self = yield;
+
+      this._loggedIn = false;
+
+      if (typeof(user) != 'undefined')
+        this.username = user;
+      if (typeof(pass) != 'undefined')
+        ID.get('WeaveID').setTempPassword(pass);
+      if (typeof(passp) != 'undefined')
+        ID.get('WeaveCryptoID').setTempPassword(passp);
+
+      if (!this.username)
+        throw "No username set, login failed";
+      if (!this.password)
+        throw "No password given or found in password manager";
+
+      this._log.debug("Logging in user " + this.username);
+
+      yield this.verifyLogin(self.cb, this.username, this.password);
+
+      this._loggedIn = true;
+      self.done(true);
+    };
     this._localLock(
-      this._notify("login", "",
-                   this._catchAll(this._login, username, password, passphrase))).
-      async(this, onComplete);
+      this._catchAll(
+        this._notify("login", "", fn))).async(this, onComplete);
   },
 
   logout: function WeaveSvc_logout() {
@@ -548,6 +552,9 @@ WeaveSvc.prototype = {
 
   _sync: function WeaveSvc__sync() {
     let self = yield;
+
+    if (!this._loggedIn)
+      throw "aborting sync, not logged in";
 
     if (!(yield this._remoteSetup.async(this, self.cb))) {
       throw "aborting sync, remote setup failed";
