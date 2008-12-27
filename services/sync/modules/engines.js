@@ -413,9 +413,18 @@ SyncEngine.prototype = {
     newitems.sort = "depthindex";
     yield newitems.get(self.cb);
 
+    let mem = Cc["@mozilla.org/xpcom/memory-service;1"].getService(Ci.nsIMemory);
     this._lastSyncTmp = 0;
     let item;
     while ((item = yield newitems.iter.next(self.cb))) {
+      if (mem.isLowMemory()) {
+        this._log.warn("Low memory, forcing GC");
+        Cu.forceGC();
+        if (mem.isLowMemory()) {
+          this._log.warn("Low memory, aborting sync!");
+          throw "Low memory";
+        }
+      }
       yield item.decrypt(self.cb, ID.get('WeaveCryptoID').password);
       if (yield this._reconcile.async(this, self.cb, item))
         yield this._applyIncoming.async(this, self.cb, item);
