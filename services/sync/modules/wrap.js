@@ -85,6 +85,7 @@ let Wrap = {
       let args = Array.prototype.slice.call(arguments);
 
       try {
+        this._log.debug("Event: " + this._osPrefix + savedName + ":start");
         this._os.notifyObservers(null, this._osPrefix + savedName + ":start", savedPayload);
         this._os.notifyObservers(null, this._osPrefix + "global:start", savedPayload);
 
@@ -93,10 +94,12 @@ let Wrap = {
         Async.run.apply(Async, args);
         ret = yield;
 
+        this._log.debug("Event: " + this._osPrefix + savedName + ":success");
         this._os.notifyObservers(null, this._osPrefix + savedName + ":success", savedPayload);
         this._os.notifyObservers(null, this._osPrefix + "global:success", savedPayload);
 
       } catch (e) {
+        this._log.debug("Event: " + this._osPrefix + savedName + ":error");
         this._os.notifyObservers(null, this._osPrefix + savedName + ":error", savedPayload);
         this._os.notifyObservers(null, this._osPrefix + "global:error", savedPayload);
         if (e != "Could not acquire lock") // FIXME HACK
