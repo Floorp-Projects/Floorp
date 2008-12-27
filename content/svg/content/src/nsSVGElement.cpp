@@ -320,9 +320,9 @@ nsSVGElement::ParseAttribute(PRInt32 aNamespaceID,
     return PR_TRUE;
   }
 
+  nsresult rv = NS_OK;
   PRBool foundMatch = PR_FALSE;
   if (aNamespaceID == kNameSpaceID_None) {
-    nsresult rv;
 
     // Check for nsSVGLength2 attribute
     LengthAttributesInfo lengthInfo = GetLengthInfo();
@@ -429,15 +429,6 @@ nsSVGElement::ParseAttribute(PRInt32 aNamespaceID,
         }
       }
     }
-
-    if (foundMatch) {
-      if (NS_FAILED(rv)) {
-        ReportAttributeParseFailure(GetOwnerDoc(), aAttribute, aValue);
-        return PR_FALSE;
-      }
-      aResult.SetTo(aValue);
-      return PR_TRUE;
-    }
   }
 
   if (!foundMatch) {
@@ -451,6 +442,15 @@ nsSVGElement::ParseAttribute(PRInt32 aNamespaceID,
         break;
       }
     }
+  }
+
+  if (foundMatch) {
+    if (NS_FAILED(rv)) {
+      ReportAttributeParseFailure(GetOwnerDoc(), aAttribute, aValue);
+      return PR_FALSE;
+    }
+    aResult.SetTo(aValue);
+    return PR_TRUE;
   }
 
   return nsSVGElementBase::ParseAttribute(aNamespaceID, aAttribute, aValue,
