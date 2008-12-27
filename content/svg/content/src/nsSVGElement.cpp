@@ -594,7 +594,9 @@ nsSVGElement::UnsetAttr(PRInt32 aNamespaceID, nsIAtom* aName,
     nsCOMPtr<nsISVGValue> svg_value = GetMappedAttribute(aNamespaceID, aName);
 
     if (svg_value) {
+      mSuppressNotification = PR_TRUE;
       ResetOldStyleBaseType(svg_value);
+      mSuppressNotification = PR_FALSE;
     }
   }
 
