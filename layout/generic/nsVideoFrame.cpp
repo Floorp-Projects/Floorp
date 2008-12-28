@@ -173,7 +173,7 @@ nsVideoFrame::Reflow(nsPresContext*           aPresContext,
                  "What is this child doing here?");
     nsBoxLayoutState boxState(PresContext(), aReflowState.rendContext);
     nsBoxFrame::LayoutChildAt(boxState, child,
-                              nsRect(mBorderPadding.left, mBorderPadding.right,
+                              nsRect(mBorderPadding.left, mBorderPadding.top,
                                      aReflowState.ComputedWidth(), aReflowState.ComputedHeight()));
   }
 
