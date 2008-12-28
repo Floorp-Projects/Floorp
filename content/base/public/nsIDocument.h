@@ -97,8 +97,8 @@ class nsFrameLoader;
 
 // IID for the nsIDocument interface
 #define NS_IDOCUMENT_IID      \
-{ 0x92b19d1c, 0x8f37, 0x4d4b, \
-  { 0xa3, 0x42, 0xb5, 0xc6, 0x8b, 0x54, 0xde, 0x6c } }
+{ 0x29f7a5d7, 0xb217, 0x4ea2, \
+  {0x95, 0x40, 0x46, 0x41, 0xb9, 0xf5, 0x99, 0xd9 } }
 
 // Flag for AddStyleSheet().
 #define NS_STYLESHEET_FROM_CATALOG                (1 << 0)
@@ -1097,6 +1097,13 @@ public:
    */
   virtual void EnumerateExternalResources(nsSubDocEnumFunc aCallback,
                                           void* aData) = 0;
+
+  /**
+   * Return whether the document is currently showing (in the sense of
+   * OnPageShow() having been called already and OnPageHide() not having been
+   * called yet.
+   */
+  PRBool IsShowing() { return mIsShowing; }
   
 protected:
   ~nsIDocument()
@@ -1171,6 +1178,9 @@ protected:
   // True iff we've ever fired a DOMTitleChanged event for this document
   PRPackedBool mHaveFiredTitleChange;
 
+  // True iff IsShowing() should be returning true
+  PRPackedBool mIsShowing;
+  
   // The bidi options for this document.  What this bitfield means is
   // defined in nsBidiUtils.h
   PRUint32 mBidiOptions;
