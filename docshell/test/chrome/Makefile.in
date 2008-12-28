@@ -69,6 +69,8 @@ _TEST_FILES =	\
 		test_bug396519.xul \
 		bug396519_window.xul \
 		test_bug428288.html \
+		test_bug449778.xul \
+		bug449778_window.xul \
 		test_bug454235.xul \
 		bug454235-subframe.xul \
 		test_bug456980.xul \

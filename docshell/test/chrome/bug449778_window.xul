@@ -1,0 +1,107 @@
+<?xml version="1.0"?>
+<?xml-stylesheet href="chrome://global/skin" type="text/css"?>
+<window title="Mozilla Bug 449778" onload="doTheTest()"
+  xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
+
+  <hbox id="parent">
+  </hbox>
+
+  <!-- test code goes here -->
+  <script type="application/javascript"><![CDATA[
+    var imports = [ "SimpleTest", "is", "isnot", "ok", "snapshotWindow",
+                    "compareSnapshots", "onerror" ];
+    for each (var import in imports) {
+      window[import] = window.opener.wrappedJSObject[import];
+    }
+
+    function $(id) {
+      return document.getElementById(id);
+    }
+
+    function addBrowser(parent, id, width, height) {
+      var b =
+        document.createElementNS("http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul", "browser");
+      b.setAttribute("type", "content");
+      b.setAttribute("id", id);
+      b.setAttribute("width", width);
+      b.setAttribute("height", height);
+      $(parent).appendChild(b);
+    }
+    addBrowser("parent", "f1", 300, 200);
+    addBrowser("parent", "f2", 300, 200);
+
+    /** Test for Bug 449778 **/
+    var doc1 = "data:text/html,<html><body>This is a test</body></html>";
+    var doc2 = "data:text/html,<html><body>This is a second test</body></html>";
+    var doc3 = "data:text/html,<html><body>This is a <script>var evt = document.createEvent('Events'); evt.initEvent('testEvt', true, true); document.dispatchEvent(evt);</script>third test</body></html>";
+
+
+    $("f1").setAttribute("src", doc1);
+    $("f2").setAttribute("src", doc2);
+
+    function doTheTest() {
+      var strs = { "f1": "", "f2" : "" };
+      function attachListener(node, type) {
+        var listener = function(e) {
+          if (strs[node.id]) strs[node.id] += " ";
+          strs[node.id] += node.id + ".page" + type;
+        }
+        node.addEventListener("page" + type, listener, false);
+
+        listener.detach = function() {
+          node.removeEventListener("page" + type, listener, false);
+        }
+        return listener;
+      }
+
+      var l1 = attachListener($("f1"), "show");
+      var l2 = attachListener($("f1"), "hide");
+      var l3 = attachListener($("f2"), "show");
+      var l4 = attachListener($("f2"), "hide");
+
+      $("f1").swapDocShells($("f2"));
+
+      is(strs["f1"], "f1.pagehide f1.pageshow",
+              "Expected hide then show on first loaded page");
+      is(strs["f2"], "f2.pagehide f2.pageshow",
+              "Expected hide then show on second loaded page");
+
+      function listener2() {
+        $("f2").removeEventListener("testEvt", listener2, false);
+
+        strs = { "f1": "", "f2" : "" };
+
+        $("f1").swapDocShells($("f2"));
+        is(strs["f1"], "f1.pagehide",
+           "Expected hide on already-loaded page, then nothing");
+        is(strs["f2"], "f2.pageshow f2.pagehide f2.pageshow",
+           "Expected show on still-loading page, then hide on it, then show " +
+           "on already-loaded page");
+
+        strs = { "f1": "", "f2" : "" };
+
+        $("f1").addEventListener("pageshow", listener3, false);
+      }
+
+      function listener3() {
+        $("f1").removeEventListener("pageshow", listener3, false);
+
+        is(strs["f1"], "f1.pageshow",
+           "Expected show as our page finishes loading");
+        is(strs["f2"], "", "Expected no more events here.");
+
+        l1.detach();
+        l2.detach();
+        l3.detach();
+        l4.detach();
+
+        window.close();
+        SimpleTest.finish();
+      }
+
+      $("f2").addEventListener("testEvt", listener2, false, true);
+      $("f2").setAttribute("src", doc3);
+    }
+
+  ]]></script>
+</window>
