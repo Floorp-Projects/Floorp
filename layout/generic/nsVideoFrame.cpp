@@ -226,8 +226,9 @@ nsVideoFrame::BuildDisplayList(nsDisplayListBuilder*   aBuilder,
     NS_ENSURE_SUCCESS(rv, rv);
   }
 
-  if (mFrames.FirstChild()) {
-    rv = mFrames.FirstChild()->BuildDisplayListForStackingContext(aBuilder, aDirtyRect, aLists.Content());
+  nsIFrame *kid = mFrames.FirstChild();
+  if (kid) {
+    rv = kid->BuildDisplayListForStackingContext(aBuilder, aDirtyRect - kid->GetOffsetTo(this), aLists.Content());
   }
   return rv;
 }
