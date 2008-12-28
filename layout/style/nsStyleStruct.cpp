@@ -1741,6 +1741,10 @@ nsChangeHint nsStyleTextReset::MaxDifference()
 nsrefcnt
 nsCSSShadowArray::Release()
 {
+  if (mRefCnt == PR_UINT32_MAX) {
+    NS_WARNING("refcount overflow, leaking object");
+    return mRefCnt;
+  }
   mRefCnt--;
   if (mRefCnt == 0) {
     delete this;

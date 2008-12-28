@@ -448,8 +448,21 @@ public:
     nsCOMPtr<nsIURI> mReferrer;
     nsCOMPtr<nsIPrincipal> mOriginPrincipal;
 
-    void AddRef() { ++mRefCnt; }
-    void Release() { if (--mRefCnt == 0) delete this; }
+    void AddRef() {
+      if (mRefCnt == PR_UINT32_MAX) {
+        NS_WARNING("refcount overflow, leaking nsCSSValue::URL");
+        return;
+      }
+      ++mRefCnt;
+    }
+    void Release() {
+      if (mRefCnt == PR_UINT32_MAX) {
+        NS_WARNING("refcount overflow, leaking nsCSSValue::URL");
+        return;
+      }
+      if (--mRefCnt == 0)
+        delete this;
+    }
   protected:
     nsrefcnt mRefCnt;
   };
@@ -467,9 +480,15 @@ public:
 
     nsCOMPtr<imgIRequest> mRequest; // null == image load blocked or somehow failed
 
-    // Override AddRef/Release so we delete ourselves via the right pointer.
-    void AddRef() { ++mRefCnt; }
-    void Release() { if (--mRefCnt == 0) delete this; }
+    // Override Release so we delete correctly without a virtual destructor
+    void Release() {
+      if (mRefCnt == PR_UINT32_MAX) {
+        NS_WARNING("refcount overflow, leaking nsCSSValue::Image");
+        return;
+      }
+      if (--mRefCnt == 0)
+        delete this;
+    }
   };
 
 private:
