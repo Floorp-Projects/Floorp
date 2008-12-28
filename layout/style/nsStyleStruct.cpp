@@ -1786,7 +1786,7 @@ nsStyleText::nsStyleText(void)
   mLetterSpacing.SetNormalValue();
   mLineHeight.SetNormalValue();
   mTextIndent.SetCoordValue(0);
-  mWordSpacing.SetNormalValue();
+  mWordSpacing = 0;
 
   mTextShadow = nsnull;
 }

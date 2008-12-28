@@ -3006,9 +3006,22 @@ nsRuleNode::ComputeTextData(void* aStartStruct,
               NS_STYLE_WHITESPACE_NORMAL, 0);
  
   // word-spacing: normal, length, inherit
-  SetCoord(textData.mWordSpacing, text->mWordSpacing, parentText->mWordSpacing,
-           SETCOORD_LH | SETCOORD_NORMAL | SETCOORD_INITIAL_NORMAL,
-           aContext, mPresContext, inherited);
+  nsStyleCoord tempCoord;
+  if (SetCoord(textData.mWordSpacing, tempCoord,
+               nsStyleCoord(parentText->mWordSpacing),
+               SETCOORD_LH | SETCOORD_NORMAL | SETCOORD_INITIAL_NORMAL,
+               aContext, mPresContext, inherited)) {
+    if (tempCoord.GetUnit() == eStyleUnit_Coord) {
+      text->mWordSpacing = tempCoord.GetCoordValue();
+    } else if (tempCoord.GetUnit() == eStyleUnit_Normal) {
+      text->mWordSpacing = 0;
+    } else {
+      NS_NOTREACHED("unexpected unit");
+    }
+  } else {
+    NS_ASSERTION(textData.mWordSpacing.GetUnit() == eCSSUnit_Null,
+                 "unexpected unit");
+  }
 
   // word-wrap: enum, normal, inherit, initial
   SetDiscrete(textData.mWordWrap, text->mWordWrap, inherited,
