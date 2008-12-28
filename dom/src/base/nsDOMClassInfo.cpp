@@ -5238,18 +5238,22 @@ nsDOMConstructor::Create(const PRUnichar* aName,
                          nsDOMConstructor** aResult)
 {
   *aResult = nsnull;
-  // Prevent creating a constructor if
-  // - aOwner is inner window which doesn't have outer window or
-  // - outer window doesn't have inner window or
-  // - caller can't access outer window's inner window.
+  // Prevent creating a constructor if aOwner is inner window which doesn't have
+  // an outer window. If the outer window doesn't have an inner window or the
+  // caller can't access the outer window's current inner window then try to use
+  // the owner (so long as it is, in fact, an inner window). If that doesn't
+  // work then prevent creation also.
   nsPIDOMWindow* outerWindow = aOwner->GetOuterWindow();
   nsPIDOMWindow* currentInner =
-    outerWindow ? outerWindow->GetCurrentInnerWindow() : nsnull;
-  if (!currentInner ||
+    outerWindow ? outerWindow->GetCurrentInnerWindow() : aOwner;
+  if (!outerWindow ||
       (aOwner != currentInner &&
-       !nsContentUtils::CanCallerAccess(currentInner))) {
+       !nsContentUtils::CanCallerAccess(currentInner) &&
+       !(currentInner = aOwner)->IsInnerWindow())) {
     return NS_ERROR_DOM_SECURITY_ERR;
   }
+  NS_ASSERTION(nsContentUtils::CanCallerAccess(currentInner),
+               "Must be able to access currentInner!");
   *aResult = new nsDOMConstructor(aName, aNameStruct, currentInner);
   NS_ENSURE_TRUE(*aResult, NS_ERROR_OUT_OF_MEMORY);
   NS_ADDREF(*aResult);
