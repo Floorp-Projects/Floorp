@@ -358,7 +358,13 @@ class nsCSSShadowArray {
       }
     }
 
-    nsrefcnt AddRef() { return ++mRefCnt; }
+    nsrefcnt AddRef() {
+      if (mRefCnt == PR_UINT32_MAX) {
+        NS_WARNING("refcount overflow, leaking object");
+        return mRefCnt;
+      }
+      return ++mRefCnt;
+    }
     nsrefcnt Release();
 
     PRUint32 Length() const { return mLength; }
