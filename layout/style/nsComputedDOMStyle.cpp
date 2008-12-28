@@ -2129,7 +2129,7 @@ nsComputedDOMStyle::GetWordSpacing(nsIDOMCSSValue** aValue)
   nsROCSSPrimitiveValue *val = GetROCSSPrimitiveValue();
   NS_ENSURE_TRUE(val, NS_ERROR_OUT_OF_MEMORY);
 
-  SetValueToCoord(val, GetStyleText()->mWordSpacing);
+  val->SetAppUnits(GetStyleText()->mWordSpacing);
 
   return CallQueryInterface(val, aValue);
 }
