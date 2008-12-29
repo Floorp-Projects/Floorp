@@ -1104,7 +1104,7 @@ public:
    * called yet.
    */
   PRBool IsShowing() { return mIsShowing; }
-  
+
 protected:
   ~nsIDocument()
   {
