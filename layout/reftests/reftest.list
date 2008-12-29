@@ -83,6 +83,9 @@ include native-theme/reftest.list
 # object/
 include object/reftest.list
 
+# ogg-video/
+include ogg-video/reftest.list
+
 # percent-overflow-sizing/
 include percent-overflow-sizing/reftest.list
 
