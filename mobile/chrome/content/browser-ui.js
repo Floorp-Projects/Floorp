@@ -123,10 +123,15 @@ var BrowserUI = {
 
   _setIcon : function(aURI) {
     var ios = Cc["@mozilla.org/network/io-service;1"].getService(Ci.nsIIOService);
-    var faviconURI = ios.newURI(aURI, null, null);
+    try {
+      var faviconURI = ios.newURI(aURI, null, null);
+    }
+    catch (e) {
+      faviconURI = null;
+    }
 
     var fis = Cc["@mozilla.org/browser/favicon-service;1"].getService(Ci.nsIFaviconService);
-    if (faviconURI.schemeIs("javascript") || fis.isFailedFavicon(faviconURI))
+    if (!faviconURI || faviconURI.schemeIs("javascript") || fis.isFailedFavicon(faviconURI))
       faviconURI = ios.newURI(kDefaultFavIconURL, null, null);
 
     var browser = getBrowser();
