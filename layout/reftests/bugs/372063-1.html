@@ -1,0 +1,147 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01//EN" "http://www.w3.org/TR/html4/strict.dtd">
+<html><head>
+    <meta http-equiv="Content-Type" content="text/html; charset=iso-8859-1">
+    <title>Testcase for bug 372063</title>
+    <style type="text/css">
+
+        html,body {
+            color:black; background-color: white; font-size:16px; padding:0; margin:0;
+        }
+
+div {color:white; font-size: xx-large; top: 0; left: 0; position: absolute; width: 100px; height:100px;}
+.pass { background:green; }
+.fail { background: red; }
+
+.test1 { top:0; }
+.test2 { top:150px; }
+.test3 { top:300px; }
+.test4 { top:450px; }
+.test4b{ left:-100px;}
+.test4b div { top:100px; left:100px;}
+.test4c{ left:-100px;}
+.test4c div div { top:100px; left:100px;}
+.test5 { top:600px; }
+.test6 { top:750px; }
+.test5b , .test6b{ left:-100px; }
+.test5b div , .test6b div { left:100px;}
+.test5c , .test6c { left:-100px;}
+.test5c div div , .test6c div div { left:100px;}
+
+#test_inherit { left: 400px; height:auto; bottom:0; }
+.inherit { clip:inherit; }
+    </style>
+</head>
+<body>
+
+<div class="test1">
+<div class="fail">FAIL</div>
+<div style="clip:rect(auto auto auto auto);">
+  <div class="pass">PASS</div>
+</div>
+</div>
+
+<div class="test2">
+<div class="pass">PASS</div>
+<div style="clip:rect(0 0 0 0);">
+  <div class="fail">FAIL</div>
+</div>
+</div>
+
+<div class="test3">
+<div class="fail">FAIL</div>
+<div style="clip:rect(0,200px,200px,0);">
+  <div class="pass">PASS</div>
+</div>
+</div>
+
+<div class="test4">
+<div class="pass">PASS</div>
+<div class="test4b" style="clip:rect(auto auto auto auto);">
+  <div class="fail">FAIL</div>
+</div>
+</div>
+
+<div class="test5">
+<div class="fail">FAIL</div>
+<div class="test5b" style="clip:auto;">
+  <div class="pass">PASS</div>
+</div>
+</div>
+
+<div class="test6">
+<div class="fail">FAIL</div>
+<div class="test6b" style="">
+  <div class="pass">PASS</div>
+</div>
+</div>
+
+<!-- same as above but with intermediary div with clip:inherit -->
+<div id="test_inherit">
+<div class="test1">
+<div class="fail">FAIL</div>
+<div style="clip:rect(auto auto auto auto);">
+ <div class="inherit">
+  <div class="pass">PASS</div>
+ </div>
+</div>
+</div>
+
+<div class="test2">
+<div class="inherit">
+  <div class="pass">PASS</div>
+</div>
+<div style="clip:rect(0 0 0 0);">
+ <div class="inherit">
+  <div class="fail">FAIL</div>
+ </div>
+</div>
+</div>
+
+<div class="test3">
+<div class="inherit">
+  <div class="fail">FAIL</div>
+</div>
+<div style="clip:rect(0,200px,200px,0);">
+ <div class="inherit">
+  <div class="pass">PASS</div>
+ </div>
+</div>
+</div>
+
+<div class="test4">
+<div class="inherit">
+ <div class="pass">PASS</div>
+</div>
+<div class="test4c" style="clip:rect(auto auto auto auto);">
+ <div class="inherit">
+  <div class="fail">FAIL</div>
+ </div>
+</div>
+</div>
+
+<div class="test5">
+<div class="inherit">
+  <div class="fail">FAIL</div>
+</div>
+<div class="test5c" style="clip:auto;">
+  <div class="inherit">
+    <div class="pass">PASS</div>
+  </div>
+</div>
+</div>
+
+<div class="test6">
+<div class="inherit">
+  <div class="fail">FAIL</div>
+</div>
+<div class="test6c" style="">
+ <div class="inherit">
+   <div class="pass">PASS</div>
+ </div>
+</div>
+</div>
+
+</div>
+
+</body>
+</html>
