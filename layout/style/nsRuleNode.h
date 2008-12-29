@@ -401,7 +401,7 @@ private:
     kMaxChildrenInList = 32
   };
 
-  PRBool HaveChildren() {
+  PRBool HaveChildren() const {
     return mChildren.asVoid != nsnull;
   }
   PRBool ChildrenAreHashed() {
@@ -751,6 +751,15 @@ public:
                             nsStyleContext* aStyleContext,
                             nsPresContext* aPresContext,
                             PRBool& aInherited);
+
+  // Return whether the rule tree for which this node is the root has
+  // cached data such that we need to do dynamic change handling for
+  // changes that change the results of media queries or require
+  // rebuilding all style data.
+  PRBool TreeHasCachedData() const {
+    NS_ASSERTION(IsRoot(), "should only be called on root of rule tree");
+    return HaveChildren() || mStyleData.mInheritedData || mStyleData.mResetData;
+  }
 };
 
 #endif
