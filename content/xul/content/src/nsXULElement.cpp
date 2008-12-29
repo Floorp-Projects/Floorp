@@ -1342,7 +1342,7 @@ nsXULElement::UnsetAttr(PRInt32 aNameSpaceID, nsIAtom* aName, PRBool aNotify)
         }
 
         // If the accesskey attribute is removed, unregister it here
-        // Also see nsAreaFrame, nsBoxFrame and nsTextBoxFrame's AttributeChanged
+        // Also see nsXULLabelFrame, nsBoxFrame and nsTextBoxFrame's AttributeChanged
         if (aName == nsGkAtoms::accesskey || aName == nsGkAtoms::control) {
             UnregisterAccessKey(oldValue);
         }
