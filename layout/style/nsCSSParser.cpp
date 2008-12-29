@@ -6428,7 +6428,7 @@ CSSParserImpl::DoParseRect(nsCSSRect& aRect)
     switch (keyword) {
       case eCSSKeyword_auto:
         if (ExpectEndProperty()) {
-          aRect.SetAllSidesTo(nsCSSValue(eCSSUnit_Auto));
+          aRect.SetAllSidesTo(nsCSSValue(eCSSUnit_RectIsAuto));
           return PR_TRUE;
         }
         break;
