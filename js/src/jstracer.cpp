@@ -6093,9 +6093,17 @@ TraceRecorder::functionCall(bool constructing, uintN argc)
                     goto next_specialization;
                 *argp = this_ins;
             } else if (argtype == 'S') {   /* this, as a string */
-                if (!JSVAL_IS_STRING(tval))
+                if (JSVAL_IS_STRING(tval)) {
+                    *argp = this_ins;
+                } else if (!JSVAL_IS_PRIMITIVE(tval) && 
+                           guardClass(JSVAL_TO_OBJECT(tval), 
+                                      this_ins, 
+                                      &js_StringClass, 
+                                      MISMATCH_EXIT)) {
+                    *argp = stobj_get_fslot(this_ins, JSSLOT_PRIVATE);
+                } else {
                     goto next_specialization;
-                *argp = this_ins;
+                }
             } else if (argtype == 'f') {
                 *argp = INS_CONSTPTR(JSVAL_TO_OBJECT(fval));
             } else if (argtype == 'p') {
