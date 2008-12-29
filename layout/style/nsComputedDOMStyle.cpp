@@ -2700,11 +2700,7 @@ nsComputedDOMStyle::GetClip(nsIDOMCSSValue** aValue)
   nsROCSSPrimitiveValue *rightVal = nsnull;
   nsROCSSPrimitiveValue *bottomVal = nsnull;
   nsROCSSPrimitiveValue *leftVal = nsnull;
-  if (display->mClipFlags == NS_STYLE_CLIP_AUTO ||
-      display->mClipFlags == (NS_STYLE_CLIP_TOP_AUTO |
-                              NS_STYLE_CLIP_RIGHT_AUTO |
-                              NS_STYLE_CLIP_BOTTOM_AUTO |
-                              NS_STYLE_CLIP_LEFT_AUTO)) {
+  if (display->mClipFlags == NS_STYLE_CLIP_AUTO) {
     val->SetIdent(nsGkAtoms::_auto);
   } else {
     // create the cssvalues for the sides, stick them in the rect object
