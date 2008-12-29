@@ -798,7 +798,7 @@ fails == 411585-3.html 411585-3-ref.html # bug 426909
 == 412607-1b.html 412607-1-ref.html
 == 412679-1.html 412679-1-ref.html
 == 412679-2.html 412679-2-ref.html
-fails == 413027-1.html 413027-1-ref.html
+== 413027-1.html 413027-1-ref.html
 fails == 413027-2.html 413027-2-ref.html
 fails == 413027-3.html 413027-3-ref.html
 == 413027-4.html 413027-4-ref.html
@@ -964,6 +964,10 @@ fails-if(MOZ_WIDGET_TOOLKIT=="cocoa") == 456147.xul 456147-ref.html # bug 456147
 == 456484-1.html 456484-1-ref.html
 == 457398-1.html 457398-1-ref.html
 == 457398-2.html 457398-2-ref.html
+== 458296-1a.html 458926-1-ref.html
+== 458296-1b.html 458926-1-ref.html
+== 458296-1c.html 458926-1-ref.html
+== 458296-1d.html 458926-1-ref.html
 == 458487-1a.html 458487-1-ref.html
 == 458487-1b.html 458487-1-ref.html
 == 458487-1c.html 458487-1-ref.html
