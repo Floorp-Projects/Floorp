@@ -438,10 +438,12 @@ public:
    * nscoord units (as scaled by the device context).
    */
   void SetVisibleArea(const nsRect& r) {
-    mVisibleArea = r;
-    // Visible area does not affect media queries when paginated.
-    if (!IsPaginated() && HasCachedStyleData())
-      PostMediaFeatureValuesChangedEvent();
+    if (!r.IsExactEqual(mVisibleArea)) {
+      mVisibleArea = r;
+      // Visible area does not affect media queries when paginated.
+      if (!IsPaginated() && HasCachedStyleData())
+        PostMediaFeatureValuesChangedEvent();
+    }
   }
 
   /**
