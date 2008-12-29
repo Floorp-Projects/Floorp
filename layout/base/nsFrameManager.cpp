@@ -1097,13 +1097,23 @@ ShouldStopImage(imgIRequest *aOldImage, imgIRequest *aNewImage)
   return stopImages;
 }
 
+/**
+ * Recompute style for aFrame and accumulate changes into aChangeList
+ * given that aMinChange is already accumulated for an ancestor.
+ * aParentContent is the content node used to resolve the parent style
+ * context.  This means that, for pseudo-elements, it is the content
+ * that should be used for selector matching (rather than the fake
+ * content node attached to the frame).
+ */
 nsChangeHint
-nsFrameManager::ReResolveStyleContext(nsPresContext    *aPresContext,
+nsFrameManager::ReResolveStyleContext(nsPresContext     *aPresContext,
                                       nsIFrame          *aFrame,
                                       nsIContent        *aParentContent,
                                       nsStyleChangeList *aChangeList, 
                                       nsChangeHint       aMinChange)
 {
+  NS_ASSERTION(aFrame->GetContent() || !aFrame->GetParent(),
+               "frame must have content (unless viewport)");
   // XXXldb get new context from prev-in-flow if possible, to avoid
   // duplication.  (Or should we just let |GetContext| handle that?)
   // Getting the hint would be nice too, but that's harder.
@@ -1126,6 +1136,10 @@ nsFrameManager::ReResolveStyleContext(nsPresContext    *aPresContext,
     oldContext->AddRef();
     nsIAtom* const pseudoTag = oldContext->GetPseudoType();
     nsIContent* localContent = aFrame->GetContent();
+    // |content| is the node that we used for rule matching of
+    // normal elements (not pseudo-elements) and for which we generate
+    // framechange hints if we need them.
+    // XXXldb Why does it make sense to use aParentContent
     nsIContent* content = localContent ? localContent : aParentContent;
 
     nsStyleContext* parentContext;
@@ -1152,7 +1166,8 @@ nsFrameManager::ReResolveStyleContext(nsPresContext    *aPresContext,
       // style context provider will be automatically propagated to
       // the frame(s) with child style contexts.
       assumeDifferenceHint = ReResolveStyleContext(aPresContext, providerFrame,
-                                                   content, aChangeList, aMinChange);
+                                                   aParentContent, aChangeList,
+                                                   aMinChange);
 
       // The provider's new context becomes the parent context of
       // aFrame's context.
