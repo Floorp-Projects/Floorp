@@ -81,12 +81,20 @@ WBORecord.prototype = {
     this.data.modified = value;
   },
 
-  get depth() this.data.depth,
+  get depth() {
+    if (this.data.depth)
+      return this.data.depth;
+    return 0;
+  },
   set depth(value) {
     this.data.depth = value;
   },
 
-  get sortindex() this.data.sortindex,
+  get sortindex() {
+    if (this.data.sortindex)
+      return this.data.sortindex;
+    return 0;
+  },
   set sortindex(value) {
     this.data.sortindex = value;
   },
@@ -97,9 +105,11 @@ WBORecord.prototype = {
   },
 
   toString: function WBORec_toString() {
-    return "{id: " + this.id + ", depth: " + this.depth +
-      ", sortindex: " + this.sortindex + ",\nmodified: " + this.modified +
-      ", payload: " + json.encode(this.cleartext) + "}";
+    return "id: " + this.id + "\n" +
+      "parent: " + this.parentid + "\n" +
+      "depth: " + this.depth + ", index: " + this.sortindex + "\n" +
+      "modified: " + this.modified + "\n" +
+      "payload: " + json.encode(this.cleartext);
   }
 };
 

@@ -48,7 +48,6 @@ Cu.import("resource://weave/log4moz.js");
 Cu.import("resource://weave/constants.js");
 Cu.import("resource://weave/util.js");
 Cu.import("resource://weave/async.js");
-Cu.import("resource://weave/crypto.js");
 Cu.import("resource://weave/base_records/wbo.js");
 
 Function.prototype.async = Async.sugar;

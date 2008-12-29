@@ -287,37 +287,12 @@ SyncEngine.prototype = {
     return this._outgoing;
   },
 
-  // Create a new record starting from an ID
-  // Calls _store.wrapItem to get the actual item, but sometimes needs to be
-  // overridden anyway (to alter parentid or other properties outside the payload)
-  _createRecord: function SyncEngine__createRecord(id, encrypt) {
-    let self = yield;
-
-    let record = new CryptoWrapper();
+  // Create a new record by querying the store, and add the engine metadata
+  _createRecord: function SyncEngine__createRecord(id) {
+    let record = this._store.createRecord(id);
     record.uri = this.engineURL + id;
     record.encryption = this.cryptoMetaURL;
-    record.cleartext = this._store.wrapItem(id);
-
-    // XXX subclasses might not expect us to delete the payload fields
-    if (record.cleartext) {
-      if (record.cleartext.parentid) {
-        record.parentid = record.cleartext.parentid;
-        delete record.cleartext.parentid;
-      }
-      if (typeof(record.cleartext.depth) != "undefined") {
-        record.depth = record.cleartext.depth;
-        delete record.cleartext.depth;
-      }
-      if (typeof(record.cleartext.sortindex) != "undefined") {
-        record.sortindex = record.cleartext.sortindex;
-        delete record.cleartext.sortindex;
-      }
-    }
-
-    if (encrypt || encrypt == undefined)
-      yield record.encrypt(self.cb, ID.get('WeaveCryptoID').password);
-
-    self.done(record);
+    return record;
   },
 
   // Check if a record is "like" another one, even though the IDs are different,
@@ -389,16 +364,16 @@ SyncEngine.prototype = {
     // XXX should have a heuristic like this, but then we need to be able to
     // serialize each item by itself, something our stores can't currently do
     //if (this._tracker.changedIDs.length >= 30)
-    this._store.cacheItemsHint();
+    //this._store.cacheItemsHint();
 
     // NOTE we want changed items -> outgoing -> server to be as atomic as
     // possible, so we clear the changed IDs after we upload the changed records
     // NOTE2 don't encrypt, we'll do that before uploading instead
     for (let id in this._tracker.changedIDs) {
-      this.outgoing.push(yield this._createRecord.async(this, self.cb, id, false));
+      this.outgoing.push(this._createRecord(id));
     }
 
-    this._store.clearItemCacheHint();
+    //this._store.clearItemCacheHint();
   },
 
   // Generate outgoing records
@@ -525,7 +500,7 @@ SyncEngine.prototype = {
       let up = new Collection(this.engineURL);
 
       // regen the store cache so we can get item depths
-      this._store.cacheItemsHint();
+      //this._store.cacheItemsHint();
       let depth = {};
 
       let out;
@@ -541,7 +516,7 @@ SyncEngine.prototype = {
       for (let id in depth) {
         up.pushDepthRecord({id: id, depth: depth[id]});
       }
-      this._store.clearItemCacheHint();
+      //this._store.clearItemCacheHint();
 
       // do the upload
       yield up.post(self.cb);
@@ -595,119 +570,5 @@ SyncEngine.prototype = {
     let self = yield;
     let all = new Resource(this.engineURL);
     yield all.delete(self.cb);
-  }
-};
-
-function BlobEngine() {
-  // subclasses should call _init
-  // we don't call it here because it requires serverPrefix to be set
-}
-BlobEngine.prototype = {
-  __proto__: Engine.prototype,
-
-  get _profileID() {
-    return ClientData.GUID;
-  },
-
-  _init: function BlobEngine__init() {
-    // FIXME meep?
-    this.__proto__.__proto__.__proto__.__proto__._init.call(this);
-    this._keys = new Keychain(this.serverPrefix);
-    this._file = new Resource(this.serverPrefix + "data");
-    this._file.pushFilter(new JsonFilter());
-    this._file.pushFilter(new CryptoFilter(this.engineId));
-  },
-
-  _initialUpload: function BlobEngine__initialUpload() {
-    let self = yield;
-    this._log.info("Initial upload to server");
-    yield this._keys.initialize(self.cb, this.engineId);
-    this._file.data = {};
-    yield this._merge.async(this, self.cb);
-    yield this._file.put(self.cb);
-  },
-
-  // NOTE: Assumes this._file has latest server data
-  // this method is separate from _sync so it's easy to override in subclasses
-  _merge: function BlobEngine__merge() {
-    let self = yield;
-    this._file.data[this._profileID] = this._store.wrap();
-  },
-
-  // This engine is very simple:
-  // 1) Get the latest server data
-  // 2) Merge with our local data store
-  // 3) Upload new merged data
-  // NOTE: a version file will be needed in the future to optimize the case
-  //       where there are no changes
-  _sync: function BlobEngine__sync() {
-    let self = yield;
-
-    this._log.info("Beginning sync");
-    this._os.notifyObservers(null, "weave:service:sync:engine:start", this.name);
-
-    // FIXME
-    //if (!(yield DAV.MKCOL(this.serverPrefix, self.cb)))
-    //  throw "Could not create remote folder";
-
-    try {
-      if ("none" != Utils.prefs.getCharPref("encryption"))
-        yield this._keys.getKeyAndIV(self.cb, this.engineId);
-      yield this._file.get(self.cb);
-      yield this._merge.async(this, self.cb);
-      yield this._file.put(self.cb);
-
-    } catch (e if e.status == 404) {
-      yield this._initialUpload.async(this, self.cb);
-    }
-
-    this._log.info("Sync complete");
-    this._os.notifyObservers(null, "weave:service:sync:engine:success", this.name);
-    self.done(true);
-  }
-};
-
-function HeuristicEngine() {
-}
-HeuristicEngine.prototype = {
-  __proto__: new Engine(),
-
-  get _remote() {
-    let remote = new RemoteStore(this);
-    this.__defineGetter__("_remote", function() remote);
-    return remote;
-  },
-
-  get _snapshot() {
-    let snap = new SnapshotStore(this.name);
-    this.__defineGetter__("_snapshot", function() snap);
-    return snap;
-  },
-
-  _resetServer: function SyncEngine__resetServer() {
-    let self = yield;
-    yield this._remote.wipe(self.cb);
-  },
-
-  _resetClient: function SyncEngine__resetClient() {
-    let self = yield;
-    this._log.debug("Resetting client state");
-    this._snapshot.wipe();
-    this._store.wipe();
-    this._log.debug("Client reset completed successfully");
-  },
-
-  _initialUpload: function HeuristicEngine__initialUpload() {
-    let self = yield;
-    this._log.info("Initial upload to server");
-    this._snapshot.data = this._store.wrap();
-    this._snapshot.version = 0;
-    this._snapshot.GUID = null; // in case there are other snapshots out there
-    yield this._remote.initialize(self.cb, this._snapshot);
-    this._snapshot.save();
-  },
-
-  _sync: function HeuristicEngine__sync() {
-    let self = yield;
   }
 };
