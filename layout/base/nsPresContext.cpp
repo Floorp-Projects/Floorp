@@ -1174,8 +1174,10 @@ nsPresContext::SetFullZoom(float aZoom)
   mFullZoom = aZoom;
   GetViewManager()->SetWindowDimensions(NSToCoordRound(oldWidthDevPixels * AppUnitsPerDevPixel()),
                                         NSToCoordRound(oldHeightDevPixels * AppUnitsPerDevPixel()));
-  MediaFeatureValuesChanged(PR_TRUE);
-  RebuildAllStyleData(NS_STYLE_HINT_REFLOW);
+  if (HasCachedStyleData()) {
+    MediaFeatureValuesChanged(PR_TRUE);
+    RebuildAllStyleData(NS_STYLE_HINT_REFLOW);
+  }
 
   mSupressResizeReflow = PR_FALSE;
 
@@ -1963,4 +1965,10 @@ nsPresContext::NotifyInvalidation(const nsRect& aRect, PRBool aIsCrossDoc)
   nsRegion* r = aIsCrossDoc ? &mCrossDocDirtyRegion : &mSameDocDirtyRegion;
   r->Or(*r, aRect);
   r->SimplifyOutward(10);
+}
+
+PRBool
+nsPresContext::HasCachedStyleData()
+{
+  return mShell && mShell->StyleSet()->HasCachedStyleData();
 }
