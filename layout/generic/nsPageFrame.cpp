@@ -658,4 +658,10 @@ nsPageBreakFrame::GetType() const
   return nsGkAtoms::pageBreakFrame; 
 }
 
-
+#ifdef DEBUG
+NS_IMETHODIMP
+nsPageBreakFrame::GetFrameName(nsAString& aResult) const
+{
+  return MakeFrameName(NS_LITERAL_STRING("PageBreak"), aResult);
+}
+#endif
