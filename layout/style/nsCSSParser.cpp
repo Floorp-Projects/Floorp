@@ -5350,7 +5350,13 @@ CSSParserImpl::ParseSingleValueProperty(nsCSSValue& aValue,
     return ParsePositiveVariant(aValue, VARIANT_HKL,
                                 nsCSSProps::kBorderWidthKTable);
   case eCSSProperty__moz_column_count:
-    return ParsePositiveVariant(aValue, VARIANT_AHI, nsnull);
+    // Need to reject 0 in addition to negatives, so don't bother with
+    // ParsePositiveVariant.  If we accept 0, we need to change
+    // NS_STYLE_COLUMN_COUNT_AUTO to something else.
+    return ParseVariant(aValue, VARIANT_AHI, nsnull) &&
+           (aValue.GetUnit() != eCSSUnit_Integer ||
+            aValue.GetIntValue() > 0 ||
+            (UngetToken(), PR_FALSE));
   case eCSSProperty__moz_column_width:
     return ParsePositiveVariant(aValue, VARIANT_AHL, nsnull);
   case eCSSProperty__moz_column_gap:
