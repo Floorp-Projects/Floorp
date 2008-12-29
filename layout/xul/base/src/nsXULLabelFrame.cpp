@@ -35,29 +35,17 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-/* derived class of nsBlockFrame; distinction barely relevant anymore */
+/* derived class of nsBlockFrame used for xul:label elements */
 
-#include "nsAreaFrame.h"
-#include "nsBlockBandData.h"
-#include "nsStyleContext.h"
-#include "nsStyleConsts.h"
-#include "nsPresContext.h"
-#include "nsINodeInfo.h"
-#include "nsGkAtoms.h"
+#include "nsXULLabelFrame.h"
 #include "nsHTMLParts.h"
-
-#ifdef MOZ_XUL
 #include "nsINameSpaceManager.h"
 #include "nsIEventStateManager.h"
-#endif
-
-#undef NOISY_MAX_ELEMENT_SIZE
-#undef NOISY_FINAL_SIZE
 
 nsIFrame*
-NS_NewAreaFrame(nsIPresShell* aPresShell, nsStyleContext* aContext, PRUint32 aFlags)
+NS_NewXULLabelFrame(nsIPresShell* aPresShell, nsStyleContext* aContext, PRUint32 aFlags)
 {
-  nsAreaFrame* it = new (aPresShell) nsAreaFrame(aContext);
+  nsXULLabelFrame* it = new (aPresShell) nsXULLabelFrame(aContext);
   
   if (it != nsnull)
     it->SetFlags(aFlags);
@@ -65,20 +53,14 @@ NS_NewAreaFrame(nsIPresShell* aPresShell, nsStyleContext* aContext, PRUint32 aFl
   return it;
 }
 
-#ifdef MOZ_XUL
-
 // If you make changes to this function, check its counterparts 
 // in nsBoxFrame and nsTextBoxFrame
 nsresult
-nsAreaFrame::RegUnregAccessKey(PRBool aDoReg)
+nsXULLabelFrame::RegUnregAccessKey(PRBool aDoReg)
 {
   // if we have no content, we can't do anything
   if (!mContent)
     return NS_ERROR_FAILURE;
-
-  // only support accesskeys for the following elements
-  if (!mContent->NodeInfo()->Equals(nsGkAtoms::label, kNameSpaceID_XUL))
-    return NS_OK;
 
   // To filter out <label>s without a control attribute.
   // XXXjag a side-effect is that we filter out anonymous <label>s
@@ -107,16 +89,14 @@ nsAreaFrame::RegUnregAccessKey(PRBool aDoReg)
 
   return rv;
 }
-#endif
 
 /////////////////////////////////////////////////////////////////////////////
 // nsIFrame
 
-#ifdef MOZ_XUL
 NS_IMETHODIMP
-nsAreaFrame::Init(nsIContent*      aContent,
-                  nsIFrame*        aParent,
-                  nsIFrame*        aPrevInFlow)
+nsXULLabelFrame::Init(nsIContent*      aContent,
+                      nsIFrame*        aParent,
+                      nsIFrame*        aPrevInFlow)
 {
   nsresult rv = nsBlockFrame::Init(aContent, aParent, aPrevInFlow);
   if (NS_FAILED(rv))
@@ -127,7 +107,7 @@ nsAreaFrame::Init(nsIContent*      aContent,
 }
 
 void
-nsAreaFrame::Destroy()
+nsXULLabelFrame::Destroy()
 {
   // unregister access key
   RegUnregAccessKey(PR_FALSE);
@@ -135,9 +115,9 @@ nsAreaFrame::Destroy()
 } 
 
 NS_IMETHODIMP
-nsAreaFrame::AttributeChanged(PRInt32 aNameSpaceID,
-                              nsIAtom* aAttribute,
-                              PRInt32 aModType)
+nsXULLabelFrame::AttributeChanged(PRInt32 aNameSpaceID,
+                                  nsIAtom* aAttribute,
+                                  PRInt32 aModType)
 {
   nsresult rv = nsBlockFrame::AttributeChanged(aNameSpaceID, 
                                                aAttribute, aModType);
@@ -149,12 +129,11 @@ nsAreaFrame::AttributeChanged(PRInt32 aNameSpaceID,
 
   return rv;
 }
-#endif
 
 nsIAtom*
-nsAreaFrame::GetType() const
+nsXULLabelFrame::GetType() const
 {
-  return nsGkAtoms::areaFrame;
+  return nsGkAtoms::XULLabelFrame;
 }
 
 /////////////////////////////////////////////////////////////////////////////
@@ -162,8 +141,8 @@ nsAreaFrame::GetType() const
 
 #ifdef NS_DEBUG
 NS_IMETHODIMP
-nsAreaFrame::GetFrameName(nsAString& aResult) const
+nsXULLabelFrame::GetFrameName(nsAString& aResult) const
 {
-  return MakeFrameName(NS_LITERAL_STRING("Area"), aResult);
+  return MakeFrameName(NS_LITERAL_STRING("XULLabel"), aResult);
 }
 #endif
