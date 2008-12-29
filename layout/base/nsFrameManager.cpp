@@ -1171,6 +1171,8 @@ nsFrameManager::ReResolveStyleContext(nsPresContext    *aPresContext,
       newContext = styleSet->ResolveStyleForNonElement(parentContext).get();
     }
     else if (pseudoTag) {
+      // XXXldb This choice of pseudoContent seems incorrect for anon
+      // boxes and perhaps other cases.
       nsIContent* pseudoContent =
           aParentContent ? aParentContent : localContent;
       if (pseudoTag == nsCSSPseudoElements::before ||
@@ -1194,7 +1196,9 @@ nsFrameManager::ReResolveStyleContext(nsPresContext    *aPresContext,
                        "firstLetter pseudoTag without a nsFirstLetterFrame");
           nsBlockFrame* block = nsBlockFrame::GetNearestAncestorBlock(aFrame);
           pseudoContent = block->GetContent();
-        }       
+        } else if (pseudoTag == nsCSSAnonBoxes::pageBreak) {
+          pseudoContent = nsnull;
+        }
         newContext = styleSet->ResolvePseudoStyleFor(pseudoContent,
                                                      pseudoTag,
                                                      parentContext).get();
