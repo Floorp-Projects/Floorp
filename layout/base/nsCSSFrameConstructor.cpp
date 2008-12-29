@@ -13398,6 +13398,13 @@ nsCSSFrameConstructor::RebuildAllStyleData(nsChangeHint aExtraHint)
   if (!mPresShell || !mPresShell->GetRootFrame())
     return;
 
+  if (mPresShell->GetPresContext()->IsPaginated()) {
+    // We don't support doing this because of bug 470929 and probably
+    // other issues.
+    NS_NOTREACHED("not allowed to rebuild all style data when paginated");
+    return;
+  }
+
   // Processing the style changes could cause a flush that propagates to
   // the parent frame and thus destroys the pres shell.
   nsCOMPtr<nsIPresShell> kungFuDeathGrip(mPresShell);
