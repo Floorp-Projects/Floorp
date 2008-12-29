@@ -439,7 +439,8 @@ public:
    */
   void SetVisibleArea(const nsRect& r) {
     mVisibleArea = r;
-    if (HasCachedStyleData())
+    // Visible area does not affect media queries when paginated.
+    if (!IsPaginated() && HasCachedStyleData())
       PostMediaFeatureValuesChangedEvent();
   }
 
