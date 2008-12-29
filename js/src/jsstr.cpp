@@ -1470,6 +1470,17 @@ String_p_match(JSContext* cx, JSString* str, jsbytecode *pc, JSObject* regexp)
     JS_ASSERT(JSVAL_IS_OBJECT(vp[0]));
     return vp[0];
 }
+
+static jsval FASTCALL
+String_p_match_obj(JSContext* cx, JSObject* str, jsbytecode *pc, JSObject* regexp)
+{
+    /* arbitrary object in vp[0] */
+    jsval vp[3] = { OBJECT_TO_JSVAL(regexp), OBJECT_TO_JSVAL(str), OBJECT_TO_JSVAL(regexp) };
+    if (!StringMatchHelper(cx, 1, vp, pc))
+        return JSVAL_ERROR_COOKIE;
+    JS_ASSERT(JSVAL_IS_OBJECT(vp[0]));
+    return vp[0];
+}
 #endif
 
 static JSBool
@@ -2496,8 +2507,9 @@ JS_DEFINE_TRCINFO_4(str_concat,
     (3, (extern, STRING_FAIL,      js_ConcatStrings, CONTEXT, THIS_STRING, STRING,           1, 1)),
     (4, (static, STRING_FAIL,      String_p_concat_2str, CONTEXT, THIS_STRING, STRING, STRING, 1, 1)),
     (5, (static, STRING_FAIL,      String_p_concat_3str, CONTEXT, THIS_STRING, STRING, STRING, STRING, 1, 1)))
-JS_DEFINE_TRCINFO_1(str_match,
-    (4, (static, JSVAL_FAIL,       String_p_match, CONTEXT, THIS_STRING, PC, REGEXP,         1, 1)))
+JS_DEFINE_TRCINFO_2(str_match,
+    (4, (static, JSVAL_FAIL,       String_p_match, CONTEXT, THIS_STRING, PC, REGEXP,         1, 1)),
+    (4, (static, JSVAL_FAIL,       String_p_match_obj, CONTEXT, THIS, PC, REGEXP,            1, 1)))
 JS_DEFINE_TRCINFO_3(str_replace,
     (4, (static, STRING_FAIL,      String_p_replace_str, CONTEXT, THIS_STRING, REGEXP, STRING, 1, 1)),
     (4, (static, STRING_FAIL,      String_p_replace_str2, CONTEXT, THIS_STRING, STRING, STRING, 1, 1)),
