@@ -168,15 +168,18 @@ PRBool nsCSSDeclaration::AppendValueToString(nsCSSProperty aProperty, nsAString&
       } break;
       case eCSSType_Rect: {
         const nsCSSRect *rect = static_cast<const nsCSSRect*>(storage);
-        if (rect->mTop.GetUnit() == eCSSUnit_Inherit ||
-            rect->mTop.GetUnit() == eCSSUnit_Initial) {
-          NS_ASSERTION(rect->mRight.GetUnit() == rect->mTop.GetUnit(),
-                       "Top inherit or initial, right isn't.  Fix the parser!");
-          NS_ASSERTION(rect->mBottom.GetUnit() == rect->mTop.GetUnit(),
-                       "Top inherit or initial, bottom isn't.  Fix the parser!");
-          NS_ASSERTION(rect->mLeft.GetUnit() == rect->mTop.GetUnit(),
-                       "Top inherit or initial, left isn't.  Fix the parser!");
-          AppendCSSValueToString(aProperty, rect->mTop, aResult);
+        const nsCSSUnit topUnit = rect->mTop.GetUnit();
+        if (topUnit == eCSSUnit_Inherit ||
+            topUnit == eCSSUnit_Initial ||
+            topUnit == eCSSUnit_RectIsAuto) {
+          NS_ASSERTION(rect->mRight.GetUnit() == topUnit &&
+                       rect->mBottom.GetUnit() == topUnit &&
+                       rect->mLeft.GetUnit() == topUnit,
+                       "parser should make all sides have the same unit");
+          if (topUnit == eCSSUnit_RectIsAuto)
+            aResult.AppendLiteral("auto");
+          else
+            AppendCSSValueToString(aProperty, rect->mTop, aResult);
         } else {
           aResult.AppendLiteral("rect(");
           AppendCSSValueToString(aProperty, rect->mTop, aResult);
@@ -433,7 +436,11 @@ nsCSSDeclaration::AppendCSSValueToString(nsCSSProperty aProperty,
     case eCSSUnit_None:         aResult.AppendLiteral("none");     break;
     case eCSSUnit_Normal:       aResult.AppendLiteral("normal");   break;
     case eCSSUnit_System_Font:  aResult.AppendLiteral("-moz-use-system-font"); break;
-    case eCSSUnit_Dummy:        break;
+    case eCSSUnit_Dummy:
+    case eCSSUnit_DummyInherit:
+    case eCSSUnit_RectIsAuto:
+      NS_NOTREACHED("should never serialize");
+      break;
 
     case eCSSUnit_String:       break;
     case eCSSUnit_URL:          break;
