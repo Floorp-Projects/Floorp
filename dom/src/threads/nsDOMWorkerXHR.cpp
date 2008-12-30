@@ -818,7 +818,8 @@ nsDOMWorkerXHR::SetMozBackgroundRequest(PRBool aMozBackgroundRequest)
 NS_IMETHODIMP
 nsDOMWorkerXHR::Init(nsIPrincipal* aPrincipal,
                      nsIScriptContext* aScriptContext,
-                     nsPIDOMWindow* aOwnerWindow)
+                     nsPIDOMWindow* aOwnerWindow,
+                     nsIURI* aBaseURI)
 {
   NS_ASSERTION(!NS_IsMainThread(), "Wrong thread!");
   NS_NOTREACHED("No one should be calling this!");
