@@ -43,15 +43,19 @@ Tests of DOM Worker Threads (Bug 437152)
   var gotErrors = false;
   worker.onerror = function(event) {
     is(event.target, worker);
-    is(event.message, "uncaught exception: Bad message: asdf");
+    is(event.data,
+       '[JavaScript Error: "uncaught exception: Bad message: asdf"]');
 
     worker.onerror = function(otherEvent) {
       is(otherEvent.target, worker);
-      is(otherEvent.message, "Components is not defined");
+      is(otherEvent.data,
+         '[JavaScript Error: "Components is not defined" {file: ' +
+         '"http://localhost:8888/tests/dom/src/threads/test/' +
+         'simpleThread_worker.js" line: 6}]');
         gotErrors = true;
 
       worker.onerror = function(oneMoreEvent) {
-        ok(false, "Worker had an error:" + oneMoreEvent.message);
+        ok(false, "Worker had an error:" + oneMoreEvent.data);
         SimpleTest.finish();
       };
     };
