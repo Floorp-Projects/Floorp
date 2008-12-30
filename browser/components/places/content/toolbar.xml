@@ -1169,7 +1169,7 @@
       <handler event="popuphidden"><![CDATA[
         var popup = event.originalTarget;
 
-        // Avoid handling popupshowing of inner views
+        // Avoid handling popuphidden of inner views
         if (popup._resultNode && PlacesUIUtils.getViewForNode(popup) == this) {
           // UI performance: folder queries are cheap, keep the resultnode open
           // so we don't rebuild its contents whenever the popup is reopened.
@@ -1178,9 +1178,15 @@
         }
 
         var parent = popup.parentNode;
-        if (parent.localName == "toolbarbutton" &&
-            !PlacesControllerDragHelper.getSession())
-          this._openedMenuButton = null;
+        if (parent.localName == "toolbarbutton") {
+          if (!PlacesControllerDragHelper.getSession())
+            this._openedMenuButton = null;
+          // Clear the dragover attribute if present, if we are dragging into a
+          // folder in the hierachy of current opened popup we don't clear
+          // this attribute on clearOverFolder.  See Notify for closeTimer.
+          if (parent.hasAttribute("dragover"))
+            parent.removeAttribute("dragover");
+        }
       ]]></handler>
 
       <handler event="mousedown"><![CDATA[
