@@ -123,7 +123,8 @@ private:
 
   struct DOMBaseVal : public nsIDOMSVGLength
   {
-    NS_DECL_ISUPPORTS
+    NS_DECL_CYCLE_COLLECTING_ISUPPORTS
+    NS_DECL_CYCLE_COLLECTION_CLASS(DOMBaseVal)
 
     DOMBaseVal(nsSVGLength2* aVal, nsSVGElement *aSVGElement)
       : mVal(aVal), mSVGElement(aSVGElement) {}
@@ -162,7 +163,8 @@ private:
 
   struct DOMAnimVal : public nsIDOMSVGLength
   {
-    NS_DECL_ISUPPORTS
+    NS_DECL_CYCLE_COLLECTING_ISUPPORTS
+    NS_DECL_CYCLE_COLLECTION_CLASS(DOMAnimVal)
 
     DOMAnimVal(nsSVGLength2* aVal, nsSVGElement *aSVGElement)
       : mVal(aVal), mSVGElement(aSVGElement) {}
@@ -198,7 +200,8 @@ private:
 
   struct DOMAnimatedLength : public nsIDOMSVGAnimatedLength
   {
-    NS_DECL_ISUPPORTS
+    NS_DECL_CYCLE_COLLECTING_ISUPPORTS
+    NS_DECL_CYCLE_COLLECTION_CLASS(DOMAnimatedLength)
 
     DOMAnimatedLength(nsSVGLength2* aVal, nsSVGElement *aSVGElement)
       : mVal(aVal), mSVGElement(aSVGElement) {}
