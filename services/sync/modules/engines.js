@@ -175,18 +175,6 @@ Engine.prototype = {
     this._log.debug("Engine initialized");
   },
 
-  _serializeCommands: function Engine__serializeCommands(commands) {
-    let json = this._json.encode(commands);
-    //json = json.replace(/ {action/g, "\n {action");
-    return json;
-  },
-
-  _serializeConflicts: function Engine__serializeConflicts(conflicts) {
-    let json = this._json.encode(conflicts);
-    //json = json.replace(/ {action/g, "\n {action");
-    return json;
-  },
-
   _resetServer: function Engine__resetServer() {
     let self = yield;
     throw "_resetServer needs to be subclassed";
@@ -272,18 +260,9 @@ SyncEngine.prototype = {
     Utils.prefs.setCharPref(this.name + ".lastSync", value);
   },
 
-  // XXX these two should perhaps just be a variable inside sync(), but we have
-  //     one or two other methods that use it
-
-  get incoming() {
-    if (!this._incoming)
-      this._incoming = [];
-    return this._incoming;
-  },
-
   get outgoing() {
     if (!this._outgoing)
-      this._outgoing = [];
+      this._outgoing = {};
     return this._outgoing;
   },
 
@@ -334,14 +313,6 @@ SyncEngine.prototype = {
       yield meta.addUnwrappedKey(self.cb, pubkey, symkey);
       yield meta.put(self.cb);
     }
-    this._tracker.disable();
-  },
-
-  // Generate outgoing records
-  _generateOutgoing: function SyncEngine__generateOutgoing() {
-    let self = yield;
-
-    this._log.debug("Calculating client changes");
 
     // first sync special case: upload all items
     // note that we use a backdoor (of sorts) to the tracker and it
@@ -359,21 +330,7 @@ SyncEngine.prototype = {
       }
     }
 
-    // generate queue from changed items list
-
-    // XXX should have a heuristic like this, but then we need to be able to
-    // serialize each item by itself, something our stores can't currently do
-    //if (this._tracker.changedIDs.length >= 30)
-    //this._store.cacheItemsHint();
-
-    // NOTE we want changed items -> outgoing -> server to be as atomic as
-    // possible, so we clear the changed IDs after we upload the changed records
-    // NOTE2 don't encrypt, we'll do that before uploading instead
-    for (let id in this._tracker.changedIDs) {
-      this.outgoing.push(this._createRecord(id));
-    }
-
-    //this._store.clearItemCacheHint();
+    this._tracker.disable(); // FIXME: need finer-grained ignoring
   },
 
   // Generate outgoing records
@@ -403,16 +360,14 @@ SyncEngine.prototype = {
       yield item.decrypt(self.cb, ID.get('WeaveCryptoID').password);
       if (yield this._reconcile.async(this, self.cb, item))
         yield this._applyIncoming.async(this, self.cb, item);
-      else
-        this._log.debug("Skipping reconciled incoming item");
+      else {
+        this._log.debug("Skipping reconciled incoming item " + item.id);
+        if (this._lastSyncTmp < item.modified)
+          this._lastSyncTmp = item.modified;
+      }
     }
-    if (typeof(this._lastSyncTmp) == "string")
-      this._lastSyncTmp = parseInt(this._lastSyncTmp);
     if (this.lastSync < this._lastSyncTmp)
         this.lastSync = this._lastSyncTmp;
-
-    // removes any holes caused by reconciliation above:
-    this._outgoing = this.outgoing.filter(function(n) n);
   },
 
   // Reconciliation has two steps:
@@ -431,42 +386,45 @@ SyncEngine.prototype = {
     let self = yield;
     let ret = true;
 
-    this._log.debug("Reconciling incoming item");
-
     // Check for the same item (same ID) on both incoming & outgoing queues
-    let conflicts = [];
-    for (let o = 0; o < this.outgoing.length; o++) {
-      if (!this.outgoing[o])
-        continue; // skip previously removed items
-      if (item.id == this.outgoing[o].id) {
-        // Only consider it a conflict if there are actual differences
-        // otherwise, just ignore the outgoing record as well
-        if (!Utils.deepEquals(item.cleartext, this.outgoing[o].cleartext))
-          conflicts.push({in: item, out: this.outgoing[o]});
-        else
-          delete this.outgoing[o];
-
-        self.done(false);
-        return;
+    if (item.id in this._tracker.changedIDs) {
+      // Check to see if client and server were changed in the same way
+      let out = this._createRecord(item.id);
+      if (Utils.deepEquals(item.cleartext, out.cleartext)) {
+        this._tracker.removeChangedID(item.id);
+        delete this.outgoing[item.id];
+      } else {
+        this._log.debug("Discarding server change due to conflict with local change");
       }
+      self.done(false);
+      return;
     }
-    if (conflicts.length)
-      this._log.debug("Conflicts found.  Conflicting server changes discarded");
+
+    // Check for the incoming item's ID otherwise existing locally
+    if (this._store.itemExists(item.id)) {
+      self.done(true);
+      return;
+    }
 
     // Check for items with different IDs which we think are the same one
-    for (let o = 0; o < this.outgoing.length; o++) {
-      if (!this.outgoing[o])
-        continue; // skip previously removed items
+    for (let id in this._tracker.changedIDs) {
+      // Generate outgoing record or used a cached one
+      let out = (id in this.outgoing)?
+        this.outgoing[id] : this._createRecord(id);
 
-      if (this._recordLike(item, this.outgoing[o])) {
-        // change refs in outgoing queue
-        yield this._changeRecordRefs.async(this, self.cb,
-                                           this.outgoing[o].id,
-                                           item.id);
-        // change actual id of item
-        this._store.changeItemID(this.outgoing[o].id,
-                                 item.id);
-        delete this.outgoing[o];
+      // cache the first 100, after that we will throw them away - slower but less memory hungry
+      if ([i for (i in this.outgoing)].length <= 100)
+        this.outgoing[id] = out;
+
+      if (this._recordLike(item, out)) {
+        // change refs in outgoing queue, then actual id of local item
+        // XXX might it be better to just clear the outgoing queue?
+        yield this._changeRecordRefs.async(this, self.cb, id, item.id);
+        this._store.changeItemID(id, item.id);
+
+        this._tracker.removeChangedID(item.id);
+        delete this.outgoing[item.id];
+
         self.done(false);
         return;
       }
@@ -545,16 +503,8 @@ SyncEngine.prototype = {
 
     try {
       yield this._syncStartup.async(this, self.cb);
-
-      // Populate outgoing queue
-      yield this._generateOutgoing.async(this, self.cb);
-
-      // Fetch incoming records and apply them
       yield this._processIncoming.async(this, self.cb);
-
-      // Upload outgoing records
       yield this._uploadOutgoing.async(this, self.cb);
-
       yield this._syncFinish.async(this, self.cb);
     }
     catch (e) {
