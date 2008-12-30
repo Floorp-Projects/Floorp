@@ -67,22 +67,6 @@ interface nsIWorkerMessageEvent : nsIDOMEvent
                         in nsISupports aSourceArg);
 };
 
-[scriptable, uuid(73d82c1d-05de-49c9-a23b-7121ff09a67a)]
-interface nsIWorkerErrorEvent : nsIDOMEvent
-{
-  readonly attribute DOMString message;
-  readonly attribute DOMString filename;
-
-  readonly attribute unsigned long lineno;
-
-  void initErrorEvent(in DOMString aTypeArg,
-                      in boolean aCanBubbleArg,
-                      in boolean aCancelableArg,
-                      in DOMString aMessageArg,
-                      in DOMString aFilenameArg,
-                      in unsigned long aLinenoArg);
-};
-
 [scriptable, uuid(74fb665a-e477-4ce2-b3c6-c58b1b28b6c3)]
 interface nsIWorkerNavigator : nsISupports
 {
@@ -92,13 +76,11 @@ interface nsIWorkerNavigator : nsISupports
   readonly attribute DOMString userAgent;
 };
 
-[scriptable, uuid(d7d7cf59-6c8a-4598-8753-630953ae7409)]
+[scriptable, uuid(a41ac154-ba18-4926-8954-cd6973ea490e)]
 interface nsIWorkerGlobalScope : nsISupports
 {
   readonly attribute nsIWorkerGlobalScope self;
   readonly attribute nsIWorkerNavigator navigator;
-
-  attribute nsIDOMEventListener onerror;
 };
 
 [scriptable, uuid(d30a2f61-86e2-434e-837f-4f1985efa865)]
