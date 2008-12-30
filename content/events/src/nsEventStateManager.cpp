@@ -143,7 +143,7 @@
 #include "nsServiceManagerUtils.h"
 #include "nsITimer.h"
 #include "nsIFontMetrics.h"
-
+#include "nsIDOMXULDocument.h"
 #include "nsIDragService.h"
 #include "nsIDragSession.h"
 #include "nsDOMDataTransfer.h"
@@ -1545,10 +1545,17 @@ GetAccessModifierMask(nsISupports* aDocShell)
 static PRBool
 IsAccessKeyTarget(nsIContent* aContent, nsIFrame* aFrame, nsAString& aKey)
 {
-  if (!aFrame)
+  if (!aContent->AttrValueIs(kNameSpaceID_None, nsGkAtoms::accesskey, aKey,
+                             eIgnoreCase))
     return PR_FALSE;
 
-  if (!aContent->AttrValueIs(kNameSpaceID_None, nsGkAtoms::accesskey, aKey, eIgnoreCase))
+  nsCOMPtr<nsIDOMXULDocument> xulDoc =
+    do_QueryInterface(aContent->GetOwnerDoc());
+  if (!xulDoc && !aContent->IsNodeOfType(nsINode::eXUL))
+    return PR_TRUE;
+
+    // For XUL we do visibility checks.
+  if (!aFrame)
     return PR_FALSE;
 
   if (aFrame->IsFocusable())
@@ -1560,6 +1567,7 @@ IsAccessKeyTarget(nsIContent* aContent, nsIFrame* aFrame, nsAString& aKey)
   if (!aFrame->AreAncestorViewsVisible())
     return PR_FALSE;
 
+  // XUL controls can be activated.
   nsCOMPtr<nsIDOMXULControlElement> control(do_QueryInterface(aContent));
   if (control)
     return PR_TRUE;
