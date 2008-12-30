@@ -478,6 +478,8 @@ protected:
 
   nsIRequestObserver* mRequestObserver;
 
+  nsCOMPtr<nsIURI> mBaseURI;
+
   PRUint32 mState;
 
   nsRefPtr<nsXMLHttpRequestUpload> mUpload;
