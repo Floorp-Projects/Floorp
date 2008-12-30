@@ -160,7 +160,8 @@ class nsReportErrorRunnable : public nsIRunnable
 public:
   NS_DECL_ISUPPORTS
 
-  nsReportErrorRunnable(nsDOMWorker* aWorker, nsIScriptError* aScriptError)
+  nsReportErrorRunnable(nsDOMWorker* aWorker,
+                        nsIScriptError* aScriptError)
   : mWorker(aWorker), mWorkerWN(aWorker->GetWrappedNative()),
     mScriptError(aScriptError) {
       NS_ASSERTION(aScriptError, "Null pointer!");
@@ -191,34 +192,37 @@ public:
 
     NS_NAMED_LITERAL_STRING(errorStr, "error");
 
-    PRBool hasListener = PR_FALSE, stopPropagation = PR_FALSE;
-    nsresult rv = NS_OK;
+    nsresult rv;
 
     if (mWorker->mOuterHandler->HasListeners(errorStr)) {
-      hasListener = PR_TRUE;
-      nsRefPtr<nsDOMWorkerMessageEvent> event(new nsDOMWorkerMessageEvent());
-      if (event) {
-        nsCString errorMessage;
-        rv = mScriptError->ToString(errorMessage);
-        if (NS_SUCCEEDED(rv)) {
-          rv = event->InitMessageEvent(errorStr, PR_FALSE, PR_FALSE,
-                                       NS_ConvertUTF8toUTF16(errorMessage),
-                                       EmptyString(), nsnull);
-          if (NS_SUCCEEDED(rv)) {
-            event->SetTarget(mWorker);
-            rv = mWorker->DispatchEvent(static_cast<nsDOMWorkerEvent*>(event),
-                                        &stopPropagation);
-            if (NS_FAILED(rv)) {
-              stopPropagation = PR_FALSE;
-            }
-          }
-        }
-      }
-    }
-    NS_ENSURE_SUCCESS(rv, rv);
+      // Construct the error event.
+      nsString message;
+      rv = mScriptError->GetErrorMessage(message);
+      NS_ENSURE_SUCCESS(rv, rv);
 
-    if (stopPropagation) {
-      return NS_OK;
+      nsString filename;
+      rv = mScriptError->GetSourceName(filename);
+      NS_ENSURE_SUCCESS(rv, rv);
+
+      PRUint32 lineno;
+      rv = mScriptError->GetLineNumber(&lineno);
+      NS_ENSURE_SUCCESS(rv, rv);
+
+      nsRefPtr<nsDOMWorkerErrorEvent> event(new nsDOMWorkerErrorEvent());
+      NS_ENSURE_TRUE(event, NS_ERROR_OUT_OF_MEMORY);
+
+      rv = event->InitErrorEvent(errorStr, PR_FALSE, PR_TRUE, message,
+                                 filename, lineno);
+      NS_ENSURE_SUCCESS(rv, rv);
+
+      event->SetTarget(mWorker);
+
+      PRBool stopPropagation = PR_FALSE;
+      rv = mWorker->DispatchEvent(static_cast<nsDOMWorkerEvent*>(event),
+                                  &stopPropagation);
+      if (NS_SUCCEEDED(rv) && stopPropagation) {
+        return NS_OK;
+      }
     }
 
     nsRefPtr<nsDOMWorker> parent = mWorker->GetParent();
@@ -504,6 +508,31 @@ DOMWorkerErrorReporter(JSContext* aCx,
                          column, aReport->flags, "DOM Worker javascript");
   NS_ENSURE_SUCCESS(rv,);
 
+  // Try the onerror handler for the worker's scope.
+  nsCOMPtr<nsIDOMEventListener> handler =
+    worker->mInnerHandler->GetOnXListener(NS_LITERAL_STRING("error"));
+
+  if (handler) {
+    nsRefPtr<nsDOMWorkerErrorEvent> event(new nsDOMWorkerErrorEvent());
+    NS_ENSURE_TRUE(event,);
+
+    rv = event->InitErrorEvent(NS_LITERAL_STRING("error"), PR_FALSE, PR_TRUE,
+                               nsDependentString(message), filename,
+                               aReport->lineno);
+    NS_ENSURE_SUCCESS(rv,);
+
+    NS_ASSERTION(worker->GetInnerScope(), "Null scope!");
+    event->SetTarget(worker->GetInnerScope());
+
+    rv = handler->HandleEvent(static_cast<nsDOMWorkerEvent*>(event));
+    NS_ENSURE_SUCCESS(rv,);
+
+    if (event->PreventDefaultCalled()) {
+      return;
+    }
+  }
+
+  // Still unhandled, fire at the onerror handler on the worker.
   nsCOMPtr<nsIRunnable> runnable =
     new nsReportErrorRunnable(worker, scriptError);
   NS_ENSURE_TRUE(runnable,);
