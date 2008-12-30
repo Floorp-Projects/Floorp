@@ -195,7 +195,7 @@ BookmarksStore.prototype = {
     return false;
   },
 
-  _itemExists: function BStore__itemExists(id) {
+  itemExists: function BStore_itemExists(id) {
     return this._getItemIdForGUID(id) >= 0;
   },
 
@@ -230,14 +230,14 @@ BookmarksStore.prototype = {
         this._ans.setItemAnnotation(newId, "bookmarks/staticTitle",
                                     record.cleartext.staticTitle || "", 0, this._ans.EXPIRE_NEVER);
         let genURI = Utils.makeURI(record.cleartext.generatorURI);
-	if (this._ms == SERVICE_NOT_SUPPORTED) {
-	  this._log.warn("Can't create microsummary -- not supported.");
-	} else {
+	if (this._ms) {
           try {
             let micsum = this._ms.createMicrosummary(uri, genURI);
             this._ms.setMicrosummary(newId, micsum);
           }
           catch(ex) { /* ignore "missing local generator" exceptions */ }
+	} else {
+	  this._log.warn("Can't create microsummary -- not supported.");
 	}
       }
     } break;

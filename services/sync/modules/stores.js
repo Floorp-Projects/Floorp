@@ -97,21 +97,6 @@ Store.prototype = {
     fn.async(this, onComplete, record);
   },
 
-  itemExists: function Store_itemExists(id) {
-    if (!this._itemCache)
-      return this._itemExists(id);
-
-    if (id in this._itemCache)
-      return true;
-    else
-      return false;
-  },
-
-  // subclasses probably want to override this one
-  _itemExists: function Store__itemExists(id) {
-    return false;
-  },
-
   cacheItemsHint: function Store_cacheItemsHint() {
     this._itemCache = this.wrap();
   },
@@ -122,12 +107,12 @@ Store.prototype = {
 
   // override these in derived objects
 
-  wrap: function Store_wrap() {
-    throw "override wrap in a subclass";
+  itemExists: function Store_itemExists(id) {
+    throw "override itemExists in a subclass";
   },
 
-  wrapItem: function Store_wrapItem() {
-    throw "override wrapItem in a subclass";
+  createRecord: function Store_createRecord() {
+    throw "override createRecord in a subclass";
   },
 
   wrapDepth: function BStore_wrapDepth(guid, items) {
