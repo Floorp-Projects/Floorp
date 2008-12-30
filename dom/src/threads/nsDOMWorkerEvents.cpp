@@ -56,6 +56,7 @@ nsDOMWorkerPrivateEvent::nsDOMWorkerPrivateEvent(nsIDOMEvent* aEvent)
 : mEvent(aEvent),
   mProgressEvent(do_QueryInterface(aEvent)),
   mMessageEvent(do_QueryInterface(aEvent)),
+  mErrorEvent(do_QueryInterface(aEvent)),
   mPreventDefaultCalled(PR_FALSE)
 {
   NS_ASSERTION(aEvent, "Null pointer!");
@@ -70,6 +71,7 @@ NS_INTERFACE_MAP_BEGIN(nsDOMWorkerPrivateEvent)
   NS_INTERFACE_MAP_ENTRY(nsIDOMWorkerPrivateEvent)
   NS_INTERFACE_MAP_ENTRY_CONDITIONAL(nsIDOMProgressEvent, mProgressEvent)
   NS_INTERFACE_MAP_ENTRY_CONDITIONAL(nsIWorkerMessageEvent, mMessageEvent)
+  NS_INTERFACE_MAP_ENTRY_CONDITIONAL(nsIWorkerErrorEvent, mErrorEvent)
   NS_INTERFACE_MAP_ENTRY(nsIClassInfo)
 NS_INTERFACE_MAP_END
 
@@ -91,7 +93,13 @@ nsDOMWorkerPrivateEvent::GetInterfaces(PRUint32* aCount, nsIID*** aArray)
 NS_IMETHODIMP
 nsDOMWorkerPrivateEvent::PreventDefault()
 {
-  mPreventDefaultCalled = PR_TRUE;
+  PRBool cancelable = PR_FALSE;
+  mEvent->GetCancelable(&cancelable);
+
+  if (cancelable) {
+    mPreventDefaultCalled = PR_TRUE;
+  }
+
   return mEvent->PreventDefault();
 }
 
@@ -134,6 +142,21 @@ nsDOMWorkerPrivateEvent::InitMessageEvent(const nsAString& aTypeArg,
   return mMessageEvent->InitMessageEvent(aTypeArg, aCanBubbleArg,
                                          aCancelableArg, aDataArg, aOriginArg,
                                          aSourceArg);
+}
+
+NS_IMETHODIMP
+nsDOMWorkerPrivateEvent::InitErrorEvent(const nsAString& aTypeArg,
+                                        PRBool aCanBubbleArg,
+                                        PRBool aCancelableArg,
+                                        const nsAString& aMessageArg,
+                                        const nsAString& aFilenameArg,
+                                        PRUint32 aLinenoArg)
+{
+  NS_ASSERTION(mErrorEvent, "Impossible!");
+
+  mPreventDefaultCalled = PR_FALSE;
+  return mErrorEvent->InitErrorEvent(aTypeArg, aCanBubbleArg, aCancelableArg,
+                                     aMessageArg, aFilenameArg, aLinenoArg);
 }
 
 PRBool
@@ -538,4 +561,48 @@ nsDOMWorkerXHREvent::Run()
 
   NS_ENSURE_SUCCESS(rv, rv);
   return NS_OK;
+}
+
+NS_IMPL_ISUPPORTS_INHERITED1(nsDOMWorkerErrorEvent, nsDOMWorkerEvent,
+                                                    nsIWorkerErrorEvent)
+
+NS_IMPL_CI_INTERFACE_GETTER2(nsDOMWorkerErrorEvent, nsIDOMEvent,
+                                                    nsIWorkerErrorEvent)
+
+NS_IMPL_THREADSAFE_DOM_CI_GETINTERFACES(nsDOMWorkerErrorEvent)
+
+nsresult
+nsDOMWorkerErrorEvent::GetMessage(nsAString& aMessage)
+{
+  aMessage.Assign(mMessage);
+  return NS_OK;
+}
+
+nsresult
+nsDOMWorkerErrorEvent::GetFilename(nsAString& aFilename)
+{
+  aFilename.Assign(mFilename);
+  return NS_OK;
+}
+
+nsresult
+nsDOMWorkerErrorEvent::GetLineno(PRUint32* aLineno)
+{
+  NS_ENSURE_ARG_POINTER(aLineno);
+  *aLineno = mLineno;
+  return NS_OK;
+}
+
+nsresult
+nsDOMWorkerErrorEvent::InitErrorEvent(const nsAString& aTypeArg,
+                                      PRBool aCanBubbleArg,
+                                      PRBool aCancelableArg,
+                                      const nsAString& aMessageArg,
+                                      const nsAString& aFilenameArg,
+                                      PRUint32 aLinenoArg)
+{
+  mMessage.Assign(aMessageArg);
+  mFilename.Assign(aFilenameArg);
+  mLineno = aLinenoArg;
+  return InitEvent(aTypeArg, aCanBubbleArg, aCancelableArg);
 }
