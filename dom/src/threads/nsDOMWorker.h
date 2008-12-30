@@ -54,9 +54,11 @@
 
 #include "nsDOMWorkerMessageHandler.h"
 
+class nsDOMWorker;
+class nsDOMWorkerFeature;
 class nsDOMWorkerMessageHandler;
+class nsDOMWorkerNavigator;
 class nsDOMWorkerPool;
-class nsDOMWorkerScope;
 class nsDOMWorkerTimeout;
 class nsICancelable;
 class nsIDOMEventListener;
@@ -64,7 +66,28 @@ class nsIEventTarget;
 class nsIScriptGlobalObject;
 class nsIXPConnectWrappedNative;
 
-class nsDOMWorkerFeature;
+class nsDOMWorkerScope : public nsIWorkerScope,
+                         public nsIDOMEventTarget,
+                         public nsIXPCScriptable,
+                         public nsIClassInfo
+{
+public:
+  NS_DECL_ISUPPORTS
+  NS_DECL_NSIWORKERGLOBALSCOPE
+  NS_DECL_NSIWORKERSCOPE
+  NS_DECL_NSIDOMEVENTTARGET
+  NS_DECL_NSIXPCSCRIPTABLE
+  NS_DECL_NSICLASSINFO
+
+  nsDOMWorkerScope(nsDOMWorker* aWorker);
+
+private:
+  nsDOMWorker* mWorker;
+
+  nsRefPtr<nsDOMWorkerNavigator> mNavigator;
+
+  PRPackedBool mHasOnerror;
+};
 
 class nsDOMWorker : public nsIWorker,
                     public nsIJSNativeInitializer,
