@@ -2534,12 +2534,13 @@ nsNavHistory::FixInvalidFrecenciesForExcludedPlaces()
         "SELECT h.id FROM moz_places_temp h "
         "WHERE  h.url >= 'place:' AND h.url < 'place;' "
         "UNION "
-        // Unvisited child of a livemark        
+        // Unvisited child of a livemark
         "SELECT b.fk FROM moz_bookmarks b "
-        "JOIN moz_items_annos a ON a.item_id = b.id "
+        "JOIN moz_bookmarks bp ON bp.id = b.parent "
+        "JOIN moz_items_annos a ON a.item_id = bp.id "
         "JOIN moz_anno_attributes n ON n.id = a.anno_attribute_id "
         "WHERE n.name = ?1 "
-        "AND fk IN( "
+        "AND b.fk IN( "
           "SELECT id FROM moz_places WHERE visit_count = 0 AND frecency < 0 "
           "UNION ALL "
           "SELECT id FROM moz_places_temp WHERE visit_count = 0 AND frecency < 0 "
@@ -4398,9 +4399,8 @@ nsNavHistory::RemovePagesInternal(const nsCString& aPlaceIdsQueryString)
     ")"));
   NS_ENSURE_SUCCESS(rv, rv);
 
-  // placeId could have a livemark item, so setting the frecency to -1
-  // would cause it to show up in the url bar autocomplete
-  // call FixInvalidFrecenciesForExcludedPlaces() to handle that scenario
+  // If we have removed all visits to a livemark's child, we need to fix its
+  // frecency, or it would appear in the url bar autocomplete.
   // XXX this might be dog slow, further degrading delete perf.
   rv = FixInvalidFrecenciesForExcludedPlaces();
   NS_ENSURE_SUCCESS(rv, rv);
