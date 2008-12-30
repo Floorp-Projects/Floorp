@@ -207,11 +207,6 @@
 // Limit the number of items in the history for performance reasons
 #define EXPIRATION_CAP_SITES 40000
 
-// DB migration types
-#define DB_MIGRATION_NONE    0
-#define DB_MIGRATION_CREATED 1
-#define DB_MIGRATION_UPDATED 2
-
 // character-set annotation
 #define CHARSET_ANNO NS_LITERAL_CSTRING("URIProperties/characterSet")
 
@@ -437,14 +432,13 @@ nsNavHistory::Init()
   NS_ENSURE_SUCCESS(rv, rv);
 
   // init db and statements
-  PRInt16 migrationType;
-  rv = InitDB(&migrationType);
+  rv = InitDB();
   if (NS_FAILED(rv)) {
     // if unable to initialize the db, force-re-initialize it:
     // InitDBFile will backup the old db and create a new one.
     rv = InitDBFile(PR_TRUE);
     NS_ENSURE_SUCCESS(rv, rv);
-    rv = InitDB(&migrationType);
+    rv = InitDB();
   }
   NS_ENSURE_SUCCESS(rv, rv);
 
@@ -536,7 +530,7 @@ nsNavHistory::Init()
    *** NS_OK.
    ****************************************************************************/
 
-  if (migrationType == DB_MIGRATION_CREATED) {
+  if (mDatabaseStatus == DATABASE_STATUS_CREATE) {
     nsCOMPtr<nsIFile> historyFile;
     rv = NS_GetSpecialDirectory(NS_APP_HISTORY_50_FILE,
                                 getter_AddRefs(historyFile));
@@ -548,7 +542,8 @@ nsNavHistory::Init()
   // In case we've either imported or done a migration from a pre-frecency build,
   // calculate the first cutoff period's frecencies now.
   // Swallow errors here to not block initialization.
-  if (migrationType != DB_MIGRATION_NONE)
+  if (mDatabaseStatus == DATABASE_STATUS_CREATE ||
+      mDatabaseStatus == DATABASE_STATUS_UPGRADED)
     (void)RecalculateFrecencies(mNumCalculateFrecencyOnMigrate,
                                 PR_FALSE /* don't recalculate old */);
 
@@ -653,11 +648,10 @@ nsNavHistory::InitDBFile(PRBool aForceInit)
 #define PLACES_SCHEMA_VERSION 8
 
 nsresult
-nsNavHistory::InitDB(PRInt16 *aMadeChanges)
+nsNavHistory::InitDB()
 {
   nsresult rv;
   PRBool tableExists;
-  *aMadeChanges = DB_MIGRATION_NONE;
 
   // IMPORTANT NOTE:
   // setting page_size must happen first, see bug #401985 for details
@@ -717,6 +711,7 @@ nsNavHistory::InitDB(PRInt16 *aMadeChanges)
     
     if (DBSchemaVersion < PLACES_SCHEMA_VERSION) {
       // Upgrading
+      mDatabaseStatus = DATABASE_STATUS_UPGRADED;
 
       // Migrate anno tables up to V3
       if (DBSchemaVersion < 3) {
@@ -819,7 +814,6 @@ nsNavHistory::InitDB(PRInt16 *aMadeChanges)
 
   // moz_places
   if (!tableExists) {
-    *aMadeChanges = DB_MIGRATION_CREATED;
     rv = mDBConn->ExecuteSimpleSQL(CREATE_MOZ_PLACES);
     NS_ENSURE_SUCCESS(rv, rv);
 
@@ -875,12 +869,6 @@ nsNavHistory::InitDB(PRInt16 *aMadeChanges)
     rv = mDBConn->ExecuteSimpleSQL(CREATE_MOZ_INPUTHISTORY);
     NS_ENSURE_SUCCESS(rv, rv);
   }
-
-  PRBool migrated = PR_FALSE;
-  rv = EnsureCurrentSchema(mDBConn, &migrated);
-  NS_ENSURE_SUCCESS(rv, rv);
-  if (migrated && *aMadeChanges != DB_MIGRATION_CREATED)
-    *aMadeChanges = DB_MIGRATION_UPDATED;
 
   rv = transaction.Commit();
   NS_ENSURE_SUCCESS(rv, rv);
@@ -1541,6 +1529,73 @@ nsNavHistory::MigrateV7Up(mozIStorageConnection* aDBConn)
 {
   mozStorageTransaction transaction(aDBConn, PR_FALSE);
 
+  // We need an index on lastModified to catch quickly last modified bookmark
+  // title for tag container's children. This will be useful for sync too.
+  PRBool lastModIndexExists = PR_FALSE;
+  nsresult rv = aDBConn->IndexExists(
+    NS_LITERAL_CSTRING("moz_bookmarks_itemlastmodifiedindex"),
+    &lastModIndexExists);
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  if (!lastModIndexExists) {
+    rv = aDBConn->ExecuteSimpleSQL(NS_LITERAL_CSTRING(
+        "CREATE INDEX moz_bookmarks_itemlastmodifiedindex "
+        "ON moz_bookmarks (fk, lastModified)"));
+    NS_ENSURE_SUCCESS(rv, rv);
+  }
+
+  // We need to do a one-time change of the moz_historyvisits.pageindex
+  // to speed up finding last visit date when joinin with moz_places.
+  // See bug 392399 for more details.
+  PRBool pageIndexExists = PR_FALSE;
+  rv = aDBConn->IndexExists(
+    NS_LITERAL_CSTRING("moz_historyvisits_pageindex"), &pageIndexExists);
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  if (pageIndexExists) {
+    // drop old index
+    rv = aDBConn->ExecuteSimpleSQL(NS_LITERAL_CSTRING(
+        "DROP INDEX IF EXISTS moz_historyvisits_pageindex"));
+    NS_ENSURE_SUCCESS(rv, rv);
+
+    // create the new multi-column index
+    rv = aDBConn->ExecuteSimpleSQL(NS_LITERAL_CSTRING(
+        "CREATE INDEX IF NOT EXISTS moz_historyvisits_placedateindex "
+        "ON moz_historyvisits (place_id, visit_date)"));
+    NS_ENSURE_SUCCESS(rv, rv);
+  }
+
+  // for existing profiles, we may not have a frecency column
+  nsCOMPtr<mozIStorageStatement> hasFrecencyStatement;
+  rv = aDBConn->CreateStatement(NS_LITERAL_CSTRING(
+      "SELECT frecency FROM moz_places"),
+    getter_AddRefs(hasFrecencyStatement));
+
+  if (NS_FAILED(rv)) {
+    // add frecency column to moz_places, default to -1
+    // so that all the frecencies are invalid and we'll
+    // recalculate them on idle.
+    rv = aDBConn->ExecuteSimpleSQL(NS_LITERAL_CSTRING(
+        "ALTER TABLE moz_places ADD frecency INTEGER DEFAULT -1 NOT NULL"));
+    NS_ENSURE_SUCCESS(rv, rv);
+
+    // create index for the frecency column
+    // XXX multi column index with typed, and visit_count?
+    rv = aDBConn->ExecuteSimpleSQL(NS_LITERAL_CSTRING(
+        "CREATE INDEX IF NOT EXISTS moz_places_frecencyindex "
+          "ON moz_places (frecency)"));
+    NS_ENSURE_SUCCESS(rv, rv);
+
+    // XXX todo
+    // forcibly call the "on idle" timer here to do a little work
+    // but the rest will happen on idle.
+
+    // for place: items and unvisited livemark items, we need to set
+    // the frecency to 0 so that they don't show up in url bar autocomplete
+    rv = FixInvalidFrecenciesForExcludedPlaces();
+    NS_ENSURE_SUCCESS(rv, rv);
+  }
+
   // Temporary migration code for bug 396300
   nsNavBookmarks* bookmarks = nsNavBookmarks::GetBookmarksService();
   NS_ENSURE_TRUE(bookmarks, NS_ERROR_OUT_OF_MEMORY);
@@ -1549,7 +1604,7 @@ nsNavHistory::MigrateV7Up(mozIStorageConnection* aDBConn)
   bookmarks->GetPlacesRoot(&rootFolder);
 
   nsCOMPtr<mozIStorageStatement> moveUnfiledBookmarks;
-  nsresult rv = aDBConn->CreateStatement(NS_LITERAL_CSTRING(
+  rv = aDBConn->CreateStatement(NS_LITERAL_CSTRING(
       "UPDATE moz_bookmarks SET parent = ?1 WHERE type = ?2 AND parent=?3"),
     getter_AddRefs(moveUnfiledBookmarks));
   rv = moveUnfiledBookmarks->BindInt64Parameter(0, unfiledFolder);
@@ -1688,94 +1743,6 @@ nsNavHistory::MigrateV8Up(mozIStorageConnection *aDBConn)
 
   return transaction.Commit();
 }
-
-nsresult
-nsNavHistory::EnsureCurrentSchema(mozIStorageConnection* aDBConn, PRBool* aDidMigrate)
-{
-  // We need an index on lastModified to catch quickly last modified bookmark
-  // title for tag container's children. This will be useful for sync too.
-  PRBool lastModIndexExists = PR_FALSE;
-  nsresult rv = aDBConn->IndexExists(
-    NS_LITERAL_CSTRING("moz_bookmarks_itemlastmodifiedindex"),
-    &lastModIndexExists);
-  NS_ENSURE_SUCCESS(rv, rv);
-
-  if (!lastModIndexExists) {
-    rv = aDBConn->ExecuteSimpleSQL(NS_LITERAL_CSTRING(
-        "CREATE INDEX moz_bookmarks_itemlastmodifiedindex "
-        "ON moz_bookmarks (fk, lastModified)"));
-    NS_ENSURE_SUCCESS(rv, rv);
-  }
-
-  // We need to do a one-time change of the moz_historyvisits.pageindex
-  // to speed up finding last visit date when joinin with moz_places.
-  // See bug 392399 for more details.
-  PRBool oldIndexExists = PR_FALSE;
-  rv = aDBConn->IndexExists(
-    NS_LITERAL_CSTRING("moz_historyvisits_pageindex"), &oldIndexExists);
-  NS_ENSURE_SUCCESS(rv, rv);
-
-  if (oldIndexExists) {
-    *aDidMigrate = PR_TRUE;
-    // wrap in a transaction for safety and performance
-    mozStorageTransaction pageindexTransaction(aDBConn, PR_FALSE);
-
-    // drop old index
-    rv = aDBConn->ExecuteSimpleSQL(NS_LITERAL_CSTRING(
-        "DROP INDEX IF EXISTS moz_historyvisits_pageindex"));
-    NS_ENSURE_SUCCESS(rv, rv);
-
-    // create the new multi-column index
-    rv = aDBConn->ExecuteSimpleSQL(NS_LITERAL_CSTRING(
-        "CREATE INDEX IF NOT EXISTS moz_historyvisits_placedateindex "
-        "ON moz_historyvisits (place_id, visit_date)"));
-    NS_ENSURE_SUCCESS(rv, rv);
-
-    rv = pageindexTransaction.Commit();
-    NS_ENSURE_SUCCESS(rv, rv);
-  }
-
-  // for existing profiles, we may not have a frecency column
-  nsCOMPtr<mozIStorageStatement> statement;
-  rv = aDBConn->CreateStatement(NS_LITERAL_CSTRING(
-      "SELECT frecency FROM moz_places"),
-    getter_AddRefs(statement));
-
-  if (NS_FAILED(rv)) {
-    *aDidMigrate = PR_TRUE;
-    // wrap in a transaction for safety and performance
-    mozStorageTransaction frecencyTransaction(aDBConn, PR_FALSE);
-
-    // add frecency column to moz_places, default to -1
-    // so that all the frecencies are invalid and we'll
-    // recalculate them on idle.
-    rv = aDBConn->ExecuteSimpleSQL(NS_LITERAL_CSTRING(
-        "ALTER TABLE moz_places ADD frecency INTEGER DEFAULT -1 NOT NULL"));
-    NS_ENSURE_SUCCESS(rv, rv);
-
-    // create index for the frecency column
-    // XXX multi column index with typed, and visit_count?
-    rv = aDBConn->ExecuteSimpleSQL(NS_LITERAL_CSTRING(
-        "CREATE INDEX IF NOT EXISTS moz_places_frecencyindex "
-          "ON moz_places (frecency)"));
-    NS_ENSURE_SUCCESS(rv, rv);
-
-    // XXX todo
-    // forcibly call the "on idle" timer here to do a little work
-    // but the rest will happen on idle.
-
-    // for place: items and unvisited livemark items, we need to set
-    // the frecency to 0 so that they don't show up in url bar autocomplete
-    rv = FixInvalidFrecenciesForExcludedPlaces();
-    NS_ENSURE_SUCCESS(rv, rv);
-
-    rv = frecencyTransaction.Commit();
-    NS_ENSURE_SUCCESS(rv, rv);
-  }
-
-  return NS_OK;
-}
-
 
 // nsNavHistory::GetUrlIdFor
 //
