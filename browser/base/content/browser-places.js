@@ -951,11 +951,7 @@ var PlacesMenuDNDController = {
 
 var PlacesStarButton = {
   init: function PSB_init() {
-    try {
-      PlacesUtils.bookmarks.addObserver(this, false);
-    } catch(ex) {
-      Components.utils.reportError("PlacesStarButton.init(): error adding bookmark observer: " + ex);
-    }
+    PlacesUtils.bookmarks.addObserver(this, false);
   },
 
   uninit: function PSB_uninit() {
