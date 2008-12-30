@@ -1131,6 +1131,11 @@ interface nsINavHistoryService : nsISupports
   const unsigned short DATABASE_STATUS_CORRUPT = 2;
 
   /**
+   * Set when database schema has been upgraded
+   */
+  const unsigned short DATABASE_STATUS_UPGRADED = 3;
+
+  /**
    * Returns the current database status
    */
   readonly attribute unsigned short databaseStatus;

@@ -495,17 +495,8 @@ protected:
    * database.  All migration is done inside a transaction that is rolled back
    * if any error occurs.  Upon initialization, history is imported, and some
    * preferences that are used are set.
-   *
-   * @param aMadeChanges [out]
-   *        Returns a constant indicating what occurred:
-   *        DB_MIGRATION_NONE
-   *          No migration occurred.
-   *        DB_MIGRATION_CREATED
-   *          The database did not exist in the past, and was created.
-   *        DB_MIGRATION_UPDATED
-   *          The database was migrated to a new version.
    */
-  nsresult InitDB(PRInt16 *aMadeChanges);
+  nsresult InitDB();
   nsresult InitTempTables();
   nsresult InitViews();
   nsresult InitFunctions();
@@ -515,7 +506,6 @@ protected:
   nsresult MigrateV6Up(mozIStorageConnection *aDBConn);
   nsresult MigrateV7Up(mozIStorageConnection *aDBConn);
   nsresult MigrateV8Up(mozIStorageConnection *aDBConn);
-  nsresult EnsureCurrentSchema(mozIStorageConnection* aDBConn, PRBool *aMadeChanges);
 
   nsresult RemovePagesInternal(const nsCString& aPlaceIdsQueryString);
 
