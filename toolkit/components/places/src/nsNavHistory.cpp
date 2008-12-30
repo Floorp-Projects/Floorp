@@ -6611,10 +6611,10 @@ nsNavHistory::RemoveDuplicateURIs()
   nsCOMPtr<mozIStorageStatement> selectStatement;
   nsresult rv = mDBConn->CreateStatement(NS_LITERAL_CSTRING(
       "SELECT "
-        "(SELECT h.id FROM moz_places_view h WHERE h.url = url "
+        "(SELECT h.id FROM moz_places h WHERE h.url = url "
          "ORDER BY h.visit_count DESC LIMIT 1), "
         "url, SUM(visit_count) "
-      "FROM moz_places_view "
+      "FROM moz_places "
       "GROUP BY url HAVING( COUNT(url) > 1)"),
     getter_AddRefs(selectStatement));
   NS_ENSURE_SUCCESS(rv, rv);
@@ -6622,10 +6622,10 @@ nsNavHistory::RemoveDuplicateURIs()
   // this query remaps history visits to the retained place_id
   nsCOMPtr<mozIStorageStatement> updateStatement;
   rv = mDBConn->CreateStatement(NS_LITERAL_CSTRING(
-      "UPDATE moz_historyvisits_view "
+      "UPDATE moz_historyvisits "
       "SET place_id = ?1 "
       "WHERE place_id IN "
-        "(SELECT id FROM moz_places_view WHERE id <> ?1 AND url = ?2)"),
+        "(SELECT id FROM moz_places WHERE id <> ?1 AND url = ?2)"),
     getter_AddRefs(updateStatement));
   NS_ENSURE_SUCCESS(rv, rv);
 
@@ -6635,7 +6635,7 @@ nsNavHistory::RemoveDuplicateURIs()
       "UPDATE moz_bookmarks "
       "SET fk = ?1 "
       "WHERE fk IN "
-        "(SELECT id FROM moz_places_view WHERE id <> ?1 AND url = ?2)"),
+        "(SELECT id FROM moz_places WHERE id <> ?1 AND url = ?2)"),
     getter_AddRefs(bookmarkStatement));
   NS_ENSURE_SUCCESS(rv, rv);
 
@@ -6645,21 +6645,21 @@ nsNavHistory::RemoveDuplicateURIs()
       "UPDATE moz_annos "
       "SET place_id = ?1 "
       "WHERE place_id IN "
-        "(SELECT id FROM moz_places_view WHERE id <> ?1 AND url = ?2)"),
+        "(SELECT id FROM moz_places WHERE id <> ?1 AND url = ?2)"),
     getter_AddRefs(annoStatement));
   NS_ENSURE_SUCCESS(rv, rv);
   
   // this query deletes all duplicate uris except the choosen id
   nsCOMPtr<mozIStorageStatement> deleteStatement;
   rv = mDBConn->CreateStatement(NS_LITERAL_CSTRING(
-      "DELETE FROM moz_places_view WHERE url = ?1 AND id <> ?2"),
+      "DELETE FROM moz_places WHERE url = ?1 AND id <> ?2"),
     getter_AddRefs(deleteStatement));
   NS_ENSURE_SUCCESS(rv, rv);
 
   // this query updates visit_count to the sum of all visits
   nsCOMPtr<mozIStorageStatement> countStatement;
   rv = mDBConn->CreateStatement(NS_LITERAL_CSTRING(
-      "UPDATE moz_places_view SET visit_count = ?1 WHERE id = ?2"),
+      "UPDATE moz_places SET visit_count = ?1 WHERE id = ?2"),
     getter_AddRefs(countStatement));
   NS_ENSURE_SUCCESS(rv, rv);
 
