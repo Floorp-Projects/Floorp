@@ -35,7 +35,8 @@ Tests of DOM Worker Threads
 
   worker.onmessage = function(event) {
     is(event.target, worker);
-    isnot(-1, event.data.indexOf(errors[errorIndex]));
+    ok(event.data.indexOf(errors[errorIndex]) != -1,
+       "Wrong message!");
     ok(errorIndex == errors.length - 1, "Wrong number of errors seen!");
     SimpleTest.finish();
   }
@@ -48,7 +49,8 @@ Tests of DOM Worker Threads
     netscape.security.PrivilegeManager.enablePrivilege('UniversalXPConnect');
 
     is(event.target, worker);
-    isnot(-1, event.message.indexOf(errors[errorIndex]));
+    ok(event.data.indexOf(errors[errorIndex]) != -1,
+       "Wrong message!");
 
     switch (errorIndex) {
       case 1:
@@ -77,9 +79,7 @@ Tests of DOM Worker Threads
         return;
       }
 
-      is(message.message,
-         '[JavaScript Error: "uncaught exception: This exception should show ' +
-         'up in the JS console"]');
+      ok(message.message.indexOf(errors[errorIndex]) != -1, "Wrong message!");
       worker.onerror = errorHandler;
       nextError();
     },

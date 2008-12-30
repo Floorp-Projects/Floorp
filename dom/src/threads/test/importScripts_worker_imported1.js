@@ -3,4 +3,5 @@ var myConstructor = {}.constructor;
 
 // Try to call a function defined in the imported script.
 function importedScriptFunction() {
+  dump("running importedScriptFunction\n");
 }

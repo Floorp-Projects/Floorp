@@ -522,12 +522,29 @@ GetStringForArgument(nsAString& aString,
   return NS_OK;
 }
 
-nsDOMWorkerScope::nsDOMWorkerScope(nsDOMWorker* aWorker)
-: mWorker(aWorker),
-  mHasOnerror(PR_FALSE)
+class nsDOMWorkerScope : public nsIWorkerScope,
+                         public nsIDOMEventTarget,
+                         public nsIXPCScriptable,
+                         public nsIClassInfo
 {
-  NS_ASSERTION(aWorker, "Null pointer!");
-}
+public:
+  NS_DECL_ISUPPORTS
+  NS_DECL_NSIWORKERGLOBALSCOPE
+  NS_DECL_NSIWORKERSCOPE
+  NS_DECL_NSIDOMEVENTTARGET
+  NS_DECL_NSIXPCSCRIPTABLE
+  NS_DECL_NSICLASSINFO
+
+  nsDOMWorkerScope(nsDOMWorker* aWorker)
+  : mWorker(aWorker) {
+    NS_ASSERTION(aWorker, "Null pointer!");
+  }
+
+private:
+  nsDOMWorker* mWorker;
+
+  nsRefPtr<nsDOMWorkerNavigator> mNavigator;
+};
 
 NS_IMPL_THREADSAFE_ISUPPORTS5(nsDOMWorkerScope, nsIWorkerScope,
                                                 nsIWorkerGlobalScope,
@@ -598,56 +615,6 @@ nsDOMWorkerScope::GetNavigator(nsIWorkerNavigator** _retval)
 
   NS_ADDREF(*_retval = mNavigator);
   return NS_OK;
-}
-
-NS_IMETHODIMP
-nsDOMWorkerScope::GetOnerror(nsIDOMEventListener** aOnerror)
-{
-  NS_ASSERTION(!NS_IsMainThread(), "Wrong thread!");
-  NS_ENSURE_ARG_POINTER(aOnerror);
-
-  if (mWorker->IsCanceled()) {
-    return NS_ERROR_ABORT;
-  }
-
-  if (!mHasOnerror) {
-    // Spec says we have to return 'undefined' until something is set here.
-    nsIXPConnect* xpc = nsContentUtils::XPConnect();
-    NS_ENSURE_TRUE(xpc, NS_ERROR_UNEXPECTED);
-
-    nsAXPCNativeCallContext* cc;
-    nsresult rv = xpc->GetCurrentNativeCallContext(&cc);
-    NS_ENSURE_SUCCESS(rv, rv);
-    NS_ENSURE_TRUE(cc, NS_ERROR_UNEXPECTED);
-
-    jsval* retval;
-    rv = cc->GetRetValPtr(&retval);
-    NS_ENSURE_SUCCESS(rv, rv);
-
-    *retval = JSVAL_VOID;
-    return cc->SetReturnValueWasSet(PR_TRUE);
-  }
-
-  nsCOMPtr<nsIDOMEventListener> listener =
-    mWorker->mInnerHandler->GetOnXListener(NS_LITERAL_STRING("error"));
-  listener.forget(aOnerror);
-
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-nsDOMWorkerScope::SetOnerror(nsIDOMEventListener* aOnerror)
-{
-  NS_ASSERTION(!NS_IsMainThread(), "Wrong thread!");
-
-  if (mWorker->IsCanceled()) {
-    return NS_ERROR_ABORT;
-  }
-
-  mHasOnerror = PR_TRUE;
-
-  return mWorker->mInnerHandler->SetOnXListener(NS_LITERAL_STRING("error"),
-                                                aOnerror);
 }
 
 NS_IMETHODIMP

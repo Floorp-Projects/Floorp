@@ -108,18 +108,9 @@ public:
   NS_IMETHOD GetSource(nsISupports** aSource)                                 \
     { return mMessageEvent->GetSource(aSource); }
 
-#define NS_FORWARD_NSIWORKERERROREVENT_SPECIAL                                \
-  NS_IMETHOD GetMessage(nsAString& aMessage)                                  \
-    { return mErrorEvent->GetMessage(aMessage); }                             \
-  NS_IMETHOD GetFilename(nsAString& aFilename)                                \
-    { return mErrorEvent->GetFilename(aFilename); }                           \
-  NS_IMETHOD GetLineno(PRUint32* aLineno)                                     \
-    { return mErrorEvent->GetLineno(aLineno); }
-
 class nsDOMWorkerPrivateEvent : public nsIDOMWorkerPrivateEvent,
                                 public nsIDOMProgressEvent,
                                 public nsIWorkerMessageEvent,
-                                public nsIWorkerErrorEvent,
                                 public nsIClassInfo
 {
 public:
@@ -127,7 +118,6 @@ public:
   NS_FORWARD_NSIDOMEVENT_SPECIAL
   NS_FORWARD_NSIWORKERMESSAGEEVENT_SPECIAL
   NS_FORWARD_NSIDOMPROGRESSEVENT_SPECIAL
-  NS_FORWARD_NSIWORKERERROREVENT_SPECIAL
   NS_DECL_NSICLASSINFO
 
   nsDOMWorkerPrivateEvent(nsIDOMEvent* aEvent);
@@ -152,20 +142,12 @@ public:
                               const nsAString& aOriginArg,
                               nsISupports* aSourceArg);
 
-  NS_IMETHOD InitErrorEvent(const nsAString& aTypeArg,
-                            PRBool aCanBubbleArg,
-                            PRBool aCancelableArg,
-                            const nsAString& aMessageArg,
-                            const nsAString& aFilenameArg,
-                            PRUint32 aLinenoArg);
-
   virtual PRBool PreventDefaultCalled();
 
 private:
   nsCOMPtr<nsIDOMEvent> mEvent;
   nsCOMPtr<nsIDOMProgressEvent> mProgressEvent;
   nsCOMPtr<nsIWorkerMessageEvent> mMessageEvent;
-  nsCOMPtr<nsIWorkerErrorEvent> mErrorEvent;
   PRBool mPreventDefaultCalled;
 };
 
@@ -183,10 +165,6 @@ public:
 
   void SetTarget(nsIDOMEventTarget* aTarget) {
     mTarget = aTarget;
-  }
-
-  PRBool PreventDefaultCalled() {
-    return PRBool(mPreventDefaultCalled);
   }
 
 protected:
@@ -320,24 +298,6 @@ protected:
   PRInt32 mChannelID;
   PRPackedBool mUploadEvent;
   PRPackedBool mProgressEvent;
-};
-
-class nsDOMWorkerErrorEvent : public nsDOMWorkerEvent,
-                              public nsIWorkerErrorEvent
-{
-public:
-  NS_DECL_ISUPPORTS_INHERITED
-  NS_FORWARD_NSIDOMEVENT(nsDOMWorkerEvent::)
-  NS_DECL_NSIWORKERERROREVENT
-  NS_DECL_NSICLASSINFO_GETINTERFACES
-
-  nsDOMWorkerErrorEvent()
-  : mLineno(0) { }
-
-protected:
-  nsString mMessage;
-  nsString mFilename;
-  PRUint32 mLineno;
 };
 
 #endif /* __NSDOMWORKEREVENTS_H__ */
