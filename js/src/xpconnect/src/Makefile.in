@@ -74,6 +74,7 @@ REQUIRES	+= content \
 		   svg \
 		   xuldoc \
 		   xultmpl \
+		   widget \
 		   $(NULL)
 
 
