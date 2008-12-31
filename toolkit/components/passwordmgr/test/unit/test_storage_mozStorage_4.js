@@ -10,6 +10,7 @@ const Cm = Components.manager;
 const BASE_CONTRACTID = "@mozilla.org/network/protocol;1?name=";
 const LDAPPH_CID = Components.ID("{08eebb58-8d1a-4ab5-9fca-e35372697828}");
 const MAILBOXPH_CID = Components.ID("{edb1dea3-b226-405a-b93d-2a678a68a198}");
+const NEWSBOXPH_CID = Components.ID("{939fe896-8961-49d0-b0e0-4ae779bdef36}");
 
 const STORAGE_TYPE = "mozStorage";
 
@@ -67,6 +68,11 @@ function generateFactory(protocol, defaultPort)
 }
 
 function run_test() {
+// News is set up as an external protocol in Firefox's prefs, for this test
+// to work, we need it to be internal.
+var prefBranch = Cc["@mozilla.org/preferences-service;1"].
+                 getService(Ci.nsIPrefBranch);
+prefBranch.setBoolPref("network.protocol-handler.external.news", false);
 
 Cm.nsIComponentRegistrar.registerFactory(LDAPPH_CID, "LDAPProtocolFactory",
                                          BASE_CONTRACTID + "ldap",
@@ -75,6 +81,10 @@ Cm.nsIComponentRegistrar.registerFactory(MAILBOXPH_CID,
                                          "MailboxProtocolFactory",
                                          BASE_CONTRACTID + "mailbox",
                                          generateFactory("mailbox", 0));
+Cm.nsIComponentRegistrar.registerFactory(NEWSBOXPH_CID,
+                                         "NewsProtocolFactory",
+                                         BASE_CONTRACTID + "news",
+                                         generateFactory("news", 119));
 
 try {
 var storage, testnum = 0;
@@ -88,6 +98,10 @@ var dummyuser2 = Cc["@mozilla.org/login-manager/loginInfo;1"].
 var dummyuser3 = Cc["@mozilla.org/login-manager/loginInfo;1"].
                  createInstance(Ci.nsILoginInfo);
 var dummyuser4 = Cc["@mozilla.org/login-manager/loginInfo;1"].
+                 createInstance(Ci.nsILoginInfo);
+var dummyuser5 = Cc["@mozilla.org/login-manager/loginInfo;1"].
+                 createInstance(Ci.nsILoginInfo);
+var dummyuser6 = Cc["@mozilla.org/login-manager/loginInfo;1"].
                  createInstance(Ci.nsILoginInfo);
 
 
@@ -104,7 +118,11 @@ dummyuser3.init("mailbox://localhost", null, "mailbox://localhost",
 dummyuser4.init("http://dummyhost.mozilla.org", "", null,
     "testuser1", "testpass1", "put_user_here", "put_pw_here");
 
-LoginTest.deleteFile(OUTDIR, "signons.sqlite");
+dummyuser5.init("news://localhost", null, "news://localhost/#password",
+    "", "newstest", "", "");
+
+dummyuser6.init("news://localhost", null, "news://localhost/#username",
+    "", "testnews", "", "");
 
 /*
  * ---------------------- Bug 403790 ----------------------
@@ -117,16 +135,19 @@ testnum++;
 testdesc = "checking reading of mailnews-like old logins";
 storage = LoginTest.initStorage(INDIR, "signons-403790.txt",
                       OUTDIR, "output-403790.sqlite");
- LoginTest.checkStorageData(storage, [], [dummyuser1, dummyuser2, dummyuser3]);
+LoginTest.checkStorageData(storage, [], [dummyuser1, dummyuser2, dummyuser3,
+                                         dummyuser5, dummyuser6]);
 
 storage.addLogin(dummyuser4); // trigger a write
 LoginTest.checkStorageData(storage, [],
-                           [dummyuser1, dummyuser2, dummyuser3, dummyuser4]);
+                           [dummyuser1, dummyuser2, dummyuser3, dummyuser4,
+                            dummyuser5, dummyuser6]);
 
 testdesc = "[flush and reload for verification]";
 storage = LoginTest.reloadStorage(OUTDIR, "output-403790.sqlite");
 LoginTest.checkStorageData(storage, [],
-                           [dummyuser1, dummyuser2, dummyuser3, dummyuser4]);
+                           [dummyuser1, dummyuser2, dummyuser3, dummyuser4,
+                            dummyuser5, dummyuser6]);
 
 LoginTest.deleteFile(OUTDIR, "output-403790.sqlite");
 

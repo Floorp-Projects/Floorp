@@ -92,7 +92,7 @@ public:
   NS_FORWARD_NSIDOMSVGELEMENT(nsSVGPathElementBase::)
 
   // nsIContent interface
-  NS_IMETHODIMP_(PRBool) IsAttributeMapped(const nsIAtom* name) const;
+  NS_IMETHOD_(PRBool) IsAttributeMapped(const nsIAtom* name) const;
 
   // nsISVGValueObserver
   NS_IMETHOD DidModifySVGObservable (nsISVGValue* observable,

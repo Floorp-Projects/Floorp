@@ -36,10 +36,12 @@
 
 #include "nsSVGBoolean.h"
 
-NS_IMPL_ADDREF(nsSVGBoolean::DOMAnimatedBoolean)
-NS_IMPL_RELEASE(nsSVGBoolean::DOMAnimatedBoolean)
+NS_SVG_VAL_IMPL_CYCLE_COLLECTION(nsSVGBoolean::DOMAnimatedBoolean, mSVGElement)
 
-NS_INTERFACE_MAP_BEGIN(nsSVGBoolean::DOMAnimatedBoolean)
+NS_IMPL_CYCLE_COLLECTING_ADDREF(nsSVGBoolean::DOMAnimatedBoolean)
+NS_IMPL_CYCLE_COLLECTING_RELEASE(nsSVGBoolean::DOMAnimatedBoolean)
+
+NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION(nsSVGBoolean::DOMAnimatedBoolean)
   NS_INTERFACE_MAP_ENTRY(nsIDOMSVGAnimatedBoolean)
   NS_INTERFACE_MAP_ENTRY(nsISupports)
   NS_INTERFACE_MAP_ENTRY_CONTENT_CLASSINFO(SVGAnimatedBoolean)
@@ -94,4 +96,3 @@ nsSVGBoolean::ToDOMAnimatedBoolean(nsIDOMSVGAnimatedBoolean **aResult,
   NS_ADDREF(*aResult);
   return NS_OK;
 }
-

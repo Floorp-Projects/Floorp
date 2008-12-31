@@ -96,7 +96,6 @@ extern SMModel EUCKRSMModel;
 extern SMModel EUCTWSMModel;
 extern SMModel GB18030SMModel;
 extern SMModel SJISSMModel;
-extern SMModel UCS2BESMModel;
 
 
 extern SMModel HZSMModel;

@@ -68,23 +68,23 @@
 #include "nsIDocument.h"
 #include "nsPIDOMWindow.h"
 
-// See matching definitions in nsXULPopupManager.h
-nsNavigationDirection DirectionFromKeyCode_lr_tb [6] = {
-  eNavigationDirection_Last,   // NS_VK_END
-  eNavigationDirection_First,  // NS_VK_HOME
-  eNavigationDirection_Start,  // NS_VK_LEFT
-  eNavigationDirection_Before, // NS_VK_UP
-  eNavigationDirection_End,    // NS_VK_RIGHT
-  eNavigationDirection_After   // NS_VK_DOWN
-};
-
-nsNavigationDirection DirectionFromKeyCode_rl_tb [6] = {
-  eNavigationDirection_Last,   // NS_VK_END
-  eNavigationDirection_First,  // NS_VK_HOME
-  eNavigationDirection_End,    // NS_VK_LEFT
-  eNavigationDirection_Before, // NS_VK_UP
-  eNavigationDirection_Start,  // NS_VK_RIGHT
-  eNavigationDirection_After   // NS_VK_DOWN
+const nsNavigationDirection DirectionFromKeyCodeTable[2][6] = {
+  {
+    eNavigationDirection_Last,   // NS_VK_END
+    eNavigationDirection_First,  // NS_VK_HOME
+    eNavigationDirection_Start,  // NS_VK_LEFT
+    eNavigationDirection_Before, // NS_VK_UP
+    eNavigationDirection_End,    // NS_VK_RIGHT
+    eNavigationDirection_After   // NS_VK_DOWN
+  },
+  {
+    eNavigationDirection_Last,   // NS_VK_END
+    eNavigationDirection_First,  // NS_VK_HOME
+    eNavigationDirection_End,    // NS_VK_LEFT
+    eNavigationDirection_Before, // NS_VK_UP
+    eNavigationDirection_Start,  // NS_VK_RIGHT
+    eNavigationDirection_After   // NS_VK_DOWN
+  }
 };
 
 nsXULPopupManager* nsXULPopupManager::sInstance = nsnull;
@@ -1604,7 +1604,8 @@ nsXULPopupManager::HandleKeyboardNavigation(PRUint32 aKeyCode)
     return PR_FALSE;
 
   nsNavigationDirection theDirection;
-  NS_DIRECTION_FROM_KEY_CODE(itemFrame, theDirection, aKeyCode);
+  NS_ASSERTION(aKeyCode >= NS_VK_END && aKeyCode <= NS_VK_DOWN, "Illegal key code");
+  theDirection = NS_DIRECTION_FROM_KEY_CODE(itemFrame, aKeyCode);
 
   // if a popup is open, first check for navigation within the popup
   if (item && HandleKeyboardNavigationInPopup(item, theDirection))

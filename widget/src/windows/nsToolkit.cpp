@@ -46,7 +46,6 @@
 #include "nsIServiceManager.h"
 #include "nsComponentManagerUtils.h"
 #include "nsWidgetAtoms.h"
-#include "nsWindowAPI.h"
 #include "nsUXThemeData.h"
 #include <objbase.h>
 #include <initguid.h>

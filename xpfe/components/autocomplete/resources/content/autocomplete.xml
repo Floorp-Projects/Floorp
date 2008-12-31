@@ -39,13 +39,16 @@
       <children includes="menupopup"/>
     </content>
 
-    <implementation implements="nsIDOMXULMenuListElement, nsIAccessibleProvider">
+    <implementation implements="nsIDOMXULMenuListElement, nsIAccessibleProvider, nsIDOMEventListener">
 
       <constructor><![CDATA[
         // XXX bug 90337 band-aid until we figure out what's going on here
         if (this.value != this.mInputElt.value)
           this.mInputElt.value = this.value;
         delete this.value;
+
+        // listen for menubar activation
+        window.top.addEventListener("DOMMenuBarActive", this, true);
 
         // set default property values
         this.ifSetAttribute("timeout", 50);
@@ -67,6 +70,7 @@
 
       <destructor><![CDATA[
         this.clearResults(false);
+        window.top.removeEventListener("DOMMenuBarActive", this, true);
       ]]></destructor>
       
       <!-- =================== PUBLIC PROPERTIES =================== -->
@@ -235,6 +239,16 @@
       <field name="resultsPopup"><![CDATA[
         document.getAnonymousElementByAttribute(this, "anonid", "popup");
       ]]></field>
+
+      <!-- nsIDOMEventListener -->
+      <method name="handleEvent">
+        <parameter name="aEvent"/>
+        <body><![CDATA[
+          this.finishAutoComplete(false, false, aEvent);
+          this.clearTimer();
+          this.closeResultPopup();
+        ]]></body>
+      </method>
 
       <!-- nsIAccessibleProvider --> 
       <property name="accessibleType" readonly="true">
@@ -928,18 +942,6 @@
       </method>
 
       <!--  -->
-      <method name="processKeyDown">
-        <parameter name="aEvent"/>
-        <body><![CDATA[
-          if (aEvent.keyCode && aEvent.keyCode == this.mMenuAccessKey) {
-              this.finishAutoComplete(false, false, aEvent);
-              this.clearTimer();
-              this.closeResultPopup();
-          }
-        ]]></body>
-      </method>
-
-      <!--  -->
       <method name="processKeyPress">
         <parameter name="aEvent"/>
         <body><![CDATA[
@@ -1435,9 +1437,6 @@
     <handlers>
       <handler event="input"
                action="if (!this.ignoreInputEvent) this.processInput();"/>
-
-      <handler event="keydown" phase="capturing"
-                action="return this.processKeyDown(event);"/>
 
       <handler event="keypress" phase="capturing"
                 action="return this.processKeyPress(event);"/>
