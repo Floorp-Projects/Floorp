@@ -490,7 +490,9 @@ BookmarksStore.prototype = {
   // NOTE: the record id will not be set, because WBOs generate it from
   //       the URL, which we don't have here.  The engine sets it.
   createRecord: function BStore_createRecord(guid) {
-    let record;
+    let record = this.cache.get(guid);
+    if (record)
+      return record;
 
     let placeId = this._bms.getItemIdForGUID(guid);
     if (placeId < 0) {
@@ -549,6 +551,7 @@ BookmarksStore.prototype = {
     record.depth = this._itemDepth(placeId);
     record.sortindex = this._bms.getItemIndex(placeId);
 
+    this.cache.put(guid, record);
     return record;
   },
 

@@ -80,6 +80,12 @@ Store.prototype = {
     return this.__json;
   },
 
+  get cache() {
+    let cache = new RecordCache();
+    this.__defineGetter__("cache", function() cache);
+    return cache;
+  },
+
   _init: function Store__init() {
     this._log = Log4Moz.repository.getLogger("Store." + this._logName);
   },
@@ -95,14 +101,6 @@ Store.prototype = {
         this.update(rec);
     };
     fn.async(this, onComplete, record);
-  },
-
-  cacheItemsHint: function Store_cacheItemsHint() {
-    this._itemCache = this.wrap();
-  },
-
-  clearItemCacheHint: function Store_clearItemCacheHint() {
-    this._itemCache = null;
   },
 
   // override these in derived objects
@@ -137,6 +135,59 @@ Store.prototype = {
 
   wipe: function Store_wipe() {
     throw "override wipe in a subclass";
+  }
+};
+
+function Cache() {
+  this.count = 0;
+  this.maxItems = 100;
+  this.fifo = true;
+  this.enabled = true;
+  this._head = this._tail = null;
+  this._items = {};
+}
+Cache.prototype = {
+  _pop: function Cache__pop() {
+    if (this.count <= 0)
+      return;
+    if (this.count == 1)
+      this.clear();
+    else {
+      delete this._items[this._tail.id];
+      this._tail = this._tail.prev;
+      this.count--;
+    }
+  },
+  put: function Cache_put(id, item) {
+    if (!this.enabled)
+      return;
+    let wrapper = {id: id, prev: null, next: this._head, item: item};
+    this._items[wrapper.id] = wrapper;
+
+    if (this.fifo) {
+      if (this._head)
+        this._head.prev = wrapper;
+      this._head = wrapper;
+    } else {
+      if (this._tail)
+        this._tail.next = wrapper;
+      this._tail = wrapper;
+    }
+    
+    this.count++;
+    if (this.count >= this.maxItems)
+      this._pop();
+  },
+  get: function Cache_get(id) {
+    if (id in this._items)
+      return this._items[id].item;
+    return undefined;
+  },
+  clear: function Cache_clear() {
+    this.count = 0;
+    this._head = null;
+    this._tail = null;
+    this._items = {};
   }
 };
 

@@ -233,6 +233,12 @@ function SyncEngine() { /* subclasses should call this._init() */ }
 SyncEngine.prototype = {
   __proto__: Engine.prototype,
 
+  get _memory() {
+    let mem = Cc["@mozilla.org/xpcom/memory-service;1"].getService(Ci.nsIMemory);
+    this.__defineGetter__("_memory" function() mem);
+    return mem;
+  },
+
   get baseURL() {
     let url = Utils.prefs.getCharPref("serverURL");
     if (url && url[url.length-1] != '/')
@@ -295,6 +301,17 @@ SyncEngine.prototype = {
     }
   },
 
+  _lowMemCheck: function SyncEngine__lowMemCheck() {
+    if (mem.isLowMemory()) {
+      this._log.warn("Low memory, forcing GC");
+      Cu.forceGC();
+      if (mem.isLowMemory()) {
+        this._log.warn("Low memory, aborting sync!");
+        throw "Low memory";
+      }
+    }
+  },
+
   // Any setup that needs to happen at the beginning of each sync.
   // Makes sure crypto records and keys are all set-up
   _syncStartup: function SyncEngine__syncStartup() {
@@ -339,24 +356,23 @@ SyncEngine.prototype = {
 
     this._log.debug("Downloading & applying server changes");
 
+    // enable cache, and keep only the first few items.  Otherwise (when
+    // we have more outgoing items than can fit in the cache), we will
+    // keep rotating items in and out, perpetually getting cache misses
+    this._store.cache.enabled = true;
+    this._store.cache.fifo = false; // filo
+    this._store.cache.clear();
+
     let newitems = new Collection(this.engineURL);
     newitems.modified = this.lastSync;
     newitems.full = true;
     newitems.sort = "depthindex";
     yield newitems.get(self.cb);
 
-    let mem = Cc["@mozilla.org/xpcom/memory-service;1"].getService(Ci.nsIMemory);
-    this._lastSyncTmp = 0;
     let item;
+    this._lastSyncTmp = 0;
     while ((item = yield newitems.iter.next(self.cb))) {
-      if (mem.isLowMemory()) {
-        this._log.warn("Low memory, forcing GC");
-        Cu.forceGC();
-        if (mem.isLowMemory()) {
-          this._log.warn("Low memory, aborting sync!");
-          throw "Low memory";
-        }
-      }
+      this._lowMemCheck();
       yield item.decrypt(self.cb, ID.get('WeaveCryptoID').password);
       if (yield this._reconcile.async(this, self.cb, item))
         yield this._applyIncoming.async(this, self.cb, item);
@@ -368,6 +384,8 @@ SyncEngine.prototype = {
     }
     if (this.lastSync < this._lastSyncTmp)
         this.lastSync = this._lastSyncTmp;
+
+    this._store.cache.clear(); // free some memory
   },
 
   // Reconciliation has two steps:
@@ -408,13 +426,7 @@ SyncEngine.prototype = {
 
     // Check for items with different IDs which we think are the same one
     for (let id in this._tracker.changedIDs) {
-      // Generate outgoing record or used a cached one
-      let out = (id in this.outgoing)?
-        this.outgoing[id] : this._createRecord(id);
-
-      // cache the first 100, after that we will throw them away - slower but less memory hungry
-      if ([i for (i in this.outgoing)].length <= 100)
-        this.outgoing[id] = out;
+      let out = this._createRecord(id);
 
       if (this._recordLike(item, out)) {
         // change refs in outgoing queue, then actual id of local item
@@ -456,25 +468,26 @@ SyncEngine.prototype = {
 
       // collection we'll upload
       let up = new Collection(this.engineURL);
-
-      // regen the store cache so we can get item depths
-      //this._store.cacheItemsHint();
       let depth = {};
 
-      let out;
-      while ((out = this.outgoing.pop())) {
+      // don't cache the outgoing items, we won't need them later
+      this._store.cache.enabled = false;
+
+      for (let id in this._tracker.changedIDs) {
+        let out = this._createRecord(id);
         this._log.trace("Outgoing:\n" + out);
         yield out.encrypt(self.cb, ID.get('WeaveCryptoID').password);
         yield up.pushRecord(self.cb, out);
         this._store.wrapDepth(out.id, depth);
       }
 
+      this._store.cache.enabled = true;
+
       // now add short depth-only records
       this._log.trace(depth.length + "outgoing depth records");
       for (let id in depth) {
         up.pushDepthRecord({id: id, depth: depth[id]});
       }
-      //this._store.clearItemCacheHint();
 
       // do the upload
       yield up.post(self.cb);
