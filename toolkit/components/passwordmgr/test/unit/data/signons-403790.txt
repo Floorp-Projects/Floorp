@@ -18,3 +18,15 @@ mailbox://test%2Bpop3@localhost
 *\=password=\
 ~cG9wM3Rlc3Q=
 .
+news://localhost:119/#password
+\=username=\
+~
+*\=password=\
+~bmV3c3Rlc3Q=
+.
+news://localhost:119/#username
+\=username=\
+~
+*\=password=\
+~dGVzdG5ld3M=
+.

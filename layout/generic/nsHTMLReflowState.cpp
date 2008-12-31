@@ -331,7 +331,9 @@ IsQuirkContainingBlockHeight(const nsHTMLReflowState* rs)
 {
   nsIAtom* frameType = rs->frame->GetType();
   if (nsGkAtoms::blockFrame == frameType ||
-      nsGkAtoms::areaFrame == frameType ||
+#ifdef MOZ_XUL
+      nsGkAtoms::XULLabelFrame == frameType ||
+#endif
       nsGkAtoms::scrollFrame == frameType) {
     // Note: This next condition could change due to a style change,
     // but that would cause a style reflow anyway, which means we're ok.
@@ -1434,7 +1436,9 @@ CalcQuirkContainingBlockHeight(const nsHTMLReflowState* aCBReflowState)
     // if the ancestor is auto height then skip it and continue up if it 
     // is the first block/area frame and possibly the body/html
     if (nsGkAtoms::blockFrame == frameType ||
-        nsGkAtoms::areaFrame == frameType ||
+#ifdef MOZ_XUL
+        nsGkAtoms::XULLabelFrame == frameType ||
+#endif
         nsGkAtoms::scrollFrame == frameType) {
 
       secondAncestorRS = firstAncestorRS;
@@ -1499,13 +1503,12 @@ CalcQuirkContainingBlockHeight(const nsHTMLReflowState* aCBReflowState)
 #endif
       
     }
-    // if we got to the html frame, then subtract out 
-    // margin/border/padding for the BODY element
-    else if (nsGkAtoms::areaFrame == frameType) {
-      // make sure it is the body
-      if (nsGkAtoms::canvasFrame == rs->parentReflowState->frame->GetType()) {
-        result -= GetVerticalMarginBorderPadding(secondAncestorRS);
-      }
+    // if we got to the html frame (a block child of the canvas) ...
+    else if (nsGkAtoms::blockFrame == frameType &&
+             nsGkAtoms::canvasFrame ==
+               rs->parentReflowState->frame->GetType()) {
+      // ... then subtract out margin/border/padding for the BODY element
+      result -= GetVerticalMarginBorderPadding(secondAncestorRS);
     }
     break;
   }

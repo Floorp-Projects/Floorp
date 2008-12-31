@@ -42,11 +42,18 @@
 #include "nsdefs.h"
 #include "nsIToolkit.h"
 
-#include "nsWindowAPI.h"
 #include "nsITimer.h"
 #include "nsCOMPtr.h"
 
 #include <imm.h>
+
+// Avoid including windowsx.h to prevent macro pollution
+#ifndef GET_X_LPARAM
+#define GET_X_LPARAM(pt) (short(LOWORD(pt)))
+#endif
+#ifndef GET_Y_LPARAM
+#define GET_Y_LPARAM(pt) (short(HIWORD(pt)))
+#endif
 
 struct MethodInfo;
 class nsIEventQueue;
@@ -159,42 +166,6 @@ private:
     nsCOMPtr<nsITimer>    mTimer;
 };
 
-
-//-------------------------------------------------------------------------
-//
-// related WM_IME_REQUEST definition.
-// VC++5.0 header doesn't have reconversion structure and message.
-//
-//-------------------------------------------------------------------------
-
-#ifndef WM_IME_REQUEST
-#define WM_IME_REQUEST                  0x0288
-#endif    // #ifndef WM_IME_REQUEST
-
-#ifndef IMR_RECONVERTSTRING
-#define IMR_RECONVERTSTRING             0x0004
-typedef struct tagRECONVERTSTRING {
-  DWORD dwSize;
-  DWORD dwVersion;
-  DWORD dwStrLen;
-  DWORD dwStrOffset;
-  DWORD dwCompStrLen;
-  DWORD dwCompStrOffset;
-  DWORD dwTargetStrLen;
-  DWORD dwTargetStrOffset;
-} RECONVERTSTRING, FAR * LPRECONVERTSTRING;
-#endif    // #ifndef IMR_RECONVERTSTRING
-
-#ifndef IMR_QUERYCHARPOSITION
-#define IMR_QUERYCHARPOSITION           0x0006
-typedef struct tagIMECHARPOSITION {
-  DWORD dwSize;
-  DWORD dwCharPos;
-  POINT pt;
-  UINT  cLineHeight;
-  RECT  rcDocument;
-} IMECHARPOSITION, *PIMECHARPOSITION;
-#endif    // #ifndef IMR_QUERYCHARPOSITION
 
 //-------------------------------------------------------------------------
 //

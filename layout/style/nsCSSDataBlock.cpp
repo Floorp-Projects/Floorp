@@ -251,8 +251,12 @@ nsCSSCompressedDataBlock::MapRuleInfoInto(nsRuleData *aRuleData) const
                                             mPresContext->
                                             DefaultBackgroundColor());
                                     }
+                                } else if (iProp == eCSSProperty_color) {
+                                    // Force colors to the user's default.
+                                    target->SetColorValue(aRuleData->
+                                        mPresContext-> DefaultColor());
                                 } else {
-                                    // Ignore 'color', 'border-*-color', and
+                                    // Ignore 'border-*-color', and
                                     // 'background-image'
                                     *target = nsCSSValue();
                                 }

@@ -1107,9 +1107,9 @@ nsBlockFrame::Reflow(nsPresContext*           aPresContext,
   }
 
   // Compute our final size
-  ComputeFinalSize(aReflowState, state, aMetrics);
-
-  ComputeCombinedArea(aReflowState, aMetrics);
+  nscoord bottomEdgeOfChildren;
+  ComputeFinalSize(aReflowState, state, aMetrics, &bottomEdgeOfChildren);
+  ComputeCombinedArea(aReflowState, aMetrics, bottomEdgeOfChildren);
   // Factor overflow container child bounds into the overflow area
   aMetrics.mOverflowArea.UnionRect(aMetrics.mOverflowArea,
                                    overflowContainerBounds);
@@ -1272,7 +1272,8 @@ nsBlockFrame::CheckForCollapsedBottomMarginFromClearanceLine()
 void
 nsBlockFrame::ComputeFinalSize(const nsHTMLReflowState& aReflowState,
                                nsBlockReflowState&      aState,
-                               nsHTMLReflowMetrics&     aMetrics)
+                               nsHTMLReflowMetrics&     aMetrics,
+                               nscoord*                 aBottomEdgeOfChildren)
 {
   const nsMargin& borderPadding = aState.BorderPadding();
 #ifdef NOISY_FINAL_SIZE
@@ -1308,6 +1309,32 @@ nsBlockFrame::ComputeFinalSize(const nsHTMLReflowState& aReflowState,
     aMetrics.mCarriedOutBottomMargin = aState.mPrevBottomMargin;
   } else {
     aMetrics.mCarriedOutBottomMargin.Zero();
+  }
+
+  nscoord bottomEdgeOfChildren = aState.mY + nonCarriedOutVerticalMargin;
+  // Shrink wrap our height around our contents.
+  if (aState.GetFlag(BRS_ISBOTTOMMARGINROOT) ||
+      NS_UNCONSTRAINEDSIZE != aReflowState.ComputedHeight()) {
+    // When we are a bottom-margin root make sure that our last
+    // childs bottom margin is fully applied. We also do this when
+    // we have a computed height, since in that case the carried out
+    // margin is not going to be applied anywhere, so we should note it
+    // here to be included in the overflow area.
+    // Apply the margin only if there's space for it.
+    if (bottomEdgeOfChildren < aState.mReflowState.availableHeight)
+    {
+      // Truncate bottom margin if it doesn't fit to our available height.
+      bottomEdgeOfChildren =
+        PR_MIN(bottomEdgeOfChildren + aState.mPrevBottomMargin.get(),
+               aState.mReflowState.availableHeight);
+    }
+  }
+  if (aState.GetFlag(BRS_SPACE_MGR)) {
+    // Include the space manager's state to properly account for the
+    // bottom margin of any floated elements; e.g., inside a table cell.
+    nscoord floatHeight =
+      aState.ClearFloats(bottomEdgeOfChildren, NS_STYLE_CLEAR_LEFT_AND_RIGHT);
+    bottomEdgeOfChildren = PR_MAX(bottomEdgeOfChildren, floatHeight);
   }
 
   // Compute final height
@@ -1374,29 +1401,7 @@ nsBlockFrame::ComputeFinalSize(const nsHTMLReflowState& aReflowState,
     aMetrics.mCarriedOutBottomMargin.Zero();
   }
   else if (NS_FRAME_IS_COMPLETE(aState.mReflowStatus)) {
-    nscoord autoHeight = aState.mY + nonCarriedOutVerticalMargin;
-
-    // Shrink wrap our height around our contents.
-    if (aState.GetFlag(BRS_ISBOTTOMMARGINROOT)) {
-      // When we are a bottom-margin root make sure that our last
-      // childs bottom margin is fully applied.
-      // Apply the margin only if there's space for it.
-      if (autoHeight < aState.mReflowState.availableHeight)
-      {
-        // Truncate bottom margin if it doesn't fit to our available height.
-        autoHeight = PR_MIN(autoHeight + aState.mPrevBottomMargin.get(), aState.mReflowState.availableHeight);
-      }
-    }
-
-    if (aState.GetFlag(BRS_SPACE_MGR)) {
-      // Include the space manager's state to properly account for the
-      // bottom margin of any floated elements; e.g., inside a table cell.
-      nscoord floatHeight =
-        aState.ClearFloats(autoHeight, NS_STYLE_CLEAR_LEFT_AND_RIGHT);
-      autoHeight = PR_MAX(autoHeight, floatHeight);
-    }
-
-    // Apply min/max values
+    nscoord autoHeight = bottomEdgeOfChildren;
     autoHeight -= borderPadding.top;
     nscoord oldAutoHeight = autoHeight;
     aReflowState.ApplyMinMaxConstraints(nsnull, &autoHeight);
@@ -1427,6 +1432,7 @@ nsBlockFrame::ComputeFinalSize(const nsHTMLReflowState& aReflowState,
 
   // Screen out negative heights --- can happen due to integer overflows :-(
   aMetrics.height = PR_MAX(0, aMetrics.height);
+  *aBottomEdgeOfChildren = bottomEdgeOfChildren;
 
 #ifdef DEBUG_blocks
   if (CRAZY_WIDTH(aMetrics.width) || CRAZY_HEIGHT(aMetrics.height)) {
@@ -1438,7 +1444,8 @@ nsBlockFrame::ComputeFinalSize(const nsHTMLReflowState& aReflowState,
 
 void
 nsBlockFrame::ComputeCombinedArea(const nsHTMLReflowState& aReflowState,
-                                  nsHTMLReflowMetrics& aMetrics)
+                                  nsHTMLReflowMetrics&     aMetrics,
+                                  nscoord                  aBottomEdgeOfChildren)
 {
   // Compute the combined area of our children
   // XXX_perf: This can be done incrementally.  It is currently one of
@@ -1469,6 +1476,20 @@ nsBlockFrame::ComputeCombinedArea(const nsHTMLReflowState& aReflowState,
     if (mBullet) {
       area.UnionRect(area, mBullet->GetRect());
     }
+
+    // Factor in the bottom edge of the children. Child frames
+    // will be added to the overflow area as we iterate through the lines,
+    // but their margins won't, so we need to account for bottom margins
+    // here. If we're a scrolled block then we also need to account
+    // for the scrollframe's padding, which is logically below the
+    // bottom margins of the children.
+    nscoord bottomEdgeOfContents = aBottomEdgeOfChildren;
+    if (GetStyleContext()->GetPseudoType() == nsCSSAnonBoxes::scrolledContent) {
+      // We're a scrolled frame; the scrollframe's padding should be added
+      // to the bottom edge of the children
+      bottomEdgeOfContents += aReflowState.mComputedPadding.bottom;
+    }
+    area.height = PR_MAX(area.YMost(), bottomEdgeOfContents) - area.y;
   }
 #ifdef NOISY_COMBINED_AREA
   ListTag(stdout);

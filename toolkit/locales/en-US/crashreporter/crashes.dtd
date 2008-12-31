@@ -3,5 +3,5 @@
 <!ENTITY date.heading               "Date Submitted">
 <!ENTITY noReports.label            "No crash reports have been submitted.">
 <!ENTITY noConfig.label             "This application has not been configured to display crash reports. The preference <code>breakpad.reportURL</code> must be set.">
-<!ENTITY clearReports.label         "Remove All Reports">
+<!ENTITY clearAllReports.label      "Remove All Reports">
 

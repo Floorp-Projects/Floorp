@@ -707,9 +707,8 @@ void nsStyleContext::DumpRegressionData(nsPresContext* aPresContext, FILE* out, 
   text->mLineHeight.ToString(str);
   fprintf(out, "%s ", NS_ConvertUTF16toUTF8(str).get());
   text->mTextIndent.ToString(str);
-  fprintf(out, "%s ", NS_ConvertUTF16toUTF8(str).get());
-  text->mWordSpacing.ToString(str);
-  fprintf(out, "%s ", NS_ConvertUTF16toUTF8(str).get());
+  fprintf(out, "%s %d", NS_ConvertUTF16toUTF8(str).get(),
+                        (int)text->mWordSpacing);
   fprintf(out, "\" />\n");
   
   // TEXT RESET

@@ -1482,7 +1482,6 @@ GK_ATOM(processingInstructionTagName, "#processing-instruction")
 GK_ATOM(textTagName, "#text")
 
 // Frame types
-GK_ATOM(areaFrame, "AreaFrame")
 GK_ATOM(bcTableCellFrame, "BCTableCellFrame") // table cell in border collapsing model
 GK_ATOM(blockFrame, "BlockFrame")
 GK_ATOM(boxFrame, "BoxFrame")
@@ -1535,6 +1534,9 @@ GK_ATOM(tableRowFrame, "TableRowFrame")
 GK_ATOM(textInputFrame,"TextInputFrame")
 GK_ATOM(textFrame, "TextFrame")
 GK_ATOM(viewportFrame, "ViewportFrame")
+#ifdef MOZ_XUL
+GK_ATOM(XULLabelFrame, "XULLabelFrame")
+#endif
 #ifdef MOZ_SVG
 GK_ATOM(svgAFrame, "SVGAFrame")
 GK_ATOM(svgClipPathFrame, "SVGClipPathFrame")

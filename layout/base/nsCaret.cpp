@@ -93,13 +93,13 @@ nsCaret::nsCaret()
 , mDrawn(PR_FALSE)
 , mReadOnly(PR_FALSE)
 , mShowDuringSelection(PR_FALSE)
-, mLastContentOffset(0)
-, mLastHint(nsFrameSelection::HINTLEFT)
 , mIgnoreUserModify(PR_TRUE)
 #ifdef IBMBIDI
-, mLastBidiLevel(0)
 , mKeyboardRTL(PR_FALSE)
+, mLastBidiLevel(0)
 #endif
+, mLastContentOffset(0)
+, mLastHint(nsFrameSelection::HINTLEFT)
 {
 }
 
@@ -177,7 +177,7 @@ DrawCJKCaret(nsIFrame* aFrame, PRInt32 aOffset)
   const nsTextFragment* frag = content->GetText();
   if (!frag)
     return PR_FALSE;
-  if (aOffset < 0 || aOffset >= frag->GetLength())
+  if (aOffset < 0 || PRUint32(aOffset) >= frag->GetLength())
     return PR_FALSE;
   PRUnichar ch = frag->CharAt(aOffset);
   return 0x2e80 <= ch && ch <= 0xd7ff;

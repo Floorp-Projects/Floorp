@@ -38,7 +38,7 @@
 #ifndef nsIsIndexFrame_h___
 #define nsIsIndexFrame_h___
 
-#include "nsAreaFrame.h"
+#include "nsBlockFrame.h"
 #include "nsIFormControlFrame.h"
 #include "nsIAnonymousContentCreator.h"
 #include "nsIStatefulFrame.h"
@@ -48,7 +48,7 @@
 #include "nsTextControlFrame.h"
 typedef   nsTextControlFrame nsNewFrame;
 
-class nsIsIndexFrame : public nsAreaFrame,
+class nsIsIndexFrame : public nsBlockFrame,
                        public nsIAnonymousContentCreator,
                        public nsIDOMKeyListener,
                        public nsIStatefulFrame

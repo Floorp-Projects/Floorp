@@ -438,8 +438,12 @@ public:
    * nscoord units (as scaled by the device context).
    */
   void SetVisibleArea(const nsRect& r) {
-    mVisibleArea = r;
-    PostMediaFeatureValuesChangedEvent();
+    if (!r.IsExactEqual(mVisibleArea)) {
+      mVisibleArea = r;
+      // Visible area does not affect media queries when paginated.
+      if (!IsPaginated() && HasCachedStyleData())
+        PostMediaFeatureValuesChangedEvent();
+    }
   }
 
   /**
@@ -505,7 +509,8 @@ public:
   float TextZoom() { return mTextZoom; }
   void SetTextZoom(float aZoom) {
     mTextZoom = aZoom;
-    RebuildAllStyleData(NS_STYLE_HINT_REFLOW);
+    if (HasCachedStyleData())
+      RebuildAllStyleData(NS_STYLE_HINT_REFLOW);
   }
 
   float GetFullZoom() { return mFullZoom; }
@@ -797,6 +802,9 @@ protected:
     mPostedFlushUserFontSet = PR_FALSE;
     FlushUserFontSet();
   }
+
+  // Can't be inline because we can't include nsStyleSet.h.
+  PRBool HasCachedStyleData();
 
   // IMPORTANT: The ownership implicit in the following member variables
   // has been explicitly checked.  If you add any members to this class,

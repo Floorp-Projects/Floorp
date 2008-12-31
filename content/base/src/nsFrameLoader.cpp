@@ -313,9 +313,14 @@ FirePageHideEvent(nsIDocShellTreeItem* aItem,
   }
 }
 
+// The pageshow event is fired for a given document only if IsShowing() returns
+// the same thing as aFireIfShowing.  This gives us a way to fire pageshow only
+// on documents that are still loading or only on documents that are already
+// loaded.
 static void
 FirePageShowEvent(nsIDocShellTreeItem* aItem,
-                  nsIDOMEventTarget* aChromeEventHandler)
+                  nsIDOMEventTarget* aChromeEventHandler,
+                  PRBool aFireIfShowing)
 {
   PRInt32 childCount = 0;
   aItem->GetChildCount(&childCount);
@@ -327,14 +332,18 @@ FirePageShowEvent(nsIDocShellTreeItem* aItem,
 
   for (PRUint32 i = 0; i < kids.Length(); ++i) {
     if (kids[i]) {
-      FirePageShowEvent(kids[i], aChromeEventHandler);
+      FirePageShowEvent(kids[i], aChromeEventHandler, aFireIfShowing);
     }
   }
 
-  nsPageTransitionEvent event(PR_TRUE, NS_PAGE_SHOW, PR_TRUE);
   nsCOMPtr<nsIDOMDocument> doc = do_GetInterface(aItem);
-  event.target = do_QueryInterface(doc);
-  nsEventDispatcher::Dispatch(aChromeEventHandler, nsnull, &event);
+  nsCOMPtr<nsIDocument> internalDoc = do_QueryInterface(doc);
+  NS_ASSERTION(internalDoc, "What happened here?");
+  if (internalDoc->IsShowing() == aFireIfShowing) {
+    nsPageTransitionEvent event(PR_TRUE, NS_PAGE_SHOW, PR_TRUE);
+    event.target = do_QueryInterface(doc);
+    nsEventDispatcher::Dispatch(aChromeEventHandler, nsnull, &event);
+  }
 }
 
 static void
@@ -609,8 +618,11 @@ nsFrameLoader::SwapWithOtherLoader(nsFrameLoader* aOther,
   }
   mInSwap = aOther->mInSwap = PR_TRUE;
 
-  // Fire pagehide events.  Note that we do NOT fire these in the normal way,
-  // but just fire them on the chrome event handlers.
+  // Fire pageshow events on still-loading pages, and then fire pagehide
+  // events.  Note that we do NOT fire these in the normal way, but just fire
+  // them on the chrome event handlers.
+  FirePageShowEvent(ourTreeItem, ourChromeEventHandler, PR_FALSE);
+  FirePageShowEvent(otherTreeItem, otherChromeEventHandler, PR_FALSE);
   FirePageHideEvent(ourTreeItem, ourChromeEventHandler);
   FirePageHideEvent(otherTreeItem, otherChromeEventHandler);
   
@@ -618,8 +630,8 @@ nsFrameLoader::SwapWithOtherLoader(nsFrameLoader* aOther,
   nsIFrame* otherFrame = otherShell->GetPrimaryFrameFor(otherContent);
   if (!ourFrame || !otherFrame) {
     mInSwap = aOther->mInSwap = PR_FALSE;
-    FirePageShowEvent(ourTreeItem, ourChromeEventHandler);
-    FirePageShowEvent(otherTreeItem, otherChromeEventHandler);
+    FirePageShowEvent(ourTreeItem, ourChromeEventHandler, PR_TRUE);
+    FirePageShowEvent(otherTreeItem, otherChromeEventHandler, PR_TRUE);
     return NS_ERROR_NOT_IMPLEMENTED;
   }
 
@@ -627,8 +639,8 @@ nsFrameLoader::SwapWithOtherLoader(nsFrameLoader* aOther,
   CallQueryInterface(ourFrame, &ourFrameFrame);
   if (!ourFrameFrame) {
     mInSwap = aOther->mInSwap = PR_FALSE;
-    FirePageShowEvent(ourTreeItem, ourChromeEventHandler);
-    FirePageShowEvent(otherTreeItem, otherChromeEventHandler);
+    FirePageShowEvent(ourTreeItem, ourChromeEventHandler, PR_TRUE);
+    FirePageShowEvent(otherTreeItem, otherChromeEventHandler, PR_TRUE);
     return NS_ERROR_NOT_IMPLEMENTED;
   }
 
@@ -636,8 +648,8 @@ nsFrameLoader::SwapWithOtherLoader(nsFrameLoader* aOther,
   rv = ourFrameFrame->BeginSwapDocShells(otherFrame);
   if (NS_FAILED(rv)) {
     mInSwap = aOther->mInSwap = PR_FALSE;
-    FirePageShowEvent(ourTreeItem, ourChromeEventHandler);
-    FirePageShowEvent(otherTreeItem, otherChromeEventHandler);
+    FirePageShowEvent(ourTreeItem, ourChromeEventHandler, PR_TRUE);
+    FirePageShowEvent(otherTreeItem, otherChromeEventHandler, PR_TRUE);
     return rv;
   }
 
@@ -690,8 +702,8 @@ nsFrameLoader::SwapWithOtherLoader(nsFrameLoader* aOther,
   ourParentDocument->FlushPendingNotifications(Flush_Layout);
   otherParentDocument->FlushPendingNotifications(Flush_Layout);
   
-  FirePageShowEvent(ourTreeItem, otherChromeEventHandler);
-  FirePageShowEvent(otherTreeItem, ourChromeEventHandler);
+  FirePageShowEvent(ourTreeItem, otherChromeEventHandler, PR_TRUE);
+  FirePageShowEvent(otherTreeItem, ourChromeEventHandler, PR_TRUE);
 
   mInSwap = aOther->mInSwap = PR_FALSE;
   return NS_OK;

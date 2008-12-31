@@ -90,7 +90,7 @@ public:
 
   virtual PRInt32 IntrinsicState() const;
 
-  NS_IMETHODIMP_(PRBool) IsAttributeMapped(const nsIAtom* name) const;
+  NS_IMETHOD_(PRBool) IsAttributeMapped(const nsIAtom* name) const;
 
   // nsSVGPathGeometryElement methods:
   virtual void ConstructPath(gfxContext *aCtx);

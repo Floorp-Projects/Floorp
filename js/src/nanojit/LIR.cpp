@@ -112,13 +112,15 @@ namespace nanojit
 		// free all the memory and clear the stats
 		_frago->pagesRelease(_pages);
 		NanoAssert(!_pages.size());
-		_thresholdPage = 0;
 		_unused = 0;
 		_stats.lir = 0;
 		_noMem = 0;
 		for (int i = 0; i < NumSavedRegs; ++i)
 			savedRegs[i] = NULL;
 		explicitSavedRegs = false;
+		// pre-allocate the next page we will be using
+		_nextPage = pageAlloc();
+		NanoAssert(_nextPage || _noMem);
 	}
 
 	int32_t LirBuffer::insCount() 
@@ -152,24 +154,16 @@ namespace nanojit
 	{
 		LInsp before = _buf->next();
 		LInsp after = before+count+LIR_FAR_SLOTS;
-		if (!samepage(before,after+LirBuffer::LIR_BUF_THRESHOLD))
+		// transition to the next page?
+		if (!samepage(before,after))
 		{
-			if (!_buf->_thresholdPage)
-			{
-				// LIR_BUF_THRESHOLD away from a new page but pre-alloc it, setting noMem for early OOM detection
-				_buf->_thresholdPage = _buf->pageAlloc();
-				NanoAssert(_buf->_thresholdPage || _buf->_noMem);
-			}
-			// transition to the next page?
-			if (!samepage(before,after))
-			{
-				NanoAssert(_buf->_thresholdPage);
-				_buf->_unused = &_buf->_thresholdPage->lir[0];	
-				_buf->_thresholdPage = 0;  // pageAlloc() stored it in _pages already			
-
-				// link LIR stream back to prior instruction (careful insLink relies on _unused...)
-				insLinkTo(LIR_skip, before-1);
-			}
+			// we don't want this to fail, so we always have a page in reserve
+			NanoAssert(_buf->_nextPage);
+			_buf->_unused = &_buf->_nextPage->lir[0];	
+			// link LIR stream back to prior instruction (careful insLink relies on _unused...)
+			insLinkTo(LIR_skip, before-1);
+			_buf->_nextPage = _buf->pageAlloc();
+			NanoAssert(_buf->_nextPage || _buf->_noMem);
 		}
 	}
 
