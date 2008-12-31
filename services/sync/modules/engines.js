@@ -235,7 +235,7 @@ SyncEngine.prototype = {
 
   get _memory() {
     let mem = Cc["@mozilla.org/xpcom/memory-service;1"].getService(Ci.nsIMemory);
-    this.__defineGetter__("_memory" function() mem);
+    this.__defineGetter__("_memory", function() mem);
     return mem;
   },
 
