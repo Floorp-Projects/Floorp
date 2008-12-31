@@ -2062,15 +2062,24 @@ class RegExpNativeCompiler {
 
     JSBool isCaseInsensitive() const { return cs->flags & JSREG_FOLD; }
 
-    void targetCurrentPoint(LIns* ins) { ins->target(lir->ins0(LIR_label)); }
-
-    void targetCurrentPoint(LInsList& fails) 
+    JSBool targetCurrentPoint(LIns* ins) 
     {
+        if (fragment->lirbuf->outOMem()) 
+            return JS_FALSE;
+        ins->target(lir->ins0(LIR_label)); 
+        return JS_TRUE;
+    }
+
+    JSBool targetCurrentPoint(LInsList& fails) 
+    {
+        if (fragment->lirbuf->outOMem()) 
+            return JS_FALSE;
         LIns* fail = lir->ins0(LIR_label);
         for (size_t i = 0; i < fails.size(); ++i) {
             fails[i]->target(fail);
         }
         fails.clear();
+        return JS_TRUE;
     }
 
     /* 
@@ -2112,7 +2121,8 @@ class RegExpNativeCompiler {
         } else {
             LIns* to_ok = lir->insBranch(LIR_jt, lir->ins2(LIR_eq, comp_ch, lir->insImm(ch)), 0);
             fails.add(lir->insBranch(LIR_jf, lir->ins2(LIR_eq, comp_ch, lir->insImm(ch2)), 0));
-            targetCurrentPoint(to_ok);
+            if (!targetCurrentPoint(to_ok))
+                return NULL;
         }
 
         return lir->ins2(LIR_piadd, pos, lir->insImm(2));
@@ -2161,13 +2171,14 @@ class RegExpNativeCompiler {
     {
         LInsList kidFails(NULL);
         if (!compileNode((RENode *) node->kid, pos, kidFails)) 
-            return JS_FALSE;
+            return NULL;
         if (!compileNode(node->next, pos, kidFails)) 
-            return JS_FALSE;
+            return NULL;
 
-        targetCurrentPoint(kidFails);
+        if (!targetCurrentPoint(kidFails))
+            return NULL;
         if (!compileNode(node->u.altprereq.kid2, pos, fails)) 
-            return JS_FALSE;
+            return NULL;
         /* 
          * Disable compilation for any regexp where something follows an
          * alternation. To make this work, we need to redesign to either
@@ -2176,7 +2187,7 @@ class RegExpNativeCompiler {
          * code. 
          */
         if (node->next) 
-            return JS_FALSE;
+            return NULL;
         return pos;
     }
 
@@ -2224,7 +2235,8 @@ class RegExpNativeCompiler {
         LInsList fails(NULL);
         if (!compileNode(root, start, fails)) 
             return JS_FALSE;
-        targetCurrentPoint(fails);
+        if (!targetCurrentPoint(fails))
+            return JS_FALSE;
         lir->ins1(LIR_ret, lir->insImm(0));
         return JS_TRUE;
     }
@@ -2238,10 +2250,12 @@ class RegExpNativeCompiler {
         if (!compileNode(root, start, fails)) 
             return JS_FALSE;
 
-        targetCurrentPoint(to_next);
+        if (!targetCurrentPoint(to_next))
+            return JS_FALSE;
         lir->ins1(LIR_ret, lir->insImm(0));
         
-        targetCurrentPoint(fails);
+        if (!targetCurrentPoint(fails))
+            return JS_FALSE;
         lir->insStorei(lir->ins2(LIR_piadd, start, lir->insImm(2)), gdata, 
                        (int) offsetof(REGlobalData, skipped));
         
