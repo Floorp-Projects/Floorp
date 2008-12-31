@@ -94,15 +94,11 @@ let Notifications = {
   },
 
   // replaces all existing notifications with the same title as the new one
-  // FIXME not working?
   replaceTitle: function Notifications_replaceTitle(notification) {
-    for each (let old in this.notifications) {
-      if (old.title == notification.title)
-        this.remove(old);
-    }
+    this.notifications.filter(function(old) old.title == notification.title)
+      .forEach(function(old) this.remove(old), this);
     this.add(notification);
   }
-
 };
 
 
