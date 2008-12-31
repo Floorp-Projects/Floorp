@@ -74,7 +74,7 @@ void
 nsLegendFrame::Destroy()
 {
   nsFormControlFrame::RegUnRegAccessKey(static_cast<nsIFrame*>(this), PR_FALSE);
-  nsAreaFrame::Destroy();
+  nsBlockFrame::Destroy();
 }
 
 // Frames are not refcounted, no need to AddRef
@@ -88,7 +88,7 @@ nsLegendFrame::QueryInterface(REFNSIID aIID, void** aInstancePtr)
     return NS_OK;
   }
 
-  return nsAreaFrame::QueryInterface(aIID, aInstancePtr);
+  return nsBlockFrame::QueryInterface(aIID, aInstancePtr);
 }
 
 NS_IMETHODIMP 
@@ -102,10 +102,10 @@ nsLegendFrame::Reflow(nsPresContext*          aPresContext,
   if (mState & NS_FRAME_FIRST_REFLOW) {
     nsFormControlFrame::RegUnRegAccessKey(static_cast<nsIFrame*>(this), PR_TRUE);
   }
-  return nsAreaFrame::Reflow(aPresContext, aDesiredSize, aReflowState, aStatus);
+  return nsBlockFrame::Reflow(aPresContext, aDesiredSize, aReflowState, aStatus);
 }
 
-// REVIEW: We don't need to override BuildDisplayList, nsAreaFrame will honour
+// REVIEW: We don't need to override BuildDisplayList, nsBlockFrame will honour
 // our visibility setting
 PRInt32 nsLegendFrame::GetAlign()
 {

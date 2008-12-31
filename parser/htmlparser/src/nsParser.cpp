@@ -2092,6 +2092,12 @@ nsParser::ParseFragment(const nsAString& aSourceBuffer,
     return result;
   }
 
+  if (!mSink) {
+    // Parse must have failed in the XML case and so the sink was killed.
+    NS_ASSERTION(aXMLMode, "Unexpected!");
+    return NS_ERROR_HTMLPARSER_STOPPARSING;
+  }
+
   nsCOMPtr<nsIFragmentContentSink> fragSink = do_QueryInterface(mSink);
   NS_ASSERTION(fragSink, "ParseFragment requires a fragment content sink");
 

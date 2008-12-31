@@ -804,7 +804,6 @@ public:
 
   NS_IMETHOD BeginObservingDocument();
   NS_IMETHOD EndObservingDocument();
-  NS_IMETHOD GetDidInitialReflow(PRBool *aDidInitialReflow);
   NS_IMETHOD InitialReflow(nscoord aWidth, nscoord aHeight);
   NS_IMETHOD ResizeReflow(nscoord aWidth, nscoord aHeight);
   NS_IMETHOD StyleChangeReflow();
@@ -2314,17 +2313,6 @@ static void CheckForFocus(nsPIDOMWindow* aOurWindow,
   // We need to ensure that the focus controller is updated, since it may be
   // suppressed when this function is called.
   aFocusController->SetFocusedWindow(aOurWindow);
-}
-
-NS_IMETHODIMP
-PresShell::GetDidInitialReflow(PRBool *aDidInitialReflow)
-{
-  if (!aDidInitialReflow)
-    return NS_ERROR_FAILURE;
-
-  *aDidInitialReflow = mDidInitialReflow;
-
-  return NS_OK;
 }
 
 NS_IMETHODIMP

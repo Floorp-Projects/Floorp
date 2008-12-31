@@ -628,8 +628,9 @@
                                     .getService(Components.interfaces.nsIIOService);
                 aURI = ios.newURI(aURI, null, null);
               }
-              this.mFaviconService.setAndLoadFaviconForPage(browser.currentURI,
-                                                            aURI, false);
+              if (this.mFaviconService)
+                this.mFaviconService.setAndLoadFaviconForPage(browser.currentURI,
+                                                              aURI, false);
             }
 
             this.updateIcon(aTab);
@@ -728,7 +729,9 @@
               aURI = ios.newURI(aURI, null, null);
             }
 
-            return this.mFaviconService.isFailedFavicon(aURI);
+            if (this.mFaviconService)
+              return this.mFaviconService.isFailedFavicon(aURI);
+            return null;
           ]]>
         </body>
       </method>

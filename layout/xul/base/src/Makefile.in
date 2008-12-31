@@ -123,6 +123,7 @@ CPPSRCS		+= \
 		nsListBoxBodyFrame.cpp \
 		nsListItemFrame.cpp \
 		nsListBoxLayout.cpp \
+		nsXULLabelFrame.cpp \
 		nsXULPopupManager.cpp \
 		$(NULL)
 
