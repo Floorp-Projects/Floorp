@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="iso-8859-1" ?>
-<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.1//EN" "http://www.w3.org/TR/xhtml11/DTD/xhtml11.dtd">
+<!DOCTYPE html PUBLIC "-//W3C//DTD landscapeHTML 1.1//EN" "http://www.w3.org/TR/xhtml11/DTD/xhtml11.dtd">
 <html xmlns="http://www.w3.org/1999/xhtml" class="reftest-print">
 <head>
   <title>Media Query - Print mode test - orientation</title>
@@ -8,20 +8,20 @@
     @media print { .a { color: aqua; } }
     @media screen { .b { color: aqua; } }
 
-    /* using orientation portrait works.  we are a 5/3 which is landscape though */
-    @media (orientation: portrait) { .c { color: aqua; } }    /* y */
-    @media print and (orientation: portrait) { .d {color: aqua; } }  /* y */
-    @media all and (orientation: portrait) { .e { color: aqua; } } /* y */
+    /* Print reftests are 5/3, which is landscape. */
+    @media (orientation: landscape) { .c { color: aqua; } }    /* y */
+    @media print and (orientation: landscape) { .d {color: aqua; } }  /* y */
+    @media all and (orientation: landscape) { .e { color: aqua; } } /* y */
 
 
     /* negative cases */
-    @media all and (orientation: landscape) { .f { color: aqua; } } /* n */
+    @media all and (orientation: portrait) { .f { color: aqua; } } /* n */
 
-    @media (orientation: landscape) { .g { color: aqua; } } /* n */
-    @media print and (orientation: landscape) { .h { color: aqua; } }  /* n */
+    @media (orientation: portrait) { .g { color: aqua; } } /* n */
+    @media print and (orientation: portrait) { .h { color: aqua; } }  /* n */
 
-    @media screen and (orientation: portrait) { .i {color: aqua; } }   /* n */
-    @media screen and (orientation: landscape) { .j {color: aqua; } } /* n */
+    @media screen and (orientation: landscape) { .i {color: aqua; } }   /* n */
+    @media screen and (orientation: portrait) { .j {color: aqua; } } /* n */
 
   ]]></style>
 </head>

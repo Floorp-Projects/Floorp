@@ -187,7 +187,7 @@ nsSVGAnimatedTransformList::DidModifySVGObservable (nsISVGValue* observable,
 
 nsresult
 NS_NewSVGAnimatedTransformList(nsIDOMSVGAnimatedTransformList** result,
-                      nsIDOMSVGTransformList* baseVal)
+                               nsIDOMSVGTransformList* baseVal)
 {
   *result = nsnull;
   

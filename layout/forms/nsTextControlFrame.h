@@ -39,7 +39,7 @@
 #define nsTextControlFrame_h___
 
 #include "nsStackFrame.h"
-#include "nsAreaFrame.h"
+#include "nsBlockFrame.h"
 #include "nsIFormControlFrame.h"
 #include "nsIDOMMouseListener.h"
 #include "nsIAnonymousContentCreator.h"

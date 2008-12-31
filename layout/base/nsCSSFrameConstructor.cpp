@@ -271,6 +271,7 @@ static FrameCtorDebugFlags gFlags[] = {
 #include "nsPIListBoxObject.h"
 #include "nsListBoxBodyFrame.h"
 #include "nsListItemFrame.h"
+#include "nsXULLabelFrame.h"
 
 //------------------------------------------------------------------
 
@@ -399,7 +400,7 @@ SVG_GetFirstNonAAncestorFrame(nsIFrame *aParentFrame)
 #endif
 
 static inline nsIFrame*
-GetFieldSetAreaFrame(nsIFrame* aFieldsetFrame)
+GetFieldSetBlockFrame(nsIFrame* aFieldsetFrame)
 {
   // Depends on the fieldset child frame order - see ConstructFieldSetFrame() below.
   nsIFrame* firstChild = aFieldsetFrame->GetFirstChild(nsnull);
@@ -4823,16 +4824,16 @@ nsCSSFrameConstructor::ConstructButtonFrame(nsFrameConstructorState& aState,
                                                                nsCSSAnonBoxes::buttonContent,
                                                                aStyleContext);
                                                                
-  nsIFrame* areaFrame = NS_NewAreaFrame(mPresShell, styleContext,
-                                        NS_BLOCK_SPACE_MGR);
+  nsIFrame* blockFrame = NS_NewBlockFrame(mPresShell, styleContext,
+                                          NS_BLOCK_SPACE_MGR);
 
-  if (NS_UNLIKELY(!areaFrame)) {
+  if (NS_UNLIKELY(!blockFrame)) {
     buttonFrame->Destroy();
     return NS_ERROR_OUT_OF_MEMORY;
   }
-  rv = InitAndRestoreFrame(aState, aContent, buttonFrame, nsnull, areaFrame);
+  rv = InitAndRestoreFrame(aState, aContent, buttonFrame, nsnull, blockFrame);
   if (NS_FAILED(rv)) {
-    areaFrame->Destroy();
+    blockFrame->Destroy();
     buttonFrame->Destroy();
     return rv;
   }
@@ -4840,7 +4841,7 @@ nsCSSFrameConstructor::ConstructButtonFrame(nsFrameConstructorState& aState,
   rv = aState.AddChild(buttonFrame, aFrameItems, aContent, aStyleContext,
                        aParentFrame);
   if (NS_FAILED(rv)) {
-    areaFrame->Destroy();
+    blockFrame->Destroy();
     buttonFrame->Destroy();
     return rv;
   }
@@ -4853,7 +4854,7 @@ nsCSSFrameConstructor::ConstructButtonFrame(nsFrameConstructorState& aState,
     ShouldHaveSpecialBlockStyle(aContent, aStyleContext,
                                 &haveFirstLetterStyle, &haveFirstLineStyle);
     nsFrameConstructorSaveState floatSaveState;
-    aState.PushFloatContainingBlock(areaFrame, floatSaveState,
+    aState.PushFloatContainingBlock(blockFrame, floatSaveState,
                                     haveFirstLetterStyle,
                                     haveFirstLineStyle);
 
@@ -4864,18 +4865,18 @@ nsCSSFrameConstructor::ConstructButtonFrame(nsFrameConstructorState& aState,
     if (aStyleDisplay->IsPositioned()) {
       // The area frame becomes a container for child frames that are
       // absolutely positioned
-      aState.PushAbsoluteContainingBlock(areaFrame, absoluteSaveState);
+      aState.PushAbsoluteContainingBlock(blockFrame, absoluteSaveState);
     }
 
-    rv = ProcessChildren(aState, aContent, areaFrame, PR_TRUE, childItems,
+    rv = ProcessChildren(aState, aContent, blockFrame, PR_TRUE, childItems,
                          buttonFrame->GetStyleDisplay()->IsBlockOutside());
     if (NS_FAILED(rv)) return rv;
   
     // Set the areas frame's initial child lists
-    areaFrame->SetInitialChildList(nsnull, childItems.childList);
+    blockFrame->SetInitialChildList(nsnull, childItems.childList);
   }
 
-  buttonFrame->SetInitialChildList(nsnull, areaFrame);
+  buttonFrame->SetInitialChildList(nsnull, blockFrame);
 
   nsFrameItems  anonymousChildItems;
   // if there are any anonymous children create frames for them
@@ -4883,7 +4884,8 @@ nsCSSFrameConstructor::ConstructButtonFrame(nsFrameConstructorState& aState,
                           PR_FALSE, anonymousChildItems);
   if (anonymousChildItems.childList) {
     // the anonymous content is already parented to the area frame
-    aState.mFrameManager->AppendFrames(areaFrame, nsnull, anonymousChildItems.childList);
+    aState.mFrameManager->AppendFrames(blockFrame, nsnull,
+                                       anonymousChildItems.childList);
   }
 
   // our new button frame returned is the top frame. 
@@ -5164,9 +5166,10 @@ nsCSSFrameConstructor::ConstructFieldSetFrame(nsFrameConstructorState& aState,
                                                                nsCSSAnonBoxes::fieldsetContent,
                                                                aStyleContext);
   
-  nsIFrame* areaFrame = NS_NewAreaFrame(mPresShell, styleContext,
-                                     NS_BLOCK_SPACE_MGR | NS_BLOCK_MARGIN_ROOT);
-  InitAndRestoreFrame(aState, aContent, newFrame, nsnull, areaFrame);
+  nsIFrame* blockFrame = NS_NewBlockFrame(mPresShell, styleContext,
+                                          NS_BLOCK_SPACE_MGR |
+                                          NS_BLOCK_MARGIN_ROOT);
+  InitAndRestoreFrame(aState, aContent, newFrame, nsnull, blockFrame);
 
   nsresult rv = aState.AddChild(newFrame, aFrameItems, aContent, aStyleContext,
                                 aParentFrame);
@@ -5180,7 +5183,7 @@ nsCSSFrameConstructor::ConstructFieldSetFrame(nsFrameConstructorState& aState,
   ShouldHaveSpecialBlockStyle(aContent, aStyleContext,
                               &haveFirstLetterStyle, &haveFirstLineStyle);
   nsFrameConstructorSaveState floatSaveState;
-  aState.PushFloatContainingBlock(areaFrame, floatSaveState,
+  aState.PushFloatContainingBlock(blockFrame, floatSaveState,
                                   haveFirstLetterStyle,
                                   haveFirstLineStyle);
 
@@ -5191,10 +5194,10 @@ nsCSSFrameConstructor::ConstructFieldSetFrame(nsFrameConstructorState& aState,
   if (aStyleDisplay->IsPositioned()) {
     // The area frame becomes a container for child frames that are
     // absolutely positioned
-    aState.PushAbsoluteContainingBlock(areaFrame, absoluteSaveState);
+    aState.PushAbsoluteContainingBlock(blockFrame, absoluteSaveState);
   }
 
-  ProcessChildren(aState, aContent, areaFrame, PR_TRUE,
+  ProcessChildren(aState, aContent, blockFrame, PR_TRUE,
                   childItems, PR_TRUE);
 
   static NS_DEFINE_IID(kLegendFrameCID, NS_LEGEND_FRAME_CID);
@@ -5214,7 +5217,7 @@ nsCSSFrameConstructor::ConstructFieldSetFrame(nsFrameConstructorState& aState,
       } else {
         childItems.childList = legendFrame->GetNextSibling();
       }
-      legendFrame->SetNextSibling(areaFrame);
+      legendFrame->SetNextSibling(blockFrame);
       legendFrame->SetParent(newFrame);
       break;
     }
@@ -5223,10 +5226,10 @@ nsCSSFrameConstructor::ConstructFieldSetFrame(nsFrameConstructorState& aState,
   }
 
   // Set the scrolled frame's initial child lists
-  areaFrame->SetInitialChildList(nsnull, childItems.childList);
+  blockFrame->SetInitialChildList(nsnull, childItems.childList);
 
   // Set the scroll frame's initial child list
-  newFrame->SetInitialChildList(nsnull, legendFrame ? legendFrame : areaFrame);
+  newFrame->SetInitialChildList(nsnull, legendFrame ? legendFrame : blockFrame);
 
   // our new frame returned is the top frame which is the list frame. 
   aNewFrame = newFrame; 
@@ -5885,8 +5888,15 @@ nsCSSFrameConstructor::ConstructXULFrame(nsFrameConstructorState& aState,
             (! aContent->HasAttr(kNameSpaceID_None, nsGkAtoms::value))) {
           // XXX we should probably be calling ConstructBlock here to handle
           // things like columns etc
-          newFrame = NS_NewAreaFrame(mPresShell, aStyleContext,
-                                     NS_BLOCK_SPACE_MGR | NS_BLOCK_MARGIN_ROOT);
+          if (aTag == nsGkAtoms::label) {
+            newFrame = NS_NewXULLabelFrame(mPresShell, aStyleContext,
+                                           NS_BLOCK_SPACE_MGR |
+                                           NS_BLOCK_MARGIN_ROOT);
+          } else {
+            newFrame = NS_NewBlockFrame(mPresShell, aStyleContext,
+                                        NS_BLOCK_SPACE_MGR |
+                                        NS_BLOCK_MARGIN_ROOT);
+          }
         }
         else {
           newFrame = NS_NewTextBoxFrame(mPresShell, aStyleContext);
@@ -6170,7 +6180,7 @@ nsCSSFrameConstructor::ConstructXULFrame(nsFrameConstructorState& aState,
       // that's why we call different things here.
       nsIAtom* frameType = geometricParent->GetType();
       if ((frameType == nsGkAtoms::blockFrame) ||
-          (frameType == nsGkAtoms::areaFrame)) {
+          (frameType == nsGkAtoms::XULLabelFrame)) {
       */
         // See if we need to create a view, e.g. the frame is absolutely positioned
         nsHTMLContainerFrame::CreateViewForFrame(newFrame, aParentFrame, PR_FALSE);
@@ -6457,8 +6467,8 @@ nsCSSFrameConstructor::ConstructFrameByDisplayType(nsFrameConstructorState& aSta
     // Initialize it
     // pass a temporary stylecontext, the correct one will be set later
     nsIFrame* scrolledFrame =
-        NS_NewAreaFrame(mPresShell, aStyleContext,
-                        NS_BLOCK_SPACE_MGR | NS_BLOCK_MARGIN_ROOT);
+        NS_NewBlockFrame(mPresShell, aStyleContext,
+                         NS_BLOCK_SPACE_MGR | NS_BLOCK_MARGIN_ROOT);
 
     nsFrameItems blockItem;
     rv = ConstructBlock(aState,
@@ -7295,6 +7305,8 @@ nsCSSFrameConstructor::ConstructSVGFrame(nsFrameConstructorState& aState,
 //    code doesn't expect positioned frames to have nsPageBreakFrame siblings)
 //
 // Returns true iff we should construct a page break frame after this element.
+// aStyleContext is the style context of the frame for which we're
+// constructing the page break
 PRBool
 nsCSSFrameConstructor::PageBreakBefore(nsFrameConstructorState& aState,
                                        nsIContent*              aContent,
@@ -7318,6 +7330,8 @@ nsCSSFrameConstructor::PageBreakBefore(nsFrameConstructorState& aState,
   return PR_FALSE;
 }
 
+// aStyleContext is the style context of the frame for which we're
+// constructing the page break
 nsresult
 nsCSSFrameConstructor::ConstructPageBreakFrame(nsFrameConstructorState& aState,
                                                nsIContent*              aContent,
@@ -7326,9 +7340,12 @@ nsCSSFrameConstructor::ConstructPageBreakFrame(nsFrameConstructorState& aState,
                                                nsFrameItems&            aFrameItems)
 {
   nsRefPtr<nsStyleContext> pseudoStyle;
+  // Use the same parent style context that |aStyleContext| has, since
+  // that's easier to re-resolve and it doesn't matter in practice.
+  // (Getting different parents can result in framechange hints, e.g.,
+  // for user-modify.)
   pseudoStyle = mPresShell->StyleSet()->ResolvePseudoStyleFor(nsnull,
-                                                              nsCSSAnonBoxes::pageBreak,
-                                                              aStyleContext);
+                   nsCSSAnonBoxes::pageBreak, aStyleContext->GetParent());
   nsIFrame* pageBreakFrame = NS_NewPageBreakFrame(mPresShell, pseudoStyle);
   if (pageBreakFrame) {
     InitAndRestoreFrame(aState, aContent, aParentFrame, nsnull, pageBreakFrame);
@@ -7368,7 +7385,8 @@ nsCSSFrameConstructor::ConstructFrame(nsFrameConstructorState& aState,
   PRBool pageBreakAfter = PR_FALSE;
 
   if (aState.mPresContext->IsPaginated()) {
-    // See if there is a page break before, if so construct one. Also see if there is one after
+    // Construct a page break frame for page-break-before, and remember if
+    // we need one for page-break-after.
     pageBreakAfter = PageBreakBefore(aState, aContent, aParentFrame,
                                      styleContext, aFrameItems);
   }
@@ -7730,14 +7748,16 @@ nsCSSFrameConstructor::GetAbsoluteContainingBlock(nsIFrame* aFrame)
       for (nsIFrame* wrappedFrame = aFrame; wrappedFrame != frame->GetParent();
            wrappedFrame = wrappedFrame->GetParent()) {
         nsIAtom* frameType = wrappedFrame->GetType();
-        if (nsGkAtoms::areaFrame == frameType ||
-            nsGkAtoms::blockFrame == frameType ||
+        if (nsGkAtoms::blockFrame == frameType ||
+#ifdef MOZ_XUL
+            nsGkAtoms::XULLabelFrame == frameType ||
+#endif
             nsGkAtoms::positionedInlineFrame == frameType) {
           containingBlock = wrappedFrame;
         } else if (nsGkAtoms::fieldSetFrame == frameType) {
           // If the positioned frame is a fieldset, use the area frame inside it.
           // We don't use GetContentInsertionFrame for fieldsets yet.
-          containingBlock = GetFieldSetAreaFrame(wrappedFrame);
+          containingBlock = GetFieldSetBlockFrame(wrappedFrame);
         }
       }
 
@@ -8150,7 +8170,7 @@ nsCSSFrameConstructor::IsValidSibling(nsIFrame*              aSibling,
   }
   else if (nsGkAtoms::fieldSetFrame == parentType ||
            (nsGkAtoms::fieldSetFrame == grandparentType &&
-            nsGkAtoms::areaFrame == parentType)) {
+            nsGkAtoms::blockFrame == parentType)) {
     // Legends can be sibling of legends but not of other content in the fieldset
     nsIAtom* sibType = aSibling->GetType();
     nsCOMPtr<nsIDOMHTMLLegendElement> legendContent(do_QueryInterface(aContent));
@@ -8328,7 +8348,7 @@ GetAdjustedParentFrame(nsIFrame*       aParentFrame,
     // parent unless the new content is a legend. 
     nsCOMPtr<nsIDOMHTMLLegendElement> legendContent(do_QueryInterface(childContent));
     if (!legendContent) {
-      newParent = GetFieldSetAreaFrame(aParentFrame);
+      newParent = GetFieldSetBlockFrame(aParentFrame);
     }
   }
   return (newParent) ? newParent : aParentFrame;
@@ -10396,15 +10416,16 @@ nsCSSFrameConstructor::CreateContinuingFrame(nsPresContext* aPresContext,
       nsHTMLContainerFrame::CreateViewForFrame(newFrame, nsnull, PR_FALSE);
     }
   
-  } else if (nsGkAtoms::areaFrame == frameType) {
-    newFrame = NS_NewAreaFrame(shell, styleContext, 0);
+#ifdef MOZ_XUL
+  } else if (nsGkAtoms::XULLabelFrame == frameType) {
+    newFrame = NS_NewXULLabelFrame(shell, styleContext, 0);
 
     if (newFrame) {
       newFrame->Init(content, aParentFrame, aFrame);
       // XXXbz should we be passing in a non-null aContentParentFrame?
       nsHTMLContainerFrame::CreateViewForFrame(newFrame, nsnull, PR_FALSE);
     }
-  
+#endif  
   } else if (nsGkAtoms::columnSetFrame == frameType) {
     newFrame = NS_NewColumnSetFrame(shell, styleContext, 0);
 
@@ -10490,8 +10511,8 @@ nsCSSFrameConstructor::CreateContinuingFrame(nsPresContext* aPresContext,
 
       // Create a continuing area frame
       nsIFrame* continuingAreaFrame;
-      nsIFrame* areaFrame = aFrame->GetFirstChild(nsnull);
-      rv = CreateContinuingFrame(aPresContext, areaFrame, newFrame,
+      nsIFrame* blockFrame = aFrame->GetFirstChild(nsnull);
+      rv = CreateContinuingFrame(aPresContext, blockFrame, newFrame,
                                  &continuingAreaFrame);
       if (NS_FAILED(rv)) {
         newFrame->Destroy();
@@ -10562,8 +10583,8 @@ nsCSSFrameConstructor::CreateContinuingFrame(nsPresContext* aPresContext,
       // Create a continuing area frame
       // XXXbz we really shouldn't have to do this by hand!
       nsIFrame* continuingAreaFrame;
-      nsIFrame* areaFrame = GetFieldSetAreaFrame(aFrame);
-      rv = CreateContinuingFrame(aPresContext, areaFrame, newFrame,
+      nsIFrame* blockFrame = GetFieldSetBlockFrame(aFrame);
+      rv = CreateContinuingFrame(aPresContext, blockFrame, newFrame,
                                  &continuingAreaFrame);
       if (NS_FAILED(rv)) {
         newFrame->Destroy();
@@ -13389,6 +13410,13 @@ nsCSSFrameConstructor::RebuildAllStyleData(nsChangeHint aExtraHint)
 
   if (!mPresShell || !mPresShell->GetRootFrame())
     return;
+
+  if (mPresShell->GetPresContext()->IsPaginated()) {
+    // We don't support doing this because of bug 470929 and probably
+    // other issues.
+    NS_NOTREACHED("not allowed to rebuild all style data when paginated");
+    return;
+  }
 
   // Processing the style changes could cause a flush that propagates to
   // the parent frame and thus destroys the pres shell.

@@ -56,6 +56,16 @@
 #include "nsOSHelperAppService.h"
 #include "nsUnicharUtils.h"
 
+#ifdef WINCE 
+#ifdef UNICODE
+#define SHELLEXECUTEINFOW SHELLEXECUTEINFO
+#define ShellExecuteExW ShellExecuteEx
+#else
+#error "we don't support narrow char wince"
+#endif
+#endif
+
+
 NS_IMPL_ISUPPORTS_INHERITED1(nsMIMEInfoWin, nsMIMEInfoBase, nsIPropertyBag)
 
 nsMIMEInfoWin::~nsMIMEInfoWin()
@@ -123,23 +133,23 @@ nsMIMEInfoWin::LaunchWithFile(nsIFile* aFile)
         if (!GetDllLaunchInfo(executable, locFile, args, PR_FALSE))
           return NS_ERROR_INVALID_ARG;
 
-        int result = (int)
-          ::ShellExecuteW(NULL, NULL, L"rundll32.exe", args.get(),
-                          NULL, SW_SHOWNORMAL);
-        // Returns a value greater than 32 if successful. See msdn.
-        if (result > 32)
+        SHELLEXECUTEINFOW seinfo;
+        memset(&seinfo, 0, sizeof(seinfo));
+        seinfo.cbSize = sizeof(SHELLEXECUTEINFOW);
+        seinfo.fMask  = NULL;
+        seinfo.hwnd   = NULL;
+        seinfo.lpVerb = NULL;
+        seinfo.lpFile = L"rundll32.exe";
+        seinfo.lpParameters =  args.get();
+        seinfo.lpDirectory  = NULL;
+        seinfo.nShow  = SW_SHOWNORMAL;
+        if (ShellExecuteExW(&seinfo))
           return NS_OK;
 
-        switch (result) {
+        switch ((int)seinfo.hInstApp) {
           case 0:
           case SE_ERR_OOM:
             return NS_ERROR_OUT_OF_MEMORY;
-          case ERROR_FILE_NOT_FOUND:
-            return NS_ERROR_FILE_NOT_FOUND;
-          case ERROR_PATH_NOT_FOUND:
-            return NS_ERROR_FILE_UNRECOGNIZED_PATH;
-          case ERROR_BAD_FORMAT:
-            return NS_ERROR_FILE_CORRUPTED;
           case SE_ERR_ACCESSDENIED:
             return NS_ERROR_FILE_ACCESS_DENIED;
           case SE_ERR_ASSOCINCOMPLETE:
@@ -153,6 +163,16 @@ nsMIMEInfoWin::LaunchWithFile(nsIFile* aFile)
             return NS_ERROR_FAILURE;
           case SE_ERR_SHARE:
             return NS_ERROR_FILE_IS_LOCKED;
+          default:
+            switch(GetLastError()) {
+              case ERROR_FILE_NOT_FOUND:
+                return NS_ERROR_FILE_NOT_FOUND;
+              case ERROR_PATH_NOT_FOUND:
+                return NS_ERROR_FILE_UNRECOGNIZED_PATH;
+              case ERROR_BAD_FORMAT:
+                return NS_ERROR_FILE_CORRUPTED;
+            }
+
         }
         return NS_ERROR_FILE_EXECUTION_FAILED;
       }
@@ -228,12 +248,14 @@ nsMIMEInfoWin::GetProperty(const nsAString& aName, nsIVariant* *_retval)
   return NS_OK;
 }
 
+#ifndef WINCE
 typedef HRESULT (STDMETHODCALLTYPE *MySHParseDisplayName)
                  (PCWSTR pszName,
                   IBindCtx *pbc,
                   LPITEMIDLIST *ppidl,
                   SFGAOF sfgaoIn,
                   SFGAOF *psfgaoOut);
+#endif
 
 // this implementation was pretty much copied verbatime from 
 // Tony Robinson's code in nsExternalProtocolWin.cpp
@@ -262,48 +284,59 @@ nsMIMEInfoWin::LoadUriInternal(nsIURI * aURL)
     if (urlSpec.Length() > maxSafeURL)
       return NS_ERROR_FAILURE;
 
-    LPITEMIDLIST pidl;
+    HMODULE hDll = NULL;
+    
+    static const PRUnichar cmdVerb[] = L"open";
+    SHELLEXECUTEINFOW sinfo;
+    memset(&sinfo, 0, sizeof(sinfo));
+    sinfo.cbSize   = sizeof(sinfo);
+#ifdef WINCE
+    sinfo.fMask    = SEE_MASK_FLAG_NO_UI;
+#else
+    sinfo.fMask    = SEE_MASK_FLAG_DDEWAIT |
+      SEE_MASK_FLAG_NO_UI;
+#endif
+    sinfo.hwnd     = NULL;
+    sinfo.lpVerb   = (LPWSTR)&cmdVerb;
+    sinfo.nShow    = SW_SHOWNORMAL;
+    
+#ifndef WINCE
+    LPITEMIDLIST pidl = NULL;
     SFGAOF sfgao;
     
     // Bug 394974
-    HMODULE hDll = ::LoadLibraryW(L"shell32.dll");
+    hDll = ::LoadLibraryW(L"shell32.dll");
     MySHParseDisplayName pMySHParseDisplayName = NULL;
     // Version 6.0 and higher
     if (pMySHParseDisplayName = 
-          (MySHParseDisplayName)::GetProcAddress(hDll,
-                                                 "SHParseDisplayName")) {
+        (MySHParseDisplayName)::GetProcAddress(hDll, "SHParseDisplayName")) {
       if (SUCCEEDED(pMySHParseDisplayName(NS_ConvertUTF8toUTF16(urlSpec).get(),
                                           NULL, &pidl, 0, &sfgao))) {
-        static const PRUnichar cmdVerb[] = L"open";
-        SHELLEXECUTEINFOW sinfo;
-        memset(&sinfo, 0, sizeof(sinfo));
-        sinfo.cbSize   = sizeof(sinfo);
-        sinfo.fMask    = SEE_MASK_FLAG_DDEWAIT |
-                         SEE_MASK_FLAG_NO_UI |
-                         SEE_MASK_INVOKEIDLIST;
-        sinfo.hwnd     = NULL;
-        sinfo.lpVerb   = (LPWSTR)&cmdVerb;
-        sinfo.nShow    = SW_SHOWNORMAL;
         sinfo.lpIDList = pidl;
-        
-        BOOL result = ShellExecuteExW(&sinfo);
-
-        CoTaskMemFree(pidl);
-
-        if (!result || ((int)sinfo.hInstApp) < 32)
-          rv = NS_ERROR_FAILURE;
+        sinfo.fMask |= SEE_MASK_INVOKEIDLIST;
+      } else {
+        // SHParseDisplayName exists, but failed. Bailing out as work around for
+        // Microsoft Security Bulletin MS07-061
+        rv = NS_ERROR_FAILURE;
       }
-    } else {
-      // Version of shell32.dll < 6.0
-      int r = (int) ::ShellExecuteW(NULL, L"open", NS_ConvertUTF8toUTF16(urlSpec).get(),
-                                    NULL, NULL, SW_SHOWNORMAL);
-      if (r < 32)
+    } else 
+#endif
+    {
+      sinfo.lpFile =  NS_ConvertUTF8toUTF16(urlSpec).get();
+    }
+    if (NS_SUCCEEDED(rv)) {
+      BOOL result = ShellExecuteExW(&sinfo);
+      if (!result || ((int)sinfo.hInstApp) < 32)
         rv = NS_ERROR_FAILURE;
     }
+#ifndef WINCE
+    if (pidl)
+      CoTaskMemFree(pidl);
+#endif
     if (hDll) 
       ::FreeLibrary(hDll);
   }
-
+  
   return rv;
 }
 

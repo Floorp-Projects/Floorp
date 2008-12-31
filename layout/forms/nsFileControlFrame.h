@@ -38,7 +38,7 @@
 #ifndef nsFileControlFrame_h___
 #define nsFileControlFrame_h___
 
-#include "nsAreaFrame.h"
+#include "nsBlockFrame.h"
 #include "nsIFormControlFrame.h"
 #include "nsIDOMMouseListener.h"
 #include "nsIAnonymousContentCreator.h"
@@ -47,7 +47,7 @@
 #include "nsTextControlFrame.h"
 typedef   nsTextControlFrame nsNewFrame;
 
-class nsFileControlFrame : public nsAreaFrame,
+class nsFileControlFrame : public nsBlockFrame,
                            public nsIFormControlFrame,
                            public nsIAnonymousContentCreator
 {
@@ -128,7 +128,7 @@ protected:
   
   virtual PRBool IsFrameOfType(PRUint32 aFlags) const
   {
-    return nsAreaFrame::IsFrameOfType(aFlags &
+    return nsBlockFrame::IsFrameOfType(aFlags &
       ~(nsIFrame::eReplaced | nsIFrame::eReplacedContainsBlock));
   }
 

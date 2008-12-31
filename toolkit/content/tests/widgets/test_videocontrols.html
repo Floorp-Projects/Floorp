@@ -65,6 +65,32 @@ function runTest(event) {
       is(video.paused, true,  "checking video play state");
       is(video.muted,  false, "checking video mute state");
 
+      // Bug 470596: Make sure that having CSS border or padding doesn't
+      // break the controls (though it should move them)
+      video.style.border = "medium solid purple";
+      video.style.borderWidth = "30px 40px 50px 60px";
+      video.style.padding = "10px 20px 30px 40px";
+      // totals: top: 40px, right: 60px, bottom: 80px, left: 100px
+
+      // Click the play button
+      synthesizeMouse(video, 100 + 12, 40 + 228, { });
+      break;
+
+    case 6:
+      is(event.type, "play",  "checking event type");
+      is(video.paused, false, "checking video play state");
+      is(video.muted, false,  "checking video mute state");
+
+      // Click the mute button
+      // XXX volume event is sent synchronously, so do this in a timeout
+      setTimeout("synthesizeMouse(video, 100 + 308, 40 + 228, { });", 0);
+      break;
+
+    case 7:
+      is(event.type, "volumechange", "checking event type");
+      is(video.paused, false,  "checking video play state");
+      is(video.muted,  true,  "checking video mute state");
+
       SimpleTest.finish();
       break;
 

@@ -733,6 +733,13 @@ nsPresContext::GetUserPreferences()
 void
 nsPresContext::PreferenceChanged(const char* aPrefName)
 {
+  if (IsPaginated()) {
+    // Until we fix things so that we can do multiple reflows and style
+    // rebuilds (see, e.g., bug 470929) in paginated mode, we should
+    // ignore preference changes when paginated.
+    return;
+  }
+
   nsDependentCString prefName(aPrefName);
   if (prefName.EqualsLiteral("layout.css.dpi")) {
     PRInt32 oldAppUnitsPerDevPixel = AppUnitsPerDevPixel();
@@ -1174,8 +1181,10 @@ nsPresContext::SetFullZoom(float aZoom)
   mFullZoom = aZoom;
   GetViewManager()->SetWindowDimensions(NSToCoordRound(oldWidthDevPixels * AppUnitsPerDevPixel()),
                                         NSToCoordRound(oldHeightDevPixels * AppUnitsPerDevPixel()));
-  MediaFeatureValuesChanged(PR_TRUE);
-  RebuildAllStyleData(NS_STYLE_HINT_REFLOW);
+  if (HasCachedStyleData()) {
+    MediaFeatureValuesChanged(PR_TRUE);
+    RebuildAllStyleData(NS_STYLE_HINT_REFLOW);
+  }
 
   mSupressResizeReflow = PR_FALSE;
 
@@ -1963,4 +1972,10 @@ nsPresContext::NotifyInvalidation(const nsRect& aRect, PRBool aIsCrossDoc)
   nsRegion* r = aIsCrossDoc ? &mCrossDocDirtyRegion : &mSameDocDirtyRegion;
   r->Or(*r, aRect);
   r->SimplifyOutward(10);
+}
+
+PRBool
+nsPresContext::HasCachedStyleData()
+{
+  return mShell && mShell->StyleSet()->HasCachedStyleData();
 }

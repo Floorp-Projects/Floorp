@@ -57,6 +57,7 @@ _TEST_FILES = \
 		scientific-helper.svg \
 		test_text.html \
 		text-helper.svg \
+		test_valueLeaks.xhtml \
 		$(NULL)
 
 libs:: $(_TEST_FILES)

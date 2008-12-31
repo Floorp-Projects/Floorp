@@ -38,10 +38,12 @@
 #include "nsTextFormatter.h"
 #include "prdtoa.h"
 
-NS_IMPL_ADDREF(nsSVGNumber2::DOMAnimatedNumber)
-NS_IMPL_RELEASE(nsSVGNumber2::DOMAnimatedNumber)
+NS_SVG_VAL_IMPL_CYCLE_COLLECTION(nsSVGNumber2::DOMAnimatedNumber, mSVGElement)
 
-NS_INTERFACE_MAP_BEGIN(nsSVGNumber2::DOMAnimatedNumber)
+NS_IMPL_CYCLE_COLLECTING_ADDREF(nsSVGNumber2::DOMAnimatedNumber)
+NS_IMPL_CYCLE_COLLECTING_RELEASE(nsSVGNumber2::DOMAnimatedNumber)
+
+NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION(nsSVGNumber2::DOMAnimatedNumber)
   NS_INTERFACE_MAP_ENTRY(nsIDOMSVGAnimatedNumber)
   NS_INTERFACE_MAP_ENTRY(nsISupports)
   NS_INTERFACE_MAP_ENTRY_CONTENT_CLASSINFO(SVGAnimatedNumber)

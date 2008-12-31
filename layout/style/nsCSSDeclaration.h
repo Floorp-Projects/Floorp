@@ -182,9 +182,17 @@ private:
     //
     friend class CSSStyleRuleImpl;
     void AddRef(void) {
+      if (mRefCnt == PR_UINT32_MAX) {
+        NS_WARNING("refcount overflow, leaking object");
+        return;
+      }
       ++mRefCnt;
     }
     void Release(void) {
+      if (mRefCnt == PR_UINT32_MAX) {
+        NS_WARNING("refcount overflow, leaking object");
+        return;
+      }
       NS_ASSERTION(0 < mRefCnt, "bad Release");
       if (0 == --mRefCnt) {
         delete this;

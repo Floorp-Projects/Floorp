@@ -55,7 +55,7 @@
 //Mark used to indicate when onchange has been fired for current combobox item
 #define NS_SKIP_NOTIFY_INDEX -2
 
-#include "nsAreaFrame.h"
+#include "nsBlockFrame.h"
 #include "nsIFormControlFrame.h"
 #include "nsIComboboxControlFrame.h"
 #include "nsIAnonymousContentCreator.h"
@@ -80,7 +80,7 @@ class nsComboboxDisplayFrame;
  */
 #define NS_COMBO_LIST_COUNT   (NS_BLOCK_LIST_COUNT + 1)
 
-class nsComboboxControlFrame : public nsAreaFrame,
+class nsComboboxControlFrame : public nsBlockFrame,
                                public nsIFormControlFrame,
                                public nsIComboboxControlFrame,
                                public nsIAnonymousContentCreator,
@@ -133,7 +133,7 @@ public:
 
   virtual PRBool IsFrameOfType(PRUint32 aFlags) const
   {
-    return nsAreaFrame::IsFrameOfType(aFlags &
+    return nsBlockFrame::IsFrameOfType(aFlags &
       ~(nsIFrame::eReplaced | nsIFrame::eReplacedContainsBlock));
   }
 
