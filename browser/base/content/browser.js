@@ -3095,6 +3095,21 @@ const BrowserSearch = {
 }
 
 function FillHistoryMenu(aParent) {
+  // Lazily add the hover listeners on first showing and never remove them
+  if (!aParent.hasStatusListener) {
+    // Show history item's uri in the status bar when hovering, and clear on exit
+    aParent.addEventListener("DOMMenuItemActive", function(aEvent) {
+      // Only the current page should have the checked attribute, so skip it
+      if (!aEvent.target.hasAttribute("checked"))
+        XULBrowserWindow.setOverLink(aEvent.target.getAttribute("uri"));
+    }, false);
+    aParent.addEventListener("DOMMenuItemInactive", function() {
+      XULBrowserWindow.setOverLink("");
+    }, false);
+
+    aParent.hasStatusListener = true;
+  }
+
   // Remove old entries if any
   var children = aParent.childNodes;
   for (var i = children.length - 1; i >= 0; --i) {
@@ -3126,8 +3141,10 @@ function FillHistoryMenu(aParent) {
   for (var j = end - 1; j >= start; j--) {
     let item = document.createElement("menuitem");
     let entry = sessionHistory.getEntryAtIndex(j, false);
+    let uri = entry.URI.spec;
 
-    item.setAttribute("label", entry.title || entry.URI.spec);
+    item.setAttribute("uri", uri);
+    item.setAttribute("label", entry.title || uri);
     item.setAttribute("index", j);
 
     if (j != index) {
