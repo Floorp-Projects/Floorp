@@ -21,6 +21,9 @@ th {
   text-align: left;
   white-space: nowrap;
 }
+th[chromedir="rtl"] {
+  text-align: right;
+}
 /* name */
 th:first-child {
   -moz-padding-end: 2em;
@@ -36,14 +39,11 @@ td:last-child {
   -moz-padding-start: .5em;
   white-space: nowrap;
 }
-.clear-reports {
+
+#clear-reports {
   float: right;
 }
-
-th[chromedir="rtl"] {
-  text-align: right;
-}
-.clear-reports[chromedir="rtl"] {
+#clear-reports[chromedir="rtl"] {
   float: left;
 }
 </style>
@@ -89,6 +89,7 @@ function populateReportList() {
   }
   catch (e) { }
   if (!reportURL) {
+    document.getElementById("clear-reports").style.display = "none";
     document.getElementById("reportList").style.display = "none";
     document.getElementById("noConfig").style.display = "block";
     return;
@@ -106,8 +107,8 @@ function populateReportList() {
     while (entries.hasMoreElements()) {
       var file = entries.getNext().QueryInterface(Ci.nsIFile);
       var leaf = file.leafName;
-      if (leaf.substring(0, 3) == "bp-" &&
-          leaf.substring(leaf.length - 4) == ".txt") {
+      if (leaf.substr(0, 3) == "bp-" &&
+          leaf.substr(-4) == ".txt") {
         var entry = {
           id: leaf.substring(3, leaf.length - 4),
           date: file.lastModifiedTime
@@ -119,6 +120,7 @@ function populateReportList() {
   }
 
   if (reports.length == 0) {
+    document.getElementById("clear-reports").style.display = "none";
     document.getElementById("reportList").style.display = "none";
     document.getElementById("noReports").style.display = "block";
     return;
@@ -172,11 +174,12 @@ function clearReports() {
   while (entries.hasMoreElements()) {
     var file = entries.getNext().QueryInterface(Ci.nsIFile);
     var leaf = file.leafName;
-    if (leaf.substring(0, 3) == "bp-" &&
-        leaf.substring(leaf.length - 4) == ".txt") {
+    if (leaf.substr(0, 3) == "bp-" &&
+        leaf.substr(-4) == ".txt") {
       file.remove(false);
     }
   }
+  document.getElementById("clear-reports").style.display = "none";
   document.getElementById("reportList").style.display = "none";
   document.getElementById("noReports").style.display = "block";
 }
@@ -184,8 +187,8 @@ function clearReports() {
 </script>
 <title>&crashes.title;</title>
 </head><body onload="populateReportList()" dir="&locale.dir;">
-<button chromedir="&locale.dir;" class="clear-reports"
-        onclick="clearReports()">&clearReports.label;</button>
+<button chromedir="&locale.dir;" id="clear-reports"
+        onclick="clearReports()">&clearAllReports.label;</button>
 <h1>&crashes.title;</h1>
 <div id="reportList">
   <table>

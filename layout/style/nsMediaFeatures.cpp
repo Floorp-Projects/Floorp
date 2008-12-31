@@ -59,7 +59,7 @@ static const PRInt32 kScanKeywords[] = {
   eCSSKeyword_UNKNOWN,                  -1
 };
 
-// A helper for three features below
+// A helper for four features below
 static nsSize
 GetSize(nsPresContext* aPresContext)
 {
@@ -143,7 +143,7 @@ GetDeviceHeight(nsPresContext* aPresContext, nsCSSValue& aResult)
 static nsresult
 GetOrientation(nsPresContext* aPresContext, nsCSSValue& aResult)
 {
-    nsSize size = aPresContext->GetVisibleArea().Size();
+    nsSize size = GetSize(aPresContext);
     PRInt32 orientation;
     if (size.width > size.height) {
         orientation = NS_STYLE_ORIENTATION_LANDSCAPE;

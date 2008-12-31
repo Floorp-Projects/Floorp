@@ -36,21 +36,12 @@
 /** Test for computation of values in property database **/
 
 var gNotAccepted = {
-  "-moz-column-width": [ "50%" ],
   "list-style": [ "none disc outside" ],
 };
 
 var gBadComputed = {
-  // NS_STYLE_COLUMN_COUNT_AUTO is 0
-  "-moz-column-count": [ "0" ],
-
-  "clip": [ "rect(auto,auto,auto,auto)" ],
-
   // The 'medium' keyword should be computing to '3px', not 'medium'.
   "outline-width": [ "3px" ],
-
-  // 'normal' should compute to 0
-  "word-spacing": [ "0", "0px", "-0em" ],
 
   // These values are treated as auto.
   "page-break-after": [ "avoid" ],

@@ -80,12 +80,20 @@ public:
   NS_HIDDEN_(void) Destroy();
 
   nsrefcnt AddRef() {
+    if (mRefCnt == PR_UINT32_MAX) {
+      NS_WARNING("refcount overflow, leaking object");
+      return mRefCnt;
+    }
     ++mRefCnt;
     NS_LOG_ADDREF(this, mRefCnt, "nsStyleContext", sizeof(nsStyleContext));
     return mRefCnt;
   }
 
   nsrefcnt Release() {
+    if (mRefCnt == PR_UINT32_MAX) {
+      NS_WARNING("refcount overflow, leaking object");
+      return mRefCnt;
+    }
     --mRefCnt;
     NS_LOG_RELEASE(this, mRefCnt, "nsStyleContext");
     if (mRefCnt == 0) {

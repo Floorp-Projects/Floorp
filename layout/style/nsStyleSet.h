@@ -227,6 +227,16 @@ class nsStyleSet
   // sheet must already have been added to the UA sheets.  The pointer must not
   // be null.  This should only be called once for a given style set.
   void SetQuirkStyleSheet(nsIStyleSheet* aQuirkStyleSheet);
+
+  // Return whether the rule tree has cached data such that we need to
+  // do dynamic change handling for changes that change the results of
+  // media queries or require rebuilding all style data.
+  // We don't care whether we have cached rule processors or whether
+  // they have cached rule cascades; getting the rule cascades again in
+  // order to do rule matching will get the correct rule cascade.
+  PRBool HasCachedStyleData() const {
+    return (mRuleTree && mRuleTree->TreeHasCachedData()) || !mRoots.IsEmpty();
+  }
   
  private:
   // Not to be implemented

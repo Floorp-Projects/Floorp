@@ -76,7 +76,9 @@ public:
 
   virtual nsIAtom* GetType() const;
 
+#ifndef MOZ_GFX_OPTIMIZE_MOBILE
   virtual PRBool ChildrenMustHaveWidgets() const { return PR_TRUE; }
+#endif
 
 #ifdef NS_DEBUG
   NS_IMETHOD GetFrameName(nsAString& aResult) const
