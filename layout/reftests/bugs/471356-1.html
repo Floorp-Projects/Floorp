@@ -1,0 +1,23 @@
+<!--quirks mode-->
+
+<!--
+  It's not clear that this is desired behavior, but I'm adding a test
+  for it because bug 243519 *accidentally* regressed it.
+
+  We're testing here that quirks mode percentage height calculation
+  subtracts the margin, padding, and border of the BODY element when the
+  basis for that percentage height is a specified non-auto height on the
+  HTML element.
+-->
+<html style="height: 300px;
+             margin: 1px 0 2px 0; padding: 4px 0 8px 0;">
+<head>
+  <title>Testcase, bug 471356 / bug 243519</title>
+</head>
+<body style="margin: 16px 0 32px 0; padding: 64px 0 128px 0;">
+  <!-- basis for percentage is 300px - (16px + 32px + 64px + 128px)
+         == 60px -->
+  <div style="background: blue; height: 50%">
+  </div>
+</body>
+</html>

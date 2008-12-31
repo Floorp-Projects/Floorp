@@ -59,7 +59,7 @@ public:
   NS_DECL_NSIDOMSVGANIMATEDPOINTS
 
   // nsIContent interface
-  NS_IMETHODIMP_(PRBool) IsAttributeMapped(const nsIAtom* name) const;
+  NS_IMETHOD_(PRBool) IsAttributeMapped(const nsIAtom* name) const;
   
   // nsSVGPathGeometryElement methods:
   virtual PRBool IsDependentAttribute(nsIAtom *aName);

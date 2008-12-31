@@ -349,11 +349,9 @@ var gCSSProperties = {
 		inherited: false,
 		type: CSS_TYPE_LONGHAND,
 		initial_values: [ "auto" ],
-		other_values: [ "1", "0", "17" ],
-		invalid_values: [
-			"-1", //unclear: see http://lists.w3.org/Archives/Public/www-style/2007Apr/0030
-			"3px"
-		]
+		other_values: [ "1", "17" ],
+		// negative and zero invalid per editor's draft
+		invalid_values: [ "-1", "0", "3px" ]
 	},
 	"-moz-column-gap": {
 		domProp: "MozColumnGap",
@@ -368,8 +366,8 @@ var gCSSProperties = {
 		inherited: false,
 		type: CSS_TYPE_LONGHAND,
 		initial_values: [ "auto" ],
-		other_values: [ "15px", "50%" ],
-		invalid_values: [ "20", "-1px" ]
+		other_values: [ "15px" ],
+		invalid_values: [ "20", "-1px", "50%" ]
 	},
 	"-moz-column-rule-width": {
 		domProp: "MozColumnRuleWidth",

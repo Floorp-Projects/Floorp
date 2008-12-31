@@ -488,32 +488,59 @@ SyncFrameViewGeometryDependentProperties(nsPresContext*  aPresContext,
                                          nsIView*         aView,
                                          PRUint32         aFlags)
 {
+#ifdef MOZ_XUL
   nsIViewManager* vm = aView->GetViewManager();
 
   PRBool isCanvas;
   const nsStyleBackground* bg;
   nsCSSRendering::FindBackground(aPresContext, aFrame, &bg, &isCanvas);
 
-  if (isCanvas) {
-    nsIView* rootView;
-    vm->GetRootView(rootView);
+  if (!isCanvas)
+    return;
 
-    if (aView->HasWidget() && aView == rootView &&
-        IsTopLevelWidget(aPresContext)) {
-      // The issue here is that the CSS 'background' propagates from the root
-      // element's frame (rootFrame) to the real root frame (nsViewportFrame),
-      // so we need to call GetFrameTransparency on that. But -moz-appearance
-      // does not propagate so we need to check that directly on rootFrame.
-      nsTransparencyMode mode = nsLayoutUtils::GetFrameTransparency(aFrame);
-      nsIFrame *rootFrame = aPresContext->PresShell()->FrameConstructor()->GetRootElementStyleFrame();
-      if(rootFrame && NS_THEME_WIN_GLASS == rootFrame->GetStyleDisplay()->mAppearance)
-        mode = eTransparencyGlass;
-      nsIWidget* widget = aView->GetWidget();
-      widget->SetTransparencyMode(mode);
-      if (rootFrame)
-        widget->SetWindowShadowStyle(rootFrame->GetStyleUIReset()->mWindowShadow);
-    }
+  nsIView* rootView;
+  vm->GetRootView(rootView);
+
+  if (!aView->HasWidget() || aView != rootView ||
+      !IsTopLevelWidget(aPresContext))
+    return;
+
+  nsIContent* rootContent = aPresContext->Document()->GetRootContent();
+  if (!rootContent || !rootContent->IsNodeOfType(nsINode::eXUL)) {
+    // Scrollframes use native widgets which don't work well with
+    // translucent windows, at least in Windows XP. So if the document
+    // has a root scrollrame it's useless to try to make it transparent,
+    // we'll just get something broken.
+    // nsCSSFrameConstructor::ConstructRootFrame constructs root
+    // scrollframes whenever the root element is not a XUL element, so
+    // we test for that here. We can't just call
+    // presShell->GetRootScrollFrame() since that might not have
+    // been constructed yet.
+    // We can change this to allow translucent toplevel HTML documents
+    // (e.g. to do something like Dashboard widgets), once we
+    // have broad support for translucent scrolled documents, but be
+    // careful because apparently some Firefox extensions expect
+    // openDialog("something.html") to produce an opaque window
+    // even if the HTML doesn't have a background-color set.
+    return;
   }
+
+  // The issue here is that the CSS 'background' propagates from the root
+  // element's frame (rootFrame) to the real root frame (nsViewportFrame),
+  // so we need to call GetFrameTransparency on that. But -moz-appearance
+  // does not propagate so we need to check that directly on rootFrame.
+  nsTransparencyMode mode = nsLayoutUtils::GetFrameTransparency(aFrame);
+  nsIFrame *rootFrame = aPresContext->PresShell()->FrameConstructor()->GetRootElementStyleFrame();
+  if (rootFrame &&
+      NS_THEME_WIN_GLASS == rootFrame->GetStyleDisplay()->mAppearance) {
+    mode = eTransparencyGlass;
+  }
+  nsIWidget* widget = aView->GetWidget();
+  widget->SetTransparencyMode(mode);
+  if (rootFrame) {
+    widget->SetWindowShadowStyle(rootFrame->GetStyleUIReset()->mWindowShadow);
+  }
+#endif
 }
 
 void

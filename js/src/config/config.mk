@@ -73,8 +73,6 @@ CHECK_VARS := \
  SHORT_LIBNAME \
  XPI_PKGNAME \
  INSTALL_EXTENSION_ID \
- SHARED_LIBRARY_NAME \
- STATIC_LIBRARY_NAME \
  $(NULL)
 
 # checks for internal spaces or trailing spaces in the variable
@@ -358,18 +356,6 @@ ifeq ($(OS_ARCH)_$(HAVE_GCC3_ABI),Darwin_1)
 DSO_PIC_CFLAGS=-mdynamic-no-pic
 else
 DSO_PIC_CFLAGS=
-endif
-endif
-
-ifndef SHARED_LIBRARY_NAME
-ifdef LIBRARY_NAME
-SHARED_LIBRARY_NAME=$(LIBRARY_NAME)
-endif
-endif
-
-ifndef STATIC_LIBRARY_NAME
-ifdef LIBRARY_NAME
-STATIC_LIBRARY_NAME=$(LIBRARY_NAME)
 endif
 endif
 

@@ -71,7 +71,8 @@ private:
 
   struct DOMAnimatedEnum : public nsIDOMSVGAnimatedEnumeration
   {
-    NS_DECL_ISUPPORTS
+    NS_DECL_CYCLE_COLLECTING_ISUPPORTS
+    NS_DECL_CYCLE_COLLECTION_CLASS(DOMAnimatedEnum)
 
     DOMAnimatedEnum(nsSVGOrientType* aVal,
                     nsSVGElement *aSVGElement)
@@ -120,7 +121,7 @@ public:
                                      nsISVGValue::modificationType aModType);
 
   // nsIContent interface
-  NS_IMETHODIMP_(PRBool) IsAttributeMapped(const nsIAtom* name) const;
+  NS_IMETHOD_(PRBool) IsAttributeMapped(const nsIAtom* name) const;
 
   virtual PRBool GetAttr(PRInt32 aNameSpaceID, nsIAtom* aName,
                          nsAString& aResult) const;

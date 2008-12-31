@@ -1063,6 +1063,16 @@ interface nsINavHistoryQueryOptions : nsISupports
 interface nsINavHistoryService : nsISupports
 {
   /**
+   * System Notifications:
+   *
+   * places-init-complete - Sent once the History service is completely
+   *                        initialized successfully.
+   * places-database-locked - Sent if initialization of the History service
+   *                          failed due to the inability to open the places.sqlite
+   *                          for access reasons.
+   */
+
+  /**
    * This transition type means the user followed a link and got a new toplevel
    * window.
    */
@@ -1119,6 +1129,11 @@ interface nsINavHistoryService : nsISupports
    * Set when database was corrupt and we replaced it
    */
   const unsigned short DATABASE_STATUS_CORRUPT = 2;
+
+  /**
+   * Set when database schema has been upgraded
+   */
+  const unsigned short DATABASE_STATUS_UPGRADED = 3;
 
   /**
    * Returns the current database status

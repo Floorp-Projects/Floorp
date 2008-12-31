@@ -1,0 +1,76 @@
+<html xmlns="http://www.w3.org/1999/xhtml">
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=467671
+-->
+<head>
+  <title>Test for Bug 467671</title>
+  <script type="application/javascript" src="/MochiKit/packed.js"></script>
+  <script type="application/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
+</head>
+<body>
+<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=467671">Mozilla Bug 467671</a>
+<p id="display"></p>
+<div id="content" style="display: none">
+  
+</div>
+<pre id="test">
+<script type="application/javascript">
+<![CDATA[
+
+/** Test for Bug 467671 **/
+
+function storeSVGPropertyAsExpando(localName, prop)
+{
+    var elem = document.createElementNS("http://www.w3.org/2000/svg", localName);
+
+    elem.addEventListener("click", function(){}, false);
+
+    var propVal = elem[prop];
+    Object.prototype.toSource[prop + "_expando"] = propVal;
+    if (propVal instanceof SVGAnimatedAngle || propVal instanceof SVGAnimatedLength) {
+        Object.prototype.toSource[prop + "_baseVal_expando"] = propVal.baseVal;
+        Object.prototype.toSource[prop + "_animVal_expando"] = propVal.animVal;
+    }
+}
+
+// angle
+storeSVGPropertyAsExpando("marker", "orientAngle");
+
+// boolean
+storeSVGPropertyAsExpando("feConvolveMatrix", "preserveAlpha");
+
+// enum
+storeSVGPropertyAsExpando("feConvolveMatrix", "edgeMode");
+
+// special marker enum
+storeSVGPropertyAsExpando("marker", "orientType");
+
+// integer
+storeSVGPropertyAsExpando("feConvolveMatrix", "orderX");
+
+// length
+storeSVGPropertyAsExpando("feConvolveMatrix", "x");
+
+// number
+storeSVGPropertyAsExpando("feConvolveMatrix", "divisor");
+
+// string
+storeSVGPropertyAsExpando("feConvolveMatrix", "in1");
+
+var elem1 = document.createElementNS("http://www.w3.org/2000/svg", "switch");
+var elem2 = document.createElementNS("http://www.w3.org/2000/svg", "rect");
+elem1.appendChild(elem2);
+document.getElementById("content").appendChild(elem1);
+
+elem2.addEventListener("click", function(){}, false);
+
+Object.prototype.toSource.expando = elem1;
+
+ok(true, "SVG shouldn't leak.");
+
+]]>
+</script>
+</pre>
+</body>
+</html>

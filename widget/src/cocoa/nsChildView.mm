@@ -109,11 +109,13 @@ extern "C" {
 struct __TISInputSource;
 typedef __TISInputSource* TISInputSourceRef;
 #endif
+TISInputSourceRef (*Leopard_TISCopyCurrentKeyboardInputSource)() = NULL;
 TISInputSourceRef (*Leopard_TISCopyCurrentKeyboardLayoutInputSource)() = NULL;
 void* (*Leopard_TISGetInputSourceProperty)(TISInputSourceRef inputSource, CFStringRef propertyKey) = NULL;
 CFArrayRef (*Leopard_TISCreateInputSourceList)(CFDictionaryRef properties, Boolean includeAllInstalled) = NULL;
 CFStringRef kOurTISPropertyUnicodeKeyLayoutData = NULL;
 CFStringRef kOurTISPropertyInputSourceID = NULL;
+CFStringRef kOurTISPropertyInputSourceLanguages = NULL;
 
 extern PRBool gCocoaWindowMethodsSwizzled; // Defined in nsCocoaWindow.mm
 
@@ -514,11 +516,13 @@ nsChildView::nsChildView() : nsBaseWidget()
     // and should be avoided."
     void* hitoolboxHandle = dlopen("/System/Library/Frameworks/Carbon.framework/Frameworks/HIToolbox.framework/Versions/A/HIToolbox", RTLD_LAZY);
     if (hitoolboxHandle) {
+      *(void **)(&Leopard_TISCopyCurrentKeyboardInputSource) = dlsym(hitoolboxHandle, "TISCopyCurrentKeyboardInputSource");
       *(void **)(&Leopard_TISCopyCurrentKeyboardLayoutInputSource) = dlsym(hitoolboxHandle, "TISCopyCurrentKeyboardLayoutInputSource");
       *(void **)(&Leopard_TISGetInputSourceProperty) = dlsym(hitoolboxHandle, "TISGetInputSourceProperty");
       *(void **)(&Leopard_TISCreateInputSourceList) = dlsym(hitoolboxHandle, "TISCreateInputSourceList");
       kOurTISPropertyUnicodeKeyLayoutData = *static_cast<CFStringRef*>(dlsym(hitoolboxHandle, "kTISPropertyUnicodeKeyLayoutData"));
       kOurTISPropertyInputSourceID = *static_cast<CFStringRef*>(dlsym(hitoolboxHandle, "kTISPropertyInputSourceID"));
+      kOurTISPropertyInputSourceLanguages = *static_cast<CFStringRef*>(dlsym(hitoolboxHandle, "kTISPropertyInputSourceLanguages"));
     }
   }
 }
@@ -6653,6 +6657,35 @@ nsTSMManager::GetIMEOpenState()
 }
 
 
+static const NSString* GetCurrentIMELanguage()
+{
+  if (!nsToolkit::OnLeopardOrLater()) {
+    // XXX [[NSInputManager currentInputManager] language] doesn't work fine.
+    switch (::GetScriptManagerVariable(smKeyScript)) {
+      case smJapanese:
+        return @"ja";
+      default:
+        return nil;
+    }
+  }
+
+  NS_PRECONDITION(Leopard_TISCopyCurrentKeyboardInputSource,
+    "Leopard_TISCopyCurrentKeyboardInputSource is not initialized");
+  TISInputSourceRef inputSource = Leopard_TISCopyCurrentKeyboardInputSource();
+  if (!inputSource) {
+    NS_ERROR("Leopard_TISCopyCurrentKeyboardInputSource failed");
+    return nil;
+  }
+
+  NS_PRECONDITION(Leopard_TISGetInputSourceProperty,
+    "Leopard_TISGetInputSourceProperty is not initialized");
+  CFArrayRef langs = static_cast<CFArrayRef>(
+    Leopard_TISGetInputSourceProperty(inputSource,
+                                      kOurTISPropertyInputSourceLanguages));
+  return static_cast<const NSString*>(CFArrayGetValueAtIndex(langs, 0));
+}
+
+
 void
 nsTSMManager::InitTSMDocument(NSView<mozView>* aViewForCaret)
 {
@@ -6685,8 +6718,11 @@ nsTSMManager::InitTSMDocument(NSView<mozView>* aViewForCaret)
 
   // ATOK (Japanese IME) updates the window level at activating,
   // we need to notify the change with this hack.
-  ::DeactivateTSMDocument(sDocumentID);
-  ::ActivateTSMDocument(sDocumentID);
+  const NSString* lang = ::GetCurrentIMELanguage();
+  if (lang && [lang isEqualToString:@"ja"]) {
+    ::DeactivateTSMDocument(sDocumentID);
+    ::ActivateTSMDocument(sDocumentID);
+  }
 
   NS_OBJC_END_TRY_ABORT_BLOCK;
 }

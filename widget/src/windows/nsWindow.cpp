@@ -163,10 +163,6 @@ static const PRUnichar kMozHeapDumpMessageString[] = L"MOZ_HeapDump";
 
 #define kWindowPositionSlop 20
 
-#ifndef SPI_GETWHEELSCROLLLINES
-#define SPI_GETWHEELSCROLLLINES 104
-#endif
-
 #ifndef WM_MOUSEHWHEEL
 #define WM_MOUSEHWHEEL 0x020E
 #endif
@@ -268,17 +264,6 @@ PRInt32 GetWindowsVersion()
 
 static NS_DEFINE_CID(kCClipboardCID,       NS_CLIPBOARD_CID);
 static NS_DEFINE_IID(kRenderingContextCID, NS_RENDERING_CONTEXT_CID);
-
-// When we build we are currently (11/27/01) setting the WINVER to 0x0400
-// Which means we do not compile in the system resource for the HAND cursor
-// this enables us still define the resource and if it isn't there then we will
-// get our own hand cursor.
-// 32649 is the resource number as defined by WINUSER.H for this cursor
-// if the resource is defined by the build env. then it will find it when asked
-// if not, then we get our own cursor.
-#ifndef IDC_HAND
-#define IDC_HAND MAKEINTRESOURCE(32649)
-#endif
 
 static const char *sScreenManagerContractID = "@mozilla.org/gfx/screenmanager;1";
 
@@ -1277,7 +1262,7 @@ nsWindow::StandardWindowCreate(nsIWidget *aParent,
 
   mWnd = ::CreateWindowExW(extendedStyle,
                            aInitData && aInitData->mDropShadow ?
-                           WindowPopupClassW() : WindowClassW(),
+                           WindowPopupClass() : WindowClass(),
                            L"",
                            style,
                            aRect.x,
@@ -4772,11 +4757,11 @@ PRBool nsWindow::ProcessMessage(UINT msg, WPARAM wParam, LPARAM lParam, LRESULT 
 #endif
       WCHAR className[kMaxClassNameLength];
       ::GetClassNameW((HWND)wParam, className, kMaxClassNameLength);
-      if (wcscmp(className, kWClassNameUI) &&
-          wcscmp(className, kWClassNameContent) &&
-          wcscmp(className, kWClassNameContentFrame) &&
-          wcscmp(className, kWClassNameDialog) &&
-          wcscmp(className, kWClassNameGeneral)) {
+      if (wcscmp(className, kClassNameUI) &&
+          wcscmp(className, kClassNameContent) &&
+          wcscmp(className, kClassNameContentFrame) &&
+          wcscmp(className, kClassNameDialog) &&
+          wcscmp(className, kClassNameGeneral)) {
         isMozWindowTakingFocus = PR_FALSE;
       }
       if (gJustGotDeactivate) {
@@ -4887,11 +4872,11 @@ PRBool nsWindow::ProcessMessage(UINT msg, WPARAM wParam, LPARAM lParam, LRESULT 
           // Deactivate
           WCHAR className[kMaxClassNameLength];
           ::GetClassNameW((HWND)wParam, className, kMaxClassNameLength);
-          if (wcscmp(className, kWClassNameUI) &&
-              wcscmp(className, kWClassNameContent) &&
-              wcscmp(className, kWClassNameContentFrame) &&
-              wcscmp(className, kWClassNameDialog) &&
-              wcscmp(className, kWClassNameGeneral)) {
+          if (wcscmp(className, kClassNameUI) &&
+              wcscmp(className, kClassNameContent) &&
+              wcscmp(className, kClassNameContentFrame) &&
+              wcscmp(className, kClassNameDialog) &&
+              wcscmp(className, kClassNameGeneral)) {
             isMozWindowTakingFocus = PR_FALSE;
           }
           gJustGotDeactivate = PR_FALSE;
@@ -5498,7 +5483,7 @@ PRBool nsWindow::DispatchPluginEvent(const MSG &aMsg)
 
 #define CS_XP_DROPSHADOW       0x00020000
 
-LPCWSTR nsWindow::WindowClassW()
+LPCWSTR nsWindow::WindowClass()
 {
   if (!nsWindow::sIsRegistered) {
     WNDCLASSW wc;
@@ -5513,33 +5498,33 @@ LPCWSTR nsWindow::WindowClassW()
     wc.hCursor       = NULL;
     wc.hbrBackground = mBrush;
     wc.lpszMenuName  = NULL;
-    wc.lpszClassName = kWClassNameHidden;
+    wc.lpszClassName = kClassNameHidden;
 
     BOOL succeeded = ::RegisterClassW(&wc) != 0;
     nsWindow::sIsRegistered = succeeded;
 
-    wc.lpszClassName = kWClassNameContentFrame;
+    wc.lpszClassName = kClassNameContentFrame;
     if (!::RegisterClassW(&wc)) {
       nsWindow::sIsRegistered = FALSE;
     }
 
-    wc.lpszClassName = kWClassNameContent;
+    wc.lpszClassName = kClassNameContent;
     if (!::RegisterClassW(&wc)) {
       nsWindow::sIsRegistered = FALSE;
     }
 
-    wc.lpszClassName = kWClassNameUI;
+    wc.lpszClassName = kClassNameUI;
     if (!::RegisterClassW(&wc)) {
       nsWindow::sIsRegistered = FALSE;
     }
 
-    wc.lpszClassName = kWClassNameGeneral;
+    wc.lpszClassName = kClassNameGeneral;
     ATOM generalClassAtom = ::RegisterClassW(&wc);
     if (!generalClassAtom) {
       nsWindow::sIsRegistered = FALSE;
     }
 
-    wc.lpszClassName = kWClassNameDialog;
+    wc.lpszClassName = kClassNameDialog;
     wc.hIcon = 0;
     if (!::RegisterClassW(&wc)) {
       nsWindow::sIsRegistered = FALSE;
@@ -5547,24 +5532,24 @@ LPCWSTR nsWindow::WindowClassW()
   }
 
   if (mWindowType == eWindowType_invisible) {
-    return kWClassNameHidden;
+    return kClassNameHidden;
   }
   if (mWindowType == eWindowType_dialog) {
-    return kWClassNameDialog;
+    return kClassNameDialog;
   }
   if (mContentType == eContentTypeContent) {
-    return kWClassNameContent;
+    return kClassNameContent;
   }
   if (mContentType == eContentTypeContentFrame) {
-    return kWClassNameContentFrame;
+    return kClassNameContentFrame;
   }
   if (mContentType == eContentTypeUI) {
-    return kWClassNameUI;
+    return kClassNameUI;
   }
-  return kWClassNameGeneral;
+  return kClassNameGeneral;
 }
 
-LPCWSTR nsWindow::WindowPopupClassW()
+LPCWSTR nsWindow::WindowPopupClass()
 {
   const LPCWSTR className = L"MozillaDropShadowWindowClass";
 
@@ -5592,50 +5577,6 @@ LPCWSTR nsWindow::WindowPopupClassW()
   }
 
   return className;
-}
-
-LPCTSTR nsWindow::WindowClass()
-{
-  // Call into the wide version to make sure things get
-  // registered properly.
-  LPCWSTR classNameW = WindowClassW();
-
-  // XXX: The class name used here must be kept in sync with
-  //      the classname used in WindowClassW();
-#ifdef UNICODE
-  return classNameW;
-#else
-  if (classNameW == kWClassNameHidden) {
-    return kClassNameHidden;
-  }
-  if (classNameW == kWClassNameDialog) {
-    return kClassNameDialog;
-  }
-  if (classNameW == kWClassNameUI) {
-    return kClassNameUI;
-  }
-  if (classNameW == kWClassNameContent) {
-    return kClassNameContent;
-  }
-  if (classNameW == kWClassNameContentFrame) {
-    return kClassNameContentFrame;
-  }
-  return kClassNameGeneral;
-#endif
-}
-
-LPCTSTR nsWindow::WindowPopupClass()
-{
-  // Call into the wide version to make sure things get
-  // registered properly.
-#ifdef UNICODE
-  return WindowPopupClassW();
-#else
-
-  // XXX: The class name used here must be kept in sync with
-  //      the classname used in WindowPopupClassW();
-  return "MozillaDropShadowWindowClass";
-#endif
 }
 
 //-------------------------------------------------------------------------

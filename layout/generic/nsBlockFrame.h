@@ -379,10 +379,12 @@ protected:
 
   virtual void ComputeFinalSize(const nsHTMLReflowState& aReflowState,
                                 nsBlockReflowState&      aState,
-                                nsHTMLReflowMetrics&     aMetrics);
+                                nsHTMLReflowMetrics&     aMetrics,
+                                nscoord*                 aBottomEdgeOfChildren);
 
   void ComputeCombinedArea(const nsHTMLReflowState& aReflowState,
-                           nsHTMLReflowMetrics& aMetrics);
+                           nsHTMLReflowMetrics&     aMetrics,
+                           nscoord                  aBottomEdgeOfChildren);
 
   /** add the frames in aFrameList to this block after aPrevSibling
     * this block thinks in terms of lines, but the frame construction code

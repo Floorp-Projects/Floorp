@@ -1266,9 +1266,7 @@ nsContentSink::StartLayout(PRBool aIgnorePendingSheets)
     // docshell in the iframe, and the content sink's call to OpenBody().
     // (Bug 153815)
 
-    PRBool didInitialReflow = PR_FALSE;
-    shell->GetDidInitialReflow(&didInitialReflow);
-    if (didInitialReflow) {
+    if (shell->DidInitialReflow()) {
       // XXX: The assumption here is that if something already
       // called InitialReflow() on this shell, it also did some of
       // the setup below, so we do nothing and just move on to the
