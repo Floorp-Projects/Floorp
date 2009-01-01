@@ -1299,12 +1299,4 @@ NS_NewDOMDocument(nsIDOMDocument** aInstancePtrResult,
 nsresult
 NS_NewPluginDocument(nsIDocument** aInstancePtrResult);
 
-inline nsIDocument*
-nsINode::GetOwnerDocument() const
-{
-  nsIDocument* ownerDoc = GetOwnerDoc();
-
-  return ownerDoc != this ? ownerDoc : nsnull;
-}
-
 #endif /* nsIDocument_h___ */
