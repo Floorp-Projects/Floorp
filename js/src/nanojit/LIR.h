@@ -714,6 +714,8 @@ namespace nanojit
             LInsp state,param1,sp,rp;
             LInsp savedRegs[NumSavedRegs];
             bool explicitSavedRegs;
+
+     		bool shared;
 			
 		protected:
 			friend class LirBufWriter;
