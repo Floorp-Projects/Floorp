@@ -260,7 +260,18 @@ nsDOMAttribute::GetParentNode(nsIDOMNode** aParentNode)
 NS_IMETHODIMP
 nsDOMAttribute::GetChildNodes(nsIDOMNodeList** aChildNodes)
 {
-  return nsINode::GetChildNodes(aChildNodes);
+  nsSlots *slots = GetSlots();
+  NS_ENSURE_TRUE(slots, NS_ERROR_OUT_OF_MEMORY);
+
+  if (!slots->mChildNodes) {
+    slots->mChildNodes = new nsChildContentList(this);
+    NS_ENSURE_TRUE(slots->mChildNodes, NS_ERROR_OUT_OF_MEMORY);
+    NS_ADDREF(slots->mChildNodes);
+  }
+
+  NS_ADDREF(*aChildNodes = slots->mChildNodes);
+
+  return NS_OK;
 }
 
 NS_IMETHODIMP
@@ -386,7 +397,11 @@ nsDOMAttribute::CloneNode(PRBool aDeep, nsIDOMNode** aResult)
 NS_IMETHODIMP
 nsDOMAttribute::GetOwnerDocument(nsIDOMDocument** aOwnerDocument)
 {
-  return nsINode::GetOwnerDocument(aOwnerDocument);
+  *aOwnerDocument = nsnull;
+
+  nsIDocument *document = GetOwnerDoc();
+
+  return document ? CallQueryInterface(document, aOwnerDocument) : NS_OK;
 }
 
 NS_IMETHODIMP

@@ -468,7 +468,7 @@ XPCConvert::NativeData2JS(XPCCallContext& ccx, jsval* d, const void* s,
                     // therefore this NativeInterface2JSObject will not end up
                     // creating a new XPCNativeScriptableShared.
                     if(!NativeInterface2JSObject(ccx, d, nsnull, iface, iid,
-                                                 nsnull, nsnull, scope, PR_TRUE,
+                                                 nsnull, scope, PR_TRUE,
                                                  OBJ_IS_NOT_GLOBAL, pErr))
                         return JS_FALSE;
 
@@ -1053,7 +1053,6 @@ XPCConvert::NativeInterface2JSObject(XPCCallContext& ccx,
                                      nsISupports* src,
                                      const nsID* iid,
                                      XPCNativeInterface* Interface,
-                                     nsWrapperCache *cache,
                                      JSObject* scope,
                                      PRBool allowNativeWrapper,
                                      PRBool isGlobal,
@@ -1124,8 +1123,8 @@ XPCConvert::NativeInterface2JSObject(XPCCallContext& ccx,
         nsresult rv;
         XPCWrappedNative* wrapper;
         nsRefPtr<XPCWrappedNative> strongWrapper;
-        if(!cache)
-            CallQueryInterface(src, &cache);
+        nsWrapperCache* cache = nsnull;
+        CallQueryInterface(src, &cache);
         if(cache &&
            (wrapper = static_cast<XPCWrappedNative*>(cache->GetWrapper())))
         {

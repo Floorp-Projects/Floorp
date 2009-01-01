@@ -5333,7 +5333,18 @@ nsDocument::GetParentNode(nsIDOMNode** aParentNode)
 NS_IMETHODIMP
 nsDocument::GetChildNodes(nsIDOMNodeList** aChildNodes)
 {
-  return nsINode::GetChildNodes(aChildNodes);
+  nsSlots *slots = GetSlots();
+  NS_ENSURE_TRUE(slots, NS_ERROR_OUT_OF_MEMORY);
+
+  if (!slots->mChildNodes) {
+    slots->mChildNodes = new nsChildContentList(this);
+    NS_ENSURE_TRUE(slots->mChildNodes, NS_ERROR_OUT_OF_MEMORY);
+    NS_ADDREF(slots->mChildNodes);
+  }
+
+  NS_ADDREF(*aChildNodes = slots->mChildNodes);
+
+  return NS_OK;
 }
 
 NS_IMETHODIMP
@@ -5359,13 +5370,26 @@ nsDocument::HasAttributes(PRBool* aHasAttributes)
 NS_IMETHODIMP
 nsDocument::GetFirstChild(nsIDOMNode** aFirstChild)
 {
-  return nsINode::GetFirstChild(aFirstChild);
+  if (mChildren.ChildCount()) {
+    return CallQueryInterface(mChildren.ChildAt(0), aFirstChild);
+  }
+
+  *aFirstChild = nsnull;
+
+  return NS_OK;
 }
 
 NS_IMETHODIMP
 nsDocument::GetLastChild(nsIDOMNode** aLastChild)
 {
-  return nsINode::GetLastChild(aLastChild);
+  PRInt32 count = mChildren.ChildCount();
+  if (count) {
+    return CallQueryInterface(mChildren.ChildAt(count-1), aLastChild);
+  }
+
+  *aLastChild = nsnull;
+
+  return NS_OK;
 }
 
 NS_IMETHODIMP
@@ -5967,7 +5991,9 @@ nsDocument::RenameNode(nsIDOMNode *aNode,
 NS_IMETHODIMP
 nsDocument::GetOwnerDocument(nsIDOMDocument** aOwnerDocument)
 {
-  return nsINode::GetOwnerDocument(aOwnerDocument);
+  *aOwnerDocument = nsnull;
+
+  return NS_OK;
 }
 
 nsresult
