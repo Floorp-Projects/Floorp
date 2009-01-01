@@ -470,7 +470,11 @@ public:
   NS_IMETHOD GetNodeValue(nsAString& aNodeValue);
   NS_IMETHOD SetNodeValue(const nsAString& aNodeValue);
   NS_IMETHOD GetNodeType(PRUint16* aNodeType);
+  NS_IMETHOD GetParentNode(nsIDOMNode** aParentNode);
   NS_IMETHOD GetAttributes(nsIDOMNamedNodeMap** aAttributes);
+  NS_IMETHOD GetPreviousSibling(nsIDOMNode** aPreviousSibling);
+  NS_IMETHOD GetNextSibling(nsIDOMNode** aNextSibling);
+  NS_IMETHOD GetOwnerDocument(nsIDOMDocument** aOwnerDocument);
   NS_IMETHOD GetNamespaceURI(nsAString& aNamespaceURI);
   NS_IMETHOD GetPrefix(nsAString& aPrefix);
   NS_IMETHOD SetPrefix(const nsAString& aPrefix);
@@ -478,7 +482,10 @@ public:
   NS_IMETHOD IsSupported(const nsAString& aFeature,
                          const nsAString& aVersion, PRBool* aReturn);
   NS_IMETHOD HasAttributes(PRBool* aHasAttributes);
+  NS_IMETHOD GetChildNodes(nsIDOMNodeList** aChildNodes);
   NS_IMETHOD HasChildNodes(PRBool* aHasChildNodes);
+  NS_IMETHOD GetFirstChild(nsIDOMNode** aFirstChild);
+  NS_IMETHOD GetLastChild(nsIDOMNode** aLastChild);
   NS_IMETHOD InsertBefore(nsIDOMNode* aNewChild, nsIDOMNode* aRefChild,
                           nsIDOMNode** aReturn);
   NS_IMETHOD ReplaceChild(nsIDOMNode* aNewChild, nsIDOMNode* aOldChild,
