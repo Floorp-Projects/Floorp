@@ -39,6 +39,7 @@
 
 const Cc = Components.classes;
 const Ci = Components.interfaces;
+const Cr = Components.results;
 const pageLoaderIface = Components.interfaces.nsIWebPageDescriptor;
 const nsISelectionPrivate = Components.interfaces.nsISelectionPrivate;
 const nsISelectionController = Components.interfaces.nsISelectionController;

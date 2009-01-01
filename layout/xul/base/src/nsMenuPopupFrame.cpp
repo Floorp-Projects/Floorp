@@ -84,6 +84,7 @@
 #include "nsIDocShellTreeOwner.h"
 #include "nsIBaseWindow.h"
 #include "nsISound.h"
+#include "nsIRootBox.h"
 
 PRInt8 nsMenuPopupFrame::sDefaultLevelParent = -1;
 
@@ -1486,6 +1487,12 @@ nsMenuPopupFrame::Destroy()
   nsXULPopupManager* pm = nsXULPopupManager::GetInstance();
   if (pm)
     pm->PopupDestroyed(this);
+
+  nsIRootBox* rootBox =
+    nsIRootBox::GetRootBox(PresContext()->GetPresShell());
+  if (rootBox && rootBox->GetDefaultTooltip() == mContent) {
+    rootBox->SetDefaultTooltip(nsnull);
+  }
 
   nsBoxFrame::Destroy();
 }
