@@ -2053,6 +2053,7 @@ class RegExpNativeCompiler {
     JSRegExp*        re;
     CompilerState*   cs;            /* RegExp to compile */
     Fragment*        fragment;
+    LirBuffer*       lirbuf;
     LirWriter*       lir;
     LirBufWriter*    lirBufWriter;  /* for skip */
 
@@ -2424,8 +2425,7 @@ GetNativeRegExp(JSContext* cx, JSRegExp* re)
             return NULL;
     } else {
         fragment = fragmento->getAnchor(hash);
-        fragment->lirbuf = new (&gc) LirBuffer(fragmento, NULL);
-        /* required to have the onDestroy method delete the lirbuf. */
+        fragment->lirbuf = JS_TRACE_MONITOR(cx).reLirBuf;
         fragment->root = fragment;
     }
         

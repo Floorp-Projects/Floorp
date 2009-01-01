@@ -2699,7 +2699,7 @@ nanojit::LirNameMap::formatGuard(LIns *i, char *out)
 void
 nanojit::Fragment::onDestroy()
 {
-    if (root == this) {
+    if (root == this && lirbuf && !lirbuf->shared) {
         delete lirbuf;
     }
     delete (TreeInfo *)vmprivate;
@@ -4034,6 +4034,8 @@ js_InitJIT(JSTraceMonitor *tm)
         Fragmento* fragmento = new (&gc) Fragmento(core, 20);
         verbose_only(fragmento->labels = new (&gc) LabelMap(core, NULL);)
         tm->reFragmento = fragmento;
+        tm->reLirBuf = new (&gc) LirBuffer(fragmento, NULL);
+        tm->reLirBuf->shared = true;
     }
     InitIMacroCode();
 #if !defined XP_WIN
@@ -4071,6 +4073,7 @@ js_FinishJIT(JSTraceMonitor *tm)
         tm->recoveryDoublePool = tm->recoveryDoublePoolPtr = NULL;
     }
     if (tm->reFragmento != NULL) {
+        delete tm->reLirBuf;
         verbose_only(delete tm->reFragmento->labels;)
         delete tm->reFragmento;
     }

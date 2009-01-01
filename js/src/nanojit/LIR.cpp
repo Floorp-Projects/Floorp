@@ -88,7 +88,7 @@ namespace nanojit
 	
 	// LCompressedBuffer
 	LirBuffer::LirBuffer(Fragmento* frago, const CallInfo* functions)
-		: _frago(frago), _pages(frago->core()->GetGC()), _functions(functions), abi(ABI_FASTCALL)
+		: _frago(frago), _pages(frago->core()->GetGC()), _functions(functions), abi(ABI_FASTCALL), shared(false)
 	{
 		clear();
 		Page* start = pageAlloc();

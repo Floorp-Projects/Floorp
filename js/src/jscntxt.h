@@ -97,6 +97,7 @@ typedef struct JSGSNCache {
 namespace nanojit {
     class Fragment;
     class Fragmento;
+    class LirBuffer;
 }
 class TraceRecorder;
 extern "C++" { template<typename T> class Queue; }
@@ -132,6 +133,7 @@ typedef struct JSTraceMonitor {
     /* Fragmento for the regular expression compiler. This is logically
      * a distinct compiler but needs to be managed in exactly the same
      * way as the real tracing Fragmento. */
+    CLS(nanojit::LirBuffer) reLirBuf;
     CLS(nanojit::Fragmento) reFragmento;
 
     /* Keep a list of recorders we need to abort on cache flush. */
