@@ -43,11 +43,3 @@
 #clearRecentHistoryDesc {
   margin-top: 2em;
 }
-
-#clearRecentHistoryDesc > button {
-  -moz-margin-start: 0;
-}
-
-#enjoyDesc {
-  margin-top: 2em;
-}
