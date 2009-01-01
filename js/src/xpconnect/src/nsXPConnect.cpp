@@ -1113,8 +1113,8 @@ nsXPConnect::InitClassesWithNewWrappedGlobal(JSContext * aJSContext,
         if(!XPCConvert::NativeInterface2JSObject(ccx, &v,
                                                  getter_AddRefs(holder),
                                                  aCOMObj, &aIID, nsnull,
-                                                 nsnull, tempGlobal,
-                                                 PR_FALSE, OBJ_IS_GLOBAL, &rv))
+                                                 tempGlobal, PR_FALSE,
+                                                 OBJ_IS_GLOBAL, &rv))
             return UnexpectedFailure(rv);
 
         NS_ASSERTION(NS_SUCCEEDED(rv) && holder, "Didn't wrap properly");
@@ -1213,7 +1213,7 @@ nsXPConnect::WrapNativeToJSVal(JSContext * aJSContext,
 
     nsresult rv;
     if(!XPCConvert::NativeInterface2JSObject(ccx, aVal, aHolder, aCOMObj, aIID,
-                                             nsnull, nsnull, aScope, PR_FALSE,
+                                             nsnull, aScope, PR_FALSE,
                                              OBJ_IS_NOT_GLOBAL, &rv))
         return rv;
 

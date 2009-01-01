@@ -424,103 +424,6 @@ nsINode::GetSelectionRootContent(nsIPresShell* aPresShell)
   return doc->GetRootContent();
 }
 
-nsIDOMNodeList*
-nsINode::GetChildNodesList()
-{
-  nsSlots *slots = GetSlots();
-  if (!slots) {
-    return nsnull;
-  }
-
-  if (!slots->mChildNodes) {
-    slots->mChildNodes = new nsChildContentList(this);
-    if (slots->mChildNodes) {
-      NS_ADDREF(slots->mChildNodes);
-    }
-  }
-
-  return slots->mChildNodes;
-}
-
-nsresult
-nsINode::GetParentNode(nsIDOMNode** aParentNode)
-{
-  *aParentNode = nsnull;
-
-  nsINode *parent = GetNodeParent();
-
-  return parent ? CallQueryInterface(parent, aParentNode) : NS_OK;
-}
-
-nsresult
-nsINode::GetChildNodes(nsIDOMNodeList** aChildNodes)
-{
-  *aChildNodes = GetChildNodesList();
-  if (!*aChildNodes) {
-    return NS_ERROR_OUT_OF_MEMORY;
-  }
-
-  NS_ADDREF(*aChildNodes);
-
-  return NS_OK;
-}
-
-nsresult
-nsINode::GetFirstChild(nsIDOMNode** aNode)
-{
-  nsIContent* child = GetChildAt(0);
-  if (child) {
-    return CallQueryInterface(child, aNode);
-  }
-
-  *aNode = nsnull;
-
-  return NS_OK;
-}
-
-nsresult
-nsINode::GetLastChild(nsIDOMNode** aNode)
-{
-  nsIContent* child = GetLastChild();
-  if (child) {
-    return CallQueryInterface(child, aNode);
-  }
-
-  *aNode = nsnull;
-
-  return NS_OK;
-}
-
-nsresult
-nsINode::GetPreviousSibling(nsIDOMNode** aPrevSibling)
-{
-  *aPrevSibling = nsnull;
-
-  nsIContent *sibling = GetSibling(-1);
-
-  return sibling ? CallQueryInterface(sibling, aPrevSibling) : NS_OK;
-}
-
-nsresult
-nsINode::GetNextSibling(nsIDOMNode** aNextSibling)
-{
-  *aNextSibling = nsnull;
-
-  nsIContent *sibling = GetSibling(1);
-
-  return sibling ? CallQueryInterface(sibling, aNextSibling) : NS_OK;
-}
-
-nsresult
-nsINode::GetOwnerDocument(nsIDOMDocument** aOwnerDocument)
-{
-  *aOwnerDocument = nsnull;
-
-  nsIDocument *ownerDoc = GetOwnerDocument();
-
-  return ownerDoc ? CallQueryInterface(ownerDoc, aOwnerDocument) : NS_OK;
-}
-
 //----------------------------------------------------------------------
 
 PRInt32
@@ -1799,6 +1702,60 @@ nsGenericElement::GetNodeType(PRUint16* aNodeType)
 }
 
 NS_IMETHODIMP
+nsGenericElement::GetParentNode(nsIDOMNode** aParentNode)
+{
+  *aParentNode = nsnull;
+  nsINode *parent = GetNodeParent();
+
+  return parent ? CallQueryInterface(parent, aParentNode) : NS_OK;
+}
+
+NS_IMETHODIMP
+nsGenericElement::GetPreviousSibling(nsIDOMNode** aPrevSibling)
+{
+  *aPrevSibling = nsnull;
+
+  nsINode *parent = GetNodeParent();
+  if (!parent) {
+    return NS_OK;
+  }
+
+  PRInt32 pos = parent->IndexOf(this);
+  nsIContent *sibling = parent->GetChildAt(pos - 1);
+
+  return sibling ? CallQueryInterface(sibling, aPrevSibling) : NS_OK;
+}
+
+NS_IMETHODIMP
+nsGenericElement::GetNextSibling(nsIDOMNode** aNextSibling)
+{
+  *aNextSibling = nsnull;
+
+  nsINode *parent = GetNodeParent();
+  if (!parent) {
+    return NS_OK;
+  }
+
+  PRInt32 pos = parent->IndexOf(this);
+  nsIContent *sibling = parent->GetChildAt(pos + 1);
+
+  return sibling ? CallQueryInterface(sibling, aNextSibling) : NS_OK;
+}
+
+NS_IMETHODIMP
+nsGenericElement::GetOwnerDocument(nsIDOMDocument** aOwnerDocument)
+{
+  nsIDocument *doc = GetOwnerDoc();
+  if (doc) {
+    return CallQueryInterface(doc, aOwnerDocument);
+  }
+
+  *aOwnerDocument = nsnull;
+
+  return NS_OK;
+}
+
+NS_IMETHODIMP
 nsGenericElement::GetNamespaceURI(nsAString& aNamespaceURI)
 {
   return mNodeInfo->GetNamespaceURI(aNamespaceURI);
@@ -1990,9 +1947,58 @@ nsGenericElement::GetAttributes(nsIDOMNamedNodeMap** aAttributes)
 }
 
 nsresult
+nsGenericElement::GetChildNodes(nsIDOMNodeList** aChildNodes)
+{
+  nsSlots *slots = GetSlots();
+
+  if (!slots) {
+    return NS_ERROR_OUT_OF_MEMORY;
+  }
+
+  if (!slots->mChildNodes) {
+    slots->mChildNodes = new nsChildContentList(this);
+    if (!slots->mChildNodes) {
+      return NS_ERROR_OUT_OF_MEMORY;
+    }
+    NS_ADDREF(slots->mChildNodes);
+  }
+
+  NS_ADDREF(*aChildNodes = slots->mChildNodes);
+
+  return NS_OK;
+}
+
+nsresult
 nsGenericElement::HasChildNodes(PRBool* aReturn)
 {
   *aReturn = mAttrsAndChildren.ChildCount() > 0;
+
+  return NS_OK;
+}
+
+nsresult
+nsGenericElement::GetFirstChild(nsIDOMNode** aNode)
+{
+  nsIContent* child = GetChildAt(0);
+  if (child) {
+    return CallQueryInterface(child, aNode);
+  }
+
+  *aNode = nsnull;
+
+  return NS_OK;
+}
+
+nsresult
+nsGenericElement::GetLastChild(nsIDOMNode** aNode)
+{
+  PRUint32 count = GetChildCount();
+  
+  if (count > 0) {
+    return CallQueryInterface(GetChildAt(count - 1), aNode);
+  }
+
+  *aNode = nsnull;
 
   return NS_OK;
 }
