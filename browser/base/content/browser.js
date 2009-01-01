@@ -6873,13 +6873,7 @@ let gPrivateBrowsingUI = {
     var brandBundle = bundleService.createBundle("chrome://branding/locale/brand.properties");
 
     var appName = brandBundle.GetStringFromName("brandShortName");
-# On Mac, no title should be displayed.
-#ifdef XP_MACOSX
-    var dialogTitle = "";
-#else
     var dialogTitle = pbBundle.GetStringFromName("privateBrowsingDialogTitle");
-#endif
-    var header = pbBundle.GetStringFromName("privateBrowsingMessageHeader");
     var message = pbBundle.formatStringFromName("privateBrowsingMessage", [appName], 1);
 
     var promptService = Cc["@mozilla.org/embedcomp/prompt-service;1"].
@@ -6895,7 +6889,7 @@ let gPrivateBrowsingUI = {
     var neverAskText = pbBundle.GetStringFromName("privateBrowsingNeverAsk");
 
     var result;
-    var choice = promptService.confirmEx(null, dialogTitle, header + "\n\n" + message,
+    var choice = promptService.confirmEx(null, dialogTitle, message,
                                flags, button0Title, button1Title, null,
                                neverAskText, neverAsk);
 
