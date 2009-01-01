@@ -43,6 +43,8 @@
   %netErrorDTD;
   <!ENTITY % globalDTD SYSTEM "chrome://global/locale/global.dtd">
   %globalDTD;
+  <!ENTITY % browserDTD SYSTEM "chrome://browser/locale/browser.dtd">
+  %browserDTD;
   <!ENTITY % privatebrowsingpageDTD SYSTEM "chrome://browser/locale/aboutPrivateBrowsing.dtd">
   %privatebrowsingpageDTD;
 ]>
@@ -79,38 +81,33 @@
 
     <!-- PAGE CONTAINER (for styling purposes only) -->
     <div id="errorPageContainer">
-    
+
       <!-- Error Title -->
       <div id="errorTitle">
         <h1 id="errorTitleText">&privatebrowsingpage.pagetitle;</h1>
       </div>
-      
+
       <!-- LONG CONTENT (the section most likely to require scrolling) -->
       <div id="errorLongContent">
-      
+
         <!-- Short Description -->
         <div id="errorShortDesc">
           <p id="errorShortDescText">&privatebrowsingpage.issueDesc;</p>
         </div>
 
-        <!-- Long Description (Note: See netError.dtd for used XHTML tags) -->
+        <!-- Long Description -->
         <div id="errorLongDesc">
-          <p>&privatebrowsingpage.longDesc;</p>
+          <p>&privatebrowsingpage.description;</p>
         </div>
 
         <!-- Clear Recent History -->
         <div id="clearRecentHistoryDesc">
-          <p>&privatebrowsingpage.clearRecentHistoryDesc;</p>
-          <button xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
-                  id="showClearRecentHistory" label="&privatebrowsingpage.clearRecentHistory.label;"
-                  accesskey="&privatebrowsingpage.clearRecentHistory.accesskey;"
-                  oncommand="openSanitizeDialog();"/>
+          <p>&privatebrowsingpage.clearRecentHistoryBefore;<a href="javascript:openSanitizeDialog();">&privatebrowsingpage.clearRecentHistoryInner;</a>&privatebrowsingpage.clearRecentHistoryAfter;</p>
         </div>
 
         <!-- Footer -->
         <div id="footerDesc">
-          <p>&privatebrowsingpage.howToStopDesc;</p>
-          <p id="enjoyDesc">&privatebrowsingpage.footerDesc;</p>
+          <p>&privatebrowsingpage.howToStop;</p>
         </div>
       </div>
     </div>

@@ -467,10 +467,12 @@
 #endif
               <menuseparator id="sanitizeSeparator"/>
               <menuitem id="privateBrowsingItem"
-                        label="&privateBrowsingCmd.label;"
-                        accesskey="&privateBrowsingCmd.accesskey;"
-                        type="checkbox"
-                        autocheck="false"
+                        label="&privateBrowsingCmd.start.label;"
+                        accesskey="&privateBrowsingCmd.start.accesskey;"
+                        startlabel="&privateBrowsingCmd.start.label;"
+                        startaccesskey="&privateBrowsingCmd.start.accesskey;"
+                        stoplabel="&privateBrowsingCmd.stop.label;"
+                        stopaccesskey="&privateBrowsingCmd.stop.accesskey;"
                         command="Tools:PrivateBrowsing"/>
               <menuitem id="sanitizeItem"
                         accesskey="&clearRecentHistoryCmd.accesskey;"
