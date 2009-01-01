@@ -1136,7 +1136,7 @@ void BuildTextRunsScanner::FlushFrames(PRBool aFlushLineBreaks, PRBool aSuppress
   if (!mSkipIncompleteTextRuns && mCurrentFramesAllSameTextRun &&
       ((mCurrentFramesAllSameTextRun->GetFlags() & nsTextFrameUtils::TEXT_INCOMING_WHITESPACE) != 0) ==
       ((mCurrentRunContextInfo & nsTextFrameUtils::INCOMING_WHITESPACE) != 0) &&
-      ((mCurrentFramesAllSameTextRun->GetFlags() & nsTextFrameUtils::TEXT_INCOMING_ARABICCHAR) != 0) ==
+      ((mCurrentFramesAllSameTextRun->GetFlags() & gfxTextRunWordCache::TEXT_INCOMING_ARABICCHAR) != 0) ==
       ((mCurrentRunContextInfo & nsTextFrameUtils::INCOMING_ARABICCHAR) != 0) &&
       IsTextRunValidForMappedFlows(mCurrentFramesAllSameTextRun)) {
     // Optimization: We do not need to (re)build the textrun.
@@ -1149,7 +1149,7 @@ void BuildTextRunsScanner::FlushFrames(PRBool aFlushLineBreaks, PRBool aSuppress
     if (textRun->GetFlags() & nsTextFrameUtils::TEXT_TRAILING_WHITESPACE) {
       mNextRunContextInfo |= nsTextFrameUtils::INCOMING_WHITESPACE;
     }
-    if (textRun->GetFlags() & nsTextFrameUtils::TEXT_TRAILING_ARABICCHAR) {
+    if (textRun->GetFlags() & gfxTextRunWordCache::TEXT_TRAILING_ARABICCHAR) {
       mNextRunContextInfo |= nsTextFrameUtils::INCOMING_ARABICCHAR;
     }
   } else {
@@ -1485,7 +1485,7 @@ BuildTextRunsScanner::BuildTextRunForFrames(void* aTextBuffer)
     textFlags |= nsTextFrameUtils::TEXT_INCOMING_WHITESPACE;
   }
   if (mCurrentRunContextInfo & nsTextFrameUtils::INCOMING_ARABICCHAR) {
-    textFlags |= nsTextFrameUtils::TEXT_INCOMING_ARABICCHAR;
+    textFlags |= gfxTextRunWordCache::TEXT_INCOMING_ARABICCHAR;
   }
 
   nsAutoTArray<PRInt32,50> textBreakPoints;
@@ -1658,7 +1658,7 @@ BuildTextRunsScanner::BuildTextRunForFrames(void* aTextBuffer)
     textFlags |= nsTextFrameUtils::TEXT_TRAILING_WHITESPACE;
   }
   if (mNextRunContextInfo & nsTextFrameUtils::INCOMING_ARABICCHAR) {
-    textFlags |= nsTextFrameUtils::TEXT_TRAILING_ARABICCHAR;
+    textFlags |= gfxTextRunWordCache::TEXT_TRAILING_ARABICCHAR;
   }
   // ContinueTextRunAcrossFrames guarantees that it doesn't matter which
   // frame's style is used, so use the last frame's
