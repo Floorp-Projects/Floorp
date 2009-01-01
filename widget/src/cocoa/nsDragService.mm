@@ -138,11 +138,14 @@ static nsresult SetUpDragClipboard(nsISupportsArray* aTransferableArray)
       NSString* currentKey = [types objectAtIndex:i];
       id currentValue = [pasteboardOutputDict valueForKey:currentKey];
       if (currentKey == NSStringPboardType ||
-          currentKey == NSHTMLPboardType ||
           currentKey == kCorePboardType_url ||
           currentKey == kCorePboardType_urld ||
           currentKey == kCorePboardType_urln) {
         [dragPBoard setString:currentValue forType:currentKey];
+      }
+      else if (currentKey == NSHTMLPboardType) {
+        [dragPBoard setString:(nsClipboard::WrapHtmlForSystemPasteboard(currentValue))
+                      forType:currentKey];
       }
       else if (currentKey == NSTIFFPboardType) {
         [dragPBoard setData:currentValue forType:currentKey];

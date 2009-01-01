@@ -1,0 +1,15 @@
+<!DOCTYPE html>
+<html>
+<head>
+<script type="text/javascript">
+
+function boom()
+{
+  document.removeChild(document.documentElement)
+  document.appendChild(document.createElementNS("http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul", "hbox"));
+}
+
+</script>
+</head>
+<body onload="boom();"></body>
+</html>
