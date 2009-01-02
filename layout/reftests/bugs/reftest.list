@@ -630,6 +630,7 @@ fails == 386310-1d.html 386310-1-ref.html
 == 388367-1.html about:blank
 == 388980-1.html 388980-1-ref.html
 == 389468-1.html 389468-1-ref.html
+== 389623-1.html 389623-1-ref.html
 == 389636-1.html about:blank  # assertion test
 == 389924-1a.html 389924-1-ref.html
 == 389924-1b.html 389924-1-ref.html
