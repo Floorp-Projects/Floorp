@@ -87,8 +87,6 @@ var gContextMenu = null;
 
 var gChromeState = null; // chrome state before we went into print preview
 
-var gSanitizeListener = null;
-
 var gAutoHideTabbarPrefListener = null;
 var gBookmarkAllTabsHandler = null;
 
@@ -1200,7 +1198,7 @@ function delayedStartup(isLoadingBlank, mustLoadSidebar) {
   gNavToolbox.customizeChange = BrowserToolboxCustomizeChange;
 
   // Set up Sanitize Item
-  gSanitizeListener = new SanitizeListener();
+  initializeSanitizer();
 
   // Enable/Disable auto-hide tabbar
   gAutoHideTabbarPrefListener = new AutoHideTabbarPrefListener();
@@ -1400,9 +1398,6 @@ function BrowserShutdown()
     Components.utils.reportError(ex);
   }
 
-  if (gSanitizeListener)
-    gSanitizeListener.shutdown();
-
   BrowserOffline.uninit();
   OfflineApps.uninit();
   DownloadMonitorPanel.uninit();
@@ -1482,14 +1477,11 @@ function nonBrowserWindowDelayedStartup()
   BrowserOffline.init();
   
   // Set up Sanitize Item
-  gSanitizeListener = new SanitizeListener();
+  initializeSanitizer();
 }
 
 function nonBrowserWindowShutdown()
 {
-  if (gSanitizeListener)
-    gSanitizeListener.shutdown();
-
   BrowserOffline.uninit();
 }
 #endif
@@ -1525,43 +1517,18 @@ AutoHideTabbarPrefListener.prototype =
   }
 }
 
-function SanitizeListener()
+function initializeSanitizer()
 {
-  gPrefService.addObserver(this.promptDomain, this, false);
+  // Always use the label with ellipsis
+  var label = gNavigatorBundle.getString("sanitizeWithPromptLabel2");
+  document.getElementById("sanitizeItem").setAttribute("label", label);
 
-  this._defaultLabel = document.getElementById("sanitizeItem")
-                               .getAttribute("label");
-  this._updateSanitizeItem();
-
-  if (gPrefService.prefHasUserValue(this.didSanitizeDomain)) {
-    gPrefService.clearUserPref(this.didSanitizeDomain);
+  const kDidSanitizeDomain = "privacy.sanitize.didShutdownSanitize";
+  if (gPrefService.prefHasUserValue(kDidSanitizeDomain)) {
+    gPrefService.clearUserPref(kDidSanitizeDomain);
     // We need to persist this preference change, since we want to
     // check it at next app start even if the browser exits abruptly
     gPrefService.QueryInterface(Ci.nsIPrefService).savePrefFile(null);
-  }
-}
-
-SanitizeListener.prototype =
-{
-  promptDomain      : "privacy.sanitize.promptOnSanitize",
-  didSanitizeDomain : "privacy.sanitize.didShutdownSanitize",
-
-  observe: function (aSubject, aTopic, aPrefName)
-  {
-    this._updateSanitizeItem();
-  },
-
-  shutdown: function ()
-  {
-    gPrefService.removeObserver(this.promptDomain, this);
-  },
-
-  _updateSanitizeItem: function ()
-  {
-    var label = gPrefService.getBoolPref(this.promptDomain) ?
-        gNavigatorBundle.getString("sanitizeWithPromptLabel2") : 
-        this._defaultLabel;
-    document.getElementById("sanitizeItem").setAttribute("label", label);
   }
 }
 
@@ -2413,6 +2380,11 @@ function BrowserOnCommand(event) {
           notificationBox.PRIORITY_CRITICAL_HIGH,
           buttons
         );
+      }
+    }
+    else if (/^about:privatebrowsing/.test(errorDoc.documentURI)) {
+      if (ot == errorDoc.getElementById("startPrivateBrowsing")) {
+        gPrivateBrowsingUI.toggleMode();
       }
     }
 }
@@ -6915,9 +6887,7 @@ let gPrivateBrowsingUI = {
   },
 
   onEnterPrivateBrowsing: function PBUI_onEnterPrivateBrowsing() {
-    let pbMenuItem = document.getElementById("privateBrowsingItem");
-    if (pbMenuItem)
-      pbMenuItem.setAttribute("checked", "true");
+    this._setPBMenuTitle("stop");
 
     this._privateBrowsingAutoStarted = this._privateBrowsingService.autoStarted;
 
@@ -6932,6 +6902,7 @@ let gPrivateBrowsingUI = {
     }
     else {
       // Disable the menu item in auto-start mode
+      let pbMenuItem = document.getElementById("privateBrowsingItem");
       if (pbMenuItem)
         pbMenuItem.setAttribute("disabled", "true");
       document.getElementById("Tools:PrivateBrowsing")
@@ -6945,9 +6916,7 @@ let gPrivateBrowsingUI = {
 
     gFindBar.getElement("findbar-textbox").reset();
 
-    let pbMenuItem = document.getElementById("privateBrowsingItem");
-    if (pbMenuItem)
-      pbMenuItem.removeAttribute("checked");
+    this._setPBMenuTitle("start");
 
     if (!this._privateBrowsingAutoStarted) {
       // Adjust the window's title
@@ -6960,6 +6929,14 @@ let gPrivateBrowsingUI = {
     }
     else
       this._privateBrowsingAutoStarted = false;
+  },
+
+  _setPBMenuTitle: function PBUI__setPBMenuTitle(aMode) {
+    let pbMenuItem = document.getElementById("privateBrowsingItem");
+    if (pbMenuItem) {
+      pbMenuItem.setAttribute("label", pbMenuItem.getAttribute(aMode + "label"));
+      pbMenuItem.setAttribute("accesskey", pbMenuItem.getAttribute(aMode + "accesskey"));
+    }
   },
 
   toggleMode: function PBUI_toggleMode() {

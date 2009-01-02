@@ -64,7 +64,7 @@ interface nsIBrowserGlue : nsISupports
    * Deletes privacy sensitive data according to user preferences
    *
    * @param aParentWindow an optionally null window which is the parent of the 
-   *        sanitization dialog (if it has to be shown per user preferences)
+   *        sanitization dialog
    *
    */
   void sanitize(in nsIDOMWindow aParentWindow);
