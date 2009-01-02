@@ -997,7 +997,6 @@ public:
 
   nsresult CloneDocHelper(nsDocument* clone) const;
 
-  void InitializeFinalizeFrameLoaders();
 protected:
 
   void RegisterNamedItems(nsIContent *aContent);
@@ -1016,6 +1015,8 @@ protected:
   nsIdentifierMapEntry* GetElementByIdInternal(nsIAtom* aID);
 
   void DispatchContentLoadedEvents();
+
+  void InitializeFinalizeFrameLoaders();
 
   void RetrieveRelevantHeaders(nsIChannel *aChannel);
 
@@ -1261,7 +1262,6 @@ private:
 
   nsTArray<nsRefPtr<nsFrameLoader> > mInitializableFrameLoaders;
   nsTArray<nsRefPtr<nsFrameLoader> > mFinalizableFrameLoaders;
-  nsCOMPtr<nsIRunnable> mFrameLoaderRunner;
 
   nsRevocableEventPtr<nsRunnableMethod<nsDocument> > mPendingTitleChangeEvent;
 

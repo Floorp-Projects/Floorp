@@ -5115,18 +5115,6 @@ nsDocument::FlushSkinBindings()
   BindingManager()->FlushSkinBindings();
 }
 
-class nsFrameLoaderRunner : public nsRunnable
-{
-public:
-  nsFrameLoaderRunner(nsDocument* aDoc) : mDoc(aDoc) {}
-  NS_IMETHOD Run() {
-    mDoc->InitializeFinalizeFrameLoaders();
-    return NS_OK;
-  }
-private:
-  nsRefPtr<nsDocument> mDoc;
-};
-
 nsresult
 nsDocument::InitializeFrameLoader(nsFrameLoader* aLoader)
 {
@@ -5137,12 +5125,11 @@ nsDocument::InitializeFrameLoader(nsFrameLoader* aLoader)
                "document is being deleted");
     return NS_ERROR_FAILURE;
   }
-
-  mInitializableFrameLoaders.AppendElement(aLoader);
-  if (!mFrameLoaderRunner) {
-    mFrameLoaderRunner = new nsFrameLoaderRunner(this);
-    NS_ENSURE_TRUE(mFrameLoaderRunner, NS_ERROR_OUT_OF_MEMORY);
-    nsContentUtils::AddScriptRunner(mFrameLoaderRunner);
+  if (mUpdateNestLevel == 0 && !mDelayFrameLoaderInitialization) {
+    nsRefPtr<nsFrameLoader> loader = aLoader;
+    return loader->ReallyStartLoading();
+  } else {
+    mInitializableFrameLoaders.AppendElement(aLoader);
   }
   return NS_OK;
 }
@@ -5154,12 +5141,11 @@ nsDocument::FinalizeFrameLoader(nsFrameLoader* aLoader)
   if (mInDestructor) {
     return NS_ERROR_FAILURE;
   }
-
-  mFinalizableFrameLoaders.AppendElement(aLoader);
-  if (!mFrameLoaderRunner) {
-    mFrameLoaderRunner = new nsFrameLoaderRunner(this);
-    NS_ENSURE_TRUE(mFrameLoaderRunner, NS_ERROR_OUT_OF_MEMORY);
-    nsContentUtils::AddScriptRunner(mFrameLoaderRunner);
+  if (mUpdateNestLevel == 0) {
+    nsRefPtr<nsFrameLoader> loader = aLoader;
+    loader->Finalize();
+  } else {
+    mFinalizableFrameLoaders.AppendElement(aLoader);
   }
   return NS_OK;
 }
@@ -5167,11 +5153,8 @@ nsDocument::FinalizeFrameLoader(nsFrameLoader* aLoader)
 void
 nsDocument::InitializeFinalizeFrameLoaders()
 {
-  mFrameLoaderRunner = nsnull;
-  if (mDelayFrameLoaderInitialization || mUpdateNestLevel != 0) {
-    return;
-  }
-
+  NS_ASSERTION(mUpdateNestLevel == 0 && !mDelayFrameLoaderInitialization,
+               "Wrong time to call InitializeFinalizeFrameLoaders!");
   // Don't use a temporary array for mInitializableFrameLoaders, because
   // loading a frame may cause some other frameloader to be removed from the
   // array. But be careful to keep the loader alive when starting the load!
