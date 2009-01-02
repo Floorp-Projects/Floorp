@@ -137,7 +137,7 @@ WriteConsoleLog();
 
 #ifdef XP_WIN
 BOOL
-WinLaunchChild(const PRUnichar *exePath, int argc, char **argv, int needElevation);
+WinLaunchChild(const PRUnichar *exePath, int argc, char **argv);
 #endif
 
 #define NS_NATIVEAPPSUPPORT_CONTRACTID "@mozilla.org/toolkit/native-app-support;1"
