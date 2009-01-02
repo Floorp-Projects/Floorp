@@ -266,12 +266,6 @@ SyncEngine.prototype = {
     Utils.prefs.setCharPref(this.name + ".lastSync", value);
   },
 
-  get outgoing() {
-    if (!this._outgoing)
-      this._outgoing = {};
-    return this._outgoing;
-  },
-
   // Create a new record by querying the store, and add the engine metadata
   _createRecord: function SyncEngine__createRecord(id) {
     let record = this._store.createRecord(id);
@@ -293,19 +287,11 @@ SyncEngine.prototype = {
     return Utils.deepEquals(a.cleartext, b.cleartext);
   },
 
-  _changeRecordRefs: function SyncEngine__changeRecordRefs(oldID, newID) {
-    let self = yield;
-    for each (let rec in this.outgoing) {
-      if (rec.parentid == oldID)
-        rec.parentid = newID;
-    }
-  },
-
   _lowMemCheck: function SyncEngine__lowMemCheck() {
-    if (mem.isLowMemory()) {
+    if (this._memory.isLowMemory()) {
       this._log.warn("Low memory, forcing GC");
       Cu.forceGC();
-      if (mem.isLowMemory()) {
+      if (this._memory.isLowMemory()) {
         this._log.warn("Low memory, aborting sync!");
         throw "Low memory";
       }
@@ -332,20 +318,17 @@ SyncEngine.prototype = {
     }
 
     // first sync special case: upload all items
-    // note that we use a backdoor (of sorts) to the tracker and it
-    // won't save to disk this list
+    // NOTE: we use a backdoor (of sorts) to the tracker so it
+    // won't save to disk this list over and over
     if (!this.lastSync) {
       this._log.info("First sync, uploading all items");
-
-      // remove any old ones first
       this._tracker.clearChangedIDs();
-
-      // now add all current ones
-      let all = this._store.getAllIDs();
-      for (let id in all) {
-        this._tracker.changedIDs[id] = true;
-      }
+      [i for (i in this._store.getAllIDs())]
+        .forEach(function(id) this._tracker.changedIDs[id] = true, this);
     }
+
+    let outnum = [i for (i in this._tracker.changedIDs)].length;
+    this._log.info(outnum + " outgoing items pre-reconciliation");
 
     this._tracker.disable(); // FIXME: need finer-grained ignoring
   },
@@ -377,7 +360,7 @@ SyncEngine.prototype = {
       if (yield this._reconcile.async(this, self.cb, item))
         yield this._applyIncoming.async(this, self.cb, item);
       else {
-        this._log.debug("Skipping reconciled incoming item " + item.id);
+        this._log.trace("Skipping reconciled incoming item " + item.id);
         if (this._lastSyncTmp < item.modified)
           this._lastSyncTmp = item.modified;
       }
@@ -385,58 +368,52 @@ SyncEngine.prototype = {
     if (this.lastSync < this._lastSyncTmp)
         this.lastSync = this._lastSyncTmp;
 
-    this._store.cache.clear(); // free some memory
+    // try to free some memory
+    this._store.cache.clear();
+    Cu.forceGC();
   },
 
-  // Reconciliation has two steps:
+  // Reconciliation has three steps:
   // 1) Check for the same item (same ID) on both the incoming and outgoing
-  // queues.  This means the same item was modified on this profile and another
-  // at the same time.  In this case, this client wins (which really means, the
-  // last profile you sync wins).
-  // 2) Check if any incoming & outgoing items are actually the same, even
-  // though they have different IDs.  This happens when the same item is added
-  // on two different machines at the same time.  For example, when a profile
-  // is synced for the first time after having (manually or otherwise) imported
-  // bookmarks imported, every bookmark will match this condition.
-  // When two items with different IDs are "the same" we change the local ID to
-  // match the remote one.
+  //    queues.  This means the same item was modified on this profile and
+  //    another at the same time.  In this case, this client wins (which really
+  //    means, the last profile you sync wins).
+  // 2) Check if the incoming item's ID exists locally.  In that case it's an
+  //    update and we should not try a similarity check (step 3)
+  // 3) Check if any incoming & outgoing items are actually the same, even
+  //    though they have different IDs.  This happens when the same item is
+  //    added on two different machines at the same time.  It's also the common
+  //    case when syncing for the first time two machines that already have the
+  //    same bookmarks.  In this case we change the IDs to match.
   _reconcile: function SyncEngine__reconcile(item) {
     let self = yield;
     let ret = true;
 
-    // Check for the same item (same ID) on both incoming & outgoing queues
+    // Step 1: check for conflicts
     if (item.id in this._tracker.changedIDs) {
       // Check to see if client and server were changed in the same way
       let out = this._createRecord(item.id);
-      if (Utils.deepEquals(item.cleartext, out.cleartext)) {
+      if (Utils.deepEquals(item.cleartext, out.cleartext))
         this._tracker.removeChangedID(item.id);
-        delete this.outgoing[item.id];
-      } else {
+      else
         this._log.debug("Discarding server change due to conflict with local change");
-      }
       self.done(false);
       return;
     }
 
-    // Check for the incoming item's ID otherwise existing locally
+    // Step 2: check for updates
     if (this._store.itemExists(item.id)) {
       self.done(true);
       return;
     }
 
-    // Check for items with different IDs which we think are the same one
+    // Step 3: check for similar items
     for (let id in this._tracker.changedIDs) {
       let out = this._createRecord(id);
-
       if (this._recordLike(item, out)) {
-        // change refs in outgoing queue, then actual id of local item
-        // XXX might it be better to just clear the outgoing queue?
-        yield this._changeRecordRefs.async(this, self.cb, id, item.id);
         this._store.changeItemID(id, item.id);
-
         this._tracker.removeChangedID(item.id);
-        delete this.outgoing[item.id];
-
+        this._store.cache.clear(); // because parentid refs will be wrong
         self.done(false);
         return;
       }
@@ -447,7 +424,6 @@ SyncEngine.prototype = {
   // Apply incoming records
   _applyIncoming: function SyncEngine__applyIncoming(item) {
     let self = yield;
-    this._log.debug("Applying incoming record");
     this._log.trace("Incoming:\n" + item);
     try {
       yield this._store.applyIncoming(self.cb, item);
@@ -463,12 +439,12 @@ SyncEngine.prototype = {
   _uploadOutgoing: function SyncEngine__uploadOutgoing() {
     let self = yield;
 
-    if (this.outgoing.length) {
-      this._log.debug("Uploading client changes (" + this.outgoing.length + ")");
-
+    let outnum = [i for (i in this._tracker.changedIDs)].length;
+    this._log.debug("Preparing " + outnum + " outgoing records");
+    if (outnum) {
       // collection we'll upload
       let up = new Collection(this.engineURL);
-      let depth = {};
+      let meta = {};
 
       // don't cache the outgoing items, we won't need them later
       this._store.cache.enabled = false;
@@ -478,24 +454,29 @@ SyncEngine.prototype = {
         this._log.trace("Outgoing:\n" + out);
         yield out.encrypt(self.cb, ID.get('WeaveCryptoID').password);
         yield up.pushRecord(self.cb, out);
-        this._store.wrapDepth(out.id, depth);
+        this._store.createMetaRecords(out.id, meta);
       }
 
       this._store.cache.enabled = true;
 
-      // now add short depth-only records
-      this._log.trace(depth.length + "outgoing depth records");
-      for (let id in depth) {
-        up.pushDepthRecord({id: id, depth: depth[id]});
+      // now add short depth-and-index-only records, except the ones we're
+      // sending as full records
+      let count = 0;
+      for each (let obj in meta) {
+          if (!obj.id in this._tracker.changedIDs) {
+            up.pushLiteral.push(obj);
+            count++;
+          }
       }
+
+      this._log.debug("Uploading client changes (" + outnum + ")");
+      this._log.debug(count + " outgoing depth+index records");
 
       // do the upload
       yield up.post(self.cb);
 
       // save last modified date
       let mod = up.data.modified;
-      if (typeof(mod) == "string")
-        mod = parseInt(mod);
       if (mod > this.lastSync)
         this.lastSync = mod;
     }
