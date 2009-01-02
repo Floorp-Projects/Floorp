@@ -926,6 +926,13 @@ nsHTMLSelectElement::SetOptionsSelectedByIndex(PRInt32 aStartIndex,
   nsPresContext *presContext = GetPresContext();
 
   if (aIsSelected) {
+    // Setting selectedIndex to an out-of-bounds index means -1. (HTML5)
+    if (aStartIndex >= (PRInt32)numItems || aStartIndex < 0 ||
+        aEndIndex >= (PRInt32)numItems || aEndIndex < 0) {
+      aStartIndex = -1;
+      aEndIndex = -1;
+    }
+
     // Only select the first value if it's not multiple
     if (!isMultiple) {
       aEndIndex = aStartIndex;
@@ -947,12 +954,6 @@ nsHTMLSelectElement::SetOptionsSelectedByIndex(PRInt32 aStartIndex,
     //
     // If index is -1, everything will be deselected (bug 28143)
     if (aStartIndex != -1) {
-      // Verify that the indices are within bounds
-      if (aStartIndex >= (PRInt32)numItems || aStartIndex < 0
-         || aEndIndex >= (PRInt32)numItems || aEndIndex < 0) {
-        return NS_ERROR_FAILURE;
-      }
-
       // Loop through the options and select them (if they are not disabled and
       // if they are not already selected).
       for (PRInt32 optIndex = aStartIndex; optIndex <= aEndIndex; optIndex++) {
