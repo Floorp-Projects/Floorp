@@ -251,7 +251,6 @@ struct FrameInfo {
     JSObject*       callee;     // callee function object
     JSObject*       block;      // caller block chain head
     intptr_t        ip_adj;     // caller script-based pc index and imacro pc
-    uint8*          typemap;    // typemap for the stack frame
     union {
         struct {
             uint16  spdist;     // distance from fp->slots to fp->regs->sp at JSOP_CALL
