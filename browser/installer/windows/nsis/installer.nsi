@@ -760,7 +760,7 @@ Function .onInit
   StrCpy $LANGUAGE 0
   ${SetBrandNameVars} "$EXEDIR\localized\distribution\setup.ini"
 
-  ${InstallOnInitCommon} "$(WARN_UNSUPPORTED_MSG)"
+  ${InstallOnInitCommon} "$(WARN_MIN_SUPPORTED_OS_MSG)"
 
   !insertmacro MUI_INSTALLOPTIONS_EXTRACT "options.ini"
   !insertmacro MUI_INSTALLOPTIONS_EXTRACT "shortcuts.ini"
