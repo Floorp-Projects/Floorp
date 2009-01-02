@@ -693,6 +693,7 @@ namespace nanojit
 			LirBuffer(Fragmento* frago, const CallInfo* functions);
 			virtual ~LirBuffer();
 			void        clear();
+            void        rewind();
 			LInsp		next();
 			bool		outOMem() { return _noMem != 0; }
 			
@@ -714,8 +715,6 @@ namespace nanojit
             LInsp state,param1,sp,rp;
             LInsp savedRegs[NumSavedRegs];
             bool explicitSavedRegs;
-
-     		bool shared;
 			
 		protected:
 			friend class LirBufWriter;

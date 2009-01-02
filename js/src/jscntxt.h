@@ -122,6 +122,7 @@ typedef struct JSTraceMonitor {
      * JS_ReportOutOfMemory when failing due to runtime limits.
      */
     JSBool                  onTrace;
+    CLS(nanojit::LirBuffer) lirbuf;
     CLS(nanojit::Fragmento) fragmento;
     CLS(TraceRecorder)      recorder;
     uint32                  globalShape;
