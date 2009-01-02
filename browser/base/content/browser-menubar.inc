@@ -473,7 +473,7 @@
                         startaccesskey="&privateBrowsingCmd.start.accesskey;"
                         stoplabel="&privateBrowsingCmd.stop.label;"
                         stopaccesskey="&privateBrowsingCmd.stop.accesskey;"
-                        command="Tools:PrivateBrowsing"/>
+                        key="key_privatebrowsing" command="Tools:PrivateBrowsing"/>
               <menuitem id="sanitizeItem"
                         accesskey="&clearRecentHistoryCmd.accesskey;"
                         label="&clearRecentHistoryCmd.label;"
