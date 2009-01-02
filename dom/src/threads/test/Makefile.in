@@ -46,10 +46,6 @@ relativesrcdir   = dom/src/threads/test
 include $(DEPTH)/config/autoconf.mk
 include $(topsrcdir)/config/rules.mk
 
-# Commenting out this test because it's timing out on linux only...
-# test_scopeOnerror.html \
-# scopeOnerror_worker.js \
-
 _TEST_FILES = \
   test_errorPropagation.html \
   errorPropagation_worker1.js \
@@ -74,6 +70,8 @@ _TEST_FILES = \
   relativeLoad_worker.js \
   relativeLoad_worker2.js \
   relativeLoad_import.js \
+  test_scopeOnerror.html \
+  scopeOnerror_worker.js \
   test_simpleThread.html \
   simpleThread_worker.js \
   test_terminate.html \
