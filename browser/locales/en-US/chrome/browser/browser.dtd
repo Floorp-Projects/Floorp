@@ -173,6 +173,7 @@
 <!ENTITY privateBrowsingCmd.start.accesskey     "B">
 <!ENTITY privateBrowsingCmd.stop.label          "Stop Private Browsing">
 <!ENTITY privateBrowsingCmd.stop.accesskey      "B">
+<!ENTITY privateBrowsingCmd.commandkey          "P">
 
 <!ENTITY viewMenu.label         "View"> 
 <!ENTITY viewMenu.accesskey       "V"> 
