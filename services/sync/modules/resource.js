@@ -287,6 +287,7 @@ ChannelListener.prototype = {
 
 function JsonFilter() {
   this._log = Log4Moz.repository.getLogger("Net.JsonFilter");
+  this._log.level = Log4Moz.Level["Debug"];
 }
 JsonFilter.prototype = {
   get _json() {
