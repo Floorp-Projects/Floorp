@@ -808,6 +808,7 @@ public:
 private:
 
   PRBool mIsRegisteredFolderObserver;
+  PRBool mBatchInProgress;
 };
 
 // nsNavHistorySeparatorResultNode

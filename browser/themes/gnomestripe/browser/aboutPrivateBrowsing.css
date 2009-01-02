@@ -36,18 +36,26 @@
  * ***** END LICENSE BLOCK ***** */
 %endif
 
-#errorPageContainer {
+body.private > #errorPageContainer {
   background-image: url("chrome://browser/skin/Privacy-48.png");
+}
+
+body.normal > #errorPageContainer {
+  background-image: url("moz-icon://stock/gtk-dialog-question?size=dialog");
 }
 
 #clearRecentHistoryDesc {
   margin-top: 2em;
 }
 
-#clearRecentHistoryDesc > button {
+#clearRecentHistoryDesc > p {
+  font-size: 110%; /* to match the value set in chrome://global/skin/netError.css */
+}
+
+#startPrivateBrowsingDesc > button {
   -moz-margin-start: 0;
 }
 
-#enjoyDesc {
-  margin-top: 2em;
+#footerDesc > p {
+  font-size: 110%; /* to match the value set in chrome://global/skin/netError.css */
 }

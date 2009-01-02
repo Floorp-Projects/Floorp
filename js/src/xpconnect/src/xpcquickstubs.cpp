@@ -348,7 +348,7 @@ xpc_qsDOMString::xpc_qsDOMString(JSContext *cx, jsval *pval)
     typedef implementation_type::char_traits traits;
     jsval v;
     JSString *s;
-    const jschar *chars;
+    const PRUnichar *chars;
     size_t len;
 
     v = *pval;
@@ -376,7 +376,7 @@ xpc_qsDOMString::xpc_qsDOMString(JSContext *cx, jsval *pval)
     }
 
     len = JS_GetStringLength(s);
-    chars = (len == 0 ? traits::sEmptyBuffer : JS_GetStringChars(s));
+    chars = (len == 0 ? traits::sEmptyBuffer : (const PRUnichar*)JS_GetStringChars(s));
     new(mBuf) implementation_type(chars, len);
     mValid = JS_TRUE;
 }
@@ -387,7 +387,7 @@ xpc_qsAString::xpc_qsAString(JSContext *cx, jsval *pval)
     typedef implementation_type::char_traits traits;
     jsval v;
     JSString *s;
-    const jschar *chars;
+    const PRUnichar *chars;
     size_t len;
 
     v = *pval;
@@ -415,7 +415,7 @@ xpc_qsAString::xpc_qsAString(JSContext *cx, jsval *pval)
     }
 
     len = JS_GetStringLength(s);
-    chars = (len == 0 ? traits::sEmptyBuffer : JS_GetStringChars(s));
+    chars = (len == 0 ? traits::sEmptyBuffer : (const PRUnichar*)JS_GetStringChars(s));
     new(mBuf) implementation_type(chars, len);
     mValid = JS_TRUE;
 }
@@ -720,7 +720,7 @@ xpc_qsJsvalToWcharStr(JSContext *cx, jsval *pval, PRUnichar **pstr)
         *pval = STRING_TO_JSVAL(str);  // Root the new string.
     }
 
-    *pstr = JS_GetStringChars(str);
+    *pstr = (PRUnichar*)JS_GetStringChars(str);
     return JS_TRUE;
 }
 
@@ -743,7 +743,8 @@ xpc_qsStringToJsval(JSContext *cx, const nsAString &str, jsval *rval)
 
 JSBool
 xpc_qsXPCOMObjectToJsval(XPCCallContext &ccx, nsISupports *p,
-                         XPCNativeInterface *iface, jsval *rval)
+                         nsWrapperCache *cache, XPCNativeInterface *iface,
+                         jsval *rval)
 {
     // From the T_INTERFACE case in XPCConvert::NativeData2JS.
     // This is one of the slowest things quick stubs do.
@@ -761,7 +762,7 @@ xpc_qsXPCOMObjectToJsval(XPCCallContext &ccx, nsISupports *p,
     // creating a new XPCNativeScriptableShared.
     nsresult rv;
     if(!XPCConvert::NativeInterface2JSObject(ccx, rval, nsnull, p, nsnull,
-                                             iface, scope, PR_TRUE,
+                                             iface, cache, scope, PR_TRUE,
                                              OBJ_IS_NOT_GLOBAL, &rv))
     {
         // I can't tell if NativeInterface2JSObject throws JS exceptions

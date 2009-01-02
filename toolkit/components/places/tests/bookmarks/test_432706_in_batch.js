@@ -1,4 +1,5 @@
-%if 0
+/* -*- Mode: Java; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
+/* vim:set ts=2 sw=2 sts=2 et: */
 /* ***** BEGIN LICENSE BLOCK *****
  * Version: MPL 1.1/GPL 2.0/LGPL 2.1
  *
@@ -12,14 +13,14 @@
  * for the specific language governing rights and limitations under the
  * License.
  *
- * The Original Code is Private Browsing.
+ * The Original Code is Places test code.
  *
- * The Initial Developer of the Original Code is
- * Ehsan Akhgari <ehsan.akhgari@gmail.com>
+ * The Initial Developer of the Original Code is Mozilla Corp.
  * Portions created by the Initial Developer are Copyright (C) 2008
  * the Initial Developer. All Rights Reserved.
  *
  * Contributor(s):
+ *  Dietrich Ayala <dietrich@mozilla.com>
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -34,28 +35,41 @@
  * the terms of any one of the MPL, the GPL or the LGPL.
  *
  * ***** END LICENSE BLOCK ***** */
-%endif
 
-body.private > #errorPageContainer {
-  background-image: url("chrome://browser/skin/Privacy-48.png");
-}
+var bmsvc = Cc["@mozilla.org/browser/nav-bookmarks-service;1"].
+            getService(Ci.nsINavBookmarksService);
+var histsvc = Cc["@mozilla.org/browser/nav-history-service;1"].
+              getService(Ci.nsINavHistoryService);
 
-body.normal > #errorPageContainer {
-  background-image: url("chrome://global/skin/icons/question-64.png");
-}
+// main
+function run_test() {
 
-#clearRecentHistoryDesc {
-  margin-top: 2em;
-}
+  // create a folder
+  var testFolder = bmsvc.createFolder(bmsvc.placesRoot, "test Folder",
+                                      bmsvc.DEFAULT_INDEX);
 
-#clearRecentHistoryDesc > p {
-  font-size: 110%; /* to match the value set in chrome://global/skin/netError.css */
-}
+  // get a node for the folder
+  var query = histsvc.getNewQuery();
+  query.setFolders([testFolder], 1);
+  var result = histsvc.executeQuery(query, histsvc.getNewQueryOptions());
+  var rootNode = result.root;
+  rootNode.containerOpen = true;
 
-#startPrivateBrowsingDesc > button {
-  -moz-margin-start: 0;
-}
+  // start a batch
+  bmsvc.runInBatchMode({
+    runBatched: function(aUserData) {
+      // add a bookmark
+      var bookmarkId = bmsvc.insertBookmark(testFolder, uri("http://google.com/"),
+                                            bmsvc.DEFAULT_INDEX, "");
 
-#footerDesc > p {
-  font-size: 110%; /* to match the value set in chrome://global/skin/netError.css */
+      // confirm the node child count didn't change inside the batch
+      do_check_eq(rootNode.childCount, 0);
+    }
+  }, null);
+
+  // confirm that after the batch ended, the node and
+  // observer have been updated
+  do_check_eq(rootNode.childCount, 1);
+
+  rootNode.containerOpen = false;
 }

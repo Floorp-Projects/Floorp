@@ -513,7 +513,7 @@ ApplyUpdate(nsIFile *greDir, nsIFile *updateDir, nsILocalFile *statusFile,
 #elif defined(XP_WIN)
   _wchdir(applyToDir.get());
 
-  if (!WinLaunchChild(updaterPathW.get(), appArgc + 4, argv, 0))
+  if (!WinLaunchChild(updaterPathW.get(), appArgc + 4, argv))
     return;
   _exit(0);
 #else
