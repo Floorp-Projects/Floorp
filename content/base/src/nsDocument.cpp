@@ -5115,6 +5115,18 @@ nsDocument::FlushSkinBindings()
   BindingManager()->FlushSkinBindings();
 }
 
+class nsFrameLoaderRunner : public nsRunnable
+{
+public:
+  nsFrameLoaderRunner(nsDocument* aDoc) : mDoc(aDoc) {}
+  NS_IMETHOD Run() {
+    mDoc->InitializeFinalizeFrameLoaders();
+    return NS_OK;
+  }
+private:
+  nsRefPtr<nsDocument> mDoc;
+};
+
 nsresult
 nsDocument::InitializeFrameLoader(nsFrameLoader* aLoader)
 {
@@ -5125,11 +5137,12 @@ nsDocument::InitializeFrameLoader(nsFrameLoader* aLoader)
                "document is being deleted");
     return NS_ERROR_FAILURE;
   }
-  if (mUpdateNestLevel == 0 && !mDelayFrameLoaderInitialization) {
-    nsRefPtr<nsFrameLoader> loader = aLoader;
-    return loader->ReallyStartLoading();
-  } else {
-    mInitializableFrameLoaders.AppendElement(aLoader);
+
+  mInitializableFrameLoaders.AppendElement(aLoader);
+  if (!mFrameLoaderRunner) {
+    mFrameLoaderRunner = new nsFrameLoaderRunner(this);
+    NS_ENSURE_TRUE(mFrameLoaderRunner, NS_ERROR_OUT_OF_MEMORY);
+    nsContentUtils::AddScriptRunner(mFrameLoaderRunner);
   }
   return NS_OK;
 }
@@ -5141,11 +5154,12 @@ nsDocument::FinalizeFrameLoader(nsFrameLoader* aLoader)
   if (mInDestructor) {
     return NS_ERROR_FAILURE;
   }
-  if (mUpdateNestLevel == 0) {
-    nsRefPtr<nsFrameLoader> loader = aLoader;
-    loader->Finalize();
-  } else {
-    mFinalizableFrameLoaders.AppendElement(aLoader);
+
+  mFinalizableFrameLoaders.AppendElement(aLoader);
+  if (!mFrameLoaderRunner) {
+    mFrameLoaderRunner = new nsFrameLoaderRunner(this);
+    NS_ENSURE_TRUE(mFrameLoaderRunner, NS_ERROR_OUT_OF_MEMORY);
+    nsContentUtils::AddScriptRunner(mFrameLoaderRunner);
   }
   return NS_OK;
 }
@@ -5153,8 +5167,11 @@ nsDocument::FinalizeFrameLoader(nsFrameLoader* aLoader)
 void
 nsDocument::InitializeFinalizeFrameLoaders()
 {
-  NS_ASSERTION(mUpdateNestLevel == 0 && !mDelayFrameLoaderInitialization,
-               "Wrong time to call InitializeFinalizeFrameLoaders!");
+  mFrameLoaderRunner = nsnull;
+  if (mDelayFrameLoaderInitialization || mUpdateNestLevel != 0) {
+    return;
+  }
+
   // Don't use a temporary array for mInitializableFrameLoaders, because
   // loading a frame may cause some other frameloader to be removed from the
   // array. But be careful to keep the loader alive when starting the load!
@@ -5333,18 +5350,7 @@ nsDocument::GetParentNode(nsIDOMNode** aParentNode)
 NS_IMETHODIMP
 nsDocument::GetChildNodes(nsIDOMNodeList** aChildNodes)
 {
-  nsSlots *slots = GetSlots();
-  NS_ENSURE_TRUE(slots, NS_ERROR_OUT_OF_MEMORY);
-
-  if (!slots->mChildNodes) {
-    slots->mChildNodes = new nsChildContentList(this);
-    NS_ENSURE_TRUE(slots->mChildNodes, NS_ERROR_OUT_OF_MEMORY);
-    NS_ADDREF(slots->mChildNodes);
-  }
-
-  NS_ADDREF(*aChildNodes = slots->mChildNodes);
-
-  return NS_OK;
+  return nsINode::GetChildNodes(aChildNodes);
 }
 
 NS_IMETHODIMP
@@ -5370,26 +5376,13 @@ nsDocument::HasAttributes(PRBool* aHasAttributes)
 NS_IMETHODIMP
 nsDocument::GetFirstChild(nsIDOMNode** aFirstChild)
 {
-  if (mChildren.ChildCount()) {
-    return CallQueryInterface(mChildren.ChildAt(0), aFirstChild);
-  }
-
-  *aFirstChild = nsnull;
-
-  return NS_OK;
+  return nsINode::GetFirstChild(aFirstChild);
 }
 
 NS_IMETHODIMP
 nsDocument::GetLastChild(nsIDOMNode** aLastChild)
 {
-  PRInt32 count = mChildren.ChildCount();
-  if (count) {
-    return CallQueryInterface(mChildren.ChildAt(count-1), aLastChild);
-  }
-
-  *aLastChild = nsnull;
-
-  return NS_OK;
+  return nsINode::GetLastChild(aLastChild);
 }
 
 NS_IMETHODIMP
@@ -5991,9 +5984,7 @@ nsDocument::RenameNode(nsIDOMNode *aNode,
 NS_IMETHODIMP
 nsDocument::GetOwnerDocument(nsIDOMDocument** aOwnerDocument)
 {
-  *aOwnerDocument = nsnull;
-
-  return NS_OK;
+  return nsINode::GetOwnerDocument(aOwnerDocument);
 }
 
 nsresult

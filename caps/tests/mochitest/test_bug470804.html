@@ -1,0 +1,42 @@
+<!DOCTYPE HTML>
+<html>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=470804
+-->
+<head>
+  <title>Test for Bug 470804</title>
+  <script type="application/javascript" src="/MochiKit/MochiKit.js"></script>
+  <script type="application/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
+</head>
+<body>
+<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=470804">Mozilla Bug 470804</a>
+<p id="display"></p>
+<div id="content" style="display: none">
+
+</div>
+<pre id="test">
+<script type="application/javascript">
+
+/** Test for Bug 470804
+    Passing a null targetURL to checkLoadURIWithPrincipal shouldn't crash
+ **/
+
+netscape.security.PrivilegeManager.enablePrivilege('UniversalXPConnect');
+const nsIScriptSecurityManager = Components.interfaces.nsIScriptSecurityManager;
+var secMan = Components.classes["@mozilla.org/scriptsecuritymanager;1"]
+                       .getService(nsIScriptSecurityManager);
+var principal = document.nodePrincipal;
+is(secMan.isSystemPrincipal(principal), false,
+   "Shouldn't have system principal here");
+try {
+  secMan.checkLoadURIWithPrincipal(principal, null,
+                                   nsIScriptSecurityManager.STANDARD);
+} catch (e) {
+  // throwing is fine, it's just crashing that's bad
+}
+ok(true, "Survival", "We should get here without crashing");
+</script>
+</pre>
+</body>
+</html>

@@ -195,90 +195,6 @@ MakeCommandLine(int argc, PRUnichar **argv)
 }
 
 /**
- * Launch a child process without elevated privilege.
- */
-static BOOL
-LaunchAsNormalUser(const PRUnichar *exePath, PRUnichar *cl)
-{
-#ifdef WINCE
-  return PR_FALSE;
-#else
-  if (!pCreateProcessWithTokenW) {
-    // IsUserAnAdmin is not present on Win9x and not exported by name on Win2k
-    *(FARPROC *)&pIsUserAnAdmin =
-        GetProcAddress(GetModuleHandleA("shell32.dll"), "IsUserAnAdmin");
-
-    // CreateProcessWithTokenW is not present on WinXP or earlier
-    *(FARPROC *)&pCreateProcessWithTokenW =
-        GetProcAddress(GetModuleHandleA("advapi32.dll"),
-                       "CreateProcessWithTokenW");
-
-    if (!pCreateProcessWithTokenW)
-      return FALSE;
-  }
-
-  // do nothing here if we are not elevated or IsUserAnAdmin is not present.
-  if (!pIsUserAnAdmin || pIsUserAnAdmin && !pIsUserAnAdmin())
-    return FALSE;
-
-  // borrow the shell token to drop the privilege
-  HWND hwndShell = FindWindowA("Progman", NULL);
-  DWORD dwProcessId;
-  GetWindowThreadProcessId(hwndShell, &dwProcessId);
-
-  HANDLE hProcessShell = OpenProcess(MAXIMUM_ALLOWED, FALSE, dwProcessId);
-  if (!hProcessShell)
-    return FALSE;
-
-  HANDLE hTokenShell;
-  BOOL ok = OpenProcessToken(hProcessShell, MAXIMUM_ALLOWED, &hTokenShell);
-  CloseHandle(hProcessShell);
-  if (!ok)
-    return FALSE;
-
-  HANDLE hNewToken;
-  ok = DuplicateTokenEx(hTokenShell,
-                        MAXIMUM_ALLOWED,
-                        NULL,
-                        SecurityDelegation,
-                        TokenPrimary,
-                        &hNewToken);
-  CloseHandle(hTokenShell);
-  if (!ok)
-    return FALSE;
-
-  STARTUPINFOW si = {sizeof(si), 0};
-  PROCESS_INFORMATION pi = {0};
-
-  // When launching with reduced privileges, environment inheritance
-  // (passing NULL as lpEnvironment) doesn't work correctly. Pass our
-  // current environment block explicitly
-  WCHAR* myenv = GetEnvironmentStringsW();
-
-  ok = pCreateProcessWithTokenW(hNewToken,
-                                0,    // profile is already loaded
-                                exePath,
-                                cl,
-                                CREATE_UNICODE_ENVIRONMENT,
-                                myenv, // inherit my environment
-                                NULL, // use my current directory
-                                &si,
-                                &pi);
-
-  if (myenv)
-    FreeEnvironmentStringsW(myenv);
-
-  CloseHandle(hNewToken);
-  if (!ok)
-    return FALSE;
-
-  CloseHandle(pi.hProcess);
-  CloseHandle(pi.hThread);
-
-  return TRUE;
-#endif
-}
-/**
  * Convert UTF8 to UTF16 without using the normal XPCOM goop, which we
  * can't link to updater.exe.
  */
@@ -310,16 +226,15 @@ FreeAllocStrings(int argc, PRUnichar **argv)
 
 /**
  * Launch a child process with the specified arguments.
- * @param needElevation 1:need elevation, -1:want to drop priv, 0:don't care
  * @note argv[0] is ignored
  * @note The form of this function that takes char **argv expects UTF-8
  */
 
 BOOL
-WinLaunchChild(const PRUnichar *exePath, int argc, PRUnichar **argv, int needElevation);
+WinLaunchChild(const PRUnichar *exePath, int argc, PRUnichar **argv);
 
 BOOL
-WinLaunchChild(const PRUnichar *exePath, int argc, char **argv, int needElevation)
+WinLaunchChild(const PRUnichar *exePath, int argc, char **argv)
 {
   PRUnichar** argvConverted = new PRUnichar*[argc];
   if (!argvConverted)
@@ -332,61 +247,37 @@ WinLaunchChild(const PRUnichar *exePath, int argc, char **argv, int needElevatio
     }
   }
 
-  BOOL ok = WinLaunchChild(exePath, argc, argvConverted, needElevation);
+  BOOL ok = WinLaunchChild(exePath, argc, argvConverted);
   FreeAllocStrings(argc, argvConverted);
   return ok;
 }
 
 BOOL
-WinLaunchChild(const PRUnichar *exePath, int argc, PRUnichar **argv, int needElevation)
+WinLaunchChild(const PRUnichar *exePath, int argc, PRUnichar **argv)
 {
   PRUnichar *cl;
   BOOL ok;
-#ifndef WINCE
-  if (needElevation > 0) {
-    cl = MakeCommandLine(argc - 1, argv + 1);
-    if (!cl)
-      return FALSE;
-    ok = ShellExecuteW(NULL, // no special UI window
-                       NULL, // use default verb
-                       exePath,
-                       cl,
-                       NULL, // use my current directory
-                       SW_SHOWDEFAULT) > (HINSTANCE)32;
-    free(cl);
-    return ok;
-  }
-#endif
   cl = MakeCommandLine(argc, argv);
   if (!cl)
     return FALSE;
 
-  if (needElevation < 0) {
-    // try to launch as a normal user first
-    ok = LaunchAsNormalUser(exePath, cl);
-    // if it fails, fallback to normal launching
-    if (!ok)
-      needElevation = 0;
-  }
-  if (needElevation == 0) {
-    STARTUPINFOW si = {sizeof(si), 0};
-    PROCESS_INFORMATION pi = {0};
+  STARTUPINFOW si = {sizeof(si), 0};
+  PROCESS_INFORMATION pi = {0};
 
-    ok = CreateProcessW(exePath,
-                        cl,
-                        NULL,  // no special security attributes
-                        NULL,  // no special thread attributes
-                        FALSE, // don't inherit filehandles
-                        0,     // No special process creation flags
-                        NULL,  // inherit my environment
-                        NULL,  // use my current directory
-                        &si,
-                        &pi);
+  ok = CreateProcessW(exePath,
+                      cl,
+                      NULL,  // no special security attributes
+                      NULL,  // no special thread attributes
+                      FALSE, // don't inherit filehandles
+                      0,     // No special process creation flags
+                      NULL,  // inherit my environment
+                      NULL,  // use my current directory
+                      &si,
+                      &pi);
 
-    if (ok) {
-      CloseHandle(pi.hProcess);
-      CloseHandle(pi.hThread);
-    }
+  if (ok) {
+    CloseHandle(pi.hProcess);
+    CloseHandle(pi.hThread);
   }
 
   free(cl);
