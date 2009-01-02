@@ -105,11 +105,11 @@ WBORecord.prototype = {
   },
 
   toString: function WBORec_toString() {
-    return "id: " + this.id + "\n" +
-      "parent: " + this.parentid + "\n" +
-      "depth: " + this.depth + ", index: " + this.sortindex + "\n" +
-      "modified: " + this.modified + "\n" +
-      "payload: " + json.encode(this.cleartext);
+    return "{ id: " + this.id + "\n" +
+      "  parent: " + this.parentid + "\n" +
+      "  depth: " + this.depth + ", index: " + this.sortindex + "\n" +
+      "  modified: " + this.modified + "\n" +
+      "  payload: " + json.encode(this.cleartext) + " }";
   }
 };
 
