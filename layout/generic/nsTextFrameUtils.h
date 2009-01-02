@@ -79,9 +79,12 @@ public:
     // We normally don't use this break opportunity because the following text
     // will have a break opportunity at the start, but it's useful for line
     // layout to know about it in case the following content is not text
-    TEXT_HAS_TRAILING_BREAK  = 0x4000000,
-    TEXT_TRAILING_ARABICCHAR = 0x8000000,
-    TEXT_INCOMING_ARABICCHAR = 0x10000000
+    TEXT_HAS_TRAILING_BREAK  = 0x4000000
+
+    // The following are defined by gfxTextRunWordCache rather than here,
+    // so that it also has access to the _INCOMING flag
+    // TEXT_TRAILING_ARABICCHAR
+    // TEXT_INCOMING_ARABICCHAR
   };
 
   // These constants are used in TransformText to represent context information
