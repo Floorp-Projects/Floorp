@@ -64,15 +64,15 @@ function test() {
   // test the gPrivateBrowsingUI object
   ok(gPrivateBrowsingUI, "The gPrivateBrowsingUI object exists");
   ok(pbMenuItem, "The Private Browsing menu item exists");
-  ok(!pbMenuItem.hasAttribute("checked"), "The Private Browsing menu item is not checked initially");
+  is(pbMenuItem.getAttribute("label"), pbMenuItem.getAttribute("startlabel"), "The Private Browsing menu item should read \"Start Private Browsing\"");
   gPrivateBrowsingUI.toggleMode();
   // check to see if the Private Browsing mode was activated successfully
   is(observer.data, "enter", "Private Browsing mode was activated using the gPrivateBrowsingUI object");
-  ok(pbMenuItem.hasAttribute("checked"), "The Private Browsing menu item was correctly checked");
+  is(pbMenuItem.getAttribute("label"), pbMenuItem.getAttribute("stoplabel"), "The Private Browsing menu item should read \"Stop Private Browsing\"");
   gPrivateBrowsingUI.toggleMode()
   // check to see if the Private Browsing mode was deactivated successfully
   is(observer.data, "exit", "Private Browsing mode was deactivated using the gPrivateBrowsingUI object");
-  ok(!pbMenuItem.hasAttribute("checked"), "The Private Browsing menu item was correctly unchecked");
+  is(pbMenuItem.getAttribute("label"), pbMenuItem.getAttribute("startlabel"), "The Private Browsing menu item should read \"Start Private Browsing\"");
 
   // now, test using the <command> object
   let cmd = document.getElementById("Tools:PrivateBrowsing");

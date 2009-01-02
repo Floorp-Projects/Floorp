@@ -263,6 +263,8 @@ class Configuration:
             setattr(self, name, config[name])
         # optional settings
         self.irregularFilenames = config.get('irregularFilenames', {})
+        self.customIncludes = config.get('customIncludes', [])
+        self.customMethodCalls = config.get('customMethodCalls', {})
 
 def readConfigFile(filename, includePath, cachedir):
     # Read the config file.
@@ -423,7 +425,7 @@ argumentUnboxingTemplates = {
 # Omitted optional arguments are treated as though the caller had passed JS
 # `null`; this behavior is from XPCWrappedNative::CallMethod.
 #
-def writeArgumentUnboxing(f, i, name, type, haveCcx, optional):
+def writeArgumentUnboxing(f, i, name, type, haveCcx, optional, rvdeclared):
     # f - file to write to
     # i - int or None - Indicates the source jsval.  If i is an int, the source
     #     jsval is argv[i]; otherwise it is *vp.  But if Python i >= C++ argc,
@@ -432,6 +434,7 @@ def writeArgumentUnboxing(f, i, name, type, haveCcx, optional):
     # name - str - name of the native C++ variable to create.
     # type - xpidl.{Interface,Native,Builtin} - IDL type of argument
     # optional - bool - True if the parameter is optional.
+    # rvdeclared - bool - False if no |nsresult rv| has been declared earlier.
 
     isSetter = (i is None)
 
@@ -459,7 +462,7 @@ def writeArgumentUnboxing(f, i, name, type, haveCcx, optional):
                 warn("Optional parameters of type %s are not supported."
                      % type.name)
             f.write(substitute(template, params))
-            return
+            return rvdeclared
         # else fall through; the type isn't supported yet.
     elif isInterfaceType(type):
         if type.name == 'nsIVariant':
@@ -471,11 +474,13 @@ def writeArgumentUnboxing(f, i, name, type, haveCcx, optional):
                 "    if (!${name})\n"
                 "        return JS_FALSE;\n")
             f.write(substitute(template, params))
-            return
+            return rvdeclared
         elif type.name == 'nsIAtom':
             # Should have special atomizing behavior.  Fall through.
             pass
         else:
+            if not rvdeclared:
+                f.write("    nsresult rv;\n");
             f.write("    nsCOMPtr<%s> %s;\n" % (type.name, name))
             f.write("    rv = xpc_qsUnwrapArg<%s>("
                     "cx, %s, getter_AddRefs(%s));\n"
@@ -490,7 +495,7 @@ def writeArgumentUnboxing(f, i, name, type, haveCcx, optional):
                 f.write("        xpc_qsThrowBadArg(cx, rv, vp, %d);\n" % i)
             f.write("        return JS_FALSE;\n"
                     "    }\n")
-            return
+            return True
 
     warn("Unable to unbox argument of type %s" % type.name)
     if i is None:
@@ -498,8 +503,9 @@ def writeArgumentUnboxing(f, i, name, type, haveCcx, optional):
     else:
         src = 'argv[%d]' % i
     f.write("    !; // TODO - Unbox argument %s = %s\n" % (name, src))
+    return rvdeclared
 
-def writeResultDecl(f, type):
+def writeResultDecl(f, type, varname):
     if isVoidType(type):
         return  # nothing to declare
     
@@ -510,19 +516,19 @@ def writeResultDecl(f, type):
                 typeName = type.name  # use it
             else:
                 typeName = t.nativename
-            f.write("    %s result;\n" % typeName)
+            f.write("    %s %s;\n" % (typeName, varname))
             return
     elif t.kind == 'native':
         name = getBuiltinOrNativeTypeName(t)
         if name in ('[domstring]', '[astring]'):
-            f.write("    nsString result;\n")
+            f.write("    nsString %s;\n" % varname)
             return
     elif t.kind in ('interface', 'forward'):
-        f.write("    nsCOMPtr<%s> result;\n" % type.name)
+        f.write("    nsCOMPtr<%s> %s;\n" % (type.name, varname))
         return
 
     warn("Unable to declare result of type %s" % type.name)
-    f.write("    !; // TODO - Declare out parameter `result`.\n")
+    f.write("    !; // TODO - Declare out parameter `%s`.\n" % varname)
 
 def outParamForm(name, type):
     type = unaliasType(type)
@@ -607,7 +613,8 @@ def writeResultConv(f, type, paramNum, jsvalPtr, jsvalRef):
             f.write("    AutoMarkingNativeInterfacePtr resultiface(ccx, "
                     "%s_Interface(ccx));\n" % type.name)
             f.write("    return xpc_qsXPCOMObjectToJsval(ccx, result, "
-                    "resultiface, %s);\n" % jsvalPtr)
+                    "xpc_qsGetWrapperCache(result), resultiface, %s);\n"
+                    % jsvalPtr)
             return
 
     warn("Unable to convert result of type %s" % type.name)
@@ -621,7 +628,7 @@ def anyParamRequiresCcx(member):
             return True
     return False
 
-def writeQuickStub(f, member, stubName, isSetter=False):
+def writeQuickStub(f, customMethodCalls, member, stubName, isSetter=False):
     """ Write a single quick stub (a custom SpiderMonkey getter/setter/method)
     for the specified XPCOM interface-member. 
     """
@@ -629,6 +636,8 @@ def writeQuickStub(f, member, stubName, isSetter=False):
     isMethod = (member.kind == 'method')
     assert isAttr or isMethod
     isGetter = isAttr and not isSetter
+
+    customMethodCall = customMethodCalls.get(stubName, None)
 
     # Function prolog.
     f.write("static JSBool\n")
@@ -661,8 +670,10 @@ def writeQuickStub(f, member, stubName, isSetter=False):
             f.write("    XPCCallContext ccx(JS_CALLER, cx, obj);\n")
 
     # Get the 'self' pointer.
-    thisType = member.iface.name
-    f.write("    %s *self;\n" % thisType)
+    if customMethodCall is None or not 'thisType' in customMethodCall:
+        f.write("    %s *self;\n" % member.iface.name)
+    else:
+        f.write("    %s *self;\n" % customMethodCall['thisType'])
     f.write("    xpc_qsSelfRef selfref;\n")
     # Don't use FromCcx for getters or setters; the way we construct the ccx in
     # a getter/setter causes it to find the wrong wrapper in some cases.
@@ -701,7 +712,7 @@ def writeQuickStub(f, member, stubName, isSetter=False):
             "parameter " + param.name + ": " + msg)
 
     # Convert in-parameters.
-    f.write("    nsresult rv;\n")
+    rvdeclared = False
     if isMethod:
         if len(member.params) > 0:
             f.write("    jsval *argv = JS_ARGV(cx, vp);\n")
@@ -717,48 +728,74 @@ def writeQuickStub(f, member, stubName, isSetter=False):
             if param.const or param.array or param.shared:
                 pfail("I am a simple caveman.")
             # Emit code to convert this argument from jsval.
-            writeArgumentUnboxing(
+            rvdeclared = writeArgumentUnboxing(
                 f, i, 'arg%d' % i, param.realtype,
                 haveCcx=haveCcx,
-                optional=param.optional)
+                optional=param.optional,
+                rvdeclared=rvdeclared)
     elif isSetter:
-        writeArgumentUnboxing(f, None, 'arg0', member.realtype,
-                              haveCcx=False, optional=False)
+        rvdeclared = writeArgumentUnboxing(f, None, 'arg0', member.realtype,
+                                           haveCcx=False, optional=False,
+                                           rvdeclared=rvdeclared)
+
+    if customMethodCall is not None:
+        f.write("%s\n" % customMethodCall['code'])
+        f.write("#ifdef DEBUG\n")
+        f.write("    nsCOMPtr<%s> debug_self = do_QueryInterface(self);\n"
+                % member.iface.name);
+        prefix = 'debug_'
+    else:
+        prefix = ''
+
+    resultname = prefix + 'result'
+    selfname = prefix + 'self'
 
     # Prepare out-parameter.
     if isMethod or isGetter:
-        writeResultDecl(f, member.realtype)
+        writeResultDecl(f, member.realtype, resultname)
 
     # Call the method.
     if isMethod:
         comName = header.methodNativeName(member)
         argv = ['arg' + str(i) for i, p in enumerate(member.params)]
         if not isVoidType(member.realtype):
-            argv.append(outParamForm('result', member.realtype))
+            argv.append(outParamForm(resultname, member.realtype))
         args = ', '.join(argv)
     else:
         comName = header.attributeNativeName(member, isGetter)
         if isGetter:
-            args = outParamForm("result", member.realtype)
+            args = outParamForm(resultname, member.realtype)
         else:
             args = "arg0"
-    f.write("    rv = self->%s(%s);\n" % (comName, args))
 
-    # Check for errors.
-    f.write("    if (NS_FAILED(rv))\n")
-    if isMethod:
-        if haveCcx:
-            f.write("        return xpc_qsThrowMethodFailedWithCcx(ccx, rv);\n")
+    if not rvdeclared:
+        f.write("    nsresult rv;\n")
+        rvdeclared = True
+    f.write("    rv = %s->%s(%s);\n" % (selfname, comName, args))
+
+    if customMethodCall is None:
+        # Check for errors.
+        f.write("    if (NS_FAILED(rv))\n")
+        if isMethod:
+            if haveCcx:
+                f.write("        return xpc_qsThrowMethodFailedWithCcx("
+                        "ccx, rv);\n")
+            else:
+                f.write("        return xpc_qsThrowMethodFailed("
+                        "cx, rv, vp);\n")
         else:
-            f.write("        return xpc_qsThrowMethodFailed("
-                    "cx, rv, vp);\n")
+            if isGetter:
+                thisval = '*vp'
+            else:
+                thisval = '*tvr.addr()'
+            f.write("        return xpc_qsThrowGetterSetterFailed(cx, rv, " +
+                    "JSVAL_TO_OBJECT(%s), id);\n" % thisval)
     else:
-        if isGetter:
-            thisval = '*vp'
-        else:
-            thisval = '*tvr.addr()'
-        f.write("        return xpc_qsThrowGetterSetterFailed(cx, rv, " +
-                "JSVAL_TO_OBJECT(%s), id);\n" % thisval)
+        if isMethod or isGetter:
+            f.write("    NS_ASSERTION(xpc_qsSameResult(debug_result, result),\n"
+                    "                 \"Got the wrong answer from the custom "
+                    "method call!\");\n")
+        f.write("#endif\n")
 
     # Convert the return value.
     if isMethod:
@@ -771,38 +808,38 @@ def writeQuickStub(f, member, stubName, isSetter=False):
     # Epilog.
     f.write("}\n\n")
 
-def writeAttrStubs(f, attr):
+def writeAttrStubs(f, customMethodCalls, attr):
     getterName = (attr.iface.name + '_'
                   + header.attributeNativeName(attr, True))
-    writeQuickStub(f, attr, getterName)
+    writeQuickStub(f, customMethodCalls, attr, getterName)
     if attr.readonly:
         setterName = 'xpc_qsReadOnlySetter'
     else:
         setterName = (attr.iface.name + '_'
                       + header.attributeNativeName(attr, False))
-        writeQuickStub(f, attr, setterName, isSetter=True)
+        writeQuickStub(f, customMethodCalls, attr, setterName, isSetter=True)
 
     ps = ('{"%s", %s, %s}'
           % (attr.name, getterName, setterName))
     return ps
 
-def writeMethodStub(f, method):
+def writeMethodStub(f, customMethodCalls, method):
     """ Write a method stub to `f`. Return an xpc_qsFunctionSpec initializer. """
     stubName = method.iface.name + '_' + header.methodNativeName(method)
-    writeQuickStub(f, method, stubName)
+    writeQuickStub(f, customMethodCalls, method, stubName)
     fs = '{"%s", %s, %d}' % (method.name, stubName, len(method.params))
     return fs
 
-def writeStubsForInterface(f, iface):
+def writeStubsForInterface(f, customMethodCalls, iface):
     f.write("// === interface %s\n\n" % iface.name)
     propspecs = []
     funcspecs = []
     for member in iface.stubMembers:
         if member.kind == 'attribute':
-            ps = writeAttrStubs(f, member)
+            ps = writeAttrStubs(f, customMethodCalls, member)
             propspecs.append(ps)
         elif member.kind == 'method':
-            fs = writeMethodStub(f, member)
+            fs = writeMethodStub(f, customMethodCalls, member)
             funcspecs.append(fs)
         else:
             raise TypeError('expected attribute or method, not %r'
@@ -1001,13 +1038,15 @@ def writeStubFile(filename, headerFilename, conf, interfaces):
     try:
         f.write(stubTopTemplate % os.path.basename(headerFilename))
         N = 256
+        for customInclude in conf.customIncludes:
+            f.write('#include "%s"\n' % customInclude)
         resulttypes = []
         for iface in interfaces:
             resulttypes.extend(writeIncludesForInterface(iface))
         f.write("\n\n")
         writeResultXPCInterfacesArray(f, conf, sets.ImmutableSet(resulttypes))
         for iface in interfaces:
-            writeStubsForInterface(f, iface)
+            writeStubsForInterface(f, conf.customMethodCalls, iface)
         writeDefiner(f, conf, interfaces)
     finally:
         f.close()

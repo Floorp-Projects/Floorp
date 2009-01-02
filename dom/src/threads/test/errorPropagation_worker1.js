@@ -10,11 +10,11 @@ worker.onerror = function(event) {
     case 2:
       // Stop and rethrow.
       event.preventDefault();
-      throw event.data;
+      throw event.message;
       break;
     case 3:
       event.preventDefault();
-      postMessage(event.data);
+      postMessage(event.message);
       worker.onerror = null;
       break;
     default:

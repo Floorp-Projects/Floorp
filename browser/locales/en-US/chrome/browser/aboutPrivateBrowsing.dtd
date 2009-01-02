@@ -1,13 +1,22 @@
-<!ENTITY privatebrowsingpage.tabtitle                  "Private Browsing">
-
-<!ENTITY privatebrowsingpage.pagetitle                 "Private Browsing">
+<!ENTITY privatebrowsingpage.title                 "Private Browsing">
+<!ENTITY privatebrowsingpage.title.normal          "Would you like to start Private Browsing?">
 
 <!ENTITY privatebrowsingpage.issueDesc                 "&brandShortName; won't remember any history for this session.">
-<!ENTITY privatebrowsingpage.longDesc                  "No history will be recorded by &brandShortName; during this browsing session.  This includes browser history, search history, download history, web form history, cookies, and temporary internet files.  However, any files you download or bookmarks you create will be preserved.">
+<!ENTITY privatebrowsingpage.issueDesc.normal          "&brandShortName; is not currently in Private Browsing mode.">
 
-<!ENTITY privatebrowsingpage.clearRecentHistoryDesc    "You may want to start by also clearing your recent history.">
-<!ENTITY privatebrowsingpage.clearRecentHistory.label  "Clear Recent History…">
-<!ENTITY privatebrowsingpage.clearRecentHistory.accesskey "C">
+<!ENTITY privatebrowsingpage.description               "In a Private Browsing session, &brandShortName; won't keep any browser history, search history, download history, web form history, cookies, or temporary internet files.  However, files you download and bookmarks you make will be kept.">
 
-<!ENTITY privatebrowsingpage.howToStopDesc             "To stop private browsing, uncheck Tools &gt; Private Browsing.">
-<!ENTITY privatebrowsingpage.footerDesc                "Enjoy!">
+<!-- LOCALIZATION NOTE (privatebrowsingpage.clearRecentHistoryBefore): include a trailing space as needed -->
+<!-- LOCALIZATION NOTE (privatebrowsingpage.clearRecentHistoryAfter): include a starting space as needed -->
+<!ENTITY privatebrowsingpage.clearRecentHistoryBefore  "You may want to start by also ">
+<!ENTITY privatebrowsingpage.clearRecentHistoryInner   "clearing your recent history">
+<!ENTITY privatebrowsingpage.clearRecentHistoryAfter   ".">
+
+<!ENTITY privatebrowsingpage.startPrivateBrowsing.label "Start Private Browsing">
+<!ENTITY privatebrowsingpage.startPrivateBrowsing.accesskey "P">
+
+<!ENTITY privatebrowsingpage.howToStop                 "To stop Private Browsing, select &toolsMenu.label; &gt; &privateBrowsingCmd.stop.label;, or close &brandShortName;.">
+<!ENTITY privatebrowsingpage.howToStart                "To start Private Browsing, you can also select &toolsMenu.label; &gt; &privateBrowsingCmd.start.label;.">
+
+<!ENTITY privatebrowsingpage.moreInfo                  "While this computer won't have a record of your browsing history, your internet service provider or employer can still track the pages you visit.">
+<!ENTITY privatebrowsingpage.learnMore                 "Learn More">
