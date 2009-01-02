@@ -88,20 +88,13 @@ namespace nanojit
 	
 	// LCompressedBuffer
 	LirBuffer::LirBuffer(Fragmento* frago, const CallInfo* functions)
-		: _frago(frago), _pages(frago->core()->GetGC()), _functions(functions), abi(ABI_FASTCALL), shared(false)
+		: _frago(frago), _pages(frago->core()->GetGC()), _functions(functions), abi(ABI_FASTCALL)
 	{
-		clear();
-		Page* start = pageAlloc();
-		if (start)
-			_unused = &start->lir[0];
-		//buffer_count++;
-		//fprintf(stderr, "LirBuffer %x unused %x\n", (int)this, (int)_unused);
+		rewind();
 	}
 
 	LirBuffer::~LirBuffer()
 	{
-		//buffer_count--;
-		//fprintf(stderr, "~LirBuffer %x start %x\n", (int)this, (int)_start);
 		clear();
 		verbose_only(if (names) NJ_DELETE(names);)
 		_frago = 0;
@@ -122,6 +115,13 @@ namespace nanojit
 		_nextPage = pageAlloc();
 		NanoAssert(_nextPage || _noMem);
 	}
+
+    void LirBuffer::rewind()
+	{
+		clear();
+		Page* start = pageAlloc();
+		_unused = start ? &start->lir[0] : NULL;
+    }
 
 	int32_t LirBuffer::insCount() 
 	{

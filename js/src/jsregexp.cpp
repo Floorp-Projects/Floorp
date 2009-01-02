@@ -2364,6 +2364,7 @@ class RegExpNativeCompiler {
     fail:
         if (lirbuf->outOMem() || oom) {
             fragmento->clearFrags();
+            lirbuf->rewind();
         } else {
             if (!guard) insertGuard(re_chars, re_length);
             fragment->blacklist();

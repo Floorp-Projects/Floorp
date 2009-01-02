@@ -2699,9 +2699,6 @@ nanojit::LirNameMap::formatGuard(LIns *i, char *out)
 void
 nanojit::Fragment::onDestroy()
 {
-    if (root == this && lirbuf && !lirbuf->shared) {
-        delete lirbuf;
-    }
     delete (TreeInfo *)vmprivate;
 }
 
@@ -3011,13 +3008,7 @@ js_RecordTree(JSContext* cx, JSTraceMonitor* tm, Fragment* f, Fragment* outer, u
 
     f->recordAttempts++;
     f->root = f;
-    /* allocate space to store the LIR for this tree */
-    if (!f->lirbuf) {
-        f->lirbuf = new (&gc) LirBuffer(tm->fragmento, NULL);
-#ifdef DEBUG
-        f->lirbuf->names = new (&gc) LirNameMap(&gc, NULL, tm->fragmento->labels);
-#endif
-    }
+    f->lirbuf = tm->lirbuf;
 
     if (f->lirbuf->outOMem()) {
         js_FlushJITCache(cx);
@@ -4026,6 +4017,10 @@ js_InitJIT(JSTraceMonitor *tm)
         Fragmento* fragmento = new (&gc) Fragmento(core, 24);
         verbose_only(fragmento->labels = new (&gc) LabelMap(core, NULL);)
         tm->fragmento = fragmento;
+        tm->lirbuf = new (&gc) LirBuffer(fragmento, NULL);
+#ifdef DEBUG
+        tm->lirbuf->names = new (&gc) LirNameMap(&gc, NULL, tm->fragmento->labels);
+#endif
         tm->globalSlots = new (&gc) SlotList();
         tm->globalTypeMap = new (&gc) TypeMap();
         tm->recoveryDoublePoolPtr = tm->recoveryDoublePool = new jsval[MAX_NATIVE_STACK_SLOTS];
@@ -4035,7 +4030,6 @@ js_InitJIT(JSTraceMonitor *tm)
         verbose_only(fragmento->labels = new (&gc) LabelMap(core, NULL);)
         tm->reFragmento = fragmento;
         tm->reLirBuf = new (&gc) LirBuffer(fragmento, NULL);
-        tm->reLirBuf->shared = true;
     }
     InitIMacroCode();
 #if !defined XP_WIN
@@ -4063,6 +4057,12 @@ js_FinishJIT(JSTraceMonitor *tm)
     if (tm->fragmento != NULL) {
         JS_ASSERT(tm->globalSlots && tm->globalTypeMap && tm->recoveryDoublePool);
         verbose_only(delete tm->fragmento->labels;)
+#ifdef DEBUG
+        delete tm->lirbuf->names;
+        tm->lirbuf->names = NULL;
+#endif
+        delete tm->lirbuf;
+        tm->lirbuf = NULL;
         delete tm->fragmento;
         tm->fragmento = NULL;
         delete tm->globalSlots;
@@ -4132,6 +4132,7 @@ js_FlushJITCache(JSContext* cx)
         delete fragmento->labels;
         fragmento->labels = new (&gc) LabelMap(core, NULL);
 #endif
+        tm->lirbuf->rewind();
     }
     if (cx->fp) {
         tm->globalShape = OBJ_SHAPE(JS_GetGlobalForObject(cx, cx->fp->scopeChain));
