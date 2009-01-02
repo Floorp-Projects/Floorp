@@ -1986,7 +1986,7 @@ TraceRecorder::snapshot(ExitType exitType)
     exit->block = fp->blockChain;
     exit->ip_adj = ip_adj;
     exit->sp_adj = (stackSlots * sizeof(double)) - treeInfo->nativeStackBase;
-    exit->rp_adj = exit->calldepth * sizeof(FrameInfo);
+    exit->rp_adj = exit->calldepth * sizeof(FrameInfo*);
     memcpy(getTypeMap(exit), typemap, typemap_size);
 
     /* BIG FAT WARNING: If compilation fails, we currently don't reset the lirbuf so its safe
@@ -2507,7 +2507,7 @@ TraceRecorder::prepareTreeCall(Fragment* inner)
            any outer frames that the inner tree doesn't expect but the outer tree has. */
         ptrdiff_t sp_adj = nativeStackOffset(&cx->fp->argv[-2]);
         /* Calculate the amount we have to lift the call stack by */
-        ptrdiff_t rp_adj = callDepth * sizeof(FrameInfo);
+        ptrdiff_t rp_adj = callDepth * sizeof(FrameInfo*);
         /* Guard that we have enough stack space for the tree we are trying to call on top
            of the new value for sp. */
         debug_only_v(printf("sp_adj=%d outer=%d inner=%d\n",
@@ -2519,7 +2519,7 @@ TraceRecorder::prepareTreeCall(Fragment* inner)
         guard(true, lir->ins2(LIR_lt, sp_top, eos_ins), OOM_EXIT);
         /* Guard that we have enough call stack space. */
         LIns* rp_top = lir->ins2i(LIR_piadd, lirbuf->rp, rp_adj +
-                ti->maxCallDepth * sizeof(FrameInfo));
+                ti->maxCallDepth * sizeof(FrameInfo*));
         guard(true, lir->ins2(LIR_lt, rp_top, eor_ins), OOM_EXIT);
         /* We have enough space, so adjust sp and rp to their new level. */
         lir->insStorei(inner_sp_ins = lir->ins2i(LIR_piadd, lirbuf->sp,
@@ -3553,8 +3553,8 @@ js_ExecuteTree(JSContext* cx, Fragment* f, uintN& inlineCallCount,
     BuildNativeStackFrame(cx, 0/*callDepth*/, ti->stackTypeMap.data(), stack);
 
     double* entry_sp = &stack[ti->nativeStackBase/sizeof(double)];
-    FrameInfo callstack_buffer[MAX_CALL_STACK_ENTRIES];
-    FrameInfo* callstack = callstack_buffer;
+    FrameInfo* callstack_buffer[MAX_CALL_STACK_ENTRIES];
+    FrameInfo** callstack = callstack_buffer;
 
     InterpState state;
     state.sp = (void*)entry_sp;
@@ -3612,7 +3612,7 @@ js_ExecuteTree(JSContext* cx, Fragment* f, uintN& inlineCallCount,
        way through the outer frames and generate interpreter frames for them. Once the call
        stack (rp) is empty, we can process the final frames (which again are not directly
        visible and only the guard we exited on will tells us about). */
-    FrameInfo* rp = (FrameInfo*)state.rp;
+    FrameInfo** rp = (FrameInfo**)state.rp;
     if (lr->exitType == NESTED_EXIT) {
         VMSideExit* nested = state.lastTreeCallGuard;
         if (!nested) {
@@ -3628,7 +3628,7 @@ js_ExecuteTree(JSContext* cx, Fragment* f, uintN& inlineCallCount,
             /* During unwinding state.rp gets overwritten at every step and we restore
                it here to its state at the innermost nested guard. The builtin already
                added the calldepth of that innermost guard to rpAtLastTreeCall. */
-            rp = (FrameInfo*)state.rpAtLastTreeCall;
+            rp = (FrameInfo**)state.rpAtLastTreeCall;
         }
         innermost = state.lastTreeExitGuard;
         if (innermostNestedGuardp)
@@ -3642,9 +3642,9 @@ js_ExecuteTree(JSContext* cx, Fragment* f, uintN& inlineCallCount,
     while (callstack < rp) {
         /* Synthesize a stack frame and write out the values in it using the type map pointer
            on the native call stack. */
-        if (js_SynthesizeFrame(cx, *callstack) < 0)
+        if (js_SynthesizeFrame(cx, **callstack) < 0)
             return NULL;
-        int slots = FlushNativeStackFrame(cx, 1/*callDepth*/, callstack->typemap, stack, cx->fp);
+        int slots = FlushNativeStackFrame(cx, 1/*callDepth*/, (uint8*)(*callstack+1), stack, cx->fp);
 #ifdef DEBUG
         JSStackFrame* fp = cx->fp;
         debug_only_v(printf("synthesized deep frame for %s:%u@%u, slots=%d\n",
@@ -3668,7 +3668,7 @@ js_ExecuteTree(JSContext* cx, Fragment* f, uintN& inlineCallCount,
     unsigned calldepth = innermost->calldepth;
     unsigned calldepth_slots = 0;
     for (unsigned n = 0; n < calldepth; ++n) {
-        int nslots = js_SynthesizeFrame(cx, callstack[n]);
+        int nslots = js_SynthesizeFrame(cx, *callstack[n]);
         if (nslots < 0)
             return NULL;
         calldepth_slots += nslots;
@@ -6692,8 +6692,9 @@ TraceRecorder::interpretedFunctionCall(jsval& fval, JSFunction* fun, uintN argc,
 
     // Generate a type map for the outgoing frame and stash it in the LIR
     unsigned stackSlots = js_NativeStackSlots(cx, 0/*callDepth*/);
-    LIns* data = lir_buf_writer->skip(stackSlots * sizeof(uint8));
-    uint8* typemap = (uint8 *)data->payload();
+    LIns* data = lir_buf_writer->skip(sizeof(FrameInfo) + stackSlots * sizeof(uint8));
+    FrameInfo* fi = (FrameInfo*)data->payload();
+    uint8* typemap = (uint8 *)(fi + 1);
     uint8* m = typemap;
     /* Determine the type of a store by looking at the current type of the actual value the
        interpreter is using. For numbers we have to check what kind of store we used last
@@ -6705,29 +6706,17 @@ TraceRecorder::interpretedFunctionCall(jsval& fval, JSFunction* fun, uintN argc,
     if (argc >= 0x8000)
         ABORT_TRACE("too many arguments");
 
-    FrameInfo fi = {
-        JSVAL_TO_OBJECT(fval),
-        fp->blockChain,
-        ENCODE_IP_ADJ(fp, fp->regs->pc),
-        typemap,
-        { { fp->regs->sp - fp->slots, argc | (constructing ? 0x8000 : 0) } }
-    };
+    fi->callee = JSVAL_TO_OBJECT(fval);
+    fi->block = fp->blockChain;
+    fi->ip_adj = ENCODE_IP_ADJ(fp, fp->regs->pc);
+    fi->s.spdist = fp->regs->sp - fp->slots;
+    fi->s.argc = argc | (constructing ? 0x8000 : 0);
 
     unsigned callDepth = getCallDepth();
     if (callDepth >= treeInfo->maxCallDepth)
         treeInfo->maxCallDepth = callDepth + 1;
 
-#define STORE_AT_RP(name)                                                     \
-    lir->insStorei(INS_CONSTPTR(fi.name), lirbuf->rp,                         \
-                   callDepth * sizeof(FrameInfo) + offsetof(FrameInfo, name))
-
-    STORE_AT_RP(callee);
-    STORE_AT_RP(block);
-    STORE_AT_RP(ip_adj);
-    STORE_AT_RP(typemap);
-    STORE_AT_RP(word);
-
-#undef STORE_AT_RP
+    lir->insStorei(INS_CONSTPTR(fi), lirbuf->rp, callDepth * sizeof(FrameInfo*));
 
     atoms = fun->u.i.script->atomMap.vector;
     return true;
