@@ -2396,7 +2396,10 @@ PresShell::InitialReflow(nscoord aWidth, nscoord aHeight)
 
     // Now flush out pending restyles before we actually reflow, in
     // case XBL constructors changed styles somewhere.
-    mFrameConstructor->ProcessPendingRestyles();
+    {
+      nsAutoScriptBlocker scriptBlocker;
+      mFrameConstructor->ProcessPendingRestyles();
+    }
 
     // And that might have run _more_ XBL constructors
     NS_ENSURE_STATE(!mHaveShutDown);
@@ -2499,7 +2502,10 @@ PresShell::ResizeReflow(nscoord aWidth, nscoord aHeight)
     nsCOMPtr<nsIPresShell> kungFuDeathGrip(this);
 
     // Make sure style is up to date
-    mFrameConstructor->ProcessPendingRestyles();
+    {
+      nsAutoScriptBlocker scriptBlocker;
+      mFrameConstructor->ProcessPendingRestyles();
+    }
 
     if (!mIsDestroying) {
       // XXX Do a full invalidate at the beginning so that invalidates along
@@ -4496,6 +4502,7 @@ PresShell::DoFlushPendingNotifications(mozFlushType aType,
       // reflow).
       mPresContext->FlushUserFontSet();
 
+      nsAutoScriptBlocker scriptBlocker;
       mFrameConstructor->ProcessPendingRestyles();
     }
 
@@ -4513,6 +4520,7 @@ PresShell::DoFlushPendingNotifications(mozFlushType aType,
     // up the new rules and we'll end up with frames whose style doesn't match
     // the frame type.
     if (!mIsDestroying) {
+      nsAutoScriptBlocker scriptBlocker;
       mFrameConstructor->ProcessPendingRestyles();
     }
 

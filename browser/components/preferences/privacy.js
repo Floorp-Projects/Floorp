@@ -23,6 +23,7 @@
 # Contributor(s):
 #   Ben Goodger <ben@mozilla.org>
 #   Jeff Walden <jwalden+code@mit.edu>
+#   Ehsan Akhgari <ehsan.akhgari@gmail.com>
 #
 # Alternatively, the contents of this file may be used under the terms of
 # either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -48,7 +49,6 @@ var gPrivacyPane = {
   init: function ()
   {
     this._updateHistoryDaysUI();
-    this.updateClearNowButtonLabel();
   },
 
   // HISTORY
@@ -257,27 +257,7 @@ var gPrivacyPane = {
    * privacy.sanitize.sanitizeOnShutdown
    * - true if the user's private data is cleared on startup according to the
    *   Clear Private Data settings, false otherwise
-   * privacy.sanitize.promptOnSanitize
-   * - true if sanitizing forces the user to accept a dialog, false otherwise
    */
-
-  /**
-   * Sets the label of the "Clear Now..." button according to the
-   * privacy.sanitize.promptOnSanitize preference. Read valueFromPreferences to
-   * only change the button when the underlying pref changes, since in the case
-   * of instantApply=false, the call to clearPrivateDataNow would result in the
-   * dialog appearing when the user just unchecked the "Ask me" checkbox.
-   */
-  updateClearNowButtonLabel: function ()
-  {
-    var pref = document.getElementById("privacy.sanitize.promptOnSanitize");
-    var clearNowButton = document.getElementById("clearDataNow");
-
-    if (pref.valueFromPreferences)
-      clearNowButton.label = clearNowButton.getAttribute("label1"); // "Clear Now..."
-    else
-      clearNowButton.label = clearNowButton.getAttribute("label2"); // "Clear Now"
-  },
 
   /**
    * Displays the Clear Private Data settings dialog.
@@ -286,14 +266,11 @@ var gPrivacyPane = {
   {
     document.documentElement.openSubDialog("chrome://browser/content/preferences/sanitize.xul",
                                            "", null);
-    this.updateClearNowButtonLabel();
   },
 
   /**
-   * Either displays a dialog from which individual parts of private data may be
-   * cleared, or automatically clears private data according to current
-   * CPD settings.  The former happens if privacy.sanitize.promptOnSanitize is
-   * true, and the latter happens otherwise.
+   * Displays a dialog from which individual parts of private data may be
+   * cleared.
    */
   clearPrivateDataNow: function ()
   {

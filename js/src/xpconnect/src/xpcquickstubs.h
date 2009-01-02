@@ -394,10 +394,23 @@ xpc_qsUnwrapArg(JSContext *cx, jsval v, T **ppArg)
                                reinterpret_cast<void **>(ppArg));
 }
 
+inline nsWrapperCache*
+xpc_qsGetWrapperCache(nsWrapperCache *cache)
+{
+    return cache;
+}
+
+inline nsWrapperCache*
+xpc_qsGetWrapperCache(void *p)
+{
+    return nsnull;
+}
+
 /** Convert an XPCOM pointer to jsval. Return JS_TRUE on success. */
 JSBool
 xpc_qsXPCOMObjectToJsval(XPCCallContext &ccx,
                          nsISupports *p,
+                         nsWrapperCache *cache,
                          XPCNativeInterface *iface,
                          jsval *rval);
 
@@ -426,6 +439,12 @@ xpc_qsReadOnlySetter(JSContext *cx, JSObject *obj, jsval id, jsval *vp);
 #ifdef DEBUG
 void
 xpc_qsAssertContextOK(JSContext *cx);
+
+inline PRBool
+xpc_qsSameResult(nsISupports *result1, nsISupports *result2)
+{
+    return SameCOMIdentity(result1, result2);
+}
 
 #define XPC_QS_ASSERT_CONTEXT_OK(cx) xpc_qsAssertContextOK(cx)
 #else

@@ -1284,6 +1284,7 @@ nsScriptSecurityManager::CheckLoadURIWithPrincipal(nsIPrincipal* aPrincipal,
                                nsIScriptSecurityManager::DISALLOW_INHERIT_PRINCIPAL),
                     NS_ERROR_UNEXPECTED);
     NS_ENSURE_ARG_POINTER(aPrincipal);
+    NS_ENSURE_ARG_POINTER(aTargetURI);
 
     if (aPrincipal == mSystemPrincipal) {
         // Allow access

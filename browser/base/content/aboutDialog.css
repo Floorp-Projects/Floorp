@@ -7,7 +7,7 @@
 }
 
 #modes {
-  min-height: 380px;
+  min-height: 400px;
 }
 
 #clientBox {
@@ -90,4 +90,11 @@ button[dlgtype="extra2"] {
 
 button[dlgtype="accept"] {
   -moz-margin-end: 13px;
+}
+
+.text-link,
+.text-link:focus {
+  margin: 0px;
+  padding: 0px;
+  border: 0px;
 }
