@@ -495,9 +495,9 @@ BookmarksStore.prototype = {
       return record;
 
     let placeId = this._bms.getItemIdForGUID(guid);
-    if (placeId < 0) {
+    if (placeId < 0) { // deleted item
       record = new PlacesItem();
-      record.cleartext = null; // deleted item
+      record.cleartext = null;
       return record;
     }
 
@@ -547,7 +547,7 @@ BookmarksStore.prototype = {
                      this._bms.getItemType(placeId));
     }
 
-    record.parentid = this._getWeaveIdForItem(this._bms.getFolderIdForItem(placeId));
+    record.parentid = this._getWeaveParentIdForItem(placeId);
     record.depth = this._itemDepth(placeId);
     record.sortindex = this._bms.getItemIndex(placeId);
 
@@ -555,12 +555,17 @@ BookmarksStore.prototype = {
     return record;
   },
 
-  getAllIDs: function BStore_getAllIDs(node, items) {
+  _getWeaveParentIdForItem: function BStore__getWeaveParentIdForItem(itemId) {
+    return this._getWeaveIdForItem(this._bms.getFolderIdForItem(itemId));
+  },
+
+  getAllIDs: function BStore_getAllIDs(node, depthIndex, items) {
+    if (typeof(items) == "undefined")
+      items = {};
     if (!node) {
-      let items = {};
-      this.getAllIDs(this._getNode(this._bms.bookmarksMenuFolder), items);
-      this.getAllIDs(this._getNode(this._bms.toolbarFolder), items);
-      this.getAllIDs(this._getNode(this._bms.unfiledBookmarksFolder), items);
+      this.getAllIDs(this._getNode(this._bms.bookmarksMenuFolder), depthIndex, items);
+      this.getAllIDs(this._getNode(this._bms.toolbarFolder), depthIndex, items);
+      this.getAllIDs(this._getNode(this._bms.unfiledBookmarksFolder), depthIndex, items);
       return items;
     }
 
@@ -570,11 +575,22 @@ BookmarksStore.prototype = {
       node.containerOpen = true;
       for (var i = 0; i < node.childCount; i++) {
         let child = node.getChild(i);
-        items[this._bms.getItemGUID(child.itemId)] = {placesId: child.itemId};
-        this.getAllIDs(child, items);
+        let foo = {id: this._bms.getItemGUID(child.itemId)};
+        if (depthIndex) {
+          foo.depth = this._itemDepth(child.itemId);
+          foo.sortindex = this._bms.getItemIndex(child.itemId);
+        }
+        items[foo.id] = foo;
+        this.getAllIDs(child, depthIndex, items);
       }
     }
 
+    return items;
+  },
+
+  createMetaRecords: function BStore_createMetaRecords(guid, items) {
+    let node = this._getNode(this._bms.getItemIdForGUID(guid));
+    this.getAllIDs(node, true, items);
     return items;
   },
 
