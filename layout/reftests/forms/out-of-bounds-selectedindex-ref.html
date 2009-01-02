@@ -1,0 +1,112 @@
+<html class="reftest-wait">
+<head><title>Testcase for bug 471741</title>
+<script>
+function sel(id,index) {
+  var el = document.getElementById(id)
+  el.selectedIndex = index;
+}
+
+</script>
+</head>
+<body>
+<select size="4" id="m1" multiple="multiple">
+	<option value="Item0">Item0</option>
+	<option selected="selected" value="Item1">Item1</option>
+	<option value="Item2">Item2</option>
+	<option value="Item3">Item3</option>
+	<option value="Item4">Item4</option>
+</select>
+<select size="1" id="s1">
+	<option value="Item0">Item0</option>
+	<option selected="selected" value="Item1">Item1</option>
+	<option value="Item2">Item2</option>
+	<option value="Item3">Item3</option>
+	<option value="Item4">Item4</option>
+</select>
+
+<select size="4" id="m2" multiple="multiple">
+	<option value="Item0">Item0</option>
+</select>
+<select size="1" id="s2">
+	<option value="Item0">Item0</option>
+</select>
+
+<select size="4" id="m3" multiple="multiple"></select>
+<select size="1" id="s3"></select>
+<br>
+
+<select size="4" id="r2m1" multiple="multiple">
+	<option value="Item0">Item0</option>
+	<option selected="selected" value="Item1">Item1</option>
+	<option value="Item2">Item2</option>
+	<option value="Item3">Item3</option>
+	<option value="Item4">Item4</option>
+</select>
+<select size="1" id="r2s1">
+	<option value="Item0">Item0</option>
+	<option selected="selected" value="Item1">Item1</option>
+	<option value="Item2">Item2</option>
+	<option value="Item3">Item3</option>
+	<option value="Item4">Item4</option>
+</select>
+
+<select size="4" id="r2m2" multiple="multiple">
+	<option value="Item0">Item0</option>
+</select>
+<select size="1" id="r2s2">
+	<option value="Item0">Item0</option>
+</select>
+
+<select size="4" id="r2m3" multiple="multiple"></select>
+<select size="1" id="r2s3"></select>
+<br>
+
+<select size="4" id="r3m1" multiple="multiple">
+	<option selected="selected" value="Item0">Item0</option>
+	<option value="Item1">Item1</option>
+	<option value="Item2">Item2</option>
+	<option value="Item3">Item3</option>
+	<option value="Item4">Item4</option>
+</select>
+<select size="1" id="r3s1">
+	<option selected="selected" value="Item0">Item0</option>
+	<option value="Item1">Item1</option>
+	<option value="Item2">Item2</option>
+	<option value="Item3">Item3</option>
+	<option value="Item4">Item4</option>
+</select>
+
+<select size="4" id="r3m2" multiple="multiple">
+	<option selected="selected" value="Item0">Item0</option>
+</select>
+<select size="1" id="r3s2">
+	<option selected="selected" value="Item0">Item0</option>
+</select>
+
+<select size="4" id="r3m3" multiple="multiple"></select>
+<select size="1" id="r3s3"></select>
+<br>
+
+<div id="result">Result: -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 0 0 0 0 -1 -1 </div>
+
+<script>
+sel('m1', -1)
+sel('s1', -1)
+sel('m2', -1)
+sel('s2', -1)
+sel('m3', -1)
+sel('s3', -1)
+
+sel('r2m1', -1)
+sel('r2s1', -1)
+sel('r2m2', -1)
+sel('r2s2', -1)
+sel('r2m3', -1)
+sel('r2s3', -1)
+
+var flush = document.documentElement.offsetHeight;
+document.documentElement.className='';
+
+</script>
+</body>
+</html>

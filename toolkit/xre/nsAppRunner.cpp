@@ -606,8 +606,6 @@ public:
 #endif
 #ifdef XP_WIN
   NS_DECL_NSIWINAPPHELPER
-private:
-  nsresult LaunchAppHelperWithArgs(int aArgc, char **aArgv);
 #endif
 };
 
@@ -731,9 +729,12 @@ nsXULAppInfo::GetXPCOMABI(nsACString& aResult)
 }
 
 #ifdef XP_WIN
-nsresult 
-nsXULAppInfo::LaunchAppHelperWithArgs(int aArgc, char **aArgv)
+#include <shellapi.h>
+
+NS_IMETHODIMP
+nsXULAppInfo::PostUpdate(nsILocalFile *aLogFile)
 {
+#ifndef WINCE
   nsresult rv;
   nsCOMPtr<nsIProperties> directoryService = 
     do_GetService(NS_DIRECTORY_SERVICE_CONTRACTID, &rv);
@@ -753,50 +754,43 @@ nsXULAppInfo::LaunchAppHelperWithArgs(int aArgc, char **aArgv)
   rv = appHelper->GetPath(appHelperPath);
   NS_ENSURE_SUCCESS(rv, rv);
 
-  if (!WinLaunchChild(appHelperPath.get(), aArgc, aArgv, 1))
-    return NS_ERROR_FAILURE;
-  else
-    return NS_OK;
-}
-
-NS_IMETHODIMP
-nsXULAppInfo::PostUpdate(nsILocalFile *aLogFile)
-{
-  nsresult rv;
-  int upgradeArgc = aLogFile ? 3 : 2;
-  char **upgradeArgv = (char**) malloc(sizeof(char*) * (upgradeArgc + 1));
-
-  if (!upgradeArgv)
-    return NS_ERROR_OUT_OF_MEMORY;
-
-  upgradeArgv[0] = "argv0ignoredbywinlaunchchild";
-  upgradeArgv[1] = "/postupdate";
-
-  char *pathArg = nsnull;
+  nsAutoString logFilePath;
+  PRUnichar *dummyArg = L"argv0ignored ";
+  PRUnichar *firstArg = L"/postupdate";
+  PRUnichar *secondArg = L" /uninstalllog=";
+  int len = wcslen(dummyArg) + wcslen(firstArg);
 
   if (aLogFile) {
-    nsCAutoString logFilePath;
-    rv = aLogFile->GetNativePath(logFilePath);
+    rv = aLogFile->GetPath(logFilePath);
     NS_ENSURE_SUCCESS(rv, rv);
-
-    pathArg = PR_smprintf("/uninstalllog=%s", logFilePath.get());
-    if (!pathArg)
-      return NS_ERROR_OUT_OF_MEMORY;
-
-    upgradeArgv[2] = pathArg;
-    upgradeArgv[3] = nsnull;
-  }
-  else {
-    upgradeArgv[2] = nsnull;
+    len += wcslen(secondArg);
+    len += wcslen(logFilePath.get());
   }
 
-  rv = LaunchAppHelperWithArgs(upgradeArgc, upgradeArgv);
-  
-  if (pathArg)
-    PR_smprintf_free(pathArg);
+  PRUnichar *cmdLine = (PRUnichar *) malloc((len + 1) * sizeof(PRUnichar));
+  if (!cmdLine)
+    return NS_ERROR_OUT_OF_MEMORY;
 
-  free(upgradeArgv);
-  return rv;
+  wcscpy(cmdLine, dummyArg);
+  wcscat(cmdLine, firstArg);
+
+  if (aLogFile) {
+    wcscat(cmdLine, secondArg);
+    wcscat(cmdLine, logFilePath.get());
+  }
+
+  BOOL ok = ShellExecuteW(NULL, // no special UI window
+                          NULL, // use default verb
+                          appHelperPath.get(),
+                          cmdLine,
+                          NULL, // use my current directory
+                          SW_SHOWDEFAULT) > (HINSTANCE)32;
+  free(cmdLine);
+
+  return (!ok ? NS_ERROR_FAILURE : NS_OK);
+#else
+  return NS_ERROR_NOT_AVAILABLE;
+#endif
 }
 
 // Matches the enum in WinNT.h for the Vista SDK but renamed so that we can
@@ -1489,6 +1483,7 @@ XRE_GetBinaryPath(const char* argv0, nsILocalFile* *aResult)
 
 #ifdef XP_WIN
 #include "nsWindowsRestart.cpp"
+#include <shellapi.h>
 #endif
 
 #if defined(XP_OS2) && (__KLIBC__ == 0 && __KLIBC_MINOR__ >= 6) // broken kLibc
@@ -1610,7 +1605,7 @@ static nsresult LaunchChild(nsINativeAppSupport* aNative,
   if (NS_FAILED(rv))
     return rv;
 
-  if (!WinLaunchChild(exePath.get(), gRestartArgc, gRestartArgv, 0))
+  if (!WinLaunchChild(exePath.get(), gRestartArgc, gRestartArgv))
     return NS_ERROR_FAILURE;
 
 #else

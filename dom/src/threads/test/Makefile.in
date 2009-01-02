@@ -70,6 +70,8 @@ _TEST_FILES = \
   relativeLoad_worker.js \
   relativeLoad_worker2.js \
   relativeLoad_import.js \
+  test_scopeOnerror.html \
+  scopeOnerror_worker.js \
   test_simpleThread.html \
   simpleThread_worker.js \
   test_terminate.html \
