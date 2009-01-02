@@ -260,18 +260,7 @@ nsDOMAttribute::GetParentNode(nsIDOMNode** aParentNode)
 NS_IMETHODIMP
 nsDOMAttribute::GetChildNodes(nsIDOMNodeList** aChildNodes)
 {
-  nsSlots *slots = GetSlots();
-  NS_ENSURE_TRUE(slots, NS_ERROR_OUT_OF_MEMORY);
-
-  if (!slots->mChildNodes) {
-    slots->mChildNodes = new nsChildContentList(this);
-    NS_ENSURE_TRUE(slots->mChildNodes, NS_ERROR_OUT_OF_MEMORY);
-    NS_ADDREF(slots->mChildNodes);
-  }
-
-  NS_ADDREF(*aChildNodes = slots->mChildNodes);
-
-  return NS_OK;
+  return nsINode::GetChildNodes(aChildNodes);
 }
 
 NS_IMETHODIMP
@@ -397,11 +386,7 @@ nsDOMAttribute::CloneNode(PRBool aDeep, nsIDOMNode** aResult)
 NS_IMETHODIMP
 nsDOMAttribute::GetOwnerDocument(nsIDOMDocument** aOwnerDocument)
 {
-  *aOwnerDocument = nsnull;
-
-  nsIDocument *document = GetOwnerDoc();
-
-  return document ? CallQueryInterface(document, aOwnerDocument) : NS_OK;
+  return nsINode::GetOwnerDocument(aOwnerDocument);
 }
 
 NS_IMETHODIMP
@@ -660,10 +645,7 @@ nsDOMAttribute::IsNodeOfType(PRUint32 aFlags) const
 PRUint32
 nsDOMAttribute::GetChildCount() const
 {
-  PRBool hasChild;
-  EnsureChildState(PR_FALSE, hasChild);
-
-  return hasChild ? 1 : 0;
+  return GetChildCount(PR_FALSE);
 }
 
 nsIContent *
@@ -679,10 +661,10 @@ nsDOMAttribute::GetChildAt(PRUint32 aIndex) const
 nsIContent * const *
 nsDOMAttribute::GetChildArray(PRUint32* aChildCount) const
 {
-  *aChildCount = GetChildCount();
+  *aChildCount = GetChildCount(PR_TRUE);
   return &mChild;
-}  
-  
+}
+
 PRInt32
 nsDOMAttribute::IndexOf(nsINode* aPossibleChild) const
 {
