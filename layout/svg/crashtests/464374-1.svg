@@ -1,0 +1,15 @@
+<svg xmlns="http://www.w3.org/2000/svg" onload="boom();">
+
+<script type="text/javascript">
+
+function boom()
+{
+  document.getElementById("b").appendChild(document.createElementNS("http://www.w3.org/1998/Math/MathML", "math"));
+  document.getElementById("defs").setAttribute("filter", "url(#a)");
+}
+
+</script>
+
+<defs id="defs"><filter id="a"/><g id="b"><rect/></g></defs>
+
+</svg>

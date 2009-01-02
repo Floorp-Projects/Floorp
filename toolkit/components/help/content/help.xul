@@ -153,7 +153,6 @@
   <stringbundle id="bundle_help"
                 src="chrome://help/locale/help.properties"/>
 
-  <vbox flex="1">
     <toolbox id="help-toolbox" class="toolbox-top">
       <toolbar id="HelpToolbar" class="chromeclass-toolbar" chromedir="&locale.dir;">
         <toolbarbutton id="help-back-button" type="menu-button"
@@ -310,5 +309,5 @@
         <findbar id="FindToolbar" browserid="help-content"/>
       </vbox>
     </hbox>
-  </vbox>
+
 </window>

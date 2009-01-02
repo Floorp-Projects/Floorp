@@ -1,0 +1,22 @@
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head>
+<script type="text/javascript">
+
+function boom()
+{
+  try {
+    document.getElementById("y").gradientTransform.baseVal.appendItem(function(){});
+  } catch(e) { }
+
+  document.documentElement.innerHTML;
+}
+
+</script>
+</head>
+
+<body onload="boom();">
+
+<linearGradient id="y" xmlns="http://www.w3.org/2000/svg" />
+
+</body>
+</html>
