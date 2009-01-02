@@ -18,7 +18,7 @@ Tests of DOM Worker Threads
     "This error should not make it back out"
   ];
 
-  var worker = new Worker("scopeOnError_worker.js");
+  var worker = new Worker("scopeOnerror_worker.js");
 
   worker.onmessage = function(event) {
     ok(event.data == "Done");
