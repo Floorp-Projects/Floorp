@@ -282,7 +282,7 @@ js_CallTree(InterpState* state, Fragment* f)
            the outer tree the failing call was in starting at that guard. */
         if (!state->lastTreeCallGuard) {
             state->lastTreeCallGuard = lr;
-            FrameInfo* rp = (FrameInfo*)state->rp;
+            FrameInfo** rp = (FrameInfo**)state->rp;
             state->rpAtLastTreeCall = rp + lr->calldepth;
         }
     } else {
