@@ -52,7 +52,9 @@ _TEST_FILES =	test_bug343416.xul \
 ifeq ($(MOZ_WIDGET_TOOLKIT),cocoa)
 _TEST_FILES += native_menus_window.xul \
                test_native_menus.xul \
-               test_bug428405.xul
+               test_bug428405.xul \
+               test_bug466599.xul \
+               $(NULL)
 endif
 
 libs:: $(_TEST_FILES)
