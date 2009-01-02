@@ -81,7 +81,7 @@ Store.prototype = {
   },
 
   get cache() {
-    let cache = new RecordCache();
+    let cache = new Cache();
     this.__defineGetter__("cache", function() cache);
     return cache;
   },
@@ -111,18 +111,6 @@ Store.prototype = {
 
   createRecord: function Store_createRecord() {
     throw "override createRecord in a subclass";
-  },
-
-  wrapDepth: function BStore_wrapDepth(guid, items) {
-    if (typeof(items) == "undefined")
-      items = {};
-    for (let childguid in this._itemCache) {
-      if (this._itemCache[childguid].parentid == guid) {
-        items[childguid] = this._itemCache[childguid].depth;
-        this.wrapDepth(childguid, items);
-      }
-    }
-    return items;
   },
 
   changeItemID: function Store_changeItemID(oldID, newID) {
