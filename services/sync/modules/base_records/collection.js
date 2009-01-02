@@ -132,8 +132,8 @@ Collection.prototype = {
     fn.async(this, onComplete, record);
   },
 
-  pushDepthRecord: function Coll_pushDepthRecord(record) {
-    this._data.push(this._json.encode(record));
+  pushLiteral: function Coll_pushLiteral(object) {
+    this._data.push(this._json.encode(object));
   },
 
   clearRecords: function Coll_clearRecords() {
