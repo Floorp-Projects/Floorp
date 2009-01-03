@@ -49,6 +49,7 @@ Cu.import("resource://weave/syncCores.js");
 Cu.import("resource://weave/stores.js");
 Cu.import("resource://weave/trackers.js");
 Cu.import("resource://weave/async.js");
+Cu.import("resource://weave/type_records/history.js");
 
 Function.prototype.async = Async.sugar;
 
@@ -181,10 +182,10 @@ HistoryStore.prototype = {
     this._log.trace("Creating SQL statement: _urlStm");
     let stm = this._db.createStatement(
       "SELECT * FROM " +
-        "(SELECT url FROM moz_places_temp WHERE id = :id LIMIT 1) " +
+        "(SELECT url,title FROM moz_places_temp WHERE id = :id LIMIT 1) " +
       "UNION ALL " +
       "SELECT * FROM ( " +
-        "SELECT url FROM moz_places WHERE id = :id " +
+        "SELECT url,title FROM moz_places WHERE id = :id " +
         "AND id NOT IN (SELECT id from moz_places_temp) " +
         "LIMIT 1 " +
       ") " +
@@ -268,7 +269,8 @@ HistoryStore.prototype = {
       if (!this._urlStm.step())
         return null;
 
-      return this._urlStm.row.url;
+      return {url: this._urlStm.row.url,
+              title: this._urlStm.row.title};
     } finally {
       this._annoAttrIdStm.reset();
       this._findPidByAnnoStm.reset();
@@ -277,41 +279,12 @@ HistoryStore.prototype = {
   },
 
   changeItemID: function HStore_changeItemID(oldID, newID) {
-    let uri = Utils.makeURI(this._findURLByGUID(oldID));
+    let uri = Utils.makeURI(this._findURLByGUID(oldID).uri);
     this._anno.setPageAnnotation(uri, "weave/guid", newID, 0, 0);
   },
 
-  // XXX need a better way to query Places for all GUIDs
-  getAllIDs: function BStore_getAllIDs() {
-    let all = this.wrap();
-    return all;
-  },
 
-  create: function HistStore_create(record) {
-    this._log.debug("  -> creating history entry: " + record.cleartext.URI);
-
-    let uri = Utils.makeURI(record.cleartext.URI);
-
-    let visit;
-    while ((visit = record.cleartext.visits.pop())) {
-      this._log.debug("     visit " + visit.date);
-      this._hsvc.addVisit(uri, visit.date, null, visit.type,
-                          (visit.type == 5 || visit.type == 6), 0);
-    }
-    this._hsvc.setPageTitle(uri, record.cleartext.title);
-  },
-
-  remove: function HistStore_remove(record) {
-    this._log.trace("  -> NOT removing history entry: " + record.id);
-    // FIXME: implement!
-  },
-
-  update: function HistStore_update(record) {
-    this._log.trace("  -> FIXME: NOT editing history entry: " + record.id);
-    // FIXME: implement!
-  },
-
-  wrap: function HistStore_wrap() {
+  getAllIDs: function HistStore_getAllIDs() {
     let query = this._hsvc.getNewQuery(),
         options = this._hsvc.getNewQueryOptions();
 
@@ -328,20 +301,65 @@ HistoryStore.prototype = {
     for (let i = 0; i < root.childCount; i++) {
       let item = root.getChild(i);
       let guid = this._getGUID(item.uri);
-      items[guid] = {title: item.title,
-		     URI: item.uri,
-                     visits: this._getVisits(item.uri)};
+      items[guid] = item.uri;
     }
-
     return items;
   },
 
-  wrapItem: function HistStore_wrapItem(id) {
-    // FIXME: use findURLByGUID! (not so important b/c of cache hints though)
-    if (this._itemCache)
-      return this._itemCache[id];
-    let all = this._wrap();
-    return all[id];
+  create: function HistStore_create(record) {
+    this._log.debug("  -> creating history entry: " + record.cleartext.uri);
+
+    let uri = Utils.makeURI(record.cleartext.uri);
+    let visit;
+    while ((visit = record.cleartext.visits.pop())) {
+      this._log.debug("     visit " + visit.date);
+      this._hsvc.addVisit(uri, visit.date, null, visit.type,
+                          (visit.type == 5 || visit.type == 6), 0);
+    }
+    this._hsvc.setPageTitle(uri, record.cleartext.title);
+  },
+
+  remove: function HistStore_remove(record) {
+    this._log.trace("  -> NOT removing history entry: " + record.id);
+    // FIXME: implement!
+  },
+
+  // FIXME: skip already-existing visits, places will add duplicates...
+  update: function HistStore_update(record) {
+    this._log.trace("  -> editing history entry: " + record.cleartext.uri);
+    let uri = Utils.makeURI(record.cleartext.uri);
+    let visit;
+    while ((visit = record.cleartext.visits.pop())) {
+      this._log.debug("     visit " + visit.date);
+      this._hsvc.addVisit(uri, visit.date, null, visit.type,
+                          (visit.type == 5 || visit.type == 6), 0);
+    }
+    this._hsvc.setPageTitle(uri, record.cleartext.title);
+  },
+
+  itemExists: function HistStore_itemExists(id) {
+    if (this._findURLByGUID(id))
+      return true;
+    return false;
+  },
+
+  createRecord: function HistStore_createRecord(guid) {
+    let foo = this._findURLByGUID(guid);
+    let record = new HistoryRec();
+    if (foo) {
+      record.histUri = foo.url;
+      record.title = foo.title;
+      record.visits = this._getVisits(record.histUri);
+    } else {
+      record.cleartext = null; // deleted item
+    }
+    this.cache.put(guid, record);
+    return record;
+  },
+
+  // no depth or index for history
+  createMetaRecords: function HistStore_createMetaRecords(guid, items) {
+    return {};
   },
 
   wipe: function HistStore_wipe() {
@@ -374,6 +392,16 @@ HistoryTracker.prototype = {
 
   _init: function HT__init() {
     this.__proto__.__proto__._init.call(this);
+
+    // FIXME: very roundabout way of getting url -> guid mapping!
+    // FIXME2: not updated after startup
+    let store = new HistoryStore();
+    let all = store.getAllIDs();
+    this._all = {};
+    for (let guid in all) {
+      this._all[all[guid]] = guid;
+    }
+
     this._hsvc.addObserver(this, false);
   },
 
@@ -403,7 +431,7 @@ HistoryTracker.prototype = {
   },
   onDeleteURI: function HT_onDeleteURI(uri) {
     this._log.trace("onDeleteURI: " + uri.spec);
-    this.addChangedID(this._store._getGUID(uri)); // FIXME eek
+    this.addChangedID(this._all[uri]);
     this._upScore();
   },
   onClearHistory: function HT_onClearHistory() {
