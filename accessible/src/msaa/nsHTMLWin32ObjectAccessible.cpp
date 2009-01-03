@@ -46,7 +46,8 @@ nsAccessibleWrap(aNode, aShell)
   mHwnd = aHwnd;
 }
 
-NS_IMETHODIMP nsHTMLWin32ObjectOwnerAccessible::Shutdown()
+nsresult
+nsHTMLWin32ObjectOwnerAccessible::Shutdown()
 {
   nsAccessibleWrap::Shutdown();
   mNativeAccessible = nsnull;

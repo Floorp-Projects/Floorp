@@ -88,6 +88,7 @@ public:
   PRBool WidgetIsContainer(PRUint8 aWidgetType);
   PRBool ThemeDrawsFocusForWidget(nsPresContext* aPresContext, nsIFrame* aFrame, PRUint8 aWidgetType);
   PRBool ThemeNeedsComboboxDropmarker();
+  virtual nsTransparencyMode GetWidgetTransparency(PRUint8 aWidgetType);
 
 protected:  
 
@@ -100,11 +101,9 @@ protected:
                  PRInt32 inState);
   void DrawProgress(CGContextRef context, const HIRect& inBoxRect,
                     PRBool inIsIndeterminate, PRBool inIsHorizontal,
-                    PRInt32 inValue, nsIFrame* aFrame);
-  void DrawTab(CGContextRef context, const HIRect& inBoxRect,
-               PRBool inIsDisabled, PRBool inIsFrontmost, 
-               PRBool inIsHorizontal, PRBool inTabBottom,
-               PRInt32 inState, nsIFrame* aFrame);
+                    PRInt32 inValue, PRInt32 inMaxValue, nsIFrame* aFrame);
+  void DrawTab(CGContextRef context, HIRect inBoxRect, PRInt32 inState,
+               nsIFrame* aFrame);
   void DrawTabPanel(CGContextRef context, const HIRect& inBoxRect, nsIFrame* aFrame);
   void DrawScale(CGContextRef context, const HIRect& inBoxRect,
                  PRBool inIsDisabled, PRInt32 inState,
@@ -112,8 +111,10 @@ protected:
                  PRInt32 inCurrentValue,
                  PRInt32 inMinValue, PRInt32 inMaxValue,
                  nsIFrame* aFrame);
-  void DrawRadioButton(CGContextRef cgContext, const HIRect& inBoxRect, PRBool inSelected,
-                       PRBool inDisabled, PRInt32 inState, nsIFrame* aFrame);
+  void DrawCheckboxOrRadio(CGContextRef cgContext, PRBool inCheckbox,
+                           const HIRect& inBoxRect, PRBool inSelected,
+                           PRBool inDisabled, PRInt32 inState, nsIFrame* aFrame);
+  void DrawSearchField(CGContextRef cgContext, const HIRect& inBoxRect, nsIFrame* aFrame);
   void DrawPushButton(CGContextRef cgContext, const HIRect& inBoxRect, PRBool inIsDefault,
                       PRBool inDisabled, PRInt32 inState, nsIFrame* aFrame);
   void DrawButton(CGContextRef context, ThemeButtonKind inKind,
@@ -125,9 +126,6 @@ protected:
                        PRBool inDisabled, ThemeDrawState inDrawState,
                        ThemeButtonAdornment inAdornment, PRInt32 inState,
                        nsIFrame* aFrame);
-  void DrawCheckbox(CGContextRef context, ThemeButtonKind inKind,
-                    const HIRect& inBoxRect, PRBool inChecked, 
-                    PRBool inDisabled, PRInt32 inState, nsIFrame* aFrame);
   void DrawUnifiedToolbar(CGContextRef cgContext, const HIRect& inBoxRect,
                           nsIFrame *aFrame);
 
@@ -138,18 +136,11 @@ protected:
                              const HIRect& aRect, PRBool aShouldGetButtonStates);
   nsIFrame* GetParentScrollbarFrame(nsIFrame *aFrame);
 
-  void DrawCellWithScaling(NSCell *cell,
-                           CGContextRef cgContext,
-                           const HIRect& destRect,
-                           NSControlSize controlSize,
-                           float naturalWidth, float naturalHeight,
-                           float minWidth, float minHeight,
-                           const float marginSet[][3][4],
-                           PRBool doSaveCTM);
-
 private:
   NSButtonCell* mPushButtonCell;
   NSButtonCell* mRadioButtonCell;
+  NSButtonCell* mCheckboxCell;
+  NSSearchFieldCell* mSearchFieldCell;
 };
 
 #endif // nsNativeThemeCocoa_h_

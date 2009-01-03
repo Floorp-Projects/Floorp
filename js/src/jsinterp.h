@@ -68,6 +68,7 @@ typedef struct JSFrameRegs {
  */
 struct JSStackFrame {
     JSFrameRegs     *regs;
+    jsbytecode      *imacpc;        /* null or interpreter macro call pc */
     jsval           *slots;         /* variables, locals and operand stack */
     JSObject        *callobj;       /* lazily created Call object */
     JSObject        *argsobj;       /* lazily created arguments object */
@@ -94,6 +95,14 @@ struct JSStackFrame {
     jsrefcount      pcDisabledSave; /* for balanced property cache control */
 #endif
 };
+
+#ifdef __cplusplus
+static JS_INLINE uintN
+FramePCOffset(JSStackFrame* fp)
+{
+    return uintN((fp->imacpc ? fp->imacpc : fp->regs->pc) - fp->script->code);
+}
+#endif
 
 static JS_INLINE jsval *
 StackBase(JSStackFrame *fp)
@@ -133,6 +142,7 @@ typedef struct JSInlineFrame {
 #define JSFRAME_ITERATOR       0x80 /* trying to get an iterator for for-in */
 #define JSFRAME_POP_BLOCKS    0x100 /* scope chain contains blocks to pop */
 #define JSFRAME_GENERATOR     0x200 /* frame belongs to generator-iterator */
+#define JSFRAME_IMACRO_START  0x400 /* imacro starting -- see jstracer.h */
 
 #define JSFRAME_OVERRIDE_SHIFT 24   /* override bit-set params; see jsfun.c */
 #define JSFRAME_OVERRIDE_BITS  8
@@ -186,8 +196,12 @@ typedef struct JSInlineFrame {
 
 #define SHAPE_OVERFLOW_BIT      JS_BIT(32 - PCVCAP_TAGBITS)
 
+/*
+ * When sprop is not null and the shape generation triggers the GC due to a
+ * shape overflow, the functions roots sprop.
+ */
 extern uint32
-js_GenerateShape(JSContext *cx, JSBool gcLocked);
+js_GenerateShape(JSContext *cx, JSBool gcLocked, JSScopeProperty *sprop);
 
 struct JSPropCacheEntry {
     jsbytecode          *kpc;           /* pc if vcap tag is <= 1, else atom */
@@ -279,7 +293,7 @@ typedef struct JSPropertyCache {
  * from obj and sprop, and entry capability forged from 24-bit OBJ_SHAPE(obj),
  * 4-bit scopeIndex, and 4-bit protoIndex.
  */
-extern void
+extern JS_REQUIRES_STACK void
 js_FillPropertyCache(JSContext *cx, JSObject *obj, jsuword kshape,
                      uintN scopeIndex, uintN protoIndex,
                      JSObject *pobj, JSScopeProperty *sprop,
@@ -334,7 +348,7 @@ js_FillPropertyCache(JSContext *cx, JSObject *obj, jsuword kshape,
             PCMETER(cache_->misses++);                                        \
     } while (0)
 
-extern JSAtom *
+extern JS_REQUIRES_STACK JSAtom *
 js_FullTestPropertyCache(JSContext *cx, jsbytecode *pc,
                          JSObject **objp, JSObject **pobjp,
                          JSPropCacheEntry **entryp);
@@ -457,7 +471,7 @@ js_Execute(JSContext *cx, JSObject *chain, JSScript *script,
 extern JSBool
 js_InvokeConstructor(JSContext *cx, uintN argc, JSBool clampReturn, jsval *vp);
 
-extern JSBool
+extern JS_REQUIRES_STACK JSBool
 js_Interpret(JSContext *cx);
 
 #define JSPROP_INITIALIZER 0x100   /* NB: Not a valid property attribute. */
@@ -517,13 +531,13 @@ js_FreeRawStack(JSContext *cx, void *mark);
 extern JSObject *
 js_ComputeGlobalThis(JSContext *cx, JSBool lazy, jsval *argv);
 
-extern JSBool
+extern JS_REQUIRES_STACK JSBool
 js_EnterWith(JSContext *cx, jsint stackIndex);
 
-extern void
+extern JS_REQUIRES_STACK void
 js_LeaveWith(JSContext *cx);
 
-extern JSClass *
+extern JS_REQUIRES_STACK JSClass *
 js_IsActiveWithOrBlock(JSContext *cx, JSObject *obj, int stackDepth);
 
 extern jsint
@@ -533,7 +547,7 @@ js_CountWithBlocks(JSContext *cx, JSStackFrame *fp);
  * Unwind block and scope chains to match the given depth. The function sets
  * fp->sp on return to stackDepth.
  */
-extern JSBool
+extern JS_REQUIRES_STACK JSBool
 js_UnwindScope(JSContext *cx, JSStackFrame *fp, jsint stackDepth,
                JSBool normalUnwind);
 
@@ -556,7 +570,7 @@ js_DoIncDec(JSContext *cx, const JSCodeSpec *cs, jsval *vp, jsval *vp2);
  * Opcode tracing helper. When len is not 0, cx->fp->regs->pc[-len] gives the
  * previous opcode.
  */
-extern void
+extern JS_REQUIRES_STACK void
 js_TraceOpcode(JSContext *cx, jsint len);
 
 /*

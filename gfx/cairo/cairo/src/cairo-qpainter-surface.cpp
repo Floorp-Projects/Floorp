@@ -601,6 +601,8 @@ _cairo_qpainter_surface_clone_similar (void *abstract_surface,
                                        int              src_y,
                                        int              width,
                                        int              height,
+                                       int              *clone_offset_x,
+                                       int              *clone_offset_y,
                                        cairo_surface_t **clone_out)
 {
     cairo_qpainter_surface_t *qs = (cairo_qpainter_surface_t *) abstract_surface;
@@ -643,6 +645,8 @@ _cairo_qpainter_surface_clone_similar (void *abstract_surface,
         new_surf = NULL;
     }
 
+    *clone_offset_x = 0;
+    *clone_offset_y = 0;
     *clone_out = new_surf;
     return (cairo_status_t) status;
 }
@@ -1384,7 +1388,7 @@ _cairo_qpainter_surface_show_glyphs (void *abstract_surface,
 	}
 
         return (cairo_int_status_t)
-               _cairo_surface_show_text_glyphs (qs->xlib_equiv, op, source, NULL, 0, glyphs, num_glyphs, NULL, 0, FALSE, scaled_font);
+               _cairo_surface_show_text_glyphs (qs->xlib_equiv, op, source, NULL, 0, glyphs, num_glyphs, NULL, 0, (cairo_text_cluster_flags_t)0, scaled_font);
     }
 #endif
 

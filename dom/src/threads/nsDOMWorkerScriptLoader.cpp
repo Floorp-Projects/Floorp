@@ -65,81 +65,38 @@
 
 #define LOG(_args) PR_LOG(gDOMThreadsLog, PR_LOG_DEBUG, _args)
 
-nsDOMWorkerScriptLoader::nsDOMWorkerScriptLoader()
-: mWorker(nsnull),
+nsDOMWorkerScriptLoader::nsDOMWorkerScriptLoader(nsDOMWorker* aWorker)
+: nsDOMWorkerFeature(aWorker),
   mTarget(nsnull),
-  mCx(NULL),
   mScriptCount(0),
   mCanceled(PR_FALSE),
-  mTrackedByWorker(PR_FALSE)
+  mForWorker(PR_FALSE)
 {
   // Created on worker thread.
   NS_ASSERTION(!NS_IsMainThread(), "Wrong thread!");
+  NS_ASSERTION(aWorker, "Null worker!");
 }
 
-nsDOMWorkerScriptLoader::~nsDOMWorkerScriptLoader()
-{
-  // Can't touch mWorker's lock
-  if (!mCanceled) {
-    // Destroyed on worker thread, unless canceled (and then who knows!).
-    NS_ASSERTION(!NS_IsMainThread(), "Wrong thread!");
-
-    if (mTrackedByWorker) {
-      jsrefcount suspendDepth = 0;
-      if (mCx) {
-        suspendDepth = JS_SuspendRequest(mCx);
-      }
-
-      nsAutoLock lock(mWorker->Lock());
-  #ifdef DEBUG
-      PRBool removed =
-  #endif
-      mWorker->mScriptLoaders.RemoveElement(this);
-      NS_ASSERTION(removed, "Something is wrong here!");
-
-      if (mCx) {
-        JS_ResumeRequest(mCx, suspendDepth);
-      }
-    }
-  }
-}
-
-NS_IMPL_ISUPPORTS_INHERITED1(nsDOMWorkerScriptLoader, nsRunnable,
+NS_IMPL_ISUPPORTS_INHERITED2(nsDOMWorkerScriptLoader, nsDOMWorkerFeature,
+                                                      nsIRunnable,
                                                       nsIStreamLoaderObserver)
 
 nsresult
-nsDOMWorkerScriptLoader::LoadScripts(nsDOMWorkerThread* aWorker,
-                                     JSContext* aCx,
-                                     const nsTArray<nsString>& aURLs)
+nsDOMWorkerScriptLoader::LoadScripts(JSContext* aCx,
+                                     const nsTArray<nsString>& aURLs,
+                                     PRBool aForWorker)
 {
   NS_ASSERTION(!NS_IsMainThread(), "Wrong thread!");
-  NS_ASSERTION(aWorker, "Null worker!");
   NS_ASSERTION(aCx, "Null context!");
-
-  NS_ASSERTION(!mWorker, "Not designed to be used more than once!");
-
-  mWorker = aWorker;
-  mCx = aCx;
 
   mTarget = NS_GetCurrentThread();
   NS_ASSERTION(mTarget, "This should never be null!");
 
-  {
-    JSAutoSuspendRequest asr(aCx);
-
-    nsAutoLock lock(mWorker->Lock());
-
-    if (mWorker->IsCanceled()) {
-      return NS_ERROR_ABORT;
-    }
-
-    mTrackedByWorker = nsnull != mWorker->mScriptLoaders.AppendElement(this);
-    NS_ASSERTION(mTrackedByWorker, "Failed to add loader to worker's array!");
-  }
-
   if (mCanceled) {
     return NS_ERROR_ABORT;
   }
+
+  mForWorker = aForWorker;
 
   mScriptCount = aURLs.Length();
   if (!mScriptCount) {
@@ -173,30 +130,18 @@ nsDOMWorkerScriptLoader::LoadScripts(nsDOMWorkerThread* aWorker,
   // network or compiling.
   AutoSuspendWorkerEvents aswe(this);
 
-  nsresult rv = DoRunLoop();
-
-  {
-    JSAutoSuspendRequest asr(aCx);
-    nsAutoLock lock(mWorker->Lock());
-#ifdef DEBUG
-    PRBool removed =
-#endif
-    mWorker->mScriptLoaders.RemoveElement(this);
-    NS_ASSERTION(removed, "Something is wrong here!");
-    mTrackedByWorker = PR_FALSE;
-   }
-
+  nsresult rv = DoRunLoop(aCx);
   if (NS_FAILED(rv)) {
     return rv;
   }
 
   // Verify that all scripts downloaded and compiled.
-  rv = VerifyScripts();
+  rv = VerifyScripts(aCx);
   if (NS_FAILED(rv)) {
     return rv;
   }
 
-  rv = ExecuteScripts();
+  rv = ExecuteScripts(aCx);
   if (NS_FAILED(rv)) {
     return rv;
   }
@@ -205,18 +150,18 @@ nsDOMWorkerScriptLoader::LoadScripts(nsDOMWorkerThread* aWorker,
 }
 
 nsresult
-nsDOMWorkerScriptLoader::LoadScript(nsDOMWorkerThread* aWorker,
-                                    JSContext* aCx,
-                                    const nsString& aURL)
+nsDOMWorkerScriptLoader::LoadScript(JSContext* aCx,
+                                    const nsString& aURL,
+                                    PRBool aForWorker)
 {
   nsAutoTArray<nsString, 1> url;
   url.AppendElement(aURL);
 
-  return LoadScripts(aWorker, aCx, url);
+  return LoadScripts(aCx, url, aForWorker);
 }
 
 nsresult
-nsDOMWorkerScriptLoader::DoRunLoop()
+nsDOMWorkerScriptLoader::DoRunLoop(JSContext* aCx)
 {
   NS_ASSERTION(!NS_IsMainThread(), "Wrong thread!");
 
@@ -234,7 +179,7 @@ nsDOMWorkerScriptLoader::DoRunLoop()
     PRBool changed = NS_SUCCEEDED(threadService->ChangeThreadPoolMaxThreads(1));
 
     while (!(done || mCanceled)) {
-      JSAutoSuspendRequest asr(mCx);
+      JSAutoSuspendRequest asr(aCx);
       NS_ProcessNextEvent(mTarget);
     }
 
@@ -247,19 +192,21 @@ nsDOMWorkerScriptLoader::DoRunLoop()
 }
 
 nsresult
-nsDOMWorkerScriptLoader::VerifyScripts()
+nsDOMWorkerScriptLoader::VerifyScripts(JSContext* aCx)
 {
+  NS_ASSERTION(aCx, "Shouldn't be null!");
+
   nsresult rv = NS_OK;
 
   for (PRUint32 index = 0; index < mScriptCount; index++) {
     ScriptLoadInfo& loadInfo = mLoadInfos[index];
     NS_ASSERTION(loadInfo.done, "Inconsistent state!");
 
-    if (NS_SUCCEEDED(loadInfo.result) && loadInfo.scriptObj) {
+    if (NS_SUCCEEDED(loadInfo.result) && loadInfo.scriptObj.ToJSObject()) {
       continue;
     }
 
-    NS_ASSERTION(!loadInfo.scriptObj, "Inconsistent state!");
+    NS_ASSERTION(!loadInfo.scriptObj.ToJSObject(), "Inconsistent state!");
 
     // Flag failure before worrying about whether or not to report an error.
     rv = NS_FAILED(loadInfo.result) ? loadInfo.result : NS_ERROR_FAILURE;
@@ -274,10 +221,24 @@ nsDOMWorkerScriptLoader::VerifyScripts()
 
     // Ok, this is the script that caused us to fail.
 
-    // Only throw an error there is no other pending exception.
-    if (!JS_IsExceptionPending(mCx)) {
+    JSAutoRequest ar(aCx);
+
+    // Only throw an error if there is no other pending exception.
+    if (!JS_IsExceptionPending(aCx)) {
+      const char* message;
+      switch (loadInfo.result) {
+        case NS_ERROR_MALFORMED_URI:
+          message = "Malformed script URI: %s";
+          break;
+        case NS_ERROR_FILE_NOT_FOUND:
+          message = "Script file not found: %s";
+          break;
+        default:
+          message = "Failed to load script: %s (nsresult = 0x%x)";
+          break;
+      }
       NS_ConvertUTF16toUTF8 url(loadInfo.url);
-      JS_ReportError(mCx, "Failed to compile script: %s", url.get());
+      JS_ReportError(aCx, message, url.get(), loadInfo.result);
     }
     break;
   }
@@ -286,30 +247,34 @@ nsDOMWorkerScriptLoader::VerifyScripts()
 }
 
 nsresult
-nsDOMWorkerScriptLoader::ExecuteScripts()
+nsDOMWorkerScriptLoader::ExecuteScripts(JSContext* aCx)
 {
+  NS_ASSERTION(aCx, "Shouldn't be null!");
+
   // Now execute all the scripts.
   for (PRUint32 index = 0; index < mScriptCount; index++) {
     ScriptLoadInfo& loadInfo = mLoadInfos[index];
 
+    JSAutoRequest ar(aCx);
+
     JSScript* script =
-      static_cast<JSScript*>(JS_GetPrivate(mCx, loadInfo.scriptObj));
+      static_cast<JSScript*>(JS_GetPrivate(aCx, loadInfo.scriptObj.ToJSObject()));
     NS_ASSERTION(script, "This shouldn't ever be null!");
 
     JSObject* global = mWorker->mGlobal ?
                        mWorker->mGlobal :
-                       JS_GetGlobalObject(mCx);
+                       JS_GetGlobalObject(aCx);
     NS_ENSURE_STATE(global);
 
     // Because we may have nested calls to this function we don't want the
     // execution to automatically report errors. We let them propagate instead.
     uint32 oldOpts =
-      JS_SetOptions(mCx, JS_GetOptions(mCx) | JSOPTION_DONT_REPORT_UNCAUGHT);
+      JS_SetOptions(aCx, JS_GetOptions(aCx) | JSOPTION_DONT_REPORT_UNCAUGHT);
 
     jsval val;
-    PRBool success = JS_ExecuteScript(mCx, global, script, &val);
+    PRBool success = JS_ExecuteScript(aCx, global, script, &val);
 
-    JS_SetOptions(mCx, oldOpts);
+    JS_SetOptions(aCx, oldOpts);
 
     if (!success) {
       return NS_ERROR_FAILURE;
@@ -448,12 +413,42 @@ nsDOMWorkerScriptLoader::RunInternal()
   NS_ASSERTION(NS_IsMainThread(), "Wrong thread!");
 
   // Things we need to make all this work...
-  nsIDocument* parentDoc = mWorker->Pool()->ParentDocument();
-  NS_ASSERTION(parentDoc, "Null parent document?!");
+  nsCOMPtr<nsIDocument> parentDoc = mWorker->Pool()->ParentDocument();
+  if (!parentDoc) {
+    // Must have been canceled.
+    return NS_ERROR_ABORT;
+  }
+
+  nsIPrincipal* principal;
+  nsIURI* baseURI;
+
+  if (mForWorker) {
+    NS_ASSERTION(mScriptCount == 1, "Bad state!");
+
+    nsRefPtr<nsDOMWorker> parentWorker = mWorker->GetParent();
+    if (parentWorker) {
+      principal = parentWorker->GetPrincipal();
+      NS_ENSURE_STATE(principal);
+
+      baseURI = parentWorker->GetURI();
+      NS_ENSURE_STATE(baseURI);
+    }
+    else {
+      principal = parentDoc->NodePrincipal();
+      NS_ENSURE_STATE(principal);
+
+      baseURI = parentDoc->GetBaseURI();
+    }
+  }
+  else {
+    principal = mWorker->GetPrincipal();
+    baseURI = mWorker->GetURI();
+
+    NS_ASSERTION(principal && baseURI, "Should have been set already!");
+  }
 
   // All of these can potentially be null, but that should be ok. We'll either
   // succeed without them or fail below.
-  nsIURI* parentBaseURI = parentDoc->GetBaseURI();
   nsCOMPtr<nsILoadGroup> loadGroup(parentDoc->GetDocumentLoadGroup());
   nsCOMPtr<nsIIOService> ios(do_GetIOService());
 
@@ -464,7 +459,7 @@ nsDOMWorkerScriptLoader::RunInternal()
     nsCOMPtr<nsIURI>& uri = loadInfo.finalURI;
     rv = nsContentUtils::NewURIWithDocumentCharset(getter_AddRefs(uri),
                                                    loadInfo.url, parentDoc,
-                                                   parentBaseURI);
+                                                   baseURI);
     if (NS_FAILED(rv)) {
       return rv;
     }
@@ -472,28 +467,33 @@ nsDOMWorkerScriptLoader::RunInternal()
     nsIScriptSecurityManager* secMan = nsContentUtils::GetSecurityManager();
     NS_ENSURE_TRUE(secMan, NS_ERROR_FAILURE);
 
-    rv =
-      secMan->CheckLoadURIWithPrincipal(parentDoc->NodePrincipal(), uri,
-                                        nsIScriptSecurityManager::ALLOW_CHROME);
-    if (NS_FAILED(rv)) {
-      return rv;
-    }
-
     PRInt16 shouldLoad = nsIContentPolicy::ACCEPT;
-    rv = NS_CheckContentLoadPolicy(nsIContentPolicy::TYPE_SCRIPT,
-                                   uri,
-                                   parentDoc->NodePrincipal(),
-                                   parentDoc,
+    rv = NS_CheckContentLoadPolicy(nsIContentPolicy::TYPE_SCRIPT, uri,
+                                   principal, parentDoc,
                                    NS_LITERAL_CSTRING("text/javascript"),
-                                   nsnull,
-                                   &shouldLoad,
-                                   nsContentUtils::GetContentPolicy(),
-                                   secMan);
+                                   nsnull, &shouldLoad,
+                                   nsContentUtils::GetContentPolicy(), secMan);
     if (NS_FAILED(rv) || NS_CP_REJECTED(shouldLoad)) {
       if (NS_FAILED(rv) || shouldLoad != nsIContentPolicy::REJECT_TYPE) {
         return NS_ERROR_CONTENT_BLOCKED;
       }
       return NS_ERROR_CONTENT_BLOCKED_SHOW_ALT;
+    }
+
+    // If this script loader is being used to make a new worker then we need to
+    // do a same-origin check. Otherwise we need to clear the load with the
+    // security manager.
+    if (mForWorker) {
+      rv = principal->CheckMayLoad(uri, PR_FALSE);
+      NS_ENSURE_SUCCESS(rv, rv);
+
+      // Set the principal and URI on the new worker.
+      mWorker->SetPrincipal(principal);
+      mWorker->SetURI(uri);
+    }
+    else {
+      rv = secMan->CheckLoadURIWithPrincipal(principal, uri, 0);
+      NS_ENSURE_SUCCESS(rv, rv);
     }
 
     // We need to know which index we're on in OnStreamComplete so we know where
@@ -613,8 +613,7 @@ nsDOMWorkerScriptLoader::OnStreamCompleteInternal(nsIStreamLoader* aLoader,
   }
 
   nsRefPtr<ScriptCompiler> compiler =
-    new ScriptCompiler(this, mCx, loadInfo.scriptText, filename,
-                       loadInfo.scriptObj);
+    new ScriptCompiler(this, loadInfo.scriptText, filename, loadInfo.scriptObj);
   NS_ASSERTION(compiler, "Out of memory!");
   if (!compiler) {
     return rv = NS_ERROR_OUT_OF_MEMORY;
@@ -663,14 +662,14 @@ void
 nsDOMWorkerScriptLoader::SuspendWorkerEvents()
 {
   NS_ASSERTION(mWorker, "No worker yet!");
-  mWorker->SuspendTimeouts();
+  mWorker->SuspendFeatures();
 }
 
 void
 nsDOMWorkerScriptLoader::ResumeWorkerEvents()
 {
   NS_ASSERTION(mWorker, "No worker yet!");
-  mWorker->ResumeTimeouts();
+  mWorker->ResumeFeatures();
 }
 
 nsDOMWorkerScriptLoader::
@@ -699,6 +698,9 @@ ScriptLoaderRunnable::~ScriptLoaderRunnable()
   }
 }
 
+NS_IMPL_THREADSAFE_ISUPPORTS1(nsDOMWorkerScriptLoader::ScriptLoaderRunnable,
+                              nsIRunnable)
+
 void
 nsDOMWorkerScriptLoader::ScriptLoaderRunnable::Revoke()
 {
@@ -707,17 +709,14 @@ nsDOMWorkerScriptLoader::ScriptLoaderRunnable::Revoke()
 
 nsDOMWorkerScriptLoader::
 ScriptCompiler::ScriptCompiler(nsDOMWorkerScriptLoader* aLoader,
-                               JSContext* aCx,
                                const nsString& aScriptText,
                                const nsCString& aFilename,
-                               nsAutoJSObjectHolder& aScriptObj)
+                               nsAutoJSValHolder& aScriptObj)
 : ScriptLoaderRunnable(aLoader),
-  mCx(aCx),
   mScriptText(aScriptText),
   mFilename(aFilename),
   mScriptObj(aScriptObj)
 {
-  NS_ASSERTION(aCx, "Null context!");
   NS_ASSERTION(!aScriptText.IsEmpty(), "No script to compile!");
   NS_ASSERTION(aScriptObj.IsHeld(), "Should be held!");
 }
@@ -731,36 +730,39 @@ nsDOMWorkerScriptLoader::ScriptCompiler::Run()
     return NS_OK;
   }
 
-  NS_ASSERTION(!mScriptObj, "Already have a script object?!");
+  NS_ASSERTION(!mScriptObj.ToJSObject(), "Already have a script object?!");
   NS_ASSERTION(mScriptObj.IsHeld(), "Not held?!");
   NS_ASSERTION(!mScriptText.IsEmpty(), "Shouldn't have empty source here!");
 
-  JSAutoRequest ar(mCx);
+  JSContext* cx = nsDOMThreadService::GetCurrentContext();
+  NS_ENSURE_STATE(cx);
 
-  JSObject* global = JS_GetGlobalObject(mCx);
+  JSAutoRequest ar(cx);
+
+  JSObject* global = JS_GetGlobalObject(cx);
   NS_ENSURE_STATE(global);
 
   // Because we may have nested calls to this function we don't want the
   // execution to automatically report errors. We let them propagate instead.
   uint32 oldOpts =
-    JS_SetOptions(mCx, JS_GetOptions(mCx) | JSOPTION_DONT_REPORT_UNCAUGHT);
+    JS_SetOptions(cx, JS_GetOptions(cx) | JSOPTION_DONT_REPORT_UNCAUGHT);
 
   JSPrincipals* principal = nsDOMWorkerSecurityManager::WorkerPrincipal();
 
   JSScript* script =
-    JS_CompileUCScriptForPrincipals(mCx, global, principal,
+    JS_CompileUCScriptForPrincipals(cx, global, principal,
                                     reinterpret_cast<const jschar*>
                                                (mScriptText.BeginReading()),
                                     mScriptText.Length(), mFilename.get(), 1);
 
-  JS_SetOptions(mCx, oldOpts);
+  JS_SetOptions(cx, oldOpts);
 
   if (!script) {
     return NS_ERROR_FAILURE;
   }
 
-  mScriptObj = JS_NewScriptObject(mCx, script);
-  NS_ENSURE_STATE(mScriptObj);
+  mScriptObj = JS_NewScriptObject(cx, script);
+  NS_ENSURE_STATE(mScriptObj.ToJSObject());
 
   return NS_OK;
 }

@@ -425,6 +425,7 @@ interface nsIXPConnect : nsISupports
 
     const PRUint32 INIT_JS_STANDARD_CLASSES  = 1 << 0;
     const PRUint32 FLAG_SYSTEM_GLOBAL_OBJECT = 1 << 1;
+    const PRUint32 OMIT_COMPONENTS_OBJECT    = 1 << 2;
 
     /**
     * wrapNative will create a new JSObject or return an existing one.
@@ -530,11 +531,7 @@ interface nsIXPConnect : nsISupports
                              in nsIStackFrame  aCaller);
 
     /**
-    * XPConnect builds internal objects that parallel, and are one-to-one with,
-    * the JSContexts in the JSRuntime. It builds these objects as needed.
-    * This method tells XPConnect to resynchronize its representations with the
-    * list of JSContexts currently 'alive' in the JSRuntime. This allows it
-    * to cleanup any representations of JSContexts that are no longer valid.
+    * Deprecated do-nothing function.
     */
     void syncJSContexts();
 

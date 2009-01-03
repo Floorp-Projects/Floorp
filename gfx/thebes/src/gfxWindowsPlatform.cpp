@@ -56,7 +56,6 @@
 #include "gfxUserFontSet.h"
 
 #include <string>
-#include <time.h>
 
 #include "lcms.h"
 
@@ -75,7 +74,7 @@ BuildKeyNameFromFontName(nsAString &aName)
     ToLowerCase(aName);
 }
 
-int PR_CALLBACK
+int
 gfxWindowsPlatform::PrefChangedCallback(const char *aPrefName, void *closure)
 {
     // XXX this could be made to only clear out the cache for the prefs that were changed
@@ -154,7 +153,7 @@ struct FontListData {
     nsStringArray& mStringArray;
 };
 
-PLDHashOperator PR_CALLBACK
+PLDHashOperator
 gfxWindowsPlatform::HashEnumFunc(nsStringHashKey::KeyType aKey,
                                  nsRefPtr<FontFamily>& aFontFamily,
                                  void* userArg)
@@ -284,9 +283,9 @@ struct FontFamilyListData {
         : mFamilyArray(aFamilyArray)
     {}
 
-    static PLDHashOperator PR_CALLBACK AppendFamily(nsStringHashKey::KeyType aKey,
-                                                    nsRefPtr<FontFamily>& aFamilyEntry,
-                                                    void *aUserArg)
+    static PLDHashOperator AppendFamily(nsStringHashKey::KeyType aKey,
+                                        nsRefPtr<FontFamily>& aFamilyEntry,
+                                        void *aUserArg)
     {
         FontFamilyListData *data = (FontFamilyListData*)aUserArg;
         data->mFamilyArray.AppendElement(aFamilyEntry);
@@ -443,7 +442,7 @@ struct FontSearch {
     nsRefPtr<FontEntry> bestMatch;
 };
 
-PLDHashOperator PR_CALLBACK
+PLDHashOperator
 gfxWindowsPlatform::FindFontForCharProc(nsStringHashKey::KeyType aKey,
                                         nsRefPtr<FontFamily>& aFontFamily,
                                         void* userArg)
@@ -576,7 +575,7 @@ FindFullNameForFace(const ENUMLOGFONTEXW *lpelfe,
 // callback called for each family name, based on the assumption that the 
 // first part of the full name is the family name
 
-static PLDHashOperator PR_CALLBACK
+static PLDHashOperator
 FindFullName(nsStringHashKey::KeyType aKey,
              nsRefPtr<FontFamily>& aFontFamily,
              void* userArg)
@@ -639,11 +638,10 @@ static void MakeUniqueFontName(PRUnichar aName[LF_FACESIZE])
 {
     static PRUint32 fontCount = 0;
     ++fontCount;
-    PRUint32 time = (PRUint32) _time32(nsnull);
 
     char buf[LF_FACESIZE];
 
-    sprintf(buf, "mozfont%8.8x%8.8x", time, fontCount);  // slightly retarded, figure something better later...
+    sprintf(buf, "mozfont%8.8x%8.8x", ::GetTickCount(), fontCount);  // slightly retarded, figure something better later...
 
     nsCAutoString fontName(buf);
 
@@ -671,17 +669,17 @@ typedef struct
 
 LONG WINAPI TTLoadEmbeddedFont
 (
-    __out HANDLE*   phFontReference,            // on completion, contains handle to identify embedded font installed
+    HANDLE*  phFontReference,           // on completion, contains handle to identify embedded font installed
                                         // on system
-    __in ULONG    ulFlags,                  // flags specifying the request 
-    __out ULONG*    pulPrivStatus,          // on completion, contains the embedding status
-    __in ULONG     ulPrivs,                 // allows for the reduction of licensing privileges
-    __out ULONG*    pulStatus,              // on completion, may contain status flags for request 
-    __in READEMBEDPROC lpfnReadFromStream,  // callback function for doc/disk reads
-    __in LPVOID    lpvReadStream,           // the input stream tokin
-    __in_opt LPWSTR    szWinFamilyName,         // the new 16 bit windows family name can be NULL
-    __in_opt LPSTR    szMacFamilyName,          // the new 8 bit mac family name can be NULL
-    __in_opt TTLOADINFO* pTTLoadInfo                // optional security
+    ULONG    ulFlags,                   // flags specifying the request 
+    ULONG*   pulPrivStatus,             // on completion, contains the embedding status
+    ULONG    ulPrivs,                   // allows for the reduction of licensing privileges
+    ULONG*   pulStatus,                 // on completion, may contain status flags for request 
+    READEMBEDPROC lpfnReadFromStream,   // callback function for doc/disk reads
+    LPVOID   lpvReadStream,             // the input stream tokin
+    LPWSTR   szWinFamilyName,           // the new 16 bit windows family name can be NULL
+    LPSTR    szMacFamilyName,           // the new 8 bit mac family name can be NULL
+    TTLOADINFO* pTTLoadInfo             // optional security
 );
 
 #endif // __t2embapi__
@@ -698,7 +696,7 @@ static TTDeleteEmbeddedFontProc TTDeleteEmbeddedFontPtr = nsnull;
 
 static void InitializeFontEmbeddingProcs()
 {
-    HMODULE fontlib = LoadLibrary("t2embed.dll");
+    HMODULE fontlib = LoadLibraryW(L"t2embed.dll");
     if (!fontlib)
         return;
     TTLoadEmbeddedFontPtr = (TTLoadEmbeddedFontProc) GetProcAddress(fontlib, "TTLoadEmbeddedFont");
@@ -724,57 +722,32 @@ public:
 
 class EOTFontStreamReader {
 public:
-    EOTFontStreamReader(nsILocalFile *aFontFile, PRUint8 *aEOTHeader, 
+    EOTFontStreamReader(const PRUint8 *aFontData, PRUint32 aLength, PRUint8 *aEOTHeader, 
                         PRUint32 aEOTHeaderLen)
-        : mFontFile(aFontFile), mFd(nsnull), mOpenError(PR_FALSE), 
-          mInHeader(PR_TRUE), mHeaderOffset(0), mEOTHeader(aEOTHeader), 
-          mEOTHeaderLen(aEOTHeaderLen)
+        : mInHeader(PR_TRUE), mHeaderOffset(0), mEOTHeader(aEOTHeader), 
+          mEOTHeaderLen(aEOTHeaderLen), mFontData(aFontData), mFontDataLen(aLength),
+          mFontDataOffset(0)
     {
     
     }
 
     ~EOTFontStreamReader() 
     { 
-        if (mFd) {
-            PR_Close(mFd);
-        }
 
-        mFontFile->Remove(PR_FALSE);
     }
 
-    nsCOMPtr<nsILocalFile>  mFontFile;
-    PRFileDesc              *mFd;
-    PRPackedBool            mOpenError;
     PRPackedBool            mInHeader;
     PRUint32                mHeaderOffset;
     PRUint8                 *mEOTHeader;
     PRUint32                mEOTHeaderLen;
-
-    PRBool OpenFontFile()
-    {
-        nsresult rv;
-
-        rv = mFontFile->OpenNSPRFileDesc(PR_RDONLY, 0, &mFd);
-        if (NS_FAILED(rv) || !mFd)
-            return PR_FALSE;
-
-        return PR_TRUE;
-    }
+    const PRUint8           *mFontData;
+    PRUint32                mFontDataLen;
+    PRUint32                mFontDataOffset;
 
     unsigned long Read(void *outBuffer, const unsigned long aBytesToRead)
     {
         PRUint32 bytesLeft = aBytesToRead;
         PRUint8 *out = static_cast<PRUint8*> (outBuffer);
-
-        if (mOpenError)
-            return 0;
-
-        if (!mFd) {
-            if (!OpenFontFile()) {
-                mOpenError = PR_TRUE;
-                return 0;
-            }
-        }
 
         // read from EOT header
         if (mInHeader) {
@@ -788,7 +761,10 @@ public:
         }
 
         if (bytesLeft) {
-            PRInt32 bytesRead = PR_Read(mFd, out, bytesLeft);
+            PRInt32 bytesRead = PR_MIN(bytesLeft, mFontDataLen - mFontDataOffset);
+            memcpy(out, mFontData, bytesRead);
+            mFontData += bytesRead;
+            mFontDataOffset += bytesRead;
             if (bytesRead > 0)
                 bytesLeft -= bytesRead;
         }
@@ -807,13 +783,17 @@ public:
 };
 
 gfxFontEntry* 
-gfxWindowsPlatform::MakePlatformFont(const gfxFontEntry *aProxyEntry, 
-                                     const gfxDownloadedFontData* aFontData)
+gfxWindowsPlatform::MakePlatformFont(const gfxProxyFontEntry *aProxyEntry,
+                                     nsISupports *aLoader,
+                                     const PRUint8 *aFontData, PRUint32 aLength)
 {
     // if calls aren't available, bail
     if (!TTLoadEmbeddedFontPtr || !TTDeleteEmbeddedFontPtr)
         return nsnull;
 
+    if (!gfxFontUtils::ValidateSFNTHeaders(aFontData, aLength))
+        return nsnull;
+        
     // create an eot header
     nsAutoTArray<PRUint8,2048> eotHeader;
     PRUint8 *buffer;
@@ -826,11 +806,7 @@ gfxWindowsPlatform::MakePlatformFont(const gfxFontEntry *aProxyEntry,
     PRInt32 ret;
 
     {
-        nsCOMPtr<nsILocalFile> fontFile(do_QueryInterface(aFontData->mFontFile, &rv));
-        if (NS_FAILED(rv))
-            return nsnull;
-
-        rv = gfxFontUtils::MakeEOTHeader(fontFile, &eotHeader, &isCFF);
+        rv = gfxFontUtils::MakeEOTHeader(aFontData, aLength, &eotHeader, &isCFF);
         if (NS_FAILED(rv))
             return nsnull;
 
@@ -840,7 +816,7 @@ gfxWindowsPlatform::MakePlatformFont(const gfxFontEntry *aProxyEntry,
         
         ULONG privStatus, pulStatus;
         MakeUniqueFontName(fontName);
-        EOTFontStreamReader eotReader(fontFile, buffer, eotlen);
+        EOTFontStreamReader eotReader(aFontData, aLength, buffer, eotlen);
 
         ret = TTLoadEmbeddedFontPtr(&fontRef, TTLOAD_PRIVATE, &privStatus, 
                                    LICENSE_PREVIEWPRINT, &pulStatus, 
@@ -911,6 +887,7 @@ gfxWindowsPlatform::FindFontEntry(const nsAString& aName, const gfxFontStyle& aF
 cmsHPROFILE
 gfxWindowsPlatform::GetPlatformCMSOutputProfile()
 {
+#ifndef WINCE
     WCHAR str[1024+1];
     DWORD size = 1024;
 
@@ -927,6 +904,9 @@ gfxWindowsPlatform::GetPlatformCMSOutputProfile()
                 NS_ConvertUTF16toUTF8(str).get());
 #endif
     return profile;
+#else
+    return nsnull;
+#endif
 }
 
 PRBool

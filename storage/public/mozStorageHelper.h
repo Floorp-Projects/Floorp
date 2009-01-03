@@ -40,6 +40,8 @@
 #define _MOZSTORAGEHELPER_H_
 
 #include "mozIStorageConnection.h"
+#include "mozIStorageStatement.h"
+#include "mozStorage.h"
 
 
 /**
@@ -68,13 +70,9 @@ public:
       mCommitOnComplete(aCommitOnComplete),
       mCompleted(PR_FALSE)
   {
-    if (mConnection) {
-      PRBool transactionInProgress = PR_FALSE;
-      mConnection->GetTransactionInProgress(&transactionInProgress);
-      mHasTransaction = ! transactionInProgress;
-      if (mHasTransaction)
-        mConnection->BeginTransactionAs(aType);
-    }
+    // We won't try to get a transaction if one is already in progress.
+    if (mConnection)
+      mHasTransaction = NS_SUCCEEDED(mConnection->BeginTransactionAs(aType));
   }
   ~mozStorageTransaction()
   {
@@ -113,7 +111,16 @@ public:
     mCompleted = PR_TRUE;
     if (! mHasTransaction)
       return NS_ERROR_FAILURE;
-    return mConnection->RollbackTransaction();
+
+    // It is possible that a rollback will return busy, so we busy wait...
+    nsresult rv = NS_OK;
+    do {
+      rv = mConnection->RollbackTransaction();
+      if (rv == NS_ERROR_STORAGE_BUSY)
+        (void)PR_Sleep(PR_INTERVAL_NO_WAIT);
+    } while (rv == NS_ERROR_STORAGE_BUSY);
+
+    return rv;
   }
 
   /**

@@ -40,94 +40,73 @@
 #ifndef __NSDOMWORKERPOOL_H__
 #define __NSDOMWORKERPOOL_H__
 
-// Bases
-#include "nsDOMWorkerBase.h"
-#include "nsIClassInfo.h"
-#include "nsIDOMThreads.h"
-
 // Other includes
 #include "jsapi.h"
+#include "nsCOMPtr.h"
 #include "nsStringGlue.h"
-#include "nsTPtrArray.h"
+#include "nsTArray.h"
 #include "prmon.h"
 
-class nsDOMWorkerThread;
+class nsDOMWorker;
 class nsIDocument;
 class nsIScriptContext;
 class nsIScriptError;
 class nsIScriptGlobalObject;
 
-/**
- * The pool is almost always touched only on the main thread.
- */
-class nsDOMWorkerPool : public nsDOMWorkerBase,
-                        public nsIDOMWorkerPool,
-                        public nsIClassInfo
+class nsDOMWorkerPool
 {
-  friend class nsDOMThreadService;
-  friend class nsDOMWorkerFunctions;
-  friend class nsDOMWorkerPoolWeakRef;
-  friend class nsDOMWorkerScriptLoader;
-  friend class nsDOMWorkerStreamObserver;
-  friend class nsDOMWorkerThread;
-  friend class nsReportErrorRunnable;
-  friend JSBool DOMWorkerOperationCallback(JSContext* aCx);
-
 public:
-  NS_DECL_ISUPPORTS
-  NS_DECL_NSIDOMWORKERPOOL
-  NS_DECL_NSICLASSINFO
+  nsDOMWorkerPool(nsIScriptGlobalObject* aGlobalObject,
+                  nsIDocument* aDocument);
 
-  nsDOMWorkerPool(nsIDocument* aDocument);
+  NS_IMETHOD_(nsrefcnt) AddRef();
+  NS_IMETHOD_(nsrefcnt) Release();
 
-  // For nsDOMWorkerBase
-  virtual nsDOMWorkerPool* Pool() {
-    return this;
-  }
-
-  nsIDocument* ParentDocument();
   nsIScriptContext* ScriptContext();
 
-private:
-  virtual ~nsDOMWorkerPool();
+  nsIScriptGlobalObject* ScriptGlobalObject() {
+    return mParentGlobal;
+  }
+
+  nsIDocument* ParentDocument() {
+    return mParentDocument;
+  }
 
   nsresult Init();
 
-  // For nsDOMWorkerBase
-  virtual nsresult HandleMessage(const nsAString& aMessage,
-                                 nsDOMWorkerBase* aSourceThread);
+  void Cancel();
+  void Suspend();
+  void Resume();
 
-  // For nsDOMWorkerBase
-  virtual nsresult DispatchMessage(nsIRunnable* aRunnable);
-
-  void HandleError(nsIScriptError* aError,
-                   nsDOMWorkerThread* aSource);
-
-  void NoteDyingWorker(nsDOMWorkerThread* aWorker);
-
-  void CancelWorkersForGlobal(nsIScriptGlobalObject* aGlobalObject);
-  void SuspendWorkersForGlobal(nsIScriptGlobalObject* aGlobalObject);
-  void ResumeWorkersForGlobal(nsIScriptGlobalObject* aGlobalObject);
+  nsresult NoteWorker(nsDOMWorker* aWorker);
+  void NoteDyingWorker(nsDOMWorker* aWorker);
 
   PRMonitor* Monitor() {
     return mMonitor;
   }
 
-  // Weak reference to the window that created and owns this pool.
-  nsISupports* mParentGlobal;
+private:
+  virtual ~nsDOMWorkerPool();
 
-  // Weak reference to the document that created this pool.
-  nsIDocument* mParentDocument;
+  void GetWorkers(nsTArray<nsDOMWorker*>& aArray);
+
+  nsAutoRefCnt mRefCnt;
+
+  // Reference to the window that created and owns this pool.
+  nsCOMPtr<nsIScriptGlobalObject> mParentGlobal;
+
+  // Reference to the document that created this pool.
+  nsCOMPtr<nsIDocument> mParentDocument;
 
   // Weak array of workers. The idea is that workers can be garbage collected
   // independently of the owning pool and other workers.
-  nsTPtrArray<nsDOMWorkerThread> mWorkers;
-
-  // An error handler function, may be null.
-  nsCOMPtr<nsIDOMWorkerErrorListener> mErrorListener;
+  nsTArray<nsDOMWorker*> mWorkers;
 
   // Monitor for suspending and resuming workers.
   PRMonitor* mMonitor;
+
+  PRPackedBool mCanceled;
+  PRPackedBool mSuspended;
 };
 
 #endif /* __NSDOMWORKERPOOL_H__ */

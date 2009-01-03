@@ -98,7 +98,8 @@ nsHashPropertyBag::HasKey(const nsAString& name, PRBool *aResult)
 NS_IMETHODIMP
 nsHashPropertyBag::Get(const nsAString& name, nsIVariant* *_retval)
 {
-    mPropertyHash.Get(name, _retval);
+    if (!mPropertyHash.Get(name, _retval))
+        *_retval = nsnull;
 
     return NS_OK;
 }
@@ -178,7 +179,7 @@ nsSimpleProperty::GetValue(nsIVariant* *aValue)
 
 // end nsSimpleProperty
 
-PR_STATIC_CALLBACK(PLDHashOperator)
+static PLDHashOperator
 PropertyHashToArrayFunc (const nsAString &aKey,
                          nsIVariant* aData,
                          void *userArg)

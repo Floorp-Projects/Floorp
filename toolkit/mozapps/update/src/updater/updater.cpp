@@ -118,7 +118,9 @@ void LaunchChild(int argc, char **argv);
 #endif
 
 #ifndef MAXPATHLEN
-# ifdef MAX_PATH
+# ifdef PATH_MAX
+#  define MAXPATHLEN PATH_MAX
+# elif defined(_MAX_PATH)
 #  define MAXPATHLEN MAX_PATH
 # elif defined(_MAX_PATH)
 #  define MAXPATHLEN _MAX_PATH
@@ -1103,7 +1105,7 @@ LaunchWinPostProcess(const WCHAR *appExe)
     exearg,
     L"\0"
   };
-
+ 
   WinLaunchChild(exefullpath, argc, argv, 0);
 }
 #endif

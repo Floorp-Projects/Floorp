@@ -53,8 +53,10 @@
 #include "nsRuleNode.h"
 #include "nsTArray.h"
 #include "nsCOMArray.h"
+#include "nsAutoPtr.h"
 
 class nsIURI;
+class nsCSSFontFaceRule;
 
 // The style set object is created by the document viewer and ownership is
 // then handed off to the PresShell.  Only the PresShell should delete a
@@ -113,6 +115,11 @@ class nsStyleSet
                       nsIAtom* aPseudoTag,
                       nsStyleContext* aParentContext);
 
+  // Append all the currently-active font face rules to aArray.  Return
+  // true for success and false for failure.
+  PRBool AppendFontFaceRules(nsPresContext* aPresContext,
+                             nsTArray<nsFontFaceRuleContainer>& aArray);
+
   // Begin ignoring style context destruction, to avoid lots of unnecessary
   // work on document teardown.
   void BeginShutdown(nsPresContext* aPresContext);
@@ -157,9 +164,6 @@ class nsStyleSet
   {
     mBindingManager = aBindingManager;
   }
-
-  // Free global data at module shutdown
-  static void FreeGlobals() { NS_IF_RELEASE(gQuirkURI); }
 
   // The "origins" of the CSS cascade, from lowest precedence to
   // highest (for non-!important rules).
@@ -209,6 +213,11 @@ class nsStyleSet
   // Note: EndReconstruct should not be called if BeginReconstruct fails
   void EndReconstruct();
 
+  // Let the style set know that a particular sheet is the quirks sheet.  This
+  // sheet must already have been added to the UA sheets.  The pointer must not
+  // be null.  This should only be called once for a given style set.
+  void SetQuirkStyleSheet(nsIStyleSheet* aQuirkStyleSheet);
+  
  private:
   // Not to be implemented
   nsStyleSet(const nsStyleSet& aCopy);
@@ -252,8 +261,6 @@ class nsStyleSet
                                               nsIAtom* aPseudoTag);
 
   nsPresContext* PresContext() { return mRuleTree->GetPresContext(); }
-
-  static nsIURI  *gQuirkURI;
 
   // The sheets in each array in mSheets are stored with the most significant
   // sheet last.

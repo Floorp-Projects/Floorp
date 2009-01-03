@@ -72,11 +72,9 @@ NS_IMPL_NS_NEW_SVG_ELEMENT(Polyline)
 NS_IMPL_ADDREF_INHERITED(nsSVGPolylineElement,nsSVGPolylineElementBase)
 NS_IMPL_RELEASE_INHERITED(nsSVGPolylineElement,nsSVGPolylineElementBase)
 
-NS_INTERFACE_MAP_BEGIN(nsSVGPolylineElement)
-  NS_INTERFACE_MAP_ENTRY(nsIDOMNode)
-  NS_INTERFACE_MAP_ENTRY(nsIDOMElement)
-  NS_INTERFACE_MAP_ENTRY(nsIDOMSVGElement)
-  NS_INTERFACE_MAP_ENTRY(nsIDOMSVGPolylineElement)
+NS_INTERFACE_TABLE_HEAD(nsSVGPolylineElement)
+  NS_NODE_INTERFACE_TABLE4(nsSVGPolylineElement, nsIDOMNode, nsIDOMElement,
+                           nsIDOMSVGElement, nsIDOMSVGPolylineElement)
   NS_INTERFACE_MAP_ENTRY_CONTENT_CLASSINFO(SVGPolylineElement)
 NS_INTERFACE_MAP_END_INHERITING(nsSVGPolylineElementBase)
 

@@ -128,9 +128,10 @@ NS_IMPL_RELEASE_INHERITED(nsHTMLLegendElement, nsGenericElement)
 
 
 // QueryInterface implementation for nsHTMLLegendElement
-NS_HTML_CONTENT_INTERFACE_TABLE_HEAD(nsHTMLLegendElement,
-                                     nsGenericHTMLFormElement)
-  NS_INTERFACE_TABLE_INHERITED1(nsHTMLLegendElement, nsIDOMHTMLLegendElement)
+NS_INTERFACE_TABLE_HEAD(nsHTMLLegendElement)
+  NS_HTML_CONTENT_INTERFACE_TABLE1(nsHTMLLegendElement, nsIDOMHTMLLegendElement)
+  NS_HTML_CONTENT_INTERFACE_TABLE_TO_MAP_SEGUE(nsHTMLLegendElement,
+                                               nsGenericHTMLFormElement)
 NS_HTML_CONTENT_INTERFACE_TABLE_TAIL_CLASSINFO(HTMLLegendElement)
 
 

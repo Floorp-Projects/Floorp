@@ -55,7 +55,11 @@ void AutoScriptEvaluate::StartEvaluating(JSErrorReporter errorReporter)
     if(!mJSContext)
         return;
     mEvaluated = PR_TRUE;
-    mOldErrorReporter = JS_SetErrorReporter(mJSContext, errorReporter);
+    if(!mJSContext->errorReporter)
+    {
+        JS_SetErrorReporter(mJSContext, errorReporter);
+        mErrorReporterSet = PR_TRUE;
+    }
     mContextHasThread = JS_GetContextThread(mJSContext);
     if (mContextHasThread)
         JS_BeginRequest(mJSContext);
@@ -105,7 +109,9 @@ AutoScriptEvaluate::~AutoScriptEvaluate()
         if(scriptNotify)
             scriptNotify->ScriptExecuted();
     }
-    JS_SetErrorReporter(mJSContext, mOldErrorReporter);
+
+    if(mErrorReporterSet)
+        JS_SetErrorReporter(mJSContext, NULL);
 }
 
 // It turns out that some errors may be not worth reporting. So, this
@@ -275,8 +281,69 @@ nsXPCWrappedJSClass::CallQueryInterfaceOnJSObject(XPCCallContext& ccx,
     id = xpc_NewIDObject(cx, jsobj, aIID);
     if(id)
     {
+        // Throwing NS_NOINTERFACE is the prescribed way to fail QI from JS. It
+        // is not an exception that is ever worth reporting, but we don't want
+        // to eat all exceptions either.
+
+        uint32 oldOpts =
+          JS_SetOptions(cx, JS_GetOptions(cx) | JSOPTION_DONT_REPORT_UNCAUGHT);
+
         jsval args[1] = {OBJECT_TO_JSVAL(id)};
         success = JS_CallFunctionValue(cx, jsobj, fun, 1, args, &retval);
+
+        JS_SetOptions(cx, oldOpts);
+
+        if(!success)
+        {
+            NS_ASSERTION(JS_IsExceptionPending(cx),
+                         "JS failed without setting an exception!");
+
+            jsval jsexception = JSVAL_NULL;
+            AUTO_MARK_JSVAL(ccx, &jsexception);
+
+            if(JS_GetPendingException(cx, &jsexception))
+            {
+                nsresult rv;
+                if(JSVAL_IS_OBJECT(jsexception))
+                {
+                    // XPConnect may have constructed an object to represent a
+                    // C++ QI failure. See if that is the case.
+                    nsCOMPtr<nsIXPConnectWrappedNative> wrapper;
+
+                    nsXPConnect::GetXPConnect()->
+                        GetWrappedNativeOfJSObject(ccx,
+                                                   JSVAL_TO_OBJECT(jsexception),
+                                                   getter_AddRefs(wrapper));
+
+                    if(wrapper)
+                    {
+                        nsCOMPtr<nsIException> exception =
+                            do_QueryWrappedNative(wrapper);
+                        if(exception &&
+                           NS_SUCCEEDED(exception->GetResult(&rv)) &&
+                           rv == NS_NOINTERFACE)
+                        {
+                            JS_ClearPendingException(cx);
+                        }
+                    }
+                }
+                else if(JSVAL_IS_NUMBER(jsexception))
+                {
+                    // JS often throws an nsresult.
+                    if(JSVAL_IS_DOUBLE(jsexception))
+                        rv = (nsresult)(*JSVAL_TO_DOUBLE(jsexception));
+                    else
+                        rv = (nsresult)(JSVAL_TO_INT(jsexception));
+
+                    if(rv == NS_NOINTERFACE)
+                        JS_ClearPendingException(cx);
+                }
+            }
+
+            // Don't report if reporting was disabled by someone else.
+            if(!(oldOpts & JSOPTION_DONT_REPORT_UNCAUGHT))
+                JS_ReportPendingException(cx);
+        }
     }
 
     if(success)
@@ -906,6 +973,15 @@ nsXPCWrappedJSClass::CleanupPointerTypeObject(const nsXPTType& type,
     }
 }
 
+class AutoClearPendingException
+{
+public:
+  AutoClearPendingException(JSContext *cx) : mCx(cx) { }
+  ~AutoClearPendingException() { JS_ClearPendingException(mCx); }
+private:
+  JSContext* mCx;
+};
+
 nsresult
 nsXPCWrappedJSClass::CheckForException(XPCCallContext & ccx,
                                        const char * aPropertyName,
@@ -926,8 +1002,10 @@ nsXPCWrappedJSClass::CheckForException(XPCCallContext & ccx,
     nsresult pending_result = xpcc->GetPendingResult();
 
     jsval js_exception;
+    JSBool is_js_exception = JS_GetPendingException(cx, &js_exception);
+
     /* JS might throw an expection whether the reporter was called or not */
-    if(JS_GetPendingException(cx, &js_exception))
+    if(is_js_exception)
     {
         if(!xpc_exception)
             XPCConvert::JSValToXPCException(ccx, js_exception, anInterfaceName,
@@ -939,8 +1017,9 @@ nsXPCWrappedJSClass::CheckForException(XPCCallContext & ccx,
         {
             ccx.GetThreadData()->SetException(nsnull); // XXX necessary?
         }
-        JS_ClearPendingException(cx);
     }
+
+    AutoClearPendingException acpe(cx);
 
     if(xpc_exception)
     {
@@ -990,6 +1069,14 @@ nsXPCWrappedJSClass::CheckForException(XPCCallContext & ccx,
                 {
                     reportable = PR_FALSE;
                 }
+            }
+
+            // Try to use the error reporter set on the context to handle this
+            // error if it came from a JS exception.
+            if(reportable && is_js_exception &&
+               cx->errorReporter != xpcWrappedJSErrorReporter)
+            {
+                reportable = !JS_ReportPendingException(cx);
             }
 
             if(reportable)
@@ -1540,7 +1627,7 @@ pre_call_clean_up:
             nsCOMPtr<nsIException> e;
 
             XPCConvert::ConstructException(code, sz, GetInterfaceName(), name,
-                                           nsnull, getter_AddRefs(e), nsnull);
+                                           nsnull, getter_AddRefs(e), nsnull, nsnull);
             xpcc->SetException(e);
             if(sz)
                 JS_smprintf_free(sz);

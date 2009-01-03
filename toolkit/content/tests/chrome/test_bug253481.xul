@@ -41,6 +41,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=253481
 <![CDATA[
 /** Test for Bug 253481 **/
 function testPaste(name, element, expected) {
+  element.value = "";
   element.focus();
   synthesizeKey("v", { accelKey: true });
   is(element.value, expected, name);
@@ -50,20 +51,26 @@ SimpleTest.waitForExplicitFinish();
 
 addLoadEvent(function() {
 setTimeout(function() {
-var testString = "  hello hello  \n  world\nworld  ";
+var testString = "\n  hello hello  \n  world\nworld  \n";
 var expectedResults = {
-"pasteintact": testString,
-"pastetofirst": testString.split(/\n/)[0],
-"replacewithspaces": testString.replace('\n',' ','g'),
+// even "pasteintact" strips leading/trailing newlines
+"pasteintact": testString.replace(/^\n/, '').replace(/\n$/, ''),
+// "pastetofirst" strips leading newlines
+"pastetofirst": testString.replace(/^\n/, '').split(/\n/)[0],
+// "replacewithspaces" strips trailing newlines first - bug 432415
+"replacewithspaces": testString.replace(/\n$/, '').replace('\n',' ','g'),
+// "strip" is pretty straightforward
 "strip": testString.replace('\n','','g'),
-"replacewithcommas": testString.replace('\n',',','g'),
+// "replacewithcommas" strips leading and trailing newlines first
+"replacewithcommas": testString.replace(/^\n/, '').replace(/\n$/, '').replace('\n',',','g'),
+// "stripsurroundingwhitespace" strips all newlines and whitespace around them
 "stripsurroundingwhitespace": testString.replace(/\s*\n\s*/g,'')
 };
 
 // Put a multi-line string in the clipboard
-Components.classes["@mozilla.org/widget/clipboardhelper;1"]
-          .getService(Components.interfaces.nsIClipboardHelper)
-          .copyString(testString);
+var clip = Components.classes["@mozilla.org/widget/clipboardhelper;1"]
+                     .getService(Components.interfaces.nsIClipboardHelper);
+clip.copyString(testString);
 
 for (let [item, expected] in Iterator(expectedResults)) {
    testPaste(item, $(item), expected);

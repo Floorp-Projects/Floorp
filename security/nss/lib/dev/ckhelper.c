@@ -35,7 +35,7 @@
  * ***** END LICENSE BLOCK ***** */
 
 #ifdef DEBUG
-static const char CVS_ID[] = "@(#) $RCSfile: ckhelper.c,v $ $Revision: 1.37 $ $Date: 2008/05/29 17:24:15 $";
+static const char CVS_ID[] = "@(#) $RCSfile: ckhelper.c,v $ $Revision: 1.38 $ $Date: 2008/09/30 04:09:02 $";
 #endif /* DEBUG */
 
 #ifndef NSSCKEPV_H
@@ -359,6 +359,10 @@ nssCryptokiCertificate_GetAttributes (
 	session = sessionOpt ? 
 	          sessionOpt : 
 	          nssToken_GetDefaultSession(certObject->token);
+	if (!session) {
+	    nss_SetError(NSS_ERROR_INVALID_ARGUMENT);
+	    return PR_FAILURE;
+	}
 
 	slot = nssToken_GetSlot(certObject->token);
 	status = nssCKObject_GetAttributes(certObject->handle, 
@@ -457,6 +461,10 @@ nssCryptokiTrust_GetAttributes (
 	session = sessionOpt ? 
 	          sessionOpt : 
 	          nssToken_GetDefaultSession(trustObject->token);
+	if (!session) {
+	    nss_SetError(NSS_ERROR_INVALID_ARGUMENT);
+	    return PR_FAILURE;
+	}
 
 	slot = nssToken_GetSlot(trustObject->token);
 	status = nssCKObject_GetAttributes(trustObject->handle,
@@ -522,6 +530,10 @@ nssCryptokiCRL_GetAttributes (
 	session = sessionOpt ? 
 	          sessionOpt : 
 	          nssToken_GetDefaultSession(crlObject->token);
+	if (session == NULL) {
+	    nss_SetError(NSS_ERROR_INVALID_ARGUMENT);
+	    return PR_FAILURE;
+	}
 
 	slot = nssToken_GetSlot(crlObject->token);
 	status = nssCKObject_GetAttributes(crlObject->handle, 
@@ -580,10 +592,9 @@ nssCryptokiPrivateKey_SetCertificate (
     if (sessionOpt) {
 	if (!nssSession_IsReadWrite(sessionOpt)) {
 	    return PR_FAILURE;
-	} else {
-	    session = sessionOpt;
-	}
-    } else if (nssSession_IsReadWrite(defaultSession)) {
+	} 
+	session = sessionOpt;
+    } else if (defaultSession && nssSession_IsReadWrite(defaultSession)) {
 	session = defaultSession;
     } else {
 	NSSSlot *slot = nssToken_GetSlot(token);

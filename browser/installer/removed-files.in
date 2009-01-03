@@ -118,6 +118,7 @@ searchplugins/netex.xml
 searchplugins/nosaltres.xml
 searchplugins/pbi-pl.xml
 searchplugins/taobao.xml
+searchplugins/wikipedia-en-CN.xml
 searchplugins/wikipedia-zh.xml
 searchplugins/yahoo-jp-shopping.xml
 searchplugins/yahoo-ru.xml
@@ -584,6 +585,7 @@ components/nsXmlRpcClient.js
 components/nsInterfaceInfoToIDL.js
 components/nsScriptableIO.js
 chrome/chromelist.txt
+modules/JSON.jsm
 #ifdef XP_MACOSX
 LICENSE
 extensions/inspector@mozilla.org/chrome/chromelist.txt

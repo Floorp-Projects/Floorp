@@ -25,6 +25,7 @@
  *   Shawn Wilsher <me@shawnwilsher.com>
  *   Srirang G Doddihal <brahmana@doddihal.com>
  *   Edward Lee <edward.lee@engineering.uiuc.edu>
+ *   Ehsan Akhgari <ehsan.akhgari@gmail.com>
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -74,8 +75,8 @@ typedef PRInt16 DownloadType;
 
 class nsDownload;
 
-#if defined(XP_WIN) && !defined(__MINGW32__)
-class nsDownloadScanner;
+#ifdef DOWNLOAD_SCANNER
+#include "nsDownloadScanner.h"
 #endif
 
 class nsDownloadManager : public nsIDownloadManager,
@@ -93,14 +94,25 @@ public:
   static nsDownloadManager *GetSingleton();
 
   virtual ~nsDownloadManager();
-#if defined(XP_WIN) && !defined(__MINGW32__)
-  nsDownloadManager() : mScanner(nsnull) { };
-private:
-  nsDownloadScanner *mScanner;
-#endif
+  nsDownloadManager() :
+      mDBType(DATABASE_DISK)
+    , mInPrivateBrowsing(PR_FALSE)
+  {
+  }
 
 protected:
-  nsresult InitDB(PRBool *aDoImport);
+  enum DatabaseType
+  {
+    DATABASE_DISK = 0, // default
+    DATABASE_MEMORY
+  };
+
+  nsresult InitDB();
+  nsresult InitFileDB(PRBool *aDoImport);
+  nsresult InitMemoryDB();
+  already_AddRefed<mozIStorageConnection> GetFileDBConnection(nsIFile *dbFile) const;
+  already_AddRefed<mozIStorageConnection> GetMemoryDBConnection() const;
+  nsresult SwitchDatabaseTypeTo(enum DatabaseType aType);
   nsresult CreateTable();
   nsresult ImportDownloadHistory();
 
@@ -242,6 +254,15 @@ protected:
    */
   enum QuitBehavior GetQuitBehavior();
 
+  void OnEnterPrivateBrowsingMode();
+  void OnLeavePrivateBrowsingMode();
+
+  // Virus scanner for windows
+#ifdef DOWNLOAD_SCANNER
+private:
+  nsRefPtr<nsDownloadScanner> mScanner;
+#endif
+
 private:
   nsCOMArray<nsIDownloadProgressListener> mListeners;
   nsCOMPtr<nsIStringBundle> mBundle;
@@ -251,6 +272,9 @@ private:
   nsCOMPtr<mozIStorageStatement> mUpdateDownloadStatement;
   nsCOMPtr<mozIStorageStatement> mGetIdsForURIStatement;
   nsAutoPtr<mozStorageTransaction> mHistoryTransaction;
+
+  enum DatabaseType mDBType;
+  PRBool mInPrivateBrowsing;
 
   static nsDownloadManager *gDownloadManagerService;
 

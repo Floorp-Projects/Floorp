@@ -41,6 +41,9 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
+#ifndef nsTreeBodyFrame_h
+#define nsTreeBodyFrame_h
+
 #include "nsLeafBoxFrame.h"
 #include "nsITreeView.h"
 #include "nsICSSPseudoComparator.h"
@@ -60,6 +63,8 @@
 #include "nsIScrollbarFrame.h"
 #include "nsThreadUtils.h"
 
+class nsOverflowChecker;
+
 // An entry in the tree's image cache
 struct nsTreeImageCacheEntry
 {
@@ -71,21 +76,66 @@ struct nsTreeImageCacheEntry
   nsCOMPtr<imgIDecoderObserver> listener;
 };
 
-static NS_DEFINE_CID(kTreeColumnImplCID, NS_TREECOLUMN_IMPL_CID);
+#define NS_TREEBODYFRAME_IID \
+{ 0xe35eb017, 0xa679, 0x4d4d, \
+  { 0x83, 0xda, 0xce, 0xd6, 0x20, 0xae, 0x9e, 0x66 } }
 
 // The actual frame that paints the cells and rows.
-class nsTreeBodyFrame : public nsLeafBoxFrame,
-                        public nsITreeBoxObject,
-                        public nsICSSPseudoComparator,
-                        public nsIScrollbarMediator,
-                        public nsIReflowCallback
+class NS_FINAL_CLASS nsTreeBodyFrame
+  : public nsLeafBoxFrame
+  , public nsICSSPseudoComparator
+  , public nsIScrollbarMediator
+  , public nsIReflowCallback
 {
 public:
   nsTreeBodyFrame(nsIPresShell* aPresShell, nsStyleContext* aContext);
-  virtual ~nsTreeBodyFrame();
+  ~nsTreeBodyFrame();
+
+  NS_DECLARE_STATIC_IID_ACCESSOR(NS_TREEBODYFRAME_IID)
 
   NS_DECL_ISUPPORTS
-  NS_DECL_NSITREEBOXOBJECT
+
+  // non-virtual signatures like nsITreeBodyFrame
+  nsresult GetColumns(nsITreeColumns **aColumns);
+  nsresult GetView(nsITreeView **aView);
+  nsresult SetView(nsITreeView *aView);
+  nsresult GetFocused(PRBool *aFocused);
+  nsresult SetFocused(PRBool aFocused);
+  nsresult GetTreeBody(nsIDOMElement **aElement);
+  nsresult GetRowHeight(PRInt32 *aValue);
+  nsresult GetRowWidth(PRInt32 *aValue);
+  nsresult GetHorizontalPosition(PRInt32 *aValue);
+  nsresult GetSelectionRegion(nsIScriptableRegion **aRegion);
+  nsresult GetFirstVisibleRow(PRInt32 *aValue);
+  nsresult GetLastVisibleRow(PRInt32 *aValue);
+  nsresult GetPageLength(PRInt32 *aValue);
+  nsresult EnsureRowIsVisible(PRInt32 aRow);
+  nsresult EnsureCellIsVisible(PRInt32 aRow, nsITreeColumn *aCol);
+  nsresult ScrollToRow(PRInt32 aRow);
+  nsresult ScrollByLines(PRInt32 aNumLines);
+  nsresult ScrollByPages(PRInt32 aNumPages);
+  nsresult ScrollToCell(PRInt32 aRow, nsITreeColumn *aCol);
+  nsresult ScrollToColumn(nsITreeColumn *aCol);
+  nsresult ScrollToHorizontalPosition(PRInt32 aValue);
+  nsresult Invalidate();
+  nsresult InvalidateColumn(nsITreeColumn *aCol);
+  nsresult InvalidateRow(PRInt32 aRow);
+  nsresult InvalidateCell(PRInt32 aRow, nsITreeColumn *aCol);
+  nsresult InvalidateRange(PRInt32 aStart, PRInt32 aEnd);
+  nsresult InvalidateColumnRange(PRInt32 aStart, PRInt32 aEnd,
+                                 nsITreeColumn *aCol);
+  nsresult GetRowAt(PRInt32 aX, PRInt32 aY, PRInt32 *aValue);
+  nsresult GetCellAt(PRInt32 aX, PRInt32 aY, PRInt32 *aRow,
+                     nsITreeColumn **aCol, nsACString &aChildElt);
+  nsresult GetCoordsForCellItem(PRInt32 aRow, nsITreeColumn *aCol,
+                                const nsACString &aElt,
+                                PRInt32 *aX, PRInt32 *aY,
+                                PRInt32 *aWidth, PRInt32 *aHeight);
+  nsresult IsCellCropped(PRInt32 aRow, nsITreeColumn *aCol, PRBool *aResult);
+  nsresult RowCountChanged(PRInt32 aIndex, PRInt32 aCount);
+  nsresult BeginUpdateBatch();
+  nsresult EndUpdateBatch();
+  nsresult ClearStyleAndImageCaches();
 
   // nsIBox
   virtual nsSize GetMinSize(nsBoxLayoutState& aBoxLayoutState);
@@ -121,7 +171,7 @@ public:
                               const nsRect&           aDirtyRect,
                               const nsDisplayListSet& aLists);
 
-  NS_IMETHOD DidSetStyleContext();
+  virtual void DidSetStyleContext(nsStyleContext* aOldStyleContext);
 
   friend nsIFrame* NS_NewTreeBodyFrame(nsIPresShell* aPresShell);
   friend class nsTreeColumn;
@@ -141,6 +191,8 @@ public:
   nsITreeBoxObject* GetTreeBoxObject() const { return mTreeBoxObject; }
 
 protected:
+  friend class nsOverflowChecker;
+
   // This method paints a specific column background of the tree.
   void PaintColumn(nsTreeColumn*        aColumn,
                    const nsRect&        aColumnRect,
@@ -381,7 +433,7 @@ protected:
       return nsnull;
 
     nsTreeColumn* col;
-    aUnknownCol->QueryInterface(kTreeColumnImplCID, (void**)&col);
+    aUnknownCol->QueryInterface(NS_GET_IID(nsTreeColumn), (void**)&col);
     return col;
   }
 
@@ -550,3 +602,7 @@ protected: // Data Members
 
   nsRevocableEventPtr<ScrollEvent> mScrollEvent;
 }; // class nsTreeBodyFrame
+
+NS_DEFINE_STATIC_IID_ACCESSOR(nsTreeBodyFrame, NS_TREEBODYFRAME_IID)
+
+#endif

@@ -109,7 +109,7 @@ nsConsoleService::Init()
     return NS_OK;
 }
 
-static PRBool PR_CALLBACK snapshot_enum_func(nsHashKey *key, void *data, void* closure)
+static PRBool snapshot_enum_func(nsHashKey *key, void *data, void* closure)
 {
     nsISupportsArray *array = (nsISupportsArray *)closure;
 

@@ -1,0 +1,12 @@
+diff -r 070e364189c8 media/liboggz/include/oggz/oggz_off_t_generated.h
+--- a/media/liboggz/include/oggz/oggz_off_t_generated.h	Wed Nov 26 09:04:13 2008 -0600
++++ b/media/liboggz/include/oggz/oggz_off_t_generated.h	Thu Nov 27 17:56:54 2008 +0800
+@@ -59,7 +59,7 @@
+ 
+ #include <sys/types.h>
+ 
+-#ifdef __APPLE__
++#if defined(__APPLE__) || defined(SOLARIS)
+ typedef off_t oggz_off_t;
+ #else
+ typedef loff_t oggz_off_t;

@@ -7,25 +7,21 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=429666
   <title>Expose ROLE_DOCUMENT for ARIA landmarks that inherit from document chrome tests</title>
   <link rel="stylesheet" type="text/css" href="chrome://mochikit/content/tests/SimpleTest/test.css" />
 
-  <script type="application/javascript" src="chrome://mochikit/content/MochiKit/packed.js"></script>
-  <script type="application/javascript" src="chrome://mochikit/content/tests/SimpleTest/SimpleTest.js"></script>
+  <script type="application/javascript"
+          src="chrome://mochikit/content/MochiKit/packed.js"></script>
+  <script type="application/javascript"
+          src="chrome://mochikit/content/tests/SimpleTest/SimpleTest.js"></script>
+
+  <script type="application/javascript"
+          src="chrome://mochikit/content/a11y/accessible/common.js"></script>
 
   <script type="application/javascript">
     function doTest()
     {
-      var accRetrieval = Components.classes["@mozilla.org/accessibleRetrieval;1"].
-                       getService(Components.interfaces.nsIAccessibleRetrieval);
-
       // Test article exposed as document
-      var articleElement = document.getElementById("testArticle");
-      var articleAcc = null;
-      try {
-        articleAcc = accRetrieval.getAccessibleFor(articleElement);
-      } catch(e) { }
-      ok(articleAcc, "no accessible for article!");
+      var articleAcc = getAccessible("testArticle");
       if (articleAcc) {
-        is(articleAcc.finalRole,
-           Components.interfaces.nsIAccessibleRole.ROLE_DOCUMENT,
+        is(articleAcc.finalRole, ROLE_DOCUMENT,
            "Wrong role for article!");
         is(articleAcc.name, "Test article", "Wrong name for article!");
       }

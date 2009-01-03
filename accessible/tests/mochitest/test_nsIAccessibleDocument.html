@@ -46,7 +46,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=441737
 
         // check if it is focusable, read-only.
         var state = {}, extraState = {}
-        docAcc.getFinalState(state, extraState);
+        docAcc.getState(state, extraState);
         var desiredStates = (state_focusable | state_readonly);
         is(state.value & desiredStates, desiredStates,
            "Wrong state bits for document!");

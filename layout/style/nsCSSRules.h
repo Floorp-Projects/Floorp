@@ -56,12 +56,15 @@
 class CSSGroupRuleRuleListImpl;
 class nsMediaList;
 
-#define DECL_STYLE_RULE_INHERIT  \
+#define DECL_STYLE_RULE_INHERIT_NO_DOMRULE  \
 NS_IMETHOD GetStyleSheet(nsIStyleSheet*& aSheet) const; \
 NS_IMETHOD SetStyleSheet(nsICSSStyleSheet* aSheet); \
 NS_IMETHOD SetParentRule(nsICSSGroupRule* aRule); \
-NS_IMETHOD GetDOMRule(nsIDOMCSSRule** aDOMRule); \
 NS_IMETHOD MapRuleInfoInto(nsRuleData* aRuleData);
+
+#define DECL_STYLE_RULE_INHERIT  \
+DECL_STYLE_RULE_INHERIT_NO_DOMRULE \
+nsIDOMCSSRule* GetDOMRuleWeak(nsresult* aResult);
 
 // inherits from nsCSSRule and also implements methods on nsICSSGroupRule
 // so they can be shared between nsCSSMediaRule and nsCSSDocumentRule
@@ -73,7 +76,7 @@ protected:
   ~nsCSSGroupRule();
 
   // implement part of nsIStyleRule and nsICSSRule
-  DECL_STYLE_RULE_INHERIT
+  DECL_STYLE_RULE_INHERIT_NO_DOMRULE
 
   // to help implement nsIStyleRule
 #ifdef DEBUG
@@ -128,6 +131,11 @@ public:
   NS_IMETHOD SetStyleSheet(nsICSSStyleSheet* aSheet); //override nsCSSGroupRule
   NS_IMETHOD GetType(PRInt32& aType) const;
   NS_IMETHOD Clone(nsICSSRule*& aClone) const;
+  nsIDOMCSSRule* GetDOMRuleWeak(nsresult *aResult)
+  {
+    *aResult = NS_OK;
+    return this;
+  }
 
   // nsIDOMCSSRule interface
   NS_DECL_NSIDOMCSSRULE
@@ -164,6 +172,11 @@ public:
   // nsICSSRule methods
   NS_IMETHOD GetType(PRInt32& aType) const;
   NS_IMETHOD Clone(nsICSSRule*& aClone) const;
+  nsIDOMCSSRule* GetDOMRuleWeak(nsresult *aResult)
+  {
+    *aResult = NS_OK;
+    return this;
+  }
 
   // nsIDOMCSSRule interface
   NS_DECL_NSIDOMCSSRULE
@@ -263,6 +276,13 @@ public:
 protected:
   friend class nsCSSFontFaceStyleDecl;
   nsCSSFontFaceStyleDecl mDecl;
+};
+
+// nsFontFaceRuleContainer - used for associating sheet type with 
+// specific @font-face rules
+struct nsFontFaceRuleContainer {
+  nsRefPtr<nsCSSFontFaceRule> mRule;
+  PRUint8 mSheetType;
 };
 
 inline nsCSSFontFaceRule*

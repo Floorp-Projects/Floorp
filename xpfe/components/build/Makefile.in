@@ -49,9 +49,6 @@ IS_COMPONENT	= 1
 MODULE_NAME	= application
 LIBXUL_LIBRARY	= 1
 
-PACKAGE_FILE = appcomps.pkg
-PACKAGE_VARS += MOZ_PHOENIX
-
 REQUIRES	= xpcom \
 		  string \
 		  rdf \
@@ -82,8 +79,11 @@ endif
 
 # Suite specific includes
 ifdef MOZ_SUITE
+ifdef SUITE_USING_XPFE_DM
+REQUIRES += downloadmanager
+endif
+
 REQUIRES	+= \
-		downloadmanager \
 		intl \
 		mork \
 		widget \
@@ -102,17 +102,6 @@ ifdef SUITE_USING_XPFE_DM
 SHARED_LIBRARY_LIBS += ../download-manager/src/$(LIB_PREFIX)downloadmanager_s.$(LIB_SUFFIX)
 LOCAL_INCLUDES += -I$(srcdir)/../download-manager/src
 endif
-
-ifndef MOZ_PLACES
-REQUIRES += history
-SHARED_LIBRARY_LIBS += \
-	../history/src/$(LIB_PREFIX)history_s.$(LIB_SUFFIX) \
-	$(NULL)
-LOCAL_INCLUDES += \
-	-I$(srcdir)/../history/src       \
-	$(NULL)
-endif
-
 endif # MOZ_SUITE
 
 ifeq ($(OS_ARCH),WINNT)

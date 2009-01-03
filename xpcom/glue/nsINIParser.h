@@ -82,8 +82,7 @@ public:
      * @return PR_FALSE to stop enumeration, or PR_TRUE to continue.
      */
     typedef PRBool
-    (* PR_CALLBACK INISectionCallback)(const char *aSection,
-                                       void *aClosure);
+    (* INISectionCallback)(const char *aSection, void *aClosure);
 
     /**
      * Enumerate the sections within the INI file.
@@ -95,9 +94,8 @@ public:
      * @return PR_FALSE to stop enumeration, or PR_TRUE to continue
      */
     typedef PRBool
-    (* PR_CALLBACK INIStringCallback)(const char *aString,
-                                      const char *aValue,
-                                      void *aClosure);
+    (* INIStringCallback)(const char *aString, const char *aValue,
+                          void *aClosure);
 
     /**
      * Enumerate the strings within a section. If the section does

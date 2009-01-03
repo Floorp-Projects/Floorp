@@ -1,0 +1,6 @@
+<svg xmlns="http://www.w3.org/2000/svg" version="1.1" viewbox="0 0 1500 1000" width="1500px" height="1000px">
+  <rect x="500" y="100" height="200" width="500" fill="black" />
+  <rect x="300" y="400" height="200" width="900" fill="black" />
+  <!-- baseline defaults to being at 800 -->
+  <rect x="100" y="700" height="200" width="1300" fill="black" />
+</svg>

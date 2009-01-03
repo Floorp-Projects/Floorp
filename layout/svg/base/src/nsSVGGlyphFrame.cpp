@@ -225,17 +225,15 @@ nsSVGGlyphFrame::CharacterDataChanged(nsPresContext*  aPresContext,
 #define CLAMP_MAX_SIZE 200
 #define PRECISE_SIZE   200
 
-NS_IMETHODIMP
-nsSVGGlyphFrame::DidSetStyleContext()
+/* virtual */ void
+nsSVGGlyphFrame::DidSetStyleContext(nsStyleContext* aOldStyleContext)
 {
-  nsSVGGlyphFrameBase::DidSetStyleContext();
+  nsSVGGlyphFrameBase::DidSetStyleContext(aOldStyleContext);
 
   if (!(GetStateBits() & NS_FRAME_FIRST_REFLOW)) {
     ClearTextRun();
     NotifyGlyphMetricsChange();
   }
-
-  return NS_OK;
 }
 
 NS_IMETHODIMP
@@ -300,7 +298,8 @@ nsSVGGlyphFrame::GetType() const
 // nsISVGChildFrame methods
 
 NS_IMETHODIMP
-nsSVGGlyphFrame::PaintSVG(nsSVGRenderState *aContext, nsIntRect *aDirtyRect)
+nsSVGGlyphFrame::PaintSVG(nsSVGRenderState *aContext,
+                          const nsIntRect *aDirtyRect)
 {
   if (!GetStyleVisibility()->IsVisible())
     return NS_OK;
@@ -426,25 +425,36 @@ MakeTmpCtx() {
 NS_IMETHODIMP
 nsSVGGlyphFrame::UpdateCoveredRegion()
 {
+  mRect.Empty();
+
   nsRefPtr<gfxContext> tmpCtx = MakeTmpCtx();
-  SetupGlobalTransform(tmpCtx);
+  SetMatrixPropagation(PR_FALSE);
   CharacterIterator iter(this, PR_TRUE);
-  iter.SetInitialMatrix(tmpCtx);
   
-  gfxRect extent;
+  gfxRect extent = gfxRect(0, 0, 0, 0);
 
   if (SetupCairoStrokeGeometry(tmpCtx)) {
+    gfxFloat strokeWidth = tmpCtx->CurrentLineWidth();
     AddCharactersToPath(&iter, tmpCtx);
-    extent = tmpCtx->UserToDevice(tmpCtx->GetUserStrokeExtent());
-  } else if (GetStyleSVG()->mFill.mType != eStyleSVGPaintType_None) {
+    tmpCtx->SetLineWidth(strokeWidth);
+    tmpCtx->IdentityMatrix();
+    extent = tmpCtx->GetUserStrokeExtent();
+  }
+  if (GetStyleSVG()->mFill.mType != eStyleSVGPaintType_None) {
     AddBoundingBoxesToPath(&iter, tmpCtx);
     tmpCtx->IdentityMatrix();
-    extent = tmpCtx->GetUserPathExtent();
-  } else {
-    extent = gfxRect(0, 0, 0, 0);
+    extent = extent.Union(tmpCtx->GetUserPathExtent());
+  }
+  SetMatrixPropagation(PR_TRUE);
+
+  if (!extent.IsEmpty()) {
+    gfxMatrix matrix;
+    GetGlobalTransform(&matrix);
+
+    extent = matrix.TransformBounds(extent);
+    mRect = nsSVGUtils::ToAppPixelRect(PresContext(), extent);
   }
 
-  mRect = nsSVGUtils::ToAppPixelRect(PresContext(), extent);
   return NS_OK;
 }
 
@@ -1168,6 +1178,11 @@ nsSVGGlyphFrame::ContainsPoint(const nsPoint &aPoint)
 PRBool
 nsSVGGlyphFrame::GetGlobalTransform(gfxMatrix *aMatrix)
 {
+  if (!GetMatrixPropagation()) {
+    aMatrix->Reset();
+    return PR_TRUE;
+  }
+
   nsCOMPtr<nsIDOMSVGMatrix> ctm;
   GetCanvasTM(getter_AddRefs(ctm));
   if (!ctm)

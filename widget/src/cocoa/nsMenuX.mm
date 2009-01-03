@@ -74,8 +74,6 @@
 extern nsIRollupListener * gRollupListener;
 extern nsIWidget         * gRollupWidget;
 
-extern "C" MenuRef _NSGetCarbonMenu(NSMenu* aMenu);
-
 static PRBool gConstructingMenu = PR_FALSE;
 static PRBool gMenuMethodsSwizzled = PR_FALSE;
 
@@ -90,14 +88,19 @@ nsMenuX::nsMenuX()
 {
   NS_OBJC_BEGIN_TRY_ABORT_BLOCK;
 
-  if (nsToolkit::OnLeopardOrLater() && !gMenuMethodsSwizzled) {
-    nsToolkit::SwizzleMethods([NSMenu class], @selector(_addItem:toTable:),
-                              @selector(nsMenuX_NSMenu_addItem:toTable:), PR_TRUE);
-    nsToolkit::SwizzleMethods([NSMenu class], @selector(_removeItem:fromTable:),
-                              @selector(nsMenuX_NSMenu_removeItem:fromTable:), PR_TRUE);
-    Class SCTGRLIndexClass = ::NSClassFromString(@"SCTGRLIndex");
-    nsToolkit::SwizzleMethods(SCTGRLIndexClass, @selector(indexMenuBarDynamically),
-                              @selector(nsMenuX_SCTGRLIndex_indexMenuBarDynamically));
+  if (!gMenuMethodsSwizzled) {
+    if (nsToolkit::OnLeopardOrLater()) {
+      nsToolkit::SwizzleMethods([NSMenu class], @selector(_addItem:toTable:),
+                                @selector(nsMenuX_NSMenu_addItem:toTable:), PR_TRUE);
+      nsToolkit::SwizzleMethods([NSMenu class], @selector(_removeItem:fromTable:),
+                                @selector(nsMenuX_NSMenu_removeItem:fromTable:), PR_TRUE);
+      Class SCTGRLIndexClass = ::NSClassFromString(@"SCTGRLIndex");
+      nsToolkit::SwizzleMethods(SCTGRLIndexClass, @selector(indexMenuBarDynamically),
+                                @selector(nsMenuX_SCTGRLIndex_indexMenuBarDynamically));
+    } else {
+      nsToolkit::SwizzleMethods([NSMenu class], @selector(performKeyEquivalent:),
+                                @selector(nsMenuX_NSMenu_performKeyEquivalent:));
+    }
     gMenuMethodsSwizzled = PR_TRUE;
   }
 
@@ -157,15 +160,13 @@ nsresult nsMenuX::Create(nsMenuObjectX* aParent, nsMenuBarX* aMenuBar, nsIConten
   if (mContent->GetChildCount() == 0)
     mVisible = PR_FALSE;
 
-  SetEnabled(!mContent->AttrValueIs(kNameSpaceID_None, nsWidgetAtoms::disabled,
-                                    nsWidgetAtoms::_true, eCaseMatters));
-
   NSString *newCocoaLabelString = nsMenuUtilsX::CreateTruncatedCocoaLabel(mLabel);
   mNativeMenuItem = [[NSMenuItem alloc] initWithTitle:newCocoaLabelString action:nil keyEquivalent:@""];
   [newCocoaLabelString release];
   [mNativeMenuItem setSubmenu:mNativeMenu];
 
-  [mNativeMenuItem setEnabled:(BOOL)mIsEnabled];
+  SetEnabled(!mContent->AttrValueIs(kNameSpaceID_None, nsWidgetAtoms::disabled,
+                                    nsWidgetAtoms::_true, eCaseMatters));
 
   // We call MenuConstruct here because keyboard commands are dependent upon
   // native menu items being created. If we only call MenuConstruct when a menu
@@ -460,8 +461,8 @@ nsresult nsMenuX::SetEnabled(PRBool aIsEnabled)
 {
   if (aIsEnabled != mIsEnabled) {
     // we always want to rebuild when this changes
-    SetRebuild(PR_TRUE); 
     mIsEnabled = aIsEnabled;
+    [mNativeMenuItem setEnabled:(BOOL)mIsEnabled];
   }
   return NS_OK;
 }
@@ -765,13 +766,10 @@ void nsMenuX::ObserveAttributeChanged(nsIDocument *aDocument, nsIContent *aConte
   nsMenuObjectTypeX parentType = mParent->MenuObjectType();
 
   if (aAttribute == nsWidgetAtoms::disabled) {
-    SetRebuild(PR_TRUE);
     SetEnabled(!mContent->AttrValueIs(kNameSpaceID_None, nsWidgetAtoms::disabled,
                                       nsWidgetAtoms::_true, eCaseMatters));
   }
   else if (aAttribute == nsWidgetAtoms::label) {
-    SetRebuild(PR_TRUE);
-    
     mContent->GetAttr(kNameSpaceID_None, nsWidgetAtoms::label, mLabel);
 
     // invalidate my parent. If we're a submenu parent, we have to rebuild
@@ -1127,6 +1125,7 @@ static NSMutableDictionary *gShadowKeyEquivDB = nil;
 @interface NSMenu (MethodSwizzling)
 + (void)nsMenuX_NSMenu_addItem:(NSMenuItem *)aItem toTable:(NSMapTable *)aTable;
 + (void)nsMenuX_NSMenu_removeItem:(NSMenuItem *)aItem fromTable:(NSMapTable *)aTable;
+- (BOOL)nsMenuX_NSMenu_performKeyEquivalent:(NSEvent *)theEvent;
 @end
 
 @implementation NSMenu (MethodSwizzling)
@@ -1170,6 +1169,20 @@ static NSMutableDictionary *gShadowKeyEquivDB = nil;
   }
 
   NS_OBJC_END_TRY_ABORT_BLOCK;
+}
+
+- (BOOL)nsMenuX_NSMenu_performKeyEquivalent:(NSEvent *)theEvent
+{
+  // On OS X 10.4.X (Tiger), Objective-C exceptions can occur during calls to
+  // [NSMenu performKeyEquivalent:] (from [GeckoNSMenu performKeyEquivalent:]
+  // or otherwise) that shouldn't be fatal (see bmo bug 461381).  So on Tiger
+  // we hook this system call to eat (and log) all Objective-C exceptions that
+  // occur during its execution.  Since we don't call XPCOM code from here,
+  // this will never cause XPCOM objects to be left on the stack without
+  // cleanup.
+  NS_OBJC_BEGIN_TRY_LOGONLY_BLOCK_RETURN;
+  return [self nsMenuX_NSMenu_performKeyEquivalent:theEvent];
+  NS_OBJC_END_TRY_LOGONLY_BLOCK_RETURN(NO);
 }
 
 @end

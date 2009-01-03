@@ -46,8 +46,9 @@
  */
 
 interface nsIDOMElement;
+interface nsIDOMHTMLCanvasElement;
 
-[scriptable, uuid(9a1ff4e0-5e31-46af-b393-2cbab8093442)]
+[scriptable, uuid(440D036F-0879-4497-9364-35DE49F6849F)]
 interface nsIDOMWindowUtils : nsISupports {
 
   /**
@@ -114,18 +115,21 @@ interface nsIDOMWindowUtils : nsISupports {
    * privileges.
    *
    * @param aType event type
-   * @param aX x offset
-   * @param aY y offset
+   * @param aX x offset in CSS pixels
+   * @param aY y offset in CSS pixels
    * @param aButton button to synthesize
    * @param aClickCount number of clicks that have been performed
    * @param aModifiers modifiers pressed, using constants defined in nsIDOMNSEvent
+   * @param aIgnoreRootScrollFrame whether the event should ignore viewport bounds
+   *                           during dispatch
    */
   void sendMouseEvent(in AString aType,
-                      in long aX,
-                      in long aY,
+                      in float aX,
+                      in float aY,
                       in long aButton,
                       in long aClickCount,
-                      in long aModifiers);
+                      in long aModifiers,
+                      [optional] in boolean aIgnoreRootScrollFrame);
 
   /** Synthesize a mouse scroll event for a window. The event types supported
    *  are: 
@@ -139,8 +143,8 @@ interface nsIDOMWindowUtils : nsISupports {
    * privileges.
    *
    * @param aType event type
-   * @param aX x offset
-   * @param aY y offset
+   * @param aX x offset in CSS pixels
+   * @param aY y offset in CSS pixels
    * @param aButton button to synthesize
    * @param aScrollFlags flag bits --- see nsMouseScrollFlags in nsGUIEvent.h
    * @param aDelta the direction and amount to scroll (in lines or pixels,
@@ -148,8 +152,8 @@ interface nsIDOMWindowUtils : nsISupports {
    * @param aModifiers modifiers pressed, using constants defined in nsIDOMNSEvent
    */
   void sendMouseScrollEvent(in AString aType,
-                            in long aX,
-                            in long aY,
+                            in float aX,
+                            in float aY,
                             in long aButton,
                             in long aScrollFlags,
                             in long aDelta,
@@ -204,14 +208,13 @@ interface nsIDOMWindowUtils : nsISupports {
   void activateNativeMenuItemAt(in AString indexString);
 
   /**
-   * See nsIWidget::ForceNativeMenuReload
+   * See nsIWidget::ForceUpdateNativeMenuAt
    *
-   * This is used for native menu system testing. Calling this forces a full
-   * reload of the menu system, reloading all native menus and their items.
-   * This is important for testing because changes to the DOM can affect the
-   * native menu system lazily.
+   * Cannot be accessed from unprivileged context (not content-accessible)
+   * Will throw a DOM security error if called without UniversalXPConnect
+   * privileges.
    */
-  void forceNativeMenuReload();
+  void forceUpdateNativeMenuAt(in AString indexString);
 
   /**
    * Focus the element aElement. The element should be in the same document
@@ -240,4 +243,48 @@ interface nsIDOMWindowUtils : nsISupports {
    */
 
   void processUpdates();
+
+  /** Synthesize a simple gesture event for a window. The event types
+   *  supported are: MozSwipeGesture, MozMagnifyGestureStart,
+   *  MozMagnifyGestureUpdate, MozMagnifyGesture,
+   *  MozRotateGestureStart, MozRotateGestureUpdate, and
+   *  MozRotateGesture.
+   *
+   * Cannot be accessed from unprivileged context (not
+   * content-accessible) Will throw a DOM security error if called
+   * without UniversalXPConnect privileges.
+   *
+   * @param aType event type
+   * @param aDirection direction, using constants defined in nsIDOMSimpleGestureEvent
+   * @param aDelta  amount of magnification or rotation for magnify and rotation events
+   * @param aModifiers modifiers pressed, using constants defined in nsIDOMNSEvent
+   */
+  void sendSimpleGestureEvent(in AString aType,
+                              in unsigned long aDirection,
+                              in double aDelta,
+                              in long aModifiers);
+
+  /**
+   * Retrieve the element at point aX, aY in the window's document.
+   *
+   * @param aIgnoreRootScrollFrame whether or not to ignore the root scroll
+   *        frame when retrieving the element. If false, this method returns
+   *        null for coordinates outside of the viewport.
+   * @param aFlushLayout flushes layout if true. Otherwise, no flush occurs.
+   */
+  nsIDOMElement elementFromPoint(in long aX,
+                                 in long aY,
+                                 in boolean aIgnoreRootScrollFrame,
+                                 in boolean aFlushLayout);
+
+  /**
+   * Compare the two canvases, returning the number of differing pixels and
+   * the maximum difference in a channel.  This will throw an error if
+   * the dimensions of the two canvases are different.
+   *
+   * This method requires UniversalXPConnect privileges.
+   */
+  PRUint32 compareCanvases(in nsIDOMHTMLCanvasElement aCanvas1,
+                           in nsIDOMHTMLCanvasElement aCanvas2,
+                           out unsigned long aMaxDifference);
 };

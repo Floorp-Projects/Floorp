@@ -195,6 +195,16 @@ function commonDialogOnLoad()
   }
 
   getAttention();
+
+  // play sound
+  try {
+    var sound = gCommonDialogParam.GetString(13);
+    if (sound) {
+      Components.classes["@mozilla.org/sound;1"]
+                .createInstance(Components.interfaces.nsISound)
+                .playSystemSound(sound);
+    }
+  } catch (e) { }
 }
 
 var gDelayExpired = false;

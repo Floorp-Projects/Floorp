@@ -56,6 +56,7 @@
 #include "nsIComponentManager.h"
 #include "nsIComponentRegistrar.h"
 #include "jsapi.h"
+#include "jsdbgapi.h"
 #include "jsprf.h"
 #include "nscore.h"
 #include "nsMemory.h"
@@ -84,10 +85,6 @@
 
 #include "nsIJSContextStack.h"
 
-#if defined(MOZ_SHARK) || defined(MOZ_CALLGRIND)
-#include "jsdbgapi.h"
-#endif
-
 /***************************************************************************/
 
 #ifdef JS_THREADSAFE
@@ -105,6 +102,7 @@
 
 FILE *gOutFile = NULL;
 FILE *gErrFile = NULL;
+FILE *gInFile = NULL;
 
 int gExitCode = 0;
 JSBool gQuitting = JS_FALSE;
@@ -113,12 +111,70 @@ static JSBool compileOnly = JS_FALSE;
 
 JSPrincipals *gJSPrincipals = nsnull;
 
+static JSBool
+GetLine(JSContext *cx, char *bufp, FILE *file, const char *prompt) {
+#ifdef EDITLINE
+    /*
+     * Use readline only if file is stdin, because there's no way to specify
+     * another handle.  Are other filehandles interactive?
+     */
+    if (file == stdin) {
+        char *linep = readline(prompt);
+        if (!linep)
+            return JS_FALSE;
+        if (*linep)
+            add_history(linep);
+        strcpy(bufp, linep);
+        JS_free(cx, linep);
+        bufp += strlen(bufp);
+        *bufp++ = '\n';
+        *bufp = '\0';
+    } else
+#endif
+    {
+        char line[256];
+        fprintf(gOutFile, prompt);
+        fflush(gOutFile);
+        if (!fgets(line, sizeof line, file))
+            return JS_FALSE;
+        strcpy(bufp, line);
+    }
+    return JS_TRUE;
+}
+
 static void
 my_ErrorReporter(JSContext *cx, const char *message, JSErrorReport *report)
 {
     int i, j, k, n;
     char *prefix = NULL, *tmp;
     const char *ctmp;
+    JSStackFrame * fp = nsnull;
+    nsCOMPtr<nsIXPConnect> xpc;
+
+    // Don't report an exception from inner JS frames as the callers may intend
+    // to handle it.
+    while ((fp = JS_FrameIterator(cx, &fp))) {
+        if (!JS_IsNativeFrame(cx, fp)) {
+            return;
+        }
+    }
+
+    // In some cases cx->fp is null here so use XPConnect to tell us about inner
+    // frames.
+    if ((xpc = do_GetService(nsIXPConnect::GetCID()))) {
+        nsAXPCNativeCallContext *cc = nsnull;
+        xpc->GetCurrentNativeCallContext(&cc);
+        if (cc) {
+            nsAXPCNativeCallContext *prev = cc;
+            while (NS_SUCCEEDED(prev->GetPreviousCallContext(&prev)) && prev) {
+                PRUint16 lang;
+                if (NS_SUCCEEDED(prev->GetLanguage(&lang)) &&
+                    lang == nsAXPCNativeCallContext::LANG_JS) {
+                    return;
+                }
+            }
+        }
+    }
 
     if (!report) {
         fprintf(gErrFile, "%s\n", message);
@@ -178,6 +234,48 @@ my_ErrorReporter(JSContext *cx, const char *message, JSErrorReport *report)
     if (!JSREPORT_IS_WARNING(report->flags))
         gExitCode = EXITCODE_RUNTIME_ERROR;
     JS_free(cx, prefix);
+}
+
+static JSBool
+ReadLine(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
+{
+    // While 4096 might be quite arbitrary, this is something to be fixed in
+    // bug 105707. It is also the same limit as in ProcessFile.
+    char buf[4096];
+    JSString *str;
+
+    /* If a prompt was specified, construct the string */
+    if (argc > 0) {
+        str = JS_ValueToString(cx, argv[0]);
+        if (!str)
+            return JS_FALSE;
+        argv[0] = STRING_TO_JSVAL(str);
+    } else {
+        str = JSVAL_TO_STRING(JS_GetEmptyStringValue(cx));
+    }
+
+    /* Get a line from the infile */
+    if (!GetLine(cx, buf, gInFile, JS_GetStringBytes(str)))
+        return JS_FALSE;
+
+    /* Strip newline character added by GetLine() */
+    unsigned int buflen = strlen(buf);
+    if (buflen == 0) {
+        if (feof(gInFile)) {
+            *rval = JSVAL_NULL;
+            return JS_TRUE;
+        }
+    } else if (buf[buflen - 1] == '\n') {
+        --buflen;
+    }
+
+    /* Turn buf into a JSString */
+    str = JS_NewStringCopyN(cx, buf, buflen);
+    if (!str)
+        return JS_FALSE;
+
+    *rval = STRING_TO_JSVAL(str);
+    return JS_TRUE;
 }
 
 static JSBool
@@ -422,6 +520,7 @@ Clear(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
 
 static JSFunctionSpec glob_functions[] = {
     {"print",           Print,          0,0,0},
+    {"readline",        ReadLine,       1,0,0},
     {"load",            Load,           1,0,0},
     {"quit",            Quit,           0,0,0},
     {"version",         Version,        1,0,0},
@@ -602,36 +701,6 @@ extern void     add_history(char *line);
 }
 #endif
 
-static JSBool
-GetLine(JSContext *cx, char *bufp, FILE *file, const char *prompt) {
-#ifdef EDITLINE
-    /*
-     * Use readline only if file is stdin, because there's no way to specify
-     * another handle.  Are other filehandles interactive?
-     */
-    if (file == stdin) {
-        char *linep = readline(prompt);
-        if (!linep)
-            return JS_FALSE;
-        if (*linep)
-            add_history(linep);
-        strcpy(bufp, linep);
-        JS_free(cx, linep);
-        bufp += strlen(bufp);
-        *bufp++ = '\n';
-        *bufp = '\0';
-    } else
-#endif
-    {
-        char line[256];
-        fprintf(gOutFile, prompt);
-        fflush(gOutFile);
-        if (!fgets(line, sizeof line, file))
-            return JS_FALSE;
-        strcpy(bufp, line);
-    }
-    return JS_TRUE;
-}
 
 static void
 ProcessFile(JSContext *cx, JSObject *obj, const char *filename, FILE *file,
@@ -1217,6 +1286,13 @@ FullTrustSecMan::GetCxSubjectPrincipal(JSContext *cx)
     return mSystemPrincipal;
 }
 
+NS_IMETHODIMP_(nsIPrincipal *)
+FullTrustSecMan::GetCxSubjectPrincipalAndFrame(JSContext *cx, JSStackFrame **fp)
+{
+    *fp = nsnull;
+    return mSystemPrincipal;
+}
+
 #endif
 
 /***************************************************************************/
@@ -1303,9 +1379,15 @@ nsXPCFunctionThisTranslator::TranslateThis(nsISupports *aInitialThis,
 
 #endif
 
+// ContextCallback calls are chained
+static JSContextCallback gOldJSContextCallback;
+
 static JSBool
 ContextCallback(JSContext *cx, uintN contextOp)
 {
+    if (gOldJSContextCallback && !gOldJSContextCallback(cx, contextOp))
+        return JS_FALSE;
+
     if (contextOp == JSCONTEXT_NEW) {
         JS_SetErrorReporter(cx, my_ErrorReporter);
         JS_SetVersion(cx, JSVERSION_LATEST);
@@ -1331,6 +1413,7 @@ main(int argc, char **argv, char **envp)
 
     gErrFile = stderr;
     gOutFile = stdout;
+    gInFile = stdin;
     {
         nsCOMPtr<nsIServiceManager> servMan;
         rv = NS_InitXPCOM2(getter_AddRefs(servMan), nsnull, nsnull);
@@ -1357,7 +1440,7 @@ main(int argc, char **argv, char **envp)
             return 1;
         }
 
-        JS_SetContextCallback(rt, ContextCallback);
+        gOldJSContextCallback = JS_SetContextCallback(rt, ContextCallback);
 
         cx = JS_NewContext(rt, 8192);
         if (!cx) {
@@ -1480,7 +1563,6 @@ main(int argc, char **argv, char **envp)
         cxstack = nsnull;
         JS_GC(cx);
         JS_DestroyContext(cx);
-        xpc->SyncJSContexts();
     } // this scopes the nsCOMPtrs
     // no nsCOMPtrs are allowed to be alive when you call NS_ShutdownXPCOM
     rv = NS_ShutdownXPCOM( NULL );

@@ -171,17 +171,19 @@ nsXFormsAccessible::GetValue(nsAString& aValue)
   return sXFormsService->GetValue(mDOMNode, aValue);
 }
 
-NS_IMETHODIMP
-nsXFormsAccessible::GetState(PRUint32 *aState, PRUint32 *aExtraState)
+nsresult
+nsXFormsAccessible::GetStateInternal(PRUint32 *aState, PRUint32 *aExtraState)
 {
   NS_ENSURE_ARG_POINTER(aState);
   *aState = 0;
-  if (!mDOMNode) {
-    if (aExtraState) {
+
+  if (IsDefunct()) {
+    if (aExtraState)
       *aExtraState = nsIAccessibleStates::EXT_STATE_DEFUNCT;
-    }
-    return NS_OK;
+
+    return NS_OK_DEFUNCT_OBJECT;
   }
+
   if (aExtraState)
     *aExtraState = 0;
 
@@ -203,7 +205,7 @@ nsXFormsAccessible::GetState(PRUint32 *aState, PRUint32 *aExtraState)
   rv = sXFormsService->IsValid(mDOMNode, &isValid);
   NS_ENSURE_SUCCESS(rv, rv);
 
-  rv = nsHyperTextAccessibleWrap::GetState(aState, aExtraState);
+  rv = nsHyperTextAccessibleWrap::GetStateInternal(aState, aExtraState);
   NS_ENSURE_SUCCESS(rv, rv);
 
   if (!isRelevant)
@@ -221,28 +223,9 @@ nsXFormsAccessible::GetState(PRUint32 *aState, PRUint32 *aExtraState)
   return NS_OK;
 }
 
-NS_IMETHODIMP
-nsXFormsAccessible::GetName(nsAString& aName)
+nsresult
+nsXFormsAccessible::GetNameInternal(nsAString& aName)
 {
-  nsCOMPtr<nsIContent> content(do_QueryInterface(mDOMNode));
-  if (!content) {
-    return NS_ERROR_FAILURE;   // Node shut down
-  }
-
-  // Check for ARIA label property
-  nsAutoString name;
-  if (content->GetAttr(kNameSpaceID_None, nsAccessibilityAtoms::aria_label, name)) {
-    aName = name;
-    return NS_OK;
-  }
-
-  // Check for ARIA labelledby relationship property
-  nsresult rv = GetTextFromRelationID(nsAccessibilityAtoms::aria_labelledby, name);
-  if (NS_SUCCEEDED(rv) && !name.IsEmpty()) {
-    aName = name;
-    return NS_OK;
-  }
-
   // search the xforms:label element
   return GetBoundChildElementValue(NS_LITERAL_STRING("label"), aName);
 }
@@ -322,14 +305,16 @@ nsXFormsEditableAccessible::
 {
 }
 
-NS_IMETHODIMP
-nsXFormsEditableAccessible::GetState(PRUint32 *aState, PRUint32 *aExtraState)
+nsresult
+nsXFormsEditableAccessible::GetStateInternal(PRUint32 *aState,
+                                             PRUint32 *aExtraState)
 {
   NS_ENSURE_ARG_POINTER(aState);
 
-  nsresult rv = nsXFormsAccessible::GetState(aState, aExtraState);
-  NS_ENSURE_SUCCESS(rv, rv);
-  if (!mDOMNode || !aExtraState)
+  nsresult rv = nsXFormsAccessible::GetStateInternal(aState, aExtraState);
+  NS_ENSURE_A11Y_SUCCESS(rv, rv);
+
+  if (!aExtraState)
     return NS_OK;
 
   PRBool isReadonly = PR_FALSE;

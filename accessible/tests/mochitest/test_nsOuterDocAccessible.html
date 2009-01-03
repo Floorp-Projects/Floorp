@@ -47,7 +47,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=441519
 
           // check if it is focusable, not desired.
           var state = {}, extraState = {}
-          outerDocAcc.getFinalState(state, extraState);
+          outerDocAcc.getState(state, extraState);
           is(state.value & state_focusable, 0,
              "Wrong focusable state bit for internal frame!");
 

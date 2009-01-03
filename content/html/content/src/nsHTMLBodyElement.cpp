@@ -299,10 +299,11 @@ NS_IMPL_ADDREF_INHERITED(nsHTMLBodyElement, nsGenericElement)
 NS_IMPL_RELEASE_INHERITED(nsHTMLBodyElement, nsGenericElement) 
 
 // QueryInterface implementation for nsHTMLBodyElement
-NS_HTML_CONTENT_INTERFACE_TABLE_HEAD(nsHTMLBodyElement, nsGenericHTMLElement)
-  NS_INTERFACE_TABLE_INHERITED1(nsHTMLBodyElement, nsIDOMHTMLBodyElement)
+NS_INTERFACE_TABLE_HEAD(nsHTMLBodyElement)
+  NS_HTML_CONTENT_INTERFACE_TABLE1(nsHTMLBodyElement, nsIDOMHTMLBodyElement)
+  NS_HTML_CONTENT_INTERFACE_TABLE_TO_MAP_SEGUE(nsHTMLBodyElement,
+                                               nsGenericHTMLElement)
 NS_HTML_CONTENT_INTERFACE_TABLE_TAIL_CLASSINFO(HTMLBodyElement)
-
 
 NS_IMPL_ELEMENT_CLONE(nsHTMLBodyElement)
 

@@ -490,7 +490,6 @@ _cairo_win32_printing_surface_paint_image_pattern (cairo_win32_surface_t   *surf
 {
     cairo_status_t status;
     cairo_extend_t extend;
-    cairo_surface_t *pat_surface;
     cairo_surface_attributes_t pat_attr;
     cairo_image_surface_t *image;
     void *image_extra;
@@ -516,25 +515,20 @@ _cairo_win32_printing_surface_paint_image_pattern (cairo_win32_surface_t   *surf
 	background_color = CAIRO_COLOR_BLACK;
 
     extend = cairo_pattern_get_extend (&pattern->base);
-    status = _cairo_pattern_acquire_surface ((cairo_pattern_t *)pattern,
-					     (cairo_surface_t *)surface,
-					     0, 0, -1, -1,
-					     &pat_surface, &pat_attr);
+
+    status = _cairo_surface_acquire_source_image (pattern->surface,
+						  &image, &image_extra);
     if (status)
 	return status;
 
-    status = _cairo_surface_acquire_source_image (pat_surface, &image, &image_extra);
-    if (status)
-	goto FINISH;
-
     if (image->base.status) {
 	status = image->base.status;
-	goto FINISH2;
+	goto CLEANUP_IMAGE;
     }
 
     if (image->width == 0 || image->height == 0) {
 	status = CAIRO_STATUS_SUCCESS;
-	goto FINISH2;
+	goto CLEANUP_IMAGE;
     }
 
     if (image->format != CAIRO_FORMAT_RGB24) {
@@ -545,7 +539,7 @@ _cairo_win32_printing_surface_paint_image_pattern (cairo_win32_surface_t   *surf
 						     image->height);
 	if (opaque_surface->status) {
 	    status = opaque_surface->status;
-	    goto FINISH3;
+	    goto CLEANUP_OPAQUE_IMAGE;
 	}
 
 	_cairo_pattern_init_for_surface (&opaque_pattern, &image->base);
@@ -557,7 +551,7 @@ _cairo_win32_printing_surface_paint_image_pattern (cairo_win32_surface_t   *surf
 						image->width, image->height);
 	if (status) {
 	    _cairo_pattern_fini (&opaque_pattern.base);
-	    goto FINISH3;
+	    goto CLEANUP_OPAQUE_IMAGE;
 	}
 
 	status = _cairo_surface_composite (CAIRO_OPERATOR_OVER,
@@ -571,7 +565,7 @@ _cairo_win32_printing_surface_paint_image_pattern (cairo_win32_surface_t   *surf
 					   image->height);
 	if (status) {
 	    _cairo_pattern_fini (&opaque_pattern.base);
-	    goto FINISH3;
+	    goto CLEANUP_OPAQUE_IMAGE;
 	}
 
 	_cairo_pattern_fini (&opaque_pattern.base);
@@ -602,8 +596,10 @@ _cairo_win32_printing_surface_paint_image_pattern (cairo_win32_surface_t   *surf
     SaveDC (surface->dc);
     _cairo_matrix_to_win32_xform (&m, &xform);
 
-    if (!SetWorldTransform (surface->dc, &xform))
-	return _cairo_win32_print_gdi_error ("_win32_scaled_font_set_world_transform");
+    if (! SetWorldTransform (surface->dc, &xform)) {
+	status = _cairo_win32_print_gdi_error ("_win32_scaled_font_set_world_transform");
+	goto CLEANUP_OPAQUE_IMAGE;
+    }
 
     oldmode = SetStretchBltMode(surface->dc, HALFTONE);
 
@@ -635,19 +631,20 @@ _cairo_win32_printing_surface_paint_image_pattern (cairo_win32_surface_t   *surf
 				&bi,
 				DIB_RGB_COLORS,
 				SRCCOPY))
-		return _cairo_win32_print_gdi_error ("_cairo_win32_printing_surface_paint(StretchDIBits)");
+	    {
+		status = _cairo_win32_print_gdi_error ("_cairo_win32_printing_surface_paint(StretchDIBits)");
+		goto CLEANUP_OPAQUE_IMAGE;
+	    }
 	}
     }
     SetStretchBltMode(surface->dc, oldmode);
     RestoreDC (surface->dc, -1);
 
-FINISH3:
+CLEANUP_OPAQUE_IMAGE:
     if (opaque_image != image)
 	cairo_surface_destroy (opaque_surface);
-FINISH2:
-    _cairo_surface_release_source_image (pat_surface, image, image_extra);
-FINISH:
-    _cairo_pattern_release_surface ((cairo_pattern_t *)pattern, pat_surface, &pat_attr);
+CLEANUP_IMAGE:
+    _cairo_surface_release_source_image (pattern->surface, image, image_extra);
 
     return status;
 }
@@ -1525,6 +1522,12 @@ _cairo_win32_printing_surface_set_paginated_mode (void *abstract_surface,
     surface->paginated_mode = paginated_mode;
 }
 
+static cairo_bool_t
+_cairo_win32_printing_surface_supports_fine_grained_fallbacks (void *abstract_surface)
+{
+    return TRUE;
+}
+
 /**
  * cairo_win32_printing_surface_create:
  * @hdc: the DC to create a surface for
@@ -1645,4 +1648,6 @@ static const cairo_paginated_surface_backend_t cairo_win32_surface_paginated_bac
     _cairo_win32_printing_surface_start_page,
     _cairo_win32_printing_surface_set_paginated_mode,
     NULL, /* set_bounding_box */
+    NULL, /* _cairo_win32_printing_surface_has_fallback_images, */
+    _cairo_win32_printing_surface_supports_fine_grained_fallbacks,
 };

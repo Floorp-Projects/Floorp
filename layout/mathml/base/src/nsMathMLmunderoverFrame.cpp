@@ -307,7 +307,6 @@ nsMathMLmunderoverFrame::Place(nsIRenderingContext& aRenderingContext,
     overFrame = underFrame->GetNextSibling();
   if (!baseFrame || !underFrame || !overFrame || overFrame->GetNextSibling()) {
     // report an error, encourage people to get their markups in order
-    NS_WARNING("invalid markup");
     return ReflowError(aRenderingContext, aDesiredSize);
   }
   GetReflowAndBoundingMetricsFor(baseFrame, baseSize, bmBase);
@@ -319,7 +318,8 @@ nsMathMLmunderoverFrame::Place(nsIRenderingContext& aRenderingContext,
   ////////////////////
   // Place Children
 
-  aRenderingContext.SetFont(GetStyleFont()->mFont, nsnull);
+  aRenderingContext.SetFont(GetStyleFont()->mFont, nsnull,
+                            PresContext()->GetUserFontSet());
   nsCOMPtr<nsIFontMetrics> fm;
   aRenderingContext.GetFontMetrics(*getter_AddRefs(fm));
 

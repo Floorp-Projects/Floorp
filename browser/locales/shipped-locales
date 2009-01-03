@@ -1,33 +1,39 @@
 af
 ar
 be
+bg
+bn-IN
 ca
 cs
-da
+cy
 de
 el
 en-GB
 en-US
+eo
 es-AR
 es-ES
+et
 eu
 fi
 fr
 fy-NL
 ga-IE
-gu-IN linux win32
+gu-IN
 he
+hi-IN
 hu
 id
+is
 it
 ja linux win32
 ja-JP-mac osx
 ka
+kn
 ko
-ku
 lt
-mk
-mn
+lv
+mr
 nb-NO
 nl
 nn-NO
@@ -41,8 +47,8 @@ si
 sk
 sl
 sq
-sr
 sv-SE
+te
 tr
 uk
 zh-CN

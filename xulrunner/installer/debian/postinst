@@ -20,7 +20,6 @@ set -e
 
 case "$1" in
     configure)
-	/usr/local/xulrunner/xulrunner --register-global
     ;;
 
     abort-upgrade|abort-remove|abort-deconfigure)

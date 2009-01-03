@@ -221,8 +221,10 @@
           this._prevFocus = document.commandDispatcher.focusedElement;
           if (!this._prevFocus)  // Content window has focus
             this._prevFocus = document.commandDispatcher.focusedWindow;
-        } catch (ex) {}
-       ]]></handler>
+        } catch (ex) {
+          this._prevFocus = document.activeElement;
+        }
+      ]]></handler>
       <handler event="popupshown"><![CDATA[
         // Fire event for accessibility APIs
         var alertEvent = document.createEvent("Events");
@@ -230,32 +232,38 @@
         this.dispatchEvent(alertEvent);
        ]]></handler>
       <handler event="popuphiding"><![CDATA[
-        function restoreFocusIfInPanel(aPanel, currentFocus, prevFocus) {
+        try {
+          this._currentFocus = document.commandDispatcher.focusedElement;
+        } catch (e) {
+          this._currentFocus = document.activeElement;
+        }
+      ]]></handler>
+      <handler event="popuphidden"><![CDATA[
+        var currentFocus = this._currentFocus;
+        var prevFocus = this._prevFocus;
+        this._currentFocus = null;
+        this._prevFocus = null;
+        if (prevFocus && currentFocus && this.getAttribute("norestorefocus") != "true") {
+          // Try to restore focus
           try {
             if (document.commandDispatcher.focusedWindow != window)
               return; // Focus has already been set to a window outside of this panel
           } catch(ex) {}
-          var ancestorOfFocus = currentFocus;
-          while (ancestorOfFocus) {
-            if (ancestorOfFocus == aPanel) {
+          while (currentFocus) {
+            if (currentFocus == this) {
               // Focus was set on an element inside this panel,
               // so we need to move it back to where it was previously
               prevFocus.focus();
               return;
             }
-            ancestorOfFocus = ancestorOfFocus.parentNode;
+            currentFocus = currentFocus.parentNode;
           }
         }
-        try {
-          if (this._prevFocus && this.getAttribute("norestorefocus") != "true")
-            setTimeout(restoreFocusIfInPanel, 0, this, document.commandDispatcher.focusedElement,
-                       this._prevFocus);
-        } catch(ex) { }
       ]]></handler>
     </handlers>
   </binding>
 
-  <binding id="tooltip" extends="chrome://global/content/bindings/popup.xml#popup">
+  <binding id="tooltip" extends="chrome://global/content/bindings/popup.xml#popup-base">
     <content>
       <children>
         <xul:label class="tooltip-label" xbl:inherits="xbl:text=label" flex="1"/>

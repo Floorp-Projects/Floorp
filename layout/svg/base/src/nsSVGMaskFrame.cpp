@@ -103,7 +103,7 @@ nsSVGMaskFrame::ComputeMaskAlpha(nsSVGRenderState *aContext,
 
   for (nsIFrame* kid = mFrames.FirstChild(); kid;
        kid = kid->GetNextSibling()) {
-    nsSVGUtils::PaintChildWithEffects(aContext, nsnull, kid);
+    nsSVGUtils::PaintFrameWithEffects(aContext, nsnull, kid);
   }
 
   gfxRect clipExtents = gfx->GetClipExtents();

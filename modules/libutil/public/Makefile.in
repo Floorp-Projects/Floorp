@@ -45,8 +45,6 @@ include $(DEPTH)/config/autoconf.mk
 MODULE		= util
 XPIDL_MODULE	= util
 
-PACKAGE_FILE = libutil.pkg
-
 EXPORTS		= $(srcdir)/stopwatch.h \
 			  $(srcdir)/nsTimer.h
 

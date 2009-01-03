@@ -56,35 +56,14 @@
 //----------------------------------------------------------------------
 // nsISupports methods:
 
-NS_IMETHODIMP 
-nsMathMLElement::QueryInterface(REFNSIID aIID, void** aInstancePtr)
-{
-  NS_PRECONDITION(aInstancePtr, "null out param");
-
-  nsresult rv = nsMathMLElementBase::QueryInterface(aIID, aInstancePtr);
-
-  if (NS_SUCCEEDED(rv))
-    return rv;
-
-  nsISupports *inst = nsnull;
-
-  if (aIID.Equals(NS_GET_IID(nsIDOMNode))) {
-    inst = static_cast<nsIDOMNode *>(this);
-  } else if (aIID.Equals(NS_GET_IID(nsIDOMElement))) {
-    inst = static_cast<nsIDOMElement *>(this);
-  } else if (aIID.Equals(NS_GET_IID(nsIClassInfo))) {
-    inst = NS_GetDOMClassInfoInstance(eDOMClassInfo_Element_id);
-    NS_ENSURE_TRUE(inst, NS_ERROR_OUT_OF_MEMORY);
-  } else {
-    return PostQueryInterface(aIID, aInstancePtr);
-  }
-
-  NS_ADDREF(inst);
-
-  *aInstancePtr = inst;
-
-  return NS_OK;
-}
+NS_INTERFACE_TABLE_HEAD(nsMathMLElement)
+  NS_NODE_OFFSET_AND_INTERFACE_TABLE_BEGIN(nsMathMLElement)
+    NS_INTERFACE_TABLE_ENTRY(nsMathMLElement, nsIDOMNode)
+    NS_INTERFACE_TABLE_ENTRY(nsMathMLElement, nsIDOMElement)
+  NS_OFFSET_AND_INTERFACE_TABLE_END
+  NS_ELEMENT_INTERFACE_TABLE_TO_MAP_SEGUE
+  NS_INTERFACE_MAP_ENTRY_CONTENT_CLASSINFO(MathMLElement)
+NS_ELEMENT_INTERFACE_MAP_END
 
 NS_IMPL_ADDREF_INHERITED(nsMathMLElement, nsMathMLElementBase)
 NS_IMPL_RELEASE_INHERITED(nsMathMLElement, nsMathMLElementBase)
@@ -117,7 +96,7 @@ nsMathMLElement::BindToTree(nsIDocument* aDocument, nsIContent* aParent,
     nsPresShellIterator iter(aDocument);
     nsCOMPtr<nsIPresShell> shell;
     while ((shell = iter.GetNextShell()) != nsnull) {
-      shell->GetPresContext()->PostRebuildAllStyleDataEvent();
+      shell->GetPresContext()->PostRebuildAllStyleDataEvent(nsChangeHint(0));
     }
   }
 

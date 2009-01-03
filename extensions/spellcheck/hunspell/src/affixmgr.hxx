@@ -70,6 +70,7 @@ using namespace std;
 #include "baseaffix.hxx"
 #include "hashmgr.hxx"
 #include "phonet.hxx"
+#include "replist.hxx"
 
 // check flag duplication
 #define dupSFX        (1 << 0)
@@ -80,9 +81,11 @@ class AffixMgr
 
   AffEntry *          pStart[SETSIZE];
   AffEntry *          sStart[SETSIZE];
-  AffEntry *          pFlag[CONTSIZE];
-  AffEntry *          sFlag[CONTSIZE];
+  AffEntry *          pFlag[SETSIZE];
+  AffEntry *          sFlag[SETSIZE];
   HashMgr *           pHMgr;
+  HashMgr **          alldic;
+  int *               maxdic;
   char *              keystring;
   char *              trystring;
   char *              encoding;
@@ -100,18 +103,22 @@ class AffixMgr
   int                 checkcompoundrep;
   int                 checkcompoundcase;
   int                 checkcompoundtriple;
+  int                 simplifiedtriple;
   FLAG                forbiddenword;
   FLAG                nosuggest;
-  FLAG                pseudoroot;
+  FLAG                needaffix;
   int                 cpdmin;
   int                 numrep;
   replentry *         reptable;
+  RepList *           iconvtable;
+  RepList *           oconvtable;
   int                 nummap;
   mapentry *          maptable;
   int                 numbreak;
   char **             breaktable;
   int                 numcheckcpd;
-  replentry *         checkcpdtable;
+  patentry *          checkcpdtable;
+  int                 simplifiedcpd;
   int                 numdefcpd;
   flagentry *         defcpdtable;
   phonetable *        phone;
@@ -144,63 +151,75 @@ class AffixMgr
   FLAG                circumfix;
   FLAG                onlyincompound;
   FLAG                keepcase;
+  FLAG                substandard;
   int                 checksharps;
+  int                 fullstrip;
 
   int                 havecontclass; // boolean variable
   char                contclasses[CONTSIZE]; // flags of possible continuing classes (twofold affix)
-  flag                flag_mode;
-  
+
 public:
- 
-  AffixMgr(const char * affpath, HashMgr * ptr);
+
+  AffixMgr(const char * affpath, HashMgr** ptr, int * md,
+    const char * key = NULL);
   ~AffixMgr();
   struct hentry *     affix_check(const char * word, int len,
-            const unsigned short needflag = (unsigned short) 0, char in_compound = IN_CPD_NOT);
+            const unsigned short needflag = (unsigned short) 0,
+            char in_compound = IN_CPD_NOT);
   struct hentry *     prefix_check(const char * word, int len,
             char in_compound, const FLAG needflag = FLAG_NULL);
   inline int isSubset(const char * s1, const char * s2);
   struct hentry *     prefix_check_twosfx(const char * word, int len,
             char in_compound, const FLAG needflag = FLAG_NULL);
   inline int isRevSubset(const char * s1, const char * end_of_s2, int len);
-  struct hentry *     suffix_check(const char * word, int len, int sfxopts, AffEntry* ppfx,
-                        char ** wlst, int maxSug, int * ns, const FLAG cclass = FLAG_NULL,
-                        const FLAG needflag = FLAG_NULL, char in_compound = IN_CPD_NOT);
+  struct hentry *     suffix_check(const char * word, int len, int sfxopts,
+            AffEntry* ppfx, char ** wlst, int maxSug, int * ns,
+            const FLAG cclass = FLAG_NULL, const FLAG needflag = FLAG_NULL,
+            char in_compound = IN_CPD_NOT);
   struct hentry *     suffix_check_twosfx(const char * word, int len,
             int sfxopts, AffEntry* ppfx, const FLAG needflag = FLAG_NULL);
 
   char * affix_check_morph(const char * word, int len,
-                    const FLAG needflag = FLAG_NULL, char in_compound = IN_CPD_NOT);
+            const FLAG needflag = FLAG_NULL, char in_compound = IN_CPD_NOT);
   char * prefix_check_morph(const char * word, int len,
-                    char in_compound, const FLAG needflag = FLAG_NULL);
-  char * suffix_check_morph (const char * word, int len, int sfxopts, AffEntry * ppfx,
-            const FLAG cclass = FLAG_NULL, const FLAG needflag = FLAG_NULL, char in_compound = IN_CPD_NOT);
+            char in_compound, const FLAG needflag = FLAG_NULL);
+  char * suffix_check_morph (const char * word, int len, int sfxopts,
+            AffEntry * ppfx, const FLAG cclass = FLAG_NULL,
+            const FLAG needflag = FLAG_NULL, char in_compound = IN_CPD_NOT);
 
   char * prefix_check_twosfx_morph(const char * word, int len,
             char in_compound, const FLAG needflag = FLAG_NULL);
   char * suffix_check_twosfx_morph(const char * word, int len,
             int sfxopts, AffEntry * ppfx, const FLAG needflag = FLAG_NULL);
 
-  int                 expand_rootword(struct guessword * wlst, int maxn, const char * ts,
-                        int wl, const unsigned short * ap, unsigned short al, char * bad, int,
-                        char *);
+  char * morphgen(char * ts, int wl, const unsigned short * ap,
+            unsigned short al, char * morph, char * targetmorph, int level);
 
-  short               get_syllable (const char * word, int wlen);
-  int                 cpdrep_check(const char * word, int len);
-  int                 cpdpat_check(const char * word, int len);
-  int                 defcpd_check(hentry *** words, short wnum, hentry * rv, hentry ** rwords, char all);
-  int                 cpdcase_check(const char * word, int len);
-  inline int                 candidate_check(const char * word, int len);
-  struct hentry *     compound_check(const char * word, int len,
-                              short wordnum, short numsyllable, short maxwordnum, short wnum, hentry ** words,
-                              char hu_mov_rule, int * cmpdstemnum, int * cmpdstem, char is_sug);
+  int    expand_rootword(struct guessword * wlst, int maxn, const char * ts,
+            int wl, const unsigned short * ap, unsigned short al, char * bad,
+            int, char *);
 
-  int compound_check_morph(const char * word, int len,
-                              short wordnum, short numsyllable, short maxwordnum, short wnum, hentry ** words,
-                              char hu_mov_rule, char ** result, char * partresult);
+  short       get_syllable (const char * word, int wlen);
+  int         cpdrep_check(const char * word, int len);
+  int         cpdpat_check(const char * word, int len, hentry * r1, hentry * r2);
+  int         defcpd_check(hentry *** words, short wnum, hentry * rv,
+                    hentry ** rwords, char all);
+  int         cpdcase_check(const char * word, int len);
+  inline int  candidate_check(const char * word, int len);
+  void        setcminmax(int * cmin, int * cmax, const char * word, int len);
+  struct hentry * compound_check(const char * word, int len, short wordnum,
+            short numsyllable, short maxwordnum, short wnum, hentry ** words,
+            char hu_mov_rule, char is_sug);
 
-  struct hentry *     lookup(const char * word);
+  int compound_check_morph(const char * word, int len, short wordnum,
+            short numsyllable, short maxwordnum, short wnum, hentry ** words,
+            char hu_mov_rule, char ** result, char * partresult);
+
+  struct hentry * lookup(const char * word);
   int                 get_numrep();
   struct replentry *  get_reptable();
+  RepList *           get_iconvtable();
+  RepList *           get_oconvtable();
   struct phonetable * get_phonetable();
   int                 get_nummap();
   struct mapentry *   get_maptable();
@@ -219,8 +238,7 @@ public:
   FLAG                get_compoundbegin();
   FLAG                get_forbiddenword();
   FLAG                get_nosuggest();
-//  FLAG                get_circumfix();
-  FLAG                get_pseudoroot();
+  FLAG                get_needaffix();
   FLAG                get_onlyincompound();
   FLAG                get_compoundroot();
   FLAG                get_lemma_present();
@@ -239,23 +257,26 @@ public:
   int                 get_sugswithdots(void);
   FLAG                get_keepcase(void);
   int                 get_checksharps(void);
+  char *              encode_flag(unsigned short aflag);
+  int                 get_fullstrip();
 
 private:
-  int  parse_file(const char * affpath);
-//  int  parse_string(char * line, char ** out, const char * name);
-  int  parse_flag(char * line, unsigned short * out, const char * name);
-  int  parse_num(char * line, int * out, const char * name);
-//  int  parse_array(char * line, char ** out, unsigned short ** out_utf16,
-//            int * out_utf16_len, const char * name);
-  int  parse_cpdsyllable(char * line);
-  int  parse_reptable(char * line, FILE * af);
-  int  parse_phonetable(char * line, FILE * af);
-  int  parse_maptable(char * line, FILE * af);
-  int  parse_breaktable(char * line, FILE * af);
-  int  parse_checkcpdtable(char * line, FILE * af);
-  int  parse_defcpdtable(char * line, FILE * af);
-  int  parse_affix(char * line, const char at, FILE * af, char * dupflags);
+  int  parse_file(const char * affpath, const char * key);
+  int  parse_flag(char * line, unsigned short * out, FileMgr * af);
+  int  parse_num(char * line, int * out, FileMgr * af);
+  int  parse_cpdsyllable(char * line, FileMgr * af);
+  int  parse_reptable(char * line, FileMgr * af);
+  int  parse_convtable(char * line, FileMgr * af, RepList ** rl, const char * keyword);
+  int  parse_phonetable(char * line, FileMgr * af);
+  int  parse_maptable(char * line, FileMgr * af);
+  int  parse_breaktable(char * line, FileMgr * af);
+  int  parse_checkcpdtable(char * line, FileMgr * af);
+  int  parse_defcpdtable(char * line, FileMgr * af);
+  int  parse_affix(char * line, const char at, FileMgr * af, char * dupflags);
 
+  void reverse_condition(char *);
+  void debugflag(char * result, unsigned short flag);
+  int condlen(char *);
   int encodeit(struct affentry * ptr, char * cs);
   int build_pfxtree(AffEntry* pfxptr);
   int build_sfxtree(AffEntry* sfxptr);
@@ -265,8 +286,8 @@ private:
   AffEntry * process_sfx_in_order(AffEntry * ptr, AffEntry * nptr);
   int process_pfx_tree_to_list();
   int process_sfx_tree_to_list();
-  int redundant_condition(char, char * strip, int stripl, const char * cond, char *);
+  int redundant_condition(char, char * strip, int stripl,
+      const char * cond, int);
 };
 
 #endif
-

@@ -100,15 +100,6 @@ radio[pane=paneAdvanced][selected="true"] {
 	-moz-image-region: rect(32px, 224px, 64px, 192px)
 }
 
-/* General Pane */
-#browserHomePage {
-  padding-top: 2px;
-  padding-bottom: 3px;
-  -moz-padding-start: 4px;
-  -moz-padding-end: 2px;
-  background-color: -moz-Dialog;
-}
-
 /* Applications Pane */
 #BrowserPreferences[animated="true"] #handlersView {
   height: 25em;
@@ -116,43 +107,6 @@ radio[pane=paneAdvanced][selected="true"] {
 
 #BrowserPreferences[animated="false"] #handlersView {
   -moz-box-flex: 1;
-}
-
-/* File Field Widget */
-filefield {
-  margin: 2px 4px;
-  -moz-appearance: textfield;
-}
-
-.fileFieldContentBox {
-  background-color: -moz-Dialog;
-  color: -moz-DialogText;
-  margin: 1px;
-}
-
-.fileFieldContentBox[disabled="true"] {
-  opacity: 0.5;
-}
-
-.fileFieldIcon[disabled="true"] {
-  opacity: 0.2;
-}
-
-.fileFieldIcon {
-  width: 16px;
-  height: 16px;
-  margin-top: 2px;
-  margin-bottom: 2px;
-  -moz-margin-start: 2px;
-  -moz-margin-end: 4px;
-}
-
-.fileFieldLabel {
-  -moz-appearance: none;
-  background-color: transparent;
-  border: none;
-  padding: 1px 0px 0px 0px;
-  margin: 0px;
 }
 
 /* Modeless Window Dialogs */
@@ -197,4 +151,23 @@ filefield {
    of the groupbox from being cutoff */
 .bottomBox {
   padding-bottom: 4px;
+}
+
+/**
+ * Clear Private Data
+ */
+#SanitizeDurationBox {
+  padding-bottom: 10px;
+}
+
+#sanitizeDurationChoice {
+  margin: 0; 
+}
+
+#sanitizeDurationLabel {
+  -moz-margin-start: 3px;
+}
+
+#SanitizeDialogPane > groupbox {
+  margin-top: 0;
 }

@@ -75,16 +75,23 @@ CPPSRCS   = \
     nsDownloadManager.cpp \
     $(NULL)
 
+ifndef MOZ_DISABLE_VISTA_SDK_REQUIREMENTS
 ifndef GNU_CXX
 ifeq ($(OS_ARCH),WINNT)
 CPPSRCS += nsDownloadScanner.cpp
 REQUIRES += xulapp
+DEFINES += -DDOWNLOAD_SCANNER
+endif
 endif
 endif
 
+ifndef MOZ_SUITE
+# XXX - Until Suite builds off XULRunner we can't guarantee our implementation
+# of nsIDownloadManagerUI overrides toolkit's.
 EXTRA_COMPONENTS = \
   nsDownloadManagerUI.js \
   $(NULL)
+endif
 
 include $(topsrcdir)/config/rules.mk
 

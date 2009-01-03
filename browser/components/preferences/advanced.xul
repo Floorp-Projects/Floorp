@@ -85,14 +85,11 @@
       <preference id="browser.offline-apps.notify"     name="browser.offline-apps.notify"     type="bool"/>
 
       <!-- Update tab -->
+#ifdef MOZ_UPDATER
       <preference id="app.update.enabled"              name="app.update.enabled"              type="bool"
                   onchange="gAdvancedPane.updateAppUpdateItems();
                             gAdvancedPane.updateAutoItems();
                             gAdvancedPane.updateModeItems();"/>
-      <preference id="extensions.update.enabled"       name="extensions.update.enabled"       type="bool"
-                  onchange="gAdvancedPane.updateAddonUpdateUI();"/>
-      <preference id="browser.search.update"           name="browser.search.update"           type="bool"/>
-
       <preference id="app.update.auto"                 name="app.update.auto"                 type="bool"
                   onchange="gAdvancedPane.updateAutoItems();
                             gAdvancedPane.updateModeItems();"/>
@@ -102,7 +99,11 @@
       <preference id="app.update.disable_button.showUpdateHistory"
                   name="app.update.disable_button.showUpdateHistory"
                   type="bool"/>
+#endif
 
+      <preference id="extensions.update.enabled"       name="extensions.update.enabled"       type="bool"
+                  onchange="gAdvancedPane.updateAddonUpdateUI();"/>
+      <preference id="browser.search.update"           name="browser.search.update"           type="bool"/>
 
       <!-- Encryption tab -->
       <preference id="security.enable_ssl3"            name="security.enable_ssl3"            type="bool"/>
@@ -267,10 +268,12 @@
         <tabpanel id="updatePanel" orient="vertical" align="start">
           <label control="autoUpdateGroup">&autoCheck.label;</label>
           <vbox class="indent" id="autoUpdateGroup" role="group">
+#ifdef MOZ_UPDATER
             <checkbox id="enableAppUpdate"
                       label="&enableAppUpdate.label;"
                       accesskey="&enableAppUpdate.accesskey;"
                       preference="app.update.enabled"/>
+#endif
             <checkbox id="enableAddonUpdate"
                       label="&enableAddonsUpdate.label;"
                       accesskey="&enableAddonsUpdate.accesskey;"
@@ -281,6 +284,7 @@
                       preference="browser.search.update"/>
           </vbox>
 
+#ifdef MOZ_UPDATER
           <separator id="updateSeparator1"/>
 
           <label id="updateModeLabel" control="updateMode">&whenUpdatesFound.label;</label>
@@ -309,6 +313,7 @@
                     preference="app.update.disable_button.showUpdateHistory"
                     oncommand="gAdvancedPane.showUpdates();"/>
           </hbox>
+#endif
         </tabpanel>
 
         <!-- Encryption -->

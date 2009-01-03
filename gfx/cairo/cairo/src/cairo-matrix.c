@@ -624,6 +624,35 @@ _cairo_matrix_is_integer_translation (const cairo_matrix_t *matrix,
     return FALSE;
 }
 
+/* By pixel exact here, we mean a matrix that is composed only of
+ * 90 degree rotations, flips, and integer translations and produces a 1:1
+ * mapping between source and destination pixels. If we transform an image
+ * with a pixel-exact matrix, filtering is not useful.
+ */
+cairo_private cairo_bool_t
+_cairo_matrix_is_pixel_exact (const cairo_matrix_t *matrix)
+{
+    cairo_fixed_t x0_fixed, y0_fixed;
+
+    if (matrix->xy == 0.0 && matrix->yx == 0.0) {
+	if (! (matrix->xx == 1.0 || matrix->xx == -1.0))
+	    return FALSE;
+	if (! (matrix->yy == 1.0 || matrix->yy == -1.0))
+	    return FALSE;
+    } else if (matrix->xx == 0.0 && matrix->yy == 0.0) {
+	if (! (matrix->xy == 1.0 || matrix->xy == -1.0))
+	    return FALSE;
+	if (! (matrix->yx == 1.0 || matrix->yx == -1.0))
+	    return FALSE;
+    } else
+	return FALSE;
+
+    x0_fixed = _cairo_fixed_from_double (matrix->x0);
+    y0_fixed = _cairo_fixed_from_double (matrix->y0);
+
+    return _cairo_fixed_is_integer (x0_fixed) && _cairo_fixed_is_integer (y0_fixed);
+}
+
 /*
   A circle in user space is transformed into an ellipse in device space.
 

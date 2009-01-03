@@ -369,6 +369,7 @@ function ShowPrefs()
   configTree.controllers.insertControllerAt(0, configController);
 
   document.getElementById("configDeck").setAttribute("selectedIndex", 1);
+  document.getElementById("configTreeKeyset").removeAttribute("disabled");
   if (!document.getElementById("showWarningNextTime").checked)
     gPrefBranch.setBoolPref("general.warnOnAboutConfig", false);
 

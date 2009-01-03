@@ -49,11 +49,11 @@
 #include "nsIDOMNSXBLFormControl.h"
 #include "nsIDOMHTMLFormElement.h"
 #include "nsIDOMHTMLOptionElement.h"
-#include "nsIDOMHTMLCollection.h"
 #include "nsIDOMHTMLOptionsCollection.h"
 #include "nsIDOMNSHTMLOptionCollectn.h"
 #include "nsISelectControlFrame.h"
 #include "nsContentUtils.h"
+#include "nsIHTMLCollection.h"
 
 // PresState
 #include "nsXPCOM.h"
@@ -71,7 +71,7 @@ class nsHTMLSelectElement;
  */
 class nsHTMLOptionCollection: public nsIDOMHTMLOptionsCollection,
                               public nsIDOMNSHTMLOptionCollection,
-                              public nsIDOMHTMLCollection
+                              public nsIHTMLCollection
 {
 public:
   nsHTMLOptionCollection(nsHTMLSelectElement* aSelect);
@@ -88,8 +88,16 @@ public:
   // nsIDOMHTMLCollection interface, all its methods are defined in
   // nsIDOMHTMLOptionsCollection
 
+  virtual nsISupports* GetNodeAt(PRUint32 aIndex, nsresult* aResult)
+  {
+    *aResult = NS_OK;
+
+    return mElements.SafeObjectAt(aIndex);
+  }
+  virtual nsISupports* GetNamedItem(const nsAString& aName, nsresult* aResult);
+
   NS_DECL_CYCLE_COLLECTION_CLASS_AMBIGUOUS(nsHTMLOptionCollection,
-                                           nsIDOMNSHTMLOptionCollection)
+                                           nsIHTMLCollection)
 
   // Helpers for nsHTMLSelectElement
   /**

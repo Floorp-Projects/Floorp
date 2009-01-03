@@ -42,8 +42,8 @@
 #define NS_CI_INTERFACE_GETTER_NAME(_class) _class##_GetInterfacesHelper
 
 #define NS_DECL_CI_INTERFACE_GETTER(_class)                                   \
-  extern NS_IMETHODIMP NS_CI_INTERFACE_GETTER_NAME(_class)(PRUint32 *,        \
-                                                           nsIID ***);
+  extern NS_IMETHODIMP NS_CI_INTERFACE_GETTER_NAME(_class)                    \
+     (PRUint32 * NS_OUTPARAM, nsIID *** NS_OUTPARAM);
 
 #define NS_DECL_CLASSINFO(_class)                                             \
   NS_DECL_CI_INTERFACE_GETTER(_class)                                         \
@@ -57,7 +57,8 @@
 
 #define NS_CLASSINFO_HELPER_BEGIN(_class, _c)                                 \
 NS_IMETHODIMP                                                                 \
-NS_CI_INTERFACE_GETTER_NAME(_class)(PRUint32 *count, nsIID ***array)          \
+NS_CI_INTERFACE_GETTER_NAME(_class)(PRUint32 *count NS_OUTPARAM,              \
+                                    nsIID ***array NS_OUTPARAM)               \
 {                                                                             \
     *count = _c;                                                              \
     *array = (nsIID **)nsMemory::Alloc(sizeof (nsIID *) * _c);

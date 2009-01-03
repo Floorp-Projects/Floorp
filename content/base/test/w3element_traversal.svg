@@ -1,0 +1,70 @@
+<!DOCTYPE svg PUBLIC "-//W3C//DTD SVG 1.1//EN"  "http://www.w3.org/Graphics/SVG/1.1/DTD/svg11.dtd"
+[
+<!ENTITY tree "<tspan id='first_element_child_entity'></tspan>">
+]>
+
+<svg xmlns="http://www.w3.org/2000/svg"
+     xmlns:xlink="http://www.w3.org/1999/xlink"
+     xmlns:pickle="http://ns.example.org/pickle"
+     version="1.1"
+     width="100%" height="100%" viewBox="0 0 400 400">
+      
+  <text >
+    <tspan id="first_element_child_namespace"></tspan>
+  </text>
+  <g id="parentEl_namespace">
+    <pickle:dill />
+  </g>
+
+  <text id="parentEl_pes" >
+    <tspan id="first_element_child_pes"></tspan>
+    <tspan id="middle_element_child_pes"></tspan>  
+    <tspan id="last_element_child_pes"></tspan>
+  </text>
+
+
+  <text id="parentEl" >
+    <tspan id="first_element_child_sibnull"></tspan>
+  </text>
+
+  <text id="parentEl_nes" >
+    <tspan id="first_element_child_nes"></tspan>
+    <tspan id="last_element_child_nes"></tspan>
+  </text>
+
+  <text id="parentEl_lec" >
+    <tspan id="first_element_child_lec"></tspan>
+    <tspan id="last_element_child_lec"></tspan>
+  </text>
+
+
+  <text id="parentEl_fec" >
+    <tspan id="first_element_child_fec"></tspan>
+  </text>
+  
+  <text id="parentEl_entity" >&tree;</text>
+
+  <text id="parentEl_dynremove" >
+    <tspan id="first_element_child_dynremove"></tspan>
+    <tspan id="last_element_child_dynremove"></tspan>
+  </text>
+
+  <text id="parentEl_dynadd" > 
+    <tspan id="first_element_child_dynadd"></tspan>
+  </text>
+
+  <text id="parentEl_null" ></text>
+
+  <text id="parentEl_count" >
+    <tspan id="first_element_child_count">
+      <tspan></tspan>
+      <tspan></tspan>
+    </tspan>
+  <tspan id="middle_element_child"></tspan>    
+  <tspan id="last_element_child_count"></tspan>
+  </text>
+
+  <text id="parentEl_nochild"></text>
+
+</svg>
+

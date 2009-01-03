@@ -97,7 +97,7 @@ struct GetKeysEnumData
     nsresult res;
 };
 
-PR_CALLBACK PLDHashOperator
+ PLDHashOperator
 GetKeysEnumerate(const char *key, nsISupports* data,
                  void *arg)
 {
@@ -130,12 +130,13 @@ nsProperties::GetKeys(PRUint32 *count, char ***keys)
 
     EnumerateRead(GetKeysEnumerate, &gked);
 
-    if (NS_FAILED(gked.res)) {
+    nsresult rv = gked.res;
+    if (NS_FAILED(rv)) {
         // Free 'em all
         for (PRUint32 i = 0; i < gked.next; i++)
             nsMemory::Free(k[i]);
         nsMemory::Free(k);
-        return gked.res;
+        return rv;
     }
 
     *count = n;

@@ -167,6 +167,13 @@ public:
   // clear all values from the store
   void ClearAll();
 
+  nsIDOMStorageItem* GetNamedItem(const nsAString& aKey, nsresult* aResult);
+
+  static nsDOMStorage* FromSupports(nsISupports* aSupports)
+  {
+    return static_cast<nsDOMStorage*>(static_cast<nsIDOMStorage*>(aSupports));
+  }
+
 protected:
 
   friend class nsDOMStorageManager;
@@ -217,6 +224,8 @@ public:
   // nsIDOMStorageList
   NS_DECL_NSIDOMSTORAGELIST
 
+  nsIDOMStorage* GetNamedItem(const nsAString& aDomain, nsresult* aResult);
+
   /**
    * Check whether aCurrentDomain has access to aRequestedDomain
    */
@@ -236,12 +245,12 @@ protected:
    * @param aCurrentDomain domain of current caller
    * @param aNoCurrentDomainCheck true to skip domain comparison
    */
-  nsresult
+  nsIDOMStorage*
   GetStorageForDomain(nsIURI* aURI,
                       const nsAString& aRequestedDomain,
                       const nsAString& aCurrentDomain,
                       PRBool aNoCurrentDomainCheck,
-                      nsIDOMStorage** aStorage);
+                      nsresult* aResult);
 
   /**
    * Convert the domain into an array of its component parts.

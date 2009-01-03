@@ -73,8 +73,9 @@ checkbox[disabled="true"] {
 
 .checkbox-check {
   -moz-appearance: checkbox;
-  width: 14px;
-  height: 12px;
+  margin: 1px;
+  width: 16px;
+  height: 16px;
 }
   
 

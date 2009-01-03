@@ -171,13 +171,14 @@ NS_IMPL_RELEASE_INHERITED(nsHTMLSelectElement, nsGenericElement)
 
 
 // QueryInterface implementation for nsHTMLSelectElement
-NS_HTML_CONTENT_CC_INTERFACE_TABLE_HEAD(nsHTMLSelectElement,
-                                        nsGenericHTMLFormElement)
-  NS_INTERFACE_TABLE_INHERITED4(nsHTMLSelectElement,
-                                nsIDOMHTMLSelectElement,
-                                nsIDOMNSHTMLSelectElement,
-                                nsIDOMNSXBLFormControl,
-                                nsISelectElement)
+NS_INTERFACE_TABLE_HEAD_CYCLE_COLLECTION_INHERITED(nsHTMLSelectElement)
+  NS_HTML_CONTENT_INTERFACE_TABLE4(nsHTMLSelectElement,
+                                   nsIDOMHTMLSelectElement,
+                                   nsIDOMNSHTMLSelectElement,
+                                   nsIDOMNSXBLFormControl,
+                                   nsISelectElement)
+  NS_HTML_CONTENT_INTERFACE_TABLE_TO_MAP_SEGUE(nsHTMLSelectElement,
+                                               nsGenericHTMLFormElement)
 NS_HTML_CONTENT_INTERFACE_TABLE_TAIL_CLASSINFO(HTMLSelectElement)
 
 
@@ -690,24 +691,30 @@ nsHTMLSelectElement::GetLength(PRUint32* aLength)
   return mOptions->GetLength(aLength);
 }
 
+#define MAX_DYNAMIC_SELECT_LENGTH 10000
+
 NS_IMETHODIMP
 nsHTMLSelectElement::SetLength(PRUint32 aLength)
 {
   nsresult rv=NS_OK;
 
   PRUint32 curlen;
-  PRInt32 i;
+  PRUint32 i;
 
   rv = GetLength(&curlen);
   if (NS_FAILED(rv)) {
     curlen = 0;
   }
 
-  if (curlen && (curlen > aLength)) { // Remove extra options
-    for (i = (curlen - 1); (i >= (PRInt32)aLength) && NS_SUCCEEDED(rv); i--) {
-      rv = Remove(i);
+  if (curlen > aLength) { // Remove extra options
+    for (i = curlen; i > aLength && NS_SUCCEEDED(rv); --i) {
+      rv = Remove(i-1);
     }
-  } else if (aLength) {
+  } else if (aLength > curlen) {
+    if (aLength > MAX_DYNAMIC_SELECT_LENGTH) {
+      return NS_ERROR_DOM_NOT_SUPPORTED_ERR;
+    }
+    
     // This violates the W3C DOM but we do this for backwards compatibility
     nsCOMPtr<nsINodeInfo> nodeInfo;
 
@@ -728,7 +735,7 @@ nsHTMLSelectElement::SetLength(PRUint32 aLength)
 
     nsCOMPtr<nsIDOMNode> node(do_QueryInterface(element));
 
-    for (i = curlen; i < (PRInt32)aLength; i++) {
+    for (i = curlen; i < aLength; i++) {
       nsCOMPtr<nsIDOMNode> tmpNode;
 
       rv = AppendChild(node, getter_AddRefs(tmpNode));
@@ -1067,9 +1074,6 @@ nsHTMLSelectElement::SetOptionsSelectedByIndex(PRInt32 aStartIndex,
   if (optionsSelected || optionsDeselected) {
     if (aChangedSomething)
       *aChangedSomething = PR_TRUE;
-
-    // Dispatch an event to notify the subcontent that the selected item has changed
-    DispatchDOMEvent(NS_LITERAL_STRING("selectedItemChanged"));
   }
 
   return NS_OK;
@@ -1223,15 +1227,7 @@ nsHTMLSelectElement::Focus()
 void
 nsHTMLSelectElement::SetFocus(nsPresContext* aPresContext)
 {
-  if (!aPresContext)
-    return;
-
-  // first see if we are disabled or not. If disabled then do nothing.
-  if (HasAttr(kNameSpaceID_None, nsGkAtoms::disabled)) {
-    return;
-  }
-
-  SetFocusAndScrollIntoView(aPresContext);
+  DoSetFocus(aPresContext);
 }
 
 PRBool
@@ -1523,7 +1519,7 @@ nsHTMLSelectElement::RestoreState(nsPresState* aState)
   nsCOMPtr<nsISupports> state;
   nsresult rv = aState->GetStatePropertyAsSupports(NS_LITERAL_STRING("selecteditems"),
                                                    getter_AddRefs(state));
-  if (NS_SUCCEEDED(rv)) {
+  if (rv == NS_STATE_PROPERTY_EXISTS) {
     RestoreStateTo((nsSelectState*)(nsISupports*)state);
 
     // Don't flush, if the frame doesn't exist yet it doesn't care if
@@ -1853,7 +1849,8 @@ NS_IMPL_CYCLE_COLLECTION_TRAVERSE_END
 
 // QueryInterface implementation for nsHTMLOptionCollection
 NS_INTERFACE_TABLE_HEAD(nsHTMLOptionCollection)
-  NS_INTERFACE_TABLE3(nsHTMLOptionCollection,
+  NS_INTERFACE_TABLE4(nsHTMLOptionCollection,
+                      nsIHTMLCollection,
                       nsIDOMNSHTMLOptionCollection,
                       nsIDOMHTMLOptionsCollection,
                       nsIDOMHTMLCollection)
@@ -1863,9 +1860,9 @@ NS_INTERFACE_MAP_END
 
 
 NS_IMPL_CYCLE_COLLECTING_ADDREF_AMBIGUOUS(nsHTMLOptionCollection,
-                                          nsIDOMNSHTMLOptionCollection)
+                                          nsIHTMLCollection)
 NS_IMPL_CYCLE_COLLECTING_RELEASE_AMBIGUOUS(nsHTMLOptionCollection,
-                                           nsIDOMNSHTMLOptionCollection)
+                                           nsIHTMLCollection)
 
 
 // nsIDOMNSHTMLOptionCollection interface
@@ -1955,38 +1952,50 @@ nsHTMLOptionCollection::SetSelectedIndex(PRInt32 aSelectedIndex)
 NS_IMETHODIMP
 nsHTMLOptionCollection::Item(PRUint32 aIndex, nsIDOMNode** aReturn)
 {
-  nsIDOMHTMLOptionElement *option = mElements.SafeObjectAt(aIndex);
+  nsresult rv;
+  nsISupports* item = GetNodeAt(aIndex, &rv);
+  if (!item) {
+    *aReturn = nsnull;
 
-  NS_IF_ADDREF(*aReturn = option);
+    return rv;
+  }
 
-  return NS_OK;
+  return CallQueryInterface(item, aReturn);
+}
+
+nsISupports*
+nsHTMLOptionCollection::GetNamedItem(const nsAString& aName, nsresult* aResult)
+{
+  *aResult = NS_OK;
+
+  PRInt32 count = mElements.Count();
+  for (PRInt32 i = 0; i < count; i++) {
+    nsCOMPtr<nsIContent> content = do_QueryInterface(mElements.ObjectAt(i));
+    if (content &&
+        (content->AttrValueIs(kNameSpaceID_None, nsGkAtoms::name, aName,
+                              eCaseMatters) ||
+         content->AttrValueIs(kNameSpaceID_None, nsGkAtoms::id, aName,
+                              eCaseMatters))) {
+      return content;
+    }
+  }
+
+  return nsnull;
 }
 
 NS_IMETHODIMP
 nsHTMLOptionCollection::NamedItem(const nsAString& aName,
                                   nsIDOMNode** aReturn)
 {
-  PRInt32 count = mElements.Count();
-  nsresult rv = NS_OK;
+  nsresult rv;
+  nsISupports* item = GetNamedItem(aName, &rv);
+  if (!item) {
+    *aReturn = nsnull;
 
-  *aReturn = nsnull;
-
-  for (PRInt32 i = 0; i < count; i++) {
-    nsCOMPtr<nsIContent> content = do_QueryInterface(mElements.ObjectAt(i));
-
-    if (content) {
-      if (content->AttrValueIs(kNameSpaceID_None, nsGkAtoms::name, aName,
-                               eCaseMatters) ||
-          content->AttrValueIs(kNameSpaceID_None, nsGkAtoms::id, aName,
-                               eCaseMatters)) {
-        rv = CallQueryInterface(content, aReturn);
-
-        break;
-      }
-    }
+    return rv;
   }
 
-  return rv;
+  return CallQueryInterface(item, aReturn);
 }
 
 NS_IMETHODIMP

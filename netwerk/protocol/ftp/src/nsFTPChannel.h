@@ -117,7 +117,8 @@ public:
 
 protected:
     virtual ~nsFtpChannel() {}
-    virtual nsresult OpenContentStream(PRBool async, nsIInputStream **result);
+    virtual nsresult OpenContentStream(PRBool async, nsIInputStream **result,
+                                       nsIChannel** channel);
     virtual PRBool GetStatusArg(nsresult status, nsString &statusArg);
     virtual void OnCallbacksChanged();
 

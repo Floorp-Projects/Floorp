@@ -156,6 +156,8 @@ MOZ_WINCONSOLE = 0
 endif
 endif
 
+# This switches $(INSTALL) to copy mode, like $(SYSINSTALL), so things that
+# shouldn't get 755 perms need $(IFLAGS1) for either way of calling nsinstall.
 NSDISTMODE = copy
 
 include $(topsrcdir)/config/config.mk
@@ -231,14 +233,6 @@ include $(topsrcdir)/config/static-rules.mk
 DEFINES += -DIMPL_XREAPI
 endif
 
-ifeq ($(MOZ_WIDGET_TOOLKIT),cocoa)
-ifdef BUILD_STATIC_LIBS
-ifdef USE_PREBINDING
-BIN_FLAGS += -Wl,-headerpad -Wl,5a0c
-endif
-endif
-endif
-
 ifeq ($(MOZ_WIDGET_TOOLKIT),photon)
 LIBS += -lphexlib
 endif
@@ -277,8 +271,9 @@ endif
 
 ifneq (,$(filter-out OS2 WINNT,$(OS_ARCH)))
 
-$(MOZ_APP_NAME):: mozilla.in Makefile.in Makefile $(DEPTH)/config/autoconf.mk
-	cat $< | sed -e "s|%MOZAPPDIR%|$(installdir)|" > $@
+$(MOZ_APP_NAME):: $(topsrcdir)/build/unix/mozilla.in $(GLOBAL_DEPS)
+	cat $< | sed -e "s|%MOZAPPDIR%|$(installdir)|" \
+		-e "s|%MOZ_APP_DISPLAYNAME%|$(MOZ_APP_DISPLAYNAME)|" > $@
 	chmod +x $@
 
 libs:: $(MOZ_APP_NAME)
@@ -304,7 +299,7 @@ ICON_FILES	= \
 		$(NULL)
 
 libs:: $(ICON_FILES)
-	$(INSTALL) $^ $(DIST)/bin/icons
+	$(INSTALL) $(IFLAGS1) $^ $(DIST)/bin/icons
 
 install::
 	$(SYSINSTALL) $(IFLAGS1) $(ICON_FILES) $(DESTDIR)$(mozappdir)/icons
@@ -312,9 +307,9 @@ endif
 
 ifeq ($(MOZ_WIDGET_TOOLKIT),gtk2)
 libs::
-	$(INSTALL) $(DIST)/branding/default16.png $(DIST)/bin/chrome/icons/default
-	$(INSTALL) $(DIST)/branding/default32.png $(DIST)/bin/chrome/icons/default
-	$(INSTALL) $(DIST)/branding/default48.png $(DIST)/bin/chrome/icons/default
+	$(INSTALL) $(IFLAGS1) $(DIST)/branding/default16.png $(DIST)/bin/chrome/icons/default
+	$(INSTALL) $(IFLAGS1) $(DIST)/branding/default32.png $(DIST)/bin/chrome/icons/default
+	$(INSTALL) $(IFLAGS1) $(DIST)/branding/default48.png $(DIST)/bin/chrome/icons/default
 endif
 
 export::
@@ -331,7 +326,6 @@ ifneq (,$(filter mac cocoa,$(MOZ_WIDGET_TOOLKIT)))
 	cp $(srcdir)/macbuild/dsstore $(DIST)/branding/dsstore
 	cp $(srcdir)/macbuild/background.png $(DIST)/branding/background.png
 	cp $(srcdir)/macbuild/disk.icns $(DIST)/branding/disk.icns
-	cp $(srcdir)/macbuild/license.r $(DIST)/branding/license.r
 endif
 ifneq (,$(filter gtk2,$(MOZ_WIDGET_TOOLKIT)))
 	cp $(srcdir)/mozicon128.png $(DIST)/branding/mozicon128.png
@@ -355,10 +349,10 @@ libs::
 	touch $(DIST)/bin/.autoreg
 
 libs:: $(srcdir)/profile/prefs.js
-	$(INSTALL) $^ $(DIST)/bin/defaults/profile
+	$(INSTALL) $(IFLAGS1) $^ $(DIST)/bin/defaults/profile
 
 libs:: $(srcdir)/blocklist.xml
-	$(INSTALL) $^ $(DIST)/bin
+	$(INSTALL) $(IFLAGS1) $^ $(DIST)/bin
 
 ifneq (,$(filter mac cocoa,$(MOZ_WIDGET_TOOLKIT)))
 
@@ -417,7 +411,7 @@ libs::
 ifeq ($(OS_ARCH),WINNT)
 	$(PERL) -pe 's/(?<!\r)\n/\r\n/g;' < $(topsrcdir)/LICENSE > $(DIST)/bin/LICENSE
 else
-	$(INSTALL) $(topsrcdir)/LICENSE	$(DIST)/bin
+	$(INSTALL) $(IFLAGS1) $(topsrcdir)/LICENSE $(DIST)/bin
 endif
 
 ifdef LIBXUL_SDK

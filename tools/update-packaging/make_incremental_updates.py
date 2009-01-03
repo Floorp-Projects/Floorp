@@ -325,18 +325,25 @@ def get_buildid(work_dir, platform):
     print 'WARNING: cannot find build ID in application.ini'
     return ''
 
-def decode_filename(filename):
-    """ Breaks filename into component parts based on regex
+def decode_filename(filepath):
+    """ Breaks filename/dir structure into component parts based on regex
         for example: firefox-3.0b3pre.en-US.linux-i686.complete.mar
+        Or linux-i686/en-US/firefox-3.0b3.complete.mar
         Returns dict with keys product, version, locale, platform, type
     """
     try:
       m = re.search(
         '(?P<product>\w+)(-)(?P<version>\w+\.\w+)(\.)(?P<locale>.+?)(\.)(?P<platform>.+?)(\.)(?P<type>\w+)(.mar)',
-      filename)
+      os.path.basename(filepath))
       return m.groupdict()
     except Exception, exc:
-      raise Exception("could not parse filename %s: %s" % (filename, exc))
+      try:
+        m = re.search(
+          '(?P<platform>.+?)\/(?P<locale>.+?)\/(?P<product>\w+)-(?P<version>\w+\.\w+)\.(?P<type>\w+).mar',
+        filepath)
+        return m.groupdict()
+      except:
+        raise Exception("could not parse filepath %s: %s" % (filepath, exc))
 
 def create_partial_patches(patches):
     """ Given the patches generates a set of partial patches"""
@@ -364,7 +371,7 @@ def create_partial_patches(patches):
             work_dir_from =  os.path.join(work_dir,"from");
             os.mkdir(work_dir_from)
             extract_mar(from_filename,work_dir_from)
-            from_decoded = decode_filename(os.path.basename(from_filename))
+            from_decoded = decode_filename(from_filename)
             from_buildid = get_buildid(work_dir_from, from_decoded['platform'])
             from_shasum = sha.sha(open(from_filename).read()).hexdigest()
             from_size = str(os.path.getsize(to_filename))
@@ -373,7 +380,7 @@ def create_partial_patches(patches):
             work_dir_to =  os.path.join(work_dir,"to")
             os.mkdir(work_dir_to)
             extract_mar(to_filename, work_dir_to)
-            to_decoded = decode_filename(os.path.basename(from_filename))
+            to_decoded = decode_filename(from_filename)
             to_buildid = get_buildid(work_dir_to, to_decoded['platform'])
             to_shasum = sha.sha(open(to_filename).read()).hexdigest()
             to_size = str(os.path.getsize(to_filename))
@@ -381,7 +388,6 @@ def create_partial_patches(patches):
             mar_extract_time = time.time()
 
             partial_filename = create_partial_patch(work_dir_from, work_dir_to, patch_filename, shas, PatchInfo(work_dir, ['channel-prefs.js','update.manifest','removed-files'],['/readme.txt']))
-            partial_decoded = decode_filename(os.path.basename(partial_filename))
             partial_buildid = to_buildid
             partial_shasum = sha.sha(open(partial_filename).read()).hexdigest()
             partial_size = str(os.path.getsize(partial_filename))
@@ -400,8 +406,8 @@ def create_partial_patches(patches):
              'partial_size':partial_size,
              'to_version':to_decoded['version'],
              'from_version':from_decoded['version'],
-             'locale':partial_decoded['locale'],
-             'platform':partial_decoded['platform'],
+             'locale':from_decoded['locale'],
+             'platform':from_decoded['platform'],
             })
             print "done with patch %s/%s time (%.2fs/%.2fs/%.2fs) (mar/patch/total)" % (str(patch_num),str(len(patches)),mar_extract_time-startTime,time.time()-mar_extract_time,time.time()-startTime)
             patch_num += 1

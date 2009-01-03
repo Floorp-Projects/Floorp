@@ -3140,7 +3140,9 @@ dtoa
 		if (ilim < 0 || cmp(b,S = multadd(S,5,0)) <= 0) {
 			/* no digits, fcvt style */
  no_digits:
-			k = -1 - ndigits;
+			/* MOZILLA CHANGE: Always return a non-empty string. */
+			*s++ = '0';
+			k = 0;
 			goto ret;
 			}
  one_digit:

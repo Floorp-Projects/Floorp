@@ -51,9 +51,6 @@ extern JSClass js_DateClass;
 extern JSObject *
 js_InitDateClass(JSContext *cx, JSObject *obj);
 
-extern JSBool
-js_date_now(JSContext *cx, uintN argc, jsval *vp);
-
 /*
  * These functions provide a C interface to the date/time object
  */

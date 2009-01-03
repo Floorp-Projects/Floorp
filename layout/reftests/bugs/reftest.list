@@ -42,8 +42,6 @@ fails == 25888-2l.html 25888-2l-ref.html # bug 25888
 fails == 25888-2r.html 25888-2r-ref.html # bug 25888
 fails == 25888-3l.html 25888-3l-ref.html # bug 25888
 fails == 25888-3r.html 25888-3r-ref.html # bug 25888
-== 271747-1a.html 271747-1-ref.html
-== 271747-1b.html 271747-1-ref.html
 == 28811-1a.html 28811-1-ref.html
 == 28811-1b.html 28811-1-ref.html
 == 28811-2a.html 28811-2-ref.html
@@ -132,6 +130,7 @@ fails == 25888-3r.html 25888-3r-ref.html # bug 25888
 == 201293-1b.html 201293-1-ref.html
 == 201293-1c.html 201293-1-ref.html
 == 201293-1d.html 201293-1-ref.html
+== 203727.html 203727-ref.html
 == 206516-1.html 206516-1-ref.html
 == 210094-1a.html 210094-1-ref.html
 == 210094-1b.html 210094-1-ref.html
@@ -143,6 +142,8 @@ fails == 25888-3r.html 25888-3r-ref.html # bug 25888
 == 214077-1b.html 214077-1-ref.html
 == 218473-1.html 218473-1-ref.html
 == 223809-1.html 223809-1-ref.html
+== 228856-1.html 228856-1-ref.html
+== 228856-2.html 228856-2-ref.html
 # == 231823-1.html 231823-1-ref.html
 == 234686-1.html 234686-ref.html
 == 234686-2.html 234686-ref.html
@@ -196,11 +197,14 @@ fails == 25888-3r.html 25888-3r-ref.html # bug 25888
 == 244135-2.html 244135-2-ref.html
 == 244932-1.html 244932-1-ref.html
 == 249982-1.html 249982-1-ref.html
+== 252920-1.html 252920-1-ref.html
 == 253701-1.html 253701-1-ref.html
 == 255820-1.html 255820-1-ref.html
 == 262151-1.html 262151-1-ref.html
 #== 263683-1.html 263683-1-ref.html
 == 267353-1.html 267353-1-ref.html
+== 271747-1a.html 271747-1-ref.html
+== 271747-1b.html 271747-1-ref.html
 == 273681-1.html 273681-1-ref.html
 fails-if(MOZ_WIDGET_TOOLKIT!="cocoa") HTTP == 289480.html#top 289480-ref.html # basically-verbatim acid2 test, HTTP for a 404 page -- bug 409329 for the non-Mac failures
 == 290129-1.html 290129-1-ref.html
@@ -443,6 +447,7 @@ random-if(MOZ_WIDGET_TOOLKIT=="gtk2") == 333970-1.html 333970-1-ref.html # bug 3
 == 364079-1.html 364079-1-ref.html
 == 364861-1.html 364861-1-ref.html
 == 364862-1.html 364862-1-ref.html
+== 364968-1.xul 364968-1-ref.html
 == 365173-1.html 365173-1-ref.html
 == 366207-1.xul 366207-1-ref.xul 
 == 366616-1.xul 366616-1-ref.xul
@@ -822,6 +827,8 @@ skip-if(MOZ_WIDGET_TOOLKIT=="cocoa") == 413292-1.html 413292-1-ref.html # disabl
 == 417178-1.html 417178-1-ref.html
 == 417246-1.html 417246-1-ref.html
 == 417676.html 417676-ref.html
+== 418574-1.html 418574-1-ref.html
+== 418574-2.html 418574-2-ref.html
 == 418766-1a.html 418766-1-ref.html
 == 418766-1b.html 418766-1-ref.html
 == 419285-1.html 419285-1-ref.html
@@ -870,6 +877,7 @@ fails-if(MOZ_WIDGET_TOOLKIT=="gtk2") == 424074-1-ref2.xul 424074-1-ref3.xul
 == 425972-1.html 425972-1-ref.html
 == 425972-2.html 425972-2-ref.html
 != 425972-1.html 425972-2.html
+== 426629-1.html 426629-1-ref.html
 != 427017-1.xhtml about:blank    # crash test (needs reftest-print)
 == 427129-scrollframe.html 427129-ref.html
 == 427129-table.html 427129-ref.html
@@ -907,17 +915,74 @@ random == 429849-1.html 429849-1-ref.html # bug 432288
 == 439910.html 439910-ref.html
 == 441259-1.html 441259-1-ref.html
 fails == 441259-2.html 441259-2-ref.html # bug 441400
+== 442542-1.html 442542-1-ref.html
 == 444015-1.html 444015-1-ref.html
+== 444375-1.html 444375-1-ref.html
 == 444928-1.html 444928-1-ref.html
 == 444928-2.html 444928-2-ref.html
 != 444928-3.html 444928-3-notref.html
+== 445004-1.html 445004-1-ref.html
+== 445142-1a.html 445142-1-ref.html
+== 445142-1b.html 445142-1-ref.html
+== 445142-1c.html 445142-1-ref.html
+== 445142-2a.html 445142-2-ref.html
+== 445142-2b.html 445142-2-ref.html
+== 446100-1a.html about:blank
+== 446100-1b.html about:blank
+== 446100-1c.html about:blank
+== 446100-1d.html about:blank
+== 446100-1e.html about:blank
+== 446100-1f.html about:blank
+== 446100-1g.html about:blank
+== 446100-1h.html about:blank
+# == 448193.html 448193-ref.html  # Fails due to 2 small single-pixel differences
 # == 448987.html 448987-ref.html  # Disabled for now - it needs privileges
 == 449171-1.html 449171-ref.html
 == 449519-1.html 449519-1-ref.html
 # == 449653-1.html 449653-1-ref.html # Disabled for now - it needs privileges
 == 450670-1.html 450670-1-ref.html
 == 451168-1.html 451168-1-ref.html
+== 452964-1.html 452964-1-ref.html
 == 454361.html about:blank
+== 455105-1.html 455105-ref.html
+== 455105-2.html 455105-ref.html
+== 455171-5.html 455171-5-ref.html
 == 455280-1.xhtml 455280-1-ref.xhtml
+== 455826-1.html 455826-1-ref.html
 fails-if(MOZ_WIDGET_TOOLKIT=="cocoa") == 456147.xul 456147-ref.html # bug 456147, but not caused by it
-
+== 456330-1.gif 456330-1-ref.png
+== 456484-1.html 456484-1-ref.html
+== 457398-1.html 457398-1-ref.html
+== 457398-2.html 457398-2-ref.html
+== 458487-1a.html 458487-1-ref.html
+== 458487-1b.html 458487-1-ref.html
+== 458487-1c.html 458487-1-ref.html
+== 458487-1d.html 458487-1-ref.html
+== 458487-1e.html 458487-1-ref.html
+== 458487-1f.html 458487-1-ref.html
+== 458487-1g.html 458487-1-ref.html
+== 458487-1h.html 458487-1-ref.html
+== 458487-2.html 458487-2-ref.html
+== 458487-3.html 458487-3-ref.html
+== 458487-4a.html 458487-4-ref.html
+== 458487-4b.html 458487-4-ref.html
+== 458487-4c.html 458487-4-ref.html
+== 458487-5a.html 458487-5-ref.html
+== 458487-5b.html 458487-5-ref.html
+== 460012-1.html 460012-1-ref.html
+== 461266-1.html 461266-1-ref.html
+fails == 461512-1.html 461512-1-ref.html # Bug 461512
+== 462844-1.html 462844-ref.html
+== 462844-2.html 462844-ref.html
+== 462844-3.html 462844-ref.html
+== 462844-4.html 462844-ref.html
+== 463204-1.html 463204-1-ref.html
+== 463217-1.xul 463217-1-ref.xul
+== 463952-1.html 463952-1-ref.html
+== 464811-1.html 464811-1-ref.html
+== 466258-1.html 466258-1-ref.html
+== 466395-1.html 466395-1-ref.html
+== 466395-2.html 466395-2-ref.html
+== 467084-1.html 467084-1-ref.html
+== 467084-2.html 467084-2-ref.html
+== 467460-1.html 467460-1-ref.html

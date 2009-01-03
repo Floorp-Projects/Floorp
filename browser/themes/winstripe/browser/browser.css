@@ -45,7 +45,6 @@
 
 @namespace url("http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul");
 @namespace html url("http://www.w3.org/1999/xhtml");
-@namespace svg url("http://www.w3.org/2000/svg");
 
 #menubar-items {
   -moz-box-orient: vertical; /* for flex hack */
@@ -203,23 +202,6 @@ menuitem.bookmark-item {
 .bookmark-item[query][hostContainer][open] {
   list-style-image: url("chrome://global/skin/icons/folder-item.png");
   -moz-image-region: rect(16px, 32px, 32px, 16px);
-}
-
-/* ::::: bookmark panel dropdown icons ::::: */
-
-#editBMPanel_toolbarFolderItem {
-  list-style-image: url("chrome://browser/skin/places/bookmarksToolbar.png") !important;
-  -moz-image-region: auto !important;
-}
-
-#editBMPanel_bmRootItem {
-  list-style-image: url("chrome://browser/skin/places/bookmarksMenu.png") !important;
-  -moz-image-region: auto !important;
-}
-
-#editBMPanel_unfiledRootItem {
-  list-style-image: url("chrome://browser/skin/places/unsortedBookmarks.png") !important;
-  -moz-image-region: auto !important;
 }
 
 /* ::::: primary toolbar buttons ::::: */
@@ -1053,11 +1035,6 @@ toolbar[iconsize="small"] #paste-button:not([disabled="true"]):hover:active {
   -moz-padding-end: 2px;
 }
 
-#urlbar[pageproxystate="invalid"] > #urlbar-icons > :not(#go-button) ,
-#urlbar[pageproxystate="valid"] > #urlbar-icons > #go-button {
-  visibility: collapse;
-}
-
 #urlbar-search-splitter {
   min-width: 8px;
   -moz-margin-start: -4px;
@@ -1297,34 +1274,13 @@ statusbarpanel#statusbar-display {
 /* ::::: throbber ::::: */
 
 #navigator-throbber {
-  -moz-appearance: none;
-  -moz-user-focus: ignore;
-  margin: 0 !important;
-  border: none !important;
-  padding: 0px !important;
-  min-width: 0;
-  background-color: transparent;
+  width: 16px;
+  min-height: 16px;
+  margin: 0 3px;
   list-style-image: url("chrome://global/skin/icons/notloading_16.png");
 }
 
 #navigator-throbber[busy="true"] {
-  list-style-image: url("chrome://global/skin/icons/loading_16.png");
-}
-
-/* the default settings for the throbber hbox is too tall for vista menus */
-#navigator-throbber > hbox {
-  border-top: 0px;
-  border-bottom: 0px;
-  padding-bottom: 1px;
-  -moz-margin-end: 1px;
-}
-
-toolbar[iconsize="small"] #navigator-throbber,
-toolbar[mode="text"] #navigator-throbber {
-  list-style-image: url("chrome://global/skin/icons/notloading_16.png");
-}
-toolbar[iconsize="small"] #navigator-throbber[busy="true"],
-toolbar[mode="text"] #navigator-throbber[busy="true"] {
   list-style-image: url("chrome://global/skin/icons/loading_16.png");
 }
 
@@ -1567,13 +1523,14 @@ tabpanels {
 }
 
 .tabs-newtab-button > .toolbarbutton-text,
-.tabs-alltabs-button > .toolbarbutton-text,
-.tabs-alltabs-button > .toolbarbutton-icon {
+.tabs-alltabs-button > .toolbarbutton-text {
   display: none;
 }
 
-.tabs-alltabs-button > .toolbarbutton-menu-dropmarker {
-  margin: 2px 1px 2px 0px;
+.tabs-alltabs-button > .toolbarbutton-icon {
+  list-style-image: url("chrome://browser/skin/tabbrowser/alltabs.png");
+  margin: 6px 0 4px;
+  -moz-image-region: auto;
 }
 
 .tabs-alltabs-box-animate {
@@ -1587,20 +1544,6 @@ tabpanels {
 
 stack[chromedir="rtl"] > hbox > .tabs-alltabs-box-animate {
   background-image: url("chrome://browser/skin/tabbrowser/alltabs-box-overflow-start-bkgnd-animate.png");
-}
-
-/* All tabs menupopup */
-.alltabs-item > .menu-iconic-left > .menu-iconic-icon {
-  list-style-image: url("chrome://global/skin/icons/folder-item.png");
-  -moz-image-region: rect(0px, 16px, 16px, 0px);
-}
-
-.alltabs-item[selected="true"] {
-  font-weight: bold;
-}
-
-.alltabs-item[busy] > .menu-iconic-left > .menu-iconic-icon {
-  list-style-image: url("chrome://global/skin/icons/loading_16.png");
 }
 
 /* Tabstrip close button */
@@ -2036,40 +1979,61 @@ toolbarbutton.bookmark-item[dragover="true"][open="true"] {
 /* ::::: Keyboard UI Panel ::::: */
 .KUI-panel {
   -moz-appearance: none;
-  background: rgba(0, 0, 0, .8) url(KUI-background.png) repeat-x;
+  background: rgba(68, 68, 68, .9) url(KUI-background.png) repeat-x;
   color: white;
-  border: 1px solid #ccc;
+  border: 1px solid rgba(255, 255, 255, 0.15);
   -moz-border-radius: 10px;
   margin-top: -1px;
   margin-left: -1px;
 }
 
+.KUI-panel[level="top"] ,
+#ctrlTab-panel:not([sticky]) {
+  background-color: rgba(68, 68, 68, .5);
+  -moz-window-shadow: none;
+}
+
 /* ::::: Ctrl-Tab Panel ::::: */
 #ctrlTab-panel {
-  margin-top: -20px;
-  border-bottom-width: 9px;
-  -moz-border-bottom-colors: #ccc black black black black black black black black;
+  padding-top: 20px;
+  font-size: 1.2em;
+  text-shadow: 0 0 3px black, 0 0 3px black, 0 0 3px black;
 }
 
-#ctrlTab-label {
+#ctrlTab-search {
+  margin: 0 0 20px;
+}
+
+.ctrlTab-thumbnail {
+  margin-bottom: 20px;
+  cursor: pointer;
   font-weight: bold;
-  font-size: 14px;
-  text-align: center;
-  margin-top: 6px;
-  margin-bottom: 10px;
 }
 
-svg|*.ctrlTab-thumbnailborder {
-  stroke: white;
-  stroke-width: 1px;
+.ctrlTab-thumbnail > html|canvas {
+  border: 2px solid white;
+  margin: -2px;
 }
 
-svg|*#ctrlTab-fadeGradientTop {
-  stop-color: black;
-  stop-opacity: .5;
+.ctrlTab-thumbnail[selected="true"] ,
+.ctrlTab-thumbnail:hover {
+  background: Highlight;
+  color: HighlightText;
+  -moz-box-shadow: 0 0 2px Highlight, 0 0 2px Highlight, 0 0 3px Highlight, 0 0 4px Highlight, 0 0 10px Highlight, 0 0 20px white;
+  text-shadow: 0 0 3px transparent;
 }
 
-svg|*#ctrlTab-fadeGradientBottom {
-  stop-color: black;
-  stop-opacity: 1;
+.ctrlTab-pagePointer {
+  margin: 0 1em 1em;
+  width: 1.5em;
+  height: 1.5em;
+  -moz-border-radius: .75em;
+  background: rgba(0, 0, 0, .5);
+  border: 1px solid rgba(255, 255, 255, .3);
+  cursor: pointer;
+}
+
+.ctrlTab-pagePointer[selected="true"] {
+  background: rgba(255, 255, 255, .6);
+  cursor: default;
 }

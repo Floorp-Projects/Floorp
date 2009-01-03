@@ -91,7 +91,7 @@ __try {
 
   // If the object is not on any screen the returned position is (0,0).
   PRUint32 states = 0;
-  nsresult rv = acc->GetFinalState(&states, nsnull);
+  nsresult rv = acc->GetState(&states, nsnull);
   if (NS_FAILED(rv))
     return GetHRESULT(rv);
 

@@ -73,7 +73,12 @@ struct JSFunction {
             uint16      extra;    /* number of arg slots for local GC roots */
             uint16      spare;    /* reserved for future use */
             JSNative    native;   /* native method pointer or null */
-            JSClass     *clasp;   /* if non-null, constructor for this class */
+            union {
+                JSClass             *clasp;    /* class of objects constructed
+                                                  by this function */
+                JSTraceableNative   *trcinfo;  /* tracer metadata; can be first
+                                                  element of array */
+            } u;
         } n;
         struct {
             uint16      nvars;    /* number of local variables */
@@ -86,6 +91,9 @@ struct JSFunction {
     JSAtom          *atom;        /* name for diagnostics and decompiling */
 };
 
+#define JSFUN_TRACEABLE      0x2000 /* can trace across calls to this native
+                                       function; use FUN_TRCINFO if set,
+                                       FUN_CLASP if unset */
 #define JSFUN_EXPR_CLOSURE   0x4000 /* expression closure: function(x)x*x */
 #define JSFUN_INTERPRETED    0x8000 /* use u.i if set, u.n if unset */
 
@@ -102,6 +110,26 @@ struct JSFunction {
 #define FUN_MINARGS(fun)     (((fun)->flags & JSFUN_FAST_NATIVE)              \
                               ? 0                                             \
                               : (fun)->nargs)
+#define FUN_CLASP(fun)       (JS_ASSERT(!FUN_INTERPRETED(fun)),               \
+                              JS_ASSERT(!((fun)->flags & JSFUN_TRACEABLE)),   \
+                              fun->u.n.u.clasp)
+#define FUN_TRCINFO(fun)     (JS_ASSERT(!FUN_INTERPRETED(fun)),               \
+                              JS_ASSERT((fun)->flags & JSFUN_TRACEABLE),      \
+                              fun->u.n.u.trcinfo)
+
+/*
+ * Traceable native.  This expands to a JSFunctionSpec initializer (like JS_FN
+ * in jsapi.h).  fastcall is a JSFastNative; trcinfo is a JSTraceableNative *.
+ */
+#ifdef JS_TRACER
+/* MSVC demands the intermediate (void *) cast here. */
+# define JS_TN(name,fastcall,nargs,flags,trcinfo)                             \
+    {name, (JSNative)(void *)(trcinfo), nargs,                                \
+     (flags) | JSFUN_FAST_NATIVE | JSFUN_STUB_GSOPS | JSFUN_TRACEABLE, 0}
+#else
+# define JS_TN(name,fastcall,nargs,flags,trcinfo)                             \
+    JS_FN(name, fastcall, nargs, flags)
+#endif
 
 extern JSClass js_ArgumentsClass;
 extern JS_FRIEND_DATA(JSClass) js_CallClass;
@@ -255,6 +283,13 @@ js_GetLocalNameArray(JSContext *cx, JSFunction *fun, struct JSArenaPool *pool);
 
 extern void
 js_FreezeLocalNames(JSContext *cx, JSFunction *fun);
+
+extern JSBool
+js_fun_apply(JSContext *cx, uintN argc, jsval *vp);
+
+extern JSBool
+js_fun_call(JSContext *cx, uintN argc, jsval *vp);
+
 
 JS_END_EXTERN_C
 

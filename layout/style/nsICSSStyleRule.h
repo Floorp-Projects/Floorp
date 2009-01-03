@@ -176,6 +176,10 @@ private:
   void ToStringInternal(nsAString& aString, nsICSSStyleSheet* aSheet,
                         PRBool aIsPseudoElem,
                         PRBool aIsNegated) const;
+  // Returns true if this selector can have a namespace specified (which
+  // happens if and only if the default namespace would apply to this
+  // selector).
+  PRBool CanBeNamespaced(PRBool aIsNegated) const;
 
 public:
   PRInt32         mNameSpace;

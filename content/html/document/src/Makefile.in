@@ -82,12 +82,16 @@ CPPSRCS		= \
 		nsHTMLContentSink.cpp \
 		nsHTMLFragmentContentSink.cpp \
 		nsHTMLDocument.cpp \
+		nsImageDocument.cpp \
 		nsMediaDocument.cpp \
 		nsPluginDocument.cpp \
-		nsImageDocument.cpp \
 		nsWyciwygChannel.cpp \
 		nsWyciwygProtocolHandler.cpp \
 		$(NULL)
+
+ifdef MOZ_MEDIA
+CPPSRCS += nsVideoDocument.cpp
+endif
 
 EXPORTS		= \
 		nsIHTMLDocument.h \

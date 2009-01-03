@@ -72,7 +72,7 @@ listbox:focus > listitem[selected="true"][current="true"] {
 
 listbox:focus > listitem[current="true"] {
   outline: 1px dotted Highlight;
-  -moz-outline-offset: -1px;
+  outline-offset: -1px;
 }
 
 listitem[selected="true"] {

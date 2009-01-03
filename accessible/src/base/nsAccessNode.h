@@ -45,12 +45,12 @@
 
 #include "nsCOMPtr.h"
 #include "nsAccessibilityAtoms.h"
-#include "nsAccessibilityUtils.h"
+#include "nsCoreUtils.h"
+#include "nsAccUtils.h"
 
 #include "nsIAccessibleTypes.h"
 #include "nsIAccessNode.h"
 #include "nsIContent.h"
-#include "nsPIAccessNode.h"
 #include "nsIDOMNode.h"
 #include "nsINameSpaceManager.h"
 #include "nsIStringBundle.h"
@@ -74,8 +74,29 @@ class nsIDocShellTreeItem;
 typedef nsInterfaceHashtable<nsVoidPtrHashKey, nsIAccessNode>
         nsAccessNodeHashtable;
 
-class nsAccessNode: public nsIAccessNode,
-                    public nsPIAccessNode
+#define NS_OK_DEFUNCT_OBJECT \
+NS_ERROR_GENERATE_SUCCESS(NS_ERROR_MODULE_GENERAL, 0x22)
+
+#define NS_ENSURE_A11Y_SUCCESS(res, ret)                                  \
+  PR_BEGIN_MACRO                                                          \
+    nsresult __rv = res; /* Don't evaluate |res| more than once */        \
+    if (NS_FAILED(__rv)) {                                                \
+      NS_ENSURE_SUCCESS_BODY(res, ret)                                    \
+      return ret;                                                         \
+    }                                                                     \
+    if (__rv == NS_OK_DEFUNCT_OBJECT)                                     \
+      return ret;                                                         \
+  PR_END_MACRO
+
+#define NS_ACCESSNODE_IMPL_CID                          \
+{  /* 13555f6e-0c0f-4002-84f6-558d47b8208e */           \
+  0x13555f6e,                                           \
+  0xc0f,                                                \
+  0x4002,                                               \
+  { 0x84, 0xf6, 0x55, 0x8d, 0x47, 0xb8, 0x20, 0x8e }    \
+}
+
+class nsAccessNode: public nsIAccessNode
 {
   public: // construction, destruction
     nsAccessNode(nsIDOMNode *, nsIWeakReference* aShell);
@@ -85,7 +106,7 @@ class nsAccessNode: public nsIAccessNode,
     NS_DECL_CYCLE_COLLECTION_CLASS_AMBIGUOUS(nsAccessNode, nsIAccessNode)
 
     NS_DECL_NSIACCESSNODE
-    NS_DECL_NSPIACCESSNODE
+    NS_DECLARE_STATIC_IID_ACCESSOR(NS_ACCESSNODE_IMPL_CID)
 
     static void InitXPAccessibility();
     static void ShutdownXPAccessibility();
@@ -102,20 +123,13 @@ class nsAccessNode: public nsIAccessNode,
                               void* aUniqueID, nsIAccessNode **aAccessNode);
     static void ClearCache(nsAccessNodeHashtable& aCache);
 
-    static PLDHashOperator PR_CALLBACK ClearCacheEntry(const void* aKey, nsCOMPtr<nsIAccessNode>& aAccessNode, void* aUserArg);
+    static PLDHashOperator ClearCacheEntry(const void* aKey, nsCOMPtr<nsIAccessNode>& aAccessNode, void* aUserArg);
 
     // Static cache methods for global document cache
     static already_AddRefed<nsIAccessibleDocument> GetDocAccessibleFor(nsIDocument *aDocument);
     static already_AddRefed<nsIAccessibleDocument> GetDocAccessibleFor(nsIWeakReference *aWeakShell);
     static already_AddRefed<nsIAccessibleDocument> GetDocAccessibleFor(nsIDocShellTreeItem *aContainer, PRBool aCanCreate = PR_FALSE);
     static already_AddRefed<nsIAccessibleDocument> GetDocAccessibleFor(nsIDOMNode *aNode);
-
-    static already_AddRefed<nsIDOMNode> GetDOMNodeForContainer(nsISupports *aContainer);
-    static already_AddRefed<nsIPresShell> GetPresShellFor(nsIDOMNode *aStartNode);
-    
-    static void GetComputedStyleDeclaration(const nsAString& aPseudoElt,
-                                            nsIDOMNode *aNode,
-                                            nsIDOMCSSStyleDeclaration **aCssDecl);
 
     already_AddRefed<nsRootAccessible> GetRootAccessible();
 
@@ -127,6 +141,21 @@ class nsAccessNode: public nsIAccessNode,
      * Returns true when the accessible is defunct.
      */
     virtual PRBool IsDefunct() { return !mDOMNode; }
+
+    /**
+     * Initialize the access node object, add it to the cache.
+     */
+    virtual nsresult Init();
+
+    /**
+     * Shutdown the access node object.
+     */
+    virtual nsresult Shutdown();
+
+    /**
+     * Return frame for the given access node object.
+     */
+    virtual nsIFrame* GetFrame();
 
 protected:
     nsresult MakeAccessNode(nsIDOMNode *aNode, nsIAccessNode **aAccessNode);
@@ -162,6 +191,9 @@ private:
   static nsIAccessibilityService *sAccService;
   static nsApplicationAccessibleWrap *gApplicationAccessible;
 };
+
+NS_DEFINE_STATIC_IID_ACCESSOR(nsAccessNode,
+                              NS_ACCESSNODE_IMPL_CID)
 
 #endif
 

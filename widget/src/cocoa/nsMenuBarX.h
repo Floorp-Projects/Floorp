@@ -46,6 +46,8 @@
 #include "nsHashtable.h"
 #include "nsINativeMenuService.h"
 #include "nsAutoPtr.h"
+#include "nsString.h"
+
 
 class nsMenuX;
 class nsMenuItemX;
@@ -121,6 +123,7 @@ public:
   nsMenuX*          GetMenuAt(PRUint32 aIndex);
   nsMenuItemX*      GetMenuItemForCommandID(PRUint32 inCommandID);
   nsresult          Paint();
+  void              ForceUpdateNativeMenuAt(const nsAString& indexString);
   void              ForceNativeMenuReload(); // used for testing
 
 protected:

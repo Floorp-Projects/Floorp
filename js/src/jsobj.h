@@ -347,7 +347,7 @@ extern JSClass  js_BlockClass;
  * When popping the stack across this object's "with" statement, client code
  * must call JS_SetPrivate(cx, withobj, NULL).
  */
-extern JSObject *
+extern JS_REQUIRES_STACK JSObject *
 js_NewWithObject(JSContext *cx, JSObject *proto, JSObject *parent, jsint depth);
 
 /*
@@ -363,7 +363,7 @@ extern JSObject *
 js_CloneBlockObject(JSContext *cx, JSObject *proto, JSObject *parent,
                     JSStackFrame *fp);
 
-extern JSBool
+extern JS_REQUIRES_STACK JSBool
 js_PutBlockObject(JSContext *cx, JSBool normalUnwind);
 
 struct JSSharpObjectMap {
@@ -396,18 +396,12 @@ extern void
 js_TraceSharpMap(JSTracer *trc, JSSharpObjectMap *map);
 
 extern JSBool
-js_obj_hasOwnProperty(JSContext *cx, uintN argc, jsval *vp);
-
-extern JSBool
 js_HasOwnPropertyHelper(JSContext *cx, JSLookupPropOp lookup, uintN argc,
                         jsval *vp);
 
 extern JSBool
 js_HasOwnProperty(JSContext *cx, JSLookupPropOp lookup, JSObject *obj, jsid id,
                   jsval *vp);
-
-extern JSBool
-js_obj_propertyIsEnumerable(JSContext *cx, uintN argc, jsval *vp);
 
 extern JSBool
 js_PropertyIsEnumerable(JSContext *cx, JSObject *obj, jsid id, jsval *vp);
@@ -495,6 +489,12 @@ js_FreeSlot(JSContext *cx, JSObject *obj, uint32 slot);
 /* JSVAL_INT_MAX as a string */
 #define JSVAL_INT_MAX_STRING "1073741823"
 
+/*
+ * Convert string indexes that convert to int jsvals as ints to save memory.
+ * Care must be taken to use this macro every time a property name is used, or
+ * else double-sets, incorrect property cache misses, or other mistakes could
+ * occur.
+ */
 #define CHECK_FOR_STRING_INDEX(id)                                            \
     JS_BEGIN_MACRO                                                            \
         if (JSID_IS_ATOM(id)) {                                               \
@@ -584,7 +584,7 @@ extern JS_FRIEND_API(JSBool)
 js_FindProperty(JSContext *cx, jsid id, JSObject **objp, JSObject **pobjp,
                 JSProperty **propp);
 
-extern JSObject *
+extern JS_REQUIRES_STACK JSObject *
 js_FindIdentifierBase(JSContext *cx, jsid id, JSPropCacheEntry *entry);
 
 extern JSObject *
@@ -726,9 +726,6 @@ js_GetWrappedObject(JSContext *cx, JSObject *obj);
 extern const char *
 js_ComputeFilename(JSContext *cx, JSStackFrame *caller,
                    JSPrincipals *principals, uintN *linenop);
-
-extern JSBool
-js_obj_eval(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval);
 
 #ifdef DEBUG
 JS_FRIEND_API(void) js_DumpChars(const jschar *s, size_t n);

@@ -1,0 +1,2 @@
+#filter substitution
+@installdir@/xulrunner /usr/bin/xulrunner

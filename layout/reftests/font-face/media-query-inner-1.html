@@ -1,0 +1,34 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD HTML 4.01//EN"
+	"http://www.w3.org/TR/html4/strict.dtd">
+<html lang="en-US">
+<head>
+	<title></title>
+	<meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+	<style type="text/css" media="(min-width: 200px)">
+
+	@font-face {
+		font-family: "MarkA";
+		src: url(../fonts/markA.ttf);
+	}
+
+	</style>
+	<style type="text/css">
+
+	body { font-family: "MarkA"; }
+
+	</style>
+	<script type="application/ecmascript">
+
+	function arm() {
+		// The resize-detector iframe will remove the class attribute.
+		document.getElementsByTagName("iframe")[0].contentWindow.arm();
+	}
+
+	</script>
+</head>
+<body>
+
+<p style="position:relative; width: -moz-max-content">ABC<iframe style="visibility:hidden;position:absolute;height:100%;width:100%" src="resize-detector-iframe.html"></iframe></p>
+
+</body>
+</html>

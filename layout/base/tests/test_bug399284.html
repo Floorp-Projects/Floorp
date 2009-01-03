@@ -34,7 +34,7 @@ while (decoderList.hasMore()) {
         data = encodeUTF16BE(testContent);
     else if (decoder == "UTF-16LE")
         data = encodeUTF16LE(testContent);
-    else if (decoder == "UTF-32BE")
+    else if (decoder == "UTF-32" || decoder == "UTF-32BE")
         data = encodeUTF32BE(testContent);
     else if (decoder == "UTF-32LE")
         data = encodeUTF32LE(testContent);

@@ -39,12 +39,14 @@
 #define nsIImage_h___
 
 #include "nsISupports.h"
-#include "nsIRenderingContext.h"
+#include "nsMargin.h"
 #include "nsRect.h"
-#include "gfxRect.h"
 
 class gfxASurface;
 class gfxPattern;
+class gfxMatrix;
+class gfxRect;
+class gfxContext;
 
 class nsIDeviceContext;
 
@@ -72,10 +74,10 @@ typedef enum {
 #define  nsImageUpdateFlags_kBitsChanged     0x2
 
 // IID for the nsIImage interface
-// 96d9d7ce-e575-4265-8507-35555112a430
+// 455fc276-01de-488f-9f8f-19b85a6b112d
 #define NS_IIMAGE_IID \
-{ 0x96d9d7ce, 0xe575, 0x4265, \
-  { 0x85, 0x07, 0x35, 0x55, 0x51, 0x12, 0xa4, 0x30 } }
+  { 0x455fc276, 0x01de, 0x488f, \
+    { 0x9f, 0x8f, 0x19, 0xb8, 0x5a, 0x6b, 0x11, 0x2d } }
 
 // Interface to Images
 class nsIImage : public nsISupports
@@ -189,19 +191,32 @@ public:
   virtual nsColorMap * GetColorMap() = 0;
 
   /**
-   * BitBlit the nsIImage to a device, the source and dest can be scaled
-   * @param aSourceRect  source rectangle, in image pixels
-   * @param aSubimageRect the subimage that we're extracting the contents from.
-   * It must contain aSourceRect. Pixels outside this rectangle must not
+   * BitBlit the nsIImage to a device, the source and dest can be scaled.
+   * @param aContext the destination
+   * @param aUserSpaceToImageSpace the transform that maps user-space
+   * coordinates to coordinates in (tiled, post-padding) image pixels
+   * @param aFill the area to fill with tiled images
+   * @param aPadding the padding to be added to this image before tiling,
+   * in image pixels
+   * @param aSubimage the subimage in padded+tiled image space that we're
+   * extracting the contents from. Pixels outside this rectangle must not
    * be sampled.
-   * @param aDestRect  destination rectangle, in device pixels
+   * 
+   * So this is supposed to
+   * -- add aPadding transparent pixels around the image
+   * -- use that image to tile the plane
+   * -- replace everything outside the aSubimage region with the nearest
+   * border pixel of that region (like EXTEND_PAD)
+   * -- fill aFill with the image, using aImageSpaceToDeviceSpace as the
+   * image-space-to-device-space transform
    */
-  NS_IMETHOD Draw(nsIRenderingContext &aContext,
-                  const gfxRect &aSourceRect,
-                  const gfxRect &aSubimageRect,
-                  const gfxRect &aDestRect) = 0;
+  virtual void Draw(gfxContext*        aContext,
+                    const gfxMatrix&   aUserSpaceToImageSpace,
+                    const gfxRect&     aFill,
+                    const nsIntMargin& aPadding,
+                    const nsIntRect&   aSubimage) = 0;
 
-  /**
+  /** 
    * Get the alpha depth for the image mask
    * @update - lordpixel 2001/05/16
    * @return  the alpha mask depth for the image, ie, 0, 1 or 8

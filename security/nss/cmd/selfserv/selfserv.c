@@ -1766,35 +1766,6 @@ beAGoodParent(int argc, char **argv, int maxProcs, PRFileDesc * listen_sock)
     exit(0);
 }
 
-#ifdef DEBUG_nelsonb
-
-#if defined(XP_UNIX) || defined(XP_OS2) || defined(XP_BEOS)
-#define SSL_GETPID getpid
-#elif defined(_WIN32_WCE)
-#define SSL_GETPID GetCurrentProcessId
-#elif defined(WIN32)
-extern int __cdecl _getpid(void);
-#define SSL_GETPID _getpid
-#else
-#define SSL_GETPID() 0   
-#endif
-
-void
-WaitForDebugger(void)
-{
-
-    int waiting       = 12;
-    int myPid         = SSL_GETPID();
-    PRIntervalTime    nrval = PR_SecondsToInterval(5);
-
-    while (waiting) {
-    	printf("child %d is waiting to be debugged!\n", myPid);
-	PR_Sleep(nrval); 
-	--waiting;
-    }
-}
-#endif
-
 #define HEXCHAR_TO_INT(c, i) \
     if (((c) >= '0') && ((c) <= '9')) { \
 	i = (c) - '0'; \
@@ -2060,9 +2031,6 @@ main(int argc, char **argv)
 	prStatus = PR_SetFDInheritable(listen_sock, PR_FALSE);
 	if (prStatus != PR_SUCCESS)
 	    errExit("PR_SetFDInheritable");
-#endif
-#ifdef DEBUG_nelsonb
-	WaitForDebugger();
 #endif
 	rv = SSL_InheritMPServerSIDCache(envString);
 	if (rv != SECSuccess)

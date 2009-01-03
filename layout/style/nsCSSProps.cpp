@@ -57,10 +57,10 @@ extern const char* const kCSSRawProperties[];
 
 // define an array of all CSS properties
 const char* const kCSSRawProperties[] = {
-#define CSS_PROP(name_, id_, method_, datastruct_, member_, type_, kwtable_) #name_,
+#define CSS_PROP(name_, id_, method_, flags_, datastruct_, member_, type_, kwtable_) #name_,
 #include "nsCSSPropList.h"
 #undef CSS_PROP
-#define CSS_PROP_SHORTHAND(name_, id_, method_) #name_,
+#define CSS_PROP_SHORTHAND(name_, id_, method_, flags_) #name_,
 #include "nsCSSPropList.h"
 #undef CSS_PROP_SHORTHAND
 };
@@ -138,37 +138,12 @@ nsCSSProps::ReleaseTable(void)
   }
 }
 
-struct CSSPropertyAlias {
-  char name[sizeof("-moz-outline-offset")];
-  nsCSSProperty id;
-};
-
-static const CSSPropertyAlias gAliases[] = {
-  { "-moz-outline", eCSSProperty_outline },
-  { "-moz-outline-color", eCSSProperty_outline_color },
-  { "-moz-outline-style", eCSSProperty_outline_style },
-  { "-moz-outline-width", eCSSProperty_outline_width },
-  { "-moz-outline-offset", eCSSProperty_outline_offset }
-  // Don't forget to update the sizeof in CSSPropertyAlias above with the
-  // longest string when you add stuff here.
-};
-
 nsCSSProperty 
 nsCSSProps::LookupProperty(const nsACString& aProperty)
 {
   NS_ASSERTION(gPropertyTable, "no lookup table, needs addref");
 
   nsCSSProperty res = nsCSSProperty(gPropertyTable->Lookup(aProperty));
-  if (res == eCSSProperty_UNKNOWN) {
-    const nsCString& prop = PromiseFlatCString(aProperty);
-    for (const CSSPropertyAlias *alias = gAliases,
-                            *alias_end = gAliases + NS_ARRAY_LENGTH(gAliases);
-         alias < alias_end; ++alias)
-      if (nsCRT::strcasecmp(prop.get(), alias->name) == 0) {
-        res = alias->id;
-        break;
-      }
-  }
   return res;
 }
 
@@ -180,16 +155,6 @@ nsCSSProps::LookupProperty(const nsAString& aProperty)
   // converting and avoid a PromiseFlatCString() call.
   NS_ASSERTION(gPropertyTable, "no lookup table, needs addref");
   nsCSSProperty res = nsCSSProperty(gPropertyTable->Lookup(aProperty));
-  if (res == eCSSProperty_UNKNOWN) {
-    NS_ConvertUTF16toUTF8 prop(aProperty);
-    for (const CSSPropertyAlias *alias = gAliases,
-                            *alias_end = gAliases + NS_ARRAY_LENGTH(gAliases);
-         alias < alias_end; ++alias)
-      if (nsCRT::strcasecmp(prop.get(), alias->name) == 0) {
-        res = alias->id;
-        break;
-      }
-  }
   return res;
 }
 
@@ -239,8 +204,6 @@ const PRInt32 nsCSSProps::kAppearanceKTable[] = {
   eCSSKeyword_button,                 NS_THEME_BUTTON,
   eCSSKeyword_radio,                  NS_THEME_RADIO,
   eCSSKeyword_checkbox,               NS_THEME_CHECKBOX,
-  eCSSKeyword_radio_small,            NS_THEME_RADIO_SMALL,
-  eCSSKeyword_checkbox_small,         NS_THEME_CHECKBOX_SMALL,
   eCSSKeyword_button_bevel,           NS_THEME_BUTTON_BEVEL,
   eCSSKeyword_toolbox,                NS_THEME_TOOLBOX,
   eCSSKeyword_toolbar,                NS_THEME_TOOLBAR,
@@ -293,6 +256,7 @@ const PRInt32 nsCSSProps::kAppearanceKTable[] = {
   eCSSKeyword_textfield,              NS_THEME_TEXTFIELD,
   eCSSKeyword_textfield_multiline,    NS_THEME_TEXTFIELD_MULTILINE,
   eCSSKeyword_caret,                  NS_THEME_TEXTFIELD_CARET,
+  eCSSKeyword_searchfield,            NS_THEME_SEARCHFIELD,
   eCSSKeyword_menulist,               NS_THEME_DROPDOWN,
   eCSSKeyword_menulistbutton,         NS_THEME_DROPDOWN_BUTTON,
   eCSSKeyword_menulisttext,           NS_THEME_DROPDOWN_TEXT,
@@ -513,6 +477,7 @@ const PRInt32 nsCSSProps::kColorKTable[] = {
   eCSSKeyword__moz_mac_menushadow, nsILookAndFeel::eColor__moz_mac_menushadow,
   eCSSKeyword__moz_mac_menutextdisable, nsILookAndFeel::eColor__moz_mac_menutextdisable,
   eCSSKeyword__moz_mac_menutextselect, nsILookAndFeel::eColor__moz_mac_menutextselect,
+  eCSSKeyword__moz_mac_disabledtoolbartext, nsILookAndFeel::eColor__moz_mac_disabledtoolbartext,
   eCSSKeyword__moz_mac_accentlightesthighlight, nsILookAndFeel::eColor__moz_mac_accentlightesthighlight,
   eCSSKeyword__moz_mac_accentregularhighlight, nsILookAndFeel::eColor__moz_mac_accentregularhighlight,
   eCSSKeyword__moz_mac_accentface, nsILookAndFeel::eColor__moz_mac_accentface,
@@ -1047,6 +1012,11 @@ const PRInt32 nsCSSProps::kWidthKTable[] = {
   eCSSKeyword_UNKNOWN,-1
 };
 
+const PRInt32 nsCSSProps::kWindowShadowKTable[] = {
+  eCSSKeyword_default, NS_STYLE_WINDOW_SHADOW_DEFAULT,
+  eCSSKeyword_UNKNOWN,-1
+};
+
 const PRInt32 nsCSSProps::kWordwrapKTable[] = {
   eCSSKeyword_normal, NS_STYLE_WORDWRAP_NORMAL,
   eCSSKeyword_break_word, NS_STYLE_WORDWRAP_BREAK_WORD,
@@ -1208,7 +1178,7 @@ nsCSSProps::ValueToKeyword(PRInt32 aValue, const PRInt32 aTable[])
 
 /* static */ const PRInt32* const
 nsCSSProps::kKeywordTableTable[eCSSProperty_COUNT_no_shorthands] = {
-  #define CSS_PROP(name_, id_, method_, datastruct_, member_, type_, kwtable_) kwtable_,
+  #define CSS_PROP(name_, id_, method_, flags_, datastruct_, member_, type_, kwtable_) kwtable_,
   #include "nsCSSPropList.h"
   #undef CSS_PROP
 };
@@ -1248,37 +1218,37 @@ PRBool nsCSSProps::GetColorName(PRInt32 aPropValue, nsCString &aStr)
 
 // define array of all CSS property types
 const nsCSSType nsCSSProps::kTypeTable[eCSSProperty_COUNT_no_shorthands] = {
-    #define CSS_PROP(name_, id_, method_, datastruct_, member_, type_, kwtable_) type_,
+    #define CSS_PROP(name_, id_, method_, flags_, datastruct_, member_, type_, kwtable_) type_,
     #include "nsCSSPropList.h"
     #undef CSS_PROP
 };
 
 const nsStyleStructID nsCSSProps::kSIDTable[eCSSProperty_COUNT_no_shorthands] = {
-    #define CSS_PROP_FONT(name_, id_, method_, datastruct_, member_, type_, kwtable_) eStyleStruct_Font,
-    #define CSS_PROP_COLOR(name_, id_, method_, datastruct_, member_, type_, kwtable_) eStyleStruct_Color,
-    #define CSS_PROP_BACKGROUND(name_, id_, method_, datastruct_, member_, type_, kwtable_) eStyleStruct_Background,
-    #define CSS_PROP_LIST(name_, id_, method_, datastruct_, member_, type_, kwtable_) eStyleStruct_List,
-    #define CSS_PROP_POSITION(name_, id_, method_, datastruct_, member_, type_, kwtable_) eStyleStruct_Position,
-    #define CSS_PROP_TEXT(name_, id_, method_, datastruct_, member_, type_, kwtable_) eStyleStruct_Text,
-    #define CSS_PROP_TEXTRESET(name_, id_, method_, datastruct_, member_, type_, kwtable_) eStyleStruct_TextReset,
-    #define CSS_PROP_DISPLAY(name_, id_, method_, datastruct_, member_, type_, kwtable_) eStyleStruct_Display,
-    #define CSS_PROP_VISIBILITY(name_, id_, method_, datastruct_, member_, type_, kwtable_) eStyleStruct_Visibility,
-    #define CSS_PROP_CONTENT(name_, id_, method_, datastruct_, member_, type_, kwtable_) eStyleStruct_Content,
-    #define CSS_PROP_QUOTES(name_, id_, method_, datastruct_, member_, type_, kwtable_) eStyleStruct_Quotes,
-    #define CSS_PROP_USERINTERFACE(name_, id_, method_, datastruct_, member_, type_, kwtable_) eStyleStruct_UserInterface,
-    #define CSS_PROP_UIRESET(name_, id_, method_, datastruct_, member_, type_, kwtable_) eStyleStruct_UIReset,
-    #define CSS_PROP_TABLE(name_, id_, method_, datastruct_, member_, type_, kwtable_) eStyleStruct_Table,
-    #define CSS_PROP_TABLEBORDER(name_, id_, method_, datastruct_, member_, type_, kwtable_) eStyleStruct_TableBorder,
-    #define CSS_PROP_MARGIN(name_, id_, method_, datastruct_, member_, type_, kwtable_) eStyleStruct_Margin,
-    #define CSS_PROP_PADDING(name_, id_, method_, datastruct_, member_, type_, kwtable_) eStyleStruct_Padding,
-    #define CSS_PROP_BORDER(name_, id_, method_, datastruct_, member_, type_, kwtable_) eStyleStruct_Border,
-    #define CSS_PROP_OUTLINE(name_, id_, method_, datastruct_, member_, type_, kwtable_) eStyleStruct_Outline,
-    #define CSS_PROP_XUL(name_, id_, method_, datastruct_, member_, type_, kwtable_) eStyleStruct_XUL,
-    #define CSS_PROP_SVG(name_, id_, method_, datastruct_, member_, type_, kwtable_) eStyleStruct_SVG,
-    #define CSS_PROP_SVGRESET(name_, id_, method_, datastruct_, member_, type_, kwtable_) eStyleStruct_SVGReset,
-    #define CSS_PROP_COLUMN(name_, id_, method_, datastruct_, member_, type_, kwtable_) eStyleStruct_Column,
+    #define CSS_PROP_FONT(name_, id_, method_, flags_, datastruct_, member_, type_, kwtable_) eStyleStruct_Font,
+    #define CSS_PROP_COLOR(name_, id_, method_, flags_, datastruct_, member_, type_, kwtable_) eStyleStruct_Color,
+    #define CSS_PROP_BACKGROUND(name_, id_, method_, flags_, datastruct_, member_, type_, kwtable_) eStyleStruct_Background,
+    #define CSS_PROP_LIST(name_, id_, method_, flags_, datastruct_, member_, type_, kwtable_) eStyleStruct_List,
+    #define CSS_PROP_POSITION(name_, id_, method_, flags_, datastruct_, member_, type_, kwtable_) eStyleStruct_Position,
+    #define CSS_PROP_TEXT(name_, id_, method_, flags_, datastruct_, member_, type_, kwtable_) eStyleStruct_Text,
+    #define CSS_PROP_TEXTRESET(name_, id_, method_, flags_, datastruct_, member_, type_, kwtable_) eStyleStruct_TextReset,
+    #define CSS_PROP_DISPLAY(name_, id_, method_, flags_, datastruct_, member_, type_, kwtable_) eStyleStruct_Display,
+    #define CSS_PROP_VISIBILITY(name_, id_, method_, flags_, datastruct_, member_, type_, kwtable_) eStyleStruct_Visibility,
+    #define CSS_PROP_CONTENT(name_, id_, method_, flags_, datastruct_, member_, type_, kwtable_) eStyleStruct_Content,
+    #define CSS_PROP_QUOTES(name_, id_, method_, flags_, datastruct_, member_, type_, kwtable_) eStyleStruct_Quotes,
+    #define CSS_PROP_USERINTERFACE(name_, id_, method_, flags_, datastruct_, member_, type_, kwtable_) eStyleStruct_UserInterface,
+    #define CSS_PROP_UIRESET(name_, id_, method_, flags_, datastruct_, member_, type_, kwtable_) eStyleStruct_UIReset,
+    #define CSS_PROP_TABLE(name_, id_, method_, flags_, datastruct_, member_, type_, kwtable_) eStyleStruct_Table,
+    #define CSS_PROP_TABLEBORDER(name_, id_, method_, flags_, datastruct_, member_, type_, kwtable_) eStyleStruct_TableBorder,
+    #define CSS_PROP_MARGIN(name_, id_, method_, flags_, datastruct_, member_, type_, kwtable_) eStyleStruct_Margin,
+    #define CSS_PROP_PADDING(name_, id_, method_, flags_, datastruct_, member_, type_, kwtable_) eStyleStruct_Padding,
+    #define CSS_PROP_BORDER(name_, id_, method_, flags_, datastruct_, member_, type_, kwtable_) eStyleStruct_Border,
+    #define CSS_PROP_OUTLINE(name_, id_, method_, flags_, datastruct_, member_, type_, kwtable_) eStyleStruct_Outline,
+    #define CSS_PROP_XUL(name_, id_, method_, flags_, datastruct_, member_, type_, kwtable_) eStyleStruct_XUL,
+    #define CSS_PROP_SVG(name_, id_, method_, flags_, datastruct_, member_, type_, kwtable_) eStyleStruct_SVG,
+    #define CSS_PROP_SVGRESET(name_, id_, method_, flags_, datastruct_, member_, type_, kwtable_) eStyleStruct_SVGReset,
+    #define CSS_PROP_COLUMN(name_, id_, method_, flags_, datastruct_, member_, type_, kwtable_) eStyleStruct_Column,
     // This shouldn't matter, but we need something to go here.
-    #define CSS_PROP_BACKENDONLY(name_, id_, method_, datastruct_, member_, type_, kwtable_) nsStyleStructID(-1),
+    #define CSS_PROP_BACKENDONLY(name_, id_, method_, flags_, datastruct_, member_, type_, kwtable_) nsStyleStructID(-1),
 
     #include "nsCSSPropList.h"
 
@@ -1306,6 +1276,15 @@ const nsStyleStructID nsCSSProps::kSIDTable[eCSSProperty_COUNT_no_shorthands] = 
     #undef CSS_PROP_SVGRESET
     #undef CSS_PROP_COLUMN
     #undef CSS_PROP_BACKENDONLY
+};
+
+const PRUint32 nsCSSProps::kFlagsTable[eCSSProperty_COUNT] = {
+    #define CSS_PROP(name_, id_, method_, flags_, datastruct_, member_, type_, kwtable_) flags_,
+    #include "nsCSSPropList.h"
+    #undef CSS_PROP
+    #define CSS_PROP_SHORTHAND(name_, id_, method_, flags_) flags_,
+    #include "nsCSSPropList.h"
+    #undef CSS_PROP_SHORTHAND
 };
 
 static const nsCSSProperty gMozBorderRadiusSubpropTable[] = {
@@ -1739,7 +1718,7 @@ static const nsCSSProperty gMarkerSubpropTable[] = {
 
 const nsCSSProperty *const
 nsCSSProps::kSubpropertyTable[eCSSProperty_COUNT - eCSSProperty_COUNT_no_shorthands] = {
-    #define CSS_PROP_SHORTHAND(name_, id_, method_) g##method_##SubpropTable,
+    #define CSS_PROP_SHORTHAND(name_, id_, method_, flags_) g##method_##SubpropTable,
     #include "nsCSSPropList.h"
     #undef CSS_PROP_SHORTHAND
 };

@@ -40,10 +40,9 @@
 #define __NSDOMWORKERXHR_H__
 
 // Bases
-#include "nsIXMLHttpRequest.h"
 #include "nsIClassInfo.h"
-
-// Interfaces
+#include "nsIXMLHttpRequest.h"
+#include "nsIXPCScriptable.h"
 
 // Other includes
 #include "nsAutoPtr.h"
@@ -52,15 +51,26 @@
 #include "prlock.h"
 
 // DOMWorker includes
-#include "nsDOMWorkerThread.h"
+#include "nsDOMWorker.h"
+#include "nsDOMWorkerMacros.h"
+#include "nsDOMWorkerXHRProxy.h"
 
-class nsDOMWorkerXHRProxy;
+// Convenience defines for event *indexes* in the sListenerTypes array.
+#define LISTENER_TYPE_ABORT 0
+#define LISTENER_TYPE_ERROR 1
+#define LISTENER_TYPE_LOAD 2
+#define LISTENER_TYPE_LOADSTART 3
+#define LISTENER_TYPE_PROGRESS 4
+#define LISTENER_TYPE_READYSTATECHANGE 5
 
-class nsDOMWorkerXHREventTarget : public nsIXMLHttpRequestEventTarget
+class nsIXPConnectWrappedNative;
+
+class nsDOMWorkerXHREventTarget : public nsDOMWorkerMessageHandler,
+                                  public nsIXMLHttpRequestEventTarget
 {
 public:
-  NS_DECL_ISUPPORTS
-  NS_DECL_NSIDOMEVENTTARGET
+  NS_DECL_ISUPPORTS_INHERITED
+  NS_FORWARD_NSIDOMEVENTTARGET(nsDOMWorkerMessageHandler::)
   NS_DECL_NSIXMLHTTPREQUESTEVENTTARGET
 
   static const char* const sListenerTypes[];
@@ -69,99 +79,80 @@ public:
 
   static PRUint32 GetListenerTypeFromString(const nsAString& aString);
 
-  virtual nsresult SetEventListener(PRUint32 aType,
-                                    nsIDOMEventListener* aListener,
-                                    PRBool aOnXListener) = 0;
-
-  virtual nsresult UnsetEventListener(PRUint32 aType,
-                                      nsIDOMEventListener* aListener) = 0;
-
-  virtual nsresult HandleWorkerEvent(nsIDOMEvent* aEvent) = 0;
-
-  virtual already_AddRefed<nsIDOMEventListener>
-    GetOnXListener(PRUint32 aType) = 0;
-
 protected:
   virtual ~nsDOMWorkerXHREventTarget() { }
 };
 
-class nsDOMWorkerXHR;
+class nsDOMWorkerXHRUpload;
 
-class nsDOMWorkerXHRUpload : public nsDOMWorkerXHREventTarget,
-                             public nsIXMLHttpRequestUpload,
-                             public nsIClassInfo
-{
-  friend class nsDOMWorkerXHR;
-
-public:
-  NS_DECL_ISUPPORTS_INHERITED
-  NS_FORWARD_NSIDOMEVENTTARGET(nsDOMWorkerXHREventTarget::)
-  NS_FORWARD_NSIXMLHTTPREQUESTEVENTTARGET(nsDOMWorkerXHREventTarget::)
-  NS_DECL_NSIXMLHTTPREQUESTUPLOAD
-  NS_DECL_NSICLASSINFO
-
-  nsDOMWorkerXHRUpload(nsDOMWorkerXHR* aWorkerXHR);
-
-  virtual nsresult SetEventListener(PRUint32 aType,
-                                    nsIDOMEventListener* aListener,
-                                    PRBool aOnXListener);
-
-  virtual nsresult UnsetEventListener(PRUint32 aType,
-                                      nsIDOMEventListener* aListener);
-
-  virtual nsresult HandleWorkerEvent(nsIDOMEvent* aEvent);
-
-  virtual already_AddRefed<nsIDOMEventListener>
-    GetOnXListener(PRUint32 aType);
-
-protected:
-  virtual ~nsDOMWorkerXHRUpload() { }
-
-  nsRefPtr<nsDOMWorkerXHR> mWorkerXHR;
-};
-
-class nsDOMWorkerXHR : public nsDOMWorkerXHREventTarget,
+class nsDOMWorkerXHR : public nsDOMWorkerFeature,
+                       public nsDOMWorkerXHREventTarget,
                        public nsIXMLHttpRequest,
-                       public nsIClassInfo
+                       public nsIXPCScriptable
 {
+  friend class nsDOMWorkerXHREvent;
+  friend class nsDOMWorkerXHRLastProgressOrLoadEvent;
   friend class nsDOMWorkerXHRProxy;
   friend class nsDOMWorkerXHRUpload;
 
 public:
   NS_DECL_ISUPPORTS_INHERITED
   NS_DECL_NSIXMLHTTPREQUEST
-  NS_DECL_NSICLASSINFO
+  NS_FORWARD_NSICLASSINFO_NOGETINTERFACES(nsDOMWorkerXHREventTarget::)
+  NS_DECL_NSICLASSINFO_GETINTERFACES
+  NS_DECL_NSIXPCSCRIPTABLE
 
-  nsDOMWorkerXHR(nsDOMWorkerThread* aWorker);
+  nsDOMWorkerXHR(nsDOMWorker* aWorker);
 
   nsresult Init();
 
-  void Cancel();
+  virtual void Cancel();
 
-  virtual nsresult SetEventListener(PRUint32 aType,
-                                    nsIDOMEventListener* aListener,
-                                    PRBool aOnXListener);
+  virtual nsresult SetOnXListener(const nsAString& aType,
+                                  nsIDOMEventListener* aListener);
 
-  virtual nsresult UnsetEventListener(PRUint32 aType,
-                                      nsIDOMEventListener* aListener);
-
-  virtual nsresult HandleWorkerEvent(nsIDOMEvent* aEvent);
-
-  virtual already_AddRefed<nsIDOMEventListener>
-    GetOnXListener(PRUint32 aType);
-
-protected:
+private:
   virtual ~nsDOMWorkerXHR();
 
   PRLock* Lock() {
     return mWorker->Lock();
   }
 
-  nsRefPtr<nsDOMWorkerThread> mWorker;
+  already_AddRefed<nsIXPConnectWrappedNative> GetWrappedNative() {
+    nsCOMPtr<nsIXPConnectWrappedNative> wrappedNative(mWrappedNative);
+    return wrappedNative.forget();
+  }
+
   nsRefPtr<nsDOMWorkerXHRProxy> mXHRProxy;
   nsRefPtr<nsDOMWorkerXHRUpload> mUpload;
 
+  nsIXPConnectWrappedNative* mWrappedNative;
+
   volatile PRBool mCanceled;
+};
+
+class nsDOMWorkerXHRUpload : public nsDOMWorkerXHREventTarget,
+                             public nsIXMLHttpRequestUpload
+{
+  friend class nsDOMWorkerXHR;
+
+public:
+  NS_DECL_ISUPPORTS_INHERITED
+  NS_DECL_NSIDOMEVENTTARGET
+  NS_FORWARD_NSIXMLHTTPREQUESTEVENTTARGET(nsDOMWorkerXHREventTarget::)
+  NS_DECL_NSIXMLHTTPREQUESTUPLOAD
+  NS_FORWARD_NSICLASSINFO_NOGETINTERFACES(nsDOMWorkerXHREventTarget::)
+  NS_DECL_NSICLASSINFO_GETINTERFACES
+
+  nsDOMWorkerXHRUpload(nsDOMWorkerXHR* aWorkerXHR);
+
+  virtual nsresult SetOnXListener(const nsAString& aType,
+                                  nsIDOMEventListener* aListener);
+
+protected:
+  virtual ~nsDOMWorkerXHRUpload() { }
+
+  nsRefPtr<nsDOMWorkerXHR> mWorkerXHR;
 };
 
 #endif /* __NSDOMWORKERXHR_H__ */

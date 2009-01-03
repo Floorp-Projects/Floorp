@@ -44,26 +44,28 @@ extrn invoke_copy_to_stack:PROC
 ;                   PRUint32 paramCount, nsXPTCVariant* params)
 ;
 
-XPTC__InvokebyIndex PROC
+XPTC__InvokebyIndex PROC FRAME
 
    ;
-   ; store register parameter
+   ; store register parameters
    ;
 
-    mov     [rsp+32], r9        ; params
-    mov     [rsp+24], r8d       ; paramCount
-    mov     [rsp+16], edx       ; methodIndex
-    mov     [rsp+8], rcx        ; that
+    mov     qword ptr [rsp+32], r9        ; params
+    mov     dword ptr [rsp+24], r8d       ; paramCount
+    mov     dword ptr [rsp+16], edx       ; methodIndex
+    mov     qword ptr [rsp+8], rcx        ; that
 
     ;
-    ; store RBX register
+    ; store RBX/RBP register for backup
     ;
 
-    mov     [rsp-8], rbx
-    mov     [rsp-16], rbp
+    mov     qword ptr [rsp-16], rbp
 
     mov     rbp, rsp            ; store current RSP to RBP
-    sub     rsp, 24
+    .SETFRAME rbp, 0
+    .ENDPROLOG
+
+    sub     rsp, 32
 
     ;
     ; maybe we don't have any parameters to copy
@@ -76,7 +78,9 @@ XPTC__InvokebyIndex PROC
     ; make space for 1st parameter
 
     mov     eax, r8d
-    shl     rax, 3              ; *= 8 (max possible param size)
+    and     eax, 1              ; AMD64 must be alignment to 16 bytes
+    add     eax, r8d
+    shl     rax, 3              ; *= 8
     sub     rsp, rax
     mov     rcx, rsp
 
@@ -100,29 +104,33 @@ XPTC__InvokebyIndex PROC
 
     add     rsp, 32
 
-    mov     rdx, [rsp]           ; 1st parameter
+    ;
+    ; Build parameters
+    ;
+
+    mov     rdx, qword ptr [rsp] ; 1st parameter
     movsd   xmm1, qword ptr [rsp] ; for double
 
-    mov     r8, [rsp+8]          ; 2nd parameter
+    mov     r8, qword ptr [rsp+8] ; 2nd parameter
     movsd   xmm2, qword ptr [rsp+8] ; for double
 
-    mov     r9, [rsp+16]         ; 3rd parameter
+    mov     r9, qword ptr [rsp+16] ; 3rd parameter
     movsd   xmm3, qword ptr [rsp+16] ; for double
-
-noparams:
 
     ;
     ; 1st parameter (this)
     ;
 
-    mov     rcx, [rbp+8]     ; that
+    mov     rcx, qword ptr [rbp+8] ; that
+
+noparams:
 
     ;
     ; calculate call address
     ;
 
-    mov     rbx, [rcx]
-    mov     eax, [rbp+16]    ; methodIndex
+    mov     r11, qword ptr [rcx]
+    mov     eax, dword ptr [rbp+16] ; methodIndex
 
     ;
     ; Now current stack has parameter list
@@ -130,15 +138,14 @@ noparams:
 
     sub     rsp, 8
 
-    call    qword ptr [rbx+rax*8]      ; stdcall, i.e. callee cleans up stack.
+    call    qword ptr [r11+rax*8]      ; stdcall, i.e. callee cleans up stack.
 
     ;
     ; restore registers
     ;
 
     mov     rsp, rbp
-    mov     rbx, [rsp-8]
-    mov     rbp, [rsp-16]
+    mov     rbp, qword ptr [rsp-16]
 
     ret
 

@@ -51,6 +51,7 @@
 #include "nsNetUtil.h"
 #include "nsCOMPtr.h"
 #include "nsAutoPtr.h"
+#include "nsString.h"
 
 #include <stdio.h>
 #include <unistd.h>
@@ -71,17 +72,14 @@ static PRLibrary *elib = nsnull;
 
 #define WAV_MIN_LENGTH 44
 
-typedef int (PR_CALLBACK *EsdOpenSoundType)(const char *host);
-typedef int (PR_CALLBACK *EsdCloseType)(int);
+typedef int (*EsdOpenSoundType)(const char *host);
+typedef int (*EsdCloseType)(int);
 
 /* used to play the sounds from the find symbol call */
-typedef int (PR_CALLBACK *EsdPlayStreamType)  (int, 
-                                               int, 
-                                               const char *, 
-                                               const char *);
-typedef int  (PR_CALLBACK *EsdAudioOpenType)  (void);
-typedef int  (PR_CALLBACK *EsdAudioWriteType) (const void *, int);
-typedef void (PR_CALLBACK *EsdAudioCloseType) (void);
+typedef int  (*EsdPlayStreamType) (int, int, const char *, const char *);
+typedef int  (*EsdAudioOpenType)  (void);
+typedef int  (*EsdAudioWriteType) (const void *, int);
+typedef void (*EsdAudioCloseType) (void);
 
 NS_IMPL_ISUPPORTS2(nsSound, nsISound, nsIStreamLoaderObserver)
 
@@ -369,8 +367,10 @@ NS_METHOD nsSound::Play(nsIURL *aURL)
 
 NS_IMETHODIMP nsSound::PlaySystemSound(const nsAString &aSoundAlias)
 {
-    if (aSoundAlias.EqualsLiteral("_moz_mailbeep")) {
-        return Beep();
+    if (NS_IsMozAliasSound(aSoundAlias)) {
+        if (aSoundAlias.Equals(NS_SYSSOUND_MAIL_BEEP))
+            return Beep();
+        return NS_OK;
     }
 
     nsresult rv;

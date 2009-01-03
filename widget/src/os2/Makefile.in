@@ -51,8 +51,6 @@ MODULE_NAME	= nsWidgetOS2Module
 GRE_MODULE	= 1
 LIBXUL_LIBRARY = 1
 
-PACKAGE_FILE = widget_os2.pkg
-
 REQUIRES	= gfx \
 		  xpcom \
 		  string \
@@ -125,6 +123,9 @@ DEFINES += -DUSE_OS2_TOOLKIT_HEADERS
 DEFINES += -DMOZ_APP_DISPLAYNAME=\"$(MOZ_APP_DISPLAYNAME)\"
 
 LOCAL_INCLUDES	= -I. -I$(srcdir)/../xpwidgets -I$(srcdir)
+
+libs::	README.$(MOZ_APP_NAME)
+	cp -f $^ $(DIST)/bin/README.txt
 
 export::
 	test -d ./res || mkdir ./res

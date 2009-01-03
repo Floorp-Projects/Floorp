@@ -1,0 +1,62 @@
+<!DOCTYPE HTML>
+<html>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=460532
+-->
+<head>
+  <meta http-equiv="Content-Type" content="text/html; charset=iso-8859-1">
+  <title>Test for bug 460532</title>
+  <script type="text/javascript" src="/MochiKit/MochiKit.js"></script>
+  <script type="text/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css">
+</head>
+<body>
+<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=460532">Mozilla Bug 460532</a>
+<p id="display"></p>
+<div id="content" style="display: block">
+lorem ipsum.
+</div>
+<pre id="test">
+<script class="testbody" type="text/javascript">
+
+function select_460532(){
+  netscape.security.PrivilegeManager.enablePrivilege("UniversalXPConnect");
+
+  var content = document.getElementById('content');
+  var node = content.firstChild;
+
+  var range = document.createRange();
+  range.setStart(node, 0);
+  range.setEnd(node, 5);
+  window.getSelection().addRange(range);
+
+  range = document.createRange();
+  range.setStart(node, 0);
+  range.setEnd(node, 6);
+  window.getSelection().addRange(range);
+}
+
+function click_460532(){
+  netscape.security.PrivilegeManager.enablePrivilege("UniversalXPConnect");
+  var wu =  document.defaultView.QueryInterface(Components.interfaces.nsIInterfaceRequestor)
+               .getInterface(Components.interfaces.nsIDOMWindowUtils);
+  var content = document.getElementById('content');
+  var rect = content.getBoundingClientRect();
+  wu.sendMouseEvent('mousedown', rect.left+5, rect.top+5, 0, 1, 0);
+  wu.sendMouseEvent('mouseup', rect.left+5, rect.top+5, 0, 1, 0);
+  ok(true, "pass");
+  SimpleTest.finish();
+}
+
+function boom_460532() {
+  select_460532();
+  setTimeout(click_460532, 100);
+}
+
+addLoadEvent(boom_460532);
+SimpleTest.waitForExplicitFinish()
+
+</script>
+</pre>
+</body>
+</html>

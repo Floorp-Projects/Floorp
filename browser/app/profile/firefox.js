@@ -80,7 +80,10 @@ pref("extensions.getAddons.search.url", "https://services.addons.mozilla.org/%LO
 // Blocklist preferences
 pref("extensions.blocklist.enabled", true);
 pref("extensions.blocklist.interval", 86400);
-pref("extensions.blocklist.url", "https://addons.mozilla.org/blocklist/2/%APP_ID%/%APP_VERSION%/%PRODUCT%/%BUILD_ID%/%BUILD_TARGET%/%LOCALE%/%CHANNEL%/%OS_VERSION%/%DISTRIBUTION%/%DISTRIBUTION_VERSION%/");
+// Controls what level the blocklist switches from warning about items to forcibly
+// blocking them.
+pref("extensions.blocklist.level", 2);
+pref("extensions.blocklist.url", "https://addons.mozilla.org/blocklist/3/%APP_ID%/%APP_VERSION%/%PRODUCT%/%BUILD_ID%/%BUILD_TARGET%/%LOCALE%/%CHANNEL%/%OS_VERSION%/%DISTRIBUTION%/%DISTRIBUTION_VERSION%/");
 pref("extensions.blocklist.detailsURL", "http://%LOCALE%.www.mozilla.com/%LOCALE%/blocklist/");
 
 // Dictionary download preference
@@ -118,16 +121,16 @@ pref("app.update.url", "https://aus2.mozilla.org/update/3/%PRODUCT%/%VERSION%/%B
 // User-settable override to app.update.url for testing purposes.
 //pref("app.update.url.override", "");
 
-// Interval: Time between checks for a new version (in seconds)
-//           default=1 day
-pref("app.update.interval", 86400);
+// app.update.interval is in branding section
+
 // Interval: Time before prompting the user again to restart to install the
 //           latest download (in seconds) default=1 day
 pref("app.update.nagTimer.restart", 86400);
+
 // Interval: When all registered timers should be checked (in milliseconds)
 //           default=10 minutes
 pref("app.update.timer", 600000);
-// Give the user x seconds to react before showing the big UI. default=12 hrs
+// Give the user x seconds to react before showing the big UI. default=12 hours
 pref("app.update.promptWaitTime", 43200);
 // Show the Update Checking/Ready UI when the user was idle for x seconds
 pref("app.update.idletime", 60);
@@ -154,7 +157,7 @@ pref("app.update.incompatible.mode", 0);
 //  .. etc ..
 //
 pref("extensions.update.enabled", true);
-pref("extensions.update.url", "https://versioncheck.addons.mozilla.org/update/VersionCheck.php?reqVersion=%REQ_VERSION%&id=%ITEM_ID%&version=%ITEM_VERSION%&maxAppVersion=%ITEM_MAXAPPVERSION%&status=%ITEM_STATUS%&appID=%APP_ID%&appVersion=%APP_VERSION%&appOS=%APP_OS%&appABI=%APP_ABI%&locale=%APP_LOCALE%");
+pref("extensions.update.url", "https://versioncheck.addons.mozilla.org/update/VersionCheck.php?reqVersion=%REQ_VERSION%&id=%ITEM_ID%&version=%ITEM_VERSION%&maxAppVersion=%ITEM_MAXAPPVERSION%&status=%ITEM_STATUS%&appID=%APP_ID%&appVersion=%APP_VERSION%&appOS=%APP_OS%&appABI=%APP_ABI%&locale=%APP_LOCALE%&currentAppVersion=%CURRENT_APP_VERSION%");
 pref("extensions.update.interval", 86400);  // Check for updates to Extensions and 
                                             // Themes every day
 // Non-symmetric (not shared by extensions) extension-specific [update] preferences
@@ -191,7 +194,6 @@ pref("browser.shell.checkDefaultBrowser", true);
 pref("browser.startup.page",                1);
 pref("browser.startup.homepage",            "resource:/browserconfig.properties");
 
-pref("browser.cache.disk.capacity",         50000);
 pref("browser.enable_automatic_image_resizing", true);
 pref("browser.chrome.site_icons", true);
 pref("browser.chrome.favicons", true);
@@ -218,6 +220,11 @@ pref("browser.urlbar.matchOnlyTyped", false);
 // 2: Match only on word boundaries (e.g., after / or .)
 // 3: Match at the beginning of the url or title
 pref("browser.urlbar.matchBehavior", 1);
+// 0: Search nothing
+// 1: Search history (visited pages)
+// 2: Search bookmarks
+// 3: Search both history and bookmarks
+pref("browser.urlbar.search.sources", 3);
 pref("browser.urlbar.filter.javascript", true);
 
 // the maximum number of results to show in autocomplete when doing richResults
@@ -236,6 +243,14 @@ pref("browser.urlbar.restrict.bookmark", "*");
 pref("browser.urlbar.restrict.tag", "+");
 pref("browser.urlbar.match.title", "#");
 pref("browser.urlbar.match.url", "@");
+
+// The default behavior for the urlbar can be configured to use any combination
+// of the restrict or match filters with each additional filter restricting
+// more (intersection). Add the following values to set the behavior as the
+// default: 1: history, 2: bookmark, 4: tag, 8: title, 16: url
+// E.g., 0 = show all results (no filtering), 1 = only visited pages in history,
+// 2 = only bookmarks, 3 = visited bookmarks, 1+16 = history matching in the url
+pref("browser.urlbar.default.behavior", 0);
 
 // Number of milliseconds to wait for the http headers (and thus
 // the Content-Disposition filename) before giving up and falling back to 
@@ -265,6 +280,9 @@ pref("browser.search.defaultenginename",      "chrome://browser-region/locale/re
 
 // disable logging for the search service by default
 pref("browser.search.log", false);
+
+// serialize search plugin XML
+pref("browser.search.cache.enabled", true);
 
 // Ordering of Search Engines in the Engine list. 
 pref("browser.search.order.1",                "chrome://browser-region/locale/region.properties");
@@ -296,11 +314,8 @@ pref("browser.history_expire_days", 180);
 pref("browser.history_expire_days_min", 90);
 pref("browser.history_expire_sites", 40000);
 
-// handle external links
-// 0=default window, 1=current window/tab, 2=new window, 3=new tab in most recent window
-pref("browser.link.open_external", 3);
-
 // handle links targeting new windows
+// 0=default window, 1=current window/tab, 2=new window, 3=new tab in most recent window
 pref("browser.link.open_newwindow", 3);
 
 // 0: no restrictions - divert everything
@@ -337,9 +352,8 @@ pref("browser.tabs.closeButtons", 1);
 // false  return to the adjacent tab (old default)
 pref("browser.tabs.selectOwnerOnClose", true);
 
-pref("browser.ctrlTab.mostRecentlyUsed", true);
+pref("browser.ctrlTab.previews", true);
 pref("browser.ctrlTab.recentlyUsedLimit", 7);
-pref("browser.ctrlTab.smoothScroll", true);
 
 // Default bookmark sorting
 pref("browser.bookmarks.sort.direction", "descending");
@@ -395,6 +409,13 @@ pref("privacy.item.siteprefs",   false);
 pref("privacy.item.sessions",    true);
 pref("privacy.item.offlineApps", false);
 
+// What default should we use for the time span in the sanitizer:
+// 0 - Clear everything
+// 1 - Last Hour
+// 2 - Last 2 Hours
+// 3 - Last 4 Hours
+// 4 - Today
+pref("privacy.sanitize.timeSpan", 0);
 pref("privacy.sanitize.sanitizeOnShutdown", false);
 pref("privacy.sanitize.promptOnSanitize", true);
 
@@ -416,6 +437,22 @@ pref("intl.charset.default",  "chrome://global-platform/locale/intl.properties")
 pref("font.language.group", "chrome://global/locale/intl.properties");
 pref("intl.menuitems.alwaysappendaccesskeys","chrome://global/locale/intl.properties");
 pref("intl.menuitems.insertseparatorbeforeaccesskeys","chrome://global/locale/intl.properties");
+
+// simple gestures support
+pref("browser.gesture.swipe.left", "Browser:BackOrBackDuplicate");
+pref("browser.gesture.swipe.right", "Browser:ForwardOrForwardDuplicate");
+pref("browser.gesture.swipe.up", "cmd_scrollTop");
+pref("browser.gesture.swipe.down", "cmd_scrollBottom");
+pref("browser.gesture.pinch.latched", true);
+pref("browser.gesture.pinch.threshold", 150);
+pref("browser.gesture.pinch.out", "cmd_fullZoomEnlarge");
+pref("browser.gesture.pinch.in", "cmd_fullZoomReduce");
+pref("browser.gesture.pinch.out.shift", "cmd_fullZoomReset");
+pref("browser.gesture.pinch.in.shift", "cmd_fullZoomReset");
+pref("browser.gesture.twist.latched", false);
+pref("browser.gesture.twist.threshold", 25);
+pref("browser.gesture.twist.right", "Browser:NextTab");
+pref("browser.gesture.twist.left", "Browser:PrevTab");
 
 // 0=lines, 1=pages, 2=history , 3=text size
 #ifdef XP_MACOSX
@@ -605,16 +642,16 @@ pref("browser.safebrowsing.enabled", true);
 pref("browser.safebrowsing.malware.enabled", true);
 
 // Non-enhanced mode (local url lists) URL list to check for updates
-pref("browser.safebrowsing.provider.0.updateURL", "http://safebrowsing.clients.google.com/safebrowsing/downloads?client={moz:client}&appver={moz:version}&pver=2.1");
+pref("browser.safebrowsing.provider.0.updateURL", "http://safebrowsing.clients.google.com/safebrowsing/downloads?client={moz:client}&appver={moz:version}&pver=2.2");
 
 pref("browser.safebrowsing.dataProvider", 0);
 
 // Does the provider name need to be localizable?
 pref("browser.safebrowsing.provider.0.name", "Google");
 pref("browser.safebrowsing.provider.0.lookupURL", "http://safebrowsing.clients.google.com/safebrowsing/lookup?sourceid=firefox-antiphish&features=TrustRank&client={moz:client}&appver={moz:version}&");
-pref("browser.safebrowsing.provider.0.keyURL", "https://sb-ssl.google.com/safebrowsing/newkey?client={moz:client}&appver={moz:version}&pver=2.1");
+pref("browser.safebrowsing.provider.0.keyURL", "https://sb-ssl.google.com/safebrowsing/newkey?client={moz:client}&appver={moz:version}&pver=2.2");
 pref("browser.safebrowsing.provider.0.reportURL", "http://safebrowsing.clients.google.com/safebrowsing/report?");
-pref("browser.safebrowsing.provider.0.gethashURL", "http://safebrowsing.clients.google.com/safebrowsing/gethash?client={moz:client}&appver={moz:version}&pver=2.1");
+pref("browser.safebrowsing.provider.0.gethashURL", "http://safebrowsing.clients.google.com/safebrowsing/gethash?client={moz:client}&appver={moz:version}&pver=2.2");
 
 // privacy policy -- Both url and fallbackurl must exist, although they may
 // point to the same file.  fallbackurl must be a chrome url
@@ -625,6 +662,8 @@ pref("browser.safebrowsing.provider.0.privacy.fallbackurl", "chrome://browser/co
 pref("browser.safebrowsing.provider.0.reportGenericURL", "http://{moz:locale}.phish-generic.mozilla.com/?hl={moz:locale}");
 pref("browser.safebrowsing.provider.0.reportErrorURL", "http://{moz:locale}.phish-error.mozilla.com/?hl={moz:locale}");
 pref("browser.safebrowsing.provider.0.reportPhishURL", "http://{moz:locale}.phish-report.mozilla.com/?hl={moz:locale}");
+pref("browser.safebrowsing.provider.0.reportMalwareURL", "http://{moz:locale}.malware-report.mozilla.com/?hl={moz:locale}");
+pref("browser.safebrowsing.provider.0.reportMalwareErrorURL", "http://{moz:locale}.malware-error.mozilla.com/?hl={moz:locale}");
 
 // FAQ URL
 pref("browser.safebrowsing.warning.infoURL", "http://%LOCALE%.www.mozilla.com/%LOCALE%/firefox/phishing-protection/");
@@ -663,20 +702,13 @@ pref("browser.safebrowsing.malware.reportURL", "http://safebrowsing.clients.goog
 
 #endif
 
-// defaults to true on Windows and Mac, because the installer shows this
-#ifdef XP_MACOSX
-pref("browser.EULA.3.accepted", true);
-#elifdef XP_WIN
-pref("browser.EULA.3.accepted", true);
-#else
-pref("browser.EULA.3.accepted", false);
-#endif
-
-// if we rev the EULA again, we should bump this so users agree to the new EULA
 pref("browser.EULA.version", 3);
+pref("browser.rights.version", 3);
+pref("browser.rights.3.shown", false);
 
 #ifdef DEBUG
-pref("browser.EULA.override", true);
+// Don't show the about:rights notification in debug builds.
+pref("browser.rights.override", true);
 #endif
 
 pref("browser.sessionstore.resume_from_crash", true);
@@ -692,6 +724,9 @@ pref("browser.sessionstore.postdata", 0);
 pref("browser.sessionstore.privacy_level", 1);
 // how many tabs can be reopened (per window)
 pref("browser.sessionstore.max_tabs_undo", 10);
+// number of crashes that can occur before the about:sessionrestore page is displayed
+// (this pref has no effect if more than 6 hours have passed since the last crash)
+pref("browser.sessionstore.max_resumed_crashes", 1);
 
 // allow META refresh by default
 pref("accessibility.blockautorefresh", false);
@@ -743,7 +778,7 @@ pref("places.frecency.unvisitedTypedBonus", 200);
 // 0 - don't pre-populate anything
 // 1 - pre-populate site URL, but don't fetch certificate
 // 2 - pre-populate site URL and pre-fetch certificate
-pref("browser.ssl_override_behavior", 1);
+pref("browser.ssl_override_behavior", 2);
 
 // Controls the display of domain in the identity box for SSL connections.
 // 0 - do not show domain
@@ -769,3 +804,12 @@ pref("breakpad.reportURL", "http://crash-stats.mozilla.com/report/index/");
 
 // base URL for web-based support pages
 pref("app.support.baseURL", "http://support.mozilla.com/1/%APP%/%VERSION%/%OS%/%LOCALE%/");
+
+// Name of alternate about: page for certificate errors (when undefined, defaults to about:neterror)
+pref("security.alternate_certificate_error_page", "certerror");
+
+// Whether to start the private browsing mode at application startup
+pref("browser.privatebrowsing.autostart", false);
+
+// Whether we should skip prompting before starting the private browsing mode
+pref("browser.privatebrowsing.dont_prompt_on_enter", false);

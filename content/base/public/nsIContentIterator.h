@@ -40,21 +40,21 @@
 
 #include "nsISupports.h"
 
-class nsIContent;
+class nsINode;
 class nsIDOMRange;
 
-#define NS_ICONTENTITERTOR_IID \
-{0xa6cf90e4, 0x15b3, 0x11d2,   \
-{0x93, 0x2e, 0x00, 0x80, 0x5f, 0x8a, 0xdd, 0x32} }
+#define NS_ICONTENTITERATOR_IID \
+{ 0x716a396c, 0xdc4e, 0x4d10, \
+  { 0xbd, 0x07, 0x27, 0xee, 0xae, 0x85, 0xe3, 0x86 } }
 
 class nsIContentIterator : public nsISupports
 {
 public:
-  NS_DECLARE_STATIC_IID_ACCESSOR(NS_ICONTENTITERTOR_IID)
+  NS_DECLARE_STATIC_IID_ACCESSOR(NS_ICONTENTITERATOR_IID)
 
   /* Initializes an iterator for the subtree rooted by the node aRoot
    */
-  virtual nsresult Init(nsIContent* aRoot) = 0;
+  virtual nsresult Init(nsINode* aRoot) = 0;
 
   /* Initializes an iterator for the subtree defined by the range aRange
    */
@@ -79,7 +79,7 @@ public:
   /** CurrentItem will return the current item, or null if the list is empty
    *  @return the current node
    */
-  virtual nsIContent *GetCurrentNode() = 0;
+  virtual nsINode *GetCurrentNode() = 0;
 
   /** return if the collection is at the end. that is the beginning following a call to Prev
    *  and it is the end of the list following a call to next
@@ -89,10 +89,10 @@ public:
 
   /** PositionAt will position the iterator to the supplied node
    */
-  virtual nsresult PositionAt(nsIContent* aCurNode) = 0;
+  virtual nsresult PositionAt(nsINode* aCurNode) = 0;
 };
 
-NS_DEFINE_STATIC_IID_ACCESSOR(nsIContentIterator, NS_ICONTENTITERTOR_IID)
+NS_DEFINE_STATIC_IID_ACCESSOR(nsIContentIterator, NS_ICONTENTITERATOR_IID)
 
 #endif // __nsIContentIterator_h___
 

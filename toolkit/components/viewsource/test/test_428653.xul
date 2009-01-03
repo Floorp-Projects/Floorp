@@ -19,27 +19,35 @@
   <script type="application/javascript">
   <![CDATA[
   /*
-  Test that we can call the content browser's document.open() via
-  wrappedJSObject (SafeJSObjectWrapper).
-  https://bugzilla.mozilla.org/show_bug.cgi?id=428653
+  Test that we can't call the content browser's document.open() either via
+  wrappedJSObject (SafeJSObjectWrapper) or not.
   */
   SimpleTest.waitForExplicitFinish();
   
   addLoadEvent(function testDocumentOpen() {
     var browser = document.getElementById("content");
     ok(browser, "got browser");
-    var doc = browser.contentDocument.wrappedJSObject;
+    var doc = browser.contentDocument;
     ok(doc, "got content document");
 
-    doc.open("text/html", "replace");
+    var opened = false;
+    try {
+      doc.open("text/html", "replace");
+      opened = true;
+    } catch (e) {
+      is(e.name, "NS_ERROR_DOM_SECURITY_ERR", "Unxpected exception")
+    }
+    is(opened, false, "Shouldn't have opened document");
 
-    var headingText = "This is a heading";
-    doc.write("<h1 id='heading'>" + headingText + "</h1>");
-    doc.close();
+    try {
+      doc.wrappedJSObject.open("text/html", "replace");
+      opened = true;
+    } catch (e) {
+      is(e.name, "NS_ERROR_DOM_SECURITY_ERR",
+         "Unxpected exception via wrappedJSObject")
+    }
+    is(opened, false, "Shouldn't have opened document via wrappedJSObject");
 
-    ok(doc.getElementById("heading").textContent, headingText,
-       "content document has content");
-    
     SimpleTest.finish();
   });
   ]]>

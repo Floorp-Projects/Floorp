@@ -57,8 +57,6 @@ SHORT_LIBNAME	= xpc$(MOZ_BITS)$(VERSION_NUMBER)
 endif
 LIBXUL_LIBRARY = 1
 
-PACKAGE_FILE = xpconnect.pkg
-
 REQUIRES	= xpcom \
 		  string \
 		  js \
@@ -162,12 +160,6 @@ endif
 
 endif
 
-# the windows ce compiler produces crap when compiling this
-# with any optimizations.  See bug 304714
-ifdef WINCE
-MOZ_OPTIMIZE_FLAGS=-Od
-endif
-
 ifeq ($(OS_ARCH),WINNT)
 ifndef GNU_CXX
 ifeq (,$(filter-out 1200 1300 1310,$(_MSC_VER)))
@@ -194,13 +186,11 @@ dom_quickstubs.h dom_quickstubs.cpp: $(srcdir)/dom_quickstubs.qsconf \
 	  --cachedir=$(DEPTH)/xpcom/idl-parser \
 	  --header-output dom_quickstubs.h \
 	  --stub-output dom_quickstubs.cpp \
-	  --makedepend-output dom_quickstubs.depends \
+	  --makedepend-output $(MDDEPDIR)/dom_qsgen.pp \
 	  $(srcdir)/dom_quickstubs.qsconf
 
 GARBAGE += \
 		dom_quickstubs.h \
 		dom_quickstubs.cpp \
-		dom_quickstubs.depends \
+		$(MDDEPDIR)/dom_qsgen.pp \
 		$(NULL)
-
--include dom_quickstubs.depends

@@ -37,7 +37,7 @@
 
 #include "windows.h"
 
-#include "npupp.h"
+#include "npfunctions.h"
 #include "npapi.h"
 #include "plugin.h"
 #include "plugload.h"

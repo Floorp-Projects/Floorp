@@ -41,7 +41,7 @@ source $TEST_DIR/bin/library.sh
 source $TEST_DIR/bin/set-build-env.sh $@
 
 case $product in
-    firefox|thunderbird)
+    firefox|thunderbird|fennec)
         cd $BUILDTREE/mozilla
 
         if ! $buildbash $bashlogin -c "cd $BUILDTREE/mozilla; make -f client.mk build" 2>&1; then
@@ -66,21 +66,25 @@ case $product in
                         executablepath=$product-$buildtype/dist/FirefoxDebug.app/Contents/MacOS
                     elif [[ "$product" == "thunderbird" ]]; then
                         executablepath=$product-$buildtype/dist/ThunderbirdDebug.app/Contents/MacOS
+                    elif [[ "$product" == "fennec" ]]; then
+                        executablepath=$product-$buildtype/dist/FennecDebug.app/Contents/MacOS
                     fi
                 else
                     if [[ "$product" == "firefox" ]]; then
                         executablepath=$product-$buildtype/dist/Firefox.app/Contents/MacOS
                     elif [[ "$product" == "thunderbird" ]]; then
                         executablepath=$product-$buildtype/dist/Thunderbird.app/Contents/MacOS
+                    elif [[ "$product" == "fennec" ]]; then
+                        executablepath=$product-$buildtype/dist/Fennec.app/Contents/MacOS
                     fi
                 fi
                 ;;
             linux)
                 executablepath=$product-$buildtype/dist/bin
-            ;;
+                ;;
         esac
 
-        if [[ "$OSID" != "nt" ]]; then
+        if [[ "$OSID" != "nt" && "$product" != "fennec" ]]; then
             #
             # patch unix-like startup scripts to exec instead of 
             # forking new processes
@@ -104,22 +108,90 @@ case $product in
         fi
         ;;
     js)
-#    cd $BUILDTREE/mozilla/js/src
 
-    if [[ $buildtype == "debug" ]]; then
-        export JSBUILDOPT=
-    else
-        export JSBUILDOPT=BUILD_OPT=1
-    fi
+        if [[ -e "$BUILDTREE/mozilla/js/src/configure.in" ]]; then
 
-    if ! $buildbash $bashlogin -c "cd $BUILDTREE/mozilla/js/src; make -f Makefile.ref ${JSBUILDOPT} clean" 2>&1; then
-        error "during js/src clean" $LINENO
-    fi 
+            # use the new fangled autoconf build environment for spidermonkey
 
-    if ! $buildbash $bashlogin -c "cd $BUILDTREE/mozilla/js/src; make -f Makefile.ref ${JSBUILDOPT}" 2>&1; then
-        error "during js/src build" $LINENO
-    fi
-    ;;
+            # recreate the OBJ directories to match the old naming standards
+            TEST_JSDIR=${TEST_JSDIR:-$TEST_DIR/tests/mozilla.org/js}
+            source $TEST_JSDIR/config.sh
+
+            mkdir -p "$BUILDTREE/mozilla/js/src/$JS_OBJDIR"
+
+            if [[ ! -e "$BUILDTREE/mozilla/js/src/configure" ]]; then
+
+                if findprogram autoconf-2.13; then
+                    AUTOCONF=autoconf-2.13
+                elif findprogram autoconf213; then
+                    AUTOCONF=autoconf213
+                else
+                    error "autoconf 2.13 not detected"
+                fi
+
+                cd "$BUILDTREE/mozilla/js/src"
+                eval "$AUTOCONF" 
+
+            fi
+
+            cd "$BUILDTREE/mozilla/js/src/$JS_OBJDIR"
+
+            if [[ -e "Makefile" ]]; then
+                if ! $buildbash $bashlogin -c "cd $BUILDTREE/mozilla/js/src/$JS_OBJDIR; make clean" 2>&1; then
+                    error "during js/src clean" $LINENO
+                fi
+            fi
+
+            # XXX: Todo
+            # This reproduces the limited approach which previously existed with Makefile.ref but
+            # does not provide the full functionality provided by the available configure options.
+            # Ideally, it would be good to use a mozconfig approach (if available) that would generate
+            # the necessary configure command line arguments. This would provide the generality to
+            # specify arbitrary configure options.
+            #
+
+            if [[ "$buildtype" == "debug" ]]; then
+                if ! $buildbash $bashlogin -c "cd $BUILDTREE/mozilla/js/src/$JS_OBJDIR; ../configure --prefix=$BUILDTREE/mozilla/js/src/$JS_OBJDIR  --disable-optimize --enable-debug"; then
+                    error "during js/src/$JS_OBJDIR configure" $LINENO
+                fi
+            else
+                if ! $buildbash $bashlogin -c "cd $BUILDTREE/mozilla/js/src/$JS_OBJDIR; ../configure --prefix=$BUILDTREE/mozilla/js/src/$JS_OBJDIR  --enable-optimize --disable-debug"; then
+                    error "during js/src/$JS_OBJDIR configure" $LINENO
+                fi
+            fi
+
+            if ! $buildbash $bashlogin -c "cd $BUILDTREE/mozilla/js/src/$JS_OBJDIR; make" 2>&1; then
+                error "during js/src build" $LINENO
+            fi
+
+            if ! $buildbash $bashlogin -c "cd $BUILDTREE/mozilla/js/src/$JS_OBJDIR; make install" 2>&1; then
+                error "during js/src install" $LINENO
+            fi
+
+        elif [[ -e "$BUILDTREE/mozilla/js/src/Makefile.ref" ]]; then
+
+            # use the old-style Makefile.ref build environment for spidermonkey
+
+            if [[ $buildtype == "debug" ]]; then
+                export JSBUILDOPT=
+            else
+                export JSBUILDOPT=BUILD_OPT=1
+            fi
+
+            if ! $buildbash $bashlogin -c "cd $BUILDTREE/mozilla/js/src; make -f Makefile.ref ${JSBUILDOPT} clean" 2>&1; then
+                error "during js/src clean" $LINENO
+            fi 
+
+            if ! $buildbash $bashlogin -c "cd $BUILDTREE/mozilla/js/src; make -f Makefile.ref ${JSBUILDOPT}" 2>&1; then
+                error "during js/src build" $LINENO
+            fi
+
+        else
+
+            error "Neither Makefile.ref or autoconf builds available"
+
+        fi
+        ;;
 esac
 
 

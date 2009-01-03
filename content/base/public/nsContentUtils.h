@@ -105,6 +105,7 @@ class nsIUGenCategory;
 class nsIWidget;
 class nsIDragSession;
 class nsPIDOMWindow;
+class nsPIDOMEventTarget;
 #ifdef MOZ_XTF
 class nsIXTFService;
 #endif
@@ -522,7 +523,7 @@ public:
    * @return boolean indicating whether a BOM was detected.
    */
   static PRBool CheckForBOM(const unsigned char* aBuffer, PRUint32 aLength,
-                            nsACString& aCharset);
+                            nsACString& aCharset, PRBool *bigEndian = nsnull);
 
 
   /**
@@ -806,6 +807,20 @@ public:
    * Returns true if aDocument is a chrome document
    */
   static PRBool IsChromeDoc(nsIDocument *aDocument);
+
+  /**
+   * Get the script file name to use when compiling the script
+   * referenced by aURI. In cases where there's no need for any extra
+   * security wrapper automation the script file name that's returned
+   * will be the spec in aURI, else it will be the spec in aDocument's
+   * URI followed by aURI's spec, separated by " -> ". Returns PR_TRUE
+   * if the script file name was modified, PR_FALSE if it's aURI's
+   * spec.
+   */
+  static PRBool GetWrapperSafeScriptFilename(nsIDocument *aDocument,
+                                             nsIURI *aURI,
+                                             nsACString& aScriptURI);
+
 
   /**
    * Returns true if aDocument belongs to a chrome docshell for
@@ -1188,12 +1203,12 @@ public:
   static const nsDependentString GetLocalizedEllipsis();
 
   /**
-   * The routine GetNativeEvent is used to fill nsNativeKeyEvent
-   * nsNativeKeyEvent. It's also used in DOMEventToNativeKeyEvent.
+   * The routine GetNativeEvent is used to fill nsNativeKeyEvent.
+   * It's also used in DOMEventToNativeKeyEvent.
    * See bug 406407 for details.
    */
   static nsEvent* GetNativeEvent(nsIDOMEvent* aDOMEvent);
-  static PRBool DOMEventToNativeKeyEvent(nsIDOMEvent* aDOMEvent,
+  static PRBool DOMEventToNativeKeyEvent(nsIDOMKeyEvent* aKeyEvent,
                                          nsNativeKeyEvent* aNativeEvent,
                                          PRBool aGetCharCode);
 
@@ -1240,14 +1255,14 @@ public:
   static nsIAtom* IsNamedItem(nsIContent* aContent);
 
   /**
-   * Get the application manifest URI for this context.  The manifest URI
+   * Get the application manifest URI for this document.  The manifest URI
    * is specified in the manifest= attribute of the root element of the
-   * toplevel window.
+   * document.
    *
-   * @param aWindow The context to check.
+   * @param aDocument The document that lists the manifest.
    * @param aURI The manifest URI.
    */
-  static void GetOfflineAppManifest(nsIDOMWindow *aWindow, nsIURI **aURI);
+  static void GetOfflineAppManifest(nsIDocument *aDocument, nsIURI **aURI);
 
   /**
    * Check whether an application should be allowed to use offline APIs.
@@ -1337,7 +1352,11 @@ public:
 
                                              
   static nsIInterfaceRequestor* GetSameOriginChecker();
-                                           
+
+  static nsIThreadJSContextStack* ThreadJSContextStack()
+  {
+    return sThreadJSContextStack;
+  }
 private:
 
   static PRBool InitializeEventTable();
@@ -1354,8 +1373,7 @@ private:
   static nsIDOMScriptObjectFactory *GetDOMScriptObjectFactory();
 
   static nsresult HoldScriptObject(PRUint32 aLangID, void* aObject);
-  PR_STATIC_CALLBACK(void) DropScriptObject(PRUint32 aLangID, void *aObject,
-                                            void *aClosure);
+  static void DropScriptObject(PRUint32 aLangID, void *aObject, void *aClosure);
 
   static PRBool CanCallerAccess(nsIPrincipal* aSubjectPrincipal,
                                 nsIPrincipal* aPrincipal);
@@ -1434,12 +1452,11 @@ public:
   ~nsCxPusher(); // Calls Pop();
 
   // Returns PR_FALSE if something erroneous happened.
-  PRBool Push(nsISupports *aCurrentTarget);
+  PRBool Push(nsPIDOMEventTarget *aCurrentTarget);
   PRBool Push(JSContext *cx);
   void Pop();
 
 private:
-  nsCOMPtr<nsIJSContextStack> mStack;
   nsCOMPtr<nsIScriptContext> mScx;
   PRBool mScriptIsRunning;
 };

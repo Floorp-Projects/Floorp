@@ -893,6 +893,11 @@ nsImageMap::AddArea(nsIContent* aArea)
   //Add focus listener to track area focus changes
   aArea->AddEventListenerByIID(this, NS_GET_IID(nsIDOMFocusListener));
 
+  // This is a nasty hack.  It needs to go away: see bug 135040.  Once this is
+  // removed, the code added to nsCSSFrameConstructor::RestyleElement,
+  // nsCSSFrameConstructor::ContentRemoved (both hacks there), and
+  // nsCSSFrameConstructor::ProcessRestyledFrames to work around this issue can
+  // be removed.
   mPresShell->FrameManager()->SetPrimaryFrameFor(aArea, mImageFrame);
   aArea->SetMayHaveFrame(PR_TRUE);
   NS_ASSERTION(aArea->MayHaveFrame(), "SetMayHaveFrame failed?");

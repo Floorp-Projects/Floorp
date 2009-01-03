@@ -416,11 +416,6 @@ public: // NOT in nsIViewManager, so private to the view module
 
   nsresult CreateRegion(nsIRegion* *result);
 
-  // return the sum of all view offsets from aView right up to the
-  // root of this view hierarchy (the view with no parent, which might
-  // not be in this view manager).
-  static nsPoint ComputeViewOffset(const nsView *aView);
-
   PRBool IsRefreshEnabled() { return RootViewManager()->mRefreshEnabled; }
 
   nsIViewObserver* GetViewObserver() { return mObserver; }

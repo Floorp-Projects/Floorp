@@ -99,13 +99,13 @@ private:
 
     static PLDHashTableOps HashTableOps;
 
-    PR_STATIC_CALLBACK(PLDHashNumber)
+    static PLDHashNumber
         HashTableHashKey(PLDHashTable *table, const void *key);
-    PR_STATIC_CALLBACK(PRBool)
+    static PRBool
         HashTableMatchEntry(PLDHashTable *table, const PLDHashEntryHdr *hdr,
                             const void *key);
 
-    PR_STATIC_CALLBACK(PLDHashOperator)
+    static PLDHashOperator
         FillSortedArray(PLDHashTable *table, PLDHashEntryHdr *hdr,
                         PRUint32 number, void *arg);
 

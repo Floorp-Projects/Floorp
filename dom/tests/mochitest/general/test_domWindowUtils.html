@@ -1,0 +1,100 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+  <title>nsIDOMWindowUtils::elementFromPoint test</title>
+  <script type="text/javascript" src="/MochiKit/MochiKit.js"></script>
+  <script type="text/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css">
+  <style>
+    html, body, div {
+      padding: 0;
+      margin: 0;
+    }
+    
+    div.test {
+      position: absolute;
+      height: 10px;
+      width: 10px;
+    }
+  </style>
+</head>
+
+<body id="body">
+
+<div class="test" id="onscreen" style="top: 100px; background-color: red;"></div>
+<div class="test" id="offscreen" style="top: 100000px; background-color: green;"></div>
+
+<script type="application/javascript;version=1.8">
+
+// Enable privileges so we can use nsIDOMWindowUtils interface
+netscape.security.PrivilegeManager.enablePrivilege("UniversalXPConnect");
+var domWindowUtils = window.QueryInterface(Components.interfaces.nsIInterfaceRequestor)
+                           .getInterface(Components.interfaces.nsIDOMWindowUtils);
+
+/*
+  nsIDOMElement elementFromPoint(in long aX,
+                                 in long aY,
+                                 in boolean aIgnoreRootScrollFrame,
+                                 in boolean aFlushLayout);
+*/
+function testElementFromPoint() {
+  let onscreen = document.getElementById("onscreen");
+  let offscreen = document.getElementById("offscreen");
+  let htmldoc = document.documentElement;
+  ok(onscreen, "on screen element exists");
+  ok(offscreen, "off screen element exists");
+  ok(htmldoc, "htmldoc element exists");
+
+  let testData = [
+    // default behavior is to return null for items outside the viewport
+    [[0, 100], null, onscreen],
+    [[9, 109], null, onscreen],
+    [[0, 100000], null, null],
+    [[9, 100009], null, null],
+
+    // ignore scroll frame
+    [[0, 100, true, false], null, onscreen],
+    [[9, 109, true, false], null, onscreen],
+    [[0, 100000, true, false], null, offscreen],
+    [[9, 100009, true, false], null, offscreen],
+
+    // layout flush tests
+    // test moving element 10px to the left and down, and flushing layout
+    [[10, 110, false, true], [[10, 110], onscreen], onscreen],
+    // test moving element back, not flushing layout
+    // (will get the html document instead)
+    [[0, 100, false, false], [[0, 100], onscreen], htmldoc],
+    // test element at same position, flushing layout
+    [[0, 100, false, true], [[0, 100], onscreen], onscreen],
+
+    // same tests repeated for offscreen element
+    [[10, 100010, true, true], [[10, 100010], offscreen], offscreen],
+    [[0, 100000, true, false], [[0, 100000], offscreen], htmldoc],
+    [[0, 100000, true, true], [[0, 100000], offscreen], offscreen],
+  ];
+
+  for (let i = 0; i < testData.length; ++i) {
+    let [x, y, ignoreScroll, flushLayout] = testData[i][0];
+    let moveData = testData[i][1];
+    let expected = testData[i][2];
+    
+    if (moveData) {
+      let moveEl = moveData[1];
+      let [moveX, moveY] = moveData[0];
+
+      moveEl.style.left = moveX + "px";
+      moveEl.style.top = moveY + "px";
+    }
+    let found = domWindowUtils.elementFromPoint(x, y, ignoreScroll, flushLayout);
+    is(found, expected, "at index " + i + " for data " + testData[i][0].toSource());
+  }
+}
+
+testElementFromPoint();
+
+</script>
+
+<p id="display"></p>
+
+</body>
+</html>

@@ -51,6 +51,4 @@ ifdef ENABLE_TESTS
 TOOL_DIRS  += tests
 endif
 
-PACKAGE_FILE = gtkembed.pkg
-
 include $(topsrcdir)/config/rules.mk

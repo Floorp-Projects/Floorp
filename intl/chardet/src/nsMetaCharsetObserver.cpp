@@ -296,6 +296,7 @@ NS_IMETHODIMP nsMetaCharsetObserver::Notify(
                         if (!preferred.EqualsLiteral("UTF-16") &&
                             !preferred.EqualsLiteral("UTF-16BE") &&
                             !preferred.EqualsLiteral("UTF-16LE") &&
+                            !preferred.EqualsLiteral("UTF-32") &&
                             !preferred.EqualsLiteral("UTF-32BE") &&
                             !preferred.EqualsLiteral("UTF-32LE")) {
                           // Propagate the error message so that the parser can
@@ -375,6 +376,7 @@ NS_IMETHODIMP nsMetaCharsetObserver::GetCharsetFromCompatibilityTag(
                   !preferred.EqualsLiteral("UTF-16") &&
                   !preferred.EqualsLiteral("UTF-16BE") &&
                   !preferred.EqualsLiteral("UTF-16LE") &&
+                  !preferred.EqualsLiteral("UTF-32") &&
                   !preferred.EqualsLiteral("UTF-32BE") &&
                   !preferred.EqualsLiteral("UTF-32LE"))
                   AppendASCIItoUTF16(preferred, aCharset);

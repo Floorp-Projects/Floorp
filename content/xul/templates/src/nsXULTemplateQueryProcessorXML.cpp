@@ -177,8 +177,6 @@ nsXULTemplateQueryProcessorXML::GetDatasource(nsIArray* aDataSources,
         return NS_ERROR_UNEXPECTED;
 
     nsIPrincipal *docPrincipal = doc->NodePrincipal();
-    nsCOMPtr<nsIURI> uri2;
-    docPrincipal->GetURI(getter_AddRefs(uri2));
 
     PRBool hasHadScriptObject = PR_TRUE;
     nsIScriptGlobalObject* scriptObject =

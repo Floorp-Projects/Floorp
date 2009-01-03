@@ -39,6 +39,8 @@
 
 #include "nsAutoPtr.h"
 #include "nsIUrlClassifierUtils.h"
+#include "nsTArray.h"
+#include "nsDataHashtable.h"
 
 class nsUrlClassifierUtils : public nsIUrlClassifierUtils
 {
@@ -120,6 +122,111 @@ private:
   void CleanupHostname(const nsACString & host, nsACString & _retval);
 
   nsAutoPtr<Charmap> mEscapeCharmap;
+};
+
+// An MRU list of fragments.  This is used by the DB service to
+// keep a set of known-clean fragments that don't need a database
+// lookup.
+class nsUrlClassifierFragmentSet
+{
+public:
+  nsUrlClassifierFragmentSet() : mFirst(nsnull), mLast(nsnull), mCapacity(16) {}
+
+  PRBool Init(PRUint32 maxEntries) {
+    mCapacity = maxEntries;
+    if (!mEntryStorage.SetCapacity(mCapacity))
+      return PR_FALSE;
+
+    if (!mEntries.Init())
+      return PR_FALSE;
+
+    return PR_TRUE;
+  }
+
+  PRBool Put(const nsACString &fragment) {
+    Entry *entry;
+    if (mEntries.Get(fragment, &entry)) {
+      // Remove this entry from the list, we'll add it back
+      // to the front.
+      UnlinkEntry(entry);
+    } else {
+      if (mEntryStorage.Length() < mEntryStorage.Capacity()) {
+        entry = mEntryStorage.AppendElement();
+        if (!entry)
+          return PR_FALSE;
+      } else {
+        // Reuse the oldest entry.
+        entry = mLast;
+        UnlinkEntry(entry);
+        mEntries.Remove(entry->mFragment);
+      }
+      entry->mFragment = fragment;
+      mEntries.Put(fragment, entry);
+    }
+
+    // Add the entry to the front of the list
+    entry->mPrev = nsnull;
+    entry->mNext = mFirst;
+    mFirst = entry;
+    if (!mLast) {
+      mLast = entry;
+    }
+
+    return PR_TRUE;
+  }
+
+  PRBool Has(const nsACString &fragment) {
+    return mEntries.Get(fragment, nsnull);
+  }
+
+  void Clear() {
+    mFirst = mLast = nsnull;
+    mEntries.Clear();
+    mEntryStorage.Clear();
+    mEntryStorage.SetCapacity(mCapacity);
+  }
+
+private:
+  // One entry in the set.  We maintain a doubly-linked list, with
+  // the most recently used entry at the front.
+  class Entry {
+  public:
+    Entry() : mNext(nsnull), mPrev(nsnull) {};
+    ~Entry() { }
+
+    Entry *mNext;
+    Entry *mPrev;
+    nsCString mFragment;
+  };
+
+  void UnlinkEntry(Entry *entry)
+  {
+    if (entry->mPrev)
+      entry->mPrev->mNext = entry->mNext;
+    else
+      mFirst = entry->mNext;
+
+    if (entry->mNext)
+      entry->mNext->mPrev = entry->mPrev;
+    else
+      mLast = entry->mPrev;
+
+    entry->mPrev = entry->mNext = nsnull;
+  }
+
+  // The newest entry in the cache.
+  Entry *mFirst;
+  // The oldest entry in the cache.
+  Entry *mLast;
+
+  // Max entries in the cache.
+  PRUint32 mCapacity;
+
+  // Storage for the entries in this set.
+  nsTArray<Entry> mEntryStorage;
+
+  // Entry lookup by fragment.
+  nsDataHashtable<nsCStringHashKey, Entry*> mEntries;
 };
 
 #endif // nsUrlClassifierUtils_h_

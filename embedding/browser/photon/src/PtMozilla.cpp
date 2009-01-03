@@ -94,7 +94,7 @@
 
 #ifdef _BUILD_STATIC_BIN
 #include "nsStaticComponent.h"
-nsresult PR_CALLBACK
+nsresult
 ph_getModuleInfo(nsStaticModuleInfo **info, PRUint32 *count);
 #endif
 

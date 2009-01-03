@@ -129,9 +129,9 @@ protected:
   inline nsIDOMWindow *GetWindowForDocShell(nsIDocShell *aDocShell);
   inline PRInt32 GetIndexOfDocShell(nsIDocShell *aDocShell);
 
-  static PLDHashOperator PR_CALLBACK RemoveForDOMDocumentEnumerator(nsISupports* aKey,
-                                                                    PRInt32& aEntry,
-                                                                    void* aUserData);
+  static PLDHashOperator RemoveForDOMDocumentEnumerator(nsISupports* aKey,
+                                                        PRInt32& aEntry,
+                                                        void* aUserData);
   // members //////////////////////////////////////////
 
   nsCOMPtr<nsIAutoCompleteController> mController;

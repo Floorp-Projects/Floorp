@@ -47,7 +47,7 @@
 #include "nsIStreamConverterService.h"
 #include "nsIContentSniffer.h"
 
-PR_STATIC_CALLBACK(PLDHashOperator)
+static PLDHashOperator
 CopyProperties(const nsAString &key, nsIVariant *data, void *closure)
 {
   nsIWritablePropertyBag *bag =
@@ -62,7 +62,7 @@ class ScopedRequestSuspender {
 public:
   ScopedRequestSuspender(nsIRequest *request)
     : mRequest(request) {
-    if (NS_FAILED(mRequest->Suspend())) {
+    if (mRequest && NS_FAILED(mRequest->Suspend())) {
       NS_WARNING("Couldn't suspend pump");
       mRequest = nsnull;
     }
@@ -89,18 +89,19 @@ nsBaseChannel::nsBaseChannel()
   , mQueriedProgressSink(PR_TRUE)
   , mSynthProgressEvents(PR_FALSE)
   , mWasOpened(PR_FALSE)
+  , mWaitingOnAsyncRedirect(PR_FALSE)
 {
   mContentType.AssignLiteral(UNKNOWN_CONTENT_TYPE);
 }
 
 nsresult
-nsBaseChannel::Redirect(nsIChannel *newChannel, PRUint32 redirectFlags)
+nsBaseChannel::Redirect(nsIChannel *newChannel, PRUint32 redirectFlags,
+                        PRBool openNewChannel)
 {
   SUSPEND_PUMP_FOR_SCOPE();
 
   // Transfer properties
 
-  newChannel->SetOriginalURI(OriginalURI());
   newChannel->SetLoadGroup(mLoadGroup);
   newChannel->SetNotificationCallbacks(mCallbacks);
   newChannel->SetLoadFlags(mLoadFlags | LOAD_REPLACE);
@@ -143,13 +144,18 @@ nsBaseChannel::Redirect(nsIChannel *newChannel, PRUint32 redirectFlags)
       return rv;
   }
 
+  // Make sure to do this _after_ making all the  OnChannelRedirect calls
+  newChannel->SetOriginalURI(OriginalURI());
+
   // If we fail to open the new channel, then we want to leave this channel
   // unaffected, so we defer tearing down our channel until we have succeeded
   // with the redirect.
 
-  rv = newChannel->AsyncOpen(mListener, mListenerContext);
-  if (NS_FAILED(rv))
-    return rv;
+  if (openNewChannel) {
+    rv = newChannel->AsyncOpen(mListener, mListenerContext);
+    if (NS_FAILED(rv))
+      return rv;
+  }
 
   // close down this channel
   Cancel(NS_BINDING_REDIRECTED);
@@ -216,9 +222,20 @@ nsresult
 nsBaseChannel::BeginPumpingData()
 {
   nsCOMPtr<nsIInputStream> stream;
-  nsresult rv = OpenContentStream(PR_TRUE, getter_AddRefs(stream));
+  nsCOMPtr<nsIChannel> channel;
+  nsresult rv = OpenContentStream(PR_TRUE, getter_AddRefs(stream),
+                                  getter_AddRefs(channel));
   if (NS_FAILED(rv))
     return rv;
+
+  NS_ASSERTION(!stream || !channel, "Got both a channel and a stream?");
+
+  if (channel) {
+      rv = NS_DispatchToCurrentThread(new RedirectRunnable(this, channel));
+      if (NS_SUCCEEDED(rv))
+          mWaitingOnAsyncRedirect = PR_TRUE;
+      return rv;
+  }
 
   // By assigning mPump, we flag this channel as pending (see IsPending).  It's
   // important that the pending flag is set when we call into the stream (the
@@ -232,6 +249,38 @@ nsBaseChannel::BeginPumpingData()
     rv = mPump->AsyncRead(this, nsnull);
 
   return rv;
+}
+
+void
+nsBaseChannel::HandleAsyncRedirect(nsIChannel* newChannel)
+{
+  NS_ASSERTION(!mPump, "Shouldn't have gotten here");
+  PRBool doNotify = PR_TRUE;
+  if (NS_SUCCEEDED(mStatus)) {
+      nsresult rv = Redirect(newChannel, nsIChannelEventSink::REDIRECT_INTERNAL,
+                             PR_TRUE);
+      if (NS_FAILED(rv))
+          Cancel(rv);
+      else
+          doNotify = PR_FALSE;
+  }
+
+  mWaitingOnAsyncRedirect = PR_FALSE;
+
+  if (doNotify) {
+    // Notify our consumer ourselves
+    mListener->OnStartRequest(this, mListenerContext);
+    mListener->OnStopRequest(this, mListenerContext, mStatus);
+    mListener = nsnull;
+    mListenerContext = nsnull;
+  }
+
+  if (mLoadGroup)
+    mLoadGroup->RemoveRequest(this, nsnull, mStatus);
+
+  // Drop notification callbacks to prevent cycles.
+  mCallbacks = nsnull;
+  CallbacksChanged();
 }
 
 //-----------------------------------------------------------------------------
@@ -342,13 +391,14 @@ NS_IMETHODIMP
 nsBaseChannel::GetOriginalURI(nsIURI **aURI)
 {
   *aURI = OriginalURI();
-  NS_IF_ADDREF(*aURI);
+  NS_ADDREF(*aURI);
   return NS_OK;
 }
 
 NS_IMETHODIMP
 nsBaseChannel::SetOriginalURI(nsIURI *aURI)
 {
+  NS_ENSURE_ARG_POINTER(aURI);
   mOriginalURI = aURI;
   return NS_OK;
 }
@@ -451,8 +501,15 @@ nsBaseChannel::Open(nsIInputStream **result)
   NS_ENSURE_TRUE(!mPump, NS_ERROR_IN_PROGRESS);
   NS_ENSURE_TRUE(!mWasOpened, NS_ERROR_IN_PROGRESS);
 
-  nsresult rv = OpenContentStream(PR_FALSE, result);
-  if (rv == NS_ERROR_NOT_IMPLEMENTED)
+  nsCOMPtr<nsIChannel> chan;
+  nsresult rv = OpenContentStream(PR_FALSE, result, getter_AddRefs(chan));
+  NS_ASSERTION(!chan || !*result, "Got both a channel and a stream?");
+  if (NS_SUCCEEDED(rv) && chan) {
+      rv = Redirect(chan, nsIChannelEventSink::REDIRECT_INTERNAL, PR_FALSE);
+      if (NS_FAILED(rv))
+          return rv;
+      rv = chan->Open(result);
+  } else if (rv == NS_ERROR_NOT_IMPLEMENTED)
     return NS_ImplementChannelOpen(this, result);
 
   mWasOpened = NS_SUCCEEDED(rv);

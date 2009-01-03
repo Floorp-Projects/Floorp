@@ -209,7 +209,7 @@ struct SysPrefCallbackData {
     PRUint32 prefAtom;
 };
 
-PRBool PR_CALLBACK
+PRBool
 sysPrefDeleteObserver(void *aElement, void *aData) {
     SysPrefCallbackData *pElement =
         static_cast<SysPrefCallbackData *>(aElement);
@@ -586,7 +586,7 @@ static const PrefNamePair sPrefNameMapping[] = {
     {nsnull, nsnull},
 };
 
-PRBool PR_CALLBACK
+PRBool
 gconfDeleteObserver(void *aElement, void *aData) {
     nsMemory::Free(aElement);
     return PR_TRUE;

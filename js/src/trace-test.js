@@ -1,3 +1,4 @@
+/* -*- Mode: C; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 4 -*- */
 /**
  * A number of the tests in this file depend on the setting of
  * HOTLOOP.  Define some constants up front, so they're easy to grep
@@ -35,6 +36,7 @@ function jitstatHandler(f)
     f("treesTrashed");
     f("slotPromoted");
     f("unstableLoopVariable");
+    f("noCompatInnerTrees");
     f("breakLoopExits");
     f("returnLoopExits");
 }
@@ -51,9 +53,51 @@ function test(f)
   }
 }
 
+function map_test(t, cases)
+{
+  for (var i = 0; i < cases.length; i++) {
+    function c() { return t(cases[i].input); }
+    c.expected = cases[i].expected;
+    c.name = t.name + "(" + uneval(cases[i].input) + ")";
+    test(c);
+  }
+}
+
+// Use this function to compare expected and actual test results.
+// Types must match.
+// For numbers, treat NaN as matching NaN, distinguish 0 and -0, and
+// tolerate a certain degree of error for other values.
+//
+// These are the same criteria used by the tests in js/tests, except that
+// we distinguish 0 and -0.
+function close_enough(expected, actual)
+{
+  if (typeof expected != typeof actual)
+    return false;
+  if (typeof expected != 'number')
+    return actual == expected;
+
+  // Distinguish NaN from other values.  Using x != x comparisons here
+  // works even if tests redefine isNaN.
+  if (actual != actual)
+    return expected != expected
+  if (expected != expected)
+    return false;
+
+  // Tolerate a certain degree of error.
+  if (actual != expected)
+    return Math.abs(actual - expected) <= 1E-10;
+
+  // Distinguish 0 and -0.
+  if (actual == 0)
+    return (1 / actual > 0) == (1 / expected > 0);
+
+  return true;
+}
+
 function check(desc, actual, expected, oldJITstats, expectedJITstats)
 {
-  if (expected == actual) {
+  if (close_enough(expected, actual)) {
     var pass = true;
     jitstatHandler(function(prop) {
                      if (expectedJITstats && prop in expectedJITstats &&
@@ -89,10 +133,11 @@ function check(desc, actual, expected, oldJITstats, expectedJITstats)
                        }
                      });
   }
-  print(desc, ": FAILED: expected", typeof(expected), "(", expected, ")",
+  print(desc, ": FAILED: expected", typeof(expected),
+        "(", uneval(expected), ")",
 	(expectedStats ? " [" + expectedStats + "] " : ""),
 	"!= actual",
-	typeof(actual), "(", actual, ")",
+	typeof(actual), "(", uneval(actual), ")",
 	(actualStats ? " [" + actualStats + "] " : ""));
 }
 
@@ -233,12 +278,11 @@ function lsh_inner(n)
     r = 0x1 << n;
   return r;
 }
-function lsh()
-{
-  return [lsh_inner(15),lsh_inner(55),lsh_inner(1),lsh_inner(0)];
-}
-lsh.expected = "32768,8388608,2,1";
-test(lsh);
+map_test (lsh_inner,
+          [{input: 15, expected: 32768},
+           {input: 55, expected: 8388608},
+           {input: 1,  expected: 2},
+           {input: 0,  expected: 1}]);
 
 function rsh_inner(n)
 {
@@ -247,12 +291,11 @@ function rsh_inner(n)
     r = 0x11010101 >> n;
   return r;
 }
-function rsh()
-{
-  return [rsh_inner(8),rsh_inner(5),rsh_inner(35),rsh_inner(-1)];
-}
-rsh.expected = "1114369,8914952,35659808,0";
-test(rsh);
+map_test (rsh_inner,
+          [{input: 8,  expected: 1114369},
+           {input: 5,  expected: 8914952},
+           {input: 35, expected: 35659808},
+           {input: -1, expected: 0}]);
 
 function ursh_inner(n)
 {
@@ -261,12 +304,12 @@ function ursh_inner(n)
     r = -55 >>> n;
   return r;
 }
-function ursh() {
-  return [ursh_inner(8),ursh_inner(33),ursh_inner(0),ursh_inner(1)];
-}
-ursh.expected = "16777215,2147483620,4294967241,2147483620";
-test(ursh);
-
+map_test (ursh_inner,
+          [{input: 8,  expected: 16777215},
+           {input: 33, expected: 2147483620},
+           {input: 0,  expected: 4294967241},
+           {input: 1,  expected: 2147483620}]);
+           
 function doMath_inner(cos)
 {
     var s = 0;
@@ -368,7 +411,7 @@ function call()
       q4 += o.f();
       q5 += glob_f2();
   }
-  var ret = [q1, q2, q3, q4, q5];
+  var ret = String([q1, q2, q3, q4, q5]);
   return ret;
 }
 call.expected =  "100,100,100,100,100";
@@ -396,7 +439,7 @@ function testif() {
 	}
     return q;
 }
-testif.expected = "0";
+testif.expected = 0;
 test(testif);
 
 var globalinc = 0;
@@ -432,7 +475,7 @@ function trees() {
     else if ((i & 2) == 0) o[1]++;
     else o[2]++;
   }
-  return o;
+  return String(o);
 }
 trees.expected = "50,25,25";
 test(trees);
@@ -444,7 +487,7 @@ function unboxint() {
 	q = o[0] << 1;
     return q;
 }
-unboxint.expected = "8";
+unboxint.expected = 8;
 test(unboxint);
 
 function strings()
@@ -517,10 +560,10 @@ var orNaNTest1, orNaNTest2;
 
 orNaNTest1 = new Function("return orTestHelper(NaN, NaN, 10);");
 orNaNTest1.name = 'orNaNTest1';
-orNaNTest1.expected = '0';
+orNaNTest1.expected = 0;
 orNaNTest2 = new Function("return orTestHelper(NaN, 1, 10);");
 orNaNTest2.name = 'orNaNTest2';
-orNaNTest2.expected = '45';
+orNaNTest2.expected = 45;
 test(orNaNTest1);
 test(orNaNTest2);
 
@@ -731,7 +774,7 @@ function missingArgTest() {
   }
   return q;
 }
-missingArgTest.expected = "1"
+missingArgTest.expected = 1;
 test(missingArgTest);
 
 JSON = function () {
@@ -844,6 +887,15 @@ function matchInLoop() {
 matchInLoop.expected = true;
 test(matchInLoop);
 
+function testMatchAsCondition() {
+    var a = ['0', '0', '0', '0'];
+    var r = /0/;
+    "x".q;
+    for (var z = 0; z < 4; z++)
+        a[z].match(r) ? 1 : 2;
+}
+test(testMatchAsCondition);
+
 function deep1(x) {
     if (x > 90)
 	return 1;
@@ -876,7 +928,7 @@ function inner_double_outer_int() {
     }
     return f(.5);
 }
-inner_double_outer_int.expected = "100";
+inner_double_outer_int.expected = 100;
 test(inner_double_outer_int);
 
 function newArrayTest()
@@ -1084,6 +1136,13 @@ function testDoubleToStr() {
 }
 testDoubleToStr.expected = 5.5*200;
 test(testDoubleToStr);
+
+function testNumberToString() {
+    var x = new Number(0);
+    for (var i = 0; i < 4; i++)
+        x.toString();
+}
+test(testNumberToString);
 
 function testDecayingInnerLoop() {
     var i, j, k = 10;
@@ -1540,8 +1599,8 @@ function testNestedExitStackOuter() {
 }
 testNestedExitStackOuter.expected = 81;
 testNestedExitStackOuter.jitstats = {
-    recorderStarted: 4,
-    recorderAborted: 0,
+    recorderStarted: 5,
+    recorderAborted: 2,
     traceTriggered: 9
 };
 test(testNestedExitStackOuter);
@@ -1551,13 +1610,6 @@ function testHOTLOOPSize() {
 }
 testHOTLOOPSize.expected = true;
 test(testHOTLOOPSize);
-
-function testGlobalProtoAccess() {
-    return "ok";
-}
-this.__proto__.a = 3; for (var j = 0; j < 4; ++j) { [a]; }
-testGlobalProtoAccess.expected = "ok";
-test(testGlobalProtoAccess);
 
 function testMatchStringObject() {
     var a = new String("foo");
@@ -1758,6 +1810,1929 @@ function testInvalidCharCodeAt()
 }
 testInvalidCharCodeAt.expected = "NaNNaNNaNNaNNaNNaNNaNNaNNaNNaN";
 test(testInvalidCharCodeAt);
+
+function FPQuadCmp()
+{
+    for (let j = 0; j < 3; ++j) { true == 0; }
+    return "ok";
+}
+FPQuadCmp.expected = "ok";
+test(FPQuadCmp);
+
+function testDestructuring() {
+    var t = 0;
+    for (var i = 0; i < HOTLOOP + 1; ++i) {
+        var [r, g, b] = [1, 1, 1];
+        t += r + g + b;
+    }
+    return t
+}
+testDestructuring.expected = (HOTLOOP + 1) * 3;
+test(testDestructuring);
+
+function loopWithUndefined1(t, val) {
+    var a = new Array(6);
+    for (var i = 0; i < 6; i++)
+        a[i] = (t > val);
+    return a;
+}
+loopWithUndefined1(5.0, 2);     //compile version with val=int
+
+function testLoopWithUndefined1() {
+    return loopWithUndefined1(5.0).join(",");  //val=undefined
+};
+testLoopWithUndefined1.expected = "false,false,false,false,false,false";
+test(testLoopWithUndefined1);
+
+function loopWithUndefined2(t, dostuff, val) {
+    var a = new Array(6);
+    for (var i = 0; i < 6; i++) {
+        if (dostuff) {
+            val = 1; 
+            a[i] = (t > val);
+        } else {
+            a[i] = (val == undefined);
+        }
+    }
+    return a;
+}
+function testLoopWithUndefined2() {
+    var a = loopWithUndefined2(5.0, true, 2);
+    var b = loopWithUndefined2(5.0, true);
+    var c = loopWithUndefined2(5.0, false, 8);
+    var d = loopWithUndefined2(5.0, false);
+    return [a[0], b[0], c[0], d[0]].join(",");
+}
+testLoopWithUndefined2.expected = "true,true,false,true";
+test(testLoopWithUndefined2);
+
+//test no multitrees assert
+function testBug462388() {
+    var c = 0, v; for each (let x in ["",v,v,v]) { for (c=0;c<4;++c) { } }
+    return true;
+}
+testBug462388.expected = true;
+test(testBug462388);
+
+//test no multitrees assert
+function testBug462407() {
+    for each (let i in [0, {}, 0, 1.5, {}, 0, 1.5, 0, 0]) { }
+    return true;
+}
+testBug462407.expected = true;
+test(testBug462407);
+
+//test no multitrees assert
+function testBug463490() {
+    function f(a, b, d) {
+        for (var i = 0; i < 10; i++) {
+            if (d)
+                b /= 2;
+        }
+        return a + b;
+    }
+    //integer stable loop
+    f(2, 2, false);
+    //double stable loop
+    f(3, 4.5, false);
+    //integer unstable branch
+    f(2, 2, true);
+    return true;
+};
+testBug463490.expected = true;
+test(testBug463490);
+
+// Test no assert (bug 464089)
+function shortRecursiveLoop(b, c) {
+    for (var i = 0; i < c; i++) {
+        if (b)
+            shortRecursiveLoop(c - 1);
+    }
+}
+function testClosingRecursion() {
+    shortRecursiveLoop(false, 1);
+    shortRecursiveLoop(true, 3);
+    return true;
+}
+testClosingRecursion.expected = true;
+test(testClosingRecursion);
+
+// Test no assert or crash from outer recorders (bug 465145)
+function testBug465145() {
+	this.__defineSetter__("x", function(){});
+	this.watch("x", function(){});
+	y = this;
+	for (var z = 0; z < 2; ++z) { x = y };
+	this.__defineSetter__("x", function(){});
+	for (var z = 0; z < 2; ++z) { x = y };
+}
+
+function testTrueShiftTrue() {
+    var a = new Array(5);
+    for (var i=0;i<5;++i) a[i] = "" + (true << true);
+    return a.join(",");
+}
+testTrueShiftTrue.expected = "2,2,2,2,2";
+test(testTrueShiftTrue);
+
+// Test no assert or crash
+function testBug465261() {
+    for (let z = 0; z < 2; ++z) { for each (let x in [0, true, (void 0), 0, (void
+    0)]) { if(x){} } };
+    return true;
+}
+testBug465261.expected = true;
+test(testBug465261);
+
+function testBug465272() {
+    var a = new Array(5);
+    for (j=0;j<5;++j) a[j] = "" + ((5) - 2);
+    return a.join(",");
+}
+testBug465272.expected = "3,3,3,3,3"
+test(testBug465272);
+
+function testBug465483() {
+	var a = new Array(4);
+	var c = 0;
+	for each (i in [4, 'a', 'b', (void 0)]) a[c++] = '' + (i + i);
+	return a.join(',');
+}
+testBug465483.expected = '8,aa,bb,NaN';
+test(testBug465483);
+
+function testNullCallee() {
+    try {
+        function f() {
+            var x = new Array(5);
+            for (var i = 0; i < 5; i++)
+                x[i] = a[i].toString();
+            return x.join(',');
+        }
+        f([[1],[2],[3],[4],[5]]);
+        f([null, null, null, null, null]);
+    } catch (e) {
+        return true;
+    }
+    return false;
+}
+testNullCallee.expected = true;
+test(testNullCallee);
+
+//test no multitrees assert
+function testBug466128() {
+    for (let a = 0; a < 3; ++a) { 
+      for each (let b in [1, 2, "three", 4, 5, 6, 7, 8]) {
+      }
+    }
+    return true;
+}
+testBug466128.expected = true;
+test(testBug466128);
+
+//test no assert
+function testBug465688() {
+    for each (let d in [-0x80000000, -0x80000000]) - -d;
+    return true;
+}
+testBug465688.expected = true;
+test(testBug465688);
+
+//test no assert
+function testBug466262() {
+	var e = 1;
+	for (var d = 0; d < 3; ++d) {
+	  if (d == 2) {
+		e = "";
+	  }
+	}
+	return true;
+}
+testBug466262.expected = true;
+test(testBug466262);
+
+// BEGIN MANDELBROT STUFF
+// XXXbz I would dearly like to wrap it up into a function to avoid polluting
+// the global scope, but the function ends up heavyweight, and then we lose on
+// the jit.
+load("mandelbrot-results.js");
+//function testMandelbrotAll() {
+  // Configuration options that affect which codepaths we follow.
+  var doImageData = true;
+  var avoidSparseArray = true;
+
+  // Control of iteration numbers and sizing.  We'll do
+  // scaler * colorNames.length iterations or so before deciding that we
+  // don't escape.
+  const scaler = 5;
+  const numRows = 600;
+  const numCols = 600;
+
+  // For now, avoid hitting memory pressure
+  gcparam("maxBytes", 1300000000); 
+  gcparam("maxMallocBytes", 1300000000); 
+
+  const colorNames = [
+    "black",
+    "green",
+    "blue",
+    "red",
+    "purple",
+    "orange",
+    "cyan",
+    "yellow",
+    "magenta",
+    "brown",
+    "pink",
+    "chartreuse",
+    "darkorange",
+    "crimson",
+    "gray",
+    "deeppink",
+    "firebrick",
+    "lavender",
+    "lawngreen",
+    "lightsalmon",
+    "lime",
+    "goldenrod"
+  ];
+  const threshold = (colorNames.length - 1) * scaler;
+
+  // Now set up our colors
+  var colors = [];
+  // 3-part for loop (iterators buggy, we will add a separate test for them)
+  for (var colorNameIdx = 0; colorNameIdx < colorNames.length; ++colorNameIdx) {
+  //for (var colorNameIdx in colorNames) {
+    colorNameIdx = parseInt(colorNameIdx);
+    colors.push([colorNameIdx, colorNameIdx, colorNameIdx, 0]);
+  }
+
+  // Storage for our point data
+  var points;
+
+  var scratch = {};
+  var scratchZ = {};
+  function complexMult(a, b) {
+    var newr = a.r * b.r - a.i * b.i;
+    var newi = a.r * b.i + a.i * b.r;
+    scratch.r = newr;
+    scratch.i = newi;
+    return scratch;
+  }
+  function complexAdd(a, b) {
+    scratch.r = a.r + b.r;
+    scratch.i = a.i + b.i;
+    return scratch;
+  }
+  function abs(a) {
+    return Math.sqrt(a.r * a.r + a.i * a.i);
+  }
+
+  function escapeAbsDiff(normZ, absC) {
+    var absZ = Math.sqrt(normZ);
+    return normZ > absZ + absC;
+  }
+
+  function escapeNorm2(normZ) {
+    return normZ > 4;
+  }
+
+  function fuzzyColors(i) {
+    return Math.floor(i / scaler) + 1;
+  }
+
+  function moddedColors(i) {
+    return (i % (colorNames.length - 1)) + 1;
+  }
+
+  function computeEscapeSpeedObjects(real, imag) {
+    var c = { r: real, i: imag }
+    scratchZ.r = scratchZ.i = 0;
+    var absC = abs(c);
+    for (var i = 0; i < threshold; ++i) {
+      scratchZ = complexAdd(c, complexMult(scratchZ, scratchZ));
+      if (escape(scratchZ.r * scratchZ.r + scratchZ.i * scratchZ.i,
+                 absC)) {
+        return colorMap(i);
+      }
+    }
+    return 0;
+  }
+
+  function computeEscapeSpeedOneObject(real, imag) {
+    // fold in the fact that we start with 0
+    var r = real;
+    var i = imag;
+    var absC = abs({r: real, i: imag});
+    for (var j = 0; j < threshold; ++j) {
+      var r2 = r * r;
+      var i2 = i * i;
+      if (escape(r2 + i2, absC)) {
+        return colorMap(j);
+      }
+      i = 2 * r * i + imag;
+      r = r2 - i2 + real;
+    }
+    return 0;
+  }
+
+  function computeEscapeSpeedDoubles(real, imag) {
+    // fold in the fact that we start with 0
+    var r = real;
+    var i = imag;
+    var absC = Math.sqrt(real * real + imag * imag);
+    for (var j = 0; j < threshold; ++j) {
+      var r2 = r * r;
+      var i2 = i * i;
+      if (escape(r2 + i2, absC)) {
+        return colorMap(j);
+      }
+      i = 2 * r * i + imag;
+      r = r2 - i2 + real;
+    }
+    return 0;
+  }
+
+  var computeEscapeSpeed = computeEscapeSpeedDoubles;
+  var escape = escapeNorm2;
+  var colorMap = fuzzyColors;
+
+  function addPointOrig(pointArray, n, i, j) {
+    if (!points[n]) {
+      points[n] = [];
+      points[n].push([i, j, 1, 1]);
+    } else {
+      var point = points[n][points[n].length-1];
+      if (point[0] == i && point[1] == j - point[3]) {
+        ++point[3];
+      } else {
+        points[n].push([i, j, 1, 1]);
+      }
+    }
+  }
+
+  function addPointImagedata(pointArray, n, col, row) {
+    var slotIdx = ((row * numCols) + col) * 4;
+    pointArray[slotIdx] = colors[n][0];
+    pointArray[slotIdx+1] = colors[n][1];
+    pointArray[slotIdx+2] = colors[n][2];
+    pointArray[slotIdx+3] = colors[n][3];
+  }
+
+  function createMandelSet() {
+    var realRange = { min: -2.1, max: 1 };
+    var imagRange = { min: -1.5, max: 1.5 };
+
+    var addPoint;
+    if (doImageData) {
+      addPoint = addPointImagedata;
+      points = new Array(4*numCols*numRows);
+      if (avoidSparseArray) {
+        for (var idx = 0; idx < 4*numCols*numRows; ++idx) {
+          points[idx] = 0;
+        }
+      }
+    } else {
+      addPoint = addPointOrig;
+      points = [];
+    }
+    var realStep = (realRange.max - realRange.min)/numCols;
+    var imagStep = (imagRange.min - imagRange.max)/numRows;
+    for (var i = 0, curReal = realRange.min;
+         i < numCols;
+         ++i, curReal += realStep) {
+      for (var j = 0, curImag = imagRange.max;
+           j < numRows;
+           ++j, curImag += imagStep) {
+        var n = computeEscapeSpeed(curReal, curImag);
+        addPoint(points, n, i, j)
+      }
+    }
+    var result;
+    if (doImageData) {
+      if (colorMap == fuzzyColors) {
+        result = mandelbrotImageDataFuzzyResult;
+      } else {
+        result = mandelbrotImageDataModdedResult;
+      }
+    } else {
+      result = mandelbrotNoImageDataResult;
+    }
+    return points.toSource() == result;
+  }
+
+  createMandelSet.expected = true;
+
+  const escapeTests = [ escapeAbsDiff ];
+  const colorMaps = [ fuzzyColors, moddedColors ];
+  const escapeComputations = [ computeEscapeSpeedObjects,
+                               computeEscapeSpeedOneObject,
+                               computeEscapeSpeedDoubles ];
+  // Test all possible escape-speed generation codepaths, using the
+  // imageData + sparse array avoidance storage.
+  doImageData = true;
+  avoidSparseArray = true;
+  for (var escapeIdx in escapeTests) {
+    escape = escapeTests[escapeIdx];
+    for (var colorMapIdx in colorMaps) {
+      colorMap = colorMaps[colorMapIdx];
+      for (var escapeComputationIdx in escapeComputations) {
+        computeEscapeSpeed = escapeComputations[escapeComputationIdx];
+        test(createMandelSet);
+      }
+    }
+  }
+
+  // Test all possible storage strategies. Note that we already tested
+  // doImageData == true with avoidSparseArray == true.
+  escape = escapeAbsDiff;
+  colorMap = fuzzyColors; // This part doesn't really matter too much here
+  computeEscapeSpeed = computeEscapeSpeedDoubles;
+
+  doImageData = true;
+  avoidSparseArray = false; 
+  test(createMandelSet);
+
+  escape = escapeNorm2;
+  doImageData = false;  // avoidSparseArray doesn't matter here
+  test(createMandelSet);
+//}
+//testMandelbrotAll();
+// END MANDELBROT STUFF
+
+function testNewDate()
+{
+    // Accessing global.Date for the first time will change the global shape,
+    // so do it before the loop starts; otherwise we have to loop an extra time
+    // to pick things up.
+    var start = new Date();
+    var time = new Date();
+    for (var j = 0; j < RUNLOOP; ++j) {
+	time = new Date();
+    }
+    return time > 0 && time >= start;
+}
+testNewDate.expected = true;
+testNewDate.jitstats = {
+    recorderStarted: 1,
+    recorderAborted: 0,
+    traceTriggered: 1
+};
+test(testNewDate);
+
+function testArrayPushPop() {
+    var a = [], sum1 = 0, sum2 = 0;
+    for (var i = 0; i < 10; ++i)
+	sum1 += a.push(i);
+    for (var i = 0; i < 10; ++i)
+	sum2 += a.pop();
+    a.push(sum1);
+    a.push(sum2);
+    return a.join(",");
+}
+testArrayPushPop.expected = "55,45";
+test(testArrayPushPop);
+
+function testResumeOp() {
+    var a = [1,"2",3,"4",5,"6",7,"8",9,"10",11,"12",13,"14",15,"16"];
+    var x = "";
+    while (a.length > 0)
+        x += a.pop();
+    return x;
+}
+testResumeOp.expected = "16151413121110987654321";
+test(testResumeOp);
+
+function testUndefinedCmp() {
+    var a = false;
+    for (var j = 0; j < 4; ++j) { if (undefined < false) { a = true; } }
+    return a;
+}
+testUndefinedCmp.expected = false;
+test(testUndefinedCmp);
+
+function reallyDeepNestedExit(schedule)
+{
+    var c = 0, j = 0;
+    for (var i = 0; i < 5; i++) {
+        for (j = 0; j < 4; j++) {
+            c += (schedule[i*4 + j] == 1) ? 1 : 2;
+        }
+    }
+    return c;
+}
+function testReallyDeepNestedExit()
+{
+    var c = 0;
+    var schedule1 = new Array(5*4);
+    var schedule2 = new Array(5*4);
+    for (var i = 0; i < 5*4; i++) {
+        schedule1[i] = 0;
+        schedule2[i] = 0;
+    }
+    /**
+     * First innermost compile: true branch runs through.
+     * Second '': false branch compiles new loop edge.
+     * First outer compile: expect true branch.
+     * Second '': hit false branch.
+     */
+    schedule1[0*4 + 3] = 1;
+    var schedules = [schedule1,
+                     schedule2,
+                     schedule1,
+                     schedule2,
+                     schedule2];
+
+    for (var i = 0; i < 5; i++) {
+        c += reallyDeepNestedExit(schedules[i]);
+    }
+    return c;
+}
+testReallyDeepNestedExit.expected = 198;
+test(testReallyDeepNestedExit);
+
+function testRegExpTest() {
+    var r = /abc/;
+    var flag = false;
+    for (var i = 0; i < 10; ++i)
+	flag = r.test("abc");
+    return flag;
+}
+testRegExpTest.expected = true;
+test(testRegExpTest);
+
+function testNumToString() {
+    var r = [];
+    var d = 123456789;
+    for (var i = 0; i < 10; ++i) {
+	r = [
+	     d.toString(),
+	     (-d).toString(),
+	     d.toString(10),
+	     (-d).toString(10),
+	     d.toString(16),
+	     (-d).toString(16),
+	     d.toString(36),
+	     (-d).toString(36)
+        ];
+    }
+    return r.join(",");
+}
+testNumToString.expected = "123456789,-123456789,123456789,-123456789,75bcd15,-75bcd15,21i3v9,-21i3v9";
+test(testNumToString);
+
+function testSubstring() {
+    for (var i = 0; i < 5; ++i) {
+        actual = "".substring(5);
+    }
+    return actual;
+}
+testSubstring.expected = "";
+test(testSubstring);
+
+function testForInLoopChangeIteratorType() {
+    for(y in [0,1,2]) y = NaN;
+    (function(){
+        [].__proto__.u = void 0;
+        for (let y in [5,6,7,8])
+            y = NaN;
+        delete [].__proto__.u;
+    })()
+    return "ok";
+}
+testForInLoopChangeIteratorType.expected = "ok";
+test(testForInLoopChangeIteratorType);
+
+function testGrowDenseArray() {
+    var a = new Array();
+    for (var i = 0; i < 10; ++i)
+	a[i] |= 5;
+    return a.join(",");
+}
+testGrowDenseArray.expected = "5,5,5,5,5,5,5,5,5,5";
+test(testGrowDenseArray);
+
+function testCallProtoMethod() {
+    function X() { this.x = 1; }
+    X.prototype.getName = function () { return "X"; }
+
+    function Y() { this.x = 2; }
+    Y.prototype.getName = function() "Y";
+
+    var a = [new X, new X, new X, new X, new Y];
+    var s = '';
+    for (var i = 0; i < a.length; i++)
+        s += a[i].getName();
+    return s;
+}
+testCallProtoMethod.expected = 'XXXXY';
+test(testCallProtoMethod);
+
+function testTypeUnstableForIn() {
+    var a = [1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16];
+    var x = 0;
+    for (var i in a) {
+        i = parseInt(i);
+        x++;
+    }
+    return x;
+}
+testTypeUnstableForIn.expected = 16;
+test(testTypeUnstableForIn);
+
+function testAddUndefined() {
+    for (var j = 0; j < 3; ++j)
+        (0 + void 0) && 0;
+}
+test(testAddUndefined);
+
+function testStringify() {
+    var t = true, f = false, u = undefined, n = 5, d = 5.5, s = "x";
+    var a = [];
+    for (var i = 0; i < 10; ++i) {
+	a[0] = "" + t;
+	a[1] = t + "";
+	a[2] = "" + f;
+	a[3] = f + "";
+	a[4] = "" + u;
+	a[5] = u + "";
+	a[6] = "" + n;
+	a[7] = n + "";
+	a[8] = "" + d;
+	a[9] = d + "";
+	a[10] = "" + s;
+	a[11] = s + "";
+    }
+    return a.join(",");
+}
+testStringify.expected = "true,true,false,false,undefined,undefined,5,5,5.5,5.5,x,x";
+test(testStringify);
+
+function testObjectToString() {
+    var o = {toString: function()"foo"};
+    var s = "";
+    for (var i = 0; i < 10; i++)
+        s += o;
+    return s;
+}
+testObjectToString.expected = "foofoofoofoofoofoofoofoofoofoo";
+test(testObjectToString);
+
+function testObjectToNumber() {
+    var o = {valueOf: function()-3};
+    var x = 0;
+    for (var i = 0; i < 10; i++)
+        x -= o;
+    return x;
+}
+testObjectToNumber.expected = 30;
+test(testObjectToNumber);
+
+function my_iterator_next() {
+    if (this.i == 10) {
+        this.i = 0;
+        throw this.StopIteration;
+    }
+    return this.i++;
+}
+function testCustomIterator() {
+    var o = {
+        __iterator__: function () {
+            return {
+                i: 0,
+                next: my_iterator_next,
+                StopIteration: StopIteration
+            };
+        }
+    };
+    var a=[];
+    for (var k = 0; k < 100; k += 10) {
+        for(var j in o) {
+            a[k + (j >> 0)] = j*k;
+        }
+    }
+    return a.join();
+}
+testCustomIterator.expected = "0,0,0,0,0,0,0,0,0,0,0,10,20,30,40,50,60,70,80,90,0,20,40,60,80,100,120,140,160,180,0,30,60,90,120,150,180,210,240,270,0,40,80,120,160,200,240,280,320,360,0,50,100,150,200,250,300,350,400,450,0,60,120,180,240,300,360,420,480,540,0,70,140,210,280,350,420,490,560,630,0,80,160,240,320,400,480,560,640,720,0,90,180,270,360,450,540,630,720,810";
+test(testCustomIterator);
+
+function bug464403() {
+    print(8);
+    var u = [print, print, function(){}]
+    for each (x in u) for (u.e in [1,1,1,1]);
+    return "ok";
+}
+bug464403.expected = "ok";
+test(bug464403);
+
+function testBoxDoubleWithDoubleSizedInt()
+{
+  var i = 0;
+  var a = new Array(3);
+
+  while (i < a.length)
+    a[i++] = 0x5a827999;
+  return a.join(",");
+}
+testBoxDoubleWithDoubleSizedInt.expected = "1518500249,1518500249,1518500249";
+test(testBoxDoubleWithDoubleSizedInt);
+
+function testObjectOrderedCmp()
+{
+  var a = new Array(5);
+  for(var i=0;i<5;++i) a[i] = ({} < {});
+  return a.join(",");
+}
+testObjectOrderedCmp.expected = "false,false,false,false,false";
+test(testObjectOrderedCmp);
+
+function testObjectOrderedCmp2()
+{
+  var a = new Array(5);
+  for(var i=0;i<5;++i) a[i] = ("" <= null);
+  return a.join(",");
+}
+testObjectOrderedCmp2.expected = "true,true,true,true,true";
+test(testObjectOrderedCmp2);
+
+function testLogicalNotNaN() {
+    var i = 0;
+    var a = new Array(5);
+    while (i < a.length)
+        a[i++] = !NaN;
+    return a.join();
+}
+testLogicalNotNaN.expected = "true,true,true,true,true";
+test(testLogicalNotNaN);
+
+function testStringToInt32() {
+    var s = "";
+    for (let j = 0; j < 5; ++j) s += ("1e+81" ^  3);
+    return s;
+}
+testStringToInt32.expected = "33333";
+test(testStringToInt32);
+
+function testIn() {
+    var array = [3];
+    var obj = { "-1": 5, "1.7": 3, "foo": 5, "1": 7 };
+    var a = [];
+    for (let j = 0; j < 5; ++j) {
+        a.push("0" in array);
+        a.push(-1 in obj);
+        a.push(1.7 in obj);
+        a.push("foo" in obj);
+        a.push(1 in obj);
+        a.push("1" in array);  
+        a.push(-2 in obj);
+        a.push(2.7 in obj);
+        a.push("bar" in obj);
+        a.push(2 in obj);    
+    }
+    return a.join(",");
+}
+testIn.expected = "true,true,true,true,true,false,false,false,false,false,true,true,true,true,true,false,false,false,false,false,true,true,true,true,true,false,false,false,false,false,true,true,true,true,true,false,false,false,false,false,true,true,true,true,true,false,false,false,false,false";
+test(testIn);
+
+function testBranchCse() {
+    empty = [];
+    out = [];
+    for (var j=0;j<10;++j) { empty[42]; out.push((1 * (1)) | ""); }
+    return out.join(",");
+}
+testBranchCse.expected = "1,1,1,1,1,1,1,1,1,1";
+test(testBranchCse);
+
+function testMulOverflow() {
+    var a = [];
+    for (let j=0;j<5;++j) a.push(0 | ((0x60000009) * 0x60000009));
+    return a.join(",");
+}
+testMulOverflow.expected = "-1073741824,-1073741824,-1073741824,-1073741824,-1073741824";
+test(testMulOverflow);
+
+function testThinLoopDemote() {
+    function f()
+    {
+        var k = 1;
+        for (var n = 0; n < 2; n++) {
+            k = (k * 10);
+        }
+        return k;
+    }
+    f();
+    return f();
+}
+testThinLoopDemote.expected = 100;
+testThinLoopDemote.jitstats = {
+    recorderStarted: 3,
+    recorderAborted: 0,
+    traceCompleted: 1,
+    traceTriggered: 0,
+    unstableLoopVariable: 2
+};
+test(testThinLoopDemote);
+
+var global = this;
+function testWeirdDateParseOuter()
+{
+    var vDateParts = ["11", "17", "2008"];
+    var out = [];
+    for (var vI = 0; vI < vDateParts.length; vI++) {
+	out.push(testWeirdDateParseInner(vDateParts[vI]));
+    }
+    /* Mutate the global shape so we fall off trace; this causes
+     * additional oddity */
+    global.x = Math.random();
+    return out;
+} 
+function testWeirdDateParseInner(pVal)
+{
+    var vR = 0;
+    for (var vI = 0; vI < pVal.length; vI++) {
+	var vC = pVal.charAt(vI);
+	if ((vC >= '0') && (vC <= '9'))
+	    vR = (vR * 10) + parseInt(vC);
+    }
+    return vR;
+}
+function testWeirdDateParse() {
+    var result = [];
+    result.push(testWeirdDateParseInner("11"));
+    result.push(testWeirdDateParseInner("17"));
+    result.push(testWeirdDateParseInner("2008"));
+    result.push(testWeirdDateParseInner("11"));
+    result.push(testWeirdDateParseInner("17"));
+    result.push(testWeirdDateParseInner("2008"));
+    result = result.concat(testWeirdDateParseOuter());
+    result = result.concat(testWeirdDateParseOuter());
+    result.push(testWeirdDateParseInner("11"));
+    result.push(testWeirdDateParseInner("17"));
+    result.push(testWeirdDateParseInner("2008"));
+    return result.join(",");
+}
+testWeirdDateParse.expected = "11,17,2008,11,17,2008,11,17,2008,11,17,2008,11,17,2008";
+testWeirdDateParse.jitstats = {
+    recorderStarted: 10,
+    recorderAborted: 1,
+    traceCompleted: 5,
+    traceTriggered: 13,
+    unstableLoopVariable: 6,
+    noCompatInnerTrees: 1
+};
+test(testWeirdDateParse);
+
+function testUndemotableBinaryOp() {
+    var out = [];
+    for (let j = 0; j < 5; ++j) { out.push(6 - ((void 0) ^ 0x80000005)); }
+    return out.join(",");
+}
+testUndemotableBinaryOp.expected = "2147483649,2147483649,2147483649,2147483649,2147483649";
+test(testUndemotableBinaryOp);
+
+function testNullRelCmp() {
+    var out = [];
+    for(j=0;j<3;++j) { out.push(3 > null); out.push(3 < null); out.push(0 == null); out.push(3 == null); }
+    return out.join(",");
+}
+testNullRelCmp.expected = "true,false,false,false,true,false,false,false,true,false,false,false";
+test(testNullRelCmp);
+
+function testEqFalseEmptyString() {
+    var x = [];
+    for (var i=0;i<5;++i) x.push(false == "");
+    return x.join(",");
+}
+testEqFalseEmptyString.expected = "true,true,true,true,true";
+test(testEqFalseEmptyString);
+
+function testIncDec2(ii) {
+    var x = [];
+    for (let j=0;j<5;++j) { 
+	ii=j;
+	jj=j; 
+	var kk=j; 
+	x.push(ii--);
+	x.push(jj--); 
+	x.push(kk--); 
+	x.push(++ii);
+	x.push(++jj); 
+	x.push(++kk); 
+    }
+    return x.join(",");
+}
+function testIncDec() {
+    return testIncDec2(0);
+}
+testIncDec.expected = "0,0,0,0,0,0,1,1,1,1,1,1,2,2,2,2,2,2,3,3,3,3,3,3,4,4,4,4,4,4";
+test(testIncDec);
+
+function testApply() {
+    var q = [];
+    for (var i = 0; i < 10; ++i)
+        Array.prototype.push.apply(q, [5]);
+    return q.join(",");
+}
+testApply.expected = "5,5,5,5,5,5,5,5,5,5";
+test(testApply);
+
+function testComparisons()
+{
+  // All the special values from each of the types in
+  // ECMA-262, 3rd ed. section 8
+  var undefinedType, nullType, booleanType, stringType, numberType, objectType;
+
+  var types = [];
+  types[undefinedType = 0] = "Undefined";
+  types[nullType = 1] = "Null";
+  types[booleanType = 2] = "Boolean";
+  types[stringType = 3] = "String";
+  types[numberType = 4] = "Number";
+  types[objectType = 5] = "Object";
+
+  var JSVAL_INT_MIN = -Math.pow(2, 30);
+  var JSVAL_INT_MAX = Math.pow(2, 30) - 1;
+
+  // Values from every ES3 type, hitting all the edge-case and special values
+  // that can be dreamed up
+  var values =
+    {
+     "undefined":
+       {
+         value: function() { return undefined; },
+         type: undefinedType
+       },
+     "null":
+       {
+         value: function() { return null; },
+         type: nullType
+       },
+     "true":
+       {
+         value: function() { return true; },
+         type: booleanType
+       },
+     "false":
+       {
+         value: function() { return false; },
+         type: booleanType
+       },
+     '""':
+       {
+         value: function() { return ""; },
+         type: stringType
+       },
+     '"a"':
+       {
+         // a > [, for string-object comparisons
+         value: function() { return "a"; },
+         type: stringType
+       },
+     '"Z"':
+       {
+         // Z < [, for string-object comparisons
+         value: function() { return "Z"; },
+         type: stringType
+       },
+     "0":
+       {
+         value: function() { return 0; },
+         type: numberType
+       },
+     "-0":
+       {
+         value: function() { return -0; },
+         type: numberType
+       },
+     "1":
+       {
+         value: function() { return 1; },
+         type: numberType
+       },
+     "Math.E":
+       {
+         value: function() { return Math.E; },
+         type: numberType
+       },
+     "JSVAL_INT_MIN - 1":
+       {
+         value: function() { return JSVAL_INT_MIN - 1; },
+         type: numberType
+       },
+     "JSVAL_INT_MIN":
+       {
+         value: function() { return JSVAL_INT_MIN; },
+         type: numberType
+       },
+     "JSVAL_INT_MIN + 1":
+       {
+         value: function() { return JSVAL_INT_MIN + 1; },
+         type: numberType
+       },
+     "JSVAL_INT_MAX - 1":
+       {
+         value: function() { return JSVAL_INT_MAX - 1; },
+         type: numberType
+       },
+     "JSVAL_INT_MAX":
+       {
+         value: function() { return JSVAL_INT_MAX; },
+         type: numberType
+       },
+     "JSVAL_INT_MAX + 1":
+       {
+         value: function() { return JSVAL_INT_MAX + 1; },
+         type: numberType
+       },
+     "Infinity":
+       {
+         value: function() { return Infinity; },
+         type: numberType
+       },
+     "-Infinity":
+       {
+         value: function() { return -Infinity; },
+         type: numberType
+       },
+     "NaN":
+       {
+         value: function() { return NaN; },
+         type: numberType
+       },
+     "{}":
+       {
+         value: function() { return {}; },
+         type: objectType
+       },
+     "{ valueOf: undefined }":
+       {
+         value: function() { return { valueOf: undefined }; },
+         type: objectType
+       },
+     "[]":
+       {
+         value: function() { return []; },
+         type: objectType
+       },
+     '[""]':
+       {
+         value: function() { return [""]; },
+         type: objectType
+       },
+     '["a"]':
+       {
+         value: function() { return ["a"]; },
+         type: objectType
+       },
+     "[0]":
+       {
+         value: function() { return [0]; },
+         type: objectType
+       }
+    };
+
+  var orderOps =
+    {
+     "<": function(a, b) { return a < b; },
+     ">": function(a, b) { return a > b; },
+     "<=": function(a, b) { return a <= b; },
+     ">=": function(a, b) { return a >= b; }
+    };
+  var eqOps =
+    {
+     "==": function(a, b) { return a == b; },
+     "!=": function(a, b) { return a != b; },
+     "===": function(a, b) { return a === b; },
+     "!==": function(a, b) { return a !== b; }
+    };
+
+
+  var notEqualIncomparable =
+    {
+      eq: { "==": false, "!=": true, "===": false, "!==": true },
+      order: { "<": false, ">": false, "<=": false, ">=": false }
+    };
+  var notEqualLessThan =
+    {
+      eq: { "==": false, "!=": true, "===": false, "!==": true },
+      order: { "<": true, ">": false, "<=": true, ">=": false }
+    };
+  var notEqualGreaterThan =
+    {
+      eq: { "==": false, "!=": true, "===": false, "!==": true },
+      order: { "<": false, ">": true, "<=": false, ">=": true }
+    };
+  var notEqualNorDifferent =
+    {
+      eq: { "==": false, "!=": true, "===": false, "!==": true },
+      order: { "<": false, ">": false, "<=": true, ">=": true }
+    };
+  var strictlyEqual =
+    {
+      eq: { "==": true, "!=": false, "===": true, "!==": false },
+      order: { "<": false, ">": false, "<=": true, ">=": true }
+    };
+  var looselyEqual =
+    {
+      eq: { "==": true, "!=": false, "===": false, "!==": true },
+      order: { "<": false, ">": false, "<=": true, ">=": true }
+    };
+  var looselyEqualNotDifferent =
+    {
+      eq: { "==": true, "!=": false, "===": false, "!==": true },
+      order: { "<": false, ">": false, "<=": true, ">=": true }
+    };
+  var looselyEqualIncomparable =
+    {
+      eq: { "==": true, "!=": false, "===": false, "!==": true },
+      order: { "<": false, ">": false, "<=": false, ">=": false }
+    };
+  var strictlyEqualNotDifferent =
+    {
+      eq: { "==": true, "!=": false, "===": true, "!==": false },
+      order: { "<": false, ">": false, "<=": true, ">=": true }
+    };
+  var strictlyEqualIncomparable =
+    {
+      eq: { "==": true, "!=": false, "===": true, "!==": false },
+      order: { "<": false, ">": false, "<=": false, ">=": false }
+    };
+
+  var comparingZeroToSomething =
+    {
+      "undefined": notEqualIncomparable,
+      "null": notEqualNorDifferent,
+      "true": notEqualLessThan,
+      "false": looselyEqual,
+      '""': looselyEqualNotDifferent,
+      '"a"': notEqualIncomparable,
+      '"Z"': notEqualIncomparable,
+      "0": strictlyEqual,
+      "-0": strictlyEqual,
+      "1": notEqualLessThan,
+      "Math.E": notEqualLessThan,
+      "JSVAL_INT_MIN - 1": notEqualGreaterThan,
+      "JSVAL_INT_MIN": notEqualGreaterThan,
+      "JSVAL_INT_MIN + 1": notEqualGreaterThan,
+      "JSVAL_INT_MAX - 1": notEqualLessThan,
+      "JSVAL_INT_MAX": notEqualLessThan,
+      "JSVAL_INT_MAX + 1": notEqualLessThan,
+      "Infinity": notEqualLessThan,
+      "-Infinity": notEqualGreaterThan,
+      "NaN": notEqualIncomparable,
+      "{}": notEqualIncomparable,
+      "{ valueOf: undefined }": notEqualIncomparable,
+      "[]": looselyEqual,
+      '[""]': looselyEqual,
+      '["a"]': notEqualIncomparable,
+      "[0]": looselyEqual
+    };
+
+  var comparingObjectOrObjectWithValueUndefined =
+    {
+      "undefined": notEqualIncomparable,
+      "null": notEqualIncomparable,
+      "true": notEqualIncomparable,
+      "false": notEqualIncomparable,
+      '""': notEqualGreaterThan,
+      '"a"': notEqualLessThan,
+      '"Z"': notEqualGreaterThan,
+      "0": notEqualIncomparable,
+      "-0": notEqualIncomparable,
+      "1": notEqualIncomparable,
+      "Math.E": notEqualIncomparable,
+      "JSVAL_INT_MIN - 1": notEqualIncomparable,
+      "JSVAL_INT_MIN": notEqualIncomparable,
+      "JSVAL_INT_MIN + 1": notEqualIncomparable,
+      "JSVAL_INT_MAX - 1": notEqualIncomparable,
+      "JSVAL_INT_MAX": notEqualIncomparable,
+      "JSVAL_INT_MAX + 1": notEqualIncomparable,
+      "Infinity": notEqualIncomparable,
+      "-Infinity": notEqualIncomparable,
+      "NaN": notEqualIncomparable,
+      "{}": notEqualNorDifferent,
+      "{ valueOf: undefined }": notEqualNorDifferent,
+      "[]": notEqualGreaterThan,
+      '[""]': notEqualGreaterThan,
+      '["a"]': notEqualLessThan,
+      "[0]": notEqualGreaterThan
+    };
+
+  // Constructed expected-value matrix
+  var expected =
+    {
+     "undefined":
+       {
+         "undefined": strictlyEqualIncomparable,
+         "null": looselyEqualIncomparable,
+         "true": notEqualIncomparable,
+         "false": notEqualIncomparable,
+         '""': notEqualIncomparable,
+         '"a"': notEqualIncomparable,
+         '"Z"': notEqualIncomparable,
+         "0": notEqualIncomparable,
+         "-0": notEqualIncomparable,
+         "1": notEqualIncomparable,
+         "Math.E": notEqualIncomparable,
+         "JSVAL_INT_MIN - 1": notEqualIncomparable,
+         "JSVAL_INT_MIN": notEqualIncomparable,
+         "JSVAL_INT_MIN + 1": notEqualIncomparable,
+         "JSVAL_INT_MAX - 1": notEqualIncomparable,
+         "JSVAL_INT_MAX": notEqualIncomparable,
+         "JSVAL_INT_MAX + 1": notEqualIncomparable,
+         "Infinity": notEqualIncomparable,
+         "-Infinity": notEqualIncomparable,
+         "NaN": notEqualIncomparable,
+         "{}": notEqualIncomparable,
+         "{ valueOf: undefined }": notEqualIncomparable,
+         "[]": notEqualIncomparable,
+         '[""]': notEqualIncomparable,
+         '["a"]': notEqualIncomparable,
+         "[0]": notEqualIncomparable
+       },
+     "null":
+       {
+         "undefined": looselyEqualIncomparable,
+         "null": strictlyEqualNotDifferent,
+         "true": notEqualLessThan,
+         "false": notEqualNorDifferent,
+         '""': notEqualNorDifferent,
+         '"a"': notEqualIncomparable,
+         '"Z"': notEqualIncomparable,
+         "0": notEqualNorDifferent,
+         "-0": notEqualNorDifferent,
+         "1": notEqualLessThan,
+         "Math.E": notEqualLessThan,
+         "JSVAL_INT_MIN - 1": notEqualGreaterThan,
+         "JSVAL_INT_MIN": notEqualGreaterThan,
+         "JSVAL_INT_MIN + 1": notEqualGreaterThan,
+         "JSVAL_INT_MAX - 1": notEqualLessThan,
+         "JSVAL_INT_MAX": notEqualLessThan,
+         "JSVAL_INT_MAX + 1": notEqualLessThan,
+         "Infinity": notEqualLessThan,
+         "-Infinity": notEqualGreaterThan,
+         "NaN": notEqualIncomparable,
+         "{}": notEqualIncomparable,
+         "{ valueOf: undefined }": notEqualIncomparable,
+         "[]": notEqualNorDifferent,
+         '[""]': notEqualNorDifferent,
+         '["a"]': notEqualIncomparable,
+         "[0]": notEqualNorDifferent
+       },
+     "true":
+       {
+         "undefined": notEqualIncomparable,
+         "null": notEqualGreaterThan,
+         "true": strictlyEqual,
+         "false": notEqualGreaterThan,
+         '""': notEqualGreaterThan,
+         '"a"': notEqualIncomparable,
+         '"Z"': notEqualIncomparable,
+         "0": notEqualGreaterThan,
+         "-0": notEqualGreaterThan,
+         "1": looselyEqual,
+         "Math.E": notEqualLessThan,
+         "JSVAL_INT_MIN - 1": notEqualGreaterThan,
+         "JSVAL_INT_MIN": notEqualGreaterThan,
+         "JSVAL_INT_MIN + 1": notEqualGreaterThan,
+         "JSVAL_INT_MAX - 1": notEqualLessThan,
+         "JSVAL_INT_MAX": notEqualLessThan,
+         "JSVAL_INT_MAX + 1": notEqualLessThan,
+         "Infinity": notEqualLessThan,
+         "-Infinity": notEqualGreaterThan,
+         "NaN": notEqualIncomparable,
+         "{}": notEqualIncomparable,
+         "{ valueOf: undefined }": notEqualIncomparable,
+         "[]": notEqualGreaterThan,
+         '[""]': notEqualGreaterThan,
+         '["a"]': notEqualIncomparable,
+         "[0]": notEqualGreaterThan
+       },
+     "false":
+       {
+         "undefined": notEqualIncomparable,
+         "null": notEqualNorDifferent,
+         "true": notEqualLessThan,
+         "false": strictlyEqual,
+         '""': looselyEqualNotDifferent,
+         '"a"': notEqualIncomparable,
+         '"Z"': notEqualIncomparable,
+         "0": looselyEqual,
+         "-0": looselyEqual,
+         "1": notEqualLessThan,
+         "Math.E": notEqualLessThan,
+         "JSVAL_INT_MIN - 1": notEqualGreaterThan,
+         "JSVAL_INT_MIN": notEqualGreaterThan,
+         "JSVAL_INT_MIN + 1": notEqualGreaterThan,
+         "JSVAL_INT_MAX - 1": notEqualLessThan,
+         "JSVAL_INT_MAX": notEqualLessThan,
+         "JSVAL_INT_MAX + 1": notEqualLessThan,
+         "Infinity": notEqualLessThan,
+         "-Infinity": notEqualGreaterThan,
+         "NaN": notEqualIncomparable,
+         "{}": notEqualIncomparable,
+         "{ valueOf: undefined }": notEqualIncomparable,
+         "[]": looselyEqual,
+         '[""]': looselyEqual,
+         '["a"]': notEqualIncomparable,
+         "[0]": looselyEqual
+       },
+     '""':
+       {
+         "undefined": notEqualIncomparable,
+         "null": notEqualNorDifferent,
+         "true": notEqualLessThan,
+         "false": looselyEqual,
+         '""': strictlyEqual,
+         '"a"': notEqualLessThan,
+         '"Z"': notEqualLessThan,
+         "0": looselyEqual,
+         "-0": looselyEqual,
+         "1": notEqualLessThan,
+         "Math.E": notEqualLessThan,
+         "JSVAL_INT_MIN - 1": notEqualGreaterThan,
+         "JSVAL_INT_MIN": notEqualGreaterThan,
+         "JSVAL_INT_MIN + 1": notEqualGreaterThan,
+         "JSVAL_INT_MAX - 1": notEqualLessThan,
+         "JSVAL_INT_MAX": notEqualLessThan,
+         "JSVAL_INT_MAX + 1": notEqualLessThan,
+         "Infinity": notEqualLessThan,
+         "-Infinity": notEqualGreaterThan,
+         "NaN": notEqualIncomparable,
+         "{}": notEqualLessThan,
+         "{ valueOf: undefined }": notEqualLessThan,
+         "[]": looselyEqual,
+         '[""]': looselyEqual,
+         '["a"]': notEqualLessThan,
+         "[0]": notEqualLessThan
+       },
+     '"a"':
+       {
+         "undefined": notEqualIncomparable,
+         "null": notEqualIncomparable,
+         "true": notEqualIncomparable,
+         "false": notEqualIncomparable,
+         '""': notEqualGreaterThan,
+         '"a"': strictlyEqual,
+         '"Z"': notEqualGreaterThan,
+         "0": notEqualIncomparable,
+         "-0": notEqualIncomparable,
+         "1": notEqualIncomparable,
+         "Math.E": notEqualIncomparable,
+         "JSVAL_INT_MIN - 1": notEqualIncomparable,
+         "JSVAL_INT_MIN": notEqualIncomparable,
+         "JSVAL_INT_MIN + 1": notEqualIncomparable,
+         "JSVAL_INT_MAX - 1": notEqualIncomparable,
+         "JSVAL_INT_MAX": notEqualIncomparable,
+         "JSVAL_INT_MAX + 1": notEqualIncomparable,
+         "Infinity": notEqualIncomparable,
+         "-Infinity": notEqualIncomparable,
+         "NaN": notEqualIncomparable,
+         "{}": notEqualGreaterThan,
+         "{ valueOf: undefined }": notEqualGreaterThan,
+         "[]": notEqualGreaterThan,
+         '[""]': notEqualGreaterThan,
+         '["a"]': looselyEqualNotDifferent,
+         "[0]": notEqualGreaterThan
+       },
+     '"Z"':
+       {
+         "undefined": notEqualIncomparable,
+         "null": notEqualIncomparable,
+         "true": notEqualIncomparable,
+         "false": notEqualIncomparable,
+         '""': notEqualGreaterThan,
+         '"a"': notEqualLessThan,
+         '"Z"': strictlyEqual,
+         "0": notEqualIncomparable,
+         "-0": notEqualIncomparable,
+         "1": notEqualIncomparable,
+         "Math.E": notEqualIncomparable,
+         "JSVAL_INT_MIN - 1": notEqualIncomparable,
+         "JSVAL_INT_MIN": notEqualIncomparable,
+         "JSVAL_INT_MIN + 1": notEqualIncomparable,
+         "JSVAL_INT_MAX - 1": notEqualIncomparable,
+         "JSVAL_INT_MAX": notEqualIncomparable,
+         "JSVAL_INT_MAX + 1": notEqualIncomparable,
+         "Infinity": notEqualIncomparable,
+         "-Infinity": notEqualIncomparable,
+         "NaN": notEqualIncomparable,
+         "{}": notEqualLessThan,
+         "{ valueOf: undefined }": notEqualLessThan,
+         "[]": notEqualGreaterThan,
+         '[""]': notEqualGreaterThan,
+         '["a"]': notEqualLessThan,
+         "[0]": notEqualGreaterThan
+       },
+     "0": comparingZeroToSomething,
+     "-0": comparingZeroToSomething,
+     "1":
+       {
+         "undefined": notEqualIncomparable,
+         "null": notEqualGreaterThan,
+         "true": looselyEqual,
+         "false": notEqualGreaterThan,
+         '""': notEqualGreaterThan,
+         '"a"': notEqualIncomparable,
+         '"Z"': notEqualIncomparable,
+         "0": notEqualGreaterThan,
+         "-0": notEqualGreaterThan,
+         "1": strictlyEqual,
+         "Math.E": notEqualLessThan,
+         "JSVAL_INT_MIN - 1": notEqualGreaterThan,
+         "JSVAL_INT_MIN": notEqualGreaterThan,
+         "JSVAL_INT_MIN + 1": notEqualGreaterThan,
+         "JSVAL_INT_MAX - 1": notEqualLessThan,
+         "JSVAL_INT_MAX": notEqualLessThan,
+         "JSVAL_INT_MAX + 1": notEqualLessThan,
+         "Infinity": notEqualLessThan,
+         "-Infinity": notEqualGreaterThan,
+         "NaN": notEqualIncomparable,
+         "{}": notEqualIncomparable,
+         "{ valueOf: undefined }": notEqualIncomparable,
+         "[]": notEqualGreaterThan,
+         '[""]': notEqualGreaterThan,
+         '["a"]': notEqualIncomparable,
+         "[0]": notEqualGreaterThan
+       },
+     "Math.E":
+       {
+         "undefined": notEqualIncomparable,
+         "null": notEqualGreaterThan,
+         "true": notEqualGreaterThan,
+         "false": notEqualGreaterThan,
+         '""': notEqualGreaterThan,
+         '"a"': notEqualIncomparable,
+         '"Z"': notEqualIncomparable,
+         "0": notEqualGreaterThan,
+         "-0": notEqualGreaterThan,
+         "1": notEqualGreaterThan,
+         "Math.E": strictlyEqual,
+         "JSVAL_INT_MIN - 1": notEqualGreaterThan,
+         "JSVAL_INT_MIN": notEqualGreaterThan,
+         "JSVAL_INT_MIN + 1": notEqualGreaterThan,
+         "JSVAL_INT_MAX - 1": notEqualLessThan,
+         "JSVAL_INT_MAX": notEqualLessThan,
+         "JSVAL_INT_MAX + 1": notEqualLessThan,
+         "Infinity": notEqualLessThan,
+         "-Infinity": notEqualGreaterThan,
+         "NaN": notEqualIncomparable,
+         "{}": notEqualIncomparable,
+         "{ valueOf: undefined }": notEqualIncomparable,
+         "[]": notEqualGreaterThan,
+         '[""]': notEqualGreaterThan,
+         '["a"]': notEqualIncomparable,
+         "[0]": notEqualGreaterThan
+       },
+     "JSVAL_INT_MIN - 1":
+       {
+         "undefined": notEqualIncomparable,
+         "null": notEqualLessThan,
+         "true": notEqualLessThan,
+         "false": notEqualLessThan,
+         '""': notEqualLessThan,
+         '"a"': notEqualIncomparable,
+         '"Z"': notEqualIncomparable,
+         "0": notEqualLessThan,
+         "-0": notEqualLessThan,
+         "1": notEqualLessThan,
+         "Math.E": notEqualLessThan,
+         "JSVAL_INT_MIN - 1": strictlyEqual,
+         "JSVAL_INT_MIN": notEqualLessThan,
+         "JSVAL_INT_MIN + 1": notEqualLessThan,
+         "JSVAL_INT_MAX - 1": notEqualLessThan,
+         "JSVAL_INT_MAX": notEqualLessThan,
+         "JSVAL_INT_MAX + 1": notEqualLessThan,
+         "Infinity": notEqualLessThan,
+         "-Infinity": notEqualGreaterThan,
+         "NaN": notEqualIncomparable,
+         "{}": notEqualIncomparable,
+         "{ valueOf: undefined }": notEqualIncomparable,
+         "[]": notEqualLessThan,
+         '[""]': notEqualLessThan,
+         '["a"]': notEqualIncomparable,
+         "[0]": notEqualLessThan
+       },
+     "JSVAL_INT_MIN":
+       {
+         "undefined": notEqualIncomparable,
+         "null": notEqualLessThan,
+         "true": notEqualLessThan,
+         "false": notEqualLessThan,
+         '""': notEqualLessThan,
+         '"a"': notEqualIncomparable,
+         '"Z"': notEqualIncomparable,
+         "0": notEqualLessThan,
+         "-0": notEqualLessThan,
+         "1": notEqualLessThan,
+         "Math.E": notEqualLessThan,
+         "JSVAL_INT_MIN - 1": notEqualGreaterThan,
+         "JSVAL_INT_MIN": strictlyEqual,
+         "JSVAL_INT_MIN + 1": notEqualLessThan,
+         "JSVAL_INT_MAX - 1": notEqualLessThan,
+         "JSVAL_INT_MAX": notEqualLessThan,
+         "JSVAL_INT_MAX + 1": notEqualLessThan,
+         "Infinity": notEqualLessThan,
+         "-Infinity": notEqualGreaterThan,
+         "NaN": notEqualIncomparable,
+         "{}": notEqualIncomparable,
+         "{ valueOf: undefined }": notEqualIncomparable,
+         "[]": notEqualLessThan,
+         '[""]': notEqualLessThan,
+         '["a"]': notEqualIncomparable,
+         "[0]": notEqualLessThan
+       },
+     "JSVAL_INT_MIN + 1":
+       {
+         "undefined": notEqualIncomparable,
+         "null": notEqualLessThan,
+         "true": notEqualLessThan,
+         "false": notEqualLessThan,
+         '""': notEqualLessThan,
+         '"a"': notEqualIncomparable,
+         '"Z"': notEqualIncomparable,
+         "0": notEqualLessThan,
+         "-0": notEqualLessThan,
+         "1": notEqualLessThan,
+         "Math.E": notEqualLessThan,
+         "JSVAL_INT_MIN - 1": notEqualGreaterThan,
+         "JSVAL_INT_MIN": notEqualGreaterThan,
+         "JSVAL_INT_MIN + 1": strictlyEqual,
+         "JSVAL_INT_MAX - 1": notEqualLessThan,
+         "JSVAL_INT_MAX": notEqualLessThan,
+         "JSVAL_INT_MAX + 1": notEqualLessThan,
+         "Infinity": notEqualLessThan,
+         "-Infinity": notEqualGreaterThan,
+         "NaN": notEqualIncomparable,
+         "{}": notEqualIncomparable,
+         "{ valueOf: undefined }": notEqualIncomparable,
+         "[]": notEqualLessThan,
+         '[""]': notEqualLessThan,
+         '["a"]': notEqualIncomparable,
+         "[0]": notEqualLessThan
+       },
+     "JSVAL_INT_MAX - 1":
+       {
+         "undefined": notEqualIncomparable,
+         "null": notEqualGreaterThan,
+         "true": notEqualGreaterThan,
+         "false": notEqualGreaterThan,
+         '""': notEqualGreaterThan,
+         '"a"': notEqualIncomparable,
+         '"Z"': notEqualIncomparable,
+         "0": notEqualGreaterThan,
+         "-0": notEqualGreaterThan,
+         "1": notEqualGreaterThan,
+         "Math.E": notEqualGreaterThan,
+         "JSVAL_INT_MIN - 1": notEqualGreaterThan,
+         "JSVAL_INT_MIN": notEqualGreaterThan,
+         "JSVAL_INT_MIN + 1": notEqualGreaterThan,
+         "JSVAL_INT_MAX - 1": strictlyEqual,
+         "JSVAL_INT_MAX": notEqualLessThan,
+         "JSVAL_INT_MAX + 1": notEqualLessThan,
+         "Infinity": notEqualLessThan,
+         "-Infinity": notEqualGreaterThan,
+         "NaN": notEqualIncomparable,
+         "{}": notEqualIncomparable,
+         "{ valueOf: undefined }": notEqualIncomparable,
+         "[]": notEqualGreaterThan,
+         '[""]': notEqualGreaterThan,
+         '["a"]': notEqualIncomparable,
+         "[0]": notEqualGreaterThan
+       },
+     "JSVAL_INT_MAX":
+       {
+         "undefined": notEqualIncomparable,
+         "null": notEqualGreaterThan,
+         "true": notEqualGreaterThan,
+         "false": notEqualGreaterThan,
+         '""': notEqualGreaterThan,
+         '"a"': notEqualIncomparable,
+         '"Z"': notEqualIncomparable,
+         "0": notEqualGreaterThan,
+         "-0": notEqualGreaterThan,
+         "1": notEqualGreaterThan,
+         "Math.E": notEqualGreaterThan,
+         "JSVAL_INT_MIN - 1": notEqualGreaterThan,
+         "JSVAL_INT_MIN": notEqualGreaterThan,
+         "JSVAL_INT_MIN + 1": notEqualGreaterThan,
+         "JSVAL_INT_MAX - 1": notEqualGreaterThan,
+         "JSVAL_INT_MAX": strictlyEqual,
+         "JSVAL_INT_MAX + 1": notEqualLessThan,
+         "Infinity": notEqualLessThan,
+         "-Infinity": notEqualGreaterThan,
+         "NaN": notEqualIncomparable,
+         "{}": notEqualIncomparable,
+         "{ valueOf: undefined }": notEqualIncomparable,
+         "[]": notEqualGreaterThan,
+         '[""]': notEqualGreaterThan,
+         '["a"]': notEqualIncomparable,
+         "[0]": notEqualGreaterThan
+       },
+     "JSVAL_INT_MAX + 1":
+       {
+         "undefined": notEqualIncomparable,
+         "null": notEqualGreaterThan,
+         "true": notEqualGreaterThan,
+         "false": notEqualGreaterThan,
+         '""': notEqualGreaterThan,
+         '"a"': notEqualIncomparable,
+         '"Z"': notEqualIncomparable,
+         "0": notEqualGreaterThan,
+         "-0": notEqualGreaterThan,
+         "1": notEqualGreaterThan,
+         "Math.E": notEqualGreaterThan,
+         "JSVAL_INT_MIN - 1": notEqualGreaterThan,
+         "JSVAL_INT_MIN": notEqualGreaterThan,
+         "JSVAL_INT_MIN + 1": notEqualGreaterThan,
+         "JSVAL_INT_MAX - 1": notEqualGreaterThan,
+         "JSVAL_INT_MAX": notEqualGreaterThan,
+         "JSVAL_INT_MAX + 1": strictlyEqual,
+         "Infinity": notEqualLessThan,
+         "-Infinity": notEqualGreaterThan,
+         "NaN": notEqualIncomparable,
+         "{}": notEqualIncomparable,
+         "{ valueOf: undefined }": notEqualIncomparable,
+         "[]": notEqualGreaterThan,
+         '[""]': notEqualGreaterThan,
+         '["a"]': notEqualIncomparable,
+         "[0]": notEqualGreaterThan
+       },
+     "Infinity":
+       {
+         "undefined": notEqualIncomparable,
+         "null": notEqualGreaterThan,
+         "true": notEqualGreaterThan,
+         "false": notEqualGreaterThan,
+         '""': notEqualGreaterThan,
+         '"a"': notEqualIncomparable,
+         '"Z"': notEqualIncomparable,
+         "0": notEqualGreaterThan,
+         "-0": notEqualGreaterThan,
+         "1": notEqualGreaterThan,
+         "Math.E": notEqualGreaterThan,
+         "JSVAL_INT_MIN - 1": notEqualGreaterThan,
+         "JSVAL_INT_MIN": notEqualGreaterThan,
+         "JSVAL_INT_MIN + 1": notEqualGreaterThan,
+         "JSVAL_INT_MAX - 1": notEqualGreaterThan,
+         "JSVAL_INT_MAX": notEqualGreaterThan,
+         "JSVAL_INT_MAX + 1": notEqualGreaterThan,
+         "Infinity": strictlyEqual,
+         "-Infinity": notEqualGreaterThan,
+         "NaN": notEqualIncomparable,
+         "{}": notEqualIncomparable,
+         "{ valueOf: undefined }": notEqualIncomparable,
+         "[]": notEqualGreaterThan,
+         '[""]': notEqualGreaterThan,
+         '["a"]': notEqualIncomparable,
+         "[0]": notEqualGreaterThan
+       },
+     "-Infinity":
+       {
+         "undefined": notEqualIncomparable,
+         "null": notEqualLessThan,
+         "true": notEqualLessThan,
+         "false": notEqualLessThan,
+         '""': notEqualLessThan,
+         '"a"': notEqualIncomparable,
+         '"Z"': notEqualIncomparable,
+         "0": notEqualLessThan,
+         "-0": notEqualLessThan,
+         "1": notEqualLessThan,
+         "Math.E": notEqualLessThan,
+         "JSVAL_INT_MIN - 1": notEqualLessThan,
+         "JSVAL_INT_MIN": notEqualLessThan,
+         "JSVAL_INT_MIN + 1": notEqualLessThan,
+         "JSVAL_INT_MAX - 1": notEqualLessThan,
+         "JSVAL_INT_MAX": notEqualLessThan,
+         "JSVAL_INT_MAX + 1": notEqualLessThan,
+         "Infinity": notEqualLessThan,
+         "-Infinity": strictlyEqual,
+         "NaN": notEqualIncomparable,
+         "{}": notEqualIncomparable,
+         "{ valueOf: undefined }": notEqualIncomparable,
+         "[]": notEqualLessThan,
+         '[""]': notEqualLessThan,
+         '["a"]': notEqualIncomparable,
+         "[0]": notEqualLessThan
+       },
+     "NaN":
+       {
+         "undefined": notEqualIncomparable,
+         "null": notEqualIncomparable,
+         "true": notEqualIncomparable,
+         "false": notEqualIncomparable,
+         '""': notEqualIncomparable,
+         '"a"': notEqualIncomparable,
+         '"Z"': notEqualIncomparable,
+         "0": notEqualIncomparable,
+         "-0": notEqualIncomparable,
+         "1": notEqualIncomparable,
+         "Math.E": notEqualIncomparable,
+         "JSVAL_INT_MIN - 1": notEqualIncomparable,
+         "JSVAL_INT_MIN": notEqualIncomparable,
+         "JSVAL_INT_MIN + 1": notEqualIncomparable,
+         "JSVAL_INT_MAX - 1": notEqualIncomparable,
+         "JSVAL_INT_MAX": notEqualIncomparable,
+         "JSVAL_INT_MAX + 1": notEqualIncomparable,
+         "Infinity": notEqualIncomparable,
+         "-Infinity": notEqualIncomparable,
+         "NaN": notEqualIncomparable,
+         "{}": notEqualIncomparable,
+         "{ valueOf: undefined }": notEqualIncomparable,
+         "[]": notEqualIncomparable,
+         '[""]': notEqualIncomparable,
+         '["a"]': notEqualIncomparable,
+         "[0]": notEqualIncomparable
+       },
+     "{}": comparingObjectOrObjectWithValueUndefined,
+     "{ valueOf: undefined }": comparingObjectOrObjectWithValueUndefined,
+     "[]":
+       {
+         "undefined": notEqualIncomparable,
+         "null": notEqualNorDifferent,
+         "true": notEqualLessThan,
+         "false": looselyEqual,
+         '""': looselyEqual,
+         '"a"': notEqualLessThan,
+         '"Z"': notEqualLessThan,
+         "0": looselyEqual,
+         "-0": looselyEqual,
+         "1": notEqualLessThan,
+         "Math.E": notEqualLessThan,
+         "JSVAL_INT_MIN - 1": notEqualGreaterThan,
+         "JSVAL_INT_MIN": notEqualGreaterThan,
+         "JSVAL_INT_MIN + 1": notEqualGreaterThan,
+         "JSVAL_INT_MAX - 1": notEqualLessThan,
+         "JSVAL_INT_MAX": notEqualLessThan,
+         "JSVAL_INT_MAX + 1": notEqualLessThan,
+         "Infinity": notEqualLessThan,
+         "-Infinity": notEqualGreaterThan,
+         "NaN": notEqualIncomparable,
+         "{}": notEqualLessThan,
+         "{ valueOf: undefined }": notEqualLessThan,
+         "[]": notEqualNorDifferent,
+         '[""]': notEqualNorDifferent,
+         '["a"]': notEqualLessThan,
+         "[0]": notEqualLessThan
+       },
+     '[""]':
+       {
+         "undefined": notEqualIncomparable,
+         "null": notEqualNorDifferent,
+         "true": notEqualLessThan,
+         "false": looselyEqual,
+         '""': looselyEqual,
+         '"a"': notEqualLessThan,
+         '"Z"': notEqualLessThan,
+         "0": looselyEqual,
+         "-0": looselyEqual,
+         "1": notEqualLessThan,
+         "Math.E": notEqualLessThan,
+         "JSVAL_INT_MIN - 1": notEqualGreaterThan,
+         "JSVAL_INT_MIN": notEqualGreaterThan,
+         "JSVAL_INT_MIN + 1": notEqualGreaterThan,
+         "JSVAL_INT_MAX - 1": notEqualLessThan,
+         "JSVAL_INT_MAX": notEqualLessThan,
+         "JSVAL_INT_MAX + 1": notEqualLessThan,
+         "Infinity": notEqualLessThan,
+         "-Infinity": notEqualGreaterThan,
+         "NaN": notEqualIncomparable,
+         "{}": notEqualLessThan,
+         "{ valueOf: undefined }": notEqualLessThan,
+         "[]": notEqualNorDifferent,
+         '[""]': notEqualNorDifferent,
+         '["a"]': notEqualLessThan,
+         "[0]": notEqualLessThan
+       },
+     '["a"]':
+       {
+         "undefined": notEqualIncomparable,
+         "null": notEqualIncomparable,
+         "true": notEqualIncomparable,
+         "false": notEqualIncomparable,
+         '""': notEqualGreaterThan,
+         '"a"': looselyEqual,
+         '"Z"': notEqualGreaterThan,
+         "0": notEqualIncomparable,
+         "-0": notEqualIncomparable,
+         "1": notEqualIncomparable,
+         "Math.E": notEqualIncomparable,
+         "JSVAL_INT_MIN - 1": notEqualIncomparable,
+         "JSVAL_INT_MIN": notEqualIncomparable,
+         "JSVAL_INT_MIN + 1": notEqualIncomparable,
+         "JSVAL_INT_MAX - 1": notEqualIncomparable,
+         "JSVAL_INT_MAX": notEqualIncomparable,
+         "JSVAL_INT_MAX + 1": notEqualIncomparable,
+         "Infinity": notEqualIncomparable,
+         "-Infinity": notEqualIncomparable,
+         "NaN": notEqualIncomparable,
+         "{}": notEqualGreaterThan,
+         "{ valueOf: undefined }": notEqualGreaterThan,
+         "[]": notEqualGreaterThan,
+         '[""]': notEqualGreaterThan,
+         '["a"]': notEqualNorDifferent,
+         "[0]": notEqualGreaterThan
+       },
+     "[0]":
+       {
+         "undefined": notEqualIncomparable,
+         "null": notEqualNorDifferent,
+         "true": notEqualLessThan,
+         "false": looselyEqual,
+         '""': notEqualGreaterThan,
+         '"a"': notEqualLessThan,
+         '"Z"': notEqualLessThan,
+         "0": looselyEqual,
+         "-0": looselyEqual,
+         "1": notEqualLessThan,
+         "Math.E": notEqualLessThan,
+         "JSVAL_INT_MIN - 1": notEqualGreaterThan,
+         "JSVAL_INT_MIN": notEqualGreaterThan,
+         "JSVAL_INT_MIN + 1": notEqualGreaterThan,
+         "JSVAL_INT_MAX - 1": notEqualLessThan,
+         "JSVAL_INT_MAX": notEqualLessThan,
+         "JSVAL_INT_MAX + 1": notEqualLessThan,
+         "Infinity": notEqualLessThan,
+         "-Infinity": notEqualGreaterThan,
+         "NaN": notEqualIncomparable,
+         "{}": notEqualLessThan,
+         "{ valueOf: undefined }": notEqualLessThan,
+         "[]": notEqualGreaterThan,
+         '[""]': notEqualGreaterThan,
+         '["a"]': notEqualLessThan,
+         "[0]": notEqualNorDifferent
+       }
+    };
+  
+
+
+  var failures = [];
+  function fail(a, ta, b, tb, ex, ac, op)
+  {
+    failures.push("(" + a + " " + op + " " + b + ") wrong: " +
+                  "expected " + ex + ", got " + ac +
+                  " (types " + types[ta] + ", " + types[tb] + ")");
+  }
+
+  var result = false;
+  for (var i in values)
+  {
+    for (var j in values)
+    {
+      // Constants, so hoist to help JIT know that
+      var vala = values[i], valb = values[j];
+      var a = vala.value(), b = valb.value();
+
+      for (var opname in orderOps)
+      {
+        var op = orderOps[opname];
+        var expect = expected[i][j].order[opname];
+        var failed = false;
+
+        for (var iter = 0; iter < 5; iter++)
+        {
+          result = op(a, b);
+          failed = failed || result !== expect;
+        }
+
+        if (failed)
+          fail(i, vala.type, j, valb.type, expect, result, opname);
+      }
+
+      for (var opname in eqOps)
+      {
+        var op = eqOps[opname];
+        var expect = expected[i][j].eq[opname];
+        var failed = false;
+
+        for (var iter = 0; iter < 5; iter++)
+        {
+          result = op(a, b);
+          failed = failed || result !== expect;
+        }
+
+        if (failed)
+          fail(i, vala.type, j, valb.type, expect, result, opname);
+      }
+    }
+  }
+
+  if (failures.length == 0)
+    return "no failures reported!";
+
+  return "\n" + failures.join(",\n");
+}
+testComparisons.expected = "no failures reported!";
+test(testComparisons);
+
+/* NOTE: Keep this test last, since it screws up all for...in loops after it. */
+function testGlobalProtoAccess() {
+    return "ok";
+}
+this.__proto__.a = 3; for (var j = 0; j < 4; ++j) { [a]; }
+testGlobalProtoAccess.expected = "ok";
+test(testGlobalProtoAccess);
 
 /* Keep these at the end so that we can see the summary after the trace-debug spew. */
 print("\npassed:", passes.length && passes.join(","));

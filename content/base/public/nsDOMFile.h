@@ -88,6 +88,28 @@ public:
   PRBool Remove(PRUint32 aIndex) { return mFiles.RemoveObjectAt(aIndex); }
   void Clear() { return mFiles.Clear(); }
 
+  nsIDOMFile* GetItemAt(PRUint32 aIndex)
+  {
+    return mFiles.SafeObjectAt(aIndex);
+  }
+
+  static nsDOMFileList* FromSupports(nsISupports* aSupports)
+  {
+#ifdef DEBUG
+    {
+      nsCOMPtr<nsIDOMFileList> list_qi = do_QueryInterface(aSupports);
+
+      // If this assertion fires the QI implementation for the object in
+      // question doesn't use the nsIDOMFileList pointer as the nsISupports
+      // pointer. That must be fixed, or we'll crash...
+      NS_ASSERTION(list_qi == static_cast<nsIDOMFileList*>(aSupports),
+                   "Uh, fix QI!");
+    }
+#endif
+
+    return static_cast<nsDOMFileList*>(aSupports);
+  }
+
 private:
   nsCOMArray<nsIDOMFile> mFiles;
 };

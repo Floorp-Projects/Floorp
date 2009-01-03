@@ -169,14 +169,12 @@ void nsXULTreeAccessible::GetTreeBoxObject(nsIDOMNode *aDOMNode, nsITreeBoxObjec
   *aBoxObject = nsnull;
 }
 
-NS_IMETHODIMP
-nsXULTreeAccessible::GetState(PRUint32 *aState, PRUint32 *aExtraState)
+nsresult
+nsXULTreeAccessible::GetStateInternal(PRUint32 *aState, PRUint32 *aExtraState)
 {
   // Get focus status from base class
-  nsresult rv = nsAccessible::GetState(aState, aExtraState);
-  NS_ENSURE_SUCCESS(rv, rv);
-  if (!mDOMNode)
-    return NS_OK;
+  nsresult rv = nsAccessible::GetStateInternal(aState, aExtraState);
+  NS_ENSURE_A11Y_SUCCESS(rv, rv);
   
   // see if we are multiple select if so set ourselves as such
   nsCOMPtr<nsIDOMElement> element (do_QueryInterface(mDOMNode));
@@ -223,7 +221,8 @@ NS_IMETHODIMP nsXULTreeAccessible::GetValue(nsAString& _retval)
   return NS_OK;
 }
 
-NS_IMETHODIMP nsXULTreeAccessible::Shutdown()
+nsresult
+nsXULTreeAccessible::Shutdown()
 {
   mTree = nsnull;
   mTreeView = nsnull;
@@ -550,12 +549,14 @@ nsXULTreeAccessible::GetCachedTreeitemAccessible(PRInt32 aRow,
   GetCacheEntry(*mAccessNodeCache, (void*)(aRow * kMaxTreeColumns + columnIndex), getter_AddRefs(accessNode));
   if (!accessNode)
   {
-    accessNode = new nsXULTreeitemAccessibleWrap(this, mDOMNode, mWeakShell, aRow, col);
-    nsCOMPtr<nsPIAccessNode> privateAccessNode(do_QueryInterface(accessNode));
-    if (!privateAccessNode)
-      return NS_ERROR_OUT_OF_MEMORY;
-    nsresult rv = privateAccessNode->Init();
+    nsXULTreeitemAccessibleWrap* treeItemAcc =
+      new nsXULTreeitemAccessibleWrap(this, mDOMNode, mWeakShell, aRow, col);
+    NS_ENSURE_TRUE(treeItemAcc, NS_ERROR_OUT_OF_MEMORY);
+
+    nsresult rv = treeItemAcc->Init();
     NS_ENSURE_SUCCESS(rv, rv);
+
+    accessNode = treeItemAcc;
     PutCacheEntry(*mAccessNodeCache, (void*)(aRow * kMaxTreeColumns + columnIndex), accessNode);
   }
   nsCOMPtr<nsIAccessible> accessible(do_QueryInterface(accessNode));
@@ -784,7 +785,8 @@ nsXULTreeitemAccessible::nsXULTreeitemAccessible(nsIAccessible *aParent, nsIDOMN
 NS_IMPL_ISUPPORTS_INHERITED1(nsXULTreeitemAccessible, nsLeafAccessible,
                              nsPIAccessibleTreeItem)
 
-NS_IMETHODIMP nsXULTreeitemAccessible::Shutdown()
+nsresult
+nsXULTreeitemAccessible::Shutdown()
 {
   mTree = nsnull;
   mTreeView = nsnull;
@@ -795,6 +797,7 @@ NS_IMETHODIMP nsXULTreeitemAccessible::Shutdown()
 NS_IMETHODIMP
 nsXULTreeitemAccessible::GetName(nsAString& aName)
 {
+  // XXX: we should take into account ARIA usage for content tree. 
   aName.Truncate();
 
   if (IsDefunct())
@@ -821,8 +824,8 @@ NS_IMETHODIMP nsXULTreeitemAccessible::GetUniqueID(void **aUniqueID)
   return NS_OK;
 }
 
-// nsPIAccessNode::init()
-NS_IMETHODIMP
+// nsAccessNode::Init()
+nsresult
 nsXULTreeitemAccessible::Init()
 {
   nsresult rv = nsLeafAccessible::Init();
@@ -843,8 +846,9 @@ NS_IMETHODIMP nsXULTreeitemAccessible::GetRole(PRUint32 *aRole)
 
 // Possible states: focused, focusable, selected, checkable, checked, 
 // expanded/collapsed, invisible
-NS_IMETHODIMP
-nsXULTreeitemAccessible::GetState(PRUint32 *aState, PRUint32 *aExtraState)
+nsresult
+nsXULTreeitemAccessible::GetStateInternal(PRUint32 *aState,
+                                          PRUint32 *aExtraState)
 {
   NS_ENSURE_ARG_POINTER(aState);
 
@@ -855,7 +859,7 @@ nsXULTreeitemAccessible::GetState(PRUint32 *aState, PRUint32 *aExtraState)
   if (IsDefunct()) {
     if (aExtraState)
       *aExtraState = nsIAccessibleStates::EXT_STATE_DEFUNCT;
-    return NS_OK;
+    return NS_OK_DEFUNCT_OBJECT;
   }
 
   *aState = nsIAccessibleStates::STATE_FOCUSABLE |

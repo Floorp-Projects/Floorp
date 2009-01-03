@@ -227,12 +227,12 @@ public:
 
     gfxFontEntry* LookupLocalFont(const nsAString& aFontName);
     
-    gfxFontEntry* MakePlatformFont(const gfxFontEntry *aProxyEntry, const gfxDownloadedFontData* aFontData);
+    gfxFontEntry* MakePlatformFont(const gfxFontEntry *aProxyEntry, const PRUint8 *aFontData, PRUint32 aLength);
 
 private:
-    static PLDHashOperator PR_CALLBACK FindFontForCharProc(nsStringHashKey::KeyType aKey,
-                                                             nsRefPtr<MacOSFamilyEntry>& aFamilyEntry,
-                                                             void* userArg);
+    static PLDHashOperator FindFontForCharProc(nsStringHashKey::KeyType aKey,
+                                               nsRefPtr<MacOSFamilyEntry>& aFamilyEntry,
+                                               void* userArg);
 
     static gfxQuartzFontCache *sSharedFontCache;
 
@@ -260,15 +260,15 @@ private:
     // explicitly set font traits for all faces to fixed-pitch
     void SetFixedPitch(const nsAString& aFamilyName);
                                                              
-    static PLDHashOperator PR_CALLBACK InitOtherFamilyNamesProc(nsStringHashKey::KeyType aKey,
-                                                             nsRefPtr<MacOSFamilyEntry>& aFamilyEntry,
-                                                             void* userArg);
+    static PLDHashOperator InitOtherFamilyNamesProc(nsStringHashKey::KeyType aKey,
+                                                    nsRefPtr<MacOSFamilyEntry>& aFamilyEntry,
+                                                    void* userArg);
 
     void GenerateFontListKey(const nsAString& aKeyName, nsAString& aResult);
     static void ATSNotification(ATSFontNotificationInfoRef aInfo, void* aUserArg);
-    static int PR_CALLBACK PrefChangedCallback(const char *aPrefName, void *closure);
+    static int PrefChangedCallback(const char *aPrefName, void *closure);
 
-    static PLDHashOperator PR_CALLBACK
+    static PLDHashOperator
         HashEnumFuncForFamilies(nsStringHashKey::KeyType aKey,
                                 nsRefPtr<MacOSFamilyEntry>& aFamilyEntry,
                                 void* aUserArg);

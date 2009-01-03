@@ -185,7 +185,7 @@ ProcessCommandFile()
 	return - 1;
     }
 
-    while (pr_fgets(buf, CMD_FILE_BUFSIZE, fd), buf && *buf != '\0') {
+    while (pr_fgets(buf, CMD_FILE_BUFSIZE, fd)) {
 	char	*eol;
 	linenum++;
 

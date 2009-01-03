@@ -55,7 +55,6 @@ const HTTP_BAD_GATEWAY           = 502;
 const HTTP_SERVICE_UNAVAILABLE   = 503;
 
 Cu.import("resource://gre/modules/XPCOMUtils.jsm");
-Cu.import("resource://gre/modules/JSON.jsm");
 
 /**
  * SuggestAutoCompleteResult contains the results returned by the Suggest
@@ -523,7 +522,7 @@ SuggestAutoComplete.prototype = {
 
     this._clearServerErrors();
 
-    var serverResults = JSON.fromString(responseText);
+    var serverResults = JSON.parse(responseText);
     var searchString = serverResults[0] || "";
     var results = serverResults[1] || [];
 

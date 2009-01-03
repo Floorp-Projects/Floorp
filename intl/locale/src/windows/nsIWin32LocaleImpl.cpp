@@ -61,6 +61,10 @@ struct iso_map
 	iso_pair    sublang_list[20];
 };
 
+HMODULE nsIWin32LocaleImpl::sKernelDLL = NULL;
+nsIWin32LocaleImpl::LocaleNameToLCIDPtr nsIWin32LocaleImpl::localeNameToLCID = NULL;
+nsIWin32LocaleImpl::LCIDToLocaleNamePtr nsIWin32LocaleImpl::lcidToLocaleName = NULL;
+
 // Older versions of VC++ and Win32 SDK  and mingw don't have 
 // macros for languages and sublanguages recently added to Win32. 
 // see http://www.tug.org/ftp/tex/texinfo/intl/localename.c
@@ -608,11 +612,18 @@ NS_IMPL_ISUPPORTS1(nsIWin32LocaleImpl,nsIWin32Locale)
 
 nsIWin32LocaleImpl::nsIWin32LocaleImpl(void)
 {
+  // We use the Vista and above functions if we have them
+  sKernelDLL = LoadLibraryW(L"kernel32.dll");
+  if (sKernelDLL) {
+    localeNameToLCID = (LocaleNameToLCIDPtr) GetProcAddress(sKernelDLL, "LocaleNameToLCID");
+    lcidToLocaleName = (LCIDToLocaleNamePtr) GetProcAddress(sKernelDLL, "LCIDToLocaleName");
+  }
 }
 
 nsIWin32LocaleImpl::~nsIWin32LocaleImpl(void)
 {
-
+  if (sKernelDLL)
+    FreeLibrary(sKernelDLL);
 }
 
 //
@@ -624,6 +635,18 @@ nsIWin32LocaleImpl::~nsIWin32LocaleImpl(void)
 NS_IMETHODIMP
 nsIWin32LocaleImpl::GetPlatformLocale(const nsAString& locale,LCID* winLCID)
 {
+  if (localeNameToLCID) {
+    nsAutoString locale_autostr(locale);
+    LCID lcid = localeNameToLCID(locale_autostr.get(), 0);
+    // The function returning 0 means that the locale name couldn't be matched,
+    // so we fallback to the old function
+    if (lcid != 0)
+    {
+      *winLCID = lcid;
+      return NS_OK;
+    }
+  }
+
   char    locale_string[9] = {'\0','\0','\0','\0','\0','\0','\0','\0','\0'};
   char*   language_code;
   char*   country_code;
@@ -657,9 +680,26 @@ nsIWin32LocaleImpl::GetPlatformLocale(const nsAString& locale,LCID* winLCID)
   return NS_ERROR_FAILURE;
 }
 
+#ifndef LOCALE_NAME_MAX_LENGTH
+#define LOCALE_NAME_MAX_LENGTH 85
+#endif
+
 NS_IMETHODIMP
 nsIWin32LocaleImpl::GetXPLocale(LCID winLCID, nsAString& locale)
 {
+  if (lcidToLocaleName)
+  {
+    WCHAR ret_locale[LOCALE_NAME_MAX_LENGTH];
+    int rv = lcidToLocaleName(winLCID, ret_locale, LOCALE_NAME_MAX_LENGTH, 0);
+    // rv 0 means that the function failed to match up the LCID, so we fallback
+    // to the old function
+    if (rv != 0)
+    {
+      locale.Assign(ret_locale);
+      return NS_OK;
+    }
+  }
+
   DWORD    lang_id, sublang_id;
   int      i,j;
 

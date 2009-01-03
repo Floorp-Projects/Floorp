@@ -55,6 +55,7 @@ _TEST_FILES =	parser_datreader.js \
 		test_bug358797.html \
 		test_bug396568.html \
 		test_bug418464.html \
+		test_bug460437.xhtml \
 		test_compatmode.html \
 		regressions.txt \
 		$(NULL)

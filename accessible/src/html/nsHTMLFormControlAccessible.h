@@ -49,11 +49,15 @@ public:
   enum { eAction_Click = 0 };
 
   nsHTMLCheckboxAccessible(nsIDOMNode* aNode, nsIWeakReference* aShell);
+
+  // nsIAccessible
   NS_IMETHOD GetRole(PRUint32 *_retval); 
   NS_IMETHOD GetNumActions(PRUint8 *_retval);
   NS_IMETHOD GetActionName(PRUint8 aIndex, nsAString& aName);
   NS_IMETHOD DoAction(PRUint8 index);
-  NS_IMETHOD GetState(PRUint32 *aState, PRUint32 *aExtraState);
+
+  // nsAccessible
+  virtual nsresult GetStateInternal(PRUint32 *aState, PRUint32 *aExtraState);
 };
 
 class nsHTMLRadioButtonAccessible : public nsRadioButtonAccessible
@@ -62,8 +66,9 @@ class nsHTMLRadioButtonAccessible : public nsRadioButtonAccessible
 public:
   nsHTMLRadioButtonAccessible(nsIDOMNode* aNode, nsIWeakReference* aShell);
 
-  NS_IMETHOD GetState(PRUint32 *aState, PRUint32 *aExtraState);
+  // nsAccessible
   virtual nsresult GetAttributesInternal(nsIPersistentProperties *aAttributes);
+  virtual nsresult GetStateInternal(PRUint32 *aState, PRUint32 *aExtraState);
 };
 
 class nsHTMLButtonAccessible : public nsHyperTextAccessibleWrap
@@ -73,12 +78,16 @@ public:
   enum { eAction_Click = 0 };
 
   nsHTMLButtonAccessible(nsIDOMNode* aNode, nsIWeakReference* aShell);
+
+  // nsIAccessible
   NS_IMETHOD GetRole(PRUint32 *_retval); 
-  NS_IMETHOD GetState(PRUint32 *aState, PRUint32 *aExtraState);
-  NS_IMETHOD GetName(nsAString& _retval); 
   NS_IMETHOD GetNumActions(PRUint8 *_retval);
   NS_IMETHOD GetActionName(PRUint8 aIndex, nsAString& aName);
   NS_IMETHOD DoAction(PRUint8 index);
+
+  // nsAccessible
+  virtual nsresult GetNameInternal(nsAString& aName);
+  virtual nsresult GetStateInternal(PRUint32 *aState, PRUint32 *aExtraState);
 };
 
 class nsHTML4ButtonAccessible : public nsHyperTextAccessibleWrap
@@ -88,12 +97,15 @@ public:
   enum { eAction_Click = 0 };
 
   nsHTML4ButtonAccessible(nsIDOMNode* aNode, nsIWeakReference* aShell);
+
+  // nsIAccessible
   NS_IMETHOD GetRole(PRUint32 *_retval); 
-  NS_IMETHOD GetState(PRUint32 *aState, PRUint32 *aExtraState);
-  NS_IMETHOD GetName(nsAString& aName) { aName.Truncate(); return GetHTMLName(aName, PR_TRUE); }
   NS_IMETHOD GetNumActions(PRUint8 *_retval);
   NS_IMETHOD GetActionName(PRUint8 aIndex, nsAString& aName);
   NS_IMETHOD DoAction(PRUint8 index);
+
+  // nsAccessible
+  virtual nsresult GetStateInternal(PRUint32 *aState, PRUint32 *aExtraState);
 };
 
 class nsHTMLTextFieldAccessible : public nsHyperTextAccessibleWrap
@@ -106,25 +118,33 @@ public:
 
   NS_DECL_ISUPPORTS_INHERITED
 
+  // nsIAccessible
   NS_IMETHOD GetRole(PRUint32 *_retval); 
-  NS_IMETHOD GetName(nsAString& aName); 
   NS_IMETHOD GetValue(nsAString& _retval); 
-  NS_IMETHOD GetState(PRUint32 *aState, PRUint32 *aExtraState);
   NS_IMETHOD GetNumActions(PRUint8 *_retval);
   NS_IMETHOD GetActionName(PRUint8 aIndex, nsAString& aName);
   NS_IMETHOD DoAction(PRUint8 index);
 
   // nsIAccessibleEditableText
   NS_IMETHOD GetAssociatedEditor(nsIEditor **aEditor);
+
+  // nsAccessible
+  virtual nsresult GetNameInternal(nsAString& aName);
+  virtual nsresult GetStateInternal(PRUint32 *aState, PRUint32 *aExtraState);
 };
 
 class nsHTMLGroupboxAccessible : public nsHyperTextAccessibleWrap
 {
 public:
   nsHTMLGroupboxAccessible(nsIDOMNode* aNode, nsIWeakReference* aShell);
+
+  // nsIAccessible
   NS_IMETHOD GetRole(PRUint32 *aRole); 
-  NS_IMETHOD GetName(nsAString& aName);
   NS_IMETHOD GetAccessibleRelated(PRUint32 aRelationType, nsIAccessible **aRelated);
+
+  // nsAccessible
+  virtual nsresult GetNameInternal(nsAString& aName);
+
 protected:
   nsIContent* GetLegend();
 };

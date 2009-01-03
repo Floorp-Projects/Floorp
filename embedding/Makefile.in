@@ -44,7 +44,6 @@ VPATH		= @srcdir@
 include $(DEPTH)/config/autoconf.mk
 
 MODULE       = embed
-PACKAGE_FILE = embed.pkg
 
 DIRS = base components browser
 

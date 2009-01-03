@@ -169,10 +169,10 @@ LCMSBOOL LCMSEXPORT cmsPrecacheProfile(cmsHPROFILE hProfile,
                                           cmsLinearInterpFixed((WORD)j, GTables[i]->GammaTable, &p16);
                      break;
 
-              case CMS_PRECACHE_LI16F_FORWARD:
+              case CMS_PRECACHE_LI8F_FORWARD:
 
                      // Allocate the precache tables
-                     cmsAllocPrecacheTables(Icc, Type, LI16F_FORWARD, 3, sizeof(FLOAT), 256);
+                     cmsAllocPrecacheTables(Icc, Type, LI8F_FORWARD, 3, sizeof(FLOAT), 256);
 
                      // Calculate the interpolation parameters
                      cmsCalcL16Params(GTables[0]->nEntries, &p16);
@@ -180,7 +180,7 @@ LCMSBOOL LCMSEXPORT cmsPrecacheProfile(cmsHPROFILE hProfile,
                      // Compute the cache
                      for (i = 0; i < 3; ++i)
                             for (j = 0; j < 256; ++j)
-                                   Icc->Precache[Type]->Impl.LI16F_FORWARD.Cache[i][j] =
+                                   Icc->Precache[Type]->Impl.LI8F_FORWARD.Cache[i][j] =
                                           ToFloatDomain(cmsLinearInterpLUT16(RGB_8_TO_16(((BYTE)j)), GTables[i]->GammaTable, &p16));
                      break;
 
@@ -188,6 +188,12 @@ LCMSBOOL LCMSEXPORT cmsPrecacheProfile(cmsHPROFILE hProfile,
                      // TODO: change non-critical asserts to CMS warnings
                      CMSASSERT(0); // Not implemented
                      break;
+       }
+
+       // Free the gamma tables
+       if (hasGammaTables) {
+              CMSASSERT(GTables[0] != NULL);
+              cmsFreeGammaTriple(GTables);
        }
 
        // Success
@@ -227,9 +233,9 @@ void cmsPrecacheFree(LPLCMSPRECACHE Cache) {
                       _cmsFree(Cache->Impl.LI16W_FORWARD.Cache[i]);
                      break;
 
-              case CMS_PRECACHE_LI16F_FORWARD:
+              case CMS_PRECACHE_LI8F_FORWARD:
                      for (i = 0; i < 3; ++i)
-                      _cmsFree(Cache->Impl.LI16F_FORWARD.Cache[i]);
+                      _cmsFree(Cache->Impl.LI8F_FORWARD.Cache[i]);
                      break;
 
               default:

@@ -35,7 +35,7 @@
  * ***** END LICENSE BLOCK ***** */
 
 #ifdef DEBUG
-static const char CVS_ID[] = "@(#) $RCSfile: devutil.c,v $ $Revision: 1.31 $ $Date: 2008/05/18 01:51:45 $";
+static const char CVS_ID[] = "@(#) $RCSfile: devutil.c,v $ $Revision: 1.32 $ $Date: 2008/09/30 04:09:02 $";
 #endif /* DEBUG */
 
 #ifndef DEVM_H
@@ -387,7 +387,10 @@ create_object (
         goto loser;
     }
     session = nssToken_GetDefaultSession(object->token);
-
+    if (!session) {
+        nss_SetError(NSS_ERROR_INVALID_POINTER);
+        goto loser;
+    }
     arena = nssArena_Create();
     if (!arena) {
 	goto loser;

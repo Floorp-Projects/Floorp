@@ -40,10 +40,11 @@
 
 #define INITGUID // needed for initializing the IID_IDataObjCollection GUID
 
+#ifdef __MINGW32__
 #include <unknwn.h>
 #include <basetyps.h>
 #include <objidl.h>
-// The above are required for __MINGW32__
+#endif
 #include <oleidl.h>
 
 #include "nsString.h"
@@ -118,14 +119,14 @@ class nsDataObjCollection : public IDataObject, public nsIDataObjCollection //, 
 #if NOT_YET
     // from nsPIDataObjCollection
     STDMETHODIMP AddDataObject(IDataObject * aDataObj);
-    STDMETHODIMP GetNumDataObjects(PRInt32* outNum) { *outNum = mDataObjects->Count(); }
-    STDMETHODIMP GetDataObjectAt(PRUint32 aItem, IDataObject** outItem) { *outItem = (IDataObject *)mDataObjects->SafeElementAt(aItem); }
+    STDMETHODIMP GetNumDataObjects(PRInt32* outNum) { *outNum = mDataObjects.Count(); }
+    STDMETHODIMP GetDataObjectAt(PRUint32 aItem, IDataObject** outItem) { *outItem = (IDataObject *)mDataObjects.SafeElementAt(aItem); }
 #endif
 
     // from nsPIDataObjCollection
     void AddDataObject(IDataObject * aDataObj);
-    PRInt32 GetNumDataObjects() { return mDataObjects->Count(); }
-    IDataObject* GetDataObjectAt(PRUint32 aItem) { return (IDataObject *)mDataObjects->SafeElementAt(aItem); }
+    PRInt32 GetNumDataObjects() { return mDataObjects.Count(); }
+    IDataObject* GetDataObjectAt(PRUint32 aItem) { return (IDataObject *)mDataObjects.SafeElementAt(aItem); }
 
 		// Return the registered OLE class ID of this object's CfDataObj.
 		CLSID GetClassID() const;
@@ -185,22 +186,12 @@ class nsDataObjCollection : public IDataObject, public nsIDataObjCollection //, 
 		// Return the adapter
 		//CfDragDrop& GetDragDrop() const;
 
-		// Return the total reference counts of all instances of this class.
-		static ULONG GetCumRefCount();
-
-		// Return the reference count (which helps determine if another app has
-		// released the interface pointer after a drop).
-		ULONG GetRefCount() const;
-
 	protected:
-    nsString mStringData;
-
     BOOL FormatsMatch(const FORMATETC& source, const FORMATETC& target) const;
 
-   	static ULONG g_cRef;              // the cum reference count of all instances
 		ULONG        m_cRef;              // the reference count
 
-    nsVoidArray * mDataFlavors;       // we own and its contents
+    nsVoidArray mDataFlavors;
 
     nsITransferable  * mTransferable; // nsDataObjCollection owns and ref counts nsITransferable, 
                                       // the nsITransferable does know anything about the nsDataObjCollection
@@ -208,8 +199,7 @@ class nsDataObjCollection : public IDataObject, public nsIDataObjCollection //, 
     CEnumFormatEtc   * m_enumFE;      // Ownership Rules: 
                                       // nsDataObjCollection owns and ref counts CEnumFormatEtc,
 
-    nsVoidArray * mDataObjects;      
-
+    nsVoidArray mDataObjects;
 };
 
 

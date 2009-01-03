@@ -99,12 +99,12 @@ public:
   // This stores both the content and the frame so that Instantiate calls can be
   // avoided if the frame changed in the meantime.
   nsObjectLoadingContent *mContent;
-  nsIObjectFrame*         mFrame;
+  nsWeakFrame             mFrame;
   nsCString               mContentType;
   nsCOMPtr<nsIURI>        mURI;
 
   nsAsyncInstantiateEvent(nsObjectLoadingContent* aContent,
-                          nsIObjectFrame* aFrame,
+                          nsIFrame* aFrame,
                           const nsCString& aType,
                           nsIURI* aURI)
     : mContent(aContent), mFrame(aFrame), mContentType(aType), mURI(aURI)
@@ -134,7 +134,7 @@ nsAsyncInstantiateEvent::Run()
   // Also make sure that we still refer to the same data.
   nsIObjectFrame* frame = mContent->
     GetExistingFrame(nsObjectLoadingContent::eFlushContent);
-  if (frame == mFrame &&
+  if (mFrame.IsAlive() &&
       mContent->mURI == mURI &&
       mContent->mContentType.Equals(mContentType)) {
     if (LOG_ENABLED()) {
@@ -798,11 +798,17 @@ nsObjectLoadingContent::HasNewFrame(nsIObjectFrame* aFrame)
     // instantiate
     nsCOMPtr<nsIPluginDocument> pDoc (do_QueryInterface(GetOurDocument()));
     if (pDoc) {
-      return NS_OK;
+      PRBool willHandleInstantiation;
+      pDoc->GetWillHandleInstantiation(&willHandleInstantiation);
+      if (willHandleInstantiation) {
+        return NS_OK;
+      }
     }
 
+    nsIFrame* frame = nsnull;
+    CallQueryInterface(aFrame, &frame);
     nsCOMPtr<nsIRunnable> event =
-        new nsAsyncInstantiateEvent(this, aFrame, mContentType, mURI);
+      new nsAsyncInstantiateEvent(this, frame, mContentType, mURI);
     if (!event) {
       return NS_ERROR_OUT_OF_MEMORY;
     }

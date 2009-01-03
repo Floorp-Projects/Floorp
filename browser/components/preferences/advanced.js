@@ -61,9 +61,11 @@ var gAdvancedPane = {
       advancedPrefs.selectedIndex = preference.value;
     }
 
+#ifdef MOZ_UPDATER
     this.updateAppUpdateItems();
     this.updateAutoItems();
     this.updateModeItems();
+#endif
     this.updateOfflineApps();
   },
 
@@ -163,7 +165,7 @@ var gAdvancedPane = {
   readCacheSize: function ()
   {
     var preference = document.getElementById("browser.cache.disk.capacity");
-    return preference.value / 1000;
+    return preference.value / 1024;
   },
 
   /**
@@ -174,7 +176,7 @@ var gAdvancedPane = {
   {
     var cacheSize = document.getElementById("cacheSize");
     var intValue = parseInt(cacheSize.value, 10);
-    return isNaN(intValue) ? 0 : intValue * 1000;
+    return isNaN(intValue) ? 0 : intValue * 1024;
   },
 
   /**
@@ -375,6 +377,7 @@ var gAdvancedPane = {
    *             iii 0/1/2   t         true   
    * 
    */
+#ifdef MOZ_UPDATER
   updateAppUpdateItems: function () 
   {
     var aus = 
@@ -420,18 +423,6 @@ var gAdvancedPane = {
                   !autoPref.value || modePref.locked;
     warnIncompatible.disabled = disable;
   },
-
-  /**
-   * The Extensions checkbox and button are disabled only if the enable Addon
-   * update preference is locked. 
-   */
-  updateAddonUpdateUI: function ()
-  {
-    var enabledPref = document.getElementById("extensions.update.enabled");
-    var enableAddonUpdate = document.getElementById("enableAddonUpdate");
-
-    enableAddonUpdate.disabled = enabledPref.locked;
-  },  
 
   /**
    * Stores the value of the app.update.mode preference, which is a tristate
@@ -483,6 +474,19 @@ var gAdvancedPane = {
                              .createInstance(Components.interfaces.nsIUpdatePrompt);
     prompter.showUpdateHistory(window);
   },
+#endif
+
+  /**
+   * The Extensions checkbox and button are disabled only if the enable Addon
+   * update preference is locked. 
+   */
+  updateAddonUpdateUI: function ()
+  {
+    var enabledPref = document.getElementById("extensions.update.enabled");
+    var enableAddonUpdate = document.getElementById("enableAddonUpdate");
+
+    enableAddonUpdate.disabled = enabledPref.locked;
+  },  
   
   // ENCRYPTION TAB
 

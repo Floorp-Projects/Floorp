@@ -48,6 +48,7 @@
 #include "nsIScriptObjectPrincipal.h"
 #include "nsIDOMWindow.h"
 #include "xpcJSWeakReference.h"
+#include "XPCWrapper.h"
 
 #ifdef MOZ_JSLOADER
 #include "mozJSComponentLoader.h"
@@ -2725,6 +2726,21 @@ nsXPCComponents_Utils::GetSandbox(nsIXPCComponents_utils_Sandbox **aSandbox)
     return NS_OK;
 }
 
+static JSBool
+MethodWrapper(JSContext *cx, JSObject *obj, uintN argc, jsval *argv,
+              jsval *rval)
+{
+    jsval v;
+    if (!JS_GetReservedSlot(cx, JSVAL_TO_OBJECT(argv[-2]), 0, &v) ||
+        !JS_CallFunctionValue(cx, obj, v, argc, argv, rval)) {
+        return JS_FALSE;
+    }
+
+    if (JSVAL_IS_PRIMITIVE(*rval))
+       return JS_TRUE;
+    return XPCNativeWrapperCtor(cx, nsnull, 1, rval, rval);
+}
+
 /* void lookupMethod (); */
 NS_IMETHODIMP
 nsXPCComponents_Utils::LookupMethod()
@@ -2831,10 +2847,35 @@ nsXPCComponents_Utils::LookupMethod()
                                   &funval))
         return NS_ERROR_XPC_BAD_CONVERT_JS;
 
-    // return the function and let xpconnect know we did so
+    // Stick the function in the return value. This roots it.
     *retval = funval;
-    cc->SetReturnValueWasSet(PR_TRUE);
 
+    // Callers of this method are implicitly buying into
+    // XPCNativeWrapper-like protection. The easiest way
+    // to enforce this is to use our own wrapper.
+    // Note: We use the outer call context to ensure that we wrap
+    // the function in the right scope.
+    NS_ASSERTION(JSVAL_IS_OBJECT(funval), "Function is not an object");
+    JSContext *outercx;
+    cc->GetJSContext(&outercx);
+    JSFunction *oldfunction = JS_ValueToFunction(outercx, funval);
+    NS_ASSERTION(oldfunction, "Function is not a function");
+
+    JSFunction *f = JS_NewFunction(outercx, MethodWrapper,
+                                   JS_GetFunctionArity(oldfunction), 0,
+                                   JS_GetScopeChain(outercx),
+                                   JS_GetFunctionName(oldfunction));
+    if(!f)
+        return NS_ERROR_FAILURE;
+
+    JSObject *funobj = JS_GetFunctionObject(f);
+    if(!JS_SetReservedSlot(outercx, funobj, 0, funval))
+        return NS_ERROR_FAILURE;
+
+    *retval = OBJECT_TO_JSVAL(funobj);
+
+    // Tell XPConnect that we returned the function through the call context.
+    cc->SetReturnValueWasSet(PR_TRUE);
     return NS_OK;
 }
 
@@ -3010,7 +3051,7 @@ SandboxFunForwarder(JSContext *cx, JSObject *obj, uintN argc, jsval *argv,
 
     if (JSVAL_IS_PRIMITIVE(*rval))
         return JS_TRUE; // nothing more to do.
-    
+
     XPCThrower::Throw(NS_ERROR_NOT_IMPLEMENTED, cx);
     return JS_FALSE;
 }
@@ -3023,7 +3064,7 @@ SandboxImport(JSContext *cx, JSObject *obj, uintN argc, jsval *argv,
         XPCThrower::Throw(NS_ERROR_INVALID_ARG, cx);
         return JS_FALSE;
     }
-    
+
     JSFunction *fun = JS_ValueToFunction(cx, argv[0]);
     if (!fun) {
         XPCThrower::Throw(NS_ERROR_INVALID_ARG, cx);
@@ -3520,55 +3561,57 @@ xpc_EvalInSandbox(JSContext *cx, JSObject *sandbox, const nsAString& source,
 
     nsresult rv = NS_OK;
 
-    AutoJSRequestWithNoCallContext req(sandcx->GetJSContext());
-    JSString *str = nsnull;
-    if (!JS_EvaluateUCScriptForPrincipals(sandcx->GetJSContext(), sandbox,
-                                          jsPrincipals,
-                                          reinterpret_cast<const jschar *>
-                                                          (PromiseFlatString(source).get()),
-                                          source.Length(), filename, lineNo,
-                                          rval) ||
-        (returnStringOnly &&
-         !JSVAL_IS_VOID(*rval) &&
-         !(str = JS_ValueToString(sandcx->GetJSContext(), *rval)))) {
-        jsval exn;
-        if (JS_GetPendingException(sandcx->GetJSContext(), &exn)) {
-            // Stash the exception in |cx| so we can execute code on
-            // sandcx without a pending exception.
-            {
-                AutoJSSuspendRequestWithNoCallContext sus(sandcx->GetJSContext());
-                AutoJSRequestWithNoCallContext cxreq(cx);
+    {
+        AutoJSRequestWithNoCallContext req(sandcx->GetJSContext());
+        JSString *str = nsnull;
+        if (!JS_EvaluateUCScriptForPrincipals(sandcx->GetJSContext(), sandbox,
+                                              jsPrincipals,
+                                              reinterpret_cast<const jschar *>
+                                                              (PromiseFlatString(source).get()),
+                                              source.Length(), filename, lineNo,
+                                              rval) ||
+            (returnStringOnly &&
+             !JSVAL_IS_VOID(*rval) &&
+             !(str = JS_ValueToString(sandcx->GetJSContext(), *rval)))) {
+            jsval exn;
+            if (JS_GetPendingException(sandcx->GetJSContext(), &exn)) {
+                // Stash the exception in |cx| so we can execute code on
+                // sandcx without a pending exception.
+                {
+                    AutoJSSuspendRequestWithNoCallContext sus(sandcx->GetJSContext());
+                    AutoJSRequestWithNoCallContext cxreq(cx);
 
-                JS_SetPendingException(cx, exn);
-            }
-
-            JS_ClearPendingException(sandcx->GetJSContext());
-            if (returnStringOnly) {
-                // The caller asked for strings only, convert the
-                // exception into a string.
-                str = JS_ValueToString(sandcx->GetJSContext(), exn);
-
-                AutoJSSuspendRequestWithNoCallContext sus(sandcx->GetJSContext());
-                AutoJSRequestWithNoCallContext cxreq(cx);
-                if (str) {
-                    // We converted the exception to a string. Use that
-                    // as the value exception.
-                    JS_SetPendingException(cx, STRING_TO_JSVAL(str));
-                } else {
-                    JS_ClearPendingException(cx);
-                    rv = NS_ERROR_FAILURE;
+                    JS_SetPendingException(cx, exn);
                 }
+
+                JS_ClearPendingException(sandcx->GetJSContext());
+                if (returnStringOnly) {
+                    // The caller asked for strings only, convert the
+                    // exception into a string.
+                    str = JS_ValueToString(sandcx->GetJSContext(), exn);
+
+                    AutoJSSuspendRequestWithNoCallContext sus(sandcx->GetJSContext());
+                    AutoJSRequestWithNoCallContext cxreq(cx);
+                    if (str) {
+                        // We converted the exception to a string. Use that
+                        // as the value exception.
+                        JS_SetPendingException(cx, STRING_TO_JSVAL(str));
+                    } else {
+                        JS_ClearPendingException(cx);
+                        rv = NS_ERROR_FAILURE;
+                    }
+                }
+
+                // Clear str so we don't confuse callers.
+                str = nsnull;
+            } else {
+                rv = NS_ERROR_OUT_OF_MEMORY;
             }
-
-            // Clear str so we don't confuse callers.
-            str = nsnull;
-        } else {
-            rv = NS_ERROR_OUT_OF_MEMORY;
         }
-    }
 
-    if (str) {
-        *rval = STRING_TO_JSVAL(str);
+        if (str) {
+            *rval = STRING_TO_JSVAL(str);
+        }
     }
 
     if (stack) {
@@ -3895,7 +3938,7 @@ nsXPCComponents::NewResolve(nsIXPConnectWrappedNative *wrapper,
                             jsval id, PRUint32 flags,
                             JSObject * *objp, PRBool *_retval)
 {
-    XPCJSRuntime* rt = nsXPConnect::GetRuntime();
+    XPCJSRuntime* rt = nsXPConnect::GetRuntimeInstance();
     if(!rt)
         return NS_ERROR_FAILURE;
 
@@ -3926,7 +3969,7 @@ nsXPCComponents::GetProperty(nsIXPConnectWrappedNative *wrapper,
                              JSContext * cx, JSObject * obj,
                              jsval id, jsval * vp, PRBool *_retval)
 {
-    XPCContext* xpcc = nsXPConnect::GetContext(cx);
+    XPCContext* xpcc = XPCContext::GetXPCContext(cx);
     if(!xpcc)
         return NS_ERROR_FAILURE;
 
@@ -3961,7 +4004,7 @@ nsXPCComponents::SetProperty(nsIXPConnectWrappedNative *wrapper,
                              JSContext * cx, JSObject * obj, jsval id,
                              jsval * vp, PRBool *_retval)
 {
-    XPCContext* xpcc = nsXPConnect::GetContext(cx);
+    XPCContext* xpcc = XPCContext::GetXPCContext(cx);
     if(!xpcc)
         return NS_ERROR_FAILURE;
 

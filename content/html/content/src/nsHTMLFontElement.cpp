@@ -96,8 +96,10 @@ NS_IMPL_RELEASE_INHERITED(nsHTMLFontElement, nsGenericElement)
 
 
 // QueryInterface implementation for nsHTMLFontElement
-NS_HTML_CONTENT_INTERFACE_TABLE_HEAD(nsHTMLFontElement, nsGenericHTMLElement)
-  NS_INTERFACE_TABLE_INHERITED1(nsHTMLFontElement, nsIDOMHTMLFontElement)
+NS_INTERFACE_TABLE_HEAD(nsHTMLFontElement)
+  NS_HTML_CONTENT_INTERFACE_TABLE1(nsHTMLFontElement, nsIDOMHTMLFontElement)
+  NS_HTML_CONTENT_INTERFACE_TABLE_TO_MAP_SEGUE(nsHTMLFontElement,
+                                               nsGenericHTMLElement)
 NS_HTML_CONTENT_INTERFACE_TABLE_TAIL_CLASSINFO(HTMLFontElement)
 
 

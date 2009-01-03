@@ -300,7 +300,7 @@ nsWebShellWindow::Toolbar()
  * This function is called to process events for the nsIWidget of the 
  * nsWebShellWindow...
  */
-nsEventStatus PR_CALLBACK
+nsEventStatus
 nsWebShellWindow::HandleEvent(nsGUIEvent *aEvent)
 {
   nsEventStatus result = nsEventStatus_eIgnore;

@@ -113,6 +113,8 @@ PROT_DataProvider.prototype.loadDataProviderPrefs_ = function() {
   this.reportGenericURL_ = this.getUrlPref_(basePref + "reportGenericURL");
   this.reportErrorURL_ = this.getUrlPref_(basePref + "reportErrorURL");
   this.reportPhishURL_ = this.getUrlPref_(basePref + "reportPhishURL");
+  this.reportMalwareURL_ = this.getUrlPref_(basePref + "reportMalwareURL")
+  this.reportMalwareErrorURL_ = this.getUrlPref_(basePref + "reportMalwareErrorURL")
 
   // Propagate the changes to the list-manager.
   this.updateListManager_();
@@ -219,4 +221,10 @@ PROT_DataProvider.prototype.getReportErrorURL = function() {
 }
 PROT_DataProvider.prototype.getReportPhishURL = function() {
   return this.reportPhishURL_;
+}
+PROT_DataProvider.prototype.getReportMalwareURL = function() {
+  return this.reportMalwareURL_;
+}
+PROT_DataProvider.prototype.getReportMalwareErrorURL = function() {
+  return this.reportMalwareErrorURL_;
 }

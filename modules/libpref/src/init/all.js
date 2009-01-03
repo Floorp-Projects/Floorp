@@ -113,6 +113,9 @@ pref("browser.display.focus_background_color", "#117722");
 pref("browser.display.focus_text_color",     "#ffffff");
 pref("browser.display.focus_ring_width",     1);
 pref("browser.display.focus_ring_on_anything", false);
+// focus ring border style.
+// 0 = solid border, 1 = dotted border
+pref("browser.display.focus_ring_style", 1);
 
 pref("browser.helperApps.alwaysAsk.force",  false);
 pref("browser.helperApps.neverAsk.saveToDisk", "");
@@ -354,6 +357,8 @@ pref("capability.policy.mailnews.*.data.get", "noAccess");
 pref("capability.policy.mailnews.*.getAttribute", "noAccess");
 pref("capability.policy.mailnews.HTMLDivElement.getAttribute", "sameOrigin");
 pref("capability.policy.mailnews.*.getAttributeNS", "noAccess");
+pref("capability.policy.mailnews.*.getAttributeNode", "noAccess");
+pref("capability.policy.mailnews.*.getAttributeNodeNS", "noAccess");
 pref("capability.policy.mailnews.*.getNamedItem", "noAccess");
 pref("capability.policy.mailnews.*.getNamedItemNS", "noAccess");
 pref("capability.policy.mailnews.*.host.get", "noAccess");
@@ -367,11 +372,13 @@ pref("capability.policy.mailnews.*.protocol.get", "noAccess");
 pref("capability.policy.mailnews.*.src.get", "noAccess");
 pref("capability.policy.mailnews.*.substringData.get", "noAccess");
 pref("capability.policy.mailnews.*.text.get", "noAccess");
+pref("capability.policy.mailnews.*.textContent", "noAccess");
 pref("capability.policy.mailnews.*.title.get", "noAccess");
 pref("capability.policy.mailnews.DOMException.toString", "noAccess");
 pref("capability.policy.mailnews.HTMLAnchorElement.toString", "noAccess");
 pref("capability.policy.mailnews.HTMLDocument.domain", "noAccess");
 pref("capability.policy.mailnews.HTMLDocument.URL", "noAccess");
+pref("capability.policy.mailnews.*.documentURI", "noAccess");
 pref("capability.policy.mailnews.Location.toString", "noAccess");
 pref("capability.policy.mailnews.Range.toString", "noAccess");
 pref("capability.policy.mailnews.Window.blur", "noAccess");
@@ -505,7 +512,7 @@ pref("javascript.enabled",                  true);
 pref("javascript.allow.mailnews",           false);
 pref("javascript.options.strict",           false);
 pref("javascript.options.relimit",          false);
-pref("javascript.options.jit.content",      false);
+pref("javascript.options.jit.content",      true);
 pref("javascript.options.jit.chrome",       false);
 
 // advanced prefs
@@ -654,6 +661,7 @@ pref("network.IDN_show_punycode", false);
 
 // ccTLDs
 pref("network.IDN.whitelist.ac", true);
+pref("network.IDN.whitelist.ar", true);
 pref("network.IDN.whitelist.at", true);
 pref("network.IDN.whitelist.br", true);
 pref("network.IDN.whitelist.ch", true);
@@ -1046,6 +1054,9 @@ pref("layout.frames.force_resizability", false);
 // pref to report CSS errors to the error console
 pref("layout.css.report_errors", true);
 
+// Should the :visited selector ever match (otherwise :link matches instead)?
+pref("layout.css.visited_links_enabled", true);
+
 // pref for which side vertical scrollbars should be on
 // 0 = end-side in UI direction
 // 1 = end-side in document/content direction
@@ -1155,27 +1166,22 @@ pref("font.name-list.serif.he", "Narkisim, David");
 pref("font.name-list.monospace.he", "Fixed Miriam Transparent, Miriam Fixed, Rod, Courier New");
 pref("font.name-list.cursive.he", "Guttman Yad, Ktav, Arial");
 
-// For CJK fonts, we list a font twice in name-list, once in the native script and once in English
-// because the name of a CJK font returned by Win32 API is beyond our control and depends on
-// whether or not Mozilla is run on CJK Win 9x/ME or Win 2k/XP with a CJK locale.
-// (see bug 227815)
-
 pref("font.name.serif.ja", "ＭＳ Ｐ明朝"); // "MS PMincho"
 pref("font.name.sans-serif.ja", "ＭＳ Ｐゴシック"); // "MS PGothic"
 pref("font.name.monospace.ja", "ＭＳ ゴシック"); // "MS Gothic"
-pref("font.name-list.serif.ja", "MS PMincho, ＭＳ Ｐ明朝, MS Mincho, MS PGothic, MS Gothic");
-pref("font.name-list.sans-serif.ja", "MS PGothic, ＭＳ Ｐゴシック, MS Gothic, MS PMincho, MS Mincho");
-pref("font.name-list.monospace.ja", "MS Gothic, ＭＳ ゴシック, MS Mincho, ＭＳ 明朝, MS PGothic, MS PMincho");
+pref("font.name-list.serif.ja", "MS PMincho, MS Mincho, MS PGothic, MS Gothic");
+pref("font.name-list.sans-serif.ja", "MS PGothic, MS Gothic, MS PMincho, MS Mincho");
+pref("font.name-list.monospace.ja", "MS Gothic, MS Mincho, MS PGothic, MS PMincho");
 
 pref("font.name.serif.ko", "바탕"); // "Batang" 
 pref("font.name.sans-serif.ko", "굴림"); // "Gulim" 
 pref("font.name.monospace.ko", "굴림체"); // "GulimChe" 
 pref("font.name.cursive.ko", "궁서"); // "Gungseo"
 
-pref("font.name-list.serif.ko", "Batang, 바탕, Gulim, 굴림"); 
-pref("font.name-list.sans-serif.ko", "Gulim, 굴림"); 
-pref("font.name-list.monospace.ko", "GulimChe, 굴림체"); 
-pref("font.name-list.cursive.ko", "Gungseo, 궁서"); 
+pref("font.name-list.serif.ko", "Batang, Gulim"); 
+pref("font.name-list.sans-serif.ko", "Gulim"); 
+pref("font.name-list.monospace.ko", "GulimChe"); 
+pref("font.name-list.cursive.ko", "Gungseo"); 
 
 pref("font.name.serif.th", "Tahoma");
 pref("font.name.sans-serif.th", "Tahoma");
@@ -1215,27 +1221,27 @@ pref("font.name.cursive.x-western", "Comic Sans MS");
 pref("font.name.serif.zh-CN", "宋体"); //MS Song
 pref("font.name.sans-serif.zh-CN", "宋体"); //MS Song
 pref("font.name.monospace.zh-CN", "宋体"); //MS Song
-pref("font.name-list.serif.zh-CN", "MS Song, 宋体, SimSun");
-pref("font.name-list.sans-serif.zh-CN", "MS Song, 宋体, SimSun");
-pref("font.name-list.monospace.zh-CN", "MS Song, 宋体, SimSun");
+pref("font.name-list.serif.zh-CN", "MS Song, SimSun");
+pref("font.name-list.sans-serif.zh-CN", "MS Song, SimSun");
+pref("font.name-list.monospace.zh-CN", "MS Song, SimSun");
 
 // Per Taiwanese users' demand. They don't want to use TC fonts for
 // rendering Latin letters. (bug 88579)
 pref("font.name.serif.zh-TW", "Times New Roman"); 
 pref("font.name.sans-serif.zh-TW", "Arial"); 
 pref("font.name.monospace.zh-TW", "細明體");  // MingLiU
-pref("font.name-list.serif.zh-TW", "新細明體,PMingLiu,細明體,MingLiU"); 
-pref("font.name-list.sans-serif.zh-TW", "新細明體,PMingLiU,細明體,MingLiU");
-pref("font.name-list.monospace.zh-TW", "MingLiU,細明體");
+pref("font.name-list.serif.zh-TW", "PMingLiu, MingLiU"); 
+pref("font.name-list.sans-serif.zh-TW", "PMingLiU, MingLiU");
+pref("font.name-list.monospace.zh-TW", "MingLiU");
 
 // hkscsm3u.ttf (HKSCS-2001) :  http://www.microsoft.com/hk/hkscs 
 // Hong Kong users have the same demand about glyphs for Latin letters (bug 88579) 
 pref("font.name.serif.zh-HK", "Times New Roman"); 
 pref("font.name.sans-serif.zh-HK", "Arial"); 
 pref("font.name.monospace.zh-HK", "細明體_HKSCS"); 
-pref("font.name-list.serif.zh-HK", "細明體_HKSCS, MingLiu_HKSCS, Ming(for ISO10646), MingLiU, 細明體"); 
-pref("font.name-list.sans-serif.zh-HK", "細明體_HKSCS, MingLiU_HKSCS, Ming(for ISO10646), MingLiU, 細明體");  
-pref("font.name-list.monospace.zh-HK", "MingLiU_HKSCS,  細明體_HKSCS, Ming(for ISO10646), MingLiU, 細明體");
+pref("font.name-list.serif.zh-HK", "MingLiu_HKSCS, Ming(for ISO10646), MingLiU"); 
+pref("font.name-list.sans-serif.zh-HK", "MingLiU_HKSCS, Ming(for ISO10646), MingLiU");  
+pref("font.name-list.monospace.zh-HK", "MingLiU_HKSCS, Ming(for ISO10646), MingLiU");
 
 pref("font.name.serif.x-devanagari", "Mangal");
 pref("font.name.sans-serif.x-devanagari", "Raghindi");
@@ -2001,15 +2007,15 @@ pref("font.name.monospace.x-cyrillic", "Courier");
 // The DejaVu fonts are shipped with eCS, so list them first but include all
 // fonts that OS/2 users are likely to have.
 pref("font.name.serif.x-unicode", "Times New Roman MT 30");
-pref("font.name-list.serif.x-unicode", "Deja Vu Serif, FreeSerif, Times New Roman WT, Times New Roman MT 30, Gentium, Doulos SIL, TITUS Cyberbit Basic, Bitstream Cyberbit, Charis SIL, Georgia, Tms Rmn");
+pref("font.name-list.serif.x-unicode", "DejaVu Serif, FreeSerif, Times New Roman WT, Times New Roman MT 30, Gentium, Doulos SIL, TITUS Cyberbit Basic, Bitstream Cyberbit, Charis SIL, Georgia, Tms Rmn");
 pref("font.name.sans-serif.x-unicode", "Lucida Sans Unicode");
-pref("font.name-list.sans-serif.x-unicode", "Deja Vu Sans, FreeSans, Arial Unicode, Lucida Sans Unicode, Code2002, Code2001, Code2000, Arial, Helv");
-pref("font.name.monospace.x-unicode", "Deja Vu Sans Mono");
-pref("font.name-list.monospace.x-unicode", "Deja Vu Sans Mono, FreeMono, Andale Mono, Monotype Sans Duospace WT J, Courier New, Courier");
+pref("font.name-list.sans-serif.x-unicode", "DejaVu Sans, FreeSans, Arial Unicode, Lucida Sans Unicode, Code2002, Code2001, Code2000, Arial, Helv");
+pref("font.name.monospace.x-unicode", "DejaVu Sans Mono");
+pref("font.name-list.monospace.x-unicode", "DejaVu Sans Mono, FreeMono, Andale Mono, Monotype Sans Duospace WT J, Courier New, Courier");
 pref("font.name.fantasy.x-unicode", "Times New Roman MT 30");
-pref("font.name-list.fantasy.x-unicode", "Deja Vu Serif, FreeSerif, Junicode, Times New Roman WT, Times New Roman MT 30, Doulos SIL, TITUS Cyberbit Basic, Bitstream Cyberbit, Charis SIL, Arial Unicode, Lucida Sans Unicode, Code2002, Code2001, Code2000");
+pref("font.name-list.fantasy.x-unicode", "DejaVu Serif, FreeSerif, Junicode, Times New Roman WT, Times New Roman MT 30, Doulos SIL, TITUS Cyberbit Basic, Bitstream Cyberbit, Charis SIL, Arial Unicode, Lucida Sans Unicode, Code2002, Code2001, Code2000");
 pref("font.name.cursive.x-unicode", "Times New Roman MT 30");
-pref("font.name-list.cursive.x-unicode", "Deja Vu Serif, FreeSerif, Times New Roman WT, Times New Roman MT 30, Doulos SIL, TITUS Cyberbit Basic, Bitstream Cyberbit, Charis SIL, Arial Unicode, Lucida Sans Unicode, Code2002, Code2001, Code2000");
+pref("font.name-list.cursive.x-unicode", "DejaVu Serif, FreeSerif, Times New Roman WT, Times New Roman MT 30, Doulos SIL, TITUS Cyberbit Basic, Bitstream Cyberbit, Charis SIL, Arial Unicode, Lucida Sans Unicode, Code2002, Code2001, Code2000");
 
 pref("font.name.serif.x-western", "Tms Rmn");
 pref("font.name.sans-serif.x-western", "Helv");

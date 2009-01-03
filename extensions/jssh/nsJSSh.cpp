@@ -580,11 +580,6 @@ NS_IMETHODIMP nsJSSh::Init()
     return NS_ERROR_FAILURE;
   }
 
-  // Let xpconnect resync its JSContext tracker. We do this before creating
-  // a new JSContext just in case the heap manager recycles the JSContext
-  // struct.
-  xpc->SyncJSContexts();
-  
   nsCOMPtr<nsIJSRuntimeService> rtsvc = do_GetService("@mozilla.org/js/xpc/RuntimeService;1");
   // get the JSRuntime from the runtime svc
   if (!rtsvc) {
@@ -667,7 +662,6 @@ NS_IMETHODIMP nsJSSh::Cleanup()
   }
 
   JS_DestroyContext(mJSContext);
-  xpc->SyncJSContexts();
   return NS_OK;
 }
 

@@ -39,7 +39,6 @@
 #include "nsTextUtils.h"
 
 #include "nsAccessNode.h"
-#include "nsAccessibilityUtils.h"
 
 ////////////////////////////////////////////////////////////////////////////////
 // nsLangTextAttr
@@ -52,7 +51,7 @@ nsLangTextAttr::Equal(nsIDOMElement *aElm)
     return PR_FALSE;
 
   nsAutoString lang;
-  nsAccUtils::GetLanguageFor(content, mRootContent, lang);
+  nsCoreUtils::GetLanguageFor(content, mRootContent, lang);
 
   return lang == mLang;
 }
@@ -88,8 +87,6 @@ static nsCSSTextAttrMapItem gCSSTextAttrsMap[] = {
   { "font-weight",       kAnyValue,       kCopyName,                  kCopyValue },
   { "text-decoration",   "line-through",  "text-line-through-style",  "solid" },
   { "text-decoration",   "underline",     "text-underline-style",     "solid" },
-  { "text-align",        kAnyValue,       kCopyName,                  kCopyValue },
-  { "text-indent",       kAnyValue,       kCopyName,                  kCopyValue },
   { "vertical-align",    kAnyValue,       "text-position",            kCopyValue }
 };
 
@@ -97,12 +94,12 @@ nsCSSTextAttr::nsCSSTextAttr(PRBool aIncludeDefAttrValue, nsIDOMElement *aElm,
                              nsIDOMElement *aRootElm) :
   mIndex(-1), mIncludeDefAttrValue(aIncludeDefAttrValue)
 {
-  nsAccessNode::GetComputedStyleDeclaration(EmptyString(), aElm,
-                                            getter_AddRefs(mStyleDecl));
+  nsCoreUtils::GetComputedStyleDeclaration(EmptyString(), aElm,
+                                           getter_AddRefs(mStyleDecl));
 
   if (!mIncludeDefAttrValue)
-    nsAccessNode::GetComputedStyleDeclaration(EmptyString(), aRootElm,
-                                              getter_AddRefs(mDefStyleDecl));
+    nsCoreUtils::GetComputedStyleDeclaration(EmptyString(), aRootElm,
+                                             getter_AddRefs(mDefStyleDecl));
 }
 
 PRBool
@@ -112,8 +109,8 @@ nsCSSTextAttr::Equal(nsIDOMElement *aElm)
     return PR_FALSE;
 
   nsCOMPtr<nsIDOMCSSStyleDeclaration> currStyleDecl;
-  nsAccessNode::GetComputedStyleDeclaration(EmptyString(), aElm,
-                                            getter_AddRefs(currStyleDecl));
+  nsCoreUtils::GetComputedStyleDeclaration(EmptyString(), aElm,
+                                           getter_AddRefs(currStyleDecl));
   if (!currStyleDecl)
     return PR_FALSE;
 
@@ -191,7 +188,7 @@ nsBackgroundTextAttr::nsBackgroundTextAttr(nsIFrame *aFrame,
 PRBool
 nsBackgroundTextAttr::Equal(nsIDOMElement *aElm)
 {
-  nsIFrame *frame = nsAccUtils::GetFrameFor(aElm);
+  nsIFrame *frame = nsCoreUtils::GetFrameFor(aElm);
   if (!frame)
     return PR_FALSE;
 
@@ -231,7 +228,7 @@ nsBackgroundTextAttr::GetColor(nsIFrame *aFrame)
 
   nsIFrame *parentFrame = aFrame->GetParent();
   if (!parentFrame)
-    return styleBackground->mBackgroundColor;
+    return aFrame->PresContext()->DefaultBackgroundColor();
 
   // Each frame of parents chain for the initially passed 'aFrame' has
   // transparent background color. So background color isn't changed from

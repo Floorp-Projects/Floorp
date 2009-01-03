@@ -18,78 +18,55 @@ Tests of DOM Worker Threads (Bug 437152)
 <pre id="test">
 <script class="testbody" type="text/javascript">
 
-  netscape.security.PrivilegeManager.enablePrivilege('UniversalXPConnect');
+  var worker = new Worker("simpleThread_worker.js");
 
-  var prefs = Components.classes["@mozilla.org/preferences-service;1"].
-              getService(Components.interfaces.nsIPrefBranch);
-  //prefs.setIntPref("javascript.options.gczeal", 2);
-
-  var workerScript =
-    "function messageListener(message, source) { " +
-    "  switch (message) { " +
-    "    case 'no-op': " +
-    "      break; " +
-    "    case 'start': " +
-    "      /* do a ton of stuff! */ " +
-    "      for (var i = 0; i < 1000; i++) { } " +
-    "      /* pass message to source */ " +
-    "      source.postMessage('started'); " +
-    "      break; " +
-    "    case 'stop': " +
-    "      /* do some more stuff! */ " +
-    "      for (var i = 0; i < 1000; i++) { } " +
-    "      /* pass message to self */ " +
-    "      threadContext.thisThread.postMessage('no-op'); " +
-    "      /* pass message to pool */ " +
-    "      postMessageToPool('stopped'); " +
-    "      break; " +
-    "    default: " +
-    "      throw 'Bad message: ' + message; " +
-    "  } " +
-    "} " +
-    "";
-
-  var pool = navigator.newWorkerPool();
-  ok(pool, "Couldn't get worker pool");
-
-  pool.messageListener = function(message, source) {
-    netscape.security.PrivilegeManager.enablePrivilege('UniversalXPConnect');
-    switch (message) {
+  worker.addEventListener("message",function(event) {
+    is(event.target, worker);
+    switch (event.data) {
       case "no-op":
         break;
       case "started":
-        // pass message to self
-        pool.postMessage("no-op");
-        // pass message to source
-        source.postMessage("stop");
+        is(gotErrors, true);
+        worker.postMessage("no-op");
+        worker.postMessage("stop");
         break;
       case "stopped":
-        // pass message to worker
         worker.postMessage("no-op");
-        prefs.setIntPref("javascript.options.gczeal", 0);
         SimpleTest.finish();
         break;
       default:
-        ok(false, "Unexpected message");
-        prefs.setIntPref("javascript.options.gczeal", 0);
+        ok(false, "Unexpected message:" + event.data);
         SimpleTest.finish();
     }
+  }, false);
+
+  var gotErrors = false;
+  worker.onerror = function(event) {
+    is(event.target, worker);
+    is(event.data,
+       '[JavaScript Error: "uncaught exception: Bad message: asdf"]');
+
+    worker.onerror = function(otherEvent) {
+      is(otherEvent.target, worker);
+      is(otherEvent.data,
+         '[JavaScript Error: "Components is not defined" {file: ' +
+         '"http://localhost:8888/tests/dom/src/threads/test/' +
+         'simpleThread_worker.js" line: 6}]');
+        gotErrors = true;
+
+      worker.onerror = function(oneMoreEvent) {
+        ok(false, "Worker had an error:" + oneMoreEvent.data);
+        SimpleTest.finish();
+      };
+    };
   };
 
-  pool.errorListener = function(error, source) {
-    netscape.security.PrivilegeManager.enablePrivilege('UniversalXPConnect');
-    ok(false, "Worker had an error");
-    prefs.setIntPref("javascript.options.gczeal", 0);
-    SimpleTest.finish();
-  };
-
-  var worker = pool.createWorker(workerScript);
-  ok(worker, "Couldn't make worker");
-
-  pool.postMessage("no-op");
+  worker.postMessage("asdf");
+  worker.postMessage("components");
   worker.postMessage("start");
 
   SimpleTest.waitForExplicitFinish();
+
 </script>
 </pre>
 </body>

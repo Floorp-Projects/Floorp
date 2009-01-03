@@ -88,14 +88,14 @@
       window.opener.wrappedJSObject.SimpleTest.finish();
     }
 
-    // We need to force a native menu reload before testing any dom changes
-    // because dom changes can affect the native menu system lazily.
-    function forceNativeMenuReload() {
+    // Force a menu to update itself. All of the menus parents will be updated
+    // as well. An empty string will force a complete menu system reload.
+    function forceUpdateNativeMenuAt(location) {
       netscape.security.PrivilegeManager.enablePrivilege('UniversalXPConnect');
       var utils = window.QueryInterface(Components.interfaces.nsIInterfaceRequestor).
                                           getInterface(Components.interfaces.nsIDOMWindowUtils);
       try {
-        utils.forceNativeMenuReload();
+        utils.forceUpdateNativeMenuAt(location);
       }
       catch (e) {
         dump(e + "\n");
@@ -144,6 +144,7 @@
     }
 
     function runBaseMenuTests() {
+      forceUpdateNativeMenuAt("0|3");
       return testItem("0|0", "cmd_FooItem0") &&
              testItem("0|1", "cmd_FooItem1") &&
              testItem("0|3|0", "cmd_BarItem0") &&
@@ -185,7 +186,6 @@
         //                      ****************
         //                      * NewMenuItem5 *
         //                      ****************
-        menubarNode.appendChild(newMenu0);
         newMenu0.appendChild(newMenuPopup0);
         newMenuPopup0.appendChild(newMenuItem0);
         newMenuPopup0.appendChild(newMenuItem1);
@@ -195,14 +195,18 @@
         newMenuPopup1.appendChild(newMenuItem3);
         newMenuPopup1.appendChild(newMenuItem4);
         newMenuPopup1.appendChild(newMenuItem5);
+        //XXX - we have to append the menu to the top-level of the menu bar
+        // only after constructing it. If we append before construction, it is
+        // invalid because it has no children and we don't validate it if we add
+        // children later.
+        menubarNode.appendChild(newMenu0);
+        forceUpdateNativeMenuAt("1|3");
+        // Run basic tests again.
+        ok(runBaseMenuTests());
 
         // Error strings.
         var sa = "Command handler(s) should have activated";
         var sna = "Command handler(s) should not have activated";
-
-        // Run basic tests again.
-        forceNativeMenuReload();
-        ok(runBaseMenuTests());
 
         // Test middle items.
         ok(testItem("1|1", "cmd_NewItem1"), sa);
@@ -210,7 +214,6 @@
 
         // Hide newMenu0.
         newMenu0.setAttribute("hidden", "true");
-        forceNativeMenuReload();
         ok(runBaseMenuTests(), sa); // the base menu should still be unhidden
         ok(!testItem("1|0", ""), sna);
         ok(!testItem("1|1", ""), sna);
@@ -221,7 +224,7 @@
 
         // Show newMenu0.
         newMenu0.setAttribute("hidden", "false");
-        forceNativeMenuReload();
+        forceUpdateNativeMenuAt("1|3");
         ok(runBaseMenuTests(), sa);
         ok(testItem("1|0", "cmd_NewItem0"), sa);
         ok(testItem("1|1", "cmd_NewItem1"), sa);
@@ -233,7 +236,7 @@
         // Hide items.
         newMenuItem1.setAttribute("hidden", "true");
         newMenuItem4.setAttribute("hidden", "true");
-        forceNativeMenuReload();
+        forceUpdateNativeMenuAt("1|2");
         ok(runBaseMenuTests(), sa);
         ok(testItem("1|0", "cmd_NewItem0"), sa);
         ok(testItem("1|1", "cmd_NewItem2"), sa);
@@ -245,7 +248,7 @@
         // Show items.
         newMenuItem1.setAttribute("hidden", "false");
         newMenuItem4.setAttribute("hidden", "false");
-        forceNativeMenuReload();
+        forceUpdateNativeMenuAt("1|3");
         ok(runBaseMenuTests(), sa);
         ok(testItem("1|0", "cmd_NewItem0"), sa);
         ok(testItem("1|1", "cmd_NewItem1"), sa);
@@ -259,7 +262,6 @@
 
         // Remove menu.
         menubarNode.removeChild(newMenu0);
-        forceNativeMenuReload();
         ok(runBaseMenuTests(), sa);
         ok(!testItem("1|0", ""), sna);
         ok(!testItem("1|1", ""), sna);
@@ -278,7 +280,7 @@
         menubarNode.removeChild(newMenu0);
         menubarNode.appendChild(tmpMenu0);
         menubarNode.appendChild(newMenu0);
-        forceNativeMenuReload();
+        forceUpdateNativeMenuAt("1|3");
         ok(runBaseMenuTests());
         ok(testItem("1|0", "cmd_NewItem0"), sa);
         ok(testItem("1|1", "cmd_NewItem1"), sa);
@@ -288,6 +290,7 @@
         ok(testItem("1|3|2", "cmd_NewItem5"), sa);
         // return state to original diagramed state
         menubarNode.removeChild(tmpMenu0);
+        delete tmpMenu0;
 
         onTestsFinished();
       }

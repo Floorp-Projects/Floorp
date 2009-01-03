@@ -78,7 +78,10 @@ protected:
   PLDHashTable                    mPrimaryFrameMap;
   PLDHashTable                    mPlaceholderMap;
   UndisplayedMap*                 mUndisplayedMap;
-  PRBool                          mIsDestroyingFrames;
+  PRPackedBool                    mIsDestroying;        // The frame manager is being destroyed.
+#ifdef DEBUG
+  PRPackedBool                    mIsDestroyingFrames;  // The frame manager is destroying some frame(s).
+#endif
 };
 
 #endif

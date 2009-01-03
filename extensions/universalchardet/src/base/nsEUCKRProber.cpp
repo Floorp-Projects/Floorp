@@ -84,7 +84,7 @@ nsProbingState nsEUCKRProber::HandleData(const char* aBuf, PRUint32 aLen)
 
 float nsEUCKRProber::GetConfidence(void)
 {
-  float distribCf = mDistributionAnalyser.GetConfidence();
+  float distribCf = mDistributionAnalyser.GetConfidence(mIsPreferredLanguage);
 
   return (float)distribCf;
 }

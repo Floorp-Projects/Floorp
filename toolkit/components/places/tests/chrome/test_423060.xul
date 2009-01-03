@@ -18,6 +18,11 @@
     const Cc = Components.classes;
     const Ci = Components.interfaces;
 
+    var wccrID = "@mozilla.org/embeddor.implemented/web-content-handler-registrar;1";
+    /* abort the test if web feed handlers are not available */
+    if (!Cc[wccrID])
+      SimpleTest.finish()
+
     /* Turn off the first run UI */
     var prefBranch = Cc["@mozilla.org/preferences-service;1"].getService(Ci.nsIPrefBranch);
     prefBranch.setBoolPref("browser.feeds.showFirstRunUI", false);
@@ -25,7 +30,6 @@
     /* register a handler for the feed type */
     const MAYBE_FEED = "application/vnd.mozilla.maybe.feed";
     var handlerPage = "http://localhost:8888/tests/toolkit/components/places/tests/chrome/demohandler.html?feedurl=%s";
-    var wccrID = "@mozilla.org/embeddor.implemented/web-content-handler-registrar;1";
     var wccr = Cc[wccrID].getService(Ci.nsIWebContentConverterService);
     wccr.registerContentHandler(MAYBE_FEED, handlerPage, "Demo handler", null);
     var demoHandler = wccr.getWebContentHandlerByURI(MAYBE_FEED, handlerPage);

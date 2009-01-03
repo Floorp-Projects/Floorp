@@ -13,7 +13,7 @@
  * for the specific language governing rights and limitations under the
  * License.
  *
- * The Original Code is MozJSHTTP code.
+ * The Original Code is httpd.js code.
  *
  * The Initial Developer of the Original Code is
  * Jeff Walden <jwalden+code@mit.edu>.
@@ -36,7 +36,7 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-// tests for header storage in MozJSHTTP; nsHttpHeaders is an *internal* data
+// tests for header storage in httpd.js; nsHttpHeaders is an *internal* data
 // structure and is not to be used directly outside of httpd.js itself except
 // for testing purposes
 

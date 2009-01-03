@@ -81,7 +81,7 @@ nsProbingState nsBig5Prober::HandleData(const char* aBuf, PRUint32 aLen)
 
 float nsBig5Prober::GetConfidence(void)
 {
-  float distribCf = mDistributionAnalyser.GetConfidence();
+  float distribCf = mDistributionAnalyser.GetConfidence(mIsPreferredLanguage);
 
   return (float)distribCf;
 }

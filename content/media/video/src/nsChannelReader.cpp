@@ -39,125 +39,28 @@
 #include "nsThreadUtils.h"
 #include "nsNetUtil.h"
 #include "prlog.h"
-#include "nsOggDecoder.h"
+#include "nsMediaDecoder.h"
 #include "nsChannelReader.h"
 #include "nsIScriptSecurityManager.h"
 
-nsChannelToPipeListener::nsChannelToPipeListener(nsOggDecoder* aDecoder) :
-  mDecoder(aDecoder),
-  mIntervalStart(0),
-  mIntervalEnd(0),
-  mTotalBytes(0)
+void nsChannelReader::Cancel()
 {
+  mStream.Cancel();
 }
-
-nsresult nsChannelToPipeListener::Init() 
-{
-  nsresult rv = NS_NewPipe(getter_AddRefs(mInput), 
-                           getter_AddRefs(mOutput),
-                           0, 
-                           PR_UINT32_MAX);
-  NS_ENSURE_SUCCESS(rv, rv);
-
-  return NS_OK;
-}
-
-void nsChannelToPipeListener::Stop()
-{
-  mDecoder = nsnull;
-  mInput = nsnull;
-  mOutput = nsnull;
-  mDecoder = nsnull;
-}
-
-double nsChannelToPipeListener::BytesPerSecond() const
-{
-  return mTotalBytes / ((PR_IntervalToMilliseconds(mIntervalEnd-mIntervalStart)) / 1000.0);
-}
-
-void nsChannelToPipeListener::GetInputStream(nsIInputStream** aStream)
-{
-  if (aStream) {
-    NS_IF_ADDREF(*aStream = mInput);
-  }
-}
-
-nsresult nsChannelToPipeListener::OnStartRequest(nsIRequest* aRequest, nsISupports* aContext)
-{
-  mIntervalStart = PR_IntervalNow();
-  mIntervalEnd = mIntervalStart;
-  mTotalBytes = 0;
-  mDecoder->UpdateBytesDownloaded(mTotalBytes);
-
-  /* Get our principal */
-  nsCOMPtr<nsIChannel> chan(do_QueryInterface(aRequest));
-  if (chan) {
-    nsCOMPtr<nsIScriptSecurityManager> secMan =
-      do_GetService("@mozilla.org/scriptsecuritymanager;1");
-    if (secMan) {
-      nsresult rv = secMan->GetChannelPrincipal(chan,
-                                                getter_AddRefs(mPrincipal));
-      if (NS_FAILED(rv)) {
-        return rv;
-      }
-    }
-  }
-
-  return NS_OK;
-}
-
-nsresult nsChannelToPipeListener::OnStopRequest(nsIRequest* aRequest, nsISupports* aContext, nsresult aStatus) 
-{
-  mOutput = nsnull;
-  if (mDecoder) {
-    mDecoder->ResourceLoaded();
-  }
-  return NS_OK;
-}
-
-nsresult nsChannelToPipeListener::OnDataAvailable(nsIRequest* aRequest, 
-                                                nsISupports* aContext, 
-                                                nsIInputStream* aStream,
-                                                PRUint32 aOffset,
-                                                PRUint32 aCount)
-{
-  if (mOutput) {
-    PRUint32 bytes = 0;
-  
-    do {
-      nsresult rv = mOutput->WriteFrom(aStream, aCount, &bytes);
-      NS_ENSURE_SUCCESS(rv, rv);
-      
-      aCount -= bytes;
-      mTotalBytes += bytes;
-      mDecoder->UpdateBytesDownloaded(mTotalBytes);
-    } while (aCount) ;
-    
-    nsresult rv = mOutput->Flush();
-    NS_ENSURE_SUCCESS(rv, rv);
-    mIntervalEnd = PR_IntervalNow();
-  }
-  return NS_OK;
-}
-
-nsIPrincipal*
-nsChannelToPipeListener::GetCurrentPrincipal()
-{
-  return mPrincipal;
-}
-
-NS_IMPL_ISUPPORTS2(nsChannelToPipeListener, nsIRequestObserver, nsIStreamListener)
 
 PRUint32 nsChannelReader::Available()
 {
-  PRUint32 available = 0;
-  mInput->Available(&available);
-  return available;
+  return mStream.Available();
 }
 
-double nsChannelReader::BytesPerSecond() const
+float nsChannelReader::DownloadRate()
 {
-  return mListener->BytesPerSecond();
+  return mStream.DownloadRate();
+}
+
+float nsChannelReader::PlaybackRate()
+{
+  return mStream.PlaybackRate();
 }
 
 OggPlayErrorCode nsChannelReader::initialise(int aBlock)
@@ -167,39 +70,33 @@ OggPlayErrorCode nsChannelReader::initialise(int aBlock)
 
 OggPlayErrorCode nsChannelReader::destroy()
 {
-  mChannel->Cancel(NS_BINDING_ABORTED);
-  mChannel = nsnull;
-  mInput->Close();
-  mInput = nsnull;
-  mListener->Stop();
-  mListener = nsnull;
-
+  mStream.Close();
   return E_OGGPLAY_OK;
 }
 
 size_t nsChannelReader::io_read(char* aBuffer, size_t aCount)
 {
   PRUint32 bytes = 0;
-  nsresult rv = mInput->Read(aBuffer, aCount, &bytes);
+  nsresult rv = mStream.Read(aBuffer, aCount, &bytes);
   if (!NS_SUCCEEDED(rv)) {
-    bytes = 0;
+    return static_cast<size_t>(OGGZ_ERR_SYSTEM);
   }
-
   mCurrentPosition += bytes;
-  return bytes == 0 ? static_cast<size_t>(OGGZ_ERR_SYSTEM) : bytes;
+  return bytes;
 }
 
 int nsChannelReader::io_seek(long aOffset, int aWhence)
 {
-  // How to implement seek in channels?
-  // fseek(file, offset, whence);
-
-  return -1;
+  nsresult rv = mStream.Seek(aWhence, aOffset);
+  if (NS_SUCCEEDED(rv))
+    return aOffset;
+  
+  return OGGZ_STOP_ERR;
 }
 
 long nsChannelReader::io_tell()
 {
-  return mCurrentPosition;
+  return mStream.Tell();
 }
 
 static OggPlayErrorCode oggplay_channel_reader_initialise(OggPlayReader* aReader, int aBlock) 
@@ -215,9 +112,7 @@ static OggPlayErrorCode oggplay_channel_reader_initialise(OggPlayReader* aReader
 static OggPlayErrorCode oggplay_channel_reader_destroy(OggPlayReader* aReader) 
 {
   nsChannelReader* me = static_cast<nsChannelReader*>(aReader);
-  OggPlayErrorCode result = me->destroy();
-  delete me;
-  return result;
+  return me->destroy();
 }
 
 static size_t oggplay_channel_reader_io_read(void* aReader, void* aBuffer, size_t aCount) 
@@ -238,48 +133,34 @@ static long oggplay_channel_reader_io_tell(void* aReader)
   return me->io_tell();
 }
 
-nsresult nsChannelReader::Init(nsOggDecoder* aDecoder, nsIURI* aURI)
+nsresult nsChannelReader::Init(nsMediaDecoder* aDecoder, nsIURI* aURI,
+                               nsIChannel* aChannel,
+                               nsIStreamListener** aStreamListener)
 {
-  nsresult rv;
-
   mCurrentPosition = 0;
-  mListener = new nsChannelToPipeListener(aDecoder);
-  NS_ENSURE_TRUE(mListener, NS_ERROR_OUT_OF_MEMORY);
+  return mStream.Open(aDecoder, aURI, aChannel, aStreamListener);
+}
 
-  rv = mListener->Init();
-  NS_ENSURE_SUCCESS(rv, rv);
-  
-  rv = NS_NewChannel(getter_AddRefs(mChannel), 
-                     aURI, 
-                     nsnull,
-                     nsnull,
-                     nsnull,
-                     nsIRequest::LOAD_NORMAL);
-  NS_ENSURE_SUCCESS(rv, rv);
-
-  rv = mChannel->AsyncOpen(mListener, nsnull);
-  NS_ENSURE_SUCCESS(rv, rv);
-  
-  mListener->GetInputStream(getter_AddRefs(mInput));
-
-  return NS_OK;
+nsChannelReader::~nsChannelReader()
+{
+  MOZ_COUNT_DTOR(nsChannelReader);
 }
 
 nsChannelReader::nsChannelReader() 
 {
+  MOZ_COUNT_CTOR(nsChannelReader);
   OggPlayReader* reader = this;
   reader->initialise = &oggplay_channel_reader_initialise;
   reader->destroy = &oggplay_channel_reader_destroy;
   reader->seek = nsnull;
-  reader->io_read = &oggplay_channel_reader_io_read;
-  reader->io_seek = &oggplay_channel_reader_io_seek;
-  reader->io_tell = &oggplay_channel_reader_io_tell;
+  reader->io_read  = &oggplay_channel_reader_io_read;
+  reader->io_seek  = &oggplay_channel_reader_io_seek;
+  reader->io_tell  = &oggplay_channel_reader_io_tell;
+  reader->duration = nsnull;
 }
 
 nsIPrincipal*
 nsChannelReader::GetCurrentPrincipal()
 {
-  if (!mListener)
-    return nsnull;
-  return mListener->GetCurrentPrincipal();
+  return mStream.GetCurrentPrincipal();
 }

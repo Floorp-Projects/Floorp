@@ -1,8 +1,13 @@
 /**
  * General
  */
-.wizard-button[dlgtype="finish"] {
+.wizard-button[heed="true"] {
   font-weight: bold;
+}
+
+.wizard-button > .button-box {
+  padding-left: 15px !important;
+  padding-right: 15px !important;
 }
 
 link {
@@ -29,10 +34,7 @@ link:focus {
   border: 1px dotted black;
 }
 
-/**
- * License Page
- */
-license {
+remotecontent {
   margin-top: 1px;
   margin-bottom: 2px;
   -moz-margin-start: 6px;
@@ -41,16 +43,19 @@ license {
   padding-bottom: 1px;
 }
 
+/**
+ * License Page
+ */
 .loadingBox {
   padding: 3px 5px 3px 5px;
 }
-.licenseLoadingThrobber {
+.remoteLoadingThrobber {
   margin-top: 3px;
 }
-.licenseLoadingThrobber[state="loading"] {
+.remoteLoadingThrobber[state="loading"] {
   list-style-image: url("chrome://global/skin/icons/loading_16.png");
 }
-.licenseLoadingThrobber[state="error"] {
+.remoteLoadingThrobber[state="error"] {
   list-style-image: url("moz-icon://stock/gtk-dialog-error?size=menu");
 }
 
@@ -59,15 +64,6 @@ license {
  */
 #moreDetails {
   margin: 1px 5px 4px 3px;
-}
-
-wizard[currentpageid="updatesfound"] .wizard-button[dlgtype="next"] {
-  font-weight: bold;
-}
-
-wizard[currentpageid="updatesfound"] .wizard-button[dlgtype="next"] > .button-box {
-  padding-left: 15px;
-  padding-right: 15px;  
 }
 
 #updateForMoreInfo {
@@ -95,28 +91,58 @@ wizard[currentpageid="updatesfound"] .wizard-button[dlgtype="next"] > .button-bo
 /**
  * Downloading Page
  */
-#downloadName {
-  margin-top: 3px;
+#downloadStatusTop, #downloadStatusLine {
+  -moz-box-align: center;
 }
 
 #downloadStatus {
-  margin-top: 6px;
   height: 3em !important;
 }
+
 #downloadThrobber {
-  margin: 5px 3px 0px 5px;
+  margin-left: 5px;
   list-style-image: url("chrome://global/skin/icons/notloading_16.png");
 }
+
+#downloadStatusProgress {
+  padding-right: 5px;
+}
+
 #downloadThrobber[state="loading"] {
   list-style-image: url("chrome://global/skin/icons/loading_16.png");
 }
-#downloadStatusLine {
-  -moz-box-align: start;
+
+#pauseButton {
+  list-style-image: url("moz-icon://stock/gtk-media-pause?size=menu");
+  -moz-appearance: none;
+  background-color: transparent;
+  border: none;
+  padding: 0;
+  margin: 0;
+  min-width: 0;
+  min-height: 0;
+}
+
+/* !Important must be used otherwise this won't immediately take affect */
+#pauseButton > .button-box {
+  padding: 0 !important;
+}
+
+#pauseButton[disabled="true"] {
+  list-style-image: url("moz-icon://stock/gtk-media-pause?size=menu&state=disabled");
+}
+
+#pauseButton[paused="true"] {
+  list-style-image: url("moz-icon://stock/gtk-media-play?size=menu");
+}
+
+#pauseButton[paused="true"][disabled="true"] {
+  list-style-image: url("moz-icon://stock/gtk-media-play?size=menu&state=disabled");
 }
 
 #verificationFailedIcon {
+  margin-left: 5px;
   list-style-image: url("moz-icon://stock/gtk-dialog-warning?size=menu");
-  margin: 5px 3px 0px 5px;
 }
 
 /**
@@ -169,4 +195,3 @@ update {
   margin-left: 27px;
   margin-bottom: 10px;
 }
-

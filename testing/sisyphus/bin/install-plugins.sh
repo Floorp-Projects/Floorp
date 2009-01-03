@@ -51,7 +51,7 @@ $SCRIPT -p product -b branch -x executablepath -D directory [-d datafiles]
 
 variable            description
 ===============     ============================================================
--p product          required. firefox|thunderbird
+-p product          required. firefox, thunderbird or fennec
 -b branch           required. 1.8.0|1.8.1|1.9.0|1.9.1
 -x executablepath   required. path to browser executable
 -D directory        required. path to location of plugins/components
@@ -87,8 +87,8 @@ if [[ -z "$product" || -z "$branch" || \
     usage
 fi
 
-if [[ "$product" != "firefox" && "$product" != "thunderbird" ]]; then
-    error "product \"$product\" must be one of firefox or thunderbird" $LINENO
+if [[ "$product" != "firefox" && "$product" != "thunderbird" && "$product" != "fennec" ]]; then
+    error "product \"$product\" must be one of firefox, thunderbird or fennec" $LINENO
 fi
 
 executable=`get_executable $product $branch $executablepath`

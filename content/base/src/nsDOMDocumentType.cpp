@@ -123,9 +123,9 @@ nsDOMDocumentType::~nsDOMDocumentType()
 
 
 // QueryInterface implementation for nsDOMDocumentType
-NS_INTERFACE_MAP_BEGIN(nsDOMDocumentType)
-  NS_INTERFACE_MAP_ENTRY(nsIDOMNode)
-  NS_INTERFACE_MAP_ENTRY(nsIDOMDocumentType)
+NS_INTERFACE_TABLE_HEAD(nsDOMDocumentType)
+  NS_NODE_INTERFACE_TABLE2(nsDOMDocumentType, nsIDOMNode, nsIDOMDocumentType)
+  NS_INTERFACE_MAP_ENTRIES_CYCLE_COLLECTION(nsDOMDocumentType)
   NS_INTERFACE_MAP_ENTRY_CONTENT_CLASSINFO(DocumentType)
 NS_INTERFACE_MAP_END_INHERITING(nsGenericDOMDataNode)
 

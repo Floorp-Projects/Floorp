@@ -62,7 +62,7 @@ struct nsCSSSelectorList;
  { 0xb2, 0x5a, 0x24, 0xff, 0x09, 0xc3, 0x70, 0xef } }
 
 // Rule processing function
-typedef void (*PR_CALLBACK RuleAppendFunc) (nsICSSRule* aRule, void* aData);
+typedef void (* RuleAppendFunc) (nsICSSRule* aRule, void* aData);
 
 // Interface to the css parser.
 class nsICSSParser : public nsISupports {

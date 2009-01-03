@@ -205,7 +205,11 @@ function (aDescriptionURL)
   var win = WINMEDSVC.getMostRecentWindow("navigator:browser");
   var browser = win.document.getElementById("content");
   var iconURL = "";
-  if (browser.shouldLoadFavIcon(browser.selectedBrowser.currentURI))
+  // Use documentURIObject in the check for shouldLoadFavIcon so that we
+  // do the right thing with about:-style error pages.  Bug 453442
+  if (browser.shouldLoadFavIcon(browser.selectedBrowser
+                                       .contentDocument
+                                       .documentURIObject))
     iconURL = win.gProxyFavIcon.getAttribute("src");
   
   if (!this.validateSearchEngine(aDescriptionURL, iconURL))

@@ -48,6 +48,8 @@
 %brandDTD;
 <!ENTITY % extensionsDTD SYSTEM "chrome://mozapps/locale/extensions/extensions.dtd">
 %extensionsDTD;
+<!ENTITY % global SYSTEM "chrome://global/locale/global.dtd">
+%global;
 ]>
 
 <window xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#"
@@ -159,32 +161,35 @@
 
   <popup id="addonContextMenu" onpopupshowing="return buildContextMenu(event);"/>
 
-  <stack id="topStackBar">
-    <radiogroup id="viewGroup" xhtml:role="listbox" persist="last-selected"
-                class="viewSelector chromeclass-toolbar" orient="horizontal">
-      <radio id="search-view" label="&search.label;" oncommand="showView('search');" persist="last-selected"/>
-      <radio id="extensions-view" label="&extensions.label;" oncommand="showView('extensions');" persist="last-selected"/>
-      <radio id="themes-view" label="&themes.label;" oncommand="showView('themes');" persist="last-selected"/>
-      <radio id="locales-view" label="&locales.label;" oncommand="showView('locales');" persist="last-selected"/>
-      <radio id="plugins-view" label="&plugins.label;" oncommand="showView('plugins');" persist="last-selected"/>
-      <radio id="updates-view" label="&update.label;" oncommand="showView('updates');"/>
-      <radio id="installs-view" label="&install.label;" oncommand="showView('installs');" hidden="true"/>
-    </radiogroup>
-    <vbox id="progressBox" hidden="true" class="viewSelector" flex="1">
-      <spacer flex="1"/>
-      <hbox>
-        <image class="addonThrobber"/>
-        <label id="progressStatus" value="&progressStatus.label;"/>
-      </hbox>
-      <progressmeter id="addonsProgress" class="extension-item-progress" flex="1"/>
-      <spacer flex="1"/>
-    </vbox>
-  </stack>
+  <windowdragbox orient="vertical">
+    <stack id="topStackBar">
+      <radiogroup id="viewGroup" xhtml:role="listbox" persist="last-selected"
+                  class="viewSelector chromeclass-toolbar" orient="horizontal"
+                  chromedir="&locale.dir;">
+        <radio id="search-view" label="&search.label;" oncommand="showView('search');" persist="last-selected"/>
+        <radio id="extensions-view" label="&extensions.label;" oncommand="showView('extensions');" persist="last-selected"/>
+        <radio id="themes-view" label="&themes.label;" oncommand="showView('themes');" persist="last-selected"/>
+        <radio id="locales-view" label="&locales.label;" oncommand="showView('locales');" persist="last-selected"/>
+        <radio id="plugins-view" label="&plugins.label;" oncommand="showView('plugins');" persist="last-selected"/>
+        <radio id="updates-view" label="&update.label;" oncommand="showView('updates');"/>
+        <radio id="installs-view" label="&install.label;" oncommand="showView('installs');" hidden="true"/>
+      </radiogroup>
+      <vbox id="progressBox" hidden="true" class="viewSelector" flex="1">
+        <spacer flex="1"/>
+        <hbox>
+          <image class="addonThrobber"/>
+          <label id="progressStatus" value="&progressStatus.label;"/>
+        </hbox>
+        <progressmeter id="addonsProgress" class="extension-item-progress" flex="1"/>
+        <spacer flex="1"/>
+      </vbox>
+    </stack>
+  </windowdragbox>
   <notificationbox id="addonsMsg" flex="1">
     <vbox id="extensionsBox" flex="1">
       <hbox id="searchPanel" align="center">
         <textbox id="searchfield" emptytext="&searchAddons.label;"
-                 type="search" searchbutton="true"
+                 type="search" searchbutton="true" cocoa-size="small"
                  oncommand="retrieveRepositoryAddons(this.value);"/>
         <spacer flex="1"/>
         <label id="browseAddons" class="text-link" value="&browseAddons.label;"
@@ -267,7 +272,8 @@
       <button id="continueDialogButton" label="&cmd.continue.label;"
               accesskey="&cmd.continue.accesskey;"
               tooltiptext="&cmd.continue.tooltip;"
-              command="cmd_continue"/>
+              command="cmd_continue"
+              hidden="true"/>
       <button id="installUpdatesAllButton" label="&cmd.installUpdatesAll.label;"
               accesskey="&cmd.installUpdatesAll.accesskey;"
               tooltiptext="&cmd.installUpdatesAll.tooltip;"
@@ -282,7 +288,8 @@
       <button id="continueDialogButton" label="&cmd.continue.label;"
               accesskey="&cmd.continue.accesskey;"
               tooltiptext="&cmd.continue.tooltip;"
-              command="cmd_continue"/>
+              command="cmd_continue"
+              hidden="true"/>
       <button id="installUpdatesAllButton" label="&cmd.installUpdatesAll.label;"
               accesskey="&cmd.installUpdatesAll.accesskey;"
               tooltiptext="&cmd.installUpdatesAll.tooltip;"

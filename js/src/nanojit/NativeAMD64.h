@@ -109,6 +109,7 @@ namespace nanojit
 	typedef int RegisterMask;
 
 	/* RBX, R13-R15 */
+	static const int NumSavedRegs = 3;
 	static const RegisterMask SavedRegs = /*(1<<RBX) |*/ /*(1<<R12) |*/ (1<<R13) | (1<<R14) | (1<<R15);
 	/* RAX, RCX, RDX, RDI, RSI, R8-R11 */
 	static const RegisterMask TempRegs = (1<<RAX) | (1<<RCX) | (1<<RDX) | (1<<R8) | (1<<R9) | (1<<R10) | (1<<R11) | (1<<RDI) | (1<<RSI);
@@ -133,7 +134,6 @@ namespace nanojit
 
 	#define nextreg(r)		Register(r+1)
 	#define prevreg(r)		Register(r-1)
-	#define imm2register(c) (Register)(c)
 	
 	verbose_only( extern const char* regNames[]; )
 
@@ -228,6 +228,7 @@ namespace nanojit
 #define AMD64_MOVD_RM_REG			0x660F7E	/* rm/r */
 #define AMD64_MOVSD_REG_RM			0xF20F10	/* rm/r */
 #define AMD64_MOVZX					0x0FB6		/* rm/r */
+#define AMD64_MOVSZ                 0x0FB7      /* rm/r */
 #define AMD64_MULSD					0xF20F59	/* rm/r */
 #define AMD64_NEG_RM				0xF7		/* rm/3 */
 #define AMD64_NOT_RM				0xF7		/* rm/2 */
@@ -326,7 +327,7 @@ namespace nanojit
 	*(--_nIns) = AMD64_MODRM_REG(2, r);							\
 	*(--_nIns) = AMD64_NOT_RM;									\
 	*(--_nIns) = AMD64_REX(1,0,r);								\
-	asm_output1("not %s",gpn(r)); 								\
+	asm_output("not %s",gpn(r)); 								\
 	} while(0)
 
 
@@ -338,25 +339,25 @@ namespace nanojit
 	if (AMD64_NEEDS_REX(s) || AMD64_NEEDS_REX(d)) {				\
 		*(--_nIns) = AMD64_REX(0,d,s);							\
 	}															\
-	asm_output2("movzx %s,%s", gpn(d),gpn(s)); 					\
+	asm_output("movzx %s,%s", gpn(d),gpn(s)); 					\
 	} while(0)
 
 
 #define AMD64_ADDmi(d,b,i,q) do {								\
 	AMD64_ALU_MEM(AMD64_ADD_RAX, b, d, i, q);					\
-	asm_output3("add %d(%s), %d", d, gpn(b), i); 				\
+	asm_output("add %d(%s), %d", d, gpn(b), i); 				\
 	} while(0)
 
 
 #define ADDQmi(d,b,i) do {										\
 	AMD64_ADDmi(d,b,i,1);										\
-	asm_output3("add %d(%s), %d", d, gpn(b), i);				\
+	asm_output("add %d(%s), %d", d, gpn(b), i);				\
 	} while (0)
 
 
 #define CMPi(r,i) do { 											\
 	AMD64_ALU(AMD64_CMP_RAX, r, i, 0);							\
-	asm_output2("cmp %s,%d",gpn(r),i); 							\
+	asm_output("cmp %s,%d",gpn(r),i); 							\
 	} while(0)
 
 
@@ -367,7 +368,7 @@ namespace nanojit
 	if (AMD64_NEEDS_REX(d) || AMD64_NEEDS_REX(s)) {				\
 		*(--_nIns) = AMD64_REX(0,d,s);							\
 	}															\
-	asm_output2("test %s,%s",gpn(d),gpn(s)); 					\
+	asm_output("test %s,%s",gpn(d),gpn(s)); 					\
 	} while(0)
 
 
@@ -376,7 +377,7 @@ namespace nanojit
 	*(--_nIns) = AMD64_MODRM_REG(d, s);							\
 	*(--_nIns) = AMD64_TEST_RM_REG;								\
 	*(--_nIns) = AMD64_REX(1,d,s);							\
-	asm_output2("test %s,%s",gpn(d),gpn(s)); 					\
+	asm_output("test %s,%s",gpn(d),gpn(s)); 					\
 	} while(0)
 
 
@@ -387,7 +388,7 @@ namespace nanojit
 	if (AMD64_NEEDS_REX(l) || AMD64_NEEDS_REX(r)) {				\
 		*(--_nIns) = AMD64_REX(0,l,r);							\
 	}															\
-	asm_output2("cmp %s,%s",gpn(l),gpn(r));						\
+	asm_output("cmp %s,%s",gpn(l),gpn(r));						\
 	} while(0)
 
 #define CMPQ(l,r) do {											\
@@ -395,18 +396,18 @@ namespace nanojit
 	*(--_nIns) = AMD64_MODRM_REG(l, r);							\
 	*(--_nIns) = AMD64_CMP_REG_RM;								\
 	*(--_nIns) = AMD64_REX(1,l,r);							\
-	asm_output2("cmp %s,%s",gpn(l),gpn(r));						\
+	asm_output("cmp %s,%s",gpn(l),gpn(r));						\
 	} while(0)
 
 #define ADDi(r,i) do { 											\
 	AMD64_ALU(AMD64_ADD_RAX, r, i, 0);							\
-	asm_output2("add %s,%d",gpn(r),i); 							\
+	asm_output("add %s,%d",gpn(r),i); 							\
 	} while(0)
 
 
 #define ADDQi(r,i) do { 										\
 	AMD64_ALU(AMD64_ADD_RAX, r, i, 1);							\
-	asm_output2("add %s,%d",gpn(r),i); 							\
+	asm_output("add %s,%d",gpn(r),i); 							\
 	} while(0)
 
 
@@ -427,37 +428,37 @@ namespace nanojit
 
 #define SHR(r,s) do {											\
 	AMD64_PRIM(AMD64_SHR_RM, 5, r);								\
-	asm_output2("shr %s,%s",gpn(r),gpn(s)); 					\
+	asm_output("shr %s,%s",gpn(r),gpn(s)); 					\
 	} while(0)
 
 
 #define AND(l,r) do { 											\
 	AMD64_PRIM(AMD64_AND_REG_RM, l, r);							\
-	asm_output2("and %s,%s",gpn(l),gpn(r)); 					\
+	asm_output("and %s,%s",gpn(l),gpn(r)); 					\
 	} while(0)
 
 
 #define ANDQ(l,r) do { 											\
 	AMD64_PRIMQ(AMD64_AND_REG_RM, l, r);						\
-	asm_output2("and %s,%s",gpn(l),gpn(r)); 					\
+	asm_output("and %s,%s",gpn(l),gpn(r)); 					\
 	} while(0)
 
 
 #define XOR(l,r) do { 											\
 	AMD64_PRIM(AMD64_XOR_REG_RM, l, r);							\
-	asm_output2("xor %s,%s",gpn(l),gpn(r));						\
+	asm_output("xor %s,%s",gpn(l),gpn(r));						\
 	} while(0)
 
 
 #define OR(l,r) do { 											\
 	AMD64_PRIM(AMD64_OR_REG_RM, l, r);							\
-	asm_output2("or %s,%s",gpn(l),gpn(r)); 						\
+	asm_output("or %s,%s",gpn(l),gpn(r)); 						\
 	} while(0)
 
 
 #define ORQ(l,r) do { 											\
 	AMD64_PRIMQ(AMD64_OR_REG_RM, l, r);							\
-	asm_output2("or %s,%s",gpn(l),gpn(r)); 						\
+	asm_output("or %s,%s",gpn(l),gpn(r)); 						\
 	} while(0)
 
 
@@ -474,36 +475,36 @@ namespace nanojit
 	}															\
 	if (AMD64_NEEDS_REX(r))										\
 		*(--_nIns) = AMD64_REX(0,0,r);							\
-	asm_output2("shr %s,%d", gpn(r), i);						\
+	asm_output("shr %s,%d", gpn(r), i);						\
 	} while (0)
 
 
 #define ANDi(r,i) do { 											\
 	AMD64_ALU(AMD64_AND_RAX, r, i, 0);							\
-	asm_output2("and %s,%d",gpn(r),i);							\
+	asm_output("and %s,%d",gpn(r),i);							\
 	} while(0)
 
 
 #define ANDQi(r,i) do { 										\
 	AMD64_ALU(AMD64_AND_RAX, r, i, 1);							\
-	asm_output2("and %s,%d",gpn(r),i);							\
+	asm_output("and %s,%d",gpn(r),i);							\
 	} while(0)
 
 
 #define ORQi(r,i) do { 										    \
 	AMD64_ALU(AMD64_OR_RAX, r, i, 1);							\
-	asm_output2("or %s,%d",gpn(r),i);							\
+	asm_output("or %s,%d",gpn(r),i);							\
 	} while(0)
 
 #define XORi(r,i) do { 											\
 	AMD64_ALU(AMD64_XOR_RAX, r, i, 0);							\
-	asm_output2("xor %s,%d",gpn(r),i); 							\
+	asm_output("xor %s,%d",gpn(r),i); 							\
 	} while(0)
 
 
 #define ORi(r,i) do { 											\
 	AMD64_ALU(AMD64_OR_RAX, r, i, 0);							\
-	asm_output2("or %s,%d",gpn(r),i);							\
+	asm_output("or %s,%d",gpn(r),i);							\
 	} while(0)
 
 
@@ -514,38 +515,38 @@ namespace nanojit
 	*(--_nIns) = AMD64_IMUL_REG_RM_1;							\
 	if (AMD64_NEEDS_REX(l) || AMD64_NEEDS_REX(r))				\
 		*(--_nIns) = AMD64_REX(0,l,r);							\
-	asm_output2("mul %s,%s", gpn(l), gpn(r));					\
+	asm_output("mul %s,%s", gpn(l), gpn(r));					\
 	} while (0)
 
 
 #define NEG(r) do { 											\
 	AMD64_PRIM(AMD64_NEG_RM, 3, r);								\
-	asm_output1("neg %s",gpn(r)); 								\
+	asm_output("neg %s",gpn(r)); 								\
 	} while(0)
 
 
 #define ADD(l,r) do {											\
 	AMD64_PRIM(AMD64_ADD_REG_RM, l, r);							\
-	asm_output2("add %s,%s", gpn(l), gpn(r));					\
+	asm_output("add %s,%s", gpn(l), gpn(r));					\
 	} while (0)
 
 
 #define ADDQ(l,r) do {											\
 	AMD64_PRIMQ(AMD64_ADD_REG_RM, l, r);						\
-	asm_output2("add %s,%s", gpn(l), gpn(r));					\
+	asm_output("add %s,%s", gpn(l), gpn(r));					\
 	} while (0)
 
 
 #define SUB(l,r) do {											\
 	AMD64_PRIM(AMD64_SUB_REG_RM, l, r);							\
-	asm_output2("sub %s,%s", gpn(l), gpn(r));					\
+	asm_output("sub %s,%s", gpn(l), gpn(r));					\
 	} while (0)
 
 
 
 #define SAR(r,s) do {											\
 	AMD64_PRIM(AMD64_SAR_RM, 7, r);								\
-	asm_output2("sar %s,%s",gpn(r),gpn(s));						\
+	asm_output("sar %s,%s",gpn(r),gpn(s));						\
 	} while (0)
 
 
@@ -562,7 +563,7 @@ namespace nanojit
 	}															\
 	if (AMD64_NEEDS_REX(r))										\
 		*(--_nIns) = AMD64_REX(0,0,r);							\
-	asm_output2("sar %s,%d", gpn(r), i);						\
+	asm_output("sar %s,%d", gpn(r), i);						\
 	} while (0)
 
 
@@ -579,7 +580,7 @@ namespace nanojit
 	}															\
 	if (AMD64_NEEDS_REX(r))										\
 		*(--_nIns) = AMD64_REX(0,0,r);							\
-	asm_output2("shl %s,%d", gpn(r), i);						\
+	asm_output("shl %s,%d", gpn(r), i);						\
 	} while (0)
 
 
@@ -595,19 +596,19 @@ namespace nanojit
 		*(--_nIns) = AMD64_SHL_RM_IMM8;							\
 	}															\
 	*(--_nIns) = AMD64_REX(1,0,r);							    \
-	asm_output2("shl %s,%d", gpn(r), i);						\
+	asm_output("shl %s,%d", gpn(r), i);						\
 	} while (0)
 
 
 #define SHL(r,s) do { 											\
 	AMD64_PRIM(AMD64_SHL_RM, 4, r);								\
-	asm_output2("shl %s,%s",gpn(r),gpn(s));						\
+	asm_output("shl %s,%s",gpn(r),gpn(s));						\
 	} while (0)
 
 
 #define AMD64_SUBi(r,i,q) do {									\
 	AMD64_ALU(AMD64_SUB_RAX, r, i, q);							\
-	asm_output2("sub %s,%d",gpn(r),i);							\
+	asm_output("sub %s,%d",gpn(r),i);							\
 	} while (0)
 
 
@@ -623,7 +624,7 @@ namespace nanojit
 	*(--_nIns) = AMD64_MODRM_REG(d, s);							\
 	*(--_nIns) = AMD64_MOV_REG_RM;								\
 	*(--_nIns) = AMD64_REX(1,d,s);								\
-	asm_output2("mov %s,%s",gpn(d),gpn(s));						\
+	asm_output("mov %s,%s",gpn(d),gpn(s));						\
 	} while (0)
 
 
@@ -635,7 +636,7 @@ namespace nanojit
 	if (AMD64_NEEDS_REX(r) || AMD64_NEEDS_REX(b)) {				\
 		*(--_nIns) = AMD64_REX(0,r,b);							\
 	}															\
-	asm_output3("lea %s,%d(%s)",gpn(r),d,gpn(b));				\
+	asm_output("lea %s,%d(%s)",gpn(r),d,gpn(b));				\
 	} while(0)
 
 
@@ -644,7 +645,7 @@ namespace nanojit
 	AMD64_MODRM_DISP(r, b, d);									\
 	*(--_nIns) = AMD64_LEA;										\
 	*(--_nIns) = AMD64_REX(1,r,b);							    \
-	asm_output3("lea %s,%d(%s)",gpn(r),d,gpn(b));				\
+	asm_output("lea %s,%d(%s)",gpn(r),d,gpn(b));				\
 	} while(0)
 
 
@@ -659,18 +660,18 @@ namespace nanojit
 
 
 
-#define SETE(r)		do { AMD64_SETCC(0x0f94,(r));			asm_output1("sete %s",gpn(r)); } while(0)
-#define SETNP(r)	do { AMD64_SETCC(0x0f9B,(r));			asm_output1("setnp %s",gpn(r)); } while(0)
-#define SETL(r)		do { AMD64_SETCC(0x0f9C,(r));			asm_output1("setl %s",gpn(r)); } while(0)
-#define SETLE(r)	do { AMD64_SETCC(0x0f9E,(r));			asm_output1("setle %s",gpn(r)); } while(0)
-#define SETG(r)		do { AMD64_SETCC(0x0f9F,(r));			asm_output1("setg %s",gpn(r)); } while(0)
-#define SETGE(r)	do { AMD64_SETCC(0x0f9D,(r));			asm_output1("setge %s",gpn(r)); } while(0)
-#define SETB(r)     do { AMD64_SETCC(0x0f92,(r));          asm_output1("setb %s",gpn(r)); } while(0)
-#define SETBE(r)    do { AMD64_SETCC(0x0f96,(r));          asm_output1("setbe %s",gpn(r)); } while(0)
-#define SETA(r)     do { AMD64_SETCC(0x0f97,(r));          asm_output1("seta %s",gpn(r)); } while(0)
-#define SETAE(r)    do { AMD64_SETCC(0x0f93,(r));          asm_output1("setae %s",gpn(r)); } while(0)
-#define SETC(r)     do { AMD64_SETCC(0x0f90,(r));          asm_output1("setc %s",gpn(r)); } while(0)
-#define SETO(r)     do { AMD64_SETCC(0x0f92,(r));          asm_output1("seto %s",gpn(r)); } while(0)
+#define SETE(r)		do { AMD64_SETCC(0x0f94,(r));			asm_output("sete %s",gpn(r)); } while(0)
+#define SETNP(r)	do { AMD64_SETCC(0x0f9B,(r));			asm_output("setnp %s",gpn(r)); } while(0)
+#define SETL(r)		do { AMD64_SETCC(0x0f9C,(r));			asm_output("setl %s",gpn(r)); } while(0)
+#define SETLE(r)	do { AMD64_SETCC(0x0f9E,(r));			asm_output("setle %s",gpn(r)); } while(0)
+#define SETG(r)		do { AMD64_SETCC(0x0f9F,(r));			asm_output("setg %s",gpn(r)); } while(0)
+#define SETGE(r)	do { AMD64_SETCC(0x0f9D,(r));			asm_output("setge %s",gpn(r)); } while(0)
+#define SETB(r)     do { AMD64_SETCC(0x0f92,(r));          asm_output("setb %s",gpn(r)); } while(0)
+#define SETBE(r)    do { AMD64_SETCC(0x0f96,(r));          asm_output("setbe %s",gpn(r)); } while(0)
+#define SETA(r)     do { AMD64_SETCC(0x0f97,(r));          asm_output("seta %s",gpn(r)); } while(0)
+#define SETAE(r)    do { AMD64_SETCC(0x0f93,(r));          asm_output("setae %s",gpn(r)); } while(0)
+#define SETC(r)     do { AMD64_SETCC(0x0f90,(r));          asm_output("setc %s",gpn(r)); } while(0)
+#define SETO(r)     do { AMD64_SETCC(0x0f92,(r));          asm_output("seto %s",gpn(r)); } while(0)
 
 
 #define AMD64_CMOV(op, dr, sr)				\
@@ -690,31 +691,31 @@ namespace nanojit
 	*(--_nIns) = AMD64_REX(1,dr,sr);	    
 
 
-#define MREQ(dr,sr)	do { AMD64_CMOV(0x0f44,dr,sr); asm_output2("cmove %s,%s", gpn(dr),gpn(sr)); } while(0)
-#define MRNE(dr,sr)	do { AMD64_CMOV(0x0f45,dr,sr); asm_output2("cmovne %s,%s", gpn(dr),gpn(sr)); } while(0)
-#define MRL(dr,sr)	do { AMD64_CMOV(0x0f4C,dr,sr); asm_output2("cmovl %s,%s", gpn(dr),gpn(sr)); } while(0)
-#define MRLE(dr,sr)	do { AMD64_CMOV(0x0f4E,dr,sr); asm_output2("cmovle %s,%s", gpn(dr),gpn(sr)); } while(0)
-#define MRG(dr,sr)	do { AMD64_CMOV(0x0f4F,dr,sr); asm_output2("cmovg %s,%s", gpn(dr),gpn(sr)); } while(0)
-#define MRGE(dr,sr)	do { AMD64_CMOV(0x0f4D,dr,sr); asm_output2("cmovge %s,%s", gpn(dr),gpn(sr)); } while(0)
-#define MRB(dr,sr)	do { AMD64_CMOV(0x0f42,dr,sr); asm_output2("cmovb %s,%s", gpn(dr),gpn(sr)); } while(0)
-#define MRBE(dr,sr)	do { AMD64_CMOV(0x0f46,dr,sr); asm_output2("cmovbe %s,%s", gpn(dr),gpn(sr)); } while(0)
-#define MRA(dr,sr)	do { AMD64_CMOV(0x0f47,dr,sr); asm_output2("cmova %s,%s", gpn(dr),gpn(sr)); } while(0)
-#define MRAE(dr,sr)	do { AMD64_CMOV(0x0f43,dr,sr); asm_output2("cmovae %s,%s", gpn(dr),gpn(sr)); } while(0)
-#define MRNC(dr,sr)	do { AMD64_CMOV(0x0f43,dr,sr); asm_output2("cmovnc %s,%s", gpn(dr),gpn(sr)); } while(0)
-#define MRNO(dr,sr)	do { AMD64_CMOV(0x0f41,dr,sr); asm_output2("cmovno %s,%s", gpn(dr),gpn(sr)); } while(0)
+#define MREQ(dr,sr)	do { AMD64_CMOV(0x0f44,dr,sr); asm_output("cmove %s,%s", gpn(dr),gpn(sr)); } while(0)
+#define MRNE(dr,sr)	do { AMD64_CMOV(0x0f45,dr,sr); asm_output("cmovne %s,%s", gpn(dr),gpn(sr)); } while(0)
+#define MRL(dr,sr)	do { AMD64_CMOV(0x0f4C,dr,sr); asm_output("cmovl %s,%s", gpn(dr),gpn(sr)); } while(0)
+#define MRLE(dr,sr)	do { AMD64_CMOV(0x0f4E,dr,sr); asm_output("cmovle %s,%s", gpn(dr),gpn(sr)); } while(0)
+#define MRG(dr,sr)	do { AMD64_CMOV(0x0f4F,dr,sr); asm_output("cmovg %s,%s", gpn(dr),gpn(sr)); } while(0)
+#define MRGE(dr,sr)	do { AMD64_CMOV(0x0f4D,dr,sr); asm_output("cmovge %s,%s", gpn(dr),gpn(sr)); } while(0)
+#define MRB(dr,sr)	do { AMD64_CMOV(0x0f42,dr,sr); asm_output("cmovb %s,%s", gpn(dr),gpn(sr)); } while(0)
+#define MRBE(dr,sr)	do { AMD64_CMOV(0x0f46,dr,sr); asm_output("cmovbe %s,%s", gpn(dr),gpn(sr)); } while(0)
+#define MRA(dr,sr)	do { AMD64_CMOV(0x0f47,dr,sr); asm_output("cmova %s,%s", gpn(dr),gpn(sr)); } while(0)
+#define MRAE(dr,sr)	do { AMD64_CMOV(0x0f43,dr,sr); asm_output("cmovae %s,%s", gpn(dr),gpn(sr)); } while(0)
+#define MRNC(dr,sr)	do { AMD64_CMOV(0x0f43,dr,sr); asm_output("cmovnc %s,%s", gpn(dr),gpn(sr)); } while(0)
+#define MRNO(dr,sr)	do { AMD64_CMOV(0x0f41,dr,sr); asm_output("cmovno %s,%s", gpn(dr),gpn(sr)); } while(0)
 
-#define MRQEQ(dr,sr) do { AMD64_CMOVQ(0x0f44,dr,sr); asm_output2("cmove %s,%s", gpn(dr),gpn(sr)); } while(0)
-#define MRQNE(dr,sr) do { AMD64_CMOVQ(0x0f45,dr,sr); asm_output2("cmovne %s,%s", gpn(dr),gpn(sr)); } while(0)
-#define MRQL(dr,sr)  do { AMD64_CMOVQ(0x0f4C,dr,sr); asm_output2("cmovl %s,%s", gpn(dr),gpn(sr)); } while(0)
-#define MRQLE(dr,sr) do { AMD64_CMOVQ(0x0f4E,dr,sr); asm_output2("cmovle %s,%s", gpn(dr),gpn(sr)); } while(0)
-#define MRQG(dr,sr)  do { AMD64_CMOVQ(0x0f4F,dr,sr); asm_output2("cmovg %s,%s", gpn(dr),gpn(sr)); } while(0)
-#define MRQGE(dr,sr) do { AMD64_CMOVQ(0x0f4D,dr,sr); asm_output2("cmovge %s,%s", gpn(dr),gpn(sr)); } while(0)
-#define MRQB(dr,sr)  do { AMD64_CMOVQ(0x0f42,dr,sr); asm_output2("cmovb %s,%s", gpn(dr),gpn(sr)); } while(0)
-#define MRQBE(dr,sr) do { AMD64_CMOVQ(0x0f46,dr,sr); asm_output2("cmovbe %s,%s", gpn(dr),gpn(sr)); } while(0)
-#define MRQA(dr,sr)  do { AMD64_CMOVQ(0x0f47,dr,sr); asm_output2("cmova %s,%s", gpn(dr),gpn(sr)); } while(0)
-#define MRQAE(dr,sr) do { AMD64_CMOVQ(0x0f43,dr,sr); asm_output2("cmovae %s,%s", gpn(dr),gpn(sr)); } while(0)
-#define MRQNC(dr,sr) do { AMD64_CMOVQ(0x0f43,dr,sr); asm_output2("cmovnc %s,%s", gpn(dr),gpn(sr)); } while(0)
-#define MRQNO(dr,sr) do { AMD64_CMOVQ(0x0f41,dr,sr); asm_output2("cmovno %s,%s", gpn(dr),gpn(sr)); } while(0)
+#define MRQEQ(dr,sr) do { AMD64_CMOVQ(0x0f44,dr,sr); asm_output("cmove %s,%s", gpn(dr),gpn(sr)); } while(0)
+#define MRQNE(dr,sr) do { AMD64_CMOVQ(0x0f45,dr,sr); asm_output("cmovne %s,%s", gpn(dr),gpn(sr)); } while(0)
+#define MRQL(dr,sr)  do { AMD64_CMOVQ(0x0f4C,dr,sr); asm_output("cmovl %s,%s", gpn(dr),gpn(sr)); } while(0)
+#define MRQLE(dr,sr) do { AMD64_CMOVQ(0x0f4E,dr,sr); asm_output("cmovle %s,%s", gpn(dr),gpn(sr)); } while(0)
+#define MRQG(dr,sr)  do { AMD64_CMOVQ(0x0f4F,dr,sr); asm_output("cmovg %s,%s", gpn(dr),gpn(sr)); } while(0)
+#define MRQGE(dr,sr) do { AMD64_CMOVQ(0x0f4D,dr,sr); asm_output("cmovge %s,%s", gpn(dr),gpn(sr)); } while(0)
+#define MRQB(dr,sr)  do { AMD64_CMOVQ(0x0f42,dr,sr); asm_output("cmovb %s,%s", gpn(dr),gpn(sr)); } while(0)
+#define MRQBE(dr,sr) do { AMD64_CMOVQ(0x0f46,dr,sr); asm_output("cmovbe %s,%s", gpn(dr),gpn(sr)); } while(0)
+#define MRQA(dr,sr)  do { AMD64_CMOVQ(0x0f47,dr,sr); asm_output("cmova %s,%s", gpn(dr),gpn(sr)); } while(0)
+#define MRQAE(dr,sr) do { AMD64_CMOVQ(0x0f43,dr,sr); asm_output("cmovae %s,%s", gpn(dr),gpn(sr)); } while(0)
+#define MRQNC(dr,sr) do { AMD64_CMOVQ(0x0f43,dr,sr); asm_output("cmovnc %s,%s", gpn(dr),gpn(sr)); } while(0)
+#define MRQNO(dr,sr) do { AMD64_CMOVQ(0x0f41,dr,sr); asm_output("cmovno %s,%s", gpn(dr),gpn(sr)); } while(0)
 
 #define AMD64_LD(reg,disp,base,q) 								\
 	underrunProtect(7);											\
@@ -726,13 +727,13 @@ namespace nanojit
 
 #define LD(reg,disp,base) do {									\
 	AMD64_LD(reg,disp,base,0);									\
-	asm_output3("mov dword %s,%d(%s)",gpn(reg),disp,gpn(base));	\
+	asm_output("mov dword %s,%d(%s)",gpn(reg),disp,gpn(base));	\
 	} while (0)
 
 
 #define LDQ(reg,disp,base) do {									\
 	AMD64_LD(reg,disp,base,1);									\
-	asm_output3("mov %s,%d(%s)",gpn(reg),disp,gpn(base));		\
+	asm_output("mov %s,%d(%s)",gpn(reg),disp,gpn(base));		\
 	} while (0)
 
 // load 8-bit, zero extend
@@ -747,17 +748,29 @@ namespace nanojit
 	if (AMD64_NEEDS_REX(r) || AMD64_NEEDS_REX(b)) {				\
 		*(--_nIns) = AMD64_REX(0,r,b);							\
 	}															\
-	asm_output3("movzx %s,%d(%s)", gpn(r),d,gpn(b)); 			\
+	asm_output("movzx %s,%d(%s)", gpn(r),d,gpn(b)); 			\
 	} while(0)
 
+	
+#define LD16Z(r,d,b) do {                                        \
+    underrunProtect(5);                                         \
+    AMD64_MODRM_DISP(r, b, d);                                  \
+    *(--_nIns) = AMD64_MOVSX & 0xFF;                            \
+    *(--_nIns) = AMD64_MOVSX >> 8;                              \
+    if (AMD64_NEEDS_REX(r) || AMD64_NEEDS_REX(b)) {             \
+        *(--_nIns) = AMD64_REX(0,r,b);                          \
+    }                                                           \
+    asm_output("movsx %s,%d(%s)", gpn(r),d,gpn(b));            \
+    } while(0)
 
+    
 #define LDi(r,i) do { 											\
 	underrunProtect(6);											\
 	IMM32(i);													\
 	*(--_nIns) = AMD64_MODRM_REG(0, r);							\
 	*(--_nIns) = AMD64_MOV_RM_IMM;								\
 	*(--_nIns) = AMD64_REX(1,0,r);							    \
-	asm_output2("mov %s,%d",gpn(r),i);							\
+	asm_output("mov %s,%d",gpn(r),i);							\
 	} while (0)
 
 
@@ -766,7 +779,7 @@ namespace nanojit
 	IMM64(i);													\
 	*(--_nIns) = AMD64_MOV_REG_IMM(r);							\
 	*(--_nIns) = AMD64_REX(1,0,r);								\
-	asm_output2("mov %s,%ld",gpn(r),(nj_printf_ld)i);			\
+	asm_output("mov %s,%ld",gpn(r),(nj_printf_ld)i);			\
 	} while(0)
 
 
@@ -780,13 +793,13 @@ namespace nanojit
 
 #define ST(base,disp,reg) do { 									\
 	AMD64_ST(base,disp,reg,0);									\
-	asm_output3("mov dword %d(%s),%s",disp,gpn(base),gpn(reg));	\
+	asm_output("mov dword %d(%s),%s",disp,gpn(base),gpn(reg));	\
 	} while(0);
 
 
 #define STQ(base,disp,reg) do {									\
 	AMD64_ST(base,disp,reg,1);									\
-	asm_output3("mov %d(%s),%s",disp,gpn(base),gpn(reg));		\
+	asm_output("mov %d(%s),%s",disp,gpn(base),gpn(reg));		\
 	} while(0);
 
 
@@ -797,7 +810,7 @@ namespace nanojit
 	*(--_nIns) = AMD64_MOV_RM_IMM;								\
 	if (AMD64_NEEDS_REX(base))									\
 		*(--_nIns) = AMD64_REX(0,0,base);						\
-	asm_output3("mov %d(%s),%d",disp,gpn(base),imm);			\
+	asm_output("mov %d(%s),%d",disp,gpn(base),imm);			\
 	} while(0);
 
 
@@ -818,7 +831,7 @@ namespace nanojit
 	if (isS8(i)) { \
 		underrunProtect(2);			\
 		_nIns-=2; _nIns[0] = 0x6a; _nIns[1] = (uint8_t)(i); \
-		asm_output1("push %d",i); \
+		asm_output("push %d",i); \
 	} else \
 		{ PUSHi32(i); } } while(0)
 
@@ -826,7 +839,7 @@ namespace nanojit
 	underrunProtect(5);	\
 	IMM32(i);			\
 	*(--_nIns) = 0x68;	\
-	asm_output1("push %d",i); } while(0)
+	asm_output("push %d",i); } while(0)
 
 /**
  * Note: PUSH/POP do not use REX's prefix 64-bit field.
@@ -837,7 +850,7 @@ namespace nanojit
 	*(--_nIns) = (uint8_t)AMD64_PUSH_REG(r);				\
 	if (AMD64_NEEDS_REX(r))									\
 		*(--_nIns) = AMD64_REX(0,0,r); 						\
-	asm_output1("push %s",gpn(r)); 							\
+	asm_output("push %s",gpn(r)); 							\
 	} while(0)
 
 #define PUSHm(d,b) do { 									\
@@ -847,7 +860,7 @@ namespace nanojit
 	if (AMD64_NEEDS_REX(b)) {								\
 		*(--_nIns) = AMD64_REX(0,6,b);						\
 	}														\
-	asm_output2("push %d(%s)",d,gpn(b)); 					\
+	asm_output("push %d(%s)",d,gpn(b)); 					\
 	} while(0)
 
 
@@ -856,7 +869,7 @@ namespace nanojit
 	*(--_nIns) = (uint8_t)(AMD64_POP_REG(r));				\
 	if (AMD64_NEEDS_REX(r))									\
 		*(--_nIns) = AMD64_REX(0,0,r);						\
-	asm_output1("pop %s",gpn(r)); 							\
+	asm_output("pop %s",gpn(r)); 							\
 	} while(0)
 
 #define JCC(o,t,n) do {                                     \
@@ -867,14 +880,14 @@ namespace nanojit
 		_nIns -= 2;                                         \
 		_nIns[0] = (uint8_t) ( 0x70 | (o) );                \
 		_nIns[1] = (uint8_t) (tt);                          \
-		asm_output2("%s %lX",(n),(ptrdiff_t)(next+tt));     \
+		asm_output("%s %lX",(n),(ptrdiff_t)(next+tt));     \
 	} else if (tt <= INT_MAX && tt >= INT_MIN) {            \
 		verbose_only( NIns* next = _nIns; )                 \
 		IMM32(tt);                                          \
 		_nIns -= 2;                                         \
 		_nIns[0] = 0x0f;                                    \
 		_nIns[1] = (uint8_t) ( 0x80 | (o) );                \
-		asm_output2("%s %lX",(n),(ptrdiff_t)(next+tt));     \
+		asm_output("%s %lX",(n),(ptrdiff_t)(next+tt));     \
 	} else {                                                \
         underrunProtect(20);                                \
         NanoAssert(!_inExit);                               \
@@ -903,7 +916,7 @@ namespace nanojit
             _nIns[0] = 0x0f;                                \
             _nIns[1] = uint8_t( 0x80 | (o) );               \
         }                                                   \
-        asm_output3("%s %d(rip) #%lX",n,offs,intptr_t(t));  \
+        asm_output("%s %d(rip) #%lX",n,offs,intptr_t(t));  \
     }                                                       \
     } while(0)
 
@@ -927,7 +940,7 @@ namespace nanojit
 		_nIns -= 2;                                     \
 		_nIns[0] = 0xeb;                                \
 		_nIns[1] = (uint8_t) ( (tt)&0xff );             \
-		asm_output1("jmp %lX",(ptrdiff_t)(next+tt));    \
+		asm_output("jmp %lX",(ptrdiff_t)(next+tt));    \
 	} else {                                            \
         if (tt >= INT_MIN && tt <= INT_MAX) {           \
     		JMP_long_nochk_offset(tt);	                \
@@ -958,7 +971,7 @@ namespace nanojit
         NanoAssert(o <= INT_MAX && o >= INT_MIN);       \
  		IMM32((o)); \
  		*(--_nIns) = JMPc; \
-		asm_output1("jmp %lX",(ptrdiff_t)(next+(o))); } while(0)
+		asm_output("jmp %lX",(ptrdiff_t)(next+(o))); } while(0)
 
 #define JMPr(r) do {                    \
     underrunProtect(2);                 \
@@ -1012,7 +1025,7 @@ namespace nanojit
 	underrunProtect(7);											\
 	AMD64_MODRM_DISP(r,b,d);									\
 	AMD64_OP3(AMD64_MOVD_REG_RM,1,r,b);							\
-	asm_output3("movd %s,%d(%s)",gpn(r),(d),gpn(b));			\
+	asm_output("movd %s,%d(%s)",gpn(r),(d),gpn(b));			\
 	} while (0)
 
 
@@ -1020,7 +1033,7 @@ namespace nanojit
 	underrunProtect(7);											\
 	AMD64_MODRM_DISP(b,r,d);									\
 	AMD64_OP3(AMD64_MOVD_RM_REG,1,b,r);							\
-	asm_output3("movd %d(%s),%s",(d),gpn(r),gpn(b));			\
+	asm_output("movd %d(%s),%s",(d),gpn(r),gpn(b));			\
 	} while (0)
 
 
@@ -1028,7 +1041,7 @@ namespace nanojit
 	underrunProtect(5);											\
 	*(--_nIns) = AMD64_MODRM_REG(xr, gr);						\
 	AMD64_OP3(AMD64_CVTSI2SD,0,xr,gr);							\
-    asm_output2("cvtsi2sd %s,%s",gpn(xr),gpn(gr)); 				\
+    asm_output("cvtsi2sd %s,%s",gpn(xr),gpn(gr)); 				\
     } while(0)
 
 // move and zero-extend gpreg to xmm reg
@@ -1045,7 +1058,7 @@ namespace nanojit
 		*(--_nIns) = AMD64_MODRM_REG(d, s);						\
 		AMD64_OP3(AMD64_MOVD_REG_RM, 1, d, s);					\
 	} 															\
-    asm_output2("movd %s,%s",gpn(d),gpn(s)); 					\
+    asm_output("movd %s,%s",gpn(d),gpn(s)); 					\
     } while(0)
 
 
@@ -1053,14 +1066,14 @@ namespace nanojit
 	underrunProtect(7);											\
 	*(--_nIns) = AMD64_MODRM_REG(rd, rs);						\
 	AMD64_OP3(AMD64_MOVSD_REG_RM,0,rd,rs);						\
-    asm_output2("movsd %s,%s",gpn(rd),gpn(rs)); 				\
+    asm_output("movsd %s,%s",gpn(rd),gpn(rs)); 				\
     } while(0)
 
 
 #define SSE_MOVDm(d,b,xrs) do {									\
 	AMD64_MODRM_DISP(xrs, b, d);								\
 	AMD64_OP3(AMD64_MOVD_RM_REG, 1, xrs, b);					\
-    asm_output3("movd %d(%s),%s", d, gpn(b), gpn(xrs));			\
+    asm_output("movd %d(%s),%s", d, gpn(b), gpn(xrs));			\
     } while(0)
 
 
@@ -1068,7 +1081,7 @@ namespace nanojit
 	underrunProtect(5);											\
 	*(--_nIns) = AMD64_MODRM_REG(rd, rs);						\
 	AMD64_OP3(AMD64_ADDSD, 0, rd, rs);							\
-    asm_output2("addsd %s,%s",gpn(rd),gpn(rs)); 				\
+    asm_output("addsd %s,%s",gpn(rd),gpn(rs)); 				\
     } while(0)
 
 
@@ -1079,7 +1092,7 @@ namespace nanojit
 	IMM32((int32_t)d);										\
 	*(--_nIns) = AMD64_MODRM(0, r, 5);						\
 	AMD64_OP3(AMD64_ADDSD, 0, r, 0);						\
-    asm_output3("addsd %s,%p // =%f",gpn(r),addr,*(double*)addr); 	\
+    asm_output("addsd %s,%p // =%f",gpn(r),addr,*(double*)addr); 	\
     } while(0)
 
 
@@ -1087,7 +1100,7 @@ namespace nanojit
 	underrunProtect(5);									\
 	*(--_nIns) = AMD64_MODRM_REG(rd, rs);				\
 	AMD64_OP3(AMD64_SUBSD, 0, rd, rs);					\
-    asm_output2("subsd %s,%s",gpn(rd),gpn(rs)); 		\
+    asm_output("subsd %s,%s",gpn(rd),gpn(rs)); 		\
     } while(0)
 
 
@@ -1095,7 +1108,7 @@ namespace nanojit
 	underrunProtect(5);									\
 	*(--_nIns) = AMD64_MODRM_REG(rd, rs);				\
 	AMD64_OP3(AMD64_MULSD, 0, rd, rs);					\
-    asm_output2("mulsd %s,%s",gpn(rd),gpn(rs)); 		\
+    asm_output("mulsd %s,%s",gpn(rd),gpn(rs)); 		\
     } while(0)
 
 
@@ -1103,14 +1116,14 @@ namespace nanojit
 	underrunProtect(5);									\
 	*(--_nIns) = AMD64_MODRM_REG(rd, rs);				\
 	AMD64_OP3(AMD64_DIVSD, 0, rd, rs);					\
-    asm_output2("divsd %s,%s",gpn(rd),gpn(rs)); 		\
+    asm_output("divsd %s,%s",gpn(rd),gpn(rs)); 		\
     } while(0)
 
 
 #define SSE_UCOMISD(rl,rr) do{ 							\
 	*(--_nIns) = AMD64_MODRM_REG(rl, rr);				\
 	AMD64_OP3(AMD64_UCOMISD, 0, rl, rr);				\
-    asm_output2("ucomisd %s,%s",gpn(rl),gpn(rr)); 		\
+    asm_output("ucomisd %s,%s",gpn(rl),gpn(rr)); 		\
     } while(0)
 
 #define EMIT_XORPD_MASK(mask)							\
@@ -1152,7 +1165,7 @@ namespace nanojit
 	IMM32((int32_t)d);									\
 	*(--_nIns) = AMD64_MODRM(0, rr, 5);					\
 	AMD64_OP3(AMD64_XORPD, 0, rr, 0);					\
-	asm_output2("xorpd %s,[0x%X]",gpn(rr),(int32_t)d);	\
+	asm_output("xorpd %s,[0x%X]",gpn(rr),(int32_t)d);	\
     } while(0)
 
 
@@ -1160,7 +1173,7 @@ namespace nanojit
 	underrunProtect(5);									\
 	*(--_nIns) = AMD64_MODRM_REG(rd, rs);				\
 	AMD64_OP3(AMD64_XORPD, 0, rd, rs);					\
-    asm_output2("xorpd %s,%s",gpn(rd),gpn(rs)); 		\
+    asm_output("xorpd %s,%s",gpn(rd),gpn(rs)); 		\
     } while(0)
 
 
@@ -1168,7 +1181,7 @@ namespace nanojit
 		underrunProtect(2);								\
 		*(--_nIns) = uint8_t(i);						\
 		*(--_nIns) = 0xA8;								\
-		asm_output1("test al, %d",i);					\
+		asm_output("test al, %d",i);					\
 		} while(0)
 
 
@@ -1189,7 +1202,7 @@ namespace nanojit
     *(--_nIns) = 0xFF;									\
     LDQi(RAX, c->_address);								\
   }														\
-  verbose_only(asm_output1("call %s",(c->_name));)		\
+  verbose_only(asm_output("call %s",(c->_name));)		\
 } while (0)
 
 }

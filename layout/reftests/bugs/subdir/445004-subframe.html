@@ -1,0 +1,35 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <script>
+      function $(str) { return document.getElementById(str); }
+      function hookLoad(str) {
+        $(str).onload = function() { window.parent.loadEnded(); };
+        window.parent.loadStarted();
+      }
+      window.onload = function() { 
+      hookLoad("w");
+        $("w").contentWindow.location.href = "passinner.png";
+        hookLoad("x");
+        var doc = $("x").contentDocument;
+        doc.write('<img src="passinner.png">');
+        doc.close();
+      };
+      function doIt() {
+        hookLoad("y");
+        $("y").contentWindow.location.href = "passouter.png";
+        hookLoad("z");
+        var doc = $("z").contentDocument;
+        doc.write('<img src="passouter.png">');
+        doc.close();
+      }
+    </script>
+  </head>
+  <body>
+    <iframe name="w" id="w" width="100" height="100"></iframe>
+    <iframe name="x" id="x" width="100" height="100"></iframe>
+    <iframe name="y" id="y" width="100" height="100"></iframe>
+    <iframe name="z" id="z" width="100" height="100"></iframe>
+    <img src="passinner.png">
+  </body>
+</html>

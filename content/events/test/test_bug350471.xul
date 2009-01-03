@@ -115,7 +115,7 @@ function testEventDispatching() {
   
     // expectedEvents should be empty now. If it's not, print errors.
     expectedEvents.forEach(function(e) {
-      ok(false, "Didn't receive expected event: " + JSON.toString(e));
+      ok(false, "Didn't receive expected event: " + JSON.parse(e));
     });
   };
   let i = 0;
@@ -134,9 +134,8 @@ function testEventDispatching() {
   });
 }
 
-function testDefaultHandling() {
+function testDefaultHandling(andThen) {
   let scrollbox = document.getElementById("scrollbox");
-  let currentTest = "";
   
   function scrollWithPreventDefault(aEvent, aDoConsume) {
     function listener(e) {
@@ -150,7 +149,13 @@ function testDefaultHandling() {
     scrollbox.removeEventListener("MozMousePixelScroll", listener, true);
   }
   
-  function helper(aType, aHasPixels, aAxis, aStart, aDelta, aConsumeLine, aConsumePixel, aPositionShouldChange) {
+  let tests = [];
+  function helper(aType, aHasPixels, aAxis, aStart, aDelta, aConsumeLine, aConsumePixel, aPositionShouldChange, aCurrentTest) {
+    tests.push([aType, aHasPixels, aAxis, aStart, aDelta, aConsumeLine, aConsumePixel, aPositionShouldChange, aCurrentTest]);
+  }
+  function exec() {
+    let [aType, aHasPixels, aAxis, aStart, aDelta, aConsumeLine, aConsumePixel, aPositionShouldChange, currentTest] = tests[0];
+    tests.shift();
     scrollbox.scrollLeft = aStart;
     scrollbox.scrollTop = aStart;
     scrollWithPreventDefault({
@@ -162,23 +167,29 @@ function testDefaultHandling() {
       "DOMMouseScroll": aConsumeLine,
       "MozMousePixelScroll": aConsumePixel
     });
-    let newPos = scrollbox[aAxis == "horizontal" ? "scrollLeft" : "scrollTop"];
-    let newPosWrongAxis = scrollbox[aAxis == "horizontal" ? "scrollTop" : "scrollLeft"];
-
-    is(newPosWrongAxis, aStart, currentTest + " wrong axis scrolled - type: " + aType);
-
-    if (aPositionShouldChange) {
-      if (aType == "MozMousePixelScroll") {
-        // aDelta is in pixels, no conversion necessary
-        is(newPos, aStart + aDelta, currentTest + " wrong scroll position - type: " + aType);
+    setTimeout(function() {
+      let newPos = scrollbox[aAxis == "horizontal" ? "scrollLeft" : "scrollTop"];
+      let newPosWrongAxis = scrollbox[aAxis == "horizontal" ? "scrollTop" : "scrollLeft"];
+  
+      is(newPosWrongAxis, aStart, currentTest + " wrong axis scrolled - type: " + aType);
+  
+      if (aPositionShouldChange) {
+        if (aType == "MozMousePixelScroll") {
+          // aDelta is in pixels, no conversion necessary
+          is(newPos, aStart + aDelta, currentTest + " wrong scroll position - type: " + aType);
+        } else {
+          // Use minLineHeight and maxLineHeight as an estimate for the conversion factor.
+          isbetween(newPos, aStart + aDelta * minLineHeight, aStart + aDelta * maxLineHeight,
+                    currentTest + " wrong scroll position - type: " + aType);
+        }
       } else {
-        // Use minLineHeight and maxLineHeight as an estimate for the conversion factor.
-        isbetween(newPos, aStart + aDelta * minLineHeight, aStart + aDelta * maxLineHeight,
-                  currentTest + " wrong scroll position - type: " + aType);
+        is(newPos, aStart, currentTest + " The scroll position shouldn't have changed. - type: " + aType);
       }
-    } else {
-      is(newPos, aStart, currentTest + " The scroll position shouldn't have changed. - type: " + aType);
-    }
+      if (tests.length)
+        exec();
+      else
+        andThen();
+    }, 0);
   }
 
   ["horizontal", "vertical"].forEach(function(aAxis) {
@@ -186,12 +197,13 @@ function testDefaultHandling() {
       [false, true].forEach(function(aConsumeLine) {
         [false, true].forEach(function(aConsumePixel) {
           let shouldScroll = !aConsumeLine && !aConsumePixel;
+          let currentTest = "";
           
           currentTest = "normal DOMMouseScroll: only scroll if neither line nor pixel scroll are consumed.";
-          helper("DOMMouseScroll", false, aAxis, 4000, aDelta, aConsumeLine, aConsumePixel, shouldScroll);
+          helper("DOMMouseScroll", false, aAxis, 4000, aDelta, aConsumeLine, aConsumePixel, shouldScroll, currentTest);
           
           currentTest = "DOMMouseScroll with hasPixels: never scroll.";
-          helper("DOMMouseScroll", true, aAxis, 4000, aDelta, aConsumeLine, aConsumePixel, false);
+          helper("DOMMouseScroll", true, aAxis, 4000, aDelta, aConsumeLine, aConsumePixel, false, currentTest);
           
           currentTest = "MozMousePixelScroll (consumed: " + aConsumePixel +
                         ") with preceding DOMMouseScroll (consumed: " + aConsumeLine +
@@ -199,21 +211,22 @@ function testDefaultHandling() {
           // It shouldn't matter:
           //  1. whether hasPixels is set on the preceding DOMMouseScroll event or
           //  2. whether the preceding DOMMouseScroll event's MozMousePixelScroll event is consumed.
-          helper("DOMMouseScroll", true, aAxis, 4000, aDelta, aConsumeLine, false, false);
-          helper("MozMousePixelScroll", false, aAxis, 4000, aDelta, false, aConsumePixel, shouldScroll);
-          helper("DOMMouseScroll", false, aAxis, 4000, aDelta, aConsumeLine, false, !aConsumeLine);
-          helper("MozMousePixelScroll", false, aAxis, 4000, aDelta, false, aConsumePixel, shouldScroll);
-          helper("DOMMouseScroll", false, aAxis, 4000, aDelta, aConsumeLine, true, false);
-          helper("MozMousePixelScroll", false, aAxis, 4000, aDelta, false, aConsumePixel, shouldScroll);
+          helper("DOMMouseScroll", true, aAxis, 4000, aDelta, aConsumeLine, false, false, currentTest);
+          helper("MozMousePixelScroll", false, aAxis, 4000, aDelta, false, aConsumePixel, shouldScroll, currentTest);
+          helper("DOMMouseScroll", false, aAxis, 4000, aDelta, aConsumeLine, false, !aConsumeLine, currentTest);
+          helper("MozMousePixelScroll", false, aAxis, 4000, aDelta, false, aConsumePixel, shouldScroll, currentTest);
+          helper("DOMMouseScroll", false, aAxis, 4000, aDelta, aConsumeLine, true, false, currentTest);
+          helper("MozMousePixelScroll", false, aAxis, 4000, aDelta, false, aConsumePixel, shouldScroll, currentTest);
         });
       });
     });
   });
+  
+  exec();
 }
 
 function runTests() {
   netscape.security.PrivilegeManager.enablePrivilege("UniversalXPConnect");
-  Components.utils.import("resource://gre/modules/JSON.jsm");
 
   testEventDispatching();
 
@@ -223,9 +236,7 @@ function runTests() {
   setTimeout(runOtherTests, 1000);
 }
 function runOtherTests() {
-  testDefaultHandling();
-
-  SimpleTest.finish();
+  testDefaultHandling(SimpleTest.finish);
 }
 
 window.onload = function() { setTimeout(runTests, 0); };

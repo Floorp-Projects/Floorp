@@ -326,7 +326,7 @@ struct nsDocumentMapReadEntry : public nsDocumentMapEntry {
                                         // mux schedule
 };
 
-PR_STATIC_CALLBACK(void)
+static void
 strmap_ClearEntry(PLDHashTable *aTable, PLDHashEntryHdr *aHdr)
 {
     nsStringMapEntry* entry = static_cast<nsStringMapEntry*>(aHdr);
@@ -360,7 +360,7 @@ struct nsURIMapReadEntry : public nsObjectMapEntry {
     nsDocumentMapReadEntry* mDocMapEntry;
 };
 
-PR_STATIC_CALLBACK(void)
+static void
 objmap_ClearEntry(PLDHashTable *aTable, PLDHashEntryHdr *aHdr)
 {
     nsObjectMapEntry* entry = static_cast<nsObjectMapEntry*>(aHdr);
@@ -1245,7 +1245,7 @@ struct nsIDMapEntry : public PLDHashEntryHdr {
     nsID            mSlowID;            // key, used by PLDHashTableOps below
 };
 
-PR_STATIC_CALLBACK(PLDHashNumber)
+static PLDHashNumber
 idmap_HashKey(PLDHashTable *aTable, const void *aKey)
 {
     const nsID *idp = reinterpret_cast<const nsID*>(aKey);
@@ -1253,7 +1253,7 @@ idmap_HashKey(PLDHashTable *aTable, const void *aKey)
     return idp->m0;
 }
 
-PR_STATIC_CALLBACK(PRBool)
+static PRBool
 idmap_MatchEntry(PLDHashTable *aTable,
                 const PLDHashEntryHdr *aHdr,
                 const void *aKey)
@@ -1723,7 +1723,7 @@ nsFastLoadFileWriter::WriteMuxedDocumentInfo(const nsFastLoadMuxedDocumentInfo& 
     return NS_OK;
 }
 
-PLDHashOperator PR_CALLBACK
+PLDHashOperator
 nsFastLoadFileWriter::IDMapEnumerate(PLDHashTable *aTable,
                                      PLDHashEntryHdr *aHdr,
                                      PRUint32 aNumber,
@@ -1743,7 +1743,7 @@ struct nsSharpObjectMapEntry : public nsObjectMapEntry {
     nsFastLoadSharpObjectInfo   mInfo;
 };
 
-PLDHashOperator PR_CALLBACK
+PLDHashOperator
 nsFastLoadFileWriter::ObjectMapEnumerate(PLDHashTable *aTable,
                                          PLDHashEntryHdr *aHdr,
                                          PRUint32 aNumber,
@@ -1767,7 +1767,7 @@ nsFastLoadFileWriter::ObjectMapEnumerate(PLDHashTable *aTable,
     return PL_DHASH_NEXT;
 }
 
-PLDHashOperator PR_CALLBACK
+PLDHashOperator
 nsFastLoadFileWriter::DocumentMapEnumerate(PLDHashTable *aTable,
                                            PLDHashEntryHdr *aHdr,
                                            PRUint32 aNumber,
@@ -1787,7 +1787,7 @@ nsFastLoadFileWriter::DocumentMapEnumerate(PLDHashTable *aTable,
     return NS_FAILED(*rvp) ? PL_DHASH_STOP : PL_DHASH_NEXT;
 }
 
-PLDHashOperator PR_CALLBACK
+PLDHashOperator
 nsFastLoadFileWriter::DependencyMapEnumerate(PLDHashTable *aTable,
                                              PLDHashEntryHdr *aHdr,
                                              PRUint32 aNumber,
@@ -2336,7 +2336,7 @@ nsFastLoadFileUpdater::GetOutputStream(nsIOutputStream** aResult)
     return NS_OK;
 }
 
-PLDHashOperator PR_CALLBACK
+PLDHashOperator
 nsFastLoadFileUpdater::CopyReadDocumentMapEntryToUpdater(PLDHashTable *aTable,
                                                          PLDHashEntryHdr *aHdr,
                                                          PRUint32 aNumber,

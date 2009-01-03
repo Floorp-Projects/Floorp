@@ -1,0 +1,58 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+  <title>Media test: timeupdate during playback</title>
+  <script type="text/javascript" src="/MochiKit/MochiKit.js"></script>
+  <script type="text/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
+</head>
+<body>
+<video id='v'
+       src='seek.ogg'
+       onloadedmetadata='return startTest();'
+       onended='return playbackEnded();'
+       ontimeupdate='return timeUpdated();'></video>
+<pre id="test">
+<script class="testbody" type="text/javascript">
+// Test if timeupdate is dispatched and the current time during the
+// update is increasing.
+var lastTime = 0.0;
+var completed = false;
+
+function startTest() {
+  if (completed)
+    return false;
+
+  var v = document.getElementById('v');
+  v.play();
+  return false;
+}
+
+function timeUpdated() {
+  if (completed)
+    return false;
+
+  var v = document.getElementById('v');
+  ok(v.currentTime > lastTime,
+     "Check currentTime of " +
+     v.currentTime +
+     " is greater than last time of " +
+     lastTime);
+  lastTime = v.currentTime;
+  return false;
+}
+
+function playbackEnded() {
+  if (completed)
+    return false
+
+  completed = true;
+  SimpleTest.finish();
+  return false;
+}
+
+SimpleTest.waitForExplicitFinish();
+</script>
+</pre>
+</body>
+</html>

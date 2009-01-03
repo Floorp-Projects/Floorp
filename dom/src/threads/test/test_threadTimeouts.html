@@ -18,86 +18,39 @@ Tests of DOM Worker Threads (Bug 437152)
 <pre id="test">
 <script class="testbody" type="text/javascript">
 
-  netscape.security.PrivilegeManager.enablePrivilege('UniversalXPConnect');
+  var worker = new Worker("threadTimeouts_worker.js");
 
-  var prefs = Components.classes["@mozilla.org/preferences-service;1"].
-              getService(Components.interfaces.nsIPrefBranch);
-  //prefs.setIntPref("javascript.options.gczeal", 2);
-
-  var workerScript =
-    "var gTimeoutId; " +
-    "var gTimeoutCount = 0; " +
-    "var gIntervalCount = 0; " +
-    "" +
-    "function timeoutFunc() { " +
-    "  if (++gTimeoutCount > 1) { " +
-    "    throw new Error('Timeout called more than once!'); " +
-    "  } " +
-    "  postMessageToPool('timeoutFinished'); " +
-    "} " +
-    "" +
-    "function intervalFunc() { " +
-    "  if (++gIntervalCount == 2) { " +
-    "    postMessageToPool('intervalFinished'); " +
-    "  } " +
-    "} " +
-    "" +
-    "function messageListener(message, source) { " +
-    "  switch (message) { " +
-    "    case 'startTimeout': " +
-    "      gTimeoutId = setTimeout(timeoutFunc, 5000); " +
-    "      clearTimeout(gTimeoutId); " +
-    "      gTimeoutId = setTimeout(timeoutFunc, 5000); " +
-    "      break; " +
-    "    case 'startInterval': " +
-    "      gTimeoutId = setInterval(intervalFunc, 5000); " +
-    "      break; " +
-    "    case 'cancelInterval': " +
-    "      clearInterval(gTimeoutId); " +
-    "      postMessageToPool('intervalCanceled'); " +
-    "      break; " +
-    "    default: " +
-    "      throw 'Bad message: ' + message; " +
-    "  } " +
-    "} " +
-    "";
-
-  var pool = navigator.newWorkerPool();
-  ok(pool, "Couldn't get worker pool");
-
-  pool.messageListener = function(message, source) {
-    netscape.security.PrivilegeManager.enablePrivilege('UniversalXPConnect');
-    switch (message) {
+  worker.onmessage = function(event) {
+    is(event.target, worker);
+    switch (event.data) {
       case "timeoutFinished":
-        source.postMessage("startInterval");
+        event.target.postMessage("startInterval");
         break;
       case "intervalFinished":
-        source.postMessage("cancelInterval");
+        event.target.postMessage("cancelInterval");
         break;
       case "intervalCanceled":
-        prefs.setIntPref("javascript.options.gczeal", 0);
+        worker.postMessage("startExpression");
+        break;
+      case "expressionFinished":
         SimpleTest.finish();
         break;
       default:
         ok(false, "Unexpected message");
-        prefs.setIntPref("javascript.options.gczeal", 0);
         SimpleTest.finish();
     }
   };
 
-  pool.errorListener = function(error, source) {
-    netscape.security.PrivilegeManager.enablePrivilege('UniversalXPConnect');
-    ok(false, "Worker had an error");
-    prefs.setIntPref("javascript.options.gczeal", 0);
+  worker.onerror = function(event) {
+    is(event.target, worker);
+    ok(false, "Worker had an error: " + event.data);
     SimpleTest.finish();
   };
-
-  var worker = pool.createWorker(workerScript);
-  ok(worker, "Couldn't make worker");
 
   worker.postMessage("startTimeout");
 
   SimpleTest.waitForExplicitFinish();
+
 </script>
 </pre>
 </body>

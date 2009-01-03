@@ -129,16 +129,20 @@ public:
   nsEventChainPreVisitor(nsPresContext* aPresContext,
                          nsEvent* aEvent,
                          nsIDOMEvent* aDOMEvent,
-                         nsEventStatus aEventStatus = nsEventStatus_eIgnore)
+                         nsEventStatus aEventStatus,
+                         PRBool aIsInAnon)
   : nsEventChainVisitor(aPresContext, aEvent, aDOMEvent, aEventStatus),
     mCanHandle(PR_TRUE), mForceContentDispatch(PR_FALSE),
-    mRelatedTargetIsInAnon(PR_FALSE) {}
+    mRelatedTargetIsInAnon(PR_FALSE), mOriginalTargetIsInAnon(aIsInAnon),
+    mWantsWillHandleEvent(PR_FALSE), mParentTarget(nsnull),
+    mEventTargetAtParent(nsnull) {}
 
   void Reset() {
     mItemFlags = 0;
     mItemData = nsnull;
     mCanHandle = PR_TRUE;
     mForceContentDispatch = PR_FALSE;
+    mWantsWillHandleEvent = PR_FALSE;
     mParentTarget = nsnull;
     mEventTargetAtParent = nsnull;
   }
@@ -165,15 +169,27 @@ public:
   PRPackedBool          mRelatedTargetIsInAnon;
 
   /**
+   * PR_TRUE if the original target of the event is inside anonymous content.
+   * This is set before calling PreHandleEvent on event targets.
+   */
+  PRPackedBool          mOriginalTargetIsInAnon;
+
+  /**
+   * Whether or not nsPIDOMEventTarget::WillHandleEvent will be
+   * called. Default is PR_FALSE;
+   */
+  PRPackedBool          mWantsWillHandleEvent;
+
+  /**
    * Parent item in the event target chain.
    */
-  nsCOMPtr<nsISupports> mParentTarget;
+  nsPIDOMEventTarget*   mParentTarget;
 
   /**
    * If the event needs to be retargeted, this is the event target,
    * which should be used when the event is handled at mParentTarget.
    */
-  nsCOMPtr<nsISupports> mEventTargetAtParent;
+  nsPIDOMEventTarget*   mEventTargetAtParent;
 };
 
 class nsEventChainPostVisitor : public nsEventChainVisitor {

@@ -39,9 +39,10 @@
 import automation
 import os
 import re
+import shutil
 import sys
 
-#expand DIST_BIN = "./" + __XPC_BIN_PATH__
+#expand DIST_BIN = __XPC_BIN_PATH__
 #expand BIN_SUFFIX = __BIN_SUFFIX__
 #expand CERTS_DIR = __CERTS_DIR__
 #expand CERTS_SRC_DIR = __CERTS_SRC_DIR__
@@ -58,7 +59,22 @@ def unlinkDbFiles(path):
       for dbFile in dbFiles:
         if dbFile.match(name) and os.path.exists(os.path.join(root, name)):
           os.unlink(os.path.join(root, name))
-  
+
+def dbFilesExist(path):
+  for root, dirs, files in os.walk(path):
+    for name in files:
+      for dbFile in dbFiles:
+        if dbFile.match(name) and os.path.exists(os.path.join(root, name)):
+          return True
+  return False
+
+def installDbFiles(path, dest):
+  for root, dirs, files in os.walk(path):
+    for name in files:
+      for dbFile in dbFiles:
+        if dbFile.match(name):
+          shutil.copy(os.path.join(root, name), os.path.join(dest, name))
+
 
 def runUtil(util, args, inputdata = None):
   proc = automation.Process(util, args, automation.environment(), inputdata)
@@ -119,7 +135,7 @@ def createCertificateAuthority(dbDir, srcDir):
   return 0
 
 
-def createSSLServerCertificate(dbDir):
+def createSSLServerCertificate(dbDir, srcDir):
   certutil = DIST_BIN + "/certutil" + BIN_SUFFIX
   pk12util = DIST_BIN + "/pk12util" + BIN_SUFFIX
 
@@ -133,14 +149,17 @@ def createSSLServerCertificate(dbDir):
 
   unlinkDbFiles(dbDir)
 
-  # Create certification database for ssltunnel
-  status = runUtil(certutil, ["-N", "-d", dbDir, "-f", pwfilePath])
-  if status != 0:
-    return status
-
-  status = runUtil(pk12util, ["-i", pgoCAPath, "-w", pwfilePath, "-d", dbDir, "-k", pwfilePath])
-  if status != 0:
-    return status
+  if not dbFilesExist(srcDir):
+    unlinkDbFiles(srcDir)
+    
+    # Create certification database for ssltunnel
+    status = runUtil(certutil, ["-N", "-d", srcDir, "-f", pwfilePath])
+    if status != 0:
+      return status
+  
+    status = runUtil(pk12util, ["-i", pgoCAPath, "-w", pwfilePath, "-d", srcDir, "-k", pwfilePath])
+    if status != 0:
+      return status
 
   # Generate automatic certificate
   locations = automation.readLocations(os.path.join(dbDir, "../server-locations.txt"))
@@ -169,17 +188,15 @@ def createSSLServerCertificate(dbDir):
     print "Nothing to generate, no automatic secure hosts specified"
   else:
     createRandomFile(rndfilePath);
-    status = runUtil(certutil, ["-S", "-s", "CN=%s" % firstLocation, "-t", "Pu,,", "-c", "pgo temporary ca", "-m", "2", "-8", locationsParam, "-v", "12", "-n", "pgo server certificate", "-d", dbDir, "-z", rndfilePath, "-f", pwfilePath])
+    
+    runUtil(certutil, ["-D", "-n", "pgo server certificate", "-d", srcDir, "-z", rndfilePath, "-f", pwfilePath])
+    # Ignore the result, the certificate may not be present when new database is being built
+    
+    status = runUtil(certutil, ["-S", "-s", "CN=%s" % firstLocation, "-t", "Pu,,", "-c", "pgo temporary ca", "-m", "2", "-8", locationsParam, "-v", "12", "-n", "pgo server certificate", "-d", srcDir, "-z", rndfilePath, "-f", pwfilePath])
     if status != 0:
       return status
     
-  # Walk the cert directory and add what necessary
-  files = os.listdir(CERTS_DIR)
-  for item in files:
-    root, ext = os.path.splitext(item)
-    if ext == ".server":
-      runUtil(pk12util, ["-i", os.path.join(CERTS_DIR, item), "-d", dbDir, "-k", pwfilePath, "-w", pwfilePath])
-            
+  installDbFiles(srcDir, dbDir)
   os.unlink(pwfilePath)
   os.unlink(rndfilePath)
   return 0
@@ -190,7 +207,7 @@ if len(sys.argv) == 1:
   sys.exit(1)
 
 if sys.argv[1] == "--gen-server":
-  certificateStatus = createSSLServerCertificate(CERTS_DIR)
+  certificateStatus = createSSLServerCertificate(CERTS_DIR, CERTS_SRC_DIR)
   if certificateStatus != 0:
     print "ERROR FAIL: SSL Server Certificate generation"
   

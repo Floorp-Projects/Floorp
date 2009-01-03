@@ -58,7 +58,7 @@
     <vbox>
       <image id="infoIcon"/>
     </vbox>
-    <vbox class="spaced" style="min-width: 20em;">
+    <vbox class="spaced" style="min-width: 20em; max-width: 40em">
       <label id="message1" class="spaced" hidden="true"/>
       <separator class="thin"/>
       <tree id="addonsTree" rows="6" hidecolumnpicker="true" hidden="true" class="spaced">
@@ -74,10 +74,5 @@
         <spacer flex="1"/>
       </hbox>
     </vbox>
-  </hbox>
-  <hbox id="buttonCenteredBox">
-    <spacer flex="1"/>
-    <button id="centeredButton"/>
-    <spacer flex="1"/>
   </hbox>
 </dialog>

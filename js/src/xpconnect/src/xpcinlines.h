@@ -731,11 +731,7 @@ xpc_NewSystemInheritingJSObject(JSContext *cx, JSClass *clasp, JSObject *proto,
 inline jsval
 GetRTStringByIndex(JSContext *cx, uintN index)
 {
-  XPCJSRuntime *rt = nsXPConnect::GetRuntime();
-
-  if (!rt)
-    return JSVAL_VOID;
-
+  XPCJSRuntime *rt = nsXPConnect::GetRuntimeInstance();
   return ID_TO_VALUE(rt->GetStringID(index));
 }
 

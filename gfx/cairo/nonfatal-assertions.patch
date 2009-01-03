@@ -1,6 +1,6 @@
 diff -r b79d47dad1ea gfx/cairo/cairo/src/cairoint.h
---- a/cairo/src/cairoint.h	Fri Jun 08 18:09:53 2007 -0700
-+++ b/cairo/src/cairoint.h	Fri Jun 29 09:18:02 2007 +0200
+--- a/gfx/cairo/cairo/src/cairoint.h	Fri Jun 08 18:09:53 2007 -0700
++++ b/gfx/cairo/cairo/src/cairoint.h	Fri Jun 29 09:18:02 2007 +0200
 @@ -159,6 +159,13 @@ CAIRO_BEGIN_DECLS
  
  #ifndef M_PI

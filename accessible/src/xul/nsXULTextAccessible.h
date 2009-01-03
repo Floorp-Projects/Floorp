@@ -51,11 +51,15 @@ class nsXULTextAccessible : public nsHyperTextAccessibleWrap
 
 public:
   nsXULTextAccessible(nsIDOMNode* aDomNode, nsIWeakReference* aShell);
-  NS_IMETHOD GetName(nsAString& _retval); 
-  NS_IMETHOD GetState(PRUint32 *aState, PRUint32 *aExtraState);
+
+  // nsIAccessible
   NS_IMETHOD GetRole(PRUint32 *aRole) { *aRole = nsIAccessibleRole::ROLE_LABEL; return NS_OK; }
   NS_IMETHOD GetAccessibleRelated(PRUint32 aRelationType,
                                   nsIAccessible **aRelated);
+
+  // nsAccessible
+  virtual nsresult GetNameInternal(nsAString& aName);
+  virtual nsresult GetStateInternal(PRUint32 *aState, PRUint32 *aExtraState);
 };
 
 class nsXULTooltipAccessible : public nsLeafAccessible
@@ -63,9 +67,12 @@ class nsXULTooltipAccessible : public nsLeafAccessible
 
 public:
   nsXULTooltipAccessible(nsIDOMNode* aDomNode, nsIWeakReference* aShell);
-  NS_IMETHOD GetName(nsAString& _retval); 
-  NS_IMETHOD GetState(PRUint32 *aState, PRUint32 *aExtraState);
+
+  // nsIAccessible
   NS_IMETHOD GetRole(PRUint32 *_retval); 
+
+  // nsAccessible
+  virtual nsresult GetStateInternal(PRUint32 *aState, PRUint32 *aExtraState);
 };
 
 class nsXULLinkAccessible : public nsHyperTextAccessibleWrap
@@ -77,9 +84,7 @@ public:
   NS_DECL_ISUPPORTS_INHERITED
 
   // nsIAccessible
-  NS_IMETHOD GetName(nsAString& aName); 
   NS_IMETHOD GetRole(PRUint32 *aRole);
-  NS_IMETHOD GetState(PRUint32 *aState, PRUint32 *aExtraState);
   NS_IMETHOD GetValue(nsAString& aValue);
 
   NS_IMETHOD GetNumActions(PRUint8 *aNumActions);
@@ -88,6 +93,10 @@ public:
 
   // nsIAccessibleHyperLink
   NS_IMETHOD GetURI(PRInt32 aIndex, nsIURI **aURI);
+
+  // nsAccessible
+  virtual nsresult GetNameInternal(nsAString& aName);
+  virtual nsresult GetStateInternal(PRUint32 *aState, PRUint32 *aExtraState);
 
 protected:
   enum { eAction_Jump = 0 };

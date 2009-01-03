@@ -1822,7 +1822,7 @@ PRBool     StartOS2App(int aArgc, char **aArgv)
 
   memset(&x, 0, sizeof(x));
   x.Length = sizeof(x);
-  (const char* const)(x.PgmTitle) = gAppData->name;
+  x.PgmTitle = (PSZ)gAppData->name;
   x.InheritOpt = SSF_INHERTOPT_PARENT;
   x.SessionType = SSF_TYPE_WINDOWABLEVIO;
   x.PgmControl = SSF_CONTROL_NOAUTOCLOSE;

@@ -45,13 +45,18 @@
 extern "C" {
 #endif
 
-BOOL APIENTRY DllMain(  HINSTANCE hModule, 
-                        DWORD reason, 
-                        LPVOID lpReserved )
+BOOL APIENTRY DllMain(  
+#ifdef WINCE
+                      HANDLE hModule, 
+#else 
+                      HINSTANCE hModule, 
+#endif
+                      DWORD reason, 
+                      LPVOID lpReserved )
 {
     switch( reason ) {
         case DLL_PROCESS_ATTACH:
-            nsToolkit::Startup(hModule);
+            nsToolkit::Startup((HINSTANCE)hModule);
             break;
 
         case DLL_THREAD_ATTACH:

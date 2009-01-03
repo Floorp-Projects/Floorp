@@ -48,9 +48,13 @@ static void *Reporter(void *) {
   struct passwd *user = getpwuid(getuid());
 
   // Write it to the desktop
-  snprintf(buffer, sizeof(buffer), "/Users/%s/Desktop/test.dmp", user->pw_name);
+  snprintf(buffer,
+           sizeof(buffer),
+           "/Users/%s/Desktop/test.dmp",
+           user->pw_name);
+  
   fprintf(stdout, "Writing %s\n", buffer);
-
+  unlink(buffer);
   md.Write(buffer);
   doneWritingReport = true;
 

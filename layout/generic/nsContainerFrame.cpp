@@ -508,7 +508,10 @@ SyncFrameViewGeometryDependentProperties(nsPresContext*  aPresContext,
       nsIFrame *rootFrame = aPresContext->PresShell()->FrameConstructor()->GetRootElementStyleFrame();
       if(rootFrame && NS_THEME_WIN_GLASS == rootFrame->GetStyleDisplay()->mAppearance)
         mode = eTransparencyGlass;
-      aView->GetWidget()->SetTransparencyMode(mode);
+      nsIWidget* widget = aView->GetWidget();
+      widget->SetTransparencyMode(mode);
+      if (rootFrame)
+        widget->SetWindowShadowStyle(rootFrame->GetStyleUIReset()->mWindowShadow);
     }
   }
 }
@@ -799,7 +802,7 @@ nsContainerFrame::ReflowChild(nsIFrame*                aKidFrame,
       // parent is not this because we are executing pullup code)
       if (aTracker) aTracker->Finish(aKidFrame);
       static_cast<nsContainerFrame*>(kidNextInFlow->GetParent())
-        ->DeleteNextInFlowChild(aPresContext, kidNextInFlow);
+        ->DeleteNextInFlowChild(aPresContext, kidNextInFlow, PR_TRUE);
     }
   }
   return result;
@@ -1103,7 +1106,8 @@ nsContainerFrame::StealFrame(nsPresContext* aPresContext,
  */
 void
 nsContainerFrame::DeleteNextInFlowChild(nsPresContext* aPresContext,
-                                        nsIFrame*      aNextInFlow)
+                                        nsIFrame*      aNextInFlow,
+                                        PRBool         aDeletingEmptyFrames)
 {
 #ifdef DEBUG
   nsIFrame* prevInFlow = aNextInFlow->GetPrevInFlow();
@@ -1123,14 +1127,11 @@ nsContainerFrame::DeleteNextInFlowChild(nsPresContext* aPresContext,
     for (PRInt32 i = frames.Count() - 1; i >= 0; --i) {
       nsIFrame* delFrame = static_cast<nsIFrame*>(frames.ElementAt(i));
       static_cast<nsContainerFrame*>(delFrame->GetParent())
-        ->DeleteNextInFlowChild(aPresContext, delFrame);
+        ->DeleteNextInFlowChild(aPresContext, delFrame, aDeletingEmptyFrames);
     }
   }
 
   aNextInFlow->Invalidate(aNextInFlow->GetOverflowRect());
-
-  // Disconnect the next-in-flow from the flow list
-  nsSplittableFrame::BreakFromPrevFlow(aNextInFlow);
 
   // Take the next-in-flow out of the parent's child list
 #ifdef DEBUG
@@ -1139,7 +1140,8 @@ nsContainerFrame::DeleteNextInFlowChild(nsPresContext* aPresContext,
     StealFrame(aPresContext, aNextInFlow);
   NS_ASSERTION(NS_SUCCEEDED(rv), "StealFrame failure");
 
-  // Delete the next-in-flow frame and its descendants.
+  // Delete the next-in-flow frame and its descendants. This will also
+  // remove it from its next-in-flow/prev-in-flow chain.
   aNextInFlow->Destroy();
 
   NS_POSTCONDITION(!prevInFlow->GetNextInFlow(), "non null next-in-flow");
@@ -1597,9 +1599,6 @@ nsContainerFrame::List(FILE* out, PRInt32 aIndent) const
   PRInt32 listIndex = 0;
   PRBool outputOneList = PR_FALSE;
   do {
-    if (!outputOneList) {
-      fputs("\n", out);
-    }
     nsIFrame* kid = GetFirstChild(listName);
     if (nsnull != kid) {
       if (outputOneList) {

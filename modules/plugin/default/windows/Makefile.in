@@ -48,8 +48,6 @@ RESFILE		= npnul32.res
 DEFFILE		= $(win_srcdir)/npnul32.def
 GRE_MODULE	= 1
 
-PACKAGE_FILE = npnul.pkg
-
 REQUIRES	= java \
 		  xpcom \
 		  pref \

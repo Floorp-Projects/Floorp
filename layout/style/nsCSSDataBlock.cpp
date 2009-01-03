@@ -470,10 +470,10 @@ nsCSSCompressedDataBlock::Clone() const
                         // fall through to keep gcc's uninitialized
                         // variable warning quiet
                     case eCSSType_ValueList:
-                        copy = new nsCSSValueList(*ValueListAtCursor(cursor));
+                        copy = ValueListAtCursor(cursor)->Clone();
                         break;
                     case eCSSType_ValuePairList:
-                        copy = new nsCSSValuePairList(*ValuePairListAtCursor(cursor));
+                        copy = ValuePairListAtCursor(cursor)->Clone();
                         break;
                 }
                 if (!copy) {
@@ -572,11 +572,11 @@ nsCSSExpandedDataBlock::~nsCSSExpandedDataBlock()
 
 const nsCSSExpandedDataBlock::PropertyOffsetInfo
 nsCSSExpandedDataBlock::kOffsetTable[eCSSProperty_COUNT_no_shorthands] = {
-    #define CSS_PROP_BACKENDONLY(name_, id_, method_, datastruct_, member_, type_, kwtable_) \
+    #define CSS_PROP_BACKENDONLY(name_, id_, method_, flags_, datastruct_, member_, type_, kwtable_) \
         { offsetof(nsCSSExpandedDataBlock, m##datastruct_.member_),           \
           size_t(-1),                                                         \
           size_t(-1) },
-    #define CSS_PROP(name_, id_, method_, datastruct_, member_, type_, kwtable_) \
+    #define CSS_PROP(name_, id_, method_, flags_, datastruct_, member_, type_, kwtable_) \
         { offsetof(nsCSSExpandedDataBlock, m##datastruct_.member_),           \
           offsetof(nsRuleData, m##datastruct_##Data),                         \
           offsetof(nsRuleData##datastruct_, member_) },

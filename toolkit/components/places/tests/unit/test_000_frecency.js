@@ -245,6 +245,9 @@ function run_test() {
 
   controller.input = input;
 
+  // always search in history + bookmarks, no matter what the default is
+  prefs.setIntPref("browser.urlbar.search.sources", 3);
+
   // Search is asynchronous, so don't let the test finish immediately
   do_test_pending();
 

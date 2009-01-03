@@ -46,7 +46,7 @@ interface nsObjectFrame;
 interface nsIContent;
 interface nsITimer;
 
-[uuid(27386cf1-f27e-4d2d-9bf4-c4621d50d299)]
+[uuid(44685af8-18be-494a-8e64-16c7d4296dd1)]
 interface nsIAccessibilityService : nsIAccessibleRetrieval
 {
   nsIAccessible createOuterDocAccessible(in nsIDOMNode aNode);
@@ -112,6 +112,13 @@ interface nsIAccessibilityService : nsIAccessibleRetrieval
    */
   void processDocLoadEvent(in nsITimer aTimer, in voidPtr aClosure, in PRUint32 aEventType);
 
+  /**
+   * Fire accessible event of the given type for the given target.
+   *
+   * @param aEvent   [in] accessible event type
+   * @param aTarget  [in] target of accessible event
+   */
+  void fireAccessibleEvent(in unsigned long aEvent, in nsIAccessible aTarget);
 };
 
 

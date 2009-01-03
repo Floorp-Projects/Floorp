@@ -44,11 +44,11 @@
 #include "nsDebug.h"
 
 // Comparator callback function for sorting array values.
-typedef int (* PR_CALLBACK nsVoidArrayComparatorFunc)
+typedef int (* nsVoidArrayComparatorFunc)
             (const void* aElement1, const void* aElement2, void* aData);
 
 // Enumerator callback function. Return PR_FALSE to stop
-typedef PRBool (* PR_CALLBACK nsVoidArrayEnumFunc)(void* aElement, void *aData);
+typedef PRBool (* nsVoidArrayEnumFunc)(void* aElement, void *aData);
 
 /// A basic zero-based array of void*'s that manages its own memory
 class NS_COM_GLUE nsVoidArray {
@@ -202,7 +202,7 @@ protected:
 
 class nsString;
 
-typedef int (* PR_CALLBACK nsStringArrayComparatorFunc)
+typedef int (* nsStringArrayComparatorFunc)
             (const nsString* aElement1, const nsString* aElement2, void* aData);
 
 typedef PRBool (*nsStringArrayEnumFunc)(nsString& aElement, void *aData);
@@ -256,7 +256,7 @@ private:
 
 class nsCString;
 
-typedef int (* PR_CALLBACK nsCStringArrayComparatorFunc)
+typedef int (* nsCStringArrayComparatorFunc)
             (const nsCString* aElement1, const nsCString* aElement2, void* aData);
 
 typedef PRBool (*nsCStringArrayEnumFunc)(nsCString& aElement, void *aData);

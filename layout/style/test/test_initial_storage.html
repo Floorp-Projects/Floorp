@@ -25,31 +25,6 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=375363
 
 var gDeclaration = document.getElementById("testnode").style;
 
-var gKnownFails = {
-  /* bug 377519: */
-  "-moz-border-end": true,
-  "-moz-border-radius": true,
-  "-moz-border-start": true,
-  "-moz-column-rule": true,
-  "-moz-outline-radius": true,
-  "background": true,
-  "border": true,
-  "border-bottom": true,
-  "border-color": true,
-  "border-left": true,
-  "border-right": true,
-  "border-style": true,
-  "border-top": true,
-  "border-width": true,
-  "cue": true,
-  "font": true,
-  "list-style": true,
-  "margin": true,
-  "outline": true,
-  "padding": true,
-  "pause": true
-};
-
 var gKnownFails2 = {
   "-moz-border-end": true,
   "-moz-border-radius": true,
@@ -92,11 +67,8 @@ function test_property(property)
   function check_set(sproperty) {
     var sinfo = gCSSProperties[sproperty];
     val = gDeclaration.getPropertyValue(sproperty);
-    var func = is;
-    if (sproperty == property && property in gKnownFails)
-      func = todo_is;
-    func(val, "-moz-initial",
-         "-moz-initial reported back for property '" + sproperty + "'");
+    is(val, "-moz-initial",
+       "-moz-initial reported back for property '" + sproperty + "'");
     if (sinfo.domProp) {
       is(val, gDeclaration[sinfo.domProp],
          "consistency between decl.getPropertyValue('" + sproperty +

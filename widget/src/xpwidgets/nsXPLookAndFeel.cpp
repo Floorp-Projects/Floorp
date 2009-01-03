@@ -601,14 +601,14 @@ nsXPLookAndFeel::GetColor(const nsColorID aID, nscolor &aColor)
   if (aID == eColor_TextHighlightBackground) {
     // This makes the matched text stand out when findbar highlighting is on
     // Used with nsISelectionController::SELECTION_FIND
-    aColor = NS_RGB(0xf0, 0xe0, 0x20);
+    aColor = NS_RGB(0xef, 0x0f, 0xff);
     return NS_OK;
   }
 
   if (aID == eColor_TextHighlightForeground) {
     // The foreground color for the matched text in findbar highlighting
     // Used with nsISelectionController::SELECTION_FIND
-    aColor = NS_RGB(0x00, 0x00, 0x00);
+    aColor = NS_RGB(0xff, 0xff, 0xff);
     return NS_OK;
   }
 

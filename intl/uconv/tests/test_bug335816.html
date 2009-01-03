@@ -10,7 +10,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=335816
   <script type="text/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
   <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
 </head>
-<body>
+<body onload="test()">
 <pre id="test">
 <script class="testbody" type="text/javascript">
 
@@ -26,8 +26,7 @@ function WontYouPleaseArrangeIt()
   $("display").innerHTML = "Keep that breathless charm";
 }
 
-  setTimeout(test, 100);
-  SimpleTest.waitForExplicitFinish();
+SimpleTest.waitForExplicitFinish();
 </script>
 </pre>
 <a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=335816">Mozilla Bug 335816</a>

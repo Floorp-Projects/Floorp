@@ -5,4 +5,10 @@ the Mozilla build system.
 
 http://svn.annodex.net/liboggplay/trunk/
 
-The svn revision number used was r3693. 
+The svn revision number used was r3774.
+
+The patch from Annodex trac ticket 421 is applied to fix bug 459938:
+  http://trac.annodex.net/ticket/421
+
+The patch from Bug 468327 (yuv_disable_optimized.patch) is applied
+to disable optimized yuv to rgb routines.

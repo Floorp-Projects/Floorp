@@ -83,9 +83,7 @@
 #include "nsBindingManager.h"
 #include "nsIDocShellTreeOwner.h"
 #include "nsIBaseWindow.h"
-#ifdef XP_WIN
 #include "nsISound.h"
-#endif
 
 const PRInt32 kMaxZ = 0x7fffffff; //XXX: Shouldn't there be a define somewhere for MaxInt for PRInt32
 
@@ -280,7 +278,9 @@ nsMenuPopupFrame::CreateWidgetForView(nsIView* aView)
   aView->CreateWidget(kCChildCID, &widgetData, nsnull, PR_TRUE, PR_TRUE,
                       eContentTypeInherit, parentWidget);
 #endif
-  aView->GetWidget()->SetTransparencyMode(mode);
+  nsIWidget* widget = aView->GetWidget();
+  widget->SetTransparencyMode(mode);
+  widget->SetWindowShadowStyle(GetStyleUIReset()->mWindowShadow);
   return NS_OK;
 }
 
@@ -560,7 +560,7 @@ nsMenuPopupFrame::InitializePopupWithAnchorAlign(nsIContent* aAnchorContent,
   }
 }
 
-void PR_CALLBACK
+void
 LazyGeneratePopupDone(nsIContent* aPopup, nsIFrame* aFrame, void* aArg)
 {
   // be safe and check the frame type
@@ -622,6 +622,11 @@ nsMenuPopupFrame::ShowPopup(PRBool aIsContextMenu, PRBool aSelectFirstItem)
       PresContext()->PresShell()->
         FrameNeedsReflow(this, nsIPresShell::eTreeChange,
                          NS_FRAME_HAS_DIRTY_CHILDREN);
+    }
+    if (mPopupType == ePopupTypeMenu) {
+      nsCOMPtr<nsISound> sound(do_CreateInstance("@mozilla.org/sound;1"));
+      if (sound)
+        sound->PlaySystemSound(NS_SYSSOUND_MENU_POPUP);
     }
   }
 
@@ -1375,11 +1380,11 @@ void nsMenuPopupFrame::EnsureMenuItemIsVisible(nsMenuFrame* aMenuItem)
   
       // scroll down
       if ( itemRect.y + itemRect.height > scrollY + viewRect.height )
-        scrollableView->ScrollTo(scrollX, itemRect.y + itemRect.height - viewRect.height, NS_SCROLL_PROPERTY_ALWAYS_BLIT);
+        scrollableView->ScrollTo(scrollX, itemRect.y + itemRect.height - viewRect.height, 0);
       
       // scroll up
       else if ( itemRect.y < scrollY )
-        scrollableView->ScrollTo(scrollX, itemRect.y, NS_SCROLL_PROPERTY_ALWAYS_BLIT);
+        scrollableView->ScrollTo(scrollX, itemRect.y, 0);
     }
   }
 }

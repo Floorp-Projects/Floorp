@@ -87,7 +87,6 @@
 // Interfaces Needed
 #include "nsIWidget.h"
 #include "nsIBaseWindow.h"
-#include "nsICharsetConverterManager.h"
 #include "nsIContent.h"
 #include "nsIContentViewerEdit.h"
 #include "nsIDocShell.h"
@@ -114,7 +113,6 @@
 #include "nsIDOMPkcs11.h"
 #include "nsIDOMOfflineResourceList.h"
 #include "nsIDOMGeoGeolocation.h"
-#include "nsIDOMThreads.h"
 #include "nsDOMString.h"
 #include "nsIEmbeddingSiteWindow2.h"
 #include "nsThreadUtils.h"
@@ -210,6 +208,7 @@ static PRLogModuleInfo* gDOMLeakPRLog;
 #endif
 
 nsIFactory *nsGlobalWindow::sComputedDOMStyleFactory   = nsnull;
+nsIDOMStorageList *nsGlobalWindow::sGlobalStorageList  = nsnull;
 
 static nsIEntropyCollector *gEntropyCollector          = nsnull;
 static PRInt32              gRefCnt                    = 0;
@@ -225,6 +224,10 @@ static PRUint32             gSerialCounter             = 0;
 
 #ifdef DEBUG_jst
 PRInt32 gTimeoutCnt                                    = 0;
+#endif
+
+#if !(defined(NS_DEBUG) || defined(MOZ_ENABLE_JS_DUMP))
+static PRBool               gDOMWindowDumpEnabled      = PR_FALSE;
 #endif
 
 #if defined(DEBUG_bryner) || defined(DEBUG_chb)
@@ -347,8 +350,6 @@ PRInt32 gTimeoutCnt                                    = 0;
 static NS_DEFINE_CID(kJVMServiceCID, NS_JVMMANAGER_CID);
 #endif
 static NS_DEFINE_CID(kXULControllersCID, NS_XULCONTROLLERS_CID);
-static NS_DEFINE_CID(kCharsetConverterManagerCID,
-                     NS_ICHARSETCONVERTERMANAGER_CID);
 
 static const char sJSStackContractID[] = "@mozilla.org/js/xpc/ContextStack;1";
 
@@ -658,9 +659,21 @@ nsGlobalWindow::nsGlobalWindow(nsGlobalWindow *aOuterWindow)
   // We could have failed the first time through trying
   // to create the entropy collector, so we should
   // try to get one until we succeed.
-  if (gRefCnt++ == 0 || !gEntropyCollector) {
+
+  gRefCnt++;
+
+#if !(defined(NS_DEBUG) || defined(MOZ_ENABLE_JS_DUMP))
+  if (gRefCnt == 1) {
+    static const char* prefName = "browser.dom.window.dump.enabled";
+    nsContentUtils::AddBoolPrefVarCache(prefName, &gDOMWindowDumpEnabled);
+    gDOMWindowDumpEnabled = nsContentUtils::GetBoolPref(prefName);
+  }
+#endif
+
+  if (!gEntropyCollector) {
     CallGetService(NS_ENTROPYCOLLECTOR_CONTRACTID, &gEntropyCollector);
   }
+
 #ifdef DEBUG
   printf("++DOMWINDOW == %d (%p) [serial = %d] [outer = %p]\n", gRefCnt,
          static_cast<void*>(static_cast<nsIScriptGlobalObject*>(this)),
@@ -768,6 +781,7 @@ void
 nsGlobalWindow::ShutDown()
 {
   NS_IF_RELEASE(sComputedDOMStyleFactory);
+  NS_IF_RELEASE(sGlobalStorageList);
 }
 
 // static
@@ -991,8 +1005,6 @@ NS_IMPL_CYCLE_COLLECTION_TRAVERSE_BEGIN(nsGlobalWindow)
     NS_IMPL_CYCLE_COLLECTION_TRAVERSE_NSCOMPTR(mScriptContexts[i])
   }
 
-  NS_IMPL_CYCLE_COLLECTION_TRAVERSE_NSCOMPTR(gGlobalStorageList)
-
   for (PRUint32 i = 0; i < NS_STID_ARRAY_UBOUND; ++i) {      
     NS_IMPL_CYCLE_COLLECTION_TRAVERSE_NSCOMPTR(mInnerWindowHolders[i])
   }
@@ -1003,13 +1015,6 @@ NS_IMPL_CYCLE_COLLECTION_TRAVERSE_BEGIN(nsGlobalWindow)
   NS_IMPL_CYCLE_COLLECTION_TRAVERSE_NSCOMPTR(mApplicationCache)
   NS_IMPL_CYCLE_COLLECTION_TRAVERSE_NSCOMPTR(mDocumentPrincipal)
   NS_IMPL_CYCLE_COLLECTION_TRAVERSE_NSCOMPTR(mDoc)
-
-  // Traverse any associated preserved wrappers.
-  {
-    if (tmp->mDoc) {
-      cb.NoteXPCOMChild(tmp->mDoc->GetReference(tmp));
-    }
-  }
 
   // Traverse stuff from nsPIDOMWindow
   NS_IMPL_CYCLE_COLLECTION_TRAVERSE_NSCOMPTR(mChromeEventHandler)
@@ -1031,8 +1036,6 @@ NS_IMPL_CYCLE_COLLECTION_UNLINK_BEGIN(nsGlobalWindow)
     NS_IMPL_CYCLE_COLLECTION_UNLINK_NSCOMPTR(mScriptContexts[i])
   }
 
-  NS_IMPL_CYCLE_COLLECTION_UNLINK_NSCOMPTR(gGlobalStorageList)
-
   for (PRUint32 i = 0; i < NS_STID_ARRAY_UBOUND; ++i) {      
     NS_IMPL_CYCLE_COLLECTION_UNLINK_NSCOMPTR(mInnerWindowHolders[i])
   }
@@ -1042,12 +1045,6 @@ NS_IMPL_CYCLE_COLLECTION_UNLINK_BEGIN(nsGlobalWindow)
   NS_IMPL_CYCLE_COLLECTION_UNLINK_NSCOMPTR(mSessionStorage)
   NS_IMPL_CYCLE_COLLECTION_UNLINK_NSCOMPTR(mApplicationCache)
   NS_IMPL_CYCLE_COLLECTION_UNLINK_NSCOMPTR(mDocumentPrincipal)
-
-  // Unlink any associated preserved wrapper.
-  if (tmp->mDoc) {
-    tmp->mDoc->RemoveReference(tmp);
-    NS_IMPL_CYCLE_COLLECTION_UNLINK_NSCOMPTR(mDoc)
-  }
 
   // Unlink stuff from nsPIDOMWindow
   NS_IMPL_CYCLE_COLLECTION_UNLINK_NSCOMPTR(mChromeEventHandler)
@@ -1070,7 +1067,7 @@ struct TraceData
   void* closure;
 };
 
-PR_STATIC_CALLBACK(PLDHashOperator)
+static PLDHashOperator
 TraceXBLHandlers(const void* aKey, void* aData, void* aClosure)
 {
   TraceData* data = static_cast<TraceData*>(aClosure);
@@ -1670,6 +1667,11 @@ nsGlobalWindow::SetNewDocument(nsIDocument* aDocument,
 
     PRBool isChrome = PR_FALSE;
 
+    nsCxPusher cxPusher;
+    if (!cxPusher.Push(cx)) {
+      return NS_ERROR_FAILURE;
+    }
+
     JSAutoRequest ar(cx);
 
     // Make sure to clear scope on the outer window *before* we
@@ -2160,7 +2162,7 @@ nsGlobalWindow::SetOpenerWindow(nsIDOMWindowInternal* aOpener,
                "Shouldn't set mHadOriginalOpener if aOpener is null");
 
   mOpener = do_GetWeakReference(aOpener);
-  NS_ASSERTION(mOpener, "Opener must support weak references!");
+  NS_ASSERTION(mOpener || !aOpener, "Opener must support weak references!");
 
   if (aOriginalOpener) {
     mHadOriginalOpener = PR_TRUE;
@@ -2864,19 +2866,14 @@ nsGlobalWindow::GetApplicationCache(nsIDOMOfflineResourceList **aApplicationCach
     nsresult rv = webNav->GetCurrentURI(getter_AddRefs(uri));
     NS_ENSURE_SUCCESS(rv, rv);
 
+    nsCOMPtr<nsIDocument> doc = do_QueryInterface(mDocument);
     nsCOMPtr<nsIURI> manifestURI;
-    nsContentUtils::GetOfflineAppManifest(GetOuterWindowInternal(),
-                                          getter_AddRefs(manifestURI));
-
-    PRBool isToplevel;
-    nsCOMPtr<nsIDOMWindow> parentWindow;
-    GetParent(getter_AddRefs(parentWindow));
-    isToplevel = (parentWindow.get() == static_cast<nsIDOMWindow*>(GetOuterWindowInternal()));
+    nsContentUtils::GetOfflineAppManifest(doc, getter_AddRefs(manifestURI));
 
     nsDOMOfflineResourceList* applicationCache =
-      new nsDOMOfflineResourceList(isToplevel, manifestURI, uri, this);
+      new nsDOMOfflineResourceList(manifestURI, uri, this);
 
-    if (!applicationCache) 
+    if (!applicationCache)
         return NS_ERROR_OUT_OF_MEMORY;
 
     mApplicationCache = applicationCache;
@@ -3831,24 +3828,25 @@ nsGlobalWindow::GetFullScreen(PRBool* aFullScreen)
   return NS_OK;
 }
 
+PRBool
+nsGlobalWindow::DOMWindowDumpEnabled()
+{
+#if !(defined(NS_DEBUG) || defined(MOZ_ENABLE_JS_DUMP))
+  // In optimized builds we check a pref that controls if we should
+  // enable output from dump() or not, in debug builds it's always
+  // enabled.
+  return gDOMWindowDumpEnabled;
+#else
+  return PR_TRUE;
+#endif
+}
+
 NS_IMETHODIMP
 nsGlobalWindow::Dump(const nsAString& aStr)
 {
-#if !(defined(NS_DEBUG) || defined(MOZ_ENABLE_JS_DUMP))
-  {
-    // In optimized builds we check a pref that controls if we should
-    // enable output from dump() or not, in debug builds it's always
-    // enabled.
-
-    // if pref doesn't exist, disable dump output.
-    PRBool enable_dump =
-      nsContentUtils::GetBoolPref("browser.dom.window.dump.enabled");
-
-    if (!enable_dump) {
-      return NS_OK;
-    }
+  if (!DOMWindowDumpEnabled()) {
+    return NS_OK;
   }
-#endif
 
   char *cstr = ToNewUTF8String(aStr);
 
@@ -4600,7 +4598,7 @@ nsGlobalWindow::ScrollTo(PRInt32 aXScroll, PRInt32 aYScroll)
 
     result = view->ScrollTo(nsPresContext::CSSPixelsToAppUnits(aXScroll),
                             nsPresContext::CSSPixelsToAppUnits(aYScroll),
-                            NS_VMREFRESH_IMMEDIATE);
+                            0);
   }
 
   return result;
@@ -5204,10 +5202,9 @@ PostMessageEvent::Run()
   if (shell)
     presContext = shell->GetPresContext();
 
-  nsEvent* internalEvent;
   nsCOMPtr<nsIPrivateDOMEvent> privEvent = do_QueryInterface(message);
   privEvent->SetTrusted(mTrustedCaller);
-  privEvent->GetInternalNSEvent(&internalEvent);
+  nsEvent *internalEvent = privEvent->GetInternalNSEvent();
 
   nsEventStatus status = nsEventStatus_eIgnore;
   nsEventDispatcher::Dispatch(static_cast<nsPIDOMWindow*>(mTargetWindow),
@@ -5991,65 +5988,6 @@ nsGlobalWindow::UpdateCommands(const nsAString& anAction)
   return NS_OK;
 }
 
-nsresult
-nsGlobalWindow::ConvertCharset(const nsAString& aStr, char** aDest)
-{
-  nsresult result = NS_OK;
-  nsCOMPtr<nsIUnicodeEncoder> encoder;
-
-  nsCOMPtr<nsICharsetConverterManager>
-    ccm(do_GetService(kCharsetConverterManagerCID));
-  NS_ENSURE_TRUE(ccm, NS_ERROR_FAILURE);
-
-  // Get the document character set
-  nsCAutoString charset(NS_LITERAL_CSTRING("UTF-8")); // default to utf-8
-  if (mDoc) {
-    charset = mDoc->GetDocumentCharacterSet();
-  }
-
-  // Get an encoder for the character set
-  result = ccm->GetUnicodeEncoderRaw(charset.get(),
-                                     getter_AddRefs(encoder));
-  if (NS_FAILED(result))
-    return result;
-
-  result = encoder->Reset();
-  if (NS_FAILED(result))
-    return result;
-
-  PRInt32 maxByteLen, srcLen;
-  srcLen = aStr.Length();
-
-  const nsPromiseFlatString& flatSrc = PromiseFlatString(aStr);
-  const PRUnichar* src = flatSrc.get();
-
-  // Get the expected length of result string
-  result = encoder->GetMaxLength(src, srcLen, &maxByteLen);
-  if (NS_FAILED(result))
-    return result;
-
-  // Allocate a buffer of the maximum length
-  *aDest = (char *) nsMemory::Alloc(maxByteLen + 1);
-  PRInt32 destLen2, destLen = maxByteLen;
-  if (!*aDest)
-    return NS_ERROR_OUT_OF_MEMORY;
-
-  // Convert from unicode to the character set
-  result = encoder->Convert(src, &srcLen, *aDest, &destLen);
-  if (NS_FAILED(result)) {    
-    nsMemory::Free(*aDest);
-    *aDest = nsnull;
-    return result;
-  }
-
-  // Allow the encoder to finish the conversion
-  destLen2 = maxByteLen - destLen;
-  encoder->Finish(*aDest + destLen, &destLen2);
-  (*aDest)[destLen + destLen2] = '\0';
-
-  return result;
-}
-
 PRBool
 nsGlobalWindow::GetBlurSuppression()
 {
@@ -6760,12 +6698,12 @@ nsGlobalWindow::GetGlobalStorage(nsIDOMStorageList ** aGlobalStorage)
   NS_ENSURE_ARG_POINTER(aGlobalStorage);
 
 #ifdef MOZ_STORAGE
-  if (!gGlobalStorageList) {
-    nsresult rv = NS_NewDOMStorageList(getter_AddRefs(gGlobalStorageList));
+  if (!sGlobalStorageList) {
+    nsresult rv = NS_NewDOMStorageList(&sGlobalStorageList);
     NS_ENSURE_SUCCESS(rv, rv);
   }
 
-  *aGlobalStorage = gGlobalStorageList;
+  *aGlobalStorage = sGlobalStorageList;
   NS_IF_ADDREF(*aGlobalStorage);
 
   return NS_OK;
@@ -6995,7 +6933,7 @@ nsGlobalWindow::Observe(nsISupports* aSubject, const char* aTopic,
   return NS_ERROR_FAILURE;
 }
 
-PR_STATIC_CALLBACK(PLDHashOperator)
+static PLDHashOperator
 FirePendingStorageEvents(const nsAString& aKey, PRBool aData, void *userArg)
 {
   nsGlobalWindow *win = static_cast<nsGlobalWindow *>(userArg);
@@ -9504,20 +9442,5 @@ NS_IMETHODIMP nsNavigator::GetGeolocation(nsIDOMGeoGeolocation **_retval)
   }
 
   NS_IF_ADDREF(*_retval = mGeolocation);
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-nsNavigator::NewWorkerPool(nsIDOMWorkerPool** _retval)
-{
-  nsCOMPtr<nsIDOMThreadService> threadService =
-    nsDOMThreadService::GetOrInitService();
-  NS_ENSURE_TRUE(threadService, NS_ERROR_OUT_OF_MEMORY);
-
-  nsCOMPtr<nsIDOMWorkerPool> newPool;
-  nsresult rv = threadService->CreatePool(getter_AddRefs(newPool));
-  NS_ENSURE_SUCCESS(rv, rv);
-
-  newPool.forget(_retval);
   return NS_OK;
 }

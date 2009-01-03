@@ -40,6 +40,7 @@
 #define nsClipboard_h_
 
 #include "nsBaseClipboard.h"
+#include "nsXPIDLString.h"
 
 #import <Cocoa/Cocoa.h>
 
@@ -59,6 +60,7 @@ public:
 
   // Helper methods, used also by nsDragService
   static NSDictionary* PasteboardDictFromTransferable(nsITransferable *aTransferable);
+  static PRBool IsStringType(const nsCString& aMIMEType, const NSString** aPasteboardType);
 
 protected:
 

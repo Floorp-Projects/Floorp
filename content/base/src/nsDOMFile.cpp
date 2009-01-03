@@ -386,7 +386,7 @@ nsDOMFileList::GetLength(PRUint32* aLength)
 NS_IMETHODIMP
 nsDOMFileList::Item(PRUint32 aIndex, nsIDOMFile **aFile)
 {
-  NS_IF_ADDREF(*aFile = mFiles.SafeObjectAt(aIndex));
+  NS_IF_ADDREF(*aFile = GetItemAt(aIndex));
 
   return NS_OK;
 }

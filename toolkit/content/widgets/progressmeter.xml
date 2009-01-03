@@ -22,16 +22,17 @@
       <property name="value" onget="return this.getAttribute('value') || '0';">
         <setter><![CDATA[
           var p = Math.round(val);
+          var max = Math.round(this.max);
           if (p < 0)
             p = 0;
-          else if (p > 100)
-            p = 100;
+          else if (p > max)
+            p = max;
           var c = this.value; 
           if (p != c) {
             var delta = p - c;
             if (delta < 0)
               delta = -delta;
-            if (delta > 3 || p == 0 || p == 100) {
+            if (delta > 3 || p == 0 || p == max) {
               this.setAttribute("value", p);
               // Fire DOM event so that accessible value change events occur
               var event = document.createEvent('Events');
@@ -43,6 +44,11 @@
           return val;
         ]]></setter>
       </property>
+      <property name="max"
+                onget="return this.getAttribute('max') || '100';"
+                onset="this.setAttribute('max', isNaN(val) ? 100 : Math.max(val, 1));
+                       this.value = this.value;
+                       return val;" />
 
       <property name="accessibleType" readonly="true">
         <getter>

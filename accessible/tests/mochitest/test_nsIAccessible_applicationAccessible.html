@@ -1,0 +1,63 @@
+<html>
+
+<head>
+  <title>application accessible name</title>
+  <link rel="stylesheet" type="text/css" 
+         href="chrome://mochikit/content/tests/SimpleTest/test.css" />
+  <script type="application/javascript" 
+          src="chrome://mochikit/content/MochiKit/packed.js"></script>
+  <script type="application/javascript" 
+          src="chrome://mochikit/content/tests/SimpleTest/SimpleTest.js">
+   </script>
+  <script type="application/javascript" 
+          src="chrome://mochikit/content/a11y/accessible/common.js" ></script>
+
+  <script type="application/javascript">
+    function doTest()
+    {
+        var accessible = getAccessible(document);
+        while (accessible && accessible.parent) {
+            accessible = accessible.parent;
+        }
+
+        if (!accessible) {
+            SimpleTest.finish();
+            return;
+        }
+
+        var bundleServ = Components.classes["@mozilla.org/intl/stringbundle;1"]
+                         .getService(Components.interfaces.nsIStringBundleService);
+        var bundle = bundleServ.createBundle("chrome://branding/locale/brand.properties");
+
+        var applicationName = "";
+
+        try {
+            applicationName = bundle.GetStringFromName("brandShortName");
+        }  catch(e) {
+        }
+
+        if (applicationName == "")
+            applicationName = "Gecko based application";
+
+        is (accessible.name, applicationName, "wrong application accessible name");
+
+        SimpleTest.finish();
+    }
+    SimpleTest.waitForExplicitFinish();
+    addLoadEvent(doTest);
+  </script>
+  </head>
+  <body>
+  <a target="_blank"
+     href="https://bugzilla.mozilla.org/show_bug.cgi?id=456121"
+    title="nsApplicationAccessible::GetName does not return a default value when brand.properties does not exist">
+    Mozilla Bug 454211
+  </a>
+
+  <p id="display"></p>
+  <div id="content" style="display: none"></div>
+  <pre id="test">
+  </pre>
+
+  </body>
+</html>

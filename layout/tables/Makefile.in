@@ -100,6 +100,7 @@ DEFINES         += -DDEBUG_TABLE_STRATEGY_off -D_IMPL_NS_LAYOUT
 LOCAL_INCLUDES	= \
 		-I$(srcdir)/../base \
 		-I$(srcdir)/../generic \
+		-I$(srcdir)/../style \
 		-I$(srcdir)/../xul/base/src \
 		-I$(srcdir)/../../content/html/content/src \
 		-I$(srcdir)/../../content/base/src \

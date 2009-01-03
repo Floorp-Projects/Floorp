@@ -46,10 +46,6 @@ include $(DEPTH)/config/autoconf.mk
 _PROFILE_DIR = $(DEPTH)/_profile/pgo
 _CERTS_DIR = $(_PROFILE_DIR)/certs
 
-# Extension of files must be '.server'
-_SERVER_CERTS = \
-    $(NULL)
-  
 # Extension of files must be '.ca'
 _CERT_AUTHORITIES = \
     pgoca.ca \
@@ -57,9 +53,12 @@ _CERT_AUTHORITIES = \
 
 _SERV_FILES = \
     pgoca.p12 \
+    cert8.db \
+    key3.db \
+    secmod.db \
     $(NULL)
 
 include $(topsrcdir)/config/rules.mk
 
-libs:: $(_SERV_FILES) $(_SERVER_CERTS) $(_CERT_AUTHORITIES)
+libs:: $(_SERV_FILES) $(_CERT_AUTHORITIES)
 	$(INSTALL) $^ $(_CERTS_DIR)

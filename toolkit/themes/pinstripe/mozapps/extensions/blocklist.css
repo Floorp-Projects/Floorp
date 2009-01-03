@@ -1,0 +1,16 @@
+richlistitem {
+  padding-top: 6px;
+  padding-bottom: 6px;
+  -moz-padding-start: 7px;
+  -moz-padding-end: 7px;
+  border-bottom: 1px solid #C0C0C0;
+}
+
+.addon-name-version {
+  font-size: 110%;
+}
+
+.blockedLabel {
+  font-weight: bold;
+  font-style: italic;
+}

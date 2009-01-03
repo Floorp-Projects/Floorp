@@ -310,6 +310,14 @@ button[icon="refresh"][disabled="true"] .button-icon {
   list-style-image: url("moz-icon://stock/gtk-refresh?size=button&state=disabled");
 }
 
+button[icon="revert"] .button-icon {
+  list-style-image: url("moz-icon://stock/gtk-revert-to-saved?size=button");
+}
+
+button[icon="revert"][disabled="true"] .button-icon {
+  list-style-image: url("moz-icon://stock/gtk-revert-to-saved?size=button&state=disabled");
+}
+
 button[icon="go-forward"] .button-icon {
   list-style-image: url("moz-icon://stock/gtk-go-forward?size=button");
 }

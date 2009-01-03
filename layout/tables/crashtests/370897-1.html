@@ -1,0 +1,45 @@
+<html>
+<head>
+<script type="text/javascript">
+var w_inc = 1;
+var h_inc = 1;
+function resizeContainer(id) {
+  var e = document.getElementById(id);
+  var w = e.clientWidth;
+  if (w > 800 && w_inc==1)
+    w_inc=-1;
+  if (w < 100 && w_inc==-1)
+    w_inc=1;
+  e.style.width=(w+w_inc)+'px';
+
+  var h = e.clientHeight;
+  if (h > 800 && h_inc==1)
+    h_inc=-1;
+  if (h < 100 && h_inc==-1)
+    h_inc=1;
+  e.style.height=(h+h_inc)+'px';
+}
+
+function boom() {
+ var table = document.getElementById('table');
+ var newNode = document.createElement('caption');
+ table.appendChild(newNode);
+ resizeContainer('test');
+
+ newNode = document.createElement('caption');
+ table.appendChild(newNode); 
+}
+
+</script>
+<title></title>
+</head>
+
+
+<body onload="boom()">
+
+<div id="test">
+<table id="table" width="100%" height="100%"><tbody><tr><td></td></tr></tbody></table>
+</div>
+
+</body>
+</html>

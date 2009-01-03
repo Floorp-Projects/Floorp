@@ -162,6 +162,7 @@ protected:
   nsHTMLFramesetBorderFrame(nsStyleContext* aContext, PRInt32 aWidth, PRBool aVertical, PRBool aVisible);
   virtual ~nsHTMLFramesetBorderFrame();
   virtual nscoord GetIntrinsicWidth();
+  virtual nscoord GetIntrinsicHeight();
 
   PRInt32 mWidth;
   PRPackedBool mVertical;
@@ -198,6 +199,7 @@ protected:
   nsHTMLFramesetBlankFrame(nsStyleContext* aContext) : nsLeafFrame(aContext) {}
   virtual ~nsHTMLFramesetBlankFrame();
   virtual nscoord GetIntrinsicWidth();
+  virtual nscoord GetIntrinsicHeight();
 
   friend class nsHTMLFramesetFrame;
   friend class nsHTMLFrameset;
@@ -1628,6 +1630,12 @@ nscoord nsHTMLFramesetBorderFrame::GetIntrinsicWidth()
   return 0;
 }
 
+nscoord nsHTMLFramesetBorderFrame::GetIntrinsicHeight()
+{
+  // No intrinsic height
+  return 0;
+}
+
 void nsHTMLFramesetBorderFrame::SetVisibility(PRBool aVisibility)
 { 
   mVisibility = aVisibility; 
@@ -1836,6 +1844,12 @@ nsHTMLFramesetBlankFrame::~nsHTMLFramesetBlankFrame()
 nscoord nsHTMLFramesetBlankFrame::GetIntrinsicWidth()
 {
   // No intrinsic width
+  return 0;
+}
+
+nscoord nsHTMLFramesetBlankFrame::GetIntrinsicHeight()
+{
+  // No intrinsic height
   return 0;
 }
 

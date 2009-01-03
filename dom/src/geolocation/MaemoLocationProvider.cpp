@@ -39,6 +39,95 @@
 #include "MaemoLocationProvider.h"
 #include "nsGeolocation.h"
 
+
+////////////////////////////////////////////////////
+// nsGeoPosition
+////////////////////////////////////////////////////
+
+/**
+ * Simple object that holds a single point in space.
+ */ 
+class nsGeoPosition : public nsIDOMGeoPosition
+{
+public:
+  NS_DECL_ISUPPORTS
+  NS_DECL_NSIDOMGEOPOSITION
+
+    nsGeoPosition(double aLat, double aLong, double aAlt, double aHError, double aVError, double aHeading, double aSpeed, long long aTimestamp)
+    : mLat(aLat), mLong(aLong), mAlt(aAlt), mHError(aHError), mVError(aVError), mHeading(aHeading), mSpeed(aSpeed), mTimestamp(aTimestamp){};
+
+private:
+  ~nsGeoPosition(){}
+  double mLat, mLong, mAlt, mHError, mVError, mHeading, mSpeed;
+  long long mTimestamp;
+};
+
+NS_INTERFACE_MAP_BEGIN(nsGeoPosition)
+  NS_INTERFACE_MAP_ENTRY_AMBIGUOUS(nsISupports, nsIDOMGeoPosition)
+  NS_INTERFACE_MAP_ENTRY(nsIDOMGeoPosition)
+  NS_DOM_INTERFACE_MAP_ENTRY_CLASSINFO(GeoPosition)
+NS_INTERFACE_MAP_END
+
+NS_IMPL_THREADSAFE_ADDREF(nsGeoPosition)
+NS_IMPL_THREADSAFE_RELEASE(nsGeoPosition)
+
+NS_IMETHODIMP
+nsGeoPosition::GetLatitude(double *aLatitude)
+{
+  *aLatitude = mLat;
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsGeoPosition::GetLongitude(double *aLongitude)
+{
+  *aLongitude = mLong;
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsGeoPosition::GetAltitude(double *aAltitude)
+{
+  *aAltitude = mAlt;
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsGeoPosition::GetAccuracy(double *aAccuracy)
+{
+  *aAccuracy = mHError;
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsGeoPosition::GetAltitudeAccuracy(double *aAltitudeAccuracy)
+{
+  *aAltitudeAccuracy = mVError;
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsGeoPosition::GetHeading(double *aHeading)
+{
+  *aHeading = mHeading;
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsGeoPosition::GetSpeed(double *aSpeed)
+{
+  *aSpeed = mSpeed;
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsGeoPosition::GetTimestamp(DOMTimeStamp* aTimestamp)
+{
+  *aTimestamp = mTimestamp;
+  return NS_OK;
+}
+
+
 NS_IMPL_ISUPPORTS1(MaemoLocationProvider, nsIGeolocationProvider)
 
 MaemoLocationProvider::MaemoLocationProvider()

@@ -65,21 +65,10 @@ CPPSRCS		= \
 		nsIFileEnumerator.cpp \
 		nsIFileTest.cpp \
 		TestCallTemplates.cpp \
-		TestCOMPtr.cpp \
-		TestCOMPtrEq.cpp \
-		TestFactory.cpp \
-		TestHashtables.cpp \
-		TestID.cpp \
 		TestINIParser.cpp \
-		TestObserverService.cpp \
-		TestServMgr.cpp \
-		TestAutoPtr.cpp \
 		TestVersionComparator.cpp \
-		TestTextFormatter.cpp \
-		TestPipe.cpp \
 		TestRacingServiceManager.cpp \
 		TestRegistrationOrder.cpp \
-		TestProxies.cpp \
 		TestThreadPoolListener.cpp \
 		TestTimers.cpp \
 		TestOOM.cpp \
@@ -87,31 +76,50 @@ CPPSRCS		= \
 
 ifndef MOZ_ENABLE_LIBXUL
 CPPSRCS += \
-		TestArray.cpp \
-		TestTArray.cpp \
 		TestAtoms.cpp \
-		TestAutoLock.cpp \
-		TestCRT.cpp \
-		TestEncoding.cpp \
 		TestPermanentAtoms.cpp \
-		TestPipes.cpp \
-		TestThreads.cpp \
-		TestThreadPool.cpp \
-		TestXPIDLString.cpp \
-		TestDeque.cpp \
-		TestStrings.cpp \
-		TestStorageStream.cpp \
-		TestExpirationTracker.cpp \
 		$(NULL)
+endif
+
+SIMPLE_PROGRAMS	:= $(CPPSRCS:.cpp=$(BIN_SUFFIX))
+
+CPP_UNIT_TESTS = \
+                 TestAutoPtr.cpp \
+                 TestCOMPtr.cpp \
+                 TestCOMPtrEq.cpp \
+                 TestFactory.cpp \
+                 TestHashtables.cpp \
+                 TestID.cpp \
+                 TestObserverService.cpp \
+                 TestPipe.cpp \
+                 TestServMgr.cpp \
+                 TestTextFormatter.cpp \
+                 $(NULL)
+
+ifndef MOZ_ENABLE_LIBXUL
+CPP_UNIT_TESTS += \
+                  TestArray.cpp \
+                  TestAutoLock.cpp \
+                  TestCRT.cpp \
+                  TestEncoding.cpp \
+                  TestExpirationTracker.cpp \
+                  TestPipes.cpp \
+                  TestProxies.cpp \
+                  TestThreads.cpp \
+                  TestThreadPool.cpp \
+                  TestXPIDLString.cpp \
+                  TestDeque.cpp \
+                  TestStrings.cpp \
+                  TestStorageStream.cpp \
+                  TestTArray.cpp \
+                  $(NULL)
 endif
 
 ifndef MOZILLA_INTERNAL_API
-CPPSRCS += \
-		TestStringAPI.cpp \
-		$(NULL)
+CPP_UNIT_TESTS += \
+                  TestStringAPI.cpp \
+                  $(NULL)
 endif
-
-SIMPLE_PROGRAMS	= $(CPPSRCS:.cpp=$(BIN_SUFFIX))
 
 include $(topsrcdir)/config/config.mk
 
@@ -119,10 +127,7 @@ ifndef MOZILLA_INTERNAL_API
 LIBS +=	$(DIST)/lib/$(LIB_PREFIX)xpcomglue_s.$(LIB_SUFFIX)
 endif
 
-LIBS		+= \
-		$(XPCOM_LIBS) \
-		$(NSPR_LIBS) \
-		$(NULL)
+LIBS += $(XPCOM_LIBS)
 
 # Needed to resolve __yylex (?)
 ifeq ($(OS_ARCH)$(OS_RELEASE),FreeBSD2)
@@ -132,47 +137,6 @@ endif
 ENABLE_CXX_EXCEPTIONS = 1
 
 XPCSHELL_TESTS = unit
-
-CPP_UNIT_TESTS = \
-  TestAutoPtr \
-  TestCOMPtr \
-  TestCOMPtrEq \
-  TestFactory \
-  TestHashtables \
-  TestID \
-  TestObserverService \
-  TestPipe \
-  TestRacingServiceManager \
-  TestServMgr \
-  TestTextFormatter \
-  TestThreadPoolListener \
-  TestTimers \
-  $(NULL)
-
-ifndef MOZ_ENABLE_LIBXUL
-CPP_UNIT_TESTS += \
-  TestArray \
-  TestAutoLock \
-  TestCRT \
-  TestEncoding \
-  TestExpirationTracker \
-  TestPipes \
-  TestProxies \
-  TestThreads \
-  TestThreadPool \
-  TestXPIDLString \
-  TestDeque \
-  TestStrings \
-  TestStorageStream \
-  TestTArray \
-  $(NULL)
-endif
-
-ifndef MOZILLA_INTERNAL_API
-CPP_UNIT_TESTS += \
-  TestStringAPI \
-  $(NULL)
-endif
 
 # Make sure we have symbols in case we need to debug these.
 MOZ_DEBUG_SYMBOLS = 1
@@ -186,6 +150,12 @@ LOCAL_INCLUDES	= \
 
 libs::
 	$(INSTALL) $(srcdir)/test.properties $(DIST)/bin/res
+
+# Copy TestHarness.h into its own module, for ease of setting up includes
+# correctly.
+export::
+	$(NSINSTALL) -D $(DIST)/include/testing
+	$(INSTALL) $(srcdir)/TestHarness.h $(DIST)/include/testing
 
 install::
 	$(SYSINSTALL) $(IFLAGS1) $(srcdir)/test.properties $(DESTDIR)$(mozappdir)/res
@@ -202,14 +172,6 @@ abs_srcdir = $(shell cd $(srcdir) && pwd)
 check::
 	@echo "Running TestVersionComparator tests"
 	@$(PERL) -w $(srcdir)/TestVersionComparatorRunner.pl "$(RUN_TEST_PROGRAM) $(FINAL_TARGET)/TestVersionComparator$(BIN_SUFFIX)"
-	@echo "Running nsTextFormatter tests"
-	@$(RUN_TEST_PROGRAM) $(FINAL_TARGET)/TestTextFormatter$(BIN_SUFFIX)
-	@$(EXIT_ON_ERROR) \
-	for f in $(CPP_UNIT_TESTS); do \
-	  echo Running $$f; \
-	  XPCOM_DEBUG_BREAK=stack-and-abort $(RUN_TEST_PROGRAM) $(DIST)/bin/$$f; \
-	  echo Finished running $$f; \
-	done
 	@echo "Running XPIDL tests"
 	$(XPIDL_COMPILE) -m header $(srcdir)/TestScriptable.idl
 	@if grep Notscriptable TestScriptable.h | grep -q NS_SCRIPTABLE ; then \

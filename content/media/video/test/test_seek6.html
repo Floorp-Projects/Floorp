@@ -1,0 +1,62 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+  <title>Media test: seek test 6</title>
+  <script type="text/javascript" src="/MochiKit/MochiKit.js"></script>
+  <script type="text/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
+</head>
+<body>
+<video id='v'
+       src='seek.ogg'
+       onloadedmetadata='return startTest();'
+       onended='return playbackEnded();'
+       onseeking='return seekStarted();'
+       onseeked='return seekEnded();'></video>
+<pre id="test">
+<script class="testbody" type="text/javascript">
+// Test for a seek, followed by a play before the seek completes, ensure we play at the end of the seek.
+var startPassed = false;
+var completed = false;
+var seekCount = 0;
+
+function startTest() {
+  if (completed)
+    return false;
+
+  var v = document.getElementById('v');
+  v.currentTime=2;
+  return false;
+}
+
+function seekStarted() {
+  if (completed)
+    return false;
+  startPassed = true;
+  var v = document.getElementById('v');
+  v.play();
+  return false;
+}
+
+function seekEnded() {
+  if (completed)
+    return false;
+  var v = document.getElementById('v');
+  ok(v.currentTime>=2 && v.currentTime<=2.2, "First seek");
+  return false;
+}
+
+function playbackEnded() {
+  if (completed)
+    return false;
+  ok(true, "Playback ended");
+  completed = true;
+  SimpleTest.finish();
+  return false;
+}
+
+SimpleTest.waitForExplicitFinish();
+</script>
+</pre>
+</body>
+</html>

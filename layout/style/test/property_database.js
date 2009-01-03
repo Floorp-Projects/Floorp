@@ -589,6 +589,14 @@ var gCSSProperties = {
 		other_values: [ "none", "text", "element", "elements", "all", "toggle", "tri-state", "-moz-all", "-moz-none" ],
 		invalid_values: []
 	},
+	"-moz-window-shadow": {
+		domProp: "MozWindowShadow",
+		inherited: false,
+		type: CSS_TYPE_LONGHAND,
+		initial_values: [ "default" ],
+		other_values: [ "none" ],
+		invalid_values: []
+	},
 	"azimuth": {
 		domProp: "azimuth",
 		inherited: true,

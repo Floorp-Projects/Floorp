@@ -32,7 +32,7 @@
         var dialog = doc.getElementById("commonDialog");
         var desc = doc.getElementById("info.body");
         var errmsg = desc.childNodes[0].data;
-        ok(errmsg.match(/\(place\)/), "Check for the correct message");
+        ok(errmsg.match(/\(place\)/) || errmsg.match(/^place /), "Check for the correct message");
 
         // Clear the dialog
         dialog.acceptDialog();

@@ -44,6 +44,11 @@ tree.sidebar-placesTree treechildren::-moz-tree-separator {
   margin: 0 10px;
 }
 
+#historyTree,
+#bookmarks-view {
+  border-top: 1px solid #bebebe;
+}
+
 #bookmarks-view treechildren::-moz-tree-row(selected,focus),
 #historyTree treechildren::-moz-tree-row(selected,focus) {  
   background-image: url("chrome://browser/skin/places/selected-focused-gradient.png");
@@ -145,7 +150,7 @@ treechildren::-moz-tree-image(query) {
 }
 
 treechildren::-moz-tree-image(title, query, tagContainer),
-treechildren::-moz-tree-image(container, OrganizerQuery_Tags) {
+treechildren::-moz-tree-image(query, OrganizerQuery_Tags) {
   list-style-image: url("chrome://mozapps/skin/places/tagContainerIcon.png");
 }
 

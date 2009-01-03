@@ -44,19 +44,11 @@ interface nsIDOMGeoPosition;
 interface nsIGeolocationPrompt;
 
 /**
- * nsIGeolocationService
- */
-[scriptable, uuid(68300FFD-802C-431B-BF92-0A657696B853)]
-interface nsIGeolocationService : nsISupports {
-  attribute nsIGeolocationPrompt prompt;
-};
-
-/**
  * Interface allows access to a geolocation and is passed to
  * the nsIGeolocationPrompt so that the application can approve
  * or deny the request.
  */
-[scriptable, function, uuid(D681C322-C075-4C6E-9765-C22711A4A60E)]
+[scriptable, function, uuid(F2AEFDE1-8E38-48B3-BBB8-BD6C4AE1AC8A)]
 interface nsIGeolocationRequest : nsISupports {
 
   readonly attribute nsIURI requestingURI;
@@ -64,7 +56,6 @@ interface nsIGeolocationRequest : nsISupports {
 
   void cancel();
   void allow();
-  void allowButFuzz();
 };
 
 /**
@@ -136,6 +127,15 @@ interface nsIGeolocationProvider : nsISupports {
 };
 
 %{C++
-#define NS_GEOLOCATION_SERVICE_CONTRACTID  "@mozilla.org/geolocation/service;1"
+/*  
+    This must be implemented by geolocation providers.  It
+    must support nsIGeolocationProvider.
+*/
 #define NS_GEOLOCATION_PROVIDER_CONTRACTID "@mozilla.org/geolocation/provider;1"
+
+/*  
+    This must be implemented by embedders.  It must support
+    nsIGeolocationPrompt.
+*/
+#define NS_GEOLOCATION_PROMPT_CONTRACTID   "@mozilla.org/geolocation/prompt;1"
 %}

@@ -407,9 +407,12 @@ public:
    * @param aPt the point, relative to the frame origin
    * @param aShouldIgnoreSuppression a boolean to control if the display
    * list builder should ignore paint suppression or not
+   * @param aIgnoreRootScrollFrame whether or not the display list builder
+   * should ignore the root scroll frame.
    */
   static nsIFrame* GetFrameForPoint(nsIFrame* aFrame, nsPoint aPt,
-                                    PRBool aShouldIgnoreSuppression = PR_FALSE);
+                                    PRBool aShouldIgnoreSuppression = PR_FALSE,
+                                    PRBool aIgnoreRootScrollFrame = PR_FALSE);
 
   /**
    * Given a point in the global coordinate space, returns that point expressed
@@ -622,6 +625,12 @@ public:
   static nsBlockFrame* FindNearestBlockAncestor(nsIFrame* aFrame);
 
   /**
+   * Find the nearest ancestor that's not for generated content. Will return
+   * aFrame if aFrame is not for generated content.
+   */
+  static nsIFrame* GetNonGeneratedAncestor(nsIFrame* aFrame);
+
+  /**
    * Cast aFrame to an nsBlockFrame* or return null if it's not
    * an nsBlockFrame.
    */
@@ -793,27 +802,76 @@ public:
   static nsIFrame* GetClosestLayer(nsIFrame* aFrame);
 
   /**
-   * Draw a single image.
+   * Draw an image.
+   * See https://wiki.mozilla.org/Gecko:Image_Snapping_and_Rendering
    *   @param aRenderingContext Where to draw the image, set up with an
    *                            appropriate scale and transform for drawing in
-   *                            app units (aDestRect).
+   *                            app units.
    *   @param aImage            The image.
-   *   @param aDestRect         Where to draw the image (app units).
-   *   @param aDirtyRect        Draw only within this region (rounded to the
-   *                            nearest pixel); the intersection of
-   *                            invalidation and clipping (this is the
-   *                            destination clip)
-   *   @param aSourceRect       If null, draw the entire image so it fits in
-   *                            aDestRect.  If non-null, the subregion of the
-   *                            image that should be drawn (in app units, such
-   *                            that converting it to CSS pixels yields image
-   *                            pixels).
+   *   @param aDest             Where one copy of the image should mapped to.
+   *   @param aFill             The area to be filled with copies of the
+   *                            image.
+   *   @param aAnchor           A point in aFill which we will ensure is
+   *                            pixel-aligned in the output.
+   *   @param aDirty            Pixels outside this area may be skipped.
    */
   static nsresult DrawImage(nsIRenderingContext* aRenderingContext,
-                            imgIContainer* aImage,
-                            const nsRect& aDestRect,
-                            const nsRect& aDirtyRect,
-                            const nsRect* aSourceRect = nsnull);
+                            imgIContainer*       aImage,
+                            const nsRect&        aDest,
+                            const nsRect&        aFill,
+                            const nsPoint&       aAnchor,
+                            const nsRect&        aDirty);
+
+  /**
+   * Draw a whole image without scaling or tiling.
+   *
+   *   @param aRenderingContext Where to draw the image, set up with an
+   *                            appropriate scale and transform for drawing in
+   *                            app units.
+   *   @param aImage            The image.
+   *   @param aDest             The top-left where the image should be drawn
+   *   @param aDirty            Pixels outside this area may be skipped.
+   *   @param aSourceArea       If non-null, this area is extracted from
+   *                            the image and drawn at aDest. It's
+   *                            in appunits. For best results it should
+   *                            be aligned with image pixels.
+   */
+  static nsresult DrawSingleUnscaledImage(nsIRenderingContext* aRenderingContext,
+                                          imgIContainer*       aImage,
+                                          const nsPoint&       aDest,
+                                          const nsRect&        aDirty,
+                                          const nsRect*        aSourceArea = nsnull);
+
+  /**
+   * Draw a whole image without tiling.
+   *
+   *   @param aRenderingContext Where to draw the image, set up with an
+   *                            appropriate scale and transform for drawing in
+   *                            app units.
+   *   @param aImage            The image.
+   *   @param aDest             The area that the image should fill
+   *   @param aDirty            Pixels outside this area may be skipped.
+   *   @param aSourceArea       If non-null, this area is extracted from
+   *                            the image and drawn in aDest. It's
+   *                            in appunits. For best results it should
+   *                            be aligned with image pixels.
+   */
+  static nsresult DrawSingleImage(nsIRenderingContext* aRenderingContext,
+                                  imgIContainer*       aImage,
+                                  const nsRect&        aDest,
+                                  const nsRect&        aDirty,
+                                  const nsRect*        aSourceArea = nsnull);
+
+  /**
+   * Given a source area of an image (in appunits) and a destination area
+   * that we want to map that source area too, computes the area that
+   * would be covered by the whole image. This is useful for passing to
+   * the aDest parameter of DrawImage, when we want to draw a subimage
+   * of an overall image.
+   */
+  static nsRect GetWholeImageDestination(const nsIntSize& aWholeImageSize,
+                                         const nsRect& aImageSourceArea,
+                                         const nsRect& aDestArea);
 
   /**
    * Set the font on aRC based on the style in aSC
@@ -867,6 +925,14 @@ public:
    */
   static nsIDeviceContext*
   GetDeviceContextForScreenInfo(nsIDocShell* aDocShell);
+
+  /**
+   * Some frames with 'position: fixed' (nsStylePosition::mDisplay ==
+   * NS_STYLE_POSITION_FIXED) are not really fixed positioned, since
+   * they're inside an element with -moz-transform.  This function says
+   * whether such an element is a real fixed-pos element.
+   */
+  static PRBool IsReallyFixedPos(nsIFrame* aFrame);
 
   /**
    * Indicates if the nsIFrame::GetUsedXXX assertions in nsFrame.cpp should

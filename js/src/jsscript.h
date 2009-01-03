@@ -53,9 +53,9 @@ JS_BEGIN_EXTERN_C
  * for-in loops.
  */
 typedef enum JSTryNoteKind {
-    JSTN_CATCH,
-    JSTN_FINALLY,
-    JSTN_ITER
+    JSTRY_CATCH,
+    JSTRY_FINALLY,
+    JSTRY_ITER
 } JSTryNoteKind;
 
 /*
@@ -156,18 +156,23 @@ StackDepth(JSScript *script)
     (JS_ASSERT((script)->trynotesOffset != 0),                                \
      (JSTryNoteArray *)((uint8 *)(script) + (script)->trynotesOffset))
 
-#define JS_GET_SCRIPT_ATOM(script, index, atom)                               \
+#define JS_GET_SCRIPT_ATOM(script_, index, atom)                              \
     JS_BEGIN_MACRO                                                            \
-        JSAtomMap *atoms_ = &(script)->atomMap;                               \
-        JS_ASSERT((uint32)(index) < atoms_->length);                          \
-        (atom) = atoms_->vector[(index)];                                     \
+        if (cx->fp && cx->fp->imacpc && cx->fp->script == script_) {          \
+            JS_ASSERT((size_t)(index) < js_common_atom_count);                \
+            (atom) = COMMON_ATOMS_START(&cx->runtime->atomState)[index];      \
+        } else {                                                              \
+            JSAtomMap *atoms_ = &(script_)->atomMap;                          \
+            JS_ASSERT((uint32)(index) < atoms_->length);                      \
+            (atom) = atoms_->vector[index];                                   \
+        }                                                                     \
     JS_END_MACRO
 
 #define JS_GET_SCRIPT_OBJECT(script, index, obj)                              \
     JS_BEGIN_MACRO                                                            \
         JSObjectArray *objects_ = JS_SCRIPT_OBJECTS(script);                  \
         JS_ASSERT((uint32)(index) < objects_->length);                        \
-        (obj) = objects_->vector[(index)];                                    \
+        (obj) = objects_->vector[index];                                      \
     JS_END_MACRO
 
 #define JS_GET_SCRIPT_FUNCTION(script, index, fun)                            \
@@ -185,7 +190,7 @@ StackDepth(JSScript *script)
     JS_BEGIN_MACRO                                                            \
         JSObjectArray *regexps_ = JS_SCRIPT_REGEXPS(script);                  \
         JS_ASSERT((uint32)(index) < regexps_->length);                        \
-        (obj) = regexps_->vector[(index)];                                    \
+        (obj) = regexps_->vector[index];                                      \
         JS_ASSERT(STOBJ_GET_CLASS(obj) == &js_RegExpClass);                   \
     JS_END_MACRO
 
@@ -291,7 +296,14 @@ js_TraceScript(JSTracer *trc, JSScript *script);
 extern jssrcnote *
 js_GetSrcNoteCached(JSContext *cx, JSScript *script, jsbytecode *pc);
 
-/* XXX need cx to lock function objects declared by prolog bytecodes. */
+/*
+ * NOTE: use js_FramePCToLineNumber(cx, fp) when you have an active fp, in
+ * preference to js_PCToLineNumber (cx, fp->script  fp->regs->pc), because
+ * fp->imacpc may be non-null, indicating an active imacro.
+ */
+extern uintN
+js_FramePCToLineNumber(JSContext *cx, JSStackFrame *fp);
+
 extern uintN
 js_PCToLineNumber(JSContext *cx, JSScript *script, jsbytecode *pc);
 

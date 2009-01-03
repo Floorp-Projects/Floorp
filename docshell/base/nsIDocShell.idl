@@ -84,8 +84,11 @@ interface nsIDocShell : nsISupports
    *                     object by calling createLoadInfo.  Once you have this
    *                     object you can set the needed properties on it and
    *                     then pass it to loadURI.
-   * @param aLoadFlags - Flags to modify load behaviour. Flags are defined
-   *                     in nsIWebNavigation.
+   * @param aLoadFlags - Flags to modify load behaviour. Flags are defined in
+   *                     nsIWebNavigation.  Note that using flags outside
+   *                     LOAD_FLAGS_MASK is only allowed if passing in a
+   *                     non-null loadInfo.  And even some of those might not
+   *                     be allowed.  Use at your own risk.
    */
   [noscript]void loadURI(in nsIURI uri,
                          in nsIDocShellLoadInfo loadInfo,

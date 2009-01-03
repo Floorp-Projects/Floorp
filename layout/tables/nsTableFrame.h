@@ -196,6 +196,9 @@ public:
 
   /** @see nsIFrame::Destroy */
   virtual void Destroy();
+  
+  /** @see nsIFrame::DidSetStyleContext */
+  virtual void DidSetStyleContext(nsStyleContext* aOldStyleContext);
 
   NS_IMETHOD AppendFrames(nsIAtom*        aListName,
                           nsIFrame*       aFrameList);
@@ -304,9 +307,11 @@ public:
    *  @param aGetInner - get only inner half of border width
    */
   nscoord GetContinuousLeftBCBorderWidth() const;
-
+  friend class nsDelayedCalcBCBorders;
+  
   void SetBCDamageArea(const nsRect& aValue);
-
+  PRBool BCRecalcNeeded(nsStyleContext* aOldStyleContext,
+                        nsStyleContext* aNewStyleContext);
   void PaintBCBorders(nsIRenderingContext& aRenderingContext,
                       const nsRect&        aDirtyRect);
 

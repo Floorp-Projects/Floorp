@@ -220,16 +220,16 @@ private:
   // Generates a random interval, in seconds, between 12 and 36 hours.
   PRInt32 GetRandomUploadInterval();
 
-  static PLDHashOperator PR_CALLBACK
+  static PLDHashOperator
   PruneDisabledCollectors(const nsAString &key,
                           nsCOMPtr<nsIMetricsCollector> &value,
                           void *userData);
 
-  static PLDHashOperator PR_CALLBACK
+  static PLDHashOperator
   DetachCollector(const nsAString &key,
                   nsIMetricsCollector *value, void *userData);
 
-  static PLDHashOperator PR_CALLBACK
+  static PLDHashOperator
   NotifyNewLog(const nsAString &key,
                nsIMetricsCollector *value, void *userData);
 

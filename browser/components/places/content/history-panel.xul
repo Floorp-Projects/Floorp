@@ -86,7 +86,7 @@
   <hbox align="center">
     <label value="&find.label;" accesskey="&find.accesskey;" 
            control="search-box"/>
-    <textbox id="search-box" flex="1" type="search"
+    <textbox id="search-box" flex="1" type="search" cocoa-size="small"
              oncommand="searchHistory(this.value);"/>
     <button id="viewButton" style="min-width:0px !important;" type="menu"
             label="&view.label;" accesskey="&view.accesskey;" selectedsort="day"

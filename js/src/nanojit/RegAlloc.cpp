@@ -49,7 +49,7 @@ namespace nanojit
 	{
 		free = 0;
 		used = 0;
-		memset(active, 0, NJ_MAX_REGISTERS * sizeof(LIns*));
+		memset(active, 0, (LastReg+1) * sizeof(LIns*));
 	}
 
 	bool RegAlloc::isFree(Register r) 
@@ -72,10 +72,17 @@ namespace nanojit
 
 	void RegAlloc::addActive(Register r, LIns* v)
 	{
-		//addActiveCount++;
+		//  Count++;
 		NanoAssert(v && r != UnknownReg && active[r] == NULL );
 		active[r] = v;
+        useActive(r);
 	}
+
+    void RegAlloc::useActive(Register r)
+    {
+        NanoAssert(r != UnknownReg && active[r] != NULL);
+        usepri[r] = priority++;
+    }
 
 	void RegAlloc::removeActive(Register r)
 	{
@@ -87,12 +94,6 @@ namespace nanojit
 		active[r] = NULL;
 	}
 
-	LIns* RegAlloc::getActive(Register r)
-	{
-		NanoAssert(r != UnknownReg);
-		return active[r];
-	}
-
 	void RegAlloc::retire(Register r)
 	{
 		NanoAssert(r != UnknownReg);
@@ -101,30 +102,26 @@ namespace nanojit
 		free |= rmask(r);
 	}
 
-	// scan table for instruction with longest span
-	LIns* Assembler::findVictim(RegAlloc &regs, RegisterMask allow, RegisterMask prefer)
+	// scan table for instruction with the lowest priority, meaning it is used
+    // furthest in the future.
+	LIns* Assembler::findVictim(RegAlloc &regs, RegisterMask allow)
 	{
-		NanoAssert(allow != 0 && (allow&prefer)==prefer);
-		LIns *i, *a=0, *p = 0;
-        int acost=10, pcost=10;
+		NanoAssert(allow != 0);
+		LIns *i, *a=0;
+        int allow_pri = 0x7fffffff;
 		for (Register r=FirstReg; r <= LastReg; r = nextreg(r))
 		{
             if ((allow & rmask(r)) && (i = regs.getActive(r)) != 0)
             {
-                int cost = getresv(i)->cost;
-                if (!a || cost < acost || cost == acost && nbr(i) < nbr(a)) {
+                int pri = canRemat(i) ? 0 : regs.getPriority(r);
+                if (!a || pri < allow_pri) {
                     a = i;
-                    acost = cost;
-                }
-                if (prefer & rmask(r)) {
-                    if (!p || cost < pcost || cost == pcost && nbr(i) < nbr(p)) {
-                        p = i;
-                        pcost = cost;
-                    }
+                    allow_pri = pri;
                 }
 			}
 		}
-        return acost < pcost ? a : p;
+        NanoAssert(a != 0);
+        return a;
 	}
 
 	#ifdef  NJ_VERBOSE
@@ -133,7 +130,7 @@ namespace nanojit
 		if (!frag || !frag->lirbuf)
 			return;
 		LirNameMap *names = frag->lirbuf->names;
-		for(int i=0; i<NJ_MAX_REGISTERS; i++)
+		for(int i=0; i<(LastReg+1); i++)
 		{
 			LIns* ins = regs.active[i];
 			Register r = (Register)i;

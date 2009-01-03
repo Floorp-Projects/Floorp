@@ -1,0 +1,3 @@
+browser.jar:
+  content/browser/certerror/aboutCertError.xhtml               (content/aboutCertError.xhtml)
+  content/browser/certerror/aboutCertError.css                 (content/aboutCertError.css)

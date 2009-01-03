@@ -138,6 +138,9 @@ public:
         { return (mParserState != PARSE_INIT && mParserState != PARSE_ERROR); }
     PRBool NeedsUpdate() { return mParserState != PARSE_INIT && mNeedsUpdate; }
 
+    void GetManifestHash(nsCString &aManifestHash)
+        { aManifestHash = mManifestHashValue; }
+
 private:
     static NS_METHOD ReadManifest(nsIInputStream *aInputStream,
                                   void *aClosure,
@@ -196,6 +199,7 @@ private:
     // manifest hash data
     nsCOMPtr<nsICryptoHash> mManifestHash;
     PRBool mManifestHashInitialized;
+    nsCString mManifestHashValue;
     nsCString mOldManifestHashValue;
 };
 
@@ -216,6 +220,9 @@ public:
     nsresult Cancel();
 
     void LoadCompleted();
+    void ManifestCheckCompleted(nsresult aStatus,
+                                const nsCString &aManifestHash);
+    void AddDocument(nsIDOMDocument *aDocument);
 
 private:
     nsresult HandleManifest(PRBool *aDoUpdate);
@@ -233,9 +240,12 @@ private:
     nsresult NotifyError();
     nsresult NotifyChecking();
     nsresult NotifyNoUpdate();
+    nsresult NotifyObsolete();
     nsresult NotifyDownloading();
     nsresult NotifyStarted(nsOfflineCacheUpdateItem *aItem);
     nsresult NotifyCompleted(nsOfflineCacheUpdateItem *aItem);
+    nsresult AssociateDocument(nsIDOMDocument *aDocument);
+    nsresult ScheduleImplicit();
     nsresult Finish();
 
     enum {
@@ -247,9 +257,11 @@ private:
         STATE_FINISHED
     } mState;
 
-    PRBool mAddedItems;
-    PRBool mPartialUpdate;
-    PRBool mSucceeded;
+    PRPackedBool mAddedItems;
+    PRPackedBool mPartialUpdate;
+    PRPackedBool mSucceeded;
+    PRPackedBool mObsolete;
+
     nsCString mUpdateDomain;
     nsCOMPtr<nsIURI> mManifestURI;
 
@@ -270,6 +282,13 @@ private:
     /* Clients watching this update for changes */
     nsCOMArray<nsIWeakReference> mWeakObservers;
     nsCOMArray<nsIOfflineCacheUpdateObserver> mObservers;
+
+    /* Documents that requested this update */
+    nsCOMArray<nsIDOMDocument> mDocuments;
+
+    /* Reschedule count.  When an update is rescheduled due to
+     * mismatched manifests, the reschedule count will be increased. */
+    PRUint32 mRescheduleCount;
 };
 
 class nsOfflineCacheUpdateService : public nsIOfflineCacheUpdateService
@@ -289,6 +308,11 @@ public:
     nsresult Init();
 
     nsresult Schedule(nsOfflineCacheUpdate *aUpdate);
+    nsresult Schedule(nsIURI *aManifestURI,
+                      nsIURI *aDocumentURI,
+                      nsIDOMDocument *aDocument,
+                      nsIOfflineCacheUpdate **aUpdate);
+
     nsresult UpdateFinished(nsOfflineCacheUpdate *aUpdate);
 
     /**
@@ -299,7 +323,7 @@ public:
 
     /** Addrefs and returns the singleton nsOfflineCacheUpdateService. */
     static nsOfflineCacheUpdateService *GetInstance();
-    
+
 private:
     nsresult ProcessNextUpdate();
 

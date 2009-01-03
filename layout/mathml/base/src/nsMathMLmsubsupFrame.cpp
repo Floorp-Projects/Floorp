@@ -159,10 +159,7 @@ nsMathMLmsubsupFrame::PlaceSubSupScript(nsPresContext*      aPresContext,
   if (!baseFrame || !subScriptFrame || !supScriptFrame ||
       supScriptFrame->GetNextSibling()) {
     // report an error, encourage people to get their markups in order
-    NS_WARNING("invalid markup");
-    return static_cast<nsMathMLContainerFrame*>
-                      (aFrame)->ReflowError(aRenderingContext,
-                                               aDesiredSize);
+    return aFrame->ReflowError(aRenderingContext, aDesiredSize);
   }
   GetReflowAndBoundingMetricsFor(baseFrame, baseSize, bmBase);
   GetReflowAndBoundingMetricsFor(subScriptFrame, subScriptSize, bmSubScript);
@@ -195,7 +192,8 @@ nsMathMLmsubsupFrame::PlaceSubSupScript(nsPresContext*      aPresContext,
   // subScriptShift1 = subscriptshift attribute * x-height
   nscoord subScriptShift1, subScriptShift2;
 
-  aRenderingContext.SetFont(baseFrame->GetStyleFont()->mFont, nsnull);
+  aRenderingContext.SetFont(baseFrame->GetStyleFont()->mFont, nsnull,
+                            aPresContext->GetUserFontSet());
   nsCOMPtr<nsIFontMetrics> fm;
   aRenderingContext.GetFontMetrics(*getter_AddRefs(fm));
 

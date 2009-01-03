@@ -1,5 +1,9 @@
 classic.jar:
 % skin browser classic/1.0 %skin/classic/browser/
+% override chrome://global/skin/icons/warning-16.png moz-icon://stock/gtk-dialog-warning?size=menu
+* skin/classic/browser/aboutPrivateBrowsing.css             (aboutPrivateBrowsing.css)
+* skin/classic/browser/aboutSessionRestore.css        (aboutSessionRestore.css)
+  skin/classic/browser/aboutCertError.css             (aboutCertError.css)
 * skin/classic/browser/browser.css                    (browser.css)
   skin/classic/browser/browser.xml
 * skin/classic/browser/engineManager.css              (engineManager.css)
@@ -12,9 +16,13 @@ classic.jar:
 * skin/classic/browser/pageInfo.css
   skin/classic/browser/pageInfo.png
   skin/classic/browser/page-livemarks.png
+  skin/classic/browser/Privacy-16.png
+  skin/classic/browser/Privacy-48.png
   skin/classic/browser/searchbar.css                  (searchbar.css)
   skin/classic/browser/Search-glass.png
   skin/classic/browser/Search-glass-rtl.png
+  skin/classic/browser/section_collapsed.png
+  skin/classic/browser/section_expanded.png
   skin/classic/browser/Secure.png
   skin/classic/browser/Security-broken.png
   skin/classic/browser/setDesktopBackground.css
@@ -31,7 +39,6 @@ classic.jar:
   skin/classic/browser/feeds/audioFeedIcon.png        (feeds/audioFeedIcon.png)
   skin/classic/browser/feeds/audioFeedIcon16.png      (feeds/audioFeedIcon16.png)
   skin/classic/browser/feeds/subscribe.css            (feeds/subscribe.css)
-* skin/classic/browser/places/bookmarkProperties.css  (places/bookmarkProperties.css)
   skin/classic/browser/places/bookmarksMenu.png       (places/bookmarksMenu.png)
   skin/classic/browser/places/bookmarksToolbar.png    (places/bookmarksToolbar.png)
   skin/classic/browser/places/calendar.png            (places/calendar.png)
@@ -56,6 +63,7 @@ classic.jar:
   skin/classic/browser/preferences/Options.png        (preferences/Options.png)
 * skin/classic/browser/preferences/preferences.css    (preferences/preferences.css)
   skin/classic/browser/preferences/applications.css   (preferences/applications.css)
+  skin/classic/browser/tabbrowser/alltabs.png          (tabbrowser/alltabs.png)
   skin/classic/browser/tabbrowser/newtab.png           (tabbrowser/newtab.png)
   skin/classic/browser/tabbrowser/tabDragIndicator.png (tabbrowser/tabDragIndicator.png)
   icon.png

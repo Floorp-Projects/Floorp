@@ -24,6 +24,13 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=
 var numCallbacks = 5;
 var callbackCounter = new Array(numCallbacks);
 
+function failureCallback(error)
+{
+  ok(error.code == error.POSITION_UNAVAILABLE, "Failure was something other than position unavailable");
+  removePrompt();
+  SimpleTest.finish();
+}
+
 // define success callbacks
 for(var i = 0; i < numCallbacks; i++) {
   eval("function successCallback" + i + "(position) {" +
@@ -50,7 +57,7 @@ promptOption = DECLINE;
 
 // one-shot position requests
 for(var i = 0; i < numCallbacks; i++) {
-  eval("navigator.geolocation.getCurrentPosition(successCallback" + i + ", null, null);");
+  eval("navigator.geolocation.getCurrentPosition(successCallback" + i + ", failureCallback, null);");
 }
 
 // wait for position change

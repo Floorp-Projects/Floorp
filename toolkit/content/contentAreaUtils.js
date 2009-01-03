@@ -23,6 +23,7 @@
 #   Ben Goodger <ben@netscape.com> (Save File)
 #   Fredrik Holmqvist <thesuckiestemail@yahoo.se>
 #   Asaf Romano <mozilla.mano@sent.com>
+#   Ehsan Akhgari <ehsan.akhgari@gmail.com>
 #
 # Alternatively, the contents of this file may be used under the terms of
 # either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -226,22 +227,31 @@ const kSaveAsType_Text     = 2; // Save document, converting to plain text.
  *  - Creates a 'Persist' object (which will perform the saving in the
  *    background) and then starts it.
  *
- * @param aURL The String representation of the URL of the document being saved
- * @param aDocument The document to be saved
- * @param aDefaultFileName The caller-provided suggested filename if we don't
+ * @param aURL
+ *        The String representation of the URL of the document being saved
+ * @param aDocument
+ *        The document to be saved
+ * @param aDefaultFileName
+ *        The caller-provided suggested filename if we don't 
  *        find a better one
- * @param aContentDisposition The caller-provided content-disposition header
- *         to use.
- * @param aContentType The caller-provided content-type to use
- * @param aShouldBypassCache If true, the document will always be refetched
- *        from the server
- * @param aFilePickerTitleKey Alternate title for the file picker
- * @param aChosenData If non-null this contains an instance of object AutoChosen
- *        (see below) which holds pre-determined data so that the user does not
- *        need to be prompted for a target filename.
- * @param aReferrer the referrer URI object (not URL string) to use, or null
-          if no referrer should be sent.
- * @param aSkipPrompt If true, the file will be saved to the default download folder.
+ * @param aContentDisposition
+ *        The caller-provided content-disposition header to use.
+ * @param aContentType
+ *        The caller-provided content-type to use
+ * @param aShouldBypassCache
+ *        If true, the document will always be refetched from the server
+ * @param aFilePickerTitleKey
+ *        Alternate title for the file picker
+ * @param aChosenData
+ *        If non-null this contains an instance of object AutoChosen (see below)
+ *        which holds pre-determined data so that the user does not need to be
+ *        prompted for a target filename.
+ * @param aReferrer
+ *        the referrer URI object (not URL string) to use, or null
+ *        if no referrer should be sent.
+ * @param aSkipPrompt [optional]
+ *        If set to true, we will attempt to save the file to the
+ *        default downloads folder without prompting.
  */
 function internalSave(aURL, aDocument, aDefaultFileName, aContentDisposition,
                       aContentType, aShouldBypassCache, aFilePickerTitleKey,
@@ -447,7 +457,7 @@ function initFileInfo(aFI, aURL, aURLCharset, aDocument,
   }
 }
 
-function getTargetFile(aFpP, aSkipPrompt)
+function getTargetFile(aFpP, /* optional */ aSkipPrompt)
 {
   const prefSvcContractID = "@mozilla.org/preferences-service;1";
   const prefSvcIID = Components.interfaces.nsIPrefService;                              
@@ -510,9 +520,21 @@ function getTargetFile(aFpP, aSkipPrompt)
 
     if (fp.show() == Components.interfaces.nsIFilePicker.returnCancel || !fp.file)
       return false;
-    
-    var directory = fp.file.parent.QueryInterface(nsILocalFile);
-    prefs.setComplexValue("lastDir", nsILocalFile, directory);
+
+    // Do not remember the last save directory inside the private browsing mode
+    var persistLastDir = true;
+    try {
+      var pbs = Components.classes["@mozilla.org/privatebrowsing;1"]
+                          .getService(Components.interfaces.nsIPrivateBrowsingService);
+      if (pbs.privateBrowsingEnabled)
+        persistLastDir = false;
+    }
+    catch (e) {
+    }
+    if (persistLastDir) {
+      var directory = fp.file.parent.QueryInterface(nsILocalFile);
+      prefs.setComplexValue("lastDir", nsILocalFile, directory);
+    }
 
     fp.file.leafName = validateFileName(fp.file.leafName);
     aFpP.saveAsType = fp.filterIndex;

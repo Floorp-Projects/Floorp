@@ -49,8 +49,6 @@ IS_COMPONENT	= 1
 MODULE_NAME	= nsComposerModule
 LIBXUL_LIBRARY	= 1
 
-PACKAGE_FILE = composer.pkg
-
 REQUIRES	= xpcom \
 		  string \
 		  unicharutil \

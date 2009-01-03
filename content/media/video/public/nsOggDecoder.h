@@ -36,66 +36,219 @@
  *
  * ***** END LICENSE BLOCK ***** */
 /*
-Each video element has two threads. They are:
-  Decode Thread
-    This thread owns the resources for downloading
-    and reading the video file. It goes through the file, decoding
-    the theora and vorbis data. It uses Oggplay to do the decoding.
+Each video element has one thread. This thread, called the Decode thread,
+owns the resources for downloading and reading the video file. It goes through the
+file, decoding the theora and vorbis data. It uses Oggplay to do the decoding.
+It indirectly uses an nsMediaStream to do the file reading and seeking via Oggplay.
+All file reads and seeks must occur on this thread only. It handles the sending
+of the audio data to the sound device and the presentation of the video data
+at the correct frame rate.
     
-  Presentation Thread This thread goes through the data decoded by the
-    decode thread, generates the RGB buffer. If there is audio data it
-    queues it for playing. This thread owns the audio device - all
-    audio operations occur on this thread. The video data is actually
-    displayed by a timer that goes off at the right framerate
-    interval. This timer sends an Invalidate event to the frame.
+When the decode thread is created an event is dispatched to it. The event
+runs for the lifetime of the playback of the resource. The decode thread
+synchronises with the main thread via a single monitor held by the 
+nsOggDecoder object.
 
-Operations are performed in the threads by sending Events via the 
-Dispatch method on the thread.
+The event contains a Run method which consists of an infinite loop
+that checks the state that the state machine is in and processes
+operations on that state.
 
-The general sequence of events with this objects is:
+The nsOggDecodeStateMachine class is the event that gets dispatched to
+the decode thread. It has the following states:
 
-1) The video element calls Load on nsVideoDecoder. This creates the 
-   threads and starts the channel for downloading the file. It sends
-   an event to the decode thread to load the initial Ogg metadata. 
-   These are the headers that give the video size, framerate, etc.
-   It returns immediately to the calling video element.
+DECODING_METADATA
+  The Ogg headers are being loaded, and things like framerate, etc are
+  being decoded.  
+DECODING_FIRSTFRAME
+  The first frame of audio/video data is being decoded.
+DECODING
+  Video/Audio frames are being decoded.
+SEEKING
+  A seek operation is in progress.
+BUFFERING
+  Decoding is paused while data is buffered for smooth playback.
+COMPLETED
+  The resource has completed decoding. 
+SHUTDOWN
+  The decoder object is about to be destroyed.
+
+The following result in state transitions.
+
+Shutdown()
+  Clean up any resources the nsOggDecodeStateMachine owns.
+Decode()
+  Start decoding video frames.
+Buffer
+  This is not user initiated. It occurs when the
+  available data in the stream drops below a certain point.
+Complete
+  This is not user initiated. It occurs when the
+  stream is completely decoded.
+Seek(float)
+  Seek to the time position given in the resource.
+
+A state transition diagram:
+
+DECODING_METADATA
+|        | Shutdown()
+  v      -->-------------------->--------------------------|
+  |                                                        |
+DECODING_FIRSTFRAME                                        v
+  |        | Shutdown()                                    |
+  v        >-------------------->--------------------------|
+  |  |------------->----->------------------------|        v
+DECODING             |          |  |              |        |
+  ^                  v Seek(t)  |  |              |        |
+  |         Decode() |          v  |              |        |
+  ^-----------<----SEEKING      |  v Complete     v        v
+  |                  |          |  |              |        |
+  |                  |          |  COMPLETED    SHUTDOWN-<-|
+  ^                  ^          |  |Shutdown()    |
+  |                  |          |  >-------->-----^
+  |         Decode() |Seek(t)   |Buffer()         |
+  -----------<--------<-------BUFFERING           |
+                                |                 ^
+                                v Shutdown()      |
+                                |                 |
+                                ------------>-----|
+
+The Main thread controls the decode state machine by setting the value
+of a mPlayState variable and notifying on the monitor
+based on the high level player actions required (Seek, Pause, Play, etc).
+
+The player states are the states requested by the client through the
+DOM API.  They represent the desired state of the player, while the
+decoder's state represents the actual state of the decoder.
+
+The high level state of the player is maintained via a PlayState value. 
+It can have the following states:
+
+START
+  The decoder has been initialized but has no resource loaded.
+PAUSED
+  A request via the API has been received to pause playback.
+LOADING
+  A request via the API has been received to load a resource.
+PLAYING
+  A request via the API has been received to start playback.
+SEEKING
+  A request via the API has been received to start seeking.
+COMPLETED
+  Playback has completed.
+SHUTDOWN
+  The decoder is about to be destroyed.
+
+State transition occurs when the Media Element calls the Play, Seek,
+etc methods on the nsOggDecoder object. When the transition occurs
+nsOggDecoder then calls the methods on the decoder state machine
+object to cause it to behave appropriate to the play state.
+
+The following represents the states that the player can be in, and the
+valid states the decode thread can be in at that time:
+
+player LOADING   decoder DECODING_METADATA, DECODING_FIRSTFRAME
+player PLAYING   decoder DECODING, BUFFERING, SEEKING, COMPLETED
+player PAUSED    decoder DECODING, BUFFERING, SEEKING, COMPLETED
+player SEEKING   decoder SEEKING
+player COMPLETED decoder SHUTDOWN
+player SHUTDOWN  decoder SHUTDOWN
+
+The general sequence of events with these objects is:
+
+1) The video element calls Load on nsMediaDecoder. This creates the
+   decode thread and starts the channel for downloading the file. It
+   instantiates and starts the Decode state machine. The high level
+   LOADING state is entered, which results in the decode state machine
+   to start decoding metadata. These are the headers that give the
+   video size, framerate, etc.  It returns immediately to the calling
+   video element.
 
 2) When the Ogg metadata has been loaded by the decode thread it will
-   call a method on the video element object to inform it that this step
-   is done, so it can do the required things by the video specification
-   at this stage. 
-
-   It then queues an event to the decode thread to decode the first
-   frame of Ogg data.
+   call a method on the video element object to inform it that this
+   step is done, so it can do the things required by the video
+   specification at this stage. The decoder then continues to decode
+   the first frame of data.
 
 3) When the first frame of Ogg data has been successfully decoded it
    calls a method on the video element object to inform it that this
    step has been done, once again so it can do the required things by
    the video specification at this stage.
 
-   It then queues an event to the decode thread to enter the standard
-   decoding loop. This loop continuously reads data from the channel
-   and decodes it. It does this by reading the data, decoding it, and 
-   if there is more data to decode, queues itself back to the thread.
+   This results in the high level state changing to PLAYING or PAUSED
+   depending on any user action that may have occurred.
 
-   The final step of the 'first frame event' is to notify a condition
-   variable that we have decoded the first frame. The presentation thread
-   uses this notification to know when to start displaying video.
+   The decode thread, while in the DECODING state, plays audio and
+   video, if the correct frame time comes around and the decoder
+   play state is PLAYING.
+   
+a/v synchronisation is done by a combination of liboggplay and the
+Decoder state machine. liboggplay ensures that a decoded frame of data
+has both the audio samples and the YUV data for that period of time.
 
-4) At some point the video element calls Play() on the decoder object.
-   This queues an event to the presentation thread which goes through
-   the decoded data, displaying it if it is video, or playing it if it
-   is audio. 
+When a frame is decoded by the decode state machine it converts the
+YUV encoded video to RGB and copies the sound data to an internal
+FrameData object. This is stored in a queue of available decoded frames.
+Included in the FrameData object is the time that that frame should
+be displayed.
 
-   Before starting this event will wait on the condition variable 
-   indicating if the first frame has decoded. 
+The display state machine keeps track of the time since the last frame it
+played. After decoding a frame it checks if it is time to display the next
+item in the decoded frame queue. If so, it pops the item off the queue
+and displays it.
 
-Pausing is handled by stopping the presentation thread. Resuming is 
-handled by restarting the presentation thread. The decode thread never
-gets too far ahead as it is throttled by the Oggplay library.
+Ideally a/v sync would take into account the actual audio clock of the
+audio hardware for the sync rather than using the system clock.
+Unfortunately getting valid time data out of the audio hardware has proven
+to be unreliable across platforms (and even distributions in Linux) depending
+on audio hardware, audio backend etc. The current approach works fine in practice
+and is a compromise until this issue can be sorted. The plan is to eventually
+move to synchronising using the audio hardware.
+
+To prevent audio skipping and framerate dropping it is very important to
+make sure no blocking occurs during the decoding process and minimise
+expensive time operations at the time a frame is to be displayed. This is
+managed by immediately converting video data to RGB on decode (an expensive
+operation to do at frame display time) and checking if the sound device will
+not block before writing sound data to it.
+
+Shutdown needs to ensure that the event posted to the decode
+thread is completed. The decode thread can potentially block internally
+inside liboggplay when reading, seeking, or its internal buffers containing
+decoded data are full. When blocked in this manner a call from the main thread
+to Shutdown() will hang.  
+
+This is fixed with a protocol to ensure that the decode event cleanly
+completes. The nsMediaStream that the nsChannelReader uses has a
+Cancel() method. Calling this before Shutdown() will close any
+internal streams or listeners resulting in blocked i/o completing with
+an error, and all future i/o on the stream having an error.
+
+This causes the decode thread to exit and Shutdown() can occur.
+
+If the decode thread is seeking then the same Cancel() operation
+causes an error to be returned from the seek call to liboggplay which
+exits out of the seek operation, and stops the seek state running on the
+decode thread.
+
+If the decode thread is blocked due to internal decode buffers being
+full, it is unblocked during the shutdown process by calling
+oggplay_prepare_for_close.
+
+In practice the OggPlay internal buffer should never fill as we retrieve and
+process the frame immediately on decoding.
+
+The Shutdown method on nsOggDecoder can spin the event loop as it waits
+for threads to complete. Spinning the event loop is a bad thing to happen
+during certain times like destruction of the media element. To work around
+this the Shutdown method does nothing by queue an event to the main thread
+to perform the actual Shutdown. This way the shutdown can occur at a safe
+time. 
+
+This means the owning object of a nsOggDecoder object *MUST* call Shutdown
+when destroying the nsOggDecoder object.
 */
-#if !defined(nsOggDecoder_h___)
-#define nsOggDecoder_h___
+#if !defined(nsOggDecoder_h_)
+#define nsOggDecoder_h_
 
 #include "nsISupports.h"
 #include "nsCOMPtr.h"
@@ -106,24 +259,19 @@ gets too far ahead as it is throttled by the Oggplay library.
 #include "nsIFrame.h"
 #include "nsAutoPtr.h"
 #include "nsSize.h"
-#include "prlock.h"
-#include "prcvar.h"
 #include "prlog.h"
+#include "prmon.h"
 #include "gfxContext.h"
 #include "gfxRect.h"
 #include "oggplay/oggplay.h"
-#include "nsVideoDecoder.h"
+#include "nsMediaDecoder.h"
 
 class nsAudioStream;
-class nsVideoDecodeEvent;
-class nsVideoPresentationEvent;
-class nsChannelToPipeListener;
+class nsOggDecodeStateMachine;
 
-class nsOggDecoder : public nsVideoDecoder
+class nsOggDecoder : public nsMediaDecoder
 {
-  friend class nsVideoDecodeEvent;
-  friend class nsVideoPresentationEvent;
-  friend class nsChannelToPipeListener;
+  friend class nsOggDecodeStateMachine;
 
   // ISupports
   NS_DECL_ISUPPORTS
@@ -132,120 +280,102 @@ class nsOggDecoder : public nsVideoDecoder
   NS_DECL_NSIOBSERVER
 
  public:
+  // Enumeration for the valid play states (see mPlayState)
+  enum PlayState {
+    PLAY_STATE_START,
+    PLAY_STATE_LOADING,
+    PLAY_STATE_PAUSED,
+    PLAY_STATE_PLAYING,
+    PLAY_STATE_SEEKING,
+    PLAY_STATE_ENDED,
+    PLAY_STATE_SHUTDOWN
+  };
+
   nsOggDecoder();
-  PRBool Init();
-  void Shutdown();
   ~nsOggDecoder();
+  PRBool Init();
+
+  // This method must be called by the owning object before that
+  // object disposes of this decoder object.
+  virtual void Shutdown();
   
-  // Returns the current video frame width and height.
-  // If there is no video frame, returns the given default size.
-  nsIntSize GetVideoSize(nsIntSize defaultSize);
-  double GetVideoFramerate();
+  virtual float GetCurrentTime();
 
-  float GetCurrentTime();
-
-  // Start downloading the video at the given URI. Decode
-  // the downloaded data up to the point of the first frame
-  // of data. 
-  nsresult Load(nsIURI* aURI);
+  virtual nsresult Load(nsIURI* aURI,
+                        nsIChannel* aChannel,
+                        nsIStreamListener **aListener);
 
   // Start playback of a video. 'Load' must have previously been
   // called.
-  nsresult Play();
+  virtual nsresult Play();
 
   // Stop playback of a video, and stop download of video stream.
   virtual void Stop();
 
   // Seek to the time position in (seconds) from the start of the video.
-  nsresult Seek(float time);
+  virtual nsresult Seek(float time);
 
-  nsresult PlaybackRateChanged();
+  virtual nsresult PlaybackRateChanged();
 
-  void Pause();
-  float GetVolume();
-  void SetVolume(float volume);
-  float GetDuration();
+  virtual void Pause();
+  virtual float GetVolume();
+  virtual void SetVolume(float volume);
+  virtual float GetDuration();
 
-  void GetCurrentURI(nsIURI** aURI);
-  nsIPrincipal* GetCurrentPrincipal();
+  virtual void GetCurrentURI(nsIURI** aURI);
+  virtual nsIPrincipal* GetCurrentPrincipal();
 
-  virtual void UpdateBytesDownloaded(PRUint32 aBytes);
+  virtual void UpdateBytesDownloaded(PRUint64 aBytes);
+
+  // Called when the video file has completed downloading.
+  // Call on the main thread only.
+  void ResourceLoaded();
+
+  // Called if the media file encounters a network error.
+  // Call on the main thread only.
+  virtual void NetworkError();
+
+  // Call from any thread safely. Return PR_TRUE if we are currently
+  // seeking in the media resource.
+  virtual PRBool IsSeeking() const;
+
+  // Get the size of the media file in bytes. Called on the main thread only.
+  virtual void SetTotalBytes(PRInt64 aBytes);
+
+  // Set a flag indicating whether seeking is supported
+  virtual void SetSeekable(PRBool aSeekable);
+
+  // Return PR_TRUE if seeking is supported.
+  virtual PRBool GetSeekable();
+
+  // Returns the channel reader.
+  nsChannelReader* GetReader() { return mReader; }
 
 protected:
-  /******
-   * The following methods must only be called on the presentation
-   * thread.
-   ******/
 
-  // Find and render the first frame of video data. Call on 
-  // presentation thread only.
-  void DisplayFirstFrame();
+  // Returns the monitor for other threads to synchronise access to
+  // state.
+  PRMonitor* GetMonitor() 
+  { 
+    return mMonitor; 
+  }
 
-  // Process one frame of video/audio data.
-  // Call on presentation thread only.
-  PRBool StepDisplay();
-
-  // Process audio or video from one track of the Ogg stream.
-  // Call on presentation thread only.
-  void ProcessTrack(int aTrackNumber, OggPlayCallbackInfo* aTrackInfo);
-
-  // Return the time in seconds that the video display is
-  // synchronised to. This can be based on the current time of
-  // the audio buffer if available, or the system clock. Call
-  // on presentation thread only.
-  double GetSyncTime();
-
-  // Return true if the video is currently paused. Call on the
-  // presentation thread only.
-  PRBool IsPaused();
-
-  // Process the video/audio data. Call on presentation thread only. 
-  void HandleVideoData(int track_num, OggPlayVideoData* video_data);
-  void HandleAudioData(OggPlayAudioData* audio_data, int size);
-
-  // Pause the audio. Call on presentation thread only.
-  void DoPause();
-
-  // Initializes and opens the audio stream. Call from the
-  // presentation thread only.
-  void OpenAudioStream();
-
-  // Closes and releases resources used by the audio stream.
-  // Call from the presentation thread only.
-  void CloseAudioStream();
-
-  // Initializes the resources owned by the presentation thread,.
-  // Call from the presentation thread only.
-  void StartPresentationThread();
-
-  /******
-   * The following methods must only be called on the decode
-   * thread.
-   ******/
-
-  // Loads the header information from the ogg resource and
-  // stores the information about framerate, etc in member
-  // variables. Must be called from the decoder thread only.
-  void LoadOggHeaders();
-
-  // Loads the First frame of the video data, making it available
-  // in the RGB buffer. Must be called from the decoder thread only.
-  void LoadFirstFrame();
-
-  // Decode some data from the media file. This is placed in a 
-  // buffer that is used by the presentation thread. Must
-  // be called from the decoder thread only.
-  PRBool StepDecoding();
-
-  // Ensure that there is enough data buffered from the video 
-  // that we can have a reasonable playback experience. Must
-  // be called from the decoder thread only.
-  void BufferData();
+  // Return the current state. Can be called on any thread. If called from
+  // a non-main thread, the decoder monitor must be held.
+  PlayState GetState()
+  {
+    return mPlayState;
+  }
 
   /****** 
    * The following methods must only be called on the main
    * thread.
    ******/
+
+  // Change to a new play state. This updates the mState variable and
+  // notifies any thread blocking on this object's monitor of the
+  // change. Call on the main thread only.
+  void ChangeState(PlayState aState);
 
   // Called when the metadata from the Ogg file has been read.
   // Call on the main thread only.
@@ -255,21 +385,17 @@ protected:
   // Call on the main thread only.
   void FirstFrameLoaded();
 
-  // Called when the video file has completed downloading.
-  // Call on the main thread only.
-  void ResourceLoaded();
-
   // Called when the video has completed playing.
   // Call on the main thread only.
-  void PlaybackCompleted();
+  void PlaybackEnded();
 
   // Return the current number of bytes loaded from the video file.
   // This is used for progress events.
-  virtual PRUint32 GetBytesLoaded();
+  virtual PRUint64 GetBytesLoaded();
 
   // Return the size of the video file in bytes.
   // This is used for progress events.
-  virtual PRUint32 GetTotalBytes();
+  virtual PRInt64 GetTotalBytes();
 
   // Buffering of data has stopped. Inform the element on the main
   // thread.
@@ -279,125 +405,109 @@ protected:
   // thread.
   void BufferingStarted();
 
+  // Seeking has stopped. Inform the element on the main
+  // thread.
+  void SeekingStopped();
+
+  // Seeking has started. Inform the element on the main
+  // thread.
+  void SeekingStarted();
+
+  // Called when the backend has changed the current playback
+  // position. It dispatches a timeupdate event and invalidates the frame.
+  // This must be called on the main thread only.
+  void PlaybackPositionChanged();
+
 private:
-  // Starts the threads and timers that handle displaying the playing
-  // video and invalidating the frame. Called on the main thread only.
-  void StartPlaybackThreads();
-
-  /******
-   * The following member variables can be accessed from the
-   * decoding thread only.
-   ******/
-
-  // Total number of bytes downloaded so far. 
-  PRUint32 mBytesDownloaded;
+  // Register/Unregister with Shutdown Observer. 
+  // Call on main thread only.
+  void RegisterShutdownObserver();
+  void UnregisterShutdownObserver();
 
   /******
    * The following members should be accessed on the main thread only
    ******/
-  nsCOMPtr<nsIChannel> mChannel;
-  nsCOMPtr<nsChannelToPipeListener> mListener;
+  // Total number of bytes downloaded so far. 
+  PRUint64 mBytesDownloaded;
 
   // The URI of the current resource
   nsCOMPtr<nsIURI> mURI;
 
-  // The audio stream resource. It should only be accessed from
-  // the presentation thread.
-  nsAutoPtr<nsAudioStream> mAudioStream;
-
-  // The time that the next video frame should be displayed in
-  // seconds. This is referenced from 0.0 which is the initial start
-  // of the video stream.
-  double mVideoNextFrameTime;
-
-  // A load of the media resource is currently in progress. It is 
-  // complete when the media metadata is loaded.
-  PRPackedBool mLoadInProgress;
-
-  // A boolean that indicates that once the load has completed loading
-  // the metadata then it should start playing.
-  PRPackedBool mPlayAfterLoad;
-
-  // True if we are registered with the observer service for shutdown.
-  PRPackedBool mNotifyOnShutdown;
-
-  /******
-   * The following member variables can be accessed from any thread.
-   ******/
-  
-  // Threads to handle decoding of Ogg data. Methods on these are
-  // called from the main thread only, but they can be read from other
-  // threads safely to see if they have been created/set.
+  // Thread to handle decoding of Ogg data.
   nsCOMPtr<nsIThread> mDecodeThread;
-  nsCOMPtr<nsIThread> mPresentationThread;
 
-  // Events for doing the Ogg decoding, displaying and repainting on
-  // different threads. These are created on the main thread and are
-  // dispatched to other threads. Threads only access them to dispatch
-  // the event to other threads.
-  nsCOMPtr<nsVideoDecodeEvent> mDecodeEvent;
-  nsCOMPtr<nsVideoPresentationEvent> mPresentationEvent;
-
-  // The time of the current frame from the video stream in
-  // seconds. This is referenced from 0.0 which is the initial start
-  // of the video stream. Set by the presentation thread, and
-  // read-only from the main thread to get the current time value.
-  float mVideoCurrentFrameTime;
+  // The current playback position of the media resource in units of
+  // seconds. This is updated approximately at the framerate of the
+  // video (if it is a video) or the callback period of the audio.
+  // It is read and written from the main thread only.
+  float mCurrentTime;
 
   // Volume that playback should start at.  0.0 = muted. 1.0 = full
   // volume.  Readable/Writeable from the main thread. Read from the
   // audio thread when it is first started to get the initial volume
   // level.
-  double mInitialVolume;
+  float mInitialVolume;
 
-  // Audio data. These are initially set on the Decoder thread when
-  // the metadata is loaded. They are read from the presentation
-  // thread after this.
-  PRInt32 mAudioRate;
-  PRInt32 mAudioChannels;
-  PRInt32 mAudioTrack;
+  // Position to seek to when the seek notification is received by the
+  // decoding thread. Written by the main thread and read via the
+  // decoding thread. Synchronised using mPlayStateMonitor. If the
+  // value is negative then no seek has been requested. When a seek is
+  // started this is reset to negative.
+  float mRequestedSeekTime;
 
-  // Video data. Initially set on the Decoder thread when the metadata
-  // is loaded. Read from the presentation thread after this.
-  PRInt32 mVideoTrack;
+  // Size of the media file in bytes. Set on the first non-byte range
+  // HTTP request from nsChannelToPipe Listener. Accessed on the
+  // main thread only.
+  PRInt64 mContentLength;
 
-  // liboggplay State. Passed to liboggplay functions on any
-  // thread. liboggplay handles a lock internally for this.
-  OggPlay* mPlayer;
+  // Duration of the media resource. Set to -1 if unknown.
+  // Set when the Ogg metadata is loaded. Accessed on the main thread
+  // only.
+  PRInt64 mDuration;
+
+  // True if we are registered with the observer service for shutdown.
+  PRPackedBool mNotifyOnShutdown;
+
+  // True if the media resource is seekable (server supports byte range
+  // requests).
+  PRPackedBool mSeekable;
+
+  /******
+   * The following member variables can be accessed from any thread.
+   ******/
+
+  // The state machine object for handling the decoding via
+  // oggplay. It is safe to call methods of this object from other
+  // threads. Its internal data is synchronised on a monitor. The
+  // lifetime of this object is after mPlayState is LOADING and before
+  // mPlayState is SHUTDOWN. It is safe to access it during this
+  // period.
+  nsCOMPtr<nsOggDecodeStateMachine> mDecodeStateMachine;
 
   // OggPlay object used to read data from a channel. Created on main
   // thread. Passed to liboggplay and the locking for multithreaded
-  // access is handled by that library.
-  nsChannelReader* mReader;
+  // access is handled by that library. Some methods are called from
+  // the decoder thread, and the state machine for that thread keeps
+  // a pointer to this reader. This is safe as the only methods called
+  // are threadsafe (via the threadsafe nsMediaStream).
+  nsAutoPtr<nsChannelReader> mReader;
 
-  // True if the video playback is paused. Read/Write from the main
-  // thread. Read from the decoder thread to not buffer data if
-  // paused.
-  PRPackedBool mPaused;
+  // Monitor for detecting when the video play state changes. A call
+  // to Wait on this monitor will block the thread until the next
+  // state change.
+  PRMonitor* mMonitor;
 
-  // True if the first frame of data has been loaded. This member,
-  // along with the condition variable and lock is used by threads 
-  // that need to wait for the first frame to be loaded before 
-  // performing some action. In particular it is used for 'autoplay' to
-  // start playback on loading of the first frame.
-  PRPackedBool mFirstFrameLoaded;
-  PRCondVar* mFirstFrameCondVar;
-  PRLock* mFirstFrameLock;
+  // Set to one of the valid play states. It is protected by the
+  // monitor mMonitor. This monitor must be acquired when reading or
+  // writing the state. Any change to the state on the main thread
+  // must call NotifyAll on the monitor so the decode thread can wake up.
+  PlayState mPlayState;
 
-  // System time in seconds since video start, or last pause/resume.
-  // Used for synching video framerate to the system clock if there is
-  // no audio hardware or no audio track. Written by main thread, read
-  // by presentation thread to handle frame rate synchronisation.
-  double mSystemSyncSeconds;
-
-  // The media resource has been completely loaded into the pipe. No
-  // need to attempt to buffer if it starves. Written on the main
-  // thread, read from the decoding thread.
-  PRPackedBool mResourceLoaded;
-
-  // PR_TRUE if the metadata for the video has been loaded. Written on
-  // the main thread, read from the decoding thread.
-  PRPackedBool mMetadataLoaded;
+  // The state to change to after a seek or load operation. It must only
+  // be changed from the main thread. The decoder monitor must be acquired
+  // when writing to the state, or when reading from a non-main thread.
+  // Any change to the state must call NotifyAll on the monitor.
+  PlayState mNextState;	
 };
 
 #endif

@@ -87,14 +87,19 @@ void cmsSignalError(int ErrorCode, const char *ErrorText, ...)
               if (nDoAbort == LCMS_ERROR_ABORT) exit(1);
 #else
               {
+#ifdef WINCE
+              UINT type = MB_OK|MB_ICONSTOP|MB_APPLMODAL;
+#else
+              UINT type = MB_OK|MB_ICONSTOP|MB_TASKMODAL;
+#endif
+
               char Buffer1[1024];
               char Buffer2[256];
 
               snprintf(Buffer1,  767, "Error #%x; ", ErrorCode);
               vsnprintf(Buffer2, 255, ErrorText, args);
               strcat(Buffer1, Buffer2);
-              MessageBox(NULL, Buffer1, "Little cms",
-                                          MB_OK|MB_ICONSTOP|MB_TASKMODAL);
+              MessageBox(NULL, Buffer1, "Little cms", type);
               va_end(args);
 
               if (nDoAbort == LCMS_ERROR_ABORT) {
@@ -103,7 +108,9 @@ void cmsSignalError(int ErrorCode, const char *ErrorText, ...)
                     _cexit();
 #endif
 
+#ifndef WINCE
                   FatalAppExitW(0, L"lcms is terminating application");
+#endif
               }
               }
 #endif

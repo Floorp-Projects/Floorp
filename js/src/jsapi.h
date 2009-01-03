@@ -45,6 +45,7 @@
  */
 #include <stddef.h>
 #include <stdio.h>
+#include "js-config.h"
 #include "jspubtd.h"
 #include "jsutil.h"
 
@@ -337,6 +338,9 @@ JS_ValueToConstructor(JSContext *cx, jsval v);
 
 extern JS_PUBLIC_API(JSString *)
 JS_ValueToString(JSContext *cx, jsval v);
+
+extern JS_PUBLIC_API(JSString *)
+JS_ValueToSource(JSContext *cx, jsval v);
 
 extern JS_PUBLIC_API(JSBool)
 JS_ValueToNumber(JSContext *cx, jsval v, jsdouble *dp);
@@ -1447,8 +1451,7 @@ struct JSFunctionSpec {
     /*
      * extra & 0xFFFF:  Number of extra argument slots for local GC roots.
      *                  If fast native, must be zero.
-     * extra >> 16:     If slow native, reserved for future use (must be 0).
-     *                  If fast native, minimum required argc.
+     * extra >> 16:     Reserved for future use (must be 0).
      */
     uint32          extra;
 };
@@ -1570,6 +1573,10 @@ extern JS_PUBLIC_API(JSBool)
 JS_DefineProperty(JSContext *cx, JSObject *obj, const char *name, jsval value,
                   JSPropertyOp getter, JSPropertyOp setter, uintN attrs);
 
+extern JS_PUBLIC_API(JSBool)
+JS_DefinePropertyById(JSContext *cx, JSObject *obj, jsid id, jsval value,
+                      JSPropertyOp getter, JSPropertyOp setter, uintN attrs);
+
 /*
  * Determine the attributes (JSPROP_* flags) of a property on a given object.
  *
@@ -1617,21 +1624,34 @@ JS_AlreadyHasOwnProperty(JSContext *cx, JSObject *obj, const char *name,
                          JSBool *foundp);
 
 extern JS_PUBLIC_API(JSBool)
+JS_AlreadyHasOwnPropertyById(JSContext *cx, JSObject *obj, jsid id,
+                             JSBool *foundp);
+
+extern JS_PUBLIC_API(JSBool)
 JS_HasProperty(JSContext *cx, JSObject *obj, const char *name, JSBool *foundp);
 
 extern JS_PUBLIC_API(JSBool)
+JS_HasPropertyById(JSContext *cx, JSObject *obj, jsid id, JSBool *foundp);
+
+extern JS_PUBLIC_API(JSBool)
 JS_LookupProperty(JSContext *cx, JSObject *obj, const char *name, jsval *vp);
+
+extern JS_PUBLIC_API(JSBool)
+JS_LookupPropertyById(JSContext *cx, JSObject *obj, jsid id, jsval *vp);
 
 extern JS_PUBLIC_API(JSBool)
 JS_LookupPropertyWithFlags(JSContext *cx, JSObject *obj, const char *name,
                            uintN flags, jsval *vp);
 
 extern JS_PUBLIC_API(JSBool)
-JS_LookupPropertyByIdWithFlags(JSContext *cx, JSObject *obj, jsid id,
+JS_LookupPropertyWithFlagsById(JSContext *cx, JSObject *obj, jsid id,
                                uintN flags, JSObject **objp, jsval *vp);
 
 extern JS_PUBLIC_API(JSBool)
 JS_GetProperty(JSContext *cx, JSObject *obj, const char *name, jsval *vp);
+
+extern JS_PUBLIC_API(JSBool)
+JS_GetPropertyById(JSContext *cx, JSObject *obj, jsid id, jsval *vp);
 
 extern JS_PUBLIC_API(JSBool)
 JS_GetMethodById(JSContext *cx, JSObject *obj, jsid id, JSObject **objp,
@@ -1645,11 +1665,20 @@ extern JS_PUBLIC_API(JSBool)
 JS_SetProperty(JSContext *cx, JSObject *obj, const char *name, jsval *vp);
 
 extern JS_PUBLIC_API(JSBool)
+JS_SetPropertyById(JSContext *cx, JSObject *obj, jsid id, jsval *vp);
+
+extern JS_PUBLIC_API(JSBool)
 JS_DeleteProperty(JSContext *cx, JSObject *obj, const char *name);
 
 extern JS_PUBLIC_API(JSBool)
 JS_DeleteProperty2(JSContext *cx, JSObject *obj, const char *name,
                    jsval *rval);
+
+extern JS_PUBLIC_API(JSBool)
+JS_DeletePropertyById(JSContext *cx, JSObject *obj, jsid id);
+
+extern JS_PUBLIC_API(JSBool)
+JS_DeletePropertyById2(JSContext *cx, JSObject *obj, jsid id, jsval *rval);
 
 extern JS_PUBLIC_API(JSBool)
 JS_DefineUCProperty(JSContext *cx, JSObject *obj,
@@ -2396,6 +2425,37 @@ JS_PUBLIC_API(char *)
 JS_EncodeString(JSContext *cx, JSString *str);
 
 /************************************************************************/
+/*
+ * JSON functions
+ */
+typedef JSBool (* JSONWriteCallback)(const jschar *buf, uint32 len, void *data);
+
+/*
+ * JSON.stringify as specificed by ES3.1 (draft)
+ */
+JS_PUBLIC_API(JSBool)
+JS_Stringify(JSContext *cx, jsval *vp, JSObject *replacer,
+             JSONWriteCallback callback, void *data);
+
+/*
+ * Retrieve a toJSON function. If found, set vp to its result.
+ */
+JS_PUBLIC_API(JSBool)
+JS_TryJSON(JSContext *cx, jsval *vp);
+
+/*
+ * JSON.parse as specificed by ES3.1 (draft)
+ */
+JS_PUBLIC_API(JSONParser *)
+JS_BeginJSONParse(JSContext *cx, jsval *vp);
+
+JS_PUBLIC_API(JSBool)
+JS_ConsumeJSONText(JSContext *cx, JSONParser *jp, const jschar *data, uint32 len);
+
+JS_PUBLIC_API(JSBool)
+JS_FinishJSONParse(JSContext *cx, JSONParser *jp);
+
+/************************************************************************/
 
 /*
  * Locale specific string conversion and error message callbacks.
@@ -2526,6 +2586,7 @@ JS_SetErrorReporter(JSContext *cx, JSErrorReporter er);
 #define JSREG_GLOB      0x02    /* global exec, creates array of matches */
 #define JSREG_MULTILINE 0x04    /* treat ^ and $ as begin and end of line */
 #define JSREG_STICKY    0x08    /* only match starting at lastIndex */
+#define JSREG_FLAT      0x10    /* parse as a flat regexp */
 
 extern JS_PUBLIC_API(JSObject *)
 JS_NewRegExpObject(JSContext *cx, char *bytes, size_t length, uintN flags);

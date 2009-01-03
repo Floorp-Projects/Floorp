@@ -95,8 +95,8 @@ SessionStartup.prototype = {
    * Initialize the component
    */
   init: function sss_init() {
-    this._prefBranch = Cc["@mozilla.org/preferences-service;1"].
-                       getService(Ci.nsIPrefService).getBranch("browser.");
+    let prefBranch = Cc["@mozilla.org/preferences-service;1"].
+                     getService(Ci.nsIPrefService).getBranch("browser.");
 
     // get file references
     var dirService = Cc["@mozilla.org/file/directory_service;1"].
@@ -104,11 +104,11 @@ SessionStartup.prototype = {
     let sessionFile = dirService.get("ProfD", Ci.nsILocalFile);
     sessionFile.append("sessionstore.js");
     
-    let doResumeSession = this._prefBranch.getBoolPref("sessionstore.resume_session_once") ||
-                          this._prefBranch.getIntPref("startup.page") == 3;
+    let doResumeSession = prefBranch.getBoolPref("sessionstore.resume_session_once") ||
+                          prefBranch.getIntPref("startup.page") == 3;
     
     // only read the session file if config allows possibility of restoring
-    var resumeFromCrash = this._prefBranch.getBoolPref("sessionstore.resume_from_crash");
+    var resumeFromCrash = prefBranch.getBoolPref("sessionstore.resume_from_crash");
     if (!resumeFromCrash && !doResumeSession || !sessionFile.exists())
       return;
     
@@ -129,7 +129,7 @@ SessionStartup.prototype = {
       initialState.session.state == STATE_RUNNING_STR;
     
     // set the startup type
-    if (lastSessionCrashed && resumeFromCrash && this._doRecoverSession())
+    if (lastSessionCrashed && resumeFromCrash)
       this._sessionType = Ci.nsISessionStartup.RECOVER_SESSION;
     else if (!lastSessionCrashed && doResumeSession)
       this._sessionType = Ci.nsISessionStartup.RESUME_SESSION;
@@ -141,6 +141,7 @@ SessionStartup.prototype = {
       var observerService = Cc["@mozilla.org/observer-service;1"].
                             getService(Ci.nsIObserverService);
       observerService.addObserver(this, "domwindowopened", true);
+      observerService.addObserver(this, "browser:purge-session-history", true);
     }
   },
 
@@ -173,6 +174,13 @@ SessionStartup.prototype = {
         self._onWindowOpened(window);
         window.removeEventListener("load", arguments.callee, false);
       }, false);
+      break;
+    case "browser:purge-session-history":
+      // reset all state on sanitization
+      this._iniString = null;
+      this._sessionType = Ci.nsISessionStartup.NO_SESSION;
+      // no need in repeating this, since startup state won't change
+      observerService.removeObserver(this, "browser:purge-session-history");
       break;
     }
   },
@@ -233,74 +241,6 @@ SessionStartup.prototype = {
    */
   get sessionType() {
     return this._sessionType;
-  },
-
-/* ........ Auxiliary Functions .............. */
-
-  /**
-   * prompt user whether or not to restore the previous session,
-   * if the browser crashed
-   * @returns bool
-   */
-  _doRecoverSession: function sss_doRecoverSession() {
-    // if the prompt fails, recover anyway
-    var recover = true;
-
-    // allow extensions to hook in a more elaborate restore prompt
-    // XXXzeniko drop this when we're using our own dialog instead of a standard prompt
-    var dialogURI = null;
-    try {
-      dialogURI = this._prefBranch.getCharPref("sessionstore.restore_prompt_uri");
-    }
-    catch (ex) { }
-    
-    try {
-      if (dialogURI) { // extension provided dialog 
-        var params = Cc["@mozilla.org/embedcomp/dialogparam;1"].
-                     createInstance(Ci.nsIDialogParamBlock);
-        // default to recovering
-        params.SetInt(0, 0);
-        Cc["@mozilla.org/embedcomp/window-watcher;1"].
-        getService(Ci.nsIWindowWatcher).
-        openWindow(null, dialogURI, "_blank", 
-                   "chrome,modal,centerscreen,titlebar", params);
-        recover = params.GetInt(0) == 0;
-      }
-      else { // basic prompt with no options
-        // get app name from branding properties
-        const brandShortName = this._getStringBundle("chrome://branding/locale/brand.properties")
-                                   .GetStringFromName("brandShortName");
-        // create prompt strings
-        var ssStringBundle = this._getStringBundle("chrome://browser/locale/sessionstore.properties");
-        var restoreTitle = ssStringBundle.formatStringFromName("restoredTitle", [brandShortName], 1);
-        var restoreText = ssStringBundle.formatStringFromName("restoredMsg", [brandShortName], 1);
-        var okTitle = ssStringBundle.GetStringFromName("okTitle");
-        var cancelTitle = ssStringBundle.GetStringFromName("cancelTitle");
-
-        var promptService = Cc["@mozilla.org/embedcomp/prompt-service;1"].
-                            getService(Ci.nsIPromptService);
-        // set the buttons that will appear on the dialog
-        var flags = promptService.BUTTON_TITLE_IS_STRING * promptService.BUTTON_POS_0 +
-                    promptService.BUTTON_TITLE_IS_STRING * promptService.BUTTON_POS_1 +
-                    promptService.BUTTON_POS_0_DEFAULT;
-        var buttonChoice = promptService.confirmEx(null, restoreTitle, restoreText, 
-                                          flags, okTitle, cancelTitle, null, 
-                                          null, {});
-        recover = (buttonChoice == 0);
-      }
-    }
-    catch (ex) { dump(ex + "\n"); } // if the prompt fails, recover anyway
-    return recover;
-  },
-
-  /**
-   * Convenience method to get localized string bundles
-   * @param aURI
-   * @returns nsIStringBundle
-   */
-  _getStringBundle: function sss_getStringBundle(aURI) {
-    return Cc["@mozilla.org/intl/stringbundle;1"].
-           getService(Ci.nsIStringBundleService).createBundle(aURI);
   },
 
 /* ........ Storage API .............. */

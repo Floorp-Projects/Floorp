@@ -45,24 +45,7 @@ include $(DEPTH)/config/autoconf.mk
 
 MODULE = psm
 
-PACKAGE_FILE = psm.pkg
-
 ifndef MOZ_NATIVE_NSS
-PACKAGE_VARS += \
-	NSS3_LIB \
-	NSSUTIL3_LIB \
-	SMIME3_LIB \
-	SSL3_LIB \
-	SOFTOKEN3_LIB \
-	SOFTOKEN3_CHK \
-	NSSDBM3_LIB \
-	LOADABLE_ROOT_MODULE \
-	HAVE_FREEBL_LIBS \
-	HAVE_FREEBL_LIBS_32 \
-	HAVE_FREEBL_LIBS_32INT64 \
-	HAVE_FREEBL_LIBS_64 \
-	$(NULL)
-
 LOADABLE_ROOT_MODULE = $(DLL_PREFIX)nssckbi$(DLL_SUFFIX)
 endif
 
@@ -72,7 +55,12 @@ SMIME3_LIB = $(DLL_PREFIX)smime3$(DLL_SUFFIX)
 SSL3_LIB =  $(DLL_PREFIX)ssl3$(DLL_SUFFIX)
 SOFTOKEN3_LIB = $(DLL_PREFIX)softokn3$(DLL_SUFFIX)
 SOFTOKEN3_CHK = $(DLL_PREFIX)softokn3.chk
+
+ifndef NSS_DISABLE_DBM
 NSSDBM3_LIB = $(DLL_PREFIX)nssdbm3$(DLL_SUFFIX)
+else
+NSSDBM3_LIB = 
+endif
 
 ifndef MOZ_NATIVE_NSS
 ifneq (,$(filter OS2 WINCE WINNT,$(OS_ARCH)))
@@ -180,6 +168,9 @@ DEFAULT_GMAKE_FLAGS += NSPR_LIB_DIR=$(NSPR_LIB_DIR)
 DEFAULT_GMAKE_FLAGS += MOZILLA_CLIENT=1
 DEFAULT_GMAKE_FLAGS += NO_MDUPDATE=1
 DEFAULT_GMAKE_FLAGS += NSS_ENABLE_ECC=1
+ifdef NSS_DISABLE_DBM 
+DEFAULT_GMAKE_FLAGS += NSS_DISABLE_DBM=1
+endif
 ABS_topsrcdir   := $(shell cd $(topsrcdir); pwd)
 ifneq ($(ABS_topsrcdir),$(MOZ_BUILD_ROOT))
 DEFAULT_GMAKE_FLAGS += BUILD_TREE=$(MOZ_BUILD_ROOT)
@@ -228,6 +219,26 @@ DEFAULT_GMAKE_FLAGS += MACOS_SDK_DIR=$(MACOS_SDK_DIR)
 endif
 endif
 ifdef CROSS_COMPILE
+
+ifdef WINCE
+DEFAULT_GMAKE_FLAGS += \
+	NSINSTALL="$(NSINSTALL)" \
+	NATIVE_CC="$(HOST_CC)" \
+	CC="arm-wince-gcc.exe" \
+	CCC="arm-wince-gcc.exe" \
+	LINK="arm-wince-link.exe" \
+	LD="arm-wince-link.exe -DLL" \
+	AS="arm-wince-as.exe -Cp -Sn -Zi -coff $(INCLUDES)" \
+	AR='arm-wince-lib -NOLOG0 -OUT:$$@' \
+	RANLIB="echo" \
+	RC="arm-wince-res.exe $(RCFLAGS)" \
+	OS_ARCH="$(OS_ARCH)" \
+	OS_TEST="$(OS_TEST)" \
+	CPU_ARCH="ARM" \
+	USE_MSYS=1 \
+	WINCE=1 \
+	$(NULL)
+else
 DEFAULT_GMAKE_FLAGS += \
 	NSINSTALL="$(NSINSTALL)" \
 	NATIVE_CC="$(HOST_CC)" \
@@ -242,6 +253,8 @@ DEFAULT_GMAKE_FLAGS += \
 	OS_TEST="$(OS_TEST)" \
 	CPU_ARCH="$(TARGET_CPU)" \
 	$(NULL)
+endif
+
 SKIP_CHK=1
 endif
 SUBMAKEFILES = boot/Makefile ssl/Makefile pki/Makefile locales/Makefile
@@ -280,7 +293,9 @@ endif
 libs::
 ifndef MOZ_NATIVE_NSS
 	$(MAKE) -C $(topsrcdir)/security/coreconf $(DEFAULT_GMAKE_FLAGS)
+ifndef NSS_DISABLE_DBM
 	$(MAKE) -C $(topsrcdir)/security/dbm $(DEFAULT_GMAKE_FLAGS) 
+endif
 	$(MAKE) -C $(topsrcdir)/security/nss/lib $(DEFAULT_GMAKE_FLAGS)
 ifdef ENABLE_TESTS
 	# Need certutil binary for mochitest certificates generation
@@ -299,7 +314,9 @@ ifndef SKIP_CHK
 	$(INSTALL) -m 644 $(DIST)/lib/$(SOFTOKEN3_CHK) $(DIST)/bin
 endif
 	$(INSTALL) -m 755 $(DIST)/lib/$(SOFTOKEN3_LIB) $(DIST)/bin
+ifndef NSS_DISABLE_DBM
 	$(INSTALL) -m 755 $(DIST)/lib/$(NSSDBM3_LIB) $(DIST)/bin
+endif
 	$(INSTALL) -m 755 $(DIST)/lib/$(NSS3_LIB) $(DIST)/bin
 	$(INSTALL) -m 755 $(DIST)/lib/$(NSSUTIL3_LIB) $(DIST)/bin
 	$(INSTALL) -m 755 $(DIST)/lib/$(SSL3_LIB) $(DIST)/bin

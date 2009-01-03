@@ -10,15 +10,16 @@ classic.jar:
         skin/classic/global/button.css
         skin/classic/global/checkbox.css
         skin/classic/global/colorpicker.css
+        skin/classic/global/commonDialog.css
 *       skin/classic/global/config.css
         skin/classic/global/customizeToolbar.css
         skin/classic/global/datetimepicker.css
         skin/classic/global/dialog.css
         skin/classic/global/dropmarker.css
         skin/classic/global/expander.css
+        skin/classic/global/filefield.css
         skin/classic/global/filepicker.css
         skin/classic/global/findBar.css
-        skin/classic/global/formatting.css
 *       skin/classic/global/global.css
         skin/classic/global/globalBindings.xml
         skin/classic/global/groupbox.css
@@ -176,15 +177,16 @@ classic.jar:
         skin/classic/aero/global/button.css
         skin/classic/aero/global/checkbox.css
         skin/classic/aero/global/colorpicker.css
+        skin/classic/aero/global/commonDialog.css
 *       skin/classic/aero/global/config.css
         skin/classic/aero/global/customizeToolbar.css
         skin/classic/aero/global/datetimepicker.css
         skin/classic/aero/global/dialog.css
         skin/classic/aero/global/dropmarker.css
         skin/classic/aero/global/expander.css
+        skin/classic/aero/global/filefield.css
         skin/classic/aero/global/filepicker.css
         skin/classic/aero/global/findBar.css
-        skin/classic/aero/global/formatting.css
 *       skin/classic/aero/global/global.css
         skin/classic/aero/global/globalBindings.xml
         skin/classic/aero/global/groupbox.css

@@ -225,7 +225,7 @@ bool ConnectSocket(PRFileDesc *fd, const PRNetAddr *addr, PRIntervalTime timeout
  * The data parameter is a connection_info_t*, and must be deleted
  * by this function.
  */
-void PR_CALLBACK HandleConnection(void* data)
+void HandleConnection(void* data)
 {
   connection_info_t* ci = static_cast<connection_info_t*>(data);
   PRIntervalTime connect_timeout = PR_SecondsToInterval(2);
@@ -433,7 +433,7 @@ void PR_CALLBACK HandleConnection(void* data)
  * The data parameter is a server_info_t*, owned by the calling
  * function.
  */
-void PR_CALLBACK StartServer(void* data)
+void StartServer(void* data)
 {
   server_info_t* si = static_cast<server_info_t*>(data);
 
@@ -642,7 +642,7 @@ int parseConfigFile(const char* filePath)
   return 0;
 }
 
-PRIntn PR_CALLBACK freeHashItems(PLHashEntry *he, PRIntn i, void *arg)
+PRIntn freeHashItems(PLHashEntry *he, PRIntn i, void *arg)
 {
   delete [] (char*)he->key;
   delete [] (char*)he->value;

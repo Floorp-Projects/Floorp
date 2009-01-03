@@ -5,6 +5,10 @@ function testName(aID, aName)
     ok(false, "No accessible for " + aID + "!");
   }
 
-  is(acc.name, aName, "Wrong name of the accessible for " + aID);
+  try {
+    is(acc.name, aName, "Wrong name of the accessible for " + aID);
+  } catch (e) {
+    ok(false, "Can't get name of the accessible for " + aID);
+  }
   return acc;
 }

@@ -37,7 +37,7 @@
 
 #include "domstubs.idl"
 
-[scriptable, uuid(F9C6A2C0-9D9B-48A2-B84B-12CC95283CD0)]
+[scriptable, uuid(B31702D0-6DAC-4FA0-B93B-F043E71C8F9A)]
 interface nsIDOMGeoPosition : nsISupports
 {
   readonly attribute double latitude;
@@ -46,6 +46,6 @@ interface nsIDOMGeoPosition : nsISupports
   readonly attribute double accuracy;
   readonly attribute double altitudeAccuracy;
   readonly attribute double heading;
-  readonly attribute double velocity;
+  readonly attribute double speed;
   readonly attribute DOMTimeStamp timestamp;
 };

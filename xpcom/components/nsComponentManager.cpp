@@ -232,10 +232,10 @@ ArenaStrdup(const char *s, PLArenaPool *arena)
 // Hashtable Callbacks
 ////////////////////////////////////////////////////////////////////////////////
 
-PRBool PR_CALLBACK
+PRBool
 nsFactoryEntry_Destroy(nsHashKey *aKey, void *aData, void* closure);
 
-PR_STATIC_CALLBACK(PLDHashNumber)
+static PLDHashNumber
 factory_HashKey(PLDHashTable *aTable, const void *aKey)
 {
     const nsCID *cidp = reinterpret_cast<const nsCID*>(aKey);
@@ -243,7 +243,7 @@ factory_HashKey(PLDHashTable *aTable, const void *aKey)
     return cidp->m0;
 }
 
-PR_STATIC_CALLBACK(PRBool)
+static PRBool
 factory_MatchEntry(PLDHashTable *aTable, const PLDHashEntryHdr *aHdr,
                    const void *aKey)
 {
@@ -254,7 +254,7 @@ factory_MatchEntry(PLDHashTable *aTable, const PLDHashEntryHdr *aHdr,
     return (entry->mFactoryEntry->mCid).Equals(*cidp);
 }
 
-PR_STATIC_CALLBACK(void)
+static void
 factory_ClearEntry(PLDHashTable *aTable, PLDHashEntryHdr *aHdr)
 {
     nsFactoryTableEntry* entry = static_cast<nsFactoryTableEntry*>(aHdr);
@@ -274,7 +274,7 @@ static const PLDHashTableOps factory_DHashTableOps = {
     PL_DHashFinalizeStub,
 };
 
-PR_STATIC_CALLBACK(void)
+static void
 contractID_ClearEntry(PLDHashTable *aTable, PLDHashEntryHdr *aHdr)
 {
     nsContractIDTableEntry* entry = static_cast<nsContractIDTableEntry*>(aHdr);
@@ -339,14 +339,14 @@ private:
         PLDHashTableEnumeratorImpl    *impl;
     };
 
-    static PLDHashOperator PR_CALLBACK Enumerator(PLDHashTable *table,
-                                                  PLDHashEntryHdr *hdr,
-                                                  PRUint32 number,
-                                                  void *data);
+    static PLDHashOperator Enumerator(PLDHashTable *table,
+                                      PLDHashEntryHdr *hdr,
+                                      PRUint32 number,
+                                      void *data);
 };
 
 // static
-PLDHashOperator PR_CALLBACK
+PLDHashOperator
 PLDHashTableEnumeratorImpl::Enumerator(PLDHashTable *table,
                                        PLDHashEntryHdr *hdr,
                                        PRUint32 number,
@@ -1083,7 +1083,7 @@ struct PersistentWriterArgs
     nsTArray<nsLoaderdata> *mLoaderData;
 };
 
-PR_STATIC_CALLBACK(PLDHashOperator)
+static PLDHashOperator
 ContractIDWriter(PLDHashTable *table,
                  PLDHashEntryHdr *hdr,
                  PRUint32 number,
@@ -1107,7 +1107,7 @@ ContractIDWriter(PLDHashTable *table,
     return PL_DHASH_NEXT;
 }
 
-PR_STATIC_CALLBACK(PLDHashOperator)
+static PLDHashOperator
 ClassIDWriter(PLDHashTable *table,
               PLDHashEntryHdr *hdr,
               PRUint32 number,
@@ -1705,7 +1705,7 @@ nsComponentManagerImpl::CreateInstanceByContractID(const char *aContractID,
 
 // Service Manager Impl
 static
-PLDHashOperator PR_CALLBACK
+PLDHashOperator
 FreeServiceFactoryEntryEnumerate(PLDHashTable *aTable,
                                  PLDHashEntryHdr *aHdr,
                                  PRUint32 aNumber,
@@ -1722,7 +1722,7 @@ FreeServiceFactoryEntryEnumerate(PLDHashTable *aTable,
 }
 
 static
-PLDHashOperator PR_CALLBACK
+PLDHashOperator
 FreeServiceContractIDEntryEnumerate(PLDHashTable *aTable,
                                     PLDHashEntryHdr *aHdr,
                                     PRUint32 aNumber,
@@ -2789,7 +2789,7 @@ typedef struct
     nsIFactory* factory;
 } UnregisterConditions;
 
-static PLDHashOperator PR_CALLBACK
+static PLDHashOperator
 DeleteFoundCIDs(PLDHashTable *aTable,
                 PLDHashEntryHdr *aHdr,
                 PRUint32 aNumber,

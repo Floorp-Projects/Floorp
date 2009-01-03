@@ -64,6 +64,12 @@ menuitem[_moz-menuactive="true"][disabled="true"] {
   color: GrayText;
 }
 
+menu[disabled="true"]:not([_moz-menuactive="true"]):-moz-system-metric(windows-classic),
+menuitem[disabled="true"]:not([_moz-menuactive="true"]):-moz-system-metric(windows-classic) {
+  color: ThreeDShadow;
+  text-shadow: 1px 1px ThreeDHighlight;
+}
+
 menuitem.spell-suggestion {
   font-weight:bold;
 }
@@ -211,6 +217,11 @@ menulist > menupopup > menuitem[_moz-menuactive="true"] {
 
 menulist > menupopup > menuitem[_moz-menuactive="true"][disabled="true"] {
   color: GrayText;
+}
+
+menulist > menupopup > menuitem[disabled="true"]:not([_moz-menuactive="true"]):-moz-system-metric(windows-classic) {
+  color: GrayText;
+  text-shadow: none;
 }
 
 menulist > menupopup > menuitem > .menu-iconic-text {

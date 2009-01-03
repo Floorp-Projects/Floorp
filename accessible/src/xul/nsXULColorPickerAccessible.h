@@ -46,18 +46,25 @@ class nsXULColorPickerTileAccessible : public nsFormControlAccessible
 {
 public:
   nsXULColorPickerTileAccessible(nsIDOMNode* aNode, nsIWeakReference* aShell);
+
+  // nsIAccessible
   NS_IMETHOD GetRole(PRUint32 *_retval);
-  NS_IMETHOD GetState(PRUint32 *aState, PRUint32 *aExtraState);
-  NS_IMETHOD GetName(nsAString& _retval);
   NS_IMETHOD GetValue(nsAString& _retval);
+
+  // nsAccessible
+  virtual nsresult GetStateInternal(PRUint32 *aState, PRUint32 *aExtraState);
 };
 
 class nsXULColorPickerAccessible : public nsXULColorPickerTileAccessible
 {
 public:
   nsXULColorPickerAccessible(nsIDOMNode* aNode, nsIWeakReference* aShell);
-  NS_IMETHOD GetState(PRUint32 *aState, PRUint32 *aExtraState);
+
+  // nsIAccessible
   NS_IMETHOD GetRole(PRUint32 *_retval);
+
+  // nsAccessible
+  virtual nsresult GetStateInternal(PRUint32 *aState, PRUint32 *aExtraState);
 };
 
 #endif  

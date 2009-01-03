@@ -81,6 +81,10 @@ XPC_XOW_WrapperMoved(JSContext *cx, XPCWrappedNative *innerObj,
 nsresult
 CanAccessWrapper(JSContext *cx, JSObject *wrappedObj);
 
+JSBool
+XPCNativeWrapperCtor(JSContext *cx, JSObject *obj, uintN argc, jsval *argv,
+                     jsval *rval);
+
 inline JSBool
 XPC_XOW_ClassNeedsXOW(const char *name)
 {

@@ -15,14 +15,27 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=448534
 <!-- Ogg video obtained from Theora test suite: http://v2v.cc/~j/theora_testsuite/ -->
 <video id='v' 
        src='320x240.ogg' 
+       onloadedmetadata='return loaded();'
        onplay='return started();' 
        onpause='return stopped();'></video>
 <pre id="test">
 <script class="testbody" type="text/javascript">
-var v = $('v');
+var v = document.getElementById('v');
 var played = false;
-var passed = false;
+var completed = false;
+
+function loaded() {
+  if (completed)
+    return false;
+
+  v.play();
+  return false;
+}
+
 function started() {
+  if (completed)
+    return false;
+
   ok(!v.paused, "Video should not be paused while playing");
   v.parentNode.removeChild(v);
   played = true;
@@ -30,19 +43,14 @@ function started() {
 }
 
 function stopped() {
+  if (completed)
+    return false;
+
+  completed = true;
   ok(v.paused, "Video should be paused after removing from the Document");
-  passed = true;
+  SimpleTest.finish();
   return false;
 }
-
-setTimeout(function () {
-             ok(played, "Video did not send play event");
-             ok(passed, "Video was not paused when removed from the Document");
-             SimpleTest.finish();
-             return false;
-           }, 6000); 
-
-v.play();
 
 SimpleTest.waitForExplicitFinish();
 </script>

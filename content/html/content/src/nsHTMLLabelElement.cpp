@@ -140,9 +140,10 @@ NS_IMPL_RELEASE_INHERITED(nsHTMLLabelElement, nsGenericElement)
 
 
 // QueryInterface implementation for nsHTMLLabelElement
-NS_HTML_CONTENT_INTERFACE_TABLE_HEAD(nsHTMLLabelElement,
-                                     nsGenericHTMLFormElement)
-  NS_INTERFACE_TABLE_INHERITED1(nsHTMLLabelElement, nsIDOMHTMLLabelElement)
+NS_INTERFACE_TABLE_HEAD(nsHTMLLabelElement)
+  NS_HTML_CONTENT_INTERFACE_TABLE1(nsHTMLLabelElement, nsIDOMHTMLLabelElement)
+  NS_HTML_CONTENT_INTERFACE_TABLE_TO_MAP_SEGUE(nsHTMLLabelElement,
+                                               nsGenericHTMLFormElement)
 NS_HTML_CONTENT_INTERFACE_TABLE_TAIL_CLASSINFO(HTMLLabelElement)
 
 

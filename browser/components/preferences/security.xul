@@ -96,13 +96,13 @@
       </hbox>
 
       <separator class="thin"/>
-      <checkbox id="tellMaybeAttackSite"
-                label="&tellMaybeAttackSite2.label;"
-                accesskey="&tellMaybeAttackSite.accesskey;"
+      <checkbox id="blockAttackSites"
+                label="&blockAttackSites.label;"
+                accesskey="&blockAttackSites.accesskey;"
                 preference="browser.safebrowsing.malware.enabled" />
-      <checkbox id="tellMaybeForgery"
-                label="&tellMaybeForgery2.label;"
-                accesskey="&tellMaybeForgery.accesskey;"
+      <checkbox id="blockWebForgeries"
+                label="&blockWebForgeries.label;"
+                accesskey="&blockWebForgeries.accesskey;"
                 preference="browser.safebrowsing.enabled" />
     </groupbox>
 

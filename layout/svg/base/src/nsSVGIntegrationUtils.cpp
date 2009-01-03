@@ -54,7 +54,8 @@ PRBool
 nsSVGIntegrationUtils::UsingEffectsForFrame(const nsIFrame* aFrame)
 {
   const nsStyleSVGReset *style = aFrame->GetStyleSVGReset();
-  return style->mFilter || style->mClipPath || style->mMask;
+  return (style->mFilter || style->mClipPath || style->mMask) &&
+          !aFrame->IsFrameOfType(nsIFrame::eSVG);
 }
 
 // Get the union the frame border-box rects over all continuations,
@@ -197,16 +198,10 @@ public:
     : mBuilder(aBuilder), mInnerList(aInnerList), mOffset(aOffset) {}
 
   virtual void Paint(nsSVGRenderState *aContext, nsIFrame *aTarget,
-                     const nsIntRect* aDirtyRect, nsIDOMSVGMatrix *aTransform)
+                     const nsIntRect* aDirtyRect)
   {
     nsIRenderingContext* ctx = aContext->GetRenderingContext(aTarget);
     gfxContext* gfxCtx = aContext->GetGfxContext();
-
-    if (aTransform) {
-      // Transform by aTransform first
-      gfxMatrix m = nsSVGUtils::ConvertSVGMatrixToThebes(aTransform);
-      gfxCtx->Multiply(m);
-    }
 
     // We're expected to paint with 1 unit equal to 1 CSS pixel. But
     // mInnerList->Paint expects 1 unit to equal 1 device pixel. So

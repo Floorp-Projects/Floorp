@@ -279,13 +279,12 @@ nsIOService::GetInstance() {
     return gIOService;
 }
 
-NS_IMPL_THREADSAFE_ISUPPORTS6(nsIOService,
+NS_IMPL_THREADSAFE_ISUPPORTS5(nsIOService,
                               nsIIOService,
                               nsIIOService2,
                               nsINetUtil,
                               nsIObserver,
-                              nsISupportsWeakReference,
-                              nsINetUtil_MOZILLA_1_9_1)
+                              nsISupportsWeakReference)
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -582,6 +581,24 @@ nsIOService::NewChannel(const nsACString &aSpec, const char *aCharset, nsIURI *a
     if (NS_FAILED(rv)) return rv;
 
     return NewChannelFromURI(uri, result);
+}
+
+PRBool
+nsIOService::IsLinkUp()
+{
+    if (!mNetworkLinkService) {
+        // We cannot decide, assume the link is up
+        return PR_TRUE;
+    }
+
+    PRBool isLinkUp;
+    nsresult rv;
+    rv = mNetworkLinkService->GetIsLinkUp(&isLinkUp);
+    if (NS_FAILED(rv)) {
+        return PR_TRUE;
+    }
+
+    return isLinkUp;
 }
 
 NS_IMETHODIMP
@@ -984,59 +1001,3 @@ nsIOService::ExtractCharsetFromContentType(const nsACString &aTypeHeader,
     }
     return NS_OK;
 }
-
-NS_IMETHODIMP
-nsIOService::OfflineAppAllowed(nsIURI *aURI,
-                               nsIPrefBranch *aPrefBranch,
-                               PRBool *aAllowed)
-{
-    *aAllowed = PR_FALSE;
-
-    nsCOMPtr<nsIURI> innerURI = NS_GetInnermostURI(aURI);
-    if (!innerURI)
-        return NS_OK;
-
-    // only http and https applications can use offline APIs.
-    PRBool match;
-    nsresult rv = innerURI->SchemeIs("http", &match);
-    NS_ENSURE_SUCCESS(rv, rv);
-
-    if (!match) {
-        rv = innerURI->SchemeIs("https", &match);
-        NS_ENSURE_SUCCESS(rv, rv);
-        if (!match) {
-            return NS_OK;
-        }
-    }
-
-    nsCOMPtr<nsIPermissionManager> permissionManager =
-        do_GetService(NS_PERMISSIONMANAGER_CONTRACTID);
-    if (!permissionManager) {
-        return NS_OK;
-    }
-
-    PRUint32 perm;
-    permissionManager->TestExactPermission(innerURI, "offline-app", &perm);
-
-    if (perm == nsIPermissionManager::UNKNOWN_ACTION) {
-        nsCOMPtr<nsIPrefBranch> branch = aPrefBranch;
-        if (!branch) {
-            branch = do_GetService(NS_PREFSERVICE_CONTRACTID);
-        }
-        if (branch) {
-            rv = branch->GetBoolPref("offline-apps.allow_by_default", aAllowed);
-            NS_ENSURE_SUCCESS(rv, rv);
-        }
-
-        return NS_OK;
-    }
-
-    if (perm == nsIPermissionManager::DENY_ACTION) {
-        return NS_OK;
-    }
-
-    *aAllowed = PR_TRUE;
-
-    return NS_OK;
-}
-

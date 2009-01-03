@@ -58,68 +58,36 @@
 
 // DOMWorker includes
 #include "nsDOMThreadService.h"
-#include "nsDOMWorkerThread.h"
+#include "nsDOMWorker.h"
 
 #define LOG(_args) PR_LOG(gDOMThreadsLog, PR_LOG_DEBUG, _args)
 
-#define LOOP_OVER_WORKERS(_func, _args)                   \
-  PR_BEGIN_MACRO                                          \
-    PRUint32 workerCount = mWorkers.Length();             \
-    for (PRUint32 i = 0; i < workerCount; i++) {          \
-      mWorkers[i]-> _func _args ;                         \
-    }                                                     \
-  PR_END_MACRO
-
-nsDOMWorkerPool::nsDOMWorkerPool(nsIDocument* aDocument)
-: mParentGlobal(nsnull),
-  mParentDocument(aDocument)
+nsDOMWorkerPool::nsDOMWorkerPool(nsIScriptGlobalObject* aGlobalObject,
+                                 nsIDocument* aDocument)
+: mParentGlobal(aGlobalObject),
+  mParentDocument(aDocument),
+  mMonitor(nsnull),
+  mCanceled(PR_FALSE),
+  mSuspended(PR_FALSE)
 {
-  NS_ASSERTION(NS_IsMainThread(), "Wrong thread!");
+  NS_ASSERTION(aGlobalObject, "Must have a global object!");
   NS_ASSERTION(aDocument, "Must have a document!");
 }
 
 nsDOMWorkerPool::~nsDOMWorkerPool()
 {
-  NS_ASSERTION(NS_IsMainThread(), "Wrong thread!");
-
-  LOOP_OVER_WORKERS(Cancel, ());
-
-  nsDOMThreadService::get()->NoteDyingPool(this);
-
   if (mMonitor) {
     nsAutoMonitor::DestroyMonitor(mMonitor);
   }
 }
 
-NS_IMPL_THREADSAFE_ISUPPORTS2(nsDOMWorkerPool, nsIDOMWorkerPool,
-                                               nsIClassInfo)
-
-NS_IMPL_CI_INTERFACE_GETTER1(nsDOMWorkerPool, nsIDOMWorkerPool)
-
-NS_IMPL_THREADSAFE_DOM_CI(nsDOMWorkerPool)
+NS_IMPL_THREADSAFE_ADDREF(nsDOMWorkerPool)
+NS_IMPL_THREADSAFE_RELEASE(nsDOMWorkerPool)
 
 nsresult
 nsDOMWorkerPool::Init()
 {
   NS_ASSERTION(NS_IsMainThread(), "Wrong thread!");
-
-  nsIScriptGlobalObject* globalObject =
-    mParentDocument->GetScriptGlobalObject();
-  NS_ENSURE_STATE(globalObject);
-
-  nsCOMPtr<nsPIDOMWindow> domWindow(do_QueryInterface(globalObject));
-  NS_ENSURE_TRUE(domWindow, NS_ERROR_NO_INTERFACE);
-
-  nsPIDOMWindow* innerWindow = domWindow->IsOuterWindow() ?
-                               domWindow->GetCurrentInnerWindow() :
-                               domWindow.get();
-  NS_ENSURE_STATE(innerWindow);
-
-  nsCOMPtr<nsISupports> globalSupports(do_QueryInterface(innerWindow));
-  NS_ENSURE_TRUE(globalSupports, NS_ERROR_NO_INTERFACE);
-
-  // We don't want a strong ref, this guy owns us.
-  mParentGlobal = globalSupports.get();
 
   mMonitor = nsAutoMonitor::NewMonitor("nsDOMWorkerPool::mMonitor");
   NS_ENSURE_TRUE(mMonitor, NS_ERROR_OUT_OF_MEMORY);
@@ -128,114 +96,140 @@ nsDOMWorkerPool::Init()
 }
 
 nsresult
-nsDOMWorkerPool::HandleMessage(const nsAString& aMessage,
-                               nsDOMWorkerBase* aSource)
+nsDOMWorkerPool::NoteWorker(nsDOMWorker* aWorker)
 {
-  nsCOMPtr<nsIDOMWorkerMessageListener> messageListener =
-    nsDOMWorkerBase::GetMessageListener();
-  if (!messageListener) {
-    LOG(("Message received on a worker with no listener!"));
-    return NS_OK;
+  NS_ASSERTION(aWorker, "Null pointer!");
+
+  PRBool suspendWorker;
+
+  {
+    nsAutoMonitor mon(mMonitor);
+
+    if (mCanceled) {
+      return NS_ERROR_ABORT;
+    }
+
+    nsDOMWorker** newWorker = mWorkers.AppendElement(aWorker);
+    NS_ENSURE_TRUE(newWorker, NS_ERROR_OUT_OF_MEMORY);
+
+    suspendWorker = mSuspended;
   }
 
-  nsCOMPtr<nsISupports> source;
-  aSource->QueryInterface(NS_GET_IID(nsISupports), getter_AddRefs(source));
-  NS_ASSERTION(source, "Impossible!");
-
-  messageListener->OnMessage(aMessage, source);
-  return NS_OK;
-}
-
-nsresult
-nsDOMWorkerPool::DispatchMessage(nsIRunnable* aRunnable)
-{
-  // Can be called from many different threads!
-
-  nsCOMPtr<nsIThread> mainThread(do_GetMainThread());
-  NS_ENSURE_TRUE(mainThread, NS_ERROR_FAILURE);
-
-  nsresult rv = mainThread->Dispatch(aRunnable, NS_DISPATCH_NORMAL);
-  NS_ENSURE_SUCCESS(rv, rv);
+  if (suspendWorker) {
+    aWorker->Suspend();
+  }
 
   return NS_OK;
 }
 
 void
-nsDOMWorkerPool::HandleError(nsIScriptError* aError,
-                             nsDOMWorkerThread* aSource)
+nsDOMWorkerPool::NoteDyingWorker(nsDOMWorker* aWorker)
 {
-  NS_ASSERTION(NS_IsMainThread(), "Wrong thread!");
+  NS_ASSERTION(aWorker, "Null pointer!");
 
-  if (mErrorListener) {
-    mErrorListener->OnError(aError,
-                            NS_ISUPPORTS_CAST(nsIDOMWorkerThread*, aSource));
+  PRBool removeFromThreadService = PR_FALSE;
+
+  {
+    nsAutoMonitor mon(mMonitor);
+
+    NS_ASSERTION(mWorkers.Contains(aWorker), "Worker from a different pool?!");
+    mWorkers.RemoveElement(aWorker);
+
+    if (!mCanceled && !mWorkers.Length()) {
+      removeFromThreadService = PR_TRUE;
+    }
+  }
+
+  if (removeFromThreadService) {
+    nsRefPtr<nsDOMWorkerPool> kungFuDeathGrip(this);
+    nsDOMThreadService::get()->NoteEmptyPool(this);
   }
 }
 
 void
-nsDOMWorkerPool::NoteDyingWorker(nsDOMWorkerThread* aWorker)
+nsDOMWorkerPool::GetWorkers(nsTArray<nsDOMWorker*>& aArray)
 {
-  NS_ASSERTION(NS_IsMainThread(), "Wrong thread!");
+  aArray.Clear();
 
-  NS_ASSERTION(mWorkers.Contains(aWorker), "Worker from a different pool?!");
-  mWorkers.RemoveElement(aWorker);
+  nsAutoMonitor mon(mMonitor);
+#ifdef DEBUG
+  nsDOMWorker** newWorkers =
+#endif
+  aArray.AppendElements(mWorkers);
+  NS_WARN_IF_FALSE(newWorkers, "Out of memory!");
 }
 
 void
-nsDOMWorkerPool::CancelWorkersForGlobal(nsIScriptGlobalObject* aGlobalObject)
+nsDOMWorkerPool::Cancel()
 {
   NS_ASSERTION(NS_IsMainThread(), "Wrong thread!");
+  NS_ASSERTION(!mCanceled, "Canceled more than once!");
 
-  nsCOMPtr<nsISupports> globalSupports(do_QueryInterface(aGlobalObject));
-  NS_ASSERTION(globalSupports, "Null pointer?!");
+  {
+    nsAutoMonitor mon(mMonitor);
 
-  if (globalSupports == mParentGlobal) {
-    LOOP_OVER_WORKERS(Cancel, ());
-    mWorkers.Clear();
-    if (IsSuspended()) {
-      nsAutoMonitor mon(mMonitor);
+    mCanceled = PR_TRUE;
+
+    nsAutoTArray<nsDOMWorker*, 10> workers;
+    GetWorkers(workers);
+
+    PRUint32 count = workers.Length();
+    if (count) {
+      for (PRUint32 index = 0; index < count; index++) {
+        workers[index]->Cancel();
+      }
       mon.NotifyAll();
     }
   }
+
+  mParentGlobal = nsnull;
+  mParentDocument = nsnull;
 }
 
 void
-nsDOMWorkerPool::SuspendWorkersForGlobal(nsIScriptGlobalObject* aGlobalObject)
+nsDOMWorkerPool::Suspend()
 {
   NS_ASSERTION(NS_IsMainThread(), "Wrong thread!");
 
-  nsCOMPtr<nsISupports> globalSupports(do_QueryInterface(aGlobalObject));
-  NS_ASSERTION(globalSupports, "Null pointer?!");
+  nsAutoTArray<nsDOMWorker*, 10> workers;
+  {
+    nsAutoMonitor mon(mMonitor);
 
-  if (globalSupports == mParentGlobal) {
-    LOOP_OVER_WORKERS(Suspend, ());
-    Suspend();
+    NS_ASSERTION(!mSuspended, "Suspended more than once!");
+    mSuspended = PR_TRUE;
+
+    GetWorkers(workers);
+  }
+
+  PRUint32 count = workers.Length();
+  for (PRUint32 index = 0; index < count; index++) {
+    workers[index]->Suspend();
   }
 }
 
 void
-nsDOMWorkerPool::ResumeWorkersForGlobal(nsIScriptGlobalObject* aGlobalObject)
+nsDOMWorkerPool::Resume()
 {
   NS_ASSERTION(NS_IsMainThread(), "Wrong thread!");
 
-  nsCOMPtr<nsISupports> globalSupports(do_QueryInterface(aGlobalObject));
-  NS_ASSERTION(globalSupports, "Null pointer?!");
+  nsAutoTArray<nsDOMWorker*, 10> workers;
+  {
+    nsAutoMonitor mon(mMonitor);
 
-  if (globalSupports == mParentGlobal) {
-    LOOP_OVER_WORKERS(Resume, ());
-    Resume();
+    NS_ASSERTION(mSuspended, "Not suspended!");
+    mSuspended = PR_FALSE;
 
+    GetWorkers(workers);
+  }
+
+  PRUint32 count = workers.Length();
+  if (count) {
+    for (PRUint32 index = 0; index < count; index++) {
+      workers[index]->Resume();
+    }
     nsAutoMonitor mon(mMonitor);
     mon.NotifyAll();
   }
-}
-
-nsIDocument*
-nsDOMWorkerPool::ParentDocument()
-{
-  NS_ASSERTION(NS_IsMainThread(),
-               "Don't touch the non-threadsafe document off the main thread!");
-  return mParentDocument;
 }
 
 nsIScriptContext*
@@ -244,92 +238,5 @@ nsDOMWorkerPool::ScriptContext()
   NS_ASSERTION(NS_IsMainThread(),
                "Don't touch the non-threadsafe script context off the main "
                "thread!");
-  return mParentDocument->GetScriptGlobalObject()->GetContext();
-}
-
-NS_IMETHODIMP
-nsDOMWorkerPool::PostMessage(const nsAString& aMessage)
-{
-  nsresult rv = PostMessageInternal(aMessage);
-  NS_ENSURE_SUCCESS(rv, rv);
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-nsDOMWorkerPool::SetMessageListener(nsIDOMWorkerMessageListener* aListener)
-{
-  NS_ASSERTION(NS_IsMainThread(), "Wrong thread!");
-  nsDOMWorkerBase::SetMessageListener(aListener);
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-nsDOMWorkerPool::GetMessageListener(nsIDOMWorkerMessageListener** aListener)
-{
-  NS_ASSERTION(NS_IsMainThread(), "Wrong thread!");
-  nsCOMPtr<nsIDOMWorkerMessageListener> listener = nsDOMWorkerBase::GetMessageListener();
-  listener.forget(aListener);
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-nsDOMWorkerPool::SetErrorListener(nsIDOMWorkerErrorListener* aListener)
-{
-  NS_ASSERTION(NS_IsMainThread(), "Wrong thread!");
-  mErrorListener = aListener;
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-nsDOMWorkerPool::GetErrorListener(nsIDOMWorkerErrorListener** aListener)
-{
-  NS_ASSERTION(NS_IsMainThread(), "Wrong thread!");
-  NS_IF_ADDREF(*aListener = mErrorListener);
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-nsDOMWorkerPool::CreateWorker(const nsAString& aFullScript,
-                              nsIDOMWorkerThread** _retval)
-{
-  NS_ASSERTION(NS_IsMainThread(), "Wrong thread!");
-
-  NS_ENSURE_ARG(!aFullScript.IsEmpty());
-  NS_ENSURE_ARG_POINTER(_retval);
-
-  nsRefPtr<nsDOMWorkerThread> worker =
-    new nsDOMWorkerThread(this, aFullScript, PR_FALSE);
-  NS_ENSURE_TRUE(worker, NS_ERROR_OUT_OF_MEMORY);
-
-  nsresult rv = worker->Init();
-  NS_ENSURE_SUCCESS(rv, rv);
-
-  NS_ASSERTION(!mWorkers.Contains(worker), "Um?!");
-  mWorkers.AppendElement(worker);
-
-  NS_ADDREF(*_retval = worker);
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-nsDOMWorkerPool::CreateWorkerFromURL(const nsAString& aScriptURL,
-                                     nsIDOMWorkerThread** _retval)
-{
-  NS_ASSERTION(NS_IsMainThread(), "Wrong thread!");
-
-  NS_ENSURE_ARG(!aScriptURL.IsEmpty());
-  NS_ENSURE_ARG_POINTER(_retval);
-
-  nsRefPtr<nsDOMWorkerThread> worker =
-    new nsDOMWorkerThread(this, aScriptURL, PR_TRUE);
-  NS_ENSURE_TRUE(worker, NS_ERROR_OUT_OF_MEMORY);
-
-  nsresult rv = worker->Init();
-  NS_ENSURE_SUCCESS(rv, rv);
-
-  NS_ASSERTION(!mWorkers.Contains(worker), "Um?!");
-  mWorkers.AppendElement(worker);
-
-  NS_ADDREF(*_retval = worker);
-  return NS_OK;
+  return mParentGlobal->GetContext();
 }

@@ -51,16 +51,6 @@ class nsIToolkit;
 class nsIWidget;
 class nsITooltipWidget;
 
-#if (defined(XP_MAC) || defined(XP_MACOSX)) && !defined(MOZ_WIDGET_COCOA)
-// A top-level widget stores a reference to itself as a window property
-// with the following creator and tag. These constants are used by embedding
-// code in addition to widget code.
-enum {
-  kTopLevelWidgetPropertyCreator = 'MOSS',
-  kTopLevelWidgetRefPropertyTag  = 'GEKO'
-};
-#endif
-
 extern nsresult 
 NS_ShowWidget(nsISupports* aWidget, PRBool aShow);
 

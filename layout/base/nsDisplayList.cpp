@@ -651,7 +651,7 @@ nsDisplayBoxShadow::Paint(nsDisplayListBuilder* aBuilder,
      nsIRenderingContext* aCtx, const nsRect& aDirtyRect) {
   nsPoint offset = aBuilder->ToReferenceFrame(mFrame);
   nsCSSRendering::PaintBoxShadow(mFrame->PresContext(), *aCtx,
-                                 mFrame, offset);
+                                 mFrame, offset, aDirtyRect);
 }
 
 nsRect

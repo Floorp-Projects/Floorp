@@ -161,7 +161,14 @@ public:
     eDOMEvents_durationchange,
     eDOMEvents_volumechange,
 #endif
-    eDOMEvents_afterpaint
+    eDOMEvents_afterpaint,
+    eDOMEvents_MozSwipeGesture,
+    eDOMEvents_MozMagnifyGestureStart,
+    eDOMEvents_MozMagnifyGestureUpdate,
+    eDOMEvents_MozMagnifyGesture,
+    eDOMEvents_MozRotateGestureStart,
+    eDOMEvents_MozRotateGestureUpdate,
+    eDOMEvents_MozRotateGesture
   };
 
   nsDOMEvent(nsPresContext* aPresContext, nsEvent* aEvent);
@@ -181,9 +188,9 @@ public:
   NS_IMETHOD    SetTarget(nsIDOMEventTarget* aTarget);
   NS_IMETHOD    SetCurrentTarget(nsIDOMEventTarget* aCurrentTarget);
   NS_IMETHOD    SetOriginalTarget(nsIDOMEventTarget* aOriginalTarget);
-  NS_IMETHOD    IsDispatchStopped(PRBool* aIsDispatchStopped);
-  NS_IMETHOD    GetInternalNSEvent(nsEvent** aNSEvent);
-  NS_IMETHOD    HasOriginalTarget(PRBool* aResult);
+  NS_IMETHOD_(PRBool)    IsDispatchStopped();
+  NS_IMETHOD_(nsEvent*)    GetInternalNSEvent();
+  NS_IMETHOD_(PRBool)    HasOriginalTarget();
   NS_IMETHOD    SetTrusted(PRBool aTrusted);
 
   static PopupControlState GetEventPopupControlState(nsEvent *aEvent);
@@ -198,6 +205,7 @@ protected:
   nsresult SetEventType(const nsAString& aEventTypeArg);
   static const char* GetEventName(PRUint32 aEventType);
   already_AddRefed<nsIDOMEventTarget> GetTargetFromFrame();
+  nsresult ReportWrongPropertyAccessWarning(const char* aPropertyName);
 
   nsEvent*                    mEvent;
   nsCOMPtr<nsPresContext>     mPresContext;

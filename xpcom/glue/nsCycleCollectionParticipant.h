@@ -139,7 +139,7 @@ NS_DEFINE_STATIC_IID_ACCESSOR(nsCycleCollectionParticipant,
 #define IMETHOD_VISIBILITY NS_COM_GLUE
 
 typedef void
-(* PR_CALLBACK TraceCallback)(PRUint32 langID, void *p, void *closure);
+(* TraceCallback)(PRUint32 langID, void *p, void *closure);
 
 class NS_NO_VTABLE nsScriptObjectTracer : public nsCycleCollectionParticipant
 {

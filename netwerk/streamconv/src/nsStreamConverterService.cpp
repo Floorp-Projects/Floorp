@@ -85,7 +85,7 @@ nsStreamConverterService::~nsStreamConverterService() {
 }
 
 // Delete all the entries in the adjacency list
-static PRBool PR_CALLBACK DeleteAdjacencyEntry(nsHashKey *aKey, void *aData, void* closure) {
+static PRBool DeleteAdjacencyEntry(nsHashKey *aKey, void *aData, void* closure) {
     SCTableData *entry = (SCTableData*)aData;
     NS_ASSERTION(entry->key && entry->data.edges, "malformed adjacency list entry");
     delete entry->key;
@@ -259,7 +259,7 @@ nsStreamConverterService::ParseFromTo(const char *aContractID, nsCString &aFromR
 // nsObjectHashtable enumerator functions.
 
 // Initializes the BFS state table.
-static PRBool PR_CALLBACK InitBFSTable(nsHashKey *aKey, void *aData, void* closure) {
+static PRBool InitBFSTable(nsHashKey *aKey, void *aData, void* closure) {
     NS_ASSERTION((SCTableData*)aData, "no data in the table enumeration");
     
     nsHashtable *BFSTable = (nsHashtable*)closure;
@@ -284,7 +284,7 @@ static PRBool PR_CALLBACK InitBFSTable(nsHashKey *aKey, void *aData, void* closu
 }
 
 // cleans up the BFS state table
-static PRBool PR_CALLBACK DeleteBFSEntry(nsHashKey *aKey, void *aData, void *closure) {
+static PRBool DeleteBFSEntry(nsHashKey *aKey, void *aData, void *closure) {
     SCTableData *data = (SCTableData*)aData;
     BFSState *state = data->data.state;
     delete state;

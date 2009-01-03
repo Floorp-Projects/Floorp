@@ -215,6 +215,18 @@ nsFormHistory::RemoveAllEntries()
   return rv;
 }
 
+NS_IMETHODIMP
+nsFormHistory::RemoveEntriesByTimeframe(PRInt64 aStartTime, PRInt64 aEndTime)
+{
+  return NS_ERROR_NOT_IMPLEMENTED;
+}
+
+NS_IMETHODIMP
+nsFormHistory::GetDBConnection()
+{
+  return NS_ERROR_NOT_IMPLEMENTED;
+}
+
 ////////////////////////////////////////////////////////////////////////
 //// nsIObserver
 
@@ -803,7 +815,7 @@ nsFormHistory::AutoCompleteSearch(const nsAString &aInputName,
   return NS_OK;
 }
 
-int PR_CALLBACK 
+int
 nsFormHistory::SortComparison(const void *v1, const void *v2, void *closureVoid) 
 {
   PRUint32 *index1 = (PRUint32 *)v1;

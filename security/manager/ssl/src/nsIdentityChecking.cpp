@@ -154,6 +154,18 @@ static struct nsMyTrustedEVInfo myTrustedEVInfos[] = {
     nsnull
   },
   {
+    // CN=COMODO ECC Certification Authority,O=COMODO CA Limited,L=Salford,ST=Greater Manchester,C=GB
+    "1.3.6.1.4.1.6449.1.2.1.5.1",
+    "Comodo EV OID",
+    SEC_OID_UNKNOWN,
+    "9F:74:4E:9F:2B:4D:BA:EC:0F:31:2C:50:B6:56:3B:8E:2D:93:C3:11",
+    "MIGFMQswCQYDVQQGEwJHQjEbMBkGA1UECBMSR3JlYXRlciBNYW5jaGVzdGVyMRAw"
+    "DgYDVQQHEwdTYWxmb3JkMRowGAYDVQQKExFDT01PRE8gQ0EgTGltaXRlZDErMCkG"
+    "A1UEAxMiQ09NT0RPIEVDQyBDZXJ0aWZpY2F0aW9uIEF1dGhvcml0eQ==",
+    "H0evqmIAcFBUTAGem2OZKg==",
+    nsnull
+  },
+  {
     // CN=COMODO Certification Authority,O=COMODO CA Limited,L=Salford,ST=Greater Manchester,C=GB
     "1.3.6.1.4.1.6449.1.2.1.5.1",
     "Comodo EV OID",
@@ -328,7 +340,7 @@ static struct nsMyTrustedEVInfo myTrustedEVInfos[] = {
     "0.0.0.0",
     0, // for real entries use a string like "Sample INVALID EV OID"
     SEC_OID_UNKNOWN,
-    "00:11:22:33:44:55:66:77:88:99:AA:BB:CC:DD:EE:FF:00:11:22:33"
+    "00:11:22:33:44:55:66:77:88:99:AA:BB:CC:DD:EE:FF:00:11:22:33",
     "Cg==",
     "Cg==",
     nsnull
@@ -947,7 +959,7 @@ nsNSSCertificate::hasValidEVOidTag(SECOidTag &resultOidTag, PRBool &validEV)
   rev.chainTests.cert_rev_method_independent_flags =
     revMethodIndependentFlags;
 
-  CERTValInParam cvin[3];
+  CERTValInParam cvin[4];
   cvin[0].type = cert_pi_policyOID;
   cvin[0].value.arraySize = 1; 
   cvin[0].value.array.oids = &oid_tag;

@@ -80,7 +80,21 @@ checkbox[disabled="true"] > .checkbox-check {
 }
 
 checkbox[disabled="true"] {
-  color: GrayText !important;
+  color: GrayText;
+}
+
+/* XXX Hack to work around bug 458231 */
+checkbox:-moz-system-metric(windows-classic) {
+  text-shadow: 1px 1px transparent;
+}
+
+checkbox:-moz-system-metric(windows-classic) > .checkbox-label-box > .checkbox-label {
+  margin-bottom: -2px !important;
+}
+
+checkbox[disabled="true"]:-moz-system-metric(windows-classic) {
+  color: ThreeDShadow;
+  text-shadow: 1px 1px ThreeDHighlight;
 }
 
 /* ::::: checkmark image ::::: */

@@ -268,7 +268,7 @@ nsCSSScanner::SetLowLevelError(nsresult aErrorCode)
 #ifdef CSS_REPORT_PARSE_ERRORS
 #define CSS_ERRORS_PREF "layout.css.report_errors"
 
-PR_STATIC_CALLBACK(int)
+static int
 CSSErrorsPrefChanged(const char *aPref, void *aClosure)
 {
   gReportErrors = nsContentUtils::GetBoolPref(CSS_ERRORS_PREF, PR_TRUE);
@@ -969,12 +969,26 @@ nsCSSScanner::ParseAndAppendEscape(nsString& aOutput)
     if (6 == i) { // look for trailing whitespace and eat it
       ch = Peek();
       if (IsWhitespace(ch)) {
-        ch = Read();
+        (void) Read();
       }
     }
     NS_ASSERTION(rv >= 0, "How did rv become negative?");
+    // "[at most six hexadecimal digits following a backslash] stand
+    // for the ISO 10646 character with that number, which must not be
+    // zero. (It is undefined in CSS 2.1 what happens if a style sheet
+    // does contain a character with Unicode codepoint zero.)"
+    //   -- CSS2.1 section 4.1.3
+    //
+    // Silently deleting \0 opens a content-filtration loophole (see
+    // bug 228856), so what we do instead is pretend the "cancels the
+    // meaning of special characters" rule applied.
     if (rv > 0) {
       AppendUCS4ToUTF16(ENSURE_VALID_CHAR(rv), aOutput);
+    } else {
+      while (i--)
+        aOutput.Append('0');
+      if (IsWhitespace(ch))
+        Pushback(ch);
     }
     return;
   } else {

@@ -1,0 +1,91 @@
+/* ***** BEGIN LICENSE BLOCK *****
+ * Version: MPL 1.1/GPL 2.0/LGPL 2.1
+ *
+ * The contents of this file are subject to the Mozilla Public License Version
+ * 1.1 (the "License"); you may not use this file except in compliance with
+ * the License. You may obtain a copy of the License at
+ * http://www.mozilla.org/MPL/
+ *
+ * Software distributed under the License is distributed on an "AS IS" basis,
+ * WITHOUT WARRANTY OF ANY KIND, either express or implied. See the License
+ * for the specific language governing rights and limitations under the
+ * License.
+ *
+ * The Original Code is Private Browsing.
+ *
+ * The Initial Developer of the Original Code is
+ * Ehsan Akhgari.
+ * Portions created by the Initial Developer are Copyright (C) 2008
+ * the Initial Developer. All Rights Reserved.
+ *
+ * Contributor(s):
+ *   Ehsan Akhgari <ehsan.akhgari@gmail.com> (Original Author)
+ *
+ * Alternatively, the contents of this file may be used under the terms of
+ * either of the GNU General Public License Version 2 or later (the "GPL"),
+ * or the GNU Lesser General Public License Version 2.1 or later (the "LGPL"),
+ * in which case the provisions of the GPL or the LGPL are applicable instead
+ * of those above. If you wish to allow use of your version of this file only
+ * under the terms of either the GPL or the LGPL, and not to allow others to
+ * use your version of this file under the terms of the MPL, indicate your
+ * decision by deleting the provisions above and replace them with the notice
+ * and other provisions required by the GPL or the LGPL. If you do not delete
+ * the provisions above, a recipient may use your version of this file under
+ * the terms of any one of the MPL, the GPL or the LGPL.
+ *
+ * ***** END LICENSE BLOCK ***** */
+
+#include "nsISupports.idl"
+
+[scriptable, uuid(49d6f133-80c0-48c7-876d-0b70bbfd0289)]
+interface nsIPrivateBrowsingService : nsISupports
+{
+    // When read, determines whether the private browsing mode is currently
+    // active.  Setting to true enters the private browsing mode, and setting
+    // to false leaves the private browsing mode.
+    // Setting this value while handling one of the notifications generated
+    // by the private browsing service throws NS_ERROR_FAILURE.
+    attribute boolean privateBrowsingEnabled;
+
+    // Determine whether the private browsing mode has been started
+    // automatically at application startup.
+    // This value will never be true if privateBrowsingEnabled is false.
+    readonly attribute boolean autoStarted;
+
+    /**
+     * Removes all data stored for a given domain.  This includes all data for
+     * subdomains of the given domain.
+     *
+     * @param aDomain
+     *        The domain that will have its data removed.
+     */
+    void removeDataFromDomain(in AUTF8String aDomain);
+};
+
+%{C++
+/**
+ * Private Browsing service notifications:
+ *
+ * - NS_PRIVATE_BROWSING_REQUEST_TOPIC:
+ *   The data parameter determines which kind of request this represents:
+ * --- NS_PRIVATE_BROWSING_ENTER:
+ *     We send this notification before switching to the private browsing mode.
+ *     The subject parameter is set to a nsISupportsPRBool, which observers can
+ *     set to true to prevent the switch to the private browsing mode.
+ * --- NS_PRIVATE_BROWSING_LEAVE:
+ *     We send this notification before leaving the private browsing mode.
+ *     The subject parameter is set to a nsISupportsPRBool, which observers can
+ *     set to true to prevent leaving the private browsing mode.
+ *
+ * - NS_PRIVATE_BROWSING_SWITCH_TOPIC:
+ *   The data parameter determines which kind of switch this represents:
+ * --- NS_PRIVATE_BROWSING_ENTER:
+ *     We send this notification while switching to the private browsing mode.
+ * --- NS_PRIVATE_BROWSING_LEAVE:
+ *     We send this notification while leaving the private browsing mode.
+ */
+#define NS_PRIVATE_BROWSING_SWITCH_TOPIC  "private-browsing"
+#define NS_PRIVATE_BROWSING_REQUEST_TOPIC "private-browsing-cancel-vote"
+#define NS_PRIVATE_BROWSING_ENTER         "enter"
+#define NS_PRIVATE_BROWSING_LEAVE         "exit"
+%}

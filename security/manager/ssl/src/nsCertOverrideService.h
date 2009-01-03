@@ -77,6 +77,7 @@ public:
     mFingerprint = other.mFingerprint;
     mOverrideBits = other.mOverrideBits;
     mDBKey = other.mDBKey;
+    mCert = other.mCert;
     return *this;
   }
 
@@ -87,6 +88,7 @@ public:
   nsCString mFingerprintAlgOID;
   OverrideBits mOverrideBits;
   nsCString mDBKey;
+  nsCOMPtr <nsIX509Cert> mCert;
 
   static void convertBitsToString(OverrideBits ob, nsACString &str);
   static void convertStringToBits(const nsACString &str, OverrideBits &ob);
@@ -170,6 +172,7 @@ public:
   ~nsCertOverrideService();
 
   nsresult Init();
+  void RemoveAllTemporaryOverrides();
 
   typedef void 
   (*PR_CALLBACK CertOverrideEnumerator)(const nsCertOverride &aSettings,
@@ -198,6 +201,7 @@ protected:
     nsresult Read();
     nsresult Write();
     nsresult AddEntryToList(const nsACString &host, PRInt32 port,
+                            nsIX509Cert *aCert,
                             const PRBool aIsTemporary,
                             const nsACString &algo_oid, 
                             const nsACString &fingerprint,

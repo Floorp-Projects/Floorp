@@ -50,7 +50,7 @@ interface nsIDownloadProgressListener;
 interface nsISimpleEnumerator;
 interface mozIStorageConnection;
 
-[scriptable, uuid(88a2df08-47f7-4268-bb16-81bab231f1bf)]
+[scriptable, uuid(bacca1ac-1b01-4a6f-9e91-c2ead1f7d2c0)]
 interface nsIDownloadManager : nsISupports {
   /**
    * Download type for generic file download.
@@ -191,6 +191,18 @@ interface nsIDownloadManager : nsISupports {
    * @throws NS_ERROR_FAILURE if the download is active.
    */
   void removeDownload(in unsigned long aID);
+
+  /**
+   * Removes all inactive downloads that were started inclusively within the
+   * specified time frame.
+   *
+   * @param aBeginTime
+   *        The start time to remove downloads by in microseconds.
+   * @param aEndTime
+   *        The end time to remove downloads by in microseconds.
+   */
+  void removeDownloadsByTimeframe(in long long aBeginTime,
+                                  in long long aEndTime);
 
   /**
    * Pause the specified download.

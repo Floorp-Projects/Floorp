@@ -111,7 +111,7 @@ class BlobImpl;
 // change to free the key in DataSourceFreeEntry.
 // XXX sigh, why were DefaultAllocTable et. al. declared static, anyway?
 
-static void * PR_CALLBACK
+static void *
 DataSourceAllocTable(void *pool, PRSize size)
 {
 #if defined(XP_MAC)
@@ -121,7 +121,7 @@ DataSourceAllocTable(void *pool, PRSize size)
     return PR_MALLOC(size);
 }
 
-static void PR_CALLBACK
+static void
 DataSourceFreeTable(void *pool, void *item)
 {
 #if defined(XP_MAC)
@@ -131,7 +131,7 @@ DataSourceFreeTable(void *pool, void *item)
     PR_Free(item);
 }
 
-static PLHashEntry * PR_CALLBACK
+static PLHashEntry *
 DataSourceAllocEntry(void *pool, const void *key)
 {
 #if defined(XP_MAC)
@@ -141,7 +141,7 @@ DataSourceAllocEntry(void *pool, const void *key)
     return PR_NEW(PLHashEntry);
 }
 
-static void PR_CALLBACK
+static void
 DataSourceFreeEntry(void *pool, PLHashEntry *he, PRUintn flag)
 {
 #if defined(XP_MAC)
@@ -168,13 +168,13 @@ struct ResourceHashEntry : public PLDHashEntryHdr {
     const char *mKey;
     nsIRDFResource *mResource;
 
-    static PLDHashNumber PR_CALLBACK
+    static PLDHashNumber
     HashKey(PLDHashTable *table, const void *key)
     {
         return nsCRT::HashCode(static_cast<const char *>(key));
     }
 
-    static PRBool PR_CALLBACK
+    static PRBool
     MatchEntry(PLDHashTable *table, const PLDHashEntryHdr *hdr,
                const void *key)
     {
@@ -206,13 +206,13 @@ struct LiteralHashEntry : public PLDHashEntryHdr {
     nsIRDFLiteral *mLiteral;
     const PRUnichar *mKey;
 
-    static PLDHashNumber PR_CALLBACK
+    static PLDHashNumber
     HashKey(PLDHashTable *table, const void *key)
     {
         return nsCRT::HashCode(static_cast<const PRUnichar *>(key));
     }
 
-    static PRBool PR_CALLBACK
+    static PRBool
     MatchEntry(PLDHashTable *table, const PLDHashEntryHdr *hdr,
                const void *key)
     {
@@ -244,13 +244,13 @@ struct IntHashEntry : public PLDHashEntryHdr {
     nsIRDFInt *mInt;
     PRInt32    mKey;
 
-    static PLDHashNumber PR_CALLBACK
+    static PLDHashNumber
     HashKey(PLDHashTable *table, const void *key)
     {
         return PLDHashNumber(*static_cast<const PRInt32 *>(key));
     }
 
-    static PRBool PR_CALLBACK
+    static PRBool
     MatchEntry(PLDHashTable *table, const PLDHashEntryHdr *hdr,
                const void *key)
     {
@@ -281,7 +281,7 @@ struct DateHashEntry : public PLDHashEntryHdr {
     nsIRDFDate *mDate;
     PRTime      mKey;
 
-    static PLDHashNumber PR_CALLBACK
+    static PLDHashNumber
     HashKey(PLDHashTable *table, const void *key)
     {
         // xor the low 32 bits with the high 32 bits.
@@ -296,7 +296,7 @@ struct DateHashEntry : public PLDHashEntryHdr {
         return PLDHashNumber(l32 ^ h32);
     }
 
-    static PRBool PR_CALLBACK
+    static PRBool
     MatchEntry(PLDHashTable *table, const PLDHashEntryHdr *hdr,
                const void *key)
     {
@@ -400,7 +400,7 @@ BlobImpl::GetLength(PRInt32 *aResult)
 struct BlobHashEntry : public PLDHashEntryHdr {
     BlobImpl *mBlob;
 
-    static PLDHashNumber PR_CALLBACK
+    static PLDHashNumber
     HashKey(PLDHashTable *table, const void *key)
     {
         const BlobImpl::Data *data =
@@ -413,7 +413,7 @@ struct BlobHashEntry : public PLDHashEntryHdr {
         return h;
     }
 
-    static PRBool PR_CALLBACK
+    static PRBool
     MatchEntry(PLDHashTable *table, const PLDHashEntryHdr *hdr,
                const void *key)
     {

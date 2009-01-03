@@ -11,13 +11,33 @@
 <![CDATA[
 
 function runTest() {
+  var tests = execTests();
+  function execNext() {
+    try {
+      tests.next();
+      setTimeout(execNext, 0);
+    } catch (e) {}
+  }
+  execNext();
+}
+
+function execTests() {
   var e = document.getElementById("edit");
   var doc = e.contentDocument;
   var win = e.contentWindow;
   var root = doc.documentElement;
+  var body = doc.body;
+
+  body.style.fontSize='16px';
+  body.style.lineHeight='16px';
+  body.style.height='400px';
+  body.style.padding='0px';
+  body.style.margin='0px';
+  body.style.borderSize='0px';
+
   var sel = win.getSelection();
   doc.designMode='on';
-  doc.body.innerHTML = "1<br>2<br>3<br>4<br>5<br>6<br>7<br>8<br>9<br>10<br>11<br>12<br>";
+  body.innerHTML = "1<br>2<br>3<br>4<br>5<br>6<br>7<br>8<br>9<br>10<br>11<br>12<br>";
   win.focus();
 
   netscape.security.PrivilegeManager.enablePrivilege("UniversalXPConnect");
@@ -30,7 +50,6 @@ function runTest() {
   }
 
   function testScrollCommand(cmd, expectTop) {
-    doCommand(cmd);
     is(root.getBoundingClientRect().top, -expectTop, cmd);
   }
 
@@ -57,7 +76,7 @@ function runTest() {
     doCommand(cmd);
     is(sel.isCollapsed, true, "collapsed after " + cmd);
     is(sel.anchorOffset, expectOffset, "offset after " + cmd);
-    return findChildNum(doc.body, sel.anchorNode);
+    return findChildNum(body, sel.anchorNode);
   }
 
   function testSelectCommand(cmd, expectNode, expectOffset) {
@@ -79,11 +98,11 @@ function runTest() {
     is(sel.anchorNode, anchorNode, "anchor not moved after " + cmd);
     is(sel.anchorOffset, anchorOffset, "anchor not moved after " + cmd);
     is(sel.focusOffset, expectOffset, "offset after " + cmd);
-    return findChildNum(doc.body, sel.focusNode);
+    return findChildNum(body, sel.focusNode);
   }
 
   function node(i) {
-    var n = doc.body.firstChild;
+    var n = body.firstChild;
     while (i > 0) {
       n = n.nextSibling;
       --i;
@@ -91,72 +110,91 @@ function runTest() {
     return n;
   }
 
+  doCommand("cmd_scrollBottom");
   testScrollCommand("cmd_scrollBottom", root.scrollHeight - 100);
+  doCommand("cmd_scrollTop");
   testScrollCommand("cmd_scrollTop", 0);
 
   doCommand("cmd_scrollPageDown");
+  yield;
   var pageHeight = -root.getBoundingClientRect().top;
   ok(pageHeight > 0, "cmd_scrollPageDown works");
   ok(pageHeight <= 100, "cmd_scrollPageDown doesn't scroll too much");
   doCommand("cmd_scrollBottom");
+  doCommand("cmd_scrollPageUp");
+  yield;
   testScrollCommand("cmd_scrollPageUp", root.scrollHeight - 100 - pageHeight);
 
   doCommand("cmd_scrollTop");
   doCommand("cmd_scrollLineDown");
+  yield;
   var lineHeight = -root.getBoundingClientRect().top;
   ok(lineHeight > 0, "Can scroll by lines");
   doCommand("cmd_scrollBottom");
+  doCommand("cmd_scrollLineUp");
+  yield;
   testScrollCommand("cmd_scrollLineUp", root.scrollHeight - 100 - lineHeight);
 
-  testMoveCommand("cmd_moveBottom", doc.body, 23);
-  testMoveCommand("cmd_moveTop", node(0), 0);
-  testSelectCommand("cmd_selectBottom", doc.body, 23);
-  doCommand("cmd_moveBottom");
-  testSelectCommand("cmd_selectTop", node(0), 0);
+  var runSelectionTests = function(selectWordNextNode, selectWordNextOffset) {
+    testMoveCommand("cmd_moveBottom", body, 23);
+    testMoveCommand("cmd_moveTop", node(0), 0);
+    testSelectCommand("cmd_selectBottom", body, 23);
+    doCommand("cmd_moveBottom");
+    testSelectCommand("cmd_selectTop", node(0), 0);
 
-  doCommand("cmd_moveTop");
-  testMoveCommand("cmd_lineNext", node(2), 0);
-  testMoveCommand("cmd_linePrevious", node(0), 0);
-  testSelectCommand("cmd_selectLineNext", node(2), 0);
-  doCommand("cmd_moveBottom");
-  testSelectCommand("cmd_selectLinePrevious", node(20), 2);
+    doCommand("cmd_moveTop");
+    testMoveCommand("cmd_lineNext", node(2), 0);
+    testMoveCommand("cmd_linePrevious", node(0), 0);
+    testSelectCommand("cmd_selectLineNext", node(2), 0);
+    doCommand("cmd_moveBottom");
+    testSelectCommand("cmd_selectLinePrevious", node(20), 2);
 
-  doCommand("cmd_moveBottom");
-  testMoveCommand("cmd_charPrevious", node(22), 1);
-  testMoveCommand("cmd_charNext", node(22), 2);
-  testSelectCommand("cmd_selectCharPrevious", node(22), 1);
-  doCommand("cmd_moveTop");
-  testSelectCommand("cmd_selectCharNext", node(0), 1);
+    doCommand("cmd_moveBottom");
+    testMoveCommand("cmd_charPrevious", node(22), 1);
+    testMoveCommand("cmd_charNext", node(22), 2);
+    testSelectCommand("cmd_selectCharPrevious", node(22), 1);
+    doCommand("cmd_moveTop");
+    testSelectCommand("cmd_selectCharNext", node(0), 1);
 
-  doCommand("cmd_moveTop");
-  testMoveCommand("cmd_endLine", doc.body, 1);
-  testMoveCommand("cmd_beginLine", node(0), 0);
-  testSelectCommand("cmd_selectEndLine", doc.body, 1);
-  doCommand("cmd_moveBottom");
-  testSelectCommand("cmd_selectBeginLine", node(22), 0);
+    doCommand("cmd_moveTop");
+    testMoveCommand("cmd_endLine", body, 1);
+    testMoveCommand("cmd_beginLine", node(0), 0);
+    testSelectCommand("cmd_selectEndLine", body, 1);
+    doCommand("cmd_moveBottom");
+    testSelectCommand("cmd_selectBeginLine", node(22), 0);
 
-  doCommand("cmd_moveBottom");
-  testMoveCommand("cmd_wordPrevious", node(22), 0);
-  testMoveCommand("cmd_wordNext", doc.body, 23);
-  testSelectCommand("cmd_selectWordPrevious", node(22), 0);
-  // XXX this fails on Windows, bug 455818
-  // doCommand("cmd_moveTop");
-  // testSelectCommand("cmd_selectWordNext", doc.body, 1);
+    doCommand("cmd_moveBottom");
+    testMoveCommand("cmd_wordPrevious", node(22), 0);
+    testMoveCommand("cmd_wordNext", body, 23);
+    testSelectCommand("cmd_selectWordPrevious", node(22), 0);
+    doCommand("cmd_moveTop");
+    testSelectCommand("cmd_selectWordNext", selectWordNextNode, selectWordNextOffset);
 
-  doCommand("cmd_moveTop");
-  var lineNum = testPageMoveCommand("cmd_movePageDown", 0);
-  ok(lineNum > 0, "cmd_movePageDown works");
-  doCommand("cmd_moveBottom");
-  doCommand("cmd_beginLine");
-  // XXX this fails on Windows, bug 455818
-  // is(testPageMoveCommand("cmd_movePageUp", 0), 22 - lineNum, "cmd_movePageUp works");
+    doCommand("cmd_moveTop");
+    var lineNum = testPageMoveCommand("cmd_movePageDown", 0);
+    ok(lineNum > 0, "cmd_movePageDown works");
+    doCommand("cmd_moveBottom");
+    doCommand("cmd_beginLine");
+    is(testPageMoveCommand("cmd_movePageUp", 0), 22 - lineNum, "cmd_movePageUp");
 
-  doCommand("cmd_moveTop");
-  is(testPageSelectCommand("cmd_selectPageDown", 0), lineNum, "cmd_selectPageUp works");
-  doCommand("cmd_moveBottom");
-  doCommand("cmd_beginLine");
-  // XXX this fails on Windows, bug 455818
-  // is(testPageSelectCommand("cmd_selectPageUp", 0), 22 - lineNum, "cmd_selectPageUp works");
+    doCommand("cmd_moveTop");
+    is(testPageSelectCommand("cmd_selectPageDown", 0), lineNum, "cmd_selectPageDown");
+    doCommand("cmd_moveBottom");
+    doCommand("cmd_beginLine");
+    is(testPageSelectCommand("cmd_selectPageUp", 0), 22 - lineNum, "cmd_selectPageUp");
+  }
+
+  var prefs = Components.classes["@mozilla.org/preferences-service;1"]
+                          .getService(Components.interfaces.nsIPrefBranch);
+  var origPrefValue = prefs.getBoolPref("layout.word_select.eat_space_to_next_word");
+  try {
+    prefs.setBoolPref("layout.word_select.eat_space_to_next_word", false);
+    runSelectionTests(body, 1);
+    prefs.setBoolPref("layout.word_select.eat_space_to_next_word", true);
+    runSelectionTests(node(2), 0);
+  } finally {
+    prefs.setBoolPref("layout.word_select.eat_space_to_next_word", origPrefValue);
+  }
 
   SimpleTest.finish();
 }

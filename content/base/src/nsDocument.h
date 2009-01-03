@@ -110,6 +110,10 @@
 #include "nsThreadUtils.h"
 #include "nsIDocumentViewer.h"
 #include "nsIInterfaceRequestor.h"
+#include "nsILoadContext.h"
+#include "nsIProgressEventSink.h"
+#include "nsISecurityEventSink.h"
+#include "nsIChannelEventSink.h"
 
 #define XML_DECLARATION_BITS_DECLARATION_EXISTS   (1 << 0)
 #define XML_DECLARATION_BITS_ENCODING_EXISTS      (1 << 1)
@@ -136,9 +140,9 @@ PR_BEGIN_EXTERN_C
    functions.  That's the only way in which they differ from
    PLHandleEventProc and PLDestroyEventProc. */
 typedef void*
-(PR_CALLBACK EventHandlerFunc)(PLEvent* self);
+(EventHandlerFunc)(PLEvent* self);
 typedef void
-(PR_CALLBACK EventDestructorFunc)(PLEvent* self);
+(EventDestructorFunc)(PLEvent* self);
 PR_END_EXTERN_C
 
 /**
@@ -310,8 +314,8 @@ public:
     static KeyTypePointer KeyToPointer(KeyType& aKey) { return &aKey; }
     static PLDHashNumber HashKey(KeyTypePointer aKey)
     {
-      return NS_PTR_TO_INT32(aKey->mCallback) >> 2 +
-             NS_PTR_TO_INT32(aKey->mData);
+      return (NS_PTR_TO_INT32(aKey->mCallback) >> 2) ^
+             (NS_PTR_TO_INT32(aKey->mData));
     }
     enum { ALLOW_MEMMOVE = PR_TRUE };
     
@@ -367,6 +371,24 @@ public:
   virtual void StyleSheetRemoved(nsIDocument *aDocument,
                                  nsIStyleSheet* aStyleSheet,
                                  PRBool aDocumentSheet);
+
+  nsIStyleSheet* GetItemAt(PRUint32 aIndex);
+
+  static nsDOMStyleSheetList* FromSupports(nsISupports* aSupports)
+  {
+    nsIDOMStyleSheetList* list = static_cast<nsIDOMStyleSheetList*>(aSupports);
+#ifdef DEBUG
+    {
+      nsCOMPtr<nsIDOMStyleSheetList> list_qi = do_QueryInterface(aSupports);
+
+      // If this assertion fires the QI implementation for the object in
+      // question doesn't use the nsIDOMStyleSheetList pointer as the
+      // nsISupports pointer. That must be fixed, or we'll crash...
+      NS_ASSERTION(list_qi == list, "Uh, fix QI!");
+    }
+#endif
+    return static_cast<nsDOMStyleSheetList*>(list);
+  }
 
 protected:
   PRInt32       mLength;
@@ -478,7 +500,42 @@ protected:
     NS_DECL_ISUPPORTS
     NS_DECL_NSIINTERFACEREQUESTOR
   private:
+    // The only reason it's safe to hold a strong ref here without leaking is
+    // that the notificationCallbacks on a loadgroup aren't the docshell itself
+    // but a shim that holds a weak reference to the docshell.
     nsCOMPtr<nsIInterfaceRequestor> mCallbacks;
+
+    // Use shims for interfaces that docshell implements directly so that we
+    // don't hand out references to the docshell.  The shims should all allow
+    // getInterface back on us, but other than that each one should only
+    // implement one interface.
+    
+    // XXXbz I wish we could just derive the _allcaps thing from _i
+#define DECL_SHIM(_i, _allcaps)                                              \
+    class _i##Shim : public nsIInterfaceRequestor,                           \
+                     public _i                                               \
+    {                                                                        \
+    public:                                                                  \
+      _i##Shim(nsIInterfaceRequestor* aIfreq, _i* aRealPtr)                  \
+        : mIfReq(aIfreq), mRealPtr(aRealPtr)                                 \
+      {                                                                      \
+        NS_ASSERTION(mIfReq, "Expected non-null here");                      \
+        NS_ASSERTION(mRealPtr, "Expected non-null here");                    \
+      }                                                                      \
+      NS_DECL_ISUPPORTS                                                      \
+      NS_FORWARD_NSIINTERFACEREQUESTOR(mIfReq->);                            \
+      NS_FORWARD_##_allcaps(mRealPtr->);                                     \
+    private:                                                                 \
+      nsCOMPtr<nsIInterfaceRequestor> mIfReq;                                \
+      nsCOMPtr<_i> mRealPtr;                                                 \
+    };
+
+    DECL_SHIM(nsILoadContext, NSILOADCONTEXT)
+    DECL_SHIM(nsIProgressEventSink, NSIPROGRESSEVENTSINK)
+    DECL_SHIM(nsIChannelEventSink, NSICHANNELEVENTSINK)
+    DECL_SHIM(nsISecurityEventSink, NSISECURITYEVENTSINK)
+    DECL_SHIM(nsIApplicationCacheContainer, NSIAPPLICATIONCACHECONTAINER)
+#undef DECL_SHIM
   };
   
   /**
@@ -677,12 +734,6 @@ public:
     GetScriptHandlingObject(PRBool& aHasHadScriptHandlingObject) const;
   virtual void SetScriptHandlingObject(nsIScriptGlobalObject* aScriptObject);
 
-  virtual void ClearScriptHandlingObject()
-  {
-    mScriptObject = nsnull;
-    mHasHadScriptHandlingObject = PR_TRUE;
-  }
-
   virtual nsIScriptGlobalObject* GetScopeObject();
 
   /**
@@ -738,9 +789,6 @@ public:
                                 nsIStyleRule* aStyleRule);
 
   virtual void FlushPendingNotifications(mozFlushType aType);
-  virtual void AddReference(void *aKey, nsISupports *aReference);
-  virtual nsISupports *GetReference(void *aKey);
-  virtual void RemoveReference(void *aKey);
   virtual nsIScriptEventManager* GetScriptEventManager();
   virtual void SetXMLDeclaration(const PRUnichar *aVersion,
                                  const PRUnichar *aEncoding,
@@ -759,7 +807,7 @@ public:
   // nsINode
   virtual PRBool IsNodeOfType(PRUint32 aFlags) const;
   virtual nsIContent *GetChildAt(PRUint32 aIndex) const;
-  virtual nsIContent * const * GetChildArray() const;
+  virtual nsIContent * const * GetChildArray(PRUint32* aChildCount) const;
   virtual PRInt32 IndexOf(nsINode* aPossibleChild) const;
   virtual PRUint32 GetChildCount() const;
   virtual nsresult InsertChildAt(nsIContent* aKid, PRUint32 aIndex,
@@ -909,6 +957,12 @@ public:
                                                    nsIDOMNodeList** aResult);
   virtual NS_HIDDEN_(nsresult) GetContentListFor(nsIContent* aContent,
                                                  nsIDOMNodeList** aResult);
+
+  virtual NS_HIDDEN_(nsresult) ElementFromPointHelper(PRInt32 aX, PRInt32 aY,
+                                                      PRBool aIgnoreRootScrollFrame,
+                                                      PRBool aFlushLayout,
+                                                      nsIDOMElement** aReturn);
+
   virtual NS_HIDDEN_(void) FlushSkinBindings();
 
   virtual NS_HIDDEN_(nsresult) InitializeFrameLoader(nsFrameLoader* aLoader);
@@ -1146,7 +1200,6 @@ protected:
   PRUint8 mIdMissCount;
 
   nsInterfaceHashtable<nsVoidPtrHashKey, nsPIBoxObject> *mBoxObjectTable;
-  nsInterfaceHashtable<nsVoidPtrHashKey, nsISupports> *mContentWrapperHash;
 
   // The channel that got passed to StartDocumentLoad(), if any
   nsCOMPtr<nsIChannel> mChannel;
@@ -1214,5 +1267,18 @@ private:
 
   nsExternalResourceMap mExternalResourceMap;
 };
+
+#define NS_DOCUMENT_INTERFACE_TABLE_BEGIN(_class)                             \
+  NS_NODE_OFFSET_AND_INTERFACE_TABLE_BEGIN(_class)                            \
+  NS_INTERFACE_TABLE_ENTRY_AMBIGUOUS(_class, nsIDOMDocument, nsDocument)      \
+  NS_INTERFACE_TABLE_ENTRY_AMBIGUOUS(_class, nsIDOMNSDocument, nsDocument)    \
+  NS_INTERFACE_TABLE_ENTRY_AMBIGUOUS(_class, nsIDOMDocumentEvent, nsDocument) \
+  NS_INTERFACE_TABLE_ENTRY_AMBIGUOUS(_class, nsIDOMDocumentView, nsDocument)  \
+  NS_INTERFACE_TABLE_ENTRY_AMBIGUOUS(_class, nsIDOMDocumentTraversal,         \
+                                     nsDocument)                              \
+  NS_INTERFACE_TABLE_ENTRY_AMBIGUOUS(_class, nsIDOMEventTarget, nsDocument)   \
+  NS_INTERFACE_TABLE_ENTRY_AMBIGUOUS(_class, nsIDOMNode, nsDocument)          \
+  NS_INTERFACE_TABLE_ENTRY_AMBIGUOUS(_class, nsIDOM3Node, nsDocument)         \
+  NS_INTERFACE_TABLE_ENTRY_AMBIGUOUS(_class, nsIDOM3Document, nsDocument)
 
 #endif /* nsDocument_h___ */

@@ -2181,7 +2181,7 @@ file_constructor(JSContext *cx, JSObject *obj, uintN argc, jsval *argv,
     JSString *str;
     JSFile   *file;
 
-    if (!(cx->fp->flags & JSFRAME_CONSTRUCTING)) {
+    if (!JS_IsConstructing(cx)) {
         /* Replace obj with a new File object. */
         obj = JS_NewObject(cx, &js_FileClass, NULL, NULL);
         if (!obj)

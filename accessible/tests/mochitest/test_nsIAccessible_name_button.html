@@ -1,0 +1,148 @@
+<html>
+
+<head>
+  <title>nsIAccessible::name calculation for HTML buttons</title>
+  <link rel="stylesheet" type="text/css" href="chrome://mochikit/content/tests/SimpleTest/test.css" />
+
+  <script type="application/javascript"
+          src="chrome://mochikit/content/MochiKit/packed.js"></script>
+  <script type="application/javascript"
+          src="chrome://mochikit/content/tests/SimpleTest/SimpleTest.js"></script>
+  <script type="application/javascript"
+          src="chrome://mochikit/content/a11y/accessible/common.js"></script>
+  <script type="application/javascript"
+          src="chrome://mochikit/content/a11y/accessible/nsIAccessible_name.js"></script>
+
+  <script type="application/javascript">
+    function doTest()
+    {
+      // html:button, aria-label
+      testName("btn_aria_label", "button label");
+
+      // html:button, aria-labelledby
+      testName("btn_aria_labelledby_text", "text");
+
+      // html:button, html:label
+      testName("btn_labelled", "label");
+
+      // html:button, name from content
+      testName("btn_namefromcontent", "1");
+
+      // html:button, no name from content
+      testName("btn_nonamefromcontent", null);
+
+      // @html:button, title
+      testName("btn_title", "title");
+
+      // html:input, aria-label
+      testName("input_aria_label", "button label");
+
+      // html:input, aria-labelledby
+      testName("input_aria_labelledby_text", "text");
+
+      // html:input, html:label
+      testName("input_labelled", "label");
+
+      // html:input, @value
+      testName("input_value0", "1");
+
+      // html:input, @value
+      testName("input_value", "1");
+
+      // html:input, @alt
+      testName("input_alt", "alt");
+
+      // html:input, @src
+      testName("input_src", "src");
+
+      // html:input, @data
+      testName("input_data", "data");
+
+      // html:input, @title
+      testName("input_title", "title");
+
+      SimpleTest.finish();
+    }
+
+    SimpleTest.waitForExplicitFinish();
+    addLoadEvent(doTest);
+  </script>
+
+</head>
+
+<body>
+
+  <a target="_blank"
+     href="https://bugzilla.mozilla.org/show_bug.cgi?id=459635"
+     title="nsIAccessible::name calculation for HTML buttons">
+    Mozilla Bug 459635
+  </a>
+  <p id="display"></p>
+  <div id="content" style="display: none"></div>
+  <pre id="test">
+  </pre>
+
+  <!-- button, aria-label, preferred to aria-labelledby -->
+  <button id="btn_aria_label"
+          aria-label="button label"
+          aria-labelledby="btn_aria_labelledby_text">1</button>
+  <br/>
+
+  <!-- button, aria-labelledby, preferred to html:label -->
+  <span id="aria_labelledby_text">text</span>
+  <label for="btn_aria_labelledby_text">label</label>
+  <button id="btn_aria_labelledby_text"
+          aria-labelledby="aria_labelledby_text">1</button>
+  <br/>
+
+  <!-- button, label, preferred to name from content -->
+  <label for="btn_labelled">label</label>
+  <button id="btn_labelled">1</button>
+
+  <!-- button, name from content, preferred to @title -->
+  <button id="btn_namefromcontent" title="title">1</button>
+
+  <!-- button, no name from content, ARIA role overrides this rule -->
+  <button id="btn_nonamefromcontent" role="presentation">1</button>
+
+  <!-- button, no content, name from @title -->
+  <button id="btn_title" title="title"></button>
+
+  <!-- input, aria-label, preferred to aria-labelledby -->
+  <input type="button" id="input_aria_label"
+          aria-label="button label"
+          aria-labelledby="aria_labelledby_text_for_input"
+          value="1"/>
+  <br/>
+
+  <!-- aria-labelledby, preferred to html:label -->
+  <span id="aria_labelledby_text_for_input">text</span>
+  <label for="input_aria_labelledby_text">label</label>
+  <input type="button" id="input_aria_labelledby_text"
+         aria-labelledby="aria_labelledby_text_for_input"
+         value="1"/>
+  <br/>
+
+  <!-- label, preferred to @title -->
+  <label for="input_labelled">label</label>
+  <input type="button" id="input_labelled" value="1" title="title"/>
+
+  <!-- name from @value, prefered to @title -->
+  <input type="button" id="input_value0" title="title" value="1"/>
+
+  <!-- name from @value, prefered to @alt -->
+  <input type="button" id="input_value" value="1" alt="alt"/>
+
+  <!-- name from @alt, preferred to @src -->
+  <input type="button" id="input_alt" alt="alt" @src="src"/>
+
+  <!-- name from @src, preferred to @data -->
+  <input type="button" id="input_src" src="src" data="data"/>
+
+  <!-- name from @data -->
+  <input type="button" id="input_data" data="data"/>
+
+  <!-- name from @title -->
+  <input type="button" id="input_title" title="title"/>
+</body>
+</html>

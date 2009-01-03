@@ -258,16 +258,13 @@
         if (this.lastChild)
           this.lastChild.setAttribute("last-tab", "true");
 
-        var o = this.getAttribute("orient");
-        if (!o)
+        if (!this.hasAttribute("orient"))
           this.setAttribute("orient", "horizontal");
 
-        for (var parent = this.parentNode; parent; parent = parent.parentNode) {
-          if (parent.localName == "tabbox" && parent.hasAttribute("selectedIndex")) {
-            var selectedIndex = parseInt(parent.getAttribute("selectedIndex"));
-            this.selectedIndex = selectedIndex > 0 ? selectedIndex : 0;
-            return;
-          }
+        if (this._tabbox && this._tabbox.hasAttribute("selectedIndex")) {
+          let selectedIndex = parseInt(this._tabbox.getAttribute("selectedIndex"));
+          this.selectedIndex = selectedIndex > 0 ? selectedIndex : 0;
+          return;
         }
 
         var children = this.childNodes;
@@ -314,6 +311,16 @@
         </setter>
       </property>
 
+      <field name="_tabbox"><![CDATA[
+        var parent = this.parentNode;
+        while (parent) {
+          if (parent.localName == "tabbox")
+            break;
+          parent = parent.parentNode;
+        }
+        parent;
+      ]]></field>
+
       <property name="selectedIndex">
         <getter>
         <![CDATA[
@@ -340,21 +347,18 @@
 
             this.setAttribute("value", tab.value);
 
-            for (var parent = this.parentNode; parent; parent = parent.parentNode) {
-              if (parent.localName == 'tabbox') {
-                parent.setAttribute("selectedIndex", val);
-                var tabpanels = parent.tabpanels;
-                // This will cause an onselect event to fire for the tabpanel element.
-                if (tabpanels) {
-                  // find an id 
-                  var linkedPanelId = tab.linkedPanel;
-                  var linkedPanel = linkedPanelId ? document.getElementById(linkedPanelId) : null;
-                  if (linkedPanel)
-                    tabpanels.selectedPanel = linkedPanel;
-                  else
-                    tabpanels.selectedIndex = val;
-                }
-                break;
+            if (this._tabbox) {
+              this._tabbox.setAttribute("selectedIndex", val);
+              var tabpanels = this._tabbox.tabpanels;
+              // This will cause an onselect event to fire for the tabpanel element.
+              if (tabpanels) {
+                // find an id
+                let linkedPanelId = tab.linkedPanel;
+                let linkedPanel = linkedPanelId ? document.getElementById(linkedPanelId) : null;
+                if (linkedPanel)
+                  tabpanels.selectedPanel = linkedPanel;
+                else
+                  tabpanels.selectedIndex = val;
               }
             }
 
@@ -440,17 +444,14 @@
             document.commandDispatcher.advanceFocusIntoSubtree(aNewTab);
             
             // Make sure that the focus doesn't move outside the tabbox
-            for (var parent = this.parentNode; parent; parent = parent.parentNode) {
-              if (parent.localName == "tabbox") {
-                try {
-                  var el = document.commandDispatcher.focusedElement;
-                  while (el && el != parent)
-                    el = el.parentNode;
-                  if (el != parent)
-                    aNewTab.focus();
-                } catch(e) {
-                }
-                break;
+            if (this._tabbox) {
+              try {
+                let el = document.commandDispatcher.focusedElement;
+                while (el && el != this._tabbox)
+                  el = el.parentNode;
+                if (el != this._tabbox)
+                  aNewTab.focus();
+              } catch(e) {
               }
             }
           }

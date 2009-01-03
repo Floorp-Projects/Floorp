@@ -543,7 +543,11 @@ nsLineIterator::~nsLineIterator()
   }
 }
 
-NS_IMPL_ISUPPORTS2(nsLineIterator, nsILineIterator, nsILineIteratorNavigator)
+/* virtual */ void
+nsLineIterator::DisposeLineIterator()
+{
+  delete this;
+}
 
 nsresult
 nsLineIterator::Init(nsLineList& aLines, PRBool aRightToLeft)
@@ -578,26 +582,16 @@ nsLineIterator::Init(nsLineList& aLines, PRBool aRightToLeft)
   return NS_OK;
 }
 
-NS_IMETHODIMP
-nsLineIterator::GetNumLines(PRInt32* aResult)
+PRInt32
+nsLineIterator::GetNumLines()
 {
-  NS_PRECONDITION(aResult, "null OUT ptr");
-  if (!aResult) {
-    return NS_ERROR_NULL_POINTER;
-  }
-  *aResult = mNumLines;
-  return NS_OK;
+  return mNumLines;
 }
 
-NS_IMETHODIMP
-nsLineIterator::GetDirection(PRBool* aIsRightToLeft)
+PRBool
+nsLineIterator::GetDirection()
 {
-  NS_PRECONDITION(aIsRightToLeft, "null OUT ptr");
-  if (!aIsRightToLeft) {
-    return NS_ERROR_NULL_POINTER;
-  }
-  *aIsRightToLeft = mRightToLeft;
-  return NS_OK;
+  return mRightToLeft;
 }
 
 NS_IMETHODIMP
@@ -635,42 +629,35 @@ nsLineIterator::GetLine(PRInt32 aLineNumber,
   return NS_OK;
 }
 
-NS_IMETHODIMP
-nsLineIterator::FindLineContaining(nsIFrame* aFrame,
-                                   PRInt32* aLineNumberResult)
+PRInt32
+nsLineIterator::FindLineContaining(nsIFrame* aFrame)
 {
   nsLineBox* line = mLines[0];
   PRInt32 lineNumber = 0;
   while (lineNumber != mNumLines) {
     if (line->Contains(aFrame)) {
-      *aLineNumberResult = lineNumber;
-      return NS_OK;
+      return lineNumber;
     }
     line = mLines[++lineNumber];
   }
-  *aLineNumberResult = -1;
-  return NS_OK;
+  return -1;
 }
 
-NS_IMETHODIMP
-nsLineIterator::FindLineAt(nscoord aY,
-                           PRInt32* aLineNumberResult)
+/* virtual */ PRInt32
+nsLineIterator::FindLineAt(nscoord aY)
 {
   nsLineBox* line = mLines[0];
   if (!line || (aY < line->mBounds.y)) {
-    *aLineNumberResult = -1;
-    return NS_OK;
+    return -1;
   }
   PRInt32 lineNumber = 0;
   while (lineNumber != mNumLines) {
     if ((aY >= line->mBounds.y) && (aY < line->mBounds.YMost())) {
-      *aLineNumberResult = lineNumber;
-      return NS_OK;
+      return lineNumber;
     }
     line = mLines[++lineNumber];
   }
-  *aLineNumberResult = mNumLines;
-  return NS_OK;
+  return mNumLines;
 }
 
 #ifdef IBMBIDI

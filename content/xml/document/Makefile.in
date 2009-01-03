@@ -42,7 +42,7 @@ VPATH		= @srcdir@
 
 include $(DEPTH)/config/autoconf.mk
 
-DIRS		= public resources src
+PARALLEL_DIRS	= public resources src
 
 ifdef ENABLE_TESTS
 DIRS            += test

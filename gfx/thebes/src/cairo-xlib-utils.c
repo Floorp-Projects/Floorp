@@ -59,6 +59,8 @@
 #define CAIRO_GDK_DRAWING_NOTE(m) do {} while (0)
 #endif
 
+#define GDK_PIXMAP_SIZE_MAX 32767
+
 static cairo_user_data_key_t pixmap_free_key;
 static void pixmap_free_func (void *data)
 {
@@ -317,6 +319,10 @@ _create_temp_xlib_surface (cairo_t *cr, Display *dpy, int width, int height,
                            cairo_gdk_drawing_support_t capabilities)
 {
     cairo_surface_t *result = NULL;
+
+    if (width >= GDK_PIXMAP_SIZE_MAX ||
+        height >= GDK_PIXMAP_SIZE_MAX)
+        return NULL;
 
     /* base the temp surface on the *screen* surface, not any intermediate
      * group surface, because the screen surface is more likely to have

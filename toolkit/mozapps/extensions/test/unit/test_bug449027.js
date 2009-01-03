@@ -35,7 +35,7 @@
  *
  * ***** END LICENSE BLOCK *****
  */
-const URI_EXTENSION_LIST_DIALOG = "chrome://mozapps/content/extensions/list.xul";
+const URI_EXTENSION_BLOCKLIST_DIALOG = "chrome://mozapps/content/extensions/blocklist.xul";
 
 do_import_script("netwerk/test/httpserver/httpd.js");
 
@@ -426,14 +426,15 @@ var PluginHostFactory = {
 var WindowWatcher = {
   openWindow: function(parent, url, name, features, arguments) {
     // Should be called to list the newly blocklisted items
-    do_check_eq(url, URI_EXTENSION_LIST_DIALOG);
+    do_check_eq(url, URI_EXTENSION_BLOCKLIST_DIALOG);
     do_check_neq(gCallback, null);
-    do_check_true(arguments instanceof Components.interfaces.nsIDialogParamBlock);
+
+    var args = arguments.wrappedJSObject;
 
     gNewBlocks = [];
-    var count = arguments.GetInt(1);
-    for (var i = 0; i < count; i++)
-      gNewBlocks.push(arguments.GetString(i));
+    var list = args.list;
+    for (var i = 0; i < list.length; i++)
+      gNewBlocks.push(list[i].name + " " + list[i].version);
 
     // Call the callback after the blocklist has finished up
     do_timeout(0, "gCallback()");
@@ -518,6 +519,13 @@ function check_state(test, lastTest) {
         expected++;
       }
     }
+    for (i = 0; i < PLUGINS.length; i++) {
+      if (PLUGINS[i][test] && !PLUGINS[i][lastTest]) {
+        if (gNewBlocks.indexOf(PLUGINS[i].name + " " + PLUGINS[i].version) < 0)
+          do_throw("Plugin " + (i + 1) + " should have been listed in the blocklist notification for test " + test);
+        expected++;
+      }
+    }
 
     do_check_eq(expected, gNewBlocks.length);
   }
@@ -540,6 +548,7 @@ function run_test() {
 
   createAppInfo("xpcshell@tests.mozilla.org", "XPCShell", "3", "8");
   startupEM();
+
   gTestserver = new nsHttpServer();
   gTestserver.registerDirectory("/data/", do_get_file("toolkit/mozapps/extensions/test/unit/data"));
   gTestserver.start(4444);

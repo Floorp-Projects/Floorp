@@ -123,14 +123,11 @@ NS_IMPL_NS_NEW_SVG_ELEMENT(Style)
 NS_IMPL_ADDREF_INHERITED(nsSVGStyleElement,nsSVGStyleElementBase)
 NS_IMPL_RELEASE_INHERITED(nsSVGStyleElement,nsSVGStyleElementBase)
 
-NS_INTERFACE_MAP_BEGIN(nsSVGStyleElement)
-  NS_INTERFACE_MAP_ENTRY(nsIDOMNode)
-  NS_INTERFACE_MAP_ENTRY(nsIDOMElement)
-  NS_INTERFACE_MAP_ENTRY(nsIDOMSVGElement)
-  NS_INTERFACE_MAP_ENTRY(nsIDOMSVGStyleElement)
-  NS_INTERFACE_MAP_ENTRY(nsIDOMLinkStyle)
-  NS_INTERFACE_MAP_ENTRY(nsIStyleSheetLinkingElement)
-  NS_INTERFACE_MAP_ENTRY(nsIMutationObserver)
+NS_INTERFACE_TABLE_HEAD(nsSVGStyleElement)
+  NS_NODE_INTERFACE_TABLE7(nsSVGStyleElement, nsIDOMNode, nsIDOMElement,
+                           nsIDOMSVGElement, nsIDOMSVGStyleElement,
+                           nsIDOMLinkStyle, nsIStyleSheetLinkingElement,
+                           nsIMutationObserver)
   NS_INTERFACE_MAP_ENTRY_CONTENT_CLASSINFO(SVGStyleElement)
 NS_INTERFACE_MAP_END_INHERITING(nsSVGStyleElementBase)
 

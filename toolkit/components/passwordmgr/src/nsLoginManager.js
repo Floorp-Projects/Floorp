@@ -19,6 +19,7 @@
  *
  * Contributor(s):
  *  Justin Dolske <dolske@mozilla.com> (original author)
+ *  Ehsan Akhgari <ehsan.akhgari@gmail.com>
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -120,6 +121,31 @@ LoginManager.prototype = {
         }
 
         return this.__storage;
+    },
+
+
+    // Private Browsing Service
+    // If the service is not available, null will be returned.
+    __privateBrowsingService : undefined,
+    get _privateBrowsingService() {
+        if (this.__privateBrowsingService == undefined) {
+            if ("@mozilla.org/privatebrowsing;1" in Cc)
+                this.__privateBrowsingService = Cc["@mozilla.org/privatebrowsing;1"].
+                                                getService(Ci.nsIPrivateBrowsingService);
+            else
+                this.__privateBrowsingService = null;
+        }
+        return this.__privateBrowsingService;
+    },
+
+
+    // Whether we are in private browsing mode
+    get _inPrivateBrowsing() {
+        var pbSvc = this._privateBrowsingService;
+        if (pbSvc)
+            return pbSvc.privateBrowsingEnabled;
+        else
+            return false;
     },
 
     _prefBranch  : null, // Preferences service
@@ -764,6 +790,13 @@ LoginManager.prototype = {
             return prompterSvc;
         }
 
+        if (this._inPrivateBrowsing) {
+            // We won't do anything in private browsing mode anyway,
+            // so there's no need to perform further checks.
+            this.log("(form submission ignored in private browsing mode)");
+            return;
+        }
+
         var doc = form.ownerDocument;
         var win = doc.defaultView;
 
@@ -871,26 +904,11 @@ LoginManager.prototype = {
         if (existingLogin) {
             this.log("Found an existing login matching this form submission");
 
-            /*
-             * Change password if needed.
-             *
-             * If the login has a username, change the password w/o prompting
-             * (because we can be fairly sure there's only one password
-             * associated with the username). But for logins without a
-             * username, ask the user... Some sites use a password-only "login"
-             * in different contexts (enter your PIN, answer a security
-             * question, etc), and without a username we can't be sure if
-             * modifying an existing login is the right thing to do.
-             */
+            // Change password if needed.
             if (existingLogin.password != formLogin.password) {
-                if (formLogin.username) {
-                    this.log("...Updating password for existing login.");
-                    this.modifyLogin(existingLogin, formLogin);
-                } else {
-                    this.log("...passwords differ, prompting to change.");
-                    prompter = getPrompter(win);
-                    prompter.promptToChangePassword(existingLogin, formLogin);
-                }
+                this.log("...passwords differ, prompting to change.");
+                prompter = getPrompter(win);
+                prompter.promptToChangePassword(existingLogin, formLogin);
             }
 
             return;
@@ -968,7 +986,8 @@ LoginManager.prototype = {
         this.log("fillDocument processing " + forms.length +
                  " forms on " + doc.documentURI);
 
-        var autofillForm = this._prefBranch.getBoolPref("autofillForms");
+        var autofillForm = !this._inPrivateBrowsing &&
+                           this._prefBranch.getBoolPref("autofillForms");
         var previousActionOrigin = null;
         var foundLogins = null;
 
@@ -1090,34 +1109,31 @@ LoginManager.prototype = {
         if (usernameField && usernameField.value) {
             // If username was specified in the form, only fill in the
             // password if we find a matching login.
-
             var username = usernameField.value.toLowerCase();
 
-            var matchingLogin;
-            var found = logins.some(function(l) {
-                                matchingLogin = l;
-                                return (l.username.toLowerCase() == username);
-                            });
-            if (found)
-                selectedLogin = matchingLogin;
+            let matchingLogins = logins.filter(function(l)
+                                     l.username.toLowerCase() == username);
+            if (matchingLogins.length)
+                selectedLogin = matchingLogins[0];
             else
                 this.log("Password not filled. None of the stored " +
                          "logins match the username already present.");
-
-        } else if (usernameField && logins.length == 2) {
-            // Special case, for sites which have a normal user+pass
-            // login *and* a password-only login (eg, a PIN)...
-            // When we have a username field and 1 of 2 available
-            // logins is password-only, go ahead and prefill the
-            // one with a username.
-            if (!logins[0].username && logins[1].username)
-                selectedLogin = logins[1];
-            else if (!logins[1].username && logins[0].username)
-                selectedLogin = logins[0];
         } else if (logins.length == 1) {
             selectedLogin = logins[0];
         } else {
-            this.log("Multiple logins for form, so not filling any.");
+            // We have multiple logins. Handle a special case here, for sites
+            // which have a normal user+pass login *and* a password-only login
+            // (eg, a PIN). Prefer the login that matches the type of the form
+            // (user+pass or pass-only) when there's exactly one that matches.
+            let matchingLogins;
+            if (usernameField)
+                matchingLogins = logins.filter(function(l) l.username);
+            else
+                matchingLogins = logins.filter(function(l) !l.username);
+            if (matchingLogins.length == 1)
+                selectedLogin = matchingLogins[0];
+            else
+                this.log("Multiple logins for form, so not filling any.");
         }
 
         var didFillForm = false;

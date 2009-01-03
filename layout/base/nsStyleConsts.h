@@ -42,6 +42,7 @@
 #define nsStyleConsts_h___
 
 #include "nsFont.h"
+#include "nsIWidget.h"
 
 // cairo doesn't support invert
 // #define GFX_HAS_INVERT
@@ -445,10 +446,6 @@
 #define NS_STYLE_FONT_STRETCH_ULTRA_EXPANDED    4
 #define NS_STYLE_FONT_STRETCH_WIDER             10
 #define NS_STYLE_FONT_STRETCH_NARROWER          -10
-
-// See nsStyleFont mFlags
-#define NS_STYLE_FONT_DEFAULT                   0x00
-#define NS_STYLE_FONT_FACE_MASK                 0xFF // used to flag generic fonts
 
 // See nsStyleFont - system fonts
 #define NS_STYLE_FONT_CAPTION                   1		// css2

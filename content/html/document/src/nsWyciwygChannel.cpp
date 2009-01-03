@@ -81,6 +81,7 @@ nsWyciwygChannel::Init(nsIURI* uri)
 {
   NS_ENSURE_ARG_POINTER(uri);
   mURI = uri;
+  mOriginalURI = uri;
   return NS_OK;
 }
 
@@ -175,18 +176,15 @@ nsWyciwygChannel::GetLoadFlags(PRUint32 * aLoadFlags)
 NS_IMETHODIMP
 nsWyciwygChannel::GetOriginalURI(nsIURI* *aURI)
 {
-  // Let's hope this isn't called before mOriginalURI is set or we will
-  // return the full wyciwyg URI for our originalURI  :S
-  NS_ASSERTION(mOriginalURI, "nsWyciwygChannel::GetOriginalURI - mOriginalURI not set!\n");
-
-  *aURI = mOriginalURI ? mOriginalURI : mURI;
-  NS_IF_ADDREF(*aURI);
+  *aURI = mOriginalURI;
+  NS_ADDREF(*aURI);
   return NS_OK;
 }
 
 NS_IMETHODIMP
 nsWyciwygChannel::SetOriginalURI(nsIURI* aURI)
 {
+  NS_ENSURE_ARG_POINTER(aURI);
   mOriginalURI = aURI;
   return NS_OK;
 }

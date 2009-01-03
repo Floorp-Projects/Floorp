@@ -49,9 +49,9 @@
 #include "prlock.h"
 
 #include "mozIStorageService.h"
-#include "mozStorageBackground.h"
 
 class mozStorageConnection;
+class nsIXPConnect;
 
 class mozStorageService : public mozIStorageService
 {
@@ -69,6 +69,10 @@ public:
     // mozIStorageService
     NS_DECL_MOZISTORAGESERVICE
 
+    /**
+     * Obtains a pointer to XPConnect.  This is used by language helpers.
+     */
+    static nsIXPConnect *XPConnect();
 private:
     virtual ~mozStorageService();
 
@@ -77,15 +81,12 @@ private:
      * can ensure that the state of sqlite3_enable_shared_cache is sane.
      */
     PRLock *mLock;
-
-    /**
-     * The background service needs to stay around just as long as this does.
-     */
-    mozStorageBackground mBackground;
 protected:
     nsCOMPtr<nsIFile> mProfileStorageFile;
 
     static mozStorageService *gStorageService;
+
+    static nsIXPConnect *sXPConnect;
 };
 
 #endif /* _MOZSTORAGESERVICE_H_ */

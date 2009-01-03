@@ -26,6 +26,7 @@
  *   Christian Biesinger <cbiesinger@web.de>
  *   Dan Mosedale <dmose@mozilla.org>
  *   Myk Melez <myk@mozilla.org>
+ *   Ehsan Akhgari <ehsan.akhgari@gmail.com>
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either of the GNU General Public License Version 2 or later (the "GPL"),
@@ -123,6 +124,8 @@
 #include "nsIRandomGenerator.h"
 #include "plbase64.h"
 #include "prmem.h"
+
+#include "nsIPrivateBrowsingService.h"
 
 // Buffer file writes in 32kb chunks
 #define BUFFERED_OUTPUT_SIZE (1024 * 32)
@@ -316,17 +319,14 @@ static PRBool GetFilenameAndExtensionFromChannel(nsIChannel* aChannel,
     // XXXbz this code is duplicated in nsDocumentOpenInfo::DispatchContent.
     // Factor it out!  Maybe store it in the nsDocumentOpenInfo?
     if (NS_FAILED(rv) || 
-        (// Some broken sites just send
-         // Content-Disposition: ; filename="file"
-         // screen those out here.
-         !dispToken.IsEmpty() &&
+        (!dispToken.IsEmpty() &&
          !dispToken.LowerCaseEqualsLiteral("inline") &&
-        // Broken sites just send
-        // Content-Disposition: filename="file"
-        // without a disposition token... screen those out.
-        !dispToken.EqualsIgnoreCase("filename", 8)) &&
-        // Also in use is Content-Disposition: name="file"
-        !dispToken.EqualsIgnoreCase("name", 4)) 
+         // Broken sites just send
+         // Content-Disposition: filename="file"
+         // without a disposition token... screen those out.
+         !dispToken.EqualsIgnoreCase("filename", 8) &&
+         // Also in use is Content-Disposition: name="file"
+         !dispToken.EqualsIgnoreCase("name", 4)))
     {
       // We have a content-disposition of "attachment" or unknown
       handleExternally = PR_TRUE;
@@ -538,6 +538,10 @@ static nsExtraMimeTypeEntry extraMimeEntries [] =
   { TEXT_XUL, "xul", "XML-Based User Interface Language", MAC_TYPE('TEXT'), MAC_TYPE('ttxt') },
   { TEXT_XML, "xml,xsl,xbl", "Extensible Markup Language", MAC_TYPE('TEXT'), MAC_TYPE('ttxt') },
   { TEXT_CSS, "css", "Style Sheet", MAC_TYPE('TEXT'), MAC_TYPE('ttxt') },
+  { "audio/ogg", "oga", "Ogg Audio", 0, 0 },
+  { "video/ogg", "ogv", "Ogg Video", 0, 0 },
+  { "audio/ogg", "ogg", "Ogg Audio", 0, 0 },
+  { "audio/x-wav", "wav", "Waveform Audio", 0, 0 }
 };
 
 #undef MAC_TYPE
@@ -563,12 +567,19 @@ NS_IMPL_ISUPPORTS6(
   nsIObserver,
   nsISupportsWeakReference)
 
-nsExternalHelperAppService::nsExternalHelperAppService()
+nsExternalHelperAppService::nsExternalHelperAppService() :
+  mInPrivateBrowsing(PR_FALSE)
 {
   gExtProtSvc = this;
 }
 nsresult nsExternalHelperAppService::Init()
 {
+  nsCOMPtr<nsIPrivateBrowsingService> pbs =
+    do_GetService(NS_PRIVATE_BROWSING_SERVICE_CONTRACTID);
+  if (pbs) {
+    pbs->GetPrivateBrowsingEnabled(&mInPrivateBrowsing);
+  }
+
   // Add an observer for profile change
   nsresult rv = NS_OK;
   nsCOMPtr<nsIObserverService> obs = do_GetService("@mozilla.org/observer-service;1", &rv);
@@ -582,7 +593,9 @@ nsresult nsExternalHelperAppService::Init()
   }
 #endif
 
-  return obs->AddObserver(this, "profile-before-change", PR_TRUE);
+  rv = obs->AddObserver(this, "profile-before-change", PR_TRUE);
+  NS_ENSURE_SUCCESS(rv, rv);
+  return obs->AddObserver(this, NS_PRIVATE_BROWSING_SWITCH_TOPIC, PR_TRUE);
 }
 
 nsExternalHelperAppService::~nsExternalHelperAppService()
@@ -926,7 +939,10 @@ NS_IMETHODIMP nsExternalHelperAppService::DeleteTemporaryFileOnExit(nsIFile * aT
   localFile->IsFile(&isFile);
   if (!isFile) return NS_OK;
 
-  mTemporaryFilesList.AppendObject(localFile);
+  if (mInPrivateBrowsing)
+    mTemporaryPrivateFilesList.AppendObject(localFile);
+  else
+    mTemporaryFilesList.AppendObject(localFile);
 
   return NS_OK;
 }
@@ -936,13 +952,13 @@ void nsExternalHelperAppService::FixFilePermissions(nsILocalFile* aFile)
   // This space intentionally left blank
 }
 
-nsresult nsExternalHelperAppService::ExpungeTemporaryFiles()
+void nsExternalHelperAppService::ExpungeTemporaryFilesHelper(nsCOMArray<nsILocalFile> &fileList)
 {
-  PRInt32 numEntries = mTemporaryFilesList.Count();
+  PRInt32 numEntries = fileList.Count();
   nsILocalFile* localFile;
   for (PRInt32 index = 0; index < numEntries; index++)
   {
-    localFile = mTemporaryFilesList[index];
+    localFile = fileList[index];
     if (localFile) {
       // First make the file writable, since the temp file is probably readonly.
       localFile->SetPermissions(0600);
@@ -950,9 +966,17 @@ nsresult nsExternalHelperAppService::ExpungeTemporaryFiles()
     }
   }
 
-  mTemporaryFilesList.Clear();
+  fileList.Clear();
+}
 
-  return NS_OK;
+void nsExternalHelperAppService::ExpungeTemporaryFiles()
+{
+  ExpungeTemporaryFilesHelper(mTemporaryFilesList);
+}
+
+void nsExternalHelperAppService::ExpungeTemporaryPrivateFiles()
+{
+  ExpungeTemporaryFilesHelper(mTemporaryPrivateFilesList);
 }
 
 static const char kExternalWarningPrefPrefix[] = 
@@ -1041,6 +1065,13 @@ nsExternalHelperAppService::Observe(nsISupports *aSubject, const char *aTopic, c
 {
   if (!strcmp(aTopic, "profile-before-change")) {
     ExpungeTemporaryFiles();
+  } else if (!strcmp(aTopic, NS_PRIVATE_BROWSING_SWITCH_TOPIC)) {
+    if (NS_LITERAL_STRING(NS_PRIVATE_BROWSING_ENTER).Equals(someData))
+      mInPrivateBrowsing = PR_TRUE;
+    else if (NS_LITERAL_STRING(NS_PRIVATE_BROWSING_LEAVE).Equals(someData)) {
+      mInPrivateBrowsing = PR_FALSE;
+      ExpungeTemporaryPrivateFiles();
+    }
   }
   return NS_OK;
 }
@@ -2169,7 +2200,7 @@ nsresult nsExternalAppHandler::OpenWithApplication()
 
     // make the tmp file readonly so users won't edit it and lose the changes
     // only if we're going to delete the file
-    if (deleteTempFileOnExit)
+    if (deleteTempFileOnExit || gExtProtSvc->InPrivateBrowsing())
       mFinalFileDestination->SetPermissions(0400);
 
     rv = mMimeInfo->LaunchWithFile(mFinalFileDestination);        
@@ -2181,7 +2212,9 @@ nsresult nsExternalAppHandler::OpenWithApplication()
       SendStatusChange(kLaunchError, rv, nsnull, path);
       Cancel(rv); // Cancel, and clean up temp file.
     }
-    else if (deleteTempFileOnExit) {
+    // Always schedule files to be deleted at the end of the private browsing
+    // mode, regardless of the value of the pref.
+    else if (deleteTempFileOnExit || gExtProtSvc->InPrivateBrowsing()) {
       NS_ASSERTION(gExtProtSvc, "Service gone away!?");
       gExtProtSvc->DeleteTemporaryFileOnExit(mFinalFileDestination);
     }

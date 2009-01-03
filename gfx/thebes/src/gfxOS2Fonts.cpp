@@ -61,8 +61,9 @@ gfxOS2Font::gfxOS2Font(gfxOS2FontEntry *aFontEntry, const gfxFontStyle *aFontSty
       mHinting(FC_HINT_MEDIUM), mAntialias(FcTrue)
 {
 #ifdef DEBUG_thebes_2
-    printf("gfxOS2Font[%#x]::gfxOS2Font(\"%s\", aFontStyle)\n",
-           (unsigned)this, NS_LossyConvertUTF16toASCII(aName).get());
+    printf("gfxOS2Font[%p]::gfxOS2Font(%p \"%s\", aFontStyle)\n",
+           (void *)this, (void *)aFontEntry,
+           NS_LossyConvertUTF16toASCII(aFontEntry->Name()).get());
 #endif
     // try to get the preferences for hinting, antialias, and embolden options
     nsCOMPtr<nsIPrefBranch> prefbranch = do_GetService(NS_PREFSERVICE_CONTRACTID);
@@ -112,32 +113,37 @@ const gfxFont::Metrics& gfxOS2Font::GetMetrics()
 #ifdef DEBUG_thebes_1
     printf("gfxOS2Font[%#x]::GetMetrics()\n", (unsigned)this);
 #endif
-    if (!mMetrics) {
-        mMetrics = new gfxFont::Metrics;
+    if (mMetrics) {
+        return *mMetrics;
+    }
 
-        mMetrics->emHeight = GetStyle()->size;
+    FT_Face face = cairo_ft_scaled_font_lock_face(CairoScaledFont());
+    if (!face) {
+        // Abort here already, otherwise we crash in the following
+        // this can happen if the font-size requested is zero.
+        // The metrics will be incomplete, but then we don't care.
+        return *mMetrics;
+    }
+    if (!face->charmap) {
+        // Also abort, if the charmap isn't loaded; then the char
+        // lookups won't work. This happens for fonts without Unicode
+        // charmap.
+        cairo_ft_scaled_font_unlock_face(CairoScaledFont());
+        return *mMetrics;
+    }
 
-        FT_UInt gid; // glyph ID
-        FT_Face face = cairo_ft_scaled_font_lock_face(CairoScaledFont());
-        if (!face || !face->charmap) {
-            // Abort here already, otherwise we crash in the following
-            // this can happen if the font-size requested is zero.
-            // The metrics will be incomplete, but then we don't care.
-            //
-            // Also abort, if the charmap isn't loaded; then the char
-            // lookups won't work. This happens for fonts without Unicode
-            // charmap.
-            if (face)
-                cairo_ft_scaled_font_unlock_face(CairoScaledFont());
-            return *mMetrics;
-        }
+    mMetrics = new gfxFont::Metrics;
+    mMetrics->emHeight = GetStyle()->size;
 
-        double emUnit = 1.0 * face->units_per_EM;
-        double xScale = face->size->metrics.x_ppem / emUnit;
-        double yScale = face->size->metrics.y_ppem / emUnit;
+    double emUnit = 1.0 * face->units_per_EM;
+    double xScale = face->size->metrics.x_ppem / emUnit;
+    double yScale = face->size->metrics.y_ppem / emUnit;
 
-        // properties of space
-        gid = FT_Get_Char_Index(face, ' ');
+    FT_UInt gid; // glyph ID
+
+    // properties of space
+    gid = FT_Get_Char_Index(face, ' ');
+    if (gid) {
         // Load glyph into glyph slot. Use load_default here to get results in
         // 26.6 fractional pixel format which is what is used for all other
         // characters in gfxOS2FontGroup::CreateGlyphRunsFT.
@@ -146,106 +152,108 @@ const gfxFont::Metrics& gfxOS2Font::GetMetrics()
         mMetrics->spaceWidth = face->glyph->advance.x >> 6;
         // save the space glyph
         mSpaceGlyph = gid;
+    } else {
+        NS_ASSERTION(gid, "this font doesn't have a space glyph!");
+    }
 
-        // properties of 'x', also use its width as average width
-        gid = FT_Get_Char_Index(face, 'x'); // select the glyph
-        if (gid) {
-            // Load glyph into glyph slot. Here, use no_scale to get font units.
-            FT_Load_Glyph(face, gid, FT_LOAD_NO_SCALE);
-            mMetrics->xHeight = face->glyph->metrics.height * yScale;
-            mMetrics->aveCharWidth = face->glyph->metrics.width * xScale;
-        } else {
-            // this font doesn't have an 'x'...
-            // fake these metrics using a fraction of the font size
-            mMetrics->xHeight = mMetrics->emHeight * 0.5;
-            mMetrics->aveCharWidth = mMetrics->emHeight * 0.5;
-        }
+    // properties of 'x', also use its width as average width
+    gid = FT_Get_Char_Index(face, 'x'); // select the glyph
+    if (gid) {
+        // Load glyph into glyph slot. Here, use no_scale to get font units.
+        FT_Load_Glyph(face, gid, FT_LOAD_NO_SCALE);
+        mMetrics->xHeight = face->glyph->metrics.height * yScale;
+        mMetrics->aveCharWidth = face->glyph->metrics.width * xScale;
+    } else {
+        // this font doesn't have an 'x'...
+        // fake these metrics using a fraction of the font size
+        mMetrics->xHeight = mMetrics->emHeight * 0.5;
+        mMetrics->aveCharWidth = mMetrics->emHeight * 0.5;
+    }
 
-        // properties of '0', for 'ch' units
-        gid = FT_Get_Char_Index(face, '0');
-        if (gid) {
-            FT_Load_Glyph(face, gid, FT_LOAD_NO_SCALE);
-            mMetrics->zeroOrAveCharWidth = face->glyph->metrics.width * xScale;
-        } else {
-             // this font doesn't have a '0'
-             mMetrics->zeroOrAveCharWidth = mMetrics->aveCharWidth;
-        }
+    // properties of '0', for 'ch' units
+    gid = FT_Get_Char_Index(face, '0');
+    if (gid) {
+        FT_Load_Glyph(face, gid, FT_LOAD_NO_SCALE);
+        mMetrics->zeroOrAveCharWidth = face->glyph->metrics.width * xScale;
+    } else {
+         // this font doesn't have a '0'
+         mMetrics->zeroOrAveCharWidth = mMetrics->aveCharWidth;
+    }
 
-        // compute an adjusted size if we need to
-        if (mAdjustedSize == 0 && GetStyle()->sizeAdjust != 0) {
-            gfxFloat aspect = mMetrics->xHeight / GetStyle()->size;
-            mAdjustedSize = GetStyle()->GetAdjustedSize(aspect);
-            mMetrics->emHeight = mAdjustedSize;
-        }
+    // compute an adjusted size if we need to
+    if (mAdjustedSize == 0 && GetStyle()->sizeAdjust != 0) {
+        gfxFloat aspect = mMetrics->xHeight / GetStyle()->size;
+        mAdjustedSize = GetStyle()->GetAdjustedSize(aspect);
+        mMetrics->emHeight = mAdjustedSize;
+    }
 
-        // now load the OS/2 TrueType table to load access some more properties
-        TT_OS2 *os2 = (TT_OS2 *)FT_Get_Sfnt_Table(face, ft_sfnt_os2);
-        if (os2 && os2->version != 0xFFFF) { // should be there if not old Mac font
-            // if we are here we can improve the avgCharWidth
-            mMetrics->aveCharWidth = os2->xAvgCharWidth * xScale;
+    // now load the OS/2 TrueType table to load access some more properties
+    TT_OS2 *os2 = (TT_OS2 *)FT_Get_Sfnt_Table(face, ft_sfnt_os2);
+    if (os2 && os2->version != 0xFFFF) { // should be there if not old Mac font
+        // if we are here we can improve the avgCharWidth
+        mMetrics->aveCharWidth = os2->xAvgCharWidth * xScale;
 
-            mMetrics->superscriptOffset = os2->ySuperscriptYOffset * yScale;
-            mMetrics->superscriptOffset = PR_MAX(1, mMetrics->superscriptOffset);
-            // some fonts have the incorrect sign (from gfxPangoFonts)
-            mMetrics->subscriptOffset   = fabs(os2->ySubscriptYOffset * yScale);
-            mMetrics->subscriptOffset   = PR_MAX(1, fabs(mMetrics->subscriptOffset));
-            mMetrics->strikeoutOffset   = os2->yStrikeoutPosition * yScale;
-            mMetrics->strikeoutSize     = os2->yStrikeoutSize * yScale;
-        } else {
-            // use fractions of emHeight instead of xHeight for these to be more robust
-            mMetrics->superscriptOffset = mMetrics->emHeight * 0.5;
-            mMetrics->subscriptOffset   = mMetrics->emHeight * 0.2;
-            mMetrics->strikeoutOffset   = mMetrics->emHeight * 0.3;
-            mMetrics->strikeoutSize     = face->underline_thickness * yScale;
-        }
-        // seems that underlineOffset really has to be negative
-        mMetrics->underlineOffset = face->underline_position * yScale;
-        mMetrics->underlineSize   = face->underline_thickness * yScale;
+        mMetrics->superscriptOffset = os2->ySuperscriptYOffset * yScale;
+        mMetrics->superscriptOffset = PR_MAX(1, mMetrics->superscriptOffset);
+        // some fonts have the incorrect sign (from gfxPangoFonts)
+        mMetrics->subscriptOffset   = fabs(os2->ySubscriptYOffset * yScale);
+        mMetrics->subscriptOffset   = PR_MAX(1, fabs(mMetrics->subscriptOffset));
+        mMetrics->strikeoutOffset   = os2->yStrikeoutPosition * yScale;
+        mMetrics->strikeoutSize     = os2->yStrikeoutSize * yScale;
+    } else {
+        // use fractions of emHeight instead of xHeight for these to be more robust
+        mMetrics->superscriptOffset = mMetrics->emHeight * 0.5;
+        mMetrics->subscriptOffset   = mMetrics->emHeight * 0.2;
+        mMetrics->strikeoutOffset   = mMetrics->emHeight * 0.3;
+        mMetrics->strikeoutSize     = face->underline_thickness * yScale;
+    }
+    // seems that underlineOffset really has to be negative
+    mMetrics->underlineOffset = face->underline_position * yScale;
+    mMetrics->underlineSize   = face->underline_thickness * yScale;
 
-        // descents are negative in FT but Thebes wants them positive
-        mMetrics->emAscent        = face->ascender * yScale;
-        mMetrics->emDescent       = -face->descender * yScale;
-        mMetrics->maxHeight       = face->height * yScale;
-        mMetrics->maxAscent       = face->bbox.yMax * yScale;
-        mMetrics->maxDescent      = -face->bbox.yMin * yScale;
-        mMetrics->maxAdvance      = face->max_advance_width * xScale;
-        // leading are not available directly (only for WinFNTs)
-        double lineHeight = mMetrics->maxAscent + mMetrics->maxDescent;
-        if (lineHeight > mMetrics->emHeight) {
-            mMetrics->internalLeading = lineHeight - mMetrics->emHeight;
-        } else {
-            mMetrics->internalLeading = 0;
-        }
-        mMetrics->externalLeading = 0; // normal value for OS/2 fonts, too
+    // descents are negative in FT but Thebes wants them positive
+    mMetrics->emAscent        = face->ascender * yScale;
+    mMetrics->emDescent       = -face->descender * yScale;
+    mMetrics->maxHeight       = face->height * yScale;
+    mMetrics->maxAscent       = face->bbox.yMax * yScale;
+    mMetrics->maxDescent      = -face->bbox.yMin * yScale;
+    mMetrics->maxAdvance      = face->max_advance_width * xScale;
+    // leading are not available directly (only for WinFNTs)
+    double lineHeight = mMetrics->maxAscent + mMetrics->maxDescent;
+    if (lineHeight > mMetrics->emHeight) {
+        mMetrics->internalLeading = lineHeight - mMetrics->emHeight;
+    } else {
+        mMetrics->internalLeading = 0;
+    }
+    mMetrics->externalLeading = 0; // normal value for OS/2 fonts, too
 
-        SanitizeMetrics(mMetrics, PR_FALSE);
+    SanitizeMetrics(mMetrics, PR_FALSE);
 
 #ifdef DEBUG_thebes_1
-        printf("gfxOS2Font[%#x]::GetMetrics():\n"
-               "  %s (%s)\n"
-               "  emHeight=%f == %f=gfxFont::style.size == %f=adjSz\n"
-               "  maxHeight=%f  xHeight=%f\n"
-               "  aveCharWidth=%f==xWidth  spaceWidth=%f\n"
-               "  supOff=%f SubOff=%f   strOff=%f strSz=%f\n"
-               "  undOff=%f undSz=%f    intLead=%f extLead=%f\n"
-               "  emAsc=%f emDesc=%f maxH=%f\n"
-               "  maxAsc=%f maxDes=%f maxAdv=%f\n",
-               (unsigned)this,
-               NS_LossyConvertUTF16toASCII(GetName()).get(),
-               os2 && os2->version != 0xFFFF ? "has OS/2 table" : "no OS/2 table!",
-               mMetrics->emHeight, GetStyle()->size, mAdjustedSize,
-               mMetrics->maxHeight, mMetrics->xHeight,
-               mMetrics->aveCharWidth, mMetrics->spaceWidth,
-               mMetrics->superscriptOffset, mMetrics->subscriptOffset,
-               mMetrics->strikeoutOffset, mMetrics->strikeoutSize,
-               mMetrics->underlineOffset, mMetrics->underlineSize,
-               mMetrics->internalLeading, mMetrics->externalLeading,
-               mMetrics->emAscent, mMetrics->emDescent, mMetrics->maxHeight,
-               mMetrics->maxAscent, mMetrics->maxDescent, mMetrics->maxAdvance
-              );
+    printf("gfxOS2Font[%#x]::GetMetrics():\n"
+           "  %s (%s)\n"
+           "  emHeight=%f == %f=gfxFont::style.size == %f=adjSz\n"
+           "  maxHeight=%f  xHeight=%f\n"
+           "  aveCharWidth=%f==xWidth  spaceWidth=%f\n"
+           "  supOff=%f SubOff=%f   strOff=%f strSz=%f\n"
+           "  undOff=%f undSz=%f    intLead=%f extLead=%f\n"
+           "  emAsc=%f emDesc=%f maxH=%f\n"
+           "  maxAsc=%f maxDes=%f maxAdv=%f\n",
+           (unsigned)this,
+           NS_LossyConvertUTF16toASCII(GetName()).get(),
+           os2 && os2->version != 0xFFFF ? "has OS/2 table" : "no OS/2 table!",
+           mMetrics->emHeight, GetStyle()->size, mAdjustedSize,
+           mMetrics->maxHeight, mMetrics->xHeight,
+           mMetrics->aveCharWidth, mMetrics->spaceWidth,
+           mMetrics->superscriptOffset, mMetrics->subscriptOffset,
+           mMetrics->strikeoutOffset, mMetrics->strikeoutSize,
+           mMetrics->underlineOffset, mMetrics->underlineSize,
+           mMetrics->internalLeading, mMetrics->externalLeading,
+           mMetrics->emAscent, mMetrics->emDescent, mMetrics->maxHeight,
+           mMetrics->maxAscent, mMetrics->maxDescent, mMetrics->maxAdvance
+          );
 #endif
-        cairo_ft_scaled_font_unlock_face(CairoScaledFont());
-    }
+    cairo_ft_scaled_font_unlock_face(CairoScaledFont());
     return *mMetrics;
 }
 
@@ -335,40 +343,31 @@ cairo_font_face_t *gfxOS2Font::CairoFontFace()
         // finally find a matching font
         FcResult fcRes;
         FcPattern *fcMatch = FcFontMatch(NULL, fcPattern, &fcRes);
-#ifdef DEBUG_thebes
-        FcChar8 *str1, *str2;
-        int w1, w2, i1, i2;
-        double s1, s2;
-        FcPatternGetString(fcPattern, FC_FAMILY, 0, &str1);
-        FcPatternGetInteger(fcPattern, FC_WEIGHT, 0, &w1);
-        FcPatternGetInteger(fcPattern, FC_SLANT, 0, &i1);
-        FcPatternGetDouble(fcPattern, FC_PIXEL_SIZE, 0, &s1);
-        FcPatternGetString(fcMatch, FC_FAMILY, 0, &str2);
-        FcPatternGetInteger(fcMatch, FC_WEIGHT, 0, &w2);
-        FcPatternGetInteger(fcMatch, FC_SLANT, 0, &i2);
-        FcPatternGetDouble(fcMatch, FC_PIXEL_SIZE, 0, &s2);
-        printf("  input=%s,%d,%d,%f\n  fcPattern=%s,%d,%d,%f\n  fcMatch=%s,%d,%d,%f\n",
-               NS_LossyConvertUTF16toASCII(GetName()).get(),
-               GetStyle()->weight, GetStyle()->style, GetStyle()->size,
-               (char *)str1, w1, i1, s1,
-               (char *)str2, w2, i2, s2);
-#endif
         FcPatternDestroy(fcPattern);
 
-        if (GetName() == NS_LITERAL_STRING("Workplace Sans") && fcW >= FC_WEIGHT_DEMIBOLD) {
-            // if we are dealing with Workplace Sans and want a bold font, we
-            // need to artificially embolden it (no bold counterpart yet)
-            FcPatternAddBool(fcMatch, FC_EMBOLDEN, FcTrue);
+        if (fcMatch) {
+            if (fcW >= FC_WEIGHT_DEMIBOLD && GetName() == NS_LITERAL_STRING("Workplace Sans")) {
+                // if we are dealing with Workplace Sans and want a bold font, we
+                // need to artificially embolden it (no bold counterpart yet)
+                FcPatternAddBool(fcMatch, FC_EMBOLDEN, FcTrue);
+            } else {
+                // if we don't embolden, we can possibly switch off antialiasing
+                FcPatternAddBool(fcMatch, FC_ANTIALIAS, mAntialias);
+            }
+            FcPatternAddInteger(fcMatch, FC_HINT_STYLE, mHinting);
+
+            // and ask cairo to return a font face for this
+            mFontFace = cairo_ft_font_face_create_for_pattern(fcMatch);
+
+            FcPatternDestroy(fcMatch);
         } else {
-            // if we don't embolden, we can possibly switch off antialiasing
-            FcPatternAddBool(fcMatch, FC_ANTIALIAS, mAntialias);
+#ifdef DEBUG
+            printf("Could not match font for:\n"
+                   "  family=%s, weight=%d, slant=%d, size=%f\n",
+                   NS_LossyConvertUTF16toASCII(GetName()).get(),
+                   GetStyle()->weight, GetStyle()->style, GetStyle()->size);
+#endif
         }
-        FcPatternAddInteger(fcMatch, FC_HINT_STYLE, mHinting);
-
-        // and ask cairo to return a font face for this
-        mFontFace = cairo_ft_font_face_create_for_pattern(fcMatch);
-
-        FcPatternDestroy(fcMatch);
     }
 
     NS_ASSERTION(mFontFace, "Failed to make font face");
@@ -380,21 +379,31 @@ cairo_scaled_font_t *gfxOS2Font::CairoScaledFont()
 #ifdef DEBUG_thebes_2
     printf("gfxOS2Font[%#x]::CairoScaledFont()\n", (unsigned)this);
 #endif
-    if (!mScaledFont) {
+    if (mScaledFont) {
+        return mScaledFont;
+    }
 #ifdef DEBUG_thebes_2
-        printf("gfxOS2Font[%#x]::CairoScaledFont(): create it for %s, %f\n",
-               (unsigned)this, NS_LossyConvertUTF16toASCII(GetName()).get(), GetStyle()->size);
+    printf("gfxOS2Font[%#x]::CairoScaledFont(): create it for %s, %f\n",
+           (unsigned)this, NS_LossyConvertUTF16toASCII(GetName()).get(), GetStyle()->size);
 #endif
 
-        double size = mAdjustedSize ? mAdjustedSize : GetStyle()->size;
-        cairo_matrix_t fontMatrix;
+    double size = mAdjustedSize ? mAdjustedSize : GetStyle()->size;
+    cairo_matrix_t identityMatrix;
+    cairo_matrix_init_identity(&identityMatrix);
+    cairo_matrix_t fontMatrix;
+    // synthetic oblique by skewing via the font matrix
+    if (!mFontEntry->mItalic &&
+        (mStyle.style & (FONT_STYLE_ITALIC | FONT_STYLE_OBLIQUE)))
+    {
+        const double kSkewFactor = 0.2126; // 12 deg skew as used in e.g. ftview
+        cairo_matrix_init(&fontMatrix, size, 0, -kSkewFactor*size, size, 0, 0);
+    } else {
         cairo_matrix_init_scale(&fontMatrix, size, size);
-        cairo_font_options_t *fontOptions = cairo_font_options_create();
-        mScaledFont = cairo_scaled_font_create(CairoFontFace(), &fontMatrix,
-                                               reinterpret_cast<cairo_matrix_t*>(&mCTM),
-                                               fontOptions);
-        cairo_font_options_destroy(fontOptions);
     }
+    cairo_font_options_t *fontOptions = cairo_font_options_create();
+    mScaledFont = cairo_scaled_font_create(CairoFontFace(), &fontMatrix,
+                                           &identityMatrix, fontOptions);
+    cairo_font_options_destroy(fontOptions);
 
     NS_ASSERTION(cairo_scaled_font_status(mScaledFont) == CAIRO_STATUS_SUCCESS,
                  "Failed to make scaled font");
@@ -806,12 +815,13 @@ void gfxOS2FontGroup::CreateGlyphRunsFT(gfxTextRun *aTextRun, const PRUint8 *aUT
     cairo_ft_scaled_font_unlock_face(font0->CairoScaledFont());
 }
 
+// append aFontName to aClosure string array, if not already present
 PRBool gfxOS2FontGroup::FontCallback(const nsAString& aFontName,
                                      const nsACString& aGenericName,
                                      void *aClosure)
 {
     nsStringArray *sa = static_cast<nsStringArray*>(aClosure);
-    if (sa->IndexOf(aFontName) < 0) {
+    if (!aFontName.IsEmpty() && sa->IndexOf(aFontName) < 0) {
         sa->AppendString(aFontName);
     }
     return PR_TRUE;

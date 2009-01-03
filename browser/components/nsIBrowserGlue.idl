@@ -73,4 +73,9 @@ interface nsIBrowserGlue : nsISupports
    * Add Smart Bookmarks special queries to bookmarks menu and toolbar folder.
    */
   void ensurePlacesDefaultQueriesInitialized();
+
+  /**
+   * Gets the most recent window that's a browser (but not a popup)
+   */
+  nsIDOMWindow getMostRecentBrowserWindow();
 };

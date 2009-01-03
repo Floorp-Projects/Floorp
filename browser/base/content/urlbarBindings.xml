@@ -72,14 +72,13 @@
 
       <method name="handleRevert">
         <body><![CDATA[
-          var throbberElement = document.getElementById("navigator-throbber");
           var isScrolling = this.popupOpen;
 
           gBrowser.userTypedValue = null;
 
           // don't revert to last valid url unless page is NOT loading
           // and user is NOT key-scrolling through autocomplete list
-          if ((!throbberElement || !throbberElement.hasAttribute("busy")) && !isScrolling) {
+          if (!XULBrowserWindow.isBusy && !isScrolling) {
             URLBarSetURI();
 
             // If the value isn't empty and the urlbar has focus, select the value.
@@ -284,44 +283,50 @@
         ]]></body>
       </method>
 
+      <method name="_getSelectedValueForClipboard">
+        <body><![CDATA[
+          var val = this.value.substring(this.selectionStart, this.selectionEnd);
+
+          // If the entire value is selected and it's a valid non-javascript,
+          // non-data URI, encode it.
+          if (val == this.value &&
+              this.getAttribute("pageproxystate") == "valid") {
+            let uri;
+            let ioService = Cc["@mozilla.org/network/io-service;1"]
+                              .getService(Ci.nsIIOService);
+            try {
+              uri = ioService.newURI(val, null, null);
+            } catch (e) {}
+
+            if (uri && !uri.schemeIs("javascript") && !uri.schemeIs("data")) {
+              val = uri.spec;
+
+              // Parentheses are known to confuse third-party applications (bug 458565).
+              val = val.replace(/[()]/g, function (c) escape(c));
+            }
+          }
+
+          return val;
+        ]]></body>
+      </method>
+
       <field name="_copyCutController"><![CDATA[
         ({
           urlbar: this,
           doCommand: function(aCommand) {
             var urlbar = this.urlbar;
-            var start = urlbar.selectionStart;
-            var end = urlbar.selectionEnd;
-            if (start == end)
+            var val = urlbar._getSelectedValueForClipboard();
+            if (!val)
               return;
-            var val;
-            if (start == 0 && end == urlbar.textLength) {
-              val = urlbar.value;
 
-              // If the entire value is selected and it's a valid non-javascript,
-              // non-data URI, encode it.
-              var uri;
-              if (urlbar.getAttribute("pageproxystate") == "valid") {
-                var ioService = Cc["@mozilla.org/network/io-service;1"]
-                                  .getService(Ci.nsIIOService);
-                try {
-                  uri = ioService.newURI(val, null, null);
-                } catch (e) {}
-              }
-              if (uri && !uri.schemeIs("javascript") && !uri.schemeIs("data"))
-                 val = uri.spec;
-
-              if (aCommand == "cmd_cut" && this.isCommandEnabled(aCommand)) {
-                urlbar.value = "";
-                SetPageProxyState("invalid");
-              }
-            } else {
-              val = urlbar.value.substring(start, end);
-              if (aCommand == "cmd_cut" && this.isCommandEnabled(aCommand)) {
-                urlbar.value = urlbar.value.substring(0, start) + urlbar.value.substring(end);
-                urlbar.selectionStart = urlbar.selectionEnd = start;
-                SetPageProxyState("invalid");
-              }
+            if (aCommand == "cmd_cut" && this.isCommandEnabled(aCommand)) {
+              let start = urlbar.selectionStart;
+              let end = urlbar.selectionEnd;
+              urlbar.value = urlbar.value.substring(0, start) + urlbar.value.substring(end);
+              urlbar.selectionStart = urlbar.selectionEnd = start;
+              SetPageProxyState("invalid");
             }
+
             Cc["@mozilla.org/widget/clipboardhelper;1"]
               .getService(Ci.nsIClipboardHelper)
               .copyString(val);
@@ -412,7 +417,21 @@
     <handlers>
       <handler event="focus" phase="capturing" action="this._hideURLTooltip();"/>
       <handler event="dragover" phase="capturing" action="nsDragAndDrop.dragOver(event, this);"/>
-      <handler event="dragdrop" phase="capturing" action="nsDragAndDrop.drop(event, this);"/>
+      <handler event="drop" phase="capturing" action="nsDragAndDrop.drop(event, this);"/>
+      <handler event="select"><![CDATA[
+        if (!Cc["@mozilla.org/widget/clipboard;1"]
+               .getService(Ci.nsIClipboard)
+               .supportsSelectionClipboard())
+          return;
+
+        var val = this._getSelectedValueForClipboard();
+        if (!val)
+          return;
+
+        Cc["@mozilla.org/widget/clipboardhelper;1"]
+          .getService(Ci.nsIClipboardHelper)
+          .copyStringToClipboard(val, Ci.nsIClipboard.kSelectionClipboard);
+      ]]></handler>
     </handlers>
 
   </binding>

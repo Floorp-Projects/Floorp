@@ -45,6 +45,8 @@
 #include "nsITreeView.h"
 #include "nsITreeBoxObject.h"
 
+class nsTreeBodyFrame;
+
 class nsTreeBoxObject : public nsITreeBoxObject, public nsBoxObject
 {
 public:
@@ -54,15 +56,15 @@ public:
   nsTreeBoxObject();
   ~nsTreeBoxObject();
 
-  nsITreeBoxObject* GetTreeBody();
-  nsITreeBoxObject* GetCachedTreeBody() { return mTreeBody; }
+  nsTreeBodyFrame* GetTreeBody();
+  nsTreeBodyFrame* GetCachedTreeBody() { return mTreeBody; }
 
   //NS_PIBOXOBJECT interfaces
   virtual void Clear();
   virtual void ClearCachedValues();
 
 protected:
-  nsITreeBoxObject* mTreeBody;
+  nsTreeBodyFrame* mTreeBody;
   nsCOMPtr<nsITreeView> mView;
 };
 

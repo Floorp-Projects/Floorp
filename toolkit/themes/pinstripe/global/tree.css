@@ -340,31 +340,6 @@ treechildren.gridlines::-moz-tree-row {
   border: none;
 }
 
-treechildren::-moz-tree-image(Name) {
-  margin: 0px 4px;
-  list-style-image: url("chrome://global/skin/tree/item.png");
-}
-
-treechildren::-moz-tree-image(Name, container) {
- list-style-image: url("chrome://global/skin/tree/folder.png");
-}
-
-treechildren::-moz-tree-image(Name, separator) {
-  list-style-image: none;
-  width: 0px !important;
-  height: 0px !important;
-  margin: 0px 0px;
-}
-
-treechildren::-moz-tree-cell-text(Name, separator) {
-  color: #999;
-  margin: 0 5px;
-}
-
-treechildren::-moz-tree-cell-text(Name, separator, selected, focus) {
-  color: #FFF;
-}
-
 /* ::::: alternating background ::::: */
 
 treechildren[alternatingbackground="true"]::-moz-tree-row(odd) {

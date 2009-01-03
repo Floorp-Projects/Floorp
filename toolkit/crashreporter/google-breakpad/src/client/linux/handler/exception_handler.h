@@ -126,6 +126,7 @@ class ExceptionHandler {
   void set_dump_path(const string &dump_path) {
     dump_path_ = dump_path;
     dump_path_c_ = dump_path_.c_str();
+    UpdateNextID();
   }
 
   // Writes a minidump immediately.  This can be used to capture the
@@ -160,6 +161,10 @@ class ExceptionHandler {
   bool InternalWriteMinidump(int signo, uintptr_t sighandler_ebp,
                              struct sigcontext **sig_ctx);
 
+  // Generates a new ID and stores it in next_minidump_id, and stores the
+  // path of the next minidump to be written in next_minidump_path_.
+  void UpdateNextID();
+
  private:
   FilterCallback filter_;
   MinidumpCallback callback_;
@@ -168,9 +173,20 @@ class ExceptionHandler {
   // The directory in which a minidump will be written, set by the dump_path
   // argument to the constructor, or set_dump_path.
   string dump_path_;
-  // C style dump path. Keep this when setting dump path, since calling
-  // c_str() of std::string when crashing may not be safe.
+
+  // The basename of the next minidump to be written, without the extension
+  string next_minidump_id_;
+
+  // The full pathname of the next minidump to be written, including the file
+  // extension
+  string next_minidump_path_;
+
+  // Pointers to C-string representations of the above. These are set
+  // when the above are set so we can avoid calling c_str during
+  // an exception.
   const char *dump_path_c_;
+  const char *next_minidump_id_c_;
+  const char *next_minidump_path_c_;
 
   // True if the ExceptionHandler installed an unhandled exception filter
   // when created (with an install_handler parameter set to true).
