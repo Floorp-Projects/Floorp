@@ -22,6 +22,7 @@
  *
  * Contributor(s):
  *   Scooter Morris <scootermorris@comcast.net>
+ *   Frederic Wang <fred.wang@free.fr> - requiredExtensions
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -50,46 +51,9 @@
 #include "nsIContent.h"
 #include "nsContentUtils.h"
 #include "nsWhitespaceTokenizer.h"
+#include "nsCommaSeparatedTokenizer.h"
 #include "nsStyleUtil.h"
 #include "nsSVGUtils.h"
-
-class nsSVGCommaTokenizer
-{
-public:
-  nsSVGCommaTokenizer(const nsSubstring& aSource) {
-    aSource.BeginReading(mIter);
-    aSource.EndReading(mEnd);
-
-    while (mIter != mEnd && *mIter == ',') {
-      ++mIter;
-    }
-  }
-
-  /**
-   * Checks if any more tokens are available.
-   */
-  PRBool hasMoreTokens() {
-    return mIter != mEnd;
-  }
-
-  /**
-   * Returns the next token.
-   */
-  const nsDependentSubstring nextToken() {
-    nsSubstring::const_char_iterator begin = mIter;
-    while (mIter != mEnd && *mIter != ',') {
-      ++mIter;
-    }
-    nsSubstring::const_char_iterator end = mIter;
-    while (mIter != mEnd && *mIter == ',') {
-      ++mIter;
-    }
-    return Substring(begin, end);
-  }
-
-private:
-  nsSubstring::const_char_iterator mIter, mEnd;
-};
 
 /**
  * Check whether we support the given feature string.
@@ -131,6 +95,43 @@ HaveFeatures(const nsSubstring& aFeatures)
 }
 
 /**
+ * Check whether we support the given extension string.
+ *
+ * @param aExtension the URI of an extension. Known extensions are
+ *   MathML and XHTML.
+ */
+static PRBool
+HaveExtension(const nsAString& aExtension)
+{
+#define SVG_SUPPORTED_EXTENSION(str) if (aExtension.Equals(NS_LITERAL_STRING(str).get())) return PR_TRUE;
+  SVG_SUPPORTED_EXTENSION("http://www.w3.org/1999/xhtml")
+#ifdef MOZ_MATHML
+  SVG_SUPPORTED_EXTENSION("http://www.w3.org/1998/Math/MathML")
+#endif
+#undef SVG_SUPPORTED_EXTENSION
+
+  return PR_FALSE;
+}
+
+/**
+ * Check whether we support the given list of extension strings.
+ *
+ * @param aExtension a whitespace separated list containing one or more
+ *   extension strings
+ */
+static PRBool
+HaveExtensions(const nsSubstring& aExtensions)
+{
+  nsWhitespaceTokenizer tokenizer(aExtensions);
+  while (tokenizer.hasMoreTokens()) {
+    if (!HaveExtension(tokenizer.nextToken())) {
+      return PR_FALSE;
+    }
+  }
+  return PR_TRUE;
+}
+
+/**
  * Compare the language name(s) in a systemLanguage attribute to the
  * user's language preferences, as defined in
  * http://www.w3.org/TR/SVG11/struct.html#SystemLanguageAttribute
@@ -144,11 +145,11 @@ MatchesLanguagePreferences(const nsSubstring& aAttribute, const nsSubstring& aLa
 {
   const nsDefaultStringComparator defaultComparator;
 
-  nsSVGCommaTokenizer attributeTokenizer(aAttribute);
+  nsCommaSeparatedTokenizer attributeTokenizer(aAttribute);
 
   while (attributeTokenizer.hasMoreTokens()) {
     const nsSubstring &attributeToken = attributeTokenizer.nextToken();
-    nsSVGCommaTokenizer languageTokenizer(aLanguagePreferences);
+    nsCommaSeparatedTokenizer languageTokenizer(aLanguagePreferences);
     while (languageTokenizer.hasMoreTokens()) {
       if (nsStyleUtil::DashMatchCompare(attributeToken,
                                         languageTokenizer.nextToken(),
@@ -211,11 +212,11 @@ NS_SVG_PassesConditionalProcessingTests(nsIContent *aContent)
   // extensions. Language extensions are capabilities within a user agent that
   // go beyond the feature set defined in the SVG specification.
   // Each extension is identified by a URI reference.
-  // For now, claim that mozilla's SVG implementation supports
-  // no extensions.  So, if extensions are required, we don't have
-  // them available.
-  if (aContent->HasAttr(kNameSpaceID_None, nsGkAtoms::requiredExtensions)) {
-    return PR_FALSE;
+  // For now, claim that mozilla's SVG implementation supports XHTML and MathML.
+  if (aContent->GetAttr(kNameSpaceID_None, nsGkAtoms::requiredExtensions, value)) {
+    if (value.IsEmpty() || !HaveExtensions(value)) {
+      return PR_FALSE;
+    }
   }
 
   // systemLanguage

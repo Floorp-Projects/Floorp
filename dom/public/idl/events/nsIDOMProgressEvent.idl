@@ -45,16 +45,16 @@
  * the specification is complete and is compatible with the WebKit ProgressEvent.
  */
 
-[scriptable, uuid(3fa16b05-81a0-4a17-ab06-98c3a5a5be09)]
+[scriptable, uuid(6af7022c-d7f8-414c-a11f-a7918f14052b)]
 interface nsIDOMProgressEvent : nsIDOMEvent
 {
   readonly attribute boolean lengthComputable;
-  readonly attribute unsigned long loaded;
-  readonly attribute unsigned long total;
+  readonly attribute unsigned long long loaded;
+  readonly attribute unsigned long long total;
   void initProgressEvent(in DOMString typeArg,
                          in boolean canBubbleArg,
                          in boolean cancelableArg,
                          in boolean lengthComputableArg,
-                         in unsigned long loadedArg,
-                         in unsigned long totalArg);
+                         in unsigned long long loadedArg,
+                         in unsigned long long totalArg);
 };

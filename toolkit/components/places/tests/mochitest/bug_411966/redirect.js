@@ -137,6 +137,7 @@ StreamListener.prototype = {
 
   // we are faking an XPCOM interface, so we need to implement QI
   QueryInterface : function(aIID) {
+    netscape.security.PrivilegeManager.enablePrivilege('UniversalXPConnect');
     if (aIID.equals(Components.interfaces.nsISupports) ||
         aIID.equals(Components.interfaces.nsIInterfaceRequestor) ||
         aIID.equals(Components.interfaces.nsIChannelEventSink) ||
@@ -163,11 +164,11 @@ function checkDBOnTimeout() {
   netscape.security.PrivilegeManager.enablePrivilege('UniversalXPConnect');
 
   // Get all pages visited from the original typed one
-  var sql = "SELECT url FROM moz_historyvisits " +
-            "JOIN moz_places h ON h.id = place_id " +
+  var sql = "SELECT url FROM moz_historyvisits_view " +
+            "JOIN moz_places_view h ON h.id = place_id " +
             "WHERE from_visit IN " +
-              "(SELECT v.id FROM moz_historyvisits v " +
-              "JOIN moz_places p ON p.id = v.place_id " +
+              "(SELECT v.id FROM moz_historyvisits_view v " +
+              "JOIN moz_places_view p ON p.id = v.place_id " +
               "WHERE p.url = ?1)";
   var stmt = mDBConn.createStatement(sql);
   stmt.bindUTF8StringParameter(0, typedURI.spec);

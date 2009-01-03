@@ -39,6 +39,9 @@
 #include "cairo-skiplist-private.h"
 #include "cairo-freelist-private.h"
 
+#define DEBUG_VALIDATE 0
+#define DEBUG_PRINT_STATE 0
+
 typedef cairo_point_t cairo_bo_point32_t;
 
 typedef struct _cairo_bo_point128 {
@@ -198,60 +201,163 @@ _slope_compare (cairo_bo_edge_t *a,
      * with respect to x. */
     if ((adx ^ bdx) < 0) {
 	return adx < 0 ? -1 : +1;
-    }
-    else {
+    } else {
 	int32_t ady = a->bottom.y - a->top.y;
 	int32_t bdy = b->bottom.y - b->top.y;
-	int64_t adx_bdy = _cairo_int32x32_64_mul (adx, bdy);
-	int64_t bdx_ady = _cairo_int32x32_64_mul (bdx, ady);
+	cairo_int64_t adx_bdy = _cairo_int32x32_64_mul (adx, bdy);
+	cairo_int64_t bdx_ady = _cairo_int32x32_64_mul (bdx, ady);
 
-	/* if (adx * bdy > bdx * ady) */
-	if (_cairo_int64_gt (adx_bdy, bdx_ady))
-	    return 1;
-
-	/* if (adx * bdy < bdx * ady) */
-	if (_cairo_int64_lt (adx_bdy, bdx_ady))
-	    return -1;
-	return 0;
+	return _cairo_int64_cmp (adx_bdy, bdx_ady);
     }
 }
 
-static cairo_quorem64_t
-edge_x_for_y (cairo_bo_edge_t *edge,
-	      int32_t y)
+/*
+ * We need to compare the x-coordinates of a pair of lines for a particular y,
+ * without loss of precision.
+ *
+ * The x-coordinate along an edge for a given y is:
+ *   X = A_x + (Y - A_y) * A_dx / A_dy
+ *
+ * So the inequality we wish to test is:
+ *   A_x + (Y - A_y) * A_dx / A_dy -?- B_x + (Y - B_y) * B_dx / B_dy,
+ * where -?- is our inequality operator.
+ *
+ * By construction, we know that A_dy and B_dy (and (Y - A_y), (Y - B_y)) are
+ * all positive, so we can rearrange it thus without causing a sign change:
+ *   A_dy * B_dy * (A_x - B_x) -?- (Y - B_y) * B_dx * A_dy
+ *                                 - (Y - A_y) * A_dx * B_dy
+ *
+ * Given the assumption that all the deltas fit within 32 bits, we can compute
+ * this comparison directly using 128 bit arithmetic.
+ *
+ * (And put the burden of the work on developing fast 128 bit ops, which are
+ * required throughout the tessellator.)
+ *
+ * See the similar discussion for _slope_compare().
+ */
+static int
+edges_compare_x_for_y_general (const cairo_bo_edge_t *a,
+			       const cairo_bo_edge_t *b,
+			       int32_t y)
 {
     /* XXX: We're assuming here that dx and dy will still fit in 32
      * bits. That's not true in general as there could be overflow. We
      * should prevent that before the tessellation algorithm
      * begins.
      */
-    int32_t dx = edge->bottom.x - edge->top.x;
-    int32_t dy = edge->bottom.y - edge->top.y;
-    int64_t numerator;
-    cairo_quorem64_t quorem;
+    int32_t adx, ady;
+    int32_t bdx, bdy;
+    cairo_int128_t L, R;
 
-    if (edge->middle.y == y) {
-       quorem.quo = edge->middle.x;
-       quorem.rem = 0;
-       return quorem;
-    }
-    if (edge->bottom.y == y) {
-       quorem.quo = edge->bottom.x;
-       quorem.rem = 0;
-       return quorem;
-    }
-    if (dy == 0) {
-	quorem.quo = _cairo_int32_to_int64 (edge->top.x);
-	quorem.rem = 0;
-	return quorem;
-    }
+    adx = a->bottom.x - a->top.x;
+    ady = a->bottom.y - a->top.y;
 
-    /* edge->top.x + (y - edge->top.y) * dx / dy */
-    numerator = _cairo_int32x32_64_mul ((y - edge->top.y), dx);
-    quorem = _cairo_int64_divrem (numerator, dy);
-    quorem.quo += edge->top.x;
+    bdx = b->bottom.x - b->top.x;
+    bdy = b->bottom.y - b->top.y;
 
-    return quorem;
+    L = _cairo_int64x32_128_mul (_cairo_int32x32_64_mul (ady, bdy),
+				 a->top.x - b->top.x);
+
+    R = _cairo_int128_sub (_cairo_int64x32_128_mul (_cairo_int32x32_64_mul (bdx,
+									    ady),
+						    y - b->top.y),
+			   _cairo_int64x32_128_mul (_cairo_int32x32_64_mul (adx,
+									    bdy),
+						    y - a->top.y));
+
+    /* return _cairo_int128_cmp (L, R); */
+    if (_cairo_int128_lt (L, R))
+	return -1;
+    if (_cairo_int128_gt (L, R))
+	return 1;
+    return 0;
+}
+
+/*
+ * We need to compare the x-coordinate of a line for a particular y wrt to a
+ * given x, without loss of precision.
+ *
+ * The x-coordinate along an edge for a given y is:
+ *   X = A_x + (Y - A_y) * A_dx / A_dy
+ *
+ * So the inequality we wish to test is:
+ *   A_x + (Y - A_y) * A_dx / A_dy -?- X
+ * where -?- is our inequality operator.
+ *
+ * By construction, we know that A_dy (and (Y - A_y)) are
+ * all positive, so we can rearrange it thus without causing a sign change:
+ *   (Y - A_y) * A_dx -?- (X - A_x) * A_dy
+ *
+ * Given the assumption that all the deltas fit within 32 bits, we can compute
+ * this comparison directly using 64 bit arithmetic.
+ *
+ * See the similar discussion for _slope_compare() and
+ * edges_compare_x_for_y_general().
+ */
+static int
+edge_compare_for_y_against_x (const cairo_bo_edge_t *a,
+			      int32_t y,
+			      int32_t x)
+{
+    int32_t adx, ady;
+    int32_t dx, dy;
+    cairo_int64_t L, R;
+
+    adx = a->bottom.x - a->top.x;
+    ady = a->bottom.y - a->top.y;
+
+    dy = y - a->top.y;
+    dx = x - a->top.x;
+
+    L = _cairo_int32x32_64_mul (dy, adx);
+    R = _cairo_int32x32_64_mul (dx, ady);
+
+    return _cairo_int64_cmp (L, R);
+}
+
+static int
+edges_compare_x_for_y (const cairo_bo_edge_t *a,
+		       const cairo_bo_edge_t *b,
+		       int32_t y)
+{
+    /* If the sweep-line is currently on an end-point of a line,
+     * then we know its precise x value (and considering that we often need to
+     * compare events at end-points, this happens frequently enough to warrant
+     * special casing).
+     */
+    enum {
+       HAVE_NEITHER = 0x0,
+       HAVE_AX      = 0x1,
+       HAVE_BX      = 0x2,
+       HAVE_BOTH    = HAVE_AX | HAVE_BX
+    } have_ax_bx = HAVE_BOTH;
+    int32_t ax, bx;
+
+    if (y == a->top.y)
+	ax = a->top.x;
+    else if (y == a->bottom.y)
+	ax = a->bottom.x;
+    else
+	have_ax_bx &= ~HAVE_AX;
+
+    if (y == b->top.y)
+	bx = b->top.x;
+    else if (y == b->bottom.y)
+	bx = b->bottom.x;
+    else
+	have_ax_bx &= ~HAVE_BX;
+
+    switch (have_ax_bx) {
+    default:
+    case HAVE_NEITHER:
+	return edges_compare_x_for_y_general (a, b, y);
+    case HAVE_AX:
+	return - edge_compare_for_y_against_x (b, y, ax);
+    case HAVE_BX:
+	return edge_compare_for_y_against_x (a, y, bx);
+    case HAVE_BOTH:
+	return ax - bx;
+    }
 }
 
 static int
@@ -259,8 +365,6 @@ _cairo_bo_sweep_line_compare_edges (cairo_bo_sweep_line_t	*sweep_line,
 				    cairo_bo_edge_t		*a,
 				    cairo_bo_edge_t		*b)
 {
-    cairo_quorem64_t ax;
-    cairo_quorem64_t bx;
     int cmp;
 
     if (a == b)
@@ -289,18 +393,9 @@ _cairo_bo_sweep_line_compare_edges (cairo_bo_sweep_line_t	*sweep_line,
            if (amin > bmax) return +1;
     }
 
-    ax = edge_x_for_y (a, sweep_line->current_y);
-    bx = edge_x_for_y (b, sweep_line->current_y);
-    if (ax.quo > bx.quo)
-	return 1;
-    else if (ax.quo < bx.quo)
-	return -1;
-
-    /* Quotients are identical, test remainder. */
-    if (ax.rem > bx.rem)
-	return 1;
-    else if (ax.rem < bx.rem)
-	return -1;
+    cmp = edges_compare_x_for_y (a, b, sweep_line->current_y);
+    if (cmp)
+	return cmp;
 
     /* The two edges intersect exactly at y, so fall back on slope
      * comparison. We know that this compare_edges function will be
@@ -489,17 +584,17 @@ det32_64 (int32_t a,
 }
 
 static inline cairo_int128_t
-det64_128 (cairo_int64_t a,
-	   cairo_int64_t b,
-	   cairo_int64_t c,
-	   cairo_int64_t d)
+det64x32_128 (cairo_int64_t a,
+	      int32_t       b,
+	      cairo_int64_t c,
+	      int32_t       d)
 {
     cairo_int128_t ad;
     cairo_int128_t bc;
 
     /* det = a * d - b * c */
-    ad = _cairo_int64x64_128_mul (a, d);
-    bc = _cairo_int64x64_128_mul (b, c);
+    ad = _cairo_int64x32_128_mul (a, d);
+    bc = _cairo_int64x32_128_mul (c, b);
 
     return _cairo_int128_sub (ad, bc);
 }
@@ -532,7 +627,7 @@ intersect_lines (cairo_bo_edge_t		*a,
     cairo_int64_t den_det = det32_64 (dx1, dy1, dx2, dy2);
     cairo_quorem64_t qr;
 
-    if (_cairo_int64_eq (den_det, 0))
+    if (_cairo_int64_is_zero (den_det))
 	return CAIRO_BO_STATUS_PARALLEL;
 
     a_det = det32_64 (a->top.x, a->top.y,
@@ -541,22 +636,22 @@ intersect_lines (cairo_bo_edge_t		*a,
 		      b->bottom.x, b->bottom.y);
 
     /* x = det (a_det, dx1, b_det, dx2) / den_det */
-    qr = _cairo_int_96by64_32x64_divrem (det64_128 (a_det, dx1,
-						    b_det, dx2),
-					 den_det);
-    if (_cairo_int64_eq (qr.rem,den_det))
-	return CAIRO_BO_STATUS_NO_INTERSECTION;
-    intersection->x.ordinate = qr.quo;
-    intersection->x.exactness = qr.rem ? INEXACT : EXACT;
-
-    /* y = det (a_det, dy1, b_det, dy2) / den_det */
-    qr = _cairo_int_96by64_32x64_divrem (det64_128 (a_det, dy1,
-						    b_det, dy2),
+    qr = _cairo_int_96by64_32x64_divrem (det64x32_128 (a_det, dx1,
+						       b_det, dx2),
 					 den_det);
     if (_cairo_int64_eq (qr.rem, den_det))
 	return CAIRO_BO_STATUS_NO_INTERSECTION;
-    intersection->y.ordinate = qr.quo;
-    intersection->y.exactness = qr.rem ? INEXACT : EXACT;
+    intersection->x.ordinate = _cairo_int64_to_int32 (qr.quo);
+    intersection->x.exactness = _cairo_int64_is_zero (qr.rem) ? EXACT : INEXACT;
+
+    /* y = det (a_det, dy1, b_det, dy2) / den_det */
+    qr = _cairo_int_96by64_32x64_divrem (det64x32_128 (a_det, dy1,
+						       b_det, dy2),
+					 den_det);
+    if (_cairo_int64_eq (qr.rem, den_det))
+	return CAIRO_BO_STATUS_NO_INTERSECTION;
+    intersection->y.ordinate = _cairo_int64_to_int32 (qr.quo);
+    intersection->y.exactness = _cairo_int64_is_zero (qr.rem) ? EXACT : INEXACT;
 
     return CAIRO_BO_STATUS_INTERSECTION;
 }
@@ -941,7 +1036,6 @@ _cairo_bo_sweep_line_swap (cairo_bo_sweep_line_t	*sweep_line,
     left->prev = right;
 }
 
-#define DEBUG_PRINT_STATE 0
 #if DEBUG_PRINT_STATE
 static void
 _cairo_bo_edge_print (cairo_bo_edge_t *edge)
@@ -1078,35 +1172,35 @@ _cairo_bo_edge_end_trap (cairo_bo_edge_t	*left,
 
     /* Only emit trapezoids with positive height. */
     if (fixed_top < fixed_bot) {
-	cairo_point_t left_top, left_bot, right_top, right_bot;
+	cairo_line_t left_line;
+	cairo_line_t right_line;
 	cairo_fixed_t xmin = bo_traps->xmin;
 	cairo_fixed_t ymin = bo_traps->ymin;
 	fixed_top += ymin;
 	fixed_bot += ymin;
 
-	left_top.x = left->top.x + xmin;
-	left_top.y = left->top.y + ymin;
-	right_top.x = right->top.x + xmin;
-	right_top.y = right->top.y + ymin;
-	left_bot.x = left->bottom.x + xmin;
-	left_bot.y = left->bottom.y + ymin;
-	right_bot.x = right->bottom.x + xmin;
-	right_bot.y = right->bottom.y + ymin;
+	left_line.p1.x  = left->top.x + xmin;
+	left_line.p1.y  = left->top.y + ymin;
+	right_line.p1.x = right->top.x + xmin;
+	right_line.p1.y = right->top.y + ymin;
+
+	left_line.p2.x  = left->bottom.x + xmin;
+	left_line.p2.y  = left->bottom.y + ymin;
+	right_line.p2.x = right->bottom.x + xmin;
+	right_line.p2.y = right->bottom.y + ymin;
 
 	/* Avoid emitting the trapezoid if it is obviously degenerate.
 	 * TODO: need a real collinearity test here for the cases
 	 * where the trapezoid is degenerate, yet the top and bottom
 	 * coordinates aren't equal.  */
-	if (left_top.x != right_top.x ||
-	    left_top.y != right_top.y ||
-	    left_bot.x != right_bot.x ||
-	    left_bot.y != right_bot.y)
+	if (left_line.p1.x != right_line.p1.x ||
+	    left_line.p1.y != right_line.p1.y ||
+	    left_line.p2.x != right_line.p2.x ||
+	    left_line.p2.y != right_line.p2.y)
 	{
-	    _cairo_traps_add_trap_from_points (bo_traps->traps,
-					       fixed_top,
-					       fixed_bot,
-					       left_top, left_bot,
-					       right_top, right_bot);
+	    _cairo_traps_add_trap (bo_traps->traps,
+				   fixed_top, fixed_bot,
+				   &left_line, &right_line);
 
 #if DEBUG_PRINT_STATE
 	    printf ("Deferred trap: left=(%08x, %08x)-(%08x,%08x) "
@@ -1177,6 +1271,7 @@ _cairo_bo_traps_fini (cairo_bo_traps_t *bo_traps)
     _cairo_freelist_fini (&bo_traps->freelist);
 }
 
+#if DEBUG_VALIDATE
 static void
 _cairo_bo_sweep_line_validate (cairo_bo_sweep_line_t *sweep_line)
 {
@@ -1193,15 +1288,16 @@ _cairo_bo_sweep_line_validate (cairo_bo_sweep_line_t *sweep_line)
     {
 	if (SKIP_ELT_TO_EDGE (elt) != edge) {
 	    fprintf (stderr, "*** Error: Sweep line fails to validate: Inconsistent data in the two lists.\n");
-	    exit (1);
+	    abort ();
 	}
     }
 
     if (edge || elt) {
 	fprintf (stderr, "*** Error: Sweep line fails to validate: One list ran out before the other.\n");
-	exit (1);
+	abort ();
     }
 }
+#endif
 
 
 static cairo_status_t
@@ -1324,9 +1420,8 @@ _cairo_bentley_ottmann_tessellate_bo_edges (cairo_bo_edge_t	*edges,
 #if DEBUG_PRINT_STATE
 	    print_state ("After processing start", &event_queue, &sweep_line);
 #endif
-	    _cairo_bo_sweep_line_validate (&sweep_line);
-
 	    break;
+
 	case CAIRO_BO_EVENT_TYPE_STOP:
 	    edge = event->e1;
 
@@ -1346,9 +1441,8 @@ _cairo_bentley_ottmann_tessellate_bo_edges (cairo_bo_edge_t	*edges,
 #if DEBUG_PRINT_STATE
 	    print_state ("After processing stop", &event_queue, &sweep_line);
 #endif
-	    _cairo_bo_sweep_line_validate (&sweep_line);
-
 	    break;
+
 	case CAIRO_BO_EVENT_TYPE_INTERSECTION:
 	    edge1 = event->e1;
 	    edge2 = event->e2;
@@ -1382,10 +1476,11 @@ _cairo_bentley_ottmann_tessellate_bo_edges (cairo_bo_edge_t	*edges,
 #if DEBUG_PRINT_STATE
 	    print_state ("After processing intersection", &event_queue, &sweep_line);
 #endif
-	    _cairo_bo_sweep_line_validate (&sweep_line);
-
 	    break;
 	}
+#if DEBUG_VALIDATE
+	_cairo_bo_sweep_line_validate (&sweep_line);
+#endif
     }
 
     *num_intersections = intersection_count;
@@ -1427,11 +1522,15 @@ _cairo_bentley_ottmann_tessellate_polygon (cairo_traps_t	 *traps,
     cairo_fixed_t ymin = 0x7FFFFFFF;
     cairo_fixed_t xmax = -0x80000000;
     cairo_fixed_t ymax = -0x80000000;
+    cairo_box_t limit;
+    cairo_bool_t has_limits;
     int num_bo_edges;
     int i;
 
     if (0 == polygon->num_edges)
 	return CAIRO_STATUS_SUCCESS;
+
+    has_limits = _cairo_traps_get_limit (traps, &limit);
 
     if (polygon->num_edges < ARRAY_LENGTH (stack_edges)) {
 	edges = stack_edges;
@@ -1470,6 +1569,13 @@ _cairo_bentley_ottmann_tessellate_polygon (cairo_traps_t	 *traps,
 	cairo_bo_edge_t *edge = &edges[num_bo_edges];
 	cairo_point_t top = polygon->edges[i].edge.p1;
 	cairo_point_t bot = polygon->edges[i].edge.p2;
+
+	/* Discard the edge if it lies outside the limits of traps. */
+	if (has_limits) {
+	    /* Strictly above or below the limits? */
+	    if (bot.y <= limit.p1.y || top.y >= limit.p2.y)
+		continue;
+	}
 
 	/* Offset coordinates into the non-negative range. */
 	top.x -= xmin;

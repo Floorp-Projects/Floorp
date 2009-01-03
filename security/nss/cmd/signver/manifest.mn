@@ -54,5 +54,3 @@ PACKAGE_FILES += signver
 endif
 
 ARCHIVE_NAME  = signver
-
-USE_STATIC_LIBS = 1

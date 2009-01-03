@@ -39,12 +39,11 @@
 #include "nsTransactionItem.h"
 #include "nsTransactionStack.h"
 #include "nsCOMPtr.h"
+#include "nsAutoPtr.h"
 
 nsTransactionStack::nsTransactionStack()
   : mQue(0)
 {
-  nsTransactionReleaseFunctor* theFunctor=new nsTransactionReleaseFunctor();
-  mQue.SetDeallocator(theFunctor);
 } 
 
 nsTransactionStack::~nsTransactionStack()
@@ -61,6 +60,7 @@ nsTransactionStack::Push(nsTransactionItem *aTransaction)
   /* nsDeque's Push() method adds new items at the back
    * of the deque.
    */
+  NS_ADDREF(aTransaction);
   mQue.Push(aTransaction);
 
   return NS_OK;
@@ -105,7 +105,7 @@ nsTransactionStack::Peek(nsTransactionItem **aTransaction)
     return NS_OK;
   }
 
-  *aTransaction = (nsTransactionItem *)(mQue.Last());
+  NS_IF_ADDREF(*aTransaction = static_cast<nsTransactionItem*>(mQue.Last()));
 
   return NS_OK;
 }
@@ -119,7 +119,8 @@ nsTransactionStack::GetItem(PRInt32 aIndex, nsTransactionItem **aTransaction)
   if (aIndex < 0 || aIndex >= mQue.GetSize())
     return NS_ERROR_FAILURE;
 
-  *aTransaction = (nsTransactionItem *)(mQue.ObjectAt(aIndex));
+  NS_IF_ADDREF(*aTransaction =
+               static_cast<nsTransactionItem*>(mQue.ObjectAt(aIndex)));
 
   return NS_OK;
 }
@@ -127,20 +128,18 @@ nsTransactionStack::GetItem(PRInt32 aIndex, nsTransactionItem **aTransaction)
 nsresult
 nsTransactionStack::Clear(void)
 {
-  nsTransactionItem *tx = 0;
+  nsRefPtr<nsTransactionItem> tx;
   nsresult result    = NS_OK;
 
   /* Pop all transactions off the stack and release them. */
 
-  result = Pop(&tx);
+  result = Pop(getter_AddRefs(tx));
 
   if (NS_FAILED(result))
     return result;
 
   while (tx) {
-    delete tx;
-
-    result = Pop(&tx);
+    result = Pop(getter_AddRefs(tx));
 
     if (NS_FAILED(result))
       return result;
@@ -168,22 +167,20 @@ nsTransactionRedoStack::~nsTransactionRedoStack()
 nsresult
 nsTransactionRedoStack::Clear(void)
 {
-  nsTransactionItem *tx = 0;
+  nsRefPtr<nsTransactionItem> tx;
   nsresult result       = NS_OK;
 
   /* When clearing a Redo stack, we have to clear from the
    * bottom of the stack towards the top!
    */
 
-  result = PopBottom(&tx);
+  result = PopBottom(getter_AddRefs(tx));
 
   if (NS_FAILED(result))
     return result;
 
   while (tx) {
-    delete tx;
-
-    result = PopBottom(&tx);
+    result = PopBottom(getter_AddRefs(tx));
 
     if (NS_FAILED(result))
       return result;
@@ -192,10 +189,3 @@ nsTransactionRedoStack::Clear(void)
   return NS_OK;
 }
 
-void *
-nsTransactionReleaseFunctor::operator()(void *aObject)
-{
-  nsTransactionItem *item = (nsTransactionItem *)aObject;
-  delete item;
-  return 0;
-}

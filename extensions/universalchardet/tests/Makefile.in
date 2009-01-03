@@ -83,6 +83,9 @@ _TEST_FILES =	\
 		test_bug426271-euc-jp.html \
 		bug426271_text-utf-8.html \
 		test_bug426271-utf-8.html \
+		bug431054_text.html \
+		test_bug431054.html \
+		test_bug431054-japanese.html \
 		$(NULL)
 
 libs:: $(_TEST_FILES)

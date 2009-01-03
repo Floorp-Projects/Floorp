@@ -99,6 +99,7 @@ _TEST_FILES = 	test_bug589.html \
 		test_bug386996.html \
 		test_bug388558.html \
 		test_bug388746.html \
+		test_bug388794.html \
 		test_bug389797.html \
 		test_bug390975.html \
 		test_bug391994.html \
@@ -120,7 +121,9 @@ _TEST_FILES = 	test_bug589.html \
 		test_bug430392.html \
 		bug441930_iframe.html \
 		test_bug441930.html \
+		test_bug442801.html \
 		test_bug448166.html \
+		test_bug460568.html \
 		$(NULL)
 
 libs:: $(_TEST_FILES)

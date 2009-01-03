@@ -47,7 +47,7 @@
 PR_BEGIN_EXTERN_C
 
 typedef void
-(* PR_CALLBACK NS_WalkStackCallback)(void *aPC, void *aClosure);
+(* NS_WalkStackCallback)(void *aPC, void *aClosure);
 
 /**
  * Call aCallback for the C/C++ stack frames on the current thread, from

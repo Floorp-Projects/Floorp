@@ -20,6 +20,7 @@
  * the Initial Developer. All Rights Reserved.
  *
  * Contributor(s):
+ *   Thomas K. Dyas <tdyas@zecador.org> (simple gestures support)
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -128,9 +129,6 @@ enum {
   // the link back to it must be weak.
   nsChildView* mGeckoChild;
     
-  // tag for our mouse enter/exit tracking rect
-  NSTrackingRectTag mMouseEnterExitTag;
-
   // Whether we're a plugin view.
   BOOL mIsPluginView;
 
@@ -166,6 +164,8 @@ enum {
   // All views are always opaque (non-transparent). The only exception is when we're
   // the content view in a transparent XUL window.
   BOOL mIsTransparent;
+  PRIntervalTime mLastShadowInvalidation;
+  BOOL mNeedsShadowInvalidation;
 
   // Holds our drag service across multiple drag calls. The reference to the
   // service is obtained when the mouse enters the view and is released when
@@ -180,6 +180,29 @@ enum {
   // Cocoa TSM documents (those created and managed by the NSTSMInputContext
   // class) -- for some reason TSMProcessRawKeyEvent() doesn't work with them.
   TSMDocumentID mPluginTSMDoc;
+
+  // Simple gestures support
+  //
+  // mGestureState is used to detect when Cocoa has called both
+  // magnifyWithEvent and rotateWithEvent within the same
+  // beginGestureWithEvent and endGestureWithEvent sequence. We
+  // discard the spurious gesture event so as not to confuse Gecko.
+  //
+  // mCumulativeMagnification keeps track of the total amount of
+  // magnification peformed during a magnify gesture so that we can
+  // send that value with the final MozMagnifyGesture event.
+  //
+  // mCumulativeRotation keeps track of the total amount of rotation
+  // performed during a rotate gesture so we can send that value with
+  // the final MozRotateGesture event.
+  enum {
+    eGestureState_None,
+    eGestureState_StartGesture,
+    eGestureState_MagnifyGesture,
+    eGestureState_RotateGesture
+  } mGestureState;
+  float mCumulativeMagnification;
+  float mCumulativeRotation;
 }
 
 // these are sent to the first responder when the window key status changes
@@ -194,6 +217,22 @@ enum {
 - (void)sendFocusEvent:(PRUint32)eventType;
 
 - (void) processPluginKeyEvent:(EventRef)aKeyEvent;
+
+// Simple gestures support
+//
+// XXX - The swipeWithEvent, beginGestureWithEvent, magnifyWithEvent,
+// rotateWithEvent, and endGestureWithEvent methods are part of a
+// PRIVATE interface exported by nsResponder and reverse-engineering
+// was necessary to obtain the methods' prototypes. Thus, Apple may
+// change the interface in the future without notice.
+//
+// The prototypes were obtained from the following link:
+// http://cocoadex.com/2008/02/nsevent-modifications-swipe-ro.html
+- (void)swipeWithEvent:(NSEvent *)anEvent;
+- (void)beginGestureWithEvent:(NSEvent *)anEvent;
+- (void)magnifyWithEvent:(NSEvent *)anEvent;
+- (void)rotateWithEvent:(NSEvent *)anEvent;
+- (void)endGestureWithEvent:(NSEvent *)anEvent;
 @end
 
 
@@ -290,6 +329,7 @@ public:
   NS_IMETHOD              Show(PRBool aState);
   NS_IMETHOD              IsVisible(PRBool& outState);
 
+  NS_IMETHOD              SetParent(nsIWidget* aNewParent);
   virtual nsIWidget*      GetParent(void);
 
   NS_IMETHOD              ModalEventFilter(PRBool aRealEvent, void *aEvent,
@@ -347,7 +387,7 @@ public:
   NS_IMETHOD        GetAttention(PRInt32 aCycleCount);
 
   NS_IMETHOD        ActivateNativeMenuItemAt(const nsAString& indexString);
-  NS_IMETHOD        ForceNativeMenuReload();
+  NS_IMETHOD        ForceUpdateNativeMenuAt(const nsAString& indexString);
 
   NS_IMETHOD        ResetInputState();
   NS_IMETHOD        SetIMEOpenState(PRBool aState);
@@ -366,6 +406,7 @@ public:
   
   virtual nsTransparencyMode GetTransparencyMode();
   virtual void                SetTransparencyMode(nsTransparencyMode aMode);
+  NS_IMETHOD        SetWindowShadowStyle(PRInt32 aStyle);
   
   // Mac specific methods
   virtual PRBool    PointInWidget(Point aThePoint);

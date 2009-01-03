@@ -50,14 +50,14 @@
 #ifdef RAPTOR_PERF_METRICS
 #  define START_TIMER()                    \
     if(mParser) mParser->mParseTime.Start(PR_FALSE); \
-    if(mParser) mParser->mDTDTime.Start(PR_FALSE); 
+    if(mParser) mParser->mDTDTime.Start(PR_FALSE);
 
 #  define STOP_TIMER()                     \
     if(mParser) mParser->mParseTime.Stop(); \
-    if(mParser) mParser->mDTDTime.Stop(); 
+    if(mParser) mParser->mDTDTime.Stop();
 
 #else
-#  define STOP_TIMER() 
+#  define STOP_TIMER()
 #  define START_TIMER()
 #endif
 
@@ -75,6 +75,7 @@
 #include "nsIPrefBranch.h"
 #include "nsUnicharUtils.h"
 #include "nsPrintfCString.h"
+#include "nsNetUtil.h"
 
 #include "nsIServiceManager.h"
 
@@ -138,7 +139,7 @@ static const char* const kElementClasses[] = {
   "text",
   "attribute-name",
   "attribute-value",
-  "markupdeclaration"  
+  "markupdeclaration"
 };
 
 static const char* const kBeforeText[] = {
@@ -201,10 +202,10 @@ static const char* const kDumpFileAfterText[] = {
 
 /**
  *  Default constructor
- *  
+ *
  *  @update  gess 4/9/98
- *  @param   
- *  @return  
+ *  @param
+ *  @return
  */
 CViewSourceHTML::CViewSourceHTML()
 {
@@ -241,10 +242,10 @@ CViewSourceHTML::CViewSourceHTML()
 
 /**
  *  Default destructor
- *  
+ *
  *  @update  gess 4/9/98
- *  @param   
- *  @return  
+ *  @param
+ *  @return
  */
 CViewSourceHTML::~CViewSourceHTML(){
   mParser=0; //just to prove we destructed...
@@ -253,11 +254,11 @@ CViewSourceHTML::~CViewSourceHTML(){
 /**
   * The parser uses a code sandwich to wrap the parsing process. Before
   * the process begins, WillBuildModel() is called. Afterwards the parser
-  * calls DidBuildModel(). 
-  * @update	rickg 03.20.2000
-  * @param	aParserContext
-  * @param	aSink
-  * @return	error code (almost always 0)
+  * calls DidBuildModel().
+  * @update rickg 03.20.2000
+  * @param  aParserContext
+  * @param  aSink
+  * @return error code (almost always 0)
   */
 nsresult CViewSourceHTML::WillBuildModel(const CParserContext& aParserContext,
                                          nsITokenizer* aTokenizer,
@@ -268,7 +269,7 @@ nsresult CViewSourceHTML::WillBuildModel(const CParserContext& aParserContext,
 #ifdef RAPTOR_PERF_METRICS
   vsTimer.Reset();
   NS_START_STOPWATCH(vsTimer);
-#endif 
+#endif
 
   STOP_TIMER();
   mSink=(nsIHTMLContentSink*)aSink;
@@ -279,7 +280,7 @@ nsresult CViewSourceHTML::WillBuildModel(const CParserContext& aParserContext,
     mFilename = Substring(contextFilename,
                           12, // The length of "view-source:"
                           contextFilename.Length() - 12);
-    
+
     mDocType=aParserContext.mDocType;
     mMimeType=aParserContext.mMimeType;
     mDTDMode=aParserContext.mDTDMode;
@@ -331,10 +332,10 @@ nsresult CViewSourceHTML::WillBuildModel(const CParserContext& aParserContext,
 /**
   * The parser uses a code sandwich to wrap the parsing process. Before
   * the process begins, WillBuildModel() is called. Afterwards the parser
-  * calls DidBuildModel(). 
-  * @update	gess5/18/98
-  * @param	aFilename is the name of the file being parsed.
-  * @return	error code (almost always 0)
+  * calls DidBuildModel().
+  * @update gess5/18/98
+  * @param  aFilename is the name of the file being parsed.
+  * @return error code (almost always 0)
   */
 NS_IMETHODIMP CViewSourceHTML::BuildModel(nsIParser* aParser,nsITokenizer* aTokenizer,nsITokenObserver* anObserver,nsIContentSink* aSink) {
   nsresult result=NS_OK;
@@ -396,7 +397,7 @@ NS_IMETHODIMP CViewSourceHTML::BuildModel(nsIParser* aParser,nsITokenizer* aToke
           AddAttrToNode(theNode, theAllocator,
                         NS_LITERAL_STRING("href"),
                         NS_LITERAL_STRING("resource://gre/res/viewsource.css"));
-          
+
           mSink->AddLeaf(theNode);
         }
         IF_FREE(theToken, theAllocator);
@@ -420,7 +421,7 @@ NS_IMETHODIMP CViewSourceHTML::BuildModel(nsIParser* aParser,nsITokenizer* aToke
           AddAttrToNode(bodyNode, theAllocator,
                         NS_LITERAL_STRING("id"),
                         NS_ConvertASCIItoUTF16(kBodyId));
-          
+
           if (mWrapLongLines) {
             AddAttrToNode(bodyNode, theAllocator,
                           NS_LITERAL_STRING("class"),
@@ -430,7 +431,7 @@ NS_IMETHODIMP CViewSourceHTML::BuildModel(nsIParser* aParser,nsITokenizer* aToke
           if(NS_SUCCEEDED(result)) mHasOpenBody=PR_TRUE;
         }
         IF_FREE(bodyToken, theAllocator);
-        
+
         if (NS_SUCCEEDED(result)) {
           CStartToken* preToken =
             static_cast<CStartToken*>
@@ -451,8 +452,6 @@ NS_IMETHODIMP CViewSourceHTML::BuildModel(nsIParser* aParser,nsITokenizer* aToke
       }
     }
 
-    mSink->WillProcessTokens();
-
     while(NS_SUCCEEDED(result)){
       CToken* theToken=mTokenizer->PopToken();
       if(theToken) {
@@ -470,7 +469,7 @@ NS_IMETHODIMP CViewSourceHTML::BuildModel(nsIParser* aParser,nsITokenizer* aToke
       }
       else break;
     }//while
-   
+
     mTokenizer=oldTokenizer;
   }
   else result=NS_ERROR_HTMLPARSER_BADTOKENIZER;
@@ -490,7 +489,7 @@ void CViewSourceHTML::StartNewPreBlock(void){
   if (!theAllocator) {
     return;
   }
-  
+
   CStartToken* theToken =
     static_cast<CStartToken*>
                (theAllocator->CreateTokenOfType(eToken_start,
@@ -506,7 +505,7 @@ void CViewSourceHTML::StartNewPreBlock(void){
                 NS_ConvertASCIItoUTF16(nsPrintfCString("line%d", mLineNumber)));
   mSink->OpenContainer(startNode);
   IF_FREE(theToken, theAllocator);
-  
+
 #ifdef DUMP_TO_FILE
   if (gDumpFile) {
     fprintf(gDumpFile, "</pre>\n");
@@ -523,7 +522,7 @@ void CViewSourceHTML::AddAttrToNode(nsCParserStartNode& aNode,
                                     const nsAString& aAttrValue)
 {
   NS_PRECONDITION(aAllocator, "Must have a token allocator!");
-  
+
   CAttributeToken* theAttr =
     (CAttributeToken*) aAllocator->CreateTokenOfType(eToken_attribute,
                                                      eHTMLTag_unknown,
@@ -542,9 +541,9 @@ void CViewSourceHTML::AddAttrToNode(nsCParserStartNode& aNode,
 }
 
 /**
- * 
- * @update	gess5/18/98
- * @param 
+ *
+ * @update  gess5/18/98
+ * @param
  * @return
  */
 NS_IMETHODIMP CViewSourceHTML::DidBuildModel(nsresult anErrorCode,PRBool aNotifySink,nsIParser* aParser,nsIContentSink* aSink){
@@ -587,7 +586,7 @@ NS_IMETHODIMP CViewSourceHTML::DidBuildModel(nsresult anErrorCode,PRBool aNotify
   printf("viewsource timer: ");
   vsTimer.Print();
   printf("\n");
-#endif 
+#endif
 
   return result;
 }
@@ -598,23 +597,23 @@ NS_IMETHODIMP CViewSourceHTML::DidBuildModel(nsresult anErrorCode,PRBool aNotify
  * It's recommended to use this method in accordance with
  * the parser's terminate() method.
  *
- * @update	harishd 07/22/99
- * @param 
+ * @update  harishd 07/22/99
+ * @param
  * @return
  */
-NS_IMETHODIMP_(void)  
+NS_IMETHODIMP_(void)
 CViewSourceHTML::Terminate() {
 }
 
-NS_IMETHODIMP_(PRInt32)  
+NS_IMETHODIMP_(PRInt32)
 CViewSourceHTML::GetType() {
   return NS_IPARSER_FLAG_HTML;
 }
 
 /**
- * 
- * @update	gess5/18/98
- * @param 
+ *
+ * @update  gess5/18/98
+ * @param
  * @return
  */
 NS_IMETHODIMP CViewSourceHTML::WillResumeParse(nsIContentSink* aSink){
@@ -626,9 +625,9 @@ NS_IMETHODIMP CViewSourceHTML::WillResumeParse(nsIContentSink* aSink){
 }
 
 /**
- * 
- * @update	gess5/18/98
- * @param 
+ *
+ * @update  gess5/18/98
+ * @param
  * @return
  */
 NS_IMETHODIMP CViewSourceHTML::WillInterruptParse(nsIContentSink* aSink){
@@ -642,8 +641,8 @@ NS_IMETHODIMP CViewSourceHTML::WillInterruptParse(nsIContentSink* aSink){
 /**
  * Called by the parser to enable/disable dtd verification of the
  * internal context stack.
- * @update	gess 7/23/98
- * @param 
+ * @update  gess 7/23/98
+ * @param
  * @return
  */
 void CViewSourceHTML::SetVerification(PRBool aEnabled)
@@ -653,7 +652,7 @@ void CViewSourceHTML::SetVerification(PRBool aEnabled)
 /**
  *  This method is called to determine whether or not a tag
  *  of one type can contain a tag of another type.
- *  
+ *
  *  @update  gess 3/25/98
  *  @param   aParent -- int tag of parent container
  *  @param   aChild -- int tag of child container
@@ -665,7 +664,7 @@ PRBool CViewSourceHTML::CanContain(PRInt32 aParent,PRInt32 aChild) const{
 }
 
 /**
- *  This method gets called to determine whether a given 
+ *  This method gets called to determine whether a given
  *  tag is itself a container
  *  
  *  @update  gess 3/25/98
@@ -679,14 +678,16 @@ PRBool CViewSourceHTML::IsContainer(PRInt32 aTag) const{
 
 /**
  *  This method gets called when a tag needs to write it's attributes
- *  
+ *
  *  @update  gess 3/25/98
- *  @param   
+ *  @param
  *  @return  result status
  */
-nsresult CViewSourceHTML::WriteAttributes(PRInt32 attrCount, PRBool aOwnerInError) {
+nsresult CViewSourceHTML::WriteAttributes(const nsAString& tagName, 
+                                          nsTokenAllocator* allocator, 
+                                          PRInt32 attrCount, PRBool aOwnerInError) {
   nsresult result=NS_OK;
-  
+
   if(attrCount){ //go collect the attributes...
     int attr = 0;
     for(attr = 0; attr < attrCount; ++attr){
@@ -699,7 +700,7 @@ nsresult CViewSourceHTML::WriteAttributes(PRInt32 attrCount, PRBool aOwnerInErro
 
           CAttributeToken* theAttrToken = (CAttributeToken*)theToken;
           const nsSubstring& theKey = theAttrToken->GetKey();
-          
+
           // The attribute is only in error if its owner is NOT in error.
           const PRBool attributeInError =
             !aOwnerInError && theAttrToken->IsInError();
@@ -708,9 +709,13 @@ nsresult CViewSourceHTML::WriteAttributes(PRInt32 attrCount, PRBool aOwnerInErro
           const nsSubstring& theValue = theAttrToken->GetValue();
 
           if(!theValue.IsEmpty() || theAttrToken->mHasEqualWithoutValue){
-            result = WriteTag(kAttributeValue,theValue,0,attributeInError);
+            if (IsUrlAttribute(tagName, theKey, theValue)) {
+              WriteHrefAttribute(allocator, theValue);
+            } else {
+              WriteTag(kAttributeValue,theValue,0,attributeInError);
+            }
           }
-        } 
+        }
       }
       else return kEOF;
     }
@@ -721,9 +726,9 @@ nsresult CViewSourceHTML::WriteAttributes(PRInt32 attrCount, PRBool aOwnerInErro
 
 /**
  *  This method gets called when a tag needs to be sent out
- *  
+ *
  *  @update  gess 3/25/98
- *  @param   
+ *  @param
  *  @return  result status
  */
 nsresult CViewSourceHTML::WriteTag(PRInt32 aTagType,const nsSubstring & aText,PRInt32 attrCount,PRBool aTagInError) {
@@ -773,7 +778,7 @@ nsresult CViewSourceHTML::WriteTag(PRInt32 aTagType,const nsSubstring & aText,PR
   if (gDumpFile && kDumpFileBeforeText[aTagType][0])
     fprintf(gDumpFile, kDumpFileBeforeText[aTagType]);
 #endif // DUMP_TO_FILE
-  
+
   if (mSyntaxHighlight && aTagType != kText) {
     CStartToken* theTagToken=
       static_cast<CStartToken*>
@@ -809,7 +814,7 @@ nsresult CViewSourceHTML::WriteTag(PRInt32 aTagType,const nsSubstring & aText,PR
 #endif // DUMP_TO_FILE
 
   if (mSyntaxHighlight && aTagType != kText) {
-    mStartNode.ReleaseAll(); 
+    mStartNode.ReleaseAll();
     mSink->CloseContainer(eHTMLTag_span);  //emit </endtag>...
 #ifdef DUMP_TO_FILE
     if (gDumpFile)
@@ -818,10 +823,10 @@ nsresult CViewSourceHTML::WriteTag(PRInt32 aTagType,const nsSubstring & aText,PR
   }
 
   if(attrCount){
-    result=WriteAttributes(attrCount, aTagInError);
+    result=WriteAttributes(aText, theAllocator, attrCount, aTagInError);
   }
 
-  // Tokens are set in error if their ending > is not there, so don't output 
+  // Tokens are set in error if their ending > is not there, so don't output
   // the after-text
   if (!aTagInError && kAfterText[aTagType][0] != 0) {
     NS_ConvertASCIItoUTF16 afterText(kAfterText[aTagType]);
@@ -835,7 +840,7 @@ nsresult CViewSourceHTML::WriteTag(PRInt32 aTagType,const nsSubstring & aText,PR
 #endif // DUMP_TO_FILE
 
   if (mSyntaxHighlight && aTagInError) {
-    mErrorNode.ReleaseAll(); 
+    mErrorNode.ReleaseAll();
     mSink->CloseContainer(eHTMLTag_span);  //emit </endtag>...
 #ifdef DUMP_TO_FILE
     if (gDumpFile)
@@ -849,7 +854,7 @@ nsresult CViewSourceHTML::WriteTag(PRInt32 aTagType,const nsSubstring & aText,PR
 }
 
 /**
- *  
+ *
  *  @update  gess 3/25/98
  *  @param   aToken -- token object to be put into content model
  *  @return  0 if all is well; non-zero is an error
@@ -859,14 +864,14 @@ NS_IMETHODIMP CViewSourceHTML::HandleToken(CToken* aToken,nsIParser* aParser)
   nsresult        result=NS_OK;
   CHTMLToken*     theToken= (CHTMLToken*)(aToken);
   eHTMLTokenTypes theType= (eHTMLTokenTypes)theToken->GetTokenType();
- 
+
   mParser=(nsParser*)aParser;
   mSink=(nsIHTMLContentSink*)aParser->GetContentSink();
- 
+
   mTokenNode.Init(theToken, mTokenizer->GetTokenAllocator());
 
   switch(theType) {
-    
+
     case eToken_start:
       {
         const nsSubstring& startValue = aToken->GetStringValue();
@@ -909,7 +914,7 @@ NS_IMETHODIMP CViewSourceHTML::HandleToken(CToken* aToken,nsIParser* aParser)
       }
       break;
 
-    case eToken_comment: 
+    case eToken_comment:
       {
         nsAutoString theStr;
         aToken->AppendSourceTo(theStr);
@@ -953,7 +958,7 @@ NS_IMETHODIMP CViewSourceHTML::HandleToken(CToken* aToken,nsIParser* aParser)
 
     case eToken_text:
       {
-        const nsSubstring& str = aToken->GetStringValue();         
+        const nsSubstring& str = aToken->GetStringValue();
         result=WriteTag(kText,str,aToken->GetAttributeCount(),aToken->IsInError());
         ++mTokenCount;
         if (NS_VIEWSOURCE_TOKENS_PER_BLOCK > 0 &&
@@ -978,8 +983,225 @@ NS_IMETHODIMP CViewSourceHTML::HandleToken(CToken* aToken,nsIParser* aParser)
       result=NS_OK;
   }//switch
 
-  mTokenNode.ReleaseAll(); 
+  mTokenNode.ReleaseAll();
 
   return result;
 }
 
+PRBool CViewSourceHTML::IsUrlAttribute(const nsAString& tagName,
+                                       const nsAString& attrName, 
+                                       const nsAString& attrValue) {
+  const nsSubstring &trimmedAttrName = TrimTokenValue(attrName);
+
+  PRBool isHref = trimmedAttrName.LowerCaseEqualsLiteral("href");
+  PRBool isSrc = !isHref && trimmedAttrName.LowerCaseEqualsLiteral("src");
+
+  // If this is the HREF attribute of a BASE element, then update the base URI.
+  // This doesn't feel like the ideal place for this, but the alternatives don't
+  // seem all that nice either.
+  if (isHref && tagName.LowerCaseEqualsLiteral("base")) {
+    const nsSubstring& baseSpec = TrimTokenValue(attrValue);
+    SetBaseURI(baseSpec);
+  }
+
+  return isHref || isSrc;
+}
+
+void CViewSourceHTML::WriteHrefAttribute(nsTokenAllocator* allocator,
+                                         const nsAString& href) {
+  // The "href" will typically contain not only the href proper, but the single
+  // or double quotes and often some surrounding whitespace as well.  Find the
+  // location of the href proper inside the string.
+  nsAString::const_iterator startProper, endProper;
+  href.BeginReading(startProper);
+  href.EndReading(endProper);
+  TrimTokenValue(startProper, endProper);
+
+  // Break the href into three parts, the preceding text, the href proper, and
+  // the succeeding text.
+  nsAString::const_iterator start, end;
+  href.BeginReading(start);
+  href.EndReading(end);  
+  const nsAString &precedingText = Substring(start, startProper);
+  const nsAString &hrefProper = Substring(startProper, endProper);
+  const nsAString &succeedingText = Substring(endProper, end);
+
+  nsAutoString fullPrecedingText;
+  fullPrecedingText.Assign(kEqual);
+  fullPrecedingText.Append(precedingText);
+
+  // Regular URLs and view-source URLs work the same way for .js and .css files.
+  // However, if the user follows a link in the view source window to a .html
+  // file (i.e. the HREF in an A tag), then presumably they will expect to see
+  // the *source* of that new page, not the rendered version.  So for now we
+  // just slap a "view-source:" at the beginning of each URL.  There are two
+  // big downsides to doing it this way -- we must make relative URLs into
+  // absolute URLs before we can turn them into view-source URLs, and links
+  // to images don't work right -- nobody wants to see the bytes constituting a
+  // PNG rendered as text.  A smarter view-source handler might be able to deal
+  // with the latter problem.
+
+  // Construct a "view-source" URL for the HREF.
+  nsAutoString viewSourceUrl;
+  CreateViewSourceURL(hrefProper, viewSourceUrl);
+
+  // Construct the HTML that will represent the HREF.
+  NS_NAMED_LITERAL_STRING(HREF, "href");
+  if (fullPrecedingText.Length() > 0) {
+    WriteTextInSpan(fullPrecedingText, allocator, EmptyString(), EmptyString());
+  }
+  WriteTextInAnchor(hrefProper, allocator, HREF, viewSourceUrl);
+  if (succeedingText.Length() > 0) {
+    WriteTextInSpan(succeedingText, allocator, EmptyString(), EmptyString());
+  }
+}
+
+nsresult CViewSourceHTML::CreateViewSourceURL(const nsAString& linkUrl,
+                                              nsString& viewSourceUrl) {
+  nsCOMPtr<nsIURI> baseURI;
+  nsCOMPtr<nsIURI> hrefURI;
+  nsresult rv;
+
+  // Default the view source URL to the empty string in case we fail.  Links
+  // with empty HREFs are essentially non-functional, at least as of Firefox
+  // 3.03.  This is preferrable behavior to links that look good but then 404.
+  viewSourceUrl.Truncate();
+  
+  // Get the character set.
+  nsCString charset;
+  PRInt32 source;
+  mParser->GetDocumentCharset(charset, source);
+
+  // Get the BaseURI.
+  rv = GetBaseURI(getter_AddRefs(baseURI));
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  // Use the link URL and the base URI to build a URI for the link.
+  rv = NS_NewURI(getter_AddRefs(hrefURI), linkUrl, charset.get(), baseURI);
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  // Get the absolute URL from the link URI.
+  nsCString absoluteLinkUrl;
+  hrefURI->GetSpec(absoluteLinkUrl);
+
+  // Prepend "view-source:" onto the absolute URL and store it in the out param.
+  viewSourceUrl.AssignLiteral("view-source:");
+  viewSourceUrl.AppendWithConversion(absoluteLinkUrl);
+
+  return NS_OK;
+}
+
+void CViewSourceHTML::WriteTextInSpan(const nsAString& text, 
+                                      nsTokenAllocator* allocator, 
+                                      const nsAString& attrName, 
+                                      const nsAString& attrValue) {
+  NS_NAMED_LITERAL_STRING(SPAN, "SPAN");
+  WriteTextInElement(SPAN, eHTMLTag_span, text, allocator, attrName, attrValue);
+}
+
+void CViewSourceHTML::WriteTextInAnchor(const nsAString& text, 
+                                        nsTokenAllocator* allocator, 
+                                        const nsAString& attrName, 
+                                        const nsAString& attrValue) {
+  NS_NAMED_LITERAL_STRING(ANCHOR, "A");
+  WriteTextInElement(ANCHOR, eHTMLTag_a, text, allocator, attrName, attrValue);
+}
+
+void CViewSourceHTML::WriteTextInElement(const nsAString& tagName, 
+                                         eHTMLTags tagType, const nsAString& text,
+                                         nsTokenAllocator* allocator,
+                                         const nsAString& attrName, 
+                                         const nsAString& attrValue) {
+  // Open the element, supplying the attribute, if any.
+  nsTokenAllocator* theAllocator = mTokenizer->GetTokenAllocator();
+  if (!theAllocator) {
+    return;
+  }
+
+  CStartToken* startToken =
+    static_cast<CStartToken*>
+      (theAllocator->CreateTokenOfType(eToken_start, tagType, tagName));
+  if (!startToken) {
+    return;
+  }
+
+  nsCParserStartNode startNode(startToken, theAllocator);
+  if (!attrName.IsEmpty()) {
+    AddAttrToNode(startNode, allocator, attrName, attrValue);
+  }
+  mSink->OpenContainer(startNode);
+
+  // Add the text node.
+  CTextToken textToken(text);
+  nsCParserNode textNode(&textToken, 0/*stack token*/);
+  mSink->AddLeaf(textNode);
+
+  // Close the element.
+  mSink->CloseContainer(tagType);
+}
+
+const nsDependentSubstring CViewSourceHTML::TrimTokenValue(const nsAString& tokenValue) {
+  nsAString::const_iterator start, end;
+  tokenValue.BeginReading(start);
+  tokenValue.EndReading(end);
+  TrimTokenValue(start, end);
+  return Substring(start, end);
+}
+
+void CViewSourceHTML::TrimTokenValue(nsAString::const_iterator& start,
+                                     nsAString::const_iterator& end) {
+  // Token values -- tag names, attribute names, and attribute values --
+  // generally contain adjacent whitespace and, in the case of attribute values,
+  // the surrounding double or single quotes.  Return a new string with this
+  // adjacent text stripped off, so only the value proper remains.
+        
+  // Skip past any whitespace or quotes on the left.
+  while (start != end) {
+    if (!IsTokenValueTrimmableCharacter(*start)) break;
+    ++start;
+  }
+
+  // Skip past any whitespace or quotes on the right.  Note that the interval 
+  // start..end is half-open.  That means the last character of the interval is
+  // at *(end - 1).
+  while (end != start) {      
+    --end;
+    if (!IsTokenValueTrimmableCharacter(*end)) {
+      ++end; // we've actually gone one too far at this point, so adjust.
+      break;
+    }
+  }
+}
+
+PRBool CViewSourceHTML::IsTokenValueTrimmableCharacter(PRUnichar ch) {
+  if (ch == ' ') return PR_TRUE;
+  if (ch == '\t') return PR_TRUE;
+  if (ch == '\r') return PR_TRUE;
+  if (ch == '\n') return PR_TRUE;
+  if (ch == '\'') return PR_TRUE;
+  if (ch == '"') return PR_TRUE;
+  return PR_FALSE;
+}
+
+nsresult CViewSourceHTML::GetBaseURI(nsIURI **result) {
+  nsresult rv = NS_OK;
+  if (!mBaseURI) {
+    rv = SetBaseURI(mFilename);
+  }
+  NS_IF_ADDREF(*result = mBaseURI);
+  return rv;
+}
+
+nsresult CViewSourceHTML::SetBaseURI(const nsAString& baseSpec) {
+  // Get the character set.
+  nsCString charset;
+  PRInt32 source;
+  mParser->GetDocumentCharset(charset, source);
+ 
+  // Create a new base URI and store it in mBaseURI.
+  nsCOMPtr<nsIURI> baseURI;
+  nsresult rv = NS_NewURI(getter_AddRefs(baseURI), baseSpec, charset.get());
+  NS_ENSURE_SUCCESS(rv, rv);
+  mBaseURI = baseURI;
+  return NS_OK;
+}

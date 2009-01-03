@@ -43,6 +43,7 @@ if [[ -z "$TEST_DIR" ]]; then
 
 TEST_DIR, the location of the Sisyphus framework, 
 is required to be set prior to calling this script.
+
 EOF
     exit 2
 fi
@@ -61,8 +62,6 @@ EOF
 fi
 
 source $TEST_DIR/bin/library.sh
-
-TEST_JSDIR=${TEST_JSDIR:-$TEST_DIR/tests/mozilla.org/js}
 
 usage()
 {
@@ -100,19 +99,25 @@ usage: bisect.sh -p product -b branch -e extra\\
        If the bad revision (test failed) occurred prior to the good revision 
        (test passed), the script will search for the first good revision which 
        fixed the failing test.
-       
+
+    -D By default, clobber builds will be used. For mercurial based builds
+       on branch 1.9.1 and later, you may specify -D to use depends builds.
+       This may achieve significant speed advantages by eliminating the need
+       to perform clobber builds for each bisection.
+
     -J javascriptoptions  optional. Set JavaScript options:
          -Z n Set gczeal to n. Currently, only valid for 
               debug builds of Gecko 1.8.1.15, 1.9.0 and later.
          -z optional. use split objects in the shell.
          -j optional. use JIT in the shell. Only available on 1.9.1 and later
 EOF
+
     exit 2
 }
 
 verbose=0
 
-while getopts "p:b:T:e:t:S:G:B:J:" optname;
+while getopts "p:b:T:e:t:S:G:B:J:D" optname;
 do
     case $optname in
         p) bisect_product=$OPTARG;;
@@ -125,12 +130,14 @@ do
         G) bisect_good="$OPTARG";;
         B) bisect_bad="$OPTARG";;
         J) javascriptoptions=$OPTARG;;
+        D) bisect_depends=1;;
     esac
 done
 
 # javascriptoptions will be passed by environment to runtests.sh
 
 if [[ -z "$bisect_product" || -z "$bisect_branch" || -z "$bisect_buildtype" || -z "$bisect_test" || -z "$bisect_good" || -z "$bisect_bad" ]]; then
+    echo "bisect_product: $bisect_product, bisect_branch: $bisect_branch, bisect_buildtype: $bisect_buildtype, bisect_test: $bisect_test, bisect_good: $bisect_good, bisect_bad: $bisect_bad"
     usage
 fi
 
@@ -138,11 +145,180 @@ OPTIND=1
 
 eval source $TEST_DIR/bin/set-build-env.sh -p $bisect_product -b $bisect_branch $bisect_extraflag -T $bisect_buildtype > /dev/null
 
+# TEST_JSDIR must be set after set-build-env.sh is called
+# on Windows since TEST_DIR can be modified in set-build-env.sh
+# from the pure cygwin path /work/... to a the cygwin windows path
+# /c/work/...
+TEST_JSDIR=${TEST_JSDIR:-$TEST_DIR/tests/mozilla.org/js}
+
 case $bisect_branch in
     1.8.*|1.9.0)
-        error "Branch $branch bisection not supported";;
+
+        #
+        # binary search using CVS
+        #
+
+        # convert dates to seconds for ordering
+        localgood=`dateparse.pl $bisect_good`
+        localbad=`dateparse.pl $bisect_bad`
+
+        # if good < bad, then we are searching for a regression, 
+        # i.e. the first bad changeset 
+        # if bad < good, then we are searching for a fix.
+        # i.e. the first good changeset. so we reverse the nature
+        # of good and bad.
+
+        if (( $localgood < $localbad )); then
+            cat <<EOF
+
+searching for a regression between $bisect_good and $bisect_bad
+the bisection is searching for the transition from test failure not found, to test failure found.
+
+EOF
+
+            searchtype="regression"
+            bisect_start=$bisect_good
+            bisect_stop=$bisect_bad
+        else
+            cat <<EOF
+
+searching for a fix between $bisect_bad and $bisect_good
+the bisection is searching for the transition from test failure found to test failure not found.
+
+EOF
+
+            searchtype="fix"
+            bisect_start=$bisect_bad
+            bisect_stop=$bisect_good
+        fi
+
+        let seconds_start="`dateparse.pl $bisect_start`"
+        let seconds_stop="`dateparse.pl $bisect_stop`"
+
+        echo "checking that the test fails in the bad revision $bisect_bad"
+        eval $TEST_DIR/bin/builder.sh -p $bisect_product -b $bisect_branch $bisect_extraflag -T $bisect_buildtype -B "clobber" > /dev/null
+        export MOZ_CO_DATE="$bisect_bad"
+        eval $TEST_DIR/bin/builder.sh -p $bisect_product -b $bisect_branch $bisect_extraflag -T $bisect_buildtype -B "checkout" > /dev/null
+        bisect_log=`eval $TEST_JSDIR/runtests.sh -p $bisect_product -b $bisect_branch $bisect_extraflag -T $bisect_buildtype -I $bisect_test -B "build" -c -t -X /dev/null 2>&1 | grep '_js.log $' | sed 's|log: \([^ ]*\) |\1|'`
+        if [[ -z "$bisect_log" ]]; then
+            echo "test $bisect_test not run."
+        else
+            if egrep -q "$bisect_test.*$bisect_string" ${bisect_log}-results-failures.log; then 
+                echo "test failure $bisect_test.*$bisect_string found, bad revision $bisect_bad confirmed"
+                bad_confirmed=1
+            else 
+                echo "test failure $bisect_test.*$bisect_string not found, bad revision $bisect_bad *not* confirmed"
+            fi
+        fi
+
+        if [[ "$bad_confirmed" != "1" ]]; then
+            error "bad revision not confirmed";
+        fi
+        
+        echo "checking that the test passes in the good revision $bisect_good"
+        eval $TEST_DIR/bin/builder.sh -p $bisect_product -b $bisect_branch $bisect_extraflag -T $bisect_buildtype -B "clobber" > /dev/null
+        export MOZ_CO_DATE="$bisect_good"
+        eval $TEST_DIR/bin/builder.sh -p $bisect_product -b $bisect_branch $bisect_extraflag -T $bisect_buildtype -B "checkout" > /dev/null
+
+        bisect_log=`eval $TEST_JSDIR/runtests.sh -p $bisect_product -b $bisect_branch $bisect_extraflag -T $bisect_buildtype -I $bisect_test -B "build" -c -t -X /dev/null 2>&1 | grep '_js.log $' | sed 's|log: \([^ ]*\) |\1|'`
+        if [[ -z "$bisect_log" ]]; then
+            echo "test $bisect_test not run."
+        else
+            if egrep -q "$bisect_test.*$bisect_string" ${bisect_log}-results-failures.log; then 
+                echo "test failure $bisect_test.*$bisect_string found, good revision $bisect_good *not* confirmed"
+            else 
+                echo "test failure $bisect_test.*$bisect_string not found, good revision $bisect_good confirmed"
+                good_confirmed=1
+            fi
+        fi
+
+        if [[ "$good_confirmed" != "1" ]]; then
+            error "good revision not confirmed";
+        fi
+        
+        echo "bisecting $bisect_start to $bisect_stop"
+
+        # 
+        # place an array of dates of checkins into an array and
+        # perform a binary search on those dates.
+        #
+        declare -a seconds_array date_array
+
+        # load the cvs checkin dates into an array. the array will look like
+        # date_array[i] date value
+        # date_array[i+1] time value
+
+        pushd $BUILDTREE/mozilla
+        date_array=(`cvs -q -z3 log -N -d "$bisect_start<$bisect_stop" | grep "^date: " | sed 's|^date: \([^;]*\).*|\1|' | sort -u`)
+        popd
+
+        let seconds_index=0 1
+        let date_index=0 1
+
+        while (( $date_index < ${#date_array[@]} )); do
+            seconds_array[$seconds_index]=`dateparse.pl "${date_array[$date_index]} ${date_array[$date_index+1]} UTC"`
+            let seconds_index=$seconds_index+1
+            let date_index=$date_index+2
+        done
+
+        let seconds_index_start=0 1
+        let seconds_index_stop=${#seconds_array[@]}
+
+        while true; do
+
+            if (( $seconds_index_start+1 >= $seconds_index_stop )); then
+                echo "*** date `date -r ${seconds_array[$seconds_index_stop]}` found ***"
+                break;
+            fi
+
+            unset result
+
+            # clobber before setting new changeset.
+            eval $TEST_DIR/bin/builder.sh -p $bisect_product -b $bisect_branch $bisect_extraflag -T $bisect_buildtype -B "clobber" > /dev/null
+
+            let seconds_index_middle="($seconds_index_start + $seconds_index_stop)/2"
+            let seconds_middle="${seconds_array[$seconds_index_middle]}"
+
+            bisect_middle="`date -r $seconds_middle`"
+            export MOZ_CO_DATE="$bisect_middle"
+            echo "testing $MOZ_CO_DATE"
+
+            eval $TEST_DIR/bin/builder.sh -p $bisect_product -b $bisect_branch $bisect_extraflag -T $bisect_buildtype -B "checkout" > /dev/null
+
+            bisect_log=`eval $TEST_JSDIR/runtests.sh -p $bisect_product -b $bisect_branch $bisect_extraflag -T $bisect_buildtype -I $bisect_test -B "build" -c -t -X /dev/null 2>&1 | grep '_js.log $' | sed 's|log: \([^ ]*\) |\1|'`
+            if [[ -z "$bisect_log" ]]; then
+                echo "test $bisect_test not run. Skipping changeset"
+                let seconds_index_start=$seconds_index_start+1
+            else
+                if [[ "$searchtype" == "regression" ]]; then
+                    # searching for a regression, pass -> fail
+                    if egrep -q "$bisect_test.*$bisect_string" ${bisect_log}-results-failures.log; then 
+                        echo "test failure $bisect_test.*$bisect_string found"
+                        let seconds_index_stop=$seconds_index_middle;
+                    else 
+                        echo "test failure $bisect_test.*$bisect_string not found"
+                        let seconds_index_start=$seconds_index_middle
+                    fi
+                else
+                    # searching for a fix, fail -> pass
+                    if egrep -q "$bisect_test.*$bisect_string" ${bisect_log}-results-failures.log; then 
+                        echo "test failure $bisect_test.*$bisect_string found"
+                        let seconds_index_start=$seconds_index_middle
+                    else 
+                        echo "test failure $bisect_test.*$bisect_string not found"
+                        let seconds_index_stop=$seconds_index_middle
+                    fi
+                fi
+            fi
+
+        done
+        ;;
 
     1.9.1)
+        #
+        # binary search using mercurial
+        #
+
         TEST_MOZILLA_HG_LOCAL=${TEST_MOZILLA_HG_LOCAL:-$BUILDDIR/hg.mozilla.org/`basename $TEST_MOZILLA_HG`}
         hg -R $TEST_MOZILLA_HG_LOCAL pull -r tip
 
@@ -159,7 +335,7 @@ case $bisect_branch in
         # i.e. the first good changeset. so we reverse the nature
         # of good and bad.
 
-        if [[ $localgood < $localbad ]]; then
+        if (( $localgood < $localbad )); then
             cat <<EOF
 
 searching for a regression between $localgood:$bisect_good and $localbad:$bisect_bad
@@ -167,6 +343,7 @@ the result is considered good when the test result does not appear in the failur
 the bisection is searching for the transition from test failure not found, to test failure found.
 
 EOF
+
             searchtype="regression"
             bisect_start=$bisect_good
             bisect_stop=$bisect_bad
@@ -178,13 +355,16 @@ the result is considered good when the test result does appear in the failure lo
 the bisection is searching for the transition from test failure found to test failure not found.
 
 EOF
+
             searchtype="fix"
             bisect_start=$bisect_bad
             bisect_stop=$bisect_good
         fi
 
         echo "checking that the test fails in the bad revision $localbad:$bisect_bad"
-        eval $TEST_DIR/bin/builder.sh -p $bisect_product -b $bisect_branch $bisect_extraflag -T $bisect_buildtype -B "clobber" > /dev/null
+        if [[ -z "$bisect_depends" ]]; then
+            eval $TEST_DIR/bin/builder.sh -p $bisect_product -b $bisect_branch $bisect_extraflag -T $bisect_buildtype -B "clobber" > /dev/null
+        fi
         hg -R $REPO update -C -r $bisect_bad
         bisect_log=`eval $TEST_JSDIR/runtests.sh -p $bisect_product -b $bisect_branch $bisect_extraflag -T $bisect_buildtype -I $bisect_test -B "build" -c -t -X /dev/null 2>&1 | grep '_js.log $' | sed 's|log: \([^ ]*\) |\1|'`
         if [[ -z "$bisect_log" ]]; then
@@ -203,7 +383,9 @@ EOF
         fi
         
         echo "checking that the test passes in the good revision $localgood:$bisect_good"
-        eval $TEST_DIR/bin/builder.sh -p $bisect_product -b $bisect_branch $bisect_extraflag -T $bisect_buildtype -B "clobber" > /dev/null
+        if [[ -z "$bisect_depends" ]]; then
+            eval $TEST_DIR/bin/builder.sh -p $bisect_product -b $bisect_branch $bisect_extraflag -T $bisect_buildtype -B "clobber" > /dev/null
+        fi
         hg -R $REPO update -C -r $bisect_good
         bisect_log=`eval $TEST_JSDIR/runtests.sh -p $bisect_product -b $bisect_branch $bisect_extraflag -T $bisect_buildtype -I $bisect_test -B "build" -c -t -X /dev/null 2>&1 | grep '_js.log $' | sed 's|log: \([^ ]*\) |\1|'`
         if [[ -z "$bisect_log" ]]; then
@@ -230,7 +412,13 @@ EOF
             unset result
 
             # clobber before setting new changeset.
-            eval $TEST_DIR/bin/builder.sh -p $bisect_product -b $bisect_branch $bisect_extraflag -T $bisect_buildtype -B "clobber" > /dev/null
+            if [[ -z "$bisect_depends" ]]; then
+                eval $TEST_DIR/bin/builder.sh -p $bisect_product -b $bisect_branch $bisect_extraflag -T $bisect_buildtype -B "clobber" > /dev/null
+            fi
+
+            # remove extraneous in-tree changes
+            # nsprpub/configure I'm looking at you!
+            hg -R $REPO update -C
 
             hg -R $REPO bisect
             bisect_log=`eval $TEST_JSDIR/runtests.sh -p $bisect_product -b $bisect_branch $bisect_extraflag -T $bisect_buildtype -I $bisect_test -B "build" -c -t -X /dev/null 2>&1 | grep '_js.log $' | sed 's|log: \([^ ]*\) |\1|'`

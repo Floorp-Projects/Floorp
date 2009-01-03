@@ -939,6 +939,7 @@ interface nsINavHistoryQueryOptions : nsISupports
    * This returns nsINavHistoryQueryResultNode nodes for each tag.
    * The node contains information how to load its content:
    * - list of bookmarks with the given tag will be loaded.
+   * Setting this resultType will force queryType to QUERY_TYPE_BOOKMARKS.
    */
   const unsigned short RESULTS_AS_TAG_QUERY = 6;
 
@@ -946,6 +947,7 @@ interface nsINavHistoryQueryOptions : nsISupports
    * This is a container with an URI result type that contains the last
    * modified bookmarks for the given tag.
    * Tag folder id must be defined in the query.
+   * Setting this resultType will force queryType to QUERY_TYPE_BOOKMARKS.
    */
   const unsigned short RESULTS_AS_TAG_CONTENTS = 7;
 
@@ -1057,7 +1059,7 @@ interface nsINavHistoryQueryOptions : nsISupports
   nsINavHistoryQueryOptions clone();
 };
 
-[scriptable, uuid(8b258ff6-b591-4da5-8b7c-0665b27d09cc)]
+[scriptable, uuid(437f539b-d541-4a0f-a200-6f9a6d45cce2)]
 interface nsINavHistoryService : nsISupports
 {
   /**
@@ -1102,6 +1104,26 @@ interface nsINavHistoryService : nsISupports
    * Set when the transition is a download.
    */
   const unsigned long TRANSITION_DOWNLOAD = 7;
+
+  /**
+   * Set when database is coherent
+   */
+  const unsigned short DATABASE_STATUS_OK = 0;
+
+  /**
+   * Set when database did not exist and we created a new one
+   */
+  const unsigned short DATABASE_STATUS_CREATE = 1;
+
+  /**
+   * Set when database was corrupt and we replaced it
+   */
+  const unsigned short DATABASE_STATUS_CORRUPT = 2;
+
+  /**
+   * Returns the current database status
+   */
+  readonly attribute unsigned short databaseStatus;
 
   /**
    * True if there is any history. This can be used in UI to determine whether

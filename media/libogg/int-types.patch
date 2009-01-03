@@ -1,0 +1,20 @@
+--- include/ogg/config_types.h.old	2008-11-10 15:24:49.465597010 +0800
++++ include/ogg/config_types.h	2008-11-10 15:25:19.249016710 +0800
+@@ -3,9 +3,15 @@
+ 
+ /* these are filled in by configure */
+ typedef int16_t ogg_int16_t;
+-typedef u_int16_t ogg_uint16_t;
+ typedef int32_t ogg_int32_t;
+-typedef u_int32_t ogg_uint32_t;
+ typedef int64_t ogg_int64_t;
+ 
++#ifdef SOLARIS
++typedef uint16_t ogg_uint16_t;
++typedef uint32_t ogg_uint32_t;
++#else
++typedef u_int16_t ogg_uint16_t;
++typedef u_int32_t ogg_uint32_t;
++#endif
++
+ #endif

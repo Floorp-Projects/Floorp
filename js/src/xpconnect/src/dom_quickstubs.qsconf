@@ -66,10 +66,11 @@ members = [
     'nsIDOMWindow.name',
     'nsIDOMWindow.parent',
     'nsIDOMWindow.top',
-    'nsIDOMWindow.document',
+    # Several window properties are magically resolved, including
+    # location, _content, navigator, document, and window itself.
+    # These do not need quick stubs.
+    #'nsIDOMWindow.document',
     'nsIDOMWindow.getSelection',
-    'nsIDOMWindowCollection.item',
-    'nsIDOMWindowCollection.length',
     'nsIDOMScreen.top',
     'nsIDOMScreen.height',
     'nsIDOMScreen.width',
@@ -215,8 +216,6 @@ members = [
     'nsIDOMNSDocument.getBoxObjectFor',
     'nsIDOMXMLDocument.evaluateXPointer',
     'nsIDOMXMLDocument.evaluateFIXptr',
-    'nsIDOMNSEditableElement.editor',
-    'nsIDOMNSEditableElement.setUserInput',
     'nsIDOMNSElement.getClientRects',
     'nsIDOMNSElement.getBoundingClientRect',
     'nsIDOMNSElement.getElementsByClassName',
@@ -269,9 +268,6 @@ members = [
     # the conflict is specially resolved in nsDOMClassInfo.cpp.
     # (See bug 453331.)
     #'nsIDOMEventTarget.addEventListener',
-    'nsIDOMEventListener.handleEvent',
-    'nsIDOMCustomEvent.setCurrentTarget',
-    'nsIDOMCustomEvent.setEventPhase',
     'nsIDOMDocumentEvent.createEvent',
     'nsIDOMMouseEvent.clientX',
     'nsIDOMMouseEvent.clientY',

@@ -330,18 +330,3 @@ nsSize nsVideoFrame::GetVideoSize()
   return nsSize(nsPresContext::CSSPixelsToAppUnits(size.width), 
                 nsPresContext::CSSPixelsToAppUnits(size.height));
 }
-
-NS_IMETHODIMP nsVideoFrame::Freeze()
-{
-  nsHTMLVideoElement* element = static_cast<nsHTMLVideoElement*>(GetContent());
-  element->Pause();
-  return NS_OK;
-}
-
-NS_IMETHODIMP nsVideoFrame::Thaw()
-{
-  nsHTMLVideoElement* element = static_cast<nsHTMLVideoElement*>(GetContent());
-  element->Play();
-  return NS_OK;
-}
-

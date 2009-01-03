@@ -41,6 +41,8 @@
 #include "nsSVGFilterFrame.h"
 #include "nsSVGClipPathFrame.h"
 #include "nsSVGMaskFrame.h"
+#include "nsSVGTextPathFrame.h"
+#include "nsCSSFrameConstructor.h"
 
 NS_IMPL_ISUPPORTS1(nsSVGRenderingObserver, nsIMutationObserver)
 
@@ -174,29 +176,11 @@ NS_IMPL_ISUPPORTS_INHERITED1(nsSVGFilterProperty,
                              nsSVGRenderingObserver,
                              nsISVGFilterProperty)
 
-nsSVGFilterProperty::nsSVGFilterProperty(nsIURI *aURI,
-                                         nsIFrame *aFilteredFrame)
-  : nsSVGRenderingObserver(aURI, aFilteredFrame)
-{
-  UpdateRect();
-}
-
 nsSVGFilterFrame *
-nsSVGFilterProperty::GetFilterFrame() {
+nsSVGFilterProperty::GetFilterFrame()
+{
   return static_cast<nsSVGFilterFrame *>
     (GetReferencedFrame(nsGkAtoms::svgFilterFrame, nsnull));
-}
-
-void
-nsSVGFilterProperty::UpdateRect()
-{
-  nsSVGFilterFrame *filter = GetFilterFrame();
-  if (filter) {
-    mFilterRect = filter->GetFilterBBox(mFrame, nsnull);
-    mFilterRect.ScaleRoundOut(filter->PresContext()->AppUnitsPerDevPixel());
-  } else {
-    mFilterRect = nsRect();
-  }
 }
 
 static void
@@ -214,18 +198,49 @@ nsSVGFilterProperty::DoUpdate()
   if (!mFrame)
     return;
 
+  // Repaint asynchronously in case the filter frame is being torn down
+  nsChangeHint changeHint =
+    nsChangeHint(nsChangeHint_RepaintFrame | nsChangeHint_UpdateEffects);
+
+  if (!mFrame->IsFrameOfType(nsIFrame::eSVG)) {
+    NS_UpdateHint(changeHint, nsChangeHint_ReflowFrame);
+  }
+  mFramePresShell->FrameConstructor()->PostRestyleEvent(
+    mFrame->GetContent(), nsReStyleHint(0), changeHint);
+}
+
+void
+nsSVGMarkerProperty::DoUpdate()
+{
+  nsSVGRenderingObserver::DoUpdate();
+  if (!mFrame)
+    return;
+
   if (mFrame->IsFrameOfType(nsIFrame::eSVG)) {
-    nsSVGOuterSVGFrame *outerSVGFrame = nsSVGUtils::GetOuterSVGFrame(mFrame);
-    if (outerSVGFrame) {
-      outerSVGFrame->Invalidate(mFilterRect);
-      UpdateRect();
-      outerSVGFrame->Invalidate(mFilterRect);
+    if (!(mFrame->GetStateBits() & NS_STATE_SVG_NONDISPLAY_CHILD)) {
+      nsSVGOuterSVGFrame *outerSVGFrame = nsSVGUtils::GetOuterSVGFrame(mFrame);
+      if (outerSVGFrame) {
+        // marker changes can change the covered region
+        outerSVGFrame->UpdateAndInvalidateCoveredRegion(mFrame);
+      }
     }
   } else {
     InvalidateAllContinuations(mFrame);
-    // Reflow so that changes in the filter overflow area get picked up
-    mFramePresShell->FrameNeedsReflow(
-         mFrame, nsIPresShell::eResize, NS_FRAME_IS_DIRTY);
+  }
+}
+
+void
+nsSVGTextPathProperty::DoUpdate()
+{
+  nsSVGRenderingObserver::DoUpdate();
+  if (!mFrame)
+    return;
+
+  NS_ASSERTION(mFrame->IsFrameOfType(nsIFrame::eSVG), "SVG frame expected");
+
+  if (mFrame->GetType() == nsGkAtoms::svgTextPathFrame) {
+    nsSVGTextPathFrame* textPathFrame = static_cast<nsSVGTextPathFrame*>(mFrame);
+    textPathFrame->NotifyGlyphMetricsChange();
   }
 }
 
@@ -237,10 +252,7 @@ nsSVGPaintingProperty::DoUpdate()
     return;
 
   if (mFrame->IsFrameOfType(nsIFrame::eSVG)) {
-    nsSVGOuterSVGFrame *outerSVGFrame = nsSVGUtils::GetOuterSVGFrame(mFrame);
-    if (outerSVGFrame) {
-      outerSVGFrame->InvalidateCoveredRegion(mFrame);
-    }
+    nsSVGUtils::InvalidateCoveredRegion(mFrame);
   } else {
     InvalidateAllContinuations(mFrame);
   }
@@ -249,6 +261,14 @@ nsSVGPaintingProperty::DoUpdate()
 static nsSVGRenderingObserver *
 CreateFilterProperty(nsIURI *aURI, nsIFrame *aFrame)
 { return new nsSVGFilterProperty(aURI, aFrame); }
+
+static nsSVGRenderingObserver *
+CreateMarkerProperty(nsIURI *aURI, nsIFrame *aFrame)
+{ return new nsSVGMarkerProperty(aURI, aFrame); }
+
+static nsSVGRenderingObserver *
+CreateTextPathProperty(nsIURI *aURI, nsIFrame *aFrame)
+{ return new nsSVGTextPathProperty(aURI, aFrame); }
 
 static nsSVGRenderingObserver *
 CreatePaintingProperty(nsIURI *aURI, nsIFrame *aFrame)
@@ -274,6 +294,20 @@ GetEffectProperty(nsIURI *aURI, nsIFrame *aFrame, nsIAtom *aProp,
   return prop;
 }
 
+nsSVGMarkerProperty *
+nsSVGEffects::GetMarkerProperty(nsIURI *aURI, nsIFrame *aFrame, nsIAtom *aProp)
+{
+  return static_cast<nsSVGMarkerProperty*>(
+          GetEffectProperty(aURI, aFrame, aProp, CreateMarkerProperty));
+}
+
+nsSVGTextPathProperty *
+nsSVGEffects::GetTextPathProperty(nsIURI *aURI, nsIFrame *aFrame, nsIAtom *aProp)
+{
+  return static_cast<nsSVGTextPathProperty*>(
+          GetEffectProperty(aURI, aFrame, aProp, CreateTextPathProperty));
+}
+
 nsSVGPaintingProperty *
 nsSVGEffects::GetPaintingProperty(nsIURI *aURI, nsIFrame *aFrame, nsIAtom *aProp)
 {
@@ -296,7 +330,8 @@ nsSVGEffects::GetEffectProperties(nsIFrame *aFrame)
 }
 
 nsSVGClipPathFrame *
-nsSVGEffects::EffectProperties::GetClipPathFrame(PRBool *aOK) {
+nsSVGEffects::EffectProperties::GetClipPathFrame(PRBool *aOK)
+{
   if (!mClipPath)
     return nsnull;
   return static_cast<nsSVGClipPathFrame *>
@@ -304,7 +339,8 @@ nsSVGEffects::EffectProperties::GetClipPathFrame(PRBool *aOK) {
 }
 
 nsSVGMaskFrame *
-nsSVGEffects::EffectProperties::GetMaskFrame(PRBool *aOK) {
+nsSVGEffects::EffectProperties::GetMaskFrame(PRBool *aOK)
+{
   if (!mMask)
     return nsnull;
   return static_cast<nsSVGMaskFrame *>
@@ -318,8 +354,19 @@ nsSVGEffects::UpdateEffects(nsIFrame *aFrame)
   aFrame->DeleteProperty(nsGkAtoms::mask);
   aFrame->DeleteProperty(nsGkAtoms::clipPath);
 
+  aFrame->DeleteProperty(nsGkAtoms::marker_start);
+  aFrame->DeleteProperty(nsGkAtoms::marker_mid);
+  aFrame->DeleteProperty(nsGkAtoms::marker_end);
+
   aFrame->DeleteProperty(nsGkAtoms::stroke);
   aFrame->DeleteProperty(nsGkAtoms::fill);
+
+  // Ensure that the filter is repainted correctly
+  // We can't do that in DoUpdate as the referenced frame may not be valid
+  const nsStyleSVGReset *style = aFrame->GetStyleSVGReset();
+  if (style->mFilter) {
+    GetEffectProperty(style->mFilter, aFrame, nsGkAtoms::filter, CreateFilterProperty);
+  }
 }
 
 nsSVGFilterProperty *
@@ -333,7 +380,7 @@ nsSVGEffects::GetFilterProperty(nsIFrame *aFrame)
   return static_cast<nsSVGFilterProperty *>(aFrame->GetProperty(nsGkAtoms::filter));
 }
 
-static PLDHashOperator PR_CALLBACK
+static PLDHashOperator
 GatherEnumerator(nsVoidPtrHashKey* aEntry, void* aArg)
 {
   nsTArray<nsSVGRenderingObserver*>* array =

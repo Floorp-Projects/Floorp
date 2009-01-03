@@ -402,7 +402,7 @@ class nsFastLoadFileReader
 };
 
 NS_COM nsresult
-NS_NewFastLoadFileReader(nsIObjectInputStream* *aResult,
+NS_NewFastLoadFileReader(nsIObjectInputStream* *aResult NS_OUTPARAM,
                          nsIInputStream* aSrcStream);
 
 /**
@@ -485,25 +485,25 @@ class nsFastLoadFileWriter
                                PRBool aIsStrongRef,
                                PRUint32 aQITag);
 
-    static PLDHashOperator PR_CALLBACK
+    static PLDHashOperator
     IDMapEnumerate(PLDHashTable *aTable,
                    PLDHashEntryHdr *aHdr,
                    PRUint32 aNumber,
                    void *aData);
 
-    static PLDHashOperator PR_CALLBACK
+    static PLDHashOperator
     ObjectMapEnumerate(PLDHashTable *aTable,
                        PLDHashEntryHdr *aHdr,
                        PRUint32 aNumber,
                        void *aData);
 
-    static PLDHashOperator PR_CALLBACK
+    static PLDHashOperator
     DocumentMapEnumerate(PLDHashTable *aTable,
                          PLDHashEntryHdr *aHdr,
                          PRUint32 aNumber,
                          void *aData);
 
-    static PLDHashOperator PR_CALLBACK
+    static PLDHashOperator
     DependencyMapEnumerate(PLDHashTable *aTable,
                            PLDHashEntryHdr *aHdr,
                            PRUint32 aNumber,
@@ -526,7 +526,7 @@ class nsFastLoadFileWriter
 };
 
 NS_COM nsresult
-NS_NewFastLoadFileWriter(nsIObjectOutputStream* *aResult,
+NS_NewFastLoadFileWriter(nsIObjectOutputStream* *aResult NS_OUTPARAM,
                          nsIOutputStream* aDestStream,
                          nsIFastLoadFileIO* aFileIO);
 
@@ -561,7 +561,7 @@ class nsFastLoadFileUpdater
     nsresult   Open(nsFastLoadFileReader* aReader);
     NS_IMETHOD Close();
 
-    static PLDHashOperator PR_CALLBACK
+    static PLDHashOperator
     CopyReadDocumentMapEntryToUpdater(PLDHashTable *aTable,
                                       PLDHashEntryHdr *aHdr,
                                       PRUint32 aNumber,
@@ -577,7 +577,7 @@ class nsFastLoadFileUpdater
 };
 
 NS_COM nsresult
-NS_NewFastLoadFileUpdater(nsIObjectOutputStream* *aResult,
+NS_NewFastLoadFileUpdater(nsIObjectOutputStream* *aResult NS_OUTPARAM,
                           nsIOutputStream* aOutputStream,
                           nsIObjectInputStream* aReaderAsStream);
 

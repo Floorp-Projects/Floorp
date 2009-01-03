@@ -54,8 +54,6 @@ REQUIRES	= pref \
 		  $(NULL)
 LIBXUL_LIBRARY = 1
 
-PACKAGE_FILE	= psshared.pkg
-
 EXPORTS		= nsCUPSShim.h \
 		  nsPaperPS.h \
 		  nsPSPrinters.h\

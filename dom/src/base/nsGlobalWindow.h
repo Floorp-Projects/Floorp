@@ -124,7 +124,6 @@ class nsDummyJavaPluginOwner;
 class PostMessageEvent;
 
 class nsDOMOfflineResourceList;
-class nsDOMOfflineLoadStatusList;
 class nsGeolocation;
 
 // permissible values for CheckOpenAllow
@@ -435,6 +434,7 @@ public:
     CacheXBLPrototypeHandler(nsXBLPrototypeHandler* aKey,
                              nsScriptObjectHolder& aHandler);
 
+  static PRBool DOMWindowDumpEnabled();
 
 protected:
   // Object Management
@@ -572,8 +572,6 @@ protected:
 
   static PRBool CanMoveResizeWindows();
 
-  nsresult ConvertCharset(const nsAString& aStr, char** aDest);
-
   PRBool   GetBlurSuppression();
 
   // If aDoFlush is true, we'll flush our own layout; otherwise we'll try to
@@ -701,9 +699,6 @@ protected:
   nsCOMPtr<nsIDOMCrypto>        mCrypto;
   nsCOMPtr<nsIDOMPkcs11>        mPkcs11;
 
-
-  nsCOMPtr<nsIDOMStorageList>   gGlobalStorageList;
-
   nsCOMPtr<nsISupports>         mInnerWindowHolders[NS_STID_ARRAY_UBOUND];
   nsCOMPtr<nsIPrincipal> mOpenerScriptPrincipal; // strong; used to determine
                                                  // whether to clear scope
@@ -742,6 +737,7 @@ protected:
   friend class nsDOMWindowUtils;
   friend class PostMessageEvent;
   static nsIFactory *sComputedDOMStyleFactory;
+  static nsIDOMStorageList* sGlobalStorageList;
 };
 
 /*

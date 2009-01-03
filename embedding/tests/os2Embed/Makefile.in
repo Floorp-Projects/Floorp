@@ -40,8 +40,6 @@ MOZILLA_INTERNAL_API = 1
 
 MODULE		= os2Embed
 
-PACKAGE_FILE = os2embed.pkg
-
 REQUIRES	= xpcom \
 		  string \
 		  embed_base \

@@ -323,8 +323,6 @@ CNavDTD::BuildModel(nsIParser* aParser,
     }
   }
 
-  mSink->WillProcessTokens();
-
   while (NS_SUCCEEDED(result)) {
     if (!(mFlags & NS_DTD_FLAG_STOP_PARSING)) {
       CToken* theToken = mTokenizer->PopToken();
@@ -1806,8 +1804,9 @@ CNavDTD::HandleSavedTokens(PRInt32 anIndex)
       PRInt32   attrCount;
       PRInt32   theTopIndex = anIndex + 1;
       PRInt32   theTagCount = mBodyContext->GetCount();
+      PRBool    formWasOnStack = mSink->IsFormOnStack();
 
-      if (mSink->IsFormOnStack()) {
+      if (formWasOnStack) {
         // Do this to synchronize dtd stack and the sink stack.
         // Note: FORM is never on the dtd stack because its always
         // considered as a leaf. However, in the sink FORM can either
@@ -1875,9 +1874,19 @@ CNavDTD::HandleSavedTokens(PRInt32 anIndex)
           result = HandleToken(theToken, mParser);
         }
       }
+
       if (theTopIndex != mBodyContext->GetCount()) {
+        // CloseContainersTo does not close any forms we might have opened while
+        // handling saved tokens, because the parser does not track forms on its
+        // mBodyContext stack.
         CloseContainersTo(theTopIndex, mBodyContext->TagAt(theTopIndex),
                           PR_TRUE);
+      }      
+
+      if (!formWasOnStack && mSink->IsFormOnStack()) {
+        // If a form has appeared on the sink context stack since the beginning of
+        // HandleSavedTokens, have the sink close it:
+        mSink->CloseContainer(eHTMLTag_form);
       }
 
       // Bad-contents were successfully processed. Now, itz time to get
@@ -2707,6 +2716,19 @@ CNavDTD::OpenContainer(const nsCParserNode *aNode,
   return result;
 }
 
+nsresult
+CNavDTD::CloseResidualStyleTags(const eHTMLTags aTag,
+                                PRBool aClosedByStartTag)
+{
+  const PRInt32 count = mBodyContext->GetCount();
+  PRInt32 pos = count;
+  while (nsHTMLElement::IsResidualStyleTag(mBodyContext->TagAt(pos - 1)))
+    --pos;
+  if (pos < count)
+    return CloseContainersTo(pos, aTag, aClosedByStartTag);
+  return NS_OK;
+}
+
 /**
  * This method does two things: 1st, help construct
  * our own internal model of the content-stack; and
@@ -2749,6 +2771,10 @@ CNavDTD::CloseContainer(const eHTMLTags aTag, PRBool aMalformed)
       if (mFlags & NS_DTD_FLAG_HAS_OPEN_FORM) {
         mFlags &= ~NS_DTD_FLAG_HAS_OPEN_FORM;
         done = PR_FALSE;
+        // If we neglect to close these tags, the sink will refuse to close the
+        // form because the form will not be on the top of the SinkContext stack.
+        // See HTMLContentSink::CloseForm.  (XXX do this in other cases?)
+        CloseResidualStyleTags(eHTMLTag_form, PR_FALSE);
       }
       break;
 

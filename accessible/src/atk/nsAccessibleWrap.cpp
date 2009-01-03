@@ -324,7 +324,8 @@ void nsAccessibleWrap::ShutdownAtkObject()
     }
 }
 
-NS_IMETHODIMP nsAccessibleWrap::Shutdown()
+nsresult
+nsAccessibleWrap::Shutdown()
 {
     ShutdownAtkObject();
     return nsAccessible::Shutdown();
@@ -371,7 +372,7 @@ NS_IMETHODIMP nsAccessibleWrap::GetNativeInterface(void **aOutAccessible)
     *aOutAccessible = nsnull;
 
     if (!mAtkObject) {
-        if (!mWeakShell || !IsEmbeddedObject(this)) {
+        if (!mWeakShell || !nsAccUtils::IsEmbeddedObject(this)) {
             // We don't create ATK objects for node which has been shutdown, or
             // nsIAccessible plain text leaves
             return NS_ERROR_FAILURE;
@@ -477,7 +478,7 @@ nsAccessibleWrap::CreateMaiInterfaces(void)
        interfacesBits |= 1 << MAI_INTERFACE_HYPERLINK_IMPL;
     }
 
-    if (!MustPrune(this)) {  // These interfaces require children
+    if (!nsAccUtils::MustPrune(this)) {  // These interfaces require children
       //nsIAccessibleHypertext
       nsCOMPtr<nsIAccessibleHyperText> accessInterfaceHypertext;
       QueryInterface(NS_GET_IID(nsIAccessibleHyperText),
@@ -770,7 +771,8 @@ getRoleCB(AtkObject *aAtkObj)
     }
 
 #ifdef DEBUG_A11Y
-    NS_ASSERTION(nsAccessible::IsTextInterfaceSupportCorrect(accWrap), "Does not support nsIAccessibleText when it should");
+    NS_ASSERTION(nsAccUtils::IsTextInterfaceSupportCorrect(accWrap),
+                 "Does not support nsIAccessibleText when it should");
 #endif
 
     if (aAtkObj->role == ATK_ROLE_INVALID) {
@@ -833,7 +835,7 @@ GetAttributeSet(nsIAccessible* aAccessible)
     if (attributes) {
         // Deal with attributes that we only need to expose in ATK
         PRUint32 state;
-        aAccessible->GetFinalState(&state, nsnull);
+        aAccessible->GetState(&state, nsnull);
         if (state & nsIAccessibleStates::STATE_HASPOPUP) {
           // There is no ATK state for haspopup, must use object attribute to expose the same info
           nsAutoString oldValueUnused;
@@ -880,7 +882,7 @@ gint
 getChildCountCB(AtkObject *aAtkObj)
 {
     nsAccessibleWrap *accWrap = GetAccessibleWrap(aAtkObj);
-    if (!accWrap || nsAccessibleWrap::MustPrune(accWrap)) {
+    if (!accWrap || nsAccUtils::MustPrune(accWrap)) {
         return 0;
     }
 
@@ -914,7 +916,7 @@ refChildCB(AtkObject *aAtkObj, gint aChildIndex)
     // or we should cache an array of children in each nsAccessible
     // (instead of mNextSibling on the children)
     nsAccessibleWrap *accWrap = GetAccessibleWrap(aAtkObj);
-    if (!accWrap || nsAccessibleWrap::MustPrune(accWrap)) {
+    if (!accWrap || nsAccUtils::MustPrune(accWrap)) {
         return nsnull;
     }
 
@@ -980,7 +982,7 @@ getIndexInParentCB(AtkObject *aAtkObj)
       if (!sibling) {
           return -1;
       }
-      if (nsAccessible::IsEmbeddedObject(sibling)) {
+      if (nsAccUtils::IsEmbeddedObject(sibling)) {
         ++ currentIndex;
       }
 
@@ -1031,7 +1033,7 @@ refStateSetCB(AtkObject *aAtkObj)
 
     // Map states
     PRUint32 accState = 0, accExtState = 0;
-    nsresult rv = accWrap->GetFinalState(&accState, &accExtState);
+    nsresult rv = accWrap->GetState(&accState, &accExtState);
     NS_ENSURE_SUCCESS(rv, state_set);
 
     TranslateStates(accState, gAtkStateMap, state_set);

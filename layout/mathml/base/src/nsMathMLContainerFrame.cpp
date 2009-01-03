@@ -94,7 +94,7 @@ nsMathMLContainerFrame::ReflowError(nsIRenderingContext& aRenderingContext,
 
   ///////////////
   // Set font
-  aRenderingContext.SetFont(GetStyleFont()->mFont, nsnull);
+  nsLayoutUtils::SetFontFromStyle(&aRenderingContext, GetStyleContext());
 
   // bounding metrics
   nsAutoString errorMsg; errorMsg.AssignLiteral("invalid-markup");
@@ -144,7 +144,7 @@ void nsDisplayMathMLError::Paint(nsDisplayListBuilder* aBuilder,
      nsIRenderingContext* aCtx, const nsRect& aDirtyRect)
 {
   // Set color and font ...
-  aCtx->SetFont(mFrame->GetStyleFont()->mFont, nsnull);
+  nsLayoutUtils::SetFontFromStyle(aCtx, mFrame->GetStyleContext());
 
   nsPoint pt = aBuilder->ToReferenceFrame(mFrame);
   aCtx->SetColor(NS_RGB(255,0,0));
@@ -1445,7 +1445,7 @@ nsMathMLContainerFrame::FixInterFrameSpacing(nsHTMLReflowMetrics& aDesiredSize)
   return gap;
 }
 
-void
+/* static */ void
 nsMathMLContainerFrame::DidReflowChildren(nsIFrame* aFirst, nsIFrame* aStop)
 
 {
@@ -1457,6 +1457,11 @@ nsMathMLContainerFrame::DidReflowChildren(nsIFrame* aFirst, nsIFrame* aStop)
        frame = frame->GetNextSibling()) {
     NS_ASSERTION(frame, "aStop isn't a sibling");
     if (frame->GetStateBits() & NS_FRAME_IN_REFLOW) {
+      // finish off principal descendants, too
+      nsIFrame* grandchild = frame->GetFirstChild(nsnull);
+      if (grandchild)
+        DidReflowChildren(grandchild, nsnull);
+
       frame->DidReflow(frame->PresContext(), nsnull,
                        NS_FRAME_REFLOW_FINISHED);
     }

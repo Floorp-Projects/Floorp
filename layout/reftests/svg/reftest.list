@@ -19,9 +19,11 @@ include moz-only/reftest.list
 == dynamic-conditions-01.svg pass.svg
 == dynamic-clipPath-01.svg pass.svg
 == dynamic-feFlood-01.svg pass.svg
+== dynamic-feImage-01.svg pass.svg
 == dynamic-filter-contents-01.svg dynamic-filter-contents-01-ref.svg
 == dynamic-gradient-contents-01.svg pass.svg
 == dynamic-link-style-01.svg pass.svg
+== dynamic-marker-01.svg pass.svg
 == dynamic-mask-contents-01.svg pass.svg
 == dynamic-pattern-01.svg pass.svg
 == dynamic-pattern-02.svg pass.svg
@@ -36,7 +38,11 @@ include moz-only/reftest.list
 == dynamic-text-01.svg dynamic-text-01-ref.svg
 == dynamic-text-02.svg dynamic-text-02-ref.svg
 == dynamic-text-03.svg dynamic-text-03-ref.svg
+== dynamic-textPath-01.svg dynamic-textPath-01-ref.svg
 == dynamic-use-01.svg pass.svg
+== dynamic-use-02.svg pass.svg
+== use-01-extref.svg pass.svg
+== use-02-extref.svg use-02-extref-ref.svg
 == fallback-color-01a.svg pass.svg
 == fallback-color-01b.svg pass.svg
 == fallback-color-02a.svg fallback-color-02-ref.svg
@@ -46,7 +52,9 @@ include moz-only/reftest.list
 == filter-basic-02.svg pass.svg
 == filter-basic-03.svg pass.svg
 == filter-foreignObject-01.svg pass.svg
+== filter-translated-01.svg filter-translated-01-ref.svg
 == foreignObject-01.svg pass.svg
+== foreignObject-02.svg foreignObject-02-ref.svg
 == foreignObject-ancestor-style-change-01.svg foreignObject-ancestor-style-change-01-ref.svg
 == foreignObject-change-transform-01.svg pass.svg
 == foreignObject-display-01.svg pass.svg
@@ -73,6 +81,7 @@ random-if(MOZ_WIDGET_TOOLKIT=="cocoa") == opacity-and-gradient-01.svg pass.svg
 == pseudo-classes-02.svg pseudo-classes-02-ref.svg
 == radialGradient-basic-01.svg pass.svg
 == radialGradient-basic-02.svg pass.svg
+== rect-01.svg pass.svg
 == rect-with-rx-and-ry-01.svg pass.svg
 == rect-with-rx-or-ry-01.svg rect-with-rx-or-ry-01-ref.svg
 == rootElement-null-01.svg pass.svg

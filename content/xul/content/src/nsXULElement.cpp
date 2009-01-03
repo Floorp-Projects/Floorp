@@ -154,18 +154,7 @@
 #include "mozAutoDocUpdate.h"
 #include "nsIDOMXULCommandEvent.h"
 #include "nsIDOMNSEvent.h"
-
-/**
- * Three bits are used for XUL Element's lazy state.
- */
-#define XUL_ELEMENT_CHILDREN_MUST_BE_REBUILT \
-  (nsXULElement::eChildrenMustBeRebuilt << XUL_ELEMENT_LAZY_STATE_OFFSET)
-
-#define XUL_ELEMENT_TEMPLATE_CONTENTS_BUILT \
-  (nsXULElement::eTemplateContentsBuilt << XUL_ELEMENT_LAZY_STATE_OFFSET)
-
-#define XUL_ELEMENT_CONTAINER_CONTENTS_BUILT \
-  (nsXULElement::eContainerContentsBuilt << XUL_ELEMENT_LAZY_STATE_OFFSET)
+#include "nsCCUncollectableMarker.h"
 
 // Global object maintenance
 nsICSSParser* nsXULPrototypeElement::sCSSParser = nsnull;
@@ -373,58 +362,33 @@ NS_NewXULElement(nsIContent** aResult, nsINodeInfo *aNodeInfo)
 NS_IMPL_CYCLE_COLLECTION_CLASS(nsXULElement)
 NS_IMPL_CYCLE_COLLECTION_TRAVERSE_BEGIN_INHERITED(nsXULElement,
                                                   nsGenericElement)
-  NS_IMPL_CYCLE_COLLECTION_TRAVERSE_NATIVE_MEMBER(mPrototype,
-                                                  nsXULPrototypeElement)
+    nsIDocument* currentDoc = tmp->GetCurrentDoc();
+    if (currentDoc && nsCCUncollectableMarker::InGeneration(
+                          currentDoc->GetMarkedCCGeneration())) {
+        return NS_OK;
+    }
+    NS_IMPL_CYCLE_COLLECTION_TRAVERSE_NATIVE_MEMBER(mPrototype,
+                                                    nsXULPrototypeElement)
 NS_IMPL_CYCLE_COLLECTION_TRAVERSE_END
 
 NS_IMPL_ADDREF_INHERITED(nsXULElement, nsGenericElement)
 NS_IMPL_RELEASE_INHERITED(nsXULElement, nsGenericElement)
 
-NS_IMETHODIMP
-nsXULElement::QueryInterface(REFNSIID aIID, void** aInstancePtr)
-{
-    NS_PRECONDITION(aInstancePtr, "null out param");
-
-    if (aIID.Equals(NS_GET_IID(nsXPCOMCycleCollectionParticipant))) {
-      *aInstancePtr = &NS_CYCLE_COLLECTION_NAME(nsXULElement);
-      return NS_OK;
-    }
-
-    nsresult rv = nsGenericElement::QueryInterface(aIID, aInstancePtr);
-    if (NS_SUCCEEDED(rv))
-        return rv;
-
-    nsISupports *inst = nsnull;
-
-    if (aIID.Equals(NS_GET_IID(nsIDOMNode))) {
-        inst = static_cast<nsIDOMNode *>(this);
-    } else if (aIID.Equals(NS_GET_IID(nsIDOMElement))) {
-        inst = static_cast<nsIDOMElement *>(this);
-    } else if (aIID.Equals(NS_GET_IID(nsIDOMXULElement))) {
-        inst = static_cast<nsIDOMXULElement *>(this);
-    } else if (aIID.Equals(NS_GET_IID(nsIScriptEventHandlerOwner))) {
-        inst = static_cast<nsIScriptEventHandlerOwner*>
-                          (new nsScriptEventHandlerOwnerTearoff(this));
-        NS_ENSURE_TRUE(inst, NS_ERROR_OUT_OF_MEMORY);
-    } else if (aIID.Equals(NS_GET_IID(nsIDOMElementCSSInlineStyle))) {
-        inst = static_cast<nsIDOMElementCSSInlineStyle *>
-                          (new nsXULElementTearoff(this));
-        NS_ENSURE_TRUE(inst, NS_ERROR_OUT_OF_MEMORY);
-    } else if (aIID.Equals(NS_GET_IID(nsIClassInfo))) {
-        inst = NS_GetDOMClassInfoInstance(eDOMClassInfo_XULElement_id);
-        NS_ENSURE_TRUE(inst, NS_ERROR_OUT_OF_MEMORY);
-    } else if (aIID.Equals(NS_GET_IID(nsIFrameLoaderOwner))) {
-        inst = static_cast<nsIFrameLoaderOwner*>(new nsXULElementTearoff(this));
-        NS_ENSURE_TRUE(inst, NS_ERROR_OUT_OF_MEMORY);
-    } else {
-        return PostQueryInterface(aIID, aInstancePtr);
-    }
-
-    NS_ADDREF(inst);
- 
-    *aInstancePtr = inst;
-    return NS_OK;
-}
+NS_INTERFACE_TABLE_HEAD_CYCLE_COLLECTION_INHERITED(nsXULElement)
+    NS_NODE_OFFSET_AND_INTERFACE_TABLE_BEGIN(nsXULElement)
+        NS_INTERFACE_TABLE_ENTRY(nsXULElement, nsIDOMNode)
+        NS_INTERFACE_TABLE_ENTRY(nsXULElement, nsIDOMElement)
+        NS_INTERFACE_TABLE_ENTRY(nsXULElement, nsIDOMXULElement)
+    NS_OFFSET_AND_INTERFACE_TABLE_END
+    NS_ELEMENT_INTERFACE_TABLE_TO_MAP_SEGUE
+    NS_INTERFACE_MAP_ENTRY_TEAROFF(nsIScriptEventHandlerOwner,
+                                   new nsScriptEventHandlerOwnerTearoff(this))
+    NS_INTERFACE_MAP_ENTRY_TEAROFF(nsIDOMElementCSSInlineStyle,
+                                   new nsXULElementTearoff(this))
+    NS_INTERFACE_MAP_ENTRY_TEAROFF(nsIFrameLoaderOwner,
+                                   new nsXULElementTearoff(this))
+    NS_INTERFACE_MAP_ENTRY_CONTENT_CLASSINFO(XULElement)
+NS_ELEMENT_INTERFACE_MAP_END
 
 //----------------------------------------------------------------------
 // nsIDOMNode interface
@@ -923,52 +887,10 @@ nsXULElement::UnbindFromTree(PRBool aDeep, PRBool aNullParent)
     nsGenericElement::UnbindFromTree(aDeep, aNullParent);
 }
 
-PRUint32
-nsXULElement::GetChildCount() const
-{
-    if (NS_FAILED(EnsureContentsGenerated())) {
-        return 0;
-    }
-
-    return PeekChildCount();
-}
-
-nsIContent *
-nsXULElement::GetChildAt(PRUint32 aIndex) const
-{
-    if (NS_FAILED(EnsureContentsGenerated())) {
-        return nsnull;
-    }
-
-    return mAttrsAndChildren.GetSafeChildAt(aIndex);
-}
-
-nsIContent * const *
-nsXULElement::GetChildArray() const
-{
-    if (NS_FAILED(EnsureContentsGenerated())) {
-        return nsnull;
-    }
-
-    return mAttrsAndChildren.GetChildArray();
-}
-
-PRInt32
-nsXULElement::IndexOf(nsINode* aPossibleChild) const
-{
-    if (NS_FAILED(EnsureContentsGenerated())) {
-        return -1;
-    }
-
-    return mAttrsAndChildren.IndexOfChild(aPossibleChild);
-}
-
 nsresult
 nsXULElement::RemoveChildAt(PRUint32 aIndex, PRBool aNotify)
 {
-    nsresult rv = EnsureContentsGenerated();
-    NS_ENSURE_SUCCESS(rv, rv);
-
+    nsresult rv;
     nsCOMPtr<nsIContent> oldKid = mAttrsAndChildren.GetSafeChildAt(aIndex);
     if (!oldKid) {
       return NS_OK;
@@ -1746,65 +1668,6 @@ nsXULElement::GetBuilder(nsIXULTemplateBuilder** aBuilder)
 //----------------------------------------------------------------------
 // Implementation methods
 
-nsresult
-nsXULElement::EnsureContentsGenerated(void) const
-{
-    if (GetFlags() & XUL_ELEMENT_CHILDREN_MUST_BE_REBUILT) {
-        // Ensure that the element is actually _in_ the document tree;
-        // otherwise, somebody is trying to generate children for a node
-        // that's not currently in the content model.
-        NS_PRECONDITION(IsInDoc(), "element not in tree");
-        if (!IsInDoc())
-            return NS_ERROR_NOT_INITIALIZED;
-
-        // XXX hack because we can't use "mutable"
-        nsXULElement* unconstThis = const_cast<nsXULElement*>(this);
-
-        // Clear this value *first*, so we can re-enter the nsIContent
-        // getters if needed.
-        unconstThis->ClearLazyState(eChildrenMustBeRebuilt);
-
-        // Walk up our ancestor chain, looking for an element with a
-        // XUL content model builder attached to it.
-        nsIContent* element = unconstThis;
-
-        do {
-            nsCOMPtr<nsIDOMXULElement> xulele = do_QueryInterface(element);
-            if (xulele) {
-                nsCOMPtr<nsIXULTemplateBuilder> builder;
-                xulele->GetBuilder(getter_AddRefs(builder));
-                if (builder) {
-                    if (HasAttr(kNameSpaceID_None, nsGkAtoms::xulcontentsgenerated)) {
-                        unconstThis->ClearLazyState(eChildrenMustBeRebuilt);
-                        return NS_OK;
-                    }
-
-                    return builder->CreateContents(unconstThis, PR_FALSE);
-                }
-            }
-
-            element = element->GetParent();
-        } while (element);
-
-        NS_ERROR("lazy state set with no XUL content builder in ancestor chain");
-        return NS_ERROR_UNEXPECTED;
-    }
-
-    return NS_OK;
-}
-
-// No need to implement AppendChildTo. The default implementation will call
-// GetChildCount which will call EnsureContentsGenerated
-nsresult
-nsXULElement::InsertChildAt(nsIContent* aKid, PRUint32 aIndex, PRBool aNotify)
-{
-  nsresult rv = EnsureContentsGenerated();
-  NS_ENSURE_SUCCESS(rv, rv);
-
-  return nsGenericElement::InsertChildAt(aKid, aIndex, aNotify);
-}
-
-
 /// XXX GetID must be defined here because we have proto attrs.
 nsIAtom*
 nsXULElement::GetID() const
@@ -1886,7 +1749,7 @@ nsXULElement::SetInlineStyleRule(nsICSSStyleRule* aStyleRule, PRBool aNotify)
   nsAttrValue attrValue(aStyleRule);
 
   return SetAttrAndNotify(kNameSpaceID_None, nsGkAtoms::style, nsnull, oldValueStr,
-                          attrValue, modification, hasListeners, aNotify);
+                          attrValue, modification, hasListeners, aNotify, nsnull);
 }
 
 nsChangeHint
@@ -2619,8 +2482,8 @@ NS_IMPL_CYCLE_COLLECTION_TRAVERSE_NATIVE_BEGIN(nsXULPrototypeNode)
             if (!name.IsAtom())
                 cb.NoteXPCOMChild(name.NodeInfo());
         }
-        for (i = 0; i < elem->mNumChildren; ++i) {
-            NS_IMPL_CYCLE_COLLECTION_TRAVERSE_NATIVE_PTR(elem->mChildren[i],
+        for (i = 0; i < elem->mChildren.Length(); ++i) {
+            NS_IMPL_CYCLE_COLLECTION_TRAVERSE_NATIVE_PTR(elem->mChildren[i].get(),
                                                          nsXULPrototypeNode,
                                                          "mChildren[i]")
         }
@@ -2718,9 +2581,9 @@ nsXULPrototypeElement::Serialize(nsIObjectOutputStream* aStream,
     }
 
     // Now write children
-    rv |= aStream->Write32(PRUint32(mNumChildren));
-    for (i = 0; i < mNumChildren; i++) {
-        nsXULPrototypeNode* child = mChildren[i];
+    rv |= aStream->Write32(PRUint32(mChildren.Length()));
+    for (i = 0; i < mChildren.Length(); i++) {
+        nsXULPrototypeNode* child = mChildren[i].get();
         switch (child->mType) {
         case eType_Element:
         case eType_Text:
@@ -2803,20 +2666,17 @@ nsXULPrototypeElement::Deserialize(nsIObjectInputStream* aStream,
     }
 
     rv |= aStream->Read32(&number);
-    mNumChildren = PRInt32(number);
+    PRUint32 numChildren = PRInt32(number);
 
-    if (mNumChildren > 0) {
-        mChildren = new nsXULPrototypeNode*[mNumChildren];
-        if (! mChildren)
+    if (numChildren > 0) {
+        if (!mChildren.SetCapacity(numChildren))
             return NS_ERROR_OUT_OF_MEMORY;
 
-        memset(mChildren, 0, sizeof(nsXULPrototypeNode*) * mNumChildren);
-
-        for (i = 0; i < mNumChildren; i++) {
+        for (i = 0; i < numChildren; i++) {
             rv |= aStream->Read32(&number);
             Type childType = (Type)number;
 
-            nsXULPrototypeNode* child = nsnull;
+            nsRefPtr<nsXULPrototypeNode> child;
 
             switch (childType) {
             case eType_Element:
@@ -2874,7 +2734,7 @@ nsXULPrototypeElement::Deserialize(nsIObjectInputStream* aStream,
                 rv = NS_ERROR_UNEXPECTED;
             }
 
-            mChildren[i] = child;
+            mChildren.AppendElement(child);
 
             // Oh dear. Something failed during the deserialization.
             // We don't know what.  But likely consequences of failed
@@ -2984,7 +2844,6 @@ nsXULPrototypeScript::nsXULPrototypeScript(PRUint32 aLangID, PRUint32 aLineNo, P
       mLangVersion(aVersion),
       mScriptObject(aLangID)
 {
-    NS_LOG_ADDREF(this, 1, ClassName(), ClassSize());
     NS_ASSERTION(aLangID != nsIProgrammingLanguage::UNKNOWN,
                  "The language ID must be known and constant");
 }
@@ -3270,7 +3129,7 @@ nsXULPrototypeScript::Compile(const PRUnichar* aText,
     }
 
     nsCAutoString urlspec;
-    aURI->GetSpec(urlspec);
+    nsContentUtils::GetWrapperSafeScriptFilename(aDocument, aURI, urlspec);
 
     // Ok, compile it to create a prototype script object!
 

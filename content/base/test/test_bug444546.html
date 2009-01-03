@@ -1,0 +1,160 @@
+<!DOCTYPE HTML>
+<html>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=444546
+-->
+<head>
+  <title>Test for Bug 444546</title>
+  <script type="application/javascript" src="/MochiKit/MochiKit.js"></script>
+  <script type="application/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
+   <style>
+     .up {
+       height: 14px;
+       width: 1px;
+       background: blue;
+       font-size: 11px;
+       color: white;
+     }
+     .down {
+       height: 14px;
+       width: 1px;
+       background: blue;
+       font-size: 11px;
+       color: white;
+     }
+   </style>
+</head>
+<body>
+<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=444546">Mozilla Bug 444546</a>
+<p id="display"></p>
+<div id="content" style="display: none">
+  
+</div>
+<pre id="test">
+<script type="application/javascript">
+
+/** Test for Bug 444546 **/
+
+  var xhrCount = 5;
+  var xhrs = new Array();
+  var uploads = new Array();
+  var maxSize = 5000000;
+  var hugeString = new Array(maxSize + 1).join('a');
+
+  function updateProgress(evt) {
+    ++evt.target.pcounter;
+    var time = new Date().getTime();
+    // 350 - 200 = 150ms
+    if ((time - evt.target.prevTime) < 150) {
+      evt.target.log.parentNode.style.background = "red";
+    }
+    var diff = (time - evt.target.prevTime);
+    if (evt.target.min == -1 || evt.target.min > diff) {
+      evt.target.min = diff;
+    }
+    if (evt.target.max == -1 || evt.target.max < diff) {
+      evt.target.max = diff;
+    }
+
+    evt.target.log.textContent = diff + "ms";
+    evt.target.prevTime = time;
+    if (evt.lengthComputable) {
+      var loaded = (evt.loaded / evt.total);
+      if (loaded < 1) {
+        evt.target.log.style.width = (loaded * 400) + "px";
+      }
+    }
+  }
+
+  function loaded(evt) {
+    evt.target.log.style.width = "400px";
+    evt.target.log.style.background = "green";
+    if ("xhr" in evt.target) {
+      evt.target.xhr.prevTime = new Date().getTime();
+      evt.target.xhr.startTime = evt.target.xhr.prevTime;
+    }
+    var total = new Date().getTime() - evt.target.startTime;
+    evt.target.log.textContent = "total:" + total + "ms";
+    if (evt.target.pcounter) {
+      evt.target.log.textContent += " ," + evt.target.pcounter + "pe, avg:" +
+        parseInt((evt.target.prevTime - evt.target.startTime)/evt.target.pcounter) + "ms";
+    }
+    if (evt.target.min != -1) {
+      ok(evt.target.min >= 150, "Events fired too fast!");
+      evt.target.log.textContent += ", min:" + evt.target.min + "ms";
+    }
+    if (evt.target.max != -1) {
+      // Disabled for now.
+      //ok(evt.target.max <= 550, "Events didn't fire fast enough!");
+      evt.target.log.textContent += ", max:" + evt.target.max + "ms";
+    }
+    if ("upload" in evt.target) {
+      is(evt.total, maxSize * 10, "Wrong data!");
+      --xhrCount;
+      if (xhrCount == 0) {
+        // This is a hack. To get more progress events, server sends the data
+        // 10 times.
+        SimpleTest.finish();
+      } else {
+        setTimeout(start, 10);
+      }
+    } else {
+      is(evt.total, maxSize, "Wrong data!");
+    }
+  }
+
+  function start() {
+    var xhr = new XMLHttpRequest();
+    xhrs.push(xhr);
+    uploads.push(xhr.upload);
+    var container = document.createElement("tr");
+    var td1 = document.createElement("td");
+    container.appendChild(td1);
+    td1.textContent = xhrs.length + ".";
+    var td2 = document.createElement("td");
+    container.appendChild(td2);
+    var td3 = document.createElement("td");
+    container.appendChild(td3);
+    var uploadElement = document.createElement("div");
+    td2.appendChild(uploadElement);
+    uploadElement.className = "up";
+    var downloadElement = document.createElement("div");
+    td3.appendChild(downloadElement);
+    downloadElement.className = "down";
+    document.getElementById('tbody').appendChild(container);
+    xhr.log = downloadElement;
+    xhr.upload.log = uploadElement;
+    xhr.onprogress = updateProgress;
+    xhr.upload.onprogress = updateProgress;
+    xhr.onload = loaded;
+    xhr.upload.onload = loaded;
+    xhr.open("POST", "bug444546.sjs");
+    xhr.upload.prevTime = new Date().getTime();
+    xhr.upload.startTime = xhr.upload.prevTime;
+    xhr.upload.xhr = xhr;
+    xhr.pcounter = 0;
+    xhr.upload.pcounter = 0;
+    xhr.min = -1;
+    xhr.upload.min = -1;
+    xhr.max = -1;
+    xhr.upload.max = -1;
+    xhr.send(hugeString);
+  }
+
+  SimpleTest.waitForExplicitFinish();
+  addLoadEvent(function() { setTimeout(start, 10); });
+
+</script>
+</pre>
+  <table>
+    <tbody id="tbody">
+      <tr>
+        <td>XHR</td>
+        <td style="min-width: 410px;">upload</td>
+        <td style="min-width: 410px;">download</td>
+      </tr>
+    </tbody>
+  </table>
+</body>
+</html>

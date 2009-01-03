@@ -40,7 +40,7 @@ $(error toolkit-tiers.mk is not compatible with --enable-libxul-sdk=)
 endif
 
 include $(topsrcdir)/config/nspr/build.mk
-include $(topsrcdir)/js/src/build.mk
+include $(topsrcdir)/config/js/build.mk
 include $(topsrcdir)/xpcom/build.mk
 include $(topsrcdir)/netwerk/build.mk
 
@@ -89,10 +89,6 @@ tier_gecko_dirs     += widget/src/gtkxtbin
 endif
 endif
 
-ifdef MOZ_IPCD
-tier_gecko_dirs += ipc/ipcd
-endif
-
 tier_gecko_dirs	+= \
 		modules/libutil \
 		modules/libjar \
@@ -123,10 +119,15 @@ tier_gecko_dirs += \
 		media/libfishsound \
 		media/libogg \
 		media/liboggplay \
-		media/liboggplay_audio \
 		media/liboggz \
 		media/libtheora \
 		media/libvorbis \
+		$(NULL)
+endif
+
+ifdef MOZ_SYDNEYAUDIO
+tier_gecko_dirs += \
+		media/libsydneyaudio \
 		$(NULL)
 endif
 
@@ -270,4 +271,8 @@ endif
 
 ifdef ENABLE_TESTS
 tier_toolkit_dirs	+= testing/mochitest
+endif
+
+ifdef MOZ_TREE_FREETYPE
+tier_external_dirs	+= modules/freetype2
 endif

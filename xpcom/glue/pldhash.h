@@ -239,24 +239,24 @@ struct PLDHashTable {
  * equal to 0; but note that pldhash.c code will never call with 0 nbytes).
  */
 typedef void *
-(* PR_CALLBACK PLDHashAllocTable)(PLDHashTable *table, PRUint32 nbytes);
+(* PLDHashAllocTable)(PLDHashTable *table, PRUint32 nbytes);
 
 typedef void
-(* PR_CALLBACK PLDHashFreeTable) (PLDHashTable *table, void *ptr);
+(* PLDHashFreeTable) (PLDHashTable *table, void *ptr);
 
 /*
  * Compute the hash code for a given key to be looked up, added, or removed
  * from table.  A hash code may have any PLDHashNumber value.
  */
 typedef PLDHashNumber
-(* PR_CALLBACK PLDHashHashKey)   (PLDHashTable *table, const void *key);
+(* PLDHashHashKey)   (PLDHashTable *table, const void *key);
 
 /*
  * Compare the key identifying entry in table with the provided key parameter.
  * Return PR_TRUE if keys match, PR_FALSE otherwise.
  */
 typedef PRBool
-(* PR_CALLBACK PLDHashMatchEntry)(PLDHashTable *table,
+(* PLDHashMatchEntry)(PLDHashTable *table,
                                       const PLDHashEntryHdr *entry,
                                       const void *key);
 
@@ -267,9 +267,9 @@ typedef PRBool
  * any reference-decrementing callback shortly.
  */
 typedef void
-(* PR_CALLBACK PLDHashMoveEntry)(PLDHashTable *table,
-                                     const PLDHashEntryHdr *from,
-                                     PLDHashEntryHdr *to);
+(* PLDHashMoveEntry)(PLDHashTable *table,
+                     const PLDHashEntryHdr *from,
+                     PLDHashEntryHdr *to);
 
 /*
  * Clear the entry and drop any strong references it holds.  This callback is
@@ -277,8 +277,8 @@ typedef void
  * but only if the given key is found in the table.
  */
 typedef void
-(* PR_CALLBACK PLDHashClearEntry)(PLDHashTable *table,
-                                      PLDHashEntryHdr *entry);
+(* PLDHashClearEntry)(PLDHashTable *table,
+                      PLDHashEntryHdr *entry);
 
 /*
  * Called when a table (whether allocated dynamically by itself, or nested in
@@ -286,7 +286,7 @@ typedef void
  * allows table->ops-specific code to finalize table->data.
  */
 typedef void
-(* PR_CALLBACK PLDHashFinalize)  (PLDHashTable *table);
+(* PLDHashFinalize)  (PLDHashTable *table);
 
 /*
  * Initialize a new entry, apart from keyHash.  This function is called when
@@ -296,9 +296,9 @@ typedef void
  * table.
  */
 typedef PRBool
-(* PR_CALLBACK PLDHashInitEntry)(PLDHashTable *table,
-                                     PLDHashEntryHdr *entry,
-                                     const void *key);
+(* PLDHashInitEntry)(PLDHashTable *table,
+                     PLDHashEntryHdr *entry,
+                     const void *key);
 
 /*
  * Finally, the "vtable" structure for PLDHashTable.  The first eight hooks
@@ -575,7 +575,7 @@ PL_DHashTableRawRemove(PLDHashTable *table, PLDHashEntryHdr *entry);
  * the entry being enumerated, rather than returning PL_DHASH_REMOVE.
  */
 typedef PLDHashOperator
-(* PR_CALLBACK PLDHashEnumerator)(PLDHashTable *table, PLDHashEntryHdr *hdr,
+(* PLDHashEnumerator)(PLDHashTable *table, PLDHashEntryHdr *hdr,
                                       PRUint32 number, void *arg);
 
 NS_COM_GLUE PRUint32

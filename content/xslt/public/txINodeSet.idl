@@ -39,12 +39,6 @@
 
 #include "domstubs.idl"
 
-%{ C++
-class txAExprResult;
-%}
-
-[ptr] native txAExprResultPtr(txAExprResult);
-
 [scriptable, uuid(15d424c0-6b47-11d9-9791-000a95dc234c)]
 interface txINodeSet : nsISupports
 {
@@ -53,5 +47,4 @@ interface txINodeSet : nsISupports
     DOMString itemAsString(in unsigned long index);
     readonly attribute unsigned long length;
     void add(in nsIDOMNode node);
-    [noscript, notxpcom] txAExprResultPtr getTxNodeSet();
 };

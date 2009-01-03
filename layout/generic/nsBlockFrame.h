@@ -74,7 +74,6 @@ class nsBlockInFlowLineIterator;
 class nsBulletFrame;
 class nsLineBox;
 class nsFirstLineFrame;
-class nsILineIterator;
 class nsIntervalSet;
 /**
  * Child list name indices
@@ -258,7 +257,8 @@ public:
                               PRBool         aForceNormal);
 
   virtual void DeleteNextInFlowChild(nsPresContext* aPresContext,
-                                     nsIFrame*       aNextInFlow);
+                                     nsIFrame*      aNextInFlow,
+                                     PRBool         aDeletingEmptyFrames);
 
   /**
    * Determines whether the collapsed margin carried out of the last
@@ -411,18 +411,26 @@ protected:
 #endif
 
 public:
-  /** does all the real work for removing aDeletedFrame from this
-    * finds the line containing aFrame.
-    * handled continued frames
-    * marks lines dirty as needed
-    * @param aDestroyFrames if false then we don't actually destroy the
-    * frame or its next in flows, we just remove them. This does NOT work
-    * on out of flow frames so always use PR_TRUE for out of flows.
-    * @param aRemoveOnlyFluidContinuations if true, only in-flows are removed;
-    * if false, all continuations are removed.
-    */
-  nsresult DoRemoveFrame(nsIFrame* aDeletedFrame, PRBool aDestroyFrames = PR_TRUE, 
-                         PRBool aRemoveOnlyFluidContinuations = PR_TRUE);
+  /**
+   * Does all the real work for removing aDeletedFrame
+   * -- finds the line containing aDeletedFrame
+   * -- removes all aDeletedFrame next-in-flows (or all continuations,
+   * if REMOVE_FIXED_CONTINUATIONS is given)
+   * -- marks lines dirty as needed
+   * -- marks textruns dirty (unless FRAMES_ARE_EMPTY is given, in which
+   * case textruns do not need to be dirtied)
+   * -- destroys all removed frames (unless PRESERVE_REMOVED_FRAMES is
+   * given)
+   * 
+   * PRESERVE_REMOVED_FRAMES does NOT work on out of flow frames so
+   * don't use it for out of flows.
+   */
+  enum {
+    PERSERVE_REMOVED_FRAMES    = 0x01,
+    REMOVE_FIXED_CONTINUATIONS = 0x02,
+    FRAMES_ARE_EMPTY           = 0x04
+  };
+  nsresult DoRemoveFrame(nsIFrame* aDeletedFrame, PRUint32 aFlags);
 
   void ReparentFloats(nsIFrame* aFirstFrame,
                       nsBlockFrame* aOldParent, PRBool aFromOverflow,
@@ -479,8 +487,12 @@ protected:
    * pull-up, mark the previous line dirty as well. Also invalidates textruns
    * on those lines because the text in the lines might have changed due to
    * addition/removal of frames.
+   * @param aLine the line to mark dirty
+   * @param aLineList the line list containing that line, null means the line
+   *        is in 'mLines' of this frame.
    */
-  nsresult MarkLineDirty(line_iterator aLine);
+  nsresult MarkLineDirty(line_iterator aLine,
+                         const nsLineList* aLineList = nsnull);
 
   // XXX where to go
   PRBool ShouldJustifyLine(nsBlockReflowState& aState,
@@ -593,6 +605,8 @@ protected:
                     nscoord aLineTop);
 
   //----------------------------------------
+
+  virtual nsILineIterator* GetLineIterator();
 
 public:
   nsLineList* GetOverflowLines() const;
@@ -720,6 +734,11 @@ public:
   nsBlockFrame* GetContainer() { return mFrame; }
   PRBool GetInOverflow() { return mInOverflowLines != nsnull; }
 
+  /**
+   * Returns the current line list we're iterating, null means
+   * we're iterating |mLines| of the container.
+   */
+  nsLineList* GetLineList() { return mInOverflowLines; }
 
   /**
    * Returns the end-iterator of whatever line list we're in.

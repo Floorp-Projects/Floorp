@@ -105,7 +105,7 @@ struct nsRequestInfo : public PLDHashEntryHdr
 };
 
 
-PR_STATIC_CALLBACK(PRBool)
+static PRBool
 RequestInfoHashInitEntry(PLDHashTable *table, PLDHashEntryHdr *entry,
                          const void *key)
 {
@@ -1437,7 +1437,7 @@ nsRequestInfo * nsDocLoader::GetRequestInfo(nsIRequest *aRequest)
 
 // PLDHashTable enumeration callback that just removes every entry
 // from the hash.
-PR_STATIC_CALLBACK(PLDHashOperator)
+static PLDHashOperator
 RemoveInfoCallback(PLDHashTable *table, PLDHashEntryHdr *hdr, PRUint32 number,
                    void *arg)
 {
@@ -1456,7 +1456,7 @@ void nsDocLoader::ClearRequestInfoHash(void)
 }
 
 // PLDHashTable enumeration callback that calculates the max progress.
-PR_STATIC_CALLBACK(PLDHashOperator)
+static PLDHashOperator
 CalcMaxProgressCallback(PLDHashTable *table, PLDHashEntryHdr *hdr,
                         PRUint32 number, void *arg)
 {
@@ -1487,15 +1487,6 @@ NS_IMETHODIMP nsDocLoader::OnChannelRedirect(nsIChannel *aOldChannel,
 {
   if (aOldChannel)
   {
-    nsresult rv;
-    nsCOMPtr<nsIURI> oldURI, newURI;
-
-    rv = aOldChannel->GetOriginalURI(getter_AddRefs(oldURI));
-    if (NS_FAILED(rv)) return rv;
-
-    rv = aNewChannel->GetURI(getter_AddRefs(newURI));
-    if (NS_FAILED(rv)) return rv;
-
     nsLoadFlags loadFlags = 0;
     PRInt32 stateFlags = nsIWebProgressListener::STATE_REDIRECTING |
                          nsIWebProgressListener::STATE_IS_REQUEST;

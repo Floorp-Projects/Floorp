@@ -1109,10 +1109,13 @@ pr_fgets(char *buf, int size, PRFileDesc *file)
 
     i = 0;
     while (i < size - 1) {
-	status = PR_Read(file, (void * ) &c, 1);
+	status = PR_Read(file, &c, 1);
 	if (status == -1) {
 	    return NULL;
 	} else if (status == 0) {
+	    if (i == 0) {
+		return NULL;
+	    }
 	    break;
 	}
 	buf[i++] = c;

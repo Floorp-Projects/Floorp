@@ -127,7 +127,7 @@ var gUpdateWizard = {
   errorItems: [],
   showErrors: function (aState, aErrors)
   {
-    openDialog("chrome://mozapps/content/update/errors.xul", "",
+    openDialog("chrome://mozapps/content/extensions/errors.xul", "",
                "modal", { state: aState, errors: aErrors });
   },
 

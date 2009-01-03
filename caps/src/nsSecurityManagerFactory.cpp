@@ -130,7 +130,7 @@ getUTF8StringArgument(JSContext *cx, JSObject *obj, PRUint16 argNum,
     CopyUTF16toUTF8(data, aRetval);
 }
 
-PR_STATIC_CALLBACK(JSBool)
+static JSBool
 netscape_security_isPrivilegeEnabled(JSContext *cx, JSObject *obj, uintN argc,
                                      jsval *argv, jsval *rval)
 {
@@ -153,7 +153,7 @@ netscape_security_isPrivilegeEnabled(JSContext *cx, JSObject *obj, uintN argc,
 }
 
 
-PR_STATIC_CALLBACK(JSBool)
+static JSBool
 netscape_security_enablePrivilege(JSContext *cx, JSObject *obj, uintN argc,
                                   jsval *argv, jsval *rval)
 {
@@ -175,7 +175,7 @@ netscape_security_enablePrivilege(JSContext *cx, JSObject *obj, uintN argc,
     return JS_TRUE;
 }
 
-PR_STATIC_CALLBACK(JSBool)
+static JSBool
 netscape_security_disablePrivilege(JSContext *cx, JSObject *obj, uintN argc,
                                    jsval *argv, jsval *rval)
 {
@@ -197,7 +197,7 @@ netscape_security_disablePrivilege(JSContext *cx, JSObject *obj, uintN argc,
     return JS_TRUE;
 }
 
-PR_STATIC_CALLBACK(JSBool)
+static JSBool
 netscape_security_revertPrivilege(JSContext *cx, JSObject *obj, uintN argc,
                                   jsval *argv, jsval *rval)
 {
@@ -219,7 +219,7 @@ netscape_security_revertPrivilege(JSContext *cx, JSObject *obj, uintN argc,
     return JS_TRUE;
 }
 
-PR_STATIC_CALLBACK(JSBool)
+static JSBool
 netscape_security_setCanEnablePrivilege(JSContext *cx, JSObject *obj, uintN argc,
                                         jsval *argv, jsval *rval)
 {
@@ -245,7 +245,7 @@ netscape_security_setCanEnablePrivilege(JSContext *cx, JSObject *obj, uintN argc
     return JS_TRUE;
 }
 
-PR_STATIC_CALLBACK(JSBool)
+static JSBool
 netscape_security_invalidate(JSContext *cx, JSObject *obj, uintN argc,
                              jsval *argv, jsval *rval)
 {
@@ -497,7 +497,7 @@ static const nsModuleComponentInfo capsComponentInfo[] =
 };
 
 
-void PR_CALLBACK
+void
 CapsModuleDtor(nsIModule* thisModules)
 {
     nsScriptSecurityManager::Shutdown();

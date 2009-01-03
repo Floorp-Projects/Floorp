@@ -47,7 +47,12 @@ DIRS += \
   chrome \
   $(NULL)
 
-CPP_UNIT_TESTS += TestNativeXMLHttpRequest.cpp TestPlainTextSerializer.cpp
+MODULE = content
+
+CPP_UNIT_TESTS = \
+                 TestNativeXMLHttpRequest.cpp \
+                 TestPlainTextSerializer.cpp \
+                 $(NULL)
 
 LOCAL_INCLUDES += -I$(topsrcdir)/xpcom/tests
 
@@ -63,14 +68,9 @@ REQUIRES += \
   htmlparser \
   $(NULL)
 
-CPPSRCS += $(CPP_UNIT_TESTS)
-
-SIMPLE_PROGRAMS += $(CPP_UNIT_TESTS:.cpp=$(BIN_SUFFIX))
-
-LIBS += \
-  $(XPCOM_GLUE_LDOPTS) \
-  $(NSPR_LIBS) \
-  $(NULL)
+XPCSHELL_TESTS = \
+               unit \
+               $(NULL)
 
 include $(topsrcdir)/config/rules.mk
 
@@ -85,6 +85,8 @@ _TEST_FILES = 	test_bug5141.html \
 		test_bug254337.html \
 		test_bug276037-1.html \
 		test_bug276037-2.xhtml \
+		test_bug298064.html \
+		bug298064-subframe.html \
 		test_bug308484.html \
 		test_bug311681.xml \
 		test_bug322317.html \
@@ -167,6 +169,25 @@ _TEST_FILES = 	test_bug5141.html \
 		test_bug420700.html \
 		test_bug421602.html \
 		test_bug422537.html \
+		test_bug424359-1.html \
+		file_htmlserializer_1.html \
+		file_htmlserializer_1_bodyonly.html \
+		file_htmlserializer_1_format.html \
+		file_htmlserializer_1_linebreak.html \
+		file_htmlserializer_1_links.html \
+		file_htmlserializer_1_noflag.html \
+		file_htmlserializer_1_noformatpre.html \
+		file_htmlserializer_1_raw.html \
+		file_htmlserializer_1_nested_body.html \
+		file_htmlserializer_1_sibling_body.html \
+		file_htmlserializer_1_sibling_body_only_body.html \
+		file_htmlserializer_1_no_body.html \
+		test_bug424359-2.html \
+		file_htmlserializer_2.html \
+		file_htmlserializer_2_basic.html \
+		file_htmlserializer_2_enthtml.html \
+		file_htmlserializer_2_entw3c.html \
+		file_htmlserializer_2_latin1.html \
 		test_bug424212.html \
 		test_bug425013.html \
 		bug426308-redirect.sjs \
@@ -210,8 +231,11 @@ _TEST_FILES = 	test_bug5141.html \
 		test_bug453521.html \
 		test_bug391728.html \
 		file_bug391728.html \
+		test_bug454325.html \
 		file_bug391728_2.html \
+		test_bug456262.html \
 		test_bug368972.html \
+		test_bug448993.html \
 		test_bug450160.html \
 		test_bug454326.html \
 		test_bug457746.html \
@@ -221,13 +245,32 @@ _TEST_FILES = 	test_bug5141.html \
 		file_CrossSiteXHR_server.sjs \
 		test_CrossSiteXHR_cache.html \
 		file_CrossSiteXHR_cache_server.sjs \
+		test_XHRDocURI.html \
+		file_XHRDocURI.xml \
+		file_XHRDocURI.xml^headers^ \
+		file_XHRDocURI.text \
+		file_XHRDocURI.text^headers^ \
+		test_bug459424.html \
+		bug461735-redirect1.sjs \
+		bug461735-redirect2.sjs \
+		bug461735-post-redirect.js \
+		test_bug461735.html \
+		test_bug380418.html \
+		test_bug465767.html \
+		test_bug380418.html^headers^ \
+		test_elementTraversal.html \
+		test_w3element_traversal.html \
+		test_w3element_traversal.xhtml \
+		test_w3element_traversal_svg.html \
+		w3element_traversal.svg \
+		test_bug444322.html \
+		bug444322.txt \
+		bug444322.js \
 		$(NULL)
+
+# Disabled for now. Mochitest isn't reliable enough for these.
+# test_bug444546.html \
+# bug444546.sjs \
 
 libs:: $(_TEST_FILES)
 	$(INSTALL) $(foreach f,$^,"$f") $(DEPTH)/_tests/testing/mochitest/tests/$(relativesrcdir)
-
-check::
-	@$(EXIT_ON_ERROR) \
-	for f in $(subst .cpp,,$(CPP_UNIT_TESTS)); do \
-	  XPCOM_DEBUG_BREAK=stack-and-abort $(RUN_TEST_PROGRAM) $(DIST)/bin/$$f; \
-	done

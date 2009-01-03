@@ -39,7 +39,8 @@
 
 // NOTE: alphabetically ordered
 #include "nsAccessibilityAtoms.h"
-#include "nsAccessibilityUtils.h"
+#include "nsCoreUtils.h"
+#include "nsAccUtils.h"
 #include "nsBaseWidgetAccessible.h"
 #include "nsIDOMXULDescriptionElement.h"
 #include "nsINameSpaceManager.h"
@@ -55,26 +56,23 @@ nsHyperTextAccessibleWrap(aDomNode, aShell)
 { 
 }
 
-/* wstring getName (); */
-NS_IMETHODIMP
-nsXULTextAccessible::GetName(nsAString& aName)
+nsresult
+nsXULTextAccessible::GetNameInternal(nsAString& aName)
 { 
-  aName.Truncate();
-
   nsCOMPtr<nsIContent> content(do_QueryInterface(mDOMNode));
-  if (!content) {
-    return NS_ERROR_FAILURE;  // Node shut down
-  }
+
   // if the value attr doesn't exist, the screen reader must get the accessible text
   // from the accessible text interface or from the children
-  return content->GetAttr(kNameSpaceID_None, nsAccessibilityAtoms::value, aName);
+  content->GetAttr(kNameSpaceID_None, nsAccessibilityAtoms::value, aName);
+  return NS_OK;
 }
 
-NS_IMETHODIMP
-nsXULTextAccessible::GetState(PRUint32 *aState, PRUint32 *aExtraState)
+nsresult
+nsXULTextAccessible::GetStateInternal(PRUint32 *aState, PRUint32 *aExtraState)
 {
-  nsresult rv = nsHyperTextAccessibleWrap::GetState(aState, aExtraState);
-  NS_ENSURE_SUCCESS(rv, rv);
+  nsresult rv = nsHyperTextAccessibleWrap::GetStateInternal(aState,
+                                                            aExtraState);
+  NS_ENSURE_A11Y_SUCCESS(rv, rv);
 
   // Labels and description have read only state
   // They are not focusable or selectable
@@ -93,7 +91,7 @@ nsXULTextAccessible::GetAccessibleRelated(PRUint32 aRelationType,
     return NS_OK;
   }
 
-  nsIContent *content = GetRoleContent(mDOMNode);
+  nsIContent *content = nsCoreUtils::GetRoleContent(mDOMNode);
   if (!content)
     return NS_ERROR_FAILURE;
 
@@ -103,9 +101,8 @@ nsXULTextAccessible::GetAccessibleRelated(PRUint32 aRelationType,
     if (parent && parent->Tag() == nsAccessibilityAtoms::caption) {
       nsCOMPtr<nsIAccessible> parentAccessible;
       GetParent(getter_AddRefs(parentAccessible));
-      if (Role(parentAccessible) == nsIAccessibleRole::ROLE_GROUPING) {
+      if (nsAccUtils::Role(parentAccessible) == nsIAccessibleRole::ROLE_GROUPING)
         parentAccessible.swap(*aRelated);
-      }
     }
   }
 
@@ -120,19 +117,12 @@ nsLeafAccessible(aDomNode, aShell)
 { 
 }
 
-NS_IMETHODIMP
-nsXULTooltipAccessible::GetName(nsAString& aName)
+nsresult
+nsXULTooltipAccessible::GetStateInternal(PRUint32 *aState,
+                                         PRUint32 *aExtraState)
 {
-  aName.Truncate();
-
-  return GetXULName(aName, PR_TRUE);
-}
-
-NS_IMETHODIMP
-nsXULTooltipAccessible::GetState(PRUint32 *aState, PRUint32 *aExtraState)
-{
-  nsresult rv = nsLeafAccessible::GetState(aState, aExtraState);
-  NS_ENSURE_SUCCESS(rv, rv);
+  nsresult rv = nsLeafAccessible::GetStateInternal(aState, aExtraState);
+  NS_ENSURE_A11Y_SUCCESS(rv, rv);
 
   *aState &= ~nsIAccessibleStates::STATE_FOCUSABLE;
   *aState |= nsIAccessibleStates::STATE_READONLY;
@@ -174,14 +164,9 @@ nsXULLinkAccessible::GetValue(nsAString& aValue)
   return NS_OK;
 }
 
-NS_IMETHODIMP
-nsXULLinkAccessible::GetName(nsAString& aName)
+nsresult
+nsXULLinkAccessible::GetNameInternal(nsAString& aName)
 {
-  aName.Truncate();
-
-  if (IsDefunct())
-    return NS_ERROR_FAILURE;
-
   nsCOMPtr<nsIContent> content(do_QueryInterface(mDOMNode));
   content->GetAttr(kNameSpaceID_None, nsAccessibilityAtoms::value, aName);
   if (!aName.IsEmpty())
@@ -200,11 +185,12 @@ nsXULLinkAccessible::GetRole(PRUint32 *aRole)
 }
 
 
-NS_IMETHODIMP
-nsXULLinkAccessible::GetState(PRUint32 *aState, PRUint32 *aExtraState)
+nsresult
+nsXULLinkAccessible::GetStateInternal(PRUint32 *aState, PRUint32 *aExtraState)
 {
-  nsresult rv = nsHyperTextAccessibleWrap::GetState(aState, aExtraState);
-  NS_ENSURE_SUCCESS(rv, rv);
+  nsresult rv = nsHyperTextAccessibleWrap::GetStateInternal(aState,
+                                                            aExtraState);
+  NS_ENSURE_A11Y_SUCCESS(rv, rv);
 
   *aState |= nsIAccessibleStates::STATE_LINKED;
   return NS_OK;

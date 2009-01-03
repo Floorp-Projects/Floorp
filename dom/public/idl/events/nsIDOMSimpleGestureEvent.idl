@@ -1,0 +1,141 @@
+/* -*- Mode: IDL; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
+/* ***** BEGIN LICENSE BLOCK *****
+ * Version: MPL 1.1/GPL 2.0/LGPL 2.1
+ *
+ * The contents of this file are subject to the Mozilla Public License Version
+ * 1.1 (the "License"); you may not use this file except in compliance with
+ * the License. You may obtain a copy of the License at
+ * http://www.mozilla.org/MPL/
+ *
+ * Software distributed under the License is distributed on an "AS IS" basis,
+ * WITHOUT WARRANTY OF ANY KIND, either express or implied. See the License
+ * for the specific language governing rights and limitations under the
+ * License.
+ *
+ * The Original Code is mozilla.org code.
+ *
+ * The Initial Developer of the Original Code is
+ * Thomas K. Dyas <tdyas@zecador.org>.
+ * Portions created by the Initial Developer are Copyright (C) 2008
+ * the Initial Developer. All Rights Reserved.
+ *
+ * Contributor(s):
+ *
+ * Alternatively, the contents of this file may be used under the terms of
+ * either the GNU General Public License Version 2 or later (the "GPL"), or
+ * the GNU Lesser General Public License Version 2.1 or later (the "LGPL"),
+ * in which case the provisions of the GPL or the LGPL are applicable instead
+ * of those above. If you wish to allow use of your version of this file only
+ * under the terms of either the GPL or the LGPL, and not to allow others to
+ * use your version of this file under the terms of the MPL, indicate your
+ * decision by deleting the provisions above and replace them with the notice
+ * and other provisions required by the GPL or the LGPL. If you do not delete
+ * the provisions above, a recipient may use your version of this file under
+ * the terms of any one of the MPL, the GPL or the LGPL.
+ *
+ * ***** END LICENSE BLOCK ***** */
+
+
+#include "nsIDOMUIEvent.idl"
+
+/**
+ * The nsIDOMSimpleGestureEvent interface is the datatype for all
+ * Mozila-specific simple gesture events in the Document Object Model.
+ *
+ * The following events are generated:
+ *
+ * MozSwipeGesture - Generated when the user swipes their fingers
+ * across the input device.
+ *
+ * MozMagnifyGestureStart - Generated when the user begins the magnify
+ * ("pinch") gesture.  The "delta" value represents the initial
+ * movement.
+ *
+ * MozMagnifyGestureUpdate - Generated periodically while the user is
+ * continuing the magnify ("pinch") gesture.  The "delta" value
+ * represents the movement since the last MozMagnifyGestureStart or
+ * MozMagnifyGestureUpdate event.
+ *
+ * MozMagnifyGesture - Generated when the user has completed the
+ * magnify ("pinch") gesture.  If you only want to receive a single
+ * event when the magnify gesture is complete, you only need to hook
+ * this event and can safely ignore the MozMagnifyGestureStart and the
+ * MozMagnifyGestureUpdate events. The "delta" value is the cumulative
+ * amount represented by the user's gesture.
+ *
+ * MozRotateGestureStart - Generated when the user begins the rotation
+ * gesture.  The "delta" value represents the initial rotation.
+ *
+ * MozRotateGestureUpdate - Generated periodically while the user is
+ * continuing the rotation gesture.  The "delta" value represents the
+ * rotation since the last MozRotateGestureStart or
+ * MozRotateGestureUpdate event.
+ *
+ * MozRotateGesture - Generated when the user has completed the
+ * rotation gesture.  If you only want to receive a single event when
+ * the rotation gesture is complete, you only need to hook this event
+ * and can safely ignore the MozRotateGestureStart and the
+ * MozRotateGestureUpdate events.  The "delta" value is the cumulative
+ * amount of rotation represented by the user's gesture.
+ */
+
+[scriptable, uuid(20AB8E74-BF9B-4D1D-8A18-B5EE0F3C0A36)]
+interface nsIDOMSimpleGestureEvent : nsIDOMUIEvent
+{
+  /* Direction constants */
+  const unsigned long DIRECTION_UP = 1;
+  const unsigned long DIRECTION_DOWN = 2;
+  const unsigned long DIRECTION_LEFT = 4;
+  const unsigned long DIRECTION_RIGHT = 8;
+  
+  /* Direction of a gesture. Diagonals are indicated by OR'ing the
+   * applicable constants together.
+   *
+   * Swipes gestures may occur in any direction.
+   *
+   * Magnify gestures do not have a direction.
+   *
+   * Rotation gestures will be either DIRECTION_LEFT or
+   * DIRECTION_RIGHT (i.e., counter-clockwise and clockwise).
+   */
+  readonly attribute unsigned long direction;
+
+  /* Delta value for magnify and rotate gestures.
+   * 
+   * For rotation, the value is in degrees and is positive for
+   * clockwise rotation and negative for counterclockwise
+   * rotation. The "direction" attribute also denotes the direction of
+   * the rotation: clockwise is DIRECTION_RIGHT and counterclockwise
+   * is DIRECTION_LEFT.
+   *
+   * For magnification, the value will be positive for a "zoom in"
+   * (i.e, increased magnification) and negative for a "zoom out"
+   * (i.e., decreased magnification).  The particular units
+   * represented by the "delta" are currently implementation specific.
+   *
+   * XXX - The units for measuring magnification are currently
+   * unspecified because the units used by Mac OS X are currently
+   * undocumented.  The values are typically in the range of 0.0 to
+   * 100.0, but it is only safe currently to rely on the delta being
+   * positive or negative.
+   */
+  readonly attribute double delta;
+
+  /* Modifier keys that may have been pressed during the gesture. */
+  readonly attribute boolean altKey;
+  readonly attribute boolean ctrlKey;
+  readonly attribute boolean shiftKey;
+  readonly attribute boolean metaKey;
+
+  void initSimpleGestureEvent(in DOMString typeArg,
+                              in boolean canBubbleArg,
+                              in boolean cancelableArg,
+                              in nsIDOMAbstractView viewArg,
+                              in long detailArg,
+                              in unsigned long directionArg,
+                              in double deltaArg,
+                              in boolean altKeyArg,
+                              in boolean ctrlKeyArg,
+                              in boolean shiftKeyArg,
+                              in boolean metaKeyArg);
+};

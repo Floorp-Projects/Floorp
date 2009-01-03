@@ -3,6 +3,7 @@ ar
 as
 be
 bg
+bn-IN
 ca
 cs
 cy
@@ -15,6 +16,7 @@ es-AR
 es-ES
 et
 eu
+fa
 fi
 fr
 fy-NL
@@ -34,9 +36,12 @@ kn
 ko
 ku
 lt
+lv
 mk
+ml
 mn
 mr
+ms
 nb-NO
 nl
 nn-NO
@@ -49,6 +54,7 @@ ro
 ru
 si
 sk
+sl
 sq
 sr
 sv-SE
@@ -57,5 +63,6 @@ te
 th
 tr
 uk
+vi
 zh-CN
 zh-TW

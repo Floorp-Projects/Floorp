@@ -38,11 +38,6 @@ CORE_DEPTH = ../../..
 
 # DEFINES = -DTRACE
 
-PRIVATE_EXPORTS = \
-	ssl3prot.h \
-	sslimpl.h \
-	$(NULL)
-
 EXPORTS = \
 	ssl.h \
 	sslt.h \

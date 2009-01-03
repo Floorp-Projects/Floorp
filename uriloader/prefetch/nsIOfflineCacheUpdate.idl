@@ -43,8 +43,10 @@ interface nsIDOMNode;
 interface nsIDOMDocument;
 interface nsIDOMLoadStatus;
 interface nsIOfflineCacheUpdate;
+interface nsIPrincipal;
+interface nsIPrefBranch;
 
-[scriptable, uuid(0aa38757-999c-44d6-bdb4-7dd32634fa83)]
+[scriptable, uuid(a28abeaf-a0b4-4440-b2fe-bc78249710ea)]
 interface nsIOfflineCacheUpdateObserver : nsISupports {
   /**
    * There was an error updating the cache.
@@ -69,6 +71,14 @@ interface nsIOfflineCacheUpdateObserver : nsISupports {
    *        The nsIOfflineCacheUpdate being processed.
    */
   void noUpdate(in nsIOfflineCacheUpdate aUpdate);
+
+  /**
+   * The cache group is now obsolete.
+   *
+   * @param aUpdate
+   *        The nsIOfflineCacheUpdate being processed.
+   */
+  void obsolete(in nsIOfflineCacheUpdate aUpdate);
 
   /**
    * Starting to download resources
@@ -217,7 +227,7 @@ interface nsIOfflineCacheUpdate : nsISupports {
   void removeObserver(in nsIOfflineCacheUpdateObserver aObserver);
 };
 
-[scriptable, uuid(3abee04b-5bbb-4405-b659-35f780e38da0)]
+[scriptable, uuid(6fd2030f-7b00-4102-a0e3-d73078821eb1)]
 interface nsIOfflineCacheUpdateService : nsISupports {
     /**
      * Constants for the offline-app permission.
@@ -253,4 +263,32 @@ interface nsIOfflineCacheUpdateService : nsISupports {
     void scheduleOnDocumentStop(in nsIURI aManifestURI,
                                 in nsIURI aDocumentURI,
                                 in nsIDOMDocument aDocument);
+
+    /**
+     * Checks whether a principal should have access to the offline
+     * cache.
+     * @param aPrincipal
+     *        The principal to check.
+     * @param aPrefBranch
+     *        The pref branch to use to check the
+     *        offline-apps.allow_by_default pref.  If not specified,
+     *        the pref service will be used.
+     */
+    boolean offlineAppAllowed(in nsIPrincipal aPrincipal,
+                              in nsIPrefBranch aPrefBranch);
+
+    /**
+     * Checks whether a document at the given URI should have access
+     * to the offline cache.
+     * @param aURI
+     *        The URI to check
+     * @param aPrefBranch
+     *        The pref branch to use to check the
+     *        offline-apps.allow_by_default pref.  If not specified,
+     *        the pref service will be used.
+     */
+    boolean offlineAppAllowedForURI(in nsIURI aURI,
+                                    in nsIPrefBranch aPrefBranch);
 };
+
+

@@ -37,26 +37,11 @@
 #ifndef nsILineIterator_h___
 #define nsILineIterator_h___
 
-#include "nsISupports.h"
+#include "nscore.h"
+#include "nsCoord.h"
 
-/* a6cf90ff-15b3-11d2-932e-00805f8add32 */
-#define NS_ILINE_ITERATOR_IID \
- { 0xa6cf90ff, 0x15b3, 0x11d2,{0x93, 0x2e, 0x00, 0x80, 0x5f, 0x8a, 0xdd, 0x32}}
-
-/* {80AA3D7A-E0BF-4e18-8A82-2110397D7BC4}*/
-#define NS_ILINE_ITERATOR_NAV_IID \
- { 0x80aa3d7a, 0xe0bf, 0x4e18,{0x8a, 0x82, 0x21, 0x10, 0x39, 0x7d, 0x7b, 0xc4}}
-
-// Line iterator API.
-//
-// Lines are numbered from 0 to N, where 0 is the top line and N is
-// the bottom line.
-//
-// NOTE: while you can get this interface by doing a slezy hacky
-// QueryInterface on block frames, it isn't like a normal com
-// interface: it's not reflexive (you can't query back to the block
-// frame) and unlike other frames, it *IS* reference counted so don't
-// forget to NS_RELEASE it when you are done with it!
+class nsIFrame;
+struct nsRect;
 
 // Line Flags (see GetLine below)
 
@@ -67,17 +52,36 @@
 // This bit is set when the line ends in some sort of break.
 #define NS_LINE_FLAG_ENDS_IN_BREAK      0x4
 
-class nsILineIterator : public nsISupports {
+/**
+ * Line iterator API.
+ *
+ * Lines are numbered from 0 to N, where 0 is the top line and N is
+ * the bottom line.
+ *
+ * Obtain this interface from frames via nsIFrame::GetLineIterator.
+ * When you are finished using the iterator, call DisposeLineIterator()
+ * to destroy the iterator if appropriate.
+ */
+class nsILineIterator
+{
+protected:
+  ~nsILineIterator() { }
+
 public:
-  NS_DECLARE_STATIC_IID_ACCESSOR(NS_ILINE_ITERATOR_IID)
+  virtual void DisposeLineIterator() = 0;
 
-  // Return the number of lines in the block.
-  NS_IMETHOD GetNumLines(PRInt32* aResult) = 0;
+  /**
+   * The number of lines in the block
+   */
+  virtual PRInt32 GetNumLines() = 0;
 
-  // Return the prevailing direction for the line. aIsRightToLeft will
-  // be set to PR_TRUE if the CSS direction property for the block is
-  // "rtl", otherwise aIsRightToLeft will be set to PR_FALSE.
-  NS_IMETHOD GetDirection(PRBool* aIsRightToLeft) = 0;
+  /**
+   * The prevailing direction of lines.
+   *
+   * @return PR_TRUE if the CSS direction property for the block is
+   *         "rtl", otherwise PR_FALSE
+   */
+  virtual PRBool GetDirection() = 0;
 
   // Return structural information about a line. aFirstFrameOnLine is
   // the first frame on the line and aNumFramesOnLine is the number of
@@ -98,19 +102,20 @@ public:
                      nsRect& aLineBounds,
                      PRUint32* aLineFlags) = 0;
 
-  // Given a frame that's a child of the block, find which line its on
-  // and return that line index into aIndexResult. aIndexResult will
-  // be set to -1 if the frame cannot be found.
-  NS_IMETHOD FindLineContaining(nsIFrame* aFrame,
-                                PRInt32* aLineNumberResult) = 0;
+  /**
+   * Given a frame that's a child of the block, find which line its on
+   * and return that line index. Returns -1 if the frame cannot be found.
+   */
+  virtual PRInt32 FindLineContaining(nsIFrame* aFrame) = 0;
 
-  // Given a Y coordinate relative to the block that provided this
-  // line iterator, find the line that contains the Y
-  // coordinate. Returns -1 in aLineNumberResult if the Y coordinate
-  // is above the first line. Returns N (where N is the number of
-  // lines) if the Y coordinate is below the last line.
-  NS_IMETHOD FindLineAt(nscoord aY,
-                        PRInt32* aLineNumberResult) = 0;
+  /**
+   * Given a Y coordinate relative to the block that provided this
+   * line iterator, return the line that contains the Y
+   * coordinate. Returns -1 in aLineNumberResult if the Y coordinate
+   * is above the first line. Returns N (where N is the number of
+   * lines) if the Y coordinate is below the last line.
+   */
+  virtual PRInt32 FindLineAt(nscoord aY) = 0;
 
   // Given a line number and an X coordinate, find the frame on the
   // line that is nearest to the X coordinate. The
@@ -136,15 +141,33 @@ public:
 #endif
 };
 
-NS_DEFINE_STATIC_IID_ACCESSOR(nsILineIterator, NS_ILINE_ITERATOR_IID)
-
-//special line iterator for keyboard navigation
-class nsILineIteratorNavigator : public nsILineIterator {
+class nsAutoLineIterator
+{
 public:
-  NS_DECLARE_STATIC_IID_ACCESSOR(NS_ILINE_ITERATOR_NAV_IID)
-};
+  nsAutoLineIterator() : mRawPtr(nsnull) { }
+  nsAutoLineIterator(nsILineIterator *i) : mRawPtr(i) { }
 
-NS_DEFINE_STATIC_IID_ACCESSOR(nsILineIteratorNavigator,
-                              NS_ILINE_ITERATOR_NAV_IID)
+  ~nsAutoLineIterator() {
+    if (mRawPtr)
+      mRawPtr->DisposeLineIterator();
+  }
+
+  operator nsILineIterator*() { return mRawPtr; }
+  nsILineIterator* operator->() { return mRawPtr; }
+
+  nsILineIterator* operator=(nsILineIterator* i) {
+    if (i == mRawPtr)
+      return i;
+
+    if (mRawPtr)
+      mRawPtr->DisposeLineIterator();
+
+    mRawPtr = i;
+    return i;
+  }
+
+private:
+  nsILineIterator* mRawPtr;
+};
 
 #endif /* nsILineIterator_h___ */

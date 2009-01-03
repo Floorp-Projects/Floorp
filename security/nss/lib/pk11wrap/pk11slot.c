@@ -554,9 +554,8 @@ PK11_FindSlotsByNames(const char *dllName, const char* slotName,
                     (0==PORT_Strcmp(tmpSlot->token_name, tokenName)))) &&
                     ( (!slotName) || (tmpSlot->slot_name &&
                     (0==PORT_Strcmp(tmpSlot->slot_name, slotName)))) ) {
-                    PK11SlotInfo* slot = PK11_ReferenceSlot(tmpSlot);
-                    if (slot) {
-                        PK11_AddSlotToList(slotList, slot);
+                    if (tmpSlot) {
+                        PK11_AddSlotToList(slotList, tmpSlot);
                         slotcount++;
                     }
                 }
@@ -1342,12 +1341,12 @@ PK11_InitSlot(SECMODModule *mod,CK_SLOT_ID slotID,PK11SlotInfo *slot)
 	    slot->disabled = PR_TRUE;
 	    slot->reason = PK11_DIS_COULD_NOT_INIT_TOKEN;
 	}
-    }
-    if (pk11_isRootSlot(slot)) {
-	if (!slot->hasRootCerts) {
-	    slot->module->trustOrder = 100;
+	if (rv == SECSuccess && pk11_isRootSlot(slot)) {
+	    if (!slot->hasRootCerts) {
+		slot->module->trustOrder = 100;
+	    }
+	    slot->hasRootCerts= PR_TRUE;
 	}
-	slot->hasRootCerts= PR_TRUE;
     }
 }
 

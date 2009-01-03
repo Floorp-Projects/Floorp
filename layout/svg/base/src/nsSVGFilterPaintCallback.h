@@ -46,19 +46,17 @@ class nsSVGRenderState;
 class nsSVGFilterPaintCallback {
 public:
   /**
-   * Paint the frame contents. aTransform should be applied to aContext
-   * (either via SetOverrideCTM or by applying the transform to aContext
-   * directly).
+   * Paint the frame contents.
    * SVG frames will have had matrix propagation set to false already.
-   * frames have to do their own thing.
+   * Non-SVG frames have to do their own thing.
    * The caller will do a Save()/Restore() as necessary so feel free
    * to mess with context state.
+   * The context will be configured to use the "user space" coordinate
+   * system.
    * @param aDirtyRect the dirty rect *in user space pixels*
-   * @param aTransform the user-space-to-filter-space transform to apply.
-   * May be null if the identity matrix is requested.
    */
   virtual void Paint(nsSVGRenderState *aContext, nsIFrame *aTarget,
-                     const nsIntRect *aDirtyRect, nsIDOMSVGMatrix *aTransform) = 0;
+                     const nsIntRect *aDirtyRect) = 0;
 };
 
 #endif

@@ -190,6 +190,10 @@ nsDirIndexParser::ParseFormat(const char* aFormatStr) {
       ++pos;
     
     ++num;
+    // There are a maximum of six allowed header fields (doubled plus
+    // terminator, just in case) -- Bug 443299
+    if (num > (2 * NS_ARRAY_LENGTH(gFieldTable)))
+      return NS_ERROR_UNEXPECTED;
 
     if (! *pos)
       break;
@@ -200,6 +204,9 @@ nsDirIndexParser::ParseFormat(const char* aFormatStr) {
   } while (*pos);
 
   mFormat = new int[num+1];
+  // Prevent NULL Deref - Bug 443299 
+  if (mFormat == nsnull)
+    return NS_ERROR_OUT_OF_MEMORY;
   mFormat[num] = -1;
   
   int formatNum=0;

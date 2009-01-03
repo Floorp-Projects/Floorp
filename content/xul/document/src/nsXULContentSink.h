@@ -48,6 +48,7 @@
 #include "nsNodeInfoManager.h"
 #include "nsVoidArray.h"
 #include "nsWeakPtr.h"
+#include "nsXULElement.h"
 
 class nsIDocument;
 class nsIScriptSecurityManager;
@@ -68,7 +69,7 @@ public:
     NS_DECL_NSIEXPATSINK
 
     // nsIContentSink
-    NS_IMETHOD WillTokenize(void) { return NS_OK; }
+    NS_IMETHOD WillParse(void) { return NS_OK; }
     NS_IMETHOD WillBuildModel(void);
     NS_IMETHOD DidBuildModel(void);
     NS_IMETHOD WillInterrupt(void);
@@ -143,11 +144,12 @@ protected:
     class ContextStack {
     protected:
         struct Entry {
-            nsXULPrototypeNode* mNode;
+            nsRefPtr<nsXULPrototypeNode> mNode;
             // a LOT of nodes have children; preallocate for 8
-            nsAutoVoidArray     mChildren;
+            nsPrototypeArray    mChildren;
             State               mState;
             Entry*              mNext;
+            Entry() : mChildren(8) {}
         };
 
         Entry* mTop;
@@ -162,8 +164,8 @@ protected:
         nsresult Push(nsXULPrototypeNode* aNode, State aState);
         nsresult Pop(State* aState);
 
-        nsresult GetTopNode(nsXULPrototypeNode** aNode);
-        nsresult GetTopChildren(nsVoidArray** aChildren);
+        nsresult GetTopNode(nsRefPtr<nsXULPrototypeNode>& aNode);
+        nsresult GetTopChildren(nsPrototypeArray** aChildren);
         nsresult GetTopNodeScriptType(PRUint32 *aScriptType);
 
         void Clear();

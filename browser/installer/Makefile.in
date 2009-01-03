@@ -49,6 +49,7 @@ NO_PKG_FILES = \
 	regchrome* \
 	regxpcom* \
 	xpcshell* \
+	js \
 	xpidl* \
 	xpt_dump* \
 	xpt_link* \
@@ -88,13 +89,14 @@ MOZ_PKG_MANIFEST = packages-static
 
 $(MOZ_PKG_MANIFEST): $(MOZ_PKG_MANIFEST_P)
 	$(PERL) $(topsrcdir)/config/preprocessor.pl $(DEFINES) $(ACDEFINES) $< > $@
+
+GARBAGE += $(MOZ_PKG_MANIFEST)
 endif
 
 ifneq (,$(filter mac cocoa,$(MOZ_WIDGET_TOOLKIT)))
 MOZ_PKG_MAC_DSSTORE=branding/dsstore
 MOZ_PKG_MAC_BACKGROUND=branding/background.png
 MOZ_PKG_MAC_ICON=branding/disk.icns
-MOZ_PKG_MAC_RSRC=branding/license.r
 MOZ_PKG_MAC_EXTRA=--symlink "/Applications:/ "
 endif
 

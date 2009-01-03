@@ -1,0 +1,9 @@
+product=fennec
+branch=1.9.1
+profilename=fennec-1.9.1-test-profile
+profiledirectory=/tmp/fennec-1.9.1-test-profile
+executablepath=${BUILDDIR}/1.9.1-test/mozilla/fennec-debug/mobile/dist
+userpreferences=${TEST_DIR}/prefs/test-user.js
+extensiondir=${TEST_DIR}/xpi
+buildtype=debug
+TEST_MOZILLA_HG=http://hg.mozilla.org/mozilla-central

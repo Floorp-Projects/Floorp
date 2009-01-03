@@ -402,17 +402,14 @@ nsresult nsDocumentOpenInfo::DispatchContent(nsIRequest *request, nsISupports * 
       // XXXbz this code is duplicated in GetFilenameAndExtensionFromChannel in
       // nsExternalHelperAppService.  Factor it out!
       if (NS_FAILED(rv) || 
-          (// Some broken sites just send
-           // Content-Disposition: ; filename="file"
-           // screen those out here.
-           !dispToken.IsEmpty() &&
+          (!dispToken.IsEmpty() &&
            !dispToken.LowerCaseEqualsLiteral("inline") &&
-          // Broken sites just send
-          // Content-Disposition: filename="file"
-          // without a disposition token... screen those out.
-           !dispToken.EqualsIgnoreCase("filename", 8)) &&
-          // Also in use is Content-Disposition: name="file"
-           !dispToken.EqualsIgnoreCase("name", 4))
+           // Broken sites just send
+           // Content-Disposition: filename="file"
+           // without a disposition token... screen those out.
+           !dispToken.EqualsIgnoreCase("filename", 8) &&
+           // Also in use is Content-Disposition: name="file"
+           !dispToken.EqualsIgnoreCase("name", 4)))
         // We have a content-disposition of "attachment" or unknown
         forceExternalHandling = PR_TRUE;
     }

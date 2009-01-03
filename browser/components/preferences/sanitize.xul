@@ -39,6 +39,7 @@
 # ***** END LICENSE BLOCK *****
 
 <?xml-stylesheet href="chrome://global/skin/"?>
+<?xml-stylesheet href="chrome://browser/skin/preferences/preferences.css" type="text/css"?> 
 
 <!DOCTYPE dialog [
   <!ENTITY % brandDTD SYSTEM "chrome://branding/locale/brand.dtd">
@@ -51,7 +52,7 @@
             xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
             dlgbuttons="accept,cancel,help"
             ondialoghelp="openPrefsHelp()"
-            title="&sanitizeDialog.title;">
+            title="&sanitizePrefs.title;">
 
   <script type="application/javascript" src="chrome://browser/content/utilityOverlay.js"/>
 
@@ -69,32 +70,45 @@
       <preference id="privacy.item.sessions"              name="privacy.item.sessions"              type="bool"/>
     </preferences>
 
-    <description>&clearDataSettings.label;</description>
+    <description>&clearDataSettings2.label;</description>
 
-    <checkbox label="&itemHistory.label;"
-              accesskey="&itemHistory.accesskey;"
-              preference="privacy.item.history"/>
-    <checkbox label="&itemDownloads.label;"
-              accesskey="&itemDownloads.accesskey;"
-              preference="privacy.item.downloads"/>
-    <checkbox label="&itemFormSearchHistory.label;"
-              accesskey="&itemFormSearchHistory.accesskey;"
-              preference="privacy.item.formdata"/>
-    <checkbox label="&itemCache.label;"
-              accesskey="&itemCache.accesskey;"
-              preference="privacy.item.cache"/>
-    <checkbox label="&itemCookies.label;"
-              accesskey="&itemCookies.accesskey;"
-              preference="privacy.item.cookies"/>
-    <checkbox label="&itemOfflineApps.label;"
-	      accesskey="&itemOfflineApps.accesskey;"
-	      preference="privacy.item.offlineApps"/>
-    <checkbox label="&itemPasswords.label;"
-              accesskey="&itemPasswords.accesskey;"
-              preference="privacy.item.passwords"/>
-    <checkbox label="&itemSessions.label;"
-              accesskey="&itemSessions.accesskey;"
-              preference="privacy.item.sessions"/>
-
+    <groupbox orient="horizontal">
+      <caption label="&historySection.label;"/>
+      <vbox style="width: &column.width;">
+        <checkbox label="&itemVisitedPages.label;"
+                  accesskey="&itemVisitedPages.accesskey;"
+                  preference="privacy.item.history"/>
+        <checkbox label="&itemDownloadList.label;"
+                  accesskey="&itemDownloadList.accesskey;"
+                  preference="privacy.item.downloads"/>
+        <checkbox label="&itemFormSearchEntries.label;"
+                  accesskey="&itemFormSearchEntries.accesskey;"
+                  preference="privacy.item.formdata"/>
+      </vbox>
+      <vbox style="width: &column.width;">
+        <checkbox label="&itemCookies.label;"
+                  accesskey="&itemCookies.accesskey;"
+                  preference="privacy.item.cookies"/>
+        <checkbox label="&itemActiveLogins.label;"
+                  accesskey="&itemActiveLogins.accesskey;"
+                  preference="privacy.item.sessions"/>
+        <checkbox label="&itemWebCache.label;"
+                  accesskey="&itemWebCache.accesskey;"
+                  preference="privacy.item.cache"/>
+      </vbox>
+    </groupbox>
+    <groupbox orient="horizontal">
+      <caption label="&dataSection.label;"/>
+      <vbox style="width: &column.width;">
+        <checkbox label="&itemPasswords.label;"
+                  accesskey="&itemPasswords.accesskey;"
+                  preference="privacy.item.passwords"/>
+      </vbox>
+      <vbox style="width: &column.width;">
+        <checkbox label="&itemOfflineApps.label;"
+                  accesskey="&itemOfflineApps.accesskey;"
+                  preference="privacy.item.offlineApps"/>
+      </vbox>
+    </groupbox>
   </prefpane>
 </prefwindow>

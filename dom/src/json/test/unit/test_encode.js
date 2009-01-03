@@ -1,3 +1,4 @@
+
 // returns a list of [string, object] pairs to test encoding
 function getTestPairs() {
   var testPairs = [
@@ -18,7 +19,10 @@ function getTestPairs() {
     ['{"x":{"a":"b","c":{"y":"z"},"f":"g"}}',
      {"x":{"a":"b","c":{"y":"z"},"f":"g"}}],
     ['{"x":[1,{"y":"z"},3]}', {"x":[1,{"y":"z"},3]}],
-    //['{"0":"h","1":"m","2":"m"}', new String("hmm")],
+    ['["hmm"]', [new String("hmm")]],
+    ['[true]', [new Boolean(true)]],
+    ['[42]', [new Number(42)]],
+    ['["1978-09-13T12:24:34.023Z"]', [new Date(Date.UTC(1978, 8, 13, 12, 24, 34, 23))]],
     ['[1,null,3]',[1,,3]],
     [null, function test(){}],
     [null, dump],
@@ -110,7 +114,7 @@ function testStringEncode() {
   var pairs = getTestPairs();
   for each(pair in pairs) {
     var nativeResult = nativeJSON.encode(pair[1]);
-    var crockfordResult = JSON.stringify(pair[1]);
+    var crockfordResult = crockfordJSON.stringify(pair[1]);
     do_check_eq(pair[0], nativeResult);
     
     // Don't follow json2.js handling of non-objects

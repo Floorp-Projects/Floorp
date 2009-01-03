@@ -204,10 +204,10 @@ private:
     // NOTE: these members are only accessed on the socket transport thread
     //-------------------------------------------------------------------------
 
-    static PRIntn PR_CALLBACK ProcessOneTransactionCB(nsHashKey *, void *, void *);
-    static PRIntn PR_CALLBACK PurgeOneIdleConnectionCB(nsHashKey *, void *, void *);
-    static PRIntn PR_CALLBACK PruneDeadConnectionsCB(nsHashKey *, void *, void *);
-    static PRIntn PR_CALLBACK ShutdownPassCB(nsHashKey *, void *, void *);
+    static PRIntn ProcessOneTransactionCB(nsHashKey *, void *, void *);
+    static PRIntn PurgeOneIdleConnectionCB(nsHashKey *, void *, void *);
+    static PRIntn PruneDeadConnectionsCB(nsHashKey *, void *, void *);
+    static PRIntn ShutdownPassCB(nsHashKey *, void *, void *);
 
     PRBool   ProcessPendingQForEntry(nsConnectionEntry *);
     PRBool   AtActiveConnectionLimit(nsConnectionEntry *, PRUint8 caps);

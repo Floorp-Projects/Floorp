@@ -37,6 +37,7 @@
 
 #include "nsISupports.idl"
 interface nsIFile;
+interface mozIStorageConnection;
 
 /**
  * The nsIFormHistory object is a service which holds a set of name/value
@@ -49,7 +50,7 @@ interface nsIFile;
  * autocomplete matches.
  */
 
-[scriptable, uuid(a61f0a62-ae0a-4382-b474-d259442ca80c)]
+[scriptable, uuid(5d7d84d1-9798-4016-bf61-a32acf09b29d)]
 interface nsIFormHistory2 : nsISupports
 {
   /**
@@ -86,6 +87,21 @@ interface nsIFormHistory2 : nsISupports
    * Gets whether a name and value pair exists in the form history.
    */
   boolean entryExists(in AString name, in AString value);
+
+  /**
+   * Removes entries that were created between the specified times.
+   *
+   * @param aBeginTime
+   *        The beginning of the timeframe, in microseconds
+   * @param aEndTime
+   *        The end of the timeframe, in microseconds
+   */
+  void removeEntriesByTimeframe(in long long aBeginTime, in long long aEndTime);
+
+  /**
+   * Returns the underlying DB connection the form history module is using.
+   */
+  readonly attribute mozIStorageConnection DBConnection;
 };
 
 /**

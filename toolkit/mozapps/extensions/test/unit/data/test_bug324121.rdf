@@ -1,0 +1,91 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<RDF:RDF xmlns:RDF="http://www.w3.org/1999/02/22-rdf-syntax-ns#"
+         xmlns:em="http://www.mozilla.org/2004/em-rdf#">
+
+  <RDF:Description about="urn:mozilla:extension:bug324121_2@tests.mozilla.org">
+    <em:updates>
+      <RDF:Seq>
+        <!-- app id compatible update available -->
+        <RDF:li>
+          <RDF:Description>
+            <em:version>2</em:version>
+            <em:targetApplication>
+              <RDF:Description>
+                <em:id>xpcshell@tests.mozilla.org</em:id>
+                <em:minVersion>3</em:minVersion>
+                <em:maxVersion>3</em:maxVersion>
+                <em:updateLink>http://localhost:4444/broken.xpi</em:updateLink>
+              </RDF:Description>
+            </em:targetApplication>
+          </RDF:Description>
+        </RDF:li>
+      </RDF:Seq>
+    </em:updates>
+  </RDF:Description>
+
+  <RDF:Description about="urn:mozilla:extension:bug324121_3@tests.mozilla.org">
+    <em:updates>
+      <RDF:Seq>
+        <!-- app id incompatible update available -->
+        <RDF:li>
+          <RDF:Description>
+            <em:version>2</em:version>
+            <em:targetApplication>
+              <RDF:Description>
+                <em:id>xpcshell@tests.mozilla.org</em:id>
+                <em:minVersion>2</em:minVersion>
+                <em:maxVersion>2</em:maxVersion>
+                <em:updateLink>http://localhost:4444/broken.xpi</em:updateLink>
+              </RDF:Description>
+            </em:targetApplication>
+          </RDF:Description>
+        </RDF:li>
+      </RDF:Seq>
+    </em:updates>
+  </RDF:Description>
+
+  <RDF:Description about="urn:mozilla:extension:bug324121_6@tests.mozilla.org">
+    <em:updates>
+      <RDF:Seq>
+        <!-- toolkit id compatible update available -->
+	<RDF:li>
+          <RDF:Description>
+            <em:version>2</em:version>
+            <em:targetApplication>
+              <RDF:Description>
+                <em:id>toolkit@mozilla.org</em:id>
+                <em:minVersion>3</em:minVersion>
+                <em:maxVersion>3</em:maxVersion>
+                <em:updateLink>http://localhost:4444/broken.xpi</em:updateLink>
+              </RDF:Description>
+            </em:targetApplication>
+          </RDF:Description>
+        </RDF:li>
+      </RDF:Seq>
+    </em:updates>
+  </RDF:Description>
+
+  <RDF:Description about="urn:mozilla:extension:bug324121_7@tests.mozilla.org">
+    <em:updates>
+      <RDF:Seq>
+        <!-- toolkit id incompatible update available -->
+        <RDF:li>
+          <RDF:Description>
+            <em:version>2</em:version>
+            <em:targetApplication>
+              <RDF:Description>
+                <em:id>toolkit@mozilla.org</em:id>
+                <em:minVersion>2</em:minVersion>
+                <em:maxVersion>2</em:maxVersion>
+                <em:updateLink>http://localhost:4444/broken.xpi</em:updateLink>
+              </RDF:Description>
+            </em:targetApplication>
+          </RDF:Description>
+        </RDF:li>
+      </RDF:Seq>
+    </em:updates>
+  </RDF:Description>
+
+</RDF:RDF>
+

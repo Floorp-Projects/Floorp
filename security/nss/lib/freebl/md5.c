@@ -222,7 +222,7 @@ struct MD5ContextStr {
 SECStatus 
 MD5_Hash(unsigned char *dest, const char *src)
 {
-	return MD5_HashBuf(dest, (unsigned char *)src, PL_strlen(src));
+	return MD5_HashBuf(dest, (const unsigned char *)src, PORT_Strlen(src));
 }
 
 SECStatus 

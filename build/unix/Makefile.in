@@ -44,7 +44,6 @@ VPATH		= @srcdir@
 include $(DEPTH)/config/autoconf.mk
 
 MODULE       = build
-PACKAGE_FILE = unix.pkg
 
 include $(topsrcdir)/config/rules.mk
 

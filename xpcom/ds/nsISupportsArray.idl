@@ -68,7 +68,7 @@ class nsISupportsArray;
 typedef PRBool (*nsISupportsArrayEnumFunc)(nsISupports* aElement, void *aData);
  
 NS_COM nsresult
-NS_NewArrayEnumerator(nsISimpleEnumerator* *result,
+NS_NewArrayEnumerator(nsISimpleEnumerator* *result NS_OUTPARAM,
                       nsISupportsArray* array);
 %}
 

@@ -1,0 +1,16 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <script>
+      function change() {
+        return "<html><body>change</body></html>";
+      }
+      function change2() {
+        return "<html><body>change2</body></html>";
+      }
+    </script>
+  </head>
+  <body>
+    <iframe src="javascript:parent.change()"></iframe>
+  </body>
+</html>

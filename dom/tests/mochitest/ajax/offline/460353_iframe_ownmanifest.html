@@ -1,0 +1,37 @@
+<html xmlns="http://www.w3.org/1999/xhtml" manifest="updating.cacheManifest">
+<head>
+<title>Bug 460353, iframe with a different manifest reference</title>
+
+<script type="text/javascript">
+
+applicationCache.onerror = function() {
+  parent.frameOnUpdate("diff", false);
+}
+
+applicationCache.oncached = function() {
+  parent.frameOnUpdate("diff", true, applicationCache.status);
+
+  /* This code tries to figure out what cache is really
+     associated to this document, but hangs on getter2.getInterface
+     from for now unknown reasons. Commenting this out.
+
+  netscape.security.PrivilegeManager.enablePrivilege("UniversalXPConnect");
+
+  var Ci = Components.interfaces;
+
+  var getter1 = window.QueryInterface(Ci.nsIInterfaceRequestor);
+  var webnav = getter1.getInterface(Ci.nsIWebNavigation);
+  var getter2 = webnav.QueryInterface(Ci.nsIInterfaceRequestor);
+  var cacheCont = getter2.getInterface(Ci.nsIApplicationCacheContainer);
+  var cache = cacheCont.applicationCache;
+  dump(cache.groupID);
+  */
+}
+
+</script>
+
+</head>
+<body onload="parent.frameOnLoad('diff', applicationCache.status);">
+  This is an iframe with a different manifest reference
+</body>
+</html>

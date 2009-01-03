@@ -1,0 +1,53 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+  <title>Media test: seek test 4</title>
+  <script type="text/javascript" src="/MochiKit/MochiKit.js"></script>
+  <script type="text/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
+</head>
+<body>
+<video id='v'
+       src='seek.ogg'
+       onloadedmetadata='return startTest();'
+       onseeking='return seekStarted();'
+       onseeked='return seekEnded();'></video>
+<pre id="test">
+<script class="testbody" type="text/javascript">
+// Test seeking works if current time is set but video is not played.
+var startPassed = false;
+var completed = false;
+
+function startTest() {
+  if (completed)
+    return false;
+
+  var v = document.getElementById('v');
+  v.currentTime=2;
+  return false;
+}
+
+function seekStarted() {
+  if (completed)
+    return false;
+
+  startPassed = true;
+  return false;
+}
+
+function seekEnded() {
+  if (completed)
+    return false;
+
+  var t = document.getElementById('v').currentTime;
+  ok(t >= 2 && t<= 3, "Video currentTime should be around 2: " + t);
+  completed = true;
+  SimpleTest.finish();
+  return false;
+}
+
+SimpleTest.waitForExplicitFinish();
+</script>
+</pre>
+</body>
+</html>

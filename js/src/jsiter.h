@@ -72,7 +72,7 @@ JS_BEGIN_EXTERN_C
 extern JS_FRIEND_API(JSBool)
 js_ValueToIterator(JSContext *cx, uintN flags, jsval *vp);
 
-extern JS_FRIEND_API(bool) JS_FASTCALL
+extern JS_FRIEND_API(JSBool) JS_FASTCALL
 js_CloseIterator(JSContext *cx, jsval v);
 
 /*
@@ -124,6 +124,13 @@ js_NewGenerator(JSContext *cx, JSStackFrame *fp);
 extern JSClass          js_GeneratorClass;
 extern JSClass          js_IteratorClass;
 extern JSClass          js_StopIterationClass;
+
+static inline bool
+js_ValueIsStopIteration(jsval v)
+{
+    return !JSVAL_IS_PRIMITIVE(v) &&
+           STOBJ_GET_CLASS(JSVAL_TO_OBJECT(v)) == &js_StopIterationClass;
+}
 
 extern JSObject *
 js_InitIteratorClasses(JSContext *cx, JSObject *obj);

@@ -47,9 +47,6 @@
 #ifndef __nsContentPolicyUtils_h__
 #define __nsContentPolicyUtils_h__
 
-// for PR_LOGGING
-#include "prlog.h"
-
 #include "nsIContentPolicy.h"
 #include "nsIServiceManager.h"
 #include "nsIContent.h"
@@ -140,6 +137,7 @@ NS_CP_ContentTypeName(PRUint32 contentType)
     CASE_RETURN( TYPE_XMLHTTPREQUEST    );
     CASE_RETURN( TYPE_OBJECT_SUBREQUEST );
     CASE_RETURN( TYPE_DTD               );
+    CASE_RETURN( TYPE_FONT              );
    default:
     return "<Unknown Type>";
   }
@@ -288,6 +286,10 @@ NS_CP_GetDocShellFromContext(nsISupports *aContext)
         }
 
         if (doc) {
+            if (doc->GetDisplayDocument()) {
+                doc = doc->GetDisplayDocument();
+            }
+            
             window = doc->GetWindow();
         }
     }

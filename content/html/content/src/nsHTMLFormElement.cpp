@@ -88,6 +88,7 @@
 #include "nsEventDispatcher.h"
 
 #include "mozAutoDocUpdate.h"
+#include "nsIHTMLCollection.h"
 
 static const int NS_FORM_CONTROL_LIST_HASHTABLE_SIZE = 16;
 
@@ -169,14 +170,13 @@ public:
   NS_IMETHOD AddElementToTable(nsIFormControl* aChild,
                                const nsAString& aName);
   NS_IMETHOD GetElementAt(PRInt32 aIndex, nsIFormControl** aElement) const;
-  NS_IMETHOD GetElementCount(PRUint32* aCount) const;
+  NS_IMETHOD_(PRUint32) GetElementCount() const;
   NS_IMETHOD RemoveElement(nsIFormControl* aElement,
                            PRBool aNotify);
   NS_IMETHOD RemoveElementFromTable(nsIFormControl* aElement,
                                     const nsAString& aName);
-  NS_IMETHOD ResolveName(const nsAString& aName,
-                         nsISupports** aReturn);
-  NS_IMETHOD IndexOfControl(nsIFormControl* aControl, PRInt32* aIndex);
+  NS_IMETHOD_(already_AddRefed<nsISupports>) ResolveName(const nsAString& aName);
+  NS_IMETHOD_(PRInt32) IndexOfControl(nsIFormControl* aControl);
   NS_IMETHOD OnSubmitClickBegin();
   NS_IMETHOD OnSubmitClickEnd();
   NS_IMETHOD FlushPendingSubmission();
@@ -294,8 +294,7 @@ protected:
   /**
    * Just like ResolveName(), but takes an arg for whether to flush
    */
-  nsresult DoResolveName(const nsAString& aName, PRBool aFlushContent,
-                         nsISupports** aReturn);
+  already_AddRefed<nsISupports> DoResolveName(const nsAString& aName, PRBool aFlushContent);
 
   //
   // Data members
@@ -350,7 +349,7 @@ PRBool nsHTMLFormElement::gPasswordManagerInitialized = PR_FALSE;
 
 // nsFormControlList
 class nsFormControlList : public nsIDOMNSHTMLFormControlList,
-                          public nsIDOMHTMLCollection
+                          public nsIHTMLCollection
 {
 public:
   nsFormControlList(nsHTMLFormElement* aForm);
@@ -368,6 +367,21 @@ public:
   // nsIDOMNSHTMLFormControlList interface
   NS_DECL_NSIDOMNSHTMLFORMCONTROLLIST
 
+  virtual nsISupports* GetNodeAt(PRUint32 aIndex, nsresult* aResult)
+  {
+    FlushPendingNotifications();
+
+    *aResult = NS_OK;
+
+    return mElements.SafeElementAt(aIndex, nsnull);
+  }
+  virtual nsISupports* GetNamedItem(const nsAString& aName, nsresult* aResult)
+  {
+    *aResult = NS_OK;
+
+    return NamedItemInternal(aName, PR_TRUE);
+  }
+
   nsresult AddElementToTable(nsIFormControl* aChild,
                              const nsAString& aName);
   nsresult RemoveElementFromTable(nsIFormControl* aChild,
@@ -375,8 +389,7 @@ public:
   nsresult IndexOfControl(nsIFormControl* aControl,
                           PRInt32* aIndex);
 
-  void NamedItemInternal(const nsAString& aName, PRBool aFlushContent,
-                         nsISupports **aResult);
+  nsISupports* NamedItemInternal(const nsAString& aName, PRBool aFlushContent);
   
   /**
    * Create a sorted list of form control elements. This list is sorted
@@ -400,8 +413,7 @@ public:
 
   nsTArray<nsIFormControl*> mNotInElements; // Holds WEAK references
 
-  NS_DECL_CYCLE_COLLECTION_CLASS_AMBIGUOUS(nsFormControlList,
-                                           nsIDOMHTMLCollection)
+  NS_DECL_CYCLE_COLLECTION_CLASS_AMBIGUOUS(nsFormControlList, nsIHTMLCollection)
 
 protected:
   // Drop all our references to the form elements
@@ -529,7 +541,7 @@ nsHTMLFormElement::Init()
 
 // nsISupports
 
-PR_STATIC_CALLBACK(PLDHashOperator)
+static PLDHashOperator
 ElementTraverser(const nsAString& key, nsIDOMHTMLInputElement* element,
                  void* userArg)
 {
@@ -553,14 +565,15 @@ NS_IMPL_RELEASE_INHERITED(nsHTMLFormElement, nsGenericElement)
 
 
 // QueryInterface implementation for nsHTMLFormElement
-NS_HTML_CONTENT_CC_INTERFACE_TABLE_HEAD(nsHTMLFormElement,
-                                        nsGenericHTMLElement)
-  NS_INTERFACE_TABLE_INHERITED5(nsHTMLFormElement,
-                                nsIDOMHTMLFormElement,
-                                nsIDOMNSHTMLFormElement,
-                                nsIForm,
-                                nsIWebProgressListener,
-                                nsIRadioGroupContainer)
+NS_INTERFACE_TABLE_HEAD_CYCLE_COLLECTION_INHERITED(nsHTMLFormElement)
+  NS_HTML_CONTENT_INTERFACE_TABLE5(nsHTMLFormElement,
+                                   nsIDOMHTMLFormElement,
+                                   nsIDOMNSHTMLFormElement,
+                                   nsIForm,
+                                   nsIWebProgressListener,
+                                   nsIRadioGroupContainer)
+  NS_HTML_CONTENT_INTERFACE_TABLE_TO_MAP_SEGUE(nsHTMLFormElement,
+                                               nsGenericHTMLElement)
 NS_HTML_CONTENT_INTERFACE_TABLE_TAIL_CLASSINFO(HTMLFormElement)
 
 
@@ -808,6 +821,7 @@ nsHTMLFormElement::UnbindFromTree(PRBool aDeep, PRBool aNullParent)
 nsresult
 nsHTMLFormElement::PreHandleEvent(nsEventChainPreVisitor& aVisitor)
 {
+  aVisitor.mWantsWillHandleEvent = PR_TRUE;
   if (aVisitor.mEvent->originalTarget == static_cast<nsIContent*>(this)) {
     PRUint32 msg = aVisitor.mEvent->message;
     if (msg == NS_FORM_SUBMIT) {
@@ -925,8 +939,7 @@ nsresult
 nsHTMLFormElement::DoReset()
 {
   // JBK walk the elements[] array instead of form frame controls - bug 34297
-  PRUint32 numElements;
-  GetElementCount(&numElements);
+  PRUint32 numElements = GetElementCount();
   for (PRUint32 elementX = 0; (elementX < numElements); elementX++) {
     nsCOMPtr<nsIFormControl> controlNode;
     GetElementAt(elementX, getter_AddRefs(controlNode));
@@ -1218,11 +1231,12 @@ nsHTMLFormElement::WalkFormElements(nsIFormSubmission* aFormSubmission,
 
 // nsIForm
 
-NS_IMETHODIMP
-nsHTMLFormElement::GetElementCount(PRUint32* aCount) const 
+NS_IMETHODIMP_(PRUint32)
+nsHTMLFormElement::GetElementCount() const 
 {
-  mControls->GetLength(aCount); 
-  return NS_OK;
+  PRUint32 count = nsnull;
+  mControls->GetLength(&count); 
+  return count;
 }
 
 NS_IMETHODIMP 
@@ -1461,7 +1475,7 @@ nsHTMLFormElement::RemoveElement(nsIFormControl* aChild,
   // Find the index of the child. This will be used later if necessary
   // to find the default submit.
   PRUint32 index = controls.IndexOf(aChild);
-  NS_ASSERTION(index != controls.NoIndex, "Child not in controls");
+  NS_ENSURE_STATE(index != controls.NoIndex);
 
   controls.RemoveElementAt(index);
 
@@ -1529,20 +1543,19 @@ nsHTMLFormElement::RemoveElementFromTable(nsIFormControl* aElement,
   return mControls->RemoveElementFromTable(aElement, aName);
 }
 
-NS_IMETHODIMP
-nsHTMLFormElement::ResolveName(const nsAString& aName,
-                               nsISupports **aResult)
+NS_IMETHODIMP_(already_AddRefed<nsISupports>)
+nsHTMLFormElement::ResolveName(const nsAString& aName)
 {
-  return DoResolveName(aName, PR_TRUE, aResult);
+  return DoResolveName(aName, PR_TRUE);
 }
 
-nsresult
+already_AddRefed<nsISupports>
 nsHTMLFormElement::DoResolveName(const nsAString& aName,
-                                 PRBool aFlushContent,
-                                 nsISupports **aResult)
+                                 PRBool aFlushContent)
 {
-  mControls->NamedItemInternal(aName, aFlushContent, aResult);
-  return NS_OK;
+  nsISupports *result;
+  NS_IF_ADDREF(result = mControls->NamedItemInternal(aName, aFlushContent));
+  return result;
 }
 
 NS_IMETHODIMP
@@ -1809,10 +1822,11 @@ nsHTMLFormElement::OnSecurityChange(nsIWebProgress* aWebProgress,
   return NS_OK;
 }
  
-NS_IMETHODIMP
-nsHTMLFormElement::IndexOfControl(nsIFormControl* aControl, PRInt32* aIndex)
+NS_IMETHODIMP_(PRInt32)
+nsHTMLFormElement::IndexOfControl(nsIFormControl* aControl)
 {
-  return mControls->IndexOfControl(aControl, aIndex);
+  PRInt32 index = nsnull;
+  return mControls->IndexOfControl(aControl, &index) == NS_OK ? index : nsnull;
 }
 
 NS_IMETHODIMP
@@ -1849,8 +1863,8 @@ nsHTMLFormElement::GetPositionInGroup(nsIDOMHTMLInputElement *aRadio,
   }
 
   nsCOMPtr<nsISupports> itemWithName;
-  nsresult rv = ResolveName(name, getter_AddRefs(itemWithName));
-  NS_ENSURE_SUCCESS(rv, rv);
+  itemWithName = ResolveName(name);
+  NS_ENSURE_TRUE(itemWithName, NS_ERROR_FAILURE);
   nsCOMPtr<nsIDOMNodeList> radioNodeList(do_QueryInterface(itemWithName));
 
   // XXX If ResolveName could return an nsContentList instead then we 
@@ -1891,8 +1905,7 @@ nsHTMLFormElement::GetNextRadioButton(const nsAString& aName,
     mSelectedRadioButtons.Get(aName, getter_AddRefs(currentRadio));
   }
 
-  nsCOMPtr<nsISupports> itemWithName;
-  ResolveName(aName, getter_AddRefs(itemWithName));
+  nsCOMPtr<nsISupports> itemWithName = ResolveName(aName);
   nsCOMPtr<nsIDOMNodeList> radioNodeList(do_QueryInterface(itemWithName));
 
   // XXX If ResolveName could return an nsContentList instead then we 
@@ -1958,8 +1971,7 @@ nsHTMLFormElement::WalkRadioGroup(const nsAString& aName,
     // *must* be a more efficient way to do this.
     //
     nsCOMPtr<nsIFormControl> control;
-    PRUint32 len = 0;
-    GetElementCount(&len);
+    PRUint32 len = GetElementCount();
     for (PRUint32 i=0; i<len; i++) {
       GetElementAt(i, getter_AddRefs(control));
       if (control->GetType() == NS_FORM_INPUT_RADIO) {
@@ -1980,7 +1992,8 @@ nsHTMLFormElement::WalkRadioGroup(const nsAString& aName,
     // Get the control / list of controls from the form using form["name"]
     //
     nsCOMPtr<nsISupports> item;
-    rv = DoResolveName(aName, aFlushContent, getter_AddRefs(item));
+    item = DoResolveName(aName, aFlushContent);
+    rv = item ? NS_OK : NS_ERROR_FAILURE;
 
     if (item) {
       //
@@ -2094,7 +2107,7 @@ nsFormControlList::FlushPendingNotifications()
   }
 }
 
-PR_STATIC_CALLBACK(PLDHashOperator)
+static PLDHashOperator
 ControlTraverser(const nsAString& key, nsISupports* control, void* userArg)
 {
   nsCycleCollectionTraversalCallback *cb = 
@@ -2114,7 +2127,8 @@ NS_IMPL_CYCLE_COLLECTION_TRAVERSE_END
 
 // XPConnect interface list for nsFormControlList
 NS_INTERFACE_TABLE_HEAD(nsFormControlList)
-  NS_INTERFACE_TABLE2(nsFormControlList,
+  NS_INTERFACE_TABLE3(nsFormControlList,
+                      nsIHTMLCollection,
                       nsIDOMHTMLCollection,
                       nsIDOMNSHTMLFormControlList)
   NS_INTERFACE_TABLE_TO_MAP_SEGUE_CYCLE_COLLECTION(nsFormControlList)
@@ -2122,10 +2136,8 @@ NS_INTERFACE_TABLE_HEAD(nsFormControlList)
 NS_INTERFACE_MAP_END
 
 
-NS_IMPL_CYCLE_COLLECTING_ADDREF_AMBIGUOUS(nsFormControlList,
-                                          nsIDOMHTMLCollection)
-NS_IMPL_CYCLE_COLLECTING_RELEASE_AMBIGUOUS(nsFormControlList,
-                                           nsIDOMHTMLCollection)
+NS_IMPL_CYCLE_COLLECTING_ADDREF_AMBIGUOUS(nsFormControlList, nsIHTMLCollection)
+NS_IMPL_CYCLE_COLLECTING_RELEASE_AMBIGUOUS(nsFormControlList, nsIHTMLCollection)
 
 
 // nsIDOMHTMLCollection interface
@@ -2141,14 +2153,15 @@ nsFormControlList::GetLength(PRUint32* aLength)
 NS_IMETHODIMP
 nsFormControlList::Item(PRUint32 aIndex, nsIDOMNode** aReturn)
 {
-  FlushPendingNotifications();
+  nsresult rv;
+  nsISupports* item = GetNodeAt(aIndex, &rv);
+  if (!item) {
+    *aReturn = nsnull;
 
-  if (aIndex < mElements.Length()) {
-    return CallQueryInterface(mElements[aIndex], aReturn);
+    return rv;
   }
 
-  *aReturn = nsnull;
-  return NS_OK;
+  return CallQueryInterface(item, aReturn);
 }
 
 NS_IMETHODIMP 
@@ -2190,20 +2203,19 @@ NS_IMETHODIMP
 nsFormControlList::NamedItem(const nsAString& aName,
                              nsISupports** aReturn)
 {
-  NamedItemInternal(aName, PR_TRUE, aReturn);
+  NS_IF_ADDREF(*aReturn = NamedItemInternal(aName, PR_TRUE));
   return NS_OK;
 }
 
-void
+nsISupports*
 nsFormControlList::NamedItemInternal(const nsAString& aName,
-                                     PRBool aFlushContent,
-                                     nsISupports** aReturn)
+                                     PRBool aFlushContent)
 {
   if (aFlushContent) {
     FlushPendingNotifications();
   }
 
-  mNameLookupTable.Get(aName, aReturn);
+  return mNameLookupTable.GetWeak(aName);
 }
 
 nsresult

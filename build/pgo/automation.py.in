@@ -68,7 +68,7 @@ __all__ = [
           ]
 
 # These are generated in mozilla/build/Makefile.in
-#expand DIST_BIN = "./" + __XPC_BIN_PATH__
+#expand DIST_BIN = __XPC_BIN_PATH__
 #expand IS_WIN32 = len("__WIN32__") != 0
 #expand IS_MAC = __IS_MAC__ != 0
 #ifdef IS_CYGWIN
@@ -307,7 +307,7 @@ user_pref("accessibility.typeaheadfind.autostart", false);
 user_pref("javascript.options.showInConsole", true);
 user_pref("layout.debug.enable_data_xbl", true);
 user_pref("browser.EULA.override", true);
-user_pref("javascript.options.jit.content", false);
+user_pref("javascript.options.jit.content", true);
 user_pref("gfx.color_management.force_srgb", true);
 
 user_pref("camino.warn_when_closing", false); // Camino-only, harmless to others

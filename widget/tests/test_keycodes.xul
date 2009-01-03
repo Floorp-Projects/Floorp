@@ -28,6 +28,7 @@
   <!-- for some reason, if we don't have 'accesskey' here, adding it dynamically later
        doesn't work! -->
   <button id="button" accesskey="z">Hello</button>
+  <input type="text" id="textbox" value=""/>
 </p>
 <div id="content" style="display: none">
   
@@ -63,10 +64,11 @@ function synthesizeNativeKey(aLayout, aKeyCode, aModifiers, aSystemChars,
     if (aModifiers.alt) modifiers |= 0x1000;
     if (aModifiers.altRight) modifiers |= 0x2000;
     if (aModifiers.command) modifiers |= 0x4000;
-    if (aModifiers.help) modifiers |= 0x8000;
-    if (aModifiers.function) modifiers |= 0x10000;
+    if (aModifiers.commandRight) modifiers |= 0x8000;
+    if (aModifiers.help) modifiers |= 0x10000;
+    if (aModifiers.function) modifiers |= 0x100000;
     if (aModifiers.numericKeyPad) modifiers |= 0x01000000;
-    
+
     utils.sendNativeKeyEvent(aLayout, aKeyCode, modifiers,
                              aSystemChars, aSystemUnmodifiedChars);
   }
@@ -93,7 +95,8 @@ if (navigator.platform.indexOf("Mac") == 0) {
     "Swedish":0x41d,
     "Arabic":0x401,
     "Hebrew":0x40d,
-    "Japanese":0x411
+    "Japanese":0x411,
+    "Lithuanian":0x10427
   };
 }
 
@@ -103,66 +106,174 @@ function eventToString(aEvent)
   if (aEvent.shift) {
     name += " [Shift]";
   }
+  if (aEvent.shiftRight) {
+    name += " [Right Shift]";
+  }
   if (aEvent.ctrl) {
     name += " [Ctrl]";
+  }
+  if (aEvent.ctrlRight) {
+    name += " [Right Ctrl]";
   }
   if (aEvent.alt) {
     name += " [Alt]";
   }
+  if (aEvent.altRight) {
+    name += " [Right Alt]";
+  }
   if (aEvent.command) {
     name += " [Command]";
+  }
+  if (aEvent.commandRight) {
+    name += " [Right Command]";
   }
 
   return name;  
 }
 
-function synthesizeKey(aEvent)
+function synthesizeKey(aEvent, aFocusElementId)
 {
-  document.getElementById("button").focus();
+  document.getElementById(aFocusElementId).focus();
 
   synthesizeNativeKey(keyboardLayouts[aEvent.layout],
                       aEvent.keyCode, aEvent, aEvent.chars, aEvent.unmodifiedChars);
 }
 
-// Test the charcodes and modifiers being delivered to keypress handlers.
-function runPressTests()
+// Test the charcodes and modifiers being delivered to keypress handlers and
+// also keydown/keyup events too.
+function runKeyEventTests()
 {
-  var pressList;
-  function onKeyPress(e)
+  var eventList, keyDownFlags, keyUpFlags, testingEvent;
+  const kShiftFlag    = 0x1;
+  const kCtrlFlag     = 0x2;
+  const kAltFlag      = 0x4;
+  const kMetaFlag     = 0x8;
+  const kNumLockFlag  = 0x10;
+  const kCapsLockFlag = 0x20;
+
+  function onKeyEvent(e)
   {
-    pressList.push(e);
+    function removeFlag(e, aFlag)
+    {
+      if (e.type == "keydown") {
+        var oldValue = keyDownFlags;
+        keyDownFlags &= ~aFlag;
+        return oldValue != keyDownFlags;
+      } else if (e.type == "keyup") {
+        var oldValue = keyUpFlags;
+        keyUpFlags &= ~aFlag;
+        return oldValue != keyUpFlags;
+      }
+      return false;
+    }
+
+    function isStateChangingModifierKeyEvent(e)
+    {
+      switch (e.keyCode) {
+        case e.DOM_VK_SHIFT:
+          return (testingEvent.shift || testingEvent.shiftRight) && removeFlag(e, kShiftFlag);
+        case e.DOM_VK_CONTROL:
+          return (testingEvent.ctrl || testingEvent.ctrlRight) && removeFlag(e, kCtrlFlag);
+        case e.DOM_VK_ALT:
+          return (testingEvent.alt || testingEvent.altRight) && removeFlag(e, kAltFlag);
+        case e.DOM_VK_META:
+          return testingEvent.command && removeFlag(e, kMetaFlag);
+        case e.DOM_VK_NUM_LOCK:
+          return testingEvent.numLock && removeFlag(e, kNumLockFlag);
+        case e.DOM_VK_CAPS_LOCK:
+          return testingEvent.capsLock && removeFlag(e, kCapsLockFlag);
+      }
+      return false;
+    }
+
+    // Ignore the state changing key events which is fired by the testing event.
+    if (!isStateChangingModifierKeyEvent(e))
+      eventList.push(e);
     e.preventDefault();
   }
 
+  const SHOULD_DELIVER_NONE             = 0x0;
+  const SHOULD_DELIVER_KEYDOWN          = 0x1;
+  const SHOULD_DELIVER_KEYPRESS         = 0x2;
+  const SHOULD_DELIVER_KEYUP            = 0x4;
+  const SHOULD_DELIVER_ALL              = SHOULD_DELIVER_KEYDOWN |
+                                          SHOULD_DELIVER_KEYPRESS |
+                                          SHOULD_DELIVER_KEYUP;
+  const SHOULD_DELIVER_KEYDOWN_KEYUP    = SHOULD_DELIVER_KEYDOWN |
+                                          SHOULD_DELIVER_KEYUP;
+  const SHOULD_DELIVER_KEYDOWN_KEYPRESS = SHOULD_DELIVER_KEYDOWN |
+                                          SHOULD_DELIVER_KEYPRESS;
+
   // The first parameter is the complete input event. The second parameter is
-  // what to test against.
-  // XXX should probably check that keydown and keyup events were dispatched too
-  function testKey(aEvent, aExpectGeckoChar)
+  // what to test against. The third parameter is which key events should be
+  // delived for the event.
+  function testKey(aEvent, aExpectGeckoChar, aShouldDelivedEvent)
   {
-    pressList = [];
-    
-    synthesizeKey(aEvent);
+    eventList = [];
+
+    // The modifier key events which are fired for state changing are har to
+    // test. We should ignore them for now.
+    keyDownFlags = keyUpFlags = 0;
+    if (navigator.platform.indexOf("Mac") != 0) {
+      // On Mac, nsChildView doesn't generate modifier keydown/keyup events for
+      // state changing for synthesizeNativeKeyEvent.
+      if (aEvent.shift || aEvent.shiftRight)
+        keyDownFlags |= kShiftFlag;
+      if (aEvent.ctrl || aEvent.ctrlRight)
+        keyDownFlags |= kCtrlFlag;
+      if (aEvent.alt || aEvent.altRight)
+        keyDownFlags |= kAltFlag;
+      if (aEvent.command)
+        keyDownFlags |= kMetaFlag;
+      if (aEvent.numLock)
+        keyDownFlags |= kNumLockFlag;
+      if (aEvent.capsLock)
+        keyDownFlags |= kCapsLockFlag;
+      keyUpFlags = keyDownFlags;
+    }
+    testingEvent = aEvent;
+
+    synthesizeKey(aEvent, "button");
 
     var name = eventToString(aEvent);
 
-    is(pressList.length, aExpectGeckoChar == "" ? 0 : 1, name + ", wrong number of press events");
-    if (pressList.length == 0)
-      return;
-    var e = pressList[0];
-    is(e.ctrlKey, aEvent.ctrl || 0, name + ", Ctrl mismatch");
-    is(e.metaKey, aEvent.command || 0, name + ", Command mismatch");
-    is(e.altKey, aEvent.alt || 0, name + ", Alt mismatch");
-    is(e.shiftKey, aEvent.shift || 0, name + ", Shift mismatch");
-  
-    if (aExpectGeckoChar.length > 0) {
-      is(e.charCode, aExpectGeckoChar.charCodeAt(0), name + ", charcode");
-    } else {
-      is(e.charCode, 0, name + ", no charcode");
+    var expectEventTypeList = [];
+    if (aShouldDelivedEvent & SHOULD_DELIVER_KEYDOWN)
+      expectEventTypeList.push("keydown");
+    if (aShouldDelivedEvent & SHOULD_DELIVER_KEYPRESS)
+      expectEventTypeList.push("keypress");
+    if (aShouldDelivedEvent & SHOULD_DELIVER_KEYUP)
+      expectEventTypeList.push("keyup");
+    is(eventList.length, expectEventTypeList.length, name + ", wrong number of key events");
+
+    var longerLength = Math.max(eventList.length, expectEventTypeList.length);
+    for (var i = 0; i < longerLength; i++) {
+      var firedEventType = i < eventList.length ? eventList[i].type : "";
+      var expectEventType = i < expectEventTypeList.length ? expectEventTypeList[i] : "";
+      if (firedEventType != "")
+        is(firedEventType, expectEventType, name + ", wrong type event fired");
+      else
+        is(firedEventType, expectEventType, name + ", a needed event is not fired");
+
+      if (firedEventType != "") {
+        var e = eventList[i];
+        is(e.ctrlKey, aEvent.ctrl || aEvent.ctrlRight || 0, name + ", Ctrl mismatch");
+        is(e.metaKey, aEvent.command || aEvent.commandRight || 0, name + ", Command mismatch");
+        is(e.altKey, aEvent.alt || aEvent.altRight || 0, name + ", Alt mismatch");
+        is(e.shiftKey, aEvent.shift || aEvent.shiftRight || 0, name + ", Shift mismatch");
+
+        if (aExpectGeckoChar.length > 0 && e.type == "keypress")
+          is(e.charCode, aExpectGeckoChar.charCodeAt(0), name + ", charcode");
+        else
+          is(e.charCode, 0, name + ", no charcode");
+      }
     }
   }
 
   // These tests have to be per-plaform.
-  document.addEventListener("keypress", onKeyPress, false);
+  document.addEventListener("keydown",  onKeyEvent, false);
+  document.addEventListener("keypress", onKeyEvent, false);
+  document.addEventListener("keyup",    onKeyEvent, false);
 
   if (navigator.platform.indexOf("Mac") == 0) {
     // On Mac, you can produce event records for any desired keyboard input
@@ -177,77 +288,124 @@ function runPressTests()
 
     // Plain text input
     testKey({layout:"US", keyCode:0, chars:"a", unmodifiedChars:"a"},
-            "a");
+            "a", SHOULD_DELIVER_ALL);
     testKey({layout:"US", keyCode:11, chars:"b", unmodifiedChars:"b"},
-            "b");
+            "b", SHOULD_DELIVER_ALL);
     testKey({layout:"US", keyCode:0, shift:1, chars:"A", unmodifiedChars:"A"},
-            "A");
+            "A", SHOULD_DELIVER_ALL);
 
     // Ctrl keys
     testKey({layout:"US", keyCode:0, ctrl:1, chars:"\u0001", unmodifiedChars:"a"},
-            "a");
+            "a", SHOULD_DELIVER_ALL);
     testKey({layout:"US", keyCode:0, ctrl:1, shift:1, chars:"\u0001", unmodifiedChars:"A"},
-            "A");
+            "A", SHOULD_DELIVER_ALL);
 
     // Alt keys
     testKey({layout:"US", keyCode:0, alt:1, chars:"\u00e5", unmodifiedChars:"a"},
-            "\u00e5");
+            "\u00e5", SHOULD_DELIVER_ALL);
     testKey({layout:"US", keyCode:0, alt:1, shift:1, chars:"\u00c5", unmodifiedChars:"A"},
-            "\u00c5");
+            "\u00c5", SHOULD_DELIVER_ALL);
     
     // Command keys
     testKey({layout:"US", keyCode:0, command:1, chars:"a", unmodifiedChars:"a"},
-            "a");
+            "a", SHOULD_DELIVER_KEYDOWN_KEYPRESS);
     // Shift-cmd gives us the shifted character
     testKey({layout:"US", keyCode:0, command:1, shift:1, chars:"a", unmodifiedChars:"A"},
-            "A");
+            "A", SHOULD_DELIVER_KEYDOWN_KEYPRESS);
     // Ctrl-cmd gives us the unshifted character
     testKey({layout:"US", keyCode:0, command:1, ctrl:1, chars:"\u0001", unmodifiedChars:"a"},
-            "a");
+            "a", SHOULD_DELIVER_KEYDOWN_KEYPRESS);
     // Alt-cmd gives us the shifted character
     testKey({layout:"US", keyCode:0, command:1, alt:1, chars:"\u00e5", unmodifiedChars:"a"},
-            "\u00e5");
+            "\u00e5", SHOULD_DELIVER_KEYDOWN_KEYPRESS);
     testKey({layout:"US", keyCode:0, command:1, alt:1, shift:1, chars:"\u00c5", unmodifiedChars:"a"},
-            "\u00c5");
+            "\u00c5", SHOULD_DELIVER_KEYDOWN_KEYPRESS);
 
     // Greek ctrl keys produce Latin charcodes
     testKey({layout:"Greek", keyCode:0, ctrl:1, chars:"\u0001", unmodifiedChars:"\u03b1"},
-            "a");
+            "a", SHOULD_DELIVER_ALL);
     testKey({layout:"Greek", keyCode:0, ctrl:1, shift:1, chars:"\u0001", unmodifiedChars:"\u0391"},
-            "A");
+            "A", SHOULD_DELIVER_ALL);
 
     // Greek command keys
     testKey({layout:"Greek", keyCode:0, command:1, chars:"a", unmodifiedChars:"\u03b1"},
-            "a");
+            "a", SHOULD_DELIVER_KEYDOWN_KEYPRESS);
     // Shift-cmd gives us the shifted character
     testKey({layout:"Greek", keyCode:0, command:1, shift:1, chars:"a", unmodifiedChars:"\u391"},
-            "A");
+            "A", SHOULD_DELIVER_KEYDOWN_KEYPRESS);
     // Ctrl-cmd gives us the unshifted character
     testKey({layout:"Greek", keyCode:0, command:1, ctrl:1, chars:"\u0001", unmodifiedChars:"\u03b1"},
-            "a");
+            "a", SHOULD_DELIVER_KEYDOWN_KEYPRESS);
     // Alt-cmd gives us the shifted character
     testKey({layout:"Greek", keyCode:0, command:1, alt:1, chars:"\u00a8", unmodifiedChars:"\u03b1"},
-            "\u00a8");
+            "\u00a8", SHOULD_DELIVER_KEYDOWN_KEYPRESS);
     testKey({layout:"Greek", keyCode:0, command:1, alt:1, shift:1, chars:"\u00b9", unmodifiedChars:"\u0391"},
-            "\u00b9");
+            "\u00b9", SHOULD_DELIVER_KEYDOWN_KEYPRESS);
 
     // German (KCHR/KeyTranslate case)
     testKey({layout:"German", keyCode:0, chars:"a", unmodifiedChars:"a"},
-            "a");
+            "a", SHOULD_DELIVER_ALL);
     testKey({layout:"German", keyCode:33, chars:"\u00fc", unmodifiedChars:"\u00fc"},
-            "\u00fc");
+            "\u00fc", SHOULD_DELIVER_ALL);
     testKey({layout:"German", keyCode:27, chars:"\u00df", unmodifiedChars:"\u00df"},
-            "\u00df");
+            "\u00df", SHOULD_DELIVER_ALL);
     testKey({layout:"German", keyCode:27, shift:1, chars:"?", unmodifiedChars:"?"},
-            "?");
+            "?", SHOULD_DELIVER_ALL);
     testKey({layout:"German", keyCode:27, command:1, chars:"\u00df", unmodifiedChars:"\u00df"},
-            "\u00df");
+            "\u00df", SHOULD_DELIVER_KEYDOWN_KEYPRESS);
     // Shift+SS is '?' but Cmd+Shift+SS is '/' on German layout.
     // XXX this test failed on 10.4
     //testKey({layout:"German", keyCode:27, command:1, shift:1, chars:"/", unmodifiedChars:"?"},
-    //        "?");
+    //        "?", SHOULD_DELIVER_KEYDOWN_KEYPRESS);
+
+    // Caps Lock key event
+    // XXX keyup event of Caps Lock key is not fired.
+    testKey({layout:"US", keyCode:57, capsLock:1, chars:"", unmodifiedChars:""},
+            "", SHOULD_DELIVER_KEYDOWN);
+    testKey({layout:"US", keyCode:57, capsLock:0, chars:"", unmodifiedChars:""},
+            "", SHOULD_DELIVER_KEYDOWN);
+
+    // Shift/RightShift key event
+    testKey({layout:"US", keyCode:56, shift:1, chars:"", unmodifiedChars:""},
+            "", SHOULD_DELIVER_KEYDOWN);
+    testKey({layout:"US", keyCode:56, shift:0, chars:"", unmodifiedChars:""},
+            "", SHOULD_DELIVER_KEYUP);
+    testKey({layout:"US", keyCode:60, shiftRight:1, chars:"", unmodifiedChars:""},
+            "", SHOULD_DELIVER_KEYDOWN);
+    testKey({layout:"US", keyCode:60, shiftRight:0, chars:"", unmodifiedChars:""},
+            "", SHOULD_DELIVER_KEYUP);
+
+    // Control/RightControl key event
+    testKey({layout:"US", keyCode:59, ctrl:1, chars:"", unmodifiedChars:""},
+            "", SHOULD_DELIVER_KEYDOWN);
+    testKey({layout:"US", keyCode:59, ctrl:0, chars:"", unmodifiedChars:""},
+            "", SHOULD_DELIVER_KEYUP);
+    testKey({layout:"US", keyCode:62, ctrlRight:1, chars:"", unmodifiedChars:""},
+            "", SHOULD_DELIVER_KEYDOWN);
+    testKey({layout:"US", keyCode:62, ctrlRight:0, chars:"", unmodifiedChars:""},
+            "", SHOULD_DELIVER_KEYUP);
+
+    // Option/RightOption key event
+    testKey({layout:"US", keyCode:58, alt:1, chars:"", unmodifiedChars:""},
+            "", SHOULD_DELIVER_KEYDOWN);
+    testKey({layout:"US", keyCode:58, alt:0, chars:"", unmodifiedChars:""},
+            "", SHOULD_DELIVER_KEYUP);
+    testKey({layout:"US", keyCode:61, altRight:1, chars:"", unmodifiedChars:""},
+            "", SHOULD_DELIVER_KEYDOWN);
+    testKey({layout:"US", keyCode:61, altRight:0, chars:"", unmodifiedChars:""},
+            "", SHOULD_DELIVER_KEYUP);
+
+    // Command/RightCommand key event
+    testKey({layout:"US", keyCode:55, command:1, chars:"", unmodifiedChars:""},
+            "", SHOULD_DELIVER_KEYDOWN);
+    testKey({layout:"US", keyCode:55, command:0, chars:"", unmodifiedChars:""},
+            "", SHOULD_DELIVER_KEYUP);
+    testKey({layout:"US", keyCode:54, commandRight:1, chars:"", unmodifiedChars:""},
+            "", SHOULD_DELIVER_KEYDOWN);
+    testKey({layout:"US", keyCode:54, commandRight:0, chars:"", unmodifiedChars:""},
+            "", SHOULD_DELIVER_KEYUP);
   }
-  
+
   if (navigator.platform.indexOf("Win") == 0) {
     // On Windows, you can use Spy++ or Winspector (free) to watch window messages.
     // The keyCode is given by the wParam of the last WM_KEYDOWN message. The
@@ -256,42 +414,50 @@ function runPressTests()
 
     // Plain text input
     testKey({layout:"US", keyCode:65, chars:"a"},
-            "a");
+            "a", SHOULD_DELIVER_ALL);
     testKey({layout:"US", keyCode:66, chars:"b"},
-            "b");
+            "b", SHOULD_DELIVER_ALL);
     testKey({layout:"US", keyCode:65, shift:1, chars:"A"},
-            "A");
+            "A", SHOULD_DELIVER_ALL);
 
     // Ctrl keys
     testKey({layout:"US", keyCode:65, ctrl:1, chars:"\u0001"},
-            "a");
+            "a", SHOULD_DELIVER_ALL);
     testKey({layout:"US", keyCode:65, ctrl:1, shift:1, chars:"\u0001"},
-            "A");
+            "A", SHOULD_DELIVER_ALL);
 
     // Alt keys
     testKey({layout:"US", keyCode:65, alt:1, chars:"a"},
-            "a");
+            "a", SHOULD_DELIVER_ALL);
     testKey({layout:"US", keyCode:65, alt:1, shift:1, chars:"A"},
-            "A");
-            
+            "A", SHOULD_DELIVER_ALL);
+
     // Shift-ctrl-alt generates no WM_CHAR, but we still get a keypress
     testKey({layout:"US", keyCode:65, alt:1, ctrl:1, shift:1, chars:""},
-            "A");
+            "A", SHOULD_DELIVER_ALL);
 
     // Greek plain text
     testKey({layout:"Greek", keyCode:65, chars:"\u03b1"},
-            "\u03b1");
+            "\u03b1", SHOULD_DELIVER_ALL);
     testKey({layout:"Greek", keyCode:65, shift:1, chars:"\u0391"},
-            "\u0391");
+            "\u0391", SHOULD_DELIVER_ALL);
 
     // Greek ctrl keys produce Latin charcodes
     testKey({layout:"Greek", keyCode:65, ctrl:1, chars:"\u0001"},
-            "a");
+            "a", SHOULD_DELIVER_ALL);
     testKey({layout:"Greek", keyCode:65, ctrl:1, shift:1, chars:"\u0001"},
-            "A");
+            "A", SHOULD_DELIVER_ALL);
+
+    // Caps Lock key event
+    testKey({layout:"US", keyCode:20, capsLock:1, chars:""},
+             "", SHOULD_DELIVER_KEYDOWN_KEYUP);
+    testKey({layout:"US", keyCode:20, capsLock:0, chars:""},
+             "", SHOULD_DELIVER_KEYDOWN_KEYUP);
   }
 
-  document.removeEventListener("keypress", onKeyPress, false);
+  document.removeEventListener("keydown",  onKeyEvent, false);
+  document.removeEventListener("keypress", onKeyEvent, false);
+  document.removeEventListener("keyup",    onKeyEvent, false);
 }
 
 // Test the activation (or not) of an HTML accesskey
@@ -312,7 +478,7 @@ function runAccessKeyTests()
     activationCount = 0;
     button.setAttribute("accesskey", aAccessKey);
 
-    synthesizeKey(aEvent);
+    synthesizeKey(aEvent, "button");
 
     var name = eventToString(aEvent);
 
@@ -409,7 +575,7 @@ function runXULKeyTests()
     var elem = document.getElementById(aElem);
     elem.activeCount = 0;
 
-    synthesizeKey(aEvent);
+    synthesizeKey(aEvent, "button");
 
     var name = eventToString(aEvent);
 
@@ -496,11 +662,53 @@ function runXULKeyTests()
   }
 }
 
+function runTextInputTests()
+{
+  var textbox = document.getElementById("textbox");
+
+  function testKey(aEvent, aExpectText) {
+    textbox.value = "";
+    textbox.focus();
+
+    synthesizeKey(aEvent, "textbox");
+
+    var name = eventToString(aEvent);
+
+    is(textbox.value, aExpectText, name + " does not input correct text.");
+  }
+
+  if (navigator.platform.indexOf("Win") == 0) {
+    // Basic sanity checks
+    testKey({layout:"US", keyCode:65, chars:"a"},
+            "a");
+    testKey({layout:"US", keyCode:65, shift:1, chars:"A"},
+            "A");
+    // When Ctrl+Alt are pressed, any text should not be inputted.
+    testKey({layout:"US", keyCode:65, ctrl:1, alt:1, chars:""},
+            "");
+
+    // Lithuanian AltGr should be consumed at 9/0 keys pressed
+    testKey({layout:"Lithuanian", keyCode:56, chars:"\u016B"},
+            "\u016B");
+    testKey({layout:"Lithuanian", keyCode:57, chars:"9"},
+            "9");
+    testKey({layout:"Lithuanian", keyCode:48, chars:"0"},
+            "0");
+    testKey({layout:"Lithuanian", keyCode:56, ctrl:1, alt:1, chars:"8"},
+            "8");
+    testKey({layout:"Lithuanian", keyCode:57, ctrl:1, alt:1, chars:"9"},
+            "9");
+    testKey({layout:"Lithuanian", keyCode:48, ctrl:1, alt:1, chars:"0"},
+            "0");
+  }
+}
+
 function runTest()
 {
-  runPressTests();
+  runKeyEventTests();
   runAccessKeyTests();
   runXULKeyTests();
+  runTextInputTests();
   SimpleTest.finish();
 }
 

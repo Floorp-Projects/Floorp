@@ -58,7 +58,6 @@
 #include "nsContentCID.h"
 #include "nsXMLDocument.h"
 #include "nsIStreamListener.h"
-#include "nsGenericDOMNodeList.h"
 
 #include "nsXBLBinding.h"
 #include "nsXBLPrototypeBinding.h"
@@ -92,15 +91,14 @@
   { 0xa29df1f8, 0xaeca, 0x4356, \
     { 0xa8, 0xc2, 0xa7, 0x24, 0xa2, 0x11, 0x73, 0xac } }
 
-class nsAnonymousContentList : public nsIDOMNodeList,
-                               public nsINodeList
+class nsAnonymousContentList : public nsINodeList
 {
 public:
   nsAnonymousContentList(nsInsertionPointList* aElements);
   virtual ~nsAnonymousContentList();
 
   NS_DECL_CYCLE_COLLECTING_ISUPPORTS
-  NS_DECL_CYCLE_COLLECTION_CLASS_AMBIGUOUS(nsAnonymousContentList, nsIDOMNodeList)
+  NS_DECL_CYCLE_COLLECTION_CLASS_AMBIGUOUS(nsAnonymousContentList, nsINodeList)
   // nsIDOMNodeList interface
   NS_DECL_NSIDOMNODELIST
 
@@ -139,13 +137,13 @@ NS_IMPL_CYCLE_COLLECTION_CLASS(nsAnonymousContentList)
 NS_IMPL_CYCLE_COLLECTING_ADDREF(nsAnonymousContentList)
 NS_IMPL_CYCLE_COLLECTING_RELEASE(nsAnonymousContentList)
 
-NS_INTERFACE_MAP_BEGIN(nsAnonymousContentList)
-  NS_INTERFACE_MAP_ENTRY(nsINodeList)
-  NS_INTERFACE_MAP_ENTRY(nsIDOMNodeList)
-  if (aIID.Equals(NS_GET_IID(nsAnonymousContentList)))
-    foundInterface = static_cast<nsIDOMNodeList*>(this);
-  else
-  NS_INTERFACE_MAP_ENTRY_AMBIGUOUS(nsISupports, nsIDOMNodeList)
+NS_INTERFACE_TABLE_HEAD(nsAnonymousContentList)
+  NS_NODELIST_OFFSET_AND_INTERFACE_TABLE_BEGIN(nsAnonymousContentList)
+    NS_INTERFACE_TABLE_ENTRY(nsAnonymousContentList, nsINodeList)
+    NS_INTERFACE_TABLE_ENTRY(nsAnonymousContentList, nsIDOMNodeList)
+    NS_INTERFACE_TABLE_ENTRY(nsAnonymousContentList, nsAnonymousContentList)
+  NS_OFFSET_AND_INTERFACE_TABLE_END
+  NS_OFFSET_AND_INTERFACE_TABLE_TO_MAP_SEGUE
   NS_INTERFACE_MAP_ENTRY_CONTENT_CLASSINFO(NodeList)
   NS_INTERFACE_MAP_ENTRIES_CYCLE_COLLECTION(nsAnonymousContentList)
 NS_INTERFACE_MAP_END
@@ -231,14 +229,14 @@ private:
   nsCOMPtr<nsISupports> mValue;
 };
 
-PR_STATIC_CALLBACK(void)
+static void
 ClearObjectEntry(PLDHashTable* table, PLDHashEntryHdr *entry)
 {
   ObjectEntry* objEntry = static_cast<ObjectEntry*>(entry);
   objEntry->~ObjectEntry();
 }
 
-PR_STATIC_CALLBACK(PRBool)
+static PRBool
 InitObjectEntry(PLDHashTable* table, PLDHashEntryHdr* entry, const void* key)
 {
   new (entry) ObjectEntry;
@@ -448,8 +446,8 @@ nsBindingManager::~nsBindingManager(void)
 }
 
 PLDHashOperator
-PR_CALLBACK RemoveInsertionParentCB(PLDHashTable* aTable, PLDHashEntryHdr* aEntry,
-                                  PRUint32 aNumber, void* aArg)
+RemoveInsertionParentCB(PLDHashTable* aTable, PLDHashEntryHdr* aEntry,
+                        PRUint32 aNumber, void* aArg)
 {
   return (static_cast<ObjectEntry*>(aEntry)->GetValue() ==
           static_cast<nsISupports*>(aArg)) ? PL_DHASH_REMOVE : PL_DHASH_NEXT;
@@ -1018,7 +1016,7 @@ struct BindingTableReadClosure
   nsBindingList          mBindings;
 };
 
-PR_STATIC_CALLBACK(PLDHashOperator)
+static PLDHashOperator
 AccumulateBindingsToDetach(nsISupports *aKey, nsXBLBinding *aBinding,
                            void* aClosure)
  {
@@ -1109,7 +1107,7 @@ nsBindingManager::RemoveLoadingDocListener(nsIURI* aURL)
   }
 }
 
-PR_STATIC_CALLBACK(PLDHashOperator)
+static PLDHashOperator
 MarkForDeath(nsISupports *aKey, nsXBLBinding *aBinding, void* aClosure)
 {
   if (aBinding->MarkedForDeath())
@@ -1299,7 +1297,7 @@ nsBindingManager::WalkRules(nsIStyleRuleProcessor::EnumFunc aFunc,
 
 typedef nsTHashtable<nsVoidPtrHashKey> RuleProcessorSet;
 
-PR_STATIC_CALLBACK(PLDHashOperator)
+static PLDHashOperator
 EnumRuleProcessors(nsISupports *aKey, nsXBLBinding *aBinding, void* aClosure)
 {
   RuleProcessorSet *set = static_cast<RuleProcessorSet*>(aClosure);
@@ -1321,7 +1319,7 @@ struct MediumFeaturesChangedData {
   PRBool *mRulesChanged;
 };
 
-PR_STATIC_CALLBACK(PLDHashOperator)
+static PLDHashOperator
 EnumMediumFeaturesChanged(nsVoidPtrHashKey *aKey, void* aClosure)
 {
   nsIStyleRuleProcessor *ruleProcessor =

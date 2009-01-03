@@ -42,6 +42,7 @@
 #include "gfxTypes.h"
 #include "gfxRect.h"
 #include "gfxUtils.h"
+#include "nsMathUtils.h"
 
 // XX - I don't think this class should use gfxFloat at all,
 // but should use 'double' and be called gfxDoubleMatrix;
@@ -176,10 +177,20 @@ public:
     }
 
     /**
+     * Returns true if the matrix is anything other than a straight
+     * translation by integers.
+     */
+    PRBool HasNonIntegerTranslation() const {
+        return HasNonTranslation() ||
+            !gfxUtils::FuzzyEqual(x0, NS_floor(x0 + 0.5)) ||
+            !gfxUtils::FuzzyEqual(y0, NS_floor(y0 + 0.5));
+    }
+
+    /**
      * Returns true if the matrix has any transform other
      * than a straight translation
      */
-    bool HasNonTranslation() const {
+    PRBool HasNonTranslation() const {
         return !gfxUtils::FuzzyEqual(xx, 1.0) || !gfxUtils::FuzzyEqual(yy, 1.0) ||
                !gfxUtils::FuzzyEqual(xy, 0.0) || !gfxUtils::FuzzyEqual(yx, 0.0);
     }
@@ -188,7 +199,7 @@ public:
      * Returns true if the matrix has any transform other
      * than a translation or a -1 y scale (y axis flip)
      */
-    bool HasNonTranslationOrFlip() const {
+    PRBool HasNonTranslationOrFlip() const {
         return !gfxUtils::FuzzyEqual(xx, 1.0) ||
                (!gfxUtils::FuzzyEqual(yy, 1.0) && !gfxUtils::FuzzyEqual(yy, -1.0)) ||
                !gfxUtils::FuzzyEqual(xy, 0.0) || !gfxUtils::FuzzyEqual(yx, 0.0);
@@ -199,7 +210,7 @@ public:
      * than a translation or scale; this is, if there is
      * no rotation.
      */
-    bool HasNonAxisAlignedTransform() const {
+    PRBool HasNonAxisAlignedTransform() const {
         return !gfxUtils::FuzzyEqual(xy, 0.0) || !gfxUtils::FuzzyEqual(yx, 0.0);
     }
 

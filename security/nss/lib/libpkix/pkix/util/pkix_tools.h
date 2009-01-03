@@ -328,7 +328,7 @@ extern PLHashNumber PR_CALLBACK pkix_ErrorGen_Hash (const void *key);
 #endif
 
 /* disable to disable ;-) */
-#define WANT_TRACE_CHECK_FAILURES
+/* #define WANT_TRACE_CHECK_FAILURES */
 
 #ifdef WANT_TRACE_CHECK_FAILURES
 #define TRACE_CHECK_FAILURE(what, errorstring) \

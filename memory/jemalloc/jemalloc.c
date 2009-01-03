@@ -174,7 +174,7 @@
     * XXX OS X over-commits, so we should probably use mmap() instead of
     * vm_allocate(), so that MALLOC_PAGEFILE works.
     */
-#  define MALLOC_PAGEFILE
+#define MALLOC_PAGEFILE
 #endif
 
 #ifdef MALLOC_PAGEFILE
@@ -1285,6 +1285,9 @@ static void	reserve_shrink(void);
 static uint64_t	reserve_notify(reserve_cnd_t cnd, size_t size, uint64_t seq);
 static uint64_t	reserve_crit(size_t size, const char *fname, uint64_t seq);
 static void	reserve_fail(size_t size, const char *fname);
+
+void		_malloc_prefork(void);
+void		_malloc_postfork(void);
 
 /*
  * End function prototypes.
@@ -5096,8 +5099,9 @@ malloc_ncpus(void)
 {
 	unsigned ret;
 	int fd, nread, column;
-	char buf[1];
+	char buf[1024];
 	static const char matchstr[] = "processor\t:";
+	int i;
 
 	/*
 	 * sysconf(3) would be the preferred method for determining the number
@@ -5117,20 +5121,23 @@ malloc_ncpus(void)
 		nread = read(fd, &buf, sizeof(buf));
 		if (nread <= 0)
 			break; /* EOF or error. */
-
-		if (buf[0] == '\n')
-			column = 0;
-		else if (column != -1) {
-			if (buf[0] == matchstr[column]) {
-				column++;
-				if (column == sizeof(matchstr) - 1) {
+		for (i = 0;i < nread;i++) {
+			char c = buf[i];
+			if (c == '\n')
+				column = 0;
+			else if (column != -1) {
+				if (c == matchstr[column]) {
+					column++;
+					if (column == sizeof(matchstr) - 1) {
+						column = -1;
+						ret++;
+					}
+				} else
 					column = -1;
-					ret++;
-				}
-			} else
-				column = -1;
+			}
 		}
 	}
+
 	if (ret == 0)
 		ret = 1; /* Something went wrong in the parser. */
 	close(fd);
@@ -5690,6 +5697,11 @@ MALLOC_OUT:
 		atexit(malloc_print_stats);
 #endif
 	}
+
+#if (!defined(MOZ_MEMORY_WINDOWS) && !defined(MOZ_MEMORY_DARWIN))
+	/* Prevent potential deadlock on malloc locks after fork. */
+	pthread_atfork(_malloc_prefork, _malloc_postfork, _malloc_postfork);
+#endif
 
 	/* Set variables according to the value of opt_small_max_2pow. */
 	if (opt_small_max_2pow < opt_quantum_2pow)

@@ -190,12 +190,12 @@ public:
   static EntryEnumerator* Create(nsTHashtable<CategoryLeaf>& aTable);
 
 private:
-  static PLDHashOperator PR_CALLBACK
+  static PLDHashOperator
     enumfunc_createenumerator(CategoryLeaf* aLeaf, void* userArg);
 };
 
 
-PLDHashOperator PR_CALLBACK
+PLDHashOperator
 EntryEnumerator::enumfunc_createenumerator(CategoryLeaf* aLeaf, void* userArg)
 {
   EntryEnumerator* mythis = static_cast<EntryEnumerator*>(userArg);
@@ -392,7 +392,7 @@ struct persistent_userstruct {
   PRBool      success;
 };
 
-PLDHashOperator PR_CALLBACK
+PLDHashOperator
 enumfunc_pentries(CategoryLeaf* aLeaf, void* userArg)
 {
   persistent_userstruct* args =
@@ -442,7 +442,7 @@ public:
   static CategoryEnumerator* Create(nsClassHashtable<nsDepCharHashKey, CategoryNode>& aTable);
 
 private:
-  static PLDHashOperator PR_CALLBACK
+  static PLDHashOperator
   enumfunc_createenumerator(const char* aStr,
                             CategoryNode* aNode,
                             void* userArg);
@@ -466,7 +466,7 @@ CategoryEnumerator::Create(nsClassHashtable<nsDepCharHashKey, CategoryNode>& aTa
   return enumObj;
 }
 
-PLDHashOperator PR_CALLBACK
+PLDHashOperator
 CategoryEnumerator::enumfunc_createenumerator(const char* aStr, CategoryNode* aNode, void* userArg)
 {
   CategoryEnumerator* mythis = static_cast<CategoryEnumerator*>(userArg);
@@ -745,7 +745,7 @@ struct writecat_struct {
   PRBool      success;
 };
 
-PLDHashOperator PR_CALLBACK
+PLDHashOperator
 enumfunc_categories(const char* aKey, CategoryNode* aCategory, void* userArg)
 {
   writecat_struct* args = static_cast<writecat_struct*>(userArg);

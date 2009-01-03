@@ -147,25 +147,25 @@ struct nsTraceRefcntStats {
 // to the functions not called Default* to free the serialNumberRecord or
 // the BloatEntry.
 
-static void * PR_CALLBACK
+static void *
 DefaultAllocTable(void *pool, PRSize size)
 {
     return PR_MALLOC(size);
 }
 
-static void PR_CALLBACK
+static void
 DefaultFreeTable(void *pool, void *item)
 {
     PR_Free(item);
 }
 
-static PLHashEntry * PR_CALLBACK
+static PLHashEntry *
 DefaultAllocEntry(void *pool, const void *key)
 {
     return PR_NEW(PLHashEntry);
 }
 
-static void PR_CALLBACK
+static void
 SerialNumberFreeEntry(void *pool, PLHashEntry *he, PRUintn flag)
 {
     if (flag == HT_FREE_ENTRY) {
@@ -174,7 +174,7 @@ SerialNumberFreeEntry(void *pool, PLHashEntry *he, PRUintn flag)
     }
 }
 
-static void PR_CALLBACK
+static void
 TypesToLogFreeEntry(void *pool, PLHashEntry *he, PRUintn flag)
 {
     if (flag == HT_FREE_ENTRY) {
@@ -274,7 +274,7 @@ public:
     mNewStats.mObjsOutstandingSquared += cnt * cnt;
   }
 
-  static PRIntn PR_CALLBACK DumpEntry(PLHashEntry *he, PRIntn i, void *arg) {
+  static PRIntn DumpEntry(PLHashEntry *he, PRIntn i, void *arg) {
     BloatEntry* entry = (BloatEntry*)he->value;
     if (entry) {
       entry->Accumulate();
@@ -283,7 +283,7 @@ public:
     return HT_ENUMERATE_NEXT;
   }
 
-  static PRIntn PR_CALLBACK TotalEntries(PLHashEntry *he, PRIntn i, void *arg) {
+  static PRIntn TotalEntries(PLHashEntry *he, PRIntn i, void *arg) {
     BloatEntry* entry = (BloatEntry*)he->value;
     if (entry && nsCRT::strcmp(entry->mClassName, "TOTAL") != 0) {
       entry->Total((BloatEntry*)arg);
@@ -386,7 +386,7 @@ protected:
   nsTraceRefcntStats mAllStats;
 };
 
-static void PR_CALLBACK
+static void
 BloatViewFreeEntry(void *pool, PLHashEntry *he, PRUintn flag)
 {
     if (flag == HT_FREE_ENTRY) {
@@ -437,7 +437,7 @@ GetBloatEntry(const char* aTypeName, PRUint32 aInstanceSize)
   return entry;
 }
 
-static PRIntn PR_CALLBACK DumpSerialNumbers(PLHashEntry* aHashEntry, PRIntn aIndex, void* aClosure)
+static PRIntn DumpSerialNumbers(PLHashEntry* aHashEntry, PRIntn aIndex, void* aClosure)
 {
   serialNumberRecord* record = reinterpret_cast<serialNumberRecord *>(aHashEntry->value);
 #ifdef HAVE_CPP_DYNAMIC_CAST_TO_VOID_PTR
@@ -653,7 +653,7 @@ static PRBool InitLog(const char* envVar, const char* msg, FILE* *result)
 }
 
 
-static PLHashNumber PR_CALLBACK HashNumber(const void* aKey)
+static PLHashNumber HashNumber(const void* aKey)
 {
   return PLHashNumber(NS_PTR_TO_INT32(aKey));
 }
@@ -826,7 +826,7 @@ static void InitTraceLog(void)
 
 extern "C" {
 
-PR_STATIC_CALLBACK(void) PrintStackFrame(void *aPC, void *aClosure)
+static void PrintStackFrame(void *aPC, void *aClosure)
 {
   FILE *stream = (FILE*)aClosure;
   nsCodeAddressDetails details;

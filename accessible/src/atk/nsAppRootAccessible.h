@@ -54,8 +54,8 @@ public:
     nsApplicationAccessibleWrap();
     virtual ~nsApplicationAccessibleWrap();
 
-    // nsPIAccessNode
-    NS_IMETHOD Init();
+    // nsAccessNode
+    virtual nsresult Init();
 
     // return the atk object for app root accessible
     NS_IMETHOD GetNativeInterface(void **aOutAccessible);

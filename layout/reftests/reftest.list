@@ -35,6 +35,12 @@ include canvas/reftest.list
 # css @import tests
 include css-import/reftest.list
 
+# css character encoding tests
+include css-charset/reftest.list
+
+# css media queries (tests for print mode)
+include css-mediaqueries/reftest.list
+
 # columns/
 include columns/reftest.list
 
@@ -52,6 +58,9 @@ include first-letter/reftest.list
 
 # first-line/
 include first-line/reftest.list
+
+# font-face
+include font-face/reftest.list
 
 # forms
 include forms/reftest.list
@@ -93,6 +102,9 @@ include svg-integration/reftest.list
 # table-background/
 include table-background/reftest.list
 
+# table-bordercollapse/
+include table-bordercollapse/reftest.list
+
 # table-dom/
 include table-dom/reftest.list
 
@@ -117,6 +129,9 @@ include text-transform/reftest.list
 # -moz-transform/
 include transform/reftest.list
 
+# xml-stylesheet/
+include ../../content/test/reftest/xml-stylesheet/reftest.list
+
 # xul-document-load/
 include xul-document-load/reftest.list
 
@@ -125,3 +140,6 @@ include ../xul/base/src/grid/reftests/reftest.list
 
 # z-index/
 include z-index/reftest.list
+
+# reftest(s) to verify content bugfixes
+include ../../content/html/document/reftests/reftests.list

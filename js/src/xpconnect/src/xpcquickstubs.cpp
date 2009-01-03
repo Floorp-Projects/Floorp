@@ -178,7 +178,7 @@ xpc_qsThrow(JSContext *cx, nsresult rv)
  * rather than "[nsIDOMNode.appendChild]".
  */
 static void
-GetMemberInfo(XPCWrappedNative *wrapper,
+GetMemberInfo(JSObject *obj,
               jsval memberId,
               const char **ifaceName,
               const char **memberName)
@@ -189,6 +189,11 @@ GetMemberInfo(XPCWrappedNative *wrapper,
     // We could instead make the quick stub could pass in its interface name,
     // but this code often produces a more specific error message, e.g.
     *ifaceName = "Unknown";
+
+    NS_ASSERTION(IS_WRAPPER_CLASS(STOBJ_GET_CLASS(obj)) ||
+                 STOBJ_GET_CLASS(obj) == &XPC_WN_Tearoff_JSClass,
+                 "obj must be an XPCWrappedNative");
+    XPCWrappedNative *wrapper = (XPCWrappedNative *) STOBJ_GET_PRIVATE(obj);
     XPCWrappedNativeProto *proto = wrapper->GetProto();
     if(proto)
     {
@@ -210,7 +215,6 @@ GetMemberInfo(XPCWrappedNative *wrapper,
 
 static void
 GetMethodInfo(JSContext *cx,
-              XPCWrappedNative *wrapper,
               jsval *vp,
               const char **ifaceName,
               const char **memberName)
@@ -221,7 +225,7 @@ GetMethodInfo(JSContext *cx,
     JSString *str = JS_GetFunctionId((JSFunction *) JS_GetPrivate(cx, funobj));
     jsval methodId = str ? STRING_TO_JSVAL(str) : JSVAL_NULL;
 
-    GetMemberInfo(wrapper, methodId, ifaceName, memberName);
+    GetMemberInfo(JSVAL_TO_OBJECT(vp[1]), methodId, ifaceName, memberName);
 }
 
 static JSBool
@@ -272,20 +276,19 @@ ThrowCallFailed(JSContext *cx, nsresult rv,
 }
 
 JSBool
-xpc_qsThrowGetterSetterFailed(JSContext *cx, nsresult rv,
-                              XPCWrappedNative *wrapper, jsval memberId)
+xpc_qsThrowGetterSetterFailed(JSContext *cx, nsresult rv, JSObject *obj,
+                              jsval memberId)
 {
     const char *ifaceName, *memberName;
-    GetMemberInfo(wrapper, memberId, &ifaceName, &memberName);
+    GetMemberInfo(obj, memberId, &ifaceName, &memberName);
     return ThrowCallFailed(cx, rv, ifaceName, memberName);
 }
 
 JSBool
-xpc_qsThrowMethodFailed(JSContext *cx, nsresult rv,
-                        XPCWrappedNative *wrapper, jsval *vp)
+xpc_qsThrowMethodFailed(JSContext *cx, nsresult rv, jsval *vp)
 {
     const char *ifaceName, *memberName;
-    GetMethodInfo(cx, wrapper, vp, &ifaceName, &memberName);
+    GetMethodInfo(cx, vp, &ifaceName, &memberName);
     return ThrowCallFailed(cx, rv, ifaceName, memberName);
 }
 
@@ -317,11 +320,10 @@ ThrowBadArg(JSContext *cx, nsresult rv,
 }
 
 void
-xpc_qsThrowBadArg(JSContext *cx, nsresult rv,
-                  XPCWrappedNative *wrapper, jsval *vp, uintN paramnum)
+xpc_qsThrowBadArg(JSContext *cx, nsresult rv, jsval *vp, uintN paramnum)
 {
     const char *ifaceName, *memberName;
-    GetMethodInfo(cx, wrapper, vp, &ifaceName, &memberName);
+    GetMethodInfo(cx, vp, &ifaceName, &memberName);
     ThrowBadArg(cx, rv, ifaceName, memberName, paramnum);
 }
 
@@ -333,10 +335,10 @@ xpc_qsThrowBadArgWithCcx(XPCCallContext &ccx, nsresult rv, uintN paramnum)
 
 void
 xpc_qsThrowBadSetterValue(JSContext *cx, nsresult rv,
-                          XPCWrappedNative *wrapper, jsval propId)
+                          JSObject *obj, jsval propId)
 {
     const char *ifaceName, *memberName;
-    GetMemberInfo(wrapper, propId, &ifaceName, &memberName);
+    GetMemberInfo(obj, propId, &ifaceName, &memberName);
     ThrowBadArg(cx, rv, ifaceName, memberName, 0);
 }
 
@@ -453,12 +455,45 @@ xpc_qsACString::xpc_qsACString(JSContext *cx, jsval *pval)
     mValid = JS_TRUE;
 }
 
+static nsresult
+getNativeFromWrapper(XPCWrappedNative *wrapper,
+                     const nsIID &iid,
+                     void **ppThis,
+                     nsISupports **pThisRef,
+                     jsval *vp)
+{
+    nsISupports *idobj = wrapper->GetIdentityObject();
+
+    // Try using the QITableEntry to avoid the extra AddRef and Release.
+    QITableEntry* entries = wrapper->GetOffsets();
+    if(entries)
+    {
+        for(QITableEntry* e = entries; e->iid; e++)
+        {
+            if(e->iid->Equals(iid))
+            {
+                *ppThis = (char*) idobj + e->offset - entries[0].offset;
+                *vp = OBJECT_TO_JSVAL(wrapper->GetFlatJSObject());
+                *pThisRef = nsnull;
+                return NS_OK;
+            }
+        }
+    }
+
+    nsresult rv = idobj->QueryInterface(iid, ppThis);
+    *pThisRef = static_cast<nsISupports*>(*ppThis);
+    if(NS_SUCCEEDED(rv))
+        *vp = OBJECT_TO_JSVAL(wrapper->GetFlatJSObject());
+    return rv;
+}
+
 JSBool
 xpc_qsUnwrapThisImpl(JSContext *cx,
                      JSObject *obj,
                      const nsIID &iid,
                      void **ppThis,
-                     XPCWrappedNative **ppWrapper)
+                     nsISupports **pThisRef,
+                     jsval *vp)
 {
     // From XPCWrappedNative::GetWrappedNativeOfJSObject.
     //
@@ -472,7 +507,6 @@ xpc_qsUnwrapThisImpl(JSContext *cx,
     {
         JSClass *clazz;
         XPCWrappedNative *wrapper;
-        nsISupports *idobj;
         nsresult rv;
 
         clazz = STOBJ_GET_CLASS(cur);
@@ -514,13 +548,9 @@ xpc_qsUnwrapThisImpl(JSContext *cx,
             goto next;
         }
 
-        idobj = wrapper->GetIdentityObject();
-        rv = idobj->QueryInterface(iid, ppThis);
+        rv = getNativeFromWrapper(wrapper, iid, ppThis, pThisRef, vp);
         if(NS_SUCCEEDED(rv))
-        {
-            *ppWrapper = wrapper;
             return JS_TRUE;
-        }
         if(rv != NS_ERROR_NO_INTERFACE)
             return xpc_qsThrow(cx, rv);
 
@@ -548,16 +578,19 @@ xpc_qsUnwrapThisImpl(JSContext *cx,
         }
 
         if(outer && outer != obj)
-            return xpc_qsUnwrapThisImpl(cx, outer, iid, ppThis, ppWrapper);
+            return xpc_qsUnwrapThisImpl(cx, outer, iid, ppThis, pThisRef, vp);
     }
 
+    *pThisRef = nsnull;
     return xpc_qsThrow(cx, NS_ERROR_XPC_BAD_OP_ON_WN_PROTO);
 }
 
 JSBool
 xpc_qsUnwrapThisFromCcxImpl(XPCCallContext &ccx,
                             const nsIID &iid,
-                            void **ppThis)
+                            void **ppThis,
+                            nsISupports **pThisRef,
+                            jsval *vp)
 {
     XPCWrappedNative *wrapper = ccx.GetWrapper();
     if(!wrapper)
@@ -565,8 +598,7 @@ xpc_qsUnwrapThisFromCcxImpl(XPCCallContext &ccx,
     if(!wrapper->IsValid())
         return xpc_qsThrow(ccx.GetJSContext(), NS_ERROR_XPC_HAS_BEEN_SHUTDOWN);
 
-    nsISupports *idobj = wrapper->GetIdentityObject();
-    nsresult rv = idobj->QueryInterface(iid, ppThis);
+    nsresult rv = getNativeFromWrapper(wrapper, iid, ppThis, pThisRef, vp);
     if(NS_FAILED(rv))
         return xpc_qsThrow(ccx.GetJSContext(), rv);
     return JS_TRUE;

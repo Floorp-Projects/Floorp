@@ -6,6 +6,9 @@
 == test-async.xul test-async-ref.xul
 == test-async.html test-async-ref.html
 
+# test that zoom works (and really zooms, not just scales)
+== test-zoom.html test-zoom-ref.html
+
 # Makes sure that the file: protocol handler and HTTP server both
 # choose HTML vs. XHTML processing based on the file extensions.
 != html-vs-xhtml-by-extension.html html-vs-xhtml-by-extension.xhtml
@@ -16,3 +19,19 @@ HTTP != html-vs-xhtml-by-extension.html html-vs-xhtml-by-extension.xhtml
 != green.html default.html
 != green.html red.html
 != red.html default.html
+
+# Make sure about:blank works, even via HTTP.
+== blank.html about:blank
+== about:blank blank.html
+HTTP == blank.html about:blank
+HTTP == about:blank blank.html
+# same for data:
+== default.html data:text/html,<div>Text</div>
+== data:text/html,<div>Text</div> default.html
+HTTP == default.html data:text/html,<div>Text</div>
+HTTP == data:text/html,<div>Text</div> default.html
+!= blank.html default.html
+HTTP != blank.html default.html
+
+HTTP(..) == filter-1.xhtml filter-1-ref.xhtml
+HTTP(..) == filter-2.xhtml filter-2-ref.xhtml

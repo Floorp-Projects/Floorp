@@ -1,0 +1,93 @@
+<?xml version="1.0"?>
+
+<bindings id="filefieldBindings"
+          xmlns="http://www.mozilla.org/xbl"
+          xmlns:xbl="http://www.mozilla.org/xbl"
+          xmlns:xul="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
+
+  <binding id="filefield" extends="chrome://global/content/bindings/general.xml#basetext">
+    <resources>
+      <stylesheet src="chrome://global/skin/filefield.css"/>
+    </resources>
+    <content>
+      <xul:stringbundle anonid="bundle" src="chrome://global/locale/filefield.properties"/>
+      <xul:hbox class="fileFieldContentBox" align="center" flex="1" xbl:inherits="disabled">
+        <xul:image class="fileFieldIcon" xbl:inherits="src=image,disabled"/>
+        <xul:textbox class="fileFieldLabel" xbl:inherits="value=label,disabled,accesskey,tabindex,aria-labelledby" flex="1" readonly="true"/>
+      </xul:hbox>
+    </content>
+    <implementation implements="nsIDOMXULLabeledControlElement">
+      <property name="label" onget="return this.getAttribute('label');">
+        <setter>
+          this.setAttribute('label', val); 
+          var elt = document.getAnonymousElementByAttribute(this, "class", "fileFieldLabel");
+          return (elt.value = val);
+        </setter>
+      </property>
+      
+      <field name="_file">null</field>
+      <property name="file"  onget="return this._file">
+        <setter>
+        <![CDATA[
+          this._file = val; 
+          if (val) {
+            this.image = this._getIconURLForFile(val);
+            this.label = this._getDisplayNameForFile(val);
+          }
+          else {
+            this.removeAttribute("image");
+            var bundle = document.getAnonymousElementByAttribute(this, "anonid", "bundle");
+            this.label = bundle.getString("downloadHelperNoneSelected");
+          }            
+          return val;
+        ]]>
+        </setter>
+      </property>      
+      <method name="_getDisplayNameForFile">
+        <parameter name="aFile"/>
+        <body>
+        <![CDATA[
+#ifdef XP_WIN
+          var lfw = aFile.QueryInterface(Components.interfaces.nsILocalFileWin);
+          try {
+            return lfw.getVersionInfoField("FileDescription"); 
+          }
+          catch (e) {
+            // fall through to the filename
+          }
+#endif
+#ifdef XP_MACOSX
+          var lfm = aFile.QueryInterface(Components.interfaces.nsILocalFileMac);
+          try {
+            return lfm.bundleDisplayName;
+          }
+          catch (e) {
+            // fall through to the file name
+          }
+#endif
+          var ios = Components.classes["@mozilla.org/network/io-service;1"]
+                              .getService(Components.interfaces.nsIIOService);
+          var url = ios.newFileURI(aFile).QueryInterface(Components.interfaces.nsIURL);
+          return url.fileName;
+        ]]>
+        </body>
+      </method>
+      
+      <method name="_getIconURLForFile">
+        <parameter name="aFile"/>
+        <body>
+        <![CDATA[
+          if (!aFile)
+            return "";
+          var ios = Components.classes["@mozilla.org/network/io-service;1"]
+                              .getService(Components.interfaces.nsIIOService);
+          var fph = ios.getProtocolHandler("file")
+                       .QueryInterface(Components.interfaces.nsIFileProtocolHandler);
+          var urlspec = fph.getURLSpecFromFile(aFile);
+          return "moz-icon://" + urlspec + "?size=16";  
+        ]]>
+        </body>
+      </method>
+    </implementation>
+  </binding>
+</bindings>

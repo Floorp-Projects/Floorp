@@ -1,0 +1,45 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+  <title>Media test: timeupdate and size</title>
+  <script type="text/javascript" src="/MochiKit/MochiKit.js"></script>
+  <script type="text/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
+</head>
+<body>
+<video id='v'
+       src='seek.ogg'
+       onloadedmetadata='return startTest();'
+       ontimeupdate='return timeUpdated();'></video>
+<pre id="test">
+<script class="testbody" type="text/javascript">
+// Test if the media size during the first timeupdate is correct.
+var completed = false;
+
+function startTest() {
+  if (completed)
+    return false;
+
+  var v = document.getElementById('v');
+  v.play();
+  return false;
+}
+
+function timeUpdated() {
+  if (completed)
+    return false;
+
+  var v = document.getElementById('v');
+  ok(v.videoHeight == 240, "Check video height of " + v.videoHeight + " is 240");
+  ok(v.videoWidth == 320, "Check video width of " + v.videoWidth + " is 320");
+  completed = true;
+  v.pause();
+  SimpleTest.finish();
+  return false;
+}
+
+SimpleTest.waitForExplicitFinish();
+</script>
+</pre>
+</body>
+</html>

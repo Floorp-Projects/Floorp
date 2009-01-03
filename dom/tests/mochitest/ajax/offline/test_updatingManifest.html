@@ -1,0 +1,366 @@
+<html xmlns="http://www.w3.org/1999/xhtml" manifest="http://localhost:8888/tests/dom/tests/mochitest/ajax/offline/updating.cacheManifest">
+<head>
+<title>Cache update test</title>
+
+<script type="text/javascript" src="/MochiKit/packed.js"></script>
+<script type="text/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+<script type="text/javascript" src="/tests/dom/tests/mochitest/ajax/offline/offlineTests.js"></script>
+<link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
+
+<script class="testbody" type="text/javascript">
+
+/**
+ * This test loads manifest and checks presence of all items.
+ * Then it modifies the manifest and updates the cache again.
+ * Then test presence of items according to the spec and also
+ * if the cache associated with the document is still the old
+ * one. Then again modifies the manifest, checks items and finally
+ * swaps cache for this document, reloads and checks document state.
+ */
+
+const NAMESPACE_BYPASS = Components.interfaces.nsIApplicationCacheNamespace.NAMESPACE_BYPASS;
+const NAMESPACE_FALLBACK = Components.interfaces.nsIApplicationCacheNamespace.NAMESPACE_FALLBACK;
+
+var manifestVersion2Content =
+  "CACHE MANIFEST\n" +
+  "# v2\n" +
+  "\n" +
+  "http://localhost:8888/tests/SimpleTest/SimpleTest.js\n" +
+  "http://localhost:8888/MochiKit/packed.js\n" +
+  "http://localhost:8888/tests/dom/tests/mochitest/ajax/offline/offlineTests.js\n" +
+  "http://localhost:8888/tests/dom/tests/mochitest/ajax/offline/updatingIFrame.html" +
+  "\n" +
+  "FALLBACK:\n" +
+  "namespace1/ fallback.html\n" +
+  "namespace1/sub/ fallback2.html\n";
+
+var manifestVersion3Content =
+  "CACHE MANIFEST\n" +
+  "# v3\n" +
+  "\n" +
+  "http://localhost:8888/MochiKit/packed.js\n" +
+  "http://localhost:8888/tests/dom/tests/mochitest/ajax/offline/offlineTests.js\n" +
+  "http://localhost:8888/tests/dom/tests/mochitest/ajax/offline/updatingIFrame.html" +
+  "\n" +
+  "FALLBACK:\n" +
+  "namespace1/sub fallback2.html\n" +
+  "\n" +
+  "NETWORK:\n" +
+  "onwhitelist.html\n";
+
+
+var updatingFrameContent =
+  "<html xmlns=\"http://www.w3.org/1999/xhtml\">\n" +
+  "<head>\n" +
+  "<title>Update iframe</title>\n" +
+  "</head>\n" +
+  "<body onload=\"parent.frameLoad(2)\">\n" +
+  "Second version of updating iframe.\n" +
+  "</body>\n" +
+  "</html>\n";
+
+
+
+var gStep = 0;
+var gGotFrameVersion = 0;
+var gCallOnUpdatingFrameLoad = null;
+
+// Helpers
+
+function reloadLocations(frames)
+{
+  for (frame in frames)
+    frames[frame].location.reload();
+}
+
+function waitForLocations(frames, doneFunc)
+{
+  frame = frames.shift();
+  if (frame)
+    // toString() might cause problems when this test will
+    // completely be changed to test IDN behavior.
+    OfflineTest.waitForAdd(frame.location.toString(), function()
+      {
+        waitForLocations(frames, doneFunc);
+      }
+    );
+  else
+  {
+    doneFunc();
+  }
+}
+
+function checkFallbackAndWhitelisting(key, fallback, onwhitelist)
+{
+  // Get matching namespace for the key
+  var matchingNamespace = OfflineTest.getActiveCache()
+    .getMatchingNamespace(key);
+
+  // If we are not expecting the key is to be on white list or
+  // has been assigned a fallback check there is not any matching
+  // namespace found and exit
+  if (!fallback && !onwhitelist) {
+    is(matchingNamespace, null, "No namespace found for "+key);
+    return;
+  }
+
+  // We expect this entry is on the white list or has a fallback
+  // entry assigned, check we found a matching namespace
+  ok(matchingNamespace, "We have a namespace for "+key);
+  if (!matchingNamespace)
+    return;
+
+  // We expect the key be assigned a fallback URI, check the namespace
+  // type is of fallback type
+  OfflineTest.is(!!(matchingNamespace.itemType & NAMESPACE_FALLBACK), !!fallback,
+    (fallback ? "Namespace type is fallback for " : "Namespace type is not fallback for ")+key);
+
+  // We expect the key be assigned a fallback URI, check the URI is
+  // equal to expected one
+  OfflineTest.is(matchingNamespace.data, fallback,
+    (fallback ? "Expected correct fallback for " : "No fallback for ")+key);
+
+  // We expect the key be on the white list, check the namespace type
+  // is of bypass type
+  OfflineTest.is(!!(matchingNamespace.itemType & NAMESPACE_BYPASS), onwhitelist,
+    (onwhitelist ? "On white list " : "Not on white list ")+key);
+}
+
+// Events
+
+function frameLoad(version)
+{
+  gGotFrameVersion = version;
+  if (gCallOnUpdatingFrameLoad)
+  {
+    var call = gCallOnUpdatingFrameLoad;
+    gCallOnUpdatingFrameLoad = null;
+    OfflineTest.priv(call)();
+  }
+}
+
+function whitelistOnLoad(version)
+{
+  // Whitelisting is not tested by this test...
+}
+
+
+// Start of the test function chain
+// ================================
+
+function manifestCached()
+{
+  OfflineTest.is(gStep, 0);
+
+  reloadLocations([fallbackFrame1, fallbackFrame2]);
+  waitForLocations([fallbackFrame1, fallbackFrame2],
+      fallbackLoaded);
+}
+
+function fallbackLoaded()
+{
+  applicationCache.add("http://localhost:8888/tests/SimpleTest/EventUtils.js");
+  OfflineTest.waitForAdd("http://localhost:8888/tests/SimpleTest/EventUtils.js",
+      dynamicLoaded);
+}
+
+function dynamicLoaded()
+{
+  window.open("http://localhost:8888/tests/dom/tests/mochitest/ajax/offline/updatingImplicit.html");
+  // window.onload invokes implicitLoaded()
+}
+
+function implicitLoaded(aWindow, errorOccured)
+{
+  aWindow.close();
+
+  OfflineTest.ok(!errorOccured, "No error on new implicit page manifest update");
+
+  OfflineTest.waitForAdd("http://localhost:8888/tests/dom/tests/mochitest/ajax/offline/updatingImplicit.html",
+      implicitCached);
+}
+
+function implicitCached()
+{
+  // Checking first version of the manifest + another implict page caching
+
+  // Explicit entries
+  OfflineTest.checkCache("http://localhost:8888/tests/SimpleTest/SimpleTest.js", false);
+  OfflineTest.checkCache("http://localhost:8888/MochiKit/packed.js", true);
+  OfflineTest.checkCache("http://localhost:8888/tests/dom/tests/mochitest/ajax/offline/offlineTests.js", true);
+
+  // Fallback entries
+  OfflineTest.checkCache("http://localhost:8888/tests/dom/tests/mochitest/ajax/offline/fallback.html", true);
+  OfflineTest.checkCache("http://localhost:8888/tests/dom/tests/mochitest/ajax/offline/fallback2.html", false);
+
+  // Whitelist entries
+  OfflineTest.checkCache("http://localhost:8888/tests/dom/tests/mochitest/ajax/offline/onwhitelist.html", false);
+  checkFallbackAndWhitelisting("http://localhost:8888/tests/dom/tests/mochitest/ajax/offline/onwhitelist.html", "", true);
+
+  // Implicit entries
+  OfflineTest.checkCache("http://localhost:8888/tests/dom/tests/mochitest/ajax/offline/updatingImplicit.html", true);
+
+  // Dynamic entries
+  OfflineTest.checkCache("http://localhost:8888/tests/SimpleTest/EventUtils.js", true);
+
+  // Fallback URI selection check
+  checkFallbackAndWhitelisting("http://localhost:8888/tests/dom/tests/mochitest/ajax/offline/namespace1/opp.html",
+      "http://localhost:8888/tests/dom/tests/mochitest/ajax/offline/fallback.html", false);
+  checkFallbackAndWhitelisting("http://localhost:8888/tests/dom/tests/mochitest/ajax/offline/namespace1/sub/opp.html",
+      "http://localhost:8888/tests/dom/tests/mochitest/ajax/offline/fallback.html", false);
+
+  // Cache object status
+  OfflineTest.is(applicationCache.status, Components.interfaces.nsIDOMOfflineResourceList.IDLE,
+      "we have associated application cache (1)");
+
+  OfflineTest.is(gGotFrameVersion, 1, "IFrame version 1");
+
+  ++gStep;
+
+  OfflineTest.putData("http://localhost:8888/tests/dom/tests/mochitest/ajax/offline/updating.cacheManifest",
+      "text/cache-manifest", manifestVersion2Content);
+
+  applicationCache.update();
+  // Invokes manifestUpdated()
+}
+
+function manifestUpdated()
+{
+  OfflineTest.ok(gStep == 1 || gStep == 2);
+
+  switch (gStep)
+  {
+  case 1:
+    // Processing second version of the manifest.
+
+    // Explicit entries
+    OfflineTest.checkCache("http://localhost:8888/tests/SimpleTest/SimpleTest.js", true);
+    OfflineTest.checkCache("http://localhost:8888/MochiKit/packed.js", true);
+    OfflineTest.checkCache("http://localhost:8888/tests/dom/tests/mochitest/ajax/offline/offlineTests.js", true);
+
+    // Fallback entries
+    OfflineTest.checkCache("http://localhost:8888/tests/dom/tests/mochitest/ajax/offline/fallback.html", true);
+    OfflineTest.checkCache("http://localhost:8888/tests/dom/tests/mochitest/ajax/offline/fallback2.html", true);
+
+    // Whitelist entries
+    OfflineTest.checkCache("http://localhost:8888/tests/dom/tests/mochitest/ajax/offline/onwhitelist.html", false);
+    checkFallbackAndWhitelisting("http://localhost:8888/tests/dom/tests/mochitest/ajax/offline/onwhitelist.html", "", false);
+
+    // Implicit entries
+    OfflineTest.checkCache("http://localhost:8888/tests/dom/tests/mochitest/ajax/offline/updatingImplicit.html", true);
+
+    // Dynamic entries
+    OfflineTest.checkCache("http://localhost:8888/tests/SimpleTest/EventUtils.js", true);
+
+    // Fallback URI selection check
+    checkFallbackAndWhitelisting("http://localhost:8888/tests/dom/tests/mochitest/ajax/offline/namespace1/opp.html",
+        "http://localhost:8888/tests/dom/tests/mochitest/ajax/offline/fallback.html", false);
+    checkFallbackAndWhitelisting("http://localhost:8888/tests/dom/tests/mochitest/ajax/offline/namespace1/sub/opp.html",
+        "http://localhost:8888/tests/dom/tests/mochitest/ajax/offline/fallback2.html", false);
+
+    // Cache object status
+    OfflineTest.is(applicationCache.status, Components.interfaces.nsIDOMOfflineResourceList.UPDATEREADY,
+        "we have associated application cache and update is pending (2)");
+
+    ++gStep;
+
+    OfflineTest.putData("http://localhost:8888/tests/dom/tests/mochitest/ajax/offline/updating.cacheManifest",
+        "text/cache-manifest", manifestVersion3Content);
+    OfflineTest.putData("http://localhost:8888/tests/dom/tests/mochitest/ajax/offline/updatingIFrame.html",
+        "text/html", updatingFrameContent);
+
+    gGotFrameVersion = 0;
+    gCallOnUpdatingFrameLoad = function() {applicationCache.update();};
+    updatingFrame.location.reload();
+
+    break;
+
+  case 2:
+    // Processing third version of the manifest.
+
+    // Explicit entries
+    OfflineTest.checkCache("http://localhost:8888/tests/SimpleTest/SimpleTest.js", false);
+    OfflineTest.checkCache("http://localhost:8888/MochiKit/packed.js", true);
+    OfflineTest.checkCache("http://localhost:8888/tests/dom/tests/mochitest/ajax/offline/offlineTests.js", true);
+
+    // Fallback entries
+    OfflineTest.checkCache("http://localhost:8888/tests/dom/tests/mochitest/ajax/offline/fallback.html", false);
+    OfflineTest.checkCache("http://localhost:8888/tests/dom/tests/mochitest/ajax/offline/fallback2.html", true);
+
+    // Whitelist entries
+    OfflineTest.checkCache("http://localhost:8888/tests/dom/tests/mochitest/ajax/offline/onwhitelist.html", false);
+    checkFallbackAndWhitelisting("http://localhost:8888/tests/dom/tests/mochitest/ajax/offline/onwhitelist.html", "", true);
+
+    // Implicit entries
+    OfflineTest.checkCache("http://localhost:8888/tests/dom/tests/mochitest/ajax/offline/updatingImplicit.html", true);
+
+    // Dynamic entries
+    OfflineTest.checkCache("http://localhost:8888/tests/SimpleTest/EventUtils.js", true);
+
+    // Fallback URI selection check
+    checkFallbackAndWhitelisting("http://localhost:8888/tests/dom/tests/mochitest/ajax/offline/namespace1/opp.html",
+        "", false);
+    checkFallbackAndWhitelisting("http://localhost:8888/tests/dom/tests/mochitest/ajax/offline/namespace1/sub/opp.html",
+        "http://localhost:8888/tests/dom/tests/mochitest/ajax/offline/fallback2.html", false);
+
+    // Cache object status
+    OfflineTest.is(applicationCache.status, Components.interfaces.nsIDOMOfflineResourceList.UPDATEREADY,
+        "we have associated application cache and update is pending (3)");
+
+    OfflineTest.is(gGotFrameVersion, 1, "IFrame version 1 because cache was not swapped");
+
+    ++gStep;
+
+    applicationCache.onnoupdate = OfflineTest.priv(manifestNoUpdate);
+    applicationCache.update();
+    // Invokes manifestNoUpdate()
+
+    break;
+  }
+}
+
+function manifestNoUpdate()
+{
+  OfflineTest.ok(gStep == 3);
+
+  OfflineTest.is(applicationCache.status, Components.interfaces.nsIDOMOfflineResourceList.UPDATEREADY,
+        "we have associated application cache and update is pending (4)");
+  applicationCache.swapCache();
+  OfflineTest.is(applicationCache.status, Components.interfaces.nsIDOMOfflineResourceList.IDLE,
+        "we have associated application cache (4)");
+
+  gGotFrameVersion = 0;
+  gCallOnUpdatingFrameLoad = checkNewVersionOfIFrame;
+  updatingFrame.location.reload();
+}
+
+function checkNewVersionOfIFrame()
+{
+  OfflineTest.is(gGotFrameVersion, 2, "IFrame version 2");
+
+  OfflineTest.teardown();
+  OfflineTest.finish();
+}
+
+// End of the test function chain
+// ==============================
+
+SimpleTest.waitForExplicitFinish();
+
+if (OfflineTest.setup()) {
+  applicationCache.onerror = OfflineTest.failEvent;
+  applicationCache.onupdateready = OfflineTest.priv(manifestUpdated);
+  applicationCache.oncached = OfflineTest.priv(manifestCached);
+}
+
+</script>
+
+</head>
+
+<body>
+  <iframe name="updatingFrame" src="http://localhost:8888/tests/dom/tests/mochitest/ajax/offline/updatingIFrame.html"></iframe>
+  <iframe name="fallbackFrame1" src="http://localhost:8888/tests/dom/tests/mochitest/ajax/offline/namespace1/opp.html"></iframe>
+  <iframe name="fallbackFrame2" src="http://localhost:8888/tests/dom/tests/mochitest/ajax/offline/namespace1/sub/opp.html"></iframe>
+  <iframe name="whitelistFrame" src="http://localhost:8888/tests/dom/tests/mochitest/ajax/offline/onwhitelist.html"></iframe>
+</body>
+</html>

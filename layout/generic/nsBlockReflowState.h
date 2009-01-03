@@ -58,6 +58,9 @@
 #define BRS_HAVELINEADJACENTTOTOP 0x00000020
 // Set when the block has the equivalent of NS_BLOCK_SPACE_MGR
 #define BRS_SPACE_MGR             0x00000040
+// Set when nsLineLayout::LineIsEmpty was true at the end of reflowing
+// the current line
+#define BRS_LINE_LAYOUT_EMPTY     0x00000080
 #define BRS_ISOVERFLOWCONTAINER   0x00000100
 #define BRS_LASTFLAG              BRS_ISOVERFLOWCONTAINER
 
@@ -164,7 +167,11 @@ public:
   void RecoverStateFrom(nsLineList::iterator aLine, nscoord aDeltaY);
 
   void AdvanceToNextLine() {
-    mLineNumber++;
+    if (GetFlag(BRS_LINE_LAYOUT_EMPTY)) {
+      SetFlag(BRS_LINE_LAYOUT_EMPTY, PR_FALSE);
+    } else {
+      mLineNumber++;
+    }
   }
 
   PRBool IsImpactedByFloat() const;

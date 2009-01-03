@@ -244,7 +244,9 @@ nsLocation::CheckURL(nsIURI* aURI, nsIDocShellLoadInfo** aLoadInfo)
 
 // Walk up the docshell hierarchy and find a usable base URI. Basically 
 // anything that would allow a relative uri.
-
+// XXXbz we don't need this for javascript: URIs anymore.  Do we need
+// it for about:blank?  I would think that we don't, and that we can
+// nuke this code.
 nsresult
 nsLocation::FindUsableBaseURI(nsIURI * aBaseURI, nsIDocShell * aParent,
                               nsIURI ** aUsableURI)
@@ -429,7 +431,11 @@ nsLocation::SetHash(const nsAString& aHash)
 
   nsCOMPtr<nsIURL> url(do_QueryInterface(uri));
   if (url) {
-    rv = url->SetRef(NS_ConvertUTF16toUTF8(aHash));
+    NS_ConvertUTF16toUTF8 hash(aHash);
+    if (hash.IsEmpty() || hash.First() != PRUnichar('#')) {
+      hash.Insert(PRUnichar('#'), 0);
+    }
+    rv = url->SetRef(hash);
     if (NS_SUCCEEDED(rv)) {
       SetURI(url);
     }

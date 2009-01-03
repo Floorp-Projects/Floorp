@@ -44,7 +44,7 @@
 #include "nsITimer.h"
 
 class nsISupportsArray;
-class SmoothScroll;
+class AsyncScroll;
 
 //this is a class that acts as a container for other views and provides
 //automatic management of scrolling of the views it contains.
@@ -71,11 +71,14 @@ public:
   NS_IMETHOD  GetScrollProperties(PRUint32 *aProperties);
   NS_IMETHOD  SetLineHeight(nscoord aHeight);
   NS_IMETHOD  GetLineHeight(nscoord *aHeight);
-  NS_IMETHOD  ScrollByLines(PRInt32 aNumLinesX, PRInt32 aNumLinesY);
+  NS_IMETHOD  ScrollByLines(PRInt32 aNumLinesX, PRInt32 aNumLinesY,
+                            PRUint32 aUpdateFlags = 0);
   NS_IMETHOD  GetPageScrollDistances(nsSize *aDistances);
-  NS_IMETHOD  ScrollByPages(PRInt32 aNumPagesX, PRInt32 aNumPagesY);
-  NS_IMETHOD  ScrollByWhole(PRBool aTop);
-  NS_IMETHOD  ScrollByPixels(PRInt32 aNumPixelsX, PRInt32 aNumPixelsY);
+  NS_IMETHOD  ScrollByPages(PRInt32 aNumPagesX, PRInt32 aNumPagesY,
+                            PRUint32 aUpdateFlags = 0);
+  NS_IMETHOD  ScrollByWhole(PRBool aTop, PRUint32 aUpdateFlags = 0);
+  NS_IMETHOD  ScrollByPixels(PRInt32 aNumPixelsX, PRInt32 aNumPixelsY,
+                             PRUint32 aUpdateFlags = 0);
   NS_IMETHOD  CanScroll(PRBool aHorizontal, PRBool aForward, PRBool &aResult);
 
   NS_IMETHOD_(nsIView*) View();
@@ -88,15 +91,15 @@ public:
   nsView*     GetScrolledView() const { return GetFirstChild(); }
 
 private:
-  NS_IMETHOD  ScrollToImpl(nscoord aX, nscoord aY, PRUint32 aUpdateFlags);
+  NS_IMETHOD  ScrollToImpl(nscoord aX, nscoord aY);
 
   // data members
-  SmoothScroll* mSmoothScroll;
+  AsyncScroll* mAsyncScroll;
 
   // methods
   void        IncrementalScroll();
   PRBool      IsSmoothScrollingEnabled();
-  static void SmoothScrollAnimationCallback(nsITimer *aTimer, void* aESM);
+  static void AsyncScrollCallback(nsITimer *aTimer, void* aSPV);
 
 protected:
   virtual ~nsScrollPortView();
@@ -106,6 +109,7 @@ protected:
   PRBool CannotBitBlt(nsView* aScrolledView);
 
   nscoord             mOffsetX, mOffsetY;
+  nscoord             mDestinationX, mDestinationY;
   PRUint32            mScrollProperties;
   nscoord             mLineHeight;
   nsISupportsArray   *mListeners;

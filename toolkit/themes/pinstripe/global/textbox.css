@@ -110,6 +110,7 @@ textbox[disabled="true"] {
 
 textbox.plain {
   -moz-appearance: none !important;
+  background-color: transparent;
   padding: 0px !important;
   margin: 0px !important;
   border: none !important;
@@ -119,35 +120,33 @@ textbox.plain {
 /* ::::: rounded search box ::::: */
 
 textbox[type="search"] {
-  -moz-appearance: none;
-  border: 3px solid;
-  -moz-border-top-colors: #5F5F5F #CFCFCF -moz-Field;
-  -moz-border-bottom-colors: #9F9F9F #EEE -moz-Field;
-  -moz-border-right-colors: #7F7F7F #EEE -moz-Field;
-  -moz-border-left-colors: #7F7F7F #EFEFEF -moz-Field;
-  -moz-border-radius: 11px;
-  padding: 0 8px;
-}
-
-textbox[type="search"]:not([searchbutton]) {
-  background-image: url("chrome://global/skin/icons/Search-glass.png");
-  background-repeat: no-repeat;
-  background-position: 1px center;
-  -moz-padding-start: 17px;
-}
-
-textbox[type="search"][focused="true"] {
-  outline: 2px solid #4A8BC7;
-  outline-offset: -2px;
-  -moz-outline-radius: 11px;
-}
-
-.textbox-search-icon[searchbutton] {
-  list-style-image: url(chrome://global/skin/icons/Search-glass.png);
+  -moz-appearance: searchfield;
+  padding: 2px 1px 1px 16px;
+  font-size: 12px;
 }
 
 .textbox-search-clear {
-  list-style-image: url(chrome://global/skin/icons/Search-close.png);
+  list-style-image: url(chrome://global/skin/icons/searchfield-regular-cancel.png);
+  -moz-image-region: rect(0, 14px, 14px, 0);
+  margin-bottom: 1px;
+}
+
+.textbox-search-clear:active:hover {
+  -moz-image-region: rect(0, 28px, 14px, 14px);
+}
+
+textbox[type="search"][cocoa-size="small"] {
+  padding: 1px 1px 0 15px;
+  font-size: 11px;
+}
+
+textbox[type="search"][cocoa-size="small"] > .textbox-input-box > .textbox-search-icons > .textbox-search-clear {
+  list-style-image: url(chrome://global/skin/icons/searchfield-small-cancel.png);
+  -moz-image-region: rect(0, 11px, 11px, 0);
+}
+
+textbox[type="search"][cocoa-size="small"] > .textbox-input-box > .textbox-search-icons > .textbox-search-clear:active:hover {
+  -moz-image-region: rect(0, 22px, 11px, 11px);
 }
 
 .textbox-search-icon[searchbutton]:not([disabled]) ,

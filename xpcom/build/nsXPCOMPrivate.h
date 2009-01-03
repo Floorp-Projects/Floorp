@@ -196,7 +196,7 @@ typedef struct XPCOMFunctions{
 
 } XPCOMFunctions;
 
-typedef nsresult (PR_CALLBACK *GetFrozenFunctionsFunc)(XPCOMFunctions *entryPoints, const char* libraryPath);
+typedef nsresult (*GetFrozenFunctionsFunc)(XPCOMFunctions *entryPoints, const char* libraryPath);
 XPCOM_API(nsresult)
 NS_GetFrozenFunctions(XPCOMFunctions *entryPoints, const char* libraryPath);
 
@@ -217,9 +217,11 @@ NS_GetFrozenFunctions(XPCOMFunctions *entryPoints, const char* libraryPath);
 
 #define XPCOM_SEARCH_KEY  "PATH"
 #define GRE_CONF_NAME     "gre.config"
-#define GRE_WIN_REG_LOC   "Software\\mozilla.org\\GRE"
+#define GRE_WIN_REG_LOC   L"Software\\mozilla.org\\GRE"
 #define XPCOM_DLL         "xpcom.dll"
+#define LXPCOM_DLL        L"xpcom.dll"
 #define XUL_DLL           "xul.dll"
+#define LXUL_DLL          L"xul.dll"
 
 #elif defined(XP_BEOS)
 
@@ -231,6 +233,7 @@ NS_GetFrozenFunctions(XPCOMFunctions *entryPoints, const char* libraryPath);
 #define XUL_DLL   "libxul"MOZ_DLL_SUFFIX
 
 #else // Unix
+#include <limits.h> // for PATH_MAX
 
 #define XPCOM_DLL "libxpcom"MOZ_DLL_SUFFIX
 

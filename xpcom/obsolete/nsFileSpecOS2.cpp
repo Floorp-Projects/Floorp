@@ -55,10 +55,6 @@
 #define INCL_WINWORKPLACE
 #include <os2.h>
 
-#ifdef XP_OS2_VACPP
-#include <direct.h>
-#endif
-
 #include <sys/types.h>
 #include <sys/stat.h>
 #include <limits.h>
@@ -501,12 +497,7 @@ void nsFileSpec::CreateDirectory(int /*mode*/)
 {
 	// Note that mPath is canonical!
 	if (!mPath.IsEmpty())
-#ifdef XP_OS2
-	    // OS2TODO - vacpp complains about mkdir but PR_MkDir should be ok?
-            PR_MkDir(nsNSPRPath(*this), PR_CREATE_FILE);
-#else
 	    mkdir(nsNSPRPath(*this));
-#endif
 } // nsFileSpec::CreateDirectory
 
 //----------------------------------------------------------------------------------------
@@ -523,12 +514,7 @@ void nsFileSpec::Delete(PRBool inRecursive) const
                     child.Delete(inRecursive);
                 }		
         }
-#ifdef XP_OS2
-            // OS2TODO - vacpp complains if use rmdir but PR_RmDir should be ok?
-            PR_RmDir(nsNSPRPath(*this));
-#else
 	    rmdir(nsNSPRPath(*this));
-#endif
     }
 	else if (!mPath.IsEmpty())
     {

@@ -43,44 +43,8 @@
 /* all localizable skin settings shall live here */
 @import url("chrome://global/locale/intl.css");
 
-@import url("chrome://global/skin/formatting.css");
-
 @namespace url("http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul");
 
-button[dlgtype="help"] {
-	min-width: 1px !important;
-	padding: 0px 0px 0px 0px !important;
-	-moz-appearance: none;
-	-moz-box-align: start !important;
-	height: 24px;
-	width: 24px;
-	margin: 4px;
-}
-
-button[dlgtype="help"][disabled] {
-  opacity: 0.5;
-}
-
-button[dlgtype="help"]:focus {
-  outline: 2px solid -moz-mac-focusring;
-  outline-offset: -2px;
-  -moz-outline-radius: 100%;
-}
-
-button[dlgtype="help"] > .button-box > .button-icon {
-  list-style-image: url("chrome://global/skin/icons/question-mark.png");
-  -moz-image-region: rect(0 24px 24px 0); 
-  padding: 0 !important;
-  margin: 0 !important;
-}
-
-button[dlgtype="help"]:active > .button-box > .button-icon {
-  -moz-image-region: rect(0 48px 24px 24px); 
-}
-
-button[dlgtype="help"] > .button-box > .button-text {
-  display: none !important;
-}
 /* ::::: XBL bindings ::::: */
 
 menulist > menupopup,
@@ -94,6 +58,20 @@ menulist > menupopup,
 
 progressmeter[mode="undetermined"] {
   -moz-binding: url("chrome://global/content/bindings/progressmeter.xml#progressmeter-periodic-redraw");
+}
+
+/* ::::: draggable elements ::::: */
+
+toolbar:not([nowindowdrag="true"]) {
+  -moz-binding: url("chrome://global/content/bindings/toolbar.xml#toolbar-drag");
+}
+
+statusbar:not([nowindowdrag="true"]) {
+  -moz-binding: url("chrome://global/content/bindings/general.xml#statusbar-drag");
+}
+
+windowdragbox {
+  -moz-binding: url("chrome://global/content/bindings/general.xml#windowdragbox");
 }
 
 /* ::::: root elements ::::: */
@@ -116,30 +94,35 @@ prefwindow {
 prefwindow .paneSelector {
   font: message-box;
 }
-prefwindow[type="child"] {
-  padding: 18px 20px 15px 18px !important;
-}
 
+prefwindow[type="child"] {
+  padding-top: 18px;
+  padding-bottom: 15px;
+  -moz-padding-start: 18px;
+  -moz-padding-end: 20px;
+}
 
 /* deprecated */
-window.dialog { 
-  padding: 8px 10px 10px 8px;
-}
-
-[wait-cursor] { 
-  cursor: wait !important; 
+window.dialog {
+  padding-top: 8px;
+  padding-bottom: 10px;
+  -moz-padding-start: 8px;
+  -moz-padding-end: 10px;
 }
 
 /* ::::: alert icons :::::*/
 
-.message-icon,
+.message-icon {
+  display: none;
+}
+
 .alert-icon,
 .error-icon,
 .question-icon {
   width: 64px;
   height: 64px;
-  list-style-image: url("chrome://global/skin/icons/information-64.png");
-  margin: 6px 20px 6px 6px !important;
+  margin: 6px;
+  -moz-margin-end: 20px;
 }
 
 .alert-icon {
@@ -176,6 +159,7 @@ statusbar {
   margin: 0px !important;
   padding: 0px 16px 1px 1px;
   -moz-appearance: none;
+  text-shadow: rgba(255, 255, 255, 0.4) 0 1px;
 }
 
 statusbarpanel {
@@ -188,88 +172,164 @@ statusbarpanel {
   padding: 0px;
 }    
 
-/* ::::: miscellaneous ::::: */
+/* ::::: miscellaneous formatting ::::: */
+
+.inset {
+  border: 1px solid ThreeDShadow;
+  border-right-color: ThreeDHighlight;
+  border-bottom-color: ThreeDHighlight;
+  margin: 0 5px 5px;
+}
+  
+.outset {
+  border: 1px solid ThreeDShadow;
+  border-left-color: ThreeDHighlight;
+  border-top-color: ThreeDHighlight;
+}
+
+separator:not([orient="vertical"]) {
+  height: 1.5em;
+}
+separator[orient="vertical"] {
+  width: 1.5em;
+}
+
+separator.thin:not([orient="vertical"]) {
+  height: 0.5em;
+}  
+separator.thin[orient="vertical"] {
+  width: 0.5em;
+}
+
+separator.groove:not([orient="vertical"]) {
+  border-top: 1px solid #A3A3A3;
+  height: 0;
+  margin-top: 0.4em;
+  margin-bottom: 0.4em;
+}
+separator.groove[orient="vertical"] {
+  border-left: 1px solid #A3A3A3;
+  width: 0;
+  margin-left: 0.4em;
+  margin-right: 0.4em;
+}
+
+.small-margin {
+  margin: 1px 2px;
+}
+    
+.plain {
+  margin: 0 !important;
+  border: none;
+  padding: 0;
+}
+
+description,
+label {
+  cursor: default;
+}
+
+label {
+  margin-top: 1px;
+  margin-bottom: 2px;
+  -moz-margin-start: 6px;
+  -moz-margin-end: 5px;
+}
+
+label[disabled="true"] {
+  color: GrayText;
+}
+
+.tooltip-label {
+  margin: 0;
+}
+
+description {
+  margin-bottom: 4px;
+}
+
+.header {
+  margin-bottom: 6px;
+  font-weight: bold;
+}
+
+.monospace {
+  font-family: monospace;
+}
+
+.indent {
+  -moz-margin-start: 23px;
+}
+
+.box-padded {
+  padding: 5px;
+}
+
+.spaced {
+  margin: 3px 5px 4px;
+}
+
+.wizard-box {
+  padding: 20px 44px 10px;
+}
+
+.text-link {
+  color: -moz-nativehyperlinktext;
+  text-decoration: underline;
+  border: 1px solid transparent;
+  cursor: pointer;
+}
+  
+.text-link:focus {
+  color: red;
+  border: 1px dotted -moz-DialogText;
+}
+  
+.text-link:hover:active {
+  color: red;
+}
+
+.text-link[visited="true"] {
+  color: purple;
+}
 
 .toolbar-focustarget {
   -moz-user-focus: ignore !important;
 }
 
-#info.icon {
-	margin-right: 14px;
-}
-
-#commonDialog {
-	line-height: 13px;
-}
-
-#commonDialog #infoContainer {
-	max-width: 33em !important;
-}
-
-#header {
-	display: none !important;
-}
-
-#warn1 {
-	font: menu;
-	font-weight: bold;
-	line-height: 16pt;
-	padding-bottom: 10px;
-}
-
-#ok, #cancel, #launch, #reveal, #pauseResume {
-	font: menu !important;
-}
-
-.message-icon {
-	display: none !important;
-}
-
-#panelFrame {
-	margin-top: 2px;
-	padding-left: 10px;
-}
-
-description {
-	margin-bottom: 4px;
-}
-
-browser {
-    margin: 0px;
-    padding: 0px;
-    background-color: #FFFFFF;
-}
-
-/* miscellaneous stuff */
-
-#OCSPDialog {
-  font: message-box;
-}
-
-#historyTree, #bookmarks-view {
-	border-top: 1px solid #bebebe;
-}
-
-/* notification bar buttons */
-
 notification > button {
-	-moz-appearance: none;
+  -moz-appearance: none;
   background: url("chrome://global/skin/icons/white-gray-gradient.gif") transparent repeat-x center center;
   -moz-background-clip: padding;
-  border: 1px solid;
-  border-bottom-width: 2px;
+  border: 1px solid rgba(0, 0, 0, 0.5);
   -moz-border-radius: 10px;
-  -moz-border-top-colors: rgba(0,0,0,0.5);
-  -moz-border-right-colors: rgba(0,0,0,0.5);
-  -moz-border-bottom-colors: rgba(255,255,255,0.35) rgba(0,0,0,0.5);
-  -moz-border-left-colors: rgba(0,0,0,0.5);
+  -moz-box-shadow: rgba(255, 255, 255, 0.4) 0 1px 0;
   padding: 0 5px;
+  margin: 0 3px;
   min-width: 79px;
-  min-height: 17px;
+  min-height: 16px;
 }
 
 notification > button:hover:active {
   background-image: url("chrome://global/skin/icons/white-gray-gradient-active.gif");
+}
+
+/* ::::: XXX - stuff that should live elsewhere ::::: */
+
+/* embedding/components/ui/progressDlg/nsProgressDialog.xul */
+#ok, #cancel, #launch, #reveal, #pauseResume {
+	font: menu !important;
+}
+
+/* toolkit/content/widgets/optionsDialog.xml */
+#panelFrame {
+  margin-top: 2px;
+  -moz-padding-start: 10px;
+}
+
+/* toolkit/mozapps/preferences/ocsp.xul */
+#OCSPDialog {
+  font: message-box;
 }
 
 /* :::::: autoscroll popup ::::: */
@@ -284,6 +344,7 @@ notification > button:hover:active {
   background-color: transparent;
   background-position: right top;
   -moz-appearance: none;
+  -moz-window-shadow: none;
 }
 
 #autoscroller[scrolldir="NS"] {

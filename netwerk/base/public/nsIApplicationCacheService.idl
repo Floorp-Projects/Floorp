@@ -45,7 +45,7 @@ interface nsIApplicationCache;
  * The application cache service manages the set of application cache
  * groups.
  */
-[scriptable, uuid(23b37fbd-5c55-43a5-b592-abf31c05e967)]
+[scriptable, uuid(36595ec8-e849-49f8-9eb4-e895a3cd39fe)]
 interface nsIApplicationCacheService : nsISupports
 {
     /**
@@ -63,6 +63,11 @@ interface nsIApplicationCacheService : nsISupports
      * Get the currently active cache object for a cache group.
      */
     nsIApplicationCache getActiveCache(in ACString group);
+
+    /**
+     * Deactivate the currently-active cache object for a cache group.
+     */
+    void deactivateGroup(in ACString group);
 
     /**
      * Try to find the best application cache to serve a resource.

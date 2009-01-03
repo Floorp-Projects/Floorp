@@ -50,8 +50,6 @@ MODULE_NAME	= nsWidgetGtk2Module
 GRE_MODULE	= 1
 LIBXUL_LIBRARY = 1
 
-PACKAGE_FILE = widget_gtk2.pkg
-
 NATIVE_THEME_SUPPORT = 1
 
 REQUIRES	= xpcom \
@@ -94,7 +92,6 @@ CPPSRCS		= \
 		nsWidgetFactory.cpp \
 		nsToolkit.cpp \
 		nsBidiKeyboard.cpp \
-		nsCommonWidget.cpp \
 		nsLookAndFeel.cpp \
 		nsGtkKeyUtils.cpp \
 		nsFilePicker.cpp \

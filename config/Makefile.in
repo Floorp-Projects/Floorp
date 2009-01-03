@@ -62,8 +62,8 @@ TARGETS		= $(HOST_PROGRAM) $(PLSRCS:.pl=) $(SIMPLE_PROGRAMS)
 ifndef CROSS_COMPILE
 ifdef USE_ELF_DYNSTR_GC
 TARGETS		+= elf-dynstr-gc
-MAKE_DIRS	+= $(MDDEPDIR)
-GARBAGE_DIRS	+= $(MDDEPDIR)
+# Compiling the above will create dependency files.
+NEED_MDDEPDIR	= 1
 endif
 endif
 
@@ -143,7 +143,7 @@ GARBAGE += \
 
 ifndef CROSS_COMPILE
 ifdef USE_ELF_DYNSTR_GC
-elf-dynstr-gc: elf-dynstr-gc.c Makefile Makefile.in
+elf-dynstr-gc: elf-dynstr-gc.c $(GLOBAL_DEPS)
 	$(CC) $(COMPILE_CFLAGS) $(GLIB_CFLAGS) -o $@ $< $(LDFLAGS) $(GLIB_LIBS) 
 endif
 endif

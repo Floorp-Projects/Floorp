@@ -709,9 +709,16 @@ CanvasFrame::Reflow(nsPresContext*           aPresContext,
       viewport->Invalidate(nsRect(nsPoint(0, 0), viewport->GetSize()));
     }
     
-    // Return our desired size (which doesn't matter)
+    // Return our desired size. Normally it's what we're told, but
+    // sometimes we can be given an unconstrained height (when a window
+    // is sizing-to-content), and we should compute our desired height.
     aDesiredSize.width = aReflowState.ComputedWidth();
-    aDesiredSize.height = aReflowState.ComputedHeight();
+    if (aReflowState.ComputedHeight() == NS_UNCONSTRAINEDSIZE) {
+      aDesiredSize.height = kidFrame->GetRect().height +
+        kidReflowState.mComputedMargin.TopBottom();
+    } else {
+      aDesiredSize.height = aReflowState.ComputedHeight();
+    }
 
     aDesiredSize.mOverflowArea.UnionRect(
       nsRect(0, 0, aDesiredSize.width, aDesiredSize.height),

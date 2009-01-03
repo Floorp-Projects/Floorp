@@ -183,14 +183,14 @@
                ondragdrop="nsDragAndDrop.drop(event, gDownloadDNDObserver);">
   </richlistbox>
 
-  <hbox id="search" align="center">
+  <windowdragbox id="search" align="center">
     <button id="clearListButton" command="cmd_clearList"
             label="&cmd.clearList.label;"
             accesskey="&cmd.clearList.accesskey;"
             tooltiptext="&cmd.clearList.tooltip;"/>
     <spacer flex="1"/>
-    <textbox type="search" id="searchbox"
+    <textbox type="search" id="searchbox" cocoa-size="small"
              oncommand="buildDownloadList();" emptytext="&searchBox.label;"/>
-  </hbox>
+  </windowdragbox>
 
 </window>

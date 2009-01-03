@@ -1,0 +1,7 @@
+Makefile.in
+autoconf.mk.in
+check-sync-dirs.py
+static-checking-config.mk
+
+# This is a copy of nspr's config/make-system-wrappers.pl.
+make-system-wrappers.pl

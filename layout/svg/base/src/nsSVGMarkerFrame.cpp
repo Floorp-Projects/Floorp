@@ -40,6 +40,7 @@
 #include "nsSVGMarkerFrame.h"
 #include "nsSVGPathGeometryFrame.h"
 #include "nsSVGMatrix.h"
+#include "nsSVGEffects.h"
 #include "nsSVGMarkerElement.h"
 #include "nsSVGPathGeometryElement.h"
 #include "gfxContext.h"
@@ -56,17 +57,34 @@ NS_NewSVGMarkerFrame(nsIPresShell* aPresShell, nsIContent* aContent, nsStyleCont
   return new (aPresShell) nsSVGMarkerFrame(aContext);
 }
 
-nsIContent *
-NS_GetSVGMarkerElement(nsIURI *aURI, nsIContent *aContent)
+//----------------------------------------------------------------------
+// nsIFrame methods:
+
+NS_IMETHODIMP
+nsSVGMarkerFrame::AttributeChanged(PRInt32  aNameSpaceID,
+                                   nsIAtom* aAttribute,
+                                   PRInt32  aModType)
 {
-  nsIContent* content = nsContentUtils::GetReferencedElement(aURI, aContent);
+  if (aNameSpaceID == kNameSpaceID_None &&
+      (aAttribute == nsGkAtoms::markerUnits ||
+       aAttribute == nsGkAtoms::refX ||
+       aAttribute == nsGkAtoms::refY ||
+       aAttribute == nsGkAtoms::markerWidth ||
+       aAttribute == nsGkAtoms::markerHeight ||
+       aAttribute == nsGkAtoms::orient ||
+       aAttribute == nsGkAtoms::preserveAspectRatio ||
+       aAttribute == nsGkAtoms::viewBox)) {
+    nsSVGEffects::InvalidateRenderingObservers(this);
+  }
 
-  nsCOMPtr<nsIDOMSVGMarkerElement> marker = do_QueryInterface(content);
+  return nsSVGMarkerFrameBase::AttributeChanged(aNameSpaceID,
+                                                aAttribute, aModType);
+}
 
-  if (marker)
-    return content;
-
-  return nsnull;
+nsIAtom *
+nsSVGMarkerFrame::GetType() const
+{
+  return nsGkAtoms::svgMarkerFrame;
 }
 
 //----------------------------------------------------------------------
@@ -186,7 +204,7 @@ nsSVGMarkerFrame::PaintMark(nsSVGRenderState *aContext,
       // The CTM of each frame referencing us may be different.
       SVGFrame->NotifySVGChanged(nsISVGChildFrame::SUPPRESS_INVALIDATION |
                                  nsISVGChildFrame::TRANSFORM_CHANGED);
-      nsSVGUtils::PaintChildWithEffects(aContext, nsnull, kid);
+      nsSVGUtils::PaintFrameWithEffects(aContext, nsnull, kid);
     }
   }
 
@@ -226,13 +244,6 @@ nsSVGMarkerFrame::RegionMark(nsSVGPathGeometryFrame *aMarkedFrame,
 
   // Now get the combined covered region
   return nsSVGUtils::GetCoveredRegion(mFrames);
-}
-
-
-nsIAtom *
-nsSVGMarkerFrame::GetType() const
-{
-  return nsGkAtoms::svgMarkerFrame;
 }
 
 void

@@ -74,10 +74,6 @@ tooltip {
   font: message-box;
 }
 
-.tooltip-label {
-  margin: 0px !important;
-}
-
 tooltip[titletip="true"] {
  /* See bug 32157 comment 128
   * margin: -2px 0px 0px -3px;

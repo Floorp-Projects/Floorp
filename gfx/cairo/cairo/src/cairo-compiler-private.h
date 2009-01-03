@@ -38,6 +38,8 @@
 #ifndef CAIRO_COMPILER_PRIVATE_H
 #define CAIRO_COMPILER_PRIVATE_H
 
+#include "cairo.h"
+
 #if HAVE_CONFIG_H
 #include "config.h"
 #endif
@@ -109,6 +111,34 @@
 # define CAIRO_FUNCTION_ALIAS(old, new)
 #endif
 
+/*
+ * Cairo uses the following function attributes in order to improve the
+ * generated code (effectively by manual inter-procedural analysis).
+ *
+ *   'cairo_pure': The function is only allowed to read from its arguments
+ *                 and global memory (i.e. following a pointer argument or
+ *                 accessing a shared variable). The return value should
+ *                 only depend on its arguments, and for an identical set of
+ *                 arguments should return the same value.
+ *
+ *   'cairo_const': The function is only allowed to read from its arguments.
+ *                  It is not allowed to access global memory. The return
+ *                  value should only depend its arguments, and for an
+ *                  identical set of arguments should return the same value.
+ *                  This is currently the most strict function attribute.
+ *
+ * Both these function attributes allow gcc to perform CSE and
+ * constant-folding, with 'cairo_const 'also guaranteeing that pointer contents
+ * do not change across the function call.
+ */
+#if __GNUC__ >= 3
+#define cairo_pure __attribute__((pure))
+#define cairo_const __attribute__((const))
+#else
+#define cairo_pure
+#define cairo_const
+#endif
+
 #ifndef __GNUC__
 #undef __attribute__
 #define __attribute__(x)
@@ -116,6 +146,7 @@
 
 #if (defined(__WIN32__) && !defined(__WINE__)) || defined(_MSC_VER)
 #define snprintf _snprintf
+#define popen _popen
 #endif
 
 #ifdef _MSC_VER

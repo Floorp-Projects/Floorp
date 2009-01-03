@@ -140,7 +140,7 @@ nsExtProtocolChannel::GetSecurityInfo(nsISupports * *aSecurityInfo)
 
 NS_IMETHODIMP nsExtProtocolChannel::GetOriginalURI(nsIURI* *aURI)
 {
-  NS_IF_ADDREF(*aURI = mOriginalURI);
+  NS_ADDREF(*aURI = mOriginalURI);
   return NS_OK; 
 }
  

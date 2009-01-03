@@ -50,15 +50,15 @@ class ZipFile(zipfile.ZipFile):
   """
   def __init__(self, file, mode="r", compression=zipfile.ZIP_STORED,
                lock = False):
-    zipfile.ZipFile.__init__(self, file, mode, compression)
-    self._remove = []
-    self.end = self.fp.tell()
-    self.debug = 0
     if lock:
       assert isinstance(file, basestring)
       self.lockfile = lockFile(file + '.lck')
     else:
       self.lockfile = None
+    zipfile.ZipFile.__init__(self, file, mode, compression)
+    self._remove = []
+    self.end = self.fp.tell()
+    self.debug = 0
 
   def writestr(self, zinfo_or_arcname, bytes):
     """Write contents into the archive.

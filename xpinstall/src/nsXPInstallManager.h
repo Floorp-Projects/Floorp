@@ -61,6 +61,7 @@
 #include "nsIChannelEventSink.h"
 #include "nsIZipReader.h"
 #include "nsIXPIInstallInfo.h"
+#include "nsILoadGroup.h"
 
 #include "nsCOMPtr.h"
 
@@ -137,6 +138,7 @@ class nsXPInstallManager : public nsIXPIDialogService,
         nsCOMPtr<nsIXPIProgressDialog>  mDlg;
 
         nsCOMPtr<nsIDOMWindowInternal>  mParentWindow;
+        nsCOMPtr<nsILoadGroup>          mLoadGroup;
 };
 
 #endif

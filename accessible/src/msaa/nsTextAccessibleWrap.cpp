@@ -172,9 +172,10 @@ STDMETHODIMP nsTextAccessibleWrap::scrollToSubstring(
     /* [in] */ unsigned int aEndIndex)
 {
 __try {
-  nsresult rv = nsAccUtils::ScrollSubstringTo(GetFrame(), mDOMNode, aStartIndex,
-                                              mDOMNode, aEndIndex,
-                                              nsIAccessibleScrollType::SCROLL_TYPE_ANYWHERE);
+  nsresult rv =
+    nsCoreUtils::ScrollSubstringTo(GetFrame(), mDOMNode, aStartIndex,
+                                   mDOMNode, aEndIndex,
+                                   nsIAccessibleScrollType::SCROLL_TYPE_ANYWHERE);
   if (NS_FAILED(rv))
     return E_FAIL;
 } __except(FilterA11yExceptions(::GetExceptionCode(), GetExceptionInformation())) { }
@@ -250,7 +251,7 @@ __try {
 
   nsIFrame *frame = GetFrame();
   nsCOMPtr<nsIPresShell> presShell = GetPresShell();
-  if (!frame || !presShell) {
+  if (!frame || !presShell || !presShell->GetPresContext()) {
     return E_FAIL;
   }
 
@@ -264,7 +265,8 @@ __try {
 
   const nsStyleVisibility *visibility = frame->GetStyleVisibility();
 
-  if (NS_FAILED(rc->SetFont(font->mFont, visibility->mLangGroup))) {
+  if (NS_FAILED(rc->SetFont(font->mFont, visibility->mLangGroup,
+                            presShell->GetPresContext()->GetUserFontSet()))) {
     return E_FAIL;
   }
 

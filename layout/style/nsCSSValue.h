@@ -54,6 +54,37 @@ class imgIRequest;
 class nsIDocument;
 class nsIPrincipal;
 
+// Deletes a linked list iteratively to avoid blowing up the stack (bug 456196).
+#define NS_CSS_DELETE_LIST_MEMBER(type_, ptr_, member_)                        \
+  {                                                                            \
+    type_ *cur = (ptr_)->member_;                                              \
+    (ptr_)->member_ = nsnull;                                                  \
+    while (cur) {                                                              \
+      type_ *next = cur->member_;                                              \
+      cur->member_ = nsnull;                                                   \
+      delete cur;                                                              \
+      cur = next;                                                              \
+    }                                                                          \
+  }
+
+// Clones a linked list iteratively to avoid blowing up the stack.
+// If it fails to clone the entire list then 'to_' is deleted and
+// we return null.
+#define NS_CSS_CLONE_LIST_MEMBER(type_, from_, member_, to_, args_)            \
+  {                                                                            \
+    type_ *dest = (to_);                                                       \
+    (to_)->member_ = nsnull;                                                   \
+    for (const type_ *src = (from_)->member_; src; src = src->member_) {       \
+      type_ *clone = src->Clone args_;                                         \
+      if (!clone) {                                                            \
+        delete (to_);                                                          \
+        return nsnull;                                                         \
+      }                                                                        \
+      dest->member_ = clone;                                                   \
+      dest = clone;                                                            \
+    }                                                                          \
+  }
+
 enum nsCSSUnit {
   eCSSUnit_Null         = 0,      // (n/a) null unit, value is not specified
   eCSSUnit_Auto         = 1,      // (n/a) value is algorithmic
@@ -63,6 +94,8 @@ enum nsCSSUnit {
   eCSSUnit_Normal       = 5,      // (n/a) value is normal (algorithmic, different than auto)
   eCSSUnit_System_Font  = 6,      // (n/a) value is -moz-use-system-font
   eCSSUnit_Dummy        = 7,      // (n/a) a fake but specified value, used
+                                  //       only in temporary values
+  eCSSUnit_DummyInherit = 8,      // (n/a) a fake but specified value, used
                                   //       only in temporary values
   eCSSUnit_String       = 10,     // (PRUnichar*) a string value
   eCSSUnit_Attr         = 11,     // (PRUnichar*) a attr(string) value
@@ -106,10 +139,8 @@ enum nsCSSUnit {
   // Length units - relative
   // Font relative measure
   eCSSUnit_EM           = 800,    // (float) == current font size
-  eCSSUnit_EN           = 801,    // (float) .5 em
-  eCSSUnit_XHeight      = 802,    // (float) distance from top of lower case x to baseline
-  eCSSUnit_CapHeight    = 803,    // (float) distance from top of uppercase case H to baseline
-  eCSSUnit_Char         = 804,    // (float) number of characters, used for width with monospace font
+  eCSSUnit_XHeight      = 801,    // (float) distance from top of lower case x to baseline
+  eCSSUnit_Char         = 802,    // (float) number of characters, used for width with monospace font
 
   // Screen relative measure
   eCSSUnit_Pixel        = 900,    // (float) CSS pixel unit
@@ -143,7 +174,7 @@ public:
   explicit nsCSSValue(nsCSSUnit aUnit = eCSSUnit_Null)
     : mUnit(aUnit)
   {
-    NS_ASSERTION(aUnit <= eCSSUnit_Dummy, "not a valueless unit");
+    NS_ASSERTION(aUnit <= eCSSUnit_DummyInherit, "not a valueless unit");
   }
 
   nsCSSValue(PRInt32 aValue, nsCSSUnit aUnit) NS_HIDDEN;
@@ -285,6 +316,7 @@ public:
   NS_HIDDEN_(void)  SetNormalValue();
   NS_HIDDEN_(void)  SetSystemFontValue();
   NS_HIDDEN_(void)  SetDummyValue();
+  NS_HIDDEN_(void)  SetDummyInheritValue();
   NS_HIDDEN_(void)  StartImageLoad(nsIDocument* aDocument)
                                    const;  // Not really const, but pretending
 

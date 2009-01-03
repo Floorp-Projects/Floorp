@@ -159,7 +159,7 @@ _cairo_pdf_operators_show_text_glyphs (cairo_pdf_operators_t	  *pdf_operators,
 				       int                         num_glyphs,
 				       const cairo_text_cluster_t *clusters,
 				       int                         num_clusters,
-				       cairo_bool_t                backward,
+				       cairo_text_cluster_flags_t  cluster_flags,
 				       cairo_scaled_font_t	  *scaled_font);
 
 #endif /* CAIRO_PDF_OPERATORS_H */

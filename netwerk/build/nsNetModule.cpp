@@ -59,6 +59,7 @@
 #include "nsDiskCacheDeviceSQL.h"
 #include "nsMimeTypes.h"
 #include "nsNetStrings.h"
+#include "nsDNSPrefetch.h"
 
 #include "nsNetCID.h"
 
@@ -598,7 +599,7 @@ CreateNewNSTXTToHTMLConvFactory(nsISupports *aOuter, REFNSIID aIID, void **aResu
 // Module implementation for the net library
 
 // Net module startup hook
-PR_STATIC_CALLBACK(nsresult) nsNetStartup(nsIModule *neckoModule)
+static nsresult nsNetStartup(nsIModule *neckoModule)
 {
     gNetStrings = new nsNetStrings();
     return gNetStrings ? NS_OK : NS_ERROR_OUT_OF_MEMORY;
@@ -606,7 +607,7 @@ PR_STATIC_CALLBACK(nsresult) nsNetStartup(nsIModule *neckoModule)
 
 
 // Net module shutdown hook
-static void PR_CALLBACK nsNetShutdown(nsIModule *neckoModule)
+static void nsNetShutdown(nsIModule *neckoModule)
 {
     // Release the url parser that the stdurl is holding.
     nsStandardURL::ShutdownGlobalObjects();
@@ -619,10 +620,13 @@ static void PR_CALLBACK nsNetShutdown(nsIModule *neckoModule)
 #ifdef XP_MACOSX
     net_ShutdownURLHelperOSX();
 #endif
-
+    
     // Release necko strings
     delete gNetStrings;
     gNetStrings = nsnull;
+    
+    // Release DNS service reference.
+    nsDNSPrefetch::Shutdown();
 }
 
 static const nsModuleComponentInfo gNetModuleInfo[] = {

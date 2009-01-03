@@ -310,7 +310,18 @@ typedef enum nsCharType nsCharType;
 #define IS_HINDI_DIGIT(u)   ( ( (u) >= START_HINDI_DIGITS )  && ( (u) <= END_HINDI_DIGITS ) )
 #define IS_ARABIC_DIGIT(u)  ( ( (u) >= START_ARABIC_DIGITS ) && ( (u) <= END_ARABIC_DIGITS ) )
 #define IS_FARSI_DIGIT(u)  ( ( (u) >= START_FARSI_DIGITS ) && ( (u) <= END_FARSI_DIGITS ) )
-#define IS_ARABIC_SEPARATOR(u) ( ( (u) == 0x066A ) || ( (u) == 0x066B ) || ( (u) == 0x066C ) )
+/**
+ * Arabic numeric separator and numeric formatting characters:
+ *  U+0600;ARABIC NUMBER SIGN
+ *  U+0601;ARABIC SIGN SANAH
+ *  U+0602;ARABIC FOOTNOTE MARKER
+ *  U+0603;ARABIC SIGN SAFHA
+ *  U+066A;ARABIC PERCENT SIGN
+ *  U+066B;ARABIC DECIMAL SEPARATOR
+ *  U+066C;ARABIC THOUSANDS SEPARATOR
+ *  U+06DD;ARABIC END OF AYAH
+ */
+#define IS_ARABIC_SEPARATOR(u) ( ( (u) == 0x0600 ) || ( (u) == 0x0601 ) || ( (u) == 0x0602 ) || ( (u) == 0x0603 ) || ( (u) == 0x066A ) || ( (u) == 0x066B ) || ( (u) == 0x066C ) || ( (u) == 0x06DD ) )
 
 #define IS_BIDI_DIACRITIC(u) ( \
   ( (u) >= 0x0591 && (u) <= 0x05A1) || ( (u) >= 0x05A3 && (u) <= 0x05B9) \

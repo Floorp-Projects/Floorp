@@ -328,9 +328,9 @@ EnsureImageHlpInitialized()
 
     ::InitializeCriticalSection(&gDbgHelpCS);
 
-    HMODULE module = ::LoadLibrary("DBGHELP.DLL");
+    HMODULE module = ::LoadLibraryW(L"DBGHELP.DLL");
     if (!module) {
-        module = ::LoadLibrary("IMAGEHLP.DLL");
+        module = ::LoadLibraryW(L"IMAGEHLP.DLL");
         if (!module) return PR_FALSE;
     }
 

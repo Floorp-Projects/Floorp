@@ -1,0 +1,143 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml">
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=459953
+-->
+<head>
+  <title>Test for Bug 459953</title>
+  <script type="application/javascript" src="/MochiKit/packed.js"></script>
+  <script type="application/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
+</head>
+<body>
+<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=459953">Mozilla Bug 459953</a>
+<p id="display"></p>
+
+<pre id="test">
+<script class="testbody" type="application/javascript">
+<![CDATA[
+SimpleTest.waitForExplicitFinish();
+
+function runTest()
+{
+  var svgns="http://www.w3.org/2000/svg";
+
+  var path1=document.createElementNS(svgns, "path");
+
+  var sseg;
+  
+  var a=10,s=20,d=30,z=9; //Arbitrary numbers for arguments
+  
+  var whatever=true; //This is often so, but here it does not matter
+  
+  sseg=path1.createSVGPathSegMovetoAbs(a, s);
+  path1.pathSegList.appendItem(sseg);
+  sseg=path1.createSVGPathSegMovetoRel(a, s);
+  path1.pathSegList.appendItem(sseg);
+  sseg=path1.createSVGPathSegLinetoAbs(a, s);
+  path1.pathSegList.appendItem(sseg);
+  sseg=path1.createSVGPathSegLinetoRel(a, s);
+  path1.pathSegList.appendItem(sseg);
+  sseg=path1.createSVGPathSegLinetoVerticalAbs(a);
+  path1.pathSegList.appendItem(sseg);
+  sseg=path1.createSVGPathSegLinetoVerticalRel(a);
+  path1.pathSegList.appendItem(sseg);
+  sseg=path1.createSVGPathSegLinetoHorizontalAbs(a);
+  path1.pathSegList.appendItem(sseg);
+  sseg=path1.createSVGPathSegLinetoHorizontalRel(a);
+  path1.pathSegList.appendItem(sseg);
+  sseg=path1.createSVGPathSegCurvetoCubicAbs(a, s, d, z, a, s);
+  path1.pathSegList.appendItem(sseg);
+  sseg=path1.createSVGPathSegCurvetoCubicRel(a, s, d, z, a, s);
+  path1.pathSegList.appendItem(sseg);
+  sseg=path1.createSVGPathSegCurvetoCubicSmoothAbs(a, s, d, z);
+  path1.pathSegList.appendItem(sseg);
+  sseg=path1.createSVGPathSegCurvetoCubicSmoothRel(a, s, d, z);
+  path1.pathSegList.appendItem(sseg);
+  sseg=path1.createSVGPathSegCurvetoQuadraticAbs(a, s, d, z);
+  path1.pathSegList.appendItem(sseg);
+  sseg=path1.createSVGPathSegCurvetoQuadraticRel(a, s, d, z);
+  path1.pathSegList.appendItem(sseg);
+  sseg=path1.createSVGPathSegCurvetoQuadraticSmoothAbs(a, s);
+  path1.pathSegList.appendItem(sseg);
+  sseg=path1.createSVGPathSegCurvetoQuadraticSmoothRel(a, s);
+  path1.pathSegList.appendItem(sseg);
+  sseg=path1.createSVGPathSegArcAbs(a, s, d, z, a, whatever, whatever);
+  path1.pathSegList.appendItem(sseg);
+  sseg=path1.createSVGPathSegArcRel(a, s, d, z, a, whatever, whatever);
+  path1.pathSegList.appendItem(sseg);
+  sseg=path1.createSVGPathSegClosePath();
+  path1.pathSegList.appendItem(sseg);
+  
+  for(var i=0;i<path1.pathSegList.numberOfItems;i++){
+    var seg=path1.pathSegList.getItem(i);
+    switch(seg.pathSegType){
+    case seg.PATHSEG_MOVETO_ABS:
+      is(seg.pathSegTypeAsLetter, "M", "wrong path segment letter");      
+      break;
+    case seg.PATHSEG_MOVETO_REL:
+      is(seg.pathSegTypeAsLetter, "m", "wrong path segment letter");      
+      break;
+    case seg.PATHSEG_CLOSEPATH:
+      is(seg.pathSegTypeAsLetter, "z", "wrong path segment letter");      
+      break;
+    case seg.PATHSEG_LINETO_ABS:
+      is(seg.pathSegTypeAsLetter, "L", "wrong path segment letter");      
+      break;
+    case seg.PATHSEG_LINETO_REL:
+      is(seg.pathSegTypeAsLetter, "l", "wrong path segment letter");      
+      break;
+    case seg.PATHSEG_LINETO_VERTICAL_ABS:
+      is(seg.pathSegTypeAsLetter, "V", "wrong path segment letter");      
+      break;
+    case seg.PATHSEG_LINETO_VERTICAL_REL:
+      is(seg.pathSegTypeAsLetter, "v", "wrong path segment letter");      
+      break;
+    case seg.PATHSEG_LINETO_HORIZONTAL_ABS:
+      is(seg.pathSegTypeAsLetter, "H", "wrong path segment letter");      
+      break;
+    case seg.PATHSEG_LINETO_HORIZONTAL_REL:
+      is(seg.pathSegTypeAsLetter, "h", "wrong path segment letter");      
+      break;
+    case seg.PATHSEG_CURVETO_CUBIC_ABS:
+      is(seg.pathSegTypeAsLetter, "C", "wrong path segment letter");      
+      break;
+    case seg.PATHSEG_CURVETO_CUBIC_REL:
+      is(seg.pathSegTypeAsLetter, "c", "wrong path segment letter");      
+      break;
+    case seg.PATHSEG_CURVETO_CUBIC_SMOOTH_ABS:
+      is(seg.pathSegTypeAsLetter, "S", "wrong path segment letter");      
+      break;
+    case seg.PATHSEG_CURVETO_CUBIC_SMOOTH_REL:
+      is(seg.pathSegTypeAsLetter, "s", "wrong path segment letter");      
+      break;
+    case seg.PATHSEG_CURVETO_QUADRATIC_ABS:
+      is(seg.pathSegTypeAsLetter, "Q", "wrong path segment letter");      
+      break;
+    case seg.PATHSEG_CURVETO_QUADRATIC_REL:
+      is(seg.pathSegTypeAsLetter, "q", "wrong path segment letter");      
+      break;
+    case seg.PATHSEG_CURVETO_QUADRATIC_SMOOTH_ABS:
+      is(seg.pathSegTypeAsLetter, "T", "wrong path segment letter");      
+      break;
+    case seg.PATHSEG_CURVETO_QUADRATIC_SMOOTH_REL:
+      is(seg.pathSegTypeAsLetter, "t", "wrong path segment letter");      
+      break;
+    case seg.PATHSEG_ARC_ABS:
+      is(seg.pathSegTypeAsLetter, "A", "wrong path segment letter");      
+      break;
+    case seg.PATHSEG_ARC_REL:
+      is(seg.pathSegTypeAsLetter, "a", "wrong path segment letter");      
+      break;
+      
+    }
+  }
+  SimpleTest.finish();
+}
+
+window.addEventListener("load", runTest, false);
+]]>
+</script>
+</pre>
+</body>
+</html>

@@ -1465,14 +1465,17 @@ CK_OBJECT_HANDLE
 pk11_FindObjectByTemplate(PK11SlotInfo *slot,CK_ATTRIBUTE *theTemplate,int tsize)
 {
     CK_OBJECT_HANDLE object;
-    CK_RV crv;
+    CK_RV crv = CKR_SESSION_HANDLE_INVALID;
     CK_ULONG objectCount;
 
     /*
      * issue the find
      */
     PK11_EnterSlotMonitor(slot);
-    crv=PK11_GETTAB(slot)->C_FindObjectsInit(slot->session, theTemplate, tsize);
+    if (slot->session != CK_INVALID_SESSION) {
+	crv = PK11_GETTAB(slot)->C_FindObjectsInit(slot->session, 
+	                                           theTemplate, tsize);
+    }
     if (crv != CKR_OK) {
         PK11_ExitSlotMonitor(slot);
 	PORT_SetError( PK11_MapError(crv) );
@@ -1498,16 +1501,18 @@ pk11_FindObjectByTemplate(PK11SlotInfo *slot,CK_ATTRIBUTE *theTemplate,int tsize
  * return all the object handles that matches the template
  */
 CK_OBJECT_HANDLE *
-pk11_FindObjectsByTemplate(PK11SlotInfo *slot,
-		CK_ATTRIBUTE *findTemplate,int findCount,int *object_count) {
+pk11_FindObjectsByTemplate(PK11SlotInfo *slot, CK_ATTRIBUTE *findTemplate,
+                           int templCount, int *object_count) 
+{
     CK_OBJECT_HANDLE *objID = NULL;
     CK_ULONG returned_count = 0;
-    CK_RV crv;
-
+    CK_RV crv = CKR_SESSION_HANDLE_INVALID;
 
     PK11_EnterSlotMonitor(slot);
-    crv = PK11_GETTAB(slot)->C_FindObjectsInit(slot->session, findTemplate, 
-								findCount);
+    if (slot->session != CK_INVALID_SESSION) {
+	crv = PK11_GETTAB(slot)->C_FindObjectsInit(slot->session, 
+	                                           findTemplate, templCount);
+    }
     if (crv != CKR_OK) {
 	PK11_ExitSlotMonitor(slot);
 	PORT_SetError( PK11_MapError(crv) );
@@ -1615,28 +1620,31 @@ PK11_MatchItem(PK11SlotInfo *slot, CK_OBJECT_HANDLE searchID,
  */
 int
 PK11_NumberObjectsFor(PK11SlotInfo *slot, CK_ATTRIBUTE *findTemplate, 
-							int templateCount)
+							int templCount)
 {
     CK_OBJECT_HANDLE objID[PK11_SEARCH_CHUNKSIZE];
     int object_count = 0;
     CK_ULONG returned_count = 0;
-    CK_RV crv;
+    CK_RV crv = CKR_SESSION_HANDLE_INVALID;
 
     PK11_EnterSlotMonitor(slot);
-    crv = PK11_GETTAB(slot)->C_FindObjectsInit(slot->session,
-					findTemplate, templateCount);
+    if (slot->session != CK_INVALID_SESSION) {
+	crv = PK11_GETTAB(slot)->C_FindObjectsInit(slot->session,
+						   findTemplate, templCount);
+    }
     if (crv != CKR_OK) {
         PK11_ExitSlotMonitor(slot);
 	PORT_SetError( PK11_MapError(crv) );
-	return 0;
+	return object_count;
     }
 
     /*
      * collect all the Matching Objects
      */
     do {
-    	crv = PK11_GETTAB(slot)->C_FindObjects(slot->session,
-				objID,PK11_SEARCH_CHUNKSIZE,&returned_count);
+    	crv = PK11_GETTAB(slot)->C_FindObjects(slot->session, objID, 
+	                                       PK11_SEARCH_CHUNKSIZE, 
+					       &returned_count);
 	if (crv != CKR_OK) {
 	    PORT_SetError( PK11_MapError(crv) );
 	    break;

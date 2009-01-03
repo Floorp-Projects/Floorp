@@ -53,26 +53,21 @@
 //----------------------------------------------------------------------
 // Implementation
 
-nsSVGGradientFrame::nsSVGGradientFrame(nsStyleContext* aContext,
-                                       nsIDOMSVGURIReference *aRef) :
+nsSVGGradientFrame::nsSVGGradientFrame(nsStyleContext* aContext) :
   nsSVGGradientFrameBase(aContext),
   mLoopFlag(PR_FALSE),
   mNoHRefURI(PR_FALSE)
 {
-  if (aRef) {
-    // Get the href
-    aRef->GetHref(getter_AddRefs(mHref));
-  }
 }
 
 //----------------------------------------------------------------------
 // nsIFrame methods:
 
-NS_IMETHODIMP
-nsSVGGradientFrame::DidSetStyleContext()
+/* virtual */ void
+nsSVGGradientFrame::DidSetStyleContext(nsStyleContext* aOldStyleContext)
 {
   nsSVGEffects::InvalidateRenderingObservers(this);
-  return nsSVGGradientFrameBase::DidSetStyleContext();
+  nsSVGGradientFrameBase::DidSetStyleContext(aOldStyleContext);
 }
 
 NS_IMETHODIMP
@@ -171,26 +166,9 @@ nsSVGGradientFrame::GetGradientTransform(nsSVGGeometryFrame *aSource)
                  "Unknown gradientUnits type");
     // objectBoundingBox is the default anyway
 
-    nsISVGChildFrame *frame = nsnull;
-    if (aSource) {
-      if (callerType == nsGkAtoms::svgGlyphFrame)
-        CallQueryInterface(aSource->GetParent(), &frame);
-      else
-        CallQueryInterface(aSource, &frame);
-    }
-    nsCOMPtr<nsIDOMSVGRect> rect;
-    if (frame) {
-      nsCOMPtr<nsIDOMSVGMatrix> matrix = frame->GetOverrideCTM();
-      frame->SetMatrixPropagation(PR_FALSE);
-      frame->SetOverrideCTM(nsnull);
-      frame->NotifySVGChanged(nsISVGChildFrame::SUPPRESS_INVALIDATION |
-                              nsISVGChildFrame::TRANSFORM_CHANGED);
-      frame->GetBBox(getter_AddRefs(rect));
-      frame->SetMatrixPropagation(PR_TRUE);
-      frame->SetOverrideCTM(matrix);
-      frame->NotifySVGChanged(nsISVGChildFrame::SUPPRESS_INVALIDATION |
-                              nsISVGChildFrame::TRANSFORM_CHANGED);
-    }
+    nsIFrame *frame = (callerType == nsGkAtoms::svgGlyphFrame) ?
+                        aSource->GetParent() : aSource;
+    nsCOMPtr<nsIDOMSVGRect> rect = nsSVGUtils::GetBBox(frame);
     if (rect) {
       float x, y, width, height;
       rect->GetX(&x);
@@ -303,8 +281,8 @@ nsSVGGradientFrame::GetReferencedGradient()
 
   if (!property) {
     // Fetch our gradient element's xlink:href attribute
-    nsAutoString href;
-    mHref->GetAnimVal(href);
+    nsSVGGradientElement *grad = static_cast<nsSVGGradientElement *>(mContent);
+    const nsString &href = grad->mStringAttributes[nsSVGGradientElement::HREF].GetAnimValue();
     if (href.IsEmpty()) {
       mNoHRefURI = PR_TRUE;
       return nsnull; // no URL
@@ -620,10 +598,7 @@ NS_NewSVGLinearGradientFrame(nsIPresShell*   aPresShell,
     return nsnull;
   }
 
-  nsCOMPtr<nsIDOMSVGURIReference> aRef = do_QueryInterface(aContent);
-  NS_ASSERTION(aRef, "NS_NewSVGLinearGradientFrame -- Content doesn't support nsIDOMSVGURIReference");
-
-  return new (aPresShell) nsSVGLinearGradientFrame(aContext, aRef);
+  return new (aPresShell) nsSVGLinearGradientFrame(aContext);
 }
 
 nsIFrame*
@@ -637,8 +612,5 @@ NS_NewSVGRadialGradientFrame(nsIPresShell*   aPresShell,
     return nsnull;
   }
 
-  nsCOMPtr<nsIDOMSVGURIReference> aRef = do_QueryInterface(aContent);
-  NS_ASSERTION(aRef, "NS_NewSVGRadialGradientFrame -- Content doesn't support nsIDOMSVGURIReference");
-
-  return new (aPresShell) nsSVGRadialGradientFrame(aContext, aRef);
+  return new (aPresShell) nsSVGRadialGradientFrame(aContext);
 }

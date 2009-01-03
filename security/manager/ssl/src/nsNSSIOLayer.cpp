@@ -972,6 +972,7 @@ static void
 AppendErrorTextMismatch(const nsString &host,
                         nsIX509Cert* ix509,
                         nsINSSComponent *component,
+                        PRBool wantsHtml,
                         nsString &returnedMessage)
 {
   const PRUnichar *params[1];
@@ -1035,8 +1036,14 @@ AppendErrorTextMismatch(const nsString &host,
     const PRUnichar *params[1];
     params[0] = allNames.get();
 
+    const char *stringID;
+    if (wantsHtml)
+      stringID = "certErrorMismatchSingle2";
+    else
+      stringID = "certErrorMismatchSinglePlain";
+
     nsString formattedString;
-    rv = component->PIPBundleFormatStringFromName("certErrorMismatchSingle2", 
+    rv = component->PIPBundleFormatStringFromName(stringID, 
                                                   params, 1, 
                                                   formattedString);
     if (NS_SUCCEEDED(rv)) {
@@ -1166,6 +1173,7 @@ getInvalidCertErrorMessage(PRUint32 multipleCollectedErrors,
                            PRInt32 port,
                            nsIX509Cert* ix509,
                            PRBool externalErrorReporting,
+                           PRBool wantsHtml,
                            nsINSSComponent *component,
                            nsString &returnedMessage)
 {
@@ -1204,7 +1212,7 @@ getInvalidCertErrorMessage(PRUint32 multipleCollectedErrors,
 
   if (multipleCollectedErrors & nsICertOverrideService::ERROR_MISMATCH)
   {
-    AppendErrorTextMismatch(host, ix509, component, returnedMessage);
+    AppendErrorTextMismatch(host, ix509, component, wantsHtml, returnedMessage);
   }
 
   if (multipleCollectedErrors & nsICertOverrideService::ERROR_TIME)
@@ -1343,6 +1351,7 @@ nsHandleInvalidCertError(nsNSSSocketInfo *socketInfo,
                          PRErrorCode errTrust, 
                          PRErrorCode errMismatch, 
                          PRErrorCode errExpired,
+                         PRBool wantsHtml,
                          nsIX509Cert* ix509)
 {
   nsresult rv;
@@ -1365,7 +1374,8 @@ nsHandleInvalidCertError(nsNSSSocketInfo *socketInfo,
   rv = getInvalidCertErrorMessage(multipleCollectedErrors, errorCodeToReport,
                                   errTrust, errMismatch, errExpired,
                                   hostU, hostWithPortU, port, 
-                                  ix509, external, nssComponent, formattedString);
+                                  ix509, external, wantsHtml,
+                                  nssComponent, formattedString);
 
   if (external)
   {
@@ -3077,6 +3087,9 @@ nsNSSBadCertHandler(void *arg, PRFileDesc *sslSocket)
     errorCodeToReport = errorCodeExpired;
 
   if (!suppressMessage) {
+    PRBool external = PR_FALSE;
+    infoObject->GetExternalErrorReporting(&external);
+
     nsHandleInvalidCertError(infoObject,
                              remaining_display_errors,
                              hostString,
@@ -3086,6 +3099,7 @@ nsNSSBadCertHandler(void *arg, PRFileDesc *sslSocket)
                              errorCodeTrust,
                              errorCodeMismatch,
                              errorCodeExpired,
+                             external, // wantsHtml
                              ix509);
   }
 

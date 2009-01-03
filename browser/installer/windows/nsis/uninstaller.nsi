@@ -383,6 +383,8 @@ Function un.leaveWelcome
   ${If} ${FileExists} "$INSTDIR\${FileMainEXE}"
     Banner::show /NOUNLOAD "$(BANNER_CHECK_EXISTING)"
 
+    ; If the message window has been found previously give the app an additional
+    ; five seconds to close.
     ${If} "$TmpVal" == "FoundMessageWindow"
       Sleep 5000
     ${EndIf}
@@ -393,9 +395,14 @@ Function un.leaveWelcome
 
     Banner::destroy
 
+    ; If there are files in use $TmpVal will be "true"
     ${If} "$TmpVal" == "true"
+      ; If the message window is found the call to ManualCloseAppPrompt will
+      ; abort leaving the value of $TmpVal set to "FoundMessageWindow".
       StrCpy $TmpVal "FoundMessageWindow"
       ${un.ManualCloseAppPrompt} "${WindowClass}" "$(WARN_MANUALLY_CLOSE_APP_UNINSTALL)"
+      ; If the message window is not found set $TmpVal to "true" so the restart
+      ; required message is displayed.
       StrCpy $TmpVal "true"
     ${EndIf}
   ${EndIf}

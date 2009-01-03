@@ -53,8 +53,6 @@ class nsPrefService : public nsIPrefService,
                       public nsIPrefBranchInternal,
                       public nsSupportsWeakReference
 {
-  friend class nsSharedPrefHandler; 
-  
 public:
   NS_DECL_ISUPPORTS
   NS_DECL_NSIPREFSERVICE
@@ -81,10 +79,6 @@ private:
   nsCOMPtr<nsIPrefBranch2> mRootBranch;
   nsCOMPtr<nsIFile>       mCurrentFile;
   PRPackedBool            mDontWriteUserPrefs;
-#if MOZ_PROFILESHARING
-  nsCOMPtr<nsIFile>       mCurrentSharedFile;
-  PRPackedBool            mDontWriteSharedUserPrefs;
-#endif
 };
 
 #endif // nsPrefService_h__

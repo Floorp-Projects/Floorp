@@ -217,10 +217,9 @@ var PlacesUtils = {
    * @returns true if the node is a visit item, false otherwise
    */
   nodeIsVisit: function PU_nodeIsVisit(aNode) {
-    const NHRN = Ci.nsINavHistoryResultNode;
     var type = aNode.type;
-    return type == NHRN.RESULT_TYPE_VISIT ||
-           type == NHRN.RESULT_TYPE_FULL_VISIT;
+    return type == Ci.nsINavHistoryResultNode.RESULT_TYPE_VISIT ||
+           type == Ci.nsINavHistoryResultNode.RESULT_TYPE_FULL_VISIT;
   },
 
   /**
@@ -254,8 +253,8 @@ var PlacesUtils = {
    * @returns true if the node is readonly, false otherwise
    */
   nodeIsReadOnly: function PU_nodeIsReadOnly(aNode) {
-    if (this.nodeIsFolder(aNode))
-      return this.bookmarks.getFolderReadonly(asQuery(aNode).folderItemId);
+    if (this.nodeIsFolder(aNode) || this.nodeIsDynamicContainer(aNode))
+      return this.bookmarks.getFolderReadonly(this.getConcreteItemId(aNode));
     if (this.nodeIsQuery(aNode) &&
         asQuery(aNode).queryOptions.resultType !=
           Ci.nsINavHistoryQueryOptions.RESULTS_AS_TAG_CONTENTS)
@@ -344,7 +343,7 @@ var PlacesUtils = {
    * @returns true if the node is a dynamic container item, false otherwise
    */
   nodeIsDynamicContainer: function PU_nodeIsDynamicContainer(aNode) {
-    if (aNode.type == NHRN.RESULT_TYPE_DYNAMIC_CONTAINER)
+    if (aNode.type == Ci.nsINavHistoryResultNode.RESULT_TYPE_DYNAMIC_CONTAINER)
       return true;
     return false;
   },
@@ -1076,11 +1075,26 @@ var PlacesUtils = {
               // remove tags via the tagging service
               var tags = this._utils.tagging.allTags;
               var uris = [];
+              var bogusTagContainer = false;
               for (let i in tags) {
-                var tagURIs = this._utils.tagging.getURIsForTag(tags[i]);
+                var tagURIs = [];
+                // skip empty tags since getURIsForTag would throw
+                if (tags[i])
+                  tagURIs = this._utils.tagging.getURIsForTag(tags[i]);
+
+                if (!tagURIs.length) {
+                  // This is a bogus tag container, empty tags should be removed
+                  // automatically, but this does not work if they contain some
+                  // not-uri node, so we remove them manually.
+                  // XXX this is a temporary workaround until we implement
+                  // preventive database maintenance in bug 431558.
+                  bogusTagContainer = true;
+                }
                 for (let j in tagURIs)
                   this._utils.tagging.untagURI(tagURIs[j], [tags[i]]);
               }
+              if (bogusTagContainer)
+                this._utils.bookmarks.removeFolderChildren(rootItemId);
             }
             else if ([this._utils.toolbarFolderId,
                       this._utils.unfiledBookmarksFolderId,
@@ -1164,7 +1178,11 @@ var PlacesUtils = {
         if (aContainer == PlacesUtils.bookmarks.tagsFolder) {
           if (aData.children) {
             aData.children.forEach(function(aChild) {
-              this.tagging.tagURI(this._uri(aChild.uri), [aData.title]);
+              try {
+                this.tagging.tagURI(this._uri(aChild.uri), [aData.title]);
+              } catch (ex) {
+                // invalid tag child, skip it
+              }
             }, this);
             return [folderIdMap, searchIds];
           }
@@ -1422,9 +1440,9 @@ var PlacesUtils = {
           var childNode = aSourceNode.getChild(i);
           if (aExcludeItems && aExcludeItems.indexOf(childNode.itemId) != -1)
             continue;
-          if (i != 0)
+          var written = serializeNodeToJSONStream(aSourceNode.getChild(i), i);
+          if (written && i < cc - 1)
             aStream.write(",", 1);
-          serializeNodeToJSONStream(aSourceNode.getChild(i), i);
         }
         if (!wasOpen)
           aSourceNode.containerOpen = false;
@@ -1445,33 +1463,53 @@ var PlacesUtils = {
 
       addGenericProperties(bNode, node);
 
+      var parent = bNode.parent;
+      var grandParent = parent ? parent.parent : null;
+
       if (self.nodeIsURI(bNode)) {
+        // Tag root accept only folder nodes
+        if (parent && parent.itemId == self.tagsFolderId)
+          return false;
         // Check for url validity, since we can't halt while writing a backup.
         // This will throw if we try to serialize an invalid url and it does
         // not make sense saving a wrong or corrupt uri node.
         try {
           self._uri(bNode.uri);
         } catch (ex) {
-          return;
+          return false;
         }
         addURIProperties(bNode, node);
       }
-      else if (self.nodeIsContainer(bNode))
+      else if (self.nodeIsContainer(bNode)) {
+        // Tag containers accept only uri nodes
+        if (grandParent && grandParent.itemId == self.tagsFolderId)
+          return false;
         addContainerProperties(bNode, node);
-      else if (self.nodeIsSeparator(bNode))
+      }
+      else if (self.nodeIsSeparator(bNode)) {
+        // Tag root accept only folder nodes
+        // Tag containers accept only uri nodes
+        if ((parent && parent.itemId == self.tagsFolderId) ||
+            (grandParent && grandParent.itemId == self.tagsFolderId))
+          return false;
+
         addSeparatorProperties(bNode, node);
+      }
 
       if (!node.feedURI && node.type == self.TYPE_X_MOZ_PLACE_CONTAINER)
         writeComplexNode(aStream, node, bNode);
       else
         writeScalarNode(aStream, node);
+      return true;
     }
 
     // serialize to stream
     serializeNodeToJSONStream(aNode, null);
   },
 
-  // XXX testing serializers
+  /**
+   * Serialize a JS object to JSON
+   */
   toJSONString: function PU_toJSONString(aObj) {
     var JSON = Cc["@mozilla.org/dom/json;1"].createInstance(Ci.nsIJSON);
     return JSON.encode(aObj);
@@ -1547,17 +1585,26 @@ var PlacesUtils = {
     // Use YYYY-MM-DD (ISO 8601) as it doesn't contain illegal characters
     // and makes the alphabetical order of multiple backup files more useful.
     var date = new Date().toLocaleFormat("%Y-%m-%d");
-    var backupFilename = this.getFormattedString("bookmarksArchiveFilename", [date]);
+    var backupFilename = "bookmarks-" + date + ".json";
 
     var backupFile = null;
     if (!aForceArchive) {
       var backupFileNames = [];
       var backupFilenamePrefix = backupFilename.substr(0, backupFilename.indexOf("-"));
+
+      // Get the localized backup filename, to clear out
+      // old backups with a localized name (bug 445704).
+      var localizedFilename = this.getFormattedString("bookmarksArchiveFilename", [date]);
+      var localizedFilenamePrefix = localizedFilename.substr(0, localizedFilename.indexOf("-"));
+      var rx = new RegExp("^(bookmarks|" + localizedFilenamePrefix + ")-.+\.(json|html)");
+
       var entries = bookmarksBackupDir.directoryEntries;
       while (entries.hasMoreElements()) {
         var entry = entries.getNext().QueryInterface(Ci.nsIFile);
         var backupName = entry.leafName;
-        if (backupName.substr(0, backupFilenamePrefix.length) == backupFilenamePrefix) {
+        // A valid backup is any file that matches either the localized or
+        // not-localized filename (bug 445704).
+        if (backupName.match(rx)) {
           if (backupName == backupFilename)
             backupFile = entry;
           backupFileNames.push(backupName);
@@ -1631,5 +1678,13 @@ var PlacesUtils = {
     var backupFile = bookmarksBackupDir.clone();
     backupFile.append(filename);
     return backupFile;
+  },
+
+  /**
+   * Starts the database coherence check and executes update tasks on a timer,
+   * this method is called by browser.js in delayed startup.
+   */
+  startPlacesDBUtils: function PU_startPlacesDBUtils() {
+    Components.utils.import("resource://gre/modules/PlacesDBUtils.jsm");
   }
 };

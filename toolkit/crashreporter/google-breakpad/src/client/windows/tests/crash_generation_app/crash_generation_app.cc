@@ -35,7 +35,7 @@
 namespace google_breakpad {
 
 const int kMaxLoadString = 100;
-const wchar_t kPipeName[] = L"\\\\.\\pipe\\GoogleCrashServices";
+const wchar_t kPipeName[] = L"\\\\.\\pipe\\BreakpadCrashServices\\TestServer";
 
 const DWORD kEditBoxStyles = WS_CHILD |
                              WS_VISIBLE |
@@ -62,6 +62,12 @@ ATOM MyRegisterClass(HINSTANCE instance);
 BOOL InitInstance(HINSTANCE, int);
 LRESULT CALLBACK WndProc(HWND, UINT, WPARAM, LPARAM);
 INT_PTR CALLBACK About(HWND, UINT, WPARAM, LPARAM);
+
+static int kCustomInfoCount = 2;
+static CustomInfoEntry kCustomInfoEntries[] = {
+    CustomInfoEntry(L"prod", L"CrashTestApp"),
+    CustomInfoEntry(L"ver", L"1.0"),
+};
 
 static ExceptionHandler* handler = NULL;
 static CrashGenerationServer* crash_server = NULL;
@@ -168,6 +174,7 @@ bool ShowDumpResults(const wchar_t* dump_path,
                      MDRawAssertionInfo* assertion,
                      bool succeeded) {
   TCHAR* text = new TCHAR[kMaximumLineLength];
+  text[0] = _T('\0');
   int result = swprintf_s(text,
                           kMaximumLineLength,
                           TEXT("Dump generation request %s\r\n"),
@@ -183,6 +190,7 @@ bool ShowDumpResults(const wchar_t* dump_path,
 static void _cdecl ShowClientConnected(void* context,
                                        const ClientInfo* client_info) {
   TCHAR* line = new TCHAR[kMaximumLineLength];
+  line[0] = _T('\0');
   int result = swprintf_s(line,
                           kMaximumLineLength,
                           L"Client connected:\t\t%d\r\n",
@@ -197,8 +205,10 @@ static void _cdecl ShowClientConnected(void* context,
 }
 
 static void _cdecl ShowClientCrashed(void* context,
-                                     const ClientInfo* client_info) {
+                                     const ClientInfo* client_info,
+                                     const wstring* dump_path) {
   TCHAR* line = new TCHAR[kMaximumLineLength];
+  line[0] = _T('\0');
   int result = swprintf_s(line,
                           kMaximumLineLength,
                           TEXT("Client requested dump:\t%d\r\n"),
@@ -210,11 +220,39 @@ static void _cdecl ShowClientCrashed(void* context,
   }
 
   QueueUserWorkItem(AppendTextWorker, line, WT_EXECUTEDEFAULT);
+
+  CustomClientInfo custom_info = client_info->GetCustomInfo();
+  if (custom_info.count <= 0) {
+    return;
+  }
+
+  wstring str_line;
+  for (int i = 0; i < custom_info.count; ++i) {
+    if (i > 0) {
+      str_line += L", ";
+    }
+    str_line += custom_info.entries[i].name;
+    str_line += L": ";
+    str_line += custom_info.entries[i].value;
+  }
+
+  line = new TCHAR[kMaximumLineLength];
+  line[0] = _T('\0');
+  result = swprintf_s(line,
+                      kMaximumLineLength,
+                      L"%s\n",
+                      str_line.c_str());
+  if (result == -1) {
+    delete[] line;
+    return;
+  }
+  QueueUserWorkItem(AppendTextWorker, line, WT_EXECUTEDEFAULT);
 }
 
 static void _cdecl ShowClientExited(void* context,
                                     const ClientInfo* client_info) {
   TCHAR* line = new TCHAR[kMaximumLineLength];
+  line[0] = _T('\0');
   int result = swprintf_s(line,
                           kMaximumLineLength,
                           TEXT("Client exited:\t\t%d\r\n"),
@@ -236,6 +274,7 @@ void CrashServerStart() {
 
   std::wstring dump_path = L"C:\\Dumps\\";
   crash_server = new CrashGenerationServer(kPipeName,
+                                           NULL,
                                            ShowClientConnected,
                                            NULL,
                                            ShowClientCrashed,
@@ -274,6 +313,7 @@ void RequestDump() {
   if (!handler->WriteMinidump()) {
     MessageBoxW(NULL, L"Dump request failed", L"Dumper", MB_OK);
   }
+  kCustomInfoEntries[1].set_value(L"1.1");
 }
 
 void CleanUp() {
@@ -425,6 +465,8 @@ int APIENTRY _tWinMain(HINSTANCE instance,
   cs_edit = new CRITICAL_SECTION();
   InitializeCriticalSection(cs_edit);
 
+  CustomClientInfo custom_info = {kCustomInfoEntries, kCustomInfoCount};
+
   // This is needed for CRT to not show dialog for invalid param
   // failures and instead let the code handle it.
   _CrtSetReportMode(_CRT_ASSERT, 0);
@@ -434,7 +476,8 @@ int APIENTRY _tWinMain(HINSTANCE instance,
                                  NULL,
                                  ExceptionHandler::HANDLER_ALL,
                                  MiniDumpNormal,
-                                 kPipeName);
+                                 kPipeName,
+                                 &custom_info);
 
   // Initialize global strings.
   LoadString(instance, IDS_APP_TITLE, title, kMaxLoadString);

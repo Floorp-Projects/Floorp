@@ -94,7 +94,8 @@ public:
   virtual nsresult PreHandleEvent(nsEventChainPreVisitor& aVisitor) = 0;
 
   /**
-   * Called just before possible event handlers on this object will be called.
+   * If nsEventChainPreVisitor.mWantsWillHandleEvent is set PR_TRUE,
+   * called just before possible event handlers on this object will be called.
    */
   virtual nsresult WillHandleEvent(nsEventChainPostVisitor& aVisitor)
   {

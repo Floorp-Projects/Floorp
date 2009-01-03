@@ -119,11 +119,12 @@ sv_PrintTime(FILE *out, SECItem *t, char *m)
     /* Convert to local time */
     PR_ExplodeTime(time, PR_LocalTimeParameters, &printableTime);
 
-    timeString = (char *)PORT_Alloc(100);
+    timeString = (char *)PORT_Alloc(256);
 
     if ( timeString ) {
-        PR_FormatTime( timeString, 100, "%a %b %d %H:%M:%S %Y", &printableTime );
-        fprintf(out, "%s%s\n", m, timeString);
+        if (PR_FormatTime( timeString, 256, "%a %b %d %H:%M:%S %Y", &printableTime )) {
+            fprintf(out, "%s%s\n", m, timeString);
+        }
         PORT_Free(timeString);
         return 0;
     }
@@ -361,14 +362,16 @@ sv_PrintSubjectPublicKeyInfo(FILE *out, PRArenaPool *arena,
     DER_ConvertBitString(&i->subjectPublicKey);
     switch(SECOID_FindOIDTag(&i->algorithm.algorithm)) {
         case SEC_OID_PKCS1_RSA_ENCRYPTION:
-            rv = SEC_ASN1DecodeItem(arena, pk, SECKEY_RSAPublicKeyTemplate,
+            rv = SEC_ASN1DecodeItem(arena, pk,
+                                    SEC_ASN1_GET(SECKEY_RSAPublicKeyTemplate),
                                     &i->subjectPublicKey);
             if (rv) return rv;
             sprintf(mm, "%s.rsaPublicKey.", msg);
             sv_PrintRSAPublicKey(out, pk, mm);
             break;
         case SEC_OID_ANSIX9_DSA_SIGNATURE:
-            rv = SEC_ASN1DecodeItem(arena, pk, SECKEY_DSAPublicKeyTemplate,
+            rv = SEC_ASN1DecodeItem(arena, pk,
+                                    SEC_ASN1_GET(SECKEY_DSAPublicKeyTemplate),
                                     &i->subjectPublicKey);
             if (rv) return rv;
             sprintf(mm, "%s.dsaPublicKey.", msg);
@@ -391,7 +394,8 @@ sv_PrintInvalidDateExten  (FILE *out, SECItem *value, char *msg)
     char *formattedTime = NULL;
 
     decodedValue.data = NULL;
-    rv = SEC_ASN1DecodeItem (NULL, &decodedValue, SEC_GeneralizedTimeTemplate,
+    rv = SEC_ASN1DecodeItem (NULL, &decodedValue,
+                             SEC_ASN1_GET(SEC_GeneralizedTimeTemplate),
                              value);
     if (rv == SECSuccess) {
         rv = DER_GeneralizedTimeToTime(&invalidTime, &decodedValue);
@@ -495,7 +499,8 @@ sv_PrintCertificate(FILE *out, SECItem *der, char *m, int level)
     arena = PORT_NewArena(DER_DEFAULT_CHUNKSIZE);
     if (!arena) return SEC_ERROR_NO_MEMORY;
 
-    rv = SEC_ASN1DecodeItem(arena, c, CERT_CertificateTemplate, der);
+    rv = SEC_ASN1DecodeItem(arena, c, SEC_ASN1_GET(CERT_CertificateTemplate),
+                            der);
     if (rv) {
         PORT_FreeArena(arena, PR_FALSE);
         return rv;
@@ -541,7 +546,8 @@ sv_PrintSignedData(FILE *out, SECItem *der, char *m, SECU_PPFunc inner)
     arena = PORT_NewArena(DER_DEFAULT_CHUNKSIZE);
     if (!arena) return SEC_ERROR_NO_MEMORY;
 
-    rv = SEC_ASN1DecodeItem(arena, sd, CERT_SignedDataTemplate, der);
+    rv = SEC_ASN1DecodeItem(arena, sd, SEC_ASN1_GET(CERT_SignedDataTemplate),
+                            der);
     if (rv) {
         PORT_FreeArena(arena, PR_FALSE);
         return rv;

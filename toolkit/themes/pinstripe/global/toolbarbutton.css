@@ -53,6 +53,11 @@ toolbarbutton {
   border-right: 1px solid transparent;
   border-left: 1px solid transparent;
   background-color: transparent;
+  text-shadow: 0 1px 0 rgba(255, 255, 255, 0.4);
+}
+
+toolbarbutton:not([disabled="true"]):active:hover {
+  text-shadow: none;
 }
 
 .toolbarbutton-icon {
@@ -77,7 +82,7 @@ toolbarbutton[disabled="true"],
 toolbarbutton[disabled="true"]:hover,
 toolbarbutton[disabled="true"]:hover:active
 toolbarbutton[disabled="true"][open="true"] {
-  color: GrayText !important;
+  color: -moz-mac-disabledtoolbartext !important;
 }
 
 /* ..... checked state ..... */

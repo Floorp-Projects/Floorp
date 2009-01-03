@@ -95,7 +95,9 @@ nsTextEditRules::CheckBidiLevelForDeletion(nsISelection         *aSelection,
   PRUint8 currentCaretLevel = frameSelection->GetCaretBidiLevel();
 
   PRUint8 levelOfDeletion;
-  levelOfDeletion = (nsIEditor::eNext==aAction) ? levelAfter : levelBefore;
+  levelOfDeletion =
+    (nsIEditor::eNext==aAction || nsIEditor::eNextWord==aAction) ?
+    levelAfter : levelBefore;
 
   if (currentCaretLevel == levelOfDeletion)
     ; // perform the deletion

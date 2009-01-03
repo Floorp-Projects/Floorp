@@ -151,7 +151,7 @@ protected:
     NS_IMETHOD UnBindListener(nsISupports *aListener, const nsIID& aIID);
     NS_IMETHOD EnableGlobalHistory(PRBool aEnable);
 
-    static nsEventStatus PR_CALLBACK HandleEvent(nsGUIEvent *aEvent);
+    static nsEventStatus HandleEvent(nsGUIEvent *aEvent);
 
 protected:
    nsDocShellTreeOwner*       mDocShellTreeOwner;

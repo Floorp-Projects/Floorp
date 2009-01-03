@@ -44,8 +44,8 @@
 struct nsStyleBackground;
 
 enum nsFontSizeType {
-  eFontSize_HTML  	= 1,
-  eFontSize_CSS			= 2
+  eFontSize_HTML = 1,
+  eFontSize_CSS = 2
 };
 
 

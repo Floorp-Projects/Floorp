@@ -1,0 +1,58 @@
+<?xml version="1.0" encoding="iso-8859-1" ?>
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.1//EN" "http://www.w3.org/TR/xhtml11/DTD/xhtml11.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml" class="reftest-print">
+<head>
+  <title>Media Query - Print mode test - max-width</title>
+  <style type="text/css"><![CDATA[
+    p {height: 10px; width: 100px; color: yellow; }
+    @media print { .a { color: aqua; } }
+    @media screen { .b { color: aqua; } }
+
+    /* we set the width to 5 inches/360pt/127mm in the reftest-print class*/
+    /* test values great than */
+    @media (max-width: 31in) { .c { color: aqua; } }    /* y */
+    @media (max-width: 3141pt) { .d { color: aqua; } }  /* y */ 
+    @media (max-width: 314mm) { .e { color: aqua; } }  /* y */
+
+    @media print and (max-width: 31in) { .f {color: aqua; } }  /* y */ 
+    @media print and (max-width: 3141pt) { .g {color: aqua; } }/* y */
+    @media print and (max-width: 314mm) { .h {color: aqua; } }/* y */
+
+    @media all and (max-width: 31in) { .i { color: aqua; } } /* y */
+
+
+    /* test values less than */
+    @media (max-width: 1in) { .j { color: aqua; } }    /* n */
+    @media (max-width: 141pt) { .k { color: aqua; } }  /* n */ 
+    @media (max-width: 14mm) { .l { color: aqua; } }  /* n */
+
+    @media print and (max-width: 1in) { .m {color: aqua; } }  /* n */ 
+    @media print and (max-width: 141pt) { .n {color: aqua; } }/* n */
+    @media print and (max-width: 14mm) { .o {color: aqua; } }/* n */
+
+    @media all and (max-width: 1in) { .p { color: aqua; } } /* n */
+
+  ]]></style>
+</head>
+
+<body>
+  <p class="a">a</p>
+  <p class="b">b</p>
+
+  <p class="c">c</p>
+  <p class="d">d</p>
+  <p class="e">e</p>
+  <p class="f">f</p>
+  <p class="g">g</p>
+  <p class="h">h</p>
+  <p class="i">i</p>
+
+  <p class="j">j</p>
+  <p class="k">k</p>
+  <p class="l">l</p>
+  <p class="m">m</p>
+  <p class="n">n</p>
+  <p class="o">o</p>
+  <p class="p">p</p>
+</body>
+</html>

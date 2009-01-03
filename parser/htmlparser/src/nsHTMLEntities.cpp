@@ -54,7 +54,7 @@ struct EntityNodeEntry : public PLDHashEntryHdr
   const EntityNode* node;
 }; 
 
-PR_STATIC_CALLBACK(PRBool)
+static PRBool
   matchNodeString(PLDHashTable*, const PLDHashEntryHdr* aHdr,
                   const void* key)
 {
@@ -63,7 +63,7 @@ PR_STATIC_CALLBACK(PRBool)
   return (nsCRT::strcmp(entry->node->mStr, str) == 0);
 }
 
-PR_STATIC_CALLBACK(PRBool)
+static PRBool
   matchNodeUnicode(PLDHashTable*, const PLDHashEntryHdr* aHdr,
                    const void* key)
 {
@@ -72,7 +72,7 @@ PR_STATIC_CALLBACK(PRBool)
   return (entry->node->mUnicode == ucode);
 }
 
-PR_STATIC_CALLBACK(PLDHashNumber)
+static PLDHashNumber
   hashUnicodeValue(PLDHashTable*, const void* key)
 {
   // key is actually the unicode value

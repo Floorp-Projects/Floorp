@@ -121,6 +121,9 @@ class JarMaker(object):
                  help="verbose output")
     p.add_option('-e', action="store_true",
                  help="create chrome.manifest instead of jarfile.manifest")
+    p.add_option('--both-manifests', action="store_true",
+                 dest="bothManifests",
+                 help="create chrome.manifest and jarfile.manifest")
     p.add_option('-s', type="string", action="append", default=[],
                  help="source directory")
     p.add_option('-t', type="string",
@@ -417,6 +420,9 @@ def main():
   if options.e:
     jm.useChromeManifest = True
     jm.useJarfileManifest = False
+  if options.bothManifests:
+    jm.useChromeManifest = True
+    jm.useJarfileManifest = True
   noise = logging.INFO
   if options.verbose is not None:
     noise = (options.verbose and logging.DEBUG) or logging.WARN

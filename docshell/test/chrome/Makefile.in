@@ -43,9 +43,27 @@ relativesrcdir	= docshell/test/chrome
 include $(DEPTH)/config/autoconf.mk
 include $(topsrcdir)/config/rules.mk
 
+_HTTP_FILES =	\
+		92598_nostore.html \
+		92598_nostore.html^headers^ \
+		112564_nocache.html \
+		112564_nocache.html^headers^ \
+		215405_nostore.html \
+		215405_nostore.html^headers^ \
+		215405_nocache.html \
+		215405_nocache.html^headers^ \
+		$(NULL)
+
 _TEST_FILES =	\
+		test_bug92598.xul \
+		bug92598_window.xul \
+		92598_nostore.html \
+		test_bug112564.xul \
+		bug112564_window.xul \
 		test_bug113934.xul \
 		bug113934_window.xul \
+		test_bug215405.xul \
+		bug215405_window.xul \
 		test_bug364461.xul \
 		bug364461_window.xul \
 		test_bug396519.xul \
@@ -53,7 +71,11 @@ _TEST_FILES =	\
 		test_bug428288.html \
 		test_bug454235.xul \
 		bug454235-subframe.xul \
+		test_bug456980.xul \
 		$(NULL)
+
+libs:: $(_HTTP_FILES)
+	$(INSTALL) $(foreach f,$^,"$f") $(DEPTH)/_tests/testing/mochitest/tests/$(relativesrcdir)
 
 libs:: $(_TEST_FILES)
 	$(INSTALL) $(foreach f,$^,"$f") $(DEPTH)/_tests/testing/mochitest/chrome/$(relativesrcdir)

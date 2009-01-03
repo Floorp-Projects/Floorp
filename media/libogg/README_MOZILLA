@@ -2,3 +2,7 @@ The source from this directory was copied from the libogg-1.1.3 source
 distribution using the update.sh script. The only changes made were
 those applied by update.sh and the addition/upate of Makefile.in files
 for the Mozilla build system.
+
+The int-types.patch address a bug that config_types.h generated from
+Linux platform can't be used on OpenSolaris directly see Mozilla bug
+449754

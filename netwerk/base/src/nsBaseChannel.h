@@ -52,6 +52,7 @@
 #include "nsIInterfaceRequestor.h"
 #include "nsIProgressEventSink.h"
 #include "nsITransport.h"
+#include "nsThreadUtils.h"
 
 //-----------------------------------------------------------------------------
 // nsBaseChannel is designed to be subclassed.  The subclass is responsible for
@@ -103,7 +104,12 @@ private:
   // need to implement ReadSegments.  If async is false, this method may return
   // NS_ERROR_NOT_IMPLEMENTED to cause the basechannel to implement Open in
   // terms of AsyncOpen (see NS_ImplementChannelOpen).
-  virtual nsresult OpenContentStream(PRBool async, nsIInputStream **stream) = 0;
+  // A callee is allowed to return an nsIChannel instead of an nsIInputStream.
+  // That case will be treated as a redirect to the new channel.  By default
+  // *channel will be set to null by the caller, so callees who don't want to
+  // return one an just not touch it.
+  virtual nsresult OpenContentStream(PRBool async, nsIInputStream **stream,
+                                     nsIChannel** channel) = 0;
 
   // The basechannel calls this method from its OnTransportStatus method to
   // determine whether to call nsIProgressEventSink::OnStatus in addition to
@@ -126,12 +132,14 @@ public:
   // Methods provided for use by the derived class:
 
   // Redirect to another channel.  This method takes care of notifying
-  // observers of this redirect as well as of opening the new channel.  It also
-  // cancels |this| with the status code NS_BINDING_REDIRECTED.  A failure
-  // return from this method means that the redirect could not be performed (no
-  // channel was opened; this channel wasn't canceled.)  The redirectFlags
-  // parameter consists of the flag values defined on nsIChannelEventSink.
-  nsresult Redirect(nsIChannel *newChannel, PRUint32 redirectFlags);
+  // observers of this redirect as well as of opening the new channel, if asked
+  // to do so.  It also cancels |this| with the status code
+  // NS_BINDING_REDIRECTED.  A failure return from this method means that the
+  // redirect could not be performed (no channel was opened; this channel
+  // wasn't canceled.)  The redirectFlags parameter consists of the flag values
+  // defined on nsIChannelEventSink.
+  nsresult Redirect(nsIChannel *newChannel, PRUint32 redirectFlags,
+                    PRBool openNewChannel);
 
   // Tests whether a type hint was set. Subclasses can use this to decide
   // whether to call SetContentType.
@@ -147,10 +155,12 @@ public:
   void SetURI(nsIURI *uri) {
     NS_ASSERTION(uri, "must specify a non-null URI");
     NS_ASSERTION(!mURI, "must not modify URI");
+    NS_ASSERTION(!mOriginalURI, "how did that get set so early?");
     mURI = uri;
+    mOriginalURI = uri;
   }
   nsIURI *OriginalURI() {
-    return mOriginalURI ? mOriginalURI : mURI;
+    return mOriginalURI;
   }
 
   // The security info is a property of the transport-layer, which should be
@@ -169,7 +179,7 @@ public:
 
   // This is a short-cut to calling nsIRequest::IsPending()
   PRBool IsPending() const {
-    return (mPump != nsnull);
+    return mPump || mWaitingOnAsyncRedirect;
   }
 
   // Set the content length that should be reported for this channel.  Pass -1
@@ -233,6 +243,31 @@ private:
     OnCallbacksChanged();
   }
 
+  // Handle an async redirect callback.  This will only be called if we
+  // returned success from AsyncOpen while posting a redirect runnable.
+  void HandleAsyncRedirect(nsIChannel* newChannel);
+
+  class RedirectRunnable : public nsRunnable
+  {
+  public:
+    RedirectRunnable(nsBaseChannel* chan, nsIChannel* newChannel)
+      : mChannel(chan), mNewChannel(newChannel)
+    {
+      NS_PRECONDITION(newChannel, "Must have channel to redirect to");
+    }
+    
+    NS_IMETHOD Run()
+    {
+      mChannel->HandleAsyncRedirect(mNewChannel);
+      return NS_OK;
+    }
+
+  private:
+    nsRefPtr<nsBaseChannel> mChannel;
+    nsCOMPtr<nsIChannel> mNewChannel;
+  };
+  friend class RedirectRunnable;
+
   nsRefPtr<nsInputStreamPump>         mPump;
   nsCOMPtr<nsIInterfaceRequestor>     mCallbacks;
   nsCOMPtr<nsIProgressEventSink>      mProgressSink;
@@ -250,6 +285,7 @@ private:
   PRPackedBool                        mQueriedProgressSink;
   PRPackedBool                        mSynthProgressEvents;
   PRPackedBool                        mWasOpened;
+  PRPackedBool                        mWaitingOnAsyncRedirect;
 };
 
 #endif // !nsBaseChannel_h__

@@ -187,8 +187,8 @@ typedef NS_CALLBACK(NSFactoryDestructorProcPtr)(void);
  * 
  * @see nsIClassInfo.idl
  **/
-typedef NS_CALLBACK(NSGetInterfacesProcPtr)(PRUint32 *countp,
-                                            nsIID* **array);
+typedef NS_CALLBACK(NSGetInterfacesProcPtr)(PRUint32 * NS_OUTPARAM countp,
+                                            nsIID* ** NS_OUTPARAM array);
 
 /** 
  * NSGetLanguageHelperProcPtr
@@ -260,7 +260,7 @@ struct nsModuleComponentInfo {
  *         NS_ERROR*    Method failure which will result in module not being 
  *                      loaded. 
  **/
-typedef nsresult (PR_CALLBACK *nsModuleConstructorProc) (nsIModule *self);
+typedef nsresult (*nsModuleConstructorProc) (nsIModule *self);
 
 
 /** 
@@ -270,7 +270,7 @@ typedef nsresult (PR_CALLBACK *nsModuleConstructorProc) (nsIModule *self);
  * @param self module which is being destroyed.
  * 
  **/
-typedef void (PR_CALLBACK *nsModuleDestructorProc) (nsIModule *self);
+typedef void (*nsModuleDestructorProc) (nsIModule *self);
 
 /**
  * nsModuleInfo

@@ -45,40 +45,42 @@
 #include "nsIRequestObserver.h"
 
 // Other includes
+#include "nsAutoPtr.h"
 #include "nsCOMPtr.h"
 #include "nsStringGlue.h"
 #include "nsTArray.h"
-
-// DOMWorker includes
-#include "nsDOMWorkerXHR.h"
 
 class nsIJSXMLHttpRequest;
 class nsIThread;
 class nsIVariant;
 class nsIXMLHttpRequest;
+class nsIXMLHttpRequestUpload;
+class nsIXPConnectWrappedNative;
+class nsDOMWorkerXHR;
 class nsDOMWorkerXHREvent;
+class nsDOMWorkerXHRFinishSyncXHRRunnable;
+class nsDOMWorkerXHRState;
 class nsDOMWorkerXHRWrappedListener;
 class nsXMLHttpRequest;
 
-class nsDOMWorkerXHRProxy : public nsRunnable,
+class nsDOMWorkerXHRProxy : public nsIRunnable,
                             public nsIDOMEventListener,
                             public nsIRequestObserver
 {
-
+  friend class nsDOMWorkerXHRAttachUploadListenersRunnable;
   friend class nsDOMWorkerXHREvent;
+  friend class nsDOMWorkerXHRFinishSyncXHRRunnable;
+  friend class nsDOMWorkerXHRLastProgressOrLoadEvent;
   friend class nsDOMWorkerXHR;
   friend class nsDOMWorkerXHRUpload;
-
-  typedef nsCOMPtr<nsIDOMEventListener> Listener;
-  typedef nsTArray<Listener> ListenerArray;
-
-  typedef nsRefPtr<nsDOMWorkerXHRWrappedListener> WrappedListener;
 
   typedef nsresult (NS_STDCALL nsIDOMEventTarget::*EventListenerFunction)
     (const nsAString&, nsIDOMEventListener*, PRBool);
 
 public:
-  NS_DECL_ISUPPORTS_INHERITED
+  typedef nsAutoTArray<nsCOMPtr<nsIRunnable>, 5> SyncEventQueue;
+
+  NS_DECL_ISUPPORTS
   NS_DECL_NSIDOMEVENTLISTENER
   NS_DECL_NSIRUNNABLE
   NS_DECL_NSIREQUESTOBSERVER
@@ -90,47 +92,48 @@ public:
 
   nsIXMLHttpRequest* GetXMLHttpRequest();
 
-  nsresult Abort();
-
-protected:
-  nsresult InitInternal();
-  void DestroyInternal();
-
-  nsresult Destroy();
-
-  void FlipOwnership();
-
-  nsresult AddEventListener(PRUint32 aType,
-                            nsIDOMEventListener* aListener,
-                            PRBool aOnXListener,
-                            PRBool aUploadListener);
-
-  nsresult RemoveEventListener(PRUint32 aType,
-                               nsIDOMEventListener* aListener,
-                               PRBool aUploadListener);
-
-  already_AddRefed<nsIDOMEventListener> GetOnXListener(PRUint32 aType,
-                                                       PRBool aUploadListener);
-
-  nsresult HandleWorkerEvent(nsDOMWorkerXHREvent* aEvent, PRBool aUploadEvent);
-
-  nsresult HandleWorkerEvent(nsIDOMEvent* aEvent, PRBool aUploadEvent);
-
-  nsresult HandleEventInternal(PRUint32 aType,
-                               nsIDOMEvent* aEvent,
-                               PRBool aUploadEvent);
-
-  void ClearEventListeners();
-
-  // Methods of nsIXMLHttpRequest that we implement
-  nsresult GetAllResponseHeaders(char** _retval);
-  nsresult GetResponseHeader(const nsACString& aHeader,
-                             nsACString& _retval);
   nsresult OpenRequest(const nsACString& aMethod,
                        const nsACString& aUrl,
                        PRBool aAsync,
                        const nsAString& aUser,
                        const nsAString& aPassword);
+
+  nsresult Abort();
+
+  SyncEventQueue* SetSyncEventQueue(SyncEventQueue* aQueue);
+
+  PRInt32 ChannelID() {
+    return mChannelID;
+  }
+
+protected:
+  struct ProgressInfo {
+    ProgressInfo() : computable(PR_FALSE), loaded(0), total(0) { }
+
+    PRBool computable;
+    PRUint64 loaded;
+    PRUint64 total;
+  };
+
+  nsresult InitInternal();
+  void DestroyInternal();
+
+  nsresult Destroy();
+
+  void AddRemoveXHRListeners(PRBool aAdd);
+  void FlipOwnership();
+
+  nsresult UploadEventListenerAdded();
+
+  nsresult HandleWorkerEvent(nsDOMWorkerXHREvent* aEvent,
+                             PRBool aUploadEvent);
+
+  nsresult HandleEventRunnable(nsIRunnable* aRunnable);
+
+  // Methods of nsIXMLHttpRequest that we implement
+  nsresult GetAllResponseHeaders(char** _retval);
+  nsresult GetResponseHeader(const nsACString& aHeader,
+                             nsACString& _retval);
   nsresult Send(nsIVariant* aBody);
   nsresult SendAsBinary(const nsAString& aBody);
   nsresult GetResponseText(nsAString& _retval);
@@ -142,9 +145,22 @@ protected:
   nsresult OverrideMimeType(const nsACString& aMimetype);
   nsresult GetMultipart(PRBool* aMultipart);
   nsresult SetMultipart(PRBool aMultipart);
+  nsresult GetWithCredentials(PRBool* aWithCredentials);
+  nsresult SetWithCredentials(PRBool aWithCredentials);
+
+  nsresult RunSyncEventLoop();
+
+  PRBool IsUploadEvent(nsIDOMEvent* aEvent);
+
+  nsresult DispatchPrematureAbortEvents(PRUint32 aType,
+                                        nsIDOMEventTarget* aTarget,
+                                        ProgressInfo* aProgressInfo);
+
+  nsresult MaybeDispatchPrematureAbortEvents(PRBool aFromOpenRequest);
 
   // May be weak or strong, check mOwnedByXHR.
   nsDOMWorkerXHR* mWorkerXHR;
+  nsCOMPtr<nsIXPConnectWrappedNative> mWorkerXHRWN;
 
   // May be weak or strong, check mOwnedByXHR.
   nsIXMLHttpRequest* mXHR;
@@ -155,19 +171,30 @@ protected:
 
   nsCOMPtr<nsIThread> mMainThread;
 
-  nsRefPtr<nsDOMWorkerXHREvent> mLastXHREvent;
+  nsRefPtr<nsDOMWorkerXHRState> mLastXHRState;
+  nsRefPtr<nsDOMWorkerXHREvent> mLastProgressOrLoadEvent;
 
-  nsTArray<ListenerArray> mXHRListeners;
-  nsTArray<WrappedListener> mXHROnXListeners;
+  SyncEventQueue* mSyncEventQueue;
 
-  nsTArray<ListenerArray> mUploadListeners;
-  nsTArray<WrappedListener> mUploadOnXListeners;
+  PRInt32 mChannelID;
+
+  // Only touched on the worker thread!
+  nsCOMPtr<nsIThread> mSyncXHRThread;
+
+  // Touched on more than one thread, protected by the worker's lock.
+  nsRefPtr<nsDOMWorkerXHRFinishSyncXHRRunnable> mSyncFinishedRunnable;
+
+  nsAutoPtr<ProgressInfo> mDownloadProgressInfo;
+  nsAutoPtr<ProgressInfo> mUploadProgressInfo;
 
   // Whether or not this object is owned by the real XHR object.
   PRPackedBool mOwnedByXHR;
 
-  PRPackedBool mMultipart;
+  PRPackedBool mWantUploadListeners;
   PRPackedBool mCanceled;
+
+  PRPackedBool mSyncRequest;
+
 };
 
 #endif /* __NSDOMWORKERXHRPROXY_H__ */

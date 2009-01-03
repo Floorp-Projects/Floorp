@@ -96,6 +96,9 @@ struct THEBES_API gfxRect {
     PRBool Contains(const gfxRect& aRect) const;
     // XXX figure out what methods (intersect, union, etc) we use and add them.
 
+    gfxPoint TopLeft() { return pos; }
+    gfxPoint BottomRight() { return gfxPoint(XMost(), YMost()); }
+
     void Inset(gfxFloat k) {
         pos.x += k;
         pos.y += k;

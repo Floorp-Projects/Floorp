@@ -80,10 +80,6 @@ DIRS += related
 ifdef SUITE_USING_XPFE_DM
 DIRS += download-manager
 endif
-
-ifndef MOZ_PLACES
-DIRS += history
-endif
 endif # MOZ_SUITE
 
 ifdef MOZ_HAVE_BROWSER

@@ -84,7 +84,7 @@ thumb[orient="horizontal"] {
 /* ::::: scrollbar button ::::: */
 
 scrollbarbutton {
-  background: -moz-Dialog no-repeat 0px 1px;
+  background: -moz-Dialog no-repeat 50% 50%;
   min-width: 16px;
   min-height: 16px;
 }
@@ -94,7 +94,7 @@ scrollbarbutton:hover:active, scrollbarbutton[active="true"] {
   -moz-border-right-colors: ThreeDShadow -moz-Dialog;
   -moz-border-bottom-colors: ThreeDShadow -moz-Dialog;
   -moz-border-left-colors: ThreeDShadow -moz-Dialog;
-  background-position: 1px 2px;
+  background-position: 60% 60%;
 }
 
 /* ::::: square at the corner of two scrollbars ::::: */
@@ -192,7 +192,7 @@ scrollbar[orient="vertical"] > scrollbarbutton[type="decrement"][disabled="true"
   /* ::::: scrollbar button ::::: */
 
   html|div scrollbarbutton {
-    background: -moz-Dialog no-repeat 0px 1px;
+    background: -moz-Dialog no-repeat 50% 50%;
     min-width: 16px;
     min-height: 16px;
   }
@@ -202,7 +202,7 @@ scrollbar[orient="vertical"] > scrollbarbutton[type="decrement"][disabled="true"
     -moz-border-right-colors: ThreeDShadow -moz-Dialog;
     -moz-border-bottom-colors: ThreeDShadow -moz-Dialog;
     -moz-border-left-colors: ThreeDShadow -moz-Dialog;
-    background-position: 1px 2px;
+    background-position: 60% 60%;
   }
 
   /* ..... increment .... */

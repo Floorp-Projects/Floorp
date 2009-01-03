@@ -49,14 +49,16 @@ PRInt32 XPCWrappedNativeProto::gDEBUG_LiveProtoCount = 0;
 XPCWrappedNativeProto::XPCWrappedNativeProto(XPCWrappedNativeScope* Scope,
                                              nsIClassInfo* ClassInfo,
                                              PRUint32 ClassInfoFlags,
-                                             XPCNativeSet* Set)
+                                             XPCNativeSet* Set,
+                                             QITableEntry* offsets)
     : mScope(Scope),
       mJSProtoObject(nsnull),
       mClassInfo(ClassInfo),
       mClassInfoFlags(ClassInfoFlags),
       mSet(Set),
       mSecurityInfo(nsnull),
-      mScriptableInfo(nsnull)
+      mScriptableInfo(nsnull),
+      mOffsets(offsets)
 {
     // This native object lives as long as its associated JSObject - killed
     // by finalization of the JSObject (or explicitly if Init fails).
@@ -205,7 +207,8 @@ XPCWrappedNativeProto::GetNewOrUsed(XPCCallContext& ccx,
                                     nsIClassInfo* ClassInfo,
                                     const XPCNativeScriptableCreateInfo* ScriptableCreateInfo,
                                     JSBool ForceNoSharing,
-                                    JSBool isGlobal)
+                                    JSBool isGlobal,
+                                    QITableEntry* offsets)
 {
     NS_ASSERTION(Scope, "bad param");
     NS_ASSERTION(ClassInfo, "bad param");
@@ -254,7 +257,7 @@ XPCWrappedNativeProto::GetNewOrUsed(XPCCallContext& ccx,
     if(!set)
         return nsnull;
 
-    proto = new XPCWrappedNativeProto(Scope, ClassInfo, ciFlags, set);
+    proto = new XPCWrappedNativeProto(Scope, ClassInfo, ciFlags, set, offsets);
 
     if(!proto || !proto->Init(ccx, isGlobal, ScriptableCreateInfo))
     {

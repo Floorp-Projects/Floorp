@@ -86,7 +86,10 @@ public:
     /**
      * Activate a platform font (needed to support @font-face src url() )
      */
-    virtual gfxFontEntry* MakePlatformFont(const gfxFontEntry *aProxyEntry, const gfxDownloadedFontData* aFontData);
+    virtual gfxFontEntry* MakePlatformFont(const gfxProxyFontEntry *aProxyEntry,
+                                           nsISupports *aLoader,
+                                           const PRUint8 *aFontData,
+                                           PRUint32 aLength);
 
     /**
      * Check whether format is supported on a platform or not (if unclear, returns true)
@@ -123,29 +126,29 @@ private:
                                             const NEWTEXTMETRICEXW *nmetrics,
                                             DWORD fontType, LPARAM data);
 
-    static PLDHashOperator PR_CALLBACK FontGetStylesProc(nsStringHashKey::KeyType aKey,
-                                                         nsRefPtr<FontFamily>& aFontFamily,
-                                                         void* userArg);
+    static PLDHashOperator FontGetStylesProc(nsStringHashKey::KeyType aKey,
+                                             nsRefPtr<FontFamily>& aFontFamily,
+                                             void* userArg);
 
-    static PLDHashOperator PR_CALLBACK FontGetCMapDataProc(nsStringHashKey::KeyType aKey,
-                                                           nsRefPtr<FontFamily>& aFontFamily,
-                                                           void* userArg);
+    static PLDHashOperator FontGetCMapDataProc(nsStringHashKey::KeyType aKey,
+                                               nsRefPtr<FontFamily>& aFontFamily,
+                                               void* userArg);
 
     static int CALLBACK FontResolveProc(const ENUMLOGFONTEXW *lpelfe,
                                         const NEWTEXTMETRICEXW *metrics,
                                         DWORD fontType, LPARAM data);
 
-    static PLDHashOperator PR_CALLBACK HashEnumFunc(nsStringHashKey::KeyType aKey,
-                                                    nsRefPtr<FontFamily>& aData,
-                                                    void* userArg);
+    static PLDHashOperator HashEnumFunc(nsStringHashKey::KeyType aKey,
+                                        nsRefPtr<FontFamily>& aData,
+                                        void* userArg);
 
-    static PLDHashOperator PR_CALLBACK FindFontForCharProc(nsStringHashKey::KeyType aKey,
-                                                             nsRefPtr<FontFamily>& aFontFamily,
-                                                             void* userArg);
+    static PLDHashOperator FindFontForCharProc(nsStringHashKey::KeyType aKey,
+                                               nsRefPtr<FontFamily>& aFontFamily,
+                                               void* userArg);
 
     virtual cmsHPROFILE GetPlatformCMSOutputProfile();
 
-    static int PR_CALLBACK PrefChangedCallback(const char*, void*);
+    static int PrefChangedCallback(const char*, void*);
 
     // gfxFontInfoLoader overrides, used to load in font cmaps
     virtual void InitLoader();

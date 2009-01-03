@@ -46,7 +46,6 @@
 #include "nsIDOMAttr.h"
 #include "nsIDOMText.h"
 #include "nsIDOMNodeList.h"
-#include "nsGenericDOMNodeList.h"
 #include "nsString.h"
 #include "nsCOMPtr.h"
 #include "nsINodeInfo.h"
@@ -92,7 +91,7 @@ public:
   virtual PRBool IsNodeOfType(PRUint32 aFlags) const;
   virtual PRUint32 GetChildCount() const;
   virtual nsIContent *GetChildAt(PRUint32 aIndex) const;
-  virtual nsIContent * const * GetChildArray() const;
+  virtual nsIContent * const * GetChildArray(PRUint32* aChildCount) const;
   virtual PRInt32 IndexOf(nsINode* aPossibleChild) const;
   virtual nsresult InsertChildAt(nsIContent* aKid, PRUint32 aIndex,
                                  PRBool aNotify);

@@ -1,0 +1,178 @@
+<!DOCTYPE HTML>
+<html>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=461710
+-->
+<head>
+  <title>Test for Bug 461710</title>
+  <script type="text/javascript" src="/MochiKit/MochiKit.js"></script>
+  <script type="text/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
+</head>
+<body>
+<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=461710">Mozilla Bug 461710</a>
+<p id="display"></p>
+<iframe id="iframe"></iframe>
+<pre id="test">
+<script class="testbody" type="text/javascript">
+
+/** Test for Bug 461710 **/
+
+netscape.security.PrivilegeManager.enablePrivilege('UniversalXPConnect');
+const Ci = Components.interfaces;
+const Cc = Components.classes;
+const Cr = Components.results;
+
+const kRed = "rgb(255, 0, 0)";
+const kBlue = "rgb(0, 0, 255)";
+
+var testpath = document.location.pathname + "/../bug_461710/";
+var prefix = "http://localhost:8888" + testpath;
+var subtests = [
+                   "visited_page.html",   // 1
+                   "visited_page-2.html", // 2
+                   "visited_page-3.html", // 3
+                   "link_page.html",      // 4
+                   "link_page-2.html",    // 5
+                   "link_page-3.html"     // 6
+               ];
+
+
+var testNum = 0;
+function loadNextTest() {
+  netscape.security.PrivilegeManager.enablePrivilege('UniversalXPConnect');
+
+  // run the initialization code for each test
+  switch (++ testNum) {
+    case 1:
+      // nothing to do here
+      break;
+
+    case 2:
+      // nothing to do here
+      break;
+
+    case 3:
+      // nothing to do here
+      break;
+
+    case 4:
+      ok(!pb.privateBrowsingEnabled, "Test #" + testNum + " should be run outside of private mode");
+      break;
+
+    case 5:
+      pb.privateBrowsingEnabled = true;
+      ok(pb.privateBrowsingEnabled, "Test #" + testNum + " should be run inside of private mode");
+      break;
+
+    case 6:
+      pb.privateBrowsingEnabled = false;
+      ok(!pb.privateBrowsingEnabled, "Test #" + testNum + " should be run outside of private mode");
+      break;
+
+    default:
+      ok(false, "Unexpected call to loadNextTest for test #" + testNum);
+  }
+
+  iframe.src = prefix + subtests[testNum-1];
+}
+
+
+function checkTest() {
+  switch (testNum) {
+    case 1:
+      // nothing to do here, we just want to mark the page as visited
+      break;
+
+    case 2:
+      // nothing to do here, we just want to mark the page as visited
+      break;
+
+    case 3:
+      // nothing to do here, we just want to mark the page as visited
+      break;
+
+    case 4:
+      // run outside of private mode, link should appear as visited
+      var doc = iframe.contentDocument;
+      var win = doc.defaultView;
+      var style = win.getComputedStyle(doc.getElementById("link"), "");
+      is(style.getPropertyValue("color"), kRed, "Visited link coloring should work outside of private mode");
+      break;
+
+    case 5:
+      // run inside of private mode, link should appear as not visited
+      var doc = iframe.contentDocument;
+      var win = doc.defaultView;
+      var style = win.getComputedStyle(doc.getElementById("link"), "");
+      is(style.getPropertyValue("color"), kBlue, "Visited link coloring should not work inside of private mode");
+      break;
+
+    case 6:
+      // run outside of private mode, link should appear as visited
+      var doc = iframe.contentDocument;
+      var win = doc.defaultView;
+      var style = win.getComputedStyle(doc.getElementById("link"), "");
+      is(style.getPropertyValue("color"), kRed, "Visited link coloring should work outside of private mode");
+      break;
+
+    default:
+      ok(false, "Unexpected call to checkTest for test #" + testNum);
+  }
+}
+
+
+var _PBSvc = null;
+function get_PBSvc() {
+  if (_PBSvc)
+    return _PBSvc;
+
+  netscape.security.PrivilegeManager.enablePrivilege('UniversalXPConnect');
+  try {
+    _PBSvc = Cc["@mozilla.org/privatebrowsing;1"].
+             getService(Ci.nsIPrivateBrowsingService);
+    return _PBSvc;
+  } catch (e) {}
+  return null;
+}
+
+
+var ignoreLoad = false;
+function handleLoad(aEvent) {
+  netscape.security.PrivilegeManager.enablePrivilege('UniversalXPConnect');
+
+  checkTest();
+
+  if (testNum < subtests.length) {
+    loadNextTest();
+  } else {
+    prefBranch.clearUserPref("browser.privatebrowsing.keep_current_session");
+    SimpleTest.finish();
+  }
+}
+
+
+var pb = get_PBSvc();
+if (!pb) { // Private Browsing might not be available
+  SimpleTest.finish();
+} else {
+  netscape.security.PrivilegeManager.enablePrivilege('UniversalXPConnect');
+
+  var prefBranch = Cc["@mozilla.org/preferences-service;1"].
+                   getService(Ci.nsIPrefBranch);
+  prefBranch.setBoolPref("browser.privatebrowsing.keep_current_session", true);
+
+  var iframe = document.getElementById("iframe");
+  iframe.onload = handleLoad;
+
+  SimpleTest.waitForExplicitFinish();
+
+  loadNextTest();
+}
+
+
+</script>
+</pre>
+</body>
+</html>
+

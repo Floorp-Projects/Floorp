@@ -59,7 +59,8 @@
 class nsComputedDOMStyle : public nsIComputedDOMStyle
 {
 public:
-  NS_DECL_ISUPPORTS
+  NS_DECL_CYCLE_COLLECTING_ISUPPORTS
+  NS_DECL_CYCLE_COLLECTION_CLASS(nsComputedDOMStyle)
 
   NS_IMETHOD Init(nsIDOMElement *aElement,
                   const nsAString& aPseudoElt,
@@ -202,6 +203,9 @@ private:
 
   /* Box Shadow */
   nsresult GetBoxShadow(nsIDOMCSSValue** aValue);
+
+  /* Window Shadow */
+  nsresult GetWindowShadow(nsIDOMCSSValue** aValue);
 
   /* Margin Properties */
   nsresult GetMarginWidth(nsIDOMCSSValue** aValue);

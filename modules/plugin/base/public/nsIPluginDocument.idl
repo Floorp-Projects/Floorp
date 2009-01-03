@@ -38,7 +38,7 @@
 #include "nsISupports.idl"
 #include "nsIStreamListener.idl"
 
-[uuid(0d8129f1-5a55-4eaa-851f-15e43ce3d183)]
+[uuid(e4be1d0a-9f24-4d69-bec5-245726ab85fb)]
 interface nsIPluginDocument : nsISupports
 {
  /**
@@ -51,4 +51,11 @@ interface nsIPluginDocument : nsISupports
   * Causes the plugin to print in full-page mode
   */
   void print();
+
+  /**
+   * Check whether the document is planning to handle plug-in instantiation
+   * itself.  If not, then the plugin content node should do it.
+   */
+  // XXXbz once we move plug-in loading to content, this can go away.
+  readonly attribute boolean willHandleInstantiation;
 };

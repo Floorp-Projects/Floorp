@@ -73,8 +73,10 @@ NS_IMPL_NS_NEW_HTML_ELEMENT_CHECK_PARSER(Audio)
 NS_IMPL_ADDREF_INHERITED(nsHTMLAudioElement, nsHTMLMediaElement)
 NS_IMPL_RELEASE_INHERITED(nsHTMLAudioElement, nsHTMLMediaElement)
 
-NS_HTML_CONTENT_INTERFACE_TABLE_HEAD(nsHTMLAudioElement, nsHTMLMediaElement)
-  NS_INTERFACE_TABLE_INHERITED1(nsHTMLAudioElement, nsIDOMHTMLAudioElement)
+NS_INTERFACE_TABLE_HEAD(nsHTMLAudioElement)
+  NS_HTML_CONTENT_INTERFACE_TABLE1(nsHTMLAudioElement, nsIDOMHTMLAudioElement)
+  NS_HTML_CONTENT_INTERFACE_TABLE_TO_MAP_SEGUE(nsHTMLAudioElement,
+                                               nsHTMLMediaElement)
 NS_HTML_CONTENT_INTERFACE_TABLE_TAIL_CLASSINFO(HTMLAudioElement)
 
 NS_IMPL_ELEMENT_CLONE(nsHTMLAudioElement)
@@ -109,12 +111,4 @@ void nsHTMLAudioElement::UnbindFromTree(PRBool aDeep,
     mDecoder->ElementUnavailable();
 
   nsHTMLMediaElement::UnbindFromTree(aDeep, aNullParent);
-}
-
-nsresult nsHTMLAudioElement::InitializeDecoder(nsAString& aChosenMediaResource)
-{
-  if (mDecoder) 
-    mDecoder->ElementAvailable(this);
-
-  return nsHTMLMediaElement::InitializeDecoder(aChosenMediaResource);
 }

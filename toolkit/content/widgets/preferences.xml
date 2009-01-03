@@ -73,6 +73,22 @@
         Components.classes["@mozilla.org/preferences-service;1"]
                   .getService(Components.interfaces.nsIPrefBranchInternal);
       </field>
+      <property name="type" readonly="true">
+        <getter>
+          <![CDATA[
+            return document.documentElement.type || "";
+          ]]>
+        </getter>
+      </property>
+      <property name="instantApply" readonly="true">
+        <getter>
+          <![CDATA[
+            var doc = document.documentElement;
+            return this.type == "child" ? doc.instantApply
+                                        : doc.instantApply || this.rootBranch.getBoolPref("browser.preferences.instantApply");
+          ]]>
+        </getter>
+      </property>
     </implementation>
   </binding>
 
@@ -90,7 +106,7 @@
         // In non-instant apply mode, we must try and use the last saved state
         // from any previous opens of a child dialog instead of the value from
         // preferences, to pick up any edits a user may have made. 
-        if (document.documentElement.type == "child" && 
+        if (this.preferences.type == "child" && 
             !this.instantApply && window.opener) {
           var pdoc = window.opener.document;
 
@@ -119,7 +135,7 @@
       
       <property name="instantApply">
         <getter>
-          return this.getAttribute("instantApply") == "true" || document.documentElement.instantApply;
+          return this.getAttribute("instantApply") == "true" || this.preferences.instantApply;
         </getter>
       </property>
 
@@ -542,8 +558,10 @@
 #else
              title="&preferencesDefaultTitleMac.title;">
 #endif
-      <xul:radiogroup anonid="selector" orient="horizontal" class="paneSelector chromeclass-toolbar"
-                      role="listbox"/> <!-- Expose to accessibility APIs as a listbox -->
+      <xul:windowdragbox orient="vertical">
+        <xul:radiogroup anonid="selector" orient="horizontal" class="paneSelector chromeclass-toolbar"
+                        role="listbox"/> <!-- Expose to accessibility APIs as a listbox -->
+      </xul:windowdragbox>
       <xul:hbox flex="1" class="paneDeckContainer">
         <xul:deck anonid="paneDeck" flex="1">
           <children includes="prefpane"/>
@@ -1078,7 +1096,7 @@
       <handler event="command">
         if (event.originalTarget.hasAttribute("pane")) {
           var pane = document.getElementById(event.originalTarget.getAttribute("pane"));
-          event.originalTarget.parentNode.parentNode.showPane(pane);
+          this.showPane(pane);
         }
       </handler>
 

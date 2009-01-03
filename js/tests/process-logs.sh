@@ -113,13 +113,14 @@ for testlogfile in `ls $testlogfiles`; do
     case "$testlogfile" in
         *,js,*) testtype=shell;;
         *,firefox,*) testtype=browser;;
+        *,fennec,*) testtype=browser;;
         *) error "unknown testtype in logfile $testlogfile" $LINENO;;
     esac
 
     debug "testtype=$testtype"
 
     case "$testlogfile" in
-        *,nightly,*) buildtype=nightly;;
+        *,nightly*) buildtype=nightly;;
         *,opt,*) buildtype=opt;;
         *,debug,*) buildtype=debug;;
         *) error "unknown buildtype in logfile $testlogfile" $LINENO;

@@ -111,11 +111,10 @@ EXPORTS
         sqlite3_mutex_alloc
         sqlite3_mutex_enter
         sqlite3_mutex_free
-        sqlite3_mutex_held
         sqlite3_mutex_leave
-        sqlite3_mutex_notheld
         sqlite3_mutex_try
         sqlite3_mprintf
+        sqlite3_next_stmt
         sqlite3_open
         sqlite3_open_v2
         sqlite3_open16

@@ -20,6 +20,7 @@
  * the Mozilla Foundation. All Rights Reserved.
  *
  * Contributor(s):
+ *   Robert Strong <robert.bugzilla@gmail.com>
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -65,52 +66,99 @@ BOOL (WINAPI *pCreateProcessWithTokenW)(HANDLE,
 BOOL (WINAPI *pIsUserAnAdmin)(VOID);
 
 /**
- * Get the length that the string will take when it is quoted.
+ * Get the length that the string will take and takes into account the
+ * additional length if the string needs to be quoted and if characters need to
+ * be escaped.
  */
-static int QuotedStrLen(const PRUnichar *s)
+static int ArgStrLen(const PRUnichar *s)
 {
-  int i = 2; // initial and final quote
-  while (*s) {
-    if (*s == '"') {
-      ++i;
-    }
+  int backslashes = 0;
+  int i = wcslen(s);
+  BOOL hasDoubleQuote = wcschr(s, L'"') != NULL;
+  // Only add doublequotes if the string contains a space or a tab
+  BOOL addDoubleQuotes = wcspbrk(s, L" \t") != NULL;
 
-    ++i, ++s;
+  if (addDoubleQuotes) {
+    i += 2; // initial and final duoblequote
   }
+
+  if (hasDoubleQuote) {
+    while (*s) {
+      if (*s == '\\') {
+        ++backslashes;
+      } else {
+        if (*s == '"') {
+          // Escape the doublequote and all backslashes preceding the doublequote
+          i += backslashes + 1;
+        }
+
+        backslashes = 0;
+      }
+
+      ++s;
+    }
+  }
+
   return i;
 }
 
 /**
- * Copy string "s" to string "d", quoting and escaping all double quotes.
+ * Copy string "s" to string "d", quoting the argument as appropriate and
+ * escaping doublequotes along with any backslashes that immediately precede
+ * duoblequotes.
  * The CRT parses this to retrieve the original argc/argv that we meant,
  * see STDARGV.C in the MSVC6 CRT sources.
  *
  * @return the end of the string
  */
-static PRUnichar* QuoteString(PRUnichar *d, const PRUnichar *s)
+static PRUnichar* ArgToString(PRUnichar *d, const PRUnichar *s)
 {
-  *d = '"';
-  ++d;
+  int backslashes = 0;
+  BOOL hasDoubleQuote = wcschr(s, L'"') != NULL;
+  // Only add doublequotes if the string contains a space or a tab
+  BOOL addDoubleQuotes = wcspbrk(s, L" \t") != NULL;
 
-  while (*s) {
-    *d = *s;
-    if (*s == '"') {
-      ++d;
-      *d = '"';
-    }
-
-    ++d; ++s;
+  if (addDoubleQuotes) {
+    *d = '"'; // initial doublequote
+    ++d;
   }
 
-  *d = '"';
-  ++d;
+  if (hasDoubleQuote) {
+    int i;
+    while (*s) {
+      if (*s == '\\') {
+        ++backslashes;
+      } else {
+        if (*s == '"') {
+          // Escape the doublequote and all backslashes preceding the doublequote
+          for (i = 0; i <= backslashes; ++i) {
+            *d = '\\';
+            ++d;
+          }
+        }
+
+        backslashes = 0;
+      }
+
+      *d = *s;
+      ++d; ++s;
+    }
+  } else {
+    wcscpy(d, s);
+    d += wcslen(s);
+  }
+
+  if (addDoubleQuotes) {
+    *d = '"'; // final doublequote
+    ++d;
+  }
 
   return d;
 }
 
 /**
- * Create a quoted command from a list of arguments. The returned string
- * is allocated with "malloc" and should be "free"d.
+ * Creates a command line from a list of arguments. The returned
+ * string is allocated with "malloc" and should be "free"d.
  *
  * argv is UTF8
  */
@@ -118,10 +166,15 @@ static PRUnichar*
 MakeCommandLine(int argc, PRUnichar **argv)
 {
   int i;
-  int len = 1; // null-termination
+  int len = 0;
 
+  // The + 1 of the last argument handles the allocation for null termination
   for (i = 0; i < argc; ++i)
-    len += QuotedStrLen(argv[i]) + 1;
+    len += ArgStrLen(argv[i]) + 1;
+
+  // Protect against callers that pass 0 arguments
+  if (len == 0)
+    len = 1;
 
   PRUnichar *s = (PRUnichar*) malloc(len * sizeof(PRUnichar));
   if (!s)
@@ -129,9 +182,11 @@ MakeCommandLine(int argc, PRUnichar **argv)
 
   PRUnichar *c = s;
   for (i = 0; i < argc; ++i) {
-    c = QuoteString(c, argv[i]);
-    *c = ' ';
-    ++c;
+    c = ArgToString(c, argv[i]);
+    if (i + 1 != argc) {
+      *c = ' ';
+      ++c;
+    }
   }
 
   *c = '\0';
@@ -287,6 +342,7 @@ WinLaunchChild(const PRUnichar *exePath, int argc, PRUnichar **argv, int needEle
 {
   PRUnichar *cl;
   BOOL ok;
+#ifndef WINCE
   if (needElevation > 0) {
     cl = MakeCommandLine(argc - 1, argv + 1);
     if (!cl)
@@ -300,7 +356,7 @@ WinLaunchChild(const PRUnichar *exePath, int argc, PRUnichar **argv, int needEle
     free(cl);
     return ok;
   }
-
+#endif
   cl = MakeCommandLine(argc, argv);
   if (!cl)
     return FALSE;

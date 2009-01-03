@@ -63,7 +63,7 @@ usage()
 
 usage: set-build-env.sh -p product -b branch -T buildtype [-e extra]
 
--p product      [firefox|thunderbird]
+-p product      [firefox|thunderbird|fennec]
 -b branch       [1.8.0|1.8.1|1.9.0|1.9.1]
 -T buildtype    [opt|debug]
 -e extra        extra qualifier to pick mozconfig and tree
@@ -280,6 +280,10 @@ for step in step1; do # dummy loop for handling exits
         project=mail
         export TEST_MOZILLA_HG=${TEST_MOZILLA_HG:-http://hg.mozilla.org/comm-central/}
         export MOZCONFIG=${MOZCONFIG:-"$BUILDTREE/mozconfig-thunderbird-$OSID-$TEST_PROCESSORTYPE-$buildtype"}
+    elif [[ $product == "fennec" ]]; then
+        project=mobile
+        export TEST_MOZILLA_HG=${TEST_MOZILLA_HG:-http://hg.mozilla.org/mozilla-central/}
+        export MOZCONFIG=${MOZCONFIG:-"$BUILDTREE/mozconfig-fennec-$OSID-$TEST_PROCESSORTYPE-$buildtype"}
     else
         echo "Assuming project=browser for product: $product"
         project=browser

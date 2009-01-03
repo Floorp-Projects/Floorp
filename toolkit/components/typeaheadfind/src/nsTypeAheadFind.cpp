@@ -1175,7 +1175,7 @@ nsTypeAheadFind::IsRangeVisible(nsIPresShell *aPresShell,
   // We know that the target range isn't usable because it's not in the
   // view port. Move range forward to first visible point,
   // this speeds us up a lot in long documents
-  nsCOMPtr<nsIBidirectionalEnumerator> frameTraversal;
+  nsCOMPtr<nsIFrameEnumerator> frameTraversal;
   nsCOMPtr<nsIFrameTraversal> trav(do_CreateInstance(kFrameTraversalCID));
   if (trav)
     trav->NewFrameTraversal(getter_AddRefs(frameTraversal),
@@ -1191,9 +1191,7 @@ nsTypeAheadFind::IsRangeVisible(nsIPresShell *aPresShell,
 
   while (rectVisibility == nsRectVisibility_kAboveViewport || rectVisibility == nsRectVisibility_kZeroAreaRect) {
     frameTraversal->Next();
-    nsISupports* currentItem;
-    frameTraversal->CurrentItem(&currentItem);
-    frame = static_cast<nsIFrame*>(currentItem);
+    frame = frameTraversal->CurrentItem();
     if (!frame)
       return PR_FALSE;
 

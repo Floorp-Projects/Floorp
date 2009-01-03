@@ -1,0 +1,18 @@
+<!DOCTYPE html>
+<html style="display: table;">
+<head>
+<script type="text/javascript">
+
+function boom()
+{
+  document.documentElement.appendChild(document.body);
+  document.documentElement.offsetHeight;
+  document.documentElement.appendChild(document.body);
+}
+
+</script>
+</head>
+
+<body onload="boom();" style="-moz-column-count: 2;"><div style="height: 1px;"></div><span style="display: inline-block;"></span></body>
+
+</html>

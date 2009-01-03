@@ -21,6 +21,7 @@
  *
  * Contributor(s):
  *   Asaf Romano <mano@mozilla.com> (Original Author)
+ *   Marco Bonardo <mak77@bonardo.net>
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -36,13 +37,16 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-var histsvc = Cc["@mozilla.org/browser/nav-history-service;1"].
-              getService(Ci.nsINavHistoryService);
-var bmsvc = Cc["@mozilla.org/browser/nav-bookmarks-service;1"].
-            getService(Ci.nsINavBookmarksService);
-var annosvc = Cc["@mozilla.org/browser/annotation-service;1"].
-              getService(Ci.nsIAnnotationService);
-
+ try {
+  var histsvc = Cc["@mozilla.org/browser/nav-history-service;1"].
+                getService(Ci.nsINavHistoryService);
+  var bmsvc = Cc["@mozilla.org/browser/nav-bookmarks-service;1"].
+              getService(Ci.nsINavBookmarksService);
+  var annosvc = Cc["@mozilla.org/browser/annotation-service;1"].
+                getService(Ci.nsIAnnotationService);
+} catch (ex) {
+  do_throw("Could not get services\n");
+}
 // main
 function run_test() {
   // load our dynamic-container sample service
@@ -84,4 +88,36 @@ function run_test() {
   // check live update of a folder exposed within a remote container
   bmsvc.insertBookmark(exposedFolder, uri("http://uri2.tld"), bmsvc.DEFAULT_INDEX, "");
   do_check_eq(folder.childCount, 2);
+
+  // Bug 457681
+  // Make the dynamic container read-only and check that it appear in the result
+  bmsvc.setFolderReadonly(remoteContainer, true);
+  options = histsvc.getNewQueryOptions();
+  query = histsvc.getNewQuery();
+  query.setFolders([testRoot], 1);
+  result = histsvc.executeQuery(query, options);
+  rootNode = result.root;
+  rootNode.containerOpen = true;
+  do_check_eq(rootNode.childCount, 2);
+  do_check_eq(rootNode.getChild(1).title, "remote container sample");
+  rootNode.containerOpen = false;
+
+  // Bug 457686
+  // If the dynamic container is child of an excludeItems query it should not
+  // append uri nodes.
+  // The dynamic container should only return an empty folder on opening.
+  options = histsvc.getNewQueryOptions();
+  options.excludeItems = true;
+  query = histsvc.getNewQuery();
+  query.setFolders([remoteContainer], 1);
+  result = histsvc.executeQuery(query, options);
+  rootNode = result.root;
+  rootNode.containerOpen = true;
+  do_check_eq(rootNode.childCount, 1);
+  folder = rootNode.getChild(0).QueryInterface(Ci.nsINavHistoryContainerResultNode);
+  do_check_eq(folder.itemId, exposedFolder);
+  folder.containerOpen = true;
+  do_check_eq(folder.childCount, 0);
+  folder.containerOpen = false;
+  rootNode.containerOpen = false;
 }

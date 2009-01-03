@@ -201,8 +201,8 @@ merge_main()
 
   # Make sure we can decrypt with our original SDR key generated above
   echo "$SCRIPTNAME: Decrypt - With Original SDR Key"
-  ${PROFTOOL} echo "sdrtest -d ${PROFILE} -i ${VALUE3} -t Test2 -f ${R_PWFILE}"
-  ${BINDIR}/sdrtest -d ${PROFILE} -i ${VALUE3} -t Test2 -f ${R_PWFILE}
+  echo "sdrtest -d ${PROFILE} -i ${VALUE3} -t Test2 -f ${R_PWFILE}"
+  ${PROFTOOL} ${BINDIR}/sdrtest -d ${PROFILE} -i ${VALUE3} -t Test2 -f ${R_PWFILE}
   html_msg $? 0 "Decrypt - Value 3"
 
   # Make sure we can decrypt with our the SDR key merged in from ../SDR

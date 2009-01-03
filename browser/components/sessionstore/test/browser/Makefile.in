@@ -45,8 +45,12 @@ include $(DEPTH)/config/autoconf.mk
 include $(topsrcdir)/config/rules.mk
 
 _BROWSER_TEST_FILES = \
+	browser_248970_a.js \
+	browser_248970_b.js \
+	browser_248970_b_sample.html \
 	browser_339445.js \
 	browser_339445_sample.html \
+	browser_345898.js \
 	browser_346337.js \
 	browser_346337_sample.html \
 	browser_350525.js \
@@ -57,6 +61,11 @@ _BROWSER_TEST_FILES = \
 	browser_448741.js \
 	browser_454908.js \
 	browser_454908_sample.html \
+	browser_456342.js \
+	browser_456342_sample.xhtml \
+	browser_463206.js \
+	browser_463206_sample.html \
+	browser_465215.js \
 	$(NULL)
 
 libs:: $(_BROWSER_TEST_FILES)

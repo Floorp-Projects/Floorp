@@ -100,6 +100,8 @@ NS_IMETHODIMP
 mozStorageStatementParams::SetProperty(nsIXPConnectWrappedNative *wrapper, JSContext * cx,
                          JSObject * obj, jsval id, jsval * vp, PRBool *_retval)
 {
+    NS_ENSURE_TRUE(mStatement, NS_ERROR_NOT_INITIALIZED);
+
     if (JSVAL_IS_INT(id)) {
         int idx = JSVAL_TO_INT(id);
 
@@ -193,6 +195,8 @@ NS_IMETHODIMP
 mozStorageStatementParams::NewResolve(nsIXPConnectWrappedNative *wrapper, JSContext * cx,
                                    JSObject * obj, jsval id, PRUint32 flags, JSObject * *objp, PRBool *_retval)
 {
+    NS_ENSURE_TRUE(mStatement, NS_ERROR_NOT_INITIALIZED);
+
     int idx = -1;
 
     if (JSVAL_IS_INT(id)) {

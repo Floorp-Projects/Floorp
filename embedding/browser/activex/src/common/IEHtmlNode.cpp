@@ -43,12 +43,12 @@
 
 static PLHashTable *g_NodeLookupTable;
 
-static PLHashNumber PR_CALLBACK HashFunction(const void *key)
+static PLHashNumber HashFunction(const void *key)
 {
     return (PRUint32) key;
 }
 
-PRIntn PR_CALLBACK HashComparator(const void *v1, const void *v2)
+PRIntn HashComparator(const void *v1, const void *v2)
 {
     if (v1 == v2)
     {

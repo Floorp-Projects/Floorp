@@ -77,25 +77,28 @@ interface nsIDocumentEncoder : nsISupports
     * Implies wrap (except inside <pre>), since html wraps.
     * HTML output: always do prettyprinting, ignoring existing formatting.
     * (Probably not well tested for HTML output.)
+    * XML output: unsupported
     */
   const unsigned long OutputFormatted     = (1 << 1);
 
   /** Don't do prettyprinting of HTML.  Don't do any wrapping that's not in
    * the existing HTML source.  This option overrides OutputFormatted if both
    * are set.
+   * Plaintext and HTML output only.
    * @note This option does not affect entity conversion.
    */
   const unsigned long OutputRaw           = (1 << 2);
 
   /** 
    * Do not print html head tags.
+   * HTML output only.
    */
   const unsigned long OutputBodyOnly      = (1 << 3);
 
   /**
-   * Wrap even if we're not doing formatted output (e.g. for text fields)
-   * XXXbz this doesn't seem to be used by all serializers... document?  How
-   * does this interact with
+   * Wrap even if we're not doing formatted output (e.g. for text fields).
+   * Plaintext output only.
+   * XXXbz How does this interact with
    * OutputFormatted/OutputRaw/OutputWrap/OutputFormatFlowed?
    */
   const unsigned long OutputPreformatted  = (1 << 4);
@@ -103,8 +106,8 @@ interface nsIDocumentEncoder : nsISupports
   /**
    * Output as though the content is preformatted
    * (e.g. maybe it's wrapped in a PRE or PRE_WRAP style tag)
-   * XXXbz this doesn't seem to be used by all serializers... document?  How
-   * does this interact with
+   * Plaintext output only.
+   * XXXbz How does this interact with
    * OutputFormatted/OutputRaw/OutputPreformatted/OutputFormatFlowed?
    */
   const unsigned long OutputWrap          = (1 << 5);
@@ -114,14 +117,15 @@ interface nsIDocumentEncoder : nsISupports
    * to text for mail sending. This differs just slightly
    * but in an important way from normal formatted, and that is that
    * lines are space stuffed. This can't (correctly) be done later.
-   * XXXbz this doesn't seem to be used by all serializers... document?  How
-   * does this interact with
+   * PlainText output only.
+   * XXXbz How does this interact with
    * OutputFormatted/OutputRaw/OutputPreformatted/OutputWrap?
    */
   const unsigned long OutputFormatFlowed  = (1 << 6);
 
   /**
-   * Convert links, image src, and script src to absolute URLs when possible
+   * Convert links, image src, and script src to absolute URLs when possible.
+   * HTML output only.
    */
   const unsigned long OutputAbsoluteLinks = (1 << 7);
 
@@ -130,6 +134,7 @@ interface nsIDocumentEncoder : nsISupports
    * This is a catch-all flag for documents with mixed contents. Beware of
    * interoperability issues. See below for other flags which might likely
    * do what you want.
+   * HTML output only.
    */
   const unsigned long OutputEncodeW3CEntities = (1 << 8);
 
@@ -163,7 +168,7 @@ interface nsIDocumentEncoder : nsISupports
 
   /**
    * Don't allow any formatting nodes (e.g. <br>, <b>) inside a <pre>.
-   * This is used primarily by mail.
+   * This is used primarily by mail. HTML output only.
    */
   const unsigned long OutputNoFormattingInPre = (1 << 13);
 
@@ -172,6 +177,7 @@ interface nsIDocumentEncoder : nsISupports
    * E.g. If set, we'll output &nbsp; if clear, we'll output 0xa0.
    * The basic set is just &nbsp; &amp; &lt; &gt; &quot; for interoperability
    * with older products that don't support &alpha; and friends.
+   * HTML output only.
    */
   const unsigned long OutputEncodeBasicEntities = (1 << 14);
     
@@ -179,6 +185,7 @@ interface nsIDocumentEncoder : nsISupports
    * Encode entities when outputting to a string.
    * The Latin1 entity set additionally includes 8bit accented letters
    * between 128 and 255.
+   * HTML output only.
    */
   const unsigned long OutputEncodeLatin1Entities = (1 << 15);
   
@@ -186,6 +193,7 @@ interface nsIDocumentEncoder : nsISupports
    * Encode entities when outputting to a string.
    * The HTML entity set additionally includes accented letters, greek
    * letters, and other special markup symbols as defined in HTML4.
+   * HTML output only.
    */
   const unsigned long OutputEncodeHTMLEntities = (1 << 16);
 
@@ -193,6 +201,7 @@ interface nsIDocumentEncoder : nsISupports
    * Normally &nbsp; is replaced with a space character when
    * encoding data as plain text, set this flag if that's
    * not desired.
+   * Plaintext output only.
    */
   const unsigned long OutputPersistNBSP = (1 << 17);
   

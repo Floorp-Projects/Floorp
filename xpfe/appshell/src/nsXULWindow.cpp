@@ -91,6 +91,7 @@
 #include "nsAppShellCID.h"
 #include "nsReadableUtils.h"
 #include "nsStyleConsts.h"
+#include "nsPresContext.h"
 
 #include "nsWebShellWindow.h" // get rid of this one, too...
 
@@ -577,8 +578,14 @@ NS_IMETHODIMP nsXULWindow::SetSize(PRInt32 aCX, PRInt32 aCY, PRBool aRepaint)
   mWindow->SetSizeMode(nsSizeMode_Normal);
 
   mIntrinsicallySized = PR_FALSE;
+  PRInt32 devX = NSAppUnitsToIntPixels(nsPresContext::CSSPixelsToAppUnits(aCX),
+                                       float(mWindow->GetDeviceContext()->
+                                             AppUnitsPerDevPixel()));
+  PRInt32 devY = NSAppUnitsToIntPixels(nsPresContext::CSSPixelsToAppUnits(aCY),
+                                       float(mWindow->GetDeviceContext()->
+                                             AppUnitsPerDevPixel()));
 
-  NS_ENSURE_SUCCESS(mWindow->Resize(aCX, aCY, aRepaint), NS_ERROR_FAILURE);
+  NS_ENSURE_SUCCESS(mWindow->Resize(devX, devY, aRepaint), NS_ERROR_FAILURE);
   PersistentAttributesDirty(PAD_SIZE);
   SavePersistentAttributes();
   return NS_OK;

@@ -62,7 +62,7 @@ void init_phonet_hash(phonetable & parms)
   {
     int i, k;
 
-    for (i = 0; i < parms.hash_size; i++) {
+    for (i = 0; i < HASHSIZE; i++) {
       parms.hash[i] = -1;
     }
 
@@ -83,6 +83,11 @@ void init_phonet_hash(phonetable & parms)
       *dest++ = *src++;
     *dest = '\0';
   }
+
+int myisalpha(char ch) {
+  if ((unsigned char) ch < 128) return isalpha(ch);
+  return 1;
+}
 
 /*  phonetic transcription algorithm                   */
 /*  see: http://aspell.net/man-html/Phonetic-Code.html */
@@ -124,13 +129,13 @@ int phonet (const char * inword, char * target,
           s++;     /**  important for (see below)  "*(s-1)"  **/
           
           while (*s != '\0'  &&  word[i+k] == *s
-                 &&  !isdigit (*s)  &&  strchr ("(-<^$", *s) == NULL) {
+                 &&  !isdigit ((unsigned char) *s)  &&  strchr ("(-<^$", *s) == NULL) {
             k++;
             s++;
           }
           if (*s == '(') {
             /**  check letters in "(..)"  **/
-            if (isalpha(word[i+k])  // ...could be implied?
+            if (myisalpha(word[i+k])  // ...could be implied?
                 && strchr(s+1, word[i+k]) != NULL) {
               k++;
               while (*s != ')')
@@ -146,7 +151,7 @@ int phonet (const char * inword, char * target,
           }
           if (*s == '<')
             s++;
-          if (isdigit (*s)) {
+          if (isdigit ((unsigned char) *s)) {
             /**  determine priority  **/
             p = *s - '0';
             s++;
@@ -156,12 +161,12 @@ int phonet (const char * inword, char * target,
 
           if (*s == '\0'
               || (*s == '^'  
-                  && (i == 0  ||  ! isalpha(word[i-1]))
+                  && (i == 0  ||  ! myisalpha(word[i-1]))
                   && (*(s+1) != '$'
-                      || (! isalpha(word[i+k0]) )))
+                      || (! myisalpha(word[i+k0]) )))
               || (*s == '$'  &&  i > 0  
-                  &&  isalpha(word[i-1])
-                  && (! isalpha(word[i+k0]) ))) 
+                  &&  myisalpha(word[i-1])
+                  && (! myisalpha(word[i+k0]) ))) 
           {
             /**  search for followup rules, if:     **/
             /**  parms.followup and k > 1  and  NO '-' in searchstring **/
@@ -180,13 +185,13 @@ int phonet (const char * inword, char * target,
                 s = parms.rules[n0];
                 s++;
                 while (*s != '\0'  &&  word[i+k0] == *s
-                       && ! isdigit(*s)  &&  strchr("(-<^$",*s) == NULL) {
+                       && ! isdigit((unsigned char) *s)  &&  strchr("(-<^$",*s) == NULL) {
                   k0++;
                   s++;
                 }
                 if (*s == '(') {
                   /**  check letters  **/
-                  if (isalpha(word[i+k0])
+                  if (myisalpha(word[i+k0])
                       &&  strchr (s+1, word[i+k0]) != NULL) {
                     k0++;
                     while (*s != ')'  &&  *s != '\0')
@@ -202,14 +207,14 @@ int phonet (const char * inword, char * target,
                 }
                 if (*s == '<')
                   s++;
-                if (isdigit (*s)) {
+                if (isdigit ((unsigned char) *s)) {
                   p0 = *s - '0';
                   s++;
                 }
 
                 if (*s == '\0'
                     /**  *s == '^' cuts  **/
-                    || (*s == '$'  &&  ! isalpha(word[i+k0]))) 
+                    || (*s == '$'  &&  ! myisalpha(word[i+k0]))) 
                 {
                   if (k0 == k) {
                     /**  this is just a piece of the string  **/

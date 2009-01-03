@@ -99,6 +99,12 @@ static void PrintStack(const CallStack *stack, const string &cpu) {
       int maxStr = 20;
       buffer[maxStr] = 0;
       printf("%-*s", maxStr, buffer);
+
+      strcpy(buffer, module->version().c_str());
+      buffer[maxStr] = 0;
+
+      printf("%-*s",maxStr, buffer);
+      
       u_int64_t instruction = frame->instruction;
 
       // PPC only: Adjust the instruction to match that of Crash reporter.  The

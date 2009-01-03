@@ -66,8 +66,8 @@
 #include <ctype.h>
 #endif
 
-#include "csutil.hxx"
 #include "atypes.hxx"
+#include "csutil.hxx"
 #include "langnum.hxx"
 
 #ifdef OPENOFFICEORG
@@ -108,8 +108,8 @@ static int utf_tbl_count = 0; // utf_tbl can be used by multiple Hunspell instan
 
 /* only UTF-16 (BMP) implementation */
 char * u16_u8(char * dest, int size, const w_char * src, int srclen) {
-    char * u8 = dest;
-    char * u8_max = u8 + size;
+    signed char * u8 = (signed char *)dest;
+    signed char * u8_max = (signed char *)(u8 + size);
     const w_char * u2 = src;
     const w_char * u2_max = src + srclen;
     while ((u2 < u2_max) && (u8 < u8_max)) {
@@ -156,7 +156,7 @@ char * u16_u8(char * dest, int size, const w_char * src, int srclen) {
 
 /* only UTF-16 (BMP) implementation */
 int u8_u16(w_char * dest, int size, const char * src) {
-    const char * u8 = src;
+    const signed char * u8 = (const signed char *)src;
     w_char * u2 = dest;
     w_char * u2_max = u2 + size;
     
@@ -178,7 +178,7 @@ int u8_u16(w_char * dest, int size, const char * src) {
         case 0x90:
         case 0xa0:
         case 0xb0: {
-            HUNSPELL_WARNING(stderr, "UTF-8 encoding error. Unexpected continuation bytes in %d. character position\n%s\n", u8 - src, src);    
+            HUNSPELL_WARNING(stderr, "UTF-8 encoding error. Unexpected continuation bytes in %ld. character position\n%s\n", static_cast<long>(u8 - (signed char *)src), src);    
             u2->h = 0xff;
             u2->l = 0xfd;
             break;
@@ -190,7 +190,7 @@ int u8_u16(w_char * dest, int size, const char * src) {
                 u2->l = (*u8 << 6) + (*(u8+1) & 0x3f);
                 u8++;
             } else {
-                HUNSPELL_WARNING(stderr, "UTF-8 encoding error. Missing continuation byte in %d. character position:\n%s\n", u8 - src, src);
+                HUNSPELL_WARNING(stderr, "UTF-8 encoding error. Missing continuation byte in %ld. character position:\n%s\n", static_cast<long>(u8 - (signed char *)src), src);
                 u2->h = 0xff;
                 u2->l = 0xfd;
             }
@@ -204,12 +204,12 @@ int u8_u16(w_char * dest, int size, const char * src) {
                     u2->l = (*u8 << 6) + (*(u8+1) & 0x3f);
                     u8++;
                 } else {
-                    HUNSPELL_WARNING(stderr, "UTF-8 encoding error. Missing continuation byte in %d. character position:\n%s\n", u8 - src, src);
+                    HUNSPELL_WARNING(stderr, "UTF-8 encoding error. Missing continuation byte in %ld. character position:\n%s\n", static_cast<long>(u8 - (signed char *)src), src);
                     u2->h = 0xff;
                     u2->l = 0xfd;
                 }
             } else {
-                HUNSPELL_WARNING(stderr, "UTF-8 encoding error. Missing continuation byte in %d. character position:\n%s\n", u8 - src, src);
+                HUNSPELL_WARNING(stderr, "UTF-8 encoding error. Missing continuation byte in %ld. character position:\n%s\n", static_cast<long>(u8 - (signed char *)src), src);
                 u2->h = 0xff;
                 u2->l = 0xfd;
             }
@@ -274,13 +274,11 @@ int flag_bsearch(unsigned short flags[], unsigned short flag, int length) {
  
  char * mystrsep(char ** stringp, const char delim)
  {
-   char * rv = NULL;
    char * mp = *stringp;
-   int n = strlen(mp);
-   if (n > 0) {
+   if (*mp != '\0') {
       char * dp;
       if (delim) {
-        dp = (char *)memchr(mp,(int)((unsigned char)delim),n);
+        dp = strchr(mp, delim);
       } else {
         // don't use isspace() here, the string can be in some random charset
         // that's way different than the locale's
@@ -290,26 +288,16 @@ int flag_bsearch(unsigned short flags[], unsigned short flag, int length) {
       if (dp) {
          *stringp = dp+1;
          int nc = (int)((unsigned long)dp - (unsigned long)mp);
-         rv = (char *) malloc(nc+1);
-	 if (rv) {
-            memcpy(rv,mp,nc);
-            *(rv+nc) = '\0';
-            return rv;
-	 }
+         *(mp+nc) = '\0';
+         return mp;
       } else {
-         rv = (char *) malloc(n+1);
-         if (rv) {
-    	    memcpy(rv, mp, n);
-            *(rv+n) = '\0';
-            *stringp = mp + n;
-            return rv;
-         }
+         *stringp = mp + strlen(mp);
+         return mp;
       }
    }
    return NULL;
  }
 
- 
  // replaces strdup with ansi version
  char * mystrdup(const char * s)
  {
@@ -317,12 +305,27 @@ int flag_bsearch(unsigned short flags[], unsigned short flag, int length) {
    if (s) {
       int sl = strlen(s);
       d = (char *) malloc(((sl+1) * sizeof(char)));
-      if (d) memcpy(d,s,((sl+1)*sizeof(char)));
+      if (d) {
+         memcpy(d,s,((sl+1)*sizeof(char)));
+         return d;
+      }
+      HUNSPELL_WARNING(stderr, "Can't allocate memory.\n");
    }
    return d;
  }
- 
- 
+
+ // strcat for limited length destination string
+ char * mystrcat(char * dest, const char * st, int max) {
+   int len;
+   int len2;
+   if (dest == NULL || st == NULL) return dest;
+   len = strlen(dest);
+   len2 = strlen(st);
+   if (len + len2 + 1 > max) return dest;
+   strcpy(dest + len, st);
+   return dest;
+ }
+
  // remove cross-platform text line end characters
  void mychomp(char * s)
  {
@@ -349,112 +352,258 @@ int flag_bsearch(unsigned short flags[], unsigned short flag, int length) {
      return d;
  }
 
-#ifdef HUNSPELL_EXPERIMENTAL
- // append s to ends of every lines in text
- void strlinecat(char * dest, const char * s)
- {
-    char * dup = mystrdup(dest);
-    char * source = dup;
-    int len = strlen(s);
-    while (*source) {
-        if (*source == '\n') {
-            strncpy(dest, s, len);
-            dest += len;
-        }
-        *dest = *source;
-        source++; dest++;
-    }
-    strcpy(dest, s);
-    free(dup);
- }
-
 // break text to lines
 // return number of lines
-int line_tok(const char * text, char *** lines) {
+int line_tok(const char * text, char *** lines, char breakchar) {
     int linenum = 0;
     char * dup = mystrdup(text);
-    char * p = strchr(dup, '\n');
+    char * p = strchr(dup, breakchar);
     while (p) {
         linenum++;
         *p = '\0';
         p++;
-        p = strchr(p, '\n');
+        p = strchr(p, breakchar);
     }
-    *lines = (char **) calloc(linenum + 1, sizeof(char *));
-    if (!(*lines)) return -1;
+    linenum++;
+//    fprintf(stderr, "LINEN:%d %p %p\n", linenum, lines, *lines);
+    *lines = (char **) malloc(linenum * sizeof(char *));
+//    fprintf(stderr, "hello\n");
+    if (!(*lines)) {
+        free(dup);
+        return 0;
+    }
 
-    p = dup; 
-    for (int i = 0; i < linenum + 1; i++) {
-        (*lines)[i] = mystrdup(p);
+    p = dup;
+    int l = 0;
+    for (int i = 0; i < linenum; i++) {
+        if (*p != '\0') {
+            (*lines)[l] = mystrdup(p);
+            if (!(*lines)[l]) {
+                for (i = 0; i < l; i++) free((*lines)[i]);
+                free(dup);
+                return 0;
+            }
+            l++;
+        }
         p += strlen(p) + 1;
     }
     free(dup);
-    return linenum;
+    if (!l) free(*lines);
+    return l;
 }
 
 // uniq line in place
-char * line_uniq(char * text) {
+char * line_uniq(char * text, char breakchar) {
     char ** lines;
-    int linenum = line_tok(text, &lines);
+    int linenum = line_tok(text, &lines, breakchar);
     int i;
     strcpy(text, lines[0]);
-    for ( i = 1; i<=linenum; i++ ) {
+    for ( i = 1; i < linenum; i++ ) {
         int dup = 0;
         for (int j = 0; j < i; j++) {
             if (strcmp(lines[i], lines[j]) == 0) dup = 1;
         }
         if (!dup) {
-            if ((i > 1) || (*(lines[0]) != '\0')) strcat(text, "\n");
+            if ((i > 1) || (*(lines[0]) != '\0')) {
+                sprintf(text + strlen(text), "%c", breakchar);
+            }
             strcat(text, lines[i]);
         }
     }
-    for ( i = 0; i<=linenum; i++ ) {
+    for ( i = 0; i < linenum; i++ ) {
         if (lines[i]) free(lines[i]);
     }
     if (lines) free(lines);
     return text;
 }
 
+// uniq and boundary for compound analysis: "1\n\2\n\1" -> " ( \1 | \2 ) "
+char * line_uniq_app(char ** text, char breakchar) {
+    if (!strchr(*text, breakchar)) {
+        return *text;
+    }
+    
+    char ** lines;
+    int i;
+    int linenum = line_tok(*text, &lines, breakchar);
+    int dup = 0;
+    for (i = 0; i < linenum; i++) {
+        for (int j = 0; j < (i - 1); j++) {
+            if (strcmp(lines[i], lines[j]) == 0) {
+                *(lines[i]) = '\0';
+                dup++;
+                break;
+            }
+        }
+    }
+    if ((linenum - dup) == 1) {
+        strcpy(*text, lines[0]);
+        freelist(&lines, linenum);
+        return *text;
+    }
+    char * newtext = (char *) malloc(strlen(*text) + 2 * linenum + 3 + 1);
+    if (newtext) {
+        free(*text);
+        *text = newtext;
+    } else {
+        freelist(&lines, linenum);
+        return *text;
+    }    
+    strcpy(*text," ( ");
+    for (i = 0; i < linenum; i++) if (*(lines[i])) {
+        sprintf(*text + strlen(*text), "%s%s", lines[i], " | ");
+    }
+    (*text)[strlen(*text) - 2] = ')'; // " ) "
+    freelist(&lines, linenum);
+    return *text;
+}
+
+ // append s to ends of every lines in text
+ void strlinecat(char * dest, const char * s)
+ {
+    char * dup = mystrdup(dest);
+    char * source = dup;
+    int len = strlen(s);
+    if (dup) {
+        while (*source) {
+            if (*source == '\n') {
+                strncpy(dest, s, len);
+                dest += len;
+            }
+            *dest = *source;
+            source++; dest++;
+        }
+        strcpy(dest, s);
+        free(dup);
+    }
+ }
+
 // change \n to char c
-char * line_join(char * text, char c) {
+char * tr(char * text, char oldc, char newc) {
     char * p;
-    for (p = text; *p; p++) if (*p == '\n') *p = c;
+    for (p = text; *p; p++) if (*p == oldc) *p = newc;
     return text;
 }
 
-// leave only last {[^}]*} substring for handling zero morphemes
-char * delete_zeros(char * morphout) {
-    char * p = morphout;
-    char * q = p;
-    char * q2 = NULL;
-    int suffix = 0;
-    
-    for (;*p && *(p+1);) {
-        switch (*p) {
-            case '{': 
-                q2 = q;
-                q--;
-                break;
-            case '}':
-                if (q2) {
-                    suffix = 1;
-                    q--;
-                }
-                break; 
-            default:
-                if (suffix) {
-                    q = q2;
-                }
-                suffix = 0;
-                *q = *p;
-        }
-        p++;
-        q++;
+// morphcmp(): compare MORPH_DERI_SFX, MORPH_INFL_SFX and MORPH_TERM_SFX fields
+// in the first line of the inputs
+// return 0, if inputs equal
+// return 1, if inputs may equal with a secondary suffix
+// otherwise return -1
+int morphcmp(const char * s, const char * t)
+{
+    int se = 0;
+    int te = 0;
+    const char * sl;
+    const char * tl;    
+    const char * olds;
+    const char * oldt;
+    if (!s || !t) return 1;
+    olds = s;
+    sl = strchr(s, '\n');
+    s = strstr(s, MORPH_DERI_SFX);
+    if (!s || (sl && sl < s)) s = strstr(olds, MORPH_INFL_SFX);
+    if (!s || (sl && sl < s)) {
+        s= strstr(olds, MORPH_TERM_SFX);
+        olds = NULL;
     }
-    *q = '\0';
-    return morphout;
+    oldt = t;
+    tl = strchr(t, '\n');
+    t = strstr(t, MORPH_DERI_SFX);
+    if (!t || (tl && tl < t)) t = strstr(oldt, MORPH_INFL_SFX);
+    if (!t || (tl && tl < t)) {
+        t = strstr(oldt, MORPH_TERM_SFX);
+        oldt = NULL;
+    }
+    while (s && t && (!sl || sl > s) && (!tl || tl > t)) {
+        s += MORPH_TAG_LEN;
+        t += MORPH_TAG_LEN;
+        se = 0;
+        te = 0;
+        while ((*s == *t) && !se && !te) {
+            s++;
+            t++;
+            switch(*s) {
+                case ' ':
+                case '\n':
+                case '\t':
+                case '\0': se = 1;
+            }
+            switch(*t) {
+                case ' ':
+                case '\n':
+                case '\t':
+                case '\0': te = 1;
+            }
+        }
+        if (!se || !te) {
+            // not terminal suffix difference
+            if (olds) return -1;
+            return 1;
+        }
+        olds = s;
+        s = strstr(s, MORPH_DERI_SFX);
+        if (!s || (sl && sl < s)) s = strstr(olds, MORPH_INFL_SFX);
+        if (!s || (sl && sl < s)) {
+            s = strstr(olds, MORPH_TERM_SFX);
+            olds = NULL;
+        }
+        oldt = t;
+        t = strstr(t, MORPH_DERI_SFX);
+        if (!t || (tl && tl < t)) t = strstr(oldt, MORPH_INFL_SFX);
+        if (!t || (tl && tl < t)) {
+            t = strstr(oldt, MORPH_TERM_SFX);
+            oldt = NULL;
+        }
+    }
+    if (!s && !t && se && te) return 0;
+    return 1;
 }
-#endif // END OF HUNSPELL_EXPERIMENTAL CODE
+
+int get_sfxcount(const char * morph)
+{
+    if (!morph || !*morph) return 0;
+    int n = 0;
+    const char * old = morph;
+    morph = strstr(morph, MORPH_DERI_SFX);
+    if (!morph) morph = strstr(old, MORPH_INFL_SFX);
+    if (!morph) morph = strstr(old, MORPH_TERM_SFX);
+    while (morph) {
+        n++;
+        old = morph;
+        morph = strstr(morph + 1, MORPH_DERI_SFX);
+        if (!morph) morph = strstr(old + 1, MORPH_INFL_SFX);
+        if (!morph) morph = strstr(old + 1, MORPH_TERM_SFX);
+    }
+    return n;
+}
+
+
+int fieldlen(const char * r)
+{
+    int n = 0;
+    while (r && *r != '\t' && *r != '\0' && *r != '\n' && *r != ' ') {
+        r++;
+        n++;
+    }
+    return n;
+}
+
+char * copy_field(char * dest, const char * morph, const char * var)
+{
+    if (!morph) return NULL;
+    const char * beg = strstr(morph, var);
+    if (beg) {
+       char * d = dest;
+       for (beg += MORPH_TAG_LEN; *beg != ' ' && *beg != '\t' &&
+            *beg != '\n' && *beg != '\0'; d++, beg++) {
+         *d = *beg;
+       }
+       *d = '\0';
+       return dest;
+  }
+  return NULL;
+}
 
 char * mystrrep(char * word, const char * pat, const char * rep) {
     char * pos = strstr(word, pat);
@@ -505,6 +654,34 @@ char * mystrrep(char * word, const char * pat, const char * rep) {
    u16_u8(word, MAXWORDUTF8LEN, w, l);
    return 0;
  }
+
+ int uniqlist(char ** list, int n) {
+   int i;
+   if (n < 2) return n;
+   for (i = 0; i < n; i++) {
+     for (int j = 0; j < i; j++) {
+        if (list[j] && list[i] && (strcmp(list[j], list[i]) == 0)) {
+            free(list[i]);
+            list[i] = NULL;
+            break;
+        }
+     }
+   } 
+   int m = 1;  
+   for (i = 1; i < n; i++) if (list[i]) {
+        list[m] = list[i];
+        m++;
+    }
+   return m;
+ }
+ 
+ void freelist(char *** list, int n) {
+   if (list && *list && n > 0) {
+     for (int i = 0; i < n; i++) if ((*list)[i]) free((*list)[i]);
+     free(*list);
+     *list = NULL;
+   }
+ }
  
  // convert null terminated string to all caps
  void mkallcap(char * p, const struct cs_info * csconv)
@@ -548,6 +725,20 @@ void mkallcap_utf(w_char * u, int nc, int langnum) {
  void mkinitcap(char * p, const struct cs_info * csconv)
  {
    if (*p != '\0') *p = csconv[((unsigned char)*p)].cupper;
+ }
+
+ // conversion function for protected memory
+ void store_pointer(char * dest, char * source)
+ {
+    memcpy(dest, &source, sizeof(char *));
+ }
+
+ // conversion function for protected memory
+ char * get_stored_pointer(char * s)
+ {
+    char * p;
+    memcpy(&p, s, sizeof(char *));
+    return p;
  }
 
 #ifndef MOZILLA_CLIENT
@@ -842,7 +1033,7 @@ struct cs_info iso1_tbl[] = {
 { 0x00, 0xfc, 0xdc },
 { 0x00, 0xfd, 0xdd },
 { 0x00, 0xfe, 0xde },
-{ 0x00, 0xff, 0xff },
+{ 0x00, 0xff, 0xff }
 };
 
 
@@ -1102,7 +1293,7 @@ struct cs_info iso2_tbl[] = {
 { 0x00, 0xfc, 0xdc },
 { 0x00, 0xfd, 0xdd },
 { 0x00, 0xfe, 0xde },
-{ 0x00, 0xff, 0xff },
+{ 0x00, 0xff, 0xff }
 };
 
 
@@ -1362,7 +1553,7 @@ struct cs_info iso3_tbl[] = {
 { 0x00, 0xfc, 0xdc },
 { 0x00, 0xfd, 0xdd },
 { 0x00, 0xfe, 0xde },
-{ 0x00, 0xff, 0xff },
+{ 0x00, 0xff, 0xff }
 };
 
 struct cs_info iso4_tbl[] = {
@@ -1621,7 +1812,7 @@ struct cs_info iso4_tbl[] = {
 { 0x00, 0xfc, 0xdc },
 { 0x00, 0xfd, 0xdd },
 { 0x00, 0xfe, 0xde },
-{ 0x00, 0xff, 0xff },
+{ 0x00, 0xff, 0xff }
 };
 
 struct cs_info iso5_tbl[] = {
@@ -1880,7 +2071,7 @@ struct cs_info iso5_tbl[] = {
 { 0x00, 0xfc, 0xac },
 { 0x00, 0xfd, 0xfd },
 { 0x00, 0xfe, 0xae },
-{ 0x00, 0xff, 0xaf },
+{ 0x00, 0xff, 0xaf }
 };
 
 struct cs_info iso6_tbl[] = {
@@ -2139,7 +2330,7 @@ struct cs_info iso6_tbl[] = {
 { 0x00, 0xfc, 0xfc },
 { 0x00, 0xfd, 0xfd },
 { 0x00, 0xfe, 0xfe },
-{ 0x00, 0xff, 0xff },
+{ 0x00, 0xff, 0xff }
 };
 
 struct cs_info iso7_tbl[] = {
@@ -2398,7 +2589,7 @@ struct cs_info iso7_tbl[] = {
 { 0x00, 0xfc, 0xbc },
 { 0x00, 0xfd, 0xbe },
 { 0x00, 0xfe, 0xbf },
-{ 0x00, 0xff, 0xff },
+{ 0x00, 0xff, 0xff }
 };
 
 struct cs_info iso8_tbl[] = {
@@ -2657,7 +2848,7 @@ struct cs_info iso8_tbl[] = {
 { 0x00, 0xfc, 0xfc },
 { 0x00, 0xfd, 0xfd },
 { 0x00, 0xfe, 0xfe },
-{ 0x00, 0xff, 0xff },
+{ 0x00, 0xff, 0xff }
 };
 
 struct cs_info iso9_tbl[] = {
@@ -2916,7 +3107,7 @@ struct cs_info iso9_tbl[] = {
 { 0x00, 0xfc, 0xdc },
 { 0x00, 0xfd, 0x49 },
 { 0x00, 0xfe, 0xde },
-{ 0x00, 0xff, 0xff },
+{ 0x00, 0xff, 0xff }
 };
 
 struct cs_info iso10_tbl[] = {
@@ -3175,7 +3366,7 @@ struct cs_info iso10_tbl[] = {
 { 0x00, 0xfc, 0xfc },
 { 0x00, 0xfd, 0xfd },
 { 0x00, 0xfe, 0xfe },
-{ 0x00, 0xff, 0xff },
+{ 0x00, 0xff, 0xff }
 };
 
 struct cs_info koi8r_tbl[] = {
@@ -3434,7 +3625,7 @@ struct cs_info koi8r_tbl[] = {
 { 0x01, 0xdc, 0xfc },
 { 0x01, 0xdd, 0xfd },
 { 0x01, 0xde, 0xfe },
-{ 0x01, 0xdf, 0xff },
+{ 0x01, 0xdf, 0xff }
 };
 
 struct cs_info koi8u_tbl[] = {
@@ -3693,7 +3884,7 @@ struct cs_info koi8u_tbl[] = {
 { 0x01, 0xdc, 0xfc },
 { 0x01, 0xdd, 0xfd },
 { 0x01, 0xde, 0xfe },
-{ 0x01, 0xdf, 0xff },
+{ 0x01, 0xdf, 0xff }
 };
 
 struct cs_info cp1251_tbl[] = {
@@ -3952,7 +4143,7 @@ struct cs_info cp1251_tbl[] = {
 { 0x00, 0xfc, 0xdc },
 { 0x00, 0xfd, 0xdd },
 { 0x00, 0xfe, 0xde },
-{ 0x00, 0xff, 0xdf },
+{ 0x00, 0xff, 0xdf }
 };
 
 struct cs_info iso13_tbl[] = {
@@ -4211,7 +4402,7 @@ struct cs_info iso13_tbl[] = {
 { 0x00, 0xFC, 0xDC },
 { 0x00, 0xFD, 0xDD },
 { 0x00, 0xFE, 0xDE },
-{ 0x00, 0xFF, 0xFF },
+{ 0x00, 0xFF, 0xFF }
 };
 
 
@@ -4471,7 +4662,7 @@ struct cs_info iso14_tbl[] = {
 { 0x00, 0xfc, 0xdc },
 { 0x00, 0xfd, 0xdd },
 { 0x00, 0xfe, 0xde },
-{ 0x00, 0xff, 0xff },
+{ 0x00, 0xff, 0xff }
 };
 
 struct cs_info iso15_tbl[] = {
@@ -4730,7 +4921,7 @@ struct cs_info iso15_tbl[] = {
 { 0x00, 0xfc, 0xdc },
 { 0x00, 0xfd, 0xdd },
 { 0x00, 0xfe, 0xde },
-{ 0x00, 0xff, 0xbe },
+{ 0x00, 0xff, 0xbe }
 };
 
 struct cs_info iscii_devanagari_tbl[] = {
@@ -4989,10 +5180,10 @@ struct cs_info iscii_devanagari_tbl[] = {
 { 0x00, 0xfc, 0xfc },
 { 0x00, 0xfd, 0xfd },
 { 0x00, 0xfe, 0xfe },
-{ 0x00, 0xff, 0xff },
+{ 0x00, 0xff, 0xff }
 };
 
-struct enc_entry encds[] = {
+static struct enc_entry encds[] = {
 {"ISO8859-1",iso1_tbl},
 {"ISO8859-2",iso2_tbl},
 {"ISO8859-3",iso3_tbl},
@@ -5009,7 +5200,7 @@ struct enc_entry encds[] = {
 {"ISO8859-13", iso13_tbl},
 {"ISO8859-14", iso14_tbl},
 {"ISO8859-15", iso15_tbl},
-{"ISCII-DEVANAGARI", iscii_devanagari_tbl},
+{"ISCII-DEVANAGARI", iscii_devanagari_tbl}
 };
 
 struct cs_info * get_current_cs(const char * es) {
@@ -5018,6 +5209,7 @@ struct cs_info * get_current_cs(const char * es) {
   for (int i = 0; i < n; i++) {
     if (strcmp(es,encds[i].enc_name) == 0) {
       ccs = encds[i].cs_table;
+      break;
     }
   }
   return ccs;
@@ -5263,14 +5455,14 @@ int get_captype(char * word, int nl, cs_info * csconv) {
    int ncap = 0;
    int nneutral = 0;
    int firstcap = 0;
-
-      for (char * q = word; *q != '\0'; q++) {
-         if (csconv[*((unsigned char *)q)].ccase) ncap++;
-         if (csconv[*((unsigned char *)q)].cupper == csconv[*((unsigned char *)q)].clower) nneutral++;
-      }
-      if (ncap) {
-        firstcap = csconv[*((unsigned char *) word)].ccase;
-      }
+   if (csconv == NULL) return NOCAP;
+   for (char * q = word; *q != '\0'; q++) {
+      if (csconv[*((unsigned char *)q)].ccase) ncap++;
+      if (csconv[*((unsigned char *)q)].cupper == csconv[*((unsigned char *)q)].clower) nneutral++;
+   }
+   if (ncap) {
+     firstcap = csconv[*((unsigned char *) word)].ccase;
+   }
 
    // now finally set the captype
    if (ncap == 0) {
@@ -5348,14 +5540,14 @@ void remove_ignored_chars(char * word, char * ignored_chars)
    *word = '\0';
 }
 
-int parse_string(char * line, char ** out, const char * warnvar)
+int parse_string(char * line, char ** out, int ln)
 {
    char * tp = line;
    char * piece;
    int i = 0;
    int np = 0;
    if (*out) {
-      HUNSPELL_WARNING(stderr, "error: duplicate %s line\n", warnvar);
+      HUNSPELL_WARNING(stderr, "error: line %d: multiple definitions\n", ln);
       return 1;
    }
    piece = mystrsep(&tp, 0);
@@ -5365,6 +5557,7 @@ int parse_string(char * line, char ** out, const char * warnvar)
               case 0: { np++; break; }
               case 1: { 
                 *out = mystrdup(piece);
+                if (!*out) return 1;
                 np++;
                 break;
               }
@@ -5372,19 +5565,19 @@ int parse_string(char * line, char ** out, const char * warnvar)
           }
           i++;
       }
-      free(piece);
+      // free(piece);
       piece = mystrsep(&tp, 0);
    }
    if (np != 2) {
-      HUNSPELL_WARNING(stderr, "error: missing %s information\n", warnvar);
+      HUNSPELL_WARNING(stderr, "error: line %d: missing data\n", ln);
       return 1;
    } 
    return 0;
 }
 
-int parse_array(char * line, char ** out,
-        unsigned short ** out_utf16, int * out_utf16_len, const char * name, int utf8) {
-   if (parse_string(line, out, name)) return 1;
+int parse_array(char * line, char ** out, unsigned short ** out_utf16,
+       int * out_utf16_len, int utf8, int ln) {
+   if (parse_string(line, out, ln)) return 1;
    if (utf8) {
         w_char w[MAXWORDLEN];
         int n = u8_u16(w, MAXWORDLEN, *out);

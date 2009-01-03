@@ -749,6 +749,22 @@ js_AppendChar(JSStringBuffer *sb, jschar c)
     sb->ptr = bp;
 }
 
+void
+js_AppendUCString(JSStringBuffer *sb, const jschar *buf, uintN len)
+{
+    jschar *bp;
+
+    if (!STRING_BUFFER_OK(sb))
+        return;
+    if (len == 0 || !ENSURE_STRING_BUFFER(sb, len))
+        return;
+    bp = sb->ptr;
+    js_strncpy(bp, buf, len);
+    bp += len;
+    *bp = 0;
+    sb->ptr = bp;
+}
+
 #if JS_HAS_XML_SUPPORT
 
 void
@@ -786,19 +802,7 @@ js_AppendCString(JSStringBuffer *sb, const char *asciiz)
 void
 js_AppendJSString(JSStringBuffer *sb, JSString *str)
 {
-    size_t length;
-    jschar *bp;
-
-    if (!STRING_BUFFER_OK(sb))
-        return;
-    length = JSSTRING_LENGTH(str);
-    if (length == 0 || !ENSURE_STRING_BUFFER(sb, length))
-        return;
-    bp = sb->ptr;
-    js_strncpy(bp, JSSTRING_CHARS(str), length);
-    bp += length;
-    *bp = 0;
-    sb->ptr = bp;
+    js_AppendUCString(sb, JSSTRING_CHARS(str), JSSTRING_LENGTH(str));
 }
 
 static JSBool
@@ -814,6 +818,8 @@ GetXMLEntity(JSContext *cx, JSTokenStream *ts)
     /* Put the entity, including the '&' already scanned, in ts->tokenbuf. */
     offset = PTRDIFF(ts->tokenbuf.ptr, ts->tokenbuf.base, jschar);
     FastAppendChar(&ts->tokenbuf, '&');
+    if (!STRING_BUFFER_OK(&ts->tokenbuf))
+        return JS_FALSE;
     while ((c = GetChar(ts)) != ';') {
         if (c == EOF || c == '\n') {
             js_ReportCompileErrorNumber(cx, ts, NULL, JSREPORT_ERROR,
@@ -821,6 +827,8 @@ GetXMLEntity(JSContext *cx, JSTokenStream *ts)
             return JS_FALSE;
         }
         FastAppendChar(&ts->tokenbuf, (jschar) c);
+        if (!STRING_BUFFER_OK(&ts->tokenbuf))
+            return JS_FALSE;
     }
 
     /* Let length be the number of jschars after the '&', including the ';'. */
@@ -906,6 +914,8 @@ badncr:
     msg = JSMSG_BAD_XML_NCR;
 bad:
     /* No match: throw a TypeError per ECMA-357 10.3.2.1 step 8(a). */
+    JS_ASSERT(STRING_BUFFER_OK(&ts->tokenbuf));
+    JS_ASSERT(PTRDIFF(ts->tokenbuf.ptr, bp, jschar) >= 1);
     bytes = js_DeflateString(cx, bp + 1,
                              PTRDIFF(ts->tokenbuf.ptr, bp, jschar) - 1);
     if (bytes) {

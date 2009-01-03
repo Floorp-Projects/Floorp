@@ -42,15 +42,6 @@
 
 class nsTransactionItem;
 
-class nsTransactionReleaseFunctor : public nsDequeFunctor
-{
-public:
-
-  nsTransactionReleaseFunctor()          {}
-  virtual ~nsTransactionReleaseFunctor() {}
-  virtual void *operator()(void *aObject);
-};
-
 class nsTransactionStack
 {
   nsDeque mQue;

@@ -89,9 +89,10 @@ protected:
 
 // nsISupports implementation
 
-NS_INTERFACE_MAP_BEGIN(nsXMLStylesheetPI)
-  NS_INTERFACE_MAP_ENTRY(nsIDOMLinkStyle)
-  NS_INTERFACE_MAP_ENTRY(nsIStyleSheetLinkingElement)
+NS_INTERFACE_TABLE_HEAD(nsXMLStylesheetPI)
+  NS_NODE_INTERFACE_TABLE4(nsXMLStylesheetPI, nsIDOMNode,
+                           nsIDOMProcessingInstruction, nsIDOMLinkStyle,
+                           nsIStyleSheetLinkingElement)
   NS_INTERFACE_MAP_ENTRY_CONTENT_CLASSINFO(XMLStylesheetProcessingInstruction)
 NS_INTERFACE_MAP_END_INHERITING(nsXMLProcessingInstruction)
 
@@ -170,8 +171,7 @@ nsXMLStylesheetPI::GetStyleSheetURL(PRBool* aIsInline,
   *aURI = nsnull;
 
   nsAutoString href;
-  GetAttrValue(nsGkAtoms::href, href);
-  if (href.IsEmpty()) {
+  if (!GetAttrValue(nsGkAtoms::href, href)) {
     return;
   }
 

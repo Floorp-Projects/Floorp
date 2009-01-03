@@ -116,7 +116,7 @@ nsAbsoluteContainingBlock::RemoveFrame(nsIFrame*       aDelegatingFrame,
   nsIFrame* nif = aOldFrame->GetNextInFlow();
   if (nif) {
     static_cast<nsContainerFrame*>(nif->GetParent())
-      ->DeleteNextInFlowChild(aOldFrame->PresContext(), nif);
+      ->DeleteNextInFlowChild(aOldFrame->PresContext(), nif, PR_FALSE);
   }
 
   PRBool result = mAbsoluteFrames.DestroyFrame(aOldFrame);
@@ -177,7 +177,7 @@ nsAbsoluteContainingBlock::Reflow(nsContainerFrame*        aDelegatingFrame,
         if (nextFrame) {
           tracker.Finish(kidFrame);
           static_cast<nsContainerFrame*>(nextFrame->GetParent())
-            ->DeleteNextInFlowChild(aPresContext, nextFrame);
+            ->DeleteNextInFlowChild(aPresContext, nextFrame, PR_TRUE);
         }
       }
     }
@@ -330,6 +330,19 @@ void
 nsAbsoluteContainingBlock::DestroyFrames(nsIFrame* aDelegatingFrame)
 {
   mAbsoluteFrames.DestroyFrames();
+}
+
+void
+nsAbsoluteContainingBlock::MarkSizeDependentFramesDirty()
+{
+  for (nsIFrame* kidFrame = mAbsoluteFrames.FirstChild();
+       kidFrame;
+       kidFrame = kidFrame->GetNextSibling()) {
+    if (FrameDependsOnContainer(kidFrame, PR_TRUE, PR_TRUE)) {
+      // Add the weakest flags that will make sure we reflow this frame later
+      kidFrame->AddStateBits(NS_FRAME_HAS_DIRTY_CHILDREN);
+    }
+  }
 }
 
 // XXX Optimize the case where it's a resize reflow and the absolutely

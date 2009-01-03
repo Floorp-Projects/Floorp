@@ -58,7 +58,7 @@ $SCRIPT -p product -b branch
 
 variable            description
 ===============     ===========================================================
--p product          required. one of firefox thunderbird
+-p product          required. one of firefox, thunderbird or fennec
 -b branch           required. one of 1.8.0 1.8.1 1.9.0 1.9.1
 -u url              optional. url where to download build
 -f filepath         optional. location to save downloaded build or to find
@@ -204,6 +204,8 @@ if [[ -n "$buildcommands" ]]; then
                 App=Firefox
             elif [[ "$product" == "thunderbird" ]]; then
                 App=Thunderbird
+            elif [[ "$product" == "fennec" ]]; then
+                App=Fennec
             fi
             if [[ "$buildtype" == "debug" ]]; then
                 AppType=Debug

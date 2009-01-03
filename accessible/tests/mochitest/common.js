@@ -4,6 +4,9 @@
 const nsIAccessibleRetrieval = Components.interfaces.nsIAccessibleRetrieval;
 
 const nsIAccessibleEvent = Components.interfaces.nsIAccessibleEvent;
+const nsIAccessibleStateChangeEvent =
+  Components.interfaces.nsIAccessibleStateChangeEvent;
+
 const nsIAccessibleStates = Components.interfaces.nsIAccessibleStates;
 const nsIAccessibleRole = Components.interfaces.nsIAccessibleRole;
 const nsIAccessibleTypes = Components.interfaces.nsIAccessibleTypes;
@@ -29,12 +32,16 @@ const nsIAccessibleValue = Components.interfaces.nsIAccessibleValue;
 const nsIObserverService = Components.interfaces.nsIObserverService;
 
 const nsIDOMNode = Components.interfaces.nsIDOMNode;
+const nsIPropertyElement = Components.interfaces.nsIPropertyElement;
 
 ////////////////////////////////////////////////////////////////////////////////
 // Roles
+
 const ROLE_COMBOBOX = nsIAccessibleRole.ROLE_COMBOBOX;
 const ROLE_COMBOBOX_LIST = nsIAccessibleRole.ROLE_COMBOBOX_LIST;
 const ROLE_COMBOBOX_OPTION = nsIAccessibleRole.ROLE_COMBOBOX_OPTION;
+const ROLE_DOCUMENT = nsIAccessibleRole.ROLE_DOCUMENT;
+const ROLE_FLAT_EQUATION = nsIAccessibleRole.ROLE_FLAT_EQUATION;
 const ROLE_LABEL = nsIAccessibleRole.ROLE_LABEL;
 const ROLE_LIST = nsIAccessibleRole.ROLE_LIST;
 const ROLE_OPTION = nsIAccessibleRole.ROLE_OPTION;
@@ -42,6 +49,7 @@ const ROLE_TEXT_LEAF = nsIAccessibleRole.ROLE_TEXT_LEAF;
 
 ////////////////////////////////////////////////////////////////////////////////
 // States
+
 const STATE_COLLAPSED = nsIAccessibleStates.STATE_COLLAPSED;
 const STATE_EXPANDED = nsIAccessibleStates.STATE_EXPANDED;
 const STATE_EXTSELECTABLE = nsIAccessibleStates.STATE_EXTSELECTABLE;
@@ -49,8 +57,12 @@ const STATE_FOCUSABLE = nsIAccessibleStates.STATE_FOCUSABLE;
 const STATE_FOCUSED = nsIAccessibleStates.STATE_FOCUSED;
 const STATE_HASPOPUP = nsIAccessibleStates.STATE_HASPOPUP;
 const STATE_MULTISELECTABLE = nsIAccessibleStates.STATE_MULTISELECTABLE;
+const STATE_READONLY = nsIAccessibleStates.STATE_READONLY;
 const STATE_SELECTABLE = nsIAccessibleStates.STATE_SELECTABLE;
 const STATE_SELECTED = nsIAccessibleStates.STATE_SELECTED;
+
+const EXT_STATE_EDITABLE = nsIAccessibleStates.EXT_STATE_EDITABLE;
+const EXT_STATE_EXPANDABLE = nsIAccessibleStates.EXT_STATE_EXPANDABLE;
 
 ////////////////////////////////////////////////////////////////////////////////
 // Accessible general
@@ -85,7 +97,7 @@ function getAccessible(aAccOrElmOrID, aInterfaces, aElmObj)
   } else {
     var elm = document.getElementById(aAccOrElmOrID);
     if (!elm) {
-      ok(false, "Can't get DOM element for " + aID);
+      ok(false, "Can't get DOM element for " + aAccOrElmOrID);
       return null;
     }
   }
@@ -186,6 +198,71 @@ function unregisterA11yEventListener(aEventType, aEventHandler)
   }
 }
 
+/**
+ * Creates event queue for the given event type. The queue consists of invoker
+ * objects, each of them generates the event of the event type. When queue is
+ * started then every invoker object is asked to generate event after timeout.
+ * When event is caught then current invoker object is asked to check wether
+ * event was handled correctly.
+ *
+ * Invoker interface is:
+ *   var invoker = {
+ *     invoke: function(){}, // generates event for the DOM node
+ *     check: function(aEvent){}, // checks event for correctness
+ *     DOMNode getter() {} // DOM node event is generated for
+ *   };
+ *
+ * @param  aEventType     the given event type
+ */
+function eventQueue(aEventType)
+{
+  /**
+   * Add invoker object into queue.
+   */
+  this.push = function eventQueue_push(aEventInvoker)
+  {
+    this.mInvokers.push(aEventInvoker);
+  }
+
+  /**
+   * Start the queue processing.
+   */
+  this.invoke = function eventQueue_invoke()
+  {
+    window.setTimeout(
+      function(aQueue)
+      {
+        if (aQueue.mIndex == aQueue.mInvokers.length - 1) {
+          unregisterA11yEventListener(aQueue.mEventType, aQueue.mEventHandler);
+
+          for (var idx = 0; idx < aQueue.mInvokers.length; idx++)
+            ok(aQueue.mInvokers[idx].wasCaught, "test " + idx + " failed.");
+
+          SimpleTest.finish();
+          return;
+        }
+
+        aQueue.mInvokers[++aQueue.mIndex].invoke();
+
+        aQueue.invoke();
+      },
+      100, this
+    );
+  }
+
+  this.getInvoker = function eventQueue_getInvoker()
+  {
+    return this.mInvokers[this.mIndex];
+  }
+
+  this.mEventType = aEventType;
+  this.mEventHandler = new eventHandlerForEventQueue(this);
+
+  registerA11yEventListener(this.mEventType, this.mEventHandler);
+
+  this.mInvokers = new Array();
+  this.mIndex = -1;
+}
 
 ////////////////////////////////////////////////////////////////////////////////
 // Private
@@ -226,3 +303,18 @@ var gA11yEventObserver =
       listenersArray[index].handleEvent(event);
   }
 };
+
+function eventHandlerForEventQueue(aQueue)
+{
+  this.handleEvent = function eventHandlerForEventQueue_handleEvent(aEvent)
+  {
+    var invoker = this.mQueue.getInvoker();
+    if (aEvent.DOMNode == invoker.DOMNode) {
+      invoker.check(aEvent);
+      invoker.wasCaught = true;
+    }
+  }
+  
+  this.mQueue = aQueue;
+}
+

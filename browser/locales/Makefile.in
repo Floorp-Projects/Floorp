@@ -48,6 +48,22 @@ include $(topsrcdir)/config/config.mk
 vpath %.xml @srcdir@/en-US/searchplugins
 vpath %.xml $(LOCALE_SRCDIR)/searchplugins
 
+ifdef LOCALE_MERGEDIR
+vpath crashreporter%.ini $(LOCALE_MERGEDIR)/browser/crashreporter
+endif
+vpath crashreporter%.ini $(LOCALE_SRCDIR)/crashreporter
+ifdef LOCALE_MERGEDIR
+vpath crashreporter%.ini @srcdir@/en-US/crashreporter
+endif
+ifdef LOCALE_MERGEDIR
+vpath book%.inc $(LOCALE_MERGEDIR)/browser/profile
+endif
+vpath book%.inc $(LOCALE_SRCDIR)/profile
+ifdef LOCALE_MERGEDIR
+vpath book%.inc @srcdir@/en-US/profile
+endif
+
+
 run_for_effects := $(shell if ! test -d $(DIST); then $(NSINSTALL) -D $(DIST); fi; if ! test -d $(DIST)/branding; then $(NSINSTALL) -D $(DIST)/branding; fi)
 _ABS_DIST := $(shell cd $(DIST) && pwd)
 
@@ -68,13 +84,19 @@ APP_VERSION := $(shell cat $(srcdir)/../config/version.txt)
 PWD := $(shell pwd)
 core_abspath = $(if $(findstring :,$(1)),$(1),$(if $(filter /%,$(1)),$(1),$(PWD)/$(1)))
 
+# ZIP_IN is defaulted to be compatible with the files the wget-en-US target
+# pulls. You may override ZIP_IN if you provide your own files. You also _must_
+# override ZIP_IN when MOZ_PKG_PRETTYNAMES is defined - the default will not
+# work in that case.
+ZIP_IN ?= $(_ABS_DIST)/$(PACKAGE)
+
 DEFINES += \
 	-DAB_CD=$(AB_CD) \
 	-DMOZ_LANGPACK_EID=langpack-$(AB_CD)@firefox.mozilla.org \
 	-DMOZ_APP_VERSION=$(MOZ_APP_VERSION) \
 	-DLOCALE_SRCDIR=$(call core_abspath,$(LOCALE_SRCDIR)) \
-	-DPKG_BASENAME=$(PKG_BASENAME) \
-	-DPKG_INST_BASENAME=$(PKG_INST_BASENAME) \
+	-DPKG_BASENAME="$(PKG_BASENAME)" \
+	-DPKG_INST_BASENAME="$(PKG_INST_BASENAME)" \
 	$(NULL)
 
 ifndef MOZ_BRANDING_DIRECTORY
@@ -100,30 +122,14 @@ install::
 	    $(LOCALE_SRCDIR)/existing-profile-defaults.js > $(DESTDIR)$(mozappdir)/defaults/existing-profile-defaults.js; \
 	fi
 
-ifeq ($(OS_ARCH),OS2)
-README_FILES = \
-	os2/README.txt \
-	$(NULL)
-else
 README_FILES = \
 	README.txt \
 	$(NULL)
-endif
 
 PROFILE_FILES = \
-	bookmarks.html \
 	localstore.rdf \
+	mimeTypes.rdf \
 	$(NULL)
-
-ifeq ($(OS_ARCH),WINNT)
-PROFILE_FILES += win/mimeTypes.rdf
-else
-ifneq (,$(filter mac cocoa,$(MOZ_WIDGET_TOOLKIT)))
-PROFILE_FILES += mac/mimeTypes.rdf
-else
-PROFILE_FILES += unix/mimeTypes.rdf
-endif
-endif
 
 PROFILE_CHROME = userChrome-example.css userContent-example.css
 
@@ -134,16 +140,32 @@ ifeq ($(OS_ARCH),WINNT)
 	  $(PERL) -pe 's/(?<!\r)\n/\r\n/g;' < $$file > $(FINAL_TARGET)/`basename $$file`; \
 	done
 else
+ifneq ($(OS_ARCH),OS2)
 	$(SYSINSTALL) $(IFLAGS1) $^ $(FINAL_TARGET)
 endif
+endif
 
-libs:: $(addprefix $(LOCALE_SRCDIR)/profile/,$(PROFILE_FILES))
+NO_JA_JP_MAC_AB_CD := $(if $(filter ja-JP-mac, $(AB_CD)),ja,$(AB_CD))
+
+%/defaults/profile/bookmarks.html: bookmarks.inc generic/profile/bookmarks.html.in
+	$(SYSINSTALL) -D $(dir $@)
+	$(PYTHON) $(topsrcdir)/config/Preprocessor.py \
+	  -I $< \
+	  -DAB_CD=$(NO_JA_JP_MAC_AB_CD) \
+	  $(srcdir)/generic/profile/bookmarks.html.in \
+	  > $@
+
+libs:: $(FINAL_TARGET)/defaults/profile/bookmarks.html ;
+
+libs:: $(addprefix generic/profile/,$(PROFILE_FILES))
 	$(SYSINSTALL) $(IFLAGS1) $^ $(FINAL_TARGET)/defaults/profile
 
 libs:: $(addprefix $(LOCALE_SRCDIR)/profile/chrome/,$(PROFILE_CHROME))
 	$(SYSINSTALL) $(IFLAGS1) $^ $(FINAL_TARGET)/defaults/profile/chrome
 
-install:: $(addprefix $(LOCALE_SRCDIR)/profile/,$(PROFILE_FILES))
+install:: $(DESTDIR)$(mozappdir)/defaults/profile/bookmarks.html ;
+
+install:: $(addprefix generic/profile/,$(PROFILE_FILES))
 	$(SYSINSTALL) $(IFLAGS1) $^ $(DESTDIR)$(mozappdir)/defaults/profile
 
 install:: $(addprefix $(LOCALE_SRCDIR)/profile/chrome/,$(PROFILE_CHROME))
@@ -157,35 +179,30 @@ libs:: $(addsuffix .xml,$(SEARCH_PLUGINS))
 install:: $(addsuffix .xml,$(SEARCH_PLUGINS))
 	$(SYSINSTALL) $(IFLAGS1) $^ $(DESTDIR)$(mozappdir)/searchplugins
 
-MICROSUMMARY_GENERATORS = $(shell cat $(LOCALE_SRCDIR)/microsummary-generators/list.txt)
-MICROSUMMARY_GENERATOR_PREFIX = $(addprefix $(LOCALE_SRCDIR)/microsummary-generators/,$(MICROSUMMARY_GENERATORS))
-
-libs::
-ifneq (,$(strip $(MICROSUMMARY_GENERATORS)))
-        $(addsuffix .xml,$(MICROSUMMARY_GENERATOR_PREFIX))
-	$(SYSINSTALL) $(IFLAGS1) $^ $(FINAL_TARGET)/microsummary-generators
+tests:
+ifneq (en-US, $(AB_CD))
+	@echo "Verifying $(AB_CD) installer variable usage"
+	@$(PERL) $(topsrcdir)/toolkit/mozapps/installer/windows/nsis/check-locales.pl $(LOCALE_SRCDIR)/installer
 endif
 
-install::
-ifneq (,$(strip $(MICROSUMMARY_GENERATORS)))
-        $(addsuffix .xml,$(MICROSUMMARY_GENERATOR_PREFIX))
-	$(SYSINSTALL) $(IFLAGS1) $^ $(DESTDIR)$(mozappdir)/microsummary-generators
-endif
+clobber-%:
+	$(RM) -rf $(DIST)/xpi-stage/locale-$*
 
 libs-%:
-	@$(MAKE) -C ../../toolkit/locales libs-$*
-	@$(MAKE) -C ../../extensions/reporter/locales libs AB_CD=$* XPI_NAME=locale-$*
-	@$(MAKE) -C ../../extensions/spellcheck/locales AB_CD=$* XPI_NAME=locale-$*
-	@$(MAKE) libs AB_CD=$* XPI_NAME=locale-$* PREF_DIR=defaults/pref
+	$(NSINSTALL) -D $(DIST)/install
+	@$(MAKE) -C ../../toolkit/locales libs-$* BOTH_MANIFESTS=1
+	@$(MAKE) -C ../../extensions/reporter/locales libs AB_CD=$* XPI_NAME=locale-$* BOTH_MANIFESTS=1
+	@$(MAKE) -C ../../extensions/spellcheck/locales AB_CD=$* XPI_NAME=locale-$* BOTH_MANIFESTS=1
+	@$(MAKE) libs AB_CD=$* XPI_NAME=locale-$* PREF_DIR=defaults/pref BOTH_MANIFESTS=1
 ifdef MOZ_BRANDING_DIRECTORY
-	@$(MAKE) -C $(DEPTH)/$(MOZ_BRANDING_DIRECTORY)/locales AB_CD=$* XPI_NAME=locale-$*
+	@$(MAKE) -C $(DEPTH)/$(MOZ_BRANDING_DIRECTORY)/locales AB_CD=$* XPI_NAME=locale-$* BOTH_MANIFESTS=1
 endif
+	@$(MAKE) tests AB_CD=$*
 
 ifneq (,$(filter mac cocoa,$(MOZ_WIDGET_TOOLKIT)))
 MOZ_PKG_MAC_DSSTORE=$(_ABS_DIST)/branding/dsstore
 MOZ_PKG_MAC_BACKGROUND=$(_ABS_DIST)/branding/background.png
 MOZ_PKG_MAC_ICON=$(_ABS_DIST)/branding/disk.icns
-MOZ_PKG_MAC_RSRC=$(_ABS_DIST)/branding/license.r
 MOZ_PKG_MAC_EXTRA=--symlink "/Applications:/ "
 endif
 
@@ -193,29 +210,23 @@ PACKAGER_NO_LIBS = 1
 include $(topsrcdir)/toolkit/mozapps/installer/packager.mk
 include $(call EXPAND_LOCALE_SRCDIR,toolkit/locales)/installer/windows/charset.mk
 
-repackage-win32-installer: WIN32_INSTALLER_OUT=$(_ABS_DIST)/$(PKG_INST_PATH)$(PKG_INST_BASENAME).exe
+repackage-win32-installer: WIN32_INSTALLER_OUT="$(_ABS_DIST)/$(PKG_INST_PATH)$(PKG_INST_BASENAME).exe"
 repackage-win32-installer: $(WIN32_INSTALLER_IN) $(SUBMAKEFILES)
-ifneq (en-US,$(AB_CD))
-	@echo "Verifying $(AB_CD) installer variable usage"
-	@$(PERL) $(topsrcdir)/toolkit/mozapps/installer/windows/nsis/check-locales.pl $(LOCALE_SRCDIR)/installer
-endif
 	@echo "Repackaging $(WIN32_INSTALLER_IN) into $(WIN32_INSTALLER_OUT)."
 ifdef MOZ_BRANDING_DIRECTORY
 	$(MAKE) -C $(DEPTH)/$(MOZ_BRANDING_DIRECTORY) export
 else
 	$(MAKE) -C ../installer/windows export
 endif
-	if test ! -d $(dir $(WIN32_INSTALLER_OUT)); then \
-	  $(NSINSTALL) -D $(dir $(WIN32_INSTALLER_OUT)); \
+	if test ! -d $(_ABS_DIST)/$(PKG_INST_PATH); then \
+	  $(NSINSTALL) -D $(_ABS_DIST)/$(PKG_INST_PATH); \
 	fi
 	$(RM) -rf l10n-stage
-	mkdir l10n-stage
+	$(NSINSTALL) -D l10n-stage
 	$(CYGWIN_WRAPPER) 7z x -ol10n-stage $(WIN32_INSTALLER_IN)
 	$(RM) -r l10n-stage/localized
 	$(RM) l10n-stage/setup.exe
-	$(RM) -rf $(DIST)/xpi-stage/locale-$(AB_CD)
-	$(MAKE) libs-$(AB_CD)
-	mv $(DIST)/xpi-stage/locale-$(AB_CD) l10n-stage/localized
+	cp -r $(DIST)/xpi-stage/locale-$(AB_CD) l10n-stage/localized
 	$(MAKE) -C ../installer/windows CONFIG_DIR=l10ngen l10ngen/setup.exe l10ngen/7zSD.sfx
 	cp ../installer/windows/l10ngen/setup.exe l10n-stage
 	$(NSINSTALL) -D l10n-stage/localized/uninstall
@@ -228,9 +239,13 @@ endif
 	    app.7z > $(WIN32_INSTALLER_OUT)
 	chmod 0755 $(WIN32_INSTALLER_OUT)
 
+ifeq (WINNT,$(OS_ARCH))
 repackage-win32-installer-%: WIN32_INSTALLER_IN=$(_ABS_DIST)/$(PKG_INST_PATH)$(PKG_INST_BASENAME).exe
-repackage-win32-installer-%: $(WIN32_INSTALLER_IN)
+repackage-win32-installer-%: $(WIN32_INSTALLER_IN) libs-%
 	@$(MAKE) repackage-win32-installer AB_CD=$* WIN32_INSTALLER_IN=$(WIN32_INSTALLER_IN)
+else
+repackage-win32-installer-%: ;
+endif
 
 ifneq (,$(filter mac cocoa,$(MOZ_WIDGET_TOOLKIT)))
 STAGEDIST = $(_ABS_DIST)/l10n-stage/$(MOZ_PKG_APPNAME)/$(_APPNAME)/Contents/MacOS
@@ -238,29 +253,45 @@ else
 STAGEDIST = $(_ABS_DIST)/l10n-stage/$(MOZ_PKG_APPNAME)
 endif
 
-repackage-zip: ZIP_OUT=$(_ABS_DIST)/$(PACKAGE)
-repackage-zip: UNPACKAGE=$(ZIP_IN)
-repackage-zip: $(ZIP_IN)
-	$(RM) -r $(DIST)/l10n-stage
-	mkdir $(DIST)/l10n-stage
+$(STAGEDIST): AB_CD:=en-US
+$(STAGEDIST): UNPACKAGE=$(ZIP_IN)
+$(STAGEDIST): $(ZIP_IN)
+# only mac needs to remove the parent of STAGEDIST...
+ifneq (,$(filter mac cocoa,$(MOZ_WIDGET_TOOLKIT)))
+	if test -d $(DIST)/l10n-stage; then \
+	  $(RM) -r -v $(DIST)/l10n-stage; \
+	fi
+else
+# ... and windows doesn't like removing STAGEDIST itself, remove all children
+	if test -d $(DIST)/l10n-stage; then \
+	  find $(STAGEDIST) -maxdepth 1 -print0 | xargs -0 $(RM) -r ; \
+	fi
+endif
+	$(NSINSTALL) -D $(DIST)/l10n-stage
 	cd $(DIST)/l10n-stage && \
 	  $(UNMAKE_PACKAGE)
-	$(RM) $(STAGEDIST)/chrome/en-US.jar \
-	  $(STAGEDIST)/chrome/en-US.manifest \
+	make clobber-zip AB_CD=en-US
+
+clobber-zip:
+	$(RM) $(STAGEDIST)/chrome/$(AB_CD).jar \
+	  $(STAGEDIST)/chrome/$(AB_CD).manifest \
 	  $(STAGEDIST)/defaults/pref/firefox-l10n.js
-	$(RM) -r $(STAGEDIST)/microsummary-generators \
-	  $(STAGEDIST)/searchplugins \
+	$(RM) -rf  $(STAGEDIST)/searchplugins \
 	  $(STAGEDIST)/dictionaries \
 	  $(STAGEDIST)/defaults/profile \
-	  $(STAGEDIST)/chrome/en-US
-	$(RM) -rf $(DIST)/xpi-stage/locale-$(AB_CD)
-	$(MAKE) libs-$(AB_CD)
+	  $(STAGEDIST)/chrome/$(AB_CD)
+
+unpack: $(STAGEDIST)
+	@echo done unpacking
+
+repackage-zip: ZIP_OUT="$(_ABS_DIST)/$(PACKAGE)"
+repackage-zip: UNPACKAGE="$(ZIP_IN)"
+repackage-zip:
 ifeq (WINNT,$(OS_ARCH))
 	$(RM) -r $(STAGEDIST)/uninstall
 	$(NSINSTALL) -D $(STAGEDIST)/uninstall
 	cp ../installer/windows/l10ngen/helper.exe $(STAGEDIST)/uninstall
 endif
-	$(RM) -r $(DIST)/xpi-stage/locale-$(AB_CD)/chrome/$(AB_CD)
 	cd $(DIST)/xpi-stage/locale-$(AB_CD) && \
 	  tar $(TAR_CREATE_FLAGS) - * | ( cd $(STAGEDIST) && tar -xf - )
 ifneq (en,$(AB))
@@ -271,40 +302,42 @@ endif
 	$(NSINSTALL) -D $(DIST)/l10n-stage/$(PKG_PATH)
 	cd $(DIST)/l10n-stage; \
 	  $(MAKE_PACKAGE)
+ifdef MOZ_MAKE_COMPLETE_MAR
+	$(MAKE) -C $(DEPTH)/tools/update-packaging full-update AB_CD=$(AB_CD) \
+	  MOZ_PKG_PRETTYNAMES=$(MOZ_PKG_PRETTYNAMES) \
+	  PACKAGE_BASE_DIR="$(_ABS_DIST)/l10n-stage" \
+	  DIST="$(_ABS_DIST)"
+endif
+# packaging done, undo l10n stuff
+ifneq (en,$(AB))
+ifneq (,$(filter mac cocoa,$(MOZ_WIDGET_TOOLKIT)))
+	mv $(_ABS_DIST)/l10n-stage/$(MOZ_PKG_APPNAME)/$(_APPNAME)/Contents/Resources/$(AB).lproj $(_ABS_DIST)/l10n-stage/$(MOZ_PKG_APPNAME)/$(_APPNAME)/Contents/Resources/en.lproj
+endif
+endif
+	$(MAKE) clobber-zip AB_CD=$(AB_CD)
 	$(NSINSTALL) -D $(DIST)/$(PKG_PATH)
-	mv -f $(DIST)/l10n-stage/$(PACKAGE) $(DIST)/$(PACKAGE)
+	mv -f "$(DIST)/l10n-stage/$(PACKAGE)" "$(DIST)/$(PACKAGE)"
 
 repackage-zip-%: ZIP_IN=$(_ABS_DIST)/$(PACKAGE)
-repackage-zip-%: $(ZIP_IN)
+repackage-zip-%: $(ZIP_IN) $(STAGEDIST) libs-%
 	@$(MAKE) repackage-zip AB_CD=$* ZIP_IN=$(ZIP_IN)
 
 langpack-%: LANGPACK_FILE=$(_ABS_DIST)/$(PKG_LANGPACK_PATH)$(PKG_LANGPACK_BASENAME).xpi
 langpack-%: AB_CD=$*
 langpack-%: XPI_NAME=locale-$*
-langpack-%:
+langpack-%: libs-%
 	@echo "Making langpack $(LANGPACK_FILE)"
 	$(NSINSTALL) -D $(DIST)/$(PKG_LANGPACK_PATH)
-	@$(RM) -rf $(DIST)/xpi-stage/locale-$(AB_CD)
-	@$(MAKE) libs-$(AB_CD) USE_EXTENSION_MANIFEST=1
 	$(PERL) $(topsrcdir)/config/preprocessor.pl $(DEFINES) $(ACDEFINES) -I$(call EXPAND_LOCALE_SRCDIR,toolkit/locales)/defines.inc -I$(LOCALE_SRCDIR)/defines.inc $(srcdir)/generic/install.rdf > $(FINAL_TARGET)/install.rdf
 	cd $(DIST)/xpi-stage/locale-$(AB_CD) && \
-	  $(ZIP) -r9D $(LANGPACK_FILE) install.rdf chrome chrome.manifest
+	  $(ZIP) -r9D $(LANGPACK_FILE) install.rdf chrome/$(AB_CD).jar chrome.manifest
 
 # This is a generic target that will make a langpack, repack ZIP (+tarball)
 # builds, and repack an installer if applicable. It is called from the
 # tinderbox scripts. Alter it with caution.
-#
-# Note: the last target called here should be repackage-zip-$* as the l10n build
-# systems rely on dist/l10n-stage/<product> to be in place in order to package
-# the complete MAR files.
 
-installers-%:
-	$(NSINSTALL) -D $(DIST)/install
-	@$(MAKE) langpack-$*
-ifeq (WINNT,$(OS_ARCH))
-	@$(MAKE) repackage-win32-installer-$*
-endif
-	@$(MAKE) repackage-zip-$*
+installers-%: clobber-% langpack-% repackage-win32-installer-% repackage-zip-%
+	@echo "repackaging done"
 
 ifdef MOZ_UPDATER
 libs:: $(addprefix $(LOCALE_SRCDIR)/,updater/updater.ini)
@@ -319,7 +352,7 @@ endif
 endif
 
 ifdef MOZ_CRASHREPORTER
-libs:: $(addprefix $(LOCALE_SRCDIR)/,crashreporter/crashreporter-override.ini)
+libs:: crashreporter-override.ini
 	$(SYSINSTALL) $(IFLAGS1) $^ $(FINAL_TARGET)
 endif
 
@@ -335,13 +368,16 @@ wget-en-US:
 ifndef WGET
 	$(error Wget not installed)
 endif
-	@$(WGET) -nv --output-document $(_ABS_DIST)/$(PACKAGE) $(EN_US_BINARY_URL)/$(PACKAGE)
+	(cd $(_ABS_DIST) && $(WGET) -nv -N  $(EN_US_BINARY_URL)/$(PACKAGE))
 	@echo "Downloaded $(EN_US_BINARY_URL)/$(PACKAGE) to $(_ABS_DIST)/$(PACKAGE)"
 ifeq ($(OS_ARCH), WINNT)
 	$(NSINSTALL) -D $(_ABS_DIST)/$(PKG_INST_PATH)
-	@$(WGET) -nv --output-document $(_ABS_DIST)/$(PKG_INST_PATH)$(PKG_INST_BASENAME).exe $(EN_US_BINARY_URL)/$(PKG_PATH)$(PKG_INST_BASENAME).exe
-	@echo "Downloaded $(EN_US_BINARY_URL)/$(PKG_PATH)$(PKG_INST_BASENAME).exe to $(_ABS_DIST)/$(PKG_INST_PATH)$(PKG_INST_BASENAME)"
+	(cd $(_ABS_DIST)/$(PKG_INST_PATH) && $(WGET) -nv -N "$(EN_US_BINARY_URL)/$(PKG_PATH)$(PKG_INST_BASENAME).exe")
+	@echo "Downloaded $(EN_US_BINARY_URL)/$(PKG_PATH)$(PKG_INST_BASENAME).exe to $(_ABS_DIST)/$(PKG_INST_PATH)$(PKG_INST_BASENAME).exe"
 endif
+
+ident:
+	@$(PYTHON) $(topsrcdir)/config/printconfigsetting.py $(STAGEDIST)/application.ini App SourceStamp
 
 #These make targets call prepare-repackages by setting different UPLOAD_DIR
 prepare-upload-latest-%:
@@ -388,3 +424,10 @@ ifeq (WINNT, $(OS_ARCH))
 endif
 # Set the permissions that the folders will have in ftp once uploaded
 	chmod -vR 775 $(UPLOAD_DIR)
+
+merge-%:
+ifdef LOCALE_MERGEDIR
+	$(RM) -rf $(LOCALE_MERGEDIR)
+	MACOSX_DEPLOYMENT_TARGET= compare-locales -m $(LOCALE_MERGEDIR) $(srcdir)/l10n.ini $(L10NBASEDIR) $*
+endif
+	@echo

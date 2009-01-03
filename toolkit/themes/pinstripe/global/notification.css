@@ -1,7 +1,7 @@
 @namespace url("http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul");
 
 notification {
-  min-height: 24px;
+  padding: 4px 3px 5px;
 }
 
 notification[type="info"] {
@@ -28,7 +28,7 @@ notification[type="critical"] {
 .messageImage {
   width: 16px;
   height: 16px;
-  margin: 0px 1px 0px 6px;
+  margin: 0 4px;
 }
 
 /* Default icons for notifications */
@@ -45,33 +45,30 @@ notification[type="critical"] .messageImage {
   list-style-image: url("chrome://global/skin/icons/error-16.png");
 }
 
-.messageText {
-  margin-top: 2px;
-  font-weight: bold;
-  -moz-margin-start: 5px;
-}
-
-.notification-inner > button {
-  -moz-appearance: none !important;
-}
-
-.messageButton {
-  margin: 0px 5px 0px 5px;
-}
-
 .notification-inner {
   border: 0 !important;
 }
 
+.messageText {
+  margin: 0 3px !important;
+  padding: 0;
+  font-weight: bold;
+}
+
 .messageCloseButton {
   -moz-appearance: none;
-  -moz-padding-end: 4px;
+  padding: 0;
+  margin: 0 2px;
   list-style-image: url("chrome://global/skin/icons/closetab.png") !important;
   border: none;
 }
 
 .messageCloseButton > .toolbarbutton-text {
   display: none;
+}
+
+.messageCloseButton > .toolbarbutton-icon {
+  padding: 0;
 }
 
 .messageCloseButton:hover {

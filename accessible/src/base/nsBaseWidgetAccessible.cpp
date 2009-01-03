@@ -42,7 +42,7 @@
 #include "nsIAccessibilityService.h"
 #include "nsIAccessibleDocument.h"
 #include "nsAccessibleWrap.h"
-#include "nsAccessibilityUtils.h"
+#include "nsCoreUtils.h"
 #include "nsIDOMNSHTMLElement.h"
 #include "nsGUIEvent.h"
 #include "nsHyperTextAccessibleWrap.h"
@@ -121,16 +121,17 @@ nsLinkableAccessible::TakeFocus()
   return nsHyperTextAccessibleWrap::TakeFocus();
 }
 
-NS_IMETHODIMP
-nsLinkableAccessible::GetState(PRUint32 *aState, PRUint32 *aExtraState)
+nsresult
+nsLinkableAccessible::GetStateInternal(PRUint32 *aState, PRUint32 *aExtraState)
 {
-  nsresult rv = nsHyperTextAccessibleWrap::GetState(aState, aExtraState);
-  NS_ENSURE_SUCCESS(rv, rv);
+  nsresult rv = nsHyperTextAccessibleWrap::GetStateInternal(aState,
+                                                            aExtraState);
+  NS_ENSURE_A11Y_SUCCESS(rv, rv);
 
   if (mIsLink) {
     *aState |= nsIAccessibleStates::STATE_LINKED;
     nsCOMPtr<nsIAccessible> actionAcc = GetActionAccessible();
-    if (actionAcc && (State(actionAcc) & nsIAccessibleStates::STATE_TRAVERSED))
+    if (nsAccUtils::State(actionAcc) & nsIAccessibleStates::STATE_TRAVERSED)
       *aState |= nsIAccessibleStates::STATE_TRAVERSED;
   }
 
@@ -233,16 +234,16 @@ nsLinkableAccessible::GetURI(PRInt32 aIndex, nsIURI **aURI)
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-// nsLinkableAccessible. nsPIAccessNode
+// nsLinkableAccessible. nsAccessNode
 
-NS_IMETHODIMP
+nsresult
 nsLinkableAccessible::Init()
 {
   CacheActionContent();
   return nsHyperTextAccessibleWrap::Init();
 }
 
-NS_IMETHODIMP
+nsresult
 nsLinkableAccessible::Shutdown()
 {
   mActionContent = nsnull;
@@ -256,8 +257,8 @@ void
 nsLinkableAccessible::CacheActionContent()
 {
   nsCOMPtr<nsIContent> walkUpContent(do_QueryInterface(mDOMNode));
-  PRBool isOnclick = nsAccUtils::HasListener(walkUpContent,
-                                             NS_LITERAL_STRING("click"));
+  PRBool isOnclick = nsCoreUtils::HasListener(walkUpContent,
+                                              NS_LITERAL_STRING("click"));
 
   if (isOnclick) {
     mActionContent = walkUpContent;
@@ -266,8 +267,8 @@ nsLinkableAccessible::CacheActionContent()
   }
 
   while ((walkUpContent = walkUpContent->GetParent())) {
-    isOnclick = nsAccUtils::HasListener(walkUpContent,
-                                        NS_LITERAL_STRING("click"));
+    isOnclick = nsCoreUtils::HasListener(walkUpContent,
+                                         NS_LITERAL_STRING("click"));
   
     nsCOMPtr<nsIDOMNode> walkUpNode(do_QueryInterface(walkUpContent));
 
@@ -275,8 +276,8 @@ nsLinkableAccessible::CacheActionContent()
     GetAccService()->GetAccessibleInWeakShell(walkUpNode, mWeakShell,
                                               getter_AddRefs(walkUpAcc));
 
-    if (walkUpAcc && Role(walkUpAcc) == nsIAccessibleRole::ROLE_LINK &&
-        (State(walkUpAcc) & nsIAccessibleStates::STATE_LINKED)) {
+    if (nsAccUtils::Role(walkUpAcc) == nsIAccessibleRole::ROLE_LINK &&
+        nsAccUtils::State(walkUpAcc) & nsIAccessibleStates::STATE_LINKED) {
       mIsLink = PR_TRUE;
       mActionContent = walkUpContent;
       return;

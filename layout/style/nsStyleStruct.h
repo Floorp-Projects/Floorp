@@ -105,11 +105,14 @@ struct nsStyleFont {
   void Destroy(nsPresContext* aContext);
 
   nsFont  mFont;        // [inherited]
-  nscoord mSize;        // [inherited] Our "computed size". Can be different from mFont.size
-                        // which is our "actual size" and is enforced to be >= the user's
-                        // preferred min-size. mFont.size should be used for display purposes
-                        // while mSize is the value to return in getComputedStyle() for example.
-  PRUint8 mFlags;       // [inherited] See nsStyleConsts.h
+  nscoord mSize;        // [inherited] Our "computed size". Can be different
+                        // from mFont.size which is our "actual size" and is
+                        // enforced to be >= the user's preferred min-size.
+                        // mFont.size should be used for display purposes
+                        // while mSize is the value to return in
+                        // getComputedStyle() for example.
+  PRUint8 mGenericID;   // [inherited] generic CSS font family, if any;
+                        // value is a kGenericFont_* constant, see nsFont.h.
 
 #ifdef MOZ_MATHML
   // MathML scriptlevel support
@@ -272,23 +275,11 @@ struct nsBorderColors {
   nsBorderColors* mNext;
   nscolor mColor;
 
-  nsBorderColors* CopyColors() {
-    nsBorderColors* next = nsnull;
-    if (mNext)
-      next = mNext->CopyColors();
-    return new nsBorderColors(mColor, next);
-  }
+  nsBorderColors() : mNext(nsnull), mColor(NS_RGB(0,0,0)) {}
+  nsBorderColors(const nscolor& aColor) : mNext(nsnull), mColor(aColor) {}
+  ~nsBorderColors();
 
-  nsBorderColors() :mNext(nsnull) { mColor = NS_RGB(0,0,0); }
-
-  nsBorderColors(const nscolor& aColor, nsBorderColors* aNext=nsnull) {
-    mColor = aColor;
-    mNext = aNext;
-  }
-
-  ~nsBorderColors() {
-    delete mNext;
-  }
+  nsBorderColors* Clone() const { return Clone(PR_TRUE); }
 
   static PRBool Equal(const nsBorderColors* c1,
                       const nsBorderColors* c2) {
@@ -304,6 +295,9 @@ struct nsBorderColors {
     // has more colors than another
     return !c1 && !c2;
   }
+
+private:
+  nsBorderColors* Clone(PRBool aDeep) const;
 };
 
 struct nsCSSShadowItem {
@@ -809,7 +803,7 @@ struct nsStyleText {
   }
 
   PRBool WordCanWrap() const {
-    return mWordWrap == NS_STYLE_WORDWRAP_BREAK_WORD;
+    return WhiteSpaceCanWrap() && mWordWrap == NS_STYLE_WORDWRAP_BREAK_WORD;
   }
 };
 
@@ -1238,6 +1232,7 @@ struct nsStyleUIReset {
   PRUint8   mUserSelect;      // [reset] (selection-style)
   PRUint8   mForceBrokenImageIcon; // [reset]  (0 if not forcing, otherwise forcing)
   PRUint8   mIMEMode;         // [reset]
+  PRUint8   mWindowShadow;    // [reset]
 };
 
 struct nsCursorImage {

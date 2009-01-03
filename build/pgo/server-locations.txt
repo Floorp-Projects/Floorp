@@ -129,6 +129,9 @@ https://sub1.xn--hxajbheg2az3al.xn--jxalpdlp:443   privileged
 http://xn--hxajbheg2az3al.xn--jxalpdlp:80        privileged
 http://sub1.xn--hxajbheg2az3al.xn--jxalpdlp:80   privileged
 
+# Bug 413909 test host
+https://bug413909.xn--hxajbheg2az3al.xn--jxalpdlp:443   privileged,cert=bug413909cert
+
 #
 # These hosts are used in tests which exercise privilege-granting functionality;
 # we could reuse some of the names above, but specific names make it easier to

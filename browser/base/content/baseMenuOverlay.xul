@@ -98,11 +98,13 @@
                   oncommand="openReleaseNotes(event)"
                   onclick="checkForMiddleClick(this, event);"/>
         <menuseparator id="updateSeparator"/>
+#ifdef MOZ_UPDATER
         <menuitem id="checkForUpdates"
                   accesskey="&updateCmd.accesskey;"
                   label="&updateCmd.label;"
                   class="menuitem-iconic"
                   oncommand="checkForUpdates();"/>
+#endif
         <menuseparator id="aboutSeparator"/>
         <menuitem id="aboutName"
                   accesskey="&aboutCmd.accesskey;"

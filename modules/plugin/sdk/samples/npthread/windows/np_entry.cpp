@@ -36,7 +36,7 @@
  * ***** END LICENSE BLOCK ***** */
 
 #include "npapi.h"
-#include "npupp.h"
+#include "npfunctions.h"
 #include "dbg.h"
 
 NPNetscapeFuncs NPNFuncs;

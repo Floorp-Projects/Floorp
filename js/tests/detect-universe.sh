@@ -71,7 +71,7 @@ Outputs to stdout the universe data for this machine.
 
 variable            description
 ===============     ============================================================
--p products         required. one or more of firefox, thunderbird, js
+-p products         required. one or more of firefox, thunderbird, fennec, js
 -b branches         required. one or more of 1.8.0, 1.8.1, 1.9.0, 1.9.1
 -R repositories     required. one or more of CVS, mozilla-central, ...
 -T buildtype        required. one or more of opt debug

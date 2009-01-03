@@ -166,10 +166,6 @@ MAKEFILES_intl="
   intl/strres/tests/Makefile
 "
 
-MAKEFILES_js="
-  js/src/Makefile
-"
-
 MAKEFILES_liveconnect="
   js/src/liveconnect/Makefile
   js/src/liveconnect/classes/Makefile
@@ -251,11 +247,8 @@ MAKEFILES_layout="
   layout/html/tests/Makefile
   layout/style/Makefile
   layout/printing/Makefile
-  layout/xul/Makefile
-  layout/xul/base/Makefile
   layout/xul/base/public/Makefile
   layout/xul/base/src/Makefile
-  layout/xul/base/src/tree/Makefile
   layout/xul/base/src/tree/src/Makefile
   layout/xul/base/src/tree/public/Makefile
 "
@@ -334,8 +327,10 @@ MAKEFILES_liboggplay="
   media/liboggplay/include/oggplay/Makefile
 "
 
-MAKEFILES_liboggplay_audio="
-  media/liboggplay_audio/Makefile
+MAKEFILES_libsydneyaudio="
+  media/libsydneyaudio/Makefile
+  media/libsydneyaudio/include/Makefile
+  media/libsydneyaudio/src/Makefile
 "
 
 MAKEFILES_oji="
@@ -355,6 +350,10 @@ MAKEFILES_plugin="
   modules/plugin/sdk/samples/common/Makefile
   modules/plugin/sdk/samples/basic/windows/Makefile
   modules/plugin/sdk/samples/winless/windows/Makefile
+"
+
+MAKEFILES_freetype2="
+  modules/freetype2/Makefile
 "
 
 MAKEFILES_netwerk="
@@ -772,7 +771,6 @@ add_makefiles "
   $MAKEFILES_gfx
   $MAKEFILES_htmlparser
   $MAKEFILES_intl
-  $MAKEFILES_js
   $MAKEFILES_liveconnect
   $MAKEFILES_xpconnect
   $MAKEFILES_jsdebugger
@@ -884,42 +882,6 @@ if test -n "$MOZ_PSM"; then
   "
 fi
 
-if test -n "$MOZ_IPCD"; then
-  add_makefiles "
-    ipc/ipcd/Makefile
-    ipc/ipcd/daemon/public/Makefile
-    ipc/ipcd/daemon/src/Makefile
-    ipc/ipcd/client/public/Makefile
-    ipc/ipcd/client/src/Makefile
-    ipc/ipcd/shared/src/Makefile
-    ipc/ipcd/test/Makefile
-    ipc/ipcd/test/module/Makefile
-    ipc/ipcd/extensions/Makefile
-    ipc/ipcd/extensions/lock/Makefile
-    ipc/ipcd/extensions/lock/public/Makefile
-    ipc/ipcd/extensions/lock/src/Makefile
-    ipc/ipcd/extensions/lock/src/module/Makefile
-    ipc/ipcd/util/Makefile
-    ipc/ipcd/util/public/Makefile
-    ipc/ipcd/util/src/Makefile
-  "
-fi
-
-if test -n "$MOZ_PROFILESHARING"; then
-  add_makefiles "
-    ipc/ipcd/extensions/transmngr/Makefile
-    ipc/ipcd/extensions/transmngr/public/Makefile
-    ipc/ipcd/extensions/transmngr/src/Makefile
-    ipc/ipcd/extensions/transmngr/build/Makefile
-    ipc/ipcd/extensions/transmngr/test/Makefile
-    ipc/ipcd/extensions/transmngr/common/Makefile
-    ipc/ipcd/extensions/transmngr/module/Makefile
-    embedding/components/profilesharingsetup/Makefile
-    embedding/components/profilesharingsetup/public/Makefile
-    embedding/components/profilesharingsetup/src/Makefile
-  "
-fi
-
 if [ ! "$SYSTEM_JPEG" ]; then
   add_makefiles "
     jpeg/Makefile
@@ -1026,10 +988,7 @@ fi
 if [ "$MOZ_MATHML" ]; then
   add_makefiles "
     intl/uconv/ucvmath/Makefile
-    layout/mathml/Makefile
-    layout/mathml/base/Makefile
     layout/mathml/base/src/Makefile
-    layout/mathml/content/Makefile
     layout/mathml/content/src/Makefile
   "
 fi
@@ -1042,8 +1001,6 @@ if [ "$MOZ_SVG" ]; then
     content/svg/content/Makefile
     content/svg/content/src/Makefile
     dom/public/idl/svg/Makefile
-    layout/svg/Makefile
-    layout/svg/base/Makefile
     layout/svg/base/src/Makefile
   "
 fi
@@ -1126,6 +1083,17 @@ if [ "$MOZ_OGG" ]; then
    $MAKEFILES_libogg
    $MAKEFILES_libfishsound
    $MAKEFILES_liboggplay
-   $MAKEFILES_liboggplay_audio
+ "
+fi
+
+if [ "$MOZ_SYDNEYAUDIO" ]; then
+ add_makefiles "
+   $MAKEFILES_libsydneyaudio
+ "
+fi
+
+if [ "$MOZ_TREE_FREETYPE" ]; then
+ add_makefiles "
+   $MAKEFILES_freetype2
  "
 fi

@@ -8,8 +8,18 @@
         </targetApplication>
       </versionRange>
     </emItem>
+    <emItem id="langpack-vi-VN@firefox.mozilla.org">
+      <versionRange minVersion="2.0" maxVersion="2.0"/>
+    </emItem>
     <emItem id="mozilla_cc@internetdownloadmanager.com">
       <versionRange minVersion="2.1" maxVersion="3.3">
+        <targetApplication id="{ec8030f7-c20a-464f-9b0e-13a3a9e97384}">
+           <versionRange minVersion="3.0a1" maxVersion="*"/>
+        </targetApplication>
+      </versionRange>
+    </emItem>
+    <emItem id="{4B3803EA-5230-4DC3-A7FC-33638F3D3542}">
+      <versionRange minVersion="1.2" maxVersion="1.2">
         <targetApplication id="{ec8030f7-c20a-464f-9b0e-13a3a9e97384}">
            <versionRange minVersion="3.0a1" maxVersion="*"/>
         </targetApplication>
@@ -18,9 +28,23 @@
   </emItems>
 <pluginItems>
   <pluginItem>
-    <match name="name" exp="Yahoo Application State Plugin"/>
-    <match name="description" exp="Yahoo Application State Plugin"/>
+    <match name="name" exp="^Yahoo Application State Plugin$"/>
+    <match name="description" exp="^Yahoo Application State Plugin$"/>
     <match name="filename" exp="npYState.dll"/>
+    <versionRange>
+      <targetApplication id="{ec8030f7-c20a-464f-9b0e-13a3a9e97384}">
+        <versionRange minVersion="3.0a1" maxVersion="3.*"/>
+      </targetApplication>
+    </versionRange>
+  </pluginItem>
+  <pluginItem>
+    <match name="name" exp="QuickTime Plug-in 7[.]1[.]"/>
+    <match name="filename" exp="npqtplugin.?[.]dll"/>
+    <versionRange>
+      <targetApplication id="{ec8030f7-c20a-464f-9b0e-13a3a9e97384}">
+        <versionRange minVersion="3.0a1" maxVersion="3.*"/>
+      </targetApplication>
+    </versionRange>
   </pluginItem>
 </pluginItems>
 </blocklist>

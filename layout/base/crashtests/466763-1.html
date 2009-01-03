@@ -1,0 +1,24 @@
+<html>
+<head>
+<script type="text/javascript">
+
+function boom()
+{
+  var s = document.getElementById("s");
+  s.appendChild(s.previousSibling);
+  s.parentNode.removeAttribute("class");
+  document.documentElement.offsetHeight;
+  s.appendChild(document.createTextNode(" "));
+}
+
+</script>
+<style type="text/css">
+
+.flfr:first-letter { float: right; }
+
+</style>
+</head>
+
+<body onload="boom();" class="flfr">&#xFEB7; <span id="s"></span></body>
+
+</html>

@@ -108,18 +108,6 @@ class TypeMap;
 # define CLS(T)  void*
 #endif
 
-/* 
- * Fragment quick cache entry.
- */
-typedef struct JSFragmentCacheEntry {
-    jsbytecode*             pc;
-    CLS(nanojit::Fragment)  fragment;
-} JSFragmentCacheEntry;
-
-#define JS_FRAGMENT_CACHE_LOG2  2
-#define JS_FRAGMENT_CACHE_SIZE  JS_BIT(JS_FRAGMENT_CACHE_LOG2)
-#define JS_FRAGMENT_CACHE_MASK  JS_BITMASK(JS_FRAGMENT_CACHE_LOG2)
-
 /*
  * Trace monitor. Every JSThread (if JS_THREADSAFE) or JSRuntime (if not
  * JS_THREADSAFE) has an associated trace monitor that keeps track of loop
@@ -138,15 +126,24 @@ typedef struct JSTraceMonitor {
     uint32                  globalShape;
     CLS(SlotList)           globalSlots;
     CLS(TypeMap)            globalTypeMap;
-    JSFragmentCacheEntry    fcache[JS_FRAGMENT_CACHE_SIZE];
     jsval                   *recoveryDoublePool;
     jsval                   *recoveryDoublePoolPtr;
+
+    /* Fragmento for the regular expression compiler. This is logically
+     * a distinct compiler but needs to be managed in exactly the same
+     * way as the real tracing Fragmento. */
+    CLS(nanojit::Fragmento) reFragmento;
+
+    /* Keep a list of recorders we need to abort on cache flush. */
+    CLS(TraceRecorder)      abortStack;
 } JSTraceMonitor;
 
 #ifdef JS_TRACER
-# define JS_ON_TRACE(cx)   (JS_TRACE_MONITOR(cx).onTrace)
+# define JS_ON_TRACE(cx)            (JS_TRACE_MONITOR(cx).onTrace)
+# define JS_EXECUTING_TRACE(cx)     (JS_ON_TRACE(cx) && !JS_TRACE_MONITOR(cx).recorder)
 #else
-# define JS_ON_TRACE(cx)   JS_FALSE
+# define JS_ON_TRACE(cx)            JS_FALSE
+# define JS_EXECUTING_TRACE(cx)     JS_FALSE
 #endif
 
 #ifdef JS_THREADSAFE
@@ -338,7 +335,7 @@ struct JSRuntime {
     JSCList             trapList;
     JSCList             watchPointList;
 
-    /* Client opaque pointer */
+    /* Client opaque pointers */
     void                *data;
 
 #ifdef JS_THREADSAFE
@@ -489,6 +486,15 @@ struct JSRuntime {
     ((((shape) >> NATIVE_ENUM_CACHE_LOG2) ^ (shape)) & NATIVE_ENUM_CACHE_MASK)
 
     jsuword             nativeEnumCache[NATIVE_ENUM_CACHE_SIZE];
+
+    /*
+     * Runtime-wide flag set to true when any Array prototype has an indexed
+     * property defined on it, creating a hazard for code reading or writing
+     * over a hole from a dense Array instance that is not prepared to look up
+     * the proto chain (the writing case must involve a check for a read-only
+     * element, which cannot be shadowed).
+     */
+    JSBool              anyArrayProtoHasElement;
 
     /*
      * Various metering fields are defined at the end of JSRuntime. In this
@@ -810,6 +816,8 @@ struct JSContext {
 
     /* Stack arena pool and frame pointer register. */
     JSArenaPool         stackPool;
+
+    JS_REQUIRES_STACK
     JSStackFrame        *fp;
 
     /* Temporary arena pool used while compiling and decompiling. */
@@ -851,8 +859,9 @@ struct JSContext {
     /* Interpreter activation count. */
     uintN               interpLevel;
 
-    /* Client opaque pointer */
+    /* Client opaque pointers. */
     void                *data;
+    void                *data2;
 
     /* GC and thread-safe state. */
     JSStackFrame        *dormantFrameChain; /* dormant stack frame to scan */
@@ -921,13 +930,15 @@ class JSAutoTempValueRooter
         JS_POP_TEMP_ROOT(mContext, &mTvr);
     }
 
+  protected:
+    JSContext *mContext;
+
   private:
 #ifndef AIX
     static void *operator new(size_t);
     static void operator delete(void *, size_t);
 #endif
 
-    JSContext *mContext;
     JSTempValueRooter mTvr;
 };
 
@@ -995,6 +1006,15 @@ class JSAutoResolveFlags
  */
 extern JSBool
 js_InitThreadPrivateIndex(void (*ptr)(void *));
+
+/*
+ * Clean up thread-private data on the current thread. NSPR automatically
+ * cleans up thread-private data for every thread except the main thread
+ * (see bug 383977) on shutdown. Thus, this function should be called for 
+ * exactly those threads that survive JS_ShutDown, including the main thread.
+ */
+extern JSBool
+js_CleanupThreadPrivateData();
 
 /*
  * Common subroutine of JS_SetVersion and js_SetVersion, to update per-context
@@ -1234,6 +1254,18 @@ extern JSErrorFormatString js_ErrorFormatString[JSErr_Limit];
  */
 extern JSBool
 js_ResetOperationCount(JSContext *cx);
+
+/*
+ * Get the current cx->fp, first lazily instantiating stack frames if needed.
+ * (Do not access cx->fp directly except in JS_REQUIRES_STACK code.)
+ *
+ * Defined in jstracer.cpp if JS_TRACER is defined.
+ */
+extern JS_FORCES_STACK JSStackFrame *
+js_GetTopStackFrame(JSContext *cx);
+
+extern JSStackFrame *
+js_GetScriptedCaller(JSContext *cx, JSStackFrame *fp);
 
 JS_END_EXTERN_C
 

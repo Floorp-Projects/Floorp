@@ -149,8 +149,10 @@
 #endif //XP_BEOS
 
 #ifdef XP_WIN
+#ifndef WINCE
 #include <process.h>
 #include <shlobj.h>
+#endif
 #include "nsThreadUtils.h"
 #endif
 
@@ -181,8 +183,6 @@
 #include <Processes.h>
 #include <Events.h>
 #endif
-
-extern "C" void ShowOSAlert(const char* aMessage);
 
 #ifdef DEBUG
 #include "prlog.h"
@@ -1491,7 +1491,7 @@ XRE_GetBinaryPath(const char* argv0, nsILocalFile* *aResult)
 #include "nsWindowsRestart.cpp"
 #endif
 
-#if defined(XP_OS2) && (__GNUC__ == 3 && __GNUC_MINOR__ == 3) // broken OS/2 GCC
+#if defined(XP_OS2) && (__KLIBC__ == 0 && __KLIBC_MINOR__ >= 6) // broken kLibc
 // Copy the environment maintained by the C library into an ASCIIZ array
 // that can be used to pass it on to the OS/2 Dos* APIs (which otherwise
 // don't know anything about the stuff set by PR_SetEnv() or setenv()).
@@ -1596,6 +1596,7 @@ static nsresult LaunchChild(nsINativeAppSupport* aNative,
   PR_SetEnv("MOZ_LAUNCHED_CHILD=1");
 
 #if defined(XP_MACOSX)
+  SetupMacCommandLine(gRestartArgc, gRestartArgv);
   LaunchChildMac(gRestartArgc, gRestartArgv);
 #else
   nsCOMPtr<nsILocalFile> lf;
@@ -1618,8 +1619,8 @@ static nsresult LaunchChild(nsINativeAppSupport* aNative,
   if (NS_FAILED(rv))
     return rv;
 
-#if defined(XP_OS2) && (__GNUC__ == 3 && __GNUC_MINOR__ == 3)
-  // implementation of _execv() is broken with GCC 3.3.x on OS/2
+#if defined(XP_OS2) && (__KLIBC__ == 0 && __KLIBC_MINOR__ >= 6)
+  // implementation of _execv() is broken with kLibc 0.6.x and later
   if (OS2LaunchChild(exePath.get(), gRestartArgc, gRestartArgv) == -1)
     return NS_ERROR_FAILURE;
 #elif defined(XP_OS2)
@@ -2524,22 +2525,10 @@ XRE_main(int argc, char* argv[], const nsXREAppData* aAppData)
   InstallUnixSignalHandlers(argv[0]);
 #endif
 
-#ifdef MOZ_ACCESSIBILITY_ATK
-  // Reset GTK_MODULES, strip atk-bridge if exists
-  // Mozilla will load libatk-bridge.so later if necessary
-  const char* gtkModules = PR_GetEnv("GTK_MODULES");
-  if (gtkModules && *gtkModules) {
-    nsCString gtkModulesStr(gtkModules);
-    gtkModulesStr.ReplaceSubstring("atk-bridge", "");
-    char* expr = PR_smprintf("GTK_MODULES=%s", gtkModulesStr.get());
-    if (expr)
-      PR_SetEnv(expr);
-    // We intentionally leak |expr| here since it is required by PR_SetEnv.
-  }
-#endif
-
+#ifndef WINCE
   // Unbuffer stdout, needed for tinderbox tests.
   setbuf(stdout, 0);
+#endif
 
 #if defined(FREEBSD)
   // Disable all SIGFPE's on FreeBSD, as it has non-IEEE-conformant fp
@@ -2928,6 +2917,34 @@ XRE_main(int argc, char* argv[], const nsXREAppData* aAppData)
       PR_fprintf(PR_STDERR, "Error: cannot open display: %s\n", display_name);
       return 1;
     }
+
+#ifdef MOZ_ACCESSIBILITY_ATK
+    // Reset GTK_MODULES, strip atk-bridge if exists
+    // Mozilla will load libatk-bridge.so later if necessary
+    const char* gtkModules = PR_GetEnv("GTK_MODULES");
+    if (gtkModules && *gtkModules) {
+      nsCString gtkModulesStr(gtkModules);
+      gtkModulesStr.ReplaceSubstring("atk-bridge", "");
+      char* expr = PR_smprintf("GTK_MODULES=%s", gtkModulesStr.get());
+      if (expr)
+        PR_SetEnv(expr);
+      // We intentionally leak |expr| here since it is required by PR_SetEnv.
+    }
+
+    // Reset gtk-modules setting from gtk settings, strip atk-bridge if exists
+    // Mozilla will load libatk-bridge.so later if necessary
+    GtkSettings* settings =
+      gtk_settings_get_for_screen(gdk_display_get_default_screen(display));
+    gchar* gtk_modules_setting = nsnull;
+    g_object_get(settings, "gtk-modules", &gtk_modules_setting, NULL);
+    if (gtk_modules_setting) {
+      nsCString gtkModulesSettingStr(gtkModules);
+      gtkModulesSettingStr.ReplaceSubstring("atk-bridge", "");
+      g_object_set(settings, "gtk-modules", gtkModulesSettingStr.get(), NULL);
+      g_free(gtk_modules_setting);
+    }
+#endif
+
     gdk_display_manager_set_default_display (gdk_display_manager_get(),
                                              display);
     
@@ -2978,7 +2995,8 @@ XRE_main(int argc, char* argv[], const nsXREAppData* aAppData)
                  dirProvider.GetAppDir(),
                  updRoot,
                  gRestartArgc,
-                 gRestartArgv);
+                 gRestartArgv,
+                 appData.version);
 #endif
 
     nsCOMPtr<nsIProfileLock> profileLock;

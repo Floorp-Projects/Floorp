@@ -103,6 +103,23 @@ char * strdup(const char *src)
 }
 #endif
 
+#ifdef WINCE
+int remove(const char* inPath)
+{
+  unsigned short wPath[MAX_PATH];
+  MultiByteToWideChar(CP_ACP,
+                      0,
+                      inPath,
+                      -1,
+                      wPath,
+                      MAX_PATH);
+  
+  if(FALSE != DeleteFileW(wPath))
+    return 0;
+  return -1;
+}
+#endif
+
 #endif /* STANDALONE */
 
 #ifdef XP_UNIX
@@ -446,7 +463,7 @@ void ProcessWindowsMessages()
 // we startup and disabled after we startup if memory is a concern.
 //***********************************************************
 
-PR_STATIC_CALLBACK(void *)
+static void *
 zlibAlloc(void *opaque, uInt items, uInt size)
 {
   nsRecyclingAllocator *zallocator = (nsRecyclingAllocator *)opaque;
@@ -461,7 +478,7 @@ zlibAlloc(void *opaque, uInt items, uInt size)
     return calloc(items, size);
 }
 
-PR_STATIC_CALLBACK(void)
+static void
 zlibFree(void *opaque, void *ptr)
 {
   nsRecyclingAllocator *zallocator = (nsRecyclingAllocator *)opaque;

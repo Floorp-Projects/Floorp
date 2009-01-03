@@ -152,23 +152,21 @@ nsXPCException::~nsXPCException()
 }
 
 PRBool
-nsXPCException::GetThrownJSVal(jsval *vp) const
+nsXPCException::StealThrownJSVal(jsval *vp)
 {
-    if(mThrownJSVal)
+    if(mThrownJSVal.IsHeld())
     {
-        if(vp)
-            *vp = mThrownJSVal->GetJSVal();
+        *vp = mThrownJSVal.Release();
         return PR_TRUE;
     }
     return PR_FALSE;
 }
 
 void
-nsXPCException::SetThrownJSVal(jsval v)
+nsXPCException::StowThrownJSVal(JSContext *cx, jsval v)
 {
-    mThrownJSVal = JSVAL_IS_TRACEABLE(v)
-        ? new XPCTraceableVariant(nsXPConnect::GetRuntime(), v)
-        : new XPCVariant(v);
+    if (mThrownJSVal.Hold(cx))
+        mThrownJSVal = v;
 }
 
 void

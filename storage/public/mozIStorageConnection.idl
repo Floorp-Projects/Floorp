@@ -45,6 +45,8 @@ interface mozIStorageAggregateFunction;
 interface mozIStorageFunction;
 interface mozIStorageProgressHandler;
 interface mozIStorageStatement;
+interface mozIStorageStatementCallback;
+interface mozIStoragePendingStatement;
 interface nsIFile;
 
 /**
@@ -56,12 +58,12 @@ interface nsIFile;
  *
  * @threadsafe
  */
-[scriptable, uuid(623f9ddb-434b-4d39-bc2d-1c617da241d0)]
+[scriptable, uuid(ac3c486c-69a1-4cbe-8f25-2ad20880eab3)]
 interface mozIStorageConnection : nsISupports {
   /*
    * Initialization and status
    */
-  
+
   /**
    * Closes a database connection.  C++ callers should simply set the database
    * variable to NULL.
@@ -125,6 +127,31 @@ interface mozIStorageConnection : nsISupports {
    * @param aSQLStatement  The SQL statement to execute
    */
   void executeSimpleSQL(in AUTF8String aSQLStatement);
+
+  /**
+   * Execute an array of queries created with this connection asynchronously
+   * using any currently bound parameters.  The statements are ran wrapped in a
+   * transaction.  These statements can be reused immediately, and reset does
+   * not need to be called.
+   *
+   * Note:  If you have any custom defined functions, they must be re-entrant
+   *        since they can be called on multiple threads.
+   *
+   * @param aStatements
+   *        The array of statements to execute asynchronously, in the order they
+   *        are given in the array.
+   * @param aNumStatements
+   *        The number of statements in aStatements.
+   * @param aCallback [optional]
+   *        The callback object that will be notified of progress, errors, and
+   *        completion.
+   * @returns an object that can be used to cancel the statements execution.
+   */
+  mozIStoragePendingStatement executeAsync(
+    [array, size_is(aNumStatements)] in mozIStorageStatement aStatements,
+    in unsigned long aNumStatements,
+    [optional] in mozIStorageStatementCallback aCallback
+  );
 
   /**
    * Check if the given table exists.

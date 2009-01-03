@@ -24,12 +24,18 @@ var gCp = null;
 
 SimpleTest.waitForExplicitFinish();
 
+function preventDefault(event) {
+  event.preventDefault();
+}
+
 function runTests()
 {
   gCp = document.getElementById("colorpicker-popup");
   is(gCp.color, "#FF0000", "popup color is initialized");
   is(gCp.tabIndex, 1, "button tabindex is initialized");
   is(gCp.disabled, false, "button is not disabled");
+  
+  document.addEventListener("keypress", preventDefault, false);
 
   goNext();
 }
@@ -97,6 +103,7 @@ function goNext()
 {
   gTestPhase++;
   if (gTestPhase >= phases.length) {
+    document.removeEventListener("keypress", preventDefault, false);
     SimpleTest.finish();
     return;
   }

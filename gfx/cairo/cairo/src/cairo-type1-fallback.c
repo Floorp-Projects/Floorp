@@ -444,18 +444,21 @@ cairo_type1_font_write_charstrings (cairo_type1_font_t    *font,
                                  "2 index /CharStrings %d dict dup begin\n",
                                  font->scaled_font_subset->num_glyphs + 1);
 
+    _cairo_scaled_font_freeze_cache (font->type1_scaled_font);
     for (i = 0; i < font->scaled_font_subset->num_glyphs; i++) {
         _cairo_array_truncate (&data, 0);
         /* four "random" bytes required by encryption algorithm */
         status = _cairo_array_append_multiple (&data, zeros, 4);
         if (status)
             goto fail;
+
         status = cairo_type1_font_create_charstring (font, i,
 						     font->scaled_font_subset->glyphs[i],
                                                      CAIRO_CHARSTRING_TYPE1,
 						     &data);
         if (status)
             goto fail;
+
         charstring_encrypt (&data);
         length = _cairo_array_num_elements (&data);
 	if (font->scaled_font_subset->glyph_names != NULL) {
@@ -474,6 +477,7 @@ cairo_type1_font_write_charstrings (cairo_type1_font_t    *font,
     }
 
 fail:
+    _cairo_scaled_font_thaw_cache (font->type1_scaled_font);
     _cairo_array_fini (&data);
     return status;
 }
@@ -823,6 +827,7 @@ _cairo_type2_charstrings_init (cairo_type2_charstrings_t *type2_subset,
         goto fail1;
     }
 
+    _cairo_scaled_font_freeze_cache (font->type1_scaled_font);
     for (i = 0; i < font->scaled_font_subset->num_glyphs; i++) {
         _cairo_array_init (&charstring, sizeof (unsigned char));
         status = _cairo_array_grow_by (&charstring, 32);
@@ -840,6 +845,7 @@ _cairo_type2_charstrings_init (cairo_type2_charstrings_t *type2_subset,
         if (status)
             goto fail2;
     }
+    _cairo_scaled_font_thaw_cache (font->type1_scaled_font);
 
     for (i = 0; i < font->scaled_font_subset->num_glyphs; i++)
 	type2_subset->widths[i] = font->widths[i];
@@ -854,6 +860,7 @@ _cairo_type2_charstrings_init (cairo_type2_charstrings_t *type2_subset,
     return cairo_type1_font_destroy (font);
 
 fail2:
+    _cairo_scaled_font_thaw_cache (font->type1_scaled_font);
     _cairo_array_fini (&charstring);
     _cairo_type2_charstrings_fini (type2_subset);
 fail1:

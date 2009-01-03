@@ -47,13 +47,13 @@ typedef nsTArray< nsRefPtr<nsThread> > nsThreadArray;
 
 //-----------------------------------------------------------------------------
 
-PR_STATIC_CALLBACK(void)
+static void
 ReleaseObject(void *data)
 {
   static_cast<nsISupports *>(data)->Release();
 }
 
-PR_STATIC_CALLBACK(PLDHashOperator)
+static PLDHashOperator
 AppendAndRemoveThread(const void *key, nsRefPtr<nsThread> &thread, void *arg)
 {
   nsThreadArray *threads = static_cast<nsThreadArray *>(arg);

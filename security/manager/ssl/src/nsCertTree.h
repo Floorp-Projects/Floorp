@@ -102,6 +102,7 @@ public:
   PRInt32 mPort;
   nsCertOverride::OverrideBits mOverrideBits;
   PRBool mIsTemporary;
+  nsCOMPtr<nsIX509Cert> mCert;
 };
 
 class nsCertTree : public nsICertTree

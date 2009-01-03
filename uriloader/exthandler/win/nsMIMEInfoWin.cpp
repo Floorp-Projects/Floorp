@@ -123,11 +123,11 @@ nsMIMEInfoWin::LaunchWithFile(nsIFile* aFile)
         if (!GetDllLaunchInfo(executable, locFile, args, PR_FALSE))
           return NS_ERROR_INVALID_ARG;
 
-        PRUint32 result = (PRUint32)
+        int result = (int)
           ::ShellExecuteW(NULL, NULL, L"rundll32.exe", args.get(),
                           NULL, SW_SHOWNORMAL);
         // Returns a value greater than 32 if successful. See msdn.
-        if (result >= 32)
+        if (result > 32)
           return NS_OK;
 
         switch (result) {

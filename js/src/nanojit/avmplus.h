@@ -162,189 +162,138 @@ static __inline__ unsigned long long rdtsc(void)
 
 struct JSContext;
 
-namespace nanojit
-{
-	class Fragment;
-
-	enum ExitType {
-	    BRANCH_EXIT, 
-	    LOOP_EXIT, 
-	    NESTED_EXIT,
-	    MISMATCH_EXIT,
-	    OOM_EXIT,
-	    OVERFLOW_EXIT
-	};
-	
-	struct SideExit
-	{
-        intptr_t ip_adj;
-        intptr_t sp_adj;
-        intptr_t rp_adj;
-        Fragment *target;
-        Fragment *from;
-        int32_t calldepth;
-        uint32 numGlobalSlots;
-        uint32 numStackSlots;
-        uint32 numStackSlotsBelowCurrentFrame;
-        uint8 *typeMap;
-        ExitType exitType;
-#if defined NJ_VERBOSE
-		uint32_t sid;
-#endif
-	};
-
-	class LIns;
-
-	struct GuardRecord
-	{
-		Fragment *target;
-		Fragment *from;
-		void *jmp;
-		void *origTarget;
-		SideExit *exit;
-		GuardRecord *outgoing;
-		GuardRecord *next;
-		LIns *guard;
-		int32_t calldepth;
-#if defined NJ_VERBOSE
-		uint32_t compileNbr;
-		uint32_t sid;
-#endif
-	};
-
-	#define GuardRecordSize(g) sizeof(GuardRecord)
-    #define SideExitSize(e) sizeof(SideExit)
-}
-
-class GC;
-
-class GCObject 
-{
-public:
-    inline void*
-    operator new(size_t size, GC* gc)
-    {
-        return calloc(1, size);
-    }
-
-    static void operator delete (void *gcObject)
-    {
-        free(gcObject); 
-    }
-};
-
-#define MMGC_SUBCLASS_DECL : public GCObject
-
-class GCFinalizedObject : public GCObject
-{
-public:
-    static void operator delete (void *gcObject)
-    {
-        free(gcObject); 
-    }
-};
-
-class GCHeap
-{
-public:
-    int32_t kNativePageSize;
-
-    GCHeap()
-    {
-#if defined _SC_PAGE_SIZE
-        kNativePageSize = sysconf(_SC_PAGE_SIZE);
-#else
-        kNativePageSize = 4096; // @todo: what is this?
-#endif
-    }
+namespace avmplus {
     
-    inline void*
-    Alloc(uint32_t pages) 
-    {
-#ifdef XP_WIN
-        return VirtualAlloc(NULL, 
-                            pages * kNativePageSize,
-                            MEM_COMMIT | MEM_RESERVE, 
-                            PAGE_EXECUTE_READWRITE);
-#elif defined AVMPLUS_UNIX
-        /**
-         * Don't use normal heap with mprotect+PROT_EXEC for executable code.
-         * SELinux and friends don't allow this.
-         */
-        return mmap(NULL, 
-                    pages * kNativePageSize,
-                    PROT_READ | PROT_WRITE | PROT_EXEC,
-                    MAP_PRIVATE | MAP_ANON,
-                    -1,
-                    0);
-#else
-        return valloc(pages * kNativePageSize); 
-#endif
-    }
+    class GC;
     
-    inline void
-    Free(void* p, uint32_t pages)
+    class GCObject 
     {
-#ifdef XP_WIN
-        VirtualFree(p, 0, MEM_RELEASE);
-#elif defined AVMPLUS_UNIX
-        #if defined SOLARIS
-        munmap((char*)p, pages * kNativePageSize); 
-        #else
-        munmap(p, pages * kNativePageSize); 
-        #endif
-#else
-        free(p);
-#endif
-    }
+    public:
+        inline void*
+        operator new(size_t size, GC* gc)
+        {
+            return calloc(1, size);
+        }
     
-};
+        static void operator delete (void *gcObject)
+        {
+            free(gcObject); 
+        }
+    };
+    
+    #define MMGC_SUBCLASS_DECL : public avmplus::GCObject
+    
+    class GCFinalizedObject : public GCObject
+    {
+    public:
+        static void operator delete (void *gcObject)
+        {
+            free(gcObject); 
+        }
+    };
+    
+    class GCHeap
+    {
+    public:
+        int32_t kNativePageSize;
+    
+        GCHeap()
+        {
+    #if defined _SC_PAGE_SIZE
+            kNativePageSize = sysconf(_SC_PAGE_SIZE);
+    #else
+            kNativePageSize = 4096; // @todo: what is this?
+    #endif
+        }
+        
+        inline void*
+        Alloc(uint32_t pages) 
+        {
+    #ifdef XP_WIN
+            return VirtualAlloc(NULL, 
+                                pages * kNativePageSize,
+                                MEM_COMMIT | MEM_RESERVE, 
+                                PAGE_EXECUTE_READWRITE);
+    #elif defined AVMPLUS_UNIX
+            /**
+             * Don't use normal heap with mprotect+PROT_EXEC for executable code.
+             * SELinux and friends don't allow this.
+             */
+            return mmap(NULL, 
+                        pages * kNativePageSize,
+                        PROT_READ | PROT_WRITE | PROT_EXEC,
+                        MAP_PRIVATE | MAP_ANON,
+                        -1,
+                        0);
+    #else
+            return valloc(pages * kNativePageSize); 
+    #endif
+        }
+        
+        inline void
+        Free(void* p, uint32_t pages)
+        {
+    #ifdef XP_WIN
+            VirtualFree(p, 0, MEM_RELEASE);
+    #elif defined AVMPLUS_UNIX
+            #if defined SOLARIS
+            munmap((char*)p, pages * kNativePageSize); 
+            #else
+            munmap(p, pages * kNativePageSize); 
+            #endif
+    #else
+            free(p);
+    #endif
+        }
+        
+    };
+    
+    class GC 
+    {
+        static GCHeap heap;
+        
+    public:
+		/**
+		* flags to be passed as second argument to alloc
+		*/
+		enum AllocFlags
+		{
+			kZero=1,
+			kContainsPointers=2,
+			kFinalize=4,
+			kRCObject=8
+		};
 
-class GC 
-{
-    static GCHeap heap;
+        static inline void*
+        Alloc(uint32_t bytes, int flags=kZero)
+        {
+          if (flags & kZero)
+            return calloc(1, bytes);
+          else
+            return malloc(bytes);
+        }
     
-public:
-    static inline void*
-    Alloc(uint32_t bytes)
-    {
-        return calloc(1, bytes);
-    }
-
-    static inline void
-    Free(void* p)
-    {
-        free(p);
-    }
-    
-    static inline GCHeap*
-    GetGCHeap()
-    {
-        return &heap;
-    }
-};
+        static inline void
+        Free(void* p)
+        {
+            free(p);
+        }
+        
+        static inline GCHeap*
+        GetGCHeap()
+        {
+            return &heap;
+        }
+    };
 
 #define DWB(x) x
 #define DRCWB(x) x
+#define WB(gc, container, addr, value) do { *(addr) = (value); } while(0)
+#define WBRC(gc, container, addr, value) do { *(addr) = (value); } while(0)
 
 #define MMGC_MEM_TYPE(x)
 
-typedef int FunctionID;
-
-namespace avmplus
-{
-    struct InterpState
-    {
-        void* sp; /* native stack pointer, stack[0] is spbase[0] */
-        void* rp; /* call stack pointer */
-        void* gp; /* global frame pointer */
-        JSContext *cx; /* current VM context handle */
-        void* eos; /* first unusable word after the native stack */
-        void* eor; /* first unusable word after the call stack */
-        nanojit::GuardRecord* lastTreeExitGuard; /* guard we exited on during a tree call */
-        nanojit::GuardRecord* lastTreeCallGuard; /* guard we want to grow from if the tree
-                                                    call exit guard mismatched */
-    };
+    typedef int FunctionID;
 
     class String
     {
@@ -376,17 +325,21 @@ namespace avmplus
 
     typedef String* Stringp;
 
-    class AvmConfiguration
+    class Config
     {
     public:
-        AvmConfiguration() {
-            memset(this, 0, sizeof(AvmConfiguration));
+        Config() {
+            memset(this, 0, sizeof(Config));
 #ifdef DEBUG
             verbose = getenv("TRACEMONKEY") && strstr(getenv("TRACEMONKEY"), "verbose");
             verbose_addrs = 1;
             verbose_exits = 1;
             verbose_live = 1;
             show_stats = 1;
+#endif
+#if defined (AVMPLUS_AMD64)
+            sse2 = true;
+            use_cmov = true;
 #endif
             tree_opt = 0;
         }
@@ -398,6 +351,11 @@ namespace avmplus
         uint32_t verbose_live:1;
         uint32_t verbose_exits:1;
         uint32_t show_stats:1;
+
+        #if defined (AVMPLUS_IA32) || defined(AVMPLUS_AMD64)
+		bool sse2;
+		bool use_cmov;
+		#endif
     };
 
     static const int kstrconst_emptyString = 0;
@@ -440,24 +398,24 @@ namespace avmplus
     public:
         AvmInterpreter interp;
         AvmConsole console;
-
-        static AvmConfiguration config;
+        
+        static Config config;
         static GC* gc;
         static String* k_str[];
-        static bool sse2_available;
-        static bool cmov_available;
 
+#if defined (AVMPLUS_IA32) || defined(AVMPLUS_AMD64)
         static inline bool
         use_sse2()
         {
-            return sse2_available;
+            return config.sse2;
         }
         
         static inline bool
         use_cmov()
         {
-            return cmov_available;
+            return config.use_cmov;
         }
+#endif
 
         static inline bool
         quiet_opt()
@@ -509,7 +467,11 @@ namespace avmplus
      * array use the [] operators.  
      */
 
-    enum ListElementType { LIST_NonGCObjects, LIST_GCObjects };
+    enum ListElementType {
+        LIST_NonGCObjects = 0,
+        LIST_GCObjects = 1,
+        LIST_RCObjects = 2
+    };
 
     template <typename T, ListElementType kElementType>
     class List
@@ -535,6 +497,8 @@ namespace avmplus
             if (data)
                 free(data);
         }
+
+        const T *getData() const { return data; }
         
         // 'this' steals the guts of 'that' and 'that' gets reset.
         void FASTCALL become(List& that)
@@ -585,6 +549,15 @@ namespace avmplus
             wb(index, value);
         }
         
+        void add(const List<T, kElementType>& l)
+        {
+            ensureCapacity(len+l.size());
+            // FIXME: make RCObject version
+            AvmAssert(kElementType != LIST_RCObjects);
+            arraycopy(l.getData(), 0, data, len, l.size());
+            len += l.size();
+        }
+
         inline void clear()
         {
             zero_range(0, len);
@@ -607,7 +580,7 @@ namespace avmplus
             return -1;
         }   
         
-        inline T last()
+        inline T last() const
         {
             return get(len-1);
         }
@@ -677,6 +650,21 @@ namespace avmplus
             ensureCapacity(newMax);
         }
         
+        void arraycopy(const T* src, int srcStart, T* dst, int dstStart, int nbr)
+        {
+            // we have 2 cases, either closing a gap or opening it.
+            if ((src == dst) && (srcStart > dstStart) )
+            {
+                for(int i=0; i<nbr; i++)
+                    dst[i+dstStart] = src[i+srcStart];  
+            }
+            else
+            {
+                for(int i=nbr-1; i>=0; i--)
+                    dst[i+dstStart] = src[i+srcStart];
+            }
+        }
+
         inline void do_wb_nongc(T* slot, T value)
         {   
             *slot = value;

@@ -48,7 +48,7 @@ struct findIndexOfClosure
     PRUint32 resultIndex;
 };
 
-PR_STATIC_CALLBACK(PRBool) FindElementCallback(void* aElement, void* aClosure);
+static PRBool FindElementCallback(void* aElement, void* aClosure);
 
 NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION(nsArray)
   NS_INTERFACE_MAP_ENTRY(nsIArray)
@@ -98,9 +98,11 @@ nsArray::IndexOf(PRUint32 aStartIndex, nsISupports* aElement,
 {
     // optimize for the common case by forwarding to mArray
     if (aStartIndex == 0) {
-        *aResult = mArray.IndexOf(aElement);
-        if (*aResult == PR_UINT32_MAX)
+        PRUint32 idx = mArray.IndexOf(aElement);
+        if (idx == PR_UINT32_MAX)
             return NS_ERROR_FAILURE;
+
+        *aResult = idx;
         return NS_OK;
     }
 

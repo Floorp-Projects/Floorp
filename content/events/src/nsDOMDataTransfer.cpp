@@ -718,11 +718,11 @@ nsDOMDataTransfer::CacheExternalFormats()
       // if the format is supported, add an item to the array with null as
       // the data. When retrieved, GetRealData will read the data.
       if (supported) {
-        if (formats[f] == kUnicodeMime) {
+        if (strcmp(formats[f], kUnicodeMime) == 0) {
           SetDataWithPrincipal(NS_LITERAL_STRING("text/plain"), nsnull, c, sysPrincipal);
         }
         else {
-          if (formats[f] == kURLDataMime)
+          if (strcmp(formats[f], kURLDataMime) == 0)
             SetDataWithPrincipal(NS_LITERAL_STRING("text/uri-list"), nsnull, c, sysPrincipal);
           SetDataWithPrincipal(NS_ConvertUTF8toUTF16(formats[f]), nsnull, c, sysPrincipal);
         }

@@ -27,6 +27,7 @@
 #   Fredrik Holmqvist <thesuckiestemail@yahoo.se>
 #   Dan Mosedale <dmose@mozilla.org>
 #   Jim Mathies <jmathies@mozilla.com>
+#   Ehsan Akhgari <ehsan.akhgari@gmail.com>
 #
 # Alternatively, the contents of this file may be used under the terms of
 # either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -237,7 +238,19 @@ nsUnknownContentTypeDialog.prototype = {
         }
         catch (e) { }
         var newDir = result.parent;
-        prefs.setComplexValue("browser.download.lastDir", Components.interfaces.nsILocalFile, newDir);
+
+        // Do not remember the last save directory inside the private browsing mode
+        var persistLastDir = true;
+        try {
+          var pbs = Components.classes["@mozilla.org/privatebrowsing;1"]
+                              .getService(Components.interfaces.nsIPrivateBrowsingService);
+          if (pbs.privateBrowsingEnabled)
+            persistLastDir = false;
+        }
+        catch (e) { }
+        if (persistLastDir)
+          prefs.setComplexValue("browser.download.lastDir", Components.interfaces.nsILocalFile, newDir);
+
         result = this.validateLeafName(newDir, result.leafName, null);
       }
       return result;

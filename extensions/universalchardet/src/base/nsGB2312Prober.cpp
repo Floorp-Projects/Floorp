@@ -89,7 +89,7 @@ nsProbingState nsGB18030Prober::HandleData(const char* aBuf, PRUint32 aLen)
 
 float nsGB18030Prober::GetConfidence(void)
 {
-  float distribCf = mDistributionAnalyser.GetConfidence();
+  float distribCf = mDistributionAnalyser.GetConfidence(mIsPreferredLanguage);
 
   return (float)distribCf;
 }

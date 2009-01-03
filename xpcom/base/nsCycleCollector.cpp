@@ -798,7 +798,7 @@ struct nsPurpleBuffer
     }
 };
 
-static PR_CALLBACK PLDHashOperator
+static PLDHashOperator
 zeroGenerationCallback(const void*  ptr,
                        PRUint32&    generation,
                        void*        userArg)
@@ -845,7 +845,7 @@ struct CallbackClosure
 static PRBool
 AddPurpleRoot(GCGraphBuilder &builder, nsISupports *root);
 
-static PR_CALLBACK PLDHashOperator
+static PLDHashOperator
 ageSelectionCallback(const void*  ptr,
                      PRUint32&    generation,
                      void*        userArg)
@@ -1187,7 +1187,7 @@ struct PtrToNodeEntry : public PLDHashEntryHdr
     PtrInfo *mNode;
 };
 
-PR_STATIC_CALLBACK(PRBool)
+static PRBool
 PtrToNodeMatchEntry(PLDHashTable *table,
                     const PLDHashEntryHdr *entry,
                     const void *key)
@@ -2492,7 +2492,7 @@ nsCycleCollector::Shutdown()
 
 #ifdef DEBUG_CC
 
-PR_STATIC_CALLBACK(PLDHashOperator)
+static PLDHashOperator
 AddExpectedGarbage(nsVoidPtrHashKey *p, void *arg)
 {
     GCGraphBuilder *builder = static_cast<GCGraphBuilder*>(arg);

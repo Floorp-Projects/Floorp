@@ -155,7 +155,7 @@ NS_IMETHODIMP mozPersonalDictionary::Load()
 // A little helper function to add the key to the list.
 // This is not threadsafe, and only safe if the consumer does not 
 // modify the list.
-PR_STATIC_CALLBACK(PLDHashOperator)
+static PLDHashOperator
 AddHostToStringArray(nsUniCharEntry *aEntry, void *aArg)
 {
   static_cast<nsStringArray*>(aArg)->AppendString(nsDependentString(aEntry->GetKey()));

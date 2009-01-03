@@ -91,6 +91,8 @@
              oncommand="goDoCommand('placesCmd_sortBy:name');"/>
     <command id="placesCmd_moveBookmarks"
              oncommand="goDoCommand('placesCmd_moveBookmarks');"/>
+    <command id="placesCmd_deleteDataHost"
+             oncommand="goDoCommand('placesCmd_deleteDataHost');"/>
   </commandset>
 
   <popup id="placesContext"
@@ -179,8 +181,21 @@
               label="&deleteCmd.label;"
               accesskey="&deleteCmd.accesskey;"
               closemenu="single"
-              selection="any"
-              forcehideselection="livemarkChild"/>
+              selection="bookmark|tagChild|folder|query|dynamiccontainer|separator|host"/>
+    <menuitem id="placesContext_delete_history"
+              command="cmd_delete"
+              label="&cmd.delete.label;"
+              accesskey="&cmd.delete.accesskey;"
+              closemenu="single"
+              selection="link"
+              forcehideselection="bookmark"/>
+    <menuitem id="placesContext_deleteHost"
+              command="placesCmd_deleteDataHost"
+              label="&cmd.deleteDomainData.label;"
+              accesskey="&cmd.deleteDomainData.accesskey;"
+              closemenu="single"
+              selection="link"
+              forcehideselection="bookmark"/>
     <menuseparator id="placesContext_deleteSeparator"/>
     <menuitem id="placesContext_reload"
               command="placesCmd_reload"

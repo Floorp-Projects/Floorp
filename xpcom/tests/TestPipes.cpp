@@ -463,56 +463,8 @@ RunTests(PRUint32 segSize, PRUint32 segCount)
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-#if 0
-void
-TestSearch(const char* delim, PRUint32 segSize)
-{
-    nsresult rv;
-    // need at least 2 segments to test boundary conditions:
-    PRUint32 bufDataSize = segSize * 2;
-    PRUint32 bufSize = segSize * 2;
-    nsCOMPtr<nsIInputStream> in;
-    nsCOMPtr<nsIOutputStream> out;
-    rv = TP_NewPipe(getter_AddRefs(in), getter_AddRefs(out), segSize, bufSize);
-    NS_ASSERTION(NS_SUCCEEDED(rv), "TP_NewPipe failed");
-    out->SetNonBlocking(PR_TRUE);
 
-    PRUint32 i, j, amt;
-    PRUint32 delimLen = nsCRT::strlen(delim);
-    for (i = 0; i < bufDataSize; i++) {
-        // first fill the buffer
-        for (j = 0; j < i; j++) {
-            rv = out->Write("-", 1, &amt);
-            NS_ASSERTION(NS_SUCCEEDED(rv) && amt == 1, "Write failed");
-        }
-        rv = out->Write(delim, delimLen, &amt);
-        NS_ASSERTION(NS_SUCCEEDED(rv), "Write failed");
-        if (i + amt < bufDataSize) {
-            for (j = i + amt; j < bufDataSize; j++) {
-                rv = out->Write("+", 1, &amt);
-                NS_ASSERTION(NS_SUCCEEDED(rv) && amt == 1, "Write failed");
-            }
-        }
-
-        // now search for the delimiter
-        PRBool found;
-        PRUint32 offset;
-        rv = in->Search(delim, PR_FALSE, &found, &offset);
-        NS_ASSERTION(NS_SUCCEEDED(rv), "Search failed");
-
-        // print the results
-        char* bufferContents = new char[bufDataSize + 1];
-        rv = in->Read(bufferContents, bufDataSize, &amt);
-        NS_ASSERTION(NS_SUCCEEDED(rv) && amt == bufDataSize, "Read failed");
-        bufferContents[bufDataSize] = '\0';
-        printf("Buffer: %s\nDelim: %s %s offset: %d\n", bufferContents,
-               delim, (found ? "found" : "not found"), offset);
-    }
-}
-#endif
-////////////////////////////////////////////////////////////////////////////////
-
-#ifdef DEBUG
+#if !defined(MOZ_ENABLE_LIBXUL) && defined(DEBUG)
 extern NS_COM void
 TestSegmentedBuffer();
 #endif
@@ -529,30 +481,9 @@ main(int argc, char* argv[])
     if (argc > 1 && nsCRT::strcmp(argv[1], "-trace") == 0)
         gTrace = PR_TRUE;
 
-#ifdef DEBUG
+#if !defined(MOZ_ENABLE_LIBXUL) && defined(DEBUG)
     printf("Testing segmented buffer...\n");
     TestSegmentedBuffer();
-#endif
-
-#if 0   // obsolete old implementation
-    nsCOMPtr<nsIInputStream> in;
-    nsCOMPtr<nsIOutputStream> out;
-    rv = TP_NewPipe(getter_AddRefs(in), getter_AddRefs(out), 4096 * 4);
-    if (NS_FAILED(rv)) {
-        printf("TP_NewPipe failed\n");
-        return -1;
-    }
-
-    rv = TestPipe(in, out);
-    if (NS_FAILED(rv)) {
-        printf("TestPipe failed\n");
-        return -1;
-    }
-#endif
-#if 0
-    TestSearch("foo", 8);
-    TestSearch("bar", 6);
-    TestSearch("baz", 2);
 #endif
 
     rv = TestChainedPipes();

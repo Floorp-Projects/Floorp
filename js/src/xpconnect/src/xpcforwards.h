@@ -74,7 +74,6 @@ class XPCJSObjectHolder;
 class JSObject2WrappedJSMap;
 class Native2WrappedNativeMap;
 class IID2WrappedJSClassMap;
-class JSContext2XPCContextMap;
 class IID2NativeInterfaceMap;
 class ClassInfo2NativeSetMap;
 class ClassInfo2WrappedNativeProtoMap;

@@ -55,7 +55,6 @@ public:
 
   // nsIAccessible
   NS_IMETHOD GetRole(PRUint32 *_retval); 
-  NS_IMETHOD GetState(PRUint32 *aState, PRUint32 *aExtraState);
   NS_IMETHOD GetNumActions(PRUint8 *_retval);
   NS_IMETHOD GetActionName(PRUint8 aIndex, nsAString& aName);
   NS_IMETHOD DoAction(PRUint8 index);
@@ -64,6 +63,7 @@ public:
 
   // nsAccessible
   virtual nsresult GetAttributesInternal(nsIPersistentProperties *aAttributes);
+  virtual nsresult GetStateInternal(PRUint32 *aState, PRUint32 *aExtraState);
 };
 
 /** 
@@ -85,10 +85,14 @@ class nsXULTabsAccessible : public nsXULSelectableAccessible
 {
 public:
   nsXULTabsAccessible(nsIDOMNode* aNode, nsIWeakReference* aShell);
+
+  // nsIAccessible
   NS_IMETHOD GetRole(PRUint32 *_retval);
   NS_IMETHOD GetNumActions(PRUint8 *_retval);
   NS_IMETHOD GetValue(nsAString& _retval);
-  NS_IMETHOD GetName(nsAString& _retval);
+
+  // nsAccessible
+  virtual nsresult GetNameInternal(nsAString& aName);
 };
 
 /**

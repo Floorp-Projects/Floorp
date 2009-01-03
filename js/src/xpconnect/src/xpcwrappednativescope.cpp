@@ -159,9 +159,7 @@ XPCWrappedNativeScope::XPCWrappedNativeScope(XPCCallContext& ccx,
         gScopes = this;
 
         // Grab the XPCContext associated with our context.
-        mContext = mRuntime->GetContextMap()->Find(ccx.GetJSContext());
-        NS_ASSERTION(mContext, "Context map is not synchronized");
-
+        mContext = XPCContext::GetXPCContext(ccx.GetJSContext());
         mContext->AddScope(this);
     }
 
@@ -493,9 +491,7 @@ XPCWrappedNativeScope::FinishedMarkPhaseOfGC(JSContext* cx, XPCJSRuntime* rt)
 void
 XPCWrappedNativeScope::FinishedFinalizationPhaseOfGC(JSContext* cx)
 {
-    XPCJSRuntime* rt = nsXPConnect::GetRuntime();
-    if(!rt)
-        return;
+    XPCJSRuntime* rt = nsXPConnect::GetRuntimeInstance();
 
     // FIXME The lock may not be necessary since we are inside
     // JSGC_FINALIZE_END callback and at this point GC still serializes access
@@ -746,6 +742,9 @@ void DEBUG_CheckForComponentsInScope(XPCCallContext& ccx, JSObject* obj,
                                      JSBool OKIfNotInitialized)
 {
     if(OKIfNotInitialized)
+        return;
+
+    if(!(JS_GetOptions(ccx) & JSOPTION_PRIVATE_IS_NSISUPPORTS))
         return;
 
     const char* name = ccx.GetRuntime()->GetStringName(XPCJSRuntime::IDX_COMPONENTS);

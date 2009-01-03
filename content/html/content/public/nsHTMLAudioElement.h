@@ -37,7 +37,6 @@
  * ***** END LICENSE BLOCK ***** */
 #include "nsIDOMHTMLAudioElement.h"
 #include "nsHTMLMediaElement.h"
-#include "nsVideoDecoder.h"
 
 typedef PRUint16 nsMediaNetworkState;
 typedef PRUint16 nsMediaReadyState;
@@ -73,6 +72,4 @@ public:
                               PRBool aCompileEventHandlers);
   virtual void UnbindFromTree(PRBool aDeep = PR_TRUE,
                               PRBool aNullParent = PR_TRUE);
-protected:
-  virtual nsresult InitializeDecoder(nsAString& aChosenMediaResource);
 };

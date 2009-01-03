@@ -494,3 +494,9 @@ nsThebesFontMetrics::GetRightToLeftText()
 {
     return mIsRightToLeft;
 }
+
+/* virtual */ gfxUserFontSet*
+nsThebesFontMetrics::GetUserFontSet()
+{
+    return mFontGroup->GetUserFontSet();
+}

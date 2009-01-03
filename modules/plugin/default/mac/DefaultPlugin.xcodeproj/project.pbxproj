@@ -3,73 +3,56 @@
 	archiveVersion = 1;
 	classes = {
 	};
-	objectVersion = 42;
+	objectVersion = 45;
 	objects = {
 
 /* Begin PBXBuildFile section */
-		4D1684A00830226300080847 /* DefaultPluginPrefix.h in Headers */ = {isa = PBXBuildFile; fileRef = 0F64AF2C0433C8A200A96652 /* DefaultPluginPrefix.h */; };
-		4D1684A20830226300080847 /* InfoPlist.strings in Resources */ = {isa = PBXBuildFile; fileRef = 089C167DFE841241C02AAC07 /* InfoPlist.strings */; };
-		4D1684A40830226300080847 /* NullPlugin.cpp in Sources */ = {isa = PBXBuildFile; fileRef = F5E0C34F036A130901A96660 /* NullPlugin.cpp */; };
-		4D1684A50830226300080847 /* npmac.cpp in Sources */ = {isa = PBXBuildFile; fileRef = F5E0C351036A130E01A96660 /* npmac.cpp */; };
-		4D1684A70830226300080847 /* Carbon.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 08EA7FFBFE8413EDC02AAC07 /* Carbon.framework */; };
-		4D1684A80830226300080847 /* CoreFoundation.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = F5A7D3AB036E359F01A96660 /* CoreFoundation.framework */; };
-		4D1684AA0830226300080847 /* NullPlugin.rsrc in Rez */ = {isa = PBXBuildFile; fileRef = F5E0C34D036A12DF01A96660 /* NullPlugin.rsrc */; };
+		032267660EAFA4C40059A1E6 /* DefaultPlugin.mm in Sources */ = {isa = PBXBuildFile; fileRef = 032267650EAFA4C40059A1E6 /* DefaultPlugin.mm */; };
+		032267840EAFA62E0059A1E6 /* Carbon.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 032267830EAFA62E0059A1E6 /* Carbon.framework */; };
+		032268110EAFB8720059A1E6 /* plugin.png in Resources */ = {isa = PBXBuildFile; fileRef = 032268100EAFB8720059A1E6 /* plugin.png */; };
+		8D576314048677EA00EA77CD /* CoreFoundation.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 0AA1909FFE8422F4C02AAC07 /* CoreFoundation.framework */; };
+		8D5B49A804867FD3000E48DA /* InfoPlist.strings in Resources */ = {isa = PBXBuildFile; fileRef = 8D5B49A704867FD3000E48DA /* InfoPlist.strings */; };
 /* End PBXBuildFile section */
 
-/* Begin PBXCopyFilesBuildPhase section */
-		4D1684AB0830226300080847 /* CopyFiles */ = {
-			isa = PBXCopyFilesBuildPhase;
-			buildActionMask = 2147483647;
-			dstPath = "";
-			dstSubfolderSpec = 6;
-			files = (
-			);
-			runOnlyForDeploymentPostprocessing = 0;
-		};
-/* End PBXCopyFilesBuildPhase section */
-
 /* Begin PBXFileReference section */
+		032267650EAFA4C40059A1E6 /* DefaultPlugin.mm */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.objcpp; path = DefaultPlugin.mm; sourceTree = "<group>"; };
+		032267830EAFA62E0059A1E6 /* Carbon.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = Carbon.framework; path = /System/Library/Frameworks/Carbon.framework; sourceTree = "<absolute>"; };
+		032268100EAFB8720059A1E6 /* plugin.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; path = plugin.png; sourceTree = "<group>"; };
 		089C167EFE841241C02AAC07 /* English */ = {isa = PBXFileReference; fileEncoding = 10; lastKnownFileType = text.plist.strings; name = English; path = English.lproj/InfoPlist.strings; sourceTree = "<group>"; };
-		08EA7FFBFE8413EDC02AAC07 /* Carbon.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = Carbon.framework; path = /System/Library/Frameworks/Carbon.framework; sourceTree = "<absolute>"; };
-		0F64AF2C0433C8A200A96652 /* DefaultPluginPrefix.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = DefaultPluginPrefix.h; sourceTree = "<group>"; };
-		4D1684AC0830226300080847 /* Info-DefaultPlugin.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = "Info-DefaultPlugin.plist"; sourceTree = "<group>"; };
-		4D1684AD0830226300080847 /* Default Plugin.plugin */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = "Default Plugin.plugin"; sourceTree = BUILT_PRODUCTS_DIR; };
-		F5A7D3AB036E359F01A96660 /* CoreFoundation.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = CoreFoundation.framework; path = /System/Library/Frameworks/CoreFoundation.framework; sourceTree = "<absolute>"; };
-		F5E0C34D036A12DF01A96660 /* NullPlugin.rsrc */ = {isa = PBXFileReference; lastKnownFileType = archive.rsrc; path = NullPlugin.rsrc; sourceTree = SOURCE_ROOT; };
-		F5E0C34F036A130901A96660 /* NullPlugin.cpp */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.cpp.cpp; path = NullPlugin.cpp; sourceTree = SOURCE_ROOT; };
-		F5E0C351036A130E01A96660 /* npmac.cpp */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.cpp.cpp; path = npmac.cpp; sourceTree = SOURCE_ROOT; };
+		0AA1909FFE8422F4C02AAC07 /* CoreFoundation.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = CoreFoundation.framework; path = /System/Library/Frameworks/CoreFoundation.framework; sourceTree = "<absolute>"; };
+		8D576316048677EA00EA77CD /* DefaultPlugin.plugin */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = DefaultPlugin.plugin; sourceTree = BUILT_PRODUCTS_DIR; };
+		8D576317048677EA00EA77CD /* Info.plist */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
-		4D1684A60830226300080847 /* Frameworks */ = {
+		8D576313048677EA00EA77CD /* Frameworks */ = {
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				4D1684A70830226300080847 /* Carbon.framework in Frameworks */,
-				4D1684A80830226300080847 /* CoreFoundation.framework in Frameworks */,
+				8D576314048677EA00EA77CD /* CoreFoundation.framework in Frameworks */,
+				032267840EAFA62E0059A1E6 /* Carbon.framework in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
 /* End PBXFrameworksBuildPhase section */
 
 /* Begin PBXGroup section */
-		089C166AFE841209C02AAC07 /* MRJPlugin */ = {
+		089C166AFE841209C02AAC07 /* DefaultPlugin */ = {
 			isa = PBXGroup;
 			children = (
-				08FB77ADFE841716C02AAC07 /* Source */,
+				08FB77AFFE84173DC02AAC07 /* Source */,
 				089C167CFE841241C02AAC07 /* Resources */,
 				089C1671FE841209C02AAC07 /* External Frameworks and Libraries */,
-				19C28FB4FE9D528D11CA2CBB /* Products */,
-				4D1684AC0830226300080847 /* Info-DefaultPlugin.plist */,
+				19C28FB6FE9D52B211CA2CBB /* Products */,
 			);
-			name = MRJPlugin;
+			name = DefaultPlugin;
 			sourceTree = "<group>";
 		};
 		089C1671FE841209C02AAC07 /* External Frameworks and Libraries */ = {
 			isa = PBXGroup;
 			children = (
-				F5A7D3AB036E359F01A96660 /* CoreFoundation.framework */,
-				08EA7FFBFE8413EDC02AAC07 /* Carbon.framework */,
+				032267830EAFA62E0059A1E6 /* Carbon.framework */,
+				0AA1909FFE8422F4C02AAC07 /* CoreFoundation.framework */,
 			);
 			name = "External Frameworks and Libraries";
 			sourceTree = "<group>";
@@ -77,62 +60,48 @@
 		089C167CFE841241C02AAC07 /* Resources */ = {
 			isa = PBXGroup;
 			children = (
-				089C167DFE841241C02AAC07 /* InfoPlist.strings */,
-				F5E0C34D036A12DF01A96660 /* NullPlugin.rsrc */,
+				032268100EAFB8720059A1E6 /* plugin.png */,
+				8D576317048677EA00EA77CD /* Info.plist */,
+				8D5B49A704867FD3000E48DA /* InfoPlist.strings */,
 			);
 			name = Resources;
 			sourceTree = "<group>";
 		};
-		08FB77ADFE841716C02AAC07 /* Source */ = {
+		08FB77AFFE84173DC02AAC07 /* Source */ = {
 			isa = PBXGroup;
 			children = (
-				0F64AF2C0433C8A200A96652 /* DefaultPluginPrefix.h */,
-				F5E0C34F036A130901A96660 /* NullPlugin.cpp */,
-				F5E0C351036A130E01A96660 /* npmac.cpp */,
+				032267650EAFA4C40059A1E6 /* DefaultPlugin.mm */,
 			);
 			name = Source;
 			sourceTree = "<group>";
 		};
-		19C28FB4FE9D528D11CA2CBB /* Products */ = {
+		19C28FB6FE9D52B211CA2CBB /* Products */ = {
 			isa = PBXGroup;
 			children = (
-				4D1684AD0830226300080847 /* Default Plugin.plugin */,
+				8D576316048677EA00EA77CD /* DefaultPlugin.plugin */,
 			);
 			name = Products;
 			sourceTree = "<group>";
 		};
 /* End PBXGroup section */
 
-/* Begin PBXHeadersBuildPhase section */
-		4D16849F0830226300080847 /* Headers */ = {
-			isa = PBXHeadersBuildPhase;
-			buildActionMask = 2147483647;
-			files = (
-				4D1684A00830226300080847 /* DefaultPluginPrefix.h in Headers */,
-			);
-			runOnlyForDeploymentPostprocessing = 0;
-		};
-/* End PBXHeadersBuildPhase section */
-
 /* Begin PBXNativeTarget section */
-		4D16849D0830226300080847 /* Default Plugin */ = {
+		8D57630D048677EA00EA77CD /* DefaultPlugin */ = {
 			isa = PBXNativeTarget;
-			buildConfigurationList = 0335A32F0CDD0E2C00E37285 /* Build configuration list for PBXNativeTarget "Default Plugin" */;
+			buildConfigurationList = 1DEB911A08733D790010E9CD /* Build configuration list for PBXNativeTarget "DefaultPlugin" */;
 			buildPhases = (
-				4D16849F0830226300080847 /* Headers */,
-				4D1684A10830226300080847 /* Resources */,
-				4D1684A30830226300080847 /* Sources */,
-				4D1684A60830226300080847 /* Frameworks */,
-				4D1684A90830226300080847 /* Rez */,
-				4D1684AB0830226300080847 /* CopyFiles */,
+				8D57630F048677EA00EA77CD /* Resources */,
+				8D576311048677EA00EA77CD /* Sources */,
+				8D576313048677EA00EA77CD /* Frameworks */,
 			);
 			buildRules = (
 			);
 			dependencies = (
 			);
-			name = "Default Plugin";
-			productName = MRJPlugin;
-			productReference = 4D1684AD0830226300080847 /* Default Plugin.plugin */;
+			name = DefaultPlugin;
+			productInstallPath = "$(HOME)/Library/Bundles";
+			productName = DefaultPlugin;
+			productReference = 8D576316048677EA00EA77CD /* DefaultPlugin.plugin */;
 			productType = "com.apple.product-type.bundle";
 		};
 /* End PBXNativeTarget section */
@@ -140,186 +109,138 @@
 /* Begin PBXProject section */
 		089C1669FE841209C02AAC07 /* Project object */ = {
 			isa = PBXProject;
-			buildConfigurationList = 0335A3340CDD0E2C00E37285 /* Build configuration list for PBXProject "DefaultPlugin" */;
-			compatibilityVersion = "Xcode 2.4";
+			buildConfigurationList = 1DEB911E08733D790010E9CD /* Build configuration list for PBXProject "DefaultPlugin" */;
+			compatibilityVersion = "Xcode 3.1";
 			hasScannedForEncodings = 1;
-			mainGroup = 089C166AFE841209C02AAC07 /* MRJPlugin */;
+			mainGroup = 089C166AFE841209C02AAC07 /* DefaultPlugin */;
 			projectDirPath = "";
 			projectRoot = "";
 			targets = (
-				4D16849D0830226300080847 /* Default Plugin */,
+				8D57630D048677EA00EA77CD /* DefaultPlugin */,
 			);
 		};
 /* End PBXProject section */
 
 /* Begin PBXResourcesBuildPhase section */
-		4D1684A10830226300080847 /* Resources */ = {
+		8D57630F048677EA00EA77CD /* Resources */ = {
 			isa = PBXResourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				4D1684A20830226300080847 /* InfoPlist.strings in Resources */,
+				8D5B49A804867FD3000E48DA /* InfoPlist.strings in Resources */,
+				032268110EAFB8720059A1E6 /* plugin.png in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
 /* End PBXResourcesBuildPhase section */
 
-/* Begin PBXRezBuildPhase section */
-		4D1684A90830226300080847 /* Rez */ = {
-			isa = PBXRezBuildPhase;
-			buildActionMask = 2147483647;
-			files = (
-				4D1684AA0830226300080847 /* NullPlugin.rsrc in Rez */,
-			);
-			runOnlyForDeploymentPostprocessing = 0;
-		};
-/* End PBXRezBuildPhase section */
-
 /* Begin PBXSourcesBuildPhase section */
-		4D1684A30830226300080847 /* Sources */ = {
+		8D576311048677EA00EA77CD /* Sources */ = {
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				4D1684A40830226300080847 /* NullPlugin.cpp in Sources */,
-				4D1684A50830226300080847 /* npmac.cpp in Sources */,
+				032267660EAFA4C40059A1E6 /* DefaultPlugin.mm in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
 /* End PBXSourcesBuildPhase section */
 
 /* Begin PBXVariantGroup section */
-		089C167DFE841241C02AAC07 /* InfoPlist.strings */ = {
+		8D5B49A704867FD3000E48DA /* InfoPlist.strings */ = {
 			isa = PBXVariantGroup;
 			children = (
 				089C167EFE841241C02AAC07 /* English */,
 			);
 			name = InfoPlist.strings;
-			sourceTree = SOURCE_ROOT;
+			sourceTree = "<group>";
 		};
 /* End PBXVariantGroup section */
 
 /* Begin XCBuildConfiguration section */
-		0335A3300CDD0E2C00E37285 /* Development */ = {
+		1DEB911B08733D790010E9CD /* Debug */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
+				ALWAYS_SEARCH_USER_PATHS = NO;
 				COPY_PHASE_STRIP = NO;
-				FRAMEWORK_SEARCH_PATHS = "\"$(SYSTEM_LIBRARY_DIR)/Frameworks/CoreFoundation.framework\"";
 				GCC_DYNAMIC_NO_PIC = NO;
 				GCC_ENABLE_FIX_AND_CONTINUE = YES;
-				GCC_GENERATE_DEBUGGING_SYMBOLS = YES;
+				GCC_MODEL_TUNING = G5;
 				GCC_OPTIMIZATION_LEVEL = 0;
-				GCC_PREFIX_HEADER = DefaultPluginPrefix.h;
-				GCC_PREPROCESSOR_DEFINITIONS = (
-					"XP_MACOSX=1",
-					"NO_X11=1",
-					"USE_SYSTEM_CONSOLE=1",
-				);
-				HEADER_SEARCH_PATHS = (
-					../../../../dist/sdk/xpcom/include,
-					../../../../dist/include/caps,
-					../../../../dist/include/java,
-					../../../../dist/include/js,
-					../../../../dist/include/nspr,
-					../../../../dist/include/nspr/obsolete,
-					../../../../dist/include/oji,
-					../../../../dist/include/plugin,
-					../../../../dist/include/xpcom,
-					../../../../dist/include/xpconnect,
-					../../../../dist/include,
-					/Developer/Headers/FlatCarbon,
-				);
-				INFOPLIST_FILE = "Info-DefaultPlugin.plist";
-				LIBRARY_SEARCH_PATHS = /usr/lib;
-				OTHER_CFLAGS = "";
-				OTHER_LDFLAGS = "";
-				OTHER_REZFLAGS = "";
-				PRODUCT_NAME = "Default Plugin";
-				SECTORDER_FLAGS = "";
-				WARNING_CFLAGS = (
-					"-Wmost",
-					"-Wno-four-char-constants",
-					"-Wno-unknown-pragmas",
-				);
+				HEADER_SEARCH_PATHS = ../../../../dist/include/plugin;
+				INFOPLIST_FILE = Info.plist;
+				INSTALL_PATH = "$(HOME)/Library/Bundles";
+				PRODUCT_NAME = DefaultPlugin;
 				WRAPPER_EXTENSION = plugin;
-				ZERO_LINK = YES;
 			};
-			name = Development;
+			name = Debug;
 		};
-		0335A3310CDD0E2C00E37285 /* Deployment */ = {
+		1DEB911C08733D790010E9CD /* Release */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
-				COPY_PHASE_STRIP = YES;
-				FRAMEWORK_SEARCH_PATHS = "\"$(SYSTEM_LIBRARY_DIR)/Frameworks/CoreFoundation.framework\"";
-				GCC_ENABLE_FIX_AND_CONTINUE = NO;
-				GCC_GENERATE_DEBUGGING_SYMBOLS = NO;
-				GCC_PREFIX_HEADER = DefaultPluginPrefix.h;
-				GCC_PREPROCESSOR_DEFINITIONS = (
-					"XP_MACOSX=1",
-					"NO_X11=1",
-					"USE_SYSTEM_CONSOLE=1",
-				);
-				HEADER_SEARCH_PATHS = (
-					../../../../dist/sdk/xpcom/include,
-					../../../../dist/include/caps,
-					../../../../dist/include/java,
-					../../../../dist/include/js,
-					../../../../dist/include/nspr,
-					../../../../dist/include/nspr/obsolete,
-					../../../../dist/include/oji,
-					../../../../dist/include/plugin,
-					../../../../dist/include/xpcom,
-					../../../../dist/include/xpconnect,
-					../../../../dist/include,
-					/Developer/Headers/FlatCarbon,
-				);
-				INFOPLIST_FILE = "Info-DefaultPlugin.plist";
-				LIBRARY_SEARCH_PATHS = /usr/lib;
-				OTHER_CFLAGS = "";
-				OTHER_LDFLAGS = "";
-				OTHER_REZFLAGS = "";
-				PRODUCT_NAME = "Default Plugin";
-				SECTORDER_FLAGS = "";
-				WARNING_CFLAGS = (
-					"-Wmost",
-					"-Wno-four-char-constants",
-					"-Wno-unknown-pragmas",
-				);
+				ALWAYS_SEARCH_USER_PATHS = NO;
+				DEBUG_INFORMATION_FORMAT = "dwarf-with-dsym";
+				GCC_MODEL_TUNING = G5;
+				HEADER_SEARCH_PATHS = ../../../../dist/include/plugin;
+				INFOPLIST_FILE = Info.plist;
+				INSTALL_PATH = "$(HOME)/Library/Bundles";
+				PRODUCT_NAME = DefaultPlugin;
 				WRAPPER_EXTENSION = plugin;
-				ZERO_LINK = NO;
 			};
-			name = Deployment;
+			name = Release;
 		};
-		0335A3350CDD0E2C00E37285 /* Development */ = {
+		1DEB911F08733D790010E9CD /* Debug */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
+				ARCHS = "$(ARCHS_STANDARD_32_BIT)";
+				GCC_C_LANGUAGE_STANDARD = c99;
+				GCC_OPTIMIZATION_LEVEL = 0;
+				GCC_PREPROCESSOR_DEFINITIONS = "XP_MACOSX=1";
+				GCC_WARN_ABOUT_RETURN_TYPE = YES;
+				GCC_WARN_UNUSED_VARIABLE = YES;
+				HEADER_SEARCH_PATHS = ../../../../dist/include/plugin;
+				ONLY_ACTIVE_ARCH = YES;
+				PREBINDING = NO;
+				SDKROOT = "";
+				WRAPPER_EXTENSION = plugin;
 			};
-			name = Development;
+			name = Debug;
 		};
-		0335A3360CDD0E2C00E37285 /* Deployment */ = {
+		1DEB912008733D790010E9CD /* Release */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
+				ARCHS = "$(ARCHS_STANDARD_32_BIT)";
+				GCC_C_LANGUAGE_STANDARD = c99;
+				GCC_PREPROCESSOR_DEFINITIONS = "XP_MACOSX=1";
+				GCC_WARN_ABOUT_RETURN_TYPE = YES;
+				GCC_WARN_UNUSED_VARIABLE = YES;
+				HEADER_SEARCH_PATHS = ../../../../dist/include/plugin;
+				PREBINDING = NO;
+				SDKROOT = "";
+				SEPARATE_SYMBOL_EDIT = NO;
+				STRIP_INSTALLED_PRODUCT = YES;
+				WRAPPER_EXTENSION = plugin;
 			};
-			name = Deployment;
+			name = Release;
 		};
 /* End XCBuildConfiguration section */
 
 /* Begin XCConfigurationList section */
-		0335A32F0CDD0E2C00E37285 /* Build configuration list for PBXNativeTarget "Default Plugin" */ = {
+		1DEB911A08733D790010E9CD /* Build configuration list for PBXNativeTarget "DefaultPlugin" */ = {
 			isa = XCConfigurationList;
 			buildConfigurations = (
-				0335A3300CDD0E2C00E37285 /* Development */,
-				0335A3310CDD0E2C00E37285 /* Deployment */,
+				1DEB911B08733D790010E9CD /* Debug */,
+				1DEB911C08733D790010E9CD /* Release */,
 			);
 			defaultConfigurationIsVisible = 0;
-			defaultConfigurationName = Development;
+			defaultConfigurationName = Release;
 		};
-		0335A3340CDD0E2C00E37285 /* Build configuration list for PBXProject "DefaultPlugin" */ = {
+		1DEB911E08733D790010E9CD /* Build configuration list for PBXProject "DefaultPlugin" */ = {
 			isa = XCConfigurationList;
 			buildConfigurations = (
-				0335A3350CDD0E2C00E37285 /* Development */,
-				0335A3360CDD0E2C00E37285 /* Deployment */,
+				1DEB911F08733D790010E9CD /* Debug */,
+				1DEB912008733D790010E9CD /* Release */,
 			);
 			defaultConfigurationIsVisible = 0;
-			defaultConfigurationName = Development;
+			defaultConfigurationName = Release;
 		};
 /* End XCConfigurationList section */
 	};

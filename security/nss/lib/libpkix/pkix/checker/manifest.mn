@@ -41,19 +41,35 @@ EXPORTS = \
 	$(NULL)
 
 PRIVATE_EXPORTS = \
+	pkix_basicconstraintschecker.h \
 	pkix_certchainchecker.h \
+	pkix_defaultcrlchecker.h \
 	pkix_defaultrevchecker.h \
+	pkix_expirationchecker.h \
+	pkix_namechainingchecker.h \
+	pkix_nameconstraintschecker.h \
 	pkix_ocspchecker.h \
+	pkix_policychecker.h \
 	pkix_revocationchecker.h \
+	pkix_signaturechecker.h \
+	pkix_targetcertchecker.h \
 	$(NULL)
 
 MODULE = nss
 
 CSRCS = \
+	pkix_basicconstraintschecker.c \
 	pkix_certchainchecker.c \
+	pkix_defaultcrlchecker.c \
 	pkix_defaultrevchecker.c \
+	pkix_expirationchecker.c \
+	pkix_namechainingchecker.c \
+	pkix_nameconstraintschecker.c \
 	pkix_ocspchecker.c \
 	pkix_revocationchecker.c \
+	pkix_policychecker.c \
+	pkix_signaturechecker.c \
+	pkix_targetcertchecker.c \
 	$(NULL)
 
 REQUIRES = dbm

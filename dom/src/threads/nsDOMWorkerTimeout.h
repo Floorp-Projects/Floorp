@@ -44,55 +44,56 @@
 
 // Other includes
 #include "jsapi.h"
+#include "nsAutoJSValHolder.h"
 #include "nsAutoPtr.h"
 #include "nsCOMPtr.h"
 #include "nsStringGlue.h"
-#include "prclist.h"
+#include "nsTArray.h"
 
 // DOMWorker includes
-#include "nsDOMWorkerThread.h"
+#include "nsDOMWorker.h"
 
 /**
  * The nsDOMWorkerTimeout has a slightly complicated life cycle. It's created
- * by an nsDOMWorkerThread (or one of its JS context functions) and immediately
- * takes a strong reference to the worker that created it. It does this so that
- * the worker can't be collected while a timeout is outstanding. However, the
- * worker needs a weak reference to the timeout so that it can be canceled if
- * the worker is canceled (in the event that the page falls out of the fastback
+ * by an nsDOMWorker (or one of its JS context functions) and immediately takes
+ * a strong reference to the worker that created it. It does this so that the
+ * worker can't be collected while a timeout is outstanding. However, the worker
+ * needs a weak reference to the timeout so that it can be canceled if the
+ * worker is canceled (in the event that the page falls out of the fastback
  * cache or the application is exiting, for instance). The only thing that holds
  * the timeout alive is it's mTimer via the nsITimerCallback interface. If the
  * timer is single-shot and has run already or if the timer is canceled then
  * this object should die.
  */
-class nsDOMWorkerTimeout : public PRCList,
+class nsDOMWorkerTimeout : public nsDOMWorkerFeature,
                            public nsITimerCallback
 {
 public:
-  NS_DECL_ISUPPORTS
+  NS_DECL_ISUPPORTS_INHERITED
   NS_DECL_NSITIMERCALLBACK
 
-  nsDOMWorkerTimeout(nsDOMWorkerThread* aWorker, PRUint32 aId);
-  ~nsDOMWorkerTimeout();
+  nsDOMWorkerTimeout(nsDOMWorker* aWorker,
+                     PRUint32 aId);
 
-  nsresult Init(JSContext* aCx, PRUint32 aArgc, jsval* aArgv,
+  nsresult Init(JSContext* aCx,
+                PRUint32 aArgc,
+                jsval* aArgv,
                 PRBool aIsInterval);
+
+  nsresult Start();
 
   nsresult Run();
 
-  void Cancel();
-  void Suspend(PRTime aNow);
-  void Resume(PRTime aNow);
+  virtual void Cancel();
+  virtual void Suspend();
+  virtual void Resume();
 
   PRIntervalTime GetInterval() {
     return mInterval;
   }
 
-  nsDOMWorkerThread* GetWorker() {
+  nsDOMWorker* GetWorker() {
     return mWorker;
-  }
-
-  PRUint32 GetId() {
-    return mId;
   }
 
   PRBool IsSuspended() {
@@ -101,6 +102,8 @@ public:
   }
 
 private:
+  ~nsDOMWorkerTimeout() { }
+
   void AcquireSpinlock();
   void ReleaseSpinlock();
 
@@ -137,53 +140,51 @@ private:
   class FunctionCallback : public CallbackBase
   {
   public:
-    FunctionCallback(PRUint32 aArgc, jsval* aArgv, nsresult* aRv);
+    FunctionCallback(PRUint32 aArgc,
+                     jsval* aArgv,
+                     nsresult* aRv);
     virtual ~FunctionCallback();
     virtual nsresult Run(nsDOMWorkerTimeout* aTimeout,
                          JSContext* aCx);
   protected:
-    jsval mCallback;
-    jsval* mCallbackArgs;
+    nsAutoJSValHolder mCallback;
+    nsTArray<nsAutoJSValHolder> mCallbackArgs;
     PRUint32 mCallbackArgsLength;
   };
-  
+
   class ExpressionCallback : public CallbackBase
   {
   public:
-    ExpressionCallback(PRUint32 aArgc, jsval* aArgv, JSContext* aCx,
+    ExpressionCallback(PRUint32 aArgc,
+                       jsval* aArgv,
+                       JSContext* aCx,
                        nsresult* aRv);
     virtual ~ExpressionCallback();
     virtual nsresult Run(nsDOMWorkerTimeout* aTimeout,
                          JSContext* aCx);
   protected:
-    JSString* mExpression;
-    nsString mFileName;
+    nsAutoJSValHolder mExpression;
+    nsCString mFileName;
     PRUint32 mLineNumber;
   };
-
-  // Hold the worker alive!
-  nsRefPtr<nsDOMWorkerThread> mWorker;
 
   // Hold this object alive!
   nsCOMPtr<nsITimer> mTimer;
 
   PRUint32 mInterval;
-  PRBool mIsInterval;
 
   PRTime mTargetTime;
 
   nsAutoPtr<CallbackBase> mCallback;
 
-  PRUint32 mId;
-
   PRInt32 mSuspendSpinlock;
-  PRBool mIsSuspended;
   PRUint32 mSuspendInterval;
   nsRefPtr<nsDOMWorkerTimeout> mSuspendedRef;
 
-#ifdef DEBUG
-  PRBool mFiredOrCanceled;
-#endif
+  PRPackedBool mIsInterval;
+  PRPackedBool mIsSuspended;
+  PRPackedBool mSuspendedBeforeStart;
+  PRPackedBool mStarted;
 };
 
 #endif /* __NSDOMWORKERTIMEOUT_H__ */

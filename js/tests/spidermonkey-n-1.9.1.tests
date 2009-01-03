@@ -104,5 +104,40 @@ js1_5/Regress/regress-354924.js
 js1_5/Regress/regress-362583.js
 js1_7/extensions/regress-353214-01.js
 js1_7/lexical/regress-346642-03.js
+js1_5/extensions/regress-432075.js
+js1_5/extensions/regress-421621.js
 # bug 450275
 js1_5/extensions/regress-434837-01.js
+# bug 408002
+js1_5/Regress/regress-320119.js
+# bug 380469
+js1_7/geniter/regress-347739.js
+js1_7/geniter/regress-349012-01.js
+js1_7/geniter/regress-349331.js
+js1_7/iterable/regress-340526-02.js
+# bug 443074
+e4x/decompilation/regress-373678.js
+js1_5/decompilation/regress-351336.js
+js1_5/decompilation/regress-351626.js
+js1_5/decompilation/regress-354878.js
+js1_5/decompilation/regress-373678.js
+js1_5/extensions/regress-352281.js
+js1_7/decompilation/regress-346642-01.js
+js1_7/decompilation/regress-349605.js
+# decompilation change in spidermonkey 1.8.1
+js1_7/decompilation/regress-351070-01.js
+js1_8/decompilation/regress-443074.js
+js1_8/genexps/regress-380237-03.js
+js1_8/genexps/regress-380237-04.js
+# decompilation change in spidermonkey 1.8.1 (bug 460501)
+js1_7/decompilation/regress-352026.js
+# https://bugzilla.mozilla.org/show_bug.cgi?id=458851#c7
+js1_5/extensions/regress-437288-01.js
+js1_5/decompilation/regress-437288-02.js
+# more decompilation changes, bug 461233
+js1_7/block/regress-352609.js
+js1_7/decompilation/regress-352011.js
+js1_7/decompilation/regress-352022.js
+js1_7/extensions/regress-353249.js
+js1_7/regress/regress-420399.js
+js1_7/decompilation/regress-350991.js

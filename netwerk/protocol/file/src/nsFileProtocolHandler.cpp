@@ -51,8 +51,13 @@
 
 // URL file handling, copied and modified from xpfe/components/bookmarks/src/nsBookmarksService.cpp
 #ifdef XP_WIN
+#ifndef WINCE
+// Windows mobile does not support internet shortcuts including
+// CLSID_InternetShortcut and IUniformResourceLocator used in
+// this file
 #include <shlobj.h>
 #include <intshcut.h>
+#endif
 #include "nsIFileURL.h"
 #ifdef CompareString
 #undef CompareString
@@ -246,7 +251,7 @@ nsFileProtocolHandler::GetDefaultPort(PRInt32 *result)
 NS_IMETHODIMP
 nsFileProtocolHandler::GetProtocolFlags(PRUint32 *result)
 {
-    *result = URI_NOAUTH | URI_IS_LOCAL_FILE;
+    *result = URI_NOAUTH | URI_IS_LOCAL_FILE | URI_IS_LOCAL_RESOURCE;
     return NS_OK;
 }
 
@@ -278,30 +283,12 @@ nsFileProtocolHandler::NewURI(const nsACString &spec,
 NS_IMETHODIMP
 nsFileProtocolHandler::NewChannel(nsIURI *uri, nsIChannel **result)
 {
-    nsresult rv;
-
-    // This file may be a url file
-    nsCOMPtr<nsIFileURL> url(do_QueryInterface(uri));
-    if (url) {
-        nsCOMPtr<nsIFile> file;
-        rv = url->GetFile(getter_AddRefs(file));
-        if (NS_SUCCEEDED(rv)) {
-            nsCOMPtr<nsIURI> uri;
-            rv = ReadURLFile(file, getter_AddRefs(uri));
-            if (NS_SUCCEEDED(rv)) {
-                rv = NS_NewChannel(result, uri);
-                if (NS_SUCCEEDED(rv))
-                    return rv;
-            }
-        }
-    }
-
     nsFileChannel *chan = new nsFileChannel(uri);
     if (!chan)
         return NS_ERROR_OUT_OF_MEMORY;
     NS_ADDREF(chan);
 
-    rv = chan->Init();
+    nsresult rv = chan->Init();
     if (NS_FAILED(rv)) {
         NS_RELEASE(chan);
         return rv;

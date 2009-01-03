@@ -53,6 +53,7 @@ interface nsIClassInfo;
 [ptr] native JSContextPtr(JSContext);
 [ptr] native JSObjectPtr(JSObject);
       native JSVal(jsval);
+[ptr] native JSStackFramePtr(JSStackFrame);
 
 [uuid(31431440-f1ce-11d2-985a-006008962422)]
 interface nsIXPCSecurityManager : nsISupports

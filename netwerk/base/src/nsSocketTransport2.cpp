@@ -707,6 +707,7 @@ nsSocketTransport::nsSocketTransport()
     , mProxyPort(0)
     , mProxyTransparent(PR_FALSE)
     , mProxyTransparentResolvesHost(PR_FALSE)
+    , mConnectionFlags(0)
     , mState(STATE_CLOSED)
     , mAttached(PR_FALSE)
     , mInputClosed(PR_TRUE)
@@ -946,7 +947,11 @@ nsSocketTransport::ResolveHost()
 
     mResolving = PR_TRUE;
 
-    rv = dns->AsyncResolve(SocketHost(), 0, this, nsnull,
+    PRUint32 dnsFlags = 0;
+    if (mConnectionFlags & nsSocketTransport::BYPASS_CACHE)
+        dnsFlags = nsIDNSService::RESOLVE_BYPASS_CACHE;
+
+    rv = dns->AsyncResolve(SocketHost(), dnsFlags, this, nsnull,
                            getter_AddRefs(mDNSRequest));
     if (NS_SUCCEEDED(rv)) {
         LOG(("  advancing to STATE_RESOLVING\n"));
@@ -1594,8 +1599,15 @@ nsSocketTransport::OnSocketDetached(PRFileDesc *fd)
             // acquiring a reference to mFD.
             mFDconnected = PR_FALSE;
         }
-        mCallbacks = nsnull;
-        mEventSink = nsnull;
+
+        // We must release mCallbacks and mEventSink to avoid memory leak
+        // but only when RecoverFromError() above failed. Otherwise we lose
+        // link with UI and security callbacks on next connection attempt 
+        // round. That would lead e.g. to a broken certificate exception page.
+        if (NS_FAILED(mCondition)) {
+            mCallbacks = nsnull;
+            mEventSink = nsnull;
+        }
     }
 }
 
@@ -1936,6 +1948,21 @@ NS_IMETHODIMP
 nsSocketTransport::GetClassIDNoAlloc(nsCID *aClassIDNoAlloc)
 {
     return NS_ERROR_NOT_AVAILABLE;
+}
+
+
+NS_IMETHODIMP
+nsSocketTransport::GetConnectionFlags(PRUint32 *value)
+{
+    *value = mConnectionFlags;
+    return NS_OK;
+}
+
+NS_IMETHODIMP
+nsSocketTransport::SetConnectionFlags(PRUint32 value)
+{
+    mConnectionFlags = value;
+    return NS_OK;
 }
 
 

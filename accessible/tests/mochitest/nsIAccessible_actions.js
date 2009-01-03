@@ -1,20 +1,4 @@
 ////////////////////////////////////////////////////////////////////////////////
-// General
-
-const nsIAccessibleRetrieval = Components.interfaces.nsIAccessibleRetrieval;
-const nsIAccessibleRole = Components.interfaces.nsIAccessibleRole;
-
-var gAccRetrieval = null;
-
-function initialize()
-{
-  gAccRetrieval = Components.classes["@mozilla.org/accessibleRetrieval;1"].
-  getService(nsIAccessibleRetrieval);
-}
-
-addLoadEvent(initialize);
-
-////////////////////////////////////////////////////////////////////////////////
 // Event constants
 
 const MOUSEDOWN_EVENT = 1;
@@ -38,33 +22,27 @@ function testActions(aArray, aIndex)
     return;
   }
 
-  var ID = aArray[aIndex].ID;
+  var accOrElmOrID = aArray[aIndex].ID;
   var actionName = aArray[aIndex].actionName;
   var events = aArray[aIndex].events;
 
-  var elm = document.getElementById(ID);
-  if (!elm) {
-    ok(false, "There is no element with ID " + ID);
-    SimpleTest.finish();
-    return null;
-  }
+  var elmObj = {};
+  var acc = getAccessible(accOrElmOrID, null, elmObj);
+  var elm = elmObj.value;
 
-  var acc = null;
-  try {
-    acc = gAccRetrieval.getAccessibleFor(elm);
-  } catch(e) {
-  }
+  var isThereActions = acc.numActions > 0;
+  ok(isThereActions,
+     "No actions on the accessible for " + accOrElmOrID);
 
-  if (!acc) {
-    ok(false, "There is no accessible for " + ID);
+  if (!isThereActions) {
     SimpleTest.finish();
-    return null;
+    return; // Stop test.
   }
 
   is(acc.getActionName(0), actionName,
-     "Wrong action name of the accessible for " + ID);
+     "Wrong action name of the accessible for " + accOrElmOrID);
 
-  gEventHandler.initialize(ID, elm, events);
+  gEventHandler.initialize(accOrElmOrID, elm, events);
 
   acc.doAction(0);
 

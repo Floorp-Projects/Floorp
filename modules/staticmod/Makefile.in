@@ -99,7 +99,7 @@ FINAL_COMPONENT_NAMES := $(shell cat $(FINAL_LINK_COMP_NAMES))
 
 nsMetaModule.$(OBJ_SUFFIX): module_list.h
 
-module_list.h: Makefile Makefile.in $(DEPTH)/config/autoconf.mk
+module_list.h: $(GLOBAL_DEPS)
 	echo '#define MODULES \' > $@
 	awk '{ print "MODULE(" $$1 ") \\" }' < $(FINAL_LINK_COMP_NAMES) >> $@
 	echo >> $@

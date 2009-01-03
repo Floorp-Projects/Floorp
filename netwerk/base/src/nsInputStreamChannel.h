@@ -55,7 +55,8 @@ public:
 protected:
     virtual ~nsInputStreamChannel() {}
 
-    virtual nsresult OpenContentStream(PRBool async, nsIInputStream **result);
+    virtual nsresult OpenContentStream(PRBool async, nsIInputStream **result,
+                                       nsIChannel** channel);
 
 private:
     nsCOMPtr<nsIInputStream> mContentStream;

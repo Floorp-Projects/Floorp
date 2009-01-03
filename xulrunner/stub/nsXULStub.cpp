@@ -186,15 +186,12 @@ main(int argc, char **argv)
 
 #ifdef XP_WIN
   wchar_t wide_path[MAX_PATH];
-  MultiByteToWideChar(CP_ACP,
-		      0,
-		      iniPath,
-		      -1,
-		      wide_path,
-		      MAX_PATH);
-  
   if (!::GetModuleFileNameW(NULL, wide_path, MAX_PATH))
     return 1;
+
+  WideCharToMultiByte(CP_ACP, 0, wide_path,-1,
+		      iniPath, MAX_PATH, NULL, NULL);
+  
 
 #elif defined(XP_OS2)
    PPIB ppib;
@@ -263,8 +260,13 @@ main(int argc, char **argv)
            "%sxulrunner" XPCOM_FILE_PATH_SEPARATOR XPCOM_DLL,
            iniPath);
 
+#ifdef WINCE
+  DWORD fileAttrs = GetFileAttributesW(NS_ConvertUTF8toUTF16(greDir).get());
+  greFound = fileAttrs != INVALID_FILE_ATTRIBUTES && 
+             fileAttrs | FILE_ATTRIBUTE_DIRECTORY;
+#else
   greFound = (access(greDir, R_OK) == 0);
-
+#endif
   strncpy(lastSlash, "application.ini", sizeof(iniPath) - (lastSlash - iniPath));
 
 #endif

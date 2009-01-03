@@ -20,6 +20,7 @@
  * the Initial Developer. All Rights Reserved.
  *
  * Contributor(s):
+ *   Laurent Jouanneau <laurent.jouanneau@disruptive-innovations.com>
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either of the GNU General Public License Version 2 or later (the "GPL"),
@@ -53,6 +54,7 @@
 #include "nsIDOMElement.h"
 #include "nsIContent.h"
 #include "nsIDocument.h"
+#include "nsIDocumentEncoder.h"
 #include "nsINameSpaceManager.h"
 #include "nsTextFragment.h"
 #include "nsString.h"
@@ -80,6 +82,7 @@ nsresult NS_NewXMLContentSerializer(nsIContentSerializer** aSerializer)
 
 nsXMLContentSerializer::nsXMLContentSerializer()
   : mPrefixIndex(0),
+    mColPos(0),
     mInAttribute(PR_FALSE),
     mAddNewline(PR_FALSE)
 {
@@ -92,11 +95,27 @@ nsXMLContentSerializer::~nsXMLContentSerializer()
 NS_IMPL_ISUPPORTS1(nsXMLContentSerializer, nsIContentSerializer)
 
 NS_IMETHODIMP 
-nsXMLContentSerializer::Init(PRUint32 flags, PRUint32 aWrapColumn,
+nsXMLContentSerializer::Init(PRUint32 aFlags, PRUint32 aWrapColumn,
                              const char* aCharSet, PRBool aIsCopying,
                              PRBool aIsWholeDocument)
 {
   mCharset = aCharSet;
+  mFlags = aFlags;
+
+  // Set the line break character:
+  if ((mFlags & nsIDocumentEncoder::OutputCRLineBreak)
+      && (mFlags & nsIDocumentEncoder::OutputLFLineBreak)) { // Windows
+    mLineBreak.AssignLiteral("\r\n");
+  }
+  else if (mFlags & nsIDocumentEncoder::OutputCRLineBreak) { // Mac
+    mLineBreak.AssignLiteral("\r");
+  }
+  else if (mFlags & nsIDocumentEncoder::OutputLFLineBreak) { // Unix/DOM
+    mLineBreak.AssignLiteral("\n");
+  }
+  else {
+    mLineBreak.AssignLiteral(NS_LINEBREAK);         // Platform/default
+  }
   return NS_OK;
 }
 
@@ -123,7 +142,6 @@ nsXMLContentSerializer::AppendTextData(nsIDOMNode* aNode,
   if (length <= 0) {
     // XXX Zero is a legal value, maybe non-zero values should be an
     // error.
-
     return NS_OK;
   }
     
@@ -148,7 +166,16 @@ nsXMLContentSerializer::AppendText(nsIDOMText* aText,
 {
   NS_ENSURE_ARG(aText);
 
-  return AppendTextData(aText, aStartOffset, aEndOffset, aStr, PR_TRUE, PR_TRUE);
+  nsAutoString data;
+  nsresult rv;
+
+  rv = AppendTextData(aText, aStartOffset, aEndOffset, data, PR_TRUE, PR_TRUE);
+  if (NS_FAILED(rv))
+    return NS_ERROR_FAILURE;
+
+  AppendToStringConvertLF(data, aStr);
+
+  return NS_OK;
 }
 
 NS_IMETHODIMP 
@@ -190,7 +217,7 @@ nsXMLContentSerializer::AppendProcessingInstruction(nsIDOMProcessingInstruction*
   AppendToString(target, aStr);
   if (!data.IsEmpty()) {
     AppendToString(NS_LITERAL_STRING(" "), aStr);
-    AppendToString(data, aStr);
+    AppendToStringConvertLF(data, aStr);
   }
   AppendToString(NS_LITERAL_STRING("?>"), aStr);
   MaybeFlagNewline(aPI);
@@ -220,10 +247,10 @@ nsXMLContentSerializer::AppendComment(nsIDOMComment* aComment,
 
     nsAutoString frag;
     data.Mid(frag, aStartOffset, length);
-    AppendToString(frag, aStr);
+    AppendToStringConvertLF(frag, aStr);
   }
   else {
-    AppendToString(data, aStr);
+    AppendToStringConvertLF(data, aStr);
   }
   AppendToString(NS_LITERAL_STRING("-->"), aStr);
   MaybeFlagNewline(aComment);
@@ -965,7 +992,7 @@ void
 nsXMLContentSerializer::MaybeAddNewline(nsAString& aStr)
 {
   if (mAddNewline) {
-    aStr.Append((PRUnichar)'\n');
+    aStr.Append(mLineBreak);
     mAddNewline = PR_FALSE;
   }
 }
@@ -1023,4 +1050,29 @@ nsXMLContentSerializer::AppendDocumentStart(nsIDOMDocument *aDocument,
   mAddNewline = PR_TRUE;
 
   return NS_OK;
+}
+
+void
+nsXMLContentSerializer::AppendToStringConvertLF(const nsAString& aStr,
+                                                 nsAString& aOutputStr)
+{
+  // Convert line-endings to mLineBreak
+  PRUint32 start = 0;
+  PRUint32 theLen = aStr.Length();
+  while (start < theLen) {
+    PRInt32 eol = aStr.FindChar('\n', start);
+    if (eol == kNotFound) {
+      nsDependentSubstring dataSubstring(aStr, start, theLen - start);
+      AppendToString(dataSubstring, aOutputStr);
+      start = theLen;
+    }
+    else {
+      nsDependentSubstring dataSubstring(aStr, start, eol - start);
+      AppendToString(dataSubstring, aOutputStr);
+      AppendToString(mLineBreak, aOutputStr);
+      start = eol + 1;
+      if (start == theLen)
+        mColPos = 0;
+    }
+  }
 }

@@ -108,6 +108,7 @@ public:
   nsString mScriptText;              // Holds script for loaded scripts
   PRUint32 mJSVersion;
   nsCOMPtr<nsIURI> mURI;
+  nsCOMPtr<nsIURI> mFinalURI;
   PRInt32 mLineNo;
 };
 
@@ -195,6 +196,31 @@ IsScriptEventHandler(nsIScriptElement *aScriptElement)
 }
 
 nsresult
+nsScriptLoader::CheckContentPolicy(nsScriptLoadRequest *aRequest,
+                                   nsISupports *aContext,
+                                   const nsAString &aType)
+{
+  PRInt16 shouldLoad = nsIContentPolicy::ACCEPT;
+  nsresult rv = NS_CheckContentLoadPolicy(nsIContentPolicy::TYPE_SCRIPT,
+                                          aRequest->mURI,
+                                          mDocument->NodePrincipal(),
+                                          aContext,
+                                          NS_LossyConvertUTF16toASCII(aType),
+                                          nsnull,    //extra
+                                          &shouldLoad,
+                                          nsContentUtils::GetContentPolicy(),
+                                          nsContentUtils::GetSecurityManager());
+  if (NS_FAILED(rv) || NS_CP_REJECTED(shouldLoad)) {
+    if (NS_FAILED(rv) || shouldLoad != nsIContentPolicy::REJECT_TYPE) {
+      return NS_ERROR_CONTENT_BLOCKED;
+    }
+    return NS_ERROR_CONTENT_BLOCKED_SHOW_ALT;
+  }
+
+  return NS_OK;
+}
+
+nsresult
 nsScriptLoader::StartLoad(nsScriptLoadRequest *aRequest, const nsAString &aType)
 {
   // Check that the containing page is allowed to load this URI.
@@ -205,21 +231,12 @@ nsScriptLoader::StartLoad(nsScriptLoadRequest *aRequest, const nsAString &aType)
   NS_ENSURE_SUCCESS(rv, rv);
 
   // After the security manager, the content-policy stuff gets a veto
-  PRInt16 shouldLoad = nsIContentPolicy::ACCEPT;
-  rv = NS_CheckContentLoadPolicy(nsIContentPolicy::TYPE_SCRIPT,
-                                 aRequest->mURI,
-                                 mDocument->NodePrincipal(),
-                                 aRequest->mElement,
-                                 NS_LossyConvertUTF16toASCII(aType),
-                                 nsnull,    //extra
-                                 &shouldLoad,
-                                 nsContentUtils::GetContentPolicy(),
-                                 nsContentUtils::GetSecurityManager());
-  if (NS_FAILED(rv) || NS_CP_REJECTED(shouldLoad)) {
-    if (NS_FAILED(rv) || shouldLoad != nsIContentPolicy::REJECT_TYPE) {
-      return NS_ERROR_CONTENT_BLOCKED;
-    }
-    return NS_ERROR_CONTENT_BLOCKED_SHOW_ALT;
+  nsISupports *context = aRequest->mElement.get()
+                         ? static_cast<nsISupports *>(aRequest->mElement.get())
+                         : static_cast<nsISupports *>(mDocument);
+  rv = CheckContentPolicy(aRequest, context, aType);
+  if (NS_FAILED(rv)) {
+    return rv;
   }
 
   nsCOMPtr<nsILoadGroup> loadGroup = mDocument->GetDocumentLoadGroup();
@@ -462,6 +479,12 @@ nsScriptLoader::ProcessScriptElement(nsIScriptElement *aElement)
       request->mDefer = mDeferEnabled && aElement->GetScriptDeferred();
       mPreloads.RemoveElementAt(i);
 
+      rv = CheckContentPolicy(request, aElement, type);
+      if (NS_FAILED(rv)) {
+        // Note, we're dropping our last ref to request here.
+        return rv;
+      }
+
       if (!request->mLoading && !request->mDefer && !hadPendingRequests &&
             ReadyToExecuteScripts() && nsContentUtils::IsSafeToRunScript()) {
         return ProcessRequest(request);
@@ -622,14 +645,7 @@ nsScriptLoader::EvaluateScript(nsScriptLoadRequest* aRequest,
     return NS_ERROR_FAILURE;
   }
 
-  nsCAutoString url;
-
-  if (aRequest->mURI) {
-    rv = aRequest->mURI->GetSpec(url);
-    if (NS_FAILED(rv)) {
-      return rv;
-    }
-  }
+  nsIURI* uri = aRequest->mFinalURI ? aRequest->mFinalURI : aRequest->mURI;
 
   PRBool oldProcessingScriptTag = context->GetProcessingScriptTag();
   context->SetProcessingScriptTag(PR_TRUE);
@@ -637,6 +653,9 @@ nsScriptLoader::EvaluateScript(nsScriptLoadRequest* aRequest,
   // Update our current script.
   nsCOMPtr<nsIScriptElement> oldCurrent = mCurrentScript;
   mCurrentScript = aRequest->mElement;
+
+  nsCAutoString url;
+  nsContentUtils::GetWrapperSafeScriptFilename(mDocument, uri, url);
 
   PRBool isUndefined;
   rv = context->EvaluateString(aScript,
@@ -747,14 +766,14 @@ DetectByteOrderMark(const unsigned char* aBytes, PRInt32 aLen, nsCString& oChars
     if (0xFF == aBytes[1]) {
       // FE FF
       // UTF-16, big-endian
-      oCharset.Assign("UTF-16BE");
+      oCharset.Assign("UTF-16");
     }
     break;
   case 0xFF:
     if (0xFE == aBytes[1]) {
       // FF FE
       // UTF-16, little-endian
-      oCharset.Assign("UTF-16LE");
+      oCharset.Assign("UTF-16");
     }
     break;
   }
@@ -912,6 +931,7 @@ nsScriptLoader::PrepareLoadedRequest(nsScriptLoadRequest* aRequest,
   }
 
   nsCOMPtr<nsIChannel> channel = do_QueryInterface(req);
+  NS_GetFinalChannelURI(channel, getter_AddRefs(aRequest->mFinalURI));
   if (aStringLen) {
     // Check the charset attribute to determine script charset.
     nsAutoString hintCharset;

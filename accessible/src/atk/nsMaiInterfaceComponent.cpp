@@ -69,14 +69,14 @@ refAccessibleAtPointCB(AtkComponent *aComponent,
                        AtkCoordType aCoordType)
 {
     nsAccessibleWrap *accWrap = GetAccessibleWrap(ATK_OBJECT(aComponent));
-    if (!accWrap || nsAccessibleWrap::MustPrune(accWrap))
+    if (!accWrap || nsAccUtils::MustPrune(accWrap))
         return nsnull;
 
     // nsIAccessible getChildAtPoint (x,y) is in screen pixels.
     if (aCoordType == ATK_XY_WINDOW) {
         nsCOMPtr<nsIDOMNode> domNode;
         accWrap->GetDOMNode(getter_AddRefs(domNode));
-        nsIntPoint winCoords = nsAccUtils::GetScreenCoordsForWindow(domNode);
+        nsIntPoint winCoords = nsCoreUtils::GetScreenCoordsForWindow(domNode);
         aAccX += winCoords.x;
         aAccY += winCoords.y;
     }
@@ -117,7 +117,7 @@ getExtentsCB(AtkComponent *aComponent,
     if (aCoordType == ATK_XY_WINDOW) {
         nsCOMPtr<nsIDOMNode> domNode;
         accWrap->GetDOMNode(getter_AddRefs(domNode));
-        nsIntPoint winCoords = nsAccUtils::GetScreenCoordsForWindow(domNode);
+        nsIntPoint winCoords = nsCoreUtils::GetScreenCoordsForWindow(domNode);
         nsAccX -= winCoords.x;
         nsAccY -= winCoords.y;
     }

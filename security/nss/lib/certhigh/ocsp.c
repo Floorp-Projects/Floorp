@@ -39,7 +39,7 @@
  * Implementation of OCSP services, for both client and server.
  * (XXX, really, mostly just for client right now, but intended to do both.)
  *
- * $Id: ocsp.c,v 1.54 2008/07/08 21:34:32 alexei.volkov.bugs%sun.com Exp $
+ * $Id: ocsp.c,v 1.55 2008/10/06 23:37:55 julien.pierre.boogz%sun.com Exp $
  */
 
 #include "prerror.h"
@@ -205,14 +205,14 @@ static void
 ocsp_dumpStringWithTime(const char *str, int64 time)
 {
     PRExplodedTime timePrintable;
-    char timestr[100];
+    char timestr[256];
 
     if (!wantOcspTrace())
         return;
     PR_ExplodeTime(time, PR_GMTParameters, &timePrintable);
-    PR_FormatTime(timestr, 100, "%a %b %d %H:%M:%S %Y", 
-                  &timePrintable);
-    ocsp_Trace("OCSP %s %s\n", str, timestr);
+    if (PR_FormatTime(timestr, 256, "%a %b %d %H:%M:%S %Y", &timePrintable)) {
+        ocsp_Trace("OCSP %s %s\n", str, timestr);
+    }
 }
 
 static void
@@ -245,16 +245,18 @@ dumpCertificate(CERTCertificate *cert)
     {
         int64 timeBefore, timeAfter;
         PRExplodedTime beforePrintable, afterPrintable;
-        char beforestr[100], afterstr[100];
+        char beforestr[256], afterstr[256];
+        PRStatus rv1, rv2;
         DER_DecodeTimeChoice(&timeBefore, &cert->validity.notBefore);
         DER_DecodeTimeChoice(&timeAfter, &cert->validity.notAfter);
         PR_ExplodeTime(timeBefore, PR_GMTParameters, &beforePrintable);
         PR_ExplodeTime(timeAfter, PR_GMTParameters, &afterPrintable);
-        PR_FormatTime(beforestr, 100, "%a %b %d %H:%M:%S %Y", 
+        rv1 = PR_FormatTime(beforestr, 256, "%a %b %d %H:%M:%S %Y", 
                       &beforePrintable);
-        PR_FormatTime(afterstr, 100, "%a %b %d %H:%M:%S %Y", 
+        rv2 = PR_FormatTime(afterstr, 256, "%a %b %d %H:%M:%S %Y", 
                       &afterPrintable);
-        ocsp_Trace("OCSP ## VALIDITY:  %s to %s\n", beforestr, afterstr);
+        ocsp_Trace("OCSP ## VALIDITY:  %s to %s\n", rv1 ? beforestr : "",
+                   rv2 ? afterstr : "");
     }
     ocsp_Trace("OCSP ## ISSUER:  %s\n", cert->issuerName);
     printHexString("OCSP ## SERIAL NUMBER:", &cert->serialNumber);

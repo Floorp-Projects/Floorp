@@ -5,6 +5,7 @@
   <script type="text/javascript" src="/MochiKit/MochiKit.js"></script>
   <script type="text/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>  
   <script type="text/javascript" src="pwmgr_common.js"></script>
+  <script type="text/javascript" src="notification_common.js"></script>
   <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
 </head>
 <body>
@@ -19,6 +20,10 @@ Login Manager test: notifications
 <script class="testbody" type="text/javascript">
 
 /** Test for Login Manager: notifications. **/
+
+// Set testpath to the directory where we live. Used to load tests from
+// alternate Mochitest servers (different hostnames, same content).
+var testpath = document.location.pathname + "/../";
 
 var subtests = [
                    "subtst_notifications_1.html", // 1
@@ -36,78 +41,15 @@ var subtests = [
                    "subtst_notifications_1.html", // 13
                    "subtst_notifications_6.html", // 14
                    "subtst_notifications_1.html", // 15
-                   "subtst_notifications_6.html"
+                   "subtst_notifications_6.html", // 16
+                   "subtst_notifications_8.html", // 17
+                   "subtst_notifications_8.html", // 18
+                   "subtst_notifications_9.html", // 19
+                   "subtst_notifications_10.html",  // 20
+                   "http://test1.example.org:80" + testpath + "subtst_notifications_1.html", // 21
+                   "http://test1.example.org:80" + testpath + "subtst_notifications_7.html", // 22
+                   "http://test1.example.org:80" + testpath + "subtst_notifications_6.html", // 23
                ];
-
-/*
- *  getNotificationBox
- *
- * Fetches the notification box for the specified window.
- */
-function getNotificationBox(aWindow) {
-/*
-    var chromeWin = aWindow
-                        .QueryInterface(Ci.nsIInterfaceRequestor)
-                        .getInterface(Ci.nsIWebNavigation)
-                        .QueryInterface(Ci.nsIDocShellTreeItem)
-                        .rootTreeItem
-                        .QueryInterface(Ci.nsIInterfaceRequestor)
-                        .getInterface(Ci.nsIDOMWindow);
-    // Don't need .wrappedJSObject here, unlike when chrome does this.
-    var browserWin = chromeWin.browserDOMWindow;
-    var notifyBox = browserWin.getNotificationBox(aWindow);
-    return notifyBox;
-*/
-    // Find the <browser> which contains aWindow, by looking
-    // through all the open windows and all the <browsers> in each.
-    var wm = Cc["@mozilla.org/appshell/window-mediator;1"].
-             getService(Ci.nsIWindowMediator);
-    var enumerator = wm.getEnumerator("navigator:browser");
-    var tabbrowser = null;
-    var foundBrowser = null;
-
-    while (!foundBrowser && enumerator.hasMoreElements()) {
-        var win = enumerator.getNext();
-        tabbrowser = win.getBrowser(); 
-        foundBrowser = tabbrowser.getBrowserForDocument(aWindow.document);
-    }
-
-    // Return the notificationBox associated with the browser.
-    return tabbrowser.getNotificationBox(foundBrowser);
-}
-
-
-/*
- * getNotificationBar
- *
- */
-function getNotificationBar(aBox, aKind) {
-    ok(true, "Looking for " + aKind + " notification bar");
-    return aBox.getNotificationWithValue(aKind);
-}
-
-
-/*
- * clickNotificationButton
- *
- * Clicks the specified notification button.
- */
-function clickNotificationButton(aBar, aButtonName) {
-    // This is a bit of a hack. The notification doesn't have an API to
-    // trigger buttons, so we dive down into the implementation and twiddle
-    // the buttons directly.
-    var buttons = aBar.getElementsByTagName("button");
-    var clicked = false;
-    for (var i = 0; i < buttons.length; i++) {
-        if (buttons[i].label == aButtonName) {
-            buttons[i].click();
-            clicked = true;
-            break;
-        }
-    }
-
-    ok(clicked, "Clicked \"" + aButtonName + "\" button"); 
-}
 
 
 var ignoreLoad = false;
@@ -144,7 +86,7 @@ function handleLoad(aEvent) {
 
 // Remember, Never for This Site, Not Now
 function checkTest() {
-    var bar;
+    var bar, notificationText, expectedText;
 
     // The document generated from formsubmit.sjs contains the user/pass it
     // received inside <span id="blah">value</span>
@@ -322,6 +264,98 @@ function checkTest() {
         ok(bar, "got notification bar");
         clickNotificationButton(bar, "Not Now");
         pwmgr.removeLogin(login1B);
+
+        // Add login for the next tests
+        pwmgr.addLogin(login1);
+        break;
+
+      case 17:
+        // Check for change-password bar, u+p login on u+p form. (not changed)
+        is(gotUser, "notifyu1", "Checking submitted username");
+        is(gotPass, "pass2",    "Checking submitted password");
+        bar = getNotificationBar(notifyBox, "password-change");
+        ok(bar, "got notification bar");
+        clickNotificationButton(bar, "Don't Change");
+        break;
+
+      case 18:
+        // Check for change-password bar, u+p login on u+p form.
+        is(gotUser, "notifyu1", "Checking submitted username");
+        is(gotPass, "pass2",    "Checking submitted password");
+        bar = getNotificationBar(notifyBox, "password-change");
+        ok(bar, "got notification bar");
+        clickNotificationButton(bar, "Change");
+
+        // cleanup
+        login1.password = "pass2";
+        pwmgr.removeLogin(login1);
+        login1.password = "notifyp1";
+
+        // Add login for the next test
+        pwmgr.addLogin(login2);
+        break;
+
+      // ...can't change a u+p login on a p-only form...
+
+      case 19:
+        // Check for change-password bar, p-only login on u+p form.
+        // (needed a different subtest for this because the login created in
+        // test_0init was interfering)
+        is(gotUser, "",         "Checking submitted username");
+        is(gotPass, "pass2",    "Checking submitted password");
+        bar = getNotificationBar(notifyBox, "password-change");
+        ok(bar, "got notification bar");
+        clickNotificationButton(bar, "Change");
+        break;
+
+      case 20:
+        // Check for change-password bar, p-only login on p-only form.
+        is(gotUser, "null",     "Checking submitted username");
+        is(gotPass, "notifyp1", "Checking submitted password");
+        bar = getNotificationBar(notifyBox, "password-change");
+        ok(bar, "got notification bar");
+        clickNotificationButton(bar, "Change");
+
+        pwmgr.removeLogin(login2);
+        break;
+
+      case 21:
+        // Check text on a user+pass notification bar
+        is(gotUser, "notifyu1", "Checking submitted username");
+        is(gotPass, "notifyp1", "Checking submitted password");
+        bar = getNotificationBar(notifyBox, "password-save");
+        ok(bar, "got notification bar");
+        // Check the text, which comes from the localized saveLoginText string.
+        notificationText = bar.getAttribute("label");
+        expectedText = /^Do you want .+ to remember the password for \"notifyu1\" on example.org\?$/;
+        ok(expectedText.test(notificationText), "Checking text: " + notificationText);
+        clickNotificationButton(bar, "Not Now");
+        break;
+
+      case 22:
+        // Check text on a user+pass notification bar, username is really long
+        is(gotUser, "nowisthetimeforallgoodmentocometotheaidoftheircountry", "Checking submitted username");
+        is(gotPass, "notifyp1", "Checking submitted password");
+        bar = getNotificationBar(notifyBox, "password-save");
+        ok(bar, "got notification bar");
+        // Check the text, which comes from the localized saveLoginText string.
+        notificationText = bar.getAttribute("label");
+        expectedText = /^Do you want .+ to remember the password for \"nowisthetimeforallgoodmentocom[^e]\" on example.org\?$/;
+        ok(expectedText.test(notificationText), "Checking text: " + notificationText);
+        clickNotificationButton(bar, "Not Now");
+        break;
+
+      case 23:
+        // Check text on a pass-only notification bar
+        is(gotUser, "null",     "Checking submitted username");
+        is(gotPass, "notifyp1", "Checking submitted password");
+        bar = getNotificationBar(notifyBox, "password-save");
+        ok(bar, "got notification bar");
+        // Check the text, which comes from the localized saveLoginTextNoUser string.
+        notificationText = bar.getAttribute("label");
+        expectedText = /^Do you want .+ to remember this password on example.org\?$/;
+        ok(expectedText.test(notificationText), "Checking text: " + notificationText);
+        clickNotificationButton(bar, "Not Now");
         break;
 
       default:

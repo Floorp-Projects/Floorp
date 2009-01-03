@@ -129,6 +129,8 @@ PlacesController.prototype = {
     case "cmd_cut":
     case "cmd_delete":
       return this._hasRemovableSelection(false);
+    case "placesCmd_deleteDataHost":
+      return this._hasRemovableSelection(false);
     case "placesCmd_moveBookmarks":
       return this._hasRemovableSelection(true);
     case "cmd_copy":
@@ -230,6 +232,12 @@ PlacesController.prototype = {
       break;
     case "cmd_delete":
       this.remove("Remove Selection");
+      break;
+    case "placesCmd_deleteDataHost":
+      let pb = Cc["@mozilla.org/privatebrowsing;1"].
+               getService(Ci.nsIPrivateBrowsingService);
+      let uri = PlacesUtils._uri(this._view.selectedNode.uri);
+      pb.removeDataFromDomain(uri.host);
       break;
     case "cmd_selectAll":
       this.selectAll();
@@ -879,11 +887,22 @@ PlacesController.prototype = {
       if (PlacesUtils.nodeIsFolder(node))
         removedFolders.push(node);
       else if (PlacesUtils.nodeIsTagQuery(node.parent)) {
-        var queries = asQuery(node.parent).getQueries({});
-        var folders = queries[0].getFolders({});
+        var tagItemId = PlacesUtils.getConcreteItemId(node.parent);
         var uri = PlacesUtils._uri(node.uri);
-        var tagItemId = folders[0];
         transactions.push(PlacesUIUtils.ptm.untagURI(uri, [tagItemId]));
+        continue;
+      }
+      else if (PlacesUtils.nodeIsTagQuery(node) && node.parent &&
+               PlacesUtils.nodeIsQuery(node.parent) &&
+               asQuery(node.parent).queryOptions.resultType ==
+                 Ci.nsINavHistoryQueryOptions.RESULTS_AS_TAG_QUERY) {
+        // Untag all URIs tagged with this tag only if the tag container is
+        // child of the "Tags" query in the library, in all other places we
+        // must only remove the query node.
+        var tag = node.title;
+        var URIs = PlacesUtils.tagging.getURIsForTag(tag);
+        for (var j = 0; j < URIs.length; j++)
+          transactions.push(PlacesUIUtils.ptm.untagURI(URIs[j], [tag]));
         continue;
       }
       else if (PlacesUtils.nodeIsQuery(node.parent) &&
@@ -971,8 +990,9 @@ PlacesController.prototype = {
     if (URIs.length > REMOVE_PAGES_MAX_SINGLEREMOVES) {
       // do removal in chunks to avoid passing a too big array to removePages
       for (var i = 0; i < URIs.length; i += REMOVE_PAGES_CHUNKLEN) {
-        var URIslice = URIs.slice(i, Math.max(i + REMOVE_PAGES_CHUNKLEN, URIs.length));
-        // set DoBatchNotify only on the last chunk
+        var URIslice = URIs.slice(i, i + REMOVE_PAGES_CHUNKLEN);
+        // set DoBatchNotify (third param) only on the last chunk, so we update
+        // the treeView when we are done.
         bhist.removePages(URIslice, URIslice.length,
                           (i + REMOVE_PAGES_CHUNKLEN) >= URIs.length);
       }

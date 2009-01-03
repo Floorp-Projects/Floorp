@@ -25,6 +25,11 @@
         0
       </field>
       
+      <!-- Set by customizeToolbar.js -->
+      <field name="customizing">
+        false
+      </field>
+
       <constructor>
         <![CDATA[
           // Look to see if there is a toolbarset.
@@ -156,22 +161,13 @@
         
         <setter>
           <![CDATA[
+            var palette = this.parentNode.palette;
             // Remove all items before the first permanent child and after the last permanent child.
-            while (this.lastChild) {
-              if (this.lastChild == this.lastPermanentChild ||
-                  (this.lastChild.localName == "toolbarpaletteitem" &&
-                  this.lastChild.firstChild == this.lastPermanentChild))
-                break;
-              this.removeChild(this.lastChild);
-            }
+            while (this.lastChild != this.lastPermanentChild)
+              palette.appendChild(this.lastChild);
 
-            while (this.firstChild) {
-              if (this.firstChild == this.firstPermanentChild ||
-                  (this.firstChild.localName == "toolbarpaletteitem" &&
-                  this.firstChild.firstChild == this.firstPermanentChild))
-                break;
-              this.removeChild(this.firstChild);
-            }
+            while (this.firstChild != this.firstPermanentChild)
+              palette.appendChild(this.firstChild);
 
             var firstChildID = this.firstPermanentChild ? this.firstPermanentChild.id : "";
             var lastChildID = this.lastPermanentChild ? this.lastPermanentChild.id : "";
@@ -179,14 +175,12 @@
             if (val && val != "__empty") {
               var itemIds = val.split(",");
               var before = true;
-              this._trackInserted = {};
               for (var i = 0; i < itemIds.length; i++) {
                 if (itemIds[i] == firstChildID || itemIds[i] == lastChildID)
                   before = false;
                 else
                   this.insertItem(itemIds[i], null, null, before);
               }
-              delete this._trackInserted;
             }
 
             return val;
@@ -225,26 +219,17 @@
               newItem.id = "spacer" + uniqueId;
               newItem.className = "chromeclass-toolbar-additional";
             } else if (this.parentNode.localName == "toolbox") {
-              if (this._trackInserted) {
-                // Protect against creating an item with the given id more than once.
-                if (aId in this._trackInserted)
+              // Attempt to locate an item with a matching id within document.
+              newItem = document.getElementById(aId);
+              if (!newItem || newItem.parentNode.parentNode != this.parentNode) {
+                // Attempt to locate an item with a matching id within palette.
+                // The palette does not live in the document by default.
+                newItem = this.parentNode.palette
+                              .getElementsByAttribute("id", aId).item(0);
+                if (!newItem || newItem.parentNode != this.parentNode.palette)
                   return false;
-                this._trackInserted[aId] = null;
-              }
-              // Attempt to locate an item with a matching id within palette.
-              var paletteItem = this.parentNode.palette.firstChild;
-              while (paletteItem) {
-                var paletteId = paletteItem.id;
-                if (paletteId == aId) {
-                  newItem = paletteItem.cloneNode(true);
-                  break;
-                }
-                paletteItem = paletteItem.nextSibling;
               }
             }
-            
-            if (!newItem)
-              return false;
 
             var insertItem = newItem;
             
@@ -266,6 +251,21 @@
           ]]>
         </body>
       </method>      
+    </implementation>
+  </binding>
+
+  <binding id="toolbar-drag"
+           extends="chrome://global/content/bindings/toolbar.xml#toolbar">
+    <implementation>
+      <constructor>
+        try {
+          Components.utils.import("resource://gre/modules/WindowDraggingUtils.jsm");
+          let draggableThis = new WindowDraggingElement(this, window);
+          draggableThis.mouseDownCheck = function(e) {
+            return !this.parentNode.customizing; // Don't move while customizing.
+          }
+        } catch (e) {}
+      </constructor>
     </implementation>
   </binding>
 

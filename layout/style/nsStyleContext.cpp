@@ -235,7 +235,7 @@ const void* nsStyleContext::GetStyleData(nsStyleStructID aSID)
 #include "nsStyleStructList.h"
 #undef STYLE_STRUCT
 
-inline const void* nsStyleContext::PeekStyleData(nsStyleStructID aSID)
+const void* nsStyleContext::PeekStyleData(nsStyleStructID aSID)
 {
   const void* cachedData = mCachedStyleData.GetStyleData(aSID); 
   if (cachedData)
@@ -607,7 +607,7 @@ void nsStyleContext::DumpRegressionData(nsPresContext* aPresContext, FILE* out, 
           NS_ConvertUTF16toUTF8(font->mFont.name).get(),
           font->mFont.size,
           font->mSize,
-          font->mFlags);
+          font->mGenericID);
 
   // COLOR
   IndentBy(out,aIndent);
@@ -805,9 +805,10 @@ void nsStyleContext::DumpRegressionData(nsPresContext* aPresContext, FILE* out, 
   // UIReset
   IndentBy(out,aIndent);
   const nsStyleUIReset* uiReset = GetStyleUIReset();
-  fprintf(out, "<uireset data=\"%d %d\" />\n",
+  fprintf(out, "<uireset data=\"%d %d %d\" />\n",
     (int)uiReset->mUserSelect,
-    (int)uiReset->mIMEMode);
+    (int)uiReset->mIMEMode,
+    (int)uiReset->mWindowShadow);
 
   // Column
   IndentBy(out,aIndent);

@@ -41,25 +41,63 @@ topsrcdir        = @top_srcdir@
 srcdir           = @srcdir@
 VPATH            = @srcdir@
 
-relativesrcdir   = dom/src/threads/tests
+relativesrcdir   = dom/src/threads/test
 
 include $(DEPTH)/config/autoconf.mk
 include $(topsrcdir)/config/rules.mk
 
 _TEST_FILES = \
+  test_errorPropagation.html \
+  errorPropagation_worker1.js \
+  errorPropagation_worker2.js \
+  test_importScripts.html \
   importScripts_worker.js \
   importScripts_worker_imported1.js \
   importScripts_worker_imported2.js \
   importScripts_worker_imported3.js \
   importScripts_worker_imported4.js \
-  test_importScripts.html \
-  test_simpleThread.html \
-  test_threadErrors.html \
-  test_threadTimeouts.html \
+  test_json.html \
+  json_worker.js \
   test_longThread.html \
+  longThread_worker.js \
+  test_navigator.html \
+  navigator_worker.js \
+  test_recursion.html \
+  recursion_worker.js \
+  test_regExpStatics.html \
+  regExpStatics_worker.js \
+  test_relativeLoad.html \
+  relativeLoad_worker.js \
+  relativeLoad_worker2.js \
+  relativeLoad_import.js \
+  test_simpleThread.html \
+  simpleThread_worker.js \
+  test_terminate.html \
+  terminate_worker.js \
+  test_threadErrors.html \
+  threadErrors_worker1.js \
+  threadErrors_worker2.js \
+  threadErrors_worker3.js \
+  threadErrors_worker4.js \
+  test_threadTimeouts.html \
+  threadTimeouts_worker.js \
   test_xhr.html \
+  xhr_worker.js \
+  test_xhrAbort.html \
+  xhrAbort_worker.js \
   testXHR.txt \
+  test_fibonacci.html \
+  fibonacci_worker.js \
+  $(NULL)
+
+_SUBDIR_TEST_FILES = \
+  relativeLoad_sub_worker.js \
+  relativeLoad_sub_worker2.js \
+  relativeLoad_sub_import.js \
   $(NULL)
 
 libs:: $(_TEST_FILES)
 	$(INSTALL) $(foreach f,$^,"$f") $(DEPTH)/_tests/testing/mochitest/tests/$(relativesrcdir)
+
+libs:: $(_SUBDIR_TEST_FILES)
+	$(INSTALL) $(foreach f,$^,"$f") $(DEPTH)/_tests/testing/mochitest/tests/$(relativesrcdir)/subdir

@@ -13,7 +13,7 @@
  * for the specific language governing rights and limitations under the
  * License.
  *
- * The Original Code is the MozJSHTTP server.
+ * The Original Code is the httpd.js server.
  *
  * The Initial Developer of the Original Code is
  * Mozilla Corporation.
@@ -43,7 +43,7 @@
 /*
  * An implementation of an HTTP server both as a loadable script and as an XPCOM
  * component.  See the accompanying README file for user documentation on
- * MozJSHTTP.
+ * httpd.js.
  */
 
 const Cc = Components.classes;
@@ -51,6 +51,8 @@ const Ci = Components.interfaces;
 const Cr = Components.results;
 const Cu = Components.utils;
 const CC = Components.Constructor;
+
+const PR_UINT32_MAX = Math.pow(2, 32) - 1;
 
 /** True if debugging output is enabled, false otherwise. */
 var DEBUG = false; // non-const *only* so tweakable in server tests
@@ -195,6 +197,9 @@ const ServerSocket = CC("@mozilla.org/network/server-socket;1",
 const BinaryInputStream = CC("@mozilla.org/binaryinputstream;1",
                              "nsIBinaryInputStream",
                              "setInputStream");
+const BinaryOutputStream = CC("@mozilla.org/binaryoutputstream;1",
+                             "nsIBinaryOutputStream",
+                             "setOutputStream");
 const ScriptableInputStream = CC("@mozilla.org/scriptableinputstream;1",
                                  "nsIScriptableInputStream",
                                  "init");
@@ -518,6 +523,22 @@ nsHttpServer.prototype =
   get identity()
   {
     return this._identity;
+  },
+
+  //
+  // see nsIHttpServer.getState
+  //
+  getState: function(k)
+  {
+    return this._handler._getState(k);
+  },
+
+  //
+  // see nsIHttpServer.setState
+  //
+  setState: function(k, v)
+  {
+    return this._handler._setState(k, v);
   },
 
   // NSISUPPORTS
@@ -951,26 +972,26 @@ function readBytes(inputStream, count)
 
 
 /** Request reader processing states; see RequestReader for details. */
-const READER_INITIAL    = 0;
-const READER_IN_HEADERS = 1;
-const READER_IN_BODY    = 2;
+const READER_IN_REQUEST_LINE = 0;
+const READER_IN_HEADERS      = 1;
+const READER_IN_BODY         = 2;
+const READER_FINISHED        = 3;
 
 
 /**
  * Reads incoming request data asynchronously, does any necessary preprocessing,
  * and forwards it to the request handler.  Processing occurs in three states:
  *
- *   READER_INITIAL             Haven't read the entire request line yet
+ *   READER_IN_REQUEST_LINE     Reading the request's status line
  *   READER_IN_HEADERS          Reading headers in the request
- *   READER_IN_BODY             Finished reading all request headers (when body
- *                              support's added, will be reading the body)
+ *   READER_IN_BODY             Reading the body of the request
+ *   READER_FINISHED            Entire request has been read and processed
  *
  * During the first two stages, initial metadata about the request is gathered
  * into a Request object.  Once the status line and headers have been processed,
- * we create a Response and hand it off to the ServerHandler to be given to the
- * appropriate request handler.
- *
- * XXX we should set up a stream to provide lazy access to the request body
+ * we start processing the body of the request into the Request.  Finally, when
+ * the entire body has been read, we create a Response and hand it off to the
+ * ServerHandler to be given to the appropriate request handler.
  *
  * @param connection : Connection
  *   the connection for the request being read
@@ -988,10 +1009,15 @@ function RequestReader(connection)
    */
   this._data = new LineData();
 
+  /**
+   * The amount of data remaining to be read from the body of this request.
+   * After all headers in the request have been read this is the value in the
+   * Content-Length header, but as the body is read its value decreases to zero.
+   */
   this._contentLength = 0;
 
   /** The current state of parsing the incoming request. */
-  this._state = READER_INITIAL;
+  this._state = READER_IN_REQUEST_LINE;
 
   /** Metadata constructed from the incoming request for the request handler. */
   this._metadata = new Request(connection.port);
@@ -1024,38 +1050,35 @@ RequestReader.prototype =
           gThreadManager.mainThread + ")");
     dumpn("*** this._state == " + this._state);
 
-    var count = input.available();
-
     // Handle cases where we get more data after a request error has been
     // discovered but *before* we can close the connection.
-    if (!this._data)
+    var data = this._data;
+    if (!data)
       return;
 
-    var moreAvailable = false;
-    var wasInBody = false;
-    
+    data.appendBytes(readBytes(input, input.available()));
+
     switch (this._state)
     {
-      case READER_INITIAL:
-        moreAvailable = this._processRequestLine(input, count);
-        break;
-
-      case READER_IN_HEADERS:
-        moreAvailable = this._processHeaders(input, count);
-        break;
-
-      case READER_IN_BODY:
-        wasInBody = true;
-        moreAvailable = this._processBody(input, count);
-        break;
       default:
         NS_ASSERT(false);
+        break;
+
+      case READER_IN_REQUEST_LINE:
+        if (!this._processRequestLine())
+          break;
+        /* fall through */
+
+      case READER_IN_HEADERS:
+        if (!this._processHeaders())
+          break;
+        /* fall through */
+
+      case READER_IN_BODY:
+        this._processBody();
     }
 
-    if (!wasInBody && this._state == READER_IN_BODY && moreAvailable)
-      moreAvailable = this._processBody(input, count);
-
-    if (moreAvailable)
+    if (this._state != READER_FINISHED)
       input.asyncWait(this, 0, 0, gThreadManager.currentThread);
   },
 
@@ -1075,26 +1098,19 @@ RequestReader.prototype =
   // PRIVATE API
 
   /**
-   * Reads count bytes from input and processes unprocessed, downloaded data as
-   * a request line.
+   * Processes unprocessed, downloaded data as a request line.
    *
-   * @param input : nsIInputStream
-   *   stream from which count bytes of data must be read
-   * @param count : PRUint32
-   *   the number of bytes of data which must be read from input
    * @returns boolean
-   *   true if more data must be read from the request, false otherwise
+   *   true iff the request line has been fully processed
    */
-  _processRequestLine: function(input, count)
+  _processRequestLine: function()
   {
-    NS_ASSERT(this._state == READER_INITIAL);
-
-    var data = this._data;
-    data.appendBytes(readBytes(input, count));
+    NS_ASSERT(this._state == READER_IN_REQUEST_LINE);
 
 
     // servers SHOULD ignore any empty line(s) received where a Request-Line
     // is expected (section 4.1)
+    var data = this._data;
     var line = {};
     var readSuccess;
     while ((readSuccess = data.readLine(line)) && line.value == "")
@@ -1108,18 +1124,8 @@ RequestReader.prototype =
     try
     {
       this._parseRequestLine(line.value);
-
-      // do we have more header data to read?
-      if (!this._parseHeaders())
-        return true;
-
-      dumpn("_processRequestLine, Content-length="+this._contentLength);
-      if (this._contentLength > 0)
-        return true;
-
-      // headers complete, do a data check and then forward to the handler
-      this._validateRequest();
-      return this._handleResponse();
+      this._state = READER_IN_HEADERS;
+      return true;
     }
     catch (e)
     {
@@ -1129,17 +1135,13 @@ RequestReader.prototype =
   },
 
   /**
-   * Reads data from input and processes it, assuming it is either at the
-   * beginning or in the middle of processing request headers.
+   * Processes stored data, assuming it is either at the beginning or in
+   * the middle of processing request headers.
    *
-   * @param input : nsIInputStream
-   *   stream from which count bytes of data must be read
-   * @param count : PRUint32
-   *   the number of bytes of data which must be read from input
    * @returns boolean
-   *   true if more data must be read from the request, false otherwise
+   *   true iff header data in the request has been fully processed
    */
-  _processHeaders: function(input, count)
+  _processHeaders: function()
   {
     NS_ASSERT(this._state == READER_IN_HEADERS);
 
@@ -1147,21 +1149,24 @@ RequestReader.prototype =
     //
     // - need to support RFC 2047-encoded non-US-ASCII characters
 
-    this._data.appendBytes(readBytes(input, count));
-
     try
     {
-      // do we have all the headers?
-      if (!this._parseHeaders())
-        return true;
+      var done = this._parseHeaders();
+      if (done)
+      {
+        var request = this._metadata;
 
-      dumpn("_processHeaders, Content-length="+this._contentLength);
-      if (this._contentLength > 0)
-        return true;
+        // XXX this is wrong for requests with transfer-encodings applied to
+        //     them, particularly chunked (which by its nature can have no
+        //     meaningful Content-Length header)!
+        this._contentLength = request.hasHeader("Content-Length")
+                            ? parseInt(request.getHeader("Content-Length"), 10)
+                            : 0;
+        dumpn("_processHeaders, Content-length=" + this._contentLength);
 
-      // we have all the headers, continue with the body
-      this._validateRequest();
-      return this._handleResponse();
+        this._state = READER_IN_BODY;
+      }
+      return done;
     }
     catch (e)
     {
@@ -1170,34 +1175,43 @@ RequestReader.prototype =
     }
   },
 
-  _processBody: function(input, count)
+  /**
+   * Processes stored data, assuming it is either at the beginning or in
+   * the middle of processing the request body.
+   *
+   * @returns boolean
+   *   true iff the request body has been fully processed
+   */
+  _processBody: function()
   {
     NS_ASSERT(this._state == READER_IN_BODY);
+
+    // XXX handle chunked transfer-coding request bodies!
 
     try
     {
       if (this._contentLength > 0)
       {
-        var bodyData = this._data.purge();
-        if (!bodyData || bodyData.length == 0)
-        {
-          if (count > this._contentLength)
-            count = this._contentLength;
+        var data = this._data.purge();
+        var count = Math.min(data.length, this._contentLength);
+        dumpn("*** loading data=" + data + " len=" + data.length +
+              " excess=" + (data.length - count));
 
-          bodyData = readBytes(input, count);
-        }
-        dumpn("*** loading data="+bodyData+" len="+bodyData.length);
-
-        this._metadata._body.appendBytes(bodyData);
-        this._contentLength -= bodyData.length;
+        var bos = new BinaryOutputStream(this._metadata._bodyOutputStream);
+        bos.writeByteArray(data, count);
+        this._contentLength -= count;
       }
 
-      dumpn("*** remainig body data len="+this._contentLength);
-      if (this._contentLength > 0)
+      dumpn("*** remaining body data len=" + this._contentLength);
+      if (this._contentLength == 0)
+      {
+        this._validateRequest();
+        this._state = READER_FINISHED;
+        this._handleResponse();
         return true;
-
-      this._validateRequest();
-      return this._handleResponse();
+      }
+      
+      return false;
     }
     catch (e)
     {
@@ -1306,6 +1320,8 @@ RequestReader.prototype =
    */
   _handleError: function(e)
   {
+    this._state = READER_FINISHED;
+
     var server = this._connection.server;
     if (e instanceof HttpError)
     {
@@ -1330,21 +1346,16 @@ RequestReader.prototype =
    *
    * This method is called once per request, after the request line and all
    * headers and the body, if any, have been received.
-   *
-   * @returns boolean
-   *   true if more data must be read, false otherwise
    */
   _handleResponse: function()
   {
-    NS_ASSERT(this._state == READER_IN_BODY);
+    NS_ASSERT(this._state == READER_FINISHED);
 
     // We don't need the line-based data any more, so make attempted reuse an
     // error.
     this._data = null;
 
     this._connection.process(this._metadata);
-
-    return false;
   },
 
 
@@ -1358,7 +1369,7 @@ RequestReader.prototype =
    */
   _parseRequestLine: function(line)
   {
-    NS_ASSERT(this._state == READER_INITIAL);
+    NS_ASSERT(this._state == READER_IN_REQUEST_LINE);
 
     dumpn("*** _parseRequestLine('" + line + "')");
 
@@ -1449,9 +1460,6 @@ RequestReader.prototype =
     metadata._scheme = scheme;
     metadata._host = host;
     metadata._port = port;
-
-    // our work here is finished
-    this._state = READER_IN_HEADERS;
   },
 
   /**
@@ -1517,12 +1525,6 @@ RequestReader.prototype =
 
         // either way, we're done processing headers
         this._state = READER_IN_BODY;
-        try
-        {
-          this._contentLength = parseInt(headers.getHeader("Content-Length"));
-          dumpn("Content-Length="+this._contentLength);
-        }
-        catch (e) {}
         return true;
       }
       else if (firstChar == " " || firstChar == "\t")
@@ -1652,16 +1654,15 @@ LineData.prototype =
   },
 
   /**
-   * Retrieve any bytes we may have overread from the request's postdata.  After
-   * this method is called, this must not be used in any way.
+   * Removes the bytes currently within this and returns them in an array.
    *
    * @returns Array
-   *   the bytes read past the CRLFCRLF at the end of request headers
+   *   the bytes within this when this method is called
    */
   purge: function()
   {
     var data = this._data;
-    this._data = null;
+    this._data = [];
     return data;
   }
 };
@@ -1820,11 +1821,11 @@ function maybeAddHeaders(file, metadata, response)
   var fis = new FileInputStream(headerFile, PR_RDONLY, 0444,
                                 Ci.nsIFileInputStream.CLOSE_ON_EOF);
 
-  var lis = new ConverterInputStream(fis, "UTF-8", 1024, 0x0);
-  lis.QueryInterface(Ci.nsIUnicharLineInputStream);
-
   try
   {
+    var lis = new ConverterInputStream(fis, "UTF-8", 1024, 0x0);
+    lis.QueryInterface(Ci.nsIUnicharLineInputStream);
+
     var line = {value: ""};
     var more = lis.readLine(line);
 
@@ -1875,6 +1876,10 @@ function maybeAddHeaders(file, metadata, response)
   {
     dumpn("WARNING: error in headers for " + metadata.path + ": " + e);
     throw HTTP_500;
+  }
+  finally
+  {
+    fis.close();
   }
 }
 
@@ -1949,6 +1954,11 @@ function ServerHandler(server)
    * when no index file is present.
    */
   this._indexHandler = defaultIndexHandler;
+
+  /**
+   * State storage for the server.
+   */
+  this._state = {};
 }
 ServerHandler.prototype =
 {
@@ -1979,8 +1989,13 @@ ServerHandler.prototype =
         if (metadata.method == "PUT")
         {
           // remotely set path override
-          var data = metadata.body.purge();
-          data = String.fromCharCode.apply(null, data.splice(0, data.length + 2));
+          var avail;
+          var bytes = [];
+          var body = new BinaryInputStream(metadata.bodyInputStream);
+          while ((avail = body.available()) > 0)
+            Array.prototype.push.apply(bytes, body.readByteArray(avail));
+
+          var data = String.fromCharCode.apply(null, bytes);
           var contentType;
           try
           {
@@ -1991,13 +2006,13 @@ ServerHandler.prototype =
             contentType = "application/octet-stream";
           }
 
-          dumpn("PUT data \'"+data+"\' for "+path);
+          dumpn("PUT data \'" + data + "\' for " + path);
           this._putDataOverrides[path] =
             function(ametadata, aresponse)
             {
-              aresponse.setStatusLine(metadata.httpVersion, 200, "OK");
+              aresponse.setStatusLine(ametadata.httpVersion, 200, "OK");
               aresponse.setHeader("Content-Type", contentType, false);
-              dumpn("*** writting PUT data=\'"+data+"\'");
+              dumpn("*** writing PUT data=\'" + data + "\'");
               aresponse.bodyOutputStream.write(data, data.length);
             };
 
@@ -2008,12 +2023,12 @@ ServerHandler.prototype =
           if (path in this._putDataOverrides)
           {
             delete this._putDataOverrides[path];
-            dumpn("clearing PUT data for "+path);
+            dumpn("clearing PUT data for " + path);
             response.setStatusLine(metadata.httpVersion, 200, "OK");
           }
           else
           {
-            dumpn("no PUT data for "+path+" to delete");
+            dumpn("no PUT data for " + path + " to delete");
             response.setStatusLine(metadata.httpVersion, 204, "No Content");
           }
         }
@@ -2021,14 +2036,14 @@ ServerHandler.prototype =
         {
           // PUT data overrides are priviledged before all
           // other overrides.
-          dumpn("calling PUT data override for "+path);
+          dumpn("calling PUT data override for " + path);
           this._putDataOverrides[path](metadata, response);
         }
         else if (path in this._overridePaths)
         {
           // explicit paths first, then files based on existing directory mappings,
           // then (if the file doesn't exist) built-in server default paths
-          dumpn("calling override for "+path);
+          dumpn("calling override for " + path);
           this._overridePaths[path](metadata, response);
         }
         else
@@ -2269,9 +2284,61 @@ ServerHandler.prototype =
     if (!file.exists())
       throw HTTP_404;
 
+    var start, end;
+    if (metadata._httpVersion.atLeast(nsHttpVersion.HTTP_1_1) &&
+        metadata.hasHeader("Range"))
+    {
+      var rangeMatch = metadata.getHeader("Range").match(/^bytes=(\d+)?-(\d+)?$/);
+      if (!rangeMatch)
+        throw HTTP_400;
+
+      if (rangeMatch[1] !== undefined)
+        start = parseInt(rangeMatch[1], 10);
+
+      if (rangeMatch[2] !== undefined)
+        end = parseInt(rangeMatch[2], 10);
+
+      if (start === undefined && end === undefined)
+        throw HTTP_400;
+
+      // No start given, so the end is really the count of bytes from the
+      // end of the file.
+      if (start === undefined)
+      {
+        start = Math.max(0, file.fileSize - end);
+        end   = file.fileSize - 1;
+      }
+
+      // start and end are inclusive
+      if (end === undefined || end >= file.fileSize)
+        end = file.fileSize - 1;
+
+      if (start !== undefined && start >= file.fileSize)
+        throw HTTP_416;
+
+      if (end < start)
+      {
+        response.setStatusLine(metadata.httpVersion, 200, "OK");
+        start = 0;
+        end = file.fileSize - 1;
+      }
+      else
+      {
+        response.setStatusLine(metadata.httpVersion, 206, "Partial Content");
+        var contentRange = "bytes " + start + "-" + end + "/" + file.fileSize;
+        response.setHeader("Content-Range", contentRange);
+      }
+    }
+    else
+    {
+      start = 0;
+      end = file.fileSize - 1;
+    }
+
     // finally...
-    dumpn("*** handling '" + path + "' as mapping to " + file.path);
-    this._writeFileResponse(metadata, file, response);
+    dumpn("*** handling '" + path + "' as mapping to " + file.path + " from " +
+          start + " to " + end + " inclusive");
+    this._writeFileResponse(metadata, file, response, start, end - start + 1);
   },
 
   /**
@@ -2284,28 +2351,63 @@ ServerHandler.prototype =
    *   the file which is to be sent in the response
    * @param response : Response
    *   the response to which the file should be written
+   * @param offset: uint
+   *   the byte offset to skip to when writing
+   * @param count: uint
+   *   the number of bytes to write
    */
-  _writeFileResponse: function(metadata, file, response)
+  _writeFileResponse: function(metadata, file, response, offset, count)
   {
     const PR_RDONLY = 0x01;
 
     var type = this._getTypeFromFile(file);
     if (type == SJS_TYPE)
     {
+      var fis = new FileInputStream(file, PR_RDONLY, 0444,
+                                    Ci.nsIFileInputStream.CLOSE_ON_EOF);
+
       try
       {
-        var fis = new FileInputStream(file, PR_RDONLY, 0444,
-                                      Ci.nsIFileInputStream.CLOSE_ON_EOF);
         var sis = new ScriptableInputStream(fis);
         var s = Cu.Sandbox(gGlobalObject);
         s.importFunction(dump, "dump");
-        Cu.evalInSandbox(sis.read(file.fileSize), s);
-        s.handleRequest(metadata, response);
+
+        // Define a basic key-value state-preservation API across requests, with
+        // keys initially corresponding to the empty string.
+        var self = this;
+        s.importFunction(function getState(k) { return self._getState(k); });
+        s.importFunction(function setState(k, v) { self._setState(k, v); });
+
+        try
+        {
+          // Alas, the line number in errors dumped to console when calling the
+          // request handler is simply an offset from where we load the SJS file.
+          // Work around this in a reasonably non-fragile way by dynamically
+          // getting the line number where we evaluate the SJS file.  Don't
+          // separate these two lines!
+          var line = new Error().lineNumber;
+          Cu.evalInSandbox(sis.read(file.fileSize), s);
+        }
+        catch (e)
+        {
+          dumpn("*** syntax error in SJS at " + file.path + ": " + e);
+          throw HTTP_500;
+        }
+
+        try
+        {
+          s.handleRequest(metadata, response);
+        }
+        catch (e)
+        {
+          dumpn("*** error running SJS at " + file.path + ": " +
+                e + " on line " + (e.lineNumber - line));
+          throw HTTP_500;
+        }
       }
-      catch (e)
+      finally
       {
-        dump("*** error running SJS: " + e + " on line " + (e.lineNumber-2192) + "\n");
-        throw HTTP_500;
+        fis.close();
       }
     }
     else
@@ -2322,11 +2424,64 @@ ServerHandler.prototype =
   
       var fis = new FileInputStream(file, PR_RDONLY, 0444,
                                     Ci.nsIFileInputStream.CLOSE_ON_EOF);
-      response.bodyOutputStream.writeFrom(fis, file.fileSize);
-      fis.close();
+
+      try
+      {
+        offset = offset || 0;
+        count  = count || file.fileSize;
+  
+        NS_ASSERT(offset == 0 || offset < file.fileSize, "bad offset");
+        NS_ASSERT(count >= 0, "bad count");
+  
+        if (offset != 0)
+        {
+          // Read and discard data up to offset so the data sent to
+          // the client matches the requested range request.
+          var sis = new ScriptableInputStream(fis);
+          sis.read(offset);
+        }
+        response.bodyOutputStream.writeFrom(fis, count);
+      }
+      finally
+      {
+        fis.close();
+      }
       
       maybeAddHeaders(file, metadata, response);
     }
+  },
+
+  /**
+   * Get the value corresponding to a given key for SJS state preservation
+   * across requests.
+   *
+   * @param k : string
+   *   the key whose corresponding value is to be returned
+   * @returns string
+   *   the corresponding value, which is initially the empty string
+   */
+  _getState: function(k)
+  {
+    NS_ASSERT(typeof k == "string");
+    var state = this._state;
+    if (k in state)
+      return state[k];
+    return state[k] = "";
+  },
+
+  /**
+   * Set the value corresponding to a given key for SJS state preservation
+   * across requests.
+   *
+   * @param k : string
+   *   the key whose corresponding value is to be set
+   * @param v : string
+   *   the value to be set
+   */
+  _setState: function(k, v)
+  {
+    NS_ASSERT(typeof v == "string");
+    this._state[k] = String(v);
   },
 
   /**
@@ -2794,6 +2949,25 @@ ServerHandler.prototype =
                   </html>";
       response.bodyOutputStream.write(body, body.length);
     },
+    416: function(metadata, response)
+    {
+      response.setStatusLine(metadata.httpVersion,
+                            416,
+                            "Requested Range Not Satisfiable");
+      response.setHeader("Content-Type", "text/html", false);
+
+      var body = "<html>\
+                   <head>\
+                    <title>416 Requested Range Not Satisfiable</title></head>\
+                    <body>\
+                     <h1>416 Requested Range Not Satisfiable</h1>\
+                     <p>The byte range was not valid for the\
+                        requested resource.\
+                     </p>\
+                    </body>\
+                  </html>";
+      response.bodyOutputStream.write(body, body.length);
+    },
     500: function(metadata, response)
     {
       response.setStatusLine(metadata.httpVersion,
@@ -2853,10 +3027,10 @@ ServerHandler.prototype =
       response.setHeader("Content-Type", "text/html", false);
 
       var body = "<html>\
-                    <head><title>MozJSHTTP</title></head>\
+                    <head><title>httpd.js</title></head>\
                     <body>\
-                      <h1>MozJSHTTP</h1>\
-                      <p>If you're seeing this page, MozJSHTTP is up and\
+                      <h1>httpd.js</h1>\
+                      <p>If you're seeing this page, httpd.js is up and\
                         serving requests!  Now set a base path and serve some\
                         files!</p>\
                     </body>\
@@ -3010,7 +3184,6 @@ Response.prototype =
 
     if (!this._bodyOutputStream && !this._outputProcessed)
     {
-      const PR_UINT32_MAX = Math.pow(2, 32) - 1;
       var pipe = new Pipe(false, false, 0, PR_UINT32_MAX, null);
       this._bodyOutputStream = pipe.outputStream;
       this._bodyInputStream = pipe.inputStream;
@@ -3595,8 +3768,13 @@ function Request(port)
   /** Port number over which the request was received. */
   this._port = port;
 
-  /** Body data of the request */
-  this._body = new LineData();
+  var bodyPipe = new Pipe(false, false, 0, PR_UINT32_MAX, null);
+
+  /** Stream from which data in this request's body may be read. */
+  this._bodyInputStream = bodyPipe.inputStream;
+
+  /** Stream to which data in this request's body is written. */
+  this._bodyOutputStream = bodyPipe.outputStream;
 
   /**
    * The headers in this request.
@@ -3708,6 +3886,14 @@ Request.prototype =
   },
 
   //
+  // see nsIHttpRequestMetadata.headers
+  //
+  get bodyInputStream()
+  {
+    return this._bodyInputStream;
+  },
+
+  //
   // see nsIPropertyBag.getProperty
   //
   getProperty: function(name) 
@@ -3721,11 +3907,6 @@ Request.prototype =
   {
     if (!this._bag)
       this._bag = new WritablePropertyBag();
-  },
-
-  get body()
-  {
-    return this._body;
   }
 };
 
@@ -3817,7 +3998,7 @@ const module =
     {
       CID:         Components.ID("{54ef6f81-30af-4b1d-ac55-8ba811293e41}"),
       contractID:  "@mozilla.org/server/jshttp;1",
-      className:   "MozJSHTTP server",
+      className:   "httpd.js server",
       factory:     makeFactory(nsHttpServer)
     }
   }

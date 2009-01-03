@@ -163,6 +163,11 @@ var tests = [function() { ensure_tag_results([uri1, uri2, uri3], "foo"); },
  * Test bug #408221
  */
 function run_test() {
+  // always search in history + bookmarks, no matter what the default is
+  var prefs = Cc["@mozilla.org/preferences-service;1"].
+              getService(Ci.nsIPrefBranch);
+  prefs.setIntPref("browser.urlbar.search.sources", 3);
+
   tagssvc.tagURI(uri1, ["Foo"]);
   tagssvc.tagURI(uri2, ["FOO"]);
   tagssvc.tagURI(uri3, ["foO"]);

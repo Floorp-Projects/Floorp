@@ -131,13 +131,13 @@ class nsContentSink : public nsICSSLoaderObserver,
   virtual nsresult ProcessMETATag(nsIContent* aContent);
 
   // nsIContentSink implementation helpers
+  NS_HIDDEN_(nsresult) WillParseImpl(void);
   NS_HIDDEN_(nsresult) WillInterruptImpl(void);
   NS_HIDDEN_(nsresult) WillResumeImpl(void);
   NS_HIDDEN_(nsresult) DidProcessATokenImpl(void);
   NS_HIDDEN_(void) WillBuildModelImpl(void);
   NS_HIDDEN_(void) DidBuildModelImpl(void);
   NS_HIDDEN_(void) DropParserAndPerfHint(void);
-  NS_HIDDEN_(nsresult) WillProcessTokensImpl(void);
 
   void NotifyAppend(nsIContent* aContent, PRUint32 aStartIndex);
 
@@ -169,7 +169,10 @@ protected:
     // document.  In this case, the document is marked as foreign in
     // the cache it was loaded from and must be reloaded from the
     // correct cache (the one it specifies).
-    CACHE_SELECTION_RELOAD = 2
+    CACHE_SELECTION_RELOAD = 2,
+
+    // Some conditions require we must reselect the cache without the manifest
+    CACHE_SELECTION_RESELECT_WITHOUT_MANIFEST = 3
   };
 
   nsresult Init(nsIDocument* aDoc, nsIURI* aURI,
@@ -194,6 +197,10 @@ protected:
   void PrefetchHref(const nsAString &aHref, nsIContent *aSource,
                     PRBool aExplicit);
 
+  // aHref can either be the usual URI format or of the form "//www.hostname.com"
+  // without a scheme.
+  void PrefetchDNS(const nsAString &aHref);
+
   // Gets the cache key (used to identify items in a cache) of the channel.
   nsresult GetChannelCacheKey(nsIChannel* aChannel, nsACString& aCacheKey);
 
@@ -208,8 +215,6 @@ protected:
   //        any.
   // @param aManifestURI
   //        The manifest URI listed in the document.
-  // @param aIsTopDocument
-  //        TRUE if this is a toplevel document.
   // @param aFetchedWithHTTPGetOrEquiv
   //        TRUE if this was fetched using the HTTP GET method.
   // @param aAction
@@ -217,7 +222,6 @@ protected:
   //        by the calling function.
   nsresult SelectDocAppCache(nsIApplicationCache *aLoadApplicationCache,
                              nsIURI *aManifestURI,
-                             PRBool aIsTopDocument,
                              PRBool aFetchedWithHTTPGetOrEquiv,
                              CacheSelectionAction *aAction);
 
@@ -230,8 +234,6 @@ protected:
   // @param aLoadApplicationCache
   //        The application cache from which the load originated, if
   //        any.
-  // @param aIsTopDocument
-  //        TRUE if this is a toplevel document.
   // @param aManifestURI
   //        Out parameter, returns the manifest URI of the cache that
   //        was selected.
@@ -239,7 +241,6 @@ protected:
   //        Out parameter, returns the action that should be performed
   //        by the calling function.
   nsresult SelectDocAppCacheNoManifest(nsIApplicationCache *aLoadApplicationCache,
-                                       PRBool aIsTopDocument,
                                        nsIURI **aManifestURI,
                                        CacheSelectionAction *aAction);
 
@@ -300,7 +301,6 @@ protected:
 
   void ContinueInterruptedParsingAsync();
   void ContinueInterruptedParsingIfEnabled();
-  void ContinueInterruptedParsing();
 
   nsCOMPtr<nsIDocument>         mDocument;
   nsCOMPtr<nsIParser>           mParser;

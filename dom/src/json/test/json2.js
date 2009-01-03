@@ -68,26 +68,13 @@
 /*jslint evil: true */
 /*extern JSON */
 
-if (!this.JSON) {
+if (!this.crockfordJSON) {
 
-    JSON = function () {
+    crockfordJSON = function () {
 
         function f(n) {    // Format integers to have at least two digits.
             return n < 10 ? '0' + n : n;
         }
-
-        Date.prototype.toJSON = function () {
-
-// Eventually, this method will be based on the date.toISOString method.
-
-            return this.getUTCFullYear()   + '-' +
-                 f(this.getUTCMonth() + 1) + '-' +
-                 f(this.getUTCDate())      + 'T' +
-                 f(this.getUTCHours())     + ':' +
-                 f(this.getUTCMinutes())   + ':' +
-                 f(this.getUTCSeconds())   + 'Z';
-        };
-
 
         var m = {    // table of character substitutions
             '\b': '\\b',

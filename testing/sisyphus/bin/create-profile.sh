@@ -52,7 +52,7 @@ $SCRIPT -p product -b branch -x executablepath -D directory -N profilename
 
 variable            description
 ===============     ============================================================
--p product          required. firefox|thunderbird
+-p product          required. firefox, thunderbird or fennec
 -b branch           required. 1.8.0|1.8.1|1.9.0|1.9.1
 -x executablepath   required. directory-tree containing executable 'product'
 -D directory        required. directory where profile is to be created.
@@ -93,8 +93,8 @@ if [[ -z "$product" || -z "$branch" || -z "$executablepath" || \
     usage
 fi
 
-if [[ "$product" != "firefox" && "$product" != "thunderbird" && "$product" ]]; then
-    error "product \"$product\" must be one of firefox or thunderbird" $LINENO
+if [[ "$product" != "firefox" && "$product" != "thunderbird" && "$product" != "fennec" ]]; then
+    error "product \"$product\" must be one of firefox, thunderbird or fennec" $LINENO
 fi
 
 if [[ "$branch" != "1.8.0" && "$branch" != "1.8.1" && "$branch" != "1.9.0" && "$branch" != "1.9.1" ]]; 
@@ -121,11 +121,16 @@ fi
 
 echo "creating profile $profilename in directory $directory"
 
-if ! $TEST_DIR/bin/timed_run.py ${TEST_STARTUP_TIMEOUT} "-" \
+tries=1
+while ! $TEST_DIR/bin/timed_run.py ${TEST_STARTUP_TIMEOUT} "-" \
         $EXECUTABLE_DRIVER \
-        $executable -CreateProfile "$profilename $directoryospath"; then
-	error "creating profile $directory" $LINENO
-fi
+        $executable -CreateProfile "$profilename $directoryospath"; do
+    let tries=tries+1
+    if [ "$tries" -gt $TEST_STARTUP_TRIES ]; then
+	    error "Failed to create profile $directory Exiting..." $LINENO
+    fi
+    sleep 30
+done
 
 if [[ -n $profiletemplate ]]; then
 	if [[ ! -d $profiletemplate ]]; then

@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN"
+          "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"
+	  [<!ENTITY first "!"><!ENTITY fallback "&#x00e6;">]>
+<html xmlns="http://www.w3.org/1999/xhtml">
+<!-- U+00E6 is expected to be found in Arial and DejaVu Sans, but not
+     Devanagari MT, FrankRuehl, nor Standard Symbols L.
+     "!" is chosen as it is expected to be found in the first font found.  -->
+  <head>
+    <style>
+      p { font-size: 16.6px;
+          font-family: Devanagari MT, FrankRuehl, Standard Symbols L, Arial, DejaVu Sans; serif }
+      .fallback { font-family: Arial, DejaVu Sans, serif; }
+    </style>
+  </head>
+  <body>
+    <p><span class="fallback">&fallback;&fallback;</span>&first;<span class="fallback">&fallback;</span>&first;<span class="fallback">&fallback;</span>&first;<span class="fallback">&fallback;</span></p>
+  </body>
+</html>

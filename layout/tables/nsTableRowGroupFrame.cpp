@@ -64,17 +64,6 @@ nsTableRowGroupFrame::~nsTableRowGroupFrame()
 {
 }
 
-/* ----------- nsTableRowGroupFrame ---------- */
-nsrefcnt nsTableRowGroupFrame::AddRef(void)
-{
-  return 1;//implementation of nsLineIterator
-}
-
-nsrefcnt nsTableRowGroupFrame::Release(void)
-{
-  return 1;//implementation of nsLineIterator
-}
-
 NS_IMETHODIMP
 nsTableRowGroupFrame::QueryInterface(const nsIID& aIID, void** aInstancePtr)
 {
@@ -83,14 +72,6 @@ nsTableRowGroupFrame::QueryInterface(const nsIID& aIID, void** aInstancePtr)
   static NS_DEFINE_IID(kITableRowGroupIID, NS_ITABLEROWGROUPFRAME_IID);
   if (aIID.Equals(kITableRowGroupIID)) {
     *aInstancePtr = (void*)this;
-    return NS_OK;
-  }
-  if (aIID.Equals(NS_GET_IID(nsILineIteratorNavigator))) {
-    *aInstancePtr = static_cast<nsILineIteratorNavigator*>(this);
-    return NS_OK;
-  }
-  if (aIID.Equals(NS_GET_IID(nsILineIterator))) {
-    *aInstancePtr = static_cast<nsILineIterator*>(this);
     return NS_OK;
   }
 
@@ -1395,6 +1376,23 @@ nsTableRowGroupFrame::Reflow(nsPresContext*           aPresContext,
   return rv;
 }
 
+/* virtual */ void
+nsTableRowGroupFrame::DidSetStyleContext(nsStyleContext* aOldStyleContext)
+{
+  if (!aOldStyleContext) //avoid this on init
+    return;
+     
+  nsTableFrame* tableFrame = nsTableFrame::GetTableFrame(this);
+    
+  if (tableFrame->IsBorderCollapse() &&
+      tableFrame->BCRecalcNeeded(aOldStyleContext, GetStyleContext())) {
+    nsRect damageArea(0, GetStartRowIndex(), tableFrame->GetColCount(),
+                      GetRowCount());
+    tableFrame->SetBCDamageArea(damageArea);
+  }
+  return;
+}
+
 NS_IMETHODIMP
 nsTableRowGroupFrame::AppendFrames(nsIAtom*        aListName,
                                    nsIFrame*       aFrameList)
@@ -1636,23 +1634,18 @@ void nsTableRowGroupFrame::SetContinuousBCBorderWidth(PRUint8     aForSide,
 }
 
 //nsILineIterator methods
-NS_IMETHODIMP
-nsTableRowGroupFrame::GetNumLines(PRInt32* aResult)
+PRInt32
+nsTableRowGroupFrame::GetNumLines()
 {
-  NS_ENSURE_ARG_POINTER(aResult);
-  *aResult = GetRowCount();
-  return NS_OK;
+  return GetRowCount();
 }
 
-NS_IMETHODIMP
-nsTableRowGroupFrame::GetDirection(PRBool* aIsRightToLeft)
+PRBool
+nsTableRowGroupFrame::GetDirection()
 {
-  NS_ENSURE_ARG_POINTER(aIsRightToLeft);
-  // rtl is table wide @see nsTableIterator
   nsTableFrame* table = nsTableFrame::GetTableFrame(this);
-  *aIsRightToLeft = (NS_STYLE_DIRECTION_RTL ==
-                     table->GetStyleVisibility()->mDirection);
-  return NS_OK;
+  return (NS_STYLE_DIRECTION_RTL ==
+          table->GetStyleVisibility()->mDirection);
 }
   
 NS_IMETHODIMP
@@ -1697,28 +1690,25 @@ nsTableRowGroupFrame::GetLine(PRInt32    aLineNumber,
   return NS_ERROR_FAILURE;
 }
   
-NS_IMETHODIMP
-nsTableRowGroupFrame::FindLineContaining(nsIFrame* aFrame, 
-                                         PRInt32*  aLineNumberResult)
+PRInt32
+nsTableRowGroupFrame::FindLineContaining(nsIFrame* aFrame)
 {
   NS_ENSURE_ARG_POINTER(aFrame);
-  NS_ENSURE_ARG_POINTER(aLineNumberResult);
   
   NS_ASSERTION((aFrame->GetType() == nsGkAtoms::tableRowFrame),
                "RowGroup contains a frame that is not a row");
 
   nsTableRowFrame* rowFrame = (nsTableRowFrame*)aFrame;
-  *aLineNumberResult = rowFrame->GetRowIndex() - GetStartRowIndex();
-
-  return NS_OK;
+  return rowFrame->GetRowIndex() - GetStartRowIndex();
 }
 
-NS_IMETHODIMP
-nsTableRowGroupFrame::FindLineAt(nscoord  aY, 
-                                 PRInt32* aLineNumberResult)
+PRInt32
+nsTableRowGroupFrame::FindLineAt(nscoord  aY)
 {
+  NS_NOTREACHED("Not implemented");
   return NS_ERROR_NOT_IMPLEMENTED;
 }
+
 #ifdef IBMBIDI
 NS_IMETHODIMP
 nsTableRowGroupFrame::CheckLineOrder(PRInt32                  aLine,

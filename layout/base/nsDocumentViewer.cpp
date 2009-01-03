@@ -118,13 +118,13 @@
 #include "nsPIDOMWindow.h"
 #include "nsJSEnvironment.h"
 #include "nsIFocusController.h"
-#include "nsIMenuParent.h"
 
 #include "nsIScrollableView.h"
 #include "nsIHTMLDocument.h"
 #include "nsITimelineService.h"
 #include "nsGfxCIID.h"
 #include "nsStyleSheetService.h"
+#include "ImageErrors.h"
 
 #include "nsIPrompt.h"
 #include "imgIContainer.h" // image animation mode constants
@@ -321,7 +321,6 @@ public:
   NS_DECL_NSICONTENTVIEWER
 
   // nsIDocumentViewer interface...
-  NS_IMETHOD SetUAStyleSheet(nsIStyleSheet* aUAStyleSheet);
   NS_IMETHOD GetDocument(nsIDocument** aResult);
   NS_IMETHOD GetPresShell(nsIPresShell** aResult);
   NS_IMETHOD GetPresContext(nsPresContext** aResult);
@@ -424,8 +423,6 @@ protected:
   nsCOMPtr<nsIViewManager> mViewManager;
   nsCOMPtr<nsPresContext> mPresContext;
   nsCOMPtr<nsIPresShell>   mPresShell;
-
-  nsCOMPtr<nsIStyleSheet>  mUAStyleSheet;
 
   nsCOMPtr<nsISelectionListener> mSelectionListener;
   nsCOMPtr<nsIDOMFocusListener> mFocusListener;
@@ -966,7 +963,12 @@ DocumentViewerImpl::LoadComplete(nsresult aStatus)
 
   // Now, fire either an OnLoad or OnError event to the document...
   PRBool restoring = PR_FALSE;
-  if(NS_SUCCEEDED(aStatus) && window) {
+  // XXXbz imagelib kills off the document load for a full-page image with
+  // NS_IMAGELIB_ERROR_LOAD_ABORTED if it's in the cache.  So we want to treat
+  // that one as a success code; otherwise whether we fire onload for the image
+  // will depend on whether it's cached!
+  if(window &&
+     (NS_SUCCEEDED(aStatus) || aStatus == NS_IMAGELIB_ERROR_LOAD_ABORTED)) {
     nsEventStatus status = nsEventStatus_eIgnore;
     nsEvent event(PR_TRUE, NS_LOAD);
     event.flags |= NS_EVENT_FLAG_CANT_BUBBLE;
@@ -1660,19 +1662,6 @@ DocumentViewerImpl::SetDOMDocument(nsIDOMDocument *aDocument)
 }
 
 NS_IMETHODIMP
-DocumentViewerImpl::SetUAStyleSheet(nsIStyleSheet* aUAStyleSheet)
-{
-  NS_ASSERTION(aUAStyleSheet, "unexpected null pointer");
-  nsCOMPtr<nsICSSStyleSheet> sheet(do_QueryInterface(aUAStyleSheet));
-  if (sheet) {
-    nsCOMPtr<nsICSSStyleSheet> newSheet;
-    sheet->Clone(nsnull, nsnull, nsnull, nsnull, getter_AddRefs(newSheet));
-    mUAStyleSheet = newSheet;
-  }
-  return NS_OK;
-}
-
-NS_IMETHODIMP
 DocumentViewerImpl::GetDocument(nsIDocument** aResult)
 {
   NS_IF_ADDREF(*aResult = mDocument);
@@ -1977,12 +1966,8 @@ DocumentViewerImpl::Hide(void)
 
   nsCOMPtr<nsIDocShell> docShell(do_QueryReferent(mContainer));
   if (docShell) {
-    PRBool saveLayoutState = PR_FALSE;
-    docShell->GetShouldSaveLayoutState(&saveLayoutState);
-    if (saveLayoutState) {
-      nsCOMPtr<nsILayoutHistoryState> layoutState;
-      mPresShell->CaptureHistoryState(getter_AddRefs(layoutState), PR_TRUE);
-    }
+    nsCOMPtr<nsILayoutHistoryState> layoutState;
+    mPresShell->CaptureHistoryState(getter_AddRefs(layoutState), PR_TRUE);
   }
 
   mPresShell->Destroy();
@@ -2067,7 +2052,7 @@ DocumentViewerImpl::RequestWindowClose(PRBool* aCanClose)
   return NS_OK;
 }
 
-PR_STATIC_CALLBACK(PRBool)
+static PRBool
 AppendAgentSheet(nsIStyleSheet *aSheet, void *aData)
 {
   nsStyleSet *styleSet = static_cast<nsStyleSet*>(aData);
@@ -2075,7 +2060,7 @@ AppendAgentSheet(nsIStyleSheet *aSheet, void *aData)
   return PR_TRUE;
 }
 
-PR_STATIC_CALLBACK(PRBool)
+static PRBool
 PrependUserSheet(nsIStyleSheet *aSheet, void *aData)
 {
   nsStyleSet *styleSet = static_cast<nsStyleSet*>(aData);
@@ -2091,10 +2076,6 @@ DocumentViewerImpl::CreateStyleSet(nsIDocument* aDocument,
 
   // this should eventually get expanded to allow for creating
   // different sets for different media
-  if (!mUAStyleSheet) {
-    NS_WARNING("unable to load UA style sheet");
-  }
-
   nsStyleSet *styleSet = new nsStyleSet();
   if (!styleSet) {
     return NS_ERROR_OUT_OF_MEMORY;
@@ -2177,9 +2158,24 @@ DocumentViewerImpl::CreateStyleSet(nsIDocument* aDocument,
     styleSet->PrependStyleSheet(nsStyleSet::eAgentSheet, sheet);
   }
 
-  if (mUAStyleSheet) {
-    styleSet->PrependStyleSheet(nsStyleSet::eAgentSheet, mUAStyleSheet);
+  // Make sure to clone the quirk sheet so that it can be usefully
+  // enabled/disabled as needed.
+  nsCOMPtr<nsICSSStyleSheet> quirkClone;
+  if (!nsLayoutStylesheetCache::UASheet() ||
+      !nsLayoutStylesheetCache::QuirkSheet() ||
+      NS_FAILED(nsLayoutStylesheetCache::QuirkSheet()->
+                Clone(nsnull, nsnull, nsnull, nsnull,
+                      getter_AddRefs(quirkClone))) ||
+      !sheet) {
+    delete styleSet;
+    return NS_ERROR_OUT_OF_MEMORY;
   }
+  // quirk.css needs to come after the regular UA sheet (or more precisely,
+  // after the html.css and so forth that the UA sheet imports).
+  styleSet->PrependStyleSheet(nsStyleSet::eAgentSheet, quirkClone);
+  styleSet->SetQuirkStyleSheet(quirkClone);
+  styleSet->PrependStyleSheet(nsStyleSet::eAgentSheet,
+                              nsLayoutStylesheetCache::UASheet());
 
   nsCOMPtr<nsIStyleSheetService> dummy =
     do_GetService(NS_STYLESHEETSERVICE_CONTRACTID);
@@ -2708,7 +2704,7 @@ SetChildFullZoom(nsIMarkupDocumentViewer* aChild, void* aClosure)
   aChild->SetFullZoom(ZoomInfo->mZoom);
 }
 
-PR_STATIC_CALLBACK(PRBool)
+static PRBool
 SetExtResourceTextZoom(nsIDocument* aDocument, void* aClosure)
 {
   // Would it be better to enumerate external resource viewers instead?
@@ -2724,7 +2720,7 @@ SetExtResourceTextZoom(nsIDocument* aDocument, void* aClosure)
   return PR_TRUE;
 }
 
-PR_STATIC_CALLBACK(PRBool)
+static PRBool
 SetExtResourceFullZoom(nsIDocument* aDocument, void* aClosure)
 {
   // Would it be better to enumerate external resource viewers instead?
@@ -3668,7 +3664,7 @@ DocumentViewerImpl::PrintPreviewNavigate(PRInt16 aType, PRInt32 aPageNum)
   // Check to see if we can short circut scrolling to the top
   if (aType == nsIWebBrowserPrint::PRINTPREVIEW_HOME ||
       (aType == nsIWebBrowserPrint::PRINTPREVIEW_GOTO_PAGENUM && aPageNum == 1)) {
-    scrollableView->ScrollTo(0, 0, PR_TRUE);
+    scrollableView->ScrollTo(0, 0, 0);
     return NS_OK;
   }
 
@@ -3755,7 +3751,7 @@ DocumentViewerImpl::PrintPreviewNavigate(PRInt16 aType, PRInt32 aPageNum)
     nscoord newYPosn = 
       nscoord(mPrintEngine->GetPrintPreviewScale() * 
               float(fndPageFrame->GetPosition().y - deadSpaceGap));
-    scrollableView->ScrollTo(0, newYPosn, PR_TRUE);
+    scrollableView->ScrollTo(0, newYPosn, 0);
   }
   return NS_OK;
 

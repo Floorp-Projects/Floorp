@@ -103,7 +103,7 @@ public:
    * @param aCount the number of elements
    * @return NS_OK if there was an element at that position, -1 otherwise
    */
-  NS_IMETHOD GetElementCount(PRUint32* aCount) const = 0;
+  NS_IMETHOD_(PRUint32) GetElementCount() const = 0;
 
   /**
    * Remove an element from this form's list of elements
@@ -138,15 +138,14 @@ public:
    * @param aName the name or id of the element to remove
    * @return NS_OK if the element was successfully removed.
    */
-  NS_IMETHOD ResolveName(const nsAString& aName,
-                         nsISupports **aResult) = 0;
+  NS_IMETHOD_(already_AddRefed<nsISupports>) ResolveName(const nsAString& aName) = 0;
 
   /**
    * Get the index of the given control within form.elements.
    * @param aControl the control to find the index of
    * @param aIndex the index [OUT]
    */
-  NS_IMETHOD IndexOfControl(nsIFormControl* aControl, PRInt32* aIndex) = 0;
+  NS_IMETHOD_(PRInt32) IndexOfControl(nsIFormControl* aControl) = 0;
 
   /**
    * Flag the form to know that a button or image triggered scripted form

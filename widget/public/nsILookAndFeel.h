@@ -151,6 +151,7 @@ public:
     eColor__moz_mac_menushadow,				//colour used to do shadows on menu items
     eColor__moz_mac_menutextdisable,                    // color used to display text for disabled menu items
     eColor__moz_mac_menutextselect,			//colour used to display text while mouse is over a menu item
+    eColor__moz_mac_disabledtoolbartext,                    // text color of disabled text on toolbars
 
   	//all of the accent colours
   	eColor__moz_mac_accentlightesthighlight,

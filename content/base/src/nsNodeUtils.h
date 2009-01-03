@@ -270,7 +270,7 @@ public:
   static void UnlinkUserData(nsINode *aNode);
 
 private:
-  friend PLDHashOperator PR_CALLBACK
+  friend PLDHashOperator
     AdoptFunc(nsAttrHashKey::KeyType aKey, nsIDOMNode *aData, void* aUserArg);
 
   /**

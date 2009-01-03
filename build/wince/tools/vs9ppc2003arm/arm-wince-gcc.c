@@ -28,6 +28,7 @@ main(int argc, char **argv)
 //  args[i++] = "/DWIN32_PLATFORM_PSPC";
 //  args[i++] = "/DPOCKETPC2003_UI_MODEL";
   args[i++] = "/D_WINDOWS";
+  args[i++] = "/DNO_ERRNO";
 
   args[i++] = "/Zc:wchar_t-";          //
   args[i++] = "/GS-";                  // disable security checks

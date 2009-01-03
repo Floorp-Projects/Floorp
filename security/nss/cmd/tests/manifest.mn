@@ -41,6 +41,7 @@ CORE_DEPTH = ../../..
 MODULE = nss
 
 CSRCS = \
+	conflict.c \
 	nonspr10.c \
 	remtest.c \
 	$(NULL)
