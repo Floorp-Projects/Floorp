@@ -37,7 +37,7 @@
  * ***** END LICENSE BLOCK ***** */
 
 #include <gtk/gtk.h>
-#include <gtk/gtkprintunixdialog.h>
+#include <gtk/gtkunixprint.h>
 #include <stdlib.h>
 
 #include "mozcontainer.h"

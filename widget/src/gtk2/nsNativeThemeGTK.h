@@ -42,7 +42,7 @@
 #include "nsIObserver.h"
 #include "nsNativeTheme.h"
 
-#include <gtk/gtkwidget.h>
+#include <gtk/gtk.h>
 #include "gtkdrawing.h"
 
 class nsNativeThemeGTK: private nsNativeTheme,
