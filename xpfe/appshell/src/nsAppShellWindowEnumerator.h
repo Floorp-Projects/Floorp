@@ -43,9 +43,9 @@
 
 class nsWindowMediator;
 
-/********************************************************************/
-/**************************** nsWindowInfo **************************/
-/********************************************************************/
+//
+// nsWindowInfo
+//
 
 struct nsWindowInfo
 {
@@ -68,10 +68,9 @@ struct nsWindowInfo
   void   ReferenceSelf(PRBool inAge, PRBool inZ);
 };
 
-
-/********************************************************************/
-/************************ virtual enumerators ***********************/
-/********************************************************************/
+//
+// virtual enumerators
+//
 
 class nsAppShellWindowEnumerator : public nsISimpleEnumerator {
 
@@ -116,9 +115,9 @@ public:
   NS_IMETHOD GetNext(nsISupports **retval);
 };
 
-/********************************************************************/
-/*********************** concrete enumerators ***********************/
-/********************************************************************/
+//
+// concrete enumerators
+//
 
 class nsASDOMWindowEarlyToLateEnumerator : public nsASDOMWindowEnumerator {
 
@@ -197,5 +196,3 @@ public:
 protected:
   virtual nsWindowInfo *FindNext();
 };
-
-
