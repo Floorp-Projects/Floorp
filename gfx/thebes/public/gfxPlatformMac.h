@@ -69,7 +69,8 @@ public:
                                   const gfxFontStyle *aStyle,
                                   gfxUserFontSet *aUserFontSet);
 
-    gfxFontEntry* LookupLocalFont(const nsAString& aFontName);
+    virtual gfxFontEntry* LookupLocalFont(const gfxProxyFontEntry *aProxyEntry,
+                                          const nsAString& aFontName);
 
     virtual gfxFontEntry* MakePlatformFont(const gfxProxyFontEntry *aProxyEntry,
                                            nsISupports *aLoader,
