@@ -515,6 +515,8 @@ nsDOMWindowUtils::ProcessUpdates()
 
 NS_IMETHODIMP
 nsDOMWindowUtils::SendSimpleGestureEvent(const nsAString& aType,
+                                         float aX,
+                                         float aY,
                                          PRUint32 aDirection,
                                          PRFloat64 aDelta,
                                          PRInt32 aModifiers)
@@ -525,7 +527,8 @@ nsDOMWindowUtils::SendSimpleGestureEvent(const nsAString& aType,
     return NS_ERROR_DOM_SECURITY_ERR;
 
   // get the widget to send the event to
-  nsCOMPtr<nsIWidget> widget = GetWidget();
+  nsPoint offset;
+  nsCOMPtr<nsIWidget> widget = GetWidget(&offset);
   if (!widget)
     return NS_ERROR_FAILURE;
 
@@ -553,6 +556,14 @@ nsDOMWindowUtils::SendSimpleGestureEvent(const nsAString& aType,
   event.isAlt = (aModifiers & nsIDOMNSEvent::ALT_MASK) ? PR_TRUE : PR_FALSE;
   event.isMeta = (aModifiers & nsIDOMNSEvent::META_MASK) ? PR_TRUE : PR_FALSE;
   event.time = PR_IntervalNow();
+
+  float appPerDev = float(widget->GetDeviceContext()->AppUnitsPerDevPixel());
+  event.refPoint.x =
+    NSAppUnitsToIntPixels(nsPresContext::CSSPixelsToAppUnits(aX) + offset.x,
+                          appPerDev);
+  event.refPoint.y =
+    NSAppUnitsToIntPixels(nsPresContext::CSSPixelsToAppUnits(aY) + offset.y,
+                          appPerDev);
 
   nsEventStatus status;
   return widget->DispatchEvent(&event, status);
