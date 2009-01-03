@@ -679,11 +679,12 @@ BookmarksTracker.prototype = {
   },
 
   onItemRemoved: function BMT_onItemRemoved(itemId, folder, index) {
+    let guid = this._all[itemId];
     delete this._all[itemId];
     if (!this.enabled)
       return;
     this._log.trace("onItemRemoved: " + itemId);
-    this.addChangedID(this._all[itemId]);
+    this.addChangedID(guid);
     this._upScore();
   },
 
