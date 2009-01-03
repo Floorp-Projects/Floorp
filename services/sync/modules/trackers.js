@@ -166,6 +166,10 @@ Tracker.prototype = {
   addChangedID: function T_addChangedID(id) {
     if (!this.enabled)
       return;
+    if (!id) {
+      this._log.warn("Attempted to add undefined ID to tracker");
+      return;
+    }
     this._log.debug("Adding changed ID " + id);
     if (!this.changedIDs[id]) {
       this.changedIDs[id] = true;
@@ -176,6 +180,10 @@ Tracker.prototype = {
   removeChangedID: function T_removeChangedID(id) {
     if (!this.enabled)
       return;
+    if (!id) {
+      this._log.warn("Attempted to remove undefined ID from tracker");
+      return;
+    }
     this._log.debug("Removing changed ID " + id);
     if (this.changedIDs[id]) {
       delete this.changedIDs[id];
