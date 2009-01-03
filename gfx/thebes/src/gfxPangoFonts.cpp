@@ -68,7 +68,7 @@
 #include <pango/pangofc-fontmap.h>
 
 #ifdef MOZ_WIDGET_GTK2
-#include <gdk/gdkscreen.h>
+#include <gdk/gdk.h>
 #endif
 
 #include <math.h>

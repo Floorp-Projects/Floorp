@@ -37,7 +37,7 @@
  * ***** END LICENSE BLOCK ***** */
 
 #include "mozcontainer.h"
-#include <gtk/gtkprivate.h>
+#include <gtk/gtk.h>
 #include <stdio.h>
 
 #ifdef ACCESSIBILITY

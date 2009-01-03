@@ -40,7 +40,7 @@
 #include <unistd.h>
 #include <fcntl.h>
 #include <errno.h>
-#include <gdk/gdkwindow.h>
+#include <gdk/gdk.h>
 #include "nsAppShell.h"
 #include "nsWindow.h"
 #include "prlog.h"
