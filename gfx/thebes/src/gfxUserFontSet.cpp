@@ -294,7 +294,6 @@ gfxUserFontSet::LoadNext(gfxProxyFontEntry *aProxyEntry)
                                                             currSrc.mLocalName);
             if (fe) {
                 aProxyEntry->mFamily->ReplaceFontEntry(aProxyEntry, fe);
-                IncrementGeneration();
                 LOG(("userfonts (%p) [src %d] loaded local: (%s) for (%s) gen: %8.8x\n", 
                      this, aProxyEntry->mSrcIndex, 
                      NS_ConvertUTF16toUTF8(currSrc.mLocalName).get(), 
