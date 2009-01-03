@@ -564,15 +564,12 @@ BookmarksStore.prototype = {
     return this._getWeaveIdForItem(this._bms.getFolderIdForItem(itemId));
   },
 
-  getAllIDs: function BStore_getAllIDs(node, depthIndex, items) {
+  _getChildren: function BStore_getChildren(guid, depthIndex, items) {
     if (typeof(items) == "undefined")
       items = {};
-    if (!node) {
-      this.getAllIDs(this._getNode(this._bms.bookmarksMenuFolder), depthIndex, items);
-      this.getAllIDs(this._getNode(this._bms.toolbarFolder), depthIndex, items);
-      this.getAllIDs(this._getNode(this._bms.unfiledBookmarksFolder), depthIndex, items);
-      return items;
-    }
+    let node = guid; // the recursion case
+    if (typeof(node) == "string") // callers will give us the guid as the first arg
+      node = this._getNode(this._getItemIdForGUID(guid));
 
     if (node.type == node.RESULT_TYPE_FOLDER &&
         !this._ls.isLivemark(node.itemId)) {
@@ -586,16 +583,46 @@ BookmarksStore.prototype = {
           foo.sortindex = this._bms.getItemIndex(child.itemId);
         }
         items[foo.id] = foo;
-        this.getAllIDs(child, depthIndex, items);
+        this._getChildren(child, depthIndex, items);
       }
     }
 
     return items;
   },
 
+  _getSiblings: function BStore__getSiblings(guid, depthIndex, items) {
+    if (typeof(items) == "undefined")
+      items = {};
+
+    let parentid = this._bms.getFolderIdForItem(this._getItemIdForGUID(guid));
+    let parent = this._getNode(parentid);
+    parent.QueryInterface(Ci.nsINavHistoryQueryResultNode);
+    parent.containerOpen = true;
+
+    for (var i = 0; i < parent.childCount; i++) {
+      let child = parent.getChild(i);
+      let foo = {id: this._bms.getItemGUID(child.itemId)};
+      if (depthIndex) {
+        foo.depth = this._itemDepth(child.itemId);
+        foo.sortindex = this._bms.getItemIndex(child.itemId);
+      }
+      items[foo.id] = foo;
+    }
+
+    return items;
+  },
+
+  getAllIDs: function BStore_getAllIDs() {
+    let items = {};
+    this._getChildren(this._getNode(this._bms.bookmarksMenuFolder), true, items);
+    this._getChildren(this._getNode(this._bms.toolbarFolder), true, items);
+    this._getChildren(this._getNode(this._bms.unfiledBookmarksFolder), true, items);
+    return items;
+  },
+
   createMetaRecords: function BStore_createMetaRecords(guid, items) {
-    let node = this._getNode(this._bms.getItemIdForGUID(guid));
-    this.getAllIDs(node, true, items);
+    this._getChildren(guid, true, items);
+    this._getSiblings(guid, true, items);
     return items;
   },
 
