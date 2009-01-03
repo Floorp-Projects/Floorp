@@ -379,10 +379,10 @@ SyncEngine.prototype = {
     if (item.parentid == local.parentid &&
         item.sortindex == local.sortindex &&
         Utils.deepEquals(item.cleartext, local.cleartext)) {
-      this._log.debug("Local record is the same");
+      this._log.trace("Local record is the same");
       return true;
     } else {
-      this._log.debug("Local record is different");
+      this._log.trace("Local record is different");
       return false;
     }
   },
