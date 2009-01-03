@@ -54,7 +54,7 @@
 
 #include "nsBaseWidget.h"
 #include "nsGUIEvent.h"
-#include <gdk/gdkevents.h>
+#include <gdk/gdk.h>
 #include <gtk/gtk.h>
 
 #ifdef MOZ_DFB
@@ -64,7 +64,6 @@
 #ifdef MOZ_X11
 #include <gdk/gdkx.h>
 #endif /* MOZ_X11 */
-#include <gtk/gtkwindow.h>
 
 #ifdef ACCESSIBILITY
 #include "nsIAccessNode.h"
@@ -72,7 +71,6 @@
 #endif
 
 #ifdef USE_XIM
-#include <gtk/gtkimmulticontext.h>
 #include "pldhash.h"
 #endif
 

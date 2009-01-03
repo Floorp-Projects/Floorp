@@ -43,8 +43,7 @@
 
 extern "C" {
 #include <gtk/gtk.h>
-#include <gtk/gtkprinter.h>
-#include <gtk/gtkprintjob.h>
+#include <gtk/gtkunixprint.h>
 }
 
 #define NS_PRINTSETTINGSGTK_IID \

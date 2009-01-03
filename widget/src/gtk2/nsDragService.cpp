@@ -56,7 +56,7 @@
 #include "nsPrimitiveHelpers.h"
 #include "prtime.h"
 #include "prthread.h"
-#include <gtk/gtkinvisible.h>
+#include <gtk/gtk.h>
 #include <gdk/gdkx.h>
 #include "nsCRT.h"
 
