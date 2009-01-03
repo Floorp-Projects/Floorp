@@ -289,7 +289,9 @@ gfxUserFontSet::LoadNext(gfxProxyFontEntry *aProxyEntry)
         // src local ==> lookup and load   
 
         if (currSrc.mIsLocal) {
-            gfxFontEntry *fe = gfxPlatform::GetPlatform()->LookupLocalFont(currSrc.mLocalName);
+            gfxFontEntry *fe =
+                gfxPlatform::GetPlatform()->LookupLocalFont(aProxyEntry,
+                                                            currSrc.mLocalName);
             if (fe) {
                 aProxyEntry->mFamily->ReplaceFontEntry(aProxyEntry, fe);
                 IncrementGeneration();

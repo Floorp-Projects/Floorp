@@ -619,7 +619,8 @@ FindFullName(nsStringHashKey::KeyType aKey,
 }
 
 gfxFontEntry* 
-gfxWindowsPlatform::LookupLocalFont(const nsAString& aFontName)
+gfxWindowsPlatform::LookupLocalFont(const gfxProxyFontEntry *aProxyEntry,
+                                    const nsAString& aFontName)
 {
     // walk over list of names
     FullFontNameSearch data(aFontName);

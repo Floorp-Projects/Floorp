@@ -105,6 +105,9 @@ public:
     const nsTArray< nsCountedRef<FcPattern> >&
     GetFontsForFamily(const FcChar8 *aFamilyName);
 
+    const nsTArray< nsCountedRef<FcPattern> >&
+    GetFontsForFullname(const FcChar8 *aFullname);
+
     // Returns the best support that any font offers for |aLang|. 
     FcLangResult GetBestLangSupport(const FcChar8 *aLang);
     // Returns the fonts offering this best level of support.
@@ -120,6 +123,10 @@ public:
     {
         return reinterpret_cast<const FcChar8*>(aCharPtr);
     }
+    static const FcChar8 *ToFcChar8(const nsCString& aCString)
+    {
+        return ToFcChar8(aCString.get());
+    }
     static const char *ToCString(const FcChar8 *aChar8Ptr)
     {
         return reinterpret_cast<const char*>(aChar8Ptr);
@@ -132,6 +139,9 @@ public:
     static int GetFcSlant(const gfxFontStyle& aFontStyle);
     // Returns a precise FC_WEIGHT from CSS weight |aBaseWeight|.
     static int FcWeightForBaseWeight(PRInt8 aBaseWeight);
+
+    static PRBool GetFullnameFromFamilyAndStyle(FcPattern *aFont,
+                                                nsACString *aFullname);
 
     // This doesn't consider which faces exist, and so initializes the pattern
     // using a guessed weight, and doesn't consider sizeAdjust.
@@ -185,7 +195,7 @@ public:
     class DepFcStrEntry : public FcStrEntryBase {
     public:
         // When constructing a new entry in the hashtable, the key is left
-        // blank.  The caller of PutEntry() must fill in mKey when NULL.  This
+        // NULL.  The caller of PutEntry() must fill in mKey when NULL.  This
         // provides a mechanism for the caller of PutEntry() to determine
         // whether the entry has been initialized.
         DepFcStrEntry(KeyTypePointer aName)
@@ -218,7 +228,7 @@ public:
             : mKey(toCopy.mKey) { }
 
         PRBool KeyEquals(KeyTypePointer aKey) const {
-            return FcStrCmpIgnoreCase(aKey, ToFcChar8(mKey.get())) == 0;
+            return FcStrCmpIgnoreCase(aKey, ToFcChar8(mKey)) == 0;
         }
 
         PRBool IsKeyInitialized() { return !mKey.IsVoid(); }
@@ -247,6 +257,41 @@ protected:
         nsTArray< nsCountedRef<FcPattern> > mFonts;
     };
 
+    // FontsByFullnameEntry is similar to FontsByFcStrEntry (used for
+    // mFontsByFamily) except for two differences:
+    //
+    // * The font does not always contain a single string for the fullname, so
+    //   the key is sometimes a combination of family and style.
+    //
+    // * There is usually only one font.
+    class FontsByFullnameEntry : public DepFcStrEntry {
+    public:
+        // When constructing a new entry in the hashtable, the key is left
+        // NULL.  The caller of PutEntry() is must fill in mKey when adding
+        // the first font if the key is not derived from the family and style.
+        // If the key is derived from family and style, a font must be added.
+        FontsByFullnameEntry(KeyTypePointer aName)
+            : DepFcStrEntry(aName) { }
+
+        FontsByFullnameEntry(const FontsByFullnameEntry& toCopy)
+            : DepFcStrEntry(toCopy), mFonts(toCopy.mFonts) { }
+
+        PRBool KeyEquals(KeyTypePointer aKey) const;
+
+        PRBool AddFont(FcPattern *aFont) {
+            return mFonts.AppendElement(aFont) != nsnull;
+        }
+        const nsTArray< nsCountedRef<FcPattern> >& GetFonts() {
+            return mFonts;
+        }
+
+        // Don't memmove the nsAutoTArray.
+        enum { ALLOW_MEMMOVE = PR_FALSE };
+    private:
+        // There is usually only one font, but sometimes more.
+        nsAutoTArray<nsCountedRef<FcPattern>,1> mFonts;
+    };
+
     class LangSupportEntry : public CopiedFcStrEntry {
     public:
         LangSupportEntry(KeyTypePointer aName)
@@ -267,10 +312,18 @@ protected:
                                  const nsACString& aLangGroup);
     nsresult UpdateFontListInternal(PRBool aForce = PR_FALSE);
 
+    void AddFullnameEntries();
+
     LangSupportEntry *GetLangSupportEntry(const FcChar8 *aLang,
                                           PRBool aWithFonts);
 
+    // mFontsByFamily and mFontsByFullname contain entries only for families
+    // and fullnames for which there are fonts.
     nsTHashtable<FontsByFcStrEntry> mFontsByFamily;
+    nsTHashtable<FontsByFullnameEntry> mFontsByFullname;
+    // mLangSupportTable contains an entry for each language that has been
+    // looked up through GetLangSupportEntry, even when the language is not
+    // supported.
     nsTHashtable<LangSupportEntry> mLangSupportTable;
     const nsTArray< nsCountedRef<FcPattern> > mEmptyPatternArray;
 
