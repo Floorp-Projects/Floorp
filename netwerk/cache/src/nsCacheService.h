@@ -25,6 +25,7 @@
  *   Gordon Sheridan  <gordon@netscape.com>
  *   Patrick C. Beard <beard@netscape.com>
  *   Darin Fisher     <darin@netscape.com>
+ *   Ehsan Akhgari    <ehsan.akhgari@gmail.com>
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -156,6 +157,8 @@ public:
 
     static void      SetMemoryCache();
 
+    static void      OnEnterExitPrivateBrowsing();
+
     nsresult         Init();
     void             Shutdown();
 private:
@@ -213,15 +216,15 @@ private:
     void             DoomActiveEntries(void);
 
     static
-    PLDHashOperator PR_CALLBACK  DeactivateAndClearEntry(PLDHashTable *    table,
-                                                         PLDHashEntryHdr * hdr,
-                                                         PRUint32          number,
-                                                         void *            arg);
+    PLDHashOperator  DeactivateAndClearEntry(PLDHashTable *    table,
+                                             PLDHashEntryHdr * hdr,
+                                             PRUint32          number,
+                                             void *            arg);
     static
-    PLDHashOperator PR_CALLBACK  RemoveActiveEntry(PLDHashTable *    table,
-                                                   PLDHashEntryHdr * hdr,
-                                                   PRUint32          number,
-                                                   void *            arg);
+    PLDHashOperator  RemoveActiveEntry(PLDHashTable *    table,
+                                       PLDHashEntryHdr * hdr,
+                                       PRUint32          number,
+                                       void *            arg);
 #if defined(PR_LOGGING)
     void LogCacheStatistics();
 #endif

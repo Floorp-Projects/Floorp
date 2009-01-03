@@ -34,13 +34,11 @@
 
 using namespace avmplus;
 
-AvmConfiguration AvmCore::config;
+Config AvmCore::config;
 static GC _gc;
 GC* AvmCore::gc = &_gc;
 GCHeap GC::heap;
 String* AvmCore::k_str[] = { (String*)"" };
-bool AvmCore::sse2_available = false;
-bool AvmCore::cmov_available = false;
 
 #ifdef _DEBUG
 // NanoAssertFail matches JS_Assert in jsutil.cpp.

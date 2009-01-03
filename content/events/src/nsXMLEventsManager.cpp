@@ -251,18 +251,18 @@ nsXMLEventsListener::HandleEvent(nsIDOMEvent* aEvent)
 
 //XMLEventsManager / DocumentObserver
 
-PR_STATIC_CALLBACK(PLDHashOperator) EnumAndUnregisterListener(nsISupports * aContent, 
-                                                              nsCOMPtr<nsXMLEventsListener> & aListener, 
-                                                              void * aData)
+static PLDHashOperator EnumAndUnregisterListener(nsISupports * aContent,
+                                                 nsCOMPtr<nsXMLEventsListener> & aListener,
+                                                 void * aData)
 {
   if (aListener)
     aListener->Unregister();
   return PL_DHASH_NEXT;
 }
 
-PR_STATIC_CALLBACK(PLDHashOperator) EnumAndSetIncomplete(nsISupports * aContent, 
-                                                         nsCOMPtr<nsXMLEventsListener> & aListener,
-                                                         void * aData)
+static PLDHashOperator EnumAndSetIncomplete(nsISupports * aContent,
+                                            nsCOMPtr<nsXMLEventsListener> & aListener,
+                                            void * aData)
 {
   if (aListener && aData) {
     nsCOMPtr<nsIContent> content = static_cast<nsIContent *>(aData);

@@ -1,0 +1,288 @@
+<!DOCTYPE HTML>
+<html>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=248970
+-->
+<head>
+  <title>Test for Bug 248970</title>
+  <script type="text/javascript" src="/MochiKit/MochiKit.js"></script>
+  <script type="text/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <script type="text/javascript" src="notification_common.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
+</head>
+<body>
+<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=248970">Mozilla Bug 248970</a>
+<p id="display"></p>
+<iframe id="iframe"></iframe>
+<pre id="test">
+<script class="testbody" type="text/javascript">
+
+/** Test for Bug 248970 **/
+// based on test_notifications.html
+
+netscape.security.PrivilegeManager.enablePrivilege('UniversalXPConnect');
+const Ci = Components.interfaces;
+const Cc = Components.classes;
+const Cr = Components.results;
+
+var testpath = document.location.pathname + "/../";
+var prefix = "http://test2.example.com" + testpath;
+var subtests = [
+                   "subtst_privbrowsing_1.html", // 1
+                   "subtst_privbrowsing_1.html", // 2
+                   "subtst_privbrowsing_1.html", // 3
+                   "subtst_privbrowsing_2.html", // 4
+                   "subtst_privbrowsing_2.html", // 5
+                   "subtst_privbrowsing_2.html", // 6
+                   "subtst_privbrowsing_3.html", // 7
+                   "subtst_privbrowsing_3.html", // 8
+                   "subtst_privbrowsing_4.html", // 9
+                   "subtst_privbrowsing_3.html" // 10
+               ];
+
+
+var testNum = 0;
+function loadNextTest() {
+  // run the initialization code for each test
+  switch (++ testNum) {
+    case 1:
+      ok(!pb.privateBrowsingEnabled, "Test #" + testNum + " should be run outside of private mode");
+      break;
+
+    case 2:
+      pb.privateBrowsingEnabled = true;
+      ok(pb.privateBrowsingEnabled, "Test #" + testNum + " should be run inside of private mode");
+      break;
+
+    case 3:
+      pb.privateBrowsingEnabled = false;
+      ok(!pb.privateBrowsingEnabled, "Test #" + testNum + " should be run outside of private mode");
+      break;
+
+    case 4:
+      pwmgr.addLogin(login);
+      ok(!pb.privateBrowsingEnabled, "Test #" + testNum + " should be run outside of private mode");
+      break;
+
+    case 5:
+      pb.privateBrowsingEnabled = true;
+      ok(pb.privateBrowsingEnabled, "Test #" + testNum + " should be run inside of private mode");
+      break;
+
+    case 6:
+      pb.privateBrowsingEnabled = false;
+      ok(!pb.privateBrowsingEnabled, "Test #" + testNum + " should be run outside of private mode");
+      break;
+
+    case 7:
+      pwmgr.addLogin(login);
+      ok(!pb.privateBrowsingEnabled, "Test #" + testNum + " should be run outside of private mode");
+      break;
+
+    case 8:
+      pb.privateBrowsingEnabled = true;
+      ok(pb.privateBrowsingEnabled, "Test #" + testNum + " should be run inside of private mode");
+      break;
+
+    case 9:
+      ok(pb.privateBrowsingEnabled, "Test #" + testNum + " should be run inside of private mode");
+      break;
+
+    case 10:
+      pb.privateBrowsingEnabled = false;
+      ok(!pb.privateBrowsingEnabled, "Test #" + testNum + " should be run outside of private mode");
+      break;
+
+    default:
+      ok(false, "Unexpected call to loadNextTest for test #" + testNum);
+  }
+
+  ok(true, "Starting test #" + testNum);
+  iframe.src = prefix + subtests[testNum-1];
+}
+
+
+function checkTest() {
+  var bar;
+
+  switch (testNum) {
+    case 1:
+      // run outside of private mode, notification bar should appear
+      bar = getNotificationBar(notifyBox, "password-save");
+      ok(bar, "got notification bar");
+      notifyBox.removeAllNotifications(true);
+      break;
+
+    case 2:
+      // run inside of private mode, notification bar should not appear
+      bar = getNotificationBar(notifyBox, "password-save");
+      ok(!bar, "checking for no notification bar");
+      notifyBox.removeAllNotifications(true);
+      break;
+
+    case 3:
+      // run outside of private mode, notification bar should appear
+      bar = getNotificationBar(notifyBox, "password-save");
+      ok(bar, "got notification bar");
+      notifyBox.removeAllNotifications(true);
+      break;
+
+    case 4:
+      // run outside of private mode, notification bar should appear
+      bar = getNotificationBar(notifyBox, "password-change");
+      ok(bar, "got notification bar");
+      notifyBox.removeAllNotifications(true);
+      break;
+
+    case 5:
+      // run inside of private mode, notification bar should not appear
+      bar = getNotificationBar(notifyBox, "password-change");
+      ok(!bar, "checking for no notification bar");
+      notifyBox.removeAllNotifications(true);
+      break;
+
+    case 6:
+      // run outside of private mode, notification bar should appear
+      bar = getNotificationBar(notifyBox, "password-change");
+      ok(bar, "got notification bar");
+      notifyBox.removeAllNotifications(true);
+      pwmgr.removeLogin(login);
+      break;
+
+    case 7:
+      // verify that the user/pass pair was autofilled
+      var gotUser = iframe.contentDocument.getElementById("user").textContent;
+      var gotPass = iframe.contentDocument.getElementById("pass").textContent;
+      is(gotUser, "notifyu1", "Checking submitted username");
+      is(gotPass, "notifyp1", "Checking submitted password");
+      break;
+
+    case 8:
+      // verify that the user/pass pair was not autofilled
+      var gotUser = iframe.contentDocument.getElementById("user").textContent;
+      var gotPass = iframe.contentDocument.getElementById("pass").textContent;
+      is(gotUser, "", "Checking submitted username");
+      is(gotPass, "", "Checking submitted password");
+      break;
+
+    case 9:
+      // verify that the user/pass pair was available for autocomplete
+      var gotUser = iframe.contentDocument.getElementById("user").textContent;
+      var gotPass = iframe.contentDocument.getElementById("pass").textContent;
+      is(gotUser, "notifyu1", "Checking submitted username");
+      is(gotPass, "notifyp1", "Checking submitted password");
+      break;
+
+    case 10:
+      // verify that the user/pass pair was autofilled
+      var gotUser = iframe.contentDocument.getElementById("user").textContent;
+      var gotPass = iframe.contentDocument.getElementById("pass").textContent;
+      is(gotUser, "notifyu1", "Checking submitted username");
+      is(gotPass, "notifyp1", "Checking submitted password");
+      pwmgr.removeLogin(login);
+      break;
+
+    default:
+      ok(false, "Unexpected call to checkTest for test #" + testNum);
+
+  }
+}
+
+
+var _PBSvc = null;
+function get_PBSvc() {
+  if (_PBSvc)
+    return _PBSvc;
+
+  netscape.security.PrivilegeManager.enablePrivilege('UniversalXPConnect');
+  try {
+    _PBSvc = Cc["@mozilla.org/privatebrowsing;1"].
+             getService(Ci.nsIPrivateBrowsingService);
+    if (_PBSvc) {
+      observer.register();
+    }
+    return _PBSvc;
+  } catch (e) {}
+  return null;
+}
+
+
+var ignoreLoad = false;
+function handleLoad(aEvent) {
+  netscape.security.PrivilegeManager.enablePrivilege('UniversalXPConnect');
+
+  // ignore every other load event ... We get one for loading the subtest (which
+  // we want to ignore), and another when the subtest's form submits itself
+  // (which we want to handle, to start the next test).
+  ignoreLoad = !ignoreLoad;
+  if (ignoreLoad) {
+    ok(true, "Ignoring load of subtest #" + testNum);
+    return;
+  }
+  ok(true, "Processing submission of subtest #" + testNum);
+
+  checkTest();
+
+  // Remove any notification bar that might be lingering from a failed test.
+  notifyBox.removeAllNotifications(true);
+
+  if (testNum < subtests.length) {
+    loadNextTest();
+  } else {
+    ok(true, "private browsing notification tests finished.");
+    prefBranch.clearUserPref("browser.privatebrowsing.keep_current_session");
+    SimpleTest.finish();
+  }
+}
+
+
+var pb = get_PBSvc();
+if (!pb) { // Private Browsing might not be available
+  ok(true, "Private browsing service is not available");
+  SimpleTest.finish();
+} else {
+  netscape.security.PrivilegeManager.enablePrivilege('UniversalXPConnect');
+
+  ok(Ci != null, "Access Ci");
+  ok(Cc != null, "Access Cc");
+
+  var prefBranch = Cc["@mozilla.org/preferences-service;1"].
+                   getService(Ci.nsIPrefBranch);
+  prefBranch.setBoolPref("browser.privatebrowsing.keep_current_session", true);
+
+  var pwmgr = Cc["@mozilla.org/login-manager;1"].
+              getService(Ci.nsILoginManager);
+  ok(pwmgr != null, "Access pwmgr");
+
+  // We need to make sure no logins have been stored by previous tests
+  // for forms in |url|, otherwise the change password notification
+  // would turn into a prompt, and the test will fail.
+  var url = "http://test2.example.com";
+  is(pwmgr.countLogins(url, "", null), 0, "No logins should be stored for " + url);
+
+  var nsLoginInfo = new Components.Constructor("@mozilla.org/login-manager/loginInfo;1",
+                                               Ci.nsILoginInfo, "init");
+  var login = new nsLoginInfo(url, url, null, "notifyu1", "notifyp1", "user", "pass");
+
+  var iframe = document.getElementById("iframe");
+  iframe.onload = handleLoad;
+
+  // The notification box (not *bar*) is a constant, per-tab container. So, we
+  // only need to fetch it once.
+  var notifyBox = getNotificationBox(window.top);
+  ok(notifyBox, "Got notification box");
+
+  // Remove any notification bars that might be left over from other tests.
+  notifyBox.removeAllNotifications(true);
+
+  SimpleTest.waitForExplicitFinish();
+
+  loadNextTest();
+}
+
+
+</script>
+</pre>
+</body>
+</html>
+

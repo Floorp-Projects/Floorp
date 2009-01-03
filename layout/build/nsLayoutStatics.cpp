@@ -83,6 +83,7 @@
 #include "nsXMLHttpRequest.h"
 #include "nsIFocusEventSuppressor.h"
 #include "nsDOMThreadService.h"
+#include "nsHTMLDNSPrefetch.h"
 #include "nsHtml5Module.h"
 
 #ifdef MOZ_XUL
@@ -112,12 +113,12 @@ PRBool NS_SVGEnabled();
 #endif
 
 #ifdef MOZ_MEDIA
-#include "nsVideoDecoder.h"
+#include "nsMediaDecoder.h"
+#include "nsHTMLMediaElement.h"
 #endif
 
-#ifdef MOZ_OGG
+#ifdef MOZ_SYDNEYAUDIO
 #include "nsAudioStream.h"
-#include "nsVideoDecoder.h"
 #endif
 
 #include "nsError.h"
@@ -186,6 +187,12 @@ nsLayoutStatics::Initialize()
     return rv;
   }
 
+  rv = nsHTMLDNSPrefetch::Initialize();
+  if (NS_FAILED(rv)) {
+    NS_ERROR("Could not initialize HTML DNS prefetch");
+    return rv;
+  }
+
 #ifdef MOZ_XUL
   rv = nsXULContentUtils::Init();
   if (NS_FAILED(rv)) {
@@ -238,6 +245,8 @@ nsLayoutStatics::Initialize()
   }
 #endif
 
+  nsCSSRuleProcessor::Startup();
+
 #ifdef MOZ_XUL
   rv = nsXULPopupManager::Init();
   if (NS_FAILED(rv)) {
@@ -247,20 +256,17 @@ nsLayoutStatics::Initialize()
 #endif
 
 #ifdef MOZ_MEDIA
-  rv = nsVideoDecoder::InitLogger();
+  rv = nsMediaDecoder::InitLogger();
   if (NS_FAILED(rv)) {
-    NS_ERROR("Could not initialize nsVideoDecoder");
+    NS_ERROR("Could not initialize nsMediaDecoder");
     return rv;
   }
   
+  nsHTMLMediaElement::InitMediaTypes();
 #endif
 
-#ifdef MOZ_OGG
-  rv = nsAudioStream::InitLibrary();
-  if (NS_FAILED(rv)) {
-    NS_ERROR("Could not initialize nsAudioStream");
-    return rv;
-  }
+#ifdef MOZ_SYDNEYAUDIO
+  nsAudioStream::InitLibrary();
 #endif
 
   nsHtml5Module::InitializeStatics();
@@ -284,6 +290,7 @@ nsLayoutStatics::Shutdown()
   CSSLoaderImpl::Shutdown();
   nsCSSRuleProcessor::FreeSystemMetrics();
   nsTextFrameTextRunCache::Shutdown();
+  nsHTMLDNSPrefetch::Shutdown();
   nsCSSRendering::Shutdown();
 #ifdef DEBUG
   nsFrame::DisplayReflowShutdown();
@@ -316,7 +323,6 @@ nsLayoutStatics::Shutdown()
 
   nsCSSScanner::ReleaseGlobals();
 
-  NS_IF_RELEASE(nsContentDLF::gUAStyleSheet);
   NS_IF_RELEASE(nsRuleNode::gLangService);
   nsStyledElement::Shutdown();
 
@@ -327,7 +333,6 @@ nsLayoutStatics::Shutdown()
   nsNodeInfo::ClearCache();
   nsLayoutStylesheetCache::Shutdown();
   NS_NameSpaceManagerShutdown();
-  nsStyleSet::FreeGlobals();
 
   nsJSRuntime::Shutdown();
   nsGlobalWindow::ShutDown();
@@ -345,7 +350,10 @@ nsLayoutStatics::Shutdown()
 
   NS_ShutdownFocusSuppressor();
 
-#ifdef MOZ_OGG
+#ifdef MOZ_MEDIA
+  nsHTMLMediaElement::ShutdownMediaTypes();
+#endif
+#ifdef MOZ_SYDNEYAUDIO
   nsAudioStream::ShutdownLibrary();
 #endif
 

@@ -68,6 +68,28 @@ public:
    */
   PRBool AppendCSSValue(nsIDOMCSSValue* aValue);
 
+  nsIDOMCSSValue* GetItemAt(PRUint32 aIndex)
+  {
+    return mCSSValues.SafeObjectAt(aIndex);
+  }
+
+  static nsDOMCSSValueList* FromSupports(nsISupports* aSupports)
+  {
+#ifdef DEBUG
+    {
+      nsCOMPtr<nsIDOMCSSValueList> list_qi = do_QueryInterface(aSupports);
+
+      // If this assertion fires the QI implementation for the object in
+      // question doesn't use the nsIDOMCSSValueList pointer as the nsISupports
+      // pointer. That must be fixed, or we'll crash...
+      NS_ASSERTION(list_qi == static_cast<nsIDOMCSSValueList*>(aSupports),
+                   "Uh, fix QI!");
+    }
+#endif
+
+    return static_cast<nsDOMCSSValueList*>(aSupports);
+  }
+
 private:
   PRPackedBool                mCommaDelimited;  // some value lists use a comma
                                                 // as the delimiter, some just use

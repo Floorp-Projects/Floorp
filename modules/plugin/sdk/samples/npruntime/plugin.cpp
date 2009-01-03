@@ -53,7 +53,7 @@
 #endif
 
 #include "plugin.h"
-#include "npupp.h"
+#include "npfunctions.h"
 
 static NPIdentifier sFoo_id;
 static NPIdentifier sBar_id;
@@ -451,10 +451,10 @@ ScriptablePluginObject::Invoke(NPIdentifier name, const NPVariant *args,
 
     STRINGZ_TO_NPVARIANT(strdup("foo return val"), *result);
 
-    return PR_TRUE;
+    return true;
   }
 
-  return PR_FALSE;
+  return false;
 }
 
 bool
@@ -465,13 +465,13 @@ ScriptablePluginObject::InvokeDefault(const NPVariant *args, uint32_t argCount,
 
   STRINGZ_TO_NPVARIANT(strdup("default method return val"), *result);
 
-  return PR_TRUE;
+  return true;
 }
 
 CPlugin::CPlugin(NPP pNPInstance) :
   m_pNPInstance(pNPInstance),
   m_pNPStream(NULL),
-  m_bInitialized(FALSE),
+  m_bInitialized(false),
   m_pScriptableObject(NULL)
 {
 #ifdef XP_WIN
@@ -622,12 +622,12 @@ static WNDPROC lpOldProc = NULL;
 NPBool CPlugin::init(NPWindow* pNPWindow)
 {
   if(pNPWindow == NULL)
-    return FALSE;
+    return false;
 
 #ifdef XP_WIN
   m_hWnd = (HWND)pNPWindow->window;
   if(m_hWnd == NULL)
-    return FALSE;
+    return false;
 
   // subclass window so we can intercept window messages and
   // do our drawing to it
@@ -640,8 +640,8 @@ NPBool CPlugin::init(NPWindow* pNPWindow)
 
   m_Window = pNPWindow;
 
-  m_bInitialized = TRUE;
-  return TRUE;
+  m_bInitialized = true;
+  return true;
 }
 
 void CPlugin::shut()
@@ -652,7 +652,7 @@ void CPlugin::shut()
   m_hWnd = NULL;
 #endif
 
-  m_bInitialized = FALSE;
+  m_bInitialized = false;
 }
 
 NPBool CPlugin::isInitialized()
@@ -682,7 +682,7 @@ void CPlugin::showVersion()
   strcpy(m_String, ua);
 
 #ifdef XP_WIN
-  InvalidateRect(m_hWnd, NULL, TRUE);
+  InvalidateRect(m_hWnd, NULL, true);
   UpdateWindow(m_hWnd);
 #endif
 
@@ -704,7 +704,7 @@ void CPlugin::clear()
   strcpy(m_String, "");
 
 #ifdef XP_WIN
-  InvalidateRect(m_hWnd, NULL, TRUE);
+  InvalidateRect(m_hWnd, NULL, true);
   UpdateWindow(m_hWnd);
 #endif
 }

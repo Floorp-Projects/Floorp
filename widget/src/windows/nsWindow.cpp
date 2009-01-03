@@ -286,7 +286,6 @@ PRUint32   nsWindow::sInstanceCount            = 0;
 PRBool     nsWindow::sIMEIsComposing           = PR_FALSE;
 PRBool     nsWindow::sIMEIsStatusChanged       = PR_FALSE;
 
-DWORD      nsWindow::sIMEProperty              = 0;
 nsString*  nsWindow::sIMECompUnicode           = NULL;
 PRUint8*   nsWindow::sIMEAttributeArray        = NULL;
 PRInt32    nsWindow::sIMEAttributeArrayLength  = 0;
@@ -297,6 +296,10 @@ PRInt32    nsWindow::sIMECompClauseArraySize   = 0;
 long       nsWindow::sIMECursorPosition        = 0;
 
 RECT*      nsWindow::sIMECompCharPos           = nsnull;
+
+PRBool     nsWindow::gSwitchKeyboardLayout     = PR_FALSE;
+
+static KeyboardLayout gKbdLayout;
 
 TriStateBool nsWindow::sCanQuit = TRI_UNKNOWN;
 
@@ -669,6 +672,7 @@ nsWindow::nsWindow() : nsBaseWidget()
   mPainting           = 0;
   mOldIMC             = NULL;
   mIMEEnabled         = nsIWidget::IME_STATUS_ENABLED;
+  mIsPluginWindow     = PR_FALSE;
 
   mLeadByte = '\0';
   mBlurEventSuppressionLevel = 0;
@@ -676,7 +680,7 @@ nsWindow::nsWindow() : nsBaseWidget()
   static BOOL gbInitGlobalValue = FALSE;
   if (! gbInitGlobalValue) {
     gbInitGlobalValue = TRUE;
-    gKeyboardLayout = GetKeyboardLayout(0);
+    gKbdLayout.LoadLayout(::GetKeyboardLayout(0));
 
     // mouse message of MSIME98/2000
     nsWindow::uWM_MSIME_MOUSE     = ::RegisterWindowMessage(RWM_MOUSE);
@@ -702,10 +706,6 @@ nsWindow::nsWindow() : nsBaseWidget()
 
     }
 
-
-HKL nsWindow::gKeyboardLayout = 0;
-PRBool nsWindow::gSwitchKeyboardLayout = PR_FALSE;
-static KeyboardLayout gKbdLayout;
 
 //-------------------------------------------------------------------------
 //
@@ -1167,22 +1167,8 @@ LRESULT CALLBACK nsWindow::WindowProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM
     }
   }
 
-#if defined(STRICT)
-  return ::CallWindowProcW((WNDPROC)someWindow->GetPrevWindowProc(), hWnd,
-                                    msg, wParam, lParam);
-#else
-  return ::CallWindowProcW((FARPROC)someWindow->GetPrevWindowProc(), hWnd,
-                                    msg, wParam, lParam);
-#endif
-}
-
-//
-// Default Window procedure for AIMM support.
-//
-LRESULT CALLBACK nsWindow::DefaultWindowProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam)
-{
-  //XXX nsWindow::DefaultWindowProc still ever required?
-  return ::DefWindowProcW(hWnd, msg, wParam, lParam);
+  return ::CallWindowProcW(someWindow->GetPrevWindowProc(),
+                           hWnd, msg, wParam, lParam);
 }
 
 //WINOLEAPI oleStatus;
@@ -2753,9 +2739,10 @@ NS_IMETHODIMP nsWindow::Update()
 void* nsWindow::GetNativeData(PRUint32 aDataType)
 {
   switch (aDataType) {
+    case NS_NATIVE_PLUGIN_PORT:
+      mIsPluginWindow = 1;
     case NS_NATIVE_WIDGET:
     case NS_NATIVE_WINDOW:
-    case NS_NATIVE_PLUGIN_PORT:
       return (void*)mWnd;
     case NS_NATIVE_GRAPHIC:
       // XXX:  This is sleezy!!  Remember to Release the DC after using it!
@@ -3075,14 +3062,14 @@ PRBool nsWindow::DispatchKeyEvent(PRUint32 aEventType, WORD aCharCode,
 }
 
 static PRBool
-StringCaseInsensitiveEquals(const PRUint16* aChars1, const PRUint32 aNumChars1,
-                          const PRUint16* aChars2, const PRUint32 aNumChars2) 
+StringCaseInsensitiveEquals(const PRUnichar* aChars1, const PRUint32 aNumChars1,
+                            const PRUnichar* aChars2, const PRUint32 aNumChars2)
 {
   if (aNumChars1 != aNumChars2)
     return PR_FALSE;
 
   nsCaseInsensitiveStringComparator comp;
-  return comp((PRUnichar*)aChars1, (PRUnichar*)aChars2, aNumChars1) == 0;
+  return comp(aChars1, aChars2, aNumChars1) == 0;
 }
 
 /**
@@ -3243,11 +3230,11 @@ BOOL nsWindow::OnKeyDown(UINT aVirtualKeyCode, LPARAM aKeyData,
     return PR_FALSE;
 
   PRUint8 shiftStates[5];
-  PRUint16 uniChars[5];
-  PRUint16 shiftedChars[5] = {0, 0, 0, 0, 0};
-  PRUint16 unshiftedChars[5] = {0, 0, 0, 0, 0};
-  PRUint16 shiftedLatinChar = 0;
-  PRUint16 unshiftedLatinChar = 0;
+  PRUnichar uniChars[5];
+  PRUnichar shiftedChars[5] = {0, 0, 0, 0, 0};
+  PRUnichar unshiftedChars[5] = {0, 0, 0, 0, 0};
+  PRUnichar shiftedLatinChar = 0;
+  PRUnichar unshiftedLatinChar = 0;
   PRUint32 numOfUniChars = 0;
   PRUint32 numOfShiftedChars = 0;
   PRUint32 numOfUnshiftedChars = 0;
@@ -3468,10 +3455,12 @@ BOOL nsWindow::OnChar(UINT charCode, UINT aScanCode, PRUint32 aFlags)
   // Keep the characters unshifted for shortcuts and accesskeys and make sure
   // that numbers are always passed as such (among others: bugs 50255 and 351310)
   if (uniChar && (mIsControlDown || mIsAltDown)) {
-    UINT virtualKeyCode = ::MapVirtualKeyEx(aScanCode, MAPVK_VSC_TO_VK, gKeyboardLayout);
+    UINT virtualKeyCode = ::MapVirtualKeyEx(aScanCode, MAPVK_VSC_TO_VK,
+                                            gKbdLayout.GetLayout());
     UINT unshiftedCharCode =
       virtualKeyCode >= '0' && virtualKeyCode <= '9' ? virtualKeyCode :
-      mIsShiftDown ? ::MapVirtualKeyEx(virtualKeyCode, MAPVK_VK_TO_CHAR, gKeyboardLayout) : 0;
+      mIsShiftDown ? ::MapVirtualKeyEx(virtualKeyCode, MAPVK_VK_TO_CHAR,
+                                       gKbdLayout.GetLayout()) : 0;
     // ignore diacritics (top bit set) and key mapping errors (char code 0)
     if ((INT)unshiftedCharCode > 0)
       uniChar = unshiftedCharCode;
@@ -3541,9 +3530,8 @@ nsWindow::SynthesizeNativeKeyEvent(PRInt32 aNativeKeyboardLayout,
   // This changes the state of the keyboard for the current thread only,
   // and we'll restore it soon, so this should be OK.
   ::SetKeyboardState(kbdState);
-  HKL oldLayout = gKeyboardLayout;
-  gKeyboardLayout = loadedLayout;
-  gKbdLayout.LoadLayout(gKeyboardLayout);
+  HKL oldLayout = gKbdLayout.GetLayout();
+  gKbdLayout.LoadLayout(loadedLayout);
 
   nsAutoTArray<KeyPair,10> keySequence;
   SetupKeyModifiersSequence(&keySequence, aModifierFlags);
@@ -3562,7 +3550,8 @@ nsWindow::SynthesizeNativeKeyEvent(PRInt32 aNativeKeyboardLayout,
     ::SetKeyboardState(kbdState);
     SetupModKeyState();
     if (i == keySequence.Length() - 1 && aCharacters.Length() > 0) {
-      UINT scanCode = ::MapVirtualKeyEx(aNativeKeyCode, MAPVK_VK_TO_VSC, gKeyboardLayout);
+      UINT scanCode = ::MapVirtualKeyEx(aNativeKeyCode, MAPVK_VK_TO_VSC,
+                                        gKbdLayout.GetLayout());
       nsFakeCharMessage msg = { aCharacters.CharAt(0), scanCode };
       OnKeyDown(key, 0, &msg);
     } else {
@@ -3583,8 +3572,7 @@ nsWindow::SynthesizeNativeKeyEvent(PRInt32 aNativeKeyboardLayout,
 
   // Restore old key state and layout
   ::SetKeyboardState(originalKbdState);
-  gKeyboardLayout = oldLayout;
-  gKbdLayout.LoadLayout(gKeyboardLayout);
+  gKbdLayout.LoadLayout(oldLayout);
   SetupModKeyState();
   
   UnloadKeyboardLayout(loadedLayout);
@@ -4716,7 +4704,7 @@ PRBool nsWindow::ProcessMessage(UINT msg, WPARAM wParam, LPARAM lParam, LRESULT 
         if (WA_INACTIVE == fActive) {
           gJustGotDeactivate = PR_TRUE;
           if (mIsTopWidgetWindow)
-            mLastKeyboardLayout = gKeyboardLayout;
+            mLastKeyboardLayout = gKbdLayout.GetLayout();
         } else {
           gJustGotActivate = PR_TRUE;
           nsMouseEvent event(PR_TRUE, NS_MOUSE_ACTIVATE, this,
@@ -4800,7 +4788,7 @@ PRBool nsWindow::ProcessMessage(UINT msg, WPARAM wParam, LPARAM lParam, LRESULT 
       }
       {
         // Get current input context
-        HIMC hC = ImmGetContext(mWnd);		
+        HIMC hC = ImmGetContext(mWnd);
         // Open the IME 
         ImmSetOpenStatus(hC, TRUE);
         // Set "multi-press" input mode
@@ -4852,7 +4840,6 @@ PRBool nsWindow::ProcessMessage(UINT msg, WPARAM wParam, LPARAM lParam, LRESULT 
         newHeight = PRInt32(r.bottom - r.top);
         nsRect rect(wp->x, wp->y, newWidth, newHeight);
 
-
 #ifdef MOZ_XUL
         if (eTransparencyTransparent == mTransparencyMode)
           ResizeTranslucentWindow(newWidth, newHeight);
@@ -4893,8 +4880,10 @@ PRBool nsWindow::ProcessMessage(UINT msg, WPARAM wParam, LPARAM lParam, LRESULT 
 
         // If we're being minimized, don't send the resize event to Gecko because
         // it will cause the scrollbar in the content area to go away and we'll
-        // forget the scroll position of the page.
-        if ( !newWidth && !newHeight && IsIconic(mWnd)) {
+        // forget the scroll position of the page.  Note that we need to check the
+        // toplevel window, because child windows seem to go to 0x0 on minimize.
+        HWND toplevelWnd = GetTopLevelHWND(mWnd);
+        if ( !newWidth && !newHeight && IsIconic(toplevelWnd)) {
           result = PR_FALSE;
           break;
         }
@@ -5009,7 +4998,7 @@ PRBool nsWindow::ProcessMessage(UINT msg, WPARAM wParam, LPARAM lParam, LRESULT 
       break;
 
     case WM_INPUTLANGCHANGE:
-      result = OnInputLangChange((HKL)lParam, aRetValue);
+      result = OnInputLangChange((HKL)lParam);
       break;
 
     case WM_IME_STARTCOMPOSITION:
@@ -5201,8 +5190,8 @@ PRBool nsWindow::ProcessMessage(UINT msg, WPARAM wParam, LPARAM lParam, LRESULT 
           break;
         }
 
-        LONG proc = ::GetWindowLongW(destWnd, GWL_WNDPROC);
-        if (proc != (LONG)&nsWindow::WindowProc) {
+        nsWindow* destWindow = GetNSWindowPtr(destWnd);
+        if (!destWindow || destWindow->mIsPluginWindow) {
           // Some other app, or a plugin window.
           // Windows directs WM_MOUSEWHEEL to the focused window.
           // However, Mozilla does not like plugins having focus, so a
@@ -5214,8 +5203,8 @@ PRBool nsWindow::ProcessMessage(UINT msg, WPARAM wParam, LPARAM lParam, LRESULT 
           // we find a parent matching our wndproc.
           HWND parentWnd = ::GetParent(destWnd);
           while (parentWnd) {
-            LONG parentWndProc = ::GetClassLongW(parentWnd, GCL_WNDPROC);
-            if (parentWndProc == (LONG)&nsWindow::DefaultWindowProc || parentWndProc == (LONG)&nsWindow::WindowProc) {
+            nsWindow* parentWindow = GetNSWindowPtr(parentWnd);
+            if (parentWindow) {
               // We have a child window - quite possibly a plugin window.
               // However, not all plugins are created equal - some will handle this message themselves,
               // some will forward directly back to us, while others will call DefWndProc, which
@@ -5223,6 +5212,7 @@ PRBool nsWindow::ProcessMessage(UINT msg, WPARAM wParam, LPARAM lParam, LRESULT 
               // So if we have sent it once, we need to handle it ourself.
               if (mIsInMouseWheelProcessing) {
                 destWnd = parentWnd;
+                destWindow = parentWindow;
               } else {
                 // First time we have seen this message.
                 // Call the child - either it will consume it, or
@@ -5243,7 +5233,6 @@ PRBool nsWindow::ProcessMessage(UINT msg, WPARAM wParam, LPARAM lParam, LRESULT 
         if (destWnd == nsnull)
           break; // done with this message.
         if (destWnd != mWnd) {
-          nsWindow* destWindow = GetNSWindowPtr(destWnd);
           if (destWindow) {
             return destWindow->ProcessMessage(msg, wParam, lParam, aRetValue);
           }
@@ -5350,12 +5339,11 @@ LPCWSTR nsWindow::WindowClassW()
 
 //    wc.style         = CS_HREDRAW | CS_VREDRAW | CS_DBLCLKS;
     wc.style         = CS_DBLCLKS;
-    wc.lpfnWndProc   = nsWindow::DefaultWindowProc;
+    wc.lpfnWndProc   = ::DefWindowProcW;
     wc.cbClsExtra    = 0;
     wc.cbWndExtra    = 0;
     wc.hInstance     = nsToolkit::mDllInstance;
-    // XXX : we don't need LoadIconW for now (see bug 171349, comment 181)
-    wc.hIcon         = ::LoadIcon(::GetModuleHandle(NULL), IDI_APPLICATION);
+    wc.hIcon         = ::LoadIconW(::GetModuleHandleW(NULL), (LPWSTR)IDI_APPLICATION);
     wc.hCursor       = NULL;
     wc.hbrBackground = mBrush;
     wc.lpszMenuName  = NULL;
@@ -5418,12 +5406,11 @@ LPCWSTR nsWindow::WindowPopupClassW()
     WNDCLASSW wc;
 
     wc.style = CS_DBLCLKS | CS_XP_DROPSHADOW;
-    wc.lpfnWndProc   = nsWindow::DefaultWindowProc;
+    wc.lpfnWndProc   = ::DefWindowProcW;
     wc.cbClsExtra    = 0;
     wc.cbWndExtra    = 0;
     wc.hInstance     = nsToolkit::mDllInstance;
-    // XXX : we don't need LoadIconW for now (see bug 171349, comment 181)
-    wc.hIcon         = ::LoadIcon(::GetModuleHandle(NULL), IDI_APPLICATION);
+    wc.hIcon         = ::LoadIconW(::GetModuleHandleW(NULL), (LPWSTR)IDI_APPLICATION);
     wc.hCursor       = NULL;
     wc.hbrBackground = mBrush;
     wc.lpszMenuName  = NULL;
@@ -5450,7 +5437,7 @@ LPCTSTR nsWindow::WindowClass()
   // XXX: The class name used here must be kept in sync with
   //      the classname used in WindowClassW();
 #ifdef UNICODE
-	return classNameW;
+  return classNameW;
 #else
   if (classNameW == kWClassNameHidden) {
     return kClassNameHidden;
@@ -5878,6 +5865,7 @@ PRBool nsWindow::OnPaint(HDC aDC)
 #endif
 
       nsRefPtr<gfxContext> thebesContext = new gfxContext(targetSurface);
+      thebesContext->SetFlag(gfxContext::FLAG_DESTINED_FOR_SCREEN);
 
 #ifdef MOZ_XUL
       if (eTransparencyGlass == mTransparencyMode && nsUXThemeData::sHaveCompositor) {
@@ -6456,6 +6444,8 @@ NS_METHOD nsWindow::SetPreferredSize(PRInt32 aWidth, PRInt32 aHeight)
   return NS_OK;
 }
 
+// XXX itABC v5.30 on Vista is E0210804. Probably, we should not use these
+// values for checking the current IME.
 #define ZH_CN_INTELLEGENT_ABC_IME ((HKL)0xe0040804L)
 #define ZH_CN_MS_PINYIN_IME_3_0 ((HKL)0xe00e0804L)
 #define ZH_CN_NEIMA_IME ((HKL)0xe0050804L)
@@ -6464,7 +6454,7 @@ NS_METHOD nsWindow::SetPreferredSize(PRInt32 aWidth, PRInt32 aHeight)
 PRBool gPinYinIMECaretCreated = PR_FALSE;
 
 void
-nsWindow::HandleTextEvent(HIMC hIMEContext,PRBool aCheckAttr)
+nsWindow::HandleTextEvent(HIMC hIMEContext, PRBool aCheckAttr)
 {
   NS_ASSERTION(sIMECompUnicode, "sIMECompUnicode is null");
   NS_ASSERTION(sIMEIsComposing, "conflict state");
@@ -6521,10 +6511,10 @@ nsWindow::HandleTextEvent(HIMC hIMEContext,PRBool aCheckAttr)
 
     ::ImmSetCandidateWindow(hIMEContext, &candForm);
 
-    // somehow the "Intellegent ABC IME" in Simplified Chinese
+    // somehow the "Intelligent ABC IME" in Simplified Chinese
     // window listen to the caret position to decide where to put the
     // candidate window
-    if (gKeyboardLayout == ZH_CN_INTELLEGENT_ABC_IME)
+    if (gKbdLayout.GetLayout() == ZH_CN_INTELLEGENT_ABC_IME)
     {
       CreateCaret(mWnd, nsnull, 1, 1);
       SetCaretPos(candForm.ptCurrentPos.x, candForm.ptCurrentPos.y);
@@ -6594,7 +6584,7 @@ nsWindow::HandleStartComposition(HIMC hIMEContext)
     printf("Candidate window position: x=%d, y=%d\n", candForm.ptCurrentPos.x, candForm.ptCurrentPos.y);
 #endif
 
-    if (!gPinYinIMECaretCreated && PINYIN_IME_ON_XP(gKeyboardLayout))
+    if (!gPinYinIMECaretCreated && PINYIN_IME_ON_XP(gKbdLayout.GetLayout()))
     {
       gPinYinIMECaretCreated = CreateCaret(mWnd, nsnull, 1, 1);
       SetCaretPos(candForm.ptCurrentPos.x, candForm.ptCurrentPos.y);
@@ -6616,7 +6606,7 @@ nsWindow::HandleStartComposition(HIMC hIMEContext)
   }
 
   if (!sIMECompUnicode)
-    sIMECompUnicode = new nsAutoString();
+    sIMECompUnicode = new nsString();
   sIMEIsComposing = PR_TRUE;
 
   return PR_TRUE;
@@ -6676,7 +6666,7 @@ nsWindow::GetTextRangeList(PRUint32* textRangeListLengthResult,nsTextRangeArray*
 
   long maxlen = sIMECompUnicode->Length();
   long cursor = sIMECursorPosition;
-  NS_ASSERTION(cursor <= maxlen, "wrong cursor positoin");
+  NS_ASSERTION(cursor <= maxlen, "wrong cursor position");
   if (cursor > maxlen)
     cursor = maxlen;
 
@@ -6687,7 +6677,7 @@ nsWindow::GetTextRangeList(PRUint32* textRangeListLengthResult,nsTextRangeArray*
     *textRangeListLengthResult = 2;
     *textRangeListResult = new nsTextRange[2];
     (*textRangeListResult)[0].mStartOffset = 0;
-    (*textRangeListResult)[0].mEndOffset = sIMECompUnicode->Length();
+    (*textRangeListResult)[0].mEndOffset = maxlen;
     (*textRangeListResult)[0].mRangeType = NS_TEXTRANGE_RAWINPUT;
     (*textRangeListResult)[1].mStartOffset = cursor;
     (*textRangeListResult)[1].mEndOffset = cursor;
@@ -6729,17 +6719,12 @@ nsWindow::GetTextRangeList(PRUint32* textRangeListLengthResult,nsTextRangeArray*
 
 
 //==========================================================================
-BOOL nsWindow::OnInputLangChange(HKL aHKL, LRESULT *oRetValue)
+BOOL nsWindow::OnInputLangChange(HKL aHKL)
 {
 #ifdef KE_DEBUG
   printf("OnInputLanguageChange\n");
 #endif
-
-  if (gKeyboardLayout != aHKL)
-  {
-    gKeyboardLayout = aHKL;
-    gKbdLayout.LoadLayout(gKeyboardLayout);
-  }
+  gKbdLayout.LoadLayout(aHKL);
 
   ResetInputState();
 
@@ -6794,17 +6779,34 @@ BOOL nsWindow::OnIMEChar(BYTE aByte1, BYTE aByte2, LPARAM aKeyState)
 // This function is used when aIndex is GCS_COMPSTR, GCS_COMPREADSTR,
 // GCS_RESULTSTR, and GCS_RESULTREADSTR.
 // Otherwise use ::ImmGetCompositionStringW.
-void nsWindow::GetCompositionString(HIMC aHIMC, DWORD aIndex, nsString* aStrUnicode)
+void nsWindow::GetCompositionString(HIMC aHIMC, DWORD aIndex)
 {
-  long lRtn;
-  lRtn = ::ImmGetCompositionStringW(aHIMC, aIndex, NULL, 0);
-  if (!EnsureStringLength(*aStrUnicode, (lRtn / sizeof(WCHAR)) + 1))
-    return; // out of memory
+  // Retrieve the size of the required output buffer.
+  long lRtn = ::ImmGetCompositionStringW(aHIMC, aIndex, NULL, 0);
+  if (lRtn < 0 ||
+      !EnsureStringLength(*sIMECompUnicode, (lRtn / sizeof(WCHAR)) + 1))
+    return; // Error or out of memory.
 
-  long buflen = lRtn + sizeof(WCHAR);
-  lRtn = ::ImmGetCompositionStringW(aHIMC, aIndex, (LPVOID)aStrUnicode->BeginWriting(), buflen);
-  lRtn = lRtn / sizeof(WCHAR);
-  aStrUnicode->SetLength(lRtn);
+  // Actually retrieve the composition string information.
+  lRtn = ::ImmGetCompositionStringW(aHIMC, aIndex,
+                                    (LPVOID)sIMECompUnicode->BeginWriting(),
+                                    lRtn + sizeof(WCHAR));
+  sIMECompUnicode->SetLength(lRtn / sizeof(WCHAR));
+}
+
+PRBool nsWindow::ConvertToANSIString(const nsAFlatString& aStr, UINT aCodePage,
+                                     nsACString& aANSIStr)
+{
+  int len = ::WideCharToMultiByte(aCodePage, 0,
+                                  (LPCWSTR)aStr.get(), aStr.Length(),
+                                  NULL, 0, NULL, NULL);
+  NS_ENSURE_TRUE(len >= 0, PR_FALSE);
+
+  if (!EnsureStringLength(aANSIStr, len))
+    return PR_FALSE;
+  ::WideCharToMultiByte(aCodePage, 0, (LPCWSTR)aStr.get(), aStr.Length(),
+                        (LPSTR)aANSIStr.BeginWriting(), len, NULL, NULL);
+  return PR_TRUE;
 }
 
 //==========================================================================
@@ -6816,12 +6818,13 @@ BOOL nsWindow::OnIMEComposition(LPARAM aGCS)
   // for bug #60050
   // MS-IME 95/97/98/2000 may send WM_IME_COMPOSITION with non-conversion
   // mode before it send WM_IME_STARTCOMPOSITION.
-  if (!sIMECompUnicode)
-    sIMECompUnicode = new nsAutoString();
-
-  NS_ASSERTION(sIMECompUnicode, "sIMECompUnicode is null");
-  if (!sIMECompUnicode)
-    return PR_TRUE;
+  if (!sIMECompUnicode) {
+    sIMECompUnicode = new nsString();
+    if (NS_UNLIKELY(!sIMECompUnicode)) {
+      NS_ASSERTION(sIMECompUnicode, "sIMECompUnicode is null");
+      return PR_TRUE;
+    }
+  }
 
   HIMC hIMEContext = ::ImmGetContext(mWnd);
   if (hIMEContext==NULL) 
@@ -6842,7 +6845,7 @@ BOOL nsWindow::OnIMEComposition(LPARAM aGCS)
     if (!sIMEIsComposing) 
       HandleStartComposition(hIMEContext);
 
-    GetCompositionString(hIMEContext, GCS_RESULTSTR, sIMECompUnicode);
+    GetCompositionString(hIMEContext, GCS_RESULTSTR);
 #ifdef DEBUG_IME
     printf("GCS_RESULTSTR compStrLen = %d\n", sIMECompUnicode->Length());
 #endif
@@ -6867,7 +6870,7 @@ BOOL nsWindow::OnIMEComposition(LPARAM aGCS)
     //--------------------------------------------------------
     // 1. Get GCS_COMPSTR
     //--------------------------------------------------------
-    GetCompositionString(hIMEContext, GCS_COMPSTR, sIMECompUnicode);
+    GetCompositionString(hIMEContext, GCS_COMPSTR);
 
     // See https://bugzilla.mozilla.org/show_bug.cgi?id=296339
     if (sIMECompUnicode->IsEmpty() &&
@@ -6894,29 +6897,61 @@ BOOL nsWindow::OnIMEComposition(LPARAM aGCS)
     //--------------------------------------------------------
     // 2. Get GCS_COMPCLAUSE
     //--------------------------------------------------------
-    long compClauseLen, compClauseLen2;
-    compClauseLen = ::ImmGetCompositionStringW(hIMEContext, GCS_COMPCLAUSE, NULL, 0);
+    long compClauseArrayByteCount =
+      ::ImmGetCompositionStringW(hIMEContext, GCS_COMPCLAUSE, NULL, 0);
 #ifdef DEBUG_IME
-    printf("GCS_COMPCLAUSE compClauseLen = %d\n", compClauseLen);
+    printf("GCS_COMPCLAUSE compClauseArrayByteCount = %d\n",
+           compClauseArrayByteCount);
 #endif
-    compClauseLen = compClauseLen / sizeof(PRUint32);
+    long compClauseArrayLength = compClauseArrayByteCount / sizeof(PRUint32);
+    if (compClauseArrayLength > 0) {
+      if (compClauseArrayByteCount > sIMECompClauseArraySize) {
+        if (sIMECompClauseArray)
+          delete [] sIMECompClauseArray;
+        // Allocate some extra space to avoid reallocations.
+        PRInt32 arrayLength = compClauseArrayLength + 32;
+        sIMECompClauseArray = new PRUint32[arrayLength];
+        sIMECompClauseArraySize = arrayLength * sizeof(PRUint32);
+      }
 
-    if (compClauseLen > sIMECompClauseArraySize) {
-      if (sIMECompClauseArray) 
-        delete [] sIMECompClauseArray;
-      // Allocate some extra space to avoid reallocations.
-      sIMECompClauseArray = new PRUint32[compClauseLen + 32];
-      sIMECompClauseArraySize = compClauseLen + 32;
+      // Intelligent ABC IME (Simplified Chinese IME, the code page is 936)
+      // will crash in ImmGetCompositionStringW for GCS_COMPCLAUSE (bug 424663).
+      // See comment 35 of the bug for the detail. Therefore, we should use A
+      // API for it, however, we should not kill Unicode support on all IMEs.
+      PRBool useA_API = !(gKbdLayout.GetIMEProperty() & IME_PROP_UNICODE);
+
+      long compClauseArrayByteCount2 = useA_API ?
+        ::ImmGetCompositionStringA(hIMEContext, GCS_COMPCLAUSE,
+                                   sIMECompClauseArray,
+                                   sIMECompClauseArraySize) :
+        ::ImmGetCompositionStringW(hIMEContext, GCS_COMPCLAUSE,
+                                   sIMECompClauseArray,
+                                   sIMECompClauseArraySize);
+      NS_ASSERTION(compClauseArrayByteCount2 == compClauseArrayByteCount,
+                   "strange result");
+      if (compClauseArrayByteCount > compClauseArrayByteCount2)
+        compClauseArrayLength = compClauseArrayByteCount2 / sizeof(PRUint32);
+
+      if (useA_API) {
+        // Convert each values of sIMECompClauseArray. The values mean offset of
+        // the clauses in ANSI string. But we need the values in Unicode string.
+        nsCAutoString compANSIStr;
+        if (ConvertToANSIString(*sIMECompUnicode,
+                                gKbdLayout.GetCodePage(), compANSIStr)) {
+          PRUint32 maxlen = compANSIStr.Length();
+          sIMECompClauseArray[0] = 0; // first value must be 0
+          for (PRInt32 i = 1; i < compClauseArrayLength; i++) {
+            PRUint32 len = PR_MIN(sIMECompClauseArray[i], maxlen);
+            sIMECompClauseArray[i] =
+              ::MultiByteToWideChar(gKbdLayout.GetCodePage(), MB_PRECOMPOSED,
+                                    (LPCSTR)compANSIStr.get(), len, NULL, 0);
+          }
+        }
+      }
     }
-
-    compClauseLen2 = ::ImmGetCompositionStringW(hIMEContext, GCS_COMPCLAUSE, sIMECompClauseArray,
-      sIMECompClauseArraySize * sizeof(PRUint32));
-
-    compClauseLen2 = compClauseLen2 / sizeof(PRUint32);
-    NS_ASSERTION(compClauseLen2 == compClauseLen, "strange result");
-    if (compClauseLen > compClauseLen2)
-      compClauseLen = compClauseLen2;
-    sIMECompClauseArrayLength = compClauseLen;
+    // compClauseArrayLength may be negative. I.e., ImmGetCompositionStringW
+    // may return an error code.
+    sIMECompClauseArrayLength = PR_MAX(0, compClauseArrayLength);
 
     //--------------------------------------------------------
     // 3. Get GCS_COMPATTR
@@ -6932,12 +6967,15 @@ BOOL nsWindow::OnIMEComposition(LPARAM aGCS)
       if (sIMEAttributeArray) 
         delete [] sIMEAttributeArray;
       // Allocate some extra space to avoid reallocations.
-      sIMEAttributeArray = new PRUint8[attrStrLen + 64];
-      sIMEAttributeArraySize = attrStrLen + 64;
+      PRInt32 arrayLength = attrStrLen + 64;
+      sIMEAttributeArray = new PRUint8[arrayLength];
+      sIMEAttributeArraySize = arrayLength * sizeof(PRUint8);
     }
     attrStrLen = ::ImmGetCompositionStringW(hIMEContext, GCS_COMPATTR, sIMEAttributeArray, sIMEAttributeArraySize);
 
-    sIMEAttributeArrayLength = attrStrLen;
+    // attrStrLen may be negative. I.e., ImmGetCompositionStringW may return an
+    // error code.
+    sIMEAttributeArrayLength = PR_MAX(0, attrStrLen);
 
     //--------------------------------------------------------
     // 4. Get GCS_CURSOPOS
@@ -6957,7 +6995,7 @@ BOOL nsWindow::OnIMEComposition(LPARAM aGCS)
   }
   if (!result) {
 #ifdef DEBUG_IME
-    fprintf(stderr,"Haandle 0 length TextEvent. \n");
+    fprintf(stderr, "Handle 0 length TextEvent.\n");
 #endif
     if (!sIMEIsComposing) 
       HandleStartComposition(hIMEContext);
@@ -6987,12 +7025,7 @@ BOOL nsWindow::OnIMEEndComposition()
   printf("OnIMEEndComposition\n");
 #endif
   if (sIMEIsComposing) {
-    HIMC hIMEContext;
-
-    if (sIMEProperty & (IME_PROP_SPECIAL_UI | IME_PROP_AT_CARET)) 
-      return PR_FALSE;
-
-    hIMEContext = ::ImmGetContext(mWnd);
+    HIMC hIMEContext = ::ImmGetContext(mWnd);
     if (hIMEContext==NULL) 
       return PR_TRUE;
 
@@ -7000,7 +7033,7 @@ BOOL nsWindow::OnIMEEndComposition()
     // first when we hit space in composition mode
     // we need to clear out the current composition string
     // in that case.
-    sIMECompUnicode->Truncate(0);
+    sIMECompUnicode->Truncate();
 
     HandleTextEvent(hIMEContext, PR_FALSE);
 
@@ -7267,12 +7300,7 @@ BOOL nsWindow::OnIMEStartComposition()
 #ifdef DEBUG_IME
   printf("OnIMEStartComposition\n");
 #endif
-  HIMC hIMEContext;
-
-  if (sIMEProperty & (IME_PROP_SPECIAL_UI | IME_PROP_AT_CARET))
-    return PR_FALSE;
-
-  hIMEContext = ::ImmGetContext(mWnd);
+  HIMC hIMEContext = ::ImmGetContext(mWnd);
   if (hIMEContext == NULL)
     return PR_TRUE;
 
@@ -7423,8 +7451,9 @@ nsWindow::HandleMouseActionOfIME(int aAction, POINT *ptPos)
 
       // Note: hitText has been done, so no check of sIMECompCharPos
       // and composing char maximum limit is necessary.
+      PRUint32 len = sIMECompUnicode->Length();
       PRUint32 i = 0;
-      for (i = 0; i < sIMECompUnicode->Length(); i++) {
+      for (i = 0; i < len; ++i) {
         if (PT_IN_RECT(*ptPos, sIMECompCharPos[i]))
           break;
       }
@@ -7709,11 +7738,24 @@ LRESULT CALLBACK nsWindow::MozSpecialMsgFilter(int code, WPARAM wParam, LPARAM l
 LRESULT CALLBACK nsWindow::MozSpecialMouseProc(int code, WPARAM wParam, LPARAM lParam)
 {
   if (gProcessHook) {
-    MOUSEHOOKSTRUCT* ms = (MOUSEHOOKSTRUCT*)lParam;
-    if (wParam == WM_LBUTTONDOWN) {
-      nsIWidget* mozWin = (nsIWidget*)GetNSWindowPtr(ms->hwnd);
-      if (mozWin == NULL) {
-        ScheduleHookTimer(ms->hwnd, (UINT)wParam);
+    switch (wParam) {
+      case WM_LBUTTONDOWN:
+      case WM_RBUTTONDOWN:
+      case WM_MBUTTONDOWN:
+      case WM_MOUSEWHEEL:
+      case WM_MOUSEHWHEEL:
+      {
+        MOUSEHOOKSTRUCT* ms = (MOUSEHOOKSTRUCT*)lParam;
+        nsIWidget* mozWin = (nsIWidget*)GetNSWindowPtr(ms->hwnd);
+        if (mozWin) {
+          // If this window is windowed plugin window, the mouse events are not
+          // sent to us.
+          if (static_cast<nsWindow*>(mozWin)->mIsPluginWindow)
+            ScheduleHookTimer(ms->hwnd, (UINT)wParam);
+        } else {
+          ScheduleHookTimer(ms->hwnd, (UINT)wParam);
+        }
+        break;
       }
     }
   }
@@ -7853,6 +7895,11 @@ VOID CALLBACK nsWindow::HookTimerForPopups(HWND hwnd, UINT uMsg, UINT idEvent, D
 }
 #endif // WinCE
 
+static PRBool IsDifferentThreadWindow(HWND aWnd)
+{
+  return ::GetCurrentThreadId() != ::GetWindowThreadProcessId(aWnd, NULL);
+}
+
 //
 // DealWithPopups
 //
@@ -7865,19 +7912,18 @@ nsWindow :: DealWithPopups ( HWND inWnd, UINT inMsg, WPARAM inWParam, LPARAM inL
   if (gRollupListener && gRollupWidget && ::IsWindowVisible(inWnd)) {
 
     if (inMsg == WM_LBUTTONDOWN || inMsg == WM_RBUTTONDOWN || inMsg == WM_MBUTTONDOWN ||
-        inMsg == WM_MOUSEWHEEL || inMsg == WM_MOUSEHWHEEL || inMsg == WM_ACTIVATE
+        inMsg == WM_MOUSEWHEEL || inMsg == WM_MOUSEHWHEEL || inMsg == WM_ACTIVATE ||
+        (inMsg == WM_KILLFOCUS && IsDifferentThreadWindow((HWND)inWParam))
 #ifndef WINCE
         || 
         inMsg == WM_NCRBUTTONDOWN || 
         inMsg == WM_MOVING || 
         inMsg == WM_SIZING || 
-        inMsg == WM_GETMINMAXINFO ||
         inMsg == WM_NCLBUTTONDOWN || 
         inMsg == WM_NCMBUTTONDOWN ||
         inMsg == WM_MOUSEACTIVATE ||
         inMsg == WM_ACTIVATEAPP ||
-        inMsg == WM_MENUSELECT ||
-        (inMsg == WM_GETMINMAXINFO && !::GetParent(inWnd))
+        inMsg == WM_MENUSELECT
 #endif
         )
     {
@@ -7937,6 +7983,9 @@ nsWindow :: DealWithPopups ( HWND inWnd, UINT inMsg, WPARAM inWParam, LPARAM inL
       else
 #endif
       if ( rollup ) {
+        // gRollupConsumeRollupEvent may be modified by
+        // nsIRollupListener::Rollup.
+        PRBool consumeRollupEvent = gRollupConsumeRollupEvent;
         // only need to deal with the last rollup for left mouse down events.
         gRollupListener->Rollup(inMsg == WM_LBUTTONDOWN ? &mLastRollup : nsnull);
 
@@ -7949,7 +7998,7 @@ nsWindow :: DealWithPopups ( HWND inWnd, UINT inMsg, WPARAM inWParam, LPARAM inL
         // false allows the event to be dispatched
         //
         // So if we are NOT supposed to be consuming events, let it go through
-        if (gRollupConsumeRollupEvent && inMsg != WM_RBUTTONDOWN) {
+        if (consumeRollupEvent && inMsg != WM_RBUTTONDOWN) {
           *outResult = TRUE;
           return TRUE;
         }

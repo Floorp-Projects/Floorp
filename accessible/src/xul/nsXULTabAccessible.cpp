@@ -96,15 +96,12 @@ NS_IMETHODIMP nsXULTabAccessible::GetRole(PRUint32 *_retval)
 /**
   * Possible states: focused, focusable, unavailable(disabled), offscreen
   */
-NS_IMETHODIMP
-nsXULTabAccessible::GetState(PRUint32 *aState, PRUint32 *aExtraState)
+nsresult
+nsXULTabAccessible::GetStateInternal(PRUint32 *aState, PRUint32 *aExtraState)
 {
   // get focus and disable status from base class
-  nsresult rv = nsLeafAccessible::GetState(aState, aExtraState);
-  if (!mDOMNode) {
-    return NS_OK;
-  }
-  NS_ENSURE_SUCCESS(rv, rv);
+  nsresult rv = nsLeafAccessible::GetStateInternal(aState, aExtraState);
+  NS_ENSURE_A11Y_SUCCESS(rv, rv);
 
   // In the past, tabs have been focusable in classic theme
   // They may be again in the future
@@ -181,7 +178,7 @@ nsXULTabAccessible::GetAccessibleRelated(PRUint32 aRelationType,
   // the setter 'selectedIndex' of tabbox.xml#tabs binding.
 
   nsCOMPtr<nsIAccessible> tabsAcc = GetParent();
-  NS_ENSURE_TRUE(tabsAcc && Role(tabsAcc) == nsIAccessibleRole::ROLE_PAGETABLIST,
+  NS_ENSURE_TRUE(nsAccUtils::Role(tabsAcc) == nsIAccessibleRole::ROLE_PAGETABLIST,
                  NS_ERROR_FAILURE);
 
   PRInt32 tabIndex = -1;
@@ -189,7 +186,7 @@ nsXULTabAccessible::GetAccessibleRelated(PRUint32 aRelationType,
   nsCOMPtr<nsIAccessible> childAcc;
   tabsAcc->GetFirstChild(getter_AddRefs(childAcc));
   while (childAcc) {
-    if (Role(childAcc) == nsIAccessibleRole::ROLE_PAGETAB)
+    if (nsAccUtils::Role(childAcc) == nsIAccessibleRole::ROLE_PAGETAB)
       tabIndex++;
 
     if (childAcc == this)
@@ -202,12 +199,12 @@ nsXULTabAccessible::GetAccessibleRelated(PRUint32 aRelationType,
 
   nsCOMPtr<nsIAccessible> tabBoxAcc;
   tabsAcc->GetParent(getter_AddRefs(tabBoxAcc));
-  NS_ENSURE_TRUE(tabBoxAcc && Role(tabBoxAcc) == nsIAccessibleRole::ROLE_PANE,
+  NS_ENSURE_TRUE(nsAccUtils::Role(tabBoxAcc) == nsIAccessibleRole::ROLE_PANE,
                  NS_ERROR_FAILURE);
 
   tabBoxAcc->GetFirstChild(getter_AddRefs(childAcc));
   while (childAcc) {
-    if (Role(childAcc) == nsIAccessibleRole::ROLE_PROPERTYPAGE) {
+    if (nsAccUtils::Role(childAcc) == nsIAccessibleRole::ROLE_PROPERTYPAGE) {
       if (tabIndex == 0) {
         NS_ADDREF(*aRelatedAccessible = childAcc);
         return NS_OK;
@@ -296,12 +293,10 @@ NS_IMETHODIMP nsXULTabsAccessible::GetValue(nsAString& _retval)
   return NS_OK;
 }
 
-/** no name*/
-NS_IMETHODIMP
-nsXULTabsAccessible::GetName(nsAString& aName)
+nsresult
+nsXULTabsAccessible::GetNameInternal(nsAString& aName)
 {
-  aName.Truncate();
-
+  // no name
   return NS_OK;
 }
 
@@ -344,7 +339,7 @@ nsXULTabpanelAccessible::GetAccessibleRelated(PRUint32 aRelationType,
   // Expose 'LABELLED_BY' relation on tabpanel accessible for tab accessible.
   nsCOMPtr<nsIAccessible> tabBoxAcc;
   GetParent(getter_AddRefs(tabBoxAcc));
-  NS_ENSURE_TRUE(tabBoxAcc && Role(tabBoxAcc) == nsIAccessibleRole::ROLE_PANE,
+  NS_ENSURE_TRUE(nsAccUtils::Role(tabBoxAcc) == nsIAccessibleRole::ROLE_PANE,
                  NS_ERROR_FAILURE);
 
   PRInt32 tabpanelIndex = -1;
@@ -354,11 +349,11 @@ nsXULTabpanelAccessible::GetAccessibleRelated(PRUint32 aRelationType,
   nsCOMPtr<nsIAccessible> childAcc;
   tabBoxAcc->GetFirstChild(getter_AddRefs(childAcc));
   while (childAcc && (!tabsAcc || !isTabpanelFound)) {
-    if (Role(childAcc) == nsIAccessibleRole::ROLE_PAGETABLIST)
+    if (nsAccUtils::Role(childAcc) == nsIAccessibleRole::ROLE_PAGETABLIST)
       tabsAcc = childAcc;
 
     if (!isTabpanelFound &&
-        Role(childAcc) == nsIAccessibleRole::ROLE_PROPERTYPAGE)
+        nsAccUtils::Role(childAcc) == nsIAccessibleRole::ROLE_PROPERTYPAGE)
       tabpanelIndex++;
 
     if (childAcc == this)
@@ -378,7 +373,7 @@ nsXULTabpanelAccessible::GetAccessibleRelated(PRUint32 aRelationType,
   nsCOMPtr<nsIAccessible> foundTabAcc;
   tabsAcc->GetFirstChild(getter_AddRefs(childAcc));
   while (childAcc) {
-    if (Role(childAcc) == nsIAccessibleRole::ROLE_PAGETAB) {
+    if (nsAccUtils::Role(childAcc) == nsIAccessibleRole::ROLE_PAGETAB) {
       if (atomID) {
         nsCOMPtr<nsIAccessNode> tabAccNode(do_QueryInterface(childAcc));
         nsCOMPtr<nsIDOMNode> tabNode;

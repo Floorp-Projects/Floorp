@@ -114,7 +114,7 @@ typedef struct _cairo_command_show_text_glyphs {
     unsigned int		 num_glyphs;
     cairo_text_cluster_t	*clusters;
     int				 num_clusters;
-    cairo_bool_t		 backward;
+    cairo_text_cluster_flags_t   cluster_flags;
     cairo_scaled_font_t		*scaled_font;
 } cairo_command_show_text_glyphs_t;
 

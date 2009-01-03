@@ -353,7 +353,8 @@
               <menupopup id="goPopup"
                          type="places"
                          onpopupshowing="HistoryMenu.onPopupShowing(this);"
-                         place="place:type=0&amp;sort=4&amp;maxResults=10">
+                         place="place:type=0&amp;sort=4&amp;maxResults=10"
+                         tooltip="btTooltip">
                 <menuitem id="historyMenuBack"
                           label="&backCmd.label;"
 #ifdef XP_MACOSX
@@ -395,7 +396,7 @@
   <menu id="bookmarksMenu" 
         label="&bookmarksMenu.label;" accesskey="&bookmarksMenu.accesskey;"
         ondragenter="PlacesMenuDNDController.onBookmarksMenuDragEnter(event);"
-        ondragdrop="nsDragAndDrop.drop(event, BookmarksMenuDropHandler);"
+        ondrop="nsDragAndDrop.drop(event, BookmarksMenuDropHandler);"
         ondragover="nsDragAndDrop.dragOver(event, BookmarksMenuDropHandler);"
         ondragexit="nsDragAndDrop.dragExit(event, BookmarksMenuDropHandler);">
     <menupopup id="bookmarksMenuPopup"
@@ -405,7 +406,8 @@
                openInTabs="children"
                oncommand="BookmarksEventHandler.onCommand(event);"
                onclick="BookmarksEventHandler.onClick(event);"
-               onpopupshowing="BookmarksEventHandler.onPopupShowing(event);">
+               onpopupshowing="BookmarksEventHandler.onPopupShowing(event);"
+               tooltip="btTooltip">
       <menuitem label="&bookmarkThisPageCmd.label;"
                 command="Browser:AddBookmarkAs" key="addBookmarkAsKb"/>
       <menuitem id="subscribeToPageMenuitem"
@@ -464,9 +466,15 @@
                         key="key_viewInfo" command="View:PageInfo"/>
 #endif
               <menuseparator id="sanitizeSeparator"/>
+              <menuitem id="privateBrowsingItem"
+                        label="&privateBrowsingCmd.label;"
+                        accesskey="&privateBrowsingCmd.accesskey;"
+                        type="checkbox"
+                        autocheck="false"
+                        command="Tools:PrivateBrowsing"/>
               <menuitem id="sanitizeItem"
-                        accesskey="&clearPrivateDataCmd.accesskey;"
-                        label="&clearPrivateDataCmd.label;"
+                        accesskey="&clearRecentHistoryCmd.accesskey;"
+                        label="&clearRecentHistoryCmd.label;"
                         key="key_sanitize" command="Tools:Sanitize"/>
 #ifndef XP_UNIX
               <menuseparator id="prefSep"/>

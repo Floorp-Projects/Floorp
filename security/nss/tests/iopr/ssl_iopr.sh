@@ -393,6 +393,7 @@ ssl_iopr_cov_ext_client()
   kill_selfserv
   
   P_R_SERVERDIR=$OR_P_R_SERVERDIR
+  P_R_CLIENTDIR=$OR_P_R_CLIENTDIR
   
   rm -f ${TEST_IN} ${TEST_OUT}
   html "</TABLE><BR>"
@@ -431,7 +432,7 @@ ssl_iopr_auth_ext_client()
   OR_P_R_SERVERDIR=$P_R_SERVERDIR
   P_R_SERVERDIR=${serDbDir}
   OR_P_R_CLIENTDIR=$P_R_CLIENTDIR
-  P_R_CLIENTDIR=$serDbDir
+  P_R_CLIENTDIR=${serDbDir}
 
   SSLAUTH_TMP=${TMP}/authin.tl.tmp
 
@@ -486,7 +487,9 @@ ssl_iopr_auth_ext_client()
       kill_selfserv
       rm -f $TEST_OUT $TEST_IN 2>&1 > /dev/null
   done < ${SSLAUTH_TMP}
+
   P_R_SERVERDIR=$OR_P_R_SERVERDIR
+  P_R_CLIENTDIR=$OR_P_R_CLIENTDIR
 
   rm -f ${SSLAUTH_TMP} ${TEST_IN} ${TEST_OUT}
   html "</TABLE><BR>"
@@ -583,7 +586,9 @@ ssl_iopr_crl_ext_client()
       done
       kill_selfserv
   done < ${SSLAUTH_TMP}
+
   P_R_SERVERDIR=$OR_P_R_SERVERDIR
+  P_R_CLIENTDIR=$OR_P_R_CLIENTDIR
 
   rm -f ${SSLAUTH_TMP}
   html "</TABLE><BR>"
@@ -599,12 +604,13 @@ ssl_iopr_crl_ext_client()
 # Returns 1 if interoperability testing is off, 0 otherwise. 
 #
 ssl_iopr_run() {
-    NO_ECC_CERTS=1 # disable ECC for interoperability tests
-
     if [ "$IOPR" -ne 1 ]; then
         return 1
     fi
     cd ${CLIENTDIR}
+    
+    ORIG_ECC_CERT=${NO_ECC_CERTS}
+    NO_ECC_CERTS=1 # disable ECC for interoperability tests
 
     num=1
     IOPR_HOST_PARAM=`echo "${IOPR_HOSTADDR_LIST} " | cut -f $num -d' '`
@@ -660,7 +666,7 @@ ssl_iopr_run() {
         num=`expr $num + 1`
         IOPR_HOST_PARAM=`echo "${IOPR_HOSTADDR_LIST} " | cut -f $num -d' '`
     done
-    NO_ECC_CERTS=0
+    NO_ECC_CERTS=${ORIG_ECC_CERTS}
     return 0
 }
 

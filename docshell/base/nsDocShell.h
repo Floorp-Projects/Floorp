@@ -107,6 +107,7 @@
 #include "nsPIDOMEventTarget.h"
 #include "nsIURIClassifier.h"
 #include "nsIChannelClassifier.h"
+#include "nsILoadContext.h"
 
 class nsIScrollableView;
 class nsDocShell;
@@ -185,7 +186,8 @@ class nsDocShell : public nsDocLoader,
                    public nsIEditorDocShell,
                    public nsIWebPageDescriptor,
                    public nsIAuthPromptProvider,
-                   public nsIObserver
+                   public nsIObserver,
+                   public nsILoadContext
 {
 friend class nsDSURIContentListener;
 
@@ -214,6 +216,7 @@ public:
     NS_DECL_NSIWEBPAGEDESCRIPTOR
     NS_DECL_NSIAUTHPROMPTPROVIDER
     NS_DECL_NSIOBSERVER
+    NS_DECL_NSILOADCONTEXT
 
     NS_IMETHOD Stop() {
         // Need this here because otherwise nsIWebNavigation::Stop
@@ -272,6 +275,10 @@ protected:
     // at the parent.
     nsIPrincipal* GetInheritedPrincipal(PRBool aConsiderCurrentDocument);
 
+    // True if when loading aURI into this docshell, the channel should look
+    // for an appropriate application cache.
+    PRBool ShouldCheckAppCache(nsIURI * aURI);
+
     // Actually open a channel and perform a URI load.  Note: whatever owner is
     // passed to this function will be set on the channel.  Callers who wish to
     // not have an owner on the channel should just pass null.
@@ -315,7 +322,10 @@ protected:
     // In this case it is the caller's responsibility to ensure
     // FireOnLocationChange is called.
     // In all other cases PR_FALSE is returned.
-    PRBool OnNewURI(nsIURI * aURI, nsIChannel * aChannel, PRUint32 aLoadType,
+    // Either aChannel or aOwner must be null.  If aChannel is
+    // present, the owner should be gotten from it.
+    PRBool OnNewURI(nsIURI * aURI, nsIChannel * aChannel, nsISupports* aOwner,
+                    PRUint32 aLoadType,
                     PRBool aFireOnLocationChange,
                     PRBool aAddToGlobalHistory = PR_TRUE);
 
@@ -323,8 +333,11 @@ protected:
 
     // Session History
     virtual PRBool ShouldAddToSessionHistory(nsIURI * aURI);
+    // Either aChannel or aOwner must be null.  If aChannel is
+    // present, the owner should be gotten from it.
     virtual nsresult AddToSessionHistory(nsIURI * aURI, nsIChannel * aChannel,
-        nsISHEntry ** aNewEntry);
+                                         nsISupports* aOwner,
+                                         nsISHEntry ** aNewEntry);
     nsresult DoAddChildSHEntry(nsISHEntry* aNewEntry, PRInt32 aChildOffset);
 
     NS_IMETHOD LoadHistoryEntry(nsISHEntry * aEntry, PRUint32 aLoadType);

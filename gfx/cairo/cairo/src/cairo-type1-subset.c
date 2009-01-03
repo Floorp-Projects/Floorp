@@ -61,7 +61,6 @@
 #include <ctype.h>
 
 typedef struct _cairo_type1_font_subset {
-
     cairo_scaled_font_subset_t *scaled_font_subset;
 
     struct {
@@ -76,7 +75,6 @@ typedef struct _cairo_type1_font_subset {
 	unsigned long  header_size;
 	unsigned long  data_size;
 	unsigned long  trailer_size;
-
     } base;
 
     FT_Face face;
@@ -115,15 +113,14 @@ typedef struct _cairo_type1_font_subset {
 
 
 static cairo_status_t
-_cairo_type1_font_subset_create (cairo_unscaled_font_t      *unscaled_font,
-				 cairo_type1_font_subset_t **subset_return,
-                                 cairo_bool_t                hex_encode)
+_cairo_type1_font_subset_init (cairo_type1_font_subset_t  *font,
+			       cairo_unscaled_font_t      *unscaled_font,
+			       cairo_bool_t                hex_encode)
 {
     cairo_ft_unscaled_font_t *ft_unscaled_font;
     cairo_status_t status;
     FT_Face face;
     PS_FontInfoRec font_info;
-    cairo_type1_font_subset_t *font;
     int i, j;
 
     ft_unscaled_font = (cairo_ft_unscaled_font_t *) unscaled_font;
@@ -145,12 +142,7 @@ _cairo_type1_font_subset_create (cairo_unscaled_font_t      *unscaled_font,
     }
 #endif
 
-    font = calloc (sizeof (cairo_type1_font_subset_t), 1);
-    if (font == NULL) {
-	status = _cairo_error (CAIRO_STATUS_NO_MEMORY);
-        goto fail1;
-    }
-
+    memset (font, 0, sizeof (font));
     font->base.unscaled_font = _cairo_unscaled_font_reference (unscaled_font);
     font->base.num_glyphs = face->num_glyphs;
     font->base.x_min = face->bbox.xMin;
@@ -189,8 +181,6 @@ _cairo_type1_font_subset_create (cairo_unscaled_font_t      *unscaled_font,
 
     _cairo_ft_unscaled_font_unlock_face (ft_unscaled_font);
 
-    *subset_return = font;
-
     return CAIRO_STATUS_SUCCESS;
 
  fail3:
@@ -198,7 +188,6 @@ _cairo_type1_font_subset_create (cairo_unscaled_font_t      *unscaled_font,
 	free (font->base.base_font);
  fail2:
     _cairo_unscaled_font_destroy (unscaled_font);
-    free (font);
  fail1:
     _cairo_ft_unscaled_font_unlock_face (ft_unscaled_font);
 
@@ -1225,10 +1214,15 @@ cairo_type1_font_subset_generate (void       *abstract_font,
 	goto fail;
     }
 
-    if (font->face->stream->read) {
-	ret = font->face->stream->read (font->face->stream, 0,
-					(unsigned char *) font->type1_data,
-					font->type1_length);
+    if (font->face->stream->read != NULL) {
+	/* Note that read() may be implemented as a macro, thanks POSIX!, so we
+	 * need to wrap the following usage in parentheses in order to
+	 * disambiguate it for the pre-processor - using the verbose function
+	 * pointer dereference for clarity.
+	 */
+	ret = (* font->face->stream->read) (font->face->stream, 0,
+					    (unsigned char *) font->type1_data,
+					    font->type1_length);
 	if (ret != font->type1_length) {
 	    status = _cairo_error (CAIRO_STATUS_READ_ERROR);
 	    goto fail;
@@ -1261,9 +1255,8 @@ cairo_type1_font_subset_generate (void       *abstract_font,
 }
 
 static void
-cairo_type1_font_subset_destroy (void *abstract_font)
+_cairo_type1_font_subset_fini (cairo_type1_font_subset_t *font)
 {
-    cairo_type1_font_subset_t *font = abstract_font;
     unsigned int i;
 
     /* If the subset generation failed, some of the pointers below may
@@ -1282,9 +1275,7 @@ cairo_type1_font_subset_destroy (void *abstract_font)
     if (font->base.base_font)
 	free (font->base.base_font);
     free (font->glyphs);
-    free (font);
 }
-
 
 cairo_status_t
 _cairo_type1_subset_init (cairo_type1_subset_t		*type1_subset,
@@ -1292,7 +1283,7 @@ _cairo_type1_subset_init (cairo_type1_subset_t		*type1_subset,
 			  cairo_scaled_font_subset_t	*scaled_font_subset,
                           cairo_bool_t                   hex_encode)
 {
-    cairo_type1_font_subset_t *font = NULL; /* hide compiler warning */
+    cairo_type1_font_subset_t font;
     cairo_status_t status;
     unsigned long parent_glyph, length;
     unsigned int i;
@@ -1308,21 +1299,21 @@ _cairo_type1_subset_init (cairo_type1_subset_t		*type1_subset,
 
     unscaled_font = _cairo_ft_scaled_font_get_unscaled_font (scaled_font_subset->scaled_font);
 
-    status = _cairo_type1_font_subset_create (unscaled_font, &font, hex_encode);
+    status = _cairo_type1_font_subset_init (&font, unscaled_font, hex_encode);
     if (status)
 	return status;
 
     for (i = 0; i < scaled_font_subset->num_glyphs; i++) {
 	parent_glyph = scaled_font_subset->glyphs[i];
-	cairo_type1_font_subset_use_glyph (font, parent_glyph);
+	cairo_type1_font_subset_use_glyph (&font, parent_glyph);
     }
 
-    status = cairo_type1_font_subset_generate (font, name);
+    status = cairo_type1_font_subset_generate (&font, name);
     if (status)
 	goto fail1;
 
-    if (font->base.base_font) {
-	type1_subset->base_font = strdup (font->base.base_font);
+    if (font.base.base_font) {
+	type1_subset->base_font = strdup (font.base.base_font);
     } else {
         snprintf(buf, sizeof (buf), "CairoFont-%u-%u",
                  scaled_font_subset->font_id, scaled_font_subset->subset_id);
@@ -1331,37 +1322,38 @@ _cairo_type1_subset_init (cairo_type1_subset_t		*type1_subset,
     if (type1_subset->base_font == NULL)
 	goto fail1;
 
-    type1_subset->widths = calloc (sizeof (int), font->num_glyphs);
+    type1_subset->widths = calloc (sizeof (int), font.num_glyphs);
     if (type1_subset->widths == NULL)
 	goto fail2;
-    for (i = 0; i < font->base.num_glyphs; i++) {
-	if (font->glyphs[i].subset_index < 0)
+    for (i = 0; i < font.base.num_glyphs; i++) {
+	if (font.glyphs[i].subset_index < 0)
 	    continue;
-	type1_subset->widths[font->glyphs[i].subset_index] =
-	    font->glyphs[i].width;
+	type1_subset->widths[font.glyphs[i].subset_index] =
+	    font.glyphs[i].width;
     }
 
-    type1_subset->x_min = font->base.x_min;
-    type1_subset->y_min = font->base.y_min;
-    type1_subset->x_max = font->base.x_max;
-    type1_subset->y_max = font->base.y_max;
-    type1_subset->ascent = font->base.ascent;
-    type1_subset->descent = font->base.descent;
+    type1_subset->x_min = font.base.x_min;
+    type1_subset->y_min = font.base.y_min;
+    type1_subset->x_max = font.base.x_max;
+    type1_subset->y_max = font.base.y_max;
+    type1_subset->ascent = font.base.ascent;
+    type1_subset->descent = font.base.descent;
 
-    length = font->base.header_size + font->base.data_size +
-	font->base.trailer_size;
+    length = font.base.header_size +
+	     font.base.data_size +
+	     font.base.trailer_size;
     type1_subset->data = malloc (length);
     if (type1_subset->data == NULL)
 	goto fail3;
 
     memcpy (type1_subset->data,
-	    _cairo_array_index (&font->contents, 0), length);
+	    _cairo_array_index (&font.contents, 0), length);
 
-    type1_subset->header_length = font->base.header_size;
-    type1_subset->data_length = font->base.data_size;
-    type1_subset->trailer_length = font->base.trailer_size;
+    type1_subset->header_length = font.base.header_size;
+    type1_subset->data_length = font.base.data_size;
+    type1_subset->trailer_length = font.base.trailer_size;
 
-    cairo_type1_font_subset_destroy (font);
+    _cairo_type1_font_subset_fini (&font);
 
     return CAIRO_STATUS_SUCCESS;
 
@@ -1370,7 +1362,7 @@ _cairo_type1_subset_init (cairo_type1_subset_t		*type1_subset,
  fail2:
     free (type1_subset->base_font);
  fail1:
-    cairo_type1_font_subset_destroy (font);
+    _cairo_type1_font_subset_fini (&font);
 
     return status;
 }

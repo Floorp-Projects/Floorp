@@ -108,7 +108,7 @@ public:
     NS_DECL_NSIINTERFACEREQUESTOR
 
     // nsIContentSink
-    NS_IMETHOD WillTokenize(void) { return NS_OK; }
+    NS_IMETHOD WillParse(void) { return NS_OK; }
     NS_IMETHOD WillBuildModel(void) { return NS_OK; }
     NS_IMETHOD DidBuildModel();
     NS_IMETHOD WillInterrupt(void) { return NS_OK; }

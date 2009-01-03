@@ -77,7 +77,7 @@ struct NameTableEntry : public PLDHashEntryHdr
     PRInt32 mIndex;
 };
 
-PR_STATIC_CALLBACK(PRBool)
+static PRBool
 matchNameKeysCaseInsensitive(PLDHashTable*, const PLDHashEntryHdr* aHdr,
                              const void* key)
 {
@@ -104,7 +104,7 @@ matchNameKeysCaseInsensitive(PLDHashTable*, const PLDHashEntryHdr* aHdr,
  * to the same value, but it's just a hash function so it doesn't
  * matter.
  */
-PR_STATIC_CALLBACK(PLDHashNumber)
+static PLDHashNumber
 caseInsensitiveStringHashKey(PLDHashTable *table, const void *key)
 {
     PLDHashNumber h = 0;

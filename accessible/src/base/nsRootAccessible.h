@@ -77,7 +77,6 @@ class nsRootAccessible : public nsDocAccessibleWrap,
     NS_IMETHOD GetName(nsAString& aName);
     NS_IMETHOD GetParent(nsIAccessible * *aParent);
     NS_IMETHOD GetRole(PRUint32 *aRole);
-    NS_IMETHOD GetState(PRUint32 *aState, PRUint32 *aExtraState);
     NS_IMETHOD GetAccessibleRelated(PRUint32 aRelationType,
                                     nsIAccessible **aRelated);
 
@@ -87,9 +86,12 @@ class nsRootAccessible : public nsDocAccessibleWrap,
     // ----- nsIDOMEventListener --------------------------
     NS_IMETHOD HandleEvent(nsIDOMEvent* aEvent);
 
-    // nsIAccessNode
-    NS_IMETHOD Init();
-    NS_IMETHOD Shutdown();
+    // nsAccessNode
+    virtual nsresult Init();
+    virtual nsresult Shutdown();
+
+    // nsAccessible
+    virtual nsresult GetStateInternal(PRUint32 *aState, PRUint32 *aExtraState);
 
     void ShutdownAll();
     
@@ -131,15 +133,15 @@ class nsRootAccessible : public nsDocAccessibleWrap,
     void GetChromeEventHandler(nsIDOMEventTarget **aChromeTarget);
 
     /**
-     * Handles 'TreeRowCountChanged' event. Used in HandleEventWithTarget().
+     * Used in HandleEventWithTarget().
      */
+    nsresult HandlePopupShownEvent(nsIAccessible *aAccessible);
+    nsresult HandlePopupHidingEvent(nsIDOMNode *aNode,
+                                    nsIAccessible *aAccessible);
+
 #ifdef MOZ_XUL
     nsresult HandleTreeRowCountChangedEvent(nsIDOMEvent *aEvent,
                                             nsIAccessibleTreeCache *aAccessible);
-
-    /**
-     * Handles 'TreeInvalidated' event. Used in HandleEventWithTarget().
-     */
     nsresult HandleTreeInvalidatedEvent(nsIDOMEvent *aEvent,
                                         nsIAccessibleTreeCache *aAccessible);
 

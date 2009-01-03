@@ -36,7 +36,7 @@
  * the terms of any one of the MPL, the GPL or the LGPL.
  *
  * ***** END LICENSE BLOCK ***** */
-/* $Id: sslsnce.c,v 1.45 2008/03/10 00:01:28 wtc%google.com Exp $ */
+/* $Id: sslsnce.c,v 1.46 2008/09/30 03:53:01 nelson%bolyard.com Exp $ */
 
 /* Note: ssl_FreeSID() in sslnonce.c gets used for both client and server 
  * cache sids!
@@ -1179,9 +1179,6 @@ SSL_ConfigServerSessionIDCacheInstance(	cacheDesc *cache,
 {
     SECStatus rv;
 
-#if defined(DEBUG_nelsonb)
-    printf("sizeof(sidCacheEntry) == %u\n", sizeof(sidCacheEntry));
-#endif
     PORT_Assert(sizeof(sidCacheEntry) == 192);
     PORT_Assert(sizeof(certCacheEntry) == 4096);
 

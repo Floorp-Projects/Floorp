@@ -81,11 +81,9 @@ function init() {
   var de = document.documentElement;
   var items = [];
   if (window.arguments[0] instanceof Components.interfaces.nsIDialogParamBlock) {
+    // This is a warning about a blocklisted item the user is trying to install
     var args = window.arguments[0];
-    var fromInstall = args.GetInt(0) == 1 ? true : false;
-    var numberOfItems = args.GetInt(1);
-    for (var i = 0; i < numberOfItems; ++i)
-      items.push(args.GetString(i));
+    var softblocked = args.GetInt(0) == 1 ? true : false;
 
     var extensionsBundle = document.getElementById("extensionsBundle");
     try {
@@ -95,45 +93,29 @@ function init() {
     }
     catch (e) { }
 
-    if (fromInstall) { // Blocklist blocked install
-      var params = {
-        message1: extensionsBundle.getFormattedString("blocklistedInstallMsg",
-                                                      [items[0]]),
-        moreInfoURL: url,
-        title: extensionsBundle.getString("blocklistedInstallTitle")
-      };
-      items = [];
-      var button = document.getElementById("centeredButton");
-      button.setAttribute("dlgtype", "accept");
+    var params = {
+      moreInfoURL: url,
+    };
+
+    if (softblocked) {
+      params.title = extensionsBundle.getString("softBlockedInstallTitle");
+      params.message1 = extensionsBundle.getFormattedString("softBlockedInstallMsg",
+                                                           [args.GetString(0)]);
+      var accept = de.getButton("accept");
+      accept.label = extensionsBundle.getString("softBlockedInstallAcceptLabel");
+      accept.accessKey = extensionsBundle.getString("softBlockedInstallAcceptKey");
+      de.getButton("cancel").focus();
+      document.addEventListener("dialogaccept", allowInstall, false);
+    }
+    else {
+      params.title = extensionsBundle.getString("blocklistedInstallTitle2");
+      params.message1 = extensionsBundle.getFormattedString("blocklistedInstallMsg2",
+                                                           [args.GetString(0)]);
       de.buttons = "accept";
       de.getButton("accept").focus();
     }
-    else { // Blocklist background notification
-      // only hide when not used due to focus issues
-      document.getElementById("buttonCenteredBox").hidden = true;
-      var brandBundle = document.getElementById("brandBundle");
-      var brandShortName = brandBundle.getString("brandShortName");
-      params = {
-        message1: extensionsBundle.getFormattedString("blocklistNotifyMsg2",
-                                                      [brandShortName]),
-        message2: extensionsBundle.getFormattedString("blocklistRestartMsg2",
-                                                      [brandShortName]),
-        moreInfoURL: url,
-        title: extensionsBundle.getString("blocklistNotifyTitle2")
-      };
-      de.buttons = "extra1,cancel";
-      button = de.getButton("cancel");
-      button.label = extensionsBundle.getString("laterButton");
-      de.setAttribute("ondialogextra1", "restartApp();");
-      button.focus();
-      button = de.getButton("extra1");
-      button.label = extensionsBundle.getFormattedString("restartButton",
-                                                         [brandShortName]);
-    }
   }
   else {
-    // only hide when not used due to focus issues
-    document.getElementById("buttonCenteredBox").hidden = true;
     items = window.arguments[0];
     params = window.arguments[1];
   }
@@ -143,7 +125,7 @@ function init() {
     document.getElementById("addonsTree").hidden = false;
 
   // Fill the addons list
-  for (i = 0; i < items.length; ++i) {
+  for (var i = 0; i < items.length; ++i) {
     var treeitem = document.createElementNS(kXULNS, "treeitem");
     var treerow  = document.createElementNS(kXULNS, "treerow");
     var treecell = document.createElementNS(kXULNS, "treecell");
@@ -185,7 +167,7 @@ function init() {
       buttonString += "," + buttonType;
     de.buttons = buttonString.substr(1);
     for (buttonType in gButtons) {
-      button = de.getButton(buttonType);
+      var button = de.getButton(buttonType);
       button.label = gButtons[buttonType].label;
       if (gButtons[buttonType].focused)
         button.focus();
@@ -195,25 +177,13 @@ function init() {
 }
 
 function shutdown() {
-  for (buttonType in gButtons)
+  for (var buttonType in gButtons)
     document.removeEventListener(kDialog + buttonType, handleButtonCommand, true);
 }
 
-function restartApp() {
-  const nsIAppStartup = Components.interfaces.nsIAppStartup;
-  // Notify all windows that an application quit has been requested.
-  var os = Components.classes["@mozilla.org/observer-service;1"]
-                     .getService(Components.interfaces.nsIObserverService);
-  var cancelQuit = Components.classes["@mozilla.org/supports-PRBool;1"]
-                             .createInstance(Components.interfaces.nsISupportsPRBool);
-  os.notifyObservers(cancelQuit, "quit-application-requested", null);
-
-  // Something aborted the quit process. 
-  if (cancelQuit.data)
-    return;
-
-  Components.classes["@mozilla.org/toolkit/app-startup;1"].getService(nsIAppStartup)
-            .quit(nsIAppStartup.eRestart | nsIAppStartup.eAttemptQuit);
+function allowInstall() {
+  var args = window.arguments[0];
+  args.SetInt(1, 1);
 }
 
 /**

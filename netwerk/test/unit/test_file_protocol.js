@@ -69,9 +69,9 @@ FileStreamListener.prototype = {
   },
 
   QueryInterface: function(iid) {
-    if (iid.Equals(Ci.nsIStreamListener) ||
-        iid.Equals(Ci.nsIRequestObserver) ||
-        iid.Equals(Ci.nsISupports))
+    if (iid.equals(Ci.nsIStreamListener) ||
+        iid.equals(Ci.nsIRequestObserver) ||
+        iid.equals(Ci.nsISupports))
       return this;
     throw Cr.NS_ERROR_NO_INTERFACE;
   },

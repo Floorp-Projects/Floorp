@@ -23,6 +23,7 @@
    -   Joe Hughes <jhughes@google.com>
    -   Asaf Romano <mano@mozilla.com>
    -   Ehsan Akhgari <ehsan.akhgari@gmail.com>
+   -   Marco Bonardo <mak77@bonardo.net>
    -
    - Alternatively, the contents of this file may be used under the terms of
    - either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -39,24 +40,22 @@
    - ***** END LICENSE BLOCK ***** -->
 
 <?xml-stylesheet href="chrome://global/skin/"?>
-<?xml-stylesheet href="chrome://browser/skin/places/bookmarkProperties.css"?>
+<?xml-stylesheet href="chrome://browser/skin/places/editBookmarkOverlay.css"?>
 <?xml-stylesheet href="chrome://browser/skin/places/places.css"?>
 <?xml-stylesheet href="chrome://browser/content/places/places.css"?>
+
 <?xul-overlay href="chrome://browser/content/places/placesOverlay.xul"?>
+<?xul-overlay href="chrome://browser/content/places/editBookmarkOverlay.xul"?>
 
 <!DOCTYPE dialog [
-  <!ENTITY % propertiesDTD SYSTEM "chrome://browser/locale/places/bookmarkProperties.dtd">
-  %propertiesDTD;
-  <!ENTITY % placesDTD SYSTEM "chrome://browser/locale/places/places.dtd">
-  %placesDTD;
+  <!ENTITY % editBookmarkOverlayDTD SYSTEM "chrome://browser/locale/places/editBookmarkOverlay.dtd">
+  %editBookmarkOverlayDTD;
 ]>
 
 <dialog id="bookmarkproperties"
         buttons="accept, cancel"
-        buttonlabelextra2="&bookmarks.newFolderButton.label;"
-        buttonaccesskeyextra2="&bookmarks.newFolderButton.accesskey;"
         ondialogaccept="BookmarkPropertiesPanel.onDialogAccept();"
-        ondialogextra2="BookmarkPropertiesPanel.newFolder();"
+        ondialogcancel="BookmarkPropertiesPanel.onDialogCancel();"
         xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
         onload="BookmarkPropertiesPanel.onDialogLoad();"
         onunload="BookmarkPropertiesPanel.onDialogUnload();"
@@ -68,103 +67,11 @@
                   src="chrome://browser/locale/places/bookmarkProperties.properties"/>
   </stringbundleset>
 
-  <script type="application/x-javascript"
+  <script type="application/javascript"
+          src="chrome://browser/content/places/editBookmarkOverlay.js"/>
+  <script type="application/javascript"
           src="chrome://browser/content/places/bookmarkProperties.js"/>
 
-  <grid id="placesInfoGrid">
-    <columns>
-      <column/>
-      <column flex="1"/>
-    </columns>
-    <rows id="placesInfoRows">
-      <row id="titleRow" align="center">
-        <label value="&bookmarks.name.label;" accesskey="&bookmarks.name.accesskey;"
-               control="namePicker"/>
-        <menulist id="namePicker"
-                  editable="true"
-                  droppable="false"
-                  oninput="BookmarkPropertiesPanel.onNamePickerInput();">
-          <menupopup>
-            <menuitem id="userEnteredName"/>
-            <menuitem disabled="true">
-              <menuseparator flex="1"/>
-              <label value="&bookmarks.liveTitlesSeparator.label;"/>
-            </menuitem>
-          </menupopup>
-        </menulist>
-      </row>
-      <row id="locationRow" align="center">
-        <label value="&bookmarks.location.label;" accesskey="&bookmarks.location.accesskey;"
-               control="editURLBar"/>
-        <textbox id="editURLBar" size="10"
-                 onchange="BookmarkPropertiesPanel.validateChanges();"
-                 oninput="BookmarkPropertiesPanel.validateChanges();"/>
-      </row>
-      <row id="livemarkFeedLocationRow" align="center">
-        <label value="&bookmarks.feed_location.label;" accesskey="&bookmarks.feed_location.accesskey;"
-               control="feedLocationTextfield"/>
-        <textbox id="feedLocationTextfield"
-                 onchange="BookmarkPropertiesPanel.validateChanges();"
-                 oninput="BookmarkPropertiesPanel.validateChanges();"/>
-      </row>
-      <row id="livemarkSiteLocationRow" align="center">
-        <label value="&bookmarks.site_location.label;" accesskey="&bookmarks.site_location.accesskey;"
-               control="feedSiteLocationTextfield"/>
-        <textbox id="feedSiteLocationTextfield"
-                 onchange="BookmarkPropertiesPanel.validateChanges();"
-                 oninput="BookmarkPropertiesPanel.validateChanges();"/>
-      </row>
-      <row id="keywordRow" align="center">
-        <label value="&bookmarks.keyword.label;" accesskey="&bookmarks.keyword.accesskey;"
-               control="keywordTextfield"/>
-        <textbox id="keywordTextfield"/>
-      </row>
-      <row id="descriptionRow">
-        <label value="&bookmarks.description.label;" accesskey="&bookmarks.description.accesskey;"
-               control="descriptionTextfield"/>
-        <textbox id="descriptionTextfield" multiline="true"/>
-      </row>
-      <row id="folderRow" align="center">
-        <label value="&bookmarks.createIn.label;" accesskey="&bookmarks.createIn.accesskey;"
-               control="folderMenuList"/>
-        <menulist id="folderMenuList"
-                  class="folder-icon"
-                  oncommand="BookmarkPropertiesPanel.onMenuListFolderSelect();">
-          <menupopup>
-            <!-- Static item for special folders -->
-            <menuitem id="bookmarksRootItem"
-                      class="menuitem-iconic folder-icon"/>
-            <menuitem id="toolbarFolderItem"
-                      class="menuitem-iconic folder-icon"/>
-            <menuseparator id="foldersSeparator" hidden="true"/>
-          </menupopup>
-        </menulist>
-        <button id="expander"
-                class="down"
-                tooltiptext="&bookmarks.expanderDown.tooltip;"
-                tooltiptextdown="&bookmarks.expanderDown.tooltip;"
-                tooltiptextup="&bookmarks.expanderUp.tooltip;"
-                oncommand="BookmarkPropertiesPanel.toggleTreeVisibility();"/>
-      </row>
-      <checkbox id="loadInSidebarCheckbox"
-                label="&bookmarks.loadInSidebar.label;"
-                accesskey="&bookmarks.loadInSidebar.accesskey;"/>
-    </rows>
-  </grid>
+<vbox id="editBookmarkPanelContent"/>
 
-  <separator class="thin"/>
-  <tree id="folderTree"
-        class="placesTree"
-        collapsed="true"
-        flex="1"
-        type="places"
-        height="150"
-        persist="height"
-        onselect="BookmarkPropertiesPanel.onFolderTreeSelect();"
-        hidecolumnpicker="true">
-    <treecols>
-      <treecol id="title" flex="1" primary="true" hideheader="true"/>
-    </treecols>
-    <treechildren id="placesListChildren" view="placesList" flex="1"/>
-  </tree>
 </dialog>

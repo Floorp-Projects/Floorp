@@ -47,7 +47,6 @@
 
 @namespace url("http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul");
 @namespace html url("http://www.w3.org/1999/xhtml");
-@namespace svg url("http://www.w3.org/2000/svg");
 
 #menubar-items {
   -moz-box-orient: vertical; /* for flex hack */
@@ -137,19 +136,6 @@ menuitem.bookmark-item {
 
 .bookmark-item > .menu-iconic-left > .menu-iconic-icon {
   -moz-padding-start: 0px;
-}
-
-/* Bookmark panel dropdown menu items */
-#editBMPanel_toolbarFolderItem {
-  list-style-image: url("chrome://browser/skin/places/bookmarksToolbar.png") !important;  
-}
-
-#editBMPanel_bmRootItem {
-  list-style-image: url("chrome://browser/skin/places/bookmarksMenu.png") !important;  
-}
-
-#editBMPanel_unfiledRootItem {
-  list-style-image: url("chrome://browser/skin/places/unsortedBookmarks.png") !important;  
 }
 
 /* Bookmark drag and drop styles */
@@ -260,9 +246,19 @@ menuitem[command="Browser:OpenFile"] {
   list-style-image: url("moz-icon://stock/gtk-close?size=menu");
 }
 
+#context-media-play {
+  list-style-image: url("moz-icon://stock/gtk-media-play?size=menu");
+}
+
+#context-media-pause {
+  list-style-image: url("moz-icon://stock/gtk-media-pause?size=menu");
+}
+
 menuitem[command="Browser:SavePage"],
 #context-savelink,
 #context-saveimage,
+#context-savevideo,
+#context-saveaudio,
 #context-savepage,
 #context-saveframe {
   list-style-image: url("moz-icon://stock/gtk-save-as?size=menu");
@@ -312,6 +308,8 @@ menuitem[command="cmd_cut"][disabled],
 menuitem[command="cmd_copy"],
 #context-copy,
 #context-copyimage,
+#context-copyvideourl,
+#context-copyaudiourl,
 #context-copylink,
 #context-copyemail {
   list-style-image: url("moz-icon://stock/gtk-copy?size=menu");
@@ -791,11 +789,6 @@ toolbar[iconsize="small"] #paste-button[disabled="true"] {
   cursor: pointer;
 }
 
-#urlbar[pageproxystate="invalid"] > #urlbar-icons > :not(#go-button) ,
-#urlbar[pageproxystate="valid"] > #urlbar-icons > #go-button {
-  visibility: collapse;
-}
-
 #urlbar-search-splitter {
   -moz-appearance: none;
   width: 8px;
@@ -1149,13 +1142,9 @@ statusbarpanel#statusbar-display {
 
 /* Throbber */
 #navigator-throbber {
-  -moz-appearance: none;
-  -moz-user-focus: ignore;
-  margin: 0 !important;
-  border: none !important;
-  padding: 0px !important;
-  min-width: 0;
-  background-color: transparent;
+  width: 16px;
+  min-height: 16px;
+  margin: 0 3px;
   list-style-image: url("chrome://global/skin/icons/notloading_16.png");
 }
 
@@ -1163,20 +1152,6 @@ statusbarpanel#statusbar-display {
   list-style-image: url("chrome://global/skin/icons/loading_16.png");
 }
 
-#navigator-throbber > hbox {
-  border-top: 0px;
-  border-bottom: 0px;
-  padding-bottom: 1px;
-}
-
-toolbar[mode="text"] #navigator-throbber,
-toolbar[iconsize="small"] #navigator-throbber {
-  list-style-image: url("chrome://global/skin/icons/notloading_16.png");
-}
-toolbar[mode="text"] #navigator-throbber[busy="true"],
-toolbar[iconsize="small"] #navigator-throbber[busy="true"] {
-  list-style-image: url("chrome://global/skin/icons/loading_16.png");
-}
 
 tabpanels {
   -moz-appearance: none;
@@ -1325,22 +1300,9 @@ tabpanels {
   opacity: 0.0;
 }
 
-/* All tabs menupopup */
-.alltabs-item > .menu-iconic-left > .menu-iconic-icon {
-  list-style-image: url("chrome://global/skin/icons/folder-item.png");
-  -moz-image-region: rect(0px, 16px, 16px, 0px);
-}
-
-.alltabs-item[selected="true"] {
-  font-weight: bold;
-}
-
-.alltabs-item[busy] > .menu-iconic-left > .menu-iconic-icon {
-  list-style-image: url("chrome://global/skin/icons/loading_16.png");
-}
-
 .tabs-alltabs-button > .toolbarbutton-icon {
-   margin: 0px;
+  list-style-image: url("chrome://browser/skin/tabbrowser/alltabs.png");
+  margin: 2px 0 2px;
 }
 
 /* Sidebar */
@@ -1397,24 +1359,41 @@ toolbar[mode="text"] > #window-controls > toolbarbutton > .toolbarbutton-text {
 }
 
 /* ::::: Ctrl-Tab Panel ::::: */
-#ctrlTab-label {
-  font-weight: bold;
-  text-align: center;
-  margin-top: .5em;
-  margin-bottom: .7em;
+#ctrlTab-panel {
+  padding-top: 15px;
 }
 
-svg|*.ctrlTab-thumbnailborder {
-  stroke: ThreeDDarkShadow;
-  stroke-width: .7px;
+#ctrlTab-search {
+  margin: 0 0 15px;
 }
 
-svg|*#ctrlTab-fadeGradientTop {
-  stop-color: ThreeDShadow;
-  stop-opacity: .75;
+.ctrlTab-thumbnail {
+  margin-bottom: 15px;
+  cursor: pointer;
 }
 
-svg|*#ctrlTab-fadeGradientBottom {
-  stop-color: -moz-dialog;
-  stop-opacity: 1;
+.ctrlTab-thumbnail > html|canvas {
+  border: 1px solid ThreeDShadow;
+  margin: -1px;
+}
+
+.ctrlTab-thumbnail[selected="true"] ,
+.ctrlTab-thumbnail:hover {
+  background: Highlight;
+  color: HighlightText;
+  -moz-box-shadow: 0 0 2px Highlight, 0 0 2px Highlight, 0 0 3px Highlight, 0 0 4px Highlight, 0 0 10px Highlight, 0 0 15px Highlight;
+}
+ 
+.ctrlTab-pagePointer {
+  margin: 0 1em 1em;
+  width: 1.5em;
+  height: 1.5em;
+  -moz-border-radius: .75em;
+  background: ThreeDShadow;
+  cursor: pointer;
+}
+
+.ctrlTab-pagePointer[selected="true"] {
+  background: ThreeDDarkShadow;
+  cursor: default;
 }

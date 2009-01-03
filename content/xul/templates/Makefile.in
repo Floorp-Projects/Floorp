@@ -43,7 +43,7 @@ VPATH		= @srcdir@
 include $(DEPTH)/config/autoconf.mk
 
 MODULE		= xultmpl
-DIRS		= public src
+PARALLEL_DIRS	= public src
 
 include $(topsrcdir)/config/rules.mk
 

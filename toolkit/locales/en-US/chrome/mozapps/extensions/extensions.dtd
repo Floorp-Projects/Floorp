@@ -112,6 +112,7 @@
 <!ENTITY insecureUpdate.label             "Does not provide secure updates.">
 <!ENTITY needsDependencies.label          "Requires additional items.">
 <!ENTITY blocklisted.label                "Disabled for your protection.">
+<!ENTITY softBlocklisted.label            "Known to cause security or stability issues.">
 <!ENTITY toBeDisabled.label               "This add-on will be disabled when &brandShortName; is restarted.">
 <!ENTITY toBeEnabled.label                "This add-on will be enabled when &brandShortName; is restarted.">
 <!ENTITY toBeInstalled.label              "This add-on will be installed when &brandShortName; is restarted.">
@@ -168,3 +169,6 @@
 <!ENTITY eula.width                       "560px">
 <!ENTITY eula.height                      "400px">
 <!ENTITY eula.accept                      "Accept and Install…">
+
+<!ENTITY blocklist.blocked.label          "Blocked">
+<!ENTITY blocklist.checkbox.label         "Disable">

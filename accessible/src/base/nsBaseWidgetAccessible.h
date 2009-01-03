@@ -85,7 +85,6 @@ public:
   NS_IMETHOD GetNumActions(PRUint8 *_retval);
   NS_IMETHOD GetActionName(PRUint8 aIndex, nsAString& aName);
   NS_IMETHOD DoAction(PRUint8 index);
-  NS_IMETHOD GetState(PRUint32 *aState, PRUint32 *aExtraState);
   NS_IMETHOD GetValue(nsAString& _retval);
   NS_IMETHOD TakeFocus();
   NS_IMETHOD GetKeyboardShortcut(nsAString& _retval);
@@ -93,9 +92,12 @@ public:
   // nsIHyperLinkAccessible
   NS_IMETHOD GetURI(PRInt32 i, nsIURI **aURI);
 
-  // nsPIAccessNode
-  NS_IMETHOD Init();
-  NS_IMETHOD Shutdown();
+  // nsAccessNode
+  virtual nsresult Init();
+  virtual nsresult Shutdown();
+
+  // nsAccessible
+  virtual nsresult GetStateInternal(PRUint32 *aState, PRUint32 *aExtraState);
 
 protected:
   /**

@@ -58,6 +58,11 @@ public:
    */
   nsresult add(mozIStorageRow *aTuple);
 
+  /**
+   * @returns the number of rows this result set holds.
+   */
+  PRInt32 rows() const { return mData.Count(); }
+
 private:
   /**
    * Stores the current index of the active result set.

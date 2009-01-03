@@ -13,12 +13,13 @@ classic.jar:
 +  skin/classic/global/checkbox.css
 +  skin/classic/global/closetab.png
 +  skin/classic/global/colorpicker.css
++  skin/classic/global/commonDialog.css
 +  skin/classic/global/config.css
 +  skin/classic/global/customizeToolbar.css
 +  skin/classic/global/dialog.css
 +  skin/classic/global/dropmarker.css
++  skin/classic/global/filefield.css
 +  skin/classic/global/filepicker.css
-+  skin/classic/global/formatting.css
 +  skin/classic/global/findBar.css
 +  skin/classic/global/global.css
 +  skin/classic/global/groupbox.css
@@ -50,6 +51,7 @@ classic.jar:
 +  skin/classic/global/toolbar.css
 +  skin/classic/global/toolbarbutton.css
 +  skin/classic/global/tree.css
++  skin/classic/global/viewbuttons.css
 +  skin/classic/global/wizard.css
 +  skin/classic/global/wizardOverlay.css
 +  skin/classic/global/globalBindings.xml
@@ -77,6 +79,8 @@ classic.jar:
 +  skin/classic/global/arrow/arrow-up-sharp.gif                       (arrow/arrow-up-sharp.gif)
 +  skin/classic/global/arrow/arrow-up.gif                             (arrow/arrow-up.gif)
 +  skin/classic/global/arrow/arrow-up.png                             (arrow/arrow-up.png)
++  skin/classic/global/checkbox/cbox-check.gif                        (checkbox/cbox-check.gif)
++  skin/classic/global/checkbox/cbox-check-dis.gif                    (checkbox/cbox-check-dis.gif)
 +  skin/classic/global/console/console-toolbar.png                    (console/console-toolbar.png)
 +  skin/classic/global/console/console-bullets.png                    (console/console-bullets.png)
 +  skin/classic/global/console/console-error-caret.gif                (console/console-error-caret.gif)
@@ -126,9 +130,9 @@ classic.jar:
 +  skin/classic/global/icons/popup-overlay.png                        (icons/popup-overlay.png)
 +  skin/classic/global/icons/question-mark.png                        (icons/question-mark.png)
 +  skin/classic/global/icons/restore.gif                              (icons/restore.gif)
-+  skin/classic/global/icons/Search-close.png                         (icons/Search-close.png)
-+  skin/classic/global/icons/Search-glass.png                         (icons/Search-glass.png)
 +  skin/classic/global/icons/search-textbox.png                       (icons/search-textbox.png)
++  skin/classic/global/icons/searchfield-regular-cancel.png           (icons/searchfield-regular-cancel.png)
++  skin/classic/global/icons/searchfield-small-cancel.png             (icons/searchfield-small-cancel.png)
 +  skin/classic/global/icons/small-document.png                       (icons/small-document.png)
 +  skin/classic/global/icons/small-globe-sunken-grey.png              (icons/small-globe-sunken-grey.png)
 +  skin/classic/global/icons/small-globe-sunken.png                   (icons/small-globe-sunken.png)
@@ -203,6 +207,27 @@ classic.jar:
 +  skin/classic/global/toolbar/Lighten.png                            (toolbar/Lighten.png)
 +  skin/classic/global/toolbar/dropmark-nav.png                       (toolbar/dropmark-nav.png)
 +  skin/classic/global/toolbar/dropmark-nav-small.png                 (toolbar/dropmark-nav-small.png)
++  skin/classic/global/toolbar/roundrectbutton.png                    (toolbar/roundrectbutton.png)
++  skin/classic/global/toolbar/roundrectbutton-down.png               (toolbar/roundrectbutton-down.png)
++  skin/classic/global/toolbar/roundrectbutton-inactive.png           (toolbar/roundrectbutton-inactive.png)
++  skin/classic/global/toolbar/viewbutton-left.png                          (toolbar/viewbutton-left.png)
++  skin/classic/global/toolbar/viewbutton-left-down.png                     (toolbar/viewbutton-left-down.png)
++  skin/classic/global/toolbar/viewbutton-left-inactive.png                 (toolbar/viewbutton-left-inactive.png)
++  skin/classic/global/toolbar/viewbutton-left-selected.png                 (toolbar/viewbutton-left-selected.png)
++  skin/classic/global/toolbar/viewbutton-left-selected-down.png            (toolbar/viewbutton-left-selected-down.png)
++  skin/classic/global/toolbar/viewbutton-left-selected-inactive.png        (toolbar/viewbutton-left-selected-inactive.png)
++  skin/classic/global/toolbar/viewbutton-middle.png                        (toolbar/viewbutton-middle.png)
++  skin/classic/global/toolbar/viewbutton-middle-down.png                   (toolbar/viewbutton-middle-down.png)
++  skin/classic/global/toolbar/viewbutton-middle-inactive.png               (toolbar/viewbutton-middle-inactive.png)
++  skin/classic/global/toolbar/viewbutton-middle-selected.png               (toolbar/viewbutton-middle-selected.png)
++  skin/classic/global/toolbar/viewbutton-middle-selected-down.png          (toolbar/viewbutton-middle-selected-down.png)
++  skin/classic/global/toolbar/viewbutton-middle-selected-inactive.png      (toolbar/viewbutton-middle-selected-inactive.png)
++  skin/classic/global/toolbar/viewbutton-right.png                         (toolbar/viewbutton-right.png)
++  skin/classic/global/toolbar/viewbutton-right-down.png                    (toolbar/viewbutton-right-down.png)
++  skin/classic/global/toolbar/viewbutton-right-inactive.png                (toolbar/viewbutton-right-inactive.png)
++  skin/classic/global/toolbar/viewbutton-right-selected.png                (toolbar/viewbutton-right-selected.png)
++  skin/classic/global/toolbar/viewbutton-right-selected-down.png           (toolbar/viewbutton-right-selected-down.png)
++  skin/classic/global/toolbar/viewbutton-right-selected-inactive.png       (toolbar/viewbutton-right-selected-inactive.png)
 +  skin/classic/global/toolbar/spring.gif                             (toolbar/spring.gif)
 +  skin/classic/global/toolbar/toolbar-background.gif                 (toolbar/toolbar-background.gif)
 +  skin/classic/global/toolbar/toolbar-background-inactive.png        (toolbar/toolbar-background-inactive.png)

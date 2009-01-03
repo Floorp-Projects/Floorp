@@ -121,6 +121,7 @@ static JSFunctionSpec boolean_methods[] = {
 #endif
     JS_FN(js_toString_str,  bool_toString,  0, JSFUN_THISP_BOOLEAN),
     JS_FN(js_valueOf_str,   bool_valueOf,   0, JSFUN_THISP_BOOLEAN),
+    JS_FN(js_toJSON_str,    bool_valueOf,   0, JSFUN_THISP_BOOLEAN),
     JS_FS_END
 };
 
@@ -132,7 +133,7 @@ Boolean(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
     bval = (argc != 0)
            ? BOOLEAN_TO_JSVAL(js_ValueToBoolean(argv[0]))
            : JSVAL_FALSE;
-    if (!(cx->fp->flags & JSFRAME_CONSTRUCTING)) {
+    if (!JS_IsConstructing(cx)) {
         *rval = bval;
         return JS_TRUE;
     }

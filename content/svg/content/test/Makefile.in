@@ -47,10 +47,12 @@ include $(topsrcdir)/config/rules.mk
 _TEST_FILES = \
 		test_bbox.xhtml \
 		bbox-helper.svg \
+		bounds-helper.svg \
 		test_dataTypes.html \
 		dataTypes-helper.svg \
 		test_getSubStringLength.xhtml \
 		getSubStringLength-helper.svg \
+		test_pathSeg.xhtml \
 		test_scientific.html \
 		scientific-helper.svg \
 		test_text.html \

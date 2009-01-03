@@ -91,6 +91,14 @@ private:
 };
 
 
+#define NS_ACCESSIBLE_IMPL_CID                          \
+{  /* 4E36C7A8-9203-4ef9-B619-271DDF6BB839 */           \
+  0x4e36c7a8,                                           \
+  0x9203,                                               \
+  0x4ef9,                                               \
+  { 0xb6, 0x19, 0x27, 0x1d, 0xdf, 0x6b, 0xb8, 0x39 }    \
+}
+
 class nsAccessible : public nsAccessNodeWrap, 
                      public nsIAccessible, 
                      public nsPIAccessible,
@@ -110,17 +118,34 @@ public:
   NS_DECL_NSIACCESSIBLEHYPERLINK
   NS_DECL_NSIACCESSIBLESELECTABLE
   NS_DECL_NSIACCESSIBLEVALUE
+  NS_DECLARE_STATIC_IID_ACCESSOR(NS_ACCESSIBLE_IMPL_CID)
 
-  // nsIAccessNode
-  NS_IMETHOD Shutdown();
+  //////////////////////////////////////////////////////////////////////////////
+  // nsAccessNode
+
+  virtual nsresult Shutdown();
+
+  //////////////////////////////////////////////////////////////////////////////
+  // Public methods
+
+  /**
+   * Returns the accessible name specified by ARIA.
+   */
+  nsresult GetARIAName(nsAString& aName);
+
+  /**
+   * Returns the accessible name provided by native markup. It doesn't take
+   * into account ARIA stuffs used to specify the name.
+   */
+  virtual nsresult GetNameInternal(nsAString& aName);
 
   /**
    * Return the state of accessible that doesn't take into account ARIA states.
-   * Use nsIAccessible::finalState() to get all states for accessible. If
+   * Use nsIAccessible::state to get all states for accessible. If
    * second argument is omitted then second bit field of accessible state won't
    * be calculated.
    */
-  NS_IMETHOD GetState(PRUint32 *aState, PRUint32 *aExtraState);
+  virtual nsresult GetStateInternal(PRUint32 *aState, PRUint32 *aExtraState);
 
   /**
    * Returns attributes for accessible without explicitly setted ARIA
@@ -128,37 +153,14 @@ public:
    */
   virtual nsresult GetAttributesInternal(nsIPersistentProperties *aAttributes);
 
-#ifdef DEBUG_A11Y
-  static PRBool IsTextInterfaceSupportCorrect(nsIAccessible *aAccessible);
-#endif
-
-  static PRBool IsCorrectFrameType(nsIFrame* aFrame, nsIAtom* aAtom);
-  static PRUint32 State(nsIAccessible *aAcc) { PRUint32 state = 0; if (aAcc) aAcc->GetFinalState(&state, nsnull); return state; }
-  static PRUint32 Role(nsIAccessible *aAcc) { PRUint32 role = nsIAccessibleRole::ROLE_NOTHING; if (aAcc) aAcc->GetFinalRole(&role); return role; }
-  static PRBool IsText(nsIAccessible *aAcc) { PRUint32 role = Role(aAcc); return role == nsIAccessibleRole::ROLE_TEXT_LEAF || role == nsIAccessibleRole::ROLE_STATICTEXT; }
-  static PRBool IsEmbeddedObject(nsIAccessible *aAcc) { PRUint32 role = Role(aAcc); return role != nsIAccessibleRole::ROLE_TEXT_LEAF && role != nsIAccessibleRole::ROLE_WHITESPACE && role != nsIAccessibleRole::ROLE_STATICTEXT; }
-  static PRInt32 TextLength(nsIAccessible *aAccessible); // Returns -1 on failure
-  static PRBool IsLeaf(nsIAccessible *aAcc) { PRInt32 numChildren; aAcc->GetChildCount(&numChildren); return numChildren > 0; }
-  static PRBool IsNodeRelevant(nsIDOMNode *aNode); // Is node something that could have an attached accessible
-  /**
-   * When exposing to platform accessibility APIs, should the children be pruned off?
-   */
-  static PRBool MustPrune(nsIAccessible *aAccessible);
+  //////////////////////////////////////////////////////////////////////////////
+  // Helper methods
   
   already_AddRefed<nsIAccessible> GetParent() {
     nsIAccessible *parent = nsnull;
     GetParent(&parent);
     return parent;
   }
-  
-  /**
-   *  Return the nsIContent* to check for ARIA attributes on -- this may not always
-   *  be the DOM node for the accessible. Specifically, for doc accessibles, it is not
-   *  the document node, but either the root element or <body> in HTML.
-   *  @param aDOMNode   The DOM node for the accessible that may be affected by ARIA
-   *  @return The nsIContent which may have ARIA markup
-   */
-  static nsIContent *GetRoleContent(nsIDOMNode *aDOMNode);
 
 protected:
   PRBool MappedAttrState(nsIContent *aContent, PRUint32 *aStateInOut, nsStateMapEntry *aStateMapEntry);
@@ -178,12 +180,19 @@ protected:
    */
   nsresult GetTextFromRelationID(nsIAtom *aIDProperty, nsString &aName);
 
-  static nsIContent *GetHTMLLabelContent(nsIContent *aForNode);
-  static nsIContent *GetLabelContent(nsIContent *aForNode);
+  //////////////////////////////////////////////////////////////////////////////
+  // Name helpers.
 
-  // Name helpers
-  nsresult GetHTMLName(nsAString& _retval, PRBool aCanAggregateSubtree = PR_TRUE);
-  nsresult GetXULName(nsAString& aName, PRBool aCanAggregateSubtree = PR_TRUE);
+  /**
+   * Compute the name of HTML node.
+   */
+  nsresult GetHTMLName(nsAString& aName);
+
+  /**
+   * Compute the name for XUL node.
+   */
+  nsresult GetXULName(nsAString& aName);
+
   // For accessibles that are not lists of choices, the name of the subtree should be the 
   // sum of names in the subtree
   nsresult AppendFlatStringFromSubtree(nsIContent *aContent, nsAString *aFlatString);
@@ -230,9 +239,6 @@ protected:
    */   
   already_AddRefed<nsIAccessible> GetFirstAvailableAccessible(nsIDOMNode *aStartNode, PRBool aRequireLeaf = PR_FALSE);
 
-  // Selection helpers
-  static already_AddRefed<nsIAccessible> GetMultiSelectFor(nsIDOMNode *aNode);
-
   // Hyperlink helpers
   virtual nsresult GetLinkOffset(PRInt32* aStartOffset, PRInt32* aEndOffset);
 
@@ -260,6 +266,14 @@ protected:
   nsresult GetAttrValue(nsIAtom *aAriaProperty, double *aValue);
 
   /**
+   * Return the action rule based on ARIA enum constants EActionRule
+   * (see nsARIAMap.h). Used by GetNumActions() and GetActionName().
+   *
+   * @param aStates  [in] states of the accessible
+   */
+  PRUint32 GetActionRule(PRUint32 aStates);
+
+  /**
    * Fires platform accessible event. It's notification method only. It does
    * change nothing on Gecko side. Mostly you should use
    * nsIAccessible::FireAccessibleEvent excepting special cases like we have
@@ -278,6 +292,8 @@ protected:
   PRInt32 mAccChildCount;
 };
 
+NS_DEFINE_STATIC_IID_ACCESSOR(nsAccessible,
+                              NS_ACCESSIBLE_IMPL_CID)
 
 #endif  
 

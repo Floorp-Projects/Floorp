@@ -423,9 +423,6 @@ nsXBLStreamListener::Load(nsIDOMEvent* aEvent)
     NS_WARNING("XBL load did not complete until after document went away! Modal dialog bug?\n");
   }
   else {
-    // Clear script handling object on asynchronously loaded XBL documents.
-    doc->ClearScriptHandlingObject();
-
     // We have to do a flush prior to notification of the document load.
     // This has to happen since the HTML content sink can be holding on
     // to notifications related to our children (e.g., if you bind to the
@@ -550,6 +547,14 @@ nsXBLService::LoadBindings(nsIContent* aContent, nsIURI* aURL,
   // XXX document may be null if we're in the midst of paint suppression
   if (!document)
     return NS_OK;
+
+  nsCAutoString urlspec;
+  if (nsContentUtils::GetWrapperSafeScriptFilename(document, aURL, urlspec)) {
+    // Block an attempt to load a binding that has special wrapper
+    // automation needs.
+
+    return NS_OK;
+  }
 
   nsBindingManager *bindingManager = document->BindingManager();
   
@@ -685,28 +690,6 @@ nsXBLService::ResolveTag(nsIContent* aContent, PRInt32* aNameSpaceID,
   }
 
   return NS_OK;
-}
-
-nsIXBLDocumentInfo*
-nsXBLService::GetXBLDocumentInfo(nsIURI* aURI, nsIContent* aBoundElement)
-{
-#ifdef MOZ_XUL
-  nsXULPrototypeCache* cache = nsXULPrototypeCache::GetInstance();
-  if (cache && cache->IsEnabled()) { 
-    // The first line of defense is the chrome cache.  
-    // This cache crosses the entire product, so any XBL bindings that are
-    // part of chrome will be reused across all XUL documents.
-    return cache->GetXBLDocumentInfo(aURI);
-  }
-#endif
-
-  // The second line of defense is the binding manager's document table.
-  nsIDocument* boundDocument = aBoundElement->GetOwnerDoc();
-  if (boundDocument) {
-    return boundDocument->BindingManager()->GetXBLDocumentInfo(aURI);
-  }
-
-  return nsnull;
 }
 
 
@@ -1288,9 +1271,6 @@ nsXBLService::FetchBindingDocument(nsIContent* aBoundElement, nsIDocument* aBoun
 
   rv = nsSyncLoadService::PushSyncStreamToListener(in, listener, channel);
   NS_ENSURE_SUCCESS(rv, rv);
-
-  // Clear script handling on synchronously loaded XBL documents.
-  doc->ClearScriptHandlingObject();
 
   doc.swap(*aResult);
 

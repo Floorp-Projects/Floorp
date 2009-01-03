@@ -73,7 +73,7 @@ function end_test() {
 // Returns human readable status text from the updates.properties bundle
 function getStatusText(aErrCode) {
   try {
-    return gUpdateBundle.GetStringFromName("checker_error-" + aErrCode);
+    return gUpdateBundle.GetStringFromName("check_error-" + aErrCode);
   }
   catch (e) {
   }

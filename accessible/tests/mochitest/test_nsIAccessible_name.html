@@ -128,6 +128,11 @@
 
       testName("textareawithchild", "Story: Bar");
 
+      /////////////////////////////////////////////////////////////////////////
+      // label with nested combobox
+
+      testName("comboinmiddle", "Subscribe to ATOM feed.");
+	   
       SimpleTest.finish();
     }
 
@@ -278,6 +283,18 @@
   <form>
     <label>Story: 
       <textarea id="textareawithchild" name="name">Foo</textarea>
+    </label>
+  </form>
+
+  <!-- A label with a nested control in the middle -->
+  <form>
+    <label id="comboinmiddle">
+      Subscribe to
+      <select id="combo3" name="occupation">
+        <option>ATOM</option>
+        <option>RSS</option>
+      </select>
+      feed.
     </label>
   </form>
 

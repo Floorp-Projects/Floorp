@@ -62,6 +62,11 @@ VISIBILITY_FLAGS =
 endif
 endif
 
+# Disable PGO for this module in non-libxul builds, where it breaks.
+ifndef MOZ_ENABLE_LIBXUL
+NO_PROFILE_GUIDED_OPTIMIZE = 1
+endif
+
 # LCMS is on the critical path, so force it O2 on all platforms
 MODULE_OPTIMIZE_FLAGS=-O2
 

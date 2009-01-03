@@ -141,14 +141,11 @@ nsNativeThemeQt::DrawWidgetBackground(nsIRenderingContext* aContext,
 
     switch (aWidgetType) {
     case NS_THEME_RADIO:
-    case NS_THEME_RADIO_SMALL: 
-    case NS_THEME_CHECKBOX:
-    case NS_THEME_CHECKBOX_SMALL: {
+    case NS_THEME_CHECKBOX: {
         QStyleOptionButton opt;
         InitButtonStyle (aWidgetType, aFrame, r, opt);
 
-        if (aWidgetType == NS_THEME_CHECKBOX ||
-            aWidgetType == NS_THEME_CHECKBOX_SMALL)
+        if (aWidgetType == NS_THEME_CHECKBOX)
         {
             style->drawPrimitive (QStyle::PE_IndicatorCheckBox, &opt, qPainter);
         } else {
@@ -332,9 +329,7 @@ nsNativeThemeQt::GetMinimumWidgetSize(nsIRenderingContext* aContext, nsIFrame* a
     PRInt32 p2a = GetAppUnitsPerDevPixel(aContext);
 
     switch (aWidgetType) {
-    case NS_THEME_RADIO_SMALL:
     case NS_THEME_RADIO:
-    case NS_THEME_CHECKBOX_SMALL:
     case NS_THEME_CHECKBOX: {
         nsRect frameRect = aFrame->GetRect();
 
@@ -345,7 +340,7 @@ nsNativeThemeQt::GetMinimumWidgetSize(nsIRenderingContext* aContext, nsIFrame* a
         InitButtonStyle(aWidgetType, aFrame, qRect, option);
 
         QRect rect = s->subElementRect(
-            (aWidgetType == NS_THEME_CHECKBOX || aWidgetType == NS_THEME_CHECKBOX_SMALL ) ?
+            (aWidgetType == NS_THEME_CHECKBOX) ?
                 QStyle::SE_CheckBoxIndicator :
                 QStyle::SE_RadioButtonIndicator,
             &option,
@@ -520,9 +515,7 @@ nsNativeThemeQt::ThemeSupportsWidget(nsPresContext* aPresContext,
     case NS_THEME_SCROLLBAR_TRACK_HORIZONTAL:
     case NS_THEME_SCROLLBAR_TRACK_VERTICAL:
     case NS_THEME_RADIO:
-    case NS_THEME_RADIO_SMALL:
     case NS_THEME_CHECKBOX:
-    case NS_THEME_CHECKBOX_SMALL:
     case NS_THEME_BUTTON_BEVEL:
     case NS_THEME_BUTTON:
     case NS_THEME_DROPDOWN:
@@ -570,6 +563,12 @@ nsNativeThemeQt::ThemeNeedsComboboxDropmarker()
     return PR_TRUE;
 }
 
+nsTransparencyMode
+nsNativeThemeQt::GetWidgetTransparency(PRUint8 aWidgetType)
+{
+  return eTransparencyOpaque;
+}
+
 void
 nsNativeThemeQt::InitButtonStyle(PRUint8 aWidgetType,
                                  nsIFrame* aFrame,
@@ -595,9 +594,7 @@ nsNativeThemeQt::InitButtonStyle(PRUint8 aWidgetType,
 
     switch (aWidgetType) {
     case NS_THEME_RADIO:
-    case NS_THEME_RADIO_SMALL:
     case NS_THEME_CHECKBOX:
-    case NS_THEME_CHECKBOX_SMALL:
         if (IsChecked(aFrame))
             opt.state |= QStyle::State_On;
         else

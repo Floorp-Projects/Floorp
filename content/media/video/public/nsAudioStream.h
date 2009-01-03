@@ -35,6 +35,9 @@
  * the terms of any one of the MPL, the GPL or the LGPL.
  *
  * ***** END LICENSE BLOCK ***** */
+#if !defined(nsAudioStream_h_)
+#define nsAudioStream_h_
+
 #include "nscore.h"
 #include "prlog.h"
 
@@ -43,12 +46,19 @@ extern PRLogModuleInfo* gAudioStreamLog;
 class nsAudioStream 
 {
  public:
-  // Initialize Audio Library. Some Audio backends (eg. PortAudio) require initializing
-  // library before using it. 
-  static nsresult InitLibrary();
+  enum SampleFormat
+  {
+    FORMAT_U8,
+    FORMAT_S16_LE,
+    FORMAT_FLOAT32_LE
+  };
 
-  // Shutdown Audio Library. Some Audio backends (eg. PortAudio) require shutting down
-  // the library after using it. 
+  // Initialize Audio Library. Some Audio backends require initializing the
+  // library before using it. 
+  static void InitLibrary();
+
+  // Shutdown Audio Library. Some Audio backends require shutting down the
+  // library after using it.
   static void ShutdownLibrary();
 
   nsAudioStream();
@@ -56,46 +66,57 @@ class nsAudioStream
   // Initialize the audio stream. aNumChannels is the number of audio channels 
   // (1 for mono, 2 for stereo, etc) and aRate is the frequency of the sound 
   // samples (22050, 44100, etc).
-  nsresult Init(PRInt32 aNumChannels, PRInt32 aRate);
+  void Init(PRInt32 aNumChannels, PRInt32 aRate, SampleFormat aFormat);
 
   // Closes the stream. All future use of the stream is an error.
-  nsresult Shutdown();
+  void Shutdown();
 
-  // Pause sound playback. 
-  nsresult Pause();
+  // Write sound data to the audio hardware.  aBuf is an array of samples in
+  // the format specified by mFormat of length aCount.  aCount should be
+  // evenly divisible by the number of channels in this audio stream.
+  void Write(const void* aBuf, PRUint32 aCount);
 
-  // Resume playback of sound.
-  nsresult Resume();
-
-  // Write sound data to the audio hardware. aBuf is an array of floats of
-  // length aCount. aCount should be evenly divisible by the number of 
-  // channels in this audio stream.
-  nsresult Write(float* aBuf, PRUint32 count);
-
-  // Store in aTime the position (in seconds) of the audio sample currently 
-  // being played by the audio hardware.
-  nsresult GetTime(double* aTime);
+  // Return the number of sound samples that can be written to the audio device
+  // without blocking.
+  PRInt32 Available();
 
   // Store in aVolume the value of the volume setting. This is a value from
   // 0 (meaning muted) to 1 (meaning full volume).
-  nsresult GetVolume(float* aVolume);
+  float GetVolume();
 
   // Set the current volume of the audio playback. This is a value from
   // 0 (meaning muted) to 1 (meaning full volume).
-  nsresult SetVolume(float aVolume);
+  void SetVolume(float aVolume);
+
+  // Block until buffered audio data has been consumed.
+  void Drain();
+
+  // Pause sound playback.
+  void Pause();
+
+  // Resume sound playback.
+  void Resume();
+
+  // Return the position (in seconds) of the audio sample currently being
+  // played by the audio hardware.
+  double GetTime();
 
  private:
   double mVolume;
-#if defined(SYDNEY_AUDIO_NO_POSITION)
-  // The time, in seconds, that playback was last paused.
-  double mPauseTime;
-#else
-  // The byte position in the audio buffer where playback
-  // was last paused.
-  PRInt64 mPauseBytes;
-#endif
   void* mAudioHandle;
   int mRate;
   int mChannels;
-  PRBool mPaused;
+
+  // The byte position in the audio buffer where playback was last paused.
+  PRInt64 mSavedPauseBytes;
+  PRInt64 mPauseBytes;
+
+  float mStartTime;
+  float mPauseTime;
+  PRInt64 mSamplesBuffered;
+
+  SampleFormat mFormat;
+
+  PRPackedBool mPaused;
 };
+#endif

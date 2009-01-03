@@ -357,7 +357,7 @@ fbCombineDisjointGeneralU (uint32_t *dest, const uint32_t *src, int width, uint8
         }
         m = FbGen (s,d,0,Fa,Fb,t, u, v);
         n = FbGen (s,d,G_SHIFT,Fa,Fb,t, u, v);
-        o = FbGen (s,d,B_SHIFT,Fa,Fb,t, u, v);
+        o = FbGen (s,d,R_SHIFT,Fa,Fb,t, u, v);
         p = FbGen (s,d,A_SHIFT,Fa,Fb,t, u, v);
         s = m|n|o|p;
 	*(dest + i) = s;
@@ -471,7 +471,7 @@ fbCombineConjointGeneralU (uint32_t *dest, const uint32_t *src, int width, uint8
         }
         m = FbGen (s,d,0,Fa,Fb,t, u, v);
         n = FbGen (s,d,G_SHIFT,Fa,Fb,t, u, v);
-        o = FbGen (s,d,B_SHIFT,Fa,Fb,t, u, v);
+        o = FbGen (s,d,R_SHIFT,Fa,Fb,t, u, v);
         p = FbGen (s,d,A_SHIFT,Fa,Fb,t, u, v);
         s = m|n|o|p;
 	*(dest + i) = s;
@@ -558,7 +558,7 @@ fbCombineMaskC (uint32_t *src, uint32_t *mask)
     {
 	x = x >> A_SHIFT;
 	x |= x << G_SHIFT;
-	x |= x << B_SHIFT;
+	x |= x << R_SHIFT;
 	*(mask) = x;
 	return;
     }
@@ -606,7 +606,7 @@ fbCombineMaskAlphaC (const uint32_t *src, uint32_t *mask)
     {
 	x = x >> A_SHIFT;
 	x |= x << G_SHIFT;
-	x |= x << B_SHIFT;
+	x |= x << R_SHIFT;
 	*(mask) = x;
 	return;
     }
@@ -889,7 +889,7 @@ fbCombineSaturateC (uint32_t *dest, uint32_t *src, uint32_t *mask, int width)
 	fbCombineMaskC (&s, &m);
 
         sa = (m >> A_SHIFT);
-        sr = (m >> B_SHIFT) & MASK;
+        sr = (m >> R_SHIFT) & MASK;
         sg = (m >> G_SHIFT) & MASK;
         sb =  m             & MASK;
         da = ~d >> A_SHIFT;
@@ -905,9 +905,9 @@ fbCombineSaturateC (uint32_t *dest, uint32_t *src, uint32_t *mask, int width)
             n = FbGen (s, d, G_SHIFT, (da << G_SHIFT) / sg, MASK, t, u, v);
 
         if (sr <= da)
-            o = Add(s,d,B_SHIFT,t);
+            o = Add(s,d,R_SHIFT,t);
         else
-            o = FbGen (s, d, B_SHIFT, (da << G_SHIFT) / sr, MASK, t, u, v);
+            o = FbGen (s, d, R_SHIFT, (da << G_SHIFT) / sr, MASK, t, u, v);
 
         if (sa <= da)
             p = Add(s,d,A_SHIFT,t);
@@ -947,14 +947,14 @@ fbCombineDisjointGeneralC (uint32_t *dest, uint32_t *src, uint32_t *mask, int wi
         case CombineAOut:
             m = (uint32_t)fbCombineDisjointOutPart ((uint8_t) (sa >> 0), da);
             n = (uint32_t)fbCombineDisjointOutPart ((uint8_t) (sa >> G_SHIFT), da) << G_SHIFT;
-            o = (uint32_t)fbCombineDisjointOutPart ((uint8_t) (sa >> B_SHIFT), da) << B_SHIFT;
+            o = (uint32_t)fbCombineDisjointOutPart ((uint8_t) (sa >> R_SHIFT), da) << R_SHIFT;
             p = (uint32_t)fbCombineDisjointOutPart ((uint8_t) (sa >> A_SHIFT), da) << A_SHIFT;
             Fa = m|n|o|p;
             break;
         case CombineAIn:
             m = (uint32_t)fbCombineDisjointInPart ((uint8_t) (sa >> 0), da);
             n = (uint32_t)fbCombineDisjointInPart ((uint8_t) (sa >> G_SHIFT), da) << G_SHIFT;
-            o = (uint32_t)fbCombineDisjointInPart ((uint8_t) (sa >> B_SHIFT), da) << B_SHIFT;
+            o = (uint32_t)fbCombineDisjointInPart ((uint8_t) (sa >> R_SHIFT), da) << R_SHIFT;
             p = (uint32_t)fbCombineDisjointInPart ((uint8_t) (sa >> A_SHIFT), da) << A_SHIFT;
             Fa = m|n|o|p;
             break;
@@ -970,14 +970,14 @@ fbCombineDisjointGeneralC (uint32_t *dest, uint32_t *src, uint32_t *mask, int wi
         case CombineBOut:
             m = (uint32_t)fbCombineDisjointOutPart (da, (uint8_t) (sa >> 0));
             n = (uint32_t)fbCombineDisjointOutPart (da, (uint8_t) (sa >> G_SHIFT)) << G_SHIFT;
-            o = (uint32_t)fbCombineDisjointOutPart (da, (uint8_t) (sa >> B_SHIFT)) << B_SHIFT;
+            o = (uint32_t)fbCombineDisjointOutPart (da, (uint8_t) (sa >> R_SHIFT)) << R_SHIFT;
             p = (uint32_t)fbCombineDisjointOutPart (da, (uint8_t) (sa >> A_SHIFT)) << A_SHIFT;
             Fb = m|n|o|p;
             break;
         case CombineBIn:
             m = (uint32_t)fbCombineDisjointInPart (da, (uint8_t) (sa >> 0));
             n = (uint32_t)fbCombineDisjointInPart (da, (uint8_t) (sa >> G_SHIFT)) << G_SHIFT;
-            o = (uint32_t)fbCombineDisjointInPart (da, (uint8_t) (sa >> B_SHIFT)) << B_SHIFT;
+            o = (uint32_t)fbCombineDisjointInPart (da, (uint8_t) (sa >> R_SHIFT)) << R_SHIFT;
             p = (uint32_t)fbCombineDisjointInPart (da, (uint8_t) (sa >> A_SHIFT)) << A_SHIFT;
             Fb = m|n|o|p;
             break;
@@ -987,7 +987,7 @@ fbCombineDisjointGeneralC (uint32_t *dest, uint32_t *src, uint32_t *mask, int wi
         }
         m = FbGen (s,d,0,GetComp(Fa,0),GetComp(Fb,0),t, u, v);
         n = FbGen (s,d,G_SHIFT,GetComp(Fa,G_SHIFT),GetComp(Fb,G_SHIFT),t, u, v);
-        o = FbGen (s,d,B_SHIFT,GetComp(Fa,B_SHIFT),GetComp(Fb,B_SHIFT),t, u, v);
+        o = FbGen (s,d,R_SHIFT,GetComp(Fa,R_SHIFT),GetComp(Fb,R_SHIFT),t, u, v);
         p = FbGen (s,d,A_SHIFT,GetComp(Fa,A_SHIFT),GetComp(Fb,A_SHIFT),t, u, v);
         s = m|n|o|p;
 	*(dest + i) = s;
@@ -1071,14 +1071,14 @@ fbCombineConjointGeneralC (uint32_t *dest, uint32_t *src, uint32_t *mask, int wi
         case CombineAOut:
             m = (uint32_t)fbCombineConjointOutPart ((uint8_t) (sa >> 0), da);
             n = (uint32_t)fbCombineConjointOutPart ((uint8_t) (sa >> G_SHIFT), da) << G_SHIFT;
-            o = (uint32_t)fbCombineConjointOutPart ((uint8_t) (sa >> B_SHIFT), da) << B_SHIFT;
+            o = (uint32_t)fbCombineConjointOutPart ((uint8_t) (sa >> R_SHIFT), da) << R_SHIFT;
             p = (uint32_t)fbCombineConjointOutPart ((uint8_t) (sa >> A_SHIFT), da) << A_SHIFT;
             Fa = m|n|o|p;
             break;
         case CombineAIn:
             m = (uint32_t)fbCombineConjointInPart ((uint8_t) (sa >> 0), da);
             n = (uint32_t)fbCombineConjointInPart ((uint8_t) (sa >> G_SHIFT), da) << G_SHIFT;
-            o = (uint32_t)fbCombineConjointInPart ((uint8_t) (sa >> B_SHIFT), da) << B_SHIFT;
+            o = (uint32_t)fbCombineConjointInPart ((uint8_t) (sa >> R_SHIFT), da) << R_SHIFT;
             p = (uint32_t)fbCombineConjointInPart ((uint8_t) (sa >> A_SHIFT), da) << A_SHIFT;
             Fa = m|n|o|p;
             break;
@@ -1094,14 +1094,14 @@ fbCombineConjointGeneralC (uint32_t *dest, uint32_t *src, uint32_t *mask, int wi
         case CombineBOut:
             m = (uint32_t)fbCombineConjointOutPart (da, (uint8_t) (sa >> 0));
             n = (uint32_t)fbCombineConjointOutPart (da, (uint8_t) (sa >> G_SHIFT)) << G_SHIFT;
-            o = (uint32_t)fbCombineConjointOutPart (da, (uint8_t) (sa >> B_SHIFT)) << B_SHIFT;
+            o = (uint32_t)fbCombineConjointOutPart (da, (uint8_t) (sa >> R_SHIFT)) << R_SHIFT;
             p = (uint32_t)fbCombineConjointOutPart (da, (uint8_t) (sa >> A_SHIFT)) << A_SHIFT;
             Fb = m|n|o|p;
             break;
         case CombineBIn:
             m = (uint32_t)fbCombineConjointInPart (da, (uint8_t) (sa >> 0));
             n = (uint32_t)fbCombineConjointInPart (da, (uint8_t) (sa >> G_SHIFT)) << G_SHIFT;
-            o = (uint32_t)fbCombineConjointInPart (da, (uint8_t) (sa >> B_SHIFT)) << B_SHIFT;
+            o = (uint32_t)fbCombineConjointInPart (da, (uint8_t) (sa >> R_SHIFT)) << R_SHIFT;
             p = (uint32_t)fbCombineConjointInPart (da, (uint8_t) (sa >> A_SHIFT)) << A_SHIFT;
             Fb = m|n|o|p;
             break;
@@ -1111,7 +1111,7 @@ fbCombineConjointGeneralC (uint32_t *dest, uint32_t *src, uint32_t *mask, int wi
         }
         m = FbGen (s,d,0,GetComp(Fa,0),GetComp(Fb,0),t, u, v);
         n = FbGen (s,d,G_SHIFT,GetComp(Fa,G_SHIFT),GetComp(Fb,G_SHIFT),t, u, v);
-        o = FbGen (s,d,B_SHIFT,GetComp(Fa,B_SHIFT),GetComp(Fb,B_SHIFT),t, u, v);
+        o = FbGen (s,d,R_SHIFT,GetComp(Fa,R_SHIFT),GetComp(Fb,R_SHIFT),t, u, v);
         p = FbGen (s,d,A_SHIFT,GetComp(Fa,A_SHIFT),GetComp(Fb,A_SHIFT),t, u, v);
         s = m|n|o|p;
 	*(dest + i) = s;

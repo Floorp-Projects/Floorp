@@ -68,7 +68,7 @@ public:
 };
 
 
-PR_STATIC_CALLBACK(PLDHashNumber)
+static PLDHashNumber
 GlobalNameHashHashKey(PLDHashTable *table, const void *key)
 {
   const nsAString *str = static_cast<const nsAString *>(key);
@@ -76,7 +76,7 @@ GlobalNameHashHashKey(PLDHashTable *table, const void *key)
   return HashString(*str);
 }
 
-PR_STATIC_CALLBACK(PRBool)
+static PRBool
 GlobalNameHashMatchEntry(PLDHashTable *table, const PLDHashEntryHdr *entry,
                          const void *key)
 {
@@ -87,7 +87,7 @@ GlobalNameHashMatchEntry(PLDHashTable *table, const PLDHashEntryHdr *entry,
   return str->Equals(e->mKey);
 }
 
-PR_STATIC_CALLBACK(void)
+static void
 GlobalNameHashClearEntry(PLDHashTable *table, PLDHashEntryHdr *entry)
 {
   GlobalNameMapEntry *e = static_cast<GlobalNameMapEntry *>(entry);
@@ -116,7 +116,7 @@ GlobalNameHashClearEntry(PLDHashTable *table, PLDHashEntryHdr *entry)
   memset(&e->mGlobalName, 0, sizeof(nsGlobalNameStruct));
 }
 
-PR_STATIC_CALLBACK(PRBool)
+static PRBool
 GlobalNameHashInitEntry(PLDHashTable *table, PLDHashEntryHdr *entry,
                         const void *key)
 {
@@ -510,7 +510,7 @@ struct NameSetClosure {
   nsresult rv;
 };
 
-PR_STATIC_CALLBACK(PLDHashOperator)
+static PLDHashOperator
 NameSetInitCallback(PLDHashTable *table, PLDHashEntryHdr *hdr,
                     PRUint32 number, void *arg)
 {

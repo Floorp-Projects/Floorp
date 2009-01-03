@@ -57,14 +57,10 @@
 #include "nsToolkit.h"
 #include "nsPrintfCString.h"
 #include "nsThreadUtils.h"
-#include "nsIFocusController.h"
-#include "nsIWindowWatcher.h"
-#include "nsIServiceManager.h"
-#include "nsIDOMWindow.h"
-#include "nsPIDOMWindow.h"
-#include "nsIDOMElement.h"
 #include "nsMenuBarX.h"
 #include "nsMenuUtilsX.h"
+#include "nsStyleConsts.h"
+#include "nsNativeThemeColors.h"
 
 #include "gfxPlatform.h"
 #include "lcms.h"
@@ -800,7 +796,6 @@ void nsCocoaWindow::MakeBackgroundTransparent(PRBool aTransparent)
     }
     [mWindow setOpaque:!aTransparent];
     [mWindow setBackgroundColor:(aTransparent ? [NSColor clearColor] : [NSColor whiteColor])];
-    [mWindow setHasShadow:!aTransparent];
   }
 
   NS_OBJC_END_TRY_ABORT_BLOCK;
@@ -1317,6 +1312,18 @@ NS_IMETHODIMP nsCocoaWindow::GetAttention(PRInt32 aCycleCount)
 }
 
 
+NS_IMETHODIMP nsCocoaWindow::SetWindowShadowStyle(PRInt32 aStyle)
+{
+  NS_OBJC_BEGIN_TRY_ABORT_BLOCK_NSRESULT;
+
+  if ([mWindow hasShadow] != (aStyle != NS_STYLE_WINDOW_SHADOW_NONE))
+    [mWindow setHasShadow:(aStyle != NS_STYLE_WINDOW_SHADOW_NONE)];
+  return NS_OK;
+
+  NS_OBJC_END_TRY_ABORT_BLOCK_NSRESULT;
+}
+
+
 NS_IMETHODIMP nsCocoaWindow::SetWindowTitlebarColor(nscolor aColor, PRBool aActive)
 {
   NS_OBJC_BEGIN_TRY_ABORT_BLOCK_NSRESULT;
@@ -1392,6 +1399,27 @@ NS_IMETHODIMP nsCocoaWindow::EndSecureKeyboardInput()
   return rv;
 
   NS_OBJC_END_TRY_ABORT_BLOCK_NSRESULT;
+}
+
+
+// Callback used by the default titlebar and toolbar shading.
+// *aIn == 0 at the top of the titlebar/toolbar, *aIn == 1 at the bottom
+/* static */ void
+nsCocoaWindow::UnifiedShading(void* aInfo, const float* aIn, float* aOut)
+{
+  UnifiedGradientInfo* info = (UnifiedGradientInfo*)aInfo;
+  // The gradient percentage at the bottom of the titlebar / top of the toolbar
+  float start = info->titlebarHeight / (info->titlebarHeight + info->toolbarHeight - 1);
+  const float startGrey = NativeGreyColorAsFloat(headerStartGrey, info->windowIsMain);
+  const float endGrey = NativeGreyColorAsFloat(headerEndGrey, info->windowIsMain);
+  // *aIn is the gradient percentage of the titlebar or toolbar gradient,
+  // a is the gradient percentage of the whole unified gradient.
+  float a = info->drawTitlebar ? *aIn * start : start + *aIn * (1 - start);
+  float result = (1.0f - a) * startGrey + a * endGrey;
+  aOut[0] = result;
+  aOut[1] = result;
+  aOut[2] = result;
+  aOut[3] = 1.0f;
 }
 
 
@@ -1971,8 +1999,8 @@ void patternDraw(void* aInfo, CGContextRef aContext)
 
   // If the titlebar color is nil, draw the default titlebar shading.
   if (!titlebarColor) {
-    // Create and draw a CGShading that uses unifiedShading() as its callback.
-    CGFunctionCallbacks callbacks = {0, unifiedShading, NULL};
+    // Create and draw a CGShading that uses nsCocoaWindow::UnifiedShading() as its callback.
+    CGFunctionCallbacks callbacks = {0, nsCocoaWindow::UnifiedShading, NULL};
     CGFunctionRef function = CGFunctionCreate(&info, 1, NULL, 4, NULL, &callbacks);
     CGColorSpaceRef colorSpace = CGColorSpaceCreateDeviceRGB();
     CGShadingRef shading = CGShadingCreateAxial(colorSpace,
@@ -2101,78 +2129,26 @@ void patternDraw(void* aInfo, CGContextRef aContext)
 @end
 
 
-// This is an internal Apple class, which we need to work around a bug in. It is
-// the class responsible for drawing the titlebar for metal windows. It actually
-// is a few levels deep in the inhertiance graph, but we don't need to know about
-// all its superclasses.
-@interface NSGrayFrame : NSObject
-+ (void)drawBevel:(NSRect)bevel inFrame:(NSRect)frame topCornerRounded:(BOOL)top;
-+ (void)drawBevel:(NSRect)bevel inFrame:(NSRect)frame topCornerRounded:(BOOL)top bottomCornerRounded:(BOOL)bottom;
-@end
-
-@implementation NSGrayFrame(DrawingBugWorkaround)
-
-// Work around a bug in this method -- it draws a strange 1px border on the left and
-// right edges of a window. We don't want that, so call the similar method defined
-// in the superclass.
-+ (void)drawBevel:(NSRect)bevel inFrame:(NSRect)frame topCornerRounded:(BOOL)top bottomCornerRounded:(BOOL)bottom
-{
-  NS_OBJC_BEGIN_TRY_ABORT_BLOCK;
-
-  if ([self respondsToSelector:@selector(drawBevel:inFrame:topCornerRounded:)])
-    [self drawBevel:bevel inFrame:frame topCornerRounded:top];
-
-  NS_OBJC_END_TRY_ABORT_BLOCK;
-}
-
-@end
-
-
-already_AddRefed<nsIDOMElement> GetFocusedElement()
-{
-  nsresult rv;
-
-  nsIDOMElement *focusedElement = nsnull;
-
-  nsCOMPtr<nsIWindowWatcher> wwatch =
-    (do_GetService(NS_WINDOWWATCHER_CONTRACTID, &rv));
-  if (!NS_SUCCEEDED(rv) || !wwatch)
-    return nsnull;
-
-  nsCOMPtr<nsIDOMWindow> domWindow;
-  wwatch->GetActiveWindow(getter_AddRefs(domWindow));
-  nsCOMPtr<nsPIDOMWindow> piWin(do_QueryInterface(domWindow));
-  if (!piWin)
-    return nsnull;
-
-  nsIFocusController *fc = piWin->GetRootFocusController();
-  if (!fc)
-    return nsnull;
-
-  rv = fc->GetFocusedElement(&focusedElement);
-  if (!NS_SUCCEEDED(rv)) {
-    NS_IF_RELEASE(focusedElement);
-    return nsnull;
-  }
-
-  return focusedElement;
-}
-
-
 @interface NSWindow (MethodSwizzling)
 - (void)nsCocoaWindow_NSWindow_sendEvent:(NSEvent *)anEvent;
 @end
 
 @implementation NSWindow (MethodSwizzling)
 
-// A mouseDown event can change the focus, and (if this happens) we may need
-// to send NS_LOSTFOCUS and NS_GOTFOCUS events to Gecko.  Otherwise other
-// Gecko events may be sent to the wrong nsChildView, or the "right"
-// nsChildView may not be focused.  This resolves bmo bug 413882.
-// But if the mouseDown event doesn't change the focus where it really counts
-// (if it doesn't change the focused nsIDOMElement/nsIContent), put the
-// Cocoa keyboard focus back where it originally was.  This resolves bmo bug
-// 413882 without regressing bmo bugs 404433, 403232 and 357535/418031.
+// An NSLeftMouseDown event can change the focus, but it doesn't always do
+// this correctly/appropriately.  As a result, Gecko keyboard events may be
+// sent to the wrong nsChildView object, and thereby "lost".  So if we know
+// which ChildView object should have the focus in our NSWindow, and if
+// processing an NSLeftMouseDown event has caused the focus to be set
+// incorrectly, we change the focus back to where it belongs.  This resolves
+// bmo bugs 314160, 403232, 404433 and 357535/418031.
+//
+// Only check for incorrect focus if our NSWindow's "new" first responder is
+// also a ChildView object:  Embedders (like Camino) sometimes legitimately
+// use NSView objects which are not ChildView objects (which don't have
+// corresponding child widgets), and expect them to be focusable via an
+// NSLeftMouseDown event.
+//
 // For non-embedders (e.g. Firefox, Thunderbird and Seamonkey), it would
 // probably only be necessary to add a sendEvent: method to the ToolbarWindow
 // class.  But embedders (like Camino) generally create their own NSWindows.
@@ -2185,41 +2161,19 @@ already_AddRefed<nsIDOMElement> GetFocusedElement()
   // Objective-C exceptions that occur here.
   NS_OBJC_BEGIN_TRY_LOGONLY_BLOCK;
 
-  nsCOMPtr<nsIDOMElement> oldFocusedElement;
-  NSResponder *oldFirstResponder;
-  NSEventType type = [anEvent type];
-  if (type == NSLeftMouseDown) {
-    oldFirstResponder = [self firstResponder];
-    if ([oldFirstResponder isKindOfClass:[ChildView class]]) {
-      oldFirstResponder = [oldFirstResponder retain];
-      oldFocusedElement = GetFocusedElement();
-    }
-    else {
-      oldFirstResponder = nil;
-    }
-  }
   [self nsCocoaWindow_NSWindow_sendEvent:anEvent];
-  if (type == NSLeftMouseDown) {
-    nsCOMPtr<nsIDOMElement> newFocusedElement;
+
+  if ([anEvent type] == NSLeftMouseDown) {
     NSResponder *newFirstResponder = [self firstResponder];
     if ([newFirstResponder isKindOfClass:[ChildView class]]) {
-      newFirstResponder = [newFirstResponder retain];
-      newFocusedElement = GetFocusedElement();
-    }
-    else {
-      newFirstResponder = nil;
-    }
-    if (oldFirstResponder != newFirstResponder) {
-      if (oldFocusedElement != newFocusedElement) {
-        [(ChildView *)oldFirstResponder sendFocusEvent:NS_LOSTFOCUS];
-        [(ChildView *)newFirstResponder sendFocusEvent:NS_GOTFOCUS];
-      }
-      else if (newFocusedElement && [(ChildView *)oldFirstResponder widget]) {
-        [self makeFirstResponder:oldFirstResponder];
+      WindowDataMap *windowMap = [WindowDataMap sharedWindowDataMap];
+      TopLevelWindowData *windowData = [windowMap dataForWindow:self];
+      if (windowData) {
+        ChildView *shouldFocusView = [windowData getShouldFocusView];
+        if (shouldFocusView && (shouldFocusView != newFirstResponder))
+          [self makeFirstResponder:shouldFocusView];
       }
     }
-    [newFirstResponder release];
-    [oldFirstResponder release];
   }
 
   NS_OBJC_END_TRY_LOGONLY_BLOCK;

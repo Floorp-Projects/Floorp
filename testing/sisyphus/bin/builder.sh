@@ -53,7 +53,7 @@ $SCRIPT -p products -b branches -B buildcommands -T buildtypes [-e extra] [-d da
 
 variable            description
 ===============     ===========================================================
--p products         required. one or more of firefox thunderbird
+-p products         required. one or more of firefox thunderbird fennec
 -b branches         required. one or more of 1.8.0 1.8.1 1.9.0 1.9.1
 -B buildcommands    required. one or more of clean clobber checkout build
 -T buildtypes       required. one or more of opt debug

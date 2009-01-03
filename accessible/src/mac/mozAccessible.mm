@@ -468,7 +468,8 @@ GetNativeFromGeckoAccessible(nsIAccessible *anAccessible)
 - (NSString*)role
 {
 #ifdef DEBUG_A11Y
-  NS_ASSERTION(nsAccessible::IsTextInterfaceSupportCorrect(mGeckoAccessible), "Does not support nsIAccessibleText when it should");
+  NS_ASSERTION(nsAccUtils::IsTextInterfaceSupportCorrect(mGeckoAccessible),
+               "Does not support nsIAccessibleText when it should");
 #endif
   return AXRoles[mRole];
 }
@@ -548,14 +549,14 @@ GetNativeFromGeckoAccessible(nsIAccessible *anAccessible)
 - (BOOL)isFocused
 {
   PRUint32 state = 0;
-  mGeckoAccessible->GetFinalState (&state, nsnull);
+  mGeckoAccessible->GetState (&state, nsnull);
   return (state & nsIAccessibleStates::STATE_FOCUSED) != 0;
 }
 
 - (BOOL)canBeFocused
 {
   PRUint32 state = 0;
-  mGeckoAccessible->GetFinalState (&state, nsnull);
+  mGeckoAccessible->GetState (&state, nsnull);
   return (state & nsIAccessibleStates::STATE_FOCUSABLE) != 0;
 }
 
@@ -568,7 +569,7 @@ GetNativeFromGeckoAccessible(nsIAccessible *anAccessible)
 - (BOOL)isEnabled
 {
   PRUint32 state = 0;
-  mGeckoAccessible->GetFinalState (&state, nsnull);
+  mGeckoAccessible->GetState (&state, nsnull);
   return (state & nsIAccessibleStates::STATE_UNAVAILABLE) == 0;
 }
 

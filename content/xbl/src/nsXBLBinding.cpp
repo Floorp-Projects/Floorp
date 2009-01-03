@@ -206,6 +206,7 @@ XBLResolve(JSContext *cx, JSObject *obj, jsval id, uintN flags,
   // Now we either resolve or fail
   PRBool didInstall;
   nsresult rv = field->InstallField(context, origObj,
+                                    content->NodePrincipal(),
                                     protoBinding->DocURI(),
                                     &didInstall);
   if (NS_FAILED(rv)) {
@@ -287,7 +288,7 @@ nsXBLBinding::~nsXBLBinding(void)
   NS_RELEASE(info);
 }
 
-PR_STATIC_CALLBACK(PLDHashOperator)
+static PLDHashOperator
 TraverseKey(nsISupports* aKey, nsInsertionPointList* aData, void* aClosure)
 {
   nsCycleCollectionTraversalCallback &cb = 
@@ -407,7 +408,7 @@ struct ContentListData : public EnumData {
   {}
 };
 
-PR_STATIC_CALLBACK(PLDHashOperator)
+static PLDHashOperator
 BuildContentLists(nsISupports* aKey,
                   nsAutoPtr<nsInsertionPointList>& aData,
                   void* aClosure)
@@ -500,7 +501,7 @@ BuildContentLists(nsISupports* aKey,
   return PL_DHASH_NEXT;
 }
 
-PR_STATIC_CALLBACK(PLDHashOperator)
+static PLDHashOperator
 RealizeDefaultContent(nsISupports* aKey,
                       nsAutoPtr<nsInsertionPointList>& aData,
                       void* aClosure)
@@ -561,7 +562,7 @@ RealizeDefaultContent(nsISupports* aKey,
   return PL_DHASH_NEXT;
 }
 
-PR_STATIC_CALLBACK(PLDHashOperator)
+static PLDHashOperator
 ChangeDocumentForDefaultContent(nsISupports* aKey,
                                 nsAutoPtr<nsInsertionPointList>& aData,
                                 void* aClosure)
@@ -1373,7 +1374,21 @@ nsXBLBinding::AllowScripts()
   PRBool canExecute;
   nsresult rv =
     mgr->CanExecuteScripts(cx, ourDocument->NodePrincipal(), &canExecute);
-  return NS_SUCCEEDED(rv) && canExecute;
+  if (NS_FAILED(rv) || !canExecute) {
+    return PR_FALSE;
+  }
+
+  // Now one last check: make sure that we're not allowing a privilege
+  // escalation here.
+  PRBool haveCert;
+  doc->NodePrincipal()->GetHasCertificate(&haveCert);
+  if (!haveCert) {
+    return PR_TRUE;
+  }
+
+  PRBool subsumes;
+  rv = ourDocument->NodePrincipal()->Subsumes(doc->NodePrincipal(), &subsumes);
+  return NS_SUCCEEDED(rv) && subsumes;
 }
 
 void

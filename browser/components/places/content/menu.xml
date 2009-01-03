@@ -154,6 +154,7 @@
           newMarginTop += sbo.y - this._scrollBox.boxObject.y;
           this._indicatorBar.firstChild.style.marginTop = newMarginTop + "px";
           this._indicatorBar.hidden = false;
+          aEvent.stopPropagation();
         ]]></body>
       </method>
 
@@ -212,6 +213,7 @@
           this._rootView._controller.setDataTransfer(aEvent);
 
           this.setAttribute("dragstart", "true");
+          aEvent.stopPropagation();
         ]]></body>
       </method>
 
@@ -228,6 +230,7 @@
             return;
 
           PlacesControllerDragHelper.onDrop(dropPoint.ip);
+          aEvent.stopPropagation();
         ]]></body>
       </method>
 
@@ -287,9 +290,10 @@
 
             if (!xulNode.node) {
               // if we are dragging over a non places node drop at the end
-              dropPoint.ip = new InsertionPoint(resultNode.itemId,
-                                                -1,
-                                                Ci.nsITreeView.DROP_ON);
+              dropPoint.ip = new InsertionPoint(
+                                  PlacesUtils.getConcreteItemId(resultNode),
+                                  -1,
+                                  Ci.nsITreeView.DROP_ON);
               return dropPoint;
             }
             else if ((PlacesUtils.nodeIsFolder(xulNode.node) ||
@@ -300,7 +304,7 @@
                 // If the mouse is in the top 25% of the node,
                 // drop above the folder.
                 dropPoint.ip = new InsertionPoint(
-                                    resultNode.itemId,
+                                    PlacesUtils.getConcreteItemId(resultNode),
                                     -1,
                                     Ci.nsITreeView.DROP_BEFORE,
                                     PlacesUtils.nodeIsTagQuery(xulNode.node),
@@ -323,7 +327,7 @@
               // This is a non-folder node or a readonly folder.
               // If the mouse is above the middle, drop above this item.
               dropPoint.ip = new InsertionPoint(
-                                  resultNode.itemId,
+                                  PlacesUtils.getConcreteItemId(resultNode),
                                   -1,
                                   Ci.nsITreeView.DROP_BEFORE,
                                   PlacesUtils.nodeIsTagQuery(xulNode.node),
@@ -333,7 +337,7 @@
 
             // Drop below the item.
             dropPoint.ip = new InsertionPoint(
-                                resultNode.itemId,
+                                PlacesUtils.getConcreteItemId(resultNode),
                                 -1,
                                 Ci.nsITreeView.DROP_AFTER,
                                 PlacesUtils.nodeIsTagQuery(xulNode.node),
@@ -521,7 +525,7 @@
           window.XULBrowserWindow.setOverLink("", null);
       ]]></handler>
       <handler event="draggesture" action="if (event.target.node) nsDragAndDrop.startDrag(event, this);"/>
-      <handler event="dragdrop" action="nsDragAndDrop.drop(event, this);"/>
+      <handler event="drop" action="nsDragAndDrop.drop(event, this);"/>
       <handler event="dragover" action="nsDragAndDrop.dragOver(event, this);"/>
       <handler event="dragexit" action="nsDragAndDrop.dragExit(event, this);"/>
     </handlers>

@@ -201,9 +201,9 @@ private:
 
 inline
 xpcFunctionDefiner::xpcFunctionDefiner(JSContext * aJSContext) : 
-    m_Runtime(nsXPConnect::GetRuntime()), m_JSContext(aJSContext)
+    m_Runtime(nsXPConnect::GetRuntimeInstance()), m_JSContext(aJSContext)
 {
-    NS_ASSERTION(m_Runtime, "nsXPConnect::GetRuntime() returned null");
+    NS_ASSERTION(m_Runtime, "nsXPConnect::GetRuntimeInstance() returned null");
     NS_ASSERTION(aJSContext, "xpcFunctionDefiner constructor passed a null context");
 }
 

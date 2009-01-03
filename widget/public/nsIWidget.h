@@ -46,6 +46,7 @@
 #include "prthread.h"
 #include "nsEvent.h"
 #include "nsCOMPtr.h"
+#include "nsITheme.h"
 
 // forward declarations
 class   nsIAppShell;
@@ -71,7 +72,7 @@ class   nsIContent;
  * The return value determines whether or not the default action should take place.
  */
 
-typedef nsEventStatus (*PR_CALLBACK EVENT_CALLBACK)(nsGUIEvent *event);
+typedef nsEventStatus (* EVENT_CALLBACK)(nsGUIEvent *event);
 
 /**
  * Flags for the getNativeData function.
@@ -93,15 +94,23 @@ typedef nsEventStatus (*PR_CALLBACK EVENT_CALLBACK)(nsGUIEvent *event);
 #define NS_NATIVE_PLUGIN_PORT_CG    101
 #endif
 
-// 0e64821f-00a2-4adc-ac3b-3439d61f4491
+// 7E01D11D-DAFC-4A5E-8C0A-7442A2E17252
 #define NS_IWIDGET_IID \
-{ 0x0e64821f, 0x00a2, 0x4adc, \
-  { 0xac, 0x3b, 0x34, 0x39, 0xd6, 0x1f, 0x44, 0x91 } }
+{ 0x7E01D11D, 0xDAFC, 0x4A5E, \
+  { 0x8C, 0x0A, 0x74, 0x42, 0xA2, 0xE1, 0x72, 0x52 } }
 
 // Hide the native window systems real window type so as to avoid
 // including native window system types and APIs. This is necessary
 // to ensure cross-platform code.
 typedef void* nsNativeWidget;
+
+/*
+ * Window shadow styles
+ * Also used for the -moz-window-shadow CSS property
+ */
+
+#define NS_STYLE_WINDOW_SHADOW_NONE             0
+#define NS_STYLE_WINDOW_SHADOW_DEFAULT          1
 
 /**
  * Border styles
@@ -227,12 +236,6 @@ enum nsTopLevelWidgetZPlacement { // for PlaceBehind()
   eZPlacementBottom = 0,  // bottom of the window stack
   eZPlacementBelow,       // just below another widget
   eZPlacementTop          // top of the window stack
-};
-
-enum nsTransparencyMode {
-  eTransparencyOpaque = 0,  // Fully opaque
-  eTransparencyTransparent, // Parts of the window may be transparent
-  eTransparencyGlass        // Transparent parts of the window have Vista AeroGlass effect applied
 };
 
 /**
@@ -711,6 +714,11 @@ class nsIWidget : public nsISupports {
      */
     virtual nsTransparencyMode GetTransparencyMode() = 0;
 
+    /**
+     * Set the shadow style of the window.
+     */
+    NS_IMETHOD SetWindowShadowStyle(PRInt32 aStyle) = 0;
+
     /** 
      * Hide window chrome (borders, buttons) for this widget.
      *
@@ -1082,9 +1090,10 @@ class nsIWidget : public nsISupports {
         CTRL_R = 0x0800,
         ALT_L = 0x1000, // includes Option
         ALT_R = 0x2000,
-        COMMAND = 0x4000,
-        HELP = 0x8000,
-        FUNCTION = 0x10000,
+        COMMAND_L = 0x4000,
+        COMMAND_R = 0x8000,
+        HELP = 0x10000,
+        FUNCTION = 0x100000,
         NUMERIC_KEY_PAD = 0x01000000 // when the key is coming from the keypad
     };
     /**
@@ -1120,7 +1129,7 @@ class nsIWidget : public nsISupports {
      * Activates a native menu item at the position specified by the index
      * string. The index string is a string of positive integers separated
      * by the "|" (pipe) character. The last integer in the string represents
-     * the item index in a submenu located using the integers prior to it.
+     * the item index in a submenu located using the integers preceeding it.
      *
      * Example: 1|0|4
      * In this string, the first integer represents the top-level submenu
@@ -1129,6 +1138,24 @@ class nsIWidget : public nsISupports {
      * submenu, and we want to activate the 5th item within that submenu.
      */
     virtual nsresult ActivateNativeMenuItemAt(const nsAString& indexString) = 0;
+
+    /**
+     * This is used for native menu system testing.
+     *
+     * Updates a native menu at the position specified by the index string.
+     * The index string is a string of positive integers separated by the "|" 
+     * (pipe) character.
+     *
+     * Example: 1|0|4
+     * In this string, the first integer represents the top-level submenu
+     * in the native menu bar. Since the integer is 1, it is the second submeu
+     * in the native menu bar. Within that, the first item (index 0) is a
+     * submenu, and we want to update submenu at index 4 within that submenu.
+     *
+     * If this is called with an empty string it forces a full reload of the
+     * menu system.
+     */
+    virtual nsresult ForceUpdateNativeMenuAt(const nsAString& indexString) = 0;
 
     /*
      * Force Input Method Editor to commit the uncommited input
@@ -1207,14 +1234,6 @@ class nsIWidget : public nsISupports {
      * state), this method returns NS_ERROR_NOT_IMPLEMENTED.
      */
     NS_IMETHOD GetToggledKeyState(PRUint32 aKeyCode, PRBool* aLEDState) = 0;
-
-    /**
-     * This is used for native menu system testing. Calling this forces a full
-     * reload of the menu system, reloading all native menus and their items.
-     * This is important for testing because changes to the DOM can affect the
-     * native menu system lazily.
-     */
-    virtual nsresult ForceNativeMenuReload() = 0;
 
 protected:
     // keep the list of children.  We also keep track of our siblings.

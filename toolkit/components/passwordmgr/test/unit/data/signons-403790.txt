@@ -12,3 +12,9 @@ ldap://localhost1:389/dc=test
 *\=password=\
 ~dGVzdHBhc3My
 .
+mailbox://test%2Bpop3@localhost
+\=username=\
+~
+*\=password=\
+~cG9wM3Rlc3Q=
+.

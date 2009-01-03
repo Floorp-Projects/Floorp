@@ -50,7 +50,7 @@ interface nsIChannel;
  * If you REALLY have to change this interface, please mark your bug as
  * blocking bug 293973.
  */
-[scriptable, uuid(3fffd8e8-3fea-442e-a0ed-2ba81ae197d5)]
+[scriptable, uuid(f8e350b9-9f31-451a-8c8f-d10fea26b780)]
 interface nsIScriptSecurityManager : nsIXPCSecurityManager
 {
     ///////////////// Security Checks //////////////////
@@ -326,6 +326,8 @@ interface nsIScriptSecurityManager : nsIXPCSecurityManager
      * principal.
      */
     [noscript,notxpcom] nsIPrincipal getCxSubjectPrincipal(in JSContextPtr cx);
+    [noscript,notxpcom] nsIPrincipal getCxSubjectPrincipalAndFrame(in JSContextPtr cx,
+                                                                   out JSStackFramePtr fp);
 };
 
 %{C++

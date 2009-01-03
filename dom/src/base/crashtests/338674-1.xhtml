@@ -1,0 +1,36 @@
+<html xmlns="http://www.w3.org/1999/xhtml" class="reftest-wait">
+<head>
+
+<script>
+
+function boom()
+{
+  var s = document.getElementById("s")
+  var t = s.previousSibling; // a whitespace text node..
+
+  document.addEventListener("DOMAttrModified", bang, false);
+  rM(s);
+  document.removeEventListener("DOMAttrModified", bang, false);
+
+  function bang(ev) {
+    document.removeEventListener("DOMAttrModified", bang, false); // avoid accidental recursion, multiple calls, etc.
+    rM(t);
+  }
+  
+  document.documentElement.removeAttribute("class");
+}
+
+function rM(n) { n.parentNode.removeChild(n); }
+
+</script>
+
+</head>
+
+<body onload="setTimeout(boom, 1);">
+
+<div><select><option>C</option></select></div>
+
+<span id="s">A <div>B</div></span>
+
+</body>
+</html>

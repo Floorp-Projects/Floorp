@@ -1,0 +1,45 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+  <title>Media test: ended</title>
+  <script type="text/javascript" src="/MochiKit/MochiKit.js"></script>
+  <script type="text/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
+</head>
+<body>
+<video id='v'
+       src='seek.ogg'
+       onloadedmetadata='return startTest();'
+       onended='return playbackEnded();'></video>
+<pre id="test">
+<script class="testbody" type="text/javascript">
+// Test if the ended event works correctly.
+var v = document.getElementById('v');
+var endPassed = false;
+var completed = false;
+
+function startTest() {
+  if (completed)
+    return false;
+
+  v.play();
+  return false;
+}
+
+function playbackEnded() {
+  if (completed)
+    return false
+
+  completed = true;
+  ok(v.currentTime >= 3.9 && v.currentTime <= 4.0,
+     "Checking currentTime at end: " + v.currentTime);
+  ok(v.ended, "Checking playback has ended");
+  SimpleTest.finish();
+  return false;
+}
+
+SimpleTest.waitForExplicitFinish();
+</script>
+</pre>
+</body>
+</html>

@@ -39,7 +39,6 @@
 static const cairo_font_options_t _cairo_font_options_nil = {
     CAIRO_ANTIALIAS_DEFAULT,
     CAIRO_SUBPIXEL_ORDER_DEFAULT,
-    CAIRO_LCD_FILTER_DEFAULT,
     CAIRO_HINT_STYLE_DEFAULT,
     CAIRO_HINT_METRICS_DEFAULT
 };
@@ -55,7 +54,6 @@ _cairo_font_options_init_default (cairo_font_options_t *options)
 {
     options->antialias = CAIRO_ANTIALIAS_DEFAULT;
     options->subpixel_order = CAIRO_SUBPIXEL_ORDER_DEFAULT;
-    options->lcd_filter = CAIRO_LCD_FILTER_DEFAULT;
     options->hint_style = CAIRO_HINT_STYLE_DEFAULT;
     options->hint_metrics = CAIRO_HINT_METRICS_DEFAULT;
 }
@@ -66,7 +64,6 @@ _cairo_font_options_init_copy (cairo_font_options_t		*options,
 {
     options->antialias = other->antialias;
     options->subpixel_order = other->subpixel_order;
-    options->lcd_filter = other->lcd_filter;
     options->hint_style = other->hint_style;
     options->hint_metrics = other->hint_metrics;
 }
@@ -192,8 +189,6 @@ cairo_font_options_merge (cairo_font_options_t       *options,
 	options->antialias = other->antialias;
     if (other->subpixel_order != CAIRO_SUBPIXEL_ORDER_DEFAULT)
 	options->subpixel_order = other->subpixel_order;
-    if (other->lcd_filter != CAIRO_LCD_FILTER_DEFAULT)
-	options->lcd_filter = other->lcd_filter;
     if (other->hint_style != CAIRO_HINT_STYLE_DEFAULT)
 	options->hint_style = other->hint_style;
     if (other->hint_metrics != CAIRO_HINT_METRICS_DEFAULT)
@@ -226,7 +221,6 @@ cairo_font_options_equal (const cairo_font_options_t *options,
 
     return (options->antialias == other->antialias &&
 	    options->subpixel_order == other->subpixel_order &&
-	    options->lcd_filter == other->lcd_filter &&
 	    options->hint_style == other->hint_style &&
 	    options->hint_metrics == other->hint_metrics);
 }
@@ -252,8 +246,7 @@ cairo_font_options_hash (const cairo_font_options_t *options)
 
     return ((options->antialias) |
 	    (options->subpixel_order << 4) |
-	    (options->lcd_filter << 8) |
-	    (options->hint_style << 12) |
+	    (options->hint_style << 8) |
 	    (options->hint_metrics << 16));
 }
 slim_hidden_def (cairo_font_options_hash);
@@ -332,49 +325,6 @@ cairo_font_options_get_subpixel_order (const cairo_font_options_t *options)
 	return CAIRO_SUBPIXEL_ORDER_DEFAULT;
 
     return options->subpixel_order;
-}
-
-/**
- * cairo_font_options_set_lcd_filter:
- * @options: a #cairo_font_options_t
- * @lcd_filter: the new LCD filter
- *
- * Sets the LCD filter for the font options object. The LCD filter
- * specifies how pixels are filtered when rendered with an antialiasing
- * mode of %CAIRO_ANTIALIAS_SUBPIXEL. See the documentation for
- * #cairo_lcd_filter_t for full details.
- *
- * Since: 1.8
- **/
-void
-cairo_font_options_set_lcd_filter (cairo_font_options_t *options,
-				   cairo_lcd_filter_t    lcd_filter)
-{
-    if (cairo_font_options_status (options))
-	return;
-
-    options->lcd_filter = lcd_filter;
-}
-slim_hidden_def (cairo_font_options_set_lcd_filter);
-
-/**
- * cairo_font_options_get_lcd_filter:
- * @options: a #cairo_font_options_t
- *
- * Gets the LCD filter for the font options object.
- * See the documentation for #cairo_lcd_filter_t for full details.
- *
- * Return value: the LCD filter for the font options object
- *
- * Since: 1.8
- **/
-cairo_lcd_filter_t
-cairo_font_options_get_lcd_filter (const cairo_font_options_t *options)
-{
-    if (cairo_font_options_status ((cairo_font_options_t *) options))
-	return CAIRO_LCD_FILTER_DEFAULT;
-
-    return options->lcd_filter;
 }
 
 /**

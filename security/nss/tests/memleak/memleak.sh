@@ -261,18 +261,35 @@ set_freebl()
 		if [ -d "${TMP_LIBDIR}" ] ; then
 			rm -rf ${TMP_LIBDIR}
 		fi
+
 		mkdir ${TMP_LIBDIR}
+		[ $? -ne 0 ] && html_failed "Create temp directory" && return 1
+
 		cp ${DIST}/${OBJDIR}/lib/*.so ${DIST}/${OBJDIR}/lib/*.chk ${TMP_LIBDIR}
+		[ $? -ne 0 ] && html_failed "Copy libraries to temp directory" && return 1
 		
 		echo "${SCRIPTNAME}: Using ${freebl} instead of ${FREEBL_DEFAULT}"
+
 		mv ${TMP_LIBDIR}/${FREEBL_DEFAULT}.so ${TMP_LIBDIR}/${FREEBL_DEFAULT}.so.orig
+		[ $? -ne 0 ] && html_failed "Move ${FREEBL_DEFAULT}.so -> ${FREEBL_DEFAULT}.so.orig" && return 1
+
 		cp ${TMP_LIBDIR}/${freebl}.so ${TMP_LIBDIR}/${FREEBL_DEFAULT}.so
+		[ $? -ne 0 ] && html_failed "Copy ${freebl}.so -> ${FREEBL_DEFAULT}.so" && return 1
+
 		mv ${TMP_LIBDIR}/${FREEBL_DEFAULT}.chk ${TMP_LIBDIR}/${FREEBL_DEFAULT}.chk.orig
+		[ $? -ne 0 ] && html_failed "Move ${FREEBL_DEFAULT}.chk -> ${FREEBL_DEFAULT}.chk.orig" && return 1
+
 		cp ${TMP_LIBDIR}/${freebl}.chk ${TMP_LIBDIR}/${FREEBL_DEFAULT}.chk
-		
+		[ $? -ne 0 ] && html_failed "Copy ${freebl}.chk to temp directory" && return 1
+
+		echo "ls -l ${TMP_LIBDIR}"
+		ls -l ${TMP_LIBDIR}
+
 		LD_LIBRARY_PATH="${TMP_LIBDIR}"
 		export LD_LIBRARY_PATH
 	fi
+
+	return 0
 }
 
 ############################# clear_freebl #############################
@@ -349,7 +366,7 @@ run_selfserv()
 	${BINDIR}/selfserv ${SELFSERV_ATTR}
 	ret=$?
 	if [ $ret -ne 0 ]; then
-		html_failed "<TR><TD> ${LOGNAME}: Selfserv"
+		html_failed "${LOGNAME}: Selfserv"
 		echo "${SCRIPTNAME} ${LOGNAME}: " \
 			"Selfserv produced a returncode of ${ret} - FAILED"
 	fi
@@ -365,7 +382,7 @@ run_selfserv_dbg()
 	${RUN_COMMAND_DBG} ${BINDIR}/selfserv ${SERVER_OPTION} ${SELFSERV_ATTR}
 	ret=$?
 	if [ $ret -ne 0 ]; then
-		html_failed "<TR><TD> ${LOGNAME}: Selfserv"
+		html_failed "${LOGNAME}: Selfserv"
 		echo "${SCRIPTNAME} ${LOGNAME}: " \
 			"Selfserv produced a returncode of ${ret} - FAILED"
 	fi
@@ -384,7 +401,7 @@ run_strsclnt()
 		${BINDIR}/strsclnt ${ATTR}
 		ret=$?
 		if [ $ret -ne 0 ]; then
-			html_failed "<TR><TD> ${LOGNAME}: Strsclnt with cipher ${cipher}"
+			html_failed "${LOGNAME}: Strsclnt with cipher ${cipher}"
 			echo "${SCRIPTNAME} ${LOGNAME}: " \
 				"Strsclnt produced a returncode of ${ret} - FAILED"
 		fi
@@ -395,7 +412,7 @@ run_strsclnt()
 	${BINDIR}/tstclnt ${TSTCLNT_ATTR} < ${REQUEST_FILE}
 	ret=$?
 	if [ $ret -ne 0 ]; then
-		html_failed "<TR><TD> ${LOGNAME}: Tstclnt"
+		html_failed "${LOGNAME}: Tstclnt"
 		echo "${SCRIPTNAME} ${LOGNAME}: " \
 			"Tstclnt produced a returncode of ${ret} - FAILED"
 	fi
@@ -412,7 +429,7 @@ run_strsclnt_dbg()
 		${RUN_COMMAND_DBG} ${BINDIR}/strsclnt ${CLIENT_OPTION} ${ATTR}
 		ret=$?
 		if [ $ret -ne 0 ]; then
-			html_failed "<TR><TD> ${LOGNAME}: Strsclnt with cipher ${cipher}"
+			html_failed "${LOGNAME}: Strsclnt with cipher ${cipher}"
 			echo "${SCRIPTNAME} ${LOGNAME}: " \
 				"Strsclnt produced a returncode of ${ret} - FAILED"
 		fi
@@ -423,7 +440,7 @@ run_strsclnt_dbg()
 	${BINDIR}/tstclnt ${TSTCLNT_ATTR} < ${REQUEST_FILE}
 	ret=$?
 	if [ $ret -ne 0 ]; then
-		html_failed "<TR><TD> ${LOGNAME}: Tstclnt"
+		html_failed "${LOGNAME}: Tstclnt"
 		echo "${SCRIPTNAME} ${LOGNAME}: " \
 			"Tstclnt produced a returncode of ${ret} - FAILED"
 	fi
@@ -501,7 +518,7 @@ run_ciphers_server()
 		set_test_mode
 		
 		for freebl in ${FREEBL_LIST}; do
-			set_freebl
+			set_freebl || continue
 			
 			LOGNAME=server-${BIT_NAME}-${freebl}-${server_mode}
 			LOGFILE=${LOGDIR}/${LOGNAME}.log
@@ -540,7 +557,7 @@ run_ciphers_client()
 		set_test_mode
 		
 		for freebl in ${FREEBL_LIST}; do
-			set_freebl
+			set_freebl || continue
 			
 			LOGNAME=client-${BIT_NAME}-${freebl}-${client_mode}
 			LOGFILE=${LOGDIR}/${LOGNAME}.log

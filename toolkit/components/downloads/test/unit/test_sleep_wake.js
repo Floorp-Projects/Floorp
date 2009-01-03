@@ -169,6 +169,8 @@ function run_test()
    */
   let destFile = dirSvc.get("ProfD", nsIF);
   destFile.append("sleep_wake");
+  if (destFile.exists())
+    destFile.remove(false);
   let persist = Cc["@mozilla.org/embedding/browser/nsWebBrowserPersist;1"].
                 createInstance(nsIWBP);
   persist.persistFlags = nsIWBP.PERSIST_FLAGS_REPLACE_EXISTING_FILES |

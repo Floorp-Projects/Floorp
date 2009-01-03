@@ -56,8 +56,10 @@ catch(ex) {
 
 // Get tagging service
 try {
+  // Notice we use createInstance because later we will have to terminate the
+  // service and restart it.
   var tagssvc = Cc["@mozilla.org/browser/tagging-service;1"].
-                getService(Ci.nsITaggingService);
+                createInstance().QueryInterface(Ci.nsITaggingService);
 } catch(ex) {
   do_throw("Could not get tagging service\n");
 }
@@ -90,7 +92,7 @@ function run_test() {
   tag1node.containerOpen = true;
   do_check_eq(tag1node.childCount, 2);
 
-  // Tagging the same url twice (or even trice!) with the same tag should be a
+  // Tagging the same url twice (or even thrice!) with the same tag should be a
   // no-op
   tagssvc.tagURI(uri1, ["tag 1"]);
   do_check_eq(tag1node.childCount, 2);
@@ -131,5 +133,45 @@ function run_test() {
   // removing the last uri from a tag should remove the tag-container
   tagssvc.untagURI(uri2, ["tag 1"]);
   do_check_eq(tagRoot.childCount, 1);
-  
+
+  // cleanup
+  tag1node.containerOpen = false;
+
+  // get array of tag folder ids => title
+  // for testing tagging with mixed folder ids and tags
+  var tagFolders = [];
+  var child = tagRoot.getChild(0);
+  var tagId = child.itemId;
+  var tagTitle = child.title;
+
+  // test mixed id/name tagging
+  // as well as non-id numeric tags
+  var uri3 = uri("http://testuri/3");
+  tagssvc.tagURI(uri3, [tagId, "tag 3", "456"]);
+  var tags = tagssvc.getTagsForURI(uri3, {});
+  do_check_true(tags.indexOf(tagTitle) != -1);
+  do_check_true(tags.indexOf("tag 3") != -1);
+  do_check_true(tags.indexOf("456") != -1);
+
+  // test mixed id/name tagging
+  tagssvc.untagURI(uri3, [tagId, "tag 3", "456"]);
+  tags = tagssvc.getTagsForURI(uri3, {});
+  do_check_eq(tags.length, 0);
+
+  // Terminate tagging service, fire up a new instance and check that existing
+  // tags are there.  This will ensure that any internal caching system is
+  // correctly filled at startup and we are not losing previously existing tags.
+  var uri4 = uri("http://testuri/4");
+  tagssvc.tagURI(uri4, [tagId, "tag 3", "456"]);
+  tagssvc = null;
+  tagssvc = Cc["@mozilla.org/browser/tagging-service;1"].
+            getService(Ci.nsITaggingService);
+  var uri4Tags = tagssvc.getTagsForURI(uri4, {});
+  do_check_eq(uri4Tags.length, 3);
+  do_check_true(uri4Tags.indexOf(tagTitle) != -1);
+  do_check_true(uri4Tags.indexOf("tag 3") != -1);
+  do_check_true(uri4Tags.indexOf("456") != -1);
+
+  // cleanup
+  tagRoot.containerOpen = false;
 }

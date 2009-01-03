@@ -123,7 +123,7 @@ public:
   virtual nsresult Clone(nsINodeInfo *aNodeInfo, nsINode **aResult) const;
 
   NS_DECL_CYCLE_COLLECTION_CLASS_INHERITED_NO_UNLINK(nsHTMLObjectElement,
-                                                     nsGenericHTMLElement)
+                                                     nsGenericHTMLFormElement)
 
 private:
   /**
@@ -178,9 +178,8 @@ NS_IMPL_CYCLE_COLLECTION_TRAVERSE_END
 NS_IMPL_ADDREF_INHERITED(nsHTMLObjectElement, nsGenericElement) 
 NS_IMPL_RELEASE_INHERITED(nsHTMLObjectElement, nsGenericElement) 
 
-NS_HTML_CONTENT_CC_INTERFACE_TABLE_HEAD(nsHTMLObjectElement,
-                                        nsGenericHTMLFormElement)
-  NS_INTERFACE_TABLE_BEGIN
+NS_INTERFACE_TABLE_HEAD_CYCLE_COLLECTION_INHERITED(nsHTMLObjectElement)
+  NS_HTML_CONTENT_INTERFACE_TABLE_BEGIN(nsHTMLObjectElement)
     NS_INTERFACE_TABLE_ENTRY(nsHTMLObjectElement, nsIDOMHTMLObjectElement)
     NS_INTERFACE_TABLE_ENTRY(nsHTMLObjectElement, imgIDecoderObserver)
     NS_INTERFACE_TABLE_ENTRY(nsHTMLObjectElement, nsIRequestObserver)
@@ -194,7 +193,9 @@ NS_HTML_CONTENT_CC_INTERFACE_TABLE_HEAD(nsHTMLObjectElement,
 #ifdef MOZ_SVG
     NS_INTERFACE_TABLE_ENTRY(nsHTMLObjectElement, nsIDOMGetSVGDocument)
 #endif
-  NS_INTERFACE_TABLE_END
+  NS_OFFSET_AND_INTERFACE_TABLE_END
+  NS_HTML_CONTENT_INTERFACE_TABLE_TO_MAP_SEGUE(nsHTMLObjectElement,
+                                               nsGenericHTMLFormElement)
 NS_HTML_CONTENT_INTERFACE_TABLE_TAIL_CLASSINFO(HTMLObjectElement)
 
 NS_IMPL_ELEMENT_CLONE(nsHTMLObjectElement)

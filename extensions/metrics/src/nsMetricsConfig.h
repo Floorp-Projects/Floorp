@@ -152,8 +152,7 @@ private:
   void ProcessConfigChild(nsIDOMElement *elem);
   void ProcessCollectorElement(nsIDOMElement *elem);
 
-  static PLDHashOperator PR_CALLBACK CopyKey(nsStringHashKey *key,
-                                             void *userData);
+  static PLDHashOperator CopyKey(nsStringHashKey *key, void *userData);
 
   nsTHashtable<nsStringHashKey> mEventSet;
   nsDataHashtable<nsStringHashKey,nsString> mNSURIToPrefixMap;

@@ -42,8 +42,6 @@
 /* all localizable skin settings shall live here */
 @import url("chrome://global/locale/intl.css");
 
-@import url("chrome://global/skin/formatting.css");
-
 @namespace url("http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul");
 
 /* ::::: XBL bindings ::::: */
@@ -82,12 +80,12 @@ prefwindow {
   font: message-box;
 }
 
+/* deprecated */
 window.dialog {
-  padding: 8px 10px 10px 8px;
-}
-
-[wait-cursor] {
-  cursor: wait !important;
+  padding-top: 8px;
+  padding-bottom: 10px;
+  -moz-padding-start: 8px;
+  -moz-padding-end: 10px;
 }
 
 /* ::::: alert icons :::::*/
@@ -158,12 +156,14 @@ statusbarpanel {
   -moz-box-align: end;
   -moz-box-pack: end;
   -moz-appearance: resizerpanel;
-  padding: 0px;
+  padding: 0;
   border: none;
 }
 
-.statusbarpanel-iconic,  .statusbarpanel-iconic-text, .statusbarpanel-menu-iconic {
-  padding: 0px 1px 0px 1px;
+.statusbarpanel-iconic,
+.statusbarpanel-iconic-text,
+.statusbarpanel-menu-iconic {
+  padding: 0 1px;
 }
 
 resizer[dir="bottomright"] {
@@ -182,10 +182,127 @@ sidebarheader > label {
   -moz-padding-start: 4px;
 }
 
-/* ::::: miscellaneous ::::: */
-
 .toolbar-focustarget {
   -moz-user-focus: ignore !important;
+}
+
+/* ::::: miscellaneous formatting ::::: */
+
+.inset {
+  border: 1px solid ThreeDShadow;
+  border-right-color: ThreeDHighlight;
+  border-bottom-color: ThreeDHighlight;
+  margin: 0 5px 5px;
+}
+  
+.outset {
+  border: 1px solid ThreeDShadow;
+  border-left-color: ThreeDHighlight;
+  border-top-color: ThreeDHighlight;
+}
+
+separator:not([orient="vertical"]) {
+  height: 1.5em;
+}
+separator[orient="vertical"] {
+  width: 1.5em;
+}
+
+separator.thin:not([orient="vertical"]) {
+  height: 0.5em;
+}  
+separator.thin[orient="vertical"] {
+  width: 0.5em;
+}
+
+separator.groove:not([orient="vertical"]) {
+  border-top: 1px solid ThreeDShadow;
+  border-bottom: 1px solid ThreeDHighlight;
+  height: 0;
+  margin-top: 0.4em;
+  margin-bottom: 0.4em;
+}
+separator.groove[orient="vertical"] {
+  border-left: 1px solid ThreeDShadow;
+  border-right: 1px solid ThreeDHighlight;
+  width: 0;
+  margin-left: 0.4em;
+  margin-right: 0.4em;
+}
+
+.small-margin {
+  margin: 1px 2px;
+}
+    
+.plain {
+  margin: 0 !important;
+  border: none;
+  padding: 0;
+}
+
+description,
+label {
+  cursor: default;
+  margin-top: 1px;
+  margin-bottom: 2px;
+  -moz-margin-start: 6px;
+  -moz-margin-end: 5px;
+}
+
+description {
+  margin-bottom: 4px;
+}
+
+label[disabled="true"] {
+  color: GrayText;
+}
+
+.tooltip-label {
+  margin: 0;
+}
+
+.header {
+  font-weight: bold;
+}
+
+.monospace {
+  font-family: monospace;
+}
+
+.indent {
+  -moz-margin-start: 23px;
+}
+
+.box-padded {
+  padding: 5px;
+}
+
+.spaced {
+  margin: 3px 5px 4px;
+}
+
+.wizard-box {
+  padding: 20px 44px 10px;
+}
+
+.text-link {
+  color: -moz-nativehyperlinktext;
+  text-decoration: underline;
+  border: 1px solid transparent;
+  cursor: pointer;
+}
+  
+.text-link:focus {
+  color: red;
+  border: 1px dotted -moz-DialogText;
+}
+  
+.text-link:hover:active {
+  color: red;
+}
+
+.text-link[visited="true"] {
+  color: purple;
 }
 
 /* :::::: autoscroll popup ::::: */

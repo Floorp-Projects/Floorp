@@ -14,15 +14,13 @@
 
     <xbl:content xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
         <spacer flex="1"/>
-        <stack xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
-            <hbox id="controlsBackground">
-                <image id="playButton"
-                       onclick="this.parentNode.parentNode.parentNode.Utils.togglePause();"/>
-                <box id="controlsMiddle" flex="1"/>
-                <image id="muteButton"
-                       onclick="this.parentNode.parentNode.parentNode.Utils.toggleMute();"/>
-            </hbox>
-        </stack>
+        <hbox id="controlsBackground">
+            <image id="playButton"
+                   onclick="if (event.button == 0) this.parentNode.parentNode.Utils.togglePause();"/>
+            <box id="controlsMiddle" flex="1"/>
+            <image id="muteButton"
+                   onclick="if (event.button == 0) this.parentNode.parentNode.Utils.toggleMute();"/>
+        </hbox>
     </xbl:content>
 
     <implementation implements="nsISecurityCheckedComponent">
@@ -88,13 +86,14 @@
                 animationDirection : 1,
                 animationTimer : null,
 
-                onMediaEvent : function (aEvent) {
+                handleEvent : function (aEvent) {
                     this.log("Got " + aEvent.type + " media event");
                     switch (aEvent.type) {
                         case "play":
                             this.playButton.setAttribute("paused", false);
                             break;
                         case "pause":
+                        case "ended":
                             this.playButton.setAttribute("paused", true);
                             break;
                         case "volumechange":
@@ -103,8 +102,6 @@
                         default:
                             this.log("!!! event " + aEvent.type + " not handled!");
                     }
-
-                    return false;
                 },
 
                 fadeControls : function (self) {
@@ -163,27 +160,23 @@
         <method name="init">
             <body>
             <![CDATA[
-            var self = this;
             var video = this.parentNode;
             this.Utils.video = video;
-            this.Utils.controls = self;
+            this.Utils.controls = this;
 
-            this.Utils.playButton = document.getAnonymousElementByAttribute(self, "id", "playButton");
-            this.Utils.muteButton = document.getAnonymousElementByAttribute(self, "id", "muteButton");
+            this.Utils.playButton = document.getAnonymousElementByAttribute(this, "id", "playButton");
+            this.Utils.muteButton = document.getAnonymousElementByAttribute(this, "id", "muteButton");
 
             // Set initial state of play/pause button.
-            // XXX (force to a bool, due to bug 457964)
-            this.Utils.playButton.setAttribute("paused", video.paused ? true : false);
-
-            function eventBouncer(aEvent) {
-                self.Utils.onMediaEvent(aEvent);
-            }
+            this.Utils.playButton.setAttribute("paused", video.paused);
 
             this.style.opacity = 0;
 
-            video.addEventListener("play",         eventBouncer, false);
-            video.addEventListener("pause",        eventBouncer, false);
-            video.addEventListener("volumechange", eventBouncer, false);
+            // Use Utils.handleEvent() callback for all media events.
+            video.addEventListener("play",         this.Utils, false);
+            video.addEventListener("pause",        this.Utils, false);
+            video.addEventListener("ended",        this.Utils, false);
+            video.addEventListener("volumechange", this.Utils, false);
 
             this.Utils.log("--- videocontrols initialized ---");
             ]]>

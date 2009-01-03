@@ -49,11 +49,6 @@
 #define NS_LUMINOSITY_DIFFERENCE(a, b) \
           PR_ABS(NS_GetLuminosity(a) - NS_GetLuminosity(b))
 
-// Weird color computing code stolen from winfe which was stolen
-// from the xfe which was written originally by Eric Bina. So there.
-// To determin colors based on the background brightness
-void NS_Get3DColors(nscolor aResult[2], nscolor aBackgroundColor);
-
 // To determine colors based on the background brightness and border color
 void NS_GetSpecial3DColors(nscolor aResult[2],
                            nscolor aBackgroundColor,
@@ -66,9 +61,12 @@ int NS_GetBrightness(PRUint8 aRed, PRUint8 aGreen, PRUint8 aBlue);
 // The range of return value is 0 to 255000.
 PRInt32 NS_GetLuminosity(nscolor aColor);
 
-// function to convert from RGB color space to HSV color space 
-void NS_RGB2HSV(nscolor aColor,PRUint16 &aHue,PRUint16 &aSat,PRUint16 &aValue);
-// function to convert from HSV color space to RGB color space 
-void NS_HSV2RGB(nscolor &aColor,PRUint16 aHue,PRUint16 aSat,PRUint16 aValue);
+// function to convert from RGBA color space to HSVA color space 
+void NS_RGB2HSV(nscolor aColor, PRUint16 &aHue, PRUint16 &aSat,
+                PRUint16 &aValue, PRUint8 &aAlpha);
+
+// function to convert from HSVA color space to RGBA color space 
+void NS_HSV2RGB(nscolor &aColor, PRUint16 aHue, PRUint16 aSat, PRUint16 aValue,
+                PRUint8 aAlpha);
 
 #endif

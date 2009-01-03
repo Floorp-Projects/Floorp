@@ -1,0 +1,19 @@
+<!DOCTYPE HTML PUBLIC "-//W#C//DTD HTML 4.01 Transitional//EN"
+"http://www.w3.org/TR/html4/loose.dtd">
+<html>
+<head>
+<title> fixed layout not triggered by changing width from auto to coordinate</title>
+<script type="text/javascript">
+function doTest(){
+ t1 = document.getElementById('target2');
+ t1.style.width="20px";
+	
+}
+</script>
+</head>
+<body onload="doTest();">
+<table border style="table-layout:fixed;" id="target2">
+<tr><td>XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX</td></tr>
+</table>
+</body>
+</html>

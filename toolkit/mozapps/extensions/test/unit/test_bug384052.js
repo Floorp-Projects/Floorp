@@ -95,7 +95,7 @@ function run_test()
   gPrefs.setCharPref("extensions.update.url", gTestURL);
 
   // Initiate update
-  gEM.update([item], 1, 2, null);
+  gEM.update([item], 1, Ci.nsIExtensionManager.UPDATE_SYNC_COMPATIBILITY, null);
 
   do_check_true(gSeenExpectedURL);
 

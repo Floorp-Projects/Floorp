@@ -524,7 +524,7 @@ read_png (png_rw_ptr	read_func,
     png_get_IHDR (png, info,
                   &png_width, &png_height, &depth,
                   &color_type, &interlace, NULL, NULL);
-    if (depth != 8 || interlace != PNG_INTERLACE_NONE ||
+    if (depth != 8 ||
 	! (color_type == PNG_COLOR_TYPE_RGB ||
 	   color_type == PNG_COLOR_TYPE_RGB_ALPHA))
     {

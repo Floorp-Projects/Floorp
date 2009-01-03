@@ -111,6 +111,7 @@
 #include "nsLayoutUtils.h"
 #include "nsContentCreatorFunctions.h"
 #include "mozAutoDocUpdate.h"
+#include "nsIFocusController.h"
 
 class nsINodeInfo;
 class nsIDOMNodeList;
@@ -1177,13 +1178,17 @@ nsresult
 nsGenericHTMLElement::UnsetAttr(PRInt32 aNameSpaceID, nsIAtom* aAttribute,
                                 PRBool aNotify)
 {
+  PRBool contentEditable = PR_FALSE;
+  PRInt32 contentEditableChange;
+
+  if (aNameSpaceID == kNameSpaceID_None) {
+    contentEditable = PR_TRUE;
+    contentEditableChange = GetContentEditableValue() == eTrue ? -1 : 0;
+  }
+
   // Check for event handlers
   if (aNameSpaceID == kNameSpaceID_None) {
-    if (aAttribute == nsGkAtoms::contenteditable) {
-      ChangeEditableState(GetContentEditableValue() == eTrue ? -1 : 0);
-    }
-    else if (nsContentUtils::IsEventAttributeName(aAttribute,
-                                                  EventNameType_HTML)) {
+    if (nsContentUtils::IsEventAttributeName(aAttribute, EventNameType_HTML)) {
       nsCOMPtr<nsIEventListenerManager> manager;
       GetListenerManager(PR_FALSE, getter_AddRefs(manager));
 
@@ -1193,8 +1198,15 @@ nsGenericHTMLElement::UnsetAttr(PRInt32 aNameSpaceID, nsIAtom* aAttribute,
     }
   }
 
-  return nsGenericHTMLElementBase::UnsetAttr(aNameSpaceID, aAttribute,
-                                             aNotify);
+  nsresult rv = nsGenericHTMLElementBase::UnsetAttr(aNameSpaceID, aAttribute,
+                                                    aNotify);
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  if (contentEditable) {
+    ChangeEditableState(contentEditableChange);
+  }
+
+  return NS_OK;
 }
 
 already_AddRefed<nsIURI>
@@ -1654,9 +1666,9 @@ nsGenericHTMLElement::MapCommonAttributesInto(const nsMappedAttributes* aAttribu
           ui->mUserModify.SetIntValue(NS_STYLE_USER_MODIFY_READ_WRITE,
                                       eCSSUnit_Enumerated);
         }
-        else {
-          ui->mUserModify.SetIntValue(NS_STYLE_USER_MODIFY_READ_ONLY,
-                                      eCSSUnit_Enumerated);
+        else if (value->Equals(nsGkAtoms::_false, eIgnoreCase)) {
+            ui->mUserModify.SetIntValue(NS_STYLE_USER_MODIFY_READ_ONLY,
+                                        eCSSUnit_Enumerated);
         }
       }
     }
@@ -2668,6 +2680,53 @@ nsGenericHTMLFormElement::SetFocusAndScrollIntoView(nsPresContext* aPresContext)
       }
     }
   }
+}
+
+void
+nsGenericHTMLFormElement::DoSetFocus(nsPresContext* aPresContext)
+{
+  if (!aPresContext)
+    return;
+
+  if (FocusState() == eActiveWindow) {
+    SetFocusAndScrollIntoView(aPresContext);
+  }
+}
+
+nsGenericHTMLFormElement::FocusTristate
+nsGenericHTMLFormElement::FocusState()
+{
+  // We can't be focused if we aren't in a document
+  nsIDocument* doc = GetCurrentDoc();
+  if (!doc)
+    return eUnfocusable;
+
+  // first see if we are disabled or not. If disabled then do nothing.
+  if (HasAttr(kNameSpaceID_None, nsGkAtoms::disabled)) {
+    return eUnfocusable;
+  }
+
+  // If the window is not active, do not allow the focus to bring the
+  // window to the front.  We update the focus controller, but do
+  // nothing else.
+  nsCOMPtr<nsPIDOMWindow> win = doc->GetWindow();
+  if (win) {
+    nsIFocusController *focusController = win->GetRootFocusController();
+    if (focusController) {
+      PRBool isActive = PR_FALSE;
+      focusController->GetActive(&isActive);
+      if (!isActive) {
+        focusController->SetFocusedWindow(win);
+        nsCOMPtr<nsIDOMElement> el =
+          do_QueryInterface(static_cast<nsGenericHTMLElement*>(this));
+        focusController->SetFocusedElement(el);
+
+        return eInactiveWindow;
+      }
+    }
+  }
+
+  return eActiveWindow;
 }
 
 //----------------------------------------------------------------------

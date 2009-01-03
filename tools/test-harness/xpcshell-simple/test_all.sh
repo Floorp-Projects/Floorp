@@ -110,7 +110,7 @@ done
 
 for t in $testdir/test_*.js
 do
-    NATIVE_TOPSRCDIR="$native_topsrcdir" TOPSRCDIR="$topsrcdir" $xpcshell -s $headfiles -f $t $tailfiles 2> $t.log 1>&2
+    NATIVE_TOPSRCDIR="$native_topsrcdir" TOPSRCDIR="$topsrcdir" $xpcshell -j -s $headfiles -f $t $tailfiles 2> $t.log 1>&2
     rv="$?"
     if [ ! "$rv" = "0"  -o \
          `grep -c '\*\*\* PASS' $t.log` = 0 ]

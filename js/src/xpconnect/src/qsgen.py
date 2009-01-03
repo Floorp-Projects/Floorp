@@ -115,9 +115,6 @@
 #   cases where a getter/setter/method is taken from one object and applied to
 #   another object.
 #
-#   Another notable difference in this area: Quick stubs don't support split
-#   objects.
-#
 # - Quick stubs never suspend the JS request.  So they are only suitable for
 #   main-thread-only interfaces.
 #
@@ -353,54 +350,66 @@ def substitute(template, vals):
 argumentUnboxingTemplates = {
     'short':
         "    int32 ${name}_i32;\n"
-        "    if (!JS_ValueToECMAInt32(cx, ${argVal}, &${name}_i32)) ${failBlock}\n"
+        "    if (!JS_ValueToECMAInt32(cx, ${argVal}, &${name}_i32))\n"
+        "        return JS_FALSE;\n"
         "    int16 ${name} = (int16) ${name}_i32;\n",
 
     'unsigned short':
         "    uint32 ${name}_u32;\n"
-        "    if (!JS_ValueToECMAUint32(cx, ${argVal}, &${name}_u32)) ${failBlock}\n"
+        "    if (!JS_ValueToECMAUint32(cx, ${argVal}, &${name}_u32))\n"
+        "        return JS_FALSE;\n"
         "    uint16 ${name} = (uint16) ${name}_u32;\n",
 
     'long':
         "    int32 ${name};\n"
-        "    if (!JS_ValueToECMAInt32(cx, ${argVal}, &${name})) ${failBlock}\n",
+        "    if (!JS_ValueToECMAInt32(cx, ${argVal}, &${name}))\n"
+        "        return JS_FALSE;\n",
 
     'unsigned long':
         "    uint32 ${name};\n"
-        "    if (!JS_ValueToECMAUint32(cx, ${argVal}, &${name})) ${failBlock}\n",
+        "    if (!JS_ValueToECMAUint32(cx, ${argVal}, &${name}))\n"
+        "        return JS_FALSE;\n",
 
     'float':
         "    jsdouble ${name}_dbl;\n"
-        "    if (!JS_ValueToNumber(cx, ${argVal}, &${name}_dbl)) ${failBlock}\n"
+        "    if (!JS_ValueToNumber(cx, ${argVal}, &${name}_dbl))\n"
+        "        return JS_FALSE;\n"
         "    float ${name} = (float) ${name}_dbl;\n",
 
     'double':
         "    jsdouble ${name};\n"
-        "    if (!JS_ValueToNumber(cx, ${argVal}, &${name})) ${failBlock}\n",
+        "    if (!JS_ValueToNumber(cx, ${argVal}, &${name}))\n"
+        "        return JS_FALSE;\n",
 
     'boolean':
         "    PRBool ${name};\n"
-        "    if (!JS_ValueToBoolean(cx, ${argVal}, &${name})) ${failBlock}\n",
+        "    if (!JS_ValueToBoolean(cx, ${argVal}, &${name}))\n"
+        "        return JS_FALSE;\n",
 
     '[astring]':
         "    xpc_qsAString ${name}(cx, ${argPtr});\n"
-        "    if (!${name}.IsValid()) ${failBlock}\n",
+        "    if (!${name}.IsValid())\n"
+        "        return JS_FALSE;\n",
 
     '[domstring]':
         "    xpc_qsDOMString ${name}(cx, ${argPtr});\n"
-        "    if (!${name}.IsValid()) ${failBlock}\n",
+        "    if (!${name}.IsValid())\n"
+        "        return JS_FALSE;\n",
 
     'string':
         "    char *${name};\n"
-        "    if (!xpc_qsJsvalToCharStr(cx, ${argPtr}, &${name})) ${failBlock}\n",
+        "    if (!xpc_qsJsvalToCharStr(cx, ${argPtr}, &${name}))\n"
+        "        return JS_FALSE;\n",
 
     'wstring':
         "    PRUnichar *${name};\n"
-        "    if (!xpc_qsJsvalToWcharStr(cx, ${argPtr}, &${name})) ${failBlock}\n",
+        "    if (!xpc_qsJsvalToWcharStr(cx, ${argPtr}, &${name}))\n"
+        "        return JS_FALSE;\n",
 
     '[cstring]':
         "    xpc_qsACString ${name}(cx, ${argPtr});\n"
-        "    if (!${name}.IsValid()) ${failBlock}\n"
+        "    if (!${name}.IsValid())\n"
+        "        return JS_FALSE;\n"
     }
 
 # From JSData2Native.
@@ -420,11 +429,6 @@ def writeArgumentUnboxing(f, i, name, type, haveCcx, optional):
 
     isSetter = (i is None)
 
-    # Spell this out each time rather than use a goto.  The most common methods
-    # only have one parameter, and in that case the goto looks silly.
-    fail = ("        NS_RELEASE(self);\n"
-            "        return JS_FALSE;\n")
-
     if isSetter:
         argPtr = "vp"
         argVal = "*vp"
@@ -438,8 +442,7 @@ def writeArgumentUnboxing(f, i, name, type, haveCcx, optional):
     params = {
         'name': name,
         'argVal': argVal,
-        'argPtr': argPtr,
-        'failBlock': '{\n' + fail + '    }'
+        'argPtr': argPtr
         }
 
     typeName = getBuiltinOrNativeTypeName(type)
@@ -459,7 +462,8 @@ def writeArgumentUnboxing(f, i, name, type, haveCcx, optional):
             template = (
                 "    nsCOMPtr<nsIVariant> ${name}(already_AddRefed<nsIVariant>("
                 "XPCVariant::newVariant(ccx, ${argVal})));\n"
-                "    if (!${name}) ${failBlock}\n")
+                "    if (!${name})\n"
+                "        return JS_FALSE;\n")
             f.write(substitute(template, params))
             return
         elif type.name == 'nsIAtom':
@@ -473,14 +477,13 @@ def writeArgumentUnboxing(f, i, name, type, haveCcx, optional):
             f.write("    if (NS_FAILED(rv)) {\n")
             if isSetter:
                 f.write("        xpc_qsThrowBadSetterValue("
-                        "cx, rv, wrapper, id);\n")
+                        "cx, rv, JSVAL_TO_OBJECT(*tvr.addr()), id);\n")
             elif haveCcx:
                 f.write("        xpc_qsThrowBadArgWithCcx(ccx, rv, %d);\n" % i)
             else:
-                f.write("        xpc_qsThrowBadArg(cx, rv, wrapper, vp, %d);\n"
-                        % i)
-            f.write(fail);
-            f.write("    }\n")
+                f.write("        xpc_qsThrowBadArg(cx, rv, vp, %d);\n" % i)
+            f.write("        return JS_FALSE;\n"
+                    "    }\n")
             return
 
     warn("Unable to unbox argument of type %s" % type.name)
@@ -652,16 +655,27 @@ def writeQuickStub(f, member, stubName, isSetter=False):
     # Get the 'self' pointer.
     thisType = member.iface.name
     f.write("    %s *self;\n" % thisType)
+    f.write("    xpc_qsSelfRef selfref;\n")
     # Don't use FromCcx for getters or setters; the way we construct the ccx in
     # a getter/setter causes it to find the wrong wrapper in some cases.
     if isMethod and haveCcx:
-        f.write("    if (!xpc_qsUnwrapThisFromCcx(ccx, &self))\n"
-                "        return JS_FALSE;\n")
+        # Undocumented, but the interpreter puts 'this' at argv[-1],
+        # which is vp[1]; and it's ok to overwrite it.
+        f.write("    if (!xpc_qsUnwrapThisFromCcx(ccx, &self, &selfref.ptr, "
+                "&vp[1]))\n")
+        f.write("        return JS_FALSE;\n")
     else:
-        # 'wrapper' is needed only for error messages.
-        f.write("    XPCWrappedNative *wrapper;\n"
-                "    if (!xpc_qsUnwrapThis(cx, obj, &self, &wrapper))\n"
-                "        return JS_FALSE;\n")
+        if isGetter:
+            pthisval = 'vp'
+        elif isSetter:
+            f.write("    xpc_qsTempRoot tvr(cx);\n")
+            pthisval = 'tvr.addr()'
+        else:
+            pthisval = '&vp[1]' # as above, ok to overwrite vp[1]
+
+        f.write("    if (!xpc_qsUnwrapThis(cx, obj, &self, &selfref.ptr, "
+                "%s))\n" % pthisval)
+        f.write("        return JS_FALSE;\n")
 
     if isMethod:
         # If there are any required arguments, check argc.
@@ -669,11 +683,9 @@ def writeQuickStub(f, member, stubName, isSetter=False):
         while requiredArgs and member.params[requiredArgs-1].optional:
             requiredArgs -= 1
         if requiredArgs:
-            f.write("    if (argc < %d) {\n" % requiredArgs)
-            f.write("        NS_RELEASE(self);\n"
-                    "        return xpc_qsThrow(cx, "
-                    "NS_ERROR_XPC_NOT_ENOUGH_ARGS);\n"
-                    "    }\n")
+            f.write("    if (argc < %d)\n" % requiredArgs)
+            f.write("        return xpc_qsThrow(cx, "
+                    "NS_ERROR_XPC_NOT_ENOUGH_ARGS);\n")
 
     def pfail(msg):
         raise UserError(
@@ -723,7 +735,6 @@ def writeQuickStub(f, member, stubName, isSetter=False):
         else:
             args = "arg0"
     f.write("    rv = self->%s(%s);\n" % (comName, args))
-    f.write("    NS_RELEASE(self);\n")
 
     # Check for errors.
     f.write("    if (NS_FAILED(rv))\n")
@@ -732,10 +743,14 @@ def writeQuickStub(f, member, stubName, isSetter=False):
             f.write("        return xpc_qsThrowMethodFailedWithCcx(ccx, rv);\n")
         else:
             f.write("        return xpc_qsThrowMethodFailed("
-                    "cx, rv, wrapper, vp);\n")
+                    "cx, rv, vp);\n")
     else:
-        f.write("        return xpc_qsThrowGetterSetterFailed("
-                "cx, rv, wrapper, id);\n")
+        if isGetter:
+            thisval = '*vp'
+        else:
+            thisval = '*tvr.addr()'
+        f.write("        return xpc_qsThrowGetterSetterFailed(cx, rv, " +
+                "JSVAL_TO_OBJECT(%s), id);\n" % thisval)
 
     # Convert the return value.
     if isMethod:
@@ -743,7 +758,7 @@ def writeQuickStub(f, member, stubName, isSetter=False):
     elif isGetter:
         writeResultConv(f, member.realtype, None, 'vp', '*vp')
     else:
-        f.write("    return JS_TRUE;\n");
+        f.write("    return JS_TRUE;\n")
 
     # Epilog.
     f.write("}\n\n")
@@ -900,6 +915,7 @@ def writeDefiner(f, conf, interfaces):
 stubTopTemplate = '''\
 /* THIS FILE IS AUTOGENERATED - DO NOT EDIT */
 #include "jsapi.h"
+#include "jscntxt.h"
 #include "prtypes.h"
 #include "nsID.h"
 #include "%s"
@@ -960,10 +976,10 @@ def writeMakeDependOutput(filename):
     f = open(filename, 'w')
     try:
         if len(make_targets) > 0:
-            f.write("%s: \\\n" % makeQuote(make_targets[0]))
+            f.write("%s:" % makeQuote(make_targets[0]))
             for filename in make_dependencies:
-                f.write('\t\t%s \\\n' % makeQuote(filename))
-            f.write('\t\t$(NULL)\n\n')
+                f.write(' \\\n\t\t%s' % makeQuote(filename))
+            f.write('\n\n')
             for filename in make_targets[1:]:
                 f.write('%s: %s\n' % (makeQuote(filename), makeQuote(make_targets[0])))
     finally:

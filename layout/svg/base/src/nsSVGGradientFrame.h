@@ -42,7 +42,6 @@
 #include "nsSVGPaintServerFrame.h"
 #include "nsISVGValueObserver.h"
 #include "nsWeakReference.h"
-#include "nsIDOMSVGAnimatedString.h"
 #include "nsSVGElement.h"
 #include "gfxPattern.h"
 
@@ -57,8 +56,7 @@ typedef nsSVGPaintServerFrame nsSVGGradientFrameBase;
 class nsSVGGradientFrame : public nsSVGGradientFrameBase
 {
 protected:
-  nsSVGGradientFrame(nsStyleContext* aContext,
-                     nsIDOMSVGURIReference *aRef);
+  nsSVGGradientFrame(nsStyleContext* aContext);
 
 public:
   // nsSVGPaintServerFrame methods:
@@ -67,7 +65,7 @@ public:
                                   float aGraphicOpacity);
 
   // nsIFrame interface:
-  NS_IMETHOD DidSetStyleContext();
+  virtual void DidSetStyleContext(nsStyleContext* aOldStyleContext);
 
   NS_IMETHOD AttributeChanged(PRInt32         aNameSpaceID,
                               nsIAtom*        aAttribute,
@@ -80,12 +78,6 @@ public:
     return MakeFrameName(NS_LITERAL_STRING("SVGGradient"), aResult);
   }
 #endif // DEBUG
-
-  // nsISVGChildFrame interface:
-  NS_IMETHOD PaintSVG(gfxContext* aContext)
-  {
-    return NS_OK;  // override - our frames don't directly render
-  }
 
 private:
 
@@ -136,10 +128,6 @@ protected:
   nsRefPtr<nsSVGElement>                 mSourceContent;
 
 private:
-  // href of the other gradient we reference (if any)
-  // XXX this should go away, we can watch our content directly
-  nsCOMPtr<nsIDOMSVGAnimatedString>      mHref;
-
   // Flag to mark this frame as "in use" during recursive calls along our
   // gradient's reference chain so we can detect reference loops. See:
   // http://www.w3.org/TR/SVG11/pservers.html#LinearGradientElementHrefAttribute
@@ -162,9 +150,8 @@ class nsSVGLinearGradientFrame : public nsSVGLinearGradientFrameBase
                                                 nsIContent*   aContent,
                                                 nsStyleContext* aContext);
 protected:
-  nsSVGLinearGradientFrame(nsStyleContext* aContext,
-                           nsIDOMSVGURIReference *aRef) :
-    nsSVGLinearGradientFrameBase(aContext, aRef) {}
+  nsSVGLinearGradientFrame(nsStyleContext* aContext) :
+    nsSVGLinearGradientFrameBase(aContext) {}
 
 public:
   // nsIFrame interface:
@@ -199,9 +186,8 @@ class nsSVGRadialGradientFrame : public nsSVGRadialGradientFrameBase
                                                 nsIContent*   aContent,
                                                 nsStyleContext* aContext);
 protected:
-  nsSVGRadialGradientFrame(nsStyleContext* aContext,
-                           nsIDOMSVGURIReference *aRef) :
-    nsSVGRadialGradientFrameBase(aContext, aRef) {}
+  nsSVGRadialGradientFrame(nsStyleContext* aContext) :
+    nsSVGRadialGradientFrameBase(aContext) {}
 
 public:
   // nsIFrame interface:

@@ -87,6 +87,8 @@ var dummyuser2 = Cc["@mozilla.org/login-manager/loginInfo;1"].
                  createInstance(Ci.nsILoginInfo);
 var dummyuser3 = Cc["@mozilla.org/login-manager/loginInfo;1"].
                  createInstance(Ci.nsILoginInfo);
+var dummyuser4 = Cc["@mozilla.org/login-manager/loginInfo;1"].
+                 createInstance(Ci.nsILoginInfo);
 
 
 dummyuser1.init("mailbox://localhost", null, "mailbox://localhost",
@@ -96,7 +98,10 @@ dummyuser2.init("ldap://localhost1", null,
     "ldap://localhost1/dc=test",
     "", "testpass2", "", "");
 
-dummyuser3.init("http://dummyhost.mozilla.org", "", null,
+dummyuser3.init("mailbox://localhost", null, "mailbox://localhost",
+    "test+pop3", "pop3test", "", "");
+
+dummyuser4.init("http://dummyhost.mozilla.org", "", null,
     "testuser1", "testpass1", "put_user_here", "put_pw_here");
 
 LoginTest.deleteFile(OUTDIR, "signons.sqlite");
@@ -112,14 +117,16 @@ testnum++;
 testdesc = "checking reading of mailnews-like old logins";
 storage = LoginTest.initStorage(INDIR, "signons-403790.txt",
                       OUTDIR, "output-403790.sqlite");
-LoginTest.checkStorageData(storage, [], [dummyuser1, dummyuser2]);
+ LoginTest.checkStorageData(storage, [], [dummyuser1, dummyuser2, dummyuser3]);
 
-storage.addLogin(dummyuser3); // trigger a write
-LoginTest.checkStorageData(storage, [], [dummyuser1, dummyuser2, dummyuser3]);
+storage.addLogin(dummyuser4); // trigger a write
+LoginTest.checkStorageData(storage, [],
+                           [dummyuser1, dummyuser2, dummyuser3, dummyuser4]);
 
 testdesc = "[flush and reload for verification]";
 storage = LoginTest.reloadStorage(OUTDIR, "output-403790.sqlite");
-LoginTest.checkStorageData(storage, [], [dummyuser1, dummyuser2, dummyuser3]);
+LoginTest.checkStorageData(storage, [],
+                           [dummyuser1, dummyuser2, dummyuser3, dummyuser4]);
 
 LoginTest.deleteFile(OUTDIR, "output-403790.sqlite");
 

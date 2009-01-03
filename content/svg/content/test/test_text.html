@@ -166,7 +166,7 @@ function runTests() {
   runTest();
 
   var doc = $("svg").contentWindow.document;
-  doc.getElementById("g").setAttribute("transform", "rotate(90 200 200)");
+  doc.getElementById("g").setAttribute("transform", "scale(2) rotate(90 200 200)");
   
   runTest();
 

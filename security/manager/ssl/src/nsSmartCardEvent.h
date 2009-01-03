@@ -65,9 +65,9 @@ public:
   NS_IMETHOD SetTarget(nsIDOMEventTarget *aTarget);
   NS_IMETHOD SetCurrentTarget(nsIDOMEventTarget *aTarget);
   NS_IMETHOD SetOriginalTarget(nsIDOMEventTarget *aTarget);
-  NS_IMETHOD GetInternalNSEvent(nsEvent** aNSEvent);
-  NS_IMETHOD IsDispatchStopped(PRBool *aIsDispatchPrevented);
-  NS_IMETHOD HasOriginalTarget(PRBool *aResult);
+  NS_IMETHOD_(nsEvent*) GetInternalNSEvent();
+  NS_IMETHOD_(PRBool ) IsDispatchStopped();
+  NS_IMETHOD_(PRBool ) HasOriginalTarget();
   NS_IMETHOD SetTrusted(PRBool aResult);
 
   NS_DECL_NSIDOMEVENT

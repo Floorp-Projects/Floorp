@@ -78,6 +78,6 @@ radio[disabled="true"] {
 
 .radio-check, .radio-check-box1 {
   -moz-appearance: radio;
-  width: 14px;
-  height: 12px;
+  width: 16px;
+  height: 16px;
 }

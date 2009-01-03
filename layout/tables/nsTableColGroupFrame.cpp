@@ -205,6 +205,26 @@ nsTableColGroupFrame::SetInitialChildList(nsIAtom*        aListName,
   return NS_OK;
 }
 
+/* virtual */ void
+nsTableColGroupFrame::DidSetStyleContext(nsStyleContext* aOldStyleContext)
+{
+  if (!aOldStyleContext) //avoid this on init
+    return;
+     
+  nsTableFrame* tableFrame = nsTableFrame::GetTableFrame(this);
+
+  if (tableFrame->IsBorderCollapse() &&
+      tableFrame->BCRecalcNeeded(aOldStyleContext, GetStyleContext())) {
+    PRInt32 colCount = GetColCount();
+    if (!colCount)
+      return; // this is a degenerated colgroup 
+    nsRect damageArea(GetFirstColumn()->GetColIndex(), 0, colCount,
+                      tableFrame->GetRowCount());
+    tableFrame->SetBCDamageArea(damageArea);
+  }
+  return;
+}
+
 NS_IMETHODIMP
 nsTableColGroupFrame::AppendFrames(nsIAtom*        aListName,
                                    nsIFrame*       aFrameList)

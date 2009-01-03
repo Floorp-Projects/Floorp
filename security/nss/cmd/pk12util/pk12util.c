@@ -67,8 +67,8 @@ Usage(char *progName)
 
     FPS "Usage:	 %s -o exportfile -n certname [-d certdir] [-P dbprefix] [-v]\n", 
         progName);
-    FPS "\t\t [-c key_cipher] [-C cert_cipher] [-k key_leng]\n");
-    FPS "\t\t [-k slotpwfile | -K slotpw] [-w p12filepwfile | -W p12filepw]\n");
+    FPS "\t\t [-c key_cipher] [-C cert_cipher] [-m | --key_len keyLen] [-n | --cert_key_len certKeyLen]\n");
+    FPS "\t\t [-k slotpwfile | -K slotpw] [-w p12filepwfile | -W p12filefilepw]\n");
 
     exit(PK12UERR_USAGE);
 }
@@ -953,8 +953,8 @@ static secuCommandFlag pk12util_options[] =
     { /* opt_Debug	       */ 'v', PR_FALSE, 0, PR_FALSE },
     { /* opt_Cipher	       */ 'c', PR_TRUE,  0, PR_FALSE },
     { /* opt_CertCipher	       */ 'C', PR_TRUE,  0, PR_FALSE },
-    { /* opt_KeyLength	       */ 'k', PR_TRUE,  0, PR_FALSE },
-    { /* opt_CertKeyLength     */ 'K', PR_TRUE,  0, PR_FALSE }
+    { /* opt_KeyLength         */ 'm', PR_TRUE,  0, PR_FALSE, "key_len" },
+    { /* opt_CertKeyLength     */ 'n', PR_TRUE,  0, PR_FALSE, "cert_key_len" }
 };
 
 int

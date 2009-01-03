@@ -159,7 +159,7 @@ public:
     NS_DECL_NSIEXPATSINK
 
     // nsIContentSink
-    NS_IMETHOD WillTokenize(void);
+    NS_IMETHOD WillParse(void);
     NS_IMETHOD WillBuildModel(void);
     NS_IMETHOD DidBuildModel(void);
     NS_IMETHOD WillInterrupt(void);
@@ -607,7 +607,7 @@ RDFContentSinkImpl::ReportError(const PRUnichar* aErrorText,
 // nsIContentSink interface
 
 NS_IMETHODIMP 
-RDFContentSinkImpl::WillTokenize(void)
+RDFContentSinkImpl::WillParse(void)
 {
     return NS_OK;
 }
@@ -994,8 +994,12 @@ RDFContentSinkImpl::GetResourceAttribute(const PRUnichar** aAttributes,
       mNodeIDMap.Get(nodeID,aResource);
 
       if (!*aResource) {
+          nsresult rv;
+          rv = gRDFService->GetAnonymousResource(aResource);
+          if (NS_FAILED(rv)) {
+              return rv;
+          }
           mNodeIDMap.Put(nodeID,*aResource);
-          return gRDFService->GetAnonymousResource(aResource);
       }
       return NS_OK;
   }

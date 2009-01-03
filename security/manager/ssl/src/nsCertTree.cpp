@@ -157,6 +157,7 @@ nsCertTreeDispInfo::nsCertTreeDispInfo(nsCertTreeDispInfo &other)
   mPort = other.mPort;
   mOverrideBits = other.mOverrideBits;
   mIsTemporary = other.mIsTemporary;
+  mCert = other.mCert;
 }
 
 nsCertTreeDispInfo::~nsCertTreeDispInfo()
@@ -167,6 +168,12 @@ NS_IMETHODIMP
 nsCertTreeDispInfo::GetCert(nsIX509Cert **_cert)
 {
   NS_ENSURE_ARG(_cert);
+  if (mCert) {
+    // we may already have the cert for temporary overrides
+    *_cert = mCert;
+    NS_IF_ADDREF(*_cert);
+    return NS_OK;
+  }
   if (mAddonInfo) {
     *_cert = mAddonInfo->mCert.get();
     NS_IF_ADDREF(*_cert);
@@ -306,10 +313,12 @@ nsCertTree::GetCertAtIndex(PRInt32 index, PRInt32 *outAbsoluteCertOffset)
     return nsnull;
 
   nsIX509Cert *rawPtr = nsnull;
-  if (certdi->mAddonInfo) {
+  if (certdi->mCert) {
+    rawPtr = certdi->mCert;
+  } else if (certdi->mAddonInfo) {
     rawPtr = certdi->mAddonInfo->mCert;
-    NS_IF_ADDREF(rawPtr);
   }
+  NS_IF_ADDREF(rawPtr);
   return rawPtr;
 }
 
@@ -397,6 +406,7 @@ MatchingCertOverridesCallback(const nsCertOverride &aSettings,
     certdi->mPort = aSettings.mPort;
     certdi->mOverrideBits = aSettings.mOverrideBits;
     certdi->mIsTemporary = aSettings.mIsTemporary;
+    certdi->mCert = aSettings.mCert;
     cap->array->InsertElementAt(cap->position, certdi);
     cap->position++;
     cap->counter++;
@@ -460,6 +470,7 @@ AddRemaningHostPortOverridesCallback(const nsCertOverride &aSettings,
     certdi->mPort = aSettings.mPort;
     certdi->mOverrideBits = aSettings.mOverrideBits;
     certdi->mIsTemporary = aSettings.mIsTemporary;
+    certdi->mCert = aSettings.mCert;
     cap->array->InsertElementAt(cap->position, certdi);
     cap->position++;
     cap->counter++;
@@ -1132,8 +1143,8 @@ nsCertTree::GetCellText(PRInt32 row, nsITreeColumn* col,
   if (!certdi)
     return NS_ERROR_FAILURE;
 
-  nsCOMPtr<nsIX509Cert> cert = nsnull;
-  if (certdi->mAddonInfo) {
+  nsCOMPtr<nsIX509Cert> cert = certdi->mCert;
+  if (!cert && certdi->mAddonInfo) {
     cert = certdi->mAddonInfo->mCert;
   }
 

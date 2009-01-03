@@ -126,6 +126,11 @@ interface nsIContentPolicy : nsISupports
    */
   const unsigned long TYPE_DTD = 13;
 
+  /**
+   * Indicates a font loaded via @font-face rule.
+   */
+  const unsigned long TYPE_FONT = 14;
+
   //////////////////////////////////////////////////////////////////////
 
   /**

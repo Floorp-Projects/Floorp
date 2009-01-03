@@ -94,16 +94,14 @@ NS_IMPL_ISUPPORTS_INHERITED1(nsHTMLImageAccessible, nsAccessible,
 ////////////////////////////////////////////////////////////////////////////////
 // nsIAccessible
 
-NS_IMETHODIMP
-nsHTMLImageAccessible::GetState(PRUint32 *aState, PRUint32 *aExtraState)
+nsresult
+nsHTMLImageAccessible::GetStateInternal(PRUint32 *aState, PRUint32 *aExtraState)
 {
   // The state is a bitfield, get our inherited state, then logically OR it with
   // STATE_ANIMATED if this is an animated image.
 
-  nsresult rv = nsLinkableAccessible::GetState(aState, aExtraState);
-  NS_ENSURE_SUCCESS(rv, rv);
-  if (!mDOMNode)
-    return NS_OK;
+  nsresult rv = nsLinkableAccessible::GetStateInternal(aState, aExtraState);
+  NS_ENSURE_A11Y_SUCCESS(rv, rv);
 
   nsCOMPtr<nsIImageLoadingContent> content(do_QueryInterface(mDOMNode));
   nsCOMPtr<imgIRequest> imageRequest;
@@ -126,39 +124,28 @@ nsHTMLImageAccessible::GetState(PRUint32 *aState, PRUint32 *aExtraState)
   return NS_OK;
 }
 
-
-/* wstring getName (); */
-NS_IMETHODIMP nsHTMLImageAccessible::GetName(nsAString& aName)
+nsresult
+nsHTMLImageAccessible::GetNameInternal(nsAString& aName)
 {
-  aName.Truncate();
-  if (IsDefunct())
-    return NS_ERROR_FAILURE;
-  
-  nsCOMPtr<nsIContent> content(do_QueryInterface(mDOMNode));
-  NS_ASSERTION(content, "Image node always supports nsIContent");
-    
   // No alt attribute means AT can repair if there is no accessible name
   // alt="" with no title or aria-labelledby means image is presentational and 
   // AT should leave accessible name empty
+
+  nsCOMPtr<nsIContent> content(do_QueryInterface(mDOMNode));
   PRBool hasAltAttrib =
     content->GetAttr(kNameSpaceID_None, nsAccessibilityAtoms::alt, aName);
-  if (aName.IsEmpty()) {
-    if (content->HasAttr(kNameSpaceID_None, nsAccessibilityAtoms::aria_label) ||
-        content->HasAttr(kNameSpaceID_None, nsAccessibilityAtoms::aria_labelledby)) {
-      // Use HTML label or DHTML accessibility's label or labelledby attribute for name
-      // GetHTMLName will also try title attribute as a last resort
-      GetHTMLName(aName, PR_FALSE);
-    }
-    if (aName.IsEmpty()) { // No name from alt or aria-labelledby
-      content->GetAttr(kNameSpaceID_None, nsAccessibilityAtoms::title, aName);
-      if (!hasAltAttrib && aName.IsEmpty()) { 
-        // Still no accessible name and no alt attribute is present.
-        // SetIsVoid() is different from empty string -- this means a name was not 
-        // provided by author and AT repair of the name is allowed.
-        aName.SetIsVoid(PR_TRUE);
-      }
-    }
+  if (!aName.IsEmpty())
+    return NS_OK;
+
+  nsresult rv = nsAccessible::GetNameInternal(aName);
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  if (aName.IsVoid() && hasAltAttrib) {
+    // No accessible name but empty alt attribute is present. This means a name
+    // was provided by author and AT repair of the name isn't allowed.
+    aName.Truncate();
   }
+
   return NS_OK;
 }
 
@@ -354,9 +341,9 @@ nsHTMLImageAccessible::GetImageSize(PRInt32 *aWidth, PRInt32 *aHeight)
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-// nsPIAccessNode
+// nsHTMLImageAccessible. nsAccessNode
 
-NS_IMETHODIMP
+nsresult
 nsHTMLImageAccessible::Shutdown()
 {
   nsLinkableAccessible::Shutdown();
@@ -427,11 +414,8 @@ nsHTMLImageAccessible::GetAreaAccessible(nsIDOMHTMLCollection *aAreaCollection,
     if (!accessNode)
       return nsnull;
     
-    nsCOMPtr<nsPIAccessNode> privateAccessNode(do_QueryInterface(accessNode));
-    NS_ASSERTION(privateAccessNode,
-                 "Accessible doesn't implement nsPIAccessNode");
-    
-    nsresult rv = privateAccessNode->Init();
+    nsRefPtr<nsAccessNode> accNode = nsAccUtils::QueryAccessNode(accessNode);
+    nsresult rv = accNode->Init();
     if (NS_FAILED(rv))
       return nsnull;
     

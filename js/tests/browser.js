@@ -568,18 +568,27 @@ function gczeal(z)
   javascriptoptions.setIntPref('gczeal', Number(z));
 }
 
+var gJit = { content: undefined, chrome: undefined };
+
 function jit(on)
 {
-  var javascriptoptions = new Preferences('javascript.options.jit.');
+  var jitoptions = new Preferences('javascript.options.jit.');
+
+  if (typeof gJit.content == 'undefined')
+  {
+    gJit.content = jitoptions.getBoolPref('content');
+    gJit.chrome  = jitoptions.getBoolPref('chrome');
+  }
+
   if (on)
   {
-    javascriptoptions.setBoolPref('content', true);
-    javascriptoptions.setBoolPref('chrome', true);
+    jitoptions.setBoolPref('content', true);
+    jitoptions.setBoolPref('chrome', false);
   }
   else
   {
-    javascriptoptions.setBoolPref('content', false);
-    javascriptoptions.setBoolPref('chrome', false);
+    jitoptions.setBoolPref('content', false);
+    jitoptions.setBoolPref('chrome', false);
   }
 }
 
@@ -611,6 +620,7 @@ function jsTestDriverBrowserInit()
 
   if (testpath)
   {
+    testpath = decodeURIComponent(testpath);
     gTestPath = testpath;
   }
 
@@ -624,22 +634,79 @@ function jsTestDriverBrowserInit()
     gczeal(zeal);
   }
 
+/*
+ * since the default setting of jit changed from false to true
+ * in http://hg.mozilla.org/tracemonkey/rev/685e00e68be9
+ * bisections which depend upon jit settings can be thrown off.
+ * default jit(false) to make bisections depending upon jit settings
+ * consistent over time. This is not needed in shell tests as the default
+ * jit setting has not changed there.
+ */
+
   var jitmatches = /;jit/.exec(document.location.search);
 
   if (jitmatches)
   {
     jit(true);
   }
-
-  var versionmatches = /version=([.0-9]*)/.exec(value);
-
-  if (!versionmatches)
+  else
   {
-    gVersion = 150;
+    jit(false);
+  }
+
+  var versionmatches;
+
+  if (attribute == 'type')
+  {
+    versionmatches = /version=([.0-9]+)/.exec(value);
   }
   else
   {
+    versionmatches = /javascript([.0-9]+)/.exec(value);
+  }
+
+  if (versionmatches)
+  {
     gVersion = 10*parseInt(versionmatches[1].replace(/\./g, ''));
+  }
+  else if (navigator.userAgent.indexOf('Gecko/') != -1)
+  {
+    // If the version is not specified, and the browser is Gecko,
+    // adjust the version to match the suite version.
+    if (attribute == 'type')
+    {
+      value = 'text/javascript;version=';
+    }
+    else
+    {
+      value = 'javascript';
+    }
+
+    if (testpath.match(/^js1_6/))
+    {
+      gVersion = 160;
+      value += '1.6';
+    }
+    else if (testpath.match(/^js1_7/))
+    {
+      gVersion = 170;
+      value += '1.7';
+    }
+    else if (testpath.match(/^js1_8/))
+    {
+      gVersion = 180;
+      value += '1.8';
+    }
+    else if (testpath.match(/^js1_8_1/))
+    {
+      gVersion = 180;
+      value += '1.8';
+    }
+    else
+    {
+      gVersion = 150;
+      value += '1.5';
+    }
   }
 
   var testpathparts = testpath.split(/\//);
@@ -724,6 +791,18 @@ function jsTestDriverEnd()
   {
     var javascriptoptions = new Preferences('javascript.options.');
     javascriptoptions.clearPref('gczeal');
+
+    var jitoptions = new Preferences('javascript.options.jit.');
+    if (typeof gJit.content != 'undefined')
+    {
+      jitoptions.setBoolPref('content', gJit.content);
+    }
+
+    if (typeof gJit.chrome != 'undefined')
+    {
+      jitoptions.setBoolPref('chrome', gJit.chrome);
+    }
+
     optionsReset();
   }
   catch(ex)

@@ -50,8 +50,6 @@ MODULE_NAME     = nsChromeModule
 GRE_MODULE      = 1
 LIBXUL_LIBRARY  = 1
 
-PACKAGE_FILE = chrome.pkg
-
 REQUIRES	= xpcom \
 		  string \
 		  rdf \

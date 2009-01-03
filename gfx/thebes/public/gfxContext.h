@@ -339,6 +339,19 @@ public:
     PRBool UserToDevicePixelSnapped(gfxRect& rect, PRBool ignoreScale = PR_FALSE) const;
 
     /**
+     * Takes the given point and tries to align it to device pixels.  If
+     * this succeeds, the method will return PR_TRUE, and the point will
+     * be in device coordinates (already transformed by the CTM).  If it 
+     * fails, the method will return PR_FALSE, and the point will not be
+     * changed.
+     *
+     * If ignoreScale is PR_TRUE, then snapping will take place even if
+     * the CTM has a scale applied.  Snapping never takes place if
+     * there is a rotation in the CTM.
+     */
+    PRBool UserToDevicePixelSnapped(gfxPoint& pt, PRBool ignoreScale = PR_FALSE) const;
+
+    /**
      * Attempts to pixel snap the rectangle, add it to the current
      * path, and to set pattern as the current painting source.  This
      * should be used for drawing filled pixel-snapped rectangles (like
@@ -615,7 +628,15 @@ public:
          * When this flag is set, snapping to device pixels is disabled.
          * It simply never does anything.
          */
-        FLAG_DISABLE_SNAPPING = (1 << 1)
+        FLAG_DISABLE_SNAPPING = (1 << 1),
+        /**
+         * When this flag is set, rendering through this context
+         * is destined to be (eventually) drawn on the screen. It can be
+         * useful to know this, for example so that windowed plugins are
+         * not unnecessarily rendered (since they will already appear
+         * on the screen, thanks to their windows).
+         */
+        FLAG_DESTINED_FOR_SCREEN = (1 << 2)
     };
 
     void SetFlag(PRInt32 aFlag) { mFlags |= aFlag; }
@@ -717,6 +738,34 @@ private:
     gfxContext *mContext;
 
     nsRefPtr<gfxPath> mPath;
+};
+
+/**
+ * Sentry helper class for functions with multiple return points that need to
+ * back up the current matrix of a context and have it automatically restored
+ * before they return.
+ */
+class THEBES_API gfxContextMatrixAutoSaveRestore
+{
+public:
+    gfxContextMatrixAutoSaveRestore(gfxContext *aContext) :
+        mContext(aContext), mMatrix(aContext->CurrentMatrix())
+    {
+    }
+
+    ~gfxContextMatrixAutoSaveRestore()
+    {
+        mContext->SetMatrix(mMatrix);
+    }
+
+    const gfxMatrix& Matrix()
+    {
+        return mMatrix;
+    }
+
+private:
+    gfxContext *mContext;
+    gfxMatrix   mMatrix;
 };
 
 #endif /* GFX_CONTEXT_H */

@@ -1975,7 +1975,7 @@ void nsCellMap::ExpandWithCells(nsTableCellMap& aMap,
     }
     cellFrame->SetColIndex(startColIndex);
   }
-  PRInt32 damageHeight = (aRowSpanIsZero) ? aMap.GetColCount() - aRowIndex : aRowSpan;
+  PRInt32 damageHeight = PR_MIN(GetRowGroup()->GetRowCount() - aRowIndex, aRowSpan);
   SetDamageArea(aColIndex, aRowIndex, 1 + endColIndex - aColIndex, damageHeight, aDamageArea); 
 
   PRInt32 rowX;

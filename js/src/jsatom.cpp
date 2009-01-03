@@ -68,17 +68,23 @@ js_AtomToPrintableString(JSContext *cx, JSAtom *atom)
 #undef JS_PROTO
 
 /*
- * Names for common atoms defined in JSAtomState starting from
+ * String constants for common atoms defined in JSAtomState starting from
  * JSAtomState.emptyAtom until JSAtomState.lazy.
  *
  * The elements of the array after the first empty string define strings
- * corresponding to JSType enumerators from jspubtd.h and to two boolean
- * literals, false and true. The following assert insists that JSType defines
- * exactly 8 types.
+ * corresponding to the two boolean literals, false and true, followed by the
+ * JSType enumerators from jspubtd.h starting with "undefined" for JSTYPE_VOID
+ * (which is pseudo-boolean 2) and continuing as initialized below. The static
+ * asserts check these relations.
  */
 JS_STATIC_ASSERT(JSTYPE_LIMIT == 8);
+JS_STATIC_ASSERT(JSVAL_TO_BOOLEAN(JSVAL_VOID) == 2);
+JS_STATIC_ASSERT(JSTYPE_VOID == 0);
+
 const char *const js_common_atom_names[] = {
     "",                         /* emptyAtom                    */
+    js_false_str,               /* booleanAtoms[0]              */
+    js_true_str,                /* booleanAtoms[1]              */
     js_undefined_str,           /* typeAtoms[JSTYPE_VOID]       */
     js_object_str,              /* typeAtoms[JSTYPE_OBJECT]     */
     js_function_str,            /* typeAtoms[JSTYPE_FUNCTION]   */
@@ -87,8 +93,6 @@ const char *const js_common_atom_names[] = {
     "boolean",                  /* typeAtoms[JSTYPE_BOOLEAN]    */
     js_null_str,                /* typeAtoms[JSTYPE_NULL]       */
     "xml",                      /* typeAtoms[JSTYPE_XML]        */
-    js_false_str,               /* booleanAtoms[0]              */
-    js_true_str,                /* booleanAtoms[1]              */
     js_null_str,                /* nullAtom                     */
 
 #define JS_PROTO(name,code,init) js_##name##_str,
@@ -96,8 +100,10 @@ const char *const js_common_atom_names[] = {
 #undef JS_PROTO
 
     js_anonymous_str,           /* anonymousAtom                */
+    js_apply_str,               /* applyAtom                    */
     js_arguments_str,           /* argumentsAtom                */
     js_arity_str,               /* arityAtom                    */
+    js_call_str,                /* callAtom                     */
     js_callee_str,              /* calleeAtom                   */
     js_caller_str,              /* callerAtom                   */
     js_class_prototype_str,     /* classPrototypeAtom           */
@@ -126,6 +132,7 @@ const char *const js_common_atom_names[] = {
     js_toSource_str,            /* toSourceAtom                 */
     js_toString_str,            /* toStringAtom                 */
     js_valueOf_str,             /* valueOfAtom                  */
+    js_toJSON_str,              /* toJSONAtom                   */
     "(void 0)",                 /* void0Atom                    */
 
 #if JS_HAS_XML_SUPPORT
@@ -142,19 +149,30 @@ const char *const js_common_atom_names[] = {
 #endif
 
 #ifdef NARCISSUS
-    js_call_str,                /* callAtom                     */
-    js_construct_str,           /* constructAtom                */
-    js_hasInstance_str,         /* hasInstanceAtom              */
+    js___call___str,            /* __call__Atom                 */
+    js___construct___str,       /* __construct__Atom            */
+    js___hasInstance___str,     /* __hasInstance__Atom          */
     js_ExecutionContext_str,    /* ExecutionContextAtom         */
     js_current_str,             /* currentAtom                  */
 #endif
 };
+
 JS_STATIC_ASSERT(JS_ARRAY_LENGTH(js_common_atom_names) * sizeof(JSAtom *) ==
                  LAZY_ATOM_OFFSET_START - ATOM_OFFSET_START);
 
+/*
+ * Interpreter macros called by the trace recorder assume common atom indexes
+ * fit in one byte of immediate operand.
+ */
+JS_STATIC_ASSERT(JS_ARRAY_LENGTH(js_common_atom_names) < 256);
+
+const size_t js_common_atom_count = JS_ARRAY_LENGTH(js_common_atom_names);
+
 const char js_anonymous_str[]       = "anonymous";
+const char js_apply_str[]           = "apply";
 const char js_arguments_str[]       = "arguments";
 const char js_arity_str[]           = "arity";
+const char js_call_str[]            = "call";
 const char js_callee_str[]          = "callee";
 const char js_caller_str[]          = "caller";
 const char js_class_prototype_str[] = "prototype";
@@ -185,6 +203,7 @@ const char js_toString_str[]        = "toString";
 const char js_toLocaleString_str[]  = "toLocaleString";
 const char js_undefined_str[]       = "undefined";
 const char js_valueOf_str[]         = "valueOf";
+const char js_toJSON_str[]          = "toJSON";
 
 #if JS_HAS_XML_SUPPORT
 const char js_etago_str[]           = "</";
@@ -205,9 +224,9 @@ const char js_send_str[]            = "send";
 #endif
 
 #ifdef NARCISSUS
-const char js_call_str[]             = "__call__";
-const char js_construct_str[]        = "__construct__";
-const char js_hasInstance_str[]      = "__hasInstance__";
+const char js___call___str[]         = "__call__";
+const char js___construct___str[]    = "__construct__";
+const char js___hasInstance___str[]  = "__hasInstance__";
 const char js_ExecutionContext_str[] = "ExecutionContext";
 const char js_current_str[]          = "current";
 #endif

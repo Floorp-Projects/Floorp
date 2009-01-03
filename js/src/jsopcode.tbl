@@ -64,9 +64,10 @@
  * format       Bytecode plus immediate operand encoding format
  *
  * Precedence   Operators               Opcodes
- *  1           let (x = y) z, yield w  JSOP_LEAVEBLOCKEXPR, JSOP_YIELD
+ *  1           yield w                 JSOP_YIELD
  *  2           ,                       JSOP_POP with SRC_PCDELTA, JSOP_RETURN
- *  3           =, +=, etc.             JSOP_SETNAME, etc. (all JOF_ASSIGNING)
+ *  3           =, +=, etc.             JSOP_SETNAME, etc. (all JOF_SET);
+ *                let (...) ...           and JSOP_LEAVEBLOCKEXPR
  *  4           ?:                      JSOP_IFEQ, JSOP_IFEQX
  *  5           ||                      JSOP_OR, JSOP_ORX
  *  6           &&                      JSOP_AND, JSOP_ANDX
@@ -78,17 +79,25 @@
  * 12           <<, >>, >>>             JSOP_LSH, JSOP_RSH, JSOP_URSH
  * 13           +, -, etc.              JSOP_ADD, JSOP_SUB, etc.
  * 14           *, /, %                 JSOP_MUL, JSOP_DIV, JSOP_MOD
- * 15           !, ~, etc.              JSOP_NOT, JSOP_BITNOT, etc.
+ * 15           !, ~, delete, etc.      JSOP_NOT, JSOP_BITNOT, JSOP_DEL*, etc.
  * 16           3.14, 0, etc.           JSOP_DOUBLE, JSOP_ZERO, etc.
- * 17           delete, new             JSOP_DEL*, JSOP_NEW
+ * 17           new                     JSOP_NEW
  * 18           x.y, f(), etc.          JSOP_GETPROP, JSOP_CALL, etc.
- * 19           x, null, etc.           JSOP_NAME, JSOP_NULL, etc.
+ * 19           x, null,                JSOP_NAME, JSOP_NULL, etc.;
+ *               function (...) ...       and JSOP_ANONFUNOBJ, JSOP_NAMEDFUNOBJ
  *
  * The push-numeric-constant operators, JSOP_ZERO, JSOP_DOUBLE, etc., have
  * lower precedence than the member operators emitted for the . operator, to
  * cause the decompiler to parenthesize the . left operand, e.g. (0).foo.
- * Otherwise the . could be taken as a decimal point.  We use the same level
- * 16 for function expressions too, to force parenthesization.
+ * Otherwise the . could be taken as a decimal point.
+ *
+ * Let expressions are "primary" when viewed from the left, but they eat up ops
+ * to the right as if assignment expressions and therefore have precedence 3.
+ * This makes the decompiler retain the parentheses in (let (a=0) x) ? a : 0
+ * but omit the superfluous ones in (let (a=0) x), a.
+ *
+ * Yield expressions must be parenthesized even in comma-expressions and
+ * argument lists, so they have the lowest precedence.
  *
  * This file is best viewed with 128 columns:
 12345678901234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789012345678
@@ -111,37 +120,37 @@ OPDEF(JSOP_IFNE,      8,  "ifne",       NULL,         3,  1,  0,  0,  JOF_JUMP|J
 OPDEF(JSOP_ARGUMENTS, 9, js_arguments_str, js_arguments_str, 1, 0, 1, 18, JOF_BYTE)
 
 /* ECMA-compliant for-in loop with argument or local loop control. */
-OPDEF(JSOP_FORARG,    10, "forarg",     NULL,         3,  0,  1, 19,  JOF_QARG|JOF_NAME|JOF_FOR)
-OPDEF(JSOP_FORLOCAL,  11, "forlocal",   NULL,         3,  0,  1, 19,  JOF_LOCAL|JOF_NAME|JOF_FOR)
+OPDEF(JSOP_FORARG,    10, "forarg",     NULL,         3,  2,  2, 19,  JOF_QARG|JOF_NAME|JOF_FOR)
+OPDEF(JSOP_FORLOCAL,  11, "forlocal",   NULL,         3,  2,  2, 19,  JOF_LOCAL|JOF_NAME|JOF_FOR)
 
 /* More longstanding bytecodes. */
 OPDEF(JSOP_DUP,       12, "dup",        NULL,         1,  1,  2,  0,  JOF_BYTE)
 OPDEF(JSOP_DUP2,      13, "dup2",       NULL,         1,  2,  4,  0,  JOF_BYTE)
 OPDEF(JSOP_SETCONST,  14, "setconst",   NULL,         3,  1,  1,  3,  JOF_ATOM|JOF_NAME|JOF_SET)
-OPDEF(JSOP_BITOR,     15, "bitor",      "|",          1,  2,  1,  7,  JOF_BYTE|JOF_LEFTASSOC)
-OPDEF(JSOP_BITXOR,    16, "bitxor",     "^",          1,  2,  1,  8,  JOF_BYTE|JOF_LEFTASSOC)
-OPDEF(JSOP_BITAND,    17, "bitand",     "&",          1,  2,  1,  9,  JOF_BYTE|JOF_LEFTASSOC)
+OPDEF(JSOP_BITOR,     15, "bitor",      "|",          1,  2,  1,  7,  JOF_BYTE|JOF_LEFTASSOC|JOF_TMPSLOT2)
+OPDEF(JSOP_BITXOR,    16, "bitxor",     "^",          1,  2,  1,  8,  JOF_BYTE|JOF_LEFTASSOC|JOF_TMPSLOT2)
+OPDEF(JSOP_BITAND,    17, "bitand",     "&",          1,  2,  1,  9,  JOF_BYTE|JOF_LEFTASSOC|JOF_TMPSLOT2)
 OPDEF(JSOP_EQ,        18, "eq",         "==",         1,  2,  1,  10,  JOF_BYTE|JOF_LEFTASSOC|JOF_DETECTING)
 OPDEF(JSOP_NE,        19, "ne",         "!=",         1,  2,  1,  10,  JOF_BYTE|JOF_LEFTASSOC|JOF_DETECTING)
-OPDEF(JSOP_LT,        20, "lt",         "<",          1,  2,  1, 11,  JOF_BYTE|JOF_LEFTASSOC)
-OPDEF(JSOP_LE,        21, "le",         "<=",         1,  2,  1, 11,  JOF_BYTE|JOF_LEFTASSOC)
-OPDEF(JSOP_GT,        22, "gt",         ">",          1,  2,  1, 11,  JOF_BYTE|JOF_LEFTASSOC)
-OPDEF(JSOP_GE,        23, "ge",         ">=",         1,  2,  1, 11,  JOF_BYTE|JOF_LEFTASSOC)
-OPDEF(JSOP_LSH,       24, "lsh",        "<<",         1,  2,  1, 12,  JOF_BYTE|JOF_LEFTASSOC)
-OPDEF(JSOP_RSH,       25, "rsh",        ">>",         1,  2,  1, 12,  JOF_BYTE|JOF_LEFTASSOC)
-OPDEF(JSOP_URSH,      26, "ursh",       ">>>",        1,  2,  1, 12,  JOF_BYTE|JOF_LEFTASSOC)
-OPDEF(JSOP_ADD,       27, "add",        "+",          1,  2,  1, 13,  JOF_BYTE|JOF_LEFTASSOC)
-OPDEF(JSOP_SUB,       28, "sub",        "-",          1,  2,  1, 13,  JOF_BYTE|JOF_LEFTASSOC)
-OPDEF(JSOP_MUL,       29, "mul",        "*",          1,  2,  1, 14,  JOF_BYTE|JOF_LEFTASSOC)
-OPDEF(JSOP_DIV,       30, "div",        "/",          1,  2,  1, 14,  JOF_BYTE|JOF_LEFTASSOC)
-OPDEF(JSOP_MOD,       31, "mod",        "%",          1,  2,  1, 14,  JOF_BYTE|JOF_LEFTASSOC)
+OPDEF(JSOP_LT,        20, "lt",         "<",          1,  2,  1, 11,  JOF_BYTE|JOF_LEFTASSOC|JOF_TMPSLOT2)
+OPDEF(JSOP_LE,        21, "le",         "<=",         1,  2,  1, 11,  JOF_BYTE|JOF_LEFTASSOC|JOF_TMPSLOT2)
+OPDEF(JSOP_GT,        22, "gt",         ">",          1,  2,  1, 11,  JOF_BYTE|JOF_LEFTASSOC|JOF_TMPSLOT2)
+OPDEF(JSOP_GE,        23, "ge",         ">=",         1,  2,  1, 11,  JOF_BYTE|JOF_LEFTASSOC|JOF_TMPSLOT2)
+OPDEF(JSOP_LSH,       24, "lsh",        "<<",         1,  2,  1, 12,  JOF_BYTE|JOF_LEFTASSOC|JOF_TMPSLOT2)
+OPDEF(JSOP_RSH,       25, "rsh",        ">>",         1,  2,  1, 12,  JOF_BYTE|JOF_LEFTASSOC|JOF_TMPSLOT2)
+OPDEF(JSOP_URSH,      26, "ursh",       ">>>",        1,  2,  1, 12,  JOF_BYTE|JOF_LEFTASSOC|JOF_TMPSLOT2)
+OPDEF(JSOP_ADD,       27, "add",        "+",          1,  2,  1, 13,  JOF_BYTE|JOF_LEFTASSOC|JOF_TMPSLOT2)
+OPDEF(JSOP_SUB,       28, "sub",        "-",          1,  2,  1, 13,  JOF_BYTE|JOF_LEFTASSOC|JOF_TMPSLOT2)
+OPDEF(JSOP_MUL,       29, "mul",        "*",          1,  2,  1, 14,  JOF_BYTE|JOF_LEFTASSOC|JOF_TMPSLOT2)
+OPDEF(JSOP_DIV,       30, "div",        "/",          1,  2,  1, 14,  JOF_BYTE|JOF_LEFTASSOC|JOF_TMPSLOT2)
+OPDEF(JSOP_MOD,       31, "mod",        "%",          1,  2,  1, 14,  JOF_BYTE|JOF_LEFTASSOC|JOF_TMPSLOT2)
 OPDEF(JSOP_NOT,       32, "not",        "!",          1,  1,  1, 15,  JOF_BYTE|JOF_DETECTING)
 OPDEF(JSOP_BITNOT,    33, "bitnot",     "~",          1,  1,  1, 15,  JOF_BYTE)
 OPDEF(JSOP_NEG,       34, "neg",        "- ",         1,  1,  1, 15,  JOF_BYTE)
 OPDEF(JSOP_NEW,       35, js_new_str,   NULL,         3, -1,  1, 17,  JOF_UINT16|JOF_INVOKE)
-OPDEF(JSOP_DELNAME,   36, "delname",    NULL,         3,  0,  1, 17,  JOF_ATOM|JOF_NAME|JOF_DEL)
-OPDEF(JSOP_DELPROP,   37, "delprop",    NULL,         3,  1,  1, 17,  JOF_ATOM|JOF_PROP|JOF_DEL)
-OPDEF(JSOP_DELELEM,   38, "delelem",    NULL,         1,  2,  1, 17,  JOF_BYTE |JOF_ELEM|JOF_DEL)
+OPDEF(JSOP_DELNAME,   36, "delname",    NULL,         3,  0,  1, 15,  JOF_ATOM|JOF_NAME|JOF_DEL)
+OPDEF(JSOP_DELPROP,   37, "delprop",    NULL,         3,  1,  1, 15,  JOF_ATOM|JOF_PROP|JOF_DEL)
+OPDEF(JSOP_DELELEM,   38, "delelem",    NULL,         1,  2,  1, 15,  JOF_BYTE |JOF_ELEM|JOF_DEL)
 OPDEF(JSOP_TYPEOF,    39, js_typeof_str,NULL,         1,  1,  1, 15,  JOF_BYTE|JOF_DETECTING)
 OPDEF(JSOP_VOID,      40, js_void_str,  NULL,         1,  1,  1, 15,  JOF_BYTE)
 
@@ -181,19 +190,30 @@ OPDEF(JSOP_TABLESWITCH,  70, "tableswitch",  NULL,   -1,  1,  0,  0,  JOF_TABLES
 OPDEF(JSOP_LOOKUPSWITCH, 71, "lookupswitch", NULL,   -1,  1,  0,  0,  JOF_LOOKUPSWITCH|JOF_DETECTING|JOF_PARENHEAD)
 
 /* New, infallible/transitive identity ops. */
-OPDEF(JSOP_STRICTEQ,  72, "stricteq",   NULL,         1,  2,  1,  10,  JOF_BYTE|JOF_DETECTING)
-OPDEF(JSOP_STRICTNE,  73, "strictne",   NULL,         1,  2,  1,  10,  JOF_BYTE|JOF_DETECTING)
-
-/* Resume instruction (emitted for the JIT for instructions that can't be restarted). */
-OPDEF(JSOP_RESUME,    74, "resume",     NULL,         1,  0,  0,  0,  JOF_BYTE)
+OPDEF(JSOP_STRICTEQ,  72, "stricteq",   "===",        1,  2,  1, 10,  JOF_BYTE|JOF_DETECTING|JOF_LEFTASSOC)
+OPDEF(JSOP_STRICTNE,  73, "strictne",   "!==",        1,  2,  1, 10,  JOF_BYTE|JOF_DETECTING|JOF_LEFTASSOC)
 
 /* Variant of JSOP_NULL for default (global) |this| parameter pushing. */
-OPDEF(JSOP_NULLTHIS,  75, js_null_str,  js_null_str,  1,  0,  1, 19,  JOF_BYTE)
+OPDEF(JSOP_NULLTHIS,  74, js_null_str,  js_null_str,  1,  0,  1, 19,  JOF_BYTE)
 
-OPDEF(JSOP_UNUSED76,  76, "unused76",   NULL,         1,  0,  0,  0,  JOF_BYTE)
-OPDEF(JSOP_UNUSED77,  77, "unused77",   NULL,         1,  0,  0,  0,  JOF_BYTE)
-OPDEF(JSOP_UNUSED78,  78, "unused78",   NULL,         1,  0,  0,  0,  JOF_BYTE)
-OPDEF(JSOP_UNUSED79,  79, "unused79",   NULL,         1,  0,  0,  0,  JOF_BYTE)
+/*
+ * JSOP_ITER sets up a for-in or for-each-in loop using the JSITER_* flag bits
+ * in this op's uint8 immediate operand. It replaces the top of stack object
+ * with an iterator for that object, and pushes a slot used by JSOP_NEXTITER.
+ *
+ * JSOP_NEXTITER stores the next iterated value in the top of stack slot which
+ * was allocated by JSOP_ITER and pushes true, or stores JSVAL_HOLE and pushes
+ * false. It is followed immediately by JSOP_IFNE{,X}.
+ *
+ * JSOP_ENDITER cleans up after the loop. It uses the slot above the iterator
+ * for temporary GC rooting.
+ */
+OPDEF(JSOP_ITER,      75, "iter",       NULL,         2,  1,  2,  0,  JOF_UINT8)
+OPDEF(JSOP_NEXTITER,  76, "nextiter",   NULL,         1,  2,  3,  0,  JOF_BYTE)
+OPDEF(JSOP_ENDITER,   77, "enditer",    NULL,         1,  2,  0,  0,  JOF_BYTE)
+
+OPDEF(JSOP_APPLY,     78, "apply",      NULL,         3, -1,  1, 18,  JOF_UINT16|JOF_INVOKE)
+OPDEF(JSOP_SWAP,      79, "swap",       NULL,         1,  2,  2,  0,  JOF_BYTE)
 
 /* Push object literal. */
 OPDEF(JSOP_OBJECT,    80, "object",     NULL,         3,  0,  1, 19,  JOF_OBJECT)
@@ -235,16 +255,12 @@ OPDEF(JSOP_DECLOCAL,  100,"declocal",   NULL,         3,  0,  1, 15,  JOF_LOCAL|
 OPDEF(JSOP_LOCALINC,  101,"localinc",   NULL,         3,  0,  1, 15,  JOF_LOCAL|JOF_NAME|JOF_INC|JOF_POST)
 OPDEF(JSOP_LOCALDEC,  102,"localdec",   NULL,         3,  0,  1, 15,  JOF_LOCAL|JOF_NAME|JOF_DEC|JOF_POST)
 
-/*
- * Initialize for-in iterator using the JSITER_* flag bits in this op's uint8
- * immediate operand. See also JSOP_ENDITER.
- */
-OPDEF(JSOP_ITER,      103,"iter",       NULL,         2,  1,  1,  0,  JOF_UINT8)
+OPDEF(JSOP_IMACOP,    103,"imacop",     NULL,         1,  0,  0,  0,  JOF_BYTE)
 
 /* ECMA-compliant for/in ops. */
-OPDEF(JSOP_FORNAME,   104,"forname",    NULL,         3,  0,  1, 19,  JOF_ATOM|JOF_NAME|JOF_FOR)
-OPDEF(JSOP_FORPROP,   105,"forprop",    NULL,         3,  1,  1, 18,  JOF_ATOM|JOF_PROP|JOF_FOR)
-OPDEF(JSOP_FORELEM,   106,"forelem",    NULL,         1,  1,  3, 18,  JOF_BYTE |JOF_ELEM|JOF_FOR)
+OPDEF(JSOP_FORNAME,   104,"forname",    NULL,         3,  2,  2, 19,  JOF_ATOM|JOF_NAME|JOF_FOR)
+OPDEF(JSOP_FORPROP,   105,"forprop",    NULL,         3,  3,  2, 18,  JOF_ATOM|JOF_PROP|JOF_FOR)
+OPDEF(JSOP_FORELEM,   106,"forelem",    NULL,         1,  2,  3, 18,  JOF_BYTE |JOF_ELEM|JOF_FOR)
 OPDEF(JSOP_POPN,      107,"popn",       NULL,         3, -1,  0,  0,  JOF_UINT16)
 
 /* ECMA-compliant assignment ops. */
@@ -318,7 +334,7 @@ OPDEF(JSOP_NAMEDFUNOBJ, 129, "namedfunobj", NULL,     3,  0,  1, 19,  JOF_OBJECT
 OPDEF(JSOP_SETLOCALPOP, 130, "setlocalpop", NULL,     3,  1,  0,  3,  JOF_LOCAL|JOF_NAME|JOF_SET)
 
 /* Parenthesization opcode to help the decompiler. */
-OPDEF(JSOP_GROUP,       131, "group",       NULL,     1,  0,  0, 19,  JOF_BYTE)
+OPDEF(JSOP_UNUSED131,   131, "unused131",   NULL,     1,  0,  0,  0,  JOF_BYTE)
 
 /*
  * Host object extension: given 'o.item(i) = j', the left-hand side compiles
@@ -419,7 +435,7 @@ OPDEF(JSOP_GETFUNNS,      185,"getfunns",   NULL,     1,  0,  1, 19,  JOF_BYTE)
  */
 OPDEF(JSOP_GETUPVAR,      186,"getupvar",   NULL,     3,  0,  1, 19,  JOF_UINT16|JOF_NAME)
 
-OPDEF(JSOP_DELDESC,       187,"deldesc",    NULL,     1,  2,  1, 17,  JOF_BYTE |JOF_ELEM|JOF_DEL)
+OPDEF(JSOP_DELDESC,       187,"deldesc",    NULL,     1,  2,  1, 15,  JOF_BYTE|JOF_ELEM|JOF_DEL)
 
 /*
  * Opcode to hold 24-bit immediate integer operands.
@@ -475,12 +491,12 @@ OPDEF(JSOP_UNUSED204,     204,"unused204",   NULL,    1,  0,  0,  0,  JOF_BYTE)
 OPDEF(JSOP_UNUSED205,     205,"unused205",   NULL,    1,  0,  0,  0,  JOF_BYTE)
 OPDEF(JSOP_UNUSED206,     206,"unused206",   NULL,    1,  0,  0,  0,  JOF_BYTE)
 OPDEF(JSOP_UNUSED207,     207,"unused207",   NULL,    1,  0,  0,  0,  JOF_BYTE)
+OPDEF(JSOP_UNUSED208,     208,"unused208",   NULL,    1,  0,  0,  0,  JOF_BYTE)
+OPDEF(JSOP_UNUSED209,     209,"unused209",   NULL,    1,  0,  0,  0,  JOF_BYTE)
 
 /*
- * Iterator, generator, and array comprehension support.
+ * Generator and array comprehension support.
  */
-OPDEF(JSOP_FORCONST,      208,"forconst",    NULL,    3,  0,  1, 19,  JOF_LOCAL|JOF_NAME|JOF_FOR)
-OPDEF(JSOP_ENDITER,       209,"enditer",     NULL,    1,  1,  0,  0,  JOF_BYTE|JOF_TMPSLOT)
 OPDEF(JSOP_GENERATOR,     210,"generator",   NULL,    1,  0,  0,  0,  JOF_BYTE)
 OPDEF(JSOP_YIELD,         211,"yield",       NULL,    1,  1,  1,  1,  JOF_BYTE)
 OPDEF(JSOP_ARRAYPUSH,     212,"arraypush",   NULL,    3,  1,  0,  3,  JOF_LOCAL)
@@ -499,7 +515,7 @@ OPDEF(JSOP_ENUMCONSTELEM, 214,"enumconstelem",NULL,   1,  3,  0,  3,  JOF_BYTE|J
  * Variant of JSOP_LEAVEBLOCK has a result on the stack above the locals,
  * which must be moved down when the block pops.
  */
-OPDEF(JSOP_LEAVEBLOCKEXPR,215,"leaveblockexpr",NULL,  3, -1,  1,  1,  JOF_UINT16)
+OPDEF(JSOP_LEAVEBLOCKEXPR,215,"leaveblockexpr",NULL,  3, -1,  1,  3,  JOF_UINT16)
 
 /*
  * Optimize common JSOP_{THIS,GET{ARG,LOCAL}} -> JSOP_GETPROP cliches.

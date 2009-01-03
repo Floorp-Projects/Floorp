@@ -78,6 +78,13 @@ _cairo_hull_init (cairo_hull_t			*hull,
     }
 }
 
+static inline cairo_int64_t
+_slope_length (cairo_slope_t *slope)
+{
+    return _cairo_int64_add (_cairo_int32x32_64_mul (slope->dx, slope->dx),
+			     _cairo_int32x32_64_mul (slope->dy, slope->dy));
+}
+
 static int
 _cairo_hull_vertex_compare (const void *av, const void *bv)
 {
@@ -87,21 +94,21 @@ _cairo_hull_vertex_compare (const void *av, const void *bv)
 
     ret = _cairo_slope_compare (&a->slope, &b->slope);
 
-    /* In the case of two vertices with identical slope from the
-       extremal point discard the nearer point. */
-
+    /*
+     * In the case of two vertices with identical slope from the
+     * extremal point discard the nearer point.
+     */
     if (ret == 0) {
-	cairo_fixed_48_16_t a_dist, b_dist;
-	a_dist = ((cairo_fixed_48_16_t) a->slope.dx * a->slope.dx +
-		  (cairo_fixed_48_16_t) a->slope.dy * a->slope.dy);
-	b_dist = ((cairo_fixed_48_16_t) b->slope.dx * b->slope.dx +
-		  (cairo_fixed_48_16_t) b->slope.dy * b->slope.dy);
+	int cmp;
+
+	cmp = _cairo_int64_cmp (_slope_length (&a->slope),
+				_slope_length (&b->slope));
+
 	/*
-	 * Use the point's ids to ensure a total ordering.
-	 * a well-defined ordering, and avoid setting discard on
-	 * both points.
+	 * Use the points' ids to ensure a well-defined ordering,
+	 * and avoid setting discard on both points.
 	 */
-	if (a_dist < b_dist || (a_dist == b_dist && a->id < b->id)) {
+	if (cmp < 0 || (cmp == 0 && a->id < b->id)) {
 	    a->discard = 1;
 	    ret = -1;
 	} else {

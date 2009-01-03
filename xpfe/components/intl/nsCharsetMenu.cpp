@@ -355,7 +355,7 @@ struct charsetMenuSortRecord {
 
 };
 
-static int PR_CALLBACK CompareMenuItems(const void* aArg1, const void* aArg2, void *data)
+static int CompareMenuItems(const void* aArg1, const void* aArg2, void *data)
 {
   PRInt32 res; 
   nsICollation * collation = (nsICollation *) data;

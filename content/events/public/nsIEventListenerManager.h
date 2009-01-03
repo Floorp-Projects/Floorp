@@ -47,19 +47,24 @@ class nsIScriptContext;
 class nsIDOMEventTarget;
 class nsIDOMEventGroup;
 class nsIAtom;
+class nsPIDOMEventTarget;
 
 /*
  * Event listener manager interface.
  */
 #define NS_IEVENTLISTENERMANAGER_IID \
-{ 0x0056ac6b, 0xc25b, 0x4fbb, \
-  { 0x92, 0x98, 0x8d, 0xce, 0x53, 0x6e } }
-
+{ 0xadfdc265, 0xea1c, 0x4c0b, \
+  { 0x91, 0xca, 0x37, 0x67, 0x2c, 0x83, 0x92, 0x1f } }
 
 class nsIEventListenerManager : public nsISupports {
 
 public:
   NS_DECLARE_STATIC_IID_ACCESSOR(NS_IEVENTLISTENERMANAGER_IID)
+
+  nsIEventListenerManager() : mMayHavePaintEventListener(PR_FALSE),
+    mMayHaveMutationListeners(PR_FALSE),
+    mNoListenerForEvent(0)
+  {}
 
   /**
   * Sets events listeners of all types.
@@ -138,7 +143,7 @@ public:
   NS_IMETHOD HandleEvent(nsPresContext* aPresContext,
                          nsEvent* aEvent,
                          nsIDOMEvent** aDOMEvent,
-                         nsISupports* aCurrentTarget,
+                         nsPIDOMEventTarget* aCurrentTarget,
                          PRUint32 aFlags,
                          nsEventStatus* aEventStatus) = 0;
 
@@ -193,6 +198,21 @@ public:
    * Returns PR_TRUE if there is at least one event listener.
    */
   virtual PRBool HasListeners() = 0;
+
+
+  /**
+   * Returns PR_TRUE if there may be a paint event listener registered,
+   * PR_FALSE if there definitely isn't.
+   */
+  PRBool MayHavePaintEventListener() { return mMayHavePaintEventListener; }
+
+protected:
+  PRUint32 mMayHavePaintEventListener : 1;
+  PRUint32 mMayHaveMutationListeners : 1;
+  // These two member variables are used to cache the information
+  // about the last event which was handled but for which event listener manager
+  // didn't have event listeners.
+  PRUint32 mNoListenerForEvent : 30;
 };
 
 NS_DEFINE_STATIC_IID_ACCESSOR(nsIEventListenerManager,

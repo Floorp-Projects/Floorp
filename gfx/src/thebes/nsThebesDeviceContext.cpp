@@ -78,7 +78,9 @@ static nsSystemFontsGTK2 *gSystemFonts = nsnull;
 #include "gfxWindowsSurface.h"
 #include "gfxPDFSurface.h"
 static nsSystemFontsWin *gSystemFonts = nsnull;
+#ifndef WINCE
 #include <usp10.h>
+#endif
 #elif defined(XP_OS2)
 #include "nsSystemFontsOS2.h"
 #include "gfxPDFSurface.h"
@@ -129,7 +131,7 @@ nsThebesDeviceContext::nsThebesDeviceContext()
 
     mWidgetSurfaceCache.Init();
 
-#ifdef XP_WIN
+#if defined(XP_WIN) && !defined(WINCE)
     SCRIPT_DIGITSUBSTITUTE sds;
     ScriptRecordDigitSubstitution(LOCALE_USER_DEFAULT, &sds);
 #endif

@@ -809,6 +809,7 @@ GetPropertyTreeChild(JSContext *cx, JSScopeProperty *parent,
     JSScopeProperty *sprop;
     PropTreeKidsChunk *chunk;
     uintN i, n;
+    uint32 shape;
 
     rt = cx->runtime;
     if (!parent) {
@@ -895,6 +896,12 @@ GetPropertyTreeChild(JSContext *cx, JSScopeProperty *parent,
     }
 
 locked_not_found:
+    /*
+     * Call js_GenerateShape before the allocation to prevent collecting the
+     * new property when the shape generation triggers the GC.
+     */
+    shape = js_GenerateShape(cx, JS_TRUE, NULL);
+
     sprop = NewScopeProperty(rt);
     if (!sprop)
         goto out_of_memory;
@@ -907,7 +914,7 @@ locked_not_found:
     sprop->flags = child->flags;
     sprop->shortid = child->shortid;
     sprop->parent = sprop->kids = NULL;
-    sprop->shape = js_GenerateShape(cx, JS_TRUE);
+    sprop->shape = shape;
 
     if (!parent) {
         entry->child = sprop;
@@ -1256,9 +1263,11 @@ js_AddScopeProperty(JSContext *cx, JSScope *scope, jsid id,
          */
         if (!JS_CLIST_IS_EMPTY(&cx->runtime->watchPointList) &&
             js_FindWatchPoint(cx->runtime, scope, id)) {
-            JS_PUSH_TEMP_ROOT_SPROP(cx, overwriting, &tvr);
+            if (overwriting)
+                JS_PUSH_TEMP_ROOT_SPROP(cx, overwriting, &tvr);
             setter = js_WrapWatchedSetter(cx, id, attrs, setter);
-            JS_POP_TEMP_ROOT(cx, &tvr);
+            if (overwriting)
+                JS_POP_TEMP_ROOT(cx, &tvr);
             if (!setter)
                 goto fail_overwrite;
         }

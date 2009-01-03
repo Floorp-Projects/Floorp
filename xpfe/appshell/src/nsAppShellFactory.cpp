@@ -71,13 +71,13 @@ static const nsModuleComponentInfo gAppShellModuleInfo[] =
   }
 };
 
-PR_STATIC_CALLBACK(nsresult)
+static nsresult
 nsAppShellModuleConstructor(nsIModule *aModule)
 {
   return nsChromeTreeOwner::InitGlobals();
 }
 
-PR_STATIC_CALLBACK(void)
+static void
 nsAppShellModuleDestructor(nsIModule *aModule)
 {
   nsChromeTreeOwner::FreeGlobals();

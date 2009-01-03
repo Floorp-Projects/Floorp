@@ -125,13 +125,13 @@ protected:
 class nsSVGFilterProperty :
   public nsSVGRenderingObserver, public nsISVGFilterProperty {
 public:
-  nsSVGFilterProperty(nsIURI *aURI, nsIFrame *aFilteredFrame);
+  nsSVGFilterProperty(nsIURI *aURI, nsIFrame *aFilteredFrame)
+    : nsSVGRenderingObserver(aURI, aFilteredFrame) {}
 
   /**
    * @return the filter frame, or null if there is no filter frame
    */
   nsSVGFilterFrame *GetFilterFrame();
-  void UpdateRect();
 
   // nsISupports
   NS_DECL_ISUPPORTS
@@ -142,18 +142,30 @@ public:
 private:
   // nsSVGRenderingObserver
   virtual void DoUpdate();
-  
-  // Tracks a bounding box for the filtered mFrame. We need this so that
-  // if the filter changes we know how much to redraw. We only need this
-  // for SVG frames since regular frames have an overflow area
-  // that includes the filtered area.
-  nsRect mFilterRect;
 };
 
+class nsSVGMarkerProperty : public nsSVGRenderingObserver {
+public:
+  nsSVGMarkerProperty(nsIURI *aURI, nsIFrame *aFrame)
+    : nsSVGRenderingObserver(aURI, aFrame) {}
+
+protected:
+  virtual void DoUpdate();
+};
+
+class nsSVGTextPathProperty : public nsSVGRenderingObserver {
+public:
+  nsSVGTextPathProperty(nsIURI *aURI, nsIFrame *aFrame)
+    : nsSVGRenderingObserver(aURI, aFrame) {}
+
+protected:
+  virtual void DoUpdate();
+};
+ 
 class nsSVGPaintingProperty : public nsSVGRenderingObserver {
 public:
-  nsSVGPaintingProperty(nsIURI *aURI, nsIFrame *aClippedFrame)
-    : nsSVGRenderingObserver(aURI, aClippedFrame) {}
+  nsSVGPaintingProperty(nsIURI *aURI, nsIFrame *aFrame)
+    : nsSVGRenderingObserver(aURI, aFrame) {}
 
 protected:
   virtual void DoUpdate();
@@ -264,6 +276,16 @@ public:
    */
   static void InvalidateDirectRenderingObservers(nsIFrame *aFrame);
 
+  /**
+   * Get an nsSVGMarkerProperty for the frame, creating a fresh one if necessary
+   */
+  static nsSVGMarkerProperty *
+  GetMarkerProperty(nsIURI *aURI, nsIFrame *aFrame, nsIAtom *aProp);
+  /**
+   * Get an nsSVGTextPathProperty for the frame, creating a fresh one if necessary
+   */
+  static nsSVGTextPathProperty *
+  GetTextPathProperty(nsIURI *aURI, nsIFrame *aFrame, nsIAtom *aProp);
   /**
    * Get an nsSVGPaintingProperty for the frame, creating a fresh one if necessary
    */

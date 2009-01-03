@@ -41,7 +41,6 @@
 #include "nsITextControlElement.h"
 #include "nsIDOMNSEditableElement.h"
 #include "nsIControllers.h"
-#include "nsIFocusController.h"
 #include "nsPIDOMWindow.h"
 #include "nsContentCID.h"
 #include "nsCOMPtr.h"
@@ -258,14 +257,15 @@ NS_IMPL_RELEASE_INHERITED(nsHTMLTextAreaElement, nsGenericElement)
 
 
 // QueryInterface implementation for nsHTMLTextAreaElement
-NS_HTML_CONTENT_CC_INTERFACE_TABLE_HEAD(nsHTMLTextAreaElement,
-                                        nsGenericHTMLFormElement)
-  NS_INTERFACE_TABLE_INHERITED5(nsHTMLTextAreaElement,
-                                nsIDOMHTMLTextAreaElement,
-                                nsIDOMNSHTMLTextAreaElement,
-                                nsITextControlElement,
-                                nsIDOMNSEditableElement,
-                                nsIMutationObserver)
+NS_INTERFACE_TABLE_HEAD_CYCLE_COLLECTION_INHERITED(nsHTMLTextAreaElement)
+  NS_HTML_CONTENT_INTERFACE_TABLE5(nsHTMLTextAreaElement,
+                                   nsIDOMHTMLTextAreaElement,
+                                   nsIDOMNSHTMLTextAreaElement,
+                                   nsITextControlElement,
+                                   nsIDOMNSEditableElement,
+                                   nsIMutationObserver)
+  NS_HTML_CONTENT_INTERFACE_TABLE_TO_MAP_SEGUE(nsHTMLTextAreaElement,
+                                               nsGenericHTMLFormElement)
 NS_HTML_CONTENT_INTERFACE_TABLE_TAIL_CLASSINFO(HTMLTextAreaElement)
 
 
@@ -307,36 +307,7 @@ nsHTMLTextAreaElement::Focus()
 void
 nsHTMLTextAreaElement::SetFocus(nsPresContext* aPresContext)
 {
-  if (!aPresContext)
-    return;
-
-  // first see if we are disabled or not. If disabled then do nothing.
-  if (HasAttr(kNameSpaceID_None, nsGkAtoms::disabled)) {
-    return;
-  }
-
-  // We can't be focus'd if we aren't in a document
-  nsIDocument* doc = GetCurrentDoc();
-  if (!doc)
-    return;
-
-  // If the window is not active, do not allow the focus to bring the
-  // window to the front.  We update the focus controller, but do
-  // nothing else.
-  nsPIDOMWindow* win = doc->GetWindow();
-  if (win) {
-    nsIFocusController *focusController = win->GetRootFocusController();
-    PRBool isActive = PR_FALSE;
-    focusController->GetActive(&isActive);
-    if (!isActive) {
-      focusController->SetFocusedWindow(win);
-      focusController->SetFocusedElement(this);
-
-      return;
-    }
-  }
-
-  SetFocusAndScrollIntoView(aPresContext);
+  DoSetFocus(aPresContext);
 }
 
 NS_IMETHODIMP
@@ -344,40 +315,25 @@ nsHTMLTextAreaElement::Select()
 {
   nsresult rv = NS_OK;
 
-  // first see if we are disabled or not. If disabled then do nothing.
-  if (HasAttr(kNameSpaceID_None, nsGkAtoms::disabled)) {
-    return rv;
-  }
-
-  // We can't be focus'd if we aren't in a document
-  nsIDocument* doc = GetCurrentDoc();
-  if (!doc)
-    return rv;
-
-  // If the window is not active, do not allow the focus to bring the
-  // window to the front.  We update the focus controller, but do
-  // nothing else.
-  nsPIDOMWindow* win = doc->GetWindow();
-  if (win) {
-    nsIFocusController *focusController = win->GetRootFocusController();
-    PRBool isActive = PR_FALSE;
-    focusController->GetActive(&isActive);
-    if (!isActive) {
-      focusController->SetFocusedWindow(win);
-      focusController->SetFocusedElement(this);
-
-      return rv;
-    }
-  }
-
   // XXX Bug?  We have to give the input focus before contents can be
   // selected
 
-  // Just like SetFocus() but without the ScrollIntoView()!
+  FocusTristate state = FocusState();
+  if (state == eUnfocusable) {
+    return NS_OK;
+  }
+
   nsCOMPtr<nsPresContext> presContext = GetPresContext();
+  if (state == eInactiveWindow) {
+    SelectAll(presContext);
+    return NS_OK;
+  }
+
+  // Just like SetFocus() but without the ScrollIntoView()!
 
   nsEventStatus status = nsEventStatus_eIgnore;
   nsGUIEvent event(PR_TRUE, NS_FORM_SELECTED, nsnull);
+  // XXXbz nsHTMLInputElement guards against this reentering; shouldn't we?
   nsEventDispatcher::Dispatch(static_cast<nsIContent*>(this), presContext,
                               &event, nsnull, &status);
 

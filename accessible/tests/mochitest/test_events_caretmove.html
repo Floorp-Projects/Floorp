@@ -44,6 +44,26 @@
       }
     }
 
+    function synthFocusTest(aNode)
+    {
+      // bug 460417
+      this.node = aNode;
+      this.testFunc = function testFunc()
+      {
+        this.node.focus();
+      }
+    }
+
+    function synthSelectAllTest(aNode)
+    {
+      // bug 460417
+      this.node = aNode;
+      this.testFunc = function testFunc()
+      {
+        this.node.select();
+      }
+    }
+
     var gTestsArray = [];
     var gTestIdx = -1;
 
@@ -83,6 +103,8 @@
     function doTests()
     {
       var textbox = document.getElementById("textbox");
+      gTestsArray.push(new synthFocusTest(textbox));
+      gTestsArray.push(new synthSelectAllTest(textbox));
       gTestsArray.push(new synthMouseTest(textbox));
       gTestsArray.push(new synthKeyTest(textbox, "VK_RIGHT"));
 

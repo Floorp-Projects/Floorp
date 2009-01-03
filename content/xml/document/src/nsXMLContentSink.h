@@ -90,7 +90,7 @@ public:
   NS_DECL_NSIEXPATSINK
 
   // nsIContentSink
-  NS_IMETHOD WillTokenize(void);
+  NS_IMETHOD WillParse(void);
   NS_IMETHOD WillBuildModel(void);
   NS_IMETHOD DidBuildModel(void);
   NS_IMETHOD WillInterrupt(void);
@@ -107,7 +107,7 @@ public:
   // nsICSSLoaderObserver
   NS_IMETHOD StyleSheetLoaded(nsICSSStyleSheet* aSheet, PRBool aWasAlternate,
                               nsresult aStatus);
-  static void ParsePIData(const nsString &aData, nsString &aHref,
+  static PRBool ParsePIData(const nsString &aData, nsString &aHref,
                           nsString &aTitle, nsString &aMedia,
                           PRBool &aIsAlternate);
 
@@ -140,7 +140,7 @@ protected:
   // being closed
   virtual nsresult CloseElement(nsIContent* aContent);
 
-  virtual nsresult FlushText();
+  virtual nsresult FlushText(PRBool aReleaseTextNode = PR_TRUE);
 
   nsresult AddContentAsLeaf(nsIContent *aContent);
 
@@ -150,7 +150,7 @@ protected:
   void PopContent();
   PRBool HaveNotifiedForCurrentContent() const;
 
-  nsresult ProcessBASETag(nsIContent* aContent);
+  void ProcessBASETag(nsIContent* aContent);
 
   nsresult FlushTags();
 
@@ -197,6 +197,8 @@ protected:
   PRInt32 mTextSize;
   
   PRInt32 mNotifyLevel;
+  nsCOMPtr<nsIContent> mLastTextNode;
+  PRInt32 mLastTextNodeSize;
 
   PRUint8 mConstrainSize : 1;
   PRUint8 mPrettyPrintXML : 1;

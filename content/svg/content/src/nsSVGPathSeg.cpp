@@ -54,6 +54,16 @@ static const float PATH_SEG_LENGTH_TOLERANCE = 0.0000001f;
 //----------------------------------------------------------------------
 // implementation helper macros
 
+#define NS_IMPL_SVGPATHSEG(type, letter)                      \
+NS_IMETHODIMP                                                 \
+GetPathSegType(PRUint16 *aPathSegType) {                      \
+  *aPathSegType = type; return NS_OK; }                       \
+                                                              \
+NS_IMETHODIMP                                                 \
+GetPathSegTypeAsLetter(nsAString & aPathSegTypeAsLetter) {    \
+  aPathSegTypeAsLetter.Assign(letter);                        \
+  return NS_OK; }
+
 #define NS_IMPL_NSISUPPORTS_SVGPATHSEG(basename)              \
 NS_IMPL_ADDREF(ns##basename)                                  \
 NS_IMPL_RELEASE(ns##basename)                                 \
@@ -133,11 +143,6 @@ static float CalcBezLength(PathPoint *curve,PRUint32 numPts,
 ////////////////////////////////////////////////////////////////////////
 // nsSVGPathSeg
 
-char nsSVGPathSeg::mTypeLetters[] = {
-  'X', 'z', 'M', 'm', 'L', 'l', 'C', 'c', 'S', 's',
-  'A', 'a', 'H', 'h', 'V', 'v', 'Q', 'q', 'T', 't'
-};
-
 nsQueryReferent
 nsSVGPathSeg::GetCurrentList() const
 {
@@ -154,20 +159,6 @@ nsSVGPathSeg::SetCurrentList(nsISVGValue* aList)
   nsresult rv;
   mCurrentList = do_GetWeakReference(aList, &rv);
   return rv;
-}
-
-NS_IMETHODIMP
-nsSVGPathSeg::GetPathSegType(PRUint16 *aPathSegType)
-{
-  *aPathSegType = GetSegType();
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-nsSVGPathSeg::GetPathSegTypeAsLetter(nsAString & aPathSegTypeAsLetter)
-{
-  aPathSegTypeAsLetter.AssignASCII(&mTypeLetters[GetSegType()], 1);
-  return NS_OK;
 }
 
 void
@@ -211,8 +202,7 @@ public:
   // nsSVGPathSeg methods:
   NS_IMETHOD GetValueString(nsAString& aValue);
   virtual float GetLength(nsSVGPathSegTraversalState *ts);
-  virtual PRUint16 GetSegType()
-    { return nsIDOMSVGPathSeg::PATHSEG_CLOSEPATH; }
+  NS_IMPL_SVGPATHSEG(PATHSEG_CLOSEPATH, 'z')
 };
 
 //----------------------------------------------------------------------
@@ -265,8 +255,7 @@ public:
   // nsSVGPathSeg methods:
   NS_IMETHOD GetValueString(nsAString& aValue);
   virtual float GetLength(nsSVGPathSegTraversalState *ts);
-  virtual PRUint16 GetSegType()
-    { return nsIDOMSVGPathSeg::PATHSEG_MOVETO_ABS; }
+  NS_IMPL_SVGPATHSEG(PATHSEG_MOVETO_ABS, 'M')
 
 protected:
   float mX, mY;
@@ -361,8 +350,7 @@ public:
   // nsSVGPathSeg methods:
   NS_IMETHOD GetValueString(nsAString& aValue);
   virtual float GetLength(nsSVGPathSegTraversalState *ts);
-  virtual PRUint16 GetSegType()
-    { return nsIDOMSVGPathSeg::PATHSEG_MOVETO_REL; }
+  NS_IMPL_SVGPATHSEG(PATHSEG_MOVETO_REL, 'm')
 
 protected:
   float mX, mY;
@@ -456,8 +444,7 @@ public:
   // nsSVGPathSeg methods:
   NS_IMETHOD GetValueString(nsAString& aValue);
   virtual float GetLength(nsSVGPathSegTraversalState *ts);
-  virtual PRUint16 GetSegType()
-    { return nsIDOMSVGPathSeg::PATHSEG_LINETO_ABS; }
+  NS_IMPL_SVGPATHSEG(PATHSEG_LINETO_ABS, 'L')
 
 protected:
   float mX, mY;
@@ -554,8 +541,7 @@ public:
   // nsSVGPathSeg methods:
   NS_IMETHOD GetValueString(nsAString& aValue);
   virtual float GetLength(nsSVGPathSegTraversalState *ts);
-  virtual PRUint16 GetSegType()
-    { return nsIDOMSVGPathSeg::PATHSEG_LINETO_REL; }
+  NS_IMPL_SVGPATHSEG(PATHSEG_LINETO_REL, 'l')
 
 protected:
   float mX, mY;
@@ -652,8 +638,7 @@ public:
   // nsSVGPathSeg methods:
   NS_IMETHOD GetValueString(nsAString& aValue);
   virtual float GetLength(nsSVGPathSegTraversalState *ts);
-  virtual PRUint16 GetSegType()
-    { return nsIDOMSVGPathSeg::PATHSEG_CURVETO_CUBIC_ABS; }
+  NS_IMPL_SVGPATHSEG(PATHSEG_CURVETO_CUBIC_ABS, 'C')
 
 protected:
   float mX, mY, mX1, mY1, mX2, mY2;
@@ -819,8 +804,7 @@ public:
   // nsSVGPathSeg methods:
   NS_IMETHOD GetValueString(nsAString& aValue);
   virtual float GetLength(nsSVGPathSegTraversalState *ts);
-  virtual PRUint16 GetSegType()
-    { return nsIDOMSVGPathSeg::PATHSEG_CURVETO_CUBIC_REL; }
+  NS_IMPL_SVGPATHSEG(PATHSEG_CURVETO_CUBIC_REL, 'c')
 
 protected:
   float mX, mY, mX1, mY1, mX2, mY2;
@@ -981,8 +965,7 @@ public:
   // nsSVGPathSeg methods:
   NS_IMETHOD GetValueString(nsAString& aValue);
   virtual float GetLength(nsSVGPathSegTraversalState *ts);
-  virtual PRUint16 GetSegType()
-    { return nsIDOMSVGPathSeg::PATHSEG_CURVETO_QUADRATIC_ABS; }
+  NS_IMPL_SVGPATHSEG(PATHSEG_CURVETO_QUADRATIC_ABS, 'Q')
 
 protected:
   float mX, mY, mX1, mY1;
@@ -1115,9 +1098,7 @@ public:
   // nsSVGPathSeg methods:
   NS_IMETHOD GetValueString(nsAString& aValue);
   virtual float GetLength(nsSVGPathSegTraversalState *ts);
-  virtual PRUint16 GetSegType()
-    { return nsIDOMSVGPathSeg::PATHSEG_CURVETO_QUADRATIC_REL; }
-
+  NS_IMPL_SVGPATHSEG(PATHSEG_CURVETO_QUADRATIC_REL, 'q')
 
 protected:
   float mX, mY, mX1, mY1;
@@ -1251,8 +1232,7 @@ public:
   // nsSVGPathSeg methods:
   NS_IMETHOD GetValueString(nsAString& aValue);
   virtual float GetLength(nsSVGPathSegTraversalState *ts);
-  virtual PRUint16 GetSegType()
-    { return nsIDOMSVGPathSeg::PATHSEG_ARC_ABS; }
+  NS_IMPL_SVGPATHSEG(PATHSEG_ARC_ABS, 'A')
 
 protected:
   float  mX, mY, mR1, mR2, mAngle;
@@ -1437,8 +1417,7 @@ public:
   // nsSVGPathSeg methods:
   NS_IMETHOD GetValueString(nsAString& aValue);
   virtual float GetLength(nsSVGPathSegTraversalState *ts);
-  virtual PRUint16 GetSegType()
-    { return nsIDOMSVGPathSeg::PATHSEG_ARC_REL; }
+  NS_IMPL_SVGPATHSEG(PATHSEG_ARC_REL, 'a')
 
 protected:
   float  mX, mY, mR1, mR2, mAngle;
@@ -1621,8 +1600,7 @@ public:
   // nsSVGPathSeg methods:
   NS_IMETHOD GetValueString(nsAString& aValue);
   virtual float GetLength(nsSVGPathSegTraversalState *ts);
-  virtual PRUint16 GetSegType()
-    { return nsIDOMSVGPathSeg::PATHSEG_LINETO_HORIZONTAL_ABS; }
+  NS_IMPL_SVGPATHSEG(PATHSEG_LINETO_HORIZONTAL_ABS, 'H')
 
 protected:
   float mX;
@@ -1704,8 +1682,7 @@ public:
   // nsSVGPathSeg methods:
   NS_IMETHOD GetValueString(nsAString& aValue);
   virtual float GetLength(nsSVGPathSegTraversalState *ts);
-  virtual PRUint16 GetSegType()
-    { return nsIDOMSVGPathSeg::PATHSEG_LINETO_HORIZONTAL_REL; }
+  NS_IMPL_SVGPATHSEG(PATHSEG_LINETO_HORIZONTAL_REL, 'h')
 
 protected:
   float mX;
@@ -1786,8 +1763,7 @@ public:
   // nsSVGPathSeg methods:
   NS_IMETHOD GetValueString(nsAString& aValue);
   virtual float GetLength(nsSVGPathSegTraversalState *ts);
-  virtual PRUint16 GetSegType()
-    { return nsIDOMSVGPathSeg::PATHSEG_LINETO_VERTICAL_ABS; }
+  NS_IMPL_SVGPATHSEG(PATHSEG_LINETO_VERTICAL_ABS, 'V')
 
 protected:
   float mY;
@@ -1869,9 +1845,7 @@ public:
   // nsSVGPathSeg methods:
   NS_IMETHOD GetValueString(nsAString& aValue);
   virtual float GetLength(nsSVGPathSegTraversalState *ts);
-  virtual PRUint16 GetSegType()
-    { return nsIDOMSVGPathSeg::PATHSEG_LINETO_VERTICAL_REL; }
-
+  NS_IMPL_SVGPATHSEG(PATHSEG_LINETO_VERTICAL_REL, 'v')
 
 protected:
   float mY;
@@ -1953,8 +1927,7 @@ public:
   // nsSVGPathSeg methods:
   NS_IMETHOD GetValueString(nsAString& aValue);
   virtual float GetLength(nsSVGPathSegTraversalState *ts);
-  virtual PRUint16 GetSegType()
-    { return nsIDOMSVGPathSeg::PATHSEG_CURVETO_CUBIC_SMOOTH_ABS; }
+  NS_IMPL_SVGPATHSEG(PATHSEG_CURVETO_CUBIC_SMOOTH_ABS, 'S')
 
 protected:
   float mX, mY, mX2, mY2;
@@ -2092,8 +2065,7 @@ public:
   // nsSVGPathSeg methods:
   NS_IMETHOD GetValueString(nsAString& aValue);
   virtual float GetLength(nsSVGPathSegTraversalState *ts);
-  virtual PRUint16 GetSegType()
-    { return nsIDOMSVGPathSeg::PATHSEG_CURVETO_CUBIC_SMOOTH_REL; }
+  NS_IMPL_SVGPATHSEG(PATHSEG_CURVETO_CUBIC_SMOOTH_REL, 's')
 
 protected:
   float mX, mY, mX2, mY2;
@@ -2228,8 +2200,7 @@ public:
   // nsSVGPathSeg methods:
   NS_IMETHOD GetValueString(nsAString& aValue);
   virtual float GetLength(nsSVGPathSegTraversalState *ts);
-  virtual PRUint16 GetSegType()
-    { return nsIDOMSVGPathSeg::PATHSEG_CURVETO_QUADRATIC_SMOOTH_ABS; }
+  NS_IMPL_SVGPATHSEG(PATHSEG_CURVETO_QUADRATIC_SMOOTH_ABS, 'T')
 
 protected:
   float mX, mY;
@@ -2331,9 +2302,7 @@ public:
   // nsSVGPathSeg methods:
   NS_IMETHOD GetValueString(nsAString& aValue);
   virtual float GetLength(nsSVGPathSegTraversalState *ts);
-  virtual PRUint16 GetSegType()
-    { return nsIDOMSVGPathSeg::PATHSEG_CURVETO_QUADRATIC_SMOOTH_REL; }
-
+  NS_IMPL_SVGPATHSEG(PATHSEG_CURVETO_QUADRATIC_SMOOTH_REL, 't')
 
 protected:
   float mX, mY;

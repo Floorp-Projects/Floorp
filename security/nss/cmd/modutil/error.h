@@ -37,6 +37,10 @@
 #ifndef MODUTIL_ERROR_H
 #define MODUTIL_ERROR_H
 
+/*
+ * The values of these enumerated constants are immutable and must not be
+ * changed.
+ */
 typedef enum {
 	NO_ERR=0,
 	INVALID_USAGE_ERR,
@@ -61,7 +65,7 @@ typedef enum {
 	DIR_NOT_WRITEABLE_ERR,
 	INVALID_CONSTANT_ERR,
 	ADD_MODULE_FAILED_ERR,
-	ADD_MODULE_FAILED_STATUS_ERR,
+	UNUSED_ERR,  /* reserved for future use */
 	OUT_OF_MEM_ERR,
 	DELETE_INTERNAL_ERR,
 	DELETE_FAILED_ERR,
@@ -114,8 +118,8 @@ static char *errStrings[] = {
 	"ERROR: Directory \"%s\" is not readable.\n",
 	"ERROR: Directory \"%s\" is not writeable.\n",
 	"\"%s\" is not a recognized value.\n",
-	"ERROR: Failed to add module \"%s\".\n",
 	"ERROR: Failed to add module \"%s\". Probable cause : \"%s\".\n",
+	"Unused error string",
 	"ERROR: Out of memory.\n",
 	"ERROR: Cannot delete internal module.\n",
 	"ERROR: Failed to delete module \"%s\".\n",

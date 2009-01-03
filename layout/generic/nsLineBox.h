@@ -1508,24 +1508,23 @@ nsLineList_const_reverse_iterator::operator=(const nsLineList_const_reverse_iter
 
 //----------------------------------------------------------------------
 
-class nsLineIterator : public nsILineIteratorNavigator {
+class NS_FINAL_CLASS nsLineIterator : public nsILineIterator
+{
 public:
   nsLineIterator();
-  virtual ~nsLineIterator();
+  ~nsLineIterator();
 
-  NS_DECL_ISUPPORTS
+  virtual void DisposeLineIterator();
 
-  NS_IMETHOD GetNumLines(PRInt32* aResult);
-  NS_IMETHOD GetDirection(PRBool* aIsRightToLeft);
+  virtual PRInt32 GetNumLines();
+  virtual PRBool GetDirection();
   NS_IMETHOD GetLine(PRInt32 aLineNumber,
                      nsIFrame** aFirstFrameOnLine,
                      PRInt32* aNumFramesOnLine,
                      nsRect& aLineBounds,
                      PRUint32* aLineFlags);
-  NS_IMETHOD FindLineContaining(nsIFrame* aFrame,
-                                PRInt32* aLineNumberResult);
-  NS_IMETHOD FindLineAt(nscoord aY,
-                        PRInt32* aLineNumberResult);
+  virtual PRInt32 FindLineContaining(nsIFrame* aFrame);
+  virtual PRInt32 FindLineAt(nscoord aY);
   NS_IMETHOD FindFrameAt(PRInt32 aLineNumber,
                          nscoord aX,
                          nsIFrame** aFrameFound,
@@ -1541,15 +1540,7 @@ public:
 #endif
   nsresult Init(nsLineList& aLines, PRBool aRightToLeft);
 
-protected:
-  PRInt32 NumLines() const {
-    return mNumLines;
-  }
-
-  nsLineBox* CurrentLine() {
-    return mLines[mIndex];
-  }
-
+private:
   nsLineBox* PrevLine() {
     if (0 == mIndex) {
       return nsnull;

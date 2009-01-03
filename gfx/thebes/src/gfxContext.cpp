@@ -217,7 +217,12 @@ gfxContext::Rectangle(const gfxRect& rect, PRBool snapToPixels)
     if (snapToPixels) {
         gfxRect snappedRect(rect);
 
-        if (UserToDevicePixelSnapped(snappedRect)) {
+#ifdef MOZ_GFX_OPTIMIZE_MOBILE
+        if (UserToDevicePixelSnapped(snappedRect, PR_TRUE))
+#else
+        if (UserToDevicePixelSnapped(snappedRect))
+#endif
+        {
             cairo_matrix_t mat;
             cairo_get_matrix(mCairo, &mat);
             cairo_identity_matrix(mCairo);
@@ -419,6 +424,26 @@ gfxContext::UserToDevicePixelSnapped(gfxRect& rect, PRBool ignoreScale) const
     rect.pos = p1;
     rect.size = gfxSize(pd.x, pd.y);
 
+    return PR_TRUE;
+}
+
+PRBool
+gfxContext::UserToDevicePixelSnapped(gfxPoint& pt, PRBool ignoreScale) const
+{
+    if (GetFlags() & FLAG_DISABLE_SNAPPING)
+        return PR_FALSE;
+
+    // if we're not at 1.0 scale, don't snap, unless we're
+    // ignoring the scale.  If we're not -just- a scale,
+    // never snap.
+    cairo_matrix_t mat;
+    cairo_get_matrix(mCairo, &mat);
+    if ((!ignoreScale && (mat.xx != 1.0 || mat.yy != 1.0)) ||
+        (mat.xy != 0.0 || mat.yx != 0.0))
+        return PR_FALSE;
+
+    pt = UserToDevice(pt);
+    pt.Round();
     return PR_TRUE;
 }
 
@@ -792,11 +817,8 @@ gfxContext::RoundedRectangle(const gfxRect& rect,
     //                         *
     //                         *
     //
-    // Where 0, 1, 2, 3 are the control points of the Bezier curve for the corner,
-    // and C is the actual corner point.
-    //
-    // For details about representing an elliptical arc as a cubic Bezier curve,
-    // see http://www.spaceroots.org/documents/ellipse/elliptical-arc.pdf
+    // Where 0, 1, 2, 3 are the control points of the Bezier curve for
+    // the corner, and C is the actual corner point.
     //
     // At the start of the loop, the current point is assumed to be
     // the point adjacent to the top left corner on the top
@@ -804,15 +826,54 @@ gfxContext::RoundedRectangle(const gfxRect& rect,
     // continue clockwise, whereas in our loop i = 0 refers to the top
     // right corner.
     //
-    // When going CCW, the control points are swapped, and the first corner
-    // that's drawn is the top left (along with the top segment).
-
-    // This is (sqrt(7) - 1) / 3; this ends up falling out of the equations
-    // given in the above paper -- it's the value of alpha at the end of section
-    // 3.4.1 when n2 and n1 are 90 degrees apart.  For the various corners, the
-    // axes the sign of this value changes, or it might be 0 -- it's multiplied by
-    // the appropriate multiplier from the list before using.
-    const gfxFloat alpha = 0.54858377035486361;
+    // When going CCW, the control points are swapped, and the first
+    // corner that's drawn is the top left (along with the top segment).
+    //
+    // There is considerable latitude in how one chooses the four
+    // control points for a Bezier curve approximation to an ellipse.
+    // For the overall path to be continuous and show no corner at the
+    // endpoints of the arc, points 0 and 3 must be at the ends of the
+    // straight segments of the rectangle; points 0, 1, and C must be
+    // collinear; and points 3, 2, and C must also be collinear.  This
+    // leaves only two free parameters: the ratio of the line segments
+    // 01 and 0C, and the ratio of the line segments 32 and 3C.  See
+    // the following papers for extensive discussion of how to choose
+    // these ratios:
+    //
+    //   Dokken, Tor, et al. "Good approximation of circles by
+    //      curvature-continuous Bezier curves."  Computer-Aided
+    //      Geometric Design 7(1990) 33--41.
+    //   Goldapp, Michael. "Approximation of circular arcs by cubic
+    //      polynomials." Computer-Aided Geometric Design 8(1991) 227--238.
+    //   Maisonobe, Luc. "Drawing an elliptical arc using polylines,
+    //      quadratic, or cubic Bezier curves."
+    //      http://www.spaceroots.org/documents/ellipse/elliptical-arc.pdf
+    //
+    // We follow the approach in section 2 of Goldapp (least-error,
+    // Hermite-type approximation) and make both ratios equal to
+    //
+    //          2   2 + n - sqrt(2n + 28)
+    //  alpha = - * ---------------------
+    //          3           n - 4
+    //
+    // where n = 3( cbrt(sqrt(2)+1) - cbrt(sqrt(2)-1) ).
+    //
+    // This is the result of Goldapp's equation (10b) when the angle
+    // swept out by the arc is pi/2, and the parameter "a-bar" is the
+    // expression given immediately below equation (21).
+    //
+    // Using this value, the maximum radial error for a circle, as a
+    // fraction of the radius, is on the order of 0.2 x 10^-3.
+    // Neither Dokken nor Goldapp discusses error for a general
+    // ellipse; Maisonobe does, but his choice of control points
+    // follows different constraints, and Goldapp's expression for
+    // 'alpha' gives much smaller radial error, even for very flat
+    // ellipses, than Maisonobe's equivalent.
+    //
+    // For the various corners and for each axis, the sign of this
+    // constant changes, or it might be 0 -- it's multiplied by the
+    // appropriate multiplier from the list before using.
+    const gfxFloat alpha = 0.55191497064665766025;
 
     typedef struct { gfxFloat a, b; } twoFloats;
 

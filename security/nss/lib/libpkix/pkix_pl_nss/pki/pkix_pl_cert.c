@@ -2903,6 +2903,7 @@ PKIX_PL_Cert_VerifySignature(
         SECStatus status;
         PKIX_Boolean certEqual = PKIX_FALSE;
         PKIX_Boolean certInHash = PKIX_FALSE;
+        void* wincx = NULL;
 
         PKIX_ENTER(CERT, "PKIX_PL_Cert_VerifySignature");
         PKIX_NULLCHECK_THREE(cert, cert->nssCert, pubKey);
@@ -2934,7 +2935,12 @@ PKIX_PL_Cert_VerifySignature(
         }
 
         PKIX_CERT_DEBUG("\t\tCalling CERT_VerifySignedDataWithPublicKey).\n");
-        status = CERT_VerifySignedDataWithPublicKey(tbsCert, nssPubKey, NULL);
+
+        PKIX_CHECK(pkix_pl_NssContext_GetWincx
+                   ((PKIX_PL_NssContext *)plContext, &wincx),
+                   PKIX_NSSCONTEXTGETWINCXFAILED);
+
+        status = CERT_VerifySignedDataWithPublicKey(tbsCert, nssPubKey, wincx);
 
         if (status != SECSuccess) {
                 PKIX_ERROR(PKIX_SIGNATUREDIDNOTVERIFYWITHTHEPUBLICKEY);

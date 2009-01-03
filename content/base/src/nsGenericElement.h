@@ -55,7 +55,6 @@
 #include "nsIDOMNSEventTarget.h"
 #include "nsIDOMNSElement.h"
 #include "nsILinkHandler.h"
-#include "nsGenericDOMNodeList.h"
 #include "nsContentUtils.h"
 #include "nsNodeUtils.h"
 #include "nsAttrAndChildArray.h"
@@ -90,18 +89,19 @@ typedef unsigned long PtrBits;
  * and Item to its existing child list.
  * @see nsIDOMNodeList
  */
-class nsChildContentList : public nsGenericDOMNodeList 
+class nsChildContentList : public nsINodeList,
+                           public nsWrapperCache
 {
 public:
   nsChildContentList(nsINode* aNode)
     : mNode(aNode)
   {
-    MOZ_COUNT_CTOR(nsChildContentList);
   }
-  virtual ~nsChildContentList();
+
+  NS_DECL_ISUPPORTS
 
   // nsIDOMNodeList interface
-  NS_IMETHOD GetLength(PRUint32* aLength);
+  NS_DECL_NSIDOMNODELIST
 
   // nsINodeList interface
   virtual nsINode* GetNodeAt(PRUint32 aIndex);  
@@ -109,6 +109,27 @@ public:
   void DropReference()
   {
     mNode = nsnull;
+  }
+
+  nsISupports* GetParentObject()
+  {
+    return mNode;
+  }
+
+  static nsChildContentList* FromSupports(nsISupports* aSupports)
+  {
+    nsINodeList* list = static_cast<nsINodeList*>(aSupports);
+#ifdef DEBUG
+    {
+      nsCOMPtr<nsINodeList> list_qi = do_QueryInterface(aSupports);
+
+      // If this assertion fires the QI implementation for the object in
+      // question doesn't use the nsINodeList pointer as the nsISupports
+      // pointer. That must be fixed, or we'll crash...
+      NS_ASSERTION(list_qi == list, "Uh, fix QI!");
+    }
+#endif
+    return static_cast<nsChildContentList*>(list);
   }
 
 private:
@@ -324,7 +345,7 @@ public:
   // nsINode interface methods
   virtual PRUint32 GetChildCount() const;
   virtual nsIContent *GetChildAt(PRUint32 aIndex) const;
-  virtual nsIContent * const * GetChildArray() const;
+  virtual nsIContent * const * GetChildArray(PRUint32* aChildCount) const;
   virtual PRInt32 IndexOf(nsINode* aPossibleChild) const;
   virtual nsresult InsertChildAt(nsIContent* aKid, PRUint32 aIndex,
                                  PRBool aNotify);
@@ -750,6 +771,8 @@ protected:
    *                      needed if aFireMutation or aNotify is true.
    * @param aFireMutation should mutation-events be fired?
    * @param aNotify       should we notify document-observers?
+   * @param aValueForAfterSetAttr If not null, AfterSetAttr will be called
+   *                      with the value pointed by this parameter.
    */
   nsresult SetAttrAndNotify(PRInt32 aNamespaceID,
                             nsIAtom* aName,
@@ -758,7 +781,8 @@ protected:
                             nsAttrValue& aParsedValue,
                             PRBool aModification,
                             PRBool aFireMutation,
-                            PRBool aNotify);
+                            PRBool aNotify,
+                            const nsAString* aValueForAfterSetAttr);
 
   /**
    * Convert an attribute string value to attribute type based on the type of
@@ -1081,5 +1105,24 @@ private:
   void GetScrollInfo(nsIScrollableView **aScrollableView,
                      nsIFrame **aFrame = nsnull);
 };
+
+#define NS_ELEMENT_INTERFACE_TABLE_TO_MAP_SEGUE                               \
+    rv = nsGenericElement::QueryInterface(aIID, aInstancePtr);                \
+    if (NS_SUCCEEDED(rv))                                                     \
+      return rv;                                                              \
+                                                                              \
+    NS_OFFSET_AND_INTERFACE_TABLE_TO_MAP_SEGUE
+
+#define NS_ELEMENT_INTERFACE_MAP_END                                          \
+    {                                                                         \
+      return PostQueryInterface(aIID, aInstancePtr);                          \
+    }                                                                         \
+                                                                              \
+    NS_ADDREF(foundInterface);                                                \
+                                                                              \
+    *aInstancePtr = foundInterface;                                           \
+                                                                              \
+    return NS_OK;                                                             \
+  }
 
 #endif /* nsGenericElement_h___ */

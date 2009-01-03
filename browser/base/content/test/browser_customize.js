@@ -1,25 +1,27 @@
 function test()
 {
   waitForExplicitFinish();
-  var panel = document.getElementById("customizeToolbarSheetPopup");
-  panel.addEventListener("popupshown", testCustomizePopupShown, false);
+  var frame = document.getElementById("customizeToolbarSheetIFrame");
+  frame.addEventListener("load", testCustomizeFrameLoadedPre, true);
+
   document.getElementById("cmd_CustomizeToolbars").doCommand();
 }
 
-function testCustomizePopupShown()
-{
-  var panel = document.getElementById("customizeToolbarSheetPopup");
-  panel.removeEventListener("popupshown", testCustomizePopupShown, false);
-  panel.addEventListener("popuphidden", testCustomizePopupHidden, false);
-
-  var frame = document.getElementById("customizeToolbarSheetIFrame").contentDocument;
-  frame.addEventListener("load", testCustomizeFrameLoaded, true);
+function testCustomizeFrameLoadedPre(){
+  // This load listener can be called before
+  // customizeToolbarSheet.xul's, which would cause the test
+  // to fail. Use executeSoon to delay running the test until
+  // event dispatch is over (all load event listeners have run).
+  executeSoon(testCustomizeFrameLoaded);
 }
 
 function testCustomizeFrameLoaded()
 {
+  var panel = document.getElementById("customizeToolbarSheetPopup");
+  panel.addEventListener("popuphidden", testCustomizePopupHidden, false);
+
   var frame = document.getElementById("customizeToolbarSheetIFrame");
-  frame.removeEventListener("load", testCustomizeFrameLoaded, true);
+  frame.removeEventListener("load", testCustomizeFrameLoadedPre, true);
 
   var menu = document.getElementById("bookmarksMenuPopup");
   ok("getResult" in menu, "menu has binding");

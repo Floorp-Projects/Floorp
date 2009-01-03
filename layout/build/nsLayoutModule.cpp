@@ -258,7 +258,7 @@ NS_IMETHODIMP
 NS_NewXULTreeBuilder(nsISupports* aOuter, REFNSIID aIID, void** aResult);
 #endif
 
-PR_STATIC_CALLBACK(nsresult) Initialize(nsIModule* aSelf);
+static nsresult Initialize(nsIModule* aSelf);
 static void Shutdown();
 
 #ifdef MOZ_XTF
@@ -326,7 +326,7 @@ static PRBool gInitialized = PR_FALSE;
 // Perform our one-time intialization for this module
 
 // static
-nsresult PR_CALLBACK
+nsresult
 Initialize(nsIModule* aSelf)
 {
   NS_PRECONDITION(!gInitialized, "module already initialized");
@@ -530,12 +530,17 @@ NS_GENERIC_FACTORY_CONSTRUCTOR(nsDataDocumentContentPolicy)
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsNoDataProtocolContentPolicy)
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsSyncLoadService)
 MAKE_CTOR(CreatePluginDocument,           nsIDocument,                 NS_NewPluginDocument)
+#ifdef MOZ_MEDIA
+MAKE_CTOR(CreateVideoDocument,            nsIDocument,                 NS_NewVideoDocument)
+#endif
 
 #ifdef MOZ_ENABLE_CANVAS
 MAKE_CTOR(CreateCanvasRenderingContext2D, nsIDOMCanvasRenderingContext2D, NS_NewCanvasRenderingContext2D)
 #endif
 
 NS_GENERIC_FACTORY_CONSTRUCTOR_INIT(nsStyleSheetService, Init)
+
+NS_GENERIC_FACTORY_CONSTRUCTOR(nsJSURI)
 
 // views are not refcounted, so this is the same as
 // NS_GENERIC_FACTORY_CONSTRUCTOR without the NS_ADDREF/NS_RELEASE
@@ -1252,6 +1257,10 @@ static const nsModuleComponentInfo gComponents[] = {
     NS_JSPROTOCOLHANDLER_CID,
     NS_JSPROTOCOLHANDLER_CONTRACTID,
     nsJSProtocolHandler::Create },
+  { "JavaScript URI",
+    NS_JSURI_CID,
+    nsnull,
+    nsJSURIConstructor },
   { "Window Command Table",
     NS_WINDOWCOMMANDTABLE_CID,
     "",
@@ -1281,6 +1290,13 @@ static const nsModuleComponentInfo gComponents[] = {
     NS_PLUGINDOCUMENT_CID,
     nsnull,
     CreatePluginDocument },
+
+#ifdef MOZ_MEDIA
+  { "Video Document",
+    NS_VIDEODOCUMENT_CID,
+    nsnull,
+    CreateVideoDocument },
+#endif
 
   { "Style sheet service",
     NS_STYLESHEETSERVICE_CID,

@@ -176,7 +176,6 @@ public:
                                         const nsCSubstring &clientID);
   PRBool                  IsActiveCache(const nsCSubstring &group,
                                         const nsCSubstring &clientID);
-  nsresult                DeactivateGroup(const nsCSubstring &group);
   nsresult                GetGroupForCache(const nsCSubstring &clientID,
                                            nsCString &out);
 

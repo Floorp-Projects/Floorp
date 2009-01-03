@@ -41,5 +41,5 @@ interface nsIDOMGeoPositionError;
 
 [scriptable, function, uuid(7D9B09D9-4843-43EB-A7A7-67F7DDA6B3C4)]
 interface nsIDOMGeoPositionErrorCallback : nsISupports {
-  void handleEvent(in nsIDOMGeoPositionError position);
+  void handleEvent(in nsIDOMGeoPositionError positionError);
 };

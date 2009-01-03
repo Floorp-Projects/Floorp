@@ -41,18 +41,16 @@ interface nsIDOMGeoPositionOptions;
 interface nsIDOMGeoPositionCallback;
 interface nsIDOMGeoPositionErrorCallback;
 
-[scriptable, function, uuid(CE495440-C8B9-42DE-B67C-60E6928C0F40)]
+[scriptable, function, uuid(37687DAF-B85F-4E4D-8881-85A0AD24CF78)]
 interface nsIDOMGeoGeolocation : nsISupports
 {
-  readonly attribute nsIDOMGeoPosition lastPosition;
-
   void getCurrentPosition(in nsIDOMGeoPositionCallback successCallback,
                           [optional] in nsIDOMGeoPositionErrorCallback errorCallback,
                           [optional] in nsIDOMGeoPositionOptions options);
 
-  unsigned short watchPosition(in nsIDOMGeoPositionCallback successCallback,
-                               [optional] in nsIDOMGeoPositionErrorCallback errorCallback,
-                               [optional] in nsIDOMGeoPositionOptions options);
+  long watchPosition(in nsIDOMGeoPositionCallback successCallback,
+                     [optional] in nsIDOMGeoPositionErrorCallback errorCallback,
+                     [optional] in nsIDOMGeoPositionOptions options);
 
-  void clearWatch(in unsigned short watchId);
+  void clearWatch(in long watchId);
 };

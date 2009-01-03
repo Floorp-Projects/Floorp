@@ -987,6 +987,7 @@ GK_ATOM(headerWindowTarget, "window-target")
 GK_ATOM(withParam, "with-param")
 GK_ATOM(wizard, "wizard")
 GK_ATOM(wrap, "wrap")
+GK_ATOM(headerDNSPrefetchControl,"x-dns-prefetch-control")
 GK_ATOM(xml, "xml")
 GK_ATOM(xmlns, "xmlns")
 GK_ATOM(xmp, "xmp")
@@ -1456,6 +1457,16 @@ GK_ATOM(now, "now")
 GK_ATOM(seconds, "seconds")
 GK_ATOM(secondsFromDateTime, "seconds-from-dateTime")
 #endif
+
+// Simple gestures support
+GK_ATOM(onMozSwipeGesture, "onMozSwipeGesture")
+GK_ATOM(onMozMagnifyGestureStart, "onMozMagnifyGestureStart")
+GK_ATOM(onMozMagnifyGestureUpdate, "onMozMagnifyGestureUpdate")
+GK_ATOM(onMozMagnifyGesture, "onMozMagnifyGesture")
+GK_ATOM(onMozRotateGestureStart, "onMozRotateGestureStart")
+GK_ATOM(onMozRotateGestureUpdate, "onMozRotateGestureUpdate")
+GK_ATOM(onMozRotateGesture, "onMozRotateGesture")
+
 
 //---------------------------------------------------------------------------
 // Special atoms

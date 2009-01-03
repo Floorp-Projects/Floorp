@@ -48,7 +48,7 @@ class nsIPresShell;
 class nsIStyleSheet;
 
 #define NS_IDOCUMENT_VIEWER_IID \
- { 0x41796e63, 0xbd1f, 0x401d,{0xb6, 0x63, 0x5b, 0x86, 0xa9, 0x70, 0x72, 0x31}}
+ { 0xf81fc126, 0x6693, 0x4bc5,{0xa7, 0xe9, 0xfc, 0xb0, 0x76, 0xd9, 0x06, 0x6d} }
 
 /**
  * A document viewer is a kind of content viewer that uses NGLayout
@@ -59,8 +59,6 @@ class nsIDocumentViewer : public nsIContentViewer
 public:
   NS_DECLARE_STATIC_IID_ACCESSOR(NS_IDOCUMENT_VIEWER_IID)
 
-  NS_IMETHOD SetUAStyleSheet(nsIStyleSheet* aUAStyleSheet) = 0;
-  
   NS_IMETHOD GetDocument(nsIDocument** aResult) = 0;
   
   NS_IMETHOD GetPresShell(nsIPresShell** aResult) = 0;

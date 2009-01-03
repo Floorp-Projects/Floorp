@@ -51,7 +51,7 @@
 
 // XXX this is to get around conflicts with windows.h defines
 // introduced through jni.h
-#if defined (XP_WIN) && ! defined (WINCE)
+#ifdef XP_WIN
 #undef GetClassName
 #undef GetObject
 #endif
@@ -210,20 +210,22 @@ NS_IMPL_CYCLE_COLLECTION_TRAVERSE_END
 NS_IMPL_ADDREF_INHERITED(nsHTMLSharedObjectElement, nsGenericElement) 
 NS_IMPL_RELEASE_INHERITED(nsHTMLSharedObjectElement, nsGenericElement) 
 
-NS_HTML_CONTENT_CC_INTERFACE_TABLE_AMBIGUOUS_HEAD(nsHTMLSharedObjectElement,
-                                                  nsGenericHTMLElement,
+NS_INTERFACE_TABLE_HEAD_CYCLE_COLLECTION_INHERITED(nsHTMLSharedObjectElement)
+  NS_HTML_CONTENT_INTERFACE_TABLE_AMBIGUOUS_BEGIN(nsHTMLSharedObjectElement,
                                                   nsIDOMHTMLAppletElement)
-  NS_INTERFACE_TABLE_INHERITED9(nsHTMLSharedObjectElement,
-                                nsIRequestObserver,
-                                nsIStreamListener,
-                                nsIFrameLoaderOwner,
-                                imgIContainerObserver,
-                                nsIObjectLoadingContent,
-                                imgIDecoderObserver,
-                                nsIImageLoadingContent,
-                                nsIInterfaceRequestor,
-                                nsIChannelEventSink)
-  NS_INTERFACE_TABLE_TO_MAP_SEGUE
+    NS_INTERFACE_TABLE_ENTRY(nsHTMLSharedObjectElement, nsIRequestObserver)
+    NS_INTERFACE_TABLE_ENTRY(nsHTMLSharedObjectElement, nsIStreamListener)
+    NS_INTERFACE_TABLE_ENTRY(nsHTMLSharedObjectElement, nsIFrameLoaderOwner)
+    NS_INTERFACE_TABLE_ENTRY(nsHTMLSharedObjectElement, imgIContainerObserver)
+    NS_INTERFACE_TABLE_ENTRY(nsHTMLSharedObjectElement, nsIObjectLoadingContent)
+    NS_INTERFACE_TABLE_ENTRY(nsHTMLSharedObjectElement, imgIDecoderObserver)
+    NS_INTERFACE_TABLE_ENTRY(nsHTMLSharedObjectElement, nsIImageLoadingContent)
+    NS_INTERFACE_TABLE_ENTRY(nsHTMLSharedObjectElement, nsIInterfaceRequestor)
+    NS_INTERFACE_TABLE_ENTRY(nsHTMLSharedObjectElement, nsIChannelEventSink)
+  NS_OFFSET_AND_INTERFACE_TABLE_END
+  NS_HTML_CONTENT_INTERFACE_TABLE_TO_MAP_SEGUE_AMBIGUOUS(nsHTMLSharedObjectElement,
+                                                         nsGenericHTMLElement,
+                                                         nsIDOMHTMLAppletElement)
   NS_INTERFACE_MAP_ENTRY_IF_TAG(nsIDOMHTMLAppletElement, applet)
   NS_INTERFACE_MAP_ENTRY_IF_TAG(nsIDOMHTMLEmbedElement, embed)
 #ifdef MOZ_SVG

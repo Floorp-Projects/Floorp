@@ -45,14 +45,14 @@
 /**
  * Native types
  */
-  [ptr] native nsDevMode(DEVMODE);
+  [ptr] native nsDevMode(DEVMODEW);
 
 /**
  * Simplified PrintSettings for Windows interface 
  *
  * @status UNDER_REVIEW
  */
-[scriptable, uuid(FF328FE4-41D5-4b78-82AB-6B1FBC7930AF)]
+[scriptable, uuid(f13b225d-473e-4372-b11f-b6dff9fe0c5b)]
 
 interface nsIPrintSettingsWin : nsISupports
 {
@@ -69,8 +69,8 @@ interface nsIPrintSettingsWin : nsISupports
    * via the "m_pd" data member of the CPrintDialog
    * in MFC.
    */
-  [noscript] attribute charPtr deviceName;
-  [noscript] attribute charPtr driverName;
+  [noscript] attribute wstring deviceName;
+  [noscript] attribute wstring driverName;
 
   [noscript] attribute nsDevMode devMode;
 

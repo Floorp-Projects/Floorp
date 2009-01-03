@@ -96,8 +96,6 @@ static const int kAllTags       = 0xffffff;
 extern void CheckElementTable();
 #endif
 
-typedef PRBool (*ContainFunc)(eHTMLTags aTag,nsDTDContext &aContext);
-
 
 /**
  * We're asking the question: is aTest a member of bitset. 
@@ -206,11 +204,9 @@ struct nsHTMLElement {
   PRBool          IsMemberOf(PRInt32 aType) const;
   PRBool          ContainsSet(PRInt32 aType) const;
   PRBool          CanContainType(PRInt32 aType) const;
-  
-  eHTMLTags       GetTag(void) const {return mTagID;}
+
   PRBool          CanContain(eHTMLTags aChild,nsDTDMode aMode) const;
   PRBool          CanExclude(eHTMLTags aChild) const;
-  PRBool          CanOmitStartTag(eHTMLTags aChild) const;
   PRBool          CanOmitEndTag(void) const;
   PRBool          CanContainSelf(void) const;
   PRBool          CanAutoCloseTag(nsDTDContext& aContext,PRInt32 aIndex,eHTMLTags aTag) const;
@@ -219,8 +215,6 @@ struct nsHTMLElement {
   PRBool          IsExcludableParent(eHTMLTags aParent) const;
   PRBool          SectionContains(eHTMLTags aTag,PRBool allowDepthSearch) const;
   PRBool          ShouldVerifyHierarchy() const;
-
-  PRBool          CanBeContained(eHTMLTags aParentTag,nsDTDContext &aContext) const; //default version
 
   static  PRBool  CanContain(eHTMLTags aParent,eHTMLTags aChild,nsDTDMode aMode);
   static  PRBool  IsContainer(eHTMLTags aTag) ;
@@ -250,8 +244,6 @@ struct nsHTMLElement {
   PRUint32        mPropagateRange;    //tells us how far a parent is willing to prop. badly formed children
   const TagList*  mSpecialParents;    //These are the special tags that contain this tag (directly)
   const TagList*  mSpecialKids;       //These are the extra things you can contain
-  eHTMLTags       mSkipTarget;        //If set, then we skip all content until this tag is seen
-  ContainFunc     mCanBeContained;
 }; 
 
 extern const nsHTMLElement gHTMLElements[];

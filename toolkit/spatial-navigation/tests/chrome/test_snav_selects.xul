@@ -39,6 +39,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=436084
 
 <script class="testbody" type="application/javascript">
 <![CDATA[
+Components.utils.import("resource://gre/modules/SpatialNavigation.js");
 
 var moveTable = [
 ["DOWN", "select_element"],
@@ -51,10 +52,17 @@ var moveTable = [
 ["DONE", "DONE"],
 ];
 
-Components.utils.import("resource://gre/modules/SpatialNavigation.js");
+var prefs = [
+["enabled",           "bool", true],
+["xulContentEnabled", "bool", true],
+["keyCode.modifier",  "char", "none"],
+];
 
 function onLoad()
 {
+    prepareTest(prefs);
+
+    // starting the test itself.
     var x = document.getElementById("some-content");
     SpatialNavigation.init(x);
     

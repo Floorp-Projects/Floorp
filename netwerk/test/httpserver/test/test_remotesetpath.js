@@ -13,7 +13,7 @@
  * for the specific language governing rights and limitations under the
  * License.
  *
- * The Original Code is MozJSHTTP code.
+ * The Original Code is httpd.js code.
  *
  * The Initial Developer of the Original Code is
  * Jeff Walden <jwalden+code@mit.edu>.
@@ -36,7 +36,7 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-// Make sure setIndexHandler works as expected
+// Make sure PUT/GET support work as expected
 
 
 var paths =

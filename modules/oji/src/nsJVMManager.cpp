@@ -274,7 +274,7 @@ nsJVMManager::NotifyAll(void* address)
 	return (PR_CNotifyAll(address) == PR_SUCCESS ? NS_OK : NS_ERROR_FAILURE);
 }
 
-static void PR_CALLBACK thread_starter(void* arg)
+static void thread_starter(void* arg)
 {
 	nsIRunnable* runnable = (nsIRunnable*) arg;
 	if (runnable != NULL) {

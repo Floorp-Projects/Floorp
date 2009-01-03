@@ -70,7 +70,7 @@ nsCommandManager::~nsCommandManager()
 }
 
 
-PR_STATIC_CALLBACK(PLDHashOperator)
+static PLDHashOperator
 TraverseCommandObservers(const char* aKey, nsCOMArray<nsIObserver>* aObservers,
                          void* aClosure)
 {

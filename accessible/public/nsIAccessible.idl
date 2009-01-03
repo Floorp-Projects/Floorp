@@ -58,7 +58,7 @@ interface nsIAccessibleRelation;
  *
  * @status UNDER_REVIEW
  */
-[scriptable, uuid(c7520419-87ec-42bc-98cc-04c0bf173530)]
+[scriptable, uuid(670fc322-14ec-4f3b-8279-9d62ab8895c0)]
 interface nsIAccessible : nsISupports
 {
   /**
@@ -164,7 +164,7 @@ interface nsIAccessible : nsISupports
    * @param aExtraState - the second bit field
    *                      (see nsIAccessibleStates::EXT_STATE_* constants)
    */
-  void getFinalState(out unsigned long aState, out unsigned long aExtraState);
+  void getState(out unsigned long aState, out unsigned long aExtraState);
 
   /**
    * Help text associated with node

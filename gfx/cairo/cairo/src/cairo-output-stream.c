@@ -116,6 +116,9 @@ closure_write (cairo_output_stream_t *stream,
     cairo_output_stream_with_closure_t *stream_with_closure =
 	(cairo_output_stream_with_closure_t *) stream;
 
+    if (stream_with_closure->write_func == NULL)
+	return CAIRO_STATUS_SUCCESS;
+
     return stream_with_closure->write_func (stream_with_closure->closure,
 					    data, length);
 }
@@ -583,6 +586,9 @@ _cairo_output_stream_create_for_filename (const char *filename)
     stdio_stream_t *stream;
     FILE *file;
 
+    if (filename == NULL)
+	return _cairo_null_stream_create ();
+
     file = fopen (filename, "wb");
     if (file == NULL) {
 	switch (errno) {
@@ -675,4 +681,27 @@ _cairo_memory_stream_length (cairo_output_stream_t *base)
     memory_stream_t *stream = (memory_stream_t *) base;
 
     return _cairo_array_num_elements (&stream->array);
+}
+
+static cairo_status_t
+null_write (cairo_output_stream_t *base,
+	    const unsigned char *data, unsigned int length)
+{
+    return CAIRO_STATUS_SUCCESS;
+}
+
+cairo_output_stream_t *
+_cairo_null_stream_create (void)
+{
+    cairo_output_stream_t *stream;
+
+    stream = malloc (sizeof *stream);
+    if (stream == NULL) {
+	_cairo_error_throw (CAIRO_STATUS_NO_MEMORY);
+	return (cairo_output_stream_t *) &_cairo_output_stream_nil;
+    }
+
+    _cairo_output_stream_init (stream, null_write, NULL);
+
+    return stream;
 }

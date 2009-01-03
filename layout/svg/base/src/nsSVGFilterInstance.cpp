@@ -351,10 +351,11 @@ nsSVGFilterInstance::BuildSourceImages()
       = GetUserSpaceToFilterSpaceTransform();
     if (!userSpaceToFilterSpaceTransform)
       return NS_ERROR_OUT_OF_MEMORY;
-
-    gfxMatrix m =
+    gfxMatrix userSpaceToFilterSpace =
       nsSVGUtils::ConvertSVGMatrixToThebes(userSpaceToFilterSpaceTransform);
+
     gfxRect r(neededRect.x, neededRect.y, neededRect.width, neededRect.height);
+    gfxMatrix m = userSpaceToFilterSpace;
     m.Invert();
     r = m.TransformBounds(r);
     r.RoundOut();
@@ -362,14 +363,15 @@ nsSVGFilterInstance::BuildSourceImages()
     nsresult rv = nsSVGUtils::GfxRectToIntRect(r, &dirty);
     if (NS_FAILED(rv))
       return rv;
-    mPaintCallback->Paint(&tmpState, mTargetFrame, &dirty,
-                          userSpaceToFilterSpaceTransform);
+
+    tmpState.GetGfxContext()->Multiply(userSpaceToFilterSpace);
+    mPaintCallback->Paint(&tmpState, mTargetFrame, &dirty);
 
     gfxContext copyContext(sourceColorAlpha);
     copyContext.SetSource(offscreen);
     copyContext.Paint();
   }
-  
+
   if (!mSourceColorAlpha.mResultNeededBox.IsEmpty()) {
     NS_ASSERTION(mSourceColorAlpha.mImageUsers > 0, "Some user must have needed this");
     mSourceColorAlpha.mImage.mImage = sourceColorAlpha;

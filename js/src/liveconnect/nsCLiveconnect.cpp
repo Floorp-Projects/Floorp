@@ -58,6 +58,7 @@
 #include "jsfun.h"
 #include "jscntxt.h"        /* For js_ReportErrorAgain().*/
 #include "jsscript.h"
+#include "jsstaticcheck.h"
 
 #include "netscape_javascript_JSObject.h"   /* javah-generated headers */
 #include "nsISecurityContext.h"
@@ -161,20 +162,10 @@ AutoPushJSContext::AutoPushJSContext(nsISupports* aSecuritySupports,
     {
         // See if there are any scripts on the stack.
         // If not, we need to add a dummy frame with a principal.
+        JSStackFrame* tempFP = JS_GetScriptedCaller(cx, NULL);
+        JS_ASSERT_NOT_EXECUTING_TRACE(cx);
 
-        PRBool hasScript = PR_FALSE;
-        JSStackFrame* tempFP = cx->fp;
-        while (tempFP)
-        {
-            if (tempFP->script)
-            {
-                hasScript = PR_TRUE;
-                break;
-            }
-            tempFP = tempFP->down;
-        };
-
-        if (!hasScript)
+        if (!tempFP)
         {
             JSPrincipals* jsprinc;
             principal->GetJSPrincipals(cx, &jsprinc);
@@ -214,6 +205,8 @@ AutoPushJSContext::~AutoPushJSContext()
     if (mFrame.argsobj)
         js_PutArgsObject(mContext, &mFrame);
     JS_ClearPendingException(mContext);
+
+    VOUCH_DOES_NOT_REQUIRE_STACK();
     if (mFrame.script)
         mContext->fp = mFrame.down;
 

@@ -3,26 +3,39 @@
 <!ENTITY printJobOptions.title "Printer Properties">
 
 <!ENTITY paperInput.label "Paper Size:">
+<!ENTITY paperInput.accesskey "P">
 
 <!ENTITY plexInput.label "Plex mode:">
+<!ENTITY plexInput.accesskey "m">
 
 <!ENTITY resolutionInput.label "Resolution/Quality:">
+<!ENTITY resolutionInput.accesskey "e">
 
 <!ENTITY cmdInput.label "Print Command:">
+<!ENTITY cmdInput.accesskey "o">
 
 <!ENTITY jobTitleInput.label "Job Title:">
+<!ENTITY jobTitleInput.accesskey "J">
 
 <!ENTITY colorGroup.label "Color:">
-<!ENTITY grayRadio.label "GrayScale">
+<!ENTITY grayRadio.label "Grayscale">
+<!ENTITY grayRadio.accesskey "G">
 <!ENTITY colorRadio.label "Color">
+<!ENTITY colorRadio.accesskey "C">
 
 <!ENTITY colorspaceInput.label "Colorspace:">
+<!ENTITY colorspaceInput.accesskey "s">
 
 <!ENTITY fontsGroup.label "Fonts:">
-<!ENTITY downloadFonts.label "Download fonts to printer?">
+<!ENTITY downloadFonts.label "Download fonts to printer">
+<!ENTITY downloadFonts.accesskey "D">
 
 <!ENTITY edgeMarginInput.label "Gap from edge of paper to Margin">
 <!ENTITY topInput.label "Top:">
+<!ENTITY topInput.accesskey "T">
 <!ENTITY bottomInput.label "Bottom:">
+<!ENTITY bottomInput.accesskey "B">
 <!ENTITY leftInput.label "Left:">
+<!ENTITY leftInput.accesskey "L">
 <!ENTITY rightInput.label "Right:">
+<!ENTITY rightInput.accesskey "R">

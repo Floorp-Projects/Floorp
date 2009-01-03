@@ -48,6 +48,7 @@ _TEST_FILES = 	test_bug360220.xul \
 		test_bug359754.xul \
 		test_bug365773.xul \
 		test_bug382990.xul \
+		test_bug457632.xul \
 		test_closemenu_attribute.xul \
 		test_colorpicker_popup.xul \
 		test_deck.xul \
@@ -105,6 +106,8 @@ _TEST_FILES = 	test_bug360220.xul \
  		test_mousescroll.xul \
 		test_scrollbar.xul \
 		test_sorttemplate.xul \
+		test_videocontrols.html \
+		video.ogg \
 		$(NULL)
 
 ifeq (,$(filter mac cocoa,$(MOZ_WIDGET_TOOLKIT)))

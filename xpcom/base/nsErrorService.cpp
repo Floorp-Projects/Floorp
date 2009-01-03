@@ -38,13 +38,13 @@
 #include "nsErrorService.h"
 #include "nsCRT.h"
 
-static void* PR_CALLBACK
+static void*
 CloneCString(nsHashKey *aKey, void *aData, void* closure)
 {
   return nsCRT::strdup((const char*)aData);
 }
 
-static PRBool PR_CALLBACK
+static PRBool
 DeleteCString(nsHashKey *aKey, void *aData, void* closure)
 {
   nsCRT::free((char*)aData);

@@ -235,6 +235,32 @@ _cairo_int64_lt (cairo_int64_t a, cairo_int64_t b)
     return _cairo_uint64_lt (a, b);
 }
 
+int
+_cairo_uint64_cmp (cairo_uint64_t a, cairo_uint64_t b)
+{
+    if (a.hi < b.hi)
+	return -1;
+    else if (a.hi > b.hi)
+	return 1;
+    else if (a.lo < b.lo)
+	return -1;
+    else if (a.lo > b.lo)
+	return 1;
+    else
+	return 0;
+}
+
+int
+_cairo_int64_cmp (cairo_int64_t a, cairo_int64_t b)
+{
+    if (_cairo_int64_negative (a) && !_cairo_int64_negative (b))
+	return -1;
+    if (!_cairo_int64_negative (a) && _cairo_int64_negative (b))
+	return 1;
+
+    return _cairo_uint64_cmp (a, b);
+}
+
 cairo_uint64_t
 _cairo_uint64_not (cairo_uint64_t a)
 {
@@ -567,6 +593,28 @@ _cairo_int128_lt (cairo_int128_t a, cairo_int128_t b)
     if (!_cairo_int128_negative (a) && _cairo_int128_negative (b))
 	return 0;
     return _cairo_uint128_lt (a, b);
+}
+
+int
+_cairo_uint128_cmp (cairo_uint128_t a, cairo_uint128_t b)
+{
+    int cmp;
+
+    cmp = _cairo_uint64_cmp (a.hi, b.hi);
+    if (cmp)
+	return cmp;
+    return _cairo_uint64_cmp (a.lo, b.lo);
+}
+
+int
+_cairo_int128_cmp (cairo_int128_t a, cairo_int128_t b)
+{
+    if (_cairo_int128_negative (a) && !_cairo_int128_negative (b))
+	return -1;
+    if (!_cairo_int128_negative (a) && _cairo_int128_negative (b))
+	return 1;
+
+    return _cairo_uint128_cmp (a, b);
 }
 
 int

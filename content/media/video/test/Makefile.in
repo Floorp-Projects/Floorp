@@ -44,18 +44,40 @@ include $(DEPTH)/config/autoconf.mk
 include $(topsrcdir)/config/rules.mk
 
 _TEST_FILES = 	test_autoplay.html \
+                test_bug461281.html \
                 test_constants.html \
                 test_controls.html \
                 test_currentTime.html \
-                test_defaultPlaybackRate.html \
+                test_duration1.html \
+                test_ended1.html \
+                test_ended2.html \
                 test_networkState.html \
+                test_onloadedmetadata.html \
                 test_paused.html \
-                test_playbackRate.html \
                 test_readyState.html \
-                test_start.html \
+                test_seek1.html \
+                test_seek2.html \
+                test_seek3.html \
+                test_seek4.html \
+                test_seek5.html \
+                test_seek6.html \
+                test_seek7.html \
+                test_seek8.html \
+                test_standalone.html \
+                test_timeupdate1.html \
+                test_timeupdate2.html \
+                test_timeupdate3.html \
                 test_volume.html \
-#               test_bug448534.html \
+                test_wav_8bit.html \
+                test_wav_ended1.html \
+                test_wav_seek_past_end.html \
+                test_wav_seek_then_play.html \
                 320x240.ogg \
+                bug461281.ogg \
+                seek.ogg \
+                r11025_s16_c1.wav \
+                r11025_u8_c1.wav \
+#                test_bug448534.html \
                 $(NULL)
 
 libs:: $(_TEST_FILES)

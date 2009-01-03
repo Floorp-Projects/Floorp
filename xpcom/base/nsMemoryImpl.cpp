@@ -293,6 +293,9 @@ nsMemoryImpl::sFlushEvent;
 XPCOM_API(void*)
 NS_Alloc(PRSize size)
 {
+    if (size > PR_INT32_MAX)
+        return nsnull;
+
     void* result = MALLOC1(size);
     if (! result) {
         // Request an asynchronous flush
@@ -304,6 +307,9 @@ NS_Alloc(PRSize size)
 XPCOM_API(void*)
 NS_Realloc(void* ptr, PRSize size)
 {
+    if (size > PR_INT32_MAX)
+        return nsnull;
+
     void* result = REALLOC1(ptr, size);
     if (! result && size != 0) {
         // Request an asynchronous flush

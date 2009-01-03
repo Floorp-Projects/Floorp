@@ -59,11 +59,13 @@ static PRUint64 sFontSetGeneration = LL_INIT(0, 0);
 // TODO: support for unicode ranges not yet implemented
 
 gfxProxyFontEntry::gfxProxyFontEntry(const nsTArray<gfxFontFaceSrc>& aFontFaceSrcList, 
+             gfxMixedFontFamily *aFamily,
              PRUint32 aWeight, 
              PRUint32 aStretch, 
              PRUint32 aItalicStyle, 
              gfxSparseBitSet *aUnicodeRanges)
-    : gfxFontEntry(NS_LITERAL_STRING("Proxy")), mIsLoading(PR_FALSE)
+    : gfxFontEntry(NS_LITERAL_STRING("Proxy")), mIsLoading(PR_FALSE),
+      mFamily(aFamily)
 {
     mIsProxy = PR_TRUE;
     mSrcList = aFontFaceSrcList;
@@ -149,10 +151,9 @@ gfxUserFontSet::AddFontFace(const nsAString& aFamilyName,
     // construct a new face and add it into the family
     if (family) {
         gfxProxyFontEntry *proxyEntry = 
-            new gfxProxyFontEntry(aFontFaceSrcList, aWeight, aStretch, 
-                                                  aItalicStyle, aUnicodeRanges);
+            new gfxProxyFontEntry(aFontFaceSrcList, family, aWeight, aStretch, 
+                                  aItalicStyle, aUnicodeRanges);
         family->AddFontEntry(proxyEntry);
-        proxyEntry->mFamily = family;
 #ifdef PR_LOGGING
         if (LOG_ENABLED()) {
             LOG(("userfonts (%p) added (%s) with style: %s weight: %d stretch: %d", 
@@ -170,12 +171,7 @@ gfxUserFontSet::FindFontEntry(const nsAString& aName,
                               const gfxFontStyle& aFontStyle, 
                               PRBool& aNeedsBold)
 {
-    nsAutoString key(aName);
-    ToLowerCase(key);
-
-    PRBool found;
-
-    gfxMixedFontFamily *family = mFontFamilies.GetWeak(key, &found);
+    gfxMixedFontFamily *family = GetFamily(aName);
 
     // no user font defined for this name
     if (!family)
@@ -209,8 +205,9 @@ gfxUserFontSet::FindFontEntry(const nsAString& aName,
 
 
 PRBool 
-gfxUserFontSet::OnLoadComplete(gfxFontEntry *aFontToLoad, 
-                               const gfxDownloadedFontData& aFontData, 
+gfxUserFontSet::OnLoadComplete(gfxFontEntry *aFontToLoad,
+                               nsISupports *aLoader,
+                               const PRUint8 *aFontData, PRUint32 aLength, 
                                nsresult aDownloadStatus)
 {
     NS_ASSERTION(aFontToLoad->mIsProxy, "trying to load font data for wrong font entry type");
@@ -222,7 +219,9 @@ gfxUserFontSet::OnLoadComplete(gfxFontEntry *aFontToLoad,
 
     // download successful, make platform font using font data
     if (NS_SUCCEEDED(aDownloadStatus)) {
-        gfxFontEntry *fe = gfxPlatform::GetPlatform()->MakePlatformFont(pe, &aFontData);
+        gfxFontEntry *fe = 
+            gfxPlatform::GetPlatform()->MakePlatformFont(pe, aLoader,
+                                                         aFontData, aLength);
         if (fe) {
             pe->mFamily->ReplaceFontEntry(pe, fe);
             IncrementGeneration();
@@ -231,13 +230,10 @@ gfxUserFontSet::OnLoadComplete(gfxFontEntry *aFontToLoad,
                 nsCAutoString fontURI;
                 pe->mSrcList[pe->mSrcIndex].mURI->GetSpec(fontURI);
 
-                nsAutoString filePath;
-                aFontData.mFontFile->GetPath(filePath);
-
-                LOG(("userfonts (%p) [src %d] loaded uri: (%s) file: (%s) for (%s) gen: %8.8x\n", 
+                LOG(("userfonts (%p) [src %d] loaded uri: (%s) for (%s) gen: %8.8x\n", 
                      this, pe->mSrcIndex, fontURI.get(), 
-                     NS_ConvertUTF16toUTF8(filePath).get(), 
-                     NS_ConvertUTF16toUTF8(pe->mFamily->Name()).get(), PRUint32(mGeneration)));
+                     NS_ConvertUTF16toUTF8(pe->mFamily->Name()).get(), 
+                     PRUint32(mGeneration)));
             }
 #endif
             return PR_TRUE;
@@ -323,9 +319,10 @@ gfxUserFontSet::LoadNext(gfxProxyFontEntry *aProxyEntry)
         else {
             if (gfxPlatform::GetPlatform()->IsFontFormatSupported(currSrc.mURI, 
                     currSrc.mFormatFlags)) {
-                PRBool loadOK = mLoaderContext->mLoaderProc(aProxyEntry, 
-                                                            currSrc.mURI, 
-                                                            mLoaderContext);
+                nsresult rv = mLoaderContext->mLoaderProc(aProxyEntry, &currSrc,
+                                                          mLoaderContext);
+                PRBool loadOK = NS_SUCCEEDED(rv);
+                
                 if (loadOK) {
 #ifdef PR_LOGGING
                     if (LOG_ENABLED()) {
@@ -391,6 +388,16 @@ gfxUserFontSet::IncrementGeneration()
     if (LL_IS_ZERO(sFontSetGeneration))
         LL_ADD(sFontSetGeneration, sFontSetGeneration, 1);
     mGeneration = sFontSetGeneration;
+}
+
+
+gfxMixedFontFamily*
+gfxUserFontSet::GetFamily(const nsAString& aFamilyName) const
+{
+    nsAutoString key(aFamilyName);
+    ToLowerCase(key);
+
+    return mFontFamilies.GetWeak(key);
 }
 
 

@@ -150,7 +150,7 @@
 #elif defined(_WIN32)
 #define THUNK_BASED_THIS_ADJUST
 
-#elif defined(__EMX__)
+#elif defined(__OS2__)
 #define THUNK_BASED_THIS_ADJUST
 
 #elif defined (__APPLE__) && (__MACH__)

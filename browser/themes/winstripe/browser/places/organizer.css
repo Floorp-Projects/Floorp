@@ -241,6 +241,7 @@
 #infoBoxExpanderLabel {
   margin: 0;
   padding: 5px 0;
+  -moz-padding-start: 2px;
 }
 
 #organizerScopeBar {

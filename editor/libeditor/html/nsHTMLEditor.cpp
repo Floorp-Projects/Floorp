@@ -852,7 +852,8 @@ nsHTMLEditor::GetBlockSectionsForRange(nsIDOMRange *aRange,
     iter->Init(aRange);
     while (iter->IsDone())
     {
-      nsCOMPtr<nsIContent> currentContent = iter->GetCurrentNode();
+      nsCOMPtr<nsIContent> currentContent =
+        do_QueryInterface(iter->GetCurrentNode());
 
       nsCOMPtr<nsIDOMNode>currentNode = do_QueryInterface(currentContent);
       if (currentNode)
@@ -3844,8 +3845,7 @@ nsHTMLEditor::GetEmbeddedObjects(nsISupportsArray** aNodeList)
     // loop through the content iterator for each content node
     while (!iter->IsDone())
     {
-      nsIContent *content = iter->GetCurrentNode();
-      nsCOMPtr<nsIDOMNode> node (do_QueryInterface(content));
+      nsCOMPtr<nsIDOMNode> node (do_QueryInterface(iter->GetCurrentNode()));
       if (node)
       {
         nsAutoString tagName;
@@ -4550,13 +4550,10 @@ nsHTMLEditor::CollapseAdjacentTextNodes(nsIDOMRange *aInRange)
 
   while (!iter->IsDone())
   {
-    nsIContent *content = iter->GetCurrentNode();  
-
-    nsCOMPtr<nsIDOMCharacterData> text = do_QueryInterface(content);
-    nsCOMPtr<nsIDOMNode>          node = do_QueryInterface(content);
-    if (text && node && IsEditable(node))
+    nsCOMPtr<nsIDOMCharacterData> text = do_QueryInterface(iter->GetCurrentNode());
+    if (text && IsEditable(text))
     {
-      textNodes.AppendElement(node.get());
+      textNodes.AppendElement(text);
     }
 
     iter->Next();

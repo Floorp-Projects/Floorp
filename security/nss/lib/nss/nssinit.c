@@ -36,7 +36,7 @@
  * the terms of any one of the MPL, the GPL or the LGPL.
  *
  * ***** END LICENSE BLOCK ***** */
-/* $Id: nssinit.c,v 1.96 2008/05/17 03:44:41 wtc%google.com Exp $ */
+/* $Id: nssinit.c,v 1.97 2008/08/22 01:33:03 wtc%google.com Exp $ */
 
 #include <ctype.h>
 #include "seccomon.h"
@@ -291,11 +291,9 @@ done:
 }
 
 
-#ifndef XP_MAC
 /*
  * The following code is an attempt to automagically find the external root
- * module. NOTE: This code should be checked out on the MAC! There must be
- * some cross platform support out there to help out with this?
+ * module.
  * Note: Keep the #if-defined chunks in order. HPUX must select before UNIX.
  */
 
@@ -308,8 +306,6 @@ static const char *dllname =
 	"libnssckbi.dylib";
 #elif defined(XP_UNIX) || defined(XP_BEOS)
 	"libnssckbi.so";
-#elif defined(XP_MAC)
-	"NSS Builtin Root Certs";
 #else
 	#error "Uh! Oh! I don't know about this platform."
 #endif
@@ -390,7 +386,6 @@ nss_FindExternalRoot(const char *dbpath, const char* secmodprefix)
         nss_FreeExternalRootPaths(oldpath, path);
 	return;
 }
-#endif
 
 /*
  * OK there are now lots of options here, lets go through them all:
@@ -558,14 +553,11 @@ loser:
 	}
 	CERT_SetDefaultCertDB((CERTCertDBHandle *)
 				STAN_GetDefaultTrustDomain());
-#ifndef XP_MAC
-	/* only servers need this. We currently do not have a mac server */
 	if ((!noModDB) && (!noCertDB) && (!noRootInit)) {
 	    if (!SECMOD_HasRootCerts()) {
 		nss_FindExternalRoot(configdir, secmodName);
 	    }
 	}
-#endif
 	pk11sdr_Init();
 	cert_CreateSubjectKeyIDHashTable();
 	nss_IsInitted = PR_TRUE;

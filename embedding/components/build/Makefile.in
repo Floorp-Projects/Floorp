@@ -56,9 +56,6 @@ ifdef MOZ_PERF_METRICS
 EXTRA_DSO_LIBS	= mozutil_s
 endif
 
-PACKAGE_FILE = embedcomponents.pkg
-PACKAGE_VARS += MOZ_PROFILESHARING
-
 REQUIRES	= js \
 		  xpcom \
 		  string \
@@ -80,10 +77,6 @@ REQUIRES	= js \
 		  commandhandler \
 		  xuldoc \
 		  $(NULL)
-
-ifdef MOZ_PROFILESHARING
-REQUIRES += profilesharingsetup
-endif
 
 CPPSRCS		= nsEmbeddingModule.cpp
 
@@ -112,11 +105,6 @@ LOCAL_INCLUDES	= \
 	-I$(srcdir)/../webbrowserpersist/src  \
 	-I$(srcdir)/../commandhandler/src \
 	$(NULL)
-
-ifdef MOZ_PROFILESHARING
-SHARED_LIBRARY_LIBS += $(DIST)/lib/$(LIB_PREFIX)profilesharingsetup_s.$(LIB_SUFFIX)
-LOCAL_INCLUDES += -I$(srcdir)/../profilesharingsetup/src
-endif
 
 ifeq ($(MOZ_WIDGET_TOOLKIT),os2)
 LOCAL_INCLUDES += -I$(srcdir)/../printingui/src/os2 

@@ -41,9 +41,6 @@
 #include "nsString.h"
 #include "nsIURI.h"
 #include "nsTArray.h"
-#include "nsIContentSink.h"
-#include "nsIXMLContentSink.h"
-#include "nsIExpatSink.h"
 #include "nsIInterfaceRequestor.h"
 #include "nsIChannelEventSink.h"
 

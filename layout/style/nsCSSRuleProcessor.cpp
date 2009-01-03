@@ -82,10 +82,13 @@
 #include "nsTArray.h"
 #include "nsContentUtils.h"
 #include "nsIMediaList.h"
-#include "gfxPlatform.h"
-#include "gfxUserFontSet.h"
 #include "nsCSSRules.h"
-#include "nsFontFaceLoader.h"
+#include "nsIPrincipal.h"
+#include "nsStyleSet.h"
+
+#define VISITED_PSEUDO_PREF "layout.css.visited_links_enabled"
+
+static PRBool gSupportVisitedPseudo = PR_TRUE;
 
 static NS_DEFINE_CID(kLookAndFeelCID, NS_LOOKANDFEEL_CID);
 static nsTArray< nsCOMPtr<nsIAtom> >* sSystemMetrics = 0;
@@ -142,7 +145,7 @@ struct RuleHashTableEntry : public PLDHashEntryHdr {
   RuleValue *mRules; // linked list of |RuleValue|, null-terminated
 };
 
-PR_STATIC_CALLBACK(PLDHashNumber)
+static PLDHashNumber
 RuleHash_CIHashKey(PLDHashTable *table, const void *key)
 {
   nsIAtom *atom = const_cast<nsIAtom*>(static_cast<const nsIAtom*>(key));
@@ -154,8 +157,7 @@ RuleHash_CIHashKey(PLDHashTable *table, const void *key)
 }
 
 typedef nsIAtom*
-(* PR_CALLBACK RuleHashGetKey)    (PLDHashTable *table,
-                                   const PLDHashEntryHdr *entry);
+(* RuleHashGetKey) (PLDHashTable *table, const PLDHashEntryHdr *entry);
 
 struct RuleHashTableOps {
   PLDHashTableOps ops;
@@ -172,7 +174,7 @@ ToLocalOps(const PLDHashTableOps *aOps)
            (((const char*) aOps) - offsetof(RuleHashTableOps, ops));
 }
 
-PR_STATIC_CALLBACK(PRBool)
+static PRBool
 RuleHash_CIMatchEntry(PLDHashTable *table, const PLDHashEntryHdr *hdr,
                       const void *key)
 {
@@ -192,7 +194,7 @@ RuleHash_CIMatchEntry(PLDHashTable *table, const PLDHashEntryHdr *hdr,
   return (nsCRT::strcasecmp(entry_str, match_str) == 0);
 }
 
-PR_STATIC_CALLBACK(PRBool)
+static PRBool
 RuleHash_CSMatchEntry(PLDHashTable *table, const PLDHashEntryHdr *hdr,
                       const void *key)
 {
@@ -204,7 +206,7 @@ RuleHash_CSMatchEntry(PLDHashTable *table, const PLDHashEntryHdr *hdr,
   return match_atom == entry_atom;
 }
 
-PR_STATIC_CALLBACK(nsIAtom*)
+static nsIAtom*
 RuleHash_TagTable_GetKey(PLDHashTable *table, const PLDHashEntryHdr *hdr)
 {
   const RuleHashTableEntry *entry =
@@ -212,7 +214,7 @@ RuleHash_TagTable_GetKey(PLDHashTable *table, const PLDHashEntryHdr *hdr)
   return entry->mRules->mSelector->mTag;
 }
 
-PR_STATIC_CALLBACK(nsIAtom*)
+static nsIAtom*
 RuleHash_ClassTable_GetKey(PLDHashTable *table, const PLDHashEntryHdr *hdr)
 {
   const RuleHashTableEntry *entry =
@@ -220,7 +222,7 @@ RuleHash_ClassTable_GetKey(PLDHashTable *table, const PLDHashEntryHdr *hdr)
   return entry->mRules->mSelector->mClassList->mAtom;
 }
 
-PR_STATIC_CALLBACK(nsIAtom*)
+static nsIAtom*
 RuleHash_IdTable_GetKey(PLDHashTable *table, const PLDHashEntryHdr *hdr)
 {
   const RuleHashTableEntry *entry =
@@ -228,13 +230,13 @@ RuleHash_IdTable_GetKey(PLDHashTable *table, const PLDHashEntryHdr *hdr)
   return entry->mRules->mSelector->mIDList->mAtom;
 }
 
-PR_STATIC_CALLBACK(PLDHashNumber)
+static PLDHashNumber
 RuleHash_NameSpaceTable_HashKey(PLDHashTable *table, const void *key)
 {
   return NS_PTR_TO_INT32(key);
 }
 
-PR_STATIC_CALLBACK(PRBool)
+static PRBool
 RuleHash_NameSpaceTable_MatchEntry(PLDHashTable *table,
                                    const PLDHashEntryHdr *hdr,
                                    const void *key)
@@ -663,7 +665,7 @@ struct AttributeSelectorEntry : public PLDHashEntryHdr {
   nsVoidArray *mSelectors;
 };
 
-PR_STATIC_CALLBACK(void)
+static void
 AttributeSelectorClearEntry(PLDHashTable *table, PLDHashEntryHdr *hdr)
 {
   AttributeSelectorEntry *entry = static_cast<AttributeSelectorEntry*>(hdr);
@@ -706,6 +708,8 @@ struct RuleCascadeData {
   nsVoidArray       mIDSelectors;
   PLDHashTable      mAttributeSelectors; // nsIAtom* -> nsVoidArray*
 
+  nsTArray<nsFontFaceRuleContainer> mFontFaceRules;
+
   // Looks up or creates the appropriate list in |mAttributeSelectors|.
   // Returns null only on allocation failure.
   nsVoidArray* AttributeListFor(nsIAtom* aAttribute);
@@ -735,10 +739,12 @@ RuleCascadeData::AttributeListFor(nsIAtom* aAttribute)
 // CSS Style rule processor implementation
 //
 
-nsCSSRuleProcessor::nsCSSRuleProcessor(const nsCOMArray<nsICSSStyleSheet>& aSheets)
+nsCSSRuleProcessor::nsCSSRuleProcessor(const nsCOMArray<nsICSSStyleSheet>& aSheets,
+                                       PRUint8 aSheetType)
   : mSheets(aSheets)
   , mRuleCascades(nsnull)
   , mLastPresContext(nsnull)
+  , mSheetType(aSheetType)
 {
   for (PRInt32 i = mSheets.Count() - 1; i >= 0; --i)
     mSheets[i]->AddRuleProcessor(this);
@@ -753,6 +759,16 @@ nsCSSRuleProcessor::~nsCSSRuleProcessor()
 }
 
 NS_IMPL_ISUPPORTS1(nsCSSRuleProcessor, nsIStyleRuleProcessor)
+
+/* static */ void
+nsCSSRuleProcessor::Startup()
+{
+  nsContentUtils::AddBoolPrefVarCache(VISITED_PSEUDO_PREF,
+                                      &gSupportVisitedPseudo);
+  // We want to default to true, not false as AddBoolPrefVarCache does.
+  gSupportVisitedPseudo =
+    nsContentUtils::GetBoolPref(VISITED_PSEUDO_PREF, PR_TRUE);
+}
 
 static PRBool
 InitSystemMetrics()
@@ -921,6 +937,10 @@ RuleProcessorData::RuleProcessorData(nsPresContext* aPresContext,
       mIsLink = PR_TRUE;
     } 
   }
+
+  if (mLinkState == eLinkState_Visited && !gSupportVisitedPseudo) {
+    mLinkState = eLinkState_Unvisited;
+  }
 }
 
 RuleProcessorData::~RuleProcessorData()
@@ -1019,8 +1039,8 @@ RuleProcessorData::GetNthIndex(PRBool aIsOfType, PRBool aIsFromEnd,
   PRInt32 result = 1;
   nsIContent* parent = mParentContent;
 
-  PRUint32 childCount = parent->GetChildCount();
-  nsIContent * const * curChildPtr = parent->GetChildArray();
+  PRUint32 childCount;
+  nsIContent * const * curChildPtr = parent->GetChildArray(&childCount);
 
 #ifdef DEBUG
   nsMutationGuard debugMutationGuard;
@@ -1030,7 +1050,7 @@ RuleProcessorData::GetNthIndex(PRBool aIsOfType, PRBool aIsFromEnd,
   nsIContent * const * stopPtr;
   if (aIsFromEnd) {
     stopPtr = curChildPtr - 1;
-    curChildPtr += childCount - 1;
+    curChildPtr = stopPtr + childCount;
     increment = -1;
   } else {
     increment = 1;
@@ -1978,7 +1998,7 @@ struct StateEnumData {
   nsReStyleHint change;
 };
 
-PR_STATIC_CALLBACK(PRBool) StateEnumFunc(void* aSelector, void* aData)
+static PRBool StateEnumFunc(void* aSelector, void* aData)
 {
   StateEnumData *enumData = static_cast<StateEnumData*>(aData);
   StateRuleProcessorData *data = enumData->data;
@@ -2032,7 +2052,7 @@ struct AttributeEnumData {
 };
 
 
-PR_STATIC_CALLBACK(PRBool) AttributeEnumFunc(void* aSelector, void* aData)
+static PRBool AttributeEnumFunc(void* aSelector, void* aData)
 {
   AttributeEnumData *enumData = static_cast<AttributeEnumData*>(aData);
   AttributeRuleProcessorData *data = enumData->data;
@@ -2130,9 +2150,30 @@ nsCSSRuleProcessor::MediumFeaturesChanged(nsPresContext* aPresContext,
   return NS_OK;
 }
 
+// Append all the currently-active font face rules to aArray.  Return
+// true for success and false for failure.
+PRBool
+nsCSSRuleProcessor::AppendFontFaceRules(
+                              nsPresContext *aPresContext,
+                              nsTArray<nsFontFaceRuleContainer>& aArray)
+{
+  RuleCascadeData* cascade = GetRuleCascade(aPresContext);
+
+  if (cascade) {
+    if (!aArray.AppendElements(cascade->mFontFaceRules))
+      return PR_FALSE;
+  }
+  
+  return PR_TRUE;
+}
+
 nsresult
 nsCSSRuleProcessor::ClearRuleCascades()
 {
+  // We rely on our caller (perhaps indirectly) to do something that
+  // will rebuild style data and the user font set (either
+  // nsIPresShell::ReconstructStyleData or
+  // nsPresContext::RebuildAllStyleData).
   RuleCascadeData *data = mRuleCascades;
   mRuleCascades = nsnull;
   while (data) {
@@ -2244,13 +2285,13 @@ struct RuleByWeightEntry : public PLDHashEntryHdr {
   PerWeightData data; // mWeight is key, mRules are value
 };
 
-PR_STATIC_CALLBACK(PLDHashNumber)
+static PLDHashNumber
 HashIntKey(PLDHashTable *table, const void *key)
 {
   return PLDHashNumber(NS_PTR_TO_INT32(key));
 }
 
-PR_STATIC_CALLBACK(PRBool)
+static PRBool
 MatchWeightEntry(PLDHashTable *table, const PLDHashEntryHdr *hdr,
                  const void *key)
 {
@@ -2271,11 +2312,15 @@ static PLDHashTableOps gRulesByWeightOps = {
 
 struct CascadeEnumData {
   CascadeEnumData(nsPresContext* aPresContext,
+                  nsTArray<nsFontFaceRuleContainer>& aFontFaceRules,
                   nsMediaQueryResultCacheKey& aKey,
-                  PLArenaPool& aArena)
+                  PLArenaPool& aArena,
+                  PRUint8 aSheetType)
     : mPresContext(aPresContext),
+      mFontFaceRules(aFontFaceRules),
       mCacheKey(aKey),
-      mArena(aArena)
+      mArena(aArena),
+      mSheetType(aSheetType)
   {
     if (!PL_DHashTableInit(&mRulesByWeight, &gRulesByWeightOps, nsnull,
                           sizeof(RuleByWeightEntry), 64))
@@ -2289,138 +2334,25 @@ struct CascadeEnumData {
   }
 
   nsPresContext* mPresContext;
+  nsTArray<nsFontFaceRuleContainer>& mFontFaceRules;
   nsMediaQueryResultCacheKey& mCacheKey;
   // Hooray, a manual PLDHashTable since nsClassHashtable doesn't
   // provide a getter that gives me a *reference* to the value.
   PLDHashTable mRulesByWeight; // of RuleValue* linked lists (?)
   PLArenaPool& mArena;
+  PRUint8 mSheetType;
 };
 
-static void
-InsertFontFaceRule(nsICSSRule* aRule, gfxUserFontSet* fs)
-{
-  nsCSSFontFaceRule *fontFace = static_cast<nsCSSFontFaceRule*> (aRule);
-  PRInt32 type;
-  NS_ASSERTION(NS_SUCCEEDED(aRule->GetType(type)) 
-               && type == nsICSSRule::FONT_FACE_RULE, 
-               "InsertFontFaceRule passed a non-fontface CSS rule");
-  
-  // fontFace->List();
-  
-  nsAutoString fontfamily, valueString;
-  nsCSSValue val;
-  
-  PRUint32 unit;
-  PRUint32 weight = NS_STYLE_FONT_WEIGHT_NORMAL;
-  PRUint32 stretch = NS_STYLE_FONT_STRETCH_NORMAL;
-  PRUint32 italicStyle = FONT_STYLE_NORMAL;
-  
-  // set up family name
-  fontFace->GetDesc(eCSSFontDesc_Family, val);
-  unit = val.GetUnit();
-  if (unit == eCSSUnit_String) {
-    val.GetStringValue(fontfamily);
-    fontfamily.Trim("\"");
-  } else {
-    NS_ASSERTION(unit == eCSSUnit_String, 
-                 "@font-face family name has non-string unit type");
-    return;
-  }
-  
-  // set up weight
-  fontFace->GetDesc(eCSSFontDesc_Weight, val);
-  unit = val.GetUnit();
-  if (unit != eCSSUnit_Null) {
-    if (unit == eCSSUnit_Normal) {
-      weight = NS_STYLE_FONT_WEIGHT_NORMAL;
-    } else {
-      weight = val.GetIntValue();
-    }
-  }
-  
-  // set up stretch
-  fontFace->GetDesc(eCSSFontDesc_Stretch, val);
-  unit = val.GetUnit();
-  if (unit != eCSSUnit_Null) {
-    if (unit == eCSSUnit_Normal) {
-      stretch = NS_STYLE_FONT_STRETCH_NORMAL;
-    } else {
-      stretch = val.GetIntValue();
-    }
-  }
-  
-  // set up font style
-  fontFace->GetDesc(eCSSFontDesc_Style, val);
-  if (val.GetUnit() != eCSSUnit_Null) {
-    if (val.GetUnit() == eCSSUnit_Normal) {
-      italicStyle = FONT_STYLE_NORMAL;
-    } else {
-      italicStyle = val.GetIntValue();
-    }
-  }
-  
-  // set up src array
-  nsTArray<gfxFontFaceSrc> srcArray;
-
-  fontFace->GetDesc(eCSSFontDesc_Src, val);
-  unit = val.GetUnit();
-  if (unit == eCSSUnit_Array) {
-    nsCSSValue::Array *srcArr = val.GetArrayValue();
-    PRUint32 i, numSrc = srcArr->Count(), faceIndex = 0;
-    
-    for (i = 0; i < numSrc; i++) {
-      val = srcArr->Item(i);
-      unit = val.GetUnit();
-      gfxFontFaceSrc *face = srcArray.AppendElements(1);
-      if (!face)
-        return;
-            
-      switch (unit) {
-       
-      case eCSSUnit_Local_Font:
-        val.GetStringValue(face->mLocalName);
-        face->mIsLocal = PR_TRUE;
-        face->mURI = nsnull;
-        face->mFormatFlags = 0;
-        break;
-      case eCSSUnit_URL:
-        face->mIsLocal = PR_FALSE;
-        face->mURI = val.GetURLValue();
-        face->mLocalName.Truncate();
-        face->mFormatFlags = 0;
-        while (i + 1 < numSrc && (val = srcArr->Item(i+1), 
-                 val.GetUnit() == eCSSUnit_Font_Format)) {
-          nsDependentString valueString(val.GetStringBufferValue());
-          if (valueString.LowerCaseEqualsASCII("opentype")) {
-            face->mFormatFlags |= gfxUserFontSet::FLAG_FORMAT_OPENTYPE; 
-          } else if (valueString.LowerCaseEqualsASCII("truetype")) {
-            face->mFormatFlags |= gfxUserFontSet::FLAG_FORMAT_TRUETYPE; 
-          } else if (valueString.LowerCaseEqualsASCII("truetype-aat")) {
-            face->mFormatFlags |= gfxUserFontSet::FLAG_FORMAT_TRUETYPE_AAT; 
-          } else if (valueString.LowerCaseEqualsASCII("embedded-opentype")) {
-            face->mFormatFlags |= gfxUserFontSet::FLAG_FORMAT_EOT;   
-          } else if (valueString.LowerCaseEqualsASCII("svg")) {
-            face->mFormatFlags |= gfxUserFontSet::FLAG_FORMAT_SVG;   
-          }
-          i++;
-        }
-        break;
-      default:
-        NS_ASSERTION(unit == eCSSUnit_Local_Font || unit == eCSSUnit_URL,
-                     "strange unit type in font-face src array");
-        break;
-      }
-     }
-  }
-  
-  if (!fontfamily.IsEmpty() && srcArray.Length() > 0) {
-    fs->AddFontFace(fontfamily, srcArray, weight, stretch, italicStyle);
-  }
-  
-}
-
+/*
+ * This enumerates style rules in a sheet (and recursively into any
+ * grouping rules) in order to:
+ *  (1) add any style rules, in order, into data->mRulesByWeight (for
+ *      the primary CSS cascade), where they are separated by weight
+ *      but kept in order per-weight, and
+ *  (2) add any @font-face rules, in order, into data->mFontFaceRules.
+ */
 static PRBool
-InsertRuleByWeight(nsICSSRule* aRule, void* aData)
+CascadeRuleEnumFunc(nsICSSRule* aRule, void* aData)
 {
   CascadeEnumData* data = (CascadeEnumData*)aData;
   PRInt32 type = nsICSSRule::UNKNOWN_RULE;
@@ -2449,33 +2381,23 @@ InsertRuleByWeight(nsICSSRule* aRule, void* aData)
            nsICSSRule::DOCUMENT_RULE == type) {
     nsICSSGroupRule* groupRule = (nsICSSGroupRule*)aRule;
     if (groupRule->UseForPresentation(data->mPresContext, data->mCacheKey))
-      if (!groupRule->EnumerateRulesForwards(InsertRuleByWeight, aData))
+      if (!groupRule->EnumerateRulesForwards(CascadeRuleEnumFunc, aData))
         return PR_FALSE;
   }
-  else if (nsICSSRule::FONT_FACE_RULE == type 
-             && gfxPlatform::GetPlatform()->DownloadableFontsEnabled()) {
-    nsPresContext *presContext = data->mPresContext;
-    gfxUserFontSet *fs = presContext->GetUserFontSet();
-    if (!fs) {
-      nsFontFaceLoaderContext *loaderCtx = new nsFontFaceLoaderContext(presContext);
-      if (!loaderCtx)
-        return PR_FALSE;
-      fs = new gfxUserFontSet(loaderCtx); // user font set owns loader context
-      if (!fs) {
-        delete loaderCtx;
-        return PR_FALSE;
-      }
-      presContext->SetUserFontSet(fs);
-    }
-    
-    InsertFontFaceRule(aRule, fs);
+  else if (nsICSSRule::FONT_FACE_RULE == type) {
+    nsCSSFontFaceRule *fontFaceRule = static_cast<nsCSSFontFaceRule*>(aRule);
+    nsFontFaceRuleContainer *ptr = data->mFontFaceRules.AppendElement();
+    if (!ptr)
+      return PR_FALSE;
+    ptr->mRule = fontFaceRule;
+    ptr->mSheetType = data->mSheetType;
   }
 
   return PR_TRUE;
 }
 
-static PRBool
-CascadeSheetRulesInto(nsICSSStyleSheet* aSheet, void* aData)
+/* static */ PRBool
+nsCSSRuleProcessor::CascadeSheetEnumFunc(nsICSSStyleSheet* aSheet, void* aData)
 {
   nsCSSStyleSheet*  sheet = static_cast<nsCSSStyleSheet*>(aSheet);
   CascadeEnumData* data = static_cast<CascadeEnumData*>(aData);
@@ -2487,18 +2409,19 @@ CascadeSheetRulesInto(nsICSSStyleSheet* aSheet, void* aData)
       sheet->mInner) {
     nsCSSStyleSheet* child = sheet->mInner->mFirstChild;
     while (child) {
-      CascadeSheetRulesInto(child, data);
+      CascadeSheetEnumFunc(child, data);
       child = child->mNext;
     }
 
-    if (!sheet->mInner->mOrderedRules.EnumerateForwards(InsertRuleByWeight, data))
+    if (!sheet->mInner->mOrderedRules.EnumerateForwards(CascadeRuleEnumFunc,
+                                                        data))
       return PR_FALSE;
   }
   return PR_TRUE;
 }
 
-PR_STATIC_CALLBACK(int) CompareWeightData(const void* aArg1, const void* aArg2,
-                                         void* closure)
+static int CompareWeightData(const void* aArg1, const void* aArg2,
+                             void* closure)
 {
   const PerWeightData* arg1 = static_cast<const PerWeightData*>(aArg1);
   const PerWeightData* arg2 = static_cast<const PerWeightData*>(aArg2);
@@ -2517,7 +2440,7 @@ struct FillWeightArrayData {
 };
 
 
-PR_STATIC_CALLBACK(PLDHashOperator)
+static PLDHashOperator
 FillWeightArray(PLDHashTable *table, PLDHashEntryHdr *hdr,
                 PRUint32 number, void *arg)
 {
@@ -2573,11 +2496,13 @@ nsCSSRuleProcessor::RefreshRuleCascade(nsPresContext* aPresContext)
       new RuleCascadeData(aPresContext->Medium(),
                           eCompatibility_NavQuirks == aPresContext->CompatibilityMode()));
     if (newCascade) {
-      CascadeEnumData data(aPresContext, newCascade->mCacheKey,
-                           newCascade->mRuleHash.Arena());
+      CascadeEnumData data(aPresContext, newCascade->mFontFaceRules,
+                           newCascade->mCacheKey,
+                           newCascade->mRuleHash.Arena(),
+                           mSheetType);
       if (!data.mRulesByWeight.ops)
         return; /* out of memory */
-      if (!mSheets.EnumerateForwards(CascadeSheetRulesInto, &data))
+      if (!mSheets.EnumerateForwards(CascadeSheetEnumFunc, &data))
         return; /* out of memory */
 
       // Sort the hash table of per-weight linked lists by weight.

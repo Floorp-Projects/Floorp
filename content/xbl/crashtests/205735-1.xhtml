@@ -1,0 +1,27 @@
+<?xml version="1.0"?>
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN"
+    "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head>
+<title>Bug 205735</title>
+<xbl:bindings xmlns:xbl="http://www.mozilla.org/xbl" xmlns="http://www.mozilla.org/xbl">
+<binding id="rd">
+<xbl:content xmlns="http://www.w3.org/1999/xhtml" xmlns:xbl="http://www.mozilla.org/xbl"><div><div>binding content<xbl:children/></div></div></xbl:content>
+  <implementation>
+    <constructor>
+    <![CDATA[
+  var x=document.getAnonymousNodes(this)[0];
+  x.removeChild(x.childNodes[0]);
+    ]]>
+    </constructor>  
+  </implementation>
+</binding>
+</xbl:bindings>
+<style type="text/css">
+.chapter{-moz-binding:url(#rd);}
+</style>
+</head>
+<body>
+<div class="chapter">test</div>
+</body>
+</html>

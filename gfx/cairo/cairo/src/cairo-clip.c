@@ -148,7 +148,10 @@ _cairo_clip_path_intersect_to_rectangle (cairo_clip_path_t       *clip_path,
         cairo_box_t extents;
         cairo_rectangle_int_t extents_rect;
 
+	_cairo_box_from_rectangle (&extents, rectangle);
+
         _cairo_traps_init (&traps);
+	_cairo_traps_limit (&traps, &extents);
 
         status = _cairo_path_fixed_fill_to_traps (&clip_path->path,
                                                   clip_path->fill_rule,
@@ -160,10 +163,10 @@ _cairo_clip_path_intersect_to_rectangle (cairo_clip_path_t       *clip_path,
         }
 
         _cairo_traps_extents (&traps, &extents);
+        _cairo_traps_fini (&traps);
+
         _cairo_box_round_to_rectangle (&extents, &extents_rect);
         _cairo_rectangle_intersect (rectangle, &extents_rect);
-
-        _cairo_traps_fini (&traps);
 
         clip_path = clip_path->prev;
     }
@@ -436,9 +439,8 @@ _cairo_clip_intersect_mask (cairo_clip_t      *clip,
 
     /* Intersect with the target surface rectangle so we don't use
      * more memory and time than we need to. */
-
     status = _cairo_surface_get_extents (target, &target_rect);
-    if (!status)
+    if (status == CAIRO_STATUS_SUCCESS)
 	_cairo_rectangle_intersect (&surface_rect, &target_rect);
 
     if (surface_rect.width == 0 || surface_rect.height == 0) {
@@ -561,6 +563,7 @@ _cairo_clip_clip (cairo_clip_t       *clip,
 		  cairo_surface_t    *target)
 {
     cairo_status_t status;
+    cairo_rectangle_int_t rectangle;
     cairo_traps_t traps;
 
     if (clip->all_clipped)
@@ -582,6 +585,17 @@ _cairo_clip_clip (cairo_clip_t       *clip,
 	return status;
 
     _cairo_traps_init (&traps);
+
+    /* Limit the traps to the target surface
+     * - so we don't add more traps than needed. */
+    status = _cairo_surface_get_extents (target, &rectangle);
+    if (status == CAIRO_STATUS_SUCCESS) {
+	cairo_box_t box;
+
+	_cairo_box_from_rectangle (&box, &rectangle);
+	_cairo_traps_limit (&traps, &box);
+    }
+
     status = _cairo_path_fixed_fill_to_traps (path,
 					      fill_rule,
 					      tolerance,
@@ -676,16 +690,22 @@ _cairo_clip_init_deep_copy (cairo_clip_t    *clip,
         }
 
         if (other->surface) {
+	    int dx, dy;
             status = _cairo_surface_clone_similar (target, other->surface,
 					           0,
 						   0,
 						   other->surface_rect.width,
 						   other->surface_rect.height,
+						   &dx, &dy,
 						   &clip->surface);
 	    if (status)
 		goto BAIL;
 
             clip->surface_rect = other->surface_rect;
+
+	    /* src offset was 0, so we expect an exact replica of the surface */
+	    assert (dx == 0);
+	    assert (dy == 0);
         }
 
         if (other->path) {

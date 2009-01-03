@@ -22,6 +22,7 @@
  * Contributor(s):
  *  Darin Fisher <darin@meer.net>
  *  Ben Turner <mozilla@songbirdnest.com>
+ *  Robert Strong <robert.bugzilla@gmail.com>
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -55,10 +56,15 @@ class nsIFile;
  * The argc and argv passed to this function should be what is needed to
  * relaunch the current process.
  *
+ * The appVersion param passed to this function is the current application's
+ * version and is used to determine if an update's version is older than the
+ * current application version.
+ *
  * This function does not modify appDir.
  */
 NS_HIDDEN_(nsresult) ProcessUpdates(nsIFile *greDir, nsIFile *appDir,
                                     nsIFile *updRootDir,
-                                    int argc, char **argv);
+                                    int argc, char **argv,
+                                    const char *&appVersion);
 
 #endif  // nsUpdateDriver_h__

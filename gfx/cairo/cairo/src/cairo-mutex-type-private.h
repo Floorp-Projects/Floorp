@@ -90,7 +90,6 @@
 
 #endif /* CAIRO_MUTEX_IMPL_INIT */
 
-
 #ifdef CAIRO_MUTEX_IMPL_FINI
 
 /* If %CAIRO_MUTEX_IMPL_FINI is defined, we may need to finalize all
@@ -169,6 +168,12 @@ typedef cairo_mutex_impl_t cairo_mutex_t;
 #define CAIRO_MUTEX_FINI		CAIRO_MUTEX_IMPL_FINI
 #define CAIRO_MUTEX_NIL_INITIALIZER	CAIRO_MUTEX_IMPL_NIL_INITIALIZER
 
+#ifndef CAIRO_MUTEX_IS_LOCKED
+# define CAIRO_MUTEX_IS_LOCKED(name) 1
+#endif
+#ifndef CAIRO_MUTEX_IS_UNLOCKED
+# define CAIRO_MUTEX_IS_UNLOCKED(name) 1
+#endif
 
 
 /* Debugging support */

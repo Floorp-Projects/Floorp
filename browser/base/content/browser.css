@@ -1,6 +1,5 @@
 @namespace url("http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul");
-@namespace svg url("http://www.w3.org/2000/svg");
-@namespace xlink url("http://www.w3.org/1999/xlink");
+@namespace html url("http://www.w3.org/1999/xhtml");
 
 searchbar {
   -moz-binding: url("chrome://browser/content/search/search.xml#searchbar");
@@ -30,6 +29,12 @@ toolbar[printpreview="true"] {
 #urlbar-throbber:not([busy="true"]),
 #urlbar-throbber[busy="true"] + #page-proxy-favicon {
   display: none;
+}
+
+#urlbar[pageproxystate="invalid"] > #urlbar-icons > :not(#go-button) ,
+#urlbar[pageproxystate="valid"] > #urlbar-icons > #go-button ,
+#urlbar[empty="true"] > #urlbar-icons > #go-button {
+  visibility: collapse;
 }
 
 #identity-box > hbox {
@@ -93,15 +98,23 @@ window[chromehidden~="toolbar"] toolbar:not(.toolbar-primary):not(.chromeclass-m
 }
 
 /* Tab Previews */
-svg|*.ctrlTab-icon:not([xlink|href]) ,
-svg|*.ctrlTab-thumbnail:not([xlink|href]) {
-  display: none;
+#ctrlTab-panel {
+  -moz-user-focus: normal;
 }
 
-svg|*.ctrlTab-thumbnailborder {
-  fill: transparent;
+.ctrlTab-thumbnail {
+  -moz-binding: url("chrome://browser/content/browser-tabPreviews.xml#ctrlTab-thumbnail");
 }
 
-svg|*.ctrlTab-icon {
-  filter: url(chrome://browser/content/browser.xul#ctrlTab-iconShadow);
+.ctrlTab-thumbnail:not([valid]) {
+  visibility: hidden;
+}
+
+#ctrlTab-pages {
+  display: block;
+  text-align: center;
+}
+ 
+.ctrlTab-pagePointer {
+  display: inline-block;
 }

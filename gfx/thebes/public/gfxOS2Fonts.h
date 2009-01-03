@@ -79,7 +79,6 @@ public:
                                                       const gfxFontStyle *aStyle);
 
 protected:
-    gfxMatrix mCTM;
     virtual PRBool SetupCairoFont(gfxContext *aContext);
 
 private:
@@ -107,6 +106,14 @@ public:
                                     const Parameters* aParams, PRUint32 aFlags);
 
     gfxOS2Font *GetFontAt(PRInt32 i) {
+        // If it turns out to be hard for all clients that cache font
+        // groups to call UpdateFontList at appropriate times, we could
+        // instead consider just calling UpdateFontList from someplace
+        // more central (such as here).
+        NS_ASSERTION(!mUserFontSet || mCurrGeneration == GetGeneration(),
+                     "Whoever was caching this font group should have "
+                     "called UpdateFontList on it");
+
 #ifdef DEBUG_thebes_2
         printf("gfxOS2FontGroup[%#x]::GetFontAt(%d), %#x, %#x\n",
                (unsigned)this, i, (unsigned)&mFonts, (unsigned)&mFonts[i]);

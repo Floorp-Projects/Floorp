@@ -48,6 +48,7 @@
 #ifdef MOZ_PANGO
 #include "gfxPangoFonts.h"
 #include "gfxContext.h"
+#include "gfxUserFontSet.h"
 #else
 #include <ft2build.h>
 #include FT_FREETYPE_H
@@ -77,6 +78,8 @@
 #include "nsMathUtils.h"
 
 #include "lcms.h"
+
+#define GDK_PIXMAP_SIZE_MAX 32767
 
 #ifndef MOZ_PANGO
 #include <ft2build.h>
@@ -149,6 +152,11 @@ gfxPlatformGtk::CreateOffscreenSurface(const gfxIntSize& size,
                                        gfxASurface::gfxImageFormat imageFormat)
 {
     nsRefPtr<gfxASurface> newSurface = nsnull;
+    PRBool sizeOk = PR_TRUE;
+
+    if (size.width >= GDK_PIXMAP_SIZE_MAX ||
+        size.height >= GDK_PIXMAP_SIZE_MAX)
+        sizeOk = PR_FALSE;
 
 #ifdef MOZ_X11
     int glitzf;
@@ -185,7 +193,7 @@ gfxPlatformGtk::CreateOffscreenSurface(const gfxIntSize& size,
     XRenderPictFormat* xrenderFormat =
         XRenderFindStandardFormat(display, xrenderFormatID);
 
-    if (xrenderFormat) {
+    if (xrenderFormat && sizeOk) {
         pixmap = gdk_pixmap_new(nsnull, size.width, size.height,
                                 xrenderFormat->depth);
 
@@ -211,17 +219,20 @@ gfxPlatformGtk::CreateOffscreenSurface(const gfxIntSize& size,
         if (pixmap)
             g_object_unref(pixmap);
     }
-
-    if (!newSurface) {
-        // We don't have Render or we couldn't create an xlib surface for
-        // whatever reason; fall back to image surface for the data.
-        newSurface = new gfxImageSurface(gfxIntSize(size.width, size.height), imageFormat);
-    }
 #endif
 
 #ifdef MOZ_DFB
-    newSurface = new gfxDirectFBSurface(size, imageFormat);
+    if (sizeOk)
+        newSurface = new gfxDirectFBSurface(size, imageFormat);
 #endif
+
+
+    if (!newSurface) {
+        // We couldn't create a native surface for whatever reason;
+        // e.g., no RENDER, bad size, etc.
+        // Fall back to image surface for the data.
+        newSurface = new gfxImageSurface(gfxIntSize(size.width, size.height), imageFormat);
+    }
 
     if (newSurface) {
         gfxContext tmpCtx(newSurface);
@@ -271,6 +282,40 @@ gfxPlatformGtk::CreateFontGroup(const nsAString &aFamilies,
                                 gfxUserFontSet *aUserFontSet)
 {
     return new gfxPangoFontGroup(aFamilies, aStyle, aUserFontSet);
+}
+
+gfxFontEntry* 
+gfxPlatformGtk::MakePlatformFont(const gfxProxyFontEntry *aProxyEntry, 
+                                 nsISupports *aLoader,
+                                 const PRUint8 *aFontData, PRUint32 aLength)
+{
+    // Just being consistent with other platforms.
+    // This will mean that only fonts in SFNT formats will be accepted.
+    if (!gfxFontUtils::ValidateSFNTHeaders(aFontData, aLength))
+        return nsnull;
+
+    return gfxPangoFontGroup::NewFontEntry(*aProxyEntry, aLoader,
+                                           aFontData, aLength);
+}
+
+PRBool
+gfxPlatformGtk::IsFontFormatSupported(nsIURI *aFontURI, PRUint32 aFormatFlags)
+{
+    // reject based on format flags
+    if (aFormatFlags & (gfxUserFontSet::FLAG_FORMAT_EOT | gfxUserFontSet::FLAG_FORMAT_SVG)) {
+        return PR_FALSE;
+    }
+
+    // Pango doesn't apply features from AAT TrueType extensions.
+    // Assume that if this is the only SFNT format specified,
+    // then AAT extensions are required for complex script support.
+    if ((aFormatFlags & gfxUserFontSet::FLAG_FORMAT_TRUETYPE_AAT) 
+         && !(aFormatFlags & (gfxUserFontSet::FLAG_FORMAT_OPENTYPE | gfxUserFontSet::FLAG_FORMAT_TRUETYPE))) {
+        return PR_FALSE;
+    }
+
+    // otherwise, return true
+    return PR_TRUE;
 }
 
 #else
@@ -451,7 +496,8 @@ gfxPlatformGtk::GetStandardFamilyName(const nsAString& aFontName, nsAString& aFa
 
 gfxFontGroup *
 gfxPlatformGtk::CreateFontGroup(const nsAString &aFamilies,
-                               const gfxFontStyle *aStyle)
+                               const gfxFontStyle *aStyle,
+                                gfxUserFontSet * /*aUserFontSet*/)
 {
     return new gfxFT2FontGroup(aFamilies, aStyle);
 }

@@ -1,0 +1,83 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+  <title>Media test: seek test 1</title>
+  <script type="text/javascript" src="/MochiKit/MochiKit.js"></script>
+  <script type="text/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
+</head>
+<body>
+<video id='v'
+       src='seek.ogg'
+       onended='return playbackEnded();'
+       onloadedmetadata='return startTest();'
+       onseeking='return seekStarted();'
+       onseeked='return seekEnded();'></video>
+<pre id="test">
+<script class="testbody" type="text/javascript">
+var startPassed = false;
+var endPassed = false;
+var seekFlagStart = false;
+var seekFlagEnd = false;
+var readonly = true;
+var completed = false;
+
+ok(!document.getElementById('v').seeking, "seeking should default to false");
+try {
+  v1.seeking = 1;
+  readonly = false;
+}
+catch(e) {
+  readonly = true;
+}
+ok(readonly, "seeking should be readonly");
+
+function startTest() {
+  if (completed)
+    return false;
+  var v = document.getElementById('v');
+  v.play();
+  v.currentTime=2;
+  return false;
+}
+
+function seekStarted() {
+  if (completed)
+    return false;
+
+  var v = document.getElementById('v');
+  startPassed = true;
+  seekFlagStart = v.seeking;
+  return false;
+}
+
+function seekEnded() {
+  if (completed)
+    return false;
+
+  var v = document.getElementById('v');
+  var t = v.currentTime;
+  ok(t >= 2 && t <= 3, "Video currentTime should be around 2: " + t);
+  endPassed = true;
+  seekFlagEnd = v.seeking;
+  return false;
+}
+
+function playbackEnded() {
+  if (completed)
+    return false;
+
+  completed = true;
+  ok(startPassed, "seeking event");
+  ok(endPassed, "seeked event");
+  ok(seekFlagStart, "seeking flag on start should be true");
+  ok(!seekFlagEnd, "seeking flag on end should be false");
+  SimpleTest.finish();
+  return false;
+}
+
+SimpleTest.waitForExplicitFinish();
+</script>
+</pre>
+</body>
+</html>

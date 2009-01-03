@@ -23,6 +23,7 @@
    -
    - Contributor(s):
    -      Gavin Sharp <gavin@gavinsharp.com> (original author)
+   -      Ehsan Akhgari <ehsan.akhgari@gmail.com>
    -
    - Alternatively, the contents of this file may be used under the terms of
    - either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -44,6 +45,38 @@
         title="Browser chrome tests">
   <script src="chrome://mochikit/content/tests/SimpleTest/MozillaFileLogger.js"/>
   <script src="chrome://mochikit/content/tests/SimpleTest/quit.js"/>
+  <style xmlns="http://www.w3.org/1999/xhtml"><![CDATA[
+    #results {
+      margin: 5px;
+      background-color: window;
+      -moz-user-select: text;
+    }
+
+    #summary {
+      border: 2px solid black;
+    }
+
+    #summary.success {
+      background-color: green;
+    }
+
+    #summary.failure {
+      background-color: red;
+    }
+
+    .failed {
+      color: red;
+      font-weight: bold;
+    }
+
+    .testHeader {
+      margin-top: 1em;
+    }
+
+    p {
+      margin: 0.1em;
+    }
+  ]]></style>
   <script type="application/javascript;version=1.7"><![CDATA[
     var gConfig;
     function TestStart() {
@@ -127,6 +160,21 @@
         return this.tests.map(function (t) {
                                   return t.result + " | " + path + " | " + t.msg;
                               }).join("\n");
+      },
+      get htmlLog() {
+        let txtToHTML = Cc["@mozilla.org/txttohtmlconv;1"].
+                        getService(Ci.mozITXTToHTMLConv);
+        function _entityEncode(str) {
+          return txtToHTML.scanTXT(str, Ci.mozITXTToHTMLConv.kEntities);
+        }
+        var path = _entityEncode( this.path );
+        return this.tests.map(function (t) {
+                                  var result = "<p class=\"result ";
+                                  result += t.pass ? "passed" : "failed";
+                                  result += "\">" + t.result + " | " + path +
+                                    " | " + _entityEncode( t.msg ) + "</p>";
+                                  return result;
+                              }).join("\n");
       }
     };
 
@@ -178,6 +226,24 @@
       Tester.start();
     }
 
+    function getHTMLLogFromTests(aTests) {
+      var log = "";
+
+      function sum(a, b){ return a + b; }
+      var passCount = aTests.map(function (f) f.passCount).reduce(sum);
+      var failCount = aTests.map(function (f) f.failCount).reduce(sum);
+      var todoCount = aTests.map(function (f) f.todoCount).reduce(sum);
+      log += "<div id=\"summary\" class=\"";
+      log += failCount == 0 ? "success" : "failure";
+      log += "\">\n<p>Passed: " + passCount + "</p>\n" +
+             "<p>Failed: " + failCount + "</p>\n" +
+             "<p>Todo: " + todoCount + "</p>\n</div>\n<div id=\"log\">\n";
+
+      return log + aTests.map(function (f) {
+                                return "<p class=\"testHeader\">" + f.path + "</p>\n" + f.htmlLog;
+                              }).join("\n") + "</div>";
+    }
+
     function getLogFromTests(aTests) {
       if (!aTests.length)
         return "TEST-PASS | | No tests to run";
@@ -222,11 +288,13 @@
       }
 
       // UI
-      document.getElementById("results").value = output;
+      document.getElementById("results").innerHTML = getHTMLLogFromTests(aTests);
       setStatus("Done.");
     }
   ]]></script>
   <button id="runTestsButton" onclick="runAllTests();" label="Run All Tests"/>
   <label id="status"/>
-  <textbox flex="1" multiline="true" id="results"/>
+  <scrollbox flex="1" style="overflow: auto" align="stretch">
+    <div id="results" xmlns="http://www.w3.org/1999/xhtml"/>
+  </scrollbox>
 </window>

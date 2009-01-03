@@ -1,7 +1,7 @@
 /**
  * General
  */
-.wizard-button[dlgtype="finish"] {
+.heed {
   font-weight: bold;
 }
 
@@ -33,10 +33,7 @@ link:focus {
   padding: 15px 10px 15px 10px;
 }
 
-/**
- * License Page
- */
-license {
+remotecontent {
   margin-top: 1px;
   margin-bottom: 2px;
   -moz-margin-start: 6px;
@@ -45,16 +42,19 @@ license {
   padding-bottom: 1px;
 }
 
+/**
+ * License Page
+ */
 .loadingBox {
   padding: 3px 5px 3px 5px;
 }
-.licenseLoadingThrobber {
+.remoteLoadingThrobber {
   margin-top: 3px;
 }
-.licenseLoadingThrobber[state="loading"] {
+.remoteLoadingThrobber[state="loading"] {
   list-style-image: url("chrome://global/skin/icons/loading_16.png");
 }
-.licenseLoadingThrobber[state="error"] {
+.remoteLoadingThrobber[state="error"] {
   list-style-image: url("chrome://global/skin/icons/notfound.png");
 }
 
@@ -113,29 +113,69 @@ wizard[currentpageid="updatesfound"] .wizard-page-box {
 /**
  * Downloading Page
  */
-#downloadName {
-  margin-top: 3px;
-}
-
-#downloadStatus {
-  margin-top: 6px;
+#downloadStatusTop, #downloadStatusLine {
+  -moz-box-align: center;
 }
 
 #downloadThrobber {
-  margin: 5px 3px 0px 5px;
+  margin-left: 5px;
   list-style-image: url("chrome://global/skin/icons/notloading_16.png");
 }
+
 #downloadThrobber[state="loading"] {
   list-style-image: url("chrome://global/skin/icons/loading_16.png");
 }
 
-#verificationFailedIcon {
-  list-style-image: url("chrome://global/skin/icons/notfound.png");
-  margin: 5px 3px 0px 5px;
+#downloadStatusProgress {
+  padding-right: 5px;
 }
 
-#downloadStatusLine {
-  -moz-box-align: center;
+#pauseButton {
+  list-style-image: url(chrome://mozapps/skin/update/buttons.png);
+  -moz-image-region: rect(48px, 16px, 64px, 0px);
+  -moz-appearance: none;
+  background-color: transparent;
+  border: none;
+  min-height: 16px;
+  min-width: 16px;
+  max-height: 16px;
+  max-width: 16px;
+  padding: 0;
+  margin: 0 1px 0 1px;
+}
+
+/* !Important must be used otherwise this won't immediately take affect */
+#pauseButton > .button-box {
+  padding: 0 !important;
+}
+
+#pauseButton:hover {
+  -moz-image-region: rect(48px, 32px, 64px, 16px);
+}
+
+#pauseButton:not([disabled="true"]):hover:active {
+  -moz-image-region: rect(48px, 48px, 64px, 32px);
+}
+
+#pauseButton[disabled="true"] {
+  -moz-image-region: rect(48px, 16px, 64px, 0px);
+}
+
+#pauseButton[paused="true"] {
+  -moz-image-region: rect(16px, 16px, 32px, 0px);
+}
+
+#pauseButton[paused="true"]:hover {
+  -moz-image-region: rect(16px, 32px, 32px, 16px);
+}
+
+#pauseButton[paused="true"]:hover:active {
+  -moz-image-region: rect(16px, 48px, 32px, 32px);
+}
+
+#verificationFailedIcon {
+  margin-left: 5px;
+  list-style-image: url("chrome://global/skin/icons/notfound.png");
 }
 
 /**
@@ -193,4 +233,3 @@ update {
   -moz-margin-start: 22px;
   -moz-margin-end: 10px;
 }
-

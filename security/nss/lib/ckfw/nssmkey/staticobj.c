@@ -37,7 +37,7 @@
  * ***** END LICENSE BLOCK ***** */
 
 #ifdef DEBUG
-static const char CVS_ID[] = "@(#) $RCSfile: staticobj.c,v $ $Revision: 1.1 $ $Date: 2005/11/23 23:04:08 $""; @(#) $RCSfile: staticobj.c,v $ $Revision: 1.1 $ $Date: 2005/11/23 23:04:08 $";
+static const char CVS_ID[] = "@(#) $RCSfile: staticobj.c,v $ $Revision: 1.2 $ $Date: 2008/10/05 20:59:22 $""; @(#) $RCSfile: staticobj.c,v $ $Revision: 1.2 $ $Date: 2008/10/05 20:59:22 $";
 #endif /* DEBUG */
 
 #ifndef CKMK_H
@@ -67,8 +67,8 @@ static const NSSItem nss_ckmk_items_1 [] = {
   { (void *)"Mozilla Mac Key Ring Access", (PRUint32)28 }
 };
 
-PR_IMPLEMENT_DATA(ckmkInternalObject) nss_ckmk_data[] = {
+ckmkInternalObject nss_ckmk_data[] = {
   { ckmkRaw, {{ 5, nss_ckmk_types_1, nss_ckmk_items_1}} , CKO_DATA, {NULL} },
 };
 
-PR_IMPLEMENT_DATA(const PRUint32) nss_ckmk_nObjects = 1;
+const PRUint32 nss_ckmk_nObjects = 1;

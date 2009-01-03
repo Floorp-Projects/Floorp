@@ -45,7 +45,6 @@ ifneq (,$(filter mac cocoa,$(MOZ_WIDGET_TOOLKIT)))
 	cp $(srcdir)/dsstore $(DIST)/branding/dsstore
 	cp $(srcdir)/background.png $(DIST)/branding/background.png
 	cp $(srcdir)/disk.icns $(DIST)/branding/disk.icns
-	cp $(srcdir)/license.r $(DIST)/branding/license.r
 endif
 ifeq ($(OS_ARCH),WINNT)
 	cp $(srcdir)/firefox.ico  $(DIST)/branding/app.ico

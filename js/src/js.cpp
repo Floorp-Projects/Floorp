@@ -54,6 +54,7 @@
 #include "jsapi.h"
 #include "jsarray.h"
 #include "jsatom.h"
+#include "jsbuiltins.h"
 #include "jscntxt.h"
 #include "jsdbgapi.h"
 #include "jsemit.h"
@@ -250,6 +251,8 @@ Process(JSContext *cx, JSObject *obj, char *filename, JSBool forceTTY)
 
     SetContextOptions(cx);
 
+#ifndef WINCE
+    /* windows mobile (and possibly other os's) does not have a TTY */
     if (!forceTTY && !isatty(fileno(file))) {
         /*
          * It's not interactive - just execute it.
@@ -282,6 +285,7 @@ Process(JSContext *cx, JSObject *obj, char *filename, JSBool forceTTY)
             fclose(file);
         return;
     }
+#endif /* WINCE */
 
     /* It's an interactive filehandle; drop into read-eval-print loop. */
     lineno = 1;
@@ -342,19 +346,52 @@ usage(void)
     return 2;
 }
 
-static struct {
+/*
+ * JSContext option name to flag map. The option names are in alphabetical
+ * order for better reporting.
+ */
+static const struct {
     const char  *name;
     uint32      flag;
 } js_options[] = {
+    {"anonfunfix",      JSOPTION_ANONFUNFIX},
+    {"atline",          JSOPTION_ATLINE},
+    {"jit",             JSOPTION_JIT},
+    {"relimit",         JSOPTION_RELIMIT},
     {"strict",          JSOPTION_STRICT},
     {"werror",          JSOPTION_WERROR},
-    {"atline",          JSOPTION_ATLINE},
     {"xml",             JSOPTION_XML},
-    {"relimit",         JSOPTION_RELIMIT},
-    {"anonfunfix",      JSOPTION_ANONFUNFIX},
-    {"jit",             JSOPTION_JIT},
-    {NULL,              0}
 };
+
+static uint32
+MapContextOptionNameToFlag(JSContext* cx, const char* name)
+{
+    for (size_t i = 0; i != JS_ARRAY_LENGTH(js_options); ++i) {
+        if (strcmp(name, js_options[i].name) == 0)
+            return js_options[i].flag;
+    }
+
+    char* msg = JS_sprintf_append(NULL,
+                                  "unknown option name '%s'."
+                                  " The valid names are ", name);
+    for (size_t i = 0; i != JS_ARRAY_LENGTH(js_options); ++i) {
+        if (!msg)
+            break;
+        msg = JS_sprintf_append(msg, "%s%s", js_options[i].name,
+                                (i + 2 < JS_ARRAY_LENGTH(js_options)
+                                 ? ", "
+                                 : i + 2 == JS_ARRAY_LENGTH(js_options)
+                                 ? " and "
+                                 : "."));
+    }
+    if (!msg) {
+        JS_ReportOutOfMemory(cx);
+    } else {
+        JS_ReportError(cx, msg);
+        free(msg);
+    }
+    return 0;
+}
 
 extern JSClass global_class;
 
@@ -470,19 +507,18 @@ extern void js_InitJITStatsClass(JSContext *cx, JSObject *glob);
                             &jitstats_class, NULL, 0);
 #endif
             break;
-            
+
         case 'o':
+          {
             if (++i == argc)
                 return usage();
 
-            for (j = 0; js_options[j].name; ++j) {
-                if (strcmp(js_options[j].name, argv[i]) == 0) {
-                    JS_ToggleOptions(cx, js_options[j].flag);
-                    break;
-                }
-            }
+            uint32 flag = MapContextOptionNameToFlag(cx, argv[i]);
+            if (flag == 0)
+                return gExitCode;
+            JS_ToggleOptions(cx, flag);
             break;
-
+          }
         case 'P':
             if (JS_GET_CLASS(cx, JS_GetPrototype(cx, obj)) != &global_class) {
                 JSObject *gobj;
@@ -501,7 +537,10 @@ extern void js_InitJITStatsClass(JSContext *cx, JSObject *glob);
             break;
 
         case 'b':
-            gBranchLimit = atoi(argv[++i]);
+            if (++i == argc)
+                return usage();
+
+            gBranchLimit = atoi(argv[i]);
             gEnableBranchCallback = (gBranchLimit != 0);
             break;
 
@@ -590,39 +629,36 @@ static JSBool
 Options(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
 {
     uint32 optset, flag;
-    uintN i, j, found;
     JSString *str;
     const char *opt;
     char *names;
+    JSBool found;
 
     optset = 0;
-    for (i = 0; i < argc; i++) {
+    for (uintN i = 0; i < argc; i++) {
         str = JS_ValueToString(cx, argv[i]);
         if (!str)
             return JS_FALSE;
+        argv[i] = STRING_TO_JSVAL(str);
         opt = JS_GetStringBytes(str);
-        for (j = 0; js_options[j].name; j++) {
-            if (strcmp(js_options[j].name, opt) == 0) {
-                optset |= js_options[j].flag;
-                break;
-            }
-        }
+        if (!opt)
+            return JS_FALSE;
+        flag = MapContextOptionNameToFlag(cx,  opt);
+        if (!flag)
+            return JS_FALSE;
+        optset |= flag;
     }
     optset = JS_ToggleOptions(cx, optset);
 
     names = NULL;
-    found = 0;
-    while (optset != 0) {
-        flag = optset;
-        optset &= optset - 1;
-        flag &= ~optset;
-        for (j = 0; js_options[j].name; j++) {
-            if (js_options[j].flag == flag) {
-                names = JS_sprintf_append(names, "%s%s",
-                                          names ? "," : "", js_options[j].name);
-                found++;
+    found = JS_FALSE;
+    for (size_t i = 0; i != JS_ARRAY_LENGTH(js_options); i++) {
+        if (js_options[i].flag & optset) {
+            found = JS_TRUE;
+            names = JS_sprintf_append(names, "%s%s",
+                                      names ? "," : "", js_options[i].name);
+            if (!names)
                 break;
-            }
         }
     }
     if (!found)
@@ -631,7 +667,6 @@ Options(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
         JS_ReportOutOfMemory(cx);
         return JS_FALSE;
     }
-
     str = JS_NewString(cx, names, strlen(names));
     if (!str) {
         free(names);
@@ -758,6 +793,20 @@ ReadLine(JSContext *cx, uintN argc, jsval *vp)
     *vp = STRING_TO_JSVAL(str);
     return JS_TRUE;
 }
+
+#ifdef JS_TRACER
+static jsval JS_FASTCALL
+Print_tn(JSContext *cx, JSString *str)
+{
+    char *bytes = JS_EncodeString(cx, str);
+    if (!bytes)
+        return JSVAL_ERROR_COOKIE;
+    fprintf(gOutFile, "%s\n", bytes);
+    JS_free(cx, bytes);
+    fflush(gOutFile);
+    return JSVAL_VOID;
+}
+#endif
 
 static JSBool
 Print(JSContext *cx, uintN argc, jsval *vp)
@@ -1069,7 +1118,7 @@ GetTrapArgs(JSContext *cx, uintN argc, jsval *argv, JSScript **scriptp,
     uintN intarg;
     JSScript *script;
 
-    *scriptp = cx->fp->down->script;
+    *scriptp = JS_GetScriptedCaller(cx, NULL)->script;
     *ip = 0;
     if (argc != 0) {
         v = argv[0];
@@ -1156,7 +1205,7 @@ LineToPC(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
         JS_ReportErrorNumber(cx, my_GetErrorMessage, NULL, JSSMSG_LINE2PC_USAGE);
         return JS_FALSE;
     }
-    script = cx->fp->down->script;
+    script = JS_GetScriptedCaller(cx, NULL)->script;
     if (!GetTrapArgs(cx, argc, argv, &script, &i))
         return JS_FALSE;
     lineno = (i == 0) ? script->lineno : (uintN)i;
@@ -1350,9 +1399,9 @@ Notes(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
     return JS_TRUE;
 }
 
-JS_STATIC_ASSERT(JSTN_CATCH == 0);
-JS_STATIC_ASSERT(JSTN_FINALLY == 1);
-JS_STATIC_ASSERT(JSTN_ITER == 2);
+JS_STATIC_ASSERT(JSTRY_CATCH == 0);
+JS_STATIC_ASSERT(JSTRY_FINALLY == 1);
+JS_STATIC_ASSERT(JSTRY_ITER == 2);
 
 static const char* const TryNoteNames[] = { "catch", "finally", "iter" };
 
@@ -1436,7 +1485,7 @@ DisassFile(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
     JSScript *script;
     JSBool ok;
     uint32 oldopts;
-    
+
     if (!argc)
         return JS_TRUE;
 
@@ -1456,7 +1505,7 @@ DisassFile(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
     obj = JS_NewScriptObject(cx, script);
     if (!obj)
         return JS_FALSE;
-    
+
     *rval = OBJECT_TO_JSVAL(obj); /* I like to root it, root it. */
     ok = Disassemble(cx, obj, 1, rval, rval); /* gross, but works! */
     *rval = JSVAL_VOID;
@@ -2326,6 +2375,9 @@ split_outerObject(JSContext *cx, JSObject *obj)
     return cpx->isInner ? cpx->outer : obj;
 }
 
+static JSBool
+split_equality(JSContext *cx, JSObject *obj, jsval v, JSBool *bp);
+
 static JSObject *
 split_innerObject(JSContext *cx, JSObject *obj)
 {
@@ -2350,9 +2402,30 @@ static JSExtendedClass split_global_class = {
     JS_ConvertStub, split_finalize,
     NULL, NULL, NULL, NULL, NULL, NULL,
     split_mark, NULL},
-    NULL, split_outerObject, split_innerObject,
+    split_equality, split_outerObject, split_innerObject,
     NULL, NULL, NULL, NULL, NULL
 };
+
+static JSBool
+split_equality(JSContext *cx, JSObject *obj, jsval v, JSBool *bp)
+{
+    *bp = JS_FALSE;
+    if (JSVAL_IS_PRIMITIVE(v))
+        return JS_TRUE;
+
+    JSObject *obj2 = JSVAL_TO_OBJECT(v);
+    if (JS_GET_CLASS(cx, obj2) != &split_global_class.base)
+        return JS_TRUE;
+
+    ComplexObject *cpx = (ComplexObject *) JS_GetPrivate(cx, obj2);
+    JS_ASSERT(!cpx->isInner);
+
+    ComplexObject *ourCpx = (ComplexObject *) JS_GetPrivate(cx, obj);
+    JS_ASSERT(!ourCpx->isInner);
+
+    *bp = (cpx == ourCpx);
+    return JS_TRUE;
+}
 
 JSObject *
 split_create_outer(JSContext *cx)
@@ -2487,6 +2560,7 @@ EvalInContext(JSContext *cx, JSObject *obj, uintN argc, jsval *argv,
         JS_ReportOutOfMemory(cx);
         return JS_FALSE;
     }
+    JS_SetOptions(scx, JS_GetOptions(cx));
 
 #ifdef JS_THREADSAFE
     JS_BeginRequest(scx);
@@ -2540,10 +2614,31 @@ out:
     return ok;
 }
 
+static int32 JS_FASTCALL
+ShapeOf_tn(JSObject *obj)
+{
+    if (!obj)
+        return 0;
+    if (!OBJ_IS_NATIVE(obj))
+        return -1;
+    return OBJ_SHAPE(obj);
+}
+
+static JSBool
+ShapeOf(JSContext *cx, uintN argc, jsval *vp)
+{
+    jsval v = JS_ARGV(cx, vp)[0];
+    if (!JSVAL_IS_OBJECT(v)) {
+        JS_ReportError(cx, "shapeOf: object expected");
+        return JS_FALSE;
+    }
+    return JS_NewNumberValue(cx, ShapeOf_tn(JSVAL_TO_OBJECT(v)), vp);
+}
+
 #ifdef JS_THREADSAFE
 
 static JSBool
-Sleep(JSContext *cx, uintN argc, jsval *vp)
+Sleep_fn(JSContext *cx, uintN argc, jsval *vp)
 {
     jsdouble t_secs;
     PRUint32 t_ticks;
@@ -2803,13 +2898,16 @@ fail:
 
 #endif
 
+JS_DEFINE_TRCINFO_1(Print, (2, (static, JSVAL_FAIL, Print_tn, CONTEXT, STRING, 0, 0)))
+JS_DEFINE_TRCINFO_1(ShapeOf, (1, (static, INT32, ShapeOf_tn, OBJECT, 0, 0)))
+
 /* We use a mix of JS_FS and JS_FN to test both kinds of natives. */
 static JSFunctionSpec shell_functions[] = {
     JS_FS("version",        Version,        0,0,0),
     JS_FS("options",        Options,        0,0,0),
     JS_FS("load",           Load,           1,0,0),
     JS_FN("readline",       ReadLine,       0,0),
-    JS_FN("print",          Print,          0,0),
+    JS_TN("print",          Print,          0,0, Print_trcinfo),
     JS_FS("help",           Help,           0,0,0),
     JS_FS("quit",           Quit,           0,0,0),
     JS_FN("gc",             GC,             0,0),
@@ -2847,6 +2945,7 @@ static JSFunctionSpec shell_functions[] = {
     JS_FN("getslx",         GetSLX,         1,0),
     JS_FN("toint32",        ToInt32,        1,0),
     JS_FS("evalcx",         EvalInContext,  1,0,0),
+    JS_TN("shapeOf",        ShapeOf,        1,0, ShapeOf_trcinfo),
 #ifdef MOZ_SHARK
     JS_FS("startShark",      js_StartShark,      0,0,0),
     JS_FS("stopShark",       js_StopShark,       0,0,0),
@@ -2868,7 +2967,7 @@ static JSFunctionSpec shell_functions[] = {
     JS_FS("arrayInfo",       js_ArrayInfo,       1,0,0),
 #endif
 #ifdef JS_THREADSAFE
-    JS_FN("sleep",          Sleep,          1,0),
+    JS_FN("sleep",          Sleep_fn,       1,0),
     JS_FN("scatter",        Scatter,        1,0),
 #endif
     JS_FS_END
@@ -2931,6 +3030,7 @@ static const char *const shell_help_messages[] = {
 "  Evaluate s in optional sandbox object o\n"
 "  if (s == '' && !o) return new o with eager standard classes\n"
 "  if (s == 'lazy' && !o) return new o with lazy standard classes",
+"shapeOf(obj)             Get the shape of obj (an implementation detail)",
 #ifdef MOZ_SHARK
 "startShark()             Start a Shark session.\n"
 "                         Shark must be running with programatic sampling.",
@@ -3756,7 +3856,7 @@ MakeAbsolutePathname(JSContext *cx, const char *from, const char *leaf)
 
     /* Else, we were given a real pathname, return that + the leaf. */
     dirlen = slash - from + 1;
-    dir = JS_malloc(cx, dirlen + strlen(leaf) + 1);
+    dir = (char*) JS_malloc(cx, dirlen + strlen(leaf) + 1);
     if (!dir)
         return NULL;
 
@@ -3804,7 +3904,7 @@ snarf(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
             if (len == -1 || fseek(file, 0, SEEK_SET) == EOF) {
                 JS_ReportError(cx, "can't seek start of %s", pathname);
             } else {
-                buf = JS_malloc(cx, len + 1);
+                buf = (char*) JS_malloc(cx, len + 1);
                 if (buf) {
                     cc = fread(buf, 1, len, file);
                     if (cc != len) {
@@ -3873,8 +3973,9 @@ main(int argc, char **argv, char **envp)
 #endif /* JSDEBUGGER */
 
     CheckHelpMessages();
+#ifndef WINCE
     setlocale(LC_ALL, "");
-
+#endif
     gStackBase = (jsuword)&stackDummy;
 
 #ifdef XP_OS2

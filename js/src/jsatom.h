@@ -162,9 +162,12 @@ struct JSAtomState {
     /* The rt->emptyString atom, see jsstr.c's js_InitRuntimeStringState. */
     JSAtom              *emptyAtom;
 
-    /* Type names and value literals. */
-    JSAtom              *typeAtoms[JSTYPE_LIMIT];
+    /*
+     * Literal value and type names.
+     * NB: booleanAtoms must come right before typeAtoms!
+     */
     JSAtom              *booleanAtoms[2];
+    JSAtom              *typeAtoms[JSTYPE_LIMIT];
     JSAtom              *nullAtom;
 
     /* Standard class constructor or prototype names. */
@@ -172,8 +175,10 @@ struct JSAtomState {
 
     /* Various built-in or commonly-used atoms, pinned on first context. */
     JSAtom              *anonymousAtom;
+    JSAtom              *applyAtom;
     JSAtom              *argumentsAtom;
     JSAtom              *arityAtom;
+    JSAtom              *callAtom;
     JSAtom              *calleeAtom;
     JSAtom              *callerAtom;
     JSAtom              *classPrototypeAtom;
@@ -202,6 +207,7 @@ struct JSAtomState {
     JSAtom              *toSourceAtom;
     JSAtom              *toStringAtom;
     JSAtom              *valueOfAtom;
+    JSAtom              *toJSONAtom;
     JSAtom              *void0Atom;
 
 #if JS_HAS_XML_SUPPORT
@@ -218,9 +224,9 @@ struct JSAtomState {
 #endif
 
 #ifdef NARCISSUS
-    JSAtom              *callAtom;
-    JSAtom              *constructAtom;
-    JSAtom              *hasInstanceAtom;
+    JSAtom              *__call__Atom;
+    JSAtom              *__construct__Atom;
+    JSAtom              *__hasInstance__Atom;
     JSAtom              *ExecutionContextAtom;
     JSAtom              *currentAtom;
 #endif
@@ -260,7 +266,13 @@ struct JSAtomState {
 #define ATOM_OFFSET_LIMIT       (sizeof(JSAtomState))
 
 #define COMMON_ATOMS_START(state)                                             \
-    (JSAtom **)((uint8 *)(state) + ATOM_OFFSET_START)
+    ((JSAtom **)((uint8 *)(state) + ATOM_OFFSET_START))
+#define COMMON_ATOM_INDEX(name)                                               \
+    ((offsetof(JSAtomState, name##Atom) - ATOM_OFFSET_START)                  \
+     / sizeof(JSAtom*))
+#define COMMON_TYPE_ATOM_INDEX(type)                                          \
+    ((offsetof(JSAtomState, typeAtoms[type]) - ATOM_OFFSET_START)             \
+     / sizeof(JSAtom*))
 
 /* Start and limit offsets should correspond to atoms. */
 JS_STATIC_ASSERT(ATOM_OFFSET_START % sizeof(JSAtom *) == 0);
@@ -274,19 +286,19 @@ JS_STATIC_ASSERT(ATOM_OFFSET_LIMIT % sizeof(JSAtom *) == 0);
     ((cx)->runtime->atomState.classAtoms[JSProto_##name])
 
 extern const char *const js_common_atom_names[];
+extern const size_t      js_common_atom_count;
 
 /*
  * Macros to access C strings for JSType and boolean literals together with
- * checks that type names and booleans starts from index 1 and 1+JSTYPE_LIMIT
- * correspondingly.
+ * checks that boolean names start from index 1 and type names from 1+2.
  */
-#define JS_TYPE_STR(type)    (js_common_atom_names[1 + (type)])
-#define JS_BOOLEAN_STR(type) (js_common_atom_names[1 + JSTYPE_LIMIT + (type)])
+#define JS_BOOLEAN_STR(type) (js_common_atom_names[1 + (type)])
+#define JS_TYPE_STR(type)    (js_common_atom_names[1 + 2 + (type)])
 
 JS_STATIC_ASSERT(1 * sizeof(JSAtom *) ==
-                 offsetof(JSAtomState, typeAtoms) - ATOM_OFFSET_START);
-JS_STATIC_ASSERT((1 + JSTYPE_LIMIT) * sizeof(JSAtom *) ==
                  offsetof(JSAtomState, booleanAtoms) - ATOM_OFFSET_START);
+JS_STATIC_ASSERT((1 + 2) * sizeof(JSAtom *) ==
+                 offsetof(JSAtomState, typeAtoms) - ATOM_OFFSET_START);
 
 /* Well-known predefined C strings. */
 #define JS_PROTO(name,code,init) extern const char js_##name##_str[];
@@ -294,8 +306,10 @@ JS_STATIC_ASSERT((1 + JSTYPE_LIMIT) * sizeof(JSAtom *) ==
 #undef JS_PROTO
 
 extern const char   js_anonymous_str[];
+extern const char   js_apply_str[];
 extern const char   js_arguments_str[];
 extern const char   js_arity_str[];
+extern const char   js_call_str[];
 extern const char   js_callee_str[];
 extern const char   js_caller_str[];
 extern const char   js_class_prototype_str[];
@@ -337,12 +351,13 @@ extern const char   js_toString_str[];
 extern const char   js_toLocaleString_str[];
 extern const char   js_undefined_str[];
 extern const char   js_valueOf_str[];
+extern const char   js_toJSON_str[];
 extern const char   js_xml_str[];
 
 #ifdef NARCISSUS
-extern const char   js_call_str[];
-extern const char   js_construct_str[];
-extern const char   js_hasInstance_str[];
+extern const char   js___call___str[];
+extern const char   js___construct___str[];
+extern const char   js___hasInstance___str[];
 extern const char   js_ExecutionContext_str[];
 extern const char   js_current_str[];
 #endif

@@ -93,7 +93,7 @@ NS_CYCLE_COLLECTION_CLASSNAME(nsXPCWrappedJS)::Traverse
 NS_IMPL_CYCLE_COLLECTION_ROOT_BEGIN(nsXPCWrappedJS)
     if(tmp->mRoot && !tmp->mRoot->HasWeakReferences() && tmp->IsValid())
     {
-        XPCJSRuntime* rt = nsXPConnect::GetRuntime();
+        XPCJSRuntime* rt = nsXPConnect::GetRuntimeInstance();
         if(rt)
         {
             if(tmp->mRoot == tmp)
@@ -229,7 +229,8 @@ nsXPCWrappedJS::Release(void)
 
     // need to take the map lock here to prevent GetNewOrUsed from trying
     // to reuse a wrapper on one thread while it's being destroyed on another
-    XPCAutoLock lock(nsXPConnect::GetRuntime()->GetMapLock());
+    XPCJSRuntime* rt = nsXPConnect::GetRuntimeInstance();
+    XPCAutoLock lock(rt->GetMapLock());
 
 do_decrement:
 
@@ -244,7 +245,7 @@ do_decrement:
     if(1 == cnt)
     {
         if(IsValid())
-            RemoveFromRootSet(nsXPConnect::GetRuntime()->GetJSRuntime());
+            RemoveFromRootSet(rt->GetJSRuntime());
 
         // If we are not the root wrapper or if we are not being used from a
         // weak reference, then this extra ref is not needed and we can let
@@ -457,15 +458,12 @@ nsXPCWrappedJS::~nsXPCWrappedJS()
         ClearWeakReferences();
 
         // Remove this root wrapper from the map
-        XPCJSRuntime* rt = nsXPConnect::GetRuntime();
-        if(rt)
+        XPCJSRuntime* rt = nsXPConnect::GetRuntimeInstance();
+        JSObject2WrappedJSMap* map = rt->GetWrappedJSMap();
+        if(map)
         {
-            JSObject2WrappedJSMap* map = rt->GetWrappedJSMap();
-            if(map)
-            {
-                XPCAutoLock lock(rt->GetMapLock());
-                map->Remove(this);
-            }
+            XPCAutoLock lock(rt->GetMapLock());
+            map->Remove(this);
         }
     }
     Unlink();
@@ -495,8 +493,8 @@ nsXPCWrappedJS::Unlink()
     NS_IF_RELEASE(mClass);
     if (mOuter)
     {
-        XPCJSRuntime* rt = nsXPConnect::GetRuntime();
-        if (rt && rt->GetThreadRunningGC())
+        XPCJSRuntime* rt = nsXPConnect::GetRuntimeInstance();
+        if (rt->GetThreadRunningGC())
         {
             rt->DeferredRelease(mOuter);
             mOuter = nsnull;

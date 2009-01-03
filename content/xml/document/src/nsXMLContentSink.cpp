@@ -205,9 +205,9 @@ NS_IMPL_CYCLE_COLLECTION_TRAVERSE_END
 
 // nsIContentSink
 NS_IMETHODIMP
-nsXMLContentSink::WillTokenize(void)
+nsXMLContentSink::WillParse(void)
 {
-  return WillProcessTokensImpl();
+  return WillParseImpl();
 }
 
 NS_IMETHODIMP
@@ -412,6 +412,7 @@ nsXMLContentSink::OnTransformDone(nsresult aResult,
   if (NS_FAILED(aResult) && contentViewer) {
     // Transform failed.
     if (domDoc) {
+      aResultDocument->SetMayStartLayout(PR_FALSE);
       // We have an error document.
       contentViewer->SetDOMDocument(domDoc);
     }
@@ -631,9 +632,9 @@ nsXMLContentSink::CloseElement(nsIContent* aContent)
   }
   
   if (nodeInfo->Equals(nsGkAtoms::base, kNameSpaceID_XHTML) &&
-           !mHasProcessedBase) {
+      !mHasProcessedBase) {
     // The first base wins
-    rv = ProcessBASETag(aContent);
+    ProcessBASETag(aContent);
     mHasProcessedBase = PR_TRUE;
   }
   else if (nodeInfo->Equals(nsGkAtoms::meta, kNameSpaceID_XHTML) &&
@@ -654,6 +655,18 @@ nsXMLContentSink::CloseElement(nsIContent* aContent)
       if (NS_SUCCEEDED(rv) && willNotify && !isAlternate) {
         ++mPendingSheetCount;
         mScriptLoader->AddExecuteBlocker();
+      }
+    }
+    // Look for <link rel="dns-prefetch" href="hostname">
+    if (nodeInfo->Equals(nsGkAtoms::link, kNameSpaceID_XHTML)) {
+      nsAutoString relVal;
+      aContent->GetAttr(kNameSpaceID_None, nsGkAtoms::rel, relVal);
+      if (relVal.EqualsLiteral("dns-prefetch")) {
+        nsAutoString hrefVal;
+        aContent->GetAttr(kNameSpaceID_None, nsGkAtoms::href, hrefVal);
+        if (!hrefVal.IsEmpty()) {
+          PrefetchDNS(hrefVal);
+        }
       }
     }
   }
@@ -783,12 +796,10 @@ nsXMLContentSink::ProcessStyleLink(nsIContent* aElement,
   return rv;
 }
 
-nsresult
+void
 nsXMLContentSink::ProcessBASETag(nsIContent* aContent)
 {
   NS_ASSERTION(aContent, "missing base-element");
-
-  nsresult rv = NS_OK;
 
   if (mDocument) {
     nsAutoString value;
@@ -799,7 +810,7 @@ nsXMLContentSink::ProcessBASETag(nsIContent* aContent)
 
     if (aContent->GetAttr(kNameSpaceID_None, nsGkAtoms::href, value)) {
       nsCOMPtr<nsIURI> baseURI;
-      rv = NS_NewURI(getter_AddRefs(baseURI), value);
+      nsresult rv = NS_NewURI(getter_AddRefs(baseURI), value);
       if (NS_SUCCEEDED(rv)) {
         rv = mDocument->SetBaseURI(baseURI); // The document checks if it is legal to set this base
         if (NS_SUCCEEDED(rv)) {
@@ -808,8 +819,6 @@ nsXMLContentSink::ProcessBASETag(nsIContent* aContent)
       }
     }
   }
-
-  return rv;
 }
 
 
@@ -830,22 +839,56 @@ nsXMLContentSink::GetTarget()
 }
 
 nsresult
-nsXMLContentSink::FlushText()
+nsXMLContentSink::FlushText(PRBool aReleaseTextNode)
 {
-  if (mTextLength == 0) {
-    return NS_OK;
+  nsresult rv = NS_OK;
+
+  if (mTextLength != 0) {
+    if (mLastTextNode) {
+      if ((mLastTextNodeSize + mTextLength) > mTextSize && !mXSLTProcessor) {
+        mLastTextNodeSize = 0;
+        mLastTextNode = nsnull;
+        FlushText(aReleaseTextNode);
+      } else {
+        PRBool notify = HaveNotifiedForCurrentContent();
+        // We could probably always increase mInNotification here since
+        // if AppendText doesn't notify it shouldn't trigger evil code.
+        // But just in case it does, we don't want to mask any notifications.
+        if (notify) {
+          ++mInNotification;
+        }
+        rv = mLastTextNode->AppendText(mText, mTextLength, notify);
+        if (notify) {
+          --mInNotification;
+        }
+
+        mLastTextNodeSize += mTextLength;
+        mTextLength = 0;
+      }
+    } else {
+      nsCOMPtr<nsIContent> textContent;
+      rv = NS_NewTextNode(getter_AddRefs(textContent),
+                          mNodeInfoManager);
+      NS_ENSURE_SUCCESS(rv, rv);
+
+      mLastTextNode = textContent;
+      
+      // Set the text in the text node
+      textContent->SetText(mText, mTextLength, PR_FALSE);
+      mLastTextNodeSize += mTextLength;
+      mTextLength = 0;
+
+      // Add text to its parent
+      rv = AddContentAsLeaf(textContent);
+    }
   }
 
-  nsCOMPtr<nsIContent> textContent;
-  nsresult rv = NS_NewTextNode(getter_AddRefs(textContent), mNodeInfoManager);
-  NS_ENSURE_SUCCESS(rv, rv);
-
-  // Set the text in the text node
-  textContent->SetText(mText, mTextLength, PR_FALSE);
-  mTextLength = 0;
-
-  // Add text to its parent
-  return AddContentAsLeaf(textContent);
+  if (aReleaseTextNode) {
+    mLastTextNodeSize = 0;
+    mLastTextNode = nsnull;
+  }
+  
+  return rv;
 }
 
 nsIContent*
@@ -1331,10 +1374,9 @@ nsXMLContentSink::HandleProcessingInstruction(const PRUnichar *aTarget,
 
   nsAutoString href, title, media;
   PRBool isAlternate = PR_FALSE;
-  ParsePIData(data, href, title, media, isAlternate);
 
   // If there was no href, we can't do anything with this PI
-  if (href.IsEmpty()) {
+  if (!ParsePIData(data, href, title, media, isAlternate)) {
       return DidProcessATokenImpl();
   }
 
@@ -1343,16 +1385,14 @@ nsXMLContentSink::HandleProcessingInstruction(const PRUnichar *aTarget,
 }
 
 /* static */
-void
+PRBool
 nsXMLContentSink::ParsePIData(const nsString &aData, nsString &aHref,
                               nsString &aTitle, nsString &aMedia,
                               PRBool &aIsAlternate)
 {
-  nsParserUtils::GetQuotedAttributeValue(aData, nsGkAtoms::href, aHref);
-
   // If there was no href, we can't do anything with this PI
-  if (aHref.IsEmpty()) {
-    return;
+  if (!nsParserUtils::GetQuotedAttributeValue(aData, nsGkAtoms::href, aHref)) {
+    return PR_FALSE;
   }
 
   nsParserUtils::GetQuotedAttributeValue(aData, nsGkAtoms::title, aTitle);
@@ -1363,6 +1403,8 @@ nsXMLContentSink::ParsePIData(const nsString &aData, nsString &aHref,
   nsParserUtils::GetQuotedAttributeValue(aData, nsGkAtoms::alternate, alternate);
 
   aIsAlternate = alternate.EqualsLiteral("yes");
+
+  return PR_TRUE;
 }
 
 NS_IMETHODIMP
@@ -1557,7 +1599,7 @@ nsXMLContentSink::FlushPendingNotifications(mozFlushType aType)
       FlushTags();
     }
     else {
-      FlushText();
+      FlushText(PR_FALSE);
     }
     if (aType >= Flush_Layout) {
       // Make sure that layout has started so that the reflow flush
@@ -1591,7 +1633,7 @@ nsXMLContentSink::FlushTags()
     mBeganUpdate = PR_TRUE;
 
     // Don't release last text node in case we need to add to it again
-    FlushText();
+    FlushText(PR_FALSE);
 
     // Start from the base of the stack (growing downward) and do
     // a notification from the node that is closest to the root of

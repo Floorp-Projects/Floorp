@@ -202,7 +202,8 @@ private:
     PRUint16     mProxyPort;
     PRPackedBool mProxyTransparent;
     PRPackedBool mProxyTransparentResolvesHost;
-
+    PRUint32     mConnectionFlags;
+    
     PRUint16         SocketPort() { return (!mProxyHost.IsEmpty() && !mProxyTransparent) ? mProxyPort : mPort; }
     const nsCString &SocketHost() { return (!mProxyHost.IsEmpty() && !mProxyTransparent) ? mProxyHost : mHost; }
 

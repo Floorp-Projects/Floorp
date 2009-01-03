@@ -1,4 +1,6 @@
 function test() {
+  waitForExplicitFinish();
+
   gBrowser.addTab();
   gBrowser.addTab();
   gBrowser.addTab();
@@ -49,7 +51,7 @@ function test() {
   }
   assertTabs(2);
 
-  //ctrlTabTest([1], 1, 0);
+  ctrlTabTest([1], 1, 0);
 
   gBrowser.removeTab(gBrowser.tabContainer.lastChild);
 
@@ -69,6 +71,66 @@ function test() {
        "Ctrl+Tab doesn't change focus if one tab is open");
   }
 
+  gBrowser.addTab();
+  gBrowser.addTab();
+  gBrowser.addTab();
+
+  assertTabs(4);
+  selectTabs([0, 1, 2, 3]);
+  pressCtrlTab();
+  ctrlTab.panel.addEventListener("popupshown", stickyTests, false);
+
+  function stickyTests() {
+    ctrlTab.panel.removeEventListener("popupshown", stickyTests, false);
+
+    EventUtils.synthesizeKey("f", { ctrlKey: true });
+    is(document.activeElement, ctrlTab.searchField.inputField,
+       "Ctrl+Tab -> Ctrl+F focuses the panel's search field");
+
+    releaseCtrl();
+    ok(isOpen(),
+       "panel is sticky after focusing the search field and releasing the Ctrl key");
+
+    EventUtils.synthesizeKey("f", {});
+    EventUtils.synthesizeKey("o", {});
+    EventUtils.synthesizeKey("o", {});
+    is(ctrlTab.searchField.value, "foo",
+       "text entered into search field");
+
+    EventUtils.synthesizeKey("VK_RETURN", {});
+    ok(isOpen(),
+       "Enter key kicks pending search off; the panel stays open as there's no match");
+    is(ctrlTab.searchField.value, "foo",
+       "search field value persists after Enter pressed");
+
+    EventUtils.synthesizeKey("VK_ESCAPE", {});
+    is(ctrlTab.searchField.value, "",
+       "ESC key clears the search field");
+    ok(isOpen(),
+       "Clearing the search field with ESC keeps the panel open");
+
+    // blur the search field
+    EventUtils.synthesizeKey("VK_TAB", {});
+    isnot(document.activeElement, ctrlTab.searchField.inputField,
+          "Tab key blurs the panel's search field");
+
+    // advance selection and close panel
+    EventUtils.synthesizeKey("VK_TAB", {});
+    EventUtils.synthesizeKey("VK_TAB", {});
+    EventUtils.synthesizeKey("VK_RETURN", {});
+    ok(!isOpen(),
+       "Enter key closes the panel");
+    is(gBrowser.tabContainer.selectedIndex, 1,
+       "Tab key advances the selection while the panel is sticky");
+
+    gBrowser.removeCurrentTab();
+    gBrowser.removeCurrentTab();
+    gBrowser.removeCurrentTab();
+    assertTabs(1);
+    finish();
+  }
+
+
   /* private utility functions */
 
   function pressCtrlTab(aShiftKey)
@@ -76,6 +138,9 @@ function test() {
 
   function releaseCtrl()
     EventUtils.synthesizeKey("VK_CONTROL", { type: "keyup" });
+
+  function isOpen()
+    ctrlTab.panel.state == "showing" || ctrlTab.panel.state == "open";
 
   function assertTabs(aTabs) {
     var tabs = gBrowser.mTabs.length;
@@ -110,18 +175,15 @@ function test() {
     }
 
     if (tabCount > 2) {
-      ok(ctrlTab.panel.state == "showing" || ctrlTab.panel.state == "open",
+      ok(isOpen(),
          "With " + tabCount + " tabs open, Ctrl+Tab opens the preview panel");
-
-      is(ctrlTab.label.value, gBrowser.mTabs[expectedIndex].label,
-         "Preview panel displays label of expected tab");
 
       releaseCtrl();
 
-      ok(ctrlTab.panel.state == "hiding" || ctrlTab.panel.state == "closed",
+      ok(!isOpen(),
          "Releasing Ctrl closes the preview panel");
     } else {
-      ok(ctrlTab.panel.state == "hiding" || ctrlTab.panel.state == "closed",
+      ok(!isOpen(),
          "With " + tabCount + " tabs open, Ctrl+Tab doesn't open the preview panel");
     }
 

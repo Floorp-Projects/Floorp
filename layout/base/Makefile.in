@@ -167,11 +167,13 @@ include $(topsrcdir)/config/rules.mk
 
 LOCAL_INCLUDES += \
 		-I$(srcdir) \
+		-I$(srcdir)/../style \
 		-I$(srcdir)/../generic \
 		-I$(srcdir)/../forms \
 		-I$(srcdir)/../tables \
 		-I$(srcdir)/../printing \
 		-I$(srcdir)/../xul/base/src \
+		-I$(srcdir)/../xul/base/src/tree/src \
 		-I$(srcdir)/../../content/base/src \
 		-I$(srcdir)/../../content/events/src \
 		-I$(srcdir)/../../content/xbl/src \
@@ -189,6 +191,11 @@ endif
 ifdef MOZ_SVG
 LOCAL_INCLUDES += \
         -I$(srcdir)/../svg/base/src
+endif
+
+ifdef MOZ_MEDIA
+LOCAL_INCLUDES += \
+        -I$(srcdir)/../../content/html/content/src
 endif
 
 CXXFLAGS += $(MOZ_CAIRO_CFLAGS)

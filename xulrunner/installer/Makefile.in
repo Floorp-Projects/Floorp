@@ -77,7 +77,7 @@ regdir = /etc/gre.d
 
 install:: $(MOZILLA_VERSION).system.conf
 	$(NSINSTALL) -D $(DESTDIR)$(regdir)
-	$(SYSINSTALL) $^ $(DESTDIR)$(regdir)
+	$(SYSINSTALL) $(IFLAGS1) $^ $(DESTDIR)$(regdir)
 endif
 
 # Add pkg-config files to the install:: target
@@ -110,7 +110,7 @@ ifndef MOZ_NATIVE_NSS
 pkg_config_files += mozilla-nss.pc
 endif
 
-%.pc: $(srcdir)/%.pc.in Makefile.in Makefile $(DEPTH)/config/autoconf.mk
+%.pc: $(srcdir)/%.pc.in $(GLOBAL_DEPS)
 	cat $< | sed \
 	-e "s|%prefix%|$(prefix)|" \
 	-e "s|%includedir%|$(includedir)|" \
@@ -118,6 +118,7 @@ endif
 	-e "s|%sdkdir%|$(sdkdir)|" \
 	-e "s|%MOZ_APP_NAME%|$(MOZ_APP_NAME)|" \
 	-e "s|%MOZILLA_VERSION%|$(MOZ_APP_VERSION)|" \
+	-e "s|%WCHAR_CFLAGS%|$(WCHAR_CFLAGS)|" \
 	-e "s|%FULL_NSPR_LIBS%|$(FULL_NSPR_LIBS)|" \
 	-e "s|%FULL_NSPR_CFLAGS%|$(FULL_NSPR_CFLAGS)|" \
 	-e "s|%NSPR_NAME%|$(NSPR_NAME)|" \
@@ -138,8 +139,13 @@ GRE_MILESTONE = $(shell $(PYTHON) $(topsrcdir)/config/printconfigsetting.py $(LI
 GRE_BUILDID = $(shell $(PYTHON) $(topsrcdir)/config/printconfigsetting.py $(LIBXUL_DIST)/bin/platform.ini Build BuildID)
 MOZ_DEB_TIMESTAMP = "$(shell date  +"%a, %d  %b %Y %T %z" )"
 
-DEFINES += -DGRE_MILESTONE=$(GRE_MILESTONE) -DGRE_BUILDID=$(GRE_BUILDID) -DMOZ_DEB_TIMESTAMP=$(MOZ_DEB_TIMESTAMP)
-
+DEFINES += \
+	-DGRE_MILESTONE=$(GRE_MILESTONE) \
+	-DGRE_BUILDID=$(GRE_BUILDID) \
+	-DMOZ_DEB_TIMESTAMP=$(MOZ_DEB_TIMESTAMP) \
+	-DMOZ_APP_NAME=$(MOZ_APP_NAME) \
+	-Dinstalldir=$(installdir) \
+	$(NULL)
 
 ifeq ($(OS_TARGET),Linux)
 debian/changelog: $(srcdir)/debian/changelog.in  $(LIBXUL_DIST)/bin/platform.ini
@@ -147,14 +153,27 @@ debian/changelog: $(srcdir)/debian/changelog.in  $(LIBXUL_DIST)/bin/platform.ini
 	$(PYTHON) $(topsrcdir)/config/Preprocessor.py \
         $(AUTOMATION_PPARGS) $(DEFINES) $(ACDEFINES) $^ > $@
 
-deb: debian/changelog
+debian/xulrunner.links: $(srcdir)/debian/xulrunner.links.in
+	$(PYTHON) $(topsrcdir)/config/Preprocessor.py \
+        $(AUTOMATION_PPARGS) $(DEFINES) $(ACDEFINES) $^ > $@
+
+debian/xulrunner.service: $(srcdir)/debian/xulrunner.service.in
+	$(PYTHON) $(topsrcdir)/config/Preprocessor.py \
+        $(AUTOMATION_PPARGS) $(DEFINES) $(ACDEFINES) $^ > $@
+
+package:
+	$(MAKE) package -C $(DEPTH)
+
+deb: package debian/changelog debian/xulrunner.service debian/xulrunner.links $(MOZILLA_VERSION).system.conf
 	$(NSINSTALL)  $(topsrcdir)/$(MOZ_BUILD_APP)/installer/debian .
-	rm -rf $(DEBDESTDIR)/usr/local/*
-	$(NSINSTALL) -D $(DEBDESTDIR)/usr/local
-	cd $(DEBDESTDIR)/usr/local; cat ../../../../$(DEPTH)/dist/$(PKG_PATH)$(PKG_BASENAME)$(PKG_SUFFIX) | $(UNMAKE_PACKAGE)
+	rm -fr $(DEBDESTDIR)
+	$(NSINSTALL) -D $(DEBDESTDIR)$(installdir)
+	cd $(DEBDESTDIR)/$(installdir); cp -pRL ../../../../../../$(DEPTH)/dist/$(MOZ_BUILD_APP)/* .
 	$(NSINSTALL) -D $(DEBDESTDIR)/usr/share/dbus-1/services/
 	cp debian/$(MOZ_BUILD_APP).service $(DEBDESTDIR)/usr/share/dbus-1/services/org.mozilla.$(MOZ_BUILD_APP).service
-	rm  $(DEBDESTDIR)/usr/local/$(MOZ_BUILD_APP)/xpidl
-	dh_shlibdeps; fakeroot dh_fixperms; fakeroot dh_installdeb ; fakeroot dh_gencontrol; fakeroot dh_md5sums; dh_builddeb
+	$(NSINSTALL) -D $(DEBDESTDIR)$(regdir)
+	$(SYSINSTALL) $(MOZILLA_VERSION).system.conf  $(DEBDESTDIR)$(regdir)/
+	rm $(DEBDESTDIR)$(installdir)/xpidl
+	dh_shlibdeps; fakeroot dh_fixperms; fakeroot dh_installdeb; fakeroot dh_gencontrol; fakeroot dh_md5sums; dh_builddeb
 endif
 

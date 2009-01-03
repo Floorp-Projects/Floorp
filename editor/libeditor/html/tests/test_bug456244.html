@@ -1,0 +1,72 @@
+<!DOCTYPE HTML>
+<html><head>
+<title>Test for bug 456244</title>
+<style src="/tests/SimpleTest/test.css" type="text/css"></style>
+<script type="application/javascript" src="/MochiKit/packed.js"></script>
+<script type="application/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+<script type="text/javascript" src="/tests/SimpleTest/EventUtils.js"></script>
+
+<script class="testbody" type="application/javascript">
+function runTest() {
+  netscape.security.PrivilegeManager.enablePrivilege("UniversalXPConnect");
+
+  function select(id) {
+    var e = document.getElementById(id);
+    e.focus();
+    return e;
+  }
+
+  function setupIframe(id) {
+    var e = document.getElementById(id);
+    var doc = e.contentDocument;
+    doc.body.innerHTML = String.fromCharCode(10)+'<span id="' + id + '_span" style="border:1px solid blue" contenteditable="true">X</span>'+String.fromCharCode(10);
+    e = doc.getElementById(id + "_span");
+    e.focus();
+    return e;
+  }
+
+  function test_end_bs(e) {
+    const msg = "Deleting all text in contenteditable inline element";
+    var before = e.parentNode.childNodes[0].nodeValue;
+    sendKey("right", e);
+    sendKey("back_space", e);
+    sendKey("back_space", e);
+    is(e.parentNode.childNodes[0].nodeValue, before, msg + " with id=" + e.id);
+    is(e.innerHTML, "", msg + " with id=" + e.id);
+  }
+
+  test_end_bs(select("t1"));
+  test_end_bs(setupIframe('i1',0));
+
+  {
+    const msg = "Deleting all text in contenteditable body element";
+    var e = document.getElementById('i2');
+    var doc = e.contentDocument;
+    doc.body.setAttribute("contenteditable", "true");
+    doc.body.focus();
+    sendKey("right", doc.body);
+    sendKey("back_space", doc.body);
+    is(doc.body.innerHTML, "<br>", msg + " with id=" + e.id);
+  }
+
+  SimpleTest.finish();
+}
+
+SimpleTest.waitForExplicitFinish();
+addLoadEvent(runTest);
+</script>
+</head>
+<body>
+<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=456244">Mozilla Bug 456244</a>
+<p id="display"></p>
+
+<pre id="test">
+</pre>
+
+<div> <span id="t1" style="border:1px solid blue" contenteditable="true">X</span> Y</div>
+
+<iframe id="i1" width="200" height="100" src="about:blank"></iframe><br>
+<iframe id="i2" width="200" height="100" src="about:blank">X</iframe><br>
+
+</body>
+</html>

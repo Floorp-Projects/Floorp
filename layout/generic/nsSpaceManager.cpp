@@ -91,14 +91,14 @@ nsSpaceManager::BandList::Clear()
 /////////////////////////////////////////////////////////////////////////////
 
 // PresShell Arena allocate callback (for nsIntervalSet use below)
-PR_STATIC_CALLBACK(void*)
+static void*
 PSArenaAllocCB(size_t aSize, void* aClosure)
 {
   return static_cast<nsIPresShell*>(aClosure)->AllocateFrame(aSize);
 }
 
 // PresShell Arena free callback (for nsIntervalSet use below)
-PR_STATIC_CALLBACK(void)
+static void
 PSArenaFreeCB(size_t aSize, void* aPtr, void* aClosure)
 {
   static_cast<nsIPresShell*>(aClosure)->FreeFrame(aSize, aPtr);
@@ -107,9 +107,8 @@ PSArenaFreeCB(size_t aSize, void* aPtr, void* aClosure)
 /////////////////////////////////////////////////////////////////////////////
 // nsSpaceManager
 
-nsSpaceManager::nsSpaceManager(nsIPresShell* aPresShell, nsIFrame* aFrame)
-  : mFrame(aFrame),
-    mLowestTop(NSCOORD_MIN),
+nsSpaceManager::nsSpaceManager(nsIPresShell* aPresShell)
+  : mLowestTop(NSCOORD_MIN),
     mFloatDamage(PSArenaAllocCB, PSArenaFreeCB, aPresShell),
     mHaveCachedLeftYMost(PR_TRUE),
     mHaveCachedRightYMost(PR_TRUE),
@@ -193,17 +192,6 @@ void nsSpaceManager::Shutdown()
 
   // Disable further caching.
   sCachedSpaceManagerCount = -1;
-}
-
-PRBool
-nsSpaceManager::XMost(nscoord& aXMost) const
-{
-  nscoord xMost = 0;
-  for (FrameInfo* fi = mFrameInfoMap; fi; fi = fi->mNext) {
-    xMost = PR_MAX(xMost, fi->mRect.XMost());
-  }
-  aXMost = xMost;
-  return !mBandList.IsEmpty();
 }
 
 PRBool
@@ -1033,16 +1021,6 @@ nsSpaceManager::RemoveRegion(nsIFrame* aFrame)
 }
 
 void
-nsSpaceManager::ClearRegions()
-{
-  ClearFrameInfo();
-  mBandList.Clear();
-  mLowestTop = NSCOORD_MIN;
-  mHaveCachedLeftYMost = mHaveCachedRightYMost = PR_TRUE;
-  mMaximalLeftYMost = mMaximalRightYMost = nscoord_MIN;
-}
-
-void
 nsSpaceManager::PushState(SavedState* aState)
 {
   NS_PRECONDITION(aState, "Need a place to save state");
@@ -1139,16 +1117,6 @@ nsSpaceManager::List(FILE* out)
   nsAutoString tmp;
 
   fprintf(out, "SpaceManager@%p", this);
-  if (mFrame) {
-    nsIFrameDebug*  frameDebug;
-
-    if (NS_SUCCEEDED(mFrame->QueryInterface(NS_GET_IID(nsIFrameDebug), (void**)&frameDebug))) {
-      frameDebug->GetFrameName(tmp);
-      fprintf(out, " frame=");
-      fputs(NS_LossyConvertUTF16toASCII(tmp).get(), out);
-      fprintf(out, "@%p", mFrame);
-    }
-  }
   fprintf(out, " xy=%d,%d <\n", mX, mY);
   if (mBandList.IsEmpty()) {
     fprintf(out, "  no bands\n");
@@ -1491,12 +1459,12 @@ nsAutoSpaceManager::~nsAutoSpaceManager()
 }
 
 nsresult
-nsAutoSpaceManager::CreateSpaceManagerFor(nsPresContext *aPresContext, nsIFrame *aFrame)
+nsAutoSpaceManager::CreateSpaceManager(nsPresContext *aPresContext)
 {
   // Create a new space manager and install it in the reflow
   // state. `Remember' the old space manager so we can restore it
   // later.
-  mNew = new nsSpaceManager(aPresContext->PresShell(), aFrame);
+  mNew = new nsSpaceManager(aPresContext->PresShell());
   if (! mNew)
     return NS_ERROR_OUT_OF_MEMORY;
 

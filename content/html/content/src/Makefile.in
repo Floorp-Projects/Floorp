@@ -83,6 +83,7 @@ EXPORTS		= \
 
 CPPSRCS		= \
 		nsClientRect.cpp \
+		nsHTMLDNSPrefetch.cpp \
 		nsGenericHTMLElement.cpp \
 		nsFormSubmission.cpp \
 		nsImageMapUtils.cpp \

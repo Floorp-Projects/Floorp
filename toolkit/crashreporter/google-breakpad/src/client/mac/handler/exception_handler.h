@@ -58,14 +58,14 @@ class ExceptionHandler {
   // will immediately report the exception as unhandled without writing a
   // minidump, allowing another handler the opportunity to handle it.
   typedef bool (*FilterCallback)(void *context);
-  
+
   // A callback function to run after the minidump has been written.
   // |minidump_id| is a unique id for the dump, so the minidump
   // file is <dump_dir>/<minidump_id>.dmp.
-  // |context| is the value passed into the constructor. 
+  // |context| is the value passed into the constructor.
   // |succeeded| indicates whether a minidump file was successfully written.
   // Return true if the exception was fully handled and breakpad should exit.
-  // Return false to allow any other exception handlers to process the 
+  // Return false to allow any other exception handlers to process the
   // exception.
   typedef bool (*MinidumpCallback)(const char *dump_dir,
                                    const char *minidump_id,
@@ -85,7 +85,7 @@ class ExceptionHandler {
   // If install_handler is true, then a minidump will be written whenever
   // an unhandled exception occurs.  If it is false, minidumps will only
   // be written when WriteMinidump is called.
-  ExceptionHandler(const string &dump_path, 
+  ExceptionHandler(const string &dump_path,
                    FilterCallback filter, MinidumpCallback callback,
                    void *callback_context, bool install_handler);
 
@@ -104,7 +104,7 @@ class ExceptionHandler {
     dump_path_c_ = dump_path_.c_str();
     UpdateNextID();  // Necessary to put dump_path_ in next_minidump_path_.
   }
-  
+
   // Writes a minidump immediately.  This can be used to capture the
   // execution state independently of a crash.  Returns true on success.
   bool WriteMinidump();
@@ -120,11 +120,11 @@ class ExceptionHandler {
 
   // Uninstall the mach exception handler (if any)
   bool UninstallHandler(bool in_exception);
-      
+
   // Setup the handler thread, and if |install_handler| is true, install the
   // mach exception port handler
   bool Setup(bool install_handler);
-    
+
   // Uninstall the mach exception handler (if any) and terminate the helper
   // thread
   bool Teardown();
@@ -149,20 +149,20 @@ class ExceptionHandler {
   // path of the next minidump to be written in next_minidump_path_.
   void UpdateNextID();
 
-  // These functions will suspend/resume all threads except for the 
+  // These functions will suspend/resume all threads except for the
   // reporting thread
   bool SuspendThreads();
   bool ResumeThreads();
-  
+
   // The destination directory for the minidump
   string dump_path_;
-  
+
   // The basename of the next minidump w/o extension
   string next_minidump_id_;
-  
+
   // The full path to the next minidump to be written, including extension
   string next_minidump_path_;
-  
+
   // Pointers to the UTF-8 versions of above
   const char *dump_path_c_;
   const char *next_minidump_id_c_;
@@ -191,18 +191,18 @@ class ExceptionHandler {
 
   // True, if we've installed the exception handler
   bool installed_exception_handler_;
-  
+
   // True, if we're in the process of uninstalling the exception handler and
   // the thread.
   bool is_in_teardown_;
-  
+
   // Save the last result of the last minidump
   bool last_minidump_write_result_;
-  
-  // A mutex for use when writing out a minidump that was requested on a 
+
+  // A mutex for use when writing out a minidump that was requested on a
   // thread other than the exception handler.
   pthread_mutex_t minidump_write_mutex_;
-  
+
   // True, if we're using the mutext to indicate when mindump writing occurs
   bool use_minidump_write_mutex_;
 };

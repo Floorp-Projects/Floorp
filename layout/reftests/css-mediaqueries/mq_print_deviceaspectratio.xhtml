@@ -1,0 +1,55 @@
+<?xml version="1.0" encoding="iso-8859-1" ?>
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.1//EN" "http://www.w3.org/TR/xhtml11/DTD/xhtml11.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml" class="reftest-print">
+<head>
+  <title>Media Query - Print mode test - Device-aspect-ratio</title>
+  <style type="text/css"><![CDATA[
+    p {height: 10px; width: 100px; color: yellow; }
+    @media print { .a { color: aqua; } }
+    @media screen { .b { color: aqua; } }
+
+    /* not sure if the 3/5 will work as aspect ratio is width/height */
+    @media (device-aspect-ratio: 5/3) { .c { color: aqua; } }    /* y */
+    @media (device-aspect-ratio: 10/6) { .d { color: aqua; } }  /* y */
+    @media (device-aspect-ratio: 15/9) { .e { color: aqua; } }  /* y */
+
+    @media print and (device-aspect-ratio: 5/3) { .f {color: aqua; } }  /* y */
+    @media print and (device-aspect-ratio: 10/6) { .g {color: aqua; } }/* y */
+    @media print and (device-aspect-ratio: 15/9) { .h {color: aqua; } }/* y */
+
+    @media all and (device-aspect-ratio: 5/3) { .i { color: aqua; } } /* y */
+
+
+    /* negative cases */
+    @media all and (device-aspect-ratio: 3/2) { .j { color: aqua; } } /* n */
+
+    @media (device-aspect-ratio: 4/3) { .k { color: aqua; } } /* n */
+    @media (device-aspect-ratio: 3/4) { .l { color: aqua; } }  /* n */
+    @media (device-aspect-ratio: 16/9) { .m { color: aqua; } } /* n */
+
+    @media screen and (device-aspect-ratio: 5/3) { .n {color: aqua; } }   /* n */
+    @media screen and (device-aspect-ratio: 10/6) { .o {color: aqua; } } /* n */
+    @media screen and (device-aspect-ratio: 15/9) { .p {color: aqua; } } /* n */
+
+  ]]></style>
+</head>
+
+<body>
+  <p class="a">a</p>
+  <p class="b">b</p>
+  <p class="c">c</p>
+  <p class="d">d</p>
+  <p class="e">e</p>
+  <p class="f">f</p>
+  <p class="g">g</p>
+  <p class="h">h</p>
+  <p class="i">i</p>
+  <p class="j">j</p>
+  <p class="k">k</p>
+  <p class="l">l</p>
+  <p class="m">m</p>
+  <p class="n">n</p>
+  <p class="o">o</p>
+  <p class="p">p</p>
+</body>
+</html>

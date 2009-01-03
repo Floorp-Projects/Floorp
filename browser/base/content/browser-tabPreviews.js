@@ -43,19 +43,19 @@
  */
 var tabPreviews = {
   aspectRatio: 0.5625, // 16:9
-  init: function () {
+  init: function tabPreviews__init() {
     this.width = Math.ceil(screen.availWidth / 5);
     this.height = Math.round(this.width * this.aspectRatio);
 
     gBrowser.tabContainer.addEventListener("TabSelect", this, false);
     gBrowser.tabContainer.addEventListener("SSTabRestored", this, false);
   },
-  uninit: function () {
+  uninit: function tabPreviews__uninit() {
     gBrowser.tabContainer.removeEventListener("TabSelect", this, false);
     gBrowser.tabContainer.removeEventListener("SSTabRestored", this, false);
     this._selectedTab = null;
   },
-  get: function (aTab) {
+  get: function tabPreviews__get(aTab) {
     if (aTab.__thumbnail_lastURI &&
         aTab.__thumbnail_lastURI != aTab.linkedBrowser.currentURI.spec) {
       aTab.__thumbnail = null;
@@ -63,7 +63,7 @@ var tabPreviews = {
     }
     return aTab.__thumbnail || this.capture(aTab, !aTab.hasAttribute("busy"));
   },
-  capture: function (aTab, aStore) {
+  capture: function tabPreviews__capture(aTab, aStore) {
     var thumbnail = document.createElementNS("http://www.w3.org/1999/xhtml", "canvas");
     thumbnail.mozOpaque = true;
     thumbnail.height = this.height;
@@ -77,14 +77,13 @@ var tabPreviews = {
     ctx.drawWindow(win, win.scrollX, win.scrollY,
                    snippetWidth, snippetWidth * this.aspectRatio, "rgb(255,255,255)");
 
-    var data = thumbnail.toDataURL("image/jpeg", "quality=60");
     if (aStore) {
-      aTab.__thumbnail = data;
+      aTab.__thumbnail = thumbnail;
       aTab.__thumbnail_lastURI = aTab.linkedBrowser.currentURI.spec;
     }
-    return data;
+    return thumbnail;
   },
-  handleEvent: function (event) {
+  handleEvent: function tabPreviews__handleEvent(event) {
     switch (event.type) {
       case "TabSelect":
         if (this._selectedTab &&
@@ -114,70 +113,128 @@ var tabPreviews = {
  * Ctrl-Tab panel
  */
 var ctrlTab = {
-  visibleCount: 3,
-  _uniqid: 0,
   get panel () {
     delete this.panel;
     return this.panel = document.getElementById("ctrlTab-panel");
   },
-  get label () {
-    delete this.label;
-    return this.label = document.getElementById("ctrlTab-label");
+  get searchField () {
+    delete this.searchField;
+    return this.searchField = document.getElementById("ctrlTab-search");
   },
-  get svgRoot () {
-    delete this.svgRoot;
-
-    let (groundFade = document.getElementById("ctrlTab-groundFade")) {
-      groundFade.setAttribute("height", Math.ceil(tabPreviews.height * .25) + 1);
-      groundFade.setAttribute("y", tabPreviews.height + 1);
-    }
-
-    this.svgRoot = document.getElementById("ctrlTab-svgRoot");
-    this.svgRoot.setAttribute("height", tabPreviews.height * 1.25 + 2);
-    return this.svgRoot;
+  get pagesBar () {
+    delete this.pagesBar;
+    return this.pagesBar = document.getElementById("ctrlTab-pages");
   },
-  get container () {
-    delete this.container;
-    return this.container = document.getElementById("ctrlTab-container");
+  get thumbnails () {
+    delete this.thumbnails;
+    return this.thumbnails = this.panel.getElementsByClassName("ctrlTab-thumbnail");
   },
-  get rtl () {
-    delete this.rtl;
-    return this.rtl = getComputedStyle(this.panel, "").direction == "rtl";
-  },
-  get iconSize () {
-    delete this.iconSize;
-    return this.iconSize = Math.max(16, Math.round(tabPreviews.height / 5));
+  get columns () {
+    delete this.columns;
+    return this.columns = this.thumbnails.length /
+                          this.panel.getElementsByClassName("ctrlTab-row").length;
   },
   get closeCharCode () {
     delete this.closeCharCode;
     return this.closeCharCode = document.getElementById("key_close")
                                         .getAttribute("key")
-                                        .toLowerCase().charCodeAt(0);
+                                        .toLocaleLowerCase().charCodeAt(0);
+  },
+  get findCharCode () {
+    delete this.findCharCode;
+    return this.findCharCode = document.getElementById("key_find")
+                                       .getAttribute("key")
+                                       .toLocaleLowerCase().charCodeAt(0);
   },
   get recentlyUsedLimit () {
     delete this.recentlyUsedLimit;
     return this.recentlyUsedLimit = gPrefService.getIntPref("browser.ctrlTab.recentlyUsedLimit");
   },
-  get smoothScroll () {
-    delete this.smoothScroll;
-    return this.smoothScroll = gPrefService.getBoolPref("browser.ctrlTab.smoothScroll");
+  selectedIndex: 0,
+  get selected () this.thumbnails.item(this.selectedIndex),
+  get isOpen   () this.panel.state == "open" || this.panel.state == "showing",
+  get tabCount () this.tabList.length,
+
+  get sticky () this.panel.hasAttribute("sticky"),
+  set sticky (val) {
+    if (val)
+      this.panel.setAttribute("sticky", "true");
+    else
+      this.panel.removeAttribute("sticky");
+    return val;
   },
-  get tabCount () {
-    return gBrowser.mTabs.length;
+
+  get pages () Math.ceil(this.tabCount / this.thumbnails.length),
+  get page  () this._page || 0,
+  set page  (page) {
+    if (page < 0)
+      page = this.pages - 1;
+    else if (page >= this.pages)
+      page = 0;
+
+    if (this.pagesBar.childNodes.length) {
+      this.pagesBar.childNodes[this.page].removeAttribute("selected");
+      this.pagesBar.childNodes[page].setAttribute("selected", "true");
+    }
+
+    this._page = page;
+    this.updatePreviews();
+    return page;
   },
-  get offscreenStart () {
-    return Array.indexOf(this.container.childNodes, this.selected) - 1;
+
+  get tabList () {
+    if (this._tabList)
+      return this._tabList;
+
+    var list = Array.slice(gBrowser.mTabs);
+
+    if (this._closing)
+      this.detachTab(this._closing, list);
+
+    for (let i = 0; i < gBrowser.tabContainer.selectedIndex; i++)
+      list.push(list.shift());
+
+    if (!this._useTabBarOrder && this.recentlyUsedLimit != 0) {
+      let recentlyUsedTabs = this._recentlyUsedTabs;
+      if (this.recentlyUsedLimit > 0)
+        recentlyUsedTabs = this._recentlyUsedTabs.slice(0, this.recentlyUsedLimit);
+      for (let i = recentlyUsedTabs.length - 1; i >= 0; i--) {
+        list.splice(list.indexOf(recentlyUsedTabs[i]), 1);
+        list.unshift(recentlyUsedTabs[i]);
+      }
+    }
+
+    if (this.searchField.value) {
+      list = list.filter(function (tab) {
+        let lowerCaseLabel, uri;
+        for (let i = 0; i < this.length; i++) {
+          if (tab.label.indexOf(this[i]) != -1)
+            continue;
+
+          if (!lowerCaseLabel)
+            lowerCaseLabel = tab.label.toLocaleLowerCase();
+          if (lowerCaseLabel.indexOf(this[i]) != -1)
+            continue;
+
+          if (!uri) {
+            uri = tab.linkedBrowser.currentURI.spec;
+            try {
+              uri = decodeURI(uri);
+            } catch (e) {}
+          }
+          if (uri.indexOf(this[i]) != -1)
+            continue;
+
+          return false;
+        }
+        return true;
+      }, this.searchField.value.split(/\s+/g));
+    }
+
+    return this._tabList = list;
   },
-  get offscreenEnd () {
-    return this.container.childNodes.length - this.visibleCount - this.offscreenStart;
-  },
-  get offsetX () {
-    return - tabPreviews.width * (this.rtl ? this.offscreenEnd : this.offscreenStart);
-  },
-  get isOpen () {
-    return this.panel.state == "open" || this.panel.state == "showing";
-  },
-  init: function () {
+
+  init: function ctrlTab__init() {
     if (this._recentlyUsedTabs)
       return;
     this._recentlyUsedTabs = [gBrowser.selectedTab];
@@ -187,10 +244,16 @@ var ctrlTab = {
     tabContainer.addEventListener("TabSelect", this, false);
     tabContainer.addEventListener("TabClose", this, false);
 
-    gBrowser.mTabBox.handleCtrlTab = false;
+    this._handleCtrlTab =
+      gPrefService.getBoolPref("browser.ctrlTab.previews") &&
+      (!gPrefService.prefHasUserValue("browser.ctrlTab.disallowForScreenReaders") ||
+       !gPrefService.getBoolPref("browser.ctrlTab.disallowForScreenReaders"));
+    if (this._handleCtrlTab)
+      gBrowser.mTabBox.handleCtrlTab = false;
     document.addEventListener("keypress", this, false);
   },
-  uninit: function () {
+
+  uninit: function ctrlTab__uninit() {
     this._recentlyUsedTabs = null;
 
     var tabContainer = gBrowser.tabContainer;
@@ -199,248 +262,128 @@ var ctrlTab = {
     tabContainer.removeEventListener("TabClose", this, false);
 
     this.panel.removeEventListener("popuphiding", this, false);
+    this.panel.removeEventListener("popupshown", this, false);
+    this.panel.removeEventListener("popuphidden", this, false);
     document.removeEventListener("keypress", this, false);
+    if (this._handleCtrlTab)
+      gBrowser.mTabBox.handleCtrlTab = true;
   },
-  addBox: function (aAtStart) {
-    const SVGNS = "http://www.w3.org/2000/svg";
 
-    var thumbnail = document.createElementNS(SVGNS, "image");
-    thumbnail.setAttribute("class", "ctrlTab-thumbnail");
-    thumbnail.setAttribute("height", tabPreviews.height);
-    thumbnail.setAttribute("width", tabPreviews.width);
-
-    var thumbnail_border = document.createElementNS(SVGNS, "rect");
-    thumbnail_border.setAttribute("class", "ctrlTab-thumbnailborder");
-    thumbnail_border.setAttribute("height", tabPreviews.height);
-    thumbnail_border.setAttribute("width", tabPreviews.width);
-
-    var icon = document.createElementNS(SVGNS, "image");
-    icon.setAttribute("class", "ctrlTab-icon");
-    icon.setAttribute("height", this.iconSize);
-    icon.setAttribute("width", this.iconSize);
-    icon.setAttribute("x", - this.iconSize * .2);
-    icon.setAttribute("y", tabPreviews.height - this.iconSize * 1.2);
-
-    var thumbnail_and_icon = document.createElementNS(SVGNS, "g");
-    thumbnail_and_icon.appendChild(thumbnail);
-    thumbnail_and_icon.appendChild(thumbnail_border);
-    thumbnail_and_icon.appendChild(icon);
-
-    var reflection = document.createElementNS(SVGNS, "use");
-    reflection.setAttribute("class", "ctrlTab-reflection");
-    var ref_scale = .5;
-    reflection.setAttribute("transform", "scale(1,-" + ref_scale + ")");
-    reflection.setAttribute("y", - ((1 / ref_scale + 1) * tabPreviews.height +
-                                    (1 / ref_scale) * 2));
-
-    var box = document.createElementNS(SVGNS, "g");
-    box.setAttribute("class", "ctrlTab-box");
-    box.setAttribute("onclick", "ctrlTab.pick(this);");
-    box.appendChild(thumbnail_and_icon);
-    box.appendChild(reflection);
-
-    if (aAtStart)
-      this.container.insertBefore(box, this.container.firstChild);
-    else
-      this.container.appendChild(box);
-    return box;
-  },
-  removeBox: function (aBox) {
-    this.container.removeChild(aBox);
-    if (!Array.some(this.container.childNodes, function (box) box._tab == aBox._tab))
-      aBox._tab.removeEventListener("DOMAttrModified", this, false);
-    aBox._tab = null;
-  },
-  addPreview: function (aBox, aTab) {
-    const XLinkNS = "http://www.w3.org/1999/xlink";
-
-    aBox._tab = aTab;
-    let (thumbnail = aBox.firstChild.firstChild)
-      thumbnail.setAttributeNS(XLinkNS, "href", tabPreviews.get(aTab));
-    this.updateIcon(aBox);
-
-    aTab.addEventListener("DOMAttrModified", this, false);
-
-    if (!aBox.firstChild.hasAttribute("id")) {
-      // set up reflection
-      this._uniqid++;
-      aBox.firstChild.setAttribute("id", "ctrlTab-preview-" + this._uniqid);
-      aBox.lastChild.setAttributeNS(XLinkNS, "href", "#ctrlTab-preview-" + this._uniqid);
+  search: function ctrlTab__search() {
+    if (this.isOpen) {
+      this._tabList = null;
+      this.buildPagesBar();
+      this.goToPage(0, 0);
+      this.updatePreviews();
     }
   },
-  updateIcon: function (aBox) {
-    const XLinkNS = "http://www.w3.org/1999/xlink";
-    var url = aBox._tab.hasAttribute("busy") ?
-              "chrome://global/skin/icons/loading_16.png" :
-              aBox._tab.getAttribute("image");
-    var icon = aBox.firstChild.lastChild;
-    if (url)
-      icon.setAttributeNS(XLinkNS, "href", url);
-    else
-      icon.removeAttributeNS(XLinkNS, "href");
+
+  buildPagesBar: function ctrlTab__buildPagesBar() {
+    var pages = this.pages;
+    if (pages == 1)
+      pages = 0;
+    while (this.pagesBar.childNodes.length > pages)
+      this.pagesBar.removeChild(this.pagesBar.lastChild);
+    while (this.pagesBar.childNodes.length < pages) {
+      let pointer = document.createElement("spacer");
+      pointer.setAttribute("onclick", "ctrlTab.goToPage(" + this.pagesBar.childNodes.length + ");");
+      pointer.setAttribute("class", "ctrlTab-pagePointer");
+      this.pagesBar.appendChild(pointer);
+    }
   },
-  tabAttrModified: function (aTab, aAttrName) {
+
+  goToPage: function ctrlTab__goToPage(aPage, aIndex) {
+    this.page = aPage;
+    this.selected.removeAttribute("selected");
+    if (aIndex) {
+      this.selectedIndex = aIndex;
+      while (!this.selected || !this.selected.hasAttribute("valid"))
+        this.selectedIndex--;
+    } else {
+      this.selectedIndex = 0;
+    }
+    this.updateSelected();
+  },
+
+  updatePreviews: function ctrlTab__updatePreviews() {
+    var tabs = this.tabList;
+    var offset = this.page * this.thumbnails.length;
+    for (let i = 0; i < this.thumbnails.length; i++)
+      this.updatePreview(this.thumbnails[i], tabs[i + offset]);
+  },
+  updatePreview: function ctrlTab__updatePreview(aThumbnail, aTab) {
+    do {
+      if (aThumbnail._tab) {
+        if (aThumbnail._tab == aTab)
+          break;
+        aThumbnail._tab.removeEventListener("DOMAttrModified", this, false);
+      }
+      aThumbnail._tab = aTab;
+      if (aTab)
+        aTab.addEventListener("DOMAttrModified", this, false);
+    } while (false);
+
+    if (aThumbnail.firstChild)
+      aThumbnail.removeChild(aThumbnail.firstChild);
+    if (aTab) {
+      aThumbnail.appendChild(tabPreviews.get(aTab));
+      aThumbnail.setAttribute("valid", "true");
+      aThumbnail.setAttribute("label", aTab.label);
+      aThumbnail.setAttribute("crop", aTab.crop);
+    } else {
+      let placeholder = document.createElement("hbox");
+      placeholder.height = tabPreviews.height;
+      aThumbnail.appendChild(placeholder);
+      aThumbnail.removeAttribute("valid");
+      aThumbnail.setAttribute("label", "placeholder");
+    }
+    aThumbnail.width = tabPreviews.width;
+  },
+
+  tabAttrModified: function ctrlTab__tabAttrModified(aTab, aAttrName) {
     switch (aAttrName) {
-      case "busy":
-      case "image":
-        Array.forEach(this.container.childNodes, function (box) {
-          if (box._tab == aTab) {
-            if (aAttrName == "busy")
-              this.addPreview(box, aTab);
-            else
-              this.updateIcon(box);
-          }
-        }, this);
-        break;
       case "label":
       case "crop":
-        if (!this._scrollTimer) {
-          let boxes = this.container.childNodes;
-          for (let i = boxes.length - 1; i >= 0; i--) {
-            if (boxes[i]._tab == aTab && boxes[i] == this.selected) {
-              this.label[aAttrName == "label" ? "value" : aAttrName] =
-                aTab.getAttribute(aAttrName);
-              break;
-            }
+      case "busy":
+        for (let i = this.thumbnails.length - 1; i >= 0; i--) {
+          if (this.thumbnails[i]._tab == aTab) {
+            this.updatePreview(this.thumbnails[i], aTab);
+            break;
           }
         }
         break;
     }
   },
-  scroll: function () {
-    if (!this.smoothScroll) {
-      this.advanceSelected();
-      this.arrangeBoxes();
-      return;
-    }
 
-    this.stopScroll();
-    let (next = this.invertDirection ? this.selected.previousSibling : this.selected.nextSibling) {
-      this.setStatusbarValue(next);
-      this.label.value = next._tab.label;
-      this.label.crop = next._tab.crop;
-    }
+  advanceSelected: function ctrlTab__advanceSelected() {
+    this.selected.removeAttribute("selected");
 
-    const FRAME_LENGTH = 40;
-    var x = this.offsetX;
-    var scrollAmounts = let (tenth = tabPreviews.width / (this.invertDirection == this.rtl ? -10 : 10))
-                        [3 * tenth, 4 * tenth, 2 * tenth, tenth];
+    this.selectedIndex += this.invertDirection ? -1 : 1;
+    if (this.selectedIndex < 0) {
+      this.page--;
+      this.selectedIndex = this.thumbnails.length - 1;
+      while (!this.selected.hasAttribute("valid"))
+        this.selectedIndex--;
+    } else if (this.selectedIndex >= this.thumbnails.length || !this.selected.hasAttribute("valid")) {
+      this.page++;
+      this.selectedIndex = 0;
+    }
+    this.updateSelected();
+  },
 
-    function processFrame(self, lateness) {
-      lateness += FRAME_LENGTH / 2;
-      do {
-        x += scrollAmounts.shift();
-        lateness -= FRAME_LENGTH;
-      } while (lateness > 0 && scrollAmounts.length);
-      self.container.setAttribute("transform", "translate("+ x +",0)");
-      self.svgRoot.forceRedraw();
-      if (!scrollAmounts.length)
-        self.stopScroll();
-    }
+  updateSelected: function ctrlTab__updateSelected() {
+    if (this.tabCount)
+      this.selected.setAttribute("selected", "true");
+  },
 
-    this._scrollTimer = setInterval(processFrame, FRAME_LENGTH, this);
-    processFrame(this, 0);
-  },
-  stopScroll: function () {
-    if (this._scrollTimer) {
-      clearInterval(this._scrollTimer);
-      this._scrollTimer = 0;
-      this.advanceSelected();
-      this.arrangeBoxes();
+  selectThumbnail: function ctrlTab__selectThumbnail(aThumbnail) {
+    if (this.tabCount) {
+      this._tabToSelect = (aThumbnail || this.selected)._tab;
+      this.panel.hidePopup();
     }
   },
-  advanceSelected: function () {
-    // regardless of visibleCount, the new highlighted tab will be
-    // the first or third-visible tab, depending on whether Shift is pressed
-    var index = ((this.invertDirection ? 0 : 2) + this.offscreenStart + this.tabCount)
-                % this.tabCount;
-    if (index < 2)
-      index += this.tabCount;
-    if (index > this.container.childNodes.length - this.visibleCount + 1)
-      index -= this.tabCount;
-    this.selected = this.container.childNodes[index];
-  },
-  arrangeBoxes: function () {
-    this.addOffscreenBox(this.invertDirection);
-    this.addOffscreenBox(!this.invertDirection);
 
-    // having lots of off-screen boxes reduces the scrolling speed, remove some
-    for (let i = this.offscreenStart; i > 1; i--)
-      this.removeBox(this.container.firstChild);
-    for (let i = this.offscreenEnd; i > 1; i--)
-      this.removeBox(this.container.lastChild);
-
-    this.container.setAttribute("transform", "translate("+ this.offsetX +", 0)");
-
-    for (let i = 0, l = this.container.childNodes.length; i < l; i++)
-      this.arrange(i);
-  },
-  addOffscreenBox: function (aAtStart) {
-    if (this.container.childNodes.length < this.tabCount + this.visibleCount + 1 &&
-        !(aAtStart ? this.offscreenStart : this.offscreenEnd)) {
-      let tabs = this.getTabList();
-      let i = aAtStart ?
-              tabs.indexOf(this.container.firstChild._tab) - 1:
-              tabs.indexOf(this.container.lastChild._tab) + 1;
-      i = (i + tabs.length) % tabs.length;
-      this.addPreview(this.addBox(aAtStart), tabs[i]);
-    }
-  },
-  arrange: function (aIndex) {
-    var box = this.container.childNodes[aIndex];
-    var selected = box == this.selected;
-    if (selected) {
-      box.setAttribute("selected", "true");
-      this.setStatusbarValue(box);
-      this.label.value = box._tab.label;
-      this.label.crop = box._tab.crop;
-    } else {
-      box.removeAttribute("selected");
-    }
-    var scale = selected ? 1 : .75;
-    var pos = this.rtl ? this.container.childNodes.length - 1 - aIndex : aIndex;
-    var trans_x = tabPreviews.width * (pos + (1 - scale) / 2) / scale;
-    var trans_y = (tabPreviews.height + 1) * (1 / scale - 1);
-    box.setAttribute("transform", "scale(" + scale + "," + scale + ") " +
-                                  "translate("+ trans_x + "," + trans_y + ")");
-  },
-  pick: function (aBox) {
-    this.stopScroll();
-    var selectedTab = (aBox || this.selected)._tab;
-    this.panel.hidePopup();
-    gBrowser.selectedTab = selectedTab;
-  },
-  setStatusbarValue: function (aBox) {
-    var value = "";
-    if (aBox) {
-      value = aBox._tab.linkedBrowser.currentURI.spec;
-      if (value == "about:blank") {
-        // XXXhack: Passing a space here (and not "")
-        // to make sure the browser implementation would
-        // still consider it a hovered link.
-        value = " ";
-      } else {
-        try {
-          value = decodeURI(value);
-        } catch (e) {}
-      }
-    }
-    XULBrowserWindow.setOverLink(value, null);
-  },
-  getTabList: function () {
-    var list = Array.slice(gBrowser.mTabs);
-    for (let i = 0; i < gBrowser.tabContainer.selectedIndex; i++)
-      list.push(list.shift());
-    if (!this._useTabBarOrder && this.recentlyUsedLimit > 0) {
-      let recentlyUsedTabs = this._recentlyUsedTabs.slice(0, this.recentlyUsedLimit);
-      for (let i = recentlyUsedTabs.length - 1; i >= 0; i--) {
-        list.splice(list.indexOf(recentlyUsedTabs[i]), 1);
-        list.unshift(recentlyUsedTabs[i]);
-      }
-    }
-    return list;
-  },
-  attachTab: function (aTab, aPos) {
+  attachTab: function ctrlTab__attachTab(aTab, aPos) {
     if (aPos == 0)
       this._recentlyUsedTabs.unshift(aTab);
     else if (aPos)
@@ -448,94 +391,207 @@ var ctrlTab = {
     else
       this._recentlyUsedTabs.push(aTab);
   },
-  detachTab: function (aTab) {
-    var i = this._recentlyUsedTabs.indexOf(aTab);
+  detachTab: function ctrlTab__detachTab(aTab, aTabs) {
+    var tabs = aTabs || this._recentlyUsedTabs;
+    var i = tabs.indexOf(aTab);
     if (i >= 0)
-      this._recentlyUsedTabs.splice(i, 1);
+      tabs.splice(i, 1);
   },
-  open: function () {
+
+  open: function ctrlTab__open(aSticky) {
+    if (this.isOpen && this.sticky) {
+      this.panel.hidePopup();
+      return;
+    }
+    this.sticky = !!aSticky;
+
     this._deferOnTabSelect = [];
     if (this.invertDirection)
       this._useTabBarOrder = true;
 
-    document.addEventListener("keyup", this, false);
-    document.addEventListener("keydown", this, false);
-    this.panel.addEventListener("popuphiding", this, false);
-    this.panel.hidden = false;
-    this.panel.width = tabPreviews.width * this.visibleCount;
-    this.panel.openPopupAtScreen(screen.availLeft + (screen.availWidth - this.panel.width) / 2,
-                                 screen.availTop + (screen.availHeight - this.svgRoot.getAttribute("height")) / 2,
-                                 false);
+    this._tabBarHandlesCtrlPageUpDown = gBrowser.mTabBox.handleCtrlPageUpDown;
+    gBrowser.mTabBox.handleCtrlPageUpDown = false;
 
-    // display $visibleCount tabs, starting with the first or
-    // the second to the last tab, depending on whether Shift is pressed
-    {
-      let tabs = this.getTabList();
-      let index = this.invertDirection ? tabs.length - 2 : 0;
-      for (let i = this.visibleCount; i > 0; i--)
-        this.addPreview(this.addBox(), tabs[index++ % tabs.length]);
+    document.addEventListener("keyup", this, true);
+    document.addEventListener("keydown", this, true);
+    this.panel.addEventListener("popupshown", this, false);
+    this.panel.addEventListener("popuphiding", this, false);
+    this.panel.addEventListener("popuphidden", this, false);
+    this._prevFocus = document.commandDispatcher.focusedElement ||
+                      document.commandDispatcher.focusedWindow;
+    this.panel.hidden = false;
+    this.panel.width = screen.availWidth * .85;
+    this.panel.popupBoxObject.setConsumeRollupEvent(Ci.nsIPopupBoxObject.ROLLUP_CONSUME);
+    this.panel.openPopupAtScreen(screen.availLeft + (screen.availWidth - this.panel.width) / 2,
+                                 screen.availTop + screen.availHeight * .12,
+                                 false);
+    this.buildPagesBar();
+    this.selectedIndex = 0;
+    this.page = 0;
+    this.advanceSelected();
+  },
+
+  onKeyPress: function ctrlTab__onKeyPress(event) {
+    var isOpen = this.isOpen;
+
+    if (isOpen &&
+        event.target == this.searchField &&
+        event.keyCode != event.DOM_VK_ESCAPE)
+      return;
+
+    if (isOpen) {
+      event.preventDefault();
+      event.stopPropagation();
     }
 
-    // regardless of visibleCount, highlight the second-visible tab
-    this.selected = this.container.childNodes[1];
-    this.arrangeBoxes();
-  },
-  onKeyPress: function (event) {
-    var isOpen = this.isOpen;
-    var propagate = !isOpen;
     switch (event.keyCode) {
       case event.DOM_VK_TAB:
-        if (event.ctrlKey && !event.altKey && !event.metaKey) {
-          propagate = false;
+        if ((event.ctrlKey || this.sticky) && !event.altKey && !event.metaKey) {
           this.invertDirection = event.shiftKey;
-          if (isOpen)
-            this.scroll();
-          else if (this.tabCount == 2)
-            gBrowser.selectedTab = this.getTabList()[1];
-          else if (this.tabCount > 2)
-            this.open();
+          if (isOpen) {
+            this.advanceSelected();
+          } else if (this._handleCtrlTab) {
+            event.preventDefault();
+            event.stopPropagation();
+            if (gBrowser.mTabs.length > 2) {
+              this.open();
+            } else if (gBrowser.mTabs.length == 2) {
+              gBrowser.selectedTab = gBrowser.selectedTab.nextSibling ||
+                                     gBrowser.selectedTab.previousSibling;
+            }
+          }
         }
+        break;
+      case event.DOM_VK_UP:
+        if (isOpen) {
+          let index = this.selectedIndex - this.columns;
+          if (index < 0) {
+            this.goToPage(this.page - 1, this.thumbnails.length + index);
+          } else {
+            this.selected.removeAttribute("selected");
+            this.selectedIndex = index;
+            this.updateSelected();
+          }
+        }
+        break;
+      case event.DOM_VK_DOWN:
+        if (isOpen) {
+          let index = this.selectedIndex + this.columns;
+          if (index >= this.thumbnails.length || !this.thumbnails[index].hasAttribute("valid")) {
+            this.goToPage(this.page + 1, this.selectedIndex % this.columns);
+          } else {
+            this.selected.removeAttribute("selected");
+            this.selectedIndex = index;
+            while (!this.selected.hasAttribute("valid"))
+              this.selectedIndex--;
+            this.updateSelected();
+          }
+        }
+        break;
+      case event.DOM_VK_LEFT:
+        if (isOpen) {
+          this.invertDirection = true;
+          this.advanceSelected();
+        }
+        break;
+      case event.DOM_VK_RIGHT:
+        if (isOpen) {
+          this.invertDirection = false;
+          this.advanceSelected();
+        }
+        break;
+      case event.DOM_VK_HOME:
+        if (isOpen)
+          this.goToPage(0);
+        break;
+      case event.DOM_VK_END:
+        if (isOpen)
+          this.goToPage(this.pages - 1, this.thumbnails.length - 1);
+        break;
+      case event.DOM_VK_PAGE_UP:
+        if (isOpen)
+          this.goToPage(this.page - 1);
+        break;
+      case event.DOM_VK_PAGE_DOWN:
+        if (isOpen)
+          this.goToPage(this.page + 1);
+        break;
+      case event.DOM_VK_RETURN:
+        if (isOpen && this.sticky)
+          this.selectThumbnail();
         break;
       case event.DOM_VK_ESCAPE:
         if (isOpen)
           this.panel.hidePopup();
         break;
       default:
-        if (isOpen && event.charCode == this.closeCharCode) {
-          this.stopScroll();
-          gBrowser.removeTab(this.selected._tab);
+        if (isOpen && event.ctrlKey) {
+          switch (event.charCode) {
+            case this.closeCharCode:
+              gBrowser.removeTab(this.selected._tab);
+              break;
+            case this.findCharCode:
+              this.searchField.focus();
+              break;
+          }
         }
     }
-    if (!propagate) {
-      event.stopPropagation();
-      event.preventDefault();
-    }
   },
-  onPopupHiding: function () {
-    this.stopScroll();
-    document.removeEventListener("keyup", this, false);
-    document.removeEventListener("keydown", this, false);
-    while (this.container.childNodes.length)
-      this.removeBox(this.container.lastChild);
-    this.selected = null;
+  onPopupHiding: function ctrlTab__onPopupHiding() {
+    gBrowser.mTabBox.handleCtrlPageUpDown = this._tabBarHandlesCtrlPageUpDown;
+    document.removeEventListener("keyup", this, true);
+    document.removeEventListener("keydown", this, true);
+
+    this.selected.removeAttribute("selected");
+    if (this.pagesBar.childNodes.length)
+      this.pagesBar.childNodes[this.page].removeAttribute("selected");
+
+    Array.forEach(this.thumbnails, function (thumbnail) {
+      this.updatePreview(thumbnail, null);
+    }, this);
+
+    this.searchField.value = "";
     this.invertDirection = false;
+    this.sticky = false;
     this._useTabBarOrder = false;
-    this._uniqid = 0;
-    this.label.value = "";
-    this.setStatusbarValue();
-    this.container.removeAttribute("transform");
-    this.svgRoot.forceRedraw();
+    this._page = null;
+    this._tabList = null;
 
     this._deferOnTabSelect.forEach(this.onTabSelect, this);
     this._deferOnTabSelect = null;
+
+    this._prevFocus.focus();
+    this._prevFocus = null;
+
+    if (this._tabToSelect) {
+      gBrowser.selectedTab = this._tabToSelect;
+      this._tabToSelect = null;
+    }
   },
-  onTabSelect: function (aTab) {
+  onTabSelect: function ctrlTab__onTabSelect(aTab) {
     if (aTab.parentNode) {
       this.detachTab(aTab);
       this.attachTab(aTab, 0);
     }
   },
-  handleEvent: function (event) {
+
+  removeClosingTabFromUI: function ctrlTab__removeClosingTabFromUI(aTab) {
+    this._closing = aTab;
+    this._tabList = null;
+    if (this.tabCount == 1) {
+      this.panel.hidePopup();
+    } else {
+      this.buildPagesBar();
+      this.updatePreviews();
+      if (!this.selected.hasAttribute("valid"))
+        this.advanceSelected();
+      else
+        this.updateSelected();
+    }
+    this._closing = null;
+  },
+
+  handleEvent: function ctrlTab__handleEvent(event) {
     switch (event.type) {
       case "DOMAttrModified":
         this.tabAttrModified(event.target, event.attrName);
@@ -551,37 +607,48 @@ var ctrlTab = {
         this.attachTab(event.target, 1);
         break;
       case "TabClose":
-        if (this.isOpen) {
-          if (this.tabCount == 2) {
-            // we have two tabs, one is being closed, so the panel isn't needed anymore
-            this.panel.hidePopup();
-          } else {
-            if (event.target == this.selected._tab)
-              this.advanceSelected();
-            this.detachTab(event.target);
-            Array.slice(this.container.childNodes).forEach(function (box) {
-              if (box._tab == event.target) {
-                this.removeBox(box);
-                this.arrangeBoxes();
-              }
-            }, this);
-          }
-        }
         this.detachTab(event.target);
+        if (this.isOpen)
+          this.removeClosingTabFromUI(event.target);
         break;
       case "keypress":
         this.onKeyPress(event);
         break;
       case "keydown":
       case "keyup":
-        // the panel is open; don't propagate any key events
-        event.stopPropagation();
-        event.preventDefault();
-        if (event.type == "keyup" && event.keyCode == event.DOM_VK_CONTROL)
-          this.pick();
+        if (event.target == this.searchField) {
+          if (event.keyCode == event.DOM_VK_RETURN) {
+            // If there's a pending search, kick it off now.
+            if (this.searchField._timer)
+              this.search();
+            this.selectThumbnail();
+          }
+        } else {
+          // Manually consume the events, as the panel is open but doesn't
+          // necessarily have focus.
+          event.stopPropagation();
+          event.preventDefault();
+        }
+
+        if (!this.sticky &&
+            event.type == "keyup" &&
+            event.keyCode == event.DOM_VK_CONTROL)
+          this.selectThumbnail();
+        break;
+      case "popupshown":
+        if (this.sticky && event.target == this.panel)
+          this.searchField.focus();
         break;
       case "popuphiding":
-        this.onPopupHiding();
+        if (event.target == this.panel)
+          this.onPopupHiding();
+        break;
+      case "popuphidden":
+        if (event.target == this.panel) {
+          // Destroy the widget in order to prevent outdated content
+          // when re-opening the panel.
+          this.panel.hidden = true;
+        }
         break;
     }
   }

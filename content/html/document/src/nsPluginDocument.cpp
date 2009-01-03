@@ -71,12 +71,22 @@ public:
   const nsCString& GetType() const { return mMimeType; }
   nsIContent*      GetPluginContent() { return mPluginContent; }
 
+  void AllowNormalInstantiation() {
+    mWillHandleInstantiation = PR_FALSE;
+  }
+
+  NS_DECL_CYCLE_COLLECTION_CLASS_INHERITED(nsPluginDocument, nsMediaDocument)
 protected:
   nsresult CreateSyntheticPluginDocument();
 
   nsCOMPtr<nsIContent>                     mPluginContent;
   nsRefPtr<nsMediaDocumentStreamListener>  mStreamListener;
   nsCString                                mMimeType;
+
+  // Hack to handle the fact that plug-in loading lives in frames and that the
+  // frames may not be around when we need to instantiate.  Once plug-in
+  // loading moves to content, this can all go away.
+  PRBool                                   mWillHandleInstantiation;
 };
 
 class nsPluginStreamListener : public nsMediaDocumentStreamListener
@@ -104,6 +114,7 @@ nsPluginStreamListener::OnStartRequest(nsIRequest* request, nsISupports *ctxt)
   nsIPresShell* shell = mDocument->GetPrimaryShell();
   if (!shell) {
     // Can't instantiate w/o a shell
+    mPluginDoc->AllowNormalInstantiation();
     return NS_BINDING_ABORTED;
   }
 
@@ -114,12 +125,14 @@ nsPluginStreamListener::OnStartRequest(nsIRequest* request, nsISupports *ctxt)
 
   nsIFrame* frame = shell->GetPrimaryFrameFor(embed);
   if (!frame) {
+    mPluginDoc->AllowNormalInstantiation();
     return rv;
   }
 
   nsIObjectFrame* objFrame;
   CallQueryInterface(frame, &objFrame);
   if (!objFrame) {
+    mPluginDoc->AllowNormalInstantiation();
     return NS_ERROR_UNEXPECTED;
   }
 
@@ -128,6 +141,10 @@ nsPluginStreamListener::OnStartRequest(nsIRequest* request, nsISupports *ctxt)
   if (NS_FAILED(rv)) {
     return rv;
   }
+
+  // Now that we're done, allow normal instantiation in the future
+  // (say if there's a reframe of this entire presentation).
+  mPluginDoc->AllowNormalInstantiation();
 
   NS_ASSERTION(mNextStream, "We should have a listener by now");
   return mNextStream->OnStartRequest(request, ctxt);
@@ -138,6 +155,7 @@ nsPluginStreamListener::OnStartRequest(nsIRequest* request, nsISupports *ctxt)
   // bother initializing members to 0.
 
 nsPluginDocument::nsPluginDocument()
+  : mWillHandleInstantiation(PR_TRUE)
 {
 }
 
@@ -145,8 +163,16 @@ nsPluginDocument::~nsPluginDocument()
 {
 }
 
-// XXXbz shouldn't this participate in cycle collection?  It's got
-// mPluginContent!
+NS_IMPL_CYCLE_COLLECTION_CLASS(nsPluginDocument)
+
+NS_IMPL_CYCLE_COLLECTION_TRAVERSE_BEGIN_INHERITED(nsPluginDocument, nsMediaDocument)
+  NS_IMPL_CYCLE_COLLECTION_TRAVERSE_NSCOMPTR(mPluginContent)
+NS_IMPL_CYCLE_COLLECTION_TRAVERSE_END
+
+NS_IMPL_CYCLE_COLLECTION_UNLINK_BEGIN_INHERITED(nsPluginDocument, nsMediaDocument)
+  NS_IMPL_CYCLE_COLLECTION_UNLINK_NSCOMPTR(mPluginContent)
+NS_IMPL_CYCLE_COLLECTION_UNLINK_END
+
 NS_IMPL_ISUPPORTS_INHERITED1(nsPluginDocument, nsMediaDocument,
                              nsIPluginDocument)
 
@@ -320,6 +346,13 @@ nsPluginDocument::Print()
     }
   }
 
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsPluginDocument::GetWillHandleInstantiation(PRBool* aWillHandle)
+{
+  *aWillHandle = mWillHandleInstantiation;
   return NS_OK;
 }
 

@@ -48,8 +48,15 @@
         </setter>
       </property>
 
-      <property name="allNotifications" readonly="true"
-                onget="return this.getElementsByTagName('notification');"/>
+      <property name="allNotifications" readonly="true">
+        <getter>
+        <![CDATA[
+          var closedNotification = this._closedNotification;
+          var notifications = this.getElementsByTagName('notification');
+          return Array.filter(notifications, function(n) n != closedNotification);
+        ]]>
+        </getter>
+      </property>
 
       <method name="getNotificationWithValue">
         <parameter name="aValue"/>
@@ -138,7 +145,7 @@
           <![CDATA[
             if (aItem == this.currentNotification)
               this.removeCurrentNotification();
-            else
+            else if (aItem != this._closedNotification)
               this.removeChild(aItem);
             return aItem;
           ]]>
@@ -166,6 +173,15 @@
                 this.removeNotification(notifications[n]);
             }
             this.currentNotification = null;
+
+            if (aImmediate && this._timer) {
+              // Must clear up any currently animating notification
+              clearInterval(this._timer);
+              if (this._closedNotification) {
+                this.removeChild(this._closedNotification);
+                this._closedNotification = null;
+              }
+            }
           ]]>
         </body>
       </method>
@@ -196,9 +212,10 @@
                 this.currentNotification.style.marginTop = "0px";
                 this.currentNotification.style.opacity = 1;
               }
-              if (this._closedNotification)
-                this._closedNotification.parentNode.
-                  removeChild(this._closedNotification);
+              if (this._closedNotification) {
+                this.removeChild(this._closedNotification);
+                this._closedNotification = null;
+              }
               this._setBlockingState(this.currentNotification);
             }
 
@@ -211,7 +228,6 @@
                 height = this.currentNotification.boxObject.height;
 
               this.currentNotification = aNotification;
-              this._closedNotification = null;
               aNotification.style.removeProperty("position");
               aNotification.style.removeProperty("top");
               aNotification.style.marginTop = -height + "px";
@@ -222,7 +238,7 @@
               change = -change;
               this._closedNotification = aNotification;
               var notifications = this.allNotifications;
-              var idx = notifications.length - 2;
+              var idx = notifications.length - 1;
               if (idx >= 0)
                 this.currentNotification = notifications[idx];
               else
@@ -234,7 +250,14 @@
             var opacitychange = change / height;
             const FRAME_LENGTH = 50;
 
-            function slide(self, off) {
+            function slide(self, args, off) {
+              // If the notificationbox is disconnected then stop the timer
+              if (self.ownerDocument.compareDocumentPosition(self) &
+                  Node.DOCUMENT_POSITION_DISCONNECTED) {
+                clearInterval(args.timer);
+                return;
+              }
+
               var framesToHandle = 1;
 
               // Skip frames if we aren't getting the desired frame rate.
@@ -260,13 +283,16 @@
 
               clearInterval(self._timer);
               self._timer = null;
-              if (self._closedNotification)
-                self._closedNotification.parentNode.
-                  removeChild(self._closedNotification);
+              if (self._closedNotification) {
+                self.removeChild(self._closedNotification);
+                self._closedNotification = null;
+              }
               self._setBlockingState(self.currentNotification);
             }
 
-            this._timer = setInterval(slide, FRAME_LENGTH, this);
+            var args = {};
+            this._timer = setInterval(slide, FRAME_LENGTH, this, args);
+            args.timer = this._timer;
           ]]>
         </body>
       </method>

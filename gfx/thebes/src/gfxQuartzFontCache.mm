@@ -142,7 +142,7 @@ MacOSFontEntry::MacOSFontEntry(ATSUFontID aFontID, PRUint16 aWeight, PRUint16 aS
     mTraits = (mItalic ? NSItalicFontMask : NSUnitalicFontMask) |
               (mFixedPitch ? NSFixedPitchFontMask : 0) |
               (mWeight >= 600 ? NSBoldFontMask : NSUnboldFontMask);
-              
+
     // get the postscript name
     OSStatus err;
     NSString *psname = NULL;
@@ -154,11 +154,11 @@ MacOSFontEntry::MacOSFontEntry(ATSUFontID aFontID, PRUint16 aWeight, PRUint16 aS
         [psname release];
     } else {
         mIsValid = PR_FALSE;
-#if DEBUG
+#ifdef DEBUG
         char warnBuf[1024];
         sprintf(warnBuf, "ATSFontGetPostScriptName err = %d", (PRInt32)err);
         NS_WARNING(warnBuf);
-#endif    
+#endif        
     }
 }
 
@@ -1301,10 +1301,8 @@ enum {
 
 class MacOSUserFontData : public gfxUserFontData {
 public:
-    MacOSUserFontData(ATSFontContainerRef aContainerRef, nsIFile *aFontFile, 
-                      nsISupports *aDownloader)
-        : mContainerRef(aContainerRef), mFontFile(aFontFile), 
-          mDownloader(aDownloader)
+    MacOSUserFontData(ATSFontContainerRef aContainerRef)
+        : mContainerRef(aContainerRef)
     { }
 
     virtual ~MacOSUserFontData()
@@ -1312,84 +1310,83 @@ public:
         // deactivate font
         if (mContainerRef)
             ATSFontDeactivate(mContainerRef, NULL, kATSOptionFlagsDefault);
-
-        if (mFontFile) {
-            mFontFile->Remove(PR_FALSE); // ignore errors
-        }
     }
 
     ATSFontContainerRef     mContainerRef;
-    nsCOMPtr<nsIFile>       mFontFile;
-
-    // maintaining a ref to this keeps temp file around or cache file pinned
-    nsCOMPtr<nsISupports>   mDownloader;  
 };
-
-static OSStatus
-MakeFSSpec(FSSpec *aFSSpec, NSString *path)
-{
-    FSRef fsref;
-    OSStatus err = FSPathMakeRef((UInt8*)([path fileSystemRepresentation]), &fsref, NULL);
-
-    if (err == noErr)
-        err = FSGetCatalogInfo(&fsref, kFSCatInfoNone, NULL, NULL, aFSSpec, NULL);
-
-    return err;
-}
 
 gfxFontEntry* 
 gfxQuartzFontCache::MakePlatformFont(const gfxFontEntry *aProxyEntry, 
-                                     const gfxDownloadedFontData* aFontData)
+                                     const PRUint8 *aFontData, PRUint32 aLength)
 {
     OSStatus err;
-    FSSpec spec;
-    nsAutoString filePath;
-
-    NS_ASSERTION(aFontData && aFontData->mFontFile, 
-                 "MakePlatformFont called with null file ptr");
-
-    if (!aFontData->mFontFile)
+    
+    NS_ASSERTION(aFontData && aLength != 0, 
+                 "MakePlatformFont called with null data ptr");
+                 
+    // do simple validation check on font data before 
+    // attempting to activate it
+    if (!gfxFontUtils::ValidateSFNTHeaders(aFontData, aLength)) {
+#if DEBUG
+        char warnBuf[1024];
+        const gfxProxyFontEntry *proxyEntry = 
+            static_cast<const gfxProxyFontEntry*> (aProxyEntry);
+        sprintf(warnBuf, "downloaded font error, invalid font data for (%s)",
+                NS_ConvertUTF16toUTF8(proxyEntry->mFamily->Name()).get());
+        NS_WARNING(warnBuf);
+#endif    
         return nsnull;
-
-    aFontData->mFontFile->GetPath(filePath);
-
-    NSString *path = GetNSStringForString(filePath);
-    if (!path)
-        return nsnull;
-
-    // assumption: filename is already in the form xxx.ttf, otherwise
-    // ATS will reject
-
-    err = MakeFSSpec(&spec, path);
-    if (err != noErr)
-        return nsnull;
+    }
 
     ATSUFontID fontID;
     ATSFontContainerRef containerRef;
 
-    err = ATSFontActivateFromFileSpecification(&spec, 
-                                               kPrivateATSFontContextPrivate, 
-                                               kATSFontFormatUnspecified,
-                                               NULL, 
-                                               kATSOptionFlagsDoNotNotify, 
-                                               &containerRef);
-    if (err != noErr)
+    err = ATSFontActivateFromMemory(const_cast<PRUint8*>(aFontData), aLength, 
+                                    kPrivateATSFontContextPrivate,
+                                    kATSFontFormatUnspecified,
+                                    NULL, 
+                                    kATSOptionFlagsDoNotNotify, 
+                                    &containerRef);
+
+    if (err != noErr) {
+#if DEBUG
+        char warnBuf[1024];
+        const gfxProxyFontEntry *proxyEntry = 
+            static_cast<const gfxProxyFontEntry*> (aProxyEntry);
+        sprintf(warnBuf, "downloaded font error, ATSFontActivateFromMemory err: %d for (%s)",
+                PRInt32(err),
+                NS_ConvertUTF16toUTF8(proxyEntry->mFamily->Name()).get());
+        NS_WARNING(warnBuf);
+#endif    
         return nsnull;
+    }
 
     mATSGeneration = ATSGeneration();
 
     // ignoring containers with multiple fonts, use the first face only for now
     err = ATSFontFindFromContainer(containerRef, kATSOptionFlagsDefault, 1, 
                                    (ATSFontRef*)&fontID, NULL);
-    if (err != noErr)
+    if (err != noErr) {
+#if DEBUG
+        char warnBuf[1024];
+        const gfxProxyFontEntry *proxyEntry = 
+            static_cast<const gfxProxyFontEntry*> (aProxyEntry);
+        sprintf(warnBuf, "downloaded font error, ATSFontFindFromContainer err: %d for (%s)",
+                PRInt32(err),
+                NS_ConvertUTF16toUTF8(proxyEntry->mFamily->Name()).get());
+        NS_WARNING(warnBuf);
+#endif  
+        ATSFontDeactivate(containerRef, NULL, kATSOptionFlagsDefault);
         return nsnull;
-
+    }
+    
     // font entry will own this
-    MacOSUserFontData *userFontData = new MacOSUserFontData(containerRef, 
-                                                            aFontData->mFontFile, 
-                                                            aFontData->mDownloader);
-    if (!userFontData)
+    MacOSUserFontData *userFontData = new MacOSUserFontData(containerRef);
+    
+    if (!userFontData) {
+        ATSFontDeactivate(containerRef, NULL, kATSOptionFlagsDefault);
         return nsnull;
+    }
 
     PRUint16 w = aProxyEntry->mWeight;
     NS_ASSERTION(w >= 100 && w <= 900, "bogus font weight value!");
@@ -1401,14 +1398,18 @@ gfxQuartzFontCache::MakePlatformFont(const gfxFontEntry *aProxyEntry,
                                        FONT_STYLE_NORMAL), 
                            userFontData);
 
+    if (!newFontEntry) {
+        delete userFontData;
+        return nsnull;
+    }
+    
     // if something is funky about this font, delete immediately
     if (newFontEntry && !newFontEntry->mIsValid) {
 #if DEBUG
         char warnBuf[1024];
         const gfxProxyFontEntry *proxyEntry = 
             static_cast<const gfxProxyFontEntry*> (aProxyEntry);
-        sprintf(warnBuf, "downloaded font not loaded properly, removed (%s) for (%s)", 
-                [path UTF8String], 
+        sprintf(warnBuf, "downloaded font not loaded properly, removed face for (%s)", 
                 NS_ConvertUTF16toUTF8(proxyEntry->mFamily->Name()).get());
         NS_WARNING(warnBuf);
 #endif    

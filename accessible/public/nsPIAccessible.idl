@@ -45,7 +45,7 @@ interface nsIAccessibleEvent;
 %}
 [ptr] native nsRoleMapEntryPtr(nsRoleMapEntry);
 
-[uuid(893ee16d-c157-4d5f-b236-60b3b2bef6a5)]
+[uuid(ed61e5cd-283a-42df-9599-765e0e27f4d9)]
 interface nsPIAccessible : nsISupports
 {
   /**
@@ -77,16 +77,6 @@ interface nsPIAccessible : nsISupports
    * Set the child count to -1 (unknown) and null out cached child pointers
    */
   void invalidateChildren();
-
-  /**
-   * Fire accessible event.
-   *
-   * @param aEvent - DOM event
-   * @param aTarget - target of DOM event
-   *
-   * XXX: eventually this method will be removed (see bug 377022)
-   */
-  void fireToolkitEvent(in unsigned long aEvent, in nsIAccessible aTarget);
 
   /**
    * Fire accessible event.

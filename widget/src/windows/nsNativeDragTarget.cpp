@@ -292,7 +292,7 @@ nsNativeDragTarget::DragEnter(LPDATAOBJECT pIDataSource,
   void* tempOutData = nsnull;
   PRUint32 tempDataLen = 0;
   nsresult loadResult = nsClipboard::GetNativeDataOffClipboard(
-      pIDataSource, 0, ::RegisterClipboardFormat(CFSTR_PREFERREDDROPEFFECT), &tempOutData, &tempDataLen);
+      pIDataSource, 0, ::RegisterClipboardFormat(CFSTR_PREFERREDDROPEFFECT), nsnull, &tempOutData, &tempDataLen);
   if (NS_SUCCEEDED(loadResult) && tempOutData) {
     NS_ASSERTION(tempDataLen == 2, "Expected word size");
     WORD preferredEffect = *((WORD*)tempOutData);

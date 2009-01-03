@@ -54,7 +54,7 @@ $SCRIPT -p product -b branch -x executablepath -N profilename
 
 variable            description
 ===============     ============================================================
--p product          required. firefox|thunderbird
+-p product          required. firefox, thunderbird or fennec
 -b branch           required. 1.8.0|1.8.1|1.9.0|1.9.1
 -x executablepath   required. directory-tree containing executable named 
                     'product'
@@ -95,8 +95,8 @@ if [[ -z "$product" || -z "$branch" || -z "$executablepath" || -z "$profilename"
     usage
 fi
 
-if [[ "$product" != "firefox" && "$product" != "thunderbird" ]]; then
-    error "product \"$product\" must be one of firefox or thunderbird" $LINENO
+if [[ "$product" != "firefox" && "$product" != "thunderbird" && "$product" != "fennec" ]]; then
+    error "product \"$product\" must be one of firefox, thunderbird, or fennec" $LINENO
 fi
 
 if [[ "$branch" != "1.8.0" && "$branch" != "1.8.1" && "$branch" != "1.9.0"  && "$branch" != "1.9.1" ]]; 

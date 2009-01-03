@@ -183,8 +183,7 @@ nsJSEventListener::HandleEvent(nsIDOMEvent* aEvent)
     nsCOMPtr<nsIPrivateDOMEvent> priv(do_QueryInterface(aEvent));
     NS_ENSURE_TRUE(priv, NS_ERROR_UNEXPECTED);
 
-    nsEvent* event;
-    priv->GetInternalNSEvent(&event);
+    nsEvent *event = priv->GetInternalNSEvent();
     if (event->message == NS_LOAD_ERROR &&
         event->eventStructType == NS_SCRIPT_ERROR_EVENT) {
       nsScriptErrorEvent *scriptEvent =
@@ -255,8 +254,7 @@ nsJSEventListener::HandleEvent(nsIDOMEvent* aEvent)
       nsCOMPtr<nsIPrivateDOMEvent> priv(do_QueryInterface(aEvent));
       NS_ENSURE_TRUE(priv, NS_ERROR_UNEXPECTED);
 
-      nsEvent* event;
-      priv->GetInternalNSEvent(&event);
+      nsEvent *event = priv->GetInternalNSEvent();
       NS_ENSURE_TRUE(event && event->message == NS_BEFORE_PAGE_UNLOAD,
                      NS_ERROR_UNEXPECTED);
 

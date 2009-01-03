@@ -82,6 +82,8 @@
 #include "nsUnicharUtils.h"
 
 #include "nsFrameSelection.h"
+#include "nsIDOM3Node.h"
+#include "nsContentUtils.h"
 
 //const static char* kMOZEditorBogusNodeAttr="MOZ_EDITOR_BOGUS_NODE";
 //const static char* kMOZEditorBogusNodeValue="TRUE";
@@ -547,13 +549,6 @@ nsHTMLEditRules::AfterEditInner(PRInt32 action, nsIEditor::EDirection aDirection
     }    
   }
 
-  // Ensure range offsets are up to date.
-  if (mDocChangeRange) {
-    mDocChangeRange->GetStartContainer(getter_AddRefs(rangeStartParent));
-    mDocChangeRange->GetEndContainer(getter_AddRefs(rangeEndParent));
-    mDocChangeRange->GetStartOffset(&rangeStartOffset);
-    mDocChangeRange->GetEndOffset(&rangeEndOffset);
-  }
   res = mHTMLEditor->HandleInlineSpellCheck(action, selection, 
                                             mRangeItem.startNode, mRangeItem.startOffset,
                                             rangeStartParent, rangeStartOffset,
@@ -1998,10 +1993,34 @@ nsHTMLEditRules::WillDeleteSelection(nsISelection *aSelection,
         so--; 
         eo--; 
       }
+      else
+      {
+        res = mHTMLEditor->ExtendSelectionForDelete(aSelection, &aAction);
+        NS_ENSURE_SUCCESS(res, res);
+
+        nsCOMPtr<nsIDOMRange> range;
+        res = aSelection->GetRangeAt(0, getter_AddRefs(range));
+        NS_ENSURE_SUCCESS(res, res);
+
+#ifdef DEBUG
+        nsIDOMNode *container;
+
+        res = range->GetStartContainer(&container);
+        NS_ENSURE_SUCCESS(res, res);
+        NS_ASSERTION(container == visNode, "selection start not in visNode");
+
+        res = range->GetEndContainer(&container);
+        NS_ENSURE_SUCCESS(res, res);
+        NS_ASSERTION(container == visNode, "selection end not in visNode");
+#endif
+
+        res = range->GetEndOffset(&eo);
+        NS_ENSURE_SUCCESS(res, res);
+      }
       res = nsWSRunObject::PrepareToDeleteRange(mHTMLEditor, address_of(visNode), &so, address_of(visNode), &eo);
       if (NS_FAILED(res)) return res;
       nsCOMPtr<nsIDOMCharacterData> nodeAsText(do_QueryInterface(visNode));
-      res = mHTMLEditor->DeleteText(nodeAsText,so,1);
+      res = mHTMLEditor->DeleteText(nodeAsText, PR_MIN(so, eo), PR_ABS(eo - so));
       *aHandled = PR_TRUE;
       if (NS_FAILED(res)) return res;    
       res = InsertBRIfNeeded(aSelection);
@@ -2478,6 +2497,20 @@ nsHTMLEditRules::WillDeleteSelection(nsISelection *aSelection,
             res = mHTMLEditor->DeleteText(nodeAsText,0,endOffset);
             if (NS_FAILED(res)) return res;
           }
+        }
+
+        PRBool join = leftBlockParent == rightBlockParent;
+        if (!join) {
+          nsCOMPtr<nsINode> parent1 = do_QueryInterface(leftParent);
+          nsCOMPtr<nsINode> parent2 = do_QueryInterface(rightParent);
+          PRUint16 pos = nsContentUtils::ComparePosition(parent1, parent2);
+          join = (pos & (nsIDOM3Node::DOCUMENT_POSITION_CONTAINS |
+                         nsIDOM3Node::DOCUMENT_POSITION_CONTAINED_BY)) != 0;
+        }
+        if (join) {
+          res = JoinBlocks(address_of(leftParent), address_of(rightParent),
+                           aCancel);
+          if (NS_FAILED(res)) return res;
         }
       }
     }
@@ -7573,26 +7606,28 @@ nsHTMLEditRules::AdjustSelection(nsISelection *aSelection, nsIEditor::EDirection
   nsCOMPtr<nsIDOMNode> theblock;
   if (IsBlockNode(selNode)) theblock = selNode;
   else theblock = mHTMLEditor->GetBlockNodeParent(selNode);
-  PRBool bIsEmptyNode;
-  res = mHTMLEditor->IsEmptyNode(theblock, &bIsEmptyNode, PR_FALSE, PR_FALSE);
-  if (NS_FAILED(res)) return res;
-  // check if br can go into the destination node
-  if (bIsEmptyNode && mHTMLEditor->CanContainTag(selNode, NS_LITERAL_STRING("br")))
-  {
-    nsIDOMElement *rootElement = mHTMLEditor->GetRoot();
-    if (!rootElement) return NS_ERROR_FAILURE;
-    nsCOMPtr<nsIDOMNode> rootNode(do_QueryInterface(rootElement));
-    if (selNode == rootNode)
+  if (theblock && mHTMLEditor->IsEditable(theblock)) {
+    PRBool bIsEmptyNode;
+    res = mHTMLEditor->IsEmptyNode(theblock, &bIsEmptyNode, PR_FALSE, PR_FALSE);
+    if (NS_FAILED(res)) return res;
+    // check if br can go into the destination node
+    if (bIsEmptyNode && mHTMLEditor->CanContainTag(selNode, NS_LITERAL_STRING("br")))
     {
-      // Our root node is completely empty. Don't add a <br> here.
-      // AfterEditInner() will add one for us when it calls
-      // CreateBogusNodeIfNeeded()!
-      return NS_OK;
-    }
+      nsIDOMElement *rootElement = mHTMLEditor->GetRoot();
+      if (!rootElement) return NS_ERROR_FAILURE;
+      nsCOMPtr<nsIDOMNode> rootNode(do_QueryInterface(rootElement));
+      if (selNode == rootNode)
+      {
+        // Our root node is completely empty. Don't add a <br> here.
+        // AfterEditInner() will add one for us when it calls
+        // CreateBogusNodeIfNeeded()!
+        return NS_OK;
+      }
 
-    nsCOMPtr<nsIDOMNode> brNode;
-    // we know we can skip the rest of this routine given the cirumstance
-    return CreateMozBR(selNode, selOffset, address_of(brNode));
+      nsCOMPtr<nsIDOMNode> brNode;
+      // we know we can skip the rest of this routine given the cirumstance
+      return CreateMozBR(selNode, selOffset, address_of(brNode));
+    }
   }
   
   // are we in a text node? 

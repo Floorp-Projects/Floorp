@@ -42,8 +42,12 @@ VPATH		= @srcdir@
 
 include $(DEPTH)/config/autoconf.mk
 
-MODULE = plugin
+MODULE = test_plugin
 
 DIRS = testplugin
+
+XPCSHELL_TESTS = \
+  unit \
+  $(NULL)
 
 include $(topsrcdir)/config/rules.mk

@@ -4,11 +4,24 @@
   <meta http-equiv="content-type" content="text/html; charset=UTF-8">
   <title>Test soft hyphen in rtl text</title>
   <style>
-   p { width: 55ch; font-family: monospace; }
+   div { width: -moz-min-content; position: relative; }
+
+   /*prevent the soft hyphens from contributing to the minimum content width*/
+   div > p:nth-child(2) {
+    position: absolute;
+    top: auto;
+    right: 0;
+    margin-top: 0;
+    width: 100%;
+   }
   </style>
  </head>
  <body dir="rtl">
+  <div>
+  <!-- add a first paragraph with no soft hyphens to set minimum content width -->
+  <p>אבגדהוזחטיכלמנסעפצקרשתאבגדהוזחטיכלמנסעפצקרשתאבגדהוזחטיכל</p>
   <p>אבגדהוזחטיכלמנסעפצקרשת&shy;אבגדהוזחטיכלמנסעפצקרשת&shy;אבגדהוזחטיכלמנסעפצקרשת&shy;אבגדהוזחטיכלמנסעפצקרשת&shy;אבגדהוזחטיכלמנסעפצקרשת&shy;אבגדהוזחטיכלמנסעפצקרשת&shy;אבגדהוזחטיכלמנסעפצקרשת&shy;אבגדהוזחטיכלמנסעפצקרשת&shy;אבגדהוזחטיכלמנסעפצקרשת&shy;אבגדהוזחטיכלמנסעפצקרשת&shy;אבגדהוזחטיכלמנסעפצקרשת&shy;אבגדהוזחטיכלמנסעפצקרשת&shy;אבגדהוזחטיכלמנסעפצקרשת</p>
   </p>
+  </div>
  </body>
 </html>

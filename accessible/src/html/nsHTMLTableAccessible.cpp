@@ -110,7 +110,7 @@ nsHTMLTableCellAccessible::GetAttributesInternal(nsIPersistentProperties *aAttri
   NS_ENSURE_SUCCESS(rv, rv);
 
   while (parentAcc) {
-    if (Role(parentAcc) == nsIAccessibleRole::ROLE_TABLE) {
+    if (nsAccUtils::Role(parentAcc) == nsIAccessibleRole::ROLE_TABLE) {
       // Table accessible must implement nsIAccessibleTable interface but if
       // it isn't happen (for example because of ARIA usage) we shouldn't fail
       // on getting other attributes.
@@ -159,7 +159,7 @@ void nsHTMLTableAccessible::CacheChildren()
     nsAccessible::CacheChildren();
     nsCOMPtr<nsIAccessible> captionAccessible;
     while (NextChild(captionAccessible)) {
-      if (Role(captionAccessible) == nsIAccessibleRole::ROLE_CAPTION) {
+      if (nsAccUtils::Role(captionAccessible) == nsIAccessibleRole::ROLE_CAPTION) {
         nsCOMPtr<nsIAccessible> captionParentAccessible;
         captionAccessible->GetParent(getter_AddRefs(captionParentAccessible));
         if (captionParentAccessible != this) {
@@ -195,20 +195,21 @@ NS_IMETHODIMP nsHTMLTableAccessible::GetRole(PRUint32 *aResult)
   return NS_OK;
 }
 
-NS_IMETHODIMP
-nsHTMLTableAccessible::GetState(PRUint32 *aState, PRUint32 *aExtraState)
+nsresult
+nsHTMLTableAccessible::GetStateInternal(PRUint32 *aState, PRUint32 *aExtraState)
 {
-  nsresult rv= nsAccessible::GetState(aState, aExtraState);
-  NS_ENSURE_SUCCESS(rv, rv);
+  nsresult rv= nsAccessible::GetStateInternal(aState, aExtraState);
+  NS_ENSURE_A11Y_SUCCESS(rv, rv);
+
   *aState |= nsIAccessibleStates::STATE_READONLY;
   return NS_OK;
 }
 
-NS_IMETHODIMP nsHTMLTableAccessible::GetName(nsAString& aName)
+nsresult
+nsHTMLTableAccessible::GetNameInternal(nsAString& aName)
 {
-  aName.Truncate();  // Default name is blank
+  nsAccessible::GetNameInternal(aName);
 
-  nsAccessible::GetName(aName);
   if (aName.IsEmpty()) {
     nsCOMPtr<nsIContent> content(do_QueryInterface(mDOMNode));
     if (content) { 
@@ -270,9 +271,9 @@ nsHTMLTableAccessible::GetCaption(nsIAccessible **aCaption)
 {
   nsCOMPtr<nsIAccessible> firstChild;
   GetFirstChild(getter_AddRefs(firstChild));
-  if (firstChild && Role(firstChild) == nsIAccessibleRole::ROLE_CAPTION) {
+  if (nsAccUtils::Role(firstChild) == nsIAccessibleRole::ROLE_CAPTION)
     NS_ADDREF(*aCaption = firstChild);
-  }
+
   return NS_OK;
 }
 
@@ -321,11 +322,10 @@ nsHTMLTableAccessible::GetColumnHeader(nsIAccessibleTable **aColumnHeader)
   }
 
   if (!accHead) {
-     accService->CreateHTMLTableHeadAccessible(section,
-                                               getter_AddRefs(accHead));
-                                                   
-    nsCOMPtr<nsPIAccessNode> accessNode(do_QueryInterface(accHead));
-    NS_ENSURE_TRUE(accHead, NS_ERROR_FAILURE);
+    accService->CreateHTMLTableHeadAccessible(section, getter_AddRefs(accHead));
+    NS_ENSURE_STATE(accHead);
+
+    nsRefPtr<nsAccessNode> accessNode = nsAccUtils::QueryAccessNode(accHead);
     rv = accessNode->Init();
     NS_ENSURE_SUCCESS(rv, rv);
   }
@@ -1059,14 +1059,15 @@ NS_IMETHODIMP nsHTMLTableAccessible::IsProbablyForLayout(PRBool *aIsProbablyForL
   nsCOMPtr<nsIAccessible> docAccessible = do_QueryInterface(nsCOMPtr<nsIAccessibleDocument>(GetDocAccessible()));
   if (docAccessible) {
     PRUint32 state, extState;
-    docAccessible->GetFinalState(&state, &extState);
+    docAccessible->GetState(&state, &extState);
     if (extState & nsIAccessibleStates::EXT_STATE_EDITABLE) {  // Need to see all elements while document is being edited
       RETURN_LAYOUT_ANSWER(PR_FALSE, "In editable document");
     }
   }
 
   // Check role and role attribute
-  PRBool hasNonTableRole = (Role(this) != nsIAccessibleRole::ROLE_TABLE);
+  PRBool hasNonTableRole =
+    (nsAccUtils::Role(this) != nsIAccessibleRole::ROLE_TABLE);
   if (hasNonTableRole) {
     RETURN_LAYOUT_ANSWER(PR_FALSE, "Has role attribute");
   }
@@ -1140,8 +1141,8 @@ NS_IMETHODIMP nsHTMLTableAccessible::IsProbablyForLayout(PRBool *aIsProbablyForL
     nodeList->Item(rowCount, getter_AddRefs(rowNode));
 
     nsCOMPtr<nsIDOMCSSStyleDeclaration> styleDecl;
-    GetComputedStyleDeclaration(EmptyString(), rowNode,
-                                getter_AddRefs(styleDecl));
+    nsCoreUtils::GetComputedStyleDeclaration(EmptyString(), rowNode,
+                                             getter_AddRefs(styleDecl));
     NS_ENSURE_TRUE(styleDecl, NS_ERROR_FAILURE);
 
     lastRowColor = color;
@@ -1167,11 +1168,15 @@ NS_IMETHODIMP nsHTMLTableAccessible::IsProbablyForLayout(PRBool *aIsProbablyForL
     nsIFrame *tableFrame = GetFrame();
     NS_ENSURE_TRUE(tableFrame , NS_ERROR_FAILURE);
     nsSize tableSize  = tableFrame->GetSize();
+
     nsCOMPtr<nsIAccessibleDocument> docAccessible = GetDocAccessible();
-    nsCOMPtr<nsPIAccessNode> docAccessNode(do_QueryInterface(docAccessible));
-    NS_ENSURE_TRUE(docAccessNode, NS_ERROR_FAILURE);
+    NS_ENSURE_TRUE(docAccessible, NS_ERROR_FAILURE);
+
+    nsRefPtr<nsAccessNode> docAccessNode = nsAccUtils::QueryAccessNode(docAccessible);
+
     nsIFrame *docFrame = docAccessNode->GetFrame();
     NS_ENSURE_TRUE(docFrame , NS_ERROR_FAILURE);
+
     nsSize docSize = docFrame->GetSize();
     if (docSize.width > 0) {
       PRInt32 percentageOfDocWidth = (100 * tableSize.width) / docSize.width;

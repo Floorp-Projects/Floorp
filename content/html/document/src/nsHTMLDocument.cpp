@@ -98,7 +98,6 @@
 #include "nsIDOMHTMLBodyElement.h"
 #include "nsINameSpaceManager.h"
 #include "nsGenericHTMLElement.h"
-#include "nsGenericDOMNodeList.h"
 #include "nsICSSLoader.h"
 #include "nsIHttpChannel.h"
 #include "nsIFile.h"
@@ -178,7 +177,7 @@ static PRBool ConvertToMidasInternalCommand(const nsAString & inCommandID,
 
 static PRBool ConvertToMidasInternalCommand(const nsAString & inCommandID,
                                             nsACString& outCommandID);
-static int PR_CALLBACK
+static int
 MyPrefChangedCallback(const char*aPrefName, void* instance_data)
 {
   const nsAdoptingString& detector_name =
@@ -255,11 +254,12 @@ NS_IMPL_RELEASE_INHERITED(nsHTMLDocument, nsDocument)
 
 // QueryInterface implementation for nsHTMLDocument
 NS_INTERFACE_TABLE_HEAD_CYCLE_COLLECTION_INHERITED(nsHTMLDocument)
-  NS_INTERFACE_TABLE_INHERITED3(nsHTMLDocument,
-                                nsIHTMLDocument,
-                                nsIDOMHTMLDocument,
-                                nsIDOMNSHTMLDocument)
-  NS_INTERFACE_TABLE_TO_MAP_SEGUE
+  NS_DOCUMENT_INTERFACE_TABLE_BEGIN(nsHTMLDocument)
+    NS_INTERFACE_TABLE_ENTRY(nsHTMLDocument, nsIHTMLDocument)
+    NS_INTERFACE_TABLE_ENTRY(nsHTMLDocument, nsIDOMHTMLDocument)
+    NS_INTERFACE_TABLE_ENTRY(nsHTMLDocument, nsIDOMNSHTMLDocument)
+  NS_OFFSET_AND_INTERFACE_TABLE_END
+  NS_OFFSET_AND_INTERFACE_TABLE_TO_MAP_SEGUE
   NS_INTERFACE_MAP_ENTRY_CONTENT_CLASSINFO(HTMLDocument)
 NS_INTERFACE_MAP_END_INHERITING(nsDocument)
 
@@ -1841,29 +1841,23 @@ nsHTMLDocument::OpenCommon(const nsACString& aContentType, PRBool aReplace)
   // (since if it's secure, then it's presumeably trusted).
   nsCOMPtr<nsIDocument> callerDoc =
     do_QueryInterface(nsContentUtils::GetDocumentFromContext());
-
-  // Grab a reference to the calling documents security info (if any)
-  // and principal as it may be lost in the call to Reset().
-  nsCOMPtr<nsISupports> securityInfo;
-  if (callerDoc) {
-    securityInfo = callerDoc->GetSecurityInfo();
-  }
-
-  nsCOMPtr<nsIPrincipal> callerPrincipal;
-  nsIScriptSecurityManager *secMan = nsContentUtils::GetSecurityManager();
-
-  secMan->GetSubjectPrincipal(getter_AddRefs(callerPrincipal));
-
-  if (!callerPrincipal) {
-    // If we're called from C++ we can't do a document.open w/o
-    // changing the principal of the document to something like
-    // about:blank (as that's the only sane thing to do when we don't
-    // know the origin of this call), and since we can't change the
-    // principals of a document for security reasons we'll have to
+  if (!callerDoc) {
+    // If we're called from C++ or in some other way without an originating
+    // document we can't do a document.open w/o changing the principal of the
+    // document to something like about:blank (as that's the only sane thing to
+    // do when we don't know the origin of this call), and since we can't
+    // change the principals of a document for security reasons we'll have to
     // refuse to go ahead with this call.
 
     return NS_ERROR_DOM_SECURITY_ERR;
   }
+
+  // Grab a reference to the calling documents security info (if any)
+  // and URIs as they may be lost in the call to Reset().
+  nsCOMPtr<nsISupports> securityInfo = callerDoc->GetSecurityInfo();
+  nsCOMPtr<nsIURI> uri = callerDoc->GetDocumentURI();
+  nsCOMPtr<nsIURI> baseURI = callerDoc->GetBaseURI();
+  nsCOMPtr<nsIPrincipal> callerPrincipal = callerDoc->NodePrincipal();
 
   // We're called from script. Make sure the script is from the same
   // origin, not just that the caller can access the document. This is
@@ -1875,18 +1869,6 @@ nsHTMLDocument::OpenCommon(const nsACString& aContentType, PRBool aReplace)
   if (NS_FAILED(callerPrincipal->Equals(NodePrincipal(), &equals)) ||
       !equals) {
     return NS_ERROR_DOM_SECURITY_ERR;
-  }
-
-  // The URI for the document after this call. Get it from the calling
-  // principal (if available), or set it to "about:blank" if no
-  // principal is reachable.
-  nsCOMPtr<nsIURI> uri;
-  callerPrincipal->GetURI(getter_AddRefs(uri));
-
-  if (!uri) {
-    rv = NS_NewURI(getter_AddRefs(uri),
-                   NS_LITERAL_CSTRING("about:blank"));
-    NS_ENSURE_SUCCESS(rv, rv);
   }
 
   // Stop current loads targeted at the window this document is in.
@@ -1919,6 +1901,9 @@ nsHTMLDocument::OpenCommon(const nsACString& aContentType, PRBool aReplace)
   if (NS_FAILED(rv)) {
     return rv;
   }
+
+  // We can't depend on channels implementing property bags, so do our
+  // base URI manually after reset.
 
   // Set the caller principal, if any, on the channel so that we'll
   // make sure to use it when we reset.
@@ -2009,6 +1994,9 @@ nsHTMLDocument::OpenCommon(const nsACString& aContentType, PRBool aReplace)
   // null.
 
   Reset(channel, group);
+  if (baseURI) {
+    mDocumentBaseURI = baseURI;
+  }
 
   if (root) {
     // Tear down the frames for the root element.
@@ -2909,7 +2897,7 @@ nsHTMLDocument::ResolveName(const nsAString& aName,
 
     if (aForm) {
       // ... we're called from a form, in that case we create a
-      // nsFormNameContentList which will filter out the elements in the
+      // nsFormContentList which will filter out the elements in the
       // list that don't belong to aForm
 
       nsFormContentList *fc_list = new nsFormContentList(aForm, *list);
@@ -3844,7 +3832,7 @@ nsHTMLDocument::ExecCommand(const nsAString & commandID,
   *_retval = PR_FALSE;
 
   // if editing is not on, bail
-  if (!IsEditingOn())
+  if (!IsEditingOnAfterFlush())
     return NS_ERROR_FAILURE;
 
   // if they are requesting UI from us, let's fail since we have no UI
@@ -3919,7 +3907,7 @@ nsHTMLDocument::ExecCommandShowHelp(const nsAString & commandID,
   *_retval = PR_FALSE;
 
   // if editing is not on, bail
-  if (!IsEditingOn())
+  if (!IsEditingOnAfterFlush())
     return NS_ERROR_FAILURE;
 
   return NS_ERROR_NOT_IMPLEMENTED;
@@ -3934,7 +3922,7 @@ nsHTMLDocument::QueryCommandEnabled(const nsAString & commandID,
   *_retval = PR_FALSE;
 
   // if editing is not on, bail
-  if (!IsEditingOn())
+  if (!IsEditingOnAfterFlush())
     return NS_ERROR_FAILURE;
 
   // get command manager and dispatch command to our window if it's acceptable
@@ -3963,7 +3951,7 @@ nsHTMLDocument::QueryCommandIndeterm(const nsAString & commandID,
   *_retval = PR_FALSE;
 
   // if editing is not on, bail
-  if (!IsEditingOn())
+  if (!IsEditingOnAfterFlush())
     return NS_ERROR_FAILURE;
 
   // get command manager and dispatch command to our window if it's acceptable
@@ -4005,7 +3993,7 @@ nsHTMLDocument::QueryCommandState(const nsAString & commandID, PRBool *_retval)
   *_retval = PR_FALSE;
 
   // if editing is not on, bail
-  if (!IsEditingOn())
+  if (!IsEditingOnAfterFlush())
     return NS_ERROR_FAILURE;
 
   // get command manager and dispatch command to our window if it's acceptable
@@ -4067,7 +4055,7 @@ nsHTMLDocument::QueryCommandSupported(const nsAString & commandID,
   *_retval = PR_FALSE;
 
   // if editing is not on, bail
-  if (!IsEditingOn())
+  if (!IsEditingOnAfterFlush())
     return NS_ERROR_FAILURE;
 
   return NS_ERROR_NOT_IMPLEMENTED;
@@ -4081,7 +4069,7 @@ nsHTMLDocument::QueryCommandText(const nsAString & commandID,
   _retval.SetLength(0);
 
   // if editing is not on, bail
-  if (!IsEditingOn())
+  if (!IsEditingOnAfterFlush())
     return NS_ERROR_FAILURE;
 
   return NS_ERROR_NOT_IMPLEMENTED;
@@ -4095,7 +4083,7 @@ nsHTMLDocument::QueryCommandValue(const nsAString & commandID,
   _retval.SetLength(0);
 
   // if editing is not on, bail
-  if (!IsEditingOn())
+  if (!IsEditingOnAfterFlush())
     return NS_ERROR_FAILURE;
 
   // get command manager and dispatch command to our window if it's acceptable
@@ -4188,4 +4176,17 @@ nsHTMLDocument::Clone(nsINodeInfo *aNodeInfo, nsINode **aResult) const
   clone->mLoadFlags = mLoadFlags;
 
   return CallQueryInterface(clone.get(), aResult);
+}
+
+PRBool
+nsHTMLDocument::IsEditingOnAfterFlush()
+{
+  nsIDocument* doc = GetParentDocument();
+  if (doc) {
+    // Make sure frames are up to date, since that can affect whether
+    // we're editable.
+    doc->FlushPendingNotifications(Flush_Frames);
+  }
+
+  return IsEditingOn();
 }

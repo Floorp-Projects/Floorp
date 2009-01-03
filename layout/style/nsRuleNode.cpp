@@ -81,7 +81,7 @@ struct ChildrenHashEntry : public PLDHashEntryHdr {
   nsRuleNode *mRuleNode;
 };
 
-/* static */ PR_CALLBACK PLDHashNumber
+/* static */ PLDHashNumber
 nsRuleNode::ChildrenHashHashKey(PLDHashTable *aTable, const void *aKey)
 {
   const nsRuleNode::Key *key =
@@ -91,7 +91,7 @@ nsRuleNode::ChildrenHashHashKey(PLDHashTable *aTable, const void *aKey)
   return PL_DHashVoidPtrKeyStub(aTable, key->mRule);
 }
 
-/* static */ PR_CALLBACK PRBool
+/* static */ PRBool
 nsRuleNode::ChildrenHashMatchEntry(PLDHashTable *aTable,
                                    const PLDHashEntryHdr *aHdr,
                                    const void *aKey)
@@ -195,11 +195,8 @@ static nscoord CalcLengthWith(const nsCSSValue& aValue,
   }
   switch (unit) {
     case eCSSUnit_EM: {
-      return NSToCoordRound(aValue.GetFloatValue() * float(aFontSize));
+      return NSToCoordRoundWithClamp(aValue.GetFloatValue() * float(aFontSize));
       // XXX scale against font metrics height instead?
-    }
-    case eCSSUnit_EN: {
-      return NSToCoordRound((aValue.GetFloatValue() * float(aFontSize)) / 2.0f);
     }
     case eCSSUnit_XHeight: {
       nsFont font = aStyleFont->mFont;
@@ -207,12 +204,7 @@ static nscoord CalcLengthWith(const nsCSSValue& aValue,
       nsCOMPtr<nsIFontMetrics> fm = aPresContext->GetMetricsFor(font);
       nscoord xHeight;
       fm->GetXHeight(xHeight);
-      return NSToCoordRound(aValue.GetFloatValue() * float(xHeight));
-    }
-    case eCSSUnit_CapHeight: {
-      NS_NOTYETIMPLEMENTED("cap height unit");
-      nscoord capHeight = ((aFontSize / 3) * 2); // XXX HACK!
-      return NSToCoordRound(aValue.GetFloatValue() * float(capHeight));
+      return NSToCoordRoundWithClamp(aValue.GetFloatValue() * float(xHeight));
     }
     case eCSSUnit_Char: {
       nsFont font = aStyleFont->mFont;
@@ -222,7 +214,7 @@ static nscoord CalcLengthWith(const nsCSSValue& aValue,
       gfxFloat zeroWidth = (tfm->GetThebesFontGroup()->GetFontAt(0)
                             ->GetMetrics().zeroOrAveCharWidth);
 
-      return NSToCoordRound(aValue.GetFloatValue() *
+      return NSToCoordRoundWithClamp(aValue.GetFloatValue() *
                             NS_ceil(aPresContext->AppUnitsPerDevPixel() *
                                     zeroWidth));
     }
@@ -602,7 +594,7 @@ nsRuleNode::operator new(size_t sz, nsPresContext* aPresContext) CPP_THROW_NEW
   return aPresContext->AllocateFromShell(sz);
 }
 
-/* static */ PR_CALLBACK PLDHashOperator
+/* static */ PLDHashOperator
 nsRuleNode::EnqueueRuleNodeChildren(PLDHashTable *table, PLDHashEntryHdr *hdr,
                                     PRUint32 number, void *arg)
 {
@@ -638,7 +630,7 @@ nsRuleNode::DestroyInternal(nsRuleNode ***aDestroyQueueTail)
       destroyQueueTail = &(*destroyQueueTail)->mNextSibling;
     } while (*destroyQueueTail);
   }
-  mChildrenTaggedPtr = nsnull;
+  mChildren.asVoid = nsnull;
 
   if (aDestroyQueueTail) {
     // Our caller destroys the queue.
@@ -679,11 +671,11 @@ nsRuleNode::nsRuleNode(nsPresContext* aContext, nsRuleNode* aParent,
   : mPresContext(aContext),
     mParent(aParent),
     mRule(aRule),
-    mChildrenTaggedPtr(nsnull),
     mDependentBits((PRUint32(aLevel) << NS_RULE_NODE_LEVEL_SHIFT) |
                    (aIsImportant ? NS_RULE_NODE_IS_IMPORTANT : 0)),
     mNoneBits(0)
 {
+  mChildren.asVoid = nsnull;
   MOZ_COUNT_CTOR(nsRuleNode);
   NS_IF_ADDREF(mRule);
 
@@ -819,8 +811,8 @@ struct PropertyCheckData {
  * result, and it returns the revised one.
  */
 typedef nsRuleNode::RuleDetail
-  (* PR_CALLBACK CheckCallbackFn)(const nsRuleDataStruct& aData,
-                                  nsRuleNode::RuleDetail aResult);
+  (* CheckCallbackFn)(const nsRuleDataStruct& aData,
+                      nsRuleNode::RuleDetail aResult);
 
 /* the information for all the properties in a style struct */
 struct StructCheckData {
@@ -869,7 +861,7 @@ ExamineCSSRect(const nsCSSRect* aRect,
   }
 }
 
-PR_STATIC_CALLBACK(nsRuleNode::RuleDetail)
+static nsRuleNode::RuleDetail
 CheckFontCallback(const nsRuleDataStruct& aData,
                   nsRuleNode::RuleDetail aResult)
 {
@@ -910,7 +902,7 @@ CheckFontCallback(const nsRuleDataStruct& aData,
   return aResult;
 }
 
-PR_STATIC_CALLBACK(nsRuleNode::RuleDetail)
+static nsRuleNode::RuleDetail
 CheckColorCallback(const nsRuleDataStruct& aData,
                    nsRuleNode::RuleDetail aResult)
 {
@@ -934,140 +926,140 @@ CheckColorCallback(const nsRuleDataStruct& aData,
 #define CSS_PROP_INCLUDE_NOT_CSS
 
 static const PropertyCheckData FontCheckProperties[] = {
-#define CSS_PROP_FONT(name_, id_, method_, datastruct_, member_, type_, kwtable_) \
+#define CSS_PROP_FONT(name_, id_, method_, flags_, datastruct_, member_, type_, kwtable_) \
   { offsetof(nsRuleData##datastruct_, member_), type_ },
 #include "nsCSSPropList.h"
 #undef CSS_PROP_FONT
 };
 
 static const PropertyCheckData DisplayCheckProperties[] = {
-#define CSS_PROP_DISPLAY(name_, id_, method_, datastruct_, member_, type_, kwtable_) \
+#define CSS_PROP_DISPLAY(name_, id_, method_, flags_, datastruct_, member_, type_, kwtable_) \
   { offsetof(nsRuleData##datastruct_, member_), type_ },
 #include "nsCSSPropList.h"
 #undef CSS_PROP_DISPLAY
 };
 
 static const PropertyCheckData VisibilityCheckProperties[] = {
-#define CSS_PROP_VISIBILITY(name_, id_, method_, datastruct_, member_, type_, kwtable_) \
+#define CSS_PROP_VISIBILITY(name_, id_, method_, flags_, datastruct_, member_, type_, kwtable_) \
   { offsetof(nsRuleData##datastruct_, member_), type_ },
 #include "nsCSSPropList.h"
 #undef CSS_PROP_VISIBILITY
 };
 
 static const PropertyCheckData MarginCheckProperties[] = {
-#define CSS_PROP_MARGIN(name_, id_, method_, datastruct_, member_, type_, kwtable_) \
+#define CSS_PROP_MARGIN(name_, id_, method_, flags_, datastruct_, member_, type_, kwtable_) \
   { offsetof(nsRuleData##datastruct_, member_), type_ },
 #include "nsCSSPropList.h"
 #undef CSS_PROP_MARGIN
 };
 
 static const PropertyCheckData BorderCheckProperties[] = {
-#define CSS_PROP_BORDER(name_, id_, method_, datastruct_, member_, type_, kwtable_) \
+#define CSS_PROP_BORDER(name_, id_, method_, flags_, datastruct_, member_, type_, kwtable_) \
   { offsetof(nsRuleData##datastruct_, member_), type_ },
 #include "nsCSSPropList.h"
 #undef CSS_PROP_BORDER
 };
 
 static const PropertyCheckData PaddingCheckProperties[] = {
-#define CSS_PROP_PADDING(name_, id_, method_, datastruct_, member_, type_, kwtable_) \
+#define CSS_PROP_PADDING(name_, id_, method_, flags_, datastruct_, member_, type_, kwtable_) \
   { offsetof(nsRuleData##datastruct_, member_), type_ },
 #include "nsCSSPropList.h"
 #undef CSS_PROP_PADDING
 };
 
 static const PropertyCheckData OutlineCheckProperties[] = {
-#define CSS_PROP_OUTLINE(name_, id_, method_, datastruct_, member_, type_, kwtable_) \
+#define CSS_PROP_OUTLINE(name_, id_, method_, flags_, datastruct_, member_, type_, kwtable_) \
   { offsetof(nsRuleData##datastruct_, member_), type_ },
 #include "nsCSSPropList.h"
 #undef CSS_PROP_OUTLINE
 };
 
 static const PropertyCheckData ListCheckProperties[] = {
-#define CSS_PROP_LIST(name_, id_, method_, datastruct_, member_, type_, kwtable_) \
+#define CSS_PROP_LIST(name_, id_, method_, flags_, datastruct_, member_, type_, kwtable_) \
   { offsetof(nsRuleData##datastruct_, member_), type_ },
 #include "nsCSSPropList.h"
 #undef CSS_PROP_LIST
 };
 
 static const PropertyCheckData ColorCheckProperties[] = {
-#define CSS_PROP_COLOR(name_, id_, method_, datastruct_, member_, type_, kwtable_) \
+#define CSS_PROP_COLOR(name_, id_, method_, flags_, datastruct_, member_, type_, kwtable_) \
   { offsetof(nsRuleData##datastruct_, member_), type_ },
 #include "nsCSSPropList.h"
 #undef CSS_PROP_COLOR
 };
 
 static const PropertyCheckData BackgroundCheckProperties[] = {
-#define CSS_PROP_BACKGROUND(name_, id_, method_, datastruct_, member_, type_, kwtable_) \
+#define CSS_PROP_BACKGROUND(name_, id_, method_, flags_, datastruct_, member_, type_, kwtable_) \
   { offsetof(nsRuleData##datastruct_, member_), type_ },
 #include "nsCSSPropList.h"
 #undef CSS_PROP_BACKGROUND
 };
 
 static const PropertyCheckData PositionCheckProperties[] = {
-#define CSS_PROP_POSITION(name_, id_, method_, datastruct_, member_, type_, kwtable_) \
+#define CSS_PROP_POSITION(name_, id_, method_, flags_, datastruct_, member_, type_, kwtable_) \
   { offsetof(nsRuleData##datastruct_, member_), type_ },
 #include "nsCSSPropList.h"
 #undef CSS_PROP_POSITION
 };
 
 static const PropertyCheckData TableCheckProperties[] = {
-#define CSS_PROP_TABLE(name_, id_, method_, datastruct_, member_, type_, kwtable_) \
+#define CSS_PROP_TABLE(name_, id_, method_, flags_, datastruct_, member_, type_, kwtable_) \
   { offsetof(nsRuleData##datastruct_, member_), type_ },
 #include "nsCSSPropList.h"
 #undef CSS_PROP_TABLE
 };
 
 static const PropertyCheckData TableBorderCheckProperties[] = {
-#define CSS_PROP_TABLEBORDER(name_, id_, method_, datastruct_, member_, type_, kwtable_) \
+#define CSS_PROP_TABLEBORDER(name_, id_, method_, flags_, datastruct_, member_, type_, kwtable_) \
   { offsetof(nsRuleData##datastruct_, member_), type_ },
 #include "nsCSSPropList.h"
 #undef CSS_PROP_TABLEBORDER
 };
 
 static const PropertyCheckData ContentCheckProperties[] = {
-#define CSS_PROP_CONTENT(name_, id_, method_, datastruct_, member_, type_, kwtable_) \
+#define CSS_PROP_CONTENT(name_, id_, method_, flags_, datastruct_, member_, type_, kwtable_) \
   { offsetof(nsRuleData##datastruct_, member_), type_ },
 #include "nsCSSPropList.h"
 #undef CSS_PROP_CONTENT
 };
 
 static const PropertyCheckData QuotesCheckProperties[] = {
-#define CSS_PROP_QUOTES(name_, id_, method_, datastruct_, member_, type_, kwtable_) \
+#define CSS_PROP_QUOTES(name_, id_, method_, flags_, datastruct_, member_, type_, kwtable_) \
   { offsetof(nsRuleData##datastruct_, member_), type_ },
 #include "nsCSSPropList.h"
 #undef CSS_PROP_QUOTES
 };
 
 static const PropertyCheckData TextCheckProperties[] = {
-#define CSS_PROP_TEXT(name_, id_, method_, datastruct_, member_, type_, kwtable_) \
+#define CSS_PROP_TEXT(name_, id_, method_, flags_, datastruct_, member_, type_, kwtable_) \
   { offsetof(nsRuleData##datastruct_, member_), type_ },
 #include "nsCSSPropList.h"
 #undef CSS_PROP_TEXT
 };
 
 static const PropertyCheckData TextResetCheckProperties[] = {
-#define CSS_PROP_TEXTRESET(name_, id_, method_, datastruct_, member_, type_, kwtable_) \
+#define CSS_PROP_TEXTRESET(name_, id_, method_, flags_, datastruct_, member_, type_, kwtable_) \
   { offsetof(nsRuleData##datastruct_, member_), type_ },
 #include "nsCSSPropList.h"
 #undef CSS_PROP_TEXTRESET
 };
 
 static const PropertyCheckData UserInterfaceCheckProperties[] = {
-#define CSS_PROP_USERINTERFACE(name_, id_, method_, datastruct_, member_, type_, kwtable_) \
+#define CSS_PROP_USERINTERFACE(name_, id_, method_, flags_, datastruct_, member_, type_, kwtable_) \
   { offsetof(nsRuleData##datastruct_, member_), type_ },
 #include "nsCSSPropList.h"
 #undef CSS_PROP_USERINTERFACE
 };
 
 static const PropertyCheckData UIResetCheckProperties[] = {
-#define CSS_PROP_UIRESET(name_, id_, method_, datastruct_, member_, type_, kwtable_) \
+#define CSS_PROP_UIRESET(name_, id_, method_, flags_, datastruct_, member_, type_, kwtable_) \
   { offsetof(nsRuleData##datastruct_, member_), type_ },
 #include "nsCSSPropList.h"
 #undef CSS_PROP_UIRESET
 };
 
 static const PropertyCheckData XULCheckProperties[] = {
-#define CSS_PROP_XUL(name_, id_, method_, datastruct_, member_, type_, kwtable_) \
+#define CSS_PROP_XUL(name_, id_, method_, flags_, datastruct_, member_, type_, kwtable_) \
   { offsetof(nsRuleData##datastruct_, member_), type_ },
 #include "nsCSSPropList.h"
 #undef CSS_PROP_XUL
@@ -1075,14 +1067,14 @@ static const PropertyCheckData XULCheckProperties[] = {
 
 #ifdef MOZ_SVG
 static const PropertyCheckData SVGCheckProperties[] = {
-#define CSS_PROP_SVG(name_, id_, method_, datastruct_, member_, type_, kwtable_) \
+#define CSS_PROP_SVG(name_, id_, method_, flags_, datastruct_, member_, type_, kwtable_) \
   { offsetof(nsRuleData##datastruct_, member_), type_ },
 #include "nsCSSPropList.h"
 #undef CSS_PROP_SVG
 };
 
 static const PropertyCheckData SVGResetCheckProperties[] = {
-#define CSS_PROP_SVGRESET(name_, id_, method_, datastruct_, member_, type_, kwtable_) \
+#define CSS_PROP_SVGRESET(name_, id_, method_, flags_, datastruct_, member_, type_, kwtable_) \
   { offsetof(nsRuleData##datastruct_, member_), type_ },
 #include "nsCSSPropList.h"
 #undef CSS_PROP_SVGRESET
@@ -1090,7 +1082,7 @@ static const PropertyCheckData SVGResetCheckProperties[] = {
 #endif
 
 static const PropertyCheckData ColumnCheckProperties[] = {
-#define CSS_PROP_COLUMN(name_, id_, method_, datastruct_, member_, type_, kwtable_) \
+#define CSS_PROP_COLUMN(name_, id_, method_, flags_, datastruct_, member_, type_, kwtable_) \
   { offsetof(nsRuleData##datastruct_, member_), type_ },
 #include "nsCSSPropList.h"
 #undef CSS_PROP_COLUMN
@@ -1664,6 +1656,14 @@ nsRuleNode::WalkRuleTree(const nsStyleStructID aSID,
     // In the absence of any computed data in the rule tree and with
     // no rules specified that didn't have values of 'inherit', we should check our parent.
     nsStyleContext* parentContext = aContext->GetParent();
+    if (isReset) {
+      /* Reset structs don't inherit from first-line. */
+      /* See similar code in COMPUTE_START_RESET */
+      while (parentContext &&
+             parentContext->GetPseudoType() == nsCSSPseudoElements::firstLine) {
+        parentContext = parentContext->GetParent();
+      }
+    }
     if (parentContext) {
       // We have a parent, and so we should just inherit from the parent.
       // Set the inherit bits on our context.  These bits tell the style context that
@@ -2036,9 +2036,10 @@ nsRuleNode::AdjustLogicalBoxProp(nsStyleContext* aContext,
                "should not have bothered calling Compute*Data");              \
                                                                               \
   nsStyleContext* parentContext = aContext->GetParent();                      \
-  if (parentContext &&                                                        \
-      parentContext->GetPseudoType() == nsCSSPseudoElements::firstLine) {     \
-    /* Reset structs don't inherit from first-line */                         \
+  /* Reset structs don't inherit from first-line */                           \
+  /* See similar code in WalkRuleTree */                                      \
+  while (parentContext &&                                                     \
+         parentContext->GetPseudoType() == nsCSSPseudoElements::firstLine) {  \
     parentContext = parentContext->GetParent();                               \
   }                                                                           \
                                                                               \
@@ -2200,7 +2201,7 @@ nsRuleNode::SetFontSize(nsPresContext* aPresContext,
 {
   PRBool zoom = PR_FALSE;
   PRInt32 baseSize = (PRInt32) aPresContext->
-    GetDefaultFont(aFont->mFlags & NS_STYLE_FONT_FACE_MASK)->size;
+    GetDefaultFont(aFont->mGenericID)->size;
   if (eCSSUnit_Enumerated == aFontData.mSize.GetUnit()) {
     PRInt32 value = aFontData.mSize.GetIntValue();
     PRInt32 scaler = aPresContext->FontScaler();
@@ -2408,31 +2409,29 @@ nsRuleNode::SetFont(nsPresContext* aPresContext, nsStyleContext* aContext,
         (aPresContext->CompatibilityMode() == eCompatibility_NavQuirks &&
          aFontData.mFamilyFromHTML);
     aFont->mFont.systemFont = PR_FALSE;
-    aFont->mFlags &= ~NS_STYLE_FONT_FACE_MASK;
     // Technically this is redundant with the code below, but it's good
     // to have since we'll still want it once we get rid of
     // SetGenericFont (bug 380915).
-    aFont->mFlags |= aGenericFontID;
+    aFont->mGenericID = aGenericFontID;
   }
   else if (eCSSUnit_System_Font == aFontData.mFamily.GetUnit()) {
     aFont->mFont.name = systemFont.name;
     aFont->mFont.familyNameQuirks = PR_FALSE;
     aFont->mFont.systemFont = PR_TRUE;
-    aFont->mFlags &= ~NS_STYLE_FONT_FACE_MASK;
+    aFont->mGenericID = kGenericFont_NONE;
   }
   else if (eCSSUnit_Inherit == aFontData.mFamily.GetUnit()) {
     aInherited = PR_TRUE;
     aFont->mFont.name = aParentFont->mFont.name;
     aFont->mFont.familyNameQuirks = aParentFont->mFont.familyNameQuirks;
     aFont->mFont.systemFont = aParentFont->mFont.systemFont;
-    aFont->mFlags &= ~NS_STYLE_FONT_FACE_MASK;
-    aFont->mFlags |= (aParentFont->mFlags & NS_STYLE_FONT_FACE_MASK);
+    aFont->mGenericID = aParentFont->mGenericID;
   }
   else if (eCSSUnit_Initial == aFontData.mFamily.GetUnit()) {
     aFont->mFont.name = defaultVariableFont->name;
     aFont->mFont.familyNameQuirks = PR_FALSE;
     aFont->mFont.systemFont = defaultVariableFont->systemFont;
-    aFont->mFlags &= ~NS_STYLE_FONT_FACE_MASK;
+    aFont->mGenericID = kGenericFont_NONE;
   }
 
   // When we're in the loop in SetGenericFont, we must ensure that we
@@ -2440,8 +2439,7 @@ nsRuleNode::SetFont(nsPresContext* aPresContext, nsStyleContext* aContext,
   // to be careful not to touch it when we're called directly from
   // ComputeFontData, because we could have a start struct.
   if (aGenericFontID != kGenericFont_NONE) {
-    aFont->mFlags &= ~NS_STYLE_FONT_FACE_MASK;
-    aFont->mFlags |= aGenericFontID;
+    aFont->mGenericID = aGenericFontID;
   }
 
   // font-style: enum, normal, inherit, initial, -moz-system-font
@@ -2587,7 +2585,7 @@ nsRuleNode::SetGenericFont(nsPresContext* aPresContext,
   contextPath.AppendElement(aContext);
   nsStyleContext* higherContext = aContext->GetParent();
   while (higherContext) {
-    if (higherContext->GetStyleFont()->mFlags & aGenericFontID) {
+    if (higherContext->GetStyleFont()->mGenericID == aGenericFontID) {
       // done walking up the higher contexts
       break;
     }
@@ -3123,6 +3121,12 @@ nsRuleNode::ComputeUIResetData(void* aStartStruct,
               parentUI->mForceBrokenImageIcon,
               0, 0, 0, 0, 0);
 
+  // -moz-window-shadow: enum, none, inherit, initial
+  SetDiscrete(uiData.mWindowShadow, ui->mWindowShadow, inherited,
+              SETDSC_ENUMERATED | SETDSC_NONE, parentUI->mWindowShadow,
+              NS_STYLE_WINDOW_SHADOW_DEFAULT, 0,
+              NS_STYLE_WINDOW_SHADOW_NONE, 0, 0);
+
   COMPUTE_END_RESET(UIReset, ui)
 }
 
@@ -3152,7 +3156,7 @@ static nsStyleTransformMatrix ReadTransforms(const nsCSSValueList* aList,
     /* Read in a single transform matrix, then accumulate it with the total. */
     nsStyleTransformMatrix currMatrix;
     currMatrix.SetToTransformFunction(currElem.GetArrayValue(), aContext,
-                                      aPresContext);
+                                      aPresContext, aInherited);
     result *= currMatrix;
   }
   return result;
@@ -3167,13 +3171,6 @@ nsRuleNode::ComputeDisplayData(void* aStartStruct,
 {
   COMPUTE_START_RESET(Display, (), display, parentDisplay,
                       Display, displayData)
-  nsIAtom* pseudoTag = aContext->GetPseudoType();
-  PRBool generatedContent = (pseudoTag == nsCSSPseudoElements::before || 
-                             pseudoTag == nsCSSPseudoElements::after);
-  NS_ASSERTION(!generatedContent || parentContext,
-               "Must have parent context for generated content");
-  if (parentDisplay == display && generatedContent)
-    parentDisplay = parentContext->GetStyleDisplay();
 
   // opacity: factor, inherit, initial
   SetFactor(displayData.mOpacity, display->mOpacity, inherited,
@@ -3371,7 +3368,7 @@ nsRuleNode::ComputeDisplayData(void* aStartStruct,
     // and 'position'.  Since generated content can't be floated or
     // positioned, we can deal with it here.
 
-    if (nsCSSPseudoElements::firstLetter == pseudoTag) {
+    if (nsCSSPseudoElements::firstLetter == aContext->GetPseudoType()) {
       // a non-floating first-letter must be inline
       // XXX this fix can go away once bug 103189 is fixed correctly
       display->mDisplay = NS_STYLE_DISPLAY_INLINE;
@@ -5178,7 +5175,7 @@ nsRuleNode::Mark()
     node->mDependentBits |= NS_RULE_NODE_GC_MARK;
 }
 
-PR_STATIC_CALLBACK(PLDHashOperator)
+static PLDHashOperator
 SweepRuleNodeChildren(PLDHashTable *table, PLDHashEntryHdr *hdr,
                       PRUint32 number, void *arg)
 {
@@ -5299,38 +5296,74 @@ nsRuleNode::HasAuthorSpecifiedRules(nsStyleContext* aStyleContext,
     nValues += NS_ARRAY_LENGTH(paddingValues);
   }
 
-  // We need to be careful not to count styles covered up by
-  // user-important or UA-important declarations.
-  for (nsRuleNode* ruleNode = aStyleContext->GetRuleNode(); ruleNode;
-       ruleNode = ruleNode->GetParent()) {
-    nsIStyleRule *rule = ruleNode->GetRule();
-    if (rule) {
-      ruleData.mLevel = ruleNode->GetLevel();
-      ruleData.mIsImportantRule = ruleNode->IsImportantRule();
-      rule->MapRuleInfoInto(&ruleData);
-      // Do the same nulling out as in GetBorderData, GetBackgroundData
-      // or GetPaddingData.
-      // We are sharing with some style rule.  It really owns the data.
-      marginData.mBoxShadow = nsnull;
+  nsStyleContext* styleContext = aStyleContext;
 
-      if (ruleData.mLevel == nsStyleSet::eAgentSheet ||
-          ruleData.mLevel == nsStyleSet::eUserSheet) {
-        // This is a rule whose effect we want to ignore, so if any of
-        // the properties we care about were set, set them to the dummy
-        // value that they'll never otherwise get.
-        for (PRUint32 i = 0; i < nValues; ++i)
-          if (values[i]->GetUnit() != eCSSUnit_Null)
-            values[i]->SetDummyValue();
-      } else {
-        // If any of the values we care about was set by the above rule,
-        // we have author style.
-        for (PRUint32 i = 0; i < nValues; ++i)
-          if (values[i]->GetUnit() != eCSSUnit_Null &&
-              values[i]->GetUnit() != eCSSUnit_Dummy) // see above
-            return PR_TRUE;
+  // We need to be careful not to count styles covered up by user-important or
+  // UA-important declarations.  But we do want to catch explicit inherit
+  // styling in those and check our parent style context to see whether we have
+  // user styling for those properties.  Note that we don't care here about
+  // inheritance due to lack of a specified value, since all the properties we
+  // care about are reset properties.
+  PRBool haveExplicitUAInherit;
+  do {
+    haveExplicitUAInherit = PR_FALSE;
+    for (nsRuleNode* ruleNode = styleContext->GetRuleNode(); ruleNode;
+         ruleNode = ruleNode->GetParent()) {
+      nsIStyleRule *rule = ruleNode->GetRule();
+      if (rule) {
+        ruleData.mLevel = ruleNode->GetLevel();
+        ruleData.mIsImportantRule = ruleNode->IsImportantRule();
+        rule->MapRuleInfoInto(&ruleData);
+        // Do the same nulling out as in GetBorderData, GetBackgroundData
+        // or GetPaddingData.
+        // We are sharing with some style rule.  It really owns the data.
+        marginData.mBoxShadow = nsnull;
+
+        if (ruleData.mLevel == nsStyleSet::eAgentSheet ||
+            ruleData.mLevel == nsStyleSet::eUserSheet) {
+          // This is a rule whose effect we want to ignore, so if any of
+          // the properties we care about were set, set them to the dummy
+          // value that they'll never otherwise get.
+          for (PRUint32 i = 0; i < nValues; ++i) {
+            nsCSSUnit unit = values[i]->GetUnit();
+            if (unit != eCSSUnit_Null &&
+                unit != eCSSUnit_Dummy &&
+                unit != eCSSUnit_DummyInherit) {
+              if (unit == eCSSUnit_Inherit) {
+                haveExplicitUAInherit = PR_TRUE;
+                values[i]->SetDummyInheritValue();
+              } else {
+                values[i]->SetDummyValue();
+              }
+            }
+          }
+        } else {
+          // If any of the values we care about was set by the above rule,
+          // we have author style.
+          for (PRUint32 i = 0; i < nValues; ++i)
+            if (values[i]->GetUnit() != eCSSUnit_Null &&
+                values[i]->GetUnit() != eCSSUnit_Dummy && // see above
+                values[i]->GetUnit() != eCSSUnit_DummyInherit)
+              return PR_TRUE;
+        }
       }
     }
-  }
+
+    if (haveExplicitUAInherit) {
+      // reset all the eCSSUnit_Null values to eCSSUnit_Dummy (since they're
+      // not styled by the author, or by anyone else), and then reset all the
+      // eCSSUnit_DummyInherit values to eCSSUnit_Null (so we will be able to
+      // detect them being styled by the author) and move up to our parent
+      // style context.
+      for (PRUint32 i = 0; i < nValues; ++i)
+        if (values[i]->GetUnit() == eCSSUnit_Null)
+          values[i]->SetDummyValue();
+      for (PRUint32 i = 0; i < nValues; ++i)
+        if (values[i]->GetUnit() == eCSSUnit_DummyInherit)
+          values[i]->Reset();
+      styleContext = styleContext->GetParent();
+    }
+  } while (haveExplicitUAInherit && styleContext);
 
   return PR_FALSE;
 }

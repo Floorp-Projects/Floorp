@@ -41,11 +41,7 @@
 OggPlayErrorCode
 oggplay_seek(OggPlay *me, ogg_int64_t milliseconds) {
 
-  OggPlaySeekTrash    * trash;
-  OggPlaySeekTrash   ** p;
-  OggPlayDataHeader  ** end_of_list_p;
-  int                   i;
-  int                   eof;
+  ogg_int64_t           eof;
 
   if (me == NULL) {
     return E_OGGPLAY_BAD_OGGPLAY;
@@ -55,7 +51,7 @@ oggplay_seek(OggPlay *me, ogg_int64_t milliseconds) {
     return E_OGGPLAY_CANT_SEEK;
   }
 
-  eof = me->reader->duration(me->reader);
+  eof = oggplay_get_duration(me);
   if (eof > -1 && milliseconds > eof) {
     return E_OGGPLAY_CANT_SEEK;
   }
@@ -76,13 +72,28 @@ oggplay_seek(OggPlay *me, ogg_int64_t milliseconds) {
     }
   }
 
+  oggplay_seek_cleanup(me, milliseconds);
+
+  return E_OGGPLAY_OK;
+
+}
+
+void
+oggplay_seek_cleanup(OggPlay* me, ogg_int64_t milliseconds)
+{
+
+  OggPlaySeekTrash    * trash;
+  OggPlaySeekTrash   ** p;
+  OggPlayDataHeader  ** end_of_list_p;
+  int                   i;
+
   /*
    * first, create a trash object to store the context that we want to
    * delete but can't until the presentation thread is no longer using it -
    * this will occur as soon as the thread calls oggplay_buffer_release_next
    */
 
-  trash = malloc(sizeof(OggPlaySeekTrash));
+  trash = calloc(sizeof(OggPlaySeekTrash), 1);
 
   /*
    * store the old buffer in it next.
@@ -129,9 +140,6 @@ oggplay_seek(OggPlay *me, ogg_int64_t milliseconds) {
   }
 
   *p = trash;
-
-  return E_OGGPLAY_OK;
-
 }
 
 void

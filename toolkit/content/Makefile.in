@@ -78,7 +78,11 @@ ifdef ENABLE_TESTS
 DIRS += tests
 endif
 
-EXTRA_JS_MODULES = debug.js
+EXTRA_JS_MODULES = \
+  debug.js \
+  WindowDraggingUtils.jsm \
+  $(NULL)
+
 EXTRA_PP_JS_MODULES = debug.js
 
 include $(topsrcdir)/config/rules.mk

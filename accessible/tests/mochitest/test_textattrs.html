@@ -4,139 +4,22 @@
   <title>Text attributes tests</title>
   <link rel="stylesheet" type="text/css" href="chrome://mochikit/content/tests/SimpleTest/test.css" />
 
-  <script type="application/javascript" src="chrome://mochikit/content/MochiKit/packed.js"></script>
-  <script type="application/javascript" src="chrome://mochikit/content/tests/SimpleTest/SimpleTest.js"></script>
+  <script type="application/javascript"
+          src="chrome://mochikit/content/MochiKit/packed.js"></script>
+  <script type="application/javascript"
+          src="chrome://mochikit/content/tests/SimpleTest/SimpleTest.js"></script>
+
+  <script type="application/javascript"
+          src="chrome://mochikit/content/a11y/accessible/common.js"></script>
+  <script type="application/javascript"
+          src="chrome://mochikit/content/a11y/accessible/attributes.js"></script>
 
   <script type="application/javascript">
-    const nsIAccessibleRetrieval = Components.interfaces.nsIAccessibleRetrieval;
-    const nsIAccessibleText = Components.interfaces.nsIAccessibleText;
-    const nsIAccessibleEvent = Components.interfaces.nsIAccessibleEvent;
 
     const nsIDOMNSEditableElement =
       Components.interfaces.nsIDOMNSEditableElement;
-    const nsIObserverService = Components.interfaces.nsIObserverService;
 
-    var gAccRetrieval = null;
     var gComputedStyle = null;
-
-    /**
-     * Test text attributes.
-     *
-     * @param aID               the ID of DOM element having text accessible
-     * @param aOffset           the offset inside text accessible to fetch
-     *                          text attributes
-     * @param aAttrs            the map of text attributes (name/value pairs)
-     * @param aStartOffset      the start offset where text attributes are
-     *                          applied
-     * @param aEndOffset        the end offset where text attribute are applied
-     */
-    function testTextAttrs(aID, aOffset,
-                           aAttrs, aStartOffset, aEndOffset)
-    {
-      var accessible = getTextAccessible(aID);
-      if (!accessible)
-        return;
-
-      var startOffset = { value: -1 };
-      var endOffset = { value: -1 };
-      var attrs = null;
-      try {
-        attrs = accessible.getTextAttributes(false,
-                                             aOffset,
-                                             startOffset, endOffset);
-      } catch (e) {
-      }
-
-      if (!attrs) {
-        ok(false, "Can't get text attributes for " + aID);
-        return;
-      }
-
-      var errorMsg = " for " + aID + " at offset " + aOffset;
-      is(startOffset.value, aStartOffset,
-         "Wrong start offset" + errorMsg);
-      is(endOffset.value, aEndOffset,
-          "Wrong end offset" + errorMsg);
-
-      compareTextAttrs(errorMsg, attrs, aAttrs);
-   }
-
-   /**
-    * Test default text attributes.
-    *
-    * @param aID               the ID of DOM element having text accessible
-    * @param aDefAttrs         the list of default text attributes (name/value
-    *                          pairs)
-    */
-   function testDefaultTextAttrs(aID, aDefAttrs)
-   {
-     var accessible = getTextAccessible(aID);
-     if (!accessible)
-       return;
-
-      var defAttrs = null;
-      try{
-        defAttrs = accessible.defaultTextAttributes;
-      } catch (e) {
-      }
-
-      if (!defAttrs) {
-        ok(false, "Can't get default attributes for " + aID);
-        return;
-      }
-
-      var errorMsg = ". Getting default attributes for " + aID;
-      compareTextAttrs(errorMsg, defAttrs, aDefAttrs);
-    }
-
-    function getTextAccessible(aID)
-    {
-      var node = document.getElementById(aID);
-      if (!node) {
-        ok(false, "Can't get the element with ID " + aID);
-        return;
-      }
-
-      var accessible = null;
-      try {
-        accessible = gAccRetrieval.getAccessibleFor(node);
-        accessible.QueryInterface(nsIAccessibleText);
-      } catch (e) {
-      }
-
-      if (!accessible)
-        ok(false, "Can't query nsIAccessibleText interface for " + aID);
-
-      return accessible;
-    }
-
-    function compareTextAttrs(aErrorMsg, aAttrs, aExpectedAttrs)
-    {
-      var enumerate = aAttrs.enumerate();
-      while (enumerate.hasMoreElements()) {
-        var prop = enumerate.getNext().
-          QueryInterface(Components.interfaces.nsIPropertyElement);
-
-        if (!(prop.key in aExpectedAttrs))
-          ok(false,
-             "Unexpected attribute '" + prop.key + "' having '" + prop.value + "'" + aErrorMsg);
-        else
-          is(prop.value, aExpectedAttrs[prop.key],
-             "Attribute '" + prop.key + " 'has wrong value" + aErrorMsg);
-      }
-
-      for (var name in aExpectedAttrs) {
-        var value = "";
-        try {
-          value = aAttrs.getStringProperty(name);
-        } catch(e) {
-        }
-
-        if (!value)
-          ok(false,
-             "There is no expected attribute '" + name + "' " + aErrorMsg);
-      }
-    }
 
     var gObserverService = null;
     var gA11yEventObserver = null;
@@ -161,7 +44,7 @@
 
       // Add accessibility event listeners
       var gObserverService = Components.classes["@mozilla.org/observer-service;1"].
-                            getService(nsIObserverService);
+                             getService(nsIObserverService);
 
       gObserverService.addObserver(gA11yEventObserver, "accessible-event",
                                   false);
@@ -180,11 +63,9 @@
           gComputedStyle = document.defaultView.getComputedStyle(node, "");
           var defAttrs = {
             "font-style": gComputedStyle.fontStyle,
-            "text-align": gComputedStyle.textAlign,
             "font-size": gComputedStyle.fontSize,
             "background-color": gComputedStyle.backgroundColor,
             "font-weight": gComputedStyle.fontWeight,
-            "text-indent": gComputedStyle.textIndent,
             "color": gComputedStyle.color,
             "font-family": gComputedStyle.fontFamily,
             "text-position": gComputedStyle.verticalAlign
@@ -201,8 +82,12 @@
           testTextAttrs(ID, 17, attrs, 17, 18);
           testTextAttrs(ID, 18, misspelledAttrs, 18, 22);
 
-          is(gA11yEventObserver.mTextAttrChangedEventCounter, 2,
-             "Wrong count of 'text attribute changed' events for " + ID);
+          if (navigator.platform == "Win32")
+            is(gA11yEventObserver.mTextAttrChangedEventCounter, 2,
+               "Wrong count of 'text attribute changed' events for " + ID);
+          else
+            todo(gA11yEventObserver.mTextAttrChangedEventCounter, 2,
+                 "Wrong count of 'text attribute changed' events for " + ID);
 
           // Remove a11y events listener
           gObserverService.removeObserver(gA11yEventObserver,
@@ -214,9 +99,6 @@
 
     function doTest()
     {
-      gAccRetrieval = Components.classes["@mozilla.org/accessibleRetrieval;1"].
-                      getService(nsIAccessibleRetrieval);
-
       //////////////////////////////////////////////////////////////////////////
       // area1
       var ID = "area1";
@@ -224,11 +106,9 @@
       gComputedStyle = document.defaultView.getComputedStyle(tempElem, "");
       var defAttrs = {
         "font-style": gComputedStyle.fontStyle,
-        "text-align": gComputedStyle.textAlign,
         "font-size": gComputedStyle.fontSize,
-        "background-color": "rgb(0, 0, 0)", // XXX 455834
+        "background-color": "rgb(255, 255, 255)",
         "font-weight": gComputedStyle.fontWeight,
-        "text-indent": gComputedStyle.textIndent,
         "color": gComputedStyle.color,
         "font-family": gComputedStyle.fontFamily,
         "text-position": gComputedStyle.verticalAlign
@@ -254,11 +134,9 @@
       gComputedStyle = document.defaultView.getComputedStyle(tempElem, "");
       defAttrs = {
         "font-style": gComputedStyle.fontStyle,
-        "text-align": gComputedStyle.textAlign,
         "font-size": gComputedStyle.fontSize,
-        "background-color": "rgb(0, 0, 0)", // XXX bug 455834
+        "background-color": "rgb(255, 255, 255)",
         "font-weight": gComputedStyle.fontWeight,
-        "text-indent": gComputedStyle.textIndent,
         "color": gComputedStyle.color,
         "font-family": gComputedStyle.fontFamily,
         "text-position": gComputedStyle.verticalAlign
@@ -295,11 +173,9 @@
       gComputedStyle = document.defaultView.getComputedStyle(tempElem, "");
       defAttrs = {
         "font-style": gComputedStyle.fontStyle,
-        "text-align": gComputedStyle.textAlign,
         "font-size": gComputedStyle.fontSize,
         "background-color": gComputedStyle.backgroundColor,
         "font-weight": gComputedStyle.fontWeight,
-        "text-indent": gComputedStyle.textIndent,
         "color": gComputedStyle.color,
         "font-family": gComputedStyle.fontFamily,
         "text-position": gComputedStyle.verticalAlign
@@ -335,11 +211,9 @@
       gComputedStyle = document.defaultView.getComputedStyle(tempElem, "");
       defAttrs = {
         "font-style": gComputedStyle.fontStyle,
-        "text-align": gComputedStyle.textAlign,
         "font-size": gComputedStyle.fontSize,
-        "background-color": "rgb(0, 0, 0)", // XXX bug 455834
+        "background-color": "rgb(255, 255, 255)",
         "font-weight": gComputedStyle.fontWeight,
-        "text-indent": gComputedStyle.textIndent,
         "color": gComputedStyle.color,
         "font-family": gComputedStyle.fontFamily,
         "text-position": gComputedStyle.verticalAlign
@@ -369,11 +243,9 @@
       gComputedStyle = document.defaultView.getComputedStyle(tempElem, "");
       defAttrs = {
         "font-style": gComputedStyle.fontStyle,
-        "text-align": gComputedStyle.textAlign,
         "font-size": gComputedStyle.fontSize,
-        "background-color": "rgb(0, 0, 0)", // XXX bug 455834
+        "background-color": "rgb(255, 255, 255)",
         "font-weight": gComputedStyle.fontWeight,
-        "text-indent": gComputedStyle.textIndent,
         "color": gComputedStyle.color,
         "font-family": gComputedStyle.fontFamily,
         "text-position": gComputedStyle.verticalAlign
@@ -404,11 +276,9 @@
       gComputedStyle = document.defaultView.getComputedStyle(tempElem, "");
       defAttrs = {
         "font-style": gComputedStyle.fontStyle,
-        "text-align": gComputedStyle.textAlign,
         "font-size": gComputedStyle.fontSize,
-        "background-color": "rgb(0, 0, 0)", // XXX bug 455834
+        "background-color": "rgb(255, 255, 255)",
         "font-weight": gComputedStyle.fontWeight,
-        "text-indent": gComputedStyle.textIndent,
         "color": gComputedStyle.color,
         "font-family": gComputedStyle.fontFamily,
         "text-position": gComputedStyle.verticalAlign
@@ -457,11 +327,9 @@
       gComputedStyle = document.defaultView.getComputedStyle(tempElem, "");
       defAttrs = {
         "font-style": gComputedStyle.fontStyle,
-        "text-align": gComputedStyle.textAlign,
         "font-size": gComputedStyle.fontSize,
-        "background-color": "rgb(0, 0, 0)", // XXX 455834
+        "background-color": "rgb(255, 255, 255)",
         "font-weight": gComputedStyle.fontWeight,
-        "text-indent": gComputedStyle.textIndent,
         "color": gComputedStyle.color,
         "font-family": gComputedStyle.fontFamily,
         "text-position": gComputedStyle.verticalAlign

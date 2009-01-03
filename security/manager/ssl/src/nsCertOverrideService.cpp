@@ -217,6 +217,28 @@ nsCertOverrideService::RemoveAllFromMemory()
   mSettingsTable.Clear();
 }
 
+PR_STATIC_CALLBACK(PLDHashOperator)
+RemoveTemporariesCallback(nsCertOverrideEntry *aEntry,
+                          void *aArg)
+{
+  if (aEntry && aEntry->mSettings.mIsTemporary) {
+    aEntry->mSettings.mCert = nsnull;
+    return PL_DHASH_REMOVE;
+  }
+
+  return PL_DHASH_NEXT;
+}
+
+void
+nsCertOverrideService::RemoveAllTemporaryOverrides()
+{
+  {
+    nsAutoMonitor lock(monitor);
+    mSettingsTable.EnumerateEntries(RemoveTemporariesCallback, nsnull);
+    // no need to write, as temporaries are never written to disk
+  }
+}
+
 nsresult
 nsCertOverrideService::Read()
 {
@@ -290,6 +312,7 @@ nsCertOverrideService::Read()
     host.Truncate(portIndex);
     
     AddEntryToList(host, port, 
+                   nsnull, // don't have the cert
                    PR_FALSE, // not temporary
                    algo_string, fingerprint, bits, db_key);
   }
@@ -489,7 +512,7 @@ nsCertOverrideService::RememberValidityOverride(const nsACString & aHostName, PR
 
   nsCAutoString nickname;
   nickname = nsNSSCertificate::defaultServerNickname(nsscert);
-  if (!nickname.IsEmpty())
+  if (!aTemporary && !nickname.IsEmpty())
   {
     PK11SlotInfo *slot = PK11_GetInternalKeySlot();
     if (!slot)
@@ -527,6 +550,8 @@ nsCertOverrideService::RememberValidityOverride(const nsACString & aHostName, PR
   {
     nsAutoMonitor lock(monitor);
     AddEntryToList(aHostName, aPort,
+                   aTemporary ? aCert : nsnull,
+                     // keep a reference to the cert for temporary overrides
                    aTemporary, 
                    mDottedOidForStoringNewHashes, fpStr, 
                    (nsCertOverride::OverrideBits)aOverrideBits, 
@@ -630,6 +655,7 @@ nsCertOverrideService::GetValidityOverride(const nsACString & aHostName, PRInt32
 
 nsresult
 nsCertOverrideService::AddEntryToList(const nsACString &aHostName, PRInt32 aPort,
+                                      nsIX509Cert *aCert,
                                       const PRBool aIsTemporary,
                                       const nsACString &fingerprintAlgOID, 
                                       const nsACString &fingerprint,
@@ -658,6 +684,7 @@ nsCertOverrideService::AddEntryToList(const nsACString &aHostName, PRInt32 aPort
     settings.mFingerprint = fingerprint;
     settings.mOverrideBits = ob;
     settings.mDBKey = dbKey;
+    settings.mCert = aCert;
   }
 
   return NS_OK;

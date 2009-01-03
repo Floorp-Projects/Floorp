@@ -1104,7 +1104,7 @@ nsOfflineCacheDevice::Init()
                                                      "  ON ns.ClientID = groups.ActiveClientID"
                                                      " WHERE ns.NameSpace <= ?1 AND ?1 GLOB ns.NameSpace || '*'"
                                                      " ORDER BY ns.NameSpace DESC, groups.ActivateTimeStamp DESC;"),
-    StatementSql ( mStatement_FindNamespaceEntry,    "SELECT ns.ClientID, ns.Data, ns.ItemType FROM "
+    StatementSql ( mStatement_FindNamespaceEntry,    "SELECT ns.NameSpace, ns.Data, ns.ItemType FROM "
                                                      "  moz_cache_namespaces AS ns JOIN moz_cache_groups AS groups"
                                                      "  ON ns.ClientID = groups.ActiveClientID"
                                                      " WHERE ClientID = ?1"
@@ -1770,7 +1770,7 @@ nsOfflineCacheDevice::GetMatchingNamespace(const nsCString &clientID,
 
   *out = nsnull;
 
-  while (hasRows)
+  if (hasRows)
   {
     nsCString namespaceSpec;
     rv = statement->GetUTF8String(0, namespaceSpec);
@@ -1784,17 +1784,6 @@ nsOfflineCacheDevice::GetMatchingNamespace(const nsCString &clientID,
     rv = statement->GetInt32(2, &itemType);
     NS_ENSURE_SUCCESS(rv, rv);
 
-    // XXX: There is currently a proposal on the table to extend matching
-    // semantics for bypass entries to be a namespace (possibly with extra
-    // filter data).  When/if that happens, this logic will need to change.
-    if ((itemType & nsIApplicationCacheNamespace::NAMESPACE_BYPASS) &&
-        (namespaceSpec != key)) {
-      rv = statement->ExecuteStep(&hasRows);
-      NS_ENSURE_SUCCESS(rv, rv);
-
-      continue;
-    }
-
     nsCOMPtr<nsIApplicationCacheNamespace> ns =
       new nsApplicationCacheNamespace();
     if (!ns)
@@ -1804,7 +1793,6 @@ nsOfflineCacheDevice::GetMatchingNamespace(const nsCString &clientID,
     NS_ENSURE_SUCCESS(rv, rv);
 
     ns.swap(*out);
-    return NS_OK;
   }
 
   return NS_OK;
@@ -1881,7 +1869,7 @@ nsOfflineCacheDevice::AddNamespace(const nsCString &clientID,
   rv = ns->GetItemType(&itemType);
   NS_ENSURE_SUCCESS(rv, rv);
 
-  LOG(("nsOfflineCacheDevice::AddNamespace [cid=%s, ns=%s, type=%d]",
+  LOG(("nsOfflineCacheDevice::AddNamespace [cid=%s, ns=%s, data=%s, type=%d]",
        PromiseFlatCString(clientID).get(),
        namespaceSpec.get(), data.get(), itemType));
 
@@ -2025,6 +2013,28 @@ nsOfflineCacheDevice::GetActiveCache(const nsACString &group,
   nsCString *clientID;
   if (mActiveCachesByGroup.Get(group, &clientID))
     return GetApplicationCache(*clientID, out);
+
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsOfflineCacheDevice::DeactivateGroup(const nsACString &group)
+{
+  nsCString *active = nsnull;
+
+  AutoResetStatement statement(mStatement_DeactivateGroup);
+  nsresult rv = statement->BindUTF8StringParameter(0, group);
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  rv = statement->Execute();
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  if (mActiveCachesByGroup.Get(group, &active))
+  {
+    mActiveCaches.Remove(*active);
+    mActiveCachesByGroup.Remove(group);
+    active = nsnull;
+  }
 
   return NS_OK;
 }
@@ -2182,29 +2192,6 @@ nsOfflineCacheDevice::IsActiveCache(const nsCSubstring &group,
 {
   nsCString *active = nsnull;
   return mActiveCachesByGroup.Get(group, &active) && *active == clientID;
-}
-
-nsresult
-nsOfflineCacheDevice::DeactivateGroup(const nsCSubstring &group)
-{
-  nsCString *active = nsnull;
-
-  AutoResetStatement statement(mStatement_DeactivateGroup);
-  nsresult rv = statement->BindUTF8StringParameter(
-                                           0, group);
-  NS_ENSURE_SUCCESS(rv, rv);
-
-  rv = statement->Execute();
-  NS_ENSURE_SUCCESS(rv, rv);
-
-  if (mActiveCachesByGroup.Get(group, &active))
-  {
-    mActiveCaches.Remove(*active);
-    mActiveCachesByGroup.Remove(group);
-    active = nsnull;
-  }
-
-  return NS_OK;
 }
 
 nsresult

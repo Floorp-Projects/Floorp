@@ -44,6 +44,7 @@
 #include "nsTObserverArray.h"
 #include "nsINodeInfo.h"
 #include "nsCOMPtr.h"
+#include "nsWrapperCache.h"
 
 class nsIContent;
 class nsIDocument;
@@ -150,16 +151,17 @@ inline nsINode* NODE_FROM(C& aContent, D& aDocument)
 
 // IID for the nsINode interface
 #define NS_INODE_IID \
-{ 0x2593b0d5, 0x9a06, 0x4d6b, \
-  { 0x9a, 0x10, 0xb1, 0x39, 0x9f, 0x1b, 0xa0, 0x8e } }
-
+{ 0xb4125da4, 0x6f86, 0x45aa, \
+ { 0xbb, 0x55, 0x80, 0x70, 0x44, 0x24, 0xe2, 0x47 } }
 
 /**
  * An internal interface that abstracts some DOMNode-related parts that both
  * nsIContent and nsIDocument share.  An instance of this interface has a list
  * of nsIContent children and provides access to them.
  */
-class nsINode : public nsPIDOMEventTarget {
+class nsINode : public nsPIDOMEventTarget,
+                public nsWrapperCache
+{
 public:
   NS_DECLARE_STATIC_IID_ACCESSOR(NS_INODE_IID)
 
@@ -242,9 +244,10 @@ public:
    * mutates (no attribute changes, not DOM tree changes, no script execution,
    * NOTHING), and will never ever peform an out-of-bounds access here.  This
    * method may return null if there are no children, or it may return a
-   * garbage pointer..
+   * garbage pointer.  In all cases the out param will be set to the number of
+   * children.
    */
-  virtual nsIContent * const * GetChildArray() const = 0;
+  virtual nsIContent * const * GetChildArray(PRUint32* aChildCount) const = 0;
 
   /**
    * Get the index of a child within this content
@@ -747,6 +750,115 @@ protected:
   PtrBits mFlagsOrSlots;
 };
 
+
+extern const nsIID kThisPtrOffsetsSID;
+
+// _implClass is the class to use to cast to nsISupports
+#define NS_OFFSET_AND_INTERFACE_TABLE_BEGIN_AMBIGUOUS(_class, _implClass)     \
+  static const QITableEntry offsetAndQITable[] = {                            \
+    NS_INTERFACE_TABLE_ENTRY_AMBIGUOUS(_class, nsISupports, _implClass)
+
+#define NS_OFFSET_AND_INTERFACE_TABLE_BEGIN(_class)                           \
+  NS_OFFSET_AND_INTERFACE_TABLE_BEGIN_AMBIGUOUS(_class, _class)
+
+#define NS_OFFSET_AND_INTERFACE_TABLE_END                                     \
+  { nsnull, 0 } };                                                            \
+  if (aIID.Equals(kThisPtrOffsetsSID)) {                                      \
+    *aInstancePtr =                                                           \
+      const_cast<void*>(static_cast<const void*>(&offsetAndQITable));         \
+    return NS_OK;                                                             \
+  }
+
+#define NS_OFFSET_AND_INTERFACE_TABLE_TO_MAP_SEGUE                            \
+  rv = NS_TableDrivenQI(this, offsetAndQITable, aIID, aInstancePtr);          \
+  NS_INTERFACE_TABLE_TO_MAP_SEGUE
+
+// nsNodeSH::PreCreate() depends on the identity pointer being the same as
+// nsINode, so if you change the nsISupports line  below, make sure
+// nsNodeSH::PreCreate() still does the right thing!
+#define NS_NODE_OFFSET_AND_INTERFACE_TABLE_BEGIN(_class)                      \
+  NS_OFFSET_AND_INTERFACE_TABLE_BEGIN_AMBIGUOUS(_class, nsINode)
+
+#define NS_NODE_INTERFACE_TABLE2(_class, _i1, _i2)                            \
+  NS_NODE_OFFSET_AND_INTERFACE_TABLE_BEGIN(_class)                            \
+    NS_INTERFACE_TABLE_ENTRY(_class, _i1)                                     \
+    NS_INTERFACE_TABLE_ENTRY(_class, _i2)                                     \
+  NS_OFFSET_AND_INTERFACE_TABLE_END                                           \
+  NS_OFFSET_AND_INTERFACE_TABLE_TO_MAP_SEGUE
+
+#define NS_NODE_INTERFACE_TABLE3(_class, _i1, _i2, _i3)                       \
+  NS_NODE_OFFSET_AND_INTERFACE_TABLE_BEGIN(_class)                            \
+    NS_INTERFACE_TABLE_ENTRY(_class, _i1)                                     \
+    NS_INTERFACE_TABLE_ENTRY(_class, _i2)                                     \
+    NS_INTERFACE_TABLE_ENTRY(_class, _i3)                                     \
+  NS_OFFSET_AND_INTERFACE_TABLE_END                                           \
+  NS_OFFSET_AND_INTERFACE_TABLE_TO_MAP_SEGUE
+
+#define NS_NODE_INTERFACE_TABLE4(_class, _i1, _i2, _i3, _i4)                  \
+  NS_NODE_OFFSET_AND_INTERFACE_TABLE_BEGIN(_class)                            \
+    NS_INTERFACE_TABLE_ENTRY(_class, _i1)                                     \
+    NS_INTERFACE_TABLE_ENTRY(_class, _i2)                                     \
+    NS_INTERFACE_TABLE_ENTRY(_class, _i3)                                     \
+    NS_INTERFACE_TABLE_ENTRY(_class, _i4)                                     \
+  NS_OFFSET_AND_INTERFACE_TABLE_END                                           \
+  NS_OFFSET_AND_INTERFACE_TABLE_TO_MAP_SEGUE
+
+#define NS_NODE_INTERFACE_TABLE5(_class, _i1, _i2, _i3, _i4, _i5)             \
+  NS_NODE_OFFSET_AND_INTERFACE_TABLE_BEGIN(_class)                            \
+    NS_INTERFACE_TABLE_ENTRY(_class, _i1)                                     \
+    NS_INTERFACE_TABLE_ENTRY(_class, _i2)                                     \
+    NS_INTERFACE_TABLE_ENTRY(_class, _i3)                                     \
+    NS_INTERFACE_TABLE_ENTRY(_class, _i4)                                     \
+    NS_INTERFACE_TABLE_ENTRY(_class, _i5)                                     \
+  NS_OFFSET_AND_INTERFACE_TABLE_END                                           \
+  NS_OFFSET_AND_INTERFACE_TABLE_TO_MAP_SEGUE
+
+#define NS_NODE_INTERFACE_TABLE6(_class, _i1, _i2, _i3, _i4, _i5, _i6)        \
+  NS_NODE_OFFSET_AND_INTERFACE_TABLE_BEGIN(_class)                            \
+    NS_INTERFACE_TABLE_ENTRY(_class, _i1)                                     \
+    NS_INTERFACE_TABLE_ENTRY(_class, _i2)                                     \
+    NS_INTERFACE_TABLE_ENTRY(_class, _i3)                                     \
+    NS_INTERFACE_TABLE_ENTRY(_class, _i4)                                     \
+    NS_INTERFACE_TABLE_ENTRY(_class, _i5)                                     \
+    NS_INTERFACE_TABLE_ENTRY(_class, _i6)                                     \
+  NS_OFFSET_AND_INTERFACE_TABLE_END                                           \
+  NS_OFFSET_AND_INTERFACE_TABLE_TO_MAP_SEGUE
+
+#define NS_NODE_INTERFACE_TABLE7(_class, _i1, _i2, _i3, _i4, _i5, _i6, _i7)   \
+  NS_NODE_OFFSET_AND_INTERFACE_TABLE_BEGIN(_class)                            \
+    NS_INTERFACE_TABLE_ENTRY(_class, _i1)                                     \
+    NS_INTERFACE_TABLE_ENTRY(_class, _i2)                                     \
+    NS_INTERFACE_TABLE_ENTRY(_class, _i3)                                     \
+    NS_INTERFACE_TABLE_ENTRY(_class, _i4)                                     \
+    NS_INTERFACE_TABLE_ENTRY(_class, _i5)                                     \
+    NS_INTERFACE_TABLE_ENTRY(_class, _i6)                                     \
+    NS_INTERFACE_TABLE_ENTRY(_class, _i7)                                     \
+  NS_OFFSET_AND_INTERFACE_TABLE_END                                           \
+  NS_OFFSET_AND_INTERFACE_TABLE_TO_MAP_SEGUE
+
+#define NS_NODE_INTERFACE_TABLE8(_class, _i1, _i2, _i3, _i4, _i5, _i6, _i7,   \
+                                 _i8)                                         \
+  NS_NODE_OFFSET_AND_INTERFACE_TABLE_BEGIN(_class)                            \
+    NS_INTERFACE_TABLE_ENTRY(_class, _i1)                                     \
+    NS_INTERFACE_TABLE_ENTRY(_class, _i2)                                     \
+    NS_INTERFACE_TABLE_ENTRY(_class, _i3)                                     \
+    NS_INTERFACE_TABLE_ENTRY(_class, _i4)                                     \
+    NS_INTERFACE_TABLE_ENTRY(_class, _i5)                                     \
+    NS_INTERFACE_TABLE_ENTRY(_class, _i6)                                     \
+    NS_INTERFACE_TABLE_ENTRY(_class, _i7)                                     \
+    NS_INTERFACE_TABLE_ENTRY(_class, _i8)                                     \
+  NS_OFFSET_AND_INTERFACE_TABLE_END                                           \
+  NS_OFFSET_AND_INTERFACE_TABLE_TO_MAP_SEGUE
+
+
 NS_DEFINE_STATIC_IID_ACCESSOR(nsINode, NS_INODE_IID)
+
+
+#define NS_IMPL_CYCLE_COLLECTION_TRAVERSE_PRESERVED_WRAPPER \
+   tmp->TraverseWrapper(cb);
+
+#define NS_IMPL_CYCLE_COLLECTION_UNLINK_PRESERVED_WRAPPER \
+  tmp->ReleaseWrapper();
+
 
 #endif /* nsINode_h___ */

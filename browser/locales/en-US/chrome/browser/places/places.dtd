@@ -71,6 +71,11 @@
 <!ENTITY cmd.edit_redo.accesskey    "R">
 <!ENTITY cmd.edit_redo.key          "y">
 
+<!ENTITY cmd.delete.label               "Delete This Page">
+<!ENTITY cmd.delete.accesskey           "D">
+<!ENTITY cmd.deleteDomainData.label     "Forget About This Site">
+<!ENTITY cmd.deleteDomainData.accesskey "F">
+
 <!ENTITY cmd.open.label                  "Open">
 <!ENTITY cmd.open.accesskey              "O">
 <!ENTITY cmd.open_window.label           "Open in a New Window">

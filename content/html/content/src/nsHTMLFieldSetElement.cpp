@@ -96,10 +96,11 @@ NS_IMPL_RELEASE_INHERITED(nsHTMLFieldSetElement, nsGenericElement)
 
 
 // QueryInterface implementation for nsHTMLFieldSetElement
-NS_HTML_CONTENT_INTERFACE_TABLE_HEAD(nsHTMLFieldSetElement,
-                                     nsGenericHTMLFormElement)
-  NS_INTERFACE_TABLE_INHERITED1(nsHTMLFieldSetElement,
-                                nsIDOMHTMLFieldSetElement)
+NS_INTERFACE_TABLE_HEAD(nsHTMLFieldSetElement)
+  NS_HTML_CONTENT_INTERFACE_TABLE1(nsHTMLFieldSetElement,
+                                   nsIDOMHTMLFieldSetElement)
+  NS_HTML_CONTENT_INTERFACE_TABLE_TO_MAP_SEGUE(nsHTMLFieldSetElement,
+                                               nsGenericHTMLFormElement)
 NS_HTML_CONTENT_INTERFACE_TABLE_TAIL_CLASSINFO(HTMLFieldSetElement)
 
 

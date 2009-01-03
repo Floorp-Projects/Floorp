@@ -1,0 +1,37 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD HTML 4.01//EN"
+	"http://www.w3.org/TR/html4/strict.dtd">
+<html lang="en-US">
+<head>
+	<title></title>
+	<meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+	<style type="text/css">
+
+	@font-face {
+		font-family: "MarkD";
+		src: url(../fonts/markD.ttf);
+	}
+
+	div {
+		margin: 0;
+		border: none;
+		padding: 0;
+		position: absolute;
+		left: 0;
+	}
+
+	</style>
+</head>
+<body>
+
+<!-- use nonexistent family to prevent kerning -->
+<p><span style="font-family: Nonexistent1">A</span><span style="font-family: Nonexistent2">B</span><span style="font-family: MarkD">D</span></p>
+
+<div style="top: 4em" src="cross-iframe-1-inner-1.html">
+<p><span style="font-family: MarkD">D</span><span style="font-family: Nonexistent2">B</span><span style="font-family: Nonexistent1">C</span></p>
+</div>
+<div style="top: 7em" src="cross-iframe-1-inner-2.html">
+<p><span>A</span><span style="font-family: MarkD">D</span><span>C</span></p>
+</div>
+
+</body>
+</html>

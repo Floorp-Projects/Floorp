@@ -123,7 +123,10 @@ var StarUI = {
         }
         else if (aEvent.keyCode == KeyEvent.DOM_VK_RETURN) {
           // hide the panel unless the folder tree is focused
-          if (aEvent.target.localName != "tree")
+          // or the tag autocomplete popup is open
+          if (aEvent.target.localName != "tree" &&
+              (aEvent.target.id != "editBMPanel_tagsField" ||
+               !aEvent.target.popupOpen))
             this.panel.hidePopup();
         }
         break;
@@ -187,6 +190,14 @@ var StarUI = {
     // The remove button is shown only if we're not already batching, i.e.
     // if the cancel button/ESC does not remove the bookmark.
     this._element("editBookmarkPanelRemoveButton").hidden = this._batching;
+
+    // The label of the remove button differs if the URI is bookmarked
+    // multiple times.
+    var bookmarks = PlacesUtils.getBookmarksForURI(gBrowser.currentURI);
+    var forms = bundle.getString("editBookmark.removeBookmarks.label");
+    Cu.import("resource://gre/modules/PluralForm.jsm");
+    var label = PluralForm.get(bookmarks.length, forms).replace("#1", bookmarks.length);
+    this._element("editBookmarkPanelRemoveButton").label = label;
 
     // unset the unstarred state, if set
     this._element("editBookmarkPanelStarIcon").removeAttribute("unstarred");
@@ -462,14 +473,12 @@ var PlacesCommandHook = {
   bookmarkLink: function PCH_bookmarkLink(aParent, aURL, aTitle) {
     var linkURI = makeURI(aURL);
     var itemId = PlacesUtils.getMostRecentBookmarkForURI(linkURI);
-    if (itemId == -1) {
-      StarUI.beginBatch();
-      var txn = PlacesUIUtils.ptm.createItem(linkURI, aParent, -1, aTitle);
-      PlacesUIUtils.ptm.doTransaction(txn);
-      itemId = PlacesUtils.getMostRecentBookmarkForURI(linkURI);
+    if (itemId == -1)
+      PlacesUIUtils.showMinimalAddBookmarkUI(linkURI, aTitle);
+    else {
+      PlacesUIUtils.showItemProperties(itemId,
+                                       PlacesUtils.bookmarks.TYPE_BOOKMARK);
     }
-
-    StarUI.showEditBookmarkPopup(itemId, getBrowser(), "overlap");
   },
 
   /**
@@ -749,31 +758,25 @@ var BookmarksEventHandler = {
   },
 
   fillInBTTooltip: function(aTipElement) {
-    // Fx2XP: Don't show tooltips for bookmarks under sub-folders
-    if (aTipElement.localName != "toolbarbutton")
+    if (!aTipElement.node)
       return false;
 
-    // Fx2XP: Only show tooltips for URL items
+    //Show tooltips only for URL items
     if (!PlacesUtils.nodeIsURI(aTipElement.node))
       return false;
 
+    var title = aTipElement.node.title;
     var url = aTipElement.node.uri;
-    if (!url) 
-      return false;
+
+    var tooltipTitle = document.getElementById("btTitleText");
+    tooltipTitle.hidden = !title || (title == url);
+    if (!tooltipTitle.hidden)
+      tooltipTitle.textContent = title;
 
     var tooltipUrl = document.getElementById("btUrlText");
     tooltipUrl.value = url;
 
-    var title = aTipElement.label;
-    var tooltipTitle = document.getElementById("btTitleText");
-    if (title && title != url) {
-      tooltipTitle.hidden = false;
-      tooltipTitle.textContent = title;
-    }
-    else
-      tooltipTitle.hidden = true;
-
-    // show tooltip
+    //Show tooltip
     return true;
   }
 };

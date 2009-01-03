@@ -50,8 +50,8 @@
 class nsPresState;
 
 #define NS_ILAYOUTHISTORYSTATE_IID \
-{ 0x99003f0f, 0x7ade, 0x44a1, \
- { 0x81, 0x74, 0xe3, 0x6a, 0xa5, 0xbb, 0x6b, 0x10 } }
+{ 0x003919e2, 0x5e6b, 0x4d76, \
+ { 0xa9, 0x4f, 0xbc, 0x5d, 0x15, 0x5b, 0x1c, 0x67 } }
 
 class nsILayoutHistoryState : public nsISupports {
  public: 
@@ -79,6 +79,12 @@ class nsILayoutHistoryState : public nsISupports {
    * Check whether this history has any states in it
    */
   NS_IMETHOD_(PRBool) HasStates() const = 0;
+
+  /**
+   * Sets whether this history can contain only scroll position history
+   * or all possible history
+   */
+   NS_IMETHOD SetScrollPositionOnly(const PRBool aFlag) = 0;
 };
 
 NS_DEFINE_STATIC_IID_ACCESSOR(nsILayoutHistoryState,

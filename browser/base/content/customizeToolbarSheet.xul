@@ -105,7 +105,7 @@
               icon="add"/>
       <button label="&restoreDefaultSet.label;"
               oncommand="restoreDefaultSet();"
-              icon="refresh"/>
+              icon="revert"/>
     </box>
 
     <separator class="groove"/>

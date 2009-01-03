@@ -56,6 +56,7 @@
 .expander-up,
 .expander-down {
   min-width: 0;
+  margin: 0;
 }
 
 .expander-up > hbox,
@@ -71,6 +72,11 @@
   list-style-image: url("chrome://global/skin/icons/expand.png");
 }
 
+#editBMPanel_tagsSelector[collapsed="true"],
+#editBMPanel_folderTree[collapsed="true"] {
+  display: none;
+}
+
 /**** name picker ****/
 
 /* Make the microsummary picker look like a regular textbox instead of 
@@ -78,30 +84,54 @@
  */
 #editBMPanel_namePicker[droppable="false"] {
   /* These rules come from the textbox element in textbox.css. */
-
-  /* Normal editable menulists set this to "none". */
-  -moz-appearance: textfield;
+  -moz-appearance: textfield; /* Normal editable menulists set this to "menulist". */
   cursor: text;
-
   border: 2px solid;
   -moz-border-top-colors: ThreeDShadow ThreeDDarkShadow;
   -moz-border-right-colors: ThreeDHighlight ThreeDLightShadow;
   -moz-border-bottom-colors: ThreeDHighlight ThreeDLightShadow;
   -moz-border-left-colors: ThreeDShadow ThreeDDarkShadow;
+  padding: 2px 2px 3px;
+  -moz-padding-start: 4px;
   background-color: -moz-Field;
   color: -moz-FieldText;
 }
 
 #editBMPanel_namePicker[droppable="false"] > .menulist-editable-box {
-  /* Normal editable menulists set this to "menulist-textfield". */
-  -moz-appearance: none;
-  padding: 2px 2px 3px 4px;
+  padding: 0;
 }
-
-
-/* Hide the drop marker and the popup. */
 
 #editBMPanel_namePicker[droppable="false"] > .menulist-dropmarker,
 #editBMPanel_namePicker[droppable="false"] > menupopup {
   display: none;
+}
+
+/* Hide the value column of the tag autocomplete popup
+ * leaving only the comment column visible. This is
+ * so that only the tag being edited is shown in the
+ * popup.
+ */
+#editBMPanel_tagsField #treecolAutoCompleteValue {
+  visibility: collapse;
+}
+
+
+/* ::::: bookmark panel dropdown icons ::::: */
+
+#editBMPanel_folderMenuList[selectedIndex="0"],
+#editBMPanel_toolbarFolderItem {
+  list-style-image: url("chrome://browser/skin/places/bookmarksToolbar.png") !important;
+  -moz-image-region: auto !important;
+}
+
+#editBMPanel_folderMenuList[selectedIndex="1"],
+#editBMPanel_bmRootItem {
+  list-style-image: url("chrome://browser/skin/places/bookmarksMenu.png") !important;
+  -moz-image-region: auto !important;
+}
+
+#editBMPanel_folderMenuList[selectedIndex="2"],
+#editBMPanel_unfiledRootItem {
+  list-style-image: url("chrome://browser/skin/places/unsortedBookmarks.png") !important;
+  -moz-image-region: auto !important;
 }

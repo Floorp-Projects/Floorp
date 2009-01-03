@@ -67,8 +67,7 @@
 }
 
 #placesToolbar {
-  margin-top: -3px;
-  padding: 0 4px;
+  padding: 0 4px 3px;
 }
 
 #placesView {
@@ -330,6 +329,7 @@
 }
 
 #organizerScopeBar {
+  -moz-appearance: none;
   background: url("chrome://global/skin/icons/find-bar-background.png") repeat-x top center #D0D0D0;
   color: #474747;
   font-size: 105%;

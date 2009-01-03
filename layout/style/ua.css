@@ -36,7 +36,6 @@
 
 @import url(resource://gre/res/html.css);
 @import url(chrome://global/content/xul.css);
-@import url(resource://gre/res/quirk.css);
 
 @namespace parsererror url(http://www.mozilla.org/newlayout/xml/parsererror.xml);
 
@@ -127,23 +126,27 @@
 *|*::-moz-anonymous-block, *|*::-moz-anonymous-positioned-block {
   /* we currently inherit from the inline that is split */
   outline: inherit;
-  -moz-outline-offset: inherit;
+  outline-offset: inherit;
   clip-path: inherit;
   filter: inherit;
   mask: inherit;
+  -moz-box-ordinal-group: inherit !important;
 }
 
 *|*::-moz-xul-anonymous-block {
   display: block ! important;
   position: static ! important;
   float: none ! important;
+  -moz-box-ordinal-group: inherit !important;
 }
 
 *|*::-moz-scrolled-content, *|*::-moz-scrolled-canvas,
 *|*::-moz-scrolled-page-sequence {
   /* e.g., text inputs, select boxes */
   padding: inherit;
-  display: inherit;
+  /* The display doesn't affect the kind of frame constructed here.  This just
+     affects auto-width sizing of the block we create. */
+  display: block;
   -moz-box-orient: inherit;
   /* make unicode-bidi inherit, otherwise it has no effect on text inputs and
      blocks with overflow: scroll; */
@@ -200,6 +203,7 @@
   z-index: inherit;
   clip: inherit;
   opacity: inherit;
+  -moz-box-ordinal-group: inherit !important;
 }
 
 /* Printing */

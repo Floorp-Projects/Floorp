@@ -1696,30 +1696,48 @@ PR_ParseTimeString(
 PR_IMPLEMENT(PRUint32)
 PR_FormatTime(char *buf, int buflen, const char *fmt, const PRExplodedTime *tm)
 {
+    size_t rv;
     struct tm a;
-    a.tm_sec = tm->tm_sec;
-    a.tm_min = tm->tm_min;
-    a.tm_hour = tm->tm_hour;
-    a.tm_mday = tm->tm_mday;
-    a.tm_mon = tm->tm_month;
-    a.tm_wday = tm->tm_wday;
-    a.tm_year = tm->tm_year - 1900;
-    a.tm_yday = tm->tm_yday;
-    a.tm_isdst = tm->tm_params.tp_dst_offset ? 1 : 0;
+    struct tm *ap;
 
-/*
- * On some platforms, for example SunOS 4, struct tm has two additional
- * fields: tm_zone and tm_gmtoff.
- */
+    if (tm) {
+        ap = &a;
+        a.tm_sec = tm->tm_sec;
+        a.tm_min = tm->tm_min;
+        a.tm_hour = tm->tm_hour;
+        a.tm_mday = tm->tm_mday;
+        a.tm_mon = tm->tm_month;
+        a.tm_wday = tm->tm_wday;
+        a.tm_year = tm->tm_year - 1900;
+        a.tm_yday = tm->tm_yday;
+        a.tm_isdst = tm->tm_params.tp_dst_offset ? 1 : 0;
+
+        /*
+         * On some platforms, for example SunOS 4, struct tm has two
+         * additional fields: tm_zone and tm_gmtoff.
+         */
 
 #if defined(SUNOS4) || (__GLIBC__ >= 2) || defined(XP_BEOS) \
         || defined(NETBSD) || defined(OPENBSD) || defined(FREEBSD) \
         || defined(DARWIN) || defined(SYMBIAN)
-    a.tm_zone = NULL;
-    a.tm_gmtoff = tm->tm_params.tp_gmt_offset + tm->tm_params.tp_dst_offset;
+        a.tm_zone = NULL;
+        a.tm_gmtoff = tm->tm_params.tp_gmt_offset +
+                      tm->tm_params.tp_dst_offset;
 #endif
+    } else {
+        ap = NULL;
+    }
 
-    return strftime(buf, buflen, fmt, &a);
+    rv = strftime(buf, buflen, fmt, ap);
+    if (!rv && buf && buflen > 0) {
+        /*
+         * When strftime fails, the contents of buf are indeterminate.
+         * Some callers don't check the return value from this function,
+         * so store an empty string in buf in case they try to print it.
+         */
+        buf[0] = '\0';
+    }
+    return rv;
 }
 
 

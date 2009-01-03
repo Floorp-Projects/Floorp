@@ -54,11 +54,10 @@
  *
  ******* END LICENSE BLOCK *******/
 
-#include "hashmgr.hxx"
 #include "affixmgr.hxx"
-#include "suggestmgr.hxx"
-#include "csutil.hxx"
+#include "hashmgr.hxx"
 #include "langnum.hxx"
+#include "suggestmgr.hxx"
 
 #define  SPELL_COMPOUND  (1 << 0)
 #define  SPELL_FORBIDDEN (1 << 1)
@@ -66,6 +65,9 @@
 #define  SPELL_NOCAP     (1 << 3)
 #define  SPELL_INITCAP   (1 << 4)
 
+#define  SPELL_XML "<?xml?>"
+
+#define MAXDIC 20
 #define MAXSUGGESTION 15
 #define MAXSHARPS 5
 
@@ -89,8 +91,10 @@ class Hunspell
 #endif
 {
   AffixMgr*       pAMgr;
-  HashMgr*        pHMgr;
+  HashMgr*        pHMgr[MAXDIC];
+  int             maxdic;
   SuggestMgr*     pSMgr;
+  char *          affixpath;
   char *          encoding;
   struct cs_info * csconv;
   int             langnum;
@@ -103,10 +107,12 @@ public:
   /* Hunspell(aff, dic) - constructor of Hunspell class
    * input: path of affix file and dictionary file
    */
-  
-  Hunspell(const char * affpath, const char * dpath);
 
+  Hunspell(const char * affpath, const char * dpath, const char * key = NULL);
   ~Hunspell();
+
+  /* load extra dictionaries (only dic files) */
+  int add_dic(const char * dpath, const char * key = NULL);
 
   /* spell(word) - spellcheck word
    * output: 0 = bad word, not 0 = good word
@@ -129,17 +135,62 @@ public:
    */
 
   int suggest(char*** slst, const char * word);
+
+  /* deallocate suggestion lists */
+
+  void free_list(char *** slst, int n);
+
   char * get_dic_encoding();
 
-  /* handling custom dictionary */
-  
-  int put_word(const char * word);
+ /* morphological functions */
 
-  /* pattern is a sample dictionary word 
-   * put word into custom dictionary with affix flags of pattern word
+ /* analyze(result, word) - morphological analysis of the word */
+ 
+  int analyze(char*** slst, const char * word);
+
+ /* stem(result, word) - stemmer function */
+  
+  int stem(char*** slst, const char * word);
+  
+ /* stem(result, analysis, n) - get stems from a morph. analysis
+  * example:
+  * char ** result, result2;
+  * int n1 = analyze(&result, "words");
+  * int n2 = stem(&result2, result, n1);   
+  */
+ 
+  int stem(char*** slst, char ** morph, int n);
+
+ /* generate(result, word, word2) - morphological generation by example(s) */
+
+  int generate(char*** slst, const char * word, const char * word2);
+
+ /* generate(result, word, desc, n) - generation by morph. description(s)
+  * example:
+  * char ** result;
+  * char * affix = "is:plural"; // description depends from dictionaries, too
+  * int n = generate(&result, "word", &affix, 1);
+  * for (int i = 0; i < n; i++) printf("%s\n", result[i]);
+  */
+
+  int generate(char*** slst, const char * word, char ** desc, int n);
+
+  /* functions for run-time modification of the dictionary */
+
+  /* add word to the run-time dictionary */
+  
+  int add(const char * word);
+
+  /* add word to the run-time dictionary with affix flags of
+   * the example (a dictionary word): Hunspell will recognize
+   * affixed forms of the new word, too.
    */
   
-  int put_word_pattern(const char * word, const char * pattern);
+  int add_with_affix(const char * word, const char * example);
+
+  /* remove word from the run-time dictionary */
+
+  int remove(const char * word);
 
   /* other */
 
@@ -149,24 +200,13 @@ public:
 
   struct cs_info * get_csconv();
   const char * get_version();
-
-  /* experimental functions */
+  
+  /* experimental and deprecated functions */
 
 #ifdef HUNSPELL_EXPERIMENTAL
-  /* suffix is an affix flag string, similarly in dictionary files */
-  
+  /* suffix is an affix flag string, similarly in dictionary files */  
   int put_word_suffix(const char * word, const char * suffix);
-  
-  /* morphological analysis */
-  
-  char * morph(const char * word);
-  int analyze(char*** out, const char *word);
-
   char * morph_with_correction(const char * word);
-
-  /* stemmer function */
-  
-  int stem(char*** slst, const char * word);
 
   /* spec. suggestions */
   int suggest_auto(char*** slst, const char * word);
@@ -189,6 +229,13 @@ private:
    hentry * spellsharps(char * base, char *, int, int, char * tmp, int * info, char **root);
    int    is_keepcase(const hentry * rv);
    int    insert_sug(char ***slst, char * word, int ns);
+   void   cat_result(char * result, char * st);
+   char * stem_description(const char * desc);
+   int    spellml(char*** slst, const char * word);
+   int    get_xml_par(char * dest, const char * par, int maxl);
+   const char * get_xml_pos(const char * s, const char * attr);
+   int    get_xml_list(char ***slst, char * list, const char * tag);
+   int    check_xml_par(const char * q, const char * attr, const char * value);
 
 };
 

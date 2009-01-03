@@ -185,7 +185,8 @@ nsMathMLmsqrtFrame::Place(nsIRenderingContext& aRenderingContext,
   ////////////
   // Prepare the radical symbol and the overline bar
 
-  aRenderingContext.SetFont(GetStyleFont()->mFont, nsnull);
+  aRenderingContext.SetFont(GetStyleFont()->mFont, nsnull,
+                            PresContext()->GetUserFontSet());
   nsCOMPtr<nsIFontMetrics> fm;
   aRenderingContext.GetFontMetrics(*getter_AddRefs(fm));
 

@@ -11,22 +11,11 @@ import sys
 import datetime
 import shutil
 from optparse import OptionParser
+from build.util import check_call
 
 topsrcdir = os.path.dirname(__file__)
 if topsrcdir == '':
     topsrcdir = '.'
-
-try:
-    from subprocess import check_call
-except ImportError:
-    import subprocess
-    def check_call(*popenargs, **kwargs):
-        retcode = subprocess.call(*popenargs, **kwargs)
-        if retcode:
-            cmd = kwargs.get("args")
-            if cmd is None:
-                cmd = popenargs[0]
-                raise Exception("Command '%s' returned non-zero exit status %i" % (cmd, retcode))
 
 def check_call_noisy(cmd, *args, **kwargs):
     print "Executing command:", cmd

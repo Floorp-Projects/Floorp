@@ -465,7 +465,7 @@ pre_call_clean_up:
             nsCOMPtr<nsIException> e;
 
             XPCConvert::ConstructException(code, sz, "IDispatch", name.get(),
-                                           nsnull, getter_AddRefs(e), nsnull);
+                                           nsnull, getter_AddRefs(e), nsnull, nsnull);
             xpcc->SetException(e);
             if(sz)
                 JS_smprintf_free(sz);

@@ -9,4 +9,4 @@ Description: The Mozilla Runtime and Embedding Engine (unstable API)
 Version: %MOZILLA_VERSION%
 Requires: %NSPR_NAME% >= %NSPR_VERSION%
 Libs: -L${sdkdir}/lib -lxpcomglue_s -lxul -lxpcom
-Cflags: -I${includedir}/${includetype} -fshort-wchar
+Cflags: -I${includedir}/${includetype} %WCHAR_CFLAGS%

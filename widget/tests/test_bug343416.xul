@@ -50,8 +50,8 @@ var idleObserver =
         
         var diff = Math.abs(data - newIdleSeconds * 1000);
 
-//        ok (diff < 5000, "The idle time should have increased by roughly 6 seconds," +
-//                         " as that's where we told this listener to fire.");
+//        ok (diff < 5000, "The idle time should have increased by roughly 6 seconds, " +
+//                         "as that's when we told this listener to fire.");
 //        if (diff >= 5000)
 //            alert(data + "  " + newIdleSeconds);
 
@@ -105,7 +105,7 @@ try
 catch (ex)
 {}
 
-ok (idleTime, "Getting the idle Time should not fail " +
+ok (idleTime, "Getting the idle time should not fail " +
               "in normal circumstances on any tier 1 platform.");
 
 // Now we set up a timeout to sanity-test the idleTime after 5 seconds
@@ -155,8 +155,8 @@ function testIdleTime()
     }
     catch (ex)
     {}
-    ok(newIdleTime, "Getting the idle time should not fail in normal" +
-                    "circumstances on any tier 1 platform.");
+    ok(newIdleTime, "Getting the idle time should not fail " +
+                    "in normal circumstances on any tier 1 platform.");
     // Get the time difference, remove the approx. 5 seconds that we've waited,
     // should be very close to 0 left.
     var timeDiff = Math.abs((newIdleTime - idleTime) -

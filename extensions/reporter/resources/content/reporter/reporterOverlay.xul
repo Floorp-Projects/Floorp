@@ -45,10 +45,12 @@
 
   <script type="application/x-javascript" src="chrome://reporter/content/reporterOverlay.js"/>
 
-  <!-- Firefox -->
+  <!-- Firefox and SeaMonkey -->
   <broadcasterset id="mainBroadcasterSet">
     <broadcaster id="reporterItemsBroadcaster" disabled="true"/>
   </broadcasterset>
+
+  <!-- Firefox -->
   <menupopup id="menu_HelpPopup">
     <menuitem id="menu_HelpPopup_reportertoolmenu" 
               label="&reporterMenu2.title;" 
@@ -59,9 +61,6 @@
   </menupopup>
 
   <!-- SeaMonkey -->
-  <broadcasterset id="navBroadcasters">
-    <broadcaster id="reporterItemsBroadcaster" disabled="true"/>
-  </broadcasterset>
   <menupopup id="helpPopup">
     <menuseparator insertbefore="menu_HelpAboutSeparator"/>
     <menuitem id="helpPopup_reportertoolmenu"

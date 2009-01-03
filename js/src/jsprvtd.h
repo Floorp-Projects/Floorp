@@ -124,6 +124,7 @@ typedef struct JSScopeProperty      JSScopeProperty;
 typedef struct JSStackHeader        JSStackHeader;
 typedef struct JSStringBuffer       JSStringBuffer;
 typedef struct JSSubString          JSSubString;
+typedef struct JSTraceableNative    JSTraceableNative;
 typedef struct JSXML                JSXML;
 typedef struct JSXMLArray           JSXMLArray;
 typedef struct JSXMLArrayCursor     JSXMLArrayCursor;

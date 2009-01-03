@@ -74,7 +74,7 @@ public:
     mLastCharOrder = order;
   }
 
-  float GetConfidence();
+  float GetConfidence(PRBool aIsPreferredLanguage);
   void      Reset(void);
   void      SetOpion(){}
   PRBool GotEnoughData() {return mTotalRel > ENOUGH_REL_THRESHOLD;}

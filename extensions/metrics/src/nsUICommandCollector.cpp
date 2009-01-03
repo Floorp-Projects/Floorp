@@ -60,7 +60,7 @@ NS_IMPL_ISUPPORTS3(nsUICommandCollector, nsIObserver, nsIDOMEventListener,
                    nsIMetricsCollector)
 
 /* static */
-PLDHashOperator PR_CALLBACK nsUICommandCollector::AddCommandEventListener(
+PLDHashOperator nsUICommandCollector::AddCommandEventListener(
 const nsIDOMWindow* key, PRUint32 windowID, void* userArg)
 {
   nsCOMPtr<nsIDOMEventTarget> windowTarget =
@@ -77,7 +77,7 @@ const nsIDOMWindow* key, PRUint32 windowID, void* userArg)
 }
 
 /* static */
-PLDHashOperator PR_CALLBACK nsUICommandCollector::RemoveCommandEventListener(
+PLDHashOperator nsUICommandCollector::RemoveCommandEventListener(
 const nsIDOMWindow* key, PRUint32 windowID, void* userArg)
 {
   nsCOMPtr<nsIDOMEventTarget> windowTarget =

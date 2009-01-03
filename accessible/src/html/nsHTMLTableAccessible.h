@@ -67,16 +67,22 @@ class nsHTMLTableAccessible : public nsAccessibleWrap,
                               public nsIAccessibleTable
 {
 public:
+  nsHTMLTableAccessible(nsIDOMNode* aDomNode, nsIWeakReference* aShell);
+
   NS_DECL_ISUPPORTS_INHERITED
   NS_DECL_NSIACCESSIBLETABLE
 
-  nsHTMLTableAccessible(nsIDOMNode* aDomNode, nsIWeakReference* aShell);
+  // nsIAccessible
   NS_IMETHOD GetRole(PRUint32 *aResult); 
-  NS_IMETHOD GetState(PRUint32 *aState, PRUint32 *aExtraState);
-  NS_IMETHOD GetName(nsAString& aResult);
-  virtual nsresult GetAttributesInternal(nsIPersistentProperties *aAttributes);
   NS_IMETHOD GetDescription(nsAString& aDescription);
   NS_IMETHOD GetAccessibleRelated(PRUint32 aRelationType, nsIAccessible **aRelated);
+
+  // nsAccessible
+  virtual nsresult GetNameInternal(nsAString& aName);
+  virtual nsresult GetStateInternal(PRUint32 *aState, PRUint32 *aExtraState);
+  virtual nsresult GetAttributesInternal(nsIPersistentProperties *aAttributes);
+
+  // nsHTMLTableAccessible
 
   /**
     * Returns true if the column index is in the valid column range.

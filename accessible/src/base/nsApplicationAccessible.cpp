@@ -92,7 +92,7 @@ NS_IMPL_RELEASE_INHERITED(nsApplicationAccessible, nsAccessible)
 ////////////////////////////////////////////////////////////////////////////////
 // nsIAccessNode
 
-NS_IMETHODIMP
+nsresult
 nsApplicationAccessible::Init()
 {
   nsresult rv;
@@ -114,16 +114,16 @@ nsApplicationAccessible::GetName(nsAString& aName)
   NS_ENSURE_STATE(bundleService);
 
   nsCOMPtr<nsIStringBundle> bundle;
-  bundleService->CreateBundle("chrome://branding/locale/brand.properties",
-                              getter_AddRefs(bundle));
+  nsresult rv = bundleService->CreateBundle("chrome://branding/locale/brand.properties",
+                                            getter_AddRefs(bundle));
+  NS_ENSURE_SUCCESS(rv, rv);
 
   nsXPIDLString appName;
-  if (bundle) {
-    bundle->GetStringFromName(NS_LITERAL_STRING("brandShortName").get(),
-                              getter_Copies(appName));
-  } else {
-    NS_WARNING("brand.properties not present, using default app name");
-    appName.AssignLiteral("Mozilla");
+  rv = bundle->GetStringFromName(NS_LITERAL_STRING("brandShortName").get(),
+                                 getter_Copies(appName));
+  if (NS_FAILED(rv) || appName.IsEmpty()) {
+    NS_WARNING("brandShortName not found, using default app name");
+    appName.AssignLiteral("Gecko based application");
   }
 
   aName.Assign(appName);
@@ -143,8 +143,9 @@ nsApplicationAccessible::GetFinalRole(PRUint32 *aFinalRole)
   return GetRole(aFinalRole);
 }
 
-NS_IMETHODIMP
-nsApplicationAccessible::GetState(PRUint32 *aState, PRUint32 *aExtraState)
+nsresult
+nsApplicationAccessible::GetStateInternal(PRUint32 *aState,
+                                          PRUint32 *aExtraState)
 {
   *aState = 0;
   if (aExtraState)

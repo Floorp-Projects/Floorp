@@ -1041,7 +1041,7 @@ nsProtocolProxyService::UnregisterFilter(nsIProtocolProxyFilter *filter)
     return NS_OK;
 }
 
-PRBool PR_CALLBACK
+PRBool
 nsProtocolProxyService::CleanupFilterArray(void *aElement, void *aData) 
 {
     if (aElement)

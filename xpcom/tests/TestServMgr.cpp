@@ -145,7 +145,7 @@ AsyncNoShutdownTest(int testNumber)
 int
 main(void)
 {
-    nsresult err;
+    nsresult err, rv = 0;
     int testNumber = 0;
 
     err = NS_InitXPCOM2(nsnull, nsnull, nsnull);
@@ -155,21 +155,34 @@ main(void)
     }
 
     err = SimpleTest(++testNumber);
-    if (err != NS_OK)
-        goto error;
+    if (err != NS_OK) {
+        printf("test %d failed\n", testNumber);
+        rv = -1;
+    }
 
-    err = AsyncNoShutdownTest(++testNumber);
-    if (err != NS_OK)
-        goto error;
+    if (rv == 0) {
+        err = AsyncNoShutdownTest(++testNumber);
+        if (err != NS_OK) {
+            printf("test %d failed\n", testNumber);
+            rv = -1;
+        }
+    }
 
-    AsyncShutdown(++testNumber);
+    if (rv == 0) {
+        err = AsyncShutdown(++testNumber);
+        if (err != NS_OK) {
+            printf("test %d failed\n", testNumber);
+            rv = -1;
+        }
+    }
 
-    printf("there was great success\n");
-    return 0;
+    if (rv == 0)
+        printf("there was great success\n");
 
-  error:
-    printf("test %d failed\n", testNumber);
-    return -1;
+    err = NS_ShutdownXPCOM(nsnull);
+    NS_ASSERTION(NS_SUCCEEDED(err), "NS_ShutdownXPCOM failed");
+
+    return rv;
 }
 
 ////////////////////////////////////////////////////////////////////////////////

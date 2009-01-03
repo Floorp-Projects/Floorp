@@ -108,8 +108,10 @@ nsPresState::GetStatePropertyAsSupports(const nsAString& aName,
                                         nsISupports** aResult)
 {
   // Retrieve from hashtable.
-  mPropertyTable.Get(aName, aResult);
-  return NS_OK;
+  if (mPropertyTable.Get(aName, aResult))
+    return NS_STATE_PROPERTY_EXISTS;
+
+  return NS_STATE_PROPERTY_NOT_THERE;
 }
 
 nsresult
@@ -142,6 +144,12 @@ nsPresState::GetScrollState()
   }
 
   return *mScrollState;
+}
+
+void
+nsPresState::ClearNonScrollState()
+{
+  mPropertyTable.Clear();
 }
 
 nsresult

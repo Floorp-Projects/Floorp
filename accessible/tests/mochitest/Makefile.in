@@ -48,45 +48,54 @@ include $(topsrcdir)/config/rules.mk
 _TEST_FILES =\
 		moz.png \
 		longdesc_src.html \
+		attributes.js \
 		common.js \
 		nsIAccessible_actions.js \
 		nsIAccessible_name.css \
 		nsIAccessible_name.js \
 		nsIAccessible_name.xbl \
  		nsIAccessible_selects.js \
+		nsIAccessible_states.js \
 		nsIAccessibleEditableText.js \
 		test_aria_activedescendant.html \
 		test_aria_role_article.html \
-		test_bug368835.xul \
+		test_aria_role_equation.html \
+		$(warning test_bug368835.xul temporarily disabled) \
 		test_bug420863.html \
 		test_cssattrs.html \
 		test_events_caretmove.html \
-		test_groupattrs.xul \
+		$(warning test_groupattrs.xul temporarily disabled) \
 	$(warning test_table_indexes.html temporarily disabled) \
 		test_nsIAccessible_actions.html \
-		test_nsIAccessible_actions.xul \
+		$(warning test_nsIAccessible_actions.xul temporarily disabled) \
+		test_nsIAccessible_applicationAccessible.html \
+		test_nsIAccessible_comboboxes.xul \
+		test_nsIAccessible_editablebody.html \
+		test_nsIAccessible_editabledoc.html \
 		test_nsIAccessible_name.html \
-		test_nsIAccessible_name.xul \
+		test_nsIAccessible_name_button.html \
+		test_nsIAccessible_name_link.html \
+		$(warning test_nsIAccessible_name.xul temporarily disabled) \
  		test_nsIAccessible_selects.html \
+		test_nsIAccessible_states.html \
 		test_nsIAccessible_focus.html \
 		test_nsIAccessibleDocument.html \
 		test_nsIAccessibleEditableText.html \
 		test_nsIAccessibleHyperLink.html \
-		test_nsIAccessibleHyperLink.xul \
+		$(warning test_nsIAccessibleHyperLink.xul temporarily disabled) \
 		test_nsIAccessibleHyperText.html \
 		test_nsIAccessibleImage.html \
 		test_nsIAccessibleTable_1.html \
 		test_nsIAccessibleTable_2.html \
 		test_nsIAccessibleTable_3.html \
 		test_nsIAccessibleTable_4.html \
-		test_nsIAccessibleTable_listboxes.xul \
+		$(warning test_nsIAccessibleTable_listboxes.xul temporarily disabled) \
 		test_nsIAccessNode_utils.html \
 		test_nsOuterDocAccessible.html \
 		test_textattrs.html \
 		test_textboxes.html \
-		test_textboxes.xul \
+		$(warning test_textboxes.xul temporarily disabled) \
 		testTextboxes.js \
-		test_bug428479.html \
 		test_bug429285.html \
 		test_bug434464.html \
 		$(NULL)

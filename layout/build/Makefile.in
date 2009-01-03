@@ -58,9 +58,6 @@ MODULE_NAME	= nsLayoutModule
 GRE_MODULE	= 1
 LIBXUL_LIBRARY	= 1
 
-PACKAGE_FILE = layout.pkg
-PACKAGE_VARS += MOZ_XUL
-
 ifndef MOZ_ENABLE_LIBXUL
 EXTRA_DSO_LIBS	= gkgfx
 endif
@@ -158,10 +155,16 @@ SHARED_LIBRARY_LIBS 	+= \
 	$(DEPTH)/media/libogg/src/$(LIB_PREFIX)ogg.$(LIB_SUFFIX) \
 	$(DEPTH)/media/liboggplay/src/liboggplay/$(LIB_PREFIX)oggplay.$(LIB_SUFFIX) \
 	$(DEPTH)/media/liboggz/src/liboggz/$(LIB_PREFIX)oggz.$(LIB_SUFFIX) \
-	$(DEPTH)/media/liboggplay_audio/$(LIB_PREFIX)oggplay_audio.$(LIB_SUFFIX) \
 	$(DEPTH)/media/libtheora/lib/$(LIB_PREFIX)theora.$(LIB_SUFFIX) \
 	$(DEPTH)/media/libvorbis/lib/$(LIB_PREFIX)vorbis.$(LIB_SUFFIX) \
 	$(NULL)
+endif
+
+ifdef MOZ_SYDNEYAUDIO
+SHARED_LIBRARY_LIBS 	+= \
+	$(DEPTH)/media/libsydneyaudio/src/$(LIB_PREFIX)sydneyaudio.$(LIB_SUFFIX) \
+	$(NULL)
+LOCAL_INCLUDES += -I$(DEPTH)/content/html/content/src
 endif
 
 ifdef NS_PRINTING
@@ -262,7 +265,7 @@ ifneq (,$(filter gtk2,$(MOZ_WIDGET_TOOLKIT)))
 EXTRA_DSO_LDOPTS += $(XLDFLAGS) $(XLIBS)
 endif
 
-ifdef MOZ_OGG
+ifdef MOZ_SYDNEYAUDIO
 ifeq ($(OS_ARCH),Darwin)
 OS_LIBS += -framework CoreAudio -framework AudioToolbox -framework AudioUnit -framework Carbon
 endif

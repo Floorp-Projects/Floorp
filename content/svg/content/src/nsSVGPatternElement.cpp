@@ -83,15 +83,11 @@ NS_IMPL_NS_NEW_SVG_ELEMENT(Pattern)
 NS_IMPL_ADDREF_INHERITED(nsSVGPatternElement,nsSVGPatternElementBase)
 NS_IMPL_RELEASE_INHERITED(nsSVGPatternElement,nsSVGPatternElementBase)
 
-NS_INTERFACE_MAP_BEGIN(nsSVGPatternElement)
-  NS_INTERFACE_MAP_ENTRY(nsIDOMNode)
-  NS_INTERFACE_MAP_ENTRY(nsIDOMElement)
-  NS_INTERFACE_MAP_ENTRY(nsIDOMSVGElement)
-  NS_INTERFACE_MAP_ENTRY(nsIDOMSVGFitToViewBox)
-  NS_INTERFACE_MAP_ENTRY(nsIDOMSVGURIReference)
-  NS_INTERFACE_MAP_ENTRY(nsIDOMSVGPatternElement)
-  NS_INTERFACE_MAP_ENTRY(nsIDOMSVGUnitTypes)
-  NS_INTERFACE_MAP_ENTRY(nsIMutationObserver)
+NS_INTERFACE_TABLE_HEAD(nsSVGPatternElement)
+  NS_NODE_INTERFACE_TABLE8(nsSVGPatternElement, nsIDOMNode, nsIDOMElement,
+                           nsIDOMSVGElement, nsIDOMSVGFitToViewBox,
+                           nsIDOMSVGURIReference, nsIDOMSVGPatternElement,
+                           nsIDOMSVGUnitTypes, nsIMutationObserver)
   NS_INTERFACE_MAP_ENTRY_CONTENT_CLASSINFO(SVGPatternElement)
 NS_INTERFACE_MAP_END_INHERITING(nsSVGPatternElementBase)
 

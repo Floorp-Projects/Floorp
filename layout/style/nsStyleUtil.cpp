@@ -225,11 +225,11 @@ nsStyleUtil::CalcFontPointSize(PRInt32 aHTMLSize, PRInt32 aBasePointSize,
   {
     PRInt32 row = fontSize - sFontSizeTableMin;
 
-	  if (aPresContext->CompatibilityMode() == eCompatibility_NavQuirks) {
-	    dFontSize = nsPresContext::CSSPixelsToAppUnits(sQuirksFontSizeTable[row][column[aHTMLSize]]);
-	  } else {
-	    dFontSize = nsPresContext::CSSPixelsToAppUnits(sStrictFontSizeTable[row][column[aHTMLSize]]);
-	  }
+    if (aPresContext->CompatibilityMode() == eCompatibility_NavQuirks) {
+      dFontSize = nsPresContext::CSSPixelsToAppUnits(sQuirksFontSizeTable[row][column[aHTMLSize]]);
+    } else {
+      dFontSize = nsPresContext::CSSPixelsToAppUnits(sStrictFontSizeTable[row][column[aHTMLSize]]);
+    }
   }
   else
   {
@@ -267,13 +267,13 @@ nscoord nsStyleUtil::FindNextSmallerFontSize(nscoord aFontSize, PRInt32 aBasePoi
 
   nscoord onePx = nsPresContext::CSSPixelsToAppUnits(1);
 
-	if (aFontSizeType == eFontSize_HTML) {
-		indexMin = 1;
-		indexMax = 7;
-	} else {
-		indexMin = 0;
-		indexMax = 6;
-	}
+  if (aFontSizeType == eFontSize_HTML) {
+    indexMin = 1;
+    indexMax = 7;
+  } else {
+    indexMin = 0;
+    indexMax = 6;
+  }
   
   smallestIndexFontSize = CalcFontPointSize(indexMin, aBasePointSize, aScalingFactor, aPresContext, aFontSizeType);
   largestIndexFontSize = CalcFontPointSize(indexMax, aBasePointSize, aScalingFactor, aPresContext, aFontSizeType); 
@@ -332,13 +332,13 @@ nscoord nsStyleUtil::FindNextLargerFontSize(nscoord aFontSize, PRInt32 aBasePoin
 
   nscoord onePx = nsPresContext::CSSPixelsToAppUnits(1);
 
-	if (aFontSizeType == eFontSize_HTML) {
-		indexMin = 1;
-		indexMax = 7;
-	} else {
-		indexMin = 0;
-		indexMax = 6;
-	}
+  if (aFontSizeType == eFontSize_HTML) {
+    indexMin = 1;
+    indexMax = 7;
+  } else {
+    indexMin = 0;
+    indexMax = 6;
+  }
   
   smallestIndexFontSize = CalcFontPointSize(indexMin, aBasePointSize, aScalingFactor, aPresContext, aFontSizeType);
   largestIndexFontSize = CalcFontPointSize(indexMax, aBasePointSize, aScalingFactor, aPresContext, aFontSizeType); 

@@ -99,7 +99,7 @@ bug413093obs.prototype = {
       ww.unregisterNotification(this);
 
       // Let the UI finish doing whatever it needs to do
-      executeSoon(function() {
+      SimpleTest.executeSoon(function() {
         setPref(false);
 
         let dmui = Cc["@mozilla.org/download-manager-ui;1"].

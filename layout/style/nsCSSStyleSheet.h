@@ -67,13 +67,16 @@ public:
   nsCSSStyleSheetInner(nsICSSStyleSheet* aPrimarySheet);
   nsCSSStyleSheetInner(nsCSSStyleSheetInner& aCopy,
                        nsCSSStyleSheet* aPrimarySheet);
-  virtual ~nsCSSStyleSheetInner();
+  ~nsCSSStyleSheetInner();
 
-  virtual nsCSSStyleSheetInner* CloneFor(nsCSSStyleSheet* aPrimarySheet);
-  virtual void AddSheet(nsICSSStyleSheet* aSheet);
-  virtual void RemoveSheet(nsICSSStyleSheet* aSheet);
+  nsCSSStyleSheetInner* CloneFor(nsCSSStyleSheet* aPrimarySheet);
+  void AddSheet(nsICSSStyleSheet* aSheet);
+  void RemoveSheet(nsICSSStyleSheet* aSheet);
 
-  virtual void RebuildNameSpaces();
+  void RebuildNameSpaces();
+
+  // Create a new namespace map
+  nsresult CreateNamespaceMap();
 
   nsAutoVoidArray        mSheets;
   nsCOMPtr<nsIURI>       mSheetURI; // for error reports, etc.
@@ -101,7 +104,6 @@ public:
 //
 
 class CSSRuleListImpl;
-static PRBool CascadeSheetRulesInto(nsICSSStyleSheet* aSheet, void* aData);
 struct ChildSheetListBuilder;
 
 class nsCSSStyleSheet : public nsICSSStyleSheet, 
@@ -131,8 +133,6 @@ public:
 #endif
   
   // nsICSSStyleSheet interface
-  NS_IMETHOD ContainsStyleSheet(nsIURI* aURL, PRBool& aContains,
-                                nsIStyleSheet** aTheChild=nsnull);
   NS_IMETHOD AppendStyleSheet(nsICSSStyleSheet* aSheet);
   NS_IMETHOD InsertStyleSheetAt(nsICSSStyleSheet* aSheet, PRInt32 aIndex);
   NS_IMETHOD PrependStyleRule(nsICSSRule* aRule);
@@ -206,6 +206,9 @@ protected:
   // UniversalBrowserWrite.
   nsresult SubjectSubsumesInnerPrincipal() const;
 
+  // Add the namespace mapping from this @namespace rule to our namespace map
+  nsresult RegisterNamespaceRule(nsICSSRule* aRule);
+
 protected:
   nsString              mTitle;
   nsCOMPtr<nsMediaList> mMedia;
@@ -224,7 +227,7 @@ protected:
   nsAutoVoidArray*      mRuleProcessors;
 
   friend class nsMediaList;
-  friend PRBool CascadeSheetRulesInto(nsICSSStyleSheet* aSheet, void* aData);
+  friend class nsCSSRuleProcessor;
   friend nsresult NS_NewCSSStyleSheet(nsICSSStyleSheet** aInstancePtrResult);
   friend struct ChildSheetListBuilder;
 };

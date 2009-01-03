@@ -39,17 +39,18 @@
 #define nsINodeList_h___
 
 class nsINode;
+class nsIDOMNodeList;
 
 // IID for the nsINodeList interface
 #define NS_INODELIST_IID \
-{ 0x06a6639a, 0x2d47, 0x4551, \
- { 0x94, 0xef, 0x93, 0xb8, 0xe1, 0x09, 0x3a, 0xb3 } }
-
+{ 0x943420c4, 0x8774, 0x43ea, \
+ { 0xb3, 0x53, 0x62, 0xa1, 0x26, 0x1c, 0x9b, 0x55 } }
 
 /**
  * An internal interface that allows QI-less getting of nodes from node lists
  */
-class nsINodeList : public nsISupports {
+class nsINodeList : public nsIDOMNodeList
+{
 public:
   NS_DECLARE_STATIC_IID_ACCESSOR(NS_INODELIST_IID)
 
@@ -58,6 +59,9 @@ public:
    */
   virtual nsINode* GetNodeAt(PRUint32 aIndex) = 0;
 };
+
+#define NS_NODELIST_OFFSET_AND_INTERFACE_TABLE_BEGIN(_class)                  \
+  NS_OFFSET_AND_INTERFACE_TABLE_BEGIN_AMBIGUOUS(_class, nsINodeList)
 
 NS_DEFINE_STATIC_IID_ACCESSOR(nsINodeList, NS_INODELIST_IID)
 

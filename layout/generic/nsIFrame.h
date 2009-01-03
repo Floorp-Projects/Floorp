@@ -85,6 +85,7 @@ class nsIDOMRange;
 class nsISelectionController;
 class nsBoxLayoutState;
 class nsIBoxLayout;
+class nsILineIterator;
 #ifdef ACCESSIBILITY
 class nsIAccessible;
 #endif
@@ -105,10 +106,10 @@ struct nsMargin;
 typedef class nsIFrame nsIBox;
 
 // IID for the nsIFrame interface
-// 3459e7bb-2b22-4eb3-b60d-27d9f851b919
+// 7b437d20-a34e-11dd-ad8b-0800200c9a66
 #define NS_IFRAME_IID \
-  { 0x3459e7bb, 0x2b22, 0x4eb3, \
-    { 0xb6, 0x0d, 0x27, 0xd9, 0xf8, 0x51, 0xb9, 0x19 } }
+  { 0x7b437d20, 0xa34e, 0x11dd, \
+    { 0xad, 0x8b, 0x08, 0x00, 0x20, 0x0c, 0x9a, 0x66 } }
 
 /**
  * Indication of how the frame can be split. This is used when doing runaround
@@ -610,13 +611,14 @@ public:
   void SetStyleContext(nsStyleContext* aContext)
   { 
     if (aContext != mStyleContext) {
-      if (mStyleContext)
-        mStyleContext->Release();
+      nsStyleContext* oldStyleContext = mStyleContext;
       mStyleContext = aContext;
       if (aContext) {
         aContext->AddRef();
-        DidSetStyleContext();
+        DidSetStyleContext(oldStyleContext);
       }
+      if (oldStyleContext)
+        oldStyleContext->Release();
     }
   }
   
@@ -633,7 +635,10 @@ public:
   }
 
   // Style post processing hook
-  NS_IMETHOD DidSetStyleContext() = 0;
+  // Attention: the old style context is the one we're forgetting,
+  // and hence possibly completely bogus for GetStyle* purposes.
+  // Use PeekStyleData instead.
+  virtual void DidSetStyleContext(nsStyleContext* aOldStyleContext) = 0;
 
   /**
    * Get the style data associated with this frame.  This returns a
@@ -691,7 +696,7 @@ public:
   NS_IMETHOD SetParent(const nsIFrame* aParent) { mParent = (nsIFrame*)aParent; return NS_OK; }
 
   /**
-   * Bounding rect of the frame. The values are in twips, and the origin is
+   * Bounding rect of the frame. The values are in app units, and the origin is
    * relative to the upper-left of the geometric parent. The size includes the
    * content area, borders, and padding.
    *
@@ -762,7 +767,7 @@ public:
 
   /**
    * Like the frame's rect (see |GetRect|), which is the border rect,
-   * other rectangles of the frame, in twips, relative to the parent.
+   * other rectangles of the frame, in app units, relative to the parent.
    *
    * Note that GetMarginRect is not meaningful for blocks (anything with
    * 'display:block', whether block frame or not) because of both the
@@ -837,15 +842,20 @@ public:
                         const nsRect&               aDirtyRect,
                         const nsDisplayListSet&     aLists);
 
-  PRBool IsThemed() {
-    return IsThemed(GetStyleDisplay());
+  PRBool IsThemed(nsTransparencyMode* aTransparencyMode = nsnull) {
+    return IsThemed(GetStyleDisplay(), aTransparencyMode);
   }
-  PRBool IsThemed(const nsStyleDisplay* aDisp) {
+  PRBool IsThemed(const nsStyleDisplay* aDisp,
+                  nsTransparencyMode* aTransparencyMode = nsnull) {
     if (!aDisp->mAppearance)
       return PR_FALSE;
     nsPresContext* pc = PresContext();
     nsITheme *theme = pc->GetTheme();
-    return theme && theme->ThemeSupportsWidget(pc, this, aDisp->mAppearance);
+    if(!theme || !theme->ThemeSupportsWidget(pc, this, aDisp->mAppearance))
+      return PR_FALSE;
+    if (aTransparencyMode)
+      *aTransparencyMode = theme->GetWidgetTransparency(aDisp->mAppearance);
+    return PR_TRUE;
   }
   
   /**
@@ -2218,7 +2228,15 @@ NS_PTR_TO_INT32(frame->GetProperty(nsGkAtoms::embeddingLevel))
    */
   void CheckInvalidateSizeChange(const nsRect& aOldRect,
                                  const nsRect& aOldOverflowRect,
-                                 nsHTMLReflowMetrics& aNewDesiredSize);
+                                 const nsSize& aNewDesiredSize);
+
+  /**
+   * Get a line iterator for this frame, if supported.
+   *
+   * @return nsnull if no line iterator is supported.
+   * @note dispose the line iterator using nsILineIterator::DisposeLineIterator
+   */
+  virtual nsILineIterator* GetLineIterator() = 0;
 
 protected:
   // Members
@@ -2240,7 +2258,8 @@ protected:
    * Gets the overflow area for any properties that are common to all types of frames
    * e.g. outlines.
    */
-  nsRect GetAdditionalOverflow(const nsRect& aOverflowArea, const nsSize& aNewSize);
+  nsRect GetAdditionalOverflow(const nsRect& aOverflowArea, const nsSize& aNewSize,
+                               PRBool* aHasOutlineOrEffects);
 
   /**
    * Can we stop inside this frame when we're skipping non-rendered whitespace?

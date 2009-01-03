@@ -94,6 +94,7 @@ void     SaveTypeAndSource(nsILocalFile *file, nsIDOMDocument *domDoc,
 int      UnicodeToCodepage( const nsAString& inString, char **outText);
 int      CodepageToUnicode( const nsACString& inString, PRUnichar **outText);
 void     RemoveCarriageReturns(char * pszText);
+MRESULT EXPENTRY nsDragWindowProc(HWND hWnd, ULONG msg, MPARAM mp1, MPARAM mp2);
 
 // --------------------------------------------------------------------------
 // Global data

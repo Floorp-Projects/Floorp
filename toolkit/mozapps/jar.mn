@@ -14,8 +14,6 @@ toolkit.jar:
 * content/mozapps/preferences/changemp.xul                      (preferences/changemp.xul)
 * content/mozapps/preferences/removemp.js                       (preferences/removemp.js)
 * content/mozapps/preferences/removemp.xul                      (preferences/removemp.xul)
-  content/mozapps/preferences/preferences.css                   (preferences/preferences.css)
-* content/mozapps/preferences/preferences.xml                   (preferences/preferences.xml)
   content/mozapps/plugins/pluginInstallerWizard.xul             (plugins/content/pluginInstallerWizard.xul)
   content/mozapps/plugins/pluginInstallerWizard.js              (plugins/content/pluginInstallerWizard.js)
   content/mozapps/plugins/pluginInstallerWizard.css             (plugins/content/pluginInstallerWizard.css)

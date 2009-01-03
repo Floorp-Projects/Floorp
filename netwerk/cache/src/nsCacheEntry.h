@@ -299,30 +299,30 @@ public:
 
 private:
     // PLDHashTable operation callbacks
-    static PLDHashNumber  PR_CALLBACK HashKey( PLDHashTable *table, const void *key);
+    static PLDHashNumber  HashKey( PLDHashTable *table, const void *key);
 
-    static PRBool         PR_CALLBACK MatchEntry( PLDHashTable *           table,
-                                                  const PLDHashEntryHdr *  entry,
-                                                  const void *             key);
+    static PRBool         MatchEntry( PLDHashTable *           table,
+                                      const PLDHashEntryHdr *  entry,
+                                      const void *             key);
 
-    static void           PR_CALLBACK MoveEntry( PLDHashTable *table,
-                                                 const PLDHashEntryHdr *from,
-                                                 PLDHashEntryHdr       *to);
+    static void           MoveEntry( PLDHashTable *table,
+                                     const PLDHashEntryHdr *from,
+                                     PLDHashEntryHdr       *to);
 
-    static void           PR_CALLBACK ClearEntry( PLDHashTable *table, PLDHashEntryHdr *entry);
+    static void           ClearEntry( PLDHashTable *table, PLDHashEntryHdr *entry);
 
-    static void           PR_CALLBACK Finalize( PLDHashTable *table);
+    static void           Finalize( PLDHashTable *table);
 
     static
-    PLDHashOperator       PR_CALLBACK FreeCacheEntries(PLDHashTable *    table,
-                                                       PLDHashEntryHdr * hdr,
-                                                       PRUint32          number,
-                                                       void *            arg);
+    PLDHashOperator       FreeCacheEntries(PLDHashTable *    table,
+                                           PLDHashEntryHdr * hdr,
+                                           PRUint32          number,
+                                           void *            arg);
     static
-    PLDHashOperator       PR_CALLBACK VisitEntry(PLDHashTable *         table,
-                                                 PLDHashEntryHdr *      hdr,
-                                                 PRUint32               number,
-                                                 void *                 arg);
+    PLDHashOperator       VisitEntry(PLDHashTable *         table,
+                                     PLDHashEntryHdr *      hdr,
+                                     PRUint32               number,
+                                     void *                 arg);
                                      
     // member variables
     static PLDHashTableOps ops;

@@ -60,3 +60,10 @@ caption {
   padding: 0px 2px 1px 4px !important;
   font: caption;
 }
+
+.caption-text {
+  margin-top: 0;
+  margin-bottom: 0;
+  -moz-margin-start: 1px;
+  -moz-margin-end: 2px;
+}

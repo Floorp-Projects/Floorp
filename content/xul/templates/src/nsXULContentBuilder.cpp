@@ -85,17 +85,8 @@
 //
 
 /**
- * The content builder generates DOM nodes from a template. Generation is done
- * dynamically on demand when child nodes are asked for by some other part of
- * content or layout. This is done for a content node by calling
- * CreateContents which creates one and only one level of children deeper. The
- * next level of content is created by calling CreateContents on each child
- * node when requested.
- *
- * CreateTemplateAndContainerContents is used to determine where in a
- * hierarchy generation is currently, related to the current node being
- * processed. The actual content generation is done entirely inside
- * BuildContentFromTemplate.
+ * The content builder generates DOM nodes from a template. The actual content
+ * generation is done entirely inside BuildContentFromTemplate.
  *
  * Content generation is centered around the generation node (the node with
  * uri="?member" on it). Nodes above the generation node are unique and
@@ -104,26 +95,10 @@
  * finds the generation node.
  *
  * Once the generation node has been found, the results for that content node
- * are added to the content map, stored in mContentSupportMap. When
- * CreateContents is later called for that node, the results are retrieved and
- * used to create a new child for each result, based on the template.
- *
- * Children below the generation node are created with CreateTemplateContents.
+ * are added to the content map, stored in mContentSupportMap.
  *
  * If recursion is allowed, generation continues, where the generation node
  * becomes the container to insert into.
- *
- * The XUL lazy state bits are used to control some aspects of generation:
- *
- * eChildrenMustBeRebuilt: set to true for a node that has its children
- *                         generated lazily. If this is set, the element will
- *                         need to call into the template builder to generate
- *                         its children. This state is cleared by the element
- *                         when this call is made.
- * eTemplateContentsBuilt: set to true for non-generation nodes if the
- *                         children have already been created.
- * eContainerContentsBuilt: set to true for generation nodes to indicate that
- *                          results have been determined.
  */
 class nsXULContentBuilder : public nsXULTemplateBuilder
 {
@@ -165,8 +140,7 @@ protected:
     /**
      * Build content from a template for a given result. This will be called
      * recursively or on demand and will be called for every node in the
-     * generated content tree. See the method defintion below for details
-     * of arguments.
+     * generated content tree.
      */
     nsresult
     BuildContentFromTemplate(nsIContent *aTemplateNode,
@@ -233,46 +207,14 @@ protected:
 
     /**
      * Create the appropriate generated content for aElement, by calling
-     * CreateTemplateContents and CreateContainerContents. Both of these
-     * functions will generate content but under different circumstances.
-     *
-     * Consider the following example:
-     *   <action>
-     *     <hbox uri="?node">
-     *       <button label="?name"/>
-     *     </hbox>
-     *   </action>
-     *
-     * At the top level, CreateTemplateContents will generate nothing, while
-     * CreateContainerContents will create an <hbox> for each result. When
-     * CreateTemplateAndContainerContents is called for each hbox,
-     * CreateTemplateContents will create the buttons, while
-     * CreateContainerContents will create the next set of hboxes recursively.
-     *
-     * Thus, CreateContainerContents creates the nodes with the uri attribute
-     * and above, while CreateTemplateContents creates the nodes below that.
-     *
-     * Note that all content is actually generated inside
-     * BuildContentFromTemplate, the various CreateX functions call this in
-     * different ways.
-     *
-     * aContainer will be set to the container in which content was generated.
-     * This will always be either aElement, or a descendant of it.
-     * aNewIndexInContainer will be the index in this container where content
-     * was generated.
+     * CreateContainerContents.
      *
      * @param aElement element to generate content inside
      * @param aForceCreation true to force creation for closed items such as menus
-     * @param aContainer container content was added inside. This is an in/out
-     *        parameter and must point to null or a valid object before calling
-     *        this function.
-     * @param aNewIndexInContainer index with container in which content was added
      */
     nsresult
     CreateTemplateAndContainerContents(nsIContent* aElement,
-                                       PRBool aForceCreation,
-                                       nsIContent** aContainer,
-                                       PRInt32* aNewIndexInContainer);
+                                       PRBool aForceCreation);
 
     /**
      * Generate the results for a template, by calling
@@ -281,19 +223,15 @@ protected:
      * @param aElement element to generate content inside
      * @param aResult reference point for query
      * @param aForceCreation true to force creation for closed items such as menus
-     * @param aNotify true to notify of DOM changes
-     * @param aContainer container content was added inside. This is an in/out
-     *        parameter and must point to null or a valid object before calling
-     *        this function.
-     * @param aNewIndexInContainer index with container in which content was added
+     * @param aNotify true to notify of DOM changes as each element is inserted
+     * @param aNotifyAtEnd notify at the end of all DOM changes
      */
     nsresult
     CreateContainerContents(nsIContent* aElement,
                             nsIXULTemplateResult* aResult,
                             PRBool aForceCreation,
                             PRBool aNotify,
-                            nsIContent** aContainer,
-                            PRInt32* aNewIndexInContainer);
+                            PRBool aNotifyAtEnd);
 
     /**
      * Generate the results for a query.
@@ -311,22 +249,6 @@ protected:
                                        nsTemplateQuerySet* aQuerySet,
                                        nsIContent** aContainer,
                                        PRInt32* aNewIndexInContainer);
-
-    /**
-     * Create the remaining content for a result. See the description of
-     * CreateTemplateAndContainerContents for details. aContainer will be
-     * either set to aElement if content was inserted or null otherwise.
-     *
-     * @param aElement element to generate content inside
-     * @param aTemplateElement element within template to generate from
-     * @param aContainer container content was added inside
-     * @param aNewIndexInContainer index with container in which content was added
-     */
-    nsresult
-    CreateTemplateContents(nsIContent* aElement,
-                           nsIContent* aTemplateElement,
-                           nsIContent** aContainer,
-                           PRInt32* aNewIndexInContainer);
 
     /**
      * Check if an element with a particular tag exists with a container.
@@ -351,9 +273,6 @@ protected:
 
     nsresult
     RemoveGeneratedContent(nsIContent* aElement);
-
-    PRBool
-    IsLazyWidgetItem(nsIContent* aElement);
 
     nsresult
     GetElementsForResult(nsIXULTemplateResult* aResult,
@@ -673,14 +592,6 @@ nsXULContentBuilder::BuildContentFromTemplate(nsIContent *aTemplateNode,
                 realKidAlreadyExisted = PR_TRUE;
             }
             else {
-                // Mark the element's contents as being generated so
-                // that any re-entrant calls don't trigger an infinite
-                // recursion.
-                nsXULElement *xulcontent = nsXULElement::FromContent(realKid);
-                if (xulcontent) {
-                    xulcontent->SetLazyState(nsXULElement::eTemplateContentsBuilt);
-                }
-
                 // Potentially remember the index of this element as the first
                 // element that we've generated. Note that we remember
                 // this -before- we recurse!
@@ -823,48 +734,26 @@ nsXULContentBuilder::BuildContentFromTemplate(nsIContent *aTemplateNode,
                 if (NS_FAILED(rv)) return rv;
             }
 
-            // XUL elements inside a template rooted on a XUL element may have
-            // their children generated lazily.
-            nsXULElement *xulcontent = nsXULElement::FromContent(realKid);
-            if (xulcontent && mRoot->IsNodeOfType(nsINode::eXUL)) {
-                PRUint32 count2 = tmplKid->GetChildCount();
-
-                if (count2 == 0 && !isGenerationElement) {
-                    // If we're at a leaf node, then we'll eagerly
-                    // mark the content as having its template &
-                    // container contents built. This avoids a useless
-                    // trip back to the template builder only to find
-                    // that we've got no work to do!
-                    xulcontent->SetLazyState(nsXULElement::eTemplateContentsBuilt);
-                    xulcontent->SetLazyState(nsXULElement::eContainerContentsBuilt);
-                }
-                else if (!aIsSelfReference) {
-                    // Just mark the XUL element as requiring more work to
-                    // be done. We'll get around to it when somebody asks
-                    // for it.
-                    xulcontent->SetLazyState(nsXULElement::eChildrenMustBeRebuilt);
-                }
-            }
-            else {
-                // Otherwise, it doesn't support lazy instantiation,
-                // and we have to recurse "by hand". Note that we
-                // _don't_ need to notify: we'll add the entire
-                // subtree in a single whack.
-                //
-                // Note that we don't bother passing aContainer and
-                // aNewIndexInContainer down: since we're HTML, we
-                // -know- that we -must- have just been created.
-                rv = BuildContentFromTemplate(tmplKid, aResourceNode, realKid, isUnique,
-                                              aIsSelfReference, aChild, PR_FALSE, aMatch,
+            // the unique content recurses up above. Also, don't recurse if
+            // this is a self reference (a reference to the same resource)
+            // or we'll end up regenerating the same content.
+            if (!aIsSelfReference && !isUnique) {
+                // this call creates the content inside the generation node,
+                // for example the label below:
+                //  <vbox uri="?">
+                //    <label value="?title"/>
+                //  </vbox>
+                rv = BuildContentFromTemplate(tmplKid, aResourceNode, realKid, PR_FALSE,
+                                              PR_FALSE, aChild, PR_FALSE, aMatch,
                                               nsnull /* don't care */,
                                               nsnull /* don't care */);
-
                 if (NS_FAILED(rv)) return rv;
 
-                if (isGenerationElement) {
-                    rv = CreateContainerContents(realKid, aChild, PR_FALSE, PR_FALSE,
-                                                 nsnull /* don't care */,
-                                                 nsnull /* don't care */);
+                if (isGenerationElement && !(mFlags & eDontRecurse)) {
+                    // if recursion is allowed, continue by building the next
+                    // level of children
+                    rv = CreateContainerContents(realKid, aChild, PR_FALSE,
+                                                 PR_FALSE, PR_FALSE);
                     if (NS_FAILED(rv)) return rv;
                 }
             }
@@ -1034,49 +923,35 @@ nsXULContentBuilder::SynchronizeUsingTemplate(nsIContent* aTemplateNode,
     if (NS_FAILED(rv))
         return rv;
 
-    // See if we've generated kids for this node yet. If we have, then
-    // recursively sync up template kids with content kids
-    PRBool contentsGenerated = PR_TRUE;
-    nsXULElement *xulcontent = nsXULElement::FromContent(aRealElement);
-    if (xulcontent) {
-        contentsGenerated = xulcontent->GetLazyState(nsXULElement::eTemplateContentsBuilt);
-    }
-    else {
-        // HTML content will _always_ have been generated up-front
-    }
+    PRUint32 count = aTemplateNode->GetChildCount();
 
-    if (contentsGenerated) {
-        PRUint32 count = aTemplateNode->GetChildCount();
+    for (PRUint32 loop = 0; loop < count; ++loop) {
+        nsIContent *tmplKid = aTemplateNode->GetChildAt(loop);
 
-        for (PRUint32 loop = 0; loop < count; ++loop) {
-            nsIContent *tmplKid = aTemplateNode->GetChildAt(loop);
+        if (! tmplKid)
+            break;
 
-            if (! tmplKid)
-                break;
+        nsIContent *realKid = aRealElement->GetChildAt(loop);
+        if (! realKid)
+            break;
 
-            nsIContent *realKid = aRealElement->GetChildAt(loop);
-
-            if (! realKid)
-                break;
-
-            // check for text nodes and update them accordingly.
-            // This code is similar to that in BuildContentFromTemplate
-            if (tmplKid->NodeInfo()->Equals(nsGkAtoms::textnode,
-                                            kNameSpaceID_XUL)) {
-                PRUnichar attrbuf[128];
-                nsFixedString attrValue(attrbuf, NS_ARRAY_LENGTH(attrbuf), 0);
-                tmplKid->GetAttr(kNameSpaceID_None, nsGkAtoms::value, attrValue);
-                if (!attrValue.IsEmpty()) {
-                    nsAutoString value;
-                    rv = SubstituteText(aResult, attrValue, value);
-                    if (NS_FAILED(rv)) return rv;
-                    realKid->SetText(value, PR_TRUE);
-                }
+        // check for text nodes and update them accordingly.
+        // This code is similar to that in BuildContentFromTemplate
+        if (tmplKid->NodeInfo()->Equals(nsGkAtoms::textnode,
+                                        kNameSpaceID_XUL)) {
+            PRUnichar attrbuf[128];
+            nsFixedString attrValue(attrbuf, NS_ARRAY_LENGTH(attrbuf), 0);
+            tmplKid->GetAttr(kNameSpaceID_None, nsGkAtoms::value, attrValue);
+            if (!attrValue.IsEmpty()) {
+                nsAutoString value;
+                rv = SubstituteText(aResult, attrValue, value);
+                if (NS_FAILED(rv)) return rv;
+                realKid->SetText(value, PR_TRUE);
             }
-
-            rv = SynchronizeUsingTemplate(tmplKid, realKid, aResult);
-            if (NS_FAILED(rv)) return rv;
         }
+
+        rv = SynchronizeUsingTemplate(tmplKid, realKid, aResult);
+        if (NS_FAILED(rv)) return rv;
     }
 
     return NS_OK;
@@ -1110,9 +985,7 @@ nsXULContentBuilder::RemoveMember(nsIContent* aContent)
 
 nsresult
 nsXULContentBuilder::CreateTemplateAndContainerContents(nsIContent* aElement,
-                                                        PRBool aForceCreation,
-                                                        nsIContent** aContainer,
-                                                        PRInt32* aNewIndexInContainer)
+                                                        PRBool aForceCreation)
 {
     // Generate both 1) the template content for the current element,
     // and 2) recursive subcontent (if the current element refers to a
@@ -1124,21 +997,6 @@ nsXULContentBuilder::CreateTemplateAndContainerContents(nsIContent* aElement,
 
     if (! mQueryProcessor)
         return NS_OK;
-
-    // If we're asked to return the first generated child, then
-    // initialize to "none".
-    if (aContainer) {
-        *aContainer = nsnull;
-        *aNewIndexInContainer = -1;
-    }
-
-    // Create the current resource's contents from the template, if
-    // appropriate
-    nsCOMPtr<nsIContent> tmpl;
-    mTemplateMap.GetTemplateFor(aElement, getter_AddRefs(tmpl));
-
-    if (tmpl)
-        CreateTemplateContents(aElement, tmpl, aContainer, aNewIndexInContainer);
 
     // for the root element, get the ref attribute and generate content
     if (aElement == mRoot) {
@@ -1156,7 +1014,7 @@ nsXULContentBuilder::CreateTemplateAndContainerContents(nsIContent* aElement,
 
         if (mRootResult) {
             CreateContainerContents(aElement, mRootResult, aForceCreation,
-                                    PR_FALSE, aContainer, aNewIndexInContainer);
+                                    PR_FALSE, PR_TRUE);
         }
     }
     else if (!(mFlags & eDontRecurse)) {
@@ -1172,7 +1030,7 @@ nsXULContentBuilder::CreateTemplateAndContainerContents(nsIContent* aElement,
                 return rv;
 
             CreateContainerContents(aElement, match->mResult, aForceCreation,
-                                    PR_FALSE, aContainer, aNewIndexInContainer);
+                                    PR_FALSE, PR_TRUE);
         }
     }
 
@@ -1187,9 +1045,11 @@ nsXULContentBuilder::CreateContainerContents(nsIContent* aElement,
                                              nsIXULTemplateResult* aResult,
                                              PRBool aForceCreation,
                                              PRBool aNotify,
-                                             nsIContent** aContainer,
-                                             PRInt32* aNewIndexInContainer)
+                                             PRBool aNotifyAtEnd)
 {
+    if (!aForceCreation && !IsOpen(aElement))
+        return NS_OK;
+
     nsCOMPtr<nsIRDFResource> refResource;
     GetResultResource(aResult, getter_AddRefs(refResource));
     if (! refResource)
@@ -1201,13 +1061,9 @@ nsXULContentBuilder::CreateContainerContents(nsIContent* aElement,
 
     ActivationEntry entry(refResource, &mTop);
 
-    // Create the contents of a container by iterating over all of the
-    // "containment" arcs out of the element's resource.
-    nsresult rv;
-
     // Compile the rules now, if they haven't been already.
     if (! mQueriesCompiled) {
-        rv = CompileQueries();
+        nsresult rv = CompileQueries();
         if (NS_FAILED(rv))
             return rv;
     }
@@ -1215,40 +1071,21 @@ nsXULContentBuilder::CreateContainerContents(nsIContent* aElement,
     if (mQuerySets.Length() == 0)
         return NS_OK;
 
-    if (aContainer) {
-        // In case aContainer has already been initialized with a value go ahead
-        // and release it. 
-        NS_IF_RELEASE(*aContainer);
-        *aNewIndexInContainer = -1;
-    }
-
-    // The tree widget is special. If the item isn't open, then just
-    // "pretend" that there aren't any contents here. We'll create
-    // them when OpenContainer() gets called.
-    if (!aForceCreation && IsLazyWidgetItem(aElement) && !IsOpen(aElement))
-        return NS_OK;
-
     // See if the element's templates contents have been generated:
     // this prevents a re-entrant call from triggering another
     // generation.
     nsXULElement *xulcontent = nsXULElement::FromContent(aElement);
     if (xulcontent) {
-        if (xulcontent->GetLazyState(nsXULElement::eContainerContentsBuilt))
+        if (xulcontent->GetTemplateGenerated())
             return NS_OK;
 
         // Now mark the element's contents as being generated so that
         // any re-entrant calls don't trigger an infinite recursion.
-        xulcontent->SetLazyState(nsXULElement::eContainerContentsBuilt);
+        xulcontent->SetTemplateGenerated();
     }
-    else {
-        // HTML is always needs to be generated.
-        //
-        // XXX Big ass-umption here -- I am assuming that this will
-        // _only_ ever get called (in the case of an HTML element)
-        // when the XUL builder is descending thru the graph and
-        // stumbles on a template that is rooted at an HTML element.
-        // (/me crosses fingers...)
-    }
+
+    PRInt32 newIndexInContainer = -1;
+    nsIContent* container = nsnull;
 
     PRInt32 querySetCount = mQuerySets.Length();
 
@@ -1259,12 +1096,17 @@ nsXULContentBuilder::CreateContainerContents(nsIContent* aElement,
         if (tag && tag != aElement->Tag())
             continue;
 
-        // XXXndeakin need to revisit how aContainer and content notification
-        // is handled. Currently though, this code is similar to the old code.
-        // *aContainer will only be set if it is null
         CreateContainerContentsForQuerySet(aElement, aResult, aNotify, queryset,
-                                           aContainer, aNewIndexInContainer);
+                                           &container, &newIndexInContainer);
     }
+
+    if (aNotifyAtEnd && container) {
+        MOZ_AUTO_DOC_UPDATE(container->GetCurrentDoc(), UPDATE_CONTENT_MODEL,
+                            PR_TRUE);
+        nsNodeUtils::ContentAppended(container, newIndexInContainer);
+    }
+
+    NS_IF_RELEASE(container);
 
     return NS_OK;
 }
@@ -1422,48 +1264,6 @@ nsXULContentBuilder::CreateContainerContentsForQuerySet(nsIContent* aElement,
 }
 
 nsresult
-nsXULContentBuilder::CreateTemplateContents(nsIContent* aElement,
-                                            nsIContent* aTemplateElement,
-                                            nsIContent** aContainer,
-                                            PRInt32* aNewIndexInContainer)
-{
-    // Create the contents of an element using the templates.
-    // See if the element's templates contents have been generated:
-    // this prevents a re-entrant call from triggering another
-    // generation.
-    nsXULElement *xulcontent = nsXULElement::FromContent(aElement);
-    if (! xulcontent)
-        return NS_OK; // HTML content is _always_ generated up-front
-
-    if (xulcontent->GetLazyState(nsXULElement::eTemplateContentsBuilt))
-        return NS_OK;
-
-    // Now mark the element's contents as being generated so that
-    // any re-entrant calls don't trigger an infinite recursion.
-    xulcontent->SetLazyState(nsXULElement::eTemplateContentsBuilt);
-
-    // Crawl up the content model until we find a generation node
-    // (one that was generated from a node with a uri attribute)
-
-    nsTemplateMatch* match = nsnull;
-    nsCOMPtr<nsIContent> element;
-    for (element = aElement;
-         element && element != mRoot;
-         element = element->GetParent()) {
-
-        if (mContentSupportMap.Get(element, &match))
-            break;
-    }
-
-    if (!match)
-        return NS_ERROR_FAILURE;
-
-    return BuildContentFromTemplate(aTemplateElement, aElement, aElement,
-                                    PR_FALSE, PR_FALSE, match->mResult, PR_FALSE,
-                                    match, aContainer, aNewIndexInContainer);
-}
-
-nsresult
 nsXULContentBuilder::EnsureElementHasGenericChild(nsIContent* parent,
                                                   PRInt32 nameSpaceID,
                                                   nsIAtom* tag,
@@ -1501,21 +1301,20 @@ nsXULContentBuilder::EnsureElementHasGenericChild(nsIContent* parent,
 PRBool
 nsXULContentBuilder::IsOpen(nsIContent* aElement)
 {
-    // XXXhyatt - use XBL service to obtain base tag.
+    // Determine if this is a <treeitem> or <menu> element
+    if (!aElement->IsNodeOfType(nsINode::eXUL))
+        return PR_TRUE;
 
+    // XXXhyatt Use the XBL service to obtain a base tag.
     nsIAtom *tag = aElement->Tag();
-
-    // Treat the 'root' element as always open, -unless- it's a
-    // menu/menupopup. We don't need to "fake" these as being open.
-    if ((aElement == mRoot) && aElement->IsNodeOfType(nsINode::eXUL) &&
-        (tag != nsGkAtoms::menu) &&
-        (tag != nsGkAtoms::menubutton) &&
-        (tag != nsGkAtoms::toolbarbutton) &&
-        (tag != nsGkAtoms::button))
-      return PR_TRUE;
-
-    return aElement->AttrValueIs(kNameSpaceID_None, nsGkAtoms::open,
-                                 nsGkAtoms::_true, eCaseMatters);
+    if (tag == nsGkAtoms::menu ||
+        tag == nsGkAtoms::menubutton ||
+        tag == nsGkAtoms::toolbarbutton ||
+        tag == nsGkAtoms::button ||
+        tag == nsGkAtoms::treeitem)
+        return aElement->AttrValueIs(kNameSpaceID_None, nsGkAtoms::open,
+                                     nsGkAtoms::_true, eCaseMatters);
+    return PR_TRUE;
 }
 
 nsresult
@@ -1574,27 +1373,6 @@ nsXULContentBuilder::RemoveGeneratedContent(nsIContent* aElement)
     }
 
     return NS_OK;
-}
-
-PRBool
-nsXULContentBuilder::IsLazyWidgetItem(nsIContent* aElement)
-{
-    // Determine if this is a <tree>, <treeitem>, or <menu> element
-
-    if (!aElement->IsNodeOfType(nsINode::eXUL)) {
-        return PR_FALSE;
-    }
-
-    // XXXhyatt Use the XBL service to obtain a base tag.
-
-    nsIAtom *tag = aElement->Tag();
-
-    return (tag == nsGkAtoms::menu ||
-            tag == nsGkAtoms::menulist ||
-            tag == nsGkAtoms::menubutton ||
-            tag == nsGkAtoms::toolbarbutton ||
-            tag == nsGkAtoms::button ||
-            tag == nsGkAtoms::treeitem);
 }
 
 nsresult
@@ -1691,20 +1469,12 @@ nsXULContentBuilder::CreateContents(nsIContent* aElement, PRBool aForceCreation)
     if (! aElement)
         return NS_ERROR_NULL_POINTER;
 
-    nsCOMPtr<nsIContent> container;
-    PRInt32 newIndex;
-    nsresult rv = CreateTemplateAndContainerContents(aElement, aForceCreation,
-                                                     getter_AddRefs(container), &newIndex);
-    NS_ENSURE_SUCCESS(rv, rv);
+    // don't build contents for closed elements. aForceCreation will be true
+    // when a menu is about to be opened, so the content should be built anyway.
+    if (!aForceCreation && !IsOpen(aElement))
+        return NS_OK;
 
-    // if forcing an element to be created, make sure to notify
-    if (aForceCreation && container) {
-        MOZ_AUTO_DOC_UPDATE(container->GetCurrentDoc(), UPDATE_CONTENT_MODEL,
-                            PR_TRUE);
-        nsNodeUtils::ContentAppended(container, newIndex);
-    }
-
-    return NS_OK;
+    return CreateTemplateAndContainerContents(aElement, aForceCreation);
 }
 
 NS_IMETHODIMP
@@ -1871,12 +1641,9 @@ nsXULContentBuilder::GetInsertionLocations(nsIXULTemplateResult* aResult,
             // yet. If not, we don't need to build any content. This
             // happens, for example, if we receive an assertion on a
             // closed folder in a tree widget or on a menu that hasn't
-            // yet been dropped.
+            // yet been opened.
             nsXULElement *xulcontent = nsXULElement::FromContent(content);
-            if (!xulcontent ||
-                xulcontent->GetLazyState(nsXULElement::eContainerContentsBuilt)) {
-                // non-XUL content is never built lazily, nor is content that's
-                // already been built
+            if (!xulcontent || xulcontent->GetTemplateGenerated()) {
                 found = PR_TRUE;
                 continue;
             }
@@ -1990,15 +1757,7 @@ nsXULContentBuilder::SynchronizeResult(nsIXULTemplateResult* aResult)
 nsresult
 nsXULContentBuilder::OpenContainer(nsIContent* aElement)
 {
-    // Get the result for this element if there is one. If it has no result,
-    // there's nothing that we need to be concerned about here.
-    nsCOMPtr<nsIXULTemplateResult> result;
-    if (aElement == mRoot) {
-        result = mRootResult;
-        if (!result)
-            return NS_OK;
-    }
-    else {
+    if (aElement != mRoot) {
         if (mFlags & eDontRecurse)
             return NS_OK;
 
@@ -2024,37 +1783,9 @@ nsXULContentBuilder::OpenContainer(nsIContent* aElement)
 
         if (! rightBuilder)
             return NS_OK;
-
-        nsTemplateMatch* match;
-        if (mContentSupportMap.Get(aElement, &match))
-            result = match->mResult;
-
-        if (!result)
-            return NS_OK;
-
-        // don't open containers if child processing isn't allowed
-        PRBool mayProcessChildren;
-        nsresult rv = result->GetMayProcessChildren(&mayProcessChildren);
-        if (NS_FAILED(rv) || !mayProcessChildren)
-            return rv;
     }
 
-    // The element has a result so build its contents.
-    // Create the container's contents "quietly" (i.e., |aNotify ==
-    // PR_FALSE|), and then use the |container| and |newIndex| to
-    // notify layout where content got created.
-    nsCOMPtr<nsIContent> container;
-    PRInt32 newIndex;
-    CreateContainerContents(aElement, result, PR_FALSE,
-                            PR_FALSE, getter_AddRefs(container), &newIndex);
-
-    if (container && IsLazyWidgetItem(aElement)) {
-        // The tree widget is special, and has to be spanked every
-        // time we add content to a container.
-        MOZ_AUTO_DOC_UPDATE(container->GetCurrentDoc(), UPDATE_CONTENT_MODEL,
-                            PR_TRUE);
-        nsNodeUtils::ContentAppended(container, newIndex);
-    }
+    CreateTemplateAndContainerContents(aElement, PR_FALSE);
 
     return NS_OK;
 }
@@ -2070,35 +1801,13 @@ nsXULContentBuilder::RebuildAll()
 {
     NS_ENSURE_TRUE(mRoot, NS_ERROR_NOT_INITIALIZED);
 
-    nsCOMPtr<nsIDocument> doc = mRoot->GetDocument();
-
     // Bail out early if we are being torn down.
+    nsCOMPtr<nsIDocument> doc = mRoot->GetDocument();
     if (!doc)
         return NS_OK;
 
-    // See if it's a XUL element whose contents have never even
-    // been generated. If so, short-circuit and bail; there's nothing
-    // for us to "rebuild" yet. They'll get built correctly the next
-    // time somebody asks for them.
-    nsXULElement *xulcontent = nsXULElement::FromContent(mRoot);
-
-/*
-    // XXXndeakin not sure if commenting this out is a good thing or not.
-    // Leaving it in causes templates where the ref is set dynamically to
-    // not work due to the order in which these state bits are set.
-
-    if (xulcontent &&
-        !xulcontent->GetLazyState(nsXULElement::eContainerContentsBuilt))
-        return NS_OK;
-*/
-
     if (mQueriesCompiled)
         Uninit(PR_FALSE);
-
-    // clear rebuild flag while processing the queries, or a recursive call to
-    // build children may occur.
-    if (xulcontent)
-        xulcontent->ClearLazyState(nsXULElement::eChildrenMustBeRebuilt);
 
     nsresult rv = CompileQueries();
     if (NS_FAILED(rv))
@@ -2107,25 +1816,13 @@ nsXULContentBuilder::RebuildAll()
     if (mQuerySets.Length() == 0)
         return NS_OK;
 
-    // Forces the XUL element to remember that it needs to
-    // re-generate its children next time around.
-    if (xulcontent) {
-        xulcontent->SetLazyState(nsXULElement::eChildrenMustBeRebuilt);
-        xulcontent->ClearLazyState(nsXULElement::eTemplateContentsBuilt);
-        xulcontent->ClearLazyState(nsXULElement::eContainerContentsBuilt);
-    }
+    nsXULElement *xulcontent = nsXULElement::FromContent(mRoot);
+    if (xulcontent)
+        xulcontent->ClearTemplateGenerated();
 
     // Now, regenerate both the template- and container-generated
     // contents for the current element...
-    nsCOMPtr<nsIContent> container;
-    PRInt32 newIndex;
-    CreateTemplateAndContainerContents(mRoot, PR_FALSE, getter_AddRefs(container), &newIndex);
-
-    if (container) {
-        MOZ_AUTO_DOC_UPDATE(container->GetCurrentDoc(), UPDATE_CONTENT_MODEL,
-                            PR_TRUE);
-        nsNodeUtils::ContentAppended(container, newIndex);
-    }
+    CreateTemplateAndContainerContents(mRoot, PR_FALSE);
 
     return NS_OK;
 }

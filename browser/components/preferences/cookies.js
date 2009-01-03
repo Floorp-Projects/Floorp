@@ -59,20 +59,7 @@ var gCookiesWindow = {
     this._bundle = document.getElementById("bundlePreferences");
     this._tree = document.getElementById("cookiesList");
     
-    this._loadCookies();
-    this._tree.treeBoxObject.view = this._view;
-    this.sort("rawHost");
-    if (this._view.rowCount > 0) 
-      this._tree.view.selection.select(0);
-
-    if ("arguments" in window && window.arguments[0] &&
-        window.arguments[0].filterString)
-    {
-      document.getElementById("filter").value = window.arguments[0].filterString;
-      this.filter();
-    }
-
-    this._saveState();
+    this._populateList(true);
       
     document.getElementById("filter").focus();
   },
@@ -83,6 +70,31 @@ var gCookiesWindow = {
                        .getService(Components.interfaces.nsIObserverService);
     os.removeObserver(this, "cookie-changed");
     os.removeObserver(this, "perm-changed");
+  },
+  
+  _populateList: function (aInitialLoad)
+  {
+    this._loadCookies();
+    this._tree.treeBoxObject.view = this._view;
+    if (aInitialLoad)
+      this.sort("rawHost");
+    if (this._view.rowCount > 0) 
+      this._tree.view.selection.select(0);
+
+    if (aInitialLoad) {
+      if ("arguments" in window && window.arguments[0] &&
+          window.arguments[0].filterString)
+      {
+        document.getElementById("filter").value = window.arguments[0].filterString;
+        this.filter();
+      }
+    }
+    else {
+      if (document.getElementById("filter").value != "")
+        this.filter();
+    }
+
+    this._saveState();
   },
   
   _cookieEquals: function (aCookieA, aCookieB, aStrippedHost)
@@ -112,6 +124,13 @@ var gCookiesWindow = {
       this._view._rowCount = 0;
       this._tree.treeBoxObject.rowCountChanged(0, -oldRowCount);
       this._view.selection.clearSelection();
+    }
+    else if (aData == "reload") {
+      // first, clear any existing entries
+      this.observe(aCookie, aTopic, "cleared");
+
+      // then, reload the list
+      this._populateList(false);
     }
     
     // We don't yet handle aData == "deleted" - it's a less common case

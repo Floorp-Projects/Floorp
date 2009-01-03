@@ -1,0 +1,57 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+  <title>Media test: seek test 8</title>
+  <script type="text/javascript" src="/MochiKit/MochiKit.js"></script>
+  <script type="text/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
+</head>
+<body>
+<video id='v'
+       src='seek.ogg'
+       onloadedmetadata='return startTest();'></video>
+<pre id="test">
+<script class="testbody" type="text/javascript">
+// If a NaN is passed to currentTime, make sure this is caught
+// otherwise an infinite loop in the Ogg backend occurs.
+var v = document.getElementById('v');
+var completed = false;
+var thrown1 = false;
+var thrown2 = false;
+var thrown3 = false;
+
+function startTest() {
+  if (completed)
+    return false;
+
+  try {
+    v.currentTime = NaN;
+  } catch(e) {
+    thrown1 = true;
+  }
+
+  try {
+    v.currentTime = -1;
+  } catch(e) {
+    thrown2 = true;
+  }
+
+  try {
+    v.currentTime = Math.random;
+  } catch(e) {
+    thrown3 = true;
+  }
+
+  completed = true;
+  ok(thrown1, "Setting currentTime to invalid value of NaN");
+  ok(thrown2, "Setting currentTime to invalid value of -1");
+  ok(thrown2, "Setting currentTime to invalid value of a function");
+  SimpleTest.finish();
+  return false;
+}
+
+SimpleTest.waitForExplicitFinish();
+</script>
+</pre>
+</body>
+</html>

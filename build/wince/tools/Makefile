@@ -42,7 +42,7 @@ CC=cl -O2
 MOZCE_DEVENV=vs$(MOZ_MSVCVERSION)
 
 MOZCE_SHUNT_SLN=../shunt/build/$(MOZCE_DEVENV)/mozce_shunt_static.sln
-MOZCE_PROJECT="Release|Windows Mobile 6 Standard SDK (ARMV4I)"
+MOZCE_PROJECT="Release|Windows Mobile 6 Professional SDK (ARMV4I)"
 MOZCE_SHUNT_DLL=../shunt/build/$(MOZCE_DEVENV)/mozce_shunt.dll
 MOZCE_TOOLS_DIR=$(MOZCE_DEVENV)ppc2003arm
 
@@ -72,27 +72,27 @@ output_some_env:
 	@echo FOUND $(MOZCE_DEVENV): VSINSTALLDIR=$(VSINSTALLDIR) / MINGW32=$(MINGW32) / MSYSTEM=$(MSYSTEM)
 	@echo FOUND $(MOZCE_DEVENV)
 
-$(MOZCE_TOOLS_DIR)/arm-wince-as.exe:	$(MOZCE_TOOLS_DIR)/arm-wince-as.c
+$(MOZCE_TOOLS_DIR)/arm-wince-as.exe:	$(MOZCE_TOOLS_DIR)/arm-wince-as.c $(MOZCE_TOOLS_DIR)/toolspath.h
 	$(CC) $(MOZCE_TOOLS_DIR)/arm-wince-as.c
 	mkdir -p bin;
 	cp arm-wince-as.exe bin; mv arm-wince-as.exe $(MOZCE_TOOLS_DIR); rm *.obj
 
-$(MOZCE_TOOLS_DIR)/arm-wince-gcc.exe:	$(MOZCE_TOOLS_DIR)/arm-wince-gcc.c
+$(MOZCE_TOOLS_DIR)/arm-wince-gcc.exe:	$(MOZCE_TOOLS_DIR)/arm-wince-gcc.c $(MOZCE_TOOLS_DIR)/toolspath.h
 	$(CC) $(MOZCE_TOOLS_DIR)/arm-wince-gcc.c
 	mkdir -p bin;
 	cp arm-wince-gcc.exe bin; mv arm-wince-gcc.exe $(MOZCE_TOOLS_DIR); rm *.obj
 
-$(MOZCE_TOOLS_DIR)/arm-wince-lib.exe:	$(MOZCE_TOOLS_DIR)/arm-wince-lib.c
+$(MOZCE_TOOLS_DIR)/arm-wince-lib.exe:	$(MOZCE_TOOLS_DIR)/arm-wince-lib.c $(MOZCE_TOOLS_DIR)/toolspath.h
 	$(CC) $(MOZCE_TOOLS_DIR)/arm-wince-lib.c
 	mkdir -p bin;
 	cp arm-wince-lib.exe bin; mv arm-wince-lib.exe $(MOZCE_TOOLS_DIR); rm *.obj
 
-$(MOZCE_TOOLS_DIR)/arm-wince-link.exe:	$(MOZCE_TOOLS_DIR)/arm-wince-link.c
+$(MOZCE_TOOLS_DIR)/arm-wince-link.exe:	$(MOZCE_TOOLS_DIR)/arm-wince-link.c $(MOZCE_TOOLS_DIR)/toolspath.h
 	$(CC) $(MOZCE_TOOLS_DIR)/arm-wince-link.c
 	mkdir -p bin;
 	cp arm-wince-link.exe bin; mv arm-wince-link.exe $(MOZCE_TOOLS_DIR); rm *.obj
 
-$(MOZCE_TOOLS_DIR)/arm-wince-res.exe:	$(MOZCE_TOOLS_DIR)/arm-wince-res.c
+$(MOZCE_TOOLS_DIR)/arm-wince-res.exe:	$(MOZCE_TOOLS_DIR)/arm-wince-res.c $(MOZCE_TOOLS_DIR)/toolspath.h
 	$(CC) $(MOZCE_TOOLS_DIR)/arm-wince-res.c
 	mkdir -p bin;
 	cp arm-wince-res.exe bin; mv arm-wince-res.exe $(MOZCE_TOOLS_DIR); rm *.obj

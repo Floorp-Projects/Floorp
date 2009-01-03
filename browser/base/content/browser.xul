@@ -30,6 +30,7 @@
 #   Dean Tessman <dean_tessman@hotmail.com>
 #   Johnathan Nightingale <johnath@mozilla.com>
 #   Dão Gottwald <dao@mozilla.com>
+#   Ehsan Akhgari <ehsan.akhgari@gmail.com>
 #
 # Alternatively, the contents of this file may be used under the terms of
 # either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -65,12 +66,24 @@
         xmlns:svg="http://www.w3.org/2000/svg"
         xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
         onload="BrowserStartup()" onunload="BrowserShutdown()" onclose="return WindowIsClosing();"
-        contenttitlesetting="true"
         title="&mainWindow.title;"
-        titlemodifier="&mainWindow.title;"
+        title_normal="&mainWindow.title;"
+#ifdef XP_MACOSX
+        title_privatebrowsing="&mainWindow.title;&mainWindow.titlemodifiermenuseparator;&mainWindow.titlePrivateBrowsingSuffix;"
+        titledefault="&mainWindow.title;"
+        titlemodifier=""
+        titlemodifier_normal=""
+        titlemodifier_privatebrowsing="&mainWindow.titlePrivateBrowsingSuffix;"
+#else
+        title_privatebrowsing="&mainWindow.titlemodifierPrivateBrowsing;"
+        titlemodifier="&mainWindow.titlemodifier;"
+        titlemodifier_normal="&mainWindow.titlemodifier;"
+        titlemodifier_privatebrowsing="&mainWindow.titlemodifierPrivateBrowsing;"
+#endif
         titlemenuseparator="&mainWindow.titlemodifiermenuseparator;"
         windowtype="navigator:browser"
         screenX="4" screenY="4"
+        browsingmode="normal"
         persist="screenX screenY width height sizemode"> 
 
 # All JS files which are not content (only) dependent that browser.xul
@@ -123,7 +136,6 @@
                     accesskey="&editBookmark.undo.accessKey;"/>
             <button id="editBookmarkPanelRemoveButton"
                     oncommand="StarUI.removeBookmarkButtonCommand();"
-                    label="&editBookmark.removeBookmark.label;"
                     accesskey="&editBookmark.removeBookmark.accessKey;"/>
             <button id="editBookmarkPanelEditButton"
                     oncommand="StarUI.editButtonCommand();"
@@ -227,35 +239,33 @@
     </panel>
 
     <tooltip id="urlTooltip">
-      <label crop="center" flex="1"/>
+      <label crop="center" flex="1" class="tooltip-label"/>
     </tooltip>
 
-    <panel id="ctrlTab-panel" class="KUI-panel" hidden="true" noautofocus="true" level="top"
-#ifdef XP_WIN
-# XXX bug 457997
-      noautohide="true"
-#endif
-    >
-      <label id="ctrlTab-label" flex="1"/>
-      <svg:svg id="ctrlTab-svgRoot">
-        <svg:defs>
-          <svg:linearGradient id="ctrlTab-fadeGradient" x1="1" y1="1" x2="1" y2="0">
-            <svg:stop id="ctrlTab-fadeGradientBottom" offset="0"/>
-            <svg:stop id="ctrlTab-fadeGradientTop" offset="1"/>
-          </svg:linearGradient>
-          <svg:filter id="ctrlTab-iconShadow">
-            <svg:feOffset result="shadow" in="SourceAlpha" dx="2" dy="-1"/>
-            <svg:feColorMatrix result="transparent-shadow" in="shadow"
-                               values="1 0 0 0   0
-                                       0 1 0 0   0
-                                       0 0 1 0   0
-                                       0 0 0 0.5 0"/>
-            <svg:feBlend in="SourceGraphic" in2="transparent-shadow"/>
-          </svg:filter>
-        </svg:defs>
-        <svg:g id="ctrlTab-container"/>
-        <svg:rect id="ctrlTab-groundFade" fill="url(#ctrlTab-fadeGradient)" width="100%"/>
-      </svg:svg>
+    <panel id="ctrlTab-panel" class="KUI-panel" hidden="true" norestorefocus="true" ignorekeys="true">
+      <hbox pack="center">
+        <textbox id="ctrlTab-search"
+                 type="search"
+                 emptytext="&ctrlTab.search.emptyText;"
+                 oncommand="ctrlTab.search();"
+                 onfocus="ctrlTab.sticky = true;"/>
+      </hbox>
+      <hbox class="ctrlTab-row">
+        <hbox flex="1" pack="center"><vbox class="ctrlTab-thumbnail"/></hbox>
+        <vbox class="ctrlTab-thumbnail"/>
+        <hbox flex="1" pack="center"><vbox class="ctrlTab-thumbnail"/></hbox>
+      </hbox>
+      <hbox class="ctrlTab-row">
+        <hbox flex="1" pack="center"><vbox class="ctrlTab-thumbnail"/></hbox>
+        <vbox class="ctrlTab-thumbnail"/>
+        <hbox flex="1" pack="center"><vbox class="ctrlTab-thumbnail"/></hbox>
+      </hbox>
+      <hbox class="ctrlTab-row">
+        <hbox flex="1" pack="center"><vbox class="ctrlTab-thumbnail"/></hbox>
+        <vbox class="ctrlTab-thumbnail"/>
+        <hbox flex="1" pack="center"><vbox class="ctrlTab-thumbnail"/></hbox>
+      </hbox>
+      <hbox id="ctrlTab-pages"/>
     </panel>
   </popupset>
 
@@ -269,14 +279,13 @@
   </tooltip>
 
   <toolbox id="navigator-toolbox" class="toolbox-top" mode="icons"
+           ondragover="gBrowser._onDragOver(event);"
+           ondrop="gBrowser._onDrop(event);"
+           ondragleave="gBrowser._onDragLeave(event);"
            defaultmode="icons">
     <!-- Menu -->
     <toolbar type="menubar" id="toolbar-menubar" class="chromeclass-menubar" customizable="true"
-#ifdef XP_MACOSX
              defaultset="menubar-items"
-#else
-             defaultset="menubar-items,spring,throbber-box"
-#endif
              mode="icons" iconsize="small" defaulticonsize="small"
              context="toolbar-context-menu">
       <toolbaritem id="menubar-items" align="center">
@@ -342,6 +351,7 @@
       <toolbaritem id="urlbar-container" align="center" flex="400" persist="width"
                    title="&locationItem.title;" class="chromeclass-location">
         <textbox id="urlbar" flex="1"
+                 delayedemptytext="&urlbar.emptyText;"
                  chromedir="&locale.dir;"
                  type="autocomplete"
                  autocompletesearch="history"
@@ -416,8 +426,9 @@
                      label="&printButton.label;" command="cmd_print"
                      tooltiptext="&printButton.tooltip;"/>
 
-      <toolbaritem id="throbber-box" title="&throbberItem.title;" align="center" pack="center">
-        <button id="navigator-throbber" disabled="true"/>
+      <toolbaritem id="navigator-throbber" title="&throbberItem.title;" align="center" pack="center"
+                   mousethrough="always">
+        <image/>
       </toolbaritem>
 
       <toolbaritem flex="1" id="personal-bookmarks" title="&bookmarksItem.title;">
@@ -481,7 +492,7 @@
              fullscreentoolbar="true" mode="icons" iconsize="large"
              customizable="true"
 #ifdef XP_MACOSX
-             defaultset="unified-back-forward-button,reload-button,stop-button,home-button,urlbar-container,search-container,throbber-box"
+             defaultset="unified-back-forward-button,reload-button,stop-button,home-button,urlbar-container,search-container"
 #else
              defaultset="unified-back-forward-button,reload-button,stop-button,home-button,urlbar-container,search-container,fullscreenflex,window-controls"
 #endif
@@ -533,7 +544,7 @@
                   contentcontextmenu="contentAreaContextMenu"
                   onnewtab="BrowserOpenTab();"
                   autocompletepopup="PopupAutoComplete"
-                  ondragdrop="nsDragAndDrop.drop(event, contentAreaDNDObserver);"
+                  ondrop="nsDragAndDrop.drop(event, contentAreaDNDObserver);"
                   onclick="return contentAreaClick(event, false);"/>
     </vbox>
   </hbox>
@@ -549,7 +560,7 @@
     <findbar browserid="content" id="FindToolbar"/>
   
     <statusbar class="chromeclass-status" id="status-bar"
-               ondragdrop="nsDragAndDrop.drop(event, contentAreaDNDObserver);">
+               ondrop="nsDragAndDrop.drop(event, contentAreaDNDObserver);">
       <statusbarpanel id="statusbar-display" label="" flex="1"/>
       <statusbarpanel class="statusbarpanel-progress" collapsed="true" id="statusbar-progresspanel">
         <progressmeter class="progressmeter-statusbar" id="statusbar-icon" mode="normal" value="0"/>

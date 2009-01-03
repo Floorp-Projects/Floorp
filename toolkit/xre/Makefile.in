@@ -107,7 +107,6 @@ CPPSRCS = \
 	nsXREDirProvider.cpp \
 	nsNativeAppSupportBase.cpp \
 	nsAppData.cpp \
-	showOSAlert.cpp \
 	$(NULL)
 
 DEFINES += -DIMPL_XREAPI
@@ -175,6 +174,7 @@ SHARED_LIBRARY_LIBS += $(DEPTH)/toolkit/crashreporter/$(LIB_PREFIX)exception_han
 ifeq ($(OS_ARCH),WINNT)
 SHARED_LIBRARY_LIBS += \
 	$(DEPTH)/toolkit/crashreporter/google-breakpad/src/client/windows/handler/$(LIB_PREFIX)exception_handler_s.$(LIB_SUFFIX) \
+	$(DEPTH)/toolkit/crashreporter/google-breakpad/src/client/windows/crash_generation/$(LIB_PREFIX)crash_generation_s.$(LIB_SUFFIX) \
 	$(DEPTH)/toolkit/crashreporter/google-breakpad/src/common/windows/$(LIB_PREFIX)breakpad_windows_common_s.$(LIB_SUFFIX)
 endif
 
@@ -203,6 +203,10 @@ SHARED_LIBRARY_LIBS += \
   $(DEPTH)/toolkit/crashreporter/google-breakpad/src/common/solaris/$(LIB_PREFIX)breakpad_solaris_common_s.$(LIB_SUFFIX) \
   $(NULL)
 endif
+endif
+
+ifdef ENABLE_TESTS
+DIRS += test
 endif
 
 include $(topsrcdir)/config/rules.mk

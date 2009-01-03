@@ -49,9 +49,11 @@
 #include "jsapi.h"
 #include "jsarray.h"
 #include "jsatom.h"
+#include "jsbuiltins.h"
 #include "jscntxt.h"
 #include "jsversion.h"
 #include "jsdbgapi.h"
+#include "jsemit.h"
 #include "jsfun.h"
 #include "jsgc.h"
 #include "jsinterp.h"
@@ -1003,7 +1005,8 @@ fun_getProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
     }
 
     /* Find fun's top-most activation record. */
-    for (fp = cx->fp; fp && (fp->fun != fun || (fp->flags & JSFRAME_SPECIAL));
+    for (fp = js_GetTopStackFrame(cx);
+         fp && (fp->fun != fun || (fp->flags & JSFRAME_SPECIAL));
          fp = fp->down) {
         continue;
     }
@@ -1584,10 +1587,8 @@ fun_toSource(JSContext *cx, uintN argc, jsval *vp)
 }
 #endif
 
-static const char call_str[] = "call";
-
-static JSBool
-fun_call(JSContext *cx, uintN argc, jsval *vp)
+JSBool
+js_fun_call(JSContext *cx, uintN argc, jsval *vp)
 {
     JSObject *obj;
     jsval fval, *argv, *invokevp;
@@ -1608,7 +1609,7 @@ fun_call(JSContext *cx, uintN argc, jsval *vp)
             if (bytes) {
                 JS_ReportErrorNumber(cx, js_GetErrorMessage, NULL,
                                      JSMSG_INCOMPATIBLE_PROTO,
-                                     js_Function_str, call_str,
+                                     js_Function_str, js_call_str,
                                      bytes);
             }
         }
@@ -1658,7 +1659,7 @@ js_fun_apply(JSContext *cx, uintN argc, jsval *vp)
 
     if (argc == 0) {
         /* Will get globalObject as 'this' and no other arguments. */
-        return fun_call(cx, argc, vp);
+        return js_fun_call(cx, argc, vp);
     }
 
     obj = JS_THIS_OBJECT(cx, vp);
@@ -1674,7 +1675,7 @@ js_fun_apply(JSContext *cx, uintN argc, jsval *vp)
             if (bytes) {
                 JS_ReportErrorNumber(cx, js_GetErrorMessage, NULL,
                                      JSMSG_INCOMPATIBLE_PROTO,
-                                     js_Function_str, "apply",
+                                     js_Function_str, js_apply_str,
                                      bytes);
             }
         }
@@ -1699,7 +1700,7 @@ js_fun_apply(JSContext *cx, uintN argc, jsval *vp)
             }
             if (!arraylike) {
                 JS_ReportErrorNumber(cx, js_GetErrorMessage, NULL,
-                                     JSMSG_BAD_APPLY_ARGS, "apply");
+                                     JSMSG_BAD_APPLY_ARGS, js_apply_str);
                 return JS_FALSE;
             }
         }
@@ -1786,10 +1787,10 @@ static JSFunctionSpec function_methods[] = {
     JS_FN(js_toSource_str,   fun_toSource,   0,0),
 #endif
     JS_FN(js_toString_str,   fun_toString,   0,0),
-    JS_FN("apply",           js_fun_apply,   2,0),
-    JS_FN(call_str,          fun_call,       1,0),
+    JS_FN(js_apply_str,      js_fun_apply,   2,0),
+    JS_FN(js_call_str,       js_fun_call,    1,0),
 #ifdef NARCISSUS
-    JS_FN("__applyConstructor__", fun_applyConstructor, 0,1,0),
+    JS_FN("__applyConstructor__", fun_applyConstructor, 1,0),
 #endif
     JS_FS_END
 };
@@ -1797,9 +1798,9 @@ static JSFunctionSpec function_methods[] = {
 static JSBool
 Function(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
 {
-    JSStackFrame *fp, *caller;
     JSFunction *fun;
     JSObject *parent;
+    JSStackFrame *fp, *caller;
     uintN i, n, lineno;
     JSAtom *atom;
     const char *filename;
@@ -1812,8 +1813,7 @@ Function(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
     size_t arg_length, args_length, old_args_length;
     JSTokenType tt;
 
-    fp = cx->fp;
-    if (!(fp->flags & JSFRAME_CONSTRUCTING)) {
+    if (!JS_IsConstructing(cx)) {
         obj = js_NewObject(cx, &js_FunctionClass, NULL, NULL, 0);
         if (!obj)
             return JS_FALSE;
@@ -1852,8 +1852,9 @@ Function(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
      * are built for Function.prototype.call or .apply activations that invoke
      * Function indirectly from a script.
      */
+    fp = js_GetTopStackFrame(cx);
     JS_ASSERT(!fp->script && fp->fun && fp->fun->u.n.native == Function);
-    caller = JS_GetScriptedCaller(cx, fp);
+    caller = js_GetScriptedCaller(cx, fp);
     if (caller) {
         principals = JS_EvalFramePrincipals(cx, fp, caller);
         filename = js_ComputeFilename(cx, caller, principals, &lineno);
@@ -2038,10 +2039,11 @@ js_InitFunctionClass(JSContext *cx, JSObject *obj)
     fun = js_NewFunction(cx, proto, NULL, 0, JSFUN_INTERPRETED, obj, NULL);
     if (!fun)
         goto bad;
-    fun->u.i.script = js_NewScript(cx, 1, 0, 0, 0, 0, 0, 0);
+    fun->u.i.script = js_NewScript(cx, 1, 1, 0, 0, 0, 0, 0);
     if (!fun->u.i.script)
         goto bad;
     fun->u.i.script->code[0] = JSOP_STOP;
+    *SCRIPT_NOTES(fun->u.i.script) = SRC_NULL;
 #ifdef CHECK_SCRIPT_OWNER
     fun->u.i.script->owner = NULL;
 #endif
@@ -2089,7 +2091,7 @@ js_NewFunction(JSContext *cx, JSObject *funobj, JSNative native, uintN nargs,
 
     /* Initialize all function members. */
     fun->nargs = nargs;
-    fun->flags = flags & (JSFUN_FLAGS_MASK | JSFUN_INTERPRETED);
+    fun->flags = flags & (JSFUN_FLAGS_MASK | JSFUN_INTERPRETED | JSFUN_TRACEABLE);
     if (flags & JSFUN_INTERPRETED) {
         JS_ASSERT(!native);
         JS_ASSERT(nargs == 0);
@@ -2100,10 +2102,20 @@ js_NewFunction(JSContext *cx, JSObject *funobj, JSNative native, uintN nargs,
         fun->u.i.names.taggedAtom = 0;
 #endif
     } else {
-        fun->u.n.native = native;
         fun->u.n.extra = 0;
         fun->u.n.spare = 0;
-        fun->u.n.clasp = NULL;
+        if (flags & JSFUN_TRACEABLE) {
+#ifdef JS_TRACER
+            JSTraceableNative *trcinfo = (JSTraceableNative *) native;
+            fun->u.n.native = (JSNative) trcinfo->native;
+            FUN_TRCINFO(fun) = trcinfo;
+#else
+            JS_ASSERT(0);
+#endif
+        } else {
+            fun->u.n.native = native;
+            FUN_CLASP(fun) = NULL;
+        }
     }
     fun->atom = atom;
 
@@ -2191,7 +2203,7 @@ js_ValueToFunctionObject(JSContext *cx, jsval *vp, uintN flags)
         return NULL;
     *vp = OBJECT_TO_JSVAL(FUN_OBJECT(fun));
 
-    caller = JS_GetScriptedCaller(cx, cx->fp);
+    caller = js_GetScriptedCaller(cx, NULL);
     if (caller) {
         principals = JS_StackFramePrincipals(cx, caller);
     } else {
@@ -2233,7 +2245,7 @@ js_ReportIsNotFunction(JSContext *cx, jsval *vp, uintN flags)
     const char *name, *source;
     JSTempValueRooter tvr;
 
-    for (fp = cx->fp; fp && !fp->regs; fp = fp->down)
+    for (fp = js_GetTopStackFrame(cx); fp && !fp->regs; fp = fp->down)
         continue;
     name = source = NULL;
     JS_PUSH_TEMP_ROOT_STRING(cx, NULL, &tvr);

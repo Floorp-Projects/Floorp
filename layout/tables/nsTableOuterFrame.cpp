@@ -1047,21 +1047,6 @@ nsTableOuterFrame::GetInnerOrigin(PRUint32         aCaptionSide,
   return NS_OK;
 }
 
-// helper method for determining if this is a nested table or not
-PRBool 
-nsTableOuterFrame::IsNested(const nsHTMLReflowState& aReflowState) const
-{
-  // Walk up the reflow state chain until we find a cell or the root
-  const nsHTMLReflowState* rs = aReflowState.parentReflowState;
-  while (rs) {
-    if (nsGkAtoms::tableFrame == rs->frame->GetType()) {
-      return PR_TRUE;
-    }
-    rs = rs->parentReflowState;
-  }
-  return PR_FALSE;
-}
-
 void
 nsTableOuterFrame::OuterBeginReflowChild(nsPresContext*           aPresContext,
                                          nsIFrame*                aChildFrame,

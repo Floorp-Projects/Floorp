@@ -49,8 +49,6 @@ IS_COMPONENT	= 1
 MODULE_NAME	= nsMorkModule
 LIBXUL_LIBRARY = 1
 
-PACKAGE_FILE = mork.pkg
-
 REQUIRES	= xpcom \
 		  $(NULL)
 

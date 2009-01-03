@@ -537,6 +537,7 @@ class InterfaceAttributes(object):
     scriptable = False
     function = False
     deprecated = False
+    noscript = False
 
     def setuuid(self, value):
         self.uuid = value.lower()
@@ -617,10 +618,15 @@ class ConstMember(object):
     def getValue(self):
         return self.value(self.iface)
 
+    def __str__(self):
+        return "\tconst %s %s = %s\n" % (self.type, self.name, self.getValue())
+
 class Attribute(object):
     kind = 'attribute'
     noscript = False
     notxpcom = False
+    readonly = False
+    binaryname = None
 
     def __init__(self, type, name, attlist, readonly, location, doccomments):
         self.type = type
@@ -628,7 +634,6 @@ class Attribute(object):
         self.attlist = attlist
         self.readonly = readonly
         self.location = location
-        self.binaryname = None
         self.doccomments = doccomments
 
         for name, value, aloc in attlist:
@@ -1125,7 +1130,7 @@ class IDLParser(object):
                          name=p[5],
                          attlist=p[1]['attlist'],
                          readonly=p[2] is not None,
-                         location=self.getLocation(p, 1),
+                         location=self.getLocation(p, 3),
                          doccomments=doccomments)
 
     def p_member_method(self, p):
@@ -1139,7 +1144,7 @@ class IDLParser(object):
                       name=p[3],
                       attlist=p[1]['attlist'],
                       paramlist=p[5],
-                      location=self.getLocation(p, 1),
+                      location=self.getLocation(p, 3),
                       doccomments=doccomments,
                       raises=p[7])
 

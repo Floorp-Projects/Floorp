@@ -519,7 +519,7 @@ js_EqualStrings(JSString *str1, JSString *str2);
  * Return less than, equal to, or greater than zero depending on whether
  * str1 is less than, equal to, or greater than str2.
  */
-extern jsint JS_FASTCALL
+extern int32 JS_FASTCALL
 js_CompareStrings(JSString *str1, JSString *str2);
 
 /*
@@ -618,26 +618,8 @@ js_str_escape(JSContext *cx, JSObject *obj, uintN argc, jsval *argv,
               jsval *rval);
 
 extern JSBool
-js_StringMatchHelper(JSContext *cx, uintN argc, jsval *vp, jsbytecode *pc);
-
-extern JSBool
-js_str_match(JSContext *cx, uintN argc, jsval *vp);
-
-extern JSBool
-js_str_replace(JSContext *cx, uintN argc, jsval *vp);
-
-extern JSBool
 js_StringReplaceHelper(JSContext *cx, uintN argc, JSObject *lambda,
                        JSString *repstr, jsval *vp);
-
-extern JSBool
-js_str_split(JSContext *cx, uintN argc, jsval *vp);
-
-extern JSBool
-js_str_toLowerCase(JSContext *cx, uintN argc, jsval *vp);
-
-extern JSBool
-js_str_toUpperCase(JSContext *cx, uintN argc, jsval *vp);
 
 /*
  * Convert one UCS-4 char and write it into a UTF-8 buffer, which must be at

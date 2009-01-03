@@ -121,33 +121,6 @@ HashNativeKey(JSDHashTable *table, const void *key)
 }
 
 /***************************************************************************/
-// implement JSContext2XPCContextMap...
-
-// static
-JSContext2XPCContextMap*
-JSContext2XPCContextMap::newMap(int size)
-{
-    JSContext2XPCContextMap* map = new JSContext2XPCContextMap(size);
-    if(map && map->mTable)
-        return map;
-    delete map;
-    return nsnull;
-}
-
-
-JSContext2XPCContextMap::JSContext2XPCContextMap(int size)
-{
-    mTable = JS_NewDHashTable(JS_DHashGetStubOps(), nsnull,
-                              sizeof(Entry), size);
-}
-
-JSContext2XPCContextMap::~JSContext2XPCContextMap()
-{
-    if(mTable)
-        JS_DHashTableDestroy(mTable);
-}
-
-/***************************************************************************/
 // implement JSObject2WrappedJSMap...
 
 // static

@@ -298,6 +298,7 @@ function showView(aView) {
                         ["availableUpdateURL", "?availableUpdateURL"],
                         ["availableUpdateVersion", "?availableUpdateVersion"],
                         ["blocklisted", "?blocklisted"],
+                        ["blocklistedsoft", "?blocklistedsoft"],
                         ["compatible", "?compatible"],
                         ["description", "?description"],
                         ["downloadURL", "?downloadURL"],
@@ -329,7 +330,6 @@ function showView(aView) {
   var showCheckUpdatesAll = true;
   var showInstallUpdatesAll = false;
   var showSkip = false;
-  var showContinue = false;
   switch (aView) {
     case "search":
       var bindingList = [ [ ["action", "?action"],
@@ -385,6 +385,7 @@ function showView(aView) {
                         ["availableUpdateVersion", "?availableUpdateVersion"],
                         ["availableUpdateInfo", "?availableUpdateInfo"],
                         ["blocklisted", "?blocklisted"],
+                        ["blocklistedsoft", "?blocklistedsoft"],
                         ["homepageURL", "?homepageURL"],
                         ["iconURL", "?iconURL"],
                         ["internalName", "?internalName"],
@@ -406,13 +407,12 @@ function showView(aView) {
       showInstallFile = false;
       showCheckUpdatesAll = false;
       showInstallUpdatesAll = false;
-      if (gUpdatesOnly)
-        showContinue = true;
       bindingList = [ [ ["aboutURL", "?aboutURL"],
                         ["addonID", "?addonID"],
                         ["availableUpdateURL", "?availableUpdateURL"],
                         ["availableUpdateVersion", "?availableUpdateVersion"],
                         ["blocklisted", "?blocklisted"],
+                        ["blocklistedsoft", "?blocklistedsoft"],
                         ["compatible", "?compatible"],
                         ["description", "?description"],
                         ["downloadURL", "?downloadURL"],
@@ -469,7 +469,6 @@ function showView(aView) {
   document.getElementById("checkUpdatesAllButton").hidden = !showCheckUpdatesAll;
   document.getElementById("installUpdatesAllButton").hidden = !showInstallUpdatesAll;
   document.getElementById("skipDialogButton").hidden = !showSkip;
-  document.getElementById("continueDialogButton").hidden = !showContinue;
   document.getElementById("themePreviewArea").hidden = !isThemes;
   document.getElementById("themeSplitter").hidden = !isThemes;
   document.getElementById("showUpdateInfoButton").hidden = aView != "updates";
@@ -487,11 +486,6 @@ function showView(aView) {
     window.setTimeout(function () { button.focus(); }, 0);
   } else
     document.getElementById("installUpdatesAllButton").removeAttribute("default");
-
-  if (showContinue)
-    document.getElementById("continueDialogButton").setAttribute("default", "true");
-  else
-    document.getElementById("continueDialogButton").removeAttribute("default");
 
   if (isThemes)
     onAddonSelect();
@@ -927,6 +921,8 @@ function rebuildPluginsDS()
     gPlugins[name][desc].plugins.push(plugin);
   }
 
+  var blocklist = Components.classes["@mozilla.org/extensions/blocklist;1"]
+                            .getService(Components.interfaces.nsIBlocklistService);
   for (var pluginName in gPlugins) {
     for (var pluginDesc in gPlugins[pluginName]) {
       plugin = gPlugins[pluginName][pluginDesc];
@@ -961,6 +957,12 @@ function rebuildPluginsDS()
       gPluginsDS.Assert(pluginNode,
                         gRDF.GetResource(PREFIX_NS_EM + "blocklisted"),
                         gRDF.GetLiteral(plugin.blocklisted ? "true" : "false"),
+                        true);
+      var softblocked = blocklist.getPluginBlocklistState(plugin) == 
+                        Components.interfaces.nsIBlocklistService.STATE_SOFTBLOCKED;
+      gPluginsDS.Assert(pluginNode,
+                        gRDF.GetResource(PREFIX_NS_EM + "blocklistedsoft"),
+                        gRDF.GetLiteral(softblocked ? "true" : "false"),
                         true);
       gPluginsDS.Assert(pluginNode,
                         gRDF.GetResource(PREFIX_NS_EM + "compatible"),
@@ -1342,8 +1344,12 @@ XPInstallDownloadManager.prototype = {
   {
   },
 
+  _failed: false,
   onInstallEnded: function(aAddon, aStatus)
   {
+    if (aStatus < 0)
+      this._failed = true;
+
     // From nsInstall.h
     // USER_CANCELLED = -210
     // All other xpinstall errors are <= -200
@@ -1371,8 +1377,15 @@ XPInstallDownloadManager.prototype = {
     gInstalling = false;
     gExtensionManager.sortTypeByProperty(nsIUpdateItem.TYPE_ANY, "name", true);
     if (gUpdatesOnly) {
-      setElementDisabledByID("cmd_continue", false);
-      document.getElementById("continueDialogButton").focus();
+      if (this._failed) {
+        let continueButton = document.getElementById("continueDialogButton");
+        setElementDisabledByID("cmd_continue", false);
+        continueButton.hidden = false;
+        continueButton.setAttribute("default", "true");
+        continueButton.focus();
+      } else {
+        setTimeout(closeEM, 2000);
+      }
     }
     else {
       updateOptionalViews();

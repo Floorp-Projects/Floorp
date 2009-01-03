@@ -40,16 +40,10 @@
 #define __NSDOMWORKERXHRPROXIEDFUNCTIONS_H__
 
 #define MAKE_PROXIED_FUNCTION0(_name) \
-  class _name : public nsRunnable \
+  class _name : public SyncEventCapturingRunnable \
   { \
   public: \
-    _name (nsDOMWorkerXHRProxy* aXHR) \
-    : mXHR(aXHR) \
-    { \
-      NS_ASSERTION(aXHR, "Null pointer!"); \
-    } \
-  \
-    NS_IMETHOD Run() \
+    virtual nsresult RunInternal() \
     { \
       nsCOMPtr<nsIXMLHttpRequest> xhr = mXHR->GetXMLHttpRequest(); \
       if (xhr) { \
@@ -57,21 +51,15 @@
       } \
       return NS_OK; \
     } \
-  private: \
-    nsRefPtr<nsDOMWorkerXHRProxy> mXHR; \
   }
 
 #define MAKE_PROXIED_FUNCTION1(_name, _arg1) \
-  class _name : public nsRunnable \
+  class _name : public SyncEventCapturingRunnable \
   { \
   public: \
-     _name (nsDOMWorkerXHRProxy* aXHR, _arg1 aArg1) \
-    : mXHR(aXHR), mArg1(aArg1) \
-    { \
-      NS_ASSERTION(aXHR, "Null pointer!"); \
-    } \
+    _name (_arg1 aArg1) : mArg1(aArg1) { } \
   \
-    NS_IMETHOD Run() \
+    virtual nsresult RunInternal() \
     { \
       nsCOMPtr<nsIXMLHttpRequest> xhr = mXHR->GetXMLHttpRequest(); \
       if (xhr) { \
@@ -80,21 +68,16 @@
       return NS_OK; \
     } \
   private: \
-    nsRefPtr<nsDOMWorkerXHRProxy> mXHR; \
      _arg1 mArg1; \
   }
 
 #define MAKE_PROXIED_FUNCTION2(_name, _arg1, _arg2) \
-  class _name : public nsRunnable \
+  class _name : public SyncEventCapturingRunnable \
   { \
   public: \
-    _name (nsDOMWorkerXHRProxy* aXHR, _arg1 aArg1, _arg2 aArg2) \
-    : mXHR(aXHR), mArg1(aArg1), mArg2(aArg2) \
-    { \
-      NS_ASSERTION(aXHR, "Null pointer!"); \
-    } \
+    _name (_arg1 aArg1, _arg2 aArg2) : mArg1(aArg1), mArg2(aArg2) { } \
   \
-    NS_IMETHOD Run() \
+    virtual nsresult RunInternal() \
     { \
       nsCOMPtr<nsIXMLHttpRequest> xhr = mXHR->GetXMLHttpRequest(); \
       if (xhr) { \
@@ -103,135 +86,80 @@
       return NS_OK; \
     } \
   private: \
-    nsRefPtr<nsDOMWorkerXHRProxy> mXHR; \
     _arg1 mArg1; \
     _arg2 mArg2; \
   }
-
-#define MAKE_PROXIED_FUNCTION3(_name, _arg1, _arg2, _arg3) \
-  class _name : public nsRunnable \
-  { \
-  public: \
-    _name (nsDOMWorkerXHRProxy* aXHR, _arg1 aArg1, _arg2 aArg2, _arg3 aArg3) \
-    : mXHR(aXHR), mArg1(aArg1), mArg2(aArg2), mArg3(aArg3) \
-    { \
-      NS_ASSERTION(aXHR, "Null pointer!"); \
-    } \
-  \
-    NS_IMETHOD Run() \
-    { \
-      nsCOMPtr<nsIXMLHttpRequest> xhr = mXHR->GetXMLHttpRequest(); \
-      if (xhr) { \
-        return xhr-> _name (mArg1, mArg2, mArg3); \
-      } \
-      return NS_OK; \
-    } \
-  private: \
-    nsRefPtr<nsDOMWorkerXHRProxy> mXHR; \
-    _arg1 mArg1; \
-    _arg2 mArg2; \
-    _arg3 mArg3; \
-  }
-
-#define MAKE_PROXIED_FUNCTION4(_name, _arg1, _arg2, _arg3, _arg4) \
-  class _name : public nsRunnable \
-  { \
-  public: \
-    _name (nsDOMWorkerXHRProxy* aXHR, _arg1 aArg1, _arg2 aArg2, _arg3 aArg3, \
-           _arg4 aArg4) \
-    : mXHR(aXHR), mArg1(aArg1), mArg2(aArg2), mArg3(aArg3), mArg4(aArg4) \
-    { \
-      NS_ASSERTION(aXHR, "Null pointer!"); \
-    } \
-  \
-    NS_IMETHOD Run() \
-    { \
-      nsCOMPtr<nsIXMLHttpRequest> xhr = mXHR->GetXMLHttpRequest(); \
-      if (xhr) { \
-        return xhr-> _name (mArg1, mArg2, mArg3, mArg4); \
-      } \
-      return NS_OK; \
-    } \
-  private: \
-    nsRefPtr<nsDOMWorkerXHRProxy> mXHR; \
-    _arg1 mArg1; \
-    _arg2 mArg2; \
-    _arg3 mArg3; \
-    _arg4 mArg4; \
-  }
-
-#define MAKE_PROXIED_FUNCTION5(_name, _arg1, _arg2, _arg3, _arg4, _arg5) \
-  class _name : public nsRunnable \
-  { \
-  public: \
-    _name (nsDOMWorkerXHRProxy* aXHR, _arg1 aArg1, _arg2 aArg2, _arg3 aArg3, \
-           _arg4 aArg4, _arg5 aArg5) \
-    : mXHR(aXHR), mArg1(aArg1), mArg2(aArg2), mArg3(aArg3), mArg4(aArg4), \
-      mArg5(aArg5) \
-    { \
-      NS_ASSERTION(aXHR, "Null pointer!"); \
-    } \
-  \
-    NS_IMETHOD Run() \
-    { \
-      nsCOMPtr<nsIXMLHttpRequest> xhr = mXHR->GetXMLHttpRequest(); \
-      if (xhr) { \
-        return xhr-> _name (mArg1, mArg2, mArg3, mArg4, mArg5); \
-      } \
-      return NS_OK; \
-    } \
-  private: \
-    nsRefPtr<nsDOMWorkerXHRProxy> mXHR; \
-    _arg1 mArg1; \
-    _arg2 mArg2; \
-    _arg3 mArg3; \
-    _arg4 mArg4; \
-    _arg5 mArg5; \
-  }
-
-#define RUN_PROXIED_FUNCTION(_name, _args) \
-  PR_BEGIN_MACRO \
-    if (mCanceled) { \
-      return NS_ERROR_ABORT; \
-    } \
-    \
-    nsCOMPtr<nsIRunnable> method = new :: _name _args; \
-    NS_ENSURE_TRUE(method, NS_ERROR_OUT_OF_MEMORY); \
-    \
-    nsRefPtr<nsResultReturningRunnable> runnable = \
-      new nsResultReturningRunnable(mMainThread, method, mWorkerXHR->mWorker); \
-    NS_ENSURE_TRUE(runnable, NS_ERROR_OUT_OF_MEMORY); \
-    \
-    nsresult _rv = runnable->Dispatch(); \
-    if (NS_FAILED(_rv)) { \
-      return _rv; \
-    } \
-  PR_END_MACRO
 
 namespace nsDOMWorkerProxiedXHRFunctions
 {
-  class Abort : public nsRunnable
+  typedef nsDOMWorkerXHRProxy::SyncEventQueue SyncEventQueue;
+
+  class SyncEventCapturingRunnable : public nsRunnable
   {
   public:
-    Abort (nsDOMWorkerXHRProxy* aXHR)
-    : mXHR(aXHR)
-    {
+    SyncEventCapturingRunnable()
+    : mXHR(nsnull), mQueue(nsnull) { }
+
+    void Init(nsDOMWorkerXHRProxy* aXHR,
+              SyncEventQueue* aQueue) {
       NS_ASSERTION(aXHR, "Null pointer!");
+      NS_ASSERTION(aQueue, "Null pointer!");
+
+      mXHR = aXHR;
+      mQueue = aQueue;
     }
 
+    virtual nsresult RunInternal() = 0;
+
     NS_IMETHOD Run() {
+      NS_ASSERTION(mXHR && mQueue, "Forgot to call Init!");
+
+      SyncEventQueue* oldQueue = mXHR->SetSyncEventQueue(mQueue);
+
+      nsresult rv = RunInternal();
+
+      mXHR->SetSyncEventQueue(oldQueue);
+
+      return rv;
+    }
+
+  protected:
+    nsRefPtr<nsDOMWorkerXHRProxy> mXHR;
+    SyncEventQueue* mQueue;
+  };
+
+  class Abort : public SyncEventCapturingRunnable
+  {
+  public:
+    virtual nsresult RunInternal() {
       return mXHR->Abort();
     }
+  };
+
+  class OpenRequest : public SyncEventCapturingRunnable
+  {
+  public:
+    OpenRequest(const nsACString& aMethod, const nsACString& aUrl,
+                PRBool aAsync, const nsAString& aUser,
+                const nsAString& aPassword)
+    : mMethod(aMethod), mUrl(aUrl), mAsync(aAsync), mUser(aUser),
+      mPassword(aPassword) { }
+  
+    virtual nsresult RunInternal() {
+      return mXHR->OpenRequest(mMethod, mUrl, mAsync, mUser, mPassword);
+    }
+
   private:
-    nsRefPtr<nsDOMWorkerXHRProxy> mXHR;
+    nsCString mMethod;
+    nsCString mUrl;
+    PRBool mAsync;
+    nsString mUser;
+    nsString mPassword;
   };
 
   MAKE_PROXIED_FUNCTION1(GetAllResponseHeaders, char**);
 
   MAKE_PROXIED_FUNCTION2(GetResponseHeader, const nsACString&, nsACString&);
-
-  MAKE_PROXIED_FUNCTION5(OpenRequest, const nsACString&, const nsACString&,
-                         PRBool, const nsAString&, const nsAString&);
 
   MAKE_PROXIED_FUNCTION1(Send, nsIVariant*);
 
@@ -243,6 +171,12 @@ namespace nsDOMWorkerProxiedXHRFunctions
   MAKE_PROXIED_FUNCTION1(OverrideMimeType, const nsACString&);
 
   MAKE_PROXIED_FUNCTION1(SetMultipart, PRBool);
+
+  MAKE_PROXIED_FUNCTION1(GetMultipart, PRBool*);
+
+  MAKE_PROXIED_FUNCTION1(GetWithCredentials, PRBool*);
+
+  MAKE_PROXIED_FUNCTION1(SetWithCredentials, PRBool);
 }
 
 #endif /* __NSDOMWORKERXHRPROXIEDFUNCTIONS_H__ */

@@ -38,7 +38,7 @@
 #include "nsCycleCollectionParticipant.h"
 #include "nsCOMPtr.h"
 
-PR_STATIC_CALLBACK(void)
+static void
 NoteChild(PRUint32 aLangID, void *aScriptThing, void *aClosure)
 {
   nsCycleCollectionTraversalCallback *cb =

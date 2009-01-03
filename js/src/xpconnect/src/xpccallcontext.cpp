@@ -124,20 +124,7 @@ XPCCallContext::XPCCallContext(XPCContext::LangType callerLanguage,
         mContextPopRequired = JS_TRUE;
     }
 
-    // Try to get the JSContext -> XPCContext mapping from the cache.
-    // FWIW... quicky tests show this hitting ~ 95% of the time.
-    // That is a *lot* of locking we can skip in nsXPConnect::GetContext.
-    mXPCContext = mThreadData->GetRecentXPCContext(mJSContext);
-
-    if(!mXPCContext)
-    {
-        if(!(mXPCContext = nsXPConnect::GetContext(mJSContext, mXPC)))
-            return;
-
-        // Fill the cache.
-        mThreadData->SetRecentContext(mJSContext, mXPCContext);
-    }
-
+    mXPCContext = XPCContext::GetXPCContext(mJSContext);
     mPrevCallerLanguage = mXPCContext->SetCallingLangType(mCallerLanguage);
 
     // hook into call context chain for our thread
@@ -352,14 +339,13 @@ XPCCallContext::~XPCCallContext()
                          "JSContext still in threadjscontextstack!");
         
             JS_DestroyContext(mJSContext);
-            mXPC->SyncJSContexts();
         }
         else
         {
             // Don't clear newborns if JS frames (compilation or execution)
             // are active!  Doing so violates ancient invariants in the JS
             // engine, and it's not necessary to fix JS component leaks.
-            if(!mJSContext->fp)
+            if(!JS_IsRunning(mJSContext))
                 JS_ClearNewbornRoots(mJSContext);
         }
     }
@@ -551,3 +537,19 @@ XPCCallContext::SetIDispatchInfo(XPCNativeInterface* iface,
 }
 
 #endif
+
+NS_IMETHODIMP
+XPCCallContext::GetPreviousCallContext(nsAXPCNativeCallContext **aResult)
+{
+  NS_ENSURE_ARG_POINTER(aResult);
+  *aResult = GetPrevCallContext();
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+XPCCallContext::GetLanguage(PRUint16 *aResult)
+{
+  NS_ENSURE_ARG_POINTER(aResult);
+  *aResult = GetCallerLanguage();
+  return NS_OK;
+}

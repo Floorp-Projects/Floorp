@@ -121,7 +121,7 @@ public:
    * @return PR_TRUE if the key exists. If key does not exist, pData is not
    *   modified.
    */
-  PRBool Get(KeyType aKey, UserDataType* pData) const
+  PRBool Get(KeyType aKey, UserDataType* pData NS_OUTPARAM) const
   {
     EntryType* ent = GetEntry(aKey);
 
@@ -168,9 +168,9 @@ public:
    *   @link PLDHashOperator::PL_DHASH_STOP PL_DHASH_STOP @endlink
    */
   typedef PLDHashOperator
-    (*PR_CALLBACK EnumReadFunction)(KeyType      aKey,
-                                    UserDataType aData,
-                                    void*        userArg);
+    (* EnumReadFunction)(KeyType      aKey,
+                         UserDataType aData,
+                         void*        userArg);
 
   /**
    * enumerate entries in the hashtable, without allowing changes
@@ -200,9 +200,9 @@ public:
    *   @link PLDHashOperator::PL_DHASH_STOP PL_DHASH_STOP @endlink
    */
   typedef PLDHashOperator
-    (*PR_CALLBACK EnumFunction)(KeyType       aKey,
-                                DataType&     aData,
-                                void*         userArg);
+    (* EnumFunction)(KeyType       aKey,
+                     DataType&     aData,
+                     void*         userArg);
 
   /**
    * enumerate entries in the hashtable, allowing changes. This

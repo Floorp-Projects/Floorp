@@ -1646,7 +1646,7 @@ sec_pkcs12_sanitize_nickname(PK11SlotInfo *slot, SECItem *nick)
     char *delimit;
     int delimitlen;
  
-    nickname = (char*)nick->data; /*Mac breaks without this type cast*/
+    nickname = (char*)nick->data;
     if ((delimit = PORT_Strchr(nickname, ':')) != NULL) {
         char *slotName;
 	int slotNameLen;

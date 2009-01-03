@@ -37,7 +37,8 @@
  * ***** END LICENSE BLOCK ***** */
 #include "nsIDOMHTMLMediaElement.h"
 #include "nsGenericHTMLElement.h"
-#include "nsVideoDecoder.h"
+#include "nsMediaDecoder.h"
+#include "nsIChannel.h"
 
 // Define to output information on decoding and painting framerate
 /* #define DEBUG_FRAME_RATE 1 */
@@ -50,6 +51,16 @@ class nsHTMLMediaElement : public nsGenericHTMLElement
 public:
   nsHTMLMediaElement(nsINodeInfo *aNodeInfo, PRBool aFromParser = PR_FALSE);
   virtual ~nsHTMLMediaElement();
+
+  /**
+   * This is used when the browser is constructing a video element to play
+   * a channel that we've already started loading. The src attribute and
+   * <source> children are ignored. 
+   * @param aChannel the channel to use
+   * @param aListener returns a stream listener that should receive
+   * notifications for the stream
+   */ 
+  nsresult LoadWithChannel(nsIChannel *aChannel, nsIStreamListener **aListener);
 
   // nsIDOMHTMLMediaElement
   NS_DECL_NSIDOMHTMLMEDIAELEMENT
@@ -98,14 +109,22 @@ public:
 
   // Called by the video decoder object, on the main thread,
   // when the video playback has ended.
-  void PlaybackCompleted();
+  void PlaybackEnded();
 
   // Called by the decoder object, on the main thread, when
   // approximately enough of the resource has been loaded to play
   // through without pausing for buffering.
   void CanPlayThrough();
 
-  // Draw the latest video data. See nsVideoDecoder for 
+  // Called by the video decoder object, on the main thread,
+  // when the resource has started seeking.
+  void SeekStarted();
+
+  // Called by the video decoder object, on the main thread,
+  // when the resource has completed seeking.
+  void SeekCompleted();
+
+  // Draw the latest video data. See nsMediaDecoder for 
   // details.
   void Paint(gfxContext* aContext, const gfxRect& aRect);
 
@@ -119,14 +138,62 @@ public:
   // events can be fired.
   void ChangeReadyState(nsMediaReadyState aState);
 
+  // Is the media element actively playing as defined by the HTML 5 specification.
+  // http://www.whatwg.org/specs/web-apps/current-work/#actively
+  PRBool IsActivelyPlaying() const;
+
+  // Has playback ended as defined by the HTML 5 specification.
+  // http://www.whatwg.org/specs/web-apps/current-work/#ended
+  PRBool IsPlaybackEnded() const;
+
   // principal of the currently playing stream
   nsIPrincipal* GetCurrentPrincipal();
 
-protected:
-  nsresult PickMediaElement(nsAString& aChosenMediaResource);
-  virtual nsresult InitializeDecoder(nsAString& aChosenMediaResource);
+  // Update the visual size of the media. Called from the decoder on the
+  // main thread when/if the size changes.
+  void UpdateMediaSize(nsIntSize size);
 
-  nsRefPtr<nsVideoDecoder> mDecoder;
+  // Handle moving into and out of the bfcache by pausing and playing
+  // as needed.
+  void Freeze();
+  void Thaw();
+
+  // Returns true if we can handle this MIME type in a <video> or <audio>
+  // element
+  static PRBool CanHandleMediaType(const char* aMIMEType);
+
+  /**
+   * Initialize data for available media types
+   */
+  static void InitMediaTypes();
+  /**
+   * Shutdown data for available media types
+   */
+  static void ShutdownMediaTypes();
+
+protected:
+  /**
+   * Figure out which resource to load (either the 'src' attribute or
+   * a <source> child) and create the decoder for it.
+   */
+  nsresult PickMediaElement();
+  /**
+   * Create a decoder for the given aMIMEType. Returns false if we
+   * were unable to create the decoder.
+   */
+  PRBool CreateDecoder(const nsACString& aMIMEType);
+  /**
+   * Initialize a decoder to load the given URI.
+   */
+  nsresult InitializeDecoder(const nsAString& aURISpec);
+  /**
+   * Initialize a decoder to load the given channel. The decoder's stream
+   * listener is returned via aListener.
+   */
+  nsresult InitializeDecoderForChannel(nsIChannel *aChannel,
+                                       nsIStreamListener **aListener);
+
+  nsRefPtr<nsMediaDecoder> mDecoder;
 
   // Error attribute
   nsCOMPtr<nsIDOMHTMLMediaError> mError;
@@ -139,17 +206,9 @@ protected:
   // Value of the volume before it was muted
   float mMutedVolume;
 
-  // The defaultPlaybackRate attribute gives the desired speed at
-  // which the media resource is to play, as a multiple of its
-  // intrinsic speed.
-  float mDefaultPlaybackRate;
-
-  // The playbackRate attribute gives the speed at which the media
-  // resource plays, as a multiple of its intrinsic speed. If it is
-  // not equal to the defaultPlaybackRate, then the implication is
-  // that the user is using a feature such as fast forward or slow
-  // motion playback.
-  float mPlaybackRate;
+  // Size of the media. Updated by the decoder on the main thread if
+  // it changes. Defaults to a width and height of -1 if not set.
+  nsIntSize mMediaSize;
 
   // If true then we have begun downloading the media content.
   // Set to false when completed, or not yet started.
@@ -177,13 +236,21 @@ protected:
   // 'Pause' method, or playback not yet having started.
   PRPackedBool mPaused;
 
-  // True if we are currently seeking through the media file.
-  PRPackedBool mSeeking;
-
   // True if the sound is muted
   PRPackedBool mMuted;
 
   // Flag to indicate if the child elements (eg. <source/>) have been
   // parsed.
   PRPackedBool mIsDoneAddingChildren;
+
+  // If TRUE then the media element was actively playing before the currently
+  // in progress seeking. If FALSE then the media element is either not seeking
+  // or was not actively playing before the current seek. Used to decide whether
+  // to raise the 'waiting' event as per 4.7.1.8 in HTML 5 specification.
+  PRPackedBool mPlayingBeforeSeek;
+
+  // PR_TRUE if the video was paused before Freeze was called. This is checked
+  // to ensure that the playstate doesn't change when the user goes Forward/Back
+  // from the bfcache.
+  PRPackedBool mPausedBeforeFreeze;
 };

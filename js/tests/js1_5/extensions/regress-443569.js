@@ -35,7 +35,7 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-var gTestfile = 'regress-443569-01.js';
+var gTestfile = 'regress-443569.js';
 //-----------------------------------------------------------------------------
 var BUGNUMBER = 443569;
 var summary = 'Do not assert: OBJ_IS_NATIVE(obj)';

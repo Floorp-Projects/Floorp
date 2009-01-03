@@ -162,12 +162,10 @@ static NS_DEFINE_CID(kDOMEventGroupCID, NS_DOMEVENTGROUP_CID);
 #include "nsIDocumentLoaderFactory.h"
 #include "nsIContentViewer.h"
 #include "nsIXMLContentSink.h"
-#include "nsIChannelEventSink.h"
 #include "nsContentErrors.h"
 #include "nsIXULDocument.h"
-#include "nsIProgressEventSink.h"
-#include "nsISecurityEventSink.h"
 #include "nsIPrompt.h"
+#include "nsIPropertyBag2.h"
 
 #include "nsFrameLoader.h"
 
@@ -271,7 +269,7 @@ nsUint32ToContentHashEntry::InitHashSet(HashSet** aSet)
   return NS_OK;
 }
 
-static PLDHashOperator PR_CALLBACK
+static PLDHashOperator
 nsUint32ToContentHashEntryVisitorCallback(nsISupportsHashKey* aEntry,
                                           void* aClosure)
 {
@@ -395,7 +393,7 @@ struct FireChangeArgs {
   nsIContent* mTo;
 };
 
-PR_STATIC_CALLBACK(PLDHashOperator)
+static PLDHashOperator
 FireChangeEnumerator(nsIdentifierMapEntry::ChangeCallbackEntry *aEntry, void *aArg)
 {
   FireChangeArgs* args = static_cast<FireChangeArgs*>(aArg);
@@ -616,20 +614,30 @@ nsDOMStyleSheetList::GetLength(PRUint32* aLength)
   return NS_OK;
 }
 
+nsIStyleSheet*
+nsDOMStyleSheetList::GetItemAt(PRUint32 aIndex)
+{
+  if (!mDocument || aIndex >= (PRUint32)mDocument->GetNumberOfStyleSheets()) {
+    return nsnull;
+  }
+
+  nsIStyleSheet *sheet = mDocument->GetStyleSheetAt(aIndex);
+  NS_ASSERTION(sheet, "Must have a sheet");
+
+  return sheet;
+}
+
 NS_IMETHODIMP
 nsDOMStyleSheetList::Item(PRUint32 aIndex, nsIDOMStyleSheet** aReturn)
 {
-  *aReturn = nsnull;
-  if (mDocument) {
-    PRInt32 count = mDocument->GetNumberOfStyleSheets();
-    if (aIndex < (PRUint32)count) {
-      nsIStyleSheet *sheet = mDocument->GetStyleSheetAt(aIndex);
-      NS_ASSERTION(sheet, "Must have a sheet");
-      return CallQueryInterface(sheet, aReturn);
-    }
+  nsIStyleSheet *sheet = GetItemAt(aIndex);
+  if (!sheet) {
+      *aReturn = nsnull;
+
+      return NS_OK;
   }
 
-  return NS_OK;
+  return CallQueryInterface(sheet, aReturn);
 }
 
 void
@@ -806,14 +814,15 @@ nsExternalResourceEnumArgs
   void *data;
 };
 
-PR_STATIC_CALLBACK(PLDHashOperator)
+static PLDHashOperator
 ExternalResourceEnumerator(nsIURI* aKey,
                            nsExternalResourceMap::ExternalResource* aData,
                            void* aClosure)
 {
   nsExternalResourceEnumArgs* args =
     static_cast<nsExternalResourceEnumArgs*>(aClosure);
-  PRBool next = args->callback(aData->mDocument, args->data);
+  PRBool next =
+    aData->mDocument ? args->callback(aData->mDocument, args->data) : PR_TRUE;
   return next ? PL_DHASH_NEXT : PL_DHASH_STOP;
 }
 
@@ -825,7 +834,7 @@ nsExternalResourceMap::EnumerateResources(nsIDocument::nsSubDocEnumFunc aCallbac
   mMap.EnumerateRead(ExternalResourceEnumerator, &args);
 }
 
-PR_STATIC_CALLBACK(PLDHashOperator)
+static PLDHashOperator
 ExternalResourceTraverser(nsIURI* aKey,
                           nsExternalResourceMap::ExternalResource* aData,
                           void* aClosure)
@@ -1108,46 +1117,73 @@ nsExternalResourceMap::PendingLoad::StartLoad(nsIURI* aURI,
     return NS_ERROR_NOT_AVAILABLE;
   }
 
+  nsCOMPtr<nsIInterfaceRequestor> req = nsContentUtils::GetSameOriginChecker();
+  NS_ENSURE_TRUE(req, NS_ERROR_OUT_OF_MEMORY);
+
   nsCOMPtr<nsILoadGroup> loadGroup = doc->GetDocumentLoadGroup();
   nsCOMPtr<nsIChannel> channel;
-  rv = NS_NewChannel(getter_AddRefs(channel), aURI, nsnull, loadGroup);
+  rv = NS_NewChannel(getter_AddRefs(channel), aURI, nsnull, loadGroup, req);
   NS_ENSURE_SUCCESS(rv, rv);
 
   mURI = aURI;
 
-  nsCOMPtr<nsIInterfaceRequestor> req = nsContentUtils::GetSameOriginChecker();
-  NS_ENSURE_TRUE(req, NS_ERROR_OUT_OF_MEMORY);
-
-  channel->SetNotificationCallbacks(req);
   return channel->AsyncOpen(this, nsnull);
 }
 
 NS_IMPL_ISUPPORTS1(nsExternalResourceMap::LoadgroupCallbacks,
                    nsIInterfaceRequestor)
 
+#define IMPL_SHIM(_i) \
+  NS_IMPL_ISUPPORTS1(nsExternalResourceMap::LoadgroupCallbacks::_i##Shim, _i)
+
+IMPL_SHIM(nsILoadContext)
+IMPL_SHIM(nsIProgressEventSink)
+IMPL_SHIM(nsIChannelEventSink)
+IMPL_SHIM(nsISecurityEventSink)
+IMPL_SHIM(nsIApplicationCacheContainer)
+
+#undef IMPL_SHIM
+
+#define IID_IS(_i) aIID.Equals(NS_GET_IID(_i))
+
+#define TRY_SHIM(_i)                                                       \
+  PR_BEGIN_MACRO                                                           \
+    if (IID_IS(_i)) {                                                      \
+      nsCOMPtr<_i> real = do_GetInterface(mCallbacks);                     \
+      if (!real) {                                                         \
+        return NS_NOINTERFACE;                                             \
+      }                                                                    \
+      nsCOMPtr<_i> shim = new _i##Shim(this, real);                        \
+      if (!shim) {                                                         \
+        return NS_ERROR_OUT_OF_MEMORY;                                     \
+      }                                                                    \
+      *aSink = shim.forget().get();                                        \
+      return NS_OK;                                                        \
+    }                                                                      \
+  PR_END_MACRO
+
 NS_IMETHODIMP
 nsExternalResourceMap::LoadgroupCallbacks::GetInterface(const nsIID & aIID,
                                                         void **aSink)
 {
-#define IID_IS(_i) aIID.Equals(NS_GET_IID(_i))
   if (mCallbacks &&
-      (IID_IS(nsIProgressEventSink) ||
-       IID_IS(nsIChannelEventSink) ||
-       IID_IS(nsISecurityEventSink) ||
-       IID_IS(nsIPrompt) ||
-       IID_IS(nsIAuthPrompt) ||
-       IID_IS(nsIAuthPrompt2) ||
-       IID_IS(nsIApplicationCacheContainer) ||
-       // XXXbz evil hack for cookies for now
-       IID_IS(nsIDOMWindow) ||
-       IID_IS(nsIDocShellTreeItem))) {
+      (IID_IS(nsIPrompt) || IID_IS(nsIAuthPrompt) || IID_IS(nsIAuthPrompt2))) {
     return mCallbacks->GetInterface(aIID, aSink);
   }
-#undef IID_IS
 
   *aSink = nsnull;
+
+  TRY_SHIM(nsILoadContext);
+  TRY_SHIM(nsIProgressEventSink);
+  TRY_SHIM(nsIChannelEventSink);
+  TRY_SHIM(nsISecurityEventSink);
+  TRY_SHIM(nsIApplicationCacheContainer);
+    
   return NS_NOINTERFACE;
 }
+
+#undef TRY_SHIM
+#undef IID_IS
 
 nsExternalResourceMap::ExternalResource::~ExternalResource()
 {
@@ -1189,9 +1225,11 @@ protected:
 
 NS_IMPL_ADDREF(nsDOMStyleSheetSetList)
 NS_IMPL_RELEASE(nsDOMStyleSheetSetList)
-NS_INTERFACE_MAP_BEGIN(nsDOMStyleSheetSetList)
-  NS_INTERFACE_MAP_ENTRY(nsIDOMDOMStringList)
-  NS_INTERFACE_MAP_ENTRY(nsISupports)
+NS_INTERFACE_TABLE_HEAD(nsDOMStyleSheetSetList)
+  NS_OFFSET_AND_INTERFACE_TABLE_BEGIN(nsDOMStyleSheetSetList)
+    NS_INTERFACE_TABLE_ENTRY(nsDOMStyleSheetSetList, nsIDOMDOMStringList)
+  NS_OFFSET_AND_INTERFACE_TABLE_END
+  NS_OFFSET_AND_INTERFACE_TABLE_TO_MAP_SEGUE
   NS_INTERFACE_MAP_ENTRY_CONTENT_CLASSINFO(DOMStringList)
 NS_INTERFACE_MAP_END
 
@@ -1452,7 +1490,7 @@ nsDocument::nsDocument(const char* aContentType)
   SetDOMStringToNull(mLastStyleSheetSet);
 }
 
-PR_STATIC_CALLBACK(PLDHashOperator)
+static PLDHashOperator
 ClearAllBoxObjects(const void* aKey, nsPIBoxObject* aBoxObject, void* aUserArg)
 {
   if (aBoxObject) {
@@ -1554,46 +1592,32 @@ nsDocument::~nsDocument()
     mBoxObjectTable->EnumerateRead(ClearAllBoxObjects, nsnull);
     delete mBoxObjectTable;
   }
-
-  delete mContentWrapperHash;
 }
 
 NS_IMPL_CYCLE_COLLECTION_CLASS(nsDocument)
 
 NS_INTERFACE_TABLE_HEAD(nsDocument)
-  NS_INTERFACE_TABLE_BEGIN
+  NS_WRAPPERCACHE_INTERFACE_MAP_ENTRY
+  NS_DOCUMENT_INTERFACE_TABLE_BEGIN(nsDocument)
     NS_INTERFACE_TABLE_ENTRY(nsDocument, nsINode)
     NS_INTERFACE_TABLE_ENTRY(nsDocument, nsIDocument)
-    NS_INTERFACE_TABLE_ENTRY(nsDocument, nsIDOMDocument)
-    NS_INTERFACE_TABLE_ENTRY(nsDocument, nsIDOMNSDocument)
-    NS_INTERFACE_TABLE_ENTRY(nsDocument, nsIDOMDocumentEvent)
     NS_INTERFACE_TABLE_ENTRY(nsDocument, nsIDOM3DocumentEvent)
     NS_INTERFACE_TABLE_ENTRY(nsDocument, nsIDOMDocumentStyle)
     NS_INTERFACE_TABLE_ENTRY(nsDocument, nsIDOMNSDocumentStyle)
-    NS_INTERFACE_TABLE_ENTRY(nsDocument, nsIDOMDocumentView)
     NS_INTERFACE_TABLE_ENTRY(nsDocument, nsIDOMDocumentRange)
-    NS_INTERFACE_TABLE_ENTRY(nsDocument, nsIDOMDocumentTraversal)
     NS_INTERFACE_TABLE_ENTRY(nsDocument, nsIDOMDocumentXBL)
     NS_INTERFACE_TABLE_ENTRY(nsDocument, nsIScriptObjectPrincipal)
-    NS_INTERFACE_TABLE_ENTRY(nsDocument, nsIDOMEventTarget)
     NS_INTERFACE_TABLE_ENTRY(nsDocument, nsIDOM3EventTarget)
     NS_INTERFACE_TABLE_ENTRY(nsDocument, nsIDOMNSEventTarget)
-    NS_INTERFACE_TABLE_ENTRY(nsDocument, nsIDOMNode)
     NS_INTERFACE_TABLE_ENTRY(nsDocument, nsPIDOMEventTarget)
-    NS_INTERFACE_TABLE_ENTRY(nsDocument, nsIDOM3Node)
-    NS_INTERFACE_TABLE_ENTRY(nsDocument, nsIDOM3Document)
     NS_INTERFACE_TABLE_ENTRY(nsDocument, nsISupportsWeakReference)
     NS_INTERFACE_TABLE_ENTRY(nsDocument, nsIRadioGroupContainer)
     NS_INTERFACE_TABLE_ENTRY(nsDocument, nsIMutationObserver)
     NS_INTERFACE_TABLE_ENTRY(nsDocument, nsIDOMNodeSelector)
     NS_INTERFACE_TABLE_ENTRY(nsDocument, nsIApplicationCacheContainer)
-    // nsNodeSH::PreCreate() depends on the identity pointer being the
-    // same as nsINode (which nsIDocument inherits), so if you change
-    // the below line, make sure nsNodeSH::PreCreate() still does the
-    // right thing!
-    NS_INTERFACE_TABLE_ENTRY_AMBIGUOUS(nsDocument, nsISupports, nsIDocument)
-  NS_INTERFACE_TABLE_END
-  NS_INTERFACE_TABLE_TO_MAP_SEGUE_CYCLE_COLLECTION(nsDocument)
+  NS_OFFSET_AND_INTERFACE_TABLE_END
+  NS_OFFSET_AND_INTERFACE_TABLE_TO_MAP_SEGUE
+  NS_INTERFACE_MAP_ENTRIES_CYCLE_COLLECTION(nsDocument)
   if (aIID.Equals(NS_GET_IID(nsIDOMXPathEvaluator)) ||
       aIID.Equals(NS_GET_IID(nsIXPathEvaluatorInternal))) {
     if (!mXPathEvaluatorTearoff) {
@@ -1616,7 +1640,7 @@ NS_IMPL_CYCLE_COLLECTING_RELEASE_AMBIGUOUS_WITH_DESTROY(nsDocument,
                                                         nsNodeUtils::LastRelease(this))
 
 
-PR_STATIC_CALLBACK(PLDHashOperator)
+static PLDHashOperator
 SubDocTraverser(PLDHashTable *table, PLDHashEntryHdr *hdr, PRUint32 number,
                 void *arg)
 {
@@ -1632,7 +1656,7 @@ SubDocTraverser(PLDHashTable *table, PLDHashEntryHdr *hdr, PRUint32 number,
   return PL_DHASH_NEXT;
 }
 
-PR_STATIC_CALLBACK(PLDHashOperator)
+static PLDHashOperator
 RadioGroupsTraverser(const nsAString& aKey, nsRadioGroupStruct* aData,
                      void* aClosure)
 {
@@ -1653,7 +1677,7 @@ RadioGroupsTraverser(const nsAString& aKey, nsRadioGroupStruct* aData,
   return PL_DHASH_NEXT;
 }
 
-PR_STATIC_CALLBACK(PLDHashOperator)
+static PLDHashOperator
 BoxObjectTraverser(const void* key, nsPIBoxObject* boxObject, void* userArg)
 {
   nsCycleCollectionTraversalCallback *cb = 
@@ -1676,7 +1700,7 @@ public:
   }
 };
 
-PR_STATIC_CALLBACK(PLDHashOperator)
+static PLDHashOperator
 LinkMapTraverser(nsUint32ToContentHashEntry* aEntry, void* userArg)
 {
   LinkMapTraversalVisitor visitor;
@@ -1685,7 +1709,7 @@ LinkMapTraverser(nsUint32ToContentHashEntry* aEntry, void* userArg)
   return PL_DHASH_NEXT;
 }
 
-PR_STATIC_CALLBACK(PLDHashOperator)
+static PLDHashOperator
 IdentifierMapEntryTraverse(nsIdentifierMapEntry *aEntry, void *aArg)
 {
   nsCycleCollectionTraversalCallback *cb =
@@ -1753,9 +1777,7 @@ NS_IMPL_CYCLE_COLLECTION_TRAVERSE_BEGIN(nsDocument)
   NS_IMPL_CYCLE_COLLECTION_TRAVERSE_NSCOMARRAY(mCatalogSheets)
   NS_IMPL_CYCLE_COLLECTION_TRAVERSE_NSCOMARRAY(mVisitednessChangedURIs)
 
-  // Traverse any associated preserved wrapper.
-  NS_CYCLE_COLLECTION_NOTE_EDGE_NAME(cb, "[preserved wrapper]");
-  cb.NoteXPCOMChild(tmp->GetReference(tmp));
+  NS_IMPL_CYCLE_COLLECTION_TRAVERSE_PRESERVED_WRAPPER
 
   if (tmp->mSubDocuments && tmp->mSubDocuments->ops) {
     PL_DHashTableEnumerate(tmp->mSubDocuments, SubDocTraverser, &cb);
@@ -1786,11 +1808,9 @@ NS_IMPL_CYCLE_COLLECTION_UNLINK_BEGIN(nsDocument)
 
   NS_IMPL_CYCLE_COLLECTION_UNLINK_USERDATA
 
-  // Drop the content hash.
-  delete tmp->mContentWrapperHash;
-  tmp->mContentWrapperHash = nsnull;
-
   tmp->mParentDocument = nsnull;
+
+  NS_IMPL_CYCLE_COLLECTION_UNLINK_PRESERVED_WRAPPER
 
   // nsDocument has a pretty complex destructor, so we're going to
   // assume that *most* cycles you actually want to break somewhere
@@ -1884,6 +1904,16 @@ nsDocument::Reset(nsIChannel* aChannel, nsILoadGroup* aLoadGroup)
   }
 
   ResetToURI(uri, aLoadGroup, principal);
+
+  nsCOMPtr<nsIPropertyBag2> bag = do_QueryInterface(aChannel);
+  if (bag) {
+    nsCOMPtr<nsIURI> baseURI;
+    bag->GetPropertyAsInterface(NS_LITERAL_STRING("baseURI"),
+                                NS_GET_IID(nsIURI), getter_AddRefs(baseURI));
+    if (baseURI) {
+      mDocumentBaseURI = baseURI;
+    }
+  }
 
   mChannel = aChannel;
 }
@@ -2576,6 +2606,15 @@ nsDocument::GetActiveElement(nsIDOMElement **aElement)
 NS_IMETHODIMP
 nsDocument::ElementFromPoint(PRInt32 aX, PRInt32 aY, nsIDOMElement** aReturn)
 {
+  return ElementFromPointHelper(aX, aY, PR_FALSE, PR_TRUE, aReturn);
+}
+
+nsresult
+nsDocument::ElementFromPointHelper(PRInt32 aX, PRInt32 aY,
+                                   PRBool aIgnoreRootScrollFrame,
+                                   PRBool aFlushLayout,
+                                   nsIDOMElement** aReturn)
+{
   NS_ENSURE_ARG_POINTER(aReturn);
   *aReturn = nsnull;
   // As per the the spec, we return null if either coord is negative
@@ -2588,7 +2627,8 @@ nsDocument::ElementFromPoint(PRInt32 aX, PRInt32 aY, nsIDOMElement** aReturn)
 
   // Make sure the layout information we get is up-to-date, and
   // ensure we get a root frame (for everything but XUL)
-  FlushPendingNotifications(Flush_Layout);
+  if (aFlushLayout)
+    FlushPendingNotifications(Flush_Layout);
 
   nsIPresShell *ps = GetPrimaryShell();
   NS_ENSURE_STATE(ps);
@@ -2598,7 +2638,8 @@ nsDocument::ElementFromPoint(PRInt32 aX, PRInt32 aY, nsIDOMElement** aReturn)
   if (!rootFrame)
     return NS_OK; // return null to premature XUL callers as a reminder to wait
 
-  nsIFrame *ptFrame = nsLayoutUtils::GetFrameForPoint(rootFrame, pt, PR_TRUE);
+  nsIFrame *ptFrame = nsLayoutUtils::GetFrameForPoint(rootFrame, pt, PR_TRUE,
+                                                      aIgnoreRootScrollFrame);
   if (!ptFrame)
     return NS_OK;
 
@@ -2971,7 +3012,7 @@ nsDocument::GetPrimaryShell() const
   return mShellsAreHidden ? nsnull : mPresShells.SafeElementAt(0, nsnull);
 }
 
-PR_STATIC_CALLBACK(void)
+static void
 SubDocClearEntry(PLDHashTable *table, PLDHashEntryHdr *entry)
 {
   SubDocMapEntry *e = static_cast<SubDocMapEntry *>(entry);
@@ -2983,7 +3024,7 @@ SubDocClearEntry(PLDHashTable *table, PLDHashEntryHdr *entry)
   }
 }
 
-PR_STATIC_CALLBACK(PRBool)
+static PRBool
 SubDocInitEntry(PLDHashTable *table, PLDHashEntryHdr *entry, const void *key)
 {
   SubDocMapEntry *e =
@@ -3082,7 +3123,7 @@ nsDocument::GetSubDocumentFor(nsIContent *aContent) const
   return nsnull;
 }
 
-PR_STATIC_CALLBACK(PLDHashOperator)
+static PLDHashOperator
 FindContentEnumerator(PLDHashTable *table, PLDHashEntryHdr *hdr,
                       PRUint32 number, void *arg)
 {
@@ -3156,9 +3197,9 @@ nsDocument::GetChildCount() const
 }
 
 nsIContent * const *
-nsDocument::GetChildArray() const
+nsDocument::GetChildArray(PRUint32* aChildCount) const
 {
-  return mChildren.GetChildArray();
+  return mChildren.GetChildArray(aChildCount);
 }
   
 
@@ -3563,6 +3604,10 @@ nsDocument::GetWindow()
 nsPIDOMWindow *
 nsDocument::GetInnerWindow()
 {
+  if (!mRemovedFromDocShell) {
+    return mWindow;
+  }
+
   nsCOMPtr<nsPIDOMWindow> win(do_QueryInterface(GetScriptGlobalObject()));
 
   return win;
@@ -3873,8 +3918,7 @@ nsDocument::DispatchContentLoadedEvents()
         // the ancestor document if we used the normal event
         // dispatching code.
 
-        nsEvent* innerEvent;
-        privateEvent->GetInternalNSEvent(&innerEvent);
+        nsEvent* innerEvent = privateEvent->GetInternalNSEvent();
         if (innerEvent) {
           nsEventStatus status = nsEventStatus_eIgnore;
 
@@ -5708,7 +5752,7 @@ nsDocument::SetDocumentURI(const nsAString& aDocumentURI)
 
 static void BlastSubtreeToPieces(nsINode *aNode);
 
-PLDHashOperator PR_CALLBACK
+PLDHashOperator
 BlastFunc(nsAttrHashKey::KeyType aKey, nsIDOMNode *aData, void* aUserArg)
 {
   nsCOMPtr<nsIAttribute> *attr =
@@ -5996,7 +6040,8 @@ nsDocument::PreHandleEvent(nsEventChainPreVisitor& aVisitor)
 
   // Load events must not propagate to |window| object, see bug 335251.
   if (aVisitor.mEvent->message != NS_LOAD) {
-    aVisitor.mParentTarget = GetWindow();
+    nsCOMPtr<nsPIDOMEventTarget> parentTarget = do_QueryInterface(GetWindow());
+    aVisitor.mParentTarget = parentTarget;
   }
   return NS_OK;
 }
@@ -6225,41 +6270,6 @@ nsDocument::FlushPendingNotifications(mozFlushType aType)
   nsCOMPtr<nsIPresShell> shell;
   while ((shell = iter.GetNextShell())) {
     shell->FlushPendingNotifications(aType);
-  }
-}
-
-void
-nsDocument::AddReference(void *aKey, nsISupports *aReference)
-{
-  if (mScriptGlobalObject) {
-    if (!mContentWrapperHash) {
-      mContentWrapperHash = new nsInterfaceHashtable<nsVoidPtrHashKey, nsISupports>;
-      if (mContentWrapperHash) {
-        mContentWrapperHash->Init(10);
-      }
-    }
-    
-    if (mContentWrapperHash)
-      mContentWrapperHash->Put(aKey, aReference);
-  }
-}
-
-nsISupports*
-nsDocument::GetReference(void *aKey)
-{
-  // NB: This method is part of content cycle collection,
-  // and must *not* Addref its return value.
-    
-  if (mContentWrapperHash)
-    return mContentWrapperHash->GetWeak(aKey);
-  return nsnull;
-}
-
-void
-nsDocument::RemoveReference(void *aKey)
-{
-  if (mContentWrapperHash) {
-    mContentWrapperHash->Remove(aKey);
   }
 }
 
@@ -6561,6 +6571,7 @@ nsDocument::RetrieveRelevantHeaders(nsIChannel *aChannel)
       "content-language",
       "content-disposition",
       "refresh",
+      "x-dns-prefetch-control",
       // add more http headers if you need
       // XXXbz don't add content-location support without reading bug
       // 238654 and its dependencies/dups first.
@@ -6756,7 +6767,7 @@ struct SubDocEnumArgs
   void *data;
 };
 
-PR_STATIC_CALLBACK(PLDHashOperator)
+static PLDHashOperator
 SubDocHashEnum(PLDHashTable *table, PLDHashEntryHdr *hdr,
                PRUint32 number, void *arg)
 {
@@ -6778,7 +6789,7 @@ nsDocument::EnumerateSubDocuments(nsSubDocEnumFunc aCallback, void *aData)
   }
 }
 
-PR_STATIC_CALLBACK(PLDHashOperator)
+static PLDHashOperator
 CanCacheSubDocument(PLDHashTable *table, PLDHashEntryHdr *hdr,
                     PRUint32 number, void *arg)
 {
@@ -6876,10 +6887,7 @@ nsDocument::Destroy()
 
   // XXX We really should let cycle collection do this, but that currently still
   //     leaks (see https://bugzilla.mozilla.org/show_bug.cgi?id=406684).
-  //     When we start relying on cycle collection again we should remove the
-  //     check for mScriptGlobalObject in AddReference.
-  delete mContentWrapperHash;
-  mContentWrapperHash = nsnull;
+  ReleaseWrapper();
 }
 
 void
@@ -7339,8 +7347,7 @@ nsDocument::CloneDocHelper(nsDocument* clone) const
   clone->nsDocument::SetDocumentURI(nsIDocument::GetDocumentURI());
   // Must set the principal first, since SetBaseURI checks it.
   clone->SetPrincipal(NodePrincipal());
-  rv = clone->SetBaseURI(nsIDocument::GetBaseURI());
-  NS_ENSURE_SUCCESS(rv, rv);
+  clone->mDocumentBaseURI = mDocumentBaseURI;
 
   // Set scripting object
   PRBool hasHadScriptObject = PR_TRUE;

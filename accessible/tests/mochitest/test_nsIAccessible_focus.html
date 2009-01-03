@@ -97,7 +97,7 @@
                "Focus wasn't recieved for element with ID " + aFocusMgr.mName + ".");
 
             var states = {}, extraStates = {};
-            aFocusMgr.mAcc.getFinalState(states, extraStates);
+            aFocusMgr.mAcc.getState(states, extraStates);
 // XXX see bug 455840. Only fails on aria-link, the other two are OK.
 // When fixing this bug, remove the if statement and else block and "todo" statement.
             if (states.value & nsIAccessibleStates.STATE_FOCUSED)

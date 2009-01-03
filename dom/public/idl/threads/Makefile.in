@@ -47,6 +47,6 @@ MODULE       = dom
 XPIDL_MODULE = dom_threads
 GRE_MODULE   = 1
 
-XPIDLSRCS    =  nsIDOMThreads.idl
+XPIDLSRCS    =  nsIDOMWorkers.idl
 
 include $(topsrcdir)/config/rules.mk

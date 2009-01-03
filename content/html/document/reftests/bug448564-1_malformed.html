@@ -1,0 +1,19 @@
+<html>
+<head>
+  <link rel="stylesheet" type="text/css"
+        href="bug448564_forms.css">
+  </link>
+</head>
+<body>
+  <i><b>
+    <form>a</form> <!-- These forms should not end up nested! -->
+    <form>b</form>
+    <!-- Why does it matter whether we explicitly close this tag? -->
+    <!-- It matters because nsHTMLTokenizer::ScanDocStructure checks
+         whether there are any malformed tags before parsing begins,
+         and, if there are any, residual style tags (<i>, <b>, &c.)
+         must be pushed inside block elements (e.g., <form>). -->
+    <div><!-- </div> -->
+  </b></i>
+</body>
+</html>

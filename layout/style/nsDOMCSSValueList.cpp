@@ -84,8 +84,7 @@ nsDOMCSSValueList::Item(PRUint32 aIndex, nsIDOMCSSValue **aReturn)
 {
   NS_ENSURE_ARG_POINTER(aReturn);
 
-  *aReturn = mCSSValues[aIndex];
-  NS_IF_ADDREF(*aReturn);
+  NS_IF_ADDREF(*aReturn = GetItemAt(aIndex));
 
   return NS_OK;
 }

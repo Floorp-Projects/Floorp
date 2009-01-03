@@ -37,18 +37,34 @@
 #
 # ***** END LICENSE BLOCK *****
 
-DEPTH		= ../..
+DEPTH		= .
 topsrcdir	= @top_srcdir@
 srcdir		= @srcdir@
 
+DIRS		= config
+
 include $(DEPTH)/config/autoconf.mk
+
+ifndef JS_MOZ_INSTALL
+# This is the appropriate behavior for GNU-style 'make install'.  For
+# Mozilla in-tree behavior, leaving NSDISTMODE unset is the right
+# thing; config/js/Makefile.in sets JS_MOZ_INSTALL in that case.
+NSDISTMODE	= copy
+endif
 
 MODULE		= js
 LIBRARY_NAME	= mozjs
 GRE_MODULE	= 1
 
-ifdef GNU_CC
-ifdef INTEL_CC
+PROGRAM         = js$(BIN_SUFFIX)
+# The shell uses some 'HIDDEN' symbols to produce statistics, so we
+# link directly against the .o files, not against the JS shared
+# library.
+PROGOBJS	= js.$(OBJ_SUFFIX) $(OBJS)
+LIBS		= $(NSPR_LIBS)
+
+ifdef GNU_CXX
+ifdef INTEL_CXX
 # icc gets special optimize flags
 ifdef MOZ_PROFILE_GENERATE
 MODULE_OPTIMIZE_FLAGS = -O0
@@ -56,26 +72,29 @@ else
 MODULE_OPTIMIZE_FLAGS = -O2 -ip
 #XXX: do we want different INTERP_OPTIMIZER flags here?
 endif
-else
+else # not INTEL_CXX
 MODULE_OPTIMIZE_FLAGS = -Os -fstrict-aliasing $(MOZ_OPTIMIZE_SIZE_TWEAK)
 # Special optimization flags for jsinterp.c
 INTERP_OPTIMIZER = -O3 -fstrict-aliasing
 endif
-else
+else # not GNU_CXX
 ifeq ($(OS_ARCH),SunOS)
 MODULE_OPTIMIZE_FLAGS = -xO4
 endif
 ifeq ($(OS_ARCH),WINNT)
+ifdef WINCE
+# -GL is not supported on windows mobile while we are using the arm-wince-link command
+MODULE_OPTIMIZE_FLAGS = -O2
+else
 MODULE_OPTIMIZE_FLAGS = -O2 -GL
 endif
 endif
+endif
+
 
 ifeq (,$(filter-out WINNT WINCE,$(OS_ARCH)))
 LIBRARY_NAME	= js$(MOZ_BITS)$(VERSION_NUMBER)
-RESFILE		= js$(MOZ_BITS)40.res
 endif
-
-PACKAGE_FILE = js.pkg
 
 # JavaScript must be built shared, even for static builds, as it is used by
 # other modules which are always built shared. Failure to do so results in
@@ -140,6 +159,7 @@ CPPSRCS		= \
 		jsmath.cpp \
 		jsnum.cpp \
 		jsobj.cpp \
+		json.cpp \
 		jsopcode.cpp \
 		jsparse.cpp \
 		jsprf.cpp \
@@ -159,7 +179,8 @@ CSRCS 		+= \
 		jsdtracef.c
 endif
 
-EXPORTS		= \
+INSTALLED_HEADERS = \
+		js-config.h \
 		jsautocfg.h \
 		jsautokw.h \
 		js.msg \
@@ -187,6 +208,7 @@ EXPORTS		= \
 		jsmath.h \
 		jsnum.h \
 		jsobj.h \
+		json.h \
 		jsopcode.tbl \
 		jsopcode.h \
 		jsotypes.h \
@@ -199,6 +221,7 @@ EXPORTS		= \
 		jsscan.h \
 		jsscope.h \
 		jsscript.h \
+		jsstaticcheck.h \
 		jsstddef.h \
 		jsstr.h \
 		jstracer.h \
@@ -212,17 +235,18 @@ EXPORTS		= \
 ifdef ENABLE_JIT
 VPATH		+= $(srcdir)/nanojit
 
-EXPORTS += \
+INSTALLED_HEADERS += \
+		builtins.tbl    \
+		jsbuiltins.h    \
 		Assembler.h     \
 		LIR.h		\
 		avmplus.h	\
-		vm_fops.h	\
 		Fragmento.h	\
 		Native.h	\
 		Native$(NANOJIT_ARCH).h \
 		RegAlloc.h	\
 		nanojit.h	\
-		builtins.tbl \
+		TraceTreeDrawer.h \
 		$(NULL)
 
 CPPSRCS += \
@@ -237,7 +261,6 @@ CPPSRCS += \
 		$(NULL)
 
 ifdef DEBUG
-EXPORTS += TraceTreeDrawer.h
 CPPSRCS += TraceTreeDrawer.cpp
 endif
 
@@ -245,14 +268,14 @@ DEFINES += -DFEATURE_NANOJIT -DJS_TRACER
 endif
 
 ifdef HAVE_DTRACE
-EXPORTS 	+= \
+INSTALLED_HEADERS += \
 		jsdtracef.h \
-		javascript-trace.h \
+		$(CURDIR)/javascript-trace.h \
 		$(NULL)
 endif
 
 ifeq (,$(filter-out WINNT WINCE,$(OS_ARCH)))
-EXPORTS		+= jscpucfg.h
+INSTALLED_HEADERS += jscpucfg.h
 endif
 
 JS_SAFE_ARENA	= 1
@@ -320,6 +343,27 @@ MOZILLA_DTRACE_SRC = $(srcdir)/javascript-trace.d
 endif
 
 include $(topsrcdir)/config/rules.mk
+
+ifdef MOZ_SYNC_BUILD_FILES
+# Because the SpiderMonkey can be distributed and built independently
+# of the Mozilla source tree, it contains its own copies of many of
+# the files used by the top-level Mozilla build process, from the
+# 'config' and 'build' subtrees.
+#
+# To make it simpler to keep the copies in sync, we follow the policy
+# that the SpiderMonkey copies must always be exact copies of those in
+# the containing Mozilla tree.  If you've made a change in one, it
+# belongs in the other as well.  If the change isn't right for both
+# places, then that's something to bring up with the other developers.
+#
+# Some files are reasonable to diverge; for example,
+# js/config/autoconf.mk.in doesn't need most of the stuff in
+# config/autoconf.mk.in.
+check-sync-dirs = $(PYTHON) $(srcdir)/config/check-sync-dirs.py
+check::
+	$(check-sync-dirs) $(srcdir)/config $(MOZ_SYNC_BUILD_FILES)/config
+	$(check-sync-dirs) $(srcdir)/build $(MOZ_SYNC_BUILD_FILES)/build
+endif
 
 # our build system doesn't handle subdir srcs very gracefully today
 export::
@@ -479,6 +523,8 @@ endif
 
 jsopcode.h jsopcode.cpp: jsopcode.tbl
 
+export:: jsautocfg.h
+
 ifeq (,$(CROSS_COMPILE)$(filter-out WINNT,$(OS_ARCH)))
 jsautocfg.h:
 	touch $@
@@ -505,19 +551,6 @@ endif
 ifdef CROSS_COMPILE
 # jscpucfg needs to know when it's supposed to produce a config for the target
 JSCPUCFG_DEFINES = $(ACDEFINES)
-
-# This is incredibly hacky.  Darwin NSPR uses the same MDCPUCFG for multiple
-# processors, and determines which processor to configure for based on
-# #ifdef i386.  This macro is among the NSPR defines, but is also automatically
-# defined by the compiler when building for i386.  It therefore needs to be
-# defined here if targeting i386, and explicitly undefined otherwise.
-ifeq ($(OS_ARCH),Darwin)
-ifeq ($(TARGET_CPU),powerpc)
-JSCPUCFG_DEFINES += -Ui386
-else
-JSCPUCFG_DEFINES += -Di386=1
-endif
-endif
 endif
 
 ifeq ($(OS_ARCH),QNX)
@@ -539,23 +572,87 @@ jscpucfg$(HOST_BIN_SUFFIX): jscpucfg.cpp Makefile.in
 endif
 endif
 
+# Compute the linker flags that programs linking against SpiderMonkey should
+# pass to get SpiderMonkey and its dependencies, beyond just the -L and -l
+# for the SpiderMonkey library itself.
+# - EXTRA_DSO_LDOPTS includes the NSPR -L and -l flags.
+# - OS_LIBS includes libraries selected by the configure script.
+# - EXTRA_LIBS includes libraries selected by this Makefile.
+JS_CONFIG_LIBS=$(EXTRA_DSO_LDOPTS) $(OS_LIBS) $(EXTRA_LIBS) 
+
+# The configure script invokes this rule explicitly at configure time!
+# It's important that js-config be ready by the time we're done
+# configuring, because we may be running other configure scripts that
+# would like to run js-config themselves, before js is built.
+#
+# This file and rules.mk go through a certain amount of work to decide
+# which libraries to build, what to name them, and what flags to pass
+# when linking them (and thus what flags its own clients must pass).
+# All this information needs to go into the js-config script.  To
+# avoid trying to re-compute all that in the configure script, we just
+# have the configure script generate this Makefile, and then invoke
+# this rule.
+at=@
+js-config: js-config.in Makefile $(DEPTH)/config/autoconf.mk $(topsrcdir)/config/config.mk $(topsrcdir)/config/rules.mk
+	rm -f js-config.tmp
+	sed < $< > js-config.tmp \
+	-e 's|$(at)prefix$(at)|$(prefix)|' \
+	-e 's|$(at)exec_prefix$(at)|$(exec_prefix)|' \
+	-e 's|$(at)includedir$(at)|$(includedir)|' \
+	-e 's|$(at)libdir$(at)|$(libdir)|' \
+	-e 's|$(at)MOZILLA_VERSION$(at)|$(MOZILLA_VERSION)|' \
+	-e 's|$(at)LIBRARY_NAME$(at)|$(LIBRARY_NAME)|' \
+	-e 's|$(at)NSPR_CFLAGS$(at)|$(NSPR_CFLAGS)|' \
+	-e 's|$(at)JS_CONFIG_LIBS$(at)|$(JS_CONFIG_LIBS)|' \
+	-e 's|$(at)MOZ_JS_LIBS$(at)|$(MOZ_JS_LIBS)|' \
+	&& mv js-config.tmp $@ && chmod +x $@
+
+SCRIPTS = js-config
+
+install:: $(INSTALLED_HEADERS)
+	$(INSTALL) $(IFLAGS1) $^ $(includedir)/$(MODULE)
+
+install:: $(SCRIPTS) $(PROGRAM)
+	$(INSTALL) $(IFLAGS2) $^ $(bindir)
+
+# The Mozilla top-level makefiles use install-runtime-libs directly to
+# place an additional copy of the libraries in the 'dist/bin'
+# directory.
+install:: install-runtime-libs
+install-runtime-libs:: $(LIBRARY) $(SHARED_LIBRARY) $(IMPORT_LIBRARY)
+ifneq (,$(LIBRARY))
+	$(INSTALL) $(IFLAGS1) $(LIBRARY) $(libdir)
+endif
+ifneq (,$(SHARED_LIBRARY))
+	$(INSTALL) $(IFLAGS2) $(SHARED_LIBRARY) $(libdir)
+endif
+ifneq (,$(IMPORT_LIBRARY))
+	$(INSTALL) $(IFLAGS2) $(IMPORT_LIBRARY) $(libdir)
+endif
+
 # Extra dependancies and rules for auto-generated headers
 host_jskwgen.$(OBJ_SUFFIX): jsversion.h jskeyword.tbl
 
-jsautokw.h: host_jskwgen$(HOST_BIN_SUFFIX)
+# Use CURDIR to avoid finding a jsautokw.h in the source tree (from a
+# previous build?) via VPATH when we're building in a separate tree.
+$(CURDIR)/jsautokw.h: host_jskwgen$(HOST_BIN_SUFFIX)
 	./host_jskwgen$(HOST_BIN_SUFFIX) $@
 
 host_jsoplengen.$(OBJ_SUFFIX): jsopcode.tbl
 
-jsautooplen.h: host_jsoplengen$(HOST_BIN_SUFFIX)
+# Use CURDIR to avoid finding a jsautooplen.h in the source tree (from
+# a previous build?) via VPATH when we're building in a separate tree.
+$(CURDIR)/jsautooplen.h: host_jsoplengen$(HOST_BIN_SUFFIX)
 	./host_jsoplengen$(HOST_BIN_SUFFIX) $@
 
 # Force auto-header generation before compiling any source that may use them
-$(CPPSRCS:%.cpp=%.$(OBJ_SUFFIX)): jsautokw.h jsautooplen.h
+$(CPPSRCS:%.cpp=%.$(OBJ_SUFFIX)): $(CURDIR)/jsautokw.h $(CURDIR)/jsautooplen.h
 
 ifdef HAVE_DTRACE
-javascript-trace.h: $(srcdir)/javascript-trace.d
+$(CURDIR)/javascript-trace.h: $(srcdir)/javascript-trace.d
 	dtrace -h -s $(srcdir)/javascript-trace.d -o javascript-trace.h.in
 	sed 's/if _DTRACE_VERSION/ifdef INCLUDE_MOZILLA_DTRACE/' \
 	    javascript-trace.h.in > javascript-trace.h
+
+$(CPPSRCS:%.cpp=%.$(OBJ_SUFFIX)): $(CURDIR)/javascript-trace.h
 endif

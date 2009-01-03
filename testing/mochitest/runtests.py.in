@@ -375,9 +375,8 @@ Are you executing $objdir/_tests/testing/mochitest/runtests.py?"""
     #   0 TOTAL              17     192  419115886    2 ...
     # 833 nsTimerImpl        60     120      24726    2 ...
     lineRe = re.compile(r"^\s*\d+\s+(?P<name>\S+)\s+"
-                        r"(?P<size>\d+)\s+(?P<bytesLeaked>\d+)\s+"
-                        r"\d+\s+(?P<numLeaked>\d+)")
-    thresholdExceeded = False
+                        r"(?P<size>-?\d+)\s+(?P<bytesLeaked>-?\d+)\s+"
+                        r"\d+\s+(?P<numLeaked>-?\d+)")
     seenTotal = False
     prefix = "TEST-PASS"
     for line in leaks:
@@ -385,24 +384,33 @@ Are you executing $objdir/_tests/testing/mochitest/runtests.py?"""
       if not matches:
         continue
       name = matches.group("name")
+      size = int(matches.group("size"))
+      bytesLeaked = int(matches.group("bytesLeaked"))
+      numLeaked = int(matches.group("numLeaked"))
+      if size < 0 or bytesLeaked < 0 or numLeaked < 0:
+        log.info("TEST-UNEXPECTED-FAIL | runtests-leaks | negative leaks caught!")
       if "TOTAL" == name:
         seenTotal = True
-        bytesLeaked = int(matches.group("bytesLeaked"))
-        if bytesLeaked > threshold:
-          thresholdExceeded = True
+        # Check for leaks.
+        if bytesLeaked < 0 or bytesLeaked > threshold:
           prefix = "TEST-UNEXPECTED-FAIL"
-          log.info("TEST-UNEXPECTED-FAIL | runtests-leaks | leaked %d bytes during test execution (should "
-                   "have leaked no more than %d bytes)",
-                   bytesLeaked, threshold)
+          leakLog = "TEST-UNEXPECTED-FAIL | runtests-leaks | leaked" \
+                    " %d bytes during test execution" % bytesLeaked
         elif bytesLeaked > 0:
-          log.info("TEST-PASS | runtests-leaks | WARNING leaked %d bytes during test execution",
-                   bytesLeaked)
+          leakLog = "TEST-PASS | runtests-leaks | WARNING leaked" \
+                    " %d bytes during test execution" % bytesLeaked
         else:
-          log.info("TEST-PASS | runtests-leaks | no leaks detected!")
+          leakLog = "TEST-PASS | runtests-leaks | no leaks detected!"
+        # Remind the threshold if it is not 0, which is the goal.
+        if threshold != 0:
+          leakLog += (threshold == INFINITY) \
+                     and (" (no threshold set)") \
+                     or  (" (threshold set at %d bytes)" % threshold)
+        # Log the information.
+        log.info(leakLog)
       else:
-        numLeaked = int(matches.group("numLeaked"))
         if numLeaked != 0:
-          if numLeaked > 1:
+          if abs(numLeaked) > 1:
             instance = "instances"
             rest = " each (%s bytes total)" % matches.group("bytesLeaked")
           else:
@@ -451,11 +459,11 @@ def maybeForceLeakThreshold(options):
       options.leakThreshold = 0
     elif options.browserChrome:
       # We still leak a nondeterministic amount running browser-chrome tests.
-      pass
+      # But we are close to 0 (bug), so start to prevent/detect regressions. (Bug 460548)
+      options.leakThreshold = 74000
     else:
-      # We leak nothing on Windows or OS X running normal Mochitests.
-      if automation.IS_MAC or automation.IS_WIN32:
-        options.leakThreshold = 0
+      # Normal Mochitests: no leaks.
+      options.leakThreshold = 0
 
 def makeTestConfig(options):
   "Creates a test configuration file for customizing test execution."

@@ -52,8 +52,6 @@ IS_COMPONENT	= 1
 MODULE_NAME	= nsFileViewModule
 LIBXUL_LIBRARY	= 1
 
-PACKAGE_FILE = filepicker.pkg
-
 REQUIRES	= \
 		xpcom \
 		layout \

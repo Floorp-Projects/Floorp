@@ -45,6 +45,7 @@
 #include "nsCRT.h"
 #include "XPCNativeWrapper.h"
 #include "XPCWrapper.h"
+#include "nsWrapperCache.h"
 
 /***************************************************************************/
 
@@ -191,10 +192,7 @@ static void DEBUG_TrackNewWrapper(XPCWrappedNative* wrapper)
 static void DEBUG_TrackDeleteWrapper(XPCWrappedNative* wrapper)
 {
 #ifdef XPC_CHECK_WRAPPERS_AT_SHUTDOWN
-    if(nsXPConnect::GetRuntime())
-        nsXPConnect::GetRuntime()->DEBUG_RemoveWrappedNative(wrapper);
-    else
-        NS_ERROR("failed to remove wrapper");
+    nsXPConnect::GetRuntimeInstance()->DEBUG_RemoveWrappedNative(wrapper);
 #endif
 #ifdef XPC_TRACK_WRAPPER_STATS
     DEBUG_TotalLiveWrappedNativeCount--;
@@ -458,6 +456,8 @@ XPCWrappedNative::GetNewOrUsed(XPCCallContext& ccx,
         if(!proto)
             return NS_ERROR_FAILURE;
 
+        proto->CacheOffsets(identity);
+
         wrapper = new XPCWrappedNative(identity, proto);
         if(!wrapper)
             return NS_ERROR_FAILURE;
@@ -590,33 +590,49 @@ XPCWrappedNative::GetUsedOnly(XPCCallContext& ccx,
                               XPCWrappedNative** resultWrapper)
 {
     NS_ASSERTION(Object, "XPCWrappedNative::GetUsedOnly was called with a null Object");
-    nsCOMPtr<nsISupports> identity;
-#ifdef XPC_IDISPATCH_SUPPORT
-    // XXX See GetNewOrUsed for more info on this
-    if(Interface->GetIID()->Equals(NSID_IDISPATCH))
-        identity = Object;
-    else
-#endif
-        identity = do_QueryInterface(Object);
-
-    if(!identity)
-    {
-        NS_ERROR("This XPCOM object fails in QueryInterface to nsISupports!");
-        return NS_ERROR_FAILURE;
-    }
 
     XPCWrappedNative* wrapper;
-    Native2WrappedNativeMap* map = Scope->GetWrappedNativeMap();
-
-    {   // scoped lock
-        XPCAutoLock lock(Scope->GetRuntime()->GetMapLock());
-        wrapper = map->Find(identity);
+    nsWrapperCache* cache = nsnull;
+    CallQueryInterface(Object, &cache);
+    if(cache)
+    {
+        wrapper = static_cast<XPCWrappedNative*>(cache->GetWrapper());
         if(!wrapper)
         {
             *resultWrapper = nsnull;
             return NS_OK;
         }
         NS_ADDREF(wrapper);
+    }
+    else
+    {
+        nsCOMPtr<nsISupports> identity;
+#ifdef XPC_IDISPATCH_SUPPORT
+        // XXX See GetNewOrUsed for more info on this
+        if(Interface->GetIID()->Equals(NSID_IDISPATCH))
+            identity = Object;
+        else
+#endif
+            identity = do_QueryInterface(Object);
+
+        if(!identity)
+        {
+            NS_ERROR("This XPCOM object fails in QueryInterface to nsISupports!");
+            return NS_ERROR_FAILURE;
+        }
+
+        Native2WrappedNativeMap* map = Scope->GetWrappedNativeMap();
+
+        {   // scoped lock
+            XPCAutoLock lock(Scope->GetRuntime()->GetMapLock());
+            wrapper = map->Find(identity);
+            if(!wrapper)
+            {
+                *resultWrapper = nsnull;
+                return NS_OK;
+            }
+            NS_ADDREF(wrapper);
+        }
     }
 
     nsresult rv;
@@ -1234,7 +1250,8 @@ XPCWrappedNative::ReparentWrapperIfFound(XPCCallContext& ccx,
                                                     oldProto->GetClassInfo(),
                                                     &ci,
                                                     !oldProto->IsShared(),
-                                                    (info->GetJSClass()->flags & JSCLASS_IS_GLOBAL));
+                                                    (info->GetJSClass()->flags & JSCLASS_IS_GLOBAL),
+                                                    oldProto->GetOffsetsMasked());
             if(!newProto)
             {
                 NS_RELEASE(wrapper);
@@ -2716,7 +2733,8 @@ NS_IMETHODIMP XPCWrappedNative::RefreshPrototype()
                                                    oldProto->GetClassInfo(),
                                                    &ci,
                                                    !oldProto->IsShared(),
-                                                   (info->GetJSClass()->flags & JSCLASS_IS_GLOBAL));
+                                                   (info->GetJSClass()->flags & JSCLASS_IS_GLOBAL),
+                                                   oldProto->GetOffsetsMasked());
     if(!newProto)
         return UnexpectedFailure(NS_ERROR_FAILURE);
 
@@ -3397,7 +3415,7 @@ XPCJSObjectHolder::XPCJSObjectHolder(XPCCallContext& ccx, JSObject* obj)
 
 XPCJSObjectHolder::~XPCJSObjectHolder()
 {
-    RemoveFromRootSet(nsXPConnect::GetRuntime()->GetJSRuntime());
+    RemoveFromRootSet(nsXPConnect::GetRuntimeInstance()->GetJSRuntime());
 }
 
 void

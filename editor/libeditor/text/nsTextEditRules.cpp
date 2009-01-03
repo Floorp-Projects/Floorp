@@ -585,6 +585,8 @@ nsTextEditRules::WillInsertText(PRInt32          aAction,
     switch(mEditor->mNewlineHandling)
     {
     case nsIPlaintextEditor::eNewlinesReplaceWithSpaces:
+      // Strip trailing newlines first so we don't wind up with trailing spaces
+      tString.Trim(CRLF, PR_FALSE, PR_TRUE);
       tString.ReplaceChar(CRLF, ' ');
       break;
     case nsIPlaintextEditor::eNewlinesStrip:
@@ -886,6 +888,9 @@ nsTextEditRules::WillDeleteSelection(nsISelection *aSelection,
 
   if (mFlags & nsIPlaintextEditor::eEditorPasswordMask)
   {
+    res = mEditor->ExtendSelectionForDelete(aSelection, &aCollapsedAction);
+    NS_ENSURE_SUCCESS(res, res);
+
     // manage the password buffer
     PRUint32 start, end;
     mEditor->GetTextSelectionOffsets(aSelection, start, end);
@@ -916,97 +921,22 @@ nsTextEditRules::WillDeleteSelection(nsISelection *aSelection,
     res = aSelection->GetIsCollapsed(&bCollapsed);
     if (NS_FAILED(res)) return res;
   
-    if (bCollapsed)
-    {
-      // Test for distance between caret and text that will be deleted
-      res = CheckBidiLevelForDeletion(aSelection, startNode, startOffset, aCollapsedAction, aCancel);
-      if (NS_FAILED(res)) return res;
-      if (*aCancel) return NS_OK;
+    if (!bCollapsed) return NS_OK;
 
-      nsCOMPtr<nsIDOMText> textNode;
-      PRUint32 strLength;
-      
-      // destroy any empty text nodes in our path
-      if (mEditor->IsTextNode(startNode))
-      {
-        textNode = do_QueryInterface(startNode);
-        res = textNode->GetLength(&strLength);
-        if (NS_FAILED(res)) return res;
-        // if it has a length and we aren't at the edge, we are done
-        if (strLength && !( ((aCollapsedAction == nsIEditor::ePrevious) && startOffset) ||
-                            ((aCollapsedAction == nsIEditor::eNext) && startOffset==PRInt32(strLength)) ) )
-          return NS_OK;
-        
-        // remember where we are
-        nsCOMPtr<nsIDOMNode> selNode = startNode;
-        res = nsEditor::GetNodeLocation(selNode, address_of(startNode), &startOffset);
-        if (NS_FAILED(res)) return res;
+    // Test for distance between caret and text that will be deleted
+    res = CheckBidiLevelForDeletion(aSelection, startNode, startOffset, aCollapsedAction, aCancel);
+    if (NS_FAILED(res)) return res;
+    if (*aCancel) return NS_OK;
 
-        // delete this text node if empty
-        if (!strLength)
-        {
-          // delete empty text node
-          res = mEditor->DeleteNode(selNode);
-          if (NS_FAILED(res)) return res;
-        }
-        else
-        {
-          // if text node isn't empty, but we are at end of it, remeber that we are after it
-          if (aCollapsedAction == nsIEditor::eNext)
-            startOffset++;
-        }
-      }
-
-      // find next node (we know we are in container here)
-      nsCOMPtr<nsIContent> child, content(do_QueryInterface(startNode));
-      if (!content) return NS_ERROR_NULL_POINTER;
-      if (aCollapsedAction == nsIEditor::ePrevious)
-        --startOffset;
-      child = content->GetChildAt(startOffset);
-
-      nsCOMPtr<nsIDOMNode> nextNode = do_QueryInterface(child);
-      
-      // scan for next node, deleting empty text nodes on way
-      while (nextNode && mEditor->IsTextNode(nextNode))
-      {
-        textNode = do_QueryInterface(nextNode);
-        if (!textNode) break;// found a br, stop there
-
-        res = textNode->GetLength(&strLength);
-        if (NS_FAILED(res)) return res;
-        if (strLength) break;  // found a non-empty text node
-        
-        // delete empty text node
-        res = mEditor->DeleteNode(nextNode);
-        if (NS_FAILED(res)) return res;
-        
-        // find next node
-        if (aCollapsedAction == nsIEditor::ePrevious)
-          --startOffset;
-          // don't need to increment startOffset for nsIEditor::eNext
-        child = content->GetChildAt(startOffset);
-
-        nextNode = do_QueryInterface(child);
-      }
-      // fix for bugzilla #125161: if we are about to forward delete a <BR>,
-      // make sure it is not last node in editfield.  If it is, cancel deletion.
-      if (nextNode && (aCollapsedAction == nsIEditor::eNext) && nsTextEditUtils::IsBreak(nextNode))
-      {
-        nsIDOMNode *body = mEditor->GetRoot();
-        if (!body)
-          return NS_ERROR_NULL_POINTER;
-        nsCOMPtr<nsIDOMNode> lastChild;
-        res = body->GetLastChild(getter_AddRefs(lastChild));
-        if (lastChild == nextNode)
-        {
-          *aCancel = PR_TRUE;
-          return NS_OK;
-        }
-      }
-    }
+    res = mEditor->ExtendSelectionForDelete(aSelection, &aCollapsedAction);
+    NS_ENSURE_SUCCESS(res, res);
   }
 
-  return res;
+  res = mEditor->DeleteSelectionImpl(aCollapsedAction);
+  NS_ENSURE_SUCCESS(res, res);
+
+  *aHandled = PR_TRUE;
+  return NS_OK;
 }
 
 nsresult

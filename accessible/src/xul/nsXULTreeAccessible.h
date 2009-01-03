@@ -61,10 +61,8 @@ public:
   nsXULTreeAccessible(nsIDOMNode* aDOMNode, nsIWeakReference* aShell);
   virtual ~nsXULTreeAccessible() {}
 
-  /* ----- nsIAccessible ----- */
-  NS_IMETHOD Shutdown();
+  // nsIAccessible
   NS_IMETHOD GetRole(PRUint32 *_retval);
-  NS_IMETHOD GetState(PRUint32 *aState, PRUint32 *aExtraState);
   NS_IMETHOD GetValue(nsAString& _retval);
 
   NS_IMETHOD GetFirstChild(nsIAccessible **_retval);
@@ -77,6 +75,13 @@ public:
   NS_IMETHOD GetDeepestChildAtPoint(PRInt32 aX, PRInt32 aY,
                                     nsIAccessible **aAccessible);
 
+  // nsAccessNode
+  virtual nsresult Shutdown();
+
+  // nsAccessible
+  virtual nsresult GetStateInternal(PRUint32 *aState, PRUint32 *aExtraState);
+
+  // nsXULTreeAccessible
   static void GetTreeBoxObject(nsIDOMNode* aDOMNode, nsITreeBoxObject** aBoxObject);
   static nsresult GetColumnCount(nsITreeBoxObject* aBoxObject, PRInt32 *aCount);
 
@@ -108,12 +113,9 @@ public:
   nsXULTreeitemAccessible(nsIAccessible *aParent, nsIDOMNode *aDOMNode, nsIWeakReference *aShell, PRInt32 aRow, nsITreeColumn* aColumn = nsnull);
   virtual ~nsXULTreeitemAccessible() {}
 
-  NS_IMETHOD Shutdown();
-
   // nsIAccessible
-  NS_IMETHOD GetName(nsAString& _retval);
+  NS_IMETHOD GetName(nsAString& aName);
   NS_IMETHOD GetRole(PRUint32 *_retval);
-  NS_IMETHOD GetState(PRUint32 *aState, PRUint32 *aExtraState);
   NS_IMETHOD GetNumActions(PRUint8 *_retval);
   NS_IMETHOD GetActionName(PRUint8 aIndex, nsAString& aName);
   virtual nsresult GetAttributesInternal(nsIPersistentProperties *aAttributes);
@@ -132,11 +134,13 @@ public:
   // nsIAccessNode
   NS_IMETHOD GetUniqueID(void **aUniqueID);
 
-  // nsPIAccessNode
-  NS_IMETHOD Init();
-
   // nsAccessNode
   virtual PRBool IsDefunct();
+  virtual nsresult Init();
+  virtual nsresult Shutdown();
+
+  // nsAccessible
+  virtual nsresult GetStateInternal(PRUint32 *aState, PRUint32 *aExtraState);
 
 protected:
   PRBool IsExpandable();

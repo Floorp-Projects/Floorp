@@ -44,6 +44,8 @@
 #include "nsIConsoleService.h"
 #include "nsIDocument.h"
 #include "nsIDOMDocument.h"
+#include "nsIDOMNavigator.h"
+#include "nsIDOMWindowInternal.h"
 #include "nsIEventTarget.h"
 #include "nsIGenericFactory.h"
 #include "nsIJSContextStack.h"
@@ -55,6 +57,7 @@
 #include "nsISupportsPriority.h"
 #include "nsIThreadPool.h"
 #include "nsIXPConnect.h"
+#include "nsPIDOMWindow.h"
 
 // Other includes
 #include "nsAutoLock.h"
@@ -62,7 +65,6 @@
 #include "nsContentUtils.h"
 #include "nsDeque.h"
 #include "nsIClassInfoImpl.h"
-#include "nsProxyRelease.h"
 #include "nsThreadUtils.h"
 #include "nsXPCOM.h"
 #include "nsXPCOMCID.h"
@@ -71,6 +73,10 @@
 #include "prthread.h"
 
 // DOMWorker includes
+#include "nsDOMWorker.h"
+#include "nsDOMWorkerEvents.h"
+#include "nsDOMWorkerMacros.h"
+#include "nsDOMWorkerMessageHandler.h"
 #include "nsDOMWorkerPool.h"
 #include "nsDOMWorkerSecurityManager.h"
 #include "nsDOMWorkerTimeout.h"
@@ -104,14 +110,6 @@ PR_STATIC_ASSERT(THREADPOOL_THREAD_CAP >= THREADPOOL_MAX_THREADS);
 
 // A "bad" value for the NSPR TLS functions.
 #define BAD_TLS_INDEX (PRUintn)-1
-
-// Don't know why nsISupports.idl defines this out...
-#define NS_FORWARD_NSISUPPORTS(_to) \
-  NS_IMETHOD QueryInterface(const nsIID& uuid, void** result) { \
-    return _to QueryInterface(uuid, result); \
-  } \
-  NS_IMETHOD_(nsrefcnt) AddRef(void) { return _to AddRef(); } \
-  NS_IMETHOD_(nsrefcnt) Release(void) { return _to Release(); } 
 
 // Easy access for static functions. No reference here.
 static nsDOMThreadService* gDOMThreadService = nsnull;
@@ -155,103 +153,106 @@ private:
 };
 
 /**
- * This class is used as to post an error to the main thread. It logs the error
- * to the console and calls the pool's onError callback.
+ * This class is used as to post an error to the worker's outer handler.
  */
-class nsReportErrorRunnable : public nsRunnable
+class nsReportErrorRunnable : public nsIRunnable
 {
 public:
-  nsReportErrorRunnable(nsIScriptError* aError, nsDOMWorkerThread* aWorker)
-  : mError(aError), mWorker(aWorker) { }
+  NS_DECL_ISUPPORTS
+
+  nsReportErrorRunnable(nsDOMWorker* aWorker, nsIScriptError* aScriptError)
+  : mWorker(aWorker), mWorkerWN(aWorker->GetWrappedNative()),
+    mScriptError(aScriptError) {
+      NS_ASSERTION(aScriptError, "Null pointer!");
+    }
 
   NS_IMETHOD Run() {
-    nsresult rv;
-
-    nsCOMPtr<nsIConsoleService> consoleService =
-      do_GetService(NS_CONSOLESERVICE_CONTRACTID, &rv);
-    if (NS_SUCCEEDED(rv)) {
-      consoleService->LogMessage(mError);
+    if (mWorker->IsCanceled()) {
+      return NS_OK;
     }
 
-    if (!mWorker->IsCanceled()) {
-#ifdef PR_LOGGING
-      nsAutoString message;
-      mError->GetErrorMessage(message);
+#ifdef DEBUG
+    {
+      nsRefPtr<nsDOMWorker> parent = mWorker->GetParent();
+      if (NS_IsMainThread()) {
+        NS_ASSERTION(!parent, "Shouldn't have a parent on the main thread!");
+      }
+      else {
+        NS_ASSERTION(parent, "Should have a parent!");
+
+        JSContext* cx = nsDOMThreadService::get()->GetCurrentContext();
+        NS_ASSERTION(cx, "No context!");
+
+        nsDOMWorker* currentWorker = (nsDOMWorker*)JS_GetContextPrivate(cx);
+        NS_ASSERTION(currentWorker == parent, "Wrong worker!");
+      }
+    }
 #endif
-      nsRefPtr<nsDOMWorkerPool> pool = mWorker->Pool();
 
-      LOG(("Posting error '%s' to pool [0x%p]",
-           NS_LossyConvertUTF16toASCII(message).get(),
-           static_cast<void*>(pool.get())));
+    NS_NAMED_LITERAL_STRING(errorStr, "error");
 
-      pool->HandleError(mError, mWorker);
+    PRBool hasListener = PR_FALSE, stopPropagation = PR_FALSE;
+    nsresult rv = NS_OK;
+
+    if (mWorker->mOuterHandler->HasListeners(errorStr)) {
+      hasListener = PR_TRUE;
+      nsRefPtr<nsDOMWorkerMessageEvent> event(new nsDOMWorkerMessageEvent());
+      if (event) {
+        nsCString errorMessage;
+        rv = mScriptError->ToString(errorMessage);
+        if (NS_SUCCEEDED(rv)) {
+          rv = event->InitMessageEvent(errorStr, PR_FALSE, PR_FALSE,
+                                       NS_ConvertUTF8toUTF16(errorMessage),
+                                       EmptyString(), nsnull);
+          if (NS_SUCCEEDED(rv)) {
+            event->SetTarget(mWorker);
+            rv = mWorker->DispatchEvent(static_cast<nsDOMWorkerEvent*>(event),
+                                        &stopPropagation);
+            if (NS_FAILED(rv)) {
+              stopPropagation = PR_FALSE;
+            }
+          }
+        }
+      }
     }
+    NS_ENSURE_SUCCESS(rv, rv);
+
+    if (stopPropagation) {
+      return NS_OK;
+    }
+
+    nsRefPtr<nsDOMWorker> parent = mWorker->GetParent();
+    if (!parent) {
+      NS_ASSERTION(NS_IsMainThread(), "Wrong thread!");
+      nsCOMPtr<nsIConsoleService> consoleService =
+        do_GetService(NS_CONSOLESERVICE_CONTRACTID);
+      if (consoleService) {
+        rv = consoleService->LogMessage(mScriptError);
+        NS_ENSURE_SUCCESS(rv, rv);
+      }
+      return NS_OK;
+    }
+
+    nsRefPtr<nsReportErrorRunnable> runnable =
+      new nsReportErrorRunnable(parent, mScriptError);
+    if (runnable) {
+      nsRefPtr<nsDOMWorker> grandparent = parent->GetParent();
+      rv = grandparent ?
+           nsDOMThreadService::get()->Dispatch(grandparent, runnable) :
+           NS_DispatchToMainThread(runnable, NS_DISPATCH_NORMAL);
+      NS_ENSURE_SUCCESS(rv, rv);
+    }
+
     return NS_OK;
   }
 
 private:
-  // XXX Maybe this should be an nsIException...
-  nsCOMPtr<nsIScriptError> mError;
-
-  // Have to carry a strong ref since this is used as a parameter to the
-  // onError callback.
-  nsRefPtr<nsDOMWorkerThread> mWorker;
+  nsRefPtr<nsDOMWorker> mWorker;
+  nsCOMPtr<nsIXPConnectWrappedNative> mWorkerWN;
+  nsCOMPtr<nsIScriptError> mScriptError;
 };
 
-/**
- * Need this to expose an nsIScriptError to content JS (implement nsIClassInfo
- * with DOM_OBJECT flag set.
- */
-class nsDOMWorkerScriptError : public nsIClassInfo
-{
-public:
-  NS_DECL_ISUPPORTS
-  NS_DECL_NSICLASSINFO
-
-  nsDOMWorkerScriptError(nsIScriptError* aError)
-  : mScriptError(this, aError) { }
-
-protected:
-
-  // Lame, nsIScriptError and nsIClassInfo both have 'readonly attribute
-  // unsigned long flags' so we have to use an inner class to do this the
-  // right way...
-  class InnerScriptError : public nsIScriptError
-  {
-  public:
-    NS_FORWARD_NSISUPPORTS(mParent->)
-    NS_FORWARD_NSISCRIPTERROR(mError->)
-    NS_FORWARD_NSICONSOLEMESSAGE(mError->)
-
-    InnerScriptError(nsDOMWorkerScriptError* aParent, nsIScriptError* aError)
-    : mParent(aParent), mError(aError) { }
-
-  protected:
-    nsDOMWorkerScriptError* mParent;
-    nsCOMPtr<nsIScriptError> mError;
-  };
-
-  InnerScriptError mScriptError;
-};
-
-NS_IMPL_THREADSAFE_ADDREF(nsDOMWorkerScriptError)
-NS_IMPL_THREADSAFE_RELEASE(nsDOMWorkerScriptError)
-
-// More hoops to jump through for the identical IDL methods
-NS_INTERFACE_MAP_BEGIN(nsDOMWorkerScriptError)
-  if (aIID.Equals(NS_GET_IID(nsIScriptError)) ||
-      aIID.Equals(NS_GET_IID(nsIConsoleMessage))) {
-    foundInterface = static_cast<nsIConsoleMessage*>(&mScriptError);
-  }
-  else
-  NS_INTERFACE_MAP_ENTRY(nsIClassInfo)
-  NS_INTERFACE_MAP_ENTRY(nsISupports)
-NS_INTERFACE_MAP_END
-
-NS_IMPL_CI_INTERFACE_GETTER2(nsDOMWorkerScriptError, nsIScriptError,
-                                                     nsIConsoleMessage)
-
-NS_IMPL_THREADSAFE_DOM_CI(nsDOMWorkerScriptError)
+NS_IMPL_THREADSAFE_ISUPPORTS1(nsReportErrorRunnable, nsIRunnable)
 
 /**
  * Used to post an expired timeout to the correct worker.
@@ -283,7 +284,7 @@ class nsDOMWorkerRunnable : public nsRunnable
   friend class nsDOMThreadService;
 
 public:
-  nsDOMWorkerRunnable(nsDOMWorkerThread* aWorker)
+  nsDOMWorkerRunnable(nsDOMWorker* aWorker)
   : mWorker(aWorker) { }
 
   virtual ~nsDOMWorkerRunnable() {
@@ -291,16 +292,6 @@ public:
     while ((runnable = dont_AddRef((nsIRunnable*)mRunnables.PopFront()))) {
       // Loop until all the runnables are dead.
     }
-
-    // Only release mWorker on the main thread!
-    nsDOMWorkerThread* worker = nsnull;
-    mWorker.swap(worker);
-
-    nsISupports* supports = NS_ISUPPORTS_CAST(nsIDOMWorkerThread*, worker);
-    NS_ASSERTION(supports, "This should never be null!");
-
-    nsCOMPtr<nsIThread> mainThread(do_GetMainThread());
-    NS_ProxyRelease(mainThread, supports);
   }
 
   void PutRunnable(nsIRunnable* aRunnable) {
@@ -314,13 +305,18 @@ public:
   }
 
   NS_IMETHOD Run() {
+    NS_ASSERTION(!NS_IsMainThread(),
+                 "This should *never* run on the main thread!");
+
     // This must have been set up by the thread service
     NS_ASSERTION(gJSContextIndex != BAD_TLS_INDEX, "No context index!");
 
     // Make sure we have a JSContext to run everything on.
     JSContext* cx = (JSContext*)PR_GetThreadPrivate(gJSContextIndex);
     NS_ASSERTION(cx, "nsDOMThreadService didn't give us a context!");
-  
+
+    NS_ASSERTION(!JS_GetGlobalObject(cx), "Shouldn't have a global!");
+
     JS_SetContextPrivate(cx, mWorker);
 
     // Tell the worker which context it will be using
@@ -335,6 +331,7 @@ public:
     else {
       // This is usually due to a parse error in the worker script...
       JS_SetGlobalObject(cx, NULL);
+      JS_SetContextPrivate(cx, NULL);
 
       nsAutoMonitor mon(gDOMThreadService->mMonitor);
       gDOMThreadService->WorkerComplete(this);
@@ -347,6 +344,9 @@ public:
 protected:
 
   void RunQueue() {
+    JSContext* cx = (JSContext*)PR_GetThreadPrivate(gJSContextIndex);
+    NS_ASSERTION(cx, "nsDOMThreadService didn't give us a context!");
+
     while (1) {
       nsCOMPtr<nsIRunnable> runnable;
       {
@@ -367,16 +367,15 @@ protected:
         }
       }
 
-#ifdef DEBUG
-      nsresult rv =
-#endif
+      // Clear out any old cruft hanging around in the regexp statics.
+      JS_ClearRegExpStatics(cx);
+
       runnable->Run();
-      NS_WARN_IF_FALSE(NS_SUCCEEDED(rv), "Runnable failed!");
     }
   }
 
   // Set at construction
-  nsRefPtr<nsDOMWorkerThread> mWorker;
+  nsRefPtr<nsDOMWorker> mWorker;
 
   // Protected by mMonitor
   nsDeque mRunnables;
@@ -389,7 +388,7 @@ protected:
 JSBool
 DOMWorkerOperationCallback(JSContext* aCx)
 {
-  nsDOMWorkerThread* worker = (nsDOMWorkerThread*)JS_GetContextPrivate(aCx);
+  nsDOMWorker* worker = (nsDOMWorker*)JS_GetContextPrivate(aCx);
 
   // Want a strong ref here to make sure that the monitor we wait on won't go
   // away.
@@ -476,7 +475,7 @@ DOMWorkerErrorReporter(JSContext* aCx,
 {
   NS_ASSERTION(!NS_IsMainThread(), "Huh?!");
 
-  nsDOMWorkerThread* worker = (nsDOMWorkerThread*)JS_GetContextPrivate(aCx);
+  nsDOMWorker* worker = (nsDOMWorker*)JS_GetContextPrivate(aCx);
 
   if (worker->IsCanceled()) {
     // We don't want to report errors from canceled workers. It's very likely
@@ -486,7 +485,7 @@ DOMWorkerErrorReporter(JSContext* aCx,
   }
 
   nsresult rv;
-  nsCOMPtr<nsIScriptError> errorObject =
+  nsCOMPtr<nsIScriptError> scriptError =
     do_CreateInstance(NS_SCRIPTERROR_CONTRACTID, &rv);
   NS_ENSURE_SUCCESS(rv,);
 
@@ -501,25 +500,21 @@ DOMWorkerErrorReporter(JSContext* aCx,
 
   PRUint32 column = aReport->uctokenptr - aReport->uclinebuf;
 
-  rv = errorObject->Init(message, filename.get(), line, aReport->lineno,
-                        column, aReport->flags, "DOM Worker javascript");
+  rv = scriptError->Init(message, filename.get(), line, aReport->lineno,
+                         column, aReport->flags, "DOM Worker javascript");
   NS_ENSURE_SUCCESS(rv,);
 
-  nsRefPtr<nsDOMWorkerScriptError> domError =
-    new nsDOMWorkerScriptError(errorObject);
-  NS_ENSURE_TRUE(domError,);
-
-  nsCOMPtr<nsIScriptError> scriptError(do_QueryInterface(domError));
-  NS_ENSURE_TRUE(scriptError,);
-
-  nsCOMPtr<nsIThread> mainThread(do_GetMainThread());
-  NS_ENSURE_TRUE(mainThread,);
-
   nsCOMPtr<nsIRunnable> runnable =
-    new nsReportErrorRunnable(scriptError, worker);
+    new nsReportErrorRunnable(worker, scriptError);
   NS_ENSURE_TRUE(runnable,);
 
-  rv = mainThread->Dispatch(runnable, NS_DISPATCH_NORMAL);
+  nsRefPtr<nsDOMWorker> parent = worker->GetParent();
+
+  // If this worker has a parent then we need to send the message through the
+  // thread service to be run on the parent's thread. Otherwise it is a
+  // top-level worker and we send the message to the main thread.
+  rv = parent ? nsDOMThreadService::get()->Dispatch(parent, runnable)
+              : NS_DispatchToMainThread(runnable, NS_DISPATCH_NORMAL);
   NS_ENSURE_SUCCESS(rv,);
 }
 
@@ -528,7 +523,8 @@ DOMWorkerErrorReporter(JSContext* aCx,
  */
 
 nsDOMThreadService::nsDOMThreadService()
-: mMonitor(nsnull)
+: mMonitor(nsnull),
+  mNavigatorStringsLoaded(PR_FALSE)
 {
   NS_ASSERTION(NS_IsMainThread(), "Wrong thread!");
 #ifdef PR_LOGGING
@@ -552,10 +548,9 @@ nsDOMThreadService::~nsDOMThreadService()
   }
 }
 
-NS_IMPL_THREADSAFE_ISUPPORTS4(nsDOMThreadService, nsIEventTarget,
+NS_IMPL_THREADSAFE_ISUPPORTS3(nsDOMThreadService, nsIEventTarget,
                                                   nsIObserver,
-                                                  nsIThreadPoolListener,
-                                                  nsIDOMThreadService)
+                                                  nsIThreadPoolListener)
 
 nsresult
 nsDOMThreadService::Init()
@@ -591,6 +586,9 @@ nsDOMThreadService::Init()
   PRBool success = mWorkersInProgress.Init();
   NS_ENSURE_TRUE(success, NS_ERROR_OUT_OF_MEMORY);
 
+  success = mPools.Init();
+  NS_ENSURE_TRUE(success, NS_ERROR_OUT_OF_MEMORY);
+
   nsCOMPtr<nsIJSRuntimeService>
     runtimeSvc(do_GetService("@mozilla.org/js/xpc/RuntimeService;1"));
   NS_ENSURE_TRUE(runtimeSvc, NS_ERROR_FAILURE);
@@ -616,7 +614,7 @@ nsDOMThreadService::Init()
 }
 
 /* static */
-already_AddRefed<nsIDOMThreadService>
+already_AddRefed<nsDOMThreadService>
 nsDOMThreadService::GetOrInitService()
 {
   if (!gDOMThreadService) {
@@ -629,7 +627,7 @@ nsDOMThreadService::GetOrInitService()
     service.swap(gDOMThreadService);
   }
 
-  nsCOMPtr<nsIDOMThreadService> service(gDOMThreadService);
+  nsRefPtr<nsDOMThreadService> service(gDOMThreadService);
   return service.forget();
 }
 
@@ -638,6 +636,24 @@ nsDOMThreadService*
 nsDOMThreadService::get()
 {
   return gDOMThreadService;
+}
+
+/* static */
+JSContext*
+nsDOMThreadService::GetCurrentContext()
+{
+  JSContext* cx;
+
+  if (NS_IsMainThread()) {
+    nsresult rv = ThreadJSContextStack()->GetSafeJSContext(&cx);
+    NS_ENSURE_SUCCESS(rv, nsnull);
+  }
+  else {
+    NS_ENSURE_TRUE(gJSContextIndex, nsnull);
+    cx = static_cast<JSContext*>(PR_GetThreadPrivate(gJSContextIndex));
+  }
+
+  return cx;
 }
 
 /* static */
@@ -681,10 +697,15 @@ nsDOMThreadService::Cleanup()
   // These must be released after the thread pool is shut down.
   NS_IF_RELEASE(gJSRuntimeService);
   NS_IF_RELEASE(gWorkerSecurityManager);
+
+  nsAutoMonitor mon(mMonitor);
+  NS_ASSERTION(!mPools.Count(), "Live workers left!");
+
+  mPools.Clear();
 }
 
 nsresult
-nsDOMThreadService::Dispatch(nsDOMWorkerThread* aWorker,
+nsDOMThreadService::Dispatch(nsDOMWorker* aWorker,
                              nsIRunnable* aRunnable)
 {
   NS_ASSERTION(aWorker, "Null pointer!");
@@ -749,7 +770,7 @@ nsDOMThreadService::WorkerComplete(nsDOMWorkerRunnable* aRunnable)
   // No need to be in the monitor here because we should already be in it.
 
 #ifdef DEBUG
-  nsRefPtr<nsDOMWorkerThread>& debugWorker = aRunnable->mWorker;
+  nsRefPtr<nsDOMWorker>& debugWorker = aRunnable->mWorker;
 
   nsRefPtr<nsDOMWorkerRunnable> runnable;
   NS_ASSERTION(mWorkersInProgress.Get(debugWorker, getter_AddRefs(runnable)) &&
@@ -758,19 +779,6 @@ nsDOMThreadService::WorkerComplete(nsDOMWorkerRunnable* aRunnable)
 #endif
 
   mWorkersInProgress.Remove(aRunnable->mWorker);
-}
-
-void
-nsDOMThreadService::WaitForCanceledWorker(nsDOMWorkerThread* aWorker)
-{
-  NS_ASSERTION(aWorker->IsCanceled(),
-               "Waiting on a worker that isn't canceled!");
-
-  nsAutoMonitor mon(mMonitor);
-
-  while (mWorkersInProgress.Get(aWorker, nsnull)) {
-    mon.Wait();
-  }
 }
 
 /* static */
@@ -804,42 +812,64 @@ nsDOMThreadService::CreateJSContext()
   return cx.forget();
 }
 
-#define LOOP_OVER_POOLS(_func, _args)                     \
-  PR_BEGIN_MACRO                                          \
-    PRUint32 poolCount = mPools.Length();                 \
-    for (PRUint32 i = 0; i < poolCount; i++) {            \
-      mPools[i]-> _func _args ;                           \
-    }                                                     \
-  PR_END_MACRO
+already_AddRefed<nsDOMWorkerPool>
+nsDOMThreadService::GetPoolForGlobal(nsIScriptGlobalObject* aGlobalObject,
+                                     PRBool aRemove)
+{
+  NS_ASSERTION(aGlobalObject, "Null pointer!");
+
+  nsAutoMonitor mon(mMonitor);
+
+  nsRefPtr<nsDOMWorkerPool> pool;
+  mPools.Get(aGlobalObject, getter_AddRefs(pool));
+
+  if (aRemove) {
+    mPools.Remove(aGlobalObject);
+  }
+
+  return pool.forget();
+}
 
 void
 nsDOMThreadService::CancelWorkersForGlobal(nsIScriptGlobalObject* aGlobalObject)
 {
-  NS_ASSERTION(NS_IsMainThread(), "Wrong thread!");
-  LOOP_OVER_POOLS(CancelWorkersForGlobal, (aGlobalObject));
+  NS_ASSERTION(aGlobalObject, "Null pointer!");
+
+  nsRefPtr<nsDOMWorkerPool> pool = GetPoolForGlobal(aGlobalObject, PR_TRUE);
+  if (pool) {
+    pool->Cancel();
+  }
 }
 
 void
 nsDOMThreadService::SuspendWorkersForGlobal(nsIScriptGlobalObject* aGlobalObject)
 {
-  NS_ASSERTION(NS_IsMainThread(), "Wrong thread!");
-  LOOP_OVER_POOLS(SuspendWorkersForGlobal, (aGlobalObject));
+  NS_ASSERTION(aGlobalObject, "Null pointer!");
+
+  nsRefPtr<nsDOMWorkerPool> pool = GetPoolForGlobal(aGlobalObject, PR_FALSE);
+  if (pool) {
+    pool->Suspend();
+  }
 }
 
 void
 nsDOMThreadService::ResumeWorkersForGlobal(nsIScriptGlobalObject* aGlobalObject)
 {
-  NS_ASSERTION(NS_IsMainThread(), "Wrong thread!");
-  LOOP_OVER_POOLS(ResumeWorkersForGlobal, (aGlobalObject));
+  NS_ASSERTION(aGlobalObject, "Null pointer!");
+
+  nsRefPtr<nsDOMWorkerPool> pool = GetPoolForGlobal(aGlobalObject, PR_FALSE);
+  if (pool) {
+    pool->Resume();
+  }
 }
 
 void
-nsDOMThreadService::NoteDyingPool(nsDOMWorkerPool* aPool)
+nsDOMThreadService::NoteEmptyPool(nsDOMWorkerPool* aPool)
 {
-  NS_ASSERTION(NS_IsMainThread(), "Wrong thread!");
+  NS_ASSERTION(aPool, "Null pointer!");
 
-  NS_ASSERTION(mPools.Contains(aPool), "aPool should be in the array!");
-  mPools.RemoveElement(aPool);
+  nsAutoMonitor mon(mMonitor);
+  mPools.Remove(aPool->ScriptGlobalObject());
 }
 
 void
@@ -856,6 +886,8 @@ nsresult
 nsDOMThreadService::ChangeThreadPoolMaxThreads(PRInt16 aDelta)
 {
   NS_ENSURE_ARG(aDelta == 1 || aDelta == -1);
+
+  nsAutoMonitor mon(mMonitor);
 
   PRUint32 currentThreadCount;
   nsresult rv = mThreadPool->GetThreadLimit(&currentThreadCount);
@@ -906,7 +938,6 @@ nsDOMThreadService::Dispatch(nsIRunnable* aEvent,
 
   // This should only ever be called by the timer code! We run the event right
   // now, but all that does is queue the real event for the proper worker.
-
   aEvent->Run();
 
   return NS_OK;
@@ -1005,31 +1036,124 @@ nsDOMThreadService::OnThreadShuttingDown()
   return NS_OK;
 }
 
-/**
- * See nsIDOMThreadService
- */
-NS_IMETHODIMP
-nsDOMThreadService::CreatePool(nsIDOMWorkerPool** _retval)
+nsresult
+nsDOMThreadService::RegisterWorker(nsDOMWorker* aWorker,
+                                   nsIScriptGlobalObject* aGlobalObject)
 {
-  NS_ASSERTION(NS_IsMainThread(), "Wrong thread!");
+  NS_ASSERTION(aWorker, "Null pointer!");
+  NS_ASSERTION(aGlobalObject, "Null pointer!");
 
-  NS_ENSURE_TRUE(mThreadPool, NS_ERROR_ILLEGAL_DURING_SHUTDOWN);
+  if (NS_IsMainThread()) {
+    nsCOMPtr<nsPIDOMWindow> domWindow(do_QueryInterface(aGlobalObject));
+    NS_ENSURE_TRUE(domWindow, NS_ERROR_NO_INTERFACE);
 
-  nsIDOMDocument* domDocument = nsContentUtils::GetDocumentFromCaller();
-  NS_ENSURE_TRUE(domDocument, NS_ERROR_UNEXPECTED);
+    nsPIDOMWindow* innerWindow = domWindow->IsOuterWindow() ?
+                                 domWindow->GetCurrentInnerWindow() :
+                                 domWindow.get();
+    NS_ENSURE_STATE(innerWindow);
 
-  nsCOMPtr<nsIDocument> callingDocument(do_QueryInterface(domDocument));
-  NS_ENSURE_TRUE(callingDocument, NS_ERROR_NO_INTERFACE);
+    nsCOMPtr<nsIScriptGlobalObject> newGlobal(do_QueryInterface(innerWindow));
+    NS_ENSURE_TRUE(newGlobal, NS_ERROR_NO_INTERFACE);
 
-  nsRefPtr<nsDOMWorkerPool> pool(new nsDOMWorkerPool(callingDocument));
-  NS_ENSURE_TRUE(pool, NS_ERROR_OUT_OF_MEMORY);
+    aGlobalObject = newGlobal;
+  }
 
-  nsresult rv = pool->Init();
+  nsRefPtr<nsDOMWorkerPool> pool;
+  {
+    nsAutoMonitor mon(mMonitor);
+
+    if (!mThreadPool) {
+      // Shutting down!
+      return NS_ERROR_ILLEGAL_DURING_SHUTDOWN;
+    }
+
+    mPools.Get(aGlobalObject, getter_AddRefs(pool));
+  }
+
+  nsresult rv;
+
+  if (!pool) {
+    NS_ASSERTION(NS_IsMainThread(), "Wrong thread!");
+
+    if (!mNavigatorStringsLoaded) {
+      nsCOMPtr<nsIDOMWindowInternal> internal(do_QueryInterface(aGlobalObject));
+      NS_ENSURE_TRUE(internal, NS_ERROR_NO_INTERFACE);
+
+      nsCOMPtr<nsIDOMNavigator> navigator;
+      rv = internal->GetNavigator(getter_AddRefs(navigator));
+      NS_ENSURE_SUCCESS(rv, rv);
+
+      rv = navigator->GetAppName(mAppName);
+      NS_ENSURE_SUCCESS(rv, rv);
+
+      rv = navigator->GetAppVersion(mAppVersion);
+      NS_ENSURE_SUCCESS(rv, rv);
+
+      rv = navigator->GetPlatform(mPlatform);
+      NS_ENSURE_SUCCESS(rv, rv);
+
+      rv = navigator->GetUserAgent(mUserAgent);
+      NS_ENSURE_SUCCESS(rv, rv);
+
+      mNavigatorStringsLoaded = PR_TRUE;
+    }
+
+    nsCOMPtr<nsPIDOMWindow> domWindow(do_QueryInterface(aGlobalObject));
+    NS_ENSURE_TRUE(domWindow, NS_ERROR_NO_INTERFACE);
+
+    nsIDOMDocument* domDocument = domWindow->GetExtantDocument();
+    NS_ENSURE_STATE(domDocument);
+
+    nsCOMPtr<nsIDocument> document(do_QueryInterface(domDocument));
+    NS_ENSURE_STATE(document);
+
+    pool = new nsDOMWorkerPool(aGlobalObject, document);
+    NS_ENSURE_TRUE(pool, NS_ERROR_OUT_OF_MEMORY);
+
+    rv = pool->Init();
+    NS_ENSURE_SUCCESS(rv, rv);
+
+    nsAutoMonitor mon(mMonitor);
+
+    PRBool success = mPools.Put(aGlobalObject, pool);
+    NS_ENSURE_TRUE(success, NS_ERROR_OUT_OF_MEMORY);
+  }
+
+  rv = pool->NoteWorker(aWorker);
   NS_ENSURE_SUCCESS(rv, rv);
 
-  NS_ASSERTION(!mPools.Contains(pool), "Um?!");
-  mPools.AppendElement(pool);
-
-  NS_ADDREF(*_retval = pool);
+  aWorker->SetPool(pool);
   return NS_OK;
+}
+
+void
+nsDOMThreadService::GetAppName(nsAString& aAppName)
+{
+  NS_ASSERTION(mNavigatorStringsLoaded,
+               "Shouldn't call this before we have loaded strings!");
+  aAppName.Assign(mAppName);
+}
+
+void
+nsDOMThreadService::GetAppVersion(nsAString& aAppVersion)
+{
+  NS_ASSERTION(mNavigatorStringsLoaded,
+               "Shouldn't call this before we have loaded strings!");
+  aAppVersion.Assign(mAppVersion);
+}
+
+void
+nsDOMThreadService::GetPlatform(nsAString& aPlatform)
+{
+  NS_ASSERTION(mNavigatorStringsLoaded,
+               "Shouldn't call this before we have loaded strings!");
+  aPlatform.Assign(mPlatform);
+}
+
+void
+nsDOMThreadService::GetUserAgent(nsAString& aUserAgent)
+{
+  NS_ASSERTION(mNavigatorStringsLoaded,
+               "Shouldn't call this before we have loaded strings!");
+  aUserAgent.Assign(mUserAgent);
 }

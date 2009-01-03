@@ -79,6 +79,7 @@
                            collapsed="true"
                            onpopupshowing="chevronPopupShowing(event);">
           <xul:menupopup anonid="chevronPopup"
+                         xbl:inherits="tooltip"
 #ifndef XP_MACOSX
                          context="placesContext"
 #endif
@@ -87,7 +88,7 @@
       </xul:hbox>
     </content>
 
-    <implementation>
+    <implementation implements="nsIAccessibleProvider, nsITimerCallback">
       <constructor><![CDATA[
         this._init();
       ]]></constructor>
@@ -144,8 +145,8 @@
       <method name="_rebuild">
         <body><![CDATA[
           // Clear out references to existing nodes, since we'll be deleting and re-adding.
-          if (this._DNDObserver._overFolder.node)
-            this._DNDObserver._clearOverFolder();
+          if (this._overFolder.node)
+            this._clearOverFolder();
           this._openedMenuButton = null;
 
           while (this.hasChildNodes())
@@ -701,323 +702,6 @@
         }
       })]]></field>
 
-      <field name="_DNDObserver"><![CDATA[({
-        // Inside the _DNDObserver object's functions, this points to 
-        // the _DNDObserver object.  _self points to the toolbar xbl object.
-        _self: this,
-
-        // Menu buttons should be opened when the mouse drags over them, and closed
-        // when the mouse drags off.  The overFolder object manages opening and closing
-        // of folders when the mouse hovers.
-        _overFolder: {node: null,
-                      openTimer: null,
-                      hoverTime: 350,
-                      closeTimer: null},
-
-        // timer for turning of indicator bar, to get rid of flicker
-        _ibTimer: null, 
- 
-        _setTimer: function TBV_DO_setTimer(time) {
-          var timer = Cc["@mozilla.org/timer;1"].createInstance(Ci.nsITimer);
-          timer.initWithCallback(this, time, timer.TYPE_ONE_SHOT);
-          return timer;
-        },
-
-        // Function to process all timer notifications.
-        notify: function TBV_DO_notify(timer) {
-          // Timer to turn off indicator bar.
-          if (timer == this._ibTimer) {
-            ib = this._self._dropIndicatorBar.removeAttribute('dragging');
-            this._ibTimer = null;
-          }
-
-          // Timer to open a menubutton that's being dragged over.
-          if (timer == this._overFolder.openTimer) {
-            // Set the autoopen attribute on the folder's menupopup so that
-            // the menu will automatically close when the mouse drags off of it.
-            this._overFolder.node.lastChild.setAttribute("autoopened", "true");
-            this._overFolder.node.open = true;
-            this._overFolder.openTimer = null;
-          }
-
-          // Timer to close a menubutton that's been dragged off of.
-          if (timer == this._overFolder.closeTimer) {
-            // Only close the menubutton if the drag session isn't currently over
-            // it or one of its children.  (The autoopened attribute will let the menu
-            // know to close later if the menu is still being dragged over.)
-            var currentNode = PlacesControllerDragHelper.currentDropTarget;
-            var inHierarchy = false;
-            while (currentNode) {
-              if (currentNode == this._self) {
-                inHierarchy = true;
-                break;
-              }
-              currentNode = currentNode.parentNode;
-            }
-            // The _clearOverFolder() function will close the menu for _overFolder.node.
-            // So null it out if we don't want to close it.
-            if (inHierarchy)
-              this._overFolder.node = null;
-            
-            // Clear out the folder and all associated timers.
-            this._clearOverFolder();
-          }
-        },
-
-        // The mouse is no longer dragging over the stored menubutton.
-        // Close the menubutton, clear out drag styles, and clear all
-        // timers for opening/closing it.
-        _clearOverFolder: function TBV_DO_clearOverFolder() {
-          if (this._overFolder.node && this._overFolder.node.lastChild) {
-            if (!this._overFolder.node.lastChild.hasAttribute("dragover")) {
-              this._overFolder.node.lastChild.hidePopup();
-            }
-            this._overFolder.node.removeAttribute("dragover");
-            this._overFolder.node = null;
-          }
-          if (this._overFolder.openTimer) {
-            this._overFolder.openTimer.cancel();
-            this._overFolder.openTimer = null;
-          }
-          if (this._overFolder.closeTimer) {
-            this._overFolder.closeTimer.cancel();
-            this._overFolder.closeTimer = null;
-          }
-        },
-
-        // This function returns information about where to drop when
-        // dragging over this menu--insertion point, child index to drop
-        // before, and folder to drop into.
-        _getDropPoint: function TBV_DO_getDropPoint(event) {
-          // Can't drop if the toolbar isn't a folder.
-          var result = this._self.getResult();
-          if (!PlacesUtils.nodeIsFolder(result.root))
-            return null;
-
-          var isRTL = document.defaultView
-                              .getComputedStyle(this._self.parentNode, "")
-                              .direction == "rtl";
-
-          var dropPoint = { ip: null, beforeIndex: null, folderNode: null };
-          // Loop through all the nodes to see which one this should
-          // get dropped in/next to
-          for (var i = 0; i < this._self.childNodes.length; i++) {
-            var xulNode = this._self.childNodes[i];
-            if (PlacesUtils.nodeIsFolder(xulNode.node) &&
-                !PlacesUtils.nodeIsReadOnly(xulNode.node)) {
-              // This is a folder. If the mouse is in the left 25% of the
-              // node (or 25% of the right, in RTL UI), drop before the folder.
-              // If it's in the middle 50%, drop into the folder. If it's past
-              // that, drop after.
-              if ((isRTL && event.clientX > xulNode.boxObject.x +
-                                            (xulNode.boxObject.width * 0.75)) ||
-                  (!isRTL && event.clientX < xulNode.boxObject.x + 
-                                             (xulNode.boxObject.width * 0.25))) {
-                // Drop to the left of this folder.
-                dropPoint.ip =
-                  new InsertionPoint(PlacesUtils.getConcreteItemId(result.root),
-                                     i, -1);
-                dropPoint.beforeIndex = i;
-                return dropPoint;
-              }
-              else if ((isRTL && event.clientX > xulNode.boxObject.x + 
-                                                 (xulNode.boxObject.width * 0.25)) ||
-                       (!isRTL && event.clientX < xulNode.boxObject.x +
-                                                  (xulNode.boxObject.width * 0.75))) {
-                // Drop inside this folder.
-                dropPoint.ip =
-                  new InsertionPoint(PlacesUtils.getConcreteItemId(xulNode.node),
-                                     -1, 1,
-                                     PlacesUtils.nodeIsTagQuery(xulNode.node));
-                dropPoint.beforeIndex = i;
-                dropPoint.folderNode = xulNode;
-                return dropPoint;
-              }
-            }
-            else {
-              // This is a non-folder node. If the mouse is left (or right, in
-              // RTL UI) of the middle, drop before the folder.  Otehrwise,
-              // we'll drop after
-              if ((isRTL && event.clientX > xulNode.boxObject.x + (xulNode.boxObject.width / 2)) ||
-                  (!isRTL && event.clientX < xulNode.boxObject.x + (xulNode.boxObject.width / 2))) {
-                // Drop before this bookmark.
-                dropPoint.ip =
-	                new InsertionPoint(PlacesUtils.getConcreteItemId(result.root),
-	                                   i, -1);
-                dropPoint.beforeIndex = i;
-                return dropPoint;
-              }
-            }
-          }
-          // Should drop after the last node.
-          dropPoint.ip =
-        	  new InsertionPoint(PlacesUtils.getConcreteItemId(result.root),
-	                             -1, 1);
-          dropPoint.beforeIndex = -1;
-          return dropPoint;
-        },
-
-        onDragStart: function TBV_DO_onDragStart(aEvent, aXferData, aDragAction) {
-          var draggedXulNode = aEvent.target;
-          // sub menus have their own d&d handlers
-          if (draggedXulNode.parentNode != this._self)
-            return false;
-
-          if (draggedXulNode.localName == "toolbarbutton" &&
-              draggedXulNode.getAttribute("type") == "menu") {
-#ifdef XP_WIN
-            // Support folder dragging on the personal toolbar when the user
-            // holds the "alt" or "shift" key while dragging.
-            // Ctrl+drag is Copy
-            if (!aEvent.shiftKey && !aEvent.altKey && !aEvent.ctrlKey)
-              return false;
-#else
-            // Support folder dragging on the personal toolbar when the user
-            // holds the "shift" key while dragging
-            // Ctrl+drag is Copy
-            if (!aEvent.shiftKey && !aEvent.ctrlKey)
-              return false;
-#endif
-            draggedXulNode.firstChild.hidePopup();
-          }
-
-          // activate the view and cache the dragged node
-          this._self._draggedNode = draggedXulNode.node;
-          this._self.focus();
-
-          this._self._controller.setDataTransfer(aEvent);
-          return true;
-        },
-
-        canDrop: function TBV_DO_canDrop(aEvent, aDragSession) {
-          // Cache the dataTransfer
-          PlacesControllerDragHelper.currentDataTransfer = aEvent.dataTransfer;
-
-          var ip = this._self.insertionPoint;
-          return ip && PlacesControllerDragHelper.canDrop(ip);
-        },
-
-        onDragOver: function TBV_DO_onDragOver(event, flavor, session) {
-          PlacesControllerDragHelper.currentDropTarget = event.target;
-          var dropPoint = this._getDropPoint(event);
-
-          var ib = this._self._dropIndicatorBar;
-          if (this._ibTimer) {
-            this._ibTimer.cancel();
-            this._ibTimer = null;
-          }
-
-          if (dropPoint.folderNode ||
-              event.originalTarget == this._self._chevron) {
-            // Dropping over a menubutton or chevron button
-            // set styles and timer to open relative menupopup
-            var overNode = dropPoint.folderNode || this._self._chevron;
-            if (this._overFolder.node != overNode) {
-              this._clearOverFolder();
-              this._overFolder.node = overNode;
-              this._overFolder.openTimer = this._setTimer(this._overFolder.hoverTime);
-            }
-            if (!this._overFolder.node.hasAttribute("dragover"))
-              this._overFolder.node.setAttribute("dragover", "true");
-
-            ib.removeAttribute("dragging");
-          }
-          else {
-            // Dragging over a normal toolbarbutton,
-            // show indicator bar and move it to the appropriate drop point.
-            if (!ib.hasAttribute("dragging"))
-              ib.setAttribute("dragging", "true");
-            var ind = ib.firstChild;
-            var halfInd = ind.boxObject.width / 2;
-            var direction = document.defaultView.getComputedStyle(this._self.parentNode, "").direction;
-            if (direction == "ltr") {
-              halfInd = Math.ceil(halfInd);
-              if (!this._self.childNodes.length)
-                ind.style.marginLeft = 0 - this._self.boxObject.x - halfInd + 'px'
-              else if (dropPoint.beforeIndex == -1)
-                ind.style.marginLeft = this._self.lastChild.boxObject.x + 
-                                       this._self.lastChild.boxObject.width - this._self.boxObject.x - halfInd + 'px';
-              else
-                ind.style.marginLeft = this._self.childNodes[dropPoint.beforeIndex].boxObject.x -
-                                       this._self.boxObject.x - halfInd + 'px';
-            }
-            else {
-              halfInd = Math.floor(halfInd);
-              if (this._self.childNodes.length == 0)
-                ind.style.marginRight = this._self.boxObject.width + 'px';
-              else if (dropPoint.beforeIndex == -1) {
-                ind.style.marginRight = this._self.boxObject.width -
-                                        (this._self.childNodes[this._self.childNodes.length - 1].boxObject.x +
-                                        halfInd) +'px';
-              }
-              else {
-                ind.style.marginRight = this._self.boxObject.width -
-                                        (this._self.childNodes[dropPoint.beforeIndex].boxObject.x +
-                                        this._self.childNodes[dropPoint.beforeIndex].boxObject.width -
-                                        this._self.boxObject.x + halfInd) + 'px';
-              }
-            }
-            // Clear out old folder information
-            this._clearOverFolder();
-          }
-        },
-
-        onDrop: function TBV_DO_onDrop(event, dropData, session) {
-          // Cache the dataTransfer
-          PlacesControllerDragHelper.currentDataTransfer = event.dataTransfer;
-
-          var dropPoint = this._getDropPoint(event);
-          if (!dropPoint)
-            return;
-          PlacesControllerDragHelper.onDrop(dropPoint.ip);
-        },
-
-        onDragExit: function TBV_DO_onDragExit(event, session) {
-          PlacesControllerDragHelper.currentDropTarget = null;
-          PlacesControllerDragHelper.currentDataTransfer = null;
-
-          // Set timer to turn off indicator bar (if we turn it off
-          // here, dragenter might be called immediately after, creating
-          // flicker.)
-          if (this._ibTimer)
-            this._ibTimer.cancel();
-          this._ibTimer = this._setTimer(10);
-          // Close any folder being hovered over
-          if (this._overFolder.node)
-            this._overFolder.closeTimer = this._setTimer(this._overFolder.hoverTime);
-
-          this._self._draggedNode = null;
-        },
-
-        getSupportedFlavours: function TBV_DO_getSupportedFlavours() {
-          return PlacesControllerDragHelper.flavourSet;
-        }
-      })]]></field>
-
-      <method name="checkForMenuEvent">
-        <parameter name="event"/>
-        <parameter name="action"/>
-        <body><![CDATA[
-          // It seems that even if the menu drag/drop event
-          // handlers set their phase to capturing, toolbarbutton
-          // menu events come to the toolbar first, and don't bubble.
-          // So if this is a menu/menuitem, try to send the event to its
-          // xbl handler.
-          if (event.target.localName.indexOf("menu") == 0) {
-            var parent = event.target.parentNode;
-            // XULDocument has no getAttribute() function, so check for it before calling.
-            while (parent && parent.getAttribute) {
-              if (parent.getAttribute("type") == "places") {
-                nsDragAndDrop[action](event, parent._DNDObserver);
-                return true;
-              }
-              parent = parent.parentNode;
-            }
-          }
-          return false;
-        ]]></body>
-      </method>
-
       <property name="selType" onget="return 'single';"/>
 
       <method name="buildContextMenu">
@@ -1133,6 +817,168 @@
           aPopup._built = true;
         ]]></body>
       </method>
+
+      <field name="_overFolder"><![CDATA[
+       (
+         // Menu buttons should be opened when the mouse drags over them, and
+         // closed when the mouse drags off. This object manages opening and
+         // closing of folders when the mouse hovers.
+         { node: null, openTimer: null, hoverTime: 350, closeTimer: null }
+       );
+      ]]></field>
+
+      <method name="_clearOverFolder">
+        <body><![CDATA[
+          // The mouse is no longer dragging over the stored menubutton.
+          // Close the menubutton, clear out drag styles, and clear all
+          // timers for opening/closing it.
+          if (this._overFolder.node && this._overFolder.node.lastChild) {
+            if (!this._overFolder.node.lastChild.hasAttribute("dragover")) {
+              this._overFolder.node.lastChild.hidePopup();
+            }
+            this._overFolder.node.removeAttribute("dragover");
+            this._overFolder.node = null;
+          }
+          if (this._overFolder.openTimer) {
+            this._overFolder.openTimer.cancel();
+            this._overFolder.openTimer = null;
+          }
+          if (this._overFolder.closeTimer) {
+            this._overFolder.closeTimer.cancel();
+            this._overFolder.closeTimer = null;
+          }
+        ]]></body>
+      </method>
+
+      <method name="_getDropPoint">
+        <parameter name="aEvent"/>
+        <body><![CDATA[
+          // This function returns information about where to drop when
+          // dragging over this menu--insertion point, child index to drop
+          // before, and folder to drop into.
+          // Can't drop if the toolbar isn't a folder.
+          var result = this.getResult();
+          if (!PlacesUtils.nodeIsFolder(result.root))
+            return null;
+
+          var isRTL = document.defaultView
+                              .getComputedStyle(this.parentNode, "")
+                              .direction == "rtl";
+
+          var dropPoint = { ip: null, beforeIndex: null, folderNode: null };
+          // Loop through all the nodes to see which one this should
+          // get dropped in/next to
+          for (var i = 0; i < this.childNodes.length; i++) {
+            var xulNode = this.childNodes[i];
+            if (PlacesUtils.nodeIsFolder(xulNode.node) &&
+                !PlacesUtils.nodeIsReadOnly(xulNode.node)) {
+              // This is a folder. If the mouse is in the left 25% of the
+              // node (or 25% of the right, in RTL UI), drop before the folder.
+              // If it's in the middle 50%, drop into the folder. If it's past
+              // that, drop after.
+              if ((isRTL && aEvent.clientX > xulNode.boxObject.x +
+                                             (xulNode.boxObject.width * 0.75)) ||
+                  (!isRTL && aEvent.clientX < xulNode.boxObject.x + 
+                                              (xulNode.boxObject.width * 0.25))) {
+                // Drop to the left of this folder.
+                dropPoint.ip =
+                  new InsertionPoint(PlacesUtils.getConcreteItemId(result.root),
+                                     i, -1);
+                dropPoint.beforeIndex = i;
+                return dropPoint;
+              }
+              else if ((isRTL && aEvent.clientX > xulNode.boxObject.x + 
+                                                  (xulNode.boxObject.width * 0.25)) ||
+                       (!isRTL && aEvent.clientX < xulNode.boxObject.x +
+                                                   (xulNode.boxObject.width * 0.75))) {
+                // Drop inside this folder.
+                dropPoint.ip =
+                  new InsertionPoint(PlacesUtils.getConcreteItemId(xulNode.node),
+                                     -1, 1,
+                                     PlacesUtils.nodeIsTagQuery(xulNode.node));
+                dropPoint.beforeIndex = i;
+                dropPoint.folderNode = xulNode;
+                return dropPoint;
+              }
+            }
+            else {
+              // This is a non-folder node. If the mouse is left (or right, in
+              // RTL UI) of the middle, drop before the folder.  Otehrwise,
+              // we'll drop after
+              if ((isRTL && aEvent.clientX > xulNode.boxObject.x + (xulNode.boxObject.width / 2)) ||
+                  (!isRTL && aEvent.clientX < xulNode.boxObject.x + (xulNode.boxObject.width / 2))) {
+                // Drop before this bookmark.
+                dropPoint.ip =
+	                new InsertionPoint(PlacesUtils.getConcreteItemId(result.root),
+	                                   i, -1);
+                dropPoint.beforeIndex = i;
+                return dropPoint;
+              }
+            }
+          }
+          // Should drop after the last node.
+          dropPoint.ip =
+        	  new InsertionPoint(PlacesUtils.getConcreteItemId(result.root),
+	                             -1, 1);
+          dropPoint.beforeIndex = -1;
+          return dropPoint;
+        ]]></body>
+      </method>
+
+      <method name="_setTimer">
+        <parameter name="aTime"/>
+        <body><![CDATA[
+          var timer = Cc["@mozilla.org/timer;1"].createInstance(Ci.nsITimer);
+          timer.initWithCallback(this, aTime, timer.TYPE_ONE_SHOT);
+          return timer;
+        ]]></body>
+      </method>
+
+      <!-- nsITimerCallback -->
+      <method name="notify">
+        <parameter name="aTimer"/>
+        <body><![CDATA[
+          // Function to process all timer notifications.
+
+          // * Timer to turn off indicator bar.
+          if (aTimer == this._ibTimer) {
+            ib = this._dropIndicatorBar.removeAttribute('dragging');
+            this._ibTimer = null;
+          }
+
+          // * Timer to open a menubutton that's being dragged over.
+          if (aTimer == this._overFolder.openTimer) {
+            // Set the autoopen attribute on the folder's menupopup so that
+            // the menu will automatically close when the mouse drags off of it.
+            this._overFolder.node.lastChild.setAttribute("autoopened", "true");
+            this._overFolder.node.open = true;
+            this._overFolder.openTimer = null;
+          }
+
+          // * Timer to close a menubutton that's been dragged off of.
+          if (aTimer == this._overFolder.closeTimer) {
+            // Only close the menubutton if the drag session isn't currently over
+            // it or one of its children.  (The autoopened attribute will let the menu
+            // know to close later if the menu is still being dragged over.)
+            var currentNode = PlacesControllerDragHelper.currentDropTarget;
+            var inHierarchy = false;
+            while (currentNode) {
+              if (currentNode == this) {
+                inHierarchy = true;
+                break;
+              }
+              currentNode = currentNode.parentNode;
+            }
+            // The _clearOverFolder() function will close the menu for _overFolder.node.
+            // So null it out if we don't want to close it.
+            if (inHierarchy)
+              this._overFolder.node = null;
+
+            // Clear out the folder and all associated timers.
+            this._clearOverFolder();
+          }
+        ]]></body>
+      </method>
     </implementation>
 
     <handlers>
@@ -1142,26 +988,159 @@
             PlacesUtils.nodeIsURI(button.node))
           window.XULBrowserWindow.setOverLink(event.target.node.uri, null);
       ]]></handler>
+
       <handler event="mouseout"><![CDATA[
         window.XULBrowserWindow.setOverLink("", null);
       ]]></handler>
-      <handler event="draggesture"><![CDATA[
-        if (event.target.localName == "toolbarbutton" ||
-            event.target.localName == "toolbarseparator")
-          nsDragAndDrop.startDrag(event, this._DNDObserver);
+
+      <handler event="dragstart"><![CDATA[
+        // sub menus have their own d&d handlers
+        var draggedDOMNode = event.target;
+        if (draggedDOMNode.parentNode != this || !draggedDOMNode.node)
+          return;
+
+        if (draggedDOMNode.localName == "toolbarbutton" &&
+            draggedDOMNode.getAttribute("type") == "menu") {
+#ifdef XP_WIN
+          // Support folder dragging on the personal toolbar when the user
+          // holds the "alt" or "shift" key while dragging.
+          // Ctrl+drag is Copy
+          if (!event.shiftKey && !event.altKey && !event.ctrlKey)
+            return;
+#else
+          // Support folder dragging on the personal toolbar when the user
+          // holds the "shift" key while dragging
+          // Ctrl+drag is Copy
+          if (!event.shiftKey && !event.ctrlKey)
+            return;
+#endif
+          draggedDOMNode.firstChild.hidePopup();
+        }
+
+        // activate the view and cache the dragged node
+        this._draggedNode = draggedDOMNode.node;
+        this.focus();
+
+        this._controller.setDataTransfer(event);
+        event.stopPropagation();
       ]]></handler>
+
       <handler event="dragover"><![CDATA[
-        if (!this.checkForMenuEvent(event, "dragOver"))
-          nsDragAndDrop.dragOver(event, this._DNDObserver);
+        // Cache the dataTransfer
+        var dt = PlacesControllerDragHelper.currentDataTransfer =
+                 event.dataTransfer;
+
+        var ib = this._dropIndicatorBar;
+        var ip = this.insertionPoint;
+        if (!ip || !PlacesControllerDragHelper.canDrop(ip)) {
+          ib.removeAttribute("dragging");
+          PlacesControllerDragHelper.currentDataTransfer = null;
+          return;
+        }
+
+        PlacesControllerDragHelper.currentDropTarget = event.target;
+        var dropPoint = this._getDropPoint(event);
+
+        if (this._ibTimer) {
+          this._ibTimer.cancel();
+          this._ibTimer = null;
+        }
+
+        if (dropPoint.folderNode ||
+            event.originalTarget == this._chevron) {
+          // Dropping over a menubutton or chevron button
+          // set styles and timer to open relative menupopup
+          var overNode = dropPoint.folderNode || this._chevron;
+          if (this._overFolder.node != overNode) {
+            this._clearOverFolder();
+            this._overFolder.node = overNode;
+            this._overFolder.openTimer = this._setTimer(this._overFolder.hoverTime);
+          }
+          if (!this._overFolder.node.hasAttribute("dragover"))
+            this._overFolder.node.setAttribute("dragover", "true");
+
+          ib.removeAttribute("dragging");
+        }
+        else {
+          // Dragging over a normal toolbarbutton,
+          // show indicator bar and move it to the appropriate drop point.
+          if (!ib.hasAttribute("dragging"))
+            ib.setAttribute("dragging", "true");
+          var ind = ib.firstChild;
+          var halfInd = ind.boxObject.width / 2;
+          var direction = document.defaultView.getComputedStyle(this.parentNode, "").direction;
+          if (direction == "ltr") {
+            halfInd = Math.ceil(halfInd);
+          if (!this.childNodes.length)
+            ind.style.marginLeft = 0 - this.boxObject.x - halfInd + 'px'
+          else if (dropPoint.beforeIndex == -1)
+            ind.style.marginLeft = this.lastChild.boxObject.x + 
+                                   this.lastChild.boxObject.width - this.boxObject.x - halfInd + 'px';
+          else
+            ind.style.marginLeft = this.childNodes[dropPoint.beforeIndex].boxObject.x -
+                                   this.boxObject.x - halfInd + 'px';
+          }
+          else {
+            halfInd = Math.floor(halfInd);
+            if (this.childNodes.length == 0)
+              ind.style.marginRight = this.boxObject.width + 'px';
+            else if (dropPoint.beforeIndex == -1) {
+              ind.style.marginRight = this.boxObject.width -
+                                      (this.childNodes[this.childNodes.length - 1].boxObject.x +
+                                      halfInd) +'px';
+            }
+            else {
+              ind.style.marginRight = this.boxObject.width -
+                                      (this.childNodes[dropPoint.beforeIndex].boxObject.x +
+                                       this.childNodes[dropPoint.beforeIndex].boxObject.width -
+                                      this.boxObject.x + halfInd) + 'px';
+            }
+          }
+          // Clear out old folder information
+          this._clearOverFolder();
+        }
+
+        dt.effectAllowed = "all";
+        event.preventDefault();
+        event.stopPropagation();
       ]]></handler>
-      <handler event="dragdrop"><![CDATA[
-        if (!this.checkForMenuEvent(event, "drop"))
-          nsDragAndDrop.drop(event, this._DNDObserver);
+
+      <handler event="drop"><![CDATA[
+        PlacesControllerDragHelper.currentDataTransfer = event.dataTransfer;
+        PlacesControllerDragHelper.currentDropTarget = event.target;
+
+        var ip = this.insertionPoint;
+        if (!ip || !PlacesControllerDragHelper.canDrop(ip))
+          return;
+
+        var dropPoint = this._getDropPoint(event);
+        if (!dropPoint)
+          return;
+
+        PlacesControllerDragHelper.onDrop(dropPoint.ip);
+        event.stopPropagation();
       ]]></handler>
-      <handler event="dragexit"><![CDATA[
-        if (!this.checkForMenuEvent(event, "dragExit"))
-          nsDragAndDrop.dragExit(event, this._DNDObserver);
+
+      <handler event="dragleave"><![CDATA[
+        PlacesControllerDragHelper.currentDropTarget = null;
+        PlacesControllerDragHelper.currentDataTransfer = null;
+
+        // Set timer to turn off indicator bar (if we turn it off
+        // here, dragenter might be called immediately after, creating
+        // flicker.)
+        if (this._ibTimer)
+          this._ibTimer.cancel();
+        this._ibTimer = this._setTimer(10);
+
+        // If we hovered over a folder, close it now
+        if (this._overFolder.node)
+            this._overFolder.closeTimer = this._setTimer(this._overFolder.hoverTime);
       ]]></handler>
+
+      <handler event="dragend"><![CDATA[
+        this._draggedNode = null;
+      ]]></handler>
+
       <handler event="popupshowing" phase="capturing"><![CDATA[
       // Don't show the popup if we are dragging a container.
       if (this._draggingContainer) {
@@ -1185,6 +1164,7 @@
             !PlacesControllerDragHelper.getSession())
           this._openedMenuButton = parent;
       ]]></handler>
+
       <handler event="popuphidden"><![CDATA[
         var popup = event.originalTarget;
 

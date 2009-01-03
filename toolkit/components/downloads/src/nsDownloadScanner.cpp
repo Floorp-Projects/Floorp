@@ -47,6 +47,7 @@
 #include "nsNetUtil.h"
 #include "nsDeque.h"
 #include "nsIFileURL.h"
+#include "nsIPrefBranch2.h"
 
 /**
  * Code overview
@@ -134,7 +135,7 @@
  *  * Get antivirus scanner status via WMI/registry
  */
 
-#define PREF_BDA_DONTCLEAN "browser.download.antivirus.dontclean"
+#define PREF_BDM_SKIPWINPOLICYCHECKS "browser.download.manager.skipWinSecurityPolicyChecks"
 
 // IAttachementExecute supports user definable settings for certain
 // security related prompts. This defines a general GUID for use in
@@ -150,6 +151,9 @@ static const GUID GUID_MozillaVirusScannerPromptGeneric =
 
 // Initial timeout is 30 seconds
 #define WATCHDOG_TIMEOUT (30*PR_USEC_PER_SEC)
+
+// Maximum length for URI's passed into IAE
+#define MAX_IAEURILENGTH 1683
 
 class nsDownloadScannerWatchdog 
 {
@@ -171,8 +175,15 @@ private:
   HANDLE mQuitEvent;
 };
 
-nsDownloadScanner::nsDownloadScanner()
-  : mHaveAVScanner(PR_FALSE), mHaveAttachmentExecute(PR_FALSE)
+NS_IMPL_ISUPPORTS1(
+  nsDownloadScanner
+  , nsIObserver
+  )
+
+nsDownloadScanner::nsDownloadScanner() :
+  mOAVExists(PR_FALSE)
+  , mAESExists(PR_FALSE)
+  , mUseAttachmentExecute(PR_FALSE)
 {
 }
  
@@ -192,19 +203,57 @@ nsDownloadScanner::Init()
   // codebase. All other COM calls/objects are made on different threads.
   nsresult rv = NS_OK;
   CoInitialize(NULL);
-  if (!IsAESAvailable() && ListCLSID() < 0)
-    rv = NS_ERROR_NOT_AVAILABLE;
+
+  // Check for the existence of IAE
+  mAESExists = IsAESAvailable();
+
+  // Init OAV scanner list
+  mOAVExists = EnumerateOAVProviders();
+  
   CoUninitialize();
-  if (NS_SUCCEEDED(rv)) {
-    mWatchdog = new nsDownloadScannerWatchdog();
-    if (mWatchdog) {
-      rv = mWatchdog->Init();
-      if (FAILED(rv))
-        mWatchdog = nsnull;
-    } else {
-      rv = NS_ERROR_OUT_OF_MEMORY;
-    }
+
+  if (!mAESExists && !mOAVExists)
+    return NS_ERROR_NOT_AVAILABLE;
+
+  if (mAESExists)
+    mUseAttachmentExecute = PR_TRUE;
+  
+  // Initialize scanning
+  mWatchdog = new nsDownloadScannerWatchdog();
+  if (mWatchdog) {
+    rv = mWatchdog->Init();
+    if (FAILED(rv))
+      mWatchdog = nsnull;
+  } else {
+    rv = NS_ERROR_OUT_OF_MEMORY;
   }
+  
+  if (NS_FAILED(rv))
+    return rv;
+
+  // If skipWinSecurityPolicyChecks is set, do not use attachement execute,
+  // fall back on the older interface. AE does virus scanning, applies
+  // security policy checks, and also adds security meta data to downloaded
+  // content.
+  PRBool skipPolicy = PR_FALSE;
+  nsCOMPtr<nsIPrefBranch> prefs(do_GetService(NS_PREFSERVICE_CONTRACTID));
+  if (prefs)
+    (void)prefs->GetBoolPref(PREF_BDM_SKIPWINPOLICYCHECKS, &skipPolicy);
+  if (skipPolicy)
+    mUseAttachmentExecute = PR_FALSE;
+  
+  // Setup a pref change even for the policy check pref.
+  nsCOMPtr<nsIPrefBranch2> prefBranch =
+    do_GetService(NS_PREFSERVICE_CONTRACTID);
+
+  if (prefBranch)
+    (void)prefBranch->AddObserver(PREF_BDM_SKIPWINPOLICYCHECKS, this, PR_FALSE);
+
+  nsCOMPtr<nsIObserverService> observerService =
+    do_GetService(NS_OBSERVERSERVICE_CONTRACTID);
+  
+  if (observerService)
+    (void)observerService->AddObserver(this, "quit-application", PR_FALSE);
 
   return rv;
 }
@@ -212,6 +261,7 @@ nsDownloadScanner::Init()
 PRBool
 nsDownloadScanner::IsAESAvailable()
 {
+  // Try to instantiate IAE to see if it's available.    
   nsRefPtr<IAttachmentExecute> ae;
   HRESULT hr;
   hr = CoCreateInstance(CLSID_AttachmentServices, NULL, CLSCTX_INPROC,
@@ -220,14 +270,11 @@ nsDownloadScanner::IsAESAvailable()
     NS_WARNING("Could not instantiate attachment execution service\n");
     return PR_FALSE;
   }
-
-  mHaveAVScanner = PR_TRUE;
-  mHaveAttachmentExecute = PR_TRUE;
   return PR_TRUE;
 }
 
-PRInt32
-nsDownloadScanner::ListCLSID()
+PRBool
+nsDownloadScanner::EnumerateOAVProviders()
 {
   nsRefPtr<ICatInformation> catInfo;
   HRESULT hr;
@@ -235,7 +282,7 @@ nsDownloadScanner::ListCLSID()
                         IID_ICatInformation, getter_AddRefs(catInfo));
   if (FAILED(hr)) {
     NS_WARNING("Could not create category information class\n");
-    return -1;
+    return PR_FALSE;
   }
   nsRefPtr<IEnumCLSID> clsidEnumerator;
   GUID guids [1] = { CATID_MSOfficeAntiVirus };
@@ -243,7 +290,7 @@ nsDownloadScanner::ListCLSID()
       getter_AddRefs(clsidEnumerator));
   if (FAILED(hr)) {
     NS_WARNING("Could not get class enumerator for category\n");
-    return -2;
+    return PR_FALSE;
   }
 
   ULONG nReceived;
@@ -253,11 +300,38 @@ nsDownloadScanner::ListCLSID()
 
   if (mScanCLSID.Length() == 0) {
     // No installed Anti Virus program
-    return -3;
+    return PR_FALSE;
   }
 
-  mHaveAVScanner = PR_TRUE;
-  return 0;
+  return PR_TRUE;
+}
+
+// XPCOM pref change observer - reset our default scanner settings.
+NS_IMETHODIMP
+nsDownloadScanner::Observe(nsISupports *aSubject, const char *aTopic, const PRUnichar *someData)
+{
+  nsCOMPtr<nsIPrefBranch2> prefBranch =
+    do_GetService(NS_PREFSERVICE_CONTRACTID);
+
+  if (aTopic && !strcmp(aTopic, "quit-application")) {
+    if (prefBranch)
+      (void)prefBranch->RemoveObserver(PREF_BDM_SKIPWINPOLICYCHECKS, this);
+
+    nsCOMPtr<nsIObserverService> observerService =
+      do_GetService(NS_OBSERVERSERVICE_CONTRACTID);
+    
+    if (observerService)
+      (void)observerService->RemoveObserver(this, "quit-application");
+    return S_OK;
+  }
+  
+  PRBool skipPolicyCheck = PR_FALSE;
+  if (prefBranch)
+    (void)prefBranch->GetBoolPref(PREF_BDM_SKIPWINPOLICYCHECKS, &skipPolicyCheck);
+
+  mUseAttachmentExecute = !skipPolicyCheck && mAESExists;
+  
+  return NS_OK;
 }
 
 // If IAttachementExecute is available, use the CheckPolicy call to find out
@@ -267,7 +341,7 @@ nsDownloadScanner::CheckPolicy(nsIURI *aSource, nsIURI *aTarget)
 {
   nsresult rv;
 
-  if (!aSource || !aTarget || !mHaveAttachmentExecute)
+  if (!aSource || !aTarget || !mUseAttachmentExecute)
     return AVPOLICY_DOWNLOAD;
 
   nsCAutoString source;
@@ -314,6 +388,9 @@ nsDownloadScanner::CheckPolicy(nsIURI *aSource, nsIURI *aTarget)
     return AVPOLICY_DOWNLOAD;
 
   if (hr == S_FALSE)
+    return AVPOLICY_PROMPT;
+
+  if (hr == E_INVALIDARG)
     return AVPOLICY_PROMPT;
 
   return AVPOLICY_BLOCKED;
@@ -384,14 +461,6 @@ nsDownloadScanner::Scan::Start()
 
   nsresult rv = NS_OK;
 
-  // Default is to try to clean downloads
-  mIsReadOnlyRequest = PR_FALSE;
-
-  nsCOMPtr<nsIPrefBranch> pref =
-    do_GetService(NS_PREFSERVICE_CONTRACTID);
-  if (pref)
-    rv = pref->GetBoolPref(PREF_BDA_DONTCLEAN, &mIsReadOnlyRequest);
-
   // Get the path to the file on disk
   nsCOMPtr<nsILocalFile> file;
   rv = mDownload->GetTargetFile(getter_AddRefs(file));
@@ -417,6 +486,13 @@ nsDownloadScanner::Scan::Start()
   nsCAutoString origin;
   rv = uri->GetSpec(origin);
   NS_ENSURE_SUCCESS(rv, rv);
+
+  // Certain virus interfaces do not like extremely long uris.
+  // Chop off the path and cgi data and just pass the base domain. 
+  if (origin.Length() > MAX_IAEURILENGTH) {
+    rv = uri->GetPrePath(origin);
+    NS_ENSURE_SUCCESS(rv, rv);
+  }
 
   CopyUTF8toUTF16(origin, mOrigin);
 
@@ -543,6 +619,10 @@ nsDownloadScanner::Scan::DoScanAES()
         NS_WARNING("Downloaded file disappeared before it could be scanned");
         newState = AVSCAN_FAILED;
       }
+      else if (hr == E_INVALIDARG) {
+        NS_WARNING("IAttachementExecute returned invalid argument error");
+        newState = AVSCAN_FAILED;
+      }
       else { 
         newState = AVSCAN_UGLY;
       }
@@ -564,7 +644,7 @@ nsDownloadScanner::Scan::DoScanOAV()
   info.cbsize = sizeof(MSOAVINFO);
   info.fPath = TRUE;
   info.fInstalled = FALSE;
-  info.fReadOnlyRequest = mIsReadOnlyRequest;
+  info.fReadOnlyRequest = FALSE;
   info.fHttpDownload = mIsHttpDownload;
   info.hwnd = NULL;
 
@@ -646,7 +726,7 @@ nsDownloadScanner::Scan::DoScan()
 {
   CoInitialize(NULL);
 
-  if (mDLScanner->mHaveAttachmentExecute ? DoScanAES() : DoScanOAV()) {
+  if (mDLScanner->mUseAttachmentExecute ? DoScanAES() : DoScanOAV()) {
     // We need to do a few more things on the main thread
     NS_DispatchToMainThread(this);
   } else {
@@ -702,7 +782,7 @@ nsDownloadScanner::Scan::CheckAndSetState(AVScanState newState, AVScanState expe
 nsresult
 nsDownloadScanner::ScanDownload(nsDownload *download)
 {
-  if (!mHaveAVScanner)
+  if (!mUseAttachmentExecute && !mOAVExists)
     return NS_ERROR_NOT_AVAILABLE;
 
   // No ref ptr, see comment below

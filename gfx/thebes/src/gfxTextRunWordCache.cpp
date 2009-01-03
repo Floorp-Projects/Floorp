@@ -185,7 +185,7 @@ protected:
     nsTHashtable<CacheHashEntry> mCache;
     
 #ifdef DEBUG
-    static PLDHashOperator PR_CALLBACK CacheDumpEntry(CacheHashEntry* aEntry, void* userArg);
+    static PLDHashOperator CacheDumpEntry(CacheHashEntry* aEntry, void* userArg);
 #endif
 };
 
@@ -767,7 +767,7 @@ TextRunWordCache::CacheHashEntry::HashKey(const KeyTypePointer aKey)
 }
 
 #ifdef DEBUG
-PLDHashOperator PR_CALLBACK
+PLDHashOperator
 TextRunWordCache::CacheDumpEntry(CacheHashEntry* aEntry, void* userArg)
 {
     FILE* output = static_cast<FILE*>(userArg);

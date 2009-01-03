@@ -222,7 +222,7 @@ static const struct UnicodeRangeTableEntry gUnicodeRanges[] = {
 
 
 nsresult
-gfxFontUtils::ReadCMAPTableFormat12(PRUint8 *aBuf, PRInt32 aLength, gfxSparseBitSet& aCharacterMap) 
+gfxFontUtils::ReadCMAPTableFormat12(PRUint8 *aBuf, PRUint32 aLength, gfxSparseBitSet& aCharacterMap) 
 {
     enum {
         OffsetFormat = 0,
@@ -262,7 +262,7 @@ gfxFontUtils::ReadCMAPTableFormat12(PRUint8 *aBuf, PRInt32 aLength, gfxSparseBit
 }
 
 nsresult 
-gfxFontUtils::ReadCMAPTableFormat4(PRUint8 *aBuf, PRInt32 aLength, gfxSparseBitSet& aCharacterMap)
+gfxFontUtils::ReadCMAPTableFormat4(PRUint8 *aBuf, PRUint32 aLength, gfxSparseBitSet& aCharacterMap)
 {
     enum {
         OffsetFormat = 0,
@@ -471,34 +471,31 @@ void gfxFontUtils::GetPrefsFontList(const char *aPrefName, nsTArray<nsString>& a
 
 }
 
-// for now, this is only needed on Windows
-
-#ifdef XP_WIN
-
 // TrueType/OpenType table handling code
 
 // need byte aligned structs
 #pragma pack(1)
 
 struct AutoSwap_PRUint16 {
-    operator PRUint16() { return NS_SWAP16(value); }
-    operator PRUint32() { return NS_SWAP16(value); }
-    PRUint16  value;
+    operator PRUint16() const { return NS_SWAP16(value); }
+    operator PRUint32() const { return NS_SWAP16(value); }
+    operator PRUint64() const { return NS_SWAP16(value); }
+    PRUint16 value;
 };
 
 struct AutoSwap_PRInt16 {
-    operator PRInt16() { return NS_SWAP16(value); }
-    operator PRUint32() { return NS_SWAP16(value); }
+    operator PRInt16() const { return NS_SWAP16(value); }
+    operator PRUint32() const { return NS_SWAP16(value); }
     PRInt16  value;
 };
 
 struct AutoSwap_PRUint32 {
-    operator PRUint32() { return NS_SWAP32(value); }
+    operator PRUint32() const { return NS_SWAP32(value); }
     PRUint32  value;
 };
 
 struct AutoSwap_PRUint64 {
-    operator PRUint64() { return NS_SWAP64(value); }
+    operator PRUint64() const { return NS_SWAP64(value); }
     PRUint64  value;
 };
 
@@ -519,7 +516,8 @@ struct TableDirEntry {
 
 struct HeadTable {
     enum {
-        HEAD_MAGIC_NUMBER = 0x5F0F3CF5
+        HEAD_MAGIC_NUMBER = 0x5F0F3CF5,
+        HEAD_CHECKSUM_CALC_CONST = 0xB1B0AFBA
     };
 
     AutoSwap_PRUint32    tableVersionNumber;    // Fixed, 0x00010000 for version 1.0.
@@ -568,6 +566,15 @@ struct NameRecord {
     };
 };
 
+// name table stores set of name record structures, followed by
+// large block containing all the strings.  name record offset and length
+// indicates the offset and length within that block.
+// http://www.microsoft.com/typography/otspec/name.htm
+struct NameRecordData {
+    PRUint32  offset;
+    PRUint32  length;
+};
+
 struct OS2Table {
     AutoSwap_PRUint16    version;                // 0004 = OpenType 1.5
     AutoSwap_PRInt16     xAvgCharWidth;
@@ -607,6 +614,189 @@ struct OS2Table {
     AutoSwap_PRUint16    usBreakChar;
     AutoSwap_PRUint16    usMaxContext;
 };
+
+static PRBool
+IsValidSFNTVersion(PRUint32 version)
+{
+    // normally 0x00010000, CFF-style OT fonts == 'OTTO' and Apple TT fonts = 'true'
+    // 'typ1' is also possible for old Type 1 fonts in a SFNT container but not supported
+    return version == 0x10000 || version == 'OTTO' || version == 'true';
+}
+
+// copy and swap UTF-16 values, assume no surrogate pairs, can be in place
+static void
+CopySwapUTF16(const PRUint16 *aInBuf, PRUint16 *aOutBuf, PRUint32 aLen)
+{
+    const PRUint16 *end = aInBuf + aLen;
+    while (aInBuf < end) {
+        PRUint16 value = *aInBuf;
+        *aOutBuf = (value >> 8) | (value & 0xff) << 8;
+        aOutBuf++;
+        aInBuf++;
+    }
+}
+
+PRBool
+gfxFontUtils::ValidateSFNTHeaders(const PRUint8 *aFontData, PRUint32 aFontDataLength)
+{
+    NS_ASSERTION(aFontData && aFontDataLength != 0, "null font data");
+
+    PRUint64 dataLength(aFontDataLength);
+    
+    // read in the sfnt header
+    if (sizeof(SFNTHeader) > aFontDataLength) {
+        NS_WARNING("invalid font (insufficient data)");
+        return PR_FALSE;
+    }
+    
+    const SFNTHeader *sfntHeader = reinterpret_cast<const SFNTHeader*>(aFontData);
+    PRUint32 sfntVersion = sfntHeader->sfntVersion;
+    if (!IsValidSFNTVersion(sfntVersion)) {
+        NS_WARNING("invalid font (SFNT version)");
+        return PR_FALSE;
+    }
+
+    // iterate through the table headers to find the head, name and OS/2 tables
+    PRBool foundHead = PR_FALSE, foundOS2 = PR_FALSE, foundName = PR_FALSE;
+    PRBool foundGlyphs = PR_FALSE, foundCFF = PR_FALSE;
+    PRUint32 headOffset, headLen, nameOffset, nameLen;
+    PRUint32 i, numTables;
+
+    numTables = sfntHeader->numTables;
+    PRUint32 headerLen = sizeof(SFNTHeader) + sizeof(TableDirEntry) * numTables;
+    if (headerLen > aFontDataLength) {
+        NS_WARNING("invalid font (table directory)");
+        return PR_FALSE;
+    }
+    
+    // table directory entries begin immediately following SFNT header
+    const TableDirEntry *dirEntry = reinterpret_cast<const TableDirEntry*>(aFontData + sizeof(SFNTHeader));
+    PRUint32 checksum = 0;
+    
+    // checksum for font = (checksum of header) + (checksum of tables)
+    const AutoSwap_PRUint32 *headerData = reinterpret_cast<const AutoSwap_PRUint32*>(aFontData);
+
+    // header length is in bytes, checksum calculated in longwords
+    for (i = 0; i < (headerLen >> 2); i++, headerData++) {
+        checksum += *headerData;
+    }
+    
+    for (i = 0; i < numTables; i++, dirEntry++) {
+    
+        // sanity check on offset, length values
+        if (PRUint64(dirEntry->offset) + PRUint64(dirEntry->length) > dataLength) {
+            NS_WARNING("invalid font (table directory entry)");
+            return PR_FALSE;
+        }
+
+        checksum += dirEntry->checkSum;
+        
+        switch (dirEntry->tag) {
+
+        case 'head':
+            foundHead = PR_TRUE;
+            headOffset = dirEntry->offset;
+            headLen = dirEntry->length;
+            if (headLen < sizeof(HeadTable)) {
+                NS_WARNING("invalid font (head table length)");
+                return PR_FALSE;
+            }
+            break;
+
+        case 'name':
+            foundName = PR_TRUE;
+            nameOffset = dirEntry->offset;
+            nameLen = dirEntry->length;
+            break;
+
+        case 'OS/2':
+            foundOS2 = PR_TRUE;
+            break;
+
+        case 'glyf':  // TrueType-style quadratic glyph table
+            foundGlyphs = PR_TRUE;
+            break;
+
+        case 'CFF ':  // PS-style cubic glyph table
+            foundCFF = PR_TRUE;
+            break;
+
+        default:
+            break;
+        }
+
+    }
+
+    // simple sanity checks
+    
+    // -- fonts need head, name tables
+    if (!foundHead || !foundName) {
+        NS_WARNING("invalid font (missing head/name table)");
+        return PR_FALSE;
+    }
+    
+    // -- on Windows need OS/2 table
+#ifdef XP_WIN
+    if (!foundOS2) {
+        NS_WARNING("invalid font (missing OS/2 table)");
+        return PR_FALSE;
+    }
+#endif
+
+    // -- head table data
+    const HeadTable *headData = reinterpret_cast<const HeadTable*>(aFontData + headOffset);
+
+    if (headData->magicNumber != HeadTable::HEAD_MAGIC_NUMBER) {
+        NS_WARNING("invalid font (head magic number)");
+        return PR_FALSE;
+    }
+
+    if (headData->checkSumAdjustment != (HeadTable::HEAD_CHECKSUM_CALC_CONST - checksum)) {
+        NS_WARNING("invalid font (bad checksum)");
+        return PR_FALSE;
+    }
+    
+    // need glyf or CFF table based on sfnt version
+    if (sfntVersion == 'OTTO') {
+        if (!foundCFF) {
+            NS_WARNING("invalid font (missing CFF table)");
+            return PR_FALSE;
+        }
+    } else {
+        if (!foundGlyphs) {
+            NS_WARNING("invalid font (missing glyf table)");
+            return PR_FALSE;
+        }
+    }
+    
+    // -- name table data
+    const NameHeader *nameHeader = reinterpret_cast<const NameHeader*>(aFontData + nameOffset);
+
+    PRUint32 nameCount = nameHeader->count;
+
+    // -- sanity check the number of name records
+    if (PRUint64(nameCount) * sizeof(NameRecord) + PRUint64(nameOffset) > dataLength) {
+        NS_WARNING("invalid font (name records)");
+        return PR_FALSE;
+    }
+    
+    // -- iterate through name records
+    const NameRecord *nameRecord = reinterpret_cast<const NameRecord*>(aFontData + nameOffset + sizeof(NameHeader));
+    PRUint64 nameStringsBase = PRUint64(nameOffset) + PRUint64(nameHeader->stringOffset);
+
+    for (i = 0; i < nameCount; i++, nameRecord++) {
+        PRUint32 namelen = nameRecord->length;
+        PRUint32 nameoff = nameRecord->offset;  // offset from base of string storage
+
+        if (nameStringsBase + PRUint64(nameoff) + PRUint64(namelen) > dataLength) {
+            NS_WARNING("invalid font (name table strings)");
+            return PR_FALSE;
+        }
+    }
+
+    // everything seems consistent
+    return PR_TRUE;
+}
 
 // Embedded OpenType (EOT) handling
 // needed for dealing with downloadable fonts on Windows
@@ -657,6 +847,10 @@ struct EOTFixedHeader {
 
 };
 
+// EOT headers are only used on Windows
+
+#ifdef XP_WIN
+
 // EOT variable-sized header (version 0x00020001 - contains 4 name
 // fields, each with the structure):
 //
@@ -676,61 +870,9 @@ struct EOTFixedHeader {
 //   rootString  - used to restrict font usage to a specific domain
 //
 
-class AutoCloseFile {
-public:
-    AutoCloseFile(PRFileDesc *aFileDesc) 
-        : mFile(aFileDesc) { }
-    ~AutoCloseFile() { PR_Close(mFile); }
-    PRFileDesc *mFile;
-};
-
-static PRFileDesc *
-OpenFontFile(nsIFile *aFontData)
-{
-    // open up the font file
-    nsCOMPtr<nsILocalFile> localFile = do_QueryInterface(aFontData);
-    if (!localFile)
-        return nsnull;
-
-    PRFileDesc *fd;
-    nsresult rv = localFile->OpenNSPRFileDesc(PR_RDONLY, 0, &fd);
-    if (NS_FAILED(rv) || !fd)
-        return nsnull;
-
-    return fd;
-}
-
-static PRBool
-IsValidVersion(PRUint32 version)
-{
-    // normally 0x00010000, CFF-style OT fonts == 'OTTO' and Apple TT fonts = 'true'
-    return version == 0x10000 || version == 'OTTO' || version == 'true';
-}
-
-// copy and swap UTF-16 values, assume no surrogate pairs, can be in place
-static void
-CopySwapUTF16(PRUint16 *aInBuf, PRUint16 *aOutBuf, PRUint32 aLen)
-{
-    PRUint16 *end = aInBuf + aLen;
-    while (aInBuf < end) {
-        PRUint16 value = *aInBuf;
-        *aOutBuf = (value >> 8) | (value & 0xff) << 8;
-        aOutBuf++;
-        aInBuf++;
-    }
-}
-
-// name table stores set of name record structures, followed by
-// large block containing all the strings.  name record offset and length
-// indicates the offset and length within that block.
-// http://www.microsoft.com/typography/otspec/name.htm
-struct NameRecordData {
-    PRUint32  offset;
-    PRUint32  length;
-};
-
 #if DEBUG
-static void DumpEOTHeader(PRUint8 *aHeader, PRUint32 aHeaderLen)
+static void 
+DumpEOTHeader(PRUint8 *aHeader, PRUint32 aHeaderLen)
 {
     PRUint32 offset = 0;
     PRUint8 *ch = aHeader;
@@ -749,17 +891,17 @@ static void DumpEOTHeader(PRUint8 *aHeader, PRUint32 aHeaderLen)
 #endif
 
 nsresult
-gfxFontUtils::MakeEOTHeader(nsIFile *aFontData, nsTArray<PRUint8> *aHeader, 
-                            PRBool *aIsCFF)
+gfxFontUtils::MakeEOTHeader(const PRUint8 *aFontData, PRUint32 aFontDataLength,
+                            nsTArray<PRUint8> *aHeader, PRBool *aIsCFF)
 {
-    PRInt32 bytesRead;
 
-    // assume TrueType
-    *aIsCFF = PR_FALSE;
-
+    NS_ASSERTION(aFontData && aFontDataLength != 0, "null font data");
     NS_ASSERTION(aHeader, "null header");
     NS_ASSERTION(aHeader->Length() == 0, "non-empty header passed in");
     NS_ASSERTION(aIsCFF, "null boolean ptr");
+
+    // assume TrueType
+    *aIsCFF = PR_FALSE;
 
     if (!aHeader->AppendElements(sizeof(EOTFixedHeader)))
         return NS_ERROR_OUT_OF_MEMORY;
@@ -767,19 +909,7 @@ gfxFontUtils::MakeEOTHeader(nsIFile *aFontData, nsTArray<PRUint8> *aHeader,
     EOTFixedHeader *eotHeader = reinterpret_cast<EOTFixedHeader*> (aHeader->Elements());
     memset(eotHeader, 0, sizeof(EOTFixedHeader));
 
-    // open the font file
-    PRFileDesc *fd = OpenFontFile(aFontData);
-    if (!fd)
-        return NS_ERROR_FAILURE;
-
-    AutoCloseFile autoCloseFile(fd);
-
-    PRFileInfo64 fileInfo;
-    if (PR_GetOpenFileInfo64(fd, &fileInfo) != PR_SUCCESS 
-        || fileInfo.size > PRInt64(0xFFFFFFFF)) 
-        return NS_ERROR_FAILURE;
-
-    PRUint32 fontDataSize = PRUint32(fileInfo.size);
+    PRUint32 fontDataSize = aFontDataLength;
 
     // set up header fields
     eotHeader->fontDataSize = fontDataSize;
@@ -790,9 +920,11 @@ gfxFontUtils::MakeEOTHeader(nsIFile *aFontData, nsTArray<PRUint8> *aHeader,
     eotHeader->magicNumber = EOTFixedHeader::EOT_MAGIC_NUMBER;
 
     // read in the sfnt header
-    SFNTHeader sfntHeader;
-    bytesRead = PR_Read(fd, &sfntHeader, sizeof(SFNTHeader));
-    if (bytesRead != sizeof(SFNTHeader) || !IsValidVersion(sfntHeader.sfntVersion))
+    if (sizeof(SFNTHeader) > aFontDataLength)
+        return NS_ERROR_FAILURE;
+    
+    const SFNTHeader *sfntHeader = reinterpret_cast<const SFNTHeader*>(aFontData);
+    if (!IsValidSFNTVersion(sfntHeader->sfntVersion))
         return NS_ERROR_FAILURE;
 
     // iterate through the table headers to find the head, name and OS/2 tables
@@ -800,33 +932,41 @@ gfxFontUtils::MakeEOTHeader(nsIFile *aFontData, nsTArray<PRUint8> *aHeader,
     PRUint32 headOffset, headLen, nameOffset, nameLen, os2Offset, os2Len;
     PRUint32 i, numTables;
 
-    numTables = sfntHeader.numTables;
-    for (i = 0; i < numTables; i++) {
-        TableDirEntry dirEntry;
-        bytesRead = PR_Read(fd, &dirEntry, sizeof(TableDirEntry));
-        if (bytesRead != sizeof(TableDirEntry))
+    numTables = sfntHeader->numTables;
+    if (sizeof(SFNTHeader) + sizeof(TableDirEntry) * numTables > aFontDataLength)
+        return NS_ERROR_FAILURE;
+    
+    PRUint64 dataLength(aFontDataLength);
+    
+    // table directory entries begin immediately following SFNT header
+    const TableDirEntry *dirEntry = reinterpret_cast<const TableDirEntry*>(aFontData + sizeof(SFNTHeader));
+    
+    for (i = 0; i < numTables; i++, dirEntry++) {
+    
+        // sanity check on offset, length values
+        if (PRUint64(dirEntry->offset) + PRUint64(dirEntry->length) > dataLength)
             return NS_ERROR_FAILURE;
 
-        switch (dirEntry.tag) {
+        switch (dirEntry->tag) {
 
         case 'head':
             foundHead = PR_TRUE;
-            headOffset = dirEntry.offset;
-            headLen = dirEntry.length;
+            headOffset = dirEntry->offset;
+            headLen = dirEntry->length;
             if (headLen < sizeof(HeadTable))
                 return NS_ERROR_FAILURE;
             break;
 
         case 'name':
             foundName = PR_TRUE;
-            nameOffset = dirEntry.offset;
-            nameLen = dirEntry.length;
+            nameOffset = dirEntry->offset;
+            nameLen = dirEntry->length;
             break;
 
         case 'OS/2':
             foundOS2 = PR_TRUE;
-            os2Offset = dirEntry.offset;
-            os2Len = dirEntry.length;
+            os2Offset = dirEntry->offset;
+            os2Len = dirEntry->length;
             break;
 
         case 'glyf':  // TrueType-style quadratic glyph table
@@ -850,72 +990,62 @@ gfxFontUtils::MakeEOTHeader(nsIFile *aFontData, nsTArray<PRUint8> *aHeader,
     if (!foundHead || !foundName || !foundOS2)
         return NS_ERROR_FAILURE;
 
+    // at this point, all table offset/length values are within bounds
+    
     // read in the data from those tables
-    PROffset64 offset;
 
     // -- head table data
-    HeadTable  headData;
-    offset = PR_Seek64(fd, PROffset64(headOffset), PR_SEEK_SET);
-    if (offset == -1)
-        return NS_ERROR_FAILURE;
-    bytesRead = PR_Read(fd, &headData, sizeof(HeadTable));
-    if (bytesRead != sizeof(HeadTable) || headData.magicNumber != HeadTable::HEAD_MAGIC_NUMBER)
+    const HeadTable  *headData = reinterpret_cast<const HeadTable*>(aFontData + headOffset);
+
+    if (headData->magicNumber != HeadTable::HEAD_MAGIC_NUMBER)
         return NS_ERROR_FAILURE;
 
-    eotHeader->checkSumAdjustment = headData.checkSumAdjustment;
+    eotHeader->checkSumAdjustment = headData->checkSumAdjustment;
 
     // -- name table data
 
     // -- first, read name table header
-    NameHeader nameHeader;
+    const NameHeader *nameHeader = reinterpret_cast<const NameHeader*>(aFontData + nameOffset);
 
-    offset = PR_Seek64(fd, PROffset64(nameOffset), PR_SEEK_SET);
-    if (offset == -1)
+    PRUint32 nameCount = nameHeader->count;
+
+    // -- sanity check the number of name records
+    if (PRUint64(nameCount) * sizeof(NameRecord) + PRUint64(nameOffset) > dataLength)
         return NS_ERROR_FAILURE;
-    bytesRead = PR_Read(fd, &nameHeader, sizeof(NameHeader));
-    if (bytesRead != sizeof(NameHeader))
-        return NS_ERROR_FAILURE;
-
-    // -- seek point is now at the start of name records
-
+    
     // -- iterate through name records, look for specific name ids with
     //    matching platform/encoding/etc. and store offset/lengths
     NameRecordData names[EOTFixedHeader::EOT_NUM_NAMES] = {0};
-    PRUint32 nameCount = nameHeader.count;
+    const NameRecord *nameRecord = reinterpret_cast<const NameRecord*>(aFontData + nameOffset + sizeof(NameHeader));
 
-    for (i = 0; i < nameCount; i++) {
-        NameRecord nameRecord;
-
-        bytesRead = PR_Read(fd, &nameRecord, sizeof(NameRecord));
-        if (bytesRead != sizeof(NameRecord))
-            return NS_ERROR_FAILURE;
+    for (i = 0; i < nameCount; i++, nameRecord++) {
 
         // looking for Microsoft English US name strings, skip others
-        if (PRUint32(nameRecord.platformID) != NameRecord::PLATFORM_ID_MICROSOFT || 
-                PRUint32(nameRecord.encodingID) != NameRecord::ENCODING_ID_MICROSOFT_UNICODEBMP || 
-                PRUint32(nameRecord.languageID) != NameRecord::LANG_ID_MICROSOFT_EN_US)
+        if (PRUint32(nameRecord->platformID) != NameRecord::PLATFORM_ID_MICROSOFT || 
+                PRUint32(nameRecord->encodingID) != NameRecord::ENCODING_ID_MICROSOFT_UNICODEBMP || 
+                PRUint32(nameRecord->languageID) != NameRecord::LANG_ID_MICROSOFT_EN_US)
             continue;
 
-        switch ((PRUint32)nameRecord.nameID) {
+        switch ((PRUint32)nameRecord->nameID) {
 
         case NameRecord::NAME_ID_FAMILY:
-            names[EOTFixedHeader::EOT_FAMILY_NAME_INDEX].offset = nameRecord.offset;
-            names[EOTFixedHeader::EOT_FAMILY_NAME_INDEX].length = nameRecord.length;
+            names[EOTFixedHeader::EOT_FAMILY_NAME_INDEX].offset = nameRecord->offset;
+            names[EOTFixedHeader::EOT_FAMILY_NAME_INDEX].length = nameRecord->length;
             break;
 
         case NameRecord::NAME_ID_STYLE:
-            names[EOTFixedHeader::EOT_STYLE_NAME_INDEX].offset = nameRecord.offset;
-            names[EOTFixedHeader::EOT_STYLE_NAME_INDEX].length = nameRecord.length;
+            names[EOTFixedHeader::EOT_STYLE_NAME_INDEX].offset = nameRecord->offset;
+            names[EOTFixedHeader::EOT_STYLE_NAME_INDEX].length = nameRecord->length;
             break;
 
         case NameRecord::NAME_ID_FULL:
-            names[EOTFixedHeader::EOT_FULL_NAME_INDEX].offset = nameRecord.offset;
-            names[EOTFixedHeader::EOT_FULL_NAME_INDEX].length = nameRecord.length;
+            names[EOTFixedHeader::EOT_FULL_NAME_INDEX].offset = nameRecord->offset;
+            names[EOTFixedHeader::EOT_FULL_NAME_INDEX].length = nameRecord->length;
             break;
 
         case NameRecord::NAME_ID_VERSION:
-            names[EOTFixedHeader::EOT_VERSION_NAME_INDEX].offset = nameRecord.offset;
-            names[EOTFixedHeader::EOT_VERSION_NAME_INDEX].length = nameRecord.length;
+            names[EOTFixedHeader::EOT_VERSION_NAME_INDEX].offset = nameRecord->offset;
+            names[EOTFixedHeader::EOT_VERSION_NAME_INDEX].length = nameRecord->length;
             break;
 
         default:
@@ -952,31 +1082,25 @@ gfxFontUtils::MakeEOTHeader(nsIFile *aFontData, nsTArray<PRUint8> *aHeader,
 
     // append the string data to the end of the EOT header
     PRUint8 *eotEnd = aHeader->Elements() + sizeof(EOTFixedHeader);
-    PROffset64 strOffset;
-    PRUint32 strLen;
+    PRUint32 strOffset, strLen;
 
     for (i = 0; i < EOTFixedHeader::EOT_NUM_NAMES; i++) {
         PRUint32 namelen = names[i].length;
         PRUint32 nameoff = names[i].offset;  // offset from base of string storage
 
-        strOffset = nameOffset + PRUint32(nameHeader.stringOffset) + nameoff;
-        offset = PR_Seek64(fd, strOffset, PR_SEEK_SET);
-        if (offset == -1)
+        // sanity check the name string location
+        if (PRUint64(nameOffset) + PRUint64(PRUint32(nameHeader->stringOffset)) + PRUint64(nameoff) + PRUint64(namelen) > dataLength)
             return NS_ERROR_FAILURE;
+    
+        strOffset = nameOffset + PRUint32(nameHeader->stringOffset) + nameoff + namelen;
 
         // output 2-byte str size   
         strLen = namelen & (~1);  // UTF-16 string len must be even
         *((PRUint16*) eotEnd) = PRUint16(strLen);
         eotEnd += 2;
 
-        // read in actual string and swap bytes from big-endian
-        // (TrueType/OpenType) to little-endian (EOT)
-        bytesRead = PR_Read(fd, eotEnd, strLen);
-        if (PRUint32(bytesRead) != strLen)
-            return NS_ERROR_FAILURE;
-
         // length is number of UTF-16 chars, not bytes    
-        CopySwapUTF16(reinterpret_cast<PRUint16*>(eotEnd), 
+        CopySwapUTF16(reinterpret_cast<const PRUint16*>(aFontData + strOffset), 
                       reinterpret_cast<PRUint16*>(eotEnd), 
                       (strLen >> 1));  
         eotEnd += strLen;
@@ -999,24 +1123,18 @@ gfxFontUtils::MakeEOTHeader(nsIFile *aFontData, nsTArray<PRUint8> *aHeader,
                  "header length calculation incorrect");
                  
     // -- OS/2 table data
-    OS2Table  os2Data;
-    offset = PR_Seek64(fd, PROffset64(os2Offset), PR_SEEK_SET);
-    if (offset == -1)
-        return NS_ERROR_FAILURE;
-    bytesRead = PR_Read(fd, &os2Data, sizeof(OS2Table));
-    if (bytesRead != sizeof(OS2Table))
-        return NS_ERROR_FAILURE;
+    const OS2Table *os2Data = reinterpret_cast<const OS2Table*>(aFontData + os2Offset);
 
-    memcpy(eotHeader->panose, os2Data.panose, sizeof(eotHeader->panose));
+    memcpy(eotHeader->panose, os2Data->panose, sizeof(eotHeader->panose));
 
-    eotHeader->italic = (PRUint16) os2Data.fsSelection & 0x01;
-    eotHeader->weight = os2Data.usWeightClass;
-    eotHeader->unicodeRange1 = os2Data.unicodeRange1;
-    eotHeader->unicodeRange2 = os2Data.unicodeRange2;
-    eotHeader->unicodeRange3 = os2Data.unicodeRange3;
-    eotHeader->unicodeRange4 = os2Data.unicodeRange4;
-    eotHeader->codePageRange1 = os2Data.codePageRange1;
-    eotHeader->codePageRange2 = os2Data.codePageRange2;
+    eotHeader->italic = (PRUint16) os2Data->fsSelection & 0x01;
+    eotHeader->weight = os2Data->usWeightClass;
+    eotHeader->unicodeRange1 = os2Data->unicodeRange1;
+    eotHeader->unicodeRange2 = os2Data->unicodeRange2;
+    eotHeader->unicodeRange3 = os2Data->unicodeRange3;
+    eotHeader->unicodeRange4 = os2Data->unicodeRange4;
+    eotHeader->codePageRange1 = os2Data->codePageRange1;
+    eotHeader->codePageRange2 = os2Data->codePageRange2;
 
     eotHeader->eotSize = aHeader->Length() + fontDataSize;
 

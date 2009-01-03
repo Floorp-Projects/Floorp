@@ -109,14 +109,15 @@ NS_IMPL_ADDREF_INHERITED(nsHTMLIFrameElement,nsGenericElement)
 NS_IMPL_RELEASE_INHERITED(nsHTMLIFrameElement,nsGenericElement)
 
 // QueryInterface implementation for nsHTMLIFrameElement
-NS_HTML_CONTENT_INTERFACE_TABLE_HEAD(nsHTMLIFrameElement,
-                                     nsGenericHTMLFrameElement)
-  NS_INTERFACE_TABLE_BEGIN
+NS_INTERFACE_TABLE_HEAD(nsHTMLIFrameElement)
+  NS_HTML_CONTENT_INTERFACE_TABLE_BEGIN(nsHTMLIFrameElement)
     NS_INTERFACE_TABLE_ENTRY(nsHTMLIFrameElement, nsIDOMHTMLIFrameElement)
 #ifdef MOZ_SVG
     NS_INTERFACE_TABLE_ENTRY(nsHTMLIFrameElement, nsIDOMGetSVGDocument)
 #endif
-  NS_INTERFACE_TABLE_END
+  NS_OFFSET_AND_INTERFACE_TABLE_END
+  NS_HTML_CONTENT_INTERFACE_TABLE_TO_MAP_SEGUE(nsHTMLIFrameElement,
+                                               nsGenericHTMLFrameElement)
 NS_HTML_CONTENT_INTERFACE_TABLE_TAIL_CLASSINFO(HTMLIFrameElement)
 
 

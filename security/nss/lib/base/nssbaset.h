@@ -38,7 +38,7 @@
 #define NSSBASET_H
 
 #ifdef DEBUG
-static const char NSSBASET_CVS_ID[] = "@(#) $RCSfile: nssbaset.h,v $ $Revision: 1.6 $ $Date: 2005/01/20 02:25:45 $";
+static const char NSSBASET_CVS_ID[] = "@(#) $RCSfile: nssbaset.h,v $ $Revision: 1.7 $ $Date: 2008/10/05 20:59:16 $";
 #endif /* DEBUG */
 
 /*
@@ -61,10 +61,10 @@ static const char NSSBASET_CVS_ID[] = "@(#) $RCSfile: nssbaset.h,v $ $Revision: 
  */
 
 #define DUMMY	/* dummy */
-#define NSS_EXTERN         PR_EXTERN(DUMMY)
-#define NSS_IMPLEMENT      PR_IMPLEMENT(DUMMY)
-#define NSS_EXTERN_DATA    PR_EXTERN_DATA(DUMMY)
-#define NSS_IMPLEMENT_DATA PR_IMPLEMENT_DATA(DUMMY)
+#define NSS_EXTERN         extern
+#define NSS_EXTERN_DATA    extern
+#define NSS_IMPLEMENT      
+#define NSS_IMPLEMENT_DATA 
 
 PR_BEGIN_EXTERN_C
 

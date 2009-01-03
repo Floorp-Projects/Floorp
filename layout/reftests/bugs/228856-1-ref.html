@@ -1,0 +1,34 @@
+<!doctype html>
+<html><head>
+<!-- This is a test for behavior made up by Mozilla in the absence of
+     specification.  Future CSS specifications may define the behavior
+     differently.  -->
+<title>\0 in CSS</title>
+<style>
+p#a:before { content: "0x" }
+p#b:before { content: "00x" }
+p#c:before { content: "000x" }
+p#d:before { content: "0000x" }
+p#e:before { content: "00000x" }
+p#f:before { content: "000000x" }
+p#g:before { content: "0 x" }
+p#h:before { content: "00 x" }
+p#i:before { content: "000 x" }
+p#j:before { content: "0000 x" }
+p#k:before { content: "00000 x" }
+p#l:before { content: "000000 x" }
+</style>
+</head><body>
+<p id="a">(a)</p>
+<p id="b">(b)</p>
+<p id="c">(c)</p>
+<p id="d">(d)</p>
+<p id="e">(e)</p>
+<p id="f">(f)</p>
+<p id="g">(g)</p>
+<p id="h">(h)</p>
+<p id="i">(i)</p>
+<p id="j">(j)</p>
+<p id="k">(k)</p>
+<p id="l">(l)</p>
+</body></html>

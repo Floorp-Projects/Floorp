@@ -68,6 +68,11 @@ class nsResolveHostCallback;
         return n;                                                            \
     }
 
+#define MAX_RESOLVER_THREADS_FOR_ANY_PRIORITY  3
+#define MAX_RESOLVER_THREADS_FOR_HIGH_PRIORITY 5
+#define MAX_RESOLVER_THREADS (MAX_RESOLVER_THREADS_FOR_ANY_PRIORITY + \
+                              MAX_RESOLVER_THREADS_FOR_HIGH_PRIORITY)
+
 struct nsHostKey
 {
     const char *host;
@@ -104,12 +109,17 @@ public:
      * thread doesn't need to lock when reading |addr_info|.
      */
     PRLock      *addr_info_lock;
-    PRAddrInfo  *addr_info;
     int          addr_info_gencnt; /* generation count of |addr_info| */
+    PRAddrInfo  *addr_info;
     PRNetAddr   *addr;
+    PRBool       negative;   /* True if this record is a cache of a failed lookup.
+                                Negative cache entries are valid just like any other
+                                (though never for more than 60 seconds), but a use
+                                of that negative entry forces an asynchronous refresh. */
+
     PRUint32     expiration; /* measured in minutes since epoch */
 
-    PRBool HasResult() const { return addr_info || addr; }
+    PRBool HasResult() const { return addr_info || addr || negative; }
 
 private:
     friend class nsHostResolver;
@@ -119,6 +129,9 @@ private:
     PRBool  resolving; /* true if this record is being resolved, which means
                         * that it is either on the pending queue or owned by
                         * one of the worker threads. */ 
+    
+    PRBool  onQueue;  /* true if pending and on the queue (not yet given to getaddrinfo())*/
+        
 
    ~nsHostRecord();
 };
@@ -150,6 +163,16 @@ public:
     virtual void OnLookupComplete(nsHostResolver *resolver,
                                   nsHostRecord   *record,
                                   nsresult        status) = 0;
+};
+
+/**
+ * nsHostResolverThreadInfo structures are passed to the resolver
+ * thread.
+ */
+struct nsHostResolverThreadInfo
+{
+    nsHostResolver *self;
+    PRBool   onlyHighPriority;
 };
 
 /**
@@ -209,32 +232,48 @@ public:
      */
     enum {
         RES_BYPASS_CACHE = 1 << 0,
-        RES_CANON_NAME   = 1 << 1
+        RES_CANON_NAME   = 1 << 1,
+        RES_PRIORITY_MEDIUM   = 1 << 2,
+        RES_PRIORITY_LOW  = 1 << 3
     };
 
 private:
     nsHostResolver(PRUint32 maxCacheEntries=50, PRUint32 maxCacheLifetime=1);
    ~nsHostResolver();
 
+   // nsHostResolverThreadInfo * is passed to the ThreadFunc
+   struct nsHostResolverThreadInfo  mHighPriorityInfo, mAnyPriorityInfo;
+   
     nsresult Init();
     nsresult IssueLookup(nsHostRecord *);
-    PRBool   GetHostToLookup(nsHostRecord **);
+    PRBool   GetHostToLookup(nsHostRecord **m, struct nsHostResolverThreadInfo *aID);
     void     OnLookupComplete(nsHostRecord *, nsresult, PRAddrInfo *);
-
-    PR_STATIC_CALLBACK(void) ThreadFunc(void *);
+    void     DeQueue(PRCList &aQ, nsHostRecord **aResult);
+    void     ClearPendingQueue(PRCList *aPendingQueue);
+    nsresult ConditionallyCreateThread(nsHostRecord *rec);
+    
+    static void  MoveQueue(nsHostRecord *aRec, PRCList &aDestQ);
+    
+    static void ThreadFunc(void *);
 
     PRUint32      mMaxCacheEntries;
     PRUint32      mMaxCacheLifetime;
     PRLock       *mLock;
     PRCondVar    *mIdleThreadCV; // non-null if idle thread
-    PRBool        mHaveIdleThread;
+    PRUint32      mNumIdleThreads;
     PRUint32      mThreadCount;
+    PRUint32      mAnyPriorityThreadCount;
     PLDHashTable  mDB;
-    PRCList       mPendingQ;
+    PRCList       mHighQ;
+    PRCList       mMediumQ;
+    PRCList       mLowQ;
     PRCList       mEvictionQ;
     PRUint32      mEvictionQSize;
+    PRUint32      mPendingCount;
     PRTime        mCreationTime;
     PRBool        mShutdown;
+    PRIntervalTime mLongIdleTimeout;
+    PRIntervalTime mShortIdleTimeout;
 };
 
 #endif // nsHostResolver_h__

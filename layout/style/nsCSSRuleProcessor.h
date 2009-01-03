@@ -47,9 +47,12 @@
 
 #include "nsIStyleRuleProcessor.h"
 #include "nsCSSStyleSheet.h"
+#include "nsTArray.h"
+#include "nsAutoPtr.h"
 
 struct RuleCascadeData;
 struct nsCSSSelectorList;
+class nsCSSFontFaceRule;
 
 /**
  * The CSS style rule processor provides a mechanism for sibling style
@@ -64,7 +67,8 @@ struct nsCSSSelectorList;
 
 class nsCSSRuleProcessor: public nsIStyleRuleProcessor {
 public:
-  nsCSSRuleProcessor(const nsCOMArray<nsICSSStyleSheet>& aSheets);
+  nsCSSRuleProcessor(const nsCOMArray<nsICSSStyleSheet>& aSheets, 
+                     PRUint8 aSheetType);
   virtual ~nsCSSRuleProcessor();
 
   NS_DECL_ISUPPORTS
@@ -72,6 +76,7 @@ public:
 public:
   nsresult ClearRuleCascades();
 
+  static void Startup();
   static void FreeSystemMetrics();
 
   /*
@@ -96,13 +101,21 @@ public:
   NS_IMETHOD MediumFeaturesChanged(nsPresContext* aPresContext,
                                    PRBool* aRulesChanged);
 
+  // Append all the currently-active font face rules to aArray.  Return
+  // true for success and false for failure.
+  PRBool AppendFontFaceRules(nsPresContext* aPresContext,
+                             nsTArray<nsFontFaceRuleContainer>& aArray);
+
 #ifdef DEBUG
   void AssertQuirksChangeOK() {
-    NS_ASSERTION(!mRuleCascades, "too late to set quirks style sheet");
+    NS_ASSERTION(!mRuleCascades, "can't toggle quirks style sheet without "
+                                 "clearing rule cascades");
   }
 #endif
 
-protected:
+private:
+  static PRBool CascadeSheetEnumFunc(nsICSSStyleSheet* aSheet, void* aData);
+
   RuleCascadeData* GetRuleCascade(nsPresContext* aPresContext);
   void RefreshRuleCascade(nsPresContext* aPresContext);
 
@@ -114,6 +127,9 @@ protected:
 
   // The last pres context for which GetRuleCascades was called.
   nsPresContext *mLastPresContext;
+  
+  // type of stylesheet using this processor
+  PRUint8 mSheetType;  // == nsStyleSet::sheetType
 };
 
 #endif /* nsCSSRuleProcessor_h_ */

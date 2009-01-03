@@ -144,12 +144,8 @@ ShouldBypassNativeWrapper(JSContext *cx, JSObject *obj)
     return JS_FALSE;
 
   // Check what the script calling us looks like
-  JSScript *script = nsnull;
-  JSStackFrame *fp = cx->fp;
-  while(!script && fp) {
-    script = fp->script;
-    fp = fp->down;
-  }
+  JSStackFrame *fp = JS_GetScriptedCaller(cx, NULL);
+  JSScript *script = fp ? fp->script : NULL;
 
   // If there's no script, bypass for now because that's what the old code did.
   // XXX FIXME: bug 341477 covers figuring out what we _should_ do.
@@ -183,10 +179,6 @@ ShouldBypassNativeWrapper(JSContext *cx, JSObject *obj)
 static JSBool
 XPC_NW_toString(JSContext *cx, JSObject *obj, uintN argc, jsval *argv,
                 jsval *rval);
-
-static JSBool
-XPCNativeWrapperCtor(JSContext *cx, JSObject *obj, uintN argc, jsval *argv,
-                     jsval *rval);
 
 static inline
 JSBool
@@ -660,7 +652,7 @@ XPC_NW_Finalize(JSContext *cx, JSObject *obj)
 {
   // We must not use obj's private data here since it's likely that it
   // has already been finalized.
-  XPCJSRuntime *rt = nsXPConnect::GetRuntime();
+  XPCJSRuntime *rt = nsXPConnect::GetRuntimeInstance();
 
   {
     // scoped lock
@@ -778,14 +770,19 @@ MirrorWrappedNativeParent(JSContext *cx, XPCWrappedNative *wrapper,
     XPCWrappedNative *parent_wrapper =
       XPCWrappedNative::GetWrappedNativeOfJSObject(cx, wn_parent);
 
-    *result = XPCNativeWrapper::GetNewOrUsed(cx, parent_wrapper, nsnull);
-    if (!*result)
-      return JS_FALSE;
+    // parent_wrapper can be null if we're in a Components.utils.evalInSandbox
+    // scope. In that case, the best we can do is just use the
+    // non-native-wrapped sandbox global object for our parent.
+    if (parent_wrapper) {
+      *result = XPCNativeWrapper::GetNewOrUsed(cx, parent_wrapper, nsnull);
+      if (!*result)
+        return JS_FALSE;
+    }
   }
   return JS_TRUE;
 }
 
-static JSBool
+JSBool
 XPCNativeWrapperCtor(JSContext *cx, JSObject *obj, uintN argc, jsval *argv,
                      jsval *rval)
 {
@@ -1085,22 +1082,18 @@ XPCNativeWrapper::AttachNewConstructorObject(XPCCallContext &ccx,
 // static
 JSObject *
 XPCNativeWrapper::GetNewOrUsed(JSContext *cx, XPCWrappedNative *wrapper,
-                               JSObject *callee)
+                               nsIPrincipal *aObjectPrincipal)
 {
-  if (callee) {
-    nsCOMPtr<nsIPrincipal> prin;
-
+  if (aObjectPrincipal) {
     nsIScriptSecurityManager *ssm = XPCWrapper::GetSecurityManager();
-    nsresult rv = ssm->GetObjectPrincipal(cx, callee, getter_AddRefs(prin));
-    if (NS_SUCCEEDED(rv) && prin) {
-      PRBool isSystem;
-      rv = ssm->IsSystemPrincipal(prin, &isSystem);
-      if (NS_SUCCEEDED(rv) && !isSystem) {
-        jsval v = OBJECT_TO_JSVAL(wrapper->GetFlatJSObject());
-        if (!XPCNativeWrapperCtor(cx, JSVAL_TO_OBJECT(v), 1, &v, &v))
-          return nsnull;
-        return JSVAL_TO_OBJECT(v);
-      }
+
+    PRBool isSystem;
+    nsresult rv = ssm->IsSystemPrincipal(aObjectPrincipal, &isSystem);
+    if (NS_SUCCEEDED(rv) && !isSystem) {
+      jsval v = OBJECT_TO_JSVAL(wrapper->GetFlatJSObject());
+      if (!XPCNativeWrapperCtor(cx, JSVAL_TO_OBJECT(v), 1, &v, &v))
+        return nsnull;
+      return JSVAL_TO_OBJECT(v);
     }
   }
 
