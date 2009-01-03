@@ -464,10 +464,10 @@ SyncEngine.prototype = {
       for (let id in this._tracker.changedIDs) {
         let out = this._createRecord(id);
         this._log.trace("Outgoing:\n" + out);
-        yield out.encrypt(self.cb, ID.get('WeaveCryptoID').password);
-        yield up.pushRecord(self.cb, out);
         if (out.cleartext) // skip deleted records
           this._store.createMetaRecords(out.id, meta);
+        yield out.encrypt(self.cb, ID.get('WeaveCryptoID').password);
+        yield up.pushRecord(self.cb, out);
       }
 
       this._store.cache.enabled = true;
@@ -476,8 +476,8 @@ SyncEngine.prototype = {
       // sending as full records
       let count = 0;
       for each (let obj in meta) {
-          if (!obj.id in this._tracker.changedIDs) {
-            up.pushLiteral.push(obj);
+          if (!(obj.id in this._tracker.changedIDs)) {
+            up.pushLiteral(obj);
             count++;
           }
       }
