@@ -377,6 +377,7 @@ SyncEngine.prototype = {
     let local = this._createRecord(item.id);
     this._log.trace("Local record: \n" + local);
     if (item.parentid == local.parentid &&
+        item.sortindex == local.sortindex &&
         Utils.deepEquals(item.cleartext, local.cleartext)) {
       this._log.debug("Local record is the same");
       return true;
