@@ -291,7 +291,6 @@ nsFaviconService::SetFaviconUrlForPage(nsIURI* aPageURI, nsIURI* aFaviconURI)
   NS_ENSURE_ARG_POINTER(aPageURI);
   NS_ENSURE_ARG_POINTER(aFaviconURI);
 
-  // we don't care if there was data
   PRBool hasData;
   nsresult rv = SetFaviconUrlForPageInternal(aPageURI, aFaviconURI, &hasData);
   NS_ENSURE_SUCCESS(rv, rv);
@@ -337,6 +336,14 @@ nsFaviconService::SetFaviconUrlForPageInternal(nsIURI* aPageURI,
 {
   nsresult rv;
   PRInt64 iconId = -1;
+  *aHasData = PR_FALSE;
+
+  nsNavHistory* historyService = nsNavHistory::GetHistoryService();
+  NS_ENSURE_TRUE(historyService, NS_ERROR_OUT_OF_MEMORY);
+
+  if (historyService->InPrivateBrowsingMode())
+    return NS_OK;
+
   mozStorageTransaction transaction(mDBConn, PR_FALSE);
   {
     mozStorageStatementScoper scoper(mDBGetIconInfo);
@@ -358,15 +365,8 @@ nsFaviconService::SetFaviconUrlForPageInternal(nsIURI* aPageURI,
     }
   }
 
-  nsNavHistory* historyService = nsNavHistory::GetHistoryService();
-  NS_ENSURE_TRUE(historyService, NS_ERROR_OUT_OF_MEMORY);
-
-  if (historyService->InPrivateBrowsingMode())
-    return NS_OK;
-
   if (iconId == -1) {
     // We did not find any entry, so create a new one
-    *aHasData = PR_FALSE;
 
     // not-binded params are automatically nullified by mozStorage
     mozStorageStatementScoper scoper(mDBInsertIcon);
