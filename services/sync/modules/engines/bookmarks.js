@@ -190,8 +190,13 @@ BookmarksStore.prototype = {
       return true;
     if (placeId == this._bms.unfiledBookmarksFolder)
       return true;
-    if (this._bms.getFolderIdForItem(placeId) < 0)
-      return true;
+    try {
+      if (this._bms.getFolderIdForItem(placeId) < 0)
+        return true;
+    } catch (e) {
+      this._log.debug("Oops!  Failed for place ID: " + placeId);
+      throw e;
+    }
     return false;
   },
 
