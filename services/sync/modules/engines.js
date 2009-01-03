@@ -269,10 +269,7 @@ SyncEngine.prototype = {
   // Create a new record by querying the store, and add the engine metadata
   _createRecord: function SyncEngine__createRecord(id) {
     let record = this._store.createRecord(id);
-    this._log.debug("setting uri to " + this.engineURL + id);
     record.uri = this.engineURL + id;
-    this._log.debug("uri set to " + record.uri);
-    this._log.debug("record id set to " + record.id);
     record.encryption = this.cryptoMetaURL;
     return record;
   },
