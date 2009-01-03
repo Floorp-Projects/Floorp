@@ -46,7 +46,9 @@ Cu.import("resource://gre/modules/XPCOMUtils.jsm");
 Cu.import("resource://weave/log4moz.js");
 Cu.import("resource://weave/util.js");
 Cu.import("resource://weave/resource.js");
+Cu.import("resource://weave/identity.js");
 Cu.import("resource://weave/async.js");
+Cu.import("resource://weave/type_records/clientData.js");
 
 Function.prototype.async = Async.sugar;
 
@@ -56,6 +58,24 @@ function ClientDataSvc() {
   this._init();
 }
 ClientDataSvc.prototype = {
+  name: "clients",
+
+  _init: function ClientData__init() {
+    this._log = Log4Moz.repository.getLogger("Service.ClientData");
+  },
+
+  get baseURL() {
+    let url = Utils.prefs.getCharPref("serverURL");
+    if (url && url[url.length-1] != '/')
+      url += '/';
+    url += "0.3/user/";
+    return url;
+  },
+
+  get engineURL() {
+    return this.baseURL + ID.get('WeaveID').username + '/' + this.name + '/';
+  },
+
   get GUID() {
     return this._getCharPref("client.GUID", function() Utils.makeGUID());
   },
@@ -77,10 +97,6 @@ ClientDataSvc.prototype = {
     Utils.prefs.setCharPref("client.type", value);
   },
 
-  clients: function ClientData__clients() {
-    return this._remote.data;
-  },
-
   _getCharPref: function ClientData__getCharPref(pref, defaultCb) {
     let value;
     try {
@@ -92,49 +108,25 @@ ClientDataSvc.prototype = {
     return value;
   },
 
-  _init: function ClientData__init() {
-    this._log = Log4Moz.repository.getLogger("Service.ClientData");
-    this._remote = new Resource("meta/clients");
-    this._remote.pushFilter(new JsonFilter());
-  },
-
-  _wrap: function ClientData__wrap() {
-    return {
-      GUID: this.GUID,
-      name: this.name,
-      type: this.type
-    };
-  },
-
-  _refresh: function ClientData__refresh() {
-    let self = yield;
-
-   // No more such thing as DAV.  I think this is making a directory.
-    // Will the directory now be handled automatically? (YES)
-   /* let ret = yield DAV.MKCOL("meta", self.cb);
-    if(!ret)
-      throw "Could not create meta information directory";*/
-
-    // This fails horribly because this._remote._uri.spec is null. What's
-    // that mean?
-    // Spec is supposed to be just a string?
-
-    // Probably problem has to do with Resource getting intialized by
-    // relative, not absolute, path?
-    // Use WBORecord (Weave Basic Object) from wbo.js?
-    this._log.debug("The URI is " + this._remote._uri);
-    this._log.debug("The URI.spec is " + this._remote._uri.spec);
-    try { yield this._remote.get(self.cb); }
-    catch (e if e.status == 404) {
-      this._log.debug("404ed.  Using empty for remote data.");
-      this._remote.data = {};
-    }
-
-    this._remote.data[this.GUID] = this._wrap();
-    yield this._remote.put(self.cb);
-    this._log.debug("Successfully downloaded clients file from server");
-  },
   refresh: function ClientData_refresh(onComplete) {
-    this._refresh.async(this, onComplete);
+    let fn = function() {
+      let self = yield;
+
+      let record = new ClientRec();
+      record.uri = this.engineURL + this.GUID;
+      try {
+        yield record.get(self.cb);
+      } catch (e) {
+        // error? first-time upload?
+        // payload will be undefined, reset it so put below will work
+        record = new ClientRec();
+        record.uri = this.engineURL + this.GUID;
+      }
+
+      record.name = this.name;
+      record.type = this.type;
+      yield record.put(self.cb);
+    };
+    fn.async(this, onComplete);
   }
 };
