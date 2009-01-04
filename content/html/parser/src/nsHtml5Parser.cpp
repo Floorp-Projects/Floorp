@@ -323,7 +323,7 @@ nsHtml5Parser::Parse(const nsAString& aSourceBuffer,
     buffer->setEnd(aSourceBuffer.Length());
     if (!mBlocked) {
       WillResumeImpl();
-      WillProcessTokensImpl();
+      WillParseImpl();
       while (buffer->hasMore()) {
         buffer->adjust(mLastWasCR);
         mLastWasCR = PR_FALSE;
@@ -618,7 +618,7 @@ nsHtml5Parser::documentMode(nsHtml5DocumentMode m)
 // nsIContentSink
 
 NS_IMETHODIMP
-nsHtml5Parser::WillTokenize()
+nsHtml5Parser::WillParse()
 {
   NS_NOTREACHED("No one shuld call this");
   return NS_ERROR_NOT_IMPLEMENTED;
@@ -770,7 +770,7 @@ nsHtml5Parser::ParseUntilSuspend()
   }
   
   WillResumeImpl();
-  WillProcessTokensImpl();
+  WillParseImpl();
   
   mSuspending = PR_FALSE;
   for (;;) {
@@ -972,4 +972,16 @@ nsHtml5Parser::FlushTags()
     return NS_OK; 
 }
 
+void
+nsHtml5Parser::ScriptExecuting()
+{
+  ++mScriptsExecuting;
+}
+
+void
+nsHtml5Parser::ScriptDidExecute()
+{
+  NS_ASSERTION(mScriptsExecuting > 0, "Too many calls to ScriptDidExecute");
+  --mScriptsExecuting;
+}
 
