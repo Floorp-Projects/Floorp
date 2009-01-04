@@ -1467,12 +1467,9 @@ NS_IMPL_THREADSAFE_ISUPPORTS2(jsdContext, jsdIContext, jsdIEphemeral)
 jsdIContext *
 jsdContext::FromPtr (JSDContext *aJSDCx, JSContext *aJSCx)
 {
-    if (!aJSDCx || !aJSCx ||
-        !(JS_GetOptions(aJSCx) & JSOPTION_PRIVATE_IS_NSISUPPORTS))
-    {
+    if (!aJSDCx || !aJSCx)
         return nsnull;
-    }
-    
+
     nsCOMPtr<jsdIContext> jsdicx;
     nsCOMPtr<jsdIEphemeral> eph = 
         jsds_FindEphemeral (&gLiveContexts, static_cast<void *>(aJSCx));
@@ -1482,17 +1479,15 @@ jsdContext::FromPtr (JSDContext *aJSDCx, JSContext *aJSCx)
     }
     else
     {
-        nsCOMPtr<nsISupports> iscx = 
-            static_cast<nsISupports *>(JS_GetContextPrivate(aJSCx));
-        if (!iscx)
-            return nsnull;
-        
+        nsCOMPtr<nsISupports> iscx;
+        if (JS_GetOptions(aJSCx) & JSOPTION_PRIVATE_IS_NSISUPPORTS)
+            iscx = static_cast<nsISupports *>(JS_GetContextPrivate(aJSCx));
         jsdicx = new jsdContext (aJSDCx, aJSCx, iscx);
     }
 
-    jsdIContext *rv = jsdicx;
-    NS_IF_ADDREF(rv);
-    return rv;
+    jsdIContext *ctx = nsnull;
+    jsdicx.swap(ctx);
+    return ctx;
 }
 
 jsdContext::jsdContext (JSDContext *aJSDCx, JSContext *aJSCx,
@@ -1592,8 +1587,7 @@ NS_IMETHODIMP
 jsdContext::GetWrappedContext(nsISupports **_rval)
 {
     ASSERT_VALID_EPHEMERAL;
-    *_rval = mISCx;
-    NS_IF_ADDREF(*_rval);
+    NS_IF_ADDREF(*_rval = mISCx);
     return NS_OK;
 }
 
@@ -1643,6 +1637,11 @@ NS_IMETHODIMP
 jsdContext::GetScriptsEnabled (PRBool *_rval)
 {
     ASSERT_VALID_EPHEMERAL;
+    if (!mISCx) {
+        *_rval = PR_TRUE;
+        return NS_OK;
+    }
+
     nsCOMPtr<nsIScriptContext> context = do_QueryInterface(mISCx);
     if (!context)
         return NS_ERROR_NO_INTERFACE;
@@ -1656,6 +1655,12 @@ NS_IMETHODIMP
 jsdContext::SetScriptsEnabled (PRBool _rval)
 {
     ASSERT_VALID_EPHEMERAL;
+    if (!mISCx) {
+        if (_rval)
+            return NS_OK;
+        return NS_ERROR_NO_INTERFACE;
+    }
+
     nsCOMPtr<nsIScriptContext> context = do_QueryInterface(mISCx);
     if (!context)
         return NS_ERROR_NO_INTERFACE;
