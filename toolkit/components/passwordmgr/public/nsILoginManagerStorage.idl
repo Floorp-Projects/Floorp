@@ -40,7 +40,7 @@
 interface nsIFile;
 interface nsILoginInfo;
 
-[scriptable, uuid(18b5acbd-36dc-496d-9212-6f1a3c068a84)]
+[scriptable, uuid(dec624d1-18ea-40ea-8ca5-69002153c8b8)]
 
 /*
  * NOTE: This interface is intended to be implemented by modules
