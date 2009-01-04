@@ -102,10 +102,10 @@ class gfxContext;
 typedef short SelectionType;
 typedef PRUint32 nsFrameState;
 
-// 23439d06-4642-4c4e-b60b-d84ad9bd8897
+// b5bc1dd3-9fd3-4fe7-8311-5dfca55ea371
 #define NS_IPRESSHELL_IID \
-  { 0x23439d06, 0x4642, 0x4c4e, \
-    { 0xb6, 0x0b, 0xd8, 0x4a, 0xd9, 0xbd, 0x88, 0x97 } }
+{ 0xb5bc1dd3, 0x9fd3, 0x4fe7, \
+  { 0x83, 0x11, 0x5d, 0xfc, 0xa5, 0x5e, 0xa3, 0x71 } }
 
 // Constants for ScrollContentIntoView() function
 #define NS_PRESSHELL_SCROLL_TOP      0
