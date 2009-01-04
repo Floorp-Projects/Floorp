@@ -1,0 +1,13 @@
+<!DOCTYPE HTML>
+<title>Test for wrapping around zero-height floats</title>
+
+<div style="width: 500px; height: 500px; float: left; font-size: 12px;">
+
+  <div style="float: left; width: 10px; height: 30px"></div>
+  <div style="float: left; clear: left; width: 100px; height: 0"></div>
+
+  <span style="display:inline-block; vertical-align: bottom; height: 20px; width: 300px; background: blue;"></span>
+  <span style="display:inline-block; vertical-align: bottom; height: 20px; width: 300px; background: purple;"></span>
+  <span style="display:inline-block; vertical-align: bottom; height: 20px; width: 300px; background: fuchsia"></span>
+
+</div>
