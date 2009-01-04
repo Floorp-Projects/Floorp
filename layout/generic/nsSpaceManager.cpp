@@ -1451,10 +1451,7 @@ nsAutoSpaceManager::~nsAutoSpaceManager()
     }
 #endif
 
-#ifdef DEBUG
-    if (mOwns)
-#endif
-      delete mNew;
+    delete mNew;
   }
 }
 

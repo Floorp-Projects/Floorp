@@ -1114,24 +1114,6 @@ nsBlockFrame::Reflow(nsPresContext*           aPresContext,
   aMetrics.mOverflowArea.UnionRect(aMetrics.mOverflowArea,
                                    overflowContainerBounds);
 
-  // see if verifyReflow is enabled, and if so store off the space manager pointer
-#ifdef DEBUG
-  PRInt32 verifyReflowFlags = nsIPresShell::GetVerifyReflowFlags();
-  if (VERIFY_REFLOW_INCLUDE_SPACE_MANAGER & verifyReflowFlags)
-  {
-    // this is a leak of the space manager, but it's only in debug if verify reflow is enabled, so not a big deal
-    nsIPresShell *shell = aPresContext->GetPresShell();
-    if (shell) {
-      nsHTMLReflowState&  reflowState = (nsHTMLReflowState&)aReflowState;
-      rv = SetProperty(nsGkAtoms::spaceManagerProperty,
-                       reflowState.mSpaceManager,
-                       nsnull /* should be nsSpaceManagerDestroyer*/);
-
-      autoSpaceManager.DebugOrphanSpaceManager();
-    }
-  }
-#endif
-
   // Let the absolutely positioned container reflow any absolutely positioned
   // child frames that need to be reflowed, e.g., elements with a percentage
   // based width/height
