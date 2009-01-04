@@ -468,9 +468,6 @@ class nsAutoSpaceManager {
 public:
   nsAutoSpaceManager(nsHTMLReflowState& aReflowState)
     : mReflowState(aReflowState),
-#ifdef DEBUG
-      mOwns(PR_TRUE),
-#endif
       mNew(nsnull),
       mOld(nsnull) {}
 
@@ -484,20 +481,8 @@ public:
   nsresult
   CreateSpaceManager(nsPresContext *aPresContext);
 
-#ifdef DEBUG
-  /**
-   * `Orphan' any space manager that the nsAutoSpaceManager created;
-   * i.e., make it so that we don't destroy the space manager when we
-   * go out of scope.
-   */
-  void DebugOrphanSpaceManager() { mOwns = PR_FALSE; }
-#endif
-
 protected:
   nsHTMLReflowState &mReflowState;
-#ifdef DEBUG
-  PRBool mOwns;
-#endif
   nsSpaceManager *mNew;
   nsSpaceManager *mOld;
 };

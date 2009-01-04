@@ -123,8 +123,7 @@ typedef PRUint32 nsFrameState;
 #define VERIFY_REFLOW_DUMP_COMMANDS   0x08
 #define VERIFY_REFLOW_NOISY_RC        0x10
 #define VERIFY_REFLOW_REALLY_NOISY_RC 0x20
-#define VERIFY_REFLOW_INCLUDE_SPACE_MANAGER 0x40
-#define VERIFY_REFLOW_DURING_RESIZE_REFLOW  0x80
+#define VERIFY_REFLOW_DURING_RESIZE_REFLOW  0x40
 
 /**
  * Presentation shell interface. Presentation shells are the
