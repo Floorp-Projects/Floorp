@@ -227,6 +227,19 @@ class nsHtml5Parser : public nsIParser,
     
     virtual void Reset();
     
+    /**
+     * Tells the parser that a script is now executing. The only data we
+     * should resume parsing for is document.written data. We'll deal with any
+     * data that comes in over the network later.
+     */
+    virtual void ScriptExecuting();
+
+    /**
+     * Tells the parser that the script is done executing. We should now
+     * continue the regular parsing process.
+     */
+    virtual void ScriptDidExecute();
+    
     /* End nsIParser  */
 
      //*********************************************
@@ -255,7 +268,7 @@ class nsHtml5Parser : public nsIParser,
 
     // nsIContentSink
 
-    NS_IMETHOD WillTokenize();
+    NS_IMETHOD WillParse();
     NS_IMETHOD WillBuildModel();
     NS_IMETHOD DidBuildModel();
     NS_IMETHOD WillInterrupt();
@@ -316,7 +329,8 @@ class nsHtml5Parser : public nsIParser,
 
     // script execution
     nsCOMPtr<nsIContent>         mScriptElement;
- 
+    PRUint32                     mScriptsExecuting;
+     
     // Gecko integration
     void*                        mRootContextKey;
     nsCOMPtr<nsIRequest>         mRequest; 
