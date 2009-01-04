@@ -128,6 +128,26 @@ interface nsILoginManagerStorage : nsISupports {
 
 
     /**
+    * Fetch all logins in the login manager. An array is always returned;
+    * if there are no logins the array is empty. This does not decrypt logins
+    * before returning the array
+    *
+    * @param count
+    *        The number of elements in the array. JS callers can simply use
+    *        the array's .length property, and supply an dummy object for
+    *        this out param. For example: |getAllEncryptedLogins({})|
+    * @param logins
+    *        An array of nsILoginInfo objects. 
+    *
+    * NOTE: This can be called from JS as:
+    *       var logins = pwmgr.getAllEncryptedLogins({});
+    *       (|logins| is an array).
+    */
+    void getAllEncryptedLogins(out unsigned long count,
+                               [retval, array, size_is(count)] out nsILoginInfo logins);
+
+
+    /**
      * Obtain a list of all hosts for which password saving is disabled.
      *
      * @param count
