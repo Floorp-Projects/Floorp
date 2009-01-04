@@ -1064,15 +1064,15 @@ jsdScript::CreatePPLineMap()
         scriptOwner = PR_TRUE;
         baseLine = 1;
     }
-        
+
     PRUint32 scriptExtent = JS_GetScriptLineExtent (cx, script);
     jsbytecode* firstPC = JS_LineNumberToPC (cx, script, 0);
     /* allocate worst case size of map (number of lines in script + 1
      * for our 0 record), we'll shrink it with a realloc later. */
-    mPPLineMap = 
+    PCMapEntry *lineMap =
         static_cast<PCMapEntry *>
                    (PR_Malloc((scriptExtent + 1) * sizeof (PCMapEntry)));
-    if (mPPLineMap) {             
+    if (lineMap) {
         mPCMapSize = 0;
         for (PRUint32 line = baseLine; line < scriptExtent + baseLine; ++line) {
             jsbytecode* pc = JS_LineNumberToPC (cx, script, line);
@@ -1083,17 +1083,19 @@ jsdScript::CreatePPLineMap()
             }
         }
         if (scriptExtent != mPCMapSize) {
-            mPPLineMap =
+            lineMap =
                 static_cast<PCMapEntry *>
-                           (PR_Realloc(mPPLineMap,
-                                          mPCMapSize * sizeof(PCMapEntry)));
+                           (PR_Realloc(mPPLineMap = lineMap,
+                                       mPCMapSize * sizeof(PCMapEntry)));
+            if (!lineMap)
+                PR_Free(mPPLineMap);
         }
     }
 
     if (scriptOwner)
         JS_DestroyScript (cx, script);
 
-    return mPPLineMap;
+    return mPPLineMap = lineMap;
 }
 
 PRUint32
@@ -1417,7 +1419,7 @@ jsdScript::IsLineExecutable(PRUint32 aLine, PRUint32 aPcmap, PRBool *_rval)
         *_rval = (aLine == JSD_GetClosestLine (mCx, mScript, pc));
     } else if (aPcmap == PCMAP_PRETTYPRINT) {
         if (!mPPLineMap && !CreatePPLineMap())
-            return NS_ERROR_FAILURE;
+            return NS_ERROR_OUT_OF_MEMORY;
         *_rval = PR_FALSE;
         for (PRUint32 i = 0; i < mPCMapSize; ++i) {
             if (mPPLineMap[i].line >= aLine) {
