@@ -1415,7 +1415,7 @@ GetVerticalMarginBorderPadding(const nsHTMLReflowState* aReflowState)
  * until it finds the canvas frame, or it encounters a frame that is not a block,
  * area, or scroll frame. This handles compatibility with IE (see bug 85016 and bug 219693)
  *
- *  When we encounter scrolledContent area frames, we skip over them, since they are guaranteed to not be useful for computing the containing block.
+ *  When we encounter scrolledContent block frames, we skip over them, since they are guaranteed to not be useful for computing the containing block.
  *
  * See also IsQuirkContainingBlockHeight.
  */
@@ -1434,7 +1434,7 @@ CalcQuirkContainingBlockHeight(const nsHTMLReflowState* aCBReflowState)
   for (; rs; rs = (nsHTMLReflowState *)(rs->parentReflowState)) { 
     nsIAtom* frameType = rs->frame->GetType();
     // if the ancestor is auto height then skip it and continue up if it 
-    // is the first block/area frame and possibly the body/html
+    // is the first block frame and possibly the body/html
     if (nsGkAtoms::blockFrame == frameType ||
 #ifdef MOZ_XUL
         nsGkAtoms::XULLabelFrame == frameType ||

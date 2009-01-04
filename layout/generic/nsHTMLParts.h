@@ -100,7 +100,6 @@ NS_NewAttributeContent(nsNodeInfoManager *aNodeInfoManager,
 nsIFrame*
 NS_NewSelectsAreaFrame(nsIPresShell* aPresShell, nsStyleContext* aContext, PRUint32 aFlags);
 
-// These AreaFrame's shrink wrap around their contents
 inline nsIFrame*
 NS_NewTableCellInnerFrame(nsIPresShell* aPresShell, nsStyleContext* aContext) {
   return NS_NewBlockFrame(aPresShell, aContext);
