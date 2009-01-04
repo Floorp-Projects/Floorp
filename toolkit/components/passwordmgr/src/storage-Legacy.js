@@ -344,6 +344,33 @@ LoginManagerStorage_legacy.prototype = {
 
 
     /*
+     * getAllEncryptedLogins
+     *
+     * Returns an array of nsAccountInfo, each in the encrypted state.
+     */
+    getAllEncryptedLogins : function (count) {
+        var result = [];
+
+        // Each entry is an array -- append the array entries to |result|.
+        for each (var hostLogins in this._logins) {
+            // Return copies to the caller. Prevents callers from modifying
+            // our internal storage
+            for each (var login in hostLogins) {
+                var clone = new this._nsLoginInfo();
+                clone.init(login.hostname, login.formSubmitURL, login.httpRealm,
+                           login.wrappedJSObject.encryptedUsername,
+                           login.wrappedJSObject.encryptedPassword,
+                           login.usernameField, login.passwordField);
+                result.push(clone);
+            }
+        }
+
+        count.value = result.length; // needed for XPCOM
+        return result;
+    },
+
+
+    /*
      * removeAllLogins
      *
      * Removes all logins from storage.
