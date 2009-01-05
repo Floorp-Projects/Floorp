@@ -79,6 +79,8 @@
 #include "nsICSSImportRule.h"
 #include "nsThreadUtils.h"
 #include "nsGkAtoms.h"
+#include "nsDocShellCID.h"
+#include "nsIChannelClassifier.h"
 
 #ifdef MOZ_XUL
 #include "nsXULPrototypeCache.h"
@@ -1454,6 +1456,19 @@ CSSLoaderImpl::LoadSheet(SheetLoadData* aLoadData, StyleSheetState aSheetState)
 #ifdef DEBUG
   mSyncCallback = PR_FALSE;
 #endif
+
+  // Check the load against the URI classifier
+  nsCOMPtr<nsIChannelClassifier> classifier =
+    do_CreateInstance(NS_CHANNELCLASSIFIER_CONTRACTID);
+  if (classifier) {
+    rv = classifier->Start(channel, PR_TRUE);
+    if (NS_FAILED(rv)) {
+      LOG_ERROR(("  Failed to classify URI"));
+      SheetComplete(aLoadData, rv);
+      channel->Cancel(rv);
+      return rv;
+    }
+  }
 
   if (NS_FAILED(rv)) {
     LOG_ERROR(("  Failed to create stream loader"));
