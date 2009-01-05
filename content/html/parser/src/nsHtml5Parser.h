@@ -70,7 +70,7 @@ enum eHtml5ParserLifecycle {
   NOT_STARTED = 0,
   PARSING = 1,
   STREAM_ENDING = 2,
-  TERMINATED = 3,
+  TERMINATED = 3
 };
 
 class nsHtml5Parser : public nsIParser,
