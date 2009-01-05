@@ -223,7 +223,6 @@ bin\components\nsBlocklistService.js
 bin\components\nsUpdateService.js
 bin\components\nsMicrosummaryService.js
 bin\components\nsPlacesTransactionsService.js
-bin\components\nsPostUpdateWin.js
 bin\components\nsPrivateBrowsingService.js
 bin\components\nsLoginInfo.js
 bin\components\nsLoginManager.js

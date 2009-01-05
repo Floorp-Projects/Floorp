@@ -120,8 +120,6 @@ const DOWNLOAD_FOREGROUND_INTERVAL  = 0;
 const UPDATE_WINDOW_NAME      = "Update:Wizard";
 const TOOLKIT_ID              = "toolkit@mozilla.org";
 
-const POST_UPDATE_CONTRACTID = "@mozilla.org/updates/post-update;1";
-
 var gApp        = null;
 var gPref       = null;
 var gABI        = null;
@@ -1226,15 +1224,7 @@ UpdateService.prototype = {
         }
 
         prompter.showUpdateInstalled();
-#ifdef MOZ_SUNBIRD
-        // we need to fix both nsPostUpdateWin.js and
-        // the uninstaller to work for sunbird
-#else
-        // Perform platform-specific post-update processing.
-        if (POST_UPDATE_CONTRACTID in Cc) {
-          Cc[POST_UPDATE_CONTRACTID].createInstance(Ci.nsIRunnable).run();
-        }
-#endif
+
         // Done with this update. Clean it up.
         cleanupActiveUpdate(updRootKey);
       }
