@@ -72,7 +72,6 @@
 #include "nsINameSpaceManager.h"
 #include "nsGkAtoms.h"
 #include "nsIContent.h"
-#include "nsSpaceManager.h"
 #include "nsHTMLParts.h"
 #include "nsIViewManager.h"
 #include "nsIView.h"

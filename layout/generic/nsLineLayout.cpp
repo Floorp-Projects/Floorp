@@ -52,7 +52,7 @@
 #include "nsInlineFrame.h"
 #include "nsStyleConsts.h"
 #include "nsHTMLContainerFrame.h"
-#include "nsSpaceManager.h"
+#include "nsFloatManager.h"
 #include "nsStyleContext.h"
 #include "nsPresContext.h"
 #include "nsIFontMetrics.h"
