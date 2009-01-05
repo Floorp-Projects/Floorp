@@ -98,8 +98,9 @@ public:
 protected:
     virtual ~nsJSThunk();
 
-    nsCOMPtr<nsIURI>            mURI;
     nsCOMPtr<nsIInputStream>    mInnerStream;
+    nsCString                   mScript;
+    nsCString                   mURL;
 };
 
 //
@@ -120,7 +121,14 @@ nsresult nsJSThunk::Init(nsIURI* uri)
 {
     NS_ENSURE_ARG_POINTER(uri);
 
-    mURI = uri;
+    // Get the script string to evaluate...
+    nsresult rv = uri->GetPath(mScript);
+    if (NS_FAILED(rv)) return rv;
+
+    // Get the url.
+    rv = uri->GetSpec(mURL);
+    if (NS_FAILED(rv)) return rv;
+
     return NS_OK;
 }
 
@@ -182,10 +190,6 @@ nsresult nsJSThunk::EvaluateScript(nsIChannel *aChannel,
         return NS_ERROR_DOM_RETVAL_UNDEFINED;
     }
 
-    // Get the script string to evaluate...
-    nsCAutoString script;
-    nsresult rv = mURI->GetPath(script);
-    if (NS_FAILED(rv)) return rv;
 
     // Get the global object we should be running on.
     nsIScriptGlobalObject* global = GetGlobalObject(aChannel);
@@ -209,6 +213,7 @@ nsresult nsJSThunk::EvaluateScript(nsIChannel *aChannel,
 
     JSObject *globalJSObject = innerGlobal->GetGlobalJSObject();
 
+    nsresult rv;
     nsCOMPtr<nsIDOMWindow> domWindow(do_QueryInterface(global, &rv));
     if (NS_FAILED(rv)) {
         return NS_ERROR_FAILURE;
@@ -219,13 +224,10 @@ nsresult nsJSThunk::EvaluateScript(nsIChannel *aChannel,
     if (!scriptContext)
         return NS_ERROR_FAILURE;
 
+    nsCAutoString script(mScript);
     // Unescape the script
     NS_UnescapeURL(script);
 
-    // Get the url.
-    nsCAutoString url;
-    rv = mURI->GetSpec(url);
-    if (NS_FAILED(rv)) return rv;
 
     nsCOMPtr<nsIScriptSecurityManager> securityManager;
     securityManager = do_GetService(NS_SCRIPTSECURITYMANAGER_CONTRACTID, &rv);
@@ -330,7 +332,7 @@ nsresult nsJSThunk::EvaluateScript(nsIChannel *aChannel,
         rv = scriptContext->EvaluateString(NS_ConvertUTF8toUTF16(script),
                                            globalJSObject, // obj
                                            principal,
-                                           url.get(),      // url
+                                           mURL.get(),     // url
                                            1,              // line no
                                            nsnull,
                                            &result,
