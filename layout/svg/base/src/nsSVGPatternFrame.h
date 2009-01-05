@@ -43,7 +43,7 @@
 #include "nsSVGPaintServerFrame.h"
 #include "gfxMatrix.h"
 
-class nsIDOMSVGAnimatedPreserveAspectRatio;
+class nsSVGPreserveAspectRatio;
 class nsIFrame;
 class nsSVGLength2;
 class nsSVGElement;
@@ -119,8 +119,8 @@ protected:
   PRUint16 GetPatternContentUnits();
   gfxMatrix GetPatternTransform();
 
-  NS_IMETHOD GetPreserveAspectRatio(nsIDOMSVGAnimatedPreserveAspectRatio
-                                                     **aPreserveAspectRatio);
+  const nsSVGPreserveAspectRatio &GetPreserveAspectRatio();
+
   NS_IMETHOD GetPatternFirstChild(nsIFrame **kid);
   NS_IMETHOD GetViewBox(nsIDOMSVGRect * *aMatrix);
   nsresult   GetPatternRect(nsIDOMSVGRect **patternRect,

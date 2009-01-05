@@ -62,6 +62,7 @@ class nsSVGAngle;
 class nsSVGBoolean;
 class nsSVGEnum;
 struct nsSVGEnumMapping;
+class nsSVGPreserveAspectRatio;
 class nsSVGString;
 
 typedef nsStyledElement nsSVGElementBase;
@@ -138,6 +139,7 @@ public:
   virtual void DidChangeAngle(PRUint8 aAttrEnum, PRBool aDoSetAttr);
   virtual void DidChangeBoolean(PRUint8 aAttrEnum, PRBool aDoSetAttr);
   virtual void DidChangeEnum(PRUint8 aAttrEnum, PRBool aDoSetAttr);
+  virtual void DidChangePreserveAspectRatio(PRBool aDoSetAttr);
   virtual void DidChangeString(PRUint8 aAttrEnum, PRBool aDoSetAttr);
 
   void GetAnimatedLengthValues(float *aFirst, ...);
@@ -309,6 +311,9 @@ protected:
   virtual AngleAttributesInfo GetAngleInfo();
   virtual BooleanAttributesInfo GetBooleanInfo();
   virtual EnumAttributesInfo GetEnumInfo();
+  // We assume all preserveAspectRatios are alike so we don't
+  // need to wrap the class
+  virtual nsSVGPreserveAspectRatio *GetPreserveAspectRatio();
   virtual StringAttributesInfo GetStringInfo();
 
   static nsSVGEnumMapping sSVGUnitTypesMap[];
