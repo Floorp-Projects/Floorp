@@ -3577,8 +3577,7 @@ nsCSSFrameConstructor::ConstructTableFrame(nsFrameConstructorState& aState,
     if (NS_FAILED(rv)) return rv;
 
     // if there are any anonymous children for the table, create frames for them
-    CreateAnonymousFrames(nsnull, aState, aContent, aNewInnerFrame,
-                          PR_FALSE, childItems);
+    CreateAnonymousFrames(nsnull, aState, aContent, aNewInnerFrame, childItems);
 
     nsFrameItems captionItems;
     PullOutCaptionFrames(childItems, captionItems);
@@ -3706,8 +3705,7 @@ nsCSSFrameConstructor::ConstructTableRowGroupFrame(nsFrameConstructorState& aSta
     if (NS_FAILED(rv)) return rv;
 
     // if there are any anonymous children for the table, create frames for them
-    CreateAnonymousFrames(nsnull, aState, aContent, aNewFrame,
-                          PR_FALSE, childItems);
+    CreateAnonymousFrames(nsnull, aState, aContent, aNewFrame, childItems);
 
     aNewFrame->SetInitialChildList(nsnull, childItems.childList);
     if (aIsPseudoParent) {
@@ -3821,8 +3819,7 @@ nsCSSFrameConstructor::ConstructTableRowFrame(nsFrameConstructorState& aState,
                          PR_FALSE);
     if (NS_FAILED(rv)) return rv;
     // if there are any anonymous children for the table, create frames for them
-    CreateAnonymousFrames(nsnull, aState, aContent, aNewFrame,
-                          PR_FALSE, childItems);
+    CreateAnonymousFrames(nsnull, aState, aContent, aNewFrame, childItems);
 
     aNewFrame->SetInitialChildList(nsnull, childItems.childList);
     if (aIsPseudoParent) {
@@ -4348,7 +4345,7 @@ nsCSSFrameConstructor::ConstructDocElementFrame(nsFrameConstructorState& aState,
     // This must happen before ProcessChildren to ensure that popups are
     // never constructed before the popupset.
     CreateAnonymousFrames(nsnull, aState, aDocElement, contentFrame,
-                          PR_FALSE, childItems, PR_TRUE);
+                          childItems, PR_TRUE);
     NS_ASSERTION(!nsLayoutUtils::GetAsBlock(contentFrame),
                  "Only XUL and SVG frames should reach here");
     ProcessChildren(aState, aDocElement, contentFrame, PR_TRUE, childItems,
@@ -4881,7 +4878,7 @@ nsCSSFrameConstructor::ConstructButtonFrame(nsFrameConstructorState& aState,
   nsFrameItems  anonymousChildItems;
   // if there are any anonymous children create frames for them
   CreateAnonymousFrames(aTag, aState, aContent, buttonFrame,
-                          PR_FALSE, anonymousChildItems);
+                        anonymousChildItems);
   if (anonymousChildItems.childList) {
     // the anonymous content is already parented to the area frame
     aState.mFrameManager->AppendFrames(blockFrame, nsnull,
@@ -4992,7 +4989,7 @@ nsCSSFrameConstructor::ConstructSelectFrame(nsFrameConstructorState& aState,
 
       nsFrameItems childItems;
       CreateAnonymousFrames(nsGkAtoms::combobox, aState, aContent,
-                            comboboxFrame, PR_TRUE, childItems);
+                            comboboxFrame, childItems);
   
       comboboxFrame->SetInitialChildList(nsnull, childItems.childList);
 
@@ -5620,8 +5617,7 @@ nsCSSFrameConstructor::ConstructHTMLFrame(nsFrameConstructorState& aState,
     }
 
     // if there are any anonymous children create frames for them
-    CreateAnonymousFrames(aTag, aState, aContent, newFrame,
-                          PR_FALSE, childItems);
+    CreateAnonymousFrames(aTag, aState, aContent, newFrame, childItems);
 
     // Set the frame's initial child list
     if (childItems.childList) {
@@ -5655,7 +5651,6 @@ nsCSSFrameConstructor::CreateAnonymousFrames(nsIAtom*                 aTag,
                                              nsFrameConstructorState& aState,
                                              nsIContent*              aParent,
                                              nsIFrame*                aNewFrame,
-                                             PRBool                   aAppendToExisting,
                                              nsFrameItems&            aChildItems,
                                              PRBool                   aIsRoot)
 {
@@ -5665,9 +5660,7 @@ nsCSSFrameConstructor::CreateAnonymousFrames(nsIAtom*                 aTag,
   // through nsIAnonymousContentCreator.  We do this check for
   // performance reasons. If we did a QueryInterface on every tag it
   // would be inefficient.
-
-  // nsGenericElement::SetDocument ought to keep a list like this one,
-  // but it can't because scroll frames get around this.
+  // XXXbz what about just having a virtual method to check this instead?
   if (!aIsRoot &&
       aTag != nsGkAtoms::input &&
       aTag != nsGkAtoms::textarea &&
@@ -5684,8 +5677,7 @@ nsCSSFrameConstructor::CreateAnonymousFrames(nsIAtom*                 aTag,
       )
     return NS_OK;
 
-  return CreateAnonymousFrames(aState, aParent, mDocument, aNewFrame,
-                               aAppendToExisting, aChildItems);
+  return CreateAnonymousFrames(aState, aParent, aNewFrame, aChildItems);
 }
 
 // after the node has been constructed and initialized create any
@@ -5693,9 +5685,7 @@ nsCSSFrameConstructor::CreateAnonymousFrames(nsIAtom*                 aTag,
 nsresult
 nsCSSFrameConstructor::CreateAnonymousFrames(nsFrameConstructorState& aState,
                                              nsIContent*              aParent,
-                                             nsIDocument*             aDocument,
                                              nsIFrame*                aParentFrame,
-                                             PRBool                   aAppendToExisting,
                                              nsFrameItems&            aChildItems)
 {
   nsIAnonymousContentCreator* creator = nsnull;
@@ -5734,7 +5724,7 @@ nsCSSFrameConstructor::CreateAnonymousFrames(nsFrameConstructorState& aState,
       content->SetNativeAnonymous();
     }
 
-    rv = content->BindToTree(aDocument, aParent, aParent, PR_TRUE);
+    rv = content->BindToTree(mDocument, aParent, aParent, PR_TRUE);
     if (NS_FAILED(rv)) {
       content->UnbindFromTree();
       return rv;
@@ -6236,8 +6226,7 @@ nsCSSFrameConstructor::ConstructXULFrame(nsFrameConstructorState& aState,
     }
       
     // XXX These should go after the wrapper!
-    CreateAnonymousFrames(aTag, aState, aContent, newFrame, PR_FALSE,
-                          childItems);
+    CreateAnonymousFrames(aTag, aState, aContent, newFrame, childItems);
 
     // Set the frame's initial child list
     newFrame->SetInitialChildList(nsnull, childItems.childList);
@@ -6317,8 +6306,7 @@ nsCSSFrameConstructor::BeginBuildingScrollFrame(nsFrameConstructorState& aState,
 
   // if there are any anonymous children for the scroll frame, create
   // frames for them.
-  CreateAnonymousFrames(aState, aContent, mDocument, gfxScrollFrame,
-                        PR_FALSE, anonymousItems);
+  CreateAnonymousFrames(aState, aContent, gfxScrollFrame, anonymousItems);
 
   parentFrame = gfxScrollFrame;
   aNewFrame = gfxScrollFrame;
@@ -6974,8 +6962,7 @@ nsCSSFrameConstructor::ConstructMathMLFrame(nsFrameConstructorState& aState,
                            childItems, PR_FALSE);
     }
 
-    CreateAnonymousFrames(aTag, aState, aContent, newFrame, PR_FALSE,
-                          childItems);
+    CreateAnonymousFrames(aTag, aState, aContent, newFrame, childItems);
 
     // Wrap runs of inline children in a block
     if (NS_SUCCEEDED(rv)) {
@@ -7284,8 +7271,7 @@ nsCSSFrameConstructor::ConstructSVGFrame(nsFrameConstructorState& aState,
         rv = ProcessChildren(aState, aContent, newFrame, PR_FALSE, childItems,
                              PR_FALSE);
       }
-      CreateAnonymousFrames(aTag, aState, aContent, newFrame,
-                            PR_FALSE, childItems);
+      CreateAnonymousFrames(aTag, aState, aContent, newFrame, childItems);
     }
 
     // Set the frame's initial child list
@@ -12502,7 +12488,7 @@ nsCSSFrameConstructor::ConstructBlock(nsFrameConstructorState& aState,
                        PR_TRUE);
 
   CreateAnonymousFrames(aContent->Tag(), aState, aContent, blockFrame,
-                        PR_FALSE, childItems);
+                        childItems);
 
   // Set the frame's initial child list
   blockFrame->SetInitialChildList(nsnull, childItems.childList);
@@ -12557,7 +12543,7 @@ nsCSSFrameConstructor::ConstructInline(nsFrameConstructorState& aState,
   if (kidsAllInline) {
     // Set the inline frame's initial child list
     CreateAnonymousFrames(aContent->Tag(), aState, aContent, aNewFrame,
-                          PR_FALSE, childItems);
+                          childItems);
 
     aNewFrame->SetInitialChildList(nsnull, childItems.childList);
     return rv;
@@ -13611,7 +13597,7 @@ nsCSSFrameConstructor::LazyGenerateChildrenEvent::Run()
         return rv;
 
       fc->CreateAnonymousFrames(mContent->Tag(), state, mContent, frame,
-                                PR_FALSE, childItems);
+                                childItems);
       frame->SetInitialChildList(nsnull, childItems.childList);
 
       fc->EndUpdate();

@@ -646,15 +646,12 @@ private:
                                  nsFrameConstructorState& aState,
                                  nsIContent*              aParent,
                                  nsIFrame*                aNewFrame,
-                                 PRBool                   aAppendToExisting,
                                  nsFrameItems&            aChildItems,
                                  PRBool                   aIsRoot = PR_FALSE);
 
   nsresult CreateAnonymousFrames(nsFrameConstructorState& aState,
                                  nsIContent*              aParent,
-                                 nsIDocument*             aDocument,
-                                 nsIFrame*                aNewFrame,
-                                 PRBool                   aAppendToExisting,
+                                 nsIFrame*                aParentFrame,
                                  nsFrameItems&            aChildItems);
 
 //MathML Mod - RBS
