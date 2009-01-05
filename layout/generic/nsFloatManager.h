@@ -210,6 +210,7 @@ private:
 
     FloatInfo(nsIFrame* aFrame, const nsRect& aRect);
 #ifdef NS_BUILD_REFCNT_LOGGING
+    FloatInfo(const FloatInfo& aOther);
     ~FloatInfo();
 #endif
   };
