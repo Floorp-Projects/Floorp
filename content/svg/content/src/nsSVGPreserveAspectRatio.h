@@ -157,12 +157,12 @@ private:
     nsRefPtr<nsSVGElement> mSVGElement;
     
     NS_IMETHOD GetAlign(PRUint16* aAlign)
-      { *aAlign = mVal->GetBaseValue().GetAlign(); return NS_OK; }
+      { *aAlign = mVal->GetAnimValue().GetAlign(); return NS_OK; }
     NS_IMETHOD SetAlign(PRUint16 aAlign)
       { return NS_ERROR_DOM_NO_MODIFICATION_ALLOWED_ERR; }
 
     NS_IMETHOD GetMeetOrSlice(PRUint16* aMeetOrSlice)
-      { *aMeetOrSlice = mVal->GetBaseValue().GetMeetOrSlice(); return NS_OK; }
+      { *aMeetOrSlice = mVal->GetAnimValue().GetMeetOrSlice(); return NS_OK; }
     NS_IMETHOD SetMeetOrSlice(PRUint16 aValue)
       { return NS_ERROR_DOM_NO_MODIFICATION_ALLOWED_ERR; }
   };
