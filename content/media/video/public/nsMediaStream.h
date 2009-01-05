@@ -42,7 +42,6 @@
 #include "nsIChannel.h"
 #include "nsIPrincipal.h"
 #include "nsIURI.h"
-#include "nsIStreamListener.h"
 #include "prlock.h"
 
 class nsMediaDecoder;
