@@ -72,6 +72,37 @@
 
 NS_IMPL_ISUPPORTS1(nsNativeThemeWin, nsITheme)
 
+#ifdef WINCE
+static int FrameRect(HDC inDC, CONST RECT *inRect, HBRUSH inBrush)
+ {
+   HBRUSH oldBrush = (HBRUSH)SelectObject(inDC, inBrush);
+   RECT myRect = *inRect;
+   InflateRect(&myRect, 1, 1); 
+
+   // The width and height of the border are always one
+   // logical unit.
+   // 1  ---->   2
+   //
+   //            |
+   //            v
+   //
+   // 4  ---->   3
+   
+   MoveToEx(inDC, myRect.left, myRect.top, (LPPOINT) NULL);
+   
+   // 1 -> 2
+   LineTo(inDC, myRect.right, myRect.top);
+   // 2 -> 3
+   LineTo(inDC, myRect.right, myRect.bottom);
+   // 3 -> 4
+   LineTo(inDC, myRect.left, myRect.bottom);
+   
+   SelectObject(inDC, oldBrush);
+   return 1;
+}
+
+#endif
+
 static inline bool IsHTMLContent(nsIFrame *frame)
 {
   nsIContent* content = frame->GetContent();
@@ -1885,17 +1916,29 @@ nsNativeThemeWin::ClassicGetMinimumWidgetSize(nsIRenderingContext* aContext, nsI
         (*aResult).width = (*aResult).height = 15;
       break;
     case NS_THEME_SCROLLBAR_THUMB_VERTICAL:        
+#ifndef WINCE
       (*aResult).width = ::GetSystemMetrics(SM_CYVTHUMB);
+#else
+      (*aResult).width = 15;
+#endif
       (*aResult).height = (*aResult).width >> 1;
       *aIsOverridable = PR_FALSE;
       break;
     case NS_THEME_SCROLLBAR_THUMB_HORIZONTAL:
+#ifndef WINCE
       (*aResult).height = ::GetSystemMetrics(SM_CXHTHUMB);
+#else
+      (*aResult).height = 15;
+#endif
       (*aResult).width = (*aResult).height >> 1;
       *aIsOverridable = PR_FALSE;
       break;
     case NS_THEME_SCROLLBAR_TRACK_HORIZONTAL:
+#ifndef WINCE
       (*aResult).width = ::GetSystemMetrics(SM_CXHTHUMB) << 1;
+#else
+      (*aResult).width = 10;
+#endif
       break;
     }
     case NS_THEME_MENUSEPARATOR:
@@ -2163,7 +2206,11 @@ nsresult nsNativeThemeWin::ClassicGetThemePartAndState(nsIFrame* aFrame, PRUint8
     }
     case NS_THEME_RESIZER:    
       aPart = DFC_SCROLL;
+#ifndef WINCE
       aState = DFCS_SCROLLSIZEGRIP;
+#else
+      aState = 0;
+#endif
       return NS_OK;
     case NS_THEME_MENUSEPARATOR:
       aPart = 0;

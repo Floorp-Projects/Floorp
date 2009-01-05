@@ -74,20 +74,15 @@ REQUIRES	= xpcom \
 			$(NULL)
 
 CPPSRCS		= \
-	IEnumFE.cpp  \
 	nsWindow.cpp         \
 	nsAppShell.cpp       \
-	nsLookAndFeel.cpp    \
 	nsToolkit.cpp        \
-	nsKeyboardLayout.cpp \
-	nsDataObj.cpp  \
-	nsDataObjCollection.cpp  \
-	nsClipboard.cpp      \
-	nsNativeThemeWin.cpp \
-	nsUXThemeData.cpp \
 	nsFilePicker.cpp     \
 	nsScreenWin.cpp	\
 	nsScreenManagerWin.cpp \
+	nsLookAndFeel.cpp    \
+	nsUXThemeData.cpp \
+	nsNativeThemeWin.cpp \
 	$(NULL)
 
 ifdef NS_PRINTING
@@ -100,9 +95,14 @@ endif
 
 ifneq ($(OS_ARCH), WINCE)
 CPPSRCS += \
+	nsKeyboardLayout.cpp \
+	IEnumFE.cpp  \
+	nsDataObj.cpp  \
+	nsDataObjCollection.cpp  \
 	nsNativeDragTarget.cpp  \
 	nsNativeDragSource.cpp  \
 	nsDragService.cpp  \
+	nsClipboard.cpp      \
 	nsImageClipboard.cpp \
 	nsBidiKeyboard.cpp   \
 	nsSound.cpp          \
