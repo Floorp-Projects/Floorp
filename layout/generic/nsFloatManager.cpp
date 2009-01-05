@@ -413,6 +413,15 @@ nsFloatManager::FloatInfo::FloatInfo(nsIFrame* aFrame, const nsRect& aRect)
 }
 
 #ifdef NS_BUILD_REFCNT_LOGGING
+nsFloatManager::FloatInfo::FloatInfo(const FloatInfo& aOther)
+  : mFrame(aOther.mFrame),
+    mRect(aOther.mRect),
+    mLeftYMost(aOther.mLeftYMost),
+    mRightYMost(aOther.mRightYMost)
+{
+  MOZ_COUNT_CTOR(nsFloatManager::FloatInfo);
+}
+
 nsFloatManager::FloatInfo::~FloatInfo()
 {
   MOZ_COUNT_DTOR(nsFloatManager::FloatInfo);
