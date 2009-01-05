@@ -50,6 +50,12 @@ iframe.contentDocument.close();
 
 var moveEvent = { type: "mousemove", clickCount: "0" };
 
+function setResize(str) {
+  iframe.contentDocument.body.setAttribute("onresize",
+                                            "document.body.setAttribute('onresize', 'void(0)');" + 
+                                            "setTimeout('" + str + "', 100)");
+}
+
 function step1() {
     /** test basic hover **/
     var divone = document.getElementById("one");
@@ -75,7 +81,7 @@ function step1() {
        ":hover applies");
 
     /** Test for Bug 302561 **/
-    iframe.contentDocument.body.setAttribute("onresize", "parent.step2()");
+    setResize("parent.step2()");
     is(iframe.contentDocument.body.offsetWidth, 50,
        ":hover does not apply (iframe body width)");
     synthesizeMouse(divtwoparent, 7, 5, moveEvent, window);
@@ -91,7 +97,7 @@ function step2() {
        ":hover applies");
     is(iframe.contentDocument.body.offsetWidth, 100,
        ":hover applies (iframe body width)");
-    iframe.contentDocument.body.setAttribute("onresize", "parent.step3()");
+    setResize("parent.step3()");
     synthesizeMouse(divtwoparent, 2, 5, moveEvent, window);
     is(iframe.contentDocument.body.offsetWidth, 50,
        ":hover does not apply (iframe body width)");
@@ -108,7 +114,7 @@ function step3() {
     }
     is(getComputedStyle(divtwo, "").backgroundColor, "transparent",
        ":hover does not apply");
-    iframe.contentDocument.body.setAttribute("onresize", "parent.step4()");
+    setResize("parent.step4()");
     /* expect to get a second resize from the oscillation */
 }
 
@@ -127,7 +133,7 @@ var step5called = false;
 function step5() {
     is(step5called, false, "step5 called only once");
     step5called = true;
-    iframe.contentDocument.body.setAttribute("onresize", "parent.step6()");
+    setResize("parent.step6()");
     synthesizeMouse(divtwoparent, 25, 5, moveEvent, window);
 }
 
@@ -137,7 +143,7 @@ function step6() {
     step6called = true;
     is(getComputedStyle(divtwo, "").backgroundColor, "transparent",
        ":hover does not apply");
-    iframe.contentDocument.body.setAttribute("onresize", "parent.step7()");
+    setResize("parent.step7()");
     synthesizeMouse(divtwoparent, 2, 5, moveEvent, window);
 }
 
@@ -152,7 +158,7 @@ function step7() {
     }
     is(getComputedStyle(divtwo, "").backgroundColor, "rgb(0, 255, 0)",
        ":hover applies");
-    iframe.contentDocument.body.setAttribute("onresize", "parent.step8()");
+    setResize("parent.step8()");
     /* expect to get a second resize from the oscillation */
 }
 
@@ -177,7 +183,7 @@ function step9() {
     /* move the mouse out of the way */
     synthesizeMouse(divtwoparent, 200, 5, moveEvent, window);
     divtwoparent.scrollLeft = 5;
-    iframe.contentDocument.body.setAttribute("onresize", "parent.step10()");
+    setResize("parent.step10()");
     synthesizeMouse(divtwoparent, 2, 5, moveEvent, window);
     /* mouse now over 7, 5 */
 }
@@ -188,7 +194,7 @@ function step10() {
     step10called = true;
     is(getComputedStyle(divtwo, "").backgroundColor, "rgb(0, 255, 0)",
        ":hover applies");
-    iframe.contentDocument.body.setAttribute("onresize", "parent.step11()");
+    setResize("parent.step11()");
     divtwoparent.scrollLeft = 0; /* mouse now over 2,5 */
 }
 
@@ -203,7 +209,7 @@ function step11() {
     }
     is(getComputedStyle(divtwo, "").backgroundColor, "transparent",
        ":hover does not apply");
-    iframe.contentDocument.body.setAttribute("onresize", "parent.step12()");
+    setResize("parent.step12()");
     /* expect to get a second resize from the oscillation */
 }
 
@@ -222,7 +228,7 @@ var step13called = false;
 function step13() {
     is(step13called, false, "step13 called only once");
     step13called = true;
-    iframe.contentDocument.body.setAttribute("onresize", "parent.step14()");
+    setResize("parent.step14()");
     divtwoparent.scrollLeft = 25; /* mouse now over 27,5 */
 }
 
@@ -232,7 +238,7 @@ function step14() {
     step14called = true;
     is(getComputedStyle(divtwo, "").backgroundColor, "transparent",
        ":hover does not apply");
-    iframe.contentDocument.body.setAttribute("onresize", "parent.step15()");
+    setResize("parent.step15()");
     divtwoparent.scrollLeft = 0; /* mouse now over 2,5 */
 }
 
@@ -247,7 +253,7 @@ function step15() {
     }
     is(getComputedStyle(divtwo, "").backgroundColor, "rgb(0, 255, 0)",
        ":hover applies");
-    iframe.contentDocument.body.setAttribute("onresize", "parent.step16()");
+    setResize("parent.step16()");
     /* expect to get a second resize from the oscillation */
 }
 
