@@ -46,7 +46,7 @@ interface nsIChannel;
  * URI classifier service, and cancels the channel before OnStartRequest
  * if it is found on a blacklist.
  */
-[scriptable, uuid(1481c5b5-9f6e-4995-8fe3-2aad5c06440d)]
+[scriptable, uuid(d17f8f74-d403-4dea-b124-3ace5dbe44dc)]
 interface nsIChannelClassifier : nsISupports
 {
   /**
@@ -59,18 +59,10 @@ interface nsIChannelClassifier : nsISupports
    * If there is no URI classifier service, NS_ERROR_FACTORY_NOT_REGISTERED
    * will be returned.
    *
-   * This method must be called immediately after AsyncOpen() has been called
-   * on the channel.
-   *
    * @param aChannel
    *        The channel to suspend.
-   * @param aInstallListener
-   *        If true, the classifier will install notification
-   *        callbacks to listen for redirects.  The classifier will
-   *        pass all notifications on to the channel's existing
-   *        notification callbacks.
    */
-  void start(in nsIChannel aChannel, in boolean aInstallListener);
+  void start(in nsIChannel aChannel);
 
   /**
    * Notify the classifier that the channel was redirected.  The new channel

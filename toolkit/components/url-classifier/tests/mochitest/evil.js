@@ -1,1 +1,0 @@
-scriptItem = "loaded malware javascript!";
