@@ -1187,12 +1187,7 @@ private:
                                  nsGUIEvent*    aEvent,
                                  nsEventStatus* aEventStatus);
 
-  //help funcs for resize events
-  void CreateResizeEventTimer();
-  void KillResizeEventTimer();
   void FireResizeEvent();
-  static void sResizeEventCallback(nsITimer* aTimer, void* aPresShell) ;
-  nsCOMPtr<nsITimer> mResizeEventTimer;
 
   typedef void (*nsPluginEnumCallback)(PresShell*, nsIContent*);
   void EnumeratePlugins(nsIDOMDocument *aDocument,
@@ -1692,8 +1687,6 @@ PresShell::Destroy()
     // Clear the link handler (weak reference) as well
     mPresContext->SetLinkHandler(nsnull);
   }
-
-  KillResizeEventTimer();
 
   mHaveShutDown = PR_TRUE;
 
@@ -2490,14 +2483,13 @@ PresShell::ResizeReflow(nscoord aWidth, nscoord aHeight)
   if (!rootFrame)
     return NS_OK;
 
+  NS_ASSERTION(mViewManager, "Must have view manager");
+  nsCOMPtr<nsIViewManager> viewManagerDeathGrip = mViewManager;
+  // Take this ref after viewManager so it'll make sure to go away first
+  nsCOMPtr<nsIPresShell> kungFuDeathGrip(this);
   if (!GetPresContext()->SupressingResizeReflow())
   {
-    NS_ASSERTION(mViewManager, "Must have view manager");
-    nsCOMPtr<nsIViewManager> viewManagerDeathGrip = mViewManager;
     nsIViewManager::UpdateViewBatch batch(mViewManager);
-
-    // Take this ref after viewManager so it'll make sure to go away first
-    nsCOMPtr<nsIPresShell> kungFuDeathGrip(this);
 
     // Make sure style is up to date
     {
@@ -2534,47 +2526,12 @@ PresShell::ResizeReflow(nscoord aWidth, nscoord aHeight)
   }
 
   if (!mIsDestroying) {
-    CreateResizeEventTimer();
+    nsContentUtils::AddScriptRunner(NS_NEW_RUNNABLE_METHOD(PresShell,
+                                                           this,
+                                                           FireResizeEvent));
   }
 
   return NS_OK; //XXX this needs to be real. MMP
-}
-
-#define RESIZE_EVENT_DELAY 200
-
-void
-PresShell::CreateResizeEventTimer ()
-{
-  // if we already have a timer set, ignore this call
-  if (mResizeEventTimer)
-    return;
-
-  if (mIsDocumentGone)
-    return;
-
-  mResizeEventTimer = do_CreateInstance("@mozilla.org/timer;1");
-  if (mResizeEventTimer) {
-    mResizeEventTimer->InitWithFuncCallback(sResizeEventCallback, this, RESIZE_EVENT_DELAY, 
-                                            nsITimer::TYPE_ONE_SHOT);
-  }
-}
-
-void
-PresShell::KillResizeEventTimer()
-{
-  if (mResizeEventTimer) {
-    mResizeEventTimer->Cancel();
-    mResizeEventTimer = nsnull;
-  }
-}
-
-void
-PresShell::sResizeEventCallback(nsITimer *aTimer, void* aPresShell)
-{
-  PresShell* self = static_cast<PresShell*>(aPresShell);
-  if (self) {
-    self->FireResizeEvent();  
-  }
 }
 
 void
@@ -2582,9 +2539,6 @@ PresShell::FireResizeEvent()
 {
   if (mIsDocumentGone)
     return;
-
-  // allow a new timer to be set
-  mResizeEventTimer = nsnull;
 
   //Send resize event from here.
   nsEvent event(PR_TRUE, NS_RESIZE_EVENT);
