@@ -43,8 +43,6 @@
 #include "nsSVGAnimatedRect.h"
 #include "nsSVGRect.h"
 #include "nsSVGMatrix.h"
-#include "nsSVGAnimatedPreserveAspectRatio.h"
-#include "nsSVGPreserveAspectRatio.h"
 #include "nsSVGPatternElement.h"
 #include "nsIFrame.h"
 
@@ -133,21 +131,6 @@ nsSVGPatternElement::Init()
     NS_ENSURE_SUCCESS(rv,rv);
   }
 
-  // DOM property: preserveAspectRatio
-  {
-    nsCOMPtr<nsIDOMSVGPreserveAspectRatio> preserveAspectRatio;
-    rv = NS_NewSVGPreserveAspectRatio(getter_AddRefs(preserveAspectRatio));
-    NS_ENSURE_SUCCESS(rv,rv);
-    rv = NS_NewSVGAnimatedPreserveAspectRatio(
-                                          getter_AddRefs(mPreserveAspectRatio),
-                                          preserveAspectRatio);
-    NS_ENSURE_SUCCESS(rv,rv);
-    rv = AddMappedSVGValue(nsGkAtoms::preserveAspectRatio,
-                           mPreserveAspectRatio);
-    NS_ENSURE_SUCCESS(rv,rv);
-  }
-
-
   return NS_OK;
 }
 
@@ -169,11 +152,10 @@ NS_IMETHODIMP nsSVGPatternElement::GetViewBox(nsIDOMSVGAnimatedRect * *aViewBox)
 
 /* readonly attribute nsIDOMSVGAnimatedPreserveAspectRatio preserveAspectRatio; */
 NS_IMETHODIMP
-nsSVGPatternElement::GetPreserveAspectRatio(nsIDOMSVGAnimatedPreserveAspectRatio * *aPreserveAspectRatio)
+nsSVGPatternElement::GetPreserveAspectRatio(nsIDOMSVGAnimatedPreserveAspectRatio
+                                            **aPreserveAspectRatio)
 {
-  *aPreserveAspectRatio = mPreserveAspectRatio;
-  NS_ADDREF(*aPreserveAspectRatio);
-  return NS_OK;
+  return mPreserveAspectRatio.ToDOMAnimatedPreserveAspectRatio(aPreserveAspectRatio, this);
 }
 
 //----------------------------------------------------------------------
@@ -270,6 +252,12 @@ nsSVGPatternElement::GetEnumInfo()
 {
   return EnumAttributesInfo(mEnumAttributes, sEnumInfo,
                             NS_ARRAY_LENGTH(sEnumInfo));
+}
+
+nsSVGPreserveAspectRatio *
+nsSVGPatternElement::GetPreserveAspectRatio()
+{
+  return &mPreserveAspectRatio;
 }
 
 nsSVGElement::StringAttributesInfo

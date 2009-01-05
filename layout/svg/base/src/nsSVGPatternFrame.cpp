@@ -40,7 +40,6 @@
 #include "nsIDOMSVGAnimatedRect.h"
 #include "nsIDOMSVGAnimTransformList.h"
 #include "nsSVGTransformList.h"
-#include "nsSVGAnimatedPreserveAspectRatio.h"
 #include "nsStyleContext.h"
 #include "nsINameSpaceManager.h"
 #include "nsISVGChildFrame.h"
@@ -382,14 +381,13 @@ nsSVGPatternFrame::GetViewBox(nsIDOMSVGRect **aViewBox)
   return viewBox->GetAnimVal(aViewBox);
 }
 
-NS_IMETHODIMP
-nsSVGPatternFrame::GetPreserveAspectRatio(nsIDOMSVGAnimatedPreserveAspectRatio
-                                          **aPreserveAspectRatio)
+const nsSVGPreserveAspectRatio &
+nsSVGPatternFrame::GetPreserveAspectRatio()
 {
   nsSVGPatternElement *patternElement =
     GetPatternWithAttr(nsGkAtoms::preserveAspectRatio, mContent);
 
-  return patternElement->GetPreserveAspectRatio(aPreserveAspectRatio);
+  return patternElement->mPreserveAspectRatio;
 }
 
 nsSVGLength2 *
@@ -570,13 +568,10 @@ nsSVGPatternFrame::ConstructCTM(nsIDOMSVGMatrix **aCTM,
     float refX = GetLengthValue(GetX());
     float refY = GetLengthValue(GetY());
 
-    nsCOMPtr<nsIDOMSVGAnimatedPreserveAspectRatio> par;
-    GetPreserveAspectRatio(getter_AddRefs(par));
-
     tempTM = nsSVGUtils::GetViewBoxTransform(viewportWidth, viewportHeight,
                                              viewBoxX + refX, viewBoxY + refY,
                                              viewBoxWidth, viewBoxHeight,
-                                             par,
+                                             GetPreserveAspectRatio(),
                                              PR_TRUE);
 
   } else {

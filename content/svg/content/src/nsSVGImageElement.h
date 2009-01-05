@@ -15,16 +15,16 @@
  * The Original Code is the Mozilla SVG project.
  *
  * The Initial Developer of the Original Code is
- * Scooter Morris.
- * Portions created by the Initial Developer are Copyright (C) 2005
+ * Crocodile Clips Ltd..
+ * Portions created by the Initial Developer are Copyright (C) 2003
  * the Initial Developer. All Rights Reserved.
  *
  * Contributor(s):
- *   Scooter Morris <scootermorris@comcast.net>
+ *   Alex Fritze <alex.fritze@crocodile-clips.com> (original author)
  *
  * Alternatively, the contents of this file may be used under the terms of
- * either the GNU General Public License Version 2 or later (the "GPL"), or
- * the GNU Lesser General Public License Version 2.1 or later (the "LGPL"),
+ * either of the GNU General Public License Version 2 or later (the "GPL"),
+ * or the GNU Lesser General Public License Version 2.1 or later (the "LGPL"),
  * in which case the provisions of the GPL or the LGPL are applicable instead
  * of those above. If you wish to allow use of your version of this file only
  * under the terms of either the GPL or the LGPL, and not to allow others to
@@ -36,96 +36,76 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-#ifndef __NS_SVGPATTERNELEMENT_H__
-#define __NS_SVGPATTERNELEMENT_H__
+#ifndef __NS_SVGIMAGEELEMENT_H__
+#define __NS_SVGIMAGEELEMENT_H__
 
-#include "nsSVGStylableElement.h"
+#include "nsSVGPathGeometryElement.h"
+#include "nsIDOMSVGImageElement.h"
 #include "nsIDOMSVGURIReference.h"
-#include "nsIDOMSVGFitToViewBox.h"
-#include "nsIDOMSVGPatternElement.h"
-#include "nsIDOMSVGUnitTypes.h"
-#include "nsSVGLength2.h"
-#include "nsStubMutationObserver.h"
-#include "nsSVGEnum.h"
+#include "nsImageLoadingContent.h"
 #include "nsSVGString.h"
+#include "nsSVGLength2.h"
 #include "nsSVGPreserveAspectRatio.h"
 
-//--------------------- Patterns ------------------------
+typedef nsSVGPathGeometryElement nsSVGImageElementBase;
 
-typedef nsSVGStylableElement nsSVGPatternElementBase;
-
-class nsSVGPatternElement : public nsSVGPatternElementBase,
-                            public nsIDOMSVGURIReference,
-                            public nsIDOMSVGFitToViewBox,
-                            public nsIDOMSVGPatternElement,
-                            public nsIDOMSVGUnitTypes,
-                            public nsStubMutationObserver
+class nsSVGImageElement : public nsSVGImageElementBase,
+                          public nsIDOMSVGImageElement,
+                          public nsIDOMSVGURIReference,
+                          public nsImageLoadingContent
 {
-  friend class nsSVGPatternFrame;
+  friend class nsSVGImageFrame;
 
 protected:
-  friend nsresult NS_NewSVGPatternElement(nsIContent **aResult,
-                                         nsINodeInfo *aNodeInfo);
-  nsSVGPatternElement(nsINodeInfo* aNodeInfo);
-  nsresult Init();
+  friend nsresult NS_NewSVGImageElement(nsIContent **aResult,
+                                        nsINodeInfo *aNodeInfo);
+  nsSVGImageElement(nsINodeInfo *aNodeInfo);
+  virtual ~nsSVGImageElement();
 
 public:
   // interfaces:
+  
   NS_DECL_ISUPPORTS_INHERITED
-
-  // Pattern Element
-  NS_DECL_NSIDOMSVGPATTERNELEMENT
-
-  // URI Reference
+  NS_DECL_NSIDOMSVGIMAGEELEMENT
   NS_DECL_NSIDOMSVGURIREFERENCE
 
-  // FitToViewbox
-  NS_DECL_NSIDOMSVGFITTOVIEWBOX
-
-  // Mutation Observer
-  NS_DECL_NSIMUTATIONOBSERVER_CHARACTERDATACHANGED
-  NS_DECL_NSIMUTATIONOBSERVER_ATTRIBUTECHANGED
-  NS_DECL_NSIMUTATIONOBSERVER_CONTENTAPPENDED
-  NS_DECL_NSIMUTATIONOBSERVER_CONTENTINSERTED
-  NS_DECL_NSIMUTATIONOBSERVER_CONTENTREMOVED
-
-  NS_FORWARD_NSIDOMNODE(nsSVGElement::)
-  NS_FORWARD_NSIDOMELEMENT(nsSVGElement::)
-  NS_FORWARD_NSIDOMSVGELEMENT(nsSVGElement::)
+  // xxx I wish we could use virtual inheritance
+  NS_FORWARD_NSIDOMNODE(nsSVGImageElementBase::)
+  NS_FORWARD_NSIDOMELEMENT(nsSVGImageElementBase::)
+  NS_FORWARD_NSIDOMSVGELEMENT(nsSVGImageElementBase::)
 
   // nsIContent interface
+  virtual nsresult AfterSetAttr(PRInt32 aNamespaceID, nsIAtom* aName,
+                                const nsAString* aValue, PRBool aNotify);
+  virtual nsresult BindToTree(nsIDocument* aDocument, nsIContent* aParent,
+                              nsIContent* aBindingParent,
+                              PRBool aCompileEventHandlers);
+
+  virtual PRInt32 IntrinsicState() const;
+
   NS_IMETHOD_(PRBool) IsAttributeMapped(const nsIAtom* name) const;
+
+  // nsSVGPathGeometryElement methods:
+  virtual void ConstructPath(gfxContext *aCtx);
 
   virtual nsresult Clone(nsINodeInfo *aNodeInfo, nsINode **aResult) const;
 
 protected:
-
-  void PushUpdate();
+  nsresult LoadSVGImage(PRBool aForce, PRBool aNotify);
 
   virtual LengthAttributesInfo GetLengthInfo();
-  virtual EnumAttributesInfo GetEnumInfo();
   virtual nsSVGPreserveAspectRatio *GetPreserveAspectRatio();
   virtual StringAttributesInfo GetStringInfo();
 
-  // nsIDOMSVGPatternElement values
   enum { X, Y, WIDTH, HEIGHT };
   nsSVGLength2 mLengthAttributes[4];
   static LengthInfo sLengthInfo[4];
 
-  enum { PATTERNUNITS, PATTERNCONTENTUNITS };
-  nsSVGEnum mEnumAttributes[2];
-  static EnumInfo sEnumInfo[2];
+  nsSVGPreserveAspectRatio mPreserveAspectRatio;
 
-  nsCOMPtr<nsIDOMSVGAnimatedTransformList> mPatternTransform;
-
-  // nsIDOMSVGURIReference properties
   enum { HREF };
   nsSVGString mStringAttributes[1];
   static StringInfo sStringInfo[1];
-
-  // nsIDOMSVGFitToViewbox properties
-  nsCOMPtr<nsIDOMSVGAnimatedRect> mViewBox;
-  nsSVGPreserveAspectRatio mPreserveAspectRatio;
 };
 
 #endif
