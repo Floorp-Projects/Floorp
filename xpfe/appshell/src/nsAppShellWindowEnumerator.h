@@ -77,8 +77,8 @@ class nsAppShellWindowEnumerator : public nsISimpleEnumerator {
 friend class nsWindowMediator;
 
 public:
-  nsAppShellWindowEnumerator (const PRUnichar* aTypeString,
-                      nsWindowMediator& inMediator);
+  nsAppShellWindowEnumerator(const PRUnichar* aTypeString,
+                             nsWindowMediator& inMediator);
   virtual ~nsAppShellWindowEnumerator();
   NS_IMETHOD GetNext(nsISupports **retval) = 0;
   NS_IMETHOD HasMoreElements(PRBool *retval);
@@ -100,8 +100,8 @@ protected:
 class nsASDOMWindowEnumerator : public nsAppShellWindowEnumerator {
 
 public:
-  nsASDOMWindowEnumerator (const PRUnichar* aTypeString,
-                           nsWindowMediator& inMediator);
+  nsASDOMWindowEnumerator(const PRUnichar* aTypeString,
+                          nsWindowMediator& inMediator);
   virtual ~nsASDOMWindowEnumerator();
   NS_IMETHOD GetNext(nsISupports **retval);
 };
@@ -109,8 +109,8 @@ public:
 class nsASXULWindowEnumerator : public nsAppShellWindowEnumerator {
 
 public:
-  nsASXULWindowEnumerator (const PRUnichar* aTypeString,
-                           nsWindowMediator& inMediator);
+  nsASXULWindowEnumerator(const PRUnichar* aTypeString,
+                          nsWindowMediator& inMediator);
   virtual ~nsASXULWindowEnumerator();
   NS_IMETHOD GetNext(nsISupports **retval);
 };
@@ -122,9 +122,8 @@ public:
 class nsASDOMWindowEarlyToLateEnumerator : public nsASDOMWindowEnumerator {
 
 public:
-  nsASDOMWindowEarlyToLateEnumerator(
-             const PRUnichar* aTypeString,
-             nsWindowMediator& inMediator);
+  nsASDOMWindowEarlyToLateEnumerator(const PRUnichar* aTypeString,
+                                     nsWindowMediator& inMediator);
 
   virtual ~nsASDOMWindowEarlyToLateEnumerator();
 
@@ -135,9 +134,8 @@ protected:
 class nsASXULWindowEarlyToLateEnumerator : public nsASXULWindowEnumerator {
 
 public:
-  nsASXULWindowEarlyToLateEnumerator(
-             const PRUnichar* aTypeString,
-             nsWindowMediator& inMediator);
+  nsASXULWindowEarlyToLateEnumerator(const PRUnichar* aTypeString,
+                                     nsWindowMediator& inMediator);
 
   virtual ~nsASXULWindowEarlyToLateEnumerator();
 
@@ -148,9 +146,8 @@ protected:
 class nsASDOMWindowFrontToBackEnumerator : public nsASDOMWindowEnumerator {
 
 public:
-  nsASDOMWindowFrontToBackEnumerator(
-             const PRUnichar* aTypeString,
-             nsWindowMediator& inMediator);
+  nsASDOMWindowFrontToBackEnumerator(const PRUnichar* aTypeString,
+                                     nsWindowMediator& inMediator);
 
   virtual ~nsASDOMWindowFrontToBackEnumerator();
 
@@ -161,9 +158,8 @@ protected:
 class nsASXULWindowFrontToBackEnumerator : public nsASXULWindowEnumerator {
 
 public:
-  nsASXULWindowFrontToBackEnumerator(
-             const PRUnichar* aTypeString,
-             nsWindowMediator& inMediator);
+  nsASXULWindowFrontToBackEnumerator(const PRUnichar* aTypeString,
+                                     nsWindowMediator& inMediator);
 
   virtual ~nsASXULWindowFrontToBackEnumerator();
 
@@ -174,9 +170,8 @@ protected:
 class nsASDOMWindowBackToFrontEnumerator : public nsASDOMWindowEnumerator {
 
 public:
-  nsASDOMWindowBackToFrontEnumerator (
-             const PRUnichar* aTypeString,
-             nsWindowMediator& inMediator);
+  nsASDOMWindowBackToFrontEnumerator(const PRUnichar* aTypeString,
+                                     nsWindowMediator& inMediator);
 
   virtual ~nsASDOMWindowBackToFrontEnumerator();
 
@@ -187,9 +182,8 @@ protected:
 class nsASXULWindowBackToFrontEnumerator : public nsASXULWindowEnumerator {
 
 public:
-  nsASXULWindowBackToFrontEnumerator (
-             const PRUnichar* aTypeString,
-             nsWindowMediator& inMediator);
+  nsASXULWindowBackToFrontEnumerator(const PRUnichar* aTypeString,
+                                     nsWindowMediator& inMediator);
 
   virtual ~nsASXULWindowBackToFrontEnumerator();
 
