@@ -71,11 +71,6 @@
 #include "nsICategoryManager.h"
 #include "nsCommaSeparatedTokenizer.h"
 
-#include "nsIContentPolicy.h"
-#include "nsContentPolicyUtils.h"
-#include "nsContentErrors.h"
-#include "nsCrossSiteListenerProxy.h"
-
 #ifdef MOZ_OGG
 #include "nsOggDecoder.h"
 #endif
@@ -221,7 +216,7 @@ PRBool nsHTMLMediaElement::AbortExistingLoads()
 
   if (mBegun) {
     mBegun = PR_FALSE;
-    mError = new nsHTMLMediaError(nsIDOMHTMLMediaError::MEDIA_ERR_ABORTED);
+    mError = new nsHTMLMediaError(nsHTMLMediaError::MEDIA_ERR_ABORTED);
     DispatchProgressEvent(NS_LITERAL_STRING("abort"));
     return PR_TRUE;
   }
@@ -260,20 +255,6 @@ NS_IMETHODIMP nsHTMLMediaElement::Load()
     mChannel = nsnull;
   }
 
-  PRInt16 shouldLoad = nsIContentPolicy::ACCEPT;
-  rv = NS_CheckContentLoadPolicy(nsIContentPolicy::TYPE_MEDIA,
-                                 uri,
-                                 NodePrincipal(),
-                                 this,
-                                 EmptyCString(), // mime type
-                                 nsnull, // extra
-                                 &shouldLoad,
-                                 nsContentUtils::GetContentPolicy(),
-                                 nsContentUtils::GetSecurityManager());
-  if (NS_FAILED(rv) || NS_CP_REJECTED(shouldLoad)) {
-    return NS_ERROR_CONTENT_BLOCKED;
-  }
-
   rv = NS_NewChannel(getter_AddRefs(mChannel),
                      uri,
                      nsnull,
@@ -285,27 +266,8 @@ NS_IMETHODIMP nsHTMLMediaElement::Load()
   // The listener holds a strong reference to us.  This creates a reference
   // cycle which is manually broken in the listener's OnStartRequest method
   // after it is finished with the element.
-  nsCOMPtr<nsIStreamListener> loadListener = new nsMediaLoadListener(this);
-  NS_ENSURE_TRUE(loadListener, NS_ERROR_OUT_OF_MEMORY);
-
-  nsCOMPtr<nsIStreamListener> listener;
-  if (ShouldCheckAllowOrigin()) {
-    listener = new nsCrossSiteListenerProxy(loadListener,
-                                            NodePrincipal(),
-                                            mChannel, 
-                                            PR_FALSE,
-                                            &rv);
-    NS_ENSURE_TRUE(listener, NS_ERROR_OUT_OF_MEMORY);
-    NS_ENSURE_SUCCESS(rv, rv);
-  } else {
-    rv = nsContentUtils::GetSecurityManager()->
-           CheckLoadURIWithPrincipal(NodePrincipal(),
-                                     uri,
-                                     nsIScriptSecurityManager::STANDARD);
-    NS_ENSURE_SUCCESS(rv, rv);
-
-    listener = loadListener;
-  }
+  nsCOMPtr<nsIStreamListener> listener = new nsMediaLoadListener(this);
+  NS_ENSURE_TRUE(listener, NS_ERROR_OUT_OF_MEMORY);
 
   nsCOMPtr<nsIHttpChannel> hc = do_QueryInterface(mChannel);
   if (hc) {
@@ -988,7 +950,7 @@ void nsHTMLMediaElement::ResourceLoaded()
 
 void nsHTMLMediaElement::NetworkError()
 {
-  mError = new nsHTMLMediaError(nsIDOMHTMLMediaError::MEDIA_ERR_NETWORK);
+  mError = new nsHTMLMediaError(nsHTMLMediaError::MEDIA_ERR_NETWORK);
   mBegun = PR_FALSE;
   DispatchProgressEvent(NS_LITERAL_STRING("error"));
   mNetworkState = nsIDOMHTMLMediaElement::NETWORK_EMPTY;
@@ -1017,12 +979,6 @@ void nsHTMLMediaElement::SeekCompleted()
 {
   mPlayingBeforeSeek = PR_FALSE;
   DispatchAsyncSimpleEvent(NS_LITERAL_STRING("seeked"));
-}
-
-PRBool nsHTMLMediaElement::ShouldCheckAllowOrigin()
-{
-  return nsContentUtils::GetBoolPref("media.enforce_same_site_origin",
-                                     PR_TRUE);
 }
 
 void nsHTMLMediaElement::ChangeReadyState(nsMediaReadyState aState)
