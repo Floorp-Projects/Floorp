@@ -255,8 +255,8 @@ case "$target" in
     echo `cd "$_topsrcdir" && pwd -W | tr '\n' '\"'` >> $srcdir/build/wince/tools/topsrcdir.h
     make -C $srcdir/build/wince/tools
     
-    echo "#include \"$WINCE_SDK/windows.h\"" > $srcdir/build/wince/shunt/include/windows.h
-    echo "#define GetProcAddress GetProcAddressA" >> $srcdir/build/wince/shunt/include/windows.h
+    echo "#include \"$WINCE_SDK/windows.h\"" > $srcdir/build/wince/shunt/include/mozce_windows_actual_incl.h
+    echo "#include \"$WINCE_SDK/ymath.h\""   > $srcdir/build/wince/shunt/include/mozce_ymath_actual_incl.h
     echo -----------------------------------------------------------------------------
 
     ;;
