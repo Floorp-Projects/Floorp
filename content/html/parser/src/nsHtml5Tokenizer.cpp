@@ -523,7 +523,7 @@ nsHtml5Tokenizer::stateLoop(PRInt32 state, PRUnichar c, PRBool reconsume, PRInt3
   stateloop: for (; ; ) {
     switch(state) {
       case NS_HTML5TOKENIZER_DATA:
-        dataloop: for (; ; ) {
+        for (; ; ) {
           if (reconsume) {
             reconsume = PR_FALSE;
           } else {
@@ -550,7 +550,7 @@ nsHtml5Tokenizer::stateLoop(PRInt32 state, PRUnichar c, PRBool reconsume, PRInt3
         }
         dataloop_end: ;
       case NS_HTML5TOKENIZER_TAG_OPEN:
-        tagopenloop: for (; ; ) {
+        for (; ; ) {
           c = read();
           if (c >= 'A' && c <= 'Z') {
             endTag = PR_FALSE;
@@ -594,7 +594,7 @@ nsHtml5Tokenizer::stateLoop(PRInt32 state, PRUnichar c, PRBool reconsume, PRInt3
         }
         tagopenloop_end: ;
       case NS_HTML5TOKENIZER_TAG_NAME:
-        tagnameloop: for (; ; ) {
+        for (; ; ) {
           c = read();
           switch(c) {
             case '\0':
@@ -628,7 +628,7 @@ nsHtml5Tokenizer::stateLoop(PRInt32 state, PRUnichar c, PRBool reconsume, PRInt3
         }
         tagnameloop_end: ;
       case NS_HTML5TOKENIZER_BEFORE_ATTRIBUTE_NAME:
-        beforeattributenameloop: for (; ; ) {
+        for (; ; ) {
           if (reconsume) {
             reconsume = PR_FALSE;
           } else {
@@ -671,7 +671,7 @@ nsHtml5Tokenizer::stateLoop(PRInt32 state, PRUnichar c, PRBool reconsume, PRInt3
         }
         beforeattributenameloop_end: ;
       case NS_HTML5TOKENIZER_ATTRIBUTE_NAME:
-        attributenameloop: for (; ; ) {
+        for (; ; ) {
           c = read();
           switch(c) {
             case '\0':
@@ -713,7 +713,7 @@ nsHtml5Tokenizer::stateLoop(PRInt32 state, PRUnichar c, PRBool reconsume, PRInt3
         }
         attributenameloop_end: ;
       case NS_HTML5TOKENIZER_BEFORE_ATTRIBUTE_VALUE:
-        beforeattributevalueloop: for (; ; ) {
+        for (; ; ) {
           c = read();
           switch(c) {
             case '\0':
@@ -753,7 +753,7 @@ nsHtml5Tokenizer::stateLoop(PRInt32 state, PRUnichar c, PRBool reconsume, PRInt3
         }
         beforeattributevalueloop_end: ;
       case NS_HTML5TOKENIZER_ATTRIBUTE_VALUE_DOUBLE_QUOTED:
-        attributevaluedoublequotedloop: for (; ; ) {
+        for (; ; ) {
           if (reconsume) {
             reconsume = PR_FALSE;
           } else {
@@ -781,7 +781,7 @@ nsHtml5Tokenizer::stateLoop(PRInt32 state, PRUnichar c, PRBool reconsume, PRInt3
         }
         attributevaluedoublequotedloop_end: ;
       case NS_HTML5TOKENIZER_AFTER_ATTRIBUTE_VALUE_QUOTED:
-        afterattributevaluequotedloop: for (; ; ) {
+        for (; ; ) {
           c = read();
           switch(c) {
             case '\0':
@@ -917,7 +917,7 @@ nsHtml5Tokenizer::stateLoop(PRInt32 state, PRUnichar c, PRBool reconsume, PRInt3
           }
         }
       case NS_HTML5TOKENIZER_BOGUS_COMMENT:
-        boguscommentloop: for (; ; ) {
+        for (; ; ) {
           if (reconsume) {
             reconsume = PR_FALSE;
           } else {
@@ -959,9 +959,9 @@ nsHtml5Tokenizer::stateLoop(PRInt32 state, PRUnichar c, PRBool reconsume, PRInt3
               goto stateloop;
           }
         }
-        boguscommenthyphenloop_end: ;
+
       case NS_HTML5TOKENIZER_MARKUP_DECLARATION_OPEN:
-        markupdeclarationopenloop: for (; ; ) {
+        for (; ; ) {
           c = read();
           switch(c) {
             case '\0':
@@ -994,7 +994,7 @@ nsHtml5Tokenizer::stateLoop(PRInt32 state, PRUnichar c, PRBool reconsume, PRInt3
         }
         markupdeclarationopenloop_end: ;
       case NS_HTML5TOKENIZER_MARKUP_DECLARATION_HYPHEN:
-        markupdeclarationhyphenloop: for (; ; ) {
+        for (; ; ) {
           c = read();
           switch(c) {
             case '\0':
@@ -1012,7 +1012,7 @@ nsHtml5Tokenizer::stateLoop(PRInt32 state, PRUnichar c, PRBool reconsume, PRInt3
         }
         markupdeclarationhyphenloop_end: ;
       case NS_HTML5TOKENIZER_COMMENT_START:
-        commentstartloop: for (; ; ) {
+        for (; ; ) {
           c = read();
           switch(c) {
             case '\0':
@@ -1034,7 +1034,7 @@ nsHtml5Tokenizer::stateLoop(PRInt32 state, PRUnichar c, PRBool reconsume, PRInt3
         }
         commentstartloop_end: ;
       case NS_HTML5TOKENIZER_COMMENT:
-        commentloop: for (; ; ) {
+        for (; ; ) {
           c = read();
           switch(c) {
             case '\0':
@@ -1050,7 +1050,7 @@ nsHtml5Tokenizer::stateLoop(PRInt32 state, PRUnichar c, PRBool reconsume, PRInt3
         }
         commentloop_end: ;
       case NS_HTML5TOKENIZER_COMMENT_END_DASH:
-        commentenddashloop: for (; ; ) {
+        for (; ; ) {
           c = read();
           switch(c) {
             case '\0':
@@ -1107,7 +1107,7 @@ nsHtml5Tokenizer::stateLoop(PRInt32 state, PRUnichar c, PRBool reconsume, PRInt3
             goto stateloop;
         }
       case NS_HTML5TOKENIZER_MARKUP_DECLARATION_OCTYPE:
-        markupdeclarationdoctypeloop: for (; ; ) {
+        for (; ; ) {
           c = read();
           if (c == '\0') {
             goto stateloop_end;
@@ -1135,7 +1135,7 @@ nsHtml5Tokenizer::stateLoop(PRInt32 state, PRUnichar c, PRBool reconsume, PRInt3
         }
         markupdeclarationdoctypeloop_end: ;
       case NS_HTML5TOKENIZER_DOCTYPE:
-        doctypeloop: for (; ; ) {
+        for (; ; ) {
           if (reconsume) {
             reconsume = PR_FALSE;
           } else {
@@ -1162,7 +1162,7 @@ nsHtml5Tokenizer::stateLoop(PRInt32 state, PRUnichar c, PRBool reconsume, PRInt3
         }
         doctypeloop_end: ;
       case NS_HTML5TOKENIZER_BEFORE_DOCTYPE_NAME:
-        beforedoctypenameloop: for (; ; ) {
+        for (; ; ) {
           if (reconsume) {
             reconsume = PR_FALSE;
           } else {
@@ -1190,7 +1190,7 @@ nsHtml5Tokenizer::stateLoop(PRInt32 state, PRUnichar c, PRBool reconsume, PRInt3
         }
         beforedoctypenameloop_end: ;
       case NS_HTML5TOKENIZER_DOCTYPE_NAME:
-        doctypenameloop: for (; ; ) {
+        for (; ; ) {
           c = read();
           switch(c) {
             case '\0':
@@ -1214,7 +1214,7 @@ nsHtml5Tokenizer::stateLoop(PRInt32 state, PRUnichar c, PRBool reconsume, PRInt3
         }
         doctypenameloop_end: ;
       case NS_HTML5TOKENIZER_AFTER_DOCTYPE_NAME:
-        afterdoctypenameloop: for (; ; ) {
+        for (; ; ) {
           c = read();
           switch(c) {
             case '\0':
@@ -1247,7 +1247,7 @@ nsHtml5Tokenizer::stateLoop(PRInt32 state, PRUnichar c, PRBool reconsume, PRInt3
         }
         afterdoctypenameloop_end: ;
       case NS_HTML5TOKENIZER_DOCTYPE_UBLIC:
-        doctypeublicloop: for (; ; ) {
+        for (; ; ) {
           c = read();
           if (c == '\0') {
             goto stateloop_end;
@@ -1273,7 +1273,7 @@ nsHtml5Tokenizer::stateLoop(PRInt32 state, PRUnichar c, PRBool reconsume, PRInt3
         }
         doctypeublicloop_end: ;
       case NS_HTML5TOKENIZER_BEFORE_DOCTYPE_PUBLIC_IDENTIFIER:
-        beforedoctypepublicidentifierloop: for (; ; ) {
+        for (; ; ) {
           if (reconsume) {
             reconsume = PR_FALSE;
           } else {
@@ -1309,7 +1309,7 @@ nsHtml5Tokenizer::stateLoop(PRInt32 state, PRUnichar c, PRBool reconsume, PRInt3
         }
         beforedoctypepublicidentifierloop_end: ;
       case NS_HTML5TOKENIZER_DOCTYPE_PUBLIC_IDENTIFIER_DOUBLE_QUOTED:
-        doctypepublicidentifierdoublequotedloop: for (; ; ) {
+        for (; ; ) {
           c = read();
           switch(c) {
             case '\0':
@@ -1331,7 +1331,7 @@ nsHtml5Tokenizer::stateLoop(PRInt32 state, PRUnichar c, PRBool reconsume, PRInt3
         }
         doctypepublicidentifierdoublequotedloop_end: ;
       case NS_HTML5TOKENIZER_AFTER_DOCTYPE_PUBLIC_IDENTIFIER:
-        afterdoctypepublicidentifierloop: for (; ; ) {
+        for (; ; ) {
           c = read();
           switch(c) {
             case '\0':
@@ -1362,7 +1362,7 @@ nsHtml5Tokenizer::stateLoop(PRInt32 state, PRUnichar c, PRBool reconsume, PRInt3
         }
         afterdoctypepublicidentifierloop_end: ;
       case NS_HTML5TOKENIZER_DOCTYPE_SYSTEM_IDENTIFIER_DOUBLE_QUOTED:
-        doctypesystemidentifierdoublequotedloop: for (; ; ) {
+        for (; ; ) {
           c = read();
           switch(c) {
             case '\0':
@@ -1382,9 +1382,9 @@ nsHtml5Tokenizer::stateLoop(PRInt32 state, PRUnichar c, PRBool reconsume, PRInt3
               continue;
           }
         }
-        doctypesystemidentifierdoublequotedloop_end: ;
+
       case NS_HTML5TOKENIZER_AFTER_DOCTYPE_SYSTEM_IDENTIFIER:
-        afterdoctypesystemidentifierloop: for (; ; ) {
+        for (; ; ) {
           c = read();
           switch(c) {
             case '\0':
@@ -1426,7 +1426,7 @@ nsHtml5Tokenizer::stateLoop(PRInt32 state, PRUnichar c, PRBool reconsume, PRInt3
           }
         }
       case NS_HTML5TOKENIZER_DOCTYPE_YSTEM:
-        doctypeystemloop: for (; ; ) {
+        for (; ; ) {
           c = read();
           if (c == '\0') {
             goto stateloop_end;
@@ -1452,7 +1452,7 @@ nsHtml5Tokenizer::stateLoop(PRInt32 state, PRUnichar c, PRBool reconsume, PRInt3
         }
         doctypeystemloop_end: ;
       case NS_HTML5TOKENIZER_BEFORE_DOCTYPE_SYSTEM_IDENTIFIER:
-        beforedoctypesystemidentifierloop: for (; ; ) {
+        for (; ; ) {
           if (reconsume) {
             reconsume = PR_FALSE;
           } else {
@@ -1554,7 +1554,7 @@ nsHtml5Tokenizer::stateLoop(PRInt32 state, PRUnichar c, PRBool reconsume, PRInt3
           }
         }
       case NS_HTML5TOKENIZER_CDATA_SECTION:
-        cdatasectionloop: for (; ; ) {
+        for (; ; ) {
           if (reconsume) {
             reconsume = PR_FALSE;
           } else {
@@ -1573,7 +1573,7 @@ nsHtml5Tokenizer::stateLoop(PRInt32 state, PRUnichar c, PRBool reconsume, PRInt3
         }
         cdatasectionloop_end: ;
       case NS_HTML5TOKENIZER_CDATA_RSQB:
-        cdatarsqb: for (; ; ) {
+        for (; ; ) {
           c = read();
           switch(c) {
             case '\0':
@@ -1607,7 +1607,7 @@ nsHtml5Tokenizer::stateLoop(PRInt32 state, PRUnichar c, PRBool reconsume, PRInt3
             goto stateloop;
         }
       case NS_HTML5TOKENIZER_ATTRIBUTE_VALUE_SINGLE_QUOTED:
-        attributevaluesinglequotedloop: for (; ; ) {
+        for (; ; ) {
           if (reconsume) {
             reconsume = PR_FALSE;
           } else {
@@ -1673,7 +1673,7 @@ nsHtml5Tokenizer::stateLoop(PRInt32 state, PRUnichar c, PRBool reconsume, PRInt3
             reconsume = PR_TRUE;
         }
       case NS_HTML5TOKENIZER_CHARACTER_REFERENCE_LOOP:
-        outer: for (; ; ) {
+        for (; ; ) {
           if (reconsume) {
             reconsume = PR_FALSE;
           } else {
@@ -1683,7 +1683,7 @@ nsHtml5Tokenizer::stateLoop(PRInt32 state, PRUnichar c, PRBool reconsume, PRInt3
             goto stateloop_end;
           }
           entCol++;
-          hiloop: for (; ; ) {
+          for (; ; ) {
             if (hi == -1) {
               goto hiloop_end;
             }
@@ -1699,7 +1699,7 @@ nsHtml5Tokenizer::stateLoop(PRInt32 state, PRUnichar c, PRBool reconsume, PRInt3
             }
           }
           hiloop_end: ;
-          loloop: for (; ; ) {
+          for (; ; ) {
             if (hi < lo) {
               goto outer_end;
             }
@@ -1792,7 +1792,7 @@ nsHtml5Tokenizer::stateLoop(PRInt32 state, PRUnichar c, PRBool reconsume, PRInt3
             reconsume = PR_TRUE;
         }
       case NS_HTML5TOKENIZER_DECIMAL_NRC_LOOP:
-        decimalloop: for (; ; ) {
+        for (; ; ) {
           if (reconsume) {
             reconsume = PR_FALSE;
           } else {
@@ -1917,7 +1917,7 @@ nsHtml5Tokenizer::stateLoop(PRInt32 state, PRUnichar c, PRBool reconsume, PRInt3
           }
         }
       case NS_HTML5TOKENIZER_PLAINTEXT:
-        plaintextloop: for (; ; ) {
+        for (; ; ) {
           if (reconsume) {
             reconsume = PR_FALSE;
           } else {
@@ -1930,9 +1930,9 @@ nsHtml5Tokenizer::stateLoop(PRInt32 state, PRUnichar c, PRBool reconsume, PRInt3
               continue;
           }
         }
-        plaintextloop_end: ;
+
       case NS_HTML5TOKENIZER_CDATA:
-        cdataloop: for (; ; ) {
+        for (; ; ) {
           if (reconsume) {
             reconsume = PR_FALSE;
           } else {
@@ -1952,7 +1952,7 @@ nsHtml5Tokenizer::stateLoop(PRInt32 state, PRUnichar c, PRBool reconsume, PRInt3
         }
         cdataloop_end: ;
       case NS_HTML5TOKENIZER_TAG_OPEN_NON_PCDATA:
-        tagopennonpcdataloop: for (; ; ) {
+        for (; ; ) {
           c = read();
           switch(c) {
             case '\0':
@@ -1979,7 +1979,7 @@ nsHtml5Tokenizer::stateLoop(PRInt32 state, PRUnichar c, PRBool reconsume, PRInt3
         }
         tagopennonpcdataloop_end: ;
       case NS_HTML5TOKENIZER_ESCAPE_EXCLAMATION:
-        escapeexclamationloop: for (; ; ) {
+        for (; ; ) {
           c = read();
           switch(c) {
             case '\0':
@@ -1995,7 +1995,7 @@ nsHtml5Tokenizer::stateLoop(PRInt32 state, PRUnichar c, PRBool reconsume, PRInt3
         }
         escapeexclamationloop_end: ;
       case NS_HTML5TOKENIZER_ESCAPE_EXCLAMATION_HYPHEN:
-        escapeexclamationhyphenloop: for (; ; ) {
+        for (; ; ) {
           c = read();
           switch(c) {
             case '\0':
@@ -2011,7 +2011,7 @@ nsHtml5Tokenizer::stateLoop(PRInt32 state, PRUnichar c, PRBool reconsume, PRInt3
         }
         escapeexclamationhyphenloop_end: ;
       case NS_HTML5TOKENIZER_ESCAPE_HYPHEN_HYPHEN:
-        escapehyphenhyphenloop: for (; ; ) {
+        for (; ; ) {
           c = read();
           switch(c) {
             case '\0':
@@ -2042,7 +2042,7 @@ nsHtml5Tokenizer::stateLoop(PRInt32 state, PRUnichar c, PRBool reconsume, PRInt3
         }
         escapeloop_end: ;
       case NS_HTML5TOKENIZER_ESCAPE_HYPHEN:
-        escapehyphenloop: for (; ; ) {
+        for (; ; ) {
           c = read();
           switch(c) {
             case '\0':
@@ -2055,7 +2055,7 @@ nsHtml5Tokenizer::stateLoop(PRInt32 state, PRUnichar c, PRBool reconsume, PRInt3
               goto stateloop;
           }
         }
-        escapehyphenloop_end: ;
+
       case NS_HTML5TOKENIZER_CLOSE_TAG_OPEN_NOT_PCDATA:
         for (; ; ) {
           c = read();
@@ -2141,7 +2141,7 @@ nsHtml5Tokenizer::stateLoop(PRInt32 state, PRUnichar c, PRBool reconsume, PRInt3
           goto stateloop;
         }
       case NS_HTML5TOKENIZER_RCDATA:
-        rcdataloop: for (; ; ) {
+        for (; ; ) {
           if (reconsume) {
             reconsume = PR_FALSE;
           } else {
@@ -2166,7 +2166,7 @@ nsHtml5Tokenizer::stateLoop(PRInt32 state, PRUnichar c, PRBool reconsume, PRInt3
               continue;
           }
         }
-        rcdataloop_end: ;
+
     }
   }
   stateloop_end: ;
@@ -2367,10 +2367,10 @@ nsHtml5Tokenizer::eof()
         state = returnState;
         continue;
       case NS_HTML5TOKENIZER_CHARACTER_REFERENCE_LOOP:
-        outer: for (; ; ) {
+        for (; ; ) {
           PRUnichar c = '\0';
           entCol++;
-          hiloop: for (; ; ) {
+          for (; ; ) {
             if (hi == -1) {
               goto hiloop_end;
             }
@@ -2386,7 +2386,7 @@ nsHtml5Tokenizer::eof()
             }
           }
           hiloop_end: ;
-          loloop: for (; ; ) {
+          for (; ; ) {
             if (hi < lo) {
               goto outer_end;
             }
