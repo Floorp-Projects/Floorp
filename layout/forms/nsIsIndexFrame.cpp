@@ -87,7 +87,7 @@ NS_NewIsIndexFrame(nsIPresShell* aPresShell, nsStyleContext* aContext)
 nsIsIndexFrame::nsIsIndexFrame(nsStyleContext* aContext) :
   nsBlockFrame(aContext)
 {
-  SetFlags(NS_BLOCK_SPACE_MGR);
+  SetFlags(NS_BLOCK_FLOAT_MGR);
 }
 
 nsIsIndexFrame::~nsIsIndexFrame()

@@ -286,7 +286,7 @@ public:
     nsBlockReflowState& aState, nsLineBox* aLine);
 
   static PRBool BlockIsMarginRoot(nsIFrame* aBlock);
-  static PRBool BlockNeedsSpaceManager(nsIFrame* aBlock);
+  static PRBool BlockNeedsFloatManager(nsIFrame* aBlock);
 
   /**
    * Returns whether aFrame is a block frame that will wrap its contents
@@ -679,7 +679,7 @@ public:
   static PRBool gNoisyIntrinsic;
   static PRBool gNoisyReflow;
   static PRBool gReallyNoisyReflow;
-  static PRBool gNoisySpaceManager;
+  static PRBool gNoisyFloatManager;
   static PRBool gVerifyLines;
   static PRBool gDisableResizeOpt;
 

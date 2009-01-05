@@ -35,7 +35,7 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-/* code for management of floats that implements space manager interfaces */
+/* code for management of floats that implements float manager interfaces */
 
 #ifndef nsBlockBandData_h___
 #define nsBlockBandData_h___
@@ -60,7 +60,7 @@ public:
   nsresult Init(nsSpaceManager* aSpaceManager, const nsSize& aSpace);
 
   // Get some available space. Note that aY is relative to the current
-  // space manager translation.
+  // float manager translation.
   nsresult GetAvailableSpace(nscoord aY, PRBool aRelaxHeightConstraint,
                              nsRect& aResult);
 
@@ -75,7 +75,7 @@ public:
 
   // Get the number of floats that are impacting the current
   // band. Note that this value is relative to the current translation
-  // in the space manager which means that some floats may be hidden
+  // in the float manager which means that some floats may be hidden
   // by the translation and therefore won't be in the count.
   PRInt32 GetFloatCount() const {
     return mLeftFloats + mRightFloats;
@@ -116,7 +116,7 @@ protected:
 
   // Number of left/right floats in the current band. Note that this
   // number may be less than the total number of floats present in
-  // the band, if our translation in the space manager "hides" some
+  // the band, if our translation in the float manager "hides" some
   // floats.
   PRInt32 mLeftFloats, mRightFloats;
 

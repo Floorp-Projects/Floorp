@@ -65,7 +65,7 @@ nsTableCaptionFrame::nsTableCaptionFrame(nsStyleContext* aContext):
   nsBlockFrame(aContext)
 {
   // shrink wrap 
-  SetFlags(NS_BLOCK_SPACE_MGR);
+  SetFlags(NS_BLOCK_FLOAT_MGR);
 }
 
 nsTableCaptionFrame::~nsTableCaptionFrame()

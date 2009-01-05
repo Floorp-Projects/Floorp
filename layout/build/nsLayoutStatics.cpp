@@ -315,7 +315,7 @@ nsLayoutStatics::Shutdown()
 #endif
 
   nsCSSFrameConstructor::ReleaseGlobals();
-  nsSpaceManager::Shutdown();
+  nsFloatManager::Shutdown();
   nsImageFrame::ReleaseGlobals();
 
   nsCSSScanner::ReleaseGlobals();

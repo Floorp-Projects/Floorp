@@ -140,15 +140,15 @@ struct nsBandData {
 };
 
 /**
- * Class for dealing with bands of available space. The space manager
+ * Class for dealing with bands of available space. The float manager
  * defines a coordinate space (relative to the frame that created the
- * space manager) with an origin at (0, 0) that grows down and to the
+ * float manager) with an origin at (0, 0) that grows down and to the
  * right.
  */
-class nsSpaceManager {
+class nsFloatManager {
 public:
-  nsSpaceManager(nsIPresShell* aPresShell);
-  ~nsSpaceManager();
+  nsFloatManager(nsIPresShell* aPresShell);
+  ~nsFloatManager();
 
   void* operator new(size_t aSize) CPP_THROW_NEW;
   void operator delete(void* aPtr, size_t aSize);
@@ -223,7 +223,7 @@ public:
    * been added; if there's a frame in the middle of them that should
    * not be removed, YOU LOSE.
    *
-   * This can only be done at the end of the life of this space manager. The only
+   * This can only be done at the end of the life of this float manager. The only
    * methods it is safe to call after this are XMost() and YMost().
    */
   nsresult RemoveTrailingRegions(nsIFrame* aFrameList);
@@ -252,7 +252,7 @@ public:
     PRPackedBool mHaveCachedLeftYMost;
     PRPackedBool mHaveCachedRightYMost;
     
-    friend class nsSpaceManager;
+    friend class nsFloatManager;
   };
 
   PRBool HasAnyFloats() { return mFrameInfoMap != nsnull; }
@@ -277,12 +277,12 @@ public:
   }
 
   /**
-   * Saves the current state of the space manager into aState.
+   * Saves the current state of the float manager into aState.
    */
   void PushState(SavedState* aState);
 
   /**
-   * Restores the space manager to the saved state.
+   * Restores the float manager to the saved state.
    * 
    * These states must be managed using stack discipline. PopState can only
    * be used after PushState has been used to save the state, and it can only
@@ -292,7 +292,7 @@ public:
   void PopState(SavedState* aState);
 
   /**
-   * Get the top of the last region placed into the space manager, to
+   * Get the top of the last region placed into the float manager, to
    * enforce the rule that a float can't be above an earlier float.
    * Returns the minimum nscoord value if there are no regions.
    */
@@ -300,7 +300,7 @@ public:
 
   /**
    * Return the coordinate of the lowest float matching aBreakType in this
-   * space manager. Returns aY if there are no matching floats.
+   * float manager. Returns aY if there are no matching floats.
    */
   nscoord ClearFloats(nscoord aY, PRUint8 aBreakType);
 
@@ -452,39 +452,39 @@ protected:
 
 
 private:
-  static PRInt32 sCachedSpaceManagerCount;
-  static void* sCachedSpaceManagers[NS_SPACE_MANAGER_CACHE_SIZE];
+  static PRInt32 sCachedFloatManagerCount;
+  static void* sCachedFloatManagers[NS_SPACE_MANAGER_CACHE_SIZE];
 
-  nsSpaceManager(const nsSpaceManager&);  // no implementation
-  void operator=(const nsSpaceManager&);  // no implementation
+  nsFloatManager(const nsFloatManager&);  // no implementation
+  void operator=(const nsFloatManager&);  // no implementation
 };
 
 /**
- * A helper class to manage maintenance of the space manager during
+ * A helper class to manage maintenance of the float manager during
  * nsBlockFrame::Reflow. It automatically restores the old space
  * manager in the reflow state when the object goes out of scope.
  */
-class nsAutoSpaceManager {
+class nsAutoFloatManager {
 public:
-  nsAutoSpaceManager(nsHTMLReflowState& aReflowState)
+  nsAutoFloatManager(nsHTMLReflowState& aReflowState)
     : mReflowState(aReflowState),
       mNew(nsnull),
       mOld(nsnull) {}
 
-  ~nsAutoSpaceManager();
+  ~nsAutoFloatManager();
 
   /**
-   * Create a new space manager for the specified frame. This will
-   * `remember' the old space manager, and install the new space
+   * Create a new float manager for the specified frame. This will
+   * `remember' the old float manager, and install the new space
    * manager in the reflow state.
    */
   nsresult
-  CreateSpaceManager(nsPresContext *aPresContext);
+  CreateFloatManager(nsPresContext *aPresContext);
 
 protected:
   nsHTMLReflowState &mReflowState;
-  nsSpaceManager *mNew;
-  nsSpaceManager *mOld;
+  nsFloatManager *mNew;
+  nsFloatManager *mOld;
 };
 
 #endif /* nsSpaceManager_h___ */
