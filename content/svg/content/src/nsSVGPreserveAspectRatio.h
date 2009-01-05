@@ -124,7 +124,7 @@ private:
                         nsSVGElement* aSVGElement);
 
   struct DOMBaseVal;
-  friend class DOMBaseVal;
+  friend struct DOMBaseVal;
   struct DOMBaseVal : public nsIDOMSVGPreserveAspectRatio
   {
     NS_DECL_CYCLE_COLLECTING_ISUPPORTS
@@ -148,7 +148,7 @@ private:
   };
 
   struct DOMAnimVal;
-  friend class DOMAnimVal;
+  friend struct DOMAnimVal;
   struct DOMAnimVal : public nsIDOMSVGPreserveAspectRatio
   {
     NS_DECL_CYCLE_COLLECTING_ISUPPORTS
