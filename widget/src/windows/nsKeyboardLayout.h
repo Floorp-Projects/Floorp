@@ -47,7 +47,6 @@
 #define VK_OEM_MINUS            0xBD   // '-' any country
 
 
-
 //  0 - Normal
 //  1 - Shift
 //  2 - Control
@@ -73,7 +72,6 @@ enum eKeyShiftFlags
   eCapsLock = 0x08
 };
 
-#ifndef WINCE
 struct DeadKeyEntry;
 class DeadKeyTable;
 
@@ -122,12 +120,10 @@ public:
   PRUint32 GetNativeUniChars (PRUint8 aShiftState, PRUnichar* aUniChars = nsnull) const;
   PRUint32 GetUniChars (PRUint8 aShiftState, PRUnichar* aUniChars, PRUint8* aFinalShiftState) const;
 };
-#endif
 
 
 class KeyboardLayout
 {
-#ifndef WINCE
   struct DeadKeyTableListEntry
   {
     DeadKeyTableListEntry* next;
@@ -161,7 +157,6 @@ class KeyboardLayout
   void DeactivateDeadKeyState ();
   const DeadKeyTable* AddDeadKeyTable (const DeadKeyEntry* aDeadKeyArray, PRUint32 aEntries);
   void ReleaseDeadKeyTables ();
-#endif
 
 public:
   KeyboardLayout ();
@@ -172,11 +167,7 @@ public:
 
   PRBool IsDeadKey () const
   {
-#ifndef WINCE
     return (mLastVirtualKeyIndex >= 0) ? mVirtualKeys [mLastVirtualKeyIndex].IsDeadKey (mLastShiftState) : PR_FALSE;
-#else
-    return PR_FALSE;
-#endif
   }
 
   void LoadLayout (HKL aLayout);

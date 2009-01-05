@@ -483,10 +483,8 @@ STDMETHODIMP nsDataObj::GetData(LPFORMATETC pFE, LPSTGMEDIUM pSTM)
   static CLIPFORMAT fileDescriptorFlavorW = ::RegisterClipboardFormat( CFSTR_FILEDESCRIPTORW ); 
   static CLIPFORMAT uniformResourceLocatorA = ::RegisterClipboardFormat( CFSTR_INETURLA );
   static CLIPFORMAT uniformResourceLocatorW = ::RegisterClipboardFormat( CFSTR_INETURLW );
-#ifndef WINCE
   static CLIPFORMAT fileFlavor = ::RegisterClipboardFormat( CFSTR_FILECONTENTS ); 
   static CLIPFORMAT PreferredDropEffect = ::RegisterClipboardFormat( CFSTR_PREFERREDDROPEFFECT );
-#endif
 
   // Arbitrary system formats
   LPDATAENTRY pde;
@@ -536,12 +534,10 @@ STDMETHODIMP nsDataObj::GetData(LPFORMATETC pFE, LPSTGMEDIUM pSTM)
             return GetUniformResourceLocator( *pFE, *pSTM, PR_FALSE);
           if ( format == uniformResourceLocatorW )
             return GetUniformResourceLocator( *pFE, *pSTM, PR_TRUE);
-#ifndef WINCE
           if ( format == fileFlavor )
             return GetFileContents ( *pFE, *pSTM );
           if ( format == PreferredDropEffect )
             return GetPreferredDropEffect( *pFE, *pSTM );
-#endif
           PRNTDEBUG2("***** nsDataObj::GetData - Unknown format %u\n", format);
           return GetText(*df, *pFE, *pSTM);
         } //switch
@@ -629,7 +625,6 @@ IUnknown* nsDataObj::GetCanonicalIUnknown(IUnknown *punk)
 STDMETHODIMP nsDataObj::SetData(LPFORMATETC pFE, LPSTGMEDIUM pSTM, BOOL fRelease)
 {
   PRNTDEBUG("nsDataObj::SetData\n");
-#ifndef WINCE
   static CLIPFORMAT PerformedDropEffect = ::RegisterClipboardFormat( CFSTR_PERFORMEDDROPEFFECT );  
 
   if (pFE && pFE->cfFormat == PerformedDropEffect) {
@@ -639,8 +634,6 @@ STDMETHODIMP nsDataObj::SetData(LPFORMATETC pFE, LPSTGMEDIUM pSTM, BOOL fRelease
       mCachedTempFile = NULL;
     }
   }
-#endif
-
   // Store arbitrary system formats
   LPDATAENTRY pde;
   HRESULT hres = FindFORMATETC(pFE, &pde, TRUE); // add
@@ -876,8 +869,6 @@ nsDataObj :: GetDib ( const nsACString& inFlavor, FORMATETC &, STGMEDIUM & aSTG 
 {
   PRNTDEBUG("nsDataObj::GetDib\n");
   ULONG result = E_FAIL;
-#ifndef WINCE  
-  
   PRUint32 len = 0;
   nsCOMPtr<nsISupports> genericDataWrapper;
   mTransferable->GetTransferData(PromiseFlatCString(inFlavor).get(), getter_AddRefs(genericDataWrapper), &len);
@@ -906,8 +897,6 @@ nsDataObj :: GetDib ( const nsACString& inFlavor, FORMATETC &, STGMEDIUM & aSTG 
   } // if we have an image
   else  
     NS_WARNING ( "Definitely not an image on clipboard" );
-
-#endif
 	return ResultFromScode(result);
 }
 
@@ -1088,9 +1077,7 @@ GetLocalizedString(const PRUnichar * aName, nsXPIDLString & aString)
 HRESULT
 nsDataObj :: GetFileDescriptorInternetShortcutA ( FORMATETC& aFE, STGMEDIUM& aSTG )
 {
-#ifdef WINCE
-  return E_FAIL;
-#else
+
   // get the title of the shortcut
   nsAutoString title;
   if ( NS_FAILED(ExtractShortcutTitle(title)) )
@@ -1127,15 +1114,11 @@ nsDataObj :: GetFileDescriptorInternetShortcutA ( FORMATETC& aFE, STGMEDIUM& aST
   aSTG.tymed = TYMED_HGLOBAL;
 
   return S_OK;
-#endif
 } // GetFileDescriptorInternetShortcutA
 
 HRESULT
 nsDataObj :: GetFileDescriptorInternetShortcutW ( FORMATETC& aFE, STGMEDIUM& aSTG )
 {
-#ifdef WINCE
-  return E_FAIL;
-#else
   // get the title of the shortcut
   nsAutoString title;
   if ( NS_FAILED(ExtractShortcutTitle(title)) )
@@ -1172,7 +1155,6 @@ nsDataObj :: GetFileDescriptorInternetShortcutW ( FORMATETC& aFE, STGMEDIUM& aST
   aSTG.tymed = TYMED_HGLOBAL;
 
   return S_OK;
-#endif
 } // GetFileDescriptorInternetShortcutW
 
 
@@ -1185,9 +1167,6 @@ nsDataObj :: GetFileDescriptorInternetShortcutW ( FORMATETC& aFE, STGMEDIUM& aST
 HRESULT
 nsDataObj :: GetFileContentsInternetShortcut ( FORMATETC& aFE, STGMEDIUM& aSTG )
 {
-#ifdef WINCE
-  return E_FAIL;
-#else
   nsAutoString url;
   if ( NS_FAILED(ExtractShortcutURL(url)) )
     return E_OUTOFMEMORY;
@@ -1222,7 +1201,6 @@ nsDataObj :: GetFileContentsInternetShortcut ( FORMATETC& aFE, STGMEDIUM& aSTG )
   aSTG.tymed = TYMED_HGLOBAL;
 
   return S_OK;
-#endif  
 } // GetFileContentsInternetShortcut
 
 // check if specified flavour is present in the transferable

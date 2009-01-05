@@ -43,13 +43,11 @@
 #include <ole2.h>
 #include <shlobj.h>
 
-#ifndef WINCE 
 #ifndef IDropTargetHelper
 #ifndef __MINGW32__   // MingW does not provide shobjidl.h.
 #include <shobjidl.h> // Vista drag image interfaces
 #endif  // MingW
 #endif
-#endif  // WINCE
 
 class nsIDragService;
 class nsIWidget;
@@ -121,9 +119,7 @@ protected:
   nsIDragService * mDragService;
 
   // Drag target helper 
-#ifndef WINCE
   IDropTargetHelper * mDropTargetHelper;
-#endif
 };
 
 #endif // _nsNativeDragTarget_h_
