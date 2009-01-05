@@ -2667,14 +2667,21 @@ js_Interpret(JSContext *cx)
      * Prepare to call a user-supplied branch handler, and abort the script
      * if it returns false.
      */
-#define CHECK_BRANCH()                                                        \
+#if JS_HAS_OPERATION_COUNT
+# define CHECK_BRANCH()                                                       \
     JS_BEGIN_MACRO                                                            \
         if ((cx->operationCount -= JSOW_SCRIPT_JUMP) <= 0) {                  \
             if (!js_ResetOperationCount(cx))                                  \
                 goto error;                                                   \
         }                                                                     \
     JS_END_MACRO
-
+#else
+# define CHECK_BRANCH()                                                       \
+    JS_BEGIN_MACRO                                                            \
+        if (cx->operationCount == 0 && !js_ResetOperationCount(cx))           \
+            goto error;                                                       \
+    JS_END_MACRO
+#endif
 #define BRANCH(n)                                                             \
     JS_BEGIN_MACRO                                                            \
         regs.pc += n;                                                         \
