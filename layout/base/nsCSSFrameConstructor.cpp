@@ -3576,9 +3576,6 @@ nsCSSFrameConstructor::ConstructTableFrame(nsFrameConstructorState& aState,
     // XXXbz what about cleaning up?
     if (NS_FAILED(rv)) return rv;
 
-    // if there are any anonymous children for the table, create frames for them
-    CreateAnonymousFrames(nsnull, aState, aContent, aNewInnerFrame, childItems);
-
     nsFrameItems captionItems;
     PullOutCaptionFrames(childItems, captionItems);
 
@@ -3704,9 +3701,6 @@ nsCSSFrameConstructor::ConstructTableRowGroupFrame(nsFrameConstructorState& aSta
     
     if (NS_FAILED(rv)) return rv;
 
-    // if there are any anonymous children for the table, create frames for them
-    CreateAnonymousFrames(nsnull, aState, aContent, aNewFrame, childItems);
-
     aNewFrame->SetInitialChildList(nsnull, childItems.childList);
     if (aIsPseudoParent) {
       nsIFrame* child = (scrollFrame) ? scrollFrame : aNewFrame;
@@ -3818,8 +3812,6 @@ nsCSSFrameConstructor::ConstructTableRowFrame(nsFrameConstructorState& aState,
     rv = ProcessChildren(aState, aContent, aNewFrame, PR_TRUE, childItems,
                          PR_FALSE);
     if (NS_FAILED(rv)) return rv;
-    // if there are any anonymous children for the table, create frames for them
-    CreateAnonymousFrames(nsnull, aState, aContent, aNewFrame, childItems);
 
     aNewFrame->SetInitialChildList(nsnull, childItems.childList);
     if (aIsPseudoParent) {
@@ -4341,11 +4333,6 @@ nsCSSFrameConstructor::ConstructDocElementFrame(nsFrameConstructorState& aState,
     // Still need to process the child content
     nsFrameItems childItems;
 
-    // Create any anonymous frames the doc element frame requires
-    // This must happen before ProcessChildren to ensure that popups are
-    // never constructed before the popupset.
-    CreateAnonymousFrames(nsnull, aState, aDocElement, contentFrame,
-                          childItems, PR_TRUE);
     NS_ASSERTION(!nsLayoutUtils::GetAsBlock(contentFrame),
                  "Only XUL and SVG frames should reach here");
     ProcessChildren(aState, aDocElement, contentFrame, PR_TRUE, childItems,
@@ -4843,8 +4830,17 @@ nsCSSFrameConstructor::ConstructButtonFrame(nsFrameConstructorState& aState,
     return rv;
   }
 
+  PRBool isLeaf = buttonFrame->IsLeaf();
+#ifdef DEBUG
+  // Make sure that we're an anonymous content creator exactly when we're a
+  // leaf
+  nsIAnonymousContentCreator* creator = nsnull;
+  CallQueryInterface(buttonFrame, &creator);
+  NS_ASSERTION(!creator == !isLeaf,
+               "Should be creator exactly when we're a leaf");
+#endif
   
-  if (!buttonFrame->IsLeaf()) { 
+  if (!isLeaf) { 
     // input type="button" have only anonymous content
     // The area frame is a float container
     PRBool haveFirstLetterStyle, haveFirstLineStyle;
@@ -4865,6 +4861,13 @@ nsCSSFrameConstructor::ConstructButtonFrame(nsFrameConstructorState& aState,
       aState.PushAbsoluteContainingBlock(blockFrame, absoluteSaveState);
     }
 
+#ifdef DEBUG
+    // Make sure that anonymous child creation will have no effect in this case
+    nsIAnonymousContentCreator* creator = nsnull;
+    CallQueryInterface(blockFrame, &creator);
+    NS_ASSERTION(!creator, "Shouldn't be an anonymous content creator!");
+#endif
+
     rv = ProcessChildren(aState, aContent, blockFrame, PR_TRUE, childItems,
                          buttonFrame->GetStyleDisplay()->IsBlockOutside());
     if (NS_FAILED(rv)) return rv;
@@ -4875,14 +4878,18 @@ nsCSSFrameConstructor::ConstructButtonFrame(nsFrameConstructorState& aState,
 
   buttonFrame->SetInitialChildList(nsnull, blockFrame);
 
-  nsFrameItems  anonymousChildItems;
-  // if there are any anonymous children create frames for them
-  CreateAnonymousFrames(aTag, aState, aContent, buttonFrame,
-                        anonymousChildItems);
-  if (anonymousChildItems.childList) {
-    // the anonymous content is already parented to the area frame
-    aState.mFrameManager->AppendFrames(blockFrame, nsnull,
-                                       anonymousChildItems.childList);
+  if (isLeaf) {
+    nsFrameItems  anonymousChildItems;
+    // if there are any anonymous children create frames for them.  Note that
+    // we're doing this using a different parent frame from the one we pass to
+    // ProcessChildren!
+    CreateAnonymousFrames(aTag, aState, aContent, buttonFrame,
+                          anonymousChildItems);
+    if (anonymousChildItems.childList) {
+      // the anonymous content is already parented to the area frame
+      aState.mFrameManager->AppendFrames(blockFrame, nsnull,
+                                         anonymousChildItems.childList);
+    }
   }
 
   // our new button frame returned is the top frame. 
@@ -5598,26 +5605,22 @@ nsCSSFrameConstructor::ConstructHTMLFrame(nsFrameConstructorState& aState,
     nsFrameItems childItems;
     nsFrameConstructorSaveState absoluteSaveState;
     nsFrameConstructorSaveState floatSaveState;
-    if (!newFrame->IsLeaf()) {
-      if (display->IsPositioned()) {
-        aState.PushAbsoluteContainingBlock(newFrame, absoluteSaveState);
-      }
-      if (isFloatContainer) {
-        PRBool haveFirstLetterStyle, haveFirstLineStyle;
-        ShouldHaveSpecialBlockStyle(aContent, aStyleContext,
-                                    &haveFirstLetterStyle,
-                                    &haveFirstLineStyle);
-        aState.PushFloatContainingBlock(newFrame, floatSaveState,
-                                        PR_FALSE, PR_FALSE);
-      }
 
-      // Process the child frames
-      rv = ProcessChildren(aState, aContent, newFrame,
-                           PR_TRUE, childItems, PR_FALSE);
+    if (display->IsPositioned()) {
+      aState.PushAbsoluteContainingBlock(newFrame, absoluteSaveState);
+    }
+    if (isFloatContainer) {
+      PRBool haveFirstLetterStyle, haveFirstLineStyle;
+      ShouldHaveSpecialBlockStyle(aContent, aStyleContext,
+                                  &haveFirstLetterStyle,
+                                  &haveFirstLineStyle);
+      aState.PushFloatContainingBlock(newFrame, floatSaveState,
+                                      PR_FALSE, PR_FALSE);
     }
 
-    // if there are any anonymous children create frames for them
-    CreateAnonymousFrames(aTag, aState, aContent, newFrame, childItems);
+    // Process the child frames
+    rv = ProcessChildren(aState, aContent, newFrame, PR_TRUE, childItems,
+                         PR_FALSE);
 
     // Set the frame's initial child list
     if (childItems.childList) {
@@ -6216,17 +6219,12 @@ nsCSSFrameConstructor::ConstructXULFrame(nsFrameConstructorState& aState,
 
     // Process the child content if requested
     nsFrameItems childItems;
-    if (!newFrame->IsLeaf()) {
-      // XXXbz don't we need calls to ShouldBuildChildFrames
-      // elsewhere too?  Why only for XUL?
-      if (mDocument->BindingManager()->ShouldBuildChildFrames(aContent)) {
-        rv = ProcessChildren(aState, aContent, newFrame, PR_FALSE,
-                             childItems, PR_FALSE);
-      }
+    // XXXbz don't we need calls to ShouldBuildChildFrames
+    // elsewhere too?  Why only for XUL?
+    if (mDocument->BindingManager()->ShouldBuildChildFrames(aContent)) {
+      rv = ProcessChildren(aState, aContent, newFrame, PR_FALSE,
+                           childItems, PR_FALSE);
     }
-      
-    // XXX These should go after the wrapper!
-    CreateAnonymousFrames(aTag, aState, aContent, newFrame, childItems);
 
     // Set the frame's initial child list
     newFrame->SetInitialChildList(nsnull, childItems.childList);
@@ -6957,12 +6955,8 @@ nsCSSFrameConstructor::ConstructMathMLFrame(nsFrameConstructorState& aState,
 
     // MathML frames are inline frames, so just process their kids
     nsFrameItems childItems;
-    if (!newFrame->IsLeaf()) {
-      rv = ProcessChildren(aState, aContent, newFrame, PR_TRUE,
-                           childItems, PR_FALSE);
-    }
-
-    CreateAnonymousFrames(aTag, aState, aContent, newFrame, childItems);
+    rv = ProcessChildren(aState, aContent, newFrame, PR_TRUE, childItems,
+                         PR_FALSE);
 
     // Wrap runs of inline children in a block
     if (NS_SUCCEEDED(rv)) {
@@ -7267,11 +7261,8 @@ nsCSSFrameConstructor::ConstructSVGFrame(nsFrameConstructorState& aState,
       nsHTMLContainerFrame::CreateViewForFrame(blockFrame, nsnull, PR_TRUE);
     } else {
       // Process the child content if requested.
-      if (!newFrame->IsLeaf()) {
-        rv = ProcessChildren(aState, aContent, newFrame, PR_FALSE, childItems,
-                             PR_FALSE);
-      }
-      CreateAnonymousFrames(aTag, aState, aContent, newFrame, childItems);
+      rv = ProcessChildren(aState, aContent, newFrame, PR_FALSE, childItems,
+                           PR_FALSE);
     }
 
     // Set the frame's initial child list
@@ -11319,41 +11310,56 @@ nsCSSFrameConstructor::ProcessChildren(nsFrameConstructorState& aState,
                                        nsFrameItems&            aFrameItems,
                                        PRBool                   aParentIsBlock)
 {
-  NS_PRECONDITION(!aFrame->IsLeaf(), "Bogus ProcessChildren caller!");
   // XXXbz ideally, this would do all the pushing of various
   // containing blocks as needed, so callers don't have to do it...
-  nsresult rv = NS_OK;
-  // :before/:after content should have the same style context parent
-  // as normal kids.
-  nsStyleContext* styleContext =
-    nsFrame::CorrectStyleParentFrame(aFrame, nsnull)->GetStyleContext();
-    
+
   // save the incoming pseudo frame state
   nsPseudoFrames priorPseudoFrames;
   aState.mPseudoFrames.Reset(&priorPseudoFrames);
 
-  if (aCanHaveGeneratedContent) {
-    // Probe for generated content before
-    CreateGeneratedContentFrame(aState, aFrame, aContent,
-                                styleContext, nsCSSPseudoElements::before,
-                                aFrameItems);
+  if (aFrame == mInitialContainingBlock) {
+    // Create any anonymous frames the initial containing block frame requires.
+    // This must happen before the rest of ProcessChildren to ensure that
+    // popups are never constructed before the popupset.
+    CreateAnonymousFrames(nsnull, aState, aContent, aFrame, aFrameItems,
+                          PR_TRUE);
   }
 
-  ChildIterator iter, last;
-  for (ChildIterator::Init(aContent, &iter, &last);
-       iter != last;
-       ++iter) {
-    rv = ConstructFrame(aState, nsCOMPtr<nsIContent>(*iter),
-                        aFrame, aFrameItems);
-    if (NS_FAILED(rv))
-      return rv;
+  nsresult rv = NS_OK;
+  if (!aFrame->IsLeaf()) {
+    // :before/:after content should have the same style context parent
+    // as normal kids.
+    nsStyleContext* styleContext =
+      nsFrame::CorrectStyleParentFrame(aFrame, nsnull)->GetStyleContext();
+
+    if (aCanHaveGeneratedContent) {
+      // Probe for generated content before
+      CreateGeneratedContentFrame(aState, aFrame, aContent,
+                                  styleContext, nsCSSPseudoElements::before,
+                                  aFrameItems);
+    }
+
+    ChildIterator iter, last;
+    for (ChildIterator::Init(aContent, &iter, &last);
+         iter != last;
+         ++iter) {
+      rv = ConstructFrame(aState, nsCOMPtr<nsIContent>(*iter),
+                          aFrame, aFrameItems);
+      if (NS_FAILED(rv))
+        return rv;
+    }
+
+    if (aCanHaveGeneratedContent) {
+      // Probe for generated content after
+      CreateGeneratedContentFrame(aState, aFrame, aContent,
+                                  styleContext, nsCSSPseudoElements::after,
+                                  aFrameItems);
+    }
   }
 
-  if (aCanHaveGeneratedContent) {
-    // Probe for generated content after
-    CreateGeneratedContentFrame(aState, aFrame, aContent,
-                                styleContext, nsCSSPseudoElements::after,
-                                aFrameItems);
+  if (aFrame != mInitialContainingBlock) {
+    CreateAnonymousFrames(aContent->Tag(), aState, aContent, aFrame,
+                          aFrameItems);
   }
 
   // process the current pseudo frame state
@@ -12487,9 +12493,6 @@ nsCSSFrameConstructor::ConstructBlock(nsFrameConstructorState& aState,
   rv = ProcessChildren(aState, aContent, blockFrame, PR_TRUE, childItems,
                        PR_TRUE);
 
-  CreateAnonymousFrames(aContent->Tag(), aState, aContent, blockFrame,
-                        childItems);
-
   // Set the frame's initial child list
   blockFrame->SetInitialChildList(nsnull, childItems.childList);
 
@@ -13596,8 +13599,6 @@ nsCSSFrameConstructor::LazyGenerateChildrenEvent::Run()
       if (NS_FAILED(rv))
         return rv;
 
-      fc->CreateAnonymousFrames(mContent->Tag(), state, mContent, frame,
-                                childItems);
       frame->SetInitialChildList(nsnull, childItems.childList);
 
       fc->EndUpdate();
