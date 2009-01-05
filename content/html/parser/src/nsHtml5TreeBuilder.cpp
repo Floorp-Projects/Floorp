@@ -93,7 +93,7 @@ void
 nsHtml5TreeBuilder::doctype(nsIAtom* name, nsString* publicIdentifier, nsString* systemIdentifier, PRBool forceQuirks)
 {
   needToDropLF = PR_FALSE;
-  doctypeloop: for (; ; ) {
+  for (; ; ) {
     switch(foreignFlag) {
       case NS_HTML5TREE_BUILDER_IN_FOREIGN:
         goto doctypeloop_end;
@@ -131,7 +131,7 @@ void
 nsHtml5TreeBuilder::comment(PRUnichar* buf, PRInt32 start, PRInt32 length)
 {
   needToDropLF = PR_FALSE;
-  commentloop: for (; ; ) {
+  for (; ; ) {
     switch(foreignFlag) {
       case NS_HTML5TREE_BUILDER_IN_FOREIGN:
         goto commentloop_end;
@@ -181,7 +181,7 @@ nsHtml5TreeBuilder::characters(PRUnichar* buf, PRInt32 start, PRInt32 length)
       return;
     default:
       PRInt32 end = start + length;
-      charactersloop: for (PRInt32 i = start; i < end; i++) {
+      for (PRInt32 i = start; i < end; i++) {
         switch(buf[i]) {
           case ' ':
           case '\t':
@@ -381,7 +381,7 @@ nsHtml5TreeBuilder::eof()
     default:
       ; // fall through
   }
-  eofloop: for (; ; ) {
+  for (; ; ) {
     switch(mode) {
       case NS_HTML5TREE_BUILDER_INITIAL:
         documentModeInternal(QUIRKS_MODE, nsnull, nsnull, PR_FALSE);
@@ -594,7 +594,7 @@ nsHtml5TreeBuilder::startTag(nsHtml5ElementName* elementName, nsHtml5HtmlAttribu
                 ; // fall through
             }
           case NS_HTML5TREE_BUILDER_IN_TABLE:
-            intableloop: for (; ; ) {
+            for (; ; ) {
               switch(group) {
                 case NS_HTML5TREE_BUILDER_CAPTION:
                   clearStackBackTo(findLastOrRoot(NS_HTML5TREE_BUILDER_TABLE));
@@ -708,7 +708,7 @@ nsHtml5TreeBuilder::startTag(nsHtml5ElementName* elementName, nsHtml5HtmlAttribu
                 ; // fall through
             }
           case NS_HTML5TREE_BUILDER_IN_BODY:
-            inbodyloop: for (; ; ) {
+            for (; ; ) {
               switch(group) {
                 case NS_HTML5TREE_BUILDER_HTML:
 
@@ -949,7 +949,7 @@ nsHtml5TreeBuilder::startTag(nsHtml5ElementName* elementName, nsHtml5HtmlAttribu
                 case NS_HTML5TREE_BUILDER_OPTGROUP:
                 case NS_HTML5TREE_BUILDER_OPTION:
                   if (findLastInScope(nsHtml5Atoms::option) != NS_HTML5TREE_BUILDER_NOT_FOUND_ON_STACK) {
-                    optionendtagloop: for (; ; ) {
+                    for (; ; ) {
                       if (isCurrent(nsHtml5Atoms::option)) {
                         pop();
                         goto optionendtagloop_end;
@@ -1033,7 +1033,7 @@ nsHtml5TreeBuilder::startTag(nsHtml5ElementName* elementName, nsHtml5HtmlAttribu
             }
             inbodyloop_end: ;
           case NS_HTML5TREE_BUILDER_IN_HEAD:
-            inheadloop: for (; ; ) {
+            for (; ; ) {
               switch(group) {
                 case NS_HTML5TREE_BUILDER_HTML:
 
@@ -1382,7 +1382,7 @@ nsHtml5TreeBuilder::extractCharsetFromContent(nsString* attributeValue)
   PRInt32 start = -1;
   PRInt32 end = -1;
   jArray<PRUnichar,PRInt32> buffer = nsHtml5Portability::newCharArrayFromString(attributeValue);
-  charsetloop: for (PRInt32 i = 0; i < buffer.length; i++) {
+  for (PRInt32 i = 0; i < buffer.length; i++) {
     PRUnichar c = buffer[i];
     switch(charsetState) {
       case NS_HTML5TREE_BUILDER_CHARSET_INITIAL:
@@ -1558,7 +1558,7 @@ nsHtml5TreeBuilder::endTag(nsHtml5ElementName* elementName)
 {
   needToDropLF = PR_FALSE;
   PRInt32 eltPos;
-  endtagloop: for (; ; ) {
+  for (; ; ) {
     PRInt32 group = elementName->group;
     nsIAtom* name = elementName->name;
     switch(mode) {
