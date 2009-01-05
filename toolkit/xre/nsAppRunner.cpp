@@ -2534,9 +2534,6 @@ XRE_main(int argc, char* argv[], const nsXREAppData* aAppData)
       PR_SetEnv(expr);
     // We intentionally leak |expr| here since it is required by PR_SetEnv.
   }
-
-  // Suppress atk-bridge init at startup, it works after GNOME 2.24.2
-  PR_SetEnv("NO_AT_BRIDGE=1");
 #endif
 
   // Unbuffer stdout, needed for tinderbox tests.
