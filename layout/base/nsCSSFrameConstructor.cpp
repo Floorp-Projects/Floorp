@@ -2284,8 +2284,8 @@ nsCSSFrameConstructor::CreateInputFrame(nsFrameConstructorState& aState,
       *aFrame = NS_NewFileControlFrame(mPresShell, aStyleContext);
 
       if (*aFrame) {
-        // The (block-like) file control frame should have a space manager
-        (*aFrame)->AddStateBits(NS_BLOCK_SPACE_MGR);
+        // The (block-like) file control frame should have a float manager
+        (*aFrame)->AddStateBits(NS_BLOCK_FLOAT_MGR);
         return NS_OK;
       }
       else {
@@ -4306,7 +4306,7 @@ nsCSSFrameConstructor::ConstructDocElementFrame(nsFrameConstructorState& aState,
 #endif
     {
       contentFrame = NS_NewBlockFrame(mPresShell, styleContext,
-        NS_BLOCK_SPACE_MGR|NS_BLOCK_MARGIN_ROOT);
+        NS_BLOCK_FLOAT_MGR|NS_BLOCK_MARGIN_ROOT);
       if (!contentFrame)
         return NS_ERROR_OUT_OF_MEMORY;
       nsFrameItems frameItems;
@@ -4825,7 +4825,7 @@ nsCSSFrameConstructor::ConstructButtonFrame(nsFrameConstructorState& aState,
                                                                aStyleContext);
                                                                
   nsIFrame* blockFrame = NS_NewBlockFrame(mPresShell, styleContext,
-                                          NS_BLOCK_SPACE_MGR);
+                                          NS_BLOCK_FLOAT_MGR);
 
   if (NS_UNLIKELY(!blockFrame)) {
     buttonFrame->Destroy();
@@ -4922,7 +4922,7 @@ nsCSSFrameConstructor::ConstructSelectFrame(nsFrameConstructorState& aState,
         // a dropdown list. The display area and button are created through anonymous content.
         // The drop-down list's frame is created explicitly. The combobox frame shares its content
         // with the drop-down list.
-      PRUint32 flags = NS_BLOCK_SPACE_MGR;
+      PRUint32 flags = NS_BLOCK_FLOAT_MGR;
       nsIFrame* comboboxFrame = NS_NewComboboxControlFrame(mPresShell, aStyleContext, flags);
 
       // Save the history state so we don't restore during construction
@@ -5024,7 +5024,7 @@ nsCSSFrameConstructor::ConstructSelectFrame(nsFrameConstructorState& aState,
       }
 
       nsIFrame* scrolledFrame = NS_NewSelectsAreaFrame(
-        mPresShell, aStyleContext, NS_BLOCK_SPACE_MGR);
+        mPresShell, aStyleContext, NS_BLOCK_FLOAT_MGR);
 
       // ******* this code stolen from Initialze ScrollFrame ********
       // please adjust this code to use BuildScrollFrame.
@@ -5167,7 +5167,7 @@ nsCSSFrameConstructor::ConstructFieldSetFrame(nsFrameConstructorState& aState,
                                                                aStyleContext);
   
   nsIFrame* blockFrame = NS_NewBlockFrame(mPresShell, styleContext,
-                                          NS_BLOCK_SPACE_MGR |
+                                          NS_BLOCK_FLOAT_MGR |
                                           NS_BLOCK_MARGIN_ROOT);
   InitAndRestoreFrame(aState, aContent, newFrame, nsnull, blockFrame);
 
@@ -5890,11 +5890,11 @@ nsCSSFrameConstructor::ConstructXULFrame(nsFrameConstructorState& aState,
           // things like columns etc
           if (aTag == nsGkAtoms::label) {
             newFrame = NS_NewXULLabelFrame(mPresShell, aStyleContext,
-                                           NS_BLOCK_SPACE_MGR |
+                                           NS_BLOCK_FLOAT_MGR |
                                            NS_BLOCK_MARGIN_ROOT);
           } else {
             newFrame = NS_NewBlockFrame(mPresShell, aStyleContext,
-                                        NS_BLOCK_SPACE_MGR |
+                                        NS_BLOCK_FLOAT_MGR |
                                         NS_BLOCK_MARGIN_ROOT);
           }
         }
@@ -6468,7 +6468,7 @@ nsCSSFrameConstructor::ConstructFrameByDisplayType(nsFrameConstructorState& aSta
     // pass a temporary stylecontext, the correct one will be set later
     nsIFrame* scrolledFrame =
         NS_NewBlockFrame(mPresShell, aStyleContext,
-                         NS_BLOCK_SPACE_MGR | NS_BLOCK_MARGIN_ROOT);
+                         NS_BLOCK_FLOAT_MGR | NS_BLOCK_MARGIN_ROOT);
 
     nsFrameItems blockItem;
     rv = ConstructBlock(aState,
@@ -6541,9 +6541,9 @@ nsCSSFrameConstructor::ConstructFrameByDisplayType(nsFrameConstructorState& aSta
     }
     // Is it block-level or inline-level?
     if (aDisplay->IsBlockInside()) {
-      // Create a wrapper frame. Only need space manager if it's inline-block
+      // Create a wrapper frame. Only need float manager if it's inline-block
       PRUint32 flags = (aDisplay->mDisplay == NS_STYLE_DISPLAY_INLINE_BLOCK ?
-                        NS_BLOCK_SPACE_MGR | NS_BLOCK_MARGIN_ROOT : 0);
+                        NS_BLOCK_FLOAT_MGR | NS_BLOCK_MARGIN_ROOT : 0);
       newFrame = NS_NewRelativeItemWrapperFrame(mPresShell, aStyleContext, 
                                                 flags);
       // XXXbz should we be passing in a non-null aContentParentFrame?
@@ -6571,7 +6571,7 @@ nsCSSFrameConstructor::ConstructFrameByDisplayType(nsFrameConstructorState& aSta
     }
     PRUint32 flags = 0;
     if (NS_STYLE_DISPLAY_INLINE_BLOCK == aDisplay->mDisplay) {
-      flags = NS_BLOCK_SPACE_MGR | NS_BLOCK_MARGIN_ROOT;
+      flags = NS_BLOCK_FLOAT_MGR | NS_BLOCK_MARGIN_ROOT;
     }
     // Create the block frame
     newFrame = NS_NewBlockFrame(mPresShell, aStyleContext, flags);
@@ -6829,7 +6829,7 @@ nsCSSFrameConstructor::FlushAccumulatedBlock(nsFrameConstructorState& aState,
   // MathML frame so that Get(Absolute/Float)ContainingBlockFor know that this
   // is not a suitable block.
   nsIFrame* blockFrame = NS_NewMathMLmathBlockFrame(mPresShell, blockContext,
-                          NS_BLOCK_SPACE_MGR | NS_BLOCK_MARGIN_ROOT);
+                          NS_BLOCK_FLOAT_MGR | NS_BLOCK_MARGIN_ROOT);
   if (NS_UNLIKELY(!blockFrame))
     return NS_ERROR_OUT_OF_MEMORY;
 
@@ -7263,7 +7263,7 @@ nsCSSFrameConstructor::ConstructSVGFrame(nsFrameConstructorState& aState,
                               nsCSSAnonBoxes::mozSVGForeignContent, aStyleContext);
     
       nsIFrame* blockFrame = NS_NewBlockFrame(mPresShell, innerPseudoStyle,
-                                              NS_BLOCK_SPACE_MGR |
+                                              NS_BLOCK_FLOAT_MGR |
                                                 NS_BLOCK_MARGIN_ROOT);
       if (NS_UNLIKELY(!blockFrame))
         return NS_ERROR_OUT_OF_MEMORY;
@@ -11415,7 +11415,7 @@ nsCSSFrameConstructor::ProcessChildren(nsFrameConstructorState& aState,
                             nsCSSAnonBoxes::mozXULAnonymousBlock,
                             frameStyleContext);
     nsIFrame *blockFrame = NS_NewBlockFrame(mPresShell, blockSC);
-    // We might, in theory, want to set NS_BLOCK_SPACE_MGR and
+    // We might, in theory, want to set NS_BLOCK_FLOAT_MGR and
     // NS_BLOCK_MARGIN_ROOT, but I think it's a bad idea given that
     // a real block placed here wouldn't get those set on it.
 

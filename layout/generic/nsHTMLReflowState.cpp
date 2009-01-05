@@ -96,7 +96,7 @@ nsHTMLReflowState::nsHTMLReflowState(nsPresContext*       aPresContext,
   parentReflowState = nsnull;
   availableWidth = aAvailableSpace.width;
   availableHeight = aAvailableSpace.height;
-  mSpaceManager = nsnull;
+  mFloatManager = nsnull;
   mLineLayout = nsnull;
   mFlags.mSpecialHeightReflow = PR_FALSE;
   mFlags.mIsTopOfPage = PR_FALSE;
@@ -155,7 +155,7 @@ nsHTMLReflowState::nsHTMLReflowState(nsPresContext*           aPresContext,
   availableWidth = aAvailableSpace.width;
   availableHeight = aAvailableSpace.height;
 
-  mSpaceManager = aParentReflowState.mSpaceManager;
+  mFloatManager = aParentReflowState.mFloatManager;
   if (frame->IsFrameOfType(nsIFrame::eLineParticipant))
     mLineLayout = aParentReflowState.mLineLayout;
   else

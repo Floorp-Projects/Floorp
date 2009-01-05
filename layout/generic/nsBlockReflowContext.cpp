@@ -270,7 +270,7 @@ nsBlockReflowContext::ReflowBlock(const nsRect&       aSpace,
 
   nscoord tx = 0, ty = 0;
   // The values of x and y do not matter for floats, so don't bother calculating
-  // them. Floats are guaranteed to have their own space manager, so tx and ty
+  // them. Floats are guaranteed to have their own float manager, so tx and ty
   // don't matter.  mX and mY don't matter becacuse they are only used in
   // PlaceBlock, which is not used for floats.
   if (aLine) {
@@ -281,7 +281,7 @@ nsBlockReflowContext::ReflowBlock(const nsRect&       aSpace,
     nscoord x = mSpace.x + aFrameRS.mComputedMargin.left;
     nscoord y = mSpace.y + mTopMargin.get() + aClearance;
 
-    if ((mFrame->GetStateBits() & NS_BLOCK_SPACE_MGR) == 0)
+    if ((mFrame->GetStateBits() & NS_BLOCK_FLOAT_MGR) == 0)
       aFrameRS.mBlockDelta = mOuterReflowState.mBlockDelta + y - aLine->mBounds.y;
 
     mX = x;
@@ -306,9 +306,9 @@ nsBlockReflowContext::ReflowBlock(const nsRect&       aSpace,
   mMetrics.height = nscoord(0xdeadbeef);
 #endif
 
-  mOuterReflowState.mSpaceManager->Translate(tx, ty);
+  mOuterReflowState.mFloatManager->Translate(tx, ty);
   rv = mFrame->Reflow(mPresContext, mMetrics, aFrameRS, aFrameReflowStatus);
-  mOuterReflowState.mSpaceManager->Translate(-tx, -ty);
+  mOuterReflowState.mFloatManager->Translate(-tx, -ty);
 
 #ifdef DEBUG
   if (!NS_INLINE_IS_BREAK_BEFORE(aFrameReflowStatus)) {

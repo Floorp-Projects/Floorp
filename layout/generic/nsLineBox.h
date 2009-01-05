@@ -46,7 +46,7 @@
 #include "nsPlaceholderFrame.h"
 #include "nsILineIterator.h"
 
-class nsSpaceManager;
+class nsFloatManager;
 class nsLineBox;
 class nsFloatCache;
 class nsFloatCacheList;
