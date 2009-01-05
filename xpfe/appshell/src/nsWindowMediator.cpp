@@ -119,7 +119,7 @@ NS_IMETHODIMP nsWindowMediator::RegisterWindow(nsIXULWindow* inWindow)
   mTimeStamp++;
 
   // Create window info struct and add to list of windows
-  nsWindowInfo* windowInfo = new nsWindowInfo (inWindow, mTimeStamp);
+  nsWindowInfo* windowInfo = new nsWindowInfo(inWindow, mTimeStamp);
   if (!windowInfo)
     return NS_ERROR_OUT_OF_MEMORY;
 
@@ -156,7 +156,7 @@ nsWindowMediator::UnregisterWindow(nsWindowInfo *inInfo)
     ((nsAppShellWindowEnumerator*)mEnumeratorList[index])->WindowRemoved(inInfo);
   
   if (mListeners) {
-    WindowTitleData winData = {inInfo->mWindow.get(), nsnull };
+    WindowTitleData winData = { inInfo->mWindow.get(), nsnull };
     mListeners->EnumerateForwards(notifyCloseWindow, (void*)&winData);
   }
 
@@ -315,7 +315,7 @@ nsWindowMediator::GetMostRecentWindow(const PRUnichar* inType, nsIDOMWindowInter
   nsWindowInfo *info = MostRecentWindowInfo(inType);
 
   if (info && info->mWindow) {
-    nsCOMPtr <nsIDOMWindowInternal> DOMWindow;
+    nsCOMPtr<nsIDOMWindowInternal> DOMWindow;
     if(NS_SUCCEEDED(GetDOMWindow(info->mWindow, DOMWindow))) {  
       *outWindow = DOMWindow;
       NS_ADDREF(*outWindow);
@@ -394,7 +394,8 @@ nsWindowMediator::CalculateZPosition(
                 nsIWidget      *inBelow,
                 PRUint32       *outPosition,
                 nsIWidget     **outBelow,
-                PRBool         *outAltered) {
+                PRBool         *outAltered)
+{
   if (!outBelow)
     return NS_ERROR_NULL_POINTER;
 
@@ -523,7 +524,8 @@ NS_IMETHODIMP
 nsWindowMediator::SetZPosition(
                 nsIXULWindow *inWindow,
                 PRUint32      inPosition,
-                nsIXULWindow *inBelow) {
+                nsIXULWindow *inBelow)
+{
   nsWindowInfo *inInfo,
                *belowInfo;
 
@@ -577,8 +579,8 @@ nsWindowMediator::SetZPosition(
 }
 
 NS_IMETHODIMP
-nsWindowMediator::GetZLevel(nsIXULWindow *aWindow, PRUint32 *_retval) {
-
+nsWindowMediator::GetZLevel(nsIXULWindow *aWindow, PRUint32 *_retval)
+{
   NS_ENSURE_ARG_POINTER(_retval);
   *_retval = nsIXULWindow::normalZ;
   nsWindowInfo *info = GetInfoFor(aWindow);
@@ -592,8 +594,8 @@ nsWindowMediator::GetZLevel(nsIXULWindow *aWindow, PRUint32 *_retval) {
 }
 
 NS_IMETHODIMP
-nsWindowMediator::SetZLevel(nsIXULWindow *aWindow, PRUint32 aZLevel) {
-
+nsWindowMediator::SetZLevel(nsIXULWindow *aWindow, PRUint32 aZLevel)
+{
   nsAutoLock lock(mListLock);
 
   nsWindowInfo *info = GetInfoFor(aWindow);
@@ -625,8 +627,8 @@ nsWindowMediator::SetZLevel(nsIXULWindow *aWindow, PRUint32 aZLevel) {
    was moved.
 */
 void
-nsWindowMediator::SortZOrderFrontToBack() {
-
+nsWindowMediator::SortZOrderFrontToBack()
+{
   nsWindowInfo *scan,   // scans list looking for problems
                *search, // searches for correct placement for scan window
                *prev,   // previous search element
@@ -684,8 +686,8 @@ nsWindowMediator::SortZOrderFrontToBack() {
 
 // see comment for SortZOrderFrontToBack
 void
-nsWindowMediator::SortZOrderBackToFront() {
-
+nsWindowMediator::SortZOrderBackToFront()
+{
   nsWindowInfo *scan,   // scans list looking for problems
                *search, // searches for correct placement for scan window
                *lowest; // bottom-most window in list
