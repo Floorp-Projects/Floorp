@@ -144,6 +144,13 @@ nsSVGElement::Init()
     enumInfo.Reset(i);
   }
 
+  nsSVGPreserveAspectRatio *preserveAspectRatio =
+    GetPreserveAspectRatio();
+
+  if (preserveAspectRatio) {
+    preserveAspectRatio->Init();
+  }
+
   StringAttributesInfo stringInfo = GetStringInfo();
 
   for (i = 0; i < stringInfo.mStringCount; i++) {
@@ -429,6 +436,19 @@ nsSVGElement::ParseAttribute(PRInt32 aNamespaceID,
         }
       }
     }
+
+    if (!foundMatch && aAttribute == nsGkAtoms::preserveAspectRatio) {
+      // Check for nsSVGPreserveAspectRatio attribute
+      nsSVGPreserveAspectRatio *preserveAspectRatio =
+        GetPreserveAspectRatio();
+      if (preserveAspectRatio) {
+        rv = preserveAspectRatio->SetBaseValueString(aValue, this, PR_FALSE);
+        if (NS_FAILED(rv)) {
+          preserveAspectRatio->Init();
+        }
+        foundMatch = PR_TRUE;
+      }
+    }
   }
 
   if (!foundMatch) {
@@ -572,6 +592,18 @@ nsSVGElement::UnsetAttr(PRInt32 aNamespaceID, nsIAtom* aName,
         }
       }
     }
+
+    if (!foundMatch && aName == nsGkAtoms::preserveAspectRatio) {
+      // Check if this is a preserveAspectRatio attribute going away
+      nsSVGPreserveAspectRatio *preserveAspectRatio =
+        GetPreserveAspectRatio();
+
+      if (preserveAspectRatio) {
+        preserveAspectRatio->Init();
+        DidChangePreserveAspectRatio(PR_FALSE);
+        foundMatch = PR_TRUE;
+      }
+    }
   }
 
   if (!foundMatch) {
@@ -611,17 +643,6 @@ nsSVGElement::ResetOldStyleBaseType(nsISVGValue *svg_value)
     nsCOMPtr<nsIDOMSVGRect> rect;
     r->GetBaseVal(getter_AddRefs(rect));
     static_cast<nsSVGRect*>(rect.get())->Clear();
-  }
-  nsCOMPtr<nsIDOMSVGAnimatedPreserveAspectRatio> ar = do_QueryInterface(svg_value);
-  if (ar) {
-    nsCOMPtr<nsIDOMSVGPreserveAspectRatio> par;
-    ar->GetBaseVal(getter_AddRefs(par));
-    par->SetAlign(nsIDOMSVGPreserveAspectRatio::SVG_PRESERVEASPECTRATIO_XMIDYMID);
-    par->SetMeetOrSlice(nsIDOMSVGPreserveAspectRatio::SVG_MEETORSLICE_MEET);
-  }
-  nsCOMPtr<nsIDOMSVGPointList> pl = do_QueryInterface(svg_value);
-  if (pl) {
-    pl->Clear();
   }
   nsCOMPtr<nsIDOMSVGAnimatedLengthList> ll = do_QueryInterface(svg_value);
   if (ll) {
@@ -1424,6 +1445,30 @@ nsSVGElement::DidChangeEnum(PRUint8 aAttrEnum, PRBool aDoSetAttr)
   info.mEnums[aAttrEnum].GetBaseValueString(newStr, this);
 
   SetAttr(kNameSpaceID_None, *info.mEnumInfo[aAttrEnum].mName,
+          newStr, PR_TRUE);
+}
+
+nsSVGPreserveAspectRatio *
+nsSVGElement::GetPreserveAspectRatio()
+{
+  return nsnull;
+}
+
+void
+nsSVGElement::DidChangePreserveAspectRatio(PRBool aDoSetAttr)
+{
+  if (!aDoSetAttr)
+    return;
+
+  nsSVGPreserveAspectRatio *preserveAspectRatio = GetPreserveAspectRatio();
+
+  NS_ASSERTION(preserveAspectRatio,
+               "DidChangePreserveAspectRatio on element with no preserveAspectRatio attrib");
+
+  nsAutoString newStr;
+  preserveAspectRatio->GetBaseValueString(newStr);
+
+  SetAttr(kNameSpaceID_None, nsGkAtoms::preserveAspectRatio,
           newStr, PR_TRUE);
 }
 
