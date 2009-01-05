@@ -42,6 +42,7 @@ searchplugins/
 components/@DLL_PREFIX@jar50@DLL_SUFFIX@
 #ifdef XP_WIN
 components/jsd3250.dll
+components/nsPostUpdateWin.js
 components/xpinstal.dll
 #else
 components/@DLL_PREFIX@jsd@DLL_SUFFIX@
