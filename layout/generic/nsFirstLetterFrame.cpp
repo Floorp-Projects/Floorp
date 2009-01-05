@@ -224,23 +224,26 @@ nsFirstLetterFrame::Reflow(nsPresContext*          aPresContext,
     ll.BeginLineReflow(bp.left, bp.top, availSize.width, NS_UNCONSTRAINEDSIZE,
                        PR_FALSE, PR_TRUE);
     rs.mLineLayout = &ll;
+    ll.SetInFirstLetter(PR_TRUE);
     ll.SetFirstLetterStyleOK(PR_TRUE);
 
     kid->WillReflow(aPresContext);
     kid->Reflow(aPresContext, aMetrics, rs, aReflowStatus);
 
     ll.EndLineReflow();
+    ll.SetInFirstLetter(PR_FALSE);
   }
   else {
     // Pretend we are a span and reflow the child frame
     nsLineLayout* ll = aReflowState.mLineLayout;
     PRBool        pushedFrame;
 
-    NS_ASSERTION(ll->GetFirstLetterStyleOK() || GetPrevContinuation(),
-                 "First-continuation first-letter should have first-letter style enabled in nsLineLayout!");
+    ll->SetInFirstLetter(
+      mStyleContext->GetPseudoType() == nsCSSPseudoElements::firstLetter);
     ll->BeginSpan(this, &aReflowState, bp.left, availSize.width);
     ll->ReflowFrame(kid, aReflowStatus, &aMetrics, pushedFrame);
     ll->EndSpan(this);
+    ll->SetInFirstLetter(PR_FALSE);
   }
 
   // Place and size the child and update the output metrics
