@@ -64,7 +64,8 @@ _TEST_FILES =\
 		test_bug420863.html \
 		test_cssattrs.html \
 		test_events_caretmove.html \
-		$(warning test_groupattrs.xul temporarily disabled) \
+		test_groupattrs.xul \
+		test_groupattrs.html \
 	$(warning test_table_indexes.html temporarily disabled) \
 		test_nsIAccessible_actions.html \
 		$(warning test_nsIAccessible_actions.xul temporarily disabled) \
