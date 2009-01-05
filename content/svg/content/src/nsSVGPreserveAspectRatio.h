@@ -123,6 +123,8 @@ private:
   nsresult ToDOMAnimVal(nsIDOMSVGPreserveAspectRatio **aResult,
                         nsSVGElement* aSVGElement);
 
+  struct DOMBaseVal;
+  friend class DOMBaseVal;
   struct DOMBaseVal : public nsIDOMSVGPreserveAspectRatio
   {
     NS_DECL_CYCLE_COLLECTING_ISUPPORTS
@@ -145,6 +147,8 @@ private:
       { return mVal->SetBaseMeetOrSlice(aMeetOrSlice, mSVGElement); }
   };
 
+  struct DOMAnimVal;
+  friend class DOMAnimVal;
   struct DOMAnimVal : public nsIDOMSVGPreserveAspectRatio
   {
     NS_DECL_CYCLE_COLLECTING_ISUPPORTS
