@@ -35,7 +35,7 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-/* code for management of floats that implements space manager interfaces */
+/* code for management of floats that implements float manager interfaces */
 
 #include "nsCOMPtr.h"
 #include "nsBlockBandData.h"
@@ -108,7 +108,7 @@ nsBlockBandData::GetAvailableSpace(nscoord aY, PRBool aRelaxHeightConstraint,
 nsresult
 nsBlockBandData::GetBandData(nscoord aY, PRBool aRelaxHeightConstraint)
 {
-  NS_ASSERTION(mSpaceManager, "bad state, no space manager");
+  NS_ASSERTION(mSpaceManager, "bad state, no float manager");
   PRInt32 iterations =0;
   nsSize space = mSpace;
   if (aRelaxHeightConstraint) {

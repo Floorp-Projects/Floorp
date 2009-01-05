@@ -454,9 +454,9 @@ public:
 
 protected:
   nsMathMLmathBlockFrame(nsStyleContext* aContext) : nsBlockFrame(aContext) {
-    // We should always have a space manager.  Not that things can really try
+    // We should always have a float manager.  Not that things can really try
     // to float out of us anyway, but we need one for line layout.
-    AddStateBits(NS_BLOCK_SPACE_MGR);
+    AddStateBits(NS_BLOCK_FLOAT_MGR);
   }
   virtual ~nsMathMLmathBlockFrame() {}
 };

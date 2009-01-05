@@ -60,19 +60,19 @@
 /////////////////////////////////////////////////////////////////////////////
 // BandList
 
-PRInt32 nsSpaceManager::sCachedSpaceManagerCount = 0;
-void* nsSpaceManager::sCachedSpaceManagers[NS_SPACE_MANAGER_CACHE_SIZE];
+PRInt32 nsFloatManager::sCachedFloatManagerCount = 0;
+void* nsFloatManager::sCachedFloatManagers[NS_SPACE_MANAGER_CACHE_SIZE];
 
 #define NSCOORD_MIN (-2147483647 - 1) /* minimum signed value */
 
-nsSpaceManager::BandList::BandList()
-  : nsSpaceManager::BandRect(NSCOORD_MIN, NSCOORD_MIN, NSCOORD_MIN, NSCOORD_MIN, (nsIFrame*)nsnull)
+nsFloatManager::BandList::BandList()
+  : nsFloatManager::BandRect(NSCOORD_MIN, NSCOORD_MIN, NSCOORD_MIN, NSCOORD_MIN, (nsIFrame*)nsnull)
 {
   PR_INIT_CLIST(this);
 }
 
 void
-nsSpaceManager::BandList::Clear()
+nsFloatManager::BandList::Clear()
 {
   if (!IsEmpty()) {
     BandRect* bandRect = Head();
@@ -105,9 +105,9 @@ PSArenaFreeCB(size_t aSize, void* aPtr, void* aClosure)
 }
 
 /////////////////////////////////////////////////////////////////////////////
-// nsSpaceManager
+// nsFloatManager
 
-nsSpaceManager::nsSpaceManager(nsIPresShell* aPresShell)
+nsFloatManager::nsFloatManager(nsIPresShell* aPresShell)
   : mLowestTop(NSCOORD_MIN),
     mFloatDamage(PSArenaAllocCB, PSArenaFreeCB, aPresShell),
     mHaveCachedLeftYMost(PR_TRUE),
@@ -116,13 +116,13 @@ nsSpaceManager::nsSpaceManager(nsIPresShell* aPresShell)
     mMaximalRightYMost(nscoord_MIN),
     mCachedBandPosition(nsnull)
 {
-  MOZ_COUNT_CTOR(nsSpaceManager);
+  MOZ_COUNT_CTOR(nsFloatManager);
   mX = mY = 0;
   mFrameInfoMap = nsnull;
 }
 
 void
-nsSpaceManager::ClearFrameInfo()
+nsFloatManager::ClearFrameInfo()
 {
   while (mFrameInfoMap) {
     FrameInfo*  next = mFrameInfoMap->mNext;
@@ -131,20 +131,20 @@ nsSpaceManager::ClearFrameInfo()
   }
 }
 
-nsSpaceManager::~nsSpaceManager()
+nsFloatManager::~nsFloatManager()
 {
-  MOZ_COUNT_DTOR(nsSpaceManager);
+  MOZ_COUNT_DTOR(nsFloatManager);
   mBandList.Clear();
   ClearFrameInfo();
 }
 
 // static
-void* nsSpaceManager::operator new(size_t aSize) CPP_THROW_NEW
+void* nsFloatManager::operator new(size_t aSize) CPP_THROW_NEW
 {
-  if (sCachedSpaceManagerCount > 0) {
+  if (sCachedFloatManagerCount > 0) {
     // We have cached unused instances of this class, return a cached
     // instance in stead of always creating a new one.
-    return sCachedSpaceManagers[--sCachedSpaceManagerCount];
+    return sCachedFloatManagers[--sCachedFloatManagerCount];
   }
 
   // The cache is empty, this means we haveto create a new instance using
@@ -153,49 +153,49 @@ void* nsSpaceManager::operator new(size_t aSize) CPP_THROW_NEW
 }
 
 void
-nsSpaceManager::operator delete(void* aPtr, size_t aSize)
+nsFloatManager::operator delete(void* aPtr, size_t aSize)
 {
   if (!aPtr)
     return;
-  // This space manager is no longer used, if there's still room in
-  // the cache we'll cache this space manager, unless the layout
+  // This float manager is no longer used, if there's still room in
+  // the cache we'll cache this float manager, unless the layout
   // module was already shut down.
 
-  if (sCachedSpaceManagerCount < NS_SPACE_MANAGER_CACHE_SIZE &&
-      sCachedSpaceManagerCount >= 0) {
+  if (sCachedFloatManagerCount < NS_SPACE_MANAGER_CACHE_SIZE &&
+      sCachedFloatManagerCount >= 0) {
     // There's still space in the cache for more instances, put this
     // instance in the cache in stead of deleting it.
 
-    sCachedSpaceManagers[sCachedSpaceManagerCount++] = aPtr;
+    sCachedFloatManagers[sCachedFloatManagerCount++] = aPtr;
     return;
   }
 
   // The cache is full, or the layout module has been shut down,
-  // delete this space manager.
+  // delete this float manager.
   nsMemory::Free(aPtr);
 }
 
 
 /* static */
-void nsSpaceManager::Shutdown()
+void nsFloatManager::Shutdown()
 {
   // The layout module is being shut down, clean up the cache and
   // disable further caching.
 
   PRInt32 i;
 
-  for (i = 0; i < sCachedSpaceManagerCount; i++) {
-    void* spaceManager = sCachedSpaceManagers[i];
-    if (spaceManager)
-      nsMemory::Free(spaceManager);
+  for (i = 0; i < sCachedFloatManagerCount; i++) {
+    void* floatManager = sCachedFloatManagers[i];
+    if (floatManager)
+      nsMemory::Free(floatManager);
   }
 
   // Disable further caching.
-  sCachedSpaceManagerCount = -1;
+  sCachedFloatManagerCount = -1;
 }
 
 PRBool
-nsSpaceManager::YMost(nscoord& aYMost) const
+nsFloatManager::YMost(nscoord& aYMost) const
 {
   PRBool result;
 
@@ -229,7 +229,7 @@ nsSpaceManager::YMost(nscoord& aYMost) const
  * @param aBandData the object to populate with available and unavailable space
  */
 nsresult
-nsSpaceManager::GetBandAvailableSpace(const BandRect* aBand,
+nsFloatManager::GetBandAvailableSpace(const BandRect* aBand,
                                       nscoord         aY,
                                       const nsSize&   aMaxSize,
                                       nsBandData&     aBandData) const
@@ -334,7 +334,7 @@ nsSpaceManager::GetBandAvailableSpace(const BandRect* aBand,
 }
 
 nsresult
-nsSpaceManager::GetBandData(nscoord       aYOffset,
+nsFloatManager::GetBandData(nscoord       aYOffset,
                             const nsSize& aMaxSize,
                             nsBandData&   aBandData) const
 {
@@ -390,8 +390,8 @@ nsSpaceManager::GetBandData(nscoord       aYOffset,
  * @param aBandRect A rect within the band
  * @returns The start of the next band, or nsnull of this is the last band.
  */
-nsSpaceManager::BandRect*
-nsSpaceManager::GetNextBand(const BandRect* aBandRect) const
+nsFloatManager::BandRect*
+nsFloatManager::GetNextBand(const BandRect* aBandRect) const
 {
   nscoord topOfBand = aBandRect->mTop;
 
@@ -416,8 +416,8 @@ nsSpaceManager::GetNextBand(const BandRect* aBandRect) const
  * @param aBandRect The first rect within a band
  * @returns The start of the previous band, or nsnull of this is the first band.
  */
-nsSpaceManager::BandRect*
-nsSpaceManager::GetPrevBand(const BandRect* aBandRect) const
+nsFloatManager::BandRect*
+nsFloatManager::GetPrevBand(const BandRect* aBandRect) const
 {
   NS_ASSERTION(aBandRect->Prev() == &mBandList ||
                aBandRect->Prev()->mBottom <= aBandRect->mTop,
@@ -449,7 +449,7 @@ nsSpaceManager::GetPrevBand(const BandRect* aBandRect) const
  *          part
  */
 void
-nsSpaceManager::DivideBand(BandRect* aBandRect, nscoord aBottom)
+nsFloatManager::DivideBand(BandRect* aBandRect, nscoord aBottom)
 {
   NS_PRECONDITION(aBottom < aBandRect->mBottom, "bad height");
   nscoord   topOfBand = aBandRect->mTop;
@@ -472,7 +472,7 @@ nsSpaceManager::DivideBand(BandRect* aBandRect, nscoord aBottom)
 }
 
 PRBool
-nsSpaceManager::CanJoinBands(BandRect* aBand, BandRect* aPrevBand)
+nsFloatManager::CanJoinBands(BandRect* aBand, BandRect* aPrevBand)
 {
   PRBool  result;
   nscoord topOfBand = aBand->mTop;
@@ -527,7 +527,7 @@ nsSpaceManager::CanJoinBands(BandRect* aBand, BandRect* aPrevBand)
  * If the two bands are joined, the previous band is the band that's deleted
  */
 PRBool
-nsSpaceManager::JoinBands(BandRect* aBand, BandRect* aPrevBand)
+nsFloatManager::JoinBands(BandRect* aBand, BandRect* aPrevBand)
 {
   if (CanJoinBands(aBand, aPrevBand)) {
     BandRect* startOfNextBand = aBand;
@@ -566,7 +566,7 @@ nsSpaceManager::JoinBands(BandRect* aBand, BandRect* aPrevBand)
  * @param aBandRect the band rect to add to the band
  */
 void
-nsSpaceManager::AddRectToBand(BandRect* aBand, BandRect* aBandRect)
+nsFloatManager::AddRectToBand(BandRect* aBand, BandRect* aBandRect)
 {
   NS_PRECONDITION((aBand->mTop == aBandRect->mTop) &&
                   (aBand->mBottom == aBandRect->mBottom), "bad band");
@@ -747,7 +747,7 @@ nsSpaceManager::AddRectToBand(BandRect* aBand, BandRect* aBandRect)
 // +-----+
 //
 void
-nsSpaceManager::InsertBandRect(BandRect* aBandRect)
+nsFloatManager::InsertBandRect(BandRect* aBandRect)
 {
   // If there are no existing bands or this rect is below the bottommost
   // band, then add a new band
@@ -847,7 +847,7 @@ nsSpaceManager::InsertBandRect(BandRect* aBandRect)
 }
 
 nsresult
-nsSpaceManager::AddRectRegion(nsIFrame* aFrame, const nsRect& aUnavailableSpace)
+nsFloatManager::AddRectRegion(nsIFrame* aFrame, const nsRect& aUnavailableSpace)
 {
   NS_PRECONDITION(nsnull != aFrame, "null frame");
 
@@ -882,7 +882,7 @@ nsSpaceManager::AddRectRegion(nsIFrame* aFrame, const nsRect& aUnavailableSpace)
 }
 
 nsresult
-nsSpaceManager::RemoveTrailingRegions(nsIFrame* aFrameList) {
+nsFloatManager::RemoveTrailingRegions(nsIFrame* aFrameList) {
   nsVoidHashSet frameSet;
 
   frameSet.Init(1);
@@ -908,7 +908,7 @@ nsSpaceManager::RemoveTrailingRegions(nsIFrame* aFrameList) {
 }
 
 nsresult
-nsSpaceManager::RemoveRegion(nsIFrame* aFrame)
+nsFloatManager::RemoveRegion(nsIFrame* aFrame)
 {
   // Get the frame info associated with aFrame
   FrameInfo*  frameInfo = GetFrameInfoFor(aFrame);
@@ -1021,7 +1021,7 @@ nsSpaceManager::RemoveRegion(nsIFrame* aFrame)
 }
 
 void
-nsSpaceManager::PushState(SavedState* aState)
+nsFloatManager::PushState(SavedState* aState)
 {
   NS_PRECONDITION(aState, "Need a place to save state");
 
@@ -1058,7 +1058,7 @@ nsSpaceManager::PushState(SavedState* aState)
 }
 
 void
-nsSpaceManager::PopState(SavedState* aState)
+nsFloatManager::PopState(SavedState* aState)
 {
   NS_PRECONDITION(aState, "No state to restore?");
 
@@ -1097,7 +1097,7 @@ nsSpaceManager::PopState(SavedState* aState)
 }
 
 nscoord
-nsSpaceManager::GetLowestRegionTop()
+nsFloatManager::GetLowestRegionTop()
 {
   if (mLowestTop == NSCOORD_MIN)
     return mLowestTop;
@@ -1106,17 +1106,17 @@ nsSpaceManager::GetLowestRegionTop()
 
 #ifdef DEBUG
 void
-DebugListSpaceManager(nsSpaceManager *aSpaceManager)
+DebugListFloatManager(nsFloatManager *aFloatManager)
 {
-  aSpaceManager->List(stdout);
+  aFloatManager->List(stdout);
 }
 
 nsresult
-nsSpaceManager::List(FILE* out)
+nsFloatManager::List(FILE* out)
 {
   nsAutoString tmp;
 
-  fprintf(out, "SpaceManager@%p", this);
+  fprintf(out, "FloatManager@%p", this);
   fprintf(out, " xy=%d,%d <\n", mX, mY);
   if (mBandList.IsEmpty()) {
     fprintf(out, "  no bands\n");
@@ -1149,8 +1149,8 @@ nsSpaceManager::List(FILE* out)
 }
 #endif
 
-nsSpaceManager::FrameInfo*
-nsSpaceManager::GetFrameInfoFor(nsIFrame* aFrame)
+nsFloatManager::FrameInfo*
+nsFloatManager::GetFrameInfoFor(nsIFrame* aFrame)
 {
   FrameInfo*  result = nsnull;
 
@@ -1163,8 +1163,8 @@ nsSpaceManager::GetFrameInfoFor(nsIFrame* aFrame)
   return result;
 }
 
-nsSpaceManager::FrameInfo*
-nsSpaceManager::CreateFrameInfo(nsIFrame* aFrame, const nsRect& aRect)
+nsFloatManager::FrameInfo*
+nsFloatManager::CreateFrameInfo(nsIFrame* aFrame, const nsRect& aRect)
 {
   FrameInfo*  frameInfo = new FrameInfo(aFrame, aRect);
 
@@ -1190,7 +1190,7 @@ nsSpaceManager::CreateFrameInfo(nsIFrame* aFrame, const nsRect& aRect)
 }
 
 void
-nsSpaceManager::DestroyFrameInfo(FrameInfo* aFrameInfo)
+nsFloatManager::DestroyFrameInfo(FrameInfo* aFrameInfo)
 {
   // See if it's at the head of the list
   if (mFrameInfoMap == aFrameInfo) {
@@ -1229,7 +1229,7 @@ nsSpaceManager::DestroyFrameInfo(FrameInfo* aFrameInfo)
 }
 
 nscoord
-nsSpaceManager::ClearFloats(nscoord aY, PRUint8 aBreakType)
+nsFloatManager::ClearFloats(nscoord aY, PRUint8 aBreakType)
 {
   nscoord bottom = aY + mY;
 
@@ -1290,8 +1290,8 @@ nsSpaceManager::ClearFloats(nscoord aY, PRUint8 aBreakType)
   return bottom;
 }
 
-nsSpaceManager::BandRect*
-nsSpaceManager::GuessBandWithTopAbove(nscoord aYOffset) const
+nsFloatManager::BandRect*
+nsFloatManager::GuessBandWithTopAbove(nscoord aYOffset) const
 {
   NS_ASSERTION(!mBandList.IsEmpty(), "no bands");
   BandRect* band = nsnull;
@@ -1314,23 +1314,23 @@ nsSpaceManager::GuessBandWithTopAbove(nscoord aYOffset) const
 /////////////////////////////////////////////////////////////////////////////
 // FrameInfo
 
-nsSpaceManager::FrameInfo::FrameInfo(nsIFrame* aFrame, const nsRect& aRect)
+nsFloatManager::FrameInfo::FrameInfo(nsIFrame* aFrame, const nsRect& aRect)
   : mFrame(aFrame), mRect(aRect), mNext(0)
 {
-  MOZ_COUNT_CTOR(nsSpaceManager::FrameInfo);
+  MOZ_COUNT_CTOR(nsFloatManager::FrameInfo);
 }
 
 #ifdef NS_BUILD_REFCNT_LOGGING
-nsSpaceManager::FrameInfo::~FrameInfo()
+nsFloatManager::FrameInfo::~FrameInfo()
 {
-  MOZ_COUNT_DTOR(nsSpaceManager::FrameInfo);
+  MOZ_COUNT_DTOR(nsFloatManager::FrameInfo);
 }
 #endif
 
 /////////////////////////////////////////////////////////////////////////////
 // BandRect
 
-nsSpaceManager::BandRect::BandRect(nscoord    aLeft,
+nsFloatManager::BandRect::BandRect(nscoord    aLeft,
                                    nscoord    aTop,
                                    nscoord    aRight,
                                    nscoord    aBottom,
@@ -1344,7 +1344,7 @@ nsSpaceManager::BandRect::BandRect(nscoord    aLeft,
   AddFrame(aFrame);
 }
 
-nsSpaceManager::BandRect::BandRect(nscoord      aLeft,
+nsFloatManager::BandRect::BandRect(nscoord      aLeft,
                                    nscoord      aTop,
                                    nscoord      aRight,
                                    nscoord      aBottom,
@@ -1358,13 +1358,13 @@ nsSpaceManager::BandRect::BandRect(nscoord      aLeft,
   mFrames = aFrames;
 }
 
-nsSpaceManager::BandRect::~BandRect()
+nsFloatManager::BandRect::~BandRect()
 {
   MOZ_COUNT_DTOR(BandRect);
 }
 
-nsSpaceManager::BandRect*
-nsSpaceManager::BandRect::SplitVertically(nscoord aBottom)
+nsFloatManager::BandRect*
+nsFloatManager::BandRect::SplitVertically(nscoord aBottom)
 {
   NS_PRECONDITION((aBottom > mTop) && (aBottom < mBottom), "bad argument");
 
@@ -1376,8 +1376,8 @@ nsSpaceManager::BandRect::SplitVertically(nscoord aBottom)
   return bottomBandRect;
 }
 
-nsSpaceManager::BandRect*
-nsSpaceManager::BandRect::SplitHorizontally(nscoord aRight)
+nsFloatManager::BandRect*
+nsFloatManager::BandRect::SplitHorizontally(nscoord aRight)
 {
   NS_PRECONDITION((aRight > mLeft) && (aRight < mRight), "bad argument");
   
@@ -1390,7 +1390,7 @@ nsSpaceManager::BandRect::SplitHorizontally(nscoord aRight)
 }
 
 PRBool
-nsSpaceManager::BandRect::HasSameFrameList(const BandRect* aBandRect) const
+nsFloatManager::BandRect::HasSameFrameList(const BandRect* aBandRect) const
 {
   const PRInt32 count = mFrames.Count();
 
@@ -1414,7 +1414,7 @@ nsSpaceManager::BandRect::HasSameFrameList(const BandRect* aBandRect) const
  * including the current band rect
  */
 PRInt32
-nsSpaceManager::BandRect::Length() const
+nsFloatManager::BandRect::Length() const
 {
   PRInt32   len = 1;
   BandRect* bandRect = Next();
@@ -1433,17 +1433,17 @@ nsSpaceManager::BandRect::Length() const
 
 //----------------------------------------------------------------------
 
-nsAutoSpaceManager::~nsAutoSpaceManager()
+nsAutoFloatManager::~nsAutoFloatManager()
 {
-  // Restore the old space manager in the reflow state if necessary.
+  // Restore the old float manager in the reflow state if necessary.
   if (mNew) {
-#ifdef NOISY_SPACEMANAGER
-    printf("restoring old space manager %p\n", mOld);
+#ifdef NOISY_FLOATMANAGER
+    printf("restoring old float manager %p\n", mOld);
 #endif
 
-    mReflowState.mSpaceManager = mOld;
+    mReflowState.mFloatManager = mOld;
 
-#ifdef NOISY_SPACEMANAGER
+#ifdef NOISY_FLOATMANAGER
     if (mOld) {
       static_cast<nsFrame *>(mReflowState.frame)->ListTag(stdout);
       printf(": space-manager %p after reflow\n", mOld);
@@ -1456,22 +1456,22 @@ nsAutoSpaceManager::~nsAutoSpaceManager()
 }
 
 nsresult
-nsAutoSpaceManager::CreateSpaceManager(nsPresContext *aPresContext)
+nsAutoFloatManager::CreateFloatManager(nsPresContext *aPresContext)
 {
-  // Create a new space manager and install it in the reflow
-  // state. `Remember' the old space manager so we can restore it
+  // Create a new float manager and install it in the reflow
+  // state. `Remember' the old float manager so we can restore it
   // later.
-  mNew = new nsSpaceManager(aPresContext->PresShell());
+  mNew = new nsFloatManager(aPresContext->PresShell());
   if (! mNew)
     return NS_ERROR_OUT_OF_MEMORY;
 
-#ifdef NOISY_SPACEMANAGER
-  printf("constructed new space manager %p (replacing %p)\n",
-         mNew, mReflowState.mSpaceManager);
+#ifdef NOISY_FLOATMANAGER
+  printf("constructed new float manager %p (replacing %p)\n",
+         mNew, mReflowState.mFloatManager);
 #endif
 
-  // Set the space manager in the existing reflow state
-  mOld = mReflowState.mSpaceManager;
-  mReflowState.mSpaceManager = mNew;
+  // Set the float manager in the existing reflow state
+  mOld = mReflowState.mFloatManager;
+  mReflowState.mFloatManager = mNew;
   return NS_OK;
 }

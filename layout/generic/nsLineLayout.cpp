@@ -93,11 +93,11 @@
 #define PLACED_RIGHT 0x2
 
 nsLineLayout::nsLineLayout(nsPresContext* aPresContext,
-                           nsSpaceManager* aSpaceManager,
+                           nsFloatManager* aFloatManager,
                            const nsHTMLReflowState* aOuterReflowState,
                            const nsLineList::iterator* aLine)
   : mPresContext(aPresContext),
-    mSpaceManager(aSpaceManager),
+    mFloatManager(aFloatManager),
     mBlockReflowState(aOuterReflowState),
     mLastOptionalBreakContent(nsnull),
     mForceBreakContent(nsnull),
@@ -108,9 +108,9 @@ nsLineLayout::nsLineLayout(nsPresContext* aPresContext,
     mMinLineHeight(0),
     mTextIndent(0)
 {
-  NS_ASSERTION(aSpaceManager || aOuterReflowState->frame->GetType() ==
+  NS_ASSERTION(aFloatManager || aOuterReflowState->frame->GetType() ==
                                   nsGkAtoms::letterFrame,
-               "space manager should be present");
+               "float manager should be present");
   MOZ_COUNT_CTOR(nsLineLayout);
 
   // Stash away some style data that we need
@@ -841,7 +841,7 @@ nsLineLayout::ReflowFrame(nsIFrame* aFrame,
 #endif
   nscoord tx = x - psd->mReflowState->mComputedBorderPadding.left;
   nscoord ty = y - psd->mReflowState->mComputedBorderPadding.top;
-  mSpaceManager->Translate(tx, ty);
+  mFloatManager->Translate(tx, ty);
 
   nsIAtom* frameType = aFrame->GetType();
   PRInt32 savedOptionalBreakOffset;
@@ -949,7 +949,7 @@ nsLineLayout::ReflowFrame(nsIFrame* aFrame,
     }
   }
 
-  mSpaceManager->Translate(-tx, -ty);
+  mFloatManager->Translate(-tx, -ty);
 
   NS_ASSERTION(metrics.width>=0, "bad width");
   NS_ASSERTION(metrics.height>=0,"bad height");
