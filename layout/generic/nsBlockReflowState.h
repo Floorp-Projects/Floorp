@@ -43,7 +43,7 @@
 #ifndef nsBlockReflowState_h__
 #define nsBlockReflowState_h__
 
-#include "nsBlockBandData.h"
+#include "nsFloatManager.h"
 #include "nsLineBox.h"
 #include "nsFrameList.h"
 #include "nsBlockFrame.h"
@@ -194,7 +194,7 @@ public:
 
   nsFloatManager* mFloatManager;
 
-  // The coordinates within the spacemanager where the block is being
+  // The coordinates within the float manager where the block is being
   // placed <b>after</b> taking into account the blocks border and
   // padding. This, therefore, represents the inner "content area" (in
   // spacemanager coordinates) where child frames will be placed,
@@ -272,9 +272,6 @@ public:
   // this to the next next-in-flow.
   nsBlockFrame* mNextInFlow;
 
-  // The current band data for the current Y coordinate
-  nsBlockBandData mBand;
-
   //----------------------------------------
 
   // Temporary line-reflow state. This state is used during the reflow
@@ -298,6 +295,11 @@ public:
   PRInt16 mFlags;
  
   PRUint8 mFloatBreakType;
+
+  // The number of floats on the sides of mAvailSpaceRect, including
+  // floats that do not reduce mAvailSpaceRect because they are in the
+  // margins.
+  PRPackedBool mBandHasFloats;
 
   void SetFlag(PRUint32 aFlag, PRBool aValue)
   {
