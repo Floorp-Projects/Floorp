@@ -70,43 +70,43 @@ static PRBool notifyCloseWindow(nsISupports *aElement, void* aData);
 static PRBool notifyWindowTitleChange(nsISupports *aElement, void* aData);
 
 // for notifyWindowTitleChange
-struct windowData {
+struct WindowTitleData {
   nsIXULWindow* mWindow;
   const PRUnichar *mTitle;
 };
 
 nsresult
-GetDOMWindow(nsIXULWindow* inWindow, nsCOMPtr< nsIDOMWindowInternal>& outDOMWindow)
+GetDOMWindow(nsIXULWindow* inWindow, nsCOMPtr<nsIDOMWindowInternal>& outDOMWindow)
 {
   nsCOMPtr<nsIDocShell> docShell;
 
   inWindow->GetDocShell(getter_AddRefs(docShell));
-   outDOMWindow = do_GetInterface(docShell);
-   return outDOMWindow ? NS_OK : NS_ERROR_FAILURE;
+  outDOMWindow = do_GetInterface(docShell);
+  return outDOMWindow ? NS_OK : NS_ERROR_FAILURE;
 }
-
-PRInt32 nsWindowMediator::gRefCnt = 0;
 
 nsWindowMediator::nsWindowMediator() :
   mEnumeratorList(), mOldestWindow(nsnull), mTopmostWindow(nsnull),
   mTimeStamp(0), mSortingZOrder(PR_FALSE), mListLock(nsnull)
 {
-   // This should really be done in the static constructor fn.
-   nsresult rv;
-   rv = Init();
-   NS_ASSERTION(NS_SUCCEEDED(rv), "uh oh, couldn't Init() for some reason");
 }
 
 nsWindowMediator::~nsWindowMediator()
 {
-  if (--gRefCnt == 0) {
-    // Delete data
-    while (mOldestWindow)
-      UnregisterWindow(mOldestWindow);
+  while (mOldestWindow)
+    UnregisterWindow(mOldestWindow);
+  
+  if (mListLock)
+    PR_DestroyLock(mListLock);
+}
 
-    if (mListLock)
-      PR_DestroyLock(mListLock);
-  }
+nsresult nsWindowMediator::Init()
+{
+  mListLock = PR_NewLock();
+  if (!mListLock)
+    return NS_ERROR_OUT_OF_MEMORY;
+
+  return NS_OK;
 }
 
 NS_IMETHODIMP nsWindowMediator::RegisterWindow(nsIXULWindow* inWindow)
@@ -124,7 +124,7 @@ NS_IMETHODIMP nsWindowMediator::RegisterWindow(nsIXULWindow* inWindow)
     return NS_ERROR_OUT_OF_MEMORY;
 
   if (mListeners) {
-    windowData winData = { inWindow, nsnull };
+    WindowTitleData winData = { inWindow, nsnull };
     mListeners->EnumerateForwards(notifyOpenWindow, (void*)&winData);
   }
   
@@ -156,7 +156,7 @@ nsWindowMediator::UnregisterWindow(nsWindowInfo *inInfo)
     ((nsAppShellWindowEnumerator*)mEnumeratorList[index])->WindowRemoved(inInfo);
   
   if (mListeners) {
-    windowData winData = {inInfo->mWindow.get(), nsnull };
+    WindowTitleData winData = {inInfo->mWindow.get(), nsnull };
     mListeners->EnumerateForwards(notifyCloseWindow, (void*)&winData);
   }
 
@@ -263,7 +263,7 @@ nsWindowMediator::GetZOrderDOMWindowEnumerator(
   else
     enumerator = new nsASDOMWindowBackToFrontEnumerator(aWindowType, *this);
   if (enumerator)
-    return enumerator->QueryInterface(NS_GET_IID(nsISimpleEnumerator), (void**) _retval);
+    return CallQueryInterface(enumerator, _retval);
 
   return NS_ERROR_OUT_OF_MEMORY;
 }
@@ -283,7 +283,7 @@ nsWindowMediator::GetZOrderXULWindowEnumerator(
   else
     enumerator = new nsASXULWindowBackToFrontEnumerator(aWindowType, *this);
   if (enumerator)
-    return enumerator->QueryInterface(NS_GET_IID(nsISimpleEnumerator), (void**) _retval);
+    return CallQueryInterface(enumerator, _retval);
 
   return NS_ERROR_OUT_OF_MEMORY;
 }
@@ -374,7 +374,7 @@ nsWindowMediator::UpdateWindowTitle(nsIXULWindow* inWindow,
 {
   nsAutoLock lock(mListLock);
   if (mListeners && GetInfoFor(inWindow)) {
-    windowData winData = { inWindow, inTitle };
+    WindowTitleData winData = { inWindow, inTitle };
     mListeners->EnumerateForwards(notifyWindowTitleChange, (void *)&winData);
   }
 
@@ -746,18 +746,6 @@ NS_IMPL_ADDREF(nsWindowMediator)
 NS_IMPL_QUERY_INTERFACE1(nsWindowMediator, nsIWindowMediator)
 NS_IMPL_RELEASE(nsWindowMediator)
 
-nsresult
-nsWindowMediator::Init()
-{
-  if (gRefCnt++ == 0) {
-    mListLock = PR_NewLock();
-    if (!mListLock)
-      return NS_ERROR_OUT_OF_MEMORY;
-  }
-
-  return NS_OK;
-}
-
 NS_IMETHODIMP
 nsWindowMediator::AddListener(nsIWindowMediatorListener* aListener)
 {
@@ -792,9 +780,9 @@ notifyOpenWindow(nsISupports *aElement, void* aData)
 {
   nsIWindowMediatorListener* listener =
     reinterpret_cast<nsIWindowMediatorListener*>(aElement);
-  windowData* winData = (windowData*) aData;
-
+  WindowTitleData* winData = static_cast<WindowTitleData*>(aData);
   listener->OnOpenWindow(winData->mWindow);
+
   return PR_TRUE;
 }
 
@@ -803,9 +791,9 @@ notifyCloseWindow(nsISupports *aElement, void* aData)
 {
   nsIWindowMediatorListener* listener =
     reinterpret_cast<nsIWindowMediatorListener*>(aElement);
-  windowData* winData = (windowData*) aData;
-  
+  WindowTitleData* winData = static_cast<WindowTitleData*>(aData);
   listener->OnCloseWindow(winData->mWindow);
+
   return PR_TRUE;
 }
 
@@ -814,11 +802,8 @@ notifyWindowTitleChange(nsISupports *aElement, void* aData)
 {
   nsIWindowMediatorListener* listener =
     reinterpret_cast<nsIWindowMediatorListener*>(aElement);
-
-  windowData* titleData =
-    reinterpret_cast<windowData*>(aData);
-  listener->OnWindowTitleChange(titleData->mWindow,
-                                titleData->mTitle);
+  WindowTitleData* titleData = reinterpret_cast<WindowTitleData*>(aData);
+  listener->OnWindowTitleChange(titleData->mWindow, titleData->mTitle);
 
   return PR_TRUE;
 }

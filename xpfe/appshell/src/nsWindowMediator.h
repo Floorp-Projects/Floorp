@@ -68,14 +68,15 @@ friend class nsASXULWindowBackToFrontEnumerator;
 public:
   nsWindowMediator();
   virtual ~nsWindowMediator();
+
   nsresult Init();
 
-  NS_DECL_NSIWINDOWMEDIATOR
   NS_DECL_ISUPPORTS
+  NS_DECL_NSIWINDOWMEDIATOR
 
 private:
-  PRInt32 AddEnumerator( nsAppShellWindowEnumerator* inEnumerator );
-  PRInt32 RemoveEnumerator( nsAppShellWindowEnumerator* inEnumerator);
+  PRInt32 AddEnumerator(nsAppShellWindowEnumerator* inEnumerator);
+  PRInt32 RemoveEnumerator(nsAppShellWindowEnumerator* inEnumerator);
   nsWindowInfo *MostRecentWindowInfo(const PRUnichar* inType);
 
   nsresult      UnregisterWindow(nsWindowInfo *inInfo);
@@ -85,15 +86,13 @@ private:
   void          SortZOrderBackToFront();
 
   nsVoidArray   mEnumeratorList;
-  nsWindowInfo *mOldestWindow,
-               *mTopmostWindow;
+  nsWindowInfo *mOldestWindow;
+  nsWindowInfo *mTopmostWindow;
   PRInt32       mTimeStamp;
   PRBool        mSortingZOrder;
   PRLock       *mListLock;
 
   nsCOMPtr<nsISupportsArray> mListeners;
-
-  static PRInt32 gRefCnt;
 };
 
 #endif
