@@ -285,6 +285,17 @@ protected:
   PRUint32 GetActionRule(PRUint32 aStates);
 
   /**
+   * Compute group attributes ('posinset', 'setsize' and 'level') based
+   * on accessible hierarchy. Used by GetAttributes() method if group attributes
+   * weren't provided by ARIA or by internal accessible implementation.
+   *
+   * @param  aRole        [in] role of this accessible
+   * @param  aAttributes  [in, out] object attributes
+   */
+  nsresult ComputeGroupAttributes(PRUint32 aRole,
+                                  nsIPersistentProperties *aAttributes);
+
+  /**
    * Fires platform accessible event. It's notification method only. It does
    * change nothing on Gecko side. Mostly you should use
    * nsIAccessible::FireAccessibleEvent excepting special cases like we have
