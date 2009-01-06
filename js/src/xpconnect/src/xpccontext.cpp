@@ -52,7 +52,6 @@ XPCContext::XPCContext(XPCJSRuntime* aRuntime,
         mPendingResult(NS_OK),
         mSecurityManager(nsnull),
         mException(nsnull),
-        mWatchdogLimit(0),
         mCallingLangType(LANG_UNKNOWN),
         mSecurityManagerFlags(0)
 {

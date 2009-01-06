@@ -70,7 +70,6 @@
 [ptr] native nsScriptObjectTracerPtr(nsScriptObjectTracer);
 [ref] native nsCCTraversalCallbackRef(nsCycleCollectionTraversalCallback);
 [ptr] native nsAXPCNativeCallContextPtr(nsAXPCNativeCallContext);
-      native PRIntervalTime(PRIntervalTime);
 
 /***************************************************************************/
 
@@ -406,7 +405,7 @@ interface nsIXPCFunctionThisTranslator : nsISupports
     { 0xbd, 0xd6, 0x0, 0x0, 0x64, 0x65, 0x73, 0x74 } }
 %}
 
-[uuid(eb95710a-e112-44ae-abe1-6f8dfb58d7f8)]
+[uuid(f8bf005e-3700-411c-ba0c-e018075f22a4)]
 interface nsIXPConnect : nsISupports
 {
 %{ C++
@@ -786,20 +785,4 @@ interface nsIXPConnect : nsISupports
         in PRUint32 flags,
         in PRUint32 interfaceCount,
         [array, size_is(interfaceCount)] in nsIIDPtr interfaceArray);
-
-    /**
-     * Returns the value of the watchdog limit for the specified context.
-     * @param cx
-     *     A context
-     */
-    [noscript,notxpcom] PRIntervalTime getWatchdogLimit(in JSContextPtr cx);
-
-    /**
-     * Sets a new value of the watchdog limit.
-     * @param cx
-     *     A context
-     * @param limit
-     *     New value of the watchdog limit.
-     */
-    [noscript,notxpcom] void setWatchdogLimit(in JSContextPtr cx, in PRIntervalTime limit);
 };
