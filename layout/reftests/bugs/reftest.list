@@ -937,7 +937,7 @@ fails == 441259-2.html 441259-2-ref.html # bug 441400
 == 444928-1.html 444928-1-ref.html
 == 444928-2.html 444928-2-ref.html
 != 444928-3.html 444928-3-notref.html
-== 445004-1.html 445004-1-ref.html
+random == 445004-1.html 445004-1-ref.html # bug 472268
 == 445142-1a.html 445142-1-ref.html
 == 445142-1b.html 445142-1-ref.html
 == 445142-1c.html 445142-1-ref.html
