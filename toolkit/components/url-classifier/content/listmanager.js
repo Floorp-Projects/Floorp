@@ -77,7 +77,7 @@ function PROT_ListManager() {
   this.tablesData = {};
 
   this.observerServiceObserver_ = new G_ObserverServiceObserver(
-                                          'xpcom-shutdown',
+                                          'quit-application',
                                           BindToObject(this.shutdown_, this),
                                           true /*only once*/);
 
@@ -119,6 +119,10 @@ function PROT_ListManager() {
  * Delete all of our data tables which seem to leak otherwise.
  */
 PROT_ListManager.prototype.shutdown_ = function() {
+  if (this.keyManager_) {
+    this.keyManager_.shutdown();
+  }
+
   for (var name in this.tablesData) {
     delete this.tablesData[name];
   }
