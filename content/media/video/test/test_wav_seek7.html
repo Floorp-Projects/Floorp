@@ -7,16 +7,10 @@
   <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
 </head>
 <body>
-<audio id='v'
-       onloadedmetadata='return startTest();'
-       onseeked='return seekEnded();'>
-  <source type='audio/x-wav' src='r11025_s16_c1.wav'>
-</audio>
 <pre id="test">
 <script class="testbody" type="text/javascript;version=1.7">
 // Test for bug identified by Chris Pearce in comment 40 on
 // bug 449159.
-var v = document.getElementById('v');
 var seekCount = 0;
 var completed = false;
 var interval;
@@ -34,7 +28,7 @@ function startTest() {
       yield i;
     }
   }();
-
+  var v = document.getElementById('v');
   interval = setInterval(function() { v.currentTime=seek.next(); }, 10);
   return false;
 }
@@ -56,5 +50,10 @@ function seekEnded() {
 SimpleTest.waitForExplicitFinish();
 </script>
 </pre>
+<audio id='v'
+       onloadedmetadata='return startTest();'
+       onseeked='return seekEnded();'>
+  <source type='audio/x-wav' src='r11025_s16_c1.wav'>
+</audio>
 </body>
 </html>

@@ -7,12 +7,6 @@
   <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
 </head>
 <body>
-<video id='v'
-       src='seek.ogg'
-       onloadedmetadata='return startTest();'
-       onended='return playbackEnded();'
-       onseeking='return seekStarted();'
-       onseeked='return seekEnded();'></video>
 <pre id="test">
 <script class="testbody" type="text/javascript">
 // Test for a seek, followed by a play before the seek completes, ensure we play at the end of the seek.
@@ -59,5 +53,11 @@ function playbackEnded() {
 SimpleTest.waitForExplicitFinish();
 </script>
 </pre>
+<video id='v'
+       src='seek.ogg'
+       onloadedmetadata='return startTest();'
+       onended='return playbackEnded();'
+       onseeking='return seekStarted();'
+       onseeked='return seekEnded();'></video>
 </body>
 </html>
