@@ -68,8 +68,7 @@
 }
 
 #main-window:not([active="true"]) > #navigator-toolbox > toolbar > toolbaritem,
-#main-window:not([active="true"]) > #navigator-toolbox > toolbar > toolbarbutton,
-#main-window:not([active="true"]) > #browser-bottombox {
+#main-window:not([active="true"]) > #navigator-toolbox > toolbar > toolbarbutton {
   opacity: 0.75;
 }
 

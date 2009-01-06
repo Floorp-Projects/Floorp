@@ -43,8 +43,6 @@ classic.jar:
 +  skin/classic/global/scrollbox.css
 +  skin/classic/global/spinbuttons.css
 +  skin/classic/global/splitter.css
-+  skin/classic/global/statusbar-background.gif
-+  skin/classic/global/statusbar-background-inactive.gif
 +  skin/classic/global/tabbox.css
 +  skin/classic/global/textbox.css
 +  skin/classic/global/datetimepicker.css
