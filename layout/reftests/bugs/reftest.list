@@ -71,7 +71,7 @@ fails == 25888-3r.html 25888-3r-ref.html # bug 25888
 == 98223-1.html 98223-1-ref.html
 == 98223-2.html 98223-2-ref.html
 == 99850-1a.html 99850-1-ref.html
-== 99850-1b.html 99850-1-ref.html
+random == 99850-1b.html 99850-1-ref.html # bug 471629
 == 99850-1c.html 99850-1-ref.html
 == 99850-1d.html 99850-1-ref.html
 == 105030-1.html 105030-1-ref.html
@@ -628,7 +628,7 @@ fails == 386310-1d.html 386310-1-ref.html
 == 387201-3.html about:blank  # Really an assertion test rather than a rendering test
 == 387344-1.html 387344-1-ref.html
 == 387876-1.html 387876-1-ref.html
-== 387876-2.html 387876-2-ref.html
+random == 387876-2.html 387876-2-ref.html # bug 471630
 == 387876-3a.html 387876-3-ref.html
 == 387876-3b.html 387876-3-ref.html
 == 388026-1.html 388026-1-ref.html
