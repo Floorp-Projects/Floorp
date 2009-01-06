@@ -5917,7 +5917,7 @@ nsCSSFrameConstructor::ConstructXULFrame(nsFrameConstructorState& aState,
       else if (display->mDisplay == NS_STYLE_DISPLAY_GRID_GROUP) {
         nsCOMPtr<nsIBoxLayout> layout;
       
-        if (aTag == nsGkAtoms::listboxbody) {
+        if (isXULNS && aTag == nsGkAtoms::listboxbody) {
           NS_NewListBoxLayout(mPresShell, layout);
           newFrame = NS_NewListBoxBodyFrame(mPresShell, aStyleContext, PR_FALSE, layout);
         }
@@ -5949,7 +5949,7 @@ nsCSSFrameConstructor::ConstructXULFrame(nsFrameConstructorState& aState,
 
         NS_NewGridRowLeafLayout(mPresShell, getter_AddRefs(layout));
 
-        if (aTag == nsGkAtoms::listitem)
+        if (isXULNS && aTag == nsGkAtoms::listitem)
           newFrame = NS_NewListItemFrame(mPresShell, aStyleContext, PR_FALSE, layout);
         else
           newFrame = NS_NewGridRowLeafFrame(mPresShell, aStyleContext, PR_FALSE, layout);
