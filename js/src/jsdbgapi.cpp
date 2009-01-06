@@ -1262,7 +1262,8 @@ JS_EvaluateUCInStackFrame(JSContext *cx, JSStackFrame *fp,
         displaySave = *disp;
         *disp = fp;
     } else {
-        disp = displaySave = NULL;
+        disp = NULL;
+        displaySave = NULL;
     }
     ok = js_Execute(cx, scobj, script, fp, JSFRAME_DEBUGGER | JSFRAME_EVAL,
                     rval);
