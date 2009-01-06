@@ -233,10 +233,7 @@ static bool did_we_check_sse2 = false;
 #endif
 
 #ifdef JS_JIT_SPEW
-static bool verbose_debug = getenv("TRACEMONKEY") && strstr(getenv("TRACEMONKEY"), "verbose");
-#define debug_only_v(x) if (verbose_debug) { x; }
-#else
-#define debug_only_v(x)
+bool js_verboseDebug = getenv("TRACEMONKEY") && strstr(getenv("TRACEMONKEY"), "verbose");
 #endif
 
 /* The entire VM shares one oracle. Collisions and concurrent updates are tolerated and worst
@@ -1043,10 +1040,7 @@ TraceRecorder::TraceRecorder(JSContext* cx, VMSideExit* _anchor, Fragment* _frag
     debug_only_v(printf("globalObj=%p, shape=%d\n", this->globalObj, OBJ_SHAPE(this->globalObj));)
 
     lir = lir_buf_writer = new (&gc) LirBufWriter(lirbuf);
-#ifdef DEBUG
-    if (verbose_debug)
-        lir = verbose_filter = new (&gc) VerboseWriter(&gc, lir, lirbuf->names);
-#endif
+    debug_only_v(lir = verbose_filter = new (&gc) VerboseWriter(&gc, lir, lirbuf->names);)
 #ifdef NJ_SOFTFLOAT
     lir = float_filter = new (&gc) SoftFloatFilter(lir);
 #endif
@@ -3897,13 +3891,21 @@ TraceRecorder::monitorRecording(JSContext* cx, TraceRecorder* tr, JSOp op)
     switch (op) {
       default: goto abort_recording;
 # define OPDEF(x,val,name,token,length,nuses,ndefs,prec,format)               \
-        case x:                                                               \
-          flag = tr->record_##x();                                            \
-          if (x == JSOP_ITER || x == JSOP_NEXTITER || x == JSOP_APPLY ||      \
-              JSOP_IS_BINARY(x) || JSOP_IS_UNARY(x) ||                        \
-              JSOP_IS_EQUALITY(x)) {                                          \
-              goto imacro;                                                    \
-          }                                                                   \
+      case x:                                                                 \
+        debug_only_v(                                                         \
+            js_Disassemble1(cx, cx->fp->script, cx->fp->regs->pc,             \
+                            (cx->fp->imacpc)                                  \
+                            ? 0                                               \
+                            : PTRDIFF(cx->fp->regs->pc,                       \
+                                      cx->fp->script->code,                   \
+                                      jsbytecode),                            \
+                            !cx->fp->imacpc, stdout);)                        \
+        flag = tr->record_##x();                                              \
+        if (x == JSOP_ITER || x == JSOP_NEXTITER || x == JSOP_APPLY ||        \
+            JSOP_IS_BINARY(x) || JSOP_IS_UNARY(x) ||                          \
+            JSOP_IS_EQUALITY(x)) {                                            \
+            goto imacro;                                                      \
+        }                                                                     \
         break;
 # include "jsopcode.tbl"
 # undef OPDEF
@@ -5531,6 +5533,9 @@ TraceRecorder::record_EnterFrame()
     debug_only_v(printf("EnterFrame %s, callDepth=%d\n",
                         js_AtomToPrintableString(cx, cx->fp->fun->atom),
                         callDepth);)
+    debug_only_v(
+        js_Disassemble(cx, cx->fp->script, JS_TRUE, stdout);
+        printf("----\n");)
     LIns* void_ins = INS_CONST(JSVAL_TO_BOOLEAN(JSVAL_VOID));
 
     jsval* vp = &fp->argv[fp->argc];

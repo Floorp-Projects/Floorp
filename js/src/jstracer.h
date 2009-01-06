@@ -150,6 +150,13 @@ public:
     void            clear();
 };
 
+#ifdef JS_JIT_SPEW
+extern bool js_verboseDebug;
+#define debug_only_v(x) if (js_verboseDebug) { x; }
+#else
+#define debug_only_v(x)
+#endif
+
 /*
  * The oracle keeps track of slots that should not be demoted to int because we know them
  * to overflow or they result in type-unstable traces. We are using a simple hash table.
