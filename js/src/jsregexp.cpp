@@ -70,17 +70,6 @@
 #include "jstracer.h"
 using namespace avmplus;
 using namespace nanojit;
-
-/* 
- * FIXME  Duplicated with jstracer.cpp, doing it this way for now
- *        to keep it private to files that need it. 
- */
-#ifdef JS_JIT_SPEW
-static bool verbose_debug = getenv("TRACEMONKEY") && strstr(getenv("TRACEMONKEY"), "verbose");
-#define debug_only_v(x) if (verbose_debug) { x; }
-#else
-#define debug_only_v(x)
-#endif
 #endif
 
 typedef enum REOp {
