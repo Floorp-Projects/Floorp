@@ -905,6 +905,7 @@ JS_BeginRequest(JSContext *cx)
 {
 #ifdef JS_THREADSAFE
     JSRuntime *rt;
+    JSContextCallback cxCallback;
 
     JS_ASSERT(cx->thread->id == js_CurrentThreadId());
     if (!cx->requestDepth) {
@@ -912,6 +913,9 @@ JS_BeginRequest(JSContext *cx)
 
         /* Wait until the GC is finished. */
         rt = cx->runtime;
+#if !JS_HAS_OPERATION_COUNT
+        cx->startTime = PR_IntervalNow();
+#endif
         JS_LOCK_GC(rt);
 
         /* NB: we use cx->thread here, not js_GetCurrentThread(). */
@@ -925,6 +929,16 @@ JS_BeginRequest(JSContext *cx)
         cx->requestDepth = 1;
         cx->outstandingRequests++;
         JS_UNLOCK_GC(rt);
+
+        cxCallback = cx->runtime->cxCallback;
+        if (cxCallback) {
+#ifdef DEBUG
+            JSBool callbackStatus =
+#endif
+                cxCallback(cx, JSCONTEXT_REQUEST_START);
+            JS_ASSERT(callbackStatus);
+        }
+
         return;
     }
     cx->requestDepth++;
@@ -985,7 +999,9 @@ JS_EndRequest(JSContext *cx)
         rt->requestCount--;
         if (rt->requestCount == 0)
             JS_NOTIFY_REQUEST_DONE(rt);
-
+#if !JS_HAS_OPERATION_COUNT
+        cx->startTime = 0;
+#endif
         JS_UNLOCK_GC(rt);
         return;
     }
@@ -3135,7 +3151,7 @@ DefinePropertyById(JSContext *cx, JSObject *obj, jsid id, jsval value,
                                        attrs, flags, tinyid, NULL);
     }
     return OBJ_DEFINE_PROPERTY(cx, obj, id, value, getter, setter, attrs,
-                               NULL);   
+                               NULL);
 }
 
 static JSBool
@@ -3812,7 +3828,7 @@ JS_HasUCProperty(JSContext *cx, JSObject *obj,
     JSProperty *prop;
 
     CHECK_REQUEST(cx);
-    ok = LookupUCProperty(cx, obj, name, namelen, 
+    ok = LookupUCProperty(cx, obj, name, namelen,
                           JSRESOLVE_QUALIFIED | JSRESOLVE_DETECTING,
                           &obj2, &prop);
     if (ok) {
@@ -5249,6 +5265,7 @@ JS_CallFunctionValue(JSContext *cx, JSObject *obj, jsval fval, uintN argc,
     return ok;
 }
 
+#if JS_HAS_OPERATION_COUNT
 JS_PUBLIC_API(void)
 JS_SetOperationCallback(JSContext *cx, JSOperationCallback callback,
                         uint32 operationLimit)
@@ -5323,6 +5340,33 @@ JS_SetBranchCallback(JSContext *cx, JSBranchCallback cb)
         JS_ClearOperationCallback(cx);
     }
     return oldcb;
+}
+#else
+
+JS_PUBLIC_API(void)
+JS_SetOperationCallback(JSContext *cx, JSOperationCallback callback)
+{
+    cx->operationCallback = callback;
+}
+
+JS_PUBLIC_API(void)
+JS_ClearOperationCallback(JSContext *cx)
+{
+    cx->operationCallback = NULL;
+}
+
+JS_PUBLIC_API(JSOperationCallback)
+JS_GetOperationCallback(JSContext *cx)
+{
+    return cx->operationCallback;
+}
+
+#endif
+
+JS_PUBLIC_API(void)
+JS_TriggerOperationCallback(JSContext *cx)
+{
+    cx->operationCount = 0;
 }
 
 JS_PUBLIC_API(JSBool)
