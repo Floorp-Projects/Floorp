@@ -1,7 +1,8 @@
-# It's possible the spec should change here...
-fails == other-float-outside-rule-3-left.html other-float-outside-rule-3-left-ref.html
-fails == other-float-outside-rule-3-right.html other-float-outside-rule-3-right-ref.html
-== other-float-outside-rule-7-left.html other-float-outside-rule-7-left-ref.html
-== other-float-outside-rule-7-right.html other-float-outside-rule-7-right-ref.html
+== other-float-outside-rule-3-left.html other-float-outside-rule-3-left-ref.html
+== other-float-outside-rule-3-right.html other-float-outside-rule-3-right-ref.html
+# It's possible the spec should change here to match rule 3...
+fails == other-float-outside-rule-7-left.html other-float-outside-rule-7-left-ref.html
+fails == other-float-outside-rule-7-right.html other-float-outside-rule-7-right-ref.html
+== float-outside-block-push.html float-outside-block-push-ref.html
 fails == zero-height-float-base.html zero-height-float-ref.html
 fails == zero-height-float.html zero-height-float-ref.html

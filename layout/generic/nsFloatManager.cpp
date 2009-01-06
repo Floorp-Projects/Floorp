@@ -200,7 +200,6 @@ nsFloatManager::GetBand(nscoord aYOffset,
       }
     } else if (floatBottom > top) {
       // This float is in our band.
-      haveFloats = PR_TRUE;
 
       // Shrink our band's height if needed.
       if (floatBottom < bottom) {
@@ -213,12 +212,19 @@ nsFloatManager::GetBand(nscoord aYOffset,
         nscoord rightEdge = fi.mRect.XMost();
         if (rightEdge > left) {
           left = rightEdge;
+          // Only set haveFloats to true if the float is inside our
+          // containing block.  This matches the spec for what some
+          // callers want and disagrees for other callers, so we should
+          // probably provide better information at some point.
+          haveFloats = PR_TRUE;
         }
       } else {
         // A right float.
         nscoord leftEdge = fi.mRect.x;
         if (leftEdge < right) {
           right = leftEdge;
+          // See above.
+          haveFloats = PR_TRUE;
         }
       }
     }
