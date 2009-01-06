@@ -113,7 +113,7 @@ NS_IMETHODIMP DeleteElementTxn::DoTransaction(void)
 #endif
 
   // remember which child mElement was (by remembering which child was next)
-  nsresult result = mElement->GetNextSibling(getter_AddRefs(mRefNode));  // can return null mRefNode
+  mElement->GetNextSibling(getter_AddRefs(mRefNode));  // can return null mRefNode
 
   // give range updater a chance.  SelAdjDeleteNode() needs to be called *before*
   // we do the action, unlike some of the other nsRangeStore update methods.
