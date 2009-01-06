@@ -316,7 +316,7 @@ nsWindowMediator::GetMostRecentWindow(const PRUnichar* inType, nsIDOMWindowInter
 
   if (info && info->mWindow) {
     nsCOMPtr<nsIDOMWindowInternal> DOMWindow;
-    if(NS_SUCCEEDED(GetDOMWindow(info->mWindow, DOMWindow))) {  
+    if (NS_SUCCEEDED(GetDOMWindow(info->mWindow, DOMWindow))) {  
       *outWindow = DOMWindow;
       NS_ADDREF(*outWindow);
       return NS_OK;
@@ -375,7 +375,7 @@ nsWindowMediator::UpdateWindowTitle(nsIXULWindow* inWindow,
   nsAutoLock lock(mListLock);
   if (mListeners && GetInfoFor(inWindow)) {
     WindowTitleData winData = { inWindow, inTitle };
-    mListeners->EnumerateForwards(notifyWindowTitleChange, (void *)&winData);
+    mListeners->EnumerateForwards(notifyWindowTitleChange, (void*)&winData);
   }
 
   return NS_OK;
@@ -584,9 +584,9 @@ nsWindowMediator::GetZLevel(nsIXULWindow *aWindow, PRUint32 *_retval)
   NS_ENSURE_ARG_POINTER(_retval);
   *_retval = nsIXULWindow::normalZ;
   nsWindowInfo *info = GetInfoFor(aWindow);
-  if (info)
+  if (info) {
     *_retval = info->mZLevel;
-  else {
+  } else {
     NS_WARNING("getting z level of unregistered window");
     // this goes off during window destruction
   }
