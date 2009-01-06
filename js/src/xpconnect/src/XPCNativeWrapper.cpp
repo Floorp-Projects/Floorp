@@ -802,23 +802,11 @@ XPCNativeWrapperCtor(JSContext *cx, JSObject *obj, uintN argc, jsval *argv,
 
   JSObject *nativeObj = JSVAL_TO_OBJECT(native);
 
-  // Unwrap a cross origin wrapper, since we're more restrictive than it is.
-  if (STOBJ_GET_CLASS(nativeObj) == &sXPC_XOW_JSClass.base) {
-    jsval v;
-    if (!::JS_GetReservedSlot(cx, nativeObj, XPCWrapper::sWrappedObjSlot, &v)) {
-      return JS_FALSE;
-    }
-    // If v is primitive, allow nativeObj to remain a cross origin wrapper,
-    // which will fail below (since it isn't a wrapped native).
-    if (!JSVAL_IS_PRIMITIVE(v)) {
-      nativeObj = JSVAL_TO_OBJECT(v);
-    }
-  } else if (STOBJ_GET_CLASS(nativeObj) == &sXPC_SJOW_JSClass.base) {
-    // Also unwrap SJOWs.
-    nativeObj = JS_GetParent(cx, nativeObj);
-    if (!nativeObj) {
-      return ThrowException(NS_ERROR_XPC_BAD_CONVERT_JS, cx);
-    }
+  // Not allowed to go from more restrictive wrappers to less restrictive
+  // wrappers.
+  if (STOBJ_GET_CLASS(nativeObj) == &sXPC_XOW_JSClass.base ||
+      STOBJ_GET_CLASS(nativeObj) == &sXPC_SJOW_JSClass.base) {
+    return ThrowException(NS_ERROR_XPC_BAD_CONVERT_JS, cx);
   }
 
   XPCWrappedNative *wrappedNative;
