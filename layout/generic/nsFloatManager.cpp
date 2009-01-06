@@ -146,7 +146,7 @@ nsFloatManager::GetBand(nscoord aYOffset,
 
   nscoord top = aYOffset + mY;
   if (top < nscoord_MIN) {
-    NS_NOTREACHED("bad value");
+    NS_WARNING("bad value");
     top = nscoord_MIN;
   }
 
@@ -166,14 +166,14 @@ nsFloatManager::GetBand(nscoord aYOffset,
   } else {
     bottom = top + aMaxHeight;
     if (bottom < top || bottom > nscoord_MAX) {
-      NS_NOTREACHED("bad value");
+      NS_WARNING("bad value");
       bottom = nscoord_MAX;
     }
   }
   nscoord left = mX;
   nscoord right = aContentAreaWidth + mX;
   if (right < left) {
-    NS_NOTREACHED("bad value");
+    NS_WARNING("bad value");
     right = left;
   }
 
