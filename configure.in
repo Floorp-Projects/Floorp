@@ -3349,11 +3349,7 @@ AC_PROG_GCC_TRADITIONAL
 AC_FUNC_MEMCMP
 AC_CHECK_FUNCS(random strerror lchown fchmod snprintf statvfs memmove rint stat64 lstat64 truncate64 statvfs64)
 AC_CHECK_FUNCS(flockfile getpagesize)
-
-dnl localtime_r and strtok_r are only present on MacOS version 10.2 and higher
-if test -z "$MACOS_DEPLOYMENT_TARGET" || test "$MACOS_DEPLOYMENT_TARGET" -ge "100200"; then
-  AC_CHECK_FUNCS(localtime_r strtok_r)
-fi
+AC_CHECK_FUNCS(localtime_r strtok_r)
 
 dnl check for wcrtomb/mbrtowc
 dnl =======================================================================
