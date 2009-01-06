@@ -26,7 +26,7 @@
       //////////////////////////////////////////////////////////////////////////
       // normal textbox without content and with no proper label
       testThis("unlabelled_Textbox", // ID
-               "", // name
+               null, // name
                "", // value
                "", // description
                ROLE_ENTRY, // role
@@ -82,7 +82,7 @@
       //////////////////////////////////////////////////////////////////////////
       // textarea without content and label
       testThis("unlabelled_Textarea", // ID
-               "", // name
+               null, // name
                "", // value
                "", // description
                ROLE_ENTRY, // role
