@@ -1075,13 +1075,9 @@ public:
 
 private:
   nsAbsoluteItems* mItems;                // pointer to struct whose data we save/restore
-  PRBool*          mFirstLetterStyle;
-  PRBool*          mFirstLineStyle;
   PRBool*          mFixedPosIsAbsPos;
 
   nsAbsoluteItems  mSavedItems;           // copy of original data
-  PRBool           mSavedFirstLetterStyle;
-  PRBool           mSavedFirstLineStyle;
   PRBool           mSavedFixedPosIsAbsPos;
 
   // The name of the child list in which our frames would belong
@@ -1110,8 +1106,6 @@ public:
   nsAbsoluteItems           mFixedItems;
   nsAbsoluteItems           mAbsoluteItems;
   nsAbsoluteItems           mFloatedItems;
-  PRBool                    mFirstLetterStyle;
-  PRBool                    mFirstLineStyle;
 
   // When working with the -moz-transform property, we want to hook
   // the abs-pos and fixed-pos lists together, since transformed
@@ -1155,9 +1149,7 @@ public:
   // XXX we should get rid of null float containing blocks and teach the
   // various frame classes to deal with floats instead.
   void PushFloatContainingBlock(nsIFrame* aNewFloatContainingBlock,
-                                nsFrameConstructorSaveState& aSaveState,
-                                PRBool aFirstLetterStyle,
-                                PRBool aFirstLineStyle);
+                                nsFrameConstructorSaveState& aSaveState);
 
   // Function to return the proper geometric parent for a frame with display
   // struct given by aStyleDisplay and parent's frame given by
@@ -1241,8 +1233,6 @@ nsFrameConstructorState::nsFrameConstructorState(nsIPresShell*          aPresShe
     mFixedItems(aFixedContainingBlock),
     mAbsoluteItems(aAbsoluteContainingBlock),
     mFloatedItems(aFloatContainingBlock),
-    mFirstLetterStyle(PR_FALSE),
-    mFirstLineStyle(PR_FALSE),
     // See PushAbsoluteContaningBlock below
     mFixedPosIsAbsPos(aAbsoluteContainingBlock &&
                       aAbsoluteContainingBlock->GetStyleDisplay()->
@@ -1268,8 +1258,6 @@ nsFrameConstructorState::nsFrameConstructorState(nsIPresShell* aPresShell,
     mFixedItems(aFixedContainingBlock),
     mAbsoluteItems(aAbsoluteContainingBlock),
     mFloatedItems(aFloatContainingBlock),
-    mFirstLetterStyle(PR_FALSE),
-    mFirstLineStyle(PR_FALSE),
     // See PushAbsoluteContaningBlock below
     mFixedPosIsAbsPos(aAbsoluteContainingBlock &&
                       aAbsoluteContainingBlock->GetStyleDisplay()->
@@ -1337,28 +1325,16 @@ nsFrameConstructorState::PushAbsoluteContainingBlock(nsIFrame* aNewAbsoluteConta
 
 void
 nsFrameConstructorState::PushFloatContainingBlock(nsIFrame* aNewFloatContainingBlock,
-                                                  nsFrameConstructorSaveState& aSaveState,
-                                                  PRBool aFirstLetterStyle,
-                                                  PRBool aFirstLineStyle)
+                                                  nsFrameConstructorSaveState& aSaveState)
 {
-  // XXXbz we should probably just be able to assert that
-  // aNewFloatContainingBlock is a float containing block... see XXX comment at
-  // the top of ProcessChildren.
   NS_PRECONDITION(!aNewFloatContainingBlock ||
-                  aNewFloatContainingBlock->GetContentInsertionFrame()->
-                    IsFloatContainingBlock(),
+                  aNewFloatContainingBlock->IsFloatContainingBlock(),
                   "Please push a real float containing block!");
   aSaveState.mItems = &mFloatedItems;
-  aSaveState.mFirstLetterStyle = &mFirstLetterStyle;
-  aSaveState.mFirstLineStyle = &mFirstLineStyle;
   aSaveState.mSavedItems = mFloatedItems;
-  aSaveState.mSavedFirstLetterStyle = mFirstLetterStyle;
-  aSaveState.mSavedFirstLineStyle = mFirstLineStyle;
   aSaveState.mChildListName = nsGkAtoms::floatList;
   aSaveState.mState = this;
   mFloatedItems = nsAbsoluteItems(aNewFloatContainingBlock);
-  mFirstLetterStyle = aFirstLetterStyle;
-  mFirstLineStyle = aFirstLineStyle;
 }
 
 nsIFrame*
@@ -1591,12 +1567,8 @@ nsFrameConstructorState::ProcessFrameInsertions(nsAbsoluteItems& aFrameItems,
 
 nsFrameConstructorSaveState::nsFrameConstructorSaveState()
   : mItems(nsnull),
-    mFirstLetterStyle(nsnull),
-    mFirstLineStyle(nsnull),
     mFixedPosIsAbsPos(nsnull),
     mSavedItems(nsnull),
-    mSavedFirstLetterStyle(PR_FALSE),
-    mSavedFirstLineStyle(PR_FALSE),
     mSavedFixedPosIsAbsPos(PR_FALSE),
     mChildListName(nsnull),
     mState(nsnull)
@@ -1615,12 +1587,6 @@ nsFrameConstructorSaveState::~nsFrameConstructorSaveState()
     // Note that this only matters for the assert in ~nsAbsoluteItems.
     mSavedItems.childList = nsnull;
 #endif
-  }
-  if (mFirstLetterStyle) {
-    *mFirstLetterStyle = mSavedFirstLetterStyle;
-  }
-  if (mFirstLineStyle) {
-    *mFirstLineStyle = mSavedFirstLineStyle;
   }
   if (mFixedPosIsAbsPos) {
     *mFixedPosIsAbsPos = mSavedFixedPosIsAbsPos;
@@ -3453,8 +3419,7 @@ nsCSSFrameConstructor::AdjustParentFrame(nsFrameConstructorState&     aState,
     aFrameItems = &aState.mPseudoFrames.mCellInner.mChildList;
     // We pushed an anonymous table cell.  The inner block of this
     // needs to become the float containing block.
-    aState.PushFloatContainingBlock(aParentFrame, aSaveState, PR_FALSE,
-                                    PR_FALSE);
+    aState.PushFloatContainingBlock(aParentFrame, aSaveState);
     aCreatedPseudo = PR_TRUE;
   }
   return NS_OK;
@@ -3524,8 +3489,7 @@ nsCSSFrameConstructor::ConstructTableFrame(nsFrameConstructorState& aState,
       ProcessPseudoFrames(aState, aChildItems);
     }
     if (hasPseudoParent) {
-      aState.PushFloatContainingBlock(parentFrame, floatSaveState,
-                                      PR_FALSE, PR_FALSE);
+      aState.PushFloatContainingBlock(parentFrame, floatSaveState);
       frameItems = &aState.mPseudoFrames.mCellInner.mChildList;
       if (aState.mPseudoFrames.mTableOuter.mFrame) {
         ProcessPseudoFrames(aState, nsGkAtoms::tableOuterFrame);
@@ -3571,8 +3535,8 @@ nsCSSFrameConstructor::ConstructTableFrame(nsFrameConstructorState& aState,
     }
 
     nsFrameItems childItems;
-    rv = ProcessChildren(aState, aContent, aNewInnerFrame, PR_TRUE, childItems,
-                         PR_FALSE);
+    rv = ProcessChildren(aState, aContent, aStyleContext, aNewInnerFrame,
+                         PR_TRUE, childItems, PR_FALSE);
     // XXXbz what about cleaning up?
     if (NS_FAILED(rv)) return rv;
 
@@ -3624,16 +3588,8 @@ nsCSSFrameConstructor::ConstructTableCaptionFrame(nsFrameConstructorState& aStat
   // XXXbz should we be passing in a non-null aContentParentFrame?
   nsHTMLContainerFrame::CreateViewForFrame(aNewFrame, nsnull, PR_FALSE);
 
-  PRBool haveFirstLetterStyle, haveFirstLineStyle;
-  ShouldHaveSpecialBlockStyle(aContent, aStyleContext,
-                              &haveFirstLetterStyle, &haveFirstLineStyle);
-
-  // The caption frame is a float container
-  nsFrameConstructorSaveState floatSaveState;
-  aState.PushFloatContainingBlock(aNewFrame, floatSaveState,
-                                  haveFirstLetterStyle, haveFirstLineStyle);
   nsFrameItems childItems;
-  rv = ProcessChildren(aState, aContent, aNewFrame,
+  rv = ProcessChildren(aState, aContent, aStyleContext, aNewFrame,
                        PR_TRUE, childItems, PR_TRUE);
   if (NS_FAILED(rv)) return rv;
   aNewFrame->SetInitialChildList(nsnull, childItems.childList);
@@ -3696,8 +3652,8 @@ nsCSSFrameConstructor::ConstructTableRowGroupFrame(nsFrameConstructorState& aSta
 
   if (!aIsPseudo) {
     nsFrameItems childItems;
-    rv = ProcessChildren(aState, aContent, aNewFrame, PR_TRUE, childItems,
-                         PR_FALSE);
+    rv = ProcessChildren(aState, aContent, aStyleContext, aNewFrame, PR_TRUE,
+                         childItems, PR_FALSE);
     
     if (NS_FAILED(rv)) return rv;
 
@@ -3753,8 +3709,8 @@ nsCSSFrameConstructor::ConstructTableColGroupFrame(nsFrameConstructorState& aSta
 
   if (!aIsPseudo) {
     nsFrameItems childItems;
-    rv = ProcessChildren(aState, aContent, aNewFrame, PR_TRUE, childItems,
-                         PR_FALSE);
+    rv = ProcessChildren(aState, aContent, aStyleContext, aNewFrame, PR_TRUE,
+                         childItems, PR_FALSE);
     if (NS_FAILED(rv)) return rv;
     aNewFrame->SetInitialChildList(nsnull, childItems.childList);
     if (aIsPseudoParent) {
@@ -3809,8 +3765,8 @@ nsCSSFrameConstructor::ConstructTableRowFrame(nsFrameConstructorState& aState,
   nsHTMLContainerFrame::CreateViewForFrame(aNewFrame, nsnull, PR_FALSE);
   if (!aIsPseudo) {
     nsFrameItems childItems;
-    rv = ProcessChildren(aState, aContent, aNewFrame, PR_TRUE, childItems,
-                         PR_FALSE);
+    rv = ProcessChildren(aState, aContent, aStyleContext, aNewFrame, PR_TRUE,
+                         childItems, PR_FALSE);
     if (NS_FAILED(rv)) return rv;
 
     aNewFrame->SetInitialChildList(nsnull, childItems.childList);
@@ -3969,21 +3925,9 @@ nsCSSFrameConstructor::ConstructTableCellFrame(nsFrameConstructorState& aState,
   InitAndRestoreFrame(aState, aContent, aNewCellOuterFrame, nsnull, aNewCellInnerFrame);
 
   if (!aIsPseudo) {
-    PRBool haveFirstLetterStyle = PR_FALSE, haveFirstLineStyle = PR_FALSE;
-    if (isBlock) {
-      ShouldHaveSpecialBlockStyle(aContent, aStyleContext,
-                                  &haveFirstLetterStyle, &haveFirstLineStyle);
-    }
-
-    // The block frame is a float container
-    nsFrameConstructorSaveState floatSaveState;
-    aState.PushFloatContainingBlock(isBlock ? aNewCellInnerFrame : nsnull,
-                                    floatSaveState,
-                                    haveFirstLetterStyle, haveFirstLineStyle);
-
     // Process the child content
     nsFrameItems childItems;
-    rv = ProcessChildren(aState, aContent, aNewCellInnerFrame, 
+    rv = ProcessChildren(aState, aContent, aStyleContext, aNewCellInnerFrame, 
                          PR_TRUE, childItems, isBlock);
 
     if (NS_FAILED(rv)) {
@@ -4335,8 +4279,8 @@ nsCSSFrameConstructor::ConstructDocElementFrame(nsFrameConstructorState& aState,
 
     NS_ASSERTION(!nsLayoutUtils::GetAsBlock(contentFrame),
                  "Only XUL and SVG frames should reach here");
-    ProcessChildren(aState, aDocElement, contentFrame, PR_TRUE, childItems,
-                    PR_FALSE);
+    ProcessChildren(aState, aDocElement, styleContext, contentFrame, PR_TRUE,
+                    childItems, PR_FALSE);
 
     // Set the initial child lists
     contentFrame->SetInitialChildList(nsnull, childItems.childList);
@@ -4841,16 +4785,6 @@ nsCSSFrameConstructor::ConstructButtonFrame(nsFrameConstructorState& aState,
 #endif
   
   if (!isLeaf) { 
-    // input type="button" have only anonymous content
-    // The area frame is a float container
-    PRBool haveFirstLetterStyle, haveFirstLineStyle;
-    ShouldHaveSpecialBlockStyle(aContent, aStyleContext,
-                                &haveFirstLetterStyle, &haveFirstLineStyle);
-    nsFrameConstructorSaveState floatSaveState;
-    aState.PushFloatContainingBlock(blockFrame, floatSaveState,
-                                    haveFirstLetterStyle,
-                                    haveFirstLineStyle);
-
     // Process children
     nsFrameConstructorSaveState absoluteSaveState;
     nsFrameItems                childItems;
@@ -4868,7 +4802,8 @@ nsCSSFrameConstructor::ConstructButtonFrame(nsFrameConstructorState& aState,
     NS_ASSERTION(!creator, "Shouldn't be an anonymous content creator!");
 #endif
 
-    rv = ProcessChildren(aState, aContent, blockFrame, PR_TRUE, childItems,
+    rv = ProcessChildren(aState, aContent, aStyleContext, blockFrame, PR_TRUE,
+                         childItems,
                          buttonFrame->GetStyleDisplay()->IsBlockOutside());
     if (NS_FAILED(rv)) return rv;
   
@@ -5113,14 +5048,6 @@ nsCSSFrameConstructor::InitializeSelectFrame(nsFrameConstructorState& aState,
     aState.mFrameManager->RestoreFrameStateFor(scrollFrame, aState.mFrameState);
   }
 
-  // The area frame is a float container
-  PRBool haveFirstLetterStyle, haveFirstLineStyle;
-  ShouldHaveSpecialBlockStyle(aContent, aStyleContext,
-                              &haveFirstLetterStyle, &haveFirstLineStyle);
-  nsFrameConstructorSaveState floatSaveState;
-  aState.PushFloatContainingBlock(scrolledFrame, floatSaveState,
-                                  haveFirstLetterStyle, haveFirstLineStyle);
-
   // Process children
   nsFrameConstructorSaveState absoluteSaveState;
   nsFrameItems                childItems;
@@ -5131,7 +5058,7 @@ nsCSSFrameConstructor::InitializeSelectFrame(nsFrameConstructorState& aState,
     aState.PushAbsoluteContainingBlock(scrolledFrame, absoluteSaveState);
   }
 
-  ProcessChildren(aState, aContent, scrolledFrame, PR_FALSE,
+  ProcessChildren(aState, aContent, aStyleContext, scrolledFrame, PR_FALSE,
                   childItems, PR_TRUE);
 
   // Set the scrolled frame's initial child lists
@@ -5181,16 +5108,6 @@ nsCSSFrameConstructor::ConstructFieldSetFrame(nsFrameConstructorState& aState,
     return rv;
   }
   
-
-  // The area frame is a float container
-  PRBool haveFirstLetterStyle, haveFirstLineStyle;
-  ShouldHaveSpecialBlockStyle(aContent, aStyleContext,
-                              &haveFirstLetterStyle, &haveFirstLineStyle);
-  nsFrameConstructorSaveState floatSaveState;
-  aState.PushFloatContainingBlock(blockFrame, floatSaveState,
-                                  haveFirstLetterStyle,
-                                  haveFirstLineStyle);
-
   // Process children
   nsFrameConstructorSaveState absoluteSaveState;
   nsFrameItems                childItems;
@@ -5198,10 +5115,12 @@ nsCSSFrameConstructor::ConstructFieldSetFrame(nsFrameConstructorState& aState,
   if (aStyleDisplay->IsPositioned()) {
     // The area frame becomes a container for child frames that are
     // absolutely positioned
+    // XXXbz this is probably wrong, and once arbitrary frames can be absolute
+    // containing blocks we should fix this..
     aState.PushAbsoluteContainingBlock(blockFrame, absoluteSaveState);
   }
 
-  ProcessChildren(aState, aContent, blockFrame, PR_TRUE,
+  ProcessChildren(aState, aContent, aStyleContext, blockFrame, PR_TRUE,
                   childItems, PR_TRUE);
 
   static NS_DEFINE_IID(kLegendFrameCID, NS_LEGEND_FRAME_CID);
@@ -5349,7 +5268,6 @@ nsCSSFrameConstructor::ConstructHTMLFrame(nsFrameConstructorState& aState,
   PRBool    frameHasBeenInitialized = PR_FALSE;
   nsIFrame* newFrame = nsnull;  // the frame we construct
   PRBool    addToHashTable = PR_TRUE;
-  PRBool    isFloatContainer = PR_FALSE;
   PRBool    addedToFrameList = PR_FALSE;
   nsresult  rv = NS_OK;
   
@@ -5489,8 +5407,6 @@ nsCSSFrameConstructor::ConstructHTMLFrame(nsFrameConstructorState& aState,
     }
     newFrame = NS_NewLegendFrame(mPresShell, aStyleContext);
     triedFrame = PR_TRUE;
-
-    isFloatContainer = PR_TRUE;
   }
   else if (nsGkAtoms::frameset == aTag) {
     NS_ASSERTION(!display->IsAbsolutelyPositioned() && !display->IsFloating(),
@@ -5540,7 +5456,6 @@ nsCSSFrameConstructor::ConstructHTMLFrame(nsFrameConstructorState& aState,
     // draw into its borders. -EDV
     frameHasBeenInitialized = PR_TRUE;
     addedToFrameList = PR_TRUE;
-    isFloatContainer = PR_TRUE;
   }
   else if (nsGkAtoms::isindex == aTag) {
     if (!aHasPseudoParent && !aState.mPseudoFrames.IsEmpty()) {
@@ -5604,23 +5519,15 @@ nsCSSFrameConstructor::ConstructHTMLFrame(nsFrameConstructorState& aState,
     // Process the child content if requested
     nsFrameItems childItems;
     nsFrameConstructorSaveState absoluteSaveState;
-    nsFrameConstructorSaveState floatSaveState;
 
     if (display->IsPositioned()) {
       aState.PushAbsoluteContainingBlock(newFrame, absoluteSaveState);
     }
-    if (isFloatContainer) {
-      PRBool haveFirstLetterStyle, haveFirstLineStyle;
-      ShouldHaveSpecialBlockStyle(aContent, aStyleContext,
-                                  &haveFirstLetterStyle,
-                                  &haveFirstLineStyle);
-      aState.PushFloatContainingBlock(newFrame, floatSaveState,
-                                      PR_FALSE, PR_FALSE);
-    }
 
-    // Process the child frames
-    rv = ProcessChildren(aState, aContent, newFrame, PR_TRUE, childItems,
-                         PR_FALSE);
+    // Process the child frames.  Don't allow block styles; anything that's a
+    // special HTML frame but wants those should do its own ProcessChildren.
+    rv = ProcessChildren(aState, aContent, aStyleContext, newFrame, PR_TRUE,
+                         childItems, PR_FALSE);
 
     // Set the frame's initial child list
     if (childItems.childList) {
@@ -6208,21 +6115,12 @@ nsCSSFrameConstructor::ConstructXULFrame(nsFrameConstructorState& aState,
     }
 #endif
 
-    // If the new frame isn't a float containing block, then push a null
-    // float containing block to disable floats. This is needed to disable
-    // floats within XUL frames.
-    nsFrameConstructorSaveState floatSaveState;
-    PRBool isFloatContainingBlock =
-      newFrame->GetContentInsertionFrame()->IsFloatContainingBlock();
-    aState.PushFloatContainingBlock(isFloatContainingBlock ? newFrame : nsnull,
-                                    floatSaveState, PR_FALSE, PR_FALSE);
-
     // Process the child content if requested
     nsFrameItems childItems;
     // XXXbz don't we need calls to ShouldBuildChildFrames
     // elsewhere too?  Why only for XUL?
     if (mDocument->BindingManager()->ShouldBuildChildFrames(aContent)) {
-      rv = ProcessChildren(aState, aContent, newFrame, PR_FALSE,
+      rv = ProcessChildren(aState, aContent, aStyleContext, newFrame, PR_FALSE,
                            childItems, PR_FALSE);
     }
 
@@ -6944,19 +6842,15 @@ nsCSSFrameConstructor::ConstructMathMLFrame(nsFrameConstructorState& aState,
       return rv;
     }
 
-    // Push a null float containing block to disable floating within mathml
-    nsFrameConstructorSaveState floatSaveState;
-    aState.PushFloatContainingBlock(nsnull, floatSaveState, PR_FALSE,
-                                    PR_FALSE);
-
-    // Same for absolute positioning
+    // Push a null absolute containing block to disable absolute
+    // positioning within mathml.
     nsFrameConstructorSaveState absoluteSaveState;
     aState.PushAbsoluteContainingBlock(nsnull, absoluteSaveState);
 
     // MathML frames are inline frames, so just process their kids
     nsFrameItems childItems;
-    rv = ProcessChildren(aState, aContent, newFrame, PR_TRUE, childItems,
-                         PR_FALSE);
+    rv = ProcessChildren(aState, aContent, aStyleContext, newFrame, PR_TRUE,
+                         childItems, PR_FALSE);
 
     // Wrap runs of inline children in a block
     if (NS_SUCCEEDED(rv)) {
@@ -7251,8 +7145,6 @@ nsCSSFrameConstructor::ConstructSVGFrame(nsFrameConstructorState& aState,
     
       // Claim to be relatively positioned so that we end up being the
       // absolute containing block.
-      nsFrameConstructorSaveState saveState;
-      aState.PushFloatContainingBlock(nsnull, saveState, PR_FALSE, PR_FALSE);
       rv = ConstructBlock(aState, innerPseudoStyle->GetStyleDisplay(), aContent,
                           newFrame, newFrame, innerPseudoStyle,
                           &blockFrame, childItems, PR_TRUE);
@@ -7261,8 +7153,8 @@ nsCSSFrameConstructor::ConstructSVGFrame(nsFrameConstructorState& aState,
       nsHTMLContainerFrame::CreateViewForFrame(blockFrame, nsnull, PR_TRUE);
     } else {
       // Process the child content if requested.
-      rv = ProcessChildren(aState, aContent, newFrame, PR_FALSE, childItems,
-                           PR_FALSE);
+      rv = ProcessChildren(aState, aContent, aStyleContext, newFrame, PR_FALSE,
+                           childItems, PR_FALSE);
     }
 
     // Set the frame's initial child list
@@ -7762,6 +7654,7 @@ nsCSSFrameConstructor::GetFloatContainingBlock(nsIFrame* aFrame)
   // Starting with aFrame, look for a frame that is a float containing block.
   // IF we hit a mathml frame, bail out; we don't allow floating out of mathml
   // frames, because they don't seem to be able to deal.
+  // The logic here needs to match the logic in ProcessChildren()
   for (nsIFrame* containingBlock = aFrame;
        containingBlock && !containingBlock->IsFrameOfType(nsIFrame::eMathML) &&
        !containingBlock->IsBoxFrame();
@@ -10318,8 +10211,8 @@ nsCSSFrameConstructor::CreateContinuingTableFrame(nsIPresShell* aPresShell,
                                          (NS_NewTableRowGroupFrame(aPresShell, rowGroupFrame->GetStyleContext()));
           nsIContent* headerFooter = rowGroupFrame->GetContent();
           headerFooterFrame->Init(headerFooter, newFrame, nsnull);
-          ProcessChildren(state, headerFooter, headerFooterFrame,
-                          PR_TRUE, childItems, PR_FALSE);
+          ProcessChildren(state, headerFooter, rowGroupFrame->GetStyleContext(),
+                          headerFooterFrame, PR_TRUE, childItems, PR_FALSE);
           NS_ASSERTION(!state.mFloatedItems.childList, "unexpected floated element");
           headerFooterFrame->SetInitialChildList(nsnull, childItems.childList);
           headerFooterFrame->SetRepeatable(PR_TRUE);
@@ -11305,13 +11198,34 @@ nsCSSFrameConstructor::ShouldHaveSpecialBlockStyle(nsIContent* aContent,
 nsresult
 nsCSSFrameConstructor::ProcessChildren(nsFrameConstructorState& aState,
                                        nsIContent*              aContent,
+                                       nsStyleContext*          aStyleContext,
                                        nsIFrame*                aFrame,
                                        PRBool                   aCanHaveGeneratedContent,
                                        nsFrameItems&            aFrameItems,
-                                       PRBool                   aParentIsBlock)
+                                       PRBool                   aAllowBlockStyles)
 {
+  NS_PRECONDITION(aFrame, "Must have parent frame here");
+  NS_PRECONDITION(aFrame->GetContentInsertionFrame() == aFrame,
+                  "Parent frame in ProcessChildren should be its own "
+                  "content insertion frame");
+
   // XXXbz ideally, this would do all the pushing of various
   // containing blocks as needed, so callers don't have to do it...
+
+  PRBool haveFirstLetterStyle = PR_FALSE, haveFirstLineStyle = PR_FALSE;
+  if (aAllowBlockStyles) {
+    ShouldHaveSpecialBlockStyle(aContent, aStyleContext, &haveFirstLetterStyle,
+                                &haveFirstLineStyle);
+  }
+
+  // The logic here needs to match the logic in GetFloatContainingBlock()
+  nsFrameConstructorSaveState floatSaveState;
+  if (aFrame->IsFrameOfType(nsIFrame::eMathML) ||
+      aFrame->IsBoxFrame()) {
+    aState.PushFloatContainingBlock(nsnull, floatSaveState);
+  } else if (aFrame->IsFloatContainingBlock()) {
+    aState.PushFloatContainingBlock(aFrame, floatSaveState);
+  }
 
   // save the incoming pseudo frame state
   nsPseudoFrames priorPseudoFrames;
@@ -11329,6 +11243,9 @@ nsCSSFrameConstructor::ProcessChildren(nsFrameConstructorState& aState,
   if (!aFrame->IsLeaf()) {
     // :before/:after content should have the same style context parent
     // as normal kids.
+    // Note that we don't use this style context for looking up things like
+    // special block styles because in some cases involving table pseudo-frames
+    // it has nothing to do with the parent frame's desired behavior.
     nsStyleContext* styleContext =
       nsFrame::CorrectStyleParentFrame(aFrame, nsnull)->GetStyleContext();
 
@@ -11370,16 +11287,14 @@ nsCSSFrameConstructor::ProcessChildren(nsFrameConstructorState& aState,
   // restore the incoming pseudo frame state
   aState.mPseudoFrames = priorPseudoFrames;
 
-  NS_ASSERTION(!aParentIsBlock || !aFrame->IsBoxFrame(),
+  NS_ASSERTION(!aAllowBlockStyles || !aFrame->IsBoxFrame(),
                "can't be both block and box");
 
-  if (aParentIsBlock) {
-    if (aState.mFirstLetterStyle) {
-      rv = WrapFramesInFirstLetterFrame(aState, aContent, aFrame, aFrameItems);
-    }
-    if (aState.mFirstLineStyle) {
-      rv = WrapFramesInFirstLineFrame(aState, aContent, aFrame, aFrameItems);
-    }
+  if (haveFirstLetterStyle) {
+    rv = WrapFramesInFirstLetterFrame(aState, aContent, aFrame, aFrameItems);
+  }
+  if (haveFirstLineStyle) {
+    rv = WrapFramesInFirstLineFrame(aState, aContent, aFrame, aFrameItems);
   }
 
   nsIContent *badKid;
@@ -12479,19 +12394,10 @@ nsCSSFrameConstructor::ConstructBlock(nsFrameConstructorState& aState,
     aState.PushAbsoluteContainingBlock(blockFrame, absoluteSaveState);
   }
 
-  // See if the block has first-letter style applied to it...
-  PRBool haveFirstLetterStyle, haveFirstLineStyle;
-  ShouldHaveSpecialBlockStyle(aContent, aStyleContext,
-                              &haveFirstLetterStyle, &haveFirstLineStyle);
-
   // Process the child content
   nsFrameItems childItems;
-  nsFrameConstructorSaveState floatSaveState;
-  aState.PushFloatContainingBlock(blockFrame, floatSaveState,
-                                  haveFirstLetterStyle,
-                                  haveFirstLineStyle);
-  rv = ProcessChildren(aState, aContent, blockFrame, PR_TRUE, childItems,
-                       PR_TRUE);
+  rv = ProcessChildren(aState, aContent, aStyleContext, blockFrame, PR_TRUE,
+                       childItems, PR_TRUE);
 
   // Set the frame's initial child list
   blockFrame->SetInitialChildList(nsnull, childItems.childList);
@@ -13594,8 +13500,8 @@ nsCSSFrameConstructor::LazyGenerateChildrenEvent::Run()
 
       nsFrameItems childItems;
       nsFrameConstructorState state(mPresShell, nsnull, nsnull, nsnull);
-      nsresult rv = fc->ProcessChildren(state, mContent, frame, PR_FALSE,
-                                        childItems, PR_FALSE);
+      nsresult rv = fc->ProcessChildren(state, mContent, frame->GetStyleContext(),
+                                        frame, PR_FALSE, childItems, PR_FALSE);
       if (NS_FAILED(rv))
         return rv;
 
