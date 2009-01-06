@@ -6727,7 +6727,7 @@ nsFrame::SetParent(const nsIFrame* aParent)
 
   if (aParent && aParent->IsBoxFrame()) {
     if (aParent->ChildrenMustHaveWidgets()) {
-        nsHTMLContainerFrame::CreateViewForFrame(this, nsnull, PR_TRUE);
+        nsHTMLContainerFrame::CreateViewForFrame(this, PR_TRUE);
         nsIView* view = GetView();
         if (!view->HasWidget())
           CreateWidgetForView(view);

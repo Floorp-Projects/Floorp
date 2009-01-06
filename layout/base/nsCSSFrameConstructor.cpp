@@ -3504,8 +3504,7 @@ nsCSSFrameConstructor::ConstructTableFrame(nsFrameConstructorState& aState,
   // Init the table outer frame and see if we need to create a view, e.g.
   // the frame is absolutely positioned  
   InitAndRestoreFrame(aState, aContent, geometricParent, nsnull, aNewOuterFrame);  
-  nsHTMLContainerFrame::CreateViewForFrame(aNewOuterFrame, aContentParent,
-                                           PR_FALSE);
+  nsHTMLContainerFrame::CreateViewForFrame(aNewOuterFrame, PR_FALSE);
 
   // Create the inner table frame
 #ifdef MOZ_MATHML
@@ -3585,8 +3584,7 @@ nsCSSFrameConstructor::ConstructTableCaptionFrame(nsFrameConstructorState& aStat
     return NS_ERROR_OUT_OF_MEMORY;
   }
   InitAndRestoreFrame(aState, aContent, parentFrame, nsnull, aNewFrame);
-  // XXXbz should we be passing in a non-null aContentParentFrame?
-  nsHTMLContainerFrame::CreateViewForFrame(aNewFrame, nsnull, PR_FALSE);
+  nsHTMLContainerFrame::CreateViewForFrame(aNewFrame, PR_FALSE);
 
   nsFrameItems childItems;
   rv = ProcessChildren(aState, aContent, aStyleContext, aNewFrame,
@@ -3638,7 +3636,7 @@ nsCSSFrameConstructor::ConstructTableRowGroupFrame(nsFrameConstructorState& aSta
   if (styleDisplay->IsScrollableOverflow()) {
     // Create an area container for the frame
     BuildScrollFrame(aState, aContent, aStyleContext, aNewFrame, parentFrame,
-                     nsnull, scrollFrame, aStyleContext);
+                     scrollFrame, aStyleContext);
 
   } 
   else {
@@ -3646,8 +3644,7 @@ nsCSSFrameConstructor::ConstructTableRowGroupFrame(nsFrameConstructorState& aSta
       return NS_ERROR_OUT_OF_MEMORY;
     }
     InitAndRestoreFrame(aState, aContent, parentFrame, nsnull, aNewFrame);
-    // XXXbz should we be passing in a non-null aContentParentFrame?
-    nsHTMLContainerFrame::CreateViewForFrame(aNewFrame, nsnull, PR_FALSE);
+    nsHTMLContainerFrame::CreateViewForFrame(aNewFrame, PR_FALSE);
   }
 
   if (!aIsPseudo) {
@@ -3761,8 +3758,7 @@ nsCSSFrameConstructor::ConstructTableRowFrame(nsFrameConstructorState& aState,
     return NS_ERROR_OUT_OF_MEMORY;
   }
   InitAndRestoreFrame(aState, aContent, parentFrame, nsnull, aNewFrame);
-  // XXXbz should we be passing in a non-null aContentParentFrame?
-  nsHTMLContainerFrame::CreateViewForFrame(aNewFrame, nsnull, PR_FALSE);
+  nsHTMLContainerFrame::CreateViewForFrame(aNewFrame, PR_FALSE);
   if (!aIsPseudo) {
     nsFrameItems childItems;
     rv = ProcessChildren(aState, aContent, aStyleContext, aNewFrame, PR_TRUE,
@@ -3892,8 +3888,7 @@ nsCSSFrameConstructor::ConstructTableCellFrame(nsFrameConstructorState& aState,
 
   // Initialize the table cell frame
   InitAndRestoreFrame(aState, aContent, parentFrame, nsnull, aNewCellOuterFrame);
-  // XXXbz should we be passing in a non-null aContentParentFrame?
-  nsHTMLContainerFrame::CreateViewForFrame(aNewCellOuterFrame, nsnull, PR_FALSE);
+  nsHTMLContainerFrame::CreateViewForFrame(aNewCellOuterFrame, PR_FALSE);
   
   // Resolve pseudo style and initialize the body cell frame
   nsRefPtr<nsStyleContext> innerPseudoStyle;
@@ -4229,8 +4224,8 @@ nsCSSFrameConstructor::ConstructDocElementFrame(nsFrameConstructorState& aState,
         *aNewFrame = frameItems.childList;
         processChildren = PR_TRUE;
 
-        // See if we need to create a view, e.g. the frame is absolutely positioned
-        nsHTMLContainerFrame::CreateViewForFrame(contentFrame, aParentFrame, PR_FALSE);
+        // See if we need to create a view
+        nsHTMLContainerFrame::CreateViewForFrame(contentFrame, PR_FALSE);
       } else {
         return NS_ERROR_FAILURE;
       }
@@ -4518,7 +4513,6 @@ nsCSSFrameConstructor::ConstructRootFrame(nsIContent*     aDocElement,
                                                   aDocElement,
                                                   styleContext,
                                                   viewportFrame,
-                                                  nsnull,
                                                   rootPseudo,
                                                   PR_TRUE,
                                                   newFrame);
@@ -4742,8 +4736,8 @@ nsCSSFrameConstructor::ConstructButtonFrame(nsFrameConstructorState& aState,
     buttonFrame->Destroy();
     return rv;
   }
-  // See if we need to create a view, e.g. the frame is absolutely positioned
-  nsHTMLContainerFrame::CreateViewForFrame(buttonFrame, aParentFrame, PR_FALSE);
+  // See if we need to create a view
+  nsHTMLContainerFrame::CreateViewForFrame(buttonFrame, PR_FALSE);
 
   
   
@@ -4873,7 +4867,7 @@ nsCSSFrameConstructor::ConstructSelectFrame(nsFrameConstructorState& aState,
                           aState.GetGeometricParent(aStyleDisplay, aParentFrame),
                           nsnull, comboboxFrame);
 
-      nsHTMLContainerFrame::CreateViewForFrame(comboboxFrame, aParentFrame, PR_FALSE);
+      nsHTMLContainerFrame::CreateViewForFrame(comboboxFrame, PR_FALSE);
 
       rv = aState.AddChild(comboboxFrame, aFrameItems, aContent, aStyleContext,
                            aParentFrame);
@@ -5015,8 +5009,7 @@ nsCSSFrameConstructor::InitializeSelectFrame(nsFrameConstructorState& aState,
     }
   }
       
-  nsHTMLContainerFrame::CreateViewForFrame(scrollFrame, aParentFrame,
-                                           aBuildCombobox);
+  nsHTMLContainerFrame::CreateViewForFrame(scrollFrame, aBuildCombobox);
   if (aBuildCombobox) {
     // Give the drop-down list a popup widget
     nsIView* view = scrollFrame->GetView();
@@ -5040,8 +5033,7 @@ nsCSSFrameConstructor::InitializeSelectFrame(nsFrameConstructorState& aState,
 
   nsStyleContext* scrolledPseudoStyle;
   BuildScrollFrame(aState, aContent, aStyleContext, scrolledFrame,
-                   geometricParent, aParentFrame, scrollFrame,
-                   scrolledPseudoStyle);
+                   geometricParent, scrollFrame, scrolledPseudoStyle);
 
   if (aState.mFrameState && aState.mFrameManager) {
     // Restore frame state for the scroll frame
@@ -5089,7 +5081,7 @@ nsCSSFrameConstructor::ConstructFieldSetFrame(nsFrameConstructorState& aState,
 
   // See if we need to create a view, e.g. the frame is absolutely
   // positioned
-  nsHTMLContainerFrame::CreateViewForFrame(newFrame, aParentFrame, PR_FALSE);
+  nsHTMLContainerFrame::CreateViewForFrame(newFrame, PR_FALSE);
 
   // Resolve style and initialize the frame
   nsRefPtr<nsStyleContext> styleContext;
@@ -5426,16 +5418,6 @@ nsCSSFrameConstructor::ConstructHTMLFrame(nsFrameConstructorState& aState,
     
     newFrame = NS_NewSubDocumentFrame(mPresShell, aStyleContext);
     triedFrame = PR_TRUE;
-
-    if (newFrame) {
-      // the nsSubDocumentFrame needs to know about its content parent during ::Init.
-      // there is no reasonable way to get the value there.
-      // so we store it as a frame property.
-      nsCOMPtr<nsIAtom> contentParentAtom = do_GetAtom("contentParent");
-      aState.mPresContext->PropertyTable()->
-        SetProperty(newFrame, contentParentAtom,
-                    aParentFrame, nsnull, nsnull);
-    }
   }
   else if (nsGkAtoms::spacer == aTag) {
     NS_ASSERTION(!display->IsAbsolutelyPositioned() && !display->IsFloating(),
@@ -5505,9 +5487,8 @@ nsCSSFrameConstructor::ConstructHTMLFrame(nsFrameConstructorState& aState,
      
     rv = InitAndRestoreFrame(aState, aContent, geometricParent, nsnull, newFrame);
     NS_ASSERTION(NS_SUCCEEDED(rv), "InitAndRestoreFrame failed");
-    // See if we need to create a view, e.g. the frame is absolutely
-    // positioned
-    nsHTMLContainerFrame::CreateViewForFrame(newFrame, aParentFrame, PR_FALSE);
+    // See if we need to create a view
+    nsHTMLContainerFrame::CreateViewForFrame(newFrame, PR_FALSE);
 
     rv = aState.AddChild(newFrame, aFrameItems, aContent, aStyleContext,
                          aParentFrame);
@@ -5931,7 +5912,7 @@ nsCSSFrameConstructor::ConstructXULFrame(nsFrameConstructorState& aState,
         if (display->IsScrollableOverflow()) {
           // set the top to be the newly created scrollframe
           BuildScrollFrame(aState, aContent, aStyleContext, newFrame,
-                           aParentFrame, nsnull, topFrame, aStyleContext);
+                           aParentFrame, topFrame, aStyleContext);
 
           // we have a scrollframe so the parent becomes the scroll frame.
           aParentFrame = newFrame->GetParent();
@@ -6022,7 +6003,7 @@ nsCSSFrameConstructor::ConstructXULFrame(nsFrameConstructorState& aState,
     if (mayBeScrollable && display->IsScrollableOverflow()) {
       // set the top to be the newly created scrollframe
       BuildScrollFrame(aState, aContent, aStyleContext, newFrame,
-                       aParentFrame, nsnull, topFrame, aStyleContext);
+                       aParentFrame, topFrame, aStyleContext);
 
       // we have a scrollframe so the parent becomes the scroll frame.
       // XXXldb Do we really want to do this?  The one case where it
@@ -6083,7 +6064,7 @@ nsCSSFrameConstructor::ConstructXULFrame(nsFrameConstructorState& aState,
           (frameType == nsGkAtoms::XULLabelFrame)) {
       */
         // See if we need to create a view, e.g. the frame is absolutely positioned
-        nsHTMLContainerFrame::CreateViewForFrame(newFrame, aParentFrame, PR_FALSE);
+        nsHTMLContainerFrame::CreateViewForFrame(newFrame, PR_FALSE);
 
       /*
       } else {
@@ -6172,7 +6153,6 @@ nsCSSFrameConstructor::BeginBuildingScrollFrame(nsFrameConstructorState& aState,
                                                 nsIContent*              aContent,
                                                 nsStyleContext*          aContentStyle,
                                                 nsIFrame*                aParentFrame,
-                                                nsIFrame*                aContentParentFrame,
                                                 nsIAtom*                 aScrolledPseudo,
                                                 PRBool                   aIsRoot,
                                                 nsIFrame*&               aNewFrame)
@@ -6196,8 +6176,7 @@ nsCSSFrameConstructor::BeginBuildingScrollFrame(nsFrameConstructorState& aState,
     InitAndRestoreFrame(aState, aContent, aParentFrame, nsnull, gfxScrollFrame);
 
     // Create a view
-    nsHTMLContainerFrame::CreateViewForFrame(gfxScrollFrame,
-                                             aContentParentFrame, PR_FALSE);
+    nsHTMLContainerFrame::CreateViewForFrame(gfxScrollFrame, PR_FALSE);
   }
 
   // if there are any anonymous children for the scroll frame, create
@@ -6229,7 +6208,9 @@ nsCSSFrameConstructor::FinishBuildingScrollFrame(nsIFrame* aScrollFrame,
   // force the scrolled frame to have a view. The view will be parented to
   // the correct anonymous inner view because the scrollframes override
   // nsIFrame::GetParentViewForChildFrame.
-  nsHTMLContainerFrame::CreateViewForFrame(aScrolledFrame, nsnull, PR_TRUE);
+  nsHTMLContainerFrame::CreateViewForFrame(aScrolledFrame, PR_TRUE);
+
+  // XXXbz what's the point of the code after this in this method?
   nsIView* view = aScrolledFrame->GetView();
   if (!view)
     return;
@@ -6273,13 +6254,12 @@ nsCSSFrameConstructor::BuildScrollFrame(nsFrameConstructorState& aState,
                                         nsStyleContext*          aContentStyle,
                                         nsIFrame*                aScrolledFrame,
                                         nsIFrame*                aParentFrame,
-                                        nsIFrame*                aContentParentFrame,
                                         nsIFrame*&               aNewFrame, 
                                         nsStyleContext*&         aScrolledContentStyle)
 {
     nsRefPtr<nsStyleContext> scrolledContentStyle =
       BeginBuildingScrollFrame(aState, aContent, aContentStyle, aParentFrame,
-                               aContentParentFrame, nsCSSAnonBoxes::scrolledContent,
+                               nsCSSAnonBoxes::scrolledContent,
                                PR_FALSE, aNewFrame);
     
     aScrolledFrame->SetStyleContextWithoutNotification(scrolledContentStyle);
@@ -6344,7 +6324,6 @@ nsCSSFrameConstructor::ConstructFrameByDisplayType(nsFrameConstructorState& aSta
     nsRefPtr<nsStyleContext> scrolledContentStyle
       = BeginBuildingScrollFrame(aState, aContent, aStyleContext,
                                  aState.GetGeometricParent(aDisplay, aParentFrame),
-                                 aParentFrame,
                                  nsCSSAnonBoxes::scrolledContent,
                                  PR_FALSE, newFrame);
     
@@ -6834,7 +6813,7 @@ nsCSSFrameConstructor::ConstructMathMLFrame(nsFrameConstructorState& aState,
     InitAndRestoreFrame(aState, aContent, geometricParent, nsnull, newFrame);
 
     // See if we need to create a view, e.g. the frame is absolutely positioned
-    nsHTMLContainerFrame::CreateViewForFrame(newFrame, aParentFrame, PR_FALSE);
+    nsHTMLContainerFrame::CreateViewForFrame(newFrame, PR_FALSE);
 
     rv = aState.AddChild(newFrame, aFrameItems, aContent, aStyleContext,
                          aParentFrame, isMath, isMath);
@@ -7120,7 +7099,7 @@ nsCSSFrameConstructor::ConstructSVGFrame(nsFrameConstructorState& aState,
   // children (if requested), and set the initial child list
   if (newFrame != nsnull) {
     InitAndRestoreFrame(aState, aContent, geometricParent, nsnull, newFrame);
-    nsHTMLContainerFrame::CreateViewForFrame(newFrame, aParentFrame, forceView);
+    nsHTMLContainerFrame::CreateViewForFrame(newFrame, forceView);
 
     rv = aState.AddChild(newFrame, aFrameItems, aContent, aStyleContext,
                          aParentFrame, isOuterSVGNode, isOuterSVGNode);
@@ -7150,7 +7129,7 @@ nsCSSFrameConstructor::ConstructSVGFrame(nsFrameConstructorState& aState,
                           &blockFrame, childItems, PR_TRUE);
       // Give the blockFrame a view so that GetOffsetTo works for descendants
       // of blockFrame with views...
-      nsHTMLContainerFrame::CreateViewForFrame(blockFrame, nsnull, PR_TRUE);
+      nsHTMLContainerFrame::CreateViewForFrame(blockFrame, PR_TRUE);
     } else {
       // Process the child content if requested.
       rv = ProcessChildren(aState, aContent, aStyleContext, newFrame, PR_FALSE,
@@ -10136,8 +10115,7 @@ nsCSSFrameConstructor::CreateContinuingOuterTableFrame(nsIPresShell*    aPresShe
 
   if (newFrame) {
     newFrame->Init(aContent, aParentFrame, aFrame);
-    // XXXbz should we be passing in a non-null aContentParentFrame?
-    nsHTMLContainerFrame::CreateViewForFrame(newFrame, nsnull, PR_FALSE);
+    nsHTMLContainerFrame::CreateViewForFrame(newFrame, PR_FALSE);
 
     // Create a continuing inner table frame, and if there's a caption then
     // replicate the caption
@@ -10183,8 +10161,7 @@ nsCSSFrameConstructor::CreateContinuingTableFrame(nsIPresShell* aPresShell,
 
   if (newFrame) {
     newFrame->Init(aContent, aParentFrame, aFrame);
-    // XXXbz should we be passing in a non-null aContentParentFrame?
-    nsHTMLContainerFrame::CreateViewForFrame(newFrame, nsnull, PR_FALSE);
+    nsHTMLContainerFrame::CreateViewForFrame(newFrame, PR_FALSE);
 
     // Replicate any header/footer frames
     nsFrameItems  childFrames;
@@ -10264,8 +10241,7 @@ nsCSSFrameConstructor::CreateContinuingFrame(nsPresContext* aPresContext,
 
     if (newFrame) {
       newFrame->Init(content, aParentFrame, aFrame);
-      // XXXbz should we be passing in a non-null aContentParentFrame?
-      nsHTMLContainerFrame::CreateViewForFrame(newFrame, nsnull, PR_FALSE);
+      nsHTMLContainerFrame::CreateViewForFrame(newFrame, PR_FALSE);
     }
     
   } else if (nsGkAtoms::inlineFrame == frameType) {
@@ -10273,8 +10249,7 @@ nsCSSFrameConstructor::CreateContinuingFrame(nsPresContext* aPresContext,
 
     if (newFrame) {
       newFrame->Init(content, aParentFrame, aFrame);
-      // XXXbz should we be passing in a non-null aContentParentFrame?
-      nsHTMLContainerFrame::CreateViewForFrame(newFrame, nsnull, PR_FALSE);
+      nsHTMLContainerFrame::CreateViewForFrame(newFrame, PR_FALSE);
     }
   
   } else if (nsGkAtoms::blockFrame == frameType) {
@@ -10282,8 +10257,7 @@ nsCSSFrameConstructor::CreateContinuingFrame(nsPresContext* aPresContext,
 
     if (newFrame) {
       newFrame->Init(content, aParentFrame, aFrame);
-      // XXXbz should we be passing in a non-null aContentParentFrame?
-      nsHTMLContainerFrame::CreateViewForFrame(newFrame, nsnull, PR_FALSE);
+      nsHTMLContainerFrame::CreateViewForFrame(newFrame, PR_FALSE);
     }
   
 #ifdef MOZ_XUL
@@ -10292,8 +10266,7 @@ nsCSSFrameConstructor::CreateContinuingFrame(nsPresContext* aPresContext,
 
     if (newFrame) {
       newFrame->Init(content, aParentFrame, aFrame);
-      // XXXbz should we be passing in a non-null aContentParentFrame?
-      nsHTMLContainerFrame::CreateViewForFrame(newFrame, nsnull, PR_FALSE);
+      nsHTMLContainerFrame::CreateViewForFrame(newFrame, PR_FALSE);
     }
 #endif  
   } else if (nsGkAtoms::columnSetFrame == frameType) {
@@ -10301,8 +10274,7 @@ nsCSSFrameConstructor::CreateContinuingFrame(nsPresContext* aPresContext,
 
     if (newFrame) {
       newFrame->Init(content, aParentFrame, aFrame);
-      // XXXbz should we be passing in a non-null aContentParentFrame?
-      nsHTMLContainerFrame::CreateViewForFrame(newFrame, nsnull, PR_FALSE);
+      nsHTMLContainerFrame::CreateViewForFrame(newFrame, PR_FALSE);
     }
   
   } else if (nsGkAtoms::positionedInlineFrame == frameType) {
@@ -10310,8 +10282,7 @@ nsCSSFrameConstructor::CreateContinuingFrame(nsPresContext* aPresContext,
 
     if (newFrame) {
       newFrame->Init(content, aParentFrame, aFrame);
-      // XXXbz should we be passing in a non-null aContentParentFrame?
-      nsHTMLContainerFrame::CreateViewForFrame(newFrame, nsnull, PR_FALSE);
+      nsHTMLContainerFrame::CreateViewForFrame(newFrame, PR_FALSE);
     }
 
   } else if (nsGkAtoms::pageFrame == frameType) {
@@ -10331,8 +10302,7 @@ nsCSSFrameConstructor::CreateContinuingFrame(nsPresContext* aPresContext,
 
     if (newFrame) {
       newFrame->Init(content, aParentFrame, aFrame);
-      // XXXbz should we be passing in a non-null aContentParentFrame?
-      nsHTMLContainerFrame::CreateViewForFrame(newFrame, nsnull, PR_FALSE);
+      nsHTMLContainerFrame::CreateViewForFrame(newFrame, PR_FALSE);
     }
 
   } else if (nsGkAtoms::tableRowFrame == frameType) {
@@ -10340,8 +10310,7 @@ nsCSSFrameConstructor::CreateContinuingFrame(nsPresContext* aPresContext,
 
     if (newFrame) {
       newFrame->Init(content, aParentFrame, aFrame);
-      // XXXbz should we be passing in a non-null aContentParentFrame?
-      nsHTMLContainerFrame::CreateViewForFrame(newFrame, nsnull, PR_FALSE);
+      nsHTMLContainerFrame::CreateViewForFrame(newFrame, PR_FALSE);
 
       // Create a continuing frame for each table cell frame
       nsFrameItems  newChildList;
@@ -10376,8 +10345,7 @@ nsCSSFrameConstructor::CreateContinuingFrame(nsPresContext* aPresContext,
 
     if (newFrame) {
       newFrame->Init(content, aParentFrame, aFrame);
-      // XXXbz should we be passing in a non-null aContentParentFrame?
-      nsHTMLContainerFrame::CreateViewForFrame(newFrame, nsnull, PR_FALSE);
+      nsHTMLContainerFrame::CreateViewForFrame(newFrame, PR_FALSE);
 
       // Create a continuing area frame
       nsIFrame* continuingBlockFrame;
@@ -10399,8 +10367,7 @@ nsCSSFrameConstructor::CreateContinuingFrame(nsPresContext* aPresContext,
 
     if (newFrame) {
       newFrame->Init(content, aParentFrame, aFrame);
-      // XXXbz should we be passing in a non-null aContentParentFrame?
-      nsHTMLContainerFrame::CreateViewForFrame(newFrame, nsnull, PR_FALSE);
+      nsHTMLContainerFrame::CreateViewForFrame(newFrame, PR_FALSE);
     }
   
   } else if (nsGkAtoms::letterFrame == frameType) {
@@ -10408,8 +10375,7 @@ nsCSSFrameConstructor::CreateContinuingFrame(nsPresContext* aPresContext,
 
     if (newFrame) {
       newFrame->Init(content, aParentFrame, aFrame);
-      // XXXbz should we be passing in a non-null aContentParentFrame?
-      nsHTMLContainerFrame::CreateViewForFrame(newFrame, nsnull, PR_FALSE);
+      nsHTMLContainerFrame::CreateViewForFrame(newFrame, PR_FALSE);
     }
 
   } else if (nsGkAtoms::imageFrame == frameType) {
@@ -10447,8 +10413,7 @@ nsCSSFrameConstructor::CreateContinuingFrame(nsPresContext* aPresContext,
     if (newFrame) {
       newFrame->Init(content, aParentFrame, aFrame);
 
-      // XXXbz should we be passing in a non-null aContentParentFrame?
-      nsHTMLContainerFrame::CreateViewForFrame(newFrame, nsnull, PR_FALSE);
+      nsHTMLContainerFrame::CreateViewForFrame(newFrame, PR_FALSE);
 
       // Create a continuing area frame
       // XXXbz we really shouldn't have to do this by hand!
@@ -12335,7 +12300,6 @@ nsCSSFrameConstructor::ConstructBlock(nsFrameConstructorState& aState,
   // Create column wrapper if necessary
   nsIFrame* blockFrame = *aNewFrame;
   nsIFrame* parent = aParentFrame;
-  nsIFrame* contentParent = aContentParentFrame;
   nsRefPtr<nsStyleContext> blockStyle = aStyleContext;
   const nsStyleColumn* columns = aStyleContext->GetStyleColumn();
 
@@ -12348,13 +12312,11 @@ nsCSSFrameConstructor::ConstructBlock(nsFrameConstructorState& aState,
     }
 
     InitAndRestoreFrame(aState, aContent, aParentFrame, nsnull, columnSetFrame);
-    // See if we need to create a view, e.g. the frame is absolutely positioned
-    nsHTMLContainerFrame::CreateViewForFrame(columnSetFrame, aContentParentFrame,
-                                             PR_FALSE);
+    // See if we need to create a view
+    nsHTMLContainerFrame::CreateViewForFrame(columnSetFrame, PR_FALSE);
     blockStyle = mPresShell->StyleSet()->
       ResolvePseudoStyleFor(aContent, nsCSSAnonBoxes::columnContent,
                             aStyleContext);
-    contentParent = columnSetFrame;
     parent = columnSetFrame;
     *aNewFrame = columnSetFrame;
 
@@ -12373,7 +12335,7 @@ nsCSSFrameConstructor::ConstructBlock(nsFrameConstructorState& aState,
   }
 
   // See if we need to create a view, e.g. the frame is absolutely positioned
-  nsHTMLContainerFrame::CreateViewForFrame(blockFrame, contentParent, PR_FALSE);
+  nsHTMLContainerFrame::CreateViewForFrame(blockFrame, PR_FALSE);
 
   if (!mInitialContainingBlock) {
     // The frame we're constructing will be the initial containing block.
@@ -12435,8 +12397,7 @@ nsCSSFrameConstructor::ConstructInline(nsFrameConstructorState& aState,
                                                   // this is part of the fix for bug 42372
 
   // Any inline frame might need a view (because of opacity, or fixed background)
-  // XXXbz should we be passing in a non-null aContentParentFrame?
-  nsHTMLContainerFrame::CreateViewForFrame(aNewFrame, nsnull, PR_FALSE);
+  nsHTMLContainerFrame::CreateViewForFrame(aNewFrame, PR_FALSE);
 
   if (aIsPositioned) {                            
     // Relatively positioned frames becomes a container for child
@@ -12518,8 +12479,7 @@ nsCSSFrameConstructor::ConstructInline(nsFrameConstructorState& aState,
   InitAndRestoreFrame(aState, aContent, aParentFrame, nsnull, blockFrame, PR_FALSE);  
 
   // Any inline frame could have a view (e.g., opacity)
-  // XXXbz should we be passing in a non-null aContentParentFrame?
-  nsHTMLContainerFrame::CreateViewForFrame(blockFrame, nsnull, PR_FALSE);
+  nsHTMLContainerFrame::CreateViewForFrame(blockFrame, PR_FALSE);
 
   if (blockFrame->HasView() || aNewFrame->HasView()) {
     // Move list2's frames into the new view
@@ -12617,8 +12577,7 @@ nsCSSFrameConstructor::MoveFramesToEndOfIBSplit(nsFrameConstructorState& aState,
                         inlineFrame, PR_FALSE);
 
     // Any frame might need a view
-    // XXXbz should we be passing in a non-null aContentParentFrame?
-    nsHTMLContainerFrame::CreateViewForFrame(inlineFrame, nsnull, PR_FALSE);
+    nsHTMLContainerFrame::CreateViewForFrame(inlineFrame, PR_FALSE);
   }
   
   if (inlineFrame->HasView() || aFramesToMove->GetParent()->HasView()) {

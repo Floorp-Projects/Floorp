@@ -283,23 +283,7 @@ nsSubDocumentFrame::Init(nsIContent*     aContent,
   // really need it or not, and the inner view will get it as the
   // parent.
   if (!HasView()) {
-    // To properly initialize the view we need to know the frame for the content
-    // that is the parent of content for this frame. This might not be our actual
-    // frame parent if we are out of flow (e.g., positioned) so our parent frame
-    // may have been set to some other ancestor.
-    // We look for a content parent frame in the frame property list, where it
-    // will have been set by nsCSSFrameConstructor if necessary.
-    nsCOMPtr<nsIAtom> contentParentAtom = do_GetAtom("contentParent");
-    nsIFrame* contentParent = nsnull;
-
-    void *value =
-      aPresContext->PropertyTable()->UnsetProperty(this,
-                                                   contentParentAtom, &rv);
-    if (NS_SUCCEEDED(rv)) {
-          contentParent = (nsIFrame*)value;
-    }
-
-    rv = nsHTMLContainerFrame::CreateViewForFrame(this, contentParent, PR_TRUE);
+    rv = nsHTMLContainerFrame::CreateViewForFrame(this, PR_TRUE);
     NS_ENSURE_SUCCESS(rv, rv);
   }
   nsIView* view = GetView();
