@@ -2740,6 +2740,8 @@ EmitSwitch(JSContext *cx, JSCodeGenerator *cg, JSParseNode *pn,
                 continue;
 
             pn4 = pn3->pn_left;
+            while (pn4->pn_type == TOK_RP)
+                pn4 = pn4->pn_kid;
             switch (pn4->pn_type) {
               case TOK_NUMBER:
                 d = pn4->pn_dval;
