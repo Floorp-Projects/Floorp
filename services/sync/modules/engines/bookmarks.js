@@ -75,26 +75,11 @@ function BookmarksEngine() {
 }
 BookmarksEngine.prototype = {
   __proto__: SyncEngine.prototype,
-  get _super() SyncEngine.prototype,
-
-  get name() "bookmarks",
-  get displayName() "Bookmarks",
-  get logName() "Bookmarks",
-  get serverPrefix() "user-data/bookmarks/",
-
-  get _store() {
-    let store = new BookmarksStore();
-    this.__defineGetter__("_store", function() store);
-    return store;
-  },
-
-  get _tracker() {
-    let tracker = new BookmarksTracker();
-    this.__defineGetter__("_tracker", function() tracker);
-    return tracker;
-  }
-  // XXX for sharing, will need to re-add code to get new shares before syncing,
-  //     and updating incoming/outgoing shared folders after syncing
+  name: "bookmarks",
+  displayName: "Bookmarks",
+  logName: "Bookmarks",
+  _storeObj: BookmarksStore,
+  _trackerObj: BookmarksTracker
 };
 
 function BookmarksStore() {
@@ -103,7 +88,6 @@ function BookmarksStore() {
 BookmarksStore.prototype = {
   __proto__: Store.prototype,
   _logName: "BStore",
-  _lookup: null,
 
   __bms: null,
   get _bms() {
@@ -190,25 +174,20 @@ BookmarksStore.prototype = {
       return true;
     if (placeId == this._bms.unfiledBookmarksFolder)
       return true;
-    try {
-      if (this._bms.getFolderIdForItem(placeId) < 0)
-        return true;
-    } catch (e) {
-      this._log.debug("Oops!  Failed for place ID: " + placeId);
-      throw e;
-    }
+    if (this._bms.getFolderIdForItem(placeId) <= 0)
+      return true;
     return false;
   },
 
   itemExists: function BStore_itemExists(id) {
-    return this._getItemIdForGUID(id) >= 0;
+    return this._getItemIdForGUID(id) > 0;
   },
 
   create: function BStore_create(record) {
     let newId;
     let parentId = this._getItemIdForGUID(record.parentid);
 
-    if (parentId < 0) {
+    if (parentId <= 0) {
       this._log.warn("Creating node with unknown parent -> reparenting to root");
       parentId = this._bms.bookmarksMenuFolder;
     }
@@ -323,7 +302,7 @@ BookmarksStore.prototype = {
     }
 
     var itemId = this._bms.getItemIdForGUID(record.id);
-    if (itemId < 0) {
+    if (itemId <= 0) {
       this._log.debug("Item " + record.id + " already removed");
       return;
     }
@@ -357,7 +336,7 @@ BookmarksStore.prototype = {
       this._log.debug("Skipping update for root node.");
       return;
     }
-    if (itemId < 0) {
+    if (itemId <= 0) {
       this._log.debug("Skipping update for unknown item: " + record.id);
       return;
     }
@@ -434,14 +413,14 @@ BookmarksStore.prototype = {
     var itemId = this._getItemIdForGUID(oldID);
     if (itemId == null) // toplevel folder
       return;
-    if (itemId < 0) {
+    if (itemId <= 0) {
       this._log.warn("Can't change GUID " + oldID + " to " +
                       newID + ": Item does not exist");
       return;
     }
 
     var collision = this._getItemIdForGUID(newID);
-    if (collision >= 0) {
+    if (collision > 0) {
       this._log.warn("Can't change GUID " + oldID + " to " +
                       newID + ": new ID already in use");
       return;
@@ -500,7 +479,7 @@ BookmarksStore.prototype = {
       return record;
 
     let placeId = this._bms.getItemIdForGUID(guid);
-    if (placeId < 0) { // deleted item
+    if (placeId <= 0) { // deleted item
       record = new PlacesItem();
       record.cleartext = null;
       return record;
@@ -630,30 +609,6 @@ BookmarksStore.prototype = {
     this._bms.removeFolderChildren(this._bms.bookmarksMenuFolder);
     this._bms.removeFolderChildren(this._bms.toolbarFolder);
     this._bms.removeFolderChildren(this._bms.unfiledBookmarksFolder);
-  },
-
-  __resetGUIDs: function BStore___resetGUIDs(node) {
-    let self = yield;
-
-    if (this._ans.itemHasAnnotation(node.itemId, "placesInternal/GUID"))
-      this._ans.removeItemAnnotation(node.itemId, "placesInternal/GUID");
-
-    if (node.type == node.RESULT_TYPE_FOLDER &&
-        !this._ls.isLivemark(node.itemId)) {
-      yield Utils.makeTimerForCall(self.cb); // Yield to main loop
-      node.QueryInterface(Ci.nsINavHistoryQueryResultNode);
-      node.containerOpen = true;
-      for (var i = 0; i < node.childCount; i++) {
-        this.__resetGUIDs(node.getChild(i));
-      }
-    }
-  },
-
-  _resetGUIDs: function BStore__resetGUIDs() {
-    let self = yield;
-    this.__resetGUIDs(this._getNode(this._bms.bookmarksMenuFolder));
-    this.__resetGUIDs(this._getNode(this._bms.toolbarFolder));
-    this.__resetGUIDs(this._getNode(this._bms.unfiledBookmarksFolder));
   }
 };
 

@@ -35,7 +35,7 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-const EXPORTED_SYMBOLS = ['Engines', 'NewEngine', 'Engine', 'SyncEngine', 'BlobEngine'];
+const EXPORTED_SYMBOLS = ['Engines', 'Engine', 'SyncEngine'];
 
 const Cc = Components.classes;
 const Ci = Components.interfaces;
@@ -47,9 +47,7 @@ Cu.import("resource://weave/log4moz.js");
 Cu.import("resource://weave/constants.js");
 Cu.import("resource://weave/util.js");
 Cu.import("resource://weave/wrap.js");
-Cu.import("resource://weave/crypto.js");
 Cu.import("resource://weave/resource.js");
-Cu.import("resource://weave/clientData.js");
 Cu.import("resource://weave/identity.js");
 Cu.import("resource://weave/stores.js");
 Cu.import("resource://weave/trackers.js");
@@ -99,25 +97,21 @@ EngineManagerSvc.prototype = {
   }
 };
 
-function Engine() { /* subclasses should call this._init() */}
+function Engine() { this._init(); }
 Engine.prototype = {
   _notify: Wrap.notify,
 
-  // "default-engine";
-  get name() { throw "name property must be overridden in subclasses"; },
+  name: "engine",
+  displayName: "Boring Engine",
+  logName: "Engine",
 
-  // "Default";
-  get displayName() { throw "displayName property must be overriden in subclasses"; },
+  // _storeObj, and _trackerObj should to be overridden in subclasses
 
-  // "DefaultEngine";
-  get logName() { throw "logName property must be overridden in subclasses"; },
+  _storeObj: Store,
+  _trackerObj: Tracker,
 
-  // "user-data/default-engine/";
-  get serverPrefix() { throw "serverPrefix property must be overridden in subclasses"; },
-
-  get enabled() {
-    return Utils.prefs.getBoolPref("engine." + this.name);
-  },
+  get enabled() Utils.prefs.getBoolPref("engine." + this.name),
+  get score() this._tracker.score,
 
   get _os() {
     let os = Cc["@mozilla.org/observer-service;1"].
@@ -126,38 +120,16 @@ Engine.prototype = {
     return os;
   },
 
-  get _json() {
-    let json = Cc["@mozilla.org/dom/json;1"].
-      createInstance(Ci.nsIJSON);
-    this.__defineGetter__("_json", function() json);
-    return json;
-  },
-
-  get score() this._tracker.score,
-
-  // _store, and tracker need to be overridden in subclasses
   get _store() {
-    let store = new Store();
+    let store = new this._storeObj();
     this.__defineGetter__("_store", function() store);
     return store;
   },
 
   get _tracker() {
-    let tracker = new Tracker();
+    let tracker = new this._trackerObj();
     this.__defineGetter__("_tracker", function() tracker);
     return tracker;
-  },
-
-  get engineId() {
-    let id = ID.get('Engine:' + this.name);
-    if (!id) {
-      // Copy the service login from WeaveID
-      let masterID = ID.get('WeaveID');
-
-      id = new Identity(this.logName, masterID.username, masterID.password);
-      ID.set('Engine:' + this.name, id);
-    }
-    return id;
   },
 
   _init: function Engine__init() {
@@ -175,63 +147,33 @@ Engine.prototype = {
     this._log.debug("Engine initialized");
   },
 
-  _resetServer: function Engine__resetServer() {
-    let self = yield;
-    throw "_resetServer needs to be subclassed";
-  },
-
-  _resetClient: function Engine__resetClient() {
-    let self = yield;
-    this._log.debug("Resetting client state");
-    this._store.wipe();
-    this._log.debug("Client reset completed successfully");
-  },
-
-  _sync: function Engine__sync() {
-    let self = yield;
-    throw "_sync needs to be subclassed";
-  },
-
-  _share: function Engine__share(guid, username) {
-    let self = yield;
-    /* This should be overridden by the engine subclass for each datatype.
-       Implementation should share the data node identified by guid,
-       and all its children, if any, with the user identified by username. */
-    self.done();
-  },
-
-  _stopSharing: function Engine__stopSharing(guid, username) {
-    let self = yield;
-    /* This should be overridden by the engine subclass for each datatype.
-     Stop sharing the data node identified by guid with the user identified
-     by username.*/
-    self.done();
-  },
-
   sync: function Engine_sync(onComplete) {
-    return this._sync.async(this, onComplete);
+    if (!this._sync)
+      throw "engine does not implement _sync method";
+    this._notify("sync", "", this._sync).async(this, onComplete);
   },
 
-  share: function Engine_share(onComplete, guid, username) {
-    return this._share.async(this, onComplete, guid, username);
+  wipeServer: function Engimne_wipeServer(onComplete) {
+    if (!this._wipeServer)
+      throw "engine does not implement _wipeServer method";
+    this._notify("wipe-server", "", this._wipeServer).async(this, onComplete);
   },
 
-  stopSharing: function Engine_share(onComplete, guid, username) {
-    return this._stopSharing.async(this, onComplete, guid, username);
+  _wipeClient: function Engine__wipeClient() {
+    let self = yield;
+    this._log.debug("Deleting all local data");
+    this._store.wipe();
   },
-
-  resetServer: function Engimne_resetServer(onComplete) {
-    this._notify("reset-server", "", this._resetServer).async(this, onComplete);
-  },
-
-  resetClient: function Engine_resetClient(onComplete) {
-    this._notify("reset-client", "", this._resetClient).async(this, onComplete);
+  wipeClient: function Engine_wipeClient(onComplete) {
+    this._notify("wipe-client", "", this._wipeClient).async(this, onComplete);
   }
 };
 
-function SyncEngine() { /* subclasses should call this._init() */ }
+function SyncEngine() { this._init(); }
 SyncEngine.prototype = {
   __proto__: Engine.prototype,
+
+  _recordObj: CryptoWrapper,
 
   get _memory() {
     let mem = Cc["@mozilla.org/xpcom/memory-service;1"].getService(Ci.nsIMemory);
@@ -346,7 +288,7 @@ SyncEngine.prototype = {
     this._store.cache.fifo = false; // filo
     this._store.cache.clear();
 
-    let newitems = new Collection(this.engineURL);
+    let newitems = new Collection(this.engineURL, this._recordObj);
     newitems.modified = this.lastSync;
     newitems.full = true;
     newitems.sort = "depthindex";
@@ -521,9 +463,11 @@ SyncEngine.prototype = {
     }
   },
 
-  _resetServer: function SyncEngine__resetServer() {
+  _wipeServer: function SyncEngine__wipeServer() {
     let self = yield;
     let all = new Resource(this.engineURL);
     yield all.delete(self.cb);
+    let crypto = new Resource(this.cryptoMetaURL);
+    yield crypto.delete(self.cb);
   }
 };

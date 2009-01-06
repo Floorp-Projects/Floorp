@@ -58,17 +58,17 @@ Utils.lazy(this, 'CryptoMetas', RecordManager);
 let json = Cc["@mozilla.org/dom/json;1"].createInstance(Ci.nsIJSON);
 let crypto = Cc["@labs.mozilla.com/Weave/Crypto;1"].createInstance(Ci.IWeaveCrypto);
 
-function CryptoWrapper(uri, authenticator) {
-  this._CryptoWrap_init(uri, authenticator);
+function CryptoWrapper(uri) {
+  this._CryptoWrap_init(uri);
 }
 CryptoWrapper.prototype = {
   __proto__: WBORecord.prototype,
   _logName: "Record.CryptoWrapper",
 
-  _CryptoWrap_init: function CryptoWrap_init(uri, authenticator) {
+  _CryptoWrap_init: function CryptoWrap_init(uri) {
     // FIXME: this will add a json filter, meaning our payloads will be json
     //        encoded, even though they are already a string
-    this._WBORec_init(uri, authenticator);
+    this._WBORec_init(uri);
     this.data.payload = {
       encryption: "",
       ciphertext: null
@@ -127,15 +127,15 @@ CryptoWrapper.prototype = {
   }
 };
 
-function CryptoMeta(uri, authenticator) {
-  this._CryptoMeta_init(uri, authenticator);
+function CryptoMeta(uri) {
+  this._CryptoMeta_init(uri);
 }
 CryptoMeta.prototype = {
   __proto__: WBORecord.prototype,
   _logName: "Record.CryptoMeta",
 
-  _CryptoMeta_init: function CryptoMeta_init(uri, authenticator) {
-    this._WBORec_init(uri, authenticator);
+  _CryptoMeta_init: function CryptoMeta_init(uri) {
+    this._WBORec_init(uri);
     this.data.payload = {
       bulkIV: null,
       keyring: {}

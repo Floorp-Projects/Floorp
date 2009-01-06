@@ -51,6 +51,7 @@ FaultTolerance = {
 
 function FTService() {
   this._log = Log4Moz.repository.getLogger("FaultTolerance");
+  this._log.level = Log4Moz.Level["Debug"];
   this._appender = new FTAppender(this);
   Log4Moz.repository.rootLogger.addAppender(this._appender);
 }
@@ -60,6 +61,7 @@ FTService.prototype = {
     // FIXME: we get all log messages here, and could use them to keep track of
     // our current state
   },
+
   onException: function FTS_onException(exception) {
     this._lastException = exception;
     this._log.debug("\n" + Utils.stackTrace(exception));

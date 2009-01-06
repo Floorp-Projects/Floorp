@@ -47,15 +47,15 @@ Cu.import("resource://weave/async.js");
 
 Function.prototype.async = Async.sugar;
 
-function WBORecord(uri, authenticator) {
-  this._WBORec_init(uri, authenticator);
+function WBORecord(uri) {
+  this._WBORec_init(uri);
 }
 WBORecord.prototype = {
   __proto__: Resource.prototype,
   _logName: "Record.WBO",
 
-  _WBORec_init: function WBORec_init(uri, authenticator) {
-    this._init(uri, authenticator);
+  _WBORec_init: function WBORec_init(uri) {
+    this._init(uri);
     this.pushFilter(new WBOFilter());
     this.pushFilter(new JsonFilter());
     this.data = {

@@ -45,7 +45,6 @@ Cu.import("resource://gre/modules/XPCOMUtils.jsm");
 Cu.import("resource://weave/log4moz.js");
 Cu.import("resource://weave/util.js");
 Cu.import("resource://weave/engines.js");
-Cu.import("resource://weave/syncCores.js");
 Cu.import("resource://weave/stores.js");
 Cu.import("resource://weave/trackers.js");
 Cu.import("resource://weave/async.js");
@@ -58,24 +57,11 @@ function HistoryEngine() {
 }
 HistoryEngine.prototype = {
   __proto__: SyncEngine.prototype,
-  get _super() SyncEngine.prototype,
-
-  get name() "history",
-  get displayName() "History",
-  get logName() "History",
-  get serverPrefix() "user-data/history/",
-
-  get _store() {
-    let store = new HistoryStore();
-    this.__defineGetter__("_store", function() store);
-    return store;
-  },
-
-  get _tracker() {
-    let tracker = new HistoryTracker();
-    this.__defineGetter__("_tracker", function() tracker);
-    return tracker;
-  }
+  name: "history",
+  displayName: "History",
+  logName: "History",
+  _storeObj: HistoryStore,
+  _trackerObj: HistoryTracker
 };
 
 function HistoryStore() {
@@ -84,7 +70,6 @@ function HistoryStore() {
 HistoryStore.prototype = {
   __proto__: Store.prototype,
   _logName: "HistStore",
-  _lookup: null,
 
   get _hsvc() {
     let hsvc = Cc["@mozilla.org/browser/nav-history-service;1"].
@@ -355,11 +340,6 @@ HistoryStore.prototype = {
     }
     this.cache.put(guid, record);
     return record;
-  },
-
-  // no depth or index for history
-  createMetaRecords: function HistStore_createMetaRecords(guid, items) {
-    return {};
   },
 
   wipe: function HistStore_wipe() {
