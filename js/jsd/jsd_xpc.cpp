@@ -1072,29 +1072,33 @@ jsdScript::CreatePPLineMap()
     PCMapEntry *lineMap =
         static_cast<PCMapEntry *>
                    (PR_Malloc((scriptExtent + 1) * sizeof (PCMapEntry)));
+    PRUint32 lineMapSize = 0;
+
     if (lineMap) {
-        mPCMapSize = 0;
         for (PRUint32 line = baseLine; line < scriptExtent + baseLine; ++line) {
             jsbytecode* pc = JS_LineNumberToPC (cx, script, line);
             if (line == JS_PCToLineNumber (cx, script, pc)) {
-                mPPLineMap[mPCMapSize].line = line;
-                mPPLineMap[mPCMapSize].pc = pc - firstPC;
-                ++mPCMapSize;
+                lineMap[lineMapSize].line = line;
+                lineMap[lineMapSize].pc = pc - firstPC;
+                ++lineMapSize;
             }
         }
-        if (scriptExtent != mPCMapSize) {
+        if (scriptExtent != lineMapSize) {
             lineMap =
                 static_cast<PCMapEntry *>
                            (PR_Realloc(mPPLineMap = lineMap,
-                                       mPCMapSize * sizeof(PCMapEntry)));
-            if (!lineMap)
+                                       lineMapSize * sizeof(PCMapEntry)));
+            if (!lineMap) {
                 PR_Free(mPPLineMap);
+                lineMapSize = 0;
+            }
         }
     }
 
     if (scriptOwner)
         JS_DestroyScript (cx, script);
 
+    mPCMapSize = lineMapSize;
     return mPPLineMap = lineMap;
 }
 
