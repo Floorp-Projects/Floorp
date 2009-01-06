@@ -48,7 +48,7 @@
 interface nsIDOMElement;
 interface nsIDOMHTMLCanvasElement;
 
-[scriptable, uuid(e3833da2-8fad-4662-9b61-908cf58a7e03)]
+[scriptable, uuid(190be8e6-35af-4e3e-9a9f-719f5b1a44a0)]
 interface nsIDOMWindowUtils : nsISupports {
 
   /**
@@ -291,4 +291,10 @@ interface nsIDOMWindowUtils : nsISupports {
   PRUint32 compareCanvases(in nsIDOMHTMLCanvasElement aCanvas1,
                            in nsIDOMHTMLCanvasElement aCanvas2,
                            out unsigned long aMaxDifference);
+
+  /**
+   * Returns true if a MozAfterPaint event has been queued but not yet
+   * fired.
+   */
+  readonly attribute boolean isMozAfterPaintPending;
 };
