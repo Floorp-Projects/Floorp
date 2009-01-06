@@ -50,15 +50,15 @@ Cu.import("resource://weave/base_records/keys.js");
 
 Function.prototype.async = Async.sugar;
 
-function HistoryRec(uri, authenticator) {
-  this._HistoryRec_init(uri, authenticator);
+function HistoryRec(uri) {
+  this._HistoryRec_init(uri);
 }
 HistoryRec.prototype = {
   __proto__: CryptoWrapper.prototype,
   _logName: "Record.History",
 
-  _HistoryRec_init: function HistItem_init(uri, authenticator) {
-    this._CryptoWrap_init(uri, authenticator);
+  _HistoryRec_init: function HistItem_init(uri) {
+    this._CryptoWrap_init(uri);
     this.cleartext = {
     };
   },

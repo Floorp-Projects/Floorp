@@ -69,8 +69,8 @@ RequestException.prototype = {
   }
 };
 
-function Resource(uri, authenticator) {
-  this._init(uri, authenticator);
+function Resource(uri) {
+  this._init(uri);
 }
 Resource.prototype = {
   _logName: "Net.Resource",
@@ -135,12 +135,11 @@ Resource.prototype = {
     this._filters = [];
   },
 
-  _init: function Res__init(uri, authenticator) {
+  _init: function Res__init(uri) {
     this._log = Log4Moz.repository.getLogger(this._logName);
     this._log.level =
       Log4Moz.Level[Utils.prefs.getCharPref("log.logger.network.resources")];
     this.uri = uri;
-    this._authenticator = authenticator;
     this._headers = {'Content-type': 'text/plain'};
     this._filters = [];
   },
@@ -286,8 +285,11 @@ ChannelListener.prototype = {
 };
 
 function JsonFilter() {
+  let level = "Debug";
+  try { level = Utils.prefs.getCharPref("log.logger.network.jsonFilter"); }
+  catch (e) { /* ignore unset prefs */ }
   this._log = Log4Moz.repository.getLogger("Net.JsonFilter");
-  this._log.level = Log4Moz.Level["Debug"];
+  this._log.level = Log4Moz.Level[level];
 }
 JsonFilter.prototype = {
   get _json() {

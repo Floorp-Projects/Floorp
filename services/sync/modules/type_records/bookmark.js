@@ -51,15 +51,15 @@ Cu.import("resource://weave/base_records/keys.js");
 
 Function.prototype.async = Async.sugar;
 
-function PlacesItem(uri, authenticator) {
-  this._PlacesItem_init(uri, authenticator);
+function PlacesItem(uri) {
+  this._PlacesItem_init(uri);
 }
 PlacesItem.prototype = {
   __proto__: CryptoWrapper.prototype,
   _logName: "Record.PlacesItem",
 
-  _PlacesItem_init: function BmkItemRec_init(uri, authenticator) {
-    this._CryptoWrap_init(uri, authenticator);
+  _PlacesItem_init: function BmkItemRec_init(uri) {
+    this._CryptoWrap_init(uri);
     this.cleartext = {
     };
   },
@@ -71,15 +71,15 @@ PlacesItem.prototype = {
   }
 };
 
-function Bookmark(uri, authenticator) {
-  this._Bookmark_init(uri, authenticator);
+function Bookmark(uri) {
+  this._Bookmark_init(uri);
 }
 Bookmark.prototype = {
   __proto__: PlacesItem.prototype,
   _logName: "Record.Bookmark",
 
-  _Bookmark_init: function BmkRec_init(uri, authenticator) {
-    this._PlacesItem_init(uri, authenticator);
+  _Bookmark_init: function BmkRec_init(uri) {
+    this._PlacesItem_init(uri);
     this.cleartext.type = "bookmark";
   },
 
@@ -112,15 +112,15 @@ Bookmark.prototype = {
   }
 };
 
-function BookmarkMicsum(uri, authenticator) {
-  this._BookmarkMicsum_init(uri, authenticator);
+function BookmarkMicsum(uri) {
+  this._BookmarkMicsum_init(uri);
 }
 BookmarkMicsum.prototype = {
   __proto__: Bookmark.prototype,
   _logName: "Record.BookmarkMicsum",
 
-  _BookmarkMicsum_init: function BmkMicsumRec_init(uri, authenticator) {
-    this._Bookmark_init(uri, authenticator);
+  _BookmarkMicsum_init: function BmkMicsumRec_init(uri) {
+    this._Bookmark_init(uri);
     this.cleartext.type = "microsummary";
   },
 
@@ -138,15 +138,15 @@ BookmarkMicsum.prototype = {
   }
 };
 
-function BookmarkFolder(uri, authenticator) {
-  this._BookmarkFolder_init(uri, authenticator);
+function BookmarkFolder(uri) {
+  this._BookmarkFolder_init(uri);
 }
 BookmarkFolder.prototype = {
   __proto__: PlacesItem.prototype,
   _logName: "Record.Folder",
 
-  _BookmarkFolder_init: function FolderRec_init(uri, authenticator) {
-    this._PlacesItem_init(uri, authenticator);
+  _BookmarkFolder_init: function FolderRec_init(uri) {
+    this._PlacesItem_init(uri);
     this.cleartext.type = "folder";
   },
 
@@ -156,15 +156,15 @@ BookmarkFolder.prototype = {
   }
 };
 
-function Livemark(uri, authenticator) {
-  this._Livemark_init(uri, authenticator);
+function Livemark(uri) {
+  this._Livemark_init(uri);
 }
 Livemark.prototype = {
   __proto__: BookmarkFolder.prototype,
   _logName: "Record.Livemark",
 
-  _Livemark_init: function LvmkRec_init(uri, authenticator) {
-    this._BookmarkFolder_init(uri, authenticator);
+  _Livemark_init: function LvmkRec_init(uri) {
+    this._BookmarkFolder_init(uri);
     this.cleartext.type = "livemark";
   },
 
@@ -185,15 +185,15 @@ Livemark.prototype = {
   }
 };
 
-function BookmarkSeparator(uri, authenticator) {
-  this._BookmarkSeparator_init(uri, authenticator);
+function BookmarkSeparator(uri) {
+  this._BookmarkSeparator_init(uri);
 }
 BookmarkSeparator.prototype = {
   __proto__: PlacesItem.prototype,
   _logName: "Record.Separator",
 
-  _BookmarkSeparator_init: function SepRec_init(uri, authenticator) {
-    this._PlacesItem_init(uri, authenticator);
+  _BookmarkSeparator_init: function SepRec_init(uri) {
+    this._PlacesItem_init(uri);
     this.cleartext.type = "separator";
   }
 };

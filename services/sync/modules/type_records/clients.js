@@ -34,7 +34,7 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-const EXPORTED_SYMBOLS = ['ClientRec'];
+const EXPORTED_SYMBOLS = ['ClientRecord'];
 
 const Cc = Components.classes;
 const Ci = Components.interfaces;
@@ -48,15 +48,15 @@ Cu.import("resource://weave/base_records/wbo.js");
 
 Function.prototype.async = Async.sugar;
 
-function ClientRec(uri, authenticator) {
-  this._ClientRec_init(uri, authenticator);
+function ClientRecord(uri) {
+  this._ClientRec_init(uri);
 }
-ClientRec.prototype = {
+ClientRecord.prototype = {
   __proto__: WBORecord.prototype,
   _logName: "Record.Client",
 
-  _ClientRec_init: function ClientRec_init(uri, authenticator) {
-    this._WBORec_init(uri, authenticator);
+  _ClientRec_init: function ClientRec_init(uri) {
+    this._WBORec_init(uri);
   },
 
   get name() this.payload.name,
@@ -67,5 +67,15 @@ ClientRec.prototype = {
   get type() this.payload.type,
   set type(value) {
     this.payload.type = value;
+  },
+
+  // FIXME: engines.js calls encrypt/decrypt for all records, so define these:
+  encrypt: function ClientRec_encrypt(onComplete) {
+    let fn = function ClientRec__encrypt() {let self = yield;};
+    fn.async(this, onComplete);
+  },
+  decrypt: function ClientRec_decrypt(onComplete) {
+    let fn = function ClientRec__decrypt() {let self = yield;};
+    fn.async(this, onComplete);
   }
 };

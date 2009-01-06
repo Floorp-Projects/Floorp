@@ -43,7 +43,7 @@ function async_test() {
   let auth = new BasicAuthenticator(new Identity("secret", "guest", "guest"));
   Auth.defaultAuthenticator = auth;
 
-  let res = new Resource("http://localhost:8080/foo"); // no authenticator
+  let res = new Resource("http://localhost:8080/foo");
   let content = yield res.get(self.cb);
   do_check_eq(content, "This path exists and is protected");
   do_check_eq(res.lastRequest.status, 200);

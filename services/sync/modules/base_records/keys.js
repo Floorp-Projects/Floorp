@@ -55,15 +55,15 @@ Function.prototype.async = Async.sugar;
 Utils.lazy(this, 'PubKeys', PubKeyManager);
 Utils.lazy(this, 'PrivKeys', PrivKeyManager);
 
-function PubKey(uri, authenticator) {
-  this._PubKey_init(uri, authenticator);
+function PubKey(uri) {
+  this._PubKey_init(uri);
 }
 PubKey.prototype = {
   __proto__: WBORecord.prototype,
   _logName: "Record.PubKey",
 
-  _PubKey_init: function PubKey_init(uri, authenticator) {
-    this._WBORec_init(uri, authenticator);
+  _PubKey_init: function PubKey_init(uri) {
+    this._WBORec_init(uri);
     this.payload = {
       type: "pubkey",
       key_data: null,
@@ -95,15 +95,15 @@ PubKey.prototype = {
   }
 };
 
-function PrivKey(uri, authenticator) {
-  this._PrivKey_init(uri, authenticator);
+function PrivKey(uri) {
+  this._PrivKey_init(uri);
 }
 PrivKey.prototype = {
   __proto__: WBORecord.prototype,
   _logName: "Record.PrivKey",
 
-  _PrivKey_init: function PrivKey_init(uri, authenticator) {
-    this._WBORec_init(uri, authenticator);
+  _PrivKey_init: function PrivKey_init(uri) {
+    this._WBORec_init(uri);
     this.payload = {
       type: "privkey",
       salt: null,

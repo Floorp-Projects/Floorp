@@ -55,15 +55,16 @@ Cu.import("resource://weave/base_records/keys.js");
 
 Function.prototype.async = Async.sugar;
 
-function Collection(uri, authenticator) {
-  this._Coll_init(uri, authenticator);
+function Collection(uri, recordObj) {
+  this._Coll_init(uri);
+  this._recordObj = recordObj;
 }
 Collection.prototype = {
   __proto__: Resource.prototype,
   _logName: "Collection",
 
-  _Coll_init: function Coll_init(uri, authenticator) {
-    this._init(uri, authenticator);
+  _Coll_init: function Coll_init(uri) {
+    this._init(uri);
     this.pushFilter(new JsonFilter());
     this._full = true;
     this._modified = 0;
@@ -161,7 +162,7 @@ CollectionIterator.prototype = {
       if (this._idx >= this.count)
         return;
       let item = this._coll.data[this._idx++];
-      let wrap = new CryptoWrapper(this._coll.uri.resolve(item.id));
+      let wrap = new this._coll._recordObj(this._coll.uri.resolve(item.id));
       wrap.data = this._coll._json.encode(item); // HACK HACK HACK
       yield wrap.filterDownload(self.cb); // XXX EEK
 
