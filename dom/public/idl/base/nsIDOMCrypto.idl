@@ -38,7 +38,7 @@
 
 #include "domstubs.idl"
 
-[scriptable, uuid(d2b675a5-f05b-4172-bac2-24cc39ffd398)]
+[scriptable, uuid(12b6d899-2aed-4ea9-8c02-2223ab7ab592)]
 interface nsIDOMCrypto : nsISupports
 {
   readonly attribute DOMString        version;
@@ -52,7 +52,6 @@ interface nsIDOMCrypto : nsISupports
   DOMString                 random(in long numBytes);
   DOMString                 signText(in DOMString stringToSign,
                                      in DOMString caOption /* ... */);
-  void                      alert(in DOMString message);
   void                      logout();
   void                      disableRightClick();
 };
