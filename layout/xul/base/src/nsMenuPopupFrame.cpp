@@ -824,8 +824,9 @@ nsMenuPopupFrame::FlipOrResize(nscoord& aScreenPoint, nscoord aSize,
         aScreenPoint = aAnchorEnd + aMarginEnd;
         // check if the new position is still off the right or bottom edge of
         // the screen. If so, resize the popup.
-        if (aScreenPoint + aSize > aScreenEnd)
+        if (aScreenPoint + aSize > aScreenEnd) {
           popupSize = aScreenEnd - aScreenPoint;
+        }
       }
     }
     else {
@@ -839,7 +840,12 @@ nsMenuPopupFrame::FlipOrResize(nscoord& aScreenPoint, nscoord aSize,
       // check whether there is more room to the left and right (or top and
       // bottom) of the anchor and put the popup on the side with more room.
       if (aScreenEnd - aAnchorEnd >= aAnchorBegin - aScreenBegin) {
-        popupSize = aScreenEnd - aScreenPoint;
+        if (mIsContextMenu) {
+          aScreenPoint = aScreenEnd - aSize;
+        }
+        else {
+          popupSize = aScreenEnd - aScreenPoint;
+        }
       }
       else {
         // flip such that the popup is to the left or top of the anchor point
@@ -849,7 +855,9 @@ nsMenuPopupFrame::FlipOrResize(nscoord& aScreenPoint, nscoord aSize,
         // screen. If so, resize the popup.
         if (aScreenPoint < aScreenBegin) {
           aScreenPoint = aScreenBegin;
-          popupSize = aAnchorBegin - aScreenPoint - aMarginBegin - aOffsetForContextMenu;
+          if (!mIsContextMenu) {
+            popupSize = aAnchorBegin - aScreenPoint - aMarginBegin;
+          }
         }
       }
     }
@@ -993,7 +1001,7 @@ nsMenuPopupFrame::SetPopupPosition(nsIFrame* aAnchorFrame)
                       nsPresContext::CSSPixelsToAppUnits(mScreenXPos) / factor);
     screenPoint.y = presContext->DevPixelsToAppUnits(
                       nsPresContext::CSSPixelsToAppUnits(mScreenYPos) / factor);
-    anchorRect = nsRect(screenPoint, nsSize());
+    anchorRect = nsRect(screenPoint, nsSize(0, 0));
 
     // add the margins on the popup
     screenPoint.MoveBy(margin.left + offsetForContextMenu,

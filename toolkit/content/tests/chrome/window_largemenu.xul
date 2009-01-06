@@ -5,8 +5,6 @@
   onfocus="setTimeout(runTests, 0);"
   xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
 
-  <title>Large Menu Tests</title>
-
   <script type="application/javascript"
           src="chrome://mochikit/content/tests/SimpleTest/EventUtils.js"/>
 
@@ -19,12 +17,17 @@
 <![CDATA[
 
 var gOverflowed = false, gUnderflowed = false;
+var gContextMenuTests = false;
 var gScreenY = -1;
 var gTestIndex = 0;
 var gTests = ["open normal", "open flipped position", "open with scrolling",
-              "open after scrolling", "open small again"];
+              "open after scrolling", "open small again",
+              "context menu enough space below",
+              "context menu more space above",
+              "context menu too big either side",
+              "context menu larger than screen"];
 
-function runTests()
+function setDocumentScreenY()
 {
   var mouseFn = function(event) { gScreenY = event.screenY; }
 
@@ -32,7 +35,11 @@ function runTests()
   window.addEventListener("mousedown", mouseFn, false);
   synthesizeMouse(document.documentElement, 0, 0, { });
   window.removeEventListener("mousedown", mouseFn, false);
+}
 
+function runTests()
+{
+  setDocumentScreenY();
   nextTest();
 }
 
@@ -65,6 +72,9 @@ function nextTest()
 
 function popupShown()
 {
+  if (gContextMenuTests)
+    return contextMenuPopupShown();
+
   var popup = document.getElementById("popup");
   var rect = popup.getBoundingClientRect();
   var sbo = document.getAnonymousNodes(popup)[0].scrollBoxObject;
@@ -124,17 +134,90 @@ function popupHidden()
     window.opener.wrappedJSObject.SimpleTest.finish();
     window.close();
   }
+  else if (gTests[gTestIndex] == "context menu enough space below") {
+    gContextMenuTests = true;
+    window.moveTo(screen.availLeft + 400, screen.availTop + 10);
+    synthesizeMouse(document.getElementById("label"), 4, 4, { type: "contextmenu", button: 2 });
+  }
+  else if (gContextMenuTests) {
+    contextMenuPopupHidden();
+  }
   else {
     nextTest();
   }
 }
+
+function contextMenuPopupShown()
+{
+  var popup = document.getElementById("popup");
+  var rect = popup.getBoundingClientRect();
+  var labelrect = document.getElementById("label").getBoundingClientRect();
+
+  is(rect.left, labelrect.left + 6, gTests[gTestIndex] + " left");
+  switch (gTests[gTestIndex]) {
+    case "context menu enough space below":
+      is(rect.top, labelrect.top + 6, gTests[gTestIndex] + " top");
+      break;
+    case "context menu more space above":
+      is(rect.top, labelrect.top - rect.height + 2, gTests[gTestIndex] + " top");
+      break;
+    case "context menu too big either side":
+      setDocumentScreenY();
+      // compare against the available size as well as the total size, as some
+      // platforms allow the menu to overlap os chrome and others do not
+      // the - 3 here is to account for 3 pixels that are subtracted from the
+      // screen size when sizing a popup for the popup shadow
+      var pos = (screen.availTop + screen.availHeight - 3 - rect.height) - gScreenY;
+      var availPos = (screen.top + screen.height - 3 - rect.height) - gScreenY;
+      ok(rect.top == pos || rect.top == availPos,
+         gTests[gTestIndex] + " top");
+      break;
+    case "context menu larger than screen":
+      is(rect.top, -(gScreenY - screen.availTop), gTests[gTestIndex] + " top");
+      break;
+  }
+
+  popup.hidePopup();
+}
+
+function contextMenuPopupHidden()
+{
+  var screenAvailBottom = screen.availTop + screen.availHeight;
+
+  var desiredHeight = -1;
+  if (gTests[gTestIndex] == "context menu more space above") {
+    window.moveTo(window.screenX, screenAvailBottom - 80);
+  }
+  if (gTests[gTestIndex] == "context menu too big either side") {
+    window.moveTo(window.screenX, screenAvailBottom / 2 - 80);
+    desiredHeight = screenAvailBottom / 2 + 120;
+  }
+  else if (gTests[gTestIndex] == "context menu larger than screen") {
+    desiredHeight = screen.availHeight + 80;
+  }
+
+  if (desiredHeight >= 0) {
+    var popup = document.getElementById("popup");
+    var height = popup.getBoundingClientRect().height;
+    var itemheight = document.getElementById("firstitem").getBoundingClientRect().height;
+    while (height < desiredHeight) {
+      var menu = document.createElement("menuitem");
+      menu.setAttribute("label", "Item");
+      popup.appendChild(menu);
+      height += itemheight;
+    }
+  }
+
+  synthesizeMouse(document.getElementById("label"), 4, 4, { type: "contextmenu", button: 2 });
+}
+
 ]]>
 </script>
 
-<label value="OK" popup="popup"/>
+<button id="label" label="OK" context="popup"/>
 <menupopup id="popup" onpopupshown="popupShown();" onpopuphidden="popupHidden();"
                       onoverflow="gOverflowed = true" onunderflow="gUnderflowed = true;">
-  <menuitem label="1"/>
+  <menuitem id="firstitem" label="1"/>
   <menuitem label="2"/>
   <menuitem label="3"/>
   <menuitem label="4"/>
