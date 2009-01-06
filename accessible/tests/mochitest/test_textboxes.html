@@ -15,6 +15,9 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=442648
   <script type="application/javascript"
           src="chrome://mochikit/content/a11y/accessible/common.js"></script>
   <script type="application/javascript"
+          src="chrome://mochikit/content/a11y/accessible/nsIAccessible_states.js"></script>
+
+  <script type="application/javascript"
           src="chrome://mochikit/content/a11y/accessible/testTextboxes.js"></script>
 
   <script type="application/javascript">
@@ -26,10 +29,10 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=442648
                null, // name
                "", // value
                "", // description
-               role_entry, // role
-               (state_focusable), // state
-               (ext_state_editable), // extState
-               (state_readonly), // absentState
+               ROLE_ENTRY, // role
+               (STATE_FOCUSABLE), // state
+               (EXT_STATE_EDITABLE), // extState
+               (STATE_READONLY), // absentState
                1, // numActions
                "activate",  // ActionName
                "Activate"); // ActionDescription
@@ -40,10 +43,10 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=442648
                "Second textbox:", // name
                "", // value
                "", // description
-               role_entry, // role
-               (state_focusable), // state
-               (ext_state_editable), // extState
-               (state_readonly), // absentState
+               ROLE_ENTRY, // role
+               (STATE_FOCUSABLE), // state
+               (EXT_STATE_EDITABLE), // extState
+               (STATE_READONLY), // absentState
                1, // numActions
                "activate",  // ActionName
                "Activate"); // ActionDescription
@@ -54,10 +57,10 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=442648
                "Textbox with predefined value:", // name
                "I have some text", // value
                "", // description
-               role_entry, // role
-               (state_focusable), // state
-               (ext_state_editable), // extState
-               (state_readonly), // absentState
+               ROLE_ENTRY, // role
+               (STATE_FOCUSABLE), // state
+               (EXT_STATE_EDITABLE), // extState
+               (STATE_READONLY), // absentState
                1, // numActions
                "activate",  // ActionName
                "Activate"); // ActionDescription
@@ -68,10 +71,10 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=442648
                "Enter some password here:", // name
                "", // value
                "", // description
-               role_password_text, // role
-               (state_focusable), // state
-               (ext_state_editable), // extState
-               (state_readonly), // absentState
+               ROLE_PASSWORD_TEXT, // role
+               (STATE_FOCUSABLE), // state
+               (EXT_STATE_EDITABLE), // extState
+               (STATE_READONLY), // absentState
                1, // numActions
                "activate",  // ActionName
                "Activate"); // ActionDescription
@@ -82,10 +85,10 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=442648
                null, // name
                "", // value
                "", // description
-               role_entry, // role
-               (state_focusable), // state
-               (ext_state_editable | ext_state_multi_line), // extState
-               (state_readonly), // absentState
+               ROLE_ENTRY, // role
+               (STATE_FOCUSABLE), // state
+               (EXT_STATE_EDITABLE | EXT_STATE_MULTI_LINE), // extState
+               (STATE_READONLY), // absentState
                1, // numActions
                "activate",  // ActionName
                "Activate"); // ActionDescription
@@ -96,10 +99,10 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=442648
                "Labelled textarea:", // name
                "", // value
                "", // description
-               role_entry, // role
-               (state_focusable), // state
-               (ext_state_editable | ext_state_multi_line), // extState
-               (state_readonly), // absentState
+               ROLE_ENTRY, // role
+               (STATE_FOCUSABLE), // state
+               (EXT_STATE_EDITABLE | EXT_STATE_MULTI_LINE), // extState
+               (STATE_READONLY), // absentState
                1, // numActions
                "activate",  // ActionName
                "Activate"); // ActionDescription
@@ -110,10 +113,10 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=442648
                "Pre-filled textarea:", // name
                "    I also have some text.\n    ", // value
                "", // description
-               role_entry, // role
-               (state_focusable), // state
-               (ext_state_editable | ext_state_multi_line), // extState
-               (state_readonly), // absentState
+               ROLE_ENTRY, // role
+               (STATE_FOCUSABLE), // state
+               (EXT_STATE_EDITABLE | EXT_STATE_MULTI_LINE), // extState
+               (STATE_READONLY), // absentState
                1, // numActions
                "activate",  // ActionName
                "Activate"); // ActionDescription
@@ -124,8 +127,8 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=442648
                "The following is a read-only textbox:", // name
                "You cannot change me.", // value
                "", // description
-               role_entry, // role
-               (state_focusable | state_readonly), // state
+               ROLE_ENTRY, // role
+               (STATE_FOCUSABLE | STATE_READONLY), // state
                (0), // extState
                (0), // absentState
                1, // numActions
@@ -138,9 +141,9 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=442648
                "This textarea is readonly, too:", // name
                "    You cannot change me, either.\n    ", // value
                "", // description
-               role_entry, // role
-               (state_focusable | state_readonly), // state
-               (ext_state_multi_line), // extState
+               ROLE_ENTRY, // role
+               (STATE_FOCUSABLE | STATE_READONLY), // state
+               (EXT_STATE_MULTI_LINE), // extState
                (0), // absentState
                1, // numActions
                "activate",  // ActionName
