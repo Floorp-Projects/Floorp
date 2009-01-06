@@ -7,12 +7,6 @@
   <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
 </head>
 <body>
-<video id='v'
-       src='seek.ogg'
-       onended='return playbackEnded();'
-       onloadedmetadata='return startTest();'
-       onseeking='return seekStarted();'
-       onseeked='return seekEnded();'></video>
 <pre id="test">
 <script class="testbody" type="text/javascript">
 var startPassed = false;
@@ -22,21 +16,20 @@ var seekFlagEnd = false;
 var readonly = true;
 var completed = false;
 
-var v = document.getElementById('v');
-ok(!v.seeking, "seeking should default to false");
-try {
-  v.seeking = 1;
-  readonly = false;
-}
-catch(e) {
-  readonly = true;
-}
-ok(readonly, "seeking should be readonly");
-
 function startTest() {
   if (completed)
     return false;
   var v = document.getElementById('v');
+  ok(!v.seeking, "seeking should default to false");
+  try {
+    v.seeking = 1;
+    readonly = false;
+  }
+  catch(e) {
+    readonly = true;
+  }
+  ok(readonly, "seeking should be readonly");
+
   v.play();
   v.currentTime=2;
   return false;
@@ -45,7 +38,6 @@ function startTest() {
 function seekStarted() {
   if (completed)
     return false;
-
   var v = document.getElementById('v');
   v.pause();
   startPassed = true;
@@ -82,5 +74,11 @@ function playbackEnded() {
 SimpleTest.waitForExplicitFinish();
 </script>
 </pre>
+<video id='v'
+       src='seek.ogg'
+       onended='return playbackEnded();'
+       onloadedmetadata='return startTest();'
+       onseeking='return seekStarted();'
+       onseeked='return seekEnded();'></video>
 </body>
 </html>

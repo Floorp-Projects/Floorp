@@ -7,10 +7,6 @@
   <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
 </head>
 <body>
-<video id='v'
-       src='seek.ogg'
-       onloadedmetadata='return startTest();'
-       ontimeupdate='return timeUpdated();'></video>
 <pre id="test">
 <script class="testbody" type="text/javascript">
 // Test if the media size during the first timeupdate is correct.
@@ -41,5 +37,9 @@ function timeUpdated() {
 SimpleTest.waitForExplicitFinish();
 </script>
 </pre>
+<video id='v'
+       src='seek.ogg'
+       onloadedmetadata='return startTest();'
+       ontimeupdate='return timeUpdated();'></video>
 </body>
 </html>

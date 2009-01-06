@@ -7,11 +7,6 @@
   <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
 </head>
 <body>
-<video id='v'
-       src='seek.ogg'
-       onloadedmetadata='return startTest();'
-       onended='return playbackEnded();'
-       ontimeupdate='return timeUpdated();'></video>
 <pre id="test">
 <script class="testbody" type="text/javascript">
 // Test if timeupdate is dispatched and the current time during the
@@ -54,5 +49,10 @@ function playbackEnded() {
 SimpleTest.waitForExplicitFinish();
 </script>
 </pre>
+<video id='v'
+       src='seek.ogg'
+       onloadedmetadata='return startTest();'
+       onended='return playbackEnded();'
+       ontimeupdate='return timeUpdated();'></video>
 </body>
 </html>

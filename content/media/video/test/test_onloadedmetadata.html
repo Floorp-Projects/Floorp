@@ -12,15 +12,6 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=467972
 <body>
 <a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=467972">Mozilla Bug 467972</a>
 
-<video id="v"
-       src="320x240.ogg"
-       onloadedmetadata="return loadedMetaData();"
-       onended="playbackEnded();"
-       onloadeddata="return loadedData();"       
-       onseeking="seekStarted();"
-       onseeked="seekEnded();"       
-       controls></video>
-
 <p id="display"></p>
 <div id="content" style="display: none">
   
@@ -84,5 +75,13 @@ SimpleTest.waitForExplicitFinish();
 
 </script>
 </pre>
+<video id="v"
+       src="320x240.ogg"
+       onloadedmetadata="return loadedMetaData();"
+       onended="playbackEnded();"
+       onloadeddata="return loadedData();"       
+       onseeking="seekStarted();"
+       onseeked="seekEnded();"       
+       controls></video>
 </body>
 </html>
