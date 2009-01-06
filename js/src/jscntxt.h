@@ -128,8 +128,8 @@ typedef struct JSTraceMonitor {
     uint32                  globalShape;
     CLS(SlotList)           globalSlots;
     CLS(TypeMap)            globalTypeMap;
-    jsval                   *recoveryDoublePool;
-    jsval                   *recoveryDoublePoolPtr;
+    jsval                   *reservedDoublePool;
+    jsval                   *reservedDoublePoolPtr;
 
     /*
      * reservedObjects is a linked list (via fslots[0]) of preallocated JSObjects.
