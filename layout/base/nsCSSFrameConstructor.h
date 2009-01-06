@@ -809,13 +809,13 @@ private:
   //  Calls BeginBuildingScrollFrame, InitAndRestoreFrame, and then FinishBuildingScrollFrame.
   //  Sets the primary frame for the content to the output aNewFrame.
   // @param aNewFrame the created scrollframe --- output only
+  // @param aParentFrame the geometric parent that the scrollframe will have.
   nsresult
   BuildScrollFrame(nsFrameConstructorState& aState,
                    nsIContent*              aContent,
                    nsStyleContext*          aContentStyle,
                    nsIFrame*                aScrolledFrame,
                    nsIFrame*                aParentFrame,
-                   nsIFrame*                aContentParentFrame,
                    nsIFrame*&               aNewFrame,
                    nsStyleContext*&         aScrolledChildStyle);
 
@@ -825,7 +825,6 @@ private:
                            nsIContent*              aContent,
                            nsStyleContext*          aContentStyle,
                            nsIFrame*                aParentFrame,
-                           nsIFrame*                aContentParentFrame,
                            nsIAtom*                 aScrolledPseudo,
                            PRBool                   aIsRoot,
                            nsIFrame*&               aNewFrame);
