@@ -3949,7 +3949,7 @@ test(testLirBufOOM);
  *                                                                           *
  *****************************************************************************/
 
-load("trace-test-math.js");
+load("math-trace-tests.js");
 
 // BEGIN MANDELBROT STUFF
 // XXXbz I would dearly like to wrap it up into a function to avoid polluting
