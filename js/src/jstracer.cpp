@@ -1312,43 +1312,43 @@ ValueToNative(JSContext* cx, jsval v, uint8 type, double* slot)
     }
 }
 
-/* We maintain an emergency recovery pool of doubles so we can recover safely if a trace runs
+/* We maintain an emergency pool of doubles so we can recover safely if a trace runs
    out of memory (doubles or objects). */
 static jsval
-AllocateDoubleFromRecoveryPool(JSContext* cx)
+AllocateDoubleFromReservedPool(JSContext* cx)
 {
     JSTraceMonitor* tm = &JS_TRACE_MONITOR(cx);
-    JS_ASSERT(tm->recoveryDoublePoolPtr > tm->recoveryDoublePool);
-    return *--tm->recoveryDoublePoolPtr;
+    JS_ASSERT(tm->reservedDoublePoolPtr > tm->reservedDoublePool);
+    return *--tm->reservedDoublePoolPtr;
 }
 
 static bool
-js_ReplenishRecoveryPool(JSContext* cx, JSTraceMonitor* tm)
+js_ReplenishReservedPool(JSContext* cx, JSTraceMonitor* tm)
 {
     /* We should not be called with a full pool. */
-    JS_ASSERT((size_t) (tm->recoveryDoublePoolPtr - tm->recoveryDoublePool) <
+    JS_ASSERT((size_t) (tm->reservedDoublePoolPtr - tm->reservedDoublePool) <
               MAX_NATIVE_STACK_SLOTS);
 
     /*
      * When the GC runs in js_NewDoubleInRootedValue, it resets
-     * tm->recoveryDoublePoolPtr back to tm->recoveryDoublePool. 
+     * tm->reservedDoublePoolPtr back to tm->reservedDoublePool. 
      */
     JSRuntime* rt = cx->runtime;
     uintN gcNumber = rt->gcNumber;
-    jsval* ptr = tm->recoveryDoublePoolPtr; 
-    while (ptr < tm->recoveryDoublePool + MAX_NATIVE_STACK_SLOTS) {
+    jsval* ptr = tm->reservedDoublePoolPtr; 
+    while (ptr < tm->reservedDoublePool + MAX_NATIVE_STACK_SLOTS) {
         if (!js_NewDoubleInRootedValue(cx, 0.0, ptr)) 
             goto oom;
         if (rt->gcNumber != gcNumber) {
-            JS_ASSERT(tm->recoveryDoublePoolPtr == tm->recoveryDoublePool);
-            ptr = tm->recoveryDoublePool;
+            JS_ASSERT(tm->reservedDoublePoolPtr == tm->reservedDoublePool);
+            ptr = tm->reservedDoublePool;
             if (uintN(rt->gcNumber - gcNumber) > uintN(1))
                 goto oom;
             continue;
         }
         ++ptr;
     }
-    tm->recoveryDoublePoolPtr = ptr;
+    tm->reservedDoublePoolPtr = ptr;
     return true;
 
 oom:
@@ -1356,7 +1356,7 @@ oom:
      * Already massive GC pressure, no need to hold doubles back.
      * We won't run any native code anyway.
      */
-    tm->recoveryDoublePoolPtr = tm->recoveryDoublePool;
+    tm->reservedDoublePoolPtr = tm->reservedDoublePool;
     return false;
 }
 
@@ -1399,7 +1399,7 @@ NativeToValue(JSContext* cx, jsval& v, uint8 type, double* slot)
             JS_ASSERT(ok);
             return;
         }
-        v = AllocateDoubleFromRecoveryPool(cx);
+        v = AllocateDoubleFromReservedPool(cx);
         JS_ASSERT(JSVAL_IS_DOUBLE(v) && *JSVAL_TO_DOUBLE(v) == 0.0);
         *JSVAL_TO_DOUBLE(v) = d;
         return;
@@ -3224,8 +3224,8 @@ js_RecordLoopEdge(JSContext* cx, TraceRecorder* r, uintN& inlineCallCount)
         JSTraceMonitor* tm = &JS_TRACE_MONITOR(cx);
         
         /* Make sure inner tree call will not run into an out-of-memory condition. */
-        if (tm->recoveryDoublePoolPtr < (tm->recoveryDoublePool + MAX_NATIVE_STACK_SLOTS) &&
-            !js_ReplenishRecoveryPool(cx, tm)) {
+        if (tm->reservedDoublePoolPtr < (tm->reservedDoublePool + MAX_NATIVE_STACK_SLOTS) &&
+            !js_ReplenishReservedPool(cx, tm)) {
             js_AbortRecording(cx, "Couldn't call inner tree (out of memory)");
             return false; 
         }
@@ -3532,7 +3532,7 @@ js_ExecuteTree(JSContext* cx, Fragment* f, uintN& inlineCallCount,
     /* Make sure the global object is sane. */
     JS_ASSERT(!ngslots || (OBJ_SHAPE(JS_GetGlobalForObject(cx, cx->fp->scopeChain)) == tm->globalShape)); 
     /* Make sure our caller replenished the double pool. */
-    JS_ASSERT(tm->recoveryDoublePoolPtr >= tm->recoveryDoublePool + MAX_NATIVE_STACK_SLOTS);
+    JS_ASSERT(tm->reservedDoublePoolPtr >= tm->reservedDoublePool + MAX_NATIVE_STACK_SLOTS);
 
     /* Reserve objects and stack space now, to make leaving the tree infallible. */
     void *reserve;
@@ -3772,10 +3772,9 @@ js_MonitorLoopEdge(JSContext* cx, uintN& inlineCallCount)
     }
     JS_ASSERT(!tm->recorder);
 
-    
-    /* Check the recovery pool of doubles (this might trigger a GC). */
-    if (tm->recoveryDoublePoolPtr < (tm->recoveryDoublePool + MAX_NATIVE_STACK_SLOTS) &&
-        !js_ReplenishRecoveryPool(cx, tm)) {
+    /* Check the pool of reserved doubles (this might trigger a GC). */
+    if (tm->reservedDoublePoolPtr < (tm->reservedDoublePool + MAX_NATIVE_STACK_SLOTS) &&
+        !js_ReplenishReservedPool(cx, tm)) {
         return false; /* Out of memory, don't try to record now. */
     }
     
@@ -4024,7 +4023,7 @@ js_InitJIT(JSTraceMonitor *tm)
     }
 #endif
     if (!tm->fragmento) {
-        JS_ASSERT(!tm->globalSlots && !tm->globalTypeMap && !tm->recoveryDoublePool);
+        JS_ASSERT(!tm->globalSlots && !tm->globalTypeMap && !tm->reservedDoublePool);
         Fragmento* fragmento = new (&gc) Fragmento(core, 24);
         verbose_only(fragmento->labels = new (&gc) LabelMap(core, NULL);)
         tm->fragmento = fragmento;
@@ -4034,7 +4033,7 @@ js_InitJIT(JSTraceMonitor *tm)
 #endif
         tm->globalSlots = new (&gc) SlotList();
         tm->globalTypeMap = new (&gc) TypeMap();
-        tm->recoveryDoublePoolPtr = tm->recoveryDoublePool = new jsval[MAX_NATIVE_STACK_SLOTS];
+        tm->reservedDoublePoolPtr = tm->reservedDoublePool = new jsval[MAX_NATIVE_STACK_SLOTS];
     }
     if (!tm->reFragmento) {
         Fragmento* fragmento = new (&gc) Fragmento(core, 20);
@@ -4066,7 +4065,7 @@ js_FinishJIT(JSTraceMonitor *tm)
     }
 #endif
     if (tm->fragmento != NULL) {
-        JS_ASSERT(tm->globalSlots && tm->globalTypeMap && tm->recoveryDoublePool);
+        JS_ASSERT(tm->globalSlots && tm->globalTypeMap && tm->reservedDoublePool);
         verbose_only(delete tm->fragmento->labels;)
 #ifdef DEBUG
         delete tm->lirbuf->names;
@@ -4080,8 +4079,8 @@ js_FinishJIT(JSTraceMonitor *tm)
         tm->globalSlots = NULL;
         delete tm->globalTypeMap;
         tm->globalTypeMap = NULL;
-        delete[] tm->recoveryDoublePool;
-        tm->recoveryDoublePool = tm->recoveryDoublePoolPtr = NULL;
+        delete[] tm->reservedDoublePool;
+        tm->reservedDoublePool = tm->reservedDoublePoolPtr = NULL;
     }
     if (tm->reFragmento != NULL) {
         delete tm->reLirBuf;
