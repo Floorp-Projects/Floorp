@@ -461,7 +461,7 @@ def maybeForceLeakThreshold(options):
     elif options.browserChrome:
       # We still leak a nondeterministic amount running browser-chrome tests.
       # But we are close to 0 (bug), so start to prevent/detect regressions. (Bug 460548)
-      options.leakThreshold = 75000
+      options.leakThreshold = 72500
     elif options.a11y:
       # We don't leak running the --a11y tests.
       options.leakThreshold = 0
