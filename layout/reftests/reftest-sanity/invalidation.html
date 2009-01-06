@@ -1,0 +1,12 @@
+<!DOCTYPE HTML>
+<html class="reftest-wait">
+<body style="border:10px solid pink;">
+<script>
+function doTest() {
+  document.body.style.border = "";
+  document.documentElement.removeAttribute('class');
+}
+document.addEventListener("MozReftestInvalidate", doTest, false);
+</script>
+</body>
+</html>

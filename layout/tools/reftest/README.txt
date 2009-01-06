@@ -267,6 +267,27 @@ Note that in layout tests it is often enough to trigger layout using
 When possible, you should use this technique instead of making your
 test async.
 
+Invalidation Tests
+==================
+
+When a test (or reference) uses reftest-wait, reftest tracks invalidation
+via MozAfterPaint and updates the test image in the same way that
+a regular window would be repainted. Therefore it is possible to test
+invalidation-related bugs by setting up initial content and then
+dynamically modifying it before removing reftest-wait. However, it is
+important to get the timing of these dynamic modifications right so that
+the test doesn't accidentally pass because a full repaint of the window
+was already pending. To help with this, reftest fires one MozReftestInvalidate
+event at the document root element for a reftest-wait test when it is safe to
+make changes that should test invalidation. The event bubbles up to the
+document and window so you can set listeners there too. For example,
+
+function doTest() {
+  document.body.style.border = "";
+  document.documentElement.removeAttribute('class');
+}
+document.addEventListener("MozReftestInvalidate", doTest, false);
+
 Printing Tests
 ==============
 Now that the patch for bug 374050 has landed

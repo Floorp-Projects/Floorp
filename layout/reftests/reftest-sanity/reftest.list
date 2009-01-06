@@ -35,3 +35,7 @@ HTTP != blank.html default.html
 
 HTTP(..) == filter-1.xhtml filter-1-ref.xhtml
 HTTP(..) == filter-2.xhtml filter-2-ref.xhtml
+
+# test that the MozReftestInvalidate event fires
+== invalidation.html about:blank
+== zoom-invalidation.html zoom-invalidation-ref.html
