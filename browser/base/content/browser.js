@@ -2124,9 +2124,10 @@ function losslessDecodeURI(aURI) {
                          encodeURIComponent);
     } catch (e) {}
 
-  // Encode invisible characters (invisible control characters, soft hyphen,
-  // zero-width space, BOM, line separator, paragraph separator) (bug 452979)
-  value = value.replace(/[\v\x0c\x1c\x1d\x1e\x1f\u00ad\u200b\ufeff\u2028\u2029]/g,
+  // Encode invisible characters (soft hyphen, zero-width space, BOM,
+  // line and paragraph separator, word joiner, invisible times,
+  // invisible separator, object replacement character) (bug 452979)
+  value = value.replace(/[\v\x0c\x1c\x1d\x1e\x1f\u00ad\u200b\ufeff\u2028\u2029\u2060\u2062\u2063\ufffc]/g,
                         encodeURIComponent);
 
   // Encode bidirectional formatting characters.
