@@ -36,6 +36,12 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
+/**
+ * Using Places services on quit-application or later is not reliable, so make
+ * sure to do shutdown work on quit-application-granted, or history
+ * synchronization could fail, losing latest changes.
+ */
+ 
 #include "nsISupports.idl"
 #include "nsIArray.idl"
 #include "nsIURI.idl"
