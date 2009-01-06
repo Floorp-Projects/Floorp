@@ -6,7 +6,7 @@
   <tabbox>
     <tabs>
       <tab label="One"/>
-      <tab label="Two"/>
+      <tab label="Two" style="padding: 0"/>
       <tab label="Three" style="display: none"/>
     </tabs>
     <tabpanels>
