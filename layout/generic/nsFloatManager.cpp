@@ -285,7 +285,7 @@ nsFloatManager::RemoveTrailingRegions(nsIFrame* aFrameList)
     }
     --newLength;
   }
-  mFloats.RemoveElementsAt(newLength, mFloats.Length() - newLength);
+  mFloats.TruncateLength(newLength);
 
 #ifdef DEBUG
   for (PRUint32 i = 0; i < mFloats.Length(); ++i) {
@@ -334,8 +334,7 @@ nsFloatManager::PopState(SavedState* aState)
 
   NS_ASSERTION(aState->mFloatInfoCount <= mFloats.Length(),
                "somebody misused PushState/PopState");
-  mFloats.RemoveElementsAt(aState->mFloatInfoCount,
-                           mFloats.Length() - aState->mFloatInfoCount);
+  mFloats.TruncateLength(aState->mFloatInfoCount);
 }
 
 nscoord
