@@ -6085,7 +6085,7 @@ nsCSSFrameConstructor::ConstructXULFrame(nsFrameConstructorState& aState,
     }
 
 #ifdef MOZ_XUL
-    if (aTag == nsGkAtoms::popupgroup &&
+    if (isXULNS && aTag == nsGkAtoms::popupgroup &&
         aContent->IsRootOfNativeAnonymousSubtree()) {
       nsIRootBox* rootBox = nsIRootBox::GetRootBox(mPresShell);
       if (rootBox) {
@@ -6098,12 +6098,8 @@ nsCSSFrameConstructor::ConstructXULFrame(nsFrameConstructorState& aState,
 
     // Process the child content if requested
     nsFrameItems childItems;
-    // XXXbz don't we need calls to ShouldBuildChildFrames
-    // elsewhere too?  Why only for XUL?
-    if (mDocument->BindingManager()->ShouldBuildChildFrames(aContent)) {
-      rv = ProcessChildren(aState, aContent, aStyleContext, newFrame, PR_FALSE,
-                           childItems, PR_FALSE);
-    }
+    rv = ProcessChildren(aState, aContent, aStyleContext, newFrame, PR_FALSE,
+                         childItems, PR_FALSE);
 
     // Set the frame's initial child list
     newFrame->SetInitialChildList(nsnull, childItems.childList);
@@ -6111,9 +6107,10 @@ nsCSSFrameConstructor::ConstructXULFrame(nsFrameConstructorState& aState,
 
 #ifdef MOZ_XUL
   // register tooltip support if needed
-  if (aTag == nsGkAtoms::treechildren || // trees always need titletips
-      aContent->HasAttr(kNameSpaceID_None, nsGkAtoms::tooltiptext) ||
-      aContent->HasAttr(kNameSpaceID_None, nsGkAtoms::tooltip))
+  if (isXULNS &&
+      (aTag == nsGkAtoms::treechildren || // trees always need titletips
+       aContent->HasAttr(kNameSpaceID_None, nsGkAtoms::tooltiptext) ||
+       aContent->HasAttr(kNameSpaceID_None, nsGkAtoms::tooltip)))
   {
     nsIRootBox* rootBox = nsIRootBox::GetRootBox(mPresShell);
     if (rootBox)
@@ -11205,7 +11202,8 @@ nsCSSFrameConstructor::ProcessChildren(nsFrameConstructorState& aState,
   }
 
   nsresult rv = NS_OK;
-  if (!aFrame->IsLeaf()) {
+  if (!aFrame->IsLeaf() &&
+      mDocument->BindingManager()->ShouldBuildChildFrames(aContent)) {
     // :before/:after content should have the same style context parent
     // as normal kids.
     // Note that we don't use this style context for looking up things like
