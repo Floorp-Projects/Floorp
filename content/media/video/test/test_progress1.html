@@ -1,0 +1,68 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+  <title>Media test: progress events</title>
+  <script type="text/javascript" src="/MochiKit/MochiKit.js"></script>
+  <script type="text/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
+</head>
+<body>
+<pre id="test">
+<script class="testbody" type="text/javascript">
+var completed = false;
+var load_count = 0;
+var last_progress = false;
+
+function on_loadedmetadata() {
+  var v = document.getElementById('v');
+  ok(v, "Found video element after metadata loaded: " + v);
+  v.play();
+  dump('test_progress1: on_loadedmetadata exiting\n');
+}
+
+function do_progress(e) {
+  dump('test_progress1: do_progress ' + e.loaded + '\n');
+  ok(!completed, "Check for progress event after completed: " + completed);
+  ok(e.lengthComputable, "Check progress lengthComputable");
+  ok(e.loaded >= 0 && e.loaded <= e.total, "Check progress loaded: " + e.loaded);
+  ok(e.total == 285310, "Check progress total: " + e.total);
+  last_progress = e.loaded;
+}
+
+function do_ended() {
+  dump('test_progress1: do_ended\n');
+  ok(!completed, "Check for duplicate ended event");
+  completed = true;
+  ok(last_progress == 285310, "Last progress event size: " + last_progress);
+  SimpleTest.finish();
+}
+
+function do_load(e) {
+  load_count++;
+  dump('test_progress1: do_loaded ' + e.loaded + "\n");
+  ok(load_count == 1, "load event raised: " + load_count);
+}
+
+function do_timeupdate() {
+  var v = document.getElementById('v');
+  dump('test_progress1: timeupdate: ' + v.currentTime + "\n");
+}
+
+function do_play() {
+  dump('test_progress1: do_play\n');
+}
+
+SimpleTest.waitForExplicitFinish();
+</script>
+</pre>
+<video id='v'
+       src='seek.ogg'
+       onloadedmetadata='on_loadedmetadata()'
+       onended='do_ended()'
+       ontimeupdate='do_timeupdate()'
+       onload='do_load(event)'
+       onplay='do_play()'
+       onprogress='do_progress(event)'>
+</video>
+</body>
+</html>

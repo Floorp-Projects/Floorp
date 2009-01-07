@@ -982,7 +982,8 @@ nsWaveDecoder::nsWaveDecoder()
     mEndedDuration(std::numeric_limits<float>::quiet_NaN()),
     mEnded(PR_FALSE),
     mNotifyOnShutdown(PR_FALSE),
-    mSeekable(PR_TRUE)
+    mSeekable(PR_TRUE),
+    mResourceLoaded(PR_FALSE)
 {
   MOZ_COUNT_CTOR(nsWaveDecoder);
 }
@@ -1098,6 +1099,7 @@ nsWaveDecoder::Stop()
 
   mStopping = PR_TRUE;
 
+  mIgnoreProgressData = PR_TRUE;
   StopProgress();
 
   if (mPlaybackStateMachine) {
@@ -1130,6 +1132,11 @@ nsWaveDecoder::Load(nsIURI* aURI, nsIChannel* aChannel, nsIStreamListener** aStr
 {
   mStopping = PR_FALSE;
 
+  // Reset progress member variables
+  mIgnoreProgressData = PR_TRUE;
+  mBytesDownloaded = 0;
+  mResourceLoaded = PR_FALSE;
+
   if (aStreamListener) {
     *aStreamListener = nsnull;
   }
@@ -1145,7 +1152,6 @@ nsWaveDecoder::Load(nsIURI* aURI, nsIChannel* aChannel, nsIStreamListener** aStr
     NS_ENSURE_SUCCESS(rv, rv);
   }
 
-  StartProgress();
   RegisterShutdownObserver();
 
   mStream = new nsMediaStream();
@@ -1177,6 +1183,18 @@ nsWaveDecoder::MetadataLoaded()
     mElement->MetadataLoaded();
     mElement->FirstFrameLoaded();
   }
+
+  if (!mResourceLoaded) {
+    StartProgress();
+  }
+  else if (mElement)
+  {
+    // Resource was loaded during metadata loading, when progress
+    // events are being ignored. Fire the final progress event.
+    mElement->DispatchAsyncProgressEvent(NS_LITERAL_STRING("progress"));
+  }
+
+  mIgnoreProgressData = PR_FALSE;
 }
 
 void
@@ -1198,13 +1216,28 @@ nsWaveDecoder::ResourceLoaded()
   if (mShuttingDown) {
     return;
   }
+
+  // If we know the content length, set the bytes downloaded to this
+  // so the final progress event gets the correct final value.
+  if (mContentLength >= 0) {
+    mBytesDownloaded = mContentLength;
+  }
+
+  mResourceLoaded = PR_TRUE;
+
   if (mElement) {
     mElement->ResourceLoaded();
   }
   if (mPlaybackStateMachine) {
     mPlaybackStateMachine->StreamEnded();
   }
+
   StopProgress();
+
+  // Ensure the final progress event gets fired
+  if (mElement && !mIgnoreProgressData) {
+    mElement->DispatchAsyncProgressEvent(NS_LITERAL_STRING("progress"));
+  }
 }
 
 void
@@ -1261,7 +1294,9 @@ nsWaveDecoder::SetTotalBytes(PRInt64 aBytes)
 void
 nsWaveDecoder::UpdateBytesDownloaded(PRUint64 aBytes)
 {
-  mBytesDownloaded = aBytes;
+  if (!mIgnoreProgressData) {
+    mBytesDownloaded = aBytes;
+  }
 }
 
 // An event that gets posted to the main thread, when the media element is
