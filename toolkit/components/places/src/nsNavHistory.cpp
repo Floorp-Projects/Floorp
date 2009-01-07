@@ -118,7 +118,6 @@
 #define PREF_BROWSER_HISTORY_EXPIRE_DAYS_MIN    "history_expire_days_min"
 #define PREF_BROWSER_HISTORY_EXPIRE_DAYS_MAX    "history_expire_days"
 #define PREF_BROWSER_HISTORY_EXPIRE_SITES       "history_expire_sites"
-#define PREF_AUTOCOMPLETE_ONLY_TYPED            "urlbar.matchOnlyTyped"
 #define PREF_AUTOCOMPLETE_MATCH_BEHAVIOR        "urlbar.matchBehavior"
 #define PREF_AUTOCOMPLETE_SEARCH_SOURCES        "urlbar.search.sources"
 #define PREF_AUTOCOMPLETE_FILTER_JAVASCRIPT     "urlbar.filter.javascript"
@@ -130,6 +129,7 @@
 #define PREF_AUTOCOMPLETE_RESTRICT_TAG          "urlbar.restrict.tag"
 #define PREF_AUTOCOMPLETE_MATCH_TITLE           "urlbar.match.title"
 #define PREF_AUTOCOMPLETE_MATCH_URL             "urlbar.match.url"
+#define PREF_AUTOCOMPLETE_RESTRICT_TYPED        "urlbar.restrict.typed"
 #define PREF_AUTOCOMPLETE_SEARCH_CHUNK_SIZE     "urlbar.search.chunkSize"
 #define PREF_AUTOCOMPLETE_SEARCH_TIMEOUT        "urlbar.search.timeout"
 #define PREF_DB_CACHE_PERCENTAGE                "history_cache_percentage"
@@ -319,12 +319,14 @@ const PRInt32 nsNavHistory::kAutoCompleteIndex_ParentId = 3;
 const PRInt32 nsNavHistory::kAutoCompleteIndex_BookmarkTitle = 4;
 const PRInt32 nsNavHistory::kAutoCompleteIndex_Tags = 5;
 const PRInt32 nsNavHistory::kAutoCompleteIndex_VisitCount = 6;
+const PRInt32 nsNavHistory::kAutoCompleteIndex_Typed = 7;
 
 const PRInt32 nsNavHistory::kAutoCompleteBehaviorHistory = 1 << 0;
 const PRInt32 nsNavHistory::kAutoCompleteBehaviorBookmark = 1 << 1;
 const PRInt32 nsNavHistory::kAutoCompleteBehaviorTag = 1 << 2;
 const PRInt32 nsNavHistory::kAutoCompleteBehaviorTitle = 1 << 3;
 const PRInt32 nsNavHistory::kAutoCompleteBehaviorUrl = 1 << 4;
+const PRInt32 nsNavHistory::kAutoCompleteBehaviorTyped = 1 << 5;
 
 static const char* gQuitApplicationMessage = "quit-application";
 static const char* gXpcomShutdown = "xpcom-shutdown";
@@ -367,7 +369,6 @@ nsNavHistory::nsNavHistory() : mBatchLevel(0),
                                mNowValid(PR_FALSE),
                                mExpireNowTimer(nsnull),
                                mExpire(this),
-                               mAutoCompleteOnlyTyped(PR_FALSE),
                                mAutoCompleteMatchBehavior(MATCH_BOUNDARY_ANYWHERE),
                                mAutoCompleteSearchSources(SEARCH_BOTH),
                                mAutoCompleteMaxResults(25),
@@ -376,6 +377,7 @@ nsNavHistory::nsNavHistory() : mBatchLevel(0),
                                mAutoCompleteRestrictTag(NS_LITERAL_STRING("+")),
                                mAutoCompleteMatchTitle(NS_LITERAL_STRING("#")),
                                mAutoCompleteMatchUrl(NS_LITERAL_STRING("@")),
+                               mAutoCompleteRestrictTyped(NS_LITERAL_STRING("~")),
                                mAutoCompleteSearchChunkSize(100),
                                mAutoCompleteSearchTimeout(100),
                                mAutoCompleteDefaultBehavior(0),
@@ -499,7 +501,6 @@ nsNavHistory::Init()
 
   nsCOMPtr<nsIPrefBranch2> pbi = do_QueryInterface(mPrefBranch);
   if (pbi) {
-    pbi->AddObserver(PREF_AUTOCOMPLETE_ONLY_TYPED, this, PR_FALSE);
     pbi->AddObserver(PREF_AUTOCOMPLETE_MATCH_BEHAVIOR, this, PR_FALSE);
     pbi->AddObserver(PREF_AUTOCOMPLETE_SEARCH_SOURCES, this, PR_FALSE);
     pbi->AddObserver(PREF_AUTOCOMPLETE_FILTER_JAVASCRIPT, this, PR_FALSE);
@@ -510,6 +511,7 @@ nsNavHistory::Init()
     pbi->AddObserver(PREF_AUTOCOMPLETE_RESTRICT_TAG, this, PR_FALSE);
     pbi->AddObserver(PREF_AUTOCOMPLETE_MATCH_TITLE, this, PR_FALSE);
     pbi->AddObserver(PREF_AUTOCOMPLETE_MATCH_URL, this, PR_FALSE);
+    pbi->AddObserver(PREF_AUTOCOMPLETE_RESTRICT_TYPED, this, PR_FALSE);
     pbi->AddObserver(PREF_AUTOCOMPLETE_SEARCH_CHUNK_SIZE, this, PR_FALSE);
     pbi->AddObserver(PREF_AUTOCOMPLETE_SEARCH_TIMEOUT, this, PR_FALSE);
     pbi->AddObserver(PREF_BROWSER_HISTORY_EXPIRE_DAYS_MAX, this, PR_FALSE);
@@ -2008,10 +2010,6 @@ nsNavHistory::LoadPrefs(PRBool aInitializing)
     mExpireSites = EXPIRATION_CAP_SITES;
   
 #ifdef MOZ_XUL
-  PRBool oldCompleteOnlyTyped = mAutoCompleteOnlyTyped;
-  mPrefBranch->GetBoolPref(PREF_AUTOCOMPLETE_ONLY_TYPED,
-                           &mAutoCompleteOnlyTyped);
-
   PRInt32 matchBehavior = 1;
   mPrefBranch->GetIntPref(PREF_AUTOCOMPLETE_MATCH_BEHAVIOR,
                           &matchBehavior);
@@ -2076,12 +2074,9 @@ nsNavHistory::LoadPrefs(PRBool aInitializing)
   mPrefBranch->GetCharPref(PREF_AUTOCOMPLETE_MATCH_URL,
                            getter_Copies(prefStr));
   mAutoCompleteMatchUrl = NS_ConvertUTF8toUTF16(prefStr);
-
-  if (!aInitializing && oldCompleteOnlyTyped != mAutoCompleteOnlyTyped) {
-    // update the autocomplete statements if the option has changed.
-    nsresult rv = CreateAutoCompleteQueries();
-    NS_ENSURE_SUCCESS(rv, rv);
-  }
+  mPrefBranch->GetCharPref(PREF_AUTOCOMPLETE_RESTRICT_TYPED,
+                           getter_Copies(prefStr));
+  mAutoCompleteRestrictTyped = NS_ConvertUTF8toUTF16(prefStr);
 
   // Clear out the search on any pref change to invalidate cached search
   mCurrentSearchString = EmptyString();
