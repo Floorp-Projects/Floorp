@@ -82,6 +82,10 @@ addPageBook(11, 1, 1, [1]); // title and url
 for each (let uri in [4,6,7,8,9,11])
   histsvc.removePage(toURI(kURIs[uri]));
 
+// Set some pages as typed
+for each (let uri in [0,3,10])
+  histsvc.addVisit(toURI(kURIs[uri]), Date.now() * 1000, null, histsvc.TRANSITION_TYPED, false, 0);
+
 // Provide for each test: description; search terms; array of gPages indices of
 // pages that should match; optional function to be run before the test
 let gTests = [
@@ -112,6 +116,8 @@ let gTests = [
    "foo @", [2,3,6,7,10,11]],
   ["10: foo + -> is tag",
    "foo +", [8,9,10,11]],
+  ["10.1: foo ~ -> is typed",
+   "foo ~", [3,10]],
 
   // Test various pairs of special searches
   ["11: foo ^ * -> history, is star",
@@ -122,24 +128,36 @@ let gTests = [
    "foo ^ @", [2,3,10]],
   ["14: foo ^ + -> history, is tag",
    "foo ^ +", [10]],
+  ["14.1: foo ^ ~ -> history, is typed",
+   "foo ^ ~", [3,10]],
   ["15: foo * # -> is star, in title",
    "foo * #", [5,7,8,9,10,11]],
   ["16: foo * @ -> is star, in url",
    "foo * @", [6,7,10,11]],
   ["17: foo * + -> same as +",
    "foo * +", [8,9,10,11]],
+  ["17.1: foo * ~ -> is star, is typed",
+   "foo * ~", [10]],
   ["18: foo # @ -> in title, in url",
    "foo # @", [3,7,10,11]],
   ["19: foo # + -> in title, is tag",
    "foo # +", [8,9,10,11]],
+  ["19.1: foo # ~ -> in title, is typed",
+   "foo # ~", [3,10]],
   ["20: foo @ + -> in url, is tag",
    "foo @ +", [10,11]],
+  ["20.1: foo @ ~ -> in url, is typed",
+   "foo @ ~", [3,10]],
+  ["20.2: foo + ~ -> is tag, is typed",
+   "foo + ~", [10]],
 
   // Test default usage by setting certain bits of default.behavior to 1
   ["21: foo -> default history",
    "foo", [1,2,3,5,10], function() makeDefault(1)],
   ["22: foo -> default history, is star",
    "foo", [5,10], function() makeDefault(3)],
+  ["22.1: foo -> default history, is star, is typed",
+   "foo", [10], function() makeDefault(35)],
   ["23: foo -> default history, is star, in url",
    "foo", [10], function() makeDefault(19)],
 
