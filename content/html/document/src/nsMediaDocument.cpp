@@ -85,7 +85,7 @@ nsMediaDocumentStreamListener::OnStartRequest(nsIRequest* request, nsISupports *
     return mNextStream->OnStartRequest(request, ctxt);
   }
 
-  return NS_OK;
+  return NS_BINDING_ABORTED;
 }
 
 NS_IMETHODIMP

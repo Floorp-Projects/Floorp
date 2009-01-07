@@ -377,7 +377,7 @@ nsSplitterFrame::Init(nsIContent*      aContent,
   nsresult  rv = nsBoxFrame::Init(aContent, aParent, aPrevInFlow);
   NS_ENSURE_SUCCESS(rv, rv);
 
-  rv = nsHTMLContainerFrame::CreateViewForFrame(this, nsnull, PR_TRUE);
+  rv = nsHTMLContainerFrame::CreateViewForFrame(this, PR_TRUE);
   NS_ENSURE_SUCCESS(rv, rv);
 
   if (!realTimeDrag) {

@@ -7,15 +7,9 @@
   <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
 </head>
 <body>
-<video id='v'
-       src='seek.ogg'
-       onloadedmetadata='return startTest();'
-       onplay='return playbackStarted();'
-       onended='return playbackEnded();'></video>
 <pre id="test">
 <script class="testbody" type="text/javascript">
 // Test if video can be replayed after ended.
-var v = document.getElementById('v');
 var completed = false;
 var playCount = 0;
 
@@ -23,6 +17,7 @@ function startTest() {
   if (completed)
     return false;
 
+  var v = document.getElementById('v');
   v.play();
   return false;
 }
@@ -37,7 +32,7 @@ function playbackStarted() {
 function playbackEnded() {
   if (completed)
     return false
-
+  var v = document.getElementById('v');
   ok(v.currentTime >= 3.9 && v.currentTime <= 4.0,
      "Checking currentTime at end: " + v.currentTime);
   ok(v.ended, "Checking playback has ended");
@@ -55,5 +50,10 @@ function playbackEnded() {
 SimpleTest.waitForExplicitFinish();
 </script>
 </pre>
+<video id='v'
+       src='seek.ogg'
+       onloadedmetadata='return startTest();'
+       onplay='return playbackStarted();'
+       onended='return playbackEnded();'></video>
 </body>
 </html>

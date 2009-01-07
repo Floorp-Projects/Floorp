@@ -37,7 +37,11 @@
 
 #include "nsDeviceContextSpecWin.h"
 #include "prmem.h"
+
+#ifndef WINCE
 #include <winspool.h>
+#endif
+
 #include <tchar.h>
 
 #include "nsAutoPtr.h"

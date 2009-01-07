@@ -1710,7 +1710,6 @@ nsWSRunObject::GetCharBefore(WSPoint &aPoint, WSPoint *outPoint)
   outPoint->mOffset = 0;
   outPoint->mChar = 0;
   
-  nsresult res = NS_OK;
   nsCOMPtr<nsIDOMNode> pointTextNode(do_QueryInterface(aPoint.mTextNode));
   PRInt32 idx = mNodeArray.IndexOf(pointTextNode);
   if (idx == -1) return NS_OK;  // can't find point, but it's not an error

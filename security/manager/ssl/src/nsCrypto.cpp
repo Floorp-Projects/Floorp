@@ -2860,15 +2860,6 @@ nsCrypto::SignText(const nsAString& aStringToSign, const nsAString& aCaOption,
   return NS_OK;
 }
 
-NS_IMETHODIMP
-nsCrypto::Alert(const nsAString& aMessage)
-{
-  PRUnichar *message = ToNewUnicode(aMessage);
-  alertUser(message);
-  nsMemory::Free(message);
-  return NS_OK;
-}
-
 //Logout out of all installed PKCS11 tokens.
 NS_IMETHODIMP
 nsCrypto::Logout()

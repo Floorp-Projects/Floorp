@@ -72,7 +72,7 @@ class nsTableColFrame;
  */
 #define NS_BLOCK_NO_AUTO_MARGINS            0x00200000
 #define NS_BLOCK_MARGIN_ROOT                0x00400000
-#define NS_BLOCK_SPACE_MGR                  0x00800000
+#define NS_BLOCK_FLOAT_MGR                  0x00800000
 #define NS_BLOCK_HAS_FIRST_LETTER_STYLE     0x20000000
 #define NS_BLOCK_FRAME_HAS_OUTSIDE_BULLET   0x40000000
 #define NS_BLOCK_HAS_FIRST_LETTER_CHILD     0x80000000
@@ -100,7 +100,6 @@ NS_NewAttributeContent(nsNodeInfoManager *aNodeInfoManager,
 nsIFrame*
 NS_NewSelectsAreaFrame(nsIPresShell* aPresShell, nsStyleContext* aContext, PRUint32 aFlags);
 
-// These AreaFrame's shrink wrap around their contents
 inline nsIFrame*
 NS_NewTableCellInnerFrame(nsIPresShell* aPresShell, nsStyleContext* aContext) {
   return NS_NewBlockFrame(aPresShell, aContext);
@@ -109,17 +108,17 @@ NS_NewTableCellInnerFrame(nsIPresShell* aPresShell, nsStyleContext* aContext) {
 // This type of BlockFrame is a margin root, but does not shrink wrap
 inline nsIFrame*
 NS_NewAbsoluteItemWrapperFrame(nsIPresShell* aPresShell, nsStyleContext* aContext) {
-  return NS_NewBlockFrame(aPresShell, aContext, NS_BLOCK_SPACE_MGR|NS_BLOCK_MARGIN_ROOT);
+  return NS_NewBlockFrame(aPresShell, aContext, NS_BLOCK_FLOAT_MGR|NS_BLOCK_MARGIN_ROOT);
 }
 
 // This type of BlockFrame shrink wraps
 inline nsIFrame*
 NS_NewFloatingItemWrapperFrame(nsIPresShell* aPresShell, nsStyleContext* aContext) {
   return NS_NewBlockFrame(aPresShell, aContext,
-    NS_BLOCK_SPACE_MGR|NS_BLOCK_MARGIN_ROOT);
+    NS_BLOCK_FLOAT_MGR|NS_BLOCK_MARGIN_ROOT);
 }
 
-// This type of BlockFrame doesn't use its own space manager and
+// This type of BlockFrame doesn't use its own float manager and
 // doesn't shrink wrap.
 inline nsIFrame*
 NS_NewRelativeItemWrapperFrame(nsIPresShell* aPresShell, nsStyleContext* aContext, PRUint32 aFlags) {

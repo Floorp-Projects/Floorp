@@ -167,7 +167,7 @@ enum { XKeyPress = KeyPress };
 #undef KeyPress
 #endif
 #ifdef MOZ_WIDGET_GTK2
-#include <gdk/gdkwindow.h>
+#include <gdk/gdk.h>
 #include <gdk/gdkx.h>
 #endif
 #endif

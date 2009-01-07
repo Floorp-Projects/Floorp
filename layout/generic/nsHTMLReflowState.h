@@ -46,7 +46,7 @@
 
 class nsPresContext;
 class nsIRenderingContext;
-class nsSpaceManager;
+class nsFloatManager;
 class nsLineLayout;
 class nsIPercentHeightObserver;
 
@@ -244,8 +244,8 @@ struct nsHTMLReflowState : public nsCSSOffsetState {
   // initialized by the Init method below.
   nsCSSFrameType   mFrameType;
 
-  // pointer to the space manager associated with this area
-  nsSpaceManager* mSpaceManager;
+  // pointer to the float manager associated with this area
+  nsFloatManager* mFloatManager;
 
   // The amount the in-flow position of the block is moving vertically relative
   // to its previous in-flow position (i.e. the amount the line containing the

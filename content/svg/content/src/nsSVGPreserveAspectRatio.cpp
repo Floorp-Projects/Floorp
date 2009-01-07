@@ -37,255 +37,232 @@
  * ***** END LICENSE BLOCK ***** */
 
 #include "nsSVGPreserveAspectRatio.h"
-#include "nsSVGValue.h"
-#include "nsCRT.h"
-#include "nsContentUtils.h"
+#include "nsWhitespaceTokenizer.h"
 
 ////////////////////////////////////////////////////////////////////////
 // nsSVGPreserveAspectRatio class
 
-class nsSVGPreserveAspectRatio : public nsIDOMSVGPreserveAspectRatio,
-                                 public nsSVGValue
-{
-protected:
-  friend nsresult NS_NewSVGPreserveAspectRatio(
-                                        nsIDOMSVGPreserveAspectRatio** result,
-                                        PRUint16 aAlign,
-                                        PRUint16 aMeetOrSlice);
+NS_SVG_VAL_IMPL_CYCLE_COLLECTION(
+  nsSVGPreserveAspectRatio::DOMBaseVal, mSVGElement)
+NS_SVG_VAL_IMPL_CYCLE_COLLECTION(
+  nsSVGPreserveAspectRatio::DOMAnimVal, mSVGElement)
+NS_SVG_VAL_IMPL_CYCLE_COLLECTION(
+  nsSVGPreserveAspectRatio::DOMAnimPAspectRatio, mSVGElement)
 
-  nsSVGPreserveAspectRatio(PRUint16 aAlign, PRUint16 aMeetOrSlice);
-  ~nsSVGPreserveAspectRatio();
+NS_IMPL_CYCLE_COLLECTING_ADDREF(nsSVGPreserveAspectRatio::DOMBaseVal)
+NS_IMPL_CYCLE_COLLECTING_RELEASE(nsSVGPreserveAspectRatio::DOMBaseVal)
 
-public:
-  // nsISupports interface:
-  NS_DECL_ISUPPORTS
+NS_IMPL_CYCLE_COLLECTING_ADDREF(nsSVGPreserveAspectRatio::DOMAnimVal)
+NS_IMPL_CYCLE_COLLECTING_RELEASE(nsSVGPreserveAspectRatio::DOMAnimVal)
 
-  // nsIDOMSVGPreserveAspectRatio interface:
-  NS_DECL_NSIDOMSVGPRESERVEASPECTRATIO
+NS_IMPL_CYCLE_COLLECTING_ADDREF(nsSVGPreserveAspectRatio::DOMAnimPAspectRatio)
+NS_IMPL_CYCLE_COLLECTING_RELEASE(nsSVGPreserveAspectRatio::DOMAnimPAspectRatio)
 
-  // nsISVGValue interface:
-  NS_IMETHOD SetValueString(const nsAString& aValue);
-  NS_IMETHOD GetValueString(nsAString& aValue);
-
-protected:
-  PRUint16 mAlign, mMeetOrSlice;
-};
-
-//----------------------------------------------------------------------
-// implementation:
-
-
-nsSVGPreserveAspectRatio::nsSVGPreserveAspectRatio(PRUint16 aAlign,
-                                                   PRUint16 aMeetOrSlice)
-    : mAlign(aAlign), mMeetOrSlice(aMeetOrSlice)
-{
-}
-
-nsSVGPreserveAspectRatio::~nsSVGPreserveAspectRatio()
-{
-}
-
-//----------------------------------------------------------------------
-// nsISupports methods:
-
-NS_IMPL_ADDREF(nsSVGPreserveAspectRatio)
-NS_IMPL_RELEASE(nsSVGPreserveAspectRatio)
-
-NS_INTERFACE_MAP_BEGIN(nsSVGPreserveAspectRatio)
-  NS_INTERFACE_MAP_ENTRY(nsISVGValue)
+NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION(nsSVGPreserveAspectRatio::DOMBaseVal)
   NS_INTERFACE_MAP_ENTRY(nsIDOMSVGPreserveAspectRatio)
+  NS_INTERFACE_MAP_ENTRY(nsISupports)
   NS_INTERFACE_MAP_ENTRY_CONTENT_CLASSINFO(SVGPreserveAspectRatio)
-  NS_INTERFACE_MAP_ENTRY_AMBIGUOUS(nsISupports, nsISVGValue)
 NS_INTERFACE_MAP_END
 
-//----------------------------------------------------------------------
-// nsISVGValue methods:
+NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION(nsSVGPreserveAspectRatio::DOMAnimVal)
+  NS_INTERFACE_MAP_ENTRY(nsIDOMSVGPreserveAspectRatio)
+  NS_INTERFACE_MAP_ENTRY(nsISupports)
+  NS_INTERFACE_MAP_ENTRY_CONTENT_CLASSINFO(SVGPreserveAspectRatio)
+NS_INTERFACE_MAP_END
 
-NS_IMETHODIMP
-nsSVGPreserveAspectRatio::SetValueString(const nsAString& aValue)
+NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION(nsSVGPreserveAspectRatio::DOMAnimPAspectRatio)
+  NS_INTERFACE_MAP_ENTRY(nsIDOMSVGAnimatedPreserveAspectRatio)
+  NS_INTERFACE_MAP_ENTRY(nsISupports)
+  NS_INTERFACE_MAP_ENTRY_CONTENT_CLASSINFO(SVGAnimatedPreserveAspectRatio)
+NS_INTERFACE_MAP_END
+
+/* Implementation */
+
+static const char *sAlignStrings[] =
+  { "none", "xMinYMin", "xMidYMin", "xMaxYMin", "xMinYMid", "xMidYMid",
+    "xMaxYMid", "xMinYMax", "xMidYMax", "xMaxYMax" };
+
+static const char *sMeetOrSliceStrings[] = { "meet", "slice" };
+
+static PRUint16
+GetAlignForString(const nsAString &aAlignString)
 {
-  char* str = ToNewCString(aValue);
-  if (!str) return NS_ERROR_OUT_OF_MEMORY;
-
-  nsresult rv = NS_OK;
-
-  char* rest = str;
-  char* token;
-  const char* delimiters = "\x20\x9\xD\xA";
-  PRUint16 align, meetOrSlice;
-
-  token = nsCRT::strtok(rest, delimiters, &rest);
-
-  if (token && !strcmp(token, "defer"))
-    // Ignore: only applicable for preserveAspectRatio on 'image' elements
-    token = nsCRT::strtok(rest, delimiters, &rest);
-
-  if (token) {
-    if (!strcmp(token, "none"))
-      align = SVG_PRESERVEASPECTRATIO_NONE;
-    else if (!strcmp(token, "xMinYMin"))
-      align = SVG_PRESERVEASPECTRATIO_XMINYMIN;
-    else if (!strcmp(token, "xMidYMin"))
-      align = SVG_PRESERVEASPECTRATIO_XMIDYMIN;
-    else if (!strcmp(token, "xMaxYMin"))
-      align = SVG_PRESERVEASPECTRATIO_XMAXYMIN;
-    else if (!strcmp(token, "xMinYMid"))
-      align = SVG_PRESERVEASPECTRATIO_XMINYMID;
-    else if (!strcmp(token, "xMidYMid"))
-      align = SVG_PRESERVEASPECTRATIO_XMIDYMID;
-    else if (!strcmp(token, "xMaxYMid"))
-      align = SVG_PRESERVEASPECTRATIO_XMAXYMID;
-    else if (!strcmp(token, "xMinYMax"))
-      align = SVG_PRESERVEASPECTRATIO_XMINYMAX;
-    else if (!strcmp(token, "xMidYMax"))
-      align = SVG_PRESERVEASPECTRATIO_XMIDYMAX;
-    else if (!strcmp(token, "xMaxYMax"))
-      align = SVG_PRESERVEASPECTRATIO_XMAXYMAX;
-    else
-      rv = NS_ERROR_FAILURE;
-
-    if (NS_SUCCEEDED(rv)) {
-      token = nsCRT::strtok(rest, delimiters, &rest);
-      if (token) {
-        if (!strcmp(token, "meet"))
-          meetOrSlice = SVG_MEETORSLICE_MEET;
-        else if (!strcmp(token, "slice"))
-          meetOrSlice = SVG_MEETORSLICE_SLICE;
-        else
-          rv = NS_ERROR_FAILURE;
-      }
-      else
-        meetOrSlice = SVG_MEETORSLICE_MEET;
-    }
-  }
-  else  // align not specified
-    rv = NS_ERROR_FAILURE;
-
-  if (nsCRT::strtok(rest, delimiters, &rest))  // there's more
-    rv = NS_ERROR_FAILURE;
-
-  if (NS_SUCCEEDED(rv)) {
-    WillModify();
-    mAlign = align;
-    mMeetOrSlice = meetOrSlice;
-    DidModify();
-  }
-
-  nsMemory::Free(str);
-
-  return rv;
-}
-
-NS_IMETHODIMP
-nsSVGPreserveAspectRatio::GetValueString(nsAString& aValue)
-{
-  // XXX: defer isn't stored
-
-  switch (mAlign) {
-    case SVG_PRESERVEASPECTRATIO_NONE:
-      aValue.AssignLiteral("none");
-      break;
-    case SVG_PRESERVEASPECTRATIO_XMINYMIN:
-      aValue.AssignLiteral("xMinYMin");
-      break;
-    case SVG_PRESERVEASPECTRATIO_XMIDYMIN:
-      aValue.AssignLiteral("xMidYMin");
-      break;
-    case SVG_PRESERVEASPECTRATIO_XMAXYMIN:
-      aValue.AssignLiteral("xMaxYMin");
-      break;
-    case SVG_PRESERVEASPECTRATIO_XMINYMID:
-      aValue.AssignLiteral("xMinYMid");
-      break;
-    case SVG_PRESERVEASPECTRATIO_XMIDYMID:
-      aValue.AssignLiteral("xMidYMid");
-      break;
-    case SVG_PRESERVEASPECTRATIO_XMAXYMID:
-      aValue.AssignLiteral("xMaxYMid");
-      break;
-    case SVG_PRESERVEASPECTRATIO_XMINYMAX:
-      aValue.AssignLiteral("xMinYMax");
-      break;
-    case SVG_PRESERVEASPECTRATIO_XMIDYMAX:
-      aValue.AssignLiteral("xMidYMax");
-      break;
-    case SVG_PRESERVEASPECTRATIO_XMAXYMAX:
-      aValue.AssignLiteral("xMaxYMax");
-      break;
-    default:
-      NS_NOTREACHED("Unknown value for mAlign");
-  }
-
-  // XXX: meetOrSlice may not have been specified in the attribute
-
-  if (mAlign != SVG_PRESERVEASPECTRATIO_NONE) {
-    switch (mMeetOrSlice) {
-      case SVG_MEETORSLICE_MEET:
-        aValue.AppendLiteral(" meet");
-        break;
-      case SVG_MEETORSLICE_SLICE:
-        aValue.AppendLiteral(" slice");
-        break;
-      default:
-        NS_NOTREACHED("Unknown value for mMeetOrSlice");
+  for (PRUint32 i = 0 ; i < NS_ARRAY_LENGTH(sAlignStrings) ; i++) {
+    if (aAlignString.EqualsASCII(sAlignStrings[i])) {
+      return (i + nsIDOMSVGPreserveAspectRatio::SVG_PRESERVEASPECTRATIO_NONE);
     }
   }
 
-  return NS_OK;
+  return nsIDOMSVGPreserveAspectRatio::SVG_PRESERVEASPECTRATIO_UNKNOWN;
 }
 
-//----------------------------------------------------------------------
-// nsIDOMSVGPreserveAspectRatio methods:
-
-/* attribute unsigned short align; */
-NS_IMETHODIMP nsSVGPreserveAspectRatio::GetAlign(PRUint16 *aAlign)
+static void
+GetAlignString(nsAString& aAlignString, PRUint16 aAlign)
 {
-  *aAlign = mAlign;
-  return NS_OK;
+  NS_ASSERTION(
+    aAlign >= nsIDOMSVGPreserveAspectRatio::SVG_PRESERVEASPECTRATIO_NONE &&
+    aAlign <= nsIDOMSVGPreserveAspectRatio::SVG_PRESERVEASPECTRATIO_XMAXYMAX,
+    "Unknown align");
+
+  aAlignString.AssignASCII(
+    sAlignStrings[aAlign -
+                  nsIDOMSVGPreserveAspectRatio::SVG_PRESERVEASPECTRATIO_NONE]);
 }
-NS_IMETHODIMP nsSVGPreserveAspectRatio::SetAlign(PRUint16 aAlign)
+
+static PRUint16
+GetMeetOrSliceForString(const nsAString &aMeetOrSlice)
 {
-  if (aAlign < SVG_PRESERVEASPECTRATIO_NONE ||
-      aAlign > SVG_PRESERVEASPECTRATIO_XMAXYMAX)
-    return NS_ERROR_FAILURE;
+  for (PRUint32 i = 0 ; i < NS_ARRAY_LENGTH(sMeetOrSliceStrings) ; i++) {
+    if (aMeetOrSlice.EqualsASCII(sMeetOrSliceStrings[i])) {
+      return (i + nsIDOMSVGPreserveAspectRatio::SVG_MEETORSLICE_MEET);
+    }
+  }
 
-  WillModify();
-  mAlign = aAlign;
-  DidModify();
-
-  return NS_OK;
+  return nsIDOMSVGPreserveAspectRatio::SVG_MEETORSLICE_UNKNOWN;
 }
 
-/* attribute unsigned short meetOrSlice; */
-NS_IMETHODIMP nsSVGPreserveAspectRatio::GetMeetOrSlice(PRUint16 *aMeetOrSlice)
+static void
+GetMeetOrSliceString(nsAString& aMeetOrSliceString, PRUint16 aMeetOrSlice)
 {
-  *aMeetOrSlice = mMeetOrSlice;
-  return NS_OK;
+  NS_ASSERTION(
+    aMeetOrSlice >= nsIDOMSVGPreserveAspectRatio::SVG_MEETORSLICE_MEET &&
+    aMeetOrSlice <= nsIDOMSVGPreserveAspectRatio::SVG_MEETORSLICE_SLICE,
+    "Unknown meetOrSlice");
+
+  aMeetOrSliceString.AssignASCII(
+    sMeetOrSliceStrings[aMeetOrSlice -
+                        nsIDOMSVGPreserveAspectRatio::SVG_MEETORSLICE_MEET]);
 }
-NS_IMETHODIMP nsSVGPreserveAspectRatio::SetMeetOrSlice(PRUint16 aMeetOrSlice)
-{
-  if (aMeetOrSlice < SVG_MEETORSLICE_MEET ||
-      aMeetOrSlice > SVG_MEETORSLICE_SLICE)
-    return NS_ERROR_FAILURE;
-
-  WillModify();
-  mMeetOrSlice = aMeetOrSlice;
-  DidModify();
-
-  return NS_OK;
-}
-
-
-////////////////////////////////////////////////////////////////////////
-// Exported creation functions:
 
 nsresult
-NS_NewSVGPreserveAspectRatio(nsIDOMSVGPreserveAspectRatio** result,
-                             PRUint16 aAlign, PRUint16 aMeetOrSlice)
+nsSVGPreserveAspectRatio::ToDOMBaseVal(nsIDOMSVGPreserveAspectRatio **aResult,
+                                       nsSVGElement *aSVGElement)
 {
-  *result = (nsIDOMSVGPreserveAspectRatio*) new nsSVGPreserveAspectRatio(aAlign, aMeetOrSlice);
-  if (!*result) return NS_ERROR_OUT_OF_MEMORY;
+  *aResult = new DOMBaseVal(this, aSVGElement);
+  if (!*aResult)
+    return NS_ERROR_OUT_OF_MEMORY;
 
-  NS_ADDREF(*result);
+  NS_ADDREF(*aResult);
+  return NS_OK;
+}
+
+nsresult
+nsSVGPreserveAspectRatio::ToDOMAnimVal(nsIDOMSVGPreserveAspectRatio **aResult,
+                                       nsSVGElement *aSVGElement)
+{
+  *aResult = new DOMAnimVal(this, aSVGElement);
+  if (!*aResult)
+    return NS_ERROR_OUT_OF_MEMORY;
+
+  NS_ADDREF(*aResult);
+  return NS_OK;
+}
+
+nsresult
+nsSVGPreserveAspectRatio::SetBaseValueString(const nsAString &aValueAsString,
+                                             nsSVGElement *aSVGElement,
+                                             PRBool aDoSetAttr)
+{
+  if (aValueAsString.IsEmpty() ||
+      NS_IsAsciiWhitespace(aValueAsString[0])) {
+    return NS_ERROR_FAILURE;
+  }
+
+  nsWhitespaceTokenizer tokenizer(aValueAsString);
+  if (!tokenizer.hasMoreTokens()) {
+    return NS_ERROR_FAILURE;
+  }
+  const nsAString &token = tokenizer.nextToken();
+
+  nsresult rv;
+  PreserveAspectRatio val;
+
+  val.mDefer = token.EqualsLiteral("defer");
+
+  if (val.mDefer) {
+    if (!tokenizer.hasMoreTokens()) {
+      return NS_ERROR_FAILURE;
+    }
+    rv = val.SetAlign(GetAlignForString(tokenizer.nextToken()));
+  } else {
+    rv = val.SetAlign(GetAlignForString(token));
+  }
+
+  NS_ENSURE_SUCCESS(rv, NS_ERROR_FAILURE);
+
+  if (tokenizer.hasMoreTokens()) {
+    rv = val.SetMeetOrSlice(GetMeetOrSliceForString(tokenizer.nextToken()));
+    NS_ENSURE_SUCCESS(rv, NS_ERROR_FAILURE);
+  } else {
+    val.mMeetOrSlice = nsIDOMSVGPreserveAspectRatio::SVG_MEETORSLICE_MEET;
+  }
+
+  if (tokenizer.hasMoreTokens()) {
+    return NS_ERROR_FAILURE;
+  }
+
+  mAnimVal = mBaseVal = val;
+  return NS_OK;
+}
+
+void
+nsSVGPreserveAspectRatio::GetBaseValueString(nsAString & aValueAsString)
+{
+  nsAutoString tmpString;
+
+  aValueAsString.Truncate();
+
+  if (mBaseVal.mDefer) {
+    aValueAsString.AppendLiteral("defer ");
+  }
+
+  GetAlignString(tmpString, mBaseVal.mAlign);
+  aValueAsString.Append(tmpString);
+
+  if (mBaseVal.mAlign !=
+      nsIDOMSVGPreserveAspectRatio::SVG_PRESERVEASPECTRATIO_NONE) {
+
+    aValueAsString.AppendLiteral(" ");
+    GetMeetOrSliceString(tmpString, mBaseVal.mMeetOrSlice);
+    aValueAsString.Append(tmpString);
+  }
+}
+
+nsresult
+nsSVGPreserveAspectRatio::SetBaseAlign(PRUint16 aAlign,
+                                       nsSVGElement *aSVGElement)
+{
+  nsresult rv = mBaseVal.SetAlign(aAlign);
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  mAnimVal.mAlign = mBaseVal.mAlign;
+  aSVGElement->DidChangePreserveAspectRatio(PR_TRUE);
+
+  return NS_OK;
+}
+
+nsresult
+nsSVGPreserveAspectRatio::SetBaseMeetOrSlice(PRUint16 aMeetOrSlice,
+                                             nsSVGElement *aSVGElement)
+{
+  nsresult rv = mBaseVal.SetMeetOrSlice(aMeetOrSlice);
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  mAnimVal.mMeetOrSlice = mBaseVal.mMeetOrSlice;
+  aSVGElement->DidChangePreserveAspectRatio(PR_TRUE);
+
+  return NS_OK;
+}
+
+nsresult
+nsSVGPreserveAspectRatio::ToDOMAnimatedPreserveAspectRatio(
+  nsIDOMSVGAnimatedPreserveAspectRatio **aResult,
+  nsSVGElement *aSVGElement)
+{
+  *aResult = new DOMAnimPAspectRatio(this, aSVGElement);
+  if (!*aResult)
+    return NS_ERROR_OUT_OF_MEMORY;
+
+  NS_ADDREF(*aResult);
   return NS_OK;
 }

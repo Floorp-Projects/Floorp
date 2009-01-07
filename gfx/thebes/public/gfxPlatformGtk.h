@@ -90,6 +90,13 @@ public:
 
 #ifdef MOZ_PANGO
     /**
+     * Look up a local platform font using the full font face name (needed to
+     * support @font-face src local() )
+     */
+    virtual gfxFontEntry* LookupLocalFont(const gfxProxyFontEntry *aProxyEntry,
+                                          const nsAString& aFontName);
+
+    /**
      * Activate a platform font (needed to support @font-face src url() )
      *
      */

@@ -57,6 +57,9 @@ const LOAD_FAILURE_TIMEOUT = 10000; // ms
 
 var gBrowser;
 var gCanvas1, gCanvas2;
+// gCurrentCanvas is non-null between InitCurrentCanvasWithSnapshot and the next
+// DocumentLoaded.
+var gCurrentCanvas = null;
 var gURLs;
 // Map from URI spec to the number of times it remains to be used
 var gURIUseCounts;
@@ -513,19 +516,104 @@ function OnDocumentLoad(event)
         // Register a mutation listener to know when the 'reftest-wait' class
         // gets removed.
         gFailureReason = "timed out waiting for reftest-wait to be removed (after onload fired)"
-        contentRootElement.addEventListener(
-            "DOMAttrModified",
-            function(event) {
-                if (!shouldWait()) {
-                    contentRootElement.removeEventListener(
-                        "DOMAttrModified",
-                        arguments.callee,
-                        false);
-                    if (doPrintMode())
-                        setupPrintMode();
-                    setTimeout(DocumentLoaded, 0);
+
+        var stopAfterPaintReceived = false;
+        var currentDoc = gBrowser.contentDocument;
+        var utils = gBrowser.contentWindow.QueryInterface(CI.nsIInterfaceRequestor)
+            .getInterface(CI.nsIDOMWindowUtils);
+
+        function FlushRendering() {
+            // Flush pending restyles and reflows
+            contentRootElement.getBoundingClientRect();
+            // Flush out invalidation
+            utils.processUpdates();
+        }
+
+        function WhenMozAfterPaintFlushed(continuation) {
+            if (utils.isMozAfterPaintPending) {
+                function handler() {
+                    gBrowser.removeEventListener("MozAfterPaint", handler, false);
+                    continuation();
                 }
-            }, false);
+                gBrowser.addEventListener("MozAfterPaint", handler, false);
+            } else {
+                continuation();
+            }
+        }
+
+        function AfterPaintListener(event) {
+            if (event.target.document != currentDoc) {
+                // ignore paint events for subframes or old documents in the window.
+                // Invalidation in subframes will cause invalidation in the main document anyway.
+                return;
+            }
+
+            FlushRendering();
+            UpdateCurrentCanvasForEvent(event);
+            // When stopAfteraintReceived is set, we can stop --- but we should keep going as long
+            // as there are paint events coming (there probably shouldn't be any, but it doesn't
+            // hurt to process them)
+            if (stopAfterPaintReceived && !utils.isMozAfterPaintPending) {
+                FinishWaitingForTestEnd();
+            }
+        }
+
+        function FinishWaitingForTestEnd() {
+            gBrowser.removeEventListener("MozAfterPaint", AfterPaintListener, false);
+            setTimeout(DocumentLoaded, 0);
+        }
+
+        function AttrModifiedListener() {
+            if (shouldWait())
+                return;
+
+            // We don't want to be notified again
+            contentRootElement.removeEventListener("DOMAttrModified", AttrModifiedListener, false);
+            if (doPrintMode())
+                setupPrintMode();
+            FlushRendering();
+
+            if (utils.isMozAfterPaintPending) {
+                // Wait for the last invalidation to have happened and been snapshotted before
+                // we stop the test
+                stopAfterPaintReceived = true;
+            } else {
+                // Nothing to wait for, so stop now
+                FinishWaitingForTestEnd();
+            }
+        }
+
+        function StartWaitingForTestEnd() {
+            FlushRendering();
+
+            function continuation() {
+                gBrowser.addEventListener("MozAfterPaint", AfterPaintListener, false);
+                contentRootElement.addEventListener("DOMAttrModified", AttrModifiedListener, false);
+
+                // Take a snapshot of the window in its current state
+                InitCurrentCanvasWithSnapshot();
+
+                if (!shouldWait()) {
+                    // reftest-wait was already removed (during the interval between OnDocumentLoaded
+                    // calling setTimeout(StartWaitingForTestEnd,0) below, and this function
+                    // actually running), so let's fake a direct notification of the attribute
+                    // change.
+                    AttrModifiedListener();
+                    return;
+                }
+
+                // Notify the test document that now is a good time to test some invalidation
+                var notification = document.createEvent("Events");
+                notification.initEvent("MozReftestInvalidate", true, false);
+                contentRootElement.dispatchEvent(notification);
+            }
+            WhenMozAfterPaintFlushed(continuation);
+        }
+
+        // After this load event has finished being dispatched, painting is normally
+        // unsuppressed, which invalidates the entire window. So ensure
+        // StartWaitingForTestEnd runs after that invalidation has been requested.
+        setTimeout(StartWaitingForTestEnd, 0);
     } else {
         if (doPrintMode())
             setupPrintMode();
@@ -553,6 +641,58 @@ function UpdateCanvasCache(url, canvas)
     }
 }
 
+function InitCurrentCanvasWithSnapshot()
+{
+    gCurrentCanvas = AllocateCanvas();
+
+    /* XXX This needs to be rgb(255,255,255) because otherwise we get
+     * black bars at the bottom of every test that are different size
+     * for the first test and the rest (scrollbar-related??) */
+    var win = gBrowser.contentWindow;
+    var ctx = gCurrentCanvas.getContext("2d");
+    var scale = gBrowser.markupDocumentViewer.fullZoom;
+    ctx.save();
+    // drawWindow always draws one canvas pixel for each CSS pixel in the source
+    // window, so scale the drawing to show the zoom (making each canvas pixel be one
+    // device pixel instead)
+    ctx.scale(scale, scale);
+    ctx.drawWindow(win, win.scrollX, win.scrollY,
+                   Math.ceil(gCurrentCanvas.width / scale),
+                   Math.ceil(gCurrentCanvas.height / scale),
+                   "rgb(255,255,255)");
+    ctx.restore();
+}
+
+function roundTo(x, fraction)
+{
+    return Math.round(x/fraction)*fraction;
+}
+
+function UpdateCurrentCanvasForEvent(event)
+{
+    var win = gBrowser.contentWindow;
+    var ctx = gCurrentCanvas.getContext("2d");
+    var scale = gBrowser.markupDocumentViewer.fullZoom;
+
+    var rectList = event.clientRects;
+    for (var i = 0; i < rectList.length; ++i) {
+        var r = rectList[i];
+        // Set left/top/right/bottom to "device pixel" boundaries
+        var left = Math.floor(roundTo(r.left*scale, 0.001))/scale;
+        var top = Math.floor(roundTo(r.top*scale, 0.001))/scale;
+        var right = Math.ceil(roundTo(r.right*scale, 0.001))/scale;
+        var bottom = Math.ceil(roundTo(r.bottom*scale, 0.001))/scale;
+
+        ctx.save();
+        ctx.scale(scale, scale);
+        ctx.translate(left, top);
+        ctx.drawWindow(win, left + win.scrollX, top + win.scrollY,
+                       right - left, bottom - top,
+                       "rgb(255,255,255)");
+        ctx.restore();
+    }
+}
+
 function DocumentLoaded()
 {
     // Keep track of which test was slowest, and how long it took.
@@ -573,35 +713,17 @@ function DocumentLoaded()
         return;
     }
 
-    var canvas;
     if (gURICanvases[gCurrentURL]) {
-        canvas = gURICanvases[gCurrentURL];
-    } else {
-        canvas = AllocateCanvas();
-
-        /* XXX This needs to be rgb(255,255,255) because otherwise we get
-         * black bars at the bottom of every test that are different size
-         * for the first test and the rest (scrollbar-related??) */
-        var win = gBrowser.contentWindow;
-        var ctx = canvas.getContext("2d");
-        var scale = gBrowser.markupDocumentViewer.fullZoom;
-        ctx.save();
-        // drawWindow always draws one canvas pixel for each CSS pixel in the source
-        // window, so scale the drawing to show the zoom (making each canvas pixel be one
-        // device pixel instead)
-        ctx.scale(scale, scale);
-        ctx.drawWindow(win, win.scrollX, win.scrollY,
-                       Math.ceil(canvas.width / scale),
-                       Math.ceil(canvas.height / scale),
-                       "rgb(255,255,255)");
-        ctx.restore();
+        gCurrentCanvas = gURICanvases[gCurrentURL];
+    } else if (gCurrentCanvas == null) {
+        InitCurrentCanvasWithSnapshot();
     }
-
     if (gState == 1) {
-        gCanvas1 = canvas;
+        gCanvas1 = gCurrentCanvas;
     } else {
-        gCanvas2 = canvas;
+        gCanvas2 = gCurrentCanvas;
     }
+    gCurrentCanvas = null;
 
     resetZoom();
 

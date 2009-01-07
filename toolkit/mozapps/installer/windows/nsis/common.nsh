@@ -2541,6 +2541,12 @@
       GoTo loop_GetLongPath
 
       end_GetLongPath:
+      ; If there is a trailing slash remove it
+      StrCmp $R9 "" +4 +1
+      StrCpy $R8 "$R9" "" -1
+      StrCmp $R8 "\" +1 +2
+      StrCpy $R9 "$R9" -1
+
       ClearErrors
 
       Pop $R4

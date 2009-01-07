@@ -48,7 +48,7 @@
 interface nsIDOMElement;
 interface nsIDOMHTMLCanvasElement;
 
-[scriptable, uuid(440D036F-0879-4497-9364-35DE49F6849F)]
+[scriptable, uuid(190be8e6-35af-4e3e-9a9f-719f5b1a44a0)]
 interface nsIDOMWindowUtils : nsISupports {
 
   /**
@@ -255,11 +255,15 @@ interface nsIDOMWindowUtils : nsISupports {
    * without UniversalXPConnect privileges.
    *
    * @param aType event type
+   * @param aX x offset in CSS pixels
+   * @param aY y offset in CSS pixels
    * @param aDirection direction, using constants defined in nsIDOMSimpleGestureEvent
    * @param aDelta  amount of magnification or rotation for magnify and rotation events
    * @param aModifiers modifiers pressed, using constants defined in nsIDOMNSEvent
    */
   void sendSimpleGestureEvent(in AString aType,
+                              in float aX,
+                              in float aY,
                               in unsigned long aDirection,
                               in double aDelta,
                               in long aModifiers);
@@ -287,4 +291,10 @@ interface nsIDOMWindowUtils : nsISupports {
   PRUint32 compareCanvases(in nsIDOMHTMLCanvasElement aCanvas1,
                            in nsIDOMHTMLCanvasElement aCanvas2,
                            out unsigned long aMaxDifference);
+
+  /**
+   * Returns true if a MozAfterPaint event has been queued but not yet
+   * fired.
+   */
+  readonly attribute boolean isMozAfterPaintPending;
 };

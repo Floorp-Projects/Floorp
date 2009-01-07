@@ -29,8 +29,8 @@ var testfunc_w = (navigator.userAgent.match(/Windows/)) ? ok : testfunc_h;
 
 function loaded() {
   win.sizeToContent();
-  testfunc_w(win.innerWidth >= 100, "innerWidth");
-  testfunc_h(win.innerHeight >= 200, "innerHeight");
+  testfunc_w(win.innerWidth >= 100, "innerWidth: " + win.innerWidth + " >= 100 ?");
+  testfunc_h(win.innerHeight >= 200, "innerHeight: " + win.innerHeight + " >= 200 ?");
   win.close();
   SimpleTest.finish();
 }

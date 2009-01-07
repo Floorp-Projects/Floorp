@@ -536,46 +536,6 @@ GetOrInit(nsIFile* aDir, const nsACString& filename,
   return rv;
 }
 
-// Generate a unique user ID.  We're using a GUID form,
-// but not jumping through hoops to make it cryptographically
-// secure.  We just want it to distinguish unique users.
-static nsresult
-InitUserID(nsACString& aUserID)
-{
-  nsID id;
-
-  // copied shamelessly from nsUUIDGenerator.cpp
-#if defined(XP_WIN)
-  HRESULT hr = CoCreateGuid((GUID*)&id);
-  if (NS_FAILED(hr))
-    return NS_ERROR_FAILURE;
-#elif defined(XP_MACOSX)
-  CFUUIDRef uuid = CFUUIDCreate(kCFAllocatorDefault);
-  if (!uuid)
-    return NS_ERROR_FAILURE;
-
-  CFUUIDBytes bytes = CFUUIDGetUUIDBytes(uuid);
-  memcpy(&id, &bytes, sizeof(nsID));
-
-  CFRelease(uuid);
-#else
-  // UNIX or some such thing
-  id.m0 = random();
-  id.m1 = random();
-  id.m2 = random();
-  *reinterpret_cast<PRUint32*>(&id.m3[0]) = random();
-  *reinterpret_cast<PRUint32*>(&id.m3[4]) = random();
-#endif
-
-  char* id_cstr = id.ToString();
-  NS_ENSURE_TRUE(id_cstr, NS_ERROR_OUT_OF_MEMORY);
-  nsDependentCString id_str(id_cstr);
-  aUserID = Substring(id_str, 1, id_str.Length()-2);
-
-  PR_Free(id_cstr);
-  return NS_OK;
-}
-
 // Init the "install time" data.  We're taking an easy way out here
 // and just setting this to "the time when this version was first run".
 static nsresult
@@ -640,10 +600,6 @@ nsresult SetupExtraData(nsILocalFile* aAppDataDirectory,
 #endif
 
   nsCAutoString data;
-  if(NS_SUCCEEDED(GetOrInit(dataDirectory, NS_LITERAL_CSTRING("UserID"),
-                            data, InitUserID)))
-    AnnotateCrashReport(NS_LITERAL_CSTRING("UserID"), data);
-
   if(NS_SUCCEEDED(GetOrInit(dataDirectory,
                             NS_LITERAL_CSTRING("InstallTime") + aBuildID,
                             data, InitInstallTime)))

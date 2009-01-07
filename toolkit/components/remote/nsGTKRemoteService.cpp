@@ -43,8 +43,7 @@
 
 #include <X11/Xatom.h> // for XA_STRING
 #include <stdlib.h>
-#include <gtk/gtkinvisible.h> // For some reason GTK+ doesn't include this file
-                              // automatically from gtk.h
+#include <gtk/gtk.h>
 #include <gdk/gdk.h>
 #include <gdk/gdkx.h>
 

@@ -61,7 +61,7 @@ class nsIDOMSVGMatrix;
 class nsIURI;
 class nsSVGOuterSVGFrame;
 class nsIPresShell;
-class nsIDOMSVGAnimatedPreserveAspectRatio;
+class nsSVGPreserveAspectRatio;
 class nsIAtom;
 class nsSVGLength2;
 class nsSVGElement;
@@ -327,7 +327,7 @@ public:
   GetViewBoxTransform(float aViewportWidth, float aViewportHeight,
                       float aViewboxX, float aViewboxY,
                       float aViewboxWidth, float aViewboxHeight,
-                      nsIDOMSVGAnimatedPreserveAspectRatio *aPreserveAspectRatio,
+                      const nsSVGPreserveAspectRatio &aPreserveAspectRatio,
                       PRBool aIgnoreAlign = PR_FALSE);
 
   /* Paint SVG frame with SVG effects - aDirtyRect is the area being

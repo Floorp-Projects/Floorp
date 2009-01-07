@@ -144,13 +144,6 @@ interface nsIDOMWindowInternal : nsIDOMWindow2
   void                      resizeBy(in long widthDif, in long heightDif);
   void                      scroll(in long xScroll, in long yScroll);
 
-  //void                      clearTimeout(in long timerID);
-  //void                      clearInterval(in long timerID);
-  //[noscript] long           setTimeout(/* in function,
-  //                                        in unsigned long timeout */);
-  //[noscript] long           setInterval(/* in function,
-  //                                        in unsigned long timeout */);
-
   /**
    * Open a new window with this one as the parent.  This method will
    * NOT examine the JS stack for purposes of determining a caller.

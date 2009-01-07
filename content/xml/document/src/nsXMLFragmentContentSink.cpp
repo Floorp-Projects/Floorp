@@ -663,7 +663,6 @@ nsXHTMLParanoidFragmentSink::HandleStartElement(const PRUnichar *aName,
                                                 PRInt32 aIndex,
                                                 PRUint32 aLineNumber)
 {
-  nsresult rv;
   PRInt32 nameSpaceID;
   nsCOMPtr<nsIAtom> prefix, localName;
   nsContentUtils::SplitExpatName(aName, getter_AddRefs(prefix),

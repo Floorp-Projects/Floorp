@@ -60,7 +60,7 @@ interface nsIDOMTextMetrics : nsISupports
   readonly attribute float width;
 };
 
-[scriptable, uuid(66e6d87c-759c-43a7-b3d3-3348180b35df)]
+[scriptable, uuid(3e7d5d06-8846-4cff-8739-44756cbf494f)]
 interface nsIDOMCanvasRenderingContext2D : nsISupports
 {
   // back-reference to the canvas element for which
@@ -202,7 +202,7 @@ interface nsIDOMCanvasRenderingContext2D : nsISupports
    * This API cannot currently be used by Web content. It is chrome
    * only.
    */
-  void drawWindow(in nsIDOMWindow window, in long x, in long y,
-                  in long w, in long h, in DOMString bgColor,
+  void drawWindow(in nsIDOMWindow window, in float x, in float y,
+                  in float w, in float h, in DOMString bgColor,
                   [optional] in unsigned long flags);
 };

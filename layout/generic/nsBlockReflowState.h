@@ -43,7 +43,7 @@
 #ifndef nsBlockReflowState_h__
 #define nsBlockReflowState_h__
 
-#include "nsBlockBandData.h"
+#include "nsFloatManager.h"
 #include "nsLineBox.h"
 #include "nsFrameList.h"
 #include "nsBlockFrame.h"
@@ -56,8 +56,8 @@
 #define BRS_ISFIRSTINFLOW         0x00000010
 // Set when mLineAdjacentToTop is valid
 #define BRS_HAVELINEADJACENTTOTOP 0x00000020
-// Set when the block has the equivalent of NS_BLOCK_SPACE_MGR
-#define BRS_SPACE_MGR             0x00000040
+// Set when the block has the equivalent of NS_BLOCK_FLOAT_MGR
+#define BRS_FLOAT_MGR             0x00000040
 // Set when nsLineLayout::LineIsEmpty was true at the end of reflowing
 // the current line
 #define BRS_LINE_LAYOUT_EMPTY     0x00000080
@@ -71,7 +71,7 @@ public:
                      nsBlockFrame* aFrame,
                      const nsHTMLReflowMetrics& aMetrics,
                      PRBool aTopMarginRoot, PRBool aBottomMarginRoot,
-                     PRBool aBlockNeedsSpaceManager);
+                     PRBool aBlockNeedsFloatManager);
 
   ~nsBlockReflowState();
 
@@ -192,14 +192,14 @@ public:
 
   const nsHTMLReflowState& mReflowState;
 
-  nsSpaceManager* mSpaceManager;
+  nsFloatManager* mFloatManager;
 
-  // The coordinates within the spacemanager where the block is being
+  // The coordinates within the float manager where the block is being
   // placed <b>after</b> taking into account the blocks border and
   // padding. This, therefore, represents the inner "content area" (in
   // spacemanager coordinates) where child frames will be placed,
   // including child blocks and floats.
-  nscoord mSpaceManagerX, mSpaceManagerY;
+  nscoord mFloatManagerX, mFloatManagerY;
 
   // XXX get rid of this
   nsReflowStatus mReflowStatus;
@@ -272,9 +272,6 @@ public:
   // this to the next next-in-flow.
   nsBlockFrame* mNextInFlow;
 
-  // The current band data for the current Y coordinate
-  nsBlockBandData mBand;
-
   //----------------------------------------
 
   // Temporary line-reflow state. This state is used during the reflow
@@ -298,6 +295,11 @@ public:
   PRInt16 mFlags;
  
   PRUint8 mFloatBreakType;
+
+  // The number of floats on the sides of mAvailSpaceRect, including
+  // floats that do not reduce mAvailSpaceRect because they are in the
+  // margins.
+  PRPackedBool mBandHasFloats;
 
   void SetFlag(PRUint32 aFlag, PRBool aValue)
   {
