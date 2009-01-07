@@ -68,8 +68,11 @@ class nsChannelToPipeListener : public nsIStreamListener
 
   public:
   // If aSeeking is PR_TRUE then this listener was created as part of a
-  // seek request and is expecting a byte range partial result.
-  nsChannelToPipeListener(nsMediaDecoder* aDecoder, PRBool aSeeking = PR_FALSE);
+  // seek request and is expecting a byte range partial result. aOffset
+  // is the offset in bytes that this listener started reading from.
+  nsChannelToPipeListener(nsMediaDecoder* aDecoder,
+                          PRBool aSeeking = PR_FALSE,
+                          PRInt64 aOffset = 0);
   nsresult Init();
   nsresult GetInputStream(nsIInputStream** aStream);
   void Stop();
@@ -95,7 +98,12 @@ private:
   // bytes per second download rate.
   PRIntervalTime mIntervalEnd;
 
-  // Total bytes transferred so far
+  // Offset from the beginning of the resource where the listener
+  // started reading. This is used for computing the current file
+  // position for progress events.
+  PRInt64 mOffset;
+
+  // Total bytes transferred so far. Used for computing download rates.
   PRInt64 mTotalBytes;
 
   // PR_TRUE if this listener is expecting a byte range request result
