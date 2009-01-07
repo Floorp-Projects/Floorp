@@ -202,7 +202,7 @@ void GetAutoCompleteBaseQuery(nsACString& aQuery) {
 // not be read later and we don't have an associated kAutoCompleteIndex_
   aQuery = NS_LITERAL_CSTRING(
       "SELECT h.url, h.title, f.url") + BOOK_TAG_SQL + NS_LITERAL_CSTRING(", "
-        "h.visit_count, h.frecency "
+        "h.visit_count, h.typed, h.frecency "
       "FROM moz_places_temp h "
       "LEFT OUTER JOIN moz_favicons f ON f.id = h.favicon_id "
       "WHERE h.frecency <> 0 "
@@ -210,7 +210,7 @@ void GetAutoCompleteBaseQuery(nsACString& aQuery) {
       "UNION ALL "
       "SELECT * FROM ( "
         "SELECT h.url, h.title, f.url") + BOOK_TAG_SQL + NS_LITERAL_CSTRING(", "
-          "h.visit_count, h.frecency "
+          "h.visit_count, h.typed, h.frecency "
         "FROM moz_places h "
         "LEFT OUTER JOIN moz_favicons f ON f.id = h.favicon_id "
         "WHERE h.id NOT IN (SELECT id FROM moz_places_temp) "
@@ -218,7 +218,8 @@ void GetAutoCompleteBaseQuery(nsACString& aQuery) {
         "{ADDITIONAL_CONDITIONS} "
         "ORDER BY h.frecency DESC LIMIT (?2 + ?3) "
       ") "
-      "ORDER BY 8 DESC LIMIT ?2 OFFSET ?3");
+      // ORDER BY h.frecency
+      "ORDER BY 9 DESC LIMIT ?2 OFFSET ?3");
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -471,11 +472,17 @@ nsNavHistory::CreateAutoCompleteQueries()
 {
   nsCString AutoCompleteQuery;
   GetAutoCompleteBaseQuery(AutoCompleteQuery);
-  AutoCompleteQuery.ReplaceSubstring("{ADDITIONAL_CONDITIONS}",
-                                     (mAutoCompleteOnlyTyped ?
-                                        "AND h.typed = 1" : ""));
+  AutoCompleteQuery.ReplaceSubstring("{ADDITIONAL_CONDITIONS}", "");
   nsresult rv = mDBConn->CreateStatement(AutoCompleteQuery,
-                                getter_AddRefs(mDBAutoCompleteQuery));
+    getter_AddRefs(mDBAutoCompleteQuery));
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  nsCString AutoCompleteTypedQuery;
+  GetAutoCompleteBaseQuery(AutoCompleteTypedQuery);
+  AutoCompleteTypedQuery.ReplaceSubstring("{ADDITIONAL_CONDITIONS}",
+                                          "AND h.typed = 1");
+  rv = mDBConn->CreateStatement(AutoCompleteTypedQuery,
+    getter_AddRefs(mDBAutoCompleteTypedQuery));
   NS_ENSURE_SUCCESS(rv, rv);
 
   // In this query we are taking BOOK_TAG_SQL only for h.id because it
@@ -485,7 +492,7 @@ nsNavHistory::CreateAutoCompleteQueries()
   nsCString sql = NS_LITERAL_CSTRING(
     "SELECT IFNULL(h_t.url, h.url), IFNULL(h_t.title, h.title), f.url ") +
       BOOK_TAG_SQL + NS_LITERAL_CSTRING(", "
-      "IFNULL(h_t.visit_count, h.visit_count), rank "
+      "IFNULL(h_t.visit_count, h.visit_count), IFNULL(h_t.typed, h.typed), rank "
     "FROM ( "
       "SELECT ROUND(MAX(((i.input = ?2) + (SUBSTR(i.input, 1, LENGTH(?2)) = ?2)) * "
         "i.use_count), 1) AS rank, place_id "
@@ -509,7 +516,8 @@ nsNavHistory::CreateAutoCompleteQueries()
         BEST_FAVICON_FOR_REVHOST("moz_places_temp") ", "
         BEST_FAVICON_FOR_REVHOST("moz_places")
       "), "
-      "b.parent, b.title, NULL, IFNULL(h_t.visit_count, h.visit_count) "
+      "b.parent, b.title, NULL, IFNULL(h_t.visit_count, h.visit_count), "
+      "IFNULL(h_t.typed, h.typed) "
     "FROM moz_keywords k "
     "JOIN moz_bookmarks b ON b.keyword_id = k.id "
     "LEFT JOIN moz_places AS h ON h.url = search_url "
@@ -733,7 +741,7 @@ nsNavHistory::StartSearch(const nsAString & aSearchString,
 
       nsCString sql = NS_LITERAL_CSTRING(
         "SELECT h.url, h.title, f.url") + BOOK_TAG_SQL + NS_LITERAL_CSTRING(", "
-          "h.visit_count "
+          "h.visit_count, h.typed "
         "FROM ( "
           "SELECT * FROM moz_places_temp "
           "WHERE url IN (") + bindings + NS_LITERAL_CSTRING(") "
@@ -885,6 +893,8 @@ nsNavHistory::ProcessTokensForSpecialSearch()
       SET_BEHAVIOR(Title);
     else if (token->Equals(mAutoCompleteMatchUrl))
       SET_BEHAVIOR(Url);
+    else if (token->Equals(mAutoCompleteRestrictTyped))
+      SET_BEHAVIOR(Typed);
     else
       needToRemove = PR_FALSE;
 
@@ -897,6 +907,7 @@ nsNavHistory::ProcessTokensForSpecialSearch()
   // restrictive query first
   mDBCurrentQuery = GET_BEHAVIOR(Tag) ? GetDBAutoCompleteTagsQuery() :
     GET_BEHAVIOR(Bookmark) ? GetDBAutoCompleteStarQuery() :
+    GET_BEHAVIOR(Typed) ? static_cast<mozIStorageStatement *>(mDBAutoCompleteTypedQuery) :
     GET_BEHAVIOR(History) ? GetDBAutoCompleteHistoryQuery() :
     static_cast<mozIStorageStatement *>(mDBAutoCompleteQuery);
 }
@@ -1063,6 +1074,8 @@ nsNavHistory::AutoCompleteProcessSearch(mozIStorageStatement* aQuery,
       PRInt32 visitCount = 0;
       rv = aQuery->GetInt32(kAutoCompleteIndex_VisitCount, &visitCount);
       NS_ENSURE_SUCCESS(rv, rv);
+      PRInt32 typed = 0;
+      rv = aQuery->GetInt32(kAutoCompleteIndex_Typed, &typed);
 
       // Always prefer the bookmark title unless it's empty
       nsAutoString title =
@@ -1091,6 +1104,7 @@ nsNavHistory::AutoCompleteProcessSearch(mozIStorageStatement* aQuery,
           // is active, make sure a corresponding condition is *not* true. If
           // any are violated, matchAll will be false.
           PRBool matchAll = !((GET_BEHAVIOR(History) && visitCount == 0) ||
+                              (GET_BEHAVIOR(Typed) && typed == 0) ||
                               (GET_BEHAVIOR(Bookmark) && !parentId) ||
                               (GET_BEHAVIOR(Tag) && entryTags.IsEmpty()));
 
