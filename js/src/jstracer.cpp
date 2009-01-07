@@ -373,7 +373,7 @@ hash_accum(uintptr_t& h, uintptr_t i)
 }
 
 
-static inline int
+JS_REQUIRES_STACK static inline int
 stackSlotHash(JSContext* cx, unsigned slot)
 {
     uintptr_t h = 5381;
@@ -383,7 +383,7 @@ stackSlotHash(JSContext* cx, unsigned slot)
     return int(h);
 }
 
-static inline int
+JS_REQUIRES_STACK static inline int
 globalSlotHash(JSContext* cx, unsigned slot)
 {    
     uintptr_t h = 5381;
@@ -401,28 +401,28 @@ globalSlotHash(JSContext* cx, unsigned slot)
 
 
 /* Tell the oracle that a certain global variable should not be demoted. */
-void
+JS_REQUIRES_STACK void
 Oracle::markGlobalSlotUndemotable(JSContext* cx, unsigned slot)
 {
     _globalDontDemote.set(&gc, globalSlotHash(cx, slot));
 }
 
 /* Consult with the oracle whether we shouldn't demote a certain global variable. */
-bool
+JS_REQUIRES_STACK bool
 Oracle::isGlobalSlotUndemotable(JSContext* cx, unsigned slot) const
 {    
     return _globalDontDemote.get(globalSlotHash(cx, slot));
 }
 
 /* Tell the oracle that a certain slot at a certain bytecode location should not be demoted. */
-void
+JS_REQUIRES_STACK void
 Oracle::markStackSlotUndemotable(JSContext* cx, unsigned slot)
 {
     _stackDontDemote.set(&gc, stackSlotHash(cx, slot));
 }
 
 /* Consult with the oracle whether we shouldn't demote a certain slot. */
-bool
+JS_REQUIRES_STACK bool
 Oracle::isStackSlotUndemotable(JSContext* cx, unsigned slot) const
 {
     return _stackDontDemote.get(stackSlotHash(cx, slot));
@@ -4318,7 +4318,7 @@ TraceRecorder::stack(int n, LIns* i)
     set(&stackval(n), i, n >= 0);
 }
 
-LIns*
+JS_REQUIRES_STACK LIns*
 TraceRecorder::alu(LOpcode v, jsdouble v0, jsdouble v1, LIns* s0, LIns* s1)
 {
     if (v == LIR_fadd || v == LIR_fsub) {
@@ -4388,7 +4388,7 @@ TraceRecorder::makeNumberInt32(LIns* f)
     return x;
 }
 
-LIns*
+JS_REQUIRES_STACK LIns*
 TraceRecorder::stringify(jsval& v)
 {
     LIns* v_ins = get(&v);
@@ -4410,7 +4410,7 @@ TraceRecorder::stringify(jsval& v)
     return v_ins;
 }
 
-bool
+JS_REQUIRES_STACK bool
 TraceRecorder::call_imacro(jsbytecode* imacro)
 {
     JSStackFrame* fp = cx->fp;

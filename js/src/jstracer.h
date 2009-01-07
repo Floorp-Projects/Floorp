@@ -169,10 +169,10 @@ class Oracle {
     avmplus::BitSet _stackDontDemote;
     avmplus::BitSet _globalDontDemote;
 public:
-    void markGlobalSlotUndemotable(JSContext* cx, unsigned slot);
-    bool isGlobalSlotUndemotable(JSContext* cx, unsigned slot) const;
-    void markStackSlotUndemotable(JSContext* cx, unsigned slot);
-    bool isStackSlotUndemotable(JSContext* cx, unsigned slot) const;
+    JS_REQUIRES_STACK void markGlobalSlotUndemotable(JSContext* cx, unsigned slot);
+    JS_REQUIRES_STACK bool isGlobalSlotUndemotable(JSContext* cx, unsigned slot) const;
+    JS_REQUIRES_STACK void markStackSlotUndemotable(JSContext* cx, unsigned slot);
+    JS_REQUIRES_STACK bool isStackSlotUndemotable(JSContext* cx, unsigned slot) const;
     void clear();
 };
 
@@ -354,13 +354,13 @@ class TraceRecorder : public avmplus::GCObject {
     JS_REQUIRES_STACK nanojit::LIns* stack(int n);
     JS_REQUIRES_STACK void stack(int n, nanojit::LIns* i);
 
-    nanojit::LIns* alu(nanojit::LOpcode op, jsdouble v0, jsdouble v1, 
-                       nanojit::LIns* s0, nanojit::LIns* s1);
+    JS_REQUIRES_STACK nanojit::LIns* alu(nanojit::LOpcode op, jsdouble v0, jsdouble v1, 
+                                         nanojit::LIns* s0, nanojit::LIns* s1);
     nanojit::LIns* f2i(nanojit::LIns* f);
     JS_REQUIRES_STACK nanojit::LIns* makeNumberInt32(nanojit::LIns* f);
-    nanojit::LIns* stringify(jsval& v);
+    JS_REQUIRES_STACK nanojit::LIns* stringify(jsval& v);
 
-    bool call_imacro(jsbytecode* imacro);
+    JS_REQUIRES_STACK bool call_imacro(jsbytecode* imacro);
 
     JS_REQUIRES_STACK bool ifop();
     JS_REQUIRES_STACK bool switchop();
