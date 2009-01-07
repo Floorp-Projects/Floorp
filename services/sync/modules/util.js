@@ -349,12 +349,10 @@ let Utils = {
   },
 
   makeURI: function Weave_makeURI(URIString) {
-    if (URIString === null || URIString == "")
+    if (!URIString)
       return null;
-    let ioservice = Cc["@mozilla.org/network/io-service;1"].
-      getService(Ci.nsIIOService);
     try {
-      return ioservice.newURI(URIString, null, null);
+      return Svc.IO.newURI(URIString, null, null);
     } catch (e) {
       let log = Log4Moz.repository.getLogger("Service.Util");
       log.debug("Could not create URI: " + e);
@@ -510,3 +508,4 @@ Utils.EventListener.prototype = {
 
 let Svc = {};
 Utils.lazyInstance(Svc, 'Json', "@mozilla.org/dom/json;1", Ci.nsIJSON);
+Utils.lazySvc(Svc, 'IO', "@mozilla.org/network/io-service;1", Ci.nsIIOService);
