@@ -529,6 +529,18 @@ function OnDocumentLoad(event)
             utils.processUpdates();
         }
 
+        function WhenMozAfterPaintFlushed(continuation) {
+            if (utils.isMozAfterPaintPending) {
+                function handler() {
+                    gBrowser.removeEventListener("MozAfterPaint", handler, false);
+                    continuation();
+                }
+                gBrowser.addEventListener("MozAfterPaint", handler, false);
+            } else {
+                continuation();
+            }
+        }
+
         function AfterPaintListener(event) {
             if (event.target.document != currentDoc) {
                 // ignore paint events for subframes or old documents in the window.
@@ -574,25 +586,28 @@ function OnDocumentLoad(event)
         function StartWaitingForTestEnd() {
             FlushRendering();
 
-            gBrowser.addEventListener("MozAfterPaint", AfterPaintListener, false);
-            contentRootElement.addEventListener("DOMAttrModified", AttrModifiedListener, false);
+            function continuation() {
+                gBrowser.addEventListener("MozAfterPaint", AfterPaintListener, false);
+                contentRootElement.addEventListener("DOMAttrModified", AttrModifiedListener, false);
 
-            // Take a snapshot of the window in its current state
-            InitCurrentCanvasWithSnapshot();
+                // Take a snapshot of the window in its current state
+                InitCurrentCanvasWithSnapshot();
 
-            if (!shouldWait()) {
-                // reftest-wait was already removed (during the interval between OnDocumentLoaded
-                // calling setTimeout(StartWaitingForTestEnd,0) below, and this function
-                // actually running), so let's fake a direct notification of the attribute
-                // change.
-                AttrModifiedListener();
-                return;
+                if (!shouldWait()) {
+                    // reftest-wait was already removed (during the interval between OnDocumentLoaded
+                    // calling setTimeout(StartWaitingForTestEnd,0) below, and this function
+                    // actually running), so let's fake a direct notification of the attribute
+                    // change.
+                    AttrModifiedListener();
+                    return;
+                }
+
+                // Notify the test document that now is a good time to test some invalidation
+                var notification = document.createEvent("Events");
+                notification.initEvent("MozReftestInvalidate", true, false);
+                contentRootElement.dispatchEvent(notification);
             }
-
-            // Notify the test document that now is a good time to test some invalidation
-            var notification = document.createEvent("Events");
-            notification.initEvent("MozReftestInvalidate", true, false);
-            contentRootElement.dispatchEvent(notification);
+            WhenMozAfterPaintFlushed(continuation);
         }
 
         // After this load event has finished being dispatched, painting is normally
