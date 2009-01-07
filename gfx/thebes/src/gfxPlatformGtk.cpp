@@ -554,8 +554,10 @@ gfxPlatformGtk::GetPlatformCMSOutputProfile()
                                &retAtom, &retFormat, &retLength,
                                &retAfter, &retProperty);
 
-            cmsHPROFILE profile =
-                cmsOpenProfileFromMem(retProperty, retLength);
+            cmsHPROFILE profile = NULL;
+
+            if (retLength > 0)
+                profile = cmsOpenProfileFromMem(retProperty, retLength);
 
             XFree(retProperty);
 
