@@ -108,14 +108,12 @@ tab:focus > .tab-middle {
 
 tab[beforeselected="true"],
 tab[afterselected="true"][chromedir="rtl"] {
-  -moz-appearance: tab-left-edge;
   border-right: none;
   -moz-border-radius-topright: 0;
 }
 
 tab[afterselected="true"],
 tab[beforeselected="true"][chromedir="rtl"] {
-  -moz-appearance: tab-right-edge;
   border-left: none;
   -moz-border-radius-topleft: 0;
 }

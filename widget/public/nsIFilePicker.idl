@@ -133,7 +133,7 @@ interface nsIFilePicker : nsISupports
   readonly attribute nsILocalFile file;
 
  /**
-  * Get the nsIURL for the file or directory.
+  * Get the nsIURI for the file or directory.
   *
   * @return Returns the file currently selected
   */

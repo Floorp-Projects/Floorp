@@ -128,6 +128,8 @@ protected:
                        nsIFrame* aFrame);
   void DrawUnifiedToolbar(CGContextRef cgContext, const HIRect& inBoxRect,
                           nsIFrame *aFrame);
+  void DrawStatusBar(CGContextRef cgContext, const HIRect& inBoxRect,
+                     nsIFrame *aFrame);
 
   // Scrollbars
   void DrawScrollbar(CGContextRef aCGContext, const HIRect& aBoxRect, nsIFrame *aFrame);

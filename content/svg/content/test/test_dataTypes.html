@@ -105,6 +105,29 @@ function runTests()
   is(convolve.result.animVal, "bar", "string animVal");
   is(convolve.getAttribute("result"), "bar", "string attribute");
 
+  // preserveAspectRatio attribute
+
+  marker.setAttribute("preserveAspectRatio", "xMinYMid slice");
+  is(marker.preserveAspectRatio.baseVal.align, 5, "preserveAspectRatio.align baseVal");
+  is(marker.preserveAspectRatio.animVal.align, 5, "preserveAspectRatio.align animVal");
+  is(marker.preserveAspectRatio.baseVal.meetOrSlice, 2, "preserveAspectRatio.meetOrSlice baseVal");
+  is(marker.preserveAspectRatio.animVal.meetOrSlice, 2, "preserveAspectRatio.meetOrSlice animVal");
+  marker.preserveAspectRatio.baseVal.align = 3;
+  is(marker.preserveAspectRatio.animVal.align, 3, "preserveAspectRatio animVal");
+  is(marker.preserveAspectRatio.animVal.meetOrSlice, 2, "preserveAspectRatio.meetOrSlice animVal");
+  marker.preserveAspectRatio.baseVal.meetOrSlice = 1;
+  is(marker.preserveAspectRatio.animVal.align, 3, "preserveAspectRatio animVal");
+  is(marker.preserveAspectRatio.animVal.meetOrSlice, 1, "preserveAspectRatio.meetOrSlice animVal");
+  is(marker.getAttribute("preserveAspectRatio"), "xMidYMin meet", "preserveAspectRatio attribute");
+  
+  var basePreserveAspectRatio = marker.preserveAspectRatio.baseVal;
+  var animPreserveAspectRatio = marker.preserveAspectRatio.animVal;
+  marker.setAttribute("preserveAspectRatio", "xMaxYMid slice");
+  is(basePreserveAspectRatio.align, 7, "preserveAspectRatio.align baseVal");
+  is(animPreserveAspectRatio.align, 7, "preserveAspectRatio.align animVal");
+  is(basePreserveAspectRatio.meetOrSlice, 2, "preserveAspectRatio.meetOrSlice baseVal");
+  is(animPreserveAspectRatio.meetOrSlice, 2, "preserveAspectRatio.meetOrSlice animVal");
+
   SimpleTest.finish();
 }
 

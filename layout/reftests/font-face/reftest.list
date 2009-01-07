@@ -1,6 +1,6 @@
-# Everything here uses HTTP(..) because they use fonts in ../fonts/.  We
-# can't use file:/// URLs because of cross-directory access restrictions
-# on file: URLs.
+# Tests using downloaded fonts use HTTP(..) because they use fonts in
+# ../fonts/.  We can't use file:/// URLs because of cross-directory access
+# restrictions on file: URLs.
 
 HTTP(..) != download-1.html download-1-notref.html
 HTTP(..) == download-2.html download-2-ref.html
@@ -52,7 +52,7 @@ HTTP(..) == disable-sheet-4.html disable-sheet-4-ref.html
 HTTP(..) == disable-sheet-5.html disable-sheet-4-ref.html
 HTTP(..) == sheet-set-base-1.html sheet-set-base-1-ref.html
 random-if(MOZ_WIDGET_TOOLKIT=="gtk2") HTTP(..) == sheet-set-switch-1.html sheet-set-switch-1-ref.html # gtk2 failure is bug 468217
-HTTP(..) == insert-rule-1.html insert-rule-1-ref.html
+random HTTP(..) == insert-rule-1.html insert-rule-1-ref.html # bug 472267
 HTTP(..) == delete-rule-1.html delete-rule-1-ref.html
 HTTP(..) == media-query-add-1.html media-query-add-1-ref.html
 HTTP(..) == media-query-remove-1.html media-query-remove-1-ref.html
@@ -61,3 +61,5 @@ HTTP(..) != media-query-add-1-ref.html media-query-remove-1-ref.html
 HTTP(..) == ahem-metrics-1.html ahem-metrics-1-ref.html
 HTTP(..) == ex-unit-1.html ex-unit-1-ref.html
 HTTP(..) == ex-unit-1-dynamic.html ex-unit-1-ref.html
+
+fails-if(MOZ_WIDGET_TOOLKIT!="gtk2") == local-1.html local-1-ref.html # fails on MS Windows and Mac due to bug 465463

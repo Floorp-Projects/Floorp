@@ -41,7 +41,6 @@
 #include "nsIDOMSVGForeignObjectElem.h"
 #include "nsIDOMSVGMatrix.h"
 #include "nsIDOMSVGSVGElement.h"
-#include "nsSpaceManager.h"
 #include "nsSVGOuterSVGFrame.h"
 #include "nsRegion.h"
 #include "nsGkAtoms.h"

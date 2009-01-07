@@ -71,7 +71,7 @@ fails == 25888-3r.html 25888-3r-ref.html # bug 25888
 == 98223-1.html 98223-1-ref.html
 == 98223-2.html 98223-2-ref.html
 == 99850-1a.html 99850-1-ref.html
-== 99850-1b.html 99850-1-ref.html
+random == 99850-1b.html 99850-1-ref.html # bug 471629
 == 99850-1c.html 99850-1-ref.html
 == 99850-1d.html 99850-1-ref.html
 == 105030-1.html 105030-1-ref.html
@@ -142,10 +142,15 @@ fails == 25888-3r.html 25888-3r-ref.html # bug 25888
 == 214077-1a.html 214077-1-ref.html
 == 214077-1b.html 214077-1-ref.html
 == 218473-1.html 218473-1-ref.html
+== 220165-1.svg 220165-1-ref.svg
 == 223809-1.html 223809-1-ref.html
 == 228856-1.html 228856-1-ref.html
 == 228856-2.html 228856-2-ref.html
 # == 231823-1.html 231823-1-ref.html
+== 233094-1.html 233094-1-ref.html
+== 233094-2a.html 233094-2-ref.html
+== 233094-2b.html 233094-2-ref.html
+== 233094-2c.html 233094-2-ref.html
 == 234686-1.html 234686-ref.html
 == 234686-2.html 234686-ref.html
 == 234686-3.html 234686-ref.html
@@ -623,7 +628,7 @@ fails == 386310-1d.html 386310-1-ref.html
 == 387201-3.html about:blank  # Really an assertion test rather than a rendering test
 == 387344-1.html 387344-1-ref.html
 == 387876-1.html 387876-1-ref.html
-== 387876-2.html 387876-2-ref.html
+random == 387876-2.html 387876-2-ref.html # bug 471630
 == 387876-3a.html 387876-3-ref.html
 == 387876-3b.html 387876-3-ref.html
 == 388026-1.html 388026-1-ref.html
@@ -932,7 +937,7 @@ fails == 441259-2.html 441259-2-ref.html # bug 441400
 == 444928-1.html 444928-1-ref.html
 == 444928-2.html 444928-2-ref.html
 != 444928-3.html 444928-3-notref.html
-== 445004-1.html 445004-1-ref.html
+random == 445004-1.html 445004-1-ref.html # bug 472268
 == 445142-1a.html 445142-1-ref.html
 == 445142-1b.html 445142-1-ref.html
 == 445142-1c.html 445142-1-ref.html

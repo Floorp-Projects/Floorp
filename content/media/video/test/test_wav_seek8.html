@@ -7,15 +7,10 @@
   <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
 </head>
 <body>
-<audio id='v'
-       onloadedmetadata='return startTest();'>
-  <source type='audio/x-wav' src='r11025_s16_c1.wav'>
-</audio>
 <pre id="test">
 <script class="testbody" type="text/javascript">
 // If a NaN is passed to currentTime, make sure this is caught
 // otherwise an infinite loop in the Wave backend occurs.
-var v = document.getElementById('v');
 var completed = false;
 var thrown1 = false;
 var thrown2 = false;
@@ -24,7 +19,7 @@ var thrown3 = false;
 function startTest() {
   if (completed)
     return false;
-
+  var v = document.getElementById('v');
   try {
     v.currentTime = NaN;
   } catch(e) {
@@ -54,5 +49,9 @@ function startTest() {
 SimpleTest.waitForExplicitFinish();
 </script>
 </pre>
+<audio id='v'
+       onloadedmetadata='return startTest();'>
+  <source type='audio/x-wav' src='r11025_s16_c1.wav'>
+</audio>
 </body>
 </html>

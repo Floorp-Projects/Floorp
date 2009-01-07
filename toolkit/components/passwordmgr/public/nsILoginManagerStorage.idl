@@ -40,7 +40,7 @@
 interface nsIFile;
 interface nsILoginInfo;
 
-[scriptable, uuid(18b5acbd-36dc-496d-9212-6f1a3c068a84)]
+[scriptable, uuid(dec624d1-18ea-40ea-8ca5-69002153c8b8)]
 
 /*
  * NOTE: This interface is intended to be implemented by modules
@@ -125,6 +125,26 @@ interface nsILoginManagerStorage : nsISupports {
      */
     void getAllLogins(out unsigned long count,
                       [retval, array, size_is(count)] out nsILoginInfo logins);
+
+
+    /**
+    * Fetch all logins in the login manager. An array is always returned;
+    * if there are no logins the array is empty. This does not decrypt logins
+    * before returning the array
+    *
+    * @param count
+    *        The number of elements in the array. JS callers can simply use
+    *        the array's .length property, and supply an dummy object for
+    *        this out param. For example: |getAllEncryptedLogins({})|
+    * @param logins
+    *        An array of nsILoginInfo objects. 
+    *
+    * NOTE: This can be called from JS as:
+    *       var logins = pwmgr.getAllEncryptedLogins({});
+    *       (|logins| is an array).
+    */
+    void getAllEncryptedLogins(out unsigned long count,
+                               [retval, array, size_is(count)] out nsILoginInfo logins);
 
 
     /**

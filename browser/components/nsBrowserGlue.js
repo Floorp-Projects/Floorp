@@ -115,9 +115,6 @@ BrowserGlue.prototype = {
       case "xpcom-shutdown":
         this._dispose();
         break;
-      case "quit-application": 
-        this._onProfileShutdown();
-        break;
       case "prefservice:after-app-defaults":
         this._onAppDefaults();
         break;
@@ -141,6 +138,10 @@ BrowserGlue.prototype = {
         if (this._saveSession) {
           this._setPrefToSaveSession();
         }
+        // Everything that uses Places during shutdown should be here, since
+        // on quit-application Places database connection will be closed
+        // and history synchronization could fail.
+        this._onProfileShutdown();
         break;
       case "session-save":
         this._setPrefToSaveSession();
@@ -173,7 +174,6 @@ BrowserGlue.prototype = {
   {
     // observer registration
     const osvr = this._observerService;
-    osvr.addObserver(this, "quit-application", false);
     osvr.addObserver(this, "xpcom-shutdown", false);
     osvr.addObserver(this, "prefservice:after-app-defaults", false);
     osvr.addObserver(this, "final-ui-startup", false);
@@ -191,7 +191,6 @@ BrowserGlue.prototype = {
   {
     // observer removal 
     const osvr = this._observerService;
-    osvr.removeObserver(this, "quit-application");
     osvr.removeObserver(this, "xpcom-shutdown");
     osvr.removeObserver(this, "prefservice:after-app-defaults");
     osvr.removeObserver(this, "final-ui-startup");

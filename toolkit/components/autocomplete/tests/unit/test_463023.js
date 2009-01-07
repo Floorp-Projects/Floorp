@@ -1,4 +1,5 @@
-/* -*- Mode: C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
+/* -*- Mode: Java; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
+/* vim:set ts=2 sw=2 sts=2 et: */
 /* ***** BEGIN LICENSE BLOCK *****
  * Version: MPL 1.1/GPL 2.0/LGPL 2.1
  *
@@ -12,19 +13,18 @@
  * for the specific language governing rights and limitations under the
  * License.
  *
- * The Original Code is the Mozilla SVG project.
+ * The Original Code is Bug 463023 unit test code.
  *
- * The Initial Developer of the Original Code is
- * Crocodile Clips Ltd..
- * Portions created by the Initial Developer are Copyright (C) 2003
+ * The Initial Developer of the Original Code is Blue Static.
+ * Portions created by the Initial Developer are Copyright (C) 2009
  * the Initial Developer. All Rights Reserved.
  *
  * Contributor(s):
- *   Alex Fritze <alex.fritze@crocodile-clips.com> (original author)
+ *   Robert Sesek <rsesek@bluestatic.org>
  *
  * Alternatively, the contents of this file may be used under the terms of
- * either of the GNU General Public License Version 2 or later (the "GPL"),
- * or the GNU Lesser General Public License Version 2.1 or later (the "LGPL"),
+ * either the GNU General Public License Version 2 or later (the "GPL"), or
+ * the GNU Lesser General Public License Version 2.1 or later (the "LGPL"),
  * in which case the provisions of the GPL or the LGPL are applicable instead
  * of those above. If you wish to allow use of your version of this file only
  * under the terms of either the GPL or the LGPL, and not to allow others to
@@ -36,34 +36,12 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-#ifndef __NS_SVGCLASSVALUE_H__
-#define __NS_SVGCLASSVALUE_H__
+const Cc = Components.classes;
+const Ci = Components.interfaces;
 
-#include "nsIDOMSVGAnimatedString.h"
-#include "nsSVGValue.h"
-#include "nsAttrValue.h"
-
-class nsSVGClassValue : public nsIDOMSVGAnimatedString,
-                        public nsSVGValue
-{
-public:
-  // nsISupports interface:
-  NS_DECL_ISUPPORTS
-
-  // nsIDOMSVGAnimatedString interface:
-  NS_DECL_NSIDOMSVGANIMATEDSTRING
-
-  // remainder of nsISVGValue interface:
-  NS_IMETHOD SetValueString(const nsAString& aValue);
-  NS_IMETHOD GetValueString(nsAString& aValue);
-
-  const nsAttrValue* GetAttrValue()
-  {
-    return &mBaseVal;
-  }
-
-protected:
-  nsAttrValue mBaseVal;
-};
-
-#endif //__NS_SVGCLASSVALUE_H__
+// main
+function run_test() {
+  var result = Cc["@mozilla.org/autocomplete/simple-result;1"].
+               createInstance(Ci.nsIAutoCompleteSimpleResult);
+  do_check_eq(result.searchStatus, Ci.nsIAutoCompleteSimpleResult.STATUS_NONE);
+}

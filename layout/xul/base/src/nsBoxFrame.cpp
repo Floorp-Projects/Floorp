@@ -72,7 +72,6 @@
 #include "nsINameSpaceManager.h"
 #include "nsGkAtoms.h"
 #include "nsIContent.h"
-#include "nsSpaceManager.h"
 #include "nsHTMLParts.h"
 #include "nsIViewManager.h"
 #include "nsIView.h"
@@ -205,7 +204,7 @@ nsBoxFrame::Init(nsIContent*      aContent,
   // see if we need a widget
   if (aParent && aParent->IsBoxFrame()) {
     if (aParent->ChildrenMustHaveWidgets()) {
-        rv = nsHTMLContainerFrame::CreateViewForFrame(this, nsnull, PR_TRUE);
+        rv = nsHTMLContainerFrame::CreateViewForFrame(this, PR_TRUE);
         NS_ENSURE_SUCCESS(rv, rv);
 
         nsIView* view = GetView();

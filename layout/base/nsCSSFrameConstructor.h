@@ -646,15 +646,12 @@ private:
                                  nsFrameConstructorState& aState,
                                  nsIContent*              aParent,
                                  nsIFrame*                aNewFrame,
-                                 PRBool                   aAppendToExisting,
                                  nsFrameItems&            aChildItems,
                                  PRBool                   aIsRoot = PR_FALSE);
 
   nsresult CreateAnonymousFrames(nsFrameConstructorState& aState,
                                  nsIContent*              aParent,
-                                 nsIDocument*             aDocument,
-                                 nsIFrame*                aNewFrame,
-                                 PRBool                   aAppendToExisting,
+                                 nsIFrame*                aParentFrame,
                                  nsFrameItems&            aChildItems);
 
 //MathML Mod - RBS
@@ -727,12 +724,42 @@ private:
                                        nsFrameItems&            aFrameItems,
                                        PRBool                   aHasPseudoParent);
 
+  /**
+   * Construct the frames for the children of aContent.  "children" is defined
+   * as "whatever ChildIterator returns for aContent".  This means we're
+   * basically operating on children in the "flattened tree" per sXBL/XBL2.
+   * This method will also handle constructing ::before, ::after,
+   * ::first-letter, and ::first-line frames, as needed and if allowed.
+   *
+   * If the parent is a float containing block, this method will handle pushing
+   * it as the float containing block in aState (so there's no need for callers
+   * to push it themselves).
+   *
+   * @param aState the frame construction state
+   * @param aContent the content node whose children need frames
+   * @param aStyleContext the style context for aContent
+   * @param aFrame the frame to use as the parent frame for the new in-flow
+   *        kids. Note that this must be its own content insertion frame, but
+   *        need not be be the primary frame for aContent.  This frame will be
+   *        pushed as the float containing block, as needed.  aFrame is also
+   *        used to find the parent style context for the kids' style contexts
+   *        (not necessary aFrame's style context).
+   * @param aCanHaveGeneratedContent Whether to allow :before and
+   *        :after styles on the parent.
+   * @param aFrameItems the list in which we should place the in-flow children
+   * @param aAllowBlockStyles Whether to allow first-letter and first-line
+   *        styles on the parent.
+   * @param aTableCreator if non-null, will just make this method call
+   *        TableProcessChildren between constructing the ::before and ::after
+   *        content instead of doing whatever it would normally do.
+   */
   nsresult ProcessChildren(nsFrameConstructorState& aState,
                            nsIContent*              aContent,
+                           nsStyleContext*          aStyleContext,
                            nsIFrame*                aFrame,
                            PRBool                   aCanHaveGeneratedContent,
                            nsFrameItems&            aFrameItems,
-                           PRBool                   aParentIsBlock);
+                           PRBool                   aAllowBlockStyles);
 
   // @param OUT aFrame the newly created frame
   nsresult CreateInputFrame(nsFrameConstructorState& aState,
@@ -782,13 +809,13 @@ private:
   //  Calls BeginBuildingScrollFrame, InitAndRestoreFrame, and then FinishBuildingScrollFrame.
   //  Sets the primary frame for the content to the output aNewFrame.
   // @param aNewFrame the created scrollframe --- output only
+  // @param aParentFrame the geometric parent that the scrollframe will have.
   nsresult
   BuildScrollFrame(nsFrameConstructorState& aState,
                    nsIContent*              aContent,
                    nsStyleContext*          aContentStyle,
                    nsIFrame*                aScrolledFrame,
                    nsIFrame*                aParentFrame,
-                   nsIFrame*                aContentParentFrame,
                    nsIFrame*&               aNewFrame,
                    nsStyleContext*&         aScrolledChildStyle);
 
@@ -798,7 +825,6 @@ private:
                            nsIContent*              aContent,
                            nsStyleContext*          aContentStyle,
                            nsIFrame*                aParentFrame,
-                           nsIFrame*                aContentParentFrame,
                            nsIAtom*                 aScrolledPseudo,
                            PRBool                   aIsRoot,
                            nsIFrame*&               aNewFrame);

@@ -501,7 +501,6 @@ RDFXMLDataSourceImpl::BlockingParse(nsIURI* aURL, nsIStreamListener* aConsumer)
     rv = NS_NewChannel(getter_AddRefs(channel), aURL, nsnull);
     if (NS_FAILED(rv)) return rv;
     nsCOMPtr<nsIInputStream> in;
-    PRUint32 sourceOffset = 0;
     rv = channel->Open(getter_AddRefs(in));
 
     // Report success if the file doesn't exist, but propagate other errors.

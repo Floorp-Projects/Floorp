@@ -218,8 +218,6 @@ nsresult nsTestUConv::TestEncoders()
   res = ccMan->GetEncoderList(getter_AddRefs(encoders));
   if (NS_FAILED(res)) return res;
 
-  PRUint32 encoderCount=0;
-
   PRBool hasMore;
   encoders->HasMore(&hasMore);
   

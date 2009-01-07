@@ -1064,36 +1064,42 @@ jsdScript::CreatePPLineMap()
         scriptOwner = PR_TRUE;
         baseLine = 1;
     }
-        
+
     PRUint32 scriptExtent = JS_GetScriptLineExtent (cx, script);
     jsbytecode* firstPC = JS_LineNumberToPC (cx, script, 0);
     /* allocate worst case size of map (number of lines in script + 1
      * for our 0 record), we'll shrink it with a realloc later. */
-    mPPLineMap = 
+    PCMapEntry *lineMap =
         static_cast<PCMapEntry *>
                    (PR_Malloc((scriptExtent + 1) * sizeof (PCMapEntry)));
-    if (mPPLineMap) {             
-        mPCMapSize = 0;
+    PRUint32 lineMapSize = 0;
+
+    if (lineMap) {
         for (PRUint32 line = baseLine; line < scriptExtent + baseLine; ++line) {
             jsbytecode* pc = JS_LineNumberToPC (cx, script, line);
             if (line == JS_PCToLineNumber (cx, script, pc)) {
-                mPPLineMap[mPCMapSize].line = line;
-                mPPLineMap[mPCMapSize].pc = pc - firstPC;
-                ++mPCMapSize;
+                lineMap[lineMapSize].line = line;
+                lineMap[lineMapSize].pc = pc - firstPC;
+                ++lineMapSize;
             }
         }
-        if (scriptExtent != mPCMapSize) {
-            mPPLineMap =
+        if (scriptExtent != lineMapSize) {
+            lineMap =
                 static_cast<PCMapEntry *>
-                           (PR_Realloc(mPPLineMap,
-                                          mPCMapSize * sizeof(PCMapEntry)));
+                           (PR_Realloc(mPPLineMap = lineMap,
+                                       lineMapSize * sizeof(PCMapEntry)));
+            if (!lineMap) {
+                PR_Free(mPPLineMap);
+                lineMapSize = 0;
+            }
         }
     }
 
     if (scriptOwner)
         JS_DestroyScript (cx, script);
 
-    return mPPLineMap;
+    mPCMapSize = lineMapSize;
+    return mPPLineMap = lineMap;
 }
 
 PRUint32
@@ -1417,7 +1423,7 @@ jsdScript::IsLineExecutable(PRUint32 aLine, PRUint32 aPcmap, PRBool *_rval)
         *_rval = (aLine == JSD_GetClosestLine (mCx, mScript, pc));
     } else if (aPcmap == PCMAP_PRETTYPRINT) {
         if (!mPPLineMap && !CreatePPLineMap())
-            return NS_ERROR_FAILURE;
+            return NS_ERROR_OUT_OF_MEMORY;
         *_rval = PR_FALSE;
         for (PRUint32 i = 0; i < mPCMapSize; ++i) {
             if (mPPLineMap[i].line >= aLine) {
@@ -1467,12 +1473,9 @@ NS_IMPL_THREADSAFE_ISUPPORTS2(jsdContext, jsdIContext, jsdIEphemeral)
 jsdIContext *
 jsdContext::FromPtr (JSDContext *aJSDCx, JSContext *aJSCx)
 {
-    if (!aJSDCx || !aJSCx ||
-        !(JS_GetOptions(aJSCx) & JSOPTION_PRIVATE_IS_NSISUPPORTS))
-    {
+    if (!aJSDCx || !aJSCx)
         return nsnull;
-    }
-    
+
     nsCOMPtr<jsdIContext> jsdicx;
     nsCOMPtr<jsdIEphemeral> eph = 
         jsds_FindEphemeral (&gLiveContexts, static_cast<void *>(aJSCx));
@@ -1482,17 +1485,15 @@ jsdContext::FromPtr (JSDContext *aJSDCx, JSContext *aJSCx)
     }
     else
     {
-        nsCOMPtr<nsISupports> iscx = 
-            static_cast<nsISupports *>(JS_GetContextPrivate(aJSCx));
-        if (!iscx)
-            return nsnull;
-        
+        nsCOMPtr<nsISupports> iscx;
+        if (JS_GetOptions(aJSCx) & JSOPTION_PRIVATE_IS_NSISUPPORTS)
+            iscx = static_cast<nsISupports *>(JS_GetContextPrivate(aJSCx));
         jsdicx = new jsdContext (aJSDCx, aJSCx, iscx);
     }
 
-    jsdIContext *rv = jsdicx;
-    NS_IF_ADDREF(rv);
-    return rv;
+    jsdIContext *ctx = nsnull;
+    jsdicx.swap(ctx);
+    return ctx;
 }
 
 jsdContext::jsdContext (JSDContext *aJSDCx, JSContext *aJSCx,
@@ -1592,8 +1593,7 @@ NS_IMETHODIMP
 jsdContext::GetWrappedContext(nsISupports **_rval)
 {
     ASSERT_VALID_EPHEMERAL;
-    *_rval = mISCx;
-    NS_IF_ADDREF(*_rval);
+    NS_IF_ADDREF(*_rval = mISCx);
     return NS_OK;
 }
 
@@ -1643,6 +1643,11 @@ NS_IMETHODIMP
 jsdContext::GetScriptsEnabled (PRBool *_rval)
 {
     ASSERT_VALID_EPHEMERAL;
+    if (!mISCx) {
+        *_rval = PR_TRUE;
+        return NS_OK;
+    }
+
     nsCOMPtr<nsIScriptContext> context = do_QueryInterface(mISCx);
     if (!context)
         return NS_ERROR_NO_INTERFACE;
@@ -1656,6 +1661,12 @@ NS_IMETHODIMP
 jsdContext::SetScriptsEnabled (PRBool _rval)
 {
     ASSERT_VALID_EPHEMERAL;
+    if (!mISCx) {
+        if (_rval)
+            return NS_OK;
+        return NS_ERROR_NO_INTERFACE;
+    }
+
     nsCOMPtr<nsIScriptContext> context = do_QueryInterface(mISCx);
     if (!context)
         return NS_ERROR_NO_INTERFACE;

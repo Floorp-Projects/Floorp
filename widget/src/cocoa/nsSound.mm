@@ -107,5 +107,22 @@ nsSound::Init()
 NS_IMETHODIMP
 nsSound::PlaySystemSound(const nsAString &aSoundAlias)
 {
+  NS_OBJC_BEGIN_TRY_ABORT_BLOCK_NSRESULT;
+
+  if (NS_IsMozAliasSound(aSoundAlias)) {
+    // Mac doesn't have system sound settings for each user actions.
+    return NS_OK;
+  }
+
+  NSString *name = [NSString stringWithCharacters:aSoundAlias.BeginReading()
+                                           length:aSoundAlias.Length()];
+  NSSound *sound = [NSSound soundNamed:name];
+  if (sound) {
+    [sound stop];
+    [sound play];
+  }
+
   return NS_OK;
+
+  NS_OBJC_END_TRY_ABORT_BLOCK_NSRESULT;
 }

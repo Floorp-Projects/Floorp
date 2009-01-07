@@ -47,7 +47,9 @@
 
 #include "nsScreenWin.h"
 
-
+#ifdef WINCE
+#define GetMonitorInfoW GetMonitorInfo
+#endif
 
 
 nsScreenWin :: nsScreenWin ( void* inScreen )

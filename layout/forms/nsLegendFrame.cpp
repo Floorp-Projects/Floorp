@@ -59,7 +59,7 @@ NS_NewLegendFrame(nsIPresShell* aPresShell, nsStyleContext* aContext)
 {
   nsIFrame* f = new (aPresShell) nsLegendFrame(aContext);
   if (f) {
-    f->AddStateBits(NS_BLOCK_SPACE_MGR | NS_BLOCK_MARGIN_ROOT);
+    f->AddStateBits(NS_BLOCK_FLOAT_MGR | NS_BLOCK_MARGIN_ROOT);
   }
   return f;
 }

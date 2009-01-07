@@ -644,10 +644,10 @@ nsColumnSetFrame::ReflowChildren(nsHTMLReflowMetrics&     aDesiredSize,
     
       nsHTMLReflowMetrics kidDesiredSize(aDesiredSize.mFlags);
 
-      // XXX it would be cool to consult the space manager for the
+      // XXX it would be cool to consult the float manager for the
       // previous block to figure out the region of floats from the
       // previous column that extend into this column, and subtract
-      // that region from the new space manager.  So you could stick a
+      // that region from the new float manager.  So you could stick a
       // really big float in the first column and text in following
       // columns would flow around it.
 

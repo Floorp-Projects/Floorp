@@ -59,14 +59,14 @@
 
 class nsBlockFrame;
 
-class nsSpaceManager;
+class nsFloatManager;
 class nsPlaceholderFrame;
 struct nsStyleText;
 
 class nsLineLayout {
 public:
   nsLineLayout(nsPresContext* aPresContext,
-               nsSpaceManager* aSpaceManager,
+               nsFloatManager* aFloatManager,
                const nsHTMLReflowState* aOuterReflowState,
                const nsLineList::iterator* aLine);
   ~nsLineLayout();
@@ -163,7 +163,8 @@ protected:
 #define LL_NEEDBACKUP                  0x00000400
 #define LL_INFIRSTLINE                 0x00000800
 #define LL_GOTLINEBOX                  0x00001000
-#define LL_LASTFLAG                    LL_GOTLINEBOX
+#define LL_INFIRSTLETTER               0x00002000
+#define LL_LASTFLAG                    LL_INFIRSTLETTER
 
   PRUint16 mFlags;
 
@@ -243,6 +244,14 @@ public:
 
   void SetFirstLetterStyleOK(PRBool aSetting) {
     SetFlag(LL_FIRSTLETTERSTYLEOK, aSetting);
+  }
+
+  PRBool GetInFirstLetter() const {
+    return GetFlag(LL_INFIRSTLETTER);
+  }
+
+  void SetInFirstLetter(PRBool aSetting) {
+    SetFlag(LL_INFIRSTLETTER, aSetting);
   }
 
   PRBool GetInFirstLine() const {
@@ -373,7 +382,7 @@ public:
 
 protected:
   // This state is constant for a given block frame doing line layout
-  nsSpaceManager* mSpaceManager;
+  nsFloatManager* mFloatManager;
   const nsStyleText* mStyleText; // for the block
   const nsHTMLReflowState* mBlockReflowState;
 

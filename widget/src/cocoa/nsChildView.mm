@@ -3327,7 +3327,7 @@ static const PRInt32 sShadowInvalidationInterval = 100;
 
   // Setup the "swipe" event.
   nsSimpleGestureEvent geckoEvent(PR_TRUE, NS_SIMPLE_GESTURE_SWIPE, mGeckoChild, 0, 0.0);
-  [self convertGenericCocoaEvent:anEvent toGeckoEvent:&geckoEvent];
+  [self convertCocoaMouseEvent:anEvent toGeckoEvent:&geckoEvent];
 
   // Record the left/right direction.
   if (deltaX > 0.0)
@@ -3391,7 +3391,7 @@ static const PRInt32 sShadowInvalidationInterval = 100;
 
   // Setup the event.
   nsSimpleGestureEvent geckoEvent(PR_TRUE, msg, mGeckoChild, 0, deltaZ);
-  [self convertGenericCocoaEvent:anEvent toGeckoEvent:&geckoEvent];
+  [self convertCocoaMouseEvent:anEvent toGeckoEvent:&geckoEvent];
 
   // Send the event.
   mGeckoChild->DispatchWindowEvent(geckoEvent);
@@ -3433,7 +3433,7 @@ static const PRInt32 sShadowInvalidationInterval = 100;
 
   // Setup the event.
   nsSimpleGestureEvent geckoEvent(PR_TRUE, msg, mGeckoChild, 0, 0.0);
-  [self convertGenericCocoaEvent:anEvent toGeckoEvent:&geckoEvent];
+  [self convertCocoaMouseEvent:anEvent toGeckoEvent:&geckoEvent];
   geckoEvent.delta = -rotation;
   if (rotation > 0.0) {
     geckoEvent.direction = nsIDOMSimpleGestureEvent::DIRECTION_LEFT;
@@ -3471,7 +3471,7 @@ static const PRInt32 sShadowInvalidationInterval = 100;
       // Setup the "magnify" event.
       nsSimpleGestureEvent geckoEvent(PR_TRUE, NS_SIMPLE_GESTURE_MAGNIFY,
                                       mGeckoChild, 0, mCumulativeMagnification);
-      [self convertGenericCocoaEvent:anEvent toGeckoEvent:&geckoEvent];
+      [self convertCocoaMouseEvent:anEvent toGeckoEvent:&geckoEvent];
 
       // Send the event.
       mGeckoChild->DispatchWindowEvent(geckoEvent);
@@ -3482,7 +3482,7 @@ static const PRInt32 sShadowInvalidationInterval = 100;
     {
       // Setup the "rotate" event.
       nsSimpleGestureEvent geckoEvent(PR_TRUE, NS_SIMPLE_GESTURE_ROTATE, mGeckoChild, 0, 0.0);
-      [self convertGenericCocoaEvent:anEvent toGeckoEvent:&geckoEvent];
+      [self convertCocoaMouseEvent:anEvent toGeckoEvent:&geckoEvent];
       geckoEvent.delta = -mCumulativeRotation;
       if (mCumulativeRotation > 0.0) {
         geckoEvent.direction = nsIDOMSimpleGestureEvent::DIRECTION_LEFT;

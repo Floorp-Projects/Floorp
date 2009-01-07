@@ -1368,6 +1368,76 @@ nsNativeThemeCocoa::DrawUnifiedToolbar(CGContextRef cgContext, const HIRect& inB
 }
 
 
+struct GreyGradientInfo {
+  float startGrey;
+  float endGrey;
+};
+
+
+static void GreyGradientCallback(void* aInfo, const float* aIn, float* aOut)
+{
+  GreyGradientInfo* info = static_cast<GreyGradientInfo*>(aInfo);
+  float result = (1.0f - *aIn) * info->startGrey + *aIn * info->endGrey;
+  aOut[0] = result;
+  aOut[1] = result;
+  aOut[2] = result;
+  aOut[3] = 1.0f;
+}
+
+
+static void DrawGreyGradient(CGContextRef cgContext, const HIRect& rect,
+                             float startGrey, float endGrey)
+{
+  if (rect.size.height <= 0.0f)
+    return;
+
+  GreyGradientInfo info = { startGrey, endGrey };
+  struct CGFunctionCallbacks callbacks = { 0, GreyGradientCallback, NULL };
+  CGFunctionRef function = CGFunctionCreate(&info, 1,  NULL, 4, NULL, &callbacks);
+  CGColorSpaceRef colorSpace = CGColorSpaceCreateDeviceRGB();
+  CGShadingRef shading = CGShadingCreateAxial(colorSpace,
+                                              CGPointMake(0, CGRectGetMinY(rect)),
+                                              CGPointMake(0, CGRectGetMaxY(rect)),
+                                              function, false, false);
+  CGColorSpaceRelease(colorSpace);
+  CGFunctionRelease(function);
+  CGContextSaveGState(cgContext);
+  CGContextClipToRect(cgContext, rect);
+  CGContextDrawShading(cgContext, shading);
+  CGContextRestoreGState(cgContext);
+  CGShadingRelease(shading);
+}
+
+
+void
+nsNativeThemeCocoa::DrawStatusBar(CGContextRef cgContext, const HIRect& inBoxRect,
+                                  nsIFrame *aFrame)
+{
+  NS_OBJC_BEGIN_TRY_ABORT_BLOCK;
+
+  if (inBoxRect.size.height < 2.0f)
+    return;
+
+  BOOL isMain = [NativeWindowForFrame(aFrame) isMainWindow];
+
+  // Draw the borders at the top of the statusbar.
+  [NativeGreyColorAsNSColor(statusbarFirstTopBorderGrey, isMain) set];
+  NSRectFill(NSMakeRect(inBoxRect.origin.x, inBoxRect.origin.y,
+                        inBoxRect.size.width, 1.0f));
+  [NativeGreyColorAsNSColor(statusbarSecondTopBorderGrey, isMain) set];
+  NSRectFill(NSMakeRect(inBoxRect.origin.x, inBoxRect.origin.y + 1.0f,
+                        inBoxRect.size.width, 1.0f));
+
+  // Draw the gradient.
+  DrawGreyGradient(cgContext, CGRectMake(inBoxRect.origin.x, inBoxRect.origin.y + 2.0f,
+                                         inBoxRect.size.width, inBoxRect.size.height - 2.0f),
+                   NativeGreyColorAsFloat(statusbarGradientStartGrey, isMain),
+                   NativeGreyColorAsFloat(statusbarGradientEndGrey, isMain));
+
+  NS_OBJC_END_TRY_ABORT_BLOCK;
+}
+
+
 NS_IMETHODIMP
 nsNativeThemeCocoa::DrawWidgetBackground(nsIRenderingContext* aContext, nsIFrame* aFrame,
                                          PRUint8 aWidgetType, const nsRect& aRect,
@@ -1562,13 +1632,16 @@ nsNativeThemeCocoa::DrawWidgetBackground(nsIRenderingContext* aContext, nsIFrame
     }
       break;
 
-    case NS_THEME_TOOLBOX:
-    case NS_THEME_STATUSBAR: {
+    case NS_THEME_TOOLBOX: {
       HIThemeHeaderDrawInfo hdi = { 0, kThemeStateActive, kHIThemeHeaderKindWindow };
       HIThemeDrawHeader(&macRect, &hdi, cgContext, HITHEME_ORIENTATION);
     }
       break;
-      
+
+    case NS_THEME_STATUSBAR: 
+      DrawStatusBar(cgContext, macRect, aFrame);
+      break;
+
     case NS_THEME_DROPDOWN:
       DrawButton(cgContext, kThemePopupButton, macRect,
                  IsDefaultButton(aFrame), IsDisabled(aFrame), 
@@ -1864,8 +1937,8 @@ nsNativeThemeCocoa::GetWidgetBorder(nsIDeviceContext* aContext,
       break;
     }
 
-    case NS_THEME_MOZ_MAC_UNIFIED_TOOLBAR:
-      aResult->SizeTo(0, 0, 1, 0);
+    case NS_THEME_STATUSBAR:
+      aResult->SizeTo(0, 1, 0, 0);
       break;
   }
 

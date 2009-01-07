@@ -1,0 +1,25 @@
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head>
+<style type="text/css">
+
+@font-face {
+      font-family: "Fontin-Sans SC";
+      src: url(http://raphaeljs.com/fontin-sans-sc.otf) format("opentype");
+}
+
+</style>
+
+<script type="text/javascript">
+
+function boom()
+{
+  document.getElementById("r").style.fontFamily = "'Fontin-Sans SC'";
+  document.documentElement.offsetHeight;
+  document.removeChild(document.documentElement);
+}
+
+</script>
+</head>
+
+<body onload="boom();"><div id="r">R</div></body>
+</html>

@@ -3349,8 +3349,8 @@ FlushLayoutForTree(nsIDOMWindow* aWindow)
 }
 
 NS_IMETHODIMP
-nsCanvasRenderingContext2D::DrawWindow(nsIDOMWindow* aWindow, PRInt32 aX, PRInt32 aY,
-                                       PRInt32 aW, PRInt32 aH, 
+nsCanvasRenderingContext2D::DrawWindow(nsIDOMWindow* aWindow, float aX, float aY,
+                                       float aW, float aH, 
                                        const nsAString& aBGColor,
                                        PRUint32 flags)
 {
