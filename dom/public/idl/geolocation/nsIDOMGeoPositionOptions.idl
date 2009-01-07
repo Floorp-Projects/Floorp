@@ -37,10 +37,10 @@
 
 #include "domstubs.idl"
 
-[scriptable, uuid(19C44AAA-64E4-4D25-8C59-EEE7ADCEB709)]
+[scriptable, uuid(453B72DE-EA90-4F09-AE16-C2E7EE0DDDC4)]
 interface nsIDOMGeoPositionOptions : nsISupports
 {
   attribute boolean enableHighAccuracy;
-  attribute unsigned long timeout;
-  attribute unsigned long maximumAge;
+  attribute long timeout;
+  attribute long maximumAge;
 };
