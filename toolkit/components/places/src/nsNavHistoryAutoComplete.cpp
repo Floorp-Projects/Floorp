@@ -903,6 +903,12 @@ nsNavHistory::ProcessTokensForSpecialSearch()
       (void)mCurrentSearchTokens.RemoveStringAt(i);
   }
 
+  // Search only typed pages in history for empty searches
+  if (mOrigSearchString.IsEmpty()) {
+    SET_BEHAVIOR(History);
+    SET_BEHAVIOR(Typed);
+  }
+
   // We can use optimized queries for restricts, so check for the most
   // restrictive query first
   mDBCurrentQuery = GET_BEHAVIOR(Tag) ? GetDBAutoCompleteTagsQuery() :
