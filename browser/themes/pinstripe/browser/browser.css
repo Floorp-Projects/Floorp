@@ -1022,7 +1022,7 @@ richlistitem[selected="true"][current="true"] > hbox > .ac-result-type-bookmark,
   -moz-appearance: none;
   -moz-window-shadow: none;
   -moz-border-image: url(chrome://browser/skin/hud-panel.png) 26 50 22 18 / 26px 50px 22px 18px repeat;
-  margin-right: 27px;
+  margin-right: -27px;
   margin-top: 1px;
   padding-top: 8px;
   color: #ffffff;
