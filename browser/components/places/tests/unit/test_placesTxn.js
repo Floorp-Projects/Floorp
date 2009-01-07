@@ -136,19 +136,18 @@ function run_test() {
   // get bookmarks root index
   var root = bmsvc.bookmarksMenuFolder;
 
-  const DESCRIPTION_ANNO = "bookmarkProperties/description";
-  var testDescription = "this is my test description";
-
   //Test creating a folder with a description
+  const DESCRIPTION_ANNO = "bookmarkProperties/description";
+  const TEST_DESCRIPTION = "this is my test description";
   var annos = [{ name: DESCRIPTION_ANNO,
                  type: annosvc.TYPE_STRING,
                 flags: 0,
-                value: testDescription,
+                value: TEST_DESCRIPTION,
               expires: annosvc.EXPIRE_NEVER }];
   var txn1 = ptSvc.createFolder("Testing folder", root, bmStartIndex, annos);
   txn1.doTransaction();
   var folderId = bmsvc.getChildFolder(root, "Testing folder");
-  do_check_eq(testDescription, 
+  do_check_eq(TEST_DESCRIPTION, 
               annosvc.getItemAnnotation(folderId, DESCRIPTION_ANNO));
   do_check_eq(observer._itemAddedIndex, bmStartIndex);
   do_check_eq(observer._itemAddedParent, root);
@@ -493,15 +492,50 @@ function run_test() {
   do_check_eq(observer._itemRemovedId, lvmkId);
 
   // Test setLoadInSidebar
+  const LOAD_IN_SIDEBAR_ANNO = "bookmarkProperties/loadInSidebar";
   var txn16 = ptSvc.setLoadInSidebar(bkmk1Id, true);
   txn16.doTransaction();
   do_check_eq(observer._itemChangedId, bkmk1Id);
-  do_check_eq(observer._itemChangedProperty, "bookmarkProperties/loadInSidebar");
+  do_check_eq(observer._itemChangedProperty, LOAD_IN_SIDEBAR_ANNO);
   do_check_eq(observer._itemChanged_isAnnotationProperty, true);
   txn16.undoTransaction();
   do_check_eq(observer._itemChangedId, bkmk1Id);
-  do_check_eq(observer._itemChangedProperty, "bookmarkProperties/loadInSidebar");
+  do_check_eq(observer._itemChangedProperty, LOAD_IN_SIDEBAR_ANNO);
   do_check_eq(observer._itemChanged_isAnnotationProperty, true);
+
+  // Test generic item annotation
+  var itemAnnoObj = { name: "testAnno/testInt",
+                      type: Ci.nsIAnnotationService.TYPE_INT32,
+                      flags: 0,
+                      value: 123,
+                      expires: Ci.nsIAnnotationService.EXPIRE_NEVER };
+  var genItemAnnoTxn = ptSvc.setItemAnnotation(bkmk1Id, itemAnnoObj);
+  genItemAnnoTxn.doTransaction();
+  do_check_eq(observer._itemChangedId, bkmk1Id);
+  do_check_eq(observer._itemChangedProperty, "testAnno/testInt");
+  do_check_eq(observer._itemChanged_isAnnotationProperty, true);
+  genItemAnnoTxn.undoTransaction();
+  do_check_eq(observer._itemChangedId, bkmk1Id);
+  do_check_eq(observer._itemChangedProperty, "testAnno/testInt");
+  do_check_eq(observer._itemChanged_isAnnotationProperty, true);
+  genItemAnnoTxn.redoTransaction();
+  do_check_eq(observer._itemChangedId, bkmk1Id);
+  do_check_eq(observer._itemChangedProperty, "testAnno/testInt");
+  do_check_eq(observer._itemChanged_isAnnotationProperty, true);
+
+  // Test generic page annotation
+  var pageAnnoObj = { name: "testAnno/testInt",
+                      type: Ci.nsIAnnotationService.TYPE_INT32,
+                      flags: 0,
+                      value: 123,
+                      expires: Ci.nsIAnnotationService.EXPIRE_NEVER };
+  var genPageAnnoTxn = ptSvc.setPageAnnotation(uri("http://www.mozilla.org/"), pageAnnoObj);
+  genPageAnnoTxn.doTransaction();
+  do_check_true(annosvc.pageHasAnnotation(uri("http://www.mozilla.org/"), "testAnno/testInt"));
+  genPageAnnoTxn.undoTransaction();
+  do_check_false(annosvc.pageHasAnnotation(uri("http://www.mozilla.org/"), "testAnno/testInt"));
+  genPageAnnoTxn.redoTransaction();
+  do_check_true(annosvc.pageHasAnnotation(uri("http://www.mozilla.org/"), "testAnno/testInt"));
 
   // sortFolderByName
   ptSvc.doTransaction(ptSvc.createFolder("Sorting folder", root, bmStartIndex, [], null));
