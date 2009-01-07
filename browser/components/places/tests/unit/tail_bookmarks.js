@@ -36,3 +36,10 @@
  * ***** END LICENSE BLOCK ***** */
 
 // put cleanup of the bookmarks test here.
+
+// XPCShell doesn't dispatch quit-application, to ensure cleanup we have to
+// dispatch it after each test run.
+var os = Cc['@mozilla.org/observer-service;1'].
+         getService(Ci.nsIObserverService);
+os.notifyObservers(null, "quit-application-granted", null);
+os.notifyObservers(null, "quit-application", null);
