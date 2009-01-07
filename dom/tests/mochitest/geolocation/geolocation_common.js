@@ -3,12 +3,6 @@ const ACCEPT = 0;
 const ACCEPT_FUZZ = 1;
 const DECLINE = 2;
 
-/* Set if testLocationProvider is registered as geolocation provider.
- * To register, copy testLocationProvider.js to components directory 
- * and remove from directory when done. 
- */
-var TEST_PROVIDER = 0; 
-
 // set if there should be a delay before prompt is accepted
 var DELAYED_PROMPT = 0;
 
@@ -37,15 +31,20 @@ function check_geolocation(location) {
 
   ok(location, "Check to see if this location is non-null");
 
-  ok("latitude" in location, "Check to see if there is a latitude");
-  ok("longitude" in location, "Check to see if there is a longitude");
-  ok("altitude" in location, "Check to see if there is a altitude");
-  ok("accuracy" in location, "Check to see if there is a accuracy");
-  ok("altitudeAccuracy" in location, "Check to see if there is a alt accuracy");
-  ok("heading" in location, "Check to see if there is a heading");
-  ok("speed" in location, "Check to see if there is a speed");
   ok("timestamp" in location, "Check to see if there is a timestamp");
 
+  // eventually, coords may be optional (eg, when civic addresses are supported)
+  ok("coords" in location, "Check to see if this location has a coords");
+
+  var coords = location.coords;
+
+  ok("latitude" in coords, "Check to see if there is a latitude");
+  ok("longitude" in coords, "Check to see if there is a longitude");
+  ok("altitude" in coords, "Check to see if there is a altitude");
+  ok("accuracy" in coords, "Check to see if there is a accuracy");
+  ok("altitudeAccuracy" in coords, "Check to see if there is a alt accuracy");
+  ok("heading" in coords, "Check to see if there is a heading");
+  ok("speed" in coords, "Check to see if there is a speed");
 }
 
 //TODO: test for fuzzed location when this is implemented
@@ -55,11 +54,6 @@ function check_fuzzed_geolocation(location) {
 
 function check_no_geolocation(location) {
    ok(!location, "Check to see if this location is null");
-}
-
-function checkFlags(flags, value, isExact) {
-  for(var i = 0; i < flags.length; i++)
-    ok(isExact ? flags[i] == value : flags[i] >= value, "ensure callbacks called " + value + " times");
 }
 
 function success_callback(position) {
