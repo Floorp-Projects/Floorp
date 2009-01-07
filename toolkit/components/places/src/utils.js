@@ -725,10 +725,15 @@ var PlacesUtils = {
    *        Array of objects, each containing the following properties:
    *        name, flags, expires, type, mimeType (only used for binary
    *        annotations) value.
+   *        If the value for an annotation is not set it will be removed.
    */
   setAnnotationsForURI: function PU_setAnnotationsForURI(aURI, aAnnos) {
     var annosvc = this.annotations;
     aAnnos.forEach(function(anno) {
+      if (!anno.value) {
+        annosvc.removePageAnnotation(aURI, anno.name);
+        return;
+      }
       var flags = ("flags" in anno) ? anno.flags : 0;
       var expires = ("expires" in anno) ?
         anno.expires : Ci.nsIAnnotationService.EXPIRE_NEVER;
@@ -750,10 +755,16 @@ var PlacesUtils = {
    *        Array of objects, each containing the following properties:
    *        name, flags, expires, type, mimeType (only used for binary
    *        annotations) value.
+   *        If the value for an annotation is not set it will be removed.
    */
   setAnnotationsForItem: function PU_setAnnotationsForItem(aItemId, aAnnos) {
     var annosvc = this.annotations;
+
     aAnnos.forEach(function(anno) {
+      if (!anno.value) {
+        annosvc.removeItemAnnotation(aItemId, anno.name);
+        return;
+      }
       var flags = ("flags" in anno) ? anno.flags : 0;
       var expires = ("expires" in anno) ?
         anno.expires : Ci.nsIAnnotationService.EXPIRE_NEVER;
