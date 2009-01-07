@@ -261,10 +261,12 @@ nsGeolocationRequest::Allow()
   
   PRUint32 maximumAge = 30 * PR_MSEC_PER_SEC;
   if (mOptions) {
-    PRUint32 tempAge;
+    PRInt32 tempAge;
     nsresult rv = mOptions->GetMaximumAge(&tempAge);
-    if (NS_SUCCEEDED(rv))
-      maximumAge = tempAge;
+    if (NS_SUCCEEDED(rv)) {
+      if (tempAge > 0)
+        maximumAge = tempAge;
+    }
   }
 
   if (lastPosition && maximumAge > 0 && ( (PR_Now() / PR_USEC_PER_MSEC ) - maximumAge <= cachedPositionTime) ) {
@@ -278,7 +280,7 @@ nsGeolocationRequest::Allow()
     mLocator->RemoveRequest(this);
   }
 
-  PRUint32 timeout;
+  PRInt32 timeout;
   if (mOptions && NS_SUCCEEDED(mOptions->GetTimeout(&timeout)) && timeout > 0) {
     
     if (timeout < 10)
