@@ -162,24 +162,30 @@ def UploadFiles(user, host, path, files, verbose=False, port=None, ssh_key=None,
     if base_path is not None:
         base_path = os.path.abspath(base_path)
     remote_files = []
-    for file in files:
-        file = os.path.abspath(file)
-        if not os.path.isfile(file):
-            raise IOError("File not found: %s" % file)
-        # first ensure that path exists remotely
-        remote_path = GetRemotePath(path, file, base_path)
-        DoSSHCommand("mkdir -p " + remote_path, user, host, port=port, ssh_key=ssh_key)
-        if verbose:
-            print "Uploading " + file
-        DoSCPFile(file, remote_path, user, host, port=port, ssh_key=ssh_key)
-        remote_files.append(remote_path + '/' + os.path.basename(file))
-    if post_upload_command is not None:
-        if verbose:
-            print "Running post-upload command: " + post_upload_command
-        file_list = '"' + '" "'.join(remote_files) + '"'
-        DoSSHCommand('%s "%s" %s' % (post_upload_command, path, file_list), user, host, port=port, ssh_key=ssh_key)
-    if upload_to_temp_dir:
-        DoSSHCommand("rm -rf %s" % path, user, host, port=port, ssh_key=ssh_key)
+    try:
+        for file in files:
+            file = os.path.abspath(file)
+            if not os.path.isfile(file):
+                raise IOError("File not found: %s" % file)
+            # first ensure that path exists remotely
+            remote_path = GetRemotePath(path, file, base_path)
+            DoSSHCommand("mkdir -p " + remote_path, user, host, port=port, ssh_key=ssh_key)
+            if verbose:
+                print "Uploading " + file
+            DoSCPFile(file, remote_path, user, host, port=port, ssh_key=ssh_key)
+            remote_files.append(remote_path + '/' + os.path.basename(file))
+        if post_upload_command is not None:
+            if verbose:
+                print "Running post-upload command: " + post_upload_command
+            file_list = '"' + '" "'.join(remote_files) + '"'
+            DoSSHCommand('%s "%s" %s' % (post_upload_command, path, file_list), user, host, port=port, ssh_key=ssh_key)
+    except:
+        print "Encountered error while uploading"
+        raise
+    finally:
+        if upload_to_temp_dir:
+            DoSSHCommand("rm -rf %s" % path, user, host, port=port,
+                         ssh_key=ssh_key)
     if verbose:
         print "Upload complete"
 
