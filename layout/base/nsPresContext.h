@@ -778,6 +778,9 @@ public:
 
   void NotifyInvalidation(const nsRect& aRect, PRBool aIsCrossDoc);
   void FireDOMPaintEvent();
+  PRBool IsDOMPaintEventPending() {
+    return !mSameDocDirtyRegion.IsEmpty() || !mCrossDocDirtyRegion.IsEmpty();
+  }
 
 protected:
   friend class nsRunnableMethod<nsPresContext>;

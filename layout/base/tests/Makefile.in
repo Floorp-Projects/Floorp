@@ -43,37 +43,6 @@ relativesrcdir	= layout/base/tests
 
 include $(DEPTH)/config/autoconf.mk
 
-ifeq (0,1) # false, since TestSpaceManager is broken
-
-MOZILLA_INTERNAL_API = 1
-
-REQUIRES	= xpcom \
-		  gfx \
-		  $(NULL)
-
-CPPSRCS		= \
-		TestSpaceManager.cpp \
-		$(NULL)
-
-SIMPLE_PROGRAMS	= $(CPPSRCS:.cpp=$(BIN_SUFFIX))
-
-LOCAL_INCLUDES	= \
-		-I$(srcdir)/../src \
-		$(NULL)
-
-EXTRA_DSO_LIBS	= gkbase_s gkgfx
-
-LIBS		+= \
-		$(LIBS_DIR) \
-		$(EXTRA_DSO_LIBS) \
-		$(MOZ_UNICHARUTIL_LIBS) \
-		$(MOZ_COMPONENT_LIBS) \
-		$(MOZ_JS_LIBS) \
-		$(TK_LIBS) \
-		$(NULL)
-
-endif # false
-
 include $(topsrcdir)/config/rules.mk
 
 DEFINES += -D_IMPL_NS_LAYOUT
@@ -95,6 +64,7 @@ _TEST_FILES =	\
 		test_bug449781.html \
 		test_bug450930.xhtml \
 		test_bug458898.html \
+		test_bug465448.xul \
 		$(NULL)
 # test_bug396024.html is currently disabled because it interacts badly with
 # the "You can't print-preview while the page is loading" dialog.

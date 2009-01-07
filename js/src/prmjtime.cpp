@@ -545,11 +545,10 @@ PRMJ_DSTOffset(JSInt64 local_time)
 #endif
 
     diff = ((tm.tm_hour - prtm.tm_hour) * PRMJ_HOUR_SECONDS) +
-	((tm.tm_min - prtm.tm_min) * 60);
+           ((tm.tm_min - prtm.tm_min) * 60);
 
-    if(diff < 0){
-	diff += PRMJ_DAY_SECONDS;
-    }
+    if (diff < 0)
+        diff += PRMJ_DAY_SECONDS;
 
     JSLL_UI2L(local_time,diff);
 
@@ -604,6 +603,16 @@ PRMJ_FormatTime(char *buf, int buflen, const char *fmt, PRMJTime *prtm)
     a.tm_mday = prtm->tm_mday;
     a.tm_mon = prtm->tm_mon;
     a.tm_wday = prtm->tm_wday;
+
+#ifdef HAVE_LOCALTIME_R
+    {
+        struct tm td;
+        time_t bogus = 0;
+        localtime_r(&bogus, &td);
+        a.tm_gmtoff = td.tm_gmtoff;
+        a.tm_zone = td.tm_zone;
+    }
+#endif
 
     /*
      * Years before 1900 and after 9999 cause strftime() to abort on Windows.

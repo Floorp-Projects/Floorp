@@ -48,6 +48,7 @@
 #include "nsIDOMSVGMatrix.h"
 #include "nsSVGLength2.h"
 #include "nsSVGEnum.h"
+#include "nsSVGPreserveAspectRatio.h"
 
 #define QI_AND_CAST_TO_NSSVGSVGELEMENT(base)                                  \
   (nsCOMPtr<nsIDOMSVGSVGElement>(do_QueryInterface(base)) ?                   \
@@ -146,6 +147,7 @@ public:
   // nsSVGElement specializations:
   virtual void DidChangeLength(PRUint8 aAttrEnum, PRBool aDoSetAttr);
   virtual void DidChangeEnum(PRUint8 aAttrEnum, PRBool aDoSetAttr);
+  virtual void DidChangePreserveAspectRatio(PRBool aDoSetAttr);
 
   // nsSVGSVGElement methods:
   float GetLength(PRUint8 mCtxType);
@@ -195,9 +197,12 @@ protected:
   static nsSVGEnumMapping sZoomAndPanMap[];
   static EnumInfo sEnumInfo[1];
 
+  virtual nsSVGPreserveAspectRatio *GetPreserveAspectRatio();
+
+  nsSVGPreserveAspectRatio mPreserveAspectRatio;
+
   nsSVGSVGElement                  *mCoordCtx;
   nsCOMPtr<nsIDOMSVGAnimatedRect>   mViewBox;
-  nsCOMPtr<nsIDOMSVGAnimatedPreserveAspectRatio> mPreserveAspectRatio;
 
   // The size of the rectangular SVG viewport into which we render. This is
   // not (necessarily) the same as the content area. See:

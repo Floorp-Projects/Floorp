@@ -12,15 +12,9 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=448534
 </head>
 <body>
 <a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=448535">Mozilla Bug 448534</a>
-<!-- Ogg video obtained from Theora test suite: http://v2v.cc/~j/theora_testsuite/ -->
-<video id='v' 
-       src='320x240.ogg' 
-       onloadedmetadata='return loaded();'
-       onplay='return started();' 
-       onpause='return stopped();'></video>
 <pre id="test">
 <script class="testbody" type="text/javascript">
-var v = document.getElementById('v');
+var v;
 var played = false;
 var completed = false;
 
@@ -28,6 +22,7 @@ function loaded() {
   if (completed)
     return false;
 
+  v = document.getElementById('v');
   v.play();
   return false;
 }
@@ -35,7 +30,7 @@ function loaded() {
 function started() {
   if (completed)
     return false;
-
+  ok(v, "'v' global should be initialized"); 
   ok(!v.paused, "Video should not be paused while playing");
   v.parentNode.removeChild(v);
   played = true;
@@ -47,6 +42,7 @@ function stopped() {
     return false;
 
   completed = true;
+  ok(v, "'v' global should be initialized");   
   ok(v.paused, "Video should be paused after removing from the Document");
   SimpleTest.finish();
   return false;
@@ -55,5 +51,11 @@ function stopped() {
 SimpleTest.waitForExplicitFinish();
 </script>
 </pre>
+<!-- Ogg video obtained from Theora test suite: http://v2v.cc/~j/theora_testsuite/ -->
+<video id='v' 
+       src='320x240.ogg' 
+       onloadedmetadata='return loaded();'
+       onplay='return started();' 
+       onpause='return stopped();'></video>
 </body>
 </html>

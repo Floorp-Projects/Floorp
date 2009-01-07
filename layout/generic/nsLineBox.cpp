@@ -41,7 +41,6 @@
 /* representation of one line within a block frame, a CSS line box */
 
 #include "nsLineBox.h"
-#include "nsSpaceManager.h"
 #include "nsLineLayout.h"
 #include "prprf.h"
 #include "nsBlockFrame.h"

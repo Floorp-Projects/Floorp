@@ -7,15 +7,11 @@
   <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
 </head>
 <body>
-<video id='v'
-       src='seek.ogg'
-       onloadedmetadata='return startTest();'
-       onseeked='return seekEnded();'></video>
 <pre id="test">
 <script class="testbody" type="text/javascript">
 // Test for bug identified by Chris Pearce in comment 40 on
 // bug 449159.
-var v = document.getElementById('v');
+var v;
 var seekCount = 0;
 var completed = false;
 var interval;
@@ -23,7 +19,7 @@ var interval;
 function startTest() {
   if (completed)
     return false;
-
+  v = document.getElementById('v');
   interval = setInterval(function() { v.currentTime=Math.random()*3; }, 10);
   return false;
 }
@@ -45,5 +41,9 @@ function seekEnded() {
 SimpleTest.waitForExplicitFinish();
 </script>
 </pre>
+<video id='v'
+       src='seek.ogg'
+       onloadedmetadata='return startTest();'
+       onseeked='return seekEnded();'></video>
 </body>
 </html>

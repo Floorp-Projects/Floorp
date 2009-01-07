@@ -1821,7 +1821,6 @@ nsComponentManagerImpl::GetService(const nsCID& aClass,
 
     nsAutoMonitor mon(mMon);
 
-    nsIDKey key(aClass);
     nsFactoryEntry* entry = nsnull;
     nsFactoryTableEntry* factoryTableEntry =
         static_cast<nsFactoryTableEntry*>
@@ -2615,7 +2614,6 @@ nsComponentManagerImpl::RegisterComponentCommon(const nsCID &aClass,
 {
     nsresult rv;
 
-    nsIDKey key(aClass);
     nsAutoMonitor mon(mMon);
 
     nsFactoryEntry *entry = GetFactoryEntry(aClass);

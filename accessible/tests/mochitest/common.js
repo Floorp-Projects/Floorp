@@ -43,10 +43,12 @@ const ROLE_COMBOBOX = nsIAccessibleRole.ROLE_COMBOBOX;
 const ROLE_COMBOBOX_LIST = nsIAccessibleRole.ROLE_COMBOBOX_LIST;
 const ROLE_COMBOBOX_OPTION = nsIAccessibleRole.ROLE_COMBOBOX_OPTION;
 const ROLE_DOCUMENT = nsIAccessibleRole.ROLE_DOCUMENT;
+const ROLE_ENTRY = nsIAccessibleRole.ROLE_ENTRY;
 const ROLE_FLAT_EQUATION = nsIAccessibleRole.ROLE_FLAT_EQUATION;
 const ROLE_LABEL = nsIAccessibleRole.ROLE_LABEL;
 const ROLE_LIST = nsIAccessibleRole.ROLE_LIST;
 const ROLE_OPTION = nsIAccessibleRole.ROLE_OPTION;
+const ROLE_PASSWORD_TEXT = nsIAccessibleRole.ROLE_PASSWORD_TEXT;
 const ROLE_TEXT_LEAF = nsIAccessibleRole.ROLE_TEXT_LEAF;
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -65,6 +67,11 @@ const STATE_SELECTED = nsIAccessibleStates.STATE_SELECTED;
 
 const EXT_STATE_EDITABLE = nsIAccessibleStates.EXT_STATE_EDITABLE;
 const EXT_STATE_EXPANDABLE = nsIAccessibleStates.EXT_STATE_EXPANDABLE;
+const EXT_STATE_INVALID = nsIAccessibleStates.STATE_INVALID;
+const EXT_STATE_MULTI_LINE = nsIAccessibleStates.EXT_STATE_MULTI_LINE;
+const EXT_STATE_REQUIRED = nsIAccessibleStates.STATE_REQUIRED;
+const EXT_STATE_SUPPORTS_AUTOCOMPLETION = 
+      nsIAccessibleStates.EXT_STATE_SUPPORTS_AUTOCOMPLETION;
 
 ////////////////////////////////////////////////////////////////////////////////
 // Accessible general

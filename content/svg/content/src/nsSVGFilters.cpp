@@ -64,7 +64,6 @@
 #include "gfxIImageFrame.h"
 #include "nsIImage.h"
 #include "nsNetUtil.h"
-#include "nsSVGAnimatedPreserveAspectRatio.h"
 #include "nsSVGPreserveAspectRatio.h"
 #include "nsIInterfaceRequestorUtils.h"
 #include "nsSVGMatrix.h"
@@ -5147,7 +5146,6 @@ protected:
                                           nsINodeInfo *aNodeInfo);
   nsSVGFEImageElement(nsINodeInfo* aNodeInfo);
   virtual ~nsSVGFEImageElement();
-  nsresult Init();
 
 public:
   virtual PRBool SubregionIsUnionOfRegions() { return PR_FALSE; }
@@ -5204,13 +5202,14 @@ protected:
   virtual PRBool OperatesOnSRGB(nsSVGFilterInstance*,
                                 PRUint32, Image*) { return PR_TRUE; }
 
+  virtual nsSVGPreserveAspectRatio *GetPreserveAspectRatio();
   virtual StringAttributesInfo GetStringInfo();
 
   enum { RESULT, HREF };
   nsSVGString mStringAttributes[2];
   static StringInfo sStringInfo[2];
 
-  nsCOMPtr<nsIDOMSVGAnimatedPreserveAspectRatio> mPreserveAspectRatio;
+  nsSVGPreserveAspectRatio mPreserveAspectRatio;
 };
 
 nsSVGElement::StringInfo nsSVGFEImageElement::sStringInfo[2] =
@@ -5247,28 +5246,6 @@ nsSVGFEImageElement::nsSVGFEImageElement(nsINodeInfo *aNodeInfo)
 nsSVGFEImageElement::~nsSVGFEImageElement()
 {
   DestroyImageLoadingContent();
-}
-
-nsresult
-nsSVGFEImageElement::Init()
-{
-  nsresult rv = nsSVGFEImageElementBase::Init();
-  NS_ENSURE_SUCCESS(rv,rv);
-
-  {
-    nsCOMPtr<nsIDOMSVGPreserveAspectRatio> preserveAspectRatio;
-    rv = NS_NewSVGPreserveAspectRatio(getter_AddRefs(preserveAspectRatio));
-    NS_ENSURE_SUCCESS(rv,rv);
-    rv = NS_NewSVGAnimatedPreserveAspectRatio(
-                                          getter_AddRefs(mPreserveAspectRatio),
-                                          preserveAspectRatio);
-    NS_ENSURE_SUCCESS(rv,rv);
-    rv = AddMappedSVGValue(nsGkAtoms::preserveAspectRatio,
-                           mPreserveAspectRatio);
-    NS_ENSURE_SUCCESS(rv,rv);
-  }
-
-  return rv;
 }
 
 //----------------------------------------------------------------------
@@ -5419,6 +5396,12 @@ nsSVGFEImageElement::ComputeTargetBBox(const nsTArray<nsIntRect>& aSourceBBoxes,
 
 //----------------------------------------------------------------------
 // nsSVGElement methods
+
+nsSVGPreserveAspectRatio *
+nsSVGFEImageElement::GetPreserveAspectRatio()
+{
+  return &mPreserveAspectRatio;
+}
 
 nsSVGElement::StringAttributesInfo
 nsSVGFEImageElement::GetStringInfo()

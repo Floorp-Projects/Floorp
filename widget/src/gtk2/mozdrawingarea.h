@@ -39,8 +39,8 @@
 #ifndef __MOZ_DRAWINGAREA_H__
 #define __MOZ_DRAWINGAREA_H__
 
-#include <gdk/gdkwindow.h>
-#include <gtk/gtkversion.h>
+#include <gdk/gdk.h>
+#include <gtk/gtk.h>
 #include "mozcontainer.h"
 
 #ifdef __cplusplus

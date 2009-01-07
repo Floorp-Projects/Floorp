@@ -48,9 +48,9 @@ NS_NewSelectsAreaFrame(nsIPresShell* aShell, nsStyleContext* aContext, PRUint32 
   nsSelectsAreaFrame* it = new (aShell) nsSelectsAreaFrame(aContext);
 
   if (it) {
-    // We need NS_BLOCK_SPACE_MGR to ensure that the options inside the select
+    // We need NS_BLOCK_FLOAT_MGR to ensure that the options inside the select
     // aren't expanded by right floats outside the select.
-    it->SetFlags(aFlags | NS_BLOCK_SPACE_MGR);
+    it->SetFlags(aFlags | NS_BLOCK_FLOAT_MGR);
   }
 
   return it;

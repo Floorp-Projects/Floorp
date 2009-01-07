@@ -1112,7 +1112,8 @@ nsFrameManager::ReResolveStyleContext(nsPresContext     *aPresContext,
                                       nsStyleChangeList *aChangeList, 
                                       nsChangeHint       aMinChange)
 {
-  NS_ASSERTION(aFrame->GetContent() || !aFrame->GetParent(),
+  NS_ASSERTION(aFrame->GetContent() ||
+               (!aFrame->GetParent() && !aParentContent),
                "frame must have content (unless viewport)");
   // XXXldb get new context from prev-in-flow if possible, to avoid
   // duplication.  (Or should we just let |GetContext| handle that?)

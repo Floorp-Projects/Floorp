@@ -5346,7 +5346,6 @@ nsFrame::GetLineNumber(nsIFrame *aFrame, PRBool aLockScroll, nsIFrame** aContain
   nsFrameManager* frameManager = aFrame->PresContext()->FrameManager();
   nsIFrame *blockFrame = aFrame;
   nsIFrame *thisBlock;
-  PRInt32   thisLine;
   nsAutoLineIterator it;
   nsresult result = NS_ERROR_FAILURE;
   while (NS_FAILED(result) && blockFrame)
@@ -6728,7 +6727,7 @@ nsFrame::SetParent(const nsIFrame* aParent)
 
   if (aParent && aParent->IsBoxFrame()) {
     if (aParent->ChildrenMustHaveWidgets()) {
-        nsHTMLContainerFrame::CreateViewForFrame(this, nsnull, PR_TRUE);
+        nsHTMLContainerFrame::CreateViewForFrame(this, PR_TRUE);
         nsIView* view = GetView();
         if (!view->HasWidget())
           CreateWidgetForView(view);

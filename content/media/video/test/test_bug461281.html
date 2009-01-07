@@ -7,14 +7,9 @@
   <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
 </head>
 <body>
-<video id='v'
-       src='bug461281.ogg'
-       onloadedmetadata='return startTest();'
-       onended='return playbackEnded();'></video>
 <pre id="test">
 <script class="testbody" type="text/javascript">
 // Test if the ended event occurs with media without an eos marker
-var v = document.getElementById('v');
 var endPassed = false;
 var completed = false;
 
@@ -22,6 +17,7 @@ function startTest() {
   if (completed)
     return false;
 
+  var v = document.getElementById('v');
   v.play();
   return false;
 }
@@ -31,6 +27,7 @@ function playbackEnded() {
     return false
 
   completed = true;
+  var v = document.getElementById('v');
   ok(v.ended, "Checking playback has ended");
   SimpleTest.finish();
   return false;
@@ -39,5 +36,9 @@ function playbackEnded() {
 SimpleTest.waitForExplicitFinish();
 </script>
 </pre>
+<video id='v'
+       src='bug461281.ogg'
+       onloadedmetadata='return startTest();'
+       onended='return playbackEnded();'></video>
 </body>
 </html>

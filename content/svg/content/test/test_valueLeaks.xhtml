@@ -28,14 +28,24 @@ function storeSVGPropertyAsExpando(localName, prop)
 
     var propVal = elem[prop];
     Object.prototype.toSource[prop + "_expando"] = propVal;
-    if (propVal instanceof SVGAnimatedAngle || propVal instanceof SVGAnimatedLength) {
+    if (propVal instanceof SVGAnimatedAngle || propVal instanceof SVGAnimatedLength ||
+        propVal instanceof SVGAnimatedRect || propVal instanceof SVGAnimatedPreserveAspectRatio) {
         Object.prototype.toSource[prop + "_baseVal_expando"] = propVal.baseVal;
         Object.prototype.toSource[prop + "_animVal_expando"] = propVal.animVal;
     }
 }
 
+// class
+storeSVGPropertyAsExpando("marker", "class");
+
 // angle
 storeSVGPropertyAsExpando("marker", "orientAngle");
+
+// viewBox
+storeSVGPropertyAsExpando("marker", "viewBox");
+
+// preserveAspectRatio
+storeSVGPropertyAsExpando("marker", "preserveAspectRatio");
 
 // boolean
 storeSVGPropertyAsExpando("feConvolveMatrix", "preserveAlpha");

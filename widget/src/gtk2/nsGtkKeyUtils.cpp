@@ -38,7 +38,7 @@
  * ***** END LICENSE BLOCK ***** */
 
 #include <gdk/gdkkeysyms.h>
-#include <gdk/gdkevents.h>
+#include <gdk/gdk.h>
 #ifdef MOZ_X11
 #include <gdk/gdkx.h>
 #endif /* MOZ_X11 */

@@ -39,7 +39,7 @@
  * ***** END LICENSE BLOCK ***** */
 
 #include "nsLookAndFeel.h"
-#include <gtk/gtkinvisible.h>
+#include <gtk/gtk.h>
 
 #include "gtkdrawing.h"
 

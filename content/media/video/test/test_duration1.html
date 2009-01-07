@@ -7,9 +7,6 @@
   <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
 </head>
 <body>
-<video id='v'
-       src='seek.ogg'
-       onloadedmetadata='return startTest();'></video>
 <pre id="test">
 <script class="testbody" type="text/javascript">
 // Test that getting the duration from a file works
@@ -35,5 +32,8 @@ timeout = setTimeout(function () {
 SimpleTest.waitForExplicitFinish();
 </script>
 </pre>
+<video id='v'
+       src='seek.ogg'
+       onloadedmetadata='return startTest();'></video>
 </body>
 </html>

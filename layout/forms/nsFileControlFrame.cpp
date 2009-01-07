@@ -420,7 +420,7 @@ NS_IMETHODIMP nsFileControlFrame::Reflow(nsPresContext*          aPresContext,
     }
   }
 
-  // The Areaframe takes care of all our reflow
+  // nsBlockFrame takes care of all our reflow
   return nsBlockFrame::Reflow(aPresContext, aDesiredSize, aReflowState,
                              aStatus);
 }

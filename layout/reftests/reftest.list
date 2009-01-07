@@ -59,6 +59,9 @@ include first-letter/reftest.list
 # first-line/
 include first-line/reftest.list
 
+# floats/
+include floats/reftest.list
+
 # font-face
 include font-face/reftest.list
 
