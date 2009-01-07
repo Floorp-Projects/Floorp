@@ -48,12 +48,10 @@
   <script type="application/javascript"><![CDATA[
 
     const LISTEN_EVENTS = ["load", "unload", "pageshow", "pagehide"];
-    const MISSING_EVENTS_TIMEOUT = 5000;
 
     var gBrowser;
     var gTestsIterator;
     var gExpected = [];
-    var gMissingEventsTimeoutId;
 
     function ok(condition, message) {
       window.opener.wrappedJSObject.SimpleTest.ok(condition, message);
@@ -62,8 +60,6 @@
       window.opener.wrappedJSObject.SimpleTest.is(a, b, message);
     }
     function finish() {
-      clearTimeout(gMissingEventsTimeoutId);
-    
       for each (let eventType in LISTEN_EVENTS) {
         gBrowser.removeEventListener(eventType, eventListener, true);
       }
@@ -78,11 +74,6 @@
       for each (let eventType in LISTEN_EVENTS) {
         gBrowser.addEventListener(eventType, eventListener, true);
       }
-      
-      gMissingEventsTimeoutId = setTimeout(function() {
-        ok(false, "Did not receive all expected events");
-        finish();
-      }, MISSING_EVENTS_TIMEOUT);
       
       gTestsIterator = testsIterator();
       nextTest();
