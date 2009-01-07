@@ -6098,7 +6098,7 @@ nsCSSFrameConstructor::ConstructXULFrame(nsFrameConstructorState& aState,
 
     // Process the child content if requested
     nsFrameItems childItems;
-    rv = ProcessChildren(aState, aContent, aStyleContext, newFrame, PR_FALSE,
+    rv = ProcessChildren(aState, aContent, aStyleContext, newFrame, PR_TRUE,
                          childItems, PR_FALSE);
 
     // Set the frame's initial child list
