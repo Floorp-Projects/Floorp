@@ -121,7 +121,7 @@ interface nsIGeolocationProvider : nsISupports {
   
   /**
    * shutdown
-   * Shuts down the location devices.
+   * Shuts down the location device.
    */
   void shutdown();
 };
