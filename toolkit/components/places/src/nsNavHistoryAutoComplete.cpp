@@ -79,6 +79,8 @@
 #include "nsPrintfCString.h"
 #include "nsILivemarkService.h"
 #include "mozIStoragePendingStatement.h"
+#include "mozIStorageStatementCallback.h"
+#include "mozIStorageError.h"
 
 #define NS_AUTOCOMPLETESIMPLERESULT_CONTRACTID \
   "@mozilla.org/autocomplete/simple-result;1"
@@ -124,6 +126,66 @@ const PRUnichar kTitleTagsSeparatorChars[] = { ' ', 0x2013, ' ', 0 };
      "(SELECT rev_host FROM moz_places_temp WHERE id = b.fk), " \
      "(SELECT rev_host FROM moz_places WHERE id = b.fk)) " \
    "ORDER BY frecency DESC LIMIT 1) "
+
+#define PLACES_AUTOCOMPLETE_FEEDBACK_UPDATED_TOPIC "places-autocomplete-feedback-updated"
+
+// Used to notify a topic to system observers on async execute completion.
+// Will throw on error.
+class AutoCompleteStatementCallbackNotifier : public mozIStorageStatementCallback
+{
+public:
+  NS_DECL_ISUPPORTS
+  NS_DECL_MOZISTORAGESTATEMENTCALLBACK
+};
+
+// AutocompleteStatementCallbackNotifier
+NS_IMPL_ISUPPORTS1(AutoCompleteStatementCallbackNotifier,
+                   mozIStorageStatementCallback)
+
+NS_IMETHODIMP
+AutoCompleteStatementCallbackNotifier::HandleCompletion(PRUint16 aReason)
+{
+  if (aReason != mozIStorageStatementCallback::REASON_FINISHED)
+    return NS_ERROR_UNEXPECTED;
+
+  nsresult rv;
+  nsCOMPtr<nsIObserverService> observerService =
+    do_GetService("@mozilla.org/observer-service;1", &rv);
+  NS_ENSURE_SUCCESS(rv, rv);
+  rv = observerService->NotifyObservers(nsnull,
+                                        PLACES_AUTOCOMPLETE_FEEDBACK_UPDATED_TOPIC,
+                                        nsnull);
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+AutoCompleteStatementCallbackNotifier::HandleError(mozIStorageError *aError)
+{
+  PRInt32 result;
+  nsresult rv = aError->GetResult(&result);
+  NS_ENSURE_SUCCESS(rv, rv);
+  nsCAutoString message;
+  rv = aError->GetMessage(message);
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  nsCAutoString warnMsg;
+  warnMsg.Append("An error occured while executing an async statement: ");
+  warnMsg.Append(result);
+  warnMsg.Append(" ");
+  warnMsg.Append(message);
+  NS_WARNING(warnMsg.get());
+
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+AutoCompleteStatementCallbackNotifier::HandleResult(mozIStorageResultSet *aResultSet)
+{
+  NS_ASSERTION(PR_FALSE, "You cannot use AutoCompleteStatementCallbackNotifier to get async statements resultset");
+  return NS_OK;
+}
 
 void GetAutoCompleteBaseQuery(nsACString& aQuery) {
 // Define common pieces of various queries
@@ -1159,8 +1221,10 @@ nsNavHistory::AutoCompleteFeedback(PRInt32 aIndex,
   NS_ENSURE_SUCCESS(rv, rv);
 
   // We do the update async and we don't care about failures
+  nsCOMPtr<AutoCompleteStatementCallbackNotifier> callback =
+    new AutoCompleteStatementCallbackNotifier();
   nsCOMPtr<mozIStoragePendingStatement> canceler;
-  rv = stmt->ExecuteAsync(nsnull, getter_AddRefs(canceler));
+  rv = stmt->ExecuteAsync(callback, getter_AddRefs(canceler));
   NS_ENSURE_SUCCESS(rv, rv);
 
   return NS_OK;
