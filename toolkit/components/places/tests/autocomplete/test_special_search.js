@@ -79,12 +79,9 @@ addPageBook(11, 1, 1, [1]); // title and url
 
 // Remove pages from history to treat them as unvisited, so pages that do have
 // visits are 0,1,2,3,5,10
-for each (let uri in [4,6,7,8,9,11])
-  histsvc.removePage(toURI(kURIs[uri]));
-
+removePages([4,6,7,8,9,11]);
 // Set some pages as typed
-for each (let uri in [0,3,10])
-  histsvc.addVisit(toURI(kURIs[uri]), Date.now() * 1000, null, histsvc.TRANSITION_TYPED, false, 0);
+markTyped([0,3,10]);
 
 // Provide for each test: description; search terms; array of gPages indices of
 // pages that should match; optional function to be run before the test
