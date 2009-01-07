@@ -270,7 +270,6 @@ nsresult nsFileStreamStrategy::Open(nsIStreamListener** aStreamListener)
   rv = mInput->Available(&size);
   if (NS_SUCCEEDED(rv)) {
     mDecoder->SetTotalBytes(size);
-    mDecoder->UpdateBytesDownloaded(size);
   }
 
   /* Get our principal */
@@ -547,7 +546,7 @@ public:
       hc->SetRequestHeader(NS_LITERAL_CSTRING("Range"), rangeString, PR_FALSE);
     }
 
-    mListener = new nsChannelToPipeListener(mDecoder, PR_TRUE, mOffset);
+    mListener = new nsChannelToPipeListener(mDecoder, PR_TRUE);
     NS_ENSURE_TRUE(mListener, NS_ERROR_OUT_OF_MEMORY);
 
     mResult = mListener->Init();
