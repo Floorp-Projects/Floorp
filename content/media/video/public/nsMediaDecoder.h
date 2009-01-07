@@ -164,11 +164,8 @@ class nsMediaDecoder : public nsIObserver
   // Invalidate the frame.
   virtual void Invalidate();
 
-  // Fire progress events if needed according to the time and byte
-  // constraints outlined in the specification. aTimer is PR_TRUE
-  // if the method is called as a result of the progress timer rather
-  // than the result of downloaded data.
-  virtual void Progress(PRBool aTimer);
+  // Update progress information.
+  virtual void Progress();
 
   // Keep track of the number of bytes downloaded
   virtual void UpdateBytesDownloaded(PRUint64 aBytes) = 0;
@@ -213,16 +210,6 @@ protected:
   PRInt32 mRGBWidth;
   PRInt32 mRGBHeight;
 
-  // Time that the last progress event was fired. Read/Write from the
-  // main thread only.
-  PRIntervalTime mProgressTime;
-
-  // Time that data was last read from the media resource. Used for
-  // computing if the download has stalled. A value of 0 indicates that
-  // a stall event has already fired and not to fire another one until
-  // more data is received. Read/Write from the main thread only.
-  PRIntervalTime mDataTime;
-
   // Has our size changed since the last repaint?
   PRPackedBool mSizeChanged;
 
@@ -252,12 +239,6 @@ protected:
   // waiting for the playback event loop to shutdown. Read/Write from the
   // main thread only.
   PRPackedBool mStopping;
-
-  // True when seeking or otherwise moving the play position around in
-  // such a manner that progress event data is inaccurate. This is set
-  // before a seek or during loading of metadata to prevent the progress indicator
-  // from jumping around. Accessed on the main thread only.
-  PRPackedBool mIgnoreProgressData;
 };
 
 #endif
