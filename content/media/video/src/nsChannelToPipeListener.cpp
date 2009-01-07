@@ -47,12 +47,10 @@
 
 nsChannelToPipeListener::nsChannelToPipeListener(
     nsMediaDecoder* aDecoder,
-    PRBool aSeeking,
-    PRInt64 aOffset) :
+    PRBool aSeeking) :
   mDecoder(aDecoder),
   mIntervalStart(0),
   mIntervalEnd(0),
-  mOffset(aOffset),
   mTotalBytes(0),
   mSeeking(aSeeking)
 {
@@ -101,7 +99,7 @@ nsresult nsChannelToPipeListener::OnStartRequest(nsIRequest* aRequest, nsISuppor
   mIntervalStart = PR_IntervalNow();
   mIntervalEnd = mIntervalStart;
   mTotalBytes = 0;
-  mDecoder->UpdateBytesDownloaded(mOffset);
+  mDecoder->UpdateBytesDownloaded(mTotalBytes);
   nsCOMPtr<nsIHttpChannel> hc = do_QueryInterface(aRequest);
   if (hc) {
     PRUint32 responseStatus = 0; 
@@ -152,10 +150,6 @@ nsresult nsChannelToPipeListener::OnStartRequest(nsIRequest* aRequest, nsISuppor
     }
   }
 
-  // Fires an initial progress event and sets up the stall counter so stall events
-  // fire if no download occurs within the required time frame.
-  mDecoder->Progress(PR_FALSE);
-
   return NS_OK;
 }
 
@@ -189,16 +183,11 @@ nsresult nsChannelToPipeListener::OnDataAvailable(nsIRequest* aRequest,
     
     aCount -= bytes;
     mTotalBytes += bytes;
-    mDecoder->UpdateBytesDownloaded(mOffset + aOffset + bytes);
+    mDecoder->UpdateBytesDownloaded(mTotalBytes);
   } while (aCount) ;
   
   nsresult rv = mOutput->Flush();
   NS_ENSURE_SUCCESS(rv, rv);
-
-  // Fire a progress events according to the time and byte constraints outlined
-  // in the spec.
-  mDecoder->Progress(PR_FALSE);
-
   mIntervalEnd = PR_IntervalNow();
   return NS_OK;
 }
