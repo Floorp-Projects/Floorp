@@ -3538,6 +3538,7 @@ js_ExecuteTree(JSContext* cx, Fragment* f, uintN& inlineCallCount,
         return NULL;
 
 #ifdef DEBUG
+    bool jsframe_pop_blocks_set_on_entry = bool(cx->fp->flags & JSFRAME_POP_BLOCKS);
     memset(stack_buffer, 0xCD, sizeof(stack_buffer));
     memset(global, 0xCD, (globalFrameSize+1)*sizeof(double));
 #endif    
@@ -3684,7 +3685,8 @@ js_ExecuteTree(JSContext* cx, Fragment* f, uintN& inlineCallCount,
        the side exit struct. */
     JSStackFrame* fp = cx->fp;
 
-    JS_ASSERT(!(fp->flags & JSFRAME_POP_BLOCKS));
+    JS_ASSERT_IF(fp->flags & JSFRAME_POP_BLOCKS,
+                 calldepth == 0 && jsframe_pop_blocks_set_on_entry);
     fp->blockChain = innermost->block;
 
     /* If we are not exiting from an inlined frame the state->sp is spbase, otherwise spbase
