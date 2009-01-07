@@ -105,9 +105,7 @@ static jsuword gStackBase;
 
 static size_t gScriptStackQuota = JS_DEFAULT_SCRIPT_STACK_QUOTA;
 
-static JSBool gEnableBranchCallback = JS_FALSE;
-static uint32 gBranchCount;
-static uint32 gBranchLimit;
+static jsdouble gOperationTimeout = -1.0;
 
 int gExitCode = 0;
 JSBool gQuitting = JS_FALSE;
@@ -130,6 +128,12 @@ static const JSErrorFormatString *
 my_GetErrorMessage(void *userRef, const char *locale, const uintN errorNumber);
 static JSObject *
 split_setup(JSContext *cx);
+
+static JSBool
+SetTimeoutValue(JSContext *cx, jsdouble t);
+
+static void
+RescheduleOperationCallback(JSContext *cx);
 
 #ifdef EDITLINE
 JS_BEGIN_EXTERN_C
@@ -169,32 +173,97 @@ GetLine(JSContext *cx, char *bufp, FILE *file, const char *prompt) {
     return JS_TRUE;
 }
 
-static JSBool
-my_BranchCallback(JSContext *cx, JSScript *script)
+/* Time-related portability helpers. */
+typedef int64 OperationTime;
+const OperationTime TIME_INFINITY = -1LL;
+
+static inline OperationTime
+TicksPerSecond()
 {
-    if (++gBranchCount == gBranchLimit) {
-        if (script) {
-            if (script->filename)
-                fprintf(gErrFile, "%s:", script->filename);
-            fprintf(gErrFile, "%u: script branch callback (%u callbacks)\n",
-                    script->lineno, gBranchLimit);
-        } else {
-            fprintf(gErrFile, "native branch callback (%u callbacks)\n",
-                    gBranchLimit);
+    return 1000LL * 1000LL;
+}
+
+static inline OperationTime
+MaybeGCPeriod()
+{
+    return TicksPerSecond() / 10;
+}
+
+static inline OperationTime
+YieldRequestPeriod()
+{
+    return TicksPerSecond() / 50;
+}
+
+struct JSShellContextData {
+    OperationTime   lastCallbackTime;   /* the last operation callback call
+                                           time */
+    OperationTime   operationTimeout;   /* time left for script execution */
+    OperationTime   lastMaybeGCTime;    /* the last JS_MaybeGC call time */
+    OperationTime   maybeGCPeriod;      /* period of JS_MaybeGC calls */
+#ifdef JS_THREADSAFE
+    OperationTime   lastYieldTime;      /* the last JS_YieldRequest call time */
+    OperationTime   yieldPeriod;        /* period of JS_YieldRequest calls */
+#endif
+};
+
+static JSShellContextData *
+NewContextData()
+{
+    JSShellContextData *data = (JSShellContextData *)
+                               malloc(sizeof(JSShellContextData));
+    if (!data)
+        return NULL;
+    data->lastCallbackTime = 0;
+    data->operationTimeout = TIME_INFINITY;
+    data->lastMaybeGCTime = 0;
+    data->maybeGCPeriod = TIME_INFINITY;
+#ifdef JS_THREADSAFE
+    data->lastYieldTime = 0;
+    data->yieldPeriod = TIME_INFINITY;
+#endif
+    return data;
+}
+
+static inline JSShellContextData *
+GetContextData(JSContext *cx)
+{
+    JSShellContextData *data = (JSShellContextData *) JS_GetContextPrivate(cx);
+
+    JS_ASSERT(data);
+    return data;
+}
+
+static JSBool
+ShellOperationCallback(JSContext *cx)
+{
+    JSShellContextData *data = GetContextData(cx);
+    OperationTime now = JS_Now();
+    OperationTime interval = now - data->lastCallbackTime;
+
+    data->lastCallbackTime = now;
+    if (data->operationTimeout != TIME_INFINITY) {
+        if (data->operationTimeout < interval) {
+            fprintf(stderr, "Error: Script is running too long\n");
+            return JS_FALSE;
         }
-        gBranchCount = 0;
-        return JS_FALSE;
+        data->operationTimeout -= interval;
     }
-#ifdef JS_THREADSAFE
-    if ((gBranchCount & 0xff) == 1) {
-#endif
-        if ((gBranchCount & 0x3fff) == 1)
+    if (data->maybeGCPeriod != TIME_INFINITY) {
+        if (now - data->lastMaybeGCTime >= data->maybeGCPeriod) {
             JS_MaybeGC(cx);
+            data->lastMaybeGCTime = now;
+        }
+    }
 #ifdef JS_THREADSAFE
-        else
+    if (data->yieldPeriod != TIME_INFINITY) {
+        if (now - data->lastYieldTime >= data->yieldPeriod) {
             JS_YieldRequest(cx);
+            data->lastYieldTime = now;
+        }
     }
 #endif
+
     return JS_TRUE;
 }
 
@@ -217,10 +286,7 @@ SetContextOptions(JSContext *cx)
     }
     JS_SetThreadStackLimit(cx, stackLimit);
     JS_SetScriptStackQuota(cx, gScriptStackQuota);
-    if (gEnableBranchCallback) {
-        JS_SetBranchCallback(cx, my_BranchCallback);
-        JS_ToggleOptions(cx, JSOPTION_NATIVE_BRANCH_CALLBACK);
-    }
+    SetTimeoutValue(cx, gOperationTimeout);
 }
 
 static void
@@ -338,7 +404,7 @@ static int
 usage(void)
 {
     fprintf(gErrFile, "%s\n", JS_GetImplementationVersion());
-    fprintf(gErrFile, "usage: js [-zKPswWxCi] [-b branchlimit] [-c stackchunksize] [-o option] [-v version] [-f scriptfile] [-e script] [-S maxstacksize] "
+    fprintf(gErrFile, "usage: js [-zKPswWxCi] [-t timeoutSeconds] [-c stackchunksize] [-o option] [-v version] [-f scriptfile] [-e script] [-S maxstacksize] "
 #ifdef JS_GC_ZEAL
 "[-Z gczeal] "
 #endif
@@ -416,12 +482,12 @@ ProcessArgs(JSContext *cx, JSObject *obj, char **argv, int argc)
             break;
         }
         switch (argv[i][1]) {
-          case 'b':
           case 'c':
           case 'f':
           case 'e':
           case 'v':
           case 'S':
+          case 't':
 #ifdef JS_GC_ZEAL
           case 'Z':
 #endif
@@ -536,12 +602,14 @@ extern void js_InitJITStatsClass(JSContext *cx, JSObject *glob);
             }
             break;
 
-        case 'b':
+        case 't':
             if (++i == argc)
                 return usage();
 
-            gBranchLimit = atoi(argv[i]);
-            gEnableBranchCallback = (gBranchLimit != 0);
+            gOperationTimeout = atof(argv[i]);
+            if (!SetTimeoutValue(cx, gOperationTimeout))
+                return JS_FALSE;
+
             break;
 
         case 'c':
@@ -2690,11 +2758,19 @@ DoScatteredWork(JSContext *cx, ScatterThreadData *td)
 {
     jsval *rval = &td->shared->results[td->index];
 
+    JSShellContextData *data = (JSShellContextData *) JS_GetContextPrivate(cx);
+    OperationTime oldPeriod = data->yieldPeriod;
+    if (oldPeriod == TIME_INFINITY)
+        data->lastYieldTime = JS_Now();
+    data->yieldPeriod = YieldRequestPeriod();
+    RescheduleOperationCallback(cx);
     if (!JS_CallFunctionValue(cx, NULL, td->fn, 0, NULL, rval)) {
         *rval = JSVAL_VOID;
         JS_GetPendingException(cx, rval);
         JS_ClearPendingException(cx);
     }
+    data->yieldPeriod = oldPeriod;
+    RescheduleOperationCallback(cx);
 }
 
 static void
@@ -2742,13 +2818,6 @@ Scatter(JSContext *cx, uintN argc, jsval *vp)
     ScatterData sd;
     JSBool ok;
     jsrefcount rc;
-
-    if (!gEnableBranchCallback) {
-        /* Enable the branch callback, for periodic scope-sharing. */
-        gEnableBranchCallback = JS_TRUE;
-        JS_SetBranchCallback(cx, my_BranchCallback);
-        JS_ToggleOptions(cx, JSOPTION_NATIVE_BRANCH_CALLBACK);
-    }
 
     sd.lock = NULL;
     sd.cvar = NULL;
@@ -2895,8 +2964,82 @@ fail:
     ok = JS_FALSE;
     goto out;
 }
+#endif /* JS_THREADSAFE */
 
+static void
+RescheduleOperationCallback(JSContext *cx)
+{
+    JSShellContextData *data = GetContextData(cx);
+
+    if (data->operationTimeout == TIME_INFINITY &&
+#ifdef JS_THREADSAFE
+        data->yieldPeriod == TIME_INFINITY &&
 #endif
+        data->maybeGCPeriod == TIME_INFINITY) {
+        JS_ClearOperationCallback(cx);
+    } else if (!JS_GetOperationCallback(cx)) {
+        /*
+         * Call the callback infrequently enough to avoid the overhead of time
+         * calculations there.
+         */
+        JS_SetOperationCallback(cx, ShellOperationCallback,
+                                1000 * JS_OPERATION_WEIGHT_BASE);
+        data->lastCallbackTime = JS_Now();
+    }
+}
+
+static JSBool
+SetTimeoutValue(JSContext *cx, jsdouble t)
+{
+    /* NB: The next condition also filter out NaNs. */
+    if (!(t <= 3600.0)) {
+        JS_ReportError(cx, "Excessive argument value");
+        return JS_FALSE;
+    }
+
+    JSShellContextData *data = GetContextData(cx);
+
+    /*
+     * For compatibility periodic MaybeGC calls are enabled only when the
+     * execution time is bounded.
+     */
+    if (t < 0) {
+        data->operationTimeout = TIME_INFINITY;
+        data->maybeGCPeriod = TIME_INFINITY;
+    } else {
+        data->operationTimeout = OperationTime(t * TicksPerSecond());
+        if (data->maybeGCPeriod == TIME_INFINITY)
+            data->lastMaybeGCTime = JS_Now();
+        data->maybeGCPeriod = MaybeGCPeriod();
+    }
+    RescheduleOperationCallback(cx);
+    return JS_TRUE;
+}
+
+static JSBool
+Timeout(JSContext *cx, uintN argc, jsval *vp)
+{
+    if (argc == 0) {
+        JSShellContextData *data = GetContextData(cx);
+        jsdouble t;
+        t = (data->operationTimeout == TIME_INFINITY)
+            ? -1
+            : jsdouble(data->operationTimeout) / TicksPerSecond();
+        return JS_NewDoubleValue(cx, t, vp);
+    }
+
+    if (argc > 1) {
+        JS_ReportError(cx, "Wrong number of arguments");
+        return JS_FALSE;
+    }
+
+    jsdouble t;
+    if (!JS_ValueToNumber(cx, JS_ARGV(cx, vp)[0], &t))
+        return JS_FALSE;
+
+    *vp = JSVAL_VOID;
+    return SetTimeoutValue(cx, t);
+}
 
 JS_DEFINE_TRCINFO_1(Print, (2, (static, JSVAL_FAIL, Print_tn, CONTEXT, STRING, 0, 0)))
 JS_DEFINE_TRCINFO_1(ShapeOf, (1, (static, INT32, ShapeOf_tn, OBJECT, 0, 0)))
@@ -2970,6 +3113,7 @@ static JSFunctionSpec shell_functions[] = {
     JS_FN("sleep",          Sleep_fn,       1,0),
     JS_FN("scatter",        Scatter,        1,0),
 #endif
+    JS_FN("timeout",        Timeout,        1,0),
     JS_FS_END
 };
 
@@ -3033,30 +3177,33 @@ static const char *const shell_help_messages[] = {
 "shapeOf(obj)             Get the shape of obj (an implementation detail)",
 #ifdef MOZ_SHARK
 "startShark()             Start a Shark session.\n"
-"                         Shark must be running with programatic sampling.",
-"stopShark()              Stop a running Shark session.",
+"                         Shark must be running with programatic sampling",
+"stopShark()              Stop a running Shark session",
 "connectShark()           Connect to Shark.\n"
-"                         The -k switch does this automatically.",
-"disconnectShark()        Disconnect from Shark.",
+"                         The -k switch does this automatically",
+"disconnectShark()        Disconnect from Shark",
 #endif
 #ifdef MOZ_CALLGRIND
-"startCallgrind()         Start callgrind instrumentation.\n",
-"stopCallgrind()          Stop callgrind instumentation.",
-"dumpCallgrind([name])    Dump callgrind counters.\n",
+"startCallgrind()         Start callgrind instrumentation",
+"stopCallgrind()          Stop callgrind instrumentation",
+"dumpCallgrind([name])    Dump callgrind counters",
 #endif
 #ifdef MOZ_VTUNE
-"startVtune([filename])   Start vtune instrumentation.\n",
-"stopVtune()              Stop vtune instumentation.",
-"pauseVtune()             Pause vtune collection.\n",
-"resumeVtune()            Resume vtune collection.\n",
+"startVtune([filename])   Start vtune instrumentation",
+"stopVtune()              Stop vtune instrumentation",
+"pauseVtune()             Pause vtune collection",
+"resumeVtune()            Resume vtune collection",
 #endif
 #ifdef DEBUG_ARRAYS
-"arrayInfo(a1, a2, ...)   Report statistics about arrays.",
+"arrayInfo(a1, a2, ...)   Report statistics about arrays",
 #endif
 #ifdef JS_THREADSAFE
 "sleep(dt)                Sleep for dt seconds",
 "scatter(fns)             Call functions concurrently (ignoring errors)",
 #endif
+"timeout([seconds])\n"
+"  Get/Set the limit in seconds for the execution time for the current context.\n"
+"  A negative value (default) means that the execution time is unlimited.",
 };
 
 /* Help messages must match shell functions. */
@@ -3942,10 +4089,27 @@ snarf(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
 static JSBool
 ContextCallback(JSContext *cx, uintN contextOp)
 {
-    if (contextOp == JSCONTEXT_NEW) {
+    switch (contextOp) {
+      case JSCONTEXT_NEW: {
+        JSShellContextData *data = NewContextData();
+        if (!data)
+            return JS_FALSE;
+        JS_SetContextPrivate(cx, data);
         JS_SetErrorReporter(cx, my_ErrorReporter);
         JS_SetVersion(cx, JSVERSION_LATEST);
         SetContextOptions(cx);
+        break;
+      }
+
+      case JSCONTEXT_DESTROY: {
+        JSShellContextData *data = GetContextData(cx);
+        JS_SetContextPrivate(cx, NULL);
+        free(data);
+        break;
+      }
+
+      default:
+        break;
     }
     return JS_TRUE;
 }
