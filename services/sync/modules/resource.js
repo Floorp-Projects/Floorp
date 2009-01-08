@@ -289,43 +289,34 @@ function RecordParser(data) {
   this._data = data;
 }
 RecordParser.prototype = {
-  _parse: function RecordParse__parse(data) {
+  getNextRecord: function RecordParser_getNextRecord() {
     let start;
     let bCount = 0;
     let done = false;
     
     for (let i = 1; i < this._data.length; i++) {
-      if (data[i] == '{') {
+      if (this._data[i] == '{') {
         if (bCount == 0)
           start = i;
         bCount++;
-      } else if (data[i] == '}') {
+      } else if (this._data[i] == '}') {
         bCount--;
         if (bCount == 0)
           done = true;
       }
       
-      if (done)
-        return [start, i];
+      if (done) {
+        let ret = this._data.substring(start, i + 1);
+        this._data = this._data.substring(i + 1);
+        return ret;
+      }
     }
     
     return false;
   },
   
-  getRecords: function RecordParse_getRecords() {
-    let off;
-    let ret = [];
-    let data = this._data;
-    
-    while (off = this._parse(data)) {
-      ret[ret.length] = data.substring(off[0], off[1] + 1);
-      data = data.substring(off[1] + 1);
-    }
-    
-    if (ret.length)
-      return ret;
-    else
-      return false;
+  append: function RecordParser_append(data) {
+    this._data += data;
   }
 };
 
