@@ -50,6 +50,7 @@
 #include "nsHtml5Portability.h"
 
 #include "nsHtml5ElementName.h"
+#include "nsHtml5ReleasableElementName.h"
 
 nsHtml5ElementName* 
 nsHtml5ElementName::elementNameByBuffer(jArray<PRUnichar,PRInt32> buf, PRInt32 offset, PRInt32 length)
@@ -57,12 +58,12 @@ nsHtml5ElementName::elementNameByBuffer(jArray<PRUnichar,PRInt32> buf, PRInt32 o
   PRInt32 hash = nsHtml5ElementName::bufToHash(buf, length);
   PRInt32 index = nsHtml5ElementName::ELEMENT_HASHES.binarySearch(hash);
   if (index < 0) {
-    return new nsHtml5ElementName(nsHtml5Portability::newLocalNameFromBuffer(buf, offset, length));
+    return new nsHtml5ReleasableElementName(nsHtml5Portability::newLocalNameFromBuffer(buf, offset, length));
   } else {
     nsHtml5ElementName* rv = nsHtml5ElementName::ELEMENT_NAMES[index];
     nsIAtom* name = rv->name;
     if (!nsHtml5Portability::localEqualsBuffer(name, buf, offset, length)) {
-      return new nsHtml5ElementName(nsHtml5Portability::newLocalNameFromBuffer(buf, offset, length));
+      return new nsHtml5ReleasableElementName(nsHtml5Portability::newLocalNameFromBuffer(buf, offset, length));
     }
     return rv;
   }
@@ -110,8 +111,8 @@ nsHtml5ElementName::release()
 {
 }
 
-void 
-nsHtml5ElementName::destructor()
+
+nsHtml5ElementName::~nsHtml5ElementName()
 {
   nsHtml5Portability::releaseLocal(name);
 }

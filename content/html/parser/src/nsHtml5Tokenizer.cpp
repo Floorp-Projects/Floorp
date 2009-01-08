@@ -1,7 +1,7 @@
 /*
- * Copyright (c) 2005, 2006, 2007 Henri Sivonen
- * Copyright (c) 2007-2008 Mozilla Foundation
- * Portions of comments Copyright 2004-2007 Apple Computer, Inc., Mozilla 
+ * Copyright (c) 2005-2007 Henri Sivonen
+ * Copyright (c) 2007-2009 Mozilla Foundation
+ * Portions of comments Copyright 2004-2008 Apple Computer, Inc., Mozilla 
  * Foundation, and Opera Software ASA.
  *
  * Permission is hereby granted, free of charge, to any person obtaining a 
@@ -70,8 +70,8 @@ nsHtml5Tokenizer::initLocation(nsString* newPublicId, nsString* newSystemId)
   this->publicId = newPublicId;
 }
 
-void 
-nsHtml5Tokenizer::destructor()
+
+nsHtml5Tokenizer::~nsHtml5Tokenizer()
 {
   bmpChar.release();
   astralChar.release();
@@ -86,6 +86,7 @@ nsHtml5Tokenizer::setContentModelFlag(PRInt32 contentModelFlag, nsIAtom* content
   }
   jArray<PRUnichar,PRInt32> asArray = nsHtml5Portability::newCharArrayFromLocal(contentModelElement);
   this->contentModelElement = nsHtml5ElementName::elementNameByBuffer(asArray, 0, asArray.length);
+  asArray.release();
   contentModelElementToArray();
 }
 
@@ -253,7 +254,7 @@ nsHtml5Tokenizer::strBufToString()
 }
 
 nsIAtom* 
-nsHtml5Tokenizer::strBufToLocal()
+nsHtml5Tokenizer::strBufToDoctypeName()
 {
   return nsHtml5Portability::newLocalNameFromBuffer(strBuf, 0, strBufLen);
 }
@@ -426,17 +427,16 @@ nsHtml5Tokenizer::attributeNameComplete()
 {
   attributeName = nsHtml5AttributeName::nameByBuffer(strBuf, 0, strBufLen);
   if (attributes->contains(attributeName)) {
-    shouldAddAttributes = PR_FALSE;
 
-  } else {
-    shouldAddAttributes = PR_TRUE;
+    attributeName->release();
+    attributeName = nsnull;
   }
 }
 
 void 
 nsHtml5Tokenizer::addAttributeWithoutValue()
 {
-  if (shouldAddAttributes) {
+  if (!!attributeName) {
     attributes->addAttribute(attributeName, nsHtml5Portability::newEmptyString());
   }
 }
@@ -444,7 +444,7 @@ nsHtml5Tokenizer::addAttributeWithoutValue()
 void 
 nsHtml5Tokenizer::addAttributeWithValue()
 {
-  if (shouldAddAttributes) {
+  if (!!attributeName) {
     nsString* value = longStrBufToString();
     attributes->addAttribute(attributeName, value);
   }
@@ -1267,9 +1267,10 @@ nsHtml5Tokenizer::stateLoop(PRInt32 state, PRUnichar c, PRBool reconsume, PRInt3
           } else {
             c = read();
           }
+          doctypeName = nsHtml5Atoms::emptystring;
           systemIdentifier = nsnull;
           publicIdentifier = nsnull;
-          doctypeName = nsnull;
+          forceQuirks = PR_FALSE;
           switch(c) {
             case '\0': {
               goto stateloop_end;
@@ -1310,7 +1311,8 @@ nsHtml5Tokenizer::stateLoop(PRInt32 state, PRUnichar c, PRBool reconsume, PRInt3
             }
             case '>': {
 
-              tokenHandler->doctype(nsHtml5Atoms::emptystring, nsnull, nsnull, PR_TRUE);
+              forceQuirks = PR_TRUE;
+              emitDoctypeToken();
               cstart = pos + 1;
               state = NS_HTML5TOKENIZER_DATA;
               goto stateloop;
@@ -1335,12 +1337,13 @@ nsHtml5Tokenizer::stateLoop(PRInt32 state, PRUnichar c, PRBool reconsume, PRInt3
             case '\t':
             case '\n':
             case '\f': {
-              doctypeName = strBufToLocal();
+              doctypeName = strBufToDoctypeName();
               state = NS_HTML5TOKENIZER_AFTER_DOCTYPE_NAME;
               goto doctypenameloop_end;
             }
             case '>': {
-              tokenHandler->doctype(strBufToLocal(), nsnull, nsnull, PR_FALSE);
+              doctypeName = strBufToDoctypeName();
+              emitDoctypeToken();
               cstart = pos + 1;
               state = NS_HTML5TOKENIZER_DATA;
               goto stateloop;
@@ -1367,7 +1370,7 @@ nsHtml5Tokenizer::stateLoop(PRInt32 state, PRUnichar c, PRBool reconsume, PRInt3
               continue;
             }
             case '>': {
-              tokenHandler->doctype(doctypeName, nsnull, nsnull, PR_FALSE);
+              emitDoctypeToken();
               cstart = pos + 1;
               state = NS_HTML5TOKENIZER_DATA;
               goto stateloop;
@@ -1449,7 +1452,8 @@ nsHtml5Tokenizer::stateLoop(PRInt32 state, PRUnichar c, PRBool reconsume, PRInt3
             }
             case '>': {
 
-              tokenHandler->doctype(doctypeName, nsnull, nsnull, PR_TRUE);
+              forceQuirks = PR_TRUE;
+              emitDoctypeToken();
               cstart = pos + 1;
               state = NS_HTML5TOKENIZER_DATA;
               goto stateloop;
@@ -1477,7 +1481,9 @@ nsHtml5Tokenizer::stateLoop(PRInt32 state, PRUnichar c, PRBool reconsume, PRInt3
             }
             case '>': {
 
-              tokenHandler->doctype(doctypeName, longStrBufToString(), nsnull, PR_TRUE);
+              forceQuirks = PR_TRUE;
+              publicIdentifier = longStrBufToString();
+              emitDoctypeToken();
               cstart = pos + 1;
               state = NS_HTML5TOKENIZER_DATA;
               goto stateloop;
@@ -1514,7 +1520,7 @@ nsHtml5Tokenizer::stateLoop(PRInt32 state, PRUnichar c, PRBool reconsume, PRInt3
               goto stateloop;
             }
             case '>': {
-              tokenHandler->doctype(doctypeName, publicIdentifier, nsnull, PR_FALSE);
+              emitDoctypeToken();
               cstart = pos + 1;
               state = NS_HTML5TOKENIZER_DATA;
               goto stateloop;
@@ -1542,7 +1548,9 @@ nsHtml5Tokenizer::stateLoop(PRInt32 state, PRUnichar c, PRBool reconsume, PRInt3
             }
             case '>': {
 
-              tokenHandler->doctype(doctypeName, publicIdentifier, longStrBufToString(), PR_TRUE);
+              forceQuirks = PR_TRUE;
+              systemIdentifier = longStrBufToString();
+              emitDoctypeToken();
               cstart = pos + 1;
               state = NS_HTML5TOKENIZER_DATA;
               goto stateloop;
@@ -1569,7 +1577,7 @@ nsHtml5Tokenizer::stateLoop(PRInt32 state, PRUnichar c, PRBool reconsume, PRInt3
               continue;
             }
             case '>': {
-              tokenHandler->doctype(doctypeName, publicIdentifier, systemIdentifier, PR_FALSE);
+              emitDoctypeToken();
               cstart = pos + 1;
               state = NS_HTML5TOKENIZER_DATA;
               goto stateloop;
@@ -1595,7 +1603,7 @@ nsHtml5Tokenizer::stateLoop(PRInt32 state, PRUnichar c, PRBool reconsume, PRInt3
               goto stateloop_end;
             }
             case '>': {
-              tokenHandler->doctype(doctypeName, publicIdentifier, systemIdentifier, forceQuirks);
+              emitDoctypeToken();
               cstart = pos + 1;
               state = NS_HTML5TOKENIZER_DATA;
               goto stateloop;
@@ -1662,7 +1670,8 @@ nsHtml5Tokenizer::stateLoop(PRInt32 state, PRUnichar c, PRBool reconsume, PRInt3
             }
             case '>': {
 
-              tokenHandler->doctype(doctypeName, nsnull, nsnull, PR_TRUE);
+              forceQuirks = PR_TRUE;
+              emitDoctypeToken();
               cstart = pos + 1;
               state = NS_HTML5TOKENIZER_DATA;
               goto stateloop;
@@ -1690,7 +1699,9 @@ nsHtml5Tokenizer::stateLoop(PRInt32 state, PRUnichar c, PRBool reconsume, PRInt3
             }
             case '>': {
 
-              tokenHandler->doctype(doctypeName, publicIdentifier, longStrBufToString(), PR_TRUE);
+              forceQuirks = PR_TRUE;
+              systemIdentifier = longStrBufToString();
+              emitDoctypeToken();
               cstart = pos + 1;
               state = NS_HTML5TOKENIZER_DATA;
               goto stateloop;
@@ -1716,7 +1727,9 @@ nsHtml5Tokenizer::stateLoop(PRInt32 state, PRUnichar c, PRBool reconsume, PRInt3
             }
             case '>': {
 
-              tokenHandler->doctype(doctypeName, longStrBufToString(), nsnull, PR_TRUE);
+              forceQuirks = PR_TRUE;
+              publicIdentifier = longStrBufToString();
+              emitDoctypeToken();
               cstart = pos + 1;
               state = NS_HTML5TOKENIZER_DATA;
               goto stateloop;
@@ -2617,12 +2630,15 @@ nsHtml5Tokenizer::eof()
       case NS_HTML5TOKENIZER_DOCTYPE:
       case NS_HTML5TOKENIZER_BEFORE_DOCTYPE_NAME: {
 
-        tokenHandler->doctype(nsHtml5Atoms::emptystring, nsnull, nsnull, PR_TRUE);
+        forceQuirks = PR_TRUE;
+        emitDoctypeToken();
         goto eofloop_end;
       }
       case NS_HTML5TOKENIZER_DOCTYPE_NAME: {
 
-        tokenHandler->doctype(strBufToLocal(), nsnull, nsnull, PR_TRUE);
+        doctypeName = strBufToDoctypeName();
+        forceQuirks = PR_TRUE;
+        emitDoctypeToken();
         goto eofloop_end;
       }
       case NS_HTML5TOKENIZER_DOCTYPE_UBLIC:
@@ -2630,34 +2646,41 @@ nsHtml5Tokenizer::eof()
       case NS_HTML5TOKENIZER_AFTER_DOCTYPE_NAME:
       case NS_HTML5TOKENIZER_BEFORE_DOCTYPE_PUBLIC_IDENTIFIER: {
 
-        tokenHandler->doctype(doctypeName, nsnull, nsnull, PR_TRUE);
+        forceQuirks = PR_TRUE;
+        emitDoctypeToken();
         goto eofloop_end;
       }
       case NS_HTML5TOKENIZER_DOCTYPE_PUBLIC_IDENTIFIER_DOUBLE_QUOTED:
       case NS_HTML5TOKENIZER_DOCTYPE_PUBLIC_IDENTIFIER_SINGLE_QUOTED: {
 
-        tokenHandler->doctype(doctypeName, longStrBufToString(), nsnull, PR_TRUE);
+        forceQuirks = PR_TRUE;
+        publicIdentifier = longStrBufToString();
+        emitDoctypeToken();
         goto eofloop_end;
       }
       case NS_HTML5TOKENIZER_AFTER_DOCTYPE_PUBLIC_IDENTIFIER:
       case NS_HTML5TOKENIZER_BEFORE_DOCTYPE_SYSTEM_IDENTIFIER: {
 
-        tokenHandler->doctype(doctypeName, publicIdentifier, nsnull, PR_TRUE);
+        forceQuirks = PR_TRUE;
+        emitDoctypeToken();
         goto eofloop_end;
       }
       case NS_HTML5TOKENIZER_DOCTYPE_SYSTEM_IDENTIFIER_DOUBLE_QUOTED:
       case NS_HTML5TOKENIZER_DOCTYPE_SYSTEM_IDENTIFIER_SINGLE_QUOTED: {
 
-        tokenHandler->doctype(doctypeName, publicIdentifier, longStrBufToString(), PR_TRUE);
+        forceQuirks = PR_TRUE;
+        systemIdentifier = longStrBufToString();
+        emitDoctypeToken();
         goto eofloop_end;
       }
       case NS_HTML5TOKENIZER_AFTER_DOCTYPE_SYSTEM_IDENTIFIER: {
 
-        tokenHandler->doctype(doctypeName, publicIdentifier, systemIdentifier, PR_TRUE);
+        forceQuirks = PR_TRUE;
+        emitDoctypeToken();
         goto eofloop_end;
       }
       case NS_HTML5TOKENIZER_BOGUS_DOCTYPE: {
-        tokenHandler->doctype(doctypeName, publicIdentifier, systemIdentifier, forceQuirks);
+        emitDoctypeToken();
         goto eofloop_end;
       }
       case NS_HTML5TOKENIZER_CONSUME_CHARACTER_REFERENCE: {
@@ -2775,6 +2798,15 @@ nsHtml5Tokenizer::eof()
   eofloop_end: ;
   tokenHandler->eof();
   return;
+}
+
+void 
+nsHtml5Tokenizer::emitDoctypeToken()
+{
+  tokenHandler->doctype(doctypeName, publicIdentifier, systemIdentifier, forceQuirks);
+  nsHtml5Portability::releaseLocal(doctypeName);
+  nsHtml5Portability::releaseString(publicIdentifier);
+  nsHtml5Portability::releaseString(systemIdentifier);
 }
 
 PRUnichar 
