@@ -568,20 +568,25 @@ case "$target" in
         _MIDL_MAJOR_VERSION=`echo ${_MIDL_FULL_VERSION} | $AWK -F\. '{ print $1 }'`
         _MIDL_MINOR_VERSION=`echo ${_MIDL_FULL_VERSION} | $AWK -F\. '{ print $2 }'`
         _MIDL_REV_VERSION=`echo ${_MIDL_FULL_VERSION} | $AWK -F\. '{ print $3 }'`
-         # Add flags if necessary
-         AC_MSG_CHECKING([for midl flags])
-         if test \( "$_MIDL_MAJOR_VERSION" -gt "6" \) -o \( "$_MIDL_MAJOR_VERSION" = "6" -a "$_MIDL_MINOR_VERSION" -gt "0" \) -o \( "$_MIDL_MAJOR_VERSION" = "6" -a "$_MIDL_MINOR_VERSION" = "00" -a "$_MIDL_REV_VERSION" -gt "359" \); then
-             # Starting with MIDL version 6.0.359, the MIDL compiler
-             # generates /Oicf /robust stubs by default, which is not
-             # compatible with versions of Windows older than Win2k.
-             # This switches us back to the old behaviour. When we drop
-             # support for Windows older than Win2k, we should remove
-             # this.
-             MIDL_FLAGS="${MIDL_FLAGS} -no_robust"
-             AC_MSG_RESULT([need -no_robust])
-         else
-             MIDL_FLAGS="${MIDL_FLAGS}"
-             AC_MSG_RESULT([none needed])
+        # Add flags if necessary
+        AC_MSG_CHECKING([for midl flags])
+        if test -n "$_MIDL_MAJOR_VERSION"; then
+            if test \( "$_MIDL_MAJOR_VERSION" -gt "6" \) -o \( "$_MIDL_MAJOR_VERSION" = "6" -a "$_MIDL_MINOR_VERSION" -gt "0" \) -o \( "$_MIDL_MAJOR_VERSION" = "6" -a "$_MIDL_MINOR_VERSION" = "00" -a "$_MIDL_REV_VERSION" -gt "359" \); then
+                # Starting with MIDL version 6.0.359, the MIDL compiler
+                # generates /Oicf /robust stubs by default, which is not
+                # compatible with versions of Windows older than Win2k.
+                # This switches us back to the old behaviour. When we drop
+                # support for Windows older than Win2k, we should remove
+                # this.
+                MIDL_FLAGS="${MIDL_FLAGS} -no_robust"
+                AC_MSG_RESULT([need -no_robust])
+            else
+                MIDL_FLAGS="${MIDL_FLAGS}"
+                AC_MSG_RESULT([none needed])
+            fi
+        else
+            MIDL_FLAGS="${MIDL_FLAGS}"
+            AC_MSG_RESULT([none needed])
         fi
         
         unset _MSVC_VER_FILTER
