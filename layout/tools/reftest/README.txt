@@ -74,6 +74,30 @@ must be one of the following:
                          particular platform (i.e. it allows us to get test
                          coverage on the other platforms).
 
+      asserts(count)
+          Loading the test and reference is known to assert exactly
+          count times.
+          NOTE: An asserts() notation with a non-zero count or maxCount
+          suppresses use of a cached canvas for the test with the
+          annotation.  However, if later occurrences of the same test
+          are not annotated, they will use the cached canvas
+          (potentially from the load that asserted).  This allows
+          repeated use of the same test or reference to be annotated
+          correctly (which may be particularly useful when the uses are
+          in different subdirectories that can be tested independently),
+          but does not force them to be, nor does it force suppression
+          of caching for a common reference when it is the test that
+          asserts.
+
+      asserts(minCount-maxCount)
+          Loading the test and reference is known to assert between
+          minCount and maxCount times, inclusive.
+          NOTE: See above regarding canvas caching.
+
+      asserts-if(condition,count)
+      asserts-if(condition,minCount-maxCount)
+          Same as above, but only if condition is true.
+
       Examples of using conditions:
           fails-if(MOZ_WIDGET_TOOLKIT=="windows") ...
           fails-if(MOZ_WIDGET_TOOLKIT=="cocoa") ...
