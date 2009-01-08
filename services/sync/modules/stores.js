@@ -142,40 +142,56 @@ function Cache() {
   this._items = {};
 }
 Cache.prototype = {
-  _pop: function Cache__pop() {
-    if (this.count <= 0)
-      return;
-    if (this.count == 1)
+  remove: function Cache_remove(item) {
+    if (this.count <= 0 || this.count == 1) {
       this.clear();
-    else {
-      delete this._items[this._tail.id];
-      this._tail = this._tail.prev;
-      this.count--;
+      return;
     }
+
+    item.next.prev = item.prev;
+    item.prev.next = item.next;
+
+    if (item == this._head)
+      this._head = item.next;
+    if (item == this._tail)
+      this._tail = item.prev;
+
+    item.next = null;
+    item.prev = null;
+
+    delete this._items[item.id];
+    this.count--;
+  },
+  pop: function Cache_pop() {
+    if (this.fifo)
+      this.remove(this._tail);
+    else
+      this.remove(this._head);
   },
   put: function Cache_put(id, item) {
     if (!this.enabled)
       return;
-    let wrapper = {id: id, prev: null, next: this._head, item: item};
-    this._items[wrapper.id] = wrapper;
 
-    if (this.fifo) {
-      if (this._head)
-        this._head.prev = wrapper;
-      let next = this._head;
+    let wrapper = {id: id, item: item};
+
+    if (this._head === null) {
+      wrapper.next = wrapper;
+      wrapper.prev = wrapper;
       this._head = wrapper;
-      this._head.next = next;
-    } else {
-      if (this._tail)
-        this._tail.next = wrapper;
-      let prev = this._tail;
       this._tail = wrapper;
-      this._tail.prev = prev;
+    } else {
+      wrapper.next = this._tail;
+      wrapper.prev = this._head;
+      this._head.prev = wrapper;
+      this._tail.next = wrapper;
+      this._tail = wrapper;
     }
     
+    this._items[wrapper.id] = wrapper;
     this.count++;
+
     if (this.count >= this.maxItems)
-      this._pop();
+      this.pop();
   },
   get: function Cache_get(id) {
     if (id in this._items)
