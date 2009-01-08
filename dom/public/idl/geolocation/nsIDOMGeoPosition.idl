@@ -36,16 +36,11 @@
 
 
 #include "domstubs.idl"
+#include "nsIDOMGeoPositionCoords.idl"
 
-[scriptable, uuid(B31702D0-6DAC-4FA0-B93B-F043E71C8F9A)]
+[scriptable, uuid(76888EB0-5EAB-4BE6-BFE0-489EC4095358)]
 interface nsIDOMGeoPosition : nsISupports
 {
-  readonly attribute double latitude;
-  readonly attribute double longitude;
-  readonly attribute double altitude;
-  readonly attribute double accuracy;
-  readonly attribute double altitudeAccuracy;
-  readonly attribute double heading;
-  readonly attribute double speed;
+  readonly attribute nsIDOMGeoPositionCoords coords;
   readonly attribute DOMTimeStamp timestamp;
 };

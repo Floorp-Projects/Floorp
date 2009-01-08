@@ -49,6 +49,7 @@ GRE_MODULE     = 1
 XPIDLSRCS =                                    \
             nsIDOMGeoGeolocation.idl           \
             nsIDOMGeoPosition.idl              \
+            nsIDOMGeoPositionCoords.idl        \
             nsIDOMGeoPositionCallback.idl      \
             nsIDOMGeoPositionError.idl         \
             nsIDOMGeoPositionErrorCallback.idl \

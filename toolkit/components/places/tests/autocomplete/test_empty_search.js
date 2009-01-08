@@ -11,14 +11,14 @@
  * for the specific language governing rights and limitations under the
  * License.
  *
- * The Original Code is Geolocation.
+ * The Original Code is Places Test Code.
  *
- * The Initial Developer of the Original Code is Mozilla Corporation
+ * The Initial Developer of the Original Code is
+ * Edward Lee <edward.lee@engineering.uiuc.edu>.
  * Portions created by the Initial Developer are Copyright (C) 2008
  * the Initial Developer. All Rights Reserved.
  *
  * Contributor(s):
- *  Doug Turner <dougt@meer.net>  (Original Author)
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -34,13 +34,46 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
+/**
+ * Test for bug 426864 that makes sure the empty search (drop down list) only
+ * shows typed pages from history.
+ */
 
-#include "domstubs.idl"
+// Define some shared uris and titles (each page needs its own uri)
+let kURIs = [
+  "http://foo/0",
+  "http://foo/1",
+  "http://foo/2",
+  "http://foo/3",
+  "http://foo/4",
+  "http://foo/5",
+];
+let kTitles = [
+  "title",
+];
 
-[scriptable, uuid(453B72DE-EA90-4F09-AE16-C2E7EE0DDDC4)]
-interface nsIDOMGeoPositionOptions : nsISupports
-{
-  attribute boolean enableHighAccuracy;
-  attribute long timeout;
-  attribute long maximumAge;
-};
+// Visited (in history)
+addPageBook(0, 0); // history
+addPageBook(1, 0, 0); // bookmark
+addPageBook(2, 0); // history typed
+addPageBook(3, 0, 0); // bookmark typed
+
+// Unvisited bookmark
+addPageBook(4, 0, 0); // bookmark
+addPageBook(5, 0, 0); // bookmark typed
+
+// Set some pages as typed
+markTyped([2,3,5]);
+// Remove pages from history to treat them as unvisited
+removePages([4,5]);
+
+// Provide for each test: description; search terms; array of gPages indices of
+// pages that should match; optional function to be run before the test
+let gTests = [
+  ["0: Match everything",
+   "foo", [0,1,2,3,4,5]],
+  ["1: Match only typed history",
+   "foo ^ ~", [2,3]],
+  ["2: Drop-down empty search matches only typed history",
+   "", [2,3]],
+];

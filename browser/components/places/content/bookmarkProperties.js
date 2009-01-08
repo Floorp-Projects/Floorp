@@ -457,11 +457,11 @@ var BookmarkPropertiesPanel = {
   },
 
   _element: function BPP__element(aID) {
-    return gEditItemOverlay._element(aID);
+    return document.getElementById("editBMPanel_" + aID);
   },
 
   onDialogUnload: function BPP_onDialogUnload() {
-    gEditItemOverlay.uninitPanel(true);
+    // gEditItemOverlay does not exist anymore here, so don't rely on it.
     // Calling removeEventListener with arguments which do not identify any
     // currently registered EventListener on the EventTarget has no effect.
     this._element("tagsSelector")
@@ -479,11 +479,20 @@ var BookmarkPropertiesPanel = {
   },
 
   onDialogAccept: function BPP_onDialogAccept() {
+    // The order here is important! We have to uninit the panel first, otherwise
+    // late changes could force it to commit more transactions.
+    gEditItemOverlay.uninitPanel(true);
+    gEditItemOverlay = null;
     this._endBatch();
     window.arguments[0].performed = true;
   },
 
   onDialogCancel: function BPP_onDialogCancel() {
+    // The order here is important! We have to uninit the panel first, otherwise
+    // changes done as part of Undo may change the panel contents and by
+    // that force it to commit more transactions.
+    gEditItemOverlay.uninitPanel(true);
+    gEditItemOverlay = null;
     this._endBatch();
     PlacesUIUtils.ptm.undoTransaction();
     window.arguments[0].performed = false;
@@ -533,68 +542,6 @@ var BookmarkPropertiesPanel = {
   },
 
   /**
-   * XXXmano todo:
-   *  1. Make setAnnotationsForURI unset a given annotation if the value field
-   *     is not set.
-   *  2. Replace PlacesEditItemDescriptionTransaction and
-   *     PlacesSetLoadInSidebarTransaction transaction with a generic
-   *     transaction to set/unset an annotation object.
-   *  3. Use the two helpers below with this new generic transaction in
-   *     _saveChanges.
-   */
-
-  /**
-   * Returns an object which could then be used to set/unset the
-   * description annotation for an item (any type).
-   *
-   * @param aDescription
-   *        The description of the item.
-   * @returns an object representing the annotation which could then be used
-   *          with get/setAnnotationsForURI of PlacesUtils.
-   */
-  _getDescriptionAnnotation:
-  function BPP__getDescriptionAnnotation(aDescription) {
-    var anno = { name: DESCRIPTION_ANNO,
-                 type: Ci.nsIAnnotationService.TYPE_STRING,
-                 flags: 0,
-                 value: aDescription,
-                 expires: Ci.nsIAnnotationService.EXPIRE_NEVER };
-
-    /**
-     * See todo note above
-     * if (aDescription)
-     *   anno.value = aDescription;
-     */
-    return anno;
-  },
-
-  /**
-   * Returns an object which could then be used to set/unset the
-   * load-in-sidebar annotation for a bookmark item.
-   *
-   * @param aLoadInSidebar
-   *        Whether to load the bookmark item in the sidebar in default
-   *        conditions.
-   * @returns an object representing the annotation which could then be used
-   *          with get/setAnnotationsForURI of PlacesUtils.
-   */
-  _getLoadInSidebarAnnotation:
-  function BPP__getLoadInSidebarAnnotation(aLoadInSidebar) {
-    var anno = { name: LOAD_IN_SIDEBAR_ANNO,
-                 type: Ci.nsIAnnotationService.TYPE_INT32,
-                 flags: 0,
-                 value: aLoadInSidebar,
-                 expires: Ci.nsIAnnotationService.EXPIRE_NEVER };
-
-    /**
-     * See todo note above
-     * if (anno)
-     *   anno.value = aLoadInSidebar;
-     */
-    return anno;
-  },
-
-  /**
    * [New Item Mode] Get the insertion point details for the new item, given
    * dialog state and opening arguments.
    *
@@ -615,12 +562,18 @@ var BookmarkPropertiesPanel = {
   _getCreateNewBookmarkTransaction:
   function BPP__getCreateNewBookmarkTransaction(aContainer, aIndex) {
     var annotations = [];
-    if (this._description)
-      annotations.push(this._getDescriptionAnnotation(this._description));
-    if (this._loadInSidebar)
-      annotations.push(this._getLoadInSidebarAnnotation(true));
-
     var childTransactions = [];
+
+    if (this._description) {
+      childTransactions.push(
+        PlacesUIUtils.ptm.editItemDescription(-1, this._description));
+    }
+
+    if (this._loadInSidebar) {
+      childTransactions.push(
+        PlacesUIUtils.ptm.setLoadInSidebar(-1, this._loadInSidebar));
+    }
+
     if (this._postData) {
       childTransactions.push(
         PlacesUIUtils.ptm.editBookmarkPostData(-1, this._postData));
