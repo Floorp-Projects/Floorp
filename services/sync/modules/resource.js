@@ -284,6 +284,51 @@ ChannelListener.prototype = {
   }
 };
 
+/* Parses out single WBOs from a full dump */
+function RecordParser(data) {
+  this._data = data;
+}
+RecordParser.prototype = {
+  _parse: function RecordParse__parse(data) {
+    let start;
+    let bCount = 0;
+    let done = false;
+    
+    for (let i = 1; i < this._data.length; i++) {
+      if (data[i] == '{') {
+        if (bCount == 0)
+          start = i;
+        bCount++;
+      } else if (data[i] == '}') {
+        bCount--;
+        if (bCount == 0)
+          done = true;
+      }
+      
+      if (done)
+        return [start, i];
+    }
+    
+    return false;
+  },
+  
+  getRecords: function RecordParse_getRecords() {
+    let off;
+    let ret = [];
+    let data = this._data;
+    
+    while (off = this._parse(data)) {
+      ret[ret.length] = data.substring(off[0], off[1] + 1);
+      data = data.substring(off[1] + 1);
+    }
+    
+    if (ret.length)
+      return ret;
+    else
+      return false;
+  }
+};
+
 function JsonFilter() {
   let level = "Debug";
   try { level = Utils.prefs.getCharPref("log.logger.network.jsonFilter"); }
