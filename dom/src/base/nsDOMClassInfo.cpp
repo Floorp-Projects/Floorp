@@ -6447,7 +6447,8 @@ nsWindowSH::NewResolve(nsIXPConnectWrappedNative *wrapper, JSContext *cx,
   // defined on our prototype chain. This way we can access this
   // expando w/o ever getting back into XPConnect.
   JSStackFrame *fp = NULL;
-  if ((flags & (JSRESOLVE_ASSIGNING)) &&
+  if ((flags & JSRESOLVE_ASSIGNING) &&
+      !(flags & JSRESOLVE_WITH) &&
       !(JS_FrameIterator(cx, &fp) && fp->regs && (JSOp)*fp->regs->pc == JSOP_BINDNAME) &&
       win->IsInnerWindow()) {
     JSObject *realObj;

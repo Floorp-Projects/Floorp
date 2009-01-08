@@ -70,17 +70,6 @@
 #include "jstracer.h"
 using namespace avmplus;
 using namespace nanojit;
-
-/* 
- * FIXME  Duplicated with jstracer.cpp, doing it this way for now
- *        to keep it private to files that need it. 
- */
-#ifdef JS_JIT_SPEW
-static bool verbose_debug = getenv("TRACEMONKEY") && strstr(getenv("TRACEMONKEY"), "verbose");
-#define debug_only_v(x) if (verbose_debug) { x; }
-#else
-#define debug_only_v(x)
-#endif
 #endif
 
 typedef enum REOp {
@@ -2207,6 +2196,8 @@ class RegExpNativeCompiler {
                     pos = compileFlatSingleChar(node->u.flat.chr, pos, fails);
                 } else {
                     for (size_t i = 0; i < node->u.flat.length; ++i) {
+                        if (fragment->lirbuf->outOMem()) 
+                            return JS_FALSE;
                         pos = compileFlatSingleChar(((jschar*) node->kid)[i], pos, fails);
                         if (!pos) break;
                     }

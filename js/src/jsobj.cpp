@@ -1893,12 +1893,116 @@ js_Object(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
 }
 
 /*
+ * Given pc pointing after a property accessing bytecode, return true if the
+ * access is "object-detecting" in the sense used by web scripts, e.g., when
+ * checking whether document.all is defined.
+ */
+static JS_REQUIRES_STACK JSBool
+Detecting(JSContext *cx, jsbytecode *pc)
+{
+    JSScript *script;
+    jsbytecode *endpc;
+    JSOp op;
+    JSAtom *atom;
+
+    if (!cx->fp)
+        return JS_FALSE;
+    script = cx->fp->script;
+    for (endpc = script->code + script->length;
+         pc < endpc;
+         pc += js_CodeSpec[op].length) {
+        /* General case: a branch or equality op follows the access. */
+        op = (JSOp) *pc;
+        if (js_CodeSpec[op].format & JOF_DETECTING)
+            return JS_TRUE;
+
+        switch (op) {
+          case JSOP_NULL:
+            /*
+             * Special case #1: handle (document.all == null).  Don't sweat
+             * about JS1.2's revision of the equality operators here.
+             */
+            if (++pc < endpc)
+                return *pc == JSOP_EQ || *pc == JSOP_NE;
+            return JS_FALSE;
+
+          case JSOP_NAME:
+            /*
+             * Special case #2: handle (document.all == undefined).  Don't
+             * worry about someone redefining undefined, which was added by
+             * Edition 3, so is read/write for backward compatibility.
+             */
+            GET_ATOM_FROM_BYTECODE(script, pc, 0, atom);
+            if (atom == cx->runtime->atomState.typeAtoms[JSTYPE_VOID] &&
+                (pc += js_CodeSpec[op].length) < endpc) {
+                op = (JSOp) *pc;
+                return op == JSOP_EQ || op == JSOP_NE ||
+                       op == JSOP_STRICTEQ || op == JSOP_STRICTNE;
+            }
+            return JS_FALSE;
+
+          default:
+            /*
+             * At this point, anything but an extended atom index prefix means
+             * we're not detecting.
+             */
+            if (!(js_CodeSpec[op].format & JOF_INDEXBASE))
+                return JS_FALSE;
+            break;
+        }
+    }
+    return JS_FALSE;
+}
+
+/*
+ * Infer lookup flags from the currently executing bytecode. This does
+ * not attempt to infer JSRESOLVE_WITH, because the current bytecode
+ * does not indicate whether we are in a with statement. Return defaultFlags
+ * if a currently executing bytecode cannot be determined.
+ */
+static uintN
+InferFlags(JSContext *cx, uintN defaultFlags)
+{
+    JSStackFrame *fp;
+    jsbytecode *pc;
+    const JSCodeSpec *cs;
+    uint32 format;
+    uintN flags = 0;
+
+    fp = js_GetTopStackFrame(cx);
+    if (!fp || !fp->regs)
+        return defaultFlags;
+    pc = fp->regs->pc;
+    cs = &js_CodeSpec[*pc];
+    format = cs->format;
+    if (JOF_MODE(format) != JOF_NAME)
+        flags |= JSRESOLVE_QUALIFIED;
+    if ((format & (JOF_SET | JOF_FOR)) ||
+        (fp->flags & JSFRAME_ASSIGNING)) {
+        flags |= JSRESOLVE_ASSIGNING;
+    } else {
+        pc += cs->length;
+        if (Detecting(cx, pc))
+            flags |= JSRESOLVE_DETECTING;
+    }
+    if (format & JOF_DECLARING)
+        flags |= JSRESOLVE_DECLARING;
+    return flags;
+}
+
+/*
  * ObjectOps and Class for with-statement stack objects.
  */
 static JSBool
 with_LookupProperty(JSContext *cx, JSObject *obj, jsid id, JSObject **objp,
                     JSProperty **propp)
 {
+    /* Fixes bug 463997 */
+    uintN flags = cx->resolveFlags;
+    if (flags == JSRESOLVE_INFER)
+        flags = InferFlags(cx, flags);
+    flags |= JSRESOLVE_WITH;
+    JSAutoResolveFlags rf(cx, flags);
     JSObject *proto = OBJ_GET_PROTO(cx, obj);
     if (!proto)
         return js_LookupProperty(cx, obj, id, objp, propp);
@@ -3310,68 +3414,6 @@ bad:
     return JS_FALSE;
 }
 
-/*
- * Given pc pointing after a property accessing bytecode, return true if the
- * access is "object-detecting" in the sense used by web scripts, e.g., when
- * checking whether document.all is defined.
- */
-static JS_REQUIRES_STACK JSBool
-Detecting(JSContext *cx, jsbytecode *pc)
-{
-    JSScript *script;
-    jsbytecode *endpc;
-    JSOp op;
-    JSAtom *atom;
-
-    if (!cx->fp)
-        return JS_FALSE;
-    script = cx->fp->script;
-    for (endpc = script->code + script->length;
-         pc < endpc;
-         pc += js_CodeSpec[op].length) {
-        /* General case: a branch or equality op follows the access. */
-        op = (JSOp) *pc;
-        if (js_CodeSpec[op].format & JOF_DETECTING)
-            return JS_TRUE;
-
-        switch (op) {
-          case JSOP_NULL:
-            /*
-             * Special case #1: handle (document.all == null).  Don't sweat
-             * about JS1.2's revision of the equality operators here.
-             */
-            if (++pc < endpc)
-                return *pc == JSOP_EQ || *pc == JSOP_NE;
-            return JS_FALSE;
-
-          case JSOP_NAME:
-            /*
-             * Special case #2: handle (document.all == undefined).  Don't
-             * worry about someone redefining undefined, which was added by
-             * Edition 3, so is read/write for backward compatibility.
-             */
-            GET_ATOM_FROM_BYTECODE(script, pc, 0, atom);
-            if (atom == cx->runtime->atomState.typeAtoms[JSTYPE_VOID] &&
-                (pc += js_CodeSpec[op].length) < endpc) {
-                op = (JSOp) *pc;
-                return op == JSOP_EQ || op == JSOP_NE ||
-                       op == JSOP_STRICTEQ || op == JSOP_STRICTNE;
-            }
-            return JS_FALSE;
-
-          default:
-            /*
-             * At this point, anything but an extended atom index prefix means
-             * we're not detecting.
-             */
-            if (!(js_CodeSpec[op].format & JOF_INDEXBASE))
-                return JS_FALSE;
-            break;
-        }
-    }
-    return JS_FALSE;
-}
-
 JS_FRIEND_API(JSBool)
 js_LookupProperty(JSContext *cx, JSObject *obj, jsid id, JSObject **objp,
                   JSProperty **propp)
@@ -3397,9 +3439,6 @@ js_LookupPropertyWithFlags(JSContext *cx, JSObject *obj, jsid id, uintN flags,
     JSResolvingEntry *entry;
     uint32 generation;
     JSNewResolveOp newresolve;
-    jsbytecode *pc;
-    const JSCodeSpec *cs;
-    uint32 format;
     JSBool ok;
 
     /* Convert string indices to integers if appropriate. */
@@ -3448,27 +3487,9 @@ js_LookupPropertyWithFlags(JSContext *cx, JSObject *obj, jsid id, uintN flags,
                 *propp = NULL;
 
                 if (clasp->flags & JSCLASS_NEW_RESOLVE) {
-                    JSStackFrame *fp = js_GetTopStackFrame(cx);
-
                     newresolve = (JSNewResolveOp)resolve;
-                    if (flags == JSRESOLVE_INFER && fp && fp->regs) {
-                        flags = 0;
-                        pc = fp->regs->pc;
-                        cs = &js_CodeSpec[*pc];
-                        format = cs->format;
-                        if (JOF_MODE(format) != JOF_NAME)
-                            flags |= JSRESOLVE_QUALIFIED;
-                        if ((format & (JOF_SET | JOF_FOR)) ||
-                            (fp->flags & JSFRAME_ASSIGNING)) {
-                            flags |= JSRESOLVE_ASSIGNING;
-                        } else {
-                            pc += cs->length;
-                            if (Detecting(cx, pc))
-                                flags |= JSRESOLVE_DETECTING;
-                        }
-                        if (format & JOF_DECLARING)
-                            flags |= JSRESOLVE_DECLARING;
-                    }
+                    if (flags == JSRESOLVE_INFER)
+                        flags = InferFlags(cx, flags);
                     obj2 = (clasp->flags & JSCLASS_NEW_RESOLVE_GETS_START)
                            ? start
                            : NULL;

@@ -108,19 +108,20 @@ namespace nanojit
 		_unused = 0;
 		_stats.lir = 0;
 		_noMem = 0;
+		_nextPage = 0;
 		for (int i = 0; i < NumSavedRegs; ++i)
 			savedRegs[i] = NULL;
 		explicitSavedRegs = false;
-		// pre-allocate the next page we will be using
-		_nextPage = pageAlloc();
-		NanoAssert(_nextPage || _noMem);
 	}
 
     void LirBuffer::rewind()
 	{
 		clear();
+		// pre-allocate the current and the next page we will be using
 		Page* start = pageAlloc();
 		_unused = start ? &start->lir[0] : NULL;
+		_nextPage = pageAlloc();
+		NanoAssert((_unused && _nextPage) || _noMem);
     }
 
 	int32_t LirBuffer::insCount() 

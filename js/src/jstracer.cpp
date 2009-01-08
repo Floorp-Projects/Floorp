@@ -111,6 +111,11 @@ static const char tagChar[]  = "OIDISIBI";
 /* Max call stack size. */
 #define MAX_CALL_STACK_ENTRIES 64
 
+/* Max memory needed to rebuild the interpreter stack when falling off trace. */
+#define MAX_INTERP_STACK_BYTES                                                \
+    (MAX_NATIVE_STACK_SLOTS * sizeof(jsval) +                                 \
+     MAX_CALL_STACK_ENTRIES * sizeof(JSInlineFrame))
+
 /* Max number of branches per tree. */
 #define MAX_BRANCHES 16
 
@@ -228,10 +233,7 @@ static bool did_we_check_sse2 = false;
 #endif
 
 #ifdef JS_JIT_SPEW
-static bool verbose_debug = getenv("TRACEMONKEY") && strstr(getenv("TRACEMONKEY"), "verbose");
-#define debug_only_v(x) if (verbose_debug) { x; }
-#else
-#define debug_only_v(x)
+bool js_verboseDebug = getenv("TRACEMONKEY") && strstr(getenv("TRACEMONKEY"), "verbose");
 #endif
 
 /* The entire VM shares one oracle. Collisions and concurrent updates are tolerated and worst
@@ -371,7 +373,7 @@ hash_accum(uintptr_t& h, uintptr_t i)
 }
 
 
-static inline int
+JS_REQUIRES_STACK static inline int
 stackSlotHash(JSContext* cx, unsigned slot)
 {
     uintptr_t h = 5381;
@@ -381,7 +383,7 @@ stackSlotHash(JSContext* cx, unsigned slot)
     return int(h);
 }
 
-static inline int
+JS_REQUIRES_STACK static inline int
 globalSlotHash(JSContext* cx, unsigned slot)
 {    
     uintptr_t h = 5381;
@@ -399,28 +401,28 @@ globalSlotHash(JSContext* cx, unsigned slot)
 
 
 /* Tell the oracle that a certain global variable should not be demoted. */
-void
+JS_REQUIRES_STACK void
 Oracle::markGlobalSlotUndemotable(JSContext* cx, unsigned slot)
 {
     _globalDontDemote.set(&gc, globalSlotHash(cx, slot));
 }
 
 /* Consult with the oracle whether we shouldn't demote a certain global variable. */
-bool
+JS_REQUIRES_STACK bool
 Oracle::isGlobalSlotUndemotable(JSContext* cx, unsigned slot) const
 {    
     return _globalDontDemote.get(globalSlotHash(cx, slot));
 }
 
 /* Tell the oracle that a certain slot at a certain bytecode location should not be demoted. */
-void
+JS_REQUIRES_STACK void
 Oracle::markStackSlotUndemotable(JSContext* cx, unsigned slot)
 {
     _stackDontDemote.set(&gc, stackSlotHash(cx, slot));
 }
 
 /* Consult with the oracle whether we shouldn't demote a certain slot. */
-bool
+JS_REQUIRES_STACK bool
 Oracle::isStackSlotUndemotable(JSContext* cx, unsigned slot) const
 {
     return _stackDontDemote.get(stackSlotHash(cx, slot));
@@ -1038,10 +1040,7 @@ TraceRecorder::TraceRecorder(JSContext* cx, VMSideExit* _anchor, Fragment* _frag
     debug_only_v(printf("globalObj=%p, shape=%d\n", this->globalObj, OBJ_SHAPE(this->globalObj));)
 
     lir = lir_buf_writer = new (&gc) LirBufWriter(lirbuf);
-#ifdef DEBUG
-    if (verbose_debug)
-        lir = verbose_filter = new (&gc) VerboseWriter(&gc, lir, lirbuf->names);
-#endif
+    debug_only_v(lir = verbose_filter = new (&gc) VerboseWriter(&gc, lir, lirbuf->names);)
 #ifdef NJ_SOFTFLOAT
     lir = float_filter = new (&gc) SoftFloatFilter(lir);
 #endif
@@ -1063,14 +1062,13 @@ TraceRecorder::TraceRecorder(JSContext* cx, VMSideExit* _anchor, Fragment* _frag
     /* read into registers all values on the stack and all globals we know so far */
     import(treeInfo, lirbuf->sp, ngslots, callDepth, globalTypeMap, stackTypeMap);
 
-#if defined(JS_HAS_OPERATION_COUNT) && !JS_HAS_OPERATION_COUNT
     if (fragment == fragment->root) {
-        guard(false, 
-              lir->ins_eq0(lir->insLoadi(cx_ins, 
-                                         offsetof(JSContext, operationCount))), 
-              snapshot(TIMEOUT_EXIT));
+        LIns* counter = lir->insLoadi(cx_ins,
+                                      offsetof(JSContext, operationCount));
+        LIns* updated = lir->ins2i(LIR_sub, counter, JSOW_SCRIPT_JUMP);
+        lir->insStorei(updated, cx_ins, offsetof(JSContext, operationCount));
+        guard(false, lir->ins2i(LIR_le, updated, 0), snapshot(TIMEOUT_EXIT));
     }
-#endif
 
     /* If we are attached to a tree call guard, make sure the guard the inner tree exited from
        is what we expect it to be. */
@@ -1307,43 +1305,43 @@ ValueToNative(JSContext* cx, jsval v, uint8 type, double* slot)
     }
 }
 
-/* We maintain an emergency recovery pool of doubles so we can recover safely if a trace runs
+/* We maintain an emergency pool of doubles so we can recover safely if a trace runs
    out of memory (doubles or objects). */
 static jsval
-AllocateDoubleFromRecoveryPool(JSContext* cx)
+AllocateDoubleFromReservedPool(JSContext* cx)
 {
     JSTraceMonitor* tm = &JS_TRACE_MONITOR(cx);
-    JS_ASSERT(tm->recoveryDoublePoolPtr > tm->recoveryDoublePool);
-    return *--tm->recoveryDoublePoolPtr;
+    JS_ASSERT(tm->reservedDoublePoolPtr > tm->reservedDoublePool);
+    return *--tm->reservedDoublePoolPtr;
 }
 
 static bool
-js_ReplenishRecoveryPool(JSContext* cx, JSTraceMonitor* tm)
+js_ReplenishReservedPool(JSContext* cx, JSTraceMonitor* tm)
 {
     /* We should not be called with a full pool. */
-    JS_ASSERT((size_t) (tm->recoveryDoublePoolPtr - tm->recoveryDoublePool) <
+    JS_ASSERT((size_t) (tm->reservedDoublePoolPtr - tm->reservedDoublePool) <
               MAX_NATIVE_STACK_SLOTS);
 
     /*
      * When the GC runs in js_NewDoubleInRootedValue, it resets
-     * tm->recoveryDoublePoolPtr back to tm->recoveryDoublePool. 
+     * tm->reservedDoublePoolPtr back to tm->reservedDoublePool. 
      */
     JSRuntime* rt = cx->runtime;
     uintN gcNumber = rt->gcNumber;
-    jsval* ptr = tm->recoveryDoublePoolPtr; 
-    while (ptr < tm->recoveryDoublePool + MAX_NATIVE_STACK_SLOTS) {
+    jsval* ptr = tm->reservedDoublePoolPtr; 
+    while (ptr < tm->reservedDoublePool + MAX_NATIVE_STACK_SLOTS) {
         if (!js_NewDoubleInRootedValue(cx, 0.0, ptr)) 
             goto oom;
         if (rt->gcNumber != gcNumber) {
-            JS_ASSERT(tm->recoveryDoublePoolPtr == tm->recoveryDoublePool);
-            ptr = tm->recoveryDoublePool;
+            JS_ASSERT(tm->reservedDoublePoolPtr == tm->reservedDoublePool);
+            ptr = tm->reservedDoublePool;
             if (uintN(rt->gcNumber - gcNumber) > uintN(1))
                 goto oom;
             continue;
         }
         ++ptr;
     }
-    tm->recoveryDoublePoolPtr = ptr;
+    tm->reservedDoublePoolPtr = ptr;
     return true;
 
 oom:
@@ -1351,14 +1349,14 @@ oom:
      * Already massive GC pressure, no need to hold doubles back.
      * We won't run any native code anyway.
      */
-    tm->recoveryDoublePoolPtr = tm->recoveryDoublePool;
+    tm->reservedDoublePoolPtr = tm->reservedDoublePool;
     return false;
 }
 
 /* Box a value from the native stack back into the jsval format. Integers
    that are too large to fit into a jsval are automatically boxed into
    heap-allocated doubles. */
-static bool
+static void
 NativeToValue(JSContext* cx, jsval& v, uint8 type, double* slot)
 {
     jsint i;
@@ -1392,12 +1390,12 @@ NativeToValue(JSContext* cx, jsval& v, uint8 type, double* slot)
 #endif
                 js_NewDoubleInRootedValue(cx, d, &v);
             JS_ASSERT(ok);
-            return true;
+            return;
         }
-        v = AllocateDoubleFromRecoveryPool(cx);
+        v = AllocateDoubleFromReservedPool(cx);
         JS_ASSERT(JSVAL_IS_DOUBLE(v) && *JSVAL_TO_DOUBLE(v) == 0.0);
         *JSVAL_TO_DOUBLE(v) = d;
-        return true;
+        return;
       }
       case JSVAL_STRING:
         v = STRING_TO_JSVAL(*(JSString**)slot);
@@ -1423,7 +1421,6 @@ NativeToValue(JSContext* cx, jsval& v, uint8 type, double* slot)
                             : STOBJ_GET_CLASS(JSVAL_TO_OBJECT(v))->name);)
         break;
     }
-    return true;
 }
 
 /* Attempt to unbox the given list of interned globals onto the native global frame. */
@@ -1451,15 +1448,13 @@ BuildNativeStackFrame(JSContext* cx, unsigned callDepth, uint8* mp, double* np)
     debug_only_v(printf("\n");)
 }
 
-/* Box the given native frame into a JS frame. This only fails due to a hard error
-   (out of memory for example). */
+/* Box the given native frame into a JS frame. This is infallible. */
 static JS_REQUIRES_STACK int
 FlushNativeGlobalFrame(JSContext* cx, unsigned ngslots, uint16* gslots, uint8* mp, double* np)
 {
     uint8* mp_base = mp;
     FORALL_GLOBAL_SLOTS(cx, ngslots, gslots,
-        if (!NativeToValue(cx, *vp, *mp, np + gslots[n]))
-            return -1;
+        NativeToValue(cx, *vp, *mp, np + gslots[n]);
         ++mp;
     );
     debug_only_v(printf("\n");)
@@ -1467,8 +1462,8 @@ FlushNativeGlobalFrame(JSContext* cx, unsigned ngslots, uint16* gslots, uint8* m
 }
 
 /**
- * Box the given native stack frame into the virtual machine stack. This fails
- * only due to a hard error (out of memory for example).
+ * Box the given native stack frame into the virtual machine stack. This
+ * is infallible.
  *
  * @param callDepth the distance between the entry frame into our trace and
  *                  cx->fp when we make this call.  If this is not called as a
@@ -1491,8 +1486,7 @@ FlushNativeStackFrame(JSContext* cx, unsigned callDepth, uint8* mp, double* np,
     FORALL_SLOTS_IN_PENDING_FRAMES(cx, callDepth,
         if (vp == stopAt) goto skip;
         debug_only_v(printf("%s%u=", vpname, vpnum);)
-        if (!NativeToValue(cx, *vp, *mp, np))
-            return -1;
+        NativeToValue(cx, *vp, *mp, np);
         ++mp; ++np
     );
 skip:
@@ -2834,11 +2828,9 @@ js_SynthesizeFrame(JSContext* cx, const FrameInfo& fi)
         a->avail += nbytes;
         JS_ASSERT(missing == 0);
     } else {
+        /* This allocation is infallible: js_ExecuteTree reserved enough stack. */
         JS_ARENA_ALLOCATE_CAST(newsp, jsval *, &cx->stackPool, nbytes);
-        if (!newsp) {
-            js_ReportOutOfScriptQuota(cx);
-            return 0;
-        }
+        JS_ASSERT(newsp);
 
         /*
          * Move args if the missing ones overflow arena a, then push
@@ -2933,10 +2925,19 @@ js_SynthesizeFrame(JSContext* cx, const FrameInfo& fi)
         /*
          * Set hookData to null because the failure case for js_GetCallObject
          * involves it calling the debugger hook.
+         *
+         * Allocating the Call object must not fail, so use an object
+         * previously reserved by js_ExecuteTrace if needed.
          */
         newifp->hookData = NULL;
-        if (!js_GetCallObject(cx, &newifp->frame, newifp->frame.scopeChain))
-            return -1;
+        JS_ASSERT(!JS_TRACE_MONITOR(cx).useReservedObjects);
+        JS_TRACE_MONITOR(cx).useReservedObjects = JS_TRUE;
+#ifdef DEBUG
+        JSObject *obj =
+#endif
+            js_GetCallObject(cx, &newifp->frame, newifp->frame.scopeChain);
+        JS_ASSERT(obj);
+        JS_TRACE_MONITOR(cx).useReservedObjects = JS_FALSE;
     }
 
     /*
@@ -3216,8 +3217,8 @@ js_RecordLoopEdge(JSContext* cx, TraceRecorder* r, uintN& inlineCallCount)
         JSTraceMonitor* tm = &JS_TRACE_MONITOR(cx);
         
         /* Make sure inner tree call will not run into an out-of-memory condition. */
-        if (tm->recoveryDoublePoolPtr < (tm->recoveryDoublePool + MAX_NATIVE_STACK_SLOTS) &&
-            !js_ReplenishRecoveryPool(cx, tm)) {
+        if (tm->reservedDoublePoolPtr < (tm->reservedDoublePool + MAX_NATIVE_STACK_SLOTS) &&
+            !js_ReplenishReservedPool(cx, tm)) {
             js_AbortRecording(cx, "Couldn't call inner tree (out of memory)");
             return false; 
         }
@@ -3524,9 +3525,19 @@ js_ExecuteTree(JSContext* cx, Fragment* f, uintN& inlineCallCount,
     /* Make sure the global object is sane. */
     JS_ASSERT(!ngslots || (OBJ_SHAPE(JS_GetGlobalForObject(cx, cx->fp->scopeChain)) == tm->globalShape)); 
     /* Make sure our caller replenished the double pool. */
-    JS_ASSERT(tm->recoveryDoublePoolPtr >= tm->recoveryDoublePool + MAX_NATIVE_STACK_SLOTS);
+    JS_ASSERT(tm->reservedDoublePoolPtr >= tm->reservedDoublePool + MAX_NATIVE_STACK_SLOTS);
+
+    /* Reserve objects and stack space now, to make leaving the tree infallible. */
+    void *reserve;
+    void *stackMark = JS_ARENA_MARK(&cx->stackPool);
+    if (!js_ReserveObjects(cx, MAX_CALL_STACK_ENTRIES))
+        return NULL;
+    JS_ARENA_ALLOCATE(reserve, &cx->stackPool, MAX_INTERP_STACK_BYTES);
+    if (!reserve)
+        return NULL;
 
 #ifdef DEBUG
+    bool jsframe_pop_blocks_set_on_entry = bool(cx->fp->flags & JSFRAME_POP_BLOCKS);
     memset(stack_buffer, 0xCD, sizeof(stack_buffer));
     memset(global, 0xCD, (globalFrameSize+1)*sizeof(double));
 #endif    
@@ -3630,11 +3641,11 @@ js_ExecuteTree(JSContext* cx, Fragment* f, uintN& inlineCallCount,
         JS_ASSERT(state.lastTreeExitGuard->exitType != NESTED_EXIT);
     }
 
+    JS_ARENA_RELEASE(&cx->stackPool, stackMark);
     while (callstack < rp) {
         /* Synthesize a stack frame and write out the values in it using the type map pointer
            on the native call stack. */
-        if (js_SynthesizeFrame(cx, **callstack) < 0)
-            return NULL;
+        js_SynthesizeFrame(cx, **callstack);
         int slots = FlushNativeStackFrame(cx, 1/*callDepth*/, (uint8*)(*callstack+1), stack, cx->fp);
 #ifdef DEBUG
         JSStackFrame* fp = cx->fp;
@@ -3643,9 +3654,7 @@ js_ExecuteTree(JSContext* cx, Fragment* f, uintN& inlineCallCount,
                             js_FramePCToLineNumber(cx, fp),
                             FramePCOffset(fp),
                             slots);)
-#endif        
-        if (slots < 0)
-            return NULL;
+#endif
         /* Keep track of the additional frames we put on the interpreter stack and the native
            stack slots we consumed. */
         ++inlineCallCount;
@@ -3659,17 +3668,14 @@ js_ExecuteTree(JSContext* cx, Fragment* f, uintN& inlineCallCount,
     unsigned calldepth = innermost->calldepth;
     unsigned calldepth_slots = 0;
     for (unsigned n = 0; n < calldepth; ++n) {
-        int nslots = js_SynthesizeFrame(cx, *callstack[n]);
-        if (nslots < 0)
-            return NULL;
-        calldepth_slots += nslots;
+        calldepth_slots += js_SynthesizeFrame(cx, *callstack[n]);
         ++inlineCallCount;
-#ifdef DEBUG        
+#ifdef DEBUG
         JSStackFrame* fp = cx->fp;
         debug_only_v(printf("synthesized shallow frame for %s:%u@%u\n",
                             fp->script->filename, js_FramePCToLineNumber(cx, fp),
                             FramePCOffset(fp));)
-#endif        
+#endif
     }
 
     /* Adjust sp and pc relative to the tree we exited from (not the tree we entered into).
@@ -3678,7 +3684,8 @@ js_ExecuteTree(JSContext* cx, Fragment* f, uintN& inlineCallCount,
        the side exit struct. */
     JSStackFrame* fp = cx->fp;
 
-    JS_ASSERT(!(fp->flags & JSFRAME_POP_BLOCKS));
+    JS_ASSERT_IF(fp->flags & JSFRAME_POP_BLOCKS,
+                 calldepth == 0 && jsframe_pop_blocks_set_on_entry);
     fp->blockChain = innermost->block;
 
     /* If we are not exiting from an inlined frame the state->sp is spbase, otherwise spbase
@@ -3721,18 +3728,17 @@ js_ExecuteTree(JSContext* cx, Fragment* f, uintN& inlineCallCount,
     JS_ASSERT(exit_gslots == tm->globalTypeMap->length());
 
     /* write back interned globals */
-    int slots = FlushNativeGlobalFrame(cx, exit_gslots, gslots, globalTypeMap, global);
-    if (slots < 0)
-        return NULL;
+    FlushNativeGlobalFrame(cx, exit_gslots, gslots, globalTypeMap, global);
     JS_ASSERT_IF(ngslots != 0, globalFrameSize == STOBJ_NSLOTS(globalObj));
     JS_ASSERT(*(uint64*)&global[globalFrameSize] == 0xdeadbeefdeadbeefLL);
 
     /* write back native stack frame */
-    slots = FlushNativeStackFrame(cx, innermost->calldepth,
-                                  getTypeMap(innermost) + innermost->numGlobalSlots,
-                                  stack, NULL);
-    if (slots < 0)
-        return NULL;
+#ifdef DEBUG
+    int slots =
+#endif
+        FlushNativeStackFrame(cx, innermost->calldepth,
+                              getTypeMap(innermost) + innermost->numGlobalSlots,
+                              stack, NULL);
     JS_ASSERT(unsigned(slots) == innermost->numStackSlots);
 
 #ifdef DEBUG
@@ -3761,10 +3767,9 @@ js_MonitorLoopEdge(JSContext* cx, uintN& inlineCallCount)
     }
     JS_ASSERT(!tm->recorder);
 
-    
-    /* Check the recovery pool of doubles (this might trigger a GC). */
-    if (tm->recoveryDoublePoolPtr < (tm->recoveryDoublePool + MAX_NATIVE_STACK_SLOTS) &&
-        !js_ReplenishRecoveryPool(cx, tm)) {
+    /* Check the pool of reserved doubles (this might trigger a GC). */
+    if (tm->reservedDoublePoolPtr < (tm->reservedDoublePool + MAX_NATIVE_STACK_SLOTS) &&
+        !js_ReplenishReservedPool(cx, tm)) {
         return false; /* Out of memory, don't try to record now. */
     }
     
@@ -3828,30 +3833,30 @@ monitor_loop:
 }
 
 JS_REQUIRES_STACK JSMonitorRecordingStatus
-TraceRecorder::monitorRecording(JSOp op)
+TraceRecorder::monitorRecording(JSContext* cx, TraceRecorder* tr, JSOp op)
 {
-    if (lirbuf->outOMem()) {
+    if (tr->lirbuf->outOMem()) {
         js_AbortRecording(cx, "no more LIR memory");
         js_FlushJITCache(cx);
         return JSMRS_STOP;
     }
 
     /* Process deepAbort() requests now. */
-    if (wasDeepAborted()) {
+    if (tr->wasDeepAborted()) {
         js_AbortRecording(cx, "deep abort requested");
         return JSMRS_STOP;
     }
 
-    if (walkedOutOfLoop()) {
+    if (tr->walkedOutOfLoop()) {
         if (!js_CloseLoop(cx))
             return JSMRS_STOP;
     } else {
         // Clear one-shot state used to communicate between record_JSOP_CALL and post-
         // opcode-case-guts record hook (record_FastNativeCallComplete).
-        pendingTraceableNative = NULL;
+        tr->pendingTraceableNative = NULL;
 
         // In the future, handle dslots realloc by computing an offset from dslots instead.
-        if (global_dslots != globalObj->dslots) {
+        if (tr->global_dslots != tr->globalObj->dslots) {
             js_AbortRecording(cx, "globalObj->dslots reallocated");
             return JSMRS_STOP;
         }
@@ -3864,16 +3869,16 @@ TraceRecorder::monitorRecording(JSOp op)
             jssrcnote* sn = js_GetSrcNote(cx->fp->script, pc);
             if (sn && SN_TYPE(sn) == SRC_BREAK) {
                 AUDIT(breakLoopExits);
-                endLoop(JS_TRACE_MONITOR(cx).fragmento);
+                tr->endLoop(JS_TRACE_MONITOR(cx).fragmento);
                 js_DeleteRecorder(cx);
                 return JSMRS_STOP; /* done recording */
             }
         }
 
         /* An explicit return from callDepth 0 should end the loop, not abort it. */
-        if (*pc == JSOP_RETURN && callDepth == 0) {
+        if (*pc == JSOP_RETURN && tr->callDepth == 0) {
             AUDIT(returnLoopExits);
-            endLoop(JS_TRACE_MONITOR(cx).fragmento);
+            tr->endLoop(JS_TRACE_MONITOR(cx).fragmento);
             js_DeleteRecorder(cx);
             return JSMRS_STOP; /* done recording */
         }
@@ -3887,13 +3892,21 @@ TraceRecorder::monitorRecording(JSOp op)
     switch (op) {
       default: goto abort_recording;
 # define OPDEF(x,val,name,token,length,nuses,ndefs,prec,format)               \
-        case x:                                                               \
-          flag = record_##x();                                                \
-          if (x == JSOP_ITER || x == JSOP_NEXTITER || x == JSOP_APPLY ||      \
-              JSOP_IS_BINARY(x) || JSOP_IS_UNARY(x) ||                        \
-              JSOP_IS_EQUALITY(x)) {                                          \
-              goto imacro;                                                    \
-          }                                                                   \
+      case x:                                                                 \
+        debug_only_v(                                                         \
+            js_Disassemble1(cx, cx->fp->script, cx->fp->regs->pc,             \
+                            (cx->fp->imacpc)                                  \
+                            ? 0                                               \
+                            : PTRDIFF(cx->fp->regs->pc,                       \
+                                      cx->fp->script->code,                   \
+                                      jsbytecode),                            \
+                            !cx->fp->imacpc, stdout);)                        \
+        flag = tr->record_##x();                                              \
+        if (x == JSOP_ITER || x == JSOP_NEXTITER || x == JSOP_APPLY ||        \
+            JSOP_IS_BINARY(x) || JSOP_IS_UNARY(x) ||                          \
+            JSOP_IS_EQUALITY(x)) {                                            \
+            goto imacro;                                                      \
+        }                                                                     \
         break;
 # include "jsopcode.tbl"
 # undef OPDEF
@@ -4013,7 +4026,7 @@ js_InitJIT(JSTraceMonitor *tm)
     }
 #endif
     if (!tm->fragmento) {
-        JS_ASSERT(!tm->globalSlots && !tm->globalTypeMap && !tm->recoveryDoublePool);
+        JS_ASSERT(!tm->globalSlots && !tm->globalTypeMap && !tm->reservedDoublePool);
         Fragmento* fragmento = new (&gc) Fragmento(core, 24);
         verbose_only(fragmento->labels = new (&gc) LabelMap(core, NULL);)
         tm->fragmento = fragmento;
@@ -4023,7 +4036,7 @@ js_InitJIT(JSTraceMonitor *tm)
 #endif
         tm->globalSlots = new (&gc) SlotList();
         tm->globalTypeMap = new (&gc) TypeMap();
-        tm->recoveryDoublePoolPtr = tm->recoveryDoublePool = new jsval[MAX_NATIVE_STACK_SLOTS];
+        tm->reservedDoublePoolPtr = tm->reservedDoublePool = new jsval[MAX_NATIVE_STACK_SLOTS];
     }
     if (!tm->reFragmento) {
         Fragmento* fragmento = new (&gc) Fragmento(core, 20);
@@ -4055,7 +4068,7 @@ js_FinishJIT(JSTraceMonitor *tm)
     }
 #endif
     if (tm->fragmento != NULL) {
-        JS_ASSERT(tm->globalSlots && tm->globalTypeMap && tm->recoveryDoublePool);
+        JS_ASSERT(tm->globalSlots && tm->globalTypeMap && tm->reservedDoublePool);
         verbose_only(delete tm->fragmento->labels;)
 #ifdef DEBUG
         delete tm->lirbuf->names;
@@ -4069,8 +4082,8 @@ js_FinishJIT(JSTraceMonitor *tm)
         tm->globalSlots = NULL;
         delete tm->globalTypeMap;
         tm->globalTypeMap = NULL;
-        delete[] tm->recoveryDoublePool;
-        tm->recoveryDoublePool = tm->recoveryDoublePoolPtr = NULL;
+        delete[] tm->reservedDoublePool;
+        tm->reservedDoublePool = tm->reservedDoublePoolPtr = NULL;
     }
     if (tm->reFragmento != NULL) {
         delete tm->reLirBuf;
@@ -4305,7 +4318,7 @@ TraceRecorder::stack(int n, LIns* i)
     set(&stackval(n), i, n >= 0);
 }
 
-LIns*
+JS_REQUIRES_STACK LIns*
 TraceRecorder::alu(LOpcode v, jsdouble v0, jsdouble v1, LIns* s0, LIns* s1)
 {
     if (v == LIR_fadd || v == LIR_fsub) {
@@ -4375,7 +4388,7 @@ TraceRecorder::makeNumberInt32(LIns* f)
     return x;
 }
 
-LIns*
+JS_REQUIRES_STACK LIns*
 TraceRecorder::stringify(jsval& v)
 {
     LIns* v_ins = get(&v);
@@ -4397,7 +4410,7 @@ TraceRecorder::stringify(jsval& v)
     return v_ins;
 }
 
-bool
+JS_REQUIRES_STACK bool
 TraceRecorder::call_imacro(jsbytecode* imacro)
 {
     JSStackFrame* fp = cx->fp;
@@ -5521,6 +5534,9 @@ TraceRecorder::record_EnterFrame()
     debug_only_v(printf("EnterFrame %s, callDepth=%d\n",
                         js_AtomToPrintableString(cx, cx->fp->fun->atom),
                         callDepth);)
+    debug_only_v(
+        js_Disassemble(cx, cx->fp->script, JS_TRUE, stdout);
+        printf("----\n");)
     LIns* void_ins = INS_CONST(JSVAL_TO_BOOLEAN(JSVAL_VOID));
 
     jsval* vp = &fp->argv[fp->argc];
