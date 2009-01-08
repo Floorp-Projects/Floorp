@@ -162,11 +162,15 @@ Cache.prototype = {
     if (this.fifo) {
       if (this._head)
         this._head.prev = wrapper;
+      let next = this._head;
       this._head = wrapper;
+      this._head.next = next;
     } else {
       if (this._tail)
         this._tail.next = wrapper;
+      let prev = this._tail;
       this._tail = wrapper;
+      this._tail.prev = prev;
     }
     
     this.count++;
