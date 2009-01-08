@@ -38,6 +38,13 @@
 #define NS_ALERTSERVICE_CONTRACTID \
   "@mozilla.org/alerts-service;1"
 
+// This separate service uses the same nsIAlertsService interface,
+// but instead sends a notification to a platform alerts API
+// if available. Using a separate CID allows us to overwrite the XUL
+// alerts service at runtime.
+#define NS_SYSTEMALERTSERVICE_CONTRACTID \
+  "@mozilla.org/system-alerts-service;1"
+
 #define NS_AUTOCOMPLETECONTROLLER_CONTRACTID \
   "@mozilla.org/autocomplete/controller;1"
 
@@ -114,6 +121,10 @@
 // {A0CCAAF8-09DA-44D8-B250-9AC3E93C8117}
 #define NS_ALERTSSERVICE_CID \
 { 0xa0ccaaf8, 0x9da, 0x44d8, { 0xb2, 0x50, 0x9a, 0xc3, 0xe9, 0x3c, 0x81, 0x17 } }
+
+// {84E11F80-CA55-11DD-AD8B-0800200C9A66}
+#define NS_SYSTEMALERTSSERVICE_CID \
+{ 0x84e11f80, 0xca55, 0x11dd, { 0xad, 0x8b, 0x08, 0x00, 0x20, 0x0c, 0x9a, 0x66 } }
 
 // {F6D5EBBD-34F4-487d-9D10-3D34123E3EB9}
 #define NS_AUTOCOMPLETECONTROLLER_CID \

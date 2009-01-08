@@ -12,15 +12,14 @@
  * for the specific language governing rights and limitations under the
  * License.
  *
- * The Original Code is the Mozilla GNOME integration code.
+ * The Original Code is mozilla.org code.
  *
  * The Initial Developer of the Original Code is
- * IBM Corporation.
- * Portions created by the Initial Developer are Copyright (C) 2004
+ * Mozilla Corporation.
+ * Portions created by the Initial Developer are Copyright (C) 2008
  * the Initial Developer. All Rights Reserved.
  *
  * Contributor(s):
- *  Brian Ryner <bryner@brianryner.com>
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -36,37 +35,40 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-#include "nsGConfService.h"
-#include "nsGnomeVFSService.h"
-#include "nsToolkitCompsCID.h"
-#include "nsIGenericFactory.h"
+#ifndef nsAlertsIconListener_h__
+#define nsAlertsIconListener_h__
 
-#ifdef MOZ_ENABLE_LIBNOTIFY
-#include "nsAlertsService.h"
-#endif
+#include "nsCOMPtr.h"
+#include "imgIDecoderObserver.h"
+#include "nsStringAPI.h"
 
-NS_GENERIC_FACTORY_CONSTRUCTOR_INIT(nsGConfService, Init)
-NS_GENERIC_FACTORY_CONSTRUCTOR_INIT(nsGnomeVFSService, Init)
+#include <gdk-pixbuf/gdk-pixbuf.h>
 
-#ifdef MOZ_ENABLE_LIBNOTIFY
-NS_GENERIC_FACTORY_CONSTRUCTOR_INIT(nsAlertsService, Init)
-#endif
+class imgIRequest;
 
-static const nsModuleComponentInfo components[] = {
-  { "GConf Service",
-    NS_GCONFSERVICE_CID,
-    NS_GCONFSERVICE_CONTRACTID,
-    nsGConfServiceConstructor },
-  { "GnomeVFS Service",
-    NS_GNOMEVFSSERVICE_CID,
-    NS_GNOMEVFSSERVICE_CONTRACTID,
-    nsGnomeVFSServiceConstructor },
-#ifdef MOZ_ENABLE_LIBNOTIFY
-  { "Gnome Alerts Service",
-    NS_SYSTEMALERTSSERVICE_CID,
-    NS_SYSTEMALERTSERVICE_CONTRACTID,
-    nsAlertsServiceConstructor },
-#endif
+class nsAlertsIconListener : public imgIDecoderObserver
+{
+public:
+  NS_DECL_ISUPPORTS
+  NS_DECL_IMGICONTAINEROBSERVER
+  NS_DECL_IMGIDECODEROBSERVER
+
+  nsAlertsIconListener();
+  virtual ~nsAlertsIconListener();
+
+  nsresult InitAlertAsync(const nsAString & aImageUrl,
+                          const nsAString & aAlertTitle, 
+                          const nsAString & aAlertText);
+
+protected:
+  nsCOMPtr<imgIRequest> mIconRequest;
+  nsCString mAlertTitle;
+  nsCString mAlertText;
+
+  PRPackedBool mLoadedFrame;
+
+  nsresult StartRequest(const nsAString & aImageUrl);
+  nsresult ShowAlert(GdkPixbuf* aPixbuf);
 };
 
-NS_IMPL_NSGETMODULE(mozgnome, components)
+#endif

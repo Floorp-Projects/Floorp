@@ -12,15 +12,14 @@
  * for the specific language governing rights and limitations under the
  * License.
  *
- * The Original Code is the Mozilla GNOME integration code.
+ * The Original Code is mozilla.org code.
  *
  * The Initial Developer of the Original Code is
- * IBM Corporation.
- * Portions created by the Initial Developer are Copyright (C) 2004
+ * Mozilla Corporation.
+ * Portions created by the Initial Developer are Copyright (C) 2008
  * the Initial Developer. All Rights Reserved.
  *
  * Contributor(s):
- *  Brian Ryner <bryner@brianryner.com>
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -36,37 +35,25 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-#include "nsGConfService.h"
-#include "nsGnomeVFSService.h"
-#include "nsToolkitCompsCID.h"
-#include "nsIGenericFactory.h"
+#ifndef nsAlertsService_h__
+#define nsAlertsService_h__
 
-#ifdef MOZ_ENABLE_LIBNOTIFY
-#include "nsAlertsService.h"
-#endif
+#include "nsIAlertsService.h"
+#include "nsCOMPtr.h"
 
-NS_GENERIC_FACTORY_CONSTRUCTOR_INIT(nsGConfService, Init)
-NS_GENERIC_FACTORY_CONSTRUCTOR_INIT(nsGnomeVFSService, Init)
+class nsAlertsService : public nsIAlertsService
+{
+public:
+  NS_DECL_NSIALERTSSERVICE
+  NS_DECL_ISUPPORTS
 
-#ifdef MOZ_ENABLE_LIBNOTIFY
-NS_GENERIC_FACTORY_CONSTRUCTOR_INIT(nsAlertsService, Init)
-#endif
+  nsAlertsService();
+  virtual ~nsAlertsService();
 
-static const nsModuleComponentInfo components[] = {
-  { "GConf Service",
-    NS_GCONFSERVICE_CID,
-    NS_GCONFSERVICE_CONTRACTID,
-    nsGConfServiceConstructor },
-  { "GnomeVFS Service",
-    NS_GNOMEVFSSERVICE_CID,
-    NS_GNOMEVFSSERVICE_CONTRACTID,
-    nsGnomeVFSServiceConstructor },
-#ifdef MOZ_ENABLE_LIBNOTIFY
-  { "Gnome Alerts Service",
-    NS_SYSTEMALERTSSERVICE_CID,
-    NS_SYSTEMALERTSERVICE_CONTRACTID,
-    nsAlertsServiceConstructor },
-#endif
+  nsresult Init();
+
+protected:
+
 };
 
-NS_IMPL_NSGETMODULE(mozgnome, components)
+#endif /* nsAlertsService_h__ */

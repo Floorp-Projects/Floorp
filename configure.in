@@ -133,6 +133,7 @@ STARTUP_NOTIFICATION_VERSION=0.8
 DBUS_VERSION=0.60
 LCMS_VERSION=1.17
 SQLITE_VERSION=3.6.6.2
+LIBNOTIFY_VERSION=0.4
 
 MSMANIFEST_TOOL=
 
@@ -5123,6 +5124,37 @@ fi
 AC_SUBST(MOZ_ENABLE_DBUS)
 AC_SUBST(MOZ_DBUS_GLIB_CFLAGS)
 AC_SUBST(MOZ_DBUS_GLIB_LIBS)
+
+dnl ========================================================
+dnl = libnotify support
+dnl ========================================================
+
+MOZ_ARG_ENABLE_BOOL(libnotify,
+[  --enable-libnotify       Enable libnotify support ],
+    MOZ_ENABLE_LIBNOTIFY=1,
+    MOZ_ENABLE_LIBNOTIFY=)
+
+if test "$MOZ_ENABLE_GTK2"
+then
+    if test "$MOZ_ENABLE_LIBNOTIFY"
+    then
+        AC_DEFINE(MOZ_ENABLE_LIBNOTIFY)
+    fi
+fi
+
+if test -z "$SKIP_LIBRARY_CHECKS"
+then
+    if test "$MOZ_ENABLE_GTK2"
+    then
+        if test "$MOZ_ENABLE_LIBNOTIFY"
+        then
+            PKG_CHECK_MODULES(MOZ_LIBNOTIFY, libnotify >= $LIBNOTIFY_VERSION)
+        fi
+    fi
+fi
+AC_SUBST(MOZ_ENABLE_LIBNOTIFY)
+AC_SUBST(MOZ_LIBNOTIFY_CFLAGS)
+AC_SUBST(MOZ_LIBNOTIFY_LIBS)
 
 dnl ========================================================
 dnl = Build Personal Security Manager
