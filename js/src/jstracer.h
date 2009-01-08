@@ -150,6 +150,13 @@ public:
     void            clear();
 };
 
+#ifdef JS_JIT_SPEW
+extern bool js_verboseDebug;
+#define debug_only_v(x) if (js_verboseDebug) { x; }
+#else
+#define debug_only_v(x)
+#endif
+
 /*
  * The oracle keeps track of slots that should not be demoted to int because we know them
  * to overflow or they result in type-unstable traces. We are using a simple hash table.
@@ -162,10 +169,10 @@ class Oracle {
     avmplus::BitSet _stackDontDemote;
     avmplus::BitSet _globalDontDemote;
 public:
-    void markGlobalSlotUndemotable(JSContext* cx, unsigned slot);
-    bool isGlobalSlotUndemotable(JSContext* cx, unsigned slot) const;
-    void markStackSlotUndemotable(JSContext* cx, unsigned slot);
-    bool isStackSlotUndemotable(JSContext* cx, unsigned slot) const;
+    JS_REQUIRES_STACK void markGlobalSlotUndemotable(JSContext* cx, unsigned slot);
+    JS_REQUIRES_STACK bool isGlobalSlotUndemotable(JSContext* cx, unsigned slot) const;
+    JS_REQUIRES_STACK void markStackSlotUndemotable(JSContext* cx, unsigned slot);
+    JS_REQUIRES_STACK bool isStackSlotUndemotable(JSContext* cx, unsigned slot) const;
     void clear();
 };
 
@@ -347,13 +354,13 @@ class TraceRecorder : public avmplus::GCObject {
     JS_REQUIRES_STACK nanojit::LIns* stack(int n);
     JS_REQUIRES_STACK void stack(int n, nanojit::LIns* i);
 
-    nanojit::LIns* alu(nanojit::LOpcode op, jsdouble v0, jsdouble v1, 
-                       nanojit::LIns* s0, nanojit::LIns* s1);
+    JS_REQUIRES_STACK nanojit::LIns* alu(nanojit::LOpcode op, jsdouble v0, jsdouble v1, 
+                                         nanojit::LIns* s0, nanojit::LIns* s1);
     nanojit::LIns* f2i(nanojit::LIns* f);
     JS_REQUIRES_STACK nanojit::LIns* makeNumberInt32(nanojit::LIns* f);
-    nanojit::LIns* stringify(jsval& v);
+    JS_REQUIRES_STACK nanojit::LIns* stringify(jsval& v);
 
-    bool call_imacro(jsbytecode* imacro);
+    JS_REQUIRES_STACK bool call_imacro(jsbytecode* imacro);
 
     JS_REQUIRES_STACK bool ifop();
     JS_REQUIRES_STACK bool switchop();
@@ -440,7 +447,7 @@ public:
                   VMSideExit* expectedInnerExit, nanojit::Fragment* outerToBlacklist);
     ~TraceRecorder();
 
-    JS_REQUIRES_STACK JSMonitorRecordingStatus monitorRecording(JSOp op);
+    static JS_REQUIRES_STACK JSMonitorRecordingStatus monitorRecording(JSContext* cx, TraceRecorder* tr, JSOp op);
 
     JS_REQUIRES_STACK uint8 determineSlotType(jsval* vp) const;
     JS_REQUIRES_STACK nanojit::LIns* snapshot(ExitType exitType);

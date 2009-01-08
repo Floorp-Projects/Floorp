@@ -911,6 +911,30 @@ function deep2() {
 deep2.expected = "ok";
 test(deep2);
 
+function heavyFn1(i) { 
+    if (i == 3) {
+	var x = 3;
+        return [0, i].map(function (i) i + x);
+    }
+    return [];
+}
+function testHeavy() {
+    for (var i = 0; i <= 3; i++)
+        heavyFn1(i);
+}
+test(testHeavy);
+
+function heavyFn2(i) {
+    if (i < 1000)
+        return heavyFn1(i);
+    return function () i;
+}
+function testHeavy2() {
+    for (var i = 0; i <= 3; i++)
+        heavyFn2(i);
+}
+test(testHeavy2);
+
 var merge_type_maps_x = 0, merge_type_maps_y = 0;
 function merge_type_maps() {
     for (merge_type_maps_x = 0; merge_type_maps_x < 50; ++merge_type_maps_x)
@@ -3949,7 +3973,7 @@ test(testLirBufOOM);
  *                                                                           *
  *****************************************************************************/
 
-load("trace-test-math.js");
+load("math-trace-tests.js");
 
 // BEGIN MANDELBROT STUFF
 // XXXbz I would dearly like to wrap it up into a function to avoid polluting

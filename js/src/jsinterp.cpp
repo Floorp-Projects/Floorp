@@ -2837,7 +2837,7 @@ js_Interpret(JSContext *cx)
 #ifdef JS_TRACER
             TraceRecorder* tr = TRACE_RECORDER(cx);
             if (tr) {
-                JSMonitorRecordingStatus status = tr->monitorRecording(op);
+                JSMonitorRecordingStatus status = TraceRecorder::monitorRecording(cx, tr, op);
                 if (status == JSMRS_CONTINUE) {
                     moreInterrupts = true;
                 } else if (status == JSMRS_IMACRO) {
