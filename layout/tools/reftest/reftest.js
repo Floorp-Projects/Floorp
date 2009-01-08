@@ -44,6 +44,7 @@ const XHTML_NS = "http://www.w3.org/1999/xhtml";
 
 const NS_LOCAL_FILE_CONTRACTID = "@mozilla.org/file/local;1";
 const IO_SERVICE_CONTRACTID = "@mozilla.org/network/io-service;1";
+const DEBUG_CONTRACTID = "@mozilla.org/xpcom/debug;1";
 const NS_LOCALFILEINPUTSTREAM_CONTRACTID =
           "@mozilla.org/network/file-input-stream;1";
 const NS_SCRIPTSECURITYMANAGER_CONTRACTID =
@@ -74,8 +75,11 @@ var gTestResults = {
   FailedLoad: 0,
   UnexpectedFail: 0,
   UnexpectedPass: 0,
+  AssertionUnexpected: 0,
+  AssertionUnexpectedFixed: 0,
   // Known problems...
   KnownFail : 0,
+  AssertionKnown: 0,
   Random : 0,
   Skip: 0,
 };
@@ -86,13 +90,16 @@ var gFailureTimeout;
 var gFailureReason;
 var gServer;
 var gCount = 0;
+var gAssertionCount = 0;
 
 var gIOService;
+var gDebug;
 var gWindowUtils;
 
 var gCurrentTestStartTime;
 var gSlowestTestTime = 0;
 var gSlowestTestURL;
+var gClearingForAssertionCheck = false;
 
 const EXPECTED_PASS = 0;
 const EXPECTED_FAIL = 1;
@@ -140,6 +147,7 @@ function OnRefTestLoad()
     var windowElem = document.documentElement;
 
     gIOService = CC[IO_SERVICE_CONTRACTID].getService(CI.nsIIOService);
+    gDebug = CC[DEBUG_CONTRACTID].getService(CI.nsIDebug2);
 
     try {
         ReadTopManifest(window.arguments[0]);
@@ -221,7 +229,9 @@ function ReadManifest(aURL)
         var items = str.split(/\s+/); // split on whitespace
 
         var expected_status = EXPECTED_PASS;
-        while (items[0].match(/^(fails|random|skip)/)) {
+        var minAsserts = 0;
+        var maxAsserts = 0;
+        while (items[0].match(/^(fails|random|skip|asserts)/)) {
             var item = items.shift();
             var stat;
             var cond;
@@ -233,6 +243,19 @@ function ReadManifest(aURL)
             } else if (item.match(/^(fails|random|skip)$/)) {
                 stat = item;
                 cond = true;
+            } else if ((m = item.match(/^asserts\((\d+)(-\d+)?\)$/))) {
+                cond = false;
+                minAsserts = Number(m[1]);
+                maxAsserts = (m[2] == undefined) ? minAsserts
+                                                 : Number(m[2].substring(1));
+            } else if ((m = item.match(/^asserts-if\((.*?),(\d+)(-\d+)?\)$/))) {
+                cond = false;
+                if (Components.utils.evalInSandbox("(" + m[1] + ")", sandbox)) {
+                    minAsserts = Number(m[2]);
+                    maxAsserts =
+                      (m[3] == undefined) ? minAsserts
+                                          : Number(m[3].substring(1));
+                }
             } else {
                 throw "Error in manifest file " + aURL.spec + " line " + lineNo;
             }
@@ -246,6 +269,10 @@ function ReadManifest(aURL)
                     expected_status = EXPECTED_DEATH;
                 }
             }
+        }
+
+        if (minAsserts > maxAsserts) {
+            throw "Bad range in manifest file " + aURL.spec + " line " + lineNo;
         }
 
         var runHttp = false;
@@ -287,6 +314,8 @@ function ReadManifest(aURL)
             gURLs.push( { equal: true /* meaningless */,
                           expected: expected_status,
                           prettyPath: prettyPath,
+                          minAsserts: minAsserts,
+                          maxAsserts: maxAsserts,
                           url1: testURI,
                           url2: null } );
         } else if (items[0] == "==" || items[0] == "!=") {
@@ -307,6 +336,8 @@ function ReadManifest(aURL)
             gURLs.push( { equal: (items[0] == "=="),
                           expected: expected_status,
                           prettyPath: prettyPath,
+                          minAsserts: minAsserts,
+                          maxAsserts: maxAsserts,
                           url1: testURI,
                           url2: refURI } );
         } else {
@@ -411,7 +442,8 @@ function StartCurrentURI(aState)
     gState = aState;
     gCurrentURL = gURLs[0]["url" + aState].spec;
 
-    if (gURICanvases[gCurrentURL] && gURLs[0].expected != EXPECTED_LOAD) {
+    if (gURICanvases[gCurrentURL] && gURLs[0].expected != EXPECTED_LOAD &&
+        gURLs[0].maxAsserts == 0) {
         // Pretend the document loaded --- DocumentLoaded will notice
         // there's already a canvas for this URL
         setTimeout(DocumentLoaded, 0);
@@ -431,15 +463,21 @@ function DoneTests()
          gTestResults.Pass + " pass, " +
          gTestResults.LoadOnly + " load only)\n");
     count = gTestResults.Exception + gTestResults.FailedLoad +
-            gTestResults.UnexpectedFail + gTestResults.UnexpectedPass;
+            gTestResults.UnexpectedFail + gTestResults.UnexpectedPass +
+            gTestResults.AssertionUnexpected +
+            gTestResults.AssertionUnexpectedFixed;
     dump("REFTEST INFO | Unexpected: " + count + " (" +
          gTestResults.UnexpectedFail + " unexpected fail, " +
          gTestResults.UnexpectedPass + " unexpected pass, " +
+         gTestResults.AssertionUnexpected + " unexpected asserts, " +
+         gTestResults.AssertionUnexpectedFixed + " unexpected fixed asserts, " +
          gTestResults.FailedLoad + " failed load, " +
          gTestResults.Exception + " exception)\n");
-    count = gTestResults.KnownFail + gTestResults.Random + gTestResults.Skip;
+    count = gTestResults.KnownFail + gTestResults.AssertionKnown +
+            gTestResults.Random + gTestResults.Skip;
     dump("REFTEST INFO | Known problems: " + count + " (" +
          gTestResults.KnownFail + " known fail, " +
+         gTestResults.AssertionKnown + " known asserts, " +
          gTestResults.Random + " random, " +
          gTestResults.Skip + " skipped)\n");
 
@@ -467,6 +505,11 @@ function OnDocumentLoad(event)
         // Ignore load events for subframes.
         return;
         
+    if (gClearingForAssertionCheck) {
+        DoAssertionCheck();
+        return;
+    }
+
     if (gBrowser.contentDocument.location.href != gCurrentURL)
         // Ignore load events for previous documents.
         return;
@@ -708,8 +751,7 @@ function DocumentLoaded()
     if (gURLs[0].expected == EXPECTED_LOAD) {
         ++gTestResults.LoadOnly;
         dump("REFTEST TEST-PASS | " + gURLs[0].prettyPath + " | (LOAD ONLY)\n");
-        gURLs.shift();
-        StartCurrentTest();
+        FinishTestItem();
         return;
     }
 
@@ -797,8 +839,7 @@ function DocumentLoaded()
             UpdateCanvasCache(gURLs[0].url1, gCanvas1);
             UpdateCanvasCache(gURLs[0].url2, gCanvas2);
 
-            gURLs.shift();
-            StartCurrentTest();
+            FinishTestItem();
             break;
         default:
             throw "Unexpected state.";
@@ -810,6 +851,55 @@ function LoadFailed()
     ++gTestResults.FailedLoad;
     dump("REFTEST TEST-UNEXPECTED-FAIL | " +
          gURLs[0]["url" + gState].spec + " | " + gFailureReason + "\n");
+    FinishTestItem();
+}
+
+function FinishTestItem()
+{
+    // Replace document with about:blank in case there are
+    // assertions when unloading.
+    gClearingForAssertionCheck = true;
+    gBrowser.loadURI("about:blank");
+}
+
+function DoAssertionCheck()
+{
+    gClearingForAssertionCheck = false;
+
+    // TEMPORARILY DISABLING ASSERTION CHECKS FOR NOW.  TO RE-ENABLE,
+    // USE COMMENTED LINE TO REPLACE FOLLOWING ONE.
+    // var newAssertionCount = gDebug.assertionCount;
+    var newAssertionCount = 0;
+    var numAsserts = newAssertionCount - gAssertionCount;
+    gAssertionCount = newAssertionCount;
+
+    var minAsserts = gURLs[0].minAsserts;
+    var maxAsserts = gURLs[0].maxAsserts;
+
+    var expectedAssertions = "expected " + minAsserts;
+    if (minAsserts != maxAsserts) {
+        expectedAssertions += " to " + maxAsserts;
+    }
+    expectedAssertions += " assertions";
+
+    if (numAsserts < minAsserts) {
+        ++gTestResults.AssertionUnexpectedFixed;
+        dump("REFTEST TEST-UNEXPECTED-PASS | " + gURLs[0].prettyPath +
+             " | assertion count " + numAsserts + " is less than " +
+             expectedAssertions + "\n");
+    } else if (numAsserts > maxAsserts) {
+        ++gTestResults.AssertionUnexpected;
+        dump("REFTEST TEST-UNEXPECTED-FAIL | " + gURLs[0].prettyPath +
+             " | assertion count " + numAsserts + " is more than " +
+             expectedAssertions + "\n");
+    } else if (numAsserts != 0) {
+        ++gTestResults.AssertionKnown;
+        dump("REFTEST TEST-KNOWN-FAIL | " + gURLs[0].prettyPath +
+             " | assertion count " + numAsserts + " matches " +
+             expectedAssertions + "\n");
+    }
+
+    // And start the next test.
     gURLs.shift();
     StartCurrentTest();
 }
