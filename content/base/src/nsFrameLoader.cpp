@@ -886,7 +886,7 @@ nsFrameLoader::EnsureDocShell()
   // initialized.
   if (NS_FAILED(base_win->Create()) || !win_private) {
     // Do not call Destroy() here. See bug 472312.
-    NS_ERROR("Something wrong when creating the docshell for a frameloader!");
+    NS_WARNING("Something wrong when creating the docshell for a frameloader!");
     return NS_ERROR_FAILURE;
   }
 
