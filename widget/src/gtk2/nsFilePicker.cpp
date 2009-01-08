@@ -105,12 +105,13 @@ GetGtkFileChooserAction(PRInt16 aMode)
     action = GTK_FILE_CHOOSER_ACTION_SELECT_FOLDER;
     break;
 
-    default:
-    NS_WARNING("Unknown nsIFilePicker mode");
-    // fall through
-
     case nsIFilePicker::modeOpen:
     case nsIFilePicker::modeOpenMultiple:
+    action = GTK_FILE_CHOOSER_ACTION_OPEN;
+    break;
+
+    default:
+    NS_WARNING("Unknown nsIFilePicker mode");
     action = GTK_FILE_CHOOSER_ACTION_OPEN;
     break;
   }
@@ -426,7 +427,7 @@ nsFilePicker::Show(PRInt16 *aReturn)
   GtkWindow *parent_widget = get_gtk_window_for_nsiwidget(mParentWidget);
 
   GtkFileChooserAction action = GetGtkFileChooserAction(mMode);
-  const gchar *accept_button = (mMode == GTK_FILE_CHOOSER_ACTION_SAVE)
+  const gchar *accept_button = (action == GTK_FILE_CHOOSER_ACTION_SAVE)
                                ? GTK_STOCK_SAVE : GTK_STOCK_OPEN;
   GtkWidget *file_chooser =
       gtk_file_chooser_dialog_new(title, parent_widget, action,
@@ -437,7 +438,7 @@ nsFilePicker::Show(PRInt16 *aReturn)
     gtk_file_chooser_set_local_only(GTK_FILE_CHOOSER(file_chooser), FALSE);
   }
 
-  if (mMode == GTK_FILE_CHOOSER_ACTION_OPEN || mMode == GTK_FILE_CHOOSER_ACTION_SAVE) {
+  if (action == GTK_FILE_CHOOSER_ACTION_OPEN || action == GTK_FILE_CHOOSER_ACTION_SAVE) {
     GtkWidget *img_preview = gtk_image_new();
     gtk_file_chooser_set_preview_widget(GTK_FILE_CHOOSER(file_chooser), img_preview);
     g_signal_connect(file_chooser, "update-preview", G_CALLBACK(UpdateFilePreviewWidget), img_preview);
@@ -446,17 +447,6 @@ nsFilePicker::Show(PRInt16 *aReturn)
   if (parent_widget && parent_widget->group) {
     gtk_window_group_add_window(parent_widget->group, GTK_WINDOW(file_chooser));
   }
-
-  if (mMode == nsIFilePicker::modeOpenMultiple) {
-    gtk_file_chooser_set_select_multiple(GTK_FILE_CHOOSER(file_chooser), TRUE);
-  } else if (mMode == nsIFilePicker::modeSave) {
-    char *default_filename = ToNewUTF8String(mDefault);
-    gtk_file_chooser_set_current_name(GTK_FILE_CHOOSER(file_chooser),
-                                      static_cast<const gchar*>(default_filename));
-    nsMemory::Free(default_filename);
-  }
-
-  gtk_dialog_set_default_response(GTK_DIALOG(file_chooser), GTK_RESPONSE_ACCEPT);
 
   nsCAutoString directory;
   if (mDisplayDirectory) {
@@ -469,6 +459,23 @@ nsFilePicker::Show(PRInt16 *aReturn)
     gtk_file_chooser_set_current_folder(GTK_FILE_CHOOSER(file_chooser),
                                         directory.get());
   }
+
+  NS_ConvertUTF16toUTF8 defaultName(mDefault);
+  switch (mMode) {
+    case nsIFilePicker::modeOpenMultiple:
+      gtk_file_chooser_set_select_multiple(GTK_FILE_CHOOSER(file_chooser), TRUE);
+      // fall through
+    case nsIFilePicker::modeOpen:
+      if (!defaultName.IsEmpty())
+        gtk_file_chooser_set_filename(GTK_FILE_CHOOSER(file_chooser), defaultName.get());
+      break;
+    case nsIFilePicker::modeSave:
+      gtk_file_chooser_set_current_name(GTK_FILE_CHOOSER(file_chooser),
+                                        defaultName.get());
+      break;
+  }
+
+  gtk_dialog_set_default_response(GTK_DIALOG(file_chooser), GTK_RESPONSE_ACCEPT);
 
   PRInt32 count = mFilters.Count();
   for (PRInt32 i = 0; i < count; ++i) {
@@ -507,7 +514,7 @@ nsFilePicker::Show(PRInt16 *aReturn)
   }
 
   gtk_file_chooser_set_do_overwrite_confirmation(GTK_FILE_CHOOSER(file_chooser), PR_TRUE);
-  gint response = RunDialog(GTK_DIALOG(file_chooser));
+  gint response = gtk_dialog_run(GTK_DIALOG(file_chooser));
 
   switch (response) {
     case GTK_RESPONSE_ACCEPT:
