@@ -2157,6 +2157,15 @@ function testNumToString() {
 testNumToString.expected = "123456789,-123456789,123456789,-123456789,75bcd15,-75bcd15,21i3v9,-21i3v9";
 test(testNumToString);
 
+function testLongNumToString() {
+    var s;
+    for (var i = 0; i < 5; i++)
+        s = (0x08000000).toString(2);
+    return s;
+}
+testLongNumToString = '1000000000000000000000000000';
+test(testLongNumToString);
+
 function testSubstring() {
     for (var i = 0; i < 5; ++i) {
         actual = "".substring(5);
