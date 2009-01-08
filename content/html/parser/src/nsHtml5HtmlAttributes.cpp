@@ -61,8 +61,8 @@ nsHtml5HtmlAttributes::nsHtml5HtmlAttributes(PRInt32 mode)
 {
 }
 
-void 
-nsHtml5HtmlAttributes::destructor()
+
+nsHtml5HtmlAttributes::~nsHtml5HtmlAttributes()
 {
   clear(0);
   names.release();

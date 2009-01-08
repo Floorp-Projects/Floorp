@@ -66,12 +66,11 @@ class nsHtml5ElementName
   private:
     static PRInt32 bufToHash(jArray<PRUnichar,PRInt32> buf, PRInt32 len);
     nsHtml5ElementName(nsIAtom* name, nsIAtom* camelCaseName, PRInt32 group, PRBool special, PRBool scoping, PRBool fosterParenting);
+  protected:
     nsHtml5ElementName(nsIAtom* name);
   public:
-    void release();
-  private:
-    void destructor();
-  public:
+    virtual void release();
+    ~nsHtml5ElementName();
     static nsHtml5ElementName* A;
     static nsHtml5ElementName* B;
     static nsHtml5ElementName* G;

@@ -74,13 +74,13 @@ class nsHtml5AttributeName
     PRInt32* uri;
     nsIAtom** local;
     nsIAtom** prefix;
+  protected:
     nsHtml5AttributeName(PRInt32* uri, nsIAtom** local, nsIAtom** prefix);
-    static nsHtml5AttributeName* create(nsIAtom* name);
-  public:
-    void release();
   private:
-    void destructor();
+    static nsHtml5AttributeName* createAttributeName(nsIAtom* name);
   public:
+    virtual void release();
+    ~nsHtml5AttributeName();
     PRInt32 getUri(PRInt32 mode);
     nsIAtom* getLocal(PRInt32 mode);
     nsIAtom* getPrefix(PRInt32 mode);

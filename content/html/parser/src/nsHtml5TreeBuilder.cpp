@@ -1,6 +1,6 @@
 /*
  * Copyright (c) 2007 Henri Sivonen
- * Copyright (c) 2007-2008 Mozilla Foundation
+ * Copyright (c) 2007-2009 Mozilla Foundation
  * Portions of comments Copyright 2004-2008 Apple Computer, Inc., Mozilla 
  * Foundation, and Opera Software ASA.
  *
@@ -983,6 +983,7 @@ nsHtml5TreeBuilder::startTag(nsHtml5ElementName* elementName, nsHtml5HtmlAttribu
                   if (promptIndex > -1) {
                     jArray<PRUnichar,PRInt32> prompt = nsHtml5Portability::newCharArrayFromString(attributes->getValue(promptIndex));
                     appendCharacters(stack[currentPtr]->node, prompt, 0, prompt.length);
+                    prompt.release();
                   } else {
                     appendCharacters(stack[currentPtr]->node, nsHtml5TreeBuilder::ISINDEX_PROMPT, 0, nsHtml5TreeBuilder::ISINDEX_PROMPT.length);
                   }
@@ -2801,6 +2802,7 @@ nsHtml5TreeBuilder::removeFromStack(PRInt32 pos)
     pop();
   } else {
 
+    stack[pos]->release();
     nsHtml5ArrayCopy::arraycopy(stack, pos + 1, pos, currentPtr - pos);
 
     currentPtr--;
@@ -2821,6 +2823,7 @@ nsHtml5TreeBuilder::removeFromStack(nsHtml5StackNode* node)
       return;
     }
 
+    node->release();
     nsHtml5ArrayCopy::arraycopy(stack, pos + 1, pos, currentPtr - pos);
     currentPtr--;
   }
@@ -2829,6 +2832,7 @@ nsHtml5TreeBuilder::removeFromStack(nsHtml5StackNode* node)
 void 
 nsHtml5TreeBuilder::removeFromListOfActiveFormattingElements(PRInt32 pos)
 {
+  listOfActiveFormattingElements[pos]->release();
   if (pos == listPtr) {
 
     listPtr--;
@@ -2927,9 +2931,13 @@ nsHtml5TreeBuilder::adoptionAgencyEndTag(nsIAtom* name)
 
 
         nsIContent* clone = shallowClone(node->node);
-        node = new nsHtml5StackNode(node->group, node->ns, node->name, clone, node->scoping, node->special, node->fosterParenting, node->popName);
-        listOfActiveFormattingElements[nodeListPos] = node;
-        stack[nodePos] = node;
+        nsHtml5StackNode* newNode = new nsHtml5StackNode(node->group, node->ns, node->name, clone, node->scoping, node->special, node->fosterParenting, node->popName);
+        stack[nodePos] = newNode;
+        newNode->retain();
+        listOfActiveFormattingElements[nodeListPos] = newNode;
+        node->release();
+        node->release();
+        node = newNode;
         nsHtml5Portability::releaseElement(clone);
       }
       detachFromParent(lastNode->node);
@@ -2974,6 +2982,7 @@ nsHtml5TreeBuilder::insertIntoStack(nsHtml5StackNode* node, PRInt32 position)
 void 
 nsHtml5TreeBuilder::insertIntoListOfActiveFormattingElements(nsHtml5StackNode* formattingClone, PRInt32 bookmark)
 {
+  formattingClone->retain();
 
   if (bookmark <= listPtr) {
     nsHtml5ArrayCopy::arraycopy(listOfActiveFormattingElements, bookmark, bookmark + 1, (listPtr - bookmark) + 1);
@@ -3133,6 +3142,7 @@ nsHtml5TreeBuilder::pop()
 
   currentPtr--;
   elementPopped(node->ns, node->popName, node->node);
+  node->release();
 }
 
 void 

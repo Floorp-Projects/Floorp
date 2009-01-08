@@ -64,7 +64,7 @@ class nsHtml5HtmlAttributes
     jArray<nsString*,PRInt32> values;
   public:
     nsHtml5HtmlAttributes(PRInt32 mode);
-    void destructor();
+    ~nsHtml5HtmlAttributes();
     PRInt32 getIndex(nsHtml5AttributeName* name);
     PRInt32 getLength();
     nsIAtom* getLocalName(PRInt32 index);
