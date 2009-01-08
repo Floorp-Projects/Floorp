@@ -1826,8 +1826,10 @@ js_NewGCThing(JSContext *cx, uintN flags, size_t nbytes)
     doGC = (rt->gcMallocBytes >= rt->gcMaxMallocBytes && rt->gcPoke);
 #ifdef JS_GC_ZEAL
     doGC = doGC || rt->gcZeal >= 2 || (rt->gcZeal >= 1 && rt->gcPoke);
+# ifdef JS_TRACER
     if (rt->gcZeal >= 1 && JS_TRACE_MONITOR(cx).useReservedObjects)
         goto testReservedObjects;
+# endif
 #endif
 
     arenaList = &rt->gcArenaList[flindex];
@@ -2242,7 +2244,7 @@ js_ReserveObjects(JSContext *cx, size_t nobjects)
 
     return JS_TRUE;
 }
-#endif JS_TRACER
+#endif
 
 JSBool
 js_AddAsGCBytes(JSContext *cx, size_t sz)
