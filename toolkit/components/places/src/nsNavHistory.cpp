@@ -7519,6 +7519,7 @@ nsNavHistory::FinalizeStatements() {
     mDBOldFrecencies,
     mDBCurrentQuery,
     mDBAutoCompleteQuery,
+    mDBAutoCompleteTypedQuery,
     mDBAutoCompleteHistoryQuery,
     mDBAutoCompleteStarQuery,
     mDBAutoCompleteTagsQuery,
