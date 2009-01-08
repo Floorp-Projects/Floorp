@@ -1284,6 +1284,16 @@ nsDownloadManager::GetDefaultDownloadsDirectory(nsILocalFile **aResult)
   if (equals) {
     rv = downloadDir->Append(folderName);
     NS_ENSURE_SUCCESS(rv, rv);
+
+    // This could be the first time we are creating the downloads folder on the
+    // desktop, so make sure it exists.
+    PRBool exists;
+    rv = downloadDir->Exists(&exists);
+    NS_ENSURE_SUCCESS(rv, rv);
+    if (!exists) {
+      rv = downloadDir->Create(nsIFile::DIRECTORY_TYPE, 0755);
+      NS_ENSURE_SUCCESS(rv, rv);
+    }
   }
 #elif defined(XP_WIN) && !defined(WINCE)
   rv = dirService->Get(NS_WIN_DEFAULT_DOWNLOAD_DIR,
@@ -1299,9 +1309,20 @@ nsDownloadManager::GetDefaultDownloadsDirectory(nsILocalFile **aResult)
   PRInt32 version;
   NS_NAMED_LITERAL_STRING(osVersion, "version");
   rv = infoService->GetPropertyAsInt32(osVersion, &version);
+  NS_ENSURE_SUCCESS(rv, rv);
   if (version < 6) { // XP/2K
     rv = downloadDir->Append(folderName);
     NS_ENSURE_SUCCESS(rv, rv);
+
+    // This could be the first time we are creating the downloads folder on the
+    // desktop, so make sure it exists.
+    PRBool exists;
+    rv = downloadDir->Exists(&exists);
+    NS_ENSURE_SUCCESS(rv, rv);
+    if (!exists) {
+      rv = downloadDir->Create(nsIFile::DIRECTORY_TYPE, 0755);
+      NS_ENSURE_SUCCESS(rv, rv);
+    }
   }
 #elif defined(XP_UNIX)
   rv = dirService->Get(NS_UNIX_DEFAULT_DOWNLOAD_DIR,
@@ -1325,7 +1346,7 @@ nsDownloadManager::GetDefaultDownloadsDirectory(nsILocalFile **aResult)
   NS_ENSURE_SUCCESS(rv, rv);
 #endif
 
-  NS_ADDREF(*aResult = downloadDir);
+  downloadDir.swap(*aResult);
 
   return NS_OK;
 }
@@ -1356,8 +1377,6 @@ nsDownloadManager::GetUserDownloadsDirectory(nsILocalFile **aResult)
                               &val);
   NS_ENSURE_SUCCESS(rv, rv);
 
-  PRBool bRes = PR_FALSE;
-
   switch(val) {
     case 0: // Desktop
       {
@@ -1369,22 +1388,12 @@ nsDownloadManager::GetUserDownloadsDirectory(nsILocalFile **aResult)
                              NS_GET_IID(nsILocalFile),
                              getter_AddRefs(downloadDir));
         NS_ENSURE_SUCCESS(rv, rv);
-        NS_ADDREF(*aResult = downloadDir);
+        downloadDir.swap(*aResult);
         return NS_OK;
       }
       break;
     case 1: // Downloads
-      {
-        rv = GetDefaultDownloadsDirectory(aResult); // refup
-        NS_ENSURE_SUCCESS(rv, rv);
-        (*aResult)->Exists(&bRes);
-        if (!bRes) {
-          rv = (*aResult)->Create(nsIFile::DIRECTORY_TYPE, 0755);
-          NS_ENSURE_SUCCESS(rv, rv);
-        }
-        return NS_OK;
-      }
-      break;
+      return GetDefaultDownloadsDirectory(aResult);
     case 2: // Custom
       {
         nsCOMPtr<nsILocalFile> customDirectory;
@@ -1392,28 +1401,37 @@ nsDownloadManager::GetUserDownloadsDirectory(nsILocalFile **aResult)
                                     NS_GET_IID(nsILocalFile),
                                     getter_AddRefs(customDirectory));
         if (customDirectory) {
-          customDirectory->Exists(&bRes);
-          if (bRes) {
-            NS_ADDREF(*aResult = customDirectory);
+          PRBool exists = PR_FALSE;
+          (void)customDirectory->Exists(&exists);
+
+          if (!exists) {
+            rv = customDirectory->Create(nsIFile::DIRECTORY_TYPE, 0755);
+            if (NS_SUCCEEDED(rv)) {
+              customDirectory.swap(*aResult);
+              return NS_OK;
+            }
+
+            // Create failed, so it still doesn't exist.  Fall out and get the
+            // default downloads directory.
+          }
+
+          PRBool writable = PR_FALSE;
+          PRBool directory = PR_FALSE;
+          (void)customDirectory->IsWritable(&writable);
+          (void)customDirectory->IsDirectory(&directory);
+
+          if (exists && writable && directory) {
+            customDirectory.swap(*aResult);
             return NS_OK;
           }
-          rv = customDirectory->Create(nsIFile::DIRECTORY_TYPE, 0755);
-          NS_ENSURE_SUCCESS(rv, rv);
-          NS_ADDREF(*aResult = customDirectory);
-          return NS_OK;
         }
-        rv = GetDefaultDownloadsDirectory(aResult); // refup
-        NS_ENSURE_SUCCESS(rv, rv);
-        (*aResult)->Exists(&bRes);
-        if (!bRes) {
-          rv = (*aResult)->Create(nsIFile::DIRECTORY_TYPE, 0755);
-          NS_ENSURE_SUCCESS(rv, rv);
-          // Update dir pref
-          prefBranch->SetComplexValue(NS_PREF_DIR,
-                                      NS_GET_IID(nsILocalFile),
-                                      *aResult);
+        rv = GetDefaultDownloadsDirectory(aResult);
+        if (NS_SUCCEEDED(rv)) {
+          (void)prefBranch->SetComplexValue(NS_PREF_DIR,
+                                            NS_GET_IID(nsILocalFile),
+                                            *aResult);
         }
-        return NS_OK;
+        return rv;
       }
       break;
   }
