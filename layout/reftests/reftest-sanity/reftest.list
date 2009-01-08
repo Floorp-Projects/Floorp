@@ -39,3 +39,11 @@ HTTP(..) == filter-2.xhtml filter-2-ref.xhtml
 # test that the MozReftestInvalidate event fires
 == invalidation.html about:blank
 == zoom-invalidation.html zoom-invalidation-ref.html
+
+# test parsing of asserts() expressions
+asserts(0) load about:blank
+asserts(0-5) load about:blank
+asserts-if(true,0) load about:blank
+asserts-if(false,7) load about:blank
+asserts-if(true,0-4) load about:blank
+asserts-if(false,6-8) load about:blank
