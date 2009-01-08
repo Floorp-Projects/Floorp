@@ -1,7 +1,7 @@
 /*
- * Copyright (c) 2005, 2006, 2007 Henri Sivonen
- * Copyright (c) 2007-2008 Mozilla Foundation
- * Portions of comments Copyright 2004-2007 Apple Computer, Inc., Mozilla 
+ * Copyright (c) 2005-2007 Henri Sivonen
+ * Copyright (c) 2007-2009 Mozilla Foundation
+ * Portions of comments Copyright 2004-2008 Apple Computer, Inc., Mozilla 
  * Foundation, and Opera Software ASA.
  *
  * Permission is hereby granted, free of charge, to any person obtaining a 
@@ -147,7 +147,6 @@ class nsHtml5Tokenizer
     PRBool endTag;
     nsHtml5ElementName* tagName;
     nsHtml5AttributeName* attributeName;
-    PRBool shouldAddAttributes;
     PRBool html4;
     PRBool alreadyComplainedAboutNonAscii;
     PRBool metaBoundaryPassed;
@@ -160,7 +159,7 @@ class nsHtml5Tokenizer
   public:
     nsHtml5Tokenizer(nsHtml5TreeBuilder* tokenHandler, nsHtml5Parser* encodingDeclarationHandler);
     void initLocation(nsString* newPublicId, nsString* newSystemId);
-    void destructor();
+    ~nsHtml5Tokenizer();
     void setContentModelFlag(PRInt32 contentModelFlag, nsIAtom* contentModelElement);
     void setContentModelFlag(PRInt32 contentModelFlag, nsHtml5ElementName* contentModelElement);
   private:
@@ -181,7 +180,7 @@ class nsHtml5Tokenizer
     void appendStrBuf(PRUnichar c);
     void appendStrBufForceWrite(PRUnichar c);
     nsString* strBufToString();
-    nsIAtom* strBufToLocal();
+    nsIAtom* strBufToDoctypeName();
     void emitStrBuf();
     void clearLongStrBufForNextState();
     void clearLongStrBuf();
@@ -218,6 +217,7 @@ class nsHtml5Tokenizer
   public:
     void eof();
   private:
+    void emitDoctypeToken();
     PRUnichar read();
   public:
     void internalEncodingDeclaration(nsString* internalCharset);

@@ -1,6 +1,6 @@
 /*
  * Copyright (c) 2007 Henri Sivonen
- * Copyright (c) 2007-2008 Mozilla Foundation
+ * Copyright (c) 2007-2009 Mozilla Foundation
  *
  * Permission is hereby granted, free of charge, to any person obtaining a 
  * copy of this software and associated documentation files (the "Software"), 
@@ -65,13 +65,16 @@ class nsHtml5StackNode
     PRBool special;
     PRBool fosterParenting;
     PRBool tainted;
+  private:
+    PRInt32 refcount;
+  public:
     nsHtml5StackNode(PRInt32 group, PRInt32 ns, nsIAtom* name, nsIContent* node, PRBool scoping, PRBool special, PRBool fosterParenting, nsIAtom* popName);
     nsHtml5StackNode(PRInt32 ns, nsHtml5ElementName* elementName, nsIContent* node);
     nsHtml5StackNode(PRInt32 ns, nsHtml5ElementName* elementName, nsIContent* node, nsIAtom* popName);
     nsHtml5StackNode(PRInt32 ns, nsHtml5ElementName* elementName, nsIContent* node, nsIAtom* popName, PRBool scoping);
-  private:
-    void destructor();
-  public:
+    ~nsHtml5StackNode();
+    void retain();
+    void release();
     static void initializeStatics();
     static void releaseStatics();
 };

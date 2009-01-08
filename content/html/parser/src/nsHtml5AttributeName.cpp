@@ -50,6 +50,7 @@
 #include "nsHtml5Portability.h"
 
 #include "nsHtml5AttributeName.h"
+#include "nsHtml5ReleasableAttributeName.h"
 
 nsIAtom** 
 nsHtml5AttributeName::SVG_DIFFERENT(nsIAtom* name, nsIAtom* camel)
@@ -97,12 +98,12 @@ nsHtml5AttributeName::nameByBuffer(PRUnichar* buf, PRInt32 offset, PRInt32 lengt
   PRInt32 hash = nsHtml5AttributeName::bufToHash(buf, length);
   PRInt32 index = nsHtml5AttributeName::ATTRIBUTE_HASHES.binarySearch(hash);
   if (index < 0) {
-    return nsHtml5AttributeName::create(nsHtml5Portability::newLocalNameFromBuffer(buf, offset, length));
+    return nsHtml5AttributeName::createAttributeName(nsHtml5Portability::newLocalNameFromBuffer(buf, offset, length));
   } else {
     nsHtml5AttributeName* rv = nsHtml5AttributeName::ATTRIBUTE_NAMES[index];
     nsIAtom* name = rv->getLocal(NS_HTML5ATTRIBUTE_NAME_HTML);
     if (!nsHtml5Portability::localEqualsBuffer(name, buf, offset, length)) {
-      return nsHtml5AttributeName::create(nsHtml5Portability::newLocalNameFromBuffer(buf, offset, length));
+      return nsHtml5AttributeName::createAttributeName(nsHtml5Portability::newLocalNameFromBuffer(buf, offset, length));
     }
     return rv;
   }
@@ -135,9 +136,9 @@ nsHtml5AttributeName::nsHtml5AttributeName(PRInt32* uri, nsIAtom** local, nsIAto
 }
 
 nsHtml5AttributeName* 
-nsHtml5AttributeName::create(nsIAtom* name)
+nsHtml5AttributeName::createAttributeName(nsIAtom* name)
 {
-  return new nsHtml5AttributeName(nsHtml5AttributeName::ALL_NO_NS, nsHtml5AttributeName::SAME_LOCAL(name), ALL_NO_PREFIX);
+  return new nsHtml5ReleasableAttributeName(nsHtml5AttributeName::ALL_NO_NS, nsHtml5AttributeName::SAME_LOCAL(name), ALL_NO_PREFIX);
 }
 
 void 
@@ -145,8 +146,8 @@ nsHtml5AttributeName::release()
 {
 }
 
-void 
-nsHtml5AttributeName::destructor()
+
+nsHtml5AttributeName::~nsHtml5AttributeName()
 {
   nsHtml5Portability::releaseLocal(local[0]);
   delete[] local;

@@ -78,6 +78,8 @@ CPPSRCS		= \
     nsHtml5TreeBuilder.cpp \
     nsHtml5Portability.cpp \
     nsHtml5Module.cpp \
+    nsHtml5ReleasableAttributeName.cpp \
+    nsHtml5ReleasableElementName.cpp \
     $(NULL)
 
 FORCE_STATIC_LIB = 1
