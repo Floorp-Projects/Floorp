@@ -334,48 +334,6 @@ class nsVoidKey : public nsHashKey {
     void* GetValue() { return mKey; }
 };
 
-////////////////////////////////////////////////////////////////////////////////
-// nsIDKey: Where keys are nsIDs (e.g. nsIID, nsCID).
-
-#include "nsID.h"
-
-class NS_COM nsIDKey : public nsHashKey {
-  protected:
-    nsID mID;
-    
-  public:
-    nsIDKey(const nsIDKey& aKey) : mID(aKey.mID) {
-#ifdef DEBUG
-          mKeyType = IDKey;
-#endif
-    }
-
-    nsIDKey(const nsID &aID) {
-#ifdef DEBUG
-        mKeyType = IDKey;
-#endif
-        mID = aID;
-    }
-    
-    PRUint32 HashCode(void) const {
-        return mID.m0;
-    }
-
-    PRBool Equals(const nsHashKey *aKey) const {
-        NS_ASSERTION(aKey->GetKeyType() == IDKey, "mismatched key types");
-        return (mID.Equals(((const nsIDKey *) aKey)->mID));
-    }
-
-    nsHashKey *Clone() const {
-        return new nsIDKey(mID);
-    }
-
-    nsIDKey(nsIObjectInputStream* aStream, nsresult *aResult);
-    nsresult Write(nsIObjectOutputStream* aStream) const;
-};
-
-////////////////////////////////////////////////////////////////////////////////
-
 #include "nsString.h"
 
 // for null-terminated c-strings
