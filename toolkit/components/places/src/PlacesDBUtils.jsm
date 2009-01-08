@@ -80,6 +80,42 @@ const MAINTENANCE_REPEAT =  24 * 60 * 60;
 //// nsPlacesDBUtils class
 
 function nsPlacesDBUtils() {
+  //////////////////////////////////////////////////////////////////////////////
+  //// Smart getters
+
+  this.__defineGetter__("_bms", function() {
+    delete this._bms;
+    return this._bms = Cc[BS_CONTRACTID].getService(Ci.nsINavBookmarksService);
+  });
+
+  this.__defineGetter__("_hs", function() {
+    delete this._hs;
+    return this._hs = Cc[HS_CONTRACTID].getService(Ci.nsINavHistoryService);
+  });
+
+  this.__defineGetter__("_os", function() {
+    delete this._os;
+    return this._os = Cc[OS_CONTRACTID].getService(Ci.nsIObserverService);
+  });
+
+  this.__defineGetter__("_idlesvc", function() {
+    delete this._idlesvc;
+    return this._idlesvc = Cc[IS_CONTRACTID].getService(Ci.nsIIdleService);
+  });
+
+  this.__defineGetter__("_dbConn", function() {
+    delete this._dbConn;
+    return this._dbConn = Cc[HS_CONTRACTID].
+                          getService(Ci.nsPIPlacesDatabase).DBConnection;
+  });
+
+  this.__defineGetter__("_bundle", function() {
+    delete this._bundle;
+    return this._bundle = Cc[SB_CONTRACTID].
+                          getService(Ci.nsIStringBundleService).
+                          createBundle(PLACES_STRING_BUNDLE_URI);
+  });
+
   // register the maintenance timer
   try {
     let tim = Cc[TIM_CONTRACTID].getService(Ci.nsIUpdateTimerManager);
@@ -514,42 +550,6 @@ nsPlacesDBUtils.prototype = {
       }, this);
   },
 };
-
-//////////////////////////////////////////////////////////////////////////////
-//// Smart getters
-
-nsPlacesDBUtils.prototype.__defineGetter__("_bms", function() {
-  delete nsPlacesDBUtils._bms;
-  return nsPlacesDBUtils._bms = Cc[BS_CONTRACTID].getService(Ci.nsINavBookmarksService);
-});
-
-nsPlacesDBUtils.prototype.__defineGetter__("_hs", function() {
-  delete nsPlacesDBUtils._hs;
-  return nsPlacesDBUtils._hs = Cc[HS_CONTRACTID].getService(Ci.nsINavHistoryService);
-});
-
-nsPlacesDBUtils.prototype.__defineGetter__("_os", function() {
-  delete nsPlacesDBUtils._os;
-  return nsPlacesDBUtils._os = Cc[OS_CONTRACTID].getService(Ci.nsIObserverService);
-});
-
-nsPlacesDBUtils.prototype.__defineGetter__("_idlesvc", function() {
-  delete nsPlacesDBUtils._idlesvc;
-  return nsPlacesDBUtils._idlesvc = Cc[IS_CONTRACTID].getService(Ci.nsIIdleService);
-});
-
-nsPlacesDBUtils.prototype.__defineGetter__("_dbConn", function() {
-  delete nsPlacesDBUtils._dbConn;
-  return nsPlacesDBUtils._dbConn = Cc[HS_CONTRACTID].
-                        getService(Ci.nsPIPlacesDatabase).DBConnection;
-});
-
-nsPlacesDBUtils.prototype.__defineGetter__("_bundle", function() {
-  delete nsPlacesDBUtils._bundle;
-  return nsPlacesDBUtils._bundle = Cc[SB_CONTRACTID].
-                                   getService(Ci.nsIStringBundleService).
-                                   createBundle(PLACES_STRING_BUNDLE_URI);
-});
 
 __defineGetter__("PlacesDBUtils", function() {
   delete this.PlacesDBUtils;
