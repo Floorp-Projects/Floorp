@@ -1,3 +1,4 @@
+/* vim: set shiftwidth=4 tabstop=8 autoindent cindent expandtab: */
 /* ***** BEGIN LICENSE BLOCK *****
  * Version: MPL 1.1/GPL 2.0/LGPL 2.1
  *
@@ -11,14 +12,14 @@
  * for the specific language governing rights and limitations under the
  * License.
  *
- * The Original Code is XPCOM
+ * The Original Code is nsIDebugInfoService.
  *
- * The Initial Developer of the Original Code is Doug Turner <dougt@meer.net>
- *
- * Portions created by the Initial Developer are Copyright (C) 2003
+ * The Initial Developer of the Original Code is the Mozilla Foundation.
+ * Portions created by the Initial Developer are Copyright (C) 2008
  * the Initial Developer. All Rights Reserved.
  *
  * Contributor(s):
+ *   L. David Baron <dbaron@dbaron.org>, Mozilla Corporation (original author)
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -34,26 +35,15 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-#include "nsIDebug.h"
-#include "nsIDebug2.h"
+/* interface to expose information about calls to NS_DebugBreak */
 
-class nsDebugImpl : public nsIDebug2
+#include "nsIDebug.idl"
+
+[scriptable, uuid(15c0b474-fedb-4789-878b-def834b84735)]
+interface nsIDebug2 : nsIDebug
 {
-public:
-    NS_DECL_ISUPPORTS
-    NS_DECL_NSIDEBUG
-    NS_DECL_NSIDEBUG2
-    
-    static NS_METHOD Create(nsISupports* outer, const nsIID& aIID, void* *aInstancePtr);
+    /**
+     * The number of assertions since process start.
+     */
+    readonly attribute long assertionCount;
 };
-
-
-#define NS_DEBUG_CONTRACTID "@mozilla.org/xpcom/debug;1"
-#define NS_DEBUG_CLASSNAME  "nsDebug Interface"
-#define NS_DEBUG_CID                                 \
-{ /* a80b1fb3-aaf6-4852-b678-c27eb7a518af */         \
-  0xa80b1fb3,                                        \
-    0xaaf6,                                          \
-    0x4852,                                          \
-    {0xb6, 0x78, 0xc2, 0x7e, 0xb7, 0xa5, 0x18, 0xaf} \
-}            
