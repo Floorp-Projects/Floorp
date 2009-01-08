@@ -306,6 +306,10 @@ HistoryStore.prototype = {
                           (visit.type == 5 || visit.type == 6), 0);
     }
     this._hsvc.setPageTitle(uri, record.cleartext.title);
+
+    let guid = this._getGUID(record.cleartext.uri);
+    if (guid != record.id)
+      this.changeItemID(guid, record.id);
   },
 
   remove: function HistStore_remove(record) {
