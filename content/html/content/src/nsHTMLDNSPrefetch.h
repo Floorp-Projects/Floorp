@@ -40,14 +40,16 @@
 #define nsHTMLDNSPrefetch_h___
 
 #include "nsCOMPtr.h"
+#include "nsAutoPtr.h"
 #include "nsString.h"
 
 #include "nsIDNSListener.h"
 #include "nsIWebProgressListener.h"
 #include "nsWeakReference.h"
 
-class nsIURI;
 class nsIDocument;
+class nsGenericHTMLElement;
+class nsITimer;
 
 class nsHTMLDNSPrefetch 
 {
@@ -68,16 +70,16 @@ public:
   // weight, but its request is also more likely to be dropped due to a 
   // full queue and it may only be used from the main thread.
 
-  static nsresult PrefetchHigh(nsIURI *aURI);
-  static nsresult PrefetchMedium(nsIURI *aURI);
-  static nsresult PrefetchLow(nsIURI *aURI);
+  static nsresult PrefetchHigh(nsGenericHTMLElement *aElement);
+  static nsresult PrefetchMedium(nsGenericHTMLElement *aElement);
+  static nsresult PrefetchLow(nsGenericHTMLElement *aElement);
   static nsresult PrefetchHigh(nsAString &host);
   static nsresult PrefetchMedium(nsAString &host);
   static nsresult PrefetchLow(nsAString &host);
 
 private:
   static nsresult Prefetch(nsAString &host, PRUint16 flags);
-  static nsresult Prefetch(nsIURI *aURI, PRUint16 flags);
+  static nsresult Prefetch(nsGenericHTMLElement *aElement, PRUint16 flags);
   static PRBool   IsSecureBaseContext(nsIDocument *aDocument);
   
 public:
@@ -93,7 +95,7 @@ public:
     nsDeferrals();
     
     void Activate();
-    nsresult Add(PRUint16 flags, nsIURI *aURI);
+    nsresult Add(PRUint16 flags, nsGenericHTMLElement *aElement);
     
   private:
     ~nsDeferrals();
@@ -103,14 +105,18 @@ public:
     PRUint16                  mHead;
     PRUint16                  mTail;
     PRUint32                  mActiveLoaderCount;
+
+    nsCOMPtr<nsITimer>        mTimer;
+    PRBool                    mTimerArmed;
+    static void Tick(nsITimer *aTimer, void *aClosure);
     
     static const int          sMaxDeferred = 512;  // keep power of 2 for masking
     static const int          sMaxDeferredMask = (sMaxDeferred - 1);
     
     struct deferred_entry
     {
-      PRUint16                 mFlags;
-      nsCOMPtr<nsIURI>         mURI;
+      PRUint16                         mFlags;
+      nsRefPtr<nsGenericHTMLElement>   mElement;
     } mEntries[sMaxDeferred];
   };
 };
