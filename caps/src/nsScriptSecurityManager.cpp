@@ -1018,6 +1018,10 @@ nsScriptSecurityManager::LookupPolicy(nsIPrincipal* aPrincipal,
     //-- Initialize policies if necessary
     if (mPolicyPrefsChanged)
     {
+        if (!mSecurityPref) {
+            rv = InitPrefs();
+            NS_ENSURE_SUCCESS(rv, rv);
+        }
         rv = InitPolicies();
         if (NS_FAILED(rv))
             return rv;
@@ -3238,8 +3242,7 @@ nsresult nsScriptSecurityManager::Init()
         sEnabledID = STRING_TO_JSVAL(::JS_InternString(cx, "enabled"));
     ::JS_EndRequest(cx);
 
-    rv = InitPrefs();
-    NS_ENSURE_SUCCESS(rv, rv);
+    InitPrefs();
 
     rv = CallGetService(NS_IOSERVICE_CONTRACTID, &sIOService);
     NS_ENSURE_SUCCESS(rv, rv);
@@ -3823,23 +3826,46 @@ const char nsScriptSecurityManager::sXPCDefaultGrantAllName[] =
 inline void
 nsScriptSecurityManager::ScriptSecurityPrefChanged()
 {
-    PRBool temp;
-    nsresult rv = mSecurityPref->SecurityGetBoolPref(sJSEnabledPrefName, &temp);
     // JavaScript defaults to enabled in failure cases.
-    mIsJavaScriptEnabled = NS_FAILED(rv) || temp;
+    mIsJavaScriptEnabled = PR_TRUE;
 
-    rv = mSecurityPref->SecurityGetBoolPref(sJSMailEnabledPrefName, &temp);
     // JavaScript in Mail defaults to disabled in failure cases.
-    // disable javascript in mailnews for TB 3.0 beta1
-    mIsMailJavaScriptEnabled = PR_FALSE; // NS_SUCCEEDED(rv) && temp;
+    mIsMailJavaScriptEnabled = PR_FALSE;
+
+    sStrictFileOriginPolicy = PR_TRUE;
+
+#ifdef XPC_IDISPATCH_SUPPORT
+    // Granting XPC Priveleges defaults to disabled in failure cases.
+    mXPCDefaultGrantAll = PR_FALSE;
+#endif
+
+    nsresult rv;
+    if (!mSecurityPref) {
+        rv = InitPrefs();
+        if (NS_FAILED(rv))
+            return;
+    }
+
+    PRBool temp;
+    rv = mSecurityPref->SecurityGetBoolPref(sJSEnabledPrefName, &temp);
+    if (NS_SUCCEEDED(rv))
+        mIsJavaScriptEnabled = temp;
+
+    // JavaScript in mailnews is disabled until quickstubs and CAPS work
+    // together or we find an alternative to CAPS: see bug 374577 or
+    // bug 453928 or bug 453943.
+    // rv = mSecurityPref->SecurityGetBoolPref(sJSMailEnabledPrefName, &temp);
+    // if (NS_SUCCEEDED(rv))
+    //     mIsMailJavaScriptEnabled = temp;
 
     rv = mSecurityPref->SecurityGetBoolPref(sFileOriginPolicyPrefName, &temp);
-    sStrictFileOriginPolicy = NS_SUCCEEDED(rv) && temp;
+    if (NS_SUCCEEDED(rv))
+        sStrictFileOriginPolicy = NS_SUCCEEDED(rv) && temp;
 
 #ifdef XPC_IDISPATCH_SUPPORT
     rv = mSecurityPref->SecurityGetBoolPref(sXPCDefaultGrantAllName, &temp);
-    // Granting XPC Priveleges defaults to disabled in failure cases.
-    mXPCDefaultGrantAll = NS_SUCCEEDED(rv) && temp;
+    if (NS_SUCCEEDED(rv))
+        mXPCDefaultGrantAll = temp;
 #endif
 }
 
