@@ -435,6 +435,7 @@ libgnomevfs/gnome-vfs-ops.h
 libgnomevfs/gnome-vfs-standard-callbacks.h
 libIDL/IDL.h
 lib$routines.h
+libnotify/notify.h
 limits
 limits.h
 link.h

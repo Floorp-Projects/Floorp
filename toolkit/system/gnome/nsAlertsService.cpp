@@ -1,4 +1,4 @@
-/* -*- Mode: C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
+/* -*- Mode: C++; tab-width: 2; indent-tabs-mode:nil; c-basic-offset: 2 -*- */
 /* ***** BEGIN LICENSE BLOCK *****
  * Version: MPL 1.1/GPL 2.0/LGPL 2.1
  *
@@ -12,15 +12,14 @@
  * for the specific language governing rights and limitations under the
  * License.
  *
- * The Original Code is the Mozilla GNOME integration code.
+ * The Original Code is mozilla.org code.
  *
  * The Initial Developer of the Original Code is
- * IBM Corporation.
- * Portions created by the Initial Developer are Copyright (C) 2004
+ * Mozilla Corporation.
+ * Portions created by the Initial Developer are Copyright (C) 2008
  * the Initial Developer. All Rights Reserved.
  *
  * Contributor(s):
- *  Brian Ryner <bryner@brianryner.com>
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -36,37 +35,38 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-#include "nsGConfService.h"
-#include "nsGnomeVFSService.h"
-#include "nsToolkitCompsCID.h"
-#include "nsIGenericFactory.h"
-
-#ifdef MOZ_ENABLE_LIBNOTIFY
 #include "nsAlertsService.h"
-#endif
+#include "nsAlertsIconListener.h"
 
-NS_GENERIC_FACTORY_CONSTRUCTOR_INIT(nsGConfService, Init)
-NS_GENERIC_FACTORY_CONSTRUCTOR_INIT(nsGnomeVFSService, Init)
+NS_IMPL_THREADSAFE_ADDREF(nsAlertsService)
+NS_IMPL_THREADSAFE_RELEASE(nsAlertsService)
 
-#ifdef MOZ_ENABLE_LIBNOTIFY
-NS_GENERIC_FACTORY_CONSTRUCTOR_INIT(nsAlertsService, Init)
-#endif
+NS_INTERFACE_MAP_BEGIN(nsAlertsService)
+   NS_INTERFACE_MAP_ENTRY_AMBIGUOUS(nsISupports, nsIAlertsService)
+   NS_INTERFACE_MAP_ENTRY(nsIAlertsService)
+NS_INTERFACE_MAP_END_THREADSAFE
 
-static const nsModuleComponentInfo components[] = {
-  { "GConf Service",
-    NS_GCONFSERVICE_CID,
-    NS_GCONFSERVICE_CONTRACTID,
-    nsGConfServiceConstructor },
-  { "GnomeVFS Service",
-    NS_GNOMEVFSSERVICE_CID,
-    NS_GNOMEVFSSERVICE_CONTRACTID,
-    nsGnomeVFSServiceConstructor },
-#ifdef MOZ_ENABLE_LIBNOTIFY
-  { "Gnome Alerts Service",
-    NS_SYSTEMALERTSSERVICE_CID,
-    NS_SYSTEMALERTSERVICE_CONTRACTID,
-    nsAlertsServiceConstructor },
-#endif
-};
+nsAlertsService::nsAlertsService()
+{}
 
-NS_IMPL_NSGETMODULE(mozgnome, components)
+nsAlertsService::~nsAlertsService()
+{}
+
+nsresult
+nsAlertsService::Init()
+{
+  return NS_OK;
+}
+
+NS_IMETHODIMP nsAlertsService::ShowAlertNotification(const nsAString & aImageUrl, const nsAString & aAlertTitle, 
+                                                     const nsAString & aAlertText, PRBool aAlertTextClickable,
+                                                     const nsAString & aAlertCookie,
+                                                     nsIObserver * aAlertListener,
+                                                     const nsAString & aAlertName)
+{
+  nsCOMPtr<nsAlertsIconListener> alertListener = new nsAlertsIconListener();
+  if (!alertListener)
+    return NS_ERROR_OUT_OF_MEMORY;
+
+  return alertListener->InitAlertAsync(aImageUrl, aAlertTitle, aAlertText);
+}
