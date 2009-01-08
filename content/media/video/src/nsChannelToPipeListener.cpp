@@ -159,7 +159,7 @@ nsresult nsChannelToPipeListener::OnStopRequest(nsIRequest* aRequest, nsISupport
   if (aStatus != NS_BINDING_ABORTED && mDecoder) {
     if (NS_SUCCEEDED(aStatus)) {
       mDecoder->ResourceLoaded();
-    } else {
+    } else if (aStatus != NS_BASE_STREAM_CLOSED) {
       mDecoder->NetworkError();
     }
   }
@@ -179,7 +179,8 @@ nsresult nsChannelToPipeListener::OnDataAvailable(nsIRequest* aRequest,
   
   do {
     nsresult rv = mOutput->WriteFrom(aStream, aCount, &bytes);
-    NS_ENSURE_SUCCESS(rv, rv);
+    if (NS_FAILED(rv))
+      return rv;
     
     aCount -= bytes;
     mTotalBytes += bytes;
