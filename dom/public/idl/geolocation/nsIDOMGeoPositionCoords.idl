@@ -37,10 +37,14 @@
 
 #include "domstubs.idl"
 
-[scriptable, uuid(453B72DE-EA90-4F09-AE16-C2E7EE0DDDC4)]
-interface nsIDOMGeoPositionOptions : nsISupports
+[scriptable, uuid(B31702D0-6DAC-4FA0-B93B-F043E71C8F9A)]
+interface nsIDOMGeoPositionCoords : nsISupports
 {
-  attribute boolean enableHighAccuracy;
-  attribute long timeout;
-  attribute long maximumAge;
+  readonly attribute double latitude;
+  readonly attribute double longitude;
+  readonly attribute double altitude;
+  readonly attribute double accuracy;
+  readonly attribute double altitudeAccuracy;
+  readonly attribute double heading;
+  readonly attribute double speed;
 };

@@ -547,6 +547,8 @@ int main(int argc, char** argv)
     // we don't need to actually send this
     queryParameters.erase("ServerURL");
 
+    queryParameters["Throttleable"] = "1";
+
     // re-set XUL_APP_FILE for xulrunner wrapped apps
     const char *appfile = getenv("MOZ_CRASHREPORTER_RESTART_XUL_APP_FILE");
     if (appfile && *appfile) {

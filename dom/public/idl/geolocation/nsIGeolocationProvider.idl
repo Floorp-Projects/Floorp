@@ -92,7 +92,7 @@ interface nsIGeolocationUpdate : nsISupports {
  * startup is called, any geo location change should call
  * callback.onRequest().
  */
-[scriptable, uuid(E319BE2D-B1D1-4CA6-AEF4-66178589B63D)]
+[scriptable, uuid(5C819505-8804-496E-9CB2-53089B3DD4EF)]
 interface nsIGeolocationProvider : nsISupports {
 
   /**
@@ -114,14 +114,8 @@ interface nsIGeolocationProvider : nsISupports {
   void watch(in nsIGeolocationUpdate callback);
 
   /**
-   * currentLocation return the current location as seen by
-   * the provider.  may be null.
-   */
-  readonly attribute nsIDOMGeoPosition currentPosition;
-  
-  /**
    * shutdown
-   * Shuts down the location devices.
+   * Shuts down the location device.
    */
   void shutdown();
 };
