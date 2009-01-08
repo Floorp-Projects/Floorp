@@ -77,7 +77,7 @@ interface jsdIProperty;
  * Debugger service.  It's not a good idea to have more than one active client of
  * the debugger service.
  */
-[scriptable, uuid(9dd9006a-4e5e-4a80-ac3d-007fb7335ca4)]
+[scriptable, uuid(39c87dbc-85b6-41e3-9f69-beb8b1b27570)]
 interface jsdIDebuggerService : nsISupports
 {
     /** Internal use only. */
@@ -205,9 +205,9 @@ interface jsdIDebuggerService : nsISupports
      */
     readonly attribute unsigned long implementationMinor;
     /**
-     * Free form string identifier for implementation.
+     * Free form AUTF8String identifier for implementation.
      */
-    readonly attribute string implementationString;
+    readonly attribute AUTF8String implementationString;
     
     /**
      * |true| if the debugger should register an app-start observer in order
@@ -276,7 +276,7 @@ interface jsdIDebuggerService : nsISupports
      *
      * @param fileName Filename to dump the heap into.
      */
-    void DumpHeap(in string fileName);
+    void DumpHeap(in AUTF8String fileName);
 
     /**
      * Clear profile data for all scripts.
@@ -397,7 +397,7 @@ interface jsdIDebuggerService : nsISupports
  * ignore.  The debugger service itself will not modify properties of these
  * objects.
  */
-[scriptable, uuid(05593438-1b83-4517-864f-3cea3d37a266)]
+[scriptable, uuid(0c9189d9-4287-47a4-bca6-6ed65aaf737f)]
 interface jsdIFilter : nsISupports
 {
     /**
@@ -441,7 +441,7 @@ interface jsdIFilter : nsISupports
      * The jsdIService caches this value internally, to if it changes you must
      * swap the filter with itself using jsdIService::swapFilters.
      */
-    attribute string urlPattern;
+    attribute AUTF8String urlPattern;
 
     /**
      * Line number for the start of this filter.  Line numbers are one based.
@@ -475,7 +475,7 @@ interface jsdINestCallback : nsISupports
 /**
  * Pass an instance of one of these to jsdIDebuggerService::enumerateFilters.
  */
-[scriptable, uuid(54382875-ed12-4f90-9a63-1f0498d0a3f2)]
+[scriptable, uuid(e391ba85-9379-4762-b387-558e38db730f)]
 interface jsdIFilterEnumerator : nsISupports
 {
     /**
@@ -488,7 +488,7 @@ interface jsdIFilterEnumerator : nsISupports
 /**
  * Pass an instance of one of these to jsdIDebuggerService::enumerateScripts.
  */
-[scriptable, uuid(4c2f706e-1dd2-11b2-9ebc-85a06e948830)]
+[scriptable, uuid(5ba76b99-acb1-4ed8-a4e4-a716a7d9097e)]
 interface jsdIScriptEnumerator : nsISupports
 {
     /**
@@ -501,7 +501,7 @@ interface jsdIScriptEnumerator : nsISupports
 /**
  * Pass an instance of one of these to jsdIDebuggerService::enumerateContexts.
  */
-[scriptable, uuid(912e342a-1dd2-11b2-b09f-cf3af38c15f0)]
+[scriptable, uuid(d96af02e-3379-4db5-885d-fee28d178701)]
 interface jsdIContextEnumerator : nsISupports
 {
     /**
@@ -514,7 +514,7 @@ interface jsdIContextEnumerator : nsISupports
 /**
  * Set jsdIDebuggerService::scriptHook to an instance of one of these.
  */
-[scriptable, uuid(ae89a7e2-1dd1-11b2-8c2f-af82086291a5)]
+[scriptable, uuid(cf7ecc3f-361b-44af-84a7-4b0d6cdca204)]
 interface jsdIScriptHook : nsISupports
 {
     /**
@@ -532,7 +532,7 @@ interface jsdIScriptHook : nsISupports
  * Hook instances of this interface up to the
  * jsdIDebuggerService::functionHook and toplevelHook properties.
  */
-[scriptable, uuid(f102caf6-1dd1-11b2-bd43-c1dbacb95a98)]
+[scriptable, uuid(191d2738-22e8-4756-b366-6c878c87d73b)]
 interface jsdICallHook : nsISupports
 {
     /**
@@ -564,7 +564,7 @@ interface jsdICallHook : nsISupports
     void onCall (in jsdIStackFrame frame, in unsigned long type);
 };
 
-[scriptable, uuid(b7dd3c1c-1dd1-11b2-83eb-8a857d199e0f)]
+[scriptable, uuid(cea9ab1a-4b5d-416f-a197-9ffa7046f2ce)]
 interface jsdIErrorHook : nsISupports
 {
     /**
@@ -593,7 +593,7 @@ interface jsdIErrorHook : nsISupports
      * Called when the JavaScript engine encounters an error.  Return |true|
      * to pass the error along, |false| to invoke the debugHook.
      */
-    boolean onError (in string message, in string fileName,
+    boolean onError (in AUTF8String message, in AUTF8String fileName,
                      in unsigned long line, in unsigned long pos,
                      in unsigned long flags, in unsigned long errnum,
                      in jsdIValue exc);
@@ -604,7 +604,7 @@ interface jsdIErrorHook : nsISupports
  * jsdIDebuggerService::breakpointHook, debuggerHook, errorHook, interruptHook,
  * and throwHook properties.
  */
-[scriptable, uuid(9a7b6ad0-1dd1-11b2-a789-fcfae96356a2)]
+[scriptable, uuid(3a722496-9d78-4f0a-a797-293d9e8cb8d2)]
 interface jsdIExecutionHook : nsISupports
 {
     /**
@@ -707,7 +707,7 @@ interface jsdIEphemeral : nsISupports
  * Context object.  Only context's which are also nsISupports objects can be
  * reflected by this interface.
  */
-[scriptable, uuid(a2dd25a4-1dd1-11b2-bda6-ed525acd4c35)]
+[scriptable, uuid(3e5c934d-6863-4d81-96f5-76a3b962fc2b)]
 interface jsdIContext : jsdIEphemeral
 {
     /* Internal use only. */
@@ -783,7 +783,7 @@ interface jsdIContext : jsdIEphemeral
  * interface.  Once a jsdIStackFrame has been invalidated all method and
  * property accesses will throw a NS_ERROR_NOT_AVAILABLE exception.
  */
-[scriptable, uuid(b6d50784-1dd1-11b2-a932-882246c6fe45)]
+[scriptable, uuid(0633ca73-105e-4e8e-bcc5-13405d61754a)]
 interface jsdIStackFrame : jsdIEphemeral
 {
     /** Internal use only. */
@@ -818,7 +818,7 @@ interface jsdIStackFrame : jsdIEphemeral
     /**
      * Function name executing in this stack frame.
      */
-    readonly attribute string         functionName;
+    readonly attribute AUTF8String    functionName;
     /**
      * Script running in this stack frame, null for native frames.
      */
@@ -851,7 +851,7 @@ interface jsdIStackFrame : jsdIEphemeral
      * @param line     Starting line number for this script.  One based.
      * @retval         Result of evaluating the script.
      */
-    boolean eval (in AString bytes, in string fileName,
+    boolean eval (in AString bytes, in AUTF8String fileName,
                   in unsigned long line, out jsdIValue result);
     
 };
@@ -860,7 +860,7 @@ interface jsdIStackFrame : jsdIEphemeral
  * Script object.  In JavaScript engine terms, there's a single script for each
  * function, and one for the top level script.
  */
-[scriptable, uuid(a38f65ca-1dd1-11b2-95d5-ff2947e9c920)]
+[scriptable, uuid(b1b7f95d-85f9-431e-afb0-936f91c27244)]
 interface jsdIScript : jsdIEphemeral
 {
     /** Internal use only. */
@@ -908,7 +908,7 @@ interface jsdIScript : jsdIEphemeral
      * instance is created and is therefore available even after the script is
      * invalidated.
      */
-    readonly attribute string        fileName;
+    readonly attribute AUTF8String   fileName;
     /**
      * Function name for this script.  "anonymous" for unnamed functions (or
      * a function actually named anonymous), empty for top level scripts.
@@ -916,7 +916,7 @@ interface jsdIScript : jsdIEphemeral
      * instance is created and is therefore available even after the script is
      * invalidated.
      */
-    readonly attribute string        functionName;
+    readonly attribute AUTF8String   functionName;
     /**
      * Fetch the function object as a jsdIValue.
      */
@@ -1020,7 +1020,7 @@ interface jsdIScript : jsdIEphemeral
  * jsdIValue adds a root for the underlying JavaScript value, so don't keep it
  * if you don't need to.
  */
-[scriptable, uuid(b7964304-1dd1-11b2-ba20-cf4205772e9d)]
+[scriptable, uuid(f39204c5-4e67-4fd0-9c70-0bd8d14e6511)]
 interface jsdIValue : jsdIEphemeral
 {
     /** Internal use only. */
@@ -1039,7 +1039,7 @@ interface jsdIValue : jsdIEphemeral
      */
     readonly attribute boolean isNumber;
     /**
-     * |true| if the value represents a JavaScript primitive number or string
+     * |true| if the value represents a JavaScript primitive number or AUTF8String
      */
     readonly attribute boolean isPrimitive;
     
@@ -1055,7 +1055,7 @@ interface jsdIValue : jsdIEphemeral
     const unsigned long TYPE_NULL     = 4;
     /** Value is an object. */
     const unsigned long TYPE_OBJECT   = 5;
-    /** Value is a primitive string. */
+    /** Value is a primitive AUTF8String. */
     const unsigned long TYPE_STRING   = 6;
     /** Value is void. */
     const unsigned long TYPE_VOID     = 7;
@@ -1075,20 +1075,20 @@ interface jsdIValue : jsdIEphemeral
      */    
     readonly attribute jsdIValue     jsParent;
     /**
-     * Class name if this value represents an object.  Empty string if the value
+     * Class name if this value represents an object.  Empty AUTF8String if the value
      * is not an object.
      */
-    readonly attribute string        jsClassName;
+    readonly attribute AUTF8String   jsClassName;
     /**
-     * Constructor name if this value represents an object.  Empty string if the
+     * Constructor name if this value represents an object.  Empty AUTF8String if the
      * value is not an object.
      */
     readonly attribute jsdIValue     jsConstructor;
     /**
-     * Function name if this value represents a function.  Empty string if the
+     * Function name if this value represents a function.  Empty AUTF8String if the
      * value is not a function.
      */
-    readonly attribute string        jsFunctionName;
+    readonly attribute AUTF8String   jsFunctionName;
     
     /**
      * Value if interpreted as a boolean.  Converts if necessary.
@@ -1107,9 +1107,9 @@ interface jsdIValue : jsdIEphemeral
      */
     readonly attribute jsdIObject objectValue;
     /**
-     * Value if interpreted as a string.  Converts if necessary.
+     * Value if interpreted as a AUTF8String.  Converts if necessary.
      */
-    readonly attribute string     stringValue;
+    readonly attribute AUTF8String     stringValue;
 
     /**
      * Number of properties.  0 if the value is not an object, or the value is
@@ -1132,7 +1132,7 @@ interface jsdIValue : jsdIEphemeral
      * @retval     jsdIProperty for the requested property name or null if no
      *             property exists for the requested name.
      */
-    jsdIProperty getProperty (in string name);
+    jsdIProperty getProperty (in AUTF8String name);
 
     /**
      * jsdIValues are wrappers around JavaScript engine structures.  Much of the
@@ -1160,7 +1160,7 @@ interface jsdIValue : jsdIEphemeral
  * functions from jsdIValue should move to this interface.  We could inherit from
  * jsdIValue or use interface flattening or something.
  */
-[scriptable, uuid(d500e8b8-1dd1-11b2-89a1-cdf55d91cbbd)]
+[scriptable, uuid(a735a94c-9d41-4997-8fcb-cfa8b649a5b7)]
 interface jsdIObject : nsISupports
 {
     /** Internal use only. */
@@ -1172,7 +1172,7 @@ interface jsdIObject : nsISupports
      * The URL (filename) that contains the script which caused this object
      * to be created.
      */
-    readonly attribute string        creatorURL;
+    readonly attribute AUTF8String   creatorURL;
     /**
      * Line number in the creatorURL where this object was created.
      */
@@ -1181,7 +1181,7 @@ interface jsdIObject : nsISupports
      * The URL (filename) that contains the script which defined the constructor
      * used to create this object.
      */
-    readonly attribute string        constructorURL;
+    readonly attribute AUTF8String   constructorURL;
     /**
      * Line number in the creatorURL where this object was created.
      */
@@ -1196,7 +1196,7 @@ interface jsdIObject : nsISupports
  * Representation of a property of an object.  When an instance is invalid, all
  * method and property access will result in a NS_UNAVAILABLE error.
  */
-[scriptable, uuid(b8816e56-1dd1-11b2-81dc-8ba99a833d9e)]
+[scriptable, uuid(4491ecd4-fb6b-43fb-bd6f-5d1473f1df24)]
 interface jsdIProperty : jsdIEphemeral
 {
     /** Internal use only. */
