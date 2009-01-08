@@ -1587,7 +1587,7 @@ endif
 # Copy each element of EXPORTS to $(PUBLIC)
 
 ifneq ($(EXPORTS)$(XPIDLSRCS)$(SDK_HEADERS)$(SDK_XPIDLSRCS),)
-$(SDK_PUBLIC) $(PUBLIC)::
+$(SDK_PUBLIC) $(PUBLIC):
 	$(NSINSTALL) -D $@
 endif
 
