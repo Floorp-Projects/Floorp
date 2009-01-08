@@ -211,6 +211,11 @@ js_NewDoubleInRootedValue(JSContext *cx, jsdouble d, jsval *vp);
 extern jsdouble *
 js_NewWeaklyRootedDouble(JSContext *cx, jsdouble d);
 
+#ifdef JS_TRACER
+extern JSBool
+js_ReserveObjects(JSContext *cx, size_t nobjects);
+#endif
+
 extern JSBool
 js_LockGCThingRT(JSRuntime *rt, void *thing);
 
