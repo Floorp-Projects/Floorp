@@ -76,6 +76,10 @@ struct nsTreeImageCacheEntry
   nsCOMPtr<imgIDecoderObserver> listener;
 };
 
+#define NS_TREEBODYFRAME_IID \
+{ 0xe35eb017, 0xa679, 0x4d4d, \
+  { 0x83, 0xda, 0xce, 0xd6, 0x20, 0xae, 0x9e, 0x66 } }
+
 // The actual frame that paints the cells and rows.
 class NS_FINAL_CLASS nsTreeBodyFrame
   : public nsLeafBoxFrame
@@ -87,9 +91,9 @@ public:
   nsTreeBodyFrame(nsIPresShell* aPresShell, nsStyleContext* aContext);
   ~nsTreeBodyFrame();
 
-  NS_DECLARE_FRAME_ACCESSOR(nsTreeBodyFrame)
+  NS_DECLARE_STATIC_IID_ACCESSOR(NS_TREEBODYFRAME_IID)
 
-  NS_DECL_QUERYFRAME
+  NS_DECL_ISUPPORTS
 
   // non-virtual signatures like nsITreeBodyFrame
   nsresult GetColumns(nsITreeColumns **aColumns);
@@ -146,9 +150,9 @@ public:
   NS_IMETHOD PseudoMatches(nsIAtom* aTag, nsCSSSelector* aSelector, PRBool* aResult);
 
   // nsIScrollbarMediator
-  NS_IMETHOD PositionChanged(nsIScrollbarFrame* aScrollbar, PRInt32 aOldIndex, PRInt32& aNewIndex);
-  NS_IMETHOD ScrollbarButtonPressed(nsIScrollbarFrame* aScrollbar, PRInt32 aOldIndex, PRInt32 aNewIndex);
-  NS_IMETHOD VisibilityChanged(PRBool aVisible) { Invalidate(); return NS_OK; }
+  NS_IMETHOD PositionChanged(nsISupports* aScrollbar, PRInt32 aOldIndex, PRInt32& aNewIndex);
+  NS_IMETHOD ScrollbarButtonPressed(nsISupports* aScrollbar, PRInt32 aOldIndex, PRInt32 aNewIndex);
+  NS_IMETHOD VisibilityChanged(nsISupports* aScrollbar, PRBool aVisible) { Invalidate(); return NS_OK; }
 
   // Overridden from nsIFrame to cache our pres context.
   NS_IMETHOD Init(nsIContent*     aContent,
@@ -598,5 +602,7 @@ protected: // Data Members
 
   nsRevocableEventPtr<ScrollEvent> mScrollEvent;
 }; // class nsTreeBodyFrame
+
+NS_DEFINE_STATIC_IID_ACCESSOR(nsTreeBodyFrame, NS_TREEBODYFRAME_IID)
 
 #endif

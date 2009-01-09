@@ -81,11 +81,14 @@ nsSVGForeignObjectFrame::nsSVGForeignObjectFrame(nsStyleContext* aContext)
 }
 
 //----------------------------------------------------------------------
-// nsIFrame methods
+// nsISupports methods
 
-NS_QUERYFRAME_HEAD(nsSVGForeignObjectFrame)
-  NS_QUERYFRAME_ENTRY(nsISVGChildFrame)
-NS_QUERYFRAME_TAIL_INHERITING(nsSVGForeignObjectFrameBase)
+NS_INTERFACE_MAP_BEGIN(nsSVGForeignObjectFrame)
+  NS_INTERFACE_MAP_ENTRY(nsISVGChildFrame)
+NS_INTERFACE_MAP_END_INHERITING(nsSVGForeignObjectFrameBase)
+
+//----------------------------------------------------------------------
+// nsIFrame methods
 
 NS_IMETHODIMP
 nsSVGForeignObjectFrame::Init(nsIContent* aContent,

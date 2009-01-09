@@ -78,7 +78,7 @@ public:
   virtual void SetAdditionalStyleContext(PRInt32 aIndex,
                                          nsStyleContext* aStyleContext);
 
-  NS_DECL_QUERYFRAME
+  NS_IMETHOD QueryInterface(const nsIID& aIID, void** aInstancePtr);
 
   void PaintCheckBox(nsIRenderingContext& aRenderingContext,
                      nsPoint aPt, const nsRect& aDirtyRect);
@@ -91,6 +91,11 @@ protected:
   PRBool GetCheckboxState();
 
   nsRefPtr<nsStyleContext> mCheckButtonFaceStyle;
+
+private:
+  NS_IMETHOD_(nsrefcnt) AddRef() { return NS_OK; }
+  NS_IMETHOD_(nsrefcnt) Release() { return NS_OK; }
+ 
 };
 
 #endif

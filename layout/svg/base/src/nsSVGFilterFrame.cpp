@@ -110,7 +110,7 @@ nsAutoFilterInstance::nsAutoFilterInstance(nsIFrame *aTarget,
 {
   nsCOMPtr<nsIDOMSVGMatrix> ctm = nsSVGUtils::GetCanvasTM(aTarget);
 
-  mTarget = do_QueryFrame(aTarget);
+  CallQueryInterface(aTarget, &mTarget);
   if (mTarget) {
     mTarget->SetMatrixPropagation(PR_FALSE);
     mTarget->NotifySVGChanged(nsISVGChildFrame::SUPPRESS_INVALIDATION |

@@ -331,7 +331,8 @@ nsCoreUtils::ScrollFrameToPoint(nsIFrame *aScrollableFrame,
                                 nsIFrame *aFrame,
                                 const nsIntPoint& aPoint)
 {
-  nsIScrollableFrame *scrollableFrame = do_QueryFrame(aScrollableFrame);
+  nsIScrollableFrame *scrollableFrame = nsnull;
+  CallQueryInterface(aScrollableFrame, &scrollableFrame);
   if (!scrollableFrame)
     return;
 

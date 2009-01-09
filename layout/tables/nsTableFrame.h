@@ -140,7 +140,8 @@ class nsTableFrame : public nsHTMLContainerFrame, public nsITableLayout
 {
 public:
 
-  NS_DECL_QUERYFRAME
+  // nsISupports
+  NS_DECL_ISUPPORTS_INHERITED
 
   /** nsTableOuterFrame has intimate knowledge of the inner table frame */
   friend class nsTableOuterFrame;

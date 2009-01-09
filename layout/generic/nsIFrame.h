@@ -47,7 +47,7 @@
    variables in this file.  -dwh */
 
 #include <stdio.h>
-#include "nsQueryFrame.h"
+#include "nsISupports.h"
 #include "nsEvent.h"
 #include "nsStyleStruct.h"
 #include "nsStyleContext.h"
@@ -464,10 +464,10 @@ typedef PRBool nsDidReflowStatus;
  * If you're not in layout but you must call functions in here, at least
  * restrict yourself to calling virtual methods, which won't hurt you as badly.
  */
-class nsIFrame : public nsQueryFrame
+class nsIFrame : public nsISupports
 {
 public:
-  NS_DECLARE_FRAME_ACCESSOR(nsIFrame)
+  NS_DECLARE_STATIC_IID_ACCESSOR(NS_IFRAME_IID)
 
   nsPresContext* PresContext() const {
     return GetStyleContext()->GetRuleNode()->GetPresContext();
@@ -2348,6 +2348,9 @@ protected:
    nsresult PeekOffsetParagraph(nsPeekOffsetStruct *aPos);
 
 private:
+  NS_IMETHOD_(nsrefcnt) AddRef(void) = 0;
+  NS_IMETHOD_(nsrefcnt) Release(void) = 0;
+
   nsRect* GetOverflowAreaProperty(PRBool aCreateIfNecessary = PR_FALSE);
 };
 
@@ -2421,5 +2424,8 @@ private:
   nsWeakFrame*  mPrev;
   nsIFrame*     mFrame;
 };
+
+
+NS_DEFINE_STATIC_IID_ACCESSOR(nsIFrame, NS_IFRAME_IID)
 
 #endif /* nsIFrame_h___ */

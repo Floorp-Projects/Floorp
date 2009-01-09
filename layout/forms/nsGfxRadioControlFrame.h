@@ -60,9 +60,8 @@ public:
   nsGfxRadioControlFrame(nsStyleContext* aContext);
   ~nsGfxRadioControlFrame();
 
-  NS_DECL_QUERYFRAME
-  
-  //nsIRadioControlFrame methods
+   //nsIRadioControlFrame methods
+  NS_IMETHOD QueryInterface(const nsIID& aIID, void** aInstancePtr);
   NS_IMETHOD SetRadioButtonFaceStyleContext(nsStyleContext *aRadioButtonFaceStyleContext);
 #ifdef ACCESSIBILITY
   NS_IMETHOD GetAccessible(nsIAccessible** aAccessible);
@@ -82,6 +81,10 @@ public:
 
 protected:
   nsRefPtr<nsStyleContext> mRadioButtonFaceStyle;
+
+private:
+  NS_IMETHOD_(nsrefcnt) AddRef() { return NS_OK; }
+  NS_IMETHOD_(nsrefcnt) Release() { return NS_OK; }
 };
 
 #endif

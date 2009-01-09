@@ -69,7 +69,10 @@ nsIRootBox::GetRootBox(nsIPresShell* aShell)
     rootFrame = rootFrame->GetFirstChild(nsnull);
   }
 
-  nsIRootBox* rootBox = do_QueryFrame(rootFrame);
+  nsIRootBox* rootBox = nsnull;
+  if (rootFrame) {
+    CallQueryInterface(rootFrame, &rootBox);
+  }
   return rootBox;
 }
 
@@ -80,7 +83,7 @@ public:
 
   nsRootBoxFrame(nsIPresShell* aShell, nsStyleContext *aContext);
 
-  NS_DECL_QUERYFRAME
+  NS_DECL_ISUPPORTS_INHERITED
 
   virtual nsPopupSetFrame* GetPopupSetFrame();
   virtual void SetPopupSetFrame(nsPopupSetFrame* aPopupSet);
@@ -330,9 +333,21 @@ nsRootBoxFrame::RemoveTooltipSupport(nsIContent* aNode)
   return NS_ERROR_NOT_IMPLEMENTED;
 }
 
-NS_QUERYFRAME_HEAD(nsRootBoxFrame)
-  NS_QUERYFRAME_ENTRY(nsIRootBox)
-NS_QUERYFRAME_TAIL_INHERITING(nsBoxFrame)
+NS_IMETHODIMP_(nsrefcnt) 
+nsRootBoxFrame::AddRef(void)
+{
+  return NS_OK;
+}
+
+NS_IMETHODIMP_(nsrefcnt)
+nsRootBoxFrame::Release(void)
+{
+  return NS_OK;
+}
+
+NS_INTERFACE_MAP_BEGIN(nsRootBoxFrame)
+  NS_INTERFACE_MAP_ENTRY(nsIRootBox)
+NS_INTERFACE_MAP_END_INHERITING(nsBoxFrame)
 
 #ifdef DEBUG
 NS_IMETHODIMP

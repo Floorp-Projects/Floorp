@@ -59,9 +59,13 @@ NS_NewScrollbarFrame (nsIPresShell* aPresShell, nsStyleContext* aContext)
   return new (aPresShell) nsScrollbarFrame (aPresShell, aContext);
 } // NS_NewScrollbarFrame
 
-NS_QUERYFRAME_HEAD(nsScrollbarFrame)
-  NS_QUERYFRAME_ENTRY(nsIScrollbarFrame)
-NS_QUERYFRAME_TAIL_INHERITING(nsBoxFrame)
+//
+// QueryInterface
+//
+NS_INTERFACE_MAP_BEGIN(nsScrollbarFrame)
+  NS_INTERFACE_MAP_ENTRY(nsIScrollbarFrame)
+NS_INTERFACE_MAP_END_INHERITING(nsBoxFrame)
+
 
 NS_IMETHODIMP
 nsScrollbarFrame::Init(nsIContent* aContent,
@@ -131,7 +135,8 @@ nsScrollbarFrame::AttributeChanged(PRInt32 aNameSpaceID,
   if (!parent)
     return rv;
 
-  nsIScrollableFrame* scrollable = do_QueryFrame(parent);
+  nsIScrollableFrame* scrollable = nsnull;
+  parent->QueryInterface(NS_GET_IID(nsIScrollableFrame), (void**)&scrollable);
   if (!scrollable)
     return rv;
 
@@ -189,13 +194,15 @@ nsScrollbarFrame::GetScrollbarMediator()
 
   // check if the frame is a scroll frame. If so, get the scrollable frame
   // inside it.
-  nsIScrollableFrame* scrollFrame = do_QueryFrame(f);
+  nsIScrollableFrame* scrollFrame;
+  CallQueryInterface(f, &scrollFrame);
   if (scrollFrame) {
     f = scrollFrame->GetScrolledFrame();
     if (!f)
       return nsnull;
   }
 
-  nsIScrollbarMediator* sbm = do_QueryFrame(f);
+  nsIScrollbarMediator* sbm;
+  CallQueryInterface(f, &sbm);
   return sbm;
 }

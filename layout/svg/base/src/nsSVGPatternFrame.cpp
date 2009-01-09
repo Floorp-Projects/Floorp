@@ -640,9 +640,9 @@ nsSVGPatternFrame::GetCallerGeometry(nsIDOMSVGMatrix **aCTM,
   // will be in *device coordinates*
   nsISVGChildFrame *callerSVGFrame;
   if (callerType == nsGkAtoms::svgGlyphFrame)
-    callerSVGFrame = do_QueryFrame(aSource->GetParent());
+    CallQueryInterface(aSource->GetParent(), &callerSVGFrame);
   else
-    callerSVGFrame = do_QueryFrame(aSource);
+    CallQueryInterface(aSource, &callerSVGFrame);
 
   callerSVGFrame->SetMatrixPropagation(PR_FALSE);
   callerSVGFrame->NotifySVGChanged(nsISVGChildFrame::SUPPRESS_INVALIDATION |

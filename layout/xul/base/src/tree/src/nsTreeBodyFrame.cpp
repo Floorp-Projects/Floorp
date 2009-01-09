@@ -134,11 +134,19 @@ NS_NewTreeBodyFrame(nsIPresShell* aPresShell, nsStyleContext* aContext)
 } // NS_NewTreeFrame
 
 
-NS_QUERYFRAME_HEAD(nsTreeBodyFrame)
-  NS_QUERYFRAME_ENTRY(nsICSSPseudoComparator)
-  NS_QUERYFRAME_ENTRY(nsIScrollbarMediator)
-  NS_QUERYFRAME_ENTRY(nsTreeBodyFrame)
-NS_QUERYFRAME_TAIL_INHERITING(nsLeafBoxFrame)
+//
+// QueryInterface
+//
+
+NS_INTERFACE_MAP_BEGIN(nsTreeBodyFrame)
+  NS_INTERFACE_MAP_ENTRY(nsICSSPseudoComparator)
+  NS_INTERFACE_MAP_ENTRY(nsIScrollbarMediator)
+  if (aIID.Equals(NS_GET_IID(nsTreeBodyFrame))) {
+    *aInstancePtr = this;
+    return NS_OK;
+  }
+  else
+NS_INTERFACE_MAP_END_INHERITING(nsLeafBoxFrame)
 
 // Constructor
 nsTreeBodyFrame::nsTreeBodyFrame(nsIPresShell* aPresShell, nsStyleContext* aContext)
@@ -169,6 +177,18 @@ nsTreeBodyFrame::~nsTreeBodyFrame()
 {
   mImageCache.EnumerateRead(CancelImageRequest, nsnull);
   delete mSlots;
+}
+
+NS_IMETHODIMP_(nsrefcnt) 
+nsTreeBodyFrame::AddRef(void)
+{
+  return NS_OK;
+}
+
+NS_IMETHODIMP_(nsrefcnt)
+nsTreeBodyFrame::Release(void)
+{
+  return NS_OK;
 }
 
 static void
@@ -843,14 +863,16 @@ static void
 FindScrollParts(nsIFrame* aCurrFrame, nsTreeBodyFrame::ScrollParts* aResult)
 {
   if (!aResult->mColumnsScrollableView) {
-    nsIScrollableFrame* f = do_QueryFrame(aCurrFrame);
+    nsIScrollableFrame* f;
+    CallQueryInterface(aCurrFrame, &f);
     if (f) {
       aResult->mColumnsFrame = aCurrFrame;
       aResult->mColumnsScrollableView = f->GetScrollableView();
     }
   }
   
-  nsIScrollbarFrame *sf = do_QueryFrame(aCurrFrame);
+  nsIScrollbarFrame *sf = nsnull;
+  CallQueryInterface(aCurrFrame, &sf);
   if (sf) {
     if (!aCurrFrame->IsHorizontal()) {
       if (!aResult->mVScrollbar) {
@@ -887,12 +909,14 @@ nsTreeBodyFrame::ScrollParts nsTreeBodyFrame::GetScrollParts()
     FindScrollParts(treeFrame, &result);
     if (result.mHScrollbar) {
       result.mHScrollbar->SetScrollbarMediatorContent(GetContent());
-      nsIFrame* f = do_QueryFrame(result.mHScrollbar);
+      nsIFrame* f;
+      CallQueryInterface(result.mHScrollbar, &f);
       result.mHScrollbarContent = f->GetContent();
     }
     if (result.mVScrollbar) {
       result.mVScrollbar->SetScrollbarMediatorContent(GetContent());
-      nsIFrame* f = do_QueryFrame(result.mVScrollbar);
+      nsIFrame* f;
+      CallQueryInterface(result.mVScrollbar, &f);
       result.mVScrollbarContent = f->GetContent();
     }
   }
@@ -4107,11 +4131,16 @@ nsTreeBodyFrame::ScrollHorzInternal(const ScrollParts& aParts, PRInt32 aPosition
 }
 
 NS_IMETHODIMP
-nsTreeBodyFrame::ScrollbarButtonPressed(nsIScrollbarFrame* aScrollbar, PRInt32 aOldIndex, PRInt32 aNewIndex)
+nsTreeBodyFrame::ScrollbarButtonPressed(nsISupports* aScrollbar, PRInt32 aOldIndex, PRInt32 aNewIndex)
 {
+  // Determine which scrollbar we're talking about 
+  nsIScrollbarFrame* sf = nsnull;
+  CallQueryInterface(aScrollbar, &sf);
+  NS_ASSERTION(sf, "scrollbar has no frame");
+
   ScrollParts parts = GetScrollParts();
 
-  if (aScrollbar == parts.mVScrollbar) {
+  if (sf == parts.mVScrollbar) {
     if (aNewIndex > aOldIndex)
       ScrollToRowInternal(parts, mTopRowIndex+1);
     else if (aNewIndex < aOldIndex)
@@ -4126,21 +4155,26 @@ nsTreeBodyFrame::ScrollbarButtonPressed(nsIScrollbarFrame* aScrollbar, PRInt32 a
 }
   
 NS_IMETHODIMP
-nsTreeBodyFrame::PositionChanged(nsIScrollbarFrame* aScrollbar, PRInt32 aOldIndex, PRInt32& aNewIndex)
+nsTreeBodyFrame::PositionChanged(nsISupports* aScrollbar, PRInt32 aOldIndex, PRInt32& aNewIndex)
 {
   ScrollParts parts = GetScrollParts();
   
   if (aOldIndex == aNewIndex)
     return NS_OK;
 
+  // Determine which scrollbar we're talking about 
+  nsIScrollbarFrame* sf = nsnull;
+  CallQueryInterface(aScrollbar, &sf);
+  NS_ASSERTION(sf, "scrollbar has no frame");
+
   // Vertical Scrollbar 
-  if (parts.mVScrollbar == aScrollbar) {
+  if (parts.mVScrollbar == sf) {
     nscoord rh = nsPresContext::AppUnitsToIntCSSPixels(mRowHeight);
 
     nscoord newrow = aNewIndex/rh;
     ScrollInternal(parts, newrow);
   // Horizontal Scrollbar
-  } else if (parts.mHScrollbar == aScrollbar) {
+  } else if (parts.mHScrollbar == sf) {
     ScrollHorzInternal(parts, aNewIndex);
   }
 
