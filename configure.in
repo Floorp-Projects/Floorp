@@ -5817,19 +5817,6 @@ MOZ_ARG_DISABLE_BOOL(updater,
 [  --disable-updater       Disable building of updater],
     MOZ_UPDATER=,
     MOZ_UPDATER=1 )
-# The Windows build requires the iconv command line utility
-# in order to build the updater.
-case "$target_os" in
-    msvc*|mks*|cygwin*|mingw*|wince*)
-        if test -n "$MOZ_UPDATER"; then
-            AC_MSG_CHECKING([for iconv])
-            AC_CHECK_PROGS(HOST_ICONV, $HOST_ICONV "iconv", "")
-            if test -z "$HOST_ICONV"; then
-                AC_MSG_ERROR([iconv not found in \$PATH])
-            fi
-        fi
-        ;;
-esac
 AC_SUBST(MOZ_UPDATER)
 
 # app update channel is 'default' when not supplied.
