@@ -81,7 +81,7 @@ var BrowserUI = {
   _editingBookmark : null,
 
   _titleChanged : function(aDocument) {
-    var browser = Browser.currentBrowser;
+    var browser = Browser.selectedBrowser;
     if (browser && aDocument != browser.contentDocument)
       return;
 
@@ -111,7 +111,7 @@ var BrowserUI = {
   },
 
   _tabSelect : function(aEvent) {
-    var browser = Browser.currentBrowser;
+    var browser = Browser.selectedBrowser;
     this._titleChanged(browser.contentDocument);
     this._favicon.src = browser.mIconURL || kDefaultFavIconURL;
 
@@ -201,7 +201,7 @@ var BrowserUI = {
       icons.setAttribute("mode", "edit");
       this._edit.readOnly = false;
 
-      let urlString = this.getDisplayURI(Browser.currentBrowser);
+      let urlString = this.getDisplayURI(Browser.selectedBrowser);
       if (urlString == "about:blank")
         urlString = "";
       this._edit.value = urlString;
@@ -285,7 +285,7 @@ var BrowserUI = {
         icons.setAttribute("mode", "view");
 
         if (!this._faviconLink) {
-          this._faviconLink = Browser.currentBrowser.currentURI.prePath + "/favicon.ico";
+          this._faviconLink = Browser.selectedBrowser.currentURI.prePath + "/favicon.ico";
         }
         this._setIcon(this._faviconLink);
         this.updateIcon();
@@ -306,7 +306,7 @@ var BrowserUI = {
   },
 
   updateIcon : function() {
-    if (Browser.currentTab.isLoading()) {
+    if (Browser.selectedTab.isLoading()) {
       this._throbber.hidden = false;
       this._throbber.setAttribute("loading", "true");
       this._favicon.hidden = true;
@@ -333,7 +333,7 @@ var BrowserUI = {
 
   /* Set the location to the current content */
   setURI : function() {
-    var browser = Browser.currentBrowser;
+    var browser = Browser.selectedBrowser;
 
     // FIXME: deckbrowser should not fire TabSelect on the initial tab (bug 454028)
     if (!browser.currentURI)
@@ -537,7 +537,7 @@ var BrowserUI = {
 
   updateStar : function() {
     var star = document.getElementById("tool-star");
-    if (PlacesUtils.getMostRecentBookmarkForURI(Browser.currentBrowser.currentURI) != -1)
+    if (PlacesUtils.getMostRecentBookmarkForURI(Browser.selectedBrowser.currentURI) != -1)
       star.setAttribute("starred", "true");
     else
       star.removeAttribute("starred");
@@ -627,7 +627,7 @@ var BrowserUI = {
 
   newTab : function() {
     ws.panTo(0, -60, true);
-    Browser.newTab(true);
+    Browser.addTab("about:blank", true);
     this.show(UIMODE_URLEDIT);
   },
 
@@ -637,7 +637,7 @@ var BrowserUI = {
   },
 
   selectTab : function(aTab) {
-    Browser.selectTab(aTab);
+    Browser.selectedTab = aTab;
     this.show(UIMODE_NONE);
   },
 

@@ -323,7 +323,7 @@ KineticPanningModule.prototype = {
       kineticData.kineticDirX = 0;
       kineticData.kineticDirY = 1;
     }
-    
+
     kineticData.kineticDuration = vel/(2 * kineticData.kineticDecelloration);
     kineticData.kineticStep = 0;
     kineticData.kineticStartX =  sX;
@@ -332,7 +332,7 @@ KineticPanningModule.prototype = {
     kineticData.kineticHandle = window.setInterval(this._doKinetic, kineticData.kineticStepSize, this);
     return true;
   },
-  
+
   _doKinetic: function(self) {
     let kineticData = self._kineticData;
 
@@ -341,7 +341,7 @@ KineticPanningModule.prototype = {
     if (t > kineticData.kineticDuration)
       t = kineticData.kineticDuration;
     let dist = kineticData.kineticInitialVel * t -
-               kineticData.kineticDecelloration * t * t; 
+               kineticData.kineticDecelloration * t * t;
     let newX = Math.floor(kineticData.kineticDirX * dist + kineticData.kineticStartX);
     let newY = Math.floor(kineticData.kineticDirY * dist + kineticData.kineticStartY);
 
@@ -527,7 +527,7 @@ ClickingModule.prototype = {
           this._reset();
           break;
         }
-        
+
         //dump("mouseup\n");
         this._events.push({event: aEvent, time: Date.now()});
 
@@ -623,7 +623,7 @@ ClickingModule.prototype = {
     var [x, y] = Browser.canvasBrowser._clientToContentCoords(aEvent.clientX, aEvent.clientY);
     //dump("sending mouse event to: " + x + " " + y + "\n");
 
-    var cwin = Browser.currentBrowser.contentWindow;
+    var cwin = Browser.selectedBrowser.contentWindow;
     var cwu = cwin.QueryInterface(Components.interfaces.nsIInterfaceRequestor)
                   .getInterface(Components.interfaces.nsIDOMWindowUtils);
 
@@ -663,4 +663,3 @@ ScrollwheelModule.prototype = {
   cancelPending: function() {
   }
 };
-

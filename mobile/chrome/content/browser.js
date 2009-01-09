@@ -61,7 +61,7 @@ __defineGetter__("gPrefService", function () {
 });
 
 function getBrowser() {
-  return Browser.currentBrowser;
+  return Browser.selectedBrowser;
 }
 
 var ws = null;
@@ -70,7 +70,7 @@ var ih = null;
 var Browser = {
   _canvasBrowser : null,
   _tabs : [],
-  _currentTab : null,
+  _selectedTab : null,
 
   startup: function() {
     var self = this;
@@ -133,9 +133,6 @@ var Browser = {
 
     BrowserUI.init();
 
-    // Create the first tab
-    this.newTab(true);
-
     window.controllers.appendController(this);
     window.controllers.appendController(BrowserUI);
 
@@ -183,10 +180,8 @@ var Browser = {
     /* Initialize Geolocation */
     this.setupGeolocationPrompt();
 
-
     /* Login Manager */
     Cc["@mozilla.org/login-manager;1"].getService(Ci.nsILoginManager);
-
 
     /* Command line arguments/initial homepage */
     // If this is an intial window launch (was a nsICommandLine passed via window params)
@@ -223,10 +218,8 @@ var Browser = {
         }
       } catch (e) {}
 
-      if (whereURI) {
-        var self = this;
-        setTimeout(function() { self.currentBrowser.loadURI(whereURI, null, null, false); }, 0);
-      }
+      if (whereURI)
+        this.addTab(whereURI, true);
     }
 
     var disablePlugins = true;
@@ -313,12 +306,8 @@ var Browser = {
    * Return the currently active <browser> object, since a <deckbrowser> may
    * have more than one
    */
-  get currentBrowser() {
-    return this._currentTab.browser;
-  },
-
-  get currentTab() {
-    return this._currentTab;
+  get selectedBrowser() {
+    return this._selectedTab.browser;
   },
 
   getTabAtIndex: function(index) {
@@ -335,9 +324,9 @@ var Browser = {
     return null;
   },
 
-  newTab: function(bringFront) {
+  addTab: function(uri, bringFront) {
     let newTab = new Tab();
-    newTab.create();
+    newTab.create(uri);
     this._tabs.push(newTab);
 
     let event = document.createEvent("Events");
@@ -345,7 +334,7 @@ var Browser = {
     newTab.content.dispatchEvent(event);
 
     if (bringFront)
-      this.selectTab(newTab);
+      this.selectedTab = newTab;
 
     return newTab;
   },
@@ -359,8 +348,8 @@ var Browser = {
 
     let tabIndex = this._tabs.indexOf(tab);
 
-    let nextTab = this._currentTab;
-    if (this._currentTab == tab) {
+    let nextTab = this._selectedTab;
+    if (this._selectedTab == tab) {
       nextTab = this.getTabAtIndex(tabIndex + 1) || this.getTabAtIndex(tabIndex - 1);
       if (!nextTab)
         return;
@@ -377,41 +366,48 @@ var Browser = {
     for (let t = tabIndex; t < this._tabs.length; t++)
       this._tabs[t].updateThumbnail();
 
-    this.selectTab(nextTab);
+    this.selectedTab = nextTab;
   },
 
-  selectTab: function(tab) {
+  get selectedTab() {
+    return this._selectedTab;
+  },
+
+  set selectedTab(tab) {
     if (tab instanceof XULElement)
       tab = this.getTabFromContent(tab);
 
-    if (!tab || this._currentTab == tab)
+    if (!tab || this._selectedTab == tab)
       return;
 
-    this._currentTab = tab;
+    let firstTab = this._selectedTab == null;
+    this._selectedTab = tab;
 
     // reset the viewportBounds to ensure a redraw
     this._currentViewportBounds = { width: 0, height: 0};
 
-    this._canvasBrowser.setCurrentBrowser(this.currentBrowser);
+    this._canvasBrowser.setCurrentBrowser(this.selectedBrowser);
     document.getElementById("tabs").selectedItem = tab.content;
 
-    ws.panTo(0,0, true);
+    if (!firstTab) {
+      ws.panTo(0,0, true);
 
-    let webProgress = this.currentBrowser.webProgress;
-    let securityUI = this.currentBrowser.securityUI;
+      let webProgress = this.selectedBrowser.webProgress;
+      let securityUI = this.selectedBrowser.securityUI;
 
-    try {
-      tab._listener.onLocationChange(webProgress, null, this.currentBrowser.currentURI);
-      if (securityUI)
-        tab._listener.onSecurityChange(webProgress, null, securityUI.state);
-    } catch (e) {
-      // don't inhibit other listeners or following code
-      Components.utils.reportError(e);
+      try {
+        tab._listener.onLocationChange(webProgress, null, this.selectedBrowser.currentURI);
+        if (securityUI)
+          tab._listener.onSecurityChange(webProgress, null, securityUI.state);
+      } catch (e) {
+        // don't inhibit other listeners or following code
+        Components.utils.reportError(e);
+      }
+
+      let event = document.createEvent("Events");
+      event.initEvent("TabSelect", true, false);
+      tab.content.dispatchEvent(event);
     }
-
-    let event = document.createEvent("Events");
-    event.initEvent("TabSelect", true, false);
-    tab.content.dispatchEvent(event);
   },
 
   supportsCommand: function(cmd) {
@@ -432,8 +428,6 @@ var Browser = {
   },
 
   doCommand: function(cmd) {
-    var browser = this.currentBrowser;
-
     switch (cmd) {
       case "cmd_fullscreen":
         window.fullScreen = !window.fullScreen;
@@ -450,11 +444,8 @@ var Browser = {
     this.findState = aState;
 
     var findbar = document.getElementById("findbar");
-    var browser = findbar.browser;
-    if (!browser) {
-      browser = this.currentBrowser;
-      findbar.browser = browser;
-    }
+    if (!findbar.browser)
+      findbar.browser = this.selectedBrowser;
 
     var panel = document.getElementById("findpanel");
     if (panel.state == "open")
@@ -548,7 +539,7 @@ var Browser = {
             url = url.split("|")[0];
         } catch (e) { /* Fall back on about blank */ }
 
-        Browser.currentBrowser.loadURI(url, null, null, false);
+        Browser.selectedBrowser.loadURI(url, null, null, false);
       }
     }
   }
@@ -596,7 +587,7 @@ nsBrowserAccess.prototype =
     }
     else {
       if (aWhere == Ci.nsIBrowserDOMWindow.OPEN_NEWTAB)
-        newWindow = Browser.newTab(true).browser.contentWindow;
+        newWindow = Browser.addTab("about:blank", true).browser.contentWindow;
       else
         newWindow = aOpener ? aOpener.top : browser.contentWindow;
     }
@@ -929,7 +920,7 @@ const gPopupBlockerObserver = {
 
   onUpdatePageReport: function (aEvent)
   {
-    var cBrowser = Browser.currentBrowser;
+    var cBrowser = Browser.selectedBrowser;
     if (aEvent.originalTarget != cBrowser)
       return;
 
@@ -985,7 +976,7 @@ const gPopupBlockerObserver = {
 
   toggleAllowPopupsForSite: function (aEvent)
   {
-    var currentURI = Browser.currentBrowser.webNavigation.currentURI;
+    var currentURI = Browser.selectedBrowser.webNavigation.currentURI;
     var pm = Components.classes["@mozilla.org/permissionmanager;1"]
                        .getService(this._kIPM);
     pm.add(currentURI, "popup", this._kIPM.ALLOW_ACTION);
@@ -1102,7 +1093,6 @@ ProgressController.prototype = {
   // This method is called to indicate a change to the current location.
   onLocationChange: function(aWebProgress, aRequest, aLocationURI) {
     // XXX this code is not multiple-tab friendly.
-
     var location = aLocationURI ? aLocationURI.spec : "";
     this._hostChanged = true;
 
@@ -1114,9 +1104,9 @@ ProgressController.prototype = {
     // <a href="#" onclick="return install();">Install Foo</a>
     //
     // - which fires a onLocationChange message to uri + '#'...
-    currentBrowser = Browser.currentBrowser;
-    if (currentBrowser.lastURI) {
-      var oldSpec = currentBrowser.lastURI.spec;
+    let selectedBrowser = Browser.selectedBrowser;
+    if (selectedBrowser.lastURI) {
+      var oldSpec = selectedBrowser.lastURI.spec;
       var oldIndexOfHash = oldSpec.indexOf("#");
       if (oldIndexOfHash != -1)
         oldSpec = oldSpec.substr(0, oldIndexOfHash);
@@ -1133,8 +1123,8 @@ ProgressController.prototype = {
         // nBox.removeTransientNotifications();
       }
     }
-    currentBrowser.lastURI = aLocationURI;
-    if (aWebProgress.DOMWindow == Browser.currentBrowser.contentWindow) {
+    selectedBrowser.lastURI = aLocationURI;
+    if (aWebProgress.DOMWindow == Browser.selectedBrowser.contentWindow) {
       BrowserUI.setURI();
     }
   },
@@ -1148,7 +1138,7 @@ ProgressController.prototype = {
     this._tab.setLoading(true);
     //dump("started loading network\n");
 
-    if (Browser.currentBrowser == this.browser) {
+    if (Browser.selectedBrowser == this.browser) {
       Browser.canvasBrowser.startLoading();
       BrowserUI.update(TOOLBARSTATE_LOADING);
     }
@@ -1157,7 +1147,7 @@ ProgressController.prototype = {
   _networkStop: function() {
     this._tab.setLoading(false);
 
-    if (Browser.currentBrowser == this.browser) {
+    if (Browser.selectedBrowser == this.browser) {
       BrowserUI.update(TOOLBARSTATE_LOADED);
     }
   },
@@ -1168,7 +1158,7 @@ ProgressController.prototype = {
     // translate any phone numbers
     Browser.translatePhoneNumbers();
 
-    if (Browser.currentBrowser == this.browser) {
+    if (Browser.selectedBrowser == this.browser) {
       // focus the dom window
       this.browser.contentWindow.focus();
 
@@ -1256,12 +1246,12 @@ Tab.prototype = {
     this._loading = b;
   },
 
-  create: function() {
+  create: function(uri) {
     this._content = document.createElement("richlistitem");
     this._content.setAttribute("type", "documenttab");
     document.getElementById("tabs").addTab(this._content);
 
-    this._createBrowser();
+    this._createBrowser(uri);
   },
 
   destroy: function() {
@@ -1269,7 +1259,7 @@ Tab.prototype = {
     document.getElementById("tabs").removeTab(this._content);
   },
 
-  _createBrowser: function() {
+  _createBrowser: function(uri) {
     if (this._browser)
       throw "Browser already exists";
 
@@ -1282,6 +1272,7 @@ Tab.prototype = {
     if (autocompletepopup)
       browser.setAttribute("autocompletepopup", autocompletepopup);
     browser.setAttribute("type", "content");
+    browser.setAttribute("src", uri);
 
     document.getElementById("browsers").appendChild(browser);
 
@@ -1352,7 +1343,7 @@ Tab.prototype = {
     if (!this._browser)
       return;
 
-    let srcCanvas = (Browser.currentBrowser == this._browser) ? document.getElementById("browser-canvas") : null;
+    let srcCanvas = (Browser.selectedBrowser == this._browser) ? document.getElementById("browser-canvas") : null;
     this._content.updateThumbnail(this._browser, srcCanvas);
   }
 }

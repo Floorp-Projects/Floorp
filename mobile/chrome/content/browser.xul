@@ -248,6 +248,7 @@
                    autocompletepopup="popup_autocomplete"
                    enablehistory="false"
                    maxrows="6"
+                   readonly="true"
                    completeselectedindex="true"
                    flex="1"
                    ontextentered="BrowserUI.goToURI();"
