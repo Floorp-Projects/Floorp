@@ -540,7 +540,13 @@ BookmarksStore.prototype = {
   },
 
   _getWeaveParentIdForItem: function BStore__getWeaveParentIdForItem(itemId) {
-    return this._getWeaveIdForItem(this._bms.getFolderIdForItem(itemId));
+    let parentid = this._bms.getFolderIdForItem(itemId);
+    if (parentid == -1) {
+      this._log.debug("Found orphan bookmark, reparenting to unfiled");
+      parentid = this._bms.unfiledBookmarksFolder;
+      this._bms.moveItem(itemId, parentid, -1);
+    }
+    return this._getWeaveIdForItem(parentid);
   },
 
   _getChildren: function BStore_getChildren(guid, depthIndex, items) {
