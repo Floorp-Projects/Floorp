@@ -341,9 +341,11 @@ ifdef MOZ_UPDATER
 libs:: $(addprefix $(LOCALE_SRCDIR)/,updater/updater.ini)
 ifeq ($(OS_ARCH),WINNT)
 	cat $< $(srcdir)/updater_append.ini $(srcdir)/../installer/windows/nsis/updater_append.ini | \
+	  sed -e "s/%MOZ_APP_DISPLAYNAME%/$(MOZ_APP_DISPLAYNAME)/" | \
 	  sed -e "s/%AB_CD%/$(AB_CD)/" > $(FINAL_TARGET)/updater.ini
 else
 	cat $< $(srcdir)/updater_append.ini | \
+	  sed -e "s/%MOZ_APP_DISPLAYNAME%/$(MOZ_APP_DISPLAYNAME)/" | \
 	  sed -e "s/%AB_CD%/$(AB_CD)/" > $(FINAL_TARGET)/updater.ini
 endif
 endif
