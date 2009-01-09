@@ -2163,7 +2163,7 @@ function testLongNumToString() {
         s = (0x08000000).toString(2);
     return s;
 }
-testLongNumToString = '1000000000000000000000000000';
+testLongNumToString.expected = '1000000000000000000000000000';
 test(testLongNumToString);
 
 function testSubstring() {
