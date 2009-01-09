@@ -177,9 +177,6 @@ var Browser = {
     // for all of our <browser>s
     SpatialNavigation.init(browsers, panCallback);
 
-    /* Initialize Geolocation */
-    this.setupGeolocationPrompt();
-
     /* Login Manager */
     Cc["@mozilla.org/login-manager;1"].getService(Ci.nsILoginManager);
 
@@ -251,51 +248,6 @@ var Browser = {
     var plugins = phs.getPluginTags({ });
     for (var i = 0; i < plugins.length; ++i)
       plugins[i].disabled = !enabled;
-  },
-
-  setupGeolocationPrompt: function() {
-    try {
-      var geolocationService = Cc["@mozilla.org/geolocation/service;1"].getService(Ci.nsIGeolocationService);
-    }
-    catch (ex) {
-      return;
-    }
-
-    geolocationService.prompt = function(request) {
-      var notificationBox = Browser.getNotificationBox();
-      var notification = notificationBox.getNotificationWithValue("geolocation");
-
-      if (!notification) {
-        var bundle_browser = document.getElementById("bundle_browser");
-        var buttons = [{
-            label: bundle_browser.getString("geolocation.exactLocation"),
-            subLabel: bundle_browser.getString("geolocation.exactLocation.subLabel"),
-            accessKey: bundle_browser.getString("geolocation.exactLocationKey"),
-            callback: function(){request.allow()}
-          },
-          {
-            label: bundle_browser.getString("geolocation.neighborhoodLocation"),
-            subLabel: bundle_browser.getString("geolocation.neighborhoodLocation.subLabel"),
-            accessKey: bundle_browser.getString("geolocation.neighborhoodLocationKey"),
-            callback: function(){request.allowButFuzz()}
-          },
-          {
-            label: bundle_browser.getString("geolocation.nothingLocation"),
-            subLabel: "",
-            accessKey: bundle_browser.getString("geolocation.nothingLocationKey"),
-            callback: function(){request.cancel()}
-          }];
-
-        var message = bundle_browser.getFormattedString("geolocation.requestMessage", [request.requestingURI.spec]);
-        var notification = notificationBox.appendNotification(message,
-                             "geolocation", null, // todo "chrome://browser/skin/Info.png",
-                             notificationBox.PRIORITY_INFO_HIGH, buttons);
-        var children = notification.childNodes;
-        for (var b = 0; b < children.length; b++)
-          children[b].setAttribute("sublabel", children[b].buttonInfo.subLabel);
-        return 1;
-      }
-    }
   },
 
   get canvasBrowser() {
