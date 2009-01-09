@@ -1930,6 +1930,12 @@ nsBoxFrame::FireDOMEventSynch(const nsAString& aDOMEventName, nsIContent *aConte
   }
 }
 
+PRBool
+nsBoxFrame::SupportsOrdinalsInChildren()
+{
+  return PR_TRUE;
+}
+
 static nsIFrame*
 SortedMerge(nsBoxLayoutState& aState, nsIFrame *aLeft, nsIFrame *aRight)
 {
@@ -2025,6 +2031,9 @@ nsBoxFrame::CheckBoxOrder(nsBoxLayoutState& aState)
   if (!child)
     return;
 
+  if (!SupportsOrdinalsInChildren())
+    return;
+
   // Run through our list of children and check whether we
   // need to sort them.
   PRUint32 maxOrdinal = child->GetOrdinal(aState);
@@ -2076,6 +2085,9 @@ nsBoxFrame::LayoutChildAt(nsBoxLayoutState& aState, nsIBox* aBox, const nsRect& 
 NS_IMETHODIMP
 nsBoxFrame::RelayoutChildAtOrdinal(nsBoxLayoutState& aState, nsIBox* aChild)
 {
+  if (!SupportsOrdinalsInChildren())
+    return NS_OK;
+
   PRUint32 ord = aChild->GetOrdinal(aState);
   
   nsIFrame *child = mFrames.FirstChild();

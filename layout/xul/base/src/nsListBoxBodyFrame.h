@@ -159,6 +159,9 @@ public:
     mBoxObject = aBoxObject;
     return PR_TRUE;
   }
+
+  virtual PRBool SupportsOrdinalsInChildren();
+
 protected:
   class nsPositionChangedEvent;
   friend class nsPositionChangedEvent;
