@@ -66,7 +66,10 @@ ifeq ($(OS_ARCH),WINNT)
 USE_STATIC_LIBS = 1
 HAVE_PROGRESSUI = 1
 RCINCLUDE = updater.rc
-CPPSRCS += progressui_win.cpp
+CPPSRCS += \
+	progressui_win.cpp \
+	readstrings.cpp \
+	$(NULL)
 OS_LIBS += $(call EXPAND_LIBNAME,comctl32 ws2_32 shell32)
 DEFINES += -DUNICODE -D_UNICODE
 ifndef GNU_CC
