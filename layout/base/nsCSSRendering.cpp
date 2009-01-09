@@ -488,8 +488,9 @@ nsCSSRendering::PaintBorder(nsPresContext* aPresContext,
 
   // in NavQuirks mode we want to use the parent's context as a starting point
   // for determining the background color
-  const nsStyleBackground* bgColor = nsCSSRendering::FindNonTransparentBackground
+  nsStyleContext* bgContext = nsCSSRendering::FindNonTransparentBackground
     (aStyleContext, compatMode == eCompatibility_NavQuirks ? PR_TRUE : PR_FALSE);
+  const nsStyleBackground* bgColor = bgContext->GetStyleBackground();
 
   border = aBorderStyle.GetComputedBorder();
   if ((0 == border.left) && (0 == border.right) &&
@@ -614,8 +615,9 @@ nsCSSRendering::PaintOutline(nsPresContext* aPresContext,
     return;
   }
 
-  const nsStyleBackground* bgColor = nsCSSRendering::FindNonTransparentBackground
+  nsStyleContext* bgContext = nsCSSRendering::FindNonTransparentBackground
     (aStyleContext, PR_FALSE);
+  const nsStyleBackground* bgColor = bgContext->GetStyleBackground();
 
   // get the radius for our outline
   GetBorderRadiusTwips(aOutlineStyle.mOutlineRadius, aBorderArea.width,
@@ -829,13 +831,12 @@ ComputeBackgroundAnchorPoint(const nsStyleBackground& aColor,
   }
 }
 
-const nsStyleBackground*
+nsStyleContext*
 nsCSSRendering::FindNonTransparentBackground(nsStyleContext* aContext,
                                              PRBool aStartAtParent /*= PR_FALSE*/)
 {
   NS_ASSERTION(aContext, "Cannot find NonTransparentBackground in a null context" );
   
-  const nsStyleBackground* result = nsnull;
   nsStyleContext* context = nsnull;
   if (aStartAtParent) {
     context = aContext->GetParent();
@@ -845,13 +846,21 @@ nsCSSRendering::FindNonTransparentBackground(nsStyleContext* aContext,
   }
   
   while (context) {
-    result = context->GetStyleBackground();
-    if (NS_GET_A(result->mBackgroundColor) > 0)
+    const nsStyleBackground* bg = context->GetStyleBackground();
+    if (NS_GET_A(bg->mBackgroundColor) > 0)
       break;
 
-    context = context->GetParent();
+    const nsStyleDisplay* display = context->GetStyleDisplay();
+    if (display->mAppearance)
+      break;
+
+    nsStyleContext* parent = context->GetParent();
+    if (!parent)
+      break;
+
+    context = parent;
   }
-  return result;
+  return context;
 }
 
 
