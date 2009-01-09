@@ -364,6 +364,12 @@ SyncEngine.prototype = {
       return;
     }
 
+    // If the incoming item has been deleted, skip step 3
+    if (item.cleartext === null) {
+      self.done(true);
+      return;
+    }
+
     // Step 3: Check for similar items
     for (let id in this._tracker.changedIDs) {
       let out = this._createRecord(id);
