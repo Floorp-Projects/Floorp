@@ -66,6 +66,7 @@ public:
     // the original text has at least one soft hyphen character
     TEXT_HAS_SHY             = 0x020000,
     TEXT_WAS_TRANSFORMED     = 0x040000,
+    TEXT_UNUSED_FLAG         = 0x080000,
 
     // The following flags are set by nsTextFrame
 

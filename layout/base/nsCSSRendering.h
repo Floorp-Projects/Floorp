@@ -125,12 +125,15 @@ struct nsCSSRendering {
                                PRBool* aIsCanvas);
                                
   /**
-   * Find a non-transparent background, for various table-related and
-   * HR-related backwards-compatibility hacks.  Be very hesitant if
-   * you're considering calling this function -- it's usually not what
-   * you want.
+   * Find a style context containing a non-transparent background,
+   * for various table-related and HR-related backwards-compatibility hacks.
+   * This function will also stop if it finds a -moz-appearance value, as
+   * the theme may draw a widget as a background.
+   *
+   * Be very hesitant if you're considering calling this function -- it's
+   * usually not what you want.
    */
-  static const nsStyleBackground*
+  static nsStyleContext*
   FindNonTransparentBackground(nsStyleContext* aContext,
                                PRBool aStartAtParent = PR_FALSE);
 

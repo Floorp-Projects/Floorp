@@ -132,7 +132,8 @@ LIBGNOME_VERSION=2.0
 STARTUP_NOTIFICATION_VERSION=0.8
 DBUS_VERSION=0.60
 LCMS_VERSION=1.17
-SQLITE_VERSION=3.6.6.2
+SQLITE_VERSION=3.6.7
+LIBNOTIFY_VERSION=0.4
 
 MSMANIFEST_TOOL=
 
@@ -568,20 +569,25 @@ case "$target" in
         _MIDL_MAJOR_VERSION=`echo ${_MIDL_FULL_VERSION} | $AWK -F\. '{ print $1 }'`
         _MIDL_MINOR_VERSION=`echo ${_MIDL_FULL_VERSION} | $AWK -F\. '{ print $2 }'`
         _MIDL_REV_VERSION=`echo ${_MIDL_FULL_VERSION} | $AWK -F\. '{ print $3 }'`
-         # Add flags if necessary
-         AC_MSG_CHECKING([for midl flags])
-         if test \( "$_MIDL_MAJOR_VERSION" -gt "6" \) -o \( "$_MIDL_MAJOR_VERSION" = "6" -a "$_MIDL_MINOR_VERSION" -gt "0" \) -o \( "$_MIDL_MAJOR_VERSION" = "6" -a "$_MIDL_MINOR_VERSION" = "00" -a "$_MIDL_REV_VERSION" -gt "359" \); then
-             # Starting with MIDL version 6.0.359, the MIDL compiler
-             # generates /Oicf /robust stubs by default, which is not
-             # compatible with versions of Windows older than Win2k.
-             # This switches us back to the old behaviour. When we drop
-             # support for Windows older than Win2k, we should remove
-             # this.
-             MIDL_FLAGS="${MIDL_FLAGS} -no_robust"
-             AC_MSG_RESULT([need -no_robust])
-         else
-             MIDL_FLAGS="${MIDL_FLAGS}"
-             AC_MSG_RESULT([none needed])
+        # Add flags if necessary
+        AC_MSG_CHECKING([for midl flags])
+        if test -n "$_MIDL_MAJOR_VERSION"; then
+            if test \( "$_MIDL_MAJOR_VERSION" -gt "6" \) -o \( "$_MIDL_MAJOR_VERSION" = "6" -a "$_MIDL_MINOR_VERSION" -gt "0" \) -o \( "$_MIDL_MAJOR_VERSION" = "6" -a "$_MIDL_MINOR_VERSION" = "00" -a "$_MIDL_REV_VERSION" -gt "359" \); then
+                # Starting with MIDL version 6.0.359, the MIDL compiler
+                # generates /Oicf /robust stubs by default, which is not
+                # compatible with versions of Windows older than Win2k.
+                # This switches us back to the old behaviour. When we drop
+                # support for Windows older than Win2k, we should remove
+                # this.
+                MIDL_FLAGS="${MIDL_FLAGS} -no_robust"
+                AC_MSG_RESULT([need -no_robust])
+            else
+                MIDL_FLAGS="${MIDL_FLAGS}"
+                AC_MSG_RESULT([none needed])
+            fi
+        else
+            MIDL_FLAGS="${MIDL_FLAGS}"
+            AC_MSG_RESULT([none needed])
         fi
         
         unset _MSVC_VER_FILTER
@@ -5118,6 +5124,37 @@ fi
 AC_SUBST(MOZ_ENABLE_DBUS)
 AC_SUBST(MOZ_DBUS_GLIB_CFLAGS)
 AC_SUBST(MOZ_DBUS_GLIB_LIBS)
+
+dnl ========================================================
+dnl = libnotify support
+dnl ========================================================
+
+MOZ_ARG_ENABLE_BOOL(libnotify,
+[  --enable-libnotify       Enable libnotify support ],
+    MOZ_ENABLE_LIBNOTIFY=1,
+    MOZ_ENABLE_LIBNOTIFY=)
+
+if test "$MOZ_ENABLE_GTK2"
+then
+    if test "$MOZ_ENABLE_LIBNOTIFY"
+    then
+        AC_DEFINE(MOZ_ENABLE_LIBNOTIFY)
+    fi
+fi
+
+if test -z "$SKIP_LIBRARY_CHECKS"
+then
+    if test "$MOZ_ENABLE_GTK2"
+    then
+        if test "$MOZ_ENABLE_LIBNOTIFY"
+        then
+            PKG_CHECK_MODULES(MOZ_LIBNOTIFY, libnotify >= $LIBNOTIFY_VERSION)
+        fi
+    fi
+fi
+AC_SUBST(MOZ_ENABLE_LIBNOTIFY)
+AC_SUBST(MOZ_LIBNOTIFY_CFLAGS)
+AC_SUBST(MOZ_LIBNOTIFY_LIBS)
 
 dnl ========================================================
 dnl = Build Personal Security Manager

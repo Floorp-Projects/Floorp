@@ -84,6 +84,7 @@
 #include "xptinfo.h" // this after nsISupports, to pick up IID so that xpt stuff doesn't try to define it itself...
 #include "nsThreadUtils.h"
 #include "prthread.h"
+#include "private/pprthred.h"
 
 #include "nsInt64.h"
 #include "nsManifestLineReader.h"
@@ -1298,7 +1299,7 @@ nsComponentManagerImpl::HashContractID(const char *aContractID,
     if(!aContractID || !aContractIDLen)
         return NS_ERROR_NULL_POINTER;
 
-    nsAutoMonitor mon(mMon);
+    NS_ABORT_IF_FALSE(PR_InMonitor(mMon), "called from outside mMon");
 
     nsContractIDTableEntry* contractIDTableEntry =
         static_cast<nsContractIDTableEntry*>
@@ -1449,6 +1450,9 @@ nsComponentManagerImpl::GetClassObjectByContractID(const char *contractID,
                                                    const nsIID &aIID,
                                                    void **aResult)
 {
+    NS_ENSURE_ARG_POINTER(aResult);
+    NS_ENSURE_ARG_POINTER(contractID);
+
     nsresult rv;
 
     nsCOMPtr<nsIFactory> factory;
@@ -1459,8 +1463,6 @@ nsComponentManagerImpl::GetClassObjectByContractID(const char *contractID,
         PR_LogPrint("nsComponentManager: GetClassObject(%s)", contractID);
     }
 #endif
-
-    PR_ASSERT(aResult != nsnull);
 
     rv = FindFactory(contractID, strlen(contractID), getter_AddRefs(factory));
     if (NS_FAILED(rv)) return rv;
@@ -1482,13 +1484,8 @@ nsComponentManagerImpl::GetClassObjectByContractID(const char *contractID,
 NS_IMETHODIMP
 nsComponentManagerImpl::ContractIDToClassID(const char *aContractID, nsCID *aClass)
 {
-    NS_PRECONDITION(aContractID != nsnull, "null ptr");
-    if (!aContractID)
-        return NS_ERROR_NULL_POINTER;
-
-    NS_PRECONDITION(aClass != nsnull, "null ptr");
-    if (!aClass)
-        return NS_ERROR_NULL_POINTER;
+    NS_ENSURE_ARG_POINTER(aContractID);
+    NS_ENSURE_ARG_POINTER(aClass);
 
     nsresult rv = NS_ERROR_FACTORY_NOT_REGISTERED;
 
@@ -1640,6 +1637,8 @@ nsComponentManagerImpl::CreateInstanceByContractID(const char *aContractID,
                                                    const nsIID &aIID,
                                                    void **aResult)
 {
+    NS_ENSURE_ARG_POINTER(aContractID);
+
     // test this first, since there's no point in creating a component during
     // shutdown -- whether it's available or not would depend on the order it
     // occurs in the list
@@ -1999,6 +1998,7 @@ NS_IMETHODIMP
 nsComponentManagerImpl::RegisterService(const char* aContractID,
                                         nsISupports* aService)
 {
+    NS_ENSURE_ARG_POINTER(aContractID);
 
     nsAutoMonitor mon(mMon);
 
@@ -3457,6 +3457,7 @@ NS_IMETHODIMP
 nsComponentManagerImpl::IsContractIDRegistered(const char *aClass,
                                                PRBool *_retval)
 {
+    NS_ENSURE_ARG_POINTER(aClass);
     nsFactoryEntry *entry = GetFactoryEntry(aClass, strlen(aClass));
 
     if (entry)
