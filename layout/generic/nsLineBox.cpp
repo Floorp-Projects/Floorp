@@ -145,8 +145,9 @@ ListFloats(FILE* out, PRInt32 aIndent, const nsFloatCacheList& aFloats)
       fprintf(out, "placeholder@%p ", static_cast<void*>(ph));
       nsIFrame* frame = ph->GetOutOfFlowFrame();
       if (frame) {
-        nsIFrameDebug* frameDebug = do_QueryFrame(frame);
-        if (frameDebug) {
+        nsIFrameDebug*  frameDebug;
+
+        if (NS_SUCCEEDED(frame->QueryInterface(NS_GET_IID(nsIFrameDebug), (void**)&frameDebug))) {
           frameDebug->GetFrameName(frameName);
           fputs(NS_LossyConvertUTF16toASCII(frameName).get(), out);
         }
@@ -224,8 +225,9 @@ nsLineBox::List(FILE* out, PRInt32 aIndent) const
   nsIFrame* frame = mFirstChild;
   PRInt32 n = GetChildCount();
   while (--n >= 0) {
-    nsIFrameDebug* frameDebug = do_QueryFrame(frame);
-    if (frameDebug) {
+    nsIFrameDebug*  frameDebug;
+
+    if (NS_SUCCEEDED(frame->QueryInterface(NS_GET_IID(nsIFrameDebug), (void**)&frameDebug))) {
       frameDebug->List(out, aIndent + 1);
     }
     frame = frame->GetNextSibling();

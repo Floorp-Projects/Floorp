@@ -273,8 +273,10 @@ nsIFrameDebug::RootFrameList(nsPresContext* aPresContext, FILE* out, PRInt32 aIn
   if (nsnull != shell) {
     nsIFrame* frame = shell->FrameManager()->GetRootFrame();
     if(nsnull != frame) {
-      nsIFrameDebug* debugFrame = do_QueryFrame(frame);
-      if (debugFrame)
+      nsIFrameDebug* debugFrame;
+      nsresult rv;
+      rv = frame->QueryInterface(NS_GET_IID(nsIFrameDebug), (void**)&debugFrame);
+      if(NS_SUCCEEDED(rv))
         debugFrame->List(out, aIndent);
     }
   }
@@ -364,12 +366,42 @@ nsFrame::~nsFrame()
     mStyleContext->Release();
 }
 
-NS_QUERYFRAME_HEAD(nsFrame)
-  NS_QUERYFRAME_ENTRY(nsIFrame)
+/////////////////////////////////////////////////////////////////////////////
+// nsISupports
+
+NS_IMETHODIMP
+nsFrame::QueryInterface(const nsIID& aIID, void** aInstancePtr)
+{
+  NS_PRECONDITION(aInstancePtr, "null out param");
+
 #ifdef DEBUG
-  NS_QUERYFRAME_ENTRY(nsIFrameDebug)
+  if (aIID.Equals(NS_GET_IID(nsIFrameDebug))) {
+    *aInstancePtr = static_cast<nsIFrameDebug*>(this);
+    return NS_OK;
+  }
 #endif
-NS_QUERYFRAME_TAIL
+
+  if (aIID.Equals(NS_GET_IID(nsIFrame)) ||
+      aIID.Equals(NS_GET_IID(nsISupports))) {
+    *aInstancePtr = static_cast<nsIFrame*>(this);
+    return NS_OK;
+  }
+
+  *aInstancePtr = nsnull;
+  return NS_ERROR_NO_INTERFACE;
+}
+
+nsrefcnt nsFrame::AddRef(void)
+{
+  NS_WARNING("not supported for frames");
+  return 1;
+}
+
+nsrefcnt nsFrame::Release(void)
+{
+  NS_WARNING("not supported for frames");
+  return 1;
+}
 
 /////////////////////////////////////////////////////////////////////////////
 // nsIFrame
@@ -1693,8 +1725,9 @@ nsFrame::GetDataForTableSelection(const nsFrameSelection *aFrameSelection,
   while (frame && NS_SUCCEEDED(result))
   {
     // Check for a table cell by querying to a known CellFrame interface
-    nsITableCellLayout *cellElement = do_QueryFrame(frame);
-    if (cellElement)
+    nsITableCellLayout *cellElement;
+    result = (frame)->QueryInterface(NS_GET_IID(nsITableCellLayout), (void **)&cellElement);
+    if (NS_SUCCEEDED(result) && cellElement)
     {
       foundCell = PR_TRUE;
       //TODO: If we want to use proximity to top or left border
@@ -1706,8 +1739,9 @@ nsFrame::GetDataForTableSelection(const nsFrameSelection *aFrameSelection,
       // If not a cell, check for table
       // This will happen when starting frame is the table or child of a table,
       //  such as a row (we were inbetween cells or in table border)
-      nsITableLayout *tableElement = do_QueryFrame(frame);
-      if (tableElement)
+      nsITableLayout *tableElement;
+      result = (frame)->QueryInterface(NS_GET_IID(nsITableLayout), (void **)&tableElement);
+      if (NS_SUCCEEDED(result) && tableElement)
       {
         foundTable = PR_TRUE;
         //TODO: How can we select row when along left table edge
@@ -4259,8 +4293,8 @@ nsFrame::GetSelectionController(nsPresContext *aPresContext, nsISelectionControl
 
   nsIFrame *frame = this;
   while (frame && (frame->GetStateBits() & NS_FRAME_INDEPENDENT_SELECTION)) {
-    nsITextControlFrame *tcf = do_QueryFrame(frame);
-    if (tcf) {
+    nsITextControlFrame *tcf;
+    if (NS_SUCCEEDED(frame->QueryInterface(NS_GET_IID(nsITextControlFrame),(void**)&tcf))) {
       NS_IF_ADDREF(*aSelCon = tcf->GetOwnedSelectionController());
       return NS_OK;
     }
@@ -4284,8 +4318,8 @@ nsIFrame::GetConstFrameSelection()
 {
   nsIFrame *frame = this;
   while (frame && (frame->GetStateBits() & NS_FRAME_INDEPENDENT_SELECTION)) {
-    nsITextControlFrame *tcf = do_QueryFrame(frame);
-    if (tcf) {
+    nsITextControlFrame *tcf;
+    if (NS_SUCCEEDED(frame->QueryInterface(NS_GET_IID(nsITextControlFrame),(void**)&tcf))) {
       return tcf->GetOwnedFrameSelection();
     }
     frame = frame->GetParent();
@@ -4373,8 +4407,9 @@ nsFrame::DumpBaseRegressionData(nsPresContext* aPresContext, FILE* out, PRInt32 
       }
       aIndent++;
       while (kid) {
-        nsIFrameDebug* frameDebug = do_QueryFrame(kid);
-        if (kid) {
+        nsIFrameDebug*  frameDebug;
+
+        if (NS_SUCCEEDED(kid->QueryInterface(NS_GET_IID(nsIFrameDebug), (void**)&frameDebug))) {
           frameDebug->DumpRegressionData(aPresContext, out, aIndent, aIncludeStyleData);
         }
         kid = kid->GetNextSibling();
@@ -4783,8 +4818,9 @@ FindBlockFrameOrBR(nsIFrame* aFrame, nsDirection aDirection)
 
   // Treat form controls as inline leaves
   // XXX we really need a way to determine whether a frame is inline-level
-  nsIFormControlFrame* fcf = do_QueryFrame(aFrame);
-  if (fcf)
+  nsIFormControlFrame* fcf; // used only for QI
+  nsresult rv = aFrame->QueryInterface(NS_GET_IID(nsIFormControlFrame), (void**)&fcf);
+  if (NS_SUCCEEDED(rv))
     return result;
   
   // Check the frame itself
@@ -6050,7 +6086,7 @@ nsIFrame::IsFocusable(PRInt32 *aTabIndex, PRBool aWithMouse)
         // because the extra focus outlines are considered unnecessarily ugly.
         // When clicked on, the selection position within the element 
         // will be enough to make them keyboard scrollable.
-        nsIScrollableFrame *scrollFrame = do_QueryFrame(this);
+        nsCOMPtr<nsIScrollableFrame> scrollFrame = do_QueryInterface(this);
         if (scrollFrame) {
           nsMargin margin = scrollFrame->GetActualScrollbarSizes();
           if (margin.top || margin.right || margin.bottom || margin.left) {
@@ -7336,8 +7372,8 @@ void DR_State::DisplayFrameTypeInfo(nsIFrame* aFrame,
     }
     if(!strcmp(frameTypeInfo->mNameAbbrev, "unknown")) {
       nsAutoString  name;
-      nsIFrameDebug* frameDebug = do_QueryFrame(aFrame);
-      if (frameDebug) {
+      nsIFrameDebug*  frameDebug;
+      if (NS_SUCCEEDED(aFrame->QueryInterface(NS_GET_IID(nsIFrameDebug), (void**)&frameDebug))) {
        frameDebug->GetFrameName(name);
        printf("%s %p ", NS_LossyConvertUTF16toASCII(name).get(), (void*)aFrame);
       }

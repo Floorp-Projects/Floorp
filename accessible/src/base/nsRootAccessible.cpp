@@ -841,7 +841,8 @@ nsresult nsRootAccessible::HandleEventWithTarget(nsIDOMEvent* aEvent,
       nsIFrame* menuFrame = menuAccessNode->GetFrame();
       NS_ENSURE_TRUE(menuFrame, NS_ERROR_FAILURE);
 
-      nsIMenuFrame* imenuFrame = do_QueryFrame(menuFrame);
+      nsIMenuFrame* imenuFrame;
+      CallQueryInterface(menuFrame, &imenuFrame);
       if (imenuFrame)
         fireFocus = PR_TRUE;
       // QI failed for nsIMenuFrame means it's not on menu bar

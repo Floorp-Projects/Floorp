@@ -62,6 +62,9 @@
 #endif
 
 
+NS_DEFINE_IID(kInlineFrameCID, NS_INLINE_FRAME_CID);
+
+
 //////////////////////////////////////////////////////////////////////
 
 // Basic nsInlineFrame methods
@@ -72,9 +75,18 @@ NS_NewInlineFrame(nsIPresShell* aPresShell, nsStyleContext* aContext)
   return new (aPresShell) nsInlineFrame(aContext);
 }
 
-NS_QUERYFRAME_HEAD(nsInlineFrame)
-  NS_QUERYFRAME_ENTRY(nsInlineFrame)
-NS_QUERYFRAME_TAIL_INHERITING(nsInlineFrameSuper)
+NS_IMETHODIMP
+nsInlineFrame::QueryInterface(const nsIID& aIID, void** aInstancePtr)
+{
+  NS_PRECONDITION(aInstancePtr, "null out param");
+
+  if (aIID.Equals(kInlineFrameCID)) {
+    *aInstancePtr = this;
+    return NS_OK;
+  }
+
+  return nsInlineFrameSuper::QueryInterface(aIID, aInstancePtr);
+}
 
 #ifdef DEBUG
 NS_IMETHODIMP

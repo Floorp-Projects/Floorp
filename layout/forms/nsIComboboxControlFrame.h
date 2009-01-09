@@ -38,7 +38,7 @@
 #ifndef nsIComboboxControlFrame_h___
 #define nsIComboboxControlFrame_h___
 
-#include "nsQueryFrame.h"
+#include "nsISupports.h"
 #include "nsFont.h"
 
 class nsPresContext;
@@ -47,15 +47,21 @@ class nsIContent;
 class nsVoidArray;
 class nsCSSFrameConstructor;
 
+
+// IID for the nsIComboboxControlFrame class
+#define NS_ICOMBOBOXCONTROLFRAME_IID    \
+  { 0x23f75e9c, 0x6850, 0x11da, \
+      { 0x95, 0x2c, 0x0, 0xe0, 0x81, 0x61, 0x16, 0x5f } }
+
 /** 
   * nsIComboboxControlFrame is the common interface for frames of form controls. It
   * provides a uniform way of creating widgets, resizing, and painting.
   * @see nsLeafFrame and its base classes for more info
   */
-class nsIComboboxControlFrame : public nsQueryFrame
-{
+class nsIComboboxControlFrame : public nsISupports {
+
 public:
-  NS_DECLARE_FRAME_ACCESSOR(nsIComboboxControlFrame)
+  NS_DECLARE_STATIC_IID_ACCESSOR(NS_ICOMBOBOXCONTROLFRAME_IID)
 
   /**
    * Indicates whether the list is dropped down
@@ -120,6 +126,9 @@ public:
    */
   virtual PRInt32 GetIndexOfDisplayArea() = 0;
 };
+
+NS_DEFINE_STATIC_IID_ACCESSOR(nsIComboboxControlFrame,
+                              NS_ICOMBOBOXCONTROLFRAME_IID)
 
 #endif
 

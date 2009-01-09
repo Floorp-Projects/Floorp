@@ -46,10 +46,17 @@ class nsIDOMSVGPoint;
 class nsIDOMSVGRect;
 class nsSVGTextPathFrame;
 
+
+// {ec9a9965-3ff2-4bb5-b0e2-dd8830e9f41a}
+#define NS_ISVGGLYPHFRAGMENTLEAF_IID \
+  { 0xec9a9965, 0x3ff2, 0x4bb5, \
+    { 0xb0, 0xe2, 0xdd, 0x88, 0x30, 0xe9, 0xf4, 0x1a } }
+
 class nsISVGGlyphFragmentLeaf : public nsISVGGlyphFragmentNode
 {
 public:
-  NS_DECLARE_FRAME_ACCESSOR(nsISVGGlyphFragmentLeaf)
+
+  NS_DECLARE_STATIC_IID_ACCESSOR(NS_ISVGGLYPHFRAGMENTLEAF_IID)
 
   NS_IMETHOD GetStartPositionOfChar(PRUint32 charnum, nsIDOMSVGPoint **_retval)=0;
   NS_IMETHOD GetEndPositionOfChar(PRUint32 charnum, nsIDOMSVGPoint **_retval)=0;
@@ -81,5 +88,8 @@ public:
   NS_IMETHOD_(PRUint16) GetTextAnchor()=0;
   NS_IMETHOD_(PRBool) IsAbsolutelyPositioned()=0;
 };
+
+NS_DEFINE_STATIC_IID_ACCESSOR(nsISVGGlyphFragmentLeaf,
+                              NS_ISVGGLYPHFRAGMENTLEAF_IID)
 
 #endif // __NS_ISVGGLYPHFRAGMENTLEAF_H__

@@ -80,7 +80,8 @@ class nsListControlFrame : public nsHTMLScrollFrame,
 public:
   friend nsIFrame* NS_NewListControlFrame(nsIPresShell* aPresShell, nsStyleContext* aContext);
 
-  NS_DECL_QUERYFRAME
+   // nsISupports
+  NS_IMETHOD QueryInterface(const nsIID& aIID, void** aInstancePtr);
 
     // nsIFrame
   NS_IMETHOD HandleEvent(nsPresContext* aPresContext,

@@ -1004,13 +1004,34 @@ NS_NewTextControlFrame(nsIPresShell* aPresShell, nsStyleContext* aContext)
   return new (aPresShell) nsTextControlFrame(aPresShell, aContext);
 }
 
-NS_QUERYFRAME_HEAD(nsTextControlFrame)
-  NS_QUERYFRAME_ENTRY(nsIFormControlFrame)
-  NS_QUERYFRAME_ENTRY(nsIAnonymousContentCreator)
-  NS_QUERYFRAME_ENTRY(nsITextControlFrame)
-  if (nsIScrollableViewProvider::kFrameIID == id && IsScrollable())
-    return static_cast<nsIScrollableViewProvider*>(this);
-NS_QUERYFRAME_TAIL_INHERITING(nsBoxFrame)
+NS_IMPL_ADDREF_INHERITED(nsTextControlFrame, nsBoxFrame)
+NS_IMPL_RELEASE_INHERITED(nsTextControlFrame, nsBoxFrame)
+ 
+
+NS_IMETHODIMP
+nsTextControlFrame::QueryInterface(const nsIID& aIID, void** aInstancePtr)
+{
+  NS_PRECONDITION(aInstancePtr, "null out param");
+
+  if (aIID.Equals(NS_GET_IID(nsIFormControlFrame))) {
+    *aInstancePtr = static_cast<nsIFormControlFrame*>(this);
+    return NS_OK;
+  }
+  if (aIID.Equals(NS_GET_IID(nsIAnonymousContentCreator))) {
+    *aInstancePtr = static_cast<nsIAnonymousContentCreator*>(this);
+    return NS_OK;
+  }
+  if (aIID.Equals(NS_GET_IID(nsITextControlFrame))) {
+    *aInstancePtr = static_cast<nsITextControlFrame*>(this);
+    return NS_OK;
+  }
+  if (aIID.Equals(NS_GET_IID(nsIScrollableViewProvider)) && IsScrollable()) {
+    *aInstancePtr = static_cast<nsIScrollableViewProvider*>(this);
+    return NS_OK;
+  }
+
+  return nsBoxFrame::QueryInterface(aIID, aInstancePtr);
+}
 
 #ifdef ACCESSIBILITY
 NS_IMETHODIMP nsTextControlFrame::GetAccessible(nsIAccessible** aAccessible)
@@ -1373,7 +1394,8 @@ nsTextControlFrame::CalcIntrinsicSize(nsIRenderingContext* aRenderingContext,
   if (IsTextArea()) {
     nsIFrame* first = GetFirstChild(nsnull);
 
-    nsIScrollableFrame *scrollableFrame = do_QueryFrame(first);
+    nsIScrollableFrame *scrollableFrame;
+    CallQueryInterface(first, &scrollableFrame);
     NS_ASSERTION(scrollableFrame, "Child must be scrollable");
 
     nsMargin scrollbarSizes =
@@ -2796,7 +2818,8 @@ nsTextControlFrame::SetInitialChildList(nsIAtom*        aListName,
   // than descending from the root frame of the frame hierarchy.
   first->AddStateBits(NS_FRAME_REFLOW_ROOT);
 
-  nsIScrollableFrame *scrollableFrame = do_QueryFrame(first);
+  nsIScrollableFrame *scrollableFrame = nsnull;
+  CallQueryInterface(first, &scrollableFrame);
   NS_ASSERTION(scrollableFrame, "Child must be scrollable");
 
   // we must turn off scrollbars for singleline text controls
@@ -2841,7 +2864,10 @@ nsTextControlFrame::SetInitialChildList(nsIAtom*        aListName,
 nsIScrollableView* nsTextControlFrame::GetScrollableView()
 {
   nsIFrame* first = GetFirstChild(nsnull);
-  nsIScrollableFrame* scrollableFrame = do_QueryFrame(first);
+  nsIScrollableFrame* scrollableFrame = nsnull;
+  if (first) {
+    CallQueryInterface(first, &scrollableFrame);
+  }
   return scrollableFrame ? scrollableFrame->GetScrollableView() : nsnull;
 }
 

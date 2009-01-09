@@ -57,6 +57,20 @@ class nsMathMLChar;
 class nsMathMLFrame : public nsIMathMLFrame {
 public:
 
+  // nsISupports ------
+
+  NS_IMETHOD QueryInterface(REFNSIID aIID, void** aInstancePtr);
+
+  NS_IMETHOD_(nsrefcnt) AddRef() {
+    // not meaningfull for frames
+    return 1;
+  }
+
+  NS_IMETHOD_(nsrefcnt) Release() {
+    // not meaningfull for frames
+    return 1;
+  }
+
   // nsIMathMLFrame ---
 
   NS_IMETHOD
@@ -215,7 +229,8 @@ public:
   GetMathMLFrameTypeFor(nsIFrame* aFrame)
   {
     if (aFrame->IsFrameOfType(nsIFrame::eMathML)) {
-      nsIMathMLFrame* mathMLFrame = do_QueryFrame(aFrame);
+      nsIMathMLFrame* mathMLFrame;
+      CallQueryInterface(aFrame, &mathMLFrame);
       if (mathMLFrame)
         return mathMLFrame->GetMathMLFrameType();
     }

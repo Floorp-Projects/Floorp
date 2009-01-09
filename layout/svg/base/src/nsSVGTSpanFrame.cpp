@@ -51,7 +51,8 @@ NS_NewSVGTSpanFrame(nsIPresShell* aPresShell, nsIContent* aContent,
                     nsIFrame* parentFrame, nsStyleContext* aContext)
 {
   NS_ASSERTION(parentFrame, "null parent");
-  nsISVGTextContentMetrics *metrics = do_QueryFrame(parentFrame);
+  nsISVGTextContentMetrics *metrics;
+  CallQueryInterface(parentFrame, &metrics);
   if (!metrics) {
     NS_ERROR("trying to construct an SVGTSpanFrame for an invalid container");
     return nsnull;
@@ -73,11 +74,11 @@ nsSVGTSpanFrame::GetType() const
 }
 
 //----------------------------------------------------------------------
-// nsQueryFrame methods
+// nsISupports methods
 
-NS_QUERYFRAME_HEAD(nsSVGTSpanFrame)
-  NS_QUERYFRAME_ENTRY(nsISVGGlyphFragmentNode)
-NS_QUERYFRAME_TAIL_INHERITING(nsSVGTSpanFrameBase)
+NS_INTERFACE_MAP_BEGIN(nsSVGTSpanFrame)
+  NS_INTERFACE_MAP_ENTRY(nsISVGGlyphFragmentNode)
+NS_INTERFACE_MAP_END_INHERITING(nsSVGTSpanFrameBase)
 
 //----------------------------------------------------------------------
 // nsIFrame methods
@@ -149,7 +150,8 @@ nsSVGTSpanFrame::GetFirstGlyphFragment()
   // try children first:
   nsIFrame* kid = mFrames.FirstChild();
   while (kid) {
-    nsISVGGlyphFragmentNode *node = do_QueryFrame(kid);
+    nsISVGGlyphFragmentNode *node = nsnull;
+    CallQueryInterface(kid, &node);
     if (node)
       return node->GetFirstGlyphFragment();
     kid = kid->GetNextSibling();
@@ -165,7 +167,8 @@ nsSVGTSpanFrame::GetNextGlyphFragment()
 {
   nsIFrame* sibling = mNextSibling;
   while (sibling) {
-    nsISVGGlyphFragmentNode *node = do_QueryFrame(sibling);
+    nsISVGGlyphFragmentNode *node = nsnull;
+    CallQueryInterface(sibling, &node);
     if (node)
       return node->GetFirstGlyphFragment();
     sibling = sibling->GetNextSibling();
@@ -174,7 +177,8 @@ nsSVGTSpanFrame::GetNextGlyphFragment()
   // no more siblings. go back up the tree.
   
   NS_ASSERTION(mParent, "null parent");
-  nsISVGGlyphFragmentNode *node = do_QueryFrame(mParent);
+  nsISVGGlyphFragmentNode *node = nsnull;
+  CallQueryInterface(mParent, &node);
   return node ? node->GetNextGlyphFragment() : nsnull;
 }
 

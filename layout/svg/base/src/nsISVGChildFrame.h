@@ -40,7 +40,7 @@
 #define __NS_ISVGCHILDFRAME_H__
 
 
-#include "nsQueryFrame.h"
+#include "nsISupports.h"
 #include "nsCOMPtr.h"
 #include "nsRect.h"
 
@@ -50,10 +50,14 @@ class nsIDOMSVGRect;
 class nsIDOMSVGMatrix;
 class nsSVGRenderState;
 
-class nsISVGChildFrame : public nsQueryFrame
-{
+#define NS_ISVGCHILDFRAME_IID \
+{ 0xfc3ee9b2, 0xaf40, 0x416d, \
+  { 0xa8, 0x51, 0xb4, 0x68, 0xa4, 0xe4, 0x8b, 0xcd } }
+
+class nsISVGChildFrame : public nsISupports {
 public:
-  NS_DECLARE_FRAME_ACCESSOR(nsISVGChildFrame)
+
+  NS_DECLARE_STATIC_IID_ACCESSOR(NS_ISVGCHILDFRAME_IID)
 
   // Paint this frame - aDirtyRect is the area being redrawn, in frame
   // offset pixel coordinates
@@ -106,6 +110,8 @@ public:
   // Does this frame have an current covered region in mRect (aka GetRect())?
   NS_IMETHOD_(PRBool) HasValidCoveredRect()=0;
 };
+
+NS_DEFINE_STATIC_IID_ACCESSOR(nsISVGChildFrame, NS_ISVGCHILDFRAME_IID)
 
 #endif // __NS_ISVGCHILDFRAME_H__
 

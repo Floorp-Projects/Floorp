@@ -244,9 +244,10 @@ nsSVGIntegrationUtils::PaintFramesWithEffects(nsIRenderingContext* aCtx,
                                               nsDisplayList* aInnerList)
 {
 #ifdef DEBUG
-  nsISVGChildFrame *svgChildFrame = do_QueryFrame(aEffectsFrame);
-  NS_ASSERTION(!svgChildFrame, "Should never be called on an SVG frame");
+  nsISVGChildFrame *svgChildFrame;
+  CallQueryInterface(aEffectsFrame, &svgChildFrame);
 #endif
+  NS_ASSERTION(!svgChildFrame, "Should never be called on an SVG frame");
 
   float opacity = aEffectsFrame->GetStyleDisplay()->mOpacity;
   if (opacity == 0.0f)

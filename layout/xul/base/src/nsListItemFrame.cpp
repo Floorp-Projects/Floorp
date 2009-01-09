@@ -44,6 +44,21 @@
 #include "nsGkAtoms.h"
 #include "nsDisplayList.h"
 
+NS_IMETHODIMP_(nsrefcnt) 
+nsListItemFrame::AddRef(void)
+{
+  return NS_OK;
+}
+
+NS_IMETHODIMP_(nsrefcnt)
+nsListItemFrame::Release(void)
+{
+  return NS_OK;
+}
+
+NS_INTERFACE_MAP_BEGIN(nsListItemFrame)
+NS_INTERFACE_MAP_END_INHERITING(nsGridRowLeafFrame)
+
 nsListItemFrame::nsListItemFrame(nsIPresShell* aPresShell,
                                  nsStyleContext* aContext,
                                  PRBool aIsRoot,

@@ -64,9 +64,19 @@ nsTableRowGroupFrame::~nsTableRowGroupFrame()
 {
 }
 
-NS_QUERYFRAME_HEAD(nsTableRowGroupFrame)
-  NS_QUERYFRAME_ENTRY(nsTableRowGroupFrame)
-NS_QUERYFRAME_TAIL_INHERITING(nsHTMLContainerFrame)
+NS_IMETHODIMP
+nsTableRowGroupFrame::QueryInterface(const nsIID& aIID, void** aInstancePtr)
+{
+  NS_PRECONDITION(aInstancePtr, "null out param");
+
+  static NS_DEFINE_IID(kITableRowGroupIID, NS_ITABLEROWGROUPFRAME_IID);
+  if (aIID.Equals(kITableRowGroupIID)) {
+    *aInstancePtr = (void*)this;
+    return NS_OK;
+  }
+
+  return nsHTMLContainerFrame::QueryInterface(aIID, aInstancePtr);
+}
 
 /* virtual */ PRBool
 nsTableRowGroupFrame::IsContainingBlock() const

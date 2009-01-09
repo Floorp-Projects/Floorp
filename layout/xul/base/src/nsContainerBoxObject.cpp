@@ -83,7 +83,9 @@ NS_IMETHODIMP nsContainerBoxObject::GetDocShell(nsIDocShell** aResult)
   nsIFrame *frame = GetFrame(PR_FALSE);
 
   if (frame) {
-    nsIFrameFrame *frame_frame = do_QueryFrame(frame);
+    nsIFrameFrame *frame_frame = nsnull;
+    CallQueryInterface(frame, &frame_frame);
+
     if (frame_frame) {
       // Ok, the frame for mContent is a nsIFrameFrame, it knows how
       // to reach the docshell, so ask it...

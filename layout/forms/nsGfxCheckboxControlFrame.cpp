@@ -93,9 +93,22 @@ nsGfxCheckboxControlFrame::~nsGfxCheckboxControlFrame()
 }
 
 
-NS_QUERYFRAME_HEAD(nsGfxCheckboxControlFrame)
-  NS_QUERYFRAME_ENTRY(nsICheckboxControlFrame)
-NS_QUERYFRAME_TAIL_INHERITING(nsFormControlFrame)
+//----------------------------------------------------------------------
+// nsISupports
+//----------------------------------------------------------------------
+// Frames are not refcounted, no need to AddRef
+NS_IMETHODIMP
+nsGfxCheckboxControlFrame::QueryInterface(const nsIID& aIID, void** aInstancePtr)
+{
+  NS_PRECONDITION(aInstancePtr, "null out param");
+
+  if (aIID.Equals(NS_GET_IID(nsICheckboxControlFrame))) {
+    *aInstancePtr = static_cast<nsICheckboxControlFrame*>(this);
+    return NS_OK;
+  }
+
+  return nsFormControlFrame::QueryInterface(aIID, aInstancePtr);
+}
 
 #ifdef ACCESSIBILITY
 NS_IMETHODIMP nsGfxCheckboxControlFrame::GetAccessible(nsIAccessible** aAccessible)

@@ -42,6 +42,7 @@
 #ifndef nsScrollbarFrame_h__
 #define nsScrollbarFrame_h__
 
+
 #include "nsBoxFrame.h"
 #include "nsIScrollbarFrame.h"
 
@@ -67,9 +68,11 @@ public:
                               nsIAtom* aAttribute,
                               PRInt32 aModType);
 
-  NS_DECL_QUERYFRAME
+  NS_IMETHOD QueryInterface(const nsIID& aIID, void** aInstancePtr);
+  NS_IMETHOD_(nsrefcnt) AddRef() { return NS_OK; }
+  NS_IMETHOD_(nsrefcnt) Release() { return NS_OK; }
 
-  NS_IMETHOD HandlePress(nsPresContext* aPresContext,
+   NS_IMETHOD HandlePress(nsPresContext* aPresContext,
                          nsGUIEvent *    aEvent,
                          nsEventStatus*  aEventStatus);
 

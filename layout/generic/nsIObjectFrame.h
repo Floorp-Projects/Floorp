@@ -47,10 +47,13 @@
 
 class nsIPluginInstance;
 
-class nsIObjectFrame : public nsQueryFrame
-{
+// {3e2df1fe-a898-4e2e-8763-4ca904fa338e}
+#define NS_IOBJECTFRAME_IID \
+{ 0x3e2df1fe, 0xa898, 0x4e2e, { 0x87, 0x63, 0x4c, 0xa9, 0x4, 0xfa, 0x33, 0x8e } }
+
+class nsIObjectFrame : public nsISupports {
 public:
-  NS_DECLARE_FRAME_ACCESSOR(nsIObjectFrame)
+  NS_DECLARE_STATIC_IID_ACCESSOR(NS_IOBJECTFRAME_IID)
 
   NS_IMETHOD GetPluginInstance(nsIPluginInstance*& aPluginInstance) = 0;
 
@@ -90,5 +93,7 @@ public:
    */
   virtual void StopPlugin() = 0;
 };
+
+NS_DEFINE_STATIC_IID_ACCESSOR(nsIObjectFrame, NS_IOBJECTFRAME_IID)
 
 #endif /* nsIObjectFrame_h___ */

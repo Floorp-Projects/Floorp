@@ -386,11 +386,28 @@ nsListControlFrame::InvalidateFocus()
   }
 }
 
-NS_QUERYFRAME_HEAD(nsListControlFrame)
-  NS_QUERYFRAME_ENTRY(nsIFormControlFrame)
-  NS_QUERYFRAME_ENTRY(nsIListControlFrame)
-  NS_QUERYFRAME_ENTRY(nsISelectControlFrame)
-NS_QUERYFRAME_TAIL_INHERITING(nsHTMLScrollFrame)
+//---------------------------------------------------------
+// Frames are not refcounted, no need to AddRef
+NS_IMETHODIMP
+nsListControlFrame::QueryInterface(const nsIID& aIID, void** aInstancePtr)
+{
+  NS_PRECONDITION(aInstancePtr, "null out param");
+
+  if (aIID.Equals(NS_GET_IID(nsIFormControlFrame))) {
+    *aInstancePtr = static_cast<nsIFormControlFrame*>(this);
+    return NS_OK;
+  }
+  if (aIID.Equals(NS_GET_IID(nsIListControlFrame))) {
+    *aInstancePtr = static_cast<nsIListControlFrame*>(this);
+    return NS_OK;
+  }
+  if (aIID.Equals(NS_GET_IID(nsISelectControlFrame))) {
+    *aInstancePtr = static_cast<nsISelectControlFrame*>(this);
+    return NS_OK;
+  }
+
+  return nsHTMLScrollFrame::QueryInterface(aIID, aInstancePtr);
+}
 
 #ifdef ACCESSIBILITY
 NS_IMETHODIMP nsListControlFrame::GetAccessible(nsIAccessible** aAccessible)
@@ -1349,7 +1366,7 @@ void
 nsListControlFrame::SetComboboxFrame(nsIFrame* aComboboxFrame)
 {
   if (nsnull != aComboboxFrame) {
-    mComboboxFrame = do_QueryFrame(aComboboxFrame);
+    aComboboxFrame->QueryInterface(NS_GET_IID(nsIComboboxControlFrame),(void**) &mComboboxFrame); 
   }
 }
 
@@ -2184,7 +2201,8 @@ nsListControlFrame::MouseDown(nsIDOMEvent* aMouseEvent)
       if (!nsComboboxControlFrame::ToolkitHasNativePopup())
       {
         PRBool isDroppedDown = mComboboxFrame->IsDroppedDown();
-        nsIFrame* comboFrame = do_QueryFrame(mComboboxFrame);
+        nsIFrame* comboFrame;
+        CallQueryInterface(mComboboxFrame, &comboFrame);
         nsWeakFrame weakFrame(comboFrame);
         mComboboxFrame->ShowDropDown(!isDroppedDown);
         if (!weakFrame.IsAlive())

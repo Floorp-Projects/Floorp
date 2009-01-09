@@ -46,6 +46,13 @@ struct nsPresentationData;
 struct nsEmbellishData;
 struct nsHTMLReflowMetrics;
 
+// a781ed45-4338-43cb-9739-a7a8f8418ff3
+#define NS_IMATHMLFRAME_IID \
+{ 0xa781ed45, 0x4338, 0x43cb, \
+  { 0x97, 0x39, 0xa7, 0xa8, 0xf8, 0x41, 0x8f, 0xf3 } }
+
+static NS_DEFINE_IID(kIMathMLFrameIID, NS_IMATHMLFRAME_IID);
+
 // For MathML, this 'type' will be used to determine the spacing between frames
 // Subclasses can return a 'type' that will give them a particular spacing
 enum eMathMLFrameType {
@@ -61,10 +68,9 @@ enum eMathMLFrameType {
 };
 
 // Abstract base class that provides additional methods for MathML frames
-class nsIMathMLFrame
-{
+class nsIMathMLFrame : public nsISupports {
 public:
-  NS_DECLARE_FRAME_ACCESSOR(nsIMathMLFrame)
+  NS_DECLARE_STATIC_IID_ACCESSOR(NS_IMATHMLFRAME_IID)
 
  /* SUPPORT FOR PRECISE POSITIONING */
  /*====================================================================*/
@@ -302,6 +308,9 @@ struct nsPresentationData {
     mstyle = nsnull;
   }
 };
+
+NS_DEFINE_STATIC_IID_ACCESSOR(nsIMathMLFrame, NS_IMATHMLFRAME_IID)
+
 
 // ==========================================================================
 // Bits used for the presentation flags -- these bits are set

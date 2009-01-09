@@ -125,8 +125,8 @@ static nsIFrame* GetScrolledBox(nsBoxObject* aScrollBox) {
   nsIFrame* frame = aScrollBox->GetFrame(PR_FALSE);
   if (!frame) 
     return nsnull;
-  nsIScrollableFrame* scrollFrame = do_QueryFrame(frame);
-  if (!scrollFrame) {
+  nsIScrollableFrame* scrollFrame;
+  if (NS_FAILED(CallQueryInterface(frame, &scrollFrame))) {
     NS_WARNING("nsIScrollBoxObject attached to something that's not a scroll frame!");
     return nsnull;
   }
@@ -435,8 +435,8 @@ nsScrollBoxObject::GetScrollableView()
   if (!frame) 
     return nsnull;
   
-  nsIScrollableFrame* scrollFrame = do_QueryFrame(frame);
-  if (!scrollFrame)
+  nsIScrollableFrame* scrollFrame;
+  if (NS_FAILED(CallQueryInterface(frame, &scrollFrame)))
     return nsnull;
 
   nsIScrollableView* scrollingView = scrollFrame->GetScrollableView();

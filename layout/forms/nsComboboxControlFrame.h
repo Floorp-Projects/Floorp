@@ -96,8 +96,8 @@ public:
   nsComboboxControlFrame(nsStyleContext* aContext);
   ~nsComboboxControlFrame();
 
-  NS_DECL_QUERYFRAME
-  NS_DECL_ISUPPORTS_INHERITED
+  // nsISupports
+  NS_IMETHOD QueryInterface(const nsIID& aIID, void** aInstancePtr);
 
   // nsIAnonymousContentCreator
   virtual nsresult CreateAnonymousContent(nsTArray<nsIContent*>& aElements);
@@ -292,6 +292,10 @@ protected:
 #ifdef DO_REFLOW_COUNTER
   PRInt32 mReflowId;
 #endif
+
+private:
+  NS_IMETHOD_(nsrefcnt) AddRef() { return NS_OK; }
+  NS_IMETHOD_(nsrefcnt) Release() { return NS_OK; }
 };
 
 #endif

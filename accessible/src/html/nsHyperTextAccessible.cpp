@@ -2044,7 +2044,8 @@ nsHyperTextAccessible::ScrollSubstringToPoint(PRInt32 aStartIndex,
   PRBool initialScrolled = PR_FALSE;
   nsIFrame *parentFrame = frame;
   while ((parentFrame = parentFrame->GetParent())) {
-    nsIScrollableFrame *scrollableFrame = do_QueryFrame(parentFrame);
+    nsIScrollableFrame *scrollableFrame = nsnull;
+    CallQueryInterface(parentFrame, &scrollableFrame);
     if (scrollableFrame) {
       if (!initialScrolled) {
         // Scroll substring to the given point. Turn the point into percents

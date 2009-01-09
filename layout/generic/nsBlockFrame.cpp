@@ -266,6 +266,8 @@ RecordReflowStatus(PRBool aChildIsBlock, nsReflowStatus aFrameReflowStatus)
 
 //----------------------------------------------------------------------
 
+const nsIID kBlockFrameCID = NS_BLOCK_FRAME_CID;
+
 nsIFrame*
 NS_NewBlockFrame(nsIPresShell* aPresShell, nsStyleContext* aContext, PRUint32 aFlags)
 {
@@ -328,9 +330,17 @@ nsBlockFrame::GetLineIterator()
   return it;
 }
 
-NS_QUERYFRAME_HEAD(nsBlockFrame)
-  NS_QUERYFRAME_ENTRY(nsBlockFrame)
-NS_QUERYFRAME_TAIL_INHERITING(nsBlockFrameSuper)
+NS_IMETHODIMP
+nsBlockFrame::QueryInterface(const nsIID& aIID, void** aInstancePtr)
+{
+  NS_PRECONDITION(aInstancePtr, "null out param");
+
+  if (aIID.Equals(kBlockFrameCID)) {
+    *aInstancePtr = static_cast<void*>(static_cast<nsBlockFrame*>(this));
+    return NS_OK;
+  }
+  return nsBlockFrameSuper::QueryInterface(aIID, aInstancePtr);
+}
 
 nsSplittableType
 nsBlockFrame::GetSplittableType() const
@@ -439,8 +449,9 @@ nsBlockFrame::List(FILE* out, PRInt32 aIndent) const
       }
       fputs("<\n", out);
       while (kid) {
-        nsIFrameDebug *frameDebug = do_QueryFrame(kid);
-        if (frameDebug) {
+        nsIFrameDebug*  frameDebug;
+
+        if (NS_SUCCEEDED(CallQueryInterface(kid, &frameDebug))) {
           frameDebug->List(out, aIndent + 1);
         }
         kid = kid->GetNextSibling();
@@ -821,7 +832,8 @@ CalculateContainingBlockSizeForAbsolutes(const nsHTMLReflowState& aReflowState,
     if (aLastRS != &aReflowState) {
       // Scrollbars need to be specifically excluded, if present, because they are outside the
       // padding-edge. We need better APIs for getting the various boxes from a frame.
-      nsIScrollableFrame* scrollFrame = do_QueryFrame(aLastRS->frame);
+      nsIScrollableFrame* scrollFrame;
+      CallQueryInterface(aLastRS->frame, &scrollFrame);
       nsMargin scrollbars(0,0,0,0);
       if (scrollFrame) {
         scrollbars =

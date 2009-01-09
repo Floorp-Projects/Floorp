@@ -60,6 +60,11 @@
 #include "nsDisplayList.h"
 #include "nsAttrName.h"
 
+static NS_DEFINE_CID(kCSSStyleSheetCID, NS_CSS_STYLESHEET_CID);
+
+
+NS_IMPL_QUERY_INTERFACE1(nsMathMLFrame, nsIMathMLFrame)
+
 eMathMLFrameType
 nsMathMLFrame::GetMathMLFrameType()
 {
@@ -187,7 +192,8 @@ nsMathMLFrame::GetEmbellishDataFrom(nsIFrame*        aFrame,
   aEmbellishData.rightSpace = 0;
 
   if (aFrame && aFrame->IsFrameOfType(nsIFrame::eMathML)) {
-    nsIMathMLFrame* mathMLFrame = do_QueryFrame(aFrame);
+    nsIMathMLFrame* mathMLFrame;
+    CallQueryInterface(aFrame, &mathMLFrame);
     if (mathMLFrame) {
       mathMLFrame->GetEmbellishData(aEmbellishData);
     }
@@ -209,7 +215,8 @@ nsMathMLFrame::GetPresentationDataFrom(nsIFrame*           aFrame,
   nsIFrame* frame = aFrame;
   while (frame) {
     if (frame->IsFrameOfType(nsIFrame::eMathML)) {
-      nsIMathMLFrame* mathMLFrame = do_QueryFrame(frame);
+      nsIMathMLFrame* mathMLFrame;
+      CallQueryInterface(frame, &mathMLFrame);
       if (mathMLFrame) {
         mathMLFrame->GetPresentationData(aPresentationData);
         break;
@@ -263,7 +270,8 @@ nsMathMLFrame::GetAttribute(nsIContent* aContent,
   mstyleParentData.mstyle = nsnull;
 
   if (mstyleParent) {
-    nsIMathMLFrame* mathMLFrame = do_QueryFrame(mstyleParent);
+    nsIMathMLFrame* mathMLFrame;
+    CallQueryInterface(mstyleParent, &mathMLFrame);
     if (mathMLFrame) {
       mathMLFrame->GetPresentationData(mstyleParentData);
     }

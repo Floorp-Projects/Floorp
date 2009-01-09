@@ -147,8 +147,7 @@ nsIsIndexFrame::GetInputFrame(nsIFormControlFrame** oFrame)
   if (presShell && mInputContent) {
     nsIFrame *frame = presShell->GetPrimaryFrameFor(mInputContent);
     if (frame) {
-      *oFrame = do_QueryFrame(frame);
-      return *oFrame ? NS_OK : NS_NOINTERFACE;
+      return CallQueryInterface(frame, oFrame);
     }
   }
   return NS_OK;
@@ -234,17 +233,20 @@ nsIsIndexFrame::CreateAnonymousContent(nsTArray<nsIContent*>& aElements)
   return NS_OK;
 }
 
-NS_QUERYFRAME_HEAD(nsIsIndexFrame)
-  NS_QUERYFRAME_ENTRY(nsIAnonymousContentCreator)
-  NS_QUERYFRAME_ENTRY(nsIStatefulFrame)
-NS_QUERYFRAME_TAIL_INHERITING(nsBlockFrame)
-
 // Frames are not refcounted, no need to AddRef
 NS_IMETHODIMP
 nsIsIndexFrame::QueryInterface(const nsIID& aIID, void** aInstancePtr)
 {
   NS_PRECONDITION(aInstancePtr, "null out param");
 
+  if (aIID.Equals(NS_GET_IID(nsIAnonymousContentCreator))) {
+    *aInstancePtr = static_cast<nsIAnonymousContentCreator*>(this);
+    return NS_OK;
+  }
+  if (aIID.Equals(NS_GET_IID(nsIStatefulFrame))) {
+    *aInstancePtr = static_cast<nsIStatefulFrame*>(this);
+    return NS_OK;
+  }
   if (aIID.Equals(NS_GET_IID(nsIDOMKeyListener))) {
     *aInstancePtr = static_cast<nsIDOMKeyListener*>(this);
     return NS_OK;
@@ -254,7 +256,7 @@ nsIsIndexFrame::QueryInterface(const nsIID& aIID, void** aInstancePtr)
     return NS_OK;
   }
 
-  return NS_NOINTERFACE;
+  return nsBlockFrame::QueryInterface(aIID, aInstancePtr);
 }
 
 nscoord

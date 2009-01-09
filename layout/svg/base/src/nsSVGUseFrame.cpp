@@ -53,9 +53,13 @@ class nsSVGUseFrame : public nsSVGUseFrameBase,
 protected:
   nsSVGUseFrame(nsStyleContext* aContext) : nsSVGUseFrameBase(aContext) {}
 
-public:
-  NS_DECL_QUERYFRAME
+   // nsISupports interface:
+  NS_IMETHOD QueryInterface(const nsIID& aIID, void** aInstancePtr);
+private:
+  NS_IMETHOD_(nsrefcnt) AddRef() { return 1; }
+  NS_IMETHOD_(nsrefcnt) Release() { return 1; }
 
+public:
   // nsIFrame interface:
   NS_IMETHOD  AttributeChanged(PRInt32         aNameSpaceID,
                                nsIAtom*        aAttribute,
@@ -106,11 +110,11 @@ nsSVGUseFrame::GetType() const
 }
 
 //----------------------------------------------------------------------
-// nsQueryFrame methods
+// nsISupports methods
 
-NS_QUERYFRAME_HEAD(nsSVGUseFrame)
-  NS_QUERYFRAME_ENTRY(nsIAnonymousContentCreator)
-NS_QUERYFRAME_TAIL_INHERITING(nsSVGUseFrameBase)
+NS_INTERFACE_MAP_BEGIN(nsSVGUseFrame)
+  NS_INTERFACE_MAP_ENTRY(nsIAnonymousContentCreator)
+NS_INTERFACE_MAP_END_INHERITING(nsSVGUseFrameBase)
 
 //----------------------------------------------------------------------
 // nsIFrame methods:
