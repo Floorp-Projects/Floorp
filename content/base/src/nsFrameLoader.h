@@ -60,12 +60,12 @@ public:
     mDepthTooGreat(PR_FALSE),
     mIsTopLevelContent(PR_FALSE),
     mDestroyCalled(PR_FALSE),
-    mInDestructor(PR_FALSE),
+    mNeedsAsyncDestroy(PR_FALSE),
     mInSwap(PR_FALSE)
   {}
 
   ~nsFrameLoader() {
-    mInDestructor = PR_TRUE;
+    mNeedsAsyncDestroy = PR_TRUE;
     nsFrameLoader::Destroy();
   }
 
@@ -95,7 +95,7 @@ private:
   PRPackedBool mDepthTooGreat : 1;
   PRPackedBool mIsTopLevelContent : 1;
   PRPackedBool mDestroyCalled : 1;
-  PRPackedBool mInDestructor : 1;
+  PRPackedBool mNeedsAsyncDestroy : 1;
   PRPackedBool mInSwap : 1;
 };
 
