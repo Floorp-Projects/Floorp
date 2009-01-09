@@ -47,6 +47,7 @@
 #include "nsDependentString.h"
 #include "nsWidgetsCID.h"
 #include "nsILookAndFeel.h"
+#include "nsToolkitCompsCID.h"
 
 static NS_DEFINE_CID(kLookAndFeelCID, NS_LOOKANDFEEL_CID);
 
@@ -73,6 +74,12 @@ NS_IMETHODIMP nsAlertsService::ShowAlertNotification(const nsAString & aImageUrl
                                                      nsIObserver * aAlertListener,
                                                      const nsAString & aAlertName)
 {
+  // Check if there is an optional service that handles system-level notifications
+  nsCOMPtr<nsIAlertsService> sysAlerts(do_GetService(NS_SYSTEMALERTSERVICE_CONTRACTID));
+  if (sysAlerts)
+    return sysAlerts->ShowAlertNotification(aImageUrl, aAlertTitle, aAlertText, aAlertTextClickable,
+                                            aAlertCookie, aAlertListener, aAlertName);
+
   nsCOMPtr<nsIWindowWatcher> wwatch(do_GetService(NS_WINDOWWATCHER_CONTRACTID));
   nsCOMPtr<nsIDOMWindow> newWindow;
   nsresult rv;

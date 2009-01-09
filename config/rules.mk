@@ -940,21 +940,25 @@ ifeq ($(OS_ARCH)_$(GNU_CC)$(INTERNAL_TOOLS), WINNT_)
 # in both stages so you can do depend builds with PGO.
 ifdef SHARED_LIBRARY
 $(SHARED_LIBRARY): FORCE
-BINARY_BASENAME = $(SHARED_LIBRARY:$(DLL_SUFFIX)=)
 endif
 ifdef PROGRAM
 $(PROGRAM): FORCE
-BINARY_BASENAME = $(PROGRAM:$(BIN_SUFFIX)=)
 endif
 
 ifdef MOZ_PROFILE_USE
 # In the second pass, we need to merge the pgc files into the pgd file.
 # The compiler would do this for us automatically if they were in the right
 # place, but they're in dist/bin.
-ifdef BINARY_BASENAME
+ifneq (,$(SHARED_LIBRARY)$(PROGRAM))
 export::
+ifdef PROGRAM
 	$(PYTHON) $(topsrcdir)/build/win32/pgomerge.py \
-	  $(BINARY_BASENAME) $(DIST)/bin
+	  $(PROGRAM:$(BIN_SUFFIX)=) $(DIST)/bin
+endif
+ifdef SHARED_LIBRARY
+	$(PYTHON) $(topsrcdir)/build/win32/pgomerge.py \
+	  $(LIBRARY_NAME) $(DIST)/bin
+endif
 endif
 endif # MOZ_PROFILE_USE
 endif # WINNT_
@@ -1587,7 +1591,7 @@ endif
 # Copy each element of EXPORTS to $(PUBLIC)
 
 ifneq ($(EXPORTS)$(XPIDLSRCS)$(SDK_HEADERS)$(SDK_XPIDLSRCS),)
-$(SDK_PUBLIC) $(PUBLIC)::
+$(SDK_PUBLIC) $(PUBLIC):
 	$(NSINSTALL) -D $@
 endif
 

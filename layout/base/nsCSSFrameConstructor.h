@@ -1014,29 +1014,25 @@ private:
                                  nsStyleContext*          aStyleContext,
                                  nsFrameItems&            aResult);
 
-  nsresult CreateLetterFrame(nsFrameConstructorState& aState,
-                             nsIFrame*                aBlockFrame,
+  nsresult CreateLetterFrame(nsIFrame*                aBlockFrame,
                              nsIContent*              aTextContent,
                              nsIFrame*                aParentFrame,
                              nsFrameItems&            aResult);
 
-  nsresult WrapFramesInFirstLetterFrame(nsFrameConstructorState& aState,
-                                        nsIContent*              aBlockContent,
-                                        nsIFrame*                aBlockFrame,
-                                        nsFrameItems&            aBlockFrames);
+  nsresult WrapFramesInFirstLetterFrame(nsIContent*   aBlockContent,
+                                        nsIFrame*     aBlockFrame,
+                                        nsFrameItems& aBlockFrames);
 
-  nsresult WrapFramesInFirstLetterFrame(nsFrameConstructorState& aState,
-                                        nsIFrame*                aBlockFrame,
-                                        nsIFrame*                aParentFrame,
-                                        nsIFrame*                aParentFrameList,
-                                        nsIFrame**               aModifiedParent,
-                                        nsIFrame**               aTextFrame,
-                                        nsIFrame**               aPrevFrame,
-                                        nsFrameItems&            aLetterFrame,
-                                        PRBool*                  aStopLooking);
+  nsresult WrapFramesInFirstLetterFrame(nsIFrame*     aBlockFrame,
+                                        nsIFrame*     aParentFrame,
+                                        nsIFrame*     aParentFrameList,
+                                        nsIFrame**    aModifiedParent,
+                                        nsIFrame**    aTextFrame,
+                                        nsIFrame**    aPrevFrame,
+                                        nsFrameItems& aLetterFrame,
+                                        PRBool*       aStopLooking);
 
-  nsresult RecoverLetterFrames(nsFrameConstructorState& aState,
-                               nsIFrame*                aBlockFrame);
+  nsresult RecoverLetterFrames(nsIFrame* aBlockFrame);
 
   // 
   nsresult RemoveLetterFrames(nsPresContext*  aPresContext,
