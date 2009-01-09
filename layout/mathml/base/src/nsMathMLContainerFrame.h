@@ -71,7 +71,7 @@ class nsMathMLContainerFrame : public nsHTMLContainerFrame,
 public:
   nsMathMLContainerFrame(nsStyleContext* aContext) : nsHTMLContainerFrame(aContext) {}
 
-  NS_DECL_QUERYFRAME
+  NS_DECL_ISUPPORTS_INHERITED
 
   // --------------------------------------------------------------------------
   // Overloaded nsMathMLFrame methods -- see documentation in nsIMathMLFrame.h

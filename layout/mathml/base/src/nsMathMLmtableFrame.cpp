@@ -349,9 +349,9 @@ ListMathMLTree(nsIFrame* atLeast)
 // --------
 // implementation of nsMathMLmtableOuterFrame
 
-NS_QUERYFRAME_HEAD(nsMathMLmtableOuterFrame)
-  NS_QUERYFRAME_ENTRY(nsIMathMLFrame)
-NS_QUERYFRAME_TAIL_INHERITING(nsTableOuterFrame)
+NS_IMPL_ADDREF_INHERITED(nsMathMLmtableOuterFrame, nsMathMLFrame)
+NS_IMPL_RELEASE_INHERITED(nsMathMLmtableOuterFrame, nsMathMLFrame)
+NS_IMPL_QUERY_INTERFACE_INHERITED1(nsMathMLmtableOuterFrame, nsTableOuterFrame, nsMathMLFrame)
 
 nsIFrame*
 NS_NewMathMLmtableOuterFrame (nsIPresShell* aPresShell, nsStyleContext* aContext)
@@ -647,6 +647,13 @@ nsMathMLmtableOuterFrame::Reflow(nsPresContext*          aPresContext,
   return rv;
 }
 
+// --------
+// implementation of nsMathMLmtableFrame
+
+NS_IMPL_ADDREF_INHERITED(nsMathMLmtableFrame, nsTableFrame)
+NS_IMPL_RELEASE_INHERITED(nsMathMLmtableFrame, nsTableFrame)
+NS_IMPL_QUERY_INTERFACE_INHERITED0(nsMathMLmtableFrame, nsTableFrame)
+
 nsIFrame*
 NS_NewMathMLmtableFrame(nsIPresShell* aPresShell, nsStyleContext* aContext)
 {
@@ -680,6 +687,10 @@ nsMathMLmtableFrame::RestyleTable()
 
 // --------
 // implementation of nsMathMLmtrFrame
+
+NS_IMPL_ADDREF_INHERITED(nsMathMLmtrFrame, nsTableRowFrame)
+NS_IMPL_RELEASE_INHERITED(nsMathMLmtrFrame, nsTableRowFrame)
+NS_IMPL_QUERY_INTERFACE_INHERITED0(nsMathMLmtrFrame, nsTableRowFrame)
 
 nsIFrame*
 NS_NewMathMLmtrFrame(nsIPresShell* aPresShell, nsStyleContext* aContext)
@@ -737,6 +748,10 @@ nsMathMLmtrFrame::AttributeChanged(PRInt32  aNameSpaceID,
 
 // --------
 // implementation of nsMathMLmtdFrame
+
+NS_IMPL_ADDREF_INHERITED(nsMathMLmtdFrame, nsTableCellFrame)
+NS_IMPL_RELEASE_INHERITED(nsMathMLmtdFrame, nsTableCellFrame)
+NS_IMPL_QUERY_INTERFACE_INHERITED0(nsMathMLmtdFrame, nsTableCellFrame)
 
 nsIFrame*
 NS_NewMathMLmtdFrame(nsIPresShell* aPresShell, nsStyleContext* aContext)
@@ -820,9 +835,9 @@ nsMathMLmtdFrame::AttributeChanged(PRInt32  aNameSpaceID,
 // --------
 // implementation of nsMathMLmtdInnerFrame
 
-NS_QUERYFRAME_HEAD(nsMathMLmtdInnerFrame)
-  NS_QUERYFRAME_ENTRY(nsIMathMLFrame)
-NS_QUERYFRAME_TAIL_INHERITING(nsBlockFrame)
+NS_IMPL_ADDREF_INHERITED(nsMathMLmtdInnerFrame, nsMathMLFrame)
+NS_IMPL_RELEASE_INHERITED(nsMathMLmtdInnerFrame, nsMathMLFrame)
+NS_IMPL_QUERY_INTERFACE_INHERITED1(nsMathMLmtdInnerFrame, nsBlockFrame, nsMathMLFrame)
 
 nsIFrame*
 NS_NewMathMLmtdInnerFrame(nsIPresShell* aPresShell, nsStyleContext* aContext)

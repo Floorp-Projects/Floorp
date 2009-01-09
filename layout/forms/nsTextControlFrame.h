@@ -168,7 +168,7 @@ public:
 
   NS_IMETHOD GetText(nsString* aText);
 
-  NS_DECL_QUERYFRAME
+  NS_DECL_ISUPPORTS_INHERITED
 
 public: //for methods who access nsTextControlFrame directly
   /**

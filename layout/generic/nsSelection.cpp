@@ -2433,7 +2433,9 @@ nsFrameSelection::GetCellLayout(nsIContent *aCellContent) const
   if (!cellFrame)
     return nsnull;
 
-  nsITableCellLayout *cellLayoutObject = do_QueryFrame(cellFrame);
+  nsITableCellLayout *cellLayoutObject = nsnull;
+  CallQueryInterface(cellFrame, &cellLayoutObject);
+
   return cellLayoutObject;
 }
 
@@ -2446,7 +2448,9 @@ nsFrameSelection::GetTableLayout(nsIContent *aTableContent) const
   if (!tableFrame)
     return nsnull;
 
-  nsITableLayout *tableLayoutObject = do_QueryFrame(tableFrame);
+  nsITableLayout *tableLayoutObject = nsnull;
+  CallQueryInterface(tableFrame, &tableLayoutObject);
+
   return tableLayoutObject;
 }
 
@@ -4592,7 +4596,8 @@ nsTypedSelection::selectFrames(nsPresContext* aPresContext,
       frame->SetSelected(aPresContext, nsnull, aFlags, eSpreadDown, mType);
       if (mFrameSelection->GetTableCellSelection())
       {
-        nsITableCellLayout *tcl = do_QueryFrame(frame);
+        nsITableCellLayout *tcl = nsnull;
+        CallQueryInterface(frame, &tcl);
         if (tcl)
         {
           return NS_OK;

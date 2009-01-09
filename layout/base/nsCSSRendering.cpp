@@ -240,13 +240,14 @@ protected:
     if (mBidiEnabled) {
       // Find the containing block frame
       nsIFrame* frame = aFrame;
-      do {
+      nsresult rv = NS_ERROR_FAILURE;
+      while (frame &&
+             frame->IsFrameOfType(nsIFrame::eLineParticipant) &&
+             NS_FAILED(rv)) {
         frame = frame->GetParent();
-        mBlockFrame = do_QueryFrame(frame);
+        rv = frame->QueryInterface(kBlockFrameCID, (void**)&mBlockFrame);
       }
-      while (frame && frame->IsFrameOfType(nsIFrame::eLineParticipant));
-
-      NS_ASSERTION(mBlockFrame, "Cannot find containing block.");
+      NS_ASSERTION(NS_SUCCEEDED(rv) && mBlockFrame, "Cannot find containing block.");
 
       mLineContinuationPoint = mContinuationPoint;
     }

@@ -4345,7 +4345,8 @@ nsDocShell::GetScrollbarVisibility(PRBool * verticalVisible,
         static_cast<nsIFrame*>(scrollView->View()->GetParent()->GetClientData());
     if (!scrollFrame)
         return NS_ERROR_FAILURE;
-    nsIScrollableFrame* scrollable = do_QueryFrame(scrollFrame);
+    nsIScrollableFrame* scrollable = nsnull;
+    CallQueryInterface(scrollFrame, &scrollable);
     if (!scrollable)
         return NS_ERROR_FAILURE;
 
@@ -9263,8 +9264,8 @@ nsDocShell::SetHasFocus(PRBool aHasFocus)
 // child lists.  aFrame must be non-null.
 static nsICanvasFrame* FindCanvasFrame(nsIFrame* aFrame)
 {
-    nsICanvasFrame* canvasFrame = do_QueryFrame(aFrame);
-    if (canvasFrame) {
+    nsICanvasFrame* canvasFrame;
+    if (NS_SUCCEEDED(CallQueryInterface(aFrame, &canvasFrame))) {
         return canvasFrame;
     }
 
@@ -9301,8 +9302,8 @@ nsDocShell::SetCanvasHasFocus(PRBool aCanvasHasFocus)
       if (frame) {
           frame = frame->GetParent();
           if (frame) {
-              nsICanvasFrame* canvasFrame = do_QueryFrame(frame);
-              if (canvasFrame) {
+              nsICanvasFrame* canvasFrame;
+              if (NS_SUCCEEDED(CallQueryInterface(frame, &canvasFrame))) {
                   return canvasFrame->SetHasFocus(aCanvasHasFocus);
               }
           }

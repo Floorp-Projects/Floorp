@@ -39,17 +39,23 @@
 #ifndef nsISelectControlFrame_h___
 #define nsISelectControlFrame_h___
 
-#include "nsQueryFrame.h"
+#include "nsISupports.h"
+
+// IID for the nsISelectControlFrame class
+// f8a1b329-d0d8-4bd5-a9ab-08c3c0f2f166
+#define NS_ISELECTCONTROLFRAME_IID \
+{ 0xf8a1b329, 0xd0d8, 0x4bd5, \
+ { 0xa9, 0xab, 0x08, 0xc3, 0xc0, 0xf2, 0xf1, 0x66 } }
 
 class nsIDOMHTMLOptionElement;
 
 /** 
   * nsISelectControlFrame is the interface for combo boxes and listboxes
   */
-class nsISelectControlFrame
-{
+class nsISelectControlFrame : public nsISupports {
+
 public:
-  NS_DECLARE_FRAME_ACCESSOR(nsISelectControlFrame)
+  NS_DECLARE_STATIC_IID_ACCESSOR(NS_ISELECTCONTROLFRAME_IID)
 
   /**
    * Adds an option to the list at index
@@ -87,5 +93,8 @@ public:
   NS_IMETHOD OnSetSelectedIndex(PRInt32 aOldIndex, PRInt32 aNewIndex) = 0;
 
 };
+
+NS_DEFINE_STATIC_IID_ACCESSOR(nsISelectControlFrame,
+                              NS_ISELECTCONTROLFRAME_IID)
 
 #endif

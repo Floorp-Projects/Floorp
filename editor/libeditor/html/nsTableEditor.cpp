@@ -2730,7 +2730,9 @@ nsHTMLEditor::GetCellIndexes(nsIDOMElement *aCell,
   nsIFrame *layoutObject = ps->GetPrimaryFrameFor(nodeAsContent);
   if (!layoutObject)  return NS_ERROR_FAILURE;
 
-  nsITableCellLayout *cellLayoutObject = do_QueryFrame(layoutObject);
+  nsITableCellLayout *cellLayoutObject=nsnull; // again, frames are not ref-counted
+  res = layoutObject->QueryInterface(NS_GET_IID(nsITableCellLayout), (void**)(&cellLayoutObject));
+  if (NS_FAILED(res)) return res;
   if (!cellLayoutObject)  return NS_ERROR_FAILURE;
   return cellLayoutObject->GetCellIndexes(*aRowIndex, *aColIndex);
 }
@@ -2750,8 +2752,8 @@ nsHTMLEditor::GetTableLayoutObject(nsIDOMElement* aTable, nsITableLayout **table
   nsIFrame *layoutObject = ps->GetPrimaryFrameFor(nodeAsContent);
   if (!layoutObject)  return NS_ERROR_FAILURE;
 
-  *tableLayoutObject = do_QueryFrame(layoutObject);
-  return *tableLayoutObject ? NS_OK : NS_NOINTERFACE;
+  return layoutObject->QueryInterface(NS_GET_IID(nsITableLayout), 
+                                      (void**)(tableLayoutObject)); 
 }
 
 //Return actual number of cells (a cell with colspan > 1 counts as just 1)

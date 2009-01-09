@@ -198,7 +198,8 @@ nsSVGMarkerFrame::PaintMark(nsSVGRenderState *aContext,
 
   for (nsIFrame* kid = mFrames.FirstChild(); kid;
        kid = kid->GetNextSibling()) {
-    nsISVGChildFrame* SVGFrame = do_QueryFrame(kid);
+    nsISVGChildFrame* SVGFrame = nsnull;
+    CallQueryInterface(kid, &SVGFrame);
     if (SVGFrame) {
       // The CTM of each frame referencing us may be different.
       SVGFrame->NotifySVGChanged(nsISVGChildFrame::SUPPRESS_INVALIDATION |
@@ -235,7 +236,8 @@ nsSVGMarkerFrame::RegionMark(nsSVGPathGeometryFrame *aMarkedFrame,
   for (nsIFrame* kid = mFrames.FirstChild();
        kid;
        kid = kid->GetNextSibling()) {
-    nsISVGChildFrame* child = do_QueryFrame(kid);
+    nsISVGChildFrame* child = nsnull;
+    CallQueryInterface(kid, &child);
     if (child)
       child->UpdateCoveredRegion();
   }

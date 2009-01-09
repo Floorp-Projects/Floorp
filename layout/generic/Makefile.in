@@ -83,7 +83,6 @@ REQUIRES	+= accessibility
 endif
 
 EXPORTS		= \
-		nsQueryFrame.h \
 		nsFrameList.h \
 		nsHTMLParts.h \
 		nsHTMLReflowMetrics.h \

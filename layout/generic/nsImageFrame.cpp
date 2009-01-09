@@ -186,9 +186,18 @@ nsImageFrame::~nsImageFrame()
 {
 }
 
-NS_QUERYFRAME_HEAD(nsImageFrame)
-  NS_QUERYFRAME_ENTRY(nsIImageFrame)
-NS_QUERYFRAME_TAIL_INHERITING(ImageFrameSuper)
+NS_IMETHODIMP
+nsImageFrame::QueryInterface(const nsIID& aIID, void** aInstancePtr)
+{
+  NS_PRECONDITION(aInstancePtr, "null out param");
+
+  if (aIID.Equals(NS_GET_IID(nsIImageFrame))) {
+    *aInstancePtr = static_cast<nsIImageFrame*>(this);
+    return NS_OK;
+  }
+
+  return ImageFrameSuper::QueryInterface(aIID, aInstancePtr);
+}
 
 #ifdef ACCESSIBILITY
 NS_IMETHODIMP nsImageFrame::GetAccessible(nsIAccessible** aAccessible)

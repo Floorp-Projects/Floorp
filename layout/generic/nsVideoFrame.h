@@ -57,7 +57,7 @@ class nsVideoFrame : public nsContainerFrame, public nsIAnonymousContentCreator
 public:
   nsVideoFrame(nsStyleContext* aContext);
 
-  NS_DECL_QUERYFRAME
+  NS_DECL_ISUPPORTS
   
   NS_IMETHOD BuildDisplayList(nsDisplayListBuilder*   aBuilder,
                               const nsRect&           aDirtyRect,

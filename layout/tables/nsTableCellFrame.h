@@ -72,7 +72,8 @@ class nsTableCellFrame : public nsHTMLContainerFrame,
 {
 public:
 
-  NS_DECL_QUERYFRAME
+  // nsISupports
+  NS_DECL_ISUPPORTS_INHERITED
 
   // default constructor supplied by the compiler
 

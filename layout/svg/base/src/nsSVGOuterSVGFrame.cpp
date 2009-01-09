@@ -104,7 +104,8 @@ nsSVGMutationObserver::AttributeChanged(nsIDocument *aDocument,
     }
 
     // is the content a child of a text element
-    nsISVGTextContentMetrics* metrics = do_QueryFrame(frame);
+    nsISVGTextContentMetrics* metrics;
+    CallQueryInterface(frame, &metrics);
     if (metrics) {
       nsSVGTextContainerFrame *containerFrame =
         static_cast<nsSVGTextContainerFrame *>(frame);
@@ -189,11 +190,11 @@ nsSVGOuterSVGFrame::Init(nsIContent* aContent,
 }
 
 //----------------------------------------------------------------------
-// nsQueryFrame methods
+// nsISupports methods
 
-NS_QUERYFRAME_HEAD(nsSVGOuterSVGFrame)
-  NS_QUERYFRAME_ENTRY(nsISVGSVGFrame)
-NS_QUERYFRAME_TAIL_INHERITING(nsSVGOuterSVGFrameBase)
+NS_INTERFACE_MAP_BEGIN(nsSVGOuterSVGFrame)
+  NS_INTERFACE_MAP_ENTRY(nsISVGSVGFrame)
+NS_INTERFACE_MAP_END_INHERITING(nsSVGOuterSVGFrameBase)
 
 //----------------------------------------------------------------------
 // nsIFrame methods
@@ -405,7 +406,8 @@ nsSVGOuterSVGFrame::DidReflow(nsPresContext*   aPresContext,
     // call InitialUpdate() on all frames:
     nsIFrame* kid = mFrames.FirstChild();
     while (kid) {
-      nsISVGChildFrame* SVGFrame = do_QueryFrame(kid);
+      nsISVGChildFrame* SVGFrame = nsnull;
+      CallQueryInterface(kid, &SVGFrame);
       if (SVGFrame) {
         SVGFrame->InitialUpdate(); 
       }
@@ -634,7 +636,8 @@ nsSVGOuterSVGFrame::GetType() const
 void
 nsSVGOuterSVGFrame::InvalidateCoveredRegion(nsIFrame *aFrame)
 {
-  nsISVGChildFrame *svgFrame = do_QueryFrame(aFrame);
+  nsISVGChildFrame *svgFrame = nsnull;
+  CallQueryInterface(aFrame, &svgFrame);
   if (!svgFrame)
     return;
 
@@ -645,7 +648,8 @@ nsSVGOuterSVGFrame::InvalidateCoveredRegion(nsIFrame *aFrame)
 PRBool
 nsSVGOuterSVGFrame::UpdateAndInvalidateCoveredRegion(nsIFrame *aFrame)
 {
-  nsISVGChildFrame *svgFrame = do_QueryFrame(aFrame);
+  nsISVGChildFrame *svgFrame = nsnull;
+  CallQueryInterface(aFrame, &svgFrame);
   if (!svgFrame)
     return PR_FALSE;
 
@@ -681,7 +685,8 @@ nsSVGOuterSVGFrame::SuspendRedraw()
 
   for (nsIFrame* kid = mFrames.FirstChild(); kid;
        kid = kid->GetNextSibling()) {
-    nsISVGChildFrame* SVGFrame = do_QueryFrame(kid);
+    nsISVGChildFrame* SVGFrame=nsnull;
+    CallQueryInterface(kid, &SVGFrame);
     if (SVGFrame) {
       SVGFrame->NotifyRedrawSuspended();
     }
@@ -703,7 +708,8 @@ nsSVGOuterSVGFrame::UnsuspendRedraw()
 
   for (nsIFrame* kid = mFrames.FirstChild(); kid;
        kid = kid->GetNextSibling()) {
-    nsISVGChildFrame* SVGFrame = do_QueryFrame(kid);
+    nsISVGChildFrame* SVGFrame=nsnull;
+    CallQueryInterface(kid, &SVGFrame);
     if (SVGFrame) {
       SVGFrame->NotifyRedrawUnsuspended();
     }

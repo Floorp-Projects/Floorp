@@ -53,6 +53,8 @@
 #include "nsInlineFrame.h"
 #include "nsPlaceholderFrame.h"
 
+static NS_DEFINE_IID(kInlineFrameCID, NS_INLINE_FRAME_CID);
+
 static const PRUnichar kSpace            = 0x0020;
 static const PRUnichar kLineSeparator    = 0x2028;
 static const PRUnichar kObjectSubstitute = 0xFFFC;
@@ -850,7 +852,9 @@ nsBidiPresUtils::RepositionFrame(nsIFrame*              aFrame,
                     isLeftMost /* out */,
                     isRightMost /* out */);
 
-  nsInlineFrame* testFrame = do_QueryFrame(aFrame);
+  nsIFrame* testFrame;
+  aFrame->QueryInterface(kInlineFrameCID, (void**)&testFrame);
+
   if (testFrame) {
     aFrame->AddStateBits(NS_INLINE_FRAME_BIDI_VISUAL_STATE_IS_SET);
 

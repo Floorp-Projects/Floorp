@@ -41,7 +41,6 @@
 #define __NS_ISVGVALUE_H__
 
 #include "nsISupports.h"
-#include "nsQueryFrame.h"
 #include "nsString.h"
 
 class nsISVGValueObserver;
@@ -73,7 +72,6 @@ public:
   };
 
   NS_DECLARE_STATIC_IID_ACCESSOR(NS_ISVGVALUE_IID)
-  NS_DECLARE_FRAME_ACCESSOR(nsISVGValue)
 
   NS_IMETHOD SetValueString(const nsAString& aValue)=0;
   NS_IMETHOD GetValueString(nsAString& aValue)=0;

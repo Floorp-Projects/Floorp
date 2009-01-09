@@ -97,7 +97,9 @@ nsSVGSwitchElement::MaybeInvalidate()
 
       nsIFrame *frame = GetPrimaryFrame();
       if (frame) {
-        nsISVGChildFrame* svgFrame = do_QueryFrame(frame);
+        nsISVGChildFrame* svgFrame = nsnull;
+
+        CallQueryInterface(frame, &svgFrame);
         if (svgFrame) {
           nsSVGUtils::UpdateGraphic(svgFrame);
         }

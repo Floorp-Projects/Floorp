@@ -48,6 +48,8 @@ nsIFrame* NS_NewTreeColFrame(nsIPresShell* aPresShell,
 class nsTreeColFrame : public nsBoxFrame
 {
 public:
+  NS_DECL_ISUPPORTS
+
   nsTreeColFrame(nsIPresShell* aPresShell,
                  nsStyleContext* aContext,
                  PRBool aIsRoot = nsnull,

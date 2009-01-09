@@ -186,9 +186,19 @@ NS_IMETHODIMP nsGfxButtonControlFrame::GetAccessible(nsIAccessible** aAccessible
 }
 #endif
 
-NS_QUERYFRAME_HEAD(nsGfxButtonControlFrame)
-  NS_QUERYFRAME_ENTRY(nsIAnonymousContentCreator)
-NS_QUERYFRAME_TAIL_INHERITING(nsHTMLButtonControlFrame)
+// Frames are not refcounted, no need to AddRef
+NS_IMETHODIMP
+nsGfxButtonControlFrame::QueryInterface(const nsIID& aIID, void** aInstancePtr)
+{
+  NS_PRECONDITION(aInstancePtr, "null out param");
+
+  if (aIID.Equals(NS_GET_IID(nsIAnonymousContentCreator))) {
+    *aInstancePtr = static_cast<nsIAnonymousContentCreator*>(this);
+    return NS_OK;
+  }
+
+  return nsHTMLButtonControlFrame::QueryInterface(aIID, aInstancePtr);
+}
 
 // Initially we hardcoded the default strings here.
 // Next, we used html.css to store the default label for various types

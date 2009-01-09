@@ -1326,7 +1326,8 @@ nsGenericHTMLElement::GetFormControlFrameFor(nsIContent* aContent,
   }
   nsIFrame* frame = GetPrimaryFrameFor(aContent, aDocument);
   if (frame) {
-    nsIFormControlFrame* form_frame = do_QueryFrame(frame);
+    nsIFormControlFrame* form_frame = nsnull;
+    CallQueryInterface(frame, &form_frame);
     if (form_frame) {
       return form_frame;
     }
@@ -1336,7 +1337,7 @@ nsGenericHTMLElement::GetFormControlFrameFor(nsIContent* aContent,
     for (frame = frame->GetFirstChild(nsnull);
          frame;
          frame = frame->GetNextSibling()) {
-      form_frame = do_QueryFrame(frame);
+      CallQueryInterface(frame, &form_frame);
       if (form_frame) {
         return form_frame;
       }
@@ -3551,7 +3552,8 @@ nsGenericHTMLElement::GetEditorInternal(nsIEditor** aEditor)
 
   nsIFormControlFrame *fcFrame = GetFormControlFrame(PR_FALSE);
   if (fcFrame) {
-    nsITextControlFrame *textFrame = do_QueryFrame(fcFrame);
+    nsITextControlFrame *textFrame = nsnull;
+    CallQueryInterface(fcFrame, &textFrame);
     if (textFrame) {
       return textFrame->GetEditor(aEditor);
     }

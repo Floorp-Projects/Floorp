@@ -361,7 +361,7 @@ nsPrintEngine::GetSeqFrameAndCountPagesInternal(nsPrintObject*  aPO,
   nsIPageSequenceFrame* seqFrame = nsnull;
   aPO->mPresShell->GetPageSequenceFrame(&seqFrame);
   if (seqFrame) {
-    aSeqFrame = do_QueryFrame(seqFrame);
+    CallQueryInterface(seqFrame, &aSeqFrame);
   } else {
     aSeqFrame = nsnull;
   }
@@ -2064,8 +2064,8 @@ nsPrintEngine::CalcNumPrintablePages(PRInt32& aNumPages)
     if (po->mPresContext && po->mPresContext->IsRootPaginatedDocument()) {
       nsIPageSequenceFrame* pageSequence;
       po->mPresShell->GetPageSequenceFrame(&pageSequence);
-      nsIFrame * seqFrame = do_QueryFrame(pageSequence);
-      if (seqFrame) {
+      nsIFrame * seqFrame;
+      if (NS_SUCCEEDED(CallQueryInterface(pageSequence, &seqFrame))) {
         nsIFrame* frame = seqFrame->GetFirstChild(nsnull);
         while (frame) {
           aNumPages++;
@@ -2148,9 +2148,10 @@ nsPrintEngine::DoPrint(nsPrintObject * aPO)
     if (nsnull != mPrt->mDebugFilePtr) {
 #ifdef NS_DEBUG
       // output the regression test
+      nsIFrameDebug* fdbg;
       nsIFrame* root = poPresShell->FrameManager()->GetRootFrame();
-      nsIFrameDebug* fdbg = do_QueryFrame(root);
-      if (fdbg) {
+
+      if (NS_SUCCEEDED(CallQueryInterface(root, &fdbg))) {
         fdbg->DumpRegressionData(poPresContext, mPrt->mDebugFilePtr, 0, PR_TRUE);
       }
       fclose(mPrt->mDebugFilePtr);
@@ -2248,8 +2249,8 @@ nsPrintEngine::DoPrint(nsPrintObject * aPO)
           }
         }
 
-        nsIFrame * seqFrame = do_QueryFrame(pageSequence);
-        if (!seqFrame) {
+        nsIFrame * seqFrame;
+        if (NS_FAILED(CallQueryInterface(pageSequence, &seqFrame))) {
           SetIsPrinting(PR_FALSE);
           return NS_ERROR_FAILURE;
         }
@@ -2504,8 +2505,8 @@ nsPrintEngine::GetPageRangeForSelection(nsIPresShell *        aPresShell,
   NS_ASSERTION(aStartFrame, "Pointer is null!");
   NS_ASSERTION(aEndFrame, "Pointer is null!");
 
-  nsIFrame * seqFrame = do_QueryFrame(aPageSeqFrame);
-  if (!seqFrame) {
+  nsIFrame * seqFrame;
+  if (NS_FAILED(CallQueryInterface(aPageSeqFrame, &seqFrame))) {
     return NS_ERROR_FAILURE;
   }
 
@@ -3295,8 +3296,9 @@ static void RootFrameList(nsPresContext* aPresContext, FILE* out, PRInt32 aInden
   if (shell) {
     nsIFrame* frame = shell->FrameManager()->GetRootFrame();
     if (frame) {
-      nsIFrameDebug* debugFrame = do_QueryFrame(frame);
-      if (debugFrame)
+      nsIFrameDebug* debugFrame;
+      nsresult rv = CallQueryInterface(frame, &debugFrame);
+      if (NS_SUCCEEDED(rv))
         debugFrame->List(aPresContext, out, aIndent);
     }
   }
@@ -3322,9 +3324,9 @@ static void DumpFrames(FILE*                 out,
      fprintf(out, "  ");
     }
     nsAutoString tmp;
+    nsIFrameDebug*  frameDebug;
 
-    nsIFrameDebug* frameDebug = do_QueryFrame(child);
-    if (frameDebug) {
+    if (NS_SUCCEEDED(CallQueryInterface(child, &frameDebug))) {
       frameDebug->GetFrameName(tmp);
     }
     fputs(NS_LossyConvertUTF16toASCII(tmp).get(), out);
@@ -3459,8 +3461,8 @@ static void DumpPrintObjectsList(nsVoidArray * aDocList)
     if (po->mPresShell) {
       rootFrame = po->mPresShell->FrameManager()->GetRootFrame();
       while (rootFrame != nsnull) {
-        nsIPageSequenceFrame * sqf = do_QueryFrame(rootFrame);
-        if (sqf) {
+        nsIPageSequenceFrame * sqf = nsnull;
+        if (NS_SUCCEEDED(CallQueryInterface(rootFrame, &sqf))) {
           break;
         }
         rootFrame = rootFrame->GetFirstChild(nsnull);

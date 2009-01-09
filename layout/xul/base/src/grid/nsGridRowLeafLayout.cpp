@@ -269,7 +269,7 @@ nsGridRowLeafLayout::ComputeChildSizes(nsIBox* aBox,
     GetParentGridPart(aBox, &parentBox, getter_AddRefs(parent));
     while (parentBox) {
       nsIBox* scrollbox = nsGrid::GetScrollBox(parentBox);
-      nsIScrollableFrame *scrollable = do_QueryFrame(scrollbox);
+      nsCOMPtr<nsIScrollableFrame> scrollable = do_QueryInterface(scrollbox);
       if (scrollable) {
         nsMargin scrollbarSizes = scrollable->GetActualScrollbarSizes();
 

@@ -82,7 +82,7 @@ protected:
 
   virtual PRBool IsEventName(nsIAtom* aName);
 
-  nsISVGTextContentMetrics* GetTextContentMetrics();
+  already_AddRefed<nsISVGTextContentMetrics> GetTextContentMetrics();
 
   enum { STARTOFFSET };
   nsSVGLength2 mLengthAttributes[1];

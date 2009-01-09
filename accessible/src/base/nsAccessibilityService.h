@@ -89,11 +89,12 @@ private:
    * Return presentation shell, DOM node for the given frame.
    *
    * @param aFrame - the given frame
+   * @param aRealFrame [out] - the given frame casted to nsIFrame
    * @param aShell [out] - presentation shell for DOM node associated with the
    *                 given frame
    * @param aContent [out] - DOM node associated with the given frame
    */
-  nsresult GetInfo(nsIFrame *aFrame,
+  nsresult GetInfo(nsISupports *aFrame, nsIFrame **aRealFrame,
                    nsIWeakReference **aShell,
                    nsIDOMNode **aContent);
 

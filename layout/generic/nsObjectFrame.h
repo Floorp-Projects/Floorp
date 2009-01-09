@@ -62,7 +62,8 @@ class nsObjectFrame : public nsObjectFrameSuper, public nsIObjectFrame {
 public:
   friend nsIFrame* NS_NewObjectFrame(nsIPresShell* aPresShell, nsStyleContext* aContext);
 
-  NS_DECL_QUERYFRAME
+  // nsISupports 
+  NS_IMETHOD QueryInterface(const nsIID& aIID, void** aInstancePtr);
 
   NS_IMETHOD Init(nsIContent* aContent,
                   nsIFrame* aParent,
@@ -139,6 +140,10 @@ public:
                                             nsIFrame* aRoot);
 
 protected:
+  // nsISupports
+  NS_IMETHOD_(nsrefcnt) AddRef(void);
+  NS_IMETHOD_(nsrefcnt) Release(void);
+
   nsObjectFrame(nsStyleContext* aContext);
   virtual ~nsObjectFrame();
 

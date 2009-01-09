@@ -522,7 +522,8 @@ nsSVGUtils::GetBBox(nsFrameList *aFrames, nsIDOMSVGRect **_retval)
 
   nsIFrame* kid = aFrames->FirstChild();
   while (kid) {
-    nsISVGChildFrame* SVGFrame = do_QueryFrame(kid);
+    nsISVGChildFrame* SVGFrame = nsnull;
+    CallQueryInterface(kid, &SVGFrame);
     if (SVGFrame) {
       nsCOMPtr<nsIDOMSVGRect> box;
       SVGFrame->GetBBox(getter_AddRefs(box));
@@ -597,7 +598,8 @@ nsSVGUtils::InvalidateCoveredRegion(nsIFrame *aFrame)
 void
 nsSVGUtils::UpdateGraphic(nsISVGChildFrame *aSVGFrame)
 {
-  nsIFrame *frame = do_QueryFrame(aSVGFrame);
+  nsIFrame *frame;
+  CallQueryInterface(aSVGFrame, &frame);
 
   nsSVGEffects::InvalidateRenderingObservers(frame);
 
@@ -742,7 +744,8 @@ nsSVGUtils::GetOuterSVGFrame(nsIFrame *aFrame)
 nsIFrame*
 nsSVGUtils::GetOuterSVGFrameAndCoveredRegion(nsIFrame* aFrame, nsRect* aRect)
 {
-  nsISVGChildFrame* svg = do_QueryFrame(aFrame);
+  nsISVGChildFrame* svg;
+  CallQueryInterface(aFrame, &svg);
   if (!svg)
     return nsnull;
   *aRect = svg->GetCoveredRegion();
@@ -877,7 +880,8 @@ nsSVGUtils::NotifyChildrenOfSVGChange(nsIFrame *aFrame, PRUint32 aFlags)
   nsIFrame *aKid = aFrame->GetFirstChild(nsnull);
 
   while (aKid) {
-    nsISVGChildFrame* SVGFrame = do_QueryFrame(aKid);
+    nsISVGChildFrame* SVGFrame = nsnull;
+    CallQueryInterface(aKid, &SVGFrame);
     if (SVGFrame) {
       SVGFrame->NotifySVGChanged(aFlags); 
     } else {
@@ -920,7 +924,8 @@ public:
   virtual void Paint(nsSVGRenderState *aContext, nsIFrame *aTarget,
                      const nsIntRect* aDirtyRect)
   {
-    nsISVGChildFrame *svgChildFrame = do_QueryFrame(aTarget);
+    nsISVGChildFrame *svgChildFrame;
+    CallQueryInterface(aTarget, &svgChildFrame);
     NS_ASSERTION(svgChildFrame, "Expected SVG frame here");
     NS_ASSERTION(!svgChildFrame->GetMatrixPropagation(),
                  "This should have been set to false already");
@@ -956,7 +961,9 @@ nsSVGUtils::PaintFrameWithEffects(nsSVGRenderState *aContext,
                                   const nsIntRect *aDirtyRect,
                                   nsIFrame *aFrame)
 {
-  nsISVGChildFrame *svgChildFrame = do_QueryFrame(aFrame);
+  nsISVGChildFrame *svgChildFrame;
+  CallQueryInterface(aFrame, &svgChildFrame);
+
   if (!svgChildFrame)
     return;
 
@@ -1137,7 +1144,8 @@ nsSVGUtils::HitTestChildren(nsIFrame *aFrame, const nsPoint &aPoint)
 
   // now do the backwards traversal
   while (current) {
-    nsISVGChildFrame* SVGFrame = do_QueryFrame(current);
+    nsISVGChildFrame* SVGFrame;
+    CallQueryInterface(current, &SVGFrame);
     if (SVGFrame) {
        result = SVGFrame->GetFrameForPoint(aPoint);
        if (result)
@@ -1172,7 +1180,8 @@ nsSVGUtils::GetCoveredRegion(const nsFrameList &aFrames)
   for (nsIFrame* kid = aFrames.FirstChild();
        kid;
        kid = kid->GetNextSibling()) {
-    nsISVGChildFrame* child = do_QueryFrame(kid);
+    nsISVGChildFrame* child = nsnull;
+    CallQueryInterface(kid, &child);
     if (child) {
       nsRect childRect = child->GetCoveredRegion();
       rect.UnionRect(rect, childRect);
@@ -1351,7 +1360,8 @@ nsSVGUtils::GfxRectToIntRect(const gfxRect& aIn, nsIntRect* aOut)
 already_AddRefed<nsIDOMSVGRect>
 nsSVGUtils::GetBBox(nsIFrame *aFrame)
 {
-  nsISVGChildFrame *svg = do_QueryFrame(aFrame);
+  nsISVGChildFrame *svg;
+  CallQueryInterface(aFrame, &svg);
   if (!svg) {
     nsIDOMSVGRect *rect = nsnull;
     gfxRect r = nsSVGIntegrationUtils::GetSVGBBoxForNonSVGFrame(aFrame);
@@ -1446,7 +1456,8 @@ nsSVGUtils::AdjustMatrixForUnits(nsIDOMSVGMatrix *aMatrix,
 
     PRBool gotRect = PR_FALSE;
     if (aFrame->IsFrameOfType(nsIFrame::eSVG)) {
-      nsISVGChildFrame *svgFrame = do_QueryFrame(aFrame);
+      nsISVGChildFrame *svgFrame;
+      CallQueryInterface(aFrame, &svgFrame);
       nsCOMPtr<nsIDOMSVGRect> rect;
       svgFrame->GetBBox(getter_AddRefs(rect));
       if (rect) {

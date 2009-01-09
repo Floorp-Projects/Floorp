@@ -546,7 +546,8 @@ nsLayoutUtils::GetScrollableFrameFor(nsIFrame *aScrolledFrame)
   if (!frame) {
     return nsnull;
   }
-  nsIScrollableFrame *sf = do_QueryFrame(frame);
+  nsIScrollableFrame *sf;
+  CallQueryInterface(frame, &sf);
   return sf;
 }
 
@@ -555,8 +556,12 @@ nsIScrollableFrame*
 nsLayoutUtils::GetScrollableFrameFor(nsIScrollableView *aScrollableView)
 {
   nsIFrame *frame = GetFrameFor(aScrollableView->View()->GetParent());
-  nsIScrollableFrame *sf = do_QueryFrame(frame);
-  return sf;
+  if (frame) {
+    nsIScrollableFrame *sf;
+    CallQueryInterface(frame, &sf);
+    return sf;
+  }
+  return nsnull;
 }
 
 //static
@@ -1529,8 +1534,10 @@ nsLayoutUtils::FindChildContainingDescendant(nsIFrame* aParent, nsIFrame* aDesce
 nsBlockFrame*
 nsLayoutUtils::GetAsBlock(nsIFrame* aFrame)
 {
-  nsBlockFrame* block = do_QueryFrame(aFrame);
-  return block;
+  nsBlockFrame* block;
+  if (NS_SUCCEEDED(aFrame->QueryInterface(kBlockFrameCID, (void**)&block)))
+    return block;
+  return nsnull;
 }
 
 nsBlockFrame*
@@ -1675,7 +1682,8 @@ nsLayoutUtils::IsViewportScrollbarFrame(nsIFrame* aFrame)
   if (!rootScrollFrame)
     return PR_FALSE;
 
-  nsIScrollableFrame* rootScrollableFrame = do_QueryFrame(rootScrollFrame);
+  nsIScrollableFrame* rootScrollableFrame = nsnull;
+  CallQueryInterface(rootScrollFrame, &rootScrollableFrame);
   NS_ASSERTION(rootScrollableFrame, "The root scorollable frame is null");
 
   if (!IsProperAncestorFrame(rootScrollFrame, aFrame))
@@ -2518,8 +2526,9 @@ nsLayoutUtils::GetFirstLineBaseline(const nsIFrame* aFrame, nscoord* aResult)
 
     // For first-line baselines, we have to consider scroll frames.
     if (fType == nsGkAtoms::scrollFrame) {
-      nsIScrollableFrame *sFrame = do_QueryFrame(const_cast<nsIFrame*>(aFrame));
-      if (!sFrame) {
+      nsIScrollableFrame *sFrame;
+      if (NS_FAILED(CallQueryInterface(const_cast<nsIFrame*>
+                                                 (aFrame), &sFrame)) || !sFrame) {
         NS_NOTREACHED("not scroll frame");
       }
       nscoord kidBaseline;

@@ -130,7 +130,9 @@ static void GetNativeRect(const nsRect& aSrc, RECT& aDst)
 static PRBool IsTopLevelMenu(nsIFrame *aFrame)
 {
   PRBool isTopLevel(PR_FALSE);
-  nsIMenuFrame *menuFrame = do_QueryFrame(aFrame);
+  nsIMenuFrame *menuFrame(nsnull);
+  CallQueryInterface(aFrame, &menuFrame);
+
   if (menuFrame) {
     isTopLevel = menuFrame->IsOnMenuBar();
   }
@@ -815,7 +817,8 @@ nsNativeThemeWin::GetThemePartAndState(nsIFrame* aFrame, PRUint8 aWidgetType,
 
       if (nsUXThemeData::sIsVistaOrLater) {
         if (isHTML) {
-          nsIComboboxControlFrame* ccf = do_QueryFrame(aFrame);
+          nsIComboboxControlFrame* ccf = nsnull;
+          CallQueryInterface(aFrame, &ccf);
           if (ccf && ccf->IsDroppedDown()) {
           /* Hover is propagated, but we need to know whether we're
            * hovering just the combobox frame, not the dropdown frame.
@@ -853,7 +856,8 @@ nsNativeThemeWin::GetThemePartAndState(nsIFrame* aFrame, PRUint8 aWidgetType,
       PRBool isTopLevel = PR_FALSE;
       PRBool isOpen = PR_FALSE;
       PRBool isHover = PR_FALSE;
-      nsIMenuFrame *menuFrame = do_QueryFrame(aFrame);
+      nsIMenuFrame *menuFrame;
+      CallQueryInterface(aFrame, &menuFrame);
 
       isTopLevel = IsTopLevelMenu(aFrame);
 
@@ -2038,7 +2042,8 @@ nsresult nsNativeThemeWin::ClassicGetThemePartAndState(nsIFrame* aFrame, PRUint8
       PRBool isTopLevel = PR_FALSE;
       PRBool isOpen = PR_FALSE;
       PRBool isContainer = PR_FALSE;
-      nsIMenuFrame *menuFrame = do_QueryFrame(aFrame);
+      nsIMenuFrame *menuFrame = nsnull;
+      CallQueryInterface(aFrame, &menuFrame);
 
       // We indicate top-level-ness using aPart. 0 is a normal menu item,
       // 1 is a top-level menu item. The state of the item is composed of

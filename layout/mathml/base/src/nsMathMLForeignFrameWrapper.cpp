@@ -54,9 +54,9 @@
 
 #include "nsMathMLForeignFrameWrapper.h"
 
-NS_QUERYFRAME_HEAD(nsMathMLForeignFrameWrapper)
-  NS_QUERYFRAME_ENTRY(nsMathMLFrame)
-NS_QUERYFRAME_TAIL_INHERITING(nsBlockFrame)
+NS_IMPL_ADDREF_INHERITED(nsMathMLForeignFrameWrapper, nsMathMLFrame)
+NS_IMPL_RELEASE_INHERITED(nsMathMLForeignFrameWrapper, nsMathMLFrame)
+NS_IMPL_QUERY_INTERFACE_INHERITED1(nsMathMLForeignFrameWrapper, nsBlockFrame, nsMathMLFrame)
 
 nsIFrame*
 NS_NewMathMLForeignFrameWrapper(nsIPresShell* aPresShell, nsStyleContext* aContext)

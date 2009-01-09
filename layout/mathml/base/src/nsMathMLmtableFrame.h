@@ -52,7 +52,7 @@ class nsMathMLmtableOuterFrame : public nsTableOuterFrame,
 public:
   friend nsIFrame* NS_NewMathMLmtableOuterFrame(nsIPresShell* aPresShell, nsStyleContext* aContext);
 
-  NS_DECL_QUERYFRAME
+  NS_DECL_ISUPPORTS_INHERITED
 
   // Overloaded nsIMathMLFrame methods
 
@@ -106,6 +106,8 @@ class nsMathMLmtableFrame : public nsTableFrame
 {
 public:
   friend nsIFrame* NS_NewMathMLmtableFrame(nsIPresShell* aPresShell, nsStyleContext* aContext);
+
+  NS_DECL_ISUPPORTS_INHERITED
 
   // Overloaded nsTableFrame methods
 
@@ -163,6 +165,8 @@ class nsMathMLmtrFrame : public nsTableRowFrame
 {
 public:
   friend nsIFrame* NS_NewMathMLmtrFrame(nsIPresShell* aPresShell, nsStyleContext* aContext);
+
+  NS_DECL_ISUPPORTS_INHERITED
 
   // overloaded nsTableRowFrame methods
 
@@ -227,6 +231,8 @@ class nsMathMLmtdFrame : public nsTableCellFrame
 public:
   friend nsIFrame* NS_NewMathMLmtdFrame(nsIPresShell* aPresShell, nsStyleContext* aContext);
 
+  NS_DECL_ISUPPORTS_INHERITED
+
   // overloaded nsTableCellFrame methods
 
   NS_IMETHOD
@@ -254,7 +260,7 @@ class nsMathMLmtdInnerFrame : public nsBlockFrame,
 public:
   friend nsIFrame* NS_NewMathMLmtdInnerFrame(nsIPresShell* aPresShell, nsStyleContext* aContext);
 
-  NS_DECL_QUERYFRAME
+  NS_DECL_ISUPPORTS_INHERITED
 
   // Overloaded nsIMathMLFrame methods
 
