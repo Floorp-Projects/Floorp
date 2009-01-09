@@ -448,31 +448,38 @@ nsFilePicker::Show(PRInt16 *aReturn)
     gtk_window_group_add_window(parent_widget->group, GTK_WINDOW(file_chooser));
   }
 
-  nsCAutoString directory;
-  if (mDisplayDirectory) {
-    mDisplayDirectory->GetNativePath(directory);
-  } else if (mPrevDisplayDirectory) {
-    mPrevDisplayDirectory->GetNativePath(directory);
-  }
-
-  if (!directory.IsEmpty()) {
-    gtk_file_chooser_set_current_folder(GTK_FILE_CHOOSER(file_chooser),
-                                        directory.get());
-  }
-
   NS_ConvertUTF16toUTF8 defaultName(mDefault);
   switch (mMode) {
     case nsIFilePicker::modeOpenMultiple:
       gtk_file_chooser_set_select_multiple(GTK_FILE_CHOOSER(file_chooser), TRUE);
-      // fall through
-    case nsIFilePicker::modeOpen:
-      if (!defaultName.IsEmpty())
-        gtk_file_chooser_set_filename(GTK_FILE_CHOOSER(file_chooser), defaultName.get());
       break;
     case nsIFilePicker::modeSave:
       gtk_file_chooser_set_current_name(GTK_FILE_CHOOSER(file_chooser),
                                         defaultName.get());
       break;
+  }
+
+  nsCOMPtr<nsIFile> defaultPath;
+  if (mDisplayDirectory) {
+    mDisplayDirectory->Clone(getter_AddRefs(defaultPath));
+  } else if (mPrevDisplayDirectory) {
+    mPrevDisplayDirectory->Clone(getter_AddRefs(defaultPath));
+  }
+
+  if (defaultPath) {
+    if (!defaultName.IsEmpty() && mMode != nsIFilePicker::modeSave) {
+      // Try to select the intended file. Even if it doesn't exist, GTK still switches
+      // directories.
+      defaultPath->AppendNative(defaultName);
+      nsCAutoString path;
+      defaultPath->GetNativePath(path);
+      gtk_file_chooser_set_filename(GTK_FILE_CHOOSER(file_chooser), path.get());
+    } else {
+      nsCAutoString directory;
+      defaultPath->GetNativePath(directory);
+      gtk_file_chooser_set_current_folder(GTK_FILE_CHOOSER(file_chooser),
+                                          directory.get());
+    }
   }
 
   gtk_dialog_set_default_response(GTK_DIALOG(file_chooser), GTK_RESPONSE_ACCEPT);
