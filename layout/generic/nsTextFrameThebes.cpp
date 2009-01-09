@@ -3060,16 +3060,24 @@ nsTextPaintStyle::InitCommonColors()
 
   nsStyleContext* sc = mFrame->GetStyleContext();
 
-  const nsStyleBackground* bg =
+  nsStyleContext* bgContext =
     nsCSSRendering::FindNonTransparentBackground(sc);
-  NS_ASSERTION(bg, "Cannot find NonTransparentBackground.");
+  NS_ASSERTION(bgContext, "Cannot find NonTransparentBackground.");
+  const nsStyleBackground* bg = bgContext->GetStyleBackground();
 
   nscolor defaultBgColor = mPresContext->DefaultBackgroundColor();
-  NS_ASSERTION(NS_GET_A(defaultBgColor) == 255,
-               "default background color is not opaque");
-
   mFrameBackgroundColor = NS_ComposeColors(defaultBgColor,
                                            bg->mBackgroundColor);
+
+  if (bgContext->GetStyleDisplay()->mAppearance) {
+    // Assume a native widget has sufficient contrast always
+    mSufficientContrast = 0;
+    mInitCommonColors = PR_TRUE;
+    return;
+  }
+
+  NS_ASSERTION(NS_GET_A(defaultBgColor) == 255,
+               "default background color is not opaque");
 
   nsILookAndFeel* look = mPresContext->LookAndFeel();
   nscolor defaultWindowBackgroundColor, selectionTextColor, selectionBGColor;
