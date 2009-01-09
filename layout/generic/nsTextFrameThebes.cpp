@@ -6041,7 +6041,9 @@ nsTextFrame::Reflow(nsPresContext*           aPresContext,
                                            eNormalBreak);
   }
   PRBool breakAfter = forceBreakAfter;
-  if (!breakAfter && charsFit == length &&
+  // length == 0 means either the text is empty or it's all collapsed away
+  PRBool emptyTextAtStartOfLine = atStartOfLine && length == 0;
+  if (!breakAfter && charsFit == length && !emptyTextAtStartOfLine &&
       transformedOffset + transformedLength == mTextRun->GetLength() &&
       (mTextRun->GetFlags() & nsTextFrameUtils::TEXT_HAS_TRAILING_BREAK)) {
     // We placed all the text in the textrun and we have a break opportunity at
