@@ -3615,6 +3615,9 @@ nsContentUtils::CreateDocument(const nsAString& aNamespaceURI,
 
   nsCOMPtr<nsIDocument> document = do_QueryInterface(*aResult);
   document->SetScriptHandlingObject(aEventObject);
+  
+  // created documents are immediately "complete" (ready to use)
+  document->SetReadyStateInternal(nsIDocument::READYSTATE_COMPLETE);
   return NS_OK;
 }
 
