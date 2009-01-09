@@ -3955,6 +3955,17 @@ function testLirBufOOM()
 testLirBufOOM.expected = "ok";
 test(testLirBufOOM);
 
+function testStringResolve() {
+    var x = 0;
+    for each (let d in [new String('q'), new String('q'), new String('q')]) {
+        if (("" + (0 in d)) === "true")
+            x++;
+    }
+    return x;
+}
+testStringResolve.expected = 3;
+test(testStringResolve);
+
 /*****************************************************************************
  *                                                                           *
  *  _____ _   _  _____ ______ _____ _______                                  *
