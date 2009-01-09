@@ -1030,6 +1030,12 @@ nsListBoxBodyFrame::GetLastFrame()
   return mFrames.LastChild();
 }
 
+PRBool
+nsListBoxBodyFrame::SupportsOrdinalsInChildren()
+{
+  return PR_FALSE;
+}
+
 ////////// lazy row creation and destruction
 
 void
