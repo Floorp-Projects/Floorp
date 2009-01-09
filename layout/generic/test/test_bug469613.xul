@@ -1,0 +1,59 @@
+<?xml version="1.0"?>
+<?xml-stylesheet href="chrome://global/skin" type="text/css"?>
+<?xml-stylesheet href="/tests/SimpleTest/test.css" type="text/css"?>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=469613
+-->
+<window title="Mozilla Bug 469613"
+  xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
+
+  <title>Test for Bug 469613</title>
+  <script type="application/javascript" src="/MochiKit/packed.js" />
+  <script type="application/javascript" src="/tests/SimpleTest/SimpleTest.js"/>
+  <script type="application/javascript" src="/tests/SimpleTest/EventUtils.js"/>
+<body  xmlns="http://www.w3.org/1999/xhtml">
+  <a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=469613">Mozilla Bug 469613</a>
+
+  <p id="display"></p>
+<div id="content" style="display: none">
+</div>
+</body>
+
+<vbox style="height: 100px; overflow: auto;" id="scrollbox">
+  <hbox style="height: 120px;"/>
+</vbox>
+
+<script class="testbody" type="application/javascript;version=1.7"><![CDATA[
+
+/** Test for Bug 469613 **/
+
+function doTest() {
+  netscape.security.PrivilegeManager.enablePrivilege("UniversalXPConnect");
+
+  let scrollbox = document.getElementById("scrollbox");
+  scrollbox.scrollTop = 0;
+
+  // Make sure that the "scroll focus" is inside the scrollbox by moving the
+  // mouse in the scrollbox.
+  synthesizeMouse(scrollbox, 6, 6, { type: "mousemove" });
+  synthesizeMouse(scrollbox, 8, 8, { type: "mousemove" });
+
+  // Now scroll 10px down.
+  synthesizeMouseScroll(scrollbox, 10, 10, {axis:"vertical", delta:10, type:"MozMousePixelScroll"});
+
+  // Send a 0-delta scroll.
+  synthesizeMouseScroll(scrollbox, 10, 10, {axis:"vertical", delta:0, type:"MozMousePixelScroll"});
+
+  setTimeout(function() {
+    // Check if the 10px were scrolled.
+    is(scrollbox.scrollTop, 10, "Starting a 0-delta scroll shouldn't cancel a pending async scroll.")
+    SimpleTest.finish();
+  }, 0);
+}
+
+SimpleTest.waitForExplicitFinish();
+addLoadEvent(doTest);
+
+]]></script>
+
+</window>
