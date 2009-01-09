@@ -54,6 +54,7 @@ interface nsIDOMNSDocument : nsISupports
            attribute DOMString      title;
 
   readonly attribute DOMString      contentType;
+  readonly attribute DOMString      readyState;
   readonly attribute DOMString      lastModified;
   readonly attribute DOMString      referrer;
 

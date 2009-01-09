@@ -969,6 +969,8 @@ DocumentViewerImpl::LoadComplete(nsresult aStatus)
   // will depend on whether it's cached!
   if(window &&
      (NS_SUCCEEDED(aStatus) || aStatus == NS_IMAGELIB_ERROR_LOAD_ABORTED)) {
+    if (mDocument)
+      mDocument->SetReadyStateInternal(nsIDocument::READYSTATE_COMPLETE);
     nsEventStatus status = nsEventStatus_eIgnore;
     nsEvent event(PR_TRUE, NS_LOAD);
     event.flags |= NS_EVENT_FLAG_CANT_BUBBLE;
