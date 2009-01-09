@@ -772,6 +772,9 @@ public:
   virtual void EndUpdate(nsUpdateType aUpdateType);
   virtual void BeginLoad();
   virtual void EndLoad();
+
+  virtual void SetReadyStateInternal(ReadyState rs);
+
   virtual void ContentStatesChanged(nsIContent* aContent1,
                                     nsIContent* aContent2,
                                     PRInt32 aStateMask);
@@ -1250,6 +1253,7 @@ private:
 
   PRUint32 mOnloadBlockCount;
   nsCOMPtr<nsIRequest> mOnloadBlocker;
+  ReadyState mReadyState;
   
   // A map from unvisited URI hashes to content elements
   nsTHashtable<nsUint32ToContentHashEntry> mLinkMap;

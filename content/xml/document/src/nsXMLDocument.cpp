@@ -544,6 +544,7 @@ nsXMLDocument::EndLoad()
   nsDocument::EndLoad();
   if (mSynchronousDOMContentLoaded) {
     mSynchronousDOMContentLoaded = PR_FALSE;
+    nsDocument::SetReadyStateInternal(nsIDocument::READYSTATE_COMPLETE);
     // Generate a document load event for the case when an XML
     // document was loaded as pure data without any presentation
     // attached to it.
