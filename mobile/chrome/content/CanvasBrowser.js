@@ -63,7 +63,7 @@ CanvasBrowser.prototype = {
     }
     return [this._canvasRect.width, this._canvasRect.height];
   },
-  
+
   get _effectiveCanvasDimensions() {
     return this.canvasDimensions.map(this._screenToPage, this);
   },
@@ -101,8 +101,6 @@ CanvasBrowser.prototype = {
     var ctx = this._canvas.getContext("2d");
     ctx.fillStyle = "rgb(255,255,255)";
     ctx.fillRect(0, 0, this._canvas.width, this._canvas.height);
-    ctx.fillStyle = "rgb(0,0,0)";
-    ctx.fillText("Loading...", 20, 20);
 
     this._resizeInterval = setInterval(function(self) { self.zoomToPage(); }, 2000, this);
   },
