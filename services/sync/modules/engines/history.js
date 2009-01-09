@@ -125,48 +125,73 @@ HistoryStore.prototype = {
 
   get _visitStm() {
     this._log.trace("Creating SQL statement: _visitStm");
-    let stm = this._db.createStatement(
-      "SELECT * FROM ( " +
-        "SELECT visit_type AS type, visit_date AS date " +
-        "FROM moz_historyvisits_temp " +
-        "WHERE place_id = :placeid " +
-        "ORDER BY visit_date DESC " +
-        "LIMIT 10 " +
-      ") " +
-      "UNION ALL " +
-      "SELECT * FROM ( " +
-        "SELECT visit_type AS type, visit_date AS date " +
-        "FROM moz_historyvisits " +
-        "WHERE place_id = :placeid " +
-        "AND id NOT IN (SELECT id FROM moz_historyvisits_temp) " +
-        "ORDER BY visit_date DESC " +
-        "LIMIT 10 " +
-      ") " +
-      "ORDER BY 2 DESC LIMIT 10"); /* 2 is visit_date */
+    let stm;
+    if (this._db.tableExists("moz_historyvisits_temp")) {
+      stm = this._db.createStatement(
+        "SELECT * FROM ( " +
+          "SELECT visit_type AS type, visit_date AS date " +
+          "FROM moz_historyvisits_temp " +
+          "WHERE place_id = :placeid " +
+          "ORDER BY visit_date DESC " +
+          "LIMIT 10 " +
+        ") " +
+        "UNION ALL " +
+        "SELECT * FROM ( " +
+          "SELECT visit_type AS type, visit_date AS date " +
+          "FROM moz_historyvisits " +
+          "WHERE place_id = :placeid " +
+          "AND id NOT IN (SELECT id FROM moz_historyvisits_temp) " +
+          "ORDER BY visit_date DESC " +
+          "LIMIT 10 " +
+        ") " +
+        "ORDER BY 2 DESC LIMIT 10"); /* 2 is visit_date */
+    } else {
+      stm = this._db.createStatement(
+	"SELECT visit_type AS type, visit_date AS date " +
+	"FROM moz_historyvisits " +
+	"WHERE place_id = :placeid " +
+	"ORDER BY visit_date DESC LIMIT 10"
+      );
+    }
     this.__defineGetter__("_visitStm", function() stm);
     return stm;
   },
 
   get _pidStm() {
     this._log.trace("Creating SQL statement: _pidStm");
-    let stm = this._db.createStatement(
-      "SELECT * FROM " +
-        "(SELECT id FROM moz_places_temp WHERE url = :url LIMIT 1) " +
-      "UNION ALL " +
-      "SELECT * FROM ( " +
-        "SELECT id FROM moz_places WHERE url = :url " +
-        "AND id NOT IN (SELECT id from moz_places_temp) " +
-        "LIMIT 1 " +
-      ") " +
-      "LIMIT 1");
+    let stm;
+    // See comment in get _urlStm()
+    if (this._db.tableExists("moz_places_temp")) {
+      stm = this._db.createStatement(
+        "SELECT * FROM " +
+          "(SELECT id FROM moz_places_temp WHERE url = :url LIMIT 1) " +
+        "UNION ALL " +
+        "SELECT * FROM ( " +
+          "SELECT id FROM moz_places WHERE url = :url " +
+          "AND id NOT IN (SELECT id from moz_places_temp) " +
+          "LIMIT 1 " +
+        ") " +
+        "LIMIT 1");
+    } else {
+      stm = this._db.createStatement(
+	"SELECT id FROM moz_places WHERE url = :url LIMIT 1"
+      );
+    }
     this.__defineGetter__("_pidStm", function() stm);
     return stm;
   },
 
   get _urlStm() {
     this._log.trace("Creating SQL statement: _urlStm");
-    try {
-      let stm = this._db.createStatement(
+    /* On Fennec, there is no table called moz_places_temp.
+     * (We think there should be; we're not sure why there's not.)
+     * As a workaround until we figure out why, we'll check if the table
+     * exists first, and if it doesn't we'll use a simpler query without
+     * that table.
+     */
+    let stm;
+    if (this._db.tableExists("moz_places_temp")) {
+      stm = this._db.createStatement(
       "SELECT * FROM " +
         "(SELECT url,title FROM moz_places_temp WHERE id = :id LIMIT 1) " +
       "UNION ALL " +
@@ -176,13 +201,10 @@ HistoryStore.prototype = {
         "LIMIT 1 " +
       ") " +
       "LIMIT 1");
-    } catch (e) {
-      // On Fennec, this gets an error that there is no such table
-      // as moz_places_temp in existence
-      /*this._log.warn("moz_places_view exists?");
-      this._log.warn( this._db.tableExists("moz_places_view"));*/
-      this._log.warn(this._db.lastErrorString);
-      throw(e);
+    } else {
+      stm = this._db.createStatement(
+	"SELECT url,title FROM moz_places WHERE id = :id LIMIT 1"
+      );
     }
     this.__defineGetter__("_urlStm", function() stm);
     return stm;
