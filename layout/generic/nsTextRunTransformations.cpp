@@ -72,7 +72,7 @@ nsTransformedTextRun::SetCapitalization(PRUint32 aStart, PRUint32 aLength,
     memset(mCapitalize.Elements(), 0, GetLength()*sizeof(PRPackedBool));
   }
   memcpy(mCapitalize.Elements() + aStart, aCapitalization, aLength*sizeof(PRPackedBool));
-  mFactory->RebuildTextRun(this, aRefContext);
+  mNeedsRebuild = PR_TRUE;
 }
 
 PRBool
@@ -82,60 +82,10 @@ nsTransformedTextRun::SetPotentialLineBreaks(PRUint32 aStart, PRUint32 aLength,
 {
   PRBool changed = gfxTextRun::SetPotentialLineBreaks(aStart, aLength,
       aBreakBefore, aRefContext);
-  mFactory->RebuildTextRun(this, aRefContext);
+  if (changed) {
+    mNeedsRebuild = PR_TRUE;
+  }
   return changed;
-}
-
-PRBool
-nsTransformedTextRun::SetLineBreaks(PRUint32 aStart, PRUint32 aLength,
-                                    PRBool aLineBreakBefore, PRBool aLineBreakAfter,
-                                    gfxFloat* aAdvanceWidthDelta,
-                                    gfxContext* aRefContext)
-{
-  nsTArray<PRUint32> newBreaks;
-  PRUint32 i;
-  PRBool changed = PR_FALSE;
-  for (i = 0; i < mLineBreaks.Length(); ++i) {
-    PRUint32 pos = mLineBreaks[i];
-    if (pos >= aStart)
-      break;
-    newBreaks.AppendElement(pos);
-  }
-  if (aLineBreakBefore != (i < mLineBreaks.Length() &&
-                           mLineBreaks[i] == aStart)) {
-    changed = PR_TRUE;
-  }
-  if (aLineBreakBefore) {
-    nsTextFrameUtils::AppendLineBreakOffset(&newBreaks, aStart);
-  }
-  if (aLineBreakAfter != (i + 1 < mLineBreaks.Length() &&
-                          mLineBreaks[i + 1] == aStart + aLength)) {
-    changed = PR_TRUE;
-  }
-  if (aLineBreakAfter) {
-    nsTextFrameUtils::AppendLineBreakOffset(&newBreaks, aStart + aLength);
-  }
-  for (; i < mLineBreaks.Length(); ++i) {
-    if (mLineBreaks[i] > aStart + aLength)
-      break;
-    changed = PR_TRUE;
-  }
-  if (!changed) {
-    if (aAdvanceWidthDelta) {
-      *aAdvanceWidthDelta = 0;
-    }
-    return PR_FALSE;
-  }
-
-  newBreaks.AppendElements(mLineBreaks.Elements() + i, mLineBreaks.Length() - i);
-  mLineBreaks.SwapElements(newBreaks);
-
-  gfxFloat currentAdvance = GetAdvanceWidth(aStart, aLength, nsnull);
-  mFactory->RebuildTextRun(this, aRefContext);
-  if (aAdvanceWidthDelta) {
-    *aAdvanceWidthDelta = GetAdvanceWidth(aStart, aLength, nsnull) - currentAdvance;
-  }
-  return PR_TRUE;
 }
 
 gfxTextRun*
@@ -144,14 +94,8 @@ nsTransformingTextRunFactory::MakeTextRun(const PRUnichar* aString, PRUint32 aLe
                                           gfxFontGroup* aFontGroup, PRUint32 aFlags,
                                           nsStyleContext** aStyles, PRBool aOwnsFactory)
 {
-  nsTransformedTextRun* textRun =
-    nsTransformedTextRun::Create(aParams, this, aFontGroup,
-                                 aString, aLength, aFlags, aStyles, aOwnsFactory);
-  if (!textRun)
-    return nsnull;
-
-  RebuildTextRun(textRun, aParams->mContext);
-  return textRun;
+  return nsTransformedTextRun::Create(aParams, this, aFontGroup,
+                                      aString, aLength, aFlags, aStyles, aOwnsFactory);
 }
 
 gfxTextRun*
@@ -271,7 +215,7 @@ GetParametersForInner(nsTransformedTextRun* aTextRun, PRUint32* aFlags,
 {
   gfxTextRunFactory::Parameters params =
     { aRefContext, nsnull, nsnull,
-      nsnull, nsnull, aTextRun->GetAppUnitsPerDevUnit()
+      nsnull, 0, aTextRun->GetAppUnitsPerDevUnit()
     };
   *aFlags = aTextRun->GetFlags() & ~gfxFontGroup::TEXT_IS_PERSISTENT;
   return params;
@@ -313,17 +257,9 @@ nsFontVariantTextRunFactory::RebuildTextRun(nsTransformedTextRun* aTextRun,
   PRBool runIsLowercase = PR_FALSE;
   nsAutoTArray<nsStyleContext*,50> styleArray;
   nsAutoTArray<PRPackedBool,50> canBreakBeforeArray;
-  nsAutoTArray<PRUint32,10> lineBreakBeforeArray;
 
-  PRUint32 nextLineBreak = 0;
   PRUint32 i;
   for (i = 0; i <= length; ++i) {
-    if (nextLineBreak < aTextRun->mLineBreaks.Length() &&
-        aTextRun->mLineBreaks[nextLineBreak] == i) {
-      lineBreakBeforeArray.AppendElement(i - runStart);
-      ++nextLineBreak;
-    }
-
     PRBool isLowercase = PR_FALSE;
     if (i < length) {
       // Characters that aren't the start of a cluster are ignored here. They
@@ -346,9 +282,7 @@ nsFontVariantTextRunFactory::RebuildTextRun(nsTransformedTextRun* aTextRun,
       nsAutoPtr<gfxTextRun> transformedChild;
       gfxTextRunCache::AutoTextRun cachedChild;
       gfxTextRun* child;
-      // Setup actual line break data for child (which may affect shaping)
-      innerParams.mInitialBreaks = lineBreakBeforeArray.Elements();
-      innerParams.mInitialBreakCount = lineBreakBeforeArray.Length();
+
       if (runIsLowercase) {
         transformedChild = uppercaseFactory.MakeTextRun(str + runStart, i - runStart,
             &innerParams, smallFont, flags, styleArray.Elements(), PR_FALSE);
@@ -372,10 +306,6 @@ nsFontVariantTextRunFactory::RebuildTextRun(nsTransformedTextRun* aTextRun,
       runStart = i;
       styleArray.Clear();
       canBreakBeforeArray.Clear();
-      lineBreakBeforeArray.Clear();
-      if (nextLineBreak > 0 && aTextRun->mLineBreaks[nextLineBreak - 1] == i) {
-        lineBreakBeforeArray.AppendElement(0);
-      }
     }
 
     if (i < length) {
@@ -384,8 +314,6 @@ nsFontVariantTextRunFactory::RebuildTextRun(nsTransformedTextRun* aTextRun,
       canBreakBeforeArray.AppendElement(aTextRun->CanBreakLineBefore(i));
     }
   }
-  NS_ASSERTION(nextLineBreak == aTextRun->mLineBreaks.Length(),
-               "lost track of line breaks somehow");
 }
 
 void
@@ -404,8 +332,6 @@ nsCaseTransformTextRunFactory::RebuildTextRun(nsTransformedTextRun* aTextRun,
   nsAutoTArray<PRPackedBool,50> charsToMergeArray;
   nsAutoTArray<nsStyleContext*,50> styleArray;
   nsAutoTArray<PRPackedBool,50> canBreakBeforeArray;
-  nsAutoTArray<PRUint32,10> lineBreakBeforeArray;
-  PRUint32 nextLineBreak = 0;
   PRUint32 extraCharsCount = 0;
 
   PRUint32 i;
@@ -415,11 +341,6 @@ nsCaseTransformTextRunFactory::RebuildTextRun(nsTransformedTextRun* aTextRun,
     charsToMergeArray.AppendElement(PR_FALSE);
     styleArray.AppendElement(styles[i]);
     canBreakBeforeArray.AppendElement(aTextRun->CanBreakLineBefore(i));
-    if (nextLineBreak < aTextRun->mLineBreaks.Length() &&
-        aTextRun->mLineBreaks[nextLineBreak] == i) {
-      lineBreakBeforeArray.AppendElement(i + extraCharsCount);
-      ++nextLineBreak;
-    }
 
     PRUint8 style = mAllUppercase ? NS_STYLE_TEXT_TRANSFORM_UPPERCASE
       : styles[i]->GetStyleText()->mTextTransform;
@@ -461,13 +382,6 @@ nsCaseTransformTextRunFactory::RebuildTextRun(nsTransformedTextRun* aTextRun,
       canBreakBeforeArray.AppendElement(PR_FALSE);
     }
   }
-  if (nextLineBreak < aTextRun->mLineBreaks.Length() &&
-      aTextRun->mLineBreaks[nextLineBreak] == length) {
-    lineBreakBeforeArray.AppendElement(length + extraCharsCount);
-    ++nextLineBreak;
-  }
-  NS_ASSERTION(nextLineBreak == aTextRun->mLineBreaks.Length(),
-               "lost track of line breaks somehow");
 
   PRUint32 flags;
   gfxTextRunFactory::Parameters innerParams =
@@ -477,9 +391,7 @@ nsCaseTransformTextRunFactory::RebuildTextRun(nsTransformedTextRun* aTextRun,
   nsAutoPtr<gfxTextRun> transformedChild;
   gfxTextRunCache::AutoTextRun cachedChild;
   gfxTextRun* child;
-  // Setup actual line break data for child (which may affect shaping)
-  innerParams.mInitialBreaks = lineBreakBeforeArray.Elements();
-  innerParams.mInitialBreakCount = lineBreakBeforeArray.Length();
+
   if (mInnerTransformingTextRunFactory) {
     transformedChild = mInnerTransformingTextRunFactory->MakeTextRun(
         convertedString.BeginReading(), convertedString.Length(),

@@ -214,6 +214,12 @@ public:
                                  const nsDisplayListSet& aIn,
                                  const nsDisplayListSet& aOut);
 
+  /**
+   * This defaults to true, but some box frames (nsListBoxBodyFrame for
+   * example) don't support ordinals in their children.
+   */
+  virtual PRBool SupportsOrdinalsInChildren();
+
 protected:
 #ifdef DEBUG_LAYOUT
     virtual void GetBoxName(nsAutoString& aName);

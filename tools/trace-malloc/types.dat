@@ -1762,7 +1762,6 @@ nsProxyEventClass::nsProxyEventClass(nsID const &, nsIInterfaceInfo *)
 
 <nsProxyEventClass>
 __builtin_new
-nsIDKey::Clone(void) const
 nsHashtable::Put(nsHashKey *, void *)
 nsProxyEventClass::nsProxyEventClass(nsID const &, nsIInterfaceInfo *)
 
@@ -1872,13 +1871,11 @@ nsComponentManagerImpl::RegisterFactory(nsID const &, char const *, char const *
 
 <nsComponentManagerImpl>
 __builtin_new
-nsIDKey::Clone(void) const
 nsHashtable::Put(nsHashKey *, void *)
 nsComponentManagerImpl::PlatformPrePopulateRegistry(void)
 
 <nsComponentManagerImpl>
 __builtin_new
-nsIDKey::Clone(void) const
 nsHashtable::Put(nsHashKey *, void *)
 nsComponentManagerImpl::RegisterFactory(nsID const &, char const *, char const *, nsIFactory *, int)
 
@@ -1907,7 +1904,6 @@ nsComponentManagerImpl::RegisterComponentCommon(nsID const &, char const *, char
 
 <nsComponentManagerImpl>
 __builtin_new
-nsIDKey::Clone(void) const
 nsHashtable::Put(nsHashKey *, void *)
 nsComponentManagerImpl::RegisterComponentCommon(nsID const &, char const *, char const *, char const *, int, int, char const *)
 
@@ -3396,7 +3392,6 @@ nsGenericModule::GetClassObject(nsIComponentManager *, nsID const &, nsID const 
 
 <nsGenericModule>
 __builtin_new
-nsIDKey::Clone(void) const
 nsHashtable::Put(nsHashKey *, void *)
 nsSupportsHashtable::Put(nsHashKey *, nsISupports *, nsISupports **)
 nsGenericModule::GetClassObject(nsIComponentManager *, nsID const &, nsID const &, void **)
@@ -3489,7 +3484,6 @@ nsServiceManagerImpl::nsServiceManagerImpl(void)
 
 <nsServiceManagerImpl>
 __builtin_new
-nsIDKey::Clone(void) const
 nsHashtable::Put(nsHashKey *, void *)
 nsServiceManagerImpl::GetService(nsID const &, nsID const &, nsISupports **, nsIShutdownListener *)
 

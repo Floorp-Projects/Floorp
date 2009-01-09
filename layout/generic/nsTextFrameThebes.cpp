@@ -615,6 +615,12 @@ public:
     mCurrentRunContextInfo(nsTextFrameUtils::INCOMING_NONE) {
     ResetRunInfo();
   }
+  ~BuildTextRunsScanner() {
+    NS_ASSERTION(mBreakSinks.IsEmpty(), "Should have been cleared");
+    NS_ASSERTION(mTextRunsToDelete.IsEmpty(), "Should have been cleared");
+    NS_ASSERTION(mLineBreakBeforeFrames.IsEmpty(), "Should have been cleared");
+    NS_ASSERTION(mMappedFlows.IsEmpty(), "Should have been cleared");
+  }
 
   void SetAtStartOfLine() {
     mStartOfLine = PR_TRUE;
@@ -641,16 +647,13 @@ public:
   void ScanFrame(nsIFrame* aFrame);
   PRBool IsTextRunValidForMappedFlows(gfxTextRun* aTextRun);
   void FlushFrames(PRBool aFlushLineBreaks, PRBool aSuppressTrailingBreak);
+  void FlushLineBreaks(gfxTextRun* aTrailingTextRun);
   void ResetRunInfo() {
     mLastFrame = nsnull;
     mMappedFlows.Clear();
     mLineBreakBeforeFrames.Clear();
     mMaxTextLength = 0;
     mDoubleByteText = PR_FALSE;
-  }
-  void ResetLineBreaker() {
-    PRBool trailingBreak;
-    mLineBreaker.Reset(&trailingBreak);
   }
   void AccumulateRunInfo(nsTextFrame* aFrame);
   /**
@@ -727,6 +730,18 @@ public:
                                             aCapitalize, mContext);
     }
 
+    void Finish() {
+      NS_ASSERTION(!(mTextRun->GetFlags() &
+                     (gfxTextRunWordCache::TEXT_UNUSED_FLAGS |
+                      nsTextFrameUtils::TEXT_UNUSED_FLAG)),
+                   "Flag set that should never be set! (memory safety error?)");
+      if (mTextRun->GetFlags() & nsTextFrameUtils::TEXT_IS_TRANSFORMED) {
+        nsTransformedTextRun* transformedTextRun =
+          static_cast<nsTransformedTextRun*>(mTextRun);
+        transformedTextRun->FinishSettingProperties(mContext);
+      }
+    }
+
     gfxTextRun*  mTextRun;
     gfxContext*  mContext;
     PRUint32     mOffsetIntoTextRun;
@@ -738,6 +753,7 @@ private:
   nsAutoTArray<MappedFlow,10>   mMappedFlows;
   nsAutoTArray<nsTextFrame*,50> mLineBreakBeforeFrames;
   nsAutoTArray<nsAutoPtr<BreakSink>,10> mBreakSinks;
+  nsAutoTArray<gfxTextRun*,5>   mTextRunsToDelete;
   nsLineBreaker                 mLineBreaker;
   gfxTextRun*                   mCurrentFramesAllSameTextRun;
   gfxContext*                   mContext;
@@ -1075,12 +1091,15 @@ BuildTextRuns(gfxContext* aContext, nsTextFrame* aForFrame,
     if (seenStartLine) {
       ++linesAfterStartLine;
       if (linesAfterStartLine >= NUM_LINES_TO_BUILD_TEXT_RUNS && scanner.CanStopOnThisLine()) {
-        // Don't flush; we may be in the middle of a textrun that we can't
-        // end here. That's OK, we just won't build it.
+        // Don't flush frames; we may be in the middle of a textrun
+        // that we can't end here. That's OK, we just won't build it.
         // Note that we must already have finished the textrun for aForFrame,
         // because we've seen the end of a textrun in a line after the line
         // containing aForFrame.
-        scanner.ResetLineBreaker();
+        scanner.FlushLineBreaks(nsnull);
+        // This flushes out mMappedFlows and mLineBreakBeforeFrames, which
+        // silences assertions in the scanner destructor.
+        scanner.ResetRunInfo();
         return;
       }
     }
@@ -1132,54 +1151,70 @@ void BuildTextRunsScanner::FlushFrames(PRBool aFlushLineBreaks, PRBool aSuppress
   if (mMappedFlows.Length() == 0)
     return;
 
-  gfxTextRun* textRun;
-  if (!mSkipIncompleteTextRuns && mCurrentFramesAllSameTextRun &&
-      ((mCurrentFramesAllSameTextRun->GetFlags() & nsTextFrameUtils::TEXT_INCOMING_WHITESPACE) != 0) ==
-      ((mCurrentRunContextInfo & nsTextFrameUtils::INCOMING_WHITESPACE) != 0) &&
-      ((mCurrentFramesAllSameTextRun->GetFlags() & gfxTextRunWordCache::TEXT_INCOMING_ARABICCHAR) != 0) ==
-      ((mCurrentRunContextInfo & nsTextFrameUtils::INCOMING_ARABICCHAR) != 0) &&
-      IsTextRunValidForMappedFlows(mCurrentFramesAllSameTextRun)) {
-    // Optimization: We do not need to (re)build the textrun.
-    textRun = mCurrentFramesAllSameTextRun;
+  gfxTextRun* textRun = nsnull;
+  if (!mMappedFlows.IsEmpty()) {
+    if (!mSkipIncompleteTextRuns && mCurrentFramesAllSameTextRun &&
+        ((mCurrentFramesAllSameTextRun->GetFlags() & nsTextFrameUtils::TEXT_INCOMING_WHITESPACE) != 0) ==
+        ((mCurrentRunContextInfo & nsTextFrameUtils::INCOMING_WHITESPACE) != 0) &&
+        ((mCurrentFramesAllSameTextRun->GetFlags() & gfxTextRunWordCache::TEXT_INCOMING_ARABICCHAR) != 0) ==
+        ((mCurrentRunContextInfo & nsTextFrameUtils::INCOMING_ARABICCHAR) != 0) &&
+        IsTextRunValidForMappedFlows(mCurrentFramesAllSameTextRun)) {
+      // Optimization: We do not need to (re)build the textrun.
+      textRun = mCurrentFramesAllSameTextRun;
 
-    // Feed this run's text into the linebreaker to provide context. This also
-    // updates mNextRunContextInfo appropriately.
-    SetupBreakSinksForTextRun(textRun, PR_TRUE, PR_FALSE);
-    mNextRunContextInfo = nsTextFrameUtils::INCOMING_NONE;
-    if (textRun->GetFlags() & nsTextFrameUtils::TEXT_TRAILING_WHITESPACE) {
-      mNextRunContextInfo |= nsTextFrameUtils::INCOMING_WHITESPACE;
+      // Feed this run's text into the linebreaker to provide context. This also
+      // updates mNextRunContextInfo appropriately.
+      SetupBreakSinksForTextRun(textRun, PR_TRUE, PR_FALSE);
+      mNextRunContextInfo = nsTextFrameUtils::INCOMING_NONE;
+      if (textRun->GetFlags() & nsTextFrameUtils::TEXT_TRAILING_WHITESPACE) {
+        mNextRunContextInfo |= nsTextFrameUtils::INCOMING_WHITESPACE;
+      }
+      if (textRun->GetFlags() & gfxTextRunWordCache::TEXT_TRAILING_ARABICCHAR) {
+        mNextRunContextInfo |= nsTextFrameUtils::INCOMING_ARABICCHAR;
+      }
+    } else {
+      nsAutoTArray<PRUint8,BIG_TEXT_NODE_SIZE> buffer;
+      if (!buffer.AppendElements(mMaxTextLength*(mDoubleByteText ? 2 : 1)))
+        return;
+      textRun = BuildTextRunForFrames(buffer.Elements());
     }
-    if (textRun->GetFlags() & gfxTextRunWordCache::TEXT_TRAILING_ARABICCHAR) {
-      mNextRunContextInfo |= nsTextFrameUtils::INCOMING_ARABICCHAR;
-    }
-  } else {
-    nsAutoTArray<PRUint8,BIG_TEXT_NODE_SIZE> buffer;
-    if (!buffer.AppendElements(mMaxTextLength*(mDoubleByteText ? 2 : 1)))
-      return;
-    textRun = BuildTextRunForFrames(buffer.Elements());
   }
 
   if (aFlushLineBreaks) {
-    PRBool trailingLineBreak;
-    nsresult rv = mLineBreaker.Reset(&trailingLineBreak);
-    // textRun may be null for various reasons, including because we constructed
-    // a partial textrun just to get the linebreaker and other state set up
-    // to build the next textrun.
-    if (NS_SUCCEEDED(rv) && trailingLineBreak && textRun && !aSuppressTrailingBreak) {
-      textRun->SetFlagBits(nsTextFrameUtils::TEXT_HAS_TRAILING_BREAK);
-    }
-    PRUint32 i;
-    for (i = 0; i < mBreakSinks.Length(); ++i) {
-      if (!mBreakSinks[i]->mExistingTextRun || mBreakSinks[i]->mChangedBreaks) {
-        // TODO cause frames associated with the textrun to be reflowed, if they
-        // aren't being reflowed already!
-      }
-    }
-    mBreakSinks.Clear();
+    FlushLineBreaks(aSuppressTrailingBreak ? nsnull : textRun);
   }
 
   mCanStopOnThisLine = PR_TRUE;
   ResetRunInfo();
+}
+
+void BuildTextRunsScanner::FlushLineBreaks(gfxTextRun* aTrailingTextRun)
+{
+  PRBool trailingLineBreak;
+  nsresult rv = mLineBreaker.Reset(&trailingLineBreak);
+  // textRun may be null for various reasons, including because we constructed
+  // a partial textrun just to get the linebreaker and other state set up
+  // to build the next textrun.
+  if (NS_SUCCEEDED(rv) && trailingLineBreak && aTrailingTextRun) {
+    aTrailingTextRun->SetFlagBits(nsTextFrameUtils::TEXT_HAS_TRAILING_BREAK);
+  }
+
+  PRUint32 i;
+  for (i = 0; i < mBreakSinks.Length(); ++i) {
+    if (!mBreakSinks[i]->mExistingTextRun || mBreakSinks[i]->mChangedBreaks) {
+      // TODO cause frames associated with the textrun to be reflowed, if they
+      // aren't being reflowed already!
+    }
+    mBreakSinks[i]->Finish();
+  }
+  mBreakSinks.Clear();
+
+  for (i = 0; i < mTextRunsToDelete.Length(); ++i) {
+    gfxTextRun* deleteTextRun = mTextRunsToDelete[i];
+    gTextRuns->RemoveFromCache(deleteTextRun);
+    delete deleteTextRun;
+  }
+  mTextRunsToDelete.Clear();
 }
 
 void BuildTextRunsScanner::AccumulateRunInfo(nsTextFrame* aFrame)
@@ -1493,15 +1528,18 @@ BuildTextRunsScanner::BuildTextRunForFrames(void* aTextBuffer)
   TextRunMappedFlow dummyMappedFlow;
 
   TextRunUserData* userData;
+  TextRunUserData* userDataToDestroy;
   // If the situation is particularly simple (and common) we don't need to
   // allocate userData.
   if (mMappedFlows.Length() == 1 && !mMappedFlows[0].mEndFrame &&
       mMappedFlows[0].mStartFrame->GetContentOffset() == 0) {
     userData = &dummyData;
+    userDataToDestroy = nsnull;
     dummyData.mMappedFlows = &dummyMappedFlow;
   } else {
     userData = static_cast<TextRunUserData*>
       (nsMemory::Alloc(sizeof(TextRunUserData) + mMappedFlows.Length()*sizeof(TextRunMappedFlow)));
+    userDataToDestroy = userData;
     userData->mMappedFlows = reinterpret_cast<TextRunMappedFlow*>(userData + 1);
   }
   userData->mMappedFlowCount = mMappedFlows.Length();
@@ -1578,7 +1616,7 @@ BuildTextRunsScanner::BuildTextRunForFrames(void* aTextBuffer)
         // then expand.
         nsAutoTArray<PRUint8,BIG_TEXT_NODE_SIZE> tempBuf;
         if (!tempBuf.AppendElements(contentLength)) {
-          DestroyUserData(userData);
+          DestroyUserData(userDataToDestroy);
           return nsnull;
         }
         PRUint8* bufStart = tempBuf.Elements();
@@ -1606,7 +1644,7 @@ BuildTextRunsScanner::BuildTextRunForFrames(void* aTextBuffer)
 
   // Check for out-of-memory in gfxSkipCharsBuilder
   if (!builder.IsOK()) {
-    DestroyUserData(userData);
+    DestroyUserData(userDataToDestroy);
     return nsnull;
   }
 
@@ -1641,7 +1679,7 @@ BuildTextRunsScanner::BuildTextRunForFrames(void* aTextBuffer)
   nsTextFrame* firstFrame = mMappedFlows[0].mStartFrame;
   gfxFontGroup* fontGroup = GetFontGroupForFrame(firstFrame);
   if (!fontGroup) {
-    DestroyUserData(userData);
+    DestroyUserData(userDataToDestroy);
     return nsnull;
   }
 
@@ -1751,7 +1789,7 @@ BuildTextRunsScanner::BuildTextRunForFrames(void* aTextBuffer)
     }
   }
   if (!textRun) {
-    DestroyUserData(userData);
+    DestroyUserData(userDataToDestroy);
     return nsnull;
   }
 
@@ -1764,11 +1802,16 @@ BuildTextRunsScanner::BuildTextRunForFrames(void* aTextBuffer)
   if (mSkipIncompleteTextRuns) {
     mSkipIncompleteTextRuns = !TextContainsLineBreakerWhiteSpace(textPtr,
         transformedLength, mDoubleByteText);
-    
-    // Nuke the textrun
-    gTextRuns->RemoveFromCache(textRun);
-    delete textRun;
-    DestroyUserData(userData);
+    // Arrange for this textrun to be deleted the next time the linebreaker
+    // is flushed out
+    mTextRunsToDelete.AppendElement(textRun);
+    // Since we're doing to destroy the user data now, avoid a dangling
+    // pointer. Strictly speaking we don't need to do this since it should
+    // not be used (since this textrun will not be used and will be
+    // itself deleted soon), but it's always better to not have dangling
+    // pointers around.
+    textRun->SetUserData(nsnull);
+    DestroyUserData(userDataToDestroy);
     return nsnull;
   }
 
@@ -3017,16 +3060,24 @@ nsTextPaintStyle::InitCommonColors()
 
   nsStyleContext* sc = mFrame->GetStyleContext();
 
-  const nsStyleBackground* bg =
+  nsStyleContext* bgContext =
     nsCSSRendering::FindNonTransparentBackground(sc);
-  NS_ASSERTION(bg, "Cannot find NonTransparentBackground.");
+  NS_ASSERTION(bgContext, "Cannot find NonTransparentBackground.");
+  const nsStyleBackground* bg = bgContext->GetStyleBackground();
 
   nscolor defaultBgColor = mPresContext->DefaultBackgroundColor();
-  NS_ASSERTION(NS_GET_A(defaultBgColor) == 255,
-               "default background color is not opaque");
-
   mFrameBackgroundColor = NS_ComposeColors(defaultBgColor,
                                            bg->mBackgroundColor);
+
+  if (bgContext->GetStyleDisplay()->mAppearance) {
+    // Assume a native widget has sufficient contrast always
+    mSufficientContrast = 0;
+    mInitCommonColors = PR_TRUE;
+    return;
+  }
+
+  NS_ASSERTION(NS_GET_A(defaultBgColor) == 255,
+               "default background color is not opaque");
 
   nsILookAndFeel* look = mPresContext->LookAndFeel();
   nscolor defaultWindowBackgroundColor, selectionTextColor, selectionBGColor;
@@ -6041,7 +6092,9 @@ nsTextFrame::Reflow(nsPresContext*           aPresContext,
                                            eNormalBreak);
   }
   PRBool breakAfter = forceBreakAfter;
-  if (!breakAfter && charsFit == length &&
+  // length == 0 means either the text is empty or it's all collapsed away
+  PRBool emptyTextAtStartOfLine = atStartOfLine && length == 0;
+  if (!breakAfter && charsFit == length && !emptyTextAtStartOfLine &&
       transformedOffset + transformedLength == mTextRun->GetLength() &&
       (mTextRun->GetFlags() & nsTextFrameUtils::TEXT_HAS_TRAILING_BREAK)) {
     // We placed all the text in the textrun and we have a break opportunity at

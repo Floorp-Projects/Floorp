@@ -187,8 +187,10 @@ struct JSThread {
     /* Property cache for faster call/get/set invocation. */
     JSPropertyCache     propertyCache;
 
+#ifdef JS_TRACER
     /* Trace-tree JIT recorder/interpreter state. */
     JSTraceMonitor      traceMonitor;
+#endif
 
     /* Lock-free list of scripts created by eval to garbage-collect. */
     JSScript            *scriptsToGC;

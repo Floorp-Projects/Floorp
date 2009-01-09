@@ -36,5 +36,4 @@
 # ***** END LICENSE BLOCK *****
 
 TIERS += js
-tier_js_staticdirs = js/src
-tier_js_dirs = config/js
+tier_js_dirs = js/src

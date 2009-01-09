@@ -1627,6 +1627,7 @@ nsFrameSelection::MaintainSelection(nsSelectionAmount aAmount)
   PRInt8 index = GetIndexFromSelectionType(nsISelectionController::SELECTION_NORMAL);
 
   mMaintainedAmount = aAmount;
+  mMaintainRange = nsnull;
   
   nsCOMPtr<nsIDOMNode> startNode;
   nsCOMPtr<nsIDOMNode> endNode;
@@ -1642,7 +1643,9 @@ nsFrameSelection::MaintainSelection(nsSelectionAmount aAmount)
   rv = mDomSelections[index]->GetFocusOffset(&endOffset);
   NS_ENSURE_SUCCESS(rv, rv);
 
-  mMaintainRange = nsnull;
+  if (!startNode || !endNode)
+    return NS_OK;
+  
   NS_NewRange(getter_AddRefs(mMaintainRange));
   if (!mMaintainRange)
     return NS_ERROR_OUT_OF_MEMORY;

@@ -49,13 +49,6 @@ ifdef DEHYDRA_PATH
 DIRS += analysis-tests
 endif
 
-ifndef JS_MOZ_INSTALL
-# This is the appropriate behavior for GNU-style 'make install'.  For
-# Mozilla in-tree behavior, leaving NSDISTMODE unset is the right
-# thing; config/js/Makefile.in sets JS_MOZ_INSTALL in that case.
-NSDISTMODE	= copy
-endif
-
 MODULE		= js
 LIBRARY_NAME	= mozjs
 GRE_MODULE	= 1
@@ -186,7 +179,7 @@ endif
 INSTALLED_HEADERS = \
 		js-config.h \
 		jsautocfg.h \
-		jsautokw.h \
+		$(CURDIR)/jsautokw.h \
 		js.msg \
 		jsapi.h \
 		jsarray.h \
@@ -282,6 +275,8 @@ ifeq (,$(filter-out WINNT WINCE,$(OS_ARCH)))
 INSTALLED_HEADERS += jscpucfg.h
 endif
 
+EXPORTS = $(INSTALLED_HEADERS)
+
 JS_SAFE_ARENA	= 1
 
 DASH_R		= -r
@@ -347,6 +342,18 @@ MOZILLA_DTRACE_SRC = $(srcdir)/javascript-trace.d
 endif
 
 include $(topsrcdir)/config/rules.mk
+
+# nsinstall doesn't get built until we enter config/ in the exports phase,
+# so we'll have to manually ensure it gets built here if we want to use
+# $(EXPORTS)
+ifneq (,$(CROSS_COMPILE)$(filter-out WINNT OS2,$(OS_ARCH)))
+ifneq ($(OS_ARCH), WINCE)
+$(EXPORTS) $(PUBLIC): config/nsinstall$(HOST_BIN_SUFFIX)
+
+config/nsinstall$(HOST_BIN_SUFFIX): $(srcdir)/config/nsinstall.c $(srcdir)/config/pathsub.c
+	$(MAKE) -C config/ nsinstall$(HOST_BIN_SUFFIX)
+endif
+endif
 
 ifdef MOZ_SYNC_BUILD_FILES
 # Because the SpiderMonkey can be distributed and built independently
@@ -612,26 +619,23 @@ js-config: js-config.in Makefile $(DEPTH)/config/autoconf.mk $(topsrcdir)/config
 	&& mv js-config.tmp $@ && chmod +x $@
 
 SCRIPTS = js-config
+SDK_BINARY = js-config
 
 install:: $(INSTALLED_HEADERS)
-	$(INSTALL) $(IFLAGS1) $^ $(includedir)/$(MODULE)
+	$(SYSINSTALL) $^ $(includedir)/$(MODULE)
 
 install:: $(SCRIPTS) $(PROGRAM)
-	$(INSTALL) $(IFLAGS2) $^ $(bindir)
+	$(SYSINSTALL) $^ $(bindir)
 
-# The Mozilla top-level makefiles use install-runtime-libs directly to
-# place an additional copy of the libraries in the 'dist/bin'
-# directory.
-install:: install-runtime-libs
-install-runtime-libs:: $(LIBRARY) $(SHARED_LIBRARY) $(IMPORT_LIBRARY)
+install:: $(LIBRARY) $(SHARED_LIBRARY) $(IMPORT_LIBRARY)
 ifneq (,$(LIBRARY))
-	$(INSTALL) $(IFLAGS1) $(LIBRARY) $(libdir)
+	$(SYSINSTALL) $(LIBRARY) $(libdir)
 endif
 ifneq (,$(SHARED_LIBRARY))
-	$(INSTALL) $(IFLAGS2) $(SHARED_LIBRARY) $(libdir)
+	$(SYSINSTALL) $(SHARED_LIBRARY) $(libdir)
 endif
 ifneq (,$(IMPORT_LIBRARY))
-	$(INSTALL) $(IFLAGS2) $(IMPORT_LIBRARY) $(libdir)
+	$(SYSINSTALL) $(IMPORT_LIBRARY) $(libdir)
 endif
 
 # Extra dependancies and rules for auto-generated headers
