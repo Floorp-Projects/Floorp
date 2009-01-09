@@ -215,11 +215,8 @@ nsFrameLoader::ReallyStartLoading()
   loadInfo->SetReferrer(referrer);
 
   // Kick off the load...
-  PRBool tmpState = mNeedsAsyncDestroy;
-  mNeedsAsyncDestroy = PR_TRUE;
   rv = mDocShell->LoadURI(mURIToLoad, loadInfo,
                           nsIWebNavigation::LOAD_FLAGS_NONE, PR_FALSE);
-  mNeedsAsyncDestroy = tmpState;
   mURIToLoad = nsnull;
 #ifdef DEBUG
   if (NS_FAILED(rv)) {
@@ -750,7 +747,7 @@ nsFrameLoader::Destroy()
     win_private->SetFrameElementInternal(nsnull);
   }
 
-  if ((mNeedsAsyncDestroy || !doc ||
+  if ((mInDestructor || !doc ||
        NS_FAILED(doc->FinalizeFrameLoader(this))) && mDocShell) {
     nsCOMPtr<nsIRunnable> event = new nsAsyncDocShellDestroyer(mDocShell);
     NS_ENSURE_TRUE(event, NS_ERROR_OUT_OF_MEMORY);
