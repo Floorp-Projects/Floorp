@@ -50,17 +50,17 @@ Cu.import("resource://weave/constants.js");
 
 Function.prototype.async = Async.sugar;
 
-function TabEngine(pbeId) {
-  this._init(pbeId);
+function TabEngine() {
+  this._init();
 }
-
 TabEngine.prototype = {
-  __proto__: new BlobEngine(),
-
-  get name() "tabs",
-  get displayName() { return "Tabs"; },
-  get logName() "TabEngine",
-  get serverPrefix() "user-data/tabs/",
+  __proto__: SyncEngine.prototype,
+  name: "tabs",
+  displayName: "Tabs",
+  logName: "Tabs",
+  _storeObj: TabStore,
+  _trackerObj: TabTracker,
+  _recordObj: ClientTabsRecord
 
   get virtualTabs() {
     let virtualTabs = {};
@@ -76,28 +76,15 @@ TabEngine.prototype = {
       }
     }
     return virtualTabs;
-  },
-
-  get _store() {
-    let store = new TabStore();
-    this.__defineGetter__("_store", function() store);
-    return this._store;
-  },
-
-  get _tracker() {
-    let tracker = new TabTracker(this);
-    this.__defineGetter__("_tracker", function() tracker);
-    return this._tracker;
   }
-
 };
 
 function TabStore() {
-  this._init();
+  this._TabStore_init();
 }
 TabStore.prototype = {
   __proto__: new Store(),
-  _logName: "TabStore",
+  _logName: "Tabs.Store",
 
   get _sessionStore() {
     let sessionStore = Cc["@mozilla.org/browser/sessionstore;1"].
