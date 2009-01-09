@@ -106,19 +106,19 @@ tab:focus > .tab-middle {
   outline: 1px dotted;
 }
 
-tab[beforeselected="true"],
-tab[afterselected="true"][chromedir="rtl"] {
+tab[beforeselected="true"]:not([chromedir="rtl"]),
+tab[selected="true"][chromedir="rtl"] + tab {
   border-right: none;
   -moz-border-radius-topright: 0;
 }
 
-tab[afterselected="true"],
+tab[selected="true"]:not([chromedir="rtl"]) + tab,
 tab[beforeselected="true"][chromedir="rtl"] {
   border-left: none;
   -moz-border-radius-topleft: 0;
 }
 
-tab[first-tab="true"][selected="true"] {
+tab:first-of-type[selected="true"] {
   padding-right: 5px;
   padding-left: 5px;
 }
@@ -148,12 +148,12 @@ tab[first-tab="true"][selected="true"] {
   padding: 4px 6px 1px 6px;
 }
 
-.tab-bottom[beforeselected="true"],
-.tab-bottom[afterselected="true"][chromedir="rtl"] {
+.tab-bottom[beforeselected="true"]:not([chromedir="rtl"]),
+.tab-bottom[selected="true"][chromedir="rtl"] + .tab-bottom {
   -moz-border-radius-bottomright: 0;
 }
 
-.tab-bottom[afterselected="true"],
+.tab-bottom[selected="true"]:not([chromedir="rtl"]) + .tab-bottom,
 .tab-bottom[beforeselected="true"][chromedir="rtl"] {
   -moz-border-radius-bottomleft: 0;
 }
