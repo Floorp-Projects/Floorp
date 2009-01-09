@@ -6385,7 +6385,8 @@ nsTableFrame::PaintBCBorders(nsIRenderingContext& aRenderingContext,
 
   PRInt32 startRowY = (GetPrevInFlow()) ? 0 : childAreaOffset.top; // y position of first row in damage area
 
-  const nsStyleBackground* bgColor = nsCSSRendering::FindNonTransparentBackground(mStyleContext);
+  nsStyleContext* bgContext = nsCSSRendering::FindNonTransparentBackground(mStyleContext);
+  const nsStyleBackground* bgColor = bgContext->GetStyleBackground();
   // determine the damage area in terms of rows and columns and finalize startColX and startRowY
   PRUint32 startRowIndex, endRowIndex, startColIndex, endColIndex;
   startRowIndex = endRowIndex = startColIndex = endColIndex = 0;
