@@ -79,9 +79,10 @@ public:
     }
 
     bool contains(T a) {
-        for (unsigned n = 0; n < _len; ++n)
+        for (unsigned n = 0; n < _len; ++n) {
             if (_data[n] == a)
                 return true;
+        }
         return false;
     }
 
