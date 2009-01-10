@@ -4565,8 +4565,7 @@ TraceRecorder::incProp(jsint incr, bool pre)
     if (!inc(v, v_ins, incr, pre))
         return false;
 
-    if (!box_jsval(v, v_ins))
-        return false;
+    box_jsval(v, v_ins);
 
     LIns* dslots_ins = NULL;
     stobj_set_slot(obj_ins, slot, dslots_ins, v_ins);
@@ -4587,8 +4586,7 @@ TraceRecorder::incElem(jsint incr, bool pre)
         return false;
     if (!inc(*vp, v_ins, incr, pre))
         return false;
-    if (!box_jsval(*vp, v_ins))
-        return false;
+    box_jsval(*vp, v_ins);
     lir->insStorei(v_ins, addr_ins, 0);
     return true;
 }
@@ -5282,7 +5280,7 @@ TraceRecorder::native_get(LIns* obj_ins, LIns* pobj_ins, JSScopeProperty* sprop,
 // So box_jsval can emit no LIR_or at all to tag an object jsval.
 JS_STATIC_ASSERT(JSVAL_OBJECT == 0);
 
-JS_REQUIRES_STACK bool
+JS_REQUIRES_STACK void
 TraceRecorder::box_jsval(jsval v, LIns*& v_ins)
 {
     if (isNumber(v)) {
@@ -5290,19 +5288,19 @@ TraceRecorder::box_jsval(jsval v, LIns*& v_ins)
         v_ins = lir->insCall(&js_BoxDouble_ci, args);
         guard(false, lir->ins2(LIR_eq, v_ins, INS_CONST(JSVAL_ERROR_COOKIE)),
               OOM_EXIT);
-        return true;
+        return;
     }
     switch (JSVAL_TAG(v)) {
       case JSVAL_BOOLEAN:
         v_ins = lir->ins2i(LIR_pior, lir->ins2i(LIR_pilsh, v_ins, JSVAL_TAGBITS), JSVAL_BOOLEAN);
-        return true;
+        return;
       case JSVAL_OBJECT:
-        return true;
-      case JSVAL_STRING:
+        return;
+      default:
+        JS_ASSERT(JSVAL_TAG(v) == JSVAL_STRING);
         v_ins = lir->ins2(LIR_pior, v_ins, INS_CONST(JSVAL_STRING));
-        return true;
+        return;
     }
-    return false;
 }
 
 JS_REQUIRES_STACK bool
@@ -5589,8 +5587,7 @@ TraceRecorder::record_JSOP_POPV()
 {
     jsval& rval = stackval(-1);
     LIns *rval_ins = get(&rval);
-    if (!box_jsval(rval, rval_ins))
-        return false;
+    box_jsval(rval, rval_ins);
 
     // Store it in cx->fp->rval. NB: Tricky dependencies. cx->fp is the right
     // frame because POPV appears only in global and eval code and we don't
@@ -6027,8 +6024,7 @@ TraceRecorder::newArray(JSObject *ctor, uint32 argc, jsval *argv, jsval *rval)
         LIns *dslots_ins = NULL;
         for (uint32 i = 0; i < argc; i++) {
             LIns *elt_ins = get(argv + i);
-            if (!box_jsval(argv[i], elt_ins))
-                return false;
+            box_jsval(argv[i], elt_ins);
             stobj_set_dslot(arr_ins, i, dslots_ins, elt_ins, "set_array_elt");
         }
     }
@@ -6164,8 +6160,7 @@ TraceRecorder::functionCall(bool constructing, uintN argc)
                 if (!VALUE_IS_FUNCTION(cx, arg))
                     goto next_specialization;
             } else if (argtype == 'v') {
-                if (!box_jsval(arg, *argp))
-                    return false;
+                box_jsval(arg, *argp);
             } else {
                 goto next_specialization;
             }
@@ -6457,8 +6452,7 @@ TraceRecorder::record_SetPropHit(JSPropCacheEntry* entry, JSScopeProperty* sprop
     LIns* dslots_ins = NULL;
     LIns* v_ins = get(&r);
     LIns* boxed_ins = v_ins;
-    if (!box_jsval(r, boxed_ins))
-        return false;
+    box_jsval(r, boxed_ins);
     if (!native_set(obj_ins, sprop, dslots_ins, boxed_ins))
         return false;
 
@@ -6589,8 +6583,7 @@ TraceRecorder::record_JSOP_SETELEM()
     jsid id;
 
     LIns* boxed_v_ins = v_ins;
-    if (!box_jsval(v, boxed_v_ins))
-        ABORT_TRACE("boxing JSOP_SETELEM value");
+    box_jsval(v, boxed_v_ins);
 
     if (JSVAL_IS_STRING(idx)) {
         if (!js_ValueToStringId(cx, idx, &id))
@@ -7299,18 +7292,6 @@ TraceRecorder::record_JSOP_ENDINIT()
 {
     jsval& v = stackval(-1);
     JS_ASSERT(!JSVAL_IS_PRIMITIVE(v));
-    JSObject* obj = JSVAL_TO_OBJECT(v);
-    if (OBJ_IS_DENSE_ARRAY(cx, obj)) {
-        // Until we get JSOP_NEWARRAY working, we do our optimizing here...
-        if (obj->fslots[JSSLOT_ARRAY_LENGTH] == 1 &&
-            obj->dslots && JSVAL_IS_STRING(obj->dslots[0])) {
-            LIns* v_ins = get(&v);
-            JS_ASSERT(v_ins->isCall() && v_ins->callInfo() == &js_FastNewArray_ci);
-            LIns* args[] = { stack(1), callArgN(v_ins, 1), cx_ins };
-            v_ins = lir->insCall(&js_Array_1str_ci, args);
-            set(&v, v_ins);
-        }
-    }
     return true;
 }
 
@@ -8599,7 +8580,33 @@ TraceRecorder::record_JSOP_LENGTH()
 JS_REQUIRES_STACK bool
 TraceRecorder::record_JSOP_NEWARRAY()
 {
-    return false;
+    JSObject* proto;
+    const CallInfo* ci = &js_NewUninitializedArray_ci;
+    if (!js_GetClassPrototype(cx, globalObj, INT_TO_JSID(JSProto_Array), &proto))
+        return false;
+
+    uint32 len = GET_UINT24(cx->fp->regs->pc);
+    LIns* args[] = { lir->insImm(len), INS_CONSTPTR(proto), cx_ins };
+    LIns* v_ins = lir->insCall(ci, args);
+    guard(false, lir->ins_eq0(v_ins), OOM_EXIT);
+
+    // De-optimize when we might have setters on Array.prototype.
+    LIns* rt_ins = lir->insLoad(LIR_ldp, cx_ins, offsetof(JSContext, runtime));
+    guard(true,
+          lir->ins_eq0(lir->insLoad(LIR_ldp, rt_ins,
+                                    offsetof(JSRuntime, anyArrayProtoHasElement))),
+          MISMATCH_EXIT);
+
+    LIns* dslots_ins = NULL;
+    for (uint32 i = 0; i < len; i++) {
+        jsval& v = stackval(-len + i);
+        LIns* elt_ins = get(&v);
+        box_jsval(v, elt_ins);
+        stobj_set_dslot(v_ins, i, dslots_ins, elt_ins, "set_array_elt");
+    }
+
+    stack(-len, v_ins);
+    return true;
 }
 
 JS_REQUIRES_STACK bool
