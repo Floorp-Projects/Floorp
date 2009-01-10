@@ -3748,8 +3748,12 @@ js_ExecuteTree(JSContext* cx, Fragment* f, uintN& inlineCallCount,
         JS_ASSERT(!fp->callee || fp->thisp == JSVAL_TO_OBJECT(fp->argv[-1]));
     }
 #endif
-
-    AUDIT(sideExitIntoInterpreter);
+#ifdef JS_JIT_SPEW
+    if (innermost->exitType != TIMEOUT_EXIT)
+        AUDIT(sideExitIntoInterpreter);
+    else
+        AUDIT(timeoutIntoInterpreter);
+#endif
 
     return innermost;
 }
