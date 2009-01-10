@@ -71,16 +71,32 @@
 #define RECURSION_LEVEL(table_) (*(uint32*)(table_->entryStore + \
                                             JS_DHASH_TABLE_SIZE(table_) * \
                                             table_->entrySize))
+/*
+ * Most callers that assert about the recursion level don't care about
+ * this magical value because they are asserting that mutation is
+ * allowed (and therefore the level is 0 or 1, depending on whether they
+ * incremented it).
+ *
+ * Only PL_DHashTableFinish needs to allow this special value.
+ */
+#define IMMUTABLE_RECURSION_LEVEL ((uint32)-1)
+
+#define RECURSION_LEVEL_SAFE_TO_FINISH(table_)                                \
+    (RECURSION_LEVEL(table_) == 0 ||                                          \
+     RECURSION_LEVEL(table_) == IMMUTABLE_RECURSION_LEVEL)
 
 #define ENTRY_STORE_EXTRA                   sizeof(uint32)
-#define INCREMENT_RECURSION_LEVEL(table_)   \
-    JS_BEGIN_MACRO                          \
-      ++RECURSION_LEVEL(table_);            \
+#define INCREMENT_RECURSION_LEVEL(table_)                                     \
+    JS_BEGIN_MACRO                                                            \
+        if (RECURSION_LEVEL(table_) != IMMUTABLE_RECURSION_LEVEL)             \
+            ++RECURSION_LEVEL(table_);                                        \
     JS_END_MACRO
-#define DECREMENT_RECURSION_LEVEL(table_)                  \
-    JS_BEGIN_MACRO                                         \
-      JSDHASH_ONELINE_ASSERT(RECURSION_LEVEL(table_) > 0); \
-      --RECURSION_LEVEL(table_);                           \
+#define DECREMENT_RECURSION_LEVEL(table_)                                     \
+    JS_BEGIN_MACRO                                                            \
+        if (RECURSION_LEVEL(table_) != IMMUTABLE_RECURSION_LEVEL) {           \
+            JSDHASH_ONELINE_ASSERT(RECURSION_LEVEL(table_) > 0);              \
+            --RECURSION_LEVEL(table_);                                        \
+        }                                                                     \
     JS_END_MACRO
 
 #else
@@ -382,7 +398,7 @@ JS_DHashTableFinish(JSDHashTable *table)
     }
 
     DECREMENT_RECURSION_LEVEL(table);
-    JS_ASSERT(RECURSION_LEVEL(table) == 0);
+    JS_ASSERT(RECURSION_LEVEL_SAFE_TO_FINISH(table));
 
     /* Free entry storage last. */
     table->ops->freeTable(table, table->entryStore);
@@ -688,6 +704,8 @@ JS_DHashTableRawRemove(JSDHashTable *table, JSDHashEntryHdr *entry)
 {
     JSDHashNumber keyHash;      /* load first in case clearEntry goofs it */
 
+    JS_ASSERT(RECURSION_LEVEL(table) != IMMUTABLE_RECURSION_LEVEL);
+
     JS_ASSERT(JS_DHASH_ENTRY_IS_LIVE(entry));
     keyHash = entry->keyHash;
     table->ops->clearEntry(table, entry);
@@ -762,6 +780,14 @@ JS_DHashTableEnumerate(JSDHashTable *table, JSDHashEnumerator etor, void *arg)
 
     return i;
 }
+
+#ifdef DEBUG
+JS_PUBLIC_API(void)
+JS_DHashMarkTableImmutable(JSDHashTable *table)
+{
+    RECURSION_LEVEL(table) = IMMUTABLE_RECURSION_LEVEL;
+}
+#endif
 
 #ifdef JS_DHASHMETER
 #include <math.h>
