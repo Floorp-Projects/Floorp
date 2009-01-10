@@ -414,7 +414,7 @@ class TraceRecorder : public avmplus::GCObject {
     JS_REQUIRES_STACK bool getProp(jsval& v);
     JS_REQUIRES_STACK bool getThis(nanojit::LIns*& this_ins);
 
-    JS_REQUIRES_STACK bool box_jsval(jsval v, nanojit::LIns*& v_ins);
+    JS_REQUIRES_STACK void box_jsval(jsval v, nanojit::LIns*& v_ins);
     JS_REQUIRES_STACK bool unbox_jsval(jsval v, nanojit::LIns*& v_ins);
     JS_REQUIRES_STACK bool guardClass(JSObject* obj, nanojit::LIns* obj_ins, JSClass* clasp,
                                       ExitType exitType = MISMATCH_EXIT);
