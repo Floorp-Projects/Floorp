@@ -6639,7 +6639,7 @@ js_SetSrcNoteOffset(JSContext *cx, JSCodeGenerator *cg, uintN index,
 
             /*
              * Simultaneously test to see if the source note array must grow to
-             * accomodate either the first or second byte of additional storage
+             * accommodate either the first or second byte of additional storage
              * required by this 3-byte offset.
              */
             if (((CG_NOTE_COUNT(cg) + 1) & CG_NOTE_MASK(cg)) <= 1) {

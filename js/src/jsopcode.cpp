@@ -3925,7 +3925,7 @@ Decompile(SprintStack *ss, jsbytecode *pc, intN nb, JSOp nextop)
 
                     /*
                      * All allocation when decompiling is LIFO, using malloc
-                     * or, more commonly, arena-alloocating from cx->tempPool.
+                     * or, more commonly, arena-allocating from cx->tempPool.
                      * After InitSprintStack succeeds, we must release to mark
                      * before returning.
                      */
