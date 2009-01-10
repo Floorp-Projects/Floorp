@@ -576,6 +576,25 @@ typedef JSDHashOperator
 extern JS_PUBLIC_API(uint32)
 JS_DHashTableEnumerate(JSDHashTable *table, JSDHashEnumerator etor, void *arg);
 
+#ifdef DEBUG
+/**
+ * Mark a table as immutable for the remainder of its lifetime.  This
+ * changes the implementation from ASSERTing one set of invariants to
+ * ASSERTing a different set.
+ *
+ * When a table is NOT marked as immutable, the table implementation
+ * asserts that the table is not mutated from its own callbacks.  It
+ * assumes the caller protects the table from being accessed on multiple
+ * threads simultaneously.
+ *
+ * When the table is marked as immutable, the re-entry assertions will
+ * no longer trigger erroneously due to multi-threaded access.  Instead,
+ * mutations will cause assertions.
+ */
+extern JS_PUBLIC_API(void)
+JS_DHashMarkTableImmutable(JSDHashTable *table);
+#endif
+
 #ifdef JS_DHASHMETER
 #include <stdio.h>
 
