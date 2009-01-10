@@ -559,8 +559,17 @@ OPDEF(JSOP_INT32,         228, "int32",        NULL,  5,  0,  1, 16,  JOF_INT32)
 OPDEF(JSOP_LENGTH,        229, "length",       NULL,  1,  1,  1, 18,  JOF_BYTE|JOF_PROP)
 
 /*
- * JSOP_NEWARRAY optimizes array literal evaluation using the interpreter stack.
- * JSOP_HOLE pushes a JSVAL_HOLE (used with JSOP_NEWINIT and JSOP_NEWARRAY).
+ * Construct a new dense array whose contents are the values provided on the
+ * stack, consuming those values and replacing them with the newly-constructed
+ * array.  The topmost value is the last value in the new array, and the
+ * bottommost value is the first value in the array; the array length is a
+ * 24-bit immediate operand to the instruction.
  */
 OPDEF(JSOP_NEWARRAY,      230, "newarray",     NULL,  4, -1,  1, 19,  JOF_UINT24)
+
+/*
+ * Push a JSVAL_HOLE value onto the stack, representing an omitted property in
+ * an array literal (e.g. property 0 in the array [, 1]).  This opcode is used
+ * with the JSOP_NEWARRAY and JSOP_NEWINIT opcodes.
+ */
 OPDEF(JSOP_HOLE,          231, "hole",         NULL,  1,  0,  1,  0,  JOF_BYTE)
