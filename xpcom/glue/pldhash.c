@@ -68,7 +68,7 @@
  */
 #ifdef DEBUG
 
-#define JSDHASH_SINGLE_LINE_ASSERTION PR_ASSERT
+#define JSDHASH_ONELINE_ASSERT PR_ASSERT
 #define RECURSION_LEVEL(table_) (*(PRUint32*)(table_->entryStore + \
                                             PL_DHASH_TABLE_SIZE(table_) * \
                                             table_->entrySize))
@@ -78,10 +78,10 @@
     PR_BEGIN_MACRO                          \
       ++RECURSION_LEVEL(table_);            \
     PR_END_MACRO
-#define DECREMENT_RECURSION_LEVEL(table_)                         \
-    PR_BEGIN_MACRO                                                \
+#define DECREMENT_RECURSION_LEVEL(table_)                  \
+    PR_BEGIN_MACRO                                         \
       NS_ASSERTION(RECURSION_LEVEL(table_) > 0, "RECURSION_LEVEL(table_) > 0"); \
-      --RECURSION_LEVEL(table_);                                \
+      --RECURSION_LEVEL(table_);                           \
     PR_END_MACRO
 
 #else
