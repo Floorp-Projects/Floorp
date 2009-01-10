@@ -47,6 +47,8 @@
 #endif
 #include "nsPIPluginInstancePeer.h"
 
+#include "nsCOMPtr.h"
+
 class nsPluginInstancePeerImpl : public nsIPluginInstancePeer2,
                                  public nsIWindowlessPluginInstancePeer,
                                  public nsIPluginTagInfo2,
@@ -95,8 +97,7 @@ public:
   nsresult SetOwner(nsIPluginInstanceOwner *aOwner);
 
 private:
-  nsIPluginInstance       *mInstance; //we don't add a ref to this
-  nsIPluginInstanceOwner  *mOwner;    //we don't add a ref to this
+  nsCOMPtr<nsIPluginInstanceOwner> mOwner;
   nsMIMEType              mMIMEType;
   PRUint32                mThreadID;
   PRBool                  mStopped;
