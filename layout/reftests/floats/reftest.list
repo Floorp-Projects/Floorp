@@ -1,6 +1,9 @@
 == other-float-outside-rule-3-left.html other-float-outside-rule-3-left-ref.html
 == other-float-outside-rule-3-right.html other-float-outside-rule-3-right-ref.html
-# It's possible the spec should change here to match rule 3...
+# Maybe the spec should change here.
+fails == other-float-outside-rule-3-left-2.html other-float-outside-rule-3-left-2-ref.html
+fails == other-float-outside-rule-3-right-2.html other-float-outside-rule-3-right-2-ref.html
+# It's possible the spec should change here too.
 fails == other-float-outside-rule-7-left.html other-float-outside-rule-7-left-ref.html
 fails == other-float-outside-rule-7-right.html other-float-outside-rule-7-right-ref.html
 == float-outside-block-push.html float-outside-block-push-ref.html
