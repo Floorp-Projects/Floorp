@@ -303,9 +303,9 @@ Tracker::has(const void *v) const
 }
 
 #if defined NANOJIT_64BIT
-#define PAGEMASK	0x7ff
+#define PAGEMASK 0x7ff
 #else
-#define PAGEMASK	0xfff
+#define PAGEMASK 0xfff
 #endif
 
 LIns*
