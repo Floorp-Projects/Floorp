@@ -1315,7 +1315,7 @@ nsCSSRendering::PaintBackgroundWithSC(nsPresContext* aPresContext,
       drawBackgroundColor = PR_FALSE;
   } else {
     bgColor = NS_RGB(255, 255, 255);
-    if (drawBackgroundImage || NS_GET_A(aColor.mBackgroundColor) > 0)
+    if (drawBackgroundImage || !aColor.IsTransparent())
       drawBackgroundColor = PR_TRUE;
   }
 
