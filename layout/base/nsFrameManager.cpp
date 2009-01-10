@@ -557,9 +557,6 @@ nsFrameManager::GetUndisplayedContent(nsIContent* aContent)
     return nsnull;
 
   nsIContent* parent = aContent->GetParent();
-  if (!parent)
-    return nsnull;
-
   for (UndisplayedNode* node = mUndisplayedMap->GetFirstNode(parent);
          node; node = node->mNext) {
     if (node->mContent == aContent)
@@ -586,10 +583,10 @@ nsFrameManager::SetUndisplayedContent(nsIContent* aContent,
   }
   if (mUndisplayedMap) {
     nsIContent* parent = aContent->GetParent();
-    NS_ASSERTION(parent, "undisplayed content must have a parent");
-    if (parent) {
-      mUndisplayedMap->AddNodeFor(parent, aContent, aStyleContext);
-    }
+    NS_ASSERTION(parent || (mPresShell && mPresShell->GetDocument() &&
+                 mPresShell->GetDocument()->GetRootContent() == aContent),
+                 "undisplayed content must have a parent, unless it's the root content");
+    mUndisplayedMap->AddNodeFor(parent, aContent, aStyleContext);
   }
 }
 
