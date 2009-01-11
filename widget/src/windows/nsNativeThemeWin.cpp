@@ -466,7 +466,7 @@ nsNativeThemeWin::GetThemePartAndState(nsIFrame* aFrame, PRUint8 aWidgetType,
         /* Note: the NOSCROLL type has a rounded corner in each
          * corner.  The more specific HSCROLL, VSCROLL, HVSCROLL types
          * have side and/or top/bottom edges rendered as straight
-         * horizontal lines with sharp corners to accomodate a
+         * horizontal lines with sharp corners to accommodate a
          * scrollbar.  However, the scrollbar gets rendered on top of
          * this for us, so we don't care, and can just use NOSCROLL
          * here.
