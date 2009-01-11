@@ -1311,7 +1311,7 @@ Engine.prototype = {
     // Write the engine to file
     aEngine._serializeToFile();
 
-    // Notify the search service of the sucessful load. It will deal with
+    // Notify the search service of the successful load. It will deal with
     // updates by checking aEngine._engineToUpdate.
     notifyAction(aEngine, SEARCH_ENGINE_LOADED);
   },
