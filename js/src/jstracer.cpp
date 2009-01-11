@@ -5303,7 +5303,7 @@ TraceRecorder::box_jsval(jsval v, LIns*& v_ins)
     }
 }
 
-JS_REQUIRES_STACK bool
+JS_REQUIRES_STACK void
 TraceRecorder::unbox_jsval(jsval v, LIns*& v_ins)
 {
     if (isNumber(v)) {
@@ -5318,7 +5318,7 @@ TraceRecorder::unbox_jsval(jsval v, LIns*& v_ins)
               MISMATCH_EXIT);
         LIns* args[] = { v_ins };
         v_ins = lir->insCall(&js_UnboxDouble_ci, args);
-        return true;
+        return;
     }
     switch (JSVAL_TAG(v)) {
       case JSVAL_BOOLEAN:
@@ -5328,7 +5328,7 @@ TraceRecorder::unbox_jsval(jsval v, LIns*& v_ins)
                          JSVAL_BOOLEAN),
               MISMATCH_EXIT);
         v_ins = lir->ins2i(LIR_ush, v_ins, JSVAL_TAGBITS);
-        return true;
+        return;
       case JSVAL_OBJECT:
         if (JSVAL_IS_NULL(v)) {
             // JSVAL_NULL maps to type JSVAL_TNULL, so insist that v_ins == 0 here.
@@ -5343,18 +5343,17 @@ TraceRecorder::unbox_jsval(jsval v, LIns*& v_ins)
                   exit);
             guard(false, lir->ins_eq0(v_ins), exit);
         }
-        return true;
-      case JSVAL_STRING:
+        return;
+      default:
+        JS_ASSERT(JSVAL_TAG(v) == JSVAL_STRING);
         guard(true,
               lir->ins2i(LIR_eq,
                         lir->ins2(LIR_piand, v_ins, INS_CONST(JSVAL_TAGMASK)),
                         JSVAL_STRING),
               MISMATCH_EXIT);
         v_ins = lir->ins2(LIR_piand, v_ins, INS_CONST(~JSVAL_TAGMASK));
-        return true;
+        return;
     }
-    JS_NOT_REACHED("unbox_jsval");
-    return false;
 }
 
 JS_REQUIRES_STACK bool
@@ -6528,8 +6527,7 @@ TraceRecorder::record_JSOP_GETELEM()
         LIns* args[] = { idx_ins, obj_ins, cx_ins };
         v_ins = lir->insCall(&js_Any_getprop_ci, args);
         guard(false, lir->ins2(LIR_eq, v_ins, INS_CONST(JSVAL_ERROR_COOKIE)), MISMATCH_EXIT);
-        if (!unbox_jsval(v, v_ins))
-            ABORT_TRACE("JSOP_GETELEM");
+        unbox_jsval(v, v_ins);
         set(&lval, v_ins);
         return true;
     }
@@ -6551,8 +6549,7 @@ TraceRecorder::record_JSOP_GETELEM()
             return false;
         LIns* v_ins = lir->insCall(&js_Any_getelem_ci, args);
         guard(false, lir->ins2(LIR_eq, v_ins, INS_CONST(JSVAL_ERROR_COOKIE)), MISMATCH_EXIT);
-        if (!unbox_jsval(v, v_ins))
-            ABORT_TRACE("JSOP_GETELEM");
+        unbox_jsval(v, v_ins);
         set(&lval, v_ins);
         return true;
     }
@@ -6871,9 +6868,8 @@ TraceRecorder::record_FastNativeCallComplete()
     bool ok = true;
     switch (JSTN_ERRTYPE(pendingTraceableNative)) {
       case FAIL_JSVAL:
-        ok = unbox_jsval(v, v_ins);
-        if (ok)
-            set(&v, v_ins);
+        unbox_jsval(v, v_ins);
+        set(&v, v_ins);
         break;
       case FAIL_NEG:
         /* Already added i2f in functionCall. */
@@ -6981,10 +6977,8 @@ TraceRecorder::prop(JSObject* obj, LIns* obj_ins, uint32& slot, LIns*& v_ins)
                 LIns* args[] = { INS_CONSTPTR(sprop), obj_ins, cx_ins };
                 v_ins = lir->insCall(&js_CallGetter_ci, args);
                 guard(false, lir->ins2(LIR_eq, v_ins, INS_CONST(JSVAL_ERROR_COOKIE)), OOM_EXIT);
-                if (!unbox_jsval((sprop->shortid == REGEXP_SOURCE) ? JSVAL_STRING : JSVAL_BOOLEAN,
-                                 v_ins)) {
-                    ABORT_TRACE("unboxing");
-                }
+                unbox_jsval((sprop->shortid == REGEXP_SOURCE) ? JSVAL_STRING : JSVAL_BOOLEAN,
+                             v_ins);
                 JS_ASSERT(cs.ndefs == 1);
                 stack(-cs.nuses, v_ins);
                 return true;
@@ -7001,8 +6995,7 @@ TraceRecorder::prop(JSObject* obj, LIns* obj_ins, uint32& slot, LIns*& v_ins)
     }
 
     v_ins = stobj_get_slot(obj_ins, slot, dslots_ins);
-    if (!unbox_jsval(STOBJ_GET_SLOT(obj, slot), v_ins))
-        ABORT_TRACE("unboxing");
+    unbox_jsval(STOBJ_GET_SLOT(obj, slot), v_ins);
     return true;
 }
 
@@ -7048,8 +7041,7 @@ TraceRecorder::elem(jsval& oval, jsval& idx, jsval*& vp, LIns*& v_ins, LIns*& ad
 
     /* Load the value and guard on its type to unbox it. */
     v_ins = lir->insLoad(LIR_ldp, addr_ins, 0);
-    if (!unbox_jsval(*vp, v_ins))
-        return false;
+    unbox_jsval(*vp, v_ins);
 
     if (JSVAL_TAG(*vp) == JSVAL_BOOLEAN) {
         // Optimize to guard for a hole only after untagging, so we know that
@@ -7480,11 +7472,9 @@ TraceRecorder::record_IteratorNextComplete()
 
     jsval& v = stackval(-2);
     LIns* v_ins = get(&v);
-    if (unbox_jsval(v, v_ins)) {
-        set(&v, v_ins);
-        return true;
-    }
-    return false;
+    unbox_jsval(v, v_ins);
+    set(&v, v_ins);
+    return true;
 }
 
 JS_REQUIRES_STACK bool
