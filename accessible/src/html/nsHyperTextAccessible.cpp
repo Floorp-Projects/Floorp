@@ -2097,7 +2097,7 @@ nsresult nsHyperTextAccessible::ContentToRenderedOffset(nsIFrame *aFrame, PRInt3
 
   gfxSkipChars skipChars;
   gfxSkipCharsIterator iter;
-  // Only get info up to original ofset, we know that will be larger than skipped offset
+  // Only get info up to original offset, we know that will be larger than skipped offset
   nsresult rv = aFrame->GetRenderedText(nsnull, &skipChars, &iter, 0, aContentOffset);
   NS_ENSURE_SUCCESS(rv, rv);
 
