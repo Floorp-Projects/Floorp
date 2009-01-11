@@ -1958,7 +1958,7 @@ function readFromClipboard()
     var clipboard = Components.classes["@mozilla.org/widget/clipboard;1"]
                               .getService(Components.interfaces.nsIClipboard);
 
-    // Create tranferable that will transfer the text.
+    // Create transferable that will transfer the text.
     var trans = Components.classes["@mozilla.org/widget/transferable;1"]
                           .createInstance(Components.interfaces.nsITransferable);
 
