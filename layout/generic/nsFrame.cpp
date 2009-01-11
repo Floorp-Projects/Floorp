@@ -94,7 +94,7 @@
 #include "nsFrameTraversal.h"
 #include "nsStyleChangeList.h"
 #include "nsIDOMRange.h"
-#include "nsITableLayout.h"    //selection neccesity
+#include "nsITableLayout.h"    //selection necessity
 #include "nsITableCellLayout.h"//  "
 #include "nsITextControlFrame.h"
 #include "nsINameSpaceManager.h"
