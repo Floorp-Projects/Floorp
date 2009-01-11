@@ -2180,7 +2180,7 @@ NS_IMETHODIMP nsChildView::GetAttention(PRInt32 aCycleCount)
 #pragma mark -
 
 
-// Force Input Method Editor to commit the uncommited input
+// Force Input Method Editor to commit the uncommitted input
 // Note that this and other IME methods don't necessarily
 // get called on the same ChildView that input is going through.
 NS_IMETHODIMP nsChildView::ResetInputState()
