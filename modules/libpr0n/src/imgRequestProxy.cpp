@@ -118,7 +118,7 @@ nsresult imgRequestProxy::Init(imgRequest *request, nsILoadGroup *aLoadGroup, im
   }
   mLoadGroup = aLoadGroup;
 
-  // Note: AddProxy won't send all the On* notifications immediatly
+  // Note: AddProxy won't send all the On* notifications immediately
   request->AddProxy(this);
 
   return NS_OK;
