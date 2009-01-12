@@ -323,11 +323,7 @@ nsHTMLObjectElement::SubmitNamesValues(nsIFormSubmission *aFormSubmission,
 
   nsIFrame* frame = GetPrimaryFrame();
 
-  nsIObjectFrame *objFrame = nsnull;
-  if (frame) {
-    CallQueryInterface(frame, &objFrame);
-  }
-
+  nsIObjectFrame *objFrame = do_QueryFrame(frame);
   if (!objFrame) {
     // No frame, nothing to submit.
 

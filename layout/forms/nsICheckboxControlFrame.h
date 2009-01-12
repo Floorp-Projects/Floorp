@@ -38,24 +38,18 @@
 #ifndef nsICheckControlFrame_h___
 #define nsICheckControlFrame_h___
 
-#include "nsISupports.h"
+#include "nsQueryFrame.h"
 class nsStyleContext;
 class nsPresContext;
-
-// IID for the nsICheckControlFrame class
-// {401347ED-0101-11d4-9706-0060B0FB9956}
-#define NS_ICHECKBOXCONTROLFRAME_IID    \
-{ 0x401347ed, 0x101, 0x11d4,  \
-  { 0x97, 0x6, 0x0, 0x60, 0xb0, 0xfb, 0x99, 0x56 } }
 
 /** 
   * nsICheckControlFrame is the common interface radio buttons.
   * @see nsFromControlFrame and its base classes for more info
   */
-class nsICheckboxControlFrame : public nsISupports {
-
+class nsICheckboxControlFrame
+{
 public:
-  NS_DECLARE_STATIC_IID_ACCESSOR(NS_ICHECKBOXCONTROLFRAME_IID)
+  NS_DECLARE_FRAME_ACCESSOR(nsICheckboxControlFrame)
 
   /**
    * Sets the Pseudo Style Contexts for the Check button
@@ -68,9 +62,6 @@ public:
    */
   NS_IMETHOD OnChecked(nsPresContext* aPresContext, PRBool aChecked) = 0;
 };
-
-NS_DEFINE_STATIC_IID_ACCESSOR(nsICheckboxControlFrame,
-                              NS_ICHECKBOXCONTROLFRAME_IID)
 
 #endif
 

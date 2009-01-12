@@ -351,8 +351,7 @@ nsMathMLmfencedFrame::doReflow(nsPresContext*          aPresContext,
                                        stretchDir, containerSize);
     childFrame = firstChild;
     while (childFrame) {
-      nsIMathMLFrame* mathmlChild;
-      childFrame->QueryInterface(NS_GET_IID(nsIMathMLFrame), (void**)&mathmlChild);
+      nsIMathMLFrame* mathmlChild = do_QueryFrame(childFrame);
       if (mathmlChild) {
         nsHTMLReflowMetrics childDesiredSize;
         // retrieve the metrics that was stored at the previous pass

@@ -72,10 +72,6 @@ struct nsRowGroupReflowState {
   ~nsRowGroupReflowState() {}
 };
 
-#define NS_ITABLEROWGROUPFRAME_IID    \
-{ 0xe940e7bc, 0xb534, 0x11d2,  \
-  { 0x95, 0xa2, 0x0, 0x60, 0xb0, 0xc3, 0x44, 0x14 } }
-
 // use the following bits from nsFrame's frame state 
 
 // thead or tfoot should be repeated on every printed page
@@ -101,7 +97,8 @@ class nsTableRowGroupFrame
   , public nsILineIterator
 {
 public:
-  NS_IMETHOD QueryInterface(const nsIID &aIID, void **aInstancePtr);
+  NS_DECLARE_FRAME_ACCESSOR(nsTableRowGroupFrame)
+  NS_DECL_QUERYFRAME
 
   /** instantiate a new instance of nsTableRowFrame.
     * @param aPresShell the pres shell for this frame

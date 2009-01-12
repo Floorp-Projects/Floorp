@@ -878,18 +878,6 @@ nsHTMLScrollFrame::Reflow(nsPresContext*           aPresContext,
   return rv;
 }
 
-NS_IMETHODIMP_(nsrefcnt) 
-nsHTMLScrollFrame::AddRef(void)
-{
-  return NS_OK;
-}
-
-NS_IMETHODIMP_(nsrefcnt)
-nsHTMLScrollFrame::Release(void)
-{
-    return NS_OK;
-}
-
 #ifdef NS_DEBUG
 NS_IMETHODIMP
 nsHTMLScrollFrame::GetFrameName(nsAString& aResult) const
@@ -923,15 +911,15 @@ nsHTMLScrollFrame::CurPosAttributeChanged(nsIContent* aChild,
   mInner.CurPosAttributeChanged(aChild);
 }
 
-NS_INTERFACE_MAP_BEGIN(nsHTMLScrollFrame)
-  NS_INTERFACE_MAP_ENTRY(nsIAnonymousContentCreator)
-#ifdef NS_DEBUG
-  NS_INTERFACE_MAP_ENTRY(nsIFrameDebug)
+NS_QUERYFRAME_HEAD(nsHTMLScrollFrame)
+  NS_QUERYFRAME_ENTRY(nsIAnonymousContentCreator)
+  NS_QUERYFRAME_ENTRY(nsIScrollableFrame)
+  NS_QUERYFRAME_ENTRY(nsIScrollableViewProvider)
+  NS_QUERYFRAME_ENTRY(nsIStatefulFrame)
+#ifdef DEBUG
+  NS_QUERYFRAME_ENTRY(nsIFrameDebug)
 #endif
-  NS_INTERFACE_MAP_ENTRY(nsIScrollableFrame)
-  NS_INTERFACE_MAP_ENTRY(nsIScrollableViewProvider)
-  NS_INTERFACE_MAP_ENTRY(nsIStatefulFrame)
-NS_INTERFACE_MAP_END_INHERITING(nsHTMLContainerFrame)
+NS_QUERYFRAME_TAIL_INHERITING(nsHTMLContainerFrame)
 
 //----------nsXULScrollFrame-------------------------------------------
 
@@ -1242,18 +1230,6 @@ nsXULScrollFrame::GetMinWidth(nsIRenderingContext *aRenderingContext)
 }
 #endif
 
-NS_IMETHODIMP_(nsrefcnt) 
-nsXULScrollFrame::AddRef(void)
-{
-  return NS_OK;
-}
-
-NS_IMETHODIMP_(nsrefcnt)
-nsXULScrollFrame::Release(void)
-{
-    return NS_OK;
-}
-
 #ifdef NS_DEBUG
 NS_IMETHODIMP
 nsXULScrollFrame::GetFrameName(nsAString& aResult) const
@@ -1278,18 +1254,16 @@ nsXULScrollFrame::DoLayout(nsBoxLayoutState& aState)
   return rv;
 }
 
-NS_INTERFACE_MAP_BEGIN(nsXULScrollFrame)
-  NS_INTERFACE_MAP_ENTRY(nsIAnonymousContentCreator)
-#ifdef NS_DEBUG
-  NS_INTERFACE_MAP_ENTRY(nsIFrameDebug)
+NS_QUERYFRAME_HEAD(nsXULScrollFrame)
+  NS_QUERYFRAME_ENTRY(nsIAnonymousContentCreator)
+  NS_QUERYFRAME_ENTRY(nsIScrollableFrame)
+  NS_QUERYFRAME_ENTRY(nsIScrollableViewProvider)
+  NS_QUERYFRAME_ENTRY(nsIStatefulFrame)
+#ifdef DEBUG
+  NS_QUERYFRAME_ENTRY(nsIFrameDebug)
 #endif
-  NS_INTERFACE_MAP_ENTRY(nsIScrollableFrame)
-  NS_INTERFACE_MAP_ENTRY(nsIScrollableViewProvider)
-  NS_INTERFACE_MAP_ENTRY(nsIStatefulFrame)
-NS_INTERFACE_MAP_END_INHERITING(nsBoxFrame)
-
-
-
+NS_QUERYFRAME_TAIL_INHERITING(nsBoxFrame)
+ 
 //-------------------- Inner ----------------------
 
 nsGfxScrollFrameInner::nsGfxScrollFrameInner(nsContainerFrame* aOuter,
@@ -1326,16 +1300,6 @@ nsGfxScrollFrameInner::nsGfxScrollFrameInner(nsContainerFrame* aOuter,
 
 nsGfxScrollFrameInner::~nsGfxScrollFrameInner()
 {
-}
-
-NS_IMETHODIMP_(nsrefcnt) nsGfxScrollFrameInner::AddRef(void)
-{
-  return 2;
-}
-
-NS_IMETHODIMP_(nsrefcnt) nsGfxScrollFrameInner::Release(void)
-{
-  return 1;
 }
 
 NS_IMPL_QUERY_INTERFACE1(nsGfxScrollFrameInner, nsIScrollPositionListener)
@@ -1412,16 +1376,15 @@ nsGfxScrollFrameInner::NeedsClipWidget() const
       return PR_FALSE;
 
     /* If we're a form element, we don't need a widget. */
-    nsIFormControlFrame* fcFrame;
-    if ((NS_SUCCEEDED(parentFrame->QueryInterface(NS_GET_IID(nsIFormControlFrame), (void**)&fcFrame)))) {
+    nsIFormControlFrame* fcFrame = do_QueryFrame(parentFrame);
+    if (fcFrame) {
       return PR_FALSE;
     }
   }
 
   // Scrollports that don't ever show associated scrollbars don't get
   // widgets, because they will seldom actually be scrolled.
-  nsIScrollableFrame *scrollableFrame;
-  CallQueryInterface(mOuter, &scrollableFrame);
+  nsIScrollableFrame *scrollableFrame = do_QueryFrame(mOuter);
   ScrollbarStyles scrollbars = scrollableFrame->GetScrollbarStyles();
   if ((scrollbars.mHorizontal == NS_STYLE_OVERFLOW_HIDDEN
        || scrollbars.mHorizontal == NS_STYLE_OVERFLOW_VISIBLE)
@@ -1687,8 +1650,7 @@ nsGfxScrollFrameInner::CreateAnonymousContent(nsTArray<nsIContent*>& aElements)
     }
   }
 
-  nsIScrollableFrame *scrollable;
-  CallQueryInterface(mOuter, &scrollable);
+  nsIScrollableFrame *scrollable = do_QueryFrame(mOuter);
 
   // At this stage in frame construction, the document element and/or
   // BODY overflow styles have not yet been propagated to the
@@ -1713,8 +1675,7 @@ nsGfxScrollFrameInner::CreateAnonymousContent(nsTArray<nsIContent*>& aElements)
   }
 
   // The anonymous <div> used by <inputs> never gets scrollbars.
-  nsITextControlFrame* textFrame = nsnull;
-  CallQueryInterface(parent, &textFrame);
+  nsITextControlFrame* textFrame = do_QueryFrame(parent);
   if (textFrame) {
     // Make sure we are not a text area.
     nsCOMPtr<nsIDOMHTMLTextAreaElement> textAreaElement(do_QueryInterface(parent->GetContent()));
@@ -2714,14 +2675,13 @@ nsGfxScrollFrameInner::SetScrollbarVisibility(nsIBox* aScrollbar, PRBool aVisibl
   if (!aScrollbar)
     return;
 
-  nsIScrollbarFrame* scrollbar;
-  CallQueryInterface(aScrollbar, &scrollbar);
+  nsIScrollbarFrame* scrollbar = do_QueryFrame(aScrollbar);
   if (scrollbar) {
     // See if we have a mediator.
     nsIScrollbarMediator* mediator = scrollbar->GetScrollbarMediator();
     if (mediator) {
       // Inform the mediator of the visibility change.
-      mediator->VisibilityChanged(scrollbar, aVisible);
+      mediator->VisibilityChanged(aVisible);
     }
   }
 }
@@ -2819,8 +2779,7 @@ nsGfxScrollFrameInner::SaveState(nsIStatefulFrame::SpecialStateID aStateID)
     return nsnull;
   }
 
-  nsIScrollbarMediator* mediator;
-  CallQueryInterface(GetScrolledFrame(), &mediator);
+  nsIScrollbarMediator* mediator = do_QueryFrame(GetScrolledFrame());
   if (mediator) {
     // child handles its own scroll state, so don't bother saving state here
     return nsnull;

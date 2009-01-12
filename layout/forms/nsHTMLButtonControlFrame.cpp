@@ -105,31 +105,9 @@ nsHTMLButtonControlFrame::Init(
   return rv;
 }
 
-nsrefcnt nsHTMLButtonControlFrame::AddRef(void)
-{
-  NS_WARNING("not supported");
-  return 1;
-}
-
-nsrefcnt nsHTMLButtonControlFrame::Release(void)
-{
-  NS_WARNING("not supported");
-  return 1;
-}
-
-// Frames are not refcounted, no need to AddRef
-NS_IMETHODIMP
-nsHTMLButtonControlFrame::QueryInterface(const nsIID& aIID, void** aInstancePtr)
-{
-  NS_PRECONDITION(aInstancePtr, "null out param");
-
-  if (aIID.Equals(NS_GET_IID(nsIFormControlFrame))) {
-    *aInstancePtr = static_cast<nsIFormControlFrame*>(this);
-    return NS_OK;
-  }
-
-  return nsHTMLContainerFrame::QueryInterface(aIID, aInstancePtr);
-}
+NS_QUERYFRAME_HEAD(nsHTMLButtonControlFrame)
+  NS_QUERYFRAME_ENTRY(nsIFormControlFrame)
+NS_QUERYFRAME_TAIL_INHERITING(nsHTMLContainerFrame)
 
 #ifdef ACCESSIBILITY
 NS_IMETHODIMP nsHTMLButtonControlFrame::GetAccessible(nsIAccessible** aAccessible)

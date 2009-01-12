@@ -38,12 +38,9 @@
 #include "nsSVGUtils.h"
 #include "nsSVGOuterSVGFrame.h"
 
-//----------------------------------------------------------------------
-// nsISupports methods
-
-NS_INTERFACE_MAP_BEGIN(nsSVGDisplayContainerFrame)
-  NS_INTERFACE_MAP_ENTRY(nsISVGChildFrame)
-NS_INTERFACE_MAP_END_INHERITING(nsSVGContainerFrame)
+NS_QUERYFRAME_HEAD(nsSVGDisplayContainerFrame)
+  NS_QUERYFRAME_ENTRY(nsISVGChildFrame)
+NS_QUERYFRAME_TAIL_INHERITING(nsSVGContainerFrame)
 
 nsIFrame*
 NS_NewSVGContainerFrame(nsIPresShell* aPresShell,
@@ -130,8 +127,7 @@ nsSVGDisplayContainerFrame::InsertFrames(nsIAtom* aListName,
 
     for (nsIFrame* kid = aFrameList; kid != end;
          kid = kid->GetNextSibling()) {
-      nsISVGChildFrame* SVGFrame = nsnull;
-      CallQueryInterface(kid, &SVGFrame);
+      nsISVGChildFrame* SVGFrame = do_QueryFrame(kid);
       if (SVGFrame) {
         SVGFrame->InitialUpdate(); 
       }
@@ -192,8 +188,7 @@ nsSVGDisplayContainerFrame::UpdateCoveredRegion()
 {
   for (nsIFrame* kid = mFrames.FirstChild(); kid;
        kid = kid->GetNextSibling()) {
-    nsISVGChildFrame* SVGFrame = nsnull;
-    CallQueryInterface(kid, &SVGFrame);
+    nsISVGChildFrame* SVGFrame = do_QueryFrame(kid);
     if (SVGFrame) {
       SVGFrame->UpdateCoveredRegion();
     }
@@ -210,8 +205,7 @@ nsSVGDisplayContainerFrame::InitialUpdate()
 
   for (nsIFrame* kid = mFrames.FirstChild(); kid;
        kid = kid->GetNextSibling()) {
-    nsISVGChildFrame* SVGFrame = nsnull;
-    CallQueryInterface(kid, &SVGFrame);
+    nsISVGChildFrame* SVGFrame = do_QueryFrame(kid);
     if (SVGFrame) {
       SVGFrame->InitialUpdate();
     }
@@ -241,8 +235,7 @@ nsSVGDisplayContainerFrame::NotifyRedrawSuspended()
 {
   for (nsIFrame* kid = mFrames.FirstChild(); kid;
        kid = kid->GetNextSibling()) {
-    nsISVGChildFrame* SVGFrame=nsnull;
-    CallQueryInterface(kid, &SVGFrame);
+    nsISVGChildFrame* SVGFrame = do_QueryFrame(kid);
     if (SVGFrame) {
       SVGFrame->NotifyRedrawSuspended();
     }
@@ -255,8 +248,7 @@ nsSVGDisplayContainerFrame::NotifyRedrawUnsuspended()
 {
   for (nsIFrame* kid = mFrames.FirstChild(); kid;
        kid = kid->GetNextSibling()) {
-    nsISVGChildFrame* SVGFrame = nsnull;
-    CallQueryInterface(kid, &SVGFrame);
+    nsISVGChildFrame* SVGFrame = do_QueryFrame(kid);
     if (SVGFrame) {
       SVGFrame->NotifyRedrawUnsuspended();
     }

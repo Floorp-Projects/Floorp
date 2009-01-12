@@ -81,9 +81,12 @@ public:
    */
   NS_IMETHOD KeyPress(nsIDOMEvent* aKeyEvent); // we only care when a key is pressed
 
-  // nsIFormControlFrame
+  NS_DECL_QUERYFRAME
+
+  // nsISupports
   NS_IMETHOD QueryInterface(const nsIID& aIID, void** aInstancePtr);
 
+  // nsIFormControlFrame
   virtual nscoord GetMinWidth(nsIRenderingContext *aRenderingContext);
   
   virtual PRBool IsLeaf() const;
