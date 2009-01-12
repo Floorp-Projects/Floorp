@@ -222,7 +222,7 @@ class MochitestServer:
             "-f", "./" + "server.js"]
 
     xpcshell = automation.DIST_BIN + "/" + "xpcshell";
-    self._process = automation.Process([xpcshell] + args, env = env)
+    self._process = automation.Process(xpcshell, args, env = env)
     pid = self._process.pid
     if pid < 0:
       print "Error starting server."
