@@ -1618,24 +1618,26 @@ PRBool
 nsAccessibilityService::HasUniversalAriaProperty(nsIContent *aContent,
                                                  nsIWeakReference *aWeakShell)
 {
-  return aContent->HasAttr(kNameSpaceID_None, nsAccessibilityAtoms::aria_atomic) ||
-         aContent->HasAttr(kNameSpaceID_None, nsAccessibilityAtoms::aria_busy) ||
+  // ARIA attributes that take NMTOKEN values (including boolean) are special cased.
+  // XXX todo: get rid of channel and datatype (bug 472679)
+  return nsAccUtils::HasDefinedARIAToken(aContent, nsAccessibilityAtoms::aria_atomic) ||
+         nsAccUtils::HasDefinedARIAToken(aContent, nsAccessibilityAtoms::aria_busy) ||
          aContent->HasAttr(kNameSpaceID_None, nsAccessibilityAtoms::aria_channel) ||
          aContent->HasAttr(kNameSpaceID_None, nsAccessibilityAtoms::aria_controls) ||
          aContent->HasAttr(kNameSpaceID_None, nsAccessibilityAtoms::aria_datatype) ||
          aContent->HasAttr(kNameSpaceID_None, nsAccessibilityAtoms::aria_describedby) ||
-         aContent->HasAttr(kNameSpaceID_None, nsAccessibilityAtoms::aria_dropeffect) ||
+         nsAccUtils::HasDefinedARIAToken(aContent, nsAccessibilityAtoms::aria_dropeffect) ||
          aContent->HasAttr(kNameSpaceID_None, nsAccessibilityAtoms::aria_flowto) ||
-         aContent->HasAttr(kNameSpaceID_None, nsAccessibilityAtoms::aria_grab) ||
-         aContent->HasAttr(kNameSpaceID_None, nsAccessibilityAtoms::aria_haspopup) ||
-         aContent->HasAttr(kNameSpaceID_None, nsAccessibilityAtoms::aria_invalid) ||
+         nsAccUtils::HasDefinedARIAToken(aContent, nsAccessibilityAtoms::aria_grab) ||
+         nsAccUtils::HasDefinedARIAToken(aContent, nsAccessibilityAtoms::aria_haspopup) ||
+         nsAccUtils::HasDefinedARIAToken(aContent, nsAccessibilityAtoms::aria_invalid) ||
          aContent->HasAttr(kNameSpaceID_None, nsAccessibilityAtoms::aria_label) ||
          aContent->HasAttr(kNameSpaceID_None, nsAccessibilityAtoms::aria_labelledby) ||
-         aContent->HasAttr(kNameSpaceID_None, nsAccessibilityAtoms::aria_live) ||
-         aContent->HasAttr(kNameSpaceID_None, nsAccessibilityAtoms::aria_owns) ||
-         aContent->HasAttr(kNameSpaceID_None, nsAccessibilityAtoms::aria_relevant) ||
-         aContent->HasAttr(kNameSpaceID_None, nsAccessibilityAtoms::aria_required) ||
-         aContent->HasAttr(kNameSpaceID_None, nsAccessibilityAtoms::aria_sort);
+         nsAccUtils::HasDefinedARIAToken(aContent, nsAccessibilityAtoms::aria_live) ||
+         nsAccUtils::HasDefinedARIAToken(aContent, nsAccessibilityAtoms::aria_owns) ||
+         nsAccUtils::HasDefinedARIAToken(aContent, nsAccessibilityAtoms::aria_relevant) ||
+         nsAccUtils::HasDefinedARIAToken(aContent, nsAccessibilityAtoms::aria_required) ||
+         nsAccUtils::HasDefinedARIAToken(aContent, nsAccessibilityAtoms::aria_sort);
 }
 
 NS_IMETHODIMP
