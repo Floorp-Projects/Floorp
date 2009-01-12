@@ -193,10 +193,17 @@ ACCESSIBILITY_ATOM(textAlign, "text-align")
 ACCESSIBILITY_ATOM(textIndent, "text-indent")
 
   // Alphabetical list of text attributes (AT API)
+ACCESSIBILITY_ATOM(color, "color")
 ACCESSIBILITY_ATOM(backgroundColor, "background-color")
+ACCESSIBILITY_ATOM(fontFamily, "font-family")
+ACCESSIBILITY_ATOM(fontStyle, "font-style")
+ACCESSIBILITY_ATOM(fontWeight, "font-weight")
 ACCESSIBILITY_ATOM(fontSize, "font-size")
 ACCESSIBILITY_ATOM(invalid, "invalid")
 ACCESSIBILITY_ATOM(language, "language")
+ACCESSIBILITY_ATOM(textLineThroughStyle, "text-line-through-style")
+ACCESSIBILITY_ATOM(textUnderlineStyle, "text-underline-style")
+ACCESSIBILITY_ATOM(textPosition, "text-position")
 
   // ARIA (DHTML accessibility) attributes
   // Also add to nsARIAMap.cpp and nsARIAMap.h
