@@ -65,16 +65,18 @@ struct FontSearch {
 
 class MacOSFamilyEntry;
 class gfxQuartzFontCache;
+class FontEntryStandardFaceComparator;
 
 // a single member of a font family (i.e. a single face, such as Times Italic)
 class MacOSFontEntry : public gfxFontEntry
 {
 public:
     friend class gfxQuartzFontCache;
+    friend class FontEntryStandardFaceComparator;
 
     // initialize with Apple-type weight [1..14]
     MacOSFontEntry(const nsAString& aPostscriptName, PRInt32 aAppleWeight, PRUint32 aTraits, 
-                    MacOSFamilyEntry *aFamily);
+                   MacOSFamilyEntry *aFamily, PRBool aIsStandardFace = PR_FALSE);
 
     const nsString& FamilyName();
 
@@ -94,6 +96,7 @@ protected:
 
     ATSUFontID mATSUFontID;
     PRPackedBool mATSUIDInitialized;
+    PRPackedBool mStandardFace;
 };
 
 // helper class for adding other family names back into font cache
@@ -150,6 +153,9 @@ public:
         for (i = 0; i < numFonts; i++)
             mAvailableFonts[i]->mIsBadUnderlineFont = aIsBadUnderlineFont;
     }
+
+    // sort available fonts to put less-desirable faces towards the end
+    void SortAvailableFonts();
 
 protected:
     
