@@ -102,6 +102,9 @@ http://sub1.test1.example.com:80     privileged
 http://sub1.test2.example.com:80     privileged
 http://sub2.test1.example.com:80     privileged
 http://sub2.test2.example.com:80     privileged
+http://nocert.example.com:80         privileged
+http://requestclientcert.example.com:80         privileged
+http://requireclientcert.example.com:80         privileged
 
 https://example.com:443                privileged
 https://test1.example.com:443          privileged
@@ -111,6 +114,8 @@ https://sub1.test2.example.com:443     privileged
 https://sub2.test1.example.com:443     privileged
 https://sub2.test2.example.com:443     privileged
 https://nocert.example.com:443         privileged,nocert
+https://requestclientcert.example.com:443         privileged,clientauth=request
+https://requireclientcert.example.com:443         privileged,clientauth=require
 
 #
 # These are subdomains of <ält.example.org>.

@@ -309,6 +309,7 @@ user_pref("layout.debug.enable_data_xbl", true);
 user_pref("browser.EULA.override", true);
 user_pref("javascript.options.jit.content", true);
 user_pref("gfx.color_management.force_srgb", true);
+user_pref("security.default_personal_cert", "Select Automatically"); // Need to client auth test be w/o any dialogs
 
 user_pref("camino.warn_when_closing", false); // Camino-only, harmless to others
 """
@@ -396,33 +397,47 @@ def fillCertificateDB(profileDir):
   sslTunnelConfig.write("forward:127.0.0.1:8888\n")
   sslTunnelConfig.write("listen:*:4443:pgo server certificate\n")
 
-  # Generate automatic certificate and bond custom certificates
+  # Configure automatic certificate and bind custom certificates, client authentication
   locations = readLocations()
   locations.pop(0)
   for loc in locations:
     if loc.scheme == "https" and "nocert" not in loc.options:
       customCertRE = re.compile("^cert=(?P<nickname>[0-9a-zA-Z_ ]+)")
+      clientAuthRE = re.compile("^clientauth=(?P<clientauth>[a-z]+)")
       for option in loc.options:
         match = customCertRE.match(option)
         if match:
           customcert = match.group("nickname");
-          sslTunnelConfig.write("listen:%s:%s:4443:%s\n" % (loc.host, loc.port, customcert))
-          break
+          sslTunnelConfig.write("listen:%s:%s:4443:%s\n" %
+              (loc.host, loc.port, customcert))
+
+        match = clientAuthRE.match(option)
+        if match:
+          clientauth = match.group("clientauth");
+          sslTunnelConfig.write("clientauth:%s:%s:4443:%s\n" %
+              (loc.host, loc.port, clientauth))
 
   sslTunnelConfig.close()
 
   # Pre-create the certification database for the profile
   certutil = DIST_BIN + "/certutil" + BIN_SUFFIX
+  pk12util = DIST_BIN + "/pk12util" + BIN_SUFFIX
+
   status = Process(certutil, ["-N", "-d", profileDir, "-f", pwfilePath], environment()).wait()
   if status != 0:
     return status
 
-  # Walk the cert directory and add custom CAs as trusted
+  # Walk the cert directory and add custom CAs and client certs
   files = os.listdir(CERTS_DIR)
   for item in files:
     root, ext = os.path.splitext(item)
     if ext == ".ca":
-      Process(certutil, ["-A", "-i", os.path.join(CERTS_DIR, item), "-d", profileDir, "-f", pwfilePath, "-n", root, "-t", "CT,,"], environment())
+      Process(certutil, ["-A", "-i", os.path.join(CERTS_DIR, item),
+        "-d", profileDir, "-f", pwfilePath, "-n", root, "-t", "CT,,"],
+        environment()).wait()
+    if ext == ".client":
+      Process(pk12util, ["-i", os.path.join(CERTS_DIR, item), "-w", pwfilePath,
+        "-d", profileDir], environment()).wait()
 
   os.unlink(pwfilePath)
   return 0
