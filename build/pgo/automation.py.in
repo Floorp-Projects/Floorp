@@ -41,10 +41,11 @@ import codecs
 from datetime import datetime
 import itertools
 import logging
-import shutil
 import os
 import re
+import shutil
 import signal
+import subprocess
 import sys
 import threading
 
@@ -102,100 +103,18 @@ log.addHandler(handler)
 # SUBPROCESSING #
 #################
 
-class Process:
+class Process(subprocess.Popen):
   """
-  Represents a subprocess of this process.  We don't just directly use the
-  subprocess module here because we want compatibility with Python 2.3 on
-  non-Windows platforms.  :-(
+  Represents our view of a subprocess.
+  It adds a kill() method which allows it to be stopped explicitly.
   """
-
-  def __init__(self, command, args, env, inputdata = None):
-    """
-    Creates a process representing the execution of the given command, which
-    must be an absolute path, with the given arguments in the given environment.
-    The process is then started.
-    """
-    command = os.path.abspath(command)
-    if IS_WIN32:
-      import tempfile
-      import subprocess
-      
-      if inputdata:
-        inputfile = tempfile.TemporaryFile()
-        inputfile.write(inputdata)
-        inputfile.seek(0)
-      else:
-        inputfile = None
-        
-      cmd = [command]
-      cmd.extend(args)
-      p = subprocess.Popen(cmd, env = env,
-                           stdout = subprocess.PIPE,
-                           stderr = subprocess.STDOUT,
-                           stdin = inputfile)
-      self._out = p.stdout
-    else:
-      import popen2
-      cmd = []
-      if env:
-        for (k, v) in env.iteritems():
-          cmd.append(k + "='" + v + "' ")
-          
-      cmd.append("'" + command + "'")
-      cmd.extend(map(lambda x: "'" + x + "'", args))
-      cmd = " ".join(cmd)
-      p = popen2.Popen4(cmd)
-      self._out = p.fromchild
-
-      if inputdata:
-        p.tochild.write(inputdata)
-        p.tochild.close()
-
-    self._process = p
-    self.pid = p.pid
-    
-    self._thread = threading.Thread(target = lambda: self._run())
-    self._thread.start()
-
-  def _run(self):
-    "Continues execution of this process on a separate thread."
-    p = self._process
-    out = self._out
-
-    if IS_WIN32:
-      running = lambda: p.poll() is None
-    else:
-      running = lambda: p.poll() == -1
-
-    # read in lines until the process finishes, then read in any last remaining
-    # buffered lines
-    while running():
-      line = out.readline().rstrip()
-      if len(line) > 0:
-        log.info(line)
-    for line in out:
-      line = line.rstrip()
-      if len(line) > 0:
-        log.info(line)
-    self._status = p.poll()
-
-  def wait(self):
-    "Waits for this process to finish, then returns the process's status."
-    self._thread.join()
-    return self._status
 
   def kill(self):
-    "Kills this process."
-    try:
-      if not IS_WIN32:
-        os.kill(self._process.pid, signal.SIGKILL)
-      else:
-        import subprocess
-        pid = "%i" % self.pid
-        process = subprocess.Popen(["taskkill", "/F", "/PID", pid])
-        process.wait()
-    except:
-      pass
+    if IS_WIN32:
+      pid = "%i" % self.pid
+      subprocess.Popen(["taskkill", "/F", "/PID", pid]).wait()
+    else:
+      os.kill(self.pid, signal.SIGTERM)
 
 
 #################
@@ -423,7 +342,7 @@ def fillCertificateDB(profileDir):
   certutil = DIST_BIN + "/certutil" + BIN_SUFFIX
   pk12util = DIST_BIN + "/pk12util" + BIN_SUFFIX
 
-  status = Process(certutil, ["-N", "-d", profileDir, "-f", pwfilePath], environment()).wait()
+  status = Process([certutil, "-N", "-d", profileDir, "-f", pwfilePath]).wait()
   if status != 0:
     return status
 
@@ -432,12 +351,17 @@ def fillCertificateDB(profileDir):
   for item in files:
     root, ext = os.path.splitext(item)
     if ext == ".ca":
-      Process(certutil, ["-A", "-i", os.path.join(CERTS_DIR, item),
-        "-d", profileDir, "-f", pwfilePath, "-n", root, "-t", "CT,,"],
-        environment()).wait()
+      args = ["-A", "-i", os.path.join(CERTS_DIR, item),
+              "-d", profileDir,
+              "-f", pwfilePath,
+              "-n", root,
+              "-t", "CT,,"]
+      Process([certutil] + args, env = environment()).wait()
     if ext == ".client":
-      Process(pk12util, ["-i", os.path.join(CERTS_DIR, item), "-w", pwfilePath,
-        "-d", profileDir], environment()).wait()
+      args = ["-i", os.path.join(CERTS_DIR, item),
+              "-w", pwfilePath,
+              "-d", profileDir]
+      Process([pk12util] + args, env = environment()).wait()
 
   os.unlink(pwfilePath)
   return 0
@@ -468,7 +392,8 @@ def runApp(testURL, env, app, profileDir, extraArgs):
   
     # start ssltunnel to provide https:// URLs capability
     ssltunnel = DIST_BIN + "/ssltunnel" + BIN_SUFFIX
-    ssltunnelProcess = Process(ssltunnel, [os.path.join(CERTS_DIR, "ssltunnel.cfg")], environment())
+    args = [os.path.join(CERTS_DIR, "ssltunnel.cfg")]
+    ssltunnelProcess = Process([ssltunnel] + args, env = environment())
     log.info("SSL tunnel pid: %d", ssltunnelProcess.pid)
   
   "Run the app, returning the time at which it was started."
@@ -496,7 +421,7 @@ def runApp(testURL, env, app, profileDir, extraArgs):
   else:
     args.append((testURL))
   args.extend(extraArgs)
-  proc = Process(cmd, args, env = environment(env))
+  proc = Process([cmd] + args, env = environment(env))
   log.info("Application pid: %d", proc.pid)
   status = proc.wait()
   if status != 0:
