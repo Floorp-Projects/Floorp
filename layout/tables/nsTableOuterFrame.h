@@ -87,8 +87,7 @@ class nsTableOuterFrame : public nsHTMLContainerFrame, public nsITableLayout
 {
 public:
 
-  // nsISupports
-  NS_DECL_ISUPPORTS_INHERITED
+  NS_DECL_QUERYFRAME
 
   /** instantiate a new instance of nsTableRowFrame.
     * @param aPresShell the pres shell for this frame

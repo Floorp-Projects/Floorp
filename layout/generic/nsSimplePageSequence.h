@@ -84,8 +84,7 @@ class nsSimplePageSequenceFrame : public nsContainerFrame,
 public:
   friend nsIFrame* NS_NewSimplePageSequenceFrame(nsIPresShell* aPresShell, nsStyleContext* aContext);
 
-  // nsISupports
-  NS_IMETHOD  QueryInterface(const nsIID& aIID, void** aInstancePtr);
+  NS_DECL_QUERYFRAME
 
   // nsIFrame
   NS_IMETHOD  Reflow(nsPresContext*      aPresContext,
@@ -148,9 +147,6 @@ protected:
   // SharedPageData Helper methods
   void SetDateTimeStr(PRUnichar * aDateTimeStr);
   void SetPageNumberFormat(PRUnichar * aFormatStr, PRBool aForPageNumOnly);
-
-  NS_IMETHOD_(nsrefcnt) AddRef(void) {return nsContainerFrame::AddRef();}
-  NS_IMETHOD_(nsrefcnt) Release(void) {return nsContainerFrame::Release();}
 
   nsMargin mMargin;
   PRBool   mIsPrintingSelection;

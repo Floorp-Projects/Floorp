@@ -94,8 +94,7 @@ NS_IMETHODIMP nsSVGGraphicElement::GetBBox(nsIDOMSVGRect **_retval)
   if (!frame || (frame->GetStateBits() & NS_STATE_SVG_NONDISPLAY_CHILD))
     return NS_ERROR_FAILURE;
 
-  nsISVGChildFrame* svgframe;
-  CallQueryInterface(frame, &svgframe);
+  nsISVGChildFrame* svgframe = do_QueryFrame(frame);
   NS_ASSERTION(svgframe, "wrong frame type");
   if (svgframe) {
     svgframe->SetMatrixPropagation(PR_FALSE);

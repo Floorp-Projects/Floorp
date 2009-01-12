@@ -72,7 +72,7 @@ public:
   nsDocElementBoxFrame(nsIPresShell* aShell, nsStyleContext* aContext)
     :nsBoxFrame(aShell, aContext, PR_TRUE) {}
 
-  NS_DECL_ISUPPORTS_INHERITED
+  NS_DECL_QUERYFRAME
 
   // nsIAnonymousContentCreator
   virtual nsresult CreateAnonymousContent(nsTArray<nsIContent*>& aElements);
@@ -148,21 +148,9 @@ nsDocElementBoxFrame::CreateAnonymousContent(nsTArray<nsIContent*>& aElements)
   return NS_OK;
 }
 
-NS_IMETHODIMP_(nsrefcnt) 
-nsDocElementBoxFrame::AddRef(void)
-{
-  return NS_OK;
-}
-
-NS_IMETHODIMP_(nsrefcnt)
-nsDocElementBoxFrame::Release(void)
-{
-  return NS_OK;
-}
-
-NS_INTERFACE_MAP_BEGIN(nsDocElementBoxFrame)
-  NS_INTERFACE_MAP_ENTRY(nsIAnonymousContentCreator)
-NS_INTERFACE_MAP_END_INHERITING(nsBoxFrame)
+NS_QUERYFRAME_HEAD(nsDocElementBoxFrame)
+  NS_QUERYFRAME_ENTRY(nsIAnonymousContentCreator)
+NS_QUERYFRAME_TAIL_INHERITING(nsBoxFrame)
 
 #ifdef DEBUG
 NS_IMETHODIMP

@@ -372,7 +372,6 @@ nsFloatManager::List(FILE* out) const
            fi.mRect.x, fi.mRect.y, fi.mRect.width, fi.mRect.height,
            fi.mLeftYMost, fi.mRightYMost);
   }
-
   return NS_OK;
 }
 #endif

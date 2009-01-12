@@ -787,9 +787,7 @@ nsHTMLInputElement::GetValue(nsAString& aValue)
 
     PRBool frameOwnsValue = PR_FALSE;
     if (formControlFrame) {
-      nsITextControlFrame* textControlFrame = nsnull;
-      CallQueryInterface(formControlFrame, &textControlFrame);
-
+      nsITextControlFrame* textControlFrame = do_QueryFrame(formControlFrame);
       if (textControlFrame) {
         textControlFrame->OwnsValue(&frameOwnsValue);
       } else {
@@ -993,7 +991,7 @@ nsHTMLInputElement::SetValueInternal(const nsAString& aValue,
       formControlFrame = GetFormControlFrame(PR_FALSE);
 
       if (formControlFrame) {
-        CallQueryInterface(formControlFrame, &textControlFrame);
+        textControlFrame = do_QueryFrame(formControlFrame);
       }
     }
 
@@ -1266,14 +1264,12 @@ nsHTMLInputElement::SetCheckedInternal(PRBool aChecked, PRBool aNotify)
     nsPresContext *presContext = GetPresContext();
 
     if (mType == NS_FORM_INPUT_CHECKBOX) {
-      nsICheckboxControlFrame* checkboxFrame = nsnull;
-      CallQueryInterface(frame, &checkboxFrame);
+      nsICheckboxControlFrame* checkboxFrame = do_QueryFrame(frame);
       if (checkboxFrame) {
         checkboxFrame->OnChecked(presContext, aChecked);
       }
     } else if (mType == NS_FORM_INPUT_RADIO) {
-      nsIRadioControlFrame* radioFrame = nsnull;
-      CallQueryInterface(frame, &radioFrame);
+      nsIRadioControlFrame* radioFrame = do_QueryFrame(frame);
       if (radioFrame) {
         radioFrame->OnChecked(presContext, aChecked);
       }
@@ -1600,8 +1596,7 @@ nsHTMLInputElement::PreHandleEvent(nsEventChainPreVisitor& aVisitor)
   if (aVisitor.mEvent->message == NS_BLUR_CONTENT) {
     nsIFrame* primaryFrame = GetPrimaryFrame();
     if (primaryFrame) {
-      nsITextControlFrame* textFrame = nsnull;
-      CallQueryInterface(primaryFrame, &textFrame);
+      nsITextControlFrame* textFrame = do_QueryFrame(primaryFrame);
       if (textFrame) {
         textFrame->CheckFireOnChange();
       }
@@ -1839,8 +1834,7 @@ nsHTMLInputElement::PostHandleEvent(nsEventChainPostVisitor& aVisitor)
             if (!isButton) {
               nsIFrame* primaryFrame = GetPrimaryFrame();
               if (primaryFrame) {
-                nsITextControlFrame* textFrame = nsnull;
-                CallQueryInterface(primaryFrame, &textFrame);
+                nsITextControlFrame* textFrame = do_QueryFrame(primaryFrame);
               
                 // Fire onChange (if necessary)
                 if (textFrame) {
@@ -2212,9 +2206,7 @@ nsHTMLInputElement::SetSelectionRange(PRInt32 aSelectionStart,
   nsIFormControlFrame* formControlFrame = GetFormControlFrame(PR_TRUE);
 
   if (formControlFrame) {
-    nsITextControlFrame* textControlFrame = nsnull;
-    CallQueryInterface(formControlFrame, &textControlFrame);
-
+    nsITextControlFrame* textControlFrame = do_QueryFrame(formControlFrame);
     if (textControlFrame)
       rv = textControlFrame->SetSelectionRange(aSelectionStart, aSelectionEnd);
   }
@@ -2238,9 +2230,7 @@ nsHTMLInputElement::SetSelectionStart(PRInt32 aSelectionStart)
   nsIFormControlFrame* formControlFrame = GetFormControlFrame(PR_TRUE);
 
   if (formControlFrame) {
-    nsITextControlFrame* textControlFrame = nsnull;
-    CallQueryInterface(formControlFrame, &textControlFrame);
-
+    nsITextControlFrame* textControlFrame = do_QueryFrame(formControlFrame);
     if (textControlFrame)
       rv = textControlFrame->SetSelectionStart(aSelectionStart);
   }
@@ -2265,9 +2255,7 @@ nsHTMLInputElement::SetSelectionEnd(PRInt32 aSelectionEnd)
   nsIFormControlFrame* formControlFrame = GetFormControlFrame(PR_TRUE);
 
   if (formControlFrame) {
-    nsITextControlFrame* textControlFrame = nsnull;
-    CallQueryInterface(formControlFrame, &textControlFrame);
-
+    nsITextControlFrame* textControlFrame = do_QueryFrame(formControlFrame);
     if (textControlFrame)
       rv = textControlFrame->SetSelectionEnd(aSelectionEnd);
   }
@@ -2304,9 +2292,7 @@ nsHTMLInputElement::GetSelectionRange(PRInt32* aSelectionStart,
   nsIFormControlFrame* formControlFrame = GetFormControlFrame(PR_TRUE);
 
   if (formControlFrame) {
-    nsITextControlFrame* textControlFrame = nsnull;
-    CallQueryInterface(formControlFrame, &textControlFrame);
-
+    nsITextControlFrame* textControlFrame = do_QueryFrame(formControlFrame);
     if (textControlFrame)
       rv = textControlFrame->GetSelectionRange(aSelectionStart, aSelectionEnd);
   }
@@ -2321,9 +2307,7 @@ nsHTMLInputElement::GetPhonetic(nsAString& aPhonetic)
   nsIFormControlFrame* formControlFrame = GetFormControlFrame(PR_TRUE);
 
   if (formControlFrame) {
-    nsITextControlFrame* textControlFrame = nsnull;
-    CallQueryInterface(formControlFrame, &textControlFrame);
-
+    nsITextControlFrame* textControlFrame = do_QueryFrame(formControlFrame);
     if (textControlFrame)
       textControlFrame->GetPhonetic(aPhonetic);
   }

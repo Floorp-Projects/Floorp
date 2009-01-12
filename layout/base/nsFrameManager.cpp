@@ -734,9 +734,8 @@ DumpContext(nsIFrame* aFrame, nsStyleContext* aContext)
   if (aFrame) {
     fputs("frame: ", stdout);
     nsAutoString  name;
-    nsIFrameDebug*  frameDebug;
-
-    if (NS_SUCCEEDED(aFrame->QueryInterface(NS_GET_IID(nsIFrameDebug), (void**)&frameDebug))) {
+    nsIFrameDebug *frameDebug = do_QueryFrame(aFrame);
+    if (frameDebug) {
       frameDebug->GetFrameName(name);
       fputs(NS_LossyConvertUTF16toASCII(name).get(), stdout);
     }
@@ -1585,9 +1584,7 @@ nsFrameManager::CaptureFrameStateFor(nsIFrame* aFrame,
   }
 
   // Only capture state for stateful frames
-  nsIStatefulFrame* statefulFrame;
-  CallQueryInterface(aFrame, &statefulFrame);
-
+  nsIStatefulFrame* statefulFrame = do_QueryFrame(aFrame);
   if (!statefulFrame) {
     return;
   }
@@ -1652,8 +1649,7 @@ nsFrameManager::RestoreFrameStateFor(nsIFrame* aFrame,
   }
 
   // Only restore state for stateful frames
-  nsIStatefulFrame* statefulFrame;
-  CallQueryInterface(aFrame, &statefulFrame);
+  nsIStatefulFrame* statefulFrame = do_QueryFrame(aFrame);
   if (!statefulFrame) {
     return;
   }

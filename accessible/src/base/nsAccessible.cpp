@@ -2785,8 +2785,7 @@ NS_IMETHODIMP nsAccessible::GetAccessibleRelated(PRUint32 aRelationType, nsIAcce
       if (frame) {
         nsIView *view = frame->GetViewExternal();
         if (view) {
-          nsIScrollableFrame *scrollFrame = nsnull;
-          CallQueryInterface(frame, &scrollFrame);
+          nsIScrollableFrame *scrollFrame = do_QueryFrame(frame);
           if (scrollFrame || view->GetWidget()) {
             return GetParent(aRelated);
           }
