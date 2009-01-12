@@ -1265,7 +1265,7 @@ FeedWriter.prototype = {
     var selectedItem = this._getSelectedItemFromMenulist(handlersMenuList);
 
     // Show the file picker before subscribing if the
-    // choose application menuitem was choosen using the keyboard
+    // choose application menuitem was chosen using the keyboard
     if (selectedItem.id == "chooseApplicationMenuItem") {
       if (!this._chooseClientApp())
         return;
