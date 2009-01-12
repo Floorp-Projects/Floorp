@@ -126,6 +126,12 @@ else
 TEST_DRIVER_PPARGS += -DIS_TEST_BUILD=0
 endif
 
+ifeq ($(MOZ_DEBUG), 1)
+TEST_DRIVER_PPARGS += -DIS_DEBUG_BUILD=1
+else
+TEST_DRIVER_PPARGS += -DIS_DEBUG_BUILD=0
+endif
+
 runtests.py: runtests.py.in
 	$(PYTHON) $(topsrcdir)/config/Preprocessor.py \
 	$(TEST_DRIVER_PPARGS) $(DEFINES) $(ACDEFINES) $^ > $@
