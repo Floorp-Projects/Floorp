@@ -137,6 +137,15 @@ public:
   static PRBool IsARIAPropForObjectAttr(nsIAtom *aAtom);
 
   /**
+   * Any ARIA property of type boolean or NMTOKEN is undefined if the ARIA
+   * property is not present, or is "" or "undefined". Do not call 
+   * this method for properties of type string, decimal, IDREF or IDREFS.
+   * 
+   * Return PR_TRUE if the ARIA property is defined, otherwise PR_FALSE
+   */
+  static PRBool HasDefinedARIAToken(nsIContent *aContent, nsIAtom *aAtom);
+
+  /**
    * Fire accessible event of the given type for the given accessible.
    */
   static nsresult FireAccEvent(PRUint32 aEventType, nsIAccessible *aAccessible,

@@ -1,0 +1,134 @@
+<!DOCTYPE html>
+<html>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=452388
+-->
+<head>
+  <title>An NMTOKEN based ARIA property is undefined if the ARIA attribute is not present, or is set to "" or "undefined"</title>
+  <link rel="stylesheet" type="text/css" href="chrome://mochikit/content/tests/SimpleTest/test.css" />
+
+  <script type="application/javascript"
+          src="chrome://mochikit/content/MochiKit/packed.js"></script>
+  <script type="application/javascript"
+          src="chrome://mochikit/content/tests/SimpleTest/SimpleTest.js"></script>
+
+  <script type="application/javascript"
+          src="chrome://mochikit/content/a11y/accessible/common.js"></script>
+  <script type="application/javascript"
+      src="chrome://mochikit/content/a11y/accessible/nsIAccessible_states.js"></script>
+
+  <script type="application/javascript">
+    function doTest()
+    {
+       // test (treeitem) selectable and selected states
+      testStates("treeitem_selected_true", (STATE_SELECTABLE | STATE_SELECTED));
+      testStates("treeitem_selected_false", STATE_SELECTABLE, 0, STATE_SELECTED);
+      testStates("treeitem_selected_empty", 0, 0, (STATE_SELECTABLE | STATE_SELECTED));
+      testStates("treeitem_selected_undefined", 0, 0, (STATE_SELECTABLE | STATE_SELECTED));
+      testStates("treeitem_selected_absent", 0, 0, (STATE_SELECTABLE | STATE_SELECTED));
+
+      // test (menuitem) checkable and checked states
+      testStates("menuitem_checked_true", (STATE_CHECKABLE | STATE_CHECKED));
+      testStates("menuitem_checked_false", STATE_CHECKABLE, 0, STATE_CHECKED);
+      testStates("menuitem_checked_empty", 0, 0, (STATE_CHECKABLE | STATE_CHECKED));
+      testStates("menuitem_checked_undefined", 0, 0, (STATE_CHECKABLE | STATE_CHECKED));
+      testStates("menuitem_checked_absent", 0, 0, (STATE_CHECKABLE | STATE_CHECKED));
+
+      // test (checkbox) checkable and checked states
+      testStates("checkbox_checked_true", (STATE_CHECKABLE | STATE_CHECKED));
+      testStates("checkbox_checked_false", STATE_CHECKABLE, 0, STATE_CHECKED);
+      testStates("checkbox_checked_empty", STATE_CHECKABLE, 0, STATE_CHECKED);
+      testStates("checkbox_checked_undefined", STATE_CHECKABLE, 0, STATE_CHECKED);
+      testStates("checkbox_checked_absent", STATE_CHECKABLE, 0, STATE_CHECKED);
+
+      // test native checkbox checked state and aria-checked state (if conflict, native wins)
+      testStates("native_checkbox_nativechecked_ariatrue", (STATE_CHECKABLE | STATE_CHECKED));
+      testStates("native_checkbox_nativechecked_ariafalse", (STATE_CHECKABLE | STATE_CHECKED));
+      testStates("native_checkbox_nativechecked_ariaempty", (STATE_CHECKABLE | STATE_CHECKED));
+      testStates("native_checkbox_nativechecked_ariaundefined", (STATE_CHECKABLE | STATE_CHECKED));
+      testStates("native_checkbox_nativechecked_ariaabsent", (STATE_CHECKABLE | STATE_CHECKED));
+      
+      testStates("native_checkbox_nativeunchecked_ariatrue", STATE_CHECKABLE, 0, STATE_CHECKED);
+      testStates("native_checkbox_nativeunchecked_ariafalse", STATE_CHECKABLE, 0, STATE_CHECKED);
+      testStates("native_checkbox_nativeunchecked_ariaempty", STATE_CHECKABLE, 0, STATE_CHECKED);
+      testStates("native_checkbox_nativeunchecked_ariaundefined", STATE_CHECKABLE, 0, STATE_CHECKED);
+      testStates("native_checkbox_nativeunchecked_ariaabsent", STATE_CHECKABLE, 0, STATE_CHECKED);
+
+      // test button aria-pressed states
+      testStates("button_pressed_true", STATE_PRESSED);
+      testStates("button_pressed_false", 0, 0, STATE_PRESSED);
+      testStates("button_pressed_empty", 0, 0, STATE_PRESSED);
+      testStates("button_pressed_undefined", 0, 0, STATE_PRESSED);
+      testStates("button_pressed_absent", 0, 0, STATE_PRESSED);
+      
+      // test aria-pressed state mapping to roles PUSHBUTTON vs TOGGLEBUTTON
+      var aButton = getAccessible("button_pressed_true");
+      if (aButton)
+        is(aButton.finalRole, ROLE_TOGGLE_BUTTON, "Wrong role for togglebutton!");
+      aButton = getAccessible("button_pressed_false");
+      if (aButton)
+        is(aButton.finalRole, ROLE_TOGGLE_BUTTON, "Wrong role for togglebutton!");
+      aButton = getAccessible("button_pressed_empty");
+      if (aButton)
+        is(aButton.finalRole, ROLE_PUSHBUTTON, "Wrong role for button!");
+      aButton = getAccessible("button_pressed_undefined");
+      if (aButton)
+        is(aButton.finalRole, ROLE_PUSHBUTTON, "Wrong role for button!");
+      aButton = getAccessible("button_pressed_absent");
+      if (aButton)
+        is(aButton.finalRole, ROLE_PUSHBUTTON, "Wrong role for button!");
+      
+      SimpleTest.finish();
+    }
+
+    SimpleTest.waitForExplicitFinish();
+    addLoadEvent(doTest);
+  </script>
+</head>
+<body>
+
+  <a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=452388">Mozilla Bug 452388</a>
+  <p id="display"></p>
+  <div id="content" style="display: none"></div>
+  <pre id="test">
+  </pre>
+  <div id="treeitem_selected_true" role="treeitem" aria-selected="true">This treeitem has aria-selected="true" and should get STATE_SELECTABLE. It should also get STATE_SELECTED.</div>
+  <div id="treeitem_selected_false" role="treeitem" aria-selected="false">This treeitem has aria-selected="false" and should get STATE_SELECTABLE.</div>
+  <div id="treeitem_selected_empty" role="treeitem" aria-selected="">This treeitem has aria-selected="" and should <emph>not</emph> get STATE_SELECTABLE.</div>
+  <div id="treeitem_selected_undefined" role="treeitem" aria-selected="undefined">This treeitem has aria-selected="undefined" and should <emph>not</emph> get STATE_SELECTABLE.</div>
+  <div id="treeitem_selected_absent" role="treeitem">This treeitem has <emph>no</emph> aria-selected attribute and should <emph>not</emph> get STATE_SELECTABLE.</div>
+
+  <div id="menuitem_checked_true" role="menuitem" aria-checked="true">This menuitem has aria-checked="true" and should get STATE_CHECKABLE. It should also get STATE_checked.</div>
+  <div id="menuitem_checked_false" role="menuitem" aria-checked="false">This menuitem has aria-checked="false" and should get STATE_CHECKABLE.</div>
+  <div id="menuitem_checked_empty" role="menuitem" aria-checked="">This menuitem has aria-checked="" and should <emph>not</emph> get STATE_CHECKABLE.</div>
+  <div id="menuitem_checked_undefined" role="menuitem" aria-checked="undefined">This menuitem has aria-checked="undefined" and should <emph>not</emph> get STATE_CHECKABLE.</div>
+  <div id="menuitem_checked_absent" role="menuitem">This menuitem has <emph>no</emph> aria-checked attribute and should <emph>not</emph> get STATE_CHECKABLE.</div>
+  
+  <div id="checkbox_checked_true" role="checkbox" aria-checked="true">This checkbox has aria-checked="true" and should get STATE_CHECKABLE. It should also get STATE_checked.</div>
+  <div id="checkbox_checked_false" role="checkbox" aria-checked="false">This checkbox has aria-checked="false" and should get STATE_CHECKABLE.</div>
+  <div id="checkbox_checked_empty" role="checkbox" aria-checked="">This checkbox has aria-checked="" and should <emph>not</emph> get STATE_CHECKABLE.</div>
+  <div id="checkbox_checked_undefined" role="checkbox" aria-checked="undefined">This checkbox has aria-checked="undefined" and should <emph>not</emph> get STATE_CHECKABLE.</div>
+  <div id="checkbox_checked_absent" role="checkbox">This checkbox has <emph>no</emph> aria-checked attribute and should <emph>not</emph> get STATE_CHECKABLE.</div>
+
+  <form action="">
+    <input id="native_checkbox_nativechecked_ariatrue" type="checkbox" checked="checked" aria-checked="true"/>
+    <input id="native_checkbox_nativechecked_ariafalse" type="checkbox" checked="checked" aria-checked="false"/>
+    <input id="native_checkbox_nativechecked_ariaempty" type="checkbox" checked="checked" aria-checked=""/>
+    <input id="native_checkbox_nativechecked_ariaundefined" type="checkbox" checked="checked" aria-checked="undefined"/>
+    <input id="native_checkbox_nativechecked_ariaabsent" type="checkbox" checked="checked" aria-checked="false"/>
+
+    <input id="native_checkbox_nativeunchecked_ariatrue" type="checkbox" aria-checked="true"/>
+    <input id="native_checkbox_nativeunchecked_ariafalse" type="checkbox" aria-checked="false"/>
+    <input id="native_checkbox_nativeunchecked_ariaempty" type="checkbox" aria-checked=""/>
+    <input id="native_checkbox_nativeunchecked_ariaundefined" type="checkbox" aria-checked="undefined"/>
+    <input id="native_checkbox_nativeunchecked_ariaabsent" type="checkbox" aria-checked="false"/>
+  </form>
+  
+  <div id="button_pressed_true" role="button" aria-pressed="true">This button has aria-pressed="true" and should get ROLE_TOGGLE_BUTTON. It should also get STATE_PRESSED.</div>
+  <div id="button_pressed_false" role="button" aria-pressed="false">This button has aria-pressed="false" and should get ROLE_TOGGLE_BUTTON.</div>
+  <div id="button_pressed_empty" role="button" aria-pressed="">This button has aria-pressed="" and should <emph>not</emph> get ROLE_BUTTON.</div>
+  <div id="button_pressed_undefined" role="button" aria-pressed="undefined">This button has aria-pressed="undefined" and should <emph>not</emph> get ROLE_TOGGLE_BUTTON.</div>
+  <div id="button_pressed_absent" role="button">This button has <emph>no</emph> aria-pressed attribute and should <emph>not</emph> get ROLE_TOGGLE_BUTTON.</div>
+ 
+  </body>
+</html>

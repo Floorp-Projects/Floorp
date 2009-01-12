@@ -64,6 +64,7 @@ ACCESSIBILITY_ATOM(password, "password")
 ACCESSIBILITY_ATOM(reset, "reset")
 ACCESSIBILITY_ATOM(submit, "submit")
 ACCESSIBILITY_ATOM(_true, "true")
+ACCESSIBILITY_ATOM(_undefined, "undefined")
 
   // Header info
 ACCESSIBILITY_ATOM(headerContentLanguage, "content-language")
