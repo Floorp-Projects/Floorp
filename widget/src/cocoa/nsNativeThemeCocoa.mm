@@ -524,8 +524,8 @@ static const CellRenderSettings radioSettings = {
   {
     { // Tiger
       {0, 0, 0, 0},     // mini
-      {0, 2, 1, 1},     // small
-      {0, 1, 0, -1}     // regular
+      {0, 1, 1, 2},     // small
+      {0, -1, 0, 1}     // regular
     },
     { // Leopard
       {0, 0, 0, 0},     // mini
@@ -644,7 +644,7 @@ static const CellRenderSettings pushButtonSettings = {
   {
     { // Tiger
       {1, 1, 1, 1},    // mini
-      {5, 1, 5, 1},    // small
+      {5, 0, 5, 2},    // small
       {6, 0, 6, 2}     // regular
     },
     { // Leopard
