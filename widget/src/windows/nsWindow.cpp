@@ -3150,20 +3150,6 @@ LRESULT nsWindow::OnKeyDown(const MSG &aMsg,
 {
   UINT virtualKeyCode = aMsg.wParam;
 
-#ifdef VK_BROWSER_BACK
-  // VK_BROWSER_BACK and VK_BROWSER_FORWARD are converted to nsCommandEvents
-  if (virtualKeyCode == VK_BROWSER_BACK) 
-  {
-    DispatchCommandEvent(APPCOMMAND_BROWSER_BACKWARD);
-    return TRUE;
-  }
-  else if (virtualKeyCode == VK_BROWSER_FORWARD) 
-  {
-    DispatchCommandEvent(APPCOMMAND_BROWSER_FORWARD);
-    return TRUE;
-  }
-#endif
-
 #ifndef WINCE
   gKbdLayout.OnKeyDown (virtualKeyCode);
 #endif
@@ -3468,11 +3454,6 @@ LRESULT nsWindow::OnKeyUp(const MSG &aMsg, PRBool *aEventDispatched)
 
   PR_LOG(sWindowsLog, PR_LOG_ALWAYS,
          ("nsWindow::OnKeyUp VK=%d\n", virtualKeyCode));
-
-#ifdef VK_BROWSER_BACK
-  if (virtualKeyCode == VK_BROWSER_BACK || virtualKeyCode == VK_BROWSER_FORWARD) 
-    return TRUE;
-#endif
 
   virtualKeyCode =
     sIMEIsComposing ? virtualKeyCode : MapFromNativeToDOM(virtualKeyCode);
