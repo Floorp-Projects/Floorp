@@ -6652,7 +6652,7 @@ nsNavHistory::RemoveDuplicateURIs()
     getter_AddRefs(annoStatement));
   NS_ENSURE_SUCCESS(rv, rv);
   
-  // this query deletes all duplicate uris except the choosen id
+  // this query deletes all duplicate uris except the chosen id
   nsCOMPtr<mozIStorageStatement> deleteStatement;
   rv = mDBConn->CreateStatement(NS_LITERAL_CSTRING(
       "DELETE FROM moz_places WHERE url = ?1 AND id <> ?2"),
