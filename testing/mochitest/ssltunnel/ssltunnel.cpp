@@ -20,7 +20,8 @@
  * the Initial Developer. All Rights Reserved.
  *
  * Contributor(s):
- * Ted Mielczarek <ted.mielczarek@gmail.com>
+ *   Ted Mielczarek <ted.mielczarek@gmail.com>
+ *   Honza Bambas <honzab@firemni.cz>
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -36,6 +37,16 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
+/*
+ * WARNING: DO NOT USE THIS CODE IN PRODUCTION SYSTEMS.  It is highly likely to
+ *          be plagued with the usual problems endemic to C (buffer overflows
+ *          and the like).  We don't especially care here (but would accept
+ *          patches!) because this is only intended for use in our test
+ *          harnesses in controlled situations where input is guaranteed not to
+ *          be malicious.
+ */
+
+#include <assert.h>
 #include <stdio.h>
 #include <string>
 #include <vector>
@@ -74,6 +85,37 @@ typedef struct {
   PRNetAddr client_addr;
   server_info_t* server_info;
 } connection_info_t;
+
+const PRInt32 BUF_SIZE = 16384;
+const PRInt32 BUF_MARGIN = 1024;
+const PRInt32 BUF_TOTAL = BUF_SIZE + BUF_MARGIN;
+
+struct relayBuffer
+{
+  char *buffer, *bufferhead, *buffertail, *bufferend;
+
+  relayBuffer()
+  {
+    // Leave 1024 bytes more for request line manipulations
+    bufferhead = buffertail = buffer = new char[BUF_TOTAL];
+    bufferend = buffer + BUF_SIZE;
+  }
+
+  ~relayBuffer()
+  {
+    delete [] buffer;
+  }
+
+  void compact() {
+    if (buffertail == bufferhead)
+      buffertail = bufferhead = buffer;
+  }
+
+  bool empty() { return bufferhead == buffertail; }
+  size_t free() { return bufferend - buffertail; }
+  size_t margin() { return free() + BUF_MARGIN; }
+  size_t present() { return buffertail - bufferhead; }
+};
 
 // A couple of stack classes for managing NSS/NSPR resources
 class AutoCert {
@@ -118,7 +160,6 @@ private:
 const PRInt32 INITIAL_THREADS = 1;
 const PRInt32 MAX_THREADS = 5;
 const PRInt32 DEFAULT_STACKSIZE = (512 * 1024);
-const PRInt32 BUF_SIZE = 4096;
 
 // global data
 string nssconfigdir;
@@ -155,17 +196,18 @@ void SignalShutdown()
 }
 
 bool ReadConnectRequest(server_info_t* server_info, 
-    char* bufferhead, char* buffertail, PRInt32* result, string* certificate, client_auth_option* clientauth)
+    relayBuffer& buffer, PRInt32* result, string& certificate,
+    client_auth_option* clientauth, string& host)
 {
-  if (buffertail - bufferhead < 4)
+  if (buffer.present() < 4)
     return false;
-  if (strncmp(buffertail-4, "\r\n\r\n", 4))
+  if (strncmp(buffer.buffertail-4, "\r\n\r\n", 4))
     return false;
 
   *result = 400;
 
   char* token;
-  token = strtok(bufferhead, " ");
+  token = strtok(buffer.bufferhead, " ");
   if (!token) 
     return true;
   if (strcmp(token, "CONNECT")) 
@@ -174,7 +216,10 @@ bool ReadConnectRequest(server_info_t* server_info,
   token = strtok(NULL, " ");
   void* c = PL_HashTableLookup(server_info->host_cert_table, token);
   if (c)
-    *certificate = (char*)c;
+    certificate = static_cast<char*>(c);
+
+  host = "https://";
+  host += token;
 
   c = PL_HashTableLookup(server_info->host_clientauth_table, token);
   if (c)
@@ -236,6 +281,45 @@ bool ConfigureSSLServerSocket(PRFileDesc* socket, server_info_t* si, string &cer
   return true;
 }
 
+/**
+ * This function prefixes Request-URI path with a full scheme-host-port
+ * string.
+ */
+bool AdjustRequestURI(relayBuffer& buffer, string *host)
+{
+  assert(buffer.margin());
+
+  // Cannot use strnchr so add a null char at the end. There is always some space left
+  // because we preserve a margin.
+  buffer.buffertail[1] = '\0';
+
+  char *token, *path;
+  path = strchr(buffer.bufferhead, ' ') + 1;
+  if (!path)
+    return false;
+
+  // If the path doesn't start with a slash don't change it, it is probably '*' or a full
+  // path already. Return true, we are done with this request adjustment.
+  if (*path != '/')
+    return true;
+
+  token = strchr(path, ' ') + 1;
+  if (!token)
+    return false;
+
+  if (strncmp(token, "HTTP/", 5))
+    return false;
+
+  size_t hostlength = host->length();
+  assert(hostlength <= buffer.margin());
+
+  memmove(path + hostlength, path, buffer.buffertail - path);
+  memcpy(path, host->c_str(), hostlength);
+  buffer.buffertail += hostlength;
+
+  return true;
+}
+
 bool ConnectSocket(PRFileDesc *fd, const PRNetAddr *addr, PRIntervalTime timeout)
 {
   PRStatus stat = PR_Connect(fd, addr, timeout);
@@ -267,44 +351,16 @@ void HandleConnection(void* data)
   bool client_error = false;
   bool connect_accepted = !do_http_proxy;
   bool ssl_updated = !do_http_proxy;
+  bool expect_request_start = do_http_proxy;
   string certificateToUse;
   client_auth_option clientAuth;
+  string fullHost;
 
   if (other_sock) 
   {
     PRInt32 numberOfSockets = 1;
 
-    struct relayBuffer
-    {
-      char *buffer, *bufferhead, *buffertail, *bufferend;
-      relayBuffer() 
-      { 
-        bufferhead = buffertail = buffer = new char[BUF_SIZE]; 
-        bufferend = buffer + BUF_SIZE; 
-      }
-      ~relayBuffer() 
-      { 
-        delete [] buffer; 
-      }
-
-      bool empty() 
-      { 
-        return bufferhead == buffertail; 
-      }
-      PRInt32 free() 
-      { 
-        return bufferend - buffertail; 
-      }
-      PRInt32 present() 
-      { 
-        return buffertail - bufferhead; 
-      }
-      void compact() 
-      { 
-        if (buffertail == bufferhead) 
-          buffertail = bufferhead = buffer;
-      }
-    } buffers[2];
+    relayBuffer buffers[2];
 
     if (!do_http_proxy)
     {
@@ -372,8 +428,8 @@ void HandleConnection(void* data)
 
             // We have to accept and handle the initial CONNECT request here
             PRInt32 response;
-            if (!connect_accepted && ReadConnectRequest(ci->server_info, buffers[s].bufferhead, buffers[s].buffertail, 
-                &response, &certificateToUse, &clientAuth))
+            if (!connect_accepted && ReadConnectRequest(ci->server_info, buffers[s],
+                &response, certificateToUse, &clientAuth, fullHost))
             {
               // Clean the request as it would be read
               buffers[s].bufferhead = buffers[s].buffertail = buffers[s].buffer;
@@ -406,7 +462,12 @@ void HandleConnection(void* data)
               in_flags &= ~PR_POLL_READ;
 
             if (ssl_updated)
+            {
+              if (s == 0 && expect_request_start)
+                expect_request_start = !AdjustRequestURI(buffers[s], &fullHost);
+
               in_flags2 |= PR_POLL_WRITE;
+            }
           }
         } // PR_POLL_READ handling
 
