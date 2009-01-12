@@ -89,7 +89,6 @@ FORCE_STATIC_LIB = 1
 
 XPIDLSRCS = \
 	nsINativeAppSupport.idl \
-	nsIXULRuntime.idl \
 	$(NULL)
 
 ifneq (,$(filter WINCE WINNT,$(OS_ARCH)))
