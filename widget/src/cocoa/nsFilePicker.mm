@@ -198,11 +198,11 @@ NS_IMETHODIMP nsFilePicker::Show(PRInt16 *retval)
   switch (mMode)
   {
     case modeOpen:
-      userClicksOK = GetLocalFiles(mTitle, PR_FALSE, mFiles);
+      userClicksOK = GetLocalFiles(mTitle, mDefault, PR_FALSE, mFiles);
       break;
     
     case modeOpenMultiple:
-      userClicksOK = GetLocalFiles(mTitle, PR_TRUE, mFiles);
+      userClicksOK = GetLocalFiles(mTitle, mDefault, PR_TRUE, mFiles);
       break;
       
     case modeSave:
@@ -228,7 +228,7 @@ NS_IMETHODIMP nsFilePicker::Show(PRInt16 *retval)
 
 // Use OpenPanel to do a GetFile. Returns |returnOK| if the user presses OK in the dialog. 
 PRInt16
-nsFilePicker::GetLocalFiles(const nsString& inTitle, PRBool inAllowMultiple, nsCOMArray<nsILocalFile>& outFiles)
+nsFilePicker::GetLocalFiles(const nsString& inTitle, const nsString& inDefaultName, PRBool inAllowMultiple, nsCOMArray<nsILocalFile>& outFiles)
 {
   NS_OBJC_BEGIN_TRY_ABORT_BLOCK_RETURN;
 
@@ -251,6 +251,9 @@ nsFilePicker::GetLocalFiles(const nsString& inTitle, PRBool inAllowMultiple, nsC
   if (!filters)
     [thePanel setTreatsFilePackagesAsDirectories:NO];       
 
+  // set up default file name
+  NSString* defaultFilename = [NSString stringWithCharacters:(const unichar*)inDefaultName.get() length:inDefaultName.Length()];
+
   // set up default directory
   NSString *theDir = PanelDefaultDirectory();
   
@@ -262,7 +265,8 @@ nsFilePicker::GetLocalFiles(const nsString& inTitle, PRBool inAllowMultiple, nsC
   }
 
   nsCocoaUtils::PrepareForNativeAppModalDialog();
-  int result = [thePanel runModalForDirectory:theDir file:nil types:filters];  
+  int result = [thePanel runModalForDirectory:theDir file:defaultFilename
+                types:filters];
   nsCocoaUtils::CleanUpAfterNativeAppModalDialog();
   
   if (result == NSFileHandlingPanelCancelButton)
