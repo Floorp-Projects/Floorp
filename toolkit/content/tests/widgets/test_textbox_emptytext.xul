@@ -43,16 +43,13 @@ function doTests() {
   ok("1" === t1.emptyText,      "emptyText persists after setting value");
 
   t1.value = "";
-  // More tests after a timeout, because the emptyText is displayed asynchronously.
-  setTimeout(function () {
-    is(t1.inputField.value, 1,  "emptyText is displayed");
-    is(t1.textLength, 0,        "textLength while emptyText is displayed");
+  is(t1.inputField.value, 1,    "emptyText is displayed");
+  is(t1.textLength, 0,          "textLength while emptyText is displayed");
 
-    t1.focus();
-    is(t1.inputField.value, "", "emptyText is not displayed as the textbox has focus");
+  t1.focus();
+  is(t1.inputField.value, "",   "emptyText is not displayed as the textbox has focus");
 
-    SimpleTest.finish();
-  }, 100);
+  SimpleTest.finish();
 }
 
   ]]></script>
