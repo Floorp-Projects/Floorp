@@ -336,3 +336,30 @@ nsNativeTheme::IsIndeterminateProgress(nsIFrame* aFrame)
                                            NS_LITERAL_STRING("undetermined"),
                                            eCaseMatters);
 }
+
+// menupopup:
+PRBool
+nsNativeTheme::IsSubmenu(nsIFrame* aFrame, PRBool* aLeftOfParent)
+{
+  if (!aFrame)
+    return PR_FALSE;
+
+  nsIContent* parentContent = aFrame->GetContent()->GetParent();
+  if (!parentContent || parentContent->Tag() != nsWidgetAtoms::menu)
+    return PR_FALSE;
+
+  nsIFrame* parent = aFrame;
+  while ((parent = parent->GetParent())) {
+    if (parent->GetContent() == parentContent) {
+      if (aLeftOfParent) {
+        nsRect selfBounds, parentBounds;
+        aFrame->GetWindow()->GetScreenBounds(selfBounds);
+        parent->GetWindow()->GetScreenBounds(parentBounds);
+        *aLeftOfParent = selfBounds.x < parentBounds.x;
+      }
+      return PR_TRUE;
+    }
+  }
+
+  return PR_FALSE;
+}

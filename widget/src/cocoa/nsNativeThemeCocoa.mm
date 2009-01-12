@@ -1493,6 +1493,12 @@ nsNativeThemeCocoa::DrawWidgetBackground(nsIRenderingContext* aContext, nsIFrame
         version: 0,
         menuType: IsDisabled(aFrame) ? kThemeMenuTypeInactive : kThemeMenuTypePopUp
       };
+
+      PRBool isLeftOfParent = PR_FALSE;
+      if (IsSubmenu(aFrame, &isLeftOfParent) && !isLeftOfParent) {
+        mdi.menuType = kThemeMenuTypeHierarchical;
+      }
+      
       // The rounded corners draw outside the frame.
       CGRect deflatedRect = CGRectMake(macRect.origin.x, macRect.origin.y + 4,
                                        macRect.size.width, macRect.size.height - 8);
