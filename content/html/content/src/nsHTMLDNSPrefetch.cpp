@@ -62,6 +62,7 @@ static PRBool sDisablePrefetchHTTPSPref;
 static PRBool sInitialized = PR_FALSE;
 static nsIDNSService *sDNSService = nsnull;
 static nsHTMLDNSPrefetch::nsDeferrals *sPrefetches = nsnull;
+static nsHTMLDNSPrefetch::nsListener *sDNSListener = nsnull;
 
 nsresult
 nsHTMLDNSPrefetch::Initialize()
@@ -74,8 +75,15 @@ nsHTMLDNSPrefetch::Initialize()
   sPrefetches = new nsHTMLDNSPrefetch::nsDeferrals();
   if (!sPrefetches)
     return NS_ERROR_OUT_OF_MEMORY;
-
   NS_ADDREF(sPrefetches);
+
+  sDNSListener = new nsHTMLDNSPrefetch::nsListener();
+  if (!sDNSListener) {
+    NS_IF_RELEASE(sPrefetches);
+    return NS_ERROR_OUT_OF_MEMORY;
+  }
+  NS_ADDREF(sDNSListener);
+
   sPrefetches->Activate();
 
   nsContentUtils::AddBoolPrefVarCache("network.dns.disablePrefetchFromHTTPS", 
@@ -104,6 +112,7 @@ nsHTMLDNSPrefetch::Shutdown()
   sInitialized = PR_FALSE;
   NS_IF_RELEASE(sDNSService);
   NS_IF_RELEASE(sPrefetches);
+  NS_IF_RELEASE(sDNSListener);
   
   return NS_OK;
 }
@@ -143,7 +152,7 @@ nsHTMLDNSPrefetch::IsAllowed (nsIDocument *aDocument)
 nsresult
 nsHTMLDNSPrefetch::Prefetch(nsGenericHTMLElement *aElement, PRUint16 flags)
 {
-  if (!(sInitialized && sPrefetches && sDNSService))
+  if (!(sInitialized && sPrefetches && sDNSService && sDNSListener))
     return NS_ERROR_NOT_AVAILABLE;
 
   return sPrefetches->Add(flags, aElement);
@@ -170,12 +179,12 @@ nsHTMLDNSPrefetch::PrefetchHigh(nsGenericHTMLElement *aElement)
 nsresult
 nsHTMLDNSPrefetch::Prefetch(nsAString &hostname, PRUint16 flags)
 {
-  if (!(sInitialized && sDNSService && sPrefetches))
+  if (!(sInitialized && sDNSService && sPrefetches && sDNSListener))
     return NS_ERROR_NOT_AVAILABLE;
 
   nsCOMPtr<nsICancelable> tmpOutstanding;
   return sDNSService->AsyncResolve(NS_ConvertUTF16toUTF8(hostname), flags,
-                                   sPrefetches, nsnull, getter_AddRefs(tmpOutstanding));
+                                   sDNSListener, nsnull, getter_AddRefs(tmpOutstanding));
 }
 
 nsresult
@@ -196,6 +205,18 @@ nsHTMLDNSPrefetch::PrefetchHigh(nsAString &hostname)
   return Prefetch(hostname, 0);
 }
 
+/////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+NS_IMPL_THREADSAFE_ISUPPORTS1(nsHTMLDNSPrefetch::nsListener,
+                              nsIDNSListener)
+
+NS_IMETHODIMP
+nsHTMLDNSPrefetch::nsListener::OnLookupComplete(nsICancelable *request,
+                                              nsIDNSRecord  *rec,
+                                              nsresult       status)
+{
+  return NS_OK;
+}
 
 /////////////////////////////////////////////////////////////////////////////////////////////////////////
 
@@ -218,11 +239,10 @@ nsHTMLDNSPrefetch::nsDeferrals::~nsDeferrals()
   Flush();
 }
 
-NS_IMPL_THREADSAFE_ISUPPORTS4(nsHTMLDNSPrefetch::nsDeferrals,
-                              nsIDNSListener,
-                              nsIWebProgressListener,
-                              nsISupportsWeakReference,
-                              nsIObserver)
+NS_IMPL_ISUPPORTS3(nsHTMLDNSPrefetch::nsDeferrals,
+                   nsIWebProgressListener,
+                   nsISupportsWeakReference,
+                   nsIObserver)
 
 void
 nsHTMLDNSPrefetch::nsDeferrals::Flush()
@@ -272,7 +292,7 @@ nsHTMLDNSPrefetch::nsDeferrals::SubmitQueue()
 
       sDNSService->AsyncResolve(hostName, 
                                 mEntries[mTail].mFlags,
-                                this, nsnull, getter_AddRefs(tmpOutstanding));
+                                sDNSListener, nsnull, getter_AddRefs(tmpOutstanding));
     }
     mEntries[mTail].mElement = nsnull;
     mTail = (mTail + 1) & sMaxDeferredMask;
@@ -318,16 +338,6 @@ nsHTMLDNSPrefetch::nsDeferrals::Tick(nsITimer *aTimer, void *aClosure)
   // loads complete.
   if (!self->mActiveLoaderCount) 
     self->SubmitQueue();
-}
-
-//////////// nsIDNSListener method
-
-NS_IMETHODIMP
-nsHTMLDNSPrefetch::nsDeferrals::OnLookupComplete(nsICancelable *request,
-                                                 nsIDNSRecord  *rec,
-                                                 nsresult       status)
-{
-  return NS_OK;
 }
 
 //////////// nsIWebProgressListener methods

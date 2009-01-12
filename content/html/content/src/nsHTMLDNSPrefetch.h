@@ -84,14 +84,24 @@ private:
   static PRBool   IsSecureBaseContext(nsIDocument *aDocument);
   
 public:
-  class nsDeferrals : public nsIDNSListener
-                    , public nsIWebProgressListener
+  class nsListener : public nsIDNSListener
+  {
+    // This class exists to give a safe callback no-op DNSListener
+  public:
+    NS_DECL_ISUPPORTS
+    NS_DECL_NSIDNSLISTENER
+
+    nsListener()  {}
+  private:
+    ~nsListener() {}
+  };
+  
+  class nsDeferrals : public nsIWebProgressListener
                     , public nsSupportsWeakReference
                     , public nsIObserver
   {
   public:
     NS_DECL_ISUPPORTS
-    NS_DECL_NSIDNSLISTENER
     NS_DECL_NSIWEBPROGRESSLISTENER
     NS_DECL_NSIOBSERVER
 
