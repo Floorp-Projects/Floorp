@@ -215,11 +215,7 @@ nsHTMLAnchorElement::BindToTree(nsIDocument* aDocument, nsIContent* aParent,
 
   // Prefetch links
   if (aDocument && nsHTMLDNSPrefetch::IsAllowed(GetOwnerDoc())) {
-    nsCOMPtr<nsIURI> hrefURI;
-    
-    GetHrefURI(getter_AddRefs(hrefURI));
-    if (hrefURI) 
-      nsHTMLDNSPrefetch::PrefetchLow(hrefURI);
+    nsHTMLDNSPrefetch::PrefetchLow(this);
   }
   return rv;
 }
