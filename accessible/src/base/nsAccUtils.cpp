@@ -272,22 +272,27 @@ nsAccUtils::SetLiveContainerAttributes(nsIPersistentProperties *aAttributes,
   nsIContent *ancestor = aStartContent;
   while (ancestor) {
     if (relevant.IsEmpty() &&
+        nsAccUtils::HasDefinedARIAToken(ancestor, nsAccessibilityAtoms::aria_relevant) &&
         ancestor->GetAttr(kNameSpaceID_None, nsAccessibilityAtoms::aria_relevant, relevant))
       SetAccAttr(aAttributes, nsAccessibilityAtoms::containerRelevant, relevant);
 
     if (live.IsEmpty() &&
+        nsAccUtils::HasDefinedARIAToken(ancestor, nsAccessibilityAtoms::aria_live) &&
         ancestor->GetAttr(kNameSpaceID_None, nsAccessibilityAtoms::aria_live, live))
       SetAccAttr(aAttributes, nsAccessibilityAtoms::containerLive, live);
 
     if (channel.IsEmpty() &&
+        nsAccUtils::HasDefinedARIAToken(ancestor, nsAccessibilityAtoms::aria_channel) &&
         ancestor->GetAttr(kNameSpaceID_None, nsAccessibilityAtoms::aria_channel, channel))
       SetAccAttr(aAttributes, nsAccessibilityAtoms::containerChannel, channel);
 
     if (atomic.IsEmpty() &&
+        nsAccUtils::HasDefinedARIAToken(ancestor, nsAccessibilityAtoms::aria_atomic) &&
         ancestor->GetAttr(kNameSpaceID_None, nsAccessibilityAtoms::aria_atomic, atomic))
       SetAccAttr(aAttributes, nsAccessibilityAtoms::containerAtomic, atomic);
 
     if (busy.IsEmpty() &&
+        nsAccUtils::HasDefinedARIAToken(ancestor, nsAccessibilityAtoms::aria_busy) &&
         ancestor->GetAttr(kNameSpaceID_None, nsAccessibilityAtoms::aria_busy, busy))
       SetAccAttr(aAttributes, nsAccessibilityAtoms::containerBusy, busy);
 
@@ -325,6 +330,19 @@ nsAccUtils::IsARIAPropForObjectAttr(nsIAtom *aAtom)
     aAtom != nsAccessibilityAtoms::aria_valuemin &&
     aAtom != nsAccessibilityAtoms::aria_valuenow &&
     aAtom != nsAccessibilityAtoms::aria_valuetext;
+}
+
+PRBool
+nsAccUtils::HasDefinedARIAToken(nsIContent *aContent, nsIAtom *aAtom)
+{
+  if (!aContent->HasAttr(kNameSpaceID_None, aAtom) ||
+      aContent->AttrValueIs(kNameSpaceID_None, aAtom,
+                            nsAccessibilityAtoms::_empty, eCaseMatters) ||
+      aContent->AttrValueIs(kNameSpaceID_None, aAtom,
+                            nsAccessibilityAtoms::_undefined, eCaseMatters)) {
+        return PR_FALSE;
+  }
+  return PR_TRUE;
 }
 
 nsresult
@@ -373,7 +391,8 @@ nsAccUtils::GetARIATreeItemParent(nsIAccessible *aStartTreeItem,
   *aTreeItemParentResult = nsnull;
   nsAutoString levelStr;
   PRInt32 level = 0;
-  if (aStartContent->GetAttr(kNameSpaceID_None, nsAccessibilityAtoms::aria_level, levelStr)) {
+  if (nsAccUtils::HasDefinedARIAToken(aStartContent, nsAccessibilityAtoms::aria_level) &&
+      aStartContent->GetAttr(kNameSpaceID_None, nsAccessibilityAtoms::aria_level, levelStr)) {
     // This is a tree that uses aria-level to define levels, so find the first previous
     // sibling accessible where level is defined to be less than the current level
     PRInt32 success;
@@ -395,6 +414,8 @@ nsAccUtils::GetARIATreeItemParent(nsIAccessible *aStartTreeItem,
         accessNode->GetDOMNode(getter_AddRefs(treeItemNode));
         nsCOMPtr<nsIContent> treeItemContent = do_QueryInterface(treeItemNode);
         if (treeItemContent &&
+            nsAccUtils::HasDefinedARIAToken(treeItemContent,
+                                     nsAccessibilityAtoms::aria_level) &&
             treeItemContent->GetAttr(kNameSpaceID_None,
                                      nsAccessibilityAtoms::aria_level, levelStr)) {
           if (levelStr.ToInteger(&success) < level && NS_SUCCEEDED(success)) {
