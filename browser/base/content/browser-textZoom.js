@@ -226,10 +226,10 @@ var FullZoom = {
 
   // location change observer
 
-  onLocationChange: function FullZoom_onLocationChange(aURI) {
+  onLocationChange: function FullZoom_onLocationChange(aURI, aBrowser) {
     if (!aURI)
       return;
-    this._applyPrefToSetting(this._cps.getPref(aURI, this.name));
+    this._applyPrefToSetting(this._cps.getPref(aURI, this.name), aBrowser);
   },
 
   // update state of zoom type menu item
@@ -286,18 +286,18 @@ var FullZoom = {
    * We don't check first to see if the new value is the same as the current
    * one.
    **/
-  _applyPrefToSetting: function FullZoom__applyPrefToSetting(aValue) {
+  _applyPrefToSetting: function FullZoom__applyPrefToSetting(aValue, aBrowser) {
     if (!this.siteSpecific || gInPrintPreviewMode ||
         content.document instanceof Ci.nsIImageDocument)
       return;
 
     try {
       if (typeof aValue != "undefined")
-        ZoomManager.zoom = this._ensureValid(aValue);
+        ZoomManager.setZoomForBrowser(aBrowser || gBrowser, this._ensureValid(aValue));
       else if (typeof this.globalValue != "undefined")
-        ZoomManager.zoom = this.globalValue;
+        ZoomManager.setZoomForBrowser(aBrowser || gBrowser, this.globalValue);
       else
-        ZoomManager.zoom = 1;
+        ZoomManager.setZoomForBrowser(aBrowser || gBrowser, 1);
     }
     catch(ex) {}
   },
