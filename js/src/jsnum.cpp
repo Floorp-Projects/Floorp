@@ -786,6 +786,17 @@ js_NewNumberInRootedValue(JSContext *cx, jsdouble d, jsval *vp)
     return js_NewDoubleInRootedValue(cx, d, vp);
 }
 
+JSBool
+js_NewWeaklyRootedNumber(JSContext *cx, jsdouble d, jsval *rval)
+{
+    jsint i;
+    if (JSDOUBLE_IS_INT(d, i) && INT_FITS_IN_JSVAL(i)) {
+        *rval = INT_TO_JSVAL(i);
+        return JS_TRUE;
+    }
+    return JS_NewDoubleValue(cx, d, rval);
+}
+
 /*
  * Convert a number to C string. The buf must be large enough to accommodate
  * the result, including '-' and '\0', if base == 10 or d is an integer that

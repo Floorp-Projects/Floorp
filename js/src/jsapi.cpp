@@ -1934,14 +1934,8 @@ JS_NewDoubleValue(JSContext *cx, jsdouble d, jsval *rval)
 JS_PUBLIC_API(JSBool)
 JS_NewNumberValue(JSContext *cx, jsdouble d, jsval *rval)
 {
-    jsint i;
-
     CHECK_REQUEST(cx);
-    if (JSDOUBLE_IS_INT(d, i) && INT_FITS_IN_JSVAL(i)) {
-        *rval = INT_TO_JSVAL(i);
-        return JS_TRUE;
-    }
-    return JS_NewDoubleValue(cx, d, rval);
+    return js_NewWeaklyRootedNumber(cx, d, rval);
 }
 
 #undef JS_AddRoot
