@@ -351,7 +351,7 @@ nsMenuPopupFrame::AdjustView()
     // if the popup has just opened, make sure the scrolled window is at 0,0
     if (mIsOpenChanged) {
       nsIBox* child = GetChildBox();
-      nsCOMPtr<nsIScrollableFrame> scrollframe(do_QueryInterface(child));
+      nsIScrollableFrame *scrollframe = do_QueryFrame(child);
       if (scrollframe)
         scrollframe->ScrollTo(nsPoint(0,0));
     }
@@ -1119,9 +1119,8 @@ PRBool nsMenuPopupFrame::ConsumeOutsideClicks()
 
 static nsIScrollableView* GetScrollableViewForFrame(nsIFrame* aFrame)
 {
-  nsIScrollableFrame* sf;
-  nsresult rv = CallQueryInterface(aFrame, &sf);
-  if (NS_FAILED(rv))
+  nsIScrollableFrame* sf = do_QueryFrame(aFrame);
+  if (!sf)
     return nsnull;
   return sf->GetScrollableView();
 }

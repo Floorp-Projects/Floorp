@@ -61,19 +61,9 @@ nsGfxRadioControlFrame::~nsGfxRadioControlFrame()
 {
 }
 
-// Frames are not refcounted, no need to AddRef
-NS_IMETHODIMP
-nsGfxRadioControlFrame::QueryInterface(const nsIID& aIID, void** aInstancePtr)
-{
-  NS_PRECONDITION(aInstancePtr, "null out param");
-
-  if (aIID.Equals(NS_GET_IID(nsIRadioControlFrame))) {
-    *aInstancePtr = static_cast<nsIRadioControlFrame*>(this);
-    return NS_OK;
-  }
-
-  return nsFormControlFrame::QueryInterface(aIID, aInstancePtr);
-}
+NS_QUERYFRAME_HEAD(nsGfxRadioControlFrame)
+  NS_QUERYFRAME_ENTRY(nsIRadioControlFrame)
+NS_QUERYFRAME_TAIL_INHERITING(nsFormControlFrame)
 
 #ifdef ACCESSIBILITY
 NS_IMETHODIMP nsGfxRadioControlFrame::GetAccessible(nsIAccessible** aAccessible)

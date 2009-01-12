@@ -51,8 +51,7 @@ NS_NewSVGTSpanFrame(nsIPresShell* aPresShell, nsIContent* aContent,
                     nsIFrame* parentFrame, nsStyleContext* aContext)
 {
   NS_ASSERTION(parentFrame, "null parent");
-  nsISVGTextContentMetrics *metrics;
-  CallQueryInterface(parentFrame, &metrics);
+  nsISVGTextContentMetrics *metrics = do_QueryFrame(parentFrame);
   if (!metrics) {
     NS_ERROR("trying to construct an SVGTSpanFrame for an invalid container");
     return nsnull;
@@ -74,11 +73,11 @@ nsSVGTSpanFrame::GetType() const
 }
 
 //----------------------------------------------------------------------
-// nsISupports methods
+// nsQueryFrame methods
 
-NS_INTERFACE_MAP_BEGIN(nsSVGTSpanFrame)
-  NS_INTERFACE_MAP_ENTRY(nsISVGGlyphFragmentNode)
-NS_INTERFACE_MAP_END_INHERITING(nsSVGTSpanFrameBase)
+NS_QUERYFRAME_HEAD(nsSVGTSpanFrame)
+  NS_QUERYFRAME_ENTRY(nsISVGGlyphFragmentNode)
+NS_QUERYFRAME_TAIL_INHERITING(nsSVGTSpanFrameBase)
 
 //----------------------------------------------------------------------
 // nsIFrame methods
@@ -150,8 +149,7 @@ nsSVGTSpanFrame::GetFirstGlyphFragment()
   // try children first:
   nsIFrame* kid = mFrames.FirstChild();
   while (kid) {
-    nsISVGGlyphFragmentNode *node = nsnull;
-    CallQueryInterface(kid, &node);
+    nsISVGGlyphFragmentNode *node = do_QueryFrame(kid);
     if (node)
       return node->GetFirstGlyphFragment();
     kid = kid->GetNextSibling();
@@ -167,8 +165,7 @@ nsSVGTSpanFrame::GetNextGlyphFragment()
 {
   nsIFrame* sibling = mNextSibling;
   while (sibling) {
-    nsISVGGlyphFragmentNode *node = nsnull;
-    CallQueryInterface(sibling, &node);
+    nsISVGGlyphFragmentNode *node = do_QueryFrame(sibling);
     if (node)
       return node->GetFirstGlyphFragment();
     sibling = sibling->GetNextSibling();
@@ -177,8 +174,7 @@ nsSVGTSpanFrame::GetNextGlyphFragment()
   // no more siblings. go back up the tree.
   
   NS_ASSERTION(mParent, "null parent");
-  nsISVGGlyphFragmentNode *node = nsnull;
-  CallQueryInterface(mParent, &node);
+  nsISVGGlyphFragmentNode *node = do_QueryFrame(mParent);
   return node ? node->GetNextGlyphFragment() : nsnull;
 }
 

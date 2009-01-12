@@ -54,13 +54,9 @@ protected:
   nsSVGTSpanFrame(nsStyleContext* aContext) :
     nsSVGTextContainerFrame(aContext) {}
 
-   // nsISupports interface:
-  NS_IMETHOD QueryInterface(const nsIID& aIID, void** aInstancePtr);
-private:
-  NS_IMETHOD_(nsrefcnt) AddRef() { return 1; }
-  NS_IMETHOD_(nsrefcnt) Release() { return 1; }
-
 public:
+  NS_DECL_QUERYFRAME
+
   // nsIFrame:
   NS_IMETHOD  AttributeChanged(PRInt32         aNameSpaceID,
                                nsIAtom*        aAttribute,

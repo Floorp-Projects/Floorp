@@ -37,13 +37,7 @@
 #ifndef nsITableCellLayout_h__
 #define nsITableCellLayout_h__
 
-#include "nsISupports.h"
-
-// IID for the nsITableCellLayout interface 
-// 0238f187-033d-426b-bd03-96eb75af5129
-#define NS_ITABLECELLAYOUT_IID \
-{ 0x0238f187, 0x033d, 0x426b, \
- { 0xbd, 0x03, 0x96, 0xeb, 0x75, 0xaf, 0x51, 0x29 } }
+#include "nsQueryFrame.h"
 
 /**
  * nsITableCellLayout
@@ -51,11 +45,11 @@
  *
  * @author  sclark
  */
-class nsITableCellLayout : public nsISupports
+class nsITableCellLayout
 {
 public:
 
-  NS_DECLARE_STATIC_IID_ACCESSOR(NS_ITABLECELLAYOUT_IID)
+  NS_DECLARE_FRAME_ACCESSOR(nsITableCellLayout)
 
   /** return the mapped cell's row and column indexes (starting at 0 for each) */
   NS_IMETHOD GetCellIndexes(PRInt32 &aRowIndex, PRInt32 &aColIndex)=0;
@@ -66,8 +60,6 @@ public:
   /** return the mapped cell's column index (starting at 0 for the first column) */
   virtual nsresult GetColIndex(PRInt32 &aColIndex) const = 0;
 };
-
-NS_DEFINE_STATIC_IID_ACCESSOR(nsITableCellLayout, NS_ITABLECELLAYOUT_IID)
 
 #endif
 

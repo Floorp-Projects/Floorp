@@ -57,13 +57,9 @@ class nsSVGForeignObjectFrame : public nsSVGForeignObjectFrameBase,
 protected:
   nsSVGForeignObjectFrame(nsStyleContext* aContext);
   
-  // nsISupports interface:
-  NS_IMETHOD QueryInterface(const nsIID& aIID, void** aInstancePtr);
-private:
-  NS_IMETHOD_(nsrefcnt) AddRef() { return 1; }
-  NS_IMETHOD_(nsrefcnt) Release() { return 1; }
-
 public:
+  NS_DECL_QUERYFRAME
+
   // nsIFrame:  
   NS_IMETHOD  Init(nsIContent* aContent,
                    nsIFrame*   aParent,

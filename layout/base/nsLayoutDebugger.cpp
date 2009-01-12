@@ -159,10 +159,7 @@ PrintDisplayListTo(nsDisplayListBuilder* aBuilder, const nsDisplayList& aList,
       fputc(' ', aOutput);
     }
     nsIFrame* f = i->GetUnderlyingFrame();
-    nsIFrameDebug* fDebug = nsnull;
-    if (f) {
-      CallQueryInterface(f, &fDebug);
-    }
+    nsIFrameDebug* fDebug = do_QueryFrame(f);
     nsAutoString fName;
     if (fDebug) {
       fDebug->GetFrameName(fName);

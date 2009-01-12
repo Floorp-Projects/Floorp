@@ -414,8 +414,8 @@ nsFrameList::List(FILE* out) const
   fputs("<\n", out);
   for (nsIFrame* frame = mFirstChild; frame;
        frame = frame->GetNextSibling()) {
-    nsIFrameDebug*  frameDebug;
-    if (NS_SUCCEEDED(frame->QueryInterface(NS_GET_IID(nsIFrameDebug), (void**)&frameDebug))) {
+    nsIFrameDebug *frameDebug = do_QueryFrame(frame);
+    if (frameDebug) {
       frameDebug->List(out, 1);
     }
   }

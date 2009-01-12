@@ -365,8 +365,7 @@ nsSVGSVGElement::SuspendRedraw(PRUint32 max_wait_milliseconds, PRUint32 *_retval
   NS_ASSERTION(frame, "suspending redraw w/o frame");
 #endif
   if (frame) {
-    nsISVGSVGFrame* svgframe;
-    CallQueryInterface(frame, &svgframe);
+    nsISVGSVGFrame* svgframe = do_QueryFrame(frame);
     NS_ASSERTION(svgframe, "wrong frame type");
     if (svgframe) {
       svgframe->SuspendRedraw();
@@ -404,8 +403,7 @@ nsSVGSVGElement::UnsuspendRedrawAll()
   NS_ASSERTION(frame, "unsuspending redraw w/o frame");
 #endif
   if (frame) {
-    nsISVGSVGFrame* svgframe;
-    CallQueryInterface(frame, &svgframe);
+    nsISVGSVGFrame* svgframe = do_QueryFrame(frame);
     NS_ASSERTION(svgframe, "wrong frame type");
     if (svgframe) {
       svgframe->UnsuspendRedraw();
@@ -658,8 +656,7 @@ nsSVGSVGElement::GetBBox(nsIDOMSVGRect **_retval)
   if (!frame || (frame->GetStateBits() & NS_STATE_SVG_NONDISPLAY_CHILD))
     return NS_ERROR_FAILURE;
 
-  nsISVGChildFrame* svgframe;
-  CallQueryInterface(frame, &svgframe);
+  nsISVGChildFrame* svgframe = do_QueryFrame(frame);
   if (svgframe) {
     svgframe->SetMatrixPropagation(PR_FALSE);
     svgframe->NotifySVGChanged(nsISVGChildFrame::SUPPRESS_INVALIDATION |
@@ -1297,8 +1294,7 @@ nsSVGSVGElement::InvalidateTransformNotifyFrame()
 
   nsIFrame* frame = presShell->GetPrimaryFrameFor(this);
   if (frame) {
-    nsISVGSVGFrame* svgframe;
-    CallQueryInterface(frame, &svgframe);
+    nsISVGSVGFrame* svgframe = do_QueryFrame(frame);
     if (svgframe) {
       svgframe->NotifyViewportChange();
     }

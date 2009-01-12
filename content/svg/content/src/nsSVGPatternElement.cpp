@@ -276,8 +276,7 @@ nsSVGPatternElement::PushUpdate()
   nsIFrame *frame = GetPrimaryFrame();
 
   if (frame) {
-    nsISVGValue *value = nsnull;
-    CallQueryInterface(frame, &value);
+    nsISVGValue *value = do_QueryFrame(frame);
     if (value) {
       value->BeginBatchUpdate();
       value->EndBatchUpdate();

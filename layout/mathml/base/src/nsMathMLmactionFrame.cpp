@@ -74,12 +74,21 @@
 #define NS_MATHML_ACTION_TYPE_TOOLTIP      3 // unsupported
 #define NS_MATHML_ACTION_TYPE_RESTYLE      4
 
-NS_IMPL_ADDREF_INHERITED(nsMathMLmactionFrame, nsMathMLContainerFrame)
-NS_IMPL_RELEASE_INHERITED(nsMathMLmactionFrame, nsMathMLContainerFrame)
-NS_IMPL_QUERY_INTERFACE_INHERITED2(nsMathMLmactionFrame,
-                                   nsMathMLContainerFrame,
-                                   nsIDOMMouseListener,
-                                   nsIDOMEventListener)
+NS_IMETHODIMP_(nsrefcnt)
+nsMathMLmactionFrame::AddRef()
+{
+  return 2;
+}
+
+NS_IMETHODIMP_(nsrefcnt)
+nsMathMLmactionFrame::Release()
+{
+  return 1;
+}
+
+NS_IMPL_QUERY_INTERFACE2(nsMathMLmactionFrame,
+                         nsIDOMMouseListener,
+                         nsIDOMEventListener)
 
 nsIFrame*
 NS_NewMathMLmactionFrame(nsIPresShell* aPresShell, nsStyleContext* aContext)
