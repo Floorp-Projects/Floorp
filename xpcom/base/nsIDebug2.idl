@@ -39,9 +39,16 @@
 
 #include "nsIDebug.idl"
 
-[scriptable, uuid(15c0b474-fedb-4789-878b-def834b84735)]
+[scriptable, uuid(9c9307ed-480a-4f2a-8f29-21378c03bcbc)]
 interface nsIDebug2 : nsIDebug
 {
+    /**
+     * Whether XPCOM was compiled with DEBUG defined.  This often
+     * correlates to whether other code (e.g., Firefox, XULRunner) was
+     * compiled with DEBUG defined.
+     */
+    readonly attribute boolean isDebugBuild;
+
     /**
      * The number of assertions since process start.
      */
