@@ -47,6 +47,14 @@ var _quit = false;
 var _fail = false;
 var _tests_pending = 0;
 
+// Disable automatic network detection, so tests work correctly when
+// not connected to a network.
+let (ios = Components.classes["@mozilla.org/network/io-service;1"]
+           .getService(Components.interfaces.nsIIOService2)) {
+  ios.manageOfflineStatus = false;
+  ios.offline = false;
+}
+
 function _TimerCallback(expr) {
   this._expr = expr;
 }
