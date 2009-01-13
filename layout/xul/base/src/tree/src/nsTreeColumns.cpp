@@ -22,6 +22,7 @@
  * Contributor(s):
  *   Dave Hyatt <hyatt@mozilla.org> (Original Author)
  *   Jan Varga <varga@ku.sk>
+ *   Ehsan Akhgari <ehsan.akhgari@gmail.com>
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -146,10 +147,13 @@ nsTreeColumn::GetRect(nsTreeBodyFrame* aBodyFrame, nscoord aY, nscoord aHeight, 
     return NS_ERROR_FAILURE;
   }
 
+  PRBool isRTL = aBodyFrame->GetStyleVisibility()->mDirection == NS_STYLE_DIRECTION_RTL;
   *aResult = frame->GetRect();
   aResult->y = aY;
   aResult->height = aHeight;
-  if (IsLastVisible(aBodyFrame))
+  if (isRTL)
+    aResult->x += aBodyFrame->mAdjustWidth;
+  else if (IsLastVisible(aBodyFrame))
     aResult->width += aBodyFrame->mAdjustWidth;
   return NS_OK;
 }
