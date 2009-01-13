@@ -268,7 +268,7 @@ nsAccUtils::SetLiveContainerAttributes(nsIPersistentProperties *aAttributes,
                                        nsIContent *aStartContent,
                                        nsIContent *aTopContent)
 {
-  nsAutoString atomic, live, relevant, channel, busy;
+  nsAutoString atomic, live, relevant, busy;
   nsIContent *ancestor = aStartContent;
   while (ancestor) {
     if (relevant.IsEmpty() &&
@@ -280,11 +280,6 @@ nsAccUtils::SetLiveContainerAttributes(nsIPersistentProperties *aAttributes,
         nsAccUtils::HasDefinedARIAToken(ancestor, nsAccessibilityAtoms::aria_live) &&
         ancestor->GetAttr(kNameSpaceID_None, nsAccessibilityAtoms::aria_live, live))
       SetAccAttr(aAttributes, nsAccessibilityAtoms::containerLive, live);
-
-    if (channel.IsEmpty() &&
-        nsAccUtils::HasDefinedARIAToken(ancestor, nsAccessibilityAtoms::aria_channel) &&
-        ancestor->GetAttr(kNameSpaceID_None, nsAccessibilityAtoms::aria_channel, channel))
-      SetAccAttr(aAttributes, nsAccessibilityAtoms::containerChannel, channel);
 
     if (atomic.IsEmpty() &&
         nsAccUtils::HasDefinedARIAToken(ancestor, nsAccessibilityAtoms::aria_atomic) &&
