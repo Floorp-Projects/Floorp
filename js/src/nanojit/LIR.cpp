@@ -1131,7 +1131,7 @@ namespace nanojit
 
 		// Argument deltas are calculated relative to the final LIns,
 		// which is the last word in the cluster.
-		LInsp from = _buf->next() + argc + insSz - 1; 
+		LInsp from = _buf->next() + argc * LIR_FAR_SLOTS + insSz - 1; 
 		for (int32_t i=0; i < argc; i++)
 			makeReachable(args[i], from);
 
