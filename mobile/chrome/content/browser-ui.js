@@ -237,11 +237,13 @@ var BrowserUI = {
 
     var toolbarH = document.getElementById("toolbar-main").boxObject.height;
     var popup = document.getElementById("popup_autocomplete");
-    popup.height = window.innerHeight - toolbarH;
-    popup.width = window.innerWidth;
+    var windowW = window.innerWidth;
+    var windowH = window.innerHeight
+    popup.height = windowH - toolbarH;
+    popup.width = windowW
 
-    document.getElementById("notifications").width = window.innerWidth;
-    document.getElementById("browser-controls").height = window.innerHeight - toolbarH;
+    document.getElementById("notifications").width = windowW;
+    document.getElementById("browser-controls").height = windowH - toolbarH;
 
     // XXX need to handle make some of these work again
 /*
