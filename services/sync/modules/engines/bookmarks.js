@@ -653,38 +653,39 @@ BookmarksTracker.prototype = {
       this._all[this._bms.getItemIdForGUID(guid)] = guid;
     }
 
+    // ignore changes to the three roots
+    // we use special names for them, so ignore their "real" places guid
+    // as well as ours, just in case
+    this.ignoreID("menu");
+    this.ignoreID("toolbar");
+    this.ignoreID("unfiled");
+    this.ignoreID(this._all[this._bms.bookmarksMenuFolder]);
+    this.ignoreID(this._all[this._bms.toolbarFolder]);
+    this.ignoreID(this._all[this._bms.unfiledBookmarksFolder]);
+
     this._bms.addObserver(this, false);
   },
 
   /* Every add/remove/change is worth 10 points */
   _upScore: function BMT__upScore() {
-    if (!this.enabled)
-      return;
     this._score += 10;
   },
 
   onItemAdded: function BMT_onEndUpdateBatch(itemId, folder, index) {
     this._all[itemId] = this._bms.getItemGUID(itemId);
-    //if (!this.enabled)
-      //return;
     this._log.trace("onItemAdded: " + itemId);
     this.addChangedID(this._all[itemId]);
     this._upScore();
   },
 
   onItemRemoved: function BMT_onItemRemoved(itemId, folder, index) {
-    let guid = this._all[itemId];
-    delete this._all[itemId];
-    if (!this.enabled)
-      return;
     this._log.trace("onItemRemoved: " + itemId);
-    this.addChangedID(guid);
+    this.addChangedID(this._all[itemId]);
+    delete this._all[itemId];
     this._upScore();
   },
 
   onItemChanged: function BMT_onItemChanged(itemId, property, isAnnotationProperty, value) {
-    if (!this.enabled)
-      return;
     this._log.trace("onItemChanged: " + itemId + ", property: " + property +
                     ", isAnno: " + isAnnotationProperty + ", value: " + value);
 
@@ -705,8 +706,6 @@ BookmarksTracker.prototype = {
   },
 
   onItemMoved: function BMT_onItemMoved(itemId, oldParent, oldIndex, newParent, newIndex) {
-    if (!this.enabled)
-      return;
     this._log.trace("onItemMoved: " + itemId);
     this.addChangedID(this._all[itemId]);
     this._upScore();
