@@ -147,8 +147,3 @@ https://sectest1.example.org:443       privileged
 https://sub.sectest2.example.org:443   privileged
 https://sectest2.example.org:443
 https://sub.sectest1.example.org:443
-
-#
-# Used while testing the url-classifier
-#
-http://malware.com:80  privileged
