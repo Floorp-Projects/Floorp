@@ -11,19 +11,18 @@
 # WITHOUT WARRANTY OF ANY KIND, either express or implied. See the License
 # for the specific language governing rights and limitations under the
 # License.
-#
-# The Original Code is mozilla.org code.
+# # The Original Code is mozilla.org code.
 #
 # The Initial Developer of the Original Code is
-# Google, Inc.
-# Portions created by the Initial Developer are Copyright (C) 2007
+# Mozilla Corporation.
+# Portions created by the Initial Developer are Copyright (C) 2008
 # the Initial Developer. All Rights Reserved.
 #
 # Contributor(s):
 #
 # Alternatively, the contents of this file may be used under the terms of
-# either the GNU General Public License Version 2 or later (the "GPL"), or
-# the GNU Lesser General Public License Version 2.1 or later (the "LGPL"),
+# either of the GNU General Public License Version 2 or later (the "GPL"),
+# or the GNU Lesser General Public License Version 2.1 or later (the "LGPL"),
 # in which case the provisions of the GPL or the LGPL are applicable instead
 # of those above. If you wish to allow use of your version of this file only
 # under the terms of either the GPL or the LGPL, and not to allow others to
@@ -35,57 +34,24 @@
 #
 # ***** END LICENSE BLOCK *****
 
-
-DEPTH     = ../../../..
-topsrcdir = @top_srcdir@
-srcdir    = @srcdir@
-VPATH     = @srcdir@
-relativesrcdir  = toolkit/components/url-classifier/tests
-
-include $(DEPTH)/config/autoconf.mk
+DEPTH		= ../../../../..
+topsrcdir	= @top_srcdir@
+srcdir		= @srcdir@
+VPATH		= @srcdir@
+relativesrcdir  = toolkit/components/url-classifier/tests/mochitest
 
 MODULE = test_url-classifier
 
-MOZILLA_INTERNAL_API = 1
-
-REQUIRES = \
-	string \
-	url-classifier \
-	xpcom \
-	necko \
-	$(NULL)
-
-# mochitest tests
-DIRS += mochitest \
-	$(NULL)
-
-# xpcshell tests
-XPCSHELL_TESTS=unit
-
-# simple c++ tests (no xpcom)
-CPPSRCS = \
-	TestUrlClassifierUtils.cpp \
-	$(NULL)
-
-SIMPLE_PROGRAMS = $(CPPSRCS:.cpp=$(BIN_SUFFIX))
-
-LOCAL_INCLUDES = \
-	-I$(srcdir)/../src \
-	-I$(srcdir)/../public \
-	$(NULL)
-
-LIBS = \
-	../src/$(LIB_PREFIX)urlclassifier_s.$(LIB_SUFFIX) \
-	$(MOZ_COMPONENT_LIBS) \
-	$(XPCOM_LIBS) \
-	$(NSPR_LIBS) \
-	$(NULL)
-
+include $(DEPTH)/config/autoconf.mk
 include $(topsrcdir)/config/rules.mk
 
-check::
-	@echo Running tests...
-	@$(EXIT_ON_ERROR) \
-	for f in $(SIMPLE_PROGRAMS); do \
-	  $(RUN_TEST_PROGRAM) $(DIST)/bin/$$f; \
-  done
+_TEST_FILES = \
+		test_classifier.html \
+		classifierFrame.html \
+		evil.js \
+		evil.css \
+		import.css \
+		$(NULL)
+
+libs:: $(_TEST_FILES)
+	$(INSTALL) $(foreach f,$^,"$f") $(DEPTH)/_tests/testing/mochitest/tests/$(relativesrcdir)
