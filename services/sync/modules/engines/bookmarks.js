@@ -539,6 +539,15 @@ BookmarksStore.prototype = {
     return record;
   },
 
+  _createMiniRecord: function BStore__createMiniRecord(placesId, depthIndex) {
+    let foo = {id: this._bms.getItemGUID(placesId)};
+    if (depthIndex) {
+      foo.depth = this._itemDepth(placesId);
+      foo.sortindex = this._bms.getItemIndex(placesId);
+    }
+    return foo;
+  },
+
   _getWeaveParentIdForItem: function BStore__getWeaveParentIdForItem(itemId) {
     let parentid = this._bms.getFolderIdForItem(itemId);
     if (parentid == -1) {
@@ -562,11 +571,7 @@ BookmarksStore.prototype = {
       node.containerOpen = true;
       for (var i = 0; i < node.childCount; i++) {
         let child = node.getChild(i);
-        let foo = {id: this._bms.getItemGUID(child.itemId)};
-        if (depthIndex) {
-          foo.depth = this._itemDepth(child.itemId);
-          foo.sortindex = this._bms.getItemIndex(child.itemId);
-        }
+        let foo = this._createMiniRecord(child.itemId);
         items[foo.id] = foo;
         this._getChildren(child, depthIndex, items);
       }
@@ -586,11 +591,7 @@ BookmarksStore.prototype = {
 
     for (var i = 0; i < parent.childCount; i++) {
       let child = parent.getChild(i);
-      let foo = {id: this._bms.getItemGUID(child.itemId)};
-      if (depthIndex) {
-        foo.depth = this._itemDepth(child.itemId);
-        foo.sortindex = this._bms.getItemIndex(child.itemId);
-      }
+      let foo = this._createMiniRecord(child.itemId);
       items[foo.id] = foo;
     }
 
@@ -599,9 +600,9 @@ BookmarksStore.prototype = {
 
   getAllIDs: function BStore_getAllIDs() {
     let items = {};
-    this._getChildren(this._getNode(this._bms.bookmarksMenuFolder), true, items);
-    this._getChildren(this._getNode(this._bms.toolbarFolder), true, items);
-    this._getChildren(this._getNode(this._bms.unfiledBookmarksFolder), true, items);
+    this._getChildren("menu", true, items);
+    this._getChildren("toolbar", true, items);
+    this._getChildren("unfiled", true, items);
     return items;
   },
 
