@@ -102,33 +102,6 @@ ifndef JS_STATIC_BUILD
 FORCE_SHARED_LIB = 1
 endif
 
-ifeq (86,$(findstring 86,$(OS_TEST)))
-ifeq (64,$(findstring 64,$(OS_TEST)))
-else
-DEFINES += -DAVMPLUS_IA32
-NANOJIT_ARCH = i386
-ENABLE_JIT = 1
-endif
-endif
-
-ifeq (arm,$(findstring arm,$(OS_TEST)))
-DEFINES += -DAVMPLUS_ARM
-NANOJIT_ARCH = ARM
-ENABLE_JIT = 1
-endif
-
-ifneq (,$(filter Linux Darwin SunOS FreeBSD,$(OS_ARCH)))
-DEFINES += -DAVMPLUS_UNIX
-endif
-
-ifeq ($(OS_ARCH),Linux)
-DEFINES += -DAVMPLUS_LINUX
-endif
-
-ifeq ($(OS_ARCH),WINNT)
-DEFINES += -DAVMPLUS_WIN32
-endif
-
 VPATH		= $(srcdir)
 
 CPPSRCS		= \
