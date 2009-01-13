@@ -231,21 +231,20 @@ var BrowserUI = {
   },
 
   _sizeControls : function(aEvent) {
-    if (window != aEvent.target) {
+    if (window != aEvent.target)
       return
-    }
 
-    var toolbarH = document.getElementById("toolbar-main").boxObject.height;
-    var popup = document.getElementById("popup_autocomplete");
-    var windowW = window.innerWidth;
-    var windowH = window.innerHeight
+    let toolbarH = document.getElementById("toolbar-main").boxObject.height;
+    let popup = document.getElementById("popup_autocomplete");
+    let windowW = window.innerWidth;
+    let windowH = window.innerHeight
     popup.height = windowH - toolbarH;
     popup.width = windowW
 
     document.getElementById("notifications").width = windowW;
     document.getElementById("browser-controls").height = windowH - toolbarH;
 
-    // XXX need to handle make some of these work again
+    // XXX need to make some of these work again
 /*
     var sidebar = document.getElementById("browser-controls");
     var panelUI = document.getElementById("panel-container");
