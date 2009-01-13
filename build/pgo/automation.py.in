@@ -445,6 +445,7 @@ def environment(env = None):
 ###############
 
 def runApp(testURL, env, app, profileDir, extraArgs):
+  "Run the app, returning a tuple containing the status code and the time at which it was started."
   if (IS_TEST_BUILD):
     # create certificate database for the profile
     certificateStatus = fillCertificateDB(profileDir)
@@ -491,4 +492,4 @@ def runApp(testURL, env, app, profileDir, extraArgs):
   if (IS_TEST_BUILD):
     ssltunnelProcess.kill()
   
-  return start
+  return (status, start)
