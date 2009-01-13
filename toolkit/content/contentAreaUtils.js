@@ -457,6 +457,8 @@ function initFileInfo(aFI, aURL, aURLCharset, aDocument,
   }
 }
 
+Components.utils.import("resource://gre/modules/DownloadLastDir.jsm");
+
 function getTargetFile(aFpP, /* optional */ aSkipPrompt)
 {
   const prefSvcContractID = "@mozilla.org/preferences-service;1";
@@ -465,6 +467,15 @@ function getTargetFile(aFpP, /* optional */ aSkipPrompt)
                         .getService(prefSvcIID).getBranch("browser.download.");
 
   const nsILocalFile = Components.interfaces.nsILocalFile;
+
+  var inPrivateBrowsing = false;
+  try {
+    var pbs = Components.classes["@mozilla.org/privatebrowsing;1"]
+                        .getService(Components.interfaces.nsIPrivateBrowsingService);
+    inPrivateBrowsing = pbs.privateBrowsingEnabled;
+  }
+  catch (e) {
+  }
 
   // For information on download folder preferences, see
   // mozilla/browser/components/preferences/main.js
@@ -479,6 +490,8 @@ function getTargetFile(aFpP, /* optional */ aSkipPrompt)
                           .getService(Components.interfaces.nsIDownloadManager);
   try {                          
     var lastDir = prefs.getComplexValue("lastDir", nsILocalFile);
+    if (inPrivateBrowsing && gDownloadLastDir.path)
+      lastDir = gDownloadLastDir.path;
     if ((!aSkipPrompt || !useDownloadDir) && lastDir.exists())
       dir = lastDir;
     else
@@ -521,20 +534,12 @@ function getTargetFile(aFpP, /* optional */ aSkipPrompt)
     if (fp.show() == Components.interfaces.nsIFilePicker.returnCancel || !fp.file)
       return false;
 
-    // Do not remember the last save directory inside the private browsing mode
-    var persistLastDir = true;
-    try {
-      var pbs = Components.classes["@mozilla.org/privatebrowsing;1"]
-                          .getService(Components.interfaces.nsIPrivateBrowsingService);
-      if (pbs.privateBrowsingEnabled)
-        persistLastDir = false;
-    }
-    catch (e) {
-    }
-    if (persistLastDir) {
-      var directory = fp.file.parent.QueryInterface(nsILocalFile);
+    // Do not store the last save directory as a pref inside the private browsing mode
+    var directory = fp.file.parent.QueryInterface(nsILocalFile);
+    if (inPrivateBrowsing)
+      gDownloadLastDir.path = directory;
+    else
       prefs.setComplexValue("lastDir", nsILocalFile, directory);
-    }
 
     fp.file.leafName = validateFileName(fp.file.leafName);
     aFpP.saveAsType = fp.filterIndex;
