@@ -658,6 +658,18 @@ html|*.textbox-textarea {
   text-shadow: inherit;
 }
 
+textbox[empty="true"] html|*.textbox-input ,
+textbox[empty="true"] html|*.textbox-textarea {
+  text-align: left;
+  direction: ltr;
+}
+
+textbox[empty="true"][chromedir="rtl"] html|*.textbox-input ,
+textbox[empty="true"][chromedir="rtl"] html|*.textbox-textarea {
+  text-align: right;
+  direction: rtl;
+}
+
 textbox[empty="true"] html|*.textbox-input[emptytextdelay="true"] ,
 textbox[empty="true"] html|*.textbox-textarea[emptytextdelay="true"] {
   color: transparent !important;
