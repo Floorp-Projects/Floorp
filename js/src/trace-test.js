@@ -46,12 +46,27 @@ function jitstatHandler(f)
 function test(f)
 {
   if (!testName || testName == f.name) {
+    var expectedJITstats = f.jitstats;
+    if (expectedJITstats)
+    {
+      var expectedProps = {};
+      jitstatHandler(function(prop) {
+                       if (prop in expectedJITstats)
+                         expectedProps[prop] = true;
+                     });
+      for (var p in expectedJITstats)
+      {
+        if (!(p in expectedProps))
+          throw "Bad property in " + f.name + ".expected: " + p;
+      }
+    }
+
     // Collect our jit stats
     var localJITstats = {};
-    jitstatHandler(function(prop, local, global) {
+    jitstatHandler(function(prop) {
                      localJITstats[prop] = tracemonkey[prop];
                    });
-    check(f.name, f(), f.expected, localJITstats, f.jitstats);
+    check(f.name, f(), f.expected, localJITstats, expectedJITstats);
   }
 }
 
