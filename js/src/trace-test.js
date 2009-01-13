@@ -29,6 +29,7 @@ function jitstatHandler(f)
     f("recorderAborted");
     f("traceCompleted");
     f("sideExitIntoInterpreter");
+    f("timeoutIntoInterpreter");
     f("typeMapMismatchAtEntry");
     f("returnToDifferentLoopHeader");
     f("traceTriggered");
@@ -36,9 +37,10 @@ function jitstatHandler(f)
     f("treesTrashed");
     f("slotPromoted");
     f("unstableLoopVariable");
-    f("noCompatInnerTrees");
     f("breakLoopExits");
     f("returnLoopExits");
+    f("mergedLoopExits")
+    f("noCompatInnerTrees");
 }
 
 function test(f)
