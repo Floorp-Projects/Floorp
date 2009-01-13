@@ -76,9 +76,13 @@
 	list-style-image: url("chrome://global/skin/arrow/arrow-up-hov.gif");
 }
 
-#editBMPanel_tagsSelector[collapsed="true"],
-#editBMPanel_folderTree[collapsed="true"] {
-  display: none;
+#editBookmarkPanelContent {
+  min-width: 260px;
+}
+
+#editBMPanel_folderTree {
+  margin-top: 2px;
+  margin-bottom: 2px;
 }
 
 /**** name picker ****/
