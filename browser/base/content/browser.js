@@ -4394,53 +4394,14 @@ nsBrowserAccess.prototype =
     return newWindow;
   },
 
-#ifdef XP_UNIX
-#ifndef XP_MACOSX
-#define BROKEN_WM_Z_ORDER
-#endif
-#endif
-#ifdef XP_OS2
-#define BROKEN_WM_Z_ORDER
-#endif
-
   // this returns the most recent non-popup browser window
   _getMostRecentBrowserWindow : function ()
   {
     if (!window.document.documentElement.getAttribute("chromehidden"))
       return window;
  
-    var wm = Components.classes["@mozilla.org/appshell/window-mediator;1"]
-                       .getService(Components.interfaces.nsIWindowMediator);
- 
-#ifdef BROKEN_WM_Z_ORDER
-    var win = wm.getMostRecentWindow("navigator:browser", true);
- 
-    // if we're lucky, this isn't a popup, and we can just return this
-    if (win && win.document.documentElement.getAttribute("chromehidden")) {
-      win = null;
-      var windowList = wm.getEnumerator("navigator:browser", true);
-      // this is oldest to newest, so this gets a bit ugly
-      while (windowList.hasMoreElements()) {
-        var nextWin = windowList.getNext();
-        if (!nextWin.document.documentElement.getAttribute("chromehidden"))
-          win = nextWin;
-      }
-    }
-#else
-    var windowList = wm.getZOrderDOMWindowEnumerator("navigator:browser", true);
-    if (!windowList.hasMoreElements())
-      return null;
- 
-    var win = windowList.getNext();
-    while (win.document.documentElement.getAttribute("chromehidden")) {
-      if (!windowList.hasMoreElements()) 
-        return null;
- 
-      win = windowList.getNext();
-    }
-#endif
-
-    return win;
+    var browserGlue = Cc[GLUE_CID].getService(Ci.nsIBrowserGlue);
+    return browserGlue.getMostRecentBrowserWindow();
   },
 
   isTabContentWindow : function(aWindow)
