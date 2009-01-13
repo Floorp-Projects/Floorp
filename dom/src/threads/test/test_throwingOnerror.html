@@ -17,21 +17,29 @@ Tests of DOM Worker Threads
 <pre id="test">
 <script class="testbody" type="text/javascript">
 
-  const testCount = 2;
+  var worker = new Worker("throwingOnerror_worker.js");
 
-  var worker = new Worker("recursion_worker.js");
-
-  worker.onmessage = function(event) {
-    is(event.data, "Done");
-    SimpleTest.finish();
-  }
+  var errors = ["foo", "bar"];
 
   worker.onerror = function(event) {
-    is(event.message, "too much recursion");
-  }
+    var found = false;
+    for (var index in errors) {
+      if (event.message = "uncaught exception: " + errors[index]) {
+        errors.splice(index, 1);
+        found = true;
+        break;
+      }
+    }
+    is(found, true, "Unexpected error!");
+  };
 
-  for (var i = 0; i < testCount; i++) {
-    worker.postMessage("start");
+  worker.onmessage = function(event) {
+    is(errors.length, 0, "Didn't see expected errors!");
+    SimpleTest.finish();
+  };
+
+  for (var i = 0; i < 2; i++) {
+    worker.postMessage("");
   }
 
   SimpleTest.waitForExplicitFinish();
