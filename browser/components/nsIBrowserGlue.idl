@@ -57,7 +57,7 @@ interface nsIDOMWindow;
  *
  */ 
 
-[scriptable, uuid(01639c88-c0eb-4d75-9ee1-f325c1e04215)]
+[scriptable, uuid(781df699-17dc-4237-b3d7-876ddb7085e3)]
 interface nsIBrowserGlue : nsISupports
 {
   /** 
