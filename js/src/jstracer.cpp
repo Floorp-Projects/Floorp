@@ -5121,7 +5121,7 @@ TraceRecorder::test_property_cache(JSObject* obj, LIns* obj_ins, JSObject*& obj2
             LIns* shape_ins = addName(lir->insLoad(LIR_ld, map_ins, offsetof(JSScope, shape)),
                                       "shape");
             guard(true, addName(lir->ins2i(LIR_eq, shape_ins, entry->kshape), "guard(kshape)"),
-                  MISMATCH_EXIT);
+                  BRANCH_EXIT);
         }
     } else {
 #ifdef DEBUG
@@ -5134,7 +5134,7 @@ TraceRecorder::test_property_cache(JSObject* obj, LIns* obj_ins, JSObject*& obj2
 #endif
         if (aobj != globalObj && !obj_ins->isconstp()) {
             guard(true, addName(lir->ins2i(LIR_eq, obj_ins, entry->kshape), "guard(kobj)"),
-                  MISMATCH_EXIT);
+                  BRANCH_EXIT);
         }
     }
 
@@ -5149,7 +5149,7 @@ TraceRecorder::test_property_cache(JSObject* obj, LIns* obj_ins, JSObject*& obj2
         if (PCVCAP_TAG(entry->vcap) == 1) {
             // Duplicate the special case in PROPERTY_CACHE_TEST.
             obj2_ins = stobj_get_fslot(obj_ins, JSSLOT_PROTO);
-            guard(false, lir->ins_eq0(obj2_ins), MISMATCH_EXIT);
+            guard(false, lir->ins_eq0(obj2_ins), BRANCH_EXIT);
         } else {
             obj2_ins = INS_CONSTPTR(obj2);
         }
@@ -5161,7 +5161,7 @@ TraceRecorder::test_property_cache(JSObject* obj, LIns* obj_ins, JSObject*& obj2
                                   "shape");
         guard(true,
               addName(lir->ins2i(LIR_eq, shape_ins, vshape), "guard(vshape)"),
-              MISMATCH_EXIT);
+              BRANCH_EXIT);
     }
 
     pcval = entry->vword;
@@ -5494,7 +5494,7 @@ TraceRecorder::guardElemOp(JSObject* obj, LIns* obj_ins, jsid id, size_t op_offs
         ABORT_TRACE("resolve hook mutated elem op base object");
 
     LIns* shape_ins = addName(lir->insLoad(LIR_ld, map_ins, offsetof(JSScope, shape)), "shape");
-    guard(true, addName(lir->ins2i(LIR_eq, shape_ins, shape), "guard(shape)"), MISMATCH_EXIT);
+    guard(true, addName(lir->ins2i(LIR_eq, shape_ins, shape), "guard(shape)"), BRANCH_EXIT);
     return true;
 }
 
@@ -6440,7 +6440,7 @@ TraceRecorder::record_SetPropHit(JSPropCacheEntry* entry, JSScopeProperty* sprop
 
     LIns* shape_ins = addName(lir->insLoad(LIR_ld, map_ins, offsetof(JSScope, shape)), "shape");
     guard(true, addName(lir->ins2i(LIR_eq, shape_ins, entry->kshape), "guard(shape)"),
-          MISMATCH_EXIT);
+          BRANCH_EXIT);
 
     if (entry->kshape != PCVCAP_SHAPE(entry->vcap)) {
         LIns* args[] = { INS_CONSTPTR(sprop), obj_ins, cx_ins };
