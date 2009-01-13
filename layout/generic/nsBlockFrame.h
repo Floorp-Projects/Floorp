@@ -425,7 +425,7 @@ public:
    * don't use it for out of flows.
    */
   enum {
-    PERSERVE_REMOVED_FRAMES    = 0x01,
+    PRESERVE_REMOVED_FRAMES    = 0x01,
     REMOVE_FIXED_CONTINUATIONS = 0x02,
     FRAMES_ARE_EMPTY           = 0x04
   };
