@@ -32,6 +32,7 @@
 
 #include <stdlib.h>
 #include <string.h>
+#include <assert.h>
 
 NPUTF8*
 createCStringFromNPVariant(const NPVariant* variant)
@@ -69,7 +70,7 @@ NPIdentifier
 int32VariantToIdentifier(NPVariant variant)
 {
   assert(NPVARIANT_IS_INT32(variant));
-  int32 integer = NPVARIANT_TO_INT32(variant);
+  int32_t integer = NPVARIANT_TO_INT32(variant);
   return NPN_GetIntIdentifier(integer);
 }
 
@@ -79,6 +80,6 @@ doubleVariantToIdentifier(NPVariant variant)
   assert(NPVARIANT_IS_DOUBLE(variant));
   double value = NPVARIANT_TO_DOUBLE(variant);
   // sadly there is no "getdoubleidentifier"
-  int32 integer = static_cast<int32>(value);
+  int32_t integer = static_cast<int32_t>(value);
   return NPN_GetIntIdentifier(integer);
 }
