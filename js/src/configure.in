@@ -2450,6 +2450,61 @@ if test -z "$COMPILE_ENVIRONMENT"; then
     SKIP_LIBRARY_CHECKS=1
 fi
 
+dnl Configure JIT support
+
+case "$target" in
+i?86-*)
+    ENABLE_JIT=1
+    NANOJIT_ARCH=i386
+    ;;
+arm*-*)
+    ENABLE_JIT=1
+    NANOJIT_ARCH=ARM
+    ;;
+esac
+
+MOZ_ARG_DISABLE_BOOL(jit,
+[  --disable-jit           Disable JIT support],
+  ENABLE_JIT=)
+
+if test "$ENABLE_JIT"; then
+
+case "$target" in
+i?86-*)
+    AC_DEFINE(AVMPLUS_IA32)
+    ;;
+
+arm*-*)
+    AC_DEFINE(AVMPLUS_ARM)
+    ;;
+esac
+
+case "$target_os" in
+linux*)
+    AC_DEFINE(AVMPLUS_UNIX)
+    AC_DEFINE(AVMPLUS_LINUX)
+    ;;
+darwin*)
+    AC_DEFINE(AVMPLUS_UNIX)
+    ;;
+solaris*)
+    AC_DEFINE(AVMPLUS_UNIX)
+    ;;
+freebsd*|kfreebsd*)
+    AC_DEFINE(AVMPLUS_UNIX)
+    ;;
+*cygwin*|*mingw*|*mks*|*msvc*|*wince)
+    AC_DEFINE(AVMPLUS_WIN32)
+    ;;
+*)
+    AC_MSG_ERROR([Unrecognized nanojit platform])
+esac
+
+fi # ENABLE_JIT
+
+AC_SUBST(ENABLE_JIT)
+AC_SUBST(NANOJIT_ARCH)
+
 if test -z "$SKIP_COMPILER_CHECKS"; then
 dnl Checks for typedefs, structures, and compiler characteristics.
 dnl ========================================================
@@ -2871,61 +2926,6 @@ if test ! "$GNU_CXX"; then
      esac
 fi
 AC_CHECK_LIB(socket, socket)
-
-dnl Configure JIT support
-
-case "$target" in
-i?86-*)
-    ENABLE_JIT=1
-    NANOJIT_ARCH=i386
-    ;;
-arm*-*)
-    ENABLE_JIT=1
-    NANOJIT_ARCH=ARM
-    ;;
-esac
-
-MOZ_ARG_DISABLE_BOOL(jit,
-[  --disable-jit           Disable JIT support],
-  ENABLE_JIT=)
-
-if test "$ENABLE_JIT"; then
-
-case "$target" in
-i?86-*)
-    AC_DEFINE(AVMPLUS_IA32)
-    ;;
-
-arm*-*)
-    AC_DEFINE(AVMPLUS_ARM)
-    ;;
-esac
-
-case "$target_os" in
-linux*)
-    AC_DEFINE(AVMPLUS_UNIX)
-    AC_DEFINE(AVMPLUS_LINUX)
-    ;;
-darwin*)
-    AC_DEFINE(AVMPLUS_UNIX)
-    ;;
-solaris*)
-    AC_DEFINE(AVMPLUS_UNIX)
-    ;;
-freebsd*|kfreebsd*)
-    AC_DEFINE(AVMPLUS_UNIX)
-    ;;
-*cygwin*|*mingw*|*mks*|*msvc*|*wince)
-    AC_DEFINE(AVMPLUS_WIN32)
-    ;;
-*)
-    AC_MSG_ERROR([Unrecognized nanojit platform])
-esac
-
-fi # ENABLE_JIT
-
-AC_SUBST(ENABLE_JIT)
-AC_SUBST(NANOJIT_ARCH)
 
 dnl Enable VFP support on ARM
 MOZ_ARG_DISABLE_BOOL(arm-vfp,
