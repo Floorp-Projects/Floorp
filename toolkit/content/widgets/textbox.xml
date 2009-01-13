@@ -205,6 +205,10 @@
           this.boxObject.removeProperty("value");
         }
 
+        // Bindings that extend this one wouldn't inherit the
+        // chromedir attribute if it would only be set in <content>.
+        this.setAttribute("chromedir", "]]>&locale.dir;<![CDATA[");
+
         this._updateVisibleText();
         this._setNewlineHandling();
       ]]></constructor>
