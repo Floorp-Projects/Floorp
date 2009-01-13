@@ -238,6 +238,8 @@ private:
   nsCOMPtr<nsIPrincipal> mPrincipal;
   nsCOMPtr<nsIURI> mURI;
 
+  PRInt32 mErrorHandlerRecursionCount;
+
   PRPackedBool mCanceled;
   PRPackedBool mSuspended;
   PRPackedBool mCompileAttempted;
