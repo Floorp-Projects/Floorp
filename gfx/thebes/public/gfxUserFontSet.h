@@ -151,12 +151,17 @@ public:
     virtual ~gfxUserFontSet();
 
     enum {
-        // no flags ==> unknown
-        FLAG_FORMAT_OPENTYPE       = 1,
-        FLAG_FORMAT_TRUETYPE       = 2,
-        FLAG_FORMAT_TRUETYPE_AAT   = 4,
-        FLAG_FORMAT_EOT            = 8,
-        FLAG_FORMAT_SVG            = 16
+        // no flags ==> no hint set
+        // unknown ==> unknown format hint set
+        FLAG_FORMAT_UNKNOWN        = 1,
+        FLAG_FORMAT_OPENTYPE       = 1 << 1,
+        FLAG_FORMAT_TRUETYPE       = 1 << 2,
+        FLAG_FORMAT_TRUETYPE_AAT   = 1 << 3,
+        FLAG_FORMAT_EOT            = 1 << 4,
+        FLAG_FORMAT_SVG            = 1 << 5,
+        
+        // mask of all unused bits, update when adding new formats
+        FLAG_FORMAT_NOT_USED       = ~((1 << 6)-1)
     };
 
     enum LoadStatus {
