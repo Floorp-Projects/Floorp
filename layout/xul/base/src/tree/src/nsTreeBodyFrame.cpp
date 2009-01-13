@@ -31,6 +31,7 @@
  *   Rene Pronk <r.pronk@its.tudelft.nl>
  *   Nate Nielsen <nielsen@memberwebs.com>
  *   Mark Banner <mark@standard8.demon.co.uk>
+ *   Ehsan Akhgari <ehsan.akhgari@gmail.com>
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either of the GNU General Public License Version 2 or later (the "GPL"),
@@ -1139,6 +1140,7 @@ nsTreeBodyFrame::GetCoordsForCellItem(PRInt32 aRow, nsITreeColumn* aCol, const n
   *aWidth = 0;
   *aHeight = 0;
 
+  PRBool isRTL = GetStyleVisibility()->mDirection == NS_STYLE_DIRECTION_RTL;
   nscoord currX = mInnerBox.x - mHorzPosition;
 
   // The Rect for the requested item. 
@@ -1212,7 +1214,8 @@ nsTreeBodyFrame::GetCoordsForCellItem(PRInt32 aRow, nsITreeColumn* aCol, const n
       // The amount of indentation is the indentation width (|mIndentation|) by the level. 
       PRInt32 level;
       mView->GetLevel(aRow, &level);
-      cellX += mIndentation * level;
+      if (!isRTL)
+        cellX += mIndentation * level;
       remainWidth -= mIndentation * level;
 
       // Find the twisty rect by computing its size. 
@@ -1235,8 +1238,9 @@ nsTreeBodyFrame::GetCoordsForCellItem(PRInt32 aRow, nsITreeColumn* aCol, const n
       twistyRect.Inflate(twistyMargin);
 
       // Adjust our working X value with the twisty width (image size, margins,
-      // borders, padding. 
-      cellX += twistyRect.width;
+      // borders, padding.
+      if (!isRTL)
+        cellX += twistyRect.width;
     }
 
     // Cell Image
@@ -1256,7 +1260,8 @@ nsTreeBodyFrame::GetCoordsForCellItem(PRInt32 aRow, nsITreeColumn* aCol, const n
     imageSize.Inflate(imageMargin);
 
     // Increment cellX by the image width
-    cellX += imageSize.width;
+    if (!isRTL)
+      cellX += imageSize.width;
     
     // Cell Text 
     nsAutoString cellText;
@@ -1310,6 +1315,9 @@ nsTreeBodyFrame::GetCoordsForCellItem(PRInt32 aRow, nsITreeColumn* aCol, const n
 
     theRect = textRect;
   }
+
+  if (isRTL)
+    theRect.x = mInnerBox.width - theRect.x - theRect.width;
 
   *aX = nsPresContext::AppUnitsToIntCSSPixels(theRect.x);
   *aY = nsPresContext::AppUnitsToIntCSSPixels(theRect.y);
@@ -1545,17 +1553,20 @@ nsTreeBodyFrame::GetItemWithinCellAt(nscoord aX, const nsRect& aCellRect,
   nscoord currX = cellRect.x;
   nscoord remainingWidth = cellRect.width;
 
-  // XXX Handle right alignment hit testing.
+  // Handle right alignment hit testing.
+  PRBool isRTL = GetStyleVisibility()->mDirection == NS_STYLE_DIRECTION_RTL;
 
   if (aColumn->IsPrimary()) {
     // If we're the primary column, we have indentation and a twisty.
     PRInt32 level;
     mView->GetLevel(aRowIndex, &level);
 
-    currX += mIndentation*level;
+    if (!isRTL)
+      currX += mIndentation*level;
     remainingWidth -= mIndentation*level;
 
-    if (aX < currX) {
+    if (isRTL && aX > currX + remainingWidth ||
+        !isRTL && aX < currX) {
       // The user clicked within the indentation.
       return nsCSSAnonBoxes::moztreecell;
     }
@@ -1589,6 +1600,8 @@ nsTreeBodyFrame::GetItemWithinCellAt(nscoord aX, const nsRect& aCellRect,
     nsMargin twistyMargin;
     twistyContext->GetStyleMargin()->GetMargin(twistyMargin);
     twistyRect.Inflate(twistyMargin);
+    if (isRTL)
+      twistyRect.x = currX + remainingWidth - twistyRect.width;
 
     // Now we test to see if aX is actually within the twistyRect.  If it is, and if the item should
     // have a twisty, then we return "twisty".  If it is within the rect but we shouldn't have a twisty,
@@ -1600,7 +1613,8 @@ nsTreeBodyFrame::GetItemWithinCellAt(nscoord aX, const nsRect& aCellRect,
         return nsCSSAnonBoxes::moztreecell;
     }
 
-    currX += twistyRect.width;
+    if (!isRTL)
+      currX += twistyRect.width;
     remainingWidth -= twistyRect.width;    
   }
   
@@ -1615,13 +1629,16 @@ nsTreeBodyFrame::GetItemWithinCellAt(nscoord aX, const nsRect& aCellRect,
   imageContext->GetStyleMargin()->GetMargin(imageMargin);
   iconSize.Inflate(imageMargin);
   iconRect.width = iconSize.width;
+  if (isRTL)
+    iconRect.x = currX + remainingWidth - iconRect.width;
 
   if (aX >= iconRect.x && aX < iconRect.x + iconRect.width) {
     // The user clicked on the image.
     return nsCSSAnonBoxes::moztreeimage;
   }
 
-  currX += iconRect.width;
+  if (!isRTL)
+    currX += iconRect.width;
   remainingWidth -= iconRect.width;    
 
   nsAutoString cellText;
@@ -1646,6 +1663,8 @@ nsTreeBodyFrame::GetItemWithinCellAt(nscoord aX, const nsRect& aCellRect,
   nsLayoutUtils::SetFontFromStyle(renderingContext, textContext);
 
   AdjustForCellText(cellText, aRowIndex, aColumn, *renderingContext, textRect);
+  if (isRTL)
+    textRect.x = currX + remainingWidth - textRect.width;
 
   if (aX >= textRect.x && aX < textRect.x + textRect.width)
     return nsCSSAnonBoxes::moztreecelltext;
@@ -3128,6 +3147,8 @@ nsTreeBodyFrame::PaintCell(PRInt32              aRowIndex,
   // out and to paint.
   nsStyleContext* cellContext = GetPseudoStyleContext(nsCSSAnonBoxes::moztreecell);
 
+  PRBool isRTL = GetStyleVisibility()->mDirection == NS_STYLE_DIRECTION_RTL;
+
   // Obtain the margins for the cell and then deflate our rect by that 
   // amount.  The cell is assumed to be contained within the deflated rect.
   nsRect cellRect(aCellRect);
@@ -3145,10 +3166,9 @@ nsTreeBodyFrame::PaintCell(PRInt32              aRowIndex,
   nscoord remainingWidth = cellRect.width;
 
   // Now we paint the contents of the cells.
-  // Text alignment determines the order in which we paint.  
-  // LEFT means paint from left to right.
-  // RIGHT means paint from right to left.
-  // XXX Implement RIGHT alignment!
+  // Directionality of the tree determines the order in which we paint.  
+  // NS_STYLE_DIRECTION_LTR means paint from left to right.
+  // NS_STYLE_DIRECTION_RTL means paint from right to left.
 
   if (aColumn->IsPrimary()) {
     // If we're the primary column, we need to indent and paint the twisty and any connecting lines
@@ -3157,7 +3177,8 @@ nsTreeBodyFrame::PaintCell(PRInt32              aRowIndex,
     PRInt32 level;
     mView->GetLevel(aRowIndex, &level);
 
-    currX += mIndentation * level;
+    if (!isRTL)
+      currX += mIndentation * level;
     remainingWidth -= mIndentation * level;
 
     // Resolve the style to use for the connecting lines.
@@ -3197,6 +3218,8 @@ nsTreeBodyFrame::PaintCell(PRInt32              aRowIndex,
       aRenderingContext.SetLineStyle(ConvertBorderStyleToLineStyle(style));
 
       nscoord srcX = currX + twistyRect.width - mIndentation / 2;
+      if (isRTL)
+        srcX = currX + remainingWidth - (srcX - cellRect.x);
       nscoord lineY = (aRowIndex - mTopRowIndex) * mRowHeight + aPt.y;
 
       // Don't paint off our cell.
@@ -3204,6 +3227,10 @@ nsTreeBodyFrame::PaintCell(PRInt32              aRowIndex,
         nscoord destX = currX + twistyRect.width;
         if (destX > cellRect.x + cellRect.width)
           destX = cellRect.x + cellRect.width;
+        if (isRTL) {
+          srcX = currX + remainingWidth - (srcX - cellRect.x);
+          destX = currX + remainingWidth - (destX - cellRect.x);
+        }
         aRenderingContext.DrawLine(srcX, lineY + mRowHeight / 2, destX, lineY + mRowHeight / 2);
       }
 
@@ -3289,6 +3316,8 @@ nsTreeBodyFrame::PaintTwisty(PRInt32              aRowIndex,
 {
   NS_PRECONDITION(aColumn && aColumn->GetFrame(this), "invalid column passed");
 
+  PRBool isRTL = GetStyleVisibility()->mDirection == NS_STYLE_DIRECTION_RTL;
+  nscoord rightEdge = aCurrX + aRemainingWidth;
   // Paint the twisty, but only if we are a non-empty container.
   PRBool shouldPaint = PR_FALSE;
   PRBool isContainer = PR_FALSE;
@@ -3319,13 +3348,16 @@ nsTreeBodyFrame::PaintTwisty(PRInt32              aRowIndex,
   nsRect copyRect(twistyRect);
   copyRect.Inflate(twistyMargin);
   aRemainingWidth -= copyRect.width;
-  aCurrX += copyRect.width;
+  if (!isRTL)
+    aCurrX += copyRect.width;
 
   if (shouldPaint) {
     // Paint our borders and background for our image rect.
     PaintBackgroundLayer(twistyContext, aPresContext, aRenderingContext, twistyRect, aDirtyRect);
 
     if (theme) {
+      if (isRTL)
+        twistyRect.x = rightEdge - twistyRect.width;
       // yeah, I know it says we're drawing a background, but a twisty is really a fg
       // object since it doesn't have anything that gecko would want to draw over it. Besides,
       // we have to prevent imagelib from drawing it.
@@ -3340,6 +3372,8 @@ nsTreeBodyFrame::PaintTwisty(PRInt32              aRowIndex,
       nsMargin bp(0,0,0,0);
       GetBorderPadding(twistyContext, bp);
       twistyRect.Deflate(bp);
+      if (isRTL)
+        twistyRect.x = rightEdge - twistyRect.width;
       imageSize.Deflate(bp);
 
       // Get the image for drawing.
@@ -3374,6 +3408,8 @@ nsTreeBodyFrame::PaintImage(PRInt32              aRowIndex,
 {
   NS_PRECONDITION(aColumn && aColumn->GetFrame(this), "invalid column passed");
 
+  PRBool isRTL = GetStyleVisibility()->mDirection == NS_STYLE_DIRECTION_RTL;
+  nscoord rightEdge = aCurrX + aRemainingWidth;
   // Resolve style for the image.
   nsStyleContext* imageContext = GetPseudoStyleContext(nsCSSAnonBoxes::moztreeimage);
 
@@ -3429,6 +3465,8 @@ nsTreeBodyFrame::PaintImage(PRInt32              aRowIndex,
   }
 
   if (image) {
+    if (isRTL)
+      imageRect.x = rightEdge - imageRect.width;
     // Paint our borders and background for our image rect
     PaintBackgroundLayer(imageContext, aPresContext, aRenderingContext, imageRect, aDirtyRect);
 
@@ -3488,7 +3526,8 @@ nsTreeBodyFrame::PaintImage(PRInt32              aRowIndex,
   // Update the aRemainingWidth and aCurrX values.
   imageRect.Inflate(imageMargin);
   aRemainingWidth -= imageRect.width;
-  aCurrX += imageRect.width;
+  if (!isRTL)
+    aCurrX += imageRect.width;
 }
 
 void
@@ -3501,6 +3540,9 @@ nsTreeBodyFrame::PaintText(PRInt32              aRowIndex,
                            nscoord&             aCurrX)
 {
   NS_PRECONDITION(aColumn && aColumn->GetFrame(this), "invalid column passed");
+
+  PRBool isRTL = GetStyleVisibility()->mDirection == NS_STYLE_DIRECTION_RTL;
+  nscoord rightEdge = aTextRect.XMost();
 
   // Now obtain the text for our cell.
   nsAutoString text;
@@ -3551,13 +3593,16 @@ nsTreeBodyFrame::PaintText(PRInt32              aRowIndex,
   // Subtract out the remaining width.
   nsRect copyRect(textRect);
   copyRect.Inflate(textMargin);
-  aCurrX += copyRect.width;
+  if (!isRTL)
+    aCurrX += copyRect.width;
 
   textRect.Inflate(bp);
   PaintBackgroundLayer(textContext, aPresContext, aRenderingContext, textRect, aDirtyRect);
 
   // Time to paint our text.
   textRect.Deflate(bp);
+  if (isRTL)
+    textRect.x = rightEdge - textRect.width;
 
   // Set our color.
   aRenderingContext.SetColor(textContext->GetStyleColor()->mColor);
@@ -3602,6 +3647,8 @@ nsTreeBodyFrame::PaintCheckbox(PRInt32              aRowIndex,
   // Resolve style for the checkbox.
   nsStyleContext* checkboxContext = GetPseudoStyleContext(nsCSSAnonBoxes::moztreecheckbox);
 
+  nscoord rightEdge = aCheckboxRect.XMost();
+
   // Obtain the margins for the checkbox and then deflate our rect by that 
   // amount.  The checkbox is assumed to be contained within the deflated rect.
   nsRect checkboxRect(aCheckboxRect);
@@ -3615,6 +3662,9 @@ nsTreeBodyFrame::PaintCheckbox(PRInt32              aRowIndex,
     imageSize.height = checkboxRect.height;
   if (imageSize.width > checkboxRect.width)
     imageSize.width = checkboxRect.width;
+
+  if (GetStyleVisibility()->mDirection == NS_STYLE_DIRECTION_RTL)
+    checkboxRect.x = rightEdge - checkboxRect.width;
 
   // Paint our borders and background for our image rect.
   PaintBackgroundLayer(checkboxContext, aPresContext, aRenderingContext, checkboxRect, aDirtyRect);
@@ -3692,7 +3742,10 @@ nsTreeBodyFrame::PaintProgressMeter(PRInt32              aRowIndex,
     else if (intValue > 100)
       intValue = 100;
 
-    meterRect.width = NSToCoordRound((float)intValue / 100 * meterRect.width);
+    nscoord meterWidth = NSToCoordRound((float)intValue / 100 * meterRect.width);
+    if (GetStyleVisibility()->mDirection == NS_STYLE_DIRECTION_RTL)
+      meterRect.x += meterRect.width - meterWidth; // right align
+    meterRect.width = meterWidth;
     PRBool useImageRegion = PR_TRUE;
     nsCOMPtr<imgIContainer> image;
     GetImage(aRowIndex, aColumn, PR_TRUE, meterContext, useImageRegion, getter_AddRefs(image));
