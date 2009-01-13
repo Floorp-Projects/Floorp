@@ -105,6 +105,11 @@
         true
 #endif
       </field>
+      <property name="keepCurrentInView"
+                onget="return (this.getAttribute('keepcurrentinview') == 'true');"
+                onset="if (val) this.setAttribute('keepcurrentinview', 'true');
+                       else this.removeAttribute('keepcurrentinview'); return val;"/>
+
       <property name="enableColumnDrag"
                 onget="return this.hasAttribute('enableColumnDrag');"
                 onset="if (val) this.setAttribute('enableColumnDrag', 'true');
