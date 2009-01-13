@@ -67,6 +67,7 @@ interface nsISHEntry;
 interface nsILayoutHistoryState;
 interface nsISecureBrowserUI;
 interface nsIDOMStorage;
+interface nsIPrincipal;
 
 [scriptable, uuid(dc4daea1-b43d-406f-bd62-c2ee879192ad)]
 interface nsIDocShell : nsISupports
@@ -423,7 +424,7 @@ interface nsIDocShell : nsISupports
    * Retrieves the WebApps session storage object for the supplied domain.
    * If it doesn't already exist, a new one will be created.
    *
-   * @param domain the domain of the storage object to retrieve
+   * @param uri the uri of the storage object to retrieve
    */
   nsIDOMStorage getSessionStorageForURI(in nsIURI uri);
 
@@ -475,3 +476,16 @@ interface nsIDocShell : nsISupports
   attribute boolean isOffScreenBrowser;    
 };
 
+[scriptable, uuid(460ba822-e664-4c38-9b08-98d2736473d7)]
+interface nsIDocShell_MOZILLA_1_9_1 : nsISupports
+{
+  /*
+   * Retrieves the WebApps session storage object for the supplied principal.
+   *
+   * @param principal returns a storage for this principal
+   * @param create If true and a session storage object doesn't
+   *               already exist, a new one will be created.
+   */
+  nsIDOMStorage getSessionStorageForPrincipal(in nsIPrincipal principal,
+                                              in boolean create);
+};
