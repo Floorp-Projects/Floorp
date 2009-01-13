@@ -53,7 +53,7 @@ var gEditItemOverlay = {
   _hiddenRows: [],
   _observersAdded: false,
   _staticFoldersListBuilt: false,
-  _initialized: false;
+  _initialized: false,
 
   get itemId() {
     return this._itemId;
