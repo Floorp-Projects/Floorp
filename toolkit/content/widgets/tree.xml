@@ -261,6 +261,13 @@
         </getter>
       </property>
 
+      <constructor><![CDATA[
+          // Bindings that extend this one wouldn't inherit the
+          // chromedir attribute if it would only be set in <content>.
+          this.setAttribute("chromedir", "]]>&locale.dir;<![CDATA[");
+        ]]>
+      </constructor>
+
       <method name="_getNextColumn">
         <parameter name="row"/>
         <parameter name="left"/>
@@ -341,23 +348,37 @@
             var box = this.treeBoxObject;
             box.ensureCellIsVisible(row, column);
 
-            var outx = {}, outy = {}, outwidth = {}, outheight = {};
+            // Get the coordinates of the text inside the cell.
+            var textx = {}, texty = {}, textwidth = {}, textheight = {};
             var coords = box.getCoordsForCellItem(row, column, "text",
-                                                  outx, outy, outwidth, outheight);
+                                                  textx, texty, textwidth, textheight);
 
+            // Get the coordinates of the cell itself.
+            var cellx = {}, cellwidth = {};
+            coords = box.getCoordsForCellItem(row, column, "cell",
+                                              cellx, {}, cellwidth, {});
+
+            // Calculate the top offset of the textbox.
             var style = window.getComputedStyle(input, "");
             var topadj = parseInt(style.borderTopWidth) + parseInt(style.paddingTop);
-            input.top = outy.value - topadj;
+            input.top = texty.value - topadj;
 
-            var left = outx.value;
+            // The leftside of the textbox is aligned to the left side of the text
+            // in LTR mode, and left side of the cell in RTL mode.
+            var left, widthdiff;
+            if (style.direction == "rtl") {
+              left = cellx.value;
+              widthdiff = cellx.value + cellwidth.value - textx.value - textwidth.value;
+            } else {
+              left = textx.value;
+              widthdiff = textx.value - cellx.value;
+            }
+
             input.left = left;
-            input.height = outheight.value + topadj +
+            input.height = textheight.value + topadj +
                            parseInt(style.borderBottomWidth) +
                            parseInt(style.paddingBottom);
-
-            coords = box.getCoordsForCellItem(row, column, "cell",
-                                              outx, outy, outwidth, outheight);
-            input.width = outwidth.value - (left - outx.value);
+            input.width = cellwidth.value - widthdiff;
             input.hidden = false;
 
             input.value = this.view.getCellText(row, column);
