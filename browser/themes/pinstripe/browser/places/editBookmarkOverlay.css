@@ -57,17 +57,12 @@
 	margin: 0 !important;
 }
 
-/**** folder tree ****/
-
-#editBMPanel_folderTree {
-   margin: 6px 0;
-}
-
 /**** expanders ****/
 
 .expander-up,
 .expander-down {
   -moz-appearance: none;
+  margin: 0;
   margin-left: 8px;
   padding: 0;
   min-width: 0;
@@ -87,6 +82,14 @@
 
 .expander-up:hover:active {
 	list-style-image: url("chrome://browser/skin/places/expander-open-active.png") !important;
+}
+
+#editBookmarkPanelContent {
+  min-width: 260px;
+}
+
+#editBMPanel_folderTree {
+  margin: 6px 4px 0 4px;
 }
 
 /**** name picker ****/
