@@ -433,25 +433,23 @@ HistoryTracker.prototype = {
    * Clearing the whole history is worth 50 points (see below)
    */
   _upScore: function BMT__upScore() {
-    if (!this.enabled)
-      return;
     this._score += 1;
   },
 
   onVisit: function HT_onVisit(uri, vid, time, session, referrer, trans) {
     this._log.trace("onVisit: " + uri.spec);
-    this.addChangedID(this._store._getGUID(uri));
-    this._upScore();
+    if (this.addChangedID(this._store._getGUID(uri)))
+      this._upScore();
   },
   onPageExpired: function HT_onPageExpired(uri, time, entry) {
     this._log.trace("onPageExpired: " + uri.spec);
-    this.addChangedID(this._store._getGUID(uri)); // XXX eek ?
-    this._upScore();
+    if (this.addChangedID(this._store._getGUID(uri))) // XXX eek ?
+      this._upScore();
   },
   onDeleteURI: function HT_onDeleteURI(uri) {
     this._log.trace("onDeleteURI: " + uri.spec);
-    this.addChangedID(this._all[uri]);
-    this._upScore();
+    if (this.addChangedID(this._all[uri]))
+      this._upScore();
   },
   onClearHistory: function HT_onClearHistory() {
     this._log.trace("onClearHistory");
