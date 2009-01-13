@@ -866,37 +866,39 @@ function DoAssertionCheck()
 {
     gClearingForAssertionCheck = false;
 
-    // TEMPORARILY DISABLING ASSERTION CHECKS FOR NOW.  TO RE-ENABLE,
-    // USE COMMENTED LINE TO REPLACE FOLLOWING ONE.
-    // var newAssertionCount = gDebug.assertionCount;
-    var newAssertionCount = 0;
-    var numAsserts = newAssertionCount - gAssertionCount;
-    gAssertionCount = newAssertionCount;
+    if (gDebug.isDebugBuild) {
+        // TEMPORARILY DISABLING ASSERTION CHECKS FOR NOW.  TO RE-ENABLE,
+        // USE COMMENTED LINE TO REPLACE FOLLOWING ONE.
+        // var newAssertionCount = gDebug.assertionCount;
+        var newAssertionCount = 0;
+        var numAsserts = newAssertionCount - gAssertionCount;
+        gAssertionCount = newAssertionCount;
 
-    var minAsserts = gURLs[0].minAsserts;
-    var maxAsserts = gURLs[0].maxAsserts;
+        var minAsserts = gURLs[0].minAsserts;
+        var maxAsserts = gURLs[0].maxAsserts;
 
-    var expectedAssertions = "expected " + minAsserts;
-    if (minAsserts != maxAsserts) {
-        expectedAssertions += " to " + maxAsserts;
-    }
-    expectedAssertions += " assertions";
+        var expectedAssertions = "expected " + minAsserts;
+        if (minAsserts != maxAsserts) {
+            expectedAssertions += " to " + maxAsserts;
+        }
+        expectedAssertions += " assertions";
 
-    if (numAsserts < minAsserts) {
-        ++gTestResults.AssertionUnexpectedFixed;
-        dump("REFTEST TEST-UNEXPECTED-PASS | " + gURLs[0].prettyPath +
-             " | assertion count " + numAsserts + " is less than " +
-             expectedAssertions + "\n");
-    } else if (numAsserts > maxAsserts) {
-        ++gTestResults.AssertionUnexpected;
-        dump("REFTEST TEST-UNEXPECTED-FAIL | " + gURLs[0].prettyPath +
-             " | assertion count " + numAsserts + " is more than " +
-             expectedAssertions + "\n");
-    } else if (numAsserts != 0) {
-        ++gTestResults.AssertionKnown;
-        dump("REFTEST TEST-KNOWN-FAIL | " + gURLs[0].prettyPath +
-             " | assertion count " + numAsserts + " matches " +
-             expectedAssertions + "\n");
+        if (numAsserts < minAsserts) {
+            ++gTestResults.AssertionUnexpectedFixed;
+            dump("REFTEST TEST-UNEXPECTED-PASS | " + gURLs[0].prettyPath +
+                 " | assertion count " + numAsserts + " is less than " +
+                 expectedAssertions + "\n");
+        } else if (numAsserts > maxAsserts) {
+            ++gTestResults.AssertionUnexpected;
+            dump("REFTEST TEST-UNEXPECTED-FAIL | " + gURLs[0].prettyPath +
+                 " | assertion count " + numAsserts + " is more than " +
+                 expectedAssertions + "\n");
+        } else if (numAsserts != 0) {
+            ++gTestResults.AssertionKnown;
+            dump("REFTEST TEST-KNOWN-FAIL | " + gURLs[0].prettyPath +
+                 " | assertion count " + numAsserts + " matches " +
+                 expectedAssertions + "\n");
+        }
     }
 
     // And start the next test.

@@ -138,6 +138,17 @@ nsDebugImpl::Abort(const char *aFile, PRInt32 aLine)
 }
 
 NS_IMETHODIMP
+nsDebugImpl::GetIsDebugBuild(PRBool* aResult)
+{
+#ifdef DEBUG
+  *aResult = PR_TRUE;
+#else
+  *aResult = PR_FALSE;
+#endif
+  return NS_OK;
+}
+
+NS_IMETHODIMP
 nsDebugImpl::GetAssertionCount(PRInt32* aResult)
 {
   *aResult = gAssertionCount;
