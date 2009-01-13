@@ -1014,6 +1014,18 @@ png.h
 #if MOZ_NATIVE_ZLIB==1
 zlib.h
 #endif
+#if MOZ_ENABLE_LIBXUL!=1
+#if BUILD_STATIC_LIBS!=1
+#define WRAP_LCMS_HEADERS
+#endif
+#endif
+#if MOZ_NATIVE_LCMS==1
+#define WRAP_LCMS_HEADERS
+#endif
+#ifdef WRAP_LCMS_HEADERS
+icc34.h
+lcms.h
+#endif
 #ifdef MOZ_ENABLE_STARTUP_NOTIFICATION
 libsn/sn.h
 libsn/sn-common.h
