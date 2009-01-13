@@ -143,7 +143,7 @@
 #define NS_BADCERTHANDLER_CONTRACTID \
   "@mozilla.org/content/xmlhttprequest-bad-cert-handler;1"
 
-#define NS_PROGRESS_EVENT_INTERVAL 350
+#define NS_PROGRESS_EVENT_INTERVAL 50
 
 NS_IMPL_CYCLE_COLLECTION_CLASS(nsDOMEventListenerWrapper)
 
