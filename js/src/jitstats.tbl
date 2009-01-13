@@ -35,6 +35,8 @@
  * the terms of any one of the MPL, the GPL or the LGPL.
  *
  * ***** END LICENSE BLOCK ***** */
+
+/* NB: Keep this list synced with jitstatHandler in trace-test.js. */
 JITSTAT(recorderStarted)
 JITSTAT(recorderAborted)
 JITSTAT(traceCompleted)
