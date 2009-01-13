@@ -1715,6 +1715,10 @@ InsertFontFaceRule(nsCSSFontFaceRule *aRule, gfxUserFontSet* aFontSet,
             face->mFormatFlags |= gfxUserFontSet::FLAG_FORMAT_EOT;   
           } else if (valueString.LowerCaseEqualsASCII("svg")) {
             face->mFormatFlags |= gfxUserFontSet::FLAG_FORMAT_SVG;   
+          } else {
+            // unknown format specified, mark to distinguish from the 
+            // case where no format hints are specified
+            face->mFormatFlags |= gfxUserFontSet::FLAG_FORMAT_UNKNOWN;
           }
           i++;
         }
