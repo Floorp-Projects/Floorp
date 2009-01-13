@@ -1057,8 +1057,10 @@ ProgressController.prototype = {
     //
     // - which fires a onLocationChange message to uri + '#'...
     let selectedBrowser = Browser.selectedBrowser;
-    if (selectedBrowser.lastURI) {
-      var oldSpec = selectedBrowser.lastURI.spec;
+    let lastURI = selectedBrowser.lastURI
+    selectedBrowser.lastURI = aLocationURI;
+    if (lastURI) {
+      var oldSpec = lastURI.spec;
       var oldIndexOfHash = oldSpec.indexOf("#");
       if (oldIndexOfHash != -1)
         oldSpec = oldSpec.substr(0, oldIndexOfHash);
@@ -1074,9 +1076,13 @@ ProgressController.prototype = {
         // var nBox = Browser.getNotificationBox();
         // nBox.removeTransientNotifications();
       }
-    }
-    selectedBrowser.lastURI = aLocationURI;
-    if (aWebProgress.DOMWindow == Browser.selectedBrowser.contentWindow) {
+    } 
+    
+    //don't do anything for about:blank on first display
+    if (!lastURI && location == "about:blank")
+      return
+    
+    if (aWebProgress.DOMWindow == selectedBrowser.contentWindow) {
       BrowserUI.setURI();
     }
   },
