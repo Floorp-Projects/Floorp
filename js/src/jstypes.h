@@ -55,6 +55,7 @@
 #define jstypes_h___
 
 #include <stddef.h>
+#include "jsstdint.h"
 
 /***********************************************************************
 ** MACROS:      JS_EXTERN_API
