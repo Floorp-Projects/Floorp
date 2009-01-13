@@ -593,6 +593,16 @@ if test -n "$_WIN32_MSVC"; then
     SKIP_PATH_CHECKS=1
     SKIP_COMPILER_CHECKS=1
     SKIP_LIBRARY_CHECKS=1
+
+    # Since we're skipping compiler and library checks, hard-code
+    # some facts here.
+
+    # Windows lacks <stdint.h>, but has __int8, and so on.
+    AC_DEFINE(JS_HAVE___INTN)
+    # Windows <stddef.h> defines intptr_t and uintptr_t.
+    # VS2005: http://msdn.microsoft.com/en-us/library/323b6b3k(VS.80).aspx
+    # VS2008: http://msdn.microsoft.com/en-us/library/323b6b3k.aspx
+    AC_DEFINE(JS_STDDEF_H_HAS_INTPTR_T)
 fi
 
 fi # COMPILE_ENVIRONMENT
@@ -2528,6 +2538,28 @@ if test "$ac_cv_siginfo_t" = true ; then
   AC_MSG_RESULT(yes)
 else
   AC_MSG_RESULT(no)
+fi
+
+dnl Find exact-width integer types, or figure them out
+dnl ourselves.
+dnl ========================================================
+dnl Once this is working, we can delete the code for int16_t,
+dnl etc. below.
+
+AC_CHECK_HEADER(stdint.h)
+if test "$ac_cv_header_stdint_h" = yes; then
+    AC_DEFINE(JS_HAVE_STDINT_H)
+else
+    dnl We'll figure them out for ourselves.  List more likely types
+    dnl earlier.  If we ever really encounter a size for which none of
+    dnl the listed types are appropriate, we'll get a configure-time
+    dnl error; just add the right answer.
+    MOZ_N_BYTE_TYPE(JS_INT8_TYPE,  1, [char])
+    MOZ_N_BYTE_TYPE(JS_INT16_TYPE, 2, [short int long])
+    MOZ_N_BYTE_TYPE(JS_INT32_TYPE, 4, [int long 'long long' short])
+    MOZ_N_BYTE_TYPE(JS_INT64_TYPE, 8, [int long 'long long'])
+    MOZ_N_BYTE_TYPE(JS_INTPTR_TYPE, sizeof (void *),
+                                      [int long 'long long' short])
 fi
 
 dnl Check for int16_t, int32_t, int64_t, int64, uint, uint_t, and uint16_t.
