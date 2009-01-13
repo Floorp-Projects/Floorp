@@ -646,6 +646,24 @@ nsWindowWatcher::OpenWindowJSInternal(nsIDOMWindow *aParent,
         nsIWebBrowserChrome::CHROME_DEPENDENT;
     }
 
+    // Make sure to not create dependent windows if our parent is invisible and
+    // isn't a chrome window.  Otherwise we can end up in a bizarre situation
+    // where we can't shut down because an invisible window is open.  If
+    // someone tries to do this, throw.
+    if (!chromeParent &&
+        (chromeFlags & nsIWebBrowserChrome::CHROME_DEPENDENT)) {
+      PRBool parentVisible = PR_TRUE;
+      nsCOMPtr<nsIBaseWindow> parentWindow(do_GetInterface(parentTreeOwner));
+      nsCOMPtr<nsIWidget> parentWidget;
+      if (parentWindow)
+        parentWindow->GetMainWidget(getter_AddRefs(parentWidget));
+      if (parentWidget)
+        parentWidget->IsVisible(parentVisible);
+      if (!parentVisible) {
+        return NS_ERROR_NOT_AVAILABLE;
+      }
+    }
+
     NS_ASSERTION(mWindowCreator,
                  "attempted to open a new window with no WindowCreator");
     rv = NS_ERROR_FAILURE;
@@ -677,21 +695,11 @@ nsWindowWatcher::OpenWindowJSInternal(nsIDOMWindow *aParent,
         if (popupConditions)
           contextFlags |= nsIWindowCreator2::PARENT_IS_LOADING_OR_RUNNING_TIMEOUT;
 
-        PRBool parentVisible = PR_TRUE;
-        if (parentChrome)
-        {
-          nsCOMPtr<nsIBaseWindow> parentWindow(do_GetInterface(parentTreeOwner));
-          nsCOMPtr<nsIWidget> parentWidget;
-          if (parentWindow)
-            parentWindow->GetMainWidget(getter_AddRefs(parentWidget));
-          if (parentWidget)
-            parentWidget->IsVisible(parentVisible);            
-        }
         PRBool cancel = PR_FALSE;
-        rv = windowCreator2->CreateChromeWindow2(
-               parentVisible ? parentChrome.get() : nsnull,
-               chromeFlags, contextFlags, uriToLoad, &cancel,
-               getter_AddRefs(newChrome));
+        rv = windowCreator2->CreateChromeWindow2(parentChrome, chromeFlags,
+                                                 contextFlags, uriToLoad,
+                                                 &cancel,
+                                                 getter_AddRefs(newChrome));
         if (NS_SUCCEEDED(rv) && cancel) {
           newChrome = 0; // just in case
           rv = NS_ERROR_ABORT;
@@ -944,6 +952,7 @@ nsWindowWatcher::OpenWindowJSInternal(nsIDOMWindow *aParent,
   if (isNewToplevelWindow)
     SizeOpenedDocShellItem(newDocShellItem, aParent, sizeSpec);
 
+  // XXXbz isn't windowIsModal always true when windowIsModalContentDialog?
   if (windowIsModal || windowIsModalContentDialog) {
     nsCOMPtr<nsIDocShellTreeOwner> newTreeOwner;
     newDocShellItem->GetTreeOwner(getter_AddRefs(newTreeOwner));
