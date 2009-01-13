@@ -7537,28 +7537,16 @@ dnl ========================================================
 dnl Check for lcms
 dnl ========================================================
 
-MOZ_NATIVE_LCMS=
-MOZ_ARG_ENABLE_BOOL(system-lcms,
-[ --enable-system-lcms Use system lcms (located with pkgconfig)],
-MOZ_NATIVE_LCMS=1,
-MOZ_NATIVE_LCMS= )
-
-if test -z "$MOZ_NATIVE_LCMS"
-then
-    LCMS_CFLAGS=
-    if test "$_WIN32_MSVC"; then
-        if test -z "$BUILD_STATIC_LIBS" -a -z "$MOZ_ENABLE_LIBXUL"; then
-            LCMS_CFLAGS=-DLCMS_DLL
-        fi
-        LCMS_LIBS='$(LIBXUL_DIST)/lib/mozlcms.lib'
-    else
-        LCMS_LIBS='-L$(LIBXUL_DIST)/bin -lmozlcms'
+LCMS_CFLAGS=
+if test "$_WIN32_MSVC"; then
+    if test -z "$BUILD_STATIC_LIBS" -a -z "$MOZ_ENABLE_LIBXUL"; then
+        LCMS_CFLAGS=-DLCMS_DLL
     fi
+    LCMS_LIBS='$(LIBXUL_DIST)/lib/mozlcms.lib'
 else
-    PKG_CHECK_MODULES(LCMS, lcms >= $LCMS_VERSION)
+    LCMS_LIBS='-L$(LIBXUL_DIST)/bin -lmozlcms'
 fi
 
-AC_SUBST(MOZ_NATIVE_LCMS)
 AC_SUBST(LCMS_CFLAGS)
 AC_SUBST(LCMS_LIBS)
 
