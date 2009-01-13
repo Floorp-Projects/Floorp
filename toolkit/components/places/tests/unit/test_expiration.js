@@ -629,7 +629,12 @@ function startExpireBoth() {
   dump("starting expiration test 3: both criteria met\n");
   // force a sync, this will ensure that later we will have the same place in
   // both temp and disk table, and that the expire site cap count is correct.
-  bmsvc.changeBookmarkURI(bookmark, testURI);
+  // adw: Commented out per bug 412132.  The patch to that bug made it illegal
+  // to pass bad item IDs into changeBookmarkURI; |bookmark| was removed up in
+  // run_test, and it's never added or used again.  The only thing this call
+  // ended up doing was updating testURI's frecency and notifying bookmark
+  // observers that testURI had changed.  Neither appears relevant to this test.
+  //bmsvc.changeBookmarkURI(bookmark, testURI);
   // add visits
   // 2 days old, in microseconds
   var age = (Date.now() - (86400 * 2 * 1000)) * 1000;
