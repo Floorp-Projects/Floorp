@@ -50,7 +50,7 @@
 #include <stdio.h>
 
 #include "npapi.h"
-#include "npupp.h"
+#include "npfunctions.h"
 
 #define XP_HFILE HFILE
 
@@ -75,7 +75,7 @@
 #include <sys/stat.h>
 
 #include "npapi.h"
-#include "npupp.h"
+#include "npfunctions.h"
 
 #define XP_HFILE FILE*
 
@@ -97,7 +97,7 @@
 #include <ctype.h>        /* isprint() */
 
 #include "npapi.h"
-#include "npupp.h"
+#include "npfunctions.h"
 
 #define XP_HFILE FILE*
 
@@ -129,7 +129,7 @@
 
 #include "npapi.h"
 
-// The Mixed Mode procInfos defined in npupp.h assume Think C-
+// The Mixed Mode procInfos defined in npfunctions.h assume Think C-
 // style calling conventions.  These conventions are used by
 // Metrowerks with the exception of pointer return types, which
 // in Metrowerks 68K are returned in A0, instead of the standard
@@ -144,7 +144,7 @@
 #endif
 #endif
 
-#include "npupp.h"
+#include "npfunctions.h"
 
 #ifdef __MWERKS__
 #ifndef powerc
