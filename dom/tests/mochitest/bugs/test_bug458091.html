@@ -1,0 +1,101 @@
+<!DOCTYPE HTML>
+<html>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=458091
+-->
+<head>
+  <title>Test for Bug 458091</title>
+  <script type="application/javascript" src="/MochiKit/MochiKit.js"></script>
+  <script type="application/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <script type="application/javascript" src="/tests/SimpleTest/EventUtils.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
+</head>
+<body>
+<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=458091">Mozilla Bug 458091</a>
+
+<div id="content" style="display: none">
+
+</div>
+<pre id="test">
+<a id="testlink1" target="_blank" href="javascript:window.opener.finish(sessionStorage['testItem']);window.close();">Javascript Link</a>
+<a id="testlink2" target="_blank" href="bug458091_child.html">HTTP Link</a>
+<a id="testlink3" target="alreadyOpened" href="bug458091_child.html">Target Link</a>
+<script type="application/javascript">
+
+/** Test for Bug 458091 **/
+
+var gTestWin;
+var gRunningTests = 0;
+
+function runNextTest()
+{
+  if (gTests.length > 0) {
+    var test = gTests.shift();
+    test();
+  } else {
+    SimpleTest.finish();
+  }
+}
+
+function finish(val)
+{
+  is(val, "correct value",
+     "New window should access the correct session storage");
+  if (--gRunningTests == 0) {
+    runNextTest();
+  }
+}
+
+SimpleTest.waitForExplicitFinish();
+
+function test1() {
+  sessionStorage["testItem"] = "correct value";
+
+  gRunningTests++;
+  window.open('javascript:window.opener.finish(sessionStorage["testItem"]);window.close();');
+
+  gRunningTests++;
+  window.open("bug458091_child.html");
+
+  gRunningTests++;
+  sendMouseEvent({type: "click"}, "testlink1");
+
+  gRunningTests++;
+  sendMouseEvent({type: "click"}, "testlink2");
+
+  // targetted load into an existing window
+  var testWin = window.open("about:blank", "alreadyOpened");
+  gRunningTests++;
+  sendMouseEvent({type: "click"}, "testlink3");
+
+  // window.location into an existing window.  Leave the window open
+  // for further tests...
+  gRunningTests++;
+  gTestWin = window.open("about:blank", "testWindow");
+  gTestWin.location = 'javascript:window.opener.finish(sessionStorage["testItem"]);';
+}
+
+function test2() {
+  // Now change session storage and load a new item in gTestWin, to
+  // verify that they properly diverged after window.open().
+  gRunningTests++;
+  sessionStorage["testItem"] = "incorrect value";
+  gTestWin.location = 'javascript:window.opener.finish(sessionStorage["testItem"]);';
+}
+
+function test3()
+{
+  // Now, with session storage still changed, try the window.open()
+  // path, make sure it doesn't overwrite the session storage.
+  gRunningTests++;
+  window.open('javascript:window.opener.finish(sessionStorage["testItem"]);window.close();',
+              "testWindow");
+}
+
+var gTests = [test1, test2, test3];
+runNextTest();
+
+</script>
+</pre>
+</body>
+</html>
