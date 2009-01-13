@@ -51,7 +51,6 @@ XPCSHELL_TESTS = \
   unit \
   $(NULL)
 
-# plugin mochitests only work on UNIX variants, including Mac OS X, at this time
 ifneq (,$(filter gtk2 cocoa windows,$(MOZ_WIDGET_TOOLKIT)))
 ifdef ENABLE_TESTS
 DIRS  += mochitest
