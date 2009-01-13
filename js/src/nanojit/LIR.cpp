@@ -1127,11 +1127,11 @@ namespace nanojit
 		NanoAssert(argc <= (int)MAXARGS);
 		uint32_t words = argwords(argc);
 		int32_t insSz = words + LIR_CALL_SLOTS; // words need for offsets + size of instruction
-		ensureRoom(argc + insSz);  // argc=# possible tramps for args
+		ensureRoom(argc * LIR_FAR_SLOTS + insSz);  // argc=# possible tramps for args
 
 		// Argument deltas are calculated relative to the final LIns,
 		// which is the last word in the cluster.
-		LInsp from = _buf->next() + argc + insSz - 1; 
+		LInsp from = _buf->next() + argc * LIR_FAR_SLOTS + insSz - 1; 
 		for (int32_t i=0; i < argc; i++)
 			makeReachable(args[i], from);
 
