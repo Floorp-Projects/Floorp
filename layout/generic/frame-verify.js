@@ -23,7 +23,7 @@ function process_type(t)
   if ((t.kind == "class" || t.kind == "struct")) {
     if (!t.isIncomplete && inheritsFrom(t, 'nsIFrame')) {
       if (inheritsFrom(t, 'nsISupports'))
-        warning("nsIFrame derivative %s inherits from nsISupports but is not refcounted.".format(t.name));
+        warning("nsIFrame derivative %s inherits from nsISupports but is not refcounted.".format(t.name), t.loc);
       
       let nonFrameBases = [];
       
