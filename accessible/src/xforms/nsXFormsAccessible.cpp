@@ -245,23 +245,6 @@ nsXFormsAccessible::GetDescription(nsAString& aDescription)
   return GetBoundChildElementValue(NS_LITERAL_STRING("hint"), aDescription);
 }
 
-nsresult
-nsXFormsAccessible::GetAttributesInternal(nsIPersistentProperties *aAttributes)
-{
-  NS_ENSURE_ARG_POINTER(aAttributes);
-
-  nsresult rv = nsHyperTextAccessibleWrap::GetAttributesInternal(aAttributes);
-  NS_ENSURE_SUCCESS(rv, rv);
-
-  nsAutoString name;
-  rv = sXFormsService->GetBuiltinTypeName(mDOMNode, name);
-  NS_ENSURE_SUCCESS(rv, rv);
-
-  nsAutoString unused;
-  return aAttributes->SetStringProperty(NS_LITERAL_CSTRING("datatype"),
-                                        name, unused);
-}
-
 NS_IMETHODIMP
 nsXFormsAccessible::GetAllowsAnonChildAccessibles(PRBool *aAllowsAnonChildren)
 {
