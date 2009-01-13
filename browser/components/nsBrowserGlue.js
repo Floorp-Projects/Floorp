@@ -927,12 +927,7 @@ BrowserGlue.prototype = {
     }
   },
 
-#ifdef XP_UNIX
-#ifndef XP_MACOSX
-#define BROKEN_WM_Z_ORDER
-#endif
-#endif
-#ifdef XP_OS2
+#ifndef XP_WIN
 #define BROKEN_WM_Z_ORDER
 #endif
 
