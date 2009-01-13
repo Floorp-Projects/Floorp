@@ -90,5 +90,7 @@
 <!ENTITY extensions.weave.serverURL.title "Server URL">
 <!ENTITY extensions.weave.serverURL.description "Sync your sessions using a different server">
 
-<!ENTITY openPrefsCmd.label "Open Weave Preferences">
-<!ENTITY openPrefsButton.label "Preferences...">
+<!ENTITY fennecOpenPrefsCmd.label "Open Weave Preferences">
+<!ENTITY fennecOpenPrefsButton.label "Details...">
+<!ENTITY fennecPrefsHeader.title "Sync Data with Weave...">
+<!ENTITY fennecPrefsHeader.description "Weave Status Goes Here...">
