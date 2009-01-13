@@ -118,7 +118,7 @@ nsSHistoryObserver::Observe(nsISupports *aSubject, const char *aTopic,
     nsSHistory::EvictGlobalContentViewer();
   } else if (!strcmp(aTopic, NS_CACHESERVICE_EMPTYCACHE_TOPIC_ID) ||
              !strcmp(aTopic, "memory-pressure")) {
-    nsSHistory::EvictAllContentViewers();
+    nsSHistory::EvictAllContentViewersGlobally();
   }
 
   return NS_OK;
@@ -664,6 +664,17 @@ nsSHistory::EvictContentViewers(PRInt32 aPreviousIndex, PRInt32 aIndex)
   return NS_OK;
 }
 
+NS_IMETHODIMP
+nsSHistory::EvictAllContentViewers()
+{
+  // XXXbz we don't actually do a good job of evicting things as we should, so
+  // we might have viewers quite far from mIndex.  So just evict everything.
+  EvictContentViewersInRange(0, mLength);
+  return NS_OK;
+}
+
+
+
 //*****************************************************************************
 //    nsSHistory: nsIWebNavigation
 //*****************************************************************************
@@ -1038,7 +1049,7 @@ nsSHistory::EvictExpiredContentViewerForEntry(nsISHEntry *aEntry)
 
 //static
 void
-nsSHistory::EvictAllContentViewers()
+nsSHistory::EvictAllContentViewersGlobally()
 {
   PRInt32 maxViewers = sHistoryMaxTotalViewers;
   sHistoryMaxTotalViewers = 0;
