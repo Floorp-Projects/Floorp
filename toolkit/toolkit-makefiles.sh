@@ -757,12 +757,6 @@ MAKEFILES_libmar="
   modules/libmar/tool/Makefile
 "
 
-MAKEFILES_lcms="
-  modules/lcms/Makefile
-  modules/lcms/include/Makefile
-  modules/lcms/src/Makefile
-"
-
 add_makefiles "
   $MAKEFILES_db
   $MAKEFILES_dom
@@ -805,7 +799,6 @@ add_makefiles "
   $MAKEFILES_accessible
   $MAKEFILES_zlib
   $MAKEFILES_libmar
-  $MAKEFILES_lcms
 "
 
 #
@@ -839,6 +832,14 @@ if [ "$MOZ_TREE_CAIRO" ] ; then
     gfx/cairo/libpixman/src/Makefile
     gfx/cairo/cairo/src/Makefile
     gfx/cairo/cairo/src/cairo-features.h
+  "
+fi
+
+if [ ! "$MOZ_NATIVE_LCMS" ] ; then
+  add_makefiles "
+    modules/lcms/Makefile
+    modules/lcms/include/Makefile
+    modules/lcms/src/Makefile
   "
 fi
 
