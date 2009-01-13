@@ -46,7 +46,7 @@
 
 static void onChooseDir(HWND hWnd)
 {
-  Logger * logger = (Logger *)GetWindowLong(hWnd, DWL_USER);
+  Logger * logger = (Logger *)GetWindowLongPtr(hWnd, DWLP_USER);
   if(!logger)
     return;
 
@@ -97,7 +97,7 @@ static void onCommand(HWND hWnd, int id, HWND hWndCtl, UINT codeNotify)
 
 static void onApply(HWND hWnd)
 {
-  Logger * logger = (Logger *)GetWindowLong(hWnd, DWL_USER);
+  Logger * logger = (Logger *)GetWindowLongPtr(hWnd, DWLP_USER);
   if(!logger)
     return;
 
@@ -130,7 +130,7 @@ static BOOL onInitDialog(HWND hWnd, HWND hWndFocus, LPARAM lParam)
   if(lParam)
   {
     logger = (Logger *)(((PROPSHEETPAGE *)lParam)->lParam);
-    SetWindowLong(hWnd, DWL_USER, (long)logger);
+    SetWindowLongPtr(hWnd, DWLP_USER, (LONG_PTR)logger);
   }
 
   if(logger)
