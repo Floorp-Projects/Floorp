@@ -84,6 +84,8 @@ _TEST_FILES = \
   threadErrors_worker4.js \
   test_threadTimeouts.html \
   threadTimeouts_worker.js \
+  test_throwingOnerror.html \
+  throwingOnerror_worker.js \
   test_xhr.html \
   xhr_worker.js \
   test_xhrAbort.html \
