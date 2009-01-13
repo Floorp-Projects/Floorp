@@ -142,8 +142,11 @@ extern void     add_history(char *line);
 JS_END_EXTERN_C
 #endif
 
-static JSBool
-GetLine(JSContext *cx, char *bufp, FILE *file, const char *prompt) {
+static char *
+GetLine(FILE *file, const char * prompt)
+{
+    size_t size;
+    char *buffer;
 #ifdef EDITLINE
     /*
      * Use readline only if file is stdin, because there's no way to specify
@@ -151,26 +154,54 @@ GetLine(JSContext *cx, char *bufp, FILE *file, const char *prompt) {
      */
     if (file == stdin) {
         char *linep = readline(prompt);
+        /*
+         * We set it to zero to avoid complaining about inappropriate ioctl
+         * for device in the case of EOF. Looks like errno == 251 if line is
+         * finished with EOF and errno == 25 if there is nothing left
+         * to read.
+         */
+        if (errno == 251 || errno == 25)
+            errno = 0;
         if (!linep)
-            return JS_FALSE;
+            return NULL;
         if (linep[0] != '\0')
             add_history(linep);
-        strcpy(bufp, linep);
-        JS_free(cx, linep);
-        bufp += strlen(bufp);
-        *bufp++ = '\n';
-        *bufp = '\0';
-    } else
+        return linep;
+    }
 #endif
-    {
-        char line[256];
+    size_t len = 0;
+    if (*prompt != '\0') {
         fprintf(gOutFile, prompt);
         fflush(gOutFile);
-        if (!fgets(line, sizeof line, file))
-            return JS_FALSE;
-        strcpy(bufp, line);
     }
-    return JS_TRUE;
+    size = 80;
+    buffer = (char *) malloc(size);
+    if (!buffer)
+        return NULL;
+    char *current = buffer;
+    while (fgets(current, size - len, file)) {
+        len += strlen(current);
+        char *t = buffer + len - 1;
+        if (*t == '\n') {
+            /* Line was read. We remove '\n' and exit. */
+            *t = '\0';
+            return buffer;
+        }
+        if (len + 1 == size) {
+            size = size * 2;
+            char *tmp = (char *) realloc(buffer, size);
+            if (!tmp) {
+                free(buffer);
+                return NULL;
+            }
+            buffer = tmp;
+        }
+        current = buffer + len;
+    }
+    if (len && !ferror(file))
+        return buffer;
+    free(buffer);
+    return NULL;
 }
 
 /* Time-related portability helpers. */
@@ -296,8 +327,8 @@ Process(JSContext *cx, JSObject *obj, char *filename, JSBool forceTTY)
     JSScript *script;
     jsval result;
     JSString *str;
-    char buffer[4096];
-    char *bufp;
+    char *buffer;
+    size_t size;
     int lineno;
     int startline;
     FILE *file;
@@ -356,9 +387,9 @@ Process(JSContext *cx, JSObject *obj, char *filename, JSBool forceTTY)
     /* It's an interactive filehandle; drop into read-eval-print loop. */
     lineno = 1;
     hitEOF = JS_FALSE;
+    size_t len;
+    buffer = NULL;
     do {
-        bufp = buffer;
-        *bufp = '\0';
 
         /*
          * Accumulate lines until we get a 'compilable unit' - one that either
@@ -368,17 +399,50 @@ Process(JSContext *cx, JSObject *obj, char *filename, JSBool forceTTY)
          */
         startline = lineno;
         do {
-            if (!GetLine(cx, bufp, file, startline == lineno ? "js> " : "")) {
+            errno = 0;
+            char *line = GetLine(file, startline == lineno ? "js> " : "");
+            if (!line) {
+                if (errno) {
+                    JS_ReportError(cx, strerror(errno));
+                    free(buffer);
+                    return;
+                }
                 hitEOF = JS_TRUE;
                 break;
             }
-            bufp += strlen(bufp);
+            if (!buffer) {
+                buffer = line;
+                len = strlen(buffer);
+                size = len + 1;
+            } else {
+                /**
+                 * len + 1 is required to store '\n' in the end of line
+                 */
+                size_t newlen = strlen(line) + (len ? len + 1 : 0);
+                if (newlen + 1 > size) {
+                    size = newlen + 1 > size * 2 ? newlen + 1 : size * 2;
+                    char *newBuf = (char *) realloc(buffer, size);
+                    if (!newBuf) {
+                        free(buffer);
+                        free(line);
+                        JS_ReportOutOfMemory(cx);
+                        return;
+                    }
+                    buffer = newBuf;
+                }
+                char *current = buffer + len;
+                if (startline != lineno)
+                    *current++ = '\n';
+                strcpy(current, line);
+                len = newlen;
+                free(line);
+            }
             lineno++;
-        } while (!JS_BufferIsCompilableUnit(cx, obj, buffer, strlen(buffer)));
+        } while (!JS_BufferIsCompilableUnit(cx, obj, buffer, len));
 
         /* Clear any pending exception from previous failed compiles.  */
         JS_ClearPendingException(cx);
-        script = JS_CompileScript(cx, obj, buffer, strlen(buffer), "typein",
+        script = JS_CompileScript(cx, obj, buffer, len, "typein",
                                   startline);
         if (script) {
             if (!compileOnly) {
@@ -393,7 +457,10 @@ Process(JSContext *cx, JSObject *obj, char *filename, JSBool forceTTY)
             }
             JS_DestroyScript(cx, script);
         }
+        *buffer = '\0';
+        len = 0;
     } while (!hitEOF && !gQuitting);
+    free(buffer);
     fprintf(gOutFile, "\n");
     if (file != stdin)
         fclose(file);
