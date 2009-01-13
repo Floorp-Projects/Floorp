@@ -110,6 +110,9 @@ typedef bool         (*NPN_PopPopupsEnabledStateProcPtr)(NPP npp);
 typedef bool         (*NPN_EnumerateProcPtr)(NPP npp, NPObject *obj, NPIdentifier **identifier, uint32_t *count);
 typedef void         (*NPN_PluginThreadAsyncCallProcPtr)(NPP instance, void (*func)(void *), void *userData);
 typedef bool         (*NPN_ConstructProcPtr)(NPP npp, NPObject* obj, const NPVariant *args, uint32_t argCount, NPVariant *result);
+typedef NPError      (*NPN_GetValueForURLPtr)(NPP npp, NPNURLVariable variable, const char *url, char **value, uint32_t *len);
+typedef NPError      (*NPN_SetValueForURLPtr)(NPP npp, NPNURLVariable variable, const char *url, const char *value, uint32_t len);
+typedef NPError      (*NPN_GetAuthenticationInfoPtr)(NPP npp, const char *protocol, const char *host, int32_t port, const char *scheme, const char *realm, char **username, uint32_t *ulen, char **password, uint32_t *plen);
 
 typedef struct _NPPluginFuncs {
   uint16_t size;
@@ -178,6 +181,9 @@ typedef struct _NPNetscapeFuncs {
   NPN_EnumerateProcPtr enumerate;
   NPN_PluginThreadAsyncCallProcPtr pluginthreadasynccall;
   NPN_ConstructProcPtr construct;
+  NPN_GetValueForURLPtr getvalueforurl;
+  NPN_SetValueForURLPtr setvalueforurl;
+  NPN_GetAuthenticationInfoPtr getauthenticationinfo;
 } NPNetscapeFuncs;
 
 #ifdef XP_MACOSX

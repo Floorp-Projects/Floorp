@@ -190,6 +190,30 @@ _releasevariantvalue(NPVariant *variant);
 void NP_CALLBACK
 _setexception(NPObject* npobj, const NPUTF8 *message);
 
+void NP_CALLBACK
+_pushpopupsenabledstate(NPP npp, NPBool enabled);
+
+void NP_CALLBACK
+_poppopupsenabledstate(NPP npp);
+
+typedef void(*PluginThreadCallback)(void *);
+void NP_CALLBACK
+_pluginthreadasynccall(NPP instance, PluginThreadCallback func,
+                       void *userData);
+
+NPError NP_CALLBACK
+_getvalueforurl(NPP instance, NPNURLVariable variable, const char *url,
+                char **value, uint32_t *len);
+NPError NP_CALLBACK
+_setvalueforurl(NPP instance, NPNURLVariable variable, const char *url,
+                const char *value, uint32_t len);
+
+NPError NP_CALLBACK
+_getauthenticationinfo(NPP instance, const char *protocol, const char *host,
+                       int32_t port, const char *scheme, const char *realm,
+                       char **username, uint32_t *ulen, char **password,
+                       uint32_t *plen);
+
 PR_END_EXTERN_C
 
 const char *
