@@ -46,7 +46,7 @@
 
 static void onCommand(HWND hWnd, int id, HWND hWndCtl, UINT codeNotify)
 {
-  CPlugin * pPlugin = (CPlugin *)GetWindowLong(hWnd, DWL_USER);
+  CPlugin * pPlugin = (CPlugin *)GetWindowLongPtr(hWnd, DWLP_USER);
   switch (id)
   {
     case IDC_GET_PLUGIN:
@@ -75,7 +75,7 @@ static BOOL onInitDialog(HWND hWnd, HWND hWndFocus, LPARAM lParam)
   if(pPlugin == NULL)
     return TRUE;
 
-  SetWindowLong(hWnd, DWL_USER, (LONG)pPlugin);
+  SetWindowLongPtr(hWnd, DWLP_USER, (LONG_PTR)pPlugin);
 
   pPlugin->m_hWndDialog = hWnd;
   

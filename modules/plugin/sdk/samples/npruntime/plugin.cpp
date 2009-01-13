@@ -635,7 +635,7 @@ NPBool CPlugin::init(NPWindow* pNPWindow)
 
   // associate window with our CPlugin object so we can access 
   // it in the window procedure
-  SetWindowLong(m_hWnd, GWL_USERDATA, (LONG)this);
+  SetWindowLongPtr(m_hWnd, GWLP_USERDATA, (LONG_PTR)this);
 #endif
 
   m_Window = pNPWindow;
@@ -746,7 +746,7 @@ static LRESULT CALLBACK PluginWinProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM
         RECT rc;
         GetClientRect(hWnd, &rc);
         FrameRect(hdc, &rc, GetStockBrush(BLACK_BRUSH));
-        CPlugin * p = (CPlugin *)GetWindowLong(hWnd, GWL_USERDATA);
+        CPlugin * p = (CPlugin *)GetWindowLongPtr(hWnd, GWLP_USERDATA);
         if(p) {
           if (p->m_String[0] == 0) {
             strcpy("foo", p->m_String);
