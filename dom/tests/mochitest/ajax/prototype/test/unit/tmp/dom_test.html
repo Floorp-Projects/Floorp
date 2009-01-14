@@ -1,0 +1,326 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+        "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml" xml:lang="en" lang="en">
+<head>
+  <title>Prototype Unit test file | Dom</title>
+  <meta http-equiv="content-type" content="text/html; charset=utf-8" />
+  <script type="text/javascript" charset="utf-8">
+    var eventResults = {};
+    var originalElement = window.Element;
+  </script>
+  <script src="../../../dist/prototype.js" type="text/javascript"></script>
+  <script src="../../lib/unittest.js" type="text/javascript"></script>
+  <link rel="stylesheet" href="../../test.css" type="text/css" />
+  
+  
+    <link rel="stylesheet" href="../fixtures/dom.css" type="text/css" charset="utf-8" />
+  
+  
+  
+    <script src="../fixtures/dom.js" type="text/javascript" charset="utf-8"></script>
+  
+
+  <script src="../dom_test.js" type="text/javascript"></script>
+</head>
+<body>
+<h1>Prototype Unit test file</h1>
+<h2>Dom</h2>
+
+<!-- This file is programmatically generated. Do not attempt to modify it. Instead, modify  -->
+
+<!-- Log output start -->
+<div id="testlog"></div>
+<!-- Log output end -->
+
+<!-- HTML Fixtures start -->
+<div id="scroll_test_1">
+  <p id="scroll_test_2">Scroll test</p>
+</div>
+
+<div id="test-visible">visible</div>
+<div id="test-hidden" style="display:none;">hidden</div>
+<div id="test-toggle-visible">visible</div>
+<div id="test-toggle-hidden" style="display:none;">hidden</div>
+<div id="test-hide-visible">visible</div>
+<div id="test-hide-hidden" style="display:none;">hidden</div>
+<div id="test-show-visible">visible</div>
+<div id="test-show-hidden" style="display:none;">hidden</div>
+<div id="removable-container"><div id="removable"></div></div>
+
+<div>
+  <table>
+    <tbody id="table">
+      <tr>
+        <td>Data</td>
+      </tr>
+      <tr>
+        <td id="a_cell">First Row</td>
+      </tr>
+      <tr id="second_row">
+        <td>Second Row</td>
+      </tr>
+    </tbody>
+  </table>
+</div>
+
+<div id="table-container-to-replace">
+  <table>
+    <tbody id="table-to-replace">
+      <tr>
+        <td>Data</td>
+      </tr>
+      <tr>
+        <td id="a_cell-to-replace">First Row</td>
+      </tr>
+      <tr id="second_row-to-replace">
+        <td>Second Row</td>
+      </tr>
+    </tbody>
+  </table>
+</div>
+
+<p class="test">Test paragraph outside of container</p>
+
+<div id="container">
+  <p class="test" id="intended">Test paragraph 1 inside of container</p>
+  <p class="test">Test paragraph 2 inside of container</p>
+  <p class="test">Test paragraph 3 inside of container</p>
+  <p class="test">Test paragraph 4 inside of container</p>
+</div>
+
+<div id="testdiv">to be updated</div>
+<div id="testdiv-replace-container-1"><div id="testdiv-replace-1"></div></div>
+<div id="testdiv-replace-container-2"><div id="testdiv-replace-2"></div></div>
+<div id="testdiv-replace-container-3"><div id="testdiv-replace-3"></div></div>
+<div id="testdiv-replace-container-4"><div id="testdiv-replace-4"></div></div>
+<div id="testdiv-replace-container-5"><div id="testdiv-replace-5"></div></div>
+<div id="testdiv-replace-container-element"><div id="testdiv-replace-element"></div></div>
+<div id="testdiv-replace-container-toelement"><div id="testdiv-replace-toelement"></div></div>
+<div id="testdiv-replace-container-tohtml"><div id="testdiv-replace-tohtml"></div></div>
+<div id="testtable-replace-container"><table id="testtable-replace"></table></div>
+<table id="testrow-replace-container"><tr id="testrow-replace"></tr></table>
+<select id="testoption-replace-container"><option id="testoption-replace"></option><option>stays</option></select>
+<div id="testform-replace-container"><p>some text</p><form id="testform-replace"><input id="testinput-replace" type="text" /></form><p>some text</p></div>
+
+<div id="element_with_visible_overflow" style="overflow:visible">V</div>
+<div id="element_with_hidden_overflow" style="overflow:hidden">H</div>
+<div id="element_with_scroll_overflow" style="overflow:scroll">S</div>
+
+<div id="element_extend_test"> </div>
+
+<div id="element_reextend_test"><div id="discard_1"></div></div>
+
+<div id="test_whitespace"> <span> </span>
+
+
+<div><div></div> </div><span> </span>
+</div>
+
+
+<div id="nav_tests_isolator">
+  <div id="nav_test_first_sibling"></div>
+  <div></div>
+  <p id="nav_test_p" class="test"></p>
+  <span id="nav_test_prev_sibling"></span>
+  
+  <ul id="navigation_test" style="display: none">
+    <!-- comment node to screw things up -->
+    <li class="first"><em>A</em></li>
+    <li><em class="dim">B</em></li>
+    <li id="navigation_test_c">
+    <em>C</em>
+    <ul>
+      <li><em class="dim">E</em></li>
+      <li id="navigation_test_f"><em>F</em></li>
+    </ul>
+    </li>
+    <li class="last"><em>D</em></li>
+  </ul>
+  
+  <div id="navigation_test_next_sibling">
+    <!-- -->
+  </div>
+  
+  <p></p>
+</div>
+
+<div id="class_names">
+  <p class="A"></p>
+  <ul class="A B" id="class_names_ul">
+    <li class="C"></li>
+    <li class="A C"></li>
+    <li class="1"></li>
+  </ul>
+  <div class="B C D"></div>
+  <div id="unextended"></div>
+</div>
+
+<div id="style_test_1" style="display:none;"></div>
+<div id="style_test_2" class="style-test" style="font-size:11px;"></div>
+
+<div id="style_test_3">blah</div>
+<span id="style_test_4">blah</span>
+<span id="style_test_5">blah</span>
+
+<div id="style_test_dimensions_container">
+  <div id="style_test_dimensions" style="background:#ddd;padding:1px;margin:1px;border:1px solid #00f"><div style="height:5px;background:#eee;width:5px;padding:2px;margin:2px;border:2px solid #0f0"> </div>
+  </div>
+</div>
+
+<div id="test_csstext_1">test_csstext_1</div>
+<div id="test_csstext_2">test_csstext_2</div>
+<div id="test_csstext_3" style="border: 1px solid red">test_csstext_3</div>
+<div id="test_csstext_4" style="font-size: 20px">test_csstext_4</div>
+<div id="test_csstext_5">test_csstext_5</div>
+
+<div id="custom_attributes">
+  <div foo="1" bar="2"></div>
+  <div foo="2"></div>
+</div>
+
+<div id="cloned_element_attributes_issue" foo="original"></div>
+<a id="attributes_with_issues_1" href="test.html" accesskey="L" tabindex="50" title="a link" onclick="alert('hello world');"></a>
+<a id="attributes_with_issues_2" href="" accesskey="" tabindex="" title=""></a>
+<a id="attributes_with_issues_3"></a>
+<form id="attributes_with_issues_form" method="post" action="blah" class="blah-class">
+  <input type="hidden" id="id" />
+  <input type="hidden" name="id" />
+  <input type="checkbox" id="action" />
+  <input type="checkbox" name="action" />
+  <input type="text" id="method" />
+  <input type="hidden" name="class" />
+  <input type="checkbox" id="attributes_with_issues_checked" name="a" checked="checked"/>
+  <input type="checkbox" id="attributes_with_issues_disabled" name="b" checked="checked" disabled="disabled"/>
+  <input type="text" id="attributes_with_issues_readonly" name="c" readonly="readonly" value="blech"/>
+  <input type="text" id="attributes_with_issues_regular"  name="d" value="0"/>
+  <input type="date" id="attributes_with_issues_type" value="blech" />
+  <select id="attributes_with_issues_multiple" name="e" multiple="multiple">
+    <option>blech</option>
+    <option>blah</option>
+  </select>
+</form>
+
+<!-- writeAttributes  -->
+<p id="write_attribute_para"></p>
+<a id="write_attribute_link" href="test.html"></a>
+<form action="/dev/null" id="write_attribute_form" method="get" accept-charset="utf-8">
+  <label id="write_attribute_label"></label>
+  <input type="checkbox" name="write_attribute_checkbox" value="" id="write_attribute_checkbox">
+  <input type="checkbox" checked="checked" name="write_attribute_checked_checkbox" value="" id="write_attribute_checked_checkbox">
+  <input type="text" name="write_attribute_input" value="" id="write_attribute_input">
+  <select id="write_attribute_select">
+    <option>Cat</option>
+    <option>Dog</option>
+  </select>
+</form>
+
+<table id="write_attribute_table" cellpadding="6" cellspacing="4">
+  <tr><td id="write_attribute_td">A</td><td>B</td></tr>
+  <tr><td>C</td></tr>
+  <tr><td>D</td><td>E</td><td>F</td></tr>
+</table>
+
+<div id="dom_attribute_precedence">
+  <form action="blech" method="post">
+    <input type="submit" id="update" />
+  </form>
+</div>
+
+<div id="not_floating_none">NFN</div>
+<div id="not_floating_inline" style="float:none">NFI</div>
+<div id="not_floating_style">NFS</div>
+
+<div id="floating_inline" style="float:left">FI</div>
+<div id="floating_style">FS</div>
+<!-- Test Element opacity functions -->
+<img id="op1" alt="op2" src="fixtures/logo.gif" style="opacity:0.5;filter:alpha(opacity=50)" />
+<img id="op2" alt="op2" src="fixtures/logo.gif"/>
+<img id="op3" alt="op3" src="fixtures/logo.gif"/>
+<img id="op4-ie" alt="op3" src="fixtures/logo.gif" style="filter:alpha(opacity=30)" />
+<div id="dimensions-visible"></div>
+<div id="dimensions-display-none"></div>
+<div id="dimensions-visible-pos-rel"></div>
+<div id="dimensions-display-none-pos-rel"></div>
+<div id="dimensions-visible-pos-abs"></div>
+<div id="dimensions-display-none-pos-abs"></div>
+<table border="0" cellspacing="0" cellpadding="0" id="dimensions-table">
+  <tbody id="dimensions-tbody">
+    <tr id="dimensions-tr">
+      <td id="dimensions-td">Data</td>
+    </tr>
+  </tbody>
+</table>
+
+<div id="dimensions-nester" style="width: 500px;">
+  <div id="dimensions-nestee" style="display: none">This is a nested DIV. Lorem ipsum dolor sit amet, consectetur adipisicing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat. Duis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla pariatur. Excepteur sint occaecat cupidatat non proident, sunt in culpa qui officia deserunt mollit anim id est laborum. Lorem ipsum dolor sit amet, consectetur adipisicing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat. Duis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla pariatur. Excepteur sint occaecat cupidatat non proident, sunt in culpa qui officia deserunt mollit anim id est laborum.</div>
+</div>
+	
+
+<p id="test-empty"></p>
+<p id="test-empty-but-contains-whitespace">  
+   
+    
+</p>
+<p id="test-full">content</p>
+<div id="ancestor">
+  <div id="child">
+    <div id="grand-child">
+      <div id="great-grand-child"></div>
+    </div></div><!-- intentional formatting; don't change this line -->
+  <div id="sibling"><div id="grand-sibling"></div></div>
+</div>
+<div id="not-in-the-family"></div>
+
+<div id="insertions-container"><div id="insertions-main"><p>some content.</p></div></div>
+<div id="insertions-node-container"><div id="insertions-node-main"><p>some content.</p></div></div>
+<div id="element-insertions-container"><div id="element-insertions-main"><p>some content.</p></div></div>
+<div id="element-insertions-multiple-container"><div id="element-insertions-multiple-main"><p>some content.</p></div></div>
+<table id="table_for_insertions"></table>
+<table id="table_for_row_insertions"><tr id="row_1"></tr></table>
+<form method="post" action="blah">
+  <select id="select_for_update" name="select_for_update">
+    <option>option 1</option>
+    <option>option 2</option>
+  </select>
+  <select id="select_for_insert_bottom" name="select_for_insert_bottom">
+    <option>option 1</option>
+    <option>option 2</option>
+  </select>
+  <select id="select_for_insert_top" name="select_for_insert_top">
+    <option>option 1</option>
+    <option>option 2</option>
+  </select>
+</form>
+<div id="wrap-container"><p id="wrap"></p></div>
+
+<!-- Positioning methods bench -->
+<div id="body_absolute" style="position: absolute; top: 10px; left: 10px">
+  <div id="absolute_absolute" style="position: absolute; top: 10px; left:10px"> </div>
+  <div id="absolute_relative" style="position: relative; top: 10px; left:10px">
+    <div style="height:10px;font-size:2px">test<span id="inline">test</span></div>
+    <div id="absolute_relative_undefined">XYZ</div>
+  </div>
+  <div id="absolute_fixed" style="position: fixed; top: 10px; left: 10px">
+    <span id="absolute_fixed_absolute" style="position: absolute; top: 10px; left: 10px">foo</span>
+    <span id="absolute_fixed_undefined" style="display:block">bar</span>
+  </div></div>
+<div id="notInlineAbsoluted"></div>
+<div id="inlineAbsoluted" style="position: absolute"></div>
+
+<div id="unextended"></div>
+<div id="identification">
+  <div id="predefined_id"></div>
+  <div></div>
+  <div></div>
+  <div></div>
+  <div id="anonymous_element_3"></div>
+</div>
+
+<div id='elementToViewportDimensions' style='display: none'></div>
+<div id="auto_dimensions" style="height:auto"></div>
+<!-- HTML Fixtures end -->
+</body>
+</html>
+<script type="text/javascript" charset="utf-8">
+  eventResults.endOfDocument = true;
+</script>
