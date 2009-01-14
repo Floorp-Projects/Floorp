@@ -93,7 +93,6 @@ Cu.import("resource://weave/base_records/keys.js", Weave);
 Cu.import("resource://weave/notifications.js", Weave);
 Cu.import("resource://weave/identity.js", Weave);
 Cu.import("resource://weave/stores.js", Weave);
-Cu.import("resource://weave/syncCores.js", Weave);
 Cu.import("resource://weave/engines.js", Weave);
 Cu.import("resource://weave/oauth.js", Weave);
 Cu.import("resource://weave/service.js", Weave); // ??
