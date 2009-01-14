@@ -930,7 +930,7 @@ test(deep2);
 
 function heavyFn1(i) { 
     if (i == 3) {
-        var x = 3;
+	var x = 3;
         return [0, i].map(function (i) i + x);
     }
     return [];
