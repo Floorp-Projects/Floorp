@@ -2552,6 +2552,21 @@ nsNavHistoryQueryResultNode::GetSortingAnnotation(nsACString& aAnnotation) {
   else
     NS_NOTREACHED("We should always have a result");
 }
+
+void
+nsNavHistoryQueryResultNode::RecursiveSort(
+    const char* aData, SortComparator aComparator)
+{
+  void* data = const_cast<void*>(static_cast<const void*>(aData));
+
+  if (!IsContainersQuery())
+    mChildren.Sort(aComparator, data);
+  else
+    for (PRInt32 i = 0; i < mChildren.Count(); i ++)
+      mChildren[i]->GetAsContainer()->RecursiveSort(aData, aComparator);
+}
+
+
 // nsNavHistoryResultNode::OnBeginUpdateBatch
 
 NS_IMETHODIMP

@@ -4381,7 +4381,6 @@ NECKO_COOKIES=1
 NECKO_DISK_CACHE=1
 NECKO_PROTOCOLS_DEFAULT="about data file ftp gopher http res viewsource"
 NECKO_SMALL_BUFFERS=
-JS_STATIC_BUILD=
 XPC_IDISPATCH_SUPPORT=
 
 
@@ -4474,7 +4473,6 @@ basic)
   NECKO_SMALL_BUFFERS=1
   NS_DISABLE_LOGGING=1
   NS_PRINTING=
-  JS_STATIC_BUILD=1
   ;;
 
 minimal)
@@ -4522,7 +4520,6 @@ minimal)
   NECKO_SMALL_BUFFERS=1
   NS_DISABLE_LOGGING=1
   NS_PRINTING=
-  JS_STATIC_BUILD=1
   ;;
 
 *)
@@ -5817,19 +5814,6 @@ MOZ_ARG_DISABLE_BOOL(updater,
 [  --disable-updater       Disable building of updater],
     MOZ_UPDATER=,
     MOZ_UPDATER=1 )
-# The Windows build requires the iconv command line utility
-# in order to build the updater.
-case "$target_os" in
-    msvc*|mks*|cygwin*|mingw*|wince*)
-        if test -n "$MOZ_UPDATER"; then
-            AC_MSG_CHECKING([for iconv])
-            AC_CHECK_PROGS(HOST_ICONV, $HOST_ICONV "iconv", "")
-            if test -z "$HOST_ICONV"; then
-                AC_MSG_ERROR([iconv not found in \$PATH])
-            fi
-        fi
-        ;;
-esac
 AC_SUBST(MOZ_UPDATER)
 
 # app update channel is 'default' when not supplied.
@@ -6557,6 +6541,17 @@ if test -n "$MOZ_VTUNE"; then
 fi
 
 dnl ========================================================
+dnl Zealous JavaScript GC
+dnl ========================================================
+MOZ_ARG_ENABLE_BOOL(gczeal,
+[  --enable-gczeal          Enable zealous JavaScript GCing],
+    JS_GC_ZEAL=1,
+    JS_GC_ZEAL= )
+if test -n "$JS_GC_ZEAL"; then
+    AC_DEFINE(JS_GC_ZEAL)
+fi
+
+dnl ========================================================
 dnl = Enable static checking using gcc-dehydra
 dnl ========================================================
 
@@ -7218,25 +7213,6 @@ else
         AC_DEFINE(MOZ_STATIC_BUILD)
     fi
     XPCOM_LIBS="$DYNAMIC_XPCOM_LIBS"
-fi
-
-dnl ========================================================
-dnl = Force JS to be a static lib
-dnl ========================================================
-MOZ_ARG_ENABLE_BOOL(js-static-build,
-[  --enable-js-static-build  Force js to be a static lib],
-    JS_STATIC_BUILD=1,
-    JS_STATIC_BUILD= )
-
-AC_SUBST(JS_STATIC_BUILD)
-        
-if test -n "$JS_STATIC_BUILD"; then
-    AC_DEFINE(EXPORT_JS_API)
-
-if test -z "$BUILD_STATIC_LIBS"; then
-    AC_MSG_ERROR([--enable-js-static-build is only compatible with --enable-static])
-fi
-
 fi
 
 dnl ========================================================

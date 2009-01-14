@@ -1962,7 +1962,7 @@ pref("ui.panel.default_level_parent", false);
 pref("ui.key.menuAccessKeyFocuses", true);
 pref("layout.css.dpi", -1); // max(96dpi, System setting)
 
-pref("font.alias-list", "sans,sans-serif,serif,monospace");
+pref("font.alias-list", "sans,sans-serif,serif,monospace,Tms Rmn,Helv,Courier,Times New Roman");
 
 pref("font.mathfont-family", "STIXNonUnicode, STIXSize1, STIXGeneral, DejaVu Sans");
 
@@ -2017,18 +2017,18 @@ pref("font.name.monospace.x-cyrillic", "Courier");
 // Unicode fonts
 // Fontconfig will match substrings, so that we only need to list e.g.
 // Times New Roman WT and it will search for the J, SC, TC, K variants.
-// The DejaVu fonts are shipped with eCS, so list them first but include all
+// The DejaVu fonts are shipped with eCS, so list them first but include other
 // fonts that OS/2 users are likely to have.
 pref("font.name.serif.x-unicode", "Times New Roman MT 30");
-pref("font.name-list.serif.x-unicode", "DejaVu Serif, FreeSerif, Times New Roman WT, Times New Roman MT 30, Gentium, Doulos SIL, TITUS Cyberbit Basic, Bitstream Cyberbit, Charis SIL, Georgia, Tms Rmn");
+pref("font.name-list.serif.x-unicode", "DejaVu Serif, FreeSerif, Times New Roman WT, Times New Roman MT 30, Tms Rmn");
 pref("font.name.sans-serif.x-unicode", "Lucida Sans Unicode");
-pref("font.name-list.sans-serif.x-unicode", "DejaVu Sans, FreeSans, Arial Unicode, Lucida Sans Unicode, Code2002, Code2001, Code2000, Arial, Helv");
+pref("font.name-list.sans-serif.x-unicode", "DejaVu Sans, FreeSans, Arial Unicode, Lucida Sans Unicode, Helv");
 pref("font.name.monospace.x-unicode", "DejaVu Sans Mono");
-pref("font.name-list.monospace.x-unicode", "DejaVu Sans Mono, FreeMono, Andale Mono, Monotype Sans Duospace WT J, Courier New, Courier");
+pref("font.name-list.monospace.x-unicode", "DejaVu Sans Mono, FreeMono, Andale Mono, Courier New, Courier");
 pref("font.name.fantasy.x-unicode", "Times New Roman MT 30");
-pref("font.name-list.fantasy.x-unicode", "DejaVu Serif, FreeSerif, Junicode, Times New Roman WT, Times New Roman MT 30, Doulos SIL, TITUS Cyberbit Basic, Bitstream Cyberbit, Charis SIL, Arial Unicode, Lucida Sans Unicode, Code2002, Code2001, Code2000");
+pref("font.name-list.fantasy.x-unicode", "DejaVu Serif, FreeSerif, Times New Roman WT, Times New Roman MT 30");
 pref("font.name.cursive.x-unicode", "Times New Roman MT 30");
-pref("font.name-list.cursive.x-unicode", "DejaVu Serif, FreeSerif, Times New Roman WT, Times New Roman MT 30, Doulos SIL, TITUS Cyberbit Basic, Bitstream Cyberbit, Charis SIL, Arial Unicode, Lucida Sans Unicode, Code2002, Code2001, Code2000");
+pref("font.name-list.cursive.x-unicode", "DejaVu Serif, FreeSerif, Times New Roman WT, Times New Roman MT 30");
 
 pref("font.name.serif.x-western", "Tms Rmn");
 pref("font.name.sans-serif.x-western", "Helv");

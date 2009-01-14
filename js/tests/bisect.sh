@@ -76,7 +76,7 @@ usage: bisect.sh -p product -b branch -e extra\\
     variable            description
     ===============     ============================================================
     -p bisect_product     one of js, firefox
-    -b bisect_branches    one of branches 1.8.0, 1.8.1, 1.9.0, 1.9.1
+    -b bisect_branches    one of branches 1.8.0, 1.8.1, 1.9.0, 1.9.1, 1.9.2
     -e bisect_extra       optional. extra qualifier to pick build tree and mozconfig.
     -T bisect_buildtype   one of build types opt debug
     -t bisect_test        Test to be bisected.
@@ -88,9 +88,9 @@ usage: bisect.sh -p product -b branch -e extra\\
                           bisect_string can contain any extended regular expressions 
                           supported by egrep.
     -G bisect_good        For branches 1.8.0, 1.8.1, 1.9.0, date test passed
-                          For branch 1.9.1, revision test passed
+                          For branch 1.9.1 and later, revision test passed
     -B bisect_bad         For branches, 1.8.0, 1.8.1, 1.9.0 date test failed
-                          For branch 1.9.1, revision test failed. 
+                          For branch 1.9.1 and later, revision test failed. 
 
        If the good revision (test passed) occurred  prior to the bad revision 
        (test failed), the script will search for the first bad revision which 
@@ -267,7 +267,7 @@ EOF
         while true; do
 
             if (( $seconds_index_start+1 >= $seconds_index_stop )); then
-                echo "*** date `date -r ${seconds_array[$seconds_index_stop]}` found ***"
+                echo "*** date `perl -e 'print scalar localtime $ARGV[0];' ${seconds_array[$seconds_index_stop]}` found ***"
                 break;
             fi
 
@@ -279,7 +279,7 @@ EOF
             let seconds_index_middle="($seconds_index_start + $seconds_index_stop)/2"
             let seconds_middle="${seconds_array[$seconds_index_middle]}"
 
-            bisect_middle="`date -r $seconds_middle`"
+            bisect_middle="`perl -e 'print scalar localtime $ARGV[0];' $seconds_middle`"
             export MOZ_CO_DATE="$bisect_middle"
             echo "testing $MOZ_CO_DATE"
 
@@ -314,7 +314,7 @@ EOF
         done
         ;;
 
-    1.9.1)
+    1.9.1|1.9.2)
         #
         # binary search using mercurial
         #

@@ -301,9 +301,7 @@ nsNativeThemeGTK::GetGtkWidgetAndState(PRUint8 aWidgetType, nsIFrame* aFrame,
             aWidgetType == NS_THEME_MENUSEPARATOR ||
             aWidgetType == NS_THEME_MENUARROW) {
           PRBool isTopLevel = PR_FALSE;
-          nsIMenuFrame *menuFrame;
-          CallQueryInterface(aFrame, &menuFrame);
-
+          nsIMenuFrame *menuFrame = do_QueryFrame(aFrame);
           if (menuFrame) {
             isTopLevel = menuFrame->IsOnMenuBar();
           }

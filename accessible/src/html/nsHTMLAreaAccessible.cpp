@@ -120,6 +120,8 @@ NS_IMETHODIMP
 nsHTMLAreaAccessible::GetBounds(PRInt32 *x, PRInt32 *y,
                                 PRInt32 *width, PRInt32 *height)
 {
+  nsresult rv;
+
   // Essentially this uses GetRect on mAreas of nsImageMap from nsImageFrame
 
   *x = *y = *width = *height = 0;
@@ -132,9 +134,7 @@ nsHTMLAreaAccessible::GetBounds(PRInt32 *x, PRInt32 *y,
 
   nsIFrame *frame = GetFrame();
   NS_ENSURE_TRUE(frame, NS_ERROR_FAILURE);
-  nsIImageFrame *imageFrame;
-  nsresult rv = frame->QueryInterface(NS_GET_IID(nsIImageFrame), (void**)&imageFrame);
-  NS_ENSURE_SUCCESS(rv, rv);
+  nsIImageFrame *imageFrame = do_QueryFrame(frame);
 
   nsCOMPtr<nsIImageMap> map;
   imageFrame->GetImageMap(presContext, getter_AddRefs(map));

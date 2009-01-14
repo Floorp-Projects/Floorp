@@ -1022,7 +1022,7 @@ richlistitem[selected="true"][current="true"] > hbox > .ac-result-type-bookmark,
   -moz-appearance: none;
   -moz-window-shadow: none;
   -moz-border-image: url(chrome://browser/skin/hud-panel.png) 26 50 22 18 / 26px 50px 22px 18px repeat;
-  margin-right: 27px;
+  margin-right: -27px;
   margin-top: 1px;
   padding-top: 8px;
   color: #ffffff;
@@ -1088,9 +1088,8 @@ richlistitem[selected="true"][current="true"] > hbox > .ac-result-type-bookmark,
   border-top-color: #212121;
   border-bottom-color: #212121;
   padding: 0;
-  margin: 0;
-  -moz-margin-start: -8px;
-  -moz-margin-end: -8px;
+  margin-left: 4px;
+  margin-right: 4px;
   margin-bottom: 8px !important;
   height:  20px;
 }
@@ -1174,10 +1173,9 @@ richlistitem[selected="true"][current="true"] > hbox > .ac-result-type-bookmark,
   border-bottom: 0 !important;
   border-left: 0 !important;
   -moz-border-top-colors: rgba(0,0,0,0.35) rgba(255,255,255,0.15);
-  margin: 0px;
-  -moz-margin-start: -8px;
-  -moz-margin-end: -8px;
   color: #ffffff !important;
+  /* Implements editBookmarkPanel resizing on folderTree un-collapse. */
+  min-width: 300px;
 }
 
 #editBookmarkPanel #editBMPanel_folderTree:focus {
@@ -1218,7 +1216,6 @@ richlistitem[selected="true"][current="true"] > hbox > .ac-result-type-bookmark,
   border-left: 0 !important;
   -moz-border-top-colors: rgba(0,0,0,0.35) rgba(255,255,255,0.15);
   -moz-border-bottom-colors: rgba(255,255,255,0.30) rgba(0,0,0,0.35) ;
-  margin: 6px -8px !important;
   color: #ffffff !important;
 }
 

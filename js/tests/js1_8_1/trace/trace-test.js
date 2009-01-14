@@ -1,4 +1,4 @@
-/* -*- Mode: C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
+/* -*- Mode: C; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 4 -*- */
 /* ***** BEGIN LICENSE BLOCK *****
  * Version: MPL 1.1/GPL 2.0/LGPL 2.1
  *
@@ -61,7 +61,7 @@ jit(true);
 // The HOTLOOP constant we depend on; only readable from our stats
 // object in debug builds.
 const haveTracemonkey = !!(this.tracemonkey)
-const HOTLOOP = haveTracemonkey ? tracemonkey.HOTLOOP : 2;
+  const HOTLOOP = haveTracemonkey ? tracemonkey.HOTLOOP : 2;
 // The loop count at which we trace
 const RECORDLOOP = HOTLOOP;
 // The loop count at which we run the trace
@@ -74,25 +74,25 @@ var fails = [], passes=[];
 
 function jitstatHandler(f)
 {
-    if (!haveTracemonkey) {
-	return;
-    }
-    // XXXbz this is a nasty hack, but I can't figure out a way to
-    // just use jitstats.tbl here
-    f("recorderStarted");
-    f("recorderAborted");
-    f("traceCompleted");
-    f("sideExitIntoInterpreter");
-    f("typeMapMismatchAtEntry");
-    f("returnToDifferentLoopHeader");
-    f("traceTriggered");
-    f("globalShapeMismatchAtEntry");
-    f("treesTrashed");
-    f("slotPromoted");
-    f("unstableLoopVariable");
-    f("noCompatInnerTrees");
-    f("breakLoopExits");
-    f("returnLoopExits");
+  if (!haveTracemonkey) 
+    return;
+
+  // XXXbz this is a nasty hack, but I can't figure out a way to
+  // just use jitstats.tbl here
+  f("recorderStarted");
+  f("recorderAborted");
+  f("traceCompleted");
+  f("sideExitIntoInterpreter");
+  f("typeMapMismatchAtEntry");
+  f("returnToDifferentLoopHeader");
+  f("traceTriggered");
+  f("globalShapeMismatchAtEntry");
+  f("treesTrashed");
+  f("slotPromoted");
+  f("unstableLoopVariable");
+  f("noCompatInnerTrees");
+  f("breakLoopExits");
+  f("returnLoopExits");
 }
 
 function test(f)
@@ -101,24 +101,66 @@ function test(f)
     // Collect our jit stats
     var localJITstats = {};
     jitstatHandler(function(prop, local, global) {
-                     localJITstats[prop] = tracemonkey[prop];
-                   });
+        localJITstats[prop] = tracemonkey[prop];
+      });
     check(f.name, f(), f.expected, localJITstats, f.jitstats);
   }
+}
+
+function map_test(t, cases)
+{
+  for (var i = 0; i < cases.length; i++) {
+    function c() { return t(cases[i].input); }
+    c.expected = cases[i].expected;
+    c.name = t.name + "(" + uneval(cases[i].input) + ")";
+    test(c);
+  }
+}
+
+// Use this function to compare expected and actual test results.
+// Types must match.
+// For numbers, treat NaN as matching NaN, distinguish 0 and -0, and
+// tolerate a certain degree of error for other values.
+//
+// These are the same criteria used by the tests in js/tests, except that
+// we distinguish 0 and -0.
+function close_enough(expected, actual)
+{
+  if (typeof expected != typeof actual)
+    return false;
+  if (typeof expected != 'number')
+    return actual == expected;
+
+  // Distinguish NaN from other values.  Using x != x comparisons here
+  // works even if tests redefine isNaN.
+  if (actual != actual)
+    return expected != expected
+      if (expected != expected)
+        return false;
+
+  // Tolerate a certain degree of error.
+  if (actual != expected)
+    return Math.abs(actual - expected) <= 1E-10;
+
+  // Distinguish 0 and -0.
+  if (actual == 0)
+    return (1 / actual > 0) == (1 / expected > 0);
+
+  return true;
 }
 
 function check(desc, actual, expected, oldJITstats, expectedJITstats)
 {
   var pass = false;
-  if (expected == actual) {
+  if (close_enough(expected, actual)) {
     pass = true;
     jitstatHandler(function(prop) {
-                     if (expectedJITstats && prop in expectedJITstats &&
-                         expectedJITstats[prop] !=
-                           tracemonkey[prop] - oldJITstats[prop]) {
-                       pass = false;
-                     }
-                   });
+        if (expectedJITstats && prop in expectedJITstats &&
+            expectedJITstats[prop] !=
+            tracemonkey[prop] - oldJITstats[prop]) {
+          pass = false;
+        }
+      });
     if (pass) {
       reportCompare(expected + '', actual + '', desc);
       passes.push(desc);
@@ -130,12 +172,12 @@ function check(desc, actual, expected, oldJITstats, expectedJITstats)
     pass = reportMatch(expected, actual + '', desc);
     if (pass) {
       jitstatHandler(function(prop) {
-		       if (expectedJITstats && prop in expectedJITstats &&
-			   expectedJITstats[prop] !=
-			   tracemonkey[prop] - oldJITstats[prop]) {
-			 pass = false;
-		       }
-		     });
+          if (expectedJITstats && prop in expectedJITstats &&
+              expectedJITstats[prop] !=
+              tracemonkey[prop] - oldJITstats[prop]) {
+            pass = false;
+          }
+        });
     }
     if (pass) {
       passes.push(desc);
@@ -144,33 +186,35 @@ function check(desc, actual, expected, oldJITstats, expectedJITstats)
   }
 
   reportCompare(expected, actual, desc);
+
   fails.push(desc);
   var expectedStats = "";
   if (expectedJITstats) {
-      jitstatHandler(function(prop) {
-                       if (prop in expectedJITstats) {
-                         if (expectedStats)
-                           expectedStats += " ";
-                         expectedStats +=
-                           prop + ": " + expectedJITstats[prop];
-                       }
-                     });
+    jitstatHandler(function(prop) {
+        if (prop in expectedJITstats) {
+          if (expectedStats)
+            expectedStats += " ";
+          expectedStats +=
+            prop + ": " + expectedJITstats[prop];
+        }
+      });
   }
   var actualStats = "";
   if (expectedJITstats) {
-      jitstatHandler(function(prop) {
-                       if (prop in expectedJITstats) {
-                         if (actualStats)
-                           actualStats += " ";
-                         actualStats += prop + ": " + (tracemonkey[prop]-oldJITstats[prop]);
-                       }
-                     });
+    jitstatHandler(function(prop) {
+        if (prop in expectedJITstats) {
+          if (actualStats)
+            actualStats += " ";
+          actualStats += prop + ": " + (tracemonkey[prop]-oldJITstats[prop]);
+        }
+      });
   }
-  print(desc, ": FAILED: expected", typeof(expected), "(", expected, ")",
-	(expectedStats ? " [" + expectedStats + "] " : ""),
-	"!= actual",
-	typeof(actual), "(", actual, ")",
-	(actualStats ? " [" + actualStats + "] " : ""));
+  print(desc, ": FAILED: expected", typeof(expected), 
+        "(", uneval(expected), ")",
+        (expectedStats ? " [" + expectedStats + "] " : ""),
+        "!= actual",
+        typeof(actual), "(", uneval(actual), ")",
+        (actualStats ? " [" + actualStats + "] " : ""));
 }
 
 function ifInsideLoop()
@@ -310,12 +354,12 @@ function lsh_inner(n)
     r = 0x1 << n;
   return r;
 }
-function lsh()
-{
-  return [lsh_inner(15),lsh_inner(55),lsh_inner(1),lsh_inner(0)];
-}
-lsh.expected = "32768,8388608,2,1";
-test(lsh);
+
+map_test (lsh_inner,
+          [{input: 15, expected: 32768},
+           {input: 55, expected: 8388608},
+           {input: 1,  expected: 2},
+           {input: 0,  expected: 1}]);
 
 function rsh_inner(n)
 {
@@ -324,12 +368,11 @@ function rsh_inner(n)
     r = 0x11010101 >> n;
   return r;
 }
-function rsh()
-{
-  return [rsh_inner(8),rsh_inner(5),rsh_inner(35),rsh_inner(-1)];
-}
-rsh.expected = "1114369,8914952,35659808,0";
-test(rsh);
+map_test (rsh_inner,
+          [{input: 8,  expected: 1114369},
+           {input: 5,  expected: 8914952},
+           {input: 35, expected: 35659808},
+           {input: -1, expected: 0}]);
 
 function ursh_inner(n)
 {
@@ -338,19 +381,19 @@ function ursh_inner(n)
     r = -55 >>> n;
   return r;
 }
-function ursh() {
-  return [ursh_inner(8),ursh_inner(33),ursh_inner(0),ursh_inner(1)];
-}
-ursh.expected = "16777215,2147483620,4294967241,2147483620";
-test(ursh);
+map_test (ursh_inner,
+          [{input: 8,  expected: 16777215},
+           {input: 33, expected: 2147483620},
+           {input: 0,  expected: 4294967241},
+           {input: 1,  expected: 2147483620}]);
 
 function doMath_inner(cos)
 {
-    var s = 0;
-    var sin = Math.sin;
-    for (var i = 0; i < 200; i++)
-        s = -Math.pow(sin(i) + cos(i * 0.75), 4);
-    return s;
+  var s = 0;
+  var sin = Math.sin;
+  for (var i = 0; i < 200; i++)
+    s = -Math.pow(sin(i) + cos(i * 0.75), 4);
+  return s;
 }
 function doMath() {
   return doMath_inner(Math.cos);
@@ -359,20 +402,20 @@ doMath.expected = -0.5405549555611059;
 test(doMath);
 
 function fannkuch() {
-   var count = Array(8);
-   var r = 8;
-   var done = 0;
-   while (done < 40) {
-      // write-out the first 30 permutations
-      done += r;
-      while (r != 1) { count[r - 1] = r; r--; }
-      while (true) {
-         count[r] = count[r] - 1;
-         if (count[r] > 0) break;
-         r++;
-      }
-   }
-   return done;
+  var count = Array(8);
+  var r = 8;
+  var done = 0;
+  while (done < 40) {
+    // write-out the first 30 permutations
+    done += r;
+    while (r != 1) { count[r - 1] = r; r--; }
+    while (true) {
+      count[r] = count[r] - 1;
+      if (count[r] > 0) break;
+      r++;
+    }
+  }
+  return done;
 }
 fannkuch.expected = 41;
 test(fannkuch);
@@ -432,20 +475,20 @@ function call()
   var q1 = 0, q2 = 0, q3 = 0, q4 = 0, q5 = 0;
   var o = {};
   function f1() {
-      return 1;
+    return 1;
   }
   function f2(f) {
-      return f();
+    return f();
   }
   o.f = f1;
   for (var i = 0; i < 100; ++i) {
-      q1 += f1();
-      q2 += f2(f1);
-      q3 += glob_f1();
-      q4 += o.f();
-      q5 += glob_f2();
+    q1 += f1();
+    q2 += f2(f1);
+    q3 += glob_f1();
+    q4 += o.f();
+    q5 += glob_f2();
   }
-  var ret = [q1, q2, q3, q4, q5];
+  var ret = String([q1, q2, q3, q4, q5]);
   return ret;
 }
 call.expected =  "100,100,100,100,100";
@@ -471,9 +514,9 @@ function testif() {
 		else
 			q--;
 	}
-    return q;
+  return q;
 }
-testif.expected = "0";
+testif.expected = 0;
 test(testif);
 
 var globalinc = 0;
@@ -509,19 +552,19 @@ function trees() {
     else if ((i & 2) == 0) o[1]++;
     else o[2]++;
   }
-  return o;
+  return String(o);
 }
 trees.expected = "50,25,25";
 test(trees);
 
 function unboxint() {
-    var q = 0;
-    var o = [4];
-    for (var i = 0; i < 100; ++i)
-	q = o[0] << 1;
-    return q;
+  var q = 0;
+  var o = [4];
+  for (var i = 0; i < 100; ++i)
+    q = o[0] << 1;
+  return q;
 }
-unboxint.expected = "8";
+unboxint.expected = 8;
 test(unboxint);
 
 function strings()
@@ -594,10 +637,10 @@ var orNaNTest1, orNaNTest2;
 
 orNaNTest1 = new Function("return orTestHelper(NaN, NaN, 10);");
 orNaNTest1.name = 'orNaNTest1';
-orNaNTest1.expected = '0';
+orNaNTest1.expected = 0;
 orNaNTest2 = new Function("return orTestHelper(NaN, 1, 10);");
 orNaNTest2.name = 'orNaNTest2';
-orNaNTest2.expected = '45';
+orNaNTest2.expected = 45;
 test(orNaNTest1);
 test(orNaNTest2);
 
@@ -613,44 +656,44 @@ function andTestHelper(a, b, n)
 
 if (!testName || testName == "truthies") {
   (function () {
-     var opsies   = ["||", "&&"];
-     var falsies  = [null, undefined, false, NaN, 0, ""];
-     var truthies = [{}, true, 1, 42, 1/0, -1/0, "blah"];
-     var boolies  = [falsies, truthies];
+    var opsies   = ["||", "&&"];
+    var falsies  = [null, undefined, false, NaN, 0, ""];
+    var truthies = [{}, true, 1, 42, 1/0, -1/0, "blah"];
+    var boolies  = [falsies, truthies];
 
-     // The for each here should abort tracing, so that this test framework
-     // relies only on the interpreter while the orTestHelper and andTestHelper
-     //  functions get trace-JITed.
-     for each (var op in opsies) {
-       for (var i in boolies) {
-	 for (var j in boolies[i]) {
-           var x = uneval(boolies[i][j]);
-           for (var k in boolies) {
-             for (var l in boolies[k]) {
-               var y = uneval(boolies[k][l]);
-               var prefix = (op == "||") ? "or" : "and";
-               var f = new Function("return " + prefix + "TestHelper(" + x + "," + y + ",10)");
-               f.name = prefix + "Test(" + x + "," + y + ")";
-               f.expected = eval(x + op + y) ? 45 : 0;
-               test(f);
-             }
-           }
-	 }
-       }
-     }
-   })();
+    // The for each here should abort tracing, so that this test framework
+    // relies only on the interpreter while the orTestHelper and andTestHelper
+    //  functions get trace-JITed.
+    for each (var op in opsies) {
+        for (var i in boolies) {
+          for (var j in boolies[i]) {
+            var x = uneval(boolies[i][j]);
+            for (var k in boolies) {
+              for (var l in boolies[k]) {
+                var y = uneval(boolies[k][l]);
+                var prefix = (op == "||") ? "or" : "and";
+                var f = new Function("return " + prefix + "TestHelper(" + x + "," + y + ",10)");
+                f.name = prefix + "Test(" + x + "," + y + ")";
+                f.expected = eval(x + op + y) ? 45 : 0;
+                test(f);
+              }
+            }
+          }
+        }
+      }
+  })();
 }
 
 function nonEmptyStack1Helper(o, farble) {
-    var a = [];
-    var j = 0;
-    for (var i in o)
-        a[j++] = i;
-    return a.join("");
+  var a = [];
+  var j = 0;
+  for (var i in o)
+    a[j++] = i;
+  return a.join("");
 }
 
 function nonEmptyStack1() {
-    return nonEmptyStack1Helper({a:1,b:2,c:3,d:4,e:5,f:6,g:7,h:8}, "hi");
+  return nonEmptyStack1Helper({a:1,b:2,c:3,d:4,e:5,f:6,g:7,h:8}, "hi");
 }
 
 nonEmptyStack1.expected = "abcdefgh";
@@ -808,18 +851,18 @@ function missingArgTest() {
   }
   return q;
 }
-missingArgTest.expected = "1"
+missingArgTest.expected = 1;
 test(missingArgTest);
 
 JSON = function () {
-    return {
-        stringify: function stringify(value, whitelist) {
-            switch (typeof(value)) {
-              case "object":
-                return value.constructor.name;
-            }
-        }
-    };
+  return {
+  stringify: function stringify(value, whitelist) {
+      switch (typeof(value)) {
+      case "object":
+      return value.constructor.name;
+      }
+    }
+  };
 }();
 
 function missingArgTest2() {
@@ -827,12 +870,12 @@ function missingArgTest2() {
     ["{}", {}],
     ["[]", []],
     ['{"foo":"bar"}', {"foo":"bar"}],
-  ]
+    ]
 
-  var a = [];
+    var a = [];
   for (var i=0; i < testPairs.length; i++) {
     var s = JSON.stringify(testPairs[i][1])
-    a[i] = s;
+      a[i] = s;
   }
   return a.join(",");
 }
@@ -854,106 +897,141 @@ deepForInLoop.expected = "pqrst";
 test(deepForInLoop);
 
 function nestedExit(x) {
-    var q = 0;
-    for (var i = 0; i < 10; ++i)
-	if (x)
+  var q = 0;
+  for (var i = 0; i < 10; ++i)
+  {
+    if (x)
 	    ++q;
+  }
 }
 function nestedExitLoop() {
-    for (var j = 0; j < 10; ++j)
-	nestedExit(j < 7);
-    return "ok";
+  for (var j = 0; j < 10; ++j)
+    nestedExit(j < 7);
+  return "ok";
 }
 nestedExitLoop.expected = "ok";
 test(nestedExitLoop);
 
 function bitsinbyte(b) {
-    var m = 1, c = 0;
-    while(m<0x100) {
-        if(b & m) c++;
-        m <<= 1;
-    }
-    return 1;
+  var m = 1, c = 0;
+  while(m<0x100) {
+    if(b & m) c++;
+    m <<= 1;
+  }
+  return 1;
 }
 function TimeFunc(func) {
-    var x,y;
-    for(var y=0; y<256; y++) func(y);
+  var x,y;
+  for(var y=0; y<256; y++) func(y);
 }
 function nestedExit2() {
-    TimeFunc(bitsinbyte);
-    return "ok";
+  TimeFunc(bitsinbyte);
+  return "ok";
 }
 nestedExit2.expected = "ok";
 test(nestedExit2);
 
 function parsingNumbers() {
-    var s1 = "123";
-    var s1z = "123zzz";
-    var s2 = "123.456";
-    var s2z = "123.456zzz";
+  var s1 = "123";
+  var s1z = "123zzz";
+  var s2 = "123.456";
+  var s2z = "123.456zzz";
 
-    var e1 = 123;
-    var e2 = 123.456;
+  var e1 = 123;
+  var e2 = 123.456;
 
-    var r1, r1z, r2, r2z;
+  var r1, r1z, r2, r2z;
 
-    for (var i = 0; i < 10; i++) {
-	r1 = parseInt(s1);
-	r1z = parseInt(s1z);
-	r2 = parseFloat(s2);
-	r2z = parseFloat(s2z);
-    }
+  for (var i = 0; i < 10; i++) {
+    r1 = parseInt(s1);
+    r1z = parseInt(s1z);
+    r2 = parseFloat(s2);
+    r2z = parseFloat(s2z);
+  }
 
-    if (r1 == e1 && r1z == e1 && r2 == e2 && r2z == e2)
-	return "ok";
-    return "fail";
+  if (r1 == e1 && r1z == e1 && r2 == e2 && r2z == e2)
+    return "ok";
+  return "fail";
 }
 parsingNumbers.expected = "ok";
 test(parsingNumbers);
 
 function matchInLoop() {
-    var k = "hi";
-    for (var i = 0; i < 10; i++) {
-        var result = k.match(/hi/) != null;
-    }
-    return result;
+  var k = "hi";
+  for (var i = 0; i < 10; i++) {
+    var result = k.match(/hi/) != null;
+  }
+  return result;
 }
 matchInLoop.expected = true;
 test(matchInLoop);
 
+function testMatchAsCondition() {
+    var a = ['0', '0', '0', '0'];
+    var r = /0/;
+    "x".q;
+    for (var z = 0; z < 4; z++)
+        a[z].match(r) ? 1 : 2;
+}
+test(testMatchAsCondition);
+
 function deep1(x) {
-    if (x > 90)
-	return 1;
-    return 2;
+  if (x > 90)
+    return 1;
+  return 2;
 }
 function deep2() {
-    for (var i = 0; i < 100; ++i)
-	deep1(i);
-    return "ok";
+  for (var i = 0; i < 100; ++i)
+    deep1(i);
+  return "ok";
 }
 deep2.expected = "ok";
 test(deep2);
 
+function heavyFn1(i) { 
+    if (i == 3) {
+	var x = 3;
+        return [0, i].map(function (i) i + x);
+    }
+    return [];
+}
+function testHeavy() {
+    for (var i = 0; i <= 3; i++)
+        heavyFn1(i);
+}
+test(testHeavy);
+
+function heavyFn2(i) {
+    if (i < 1000)
+        return heavyFn1(i);
+    return function () i;
+}
+function testHeavy2() {
+    for (var i = 0; i <= 3; i++)
+        heavyFn2(i);
+}
+test(testHeavy2);
+
 var merge_type_maps_x = 0, merge_type_maps_y = 0;
 function merge_type_maps() {
-    for (merge_type_maps_x = 0; merge_type_maps_x < 50; ++merge_type_maps_x)
-        if ((merge_type_maps_x & 1) == 1)
+  for (merge_type_maps_x = 0; merge_type_maps_x < 50; ++merge_type_maps_x)
+    if ((merge_type_maps_x & 1) == 1)
 	    ++merge_type_maps_y;
-    return [merge_type_maps_x,merge_type_maps_y].join(",");
+  return [merge_type_maps_x,merge_type_maps_y].join(",");
 }
 merge_type_maps.expected = "50,25";
 test(merge_type_maps)
 
 function inner_double_outer_int() {
-    function f(i) {
-	for (var m = 0; m < 20; ++m)
+  function f(i) {
+    for (var m = 0; m < 20; ++m)
 	    for (var n = 0; n < 100; n += i)
-		;
-	return n;
-    }
-    return f(.5);
+        ;
+    return n;
+  }
+  return f(.5);
 }
-inner_double_outer_int.expected = "100";
+inner_double_outer_int.expected = 100;
 test(inner_double_outer_int);
 
 function newArrayTest()
@@ -969,7 +1047,7 @@ test(newArrayTest);
 function stringSplitTest()
 {
   var s = "a,b"
-  var a = null;
+    var a = null;
   for (var i = 0; i < 10; ++i)
     a = s.split(",");
   return a.join();
@@ -980,7 +1058,7 @@ test(stringSplitTest);
 function stringSplitIntoArrayTest()
 {
   var s = "a,b"
-  var a = [];
+    var a = [];
   for (var i = 0; i < 10; ++i)
     a[i] = s.split(",");
   return a.join();
@@ -989,67 +1067,71 @@ stringSplitIntoArrayTest.expected="a,b,a,b,a,b,a,b,a,b,a,b,a,b,a,b,a,b,a,b";
 test(stringSplitIntoArrayTest);
 
 function forVarInWith() {
-    function foo() ({notk:42});
-    function bar() ({p:1, q:2, r:3, s:4, t:5});
-    var o = foo();
-    var a = [];
-    with (o) {
-        for (var k in bar())
-            a[a.length] = k;
-    }
-    return a.join("");
+  function foo() ({notk:42});
+  function bar() ({p:1, q:2, r:3, s:4, t:5});
+  var o = foo();
+  var a = [];
+  with (o) {
+    for (var k in bar())
+      a[a.length] = k;
+  }
+  return a.join("");
 }
 forVarInWith.expected = "pqrst";
 test(forVarInWith);
 
 function inObjectTest() {
-    var o = {p: 1, q: 2, r: 3, s: 4, t: 5};
-    var r = 0;
-    for (var i in o) {
-        if (!(i in o))
-            break;
-        if ((i + i) in o)
-            break;
-        ++r;
-    }
-    return r;
+  var o = {p: 1, q: 2, r: 3, s: 4, t: 5};
+  var r = 0;
+  for (var i in o) {
+    if (!(i in o))
+      break;
+    if ((i + i) in o)
+      break;
+    ++r;
+  }
+  return r;
 }
 inObjectTest.expected = 5;
 test(inObjectTest);
 
 function inArrayTest() {
-    var a = [0, 1, 2, 3, 4, 5, 6, 7, 8, 9];
-    for (var i = 0; i < a.length; i++) {
-        if (!(i in a))
-            break;
-    }
-    return i;
+  var a = [0, 1, 2, 3, 4, 5, 6, 7, 8, 9];
+  for (var i = 0; i < a.length; i++) {
+    if (!(i in a))
+      break;
+  }
+  return i;
 }
 inArrayTest.expected = 10;
 test(inArrayTest);
 
 function innerLoopIntOuterDouble() {
-    var n = 10000, i=0, j=0, count=0, limit=0;
-    for (i = 1; i <= n; ++i) {
-	limit = i * 1;
-	for (j = 0; j < limit; ++j) {
+  var n = 10000, i=0, j=0, count=0, limit=0;
+  for (i = 1; i <= n; ++i) {
+    limit = i * 1;
+    for (j = 0; j < limit; ++j) {
 	    ++count;
-	}
     }
-    return "" + count;
+  }
+  return "" + count;
 }
 innerLoopIntOuterDouble.expected="50005000";
 test(innerLoopIntOuterDouble);
 
 function outerline(){
-    var i=0;
-    var j=0;
+  var i=0;
+  var j=0;
 
-    for (i = 3; i<= 100000; i+=2)
-	for (j = 3; j < 1000; j+=2)
+  for (i = 3; i<= 100000; i+=2)
+  {
+    for (j = 3; j < 1000; j+=2)
+    {
 	    if ((i & 1) == 1)
-		break;
-    return "ok";
+        break;
+    }
+  }
+  return "ok";
 }
 outerline.expected="ok";
 test(outerline);
@@ -1121,11 +1203,11 @@ function testBranchingUnstableObject() {
   var x = {s: "a"};
   var t = "";
   for (var i=0; i < 100; ++i) {
-      if (i == 51)
-      {
-        x.s = 5;
-      }
-      t += x.s;
+    if (i == 51)
+    {
+      x.s = 5;
+    }
+    t += x.s;
   }
   return t.length;
 }
@@ -1139,12 +1221,12 @@ function testArrayDensityChange() {
     x[i] = "asdf";
   }
   for (var i=0; i < x.length; ++i) {
-      if (i == 51)
-      {
-        x[199] = "asdf";
-      }
-      if (x[i])
-        count += x[i].length;
+    if (i == 51)
+    {
+      x[199] = "asdf";
+    }
+    if (x[i])
+      count += x[i].length;
   }
   return count;
 }
@@ -1152,219 +1234,218 @@ testArrayDensityChange.expected = 404;
 test(testArrayDensityChange);
 
 function testDoubleToStr() {
-    var x = 0.0;
-    var y = 5.5;
-    for (var i = 0; i < 200; i++) {
-       x += parseFloat(y.toString());
-    }
-    return x;
+  var x = 0.0;
+  var y = 5.5;
+  for (var i = 0; i < 200; i++) {
+    x += parseFloat(y.toString());
+  }
+  return x;
 }
 testDoubleToStr.expected = 5.5*200;
 test(testDoubleToStr);
 
 function testNumberToString() {
-    var x = new Number(0);
-    for (var i = 0; i < 4; i++)
-        x.toString();
+  var x = new Number(0);
+  for (var i = 0; i < 4; i++)
+    x.toString();
 }
 test(testNumberToString);
 
 function testDecayingInnerLoop() {
-    var i, j, k = 10;
-    for (i = 0; i < 5000; ++i) {
-	for (j = 0; j < k; ++j);
-	--k;
-    }
-    return i;
+  var i, j, k = 10;
+  for (i = 0; i < 5000; ++i) {
+    for (j = 0; j < k; ++j);
+    --k;
+  }
+  return i;
 }
 testDecayingInnerLoop.expected = 5000;
 test(testDecayingInnerLoop);
 
 function testContinue() {
-    var i;
-    var total = 0;
-    for (i = 0; i < 20; ++i) {
-	if (i == 11)
+  var i;
+  var total = 0;
+  for (i = 0; i < 20; ++i) {
+    if (i == 11)
 	    continue;
-	total++;
-    }
-    return total;
+    total++;
+  }
+  return total;
 }
 testContinue.expected = 19;
 test(testContinue);
 
 function testContinueWithLabel() {
-    var i = 0;
-    var j = 20;
-    checkiandj :
-    while (i<10) {
-	i+=1;
+  var i = 0;
+  var j = 20;
+checkiandj :
+  while (i<10) {
+    i+=1;
 	checkj :
-	while (j>10) {
+    while (j>10) {
 	    j-=1;
 	    if ((j%2)==0)
-		continue checkj;
-	}
+        continue checkj;
     }
-    return i + j;
+  }
+  return i + j;
 }
 testContinueWithLabel.expected = 20;
 test(testContinueWithLabel);
 
 function testDivision() {
-    var a = 32768;
-    var b;
-    while (b !== 1) {
-	b = a / 2;
-	a = b;
-    }
-    return a;
+  var a = 32768;
+  var b;
+  while (b !== 1) {
+    b = a / 2;
+    a = b;
+  }
+  return a;
 }
 testDivision.expected = 1;
 test(testDivision);
 
 function testDivisionFloat() {
-    var a = 32768.0;
-    var b;
-    while (b !== 1) {
-	b = a / 2.0;
-	a = b;
-    }
-    return a === 1.0;
+  var a = 32768.0;
+  var b;
+  while (b !== 1) {
+    b = a / 2.0;
+    a = b;
+  }
+  return a === 1.0;
 }
 testDivisionFloat.expected = true;
 test(testDivisionFloat);
 
 function testToUpperToLower() {
-    var s = "Hello", s1, s2;
-    for (i = 0; i < 100; ++i) {
-	s1 = s.toLowerCase();
-	s2 = s.toUpperCase();
-    }
-    return s1 + s2;
+  var s = "Hello", s1, s2;
+  for (i = 0; i < 100; ++i) {
+    s1 = s.toLowerCase();
+    s2 = s.toUpperCase();
+  }
+  return s1 + s2;
 }
 testToUpperToLower.expected = "helloHELLO";
 test(testToUpperToLower);
 
 function testReplace2() {
-    var s = "H e l l o", s1;
-    for (i = 0; i < 100; ++i) {
-	s1 = s.replace(" ", "");
-    }
-    return s1;
+  var s = "H e l l o", s1;
+  for (i = 0; i < 100; ++i)
+    s1 = s.replace(" ", "");
+  return s1;
 }
 testReplace2.expected = "He l l o";
 test(testReplace2);
 
 function testBitwise() {
-    var x = 10000;
-    var y = 123456;
-    var z = 987234;
-    for (var i = 0; i < 50; i++) {
-        x = x ^ y;
-        y = y | z;
-        z = ~x;
-    }
-    return x + y + z;
+  var x = 10000;
+  var y = 123456;
+  var z = 987234;
+  for (var i = 0; i < 50; i++) {
+    x = x ^ y;
+    y = y | z;
+    z = ~x;
+  }
+  return x + y + z;
 }
 testBitwise.expected = -1298;
 test(testBitwise);
 
 function testSwitch() {
-    var x = 0;
-    var ret = 0;
-    for (var i = 0; i < 100; ++i) {
-        switch (x) {
-            case 0:
-                ret += 1;
-                break;
-            case 1:
-                ret += 2;
-                break;
-            case 2:
-                ret += 3;
-                break;
-            case 3:
-                ret += 4;
-                break;
-            default:
-                x = 0;
-        }
-        x++;
+  var x = 0;
+  var ret = 0;
+  for (var i = 0; i < 100; ++i) {
+    switch (x) {
+    case 0:
+      ret += 1;
+      break;
+    case 1:
+      ret += 2;
+      break;
+    case 2:
+      ret += 3;
+      break;
+    case 3:
+      ret += 4;
+      break;
+    default:
+      x = 0;
     }
-    return ret;
+    x++;
+  }
+  return ret;
 }
 testSwitch.expected = 226;
 test(testSwitch);
 
 function testSwitchString() {
-    var x = "asdf";
-    var ret = 0;
-    for (var i = 0; i < 100; ++i) {
-        switch (x) {
-        case "asdf":
-            x = "asd";
-            ret += 1;
-            break;
-        case "asd":
-            x = "as";
-            ret += 2;
-            break;
-        case "as":
-            x = "a";
-            ret += 3;
-            break;
-        case "a":
-            x = "foo";
-            ret += 4;
-            break;
-        default:
-            x = "asdf";
-        }
+  var x = "asdf";
+  var ret = 0;
+  for (var i = 0; i < 100; ++i) {
+    switch (x) {
+    case "asdf":
+      x = "asd";
+      ret += 1;
+      break;
+    case "asd":
+      x = "as";
+      ret += 2;
+      break;
+    case "as":
+      x = "a";
+      ret += 3;
+      break;
+    case "a":
+      x = "foo";
+      ret += 4;
+      break;
+    default:
+      x = "asdf";
     }
-    return ret;
+  }
+  return ret;
 }
 testSwitchString.expected = 200;
 test(testSwitchString);
 
 function testNegZero1Helper(z) {
-    for (let j = 0; j < 5; ++j) { z = -z; }
-    return Math.atan2(0, -0) == Math.atan2(0, z);
+  for (let j = 0; j < 5; ++j) { z = -z; }
+  return Math.atan2(0, -0) == Math.atan2(0, z);
 }
 
 var testNegZero1 = function() { return testNegZero1Helper(0); }
-testNegZero1.expected = true;
+  testNegZero1.expected = true;
 testNegZero1.name = 'testNegZero1';
 testNegZero1Helper(1);
 test(testNegZero1);
 
 // No test case, just make sure this doesn't assert.
 function testNegZero2() {
-    var z = 0;
-    for (let j = 0; j < 5; ++j) { ({p: (-z)}); }
+  var z = 0;
+  for (let j = 0; j < 5; ++j) { ({p: (-z)}); }
 }
 testNegZero2();
 
 function testConstSwitch() {
-    var x;
-    for (var j=0;j<5;++j) { switch(1.1) { case NaN: case 2: } x = 2; }
-    return x;
+  var x;
+  for (var j=0;j<5;++j) { switch(1.1) { case NaN: case 2: } x = 2; }
+  return x;
 }
 testConstSwitch.expected = 2;
 test(testConstSwitch);
 
 function testConstSwitch2() {
-    var x;
-    for (var j = 0; j < 4; ++j) { switch(0/0) { } }
-    return "ok";
+  var x;
+  for (var j = 0; j < 4; ++j) { switch(0/0) { } }
+  return "ok";
 }
 testConstSwitch2.expected = "ok";
 test(testConstSwitch2);
 
 function testConstIf() {
-    var x;
-    for (var j=0;j<5;++j) { if (1.1 || 5) { } x = 2;}
-    return x;
+  var x;
+  for (var j=0;j<5;++j) { if (1.1 || 5) { } x = 2;}
+  return x;
 }
 testConstIf.expected = 2;
 test(testConstIf);
@@ -1377,7 +1458,7 @@ function testTypeofHole() {
   return a.join(",");
 }
 testTypeofHole.expected = "undefined,undefined,undefined,undefined,undefined,number"
-test(testTypeofHole);
+  test(testTypeofHole);
 
 function testNativeLog() {
   var a = new Array(5);
@@ -1390,206 +1471,206 @@ testNativeLog.expected = "10,10,10,10,10";
 test(testNativeLog);
 
 function test_JSOP_ARGSUB() {
-    function f0() { return arguments[0]; }
-    function f1() { return arguments[1]; }
-    function f2() { return arguments[2]; }
-    function f3() { return arguments[3]; }
-    function f4() { return arguments[4]; }
-    function f5() { return arguments[5]; }
-    function f6() { return arguments[6]; }
-    function f7() { return arguments[7]; }
-    function f8() { return arguments[8]; }
-    function f9() { return arguments[9]; }
-    var a = [];
-    for (var i = 0; i < 10; i++) {
-        a[0] = f0('a');
-        a[1] = f1('a','b');
-        a[2] = f2('a','b','c');
-        a[3] = f3('a','b','c','d');
-        a[4] = f4('a','b','c','d','e');
-        a[5] = f5('a','b','c','d','e','f');
-        a[6] = f6('a','b','c','d','e','f','g');
-        a[7] = f7('a','b','c','d','e','f','g','h');
-        a[8] = f8('a','b','c','d','e','f','g','h','i');
-        a[9] = f9('a','b','c','d','e','f','g','h','i','j');
-    }
-    return a.join("");
+  function f0() { return arguments[0]; }
+  function f1() { return arguments[1]; }
+  function f2() { return arguments[2]; }
+  function f3() { return arguments[3]; }
+  function f4() { return arguments[4]; }
+  function f5() { return arguments[5]; }
+  function f6() { return arguments[6]; }
+  function f7() { return arguments[7]; }
+  function f8() { return arguments[8]; }
+  function f9() { return arguments[9]; }
+  var a = [];
+  for (var i = 0; i < 10; i++) {
+    a[0] = f0('a');
+    a[1] = f1('a','b');
+    a[2] = f2('a','b','c');
+    a[3] = f3('a','b','c','d');
+    a[4] = f4('a','b','c','d','e');
+    a[5] = f5('a','b','c','d','e','f');
+    a[6] = f6('a','b','c','d','e','f','g');
+    a[7] = f7('a','b','c','d','e','f','g','h');
+    a[8] = f8('a','b','c','d','e','f','g','h','i');
+    a[9] = f9('a','b','c','d','e','f','g','h','i','j');
+  }
+  return a.join("");
 }
 test_JSOP_ARGSUB.expected = "abcdefghij";
 test(test_JSOP_ARGSUB);
 
 function test_JSOP_ARGCNT() {
-    function f0() { return arguments.length; }
-    function f1() { return arguments.length; }
-    function f2() { return arguments.length; }
-    function f3() { return arguments.length; }
-    function f4() { return arguments.length; }
-    function f5() { return arguments.length; }
-    function f6() { return arguments.length; }
-    function f7() { return arguments.length; }
-    function f8() { return arguments.length; }
-    function f9() { return arguments.length; }
-    var a = [];
-    for (var i = 0; i < 10; i++) {
-        a[0] = f0('a');
-        a[1] = f1('a','b');
-        a[2] = f2('a','b','c');
-        a[3] = f3('a','b','c','d');
-        a[4] = f4('a','b','c','d','e');
-        a[5] = f5('a','b','c','d','e','f');
-        a[6] = f6('a','b','c','d','e','f','g');
-        a[7] = f7('a','b','c','d','e','f','g','h');
-        a[8] = f8('a','b','c','d','e','f','g','h','i');
-        a[9] = f9('a','b','c','d','e','f','g','h','i','j');
-    }
-    return a.join(",");
+  function f0() { return arguments.length; }
+  function f1() { return arguments.length; }
+  function f2() { return arguments.length; }
+  function f3() { return arguments.length; }
+  function f4() { return arguments.length; }
+  function f5() { return arguments.length; }
+  function f6() { return arguments.length; }
+  function f7() { return arguments.length; }
+  function f8() { return arguments.length; }
+  function f9() { return arguments.length; }
+  var a = [];
+  for (var i = 0; i < 10; i++) {
+    a[0] = f0('a');
+    a[1] = f1('a','b');
+    a[2] = f2('a','b','c');
+    a[3] = f3('a','b','c','d');
+    a[4] = f4('a','b','c','d','e');
+    a[5] = f5('a','b','c','d','e','f');
+    a[6] = f6('a','b','c','d','e','f','g');
+    a[7] = f7('a','b','c','d','e','f','g','h');
+    a[8] = f8('a','b','c','d','e','f','g','h','i');
+    a[9] = f9('a','b','c','d','e','f','g','h','i','j');
+  }
+  return a.join(",");
 }
 test_JSOP_ARGCNT.expected = "1,2,3,4,5,6,7,8,9,10";
 test(test_JSOP_ARGCNT);
 
 function testNativeMax() {
-    var out = [], k;
-    for (var i = 0; i < 5; ++i) {
-        k = Math.max(k, i);
-    }
-    out.push(k);
+  var out = [], k;
+  for (var i = 0; i < 5; ++i) {
+    k = Math.max(k, i);
+  }
+  out.push(k);
 
-    k = 0;
-    for (var i = 0; i < 5; ++i) {
-        k = Math.max(k, i);
-    }
-    out.push(k);
+  k = 0;
+  for (var i = 0; i < 5; ++i) {
+    k = Math.max(k, i);
+  }
+  out.push(k);
 
-    for (var i = 0; i < 5; ++i) {
-        k = Math.max(0, -0);
-    }
-    out.push((1 / k) < 0);
-    return out.join(",");
+  for (var i = 0; i < 5; ++i) {
+    k = Math.max(0, -0);
+  }
+  out.push((1 / k) < 0);
+  return out.join(",");
 }
 testNativeMax.expected = "NaN,4,false";
 test(testNativeMax);
 
 function testFloatArrayIndex() {
-    var a = [];
-    for (var i = 0; i < 10; ++i) {
-	a[3] = 5;
-	a[3.5] = 7;
-    }
-    return a[3] + "," + a[3.5];
+  var a = [];
+  for (var i = 0; i < 10; ++i) {
+    a[3] = 5;
+    a[3.5] = 7;
+  }
+  return a[3] + "," + a[3.5];
 }
 testFloatArrayIndex.expected = "5,7";
 test(testFloatArrayIndex);
 
 function testStrict() {
-    var n = 10, a = [];
-    for (var i = 0; i < 10; ++i) {
-	a[0] = (n === 10);
-	a[1] = (n !== 10);
-	a[2] = (n === null);
-	a[3] = (n == null);
-    }
-    return a.join(",");
+  var n = 10, a = [];
+  for (var i = 0; i < 10; ++i) {
+    a[0] = (n === 10);
+    a[1] = (n !== 10);
+    a[2] = (n === null);
+    a[3] = (n == null);
+  }
+  return a.join(",");
 }
 testStrict.expected = "true,false,false,false";
 test(testStrict);
 
 function testSetPropNeitherMissNorHit() {
-    for (var j = 0; j < 5; ++j) { if (({}).__proto__ = 1) { } }
-    return "ok";
+  for (var j = 0; j < 5; ++j) { if (({}).__proto__ = 1) { } }
+  return "ok";
 }
 testSetPropNeitherMissNorHit.expected = "ok";
 test(testSetPropNeitherMissNorHit);
 
 function testPrimitiveConstructorPrototype() {
-    var f = function(){};
-    f.prototype = false;
-    for (let j=0;j<5;++j) { new f; }
-    return "ok";
+  var f = function(){};
+  f.prototype = false;
+  for (let j=0;j<5;++j) { new f; }
+  return "ok";
 }
 testPrimitiveConstructorPrototype.expected = "ok";
 test(testPrimitiveConstructorPrototype);
 
 function testSideExitInConstructor() {
-    var FCKConfig = {};
-    FCKConfig.CoreStyles =
-	{
+  var FCKConfig = {};
+  FCKConfig.CoreStyles =
+    {
 	    'Bold': { },
 	    'Italic': { },
 	    'FontFace': { },
 	    'Size' :
 	    {
-		Overrides: [ ]
+      Overrides: [ ]
 	    },
 
 	    'Color' :
 	    {
-		Element: '',
-		Styles: {  },
-		Overrides: [  ]
+      Element: '',
+      Styles: {  },
+      Overrides: [  ]
 	    },
 	    'BackColor': {
-		Element : '',
-		Styles : { 'background-color' : '' }
+      Element : '',
+      Styles : { 'background-color' : '' }
 	    },
 
-	};
-    var FCKStyle = function(A) {
-	A.Element;
     };
+  var FCKStyle = function(A) {
+    A.Element;
+  };
 
-    var pass = true;
-    for (var s in FCKConfig.CoreStyles) {
-	var x = new FCKStyle(FCKConfig.CoreStyles[s]);
-	if (!x) pass = false;
-    }
-    return pass;
+  var pass = true;
+  for (var s in FCKConfig.CoreStyles) {
+    var x = new FCKStyle(FCKConfig.CoreStyles[s]);
+    if (!x)
+      pass = false;
+  }
+  return pass;
 }
 testSideExitInConstructor.expected = true;
 test(testSideExitInConstructor);
 
 function testNot() {
-    var a = new Object(), b = null, c = "foo", d = "", e = 5, f = 0, g = 5.5, h = -0, i = true, j = false, k = undefined;
-    var r;
-    for (var i = 0; i < 10; ++i) {
-	r = [!a, !b, !c, !d, !e, !f, !g, !h, !i, !j, !k];
-    }
-    return r.join(",");
+  var a = new Object(), b = null, c = "foo", d = "", e = 5, f = 0, g = 5.5, h = -0, i = true, j = false, k = undefined;
+  var r;
+  for (var i = 0; i < 10; ++i)
+    r = [!a, !b, !c, !d, !e, !f, !g, !h, !i, !j, !k];
+  return r.join(",");
 }
 testNot.expected = "false,true,false,true,false,true,false,true,false,true,true";
 test(testNot);
 
 function doTestDifferingArgc(a, b)
 {
-    var k = 0;
-    for (var i = 0; i < 10; i++)
-    {
-        k += i;
-    }
-    return k;
+  var k = 0;
+  for (var i = 0; i < 10; i++)
+  {
+    k += i;
+  }
+  return k;
 }
 function testDifferingArgc()
 {
-    var x = 0;
-    x += doTestDifferingArgc(1, 2);
-    x += doTestDifferingArgc(1);
-    x += doTestDifferingArgc(1, 2, 3);
-    return x;
+  var x = 0;
+  x += doTestDifferingArgc(1, 2);
+  x += doTestDifferingArgc(1);
+  x += doTestDifferingArgc(1, 2, 3);
+  return x;
 }
 testDifferingArgc.expected = 45*3;
 test(testDifferingArgc);
 
 function doTestMoreArgcThanNargs()
 {
-    var x = 0;
-    for (var i = 0; i < 10; i++)
-    {
-        x = x + arguments[3];
-    }
-    return x;
+  var x = 0;
+  for (var i = 0; i < 10; i++)
+  {
+    x = x + arguments[3];
+  }
+  return x;
 }
 function testMoreArgcThanNargs()
 {
-    return doTestMoreArgcThanNargs(1, 2, 3, 4, 5, 6, 7, 8, 9, 10);
+  return doTestMoreArgcThanNargs(1, 2, 3, 4, 5, 6, 7, 8, 9, 10);
 }
 testMoreArgcThanNargs.expected = 4*10;
 test(testMoreArgcThanNargs);
@@ -1624,320 +1705,317 @@ function testNestedExitStackOuter() {
 }
 testNestedExitStackOuter.expected = 81;
 testNestedExitStackOuter.jitstats = {
-    recorderStarted: 5,
-    recorderAborted: 2,
-    traceTriggered: 9
+recorderStarted: 5,
+recorderAborted: 2,
+traceTriggered: 9
 };
 test(testNestedExitStackOuter);
 
 function testHOTLOOPSize() {
-    return HOTLOOP > 1;
+  return HOTLOOP > 1;
 }
 testHOTLOOPSize.expected = true;
 test(testHOTLOOPSize);
 
 function testMatchStringObject() {
-    var a = new String("foo");
-    var b;
-    for (i = 0; i < 300; i++) {
-	b = a.match(/bar/);
-    }
-    return b;
+  var a = new String("foo");
+  var b;
+  for (i = 0; i < 300; i++)
+    b = a.match(/bar/);
+  return b;
 }
 testMatchStringObject.expected = null;
 test(testMatchStringObject);
 
 function innerSwitch(k)
 {
-    var m = 0;
+  var m = 0;
 
-    switch (k)
-    {
-    case 0:
-        m = 1;
-        break;
-    }
+  switch (k)
+  {
+  case 0:
+    m = 1;
+    break;
+  }
 
-    return m;
+  return m;
 }
 function testInnerSwitchBreak()
 {
-    var r = new Array(5);
-    for (var i = 0; i < 5; i++)
-    {
-        r[i] = innerSwitch(0);
-    }
+  var r = new Array(5);
+  for (var i = 0; i < 5; i++)
+  {
+    r[i] = innerSwitch(0);
+  }
 
-    return r.join(",");
+  return r.join(",");
 }
 testInnerSwitchBreak.expected = "1,1,1,1,1";
 test(testInnerSwitchBreak);
 
 function testArrayNaNIndex()
 {
-    for (var j = 0; j < 4; ++j) { [this[NaN]]; }
-    for (var j = 0; j < 5; ++j) { if([1][-0]) { } }
-    return "ok";
+  for (var j = 0; j < 4; ++j) { [this[NaN]]; }
+  for (var j = 0; j < 5; ++j) { if([1][-0]) { } }
+  return "ok";
 }
 testArrayNaNIndex.expected = "ok";
 test(testArrayNaNIndex);
 
 function innerTestInnerMissingArgs(a,b,c,d)
 {
-        if (a) {
-        } else {
-        }
+  if (a) {
+  } else {
+  }
 }
 function doTestInnerMissingArgs(k)
 {
-    for (i = 0; i < 10; i++) {
-        innerTestInnerMissingArgs(k);
-    }
+  for (i = 0; i < 10; i++) {
+    innerTestInnerMissingArgs(k);
+  }
 }
 function testInnerMissingArgs()
 {
-    doTestInnerMissingArgs(1);
-    doTestInnerMissingArgs(0);
-    return 1;
+  doTestInnerMissingArgs(1);
+  doTestInnerMissingArgs(0);
+  return 1;
 }
 testInnerMissingArgs.expected = 1;  //Expected: that we don't crash.
 test(testInnerMissingArgs);
 
 function regexpLastIndex()
 {
-    var n = 0;
-    var re = /hi/g;
-    var ss = " hi hi hi hi hi hi hi hi hi hi";
-    for (var i = 0; i < 10; i++) {
-        // re.exec(ss);
-        n += (re.lastIndex > 0) ? 3 : 0;
-        re.lastIndex = 0;
-    }
-    return n;
+  var n = 0;
+  var re = /hi/g;
+  var ss = " hi hi hi hi hi hi hi hi hi hi";
+  for (var i = 0; i < 10; i++) {
+    // re.exec(ss);
+    n += (re.lastIndex > 0) ? 3 : 0;
+    re.lastIndex = 0;
+  }
+  return n;
 }
 regexpLastIndex.expected = 0; // 30;
 test(regexpLastIndex);
 
 function testHOTLOOPCorrectness() {
-    var b = 0;
-    for (var i = 0; i < HOTLOOP; ++i) {
-	++b;
-    }
-    return b;
+  var b = 0;
+  for (var i = 0; i < HOTLOOP; ++i)
+    ++b;
+  return b;
 }
 testHOTLOOPCorrectness.expected = HOTLOOP;
 testHOTLOOPCorrectness.jitstats = {
-    recorderStarted: 1,
-    recorderAborted: 0,
-    traceTriggered: 0
+recorderStarted: 1,
+recorderAborted: 0,
+traceTriggered: 0
 };
 // Change the global shape right before doing the test
 this.testHOTLOOPCorrectnessVar = 1;
 test(testHOTLOOPCorrectness);
 
 function testRUNLOOPCorrectness() {
-    var b = 0;
-    for (var i = 0; i < RUNLOOP; ++i) {
-	++b;
-    }
-    return b;
+  var b = 0;
+  for (var i = 0; i < RUNLOOP; ++i) {
+    ++b;
+  }
+  return b;
 }
 testRUNLOOPCorrectness.expected = RUNLOOP;
 testRUNLOOPCorrectness.jitstats = {
-    recorderStarted: 1,
-    recorderAborted: 0,
-    traceTriggered: 1
+recorderStarted: 1,
+recorderAborted: 0,
+traceTriggered: 1
 };
 // Change the global shape right before doing the test
 this.testRUNLOOPCorrectnessVar = 1;
 test(testRUNLOOPCorrectness);
 
 function testDateNow() {
-    // Accessing global.Date for the first time will change the global shape,
-    // so do it before the loop starts; otherwise we have to loop an extra time
-    // to pick things up.
-    var time = Date.now();
-    for (var j = 0; j < RUNLOOP; ++j) {
-	time = Date.now();
-    }
-    return "ok";
+  // Accessing global.Date for the first time will change the global shape,
+  // so do it before the loop starts; otherwise we have to loop an extra time
+  // to pick things up.
+  var time = Date.now();
+  for (var j = 0; j < RUNLOOP; ++j)
+    time = Date.now();
+  return "ok";
 }
 testDateNow.expected = "ok";
 testDateNow.jitstats = {
-    recorderStarted: 1,
-    recorderAborted: 0,
-    traceTriggered: 1
+recorderStarted: 1,
+recorderAborted: 0,
+traceTriggered: 1
 };
 test(testDateNow);
 
 function testINITELEM()
 {
-    var x;
-    for (var i = 0; i < 10; ++i)
-	x = { 0: 5, 1: 5 };
-    return x[0] + x[1];
+  var x;
+  for (var i = 0; i < 10; ++i)
+    x = { 0: 5, 1: 5 };
+  return x[0] + x[1];
 }
 testINITELEM.expected = 10;
 test(testINITELEM);
 
 function testUndefinedBooleanCmp()
 {
-    var t = true, f = false, x = [];
-    for (var i = 0; i < 10; ++i) {
-	x[0] = t == undefined;
-	x[1] = t != undefined;
-	x[2] = t === undefined;
-	x[3] = t !== undefined;
-	x[4] = t < undefined;
-	x[5] = t > undefined;
-	x[6] = t <= undefined;
-	x[7] = t >= undefined;
-	x[8] = f == undefined;
-	x[9] = f != undefined;
-	x[10] = f === undefined;
-	x[11] = f !== undefined;
-	x[12] = f < undefined;
-	x[13] = f > undefined;
-	x[14] = f <= undefined;
-	x[15] = f >= undefined;
-    }
-    return x.join(",");
+  var t = true, f = false, x = [];
+  for (var i = 0; i < 10; ++i) {
+    x[0] = t == undefined;
+    x[1] = t != undefined;
+    x[2] = t === undefined;
+    x[3] = t !== undefined;
+    x[4] = t < undefined;
+    x[5] = t > undefined;
+    x[6] = t <= undefined;
+    x[7] = t >= undefined;
+    x[8] = f == undefined;
+    x[9] = f != undefined;
+    x[10] = f === undefined;
+    x[11] = f !== undefined;
+    x[12] = f < undefined;
+    x[13] = f > undefined;
+    x[14] = f <= undefined;
+    x[15] = f >= undefined;
+  }
+  return x.join(",");
 }
 testUndefinedBooleanCmp.expected = "false,true,false,true,false,false,false,false,false,true,false,true,false,false,false,false";
 test(testUndefinedBooleanCmp);
 
 function testConstantBooleanExpr()
 {
-    for (var j = 0; j < 3; ++j) { if(true <= true) { } }
-    return "ok";
+  for (var j = 0; j < 3; ++j) { if(true <= true) { } }
+  return "ok";
 }
 testConstantBooleanExpr.expected = "ok";
 test(testConstantBooleanExpr);
 
 function testNegativeGETELEMIndex()
 {
-    for (let i=0;i<3;++i) /x/[-4];
-    return "ok";
+  for (let i=0;i<3;++i) /x/[-4];
+  return "ok";
 }
 testNegativeGETELEMIndex.expected = "ok";
 test(testNegativeGETELEMIndex);
 
 function doTestInvalidCharCodeAt(input)
 {
-    var q = "";
-    for (var i = 0; i < 10; i++)
-       q += input.charCodeAt(i);
-    return q;
+  var q = "";
+  for (var i = 0; i < 10; i++)
+    q += input.charCodeAt(i);
+  return q;
 }
 function testInvalidCharCodeAt()
 {
-    return doTestInvalidCharCodeAt("");
+  return doTestInvalidCharCodeAt("");
 }
 testInvalidCharCodeAt.expected = "NaNNaNNaNNaNNaNNaNNaNNaNNaNNaN";
 test(testInvalidCharCodeAt);
 
 function FPQuadCmp()
 {
-    for (let j = 0; j < 3; ++j) { true == 0; }
-    return "ok";
+  for (let j = 0; j < 3; ++j) { true == 0; }
+  return "ok";
 }
 FPQuadCmp.expected = "ok";
 test(FPQuadCmp);
 
 function testDestructuring() {
-    var t = 0;
-    for (var i = 0; i < HOTLOOP + 1; ++i) {
-        var [r, g, b] = [1, 1, 1];
-        t += r + g + b;
+  var t = 0;
+  for (var i = 0; i < HOTLOOP + 1; ++i) {
+    var [r, g, b] = [1, 1, 1];
+    t += r + g + b;
+  }
+  return t
     }
-    return t
-}
 testDestructuring.expected = (HOTLOOP + 1) * 3;
 test(testDestructuring);
 
 function loopWithUndefined1(t, val) {
-    var a = new Array(6);
-    for (var i = 0; i < 6; i++)
-        a[i] = (t > val);
-    return a;
+  var a = new Array(6);
+  for (var i = 0; i < 6; i++)
+    a[i] = (t > val);
+  return a;
 }
 loopWithUndefined1(5.0, 2);     //compile version with val=int
 
 function testLoopWithUndefined1() {
-    return loopWithUndefined1(5.0).join(",");  //val=undefined
+  return loopWithUndefined1(5.0).join(",");  //val=undefined
 };
 testLoopWithUndefined1.expected = "false,false,false,false,false,false";
 test(testLoopWithUndefined1);
 
 function loopWithUndefined2(t, dostuff, val) {
-    var a = new Array(6);
-    for (var i = 0; i < 6; i++) {
-        if (dostuff) {
-            val = 1; 
-            a[i] = (t > val);
-        } else {
-            a[i] = (val == undefined);
-        }
+  var a = new Array(6);
+  for (var i = 0; i < 6; i++) {
+    if (dostuff) {
+      val = 1; 
+      a[i] = (t > val);
+    } else {
+      a[i] = (val == undefined);
     }
-    return a;
+  }
+  return a;
 }
 function testLoopWithUndefined2() {
-    var a = loopWithUndefined2(5.0, true, 2);
-    var b = loopWithUndefined2(5.0, true);
-    var c = loopWithUndefined2(5.0, false, 8);
-    var d = loopWithUndefined2(5.0, false);
-    return [a[0], b[0], c[0], d[0]].join(",");
+  var a = loopWithUndefined2(5.0, true, 2);
+  var b = loopWithUndefined2(5.0, true);
+  var c = loopWithUndefined2(5.0, false, 8);
+  var d = loopWithUndefined2(5.0, false);
+  return [a[0], b[0], c[0], d[0]].join(",");
 }
 testLoopWithUndefined2.expected = "true,true,false,true";
 test(testLoopWithUndefined2);
 
 //test no multitrees assert
 function testBug462388() {
-    var c = 0, v; for each (let x in ["",v,v,v]) { for (c=0;c<4;++c) { } }
-    return true;
+  var c = 0, v; for each (let x in ["",v,v,v]) { for (c=0;c<4;++c) { } }
+  return true;
 }
 testBug462388.expected = true;
 test(testBug462388);
 
 //test no multitrees assert
 function testBug462407() {
-    for each (let i in [0, {}, 0, 1.5, {}, 0, 1.5, 0, 0]) { }
-    return true;
+  for each (let i in [0, {}, 0, 1.5, {}, 0, 1.5, 0, 0]) { }
+  return true;
 }
 testBug462407.expected = true;
 test(testBug462407);
 
 //test no multitrees assert
 function testBug463490() {
-    function f(a, b, d) {
-        for (var i = 0; i < 10; i++) {
-            if (d)
-                b /= 2;
-        }
-        return a + b;
+  function f(a, b, d) {
+    for (var i = 0; i < 10; i++) {
+      if (d)
+        b /= 2;
     }
-    //integer stable loop
-    f(2, 2, false);
-    //double stable loop
-    f(3, 4.5, false);
-    //integer unstable branch
-    f(2, 2, true);
-    return true;
+    return a + b;
+  }
+  //integer stable loop
+  f(2, 2, false);
+  //double stable loop
+  f(3, 4.5, false);
+  //integer unstable branch
+  f(2, 2, true);
+  return true;
 };
 testBug463490.expected = true;
 test(testBug463490);
 
 // Test no assert (bug 464089)
 function shortRecursiveLoop(b, c) {
-    for (var i = 0; i < c; i++) {
-        if (b)
-            shortRecursiveLoop(c - 1);
-    }
+  for (var i = 0; i < c; i++) {
+    if (b)
+      shortRecursiveLoop(c - 1);
+  }
 }
 function testClosingRecursion() {
-    shortRecursiveLoop(false, 1);
-    shortRecursiveLoop(true, 3);
-    return true;
+  shortRecursiveLoop(false, 1);
+  shortRecursiveLoop(true, 3);
+  return true;
 }
 testClosingRecursion.expected = true;
 test(testClosingRecursion);
@@ -1953,29 +2031,29 @@ function testBug465145() {
 }
 
 function testTrueShiftTrue() {
-    var a = new Array(5);
-    for (var i=0;i<5;++i) a[i] = "" + (true << true);
-    return a.join(",");
+  var a = new Array(5);
+  for (var i=0;i<5;++i) a[i] = "" + (true << true);
+  return a.join(",");
 }
 testTrueShiftTrue.expected = "2,2,2,2,2";
 test(testTrueShiftTrue);
 
 // Test no assert or crash
 function testBug465261() {
-    for (let z = 0; z < 2; ++z) { for each (let x in [0, true, (void 0), 0, (void
-    0)]) { if(x){} } };
-    return true;
+  for (let z = 0; z < 2; ++z) { for each (let x in [0, true, (void 0), 0, (void
+                                                                           0)]) { if(x){} } };
+  return true;
 }
 testBug465261.expected = true;
 test(testBug465261);
 
 function testBug465272() {
-    var a = new Array(5);
-    for (j=0;j<5;++j) a[j] = "" + ((5) - 2);
-    return a.join(",");
+  var a = new Array(5);
+  for (j=0;j<5;++j) a[j] = "" + ((5) - 2);
+  return a.join(",");
 }
 testBug465272.expected = "3,3,3,3,3"
-test(testBug465272);
+  test(testBug465272);
 
 function testBug465483() {
 	var a = new Array(4);
@@ -1987,284 +2065,315 @@ testBug465483.expected = '8,aa,bb,NaN';
 test(testBug465483);
 
 function testNullCallee() {
-    try {
-        function f() {
-            var x = new Array(5);
-            for (var i = 0; i < 5; i++)
-                x[i] = a[i].toString();
-            return x.join(',');
-        }
-        f([[1],[2],[3],[4],[5]]);
-        f([null, null, null, null, null]);
-    } catch (e) {
-        return true;
+  try {
+    function f() {
+      var x = new Array(5);
+      for (var i = 0; i < 5; i++)
+        x[i] = a[i].toString();
+      return x.join(',');
     }
-    return false;
+    f([[1],[2],[3],[4],[5]]);
+    f([null, null, null, null, null]);
+  } catch (e) {
+    return true;
+  }
+  return false;
 }
 testNullCallee.expected = true;
 test(testNullCallee);
 
+//test no multitrees assert
+function testBug466128() {
+    for (let a = 0; a < 3; ++a) {
+      for each (let b in [1, 2, "three", 4, 5, 6, 7, 8]) {
+      }
+    }
+    return true;
+}
+testBug466128.expected = true;
+test(testBug466128);
+
+//test no assert
+function testBug465688() {
+    for each (let d in [-0x80000000, -0x80000000]) - -d;
+    return true;
+}
+testBug465688.expected = true;
+test(testBug465688);
+
+//test no assert
+function testBug466262() {
+    var e = 1;
+    for (var d = 0; d < 3; ++d) {
+      if (d == 2) {
+        e = "";
+      }
+    }
+    return true;
+}
+testBug466262.expected = true;
+test(testBug466262);
+
 function testNewDate()
 {
-    // Accessing global.Date for the first time will change the global shape,
-    // so do it before the loop starts; otherwise we have to loop an extra time
-    // to pick things up.
-    var start = new Date();
-    var time = new Date();
-    for (var j = 0; j < RUNLOOP; ++j) {
-	time = new Date();
-    }
-    return time > 0 && time >= start;
+  // Accessing global.Date for the first time will change the global shape,
+  // so do it before the loop starts; otherwise we have to loop an extra time
+  // to pick things up.
+  var start = new Date();
+  var time = new Date();
+  for (var j = 0; j < RUNLOOP; ++j)
+    time = new Date();
+  return time > 0 && time >= start;
 }
 testNewDate.expected = true;
 testNewDate.jitstats = {
-    recorderStarted: 1,
-    recorderAborted: 0,
-    traceTriggered: 1
+recorderStarted: 1,
+recorderAborted: 0,
+traceTriggered: 1
 };
 test(testNewDate);
 
 function testArrayPushPop() {
-    var a = [], sum1 = 0, sum2 = 0;
-    for (var i = 0; i < 10; ++i)
-	sum1 += a.push(i);
-    for (var i = 0; i < 10; ++i)
-	sum2 += a.pop();
-    a.push(sum1);
-    a.push(sum2);
-    return a.join(",");
+  var a = [], sum1 = 0, sum2 = 0;
+  for (var i = 0; i < 10; ++i)
+    sum1 += a.push(i);
+  for (var i = 0; i < 10; ++i)
+    sum2 += a.pop();
+  a.push(sum1);
+  a.push(sum2);
+  return a.join(",");
 }
 testArrayPushPop.expected = "55,45";
 test(testArrayPushPop);
 
 function testResumeOp() {
-    var a = [1,"2",3,"4",5,"6",7,"8",9,"10",11,"12",13,"14",15,"16"];
-    var x = "";
-    while (a.length > 0)
-        x += a.pop();
-    return x;
+  var a = [1,"2",3,"4",5,"6",7,"8",9,"10",11,"12",13,"14",15,"16"];
+  var x = "";
+  while (a.length > 0)
+    x += a.pop();
+  return x;
 }
 testResumeOp.expected = "16151413121110987654321";
 test(testResumeOp);
 
 function testUndefinedCmp() {
-    var a = false;
-    for (var j = 0; j < 4; ++j) { if (undefined < false) { a = true; } }
-    return a;
+  var a = false;
+  for (var j = 0; j < 4; ++j) { if (undefined < false) { a = true; } }
+  return a;
 }
 testUndefinedCmp.expected = false;
 test(testUndefinedCmp);
 
 function reallyDeepNestedExit(schedule)
 {
-    var c = 0, j = 0;
-    for (var i = 0; i < 5; i++) {
-        for (j = 0; j < 4; j++) {
-            c += (schedule[i*4 + j] == 1) ? 1 : 2;
-        }
+  var c = 0, j = 0;
+  for (var i = 0; i < 5; i++) {
+    for (j = 0; j < 4; j++) {
+      c += (schedule[i*4 + j] == 1) ? 1 : 2;
     }
-    return c;
+  }
+  return c;
 }
 function testReallyDeepNestedExit()
 {
-    var c = 0;
-    var schedule1 = new Array(5*4);
-    var schedule2 = new Array(5*4);
-    for (var i = 0; i < 5*4; i++) {
-        schedule1[i] = 0;
-        schedule2[i] = 0;
-    }
-    /**
-     * First innermost compile: true branch runs through.
-     * Second '': false branch compiles new loop edge.
-     * First outer compile: expect true branch.
-     * Second '': hit false branch.
-     */
-    schedule1[0*4 + 3] = 1;
-    var schedules = [schedule1,
-                     schedule2,
-                     schedule1,
-                     schedule2,
-                     schedule2];
+  var c = 0;
+  var schedule1 = new Array(5*4);
+  var schedule2 = new Array(5*4);
+  for (var i = 0; i < 5*4; i++) {
+    schedule1[i] = 0;
+    schedule2[i] = 0;
+  }
+  /**
+   * First innermost compile: true branch runs through.
+   * Second '': false branch compiles new loop edge.
+   * First outer compile: expect true branch.
+   * Second '': hit false branch.
+   */
+  schedule1[0*4 + 3] = 1;
+  var schedules = [schedule1,
+                   schedule2,
+                   schedule1,
+                   schedule2,
+                   schedule2];
 
-    for (var i = 0; i < 5; i++) {
-        c += reallyDeepNestedExit(schedules[i]);
-    }
-    return c;
+  for (var i = 0; i < 5; i++) {
+    c += reallyDeepNestedExit(schedules[i]);
+  }
+  return c;
 }
 testReallyDeepNestedExit.expected = 198;
 test(testReallyDeepNestedExit);
 
 function testRegExpTest() {
-    var r = /abc/;
-    var flag = false;
-    for (var i = 0; i < 10; ++i)
-	flag = r.test("abc");
-    return flag;
+  var r = /abc/;
+  var flag = false;
+  for (var i = 0; i < 10; ++i)
+    flag = r.test("abc");
+  return flag;
 }
 testRegExpTest.expected = true;
 test(testRegExpTest);
 
 function testNumToString() {
-    var r = [];
-    var d = 123456789;
-    for (var i = 0; i < 10; ++i) {
-	r = [
-	     d.toString(),
-	     (-d).toString(),
-	     d.toString(10),
-	     (-d).toString(10),
-	     d.toString(16),
-	     (-d).toString(16),
-	     d.toString(36),
-	     (-d).toString(36)
-        ];
-    }
-    return r.join(",");
+  var r = [];
+  var d = 123456789;
+  for (var i = 0; i < 10; ++i) {
+    r = [
+      d.toString(),
+      (-d).toString(),
+      d.toString(10),
+      (-d).toString(10),
+      d.toString(16),
+      (-d).toString(16),
+      d.toString(36),
+      (-d).toString(36)
+      ];
+  }
+  return r.join(",");
 }
 testNumToString.expected = "123456789,-123456789,123456789,-123456789,75bcd15,-75bcd15,21i3v9,-21i3v9";
 test(testNumToString);
 
 function testSubstring() {
-    for (var i = 0; i < 5; ++i) {
-        actual = "".substring(5);
-    }
-    return actual;
+  for (var i = 0; i < 5; ++i) {
+    actual = "".substring(5);
+  }
+  return actual;
 }
 testSubstring.expected = "";
 test(testSubstring);
 
 function testForInLoopChangeIteratorType() {
-    for(y in [0,1,2]) y = NaN;
-    (function(){
-        [].__proto__.u = void 0;
-        for (let y in [5,6,7,8])
-            y = NaN;
-        delete [].__proto__.u;
-    })()
+  for(y in [0,1,2]) y = NaN;
+  (function(){
+    [].__proto__.u = void 0;
+    for (let y in [5,6,7,8])
+      y = NaN;
+    delete [].__proto__.u;
+  })()
     return "ok";
 }
 testForInLoopChangeIteratorType.expected = "ok";
 test(testForInLoopChangeIteratorType);
 
 function testGrowDenseArray() {
-    var a = new Array();
-    for (var i = 0; i < 10; ++i)
-	a[i] |= 5;
-    return a.join(",");
+  var a = new Array();
+  for (var i = 0; i < 10; ++i)
+    a[i] |= 5;
+  return a.join(",");
 }
 testGrowDenseArray.expected = "5,5,5,5,5,5,5,5,5,5";
 test(testGrowDenseArray);
 
 function testCallProtoMethod() {
-    function X() { this.x = 1; }
-    X.prototype.getName = function () { return "X"; }
+  function X() { this.x = 1; }
+  X.prototype.getName = function () { return "X"; }
 
-    function Y() { this.x = 2; }
-    Y.prototype.getName = function() "Y";
+  function Y() { this.x = 2; }
+  Y.prototype.getName = function() "Y";
 
-    var a = [new X, new X, new X, new X, new Y];
-    var s = '';
-    for (var i = 0; i < a.length; i++)
-        s += a[i].getName();
-    return s;
+  var a = [new X, new X, new X, new X, new Y];
+  var s = '';
+  for (var i = 0; i < a.length; i++)
+    s += a[i].getName();
+  return s;
 }
 testCallProtoMethod.expected = 'XXXXY';
 test(testCallProtoMethod);
 
 function testTypeUnstableForIn() {
-    var a = [1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16];
-    var x = 0;
-    for (var i in a) {
-        i = parseInt(i);
-        x++;
-    }
-    return x;
+  var a = [1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16];
+  var x = 0;
+  for (var i in a) {
+    i = parseInt(i);
+    x++;
+  }
+  return x;
 }
 testTypeUnstableForIn.expected = 16;
 test(testTypeUnstableForIn);
 
 function testAddUndefined() {
-    for (var j = 0; j < 3; ++j)
-        (0 + void 0) && 0;
+  for (var j = 0; j < 3; ++j)
+    (0 + void 0) && 0;
 }
 test(testAddUndefined);
 
 function testStringify() {
-    var t = true, f = false, u = undefined, n = 5, d = 5.5, s = "x";
-    var a = [];
-    for (var i = 0; i < 10; ++i) {
-	a[0] = "" + t;
-	a[1] = t + "";
-	a[2] = "" + f;
-	a[3] = f + "";
-	a[4] = "" + u;
-	a[5] = u + "";
-	a[6] = "" + n;
-	a[7] = n + "";
-	a[8] = "" + d;
-	a[9] = d + "";
-	a[10] = "" + s;
-	a[11] = s + "";
-    }
-    return a.join(",");
+  var t = true, f = false, u = undefined, n = 5, d = 5.5, s = "x";
+  var a = [];
+  for (var i = 0; i < 10; ++i) {
+    a[0] = "" + t;
+    a[1] = t + "";
+    a[2] = "" + f;
+    a[3] = f + "";
+    a[4] = "" + u;
+    a[5] = u + "";
+    a[6] = "" + n;
+    a[7] = n + "";
+    a[8] = "" + d;
+    a[9] = d + "";
+    a[10] = "" + s;
+    a[11] = s + "";
+  }
+  return a.join(",");
 }
 testStringify.expected = "true,true,false,false,undefined,undefined,5,5,5.5,5.5,x,x";
 test(testStringify);
 
 function testObjectToString() {
-    var o = {toString: function()"foo"};
-    var s = "";
-    for (var i = 0; i < 10; i++)
-        s += o;
-    return s;
+  var o = {toString: function()"foo"};
+  var s = "";
+  for (var i = 0; i < 10; i++)
+    s += o;
+  return s;
 }
 testObjectToString.expected = "foofoofoofoofoofoofoofoofoofoo";
 test(testObjectToString);
 
 function testObjectToNumber() {
-    var o = {valueOf: function()-3};
-    var x = 0;
-    for (var i = 0; i < 10; i++)
-        x -= o;
-    return x;
+  var o = {valueOf: function()-3};
+  var x = 0;
+  for (var i = 0; i < 10; i++)
+    x -= o;
+  return x;
 }
 testObjectToNumber.expected = 30;
 test(testObjectToNumber);
 
 function my_iterator_next() {
-    if (this.i == 10) {
-        this.i = 0;
-        throw this.StopIteration;
-    }
-    return this.i++;
+  if (this.i == 10) {
+    this.i = 0;
+    throw this.StopIteration;
+  }
+  return this.i++;
 }
 function testCustomIterator() {
-    var o = {
-        __iterator__: function () {
-            return {
-                i: 0,
-                next: my_iterator_next,
-                StopIteration: StopIteration
-            };
-        }
-    };
-    var a=[];
-    for (var k = 0; k < 100; k += 10) {
-        for(var j in o) {
-            a[k + (j >> 0)] = j*k;
-        }
+  var o = {
+  __iterator__: function () {
+      return {
+      i: 0,
+      next: my_iterator_next,
+      StopIteration: StopIteration
+      };
     }
-    return a.join();
+  };
+  var a=[];
+  for (var k = 0; k < 100; k += 10) {
+    for(var j in o) {
+      a[k + (j >> 0)] = j*k;
+    }
+  }
+  return a.join();
 }
 testCustomIterator.expected = "0,0,0,0,0,0,0,0,0,0,0,10,20,30,40,50,60,70,80,90,0,20,40,60,80,100,120,140,160,180,0,30,60,90,120,150,180,210,240,270,0,40,80,120,160,200,240,280,320,360,0,50,100,150,200,250,300,350,400,450,0,60,120,180,240,300,360,420,480,540,0,70,140,210,280,350,420,490,560,630,0,80,160,240,320,400,480,560,640,720,0,90,180,270,360,450,540,630,720,810";
 test(testCustomIterator);
 
 function bug464403() {
-    print(8);
-    var u = [print, print, function(){}]
+  print(8);
+  var u = [print, print, function(){}]
     for each (x in u) for (u.e in [1,1,1,1]);
-    return "ok";
+  return "ok";
 }
 bug464403.expected = "ok";
 test(bug464403);
@@ -2300,180 +2409,1678 @@ testObjectOrderedCmp2.expected = "true,true,true,true,true";
 test(testObjectOrderedCmp2);
 
 function testLogicalNotNaN() {
-    var i = 0;
-    var a = new Array(5);
-    while (i < a.length)
-        a[i++] = !NaN;
-    return a.join();
+  var i = 0;
+  var a = new Array(5);
+  while (i < a.length)
+    a[i++] = !NaN;
+  return a.join();
 }
 testLogicalNotNaN.expected = "true,true,true,true,true";
 test(testLogicalNotNaN);
 
 function testStringToInt32() {
-    var s = "";
-    for (let j = 0; j < 5; ++j) s += ("1e+81" ^  3);
-    return s;
+  var s = "";
+  for (let j = 0; j < 5; ++j) s += ("1e+81" ^  3);
+  return s;
 }
 testStringToInt32.expected = "33333";
 test(testStringToInt32);
 
 function testIn() {
-    var array = [3];
-    var obj = { "-1": 5, "1.7": 3, "foo": 5, "1": 7 };
-    var a = [];
-    for (let j = 0; j < 5; ++j) {
-        a.push("0" in array);
-        a.push(-1 in obj);
-        a.push(1.7 in obj);
-        a.push("foo" in obj);
-        a.push(1 in obj);
-        a.push("1" in array);  
-        a.push(-2 in obj);
-        a.push(2.7 in obj);
-        a.push("bar" in obj);
-        a.push(2 in obj);    
-    }
-    return a.join(",");
+  var array = [3];
+  var obj = { "-1": 5, "1.7": 3, "foo": 5, "1": 7 };
+  var a = [];
+  for (let j = 0; j < 5; ++j) {
+    a.push("0" in array);
+    a.push(-1 in obj);
+    a.push(1.7 in obj);
+    a.push("foo" in obj);
+    a.push(1 in obj);
+    a.push("1" in array);  
+    a.push(-2 in obj);
+    a.push(2.7 in obj);
+    a.push("bar" in obj);
+    a.push(2 in obj);    
+  }
+  return a.join(",");
 }
 testIn.expected = "true,true,true,true,true,false,false,false,false,false,true,true,true,true,true,false,false,false,false,false,true,true,true,true,true,false,false,false,false,false,true,true,true,true,true,false,false,false,false,false,true,true,true,true,true,false,false,false,false,false";
 test(testIn);
 
 function testBranchCse() {
-    empty = [];
-    out = [];
-    for (var j=0;j<10;++j) { empty[42]; out.push((1 * (1)) | ""); }
-    return out.join(",");
+  empty = [];
+  out = [];
+  for (var j=0;j<10;++j) { empty[42]; out.push((1 * (1)) | ""); }
+  return out.join(",");
 }
 testBranchCse.expected = "1,1,1,1,1,1,1,1,1,1";
 test(testBranchCse);
 
 function testMulOverflow() {
-    var a = [];
-    for (let j=0;j<5;++j) a.push(0 | ((0x60000009) * 0x60000009));
-    return a.join(",");
+  var a = [];
+  for (let j=0;j<5;++j) a.push(0 | ((0x60000009) * 0x60000009));
+  return a.join(",");
 }
 testMulOverflow.expected = "-1073741824,-1073741824,-1073741824,-1073741824,-1073741824";
 test(testMulOverflow);
 
 function testThinLoopDemote() {
-    function f()
-    {
-        var k = 1;
-        for (var n = 0; n < 2; n++) {
-            k = (k * 10);
-        }
-        return k;
+  function f()
+  {
+    var k = 1;
+    for (var n = 0; n < 2; n++) {
+      k = (k * 10);
     }
-    f();
-    return f();
+    return k;
+  }
+  f();
+  return f();
 }
 testThinLoopDemote.expected = 100;
 testThinLoopDemote.jitstats = {
-    recorderStarted: 3,
-    recorderAborted: 0,
-    traceCompleted: 1,
-    traceTriggered: 0,
-    unstableLoopVariable: 2
+recorderStarted: 3,
+recorderAborted: 0,
+traceCompleted: 1,
+traceTriggered: 0,
+unstableLoopVariable: 2
 };
 test(testThinLoopDemote);
 
 var global = this;
 function testWeirdDateParseOuter()
 {
-    var vDateParts = ["11", "17", "2008"];
-    var out = [];
-    for (var vI = 0; vI < vDateParts.length; vI++) {
-	out.push(testWeirdDateParseInner(vDateParts[vI]));
-    }
-    /* Mutate the global shape so we fall off trace; this causes
-     * additional oddity */
-    global.x = Math.random();
-    return out;
+  var vDateParts = ["11", "17", "2008"];
+  var out = [];
+  for (var vI = 0; vI < vDateParts.length; vI++)
+    out.push(testWeirdDateParseInner(vDateParts[vI]));
+  /* Mutate the global shape so we fall off trace; this causes
+   * additional oddity */
+  global.x = Math.random();
+  return out;
 } 
 function testWeirdDateParseInner(pVal)
 {
-    var vR = 0;
-    for (var vI = 0; vI < pVal.length; vI++) {
-	var vC = pVal.charAt(vI);
-	if ((vC >= '0') && (vC <= '9'))
+  var vR = 0;
+  for (var vI = 0; vI < pVal.length; vI++) {
+    var vC = pVal.charAt(vI);
+    if ((vC >= '0') && (vC <= '9'))
 	    vR = (vR * 10) + parseInt(vC);
-    }
-    return vR;
+  }
+  return vR;
 }
 function testWeirdDateParse() {
-    var result = [];
-    result.push(testWeirdDateParseInner("11"));
-    result.push(testWeirdDateParseInner("17"));
-    result.push(testWeirdDateParseInner("2008"));
-    result.push(testWeirdDateParseInner("11"));
-    result.push(testWeirdDateParseInner("17"));
-    result.push(testWeirdDateParseInner("2008"));
-    result = result.concat(testWeirdDateParseOuter());
-    result = result.concat(testWeirdDateParseOuter());
-    result.push(testWeirdDateParseInner("11"));
-    result.push(testWeirdDateParseInner("17"));
-    result.push(testWeirdDateParseInner("2008"));
-    return result.join(",");
+  var result = [];
+  result.push(testWeirdDateParseInner("11"));
+  result.push(testWeirdDateParseInner("17"));
+  result.push(testWeirdDateParseInner("2008"));
+  result.push(testWeirdDateParseInner("11"));
+  result.push(testWeirdDateParseInner("17"));
+  result.push(testWeirdDateParseInner("2008"));
+  result = result.concat(testWeirdDateParseOuter());
+  result = result.concat(testWeirdDateParseOuter());
+  result.push(testWeirdDateParseInner("11"));
+  result.push(testWeirdDateParseInner("17"));
+  result.push(testWeirdDateParseInner("2008"));
+  return result.join(",");
 }
 testWeirdDateParse.expected = "11,17,2008,11,17,2008,11,17,2008,11,17,2008,11,17,2008";
 testWeirdDateParse.jitstats = {
-    recorderStarted: 10,
-    recorderAborted: 1,
-    traceCompleted: 5,
-    traceTriggered: 13,
-    unstableLoopVariable: 6,
-    noCompatInnerTrees: 1
+recorderStarted: 10,
+recorderAborted: 1,
+traceCompleted: 5,
+traceTriggered: 13,
+unstableLoopVariable: 6,
+noCompatInnerTrees: 1
 };
 test(testWeirdDateParse);
 
 function testUndemotableBinaryOp() {
-    var out = [];
-    for (let j = 0; j < 5; ++j) { out.push(6 - ((void 0) ^ 0x80000005)); }
-    return out.join(",");
+  var out = [];
+  for (let j = 0; j < 5; ++j) { out.push(6 - ((void 0) ^ 0x80000005)); }
+  return out.join(",");
 }
 testUndemotableBinaryOp.expected = "2147483649,2147483649,2147483649,2147483649,2147483649";
 test(testUndemotableBinaryOp);
 
 function testNullRelCmp() {
-    var out = [];
-    for(j=0;j<3;++j) { out.push(3 > null); out.push(3 < null); out.push(0 == null); out.push(3 == null); }
-    return out.join(",");
+  var out = [];
+  for(j=0;j<3;++j) { out.push(3 > null); out.push(3 < null); out.push(0 == null); out.push(3 == null); }
+  return out.join(",");
 }
 testNullRelCmp.expected = "true,false,false,false,true,false,false,false,true,false,false,false";
 test(testNullRelCmp);
 
 function testEqFalseEmptyString() {
-    var x = [];
-    for (var i=0;i<5;++i) x.push(false == "");
-    return x.join(",");
+  var x = [];
+  for (var i=0;i<5;++i) x.push(false == "");
+  return x.join(",");
 }
 testEqFalseEmptyString.expected = "true,true,true,true,true";
 test(testEqFalseEmptyString);
 
 function testIncDec2(ii) {
-    var x = [];
-    for (let j=0;j<5;++j) { 
-	ii=j;
-	jj=j; 
-	var kk=j; 
-	x.push(ii--);
-	x.push(jj--); 
-	x.push(kk--); 
-	x.push(++ii);
-	x.push(++jj); 
-	x.push(++kk); 
-    }
-    return x.join(",");
+  var x = [];
+  for (let j=0;j<5;++j) { 
+    ii=j;
+    jj=j; 
+    var kk=j; 
+    x.push(ii--);
+    x.push(jj--); 
+    x.push(kk--); 
+    x.push(++ii);
+    x.push(++jj); 
+    x.push(++kk); 
+  }
+  return x.join(",");
 }
 function testIncDec() {
-    return testIncDec2(0);
+  return testIncDec2(0);
 }
 testIncDec.expected = "0,0,0,0,0,0,1,1,1,1,1,1,2,2,2,2,2,2,3,3,3,3,3,3,4,4,4,4,4,4";
 test(testIncDec);
 
+function testApply() {
+    var q = [];
+    for (var i = 0; i < 10; ++i)
+        Array.prototype.push.apply(q, [5]);
+    return q.join(",");
+}
+testApply.expected = "5,5,5,5,5,5,5,5,5,5";
+test(testApply);
+
+function testComparisons()
+{
+  // All the special values from each of the types in
+  // ECMA-262, 3rd ed. section 8
+  var undefinedType, nullType, booleanType, stringType, numberType, objectType;
+
+  var types = [];
+  types[undefinedType = 0] = "Undefined";
+  types[nullType = 1] = "Null";
+  types[booleanType = 2] = "Boolean";
+  types[stringType = 3] = "String";
+  types[numberType = 4] = "Number";
+  types[objectType = 5] = "Object";
+
+  var JSVAL_INT_MIN = -Math.pow(2, 30);
+  var JSVAL_INT_MAX = Math.pow(2, 30) - 1;
+
+  // Values from every ES3 type, hitting all the edge-case and special values
+  // that can be dreamed up
+  var values =
+    {
+     "undefined":
+       {
+         value: function() { return undefined; },
+         type: undefinedType
+       },
+     "null":
+       {
+         value: function() { return null; },
+         type: nullType
+       },
+     "true":
+       {
+         value: function() { return true; },
+         type: booleanType
+       },
+     "false":
+       {
+         value: function() { return false; },
+         type: booleanType
+       },
+     '""':
+       {
+         value: function() { return ""; },
+         type: stringType
+       },
+     '"a"':
+       {
+         // a > [, for string-object comparisons
+         value: function() { return "a"; },
+         type: stringType
+       },
+     '"Z"':
+       {
+         // Z < [, for string-object comparisons
+         value: function() { return "Z"; },
+         type: stringType
+       },
+     "0":
+       {
+         value: function() { return 0; },
+         type: numberType
+       },
+     "-0":
+       {
+         value: function() { return -0; },
+         type: numberType
+       },
+     "1":
+       {
+         value: function() { return 1; },
+         type: numberType
+       },
+     "Math.E":
+       {
+         value: function() { return Math.E; },
+         type: numberType
+       },
+     "JSVAL_INT_MIN - 1":
+       {
+         value: function() { return JSVAL_INT_MIN - 1; },
+         type: numberType
+       },
+     "JSVAL_INT_MIN":
+       {
+         value: function() { return JSVAL_INT_MIN; },
+         type: numberType
+       },
+     "JSVAL_INT_MIN + 1":
+       {
+         value: function() { return JSVAL_INT_MIN + 1; },
+         type: numberType
+       },
+     "JSVAL_INT_MAX - 1":
+       {
+         value: function() { return JSVAL_INT_MAX - 1; },
+         type: numberType
+       },
+     "JSVAL_INT_MAX":
+       {
+         value: function() { return JSVAL_INT_MAX; },
+         type: numberType
+       },
+     "JSVAL_INT_MAX + 1":
+       {
+         value: function() { return JSVAL_INT_MAX + 1; },
+         type: numberType
+       },
+     "Infinity":
+       {
+         value: function() { return Infinity; },
+         type: numberType
+       },
+     "-Infinity":
+       {
+         value: function() { return -Infinity; },
+         type: numberType
+       },
+     "NaN":
+       {
+         value: function() { return NaN; },
+         type: numberType
+       },
+     "{}":
+       {
+         value: function() { return {}; },
+         type: objectType
+       },
+     "{ valueOf: undefined }":
+       {
+         value: function() { return { valueOf: undefined }; },
+         type: objectType
+       },
+     "[]":
+       {
+         value: function() { return []; },
+         type: objectType
+       },
+     '[""]':
+       {
+         value: function() { return [""]; },
+         type: objectType
+       },
+     '["a"]':
+       {
+         value: function() { return ["a"]; },
+         type: objectType
+       },
+     "[0]":
+       {
+         value: function() { return [0]; },
+         type: objectType
+       }
+    };
+
+  var orderOps =
+    {
+     "<": function(a, b) { return a < b; },
+     ">": function(a, b) { return a > b; },
+     "<=": function(a, b) { return a <= b; },
+     ">=": function(a, b) { return a >= b; }
+    };
+  var eqOps =
+    {
+     "==": function(a, b) { return a == b; },
+     "!=": function(a, b) { return a != b; },
+     "===": function(a, b) { return a === b; },
+     "!==": function(a, b) { return a !== b; }
+    };
+
+
+  var notEqualIncomparable =
+    {
+      eq: { "==": false, "!=": true, "===": false, "!==": true },
+      order: { "<": false, ">": false, "<=": false, ">=": false }
+    };
+  var notEqualLessThan =
+    {
+      eq: { "==": false, "!=": true, "===": false, "!==": true },
+      order: { "<": true, ">": false, "<=": true, ">=": false }
+    };
+  var notEqualGreaterThan =
+    {
+      eq: { "==": false, "!=": true, "===": false, "!==": true },
+      order: { "<": false, ">": true, "<=": false, ">=": true }
+    };
+  var notEqualNorDifferent =
+    {
+      eq: { "==": false, "!=": true, "===": false, "!==": true },
+      order: { "<": false, ">": false, "<=": true, ">=": true }
+    };
+  var strictlyEqual =
+    {
+      eq: { "==": true, "!=": false, "===": true, "!==": false },
+      order: { "<": false, ">": false, "<=": true, ">=": true }
+    };
+  var looselyEqual =
+    {
+      eq: { "==": true, "!=": false, "===": false, "!==": true },
+      order: { "<": false, ">": false, "<=": true, ">=": true }
+    };
+  var looselyEqualNotDifferent =
+    {
+      eq: { "==": true, "!=": false, "===": false, "!==": true },
+      order: { "<": false, ">": false, "<=": true, ">=": true }
+    };
+  var looselyEqualIncomparable =
+    {
+      eq: { "==": true, "!=": false, "===": false, "!==": true },
+      order: { "<": false, ">": false, "<=": false, ">=": false }
+    };
+  var strictlyEqualNotDifferent =
+    {
+      eq: { "==": true, "!=": false, "===": true, "!==": false },
+      order: { "<": false, ">": false, "<=": true, ">=": true }
+    };
+  var strictlyEqualIncomparable =
+    {
+      eq: { "==": true, "!=": false, "===": true, "!==": false },
+      order: { "<": false, ">": false, "<=": false, ">=": false }
+    };
+
+  var comparingZeroToSomething =
+    {
+      "undefined": notEqualIncomparable,
+      "null": notEqualNorDifferent,
+      "true": notEqualLessThan,
+      "false": looselyEqual,
+      '""': looselyEqualNotDifferent,
+      '"a"': notEqualIncomparable,
+      '"Z"': notEqualIncomparable,
+      "0": strictlyEqual,
+      "-0": strictlyEqual,
+      "1": notEqualLessThan,
+      "Math.E": notEqualLessThan,
+      "JSVAL_INT_MIN - 1": notEqualGreaterThan,
+      "JSVAL_INT_MIN": notEqualGreaterThan,
+      "JSVAL_INT_MIN + 1": notEqualGreaterThan,
+      "JSVAL_INT_MAX - 1": notEqualLessThan,
+      "JSVAL_INT_MAX": notEqualLessThan,
+      "JSVAL_INT_MAX + 1": notEqualLessThan,
+      "Infinity": notEqualLessThan,
+      "-Infinity": notEqualGreaterThan,
+      "NaN": notEqualIncomparable,
+      "{}": notEqualIncomparable,
+      "{ valueOf: undefined }": notEqualIncomparable,
+      "[]": looselyEqual,
+      '[""]': looselyEqual,
+      '["a"]': notEqualIncomparable,
+      "[0]": looselyEqual
+    };
+
+  var comparingObjectOrObjectWithValueUndefined =
+    {
+      "undefined": notEqualIncomparable,
+      "null": notEqualIncomparable,
+      "true": notEqualIncomparable,
+      "false": notEqualIncomparable,
+      '""': notEqualGreaterThan,
+      '"a"': notEqualLessThan,
+      '"Z"': notEqualGreaterThan,
+      "0": notEqualIncomparable,
+      "-0": notEqualIncomparable,
+      "1": notEqualIncomparable,
+      "Math.E": notEqualIncomparable,
+      "JSVAL_INT_MIN - 1": notEqualIncomparable,
+      "JSVAL_INT_MIN": notEqualIncomparable,
+      "JSVAL_INT_MIN + 1": notEqualIncomparable,
+      "JSVAL_INT_MAX - 1": notEqualIncomparable,
+      "JSVAL_INT_MAX": notEqualIncomparable,
+      "JSVAL_INT_MAX + 1": notEqualIncomparable,
+      "Infinity": notEqualIncomparable,
+      "-Infinity": notEqualIncomparable,
+      "NaN": notEqualIncomparable,
+      "{}": notEqualNorDifferent,
+      "{ valueOf: undefined }": notEqualNorDifferent,
+      "[]": notEqualGreaterThan,
+      '[""]': notEqualGreaterThan,
+      '["a"]': notEqualLessThan,
+      "[0]": notEqualGreaterThan
+    };
+
+  // Constructed expected-value matrix
+  var expected =
+    {
+     "undefined":
+       {
+         "undefined": strictlyEqualIncomparable,
+         "null": looselyEqualIncomparable,
+         "true": notEqualIncomparable,
+         "false": notEqualIncomparable,
+         '""': notEqualIncomparable,
+         '"a"': notEqualIncomparable,
+         '"Z"': notEqualIncomparable,
+         "0": notEqualIncomparable,
+         "-0": notEqualIncomparable,
+         "1": notEqualIncomparable,
+         "Math.E": notEqualIncomparable,
+         "JSVAL_INT_MIN - 1": notEqualIncomparable,
+         "JSVAL_INT_MIN": notEqualIncomparable,
+         "JSVAL_INT_MIN + 1": notEqualIncomparable,
+         "JSVAL_INT_MAX - 1": notEqualIncomparable,
+         "JSVAL_INT_MAX": notEqualIncomparable,
+         "JSVAL_INT_MAX + 1": notEqualIncomparable,
+         "Infinity": notEqualIncomparable,
+         "-Infinity": notEqualIncomparable,
+         "NaN": notEqualIncomparable,
+         "{}": notEqualIncomparable,
+         "{ valueOf: undefined }": notEqualIncomparable,
+         "[]": notEqualIncomparable,
+         '[""]': notEqualIncomparable,
+         '["a"]': notEqualIncomparable,
+         "[0]": notEqualIncomparable
+       },
+     "null":
+       {
+         "undefined": looselyEqualIncomparable,
+         "null": strictlyEqualNotDifferent,
+         "true": notEqualLessThan,
+         "false": notEqualNorDifferent,
+         '""': notEqualNorDifferent,
+         '"a"': notEqualIncomparable,
+         '"Z"': notEqualIncomparable,
+         "0": notEqualNorDifferent,
+         "-0": notEqualNorDifferent,
+         "1": notEqualLessThan,
+         "Math.E": notEqualLessThan,
+         "JSVAL_INT_MIN - 1": notEqualGreaterThan,
+         "JSVAL_INT_MIN": notEqualGreaterThan,
+         "JSVAL_INT_MIN + 1": notEqualGreaterThan,
+         "JSVAL_INT_MAX - 1": notEqualLessThan,
+         "JSVAL_INT_MAX": notEqualLessThan,
+         "JSVAL_INT_MAX + 1": notEqualLessThan,
+         "Infinity": notEqualLessThan,
+         "-Infinity": notEqualGreaterThan,
+         "NaN": notEqualIncomparable,
+         "{}": notEqualIncomparable,
+         "{ valueOf: undefined }": notEqualIncomparable,
+         "[]": notEqualNorDifferent,
+         '[""]': notEqualNorDifferent,
+         '["a"]': notEqualIncomparable,
+         "[0]": notEqualNorDifferent
+       },
+     "true":
+       {
+         "undefined": notEqualIncomparable,
+         "null": notEqualGreaterThan,
+         "true": strictlyEqual,
+         "false": notEqualGreaterThan,
+         '""': notEqualGreaterThan,
+         '"a"': notEqualIncomparable,
+         '"Z"': notEqualIncomparable,
+         "0": notEqualGreaterThan,
+         "-0": notEqualGreaterThan,
+         "1": looselyEqual,
+         "Math.E": notEqualLessThan,
+         "JSVAL_INT_MIN - 1": notEqualGreaterThan,
+         "JSVAL_INT_MIN": notEqualGreaterThan,
+         "JSVAL_INT_MIN + 1": notEqualGreaterThan,
+         "JSVAL_INT_MAX - 1": notEqualLessThan,
+         "JSVAL_INT_MAX": notEqualLessThan,
+         "JSVAL_INT_MAX + 1": notEqualLessThan,
+         "Infinity": notEqualLessThan,
+         "-Infinity": notEqualGreaterThan,
+         "NaN": notEqualIncomparable,
+         "{}": notEqualIncomparable,
+         "{ valueOf: undefined }": notEqualIncomparable,
+         "[]": notEqualGreaterThan,
+         '[""]': notEqualGreaterThan,
+         '["a"]': notEqualIncomparable,
+         "[0]": notEqualGreaterThan
+       },
+     "false":
+       {
+         "undefined": notEqualIncomparable,
+         "null": notEqualNorDifferent,
+         "true": notEqualLessThan,
+         "false": strictlyEqual,
+         '""': looselyEqualNotDifferent,
+         '"a"': notEqualIncomparable,
+         '"Z"': notEqualIncomparable,
+         "0": looselyEqual,
+         "-0": looselyEqual,
+         "1": notEqualLessThan,
+         "Math.E": notEqualLessThan,
+         "JSVAL_INT_MIN - 1": notEqualGreaterThan,
+         "JSVAL_INT_MIN": notEqualGreaterThan,
+         "JSVAL_INT_MIN + 1": notEqualGreaterThan,
+         "JSVAL_INT_MAX - 1": notEqualLessThan,
+         "JSVAL_INT_MAX": notEqualLessThan,
+         "JSVAL_INT_MAX + 1": notEqualLessThan,
+         "Infinity": notEqualLessThan,
+         "-Infinity": notEqualGreaterThan,
+         "NaN": notEqualIncomparable,
+         "{}": notEqualIncomparable,
+         "{ valueOf: undefined }": notEqualIncomparable,
+         "[]": looselyEqual,
+         '[""]': looselyEqual,
+         '["a"]': notEqualIncomparable,
+         "[0]": looselyEqual
+       },
+     '""':
+       {
+         "undefined": notEqualIncomparable,
+         "null": notEqualNorDifferent,
+         "true": notEqualLessThan,
+         "false": looselyEqual,
+         '""': strictlyEqual,
+         '"a"': notEqualLessThan,
+         '"Z"': notEqualLessThan,
+         "0": looselyEqual,
+         "-0": looselyEqual,
+         "1": notEqualLessThan,
+         "Math.E": notEqualLessThan,
+         "JSVAL_INT_MIN - 1": notEqualGreaterThan,
+         "JSVAL_INT_MIN": notEqualGreaterThan,
+         "JSVAL_INT_MIN + 1": notEqualGreaterThan,
+         "JSVAL_INT_MAX - 1": notEqualLessThan,
+         "JSVAL_INT_MAX": notEqualLessThan,
+         "JSVAL_INT_MAX + 1": notEqualLessThan,
+         "Infinity": notEqualLessThan,
+         "-Infinity": notEqualGreaterThan,
+         "NaN": notEqualIncomparable,
+         "{}": notEqualLessThan,
+         "{ valueOf: undefined }": notEqualLessThan,
+         "[]": looselyEqual,
+         '[""]': looselyEqual,
+         '["a"]': notEqualLessThan,
+         "[0]": notEqualLessThan
+       },
+     '"a"':
+       {
+         "undefined": notEqualIncomparable,
+         "null": notEqualIncomparable,
+         "true": notEqualIncomparable,
+         "false": notEqualIncomparable,
+         '""': notEqualGreaterThan,
+         '"a"': strictlyEqual,
+         '"Z"': notEqualGreaterThan,
+         "0": notEqualIncomparable,
+         "-0": notEqualIncomparable,
+         "1": notEqualIncomparable,
+         "Math.E": notEqualIncomparable,
+         "JSVAL_INT_MIN - 1": notEqualIncomparable,
+         "JSVAL_INT_MIN": notEqualIncomparable,
+         "JSVAL_INT_MIN + 1": notEqualIncomparable,
+         "JSVAL_INT_MAX - 1": notEqualIncomparable,
+         "JSVAL_INT_MAX": notEqualIncomparable,
+         "JSVAL_INT_MAX + 1": notEqualIncomparable,
+         "Infinity": notEqualIncomparable,
+         "-Infinity": notEqualIncomparable,
+         "NaN": notEqualIncomparable,
+         "{}": notEqualGreaterThan,
+         "{ valueOf: undefined }": notEqualGreaterThan,
+         "[]": notEqualGreaterThan,
+         '[""]': notEqualGreaterThan,
+         '["a"]': looselyEqualNotDifferent,
+         "[0]": notEqualGreaterThan
+       },
+     '"Z"':
+       {
+         "undefined": notEqualIncomparable,
+         "null": notEqualIncomparable,
+         "true": notEqualIncomparable,
+         "false": notEqualIncomparable,
+         '""': notEqualGreaterThan,
+         '"a"': notEqualLessThan,
+         '"Z"': strictlyEqual,
+         "0": notEqualIncomparable,
+         "-0": notEqualIncomparable,
+         "1": notEqualIncomparable,
+         "Math.E": notEqualIncomparable,
+         "JSVAL_INT_MIN - 1": notEqualIncomparable,
+         "JSVAL_INT_MIN": notEqualIncomparable,
+         "JSVAL_INT_MIN + 1": notEqualIncomparable,
+         "JSVAL_INT_MAX - 1": notEqualIncomparable,
+         "JSVAL_INT_MAX": notEqualIncomparable,
+         "JSVAL_INT_MAX + 1": notEqualIncomparable,
+         "Infinity": notEqualIncomparable,
+         "-Infinity": notEqualIncomparable,
+         "NaN": notEqualIncomparable,
+         "{}": notEqualLessThan,
+         "{ valueOf: undefined }": notEqualLessThan,
+         "[]": notEqualGreaterThan,
+         '[""]': notEqualGreaterThan,
+         '["a"]': notEqualLessThan,
+         "[0]": notEqualGreaterThan
+       },
+     "0": comparingZeroToSomething,
+     "-0": comparingZeroToSomething,
+     "1":
+       {
+         "undefined": notEqualIncomparable,
+         "null": notEqualGreaterThan,
+         "true": looselyEqual,
+         "false": notEqualGreaterThan,
+         '""': notEqualGreaterThan,
+         '"a"': notEqualIncomparable,
+         '"Z"': notEqualIncomparable,
+         "0": notEqualGreaterThan,
+         "-0": notEqualGreaterThan,
+         "1": strictlyEqual,
+         "Math.E": notEqualLessThan,
+         "JSVAL_INT_MIN - 1": notEqualGreaterThan,
+         "JSVAL_INT_MIN": notEqualGreaterThan,
+         "JSVAL_INT_MIN + 1": notEqualGreaterThan,
+         "JSVAL_INT_MAX - 1": notEqualLessThan,
+         "JSVAL_INT_MAX": notEqualLessThan,
+         "JSVAL_INT_MAX + 1": notEqualLessThan,
+         "Infinity": notEqualLessThan,
+         "-Infinity": notEqualGreaterThan,
+         "NaN": notEqualIncomparable,
+         "{}": notEqualIncomparable,
+         "{ valueOf: undefined }": notEqualIncomparable,
+         "[]": notEqualGreaterThan,
+         '[""]': notEqualGreaterThan,
+         '["a"]': notEqualIncomparable,
+         "[0]": notEqualGreaterThan
+       },
+     "Math.E":
+       {
+         "undefined": notEqualIncomparable,
+         "null": notEqualGreaterThan,
+         "true": notEqualGreaterThan,
+         "false": notEqualGreaterThan,
+         '""': notEqualGreaterThan,
+         '"a"': notEqualIncomparable,
+         '"Z"': notEqualIncomparable,
+         "0": notEqualGreaterThan,
+         "-0": notEqualGreaterThan,
+         "1": notEqualGreaterThan,
+         "Math.E": strictlyEqual,
+         "JSVAL_INT_MIN - 1": notEqualGreaterThan,
+         "JSVAL_INT_MIN": notEqualGreaterThan,
+         "JSVAL_INT_MIN + 1": notEqualGreaterThan,
+         "JSVAL_INT_MAX - 1": notEqualLessThan,
+         "JSVAL_INT_MAX": notEqualLessThan,
+         "JSVAL_INT_MAX + 1": notEqualLessThan,
+         "Infinity": notEqualLessThan,
+         "-Infinity": notEqualGreaterThan,
+         "NaN": notEqualIncomparable,
+         "{}": notEqualIncomparable,
+         "{ valueOf: undefined }": notEqualIncomparable,
+         "[]": notEqualGreaterThan,
+         '[""]': notEqualGreaterThan,
+         '["a"]': notEqualIncomparable,
+         "[0]": notEqualGreaterThan
+       },
+     "JSVAL_INT_MIN - 1":
+       {
+         "undefined": notEqualIncomparable,
+         "null": notEqualLessThan,
+         "true": notEqualLessThan,
+         "false": notEqualLessThan,
+         '""': notEqualLessThan,
+         '"a"': notEqualIncomparable,
+         '"Z"': notEqualIncomparable,
+         "0": notEqualLessThan,
+         "-0": notEqualLessThan,
+         "1": notEqualLessThan,
+         "Math.E": notEqualLessThan,
+         "JSVAL_INT_MIN - 1": strictlyEqual,
+         "JSVAL_INT_MIN": notEqualLessThan,
+         "JSVAL_INT_MIN + 1": notEqualLessThan,
+         "JSVAL_INT_MAX - 1": notEqualLessThan,
+         "JSVAL_INT_MAX": notEqualLessThan,
+         "JSVAL_INT_MAX + 1": notEqualLessThan,
+         "Infinity": notEqualLessThan,
+         "-Infinity": notEqualGreaterThan,
+         "NaN": notEqualIncomparable,
+         "{}": notEqualIncomparable,
+         "{ valueOf: undefined }": notEqualIncomparable,
+         "[]": notEqualLessThan,
+         '[""]': notEqualLessThan,
+         '["a"]': notEqualIncomparable,
+         "[0]": notEqualLessThan
+       },
+     "JSVAL_INT_MIN":
+       {
+         "undefined": notEqualIncomparable,
+         "null": notEqualLessThan,
+         "true": notEqualLessThan,
+         "false": notEqualLessThan,
+         '""': notEqualLessThan,
+         '"a"': notEqualIncomparable,
+         '"Z"': notEqualIncomparable,
+         "0": notEqualLessThan,
+         "-0": notEqualLessThan,
+         "1": notEqualLessThan,
+         "Math.E": notEqualLessThan,
+         "JSVAL_INT_MIN - 1": notEqualGreaterThan,
+         "JSVAL_INT_MIN": strictlyEqual,
+         "JSVAL_INT_MIN + 1": notEqualLessThan,
+         "JSVAL_INT_MAX - 1": notEqualLessThan,
+         "JSVAL_INT_MAX": notEqualLessThan,
+         "JSVAL_INT_MAX + 1": notEqualLessThan,
+         "Infinity": notEqualLessThan,
+         "-Infinity": notEqualGreaterThan,
+         "NaN": notEqualIncomparable,
+         "{}": notEqualIncomparable,
+         "{ valueOf: undefined }": notEqualIncomparable,
+         "[]": notEqualLessThan,
+         '[""]': notEqualLessThan,
+         '["a"]': notEqualIncomparable,
+         "[0]": notEqualLessThan
+       },
+     "JSVAL_INT_MIN + 1":
+       {
+         "undefined": notEqualIncomparable,
+         "null": notEqualLessThan,
+         "true": notEqualLessThan,
+         "false": notEqualLessThan,
+         '""': notEqualLessThan,
+         '"a"': notEqualIncomparable,
+         '"Z"': notEqualIncomparable,
+         "0": notEqualLessThan,
+         "-0": notEqualLessThan,
+         "1": notEqualLessThan,
+         "Math.E": notEqualLessThan,
+         "JSVAL_INT_MIN - 1": notEqualGreaterThan,
+         "JSVAL_INT_MIN": notEqualGreaterThan,
+         "JSVAL_INT_MIN + 1": strictlyEqual,
+         "JSVAL_INT_MAX - 1": notEqualLessThan,
+         "JSVAL_INT_MAX": notEqualLessThan,
+         "JSVAL_INT_MAX + 1": notEqualLessThan,
+         "Infinity": notEqualLessThan,
+         "-Infinity": notEqualGreaterThan,
+         "NaN": notEqualIncomparable,
+         "{}": notEqualIncomparable,
+         "{ valueOf: undefined }": notEqualIncomparable,
+         "[]": notEqualLessThan,
+         '[""]': notEqualLessThan,
+         '["a"]': notEqualIncomparable,
+         "[0]": notEqualLessThan
+       },
+     "JSVAL_INT_MAX - 1":
+       {
+         "undefined": notEqualIncomparable,
+         "null": notEqualGreaterThan,
+         "true": notEqualGreaterThan,
+         "false": notEqualGreaterThan,
+         '""': notEqualGreaterThan,
+         '"a"': notEqualIncomparable,
+         '"Z"': notEqualIncomparable,
+         "0": notEqualGreaterThan,
+         "-0": notEqualGreaterThan,
+         "1": notEqualGreaterThan,
+         "Math.E": notEqualGreaterThan,
+         "JSVAL_INT_MIN - 1": notEqualGreaterThan,
+         "JSVAL_INT_MIN": notEqualGreaterThan,
+         "JSVAL_INT_MIN + 1": notEqualGreaterThan,
+         "JSVAL_INT_MAX - 1": strictlyEqual,
+         "JSVAL_INT_MAX": notEqualLessThan,
+         "JSVAL_INT_MAX + 1": notEqualLessThan,
+         "Infinity": notEqualLessThan,
+         "-Infinity": notEqualGreaterThan,
+         "NaN": notEqualIncomparable,
+         "{}": notEqualIncomparable,
+         "{ valueOf: undefined }": notEqualIncomparable,
+         "[]": notEqualGreaterThan,
+         '[""]': notEqualGreaterThan,
+         '["a"]': notEqualIncomparable,
+         "[0]": notEqualGreaterThan
+       },
+     "JSVAL_INT_MAX":
+       {
+         "undefined": notEqualIncomparable,
+         "null": notEqualGreaterThan,
+         "true": notEqualGreaterThan,
+         "false": notEqualGreaterThan,
+         '""': notEqualGreaterThan,
+         '"a"': notEqualIncomparable,
+         '"Z"': notEqualIncomparable,
+         "0": notEqualGreaterThan,
+         "-0": notEqualGreaterThan,
+         "1": notEqualGreaterThan,
+         "Math.E": notEqualGreaterThan,
+         "JSVAL_INT_MIN - 1": notEqualGreaterThan,
+         "JSVAL_INT_MIN": notEqualGreaterThan,
+         "JSVAL_INT_MIN + 1": notEqualGreaterThan,
+         "JSVAL_INT_MAX - 1": notEqualGreaterThan,
+         "JSVAL_INT_MAX": strictlyEqual,
+         "JSVAL_INT_MAX + 1": notEqualLessThan,
+         "Infinity": notEqualLessThan,
+         "-Infinity": notEqualGreaterThan,
+         "NaN": notEqualIncomparable,
+         "{}": notEqualIncomparable,
+         "{ valueOf: undefined }": notEqualIncomparable,
+         "[]": notEqualGreaterThan,
+         '[""]': notEqualGreaterThan,
+         '["a"]': notEqualIncomparable,
+         "[0]": notEqualGreaterThan
+       },
+     "JSVAL_INT_MAX + 1":
+       {
+         "undefined": notEqualIncomparable,
+         "null": notEqualGreaterThan,
+         "true": notEqualGreaterThan,
+         "false": notEqualGreaterThan,
+         '""': notEqualGreaterThan,
+         '"a"': notEqualIncomparable,
+         '"Z"': notEqualIncomparable,
+         "0": notEqualGreaterThan,
+         "-0": notEqualGreaterThan,
+         "1": notEqualGreaterThan,
+         "Math.E": notEqualGreaterThan,
+         "JSVAL_INT_MIN - 1": notEqualGreaterThan,
+         "JSVAL_INT_MIN": notEqualGreaterThan,
+         "JSVAL_INT_MIN + 1": notEqualGreaterThan,
+         "JSVAL_INT_MAX - 1": notEqualGreaterThan,
+         "JSVAL_INT_MAX": notEqualGreaterThan,
+         "JSVAL_INT_MAX + 1": strictlyEqual,
+         "Infinity": notEqualLessThan,
+         "-Infinity": notEqualGreaterThan,
+         "NaN": notEqualIncomparable,
+         "{}": notEqualIncomparable,
+         "{ valueOf: undefined }": notEqualIncomparable,
+         "[]": notEqualGreaterThan,
+         '[""]': notEqualGreaterThan,
+         '["a"]': notEqualIncomparable,
+         "[0]": notEqualGreaterThan
+       },
+     "Infinity":
+       {
+         "undefined": notEqualIncomparable,
+         "null": notEqualGreaterThan,
+         "true": notEqualGreaterThan,
+         "false": notEqualGreaterThan,
+         '""': notEqualGreaterThan,
+         '"a"': notEqualIncomparable,
+         '"Z"': notEqualIncomparable,
+         "0": notEqualGreaterThan,
+         "-0": notEqualGreaterThan,
+         "1": notEqualGreaterThan,
+         "Math.E": notEqualGreaterThan,
+         "JSVAL_INT_MIN - 1": notEqualGreaterThan,
+         "JSVAL_INT_MIN": notEqualGreaterThan,
+         "JSVAL_INT_MIN + 1": notEqualGreaterThan,
+         "JSVAL_INT_MAX - 1": notEqualGreaterThan,
+         "JSVAL_INT_MAX": notEqualGreaterThan,
+         "JSVAL_INT_MAX + 1": notEqualGreaterThan,
+         "Infinity": strictlyEqual,
+         "-Infinity": notEqualGreaterThan,
+         "NaN": notEqualIncomparable,
+         "{}": notEqualIncomparable,
+         "{ valueOf: undefined }": notEqualIncomparable,
+         "[]": notEqualGreaterThan,
+         '[""]': notEqualGreaterThan,
+         '["a"]': notEqualIncomparable,
+         "[0]": notEqualGreaterThan
+       },
+     "-Infinity":
+       {
+         "undefined": notEqualIncomparable,
+         "null": notEqualLessThan,
+         "true": notEqualLessThan,
+         "false": notEqualLessThan,
+         '""': notEqualLessThan,
+         '"a"': notEqualIncomparable,
+         '"Z"': notEqualIncomparable,
+         "0": notEqualLessThan,
+         "-0": notEqualLessThan,
+         "1": notEqualLessThan,
+         "Math.E": notEqualLessThan,
+         "JSVAL_INT_MIN - 1": notEqualLessThan,
+         "JSVAL_INT_MIN": notEqualLessThan,
+         "JSVAL_INT_MIN + 1": notEqualLessThan,
+         "JSVAL_INT_MAX - 1": notEqualLessThan,
+         "JSVAL_INT_MAX": notEqualLessThan,
+         "JSVAL_INT_MAX + 1": notEqualLessThan,
+         "Infinity": notEqualLessThan,
+         "-Infinity": strictlyEqual,
+         "NaN": notEqualIncomparable,
+         "{}": notEqualIncomparable,
+         "{ valueOf: undefined }": notEqualIncomparable,
+         "[]": notEqualLessThan,
+         '[""]': notEqualLessThan,
+         '["a"]': notEqualIncomparable,
+         "[0]": notEqualLessThan
+       },
+     "NaN":
+       {
+         "undefined": notEqualIncomparable,
+         "null": notEqualIncomparable,
+         "true": notEqualIncomparable,
+         "false": notEqualIncomparable,
+         '""': notEqualIncomparable,
+         '"a"': notEqualIncomparable,
+         '"Z"': notEqualIncomparable,
+         "0": notEqualIncomparable,
+         "-0": notEqualIncomparable,
+         "1": notEqualIncomparable,
+         "Math.E": notEqualIncomparable,
+         "JSVAL_INT_MIN - 1": notEqualIncomparable,
+         "JSVAL_INT_MIN": notEqualIncomparable,
+         "JSVAL_INT_MIN + 1": notEqualIncomparable,
+         "JSVAL_INT_MAX - 1": notEqualIncomparable,
+         "JSVAL_INT_MAX": notEqualIncomparable,
+         "JSVAL_INT_MAX + 1": notEqualIncomparable,
+         "Infinity": notEqualIncomparable,
+         "-Infinity": notEqualIncomparable,
+         "NaN": notEqualIncomparable,
+         "{}": notEqualIncomparable,
+         "{ valueOf: undefined }": notEqualIncomparable,
+         "[]": notEqualIncomparable,
+         '[""]': notEqualIncomparable,
+         '["a"]': notEqualIncomparable,
+         "[0]": notEqualIncomparable
+       },
+     "{}": comparingObjectOrObjectWithValueUndefined,
+     "{ valueOf: undefined }": comparingObjectOrObjectWithValueUndefined,
+     "[]":
+       {
+         "undefined": notEqualIncomparable,
+         "null": notEqualNorDifferent,
+         "true": notEqualLessThan,
+         "false": looselyEqual,
+         '""': looselyEqual,
+         '"a"': notEqualLessThan,
+         '"Z"': notEqualLessThan,
+         "0": looselyEqual,
+         "-0": looselyEqual,
+         "1": notEqualLessThan,
+         "Math.E": notEqualLessThan,
+         "JSVAL_INT_MIN - 1": notEqualGreaterThan,
+         "JSVAL_INT_MIN": notEqualGreaterThan,
+         "JSVAL_INT_MIN + 1": notEqualGreaterThan,
+         "JSVAL_INT_MAX - 1": notEqualLessThan,
+         "JSVAL_INT_MAX": notEqualLessThan,
+         "JSVAL_INT_MAX + 1": notEqualLessThan,
+         "Infinity": notEqualLessThan,
+         "-Infinity": notEqualGreaterThan,
+         "NaN": notEqualIncomparable,
+         "{}": notEqualLessThan,
+         "{ valueOf: undefined }": notEqualLessThan,
+         "[]": notEqualNorDifferent,
+         '[""]': notEqualNorDifferent,
+         '["a"]': notEqualLessThan,
+         "[0]": notEqualLessThan
+       },
+     '[""]':
+       {
+         "undefined": notEqualIncomparable,
+         "null": notEqualNorDifferent,
+         "true": notEqualLessThan,
+         "false": looselyEqual,
+         '""': looselyEqual,
+         '"a"': notEqualLessThan,
+         '"Z"': notEqualLessThan,
+         "0": looselyEqual,
+         "-0": looselyEqual,
+         "1": notEqualLessThan,
+         "Math.E": notEqualLessThan,
+         "JSVAL_INT_MIN - 1": notEqualGreaterThan,
+         "JSVAL_INT_MIN": notEqualGreaterThan,
+         "JSVAL_INT_MIN + 1": notEqualGreaterThan,
+         "JSVAL_INT_MAX - 1": notEqualLessThan,
+         "JSVAL_INT_MAX": notEqualLessThan,
+         "JSVAL_INT_MAX + 1": notEqualLessThan,
+         "Infinity": notEqualLessThan,
+         "-Infinity": notEqualGreaterThan,
+         "NaN": notEqualIncomparable,
+         "{}": notEqualLessThan,
+         "{ valueOf: undefined }": notEqualLessThan,
+         "[]": notEqualNorDifferent,
+         '[""]': notEqualNorDifferent,
+         '["a"]': notEqualLessThan,
+         "[0]": notEqualLessThan
+       },
+     '["a"]':
+       {
+         "undefined": notEqualIncomparable,
+         "null": notEqualIncomparable,
+         "true": notEqualIncomparable,
+         "false": notEqualIncomparable,
+         '""': notEqualGreaterThan,
+         '"a"': looselyEqual,
+         '"Z"': notEqualGreaterThan,
+         "0": notEqualIncomparable,
+         "-0": notEqualIncomparable,
+         "1": notEqualIncomparable,
+         "Math.E": notEqualIncomparable,
+         "JSVAL_INT_MIN - 1": notEqualIncomparable,
+         "JSVAL_INT_MIN": notEqualIncomparable,
+         "JSVAL_INT_MIN + 1": notEqualIncomparable,
+         "JSVAL_INT_MAX - 1": notEqualIncomparable,
+         "JSVAL_INT_MAX": notEqualIncomparable,
+         "JSVAL_INT_MAX + 1": notEqualIncomparable,
+         "Infinity": notEqualIncomparable,
+         "-Infinity": notEqualIncomparable,
+         "NaN": notEqualIncomparable,
+         "{}": notEqualGreaterThan,
+         "{ valueOf: undefined }": notEqualGreaterThan,
+         "[]": notEqualGreaterThan,
+         '[""]': notEqualGreaterThan,
+         '["a"]': notEqualNorDifferent,
+         "[0]": notEqualGreaterThan
+       },
+     "[0]":
+       {
+         "undefined": notEqualIncomparable,
+         "null": notEqualNorDifferent,
+         "true": notEqualLessThan,
+         "false": looselyEqual,
+         '""': notEqualGreaterThan,
+         '"a"': notEqualLessThan,
+         '"Z"': notEqualLessThan,
+         "0": looselyEqual,
+         "-0": looselyEqual,
+         "1": notEqualLessThan,
+         "Math.E": notEqualLessThan,
+         "JSVAL_INT_MIN - 1": notEqualGreaterThan,
+         "JSVAL_INT_MIN": notEqualGreaterThan,
+         "JSVAL_INT_MIN + 1": notEqualGreaterThan,
+         "JSVAL_INT_MAX - 1": notEqualLessThan,
+         "JSVAL_INT_MAX": notEqualLessThan,
+         "JSVAL_INT_MAX + 1": notEqualLessThan,
+         "Infinity": notEqualLessThan,
+         "-Infinity": notEqualGreaterThan,
+         "NaN": notEqualIncomparable,
+         "{}": notEqualLessThan,
+         "{ valueOf: undefined }": notEqualLessThan,
+         "[]": notEqualGreaterThan,
+         '[""]': notEqualGreaterThan,
+         '["a"]': notEqualLessThan,
+         "[0]": notEqualNorDifferent
+       }
+    };
+
+
+
+  var failures = [];
+  function fail(a, ta, b, tb, ex, ac, op)
+  {
+    failures.push("(" + a + " " + op + " " + b + ") wrong: " +
+                  "expected " + ex + ", got " + ac +
+                  " (types " + types[ta] + ", " + types[tb] + ")");
+  }
+
+  var result = false;
+  for (var i in values)
+  {
+    for (var j in values)
+    {
+      // Constants, so hoist to help JIT know that
+      var vala = values[i], valb = values[j];
+      var a = vala.value(), b = valb.value();
+
+      for (var opname in orderOps)
+      {
+        var op = orderOps[opname];
+        var expect = expected[i][j].order[opname];
+        var failed = false;
+
+        for (var iter = 0; iter < 5; iter++)
+        {
+          result = op(a, b);
+          failed = failed || result !== expect;
+        }
+
+        if (failed)
+          fail(i, vala.type, j, valb.type, expect, result, opname);
+      }
+
+      for (var opname in eqOps)
+      {
+        var op = eqOps[opname];
+        var expect = expected[i][j].eq[opname];
+        var failed = false;
+
+        for (var iter = 0; iter < 5; iter++)
+        {
+          result = op(a, b);
+          failed = failed || result !== expect;
+        }
+
+        if (failed)
+          fail(i, vala.type, j, valb.type, expect, result, opname);
+      }
+    }
+  }
+
+  if (failures.length == 0)
+    return "no failures reported!";
+
+  return "\n" + failures.join(",\n");
+}
+testComparisons.expected = "no failures reported!";
+test(testComparisons);
+
+function testCaseAbort()
+{
+  var four = "4";
+  var r = 0;
+  for (var i = 0; i < 5; i++)
+  {
+    switch (i)
+    {
+      case four: r += 1; break;
+      default: r += 2; break;
+    }
+  }
+
+  return "" + r;
+}
+testCaseAbort.expected = "10";
+testCaseAbort.jitstats = {
+  recorderAborted: 0
+};
+test(testCaseAbort);
+
+function testApplyCallHelper(f) {
+    var r = [];
+    for (var i = 0; i < 10; ++i) f.call();
+    r.push(x);
+    for (var i = 0; i < 10; ++i) f.call(this);
+    r.push(x);
+    for (var i = 0; i < 10; ++i) f.apply(this);
+    r.push(x);
+    for (var i = 0; i < 10; ++i) f.call(this,0);
+    r.push(x);
+    for (var i = 0; i < 10; ++i) f.apply(this,[0]);
+    r.push(x);
+    for (var i = 0; i < 10; ++i) f.call(this,0,1);
+    r.push(x);
+    for (var i = 0; i < 10; ++i) f.apply(this,[0,1]);
+    r.push(x);
+    for (var i = 0; i < 10; ++i) f.call(this,0,1,2);
+    r.push(x);
+    for (var i = 0; i < 10; ++i) f.apply(this,[0,1,2]);
+    r.push(x);
+    for (var i = 0; i < 10; ++i) f.call(this,0,1,2,3);
+    r.push(x);
+    for (var i = 0; i < 10; ++i) f.apply(this,[0,1,2,3]);
+    r.push(x);
+    for (var i = 0; i < 10; ++i) f.call(this,0,1,2,3,4);
+    r.push(x);
+    for (var i = 0; i < 10; ++i) f.apply(this,[0,1,2,3,4]);
+    r.push(x);
+    for (var i = 0; i < 10; ++i) f.call(this,0,1,2,3,4,5);
+    r.push(x);
+    for (var i = 0; i < 10; ++i) f.apply(this,[0,1,2,3,4,5])
+    r.push(x);
+    return(r.join(","));
+}
+function testApplyCall() {
+    var r = testApplyCallHelper(function (a0,a1,a2,a3,a4,a5,a6,a7) { x = [a0,a1,a2,a3,a4,a5,a6,a7]; });
+    r += testApplyCallHelper(function (a0,a1,a2,a3,a4,a5,a6,a7) { x = [a0,a1,a2,a3,a4,a5,a6,a7]; });
+    return r;
+}
+testApplyCall.expected =
+",,,,,,,,,,,,,,,,,,,,,,,,0,,,,,,,,0,,,,,,,,0,1,,,,,,,0,1,,,,,,,0,1,2,,,,,,0,1,2,,,,,,0,1,2,3,,,,,0,1,2,3,,,,,0,1,2,3,4,,,,0,1,2,3,4,,,,0,1,2,3,4,5,,,0,1,2,3,4,5,," +
+",,,,,,,,,,,,,,,,,,,,,,,,0,,,,,,,,0,,,,,,,,0,1,,,,,,,0,1,,,,,,,0,1,2,,,,,,0,1,2,,,,,,0,1,2,3,,,,,0,1,2,3,,,,,0,1,2,3,4,,,,0,1,2,3,4,,,,0,1,2,3,4,5,,,0,1,2,3,4,5,,";
+test(testApplyCall);
+
+function testApplyUnboxHelper(f,a) {
+    var q;
+    for (var i = 0; i < 10; ++i)
+        q = f.apply(f,a);
+    return q;
+}
+function testApplyUnbox() {
+    var f = function(x) { return x; }
+    return [testApplyUnboxHelper(f,[1]), testApplyUnboxHelper(f,[true])].join(",");
+}
+testApplyUnbox.expected = "1,true";
+test(testApplyUnbox);
+
+function testCallPick() {
+    function g(x,a) {
+        x.f();
+    }
+
+    var x = [];
+    x.f = function() { }
+
+    var y = [];
+    y.f = function() { }
+
+    var z = [x,x,x,x,x,y,y,y,y,y];
+
+    for (var i = 0; i < 10; ++i)
+        g.call(this, z[i], "");
+    return true;
+}
+testCallPick.expected = true;
+test(testCallPick);
+
+function testInvertNullAfterNegateNull()
+{
+  for (var i = 0; i < 5; i++) !null;
+  for (var i = 0; i < 5; i++) -null;
+  return "no assertion";
+}
+testInvertNullAfterNegateNull.expected = "no assertion";
+test(testInvertNullAfterNegateNull);
+
+function testUnaryImacros()
+{
+  function checkArg(x)
+  {
+    return 1;
+  }
+
+  var o = { valueOf: checkArg, toString: null };
+  var count = 0;
+  var v = 0;
+  for (var i = 0; i < 5; i++)
+    v += +o + -(-o);
+
+  var results = [v === 10 ? "valueOf passed" : "valueOf failed"];
+
+  o.valueOf = null;
+  o.toString = checkArg;
+
+  for (var i = 0; i < 5; i++)
+    v += +o + -(-o);
+
+  results.push(v === 20 ? "toString passed" : "toString failed");
+
+  return results.join(", ");
+}
+testUnaryImacros.expected = "valueOf passed, toString passed";
+test(testUnaryImacros);
+
+function testAddAnyInconvertibleObject()
+{
+  var count = 0;
+  function toString() { ++count; if (count == 5) return {}; return "" + count; }
+
+  var threw = false;
+  try
+  {
+    for (var i = 0; i < 10; i++)
+    {
+        var o = {valueOf: undefined, toString: toString};
+        var q = 5 + o;
+    }
+  }
+  catch (e)
+  {
+    threw = true;
+    if (i !== 4)
+      return "expected i === 4, got " + i;
+    if (q !== "54")
+      return "expected q === '54', got " + q + " (type " + typeof q + ")";
+    if (count !== 5)
+      return "expected count === 5, got " + count;
+  }
+  if (!threw)
+    return "expected throw with 5 + o"; // hey, a rhyme!
+
+  return "pass";
+}
+testAddAnyInconvertibleObject.expected = "pass";
+testAddAnyInconvertibleObject.jitstats = {
+  recorderStarted: 1,
+  recorderAborted: 0,
+  sideExits: 1
+};
+test(testAddAnyInconvertibleObject);
+
+function testAddInconvertibleObjectAny()
+{
+  var count = 0;
+  function toString() { ++count; if (count == 5) return {}; return "" + count; }
+
+  var threw = false;
+  try
+  {
+    for (var i = 0; i < 10; i++)
+    {
+        var o = {valueOf: undefined, toString: toString};
+        var q = o + 5;
+    }
+  }
+  catch (e)
+  {
+    threw = true;
+    if (i !== 4)
+      return "expected i === 4, got " + i;
+    if (q !== "45")
+      return "expected q === '54', got " + q + " (type " + typeof q + ")";
+    if (count !== 5)
+      return "expected count === 5, got " + count;
+  }
+  if (!threw)
+    return "expected throw with o + 5";
+
+  return "pass";
+}
+testAddInconvertibleObjectAny.expected = "pass";
+testAddInconvertibleObjectAny.jitstats = {
+  recorderStarted: 1,
+  recorderAborted: 0,
+  sideExits: 1
+};
+test(testAddInconvertibleObjectAny);
+
+function testAddInconvertibleObjectInconvertibleObject()
+{
+  var count1 = 0;
+  function toString1() { ++count1; if (count1 == 5) return {}; return "" + count1; }
+  var count2 = 0;
+  function toString2() { ++count2; if (count2 == 5) return {}; return "" + count2; }
+
+  var threw = false;
+  try
+  {
+    for (var i = 0; i < 10; i++)
+    {
+        var o1 = {valueOf: undefined, toString: toString1};
+        var o2 = {valueOf: undefined, toString: toString2};
+        var q = o1 + o2;
+    }
+  }
+  catch (e)
+  {
+    threw = true;
+    if (i !== 4)
+      return "expected i === 4, got " + i;
+    if (q !== "44")
+      return "expected q === '44', got " + q + " (type " + typeof q + ")";
+    if (count1 !== 5)
+      return "expected count1 === 5, got " + count1;
+    if (count2 !== 4)
+      return "expected count2 === 5, got " + count2;
+  }
+  if (!threw)
+    return "expected throw with o1 + o2";
+
+  return "pass";
+}
+testAddInconvertibleObjectInconvertibleObject.expected = "pass";
+testAddInconvertibleObjectInconvertibleObject.jitstats = {
+  recorderStarted: 1,
+  recorderAborted: 0,
+  sideExits: 1
+};
+test(testAddInconvertibleObjectInconvertibleObject);
+
+function testBitOrAnyInconvertibleObject()
+{
+  var count = 0;
+  function toString() { ++count; if (count == 5) return {}; return count; }
+
+  var threw = false;
+  try
+  {
+    for (var i = 0; i < 10; i++)
+    {
+        var o = {valueOf: undefined, toString: toString};
+        var q = 2 | o;
+    }
+  }
+  catch (e)
+  {
+    threw = true;
+    if (i !== 4)
+      return "expected i === 4, got " + i;
+    if (q !== 6)
+      return "expected q === 6, got " + q;
+    if (count !== 5)
+      return "expected count === 5, got " + count;
+  }
+  if (!threw)
+    return "expected throw with 2 | o"; // hey, a rhyme!
+
+  return "pass";
+}
+testBitOrAnyInconvertibleObject.expected = "pass";
+testBitOrAnyInconvertibleObject.jitstats = {
+  recorderStarted: 1,
+  recorderAborted: 0,
+  sideExits: 1
+};
+test(testBitOrAnyInconvertibleObject);
+
+function testBitOrInconvertibleObjectAny()
+{
+  var count = 0;
+  function toString() { ++count; if (count == 5) return {}; return count; }
+
+  var threw = false;
+  try
+  {
+    for (var i = 0; i < 10; i++)
+    {
+        var o = {valueOf: undefined, toString: toString};
+        var q = o | 2;
+    }
+  }
+  catch (e)
+  {
+    threw = true;
+    if (i !== 4)
+      return "expected i === 4, got " + i;
+    if (q !== 6)
+      return "expected q === 6, got " + q;
+    if (count !== 5)
+      return "expected count === 5, got " + count;
+  }
+  if (!threw)
+    return "expected throw with o | 2";
+
+  return "pass";
+}
+testBitOrInconvertibleObjectAny.expected = "pass";
+testBitOrInconvertibleObjectAny.jitstats = {
+  recorderStarted: 1,
+  recorderAborted: 0,
+  sideExits: 1
+};
+test(testBitOrInconvertibleObjectAny);
+
+function testBitOrInconvertibleObjectInconvertibleObject()
+{
+  var count1 = 0;
+  function toString1() { ++count1; if (count1 == 5) return {}; return count1; }
+  var count2 = 0;
+  function toString2() { ++count2; if (count2 == 5) return {}; return count2; }
+
+  var threw = false;
+  try
+  {
+    for (var i = 0; i < 10; i++)
+    {
+        var o1 = {valueOf: undefined, toString: toString1};
+        var o2 = {valueOf: undefined, toString: toString2};
+        var q = o1 | o2;
+    }
+  }
+  catch (e)
+  {
+    threw = true;
+    if (i !== 4)
+      return "expected i === 4, got " + i;
+    if (q !== 4)
+      return "expected q === 4, got " + q;
+    if (count1 !== 5)
+      return "expected count1 === 5, got " + count1;
+    if (count2 !== 4)
+      return "expected count2 === 5, got " + count2;
+  }
+  if (!threw)
+    return "expected throw with o1 | o2";
+
+  return "pass";
+}
+testBitOrInconvertibleObjectInconvertibleObject.expected = "pass";
+testBitOrInconvertibleObjectInconvertibleObject.jitstats = {
+  recorderStarted: 1,
+  recorderAborted: 0,
+  sideExits: 1
+};
+test(testBitOrInconvertibleObjectInconvertibleObject);
+
+function testCaseTypeMismatchBadness()
+{
+  for (var z = 0; z < 3; ++z)
+  {
+    switch ("")
+    {
+      default:
+      case 9:
+        break;
+
+      case "":
+      case <x/>:
+        break;
+    }
+  }
+
+  return "no crash";
+}
+testCaseTypeMismatchBadness.expected = "no crash";
+testCaseTypeMismatchBadness.jitstats = {
+    recorderAborted: 0
+};
+test(testCaseTypeMismatchBadness);
+
+function testDoubleComparison()
+{
+  for (var i = 0; i < 500000; ++i)
+  {
+    switch (1 / 0)
+    {
+      case Infinity:
+    }
+  }
+
+  return "finished";
+}
+testDoubleComparison.expected = "finished";
+testDoubleComparison.jitstats = {
+  sideExitIntoInterpreter: 1
+};
+test(testDoubleComparison);
+
+function testLirBufOOM()
+{
+    var a = [
+             "12345678901234",
+             "123456789012",
+             "1234567890123456789012345678",
+             "12345678901234567890123456789012345678901234567890123456",
+             "f",
+             "$",
+             "",
+             "f()",
+             "(\\*)",
+             "b()",
+             "()",
+             "(#)",
+             "ABCDEFGHIJK",
+             "ABCDEFGHIJKLM",
+             "ABCDEFGHIJKLMNOPQ",
+             "ABCDEFGH",
+             "(.)",
+             "(|)",
+             "()$",
+             "/()",
+             "(.)$"
+             ];
+    
+    for (var j = 0; j < 200; ++j) {
+        var js = "" + j;
+        for (var i = 0; i < a.length; i++)
+            "".match(a[i] + js)
+    }
+    return "ok";
+}
+testLirBufOOM.expected = "ok";
+test(testLirBufOOM);
+
+/*****************************************************************************
+ *                                                                           *
+ *  _____ _   _  _____ ______ _____ _______                                  *
+ * |_   _| \ | |/ ____|  ____|  __ \__   __|                                 *
+ *   | | |  \| | (___ | |__  | |__) | | |                                    *
+ *   | | | . ` |\___ \|  __| |  _  /  | |                                    *
+ *  _| |_| |\  |____) | |____| | \ \  | |                                    *
+ * |_____|_| \_|_____/|______|_|  \_\ |_|                                    *
+ *                                                                           *
+ *                                                                           *
+ *  _______ ______  _____ _______ _____                                      *
+ * |__   __|  ____|/ ____|__   __/ ____|                                     *
+ *    | |  | |__  | (___    | | | (___                                       *
+ *    | |  |  __|  \___ \   | |  \___ \                                      *
+ *    | |  | |____ ____) |  | |  ____) |                                     *
+ *    |_|  |______|_____/   |_| |_____/                                      *
+ *                                                                           *
+ *                                                                           *
+ *  ____  ______ ______ ____  _____  ______    _    _ ______ _____  ______   *
+ * |  _ \|  ____|  ____/ __ \|  __ \|  ____|  | |  | |  ____|  __ \|  ____|  *
+ * | |_) | |__  | |__ | |  | | |__) | |__     | |__| | |__  | |__) | |__     *
+ * |  _ <|  __| |  __|| |  | |  _  /|  __|    |  __  |  __| |  _  /|  __|    *
+ * | |_) | |____| |   | |__| | | \ \| |____   | |  | | |____| | \ \| |____   *
+ * |____/|______|_|    \____/|_|  \_\______|  |_|  |_|______|_|  \_\______|  *
+ *                                                                           *
+ *****************************************************************************/
+
+// math-trace-tests.js is a separate file here.
+
+// MANDELBROT STUFF deleted
+
+/*****************************************************************************
+ *  _   _  ____     _   __  ____  _____  ______                              *
+ * | \ | |/ __ \   |  \/  |/ __ \|  __ \|  ____|                             *
+ * |  \| | |  | |  | \  / | |  | | |__) | |__                                *
+ * | . ` | |  | |  | |\/| | |  | |  _  /|  __|                               *
+ * | |\  | |__| |  | |  | | |__| | | \ \| |____                              *
+ * |_| \_|\____/   |_|  |_|\____/|_|  \_\______|                             *
+ *                                                                           *
+ *  _______ ______  _____ _______ _____                                      *
+ * |__   __|  ____|/ ____|__   __/ ____|                                     *
+ *    | |  | |__  | (___    | | | (___                                       *
+ *    | |  |  __|  \___ \   | |  \___ \                                      *
+ *    | |  | |____ ____) |  | |  ____) |                                     *
+ *    |_|  |______|_____/   |_| |_____/                                      *
+ *                                                                           *
+ *           ______ _______ ______ _____     _    _ ______ _____  ______ _   *
+ *     /\   |  ____|__   __|  ____|  __ \   | |  | |  ____|  __ \|  ____| |  *
+ *    /  \  | |__     | |  | |__  | |__) |  | |__| | |__  | |__) | |__  | |  *
+ *   / /\ \ |  __|    | |  |  __| |  _  /   |  __  |  __| |  _  /|  __| | |  *
+ *  / ____ \| |       | |  | |____| | \ \   | |  | | |____| | \ \| |____|_|  *
+ * /_/    \_\_|       |_|  |______|_|  \_\  |_|  |_|______|_|  \_\______(_)  *
+ *                                                                           *
+ *****************************************************************************/
+
 /* NOTE: Keep this test last, since it screws up all for...in loops after it. */
 function testGlobalProtoAccess() {
-    return "ok";
+  return "ok";
 }
 this.__proto__.a = 3; for (var j = 0; j < 4; ++j) { [a]; }
 testGlobalProtoAccess.expected = "ok";

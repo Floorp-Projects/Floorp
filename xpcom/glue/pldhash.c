@@ -68,20 +68,36 @@
  */
 #ifdef DEBUG
 
-#define JSDHASH_SINGLE_LINE_ASSERTION PR_ASSERT
+#define JSDHASH_ONELINE_ASSERT PR_ASSERT
 #define RECURSION_LEVEL(table_) (*(PRUint32*)(table_->entryStore + \
                                             PL_DHASH_TABLE_SIZE(table_) * \
                                             table_->entrySize))
+/*
+ * Most callers that assert about the recursion level don't care about
+ * this magical value because they are asserting that mutation is
+ * allowed (and therefore the level is 0 or 1, depending on whether they
+ * incremented it).
+ *
+ * Only PL_DHashTableFinish needs to allow this special value.
+ */
+#define IMMUTABLE_RECURSION_LEVEL ((PRUint32)-1)
+
+#define RECURSION_LEVEL_SAFE_TO_FINISH(table_)                                \
+    (RECURSION_LEVEL(table_) == 0 ||                                          \
+     RECURSION_LEVEL(table_) == IMMUTABLE_RECURSION_LEVEL)
 
 #define ENTRY_STORE_EXTRA                   sizeof(PRUint32)
-#define INCREMENT_RECURSION_LEVEL(table_)   \
-    PR_BEGIN_MACRO                          \
-      ++RECURSION_LEVEL(table_);            \
+#define INCREMENT_RECURSION_LEVEL(table_)                                     \
+    PR_BEGIN_MACRO                                                            \
+        if (RECURSION_LEVEL(table_) != IMMUTABLE_RECURSION_LEVEL)             \
+            ++RECURSION_LEVEL(table_);                                        \
     PR_END_MACRO
-#define DECREMENT_RECURSION_LEVEL(table_)                         \
-    PR_BEGIN_MACRO                                                \
-      NS_ASSERTION(RECURSION_LEVEL(table_) > 0, "RECURSION_LEVEL(table_) > 0"); \
-      --RECURSION_LEVEL(table_);                                \
+#define DECREMENT_RECURSION_LEVEL(table_)                                     \
+    PR_BEGIN_MACRO                                                            \
+        if (RECURSION_LEVEL(table_) != IMMUTABLE_RECURSION_LEVEL) {           \
+            NS_ASSERTION(RECURSION_LEVEL(table_) > 0, "RECURSION_LEVEL(table_) > 0");              \
+            --RECURSION_LEVEL(table_);                                        \
+        }                                                                     \
     PR_END_MACRO
 
 #else
@@ -386,8 +402,8 @@ PL_DHashTableFinish(PLDHashTable *table)
     }
 
     DECREMENT_RECURSION_LEVEL(table);
-    NS_ASSERTION(RECURSION_LEVEL(table) == 0,
-                 "RECURSION_LEVEL(table) == 0");
+    NS_ASSERTION(RECURSION_LEVEL_SAFE_TO_FINISH(table),
+                 "RECURSION_LEVEL_SAFE_TO_FINISH(table)");
 
     /* Free entry storage last. */
     table->ops->freeTable(table, table->entryStore);
@@ -698,6 +714,9 @@ PL_DHashTableRawRemove(PLDHashTable *table, PLDHashEntryHdr *entry)
 {
     PLDHashNumber keyHash;      /* load first in case clearEntry goofs it */
 
+    NS_ASSERTION(RECURSION_LEVEL(table) != IMMUTABLE_RECURSION_LEVEL,
+                 "RECURSION_LEVEL(table) != IMMUTABLE_RECURSION_LEVEL");
+
     NS_ASSERTION(PL_DHASH_ENTRY_IS_LIVE(entry),
                  "PL_DHASH_ENTRY_IS_LIVE(entry)");
     keyHash = entry->keyHash;
@@ -774,6 +793,14 @@ PL_DHashTableEnumerate(PLDHashTable *table, PLDHashEnumerator etor, void *arg)
 
     return i;
 }
+
+#ifdef DEBUG
+void
+PL_DHashMarkTableImmutable(PLDHashTable *table)
+{
+    RECURSION_LEVEL(table) = IMMUTABLE_RECURSION_LEVEL;
+}
+#endif
 
 #ifdef PL_DHASHMETER
 #include <math.h>

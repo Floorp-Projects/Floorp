@@ -310,6 +310,7 @@ user_pref("layout.debug.enable_data_xbl", true);
 user_pref("browser.EULA.override", true);
 user_pref("javascript.options.jit.content", true);
 user_pref("gfx.color_management.force_srgb", true);
+user_pref("network.manage-offline-status", false);
 
 user_pref("camino.warn_when_closing", false); // Camino-only, harmless to others
 """
@@ -452,6 +453,7 @@ def environment(env = None):
 ###############
 
 def runApp(testURL, env, app, profileDir, extraArgs):
+  "Run the app, returning a tuple containing the status code and the time at which it was started."
   if (IS_TEST_BUILD):
     # create certificate database for the profile
     certificateStatus = fillCertificateDB(profileDir)
@@ -498,4 +500,4 @@ def runApp(testURL, env, app, profileDir, extraArgs):
   if (IS_TEST_BUILD):
     ssltunnelProcess.kill()
   
-  return start
+  return (status, start)

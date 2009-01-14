@@ -692,6 +692,8 @@ txMozillaXSLTProcessor::TransformToDoc(nsIDOMDocument *aOutputDoc,
             txAOutputXMLEventHandler* handler =
                 static_cast<txAOutputXMLEventHandler*>(es.mOutputHandler);
             handler->getOutputDocument(aResult);
+            nsCOMPtr<nsIDocument> doc = do_QueryInterface(*aResult);
+            doc->SetReadyStateInternal(nsIDocument::READYSTATE_COMPLETE);
         }
     }
     else if (mObserver) {

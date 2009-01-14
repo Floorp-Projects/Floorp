@@ -1,0 +1,8 @@
+product=${product:-thunderbird}
+branch=${branch:-1.8.0}
+buildtype=${buildtype:-opt}
+profilename=${profilename:-thunderbird-1.8.0-profile}
+profiledirectory=${profiledirectory:-/tmp/thunderbird-1.8.0-profile}
+executablepath=${executablepath:-/work/mozilla/builds/1.8.0/mozilla/thunderbird-opt/dist}
+userpreferences=${userpreferences:-/work/mozilla/mozilla.com/test.mozilla.com/www/prefs/test-user.js}
+extensiondir=${extensiondir:-/work/mozilla/mozilla.com/test.mozilla.com/www/xpi}

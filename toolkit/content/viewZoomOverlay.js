@@ -42,7 +42,8 @@
 
 /** Document Zoom Management Code
  *
- * To use this, you'll need to have a getBrowser() function.
+ * To use this, you'll need to have a getBrowser() function or use the methods
+ * that accept a browser to be modified.
  **/
 
 var ZoomManager = {
@@ -72,17 +73,26 @@ var ZoomManager = {
   },
 
   get zoom ZoomManager_get_zoom() {
-    var markupDocumentViewer = getBrowser().markupDocumentViewer;
+    return this.getZoomForBrowser(getBrowser());
+  },
+
+  getZoomForBrowser: function ZoomManager_getZoomForBrowser(aBrowser) {
+    var markupDocumentViewer = aBrowser.markupDocumentViewer;
 
     return this.useFullZoom ? markupDocumentViewer.fullZoom
                             : markupDocumentViewer.textZoom;
   },
 
   set zoom ZoomManager_set_zoom(aVal) {
+    this.setZoomForBrowser(getBrowser(), aVal);
+    return aVal;
+  },
+
+  setZoomForBrowser: function ZoomManager_setZoomForBrowser(aBrowser, aVal) {
     if (aVal < this.MIN || aVal > this.MAX)
       throw Components.results.NS_ERROR_INVALID_ARG;
 
-    var markupDocumentViewer = getBrowser().markupDocumentViewer;
+    var markupDocumentViewer = aBrowser.markupDocumentViewer;
 
     if (this.useFullZoom) {
       markupDocumentViewer.textZoom = 1;
@@ -91,8 +101,6 @@ var ZoomManager = {
       markupDocumentViewer.textZoom = aVal;
       markupDocumentViewer.fullZoom = 1;
     }
-
-    return aVal;
   },
 
   get zoomValues ZoomManager_get_zoomValues() {

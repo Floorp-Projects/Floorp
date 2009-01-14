@@ -85,7 +85,7 @@ differences_found = False
 def report(copy, original, differing):
     global differences_found
     if not differences_found:
-        print >> sys.stderr, "TEST-FAIL | build file copies are not in sync"
+        print >> sys.stderr, "TEST-UNEXPECTED-FAIL | build file copies are not in sync"
         print >> sys.stderr, "file(s) found in:               %s" % (copy)
         print >> sys.stderr, ("differ from their originals in: %s"
                               % (original))

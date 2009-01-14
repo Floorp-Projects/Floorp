@@ -969,6 +969,8 @@ DocumentViewerImpl::LoadComplete(nsresult aStatus)
   // will depend on whether it's cached!
   if(window &&
      (NS_SUCCEEDED(aStatus) || aStatus == NS_IMAGELIB_ERROR_LOAD_ABORTED)) {
+    if (mDocument)
+      mDocument->SetReadyStateInternal(nsIDocument::READYSTATE_COMPLETE);
     nsEventStatus status = nsEventStatus_eIgnore;
     nsEvent event(PR_TRUE, NS_LOAD);
     event.flags |= NS_EVENT_FLAG_CANT_BUBBLE;
@@ -3737,8 +3739,8 @@ DocumentViewerImpl::PrintPreviewNavigate(PRInt16 aType, PRInt32 aPageNum)
 
   if (fndPageFrame && scrollableView) {
     nscoord deadSpaceGapTwips = 0;
-    nsIPageSequenceFrame * sqf;
-    if (NS_SUCCEEDED(CallQueryInterface(seqFrame, &sqf))) {
+    nsIPageSequenceFrame * sqf = do_QueryFrame(seqFrame);
+    if (sqf) {
       sqf->GetDeadSpaceValue(&deadSpaceGapTwips);
     }
 

@@ -35,6 +35,8 @@
 # ***** END LICENSE BLOCK *****
 
 !macro PostUpdate
+  ${CreateShortcutsLog}
+
   ; Remove registry entries for non-existent apps and for apps that point to our
   ; install location in the Software\Mozilla key and uninstall registry entries
   ; that point to our install location for both HKCU and HKLM.
@@ -353,51 +355,6 @@
   ${WriteRegStr2} $TmpVal "$0" "PathToExe" "$8\${FileMainEXE}" 0
   ${WriteRegStr2} $TmpVal "$0" "Program Folder Path" "$SMPROGRAMS\$StartMenuDir" 0
 
-  SetShellVarContext all  ; Set $DESKTOP to All Users
-  ${Unless} ${FileExists} "$DESKTOP\${BrandFullName}.lnk"
-    SetShellVarContext current  ; Set $DESKTOP to the current user's desktop
-  ${EndUnless}
-
-  ${If} ${FileExists} "$DESKTOP\${BrandFullName}.lnk"
-    ShellLink::GetShortCutArgs "$DESKTOP\${BrandFullName}.lnk"
-    Pop $1
-    ${If} "$1" == ""
-      ShellLink::GetShortCutTarget "$DESKTOP\${BrandFullName}.lnk"
-      Pop $1
-      ${GetLongPath} "$1" $1
-      ${If} "$1" == "$8\${FileMainEXE}"
-        ${WriteRegDWORD2} $TmpVal "$0" "Create Desktop Shortcut" 1 0
-      ${Else}
-        ${WriteRegDWORD2} $TmpVal "$0" "Create Desktop Shortcut" 0 0
-      ${EndIf}
-    ${EndIf}
-  ${EndIf}
-
-  ; XXXrstrong - need a cleaner way to prevent unsetting SHCTX from HKLM when
-  ; trying to find the desktop shortcut.
-  ${If} "$TmpVal" == "HKCU"
-    SetShellVarContext current ; Set SHCTX to the current user (e.g. HKCU)
-  ${Else}
-    SetShellVarContext all     ; Set SHCTX to all users (e.g. HKLM)
-  ${EndIf}
-
-  ${If} ${FileExists} "$QUICKLAUNCH\${BrandFullName}.lnk"
-    ShellLink::GetShortCutArgs "$QUICKLAUNCH\${BrandFullName}.lnk"
-    Pop $1
-    ${If} "$1" == ""
-      ShellLink::GetShortCutTarget "$QUICKLAUNCH\${BrandFullName}.lnk"
-      Pop $1
-      ${GetLongPath} "$1" $1
-      ${If} "$1" == "$8\${FileMainEXE}"
-        ${WriteRegDWORD2} $TmpVal "$0" "Create Quick Launch Shortcut" 1 0
-      ${Else}
-        ${WriteRegDWORD2} $TmpVal "$0" "Create Quick Launch Shortcut" 0 0
-      ${EndIf}
-    ${EndIf}
-  ${EndIf}
-  ; XXXrstrong - "Create Start Menu Shortcut" and "Start Menu Folder" are only
-  ; set in the installer and should also be set here for software update.
-
   StrCpy $0 "Software\Mozilla\${BrandFullNameInternal}\${AppVersion} (${AB_CD})\Uninstall"
   ${WriteRegStr2} $TmpVal "$0" "Uninstall Log Folder" "$8\uninstall" 0
   ${WriteRegStr2} $TmpVal "$0" "Description" "${BrandFullNameInternal} (${AppVersion})" 0
@@ -548,6 +505,35 @@
   ${EndIf}
 !macroend
 !define RemoveDeprecatedKeys "!insertmacro RemoveDeprecatedKeys"
+
+; Creates the shortcuts log ini file with the appropriate entries if it doesn't
+; already exist.
+!macro CreateShortcutsLog
+  ${GetShortcutsLogPath} $0
+  ${Unless} ${FileExists} "$0"
+    ; Default to ${BrandFullName} for the Start Menu Folder
+    StrCpy $TmpVal ${BrandFullName}
+    ; Prior to Firefox 3.1 the Start Menu directory was written to the registry and
+    ; this value can be used to set the Start Menu directory.
+    ClearErrors
+    ReadRegStr $0 SHCTX "Software\Mozilla\${BrandFullNameInternal}\${AppVersion} (${AB_CD})\Main" "Start Menu Folder"
+    ${If} ${Errors}
+      ${FindSMProgramsDir} $0
+      ${If} "$0" != ""
+        StrCpy $TmpVal "$0"
+      ${EndIf}
+    ${Else}
+      StrCpy $TmpVal "$0"
+    ${EndUnless}
+
+    ${LogSMProgramsDirRelPath} "$TmpVal"
+    ${LogSMProgramsShortcut} "${BrandFullName}.lnk"
+    ${LogSMProgramsShortcut} "${BrandFullName} ($(SAFE_MODE)).lnk"
+    ${LogQuickLaunchShortcut} "${BrandFullName}.lnk"
+    ${LogDesktopShortcut} "${BrandFullName}.lnk"
+  ${EndUnless}
+!macroend
+!define CreateShortcutsLog "!insertmacro CreateShortcutsLog"
 
 ; The files to check if they are in use during (un)install so the restart is
 ; required message is displayed. All files must be located in the $INSTDIR

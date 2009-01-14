@@ -58,13 +58,8 @@
 #include "nsIHashable.h"
 #include "nsIClassInfoImpl.h"
 
-#define INCL_DOSFILEMGR
+#define INCL_DOS
 #define INCL_DOSERRORS
-#define INCL_DOSPROCESS
-#define INCL_DOSSESMGR
-#define INCL_DOSMODULEMGR
-#define INCL_DOSNLS
-#define INCL_DOSMISC
 #define INCL_WINCOUNTRY
 #define INCL_WINWORKPLACE
 

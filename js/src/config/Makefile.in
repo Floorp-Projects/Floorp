@@ -89,13 +89,13 @@ endif
 
 ifdef WRAP_SYSTEM_INCLUDES
 export::
-	if test ! -d system_wrappers; then mkdir system_wrappers; fi
+	if test ! -d system_wrappers_js; then mkdir system_wrappers_js; fi
 	$(PERL) $(srcdir)/preprocessor.pl $(DEFINES) $(ACDEFINES) \
 		-DBUILD_STATIC_LIBS=$(BUILD_STATIC_LIBS) \
-		$(srcdir)/system-headers | $(PERL) $(srcdir)/make-system-wrappers.pl system_wrappers
-	$(INSTALL) system_wrappers $(DIST)/include
+		$(srcdir)/system-headers | $(PERL) $(srcdir)/make-system-wrappers.pl system_wrappers_js
+	$(INSTALL) system_wrappers_js $(DIST)/include
 
-GARBAGE_DIRS += system_wrappers
+GARBAGE_DIRS += system_wrappers_js
 endif
 
 FORCE:

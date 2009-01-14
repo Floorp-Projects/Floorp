@@ -404,25 +404,17 @@ PlacesTreeView.prototype = {
 
   _convertPRTimeToString: function PTV__convertPRTimeToString(aTime) {
     var timeInMilliseconds = aTime / 1000; // PRTime is in microseconds
+
+    // Date is calculated starting from midnight, so the modulo with a day are
+    // milliseconds from today's midnight.
+    var now = Date.now();
+    var midnight = now - (now % (24 * 60 * 60 * 1000));
+
+    var dateFormat = timeInMilliseconds > midnight ?
+                      Ci.nsIScriptableDateFormat.dateFormatNone :
+                      Ci.nsIScriptableDateFormat.dateFormatShort;
+
     var timeObj = new Date(timeInMilliseconds);
-
-    // Check if it is today and only display the time.  Only bother
-    // checking for today if it's within the last 24 hours, since
-    // computing midnight is not really cheap. Sometimes we may get dates
-    // in the future, so always show those.
-    var ago = new Date(Date.now() - timeInMilliseconds);
-    var dateFormat = Ci.nsIScriptableDateFormat.dateFormatShort;
-    if (ago > -10000 && ago < (1000 * 24 * 60 * 60)) {
-      var midnight = new Date(timeInMilliseconds);
-      midnight.setHours(0);
-      midnight.setMinutes(0);
-      midnight.setSeconds(0);
-      midnight.setMilliseconds(0);
-
-      if (timeInMilliseconds > midnight.getTime())
-        dateFormat = Ci.nsIScriptableDateFormat.dateFormatNone;
-    }
-
     return (this._dateService.FormatDateTime("", dateFormat,
       Ci.nsIScriptableDateFormat.timeFormatNoSeconds,
       timeObj.getFullYear(), timeObj.getMonth() + 1,

@@ -169,7 +169,7 @@ static void replaceEditWithCombo(HWND hWnd, BOOL b1, BOOL b2, BOOL b3, BOOL b6)
 
 void updateUI(HWND hWnd)
 {
-  CPlugin * pPlugin = (CPlugin *)GetWindowLong(hWnd, DWL_USER);
+  CPlugin * pPlugin = (CPlugin *)GetWindowLongPtr(hWnd, DWLP_USER);
   assert(pPlugin != NULL);
 
   DWORD dwNPInstance = (DWORD)pPlugin->getNPInstance();
@@ -437,7 +437,7 @@ NPByteRange g_npByteRangeList[] = {
 
 void onGo(HWND hWnd)
 {
-  CPlugin * pPlugin = (CPlugin *)GetWindowLong(hWnd, DWL_USER);
+  CPlugin * pPlugin = (CPlugin *)GetWindowLongPtr(hWnd, DWLP_USER);
   assert(pPlugin != NULL);
 
   char szString[80];

@@ -16,12 +16,15 @@ HTTP(..) != multiple-descriptor-1.html multiple-descriptor-1-notref.html
 HTTP(..) == src-list-1.html src-list-1-ref.html
 HTTP(..) == src-list-2.html src-list-2-ref.html
 fails-if(MOZ_WIDGET_TOOLKIT=="windows") HTTP(..) == src-list-2-big-otf.html src-list-2-big-ref.html # bug 470713
-fails HTTP(..) == src-list-format-1.html src-list-format-1-ref.html # bug 465452
-fails HTTP(..) == src-list-format-2.html src-list-format-2-ref.html # bug 465452
+HTTP(..) == src-list-format-1.html src-list-format-1-ref.html
+HTTP(..) == src-list-format-2.html src-list-format-2-ref.html
 HTTP(..) == src-list-format-3.html src-list-format-3-ref.html
 HTTP(..) == src-list-format-4.html src-list-format-1-ref.html
 HTTP(..) == src-list-format-5.html src-list-format-2-ref.html
-fails HTTP(..) == src-list-format-6.html src-list-format-3-ref.html # bug 465452
+HTTP(..) == src-list-format-6.html src-list-format-3-ref.html
+# assumes AAT fonts are only supported on MacOS
+skip-if(MOZ_WIDGET_TOOLKIT=="cocoa") HTTP(..) == src-list-format-7.html src-list-format-2-ref.html
+skip-if(MOZ_WIDGET_TOOLKIT!="cocoa") HTTP(..) == src-list-format-7.html src-list-format-3-ref.html
 # FIXME: The behavior here is neither mandated nor specified by the spec, but
 # it really ought to be.
 HTTP(..) == order-1.html order-1-ref.html

@@ -84,6 +84,8 @@ _TEST_FILES	= \
 		test_bug440572.html \
 		iframe_bug440572.html \
 		test_bug437361.html \
+		test_bug458091.html \
+		bug458091_child.html \
 		test_bug459848.html \
 		test_bug465263.html \
 		$(NULL)
