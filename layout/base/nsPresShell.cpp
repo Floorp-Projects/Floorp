@@ -1188,6 +1188,7 @@ private:
                                  nsEventStatus* aEventStatus);
 
   void FireResizeEvent();
+  nsRevocableEventPtr<nsRunnableMethod<PresShell> > mResizeEvent;
 
   typedef void (*nsPluginEnumCallback)(PresShell*, nsIContent*);
   void EnumeratePlugins(nsIDOMDocument *aDocument,
@@ -1655,6 +1656,7 @@ PresShell::Destroy()
   // apparently frame destruction sometimes spins the event queue when
   // plug-ins are involved(!).
   mReflowEvent.Revoke();
+  mResizeEvent.Revoke();
 
   CancelAllPendingReflows();
   CancelPostedReflowCallbacks();
@@ -2525,10 +2527,12 @@ PresShell::ResizeReflow(nscoord aWidth, nscoord aHeight)
       nsRect(0, 0, aWidth, rootFrame->GetRect().height));
   }
 
-  if (!mIsDestroying) {
-    nsContentUtils::AddScriptRunner(NS_NEW_RUNNABLE_METHOD(PresShell,
-                                                           this,
-                                                           FireResizeEvent));
+  if (!mIsDestroying && !mResizeEvent.IsPending()) {
+    nsRefPtr<nsRunnableMethod<PresShell> > resizeEvent =
+      NS_NEW_RUNNABLE_METHOD(PresShell, this, FireResizeEvent);
+    if (NS_SUCCEEDED(NS_DispatchToCurrentThread(resizeEvent))) {
+      mResizeEvent = resizeEvent;
+    }
   }
 
   return NS_OK; //XXX this needs to be real. MMP
@@ -2537,6 +2541,8 @@ PresShell::ResizeReflow(nscoord aWidth, nscoord aHeight)
 void
 PresShell::FireResizeEvent()
 {
+  mResizeEvent.Revoke();
+
   if (mIsDocumentGone)
     return;
 
@@ -4427,6 +4433,13 @@ PresShell::DoFlushPendingNotifications(mozFlushType aType,
     // Processing pending notifications can kill us, and some callers only
     // hold weak refs when calling FlushPendingNotifications().  :(
     nsCOMPtr<nsIPresShell> kungFuDeathGrip(this);
+
+    if (mResizeEvent.IsPending()) {
+      FireResizeEvent();
+      if (mIsDestroying) {
+        return NS_OK;
+      }
+    }
 
     // Style reresolves not in conjunction with reflows can't cause
     // painting or geometry changes, so don't bother with view update
