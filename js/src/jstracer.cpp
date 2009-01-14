@@ -8485,7 +8485,7 @@ TraceRecorder::record_JSOP_CALLGVAR()
     if (!lazilyImportGlobalSlot(slot))
          ABORT_TRACE("lazy import of global slot failed");
 
-    jsval& v = STOBJ_GET_SLOT(cx->fp->scopeChain, slot);
+    jsval& v = STOBJ_GET_SLOT(globalObj, slot);
     stack(0, get(&v));
     stack(1, INS_CONSTPTR(NULL));
     return true;
