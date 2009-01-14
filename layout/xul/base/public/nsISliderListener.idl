@@ -12,15 +12,13 @@
  * for the specific language governing rights and limitations under the
  * License.
  *
- * The Original Code is Mozilla Communicator client code.
+ * The Original Code is mozilla.org code.
  *
- * The Initial Developer of the Original Code is
- * Netscape Communications Corporation.
- * Portions created by the Initial Developer are Copyright (C) 1998
+ * The Initial Developer of the Original Code is Neil Deakin
+ * Portions created by the Initial Developer are Copyright (C) 2009
  * the Initial Developer. All Rights Reserved.
  *
  * Contributor(s):
- *   Original Author: David W. Hyatt (hyatt@netscape.com)
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either of the GNU General Public License Version 2 or later (the "GPL"),
@@ -36,29 +34,19 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-#ifndef nsIScrollbarListener_h___
-#define nsIScrollbarListener_h___
+#include "nsISupports.idl"
 
-// {A0ADBD81-2911-11d3-97FA-00400553EEF0}
-#define NS_ISCROLLBARLISTENER_IID \
-{ 0xa0adbd81, 0x2911, 0x11d3, { 0x97, 0xfa, 0x0, 0x40, 0x5, 0x53, 0xee, 0xf0 } }
-
-static NS_DEFINE_IID(kIScrollbarListenerIID,     NS_ISCROLLBARLISTENER_IID);
-
-class nsPresContext;
-
-class nsIScrollbarListener : public nsISupports {
-
-public:
-
-  NS_DECLARE_STATIC_IID_ACCESSOR(NS_ISCROLLBARLISTENER_IID)
-  
-  NS_IMETHOD PositionChanged(nsPresContext* aPresContext, PRInt32 aOldIndex, PRInt32& aNewIndex) = 0;
-
-  NS_IMETHOD PagedUpDown() = 0;
+/**
+ * Used for <scale> to listen to slider changes to avoid mutation listeners
+ */
+[scriptable, uuid(CD380CB5-E9F6-4B7D-A19F-B1FD7B31C532)]
+interface nsISliderListener : nsISupports
+{
+  /**
+   * Called when the current, minimum or maximum value has been changed to
+   * newValue. The which parameter will either be 'curpos', 'minpos' or 'maxpos'.
+   * If userChanged is true, then the user changed ths slider, otherwise it
+   * was changed via some other means.
+   */
+  void valueChanged(in AString which, in long newValue, in boolean userChanged);
 };
-
-NS_DEFINE_STATIC_IID_ACCESSOR(nsIScrollbarListener, NS_ISCROLLBARLISTENER_IID)
-
-#endif
-
