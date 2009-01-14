@@ -70,7 +70,6 @@ class nsHtml5Portability
     static PRBool lowerCaseLiteralEqualsIgnoreAsciiCaseString(nsString* lowerCaseLiteral, nsString* string);
     static PRBool literalEqualsString(nsString* literal, nsString* string);
     static jArray<PRUnichar,PRInt32> isIndexPrompt();
-    static PRBool localEqualsHtmlIgnoreAsciiCase(nsIAtom* name);
     static void initializeStatics();
     static void releaseStatics();
 };

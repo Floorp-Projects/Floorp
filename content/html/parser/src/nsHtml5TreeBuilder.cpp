@@ -64,7 +64,10 @@ nsHtml5TreeBuilder::startTokenization(nsHtml5Tokenizer* self)
   originalMode = NS_HTML5TREE_BUILDER_INITIAL;
   currentPtr = -1;
   listPtr = -1;
+  nsHtml5Portability::releaseElement(formPointer);
   formPointer = nsnull;
+  nsHtml5Portability::releaseElement(headPointer);
+  headPointer = nsnull;
   start(fragment);
   startCoalescing();
   if (fragment) {
@@ -538,7 +541,7 @@ nsHtml5TreeBuilder::startTag(nsHtml5ElementName* elementName, nsHtml5HtmlAttribu
           needsPostProcessing = PR_TRUE;
         } else {
           switch(group) {
-            case NS_HTML5TREE_BUILDER_B_OR_BIG_OR_EM_OR_FONT_OR_I_OR_S_OR_SMALL_OR_STRIKE_OR_STRONG_OR_TT_OR_U:
+            case NS_HTML5TREE_BUILDER_B_OR_BIG_OR_EM_OR_I_OR_S_OR_SMALL_OR_STRIKE_OR_STRONG_OR_TT_OR_U:
             case NS_HTML5TREE_BUILDER_DIV_OR_BLOCKQUOTE_OR_CENTER_OR_MENU:
             case NS_HTML5TREE_BUILDER_BODY:
             case NS_HTML5TREE_BUILDER_BR:
@@ -561,6 +564,16 @@ nsHtml5TreeBuilder::startTag(nsHtml5ElementName* elementName, nsHtml5HtmlAttribu
               }
               foreignFlag = NS_HTML5TREE_BUILDER_NOT_IN_FOREIGN;
               goto starttagloop;
+            }
+            case NS_HTML5TREE_BUILDER_FONT: {
+              if (attributes->contains(nsHtml5AttributeName::COLOR) || attributes->contains(nsHtml5AttributeName::FACE) || attributes->contains(nsHtml5AttributeName::SIZE)) {
+
+                while (stack[currentPtr]->ns != kNameSpaceID_XHTML) {
+                  pop();
+                }
+                foreignFlag = NS_HTML5TREE_BUILDER_NOT_IN_FOREIGN;
+                goto starttagloop;
+              }
             }
             default: {
               if (kNameSpaceID_SVG == currNs) {
@@ -803,10 +816,18 @@ nsHtml5TreeBuilder::startTag(nsHtml5ElementName* elementName, nsHtml5HtmlAttribu
                 }
                 case NS_HTML5TREE_BUILDER_P:
                 case NS_HTML5TREE_BUILDER_DIV_OR_BLOCKQUOTE_OR_CENTER_OR_MENU:
-                case NS_HTML5TREE_BUILDER_H1_OR_H2_OR_H3_OR_H4_OR_H5_OR_H6:
                 case NS_HTML5TREE_BUILDER_UL_OR_OL_OR_DL:
                 case NS_HTML5TREE_BUILDER_ADDRESS_OR_DIR_OR_ARTICLE_OR_ASIDE_OR_DATAGRID_OR_DETAILS_OR_DIALOG_OR_FIGURE_OR_FOOTER_OR_HEADER_OR_NAV_OR_SECTION: {
                   implicitlyCloseP();
+                  appendToCurrentNodeAndPushElementMayFoster(kNameSpaceID_XHTML, elementName, attributes);
+                  goto starttagloop_end;
+                }
+                case NS_HTML5TREE_BUILDER_H1_OR_H2_OR_H3_OR_H4_OR_H5_OR_H6: {
+                  implicitlyCloseP();
+                  if (stack[currentPtr]->group == NS_HTML5TREE_BUILDER_H1_OR_H2_OR_H3_OR_H4_OR_H5_OR_H6) {
+
+                    pop();
+                  }
                   appendToCurrentNodeAndPushElementMayFoster(kNameSpaceID_XHTML, elementName, attributes);
                   goto starttagloop_end;
                 }
@@ -877,7 +898,8 @@ nsHtml5TreeBuilder::startTag(nsHtml5ElementName* elementName, nsHtml5HtmlAttribu
                   appendToCurrentNodeAndPushFormattingElementMayFoster(kNameSpaceID_XHTML, elementName, attributes);
                   goto starttagloop_end;
                 }
-                case NS_HTML5TREE_BUILDER_B_OR_BIG_OR_EM_OR_FONT_OR_I_OR_S_OR_SMALL_OR_STRIKE_OR_STRONG_OR_TT_OR_U: {
+                case NS_HTML5TREE_BUILDER_B_OR_BIG_OR_EM_OR_I_OR_S_OR_SMALL_OR_STRIKE_OR_STRONG_OR_TT_OR_U:
+                case NS_HTML5TREE_BUILDER_FONT: {
                   reconstructTheActiveFormattingElements();
                   appendToCurrentNodeAndPushFormattingElementMayFoster(kNameSpaceID_XHTML, elementName, attributes);
                   goto starttagloop_end;
@@ -970,7 +992,7 @@ nsHtml5TreeBuilder::startTag(nsHtml5ElementName* elementName, nsHtml5HtmlAttribu
                     goto starttagloop_end;
                   }
                   implicitlyCloseP();
-                  nsHtml5HtmlAttributes* formAttrs = tokenizer->emptyAttributes();
+                  nsHtml5HtmlAttributes* formAttrs = new nsHtml5HtmlAttributes(0);
                   PRInt32 actionIndex = attributes->getIndex(nsHtml5AttributeName::ACTION);
                   if (actionIndex > -1) {
                     formAttrs->addAttribute(nsHtml5AttributeName::ACTION, attributes->getValue(actionIndex));
@@ -1001,6 +1023,7 @@ nsHtml5TreeBuilder::startTag(nsHtml5ElementName* elementName, nsHtml5HtmlAttribu
                   appendVoidElementToCurrentMayFoster(kNameSpaceID_XHTML, nsHtml5ElementName::HR, nsHtml5HtmlAttributes::EMPTY_ATTRIBUTES);
                   pop();
                   selfClosing = PR_FALSE;
+                  delete formAttrs;
                   goto starttagloop_end;
                 }
                 case NS_HTML5TREE_BUILDER_TEXTAREA: {
@@ -1326,6 +1349,13 @@ nsHtml5TreeBuilder::startTag(nsHtml5ElementName* elementName, nsHtml5HtmlAttribu
 
                 endSelect();
                 continue;
+              }
+              case NS_HTML5TREE_BUILDER_SCRIPT: {
+                appendToCurrentNodeAndPushElementMayFoster(kNameSpaceID_XHTML, elementName, attributes);
+                originalMode = mode;
+                mode = NS_HTML5TREE_BUILDER_IN_CDATA_RCDATA;
+                tokenizer->setContentModelFlag(NS_HTML5TOKENIZER_CDATA, elementName);
+                goto starttagloop_end;
               }
               default: {
 
@@ -2035,19 +2065,22 @@ nsHtml5TreeBuilder::endTag(nsHtml5ElementName* elementName)
             goto endtagloop_end;
           }
           case NS_HTML5TREE_BUILDER_FORM: {
+            if (!formPointer) {
+
+              goto endtagloop_end;
+            }
+            nsHtml5Portability::releaseElement(formPointer);
             formPointer = nsnull;
             eltPos = findLastInScope(name);
             if (eltPos == NS_HTML5TREE_BUILDER_NOT_FOUND_ON_STACK) {
 
-            } else {
-              generateImpliedEndTags();
-              if (!isCurrent(name)) {
-
-              }
-              while (currentPtr >= eltPos) {
-                pop();
-              }
+              goto endtagloop_end;
             }
+            generateImpliedEndTags();
+            if (!isCurrent(name)) {
+
+            }
+            removeFromStack(eltPos);
             goto endtagloop_end;
           }
           case NS_HTML5TREE_BUILDER_P: {
@@ -2106,7 +2139,8 @@ nsHtml5TreeBuilder::endTag(nsHtml5ElementName* elementName)
             goto endtagloop_end;
           }
           case NS_HTML5TREE_BUILDER_A:
-          case NS_HTML5TREE_BUILDER_B_OR_BIG_OR_EM_OR_FONT_OR_I_OR_S_OR_SMALL_OR_STRIKE_OR_STRONG_OR_TT_OR_U:
+          case NS_HTML5TREE_BUILDER_B_OR_BIG_OR_EM_OR_I_OR_S_OR_SMALL_OR_STRIKE_OR_STRONG_OR_TT_OR_U:
+          case NS_HTML5TREE_BUILDER_FONT:
           case NS_HTML5TREE_BUILDER_NOBR: {
             adoptionAgencyEndTag(name);
             goto endtagloop_end;
@@ -2383,8 +2417,17 @@ nsHtml5TreeBuilder::endTag(nsHtml5ElementName* elementName)
         }
       }
       case NS_HTML5TREE_BUILDER_AFTER_HEAD: {
+        switch(group) {
+          case NS_HTML5TREE_BUILDER_BR: {
+            appendToCurrentNodeAndPushBodyElement();
+            mode = NS_HTML5TREE_BUILDER_IN_BODY;
+            continue;
+          }
+          default: {
 
-        goto endtagloop_end;
+            goto endtagloop_end;
+          }
+        }
       }
       case NS_HTML5TREE_BUILDER_AFTER_AFTER_BODY: {
 
@@ -2587,7 +2630,7 @@ nsHtml5TreeBuilder::isQuirky(nsIAtom* name, nsString* publicIdentifier, nsString
   if (forceQuirks) {
     return PR_TRUE;
   }
-  if (!nsHtml5Portability::localEqualsHtmlIgnoreAsciiCase(name)) {
+  if (name != nsHtml5StringLiterals::html) {
     return PR_TRUE;
   }
   if (!!publicIdentifier) {
@@ -3200,6 +3243,7 @@ nsHtml5TreeBuilder::appendToCurrentNodeAndPushHeadElement(nsHtml5HtmlAttributes*
   nsIContent* elt = createElement(kNameSpaceID_XHTML, nsHtml5Atoms::head, attributes);
   appendElement(elt, stack[currentPtr]->node);
   headPointer = elt;
+  nsHtml5Portability::retainElement(headPointer);
   nsHtml5StackNode* node = new nsHtml5StackNode(kNameSpaceID_XHTML, nsHtml5ElementName::HEAD, elt);
   push(node);
   nsHtml5Portability::releaseElement(elt);
@@ -3223,6 +3267,7 @@ nsHtml5TreeBuilder::appendToCurrentNodeAndPushFormElementMayFoster(nsHtml5HtmlAt
   flushCharacters();
   nsIContent* elt = createElement(kNameSpaceID_XHTML, nsHtml5Atoms::form, attributes);
   formPointer = elt;
+  nsHtml5Portability::retainElement(formPointer);
   nsHtml5StackNode* current = stack[currentPtr];
   if (current->fosterParenting) {
 

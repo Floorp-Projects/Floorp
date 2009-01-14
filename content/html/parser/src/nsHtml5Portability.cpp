@@ -196,30 +196,6 @@ nsHtml5Portability::isIndexPrompt()
   return rv;
 }
 
-PRBool
-nsHtml5Portability::localEqualsHtmlIgnoreAsciiCase(nsIAtom* name)
-{
-  const char* reference = "html";
-  const char* buf;
-  name->GetUTF8String(&buf);
-  for(;;) {
-    char refChar = *reference;
-    char bufChar = *buf;
-    if (bufChar >= 'A' && bufChar <= 'Z') {
-      bufChar += 0x20;
-    }
-    if (refChar != bufChar) {
-      return PR_FALSE;
-    }
-    if (!refChar) {
-      return PR_TRUE;
-    }
-    ++reference;
-    ++buf;
-  }
-  return PR_TRUE; // unreachable but keep compiler happy
-}
-
 void
 nsHtml5Portability::initializeStatics()
 {
