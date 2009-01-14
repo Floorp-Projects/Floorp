@@ -45,9 +45,11 @@ relativesrcdir	= security/ssl
 include $(DEPTH)/config/autoconf.mk
 include $(topsrcdir)/config/rules.mk
 
-# _CHROME_FILES	= \
-#		$(NULL)
+_CHROME_FILES	= \
+	test_bug466080.html \
+	bug466080.sjs \
+		$(NULL)
 #	test_bug413909.html \ # Leaks the world.
 
-# libs:: $(_CHROME_FILES)
-#	$(INSTALL) $(foreach f,$^,"$f") $(DEPTH)/_tests/testing/mochitest/chrome/$(relativesrcdir)
+libs:: $(_CHROME_FILES)
+	$(INSTALL) $(foreach f,$^,"$f") $(DEPTH)/_tests/testing/mochitest/chrome/$(relativesrcdir)

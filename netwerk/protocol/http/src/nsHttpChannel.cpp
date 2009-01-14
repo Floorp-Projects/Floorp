@@ -657,6 +657,11 @@ nsHttpChannel::SetupTransaction()
         return NS_ERROR_OUT_OF_MEMORY;
     NS_ADDREF(mTransaction);
 
+    // See bug #466080. Transfer LOAD_ANONYMOUS flag to socket-layer.
+    if (mLoadFlags & LOAD_ANONYMOUS) {
+        mCaps |= NS_HTTP_LOAD_ANONYMOUS;
+    }
+
     nsCOMPtr<nsIAsyncInputStream> responseStream;
     rv = mTransaction->Init(mCaps, mConnectionInfo, &mRequestHead,
                             mUploadStream, mUploadStreamHasHeaders,
