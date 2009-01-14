@@ -750,7 +750,7 @@ struct JSContext {
      * Operation count. It is declared as the first field in the struct to
      * ensure the fastest possible access.
      */
-    int32               operationCount;
+    volatile int32      operationCount;
 
     /* JSRuntime contextList linkage. */
     JSCList             link;
@@ -860,11 +860,10 @@ struct JSContext {
     JSErrorReporter     errorReporter;
 
     /*
-     * Flag indicating that the operation callback is set. When the flag is 0
-     * but operationCallback is not null, operationCallback stores the branch
+     * Flag indicating that operationCallback stores the deprecated branch
      * callback.
      */
-    uint32              operationCallbackIsSet :    1;
+    uint32              branchCallbackWasSet   :    1;
     uint32              operationLimit         :    31;
     JSOperationCallback operationCallback;
 
@@ -1273,6 +1272,23 @@ extern JSErrorFormatString js_ErrorFormatString[JSErr_Limit];
  */
 extern JSBool
 js_ResetOperationCount(JSContext *cx);
+
+static JS_INLINE void
+js_InitOperationLimit(JSContext *cx)
+{
+    /*
+     * Set the limit to 1 + max to detect if JS_SetOperationLimit() was ever
+     * called.
+     */
+    cx->operationCount = (int32) JS_MAX_OPERATION_LIMIT + 1;
+    cx->operationLimit = JS_MAX_OPERATION_LIMIT + 1;
+}
+
+static JS_INLINE JSBool
+js_HasOperationLimit(JSContext *cx)
+{
+    return cx->operationLimit <= JS_MAX_OPERATION_LIMIT;
+}
 
 /*
  * Get the current cx->fp, first lazily instantiating stack frames if needed.
