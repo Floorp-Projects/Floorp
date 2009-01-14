@@ -78,7 +78,6 @@ Tracker.prototype = {
     this._score = 0;
     this._ignored = [];
     this.loadChangedIDs();
-    this.enable();
   },
 
   /*
@@ -170,29 +169,31 @@ Tracker.prototype = {
   addChangedID: function T_addChangedID(id) {
     if (!id) {
       this._log.warn("Attempted to add undefined ID to tracker");
-      return;
+      return false;
     }
     if (id in this._ignored)
-      return;
-    this._log.debug("Adding changed ID " + id);
+      return false;
     if (!this.changedIDs[id]) {
+      this._log.debug("Adding changed ID " + id);
       this.changedIDs[id] = true;
       this.saveChangedIDs();
     }
+    return true;
   },
 
   removeChangedID: function T_removeChangedID(id) {
     if (!id) {
       this._log.warn("Attempted to remove undefined ID to tracker");
-      return;
+      return false;
     }
     if (id in this._ignored)
-      return;
-    this._log.debug("Removing changed ID " + id);
+      return false;
     if (this.changedIDs[id]) {
+      this._log.debug("Removing changed ID " + id);
       delete this.changedIDs[id];
       this.saveChangedIDs();
     }
+    return true;
   },
 
   clearChangedIDs: function T_clearChangedIDs() {
