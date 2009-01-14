@@ -229,28 +229,27 @@ static struct {
     },
 };
 static struct {
-    jsbytecode sign[37];
+    jsbytecode sign[34];
 } unary_imacros = {
     {
 /* 0*/  JSOP_DUP,
 /* 1*/  JSOP_DUP,
 /* 2*/  JSOP_GETPROP, 0, COMMON_ATOM_INDEX(valueOf),
-/* 5*/  JSOP_IFPRIMTOP, 0, 21,
+/* 5*/  JSOP_IFPRIMTOP, 0, 18,
 /* 8*/  JSOP_SWAP,
-/* 9*/  JSOP_STRING, 0, COMMON_TYPE_ATOM_INDEX(JSTYPE_NUMBER),
-/*12*/  JSOP_CALL, 0, 1,
-/*15*/  JSOP_IFPRIMTOP, 0, 6,
-/*18*/  JSOP_GOTO, 0, 9,
-/*21*/  JSOP_SWAP,
-/*22*/  JSOP_POP,
-/*23*/  JSOP_GOTO, 0, 12,
-/*26*/  JSOP_POP,
-/*27*/  JSOP_POP,
-/*28*/  JSOP_CALLPROP, 0, COMMON_ATOM_INDEX(toString),
-/*31*/  JSOP_CALL, 0, 0,
-/*34*/  JSOP_PRIMTOP,
-/*35*/  JSOP_IMACOP,
-/*36*/  JSOP_STOP,
+/* 9*/  JSOP_CALL, 0, 0,
+/*12*/  JSOP_IFPRIMTOP, 0, 6,
+/*15*/  JSOP_GOTO, 0, 9,
+/*18*/  JSOP_SWAP,
+/*19*/  JSOP_POP,
+/*20*/  JSOP_GOTO, 0, 12,
+/*23*/  JSOP_POP,
+/*24*/  JSOP_POP,
+/*25*/  JSOP_CALLPROP, 0, COMMON_ATOM_INDEX(toString),
+/*28*/  JSOP_CALL, 0, 0,
+/*31*/  JSOP_PRIMTOP,
+/*32*/  JSOP_IMACOP,
+/*33*/  JSOP_STOP,
     },
 };
 static struct {
@@ -571,8 +570,8 @@ uint8 js_opcode2extra[JSOP_LIMIT] = {
     3,  /* JSOP_MOD */
     0,  /* JSOP_NOT */
     0,  /* JSOP_BITNOT */
-    3,  /* JSOP_NEG */
-    3,  /* JSOP_POS */
+    2,  /* JSOP_NEG */
+    2,  /* JSOP_POS */
     0,  /* JSOP_DELNAME */
     0,  /* JSOP_DELPROP */
     0,  /* JSOP_DELELEM */
