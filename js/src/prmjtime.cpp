@@ -139,12 +139,8 @@ PRMJ_ToExtendedTime(JSInt32 base_time)
 
     JSLL_UI2L(g1970GMTMicroSeconds,G1970GMTMICROHI);
     JSLL_UI2L(low,G1970GMTMICROLOW);
-#ifndef JS_HAVE_LONG_LONG
     JSLL_SHL(g1970GMTMicroSeconds,g1970GMTMicroSeconds,16);
     JSLL_SHL(g1970GMTMicroSeconds,g1970GMTMicroSeconds,16);
-#else
-    JSLL_SHL(g1970GMTMicroSeconds,g1970GMTMicroSeconds,32);
-#endif
     JSLL_ADD(g1970GMTMicroSeconds,g1970GMTMicroSeconds,low);
 
     JSLL_I2L(exttime,base_time);
