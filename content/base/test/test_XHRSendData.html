@@ -126,7 +126,12 @@ for each(test in tests) {
     is(xhr.getResponseHeader("Result-Content-Type"), null);
   }
 
-  is(xhr.responseText, test.resBody, "Wrong body");  
+  if (test.body instanceof Document) {
+    is(xhr.responseText.replace("\r\n", "\n"), test.resBody, "Wrong body");
+  }
+  else {
+    is(xhr.responseText, test.resBody, "Wrong body");
+  }
 }
 
 </script>
