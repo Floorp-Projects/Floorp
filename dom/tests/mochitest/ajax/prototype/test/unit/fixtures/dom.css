@@ -1,0 +1,85 @@
+#style_test_1 { cursor: pointer; font-size:12px;}
+div.style-test { margin-left: 1px }
+
+#style_test_dimensions_container { 
+  position: absolute;
+  top: 0;
+  left: 500px;
+  width: 20px;
+  height: 30px;
+  margin: 10px;
+  padding: 10px;
+  border: 3px solid red;
+}
+
+#not_floating_style { float: none }
+#floating_style { float: left }
+#op2 { opacity:0.5;filter:alpha(opacity=50)progid:DXImageTransform.Microsoft.Blur(strength=10);}
+
+#scroll_test_1 { 
+  margin: 10px;
+  padding: 10px;
+  position: relative;
+}
+
+#scroll_test_2 {
+  position: absolute;
+  left: 10px;
+  top: 10px;
+}
+
+#dimensions-visible,
+#dimensions-display-none,
+#dimensions-visible-pos-rel,
+#dimensions-display-none-pos-rel,
+#dimensions-visible-pos-abs,
+#dimensions-display-none-pos-abs {
+  font-size: 10px;
+  height: 10em;
+  width: 20em;
+}
+
+#dimensions-visible-pos-abs,
+#dimensions-display-none-pos-abs {
+  position: absolute;
+  top: 15px;
+  left: 15px;
+}
+
+#dimensions-visible-pos-rel,
+#dimensions-display-none-pos-rel {
+  position: relative;
+  top: 15px;
+  left: 15px;
+}
+
+#dimensions-display-none, #dimensions-display-none-pos-rel, #dimensions-display-none-pos-abs {
+  display: none;
+}
+
+#dimensions-table, #dimensions-tbody, #dimensions-tr, #dimensions-td {
+  font-size: 10px;
+  margin: 0;
+  padding: 0;
+  border: 0;
+  border-spacing: 0;
+  height: 10em;
+  width: 20em;
+}
+
+
+#notInlineAbsoluted { position: absolute; }
+
+#elementToViewportDimensions {
+  position: absolute;
+  top: 0;
+  left: 0;
+  height: 10px;
+  width: 10px;
+  background: #000;
+}
+
+/* for scroll test on really big screens */
+body {
+  height: 40000px;
+}
