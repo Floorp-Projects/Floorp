@@ -1996,15 +1996,14 @@ nsSSLIOLayerNewSocket(PRInt32 family,
                       PRInt32 proxyPort,
                       PRFileDesc **fd,
                       nsISupports** info,
-                      PRBool forSTARTTLS,
-                      PRBool anonymousLoad)
+                      PRBool forSTARTTLS)
 {
 
   PRFileDesc* sock = PR_OpenTCPSocket(family);
   if (!sock) return NS_ERROR_OUT_OF_MEMORY;
 
   nsresult rv = nsSSLIOLayerAddToSocket(family, host, port, proxyHost, proxyPort,
-                                        sock, info, forSTARTTLS, anonymousLoad);
+                                        sock, info, forSTARTTLS);
   if (NS_FAILED(rv)) {
     PR_Close(sock);
     return rv;
@@ -3111,8 +3110,7 @@ nsNSSBadCertHandler(void *arg, PRFileDesc *sslSocket)
 static PRFileDesc*
 nsSSLIOLayerImportFD(PRFileDesc *fd,
                      nsNSSSocketInfo *infoObject,
-                     const char *host,
-                     PRBool anonymousLoad)
+                     const char *host)
 {
   nsNSSShutDownPreventionLock locker;
   PRFileDesc* sslSock = SSL_ImportFD(nsnull, fd);
@@ -3122,15 +3120,9 @@ nsSSLIOLayerImportFD(PRFileDesc *fd,
   }
   SSL_SetPKCS11PinArg(sslSock, (nsIInterfaceRequestor*)infoObject);
   SSL_HandshakeCallback(sslSock, HandshakeCallback, infoObject);
-
-  // Disable this hook if we connect anonymously. See bug 466080.
-  if (anonymousLoad) {
-      SSL_GetClientAuthDataHook(sslSock, NULL, infoObject);
-  } else {
-      SSL_GetClientAuthDataHook(sslSock, 
+  SSL_GetClientAuthDataHook(sslSock, 
                             (SSLGetClientAuthData)nsNSS_SSLGetClientAuthData,
                             infoObject);
-  }
   SSL_AuthCertificateHook(sslSock, AuthCertificateCallback, 0);
 
   PRInt32 ret = SSL_SetURL(sslSock, host);
@@ -3149,7 +3141,7 @@ loser:
 static nsresult
 nsSSLIOLayerSetOptions(PRFileDesc *fd, PRBool forSTARTTLS, 
                        const char *proxyHost, const char *host, PRInt32 port,
-                       PRBool anonymousLoad, nsNSSSocketInfo *infoObject)
+                       nsNSSSocketInfo *infoObject)
 {
   nsNSSShutDownPreventionLock locker;
   if (forSTARTTLS || proxyHost) {
@@ -3200,13 +3192,7 @@ nsSSLIOLayerSetOptions(PRFileDesc *fd, PRBool forSTARTTLS,
   }
 
   // Set the Peer ID so that SSL proxy connections work properly.
-  char *peerId;
-  if (anonymousLoad) {  // See bug #466080. Separate the caches.
-      peerId = PR_smprintf("anon:%s:%d", host, port);
-  } else {
-      peerId = PR_smprintf("%s:%d", host, port);
-  }
-  
+  char *peerId = PR_smprintf("%s:%d", host, port);
   if (SECSuccess != SSL_SetSockPeerID(fd, peerId)) {
     PR_smprintf_free(peerId);
     return NS_ERROR_FAILURE;
@@ -3224,8 +3210,7 @@ nsSSLIOLayerAddToSocket(PRInt32 family,
                         PRInt32 proxyPort,
                         PRFileDesc* fd,
                         nsISupports** info,
-                        PRBool forSTARTTLS,
-                        PRBool anonymousLoad)
+                        PRBool forSTARTTLS)
 {
   nsNSSShutDownPreventionLock locker;
   PRFileDesc* layer = nsnull;
@@ -3239,7 +3224,7 @@ nsSSLIOLayerAddToSocket(PRInt32 family,
   infoObject->SetHostName(host);
   infoObject->SetPort(port);
 
-  PRFileDesc *sslSock = nsSSLIOLayerImportFD(fd, infoObject, host, anonymousLoad);
+  PRFileDesc *sslSock = nsSSLIOLayerImportFD(fd, infoObject, host);
   if (!sslSock) {
     NS_ASSERTION(PR_FALSE, "NSS: Error importing socket");
     goto loser;
@@ -3247,8 +3232,7 @@ nsSSLIOLayerAddToSocket(PRInt32 family,
 
   infoObject->SetFileDescPtr(sslSock);
 
-  rv = nsSSLIOLayerSetOptions(sslSock,
-                              forSTARTTLS, proxyHost, host, port, anonymousLoad,
+  rv = nsSSLIOLayerSetOptions(sslSock, forSTARTTLS, proxyHost, host, port,
                               infoObject);
 
   if (NS_FAILED(rv))
