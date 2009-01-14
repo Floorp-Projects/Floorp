@@ -123,6 +123,7 @@ html|*.menulist-editable-input {
   -moz-box-align: center;
   -moz-box-pack: center;
   margin: 0;
+  border: 2px solid;
   -moz-border-top-colors: ThreeDHighlight ThreeDLightShadow;
   -moz-border-right-colors: ThreeDDarkShadow ThreeDShadow;
   -moz-border-bottom-colors: ThreeDDarkShadow ThreeDShadow;
