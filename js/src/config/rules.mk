@@ -323,7 +323,7 @@ ifdef SHARED_LIBRARY_NAME
 MAPFILE=$(SHARED_LIBRARY_NAME).map
 else
 MAPFILE=$(basename $(@F)).map
-endif # LIBRARY_NAME
+endif # SHARED_LIBRARY_NAME
 endif # MOZ_MAPINFO
 
 ifdef DEFFILE
@@ -950,7 +950,7 @@ ifdef PROGRAM
 endif
 ifdef SHARED_LIBRARY
 	$(PYTHON) $(topsrcdir)/build/win32/pgomerge.py \
-	  $(LIBRARY_NAME) $(DIST)/bin
+	  $(SHARED_LIBRARY_NAME) $(DIST)/bin
 endif
 endif
 endif # MOZ_PROFILE_USE
