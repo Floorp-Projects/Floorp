@@ -136,7 +136,7 @@ function popupHidden()
   }
   else if (gTests[gTestIndex] == "context menu enough space below") {
     gContextMenuTests = true;
-    window.moveTo(screen.availLeft + 400, screen.availTop + 10);
+    window.moveTo(window.screenX, screen.availTop + 10);
     synthesizeMouse(document.getElementById("label"), 4, 4, { type: "contextmenu", button: 2 });
   }
   else if (gContextMenuTests) {
@@ -154,7 +154,6 @@ function contextMenuPopupShown()
   var labelrect = document.getElementById("label").getBoundingClientRect();
 
   // XXXndeakin disable test on Linux for now
-  if (navigator.platform.indexOf("Lin") == -1)
     is(rect.left, labelrect.left + 6, gTests[gTestIndex] + " left");
   switch (gTests[gTestIndex]) {
     case "context menu enough space below":
@@ -175,7 +174,7 @@ function contextMenuPopupShown()
          gTests[gTestIndex] + " top");
       break;
     case "context menu larger than screen":
-      is(rect.top, -(gScreenY - screen.availTop), gTests[gTestIndex] + " top");
+      ok(rect.top == -(gScreenY - screen.availTop) || rect.top == -(gScreenY - screen.top), gTests[gTestIndex] + " top");
       break;
   }
 
