@@ -9674,6 +9674,8 @@ nsCSSFrameConstructor::CharacterDataChanged(nsIContent* aContent,
 nsresult
 nsCSSFrameConstructor::ProcessRestyledFrames(nsStyleChangeList& aChangeList)
 {
+  NS_ASSERTION(!nsContentUtils::IsSafeToRunScript(),
+               "Someone forgot a script blocker");
   PRInt32 count = aChangeList.Count();
   if (!count)
     return NS_OK;
@@ -13261,6 +13263,11 @@ nsCSSFrameConstructor::RebuildAllStyleData(nsChangeHint aExtraHint)
     return;
   }
 
+  nsAutoScriptBlocker scriptBlocker;
+
+  // Make sure that the viewmanager will outlive the presshell
+  nsIViewManager::UpdateViewBatch batch(mPresShell->GetViewManager());
+
   // Processing the style changes could cause a flush that propagates to
   // the parent frame and thus destroys the pres shell.
   nsCOMPtr<nsIPresShell> kungFuDeathGrip(mPresShell);
@@ -13268,8 +13275,10 @@ nsCSSFrameConstructor::RebuildAllStyleData(nsChangeHint aExtraHint)
   // Tell the style set to get the old rule tree out of the way
   // so we can recalculate while maintaining rule tree immutability
   nsresult rv = mPresShell->StyleSet()->BeginReconstruct();
-  if (NS_FAILED(rv))
+  if (NS_FAILED(rv)) {
+    batch.EndUpdateViewBatch(NS_VMREFRESH_NO_SYNC);
     return;
+  }
 
   // Recalculate all of the style contexts for the document
   // Note that we can ignore the return value of ComputeStyleChangeFor
@@ -13290,6 +13299,7 @@ nsCSSFrameConstructor::RebuildAllStyleData(nsChangeHint aExtraHint)
   // reconstructed will still have their old style context pointers
   // until they are destroyed).
   mPresShell->StyleSet()->EndReconstruct();
+  batch.EndUpdateViewBatch(NS_VMREFRESH_NO_SYNC);
 }
 
 void
@@ -13450,8 +13460,10 @@ nsCSSFrameConstructor::LazyGenerateChildrenEvent::Run()
       nsFrameConstructorState state(mPresShell, nsnull, nsnull, nsnull);
       nsresult rv = fc->ProcessChildren(state, mContent, frame->GetStyleContext(),
                                         frame, PR_FALSE, childItems, PR_FALSE);
-      if (NS_FAILED(rv))
+      if (NS_FAILED(rv)) {
+        fc->EndUpdate();
         return rv;
+      }
 
       frame->SetInitialChildList(nsnull, childItems.childList);
 
