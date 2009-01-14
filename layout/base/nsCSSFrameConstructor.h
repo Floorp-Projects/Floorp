@@ -271,10 +271,6 @@ public:
   nsIFrame* GetRootElementStyleFrame() { return mRootElementStyleFrame; }
   nsIFrame* GetPageSequenceFrame() { return mPageSequenceFrame; }
 
-  // Get the frame that is the parent of the root element.
-  nsIFrame* GetDocElementContainingBlock()
-    { return mDocElementContainingBlock; }
-
 private:
 
   nsresult ReconstructDocElementHierarchyInternal();
