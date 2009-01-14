@@ -4917,6 +4917,9 @@ function middleMousePaste(event)
 var contentAreaDNDObserver = {
   onDrop: function (aEvent, aXferData, aDragSession)
     {
+      if (aEvent.getPreventDefault())
+        return;
+
       var url = transferUtils.retrieveURLFromData(aXferData.data, aXferData.flavour.contentType);
 
       // valid urls don't contain spaces ' '; if we have a space it
