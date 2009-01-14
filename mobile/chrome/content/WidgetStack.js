@@ -718,110 +718,12 @@ WidgetStack.prototype = {
   // updateSize: tell the WidgetStack to update its size, because it
   // was either resized or some other event took place.
   updateSize: function updateSize() {
-    // this code is not currently used
-    return
     // XXX assumes we can only be resized from the bottom left/bottom right
     let rect = this._el.getBoundingClientRect();
     this._viewingRect.width = rect.width;
     this._viewingRect.height = rect.height;
 
     this._adjustViewingRect();
-
-    // If the viewport changed size (the only thing that's allowed to for now),
-    // update its internal sizes
-    let vws = this._viewport;
-    if (vws) {
-      let vwb = this._viewportBounds;
-      let vwib = vws.viewportInnerBounds;
-      let vww = vws.widget
-      let w,h;
-
-      if (vww.hasAttribute("vptargetw") &&
-          vww.hasAttribute("vptargeth")) 
-      {
-        w = parseInt(vww.getAttribute("vptargetw"));
-        h = parseInt(vww.getAttribute("vptargeth"));
-      } else if (vww.hasAttribute("widgetwidth") &&
-                 vww.hasAttribute("widgetheight")) 
-      {
-        w = parseInt(vww.getAttribute("widgetwidth"));
-        h = parseInt(vww.getAttribute("widgetheight"));
-      } else 
-      {
-        let newViewportRect = vww.getBoundingClientRect();
-        w = newViewportRect.width;
-        h = newViewportRect.height;
-      }
-
-      // the amount the viewport size changed by
-      let dw = w - vws.rect.width;
-      let dh = h - vws.rect.height;
-
-      if (dw != 0 || dh != 0) {
-        // the amount we'll need to move the viewport inner bounds origin by
-        // to make sure that it stays within the viewport
-        let dx = 0;
-        let dy = 0;
-
-        log("updateSize: viewport size:", w, h, "old:", vws.rect.width, vws.rect.height);
-
-        vws.rect.width = w;
-        vws.rect.height = h;
-
-        // if we'd blow past the left/bottom of the bounds, calculate adjustment to
-        // the inner bounds origin
-        if (vwib.right + dw > vwb.right)
-          dx = vwb.right - (vwib.right + dw);
-        if (vwib.bottom + dh > vwb.bottom)
-          dy = vwb.bottom - (vwib.bottom + dh);
-
-        // if with the new inner bounds origin we'd blow past the right/top, then just
-        // make the adjustment take us to the origin
-        if (vwib.left + dx < vwb.left)
-          dx = vwb.left - vwib.left;
-        if (vwib.top + dy < vwb.top)
-          dy = vwb.bottom - vwib.bottom;
-
-        // make the adjustments
-        vwib.right += dx;
-        vwib.top += dy;
-        // XXX should these take us to a max of vwb.width/vwb.height? or is it ok if it's bigger?
-        vwib.width += dw;
-        vwib.height += dh;
-
-        for (let wid in this._widgetState) {
-          let state = this._widgetState[wid];
-          let commit = false;
-
-          if (state.vpRelative) {
-            if (!state.vpOffsetXBefore) {
-              state.vpOffsetX -= dw;
-              state.rect.x -= dw;
-              commit = true;
-            }
-            if (!state.vpOffsetYBefore) {
-              state.vpOffsetY -= dh;
-              state.rect.y -= dh;
-              commit = true;
-            }
-          }
-
-          if (commit)
-            this._commitState(state);
-        }
-
-        this._viewportOverflow.right += dw;
-        this._viewportOverflow.bottom += dh;
-
-        this._pannableBounds = this._viewportBounds.clone().expandBy(this._viewportOverflow);
-
-        log("pb", this._pannableBounds);
-
-        this._viewportUpdate(true);
-      }
-    }
-
-    // note: the actual viewport bounds didn't change, so we don't need to move any of the relative widgets
   },
 
   //
