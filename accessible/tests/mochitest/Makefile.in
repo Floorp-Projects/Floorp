@@ -60,10 +60,12 @@ _TEST_FILES =\
 		test_aria_activedescendant.html \
 		test_aria_role_article.html \
 		test_aria_role_equation.html \
+		test_aria_token_attrs.html \
 		$(warning test_bug368835.xul temporarily disabled) \
 		test_bug420863.html \
 		test_cssattrs.html \
 		test_events_caretmove.html \
+		test_events_mutation.html \
 		test_groupattrs.xul \
 		test_groupattrs.html \
 	$(warning test_table_indexes.html temporarily disabled) \

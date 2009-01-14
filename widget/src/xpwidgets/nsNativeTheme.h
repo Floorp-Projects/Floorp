@@ -165,6 +165,9 @@ class nsNativeTheme
       return CheckBooleanAttr(aFrame, nsWidgetAtoms::readonly);
   }
 
+  // menupopup:
+  PRBool IsSubmenu(nsIFrame* aFrame, PRBool* aLeftOfParent);
+
   nsIPresShell *GetPresShell(nsIFrame* aFrame);
   PRInt32 CheckIntAttr(nsIFrame* aFrame, nsIAtom* aAtom, PRInt32 defaultValue);
   PRBool CheckBooleanAttr(nsIFrame* aFrame, nsIAtom* aAtom);

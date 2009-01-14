@@ -566,7 +566,18 @@ BrowserGlue.prototype = {
     }
     else {
       // ensurePlacesDefaultQueriesInitialized() is called by import.
-      this._prefs.setIntPref("browser.places.smartBookmarksVersion", 0);
+      // Don't try to recreate smart bookmarks if autoExportHTML is true or
+      // smart bookmarks are disabled.
+      var autoExportHTML = false;
+      try {
+        autoExportHTML = this._prefs.getBoolPref("browser.bookmarks.autoExportHTML");
+      } catch(ex) {}
+      var smartBookmarksVersion = 0;
+      try {
+        smartBookmarksVersion = this._prefs.getIntPref("browser.places.smartBookmarksVersion");
+      } catch(ex) {}
+      if (!autoExportHTML && smartBookmarksVersion != -1)
+        this._prefs.setIntPref("browser.places.smartBookmarksVersion", 0);
 
       // Get bookmarks.html file location
       var dirService = Cc["@mozilla.org/file/directory_service;1"].
@@ -916,12 +927,7 @@ BrowserGlue.prototype = {
     }
   },
 
-#ifdef XP_UNIX
-#ifndef XP_MACOSX
-#define BROKEN_WM_Z_ORDER
-#endif
-#endif
-#ifdef XP_OS2
+#ifndef XP_WIN
 #define BROKEN_WM_Z_ORDER
 #endif
 

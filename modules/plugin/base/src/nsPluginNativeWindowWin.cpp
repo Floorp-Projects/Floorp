@@ -490,7 +490,7 @@ nsresult nsPluginNativeWindowWin::CallSetWindow(nsCOMPtr<nsIPluginInstance> &aPl
 
   // We need WndProc before plug-ins do subclass in nsPluginNativeWindow::CallSetWindow.
   if (aPluginInstance) {
-    WNDPROC currentWndProc = (WNDPROC)::GetWindowLong((HWND)window, GWL_WNDPROC);
+    WNDPROC currentWndProc = (WNDPROC)::GetWindowLongPtr((HWND)window, GWLP_WNDPROC);
     if (currentWndProc != PluginWndProc)
       mPrevWinProc = currentWndProc;
   }
@@ -518,11 +518,11 @@ nsresult nsPluginNativeWindowWin::SubclassAndAssociateWindow()
     return NS_ERROR_FAILURE;
 
   // check if we need to re-subclass
-  WNDPROC currentWndProc = (WNDPROC)::GetWindowLong(hWnd, GWL_WNDPROC);
+  WNDPROC currentWndProc = (WNDPROC)::GetWindowLongPtr(hWnd, GWLP_WNDPROC);
   if (PluginWndProc == currentWndProc)
     return NS_OK;
 
-  mPluginWinProc = SubclassWindow(hWnd, (LONG)PluginWndProc);
+  mPluginWinProc = SubclassWindow(hWnd, (LONG_PTR)PluginWndProc);
   if (!mPluginWinProc)
     return NS_ERROR_FAILURE;
 
@@ -548,9 +548,9 @@ nsresult nsPluginNativeWindowWin::UndoSubclassAndAssociateWindow()
   // restore the original win proc
   // but only do this if this were us last time
   if (mPluginWinProc) {
-    WNDPROC currentWndProc = (WNDPROC)::GetWindowLong(hWnd, GWL_WNDPROC);
+    WNDPROC currentWndProc = (WNDPROC)::GetWindowLongPtr(hWnd, GWLP_WNDPROC);
     if (currentWndProc == PluginWndProc)
-      SubclassWindow(hWnd, (LONG)mPluginWinProc);
+      SubclassWindow(hWnd, (LONG_PTR)mPluginWinProc);
   }
 
   return NS_OK;

@@ -123,6 +123,7 @@
 #include "nsReadableUtils.h"
 #include "nsStaticComponents.h"
 #include "nsXPCOM.h"
+#include "nsXPCOMCIDInternal.h"
 #include "nsXPIDLString.h"
 #include "nsXPFEComponentsCID.h"
 #include "nsVersionComparator.h"
@@ -892,6 +893,12 @@ static nsModuleComponentInfo kComponents[] =
     "nsXULAppInfo",
     APPINFO_CID,
     XULAPPINFO_SERVICE_CONTRACTID,
+    AppInfoConstructor
+  },
+  {
+    "nsXULAppInfo",
+    APPINFO_CID,
+    XULRUNTIME_SERVICE_CONTRACTID,
     AppInfoConstructor
   }
 #ifdef MOZ_CRASHREPORTER

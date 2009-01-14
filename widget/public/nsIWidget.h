@@ -1158,7 +1158,7 @@ class nsIWidget : public nsISupports {
     virtual nsresult ForceUpdateNativeMenuAt(const nsAString& indexString) = 0;
 
     /*
-     * Force Input Method Editor to commit the uncommited input
+     * Force Input Method Editor to commit the uncommitted input
      */
     NS_IMETHOD ResetInputState()=0;
 

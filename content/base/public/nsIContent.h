@@ -404,7 +404,7 @@ public:
    * @returns The name at the given index, or null if the index is
    *          out-of-bounds.
    * @note    The document returned by NodeInfo()->GetDocument() (if one is
-   *          present) is *not* neccesarily the owner document of the element.
+   *          present) is *not* necessarily the owner document of the element.
    * @note    The pointer returned by this function is only valid until the
    *          next call of either GetAttrNameAt or SetAttr on the element.
    */

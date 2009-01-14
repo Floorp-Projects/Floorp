@@ -35,11 +35,11 @@ tab {
   -moz-appearance: tab;
 }
 
-tab[first-tab=true] {
+tab:first-of-type {
   -moz-padding-start: 2px;
 }
 
-tab[last-tab=true] {
+tab:last-of-type {
   -moz-padding-end: 2px;
 }
 
@@ -116,13 +116,13 @@ tabs.tabs-bottom > tab[beforeselected=true] {
   -moz-margin-end: -2px;
 }
 
-tabbox.tabs-bottom > tabs > tab:not([selected=true])[first-tab=true],
-tabs.tabs-bottom > tab:not([selected=true])[first-tab=true] {
+tabbox.tabs-bottom > tabs > tab:first-of-type:not([selected=true]),
+tabs.tabs-bottom > tab:first-of-type:not([selected=true]) {
   -moz-border-start: 4px solid transparent;
 }
 
-tabbox.tabs-bottom > tabs > tab[selected=true][first-tab=true],
-tabs.tabs-bottom > tab[selected=true][first-tab=true] {
+tabbox.tabs-bottom > tabs > tab:first-of-type[selected=true],
+tabs.tabs-bottom > tab:first-of-type[selected=true] {
   -moz-margin-start: 2px;
 }
 

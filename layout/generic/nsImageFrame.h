@@ -96,8 +96,7 @@ class nsImageFrame : public ImageFrameSuper, public nsIImageFrame {
 public:
   nsImageFrame(nsStyleContext* aContext);
 
-  // nsISupports 
-  NS_IMETHOD QueryInterface(const nsIID& aIID, void** aInstancePtr);
+  NS_DECL_QUERYFRAME
 
   virtual void Destroy();
   NS_IMETHOD Init(nsIContent*      aContent,

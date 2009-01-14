@@ -59,10 +59,6 @@ class  nsHTMLFramesetBorderFrame;
 class  nsGUIEvent;
 class  nsHTMLFramesetFrame;
 
-#define NS_IFRAMESETFRAME_IID \
-{ 0xf47deac0, 0x4200, 0x11d2, \
-  { 0x80, 0x3c, 0x0, 0x60, 0x8, 0x15, 0xa7, 0x91 } }
-
 #define NO_COLOR 0xFFFFFFFA
 
 struct nsBorderColor 
@@ -108,14 +104,13 @@ struct nsFramesetDrag {
 class nsHTMLFramesetFrame : public nsHTMLContainerFrame
 {
 public:
-  // Woohoo, concrete class with an IID!
-  NS_DECLARE_STATIC_IID_ACCESSOR(NS_IFRAMESETFRAME_IID)
+  NS_DECLARE_FRAME_ACCESSOR(nsHTMLFramesetFrame)
 
   nsHTMLFramesetFrame(nsStyleContext* aContext);
 
   virtual ~nsHTMLFramesetFrame();
 
-  NS_IMETHOD QueryInterface(const nsIID& aIID, void** aInstancePtr);
+  NS_DECL_QUERYFRAME
 
   NS_IMETHOD Init(nsIContent*      aContent,
                   nsIFrame*        aParent,
@@ -271,7 +266,5 @@ protected:
   
   PRBool mForceFrameResizability;
 };
-
-NS_DEFINE_STATIC_IID_ACCESSOR(nsHTMLFramesetFrame, NS_IFRAMESETFRAME_IID)
 
 #endif

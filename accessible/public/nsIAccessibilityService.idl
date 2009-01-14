@@ -52,29 +52,29 @@ interface nsIAccessibilityService : nsIAccessibleRetrieval
   nsIAccessible createOuterDocAccessible(in nsIDOMNode aNode);
   nsIAccessible createRootAccessible(in nsIPresShell aShell, in nsIDocument aDocument);
 
-  nsIAccessible createHTML4ButtonAccessible(in nsISupports aFrame);
-  nsIAccessible createHyperTextAccessible(in nsISupports aFrame);
-  nsIAccessible createHTMLBRAccessible(in nsISupports aFrame);
-  nsIAccessible createHTMLButtonAccessible(in nsISupports aFrame);
+  nsIAccessible createHTML4ButtonAccessible(in nsIFrame aFrame);
+  nsIAccessible createHyperTextAccessible(in nsIFrame aFrame);
+  nsIAccessible createHTMLBRAccessible(in nsIFrame aFrame);
+  nsIAccessible createHTMLButtonAccessible(in nsIFrame aFrame);
   nsIAccessible createHTMLAccessibleByMarkup(in nsIFrame aFrame, in nsIWeakReference aWeakShell, in nsIDOMNode aDOMNode);
-  nsIAccessible createHTMLLIAccessible(in nsISupports aFrame, in nsISupports aBulletFrame, in AString aBulletText);
-  nsIAccessible createHTMLCheckboxAccessible(in nsISupports aFrame);
+  nsIAccessible createHTMLLIAccessible(in nsIFrame aFrame, in nsIFrame aBulletFrame, in AString aBulletText);
+  nsIAccessible createHTMLCheckboxAccessible(in nsIFrame aFrame);
   nsIAccessible createHTMLComboboxAccessible(in nsIDOMNode aNode, in nsIWeakReference aPresShell);
-  nsIAccessible createHTMLGenericAccessible(in nsISupports aFrame);
-  nsIAccessible createHTMLGroupboxAccessible(in nsISupports aFrame);
-  nsIAccessible createHTMLHRAccessible(in nsISupports aFrame);
-  nsIAccessible createHTMLImageAccessible(in nsISupports aFrame);
-  nsIAccessible createHTMLLabelAccessible(in nsISupports aFrame);
+  nsIAccessible createHTMLGenericAccessible(in nsIFrame aFrame);
+  nsIAccessible createHTMLGroupboxAccessible(in nsIFrame aFrame);
+  nsIAccessible createHTMLHRAccessible(in nsIFrame aFrame);
+  nsIAccessible createHTMLImageAccessible(in nsIFrame aFrame);
+  nsIAccessible createHTMLLabelAccessible(in nsIFrame aFrame);
   nsIAccessible createHTMLListboxAccessible(in nsIDOMNode aNode, in nsIWeakReference aPresShell);
   nsIAccessible createHTMLObjectFrameAccessible(in nsObjectFrame aFrame);
-  nsIAccessible createHTMLRadioButtonAccessible(in nsISupports aFrame);
+  nsIAccessible createHTMLRadioButtonAccessible(in nsIFrame aFrame);
   nsIAccessible createHTMLSelectOptionAccessible(in nsIDOMNode aNode, in nsIAccessible aAccParent, in nsIWeakReference aPresShell);
-  nsIAccessible createHTMLTableAccessible(in nsISupports aFrame);
-  nsIAccessible createHTMLTableCellAccessible(in nsISupports aFrame);
+  nsIAccessible createHTMLTableAccessible(in nsIFrame aFrame);
+  nsIAccessible createHTMLTableCellAccessible(in nsIFrame aFrame);
   nsIAccessible createHTMLTableHeadAccessible(in nsIDOMNode aDOMNode);
-  nsIAccessible createHTMLTextAccessible(in nsISupports aFrame);
-  nsIAccessible createHTMLTextFieldAccessible(in nsISupports aFrame);
-  nsIAccessible createHTMLCaptionAccessible(in nsISupports aFrame);
+  nsIAccessible createHTMLTextAccessible(in nsIFrame aFrame);
+  nsIAccessible createHTMLTextFieldAccessible(in nsIFrame aFrame);
+  nsIAccessible createHTMLCaptionAccessible(in nsIFrame aFrame);
 
   nsIAccessible getAccessible(in nsIDOMNode aNode, in nsIPresShell aPresShell,                          
                               in nsIWeakReference aWeakShell, 

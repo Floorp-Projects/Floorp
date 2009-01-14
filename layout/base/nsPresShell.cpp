@@ -1188,6 +1188,7 @@ private:
                                  nsEventStatus* aEventStatus);
 
   void FireResizeEvent();
+  nsRevocableEventPtr<nsRunnableMethod<PresShell> > mResizeEvent;
 
   typedef void (*nsPluginEnumCallback)(PresShell*, nsIContent*);
   void EnumeratePlugins(nsIDOMDocument *aDocument,
@@ -1655,6 +1656,7 @@ PresShell::Destroy()
   // apparently frame destruction sometimes spins the event queue when
   // plug-ins are involved(!).
   mReflowEvent.Revoke();
+  mResizeEvent.Revoke();
 
   CancelAllPendingReflows();
   CancelPostedReflowCallbacks();
@@ -2525,10 +2527,12 @@ PresShell::ResizeReflow(nscoord aWidth, nscoord aHeight)
       nsRect(0, 0, aWidth, rootFrame->GetRect().height));
   }
 
-  if (!mIsDestroying) {
-    nsContentUtils::AddScriptRunner(NS_NEW_RUNNABLE_METHOD(PresShell,
-                                                           this,
-                                                           FireResizeEvent));
+  if (!mIsDestroying && !mResizeEvent.IsPending()) {
+    nsRefPtr<nsRunnableMethod<PresShell> > resizeEvent =
+      NS_NEW_RUNNABLE_METHOD(PresShell, this, FireResizeEvent);
+    if (NS_SUCCEEDED(NS_DispatchToCurrentThread(resizeEvent))) {
+      mResizeEvent = resizeEvent;
+    }
   }
 
   return NS_OK; //XXX this needs to be real. MMP
@@ -2537,6 +2541,8 @@ PresShell::ResizeReflow(nscoord aWidth, nscoord aHeight)
 void
 PresShell::FireResizeEvent()
 {
+  mResizeEvent.Revoke();
+
   if (mIsDocumentGone)
     return;
 
@@ -2930,8 +2936,7 @@ nsIPresShell::GetRootScrollFrameAsScrollable() const
   nsIFrame* frame = GetRootScrollFrame();
   if (!frame)
     return nsnull;
-  nsIScrollableFrame* scrollableFrame = nsnull;
-  CallQueryInterface(frame, &scrollableFrame);
+  nsIScrollableFrame* scrollableFrame = do_QueryFrame(frame);
   NS_ASSERTION(scrollableFrame,
                "All scroll frames must implement nsIScrollableFrame");
   return scrollableFrame;
@@ -2947,9 +2952,7 @@ PresShell::GetPageSequenceFrame(nsIPageSequenceFrame** aResult) const
 
   *aResult = nsnull;
   nsIFrame* frame = mFrameConstructor->GetPageSequenceFrame();
-  if (frame) {
-    CallQueryInterface(frame, aResult);
-  }
+  *aResult = do_QueryFrame(frame);
   return *aResult ? NS_OK : NS_ERROR_FAILURE;
 }
 
@@ -3003,8 +3006,7 @@ PresShell::RestoreRootScrollPosition()
   if (historyState) {
     nsIFrame* scrollFrame = GetRootScrollFrame();
     if (scrollFrame) {
-      nsIScrollableFrame* scrollableFrame;
-      CallQueryInterface(scrollFrame, &scrollableFrame);
+      nsIScrollableFrame* scrollableFrame = do_QueryFrame(scrollFrame);
       if (scrollableFrame) {
         FrameManager()->RestoreFrameStateFor(scrollFrame, historyState,
                                              nsIStatefulFrame::eDocumentScrollState);
@@ -3222,8 +3224,7 @@ PresShell::GetViewToScroll(nsLayoutUtils::Direction aDirection)
   if (focusedContent) {
     nsIFrame* startFrame = GetPrimaryFrameFor(focusedContent);
     if (startFrame) {
-      nsIScrollableViewProvider* svp;
-      CallQueryInterface(startFrame, &svp);
+      nsIScrollableViewProvider* svp = do_QueryFrame(startFrame);
       // If this very frame provides a scroll view, start there instead of frame's
       // closest view, because the scroll view may be inside a child frame.
       // For example, this happens in the case of overflow:scroll.
@@ -4432,6 +4433,13 @@ PresShell::DoFlushPendingNotifications(mozFlushType aType,
     // Processing pending notifications can kill us, and some callers only
     // hold weak refs when calling FlushPendingNotifications().  :(
     nsCOMPtr<nsIPresShell> kungFuDeathGrip(this);
+
+    if (mResizeEvent.IsPending()) {
+      FireResizeEvent();
+      if (mIsDestroying) {
+        return NS_OK;
+      }
+    }
 
     // Style reresolves not in conjunction with reflows can't cause
     // painting or geometry changes, so don't bother with view update
@@ -5995,9 +6003,7 @@ StopPluginInstance(PresShell *aShell, nsIContent *aContent)
 {
   nsIFrame *frame = aShell->FrameManager()->GetPrimaryFrameFor(aContent, -1);
 
-  nsIObjectFrame *objectFrame = nsnull;
-  if (frame)
-    CallQueryInterface(frame, &objectFrame);
+  nsIObjectFrame *objectFrame = do_QueryFrame(frame);
   if (!objectFrame)
     return;
 
@@ -6281,10 +6287,9 @@ void
 PresShell::DoVerifyReflow()
 {
   if (nsIFrameDebug::GetVerifyTreeEnable()) {
-    nsIFrameDebug*  frameDebug;
     nsIFrame* rootFrame = FrameManager()->GetRootFrame();
-    if (NS_SUCCEEDED(rootFrame->QueryInterface(NS_GET_IID(nsIFrameDebug),
-                                               (void**)&frameDebug))) {
+    nsIFrameDebug *frameDebug = do_QueryFrame(rootFrame);
+    if (frameDebug) {
       frameDebug->VerifyTree();
     }
   }
@@ -6426,8 +6431,7 @@ ReResolveMenusAndTrees(nsIFrame *aFrame, void *aClosure)
 {
   // Trees have a special style cache that needs to be flushed when
   // the theme changes.
-  nsTreeBodyFrame *treeBody = nsnull;
-  CallQueryInterface(aFrame, &treeBody);
+  nsTreeBodyFrame *treeBody = do_QueryFrame(aFrame);
   if (treeBody)
     treeBody->ClearStyleAndImageCaches();
 
@@ -6601,10 +6605,8 @@ LogVerifyMessage(nsIFrame* k1, nsIFrame* k2, const char* aMsg)
   printf("verifyreflow: ");
   nsAutoString name;
   if (nsnull != k1) {
-    nsIFrameDebug*  frameDebug;
-
-    if (NS_SUCCEEDED(k1->QueryInterface(NS_GET_IID(nsIFrameDebug),
-                                        (void**)&frameDebug))) {
+    nsIFrameDebug *frameDebug = do_QueryFrame(k1);
+    if (frameDebug) {
      frameDebug->GetFrameName(name);
     }
   }
@@ -6618,10 +6620,8 @@ LogVerifyMessage(nsIFrame* k1, nsIFrame* k2, const char* aMsg)
   printf(" != ");
 
   if (nsnull != k2) {
-    nsIFrameDebug*  frameDebug;
-
-    if (NS_SUCCEEDED(k2->QueryInterface(NS_GET_IID(nsIFrameDebug),
-                                        (void**)&frameDebug))) {
+    nsIFrameDebug *frameDebug = do_QueryFrame(k2);
+    if (frameDebug) {
       frameDebug->GetFrameName(name);
     }
   }
@@ -6641,10 +6641,8 @@ LogVerifyMessage(nsIFrame* k1, nsIFrame* k2, const char* aMsg,
 {
   printf("VerifyReflow Error:\n");
   nsAutoString name;
-  nsIFrameDebug*  frameDebug;
-
-  if (NS_SUCCEEDED(k1->QueryInterface(NS_GET_IID(nsIFrameDebug),
-                                      (void**)&frameDebug))) {
+  nsIFrameDebug *frameDebug = do_QueryFrame(k1);
+  if (frameDebug) {
     fprintf(stdout, "  ");
     frameDebug->GetFrameName(name);
     fputs(NS_LossyConvertUTF16toASCII(name).get(), stdout);
@@ -6654,8 +6652,8 @@ LogVerifyMessage(nsIFrame* k1, nsIFrame* k2, const char* aMsg,
 
   printf(" != \n");
 
-  if (NS_SUCCEEDED(k2->QueryInterface(NS_GET_IID(nsIFrameDebug),
-                                      (void**)&frameDebug))) {
+  frameDebug = do_QueryFrame(k2);
+  if (frameDebug) {
     fprintf(stdout, "  ");
     frameDebug->GetFrameName(name);
     fputs(NS_LossyConvertUTF16toASCII(name).get(), stdout);
@@ -7013,13 +7011,13 @@ PresShell::VerifyIncrementalReflow()
   PRBool ok = CompareTrees(mPresContext, root1, cx, root2);
   if (!ok && (VERIFY_REFLOW_NOISY & gVerifyReflowFlags)) {
     printf("Verify reflow failed, primary tree:\n");
-    nsIFrameDebug*  frameDebug;
-
-    if (NS_SUCCEEDED(CallQueryInterface(root1, &frameDebug))) {
+    nsIFrameDebug*  frameDebug = do_QueryFrame(root1);
+    if (frameDebug) {
       frameDebug->List(stdout, 0);
     }
     printf("Verification tree:\n");
-    if (NS_SUCCEEDED(CallQueryInterface(root2, &frameDebug))) {
+    frameDebug = do_QueryFrame(root2);
+    if (frameDebug) {
       frameDebug->List(stdout, 0);
     }
   }

@@ -52,7 +52,7 @@ interface nsIDocShell;
 #define NS_SHISTORY_INTERNAL_CONTRACTID "@mozilla.org/browser/shistory-internal;1"
 %}
 
-[scriptable, uuid(9c47c121-1c6e-4d8f-b904-3ac968116e88)]
+[scriptable, uuid(7ca0fd71-437c-48ad-985d-11ce9e2429b4)]
 interface nsISHistoryInternal: nsISupports
 {
   /**
@@ -105,4 +105,9 @@ interface nsISHistoryInternal: nsISupports
     * that has timed out.
     */
    void evictExpiredContentViewerForEntry(in nsISHEntry aEntry);
+
+   /**
+    * Evict all the content viewers in this session history
+    */
+   void evictAllContentViewers();
 };

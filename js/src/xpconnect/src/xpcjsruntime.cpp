@@ -461,6 +461,22 @@ void XPCJSRuntime::UnrootContextGlobals()
     }
 }
 
+#ifdef DEBUG_CC
+void XPCJSRuntime::RootContextGlobals()
+{
+    JSContext *iter = nsnull, *acx;
+    while((acx = JS_ContextIterator(GetJSRuntime(), &iter)))
+    {
+        if(JS_HAS_OPTION(acx, JSOPTION_UNROOTED_GLOBAL))
+        {
+            JS_ToggleOptions(acx, JSOPTION_UNROOTED_GLOBAL);
+            --mUnrootedGlobalCount;
+        }
+    }
+    NS_ASSERTION(mUnrootedGlobalCount == 0, "bad state");
+}
+#endif
+
 // static
 JSBool XPCJSRuntime::GCCallback(JSContext *cx, JSGCStatus status)
 {

@@ -52,7 +52,7 @@ $SCRIPT -p product -b branch -x executablepath -i talkbackid [-d datafiles]
 variable            description
 ===============     ============================================================
 -p product          required. firefox|thunderbird
--b branch           required. 1.8.0|1.8.1|1.9.0|1.9.1
+-b branch           required. one of 1.8.0 1.8.1
 -x executablepath   required. directory-tree containing executable named 
                     'product'
 -i talkbackid       required. identifier to add to talkback url

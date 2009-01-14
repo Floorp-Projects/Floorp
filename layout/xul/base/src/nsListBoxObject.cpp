@@ -206,8 +206,7 @@ nsListBoxObject::GetListBoxBody(PRBool aFlush)
   frame = shell->GetPrimaryFrameFor(content);
   if (!frame)
      return nsnull;
-  nsIScrollableFrame* scrollFrame;
-  CallQueryInterface(frame, &scrollFrame);
+  nsIScrollableFrame* scrollFrame = do_QueryFrame(frame);
   if (!scrollFrame)
     return nsnull;
 
@@ -217,8 +216,7 @@ nsListBoxObject::GetListBoxBody(PRBool aFlush)
      return nsnull;
 
   // It's a frame. Refcounts are irrelevant.
-  nsListBoxBodyFrame* listBoxBody = nsnull;
-  CallQueryInterface(yeahBaby, &listBoxBody);
+  nsListBoxBodyFrame* listBoxBody = do_QueryFrame(yeahBaby);
   NS_ENSURE_TRUE(listBoxBody &&
                  listBoxBody->SetBoxObject(this),
                  nsnull);

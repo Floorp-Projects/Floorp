@@ -124,6 +124,12 @@ _TEST_FILES = 	test_bug589.html \
 		test_bug442801.html \
 		test_bug448166.html \
 		test_bug460568.html \
+		test_bug347174.html \
+		test_bug347174_write.html \
+		test_bug347174_xsl.html \
+		test_bug347174_xslp.html \
+		347174transformable.xml \
+		347174transform.xsl \
 		$(NULL)
 
 libs:: $(_TEST_FILES)

@@ -21,6 +21,7 @@
  *
  * Contributor(s):
  *   Brian Ryner <bryner@brianryner.com> (original author)
+ *   Drew Willcoxon <adw@mozilla.com>
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -2531,6 +2532,15 @@ nsNavBookmarks::ChangeBookmarkURI(PRInt64 aBookmarkId, nsIURI *aNewURI)
   if (!placeId)
     return NS_ERROR_INVALID_ARG;
 
+  // We need the bookmark's current corresponding places ID below, so get it now
+  // before we change it.  GetBookmarkURI will fail if aBookmarkId is bad.
+  nsCOMPtr<nsIURI> oldURI;
+  PRInt64 oldPlaceId;
+  rv = GetBookmarkURI(aBookmarkId, getter_AddRefs(oldURI));
+  NS_ENSURE_SUCCESS(rv, rv);
+  rv = History()->GetUrlIdFor(oldURI, &oldPlaceId, PR_FALSE);
+  NS_ENSURE_SUCCESS(rv, rv);
+
   nsCOMPtr<mozIStorageStatement> statement;
   rv = mDBConn->CreateStatement(NS_LITERAL_CSTRING(
       "UPDATE moz_bookmarks SET fk = ?1 WHERE id = ?2"),
@@ -2547,18 +2557,55 @@ nsNavBookmarks::ChangeBookmarkURI(PRInt64 aBookmarkId, nsIURI *aNewURI)
   rv = transaction.Commit();
   NS_ENSURE_SUCCESS(rv, rv);
 
-  // upon changing the uri for a bookmark, update the frecency for the new place
-  // no need to check if this is a livemark, because...
-  rv = History()->UpdateFrecency(placeId, PR_TRUE /* isBookmark */);
+  // Upon changing the URI for a bookmark, update the frecency for the new place.
+  // UpdateFrecency needs to know whether placeId is bookmarked (as opposed
+  // to a livemark item).  Bookmarking it is exactly what we did above.
+  rv = History()->UpdateFrecency(placeId, PR_TRUE /* isBookmarked */);
   NS_ENSURE_SUCCESS(rv, rv);
 
-#if 0
-  // upon changing the uri for a bookmark, update the frecency for the old place
-  // XXX todo, we need to get the oldPlaceId (fk) before changing it above
-  // and then here, we need to determine if that oldPlaceId is still a bookmark (and not a livemark)
-  rv = History()->UpdateFrecency(oldPlaceId,  PR_FALSE /* isBookmark */);
+  // Upon changing the URI for a bookmark, update the frecency for the old place.
+  // UpdateFrecency again needs to know whether oldPlaceId is bookmarked.  It may
+  // no longer be, so we need to figure out whether it still is.  Our strategy
+  // is: find all bookmarks corresponding to oldPlaceId that are not livemark
+  // items, i.e., whose parents are not livemarks.  If any such bookmarks exist,
+  // oldPlaceId is still bookmarked.
+  PRBool isBookmarked = PR_FALSE;
+
+  nsCOMPtr<mozIStorageStatement> isBookmarkedStmt;
+  rv = mDBConn->CreateStatement(NS_LITERAL_CSTRING(
+      "SELECT id "
+      "FROM moz_bookmarks "
+      "WHERE fk = ?1 AND "
+            "type = ?2 AND "
+            "parent NOT IN ("
+              "SELECT a.item_id "
+              "FROM moz_items_annos a "
+              "JOIN moz_anno_attributes n ON a.anno_attribute_id = n.id "
+              "WHERE n.name = ?3"
+            ")"),
+    getter_AddRefs(isBookmarkedStmt));
   NS_ENSURE_SUCCESS(rv, rv);
-#endif
+
+  {
+    mozStorageStatementScoper scope(isBookmarkedStmt);
+
+    rv = isBookmarkedStmt->BindInt64Parameter(0, oldPlaceId);
+    NS_ENSURE_SUCCESS(rv, rv);
+    rv = isBookmarkedStmt->BindInt32Parameter(1, TYPE_BOOKMARK);
+    NS_ENSURE_SUCCESS(rv, rv);
+    rv = isBookmarkedStmt->BindUTF8StringParameter(
+           2, NS_LITERAL_CSTRING(LMANNO_FEEDURI));
+    NS_ENSURE_SUCCESS(rv, rv);
+
+    // If executing isBookmarkedStmt returns any rows, then there exists at least
+    // one bookmark corresponding to oldPlaceId that is not a livemark item.
+    // isBookmarked will be set to true in that case and false otherwise.
+    rv = isBookmarkedStmt->ExecuteStep(&isBookmarked);
+    NS_ENSURE_SUCCESS(rv, rv);
+  }
+
+  rv = History()->UpdateFrecency(oldPlaceId, isBookmarked);
+  NS_ENSURE_SUCCESS(rv, rv);
 
   nsCAutoString spec;
   rv = aNewURI->GetSpec(spec);
