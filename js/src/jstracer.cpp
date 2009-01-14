@@ -372,7 +372,6 @@ hash_accum(uintptr_t& h, uintptr_t i)
     h = ((h << 5) + h + (ORACLE_MASK & i)) & ORACLE_MASK;
 }
 
-
 JS_REQUIRES_STACK static inline int
 stackSlotHash(JSContext* cx, unsigned slot)
 {
@@ -1065,9 +1064,14 @@ TraceRecorder::TraceRecorder(JSContext* cx, VMSideExit* _anchor, Fragment* _frag
     if (fragment == fragment->root) {
         LIns* counter = lir->insLoadi(cx_ins,
                                       offsetof(JSContext, operationCount));
-        LIns* updated = lir->ins2i(LIR_sub, counter, JSOW_SCRIPT_JUMP);
-        lir->insStorei(updated, cx_ins, offsetof(JSContext, operationCount));
-        guard(false, lir->ins2i(LIR_le, updated, 0), snapshot(TIMEOUT_EXIT));
+        if (js_HasOperationLimit(cx)) {
+            /* Add code to decrease the operationCount if the embedding relies
+               on its auto-updating. */
+            counter = lir->ins2i(LIR_sub, counter, JSOW_SCRIPT_JUMP);
+            lir->insStorei(counter, cx_ins,
+                           offsetof(JSContext, operationCount));
+        }
+        guard(false, lir->ins2i(LIR_le, counter, 0), snapshot(TIMEOUT_EXIT));
     }
 
     /* If we are attached to a tree call guard, make sure the guard the inner tree exited from

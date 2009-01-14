@@ -5253,49 +5253,34 @@ JS_PUBLIC_API(void)
 JS_SetOperationCallback(JSContext *cx, JSOperationCallback callback,
                         uint32 operationLimit)
 {
-    JS_ASSERT(callback);
-    JS_ASSERT(operationLimit <= JS_MAX_OPERATION_LIMIT);
-    JS_ASSERT(operationLimit > 0);
-
-    cx->operationCount = (int32) operationLimit;
-    cx->operationLimit = operationLimit;
-    cx->operationCallbackIsSet = 1;
-    cx->operationCallback = callback;
+    JS_SetOperationCallbackFunction(cx, callback);
+    JS_SetOperationLimit(cx, operationLimit);
 }
 
 JS_PUBLIC_API(void)
 JS_ClearOperationCallback(JSContext *cx)
 {
-    cx->operationCount = (int32) JS_MAX_OPERATION_LIMIT;
-    cx->operationLimit = JS_MAX_OPERATION_LIMIT;
-    cx->operationCallbackIsSet = 0;
-    cx->operationCallback = NULL;
-}
-
-JS_PUBLIC_API(JSOperationCallback)
-JS_GetOperationCallback(JSContext *cx)
-{
-    JS_ASSERT(cx->operationCallbackIsSet || !cx->operationCallback);
-    return cx->operationCallback;
-}
-
-JS_PUBLIC_API(uint32)
-JS_GetOperationLimit(JSContext *cx)
-{
-    JS_ASSERT(cx->operationCallbackIsSet);
-    return cx->operationLimit;
+    JS_SetOperationCallbackFunction(cx, NULL);
+    JS_SetOperationLimit(cx, JS_MAX_OPERATION_LIMIT);
 }
 
 JS_PUBLIC_API(void)
 JS_SetOperationLimit(JSContext *cx, uint32 operationLimit)
 {
+    /* Mixed operation and branch callbacks are not supported. */
+    JS_ASSERT(!cx->branchCallbackWasSet);
     JS_ASSERT(operationLimit <= JS_MAX_OPERATION_LIMIT);
     JS_ASSERT(operationLimit > 0);
-    JS_ASSERT(cx->operationCallbackIsSet);
 
+    cx->operationCount = (int32) operationLimit;
     cx->operationLimit = operationLimit;
-    if (cx->operationCount > (int32) operationLimit)
-        cx->operationCount = (int32) operationLimit;
+}
+
+JS_PUBLIC_API(uint32)
+JS_GetOperationLimit(JSContext *cx)
+{
+    JS_ASSERT(!cx->branchCallbackWasSet);
+    return cx->operationLimit;
 }
 
 JS_PUBLIC_API(JSBranchCallback)
@@ -5303,14 +5288,16 @@ JS_SetBranchCallback(JSContext *cx, JSBranchCallback cb)
 {
     JSBranchCallback oldcb;
 
-    if (cx->operationCallbackIsSet) {
+    if (!cx->branchCallbackWasSet) {
 #ifdef DEBUG
-        fprintf(stderr,
+        if (cx->operationCallback) {
+            fprintf(stderr,
 "JS API usage error: call to JS_SetOperationCallback is followed by\n"
 "invocation of deprecated JS_SetBranchCallback\n");
-        JS_ASSERT(0);
+            JS_ASSERT(0);
+        }
 #endif
-        cx->operationCallbackIsSet = 0;
+        cx->branchCallbackWasSet = 1;
         oldcb = NULL;
     } else {
         oldcb = (JSBranchCallback) cx->operationCallback;
@@ -5320,9 +5307,30 @@ JS_SetBranchCallback(JSContext *cx, JSBranchCallback cb)
         cx->operationLimit = JSOW_SCRIPT_JUMP;
         cx->operationCallback = (JSOperationCallback) cb;
     } else {
-        JS_ClearOperationCallback(cx);
+        cx->operationCallback = NULL;
     }
     return oldcb;
+}
+
+JS_PUBLIC_API(void)
+JS_SetOperationCallbackFunction(JSContext *cx, JSOperationCallback callback)
+{
+    /* Mixed operation and branch callbacks are not supported. */
+    JS_ASSERT(!cx->branchCallbackWasSet);
+    cx->operationCallback = callback;
+}
+
+JS_PUBLIC_API(JSOperationCallback)
+JS_GetOperationCallback(JSContext *cx)
+{
+    JS_ASSERT(!cx->branchCallbackWasSet);
+    return cx->operationCallback;
+}
+
+JS_PUBLIC_API(void)
+JS_TriggerOperationCallback(JSContext *cx)
+{
+    cx->operationCount = 0;
 }
 
 JS_PUBLIC_API(JSBool)
