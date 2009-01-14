@@ -139,7 +139,11 @@
     <key id="key_forward" keycode="VK_RIGHT" command="cmd_forward" modifiers="control"/>
     <key id="key_back2" keycode="VK_BACK" command="cmd_back"/>
     <key id="key_forward2" keycode="VK_BACK" command="cmd_forward" modifiers="shift"/>
+#ifndef MOZ_PLATFORM_HILDON
     <key id="key_reload" keycode="VK_F5" command="cmd_reload"/>
+#else
+    <!-- F5 on maemo is "home" which is a task switching key -->
+#endif
     <key id="key_focusURL" key="l" modifiers="accel" command="cmd_openLocation"/>
 
     <!-- scrolling -->
