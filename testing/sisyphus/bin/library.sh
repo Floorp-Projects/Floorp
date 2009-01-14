@@ -106,6 +106,41 @@ error()
 if [[ -z "$LIBRARYSH" ]]; then
     # skip remainder of script if it has already included
 
+    checkProductBranch()
+    {
+        local product=$1
+        local branch=$2
+
+        case $product in
+            js|firefox|thunderbird|fennec)
+                ;;
+            *)
+                error "product \"$product\" must be one of firefox, thunderbird, or fennec" $LINENO
+        esac
+
+        case $branch in
+            1.8.0|1.8.1|1.9.0|1.9.1|1.9.2)
+                ;;
+            *)
+                error "branch \"$branch\" must be one of 1.8.0, 1.8.1, 1.9.0 1.9.1 1.9.2" $LINENO
+        esac
+
+        # special case thunderbird and fennec due to their different
+        # repository and build tree structures.
+        case "$product" in
+            "thunderbird")
+                if [[ $branch == "1.9.2" ]]; then
+                    error "thunderbird on branch 1.9.2 is not supported"
+                fi
+                ;;
+            "fennec")
+                if [[ $branch != "1.9.1" && "$branch" != "1.9.2" ]]; then
+                    error "fennec on branch $branch is not supported"
+                fi
+                ;;
+        esac
+     } 
+
     # Darwin 8.11.1's |which| does not return a non-zero exit code if the 
     # program can not be found. Therefore, kludge around it.
     findprogram()

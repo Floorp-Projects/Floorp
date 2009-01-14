@@ -48,5 +48,5 @@
 export LC_ALL=C # handle all character sets
 
 (for f in $@; do
-    grep -h -m 1 TEST_ID $f | tr -dc '[\040-\177\n]' | sed 's|^TEST_ID=[^,]*, \(TEST_BRANCH=[^,]*, TEST_REPO=[^,]*, TEST_BUILDTYPE=[^,]*, TEST_TYPE=[^,]*\), \(TEST_OS=[^,]*, TEST_KERNEL=[^,]*, TEST_PROCESSORTYPE=[^,]*, TEST_MEMORY=[^,]*, TEST_CPUSPEED=[^,]*, TEST_TIMEZONE=[^,]*\),.*|\2, \1|' 
+    grep -h -m 1 TEST_ID $f | tr -dc '[\040-\177\n]' | sed 's|^TEST_ID=[^,]*, \(TEST_BRANCH=[^,]*, TEST_REPO=[^,]*, TEST_BUILDTYPE=[^,]*, TEST_TYPE=[^,]*\), \(TEST_OS=[^,]*, TEST_KERNEL=[^,]*, TEST_PROCESSORTYPE=[^,]*, TEST_MEMORY=[^,]*, TEST_CPUSPEED=[^,]*, TEST_TIMEZONE=[^,]*, TEST_OPTIONS=[^,]*\),.*|\2, \1|' 
 done) | sort -u
