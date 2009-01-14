@@ -553,7 +553,7 @@ nsXPConnect::BeginCycleCollection(nsCycleCollectionTraversalCallback &cb)
             return NS_ERROR_OUT_OF_MEMORY;
         }
 
-        GetRuntime()->UnsetContextGlobals();
+        GetRuntime()->UnrootContextGlobals();
 
         PRBool alreadyCollecting = mCycleCollecting;
         mCycleCollecting = PR_TRUE;
@@ -600,7 +600,7 @@ nsXPConnect::FinishCycleCollection()
         mCycleCollectionContext = nsnull;
         mExplainCycleCollectionContext = nsnull;
 
-        GetRuntime()->RestoreContextGlobals();
+        GetRuntime()->RootContextGlobals();
     }
 #endif
 
