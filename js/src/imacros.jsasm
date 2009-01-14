@@ -275,7 +275,8 @@
         getprop valueOf                 # obj obj valueOf
         ifprimtop 2                     # obj obj valueOf
         swap                            # obj valueOf obj
-        call 0                          # obj lval
+        string number                   # obj valueOf obj "number"
+        call 1                          # obj lval
         ifprimtop 1                     # obj lval
         goto 3                          # obj lval
 1:      swap                            # lval obj
