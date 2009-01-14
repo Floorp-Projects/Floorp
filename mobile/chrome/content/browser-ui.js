@@ -207,7 +207,7 @@ var BrowserUI = {
       this._edit.value = urlString;
 
       this._edit.inputField.focus();
-      this._edit.editor.selectAll();
+      this._edit.select();
     }
     else {
       icons.setAttribute("mode", "view");
