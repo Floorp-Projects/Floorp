@@ -65,7 +65,6 @@ _TEST_FILES =	\
 		test_bug450930.xhtml \
 		test_bug458898.html \
 		test_bug465448.xul \
-		test_bug471126.html \
 		$(NULL)
 # test_bug396024.html is currently disabled because it interacts badly with
 # the "You can't print-preview while the page is loading" dialog.
