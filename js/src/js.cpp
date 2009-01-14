@@ -107,6 +107,16 @@ static size_t gScriptStackQuota = JS_DEFAULT_SCRIPT_STACK_QUOTA;
 
 static jsdouble gOperationTimeout = -1.0;
 
+/*
+ * Watchdog thread state.
+ */
+#ifdef JS_THREADSAFE
+static PRCondVar *gWatchdogWakeup;
+static PRThread *gWatchdogThread;
+static PRIntervalTime gWatchdogSleepDuration = 0;
+static PRIntervalTime gLastWatchdogWakeup;
+#endif
+
 int gExitCode = 0;
 JSBool gQuitting = JS_FALSE;
 FILE *gErrFile = NULL;
@@ -128,12 +138,6 @@ static const JSErrorFormatString *
 my_GetErrorMessage(void *userRef, const char *locale, const uintN errorNumber);
 static JSObject *
 split_setup(JSContext *cx);
-
-static JSBool
-SetTimeoutValue(JSContext *cx, jsdouble t);
-
-static void
-RescheduleOperationCallback(JSContext *cx);
 
 #ifdef EDITLINE
 JS_BEGIN_EXTERN_C
@@ -204,39 +208,65 @@ GetLine(FILE *file, const char * prompt)
     return NULL;
 }
 
-/* Time-related portability helpers. */
-typedef int64 OperationTime;
-const OperationTime TIME_INFINITY = -1LL;
-
-static inline OperationTime
-TicksPerSecond()
-{
-    return 1000LL * 1000LL;
-}
-
-static inline OperationTime
-MaybeGCPeriod()
-{
-    return TicksPerSecond() / 10;
-}
-
-static inline OperationTime
-YieldRequestPeriod()
-{
-    return TicksPerSecond() / 50;
-}
-
+/*
+ * State to store as JSContext private.
+ *
+ * In the JS_THREADSAFE case, when the watchdog thread triggers the operation
+ * callback, we use PR_IntervalNow(), not JS_Now() as the latter could be
+ * expensive and is not suitable for calls when a GC lock is held. This forces
+ * us to use PRIntervalTime as a time type and deal with potential time-wraps
+ * over uint32 limit. In particular, we must use time relative to some recent
+ * timestamp when checking for expiration, not absolute time values, as in the
+ * !JS_THREADSAFE case, when time is int64 and no time-wraps are feasible.
+ *
+ * We declare such timestamps as volatile as they are updated in the operation
+ * callback without taking any locks. Any possible race can only lead to more
+ * frequent callback calls. This is safe as the callback does everything based
+ * on timing.
+ */
 struct JSShellContextData {
-    OperationTime   lastCallbackTime;   /* the last operation callback call
-                                           time */
-    OperationTime   operationTimeout;   /* time left for script execution */
-    OperationTime   lastMaybeGCTime;    /* the last JS_MaybeGC call time */
-    OperationTime   maybeGCPeriod;      /* period of JS_MaybeGC calls */
 #ifdef JS_THREADSAFE
-    OperationTime   lastYieldTime;      /* the last JS_YieldRequest call time */
-    OperationTime   yieldPeriod;        /* period of JS_YieldRequest calls */
+    PRIntervalTime          timeout;
+    volatile PRIntervalTime startTime;      /* startTime + timeout is time when
+                                               script must be stopped */
+    PRIntervalTime          maybeGCPeriod;
+    volatile PRIntervalTime lastMaybeGCTime;/* lastMaybeGCTime + maybeGCPeriod
+                                               is the time to call MaybeGC */
+    PRIntervalTime          yieldPeriod;
+    volatile PRIntervalTime lastYieldTime;  /* lastYieldTime + yieldPeriod is
+                                               the time to call
+                                               JS_YieldRequest() */
+#else
+    int64                   stopTime;       /* time when script must be
+                                               stopped */
+    int64                   nextMaybeGCTime;/* time to call JS_MaybeGC */
 #endif
 };
+
+static JSBool
+SetTimeoutValue(JSContext *cx, jsdouble t);
+
+#ifdef JS_THREADSAFE
+
+# define DEFAULT_YIELD_PERIOD()     (PR_TicksPerSecond() / 50)
+# define DEFAULT_MAYBEGC_PERIOD()   (PR_TicksPerSecond() / 10)
+
+/*
+ * The function assumes that the GC lock is already held on entry. On a
+ * successful exit the lock will be held, on failure the lock is released and
+ * the error is reported.
+ */
+static JSBool
+RescheduleWatchdog(JSContext *cx, JSShellContextData *data, PRIntervalTime now);
+
+#else
+
+# define DEFAULT_MAYBEGC_PERIOD()   (MICROSECONDS_PER_SECOND / 10)
+
+const int64 MICROSECONDS_PER_SECOND = 1000000LL;
+const int64 MAX_TIME_VALUE = 0x7FFFFFFFFFFFFFFFLL;
+
+#endif
 
 static JSShellContextData *
 NewContextData()
@@ -245,14 +275,20 @@ NewContextData()
                                malloc(sizeof(JSShellContextData));
     if (!data)
         return NULL;
-    data->lastCallbackTime = 0;
-    data->operationTimeout = TIME_INFINITY;
-    data->lastMaybeGCTime = 0;
-    data->maybeGCPeriod = TIME_INFINITY;
 #ifdef JS_THREADSAFE
+    data->timeout = PR_INTERVAL_NO_TIMEOUT;
+    data->maybeGCPeriod = PR_INTERVAL_NO_TIMEOUT;
+    data->yieldPeriod = PR_INTERVAL_NO_TIMEOUT;
+# ifdef DEBUG
+    data->startTime = 0;
+    data->lastMaybeGCTime = 0;
     data->lastYieldTime = 0;
-    data->yieldPeriod = TIME_INFINITY;
+# endif
+#else /* !JS_THREADSAFE */
+    data->stopTime = MAX_TIME_VALUE;
+    data->nextMaybeGCTime = MAX_TIME_VALUE;
 #endif
+
     return data;
 }
 
@@ -269,30 +305,45 @@ static JSBool
 ShellOperationCallback(JSContext *cx)
 {
     JSShellContextData *data = GetContextData(cx);
-    OperationTime now = JS_Now();
-    OperationTime interval = now - data->lastCallbackTime;
-
-    data->lastCallbackTime = now;
-    if (data->operationTimeout != TIME_INFINITY) {
-        if (data->operationTimeout < interval) {
-            fprintf(stderr, "Error: Script is running too long\n");
-            return JS_FALSE;
-        }
-        data->operationTimeout -= interval;
-    }
-    if (data->maybeGCPeriod != TIME_INFINITY) {
-        if (now - data->lastMaybeGCTime >= data->maybeGCPeriod) {
-            JS_MaybeGC(cx);
-            data->lastMaybeGCTime = now;
-        }
-    }
+    JSBool doStop;
+    JSBool doMaybeGC;
 #ifdef JS_THREADSAFE
-    if (data->yieldPeriod != TIME_INFINITY) {
-        if (now - data->lastYieldTime >= data->yieldPeriod) {
-            JS_YieldRequest(cx);
-            data->lastYieldTime = now;
-        }
+    JSBool doYield;
+    PRIntervalTime now = PR_IntervalNow();
+
+    doStop = (data->timeout != PR_INTERVAL_NO_TIMEOUT &&
+              now - data->startTime >= data->timeout);
+
+    doMaybeGC = (data->maybeGCPeriod != PR_INTERVAL_NO_TIMEOUT &&
+                 now - data->lastMaybeGCTime >= data->maybeGCPeriod);
+    if (doMaybeGC)
+        data->lastMaybeGCTime = now;
+
+    doYield = (data->yieldPeriod != PR_INTERVAL_NO_TIMEOUT &&
+               now - data->lastYieldTime >= data->yieldPeriod);
+    if (doYield)
+        data->lastYieldTime = now;
+
+#else /* !JS_THREADSAFE */
+    int64 now = JS_Now();
+
+    doStop = (now >= data->stopTime);
+    doMaybeGC = (now >= data->nextMaybeGCTime);
+    if (doMaybeGC)
+        data->nextMaybeGCTime = now + DEFAULT_MAYBEGC_PERIOD();
+#endif
+
+    if (doStop) {
+        fputs("Error: script is running for too long\n", stderr);
+        return JS_FALSE;
     }
+
+    if (doMaybeGC)
+        JS_MaybeGC(cx);
+
+#ifdef JS_THREADSAFE
+    if (doYield)
+        JS_YieldRequest(cx);
 #endif
 
     return JS_TRUE;
@@ -318,6 +369,7 @@ SetContextOptions(JSContext *cx)
     JS_SetThreadStackLimit(cx, stackLimit);
     JS_SetScriptStackQuota(cx, gScriptStackQuota);
     SetTimeoutValue(cx, gOperationTimeout);
+    JS_SetOperationCallbackFunction(cx, ShellOperationCallback);
 }
 
 static void
@@ -2825,19 +2877,40 @@ DoScatteredWork(JSContext *cx, ScatterThreadData *td)
 {
     jsval *rval = &td->shared->results[td->index];
 
-    JSShellContextData *data = (JSShellContextData *) JS_GetContextPrivate(cx);
-    OperationTime oldPeriod = data->yieldPeriod;
-    if (oldPeriod == TIME_INFINITY)
-        data->lastYieldTime = JS_Now();
-    data->yieldPeriod = YieldRequestPeriod();
-    RescheduleOperationCallback(cx);
-    if (!JS_CallFunctionValue(cx, NULL, td->fn, 0, NULL, rval)) {
+    JSShellContextData *data = GetContextData(cx);
+    PRIntervalTime oldYieldPeriod = data->yieldPeriod;
+    PRIntervalTime newYieldPeriod = DEFAULT_YIELD_PERIOD();
+    JSBool scheduleOk = JS_TRUE;
+
+    /*
+     * Here oldYieldPeriod is DEFAULT_YIELD_PERIOD() when the scatter reuses
+     * a context used by a previous scatter call.
+     */
+    if (oldYieldPeriod != newYieldPeriod) {
+        JS_LOCK_GC(cx->runtime);
+        PRIntervalTime now = PR_IntervalNow();
+        JS_ASSERT(oldYieldPeriod == PR_INTERVAL_NO_TIMEOUT);
+        data->lastYieldTime = now;
+        data->yieldPeriod = newYieldPeriod;
+        scheduleOk = RescheduleWatchdog(cx, data, now);
+        if (scheduleOk)
+            JS_UNLOCK_GC(cx->runtime);
+    }
+    if (!scheduleOk ||
+        !JS_CallFunctionValue(cx, NULL, td->fn, 0, NULL, rval)) {
         *rval = JSVAL_VOID;
         JS_GetPendingException(cx, rval);
         JS_ClearPendingException(cx);
     }
-    data->yieldPeriod = oldPeriod;
-    RescheduleOperationCallback(cx);
+
+    /*
+     * We do not need to lock or call RescheduleWatchdog. Here yieldPeriod
+     * can only stay at DEFAULT_YIELD_PERIOD or go to PR_INTERVAL_NO_TIMEOUT.
+     * Thus we never need to wake up the watchdog thread earlier.
+     */
+    JS_ASSERT(oldYieldPeriod == data->yieldPeriod ||
+              oldYieldPeriod == PR_INTERVAL_NO_TIMEOUT);
+    data->yieldPeriod = oldYieldPeriod;
 }
 
 static void
@@ -3031,55 +3104,189 @@ fail:
     ok = JS_FALSE;
     goto out;
 }
-#endif /* JS_THREADSAFE */
+
+/*
+ * Find duration between now and base + period, set it to sleepDuration if the
+ * latter value is greater and set expired to true if base + period comes
+ * before now. This function correctly deals with a possible time wrap between
+ * base and now.
+ */
+static void
+UpdateSleepDuration(PRIntervalTime now, PRIntervalTime base,
+                    PRIntervalTime period, PRIntervalTime &sleepDuration,
+                    JSBool &expired)
+{
+    if (period == PR_INTERVAL_NO_TIMEOUT)
+        return;
+
+    PRIntervalTime t;
+    PRIntervalTime diff = now - base;
+    if (diff >= period) {
+        expired = JS_TRUE;
+        t = period;
+    } else {
+        t = period - diff;
+    }
+    if (sleepDuration == PR_INTERVAL_NO_TIMEOUT || sleepDuration > t)
+        sleepDuration = t;
+}
 
 static void
-RescheduleOperationCallback(JSContext *cx)
+CheckCallbackTime(JSContext *cx, JSShellContextData *data, PRIntervalTime now,
+                  PRIntervalTime &sleepDuration)
 {
-    JSShellContextData *data = GetContextData(cx);
+    JSBool expired = JS_FALSE;
 
-    if (data->operationTimeout == TIME_INFINITY &&
-#ifdef JS_THREADSAFE
-        data->yieldPeriod == TIME_INFINITY &&
-#endif
-        data->maybeGCPeriod == TIME_INFINITY) {
-        JS_ClearOperationCallback(cx);
-    } else if (!JS_GetOperationCallback(cx)) {
-        /*
-         * Call the callback infrequently enough to avoid the overhead of time
-         * calculations there.
-         */
-        JS_SetOperationCallback(cx, ShellOperationCallback,
-                                1000 * JS_OPERATION_WEIGHT_BASE);
-        data->lastCallbackTime = JS_Now();
+    UpdateSleepDuration(now, data->startTime, data->timeout,
+                        sleepDuration, expired);
+    UpdateSleepDuration(now, data->lastMaybeGCTime, data->maybeGCPeriod,
+                        sleepDuration, expired);
+    UpdateSleepDuration(now, data->lastYieldTime, data->yieldPeriod,
+                        sleepDuration, expired);
+    if (expired) {
+        JS_ASSERT(sleepDuration != PR_INTERVAL_NO_TIMEOUT);
+        JS_TriggerOperationCallback(cx);
     }
 }
+
+static void
+WatchdogMain(void *arg)
+{
+    JSRuntime *rt = (JSRuntime *) arg;
+    PRBool isRunning = JS_TRUE;
+
+    JS_LOCK_GC(rt);
+    while (gWatchdogThread) {
+        PRIntervalTime now = PR_IntervalNow();
+        PRIntervalTime sleepDuration = PR_INTERVAL_NO_TIMEOUT;
+        JSContext *iter = NULL;
+        JSContext *acx;
+
+        while ((acx = js_ContextIterator(rt, JS_FALSE, &iter))) {
+            if (acx->requestDepth > 0) {
+                JSShellContextData *data = (JSShellContextData *)
+                                           JS_GetContextPrivate(acx);
+
+                /*
+                 * For the last context inside JS_DestroyContext the engine
+                 * starts a new request to shutdown the runtime. For such
+                 * context data is null.
+                 */
+                if (data)
+                    CheckCallbackTime(acx, data, now, sleepDuration);
+            }
+        }
+
+        gLastWatchdogWakeup = now;
+        gWatchdogSleepDuration = sleepDuration;
+#ifdef DEBUG
+        PRStatus status =
+#endif
+            PR_WaitCondVar(gWatchdogWakeup, sleepDuration);
+        JS_ASSERT(status == PR_SUCCESS);
+    }
+
+    /* Wake up the main thread waiting for the watchdog to terminate. */
+    PR_NotifyCondVar(gWatchdogWakeup);
+    JS_UNLOCK_GC(rt);
+}
+
+static JSBool
+RescheduleWatchdog(JSContext *cx, JSShellContextData *data, PRIntervalTime now)
+{
+    JS_ASSERT(data == GetContextData(cx));
+
+    PRIntervalTime nextCallbackTime = PR_INTERVAL_NO_TIMEOUT;
+    CheckCallbackTime(cx, data, now, nextCallbackTime);
+    if (nextCallbackTime == PR_INTERVAL_NO_TIMEOUT)
+        return JS_TRUE;
+
+    if (gWatchdogThread) {
+        /*
+         * Notify the watchdog if it would wake up after data->watchdogLimit
+         * expires. PRIntervalTime is unsigned so the subtraction in the
+         * following check gives the correct interval even when time wraps
+         * around between gLastWatchdogWakeup and now.
+         */
+        if (gWatchdogSleepDuration == PR_INTERVAL_NO_TIMEOUT ||
+            PRInt32(now - gLastWatchdogWakeup) <
+            PRInt32(gWatchdogSleepDuration) - PRInt32(nextCallbackTime)) {
+            PR_NotifyCondVar(gWatchdogWakeup);
+        }
+    } else {
+        gWatchdogThread = PR_CreateThread(PR_USER_THREAD,
+                                          WatchdogMain,
+                                          cx->runtime,
+                                          PR_PRIORITY_NORMAL,
+                                          PR_LOCAL_THREAD,
+                                          PR_UNJOINABLE_THREAD,
+                                          0);
+        if (!gWatchdogThread) {
+            JS_UNLOCK_GC(cx->runtime);
+            JS_ReportError(cx, "failed to create the watchdog thread");
+            return JS_FALSE;
+        }
+
+        /* The watchdog thread does not sleep on creation. */
+        JS_ASSERT(gWatchdogSleepDuration == 0);
+        gLastWatchdogWakeup = now;
+    }
+    return JS_TRUE;
+}
+#endif /* JS_THREADSAFE */
 
 static JSBool
 SetTimeoutValue(JSContext *cx, jsdouble t)
 {
     /* NB: The next condition also filter out NaNs. */
     if (!(t <= 3600.0)) {
-        JS_ReportError(cx, "Excessive argument value");
+        JS_ReportError(cx, "Excessive timeout value");
         return JS_FALSE;
     }
-
-    JSShellContextData *data = GetContextData(cx);
 
     /*
      * For compatibility periodic MaybeGC calls are enabled only when the
      * execution time is bounded.
      */
+    JSShellContextData *data = GetContextData(cx);
+#ifdef JS_THREADSAFE
+    JS_LOCK_GC(cx->runtime);
     if (t < 0) {
-        data->operationTimeout = TIME_INFINITY;
-        data->maybeGCPeriod = TIME_INFINITY;
+        data->timeout = PR_INTERVAL_NO_TIMEOUT;
+        data->maybeGCPeriod = PR_INTERVAL_NO_TIMEOUT;
     } else {
-        data->operationTimeout = OperationTime(t * TicksPerSecond());
-        if (data->maybeGCPeriod == TIME_INFINITY)
-            data->lastMaybeGCTime = JS_Now();
-        data->maybeGCPeriod = MaybeGCPeriod();
+        PRIntervalTime now = PR_IntervalNow();
+        data->timeout = PRIntervalTime(t * PR_TicksPerSecond());
+        data->startTime = now;
+        if (data->maybeGCPeriod == PR_INTERVAL_NO_TIMEOUT) {
+            data->maybeGCPeriod = DEFAULT_MAYBEGC_PERIOD();
+            data->lastMaybeGCTime = now;
+        }
+        if (!RescheduleWatchdog(cx, data, now)) {
+            /* The GC lock is already released here. */
+            return JS_FALSE;
+        }
     }
-    RescheduleOperationCallback(cx);
+    JS_UNLOCK_GC(cx->runtime);
+
+#else /* !JS_THREADSAFE */
+    if (t < 0) {
+        data->stopTime = MAX_TIME_VALUE;
+        data->nextMaybeGCTime = MAX_TIME_VALUE;
+        JS_SetOperationLimit(cx, JS_MAX_OPERATION_LIMIT);
+    } else {
+        int64 now = JS_Now();
+        data->stopTime = now + int64(t * MICROSECONDS_PER_SECOND);
+        if (data->nextMaybeGCTime == MAX_TIME_VALUE)
+            data->nextMaybeGCTime = now + DEFAULT_MAYBEGC_PERIOD();
+
+        /*
+         * Call the callback infrequently enough to avoid the overhead of
+         * time calculations there.
+         */
+        JS_SetOperationLimit(cx, 1000 * JS_OPERATION_WEIGHT_BASE);
+    }
+#endif
     return JS_TRUE;
 }
 
@@ -3088,11 +3295,28 @@ Timeout(JSContext *cx, uintN argc, jsval *vp)
 {
     if (argc == 0) {
         JSShellContextData *data = GetContextData(cx);
-        jsdouble t;
-        t = (data->operationTimeout == TIME_INFINITY)
-            ? -1
-            : jsdouble(data->operationTimeout) / TicksPerSecond();
-        return JS_NewDoubleValue(cx, t, vp);
+        jsdouble t; /* remaining time to run */
+
+#ifdef JS_THREADSAFE
+        if (data->timeout == PR_INTERVAL_NO_TIMEOUT) {
+            t = -1.0;
+        } else {
+            PRIntervalTime expiredTime = PR_IntervalNow() - data->startTime;
+            t = (expiredTime >= data->timeout)
+                ? 0.0
+                : jsdouble(data->timeout - expiredTime) / PR_TicksPerSecond();
+        }
+#else
+        if (data->stopTime == MAX_TIME_VALUE) {
+            t = -1.0;
+        } else {
+            int64 remainingTime = data->stopTime - JS_Now();
+            t = (remainingTime <= 0)
+                ? 0.0
+                : jsdouble(remainingTime) / MICROSECONDS_PER_SECOND;
+        }
+#endif
+        return JS_NewNumberValue(cx, t, vp);
     }
 
     if (argc > 1) {
@@ -4225,6 +4449,13 @@ main(int argc, char **argv, char **envp)
     rt = JS_NewRuntime(64L * 1024L * 1024L);
     if (!rt)
         return 1;
+
+#ifdef JS_THREADSAFE
+    gWatchdogWakeup = JS_NEW_CONDVAR(rt->gcLock);
+    if (!gWatchdogWakeup)
+        return 1;
+#endif
+
     JS_SetContextCallback(rt, ContextCallback);
 
     cx = JS_NewContext(rt, gStackChunkSize);
@@ -4335,6 +4566,22 @@ main(int argc, char **argv, char **envp)
 #endif
 
     JS_DestroyContext(cx);
+
+#ifdef JS_THREADSAFE
+    JS_LOCK_GC(rt);
+    if (gWatchdogThread) {
+        /*
+         * The watchdog thread is running, tell it to terminate waking it up
+         * if necessary and wait until it signals that it done.
+         */
+        gWatchdogThread = NULL;
+        PR_NotifyCondVar(gWatchdogWakeup);
+        PR_WaitCondVar(gWatchdogWakeup, PR_INTERVAL_NO_TIMEOUT);
+    }
+    JS_UNLOCK_GC(rt);
+    JS_DESTROY_CONDVAR(gWatchdogWakeup);
+#endif
+
     JS_DestroyRuntime(rt);
     JS_ShutDown();
     return result;
