@@ -48,6 +48,7 @@ export BUILD_OFFICIAL=1
 if [[ -z "$CVSROOT" ]]; then
     if grep -q buildbot@qm ~/.ssh/id_dsa.pub; then
         export CVSROOT=:ext:unittest@cvs.mozilla.org:/cvsroot
+        export CVS_RSH=ssh
     else
         export CVSROOT=:pserver:anonymous@cvs-mirror.mozilla.org:/cvsroot
     fi
@@ -63,9 +64,9 @@ usage()
 
 usage: set-build-env.sh -p product -b branch -T buildtype [-e extra]
 
--p product      [firefox|thunderbird|fennec]
--b branch       [1.8.0|1.8.1|1.9.0|1.9.1]
--T buildtype    [opt|debug]
+-p product      one of js firefox thunderbird fennec
+-b branch       one of 1.8.0 1.8.1 1.9.0 1.9.1 1.9.2
+-T buildtype    one of opt debug
 -e extra        extra qualifier to pick mozconfig and tree
 
 EOF
@@ -101,7 +102,9 @@ for step in step1; do # dummy loop for handling exits
 
     # include environment variables
     datafiles=$TEST_DIR/data/$product,$branch$extra,$buildtype.data
-    loaddata $datafiles
+    if [[ -e "$datafiles" ]]; then
+        loaddata $datafiles
+    fi
 
     # echo product=$product, branch=$branch, buildtype=$buildtype, extra=$extra
 
@@ -127,7 +130,9 @@ for step in step1; do # dummy loop for handling exits
     elif [[ $branch == "1.9.0" ]]; then
         export BRANCH_CO_FLAGS="";
     elif [[ $branch == "1.9.1" ]]; then
-        # XXX: mozilla-central
+        export BRANCH_CO_FLAGS="";
+    elif [[ $branch == "1.9.2" ]]; then
+        TEST_MOZILLA_HG=${TEST_MOZILLA_HG:-http://hg.mozilla.org/mozilla-central}
         export BRANCH_CO_FLAGS="";
     else
         echo "Unknown branch: $branch"
@@ -227,43 +232,47 @@ for step in step1; do # dummy loop for handling exits
     export CONFIG_SHELL=$buildbash
     export CONFIGURE_ENV_ARGS=$buildbash
 
+    # note that thunderbird and fennec based on 1.9.1 can not be contained in the
+    # same tree as firefox since they come from different repositories.
+    case "$branch-$product" in
+        1.9.1-thunderbird)
+            export BUILDTREE="${BUILDTREE:-$BUILDDIR/$branch-$product$extra}"
+            ;;
+        *)
+            export BUILDTREE="${BUILDTREE:-$BUILDDIR/$branch$extra}"
+            ;;
+    esac
 
-    if [[ -z $extra ]]; then
-        export BUILDTREE="${BUILDTREE:-$BUILDDIR/$branch}"
-    else
-        export BUILDTREE="${BUILDTREE:-$BUILDDIR/$branch$extra}"
+    #
+    # extras can't be placed in mozconfigs since not all parts
+    # of the build system use mozconfig (e.g. js shell) and since
+    # the obj directory is not configurable for them as well thus
+    # requiring separate source trees
+    #
 
-        #
-        # extras can't be placed in mozconfigs since not all parts
-        # of the build system use mozconfig (e.g. js shell) and since
-        # the obj directory is not configurable for them as well thus
-        # requiring separate source trees
-        #
+    case "$extra" in
+        -too-much-gc)
+            export XCFLAGS="-DWAY_TOO_MUCH_GC=1"
+            export CFLAGS="-DWAY_TOO_MUCH_GC=1"
+            export CXXFLAGS="-DWAY_TOO_MUCH_GC=1"
+            ;;
+        -gcov)
 
-        case "$extra" in
-            -too-much-gc)
-                export XCFLAGS="-DWAY_TOO_MUCH_GC=1"
-                export CFLAGS="-DWAY_TOO_MUCH_GC=1"
-                export CXXFLAGS="-DWAY_TOO_MUCH_GC=1"
-                ;;
-            -gcov)
-
-                if [[ "$OSID" == "nt" ]]; then
-                    echo "NT does not support gcov"
-                    myexit 1
-                fi
-                export CFLAGS="--coverage"
-                export CXXFLAGS="--coverage"
-                export XCFLAGS="--coverage"
-                export OS_CFLAGS="--coverage"
-                export LDFLAGS="--coverage"
-                export XLDFLAGS="--coverage"
-                export XLDOPTS="--coverage"
-                ;;
-            -jprof)
-                ;;
-        esac
-    fi
+            if [[ "$OSID" == "nt" ]]; then
+                echo "NT does not support gcov"
+                myexit 1
+            fi
+            export CFLAGS="--coverage"
+            export CXXFLAGS="--coverage"
+            export XCFLAGS="--coverage"
+            export OS_CFLAGS="--coverage"
+            export LDFLAGS="--coverage"
+            export XLDFLAGS="--coverage"
+            export XLDOPTS="--coverage"
+            ;;
+        -jprof)
+            ;;
+    esac
 
     if [[ ! -d $BUILDTREE ]]; then
         echo "Build directory $BUILDTREE does not exist"
@@ -274,24 +283,54 @@ for step in step1; do # dummy loop for handling exits
     # and is used to find mozilla/(browser|mail)/config/mozconfig
     if [[ $product == "firefox" ]]; then
         project=browser
-        export TEST_MOZILLA_HG=${TEST_MOZILLA_HG:-http://hg.mozilla.org/mozilla-central/}
+        case $branch in
+            1.9.1)
+                export TEST_MOZILLA_HG=${TEST_MOZILLA_HG:-http://hg.mozilla.org/releases/mozilla-1.9.1}
+                ;;
+            1.9.2)
+                export TEST_MOZILLA_HG=${TEST_MOZILLA_HG:-http://hg.mozilla.org/mozilla-central}
+                ;;
+        esac
         export MOZCONFIG=${MOZCONFIG:-"$BUILDTREE/mozconfig-firefox-$OSID-$TEST_PROCESSORTYPE-$buildtype"}
+
     elif [[ $product == "thunderbird" ]]; then
         project=mail
-        export TEST_MOZILLA_HG=${TEST_MOZILLA_HG:-http://hg.mozilla.org/comm-central/}
+        case $branch in
+            1.8.*);;
+            1.9.0);;
+            *)
+                export TEST_MOZILLA_HG=${TEST_MOZILLA_HG:-http://hg.mozilla.org/comm-central}
+                ;;
+        esac
         export MOZCONFIG=${MOZCONFIG:-"$BUILDTREE/mozconfig-thunderbird-$OSID-$TEST_PROCESSORTYPE-$buildtype"}
     elif [[ $product == "fennec" ]]; then
         project=mobile
-        export TEST_MOZILLA_HG=${TEST_MOZILLA_HG:-http://hg.mozilla.org/mozilla-central/}
+        case $branch in
+            1.9.1)
+                export TEST_MOZILLA_HG=${TEST_MOZILLA_HG:-http://hg.mozilla.org/releases/mozilla-1.9.1}
+                ;;
+            1.9.2)
+                export TEST_MOZILLA_HG=${TEST_MOZILLA_HG:-http://hg.mozilla.org/mozilla-central}
+                ;;
+        esac
         export MOZCONFIG=${MOZCONFIG:-"$BUILDTREE/mozconfig-fennec-$OSID-$TEST_PROCESSORTYPE-$buildtype"}
     else
         echo "Assuming project=browser for product: $product"
         project=browser
-        export TEST_MOZILLA_HG=${TEST_MOZILLA_HG:-http://hg.mozilla.org/mozilla-central/}
+        case $branch in
+            1.9.1)
+                export TEST_MOZILLA_HG=${TEST_MOZILLA_HG:-http://hg.mozilla.org/releases/mozilla-1.9.1}
+                ;;
+            1.9.2)
+                export TEST_MOZILLA_HG=${TEST_MOZILLA_HG:-http://hg.mozilla.org/mozilla-central}
+                ;;
+        esac
         export MOZCONFIG=${MOZCONFIG:-"$BUILDTREE/mozconfig-firefox-$OSID-$TEST_PROCESSORTYPE-$buildtype"}
     fi
 
-    export TEST_MOZILLA_HG_REV=${TEST_MOZILLA_HG_REV:-tip}
+    if [[ -n "$TEST_MOZILLA_HG" ]]; then
+        export TEST_MOZILLA_HG_REV=${TEST_MOZILLA_HG_REV:-tip}
+    fi
 
     # js shell builds
     if [[ $buildtype == "debug" ]]; then
@@ -306,6 +345,62 @@ for step in step1; do # dummy loop for handling exits
             ;;
     esac
     # end js shell builds
+
+    # set default "data" variables to reduce need for data files.
+
+    case $product in
+        firefox)
+            profilename=${profilename:-$product-$branch$extra-profile}
+            profiledirectory=${profiledirectory:-/tmp/$product-$branch$extra-profile}
+            userpreferences=${userpreferences:-$TEST_DIR/prefs/test-user.js}
+            extensiondir=${extensiondir:-$TEST_DIR/xpi}
+            executablepath=${executablepath:-$BUILDTREE/mozilla/$product-$buildtype/dist}
+            ;;
+        js)
+            jsshellsourcepath=${jsshellsourcepath:-$BUILDTREE/mozilla/js/src}
+            ;;
+        thunderbird)
+            profilename=${profilename:-$product-$branch$extra-profile}
+            profiledirectory=${profiledirectory:-/tmp/$product-$branch$extra-profile}
+            userpreferences=${userpreferences:-$TEST_DIR/prefs/test-user.js}
+            extensiondir=${extensiondir:-$TEST_DIR/xpi}
+            if [[ $branch == "1.8.0" || $branch = "1.8.1" || $branch == "1.9.0" ]]; then
+                executablepath=${executablepath:-$BUILDTREE/mozilla/$product-$buildtype/dist}
+            else
+                executablepath=${executablepath:-$BUILDTREE/mozilla/$product-$buildtype/mozilla/dist}
+            fi
+            ;;
+        fennec)
+            profilename=${profilename:-$product-$branch$extra-profile}
+            profiledirectory=${profiledirectory:-/tmp/$product-$branch$extra-profile}
+            userpreferences=${userpreferences:-$TEST_DIR/prefs/test-user.js}
+            extensiondir=${extensiondir:-$TEST_DIR/xpi}
+            executablepath=${executablepath:-$BUILDTREE/mozilla/$product-$buildtype/mobile/dist}
+            ;;
+    esac
+
+    if [[ -n "$datafiles" && ! -e $datafiles ]]; then
+        # if there is not already a data file for this configuration, create it
+        # this will save this configuration for the tester.sh and other scripts
+        # which use datafiles for passing configuration values.
+        
+        echo product=\${product:-$product}                                          >> $datafiles
+        echo branch=\${branch:-$branch}                                             >> $datafiles
+        echo buildtype=\${buildtype:-$buildtype}                                    >> $datafiles
+        if [[ $product == "js" ]]; then
+            echo jsshellsourcepath=\${jsshellsourcepath:-$jsshellsourcepath}        >> $datafiles
+        else
+            echo profilename=\${profilename:-$profilename}                          >> $datafiles
+            echo profiledirectory=\${profiledirectory:-$profiledirectory}           >> $datafiles
+            echo executablepath=\${executablepath:-$executablepath}                 >> $datafiles
+            echo userpreferences=\${userpreferences:-$userpreferences}              >> $datafiles
+            echo extensiondir=\${extensiondir:-$extensiondir}                       >> $datafiles
+        fi
+        if [[ -n "$TEST_MOZILLA_HG" ]]; then
+            echo TEST_MOZILLA_HG=\${TEST_MOZILLA_HG:-$TEST_MOZILLA_HG}              >> $datafiles
+            echo TEST_MOZILLA_HG_REV=\${TEST_MOZILLA_HG_REV:-$TEST_MOZILLA_HG_REV}  >> $datafiles
+        fi
+    fi
 
     set | sed 's/^/environment: /'
     echo "mozconfig: $MOZCONFIG"

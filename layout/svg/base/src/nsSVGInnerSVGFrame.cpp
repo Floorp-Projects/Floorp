@@ -57,13 +57,10 @@ protected:
   nsSVGInnerSVGFrame(nsStyleContext* aContext) :
     nsSVGInnerSVGFrameBase(aContext) {}
   
-   // nsISupports interface:
-  NS_IMETHOD QueryInterface(const nsIID& aIID, void** aInstancePtr);
-private:
-  NS_IMETHOD_(nsrefcnt) AddRef() { return 1; }
-  NS_IMETHOD_(nsrefcnt) Release() { return 1; }
-
 public:
+  NS_DECL_ISUPPORTS_INHERITED
+  NS_DECL_QUERYFRAME
+
   // We don't define an AttributeChanged method since changes to the
   // 'x', 'y', 'width' and 'height' attributes of our content object
   // are handled in nsSVGSVGElement::DidModifySVGObservable
@@ -129,13 +126,26 @@ NS_NewSVGInnerSVGFrame(nsIPresShell* aPresShell, nsIContent* aContent, nsStyleCo
 
 NS_INTERFACE_MAP_BEGIN(nsSVGInnerSVGFrame)
   NS_INTERFACE_MAP_ENTRY(nsISVGValueObserver)
-  NS_INTERFACE_MAP_ENTRY(nsISupportsWeakReference)
-  NS_INTERFACE_MAP_ENTRY(nsISVGSVGFrame)
-NS_INTERFACE_MAP_END_INHERITING(nsSVGInnerSVGFrameBase)
+NS_INTERFACE_MAP_END
 
+NS_IMETHODIMP_(nsrefcnt)
+nsSVGInnerSVGFrame::AddRef()
+{
+  return 2;
+}
+
+NS_IMETHODIMP_(nsrefcnt)
+nsSVGInnerSVGFrame::Release()
+{
+  return 1;
+}
 
 //----------------------------------------------------------------------
 // nsIFrame methods
+
+NS_QUERYFRAME_HEAD(nsSVGInnerSVGFrame)
+  NS_QUERYFRAME_ENTRY(nsISVGSVGFrame)
+NS_QUERYFRAME_TAIL_INHERITING(nsSVGInnerSVGFrameBase)
 
 nsIAtom *
 nsSVGInnerSVGFrame::GetType() const

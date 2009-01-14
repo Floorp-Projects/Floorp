@@ -15,11 +15,6 @@
 SimpleTest.waitForExplicitFinish();
 var win = window.open("data:text/html,<div style='height:200px; width:100px;'>", "_blank", "width=600,height=600");
 
-// doesn't succeed on SeaMonkey currently, see bug 469331
-// mark it todo there instead
-var testfunc_h = (navigator.userAgent.match(/ SeaMonkey\//)) ? todo : ok;
-var testfunc_w = (navigator.userAgent.match(/Windows/)) ? ok : testfunc_h;
-
 function loaded() {
   win.sizeToContent();
   win.sizeToContent();
@@ -27,8 +22,8 @@ function loaded() {
   win.sizeToContent();
   win.sizeToContent();
   win.sizeToContent();
-  testfunc_w(win.innerWidth >= 100, "innerWidth");
-  testfunc_h(win.innerHeight >= 200, "innerHeight");
+  ok(win.innerWidth >= 100, "innerWidth");
+  ok(win.innerHeight >= 200, "innerHeight");
   win.close();
   SimpleTest.finish();
 }

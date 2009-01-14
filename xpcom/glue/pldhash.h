@@ -256,9 +256,8 @@ typedef PLDHashNumber
  * Return PR_TRUE if keys match, PR_FALSE otherwise.
  */
 typedef PRBool
-(* PLDHashMatchEntry)(PLDHashTable *table,
-                                      const PLDHashEntryHdr *entry,
-                                      const void *key);
+(* PLDHashMatchEntry)(PLDHashTable *table, const PLDHashEntryHdr *entry,
+                      const void *key);
 
 /*
  * Copy the data starting at from to the new entry storage at to.  Do not add
@@ -267,8 +266,7 @@ typedef PRBool
  * any reference-decrementing callback shortly.
  */
 typedef void
-(* PLDHashMoveEntry)(PLDHashTable *table,
-                     const PLDHashEntryHdr *from,
+(* PLDHashMoveEntry)(PLDHashTable *table, const PLDHashEntryHdr *from,
                      PLDHashEntryHdr *to);
 
 /*
@@ -277,8 +275,7 @@ typedef void
  * but only if the given key is found in the table.
  */
 typedef void
-(* PLDHashClearEntry)(PLDHashTable *table,
-                      PLDHashEntryHdr *entry);
+(* PLDHashClearEntry)(PLDHashTable *table, PLDHashEntryHdr *entry);
 
 /*
  * Called when a table (whether allocated dynamically by itself, or nested in
@@ -296,8 +293,7 @@ typedef void
  * table.
  */
 typedef PRBool
-(* PLDHashInitEntry)(PLDHashTable *table,
-                     PLDHashEntryHdr *entry,
+(* PLDHashInitEntry)(PLDHashTable *table, PLDHashEntryHdr *entry,
                      const void *key);
 
 /*
@@ -575,11 +571,30 @@ PL_DHashTableRawRemove(PLDHashTable *table, PLDHashEntryHdr *entry);
  * the entry being enumerated, rather than returning PL_DHASH_REMOVE.
  */
 typedef PLDHashOperator
-(* PLDHashEnumerator)(PLDHashTable *table, PLDHashEntryHdr *hdr,
-                                      PRUint32 number, void *arg);
+(* PLDHashEnumerator)(PLDHashTable *table, PLDHashEntryHdr *hdr, PRUint32 number,
+                      void *arg);
 
 NS_COM_GLUE PRUint32
 PL_DHashTableEnumerate(PLDHashTable *table, PLDHashEnumerator etor, void *arg);
+
+#ifdef DEBUG
+/**
+ * Mark a table as immutable for the remainder of its lifetime.  This
+ * changes the implementation from ASSERTing one set of invariants to
+ * ASSERTing a different set.
+ *
+ * When a table is NOT marked as immutable, the table implementation
+ * asserts that the table is not mutated from its own callbacks.  It
+ * assumes the caller protects the table from being accessed on multiple
+ * threads simultaneously.
+ *
+ * When the table is marked as immutable, the re-entry assertions will
+ * no longer trigger erroneously due to multi-threaded access.  Instead,
+ * mutations will cause assertions.
+ */
+NS_COM_GLUE void
+PL_DHashMarkTableImmutable(PLDHashTable *table);
+#endif
 
 #ifdef PL_DHASHMETER
 #include <stdio.h>

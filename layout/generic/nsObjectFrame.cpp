@@ -581,30 +581,9 @@ nsObjectFrame::~nsObjectFrame()
          ("nsObjectFrame %p deleted\n", this));
 }
 
-NS_IMETHODIMP
-nsObjectFrame::QueryInterface(const nsIID& aIID, void** aInstancePtr)
-{
-  NS_PRECONDITION(aInstancePtr, "null out param");
-
-  if (aIID.Equals(NS_GET_IID(nsIObjectFrame))) {
-    *aInstancePtr = static_cast<nsIObjectFrame*>(this);
-    return NS_OK;
-  }
-
-  return nsObjectFrameSuper::QueryInterface(aIID, aInstancePtr);
-}
-
-NS_IMETHODIMP_(nsrefcnt) nsObjectFrame::AddRef(void)
-{
-  NS_WARNING("not supported for frames");
-  return 1;
-}
-
-NS_IMETHODIMP_(nsrefcnt) nsObjectFrame::Release(void)
-{
-  NS_WARNING("not supported for frames");
-  return 1;
-}
+NS_QUERYFRAME_HEAD(nsObjectFrame)
+  NS_QUERYFRAME_ENTRY(nsIObjectFrame)
+NS_QUERYFRAME_TAIL_INHERITING(nsObjectFrameSuper)
 
 #ifdef ACCESSIBILITY
 NS_IMETHODIMP nsObjectFrame::GetAccessible(nsIAccessible** aAccessible)
@@ -1193,8 +1172,7 @@ nsObjectFrame::PrintPlugin(nsIRenderingContext& aRenderingContext,
   nsPresContext* presContext = PresContext();
   // make sure this is REALLY an nsIObjectFrame
   // we may need to go through the children to get it
-  nsIObjectFrame* objectFrame = nsnull;
-  CallQueryInterface(frame,&objectFrame);
+  nsIObjectFrame* objectFrame = do_QueryFrame(frame);
   if (!objectFrame)
     objectFrame = GetNextObjectFrame(presContext,frame);
   if (!objectFrame)
@@ -2157,8 +2135,7 @@ nsObjectFrame::GetNextObjectFrame(nsPresContext* aPresContext, nsIFrame* aRoot)
   nsIFrame* child = aRoot->GetFirstChild(nsnull);
 
   while (child) {
-    nsIObjectFrame* outFrame = nsnull;
-    CallQueryInterface(child, &outFrame);
+    nsIObjectFrame* outFrame = do_QueryFrame(child);
     if (outFrame) {
       nsCOMPtr<nsIPluginInstance> pi;
       outFrame->GetPluginInstance(*getter_AddRefs(pi));  // make sure we have a REAL plugin

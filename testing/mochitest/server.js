@@ -41,6 +41,14 @@
 // and because they're constants it's not safe to redefine them.  Scope leakage
 // sucks.
 
+// Disable automatic network detection, so tests work correctly when
+// not connected to a network.
+let (ios = Cc["@mozilla.org/network/io-service;1"]
+           .getService(Ci.nsIIOService2)) {
+  ios.manageOfflineStatus = false;
+  ios.offline = false;
+}
+
 const SERVER_PORT = 8888;
 var server; // for use in the shutdown handler, if necessary
 

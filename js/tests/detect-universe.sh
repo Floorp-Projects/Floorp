@@ -72,7 +72,7 @@ Outputs to stdout the universe data for this machine.
 variable            description
 ===============     ============================================================
 -p products         required. one or more of firefox, thunderbird, fennec, js
--b branches         required. one or more of 1.8.0, 1.8.1, 1.9.0, 1.9.1
+-b branches         required. one or more of 1.8.0, 1.8.1, 1.9.0, 1.9.1, 1.9.2
 -R repositories     required. one or more of CVS, mozilla-central, ...
 -T buildtype        required. one or more of opt debug
 
@@ -114,11 +114,11 @@ fi
     for branch in $branches; do
         for repo in $repos; do
 
-            if [[ "$branch" == "1.9.1" && $repo == "CVS" ]]; then
+            if [[ ("$branch" != "1.8.0" && "$branch" != "1.8.1" && "$branch" != "1.9.0") && $repo == "CVS" ]]; then
                 continue;
             fi
 
-            if [[ "$branch" != "1.9.1" && $repo != "CVS" ]]; then
+            if [[ ("$branch" == "1.8.0" || "$branch" == "1.8.1" || "$branch" == "1.9.0") && $repo != "CVS" ]]; then
                 continue
             fi
 

@@ -1,0 +1,7 @@
+LIBRARY   NPTEST
+
+EXPORTS
+  NP_GetEntryPoints     @1
+  NP_Initialize         @2
+  NP_Shutdown           @3
+  NP_GetMIMEDescription @4

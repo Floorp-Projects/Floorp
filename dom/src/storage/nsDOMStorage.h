@@ -116,7 +116,7 @@ class nsDOMStorage : public nsIDOMStorage,
 {
 public:
   nsDOMStorage();
-  nsDOMStorage(nsIURI* aURI, const nsAString& aDomain, PRBool aUseDB);
+  nsDOMStorage(const nsAString& aDomain, PRBool aUseDB);
   virtual ~nsDOMStorage();
 
   // nsISupports
@@ -127,23 +127,29 @@ public:
   NS_DECL_NSIDOMSTORAGE
 
   // nsPIDOMStorage
-  virtual void Init(nsIURI* aURI, const nsAString& aDomain, PRBool aUseDB);
-  virtual already_AddRefed<nsIDOMStorage> Clone(nsIURI* aURI);
+  virtual void Init(const nsAString& aDomain, PRBool aUseDB);
+  virtual already_AddRefed<nsIDOMStorage> Clone();
   virtual nsTArray<nsString> *GetKeys();
+  virtual const nsString &Domain();
+  virtual PRBool CanAccess(nsIPrincipal *aPrincipal);
 
+  // If true, the contents of the storage should be stored in the
+  // database, otherwise this storage should act like a session
+  // storage.
+  // This call relies on mSessionOnly, and should only be used
+  // after a CacheStoragePermissions() call.  See the comments
+  // for mSessionOnly below.
   PRBool UseDB() { return mUseDB && !mSessionOnly; }
 
-  // cache whether storage may be used by aURI, and whether it is session
-  // only. If aURI is null, the uri associated with this storage (mURI)
-  // is checked. Returns true if storage may be used.
+  // Check whether storage may be used by the caller, and whether it
+  // is session only.  Returns true if storage may be used.
   static PRBool
-  CanUseStorage(nsIURI* aURI, PRPackedBool* aSessionOnly);
+  CanUseStorage(PRPackedBool* aSessionOnly);
 
+  // Check whether storage may be used.  Updates mSessionOnly based on
+  // the result of CanUseStorage.
   PRBool
-  CacheStoragePermissions()
-  {
-    return CanUseStorage(mURI, &mSessionOnly);
-  }
+  CacheStoragePermissions();
 
   // retrieve the value and secure state corresponding to a key out of storage.
   nsresult
@@ -188,14 +194,15 @@ protected:
   // true if the storage database should be used for values
   PRPackedBool mUseDB;
 
-  // true if the preferences indicates that this storage should be session only
+  // true if the preferences indicates that this storage should be
+  // session only. This member is updated by
+  // CacheStoragePermissions(), using the current principal.
+  // CacheStoragePermissions() must be called at each entry point to
+  // make sure this stays up to date.
   PRPackedBool mSessionOnly;
 
   // true if items from the database are cached
   PRPackedBool mItemsCached;
-
-  // the URI this store is associated with
-  nsCOMPtr<nsIURI> mURI;
 
   // domain this store is associated with
   nsString mDomain;
@@ -246,8 +253,7 @@ protected:
    * @param aNoCurrentDomainCheck true to skip domain comparison
    */
   nsIDOMStorage*
-  GetStorageForDomain(nsIURI* aURI,
-                      const nsAString& aRequestedDomain,
+  GetStorageForDomain(const nsAString& aRequestedDomain,
                       const nsAString& aCurrentDomain,
                       PRBool aNoCurrentDomainCheck,
                       nsresult* aResult);

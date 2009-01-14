@@ -240,14 +240,13 @@ protected:
     if (mBidiEnabled) {
       // Find the containing block frame
       nsIFrame* frame = aFrame;
-      nsresult rv = NS_ERROR_FAILURE;
-      while (frame &&
-             frame->IsFrameOfType(nsIFrame::eLineParticipant) &&
-             NS_FAILED(rv)) {
+      do {
         frame = frame->GetParent();
-        rv = frame->QueryInterface(kBlockFrameCID, (void**)&mBlockFrame);
+        mBlockFrame = do_QueryFrame(frame);
       }
-      NS_ASSERTION(NS_SUCCEEDED(rv) && mBlockFrame, "Cannot find containing block.");
+      while (frame && frame->IsFrameOfType(nsIFrame::eLineParticipant));
+
+      NS_ASSERTION(mBlockFrame, "Cannot find containing block.");
 
       mLineContinuationPoint = mContinuationPoint;
     }
@@ -1315,7 +1314,7 @@ nsCSSRendering::PaintBackgroundWithSC(nsPresContext* aPresContext,
       drawBackgroundColor = PR_FALSE;
   } else {
     bgColor = NS_RGB(255, 255, 255);
-    if (drawBackgroundImage || NS_GET_A(aColor.mBackgroundColor) > 0)
+    if (drawBackgroundImage || !aColor.IsTransparent())
       drawBackgroundColor = PR_TRUE;
   }
 

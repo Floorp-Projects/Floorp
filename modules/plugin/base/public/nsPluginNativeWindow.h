@@ -46,6 +46,7 @@
 #include "nsIPluginInstance.h"
 #include "nsplugindefs.h"
 #include "nsIWidget.h"
+#include "nsTraceRefcnt.h"
 
 /**
  * base class for native plugin window implementations
@@ -53,8 +54,13 @@
 class nsPluginNativeWindow : public nsPluginWindow
 {
 public: 
-  nsPluginNativeWindow() : nsPluginWindow() {}
-  virtual ~nsPluginNativeWindow() {}
+  nsPluginNativeWindow() : nsPluginWindow() {
+    MOZ_COUNT_CTOR(nsPluginNativeWindow);
+  }
+
+  virtual ~nsPluginNativeWindow() {
+    MOZ_COUNT_DTOR(nsPluginNativeWindow);
+  }
 
   /**
    *   !!! CAUTION !!!

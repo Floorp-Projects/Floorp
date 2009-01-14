@@ -325,8 +325,8 @@ private:
                                                     HSZ      hsz1,
                                                     HSZ      hsz2,
                                                     HDDEDATA hdata,
-                                                    ULONG    dwData1,
-                                                    ULONG    dwData2 );
+                                                    ULONG_PTR dwData1,
+                                                    ULONG_PTR dwData2 );
     static void HandleCommandLine(const char* aCmdLineString, nsIFile* aWorkingDir, PRUint32 aState);
     static void ParseDDEArg( HSZ args, int index, nsString& string);
     static void ParseDDEArg( const WCHAR* args, int index, nsString& aString);
@@ -590,7 +590,7 @@ struct MessageWindow {
     }
 
     // Window proc.
-    static long CALLBACK WindowProc( HWND msgWindow, UINT msg, WPARAM wp, LPARAM lp ) {
+    static LRESULT CALLBACK WindowProc( HWND msgWindow, UINT msg, WPARAM wp, LPARAM lp ) {
         if ( msg == WM_COPYDATA ) {
             if (!nsNativeAppSupportWin::mCanHandleRequests)
                 return FALSE;
@@ -924,8 +924,8 @@ nsNativeAppSupportWin::HandleDDENotification( UINT uType,       // transaction t
                                               HSZ hsz1,         // handle to a string
                                               HSZ hsz2,         // handle to a string
                                               HDDEDATA hdata,   // handle to a global memory object
-                                              ULONG dwData1,    // transaction-specific data
-                                              ULONG dwData2 ) { // transaction-specific data
+                                              ULONG_PTR dwData1,    // transaction-specific data
+                                              ULONG_PTR dwData2 ) { // transaction-specific data
 
     if (!mCanHandleRequests)
         return 0;

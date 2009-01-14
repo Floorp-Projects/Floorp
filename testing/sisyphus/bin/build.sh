@@ -119,20 +119,20 @@ case $product in
 
             mkdir -p "$BUILDTREE/mozilla/js/src/$JS_OBJDIR"
 
-            if [[ ! -e "$BUILDTREE/mozilla/js/src/configure" ]]; then
+            # run autoconf everytime instead of only when configure
+            # needs to be initially generated in order to pick up
+            # configure.in changes.
 
-                if findprogram autoconf-2.13; then
-                    AUTOCONF=autoconf-2.13
-                elif findprogram autoconf213; then
-                    AUTOCONF=autoconf213
-                else
-                    error "autoconf 2.13 not detected"
-                fi
-
-                cd "$BUILDTREE/mozilla/js/src"
-                eval "$AUTOCONF" 
-
+            if findprogram autoconf-2.13; then
+                AUTOCONF=autoconf-2.13
+            elif findprogram autoconf213; then
+                AUTOCONF=autoconf213
+            else
+                error "autoconf 2.13 not detected"
             fi
+
+            cd "$BUILDTREE/mozilla/js/src"
+            eval "$AUTOCONF" 
 
             cd "$BUILDTREE/mozilla/js/src/$JS_OBJDIR"
 

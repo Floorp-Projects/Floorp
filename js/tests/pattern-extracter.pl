@@ -75,8 +75,8 @@ sub processfile
 
         $recordcurr = {};
 
-        my ($test_id, $test_branch, $test_repo, $test_buildtype, $test_type, $test_os, $test_kernel, $test_processortype, $test_memory, $test_cpuspeed, $test_timezone, $test_result, $test_exitstatus, $test_description) = $_ =~ 
-            /TEST_ID=([^,]*), TEST_BRANCH=([^,]*), TEST_REPO=([^,]*), TEST_BUILDTYPE=([^,]*), TEST_TYPE=([^,]*), TEST_OS=([^,]*), TEST_KERNEL=([^,]*), TEST_PROCESSORTYPE=([^,]*), TEST_MEMORY=([^,]*), TEST_CPUSPEED=([^,]*), TEST_TIMEZONE=([^,]*), TEST_RESULT=([^,]*), TEST_EXITSTATUS=([^,]*), TEST_DESCRIPTION=(.*)/;
+        my ($test_id, $test_branch, $test_repo, $test_buildtype, $test_type, $test_os, $test_kernel, $test_processortype, $test_memory, $test_cpuspeed, $test_timezone, $test_options, $test_result, $test_exitstatus, $test_description) = $_ =~ 
+            /TEST_ID=([^,]*), TEST_BRANCH=([^,]*), TEST_REPO=([^,]*), TEST_BUILDTYPE=([^,]*), TEST_TYPE=([^,]*), TEST_OS=([^,]*), TEST_KERNEL=([^,]*), TEST_PROCESSORTYPE=([^,]*), TEST_MEMORY=([^,]*), TEST_CPUSPEED=([^,]*), TEST_TIMEZONE=([^,]*), TEST_OPTIONS=([^,]*), TEST_RESULT=([^,]*), TEST_EXITSTATUS=([^,]*), TEST_DESCRIPTION=(.*)/;
 
         $recordcurr->{TEST_ID}            = $test_id;
         $recordcurr->{TEST_BRANCH}        = $test_branch;
@@ -89,6 +89,7 @@ sub processfile
         $recordcurr->{TEST_MEMORY}        = $test_memory;
         $recordcurr->{TEST_CPUSPEED}      = $test_cpuspeed;
         $recordcurr->{TEST_TIMEZONE}      = $test_timezone;
+        $recordcurr->{TEST_OPTIONS}       = $test_options;
         $recordcurr->{TEST_RESULT}        = $test_result;
         $recordcurr->{TEST_EXITSTATUS}    = $test_exitstatus;
         $recordcurr->{TEST_DESCRIPTION}   = $test_description;
