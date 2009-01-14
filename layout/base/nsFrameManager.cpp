@@ -1312,28 +1312,10 @@ nsFrameManager::ReResolveStyleContext(nsPresContext     *aPresContext,
     }
 
     // now look for undisplayed child content and pseudos
-
-    // When the root element is display:none, we still construct *some*
-    // frames that have the root element as their mContent, down to the
-    // DocElementContainingBlock.
-    PRBool checkUndisplayed;
-    nsIContent *undisplayedParent;
-    if (pseudoTag) {
-      checkUndisplayed = aFrame == mPresShell->FrameConstructor()->
-                                     GetDocElementContainingBlock();
-      undisplayedParent = nsnull;
-    } else {
-      checkUndisplayed = !!localContent;
-      undisplayedParent = localContent;
-    }
-    if (checkUndisplayed && mUndisplayedMap) {
+    if (!pseudoTag && localContent && mUndisplayedMap) {
       for (UndisplayedNode* undisplayed =
-                              mUndisplayedMap->GetFirstNode(undisplayedParent);
+                                   mUndisplayedMap->GetFirstNode(localContent);
            undisplayed; undisplayed = undisplayed->mNext) {
-        NS_ASSERTION(undisplayedParent ||
-                     undisplayed->mContent ==
-                       mPresShell->GetDocument()->GetRootContent(),
-                     "undisplayed node child of null must be root");
         nsRefPtr<nsStyleContext> undisplayedContext;
         nsIAtom* const undisplayedPseudoTag = undisplayed->mStyle->GetPseudoType();
         if (!undisplayedPseudoTag) {  // child content
