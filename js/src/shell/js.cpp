@@ -442,7 +442,6 @@ Process(JSContext *cx, JSObject *obj, char *filename, JSBool forceTTY)
     size_t len;
     buffer = NULL;
     do {
-
         /*
          * Accumulate lines until we get a 'compilable unit' - one that either
          * generates an error (before running out of source) or that compiles
@@ -492,6 +491,9 @@ Process(JSContext *cx, JSObject *obj, char *filename, JSBool forceTTY)
             lineno++;
         } while (!JS_BufferIsCompilableUnit(cx, obj, buffer, len));
 
+        if (hitEOF)
+            break;
+
         /* Clear any pending exception from previous failed compiles.  */
         JS_ClearPendingException(cx);
         script = JS_CompileScript(cx, obj, buffer, len, "typein",
@@ -511,7 +513,8 @@ Process(JSContext *cx, JSObject *obj, char *filename, JSBool forceTTY)
         }
         *buffer = '\0';
         len = 0;
-    } while (!hitEOF && !gQuitting);
+    } while (!gQuitting);
+
     free(buffer);
     fprintf(gOutFile, "\n");
     if (file != stdin)
