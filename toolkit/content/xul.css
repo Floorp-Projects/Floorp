@@ -695,6 +695,10 @@ textbox[type="number"] {
   -moz-binding: url("chrome://global/content/bindings/numberbox.xml#numberbox");
 }
 
+.textbox-contextmenu[chromedir="rtl"] {
+  direction: rtl;
+}
+
 /********** autocomplete textbox **********/
 
 /* thunderbird and Nvu don't use the new toolkit's autocomplete widget yet.... */

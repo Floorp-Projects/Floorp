@@ -492,6 +492,8 @@
     <content context="_child">
       <children/>
       <xul:menupopup anonid="input-box-contextmenu"
+                     class="textbox-contextmenu"
+                     chromedir="&locale.dir;"
                      onpopupshowing="if (document.commandDispatcher.focusedElement != this.parentNode.firstChild)
                                        this.parentNode.firstChild.focus();
                                      this.parentNode._doPopupItemEnabling(this);"
@@ -553,6 +555,8 @@
     <content context="_child">
       <children/>
       <xul:menupopup anonid="input-box-contextmenu"
+                     class="textbox-contextmenu"
+                     chromedir="&locale.dir;"
                      onpopupshowing="if (document.commandDispatcher.focusedElement != this.parentNode.firstChild)
                                        this.parentNode.firstChild.focus();
                                      this.parentNode._doPopupItemEnablingSpell(this);"
