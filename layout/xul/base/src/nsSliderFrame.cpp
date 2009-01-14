@@ -242,7 +242,7 @@ public:
   NS_IMETHODIMP Run()
   {
     nsAutoString which;
-    mWhich->ToString(atom);
+    mWhich->ToString(which);
     return mListener->ValueChanged(which, mValue, mUserChanged);
   }
 
