@@ -144,3 +144,6 @@ js1_7/extensions/regress-353249.js
 js1_7/regress/regress-420399.js
 #
 js1_7/decompilation/regress-371802.js
+# bug 446026
+js1_8/regress/regress-442333-01.js
+js1_6/Array/regress-320887.js
