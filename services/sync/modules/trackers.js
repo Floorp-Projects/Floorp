@@ -76,20 +76,9 @@ Tracker.prototype = {
   _init: function T__init() {
     this._log = Log4Moz.repository.getLogger(this._logName);
     this._score = 0;
+    this._ignored = [];
     this.loadChangedIDs();
     this.enable();
-  },
-
-  get enabled() {
-    return this._enabled;
-  },
-
-  enable: function T_enable() {
-    this._enabled = true;
-  },
-
-  disable: function T_disable() {
-    this._enabled = false;
   },
 
   /*
@@ -163,13 +152,28 @@ Tracker.prototype = {
     }
   },
 
+  // ignore/unignore specific IDs.  Useful for ignoring items that are
+  // being processed, or that shouldn't be synced.
+  // But note: not persisted to disk
+
+  ignoreID: function T_ignoreID(id) {
+    this.unignoreID(id);
+    this._ignored.push(id);
+  },
+
+  unignoreID: function T_unignoreID(id) {
+    let index = this._ignored.indexOf(id);
+    if (index != -1)
+      this._ignored.splice(index, 1);
+  },
+
   addChangedID: function T_addChangedID(id) {
-    if (!this.enabled)
-      return;
     if (!id) {
       this._log.warn("Attempted to add undefined ID to tracker");
       return;
     }
+    if (id in this._ignored)
+      return;
     this._log.debug("Adding changed ID " + id);
     if (!this.changedIDs[id]) {
       this.changedIDs[id] = true;
@@ -178,12 +182,12 @@ Tracker.prototype = {
   },
 
   removeChangedID: function T_removeChangedID(id) {
-    if (!this.enabled)
-      return;
     if (!id) {
-      this._log.warn("Attempted to remove undefined ID from tracker");
+      this._log.warn("Attempted to remove undefined ID to tracker");
       return;
     }
+    if (id in this._ignored)
+      return;
     this._log.debug("Removing changed ID " + id);
     if (this.changedIDs[id]) {
       delete this.changedIDs[id];
