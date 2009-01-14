@@ -1318,7 +1318,11 @@ nsHtml5Tokenizer::stateLoop(PRInt32 state, PRUnichar c, PRBool reconsume, PRInt3
               goto stateloop;
             }
             default: {
-              clearStrBufAndAppendCurrentC(c);
+              if (c >= 'A' && c <= 'Z') {
+                clearStrBufAndAppendForceWrite((PRUnichar) (c + 0x20));
+              } else {
+                clearStrBufAndAppendCurrentC(c);
+              }
               state = NS_HTML5TOKENIZER_DOCTYPE_NAME;
               goto beforedoctypenameloop_end;
             }
@@ -1349,6 +1353,9 @@ nsHtml5Tokenizer::stateLoop(PRInt32 state, PRUnichar c, PRBool reconsume, PRInt3
               goto stateloop;
             }
             default: {
+              if (c >= 'A' && c <= 'Z') {
+                c += 0x0020;
+              }
               appendStrBuf(c);
               continue;
             }
@@ -2374,8 +2381,7 @@ nsHtml5Tokenizer::stateLoop(PRInt32 state, PRUnichar c, PRBool reconsume, PRInt3
                 goto stateloop;
               }
               case '/': {
-
-                state = NS_HTML5TOKENIZER_BEFORE_ATTRIBUTE_NAME;
+                state = NS_HTML5TOKENIZER_SELF_CLOSING_START_TAG;
                 goto stateloop;
               }
               default: {
@@ -2544,7 +2550,15 @@ nsHtml5Tokenizer::eof()
         goto eofloop_end;
       }
       case NS_HTML5TOKENIZER_CLOSE_TAG_OPEN_NOT_PCDATA: {
-        goto eofloop_end;
+        if (index < contentModelElementNameAsArray.length) {
+          goto eofloop_end;
+        } else {
+
+          endTag = PR_TRUE;
+          tagName = contentModelElement;
+          emitCurrentTagToken(PR_FALSE);
+          goto eofloop_end;
+        }
       }
       case NS_HTML5TOKENIZER_CLOSE_TAG_OPEN_PCDATA: {
 
@@ -2606,8 +2620,19 @@ nsHtml5Tokenizer::eof()
         goto eofloop_end;
       }
       case NS_HTML5TOKENIZER_MARKUP_DECLARATION_OCTYPE: {
+        if (index < 6) {
 
-        emitComment(0);
+          emitComment(0);
+        } else {
+
+
+          doctypeName = nsHtml5Atoms::emptystring;
+          publicIdentifier = nsnull;
+          systemIdentifier = nsnull;
+          forceQuirks = PR_TRUE;
+          emitDoctypeToken();
+          goto eofloop_end;
+        }
         goto eofloop_end;
       }
       case NS_HTML5TOKENIZER_COMMENT_START:
