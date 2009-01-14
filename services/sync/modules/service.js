@@ -313,8 +313,8 @@ WeaveSvc.prototype = {
       } catch (e) {}
     self.done();
   },
-  onStartup: function WeaveSvc_onStartup() {
-    this._onStartup.async(this);
+  onStartup: function WeaveSvc_onStartup(callback) {
+    this._onStartup.async(this, callback);
   },
 
   _initLogs: function WeaveSvc__initLogs() {
