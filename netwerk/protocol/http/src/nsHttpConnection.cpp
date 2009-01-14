@@ -452,8 +452,14 @@ nsHttpConnection::CreateTransport(PRUint8 caps)
                               getter_AddRefs(strans));
     if (NS_FAILED(rv)) return rv;
 
+    PRUint32 tmpFlags = 0;
     if (caps & NS_HTTP_REFRESH_DNS)
-        strans->SetConnectionFlags(nsISocketTransport::BYPASS_CACHE); 
+        tmpFlags = nsISocketTransport::BYPASS_CACHE;
+    
+    if (caps & NS_HTTP_LOAD_ANONYMOUS)
+        tmpFlags |= nsISocketTransport::ANONYMOUS_CONNECT;
+    
+    strans->SetConnectionFlags(tmpFlags); 
 
     // NOTE: these create cyclical references, which we break inside
     //       nsHttpConnection::Close
