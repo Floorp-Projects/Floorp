@@ -78,7 +78,6 @@ Tracker.prototype = {
     this._score = 0;
     this._ignored = [];
     this.loadChangedIDs();
-    this.enable();
   },
 
   /*
