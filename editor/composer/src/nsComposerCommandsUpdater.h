@@ -119,7 +119,7 @@ protected:
   void          TimerCallback();
   nsCOMPtr<nsITimer>  mUpdateTimer;
 
-  nsWeakPtr     mDOMWindow;
+  nsIDOMWindow* mDOMWindow;  // Weak reference
   nsWeakPtr     mDocShell;
   PRInt8        mDirtyState;  
   PRInt8        mSelectionCollapsed;  
