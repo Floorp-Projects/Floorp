@@ -1103,11 +1103,6 @@ public:
                                           void* aData) = 0;
 
   /**
-   * Dispatch DOMContentLoaded and DOMFrameContentLoaded events
-   */
-  virtual void DispatchContentLoadedEvents() = 0;
-
-  /**
    * Return whether the document is currently showing (in the sense of
    * OnPageShow() having been called already and OnPageHide() not having been
    * called yet.
