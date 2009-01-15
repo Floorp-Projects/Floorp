@@ -3893,6 +3893,8 @@ nsDocument::RemoveIDTargetObserver(nsIAtom* aID,
 void
 nsDocument::DispatchContentLoadedEvents()
 {
+  SetReadyStateInternal(READYSTATE_INTERACTIVE);
+
   // If you add early returns from this method, make sure you're
   // calling UnblockOnload properly.
   
@@ -3966,9 +3968,7 @@ nsDocument::DispatchContentLoadedEvents()
     } while (parent);
   }
 
-  if (mScriptLoader) {
-    mScriptLoader->EndDeferringScripts();
-  }
+  mScriptLoader->EndDeferringScripts();
 
   UnblockOnload(PR_TRUE);
 }
@@ -3985,17 +3985,6 @@ nsDocument::EndLoad()
   }
   
   NS_DOCUMENT_NOTIFY_OBSERVERS(EndLoad, (this));
-  
-  SetReadyStateInternal(READYSTATE_INTERACTIVE);
-
-  if (!mSynchronousDOMContentLoaded) {
-    nsRefPtr<nsIRunnable> ev =
-      new nsRunnableMethod<nsDocument>(this,
-                                       &nsDocument::DispatchContentLoadedEvents);
-    NS_DispatchToCurrentThread(ev);
-  } else {
-    DispatchContentLoadedEvents();
-  }
 }
 
 void
