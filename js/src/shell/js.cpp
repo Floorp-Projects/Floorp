@@ -141,8 +141,8 @@ split_setup(JSContext *cx);
 
 #ifdef EDITLINE
 JS_BEGIN_EXTERN_C
-extern char     *readline(const char *prompt);
-extern void     add_history(char *line);
+JS_EXTERN_API(char)    *readline(const char *prompt);
+JS_EXTERN_API(void)     add_history(char *line);
 JS_END_EXTERN_C
 #endif
 
