@@ -81,7 +81,6 @@ struct nsPoint {
   }
 };
 
-#ifdef NS_COORD_IS_FLOAT
 struct nsIntPoint {
   PRInt32 x, y;
 
@@ -90,50 +89,29 @@ struct nsIntPoint {
   nsIntPoint(const nsIntPoint& aPoint) { x = aPoint.x; y = aPoint.y;}
   nsIntPoint(PRInt32 aX, PRInt32 aY) { x = aX; y = aY;}
 
-  void MoveTo(PRInt32 aX, PRInt32 aY) {x = aX; y = aY;}
-};
-
-typedef nsPoint nsFloatPoint;
-#else
-typedef nsPoint nsIntPoint;
-
-struct nsFloatPoint {
-  float x, y;
-
-  // Constructors
-  nsFloatPoint() {}
-  nsFloatPoint(const nsFloatPoint& aPoint) {x = aPoint.x; y = aPoint.y;}
-  nsFloatPoint(float aX, float aY) {x = aX; y = aY;}
-
-  void MoveTo(float aX, float aY) {x = aX; y = aY;}
-  void MoveTo(nscoord aX, nscoord aY) {x = (float)aX; y = (float)aY;}
-  void MoveBy(float aDx, float aDy) {x += aDx; y += aDy;}
-
-  // Overloaded operators. Note that '=' isn't defined so we'll get the
-  // compiler generated default assignment operator
-  PRBool   operator==(const nsFloatPoint& aPoint) const {
+  PRBool   operator==(const nsIntPoint& aPoint) const {
     return (PRBool) ((x == aPoint.x) && (y == aPoint.y));
   }
-  PRBool   operator!=(const nsFloatPoint& aPoint) const {
+  PRBool   operator!=(const nsIntPoint& aPoint) const {
     return (PRBool) ((x != aPoint.x) || (y != aPoint.y));
   }
-  nsFloatPoint operator+(const nsFloatPoint& aPoint) const {
-    return nsFloatPoint(x + aPoint.x, y + aPoint.y);
+  nsIntPoint operator+(const nsIntPoint& aPoint) const {
+    return nsIntPoint(x + aPoint.x, y + aPoint.y);
   }
-  nsFloatPoint operator-(const nsFloatPoint& aPoint) const {
-    return nsFloatPoint(x - aPoint.x, y - aPoint.y);
+  nsIntPoint operator-(const nsIntPoint& aPoint) const {
+    return nsIntPoint(x - aPoint.x, y - aPoint.y);
   }
-  nsFloatPoint& operator+=(const nsFloatPoint& aPoint) {
+  nsIntPoint& operator+=(const nsIntPoint& aPoint) {
     x += aPoint.x;
     y += aPoint.y;
     return *this;
   }
-  nsFloatPoint& operator-=(const nsFloatPoint& aPoint) {
+  nsIntPoint& operator-=(const nsIntPoint& aPoint) {
     x -= aPoint.x;
     y -= aPoint.y;
     return *this;
   }
+  void MoveTo(PRInt32 aX, PRInt32 aY) {x = aX; y = aY;}
 };
-#endif // !NS_COORD_IS_FLOAT
 
 #endif /* NSPOINT_H */

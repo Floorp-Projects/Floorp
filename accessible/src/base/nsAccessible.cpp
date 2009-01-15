@@ -1337,7 +1337,7 @@ NS_IMETHODIMP nsAccessible::GetBounds(PRInt32 *x, PRInt32 *y, PRInt32 *width, PR
 
   // We have the union of the rectangle, now we need to put it in absolute screen coords
 
-  nsRect orgRectPixels = aBoundingFrame->GetScreenRectExternal();
+  nsIntRect orgRectPixels = aBoundingFrame->GetScreenRectExternal();
   *x += orgRectPixels.x;
   *y += orgRectPixels.y;
 

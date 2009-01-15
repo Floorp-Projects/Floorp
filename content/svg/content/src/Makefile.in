@@ -21,6 +21,7 @@
 #
 # Contributor(s):
 #   Alex Fritze <alex.fritze@crocodile-clips.com>
+#   Chris Double  <chris.double@double.co.nz>
 #
 # Alternatively, the contents of this file may be used under the terms of
 # either of the GNU General Public License Version 2 or later (the "GPL"),
@@ -137,6 +138,13 @@ CPPSRCS		= \
 		nsSVGValue.cpp \
 		$(NULL)
 
+ifdef MOZ_SMIL
+CPPSRCS += nsSVGAnimateElement.cpp \
+           nsSVGAnimationElement.cpp \
+           nsSVGSetElement.cpp \
+           $(NULL)
+endif
+
 include $(topsrcdir)/config/config.mk
 
 # we don't want the shared lib, but we want to force the creation of a static lib.
@@ -155,7 +163,6 @@ EXPORTS =  			\
 	nsSVGMatrix.h              \
 	$(NULL)
 
-
 include $(topsrcdir)/config/rules.mk
 
 INCLUDES += 	\
@@ -170,5 +177,11 @@ INCLUDES += 	\
 		-I$(srcdir)/../../../html/content/src \
 		-I$(topsrcdir)/content/xbl/src \
 		$(NULL)
+
+ifdef MOZ_SMIL
+INCLUDES += 	\
+		-I$(srcdir)/../../../smil \
+		$(NULL)
+endif
 
 DEFINES += -D_IMPL_NS_LAYOUT

@@ -158,7 +158,12 @@ function onPrefChange(evt) {
   is(evt.data, testdata.dummy, "Check 'Application.prefs.set' fired a change event");
   Application.prefs.events.removeListener("change", onPrefChange);
 
+  // We are removing the old listener after adding the new listener so we can test that
+  // removing a listener does not remove all listeners
+  Application.prefs.get("fuel.fuel-test").events.addListener("change", onPrefChangeDummy);
   Application.prefs.get("fuel.fuel-test").events.addListener("change", onPrefChange2);
+  Application.prefs.get("fuel.fuel-test").events.removeListener("change", onPrefChangeDummy);
+
   Application.prefs.setValue("fuel.fuel-test", "change event2");
 }
 
@@ -168,3 +173,5 @@ function onPrefChange2(evt) {
 
   finish();
 }
+
+function onPrefChangeDummy(evt) { }

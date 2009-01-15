@@ -171,6 +171,11 @@ static NS_DEFINE_CID(kDOMEventGroupCID, NS_DOMEVENTGROUP_CID);
 
 #include "mozAutoDocUpdate.h"
 
+#ifdef MOZ_SMIL
+#include "nsSMILAnimationController.h"
+#include "imgIContainer.h"
+#endif // MOZ_SMIL
+
 
 #ifdef MOZ_LOGGING
 // so we can get logging even in release builds
@@ -896,7 +901,7 @@ nsExternalResourceMap::AddExternalResource(nsIURI* aURI,
     } else {
       doc->SetDisplayDocument(aDisplayDocument);
 
-      rv = aViewer->Init(nsnull, nsRect(0, 0, 0, 0));
+      rv = aViewer->Init(nsnull, nsIntRect(0, 0, 0, 0));
       if (NS_SUCCEEDED(rv)) {
         rv = aViewer->Open(nsnull, nsnull);
       }
@@ -1776,6 +1781,13 @@ NS_IMPL_CYCLE_COLLECTION_TRAVERSE_BEGIN(nsDocument)
   NS_IMPL_CYCLE_COLLECTION_TRAVERSE_NSCOMARRAY(mStyleSheets)
   NS_IMPL_CYCLE_COLLECTION_TRAVERSE_NSCOMARRAY(mCatalogSheets)
   NS_IMPL_CYCLE_COLLECTION_TRAVERSE_NSCOMARRAY(mVisitednessChangedURIs)
+
+#ifdef MOZ_SMIL
+  // Traverse animation components
+  if (tmp->mAnimationController) {
+    tmp->mAnimationController->Traverse(&cb);
+  }
+#endif // MOZ_SMIL
 
   NS_IMPL_CYCLE_COLLECTION_TRAVERSE_PRESERVED_WRAPPER
 
@@ -5255,6 +5267,32 @@ nsDocument::EnumerateExternalResources(nsSubDocEnumFunc aCallback, void* aData)
   mExternalResourceMap.EnumerateResources(aCallback, aData);
 }
 
+#ifdef MOZ_SMIL
+nsSMILAnimationController*
+nsDocument::GetAnimationController()
+{
+  // We create the animation controller lazily because most documents won't want
+  // one and only SVG documents and the like will call this
+  if (mAnimationController)
+    return mAnimationController;
+
+  mAnimationController = NS_NewSMILAnimationController(this);
+  
+  // If there's a presContext then check the animation mode and pause if
+  // necessary.
+  nsIPresShell *shell = GetPrimaryShell();
+  if (mAnimationController && shell) {
+    nsPresContext *context = shell->GetPresContext();
+    if (context &&
+        context->ImageAnimationMode() == imgIContainer::kDontAnimMode) {
+      mAnimationController->Pause(nsSMILTimeContainer::PAUSE_USERPREF);
+    }
+  }
+
+  return mAnimationController;
+}
+#endif // MOZ_SMIL
+
 struct DirTable {
   const char* mName;
   PRUint8     mValue;
@@ -7103,6 +7141,12 @@ nsDocument::OnPageShow(PRBool aPersisted)
   // Set mIsShowing before firing events, in case those event handlers
   // move us around.
   mIsShowing = PR_TRUE;
+
+#ifdef MOZ_SMIL
+  if (mAnimationController) {
+    mAnimationController->OnPageShow();
+  }
+#endif
   
   nsPageTransitionEvent event(PR_TRUE, NS_PAGE_SHOW, aPersisted);
   DispatchEventToWindow(&event);
@@ -7133,6 +7177,12 @@ nsDocument::OnPageHide(PRBool aPersisted)
   // Set mIsShowing before firing events, in case those event handlers
   // move us around.
   mIsShowing = PR_FALSE;
+
+#ifdef MOZ_SMIL
+  if (mAnimationController) {
+    mAnimationController->OnPageHide();
+  }
+#endif
   
   // Now send out a PageHide event.
   nsPageTransitionEvent event(PR_TRUE, NS_PAGE_HIDE, aPersisted);

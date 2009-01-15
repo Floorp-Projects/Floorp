@@ -5582,7 +5582,7 @@ nsDocShell::CaptureState()
             if (rootView) {
                 nsIWidget *widget = rootView->GetWidget();
                 if (widget) {
-                    nsRect bounds(0, 0, 0, 0);
+                    nsIntRect bounds(0, 0, 0, 0);
                     widget->GetBounds(bounds);
                     rv = mOSHE->SetViewerBounds(bounds);
                 }
@@ -5907,7 +5907,7 @@ nsDocShell::RestoreFromHistory()
     // bounds of the root view's widget.
 
     nsIView *rootViewSibling = nsnull, *rootViewParent = nsnull;
-    nsRect newBounds(0, 0, 0, 0);
+    nsIntRect newBounds(0, 0, 0, 0);
 
     nsCOMPtr<nsIPresShell> oldPresShell;
     nsDocShell::GetPresShell(getter_AddRefs(oldPresShell));
@@ -5963,7 +5963,7 @@ nsDocShell::RestoreFromHistory()
     }
 
     // get the previous content viewer size
-    nsRect oldBounds(0, 0, 0, 0);
+    nsIntRect oldBounds(0, 0, 0, 0);
     mLSHE->GetViewerBounds(oldBounds);
 
     // Restore the refresh URI list.  The refresh timers will be restarted
@@ -6537,7 +6537,7 @@ nsDocShell::SetupNewViewer(nsIContentViewer * aNewViewer)
     nsCOMPtr<nsIWidget> widget;
     NS_ENSURE_SUCCESS(GetMainWidget(getter_AddRefs(widget)), NS_ERROR_FAILURE);
 
-    nsRect bounds(x, y, cx, cy);
+    nsIntRect bounds(x, y, cx, cy);
 
     if (NS_FAILED(mContentViewer->Init(widget, bounds))) {
         mContentViewer = nsnull;

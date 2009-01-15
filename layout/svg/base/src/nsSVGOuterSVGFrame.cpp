@@ -558,7 +558,7 @@ nsSVGOuterSVGFrame::Paint(nsIRenderingContext& aRenderingContext,
   PRTime start = PR_Now();
 #endif
 
-  dirtyRect.ScaleRoundOut(1.0f / PresContext()->AppUnitsPerDevPixel());
+  nsIntRect dirtyPxRect = nsRect::ToOutsidePixels(dirtyRect, PresContext()->AppUnitsPerDevPixel());
 
   nsSVGRenderState ctx(&aRenderingContext);
 
@@ -570,7 +570,7 @@ nsSVGOuterSVGFrame::Paint(nsIRenderingContext& aRenderingContext,
   }
 #endif
 
-  nsSVGUtils::PaintFrameWithEffects(&ctx, &dirtyRect, this);
+  nsSVGUtils::PaintFrameWithEffects(&ctx, &dirtyPxRect, this);
 
 #ifdef XP_MACOSX
   if (mEnableBitmapFallback) {

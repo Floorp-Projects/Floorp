@@ -513,7 +513,7 @@ static HWND CreateControl(LPCTSTR          aType,
                           HWND             aHdlg, 
                           int              aId, 
                           const nsAString& aStr, 
-                          const nsRect&    aRect)
+                          const nsIntRect& aRect)
 {
   nsCAutoString str;
   if (NS_FAILED(NS_CopyUnicodeToNative(aStr, str)))
@@ -541,7 +541,7 @@ static HWND CreateRadioBtn(HINSTANCE        aHInst,
                            HWND             aHdlg, 
                            int              aId, 
                            const char*      aStr, 
-                           const nsRect&    aRect)
+                           const nsIntRect& aRect)
 {
   nsString cStr;
   cStr.AssignWithConversion(aStr);
@@ -554,7 +554,7 @@ static HWND CreateGroupBox(HINSTANCE        aHInst,
                            HWND             aHdlg, 
                            int              aId, 
                            const nsAString& aStr, 
-                           const nsRect&    aRect)
+                           const nsIntRect& aRect)
 {
   return CreateControl("BUTTON", BS_GROUPBOX, aHInst, aHdlg, aId, aStr, aRect);
 }
@@ -665,7 +665,7 @@ static UINT CALLBACK PrintHookProc(HWND hdlg, UINT uiMsg, WPARAM wParam, LPARAM 
     int y         = top+(rad1Rect.top-dlgRect.top);     // starting pos of first radio
     int rbWidth   = dlgRect.right - rad1Rect.left - 5;  // measure from rb left to the edge of the groupbox
                                                         // (5 is arbitrary)
-    nsRect rect;
+    nsIntRect rect;
 
     // Create and position the radio buttons
     //

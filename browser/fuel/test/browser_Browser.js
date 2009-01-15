@@ -35,18 +35,20 @@ function test() {
     gPageA.events.removeListener("load", onPageAFirstLoad);
 
     gPageB = activeWin.open(url("chrome://mochikit/content/browser/browser/fuel/test/ContentB.html"));
-    gPageB.events.addListener("load", function() {
-      executeSoon(afterOpen);
-    });
+    gPageB.events.addListener("load", delayAfterOpen);
     gPageB.focus();
 
     is(activeWin.tabs.length, 3, "Checking length of 'Browser.tabs' after opening a second additional tab");
     is(activeWin.activeTab.index, gPageB.index, "Checking 'Browser.activeTab' after setting focus");
   }
 
+  function delayAfterOpen() {
+    executeSoon(afterOpen);
+  }
+
   // need to wait for the url's to be refreshed during the load
   function afterOpen(event) {
-    gPageB.events.removeListener("load", afterOpen);
+    gPageB.events.removeListener("load", delayAfterOpen);
 
     is(gPageA.uri.spec, "chrome://mochikit/content/browser/browser/fuel/test/ContentA.html", "Checking 'BrowserTab.uri' after opening");
     is(gPageB.uri.spec, "chrome://mochikit/content/browser/browser/fuel/test/ContentB.html", "Checking 'BrowserTab.uri' after opening");
@@ -60,6 +62,9 @@ function test() {
     is(test1.innerHTML, "A", "Checking content of element in content DOM");
 
     // test moving tab
+    is(gTabMoveCount, 0, "Checking initial tab move count");
+
+    // move the tab
     gPageA.moveToEnd();
     is(gPageA.index, 2, "Checking index after moving tab");
 
@@ -89,7 +94,7 @@ function test() {
     });
 
     // test loading new content with a frame into a tab
-    // the event will be checked in afterClose
+    // the event will be checked in onPageBLoadComplete
     gPageB.events.addListener("load", onPageBLoadWithFrames);
     gPageB.load(url("chrome://mochikit/content/browser/browser/fuel/test/ContentWithFrames.html"));
   }
@@ -104,7 +109,7 @@ function test() {
     is(gPageLoadCount, 1, "Checking load count after loading new content with a frame");
 
     // test loading new content into a tab
-    // the event will be checked in onPageLoad
+    // the event will be checked in onPageASecondLoad
     gPageA.events.addListener("load", onPageASecondLoad);
     gPageA.load(url("chrome://mochikit/content/browser/browser/fuel/test/ContentB.html"));
   }

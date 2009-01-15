@@ -1,0 +1,5 @@
+<svg xmlns="http://www.w3.org/2000/svg">
+  <circle cx="150" cy="50" r="30" fill="blue"/>
+  <!-- Tick mark to show where the circle should be -->
+  <path d="M150 40v20" stroke="green"/>
+</svg>

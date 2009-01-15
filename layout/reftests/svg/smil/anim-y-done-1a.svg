@@ -1,0 +1,10 @@
+<svg xmlns="http://www.w3.org/2000/svg"
+     xmlns:xlink="http://www.w3.org/1999/xlink"
+     class="reftest-wait"
+     onload="setTimeAndSnapshot(2, false)">
+  <script xlink:href="smil-util.js" type="text/javascript"/>
+  <rect x="15" y="200" width="200" height="200" fill="blue">
+    <animate attributeName="y"
+             from="200" to="15" begin="0s" dur="2s" fill="freeze"/>
+  </rect>
+</svg>
