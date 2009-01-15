@@ -288,9 +288,9 @@ NS_IMETHODIMP nsScrollBoxObject::ScrollToElement(nsIDOMElement *child)
     nsPoint cp;
     scrollableView->GetScrollPosition(cp.x,cp.y);
 
-    GetOffsetRect(crect);    
-    crect.x = nsPresContext::CSSPixelsToAppUnits(crect.x);
-    crect.y = nsPresContext::CSSPixelsToAppUnits(crect.y);
+    nsIntRect prect;
+    GetOffsetRect(prect);
+    crect = nsIntRect::ToAppUnits(prect, nsPresContext::AppUnitsPerCSSPixel());
     nscoord newx=cp.x, newy=cp.y;
 
     // we only scroll in the direction of the scrollbox orientation
@@ -388,11 +388,9 @@ NS_IMETHODIMP nsScrollBoxObject::EnsureElementIsVisible(nsIDOMElement *child)
     // get our current info
     nsPoint cp;
     scrollableView->GetScrollPosition(cp.x,cp.y);
-    GetOffsetRect(crect);    
-    crect.x = nsPresContext::CSSPixelsToAppUnits(crect.x);
-    crect.y = nsPresContext::CSSPixelsToAppUnits(crect.y);
-    crect.width = nsPresContext::CSSPixelsToAppUnits(crect.width);
-    crect.height = nsPresContext::CSSPixelsToAppUnits(crect.height);
+    nsIntRect prect;
+    GetOffsetRect(prect);
+    crect = nsIntRect::ToAppUnits(prect, nsPresContext::AppUnitsPerCSSPixel());
 
     nscoord newx=cp.x, newy=cp.y;
 

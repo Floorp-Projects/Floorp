@@ -61,7 +61,7 @@ public:
                    const nsRect& aDirtyRect, nsPoint aPt);
                               
   /* get the size of the canvas's image */
-  nsSize GetCanvasSize();
+  nsIntSize GetCanvasSize();
 
   virtual nscoord GetMinWidth(nsIRenderingContext *aRenderingContext);
   virtual nscoord GetPrefWidth(nsIRenderingContext *aRenderingContext);
