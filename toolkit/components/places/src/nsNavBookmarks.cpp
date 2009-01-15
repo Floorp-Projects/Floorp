@@ -2557,6 +2557,14 @@ nsNavBookmarks::ChangeBookmarkURI(PRInt64 aBookmarkId, nsIURI *aNewURI)
   rv = transaction.Commit();
   NS_ENSURE_SUCCESS(rv, rv);
 
+  // Add new URI to bookmark hash.
+  rv = AddBookmarkToHash(placeId, 0);
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  // Remove old URI from bookmark hash.
+  rv = UpdateBookmarkHashOnRemove(oldPlaceId);
+  NS_ENSURE_SUCCESS(rv, rv);
+
   // Upon changing the URI for a bookmark, update the frecency for the new place.
   // UpdateFrecency needs to know whether placeId is bookmarked (as opposed
   // to a livemark item).  Bookmarking it is exactly what we did above.
