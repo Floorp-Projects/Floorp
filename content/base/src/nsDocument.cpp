@@ -3954,10 +3954,6 @@ nsDocument::DispatchContentLoadedEvents()
     } while (parent);
   }
 
-  if (mScriptLoader) {
-    mScriptLoader->EndDeferringScripts();
-  }
-
   UnblockOnload(PR_TRUE);
 }
 
@@ -3975,15 +3971,6 @@ nsDocument::EndLoad()
   NS_DOCUMENT_NOTIFY_OBSERVERS(EndLoad, (this));
   
   SetReadyStateInternal(READYSTATE_INTERACTIVE);
-
-  if (!mSynchronousDOMContentLoaded) {
-    nsRefPtr<nsIRunnable> ev =
-      new nsRunnableMethod<nsDocument>(this,
-                                       &nsDocument::DispatchContentLoadedEvents);
-    NS_DispatchToCurrentThread(ev);
-  } else {
-    DispatchContentLoadedEvents();
-  }
 }
 
 void

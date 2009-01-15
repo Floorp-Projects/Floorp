@@ -184,6 +184,7 @@ public:
   NS_IMETHOD WillParse(void);
   NS_IMETHOD WillBuildModel(void);
   NS_IMETHOD DidBuildModel(void);
+  virtual PRBool ReadyToCallDidBuildModel(void);
   NS_IMETHOD WillInterrupt(void);
   NS_IMETHOD WillResume(void);
   NS_IMETHOD SetParser(nsIParser* aParser);
@@ -1834,6 +1835,12 @@ HTMLContentSink::DidBuildModel(void)
   DropParserAndPerfHint();
 
   return NS_OK;
+}
+
+PRBool
+HTMLContentSink::ReadyToCallDidBuildModel()
+{
+  return ReadyToCallDidBuildModelImpl();
 }
 
 NS_IMETHODIMP
