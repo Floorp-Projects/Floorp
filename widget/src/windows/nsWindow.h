@@ -123,14 +123,14 @@ public:
 
   // nsIWidget interface
   NS_IMETHOD              Create(nsIWidget *aParent,
-                                 const nsRect &aRect,
+                                 const nsIntRect &aRect,
                                  EVENT_CALLBACK aHandleEventFunction,
                                  nsIDeviceContext *aContext,
                                  nsIAppShell *aAppShell = nsnull,
                                  nsIToolkit *aToolkit = nsnull,
                                  nsWidgetInitData *aInitData = nsnull);
   NS_IMETHOD              Create(nsNativeWidget aParent,
-                                 const nsRect &aRect,
+                                 const nsIntRect &aRect,
                                  EVENT_CALLBACK aHandleEventFunction,
                                  nsIDeviceContext *aContext,
                                  nsIAppShell *aAppShell = nsnull,
@@ -141,7 +141,7 @@ public:
   // Create(nsNativeWidget...)
 
   virtual nsresult        StandardWindowCreate(nsIWidget *aParent,
-                                               const nsRect &aRect,
+                                               const nsIntRect &aRect,
                                                EVENT_CALLBACK aHandleEventFunction,
                                                nsIDeviceContext *aContext,
                                                nsIAppShell *aAppShell,
@@ -165,9 +165,9 @@ public:
   NS_IMETHOD              Enable(PRBool aState);
   NS_IMETHOD              IsEnabled(PRBool *aState);
   NS_IMETHOD              SetFocus(PRBool aRaise);
-  NS_IMETHOD              GetBounds(nsRect &aRect);
-  NS_IMETHOD              GetClientBounds(nsRect &aRect);
-  NS_IMETHOD              GetScreenBounds(nsRect &aRect);
+  NS_IMETHOD              GetBounds(nsIntRect &aRect);
+  NS_IMETHOD              GetClientBounds(nsIntRect &aRect);
+  NS_IMETHOD              GetScreenBounds(nsIntRect &aRect);
   NS_IMETHOD              SetBackgroundColor(const nscolor &aColor);
   NS_IMETHOD              SetCursor(nsCursor aCursor);
   NS_IMETHOD              SetCursor(imgIContainer* aCursor,
@@ -175,22 +175,22 @@ public:
   NS_IMETHOD              HideWindowChrome(PRBool aShouldHide);
   NS_IMETHOD              Validate();
   NS_IMETHOD              Invalidate(PRBool aIsSynchronous);
-  NS_IMETHOD              Invalidate(const nsRect & aRect, PRBool aIsSynchronous);
+  NS_IMETHOD              Invalidate(const nsIntRect & aRect, PRBool aIsSynchronous);
   NS_IMETHOD              InvalidateRegion(const nsIRegion *aRegion, PRBool aIsSynchronous);
   NS_IMETHOD              Update();
   virtual void*           GetNativeData(PRUint32 aDataType);
   virtual void            FreeNativeData(void * data, PRUint32 aDataType);//~~~
   NS_IMETHOD              SetColorMap(nsColorMap *aColorMap);
   //XXX-Scroll is obsolete it is going away soon
-  NS_IMETHOD              Scroll(PRInt32 aDx, PRInt32 aDy, nsRect *aClipRect);
+  NS_IMETHOD              Scroll(PRInt32 aDx, PRInt32 aDy, nsIntRect *aClipRect);
   NS_IMETHOD              ScrollWidgets(PRInt32 aDx, PRInt32 aDy);
-  NS_IMETHOD              ScrollRect(nsRect &aRect, PRInt32 aDx, PRInt32 aDy);
+  NS_IMETHOD              ScrollRect(nsIntRect &aRect, PRInt32 aDx, PRInt32 aDy);
   NS_IMETHOD              SetTitle(const nsAString& aTitle);
   NS_IMETHOD              SetIcon(const nsAString& aIconSpec);
   NS_IMETHOD              SetMenuBar(void * aMenuBar) { return NS_ERROR_FAILURE; }
   NS_IMETHOD              ShowMenuBar(PRBool aShow)         { return NS_ERROR_FAILURE; }
-  NS_IMETHOD              WidgetToScreen(const nsRect& aOldRect, nsRect& aNewRect);
-  NS_IMETHOD              ScreenToWidget(const nsRect& aOldRect, nsRect& aNewRect);
+  NS_IMETHOD              WidgetToScreen(const nsIntRect& aOldRect, nsIntRect& aNewRect);
+  NS_IMETHOD              ScreenToWidget(const nsIntRect& aOldRect, nsIntRect& aNewRect);
   NS_IMETHOD              BeginResizingChildren(void);
   NS_IMETHOD              EndResizingChildren(void);
   NS_IMETHOD              GetPreferredSize(PRInt32& aWidth, PRInt32& aHeight);
@@ -250,15 +250,15 @@ public:
                                              PRBool aIsContextMenuKey = PR_FALSE,
                                              PRInt16 aButton = nsMouseEvent::eLeftButton);
 #ifdef ACCESSIBILITY
-  virtual PRBool          DispatchAccessibleEvent(PRUint32 aEventType, nsIAccessible** aAccessible, nsPoint* aPoint = nsnull);
+  virtual PRBool          DispatchAccessibleEvent(PRUint32 aEventType, nsIAccessible** aAccessible, nsIntPoint* aPoint = nsnull);
   already_AddRefed<nsIAccessible> GetRootAccessible();
 #endif
   virtual PRBool          AutoErase();
-  nsPoint*                GetLastPoint() { return &mLastPoint; }
+  nsIntPoint*             GetLastPoint() { return &mLastPoint; }
 
   PRInt32                 GetNewCmdMenuId() { mMenuCmdId++; return mMenuCmdId; }
 
-  void                    InitEvent(nsGUIEvent& event, nsPoint* aPoint = nsnull);
+  void                    InitEvent(nsGUIEvent& event, nsIntPoint* aPoint = nsnull);
 
   void                    SuppressBlurEvents(PRBool aSuppress);
   PRBool                  BlurEventsSuppressed();
@@ -318,7 +318,7 @@ protected:
   virtual void            OnDestroy();
   virtual PRBool          OnMove(PRInt32 aX, PRInt32 aY);
   virtual PRBool          OnPaint(HDC aDC = nsnull);
-  virtual PRBool          OnResize(nsRect &aWindowRect);
+  virtual PRBool          OnResize(nsIntRect &aWindowRect);
   
   void                    SetupModKeyState();
   void                    RemoveMessageAndDispatchPluginEvent(UINT aFirstMsg, UINT aLastMsg);
@@ -368,9 +368,9 @@ protected:
    *  @param aOutRect         The converted cursor rect.
    */
   void                    ResolveIMECaretPos(nsIWidget* aReferenceWidget,
-                                             nsRect&    aCursorRect,
+                                             nsIntRect& aCursorRect,
                                              nsIWidget* aNewOriginWidget,
-                                             nsRect&    aOutRect);
+                                             nsIntRect& aOutRect);
 
   PRBool                  ConvertToANSIString(const nsAFlatString& aStr,
                                               UINT aCodePage,
@@ -397,7 +397,7 @@ protected:
   PRBool DispatchCommandEvent(PRUint32 aEventCommand);
   void RelayMouseEvent(UINT aMsg, WPARAM wParam, LPARAM lParam);
 
-  void GetNonClientBounds(nsRect &aRect);
+  void GetNonClientBounds(nsIntRect &aRect);
   void HandleTextEvent(HIMC hIMEContext, PRBool aCheckAttr = PR_TRUE);
   BOOL HandleStartComposition(HIMC hIMEContext);
   void HandleEndComposition(void);
@@ -459,9 +459,9 @@ protected:
 
   static TriStateBool sCanQuit;
 
-  nsSize        mLastSize;
+  nsIntSize     mLastSize;
   static        nsWindow* gCurrentWindow;
-  nsPoint       mLastPoint;
+  nsIntPoint    mLastPoint;
   HWND          mWnd;
   HDC           mPaintDC; // only set during painting
 #if 0

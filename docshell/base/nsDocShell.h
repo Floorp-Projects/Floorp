@@ -638,7 +638,7 @@ protected:
     nsCOMPtr<nsISupportsArray> mRefreshURIList;
     nsCOMPtr<nsISupportsArray> mSavedRefreshURIList;
     nsRefPtr<nsDSURIContentListener> mContentListener;
-    nsRect                     mBounds; // Dimensions of the docshell
+    nsIntRect                  mBounds; // Dimensions of the docshell
     nsCOMPtr<nsIContentViewer> mContentViewer;
     nsCOMPtr<nsIDocumentCharsetInfo> mDocumentCharsetInfo;
     nsCOMPtr<nsIWidget>        mParentWidget;
@@ -651,7 +651,7 @@ protected:
     nsCOMPtr<nsISHistory>      mSessionHistory;
     nsCOMPtr<nsIGlobalHistory2> mGlobalHistory;
     nsCOMPtr<nsIWebBrowserFind> mFind;
-    nsPoint                    mDefaultScrollbarPref; // persistent across doc loads
+    nsIntPoint                 mDefaultScrollbarPref; // persistent across doc loads
     // Reference to the SHEntry for this docshell until the page is destroyed.
     // Somebody give me better name
     nsCOMPtr<nsISHEntry>       mOSHE; 

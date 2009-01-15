@@ -615,7 +615,7 @@ NS_IMETHODIMP nsXULWindow::SetPositionAndSize(PRInt32 aX, PRInt32 aY,
 NS_IMETHODIMP nsXULWindow::GetPositionAndSize(PRInt32* x, PRInt32* y, PRInt32* cx,
    PRInt32* cy)
 {
-  nsRect rect;
+  nsIntRect rect;
 
   if (!mWindow)
     return NS_ERROR_FAILURE;

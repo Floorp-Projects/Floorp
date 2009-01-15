@@ -1839,7 +1839,7 @@ NS_IMETHODIMP
 nsNativeThemeCocoa::GetWidgetBorder(nsIDeviceContext* aContext, 
                                     nsIFrame* aFrame,
                                     PRUint8 aWidgetType,
-                                    nsMargin* aResult)
+                                    nsIntMargin* aResult)
 {
   NS_OBJC_BEGIN_TRY_ABORT_BLOCK_NSRESULT;
 
@@ -1940,7 +1940,7 @@ PRBool
 nsNativeThemeCocoa::GetWidgetPadding(nsIDeviceContext* aContext, 
                                      nsIFrame* aFrame,
                                      PRUint8 aWidgetType,
-                                     nsMargin* aResult)
+                                     nsIntMargin* aResult)
 {
   // We don't want CSS padding being used for certain widgets.
   // See bug 381639 for an example of why.
@@ -1995,7 +1995,7 @@ NS_IMETHODIMP
 nsNativeThemeCocoa::GetMinimumWidgetSize(nsIRenderingContext* aContext,
                                          nsIFrame* aFrame,
                                          PRUint8 aWidgetType,
-                                         nsSize* aResult,
+                                         nsIntSize* aResult,
                                          PRBool* aIsOverridable)
 {
   NS_OBJC_BEGIN_TRY_ABORT_BLOCK_NSRESULT;
