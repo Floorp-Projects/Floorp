@@ -584,7 +584,7 @@ nsresult HandleNumbers(PRUnichar* aBuffer, PRUint32 aSize, PRUint32 aNumFlag)
     case IBMBIDI_NUMERAL_REGULAR:
     case IBMBIDI_NUMERAL_HINDICONTEXT:
       for (i=0;i<aSize;i++)
-        aBuffer[i] = HandleNumberInChar(aBuffer[i], i>0 ? aBuffer[i-1] : 0, aNumFlag);
+        aBuffer[i] = HandleNumberInChar(aBuffer[i], !!(i>0 ? aBuffer[i-1] : 0), aNumFlag);
       break;
     case IBMBIDI_NUMERAL_NOMINAL:
     default:

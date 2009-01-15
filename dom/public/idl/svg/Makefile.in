@@ -21,6 +21,7 @@
 # the Initial Developer. All Rights Reserved.
 #
 # Contributor(s):
+#   Chris Double  <chris.double@double.co.nz>
 #
 # Alternatively, the contents of this file may be used under the terms of
 # either of the GNU General Public License Version 2 or later (the "GPL"),
@@ -126,5 +127,13 @@ XPIDLSRCS	= \
 		nsIDOMSVGZoomAndPan.idl \
 		nsIDOMSVGZoomEvent.idl \
 		$(NULL)
+
+ifdef MOZ_SMIL
+XPIDLSRCS	+= \
+		nsIDOMSVGAnimateElement.idl \
+		nsIDOMSVGAnimationElement.idl \
+		nsIDOMSVGSetElement.idl \
+		$(NULL)
+endif
 
 include $(topsrcdir)/config/rules.mk

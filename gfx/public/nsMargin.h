@@ -105,7 +105,6 @@ struct nsMargin {
                                                  return *this;}
 };
 
-#ifdef NS_COORD_IS_FLOAT
 struct nsIntMargin {
   PRInt32 top, right, bottom, left;
 
@@ -115,9 +114,29 @@ struct nsIntMargin {
   nsIntMargin(PRInt32 aLeft,  PRInt32 aTop,
               PRInt32 aRight, PRInt32 aBottom) {left = aLeft; top = aTop;
                                                 right = aRight; bottom = aBottom;}
+  void SizeTo(PRInt32 aLeft,  PRInt32 aTop,
+              PRInt32 aRight, PRInt32 aBottom) {left = aLeft; top = aTop;
+                                                right = aRight; bottom = aBottom;}
+  PRInt32& side(PRUint8 aSide) {
+    NS_PRECONDITION(aSide <= NS_SIDE_LEFT, "Out of range side");
+    return *(&top + aSide);
+  }
+
+  PRInt32 side(PRUint8 aSide) const {
+    NS_PRECONDITION(aSide <= NS_SIDE_LEFT, "Out of range side");
+    return *(&top + aSide);
+  }
+  PRInt32 LeftRight() const { return left + right; }
+  PRInt32 TopBottom() const { return top + bottom; }
+
+  PRBool operator!=(const nsIntMargin& aMargin) const {
+    return (PRBool) ((left != aMargin.left) || (top != aMargin.top) ||
+                     (right != aMargin.right) || (bottom != aMargin.bottom));
+  }
+  nsIntMargin operator+(const nsIntMargin& aMargin) const {
+    return nsIntMargin(left + aMargin.left, top + aMargin.top,
+                    right + aMargin.right, bottom + aMargin.bottom);
+  }
 };
-#else
-typedef nsMargin nsIntMargin;
-#endif
 
 #endif /* NSMARGIN_H */

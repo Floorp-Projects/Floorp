@@ -569,16 +569,15 @@ nsIFrame::GetUsedBorder() const
 
   const nsStyleDisplay *disp = GetStyleDisplay();
   if (mutable_this->IsThemed(disp)) {
-    nsMargin result;
+    nsIntMargin result;
     nsPresContext *presContext = PresContext();
     presContext->GetTheme()->GetWidgetBorder(presContext->DeviceContext(),
                                              mutable_this, disp->mAppearance,
                                              &result);
-    result.top = presContext->DevPixelsToAppUnits(result.top);
-    result.right = presContext->DevPixelsToAppUnits(result.right);
-    result.bottom = presContext->DevPixelsToAppUnits(result.bottom);
-    result.left = presContext->DevPixelsToAppUnits(result.left);
-    return result;
+    return nsMargin(presContext->DevPixelsToAppUnits(result.left),
+                    presContext->DevPixelsToAppUnits(result.top),
+                    presContext->DevPixelsToAppUnits(result.right),
+                    presContext->DevPixelsToAppUnits(result.bottom));
   }
 
   return GetStyleBorder()->GetActualBorder();
@@ -601,14 +600,15 @@ nsIFrame::GetUsedPadding() const
   const nsStyleDisplay *disp = GetStyleDisplay();
   if (mutable_this->IsThemed(disp)) {
     nsPresContext *presContext = PresContext();
+    nsIntMargin widget;
     if (presContext->GetTheme()->GetWidgetPadding(presContext->DeviceContext(),
                                                   mutable_this,
                                                   disp->mAppearance,
-                                                  &padding)) {
-      padding.top = presContext->DevPixelsToAppUnits(padding.top);
-      padding.right = presContext->DevPixelsToAppUnits(padding.right);
-      padding.bottom = presContext->DevPixelsToAppUnits(padding.bottom);
-      padding.left = presContext->DevPixelsToAppUnits(padding.left);
+                                                  &widget)) {
+      padding.top = presContext->DevPixelsToAppUnits(widget.top);
+      padding.right = presContext->DevPixelsToAppUnits(widget.right);
+      padding.bottom = presContext->DevPixelsToAppUnits(widget.bottom);
+      padding.left = presContext->DevPixelsToAppUnits(widget.left);
       return padding;
     }
   }
@@ -801,9 +801,9 @@ void nsDisplaySelectionOverlay::Paint(nsDisplayListBuilder* aBuilder,
 
   nsRect rect(aBuilder->ToReferenceFrame(mFrame), mFrame->GetSize());
   rect.IntersectRect(rect, aDirtyRect);
-  rect.ScaleRoundOut(1.0f / mFrame->PresContext()->AppUnitsPerDevPixel());
+  nsIntRect pxRect = nsRect::ToOutsidePixels(rect, mFrame->PresContext()->AppUnitsPerDevPixel());
   ctx->NewPath();
-  ctx->Rectangle(gfxRect(rect.x, rect.y, rect.width, rect.height), PR_TRUE);
+  ctx->Rectangle(gfxRect(pxRect.x, pxRect.y, pxRect.width, pxRect.height), PR_TRUE);
   ctx->Fill();
 }
 
@@ -3045,13 +3045,13 @@ nsFrame::IntrinsicWidthOffsets(nsIRenderingContext* aRenderingContext)
   if (IsThemed(disp)) {
     nsPresContext *presContext = PresContext();
 
-    nsMargin border;
+    nsIntMargin border;
     presContext->GetTheme()->GetWidgetBorder(presContext->DeviceContext(),
                                              this, disp->mAppearance,
                                              &border);
     result.hBorder = presContext->DevPixelsToAppUnits(border.LeftRight());
 
-    nsMargin padding;
+    nsIntMargin padding;
     if (presContext->GetTheme()->GetWidgetPadding(presContext->DeviceContext(),
                                                   this, disp->mAppearance,
                                                   &padding)) {
@@ -3162,15 +3162,16 @@ nsFrame::ComputeSize(nsIRenderingContext *aRenderingContext,
 
   const nsStyleDisplay *disp = GetStyleDisplay();
   if (IsThemed(disp)) {
-    nsSize size(0, 0);
+    nsIntSize widget(0, 0);
     PRBool canOverride = PR_TRUE;
     nsPresContext *presContext = PresContext();
     presContext->GetTheme()->
       GetMinimumWidgetSize(aRenderingContext, this, disp->mAppearance,
-                           &size, &canOverride);
+                           &widget, &canOverride);
 
-    size.width = presContext->DevPixelsToAppUnits(size.width);
-    size.height = presContext->DevPixelsToAppUnits(size.height);
+    nsSize size;
+    size.width = presContext->DevPixelsToAppUnits(widget.width);
+    size.height = presContext->DevPixelsToAppUnits(widget.height);
 
     // GMWS() returns border-box; we need content-box
     size.width -= aBorder.width + aPadding.width;
@@ -3527,9 +3528,7 @@ nsIntRect nsIFrame::GetScreenRectExternal() const
 
 nsIntRect nsIFrame::GetScreenRect() const
 {
-  nsRect r = GetScreenRectInAppUnits().ScaleRoundOutInverse(PresContext()->AppUnitsPerDevPixel());
-  // nsRect and nsIntRect are not necessarily the same
-  return nsIntRect(r.x, r.y, r.width, r.height);
+  return nsRect::ToOutsidePixels(GetScreenRectInAppUnits(), PresContext()->AppUnitsPerDevPixel());
 }
 
 // virtual
@@ -3549,7 +3548,6 @@ nsRect nsIFrame::GetScreenRectInAppUnits() const
     nsIWidget* widget = view->GetNearestWidget(&toWidgetOffset);
 
     if (widget) {
-      // WidgetToScreen really should take nsIntRect, not nsRect
       nsIntRect localRect(0,0,0,0), screenRect;
       widget->WidgetToScreen(localRect, screenRect);
 
