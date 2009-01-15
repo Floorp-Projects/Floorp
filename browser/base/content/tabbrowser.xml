@@ -119,7 +119,7 @@
             <xul:menuseparator/>
             <xul:menuitem id="context_closeTab" label="&closeTab.label;" accesskey="&closeTab.accesskey;"
                           oncommand="var tabbrowser = this.parentNode.parentNode.parentNode.parentNode;
-                                     tabbrowser.removeTab(tabbrowser.mContextTab);"/>
+                                     tabbrowser.removeClickedTab(tabbrowser.mContextTab);"/>
           </xul:menupopup>
 
           <xul:tabs class="tabbrowser-tabs" flex="1"
@@ -1015,7 +1015,7 @@
             if (event.button != 1 || event.target.localName != 'tab')
               return;
 
-            this.removeTab(event.target);
+            this.removeClickedTab(event.target);
             event.stopPropagation();
           ]]>
         </body>
@@ -1493,6 +1493,15 @@
         <body>
           <![CDATA[
             this._endRemoveTab(this._beginRemoveTab(aTab, true));
+          ]]>
+        </body>
+      </method>
+
+      <method name="removeClickedTab">
+        <parameter name="aTab"/>
+        <body>
+          <![CDATA[
+            this._endRemoveTab(this._beginRemoveTab(aTab, true, false));
           ]]>
         </body>
       </method>
@@ -3292,7 +3301,7 @@
             // Reset the "ignored click" flag
             this._ignoredClick = false;
 
-            tabbedBrowser.removeTab(bindingParent);
+            tabbedBrowser.removeClickedTab(bindingParent);
             tabbedBrowser._blockDblClick = true;
 
             /* XXXmano hack (see bug 343628):
