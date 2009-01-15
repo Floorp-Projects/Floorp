@@ -47,6 +47,8 @@
 #include "gfxCore.h"
 #include "nsTraceRefcnt.h"
 
+struct nsIntRect;
+
 struct NS_GFX nsRect {
   nscoord x, y;
   nscoord width, height;
@@ -168,25 +170,9 @@ struct NS_GFX nsRect {
   nsRect& operator+=(const nsPoint& aPoint) {x += aPoint.x; y += aPoint.y; return *this;}
   nsRect& operator-=(const nsPoint& aPoint) {x -= aPoint.x; y -= aPoint.y; return *this;}
 
-  nsRect& operator*=(const float aScale) {x = NSToCoordRound(x * aScale); 
-                                          y = NSToCoordRound(y * aScale); 
-                                          width = NSToCoordRound(width * aScale); 
-                                          height = NSToCoordRound(height * aScale); 
-                                          return *this;}
-
   // Scale by aScale, converting coordinates to integers so that the result
   // is the smallest integer-coordinate rectangle containing the unrounded result
   nsRect& ScaleRoundOut(float aScale);
-  // Scale by the inverse of aScale, converting coordinates to integers so that the result
-  // is the smallest integer-coordinate rectangle containing the unrounded result.
-  // More accurate than ScaleRoundOut(1.0/aScale).
-  nsRect& ScaleRoundOutInverse(float aScale);
-  // Scale by aScale, converting coordinates to integers so that the result
-  // is the larges integer-coordinate rectangle contained in the unrounded result
-  nsRect& ScaleRoundIn(float aScale);
-  // Scale by the inverse of aScale, converting coordinates to integers so that
-  // the result contains the same pixel centers as the unrounded result
-  nsRect& ScaleRoundPreservingCentersInverse(float aScale);
 
   // Helpers for accessing the vertices
   nsPoint TopLeft() const { return nsPoint(x, y); }
@@ -199,9 +185,12 @@ struct NS_GFX nsRect {
   // Helper methods for computing the extents
   nscoord XMost() const {return x + width;}
   nscoord YMost() const {return y + height;}
+
+  static inline nsIntRect ToNearestPixels(const nsRect &aRect, nscoord aAppUnitsPerPixel);
+  static inline nsIntRect ToOutsidePixels(const nsRect &aRect, nscoord aAppUnitsPerPixel);
+  static inline nsIntRect ToInsidePixels(const nsRect &aRect, nscoord aAppUnitsPerPixel);
 };
 
-#ifdef NS_COORD_IS_FLOAT
 struct NS_GFX nsIntRect {
   PRInt32 x, y;
   PRInt32 width, height;
@@ -209,6 +198,10 @@ struct NS_GFX nsIntRect {
   // Constructors
   nsIntRect() : x(0), y(0), width(0), height(0) {}
   nsIntRect(const nsIntRect& aRect) {*this = aRect;}
+  nsIntRect(const nsIntPoint& aOrigin, const nsIntSize &aSize) {
+    x = aOrigin.x; y = aOrigin.y;
+    width = aSize.width; height = aSize.height;
+  }
   nsIntRect(PRInt32 aX, PRInt32 aY, PRInt32 aWidth, PRInt32 aHeight) {
     x = aX; y = aY; width = aWidth; height = aHeight;
   }
@@ -218,9 +211,72 @@ struct NS_GFX nsIntRect {
   PRBool IsEmpty() const {
     return (PRBool) ((height <= 0) || (width <= 0));
   }
+  void Empty() {width = height = 0;}
+
+  // Inflate the rect by the specified width/height or margin
+  void Inflate(PRInt32 aDx, PRInt32 aDy) {
+    x -= aDx;
+    y -= aDy;
+    width += aDx*2;
+    height += aDy*2;
+  }
+  void Inflate(const nsIntMargin &aMargin) {
+    x -= aMargin.left;
+    y -= aMargin.top;
+    width += aMargin.left + aMargin.right;
+    height += aMargin.top + aMargin.bottom;
+  }
+
+  // Overloaded operators. Note that '=' isn't defined so we'll get the
+  // compiler generated default assignment operator.
+  PRBool operator==(const nsIntRect& aRect) const {
+    return (PRBool) ((IsEmpty() && aRect.IsEmpty()) ||
+                     ((x == aRect.x) && (y == aRect.y) &&
+                      (width == aRect.width) && (height == aRect.height)));
+  }
+  PRBool  operator!=(const nsIntRect& aRect) const {
+    return (PRBool) !operator==(aRect);
+  }
+
+  nsIntRect  operator+(const nsIntPoint& aPoint) const {
+    return nsIntRect(x + aPoint.x, y + aPoint.y, width, height);
+  }
+  nsIntRect  operator-(const nsIntPoint& aPoint) const {
+    return nsIntRect(x - aPoint.x, y - aPoint.y, width, height);
+  }
+  nsIntRect& operator+=(const nsIntPoint& aPoint) {x += aPoint.x; y += aPoint.y; return *this;}
+  nsIntRect& operator-=(const nsIntPoint& aPoint) {x -= aPoint.x; y -= aPoint.y; return *this;}
 
   void SetRect(PRInt32 aX, PRInt32 aY, PRInt32 aWidth, PRInt32 aHeight) {
     x = aX; y = aY; width = aWidth; height = aHeight;
+  }
+
+  void MoveTo(PRInt32 aX, PRInt32 aY) {x = aX; y = aY;}
+  void MoveTo(const nsIntPoint& aPoint) {x = aPoint.x; y = aPoint.y;}
+  void MoveBy(PRInt32 aDx, PRInt32 aDy) {x += aDx; y += aDy;}
+  void MoveBy(const nsIntPoint& aPoint) {x += aPoint.x; y += aPoint.y;}
+  void SizeTo(PRInt32 aWidth, PRInt32 aHeight) {width = aWidth; height = aHeight;}
+  void SizeTo(const nsIntSize& aSize) {SizeTo(aSize.width, aSize.height);}
+  void SizeBy(PRInt32 aDeltaWidth, PRInt32 aDeltaHeight) {width += aDeltaWidth;
+                                                          height += aDeltaHeight;}
+
+  PRBool Contains(const nsIntRect& aRect) const
+  {
+    return (PRBool) ((aRect.x >= x) && (aRect.y >= y) &&
+                     (aRect.XMost() <= XMost()) && (aRect.YMost() <= YMost()));
+  }
+  PRBool Contains(PRInt32 aX, PRInt32 aY) const
+  {
+    return (PRBool) ((aX >= x) && (aY >= y) &&
+                     (aX < XMost()) && (aY < YMost()));
+  }
+  PRBool Contains(const nsIntPoint& aPoint) const { return Contains(aPoint.x, aPoint.y); }
+
+  // Intersection. Returns TRUE if the receiver overlaps aRect and
+  // FALSE otherwise
+  PRBool Intersects(const nsIntRect& aRect) const {
+    return (PRBool) ((x < aRect.XMost()) && (y < aRect.YMost()) &&
+                     (aRect.x < XMost()) && (aRect.y < YMost()));
   }
 
   // Computes the area in which aRect1 and aRect2 overlap, and fills 'this' with
@@ -237,13 +293,75 @@ struct NS_GFX nsIntRect {
   // 'this' can be the same object as either aRect1 or aRect2
   PRBool UnionRect(const nsIntRect& aRect1, const nsIntRect& aRect2);
 
+  // Helpers for accessing the vertices
+  nsIntPoint TopLeft() const { return nsIntPoint(x, y); }
+  nsIntPoint TopRight() const { return nsIntPoint(XMost(), y); }
+  nsIntPoint BottomLeft() const { return nsIntPoint(x, YMost()); }
+  nsIntPoint BottomRight() const { return nsIntPoint(XMost(), YMost()); }
+
+  nsIntSize Size() const { return nsIntSize(width, height); }
+
   // Helper methods for computing the extents
   PRInt32 XMost() const {return x + width;}
   PRInt32 YMost() const {return y + height;}
+
+  static inline nsRect ToAppUnits(const nsIntRect &aRect, nscoord aAppUnitsPerPixel);
 };
-#else
-typedef nsRect nsIntRect;
-#endif
+
+/*
+ * App Unit/Pixel conversions
+ */
+// scale the rect but round to preserve centers
+inline nsIntRect
+nsRect::ToNearestPixels(const nsRect &aRect, nscoord aAppUnitsPerPixel)
+{
+  nsIntRect rect;
+  rect.x = NSToIntRound(NSAppUnitsToFloatPixels(aRect.x, float(aAppUnitsPerPixel)));
+  rect.y = NSToIntRound(NSAppUnitsToFloatPixels(aRect.y, float(aAppUnitsPerPixel)));
+  rect.width  = NSToIntRound(NSAppUnitsToFloatPixels(aRect.XMost(),
+                             float(aAppUnitsPerPixel))) - rect.x;
+  rect.height = NSToIntRound(NSAppUnitsToFloatPixels(aRect.YMost(),
+                             float(aAppUnitsPerPixel))) - rect.y;
+  return rect;
+}
+
+// scale the rect but round to smallest containing rect
+inline nsIntRect
+nsRect::ToOutsidePixels(const nsRect &aRect, nscoord aAppUnitsPerPixel)
+{
+  nsIntRect rect;
+  rect.x = NSToIntFloor(NSAppUnitsToFloatPixels(aRect.x, float(aAppUnitsPerPixel)));
+  rect.y = NSToIntFloor(NSAppUnitsToFloatPixels(aRect.y, float(aAppUnitsPerPixel)));
+  rect.width  = NSToIntCeil(NSAppUnitsToFloatPixels(aRect.XMost(),
+                            float(aAppUnitsPerPixel))) - rect.x;
+  rect.height = NSToIntCeil(NSAppUnitsToFloatPixels(aRect.YMost(),
+                            float(aAppUnitsPerPixel))) - rect.y;
+  return rect;
+}
+
+// scale the rect but round to largest contained rect
+inline nsIntRect
+nsRect::ToInsidePixels(const nsRect &aRect, nscoord aAppUnitsPerPixel)
+{
+  nsIntRect rect;
+  rect.x = NSToIntCeil(NSAppUnitsToFloatPixels(aRect.x, float(aAppUnitsPerPixel)));
+  rect.y = NSToIntCeil(NSAppUnitsToFloatPixels(aRect.y, float(aAppUnitsPerPixel)));
+  rect.width  = NSToIntFloor(NSAppUnitsToFloatPixels(aRect.XMost(),
+                             float(aAppUnitsPerPixel))) - rect.x;
+  rect.height = NSToIntFloor(NSAppUnitsToFloatPixels(aRect.YMost(),
+                             float(aAppUnitsPerPixel))) - rect.y;
+  return rect;
+}
+
+// app units are integer multiples of pixels, so no rounding needed
+inline nsRect
+nsIntRect::ToAppUnits(const nsIntRect &aRect, nscoord aAppUnitsPerPixel)
+{
+  return nsRect(NSIntPixelsToAppUnits(aRect.x, aAppUnitsPerPixel),
+                NSIntPixelsToAppUnits(aRect.y, aAppUnitsPerPixel),
+                NSIntPixelsToAppUnits(aRect.width, aAppUnitsPerPixel),
+                NSIntPixelsToAppUnits(aRect.height, aAppUnitsPerPixel));
+}
 
 #ifdef DEBUG
 // Diagnostics

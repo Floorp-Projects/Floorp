@@ -881,12 +881,12 @@ public:
 
   virtual already_AddRefed<gfxASurface> RenderNode(nsIDOMNode* aNode,
                                                    nsIRegion* aRegion,
-                                                   nsPoint& aPoint,
-                                                   nsRect* aScreenRect);
+                                                   nsIntPoint& aPoint,
+                                                   nsIntRect* aScreenRect);
 
   virtual already_AddRefed<gfxASurface> RenderSelection(nsISelection* aSelection,
-                                                        nsPoint& aPoint,
-                                                        nsRect* aScreenRect);
+                                                        nsIntPoint& aPoint,
+                                                        nsIntRect* aScreenRect);
 
   //nsIViewObserver interface
 
@@ -1087,8 +1087,8 @@ protected:
                       nsISelection* aSelection,
                       nsIRegion* aRegion,
                       nsRect aArea,
-                      nsPoint& aPoint,
-                      nsRect* aScreenRect);
+                      nsIntPoint& aPoint,
+                      nsIntRect* aScreenRect);
 
   /**
    * Methods to handle changes to user and UA sheet lists that we get
@@ -5113,8 +5113,8 @@ PresShell::PaintRangePaintInfo(nsTArray<nsAutoPtr<RangePaintInfo> >* aItems,
                                nsISelection* aSelection,
                                nsIRegion* aRegion,
                                nsRect aArea,
-                               nsPoint& aPoint,
-                               nsRect* aScreenRect)
+                               nsIntPoint& aPoint,
+                               nsIntRect* aScreenRect)
 {
   nsPresContext* pc = GetPresContext();
   if (!pc || aArea.width == 0 || aArea.height == 0)
@@ -5123,8 +5123,7 @@ PresShell::PaintRangePaintInfo(nsTArray<nsAutoPtr<RangePaintInfo> >* aItems,
   nsIDeviceContext* deviceContext = pc->DeviceContext();
 
   // use the rectangle to create the surface
-  nsRect pixelArea = aArea;
-  pixelArea.ScaleRoundOut(1.0 / pc->AppUnitsPerDevPixel());
+  nsIntRect pixelArea = nsRect::ToOutsidePixels(aArea, pc->AppUnitsPerDevPixel());
 
   // if the area of the image is larger than the maximum area, scale it down
   float scale = 0.0;
@@ -5228,8 +5227,8 @@ PresShell::PaintRangePaintInfo(nsTArray<nsAutoPtr<RangePaintInfo> >* aItems,
 already_AddRefed<gfxASurface>
 PresShell::RenderNode(nsIDOMNode* aNode,
                       nsIRegion* aRegion,
-                      nsPoint& aPoint,
-                      nsRect* aScreenRect)
+                      nsIntPoint& aPoint,
+                      nsIntRect* aScreenRect)
 {
   // area will hold the size of the surface needed to draw the node, measured
   // from the root frame.
@@ -5254,12 +5253,11 @@ PresShell::RenderNode(nsIDOMNode* aNode,
 
   if (aRegion) {
     // combine the area with the supplied region
-    nsRect rrectPixels;
+    nsIntRect rrectPixels;
     aRegion->GetBoundingBox(&rrectPixels.x, &rrectPixels.y,
                             &rrectPixels.width, &rrectPixels.height);
 
-    nsRect rrect = rrectPixels;
-    rrect.ScaleRoundOut(nsPresContext::AppUnitsPerCSSPixel());
+    nsRect rrect = nsIntRect::ToAppUnits(rrectPixels, nsPresContext::AppUnitsPerCSSPixel());
     area.IntersectRect(area, rrect);
     
     nsPresContext* pc = GetPresContext();
@@ -5277,8 +5275,8 @@ PresShell::RenderNode(nsIDOMNode* aNode,
 
 already_AddRefed<gfxASurface>
 PresShell::RenderSelection(nsISelection* aSelection,
-                           nsPoint& aPoint,
-                           nsRect* aScreenRect)
+                           nsIntPoint& aPoint,
+                           nsIntRect* aScreenRect)
 {
   // area will hold the size of the surface needed to draw the selection,
   // measured from the root frame.
@@ -6664,6 +6662,35 @@ LogVerifyMessage(nsIFrame* k1, nsIFrame* k2, const char* aMsg,
   printf("  %s\n", aMsg);
 }
 
+static void
+LogVerifyMessage(nsIFrame* k1, nsIFrame* k2, const char* aMsg,
+                 const nsIntRect& r1, const nsIntRect& r2)
+{
+  printf("VerifyReflow Error:\n");
+  nsAutoString name;
+  nsIFrameDebug *frameDebug = do_QueryFrame(k1);
+  if (frameDebug) {
+    fprintf(stdout, "  ");
+    frameDebug->GetFrameName(name);
+    fputs(NS_LossyConvertUTF16toASCII(name).get(), stdout);
+    fprintf(stdout, " %p ", (void*)k1);
+  }
+  printf("{%d, %d, %d, %d}", r1.x, r1.y, r1.width, r1.height);
+
+  printf(" != \n");
+
+  frameDebug = do_QueryFrame(k2);
+  if (frameDebug) {
+    fprintf(stdout, "  ");
+    frameDebug->GetFrameName(name);
+    fputs(NS_LossyConvertUTF16toASCII(name).get(), stdout);
+    fprintf(stdout, " %p ", (void*)k2);
+  }
+  printf("{%d, %d, %d, %d}\n", r2.x, r2.y, r2.width, r2.height);
+
+  printf("  %s\n", aMsg);
+}
+
 static PRBool
 CompareTrees(nsPresContext* aFirstPresContext, nsIFrame* aFirstFrame, 
              nsPresContext* aSecondPresContext, nsIFrame* aSecondFrame)
@@ -6691,7 +6718,7 @@ CompareTrees(nsPresContext* aFirstPresContext, nsIFrame* aFirstFrame,
       }
     }
 
-    nsRect r1, r2;
+    nsIntRect r1, r2;
     nsIView* v1, *v2;
     for (;;) {
       if (((nsnull == k1) && (nsnull != k2)) ||
