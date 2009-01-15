@@ -1,0 +1,81 @@
+# Tests related to SVG Animation (using SMIL)
+# XXXdholbert Partial list of features that still need reftests:
+#   - calcMode=discrete, paced, spline
+#   - Stacking of additive=[sum|replace] animations
+#   - Stacking of additive animations, w/ "hybrid case of to-animation"
+#   - Repeating animations, w/ & w/out accumulate=sum
+#   - <set>
+#   - Interpolation between different units (e.g. font-size attr, 3em to 50px)
+#   - Correct behavior for em/ex font-size animations, when context changes
+#      (with change happening 1. when completed/frozen and 2. when animating)
+#   - CSS properties
+#   - DOM interfaces:
+#    * Section 6.2 of http://www.w3.org/TR/smil-animation/
+#    * Animation-related bits of http://www.w3.org/TR/SVG/struct.html#DOMInterfaces
+
+# animation sort-order tests
+include sort/reftest.list
+
+# style tests
+include style/reftest.list
+
+# time-dependent tests
+# XXXdholbert Disabling this class of tests for now, because most of them
+# can & should be converted so they don't depend on specific timeout values.
+# (to prevent sporadic failures due to nondeterminism)
+# include timed/reftest.list
+
+# time container tests
+include container/reftest.list
+
+# repeat tests
+include repeat/reftest.list
+
+# restart tests
+include restart/reftest.list
+
+# pause tests
+include pause/reftest.list
+
+# General tests
+== anim-discrete-values-1.svg      anim-standard-ref.svg
+== anim-discrete-replace-sum-1.svg anim-standard-ref.svg
+== anim-discrete-sum-none-1.svg    anim-standard-ref.svg
+== anim-discrete-sum-sum-1.svg     anim-standard-ref.svg
+
+fails == anim-fillcolor-1.svg      anim-standard-ref.svg # color support
+fails == anim-fillopacity-1.svg anim-standard-ref.svg    # non-length-numeric values support
+
+== anim-height-done-1a.svg anim-standard-ref.svg
+== anim-height-done-1b.svg anim-standard-ref.svg
+== anim-height-interp-1.svg anim-height-interp-1-ref.svg
+== anim-height-interp-2.svg anim-height-interp-2-ref.svg
+== anim-height-interp-3.svg anim-height-interp-3-ref.svg
+== anim-height-interp-4.svg anim-height-interp-4-ref.svg
+== anim-height-interp-5.svg anim-height-interp-5-ref.svg
+== anim-height-interp-6.svg anim-height-interp-6-ref.svg
+
+fails == anim-strokecolor-1.svg anim-standard-ref.svg # color support
+fails == anim-strokewidth-1.svg anim-standard-ref.svg # color support
+fails == anim-targethref-1.svg anim-standard-ref.svg  # href support
+
+== anim-width-done-1a.svg anim-standard-ref.svg
+== anim-width-done-1b.svg anim-standard-ref.svg
+
+== anim-x-done-1a.svg anim-standard-ref.svg
+== anim-x-done-1b.svg anim-standard-ref.svg
+== anim-x-interp-1.svg anim-x-interp-1-ref.svg
+== anim-x-interp-2.svg anim-x-interp-2-ref.svg
+== anim-x-interp-3.svg anim-x-interp-3-ref.svg
+== anim-x-interp-4.svg anim-x-interp-4-ref.svg
+== anim-x-interp-5.svg anim-x-interp-5-ref.svg
+== anim-x-interp-6.svg anim-x-interp-6-ref.svg
+
+== anim-y-done-1a.svg anim-standard-ref.svg
+== anim-y-done-1b.svg anim-standard-ref.svg
+== anim-y-interp-1.svg anim-y-interp-1-ref.svg
+== anim-y-interp-2.svg anim-y-interp-2-ref.svg
+== anim-y-interp-3.svg anim-y-interp-3-ref.svg
+== anim-y-interp-4.svg anim-y-interp-4-ref.svg
+== anim-y-interp-5.svg anim-y-interp-5-ref.svg
+== anim-y-interp-6.svg anim-y-interp-6-ref.svg

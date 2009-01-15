@@ -50,6 +50,10 @@
 #include "nsSVGEnum.h"
 #include "nsSVGPreserveAspectRatio.h"
 
+#ifdef MOZ_SMIL
+class nsSMILTimeContainer;
+#endif // MOZ_SMIL
+
 #define QI_AND_CAST_TO_NSSVGSVGELEMENT(base)                                  \
   (nsCOMPtr<nsIDOMSVGSVGElement>(do_QueryInterface(base)) ?                   \
    static_cast<nsSVGSVGElement*>(base.get()) : nsnull)
@@ -80,8 +84,9 @@ class nsSVGSVGElement : public nsSVGSVGElementBase,
 
 protected:
   friend nsresult NS_NewSVGSVGElement(nsIContent **aResult,
-                                      nsINodeInfo *aNodeInfo);
-  nsSVGSVGElement(nsINodeInfo* aNodeInfo);
+                                      nsINodeInfo *aNodeInfo,
+                                      PRBool aFromParser);
+  nsSVGSVGElement(nsINodeInfo* aNodeInfo, PRBool aFromParser);
   virtual ~nsSVGSVGElement();
   nsresult Init();
   
@@ -130,8 +135,16 @@ public:
   NS_IMETHOD_(float) GetPreviousTranslate_y();
   NS_IMETHOD_(float) GetPreviousScale();
 
+#ifdef MOZ_SMIL
+  nsSMILTimeContainer* GetTimedDocumentRoot();
+  void RequestSample();
+#endif // MOZ_SMIL
+
   // nsIContent interface
   NS_IMETHOD_(PRBool) IsAttributeMapped(const nsIAtom* aAttribute) const;
+#ifdef MOZ_SMIL
+  virtual nsresult PreHandleEvent(nsEventChainPreVisitor& aVisitor);
+#endif // MOZ_SMIL
 
   virtual nsresult AfterSetAttr(PRInt32 aNameSpaceID, nsIAtom* aName,
                                 const nsAString* aValue, PRBool aNotify);
@@ -172,14 +185,36 @@ protected:
   // nsSVGElement overrides
   PRBool IsEventName(nsIAtom* aName);
 
+#ifdef MOZ_SMIL
+  virtual nsresult BindToTree(nsIDocument* aDocument, nsIContent* aParent,
+                              nsIContent* aBindingParent,
+                              PRBool aCompileEventHandlers);
+  virtual void UnbindFromTree(PRBool aDeep, PRBool aNullParent);
+#endif // MOZ_SMIL   
+
   // implementation helpers:
   void GetOffsetToAncestor(nsIContent* ancestor, float &x, float &y);
+
   PRBool IsRoot() {
     NS_ASSERTION((IsInDoc() && !GetParent()) ==
                  (GetOwnerDoc() && (GetOwnerDoc()->GetRootContent() == this)),
                  "Can't determine if we're root");
     return IsInDoc() && !GetParent();
   }
+
+#ifdef MOZ_SMIL
+  /* 
+   * While binding to the tree we need to determine if we will be the outermost
+   * <svg> element _before_ the children are bound (as they want to know what
+   * timed document root to register with) and therefore _before_ our parent is
+   * set (both actions are performed by nsGenericElement::BindToTree) so we
+   * can't use GetOwnerSVGElement() as it relies on GetParent(). This code is
+   * basically a simplified version of GetOwnerSVGElement that uses the parent
+   * parameters passed in instead.
+   */
+  PRBool WillBeOutermostSVG(nsIContent* aParent,
+                            nsIContent* aBindingParent) const;
+#endif // MOZ_SMIL
 
   // invalidate viewbox -> viewport xform & inform frames
   void InvalidateTransformNotifyFrame();
@@ -216,6 +251,12 @@ protected:
 
   float mCoordCtxMmPerPx;
 
+#ifdef MOZ_SMIL
+  // The time container for animations within this SVG document fragment. Set
+  // for all outermost <svg> elements (not nested <svg> elements).
+  nsAutoPtr<nsSMILTimeContainer> mTimedDocumentRoot;
+#endif // MOZ_SMIL
+
   // zoom and pan
   // IMPORTANT: only RecordCurrentScaleTranslate should change the "mPreviousX"
   // members below - see the comment in RecordCurrentScaleTranslate
@@ -226,6 +267,14 @@ protected:
   float                             mPreviousScale;
   PRInt32                           mRedrawSuspendCount;
   PRPackedBool                      mDispatchEvent;
+
+#ifdef MOZ_SMIL
+  // For outermost <svg> elements created from parsing, animation is started by
+  // the onload event in accordance with the SVG spec, but for <svg> elements
+  // created by script or promoted from inner <svg> to outermost <svg> we need
+  // to manually kick off animation when they are bound to the tree.
+  PRPackedBool                      mStartAnimationOnBindToTree;
+#endif // MOZ_SMIL
 };
 
 #endif

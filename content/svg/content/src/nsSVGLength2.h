@@ -43,6 +43,12 @@
 #include "nsSVGElement.h"
 #include "nsDOMError.h"
 
+#ifdef MOZ_SMIL
+#include "nsISMILAttr.h"
+class nsSMILValue;
+class nsISMILType;
+#endif // MOZ_SMIL
+
 class nsIFrame;
 
 class nsSVGLength2
@@ -87,6 +93,10 @@ public:
   
   nsresult ToDOMAnimatedLength(nsIDOMSVGAnimatedLength **aResult,
                                nsSVGElement* aSVGElement);
+#ifdef MOZ_SMIL
+  // Returns a new nsISMILAttr object that the caller must delete
+  nsISMILAttr* ToSMILAttr(nsSVGElement* aSVGElement);
+#endif // MOZ_SMIL
 
 private:
   
@@ -115,6 +125,7 @@ private:
   float GetUnitScaleFactor(nsSVGSVGElement *aCtx) const;
   void SetBaseValue(float aValue, nsSVGElement *aSVGElement);
   void SetBaseValueInSpecifiedUnits(float aValue, nsSVGElement *aSVGElement);
+  void SetAnimValue(float aValue, nsSVGElement *aSVGElement);
   void NewValueSpecifiedUnits(PRUint16 aUnitType, float aValue,
                               nsSVGElement *aSVGElement);
   void ConvertToSpecifiedUnits(PRUint16 aUnitType, nsSVGElement *aSVGElement);
@@ -215,6 +226,29 @@ private:
     NS_IMETHOD GetAnimVal(nsIDOMSVGLength **aAnimVal)
       { return mVal->ToDOMAnimVal(aAnimVal, mSVGElement); }
   };
+
+#ifdef MOZ_SMIL
+  struct SMILLength : public nsISMILAttr
+  {
+  public:
+    SMILLength(nsSVGLength2* aVal, nsSVGElement *aSVGElement)
+      : mVal(aVal), mSVGElement(aSVGElement) {}
+
+    // These will stay alive because a nsISMILAttr only lives as long
+    // as the Compositing step, and DOM elements don't get a chance to
+    // die during that.
+    nsSVGLength2* mVal;
+    nsSVGElement* mSVGElement;
+
+
+    // nsISMILAttr methods
+    virtual nsresult ValueFromString(const nsAString& aStr,
+                                     const nsISMILAnimationElement* aSrcElement,
+                                     nsSMILValue &aValue) const;
+    virtual nsSMILValue GetBaseValue() const;
+    virtual nsresult SetAnimValue(const nsSMILValue& aValue);
+  };
+#endif // MOZ_SMIL
 };
 
-#endif
+#endif //  __NS_SVGLENGTH2_H__
