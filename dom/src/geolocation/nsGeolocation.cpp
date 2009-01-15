@@ -166,15 +166,16 @@ nsGeolocationRequest::Init()
   return NS_OK;
 }
 
-
-NS_INTERFACE_MAP_BEGIN(nsGeolocationRequest)
+NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION(nsGeolocationRequest)
   NS_INTERFACE_MAP_ENTRY_AMBIGUOUS(nsISupports, nsIGeolocationRequest)
   NS_INTERFACE_MAP_ENTRY(nsIGeolocationRequest)
   NS_INTERFACE_MAP_ENTRY(nsITimerCallback)
 NS_INTERFACE_MAP_END
 
-NS_IMPL_ADDREF(nsGeolocationRequest)
-NS_IMPL_RELEASE(nsGeolocationRequest)
+NS_IMPL_CYCLE_COLLECTING_ADDREF(nsGeolocationRequest)
+NS_IMPL_CYCLE_COLLECTING_RELEASE(nsGeolocationRequest)
+
+NS_IMPL_CYCLE_COLLECTION_3(nsGeolocationRequest, mCallback, mErrorCallback, mOptions)
 
 
 void
@@ -528,14 +529,29 @@ nsGeolocationService::RemoveLocator(nsGeolocation* aLocator)
 // nsGeolocation
 ////////////////////////////////////////////////////
 
-NS_INTERFACE_MAP_BEGIN(nsGeolocation)
+NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION(nsGeolocation)
   NS_INTERFACE_MAP_ENTRY_AMBIGUOUS(nsISupports, nsIDOMGeoGeolocation)
   NS_INTERFACE_MAP_ENTRY(nsIDOMGeoGeolocation)
   NS_DOM_INTERFACE_MAP_ENTRY_CLASSINFO(GeoGeolocation)
 NS_INTERFACE_MAP_END
 
-NS_IMPL_ADDREF(nsGeolocation)
-NS_IMPL_RELEASE(nsGeolocation)
+NS_IMPL_CYCLE_COLLECTING_ADDREF(nsGeolocation)
+NS_IMPL_CYCLE_COLLECTING_RELEASE(nsGeolocation)
+NS_IMPL_CYCLE_COLLECTION_CLASS(nsGeolocation)
+
+NS_IMPL_CYCLE_COLLECTION_UNLINK_BEGIN(nsGeolocation)
+  tmp->mPendingCallbacks.Clear();
+  tmp->mWatchingCallbacks.Clear();
+NS_IMPL_CYCLE_COLLECTION_UNLINK_END
+
+NS_IMPL_CYCLE_COLLECTION_TRAVERSE_BEGIN(nsGeolocation)
+  PRUint32 i; 
+  for (i = 0; i < tmp->mPendingCallbacks.Length(); ++i)
+    NS_IMPL_CYCLE_COLLECTION_TRAVERSE_NSCOMPTR_AMBIGUOUS(mPendingCallbacks[i], nsIGeolocationRequest)
+
+  for (i = 0; i < tmp->mWatchingCallbacks.Length(); ++i)
+    NS_IMPL_CYCLE_COLLECTION_TRAVERSE_NSCOMPTR_AMBIGUOUS(mWatchingCallbacks[i], nsIGeolocationRequest)
+NS_IMPL_CYCLE_COLLECTION_TRAVERSE_END
 
 nsGeolocation::nsGeolocation(nsIDOMWindow* aContentDom) 
 : mUpdateInProgress(PR_FALSE)
