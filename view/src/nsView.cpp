@@ -356,7 +356,7 @@ void nsView::ResetWidgetBounds(PRBool aRecurse, PRBool aMoveOnly,
   }
 }
 
-nsRect nsView::CalcWidgetBounds(nsWindowType aType)
+nsIntRect nsView::CalcWidgetBounds(nsWindowType aType)
 {
   nsCOMPtr<nsIDeviceContext> dx;
   mViewManager->GetDeviceContext(*getter_AddRefs(dx));
@@ -373,15 +373,14 @@ nsRect nsView::CalcWidgetBounds(nsWindowType aType)
 
     if (parentWidget && aType == eWindowType_popup &&
         mVis == nsViewVisibility_kShow) {
-      nsRect screenRect(0,0,1,1);
+      nsIntRect screenRect(0,0,1,1);
       parentWidget->WidgetToScreen(screenRect, screenRect);
       viewBounds += nsPoint(NSIntPixelsToAppUnits(screenRect.x, p2a),
                             NSIntPixelsToAppUnits(screenRect.y, p2a));
     }
   }
 
-  nsRect newBounds(viewBounds);
-  newBounds.ScaleRoundPreservingCentersInverse(p2a);
+  nsIntRect newBounds = nsRect::ToNearestPixels(viewBounds, p2a);
 
   nsPoint roundedOffset(NSIntPixelsToAppUnits(newBounds.x, p2a),
                         NSIntPixelsToAppUnits(newBounds.y, p2a));
@@ -398,7 +397,7 @@ void nsView::DoResetWidgetBounds(PRBool aMoveOnly,
     return;
   }
   
-  nsRect curBounds;
+  nsIntRect curBounds;
   mWindow->GetBounds(curBounds);
   nsWindowType type;
   mWindow->GetWindowType(type);
@@ -414,7 +413,7 @@ void nsView::DoResetWidgetBounds(PRBool aMoveOnly,
 
   NS_PRECONDITION(mWindow, "Why was this called??");
 
-  nsRect newBounds = CalcWidgetBounds(type);
+  nsIntRect newBounds = CalcWidgetBounds(type);
 
   PRBool changedPos = curBounds.TopLeft() != newBounds.TopLeft();
   PRBool changedSize = curBounds.Size() != newBounds.Size();
@@ -636,9 +635,9 @@ nsresult nsIView::CreateWidget(const nsIID &aWindowIID,
 
   nsView* v = static_cast<nsView*>(this);
 
-  nsRect trect = v->CalcWidgetBounds(aWidgetInitData
-                                     ? aWidgetInitData->mWindowType
-                                     : eWindowType_child);
+  nsIntRect trect = v->CalcWidgetBounds(aWidgetInitData
+                                        ? aWidgetInitData->mWindowType
+                                        : eWindowType_child);
 
   if (NS_OK == v->LoadWidget(aWindowIID))
   {
@@ -755,17 +754,15 @@ void nsIView::List(FILE* out, PRInt32 aIndent) const
   for (i = aIndent; --i >= 0; ) fputs("  ", out);
   fprintf(out, "%p ", (void*)this);
   if (nsnull != mWindow) {
-    nsRect windowBounds;
-    nsRect nonclientBounds;
-    float p2t;
     nsIDeviceContext *dx;
     mViewManager->GetDeviceContext(dx);
-    p2t = (float) dx->AppUnitsPerDevPixel();
+    nscoord p2a = dx->AppUnitsPerDevPixel();
     NS_RELEASE(dx);
-    mWindow->GetClientBounds(windowBounds);
-    windowBounds *= p2t;
-    mWindow->GetBounds(nonclientBounds);
-    nonclientBounds *= p2t;
+    nsIntRect rect;
+    mWindow->GetClientBounds(rect);
+    nsRect windowBounds = nsIntRect::ToAppUnits(rect, p2a);
+    mWindow->GetBounds(rect);
+    nsRect nonclientBounds = nsIntRect::ToAppUnits(rect, p2a);
     nsrefcnt widgetRefCnt = mWindow->AddRef() - 1;
     mWindow->Release();
     PRInt32 Z;

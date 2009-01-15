@@ -71,7 +71,7 @@ public:
     virtual PRUint8 *GetAlphaBits();
     virtual PRInt32 GetAlphaLineStride();
     virtual PRBool GetIsImageComplete();
-    virtual nsresult ImageUpdated(nsIDeviceContext *aContext, PRUint8 aFlags, nsRect *aUpdateRect);
+    virtual nsresult ImageUpdated(nsIDeviceContext *aContext, PRUint8 aFlags, nsIntRect *aUpdateRect);
     virtual nsresult Optimize(nsIDeviceContext* aContext);
     virtual nsColorMap *GetColorMap();
 
@@ -152,7 +152,7 @@ protected:
     PRInt32 mWidth;
     PRInt32 mHeight;
     PRInt32 mStride;
-    nsRect mDecoded;
+    nsIntRect mDecoded;
     PRPackedBool mImageComplete;
     PRPackedBool mSinglePixel;
     PRPackedBool mFormatChanged;

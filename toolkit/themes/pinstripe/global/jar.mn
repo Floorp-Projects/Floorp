@@ -101,6 +101,7 @@ classic.jar:
 +  skin/classic/global/icons/blacklist_large.png                      (icons/blacklist_large.png)
 +  skin/classic/global/icons/blacklist_64.png                         (icons/blacklist_64.png)
 +  skin/classic/global/icons/chevron.png                              (icons/chevron.png)
++  skin/classic/global/icons/chevron-rtl.png                          (icons/chevron-rtl.png)
 +  skin/classic/global/icons/close.gif                                (icons/close.gif)
 +  skin/classic/global/icons/checkbox.png                             (icons/checkbox.png)
 +  skin/classic/global/icons/closetab-active.png                      (icons/closetab-active.png)

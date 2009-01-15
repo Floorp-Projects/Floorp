@@ -121,7 +121,7 @@ public:
   NS_IMETHOD GetPaperName(PRUnichar * *aPaperName);
   NS_IMETHOD SetPaperName(const PRUnichar * aPaperName);
 
-  NS_IMETHOD SetUnwriteableMarginInTwips(nsMargin& aUnwriteableMargin);
+  NS_IMETHOD SetUnwriteableMarginInTwips(nsIntMargin& aUnwriteableMargin);
   NS_IMETHOD SetUnwriteableMarginTop(double aUnwriteableMarginTop);
   NS_IMETHOD SetUnwriteableMarginLeft(double aUnwriteableMarginLeft);
   NS_IMETHOD SetUnwriteableMarginBottom(double aUnwriteableMarginBottom);

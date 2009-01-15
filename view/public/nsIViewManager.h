@@ -60,10 +60,10 @@ enum nsRectVisibility {
   nsRectVisibility_kZeroAreaRect
 }; 
 
-// 7eae119d-9fc8-482d-92ec-145eef228a4a
+// de2a2d24-9753-4488-9fdc-dd0accb484f7
 #define NS_IVIEWMANAGER_IID   \
-{ 0x7eae119d, 0x9fc8, 0x482d, \
-  { 0x92, 0xec, 0x14, 0x5e, 0xef, 0x22, 0x8a, 0x4a } }
+{ 0xde2a2d24, 0x9753, 0x4488, \
+  { 0x9f, 0xdc, 0xdd, 0x0a, 0xcc, 0xb4, 0x84, 0xf7 } }
 
 class nsIViewManager : public nsISupports
 {
@@ -477,7 +477,7 @@ public:
    *                        otherwise it returns an enum indicating why not
    */
   NS_IMETHOD GetRectVisibility(nsIView *aView, const nsRect &aRect, 
-                               PRUint16 aMinTwips, 
+                               nscoord aMinTwips,
                                nsRectVisibility *aRectVisibility)=0;
 
   /**
