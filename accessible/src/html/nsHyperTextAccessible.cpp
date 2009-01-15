@@ -159,7 +159,10 @@ NS_IMETHODIMP nsHyperTextAccessible::GetRole(PRUint32 *aRole)
   }
   else {
     nsIFrame *frame = GetFrame();
-    if (frame && frame->GetType() == nsAccessibilityAtoms::blockFrame) {
+    if (frame && frame->GetType() == nsAccessibilityAtoms::blockFrame &&
+        frame->GetContent()->Tag() != nsAccessibilityAtoms::input) {
+      // An html:input @type="file" is the only input that is exposed as a
+      // blockframe. It must be exposed as ROLE_TEXT_CONTAINER for JAWS.
       *aRole = nsIAccessibleRole::ROLE_PARAGRAPH;
     }
     else {
