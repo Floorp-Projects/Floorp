@@ -84,6 +84,7 @@ UNIXISH = not IS_WIN32 and not IS_MAC
 #expand DEFAULT_APP = "./" + __BROWSER_PATH__
 #expand CERTS_DIR = __CERTS_DIR__
 #expand IS_TEST_BUILD = __IS_TEST_BUILD__
+#expand IS_DEBUG_BUILD = __IS_DEBUG_BUILD__
 
 ###########
 # LOGGING #
@@ -314,6 +315,13 @@ user_pref("network.manage-offline-status", false);
 user_pref("camino.warn_when_closing", false); // Camino-only, harmless to others
 """
   prefs.append(part)
+
+  # Increase the max script run time 10-fold for debug builds
+  if (IS_DEBUG_BUILD):
+    prefs.append("""\
+user_pref("dom.max_script_run_time", 100);
+user_pref("dom.max_chrome_script_run_time", 200);
+""")
 
   locations = readLocations()
 
