@@ -24,6 +24,7 @@
  *  Jungshik Shin <jshin@mailaps.org>
  *  Asaf Romano <mozilla.mano@sent.com>
  *  Mark Mentovai <mark@moxienet.com>
+ *  Josh Aas <josh@mozilla.com>
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -67,12 +68,6 @@
 #include <sys/stat.h>
 #include <stdlib.h>
 
-#if !defined(MAC_OS_X_VERSION_10_4) || MAC_OS_X_VERSION_MIN_REQUIRED < MAC_OS_X_VERSION_10_4
-#define GetAliasSizeFromRecord(aliasRecord) aliasRecord.aliasSize
-#else
-#define GetAliasSizeFromRecord(aliasRecord) GetAliasSizeFromPtr(&aliasRecord)
-#endif
-
 #define CHECK_mBaseRef()                        \
     PR_BEGIN_MACRO                              \
         if (!mBaseRef)                          \
@@ -80,7 +75,6 @@
     PR_END_MACRO
 
 static nsresult MacErrorMapper(OSErr inErr);
-static OSErr FindRunningAppBySignature(OSType aAppSig, ProcessSerialNumber& outPsn);
 static void CopyUTF8toUTF16NFC(const nsACString& aSrc, nsAString& aResult);
 
 #pragma mark -
@@ -287,32 +281,9 @@ class nsDirEnumerator : public nsISimpleEnumerator,
 
 NS_IMPL_ISUPPORTS2(nsDirEnumerator, nsISimpleEnumerator, nsIDirectoryEnumerator)
 
-#pragma mark -
-#pragma mark [StAEDesc]
-
-class StAEDesc: public AEDesc
-{
-public:
-    StAEDesc()
-    {
-      descriptorType = typeNull;
-      dataHandle = nil;
-    }
-              
-    ~StAEDesc()
-    {
-      NS_OBJC_BEGIN_TRY_ABORT_BLOCK;
-
-      ::AEDisposeDesc(this);
-
-      NS_OBJC_END_TRY_ABORT_BLOCK;
-    }
-};
-
 #define FILENAME_BUFFER_SIZE 512
 
-const char      nsLocalFile::kPathSepChar = '/';
-const PRUnichar nsLocalFile::kPathSepUnichar = '/';
+const char nsLocalFile::kPathSepChar = '/';
 
 // The HFS+ epoch is Jan. 1, 1904 GMT - differs from HFS in which times were local
 // The NSPR epoch is Jan. 1, 1970 GMT
@@ -1660,7 +1631,7 @@ NS_IMETHODIMP nsLocalFile::SetPersistentDescriptor(const nsACString& aPersistent
   
   // Cast to an alias record and resolve.
   AliasRecord aliasHeader = *(AliasPtr)decodedData;
-  PRInt32 aliasSize = GetAliasSizeFromRecord(aliasHeader);
+  PRInt32 aliasSize = ::GetAliasSizeFromPtr(&aliasHeader);
   if (aliasSize > ((PRInt32)dataSize * 3) / 4) { // be paranoid about having too few data
     PR_Free(decodedData);
     return NS_ERROR_FAILURE;
@@ -1693,47 +1664,18 @@ NS_IMETHODIMP nsLocalFile::Reveal()
 {
   NS_OBJC_BEGIN_TRY_ABORT_BLOCK_NSRESULT;
 
-  FSRef             fsRefToReveal;
-  AppleEvent        aeEvent = {0, nil};
-  AppleEvent        aeReply = {0, nil};
-  StAEDesc          aeDirDesc, listElem, myAddressDesc, fileList;
-  OSErr             err;
-  ProcessSerialNumber   process;
-    
-  nsresult rv = GetFSRefInternal(fsRefToReveal);
-  if (NS_FAILED(rv))
-    return rv;
-  
-  err = ::FindRunningAppBySignature ('MACS', process);
-  if (err == noErr) { 
-    err = ::AECreateDesc(typeProcessSerialNumber, (Ptr)&process, sizeof(process), &myAddressDesc);
-    if (err == noErr) {
-      // Create the FinderEvent
-      err = ::AECreateAppleEvent(kAEMiscStandards, kAEMakeObjectsVisible, &myAddressDesc,
-                        kAutoGenerateReturnID, kAnyTransactionID, &aeEvent);   
-      if (err == noErr) {
-        // Create the file list
-        err = ::AECreateList(nil, 0, false, &fileList);
-        if (err == noErr) {
-          FSSpec fsSpecToReveal;
-          err = ::FSRefMakeFSSpec(&fsRefToReveal, &fsSpecToReveal);
-          if (err == noErr) {
-            err = ::AEPutPtr(&fileList, 0, typeFSS, &fsSpecToReveal, sizeof(FSSpec));
-            if (err == noErr) {
-              err = ::AEPutParamDesc(&aeEvent, keyDirectObject, &fileList);
-              if (err == noErr) {
-                err = ::AESend(&aeEvent, &aeReply, kAENoReply, kAENormalPriority, kAEDefaultTimeout, nil, nil);
-                if (err == noErr)
-                  ::SetFrontProcess(&process);
-              }
-            }
-          }
-        }
-      }
-    }
+  BOOL success = NO;
+
+  CFURLRef urlRef;
+  if (NS_SUCCEEDED(GetCFURL(&urlRef)) && urlRef) {
+    NSAutoreleasePool* ap = [[NSAutoreleasePool alloc] init];
+    success = [[NSWorkspace sharedWorkspace] selectFile:[(NSURL*)urlRef path] inFileViewerRootedAtPath:@""];
+    [ap release];
+
+    ::CFRelease(urlRef);
   }
-    
-  return NS_OK;
+
+  return (success ? NS_OK : NS_ERROR_FAILURE);
 
   NS_OBJC_END_TRY_ABORT_BLOCK_NSRESULT;
 }
@@ -1742,13 +1684,18 @@ NS_IMETHODIMP nsLocalFile::Launch()
 {
   NS_OBJC_BEGIN_TRY_ABORT_BLOCK_NSRESULT;
 
-  FSRef fsRef;
-  nsresult rv = GetFSRefInternal(fsRef);
-  if (NS_FAILED(rv))
-    return rv;
+  BOOL success = NO;
 
-  OSErr err = ::LSOpenFSRef(&fsRef, NULL);
-  return MacErrorMapper(err);
+  CFURLRef urlRef;
+  if (NS_SUCCEEDED(GetCFURL(&urlRef)) && urlRef) {
+    NSAutoreleasePool* ap = [[NSAutoreleasePool alloc] init];
+    success = [[NSWorkspace sharedWorkspace] openURL:(NSURL*)urlRef];
+    [ap release];
+
+    ::CFRelease(urlRef);
+  }
+
+  return (success ? NS_OK : NS_ERROR_FAILURE);
 
   NS_OBJC_END_TRY_ABORT_BLOCK_NSRESULT;
 }
@@ -2537,38 +2484,6 @@ static nsresult MacErrorMapper(OSErr inErr)
             break;
     }
     return outErr;
-}
-
-static OSErr FindRunningAppBySignature(OSType aAppSig, ProcessSerialNumber& outPsn)
-{
-  NS_OBJC_BEGIN_TRY_ABORT_BLOCK_RETURN;
-
-  ProcessInfoRec info;
-  OSErr err = noErr;
-  
-  outPsn.highLongOfPSN = 0;
-  outPsn.lowLongOfPSN  = kNoProcess;
-  
-  while (PR_TRUE)
-  {
-    err = ::GetNextProcess(&outPsn);
-    if (err == procNotFound)
-      break;
-    if (err != noErr)
-      return err;
-    info.processInfoLength = sizeof(ProcessInfoRec);
-    info.processName = nil;
-    info.processAppSpec = nil;
-    err = ::GetProcessInformation(&outPsn, &info);
-    if (err != noErr)
-      return err;
-    
-    if (info.processSignature == aAppSig)
-      return noErr;
-  }
-  return procNotFound;
-
-  NS_OBJC_END_TRY_ABORT_BLOCK_RETURN(procNotFound);
 }
 
 // Convert a UTF-8 string to a UTF-16 string while normalizing to
