@@ -398,13 +398,15 @@ js_AddProperty(JSContext* cx, JSObject* obj, JSScopeProperty* sprop)
     return JS_FALSE;
 }
 
-JSBool FASTCALL
-js_HasNamedProperty(JSContext* cx, JSObject* obj, JSString* idstr)
+static JSBool
+HasProperty(JSContext* cx, JSObject* obj, jsid id)
 {
-    jsid id;
-    if (!js_ValueToStringId(cx, STRING_TO_JSVAL(idstr), &id))
+    // check whether we know how the resolve op will behave
+    JSClass* clasp = OBJ_GET_CLASS(cx, obj);
+    if (clasp->resolve != JS_ResolveStub && clasp != &js_StringClass)
         return JSVAL_TO_BOOLEAN(JSVAL_VOID);
 
+    JSAutoResolveFlags rf(cx, JSRESOLVE_QUALIFIED);
     JSObject* obj2;
     JSProperty* prop;
     if (!OBJ_LOOKUP_PROPERTY(cx, obj, id, &obj2, &prop))
@@ -415,19 +417,23 @@ js_HasNamedProperty(JSContext* cx, JSObject* obj, JSString* idstr)
 }
 
 JSBool FASTCALL
+js_HasNamedProperty(JSContext* cx, JSObject* obj, JSString* idstr)
+{
+    jsid id;
+    if (!js_ValueToStringId(cx, STRING_TO_JSVAL(idstr), &id))
+        return JSVAL_TO_BOOLEAN(JSVAL_VOID);
+
+    return HasProperty(cx, obj, id);
+}
+
+JSBool FASTCALL
 js_HasNamedPropertyInt32(JSContext* cx, JSObject* obj, int32 index)
 {
     jsid id;
     if (!js_Int32ToId(cx, index, &id))
         return JSVAL_TO_BOOLEAN(JSVAL_VOID);
 
-    JSObject* obj2;
-    JSProperty* prop;
-    if (!OBJ_LOOKUP_PROPERTY(cx, obj, id, &obj2, &prop))
-        return JSVAL_TO_BOOLEAN(JSVAL_VOID);
-    if (prop)
-        OBJ_DROP_PROPERTY(cx, obj2, prop);
-    return prop != NULL;
+    return HasProperty(cx, obj, id);
 }
 
 jsval FASTCALL

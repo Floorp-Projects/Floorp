@@ -106,7 +106,8 @@ namespace nanojit
 
 		uint32_t stackPushed =
             STACK_GRANULARITY + // returnaddr
-            STACK_GRANULARITY; // ebp
+            STACK_GRANULARITY + // ebp
+			STACK_GRANULARITY;  // dummy
 		
 		if (!_thisfrag->lirbuf->explicitSavedRegs)
 			stackPushed += NumSavedRegs * STACK_GRANULARITY;
@@ -130,9 +131,11 @@ namespace nanojit
 		MR(FP, SP); // Establish our own FP.
         PUSHr(FP); // Save caller's FP.
 
-		if (!_thisfrag->lirbuf->explicitSavedRegs) 
+		if (!_thisfrag->lirbuf->explicitSavedRegs) {
+			PUSHr(FP); // dummy
 			for (int i = 0; i < NumSavedRegs; ++i)
 				PUSHr(savedRegs[i]);
+		}
 
         // align the entry point
         asm_align_code();
@@ -207,9 +210,11 @@ namespace nanojit
     {
         RET();
 
-		if (!_thisfrag->lirbuf->explicitSavedRegs) 
+		if (!_thisfrag->lirbuf->explicitSavedRegs) {
 			for (int i = NumSavedRegs - 1; i >= 0; --i)
 				POPr(savedRegs[i]);
+			POPr(FP); // dummy
+		}
 
         POPr(FP); // Restore caller's FP.
         MR(SP,FP); // pop the stack frame
