@@ -697,7 +697,7 @@ BookmarksTracker.prototype = {
   },
 
   onItemChanged: function BMT_onItemChanged(itemId, property, isAnno, value) {
-    if (this._ls.isLivemark(this._bms.getFolderIdForItem(itemId))
+    if (this._ls.isLivemark(this._bms.getFolderIdForItem(itemId)))
       return;
     this._log.trace("onItemChanged: " + itemId +
                     (", " + property + (isAnno? " (anno)" : "")) +
