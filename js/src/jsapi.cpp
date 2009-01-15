@@ -5269,13 +5269,7 @@ JS_SetOperationLimit(JSContext *cx, uint32 operationLimit)
 {
     /* Mixed operation and branch callbacks are not supported. */
     JS_ASSERT(!cx->branchCallbackWasSet);
-
-    // FIXME: bug 473721 wallpaper
-    // JS_ASSERT(operationLimit <= JS_MAX_OPERATION_LIMIT);
-    if (!(operationLimit <= JS_MAX_OPERATION_LIMIT)) {
-        operationLimit = JS_MAX_OPERATION_LIMIT;
-    }
-
+    JS_ASSERT(operationLimit <= JS_MAX_OPERATION_LIMIT);
     JS_ASSERT(operationLimit > 0);
 
     cx->operationCount = (int32) operationLimit;
