@@ -349,19 +349,21 @@ nsContentSink::ScriptAvailable(nsresult aResult,
     mParser->ScriptExecuting();
   }
 
-  if (count == 0) {
-    return NS_OK;
-  }
-
   // aElement will not be in mScriptElements if a <script> was added
   // using the DOM during loading, or if the script was inline and thus
   // never blocked.
-  NS_ASSERTION(mScriptElements.IndexOf(aElement) == PRUint32(count - 1) ||
+  NS_ASSERTION(count == 0 ||
+               mScriptElements.IndexOf(aElement) == PRUint32(count - 1) ||
                mScriptElements.IndexOf(aElement) == PRUint32(-1),
                "script found at unexpected position");
 
   // Check if this is the element we were waiting for
-  if (aElement != mScriptElements[count - 1]) {
+  if (count == 0 || aElement != mScriptElements[count - 1]) {
+    if (mDidGetReadyToCallDidBuildModelCall &&
+        !mScriptLoader->HasPendingOrCurrentScripts() &&
+        mParser && mParser->IsParserEnabled()) {
+      ContinueInterruptedParsingAsync();
+    }
     return NS_OK;
   }
 
@@ -406,6 +408,11 @@ nsContentSink::ScriptEvaluated(nsresult aResult,
   // Check if this is the element we were waiting for
   PRInt32 count = mScriptElements.Count();
   if (count == 0 || aElement != mScriptElements[count - 1]) {
+    if (mDidGetReadyToCallDidBuildModelCall &&
+        !mScriptLoader->HasPendingOrCurrentScripts() &&
+        mParser && mParser->IsParserEnabled()) {
+      ContinueInterruptedParsingAsync();
+    }
     return NS_OK;
   }
 
@@ -1747,6 +1754,23 @@ nsContentSink::ContinueInterruptedParsingAsync()
     &nsContentSink::ContinueInterruptedParsingIfEnabled);
 
   NS_DispatchToCurrentThread(ev);
+}
+
+PRBool
+nsContentSink::ReadyToCallDidBuildModelImpl()
+{
+  if (!mDidGetReadyToCallDidBuildModelCall) {
+    if (mDocument) {
+      mDocument->SetReadyStateInternal(nsIDocument::READYSTATE_INTERACTIVE);
+    }
+
+    if (mScriptLoader) {
+      mScriptLoader->EndDeferringScripts();
+    }
+  }
+  mDidGetReadyToCallDidBuildModelCall = PR_TRUE;
+  
+  return !mScriptLoader || !mScriptLoader->HasPendingOrCurrentScripts();
 }
 
 // URIs: action, href, src, longdesc, usemap, cite

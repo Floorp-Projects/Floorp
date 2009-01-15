@@ -1525,7 +1525,8 @@ nsParser::DidBuildModel(nsresult anErrorCode)
 
   if (IsComplete()) {
     if (mParserContext && !mParserContext->mPrevContext) {
-      if (mParserContext->mDTD) {
+      if (mParserContext->mDTD && mSink &&
+          mSink->ReadyToCallDidBuildModel()) {
         result = mParserContext->mDTD->DidBuildModel(anErrorCode,PR_TRUE,this,mSink);
       }
 
