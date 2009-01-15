@@ -54,6 +54,10 @@
 #include "nsCycleCollectionParticipant.h"
 #include "nsContentUtils.h"
 
+#ifdef MOZ_SMIL
+#include "nsISMILAttr.h"
+#endif // MOZ_SMIL
+
 class nsIDOMAttr;
 class nsIDOMEventListener;
 class nsIDOMNodeList;
@@ -217,6 +221,14 @@ public:
   virtual void AppendTextTo(nsAString& aResult);
   virtual void DestroyContent();
   virtual void SaveSubtreeState();
+
+#ifdef MOZ_SMIL
+  virtual nsISMILAttr* GetAnimatedAttr(const nsIAtom* /*aName*/)
+  {
+    return nsnull;
+  }
+#endif // MOZ_SMIL
+
 #ifdef DEBUG
   virtual void List(FILE* out, PRInt32 aIndent) const;
   virtual void DumpContent(FILE* out, PRInt32 aIndent, PRBool aDumpAll) const;

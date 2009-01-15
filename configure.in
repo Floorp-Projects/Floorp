@@ -5760,6 +5760,17 @@ if test -n "$MOZ_SVG"; then
 fi
 
 dnl ========================================================
+dnl SMIL
+dnl ========================================================
+MOZ_ARG_ENABLE_BOOL(smil,
+[  --enable-smil            Enable SMIL animation support],
+    MOZ_SMIL=1,
+    MOZ_SMIL= )
+if test -n "$MOZ_SMIL"; then
+  AC_DEFINE(MOZ_SMIL)
+fi
+
+dnl ========================================================
 dnl Installer
 dnl ========================================================
 case "$target_os" in
@@ -7807,6 +7818,7 @@ AC_SUBST(MOZ_XTF)
 AC_SUBST(MOZ_NO_INSPECTOR_APIS)
 AC_SUBST(MOZ_PREF_EXTENSIONS)
 AC_SUBST(MOZ_SVG)
+AC_SUBST(MOZ_SMIL)
 AC_SUBST(MOZ_XSLT_STANDALONE)
 AC_SUBST(MOZ_JS_LIBS)
 AC_SUBST(MOZ_PSM)

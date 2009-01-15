@@ -21,6 +21,7 @@
  *
  * Contributor(s):
  *   Alex Fritze <alex.fritze@crocodile-clips.com> (original author)
+ *   Chris Double  <chris.double@double.co.nz>
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either of the GNU General Public License Version 2 or later (the "GPL"),
@@ -63,7 +64,8 @@ NS_NewSVGRectElement(nsIContent **aResult, nsINodeInfo *aNodeInfo);
 nsresult
 NS_NewSVGGElement(nsIContent **aResult, nsINodeInfo *aNodeInfo);
 nsresult
-NS_NewSVGSVGElement(nsIContent **aResult, nsINodeInfo *aNodeInfo);
+NS_NewSVGSVGElement(nsIContent **aResult, nsINodeInfo *aNodeInfo,
+                    PRBool aFromParser);
 nsresult
 NS_NewSVGForeignObjectElement(nsIContent **aResult, nsINodeInfo *aNodeInfo);
 nsresult
@@ -159,8 +161,16 @@ NS_NewSVGFEImageElement(nsIContent **aResult, nsINodeInfo *aNodeInfo);
 nsresult
 NS_NewSVGFEDisplacementMapElement(nsIContent **aResult, nsINodeInfo *aNodeInfo);
 
+#ifdef MOZ_SMIL
 nsresult
-NS_NewSVGElement(nsIContent** aResult, nsINodeInfo *aNodeInfo)
+NS_NewSVGAnimateElement(nsIContent **aResult, nsINodeInfo *aNodeInfo);
+nsresult
+NS_NewSVGSetElement(nsIContent **aResult, nsINodeInfo *aNodeInfo);
+#endif // MOZ_SMIL
+
+nsresult
+NS_NewSVGElement(nsIContent** aResult, nsINodeInfo *aNodeInfo,
+                 PRBool aFromParser)
 {
   NS_PRECONDITION(NS_SVGEnabled(),
                   "creating an SVG element while SVG disabled");
@@ -189,7 +199,7 @@ NS_NewSVGElement(nsIContent** aResult, nsINodeInfo *aNodeInfo)
   if (name == nsGkAtoms::rect)
     return NS_NewSVGRectElement(aResult, aNodeInfo);
   if (name == nsGkAtoms::svg)
-    return NS_NewSVGSVGElement(aResult, aNodeInfo);
+    return NS_NewSVGSVGElement(aResult, aNodeInfo, aFromParser);
   if (name == nsGkAtoms::g)
     return NS_NewSVGGElement(aResult, aNodeInfo);
   if (name == nsGkAtoms::foreignObject)
@@ -286,6 +296,12 @@ NS_NewSVGElement(nsIContent** aResult, nsINodeInfo *aNodeInfo)
     return NS_NewSVGMaskElement(aResult, aNodeInfo);
   if (name == nsGkAtoms::svgSwitch)
     return NS_NewSVGSwitchElement(aResult, aNodeInfo);
+#ifdef MOZ_SMIL
+  if (name == nsGkAtoms::animate)
+    return NS_NewSVGAnimateElement(aResult, aNodeInfo);
+  if (name == nsGkAtoms::set)
+    return NS_NewSVGSetElement(aResult, aNodeInfo);
+#endif // MOZ_SMIL
 
   // if we don't know what to create, just create a standard xml element:
   return NS_NewXMLElement(aResult, aNodeInfo);

@@ -1257,6 +1257,25 @@ GK_ATOM(z, "z")
 GK_ATOM(zoomAndPan, "zoomAndPan")
 #endif
 
+#ifdef MOZ_SMIL
+GK_ATOM(accumulate, "accumulate")
+GK_ATOM(additive, "additive")
+GK_ATOM(attributeName, "attributeName")
+GK_ATOM(attributeType, "attributeType")
+GK_ATOM(begin, "begin")
+GK_ATOM(by, "by")
+GK_ATOM(calcMode, "calcMode")
+GK_ATOM(css, "CSS")
+GK_ATOM(dur, "dur")
+GK_ATOM(keySplines, "keySplines")
+GK_ATOM(keyTimes, "keyTimes")
+GK_ATOM(repeatCount, "repeatCount")
+GK_ATOM(repeatDur, "repeatDur")
+GK_ATOM(restart, "restart")
+GK_ATOM(to, "to")
+GK_ATOM(XML, "XML")
+#endif
+
 #ifdef MOZ_MATHML
 GK_ATOM(MOZcolumnalign, "-moz-math-columnalign")
 GK_ATOM(MOZcolumnline, "-moz-math-columnline") // different from columnlines_

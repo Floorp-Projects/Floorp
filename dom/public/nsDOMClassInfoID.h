@@ -243,6 +243,10 @@ enum nsDOMClassInfoID {
 
   // SVG element classes
   eDOMClassInfo_SVGAElement_id,
+#ifdef MOZ_SMIL
+  eDOMClassInfo_SVGAnimateElement_id,
+  eDOMClassInfo_SVGSetElement_id,
+#endif // MOZ_SMIL
   eDOMClassInfo_SVGCircleElement_id,
   eDOMClassInfo_SVGClipPathElement_id,
   eDOMClassInfo_SVGDefsElement_id,
