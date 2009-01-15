@@ -1046,6 +1046,12 @@ ProgressController.prototype = {
   onLocationChange: function(aWebProgress, aRequest, aLocationURI) {
     // XXX this code is not multiple-tab friendly.
     var location = aLocationURI ? aLocationURI.spec : "";
+    let lastURI = selectedBrowser.lastURI    
+    //don't do anything for about:blank or about:firstrun on first display
+    if (!lastURI && (location == "about:blank" || location == "about:firstrun" )) {
+      return
+    }
+    
     this._hostChanged = true;
 
     // This code here does not compare uris exactly when determining
@@ -1057,7 +1063,6 @@ ProgressController.prototype = {
     //
     // - which fires a onLocationChange message to uri + '#'...
     let selectedBrowser = Browser.selectedBrowser;
-    let lastURI = selectedBrowser.lastURI
     selectedBrowser.lastURI = aLocationURI;
     if (lastURI) {
       var oldSpec = lastURI.spec;
@@ -1077,10 +1082,6 @@ ProgressController.prototype = {
         // nBox.removeTransientNotifications();
       }
     } 
-    
-    //don't do anything for about:blank on first display
-    if (!lastURI && location == "about:blank")
-      return
     
     if (aWebProgress.DOMWindow == selectedBrowser.contentWindow) {
       BrowserUI.setURI();
