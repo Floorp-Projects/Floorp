@@ -19,10 +19,10 @@ var Cc = Components.classes;
 var Ci = Components.interfaces;
 
 // Add some URLs to the malware database.
-var testData = "malware.com/";
+var testData = "example.com/tests/toolkit/components/url-classifier/tests/mochitest/evilWorker.js";
 var testUpdate =
-  "n:1000\ni:test-malware-simple\nad:1\n" +
-  "a:524:32:" + testData.length + "\n" +
+  "n:1000\ni:test-malware-simple\nad:550\n" +
+  "a:550:32:" + testData.length + "\n" +
   testData;
 
 var dbService = Cc["@mozilla.org/url-classifier/dbservice;1"]
@@ -47,7 +47,7 @@ function doUpdate(update) {
       SimpleTest.finish();
     },
     updateSuccess: function(requestedTimeout) {
-      document.getElementById("testFrame").src = "classifierFrame.html";
+      document.getElementById("testFrame").src = "http://example.com/tests/toolkit/components/url-classifier/tests/mochitest/workerFrame.html";
     }
   };
 
@@ -69,6 +69,19 @@ function doUpdate(update) {
     throw ex;
   }
 }
+
+function onmessage(event)
+{
+  var pieces = event.data.split(':');
+  if (pieces[0] == "finish") {
+    SimpleTest.finish();
+    return;
+  }
+
+  is(pieces[0], "success", pieces[1]);
+}
+
+window.addEventListener("message", onmessage, false);
 
 doUpdate(testUpdate);
 

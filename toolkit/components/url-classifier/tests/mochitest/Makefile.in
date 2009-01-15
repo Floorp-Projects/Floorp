@@ -47,8 +47,12 @@ include $(topsrcdir)/config/rules.mk
 
 _TEST_FILES = \
 		test_classifier.html \
+		test_classifier_worker.html \
 		classifierFrame.html \
+		workerFrame.html \
+		cleanWorker.js \
 		evil.js \
+		evilWorker.js \
 		evil.css \
 		import.css \
 		$(NULL)
