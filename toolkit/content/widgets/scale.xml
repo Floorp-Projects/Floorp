@@ -181,35 +181,47 @@
     </implementation>
 
     <handlers>
-      <handler event="keypress" keycode="VK_UP" preventdefault="true">
-        this._userChanged = true;
-        (this.dir == "reverse") ? this.increase() : this.decrease();
-        this._userChanged = false;
-      </handler>
       <handler event="keypress" keycode="VK_LEFT" preventdefault="true">
-        this._userChanged = true;
-        (this.dir == "reverse") ? this.increase() : this.decrease();
-        this._userChanged = false;
-      </handler>
-      <handler event="keypress" keycode="VK_DOWN" preventdefault="true">
-        this._userChanged = true;
-        (this.dir == "reverse") ? this.decrease() : this.increase();
-        this._userChanged = false;
+        <![CDATA[
+          this._userChanged = true;
+          (this.orient != "vertical" && this.dir == "reverse") ? this.increase() : this.decrease();
+          this._userChanged = false;
+        ]]>
       </handler>
       <handler event="keypress" keycode="VK_RIGHT" preventdefault="true">
-        this._userChanged = true;
-        (this.dir == "reverse") ? this.decrease() : this.increase();
-        this._userChanged = false;
+        <![CDATA[
+          this._userChanged = true;
+          (this.orient != "vertical" && this.dir == "reverse") ? this.decrease() : this.increase();
+          this._userChanged = false;
+        ]]>
+      </handler>
+      <handler event="keypress" keycode="VK_UP" preventdefault="true">
+        <![CDATA[
+          this._userChanged = true;
+          (this.orient == "vertical" && this.dir != "reverse") ? this.decrease() : this.increase();
+          this._userChanged = false;
+        ]]>
+      </handler>
+      <handler event="keypress" keycode="VK_DOWN" preventdefault="true">
+        <![CDATA[
+          this._userChanged = true;
+          (this.orient == "vertical" && this.dir != "reverse") ? this.increase() : this.decrease();
+          this._userChanged = false;
+        ]]>
       </handler>
       <handler event="keypress" keycode="VK_PAGE_UP" preventdefault="true">
-        this._userChanged = true;
-        (this.dir == "reverse") ? this.increasePage() : this.decreasePage();
-        this._userChanged = false;
+        <![CDATA[
+          this._userChanged = true;
+          (this.orient == "vertical" && this.dir != "reverse") ? this.decreasePage() : this.increasePage();
+          this._userChanged = false;
+        ]]>
       </handler>
       <handler event="keypress" keycode="VK_PAGE_DOWN" preventdefault="true">
-        this._userChanged = true;
-        (this.dir == "reverse") ? this.decreasePage() : this.increasePage();
-        this._userChanged = false;
+        <![CDATA[
+          this._userChanged = true;
+          (this.orient == "vertical" && this.dir != "reverse") ? this.increasePage() : this.decreasePage();
+          this._userChanged = false;
+        ]]>
       </handler>
       <handler event="keypress" keycode="VK_HOME" preventdefault="true">
         this._userChanged = true;
