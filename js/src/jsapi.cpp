@@ -5286,7 +5286,13 @@ JS_PUBLIC_API(uint32)
 JS_GetOperationLimit(JSContext *cx)
 {
     JS_ASSERT(!cx->branchCallbackWasSet);
-    return cx->operationLimit;
+
+    /*
+     * cx->operationLimit is initialized to JS_MAX_OPERATION_LIMIT + 1 to
+     * detect for optimizations if the embedding has ever set it.
+     */
+    JS_ASSERT(cx->operationLimit <= JS_MAX_OPERATION_LIMIT + 1);
+    return JS_MIN(cx->operationLimit, JS_MAX_OPERATION_LIMIT);
 }
 
 JS_PUBLIC_API(JSBranchCallback)
