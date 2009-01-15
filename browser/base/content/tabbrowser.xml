@@ -1620,25 +1620,7 @@
             this._browsers = null; 
             this.mPanelContainer.removeChild(browser.parentNode);
 
-            try {
-              // if we're at the right side (and not the logical end,
-              // which is why this works for both LTR and RTL)
-              // of the tabstrip, we need to ensure that we stay 
-              // completely scrolled to the right side
-              var tabStrip = this.mTabContainer.mTabstrip;
-              var scrollPos = {};
-              tabStrip.scrollBoxObject.getPosition(scrollPos, {});
-              var scrolledSize = {};
-              tabStrip.scrollBoxObject.getScrolledSize(scrolledSize, {});
-
-              if (scrollPos.value + tabStrip.boxObject.width >= 
-                  scrolledSize.value) {
-                tabStrip.scrollByPixels(-1 * this.mTabContainer.firstChild
-                                                 .boxObject.width);
-              }
-            }
-            catch (ex) {
-            }
+            this.tabContainer._fillTrailingGap();
 
             // Find the tab to select
             var newIndex = -1;
@@ -3111,10 +3093,31 @@
         ]]>
         </getter>
       </property>
-        
+
       <method name="_handleTabSelect">
         <body><![CDATA[
           this.mTabstrip.ensureElementIsVisible(this.selectedItem);
+        ]]></body>
+      </method>
+
+      <method name="_fillTrailingGap">
+        <body><![CDATA[
+          try {
+            // if we're at the right side (and not the logical end,
+            // which is why this works for both LTR and RTL)
+            // of the tabstrip, we need to ensure that we stay
+            // completely scrolled to the right side
+            var tabStrip = this.mTabstrip;
+            var scrollPos = {};
+            tabStrip.scrollBoxObject.getPosition(scrollPos, {});
+            var scrolledSize = {};
+            tabStrip.scrollBoxObject.getScrolledSize(scrolledSize, {});
+
+            if (scrollPos.value + tabStrip.boxObject.width >=
+                scrolledSize.value) {
+              tabStrip.scrollByPixels(-1);
+            }
+          } catch (e) {}
         ]]></body>
       </method>
 
@@ -3134,8 +3137,7 @@
               var width = this.mTabstrip.boxObject.width;
               if (width != this.mTabstripWidth) {
                 this.adjustTabstrip();
-                // XXX without this line the tab bar won't budge
-                this.mTabstrip.scrollByPixels(1);
+                this._fillTrailingGap();
                 this._handleTabSelect();
                 this.mTabstripWidth = width;
               }
