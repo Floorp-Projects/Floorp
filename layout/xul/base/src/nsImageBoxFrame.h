@@ -60,7 +60,7 @@ public:
                           const PRUnichar *statusArg);
   // imgIContainerObserver (override nsStubImageDecoderObserver)
   NS_IMETHOD FrameChanged(imgIContainer *container, gfxIImageFrame *newframe,
-                          nsRect * dirtyRect);
+                          nsIntRect *dirtyRect);
 
   void SetFrame(nsImageBoxFrame *frame) { mFrame = frame; }
 
@@ -123,7 +123,7 @@ public:
                           const PRUnichar *statusArg);
   NS_IMETHOD FrameChanged(imgIContainer *container,
                           gfxIImageFrame *newframe,
-                          nsRect * dirtyRect);
+                          nsIntRect *dirtyRect);
 
   virtual ~nsImageBoxFrame();
 

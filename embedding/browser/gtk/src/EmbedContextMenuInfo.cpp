@@ -94,7 +94,7 @@ EmbedContextMenuInfo::EmbedContextMenuInfo(EmbedPrivate *aOwner) : mCtxFrameNum(
   mNSHHTMLElementSc = nsnull;
   mCtxEvent = nsnull;
   mEventNode = nsnull;
-  mFormRect = nsRect(0,0,0,0);
+  mFormRect = nsIntRect(0,0,0,0);
 }
 
 EmbedContextMenuInfo::~EmbedContextMenuInfo(void)

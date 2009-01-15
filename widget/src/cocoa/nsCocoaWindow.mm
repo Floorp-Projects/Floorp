@@ -174,7 +174,7 @@ static bool WindowSizeAllowed(PRInt32 aWidth, PRInt32 aHeight)
 // Utility method for implementing both Create(nsIWidget ...) and
 // Create(nsNativeWidget...)
 nsresult nsCocoaWindow::StandardCreate(nsIWidget *aParent,
-                        const nsRect &aRect,
+                        const nsIntRect &aRect,
                         EVENT_CALLBACK aHandleEventFunction,
                         nsIDeviceContext *aContext,
                         nsIAppShell *aAppShell,
@@ -399,7 +399,7 @@ nsresult nsCocoaWindow::StandardCreate(nsIWidget *aParent,
 
 // Create a nsCocoaWindow using a native window provided by the application
 NS_IMETHODIMP nsCocoaWindow::Create(nsNativeWidget aNativeWindow,
-                      const nsRect &aRect,
+                      const nsIntRect &aRect,
                       EVENT_CALLBACK aHandleEventFunction,
                       nsIDeviceContext *aContext,
                       nsIAppShell *aAppShell,
@@ -412,7 +412,7 @@ NS_IMETHODIMP nsCocoaWindow::Create(nsNativeWidget aNativeWindow,
 
 
 NS_IMETHODIMP nsCocoaWindow::Create(nsIWidget* aParent,
-                      const nsRect &aRect,
+                      const nsIntRect &aRect,
                       EVENT_CALLBACK aHandleEventFunction,
                       nsIDeviceContext *aContext,
                       nsIAppShell *aAppShell,
@@ -926,14 +926,14 @@ NS_IMETHODIMP nsCocoaWindow::Resize(PRInt32 aX, PRInt32 aY, PRInt32 aWidth, PRIn
   if (!WindowSizeAllowed(aWidth, aHeight))
     return NS_ERROR_FAILURE;
 
-  nsRect windowBounds(nsCocoaUtils::CocoaRectToGeckoRect([mWindow frame]));
+  nsIntRect windowBounds(nsCocoaUtils::CocoaRectToGeckoRect([mWindow frame]));
   BOOL isMoving = (windowBounds.x != aX || windowBounds.y != aY);
   BOOL isResizing = (windowBounds.width != aWidth || windowBounds.height != aHeight);
 
   if (IsResizing() || !mWindow || (!isMoving && !isResizing))
     return NS_OK;
 
-  nsRect geckoRect(aX, aY, aWidth, aHeight);
+  nsIntRect geckoRect(aX, aY, aWidth, aHeight);
   NSRect newFrame = nsCocoaUtils::GeckoRectToCocoaRect(geckoRect);
 
   // We have to report the size event -first-, to make sure that content
@@ -973,22 +973,18 @@ NS_IMETHODIMP nsCocoaWindow::Resize(PRInt32 aWidth, PRInt32 aHeight, PRBool aRep
   if (!WindowSizeAllowed(aWidth, aHeight))
     return NS_ERROR_FAILURE;
 
-  nsRect windowBounds(nsCocoaUtils::CocoaRectToGeckoRect([mWindow frame]));
+  nsIntRect windowBounds(nsCocoaUtils::CocoaRectToGeckoRect([mWindow frame]));
   return Resize(windowBounds.x, windowBounds.y, aWidth, aHeight, aRepaint);
 
   NS_OBJC_END_TRY_ABORT_BLOCK_NSRESULT;
 }
 
 
-NS_IMETHODIMP nsCocoaWindow::GetScreenBounds(nsRect &aRect)
+NS_IMETHODIMP nsCocoaWindow::GetScreenBounds(nsIntRect &aRect)
 {
   NS_OBJC_BEGIN_TRY_ABORT_BLOCK_NSRESULT;
 
-  nsRect windowFrame = nsCocoaUtils::CocoaRectToGeckoRect([mWindow frame]);
-  aRect.x = windowFrame.x;
-  aRect.y = windowFrame.y;
-  aRect.width = windowFrame.width;
-  aRect.height = windowFrame.height;
+  aRect = nsCocoaUtils::CocoaRectToGeckoRect([mWindow frame]);
   // printf("GetScreenBounds: output: %d,%d,%d,%d\n", aRect.x, aRect.y, aRect.width, aRect.height);
   return NS_OK;
 
@@ -1016,7 +1012,7 @@ NS_IMETHODIMP nsCocoaWindow::SetTitle(const nsAString& aTitle)
 }
 
 
-NS_IMETHODIMP nsCocoaWindow::Invalidate(const nsRect & aRect, PRBool aIsSynchronous)
+NS_IMETHODIMP nsCocoaWindow::Invalidate(const nsIntRect & aRect, PRBool aIsSynchronous)
 {
   if (mPopupContentView)
     return mPopupContentView->Invalidate(aRect, aIsSynchronous);
@@ -1214,11 +1210,11 @@ NS_IMETHODIMP nsCocoaWindow::ShowMenuBar(PRBool aShow)
 }
 
 
-NS_IMETHODIMP nsCocoaWindow::WidgetToScreen(const nsRect& aOldRect, nsRect& aNewRect)
+NS_IMETHODIMP nsCocoaWindow::WidgetToScreen(const nsIntRect& aOldRect, nsIntRect& aNewRect)
 {
   NS_OBJC_BEGIN_TRY_ABORT_BLOCK_NSRESULT;
 
-  nsRect r = nsCocoaUtils::CocoaRectToGeckoRect([mWindow contentRectForFrameRect:[mWindow frame]]);
+  nsIntRect r = nsCocoaUtils::CocoaRectToGeckoRect([mWindow contentRectForFrameRect:[mWindow frame]]);
 
   aNewRect.x = r.x + aOldRect.x;
   aNewRect.y = r.y + aOldRect.y;
@@ -1231,11 +1227,11 @@ NS_IMETHODIMP nsCocoaWindow::WidgetToScreen(const nsRect& aOldRect, nsRect& aNew
 }
 
 
-NS_IMETHODIMP nsCocoaWindow::ScreenToWidget(const nsRect& aOldRect, nsRect& aNewRect)
+NS_IMETHODIMP nsCocoaWindow::ScreenToWidget(const nsIntRect& aOldRect, nsIntRect& aNewRect)
 {
   NS_OBJC_BEGIN_TRY_ABORT_BLOCK_NSRESULT;
 
-  nsRect r = nsCocoaUtils::CocoaRectToGeckoRect([mWindow contentRectForFrameRect:[mWindow frame]]);
+  nsIntRect r = nsCocoaUtils::CocoaRectToGeckoRect([mWindow contentRectForFrameRect:[mWindow frame]]);
 
   aNewRect.x = aOldRect.x - r.x;
   aNewRect.y = aOldRect.y - r.y;
@@ -1567,7 +1563,7 @@ nsCocoaWindow::UnifiedShading(void* aInfo, const float* aIn, float* aOut)
 {
   // Dispatch the move event to Gecko
   nsGUIEvent guiEvent(PR_TRUE, NS_MOVE, mGeckoWindow);
-  nsRect rect;
+  nsIntRect rect;
   mGeckoWindow->GetScreenBounds(rect);
   guiEvent.refPoint.x = rect.x;
   guiEvent.refPoint.y = rect.y;

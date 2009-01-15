@@ -2200,8 +2200,8 @@ nsPrintEngine::DoPrint(nsPrintObject * aPO)
           if (NS_SUCCEEDED(rv)) {
             mPrt->mPrintSettings->SetStartPageRange(startPageNum);
             mPrt->mPrintSettings->SetEndPageRange(endPageNum);
-            nsMargin marginTwips(0,0,0,0);
-            nsMargin unwrtMarginTwips(0,0,0,0);
+            nsIntMargin marginTwips(0,0,0,0);
+            nsIntMargin unwrtMarginTwips(0,0,0,0);
             mPrt->mPrintSettings->GetMarginInTwips(marginTwips);
             mPrt->mPrintSettings->GetUnwriteableMarginInTwips(unwrtMarginTwips);
             nsMargin totalMargin = poPresContext->TwipsToAppUnits(marginTwips + 

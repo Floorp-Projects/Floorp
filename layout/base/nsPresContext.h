@@ -566,7 +566,7 @@ public:
                           mDeviceContext->AppUnitsPerInch()); }
 
   // Margin-specific version, since they often need TwipsToAppUnits
-  nsMargin TwipsToAppUnits(const nsMargin &marginInTwips) const
+  nsMargin TwipsToAppUnits(const nsIntMargin &marginInTwips) const
   { return nsMargin(TwipsToAppUnits(marginInTwips.left), 
                     TwipsToAppUnits(marginInTwips.top),
                     TwipsToAppUnits(marginInTwips.right),

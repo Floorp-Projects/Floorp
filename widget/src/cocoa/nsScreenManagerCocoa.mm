@@ -76,7 +76,7 @@ nsScreenManagerCocoa::ScreenForRect (PRInt32 aX, PRInt32 aY, PRInt32 aWidth, PRI
     NS_OBJC_BEGIN_TRY_ABORT_BLOCK_NSRESULT;
 
     NSEnumerator *screenEnum = [[NSScreen screens] objectEnumerator];
-    NSRect inRect = nsCocoaUtils::GeckoRectToCocoaRect(nsRect(aX, aY, aWidth, aHeight));
+    NSRect inRect = nsCocoaUtils::GeckoRectToCocoaRect(nsIntRect(aX, aY, aWidth, aHeight));
     NSScreen *screenWindowIsOn = [NSScreen mainScreen];
     float greatestArea = 0;
 
