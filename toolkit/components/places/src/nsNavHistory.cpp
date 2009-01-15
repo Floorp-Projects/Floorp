@@ -4524,11 +4524,11 @@ nsNavHistory::RemovePagesFromHost(const nsACString& aHost, PRBool aEntireDomain)
     hostPlaceIds.AppendInt(placeId);
   }
 
-  // force a full refresh calling onEndUpdateBatch (will call Refresh())
-  UpdateBatchScoper batch(*this); // sends Begin/EndUpdateBatch to observers
-
   rv = RemovePagesInternal(hostPlaceIds);
   NS_ENSURE_SUCCESS(rv, rv);
+
+  // force a full refresh calling onEndUpdateBatch (will call Refresh())
+  UpdateBatchScoper batch(*this); // sends Begin/EndUpdateBatch to observers
 
   return NS_OK;
 }
