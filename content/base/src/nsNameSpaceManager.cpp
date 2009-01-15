@@ -243,7 +243,7 @@ NS_NewElement(nsIContent** aResult, PRInt32 aElementType,
 #endif
 #ifdef MOZ_SVG
   if (aElementType == kNameSpaceID_SVG && NS_SVGEnabled()) {
-    return NS_NewSVGElement(aResult, aNodeInfo);
+    return NS_NewSVGElement(aResult, aNodeInfo, aFromParser);
   }
 #endif
   if (aElementType == kNameSpaceID_XMLEvents) {

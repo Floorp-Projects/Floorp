@@ -342,6 +342,9 @@ bin/res/entityTables/*
 ; svg
 bin/res/svg.css
 bin/components/dom_svg.xpt
+#ifdef MOZ_SMIL
+bin/components/dom_smil.xpt
+#endif
 
 ; [Personal Security Manager]
 ;

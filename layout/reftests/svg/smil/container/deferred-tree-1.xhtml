@@ -1,0 +1,76 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no" ?>
+<html xmlns="http://www.w3.org/1999/xhtml" class="reftest-wait">
+  <head>
+    <title>Deferred tree</title>
+    <!--
+    PURPOSE: This is similar to the deferred-anim test case.  The animation
+    controller is not created for every web page, but only for those pages that
+    contain SMIL animatable content. But, if some SVG content containing
+    animation is added after the page is loaded, the animation should still run.
+    
+    OPERATION: There is a plain XHTML document, but later an SVG document is
+    added. This document contains a moving circle.
+
+    EXPECTED RESULTS: The SVG document fragment appears containing a circle that
+    is animated.
+    -->
+    <script>
+        function animate()
+        {
+          makeTree();
+          var svg = document.getElementById('created-svg');
+          // What we really want to test is that the animation starts by itself
+          // so calls to setCurrentTime won't do. Instead we test the
+          // animation is active in two ways:
+          // (1) Check the DOM
+          if (svg.animationsPaused()) {
+            svg.parentNode.removeChild(svg);
+          }
+          // (2) Define a really really quick animation (0.01s) and then delay
+          // our snapshot accordingly
+          setTimeout('document.documentElement.removeAttribute("class")', 150);
+        }
+
+        function makeTree()
+        {
+          const svgns="http://www.w3.org/2000/svg";
+          var svg = document.createElementNS(svgns, 'svg');
+          svg.setAttribute('xmlns', svgns);
+          svg.setAttribute('width', '200px');
+          svg.setAttribute('height', '200px');
+          svg.setAttribute('id', 'created-svg');
+          var rect = document.createElementNS(svgns, 'rect');
+          rect.setAttribute('x', '0');
+          rect.setAttribute('y', '0');
+          rect.setAttribute('width', '199');
+          rect.setAttribute('height', '199');
+          rect.setAttribute('style', 'fill: none; stroke: black');
+          var ellipse = document.createElementNS(svgns, 'ellipse');
+          ellipse.setAttribute('stroke-width', '1');
+          ellipse.setAttribute('stroke', 'black');
+          ellipse.setAttribute('fill', 'yellow');
+          ellipse.setAttribute('cx', '100');
+          ellipse.setAttribute('cy', '20');
+          ellipse.setAttribute('rx', '40');
+          ellipse.setAttribute('ry', '20');
+          var anim = document.createElementNS(svgns, 'animate');
+          anim.setAttribute('attributeName', 'cy');
+          anim.setAttribute('attributeType', 'XML');
+          anim.setAttribute('begin', '0s');
+          anim.setAttribute('from', '20');
+          anim.setAttribute('to', '170');
+          anim.setAttribute('dur', '0.01s');
+          anim.setAttribute('fill', 'freeze');
+          ellipse.appendChild(anim);
+          svg.appendChild(rect);
+          svg.appendChild(ellipse);
+          var target = document.getElementById('tree-container');
+          target.appendChild(svg);
+        }
+    </script>
+  </head>
+
+  <body onload="animate()">
+    <p id="tree-container"/>
+  </body>
+</html>
