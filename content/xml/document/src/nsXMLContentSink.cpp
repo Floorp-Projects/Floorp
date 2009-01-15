@@ -383,6 +383,12 @@ nsXMLContentSink::DidBuildModel()
   return NS_OK;
 }
 
+PRBool
+nsXMLContentSink::ReadyToCallDidBuildModel()
+{
+  return ReadyToCallDidBuildModelImpl();
+}
+
 NS_IMETHODIMP
 nsXMLContentSink::OnDocumentCreated(nsIDocument* aResultDocument)
 {
