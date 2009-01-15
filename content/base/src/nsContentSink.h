@@ -138,6 +138,7 @@ class nsContentSink : public nsICSSLoaderObserver,
   NS_HIDDEN_(nsresult) DidProcessATokenImpl(void);
   NS_HIDDEN_(void) WillBuildModelImpl(void);
   NS_HIDDEN_(void) DidBuildModelImpl(void);
+  NS_HIDDEN_(PRBool) ReadyToCallDidBuildModelImpl(void);
   NS_HIDDEN_(void) DropParserAndPerfHint(void);
 
   void NotifyAppend(nsIContent* aContent, PRUint32 aStartIndex);
@@ -350,6 +351,8 @@ protected:
   PRUint8 mDeferredLayoutStart : 1;
   // If true, we deferred notifications until sheets load
   PRUint8 mDeferredFlushTags : 1;
+  // If true, we did get a ReadyToCallDidBuildModel call
+  PRUint8 mDidGetReadyToCallDidBuildModelCall : 1;
   
   // -- Can interrupt parsing members --
   PRUint32 mDelayTimerStart;
