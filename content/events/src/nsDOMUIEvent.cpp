@@ -121,28 +121,32 @@ NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION_INHERITED(nsDOMUIEvent)
   NS_INTERFACE_MAP_ENTRY_CONTENT_CLASSINFO(UIEvent)
 NS_INTERFACE_MAP_END_INHERITING(nsDOMEvent)
 
-nsPoint nsDOMUIEvent::GetScreenPoint() {
+nsIntPoint
+nsDOMUIEvent::GetScreenPoint()
+{
   if (!mEvent || 
        (mEvent->eventStructType != NS_MOUSE_EVENT &&
         mEvent->eventStructType != NS_POPUP_EVENT &&
         mEvent->eventStructType != NS_MOUSE_SCROLL_EVENT &&
         mEvent->eventStructType != NS_DRAG_EVENT)) {
-    return nsPoint(0, 0);
+    return nsIntPoint(0, 0);
   }
 
   if (!((nsGUIEvent*)mEvent)->widget ) {
     return mEvent->refPoint;
   }
 
-  nsRect bounds(mEvent->refPoint, nsSize(1, 1));
-  nsRect offset;
+  nsIntRect bounds(mEvent->refPoint, nsIntSize(1, 1));
+  nsIntRect offset;
   ((nsGUIEvent*)mEvent)->widget->WidgetToScreen ( bounds, offset );
-  PRInt32 factor = mPresContext->DeviceContext()->UnscaledAppUnitsPerDevPixel();
-  return nsPoint(nsPresContext::AppUnitsToIntCSSPixels(offset.x * factor),
-                 nsPresContext::AppUnitsToIntCSSPixels(offset.y * factor));
+  nscoord factor = mPresContext->DeviceContext()->UnscaledAppUnitsPerDevPixel();
+  return nsIntPoint(nsPresContext::AppUnitsToIntCSSPixels(offset.x * factor),
+                    nsPresContext::AppUnitsToIntCSSPixels(offset.y * factor));
 }
 
-nsPoint nsDOMUIEvent::GetClientPoint() {
+nsIntPoint
+nsDOMUIEvent::GetClientPoint()
+{
   if (!mEvent ||
       (mEvent->eventStructType != NS_MOUSE_EVENT &&
        mEvent->eventStructType != NS_POPUP_EVENT &&
@@ -156,14 +160,14 @@ nsPoint nsDOMUIEvent::GetClientPoint() {
   nsPoint pt(0, 0);
   nsIPresShell* shell = mPresContext->GetPresShell();
   if (!shell) {
-    return pt;
+    return nsIntPoint(0, 0);
   }
   nsIFrame* rootFrame = shell->GetRootFrame();
   if (rootFrame)
     pt = nsLayoutUtils::GetEventCoordinatesRelativeTo(mEvent, rootFrame);
 
-  return nsPoint(nsPresContext::AppUnitsToIntCSSPixels(pt.x),
-                 nsPresContext::AppUnitsToIntCSSPixels(pt.y));
+  return nsIntPoint(nsPresContext::AppUnitsToIntCSSPixels(pt.x),
+                    nsPresContext::AppUnitsToIntCSSPixels(pt.y));
 }
 
 NS_IMETHODIMP
@@ -194,14 +198,14 @@ nsDOMUIEvent::InitUIEvent(const nsAString & typeArg, PRBool canBubbleArg, PRBool
 }
 
 // ---- nsDOMNSUIEvent implementation -------------------
-nsPoint
+nsIntPoint
 nsDOMUIEvent::GetPagePoint()
 {
   if (mPrivateDataDuplicated) {
     return mPagePoint;
   }
 
-  nsPoint pagePoint = GetClientPoint();
+  nsIntPoint pagePoint = GetClientPoint();
 
   // If there is some scrolling, add scroll info to client point.
   if (mPresContext && mPresContext->GetPresShell()) {
@@ -209,8 +213,8 @@ nsDOMUIEvent::GetPagePoint()
     nsIScrollableFrame* scrollframe = shell->GetRootScrollFrameAsScrollable();
     if (scrollframe) {
       nsPoint pt = scrollframe->GetScrollPosition();
-      pagePoint += nsPoint(nsPresContext::AppUnitsToIntCSSPixels(pt.x),
-                           nsPresContext::AppUnitsToIntCSSPixels(pt.y));
+      pagePoint += nsIntPoint(nsPresContext::AppUnitsToIntCSSPixels(pt.x),
+                              nsPresContext::AppUnitsToIntCSSPixels(pt.y));
     }
   }
 
@@ -306,7 +310,9 @@ nsDOMUIEvent::SetCancelBubble(PRBool aCancelBubble)
   return NS_OK;
 }
 
-nsPoint nsDOMUIEvent::GetLayerPoint() {
+nsIntPoint
+nsDOMUIEvent::GetLayerPoint()
+{
   if (!mEvent ||
       (mEvent->eventStructType != NS_MOUSE_EVENT &&
        mEvent->eventStructType != NS_POPUP_EVENT &&
@@ -323,9 +329,8 @@ nsPoint nsDOMUIEvent::GetLayerPoint() {
     return mLayerPoint;
   nsIFrame* layer = nsLayoutUtils::GetClosestLayer(targetFrame);
   nsPoint pt(nsLayoutUtils::GetEventCoordinatesRelativeTo(mEvent, layer));
-  pt.x =  nsPresContext::AppUnitsToIntCSSPixels(pt.x);
-  pt.y =  nsPresContext::AppUnitsToIntCSSPixels(pt.y);
-  return pt;
+  return nsIntPoint(nsPresContext::AppUnitsToIntCSSPixels(pt.x),
+                    nsPresContext::AppUnitsToIntCSSPixels(pt.y));
 }
 
 NS_IMETHODIMP
@@ -389,7 +394,7 @@ nsDOMUIEvent::DuplicatePrivateData()
   mLayerPoint = GetLayerPoint();
   mPagePoint = GetPagePoint();
   // GetScreenPoint converts mEvent->refPoint to right coordinates.
-  nsPoint screenPoint = GetScreenPoint();
+  nsIntPoint screenPoint = GetScreenPoint();
   nsresult rv = nsDOMEvent::DuplicatePrivateData();
   if (NS_SUCCEEDED(rv)) {
     mEvent->refPoint = screenPoint;

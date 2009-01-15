@@ -140,7 +140,8 @@ nsHTMLAreaAccessible::GetBounds(PRInt32 *x, PRInt32 *y,
   imageFrame->GetImageMap(presContext, getter_AddRefs(map));
   NS_ENSURE_TRUE(map, NS_ERROR_FAILURE);
 
-  nsRect rect, orgRectPixels;
+  nsRect rect;
+  nsIntRect orgRectPixels;
   rv = map->GetBoundsForAreaContent(ourContent, presContext, rect);
   NS_ENSURE_SUCCESS(rv, rv);
 

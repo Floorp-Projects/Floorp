@@ -299,14 +299,14 @@ public:
 
   // nsIWidget interface
   NS_IMETHOD              Create(nsIWidget *aParent,
-                                 const nsRect &aRect,
+                                 const nsIntRect &aRect,
                                  EVENT_CALLBACK aHandleEventFunction,
                                  nsIDeviceContext *aContext,
                                  nsIAppShell *aAppShell = nsnull,
                                  nsIToolkit *aToolkit = nsnull,
                                  nsWidgetInitData *aInitData = nsnull);
   NS_IMETHOD              Create(nsNativeWidget aNativeParent,
-                                 const nsRect &aRect,
+                                 const nsIntRect &aRect,
                                  EVENT_CALLBACK aHandleEventFunction,
                                  nsIDeviceContext *aContext,
                                  nsIAppShell *aAppShell = nsnull,
@@ -317,7 +317,7 @@ public:
    // Create(nsNativeWidget...)
 
   virtual nsresult        StandardCreate(nsIWidget *aParent,
-                              const nsRect &aRect,
+                              const nsIntRect &aRect,
                               EVENT_CALLBACK aHandleEventFunction,
                               nsIDeviceContext *aContext,
                               nsIAppShell *aAppShell,
@@ -345,19 +345,19 @@ public:
   NS_IMETHOD              Enable(PRBool aState);
   NS_IMETHOD              IsEnabled(PRBool *aState);
   NS_IMETHOD              SetFocus(PRBool aRaise);
-  NS_IMETHOD              SetBounds(const nsRect &aRect);
-  NS_IMETHOD              GetBounds(nsRect &aRect);
+  NS_IMETHOD              SetBounds(const nsIntRect &aRect);
+  NS_IMETHOD              GetBounds(nsIntRect &aRect);
 
   NS_IMETHOD              Invalidate(PRBool aIsSynchronous);
-  NS_IMETHOD              Invalidate(const nsRect &aRect,PRBool aIsSynchronous);
+  NS_IMETHOD              Invalidate(const nsIntRect &aRect, PRBool aIsSynchronous);
   NS_IMETHOD              InvalidateRegion(const nsIRegion *aRegion, PRBool aIsSynchronous);
   NS_IMETHOD              Validate();
 
   virtual void*           GetNativeData(PRUint32 aDataType);
   NS_IMETHOD              SetColorMap(nsColorMap *aColorMap);
-  NS_IMETHOD              Scroll(PRInt32 aDx, PRInt32 aDy, nsRect *aClipRect);
-  NS_IMETHOD              WidgetToScreen(const nsRect& aOldRect, nsRect& aNewRect);
-  NS_IMETHOD              ScreenToWidget(const nsRect& aOldRect, nsRect& aNewRect);
+  NS_IMETHOD              Scroll(PRInt32 aDx, PRInt32 aDy, nsIntRect *aClipRect);
+  NS_IMETHOD              WidgetToScreen(const nsIntRect& aOldRect, nsIntRect& aNewRect);
+  NS_IMETHOD              ScreenToWidget(const nsIntRect& aOldRect, nsIntRect& aNewRect);
   NS_IMETHOD              BeginResizingChildren(void);
   NS_IMETHOD              EndResizingChildren(void);
   virtual PRBool          ShowsResizeIndicator(nsIntRect* aResizerRect);
@@ -369,9 +369,9 @@ public:
   NS_IMETHOD              Update();
 
   virtual void      ConvertToDeviceCoordinates(nscoord &aX, nscoord &aY);
-  void              LocalToWindowCoordinate(nsPoint& aPoint)            { ConvertToDeviceCoordinates(aPoint.x, aPoint.y); }
+  void              LocalToWindowCoordinate(nsIntPoint& aPoint)         { ConvertToDeviceCoordinates(aPoint.x, aPoint.y); }
   void              LocalToWindowCoordinate(nscoord& aX, nscoord& aY)   { ConvertToDeviceCoordinates(aX, aY); }
-  void              LocalToWindowCoordinate(nsRect& aRect)              { ConvertToDeviceCoordinates(aRect.x, aRect.y); }
+  void              LocalToWindowCoordinate(nsIntRect& aRect)           { ConvertToDeviceCoordinates(aRect.x, aRect.y); }
 
   NS_IMETHOD        SetMenuBar(void* aMenuBar);
   NS_IMETHOD        ShowMenuBar(PRBool aShow);
@@ -400,7 +400,7 @@ public:
                                        PRBool* aLEDState);
 
   // nsIPluginWidget
-  NS_IMETHOD        GetPluginClipRect(nsRect& outClipRect, nsPoint& outOrigin, PRBool& outWidgetVisible);
+  NS_IMETHOD        GetPluginClipRect(nsIntRect& outClipRect, nsIntPoint& outOrigin, PRBool& outWidgetVisible);
   NS_IMETHOD        StartDrawPlugin();
   NS_IMETHOD        EndDrawPlugin();
   NS_IMETHOD        SetPluginInstanceOwner(nsIPluginInstanceOwner* aInstanceOwner);

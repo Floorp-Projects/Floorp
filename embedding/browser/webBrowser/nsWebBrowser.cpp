@@ -1129,7 +1129,7 @@ NS_IMETHODIMP nsWebBrowser::Create()
         mContentType == typeChromeWrapper)? eContentTypeUI: eContentTypeContent;
 
       widgetInit.mWindowType = eWindowType_child;
-      nsRect bounds(mInitInfo->x, mInitInfo->y, mInitInfo->cx, mInitInfo->cy);
+      nsIntRect bounds(mInitInfo->x, mInitInfo->y, mInitInfo->cx, mInitInfo->cy);
       
       mInternalWidget->SetClientData(static_cast<nsWebBrowser *>(this));
       mInternalWidget->Create(mParentNativeWindow, bounds, nsWebBrowser::HandleEvent,
@@ -1317,7 +1317,7 @@ NS_IMETHODIMP nsWebBrowser::GetPositionAndSize(PRInt32* aX, PRInt32* aY,
       {
       if(mInternalWidget)
          {
-         nsRect bounds;
+         nsIntRect bounds;
          NS_ENSURE_SUCCESS(mInternalWidget->GetBounds(bounds), NS_ERROR_FAILURE);
 
          if(aX)

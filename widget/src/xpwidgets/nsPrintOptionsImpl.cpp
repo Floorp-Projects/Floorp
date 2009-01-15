@@ -38,7 +38,6 @@
  * ***** END LICENSE BLOCK ***** */
 
 #include "nsPrintOptionsImpl.h"
-#include "nsCoord.h"
 #include "nsReadableUtils.h"
 #include "nsPrintSettingsImpl.h"
 
@@ -252,9 +251,8 @@ nsPrintOptions::ReadPrefs(nsIPrintSettings* aPS, const nsAString& aPrinterName,
   NS_ENSURE_ARG_POINTER(aPS);
 
   if (aFlags & nsIPrintSettings::kInitSaveMargins) {
-    nscoord halfInch = NS_INCHES_TO_TWIPS(0.5);
-    nsMargin margin;
-    margin.SizeTo(halfInch, halfInch, halfInch, halfInch);
+    PRInt32 halfInch = NS_INCHES_TO_TWIPS(0.5);
+    nsIntMargin margin(halfInch, halfInch, halfInch, halfInch);
     ReadInchesToTwipsPref(GetPrefName(kMarginTop, aPrinterName), margin.top,
                           kMarginTop);
     DUMP_INT(kReadStr, kMarginTop, margin.top);
@@ -271,8 +269,7 @@ nsPrintOptions::ReadPrefs(nsIPrintSettings* aPS, const nsAString& aPrinterName,
   }
 
   if (aFlags & nsIPrintSettings::kInitSaveEdges) {
-    nsMargin margin;
-    margin.SizeTo(0,0,0,0);
+    nsIntMargin margin(0,0,0,0);
     ReadInchesIntToTwipsPref(GetPrefName(kEdgeTop, aPrinterName), margin.top,
                              kEdgeTop);
     DUMP_INT(kReadStr, kEdgeTop, margin.top);
@@ -289,8 +286,7 @@ nsPrintOptions::ReadPrefs(nsIPrintSettings* aPS, const nsAString& aPrinterName,
   }
 
   if (aFlags & nsIPrintSettings::kInitSaveUnwriteableMargins) {
-    nsMargin margin;
-    margin.SizeTo(0,0,0,0);
+    nsIntMargin margin;
     ReadInchesIntToTwipsPref(GetPrefName(kUnwriteableMarginTop, aPrinterName), margin.top,
                              kUnwriteableMarginTop);
     DUMP_INT(kReadStr, kUnwriteableMarginTop, margin.top);
@@ -558,7 +554,7 @@ nsPrintOptions::WritePrefs(nsIPrintSettings *aPS, const nsAString& aPrinterName,
   NS_ENSURE_ARG_POINTER(aPS);
   NS_ENSURE_STATE(mPrefBranch);
 
-  nsMargin margin;
+  nsIntMargin margin;
   if (aFlags & nsIPrintSettings::kInitSaveMargins) {
     if (NS_SUCCEEDED(aPS->GetMarginInTwips(margin))) {
       WriteInchesFromTwipsPref(GetPrefName(kMarginTop, aPrinterName),
@@ -576,7 +572,7 @@ nsPrintOptions::WritePrefs(nsIPrintSettings *aPS, const nsAString& aPrinterName,
     }
   }
 
-  nsMargin edge;
+  nsIntMargin edge;
   if (aFlags & nsIPrintSettings::kInitSaveEdges) {
     if (NS_SUCCEEDED(aPS->GetEdgeInTwips(edge))) {
       WriteInchesIntFromTwipsPref(GetPrefName(kEdgeTop, aPrinterName),
@@ -594,7 +590,7 @@ nsPrintOptions::WritePrefs(nsIPrintSettings *aPS, const nsAString& aPrinterName,
     }
   }
 
-  nsMargin unwriteableMargin;
+  nsIntMargin unwriteableMargin;
   if (aFlags & nsIPrintSettings::kInitSaveUnwriteableMargins) {
     if (NS_SUCCEEDED(aPS->GetUnwriteableMarginInTwips(unwriteableMargin))) {
       WriteInchesIntFromTwipsPref(GetPrefName(kUnwriteableMarginTop, aPrinterName),
@@ -1170,7 +1166,7 @@ nsPrintOptions::WritePrefDouble(const char * aPrefId, double aVal)
 }
 
 void
-nsPrintOptions::ReadInchesToTwipsPref(const char * aPrefId, nscoord& aTwips,
+nsPrintOptions::ReadInchesToTwipsPref(const char * aPrefId, PRInt32& aTwips,
                                       const char * aMarginPref)
 {
   if (!mPrefBranch) {
@@ -1196,7 +1192,7 @@ nsPrintOptions::ReadInchesToTwipsPref(const char * aPrefId, nscoord& aTwips,
 }
 
 void
-nsPrintOptions::WriteInchesFromTwipsPref(const char * aPrefId, nscoord aTwips)
+nsPrintOptions::WriteInchesFromTwipsPref(const char * aPrefId, PRInt32 aTwips)
 {
   if (!mPrefBranch) {
     return;
@@ -1210,7 +1206,7 @@ nsPrintOptions::WriteInchesFromTwipsPref(const char * aPrefId, nscoord aTwips)
 }
 
 void
-nsPrintOptions::ReadInchesIntToTwipsPref(const char * aPrefId, nscoord& aTwips,
+nsPrintOptions::ReadInchesIntToTwipsPref(const char * aPrefId, PRInt32& aTwips,
                                          const char * aMarginPref)
 {
   if (!mPrefBranch) {
@@ -1230,7 +1226,7 @@ nsPrintOptions::ReadInchesIntToTwipsPref(const char * aPrefId, nscoord& aTwips,
 }
 
 void
-nsPrintOptions::WriteInchesIntFromTwipsPref(const char * aPrefId, nscoord aTwips)
+nsPrintOptions::WriteInchesIntFromTwipsPref(const char * aPrefId, PRInt32 aTwips)
 {
   if (!mPrefBranch) {
     return;
