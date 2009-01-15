@@ -243,12 +243,9 @@ static nsresult ClampScrollValues(nscoord& aX, nscoord& aY, nsScrollPortView* aT
 NS_IMETHODIMP nsScrollPortView::ScrollTo(nscoord aDestinationX, nscoord aDestinationY,
                                          PRUint32 aUpdateFlags)
 {
-  // Do nothing if the target scroll position hasn't changed.
-  if (aDestinationX == mDestinationX && aDestinationY == mDestinationY)
-    return NS_OK;
-
-  if (aDestinationX == mOffsetX && aDestinationY == mOffsetY) {
-    // Kill any in-progress async scroll.
+  // do nothing if the we aren't scrolling.
+  if (aDestinationX == mDestinationX && aDestinationY == mDestinationY) {
+    // kill any in-progress smooth scroll
     delete mAsyncScroll;
     mAsyncScroll = nsnull;
     return NS_OK;
