@@ -206,14 +206,6 @@ public:
   void EndDeferringScripts();
 
   /**
-   * Returns the number of pending scripts, deferred or not.
-   */
-  PRUint32 HasPendingOrCurrentScripts()
-  {
-    return mCurrentScript || GetFirstPendingRequest();
-  }
-
-  /**
    * Adds aURI to the preload list and starts loading it.
    *
    * @param aURI The URI of the external script.

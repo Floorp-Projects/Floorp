@@ -349,21 +349,19 @@ nsContentSink::ScriptAvailable(nsresult aResult,
     mParser->ScriptExecuting();
   }
 
+  if (count == 0) {
+    return NS_OK;
+  }
+
   // aElement will not be in mScriptElements if a <script> was added
   // using the DOM during loading, or if the script was inline and thus
   // never blocked.
-  NS_ASSERTION(count == 0 ||
-               mScriptElements.IndexOf(aElement) == count - 1 ||
+  NS_ASSERTION(mScriptElements.IndexOf(aElement) == count - 1 ||
                mScriptElements.IndexOf(aElement) == PRUint32(-1),
                "script found at unexpected position");
 
   // Check if this is the element we were waiting for
-  if (count == 0 || aElement != mScriptElements[count - 1]) {
-    if (mDidGetReadyToCallDidBuildModelCall &&
-        !mScriptLoader->HasPendingOrCurrentScripts()) {
-      ContinueInterruptedParsingAsyncIfEnabled();
-    }
-
+  if (aElement != mScriptElements[count - 1]) {
     return NS_OK;
   }
 
@@ -389,7 +387,7 @@ nsContentSink::ScriptAvailable(nsresult aResult,
       //     script load, assuming that that error code means that the user
       //     stopped the load through some action (like clicking a link). See
       //     http://bugzilla.mozilla.org/show_bug.cgi?id=243392.
-      ContinueInterruptedParsingAsyncIfEnabled();
+      ContinueInterruptedParsingAsync();
     }
   }
 
@@ -408,10 +406,6 @@ nsContentSink::ScriptEvaluated(nsresult aResult,
   // Check if this is the element we were waiting for
   PRInt32 count = mScriptElements.Count();
   if (count == 0 || aElement != mScriptElements[count - 1]) {
-    if (mDidGetReadyToCallDidBuildModelCall &&
-        !mScriptLoader->HasPendingOrCurrentScripts()) {
-      ContinueInterruptedParsingAsyncIfEnabled();
-    }
     return NS_OK;
   }
 
@@ -422,7 +416,9 @@ nsContentSink::ScriptEvaluated(nsresult aResult,
     PostEvaluateScript(aElement);
   }
 
-  ContinueInterruptedParsingAsyncIfEnabled();
+  if (mParser && mParser->IsParserEnabled()) {
+    ContinueInterruptedParsingAsync();
+  }
 
   return NS_OK;
 }
@@ -1745,27 +1741,12 @@ nsContentSink::ContinueInterruptedParsingIfEnabled()
 }
 
 void
-nsContentSink::ContinueInterruptedParsingAsyncIfEnabled()
+nsContentSink::ContinueInterruptedParsingAsync()
 {
-  if (mParser && mParser->IsParserEnabled()) {
-    nsCOMPtr<nsIRunnable> ev = new nsRunnableMethod<nsContentSink>(this,
-      &nsContentSink::ContinueInterruptedParsingIfEnabled);
+  nsCOMPtr<nsIRunnable> ev = new nsRunnableMethod<nsContentSink>(this,
+    &nsContentSink::ContinueInterruptedParsingIfEnabled);
 
-    NS_DispatchToCurrentThread(ev);
-  }
-}
-
-PRBool
-nsContentSink::ReadyToCallDidBuildModelImpl()
-{
-  if (!mDidGetReadyToCallDidBuildModelCall) {
-    mDidGetReadyToCallDidBuildModelCall = PR_TRUE;
-
-    mDocument->DispatchContentLoadedEvents();
-    mScriptLoader->EndDeferringScripts();
-  }
-  
-  return !mScriptLoader->HasPendingOrCurrentScripts();
+  NS_DispatchToCurrentThread(ev);
 }
 
 // URIs: action, href, src, longdesc, usemap, cite
