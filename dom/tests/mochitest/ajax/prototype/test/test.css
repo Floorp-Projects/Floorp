@@ -12,38 +12,39 @@ body {
   margin-bottom: 2em;
 }
 
-#logsummary {
+.logsummary {
+  margin-top: 1em;
   margin-bottom: 1em;
   padding: 1ex;
   border: 1px solid #000;
   font-weight: bold;
 }
 
-#logtable {
+.logtable {
   width:100%;
   border-collapse: collapse;
   border: 1px dotted #666;
 }
 
-#logtable td, #logtable th {
+.logtable td, .logtable th {
   text-align: left;
   padding: 3px 8px;
   border: 1px dotted #666;
 }
 
-#logtable .passed {
+.logtable .passed {
   background-color: #cfc;
 }
 
-#logtable .failed, #logtable .error {
+.logtable .failed, .logtable .error {
   background-color: #fcc;
 }
 
-#logtable td div.action_buttons {
+.logtable td div.action_buttons {
   display: inline;
 }
 
-#logtable td div.action_buttons input {
+.logtable td div.action_buttons input {
   margin: 0 5px;
   font-size: 10px;
 }

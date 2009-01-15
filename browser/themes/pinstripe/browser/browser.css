@@ -1472,6 +1472,10 @@ toolbarbutton.chevron {
   list-style-image: url("chrome://global/skin/icons/chevron.png") !important;
 }
 
+toolbarbutton.chevron[chromedir="rtl"] {
+  list-style-image: url("chrome://global/skin/icons/chevron-rtl.png") !important;
+}
+
 
 toolbarbutton.chevron > .toolbarbutton-menu-dropmarker {
   display: none;

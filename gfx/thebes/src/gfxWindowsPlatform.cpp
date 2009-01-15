@@ -111,7 +111,11 @@ already_AddRefed<gfxASurface>
 gfxWindowsPlatform::CreateOffscreenSurface(const gfxIntSize& size,
                                            gfxASurface::gfxImageFormat imageFormat)
 {
+#ifndef WINCE
     gfxASurface *surf = new gfxWindowsSurface(size, imageFormat);
+#else
+    gfxASurface *surf = new gfxImageSurface(size, imageFormat);
+#endif
     NS_IF_ADDREF(surf);
     return surf;
 }

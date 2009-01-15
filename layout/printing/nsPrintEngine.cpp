@@ -1864,6 +1864,27 @@ nsPrintEngine::ReflowPrintObject(nsPrintObject * aPO)
     documentIsTopLevel = PR_TRUE;
   }
 
+  // Here we decide whether we need scrollbars and
+  // what the parent will be of the widget
+  // How this logic presently works: Print Preview is always as-is (as far
+  // as I can tell; not sure how it would work in other cases); only the root 
+  // is not eIFrame or eFrame.  The child documents get a parent widget from
+  // logic in nsFrameFrame.  In any case, a child widget is created for the root
+  // view of the document.
+  PRBool canCreateScrollbars = PR_FALSE;
+  nsIView* parentView;
+  // the top nsPrintObject's widget will always have scrollbars
+  if (frame) {
+    nsIView* view = frame->GetView();
+    NS_ENSURE_TRUE(view, NS_ERROR_FAILURE);
+    view = view->GetFirstChild();
+    NS_ENSURE_TRUE(view, NS_ERROR_FAILURE);
+    parentView = view;
+  } else {
+    canCreateScrollbars = PR_TRUE;
+    parentView = nsnull;
+  }
+
   // create the PresContext
   aPO->mPresContext = new nsPresContext(aPO->mDocument,
                                         mIsCreatingPrintPreview ?
@@ -1906,27 +1927,6 @@ nsPrintEngine::ReflowPrintObject(nsPrintObject * aPO)
 
   PR_PL(("In DV::ReflowPrintObject PO: %p (%9s) Setting w,h to %d,%d\n", aPO,
          gFrameTypesStr[aPO->mFrameType], adjSize.width, adjSize.height));
-
-  // Here we decide whether we need scrollbars and
-  // what the parent will be of the widget
-  // How this logic presently works: Print Preview is always as-is (as far
-  // as I can tell; not sure how it would work in other cases); only the root 
-  // is not eIFrame or eFrame.  The child documents get a parent widget from
-  // logic in nsFrameFrame.  In any case, a child widget is created for the root
-  // view of the document.
-  PRBool canCreateScrollbars = PR_FALSE;
-  nsIView* parentView;
-  // the top nsPrintObject's widget will always have scrollbars
-  if (frame) {
-    nsIView* view = frame->GetView();
-    NS_ENSURE_TRUE(view, NS_ERROR_FAILURE);
-    view = view->GetFirstChild();
-    NS_ENSURE_TRUE(view, NS_ERROR_FAILURE);
-    parentView = view;
-  } else {
-    canCreateScrollbars = PR_TRUE;
-    parentView = nsnull;
-  }
 
   // Create a child window of the parent that is our "root view/window"
   nsRect tbounds = nsRect(nsPoint(0, 0), adjSize);
@@ -2200,8 +2200,8 @@ nsPrintEngine::DoPrint(nsPrintObject * aPO)
           if (NS_SUCCEEDED(rv)) {
             mPrt->mPrintSettings->SetStartPageRange(startPageNum);
             mPrt->mPrintSettings->SetEndPageRange(endPageNum);
-            nsMargin marginTwips(0,0,0,0);
-            nsMargin unwrtMarginTwips(0,0,0,0);
+            nsIntMargin marginTwips(0,0,0,0);
+            nsIntMargin unwrtMarginTwips(0,0,0,0);
             mPrt->mPrintSettings->GetMarginInTwips(marginTwips);
             mPrt->mPrintSettings->GetUnwriteableMarginInTwips(unwrtMarginTwips);
             nsMargin totalMargin = poPresContext->TwipsToAppUnits(marginTwips + 

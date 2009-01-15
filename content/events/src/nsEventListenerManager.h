@@ -186,9 +186,9 @@ protected:
                                nsIDOMEvent** aDOMEvent);
   PRBool PrepareToUseCaretPosition(nsIWidget* aEventWidget,
                                    nsIPresShell* aShell,
-                                   nsPoint& aTargetPt);
+                                   nsIntPoint& aTargetPt);
   void GetCoordinatesFor(nsIDOMElement *aCurrentEl, nsPresContext *aPresContext,
-                         nsIPresShell *aPresShell, nsPoint& aTargetPt);
+                         nsIPresShell *aPresShell, nsIntPoint& aTargetPt);
   nsresult GetDOM2EventGroup(nsIDOMEventGroup** aGroup);
   PRBool ListenerCanHandle(nsListenerStruct* aLs, nsEvent* aEvent);
   nsPIDOMWindow* GetInnerWindowForTarget();

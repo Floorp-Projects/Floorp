@@ -868,8 +868,7 @@ nsViewManager::UpdateWidgetArea(nsView *aWidgetView, const nsRegion &aDamagedReg
 
     const nsRect* r;
     for (nsRegionRectIterator iter(leftOver); (r = iter.Next());) {
-      nsRect bounds = *r;
-      ViewToWidget(aWidgetView, aWidgetView, bounds);
+      nsIntRect bounds = ViewToWidget(aWidgetView, aWidgetView, *r);
       widget->Invalidate(bounds, PR_FALSE);
     }
   }
@@ -993,14 +992,6 @@ void nsViewManager::SuppressFocusEvents(PRBool aSuppress)
 
 }
 
-static void ConvertRectAppUnitsToIntPixels(nsRect& aRect, PRInt32 p2a)
-{
-  aRect.x = NSAppUnitsToIntPixels(aRect.x, p2a);
-  aRect.y = NSAppUnitsToIntPixels(aRect.y, p2a);
-  aRect.width = NSAppUnitsToIntPixels(aRect.width, p2a);
-  aRect.height = NSAppUnitsToIntPixels(aRect.height, p2a);
-}
-
 NS_IMETHODIMP nsViewManager::DispatchEvent(nsGUIEvent *aEvent, nsEventStatus *aStatus)
 {
   *aStatus = nsEventStatus_eIgnore;
@@ -1050,7 +1041,7 @@ NS_IMETHODIMP nsViewManager::DispatchEvent(nsGUIEvent *aEvent, nsEventStatus *aS
           if (NS_FAILED(CreateRegion(getter_AddRefs(region))))
             break;
 
-          const nsRect& damrect = *event->rect;
+          const nsIntRect& damrect = *event->rect;
           region->SetTo(damrect.x, damrect.y, damrect.width, damrect.height);
         }
         
@@ -1132,10 +1123,9 @@ NS_IMETHODIMP nsViewManager::DispatchEvent(nsGUIEvent *aEvent, nsEventStatus *aS
         } else {
           // since we got an NS_PAINT event, we need to
           // draw something so we don't get blank areas.
-          nsRect damRect;
-          region->GetBoundingBox(&damRect.x, &damRect.y, &damRect.width, &damRect.height);
-          PRInt32 p2a = mContext->AppUnitsPerDevPixel();
-          damRect.ScaleRoundOut(float(p2a));
+          nsIntRect damIntRect;
+          region->GetBoundingBox(&damIntRect.x, &damIntRect.y, &damIntRect.width, &damIntRect.height);
+          nsRect damRect = nsIntRect::ToAppUnits(damIntRect, mContext->AppUnitsPerDevPixel());
           DefaultRefresh(view, event->renderingContext, &damRect);
         
           // Clients like the editor can trigger multiple
@@ -1277,8 +1267,8 @@ NS_IMETHODIMP nsViewManager::DispatchEvent(nsGUIEvent *aEvent, nsEventStatus *aS
             nsPoint rootOffset = baseView->GetDimensions().TopLeft();
             rootOffset += baseView->GetOffsetTo(RootViewManager()->mRootView);
             RootViewManager()->mMouseLocation = aEvent->refPoint +
-                nsPoint(NSAppUnitsToIntPixels(rootOffset.x, p2a),
-                        NSAppUnitsToIntPixels(rootOffset.y, p2a));
+                nsIntPoint(NSAppUnitsToIntPixels(rootOffset.x, p2a),
+                           NSAppUnitsToIntPixels(rootOffset.y, p2a));
 #ifdef DEBUG_MOUSE_LOCATION
             if (aEvent->message == NS_MOUSE_ENTER)
               printf("[vm=%p]got mouse enter for %p\n",
@@ -1296,7 +1286,7 @@ NS_IMETHODIMP nsViewManager::DispatchEvent(nsGUIEvent *aEvent, nsEventStatus *aS
             // won't matter at all since we'll get the mouse move or
             // enter after the mouse exit when the mouse moves from one
             // of our widgets into another.
-            RootViewManager()->mMouseLocation = nsPoint(NSCOORD_NONE, NSCOORD_NONE);
+            RootViewManager()->mMouseLocation = nsIntPoint(NSCOORD_NONE, NSCOORD_NONE);
 #ifdef DEBUG_MOUSE_LOCATION
             printf("[vm=%p]got mouse exit for %p\n",
                    this, aEvent->widget);
@@ -1333,26 +1323,6 @@ NS_IMETHODIMP nsViewManager::DispatchEvent(nsGUIEvent *aEvent, nsEventStatus *aS
           pt += offset;
 
           *aStatus = HandleEvent(view, pt, aEvent, capturedEvent);
-
-          //
-          // need to map the reply back into platform coordinates
-          //
-          switch (aEvent->message) {
-            case NS_TEXT_TEXT:
-              ConvertRectAppUnitsToIntPixels(
-                ((nsTextEvent*)aEvent)->theReply.mCursorPosition, p2a);
-              break;
-            case NS_COMPOSITION_START:
-            case NS_COMPOSITION_QUERY:
-              ConvertRectAppUnitsToIntPixels(
-                ((nsCompositionEvent*)aEvent)->theReply.mCursorPosition, p2a);
-              break;
-            case NS_QUERY_CHARACTER_RECT:
-            case NS_QUERY_CARET_RECT:
-              ConvertRectAppUnitsToIntPixels(
-                ((nsQueryContentEvent*)aEvent)->mReply.mRect, p2a);
-              break;
-          }
         }
     
         break;
@@ -2026,25 +1996,26 @@ NS_IMETHODIMP nsViewManager::ForceUpdate()
   return NS_OK;
 }
 
-void nsViewManager::ViewToWidget(nsView *aView, nsView* aWidgetView, nsRect &aRect) const
+nsIntRect nsViewManager::ViewToWidget(nsView *aView, nsView* aWidgetView, const nsRect &aRect) const
 {
+  nsRect rect = aRect;
   while (aView != aWidgetView) {
-    aView->ConvertToParentCoords(&aRect.x, &aRect.y);
+    aView->ConvertToParentCoords(&rect.x, &rect.y);
     aView = aView->GetParent();
   }
   
   // intersect aRect with bounds of aWidgetView, to prevent generating any illegal rectangles.
   nsRect bounds;
   aWidgetView->GetDimensions(bounds);
-  aRect.IntersectRect(aRect, bounds);
+  rect.IntersectRect(rect, bounds);
   // account for the view's origin not lining up with the widget's
-  aRect.x -= bounds.x;
-  aRect.y -= bounds.y;
+  rect.x -= bounds.x;
+  rect.y -= bounds.y;
 
-  aRect += aView->ViewToWidgetOffset();
+  rect += aView->ViewToWidgetOffset();
 
   // finally, convert to device coordinates.
-  aRect.ScaleRoundOut(1.0f / mContext->AppUnitsPerDevPixel());
+  return nsRect::ToOutsidePixels(rect, mContext->AppUnitsPerDevPixel());
 }
 
 nsresult nsViewManager::GetVisibleRect(nsRect& aVisibleRect)
@@ -2102,7 +2073,7 @@ nsresult nsViewManager::GetAbsoluteRect(nsView *aView, const nsRect &aRect,
 
 NS_IMETHODIMP nsViewManager::GetRectVisibility(nsIView *aView, 
                                                const nsRect &aRect,
-                                               PRUint16 aMinTwips, 
+                                               nscoord aMinTwips,
                                                nsRectVisibility *aRectVisibility)
 {
   nsView* view = static_cast<nsView*>(aView);
@@ -2293,7 +2264,7 @@ nsViewManager::SynthesizeMouseMove(PRBool aFromScroll)
   if (!IsRootVM())
     return RootViewManager()->SynthesizeMouseMove(aFromScroll);
 
-  if (mMouseLocation == nsPoint(NSCOORD_NONE, NSCOORD_NONE))
+  if (mMouseLocation == nsIntPoint(NSCOORD_NONE, NSCOORD_NONE))
     return NS_OK;
 
   if (!mSynthMouseMoveEvent.IsPending()) {
@@ -2376,7 +2347,7 @@ nsViewManager::ProcessSynthMouseMoveEvent(PRBool aFromScroll)
 
   NS_ASSERTION(IsRootVM(), "Only the root view manager should be here");
 
-  if (mMouseLocation == nsPoint(NSCOORD_NONE, NSCOORD_NONE) || !mRootView) {
+  if (mMouseLocation == nsIntPoint(NSCOORD_NONE, NSCOORD_NONE) || !mRootView) {
     mSynthMouseMoveEvent.Forget();
     return;
   }
@@ -2390,14 +2361,14 @@ nsViewManager::ProcessSynthMouseMoveEvent(PRBool aFromScroll)
          this, mMouseLocation.x, mMouseLocation.y);
 #endif
                                                        
-  nsPoint pt = mMouseLocation;
+  nsPoint pt;
   PRInt32 p2a = mContext->AppUnitsPerDevPixel();
   pt.x = NSIntPixelsToAppUnits(mMouseLocation.x, p2a);
   pt.y = NSIntPixelsToAppUnits(mMouseLocation.y, p2a);
   // This could be a bit slow (traverses entire view hierarchy)
   // but it's OK to do it once per synthetic mouse event
   nsView* view = FindFloatingViewContaining(mRootView, pt);
-  nsPoint offset(0, 0);
+  nsIntPoint offset(0, 0);
   nsViewManager *pointVM;
   if (!view) {
     view = mRootView;
@@ -2405,9 +2376,9 @@ nsViewManager::ProcessSynthMouseMoveEvent(PRBool aFromScroll)
     // pointView can be null in situations related to mouse capture
     pointVM = (pointView ? pointView : view)->GetViewManager();
   } else {
-    offset = view->GetOffsetTo(mRootView);
-    offset.x = NSAppUnitsToIntPixels(offset.x, p2a);
-    offset.y = NSAppUnitsToIntPixels(offset.y, p2a);
+    nsPoint viewoffset = view->GetOffsetTo(mRootView);
+    offset.x = NSAppUnitsToIntPixels(viewoffset.x, p2a);
+    offset.y = NSAppUnitsToIntPixels(viewoffset.y, p2a);
     pointVM = view->GetViewManager();
   }
   nsMouseEvent event(PR_TRUE, NS_MOUSE_MOVE, view->GetWidget(),

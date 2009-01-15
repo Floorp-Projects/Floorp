@@ -55,11 +55,18 @@
 using std::string;
 using std::vector;
 
+enum client_auth_option {
+  caNone = 0,
+  caRequire = 1,
+  caRequest = 2
+};
+
 // Structs for passing data into jobs on the thread pool
 typedef struct {
   PRInt32 listen_port;
   string cert_nickname;
   PLHashTable* host_cert_table;
+  PLHashTable* host_clientauth_table;
 } server_info_t;
 
 typedef struct {
@@ -123,7 +130,19 @@ PRCondVar* shutdown_condvar = NULL;
 // Not really used, unless something fails to start
 bool shutdown_server = false;
 bool do_http_proxy = false;
-bool any_host_cert_mapping = false;
+bool any_host_spec_config = false;
+
+PR_CALLBACK PRIntn ClientAuthValueComparator(const void *v1, const void *v2)
+{
+  int a = *static_cast<const client_auth_option*>(v1) -
+          *static_cast<const client_auth_option*>(v2);
+  if (a == 0)
+    return 0;
+  if (a > 0)
+    return 1;
+  else // (a < 0)
+    return -1;
+}
 
 /*
  * Signal the main thread that the application should shut down.
@@ -136,7 +155,7 @@ void SignalShutdown()
 }
 
 bool ReadConnectRequest(server_info_t* server_info, 
-    char* bufferhead, char* buffertail, PRInt32* result, string* certificate)
+    char* bufferhead, char* buffertail, PRInt32* result, string* certificate, client_auth_option* clientauth)
 {
   if (buffertail - bufferhead < 4)
     return false;
@@ -157,6 +176,12 @@ bool ReadConnectRequest(server_info_t* server_info,
   if (c)
     *certificate = (char*)c;
 
+  c = PL_HashTableLookup(server_info->host_clientauth_table, token);
+  if (c)
+    *clientauth = *static_cast<client_auth_option*>(c);
+  else
+    *clientauth = caNone;
+
   token = strtok(NULL, "/");
   if (strcmp(token, "HTTP"))
     return true;
@@ -165,7 +190,7 @@ bool ReadConnectRequest(server_info_t* server_info,
   return true;
 }
 
-bool ConfigureSSLServerSocket(PRFileDesc* socket, server_info_t* si, string &certificate)
+bool ConfigureSSLServerSocket(PRFileDesc* socket, server_info_t* si, string &certificate, client_auth_option clientAuth)
 {
   const char* certnick = certificate.empty() ?
       si->cert_nickname.c_str() : certificate.c_str();
@@ -199,6 +224,13 @@ bool ConfigureSSLServerSocket(PRFileDesc* socket, server_info_t* si, string &cer
   SSL_OptionSet(ssl_socket, SSL_SECURITY, PR_TRUE);
   SSL_OptionSet(ssl_socket, SSL_HANDSHAKE_AS_CLIENT, PR_FALSE);
   SSL_OptionSet(ssl_socket, SSL_HANDSHAKE_AS_SERVER, PR_TRUE);
+
+  if (clientAuth != caNone)
+  {
+    SSL_OptionSet(ssl_socket, SSL_REQUEST_CERTIFICATE, PR_TRUE);
+    SSL_OptionSet(ssl_socket, SSL_REQUIRE_CERTIFICATE, clientAuth == caRequire);
+  }
+
   SSL_ResetHandshake(ssl_socket, PR_TRUE);
 
   return true;
@@ -236,6 +268,7 @@ void HandleConnection(void* data)
   bool connect_accepted = !do_http_proxy;
   bool ssl_updated = !do_http_proxy;
   string certificateToUse;
+  client_auth_option clientAuth;
 
   if (other_sock) 
   {
@@ -275,7 +308,7 @@ void HandleConnection(void* data)
 
     if (!do_http_proxy)
     {
-      if (!ConfigureSSLServerSocket(ci->client_sock, ci->server_info, certificateToUse))
+      if (!ConfigureSSLServerSocket(ci->client_sock, ci->server_info, certificateToUse, caNone))
         client_error = true;
       else if (!ConnectSocket(other_sock, &remote_addr, connect_timeout))
         client_error = true;
@@ -340,7 +373,7 @@ void HandleConnection(void* data)
             // We have to accept and handle the initial CONNECT request here
             PRInt32 response;
             if (!connect_accepted && ReadConnectRequest(ci->server_info, buffers[s].bufferhead, buffers[s].buffertail, 
-                &response, &certificateToUse))
+                &response, &certificateToUse, &clientAuth))
             {
               // Clean the request as it would be read
               buffers[s].bufferhead = buffers[s].buffertail = buffers[s].buffer;
@@ -398,7 +431,7 @@ void HandleConnection(void* data)
               {
                 // Proxy response has just been writen, update to ssl
                 ssl_updated = true;
-                if (!ConfigureSSLServerSocket(ci->client_sock, ci->server_info, certificateToUse))
+                if (!ConfigureSSLServerSocket(ci->client_sock, ci->server_info, certificateToUse, clientAuth))
                 {
                   client_error = true;
                   break;
@@ -528,10 +561,10 @@ int processConfigLine(char* configLine)
       fprintf(stderr, "Invalid remote IP address: %s\n", ipstring);
       return 1;
     }
-    char* portstring = strtok(NULL, ":");
-    int port = atoi(portstring);
+    char* serverportstring = strtok(NULL, ":");
+    int port = atoi(serverportstring);
     if (port <= 0) {
-      fprintf(stderr, "Invalid remote port: %s\n", portstring);
+      fprintf(stderr, "Invalid remote port: %s\n", serverportstring);
       return 1;
     }
     remote_addr.inet.port = PR_htons(port);
@@ -546,16 +579,16 @@ int processConfigLine(char* configLine)
     char* hostportstring = NULL;
     if (strcmp(hostname, "*"))
     {
-      any_host_cert_mapping = true;
+      any_host_spec_config = true;
       hostportstring = strtok(NULL, ":");
     }
 
-    char* portstring = strtok(NULL, ":");
+    char* serverportstring = strtok(NULL, ":");
     char* certnick = strtok(NULL, ":");
 
-    int port = atoi(portstring);
+    int port = atoi(serverportstring);
     if (port <= 0) {
-      fprintf(stderr, "Invalid port specified: %s\n", portstring);
+      fprintf(stderr, "Invalid port specified: %s\n", serverportstring);
       return 1;
     }
 
@@ -569,7 +602,11 @@ int processConfigLine(char* configLine)
       strcat(hostname_copy, hostportstring);
       strcpy(certnick_copy, certnick);
 
-      PL_HashTableAdd(existingServer->host_cert_table, hostname_copy, certnick_copy);
+      PLHashEntry* entry = PL_HashTableAdd(existingServer->host_cert_table, hostname_copy, certnick_copy);
+      if (!entry) {
+        fprintf(stderr, "Out of memory");
+        return 1;
+      }
     }
     else
     {
@@ -582,12 +619,78 @@ int processConfigLine(char* configLine)
         fprintf(stderr, "Internal, could not create hash table\n");
         return 1;
       }
+      server.host_clientauth_table = PL_NewHashTable(0, PL_HashString, PL_CompareStrings, ClientAuthValueComparator, NULL, NULL);
+      if (!server.host_clientauth_table)
+      {
+        fprintf(stderr, "Internal, could not create hash table\n");
+        return 1;
+      }
       servers.push_back(server);
     }
 
     return 0;
   }
   
+  if (!strcmp(keyword, "clientauth"))
+  {
+    char* hostname = strtok(NULL, ":");
+    char* hostportstring = strtok(NULL, ":");
+    char* serverportstring = strtok(NULL, ":");
+
+    int port = atoi(serverportstring);
+    if (port <= 0) {
+      fprintf(stderr, "Invalid port specified: %s\n", serverportstring);
+      return 1;
+    }
+
+    if (server_info_t* existingServer = findServerInfo(port))
+    {
+      char* authoptionstring = strtok(NULL, ":");
+      client_auth_option* authoption = new client_auth_option;
+      if (!authoption) {
+        fprintf(stderr, "Out of memory");
+        return 1;
+      }
+
+      if (!strcmp(authoptionstring, "require"))
+        *authoption = caRequire;
+      else if (!strcmp(authoptionstring, "request"))
+        *authoption = caRequest;
+      else if (!strcmp(authoptionstring, "none"))
+        *authoption = caNone;
+      else
+      {
+        fprintf(stderr, "Incorrect client auth option modifier for host '%s'", hostname);
+        return 1;
+      }
+
+      any_host_spec_config = true;
+
+      char *hostname_copy = new char[strlen(hostname)+strlen(hostportstring)+2];
+      if (!hostname_copy) {
+        fprintf(stderr, "Out of memory");
+        return 1;
+      }
+
+      strcpy(hostname_copy, hostname);
+      strcat(hostname_copy, ":");
+      strcat(hostname_copy, hostportstring);
+
+      PLHashEntry* entry = PL_HashTableAdd(existingServer->host_clientauth_table, hostname_copy, authoption);
+      if (!entry) {
+        fprintf(stderr, "Out of memory");
+        return 1;
+      }
+    }
+    else
+    {
+      fprintf(stderr, "Server on port %d for client authentication option is not defined, use 'listen' option first", port);
+      return 1;
+    }
+
+    return 0;
+  }
+
   // Configure the NSS certificate database directory
   if (!strcmp(keyword, "certdbdir"))
   {
@@ -633,18 +736,25 @@ int parseConfigFile(const char* filePath)
     return 1;
   }
 
-  if (any_host_cert_mapping && !do_http_proxy)
+  if (any_host_spec_config && !do_http_proxy)
   {
-    printf("Warning: any host-specific certificate configurations are ignored, add httpproxy:1 to allow them\n");
+    printf("Warning: any host-specific configurations are ignored, add httpproxy:1 to allow them\n");
   }
 
   return 0;
 }
 
-PRIntn freeHashItems(PLHashEntry *he, PRIntn i, void *arg)
+PRIntn freeHostCertHashItems(PLHashEntry *he, PRIntn i, void *arg)
 {
   delete [] (char*)he->key;
   delete [] (char*)he->value;
+  return HT_ENUMERATE_REMOVE;
+}
+
+PRIntn freeClientAuthHashItems(PLHashEntry *he, PRIntn i, void *arg)
+{
+  delete [] (char*)he->key;
+  delete (client_auth_option*)he->value;
   return HT_ENUMERATE_REMOVE;
 }
 
@@ -674,9 +784,15 @@ int main(int argc, char** argv)
       "       listen:*:5678:server cert 2\n\n"
       "       # Accept connections on port 4443 and authenticate using\n"
       "       # 'a different cert' when target host is 'my.host.name:443'.\n"
-      "       # This works only in httpproxy mode and has higher priority\n"
-      "       # then the previews option.\n"
-      "       listen:my.host.name:443:4443:a different cert\n",
+      "       # This only works in httpproxy mode and has higher priority\n"
+      "       # than the previous option.\n"
+      "       listen:my.host.name:443:4443:a different cert\n\n"
+      "       # To make a specific host require or just request a client certificate\n"
+      "       # to authenticate use the following options. This can only be used\n"
+      "       # in httpproxy mode and only after the 'listen' option has been\n"
+      "       # specified. You also have to specify the tunnel listen port.\n"
+      "       clientauth:requesting-client-cert.host.com:443:4443:request\n"
+      "       clientauth:requiring-client-cert.host.com:443:4443:require\n",
       configFilePath);
     return 1;
   }
@@ -764,8 +880,10 @@ int main(int argc, char** argv)
   for (vector<server_info_t>::iterator it = servers.begin();
        it != servers.end(); it++) 
   {
-    PL_HashTableEnumerateEntries(it->host_cert_table, freeHashItems, NULL);
+    PL_HashTableEnumerateEntries(it->host_cert_table, freeHostCertHashItems, NULL);
+    PL_HashTableEnumerateEntries(it->host_clientauth_table, freeClientAuthHashItems, NULL);
     PL_HashTableDestroy(it->host_cert_table);
+    PL_HashTableDestroy(it->host_clientauth_table);
   }
 
   PR_Cleanup();

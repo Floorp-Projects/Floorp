@@ -352,7 +352,7 @@ nsNativeTheme::IsSubmenu(nsIFrame* aFrame, PRBool* aLeftOfParent)
   while ((parent = parent->GetParent())) {
     if (parent->GetContent() == parentContent) {
       if (aLeftOfParent) {
-        nsRect selfBounds, parentBounds;
+        nsIntRect selfBounds, parentBounds;
         aFrame->GetWindow()->GetScreenBounds(selfBounds);
         parent->GetWindow()->GetScreenBounds(parentBounds);
         *aLeftOfParent = selfBounds.x < parentBounds.x;

@@ -1,0 +1,58 @@
+<!DOCTYPE html>
+<html>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=472326
+-->
+<head>
+  <title>test nsHyperTextAccessible roles</title>
+  <link rel="stylesheet" type="text/css" href="chrome://mochikit/content/tests/SimpleTest/test.css" />
+
+  <script type="application/javascript"
+          src="chrome://mochikit/content/MochiKit/packed.js"></script>
+  <script type="application/javascript"
+          src="chrome://mochikit/content/tests/SimpleTest/SimpleTest.js"></script>
+
+  <script type="application/javascript"
+          src="chrome://mochikit/content/a11y/accessible/common.js"></script>
+
+  <script type="application/javascript">
+    function doTests()
+    {
+      // Test that an html:input @type="file" is exposed as ROLE_TEXT_CONTAINER.
+      // After fix for bug 471356, it was temporarily exposed as a paragraph,
+      // breaking JAWS compatibility.
+      fileUploadAcc = getAccessible("data");
+      if (fileUploadAcc)
+        is(fileUploadAcc.role, ROLE_TEXT_CONTAINER,
+           "Wrong role for file upload textbox!");
+
+      // Test regular paragraph by comparison to make sure exposure does not
+      // get broken.
+      var paraAcc = getAccessible("p");
+      if (paraAcc)
+        is(paraAcc.role, ROLE_PARAGRAPH, "Wrong role for paragraph!");
+
+      SimpleTest.finish();
+    }
+
+    SimpleTest.waitForExplicitFinish();
+    addLoadEvent(doTests);
+  </script>
+</head>
+<body>
+
+  <a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=472326"
+     title="html:input of type "file" no longer rendered to screen readers">
+     Mozilla Bug 472326
+  </a>
+  <p id="display"></p>
+  <div id="content" style="display: none"></div>
+  <pre id="test">
+  </pre>
+  <form action="submit.php" method="post">
+    <label for="data">File</label>:
+    <input type="file" id="data" name="data" size="50"/>
+  </form>
+  <p id="p">A paragraph for comparison.</p>
+</body>
+</html>
