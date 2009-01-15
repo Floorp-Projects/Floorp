@@ -61,7 +61,16 @@ HistoryEngine.prototype = {
   displayName: "History",
   logName: "History",
   _storeObj: HistoryStore,
-  _trackerObj: HistoryTracker
+  _trackerObj: HistoryTracker,
+  // TODO the following overridden method has been defined just to facilitate
+  // debugging of tempTableExists.  Once that debugging is done, this should
+  // be deleted.
+  _syncFinish: function HistoryEngine__syncFinish(error) {
+    let self = yield;
+    this._log.debug("Finishing up sync");
+    this._log.debug(this._store._pidStm);
+    this._tracker.resetScore();
+  }
 };
 
 function HistoryStore() {
@@ -123,10 +132,33 @@ HistoryStore.prototype = {
     }
   },
 
+  tempTableExists: function HistStore__tempTableExists(tableName) {
+    // Check for table existance manually
+    // (just using this._db.tableExists() gives us false negatives on
+    // Firefox for temp tables.)
+    let statement = this._db.createStatement(
+      "SELECT count(*) as count FROM sqlite_temp_master WHERE type='table' " +
+      "AND name='" + tableName + "'"
+    );
+    dump("Checking if temp table " + tableName + " exists.\n");
+    this._log.debug("Checking if temp table " + tableName + " exists.");
+    statement.step();
+    let num = statement.row["count"];
+    if (num == 0) {
+      this._log.debug("No: the table does not exist.");
+      dump("No: the table does not exist.\n");
+      return false;
+    } else {
+      this._log.debug("Yes: the table exists.");
+      dump("Yes: the table exists.\n");
+      return true;
+    }
+  },
+
   get _visitStm() {
     this._log.trace("Creating SQL statement: _visitStm");
     let stm;
-    if (this._db.tableExists("moz_historyvisits_temp")) {
+    if (this.tempTableExists("moz_historyvisits_temp")) {
       stm = this._db.createStatement(
         "SELECT * FROM ( " +
           "SELECT visit_type AS type, visit_date AS date " +
@@ -161,7 +193,7 @@ HistoryStore.prototype = {
     this._log.trace("Creating SQL statement: _pidStm");
     let stm;
     // See comment in get _urlStm()
-    if (this._db.tableExists("moz_places_temp")) {
+    if (this.tempTableExists("moz_places_temp")) {
       stm = this._db.createStatement(
         "SELECT * FROM " +
           "(SELECT id FROM moz_places_temp WHERE url = :url LIMIT 1) " +
@@ -190,7 +222,7 @@ HistoryStore.prototype = {
      * that table.
      */
     let stm;
-    if (this._db.tableExists("moz_places_temp")) {
+    if (this.tempTableExists("moz_places_temp")) {
       stm = this._db.createStatement(
       "SELECT * FROM " +
         "(SELECT url,title FROM moz_places_temp WHERE id = :id LIMIT 1) " +
