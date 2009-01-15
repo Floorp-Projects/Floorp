@@ -1,4 +1,4 @@
-/* -*- Mode: C; tab-width: 8; indent-tabs-mode: nil; c-basic-offset: 4 -*-
+/* -*- Mode: C; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 4 -*-
  * vim: set sw=4 ts=8 et tw=99:
  *
  * ***** BEGIN LICENSE BLOCK *****
@@ -3468,20 +3468,16 @@ Decompile(SprintStack *ss, jsbytecode *pc, intN nb, JSOp nextop)
 #if JS_HAS_LVALUE_RETURN
               case JSOP_SETCALL:
 #endif
-                /* Turn off most parens (all if there's only one argument). */
                 argc = GET_ARGC(pc);
-                op = (argc == 1) ? JSOP_NOP : JSOP_SETNAME;
                 argv = (char **)
                     JS_malloc(cx, (size_t)(argc + 1) * sizeof *argv);
                 if (!argv)
                     return NULL;
 
+                op = JSOP_SETNAME;
                 ok = JS_TRUE;
-                for (i = argc; i > 0; i--) {
+                for (i = argc; i > 0; i--)
                     argv[i] = JS_strdup(cx, POP_STR());
-                    if (!argv[i])
-                        ok = JS_FALSE;
-                }
 
                 /* Skip the JSOP_PUSHOBJ-created empty string. */
                 LOCAL_ASSERT(ss->top >= 2);
@@ -3492,7 +3488,7 @@ Decompile(SprintStack *ss, jsbytecode *pc, intN nb, JSOp nextop)
                  * Same for new (x(y).z) -- contrast with new x(y).z.
                  * See PROPAGATE_CALLNESS.
                  */
-                op = (JSOp) ss->opcodes[ss->top-1];
+                op = (JSOp) ss->opcodes[ss->top - 1];
                 lval = PopStr(ss,
                               (saveop == JSOP_NEW &&
                                (op == JSOP_CALL || 
@@ -3504,7 +3500,7 @@ Decompile(SprintStack *ss, jsbytecode *pc, intN nb, JSOp nextop)
                 op = saveop;
 
                 argv[0] = JS_strdup(cx, lval);
-                if (!argv[i])
+                if (!argv[0])
                     ok = JS_FALSE;
 
                 lval = "(", rval = ")";
@@ -3531,10 +3527,8 @@ Decompile(SprintStack *ss, jsbytecode *pc, intN nb, JSOp nextop)
                 if (Sprint(&ss->sprinter, rval) < 0)
                     ok = JS_FALSE;
 
-                for (i = 0; i <= argc; i++) {
-                    if (argv[i])
-                        JS_free(cx, argv[i]);
-                }
+                for (i = 0; i <= argc; i++)
+                    JS_free(cx, argv[i]);
                 JS_free(cx, argv);
                 if (!ok)
                     return NULL;
@@ -3931,7 +3925,7 @@ Decompile(SprintStack *ss, jsbytecode *pc, intN nb, JSOp nextop)
 
                     /*
                      * All allocation when decompiling is LIFO, using malloc
-                     * or, more commonly, arena-alloocating from cx->tempPool.
+                     * or, more commonly, arena-allocating from cx->tempPool.
                      * After InitSprintStack succeeds, we must release to mark
                      * before returning.
                      */
@@ -4287,53 +4281,48 @@ Decompile(SprintStack *ss, jsbytecode *pc, intN nb, JSOp nextop)
                 break;
 
               case JSOP_NEWARRAY:
-              {
-                ptrdiff_t off;
-                char *base, *from, *to;
-
-                /*
-                 * All operands are stacked and ready for in-place formatting.
-                 * We know that PAREN_SLOP is 3 here, and take advantage of it
-                 * to avoid strdup'ing.
-                 */
                 argc = GET_UINT24(pc);
                 LOCAL_ASSERT(ss->top >= (uintN) argc);
-                sn = js_GetSrcNote(jp->script, pc);
                 if (argc == 0) {
-                    todo = Sprint(&ss->sprinter, "[%s]",
-                                  (sn && SN_TYPE(sn) == SRC_CONTINUE)
-                                  ? ", "
-                                  : "");
-                } else {
-                    ss->top -= argc;
-                    off = GetOff(ss, ss->top);
-                    LOCAL_ASSERT(off >= PAREN_SLOP);
-                    base = OFF2STR(&ss->sprinter, off);
-                    to = base + 1;
-                    i = 0;
-                    for (;;) {
-                        /* Move to the next string that had been stacked. */
-                        from = OFF2STR(&ss->sprinter, off);
-                        todo = strlen(from);
-                        memmove(to, from, todo);
-                        to += todo;
-                        if (++i == argc &&
-                            !(sn && SN_TYPE(sn) == SRC_CONTINUE)) {
-                            break;
-                        }
-                        *to++ = ',';
-                        *to++ = ' ';
-                        off = GetOff(ss, ss->top + i);
-                    }
-                    LOCAL_ASSERT(to - base < ss->sprinter.offset - PAREN_SLOP);
-                    *base = '[';
-                    *to++ = ']';
-                    *to = '\0';
-                    ss->sprinter.offset = STR2OFF(&ss->sprinter, to);
-                    todo = STR2OFF(&ss->sprinter, base);
+                    todo = SprintCString(&ss->sprinter, "[]");
+                    break;
                 }
+
+                argv = (char **) JS_malloc(cx, size_t(argc) * sizeof *argv);
+                if (!argv)
+                    return NULL;
+
+                op = JSOP_SETNAME;
+                ok = JS_TRUE;
+                i = argc;
+                while (i > 0)
+                    argv[--i] = JS_strdup(cx, POP_STR());
+
+                todo = SprintCString(&ss->sprinter, "[");
+                if (todo < 0)
+                    break;
+
+                for (i = 0; i < argc; i++) {
+                    if (!argv[i] ||
+                        Sprint(&ss->sprinter, ss_format,
+                               argv[i], (i < argc - 1) ? ", " : "") < 0) {
+                        ok = JS_FALSE;
+                        break;
+                    }
+                }
+
+                for (i = 0; i < argc; i++)
+                    JS_free(cx, argv[i]);
+                JS_free(cx, argv);
+                if (!ok)
+                    return NULL;
+
+                sn = js_GetSrcNote(jp->script, pc);
+                if (sn && SN_TYPE(sn) == SRC_CONTINUE && SprintCString(&ss->sprinter, ", ") < 0)
+                    return NULL;
+                if (SprintCString(&ss->sprinter, "]") < 0)
+                    return NULL;
                 break;
-              }
 
               case JSOP_NEWINIT:
               {

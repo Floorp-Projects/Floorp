@@ -79,9 +79,10 @@ public:
     }
 
     bool contains(T a) {
-        for (unsigned n = 0; n < _len; ++n)
+        for (unsigned n = 0; n < _len; ++n) {
             if (_data[n] == a)
                 return true;
+        }
         return false;
     }
 
@@ -414,8 +415,8 @@ class TraceRecorder : public avmplus::GCObject {
     JS_REQUIRES_STACK bool getProp(jsval& v);
     JS_REQUIRES_STACK bool getThis(nanojit::LIns*& this_ins);
 
-    JS_REQUIRES_STACK bool box_jsval(jsval v, nanojit::LIns*& v_ins);
-    JS_REQUIRES_STACK bool unbox_jsval(jsval v, nanojit::LIns*& v_ins);
+    JS_REQUIRES_STACK void box_jsval(jsval v, nanojit::LIns*& v_ins);
+    JS_REQUIRES_STACK void unbox_jsval(jsval v, nanojit::LIns*& v_ins);
     JS_REQUIRES_STACK bool guardClass(JSObject* obj, nanojit::LIns* obj_ins, JSClass* clasp,
                                       ExitType exitType = MISMATCH_EXIT);
     JS_REQUIRES_STACK bool guardDenseArray(JSObject* obj, nanojit::LIns* obj_ins,
