@@ -46,6 +46,7 @@
 #include "nsIRequest.h"
 #include "nsIScriptSecurityManager.h"
 #include "nsIStreamLoader.h"
+#include "nsIChannelClassifier.h"
 
 // Other includes
 #include "nsAutoLock.h"
@@ -58,6 +59,7 @@
 #include "nsScriptLoader.h"
 #include "nsThreadUtils.h"
 #include "pratom.h"
+#include "nsDocShellCID.h"
 
 // DOMWorker includes
 #include "nsDOMWorkerPool.h"
@@ -522,6 +524,18 @@ nsDOMWorkerScriptLoader::RunInternal()
       // Null this out so we don't try to cancel it later.
       loadInfo.channel = nsnull;
       return rv;
+    }
+
+    // Check the load against the URI classifier
+    nsCOMPtr<nsIChannelClassifier> classifier =
+        do_CreateInstance(NS_CHANNELCLASSIFIER_CONTRACTID);
+    if (classifier) {
+        rv = classifier->Start(loadInfo.channel, PR_TRUE);
+        if (NS_FAILED(rv)) {
+            loadInfo.channel->Cancel(rv);
+            loadInfo.channel = nsnull;
+            return rv;
+        }
     }
   }
 
