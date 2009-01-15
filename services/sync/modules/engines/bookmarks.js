@@ -634,6 +634,13 @@ BookmarksTracker.prototype = {
     return bms;
   },
 
+  get _ls() {
+    let ls = Cc["@mozilla.org/browser/livemark-service;2"].
+      getService(Ci.nsILivemarkService);
+    this.__defineGetter__("_ls", function() ls);
+    return ls;
+  },
+
   QueryInterface: XPCOMUtils.generateQI([Ci.nsINavBookmarkObserver]),
 
   _init: function BMT__init() {
@@ -672,6 +679,8 @@ BookmarksTracker.prototype = {
   },
 
   onItemAdded: function BMT_onEndUpdateBatch(itemId, folder, index) {
+    if (this._ls.isLivemark(folder))
+      return;
     this._log.trace("onItemAdded: " + itemId);
     this._all[itemId] = this._bms.getItemGUID(itemId);
     if (this.addChangedID(this._all[itemId]))
@@ -679,6 +688,8 @@ BookmarksTracker.prototype = {
   },
 
   onItemRemoved: function BMT_onItemRemoved(itemId, folder, index) {
+    if (this._ls.isLivemark(folder))
+      return;
     this._log.trace("onItemRemoved: " + itemId);
     if (this.addChangedID(this._all[itemId]))
       this._upScore();
@@ -686,6 +697,8 @@ BookmarksTracker.prototype = {
   },
 
   onItemChanged: function BMT_onItemChanged(itemId, property, isAnno, value) {
+    if (this._ls.isLivemark(this._bms.getFolderIdForItem(itemId))
+      return;
     this._log.trace("onItemChanged: " + itemId +
                     (", " + property + (isAnno? " (anno)" : "")) +
                     (value? (" = \"" + value + "\"") : ""));
