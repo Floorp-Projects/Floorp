@@ -1670,7 +1670,7 @@ _hasmethod(NPP npp, NPObject* npobj, NPIdentifier methodName)
                  ("NPN_HasMethod(npp %p, npobj %p, property %p) called\n",
                   npp, npobj, methodName));
 
-  return npobj->_class->hasProperty(npobj, methodName);
+  return npobj->_class->hasMethod(npobj, methodName);
 }
 
 bool NP_CALLBACK
