@@ -446,8 +446,7 @@ HistoryTracker.prototype = {
 
     // FIXME: very roundabout way of getting url -> guid mapping!
     // FIXME2: not updated after startup
-    let store = new HistoryStore();
-    let all = store.getAllIDs();
+    let all = this._store.getAllIDs();
     this._all = {};
     for (let guid in all) {
       this._all[all[guid]] = guid;

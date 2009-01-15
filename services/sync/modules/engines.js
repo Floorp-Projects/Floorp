@@ -296,13 +296,16 @@ SyncEngine.prototype = {
     yield newitems.get(self.cb);
 
     let item;
+    let count = {applied: 0, reconciled: 0};
     this._lastSyncTmp = 0;
     while ((item = yield newitems.iter.next(self.cb))) {
       this._lowMemCheck();
       yield item.decrypt(self.cb, ID.get('WeaveCryptoID').password);
-      if (yield this._reconcile.async(this, self.cb, item))
+      if (yield this._reconcile.async(this, self.cb, item)) {
+        count.applied++;
         yield this._applyIncoming.async(this, self.cb, item);
-      else {
+      } else {
+        count.reconciled++;
         this._log.trace("Skipping reconciled incoming item " + item.id);
         if (this._lastSyncTmp < item.modified)
           this._lastSyncTmp = item.modified;
@@ -310,6 +313,9 @@ SyncEngine.prototype = {
     }
     if (this.lastSync < this._lastSyncTmp)
         this.lastSync = this._lastSyncTmp;
+
+    this._log.info("Applied " + count.applied + " records, reconciled " +
+                    count.reconciled + " records");
 
     // try to free some memory
     this._store.cache.clear();
@@ -387,7 +393,7 @@ SyncEngine.prototype = {
     let self = yield;
     this._log.trace("Incoming:\n" + item);
     try {
-      this._tracker.ignoreID(item.id);
+      this._tracker.ignoreAll = true;
       yield this._store.applyIncoming(self.cb, item);
       if (this._lastSyncTmp < item.modified)
         this._lastSyncTmp = item.modified;
@@ -395,7 +401,7 @@ SyncEngine.prototype = {
       this._log.warn("Error while applying incoming record: " +
                      (e.message? e.message : e));
     } finally {
-      this._tracker.unignoreID(item.id);
+      this._tracker.ignoreAll = false;
     }
   },
 
@@ -434,7 +440,7 @@ SyncEngine.prototype = {
           }
       }
 
-      this._log.debug("Uploading " + outnum + " records + " + count + " index/depth records)");
+      this._log.info("Uploading " + outnum + " records + " + count + " index/depth records)");
       // do the upload
       yield up.post(self.cb);
 
