@@ -1,0 +1,8 @@
+<script>
+  var url = document.location.href;
+  var imageUrl = url.replace(/[/][^/]*$/, "/mozilla-16.png");
+  var viewSourceImageUrl = "view-source:" + imageUrl;
+  var html = "<iframe src='#url#'>".replace(/#url#/, viewSourceImageUrl);
+  document.write(html);
+</script>
+

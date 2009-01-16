@@ -164,6 +164,11 @@ nsContentDLF::CreateInstance(const char* aCommand,
                              nsIStreamListener** aDocListener,
                              nsIContentViewer** aDocViewer)
 {
+  // Declare "type" here.  This is because although the variable itself only
+  // needs limited scope, we need to use the raw string memory -- as returned
+  // by "type.get()" farther down in the function.
+  nsCAutoString type;
+
   // Are we viewing source?
 #ifdef MOZ_VIEW_SOURCE
   nsCOMPtr<nsIViewSourceChannel> viewSourceChannel = do_QueryInterface(aChannel);
@@ -175,7 +180,6 @@ nsContentDLF::CreateInstance(const char* aCommand,
     // view-source channel normally returns.  Get the actual content
     // type of the data.  If it's known, use it; otherwise use
     // text/plain.
-    nsCAutoString type;
     viewSourceChannel->GetOriginalContentType(type);
     PRBool knownType = PR_FALSE;
     PRInt32 typeIndex;
@@ -210,6 +214,10 @@ nsContentDLF::CreateInstance(const char* aCommand,
 
     if (knownType) {
       viewSourceChannel->SetContentType(type);
+    } else if (IsImageContentType(type.get())) {
+      // If it's an image, we want to display it the same way we normally would.
+      // Also note the lifetime of "type" allows us to safely use "get()" here.
+      aContentType = type.get();
     } else {
       viewSourceChannel->SetContentType(NS_LITERAL_CSTRING("text/plain"));
     }
@@ -279,10 +287,7 @@ nsContentDLF::CreateInstance(const char* aCommand,
 #endif
 
   // Try image types
-  nsCOMPtr<imgILoader> loader(do_GetService("@mozilla.org/image/loader;1"));
-  PRBool isReg = PR_FALSE;
-  loader->SupportImageWithMimeType(aContentType, &isReg);
-  if (isReg) {
+  if (IsImageContentType(aContentType)) {
     return CreateDocument(aCommand, 
                           aChannel, aLoadGroup,
                           aContainer, kImageDocumentCID,
@@ -606,3 +611,11 @@ nsContentDLF::UnregisterDocumentFactories(nsIComponentManager* aCompMgr,
 
   return rv;
 }
+
+PRBool nsContentDLF::IsImageContentType(const char* aContentType) {
+  nsCOMPtr<imgILoader> loader(do_GetService("@mozilla.org/image/loader;1"));
+  PRBool isDecoderAvailable = PR_FALSE;
+  loader->SupportImageWithMimeType(aContentType, &isDecoderAvailable);
+  return isDecoderAvailable;
+}
+
