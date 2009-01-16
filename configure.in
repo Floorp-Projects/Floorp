@@ -655,6 +655,18 @@ if test -n "$_WIN32_MSVC"; then
     SKIP_PATH_CHECKS=1
     SKIP_COMPILER_CHECKS=1
     SKIP_LIBRARY_CHECKS=1
+
+    # Since we're skipping compiler and library checks, hard-code
+    # some facts here.
+    case "$target" in
+    *-wince)
+        ;;
+    *)
+        AC_DEFINE(HAVE_IO_H)
+        AC_DEFINE(HAVE_SETBUF)
+        AC_DEFINE(HAVE_ISATTY)
+        ;;
+    esac
 fi
 
 fi # COMPILE_ENVIRONMENT
@@ -2955,6 +2967,7 @@ AC_CHECK_HEADERS(sys/bitypes.h memory.h unistd.h)
 AC_CHECK_HEADERS(gnu/libc-version.h nl_types.h)
 AC_CHECK_HEADERS(malloc.h)
 AC_CHECK_HEADERS(X11/XKBlib.h)
+AC_CHECK_HEADERS(io.h)
 
 dnl These are all the places some variant of statfs can be hiding.
 AC_CHECK_HEADERS(sys/statvfs.h sys/statfs.h sys/vfs.h sys/mount.h)
@@ -3353,7 +3366,7 @@ dnl Checks for library functions.
 dnl ========================================================
 AC_PROG_GCC_TRADITIONAL
 AC_FUNC_MEMCMP
-AC_CHECK_FUNCS(random strerror lchown fchmod snprintf statvfs memmove rint stat64 lstat64 truncate64 statvfs64)
+AC_CHECK_FUNCS(random strerror lchown fchmod snprintf statvfs memmove rint stat64 lstat64 truncate64 statvfs64 setbuf isatty)
 AC_CHECK_FUNCS(flockfile getpagesize)
 AC_CHECK_FUNCS(localtime_r strtok_r)
 
