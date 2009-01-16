@@ -42,6 +42,9 @@
  */
 
 #include "pkix_logger.h"
+#ifndef PKIX_ERROR_DESCRIPTION
+#include "prprf.h"
+#endif
 
 /* Global variable to keep PKIX_Logger List */
 PKIX_List *pkixLoggers = NULL;
@@ -291,6 +294,32 @@ cleanup:
         if (error) { return(NULL); }
 
         return(NULL);
+}
+
+PKIX_Error *
+pkix_Logger_CheckWithCode(
+        PKIX_List *pkixLoggersList,
+        PKIX_UInt32 errorCode,
+        const char *message2,
+        PKIX_ERRORCLASS logComponent,
+        PKIX_UInt32 currentLevel,
+        void *plContext)
+{
+    char error[32];
+    char *errorString = NULL;
+
+    PKIX_ENTER(LOGGER, "pkix_Logger_CheckWithCode");
+#if defined PKIX_ERROR_DESCRIPTION
+    errorString = PKIX_ErrorText[errorCode];
+#else
+    PR_snprintf(error, 32, "Error code: %d", errorCode);
+    errorString = error;
+#endif /* PKIX_ERROR_DESCRIPTION */
+
+    pkixErrorResult = pkix_Logger_Check(pkixLoggersList, errorString,
+                                        message2, logComponent,
+                                        currentLevel, plContext);
+    PKIX_RETURN(LOGGER);
 }
 
 /*

@@ -36,9 +36,14 @@
  * the terms of any one of the MPL, the GPL or the LGPL.
  *
  * ***** END LICENSE BLOCK ***** */
-/* $Id: sha512.c,v 1.11 2008/02/16 02:24:48 wtc%google.com Exp $ */
+/* $Id: sha512.c,v 1.13 2008/11/19 21:10:52 nelson%bolyard.com Exp $ */
+
+#ifdef FREEBL_NO_DEPEND
+#include "stubs.h"
+#endif
+
 #include "prcpucfg.h"
-#if defined(_X86_) || defined(SHA_NO_LONG_LONG)
+#if (defined(_X86_) && !defined(__x86_64__)) || defined(SHA_NO_LONG_LONG)
 #define NOUNROLL512 1
 #undef HAVE_LONG_LONG
 #endif
@@ -120,13 +125,13 @@ swap4b(PRUint32 dwd)
 #define SHA_HTONL(x) swap4b(x)
 #define BYTESWAP4(x)  x = SHA_HTONL(x)
 
-#elif defined(LINUX) && defined(_X86_)
-#undef  __OPTIMIZE__
-#define __OPTIMIZE__ 1
-#undef  __pentium__
-#define __pentium__ 1
-#include <byteswap.h>
-#define SHA_HTONL(x) bswap_32(x)
+#elif defined(__GNUC__) && defined(_X86_)
+static __inline__ PRUint32 swap4b(PRUint32 value)
+{
+    __asm__("bswap %0" : "+r" (value));
+    return (value);
+}
+#define SHA_HTONL(x) swap4b(x)
 #define BYTESWAP4(x)  x = SHA_HTONL(x)
 
 #else /* neither windows nor Linux PC */
@@ -136,7 +141,7 @@ swap4b(PRUint32 dwd)
 #define BYTESWAP4(x)  x = SHA_HTONL(x)
 #endif
 
-#if defined(_MSC_VER) && defined(_X86_)
+#if defined(_MSC_VER)
 #pragma intrinsic (_lrotr, _lrotl) 
 #define ROTR32(x,n) _lrotr(x,n)
 #define ROTL32(x,n) _lrotl(x,n)
@@ -522,8 +527,14 @@ void SHA256_Clone(SHA256Context *dest, SHA256Context *src)
 
 /* common #defines for SHA512 and SHA384 */
 #if defined(HAVE_LONG_LONG)
+#if defined(_MSC_VER)
+#pragma intrinsic(_rotr64,_rotl64)
+#define ROTR64(x,n) _rotr64(x,n)
+#define ROTL64(x,n) _rotl64(x,n)
+#else
 #define ROTR64(x,n) ((x >> n) | (x << (64 - n)))
 #define ROTL64(x,n) ((x << n) | (x >> (64 - n)))
+#endif
 
 #define S0(x) (ROTR64(x,28) ^ ROTR64(x,34) ^ ROTR64(x,39))
 #define S1(x) (ROTR64(x,14) ^ ROTR64(x,18) ^ ROTR64(x,41))
@@ -538,12 +549,26 @@ void SHA256_Clone(SHA256Context *dest, SHA256Context *src)
 #define ULLC(hi,lo) 0x ## hi ## lo ## ULL
 #endif
 
+#if defined(_MSC_VER)
+#pragma intrinsic(_byteswap_uint64)
+#define SHA_HTONLL(x) _byteswap_uint64(x)
+
+#elif defined(__GNUC__) && (defined(__x86_64__) || defined(__x86_64))
+static __inline__ PRUint64 swap8b(PRUint64 value)
+{
+    __asm__("bswapq %0" : "+r" (value));
+    return (value);
+}
+#define SHA_HTONLL(x) swap8b(x)
+
+#else
 #define SHA_MASK16 ULLC(0000FFFF,0000FFFF)
 #define SHA_MASK8  ULLC(00FF00FF,00FF00FF)
 #define SHA_HTONLL(x) (t1 = x, \
   t1 = ((t1 & SHA_MASK8 ) <<  8) | ((t1 >>  8) & SHA_MASK8 ), \
   t1 = ((t1 & SHA_MASK16) << 16) | ((t1 >> 16) & SHA_MASK16), \
   (t1 >> 32) | (t1 << 32))
+#endif
 #define BYTESWAP8(x)  x = SHA_HTONLL(x)
 
 #else /* no long long */

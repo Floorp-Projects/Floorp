@@ -39,7 +39,7 @@
  * the terms of any one of the MPL, the GPL or the LGPL.
  *
  * ***** END LICENSE BLOCK ***** */
-/* $Id: sslimpl.h,v 1.65 2008/03/06 20:16:22 wtc%google.com Exp $ */
+/* $Id: sslimpl.h,v 1.66 2008/12/17 06:09:19 nelson%bolyard.com Exp $ */
 
 #ifndef __sslimpl_h_
 #define __sslimpl_h_
@@ -87,6 +87,7 @@ typedef SSLSignType     SSL3SignType;
 #define calg_fortezza	ssl_calg_fortezza /* deprecated, must preserve */
 #define calg_aes	ssl_calg_aes
 #define calg_camellia	ssl_calg_camellia
+#define calg_seed	ssl_calg_seed
 
 #define mac_null	ssl_mac_null
 #define mac_md5 	ssl_mac_md5
@@ -169,7 +170,7 @@ typedef enum { SSLAppOpRead = 0,
 #define SSL3_MASTER_SECRET_LENGTH 48
 
 /* number of wrap mechanisms potentially used to wrap master secrets. */
-#define SSL_NUM_WRAP_MECHS              15
+#define SSL_NUM_WRAP_MECHS              16
 
 /* This makes the cert cache entry exactly 4k. */
 #define SSL_MAX_CACHED_CERT_LEN		4060
@@ -310,9 +311,9 @@ typedef struct {
 } ssl3CipherSuiteCfg;
 
 #ifdef NSS_ENABLE_ECC
-#define ssl_V3_SUITES_IMPLEMENTED 49
+#define ssl_V3_SUITES_IMPLEMENTED 50
 #else
-#define ssl_V3_SUITES_IMPLEMENTED 29
+#define ssl_V3_SUITES_IMPLEMENTED 30
 #endif /* NSS_ENABLE_ECC */
 
 typedef struct sslOptionsStr {
@@ -471,6 +472,7 @@ typedef enum {
     cipher_aes_256,
     cipher_camellia_128,
     cipher_camellia_256,
+    cipher_seed,
     cipher_missing              /* reserved for no such supported cipher */
     /* This enum must match ssl3_cipherName[] in ssl3con.c.  */
 } SSL3BulkCipher;

@@ -141,8 +141,9 @@ pkix_pl_X500Name_ToString(
         PKIX_PL_String **pString,
         void *plContext)
 {
-        PKIX_PL_String *nameString = NULL;
         PKIX_PL_X500Name *name = NULL;
+        char *string = NULL;
+        PKIX_UInt32 strLength = 0;
 
         PKIX_ENTER(X500NAME, "pkix_pl_X500Name_toString");
         PKIX_NULLCHECK_TWO(object, pString);
@@ -151,12 +152,15 @@ pkix_pl_X500Name_ToString(
                     PKIX_OBJECTNOTANX500NAME);
 
         name = (PKIX_PL_X500Name *)object;
+        string = CERT_NameToAscii(&name->nssDN);
+        if (!string){
+                PKIX_ERROR(PKIX_CERTNAMETOASCIIFAILED);
+        }
+        strLength = PL_strlen(string);
 
-        PKIX_CHECK(pkix_pl_X500Name_ToString_Helper
-                    (name, &nameString, plContext),
-                    PKIX_X500NAMETOSTRINGHELPERFAILED);
-
-        *pString = nameString;
+        PKIX_CHECK(PKIX_PL_String_Create
+                    (PKIX_ESCASCII, string, strLength, pString, plContext),
+                    PKIX_STRINGCREATEFAILED);
 
 cleanup:
 
