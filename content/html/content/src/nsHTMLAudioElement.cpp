@@ -90,25 +90,3 @@ nsHTMLAudioElement::nsHTMLAudioElement(nsINodeInfo *aNodeInfo, PRBool aFromParse
 nsHTMLAudioElement::~nsHTMLAudioElement()
 {
 }
-
-nsresult nsHTMLAudioElement::BindToTree(nsIDocument* aDocument, nsIContent* aParent,
-                                        nsIContent* aBindingParent,
-                                        PRBool aCompileEventHandlers)
-{
-  if (mDecoder)
-    mDecoder->ElementAvailable(this);
-
-  return nsHTMLMediaElement::BindToTree(aDocument, 
-                                        aParent, 
-                                        aBindingParent, 
-                                        aCompileEventHandlers);
-}
-
-void nsHTMLAudioElement::UnbindFromTree(PRBool aDeep,
-                                        PRBool aNullParent)
-{
-  if (mDecoder) 
-    mDecoder->ElementUnavailable();
-
-  nsHTMLMediaElement::UnbindFromTree(aDeep, aNullParent);
-}

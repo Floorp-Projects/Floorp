@@ -87,8 +87,9 @@ nsMediaDecoder::~nsMediaDecoder()
   MOZ_COUNT_DTOR(nsMediaDecoder);
 }
 
-PRBool nsMediaDecoder::Init()
+PRBool nsMediaDecoder::Init(nsHTMLMediaElement* aElement)
 {
+  mElement = aElement;
   mVideoUpdateLock = PR_NewLock();
 
   return mVideoUpdateLock != nsnull;
@@ -97,9 +98,8 @@ PRBool nsMediaDecoder::Init()
 void nsMediaDecoder::Shutdown()
 {
   StopProgress();
-  ElementUnavailable();
+  mElement = nsnull;
 }
-
 
 nsresult nsMediaDecoder::InitLogger() 
 {
@@ -115,23 +115,26 @@ void nsMediaDecoder::Invalidate()
     return;
 
   nsIFrame* frame = mElement->GetPrimaryFrame();
-  if (!frame)
-    return;
   
   {
     nsAutoLock lock(mVideoUpdateLock);
     if (mSizeChanged) {
       mElement->UpdateMediaSize(nsIntSize(mRGBWidth, mRGBHeight));
       mSizeChanged = PR_FALSE;
-      nsPresContext* presContext = frame->PresContext();      
-      nsIPresShell *presShell = presContext->PresShell();
-      presShell->FrameNeedsReflow(frame, 
-                                  nsIPresShell::eStyleChange,
-                                  NS_FRAME_IS_DIRTY);
+      if (frame) {
+        nsPresContext* presContext = frame->PresContext();      
+        nsIPresShell *presShell = presContext->PresShell();
+        presShell->FrameNeedsReflow(frame, 
+                                    nsIPresShell::eStyleChange,
+                                    NS_FRAME_IS_DIRTY);
+      }
     }
   }
-  nsRect r(nsPoint(0,0), frame->GetSize());
-  frame->Invalidate(r);
+
+  if (frame) {
+    nsRect r(nsPoint(0,0), frame->GetSize());
+    frame->Invalidate(r);
+  }
 }
 
 static void ProgressCallback(nsITimer* aTimer, void* aClosure)
@@ -253,15 +256,5 @@ void nsMediaDecoder::Paint(gfxContext* aContext, const gfxRect& aRect)
     }
   }   
 #endif
-}
-
-void nsMediaDecoder::ElementAvailable(nsHTMLMediaElement* anElement)
-{
-  mElement = anElement;
-}
-
-void nsMediaDecoder::ElementUnavailable()
-{
-  mElement = nsnull;
 }
 
