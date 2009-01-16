@@ -510,7 +510,7 @@ NS_IMETHODIMP nsLookAndFeel::GetMetric(const nsMetricID aID, PRInt32 & aMetric)
           // users a handful of clock cycles by skipping checks for the
           // 5.x themes (or vice-versa), we can use a single loop for all
           // the different Windows versions.
-          if (hresult == S_OK && GetWindowsVersion() <= VISTA_VERSION) {
+          if (hresult == S_OK && GetWindowsVersion() <= WIN7_VERSION) {
             LPCWSTR defThemes[] = {
               L"luna.msstyles",
               L"royale.msstyles",
