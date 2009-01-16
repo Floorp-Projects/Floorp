@@ -64,15 +64,27 @@ public:
     nsArray(const nsCOMArray_base& aBaseArray) : mArray(aBaseArray)
     { }
     
-    NS_DECL_CYCLE_COLLECTING_ISUPPORTS
-    NS_DECL_CYCLE_COLLECTION_CLASS(nsArray)
+    NS_DECL_ISUPPORTS
     NS_DECL_NSIARRAY
     NS_DECL_NSIMUTABLEARRAY
 
-private:
+protected:
     ~nsArray();
 
     nsCOMArray_base mArray;
 };
+
+class nsArrayCC : public nsArray
+{
+public:
+    nsArrayCC() : nsArray() { }
+    nsArrayCC(const nsCOMArray_base& aBaseArray) : nsArray(aBaseArray)
+    { }
+    
+    NS_DECL_CYCLE_COLLECTING_ISUPPORTS
+    NS_DECL_CYCLE_COLLECTION_CLASS(nsArrayCC)
+};
+
+NS_METHOD nsArrayConstructor(nsISupports *aOuter, const nsIID& aIID, void **aResult);
 
 #endif
