@@ -338,7 +338,7 @@ var Browser = {
     // reset the viewportBounds to ensure a redraw
     this._currentViewportBounds = { width: 0, height: 0};
 
-    this._canvasBrowser.setCurrentBrowser(this.selectedBrowser);
+    this._canvasBrowser.setCurrentBrowser(this.selectedBrowser, firstTab);
     document.getElementById("tabs").selectedItem = tab.content;
 
     if (!firstTab) {
@@ -1046,12 +1046,13 @@ ProgressController.prototype = {
   onLocationChange: function(aWebProgress, aRequest, aLocationURI) {
     // XXX this code is not multiple-tab friendly.
     var location = aLocationURI ? aLocationURI.spec : "";
-    let lastURI = selectedBrowser.lastURI    
+    let selectedBrowser = Browser.selectedBrowser;
+    let lastURI = selectedBrowser.lastURI;
     //don't do anything for about:blank or about:firstrun on first display
     if (!lastURI && (location == "about:blank" || location == "about:firstrun" )) {
-      return
+      return;
     }
-    
+
     this._hostChanged = true;
 
     // This code here does not compare uris exactly when determining
@@ -1062,7 +1063,6 @@ ProgressController.prototype = {
     // <a href="#" onclick="return install();">Install Foo</a>
     //
     // - which fires a onLocationChange message to uri + '#'...
-    let selectedBrowser = Browser.selectedBrowser;
     selectedBrowser.lastURI = aLocationURI;
     if (lastURI) {
       var oldSpec = lastURI.spec;
