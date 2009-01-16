@@ -34,7 +34,6 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-#include "nsSVGLength.h"
 #include "nsIDOMDocument.h"
 #include "nsIDOMSVGElement.h"
 #include "nsIDOMSVGSVGElement.h"
@@ -364,38 +363,21 @@ nsSVGUtils::CoordToFloat(nsPresContext *aPresContext,
                          nsSVGElement *aContent,
                          const nsStyleCoord &aCoord)
 {
-  float val = 0.0f;
-
   switch (aCoord.GetUnit()) {
   case eStyleUnit_Factor:
     // user units
-    val = aCoord.GetFactorValue();
-    break;
+    return aCoord.GetFactorValue();
 
   case eStyleUnit_Coord:
-    val = nsPresContext::AppUnitsToFloatCSSPixels(aCoord.GetCoordValue());
-    break;
+    return nsPresContext::AppUnitsToFloatCSSPixels(aCoord.GetCoordValue());
 
   case eStyleUnit_Percent: {
-      nsCOMPtr<nsISVGLength> length;
-      NS_NewSVGLength(getter_AddRefs(length),
-                      aCoord.GetPercentValue() * 100.0f,
-                      nsIDOMSVGLength::SVG_LENGTHTYPE_PERCENTAGE);
-
-      if (!length)
-        break;
-
-      nsWeakPtr weakCtx =
-        do_GetWeakReference(static_cast<nsGenericElement*>(aContent));
-      length->SetContext(weakCtx, nsSVGUtils::XY);
-      length->GetValue(&val);
-      break;
+      nsSVGSVGElement* ctx = aContent->GetCtx();
+      return ctx ? aCoord.GetPercentValue() * ctx->GetLength(nsSVGUtils::XY) : 0.0f;
     }
   default:
-    break;
+    return 0.0f;
   }
-
-  return val;
 }
 
 nsresult
