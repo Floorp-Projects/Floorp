@@ -61,6 +61,7 @@ class nsHtml5TreeBuilder
     static jArray<PRUnichar,PRInt32> ISINDEX_PROMPT;
     static jArray<nsString*,PRInt32> QUIRKY_PUBLIC_IDS;
     nsHtml5StackNode* MARKER;
+    static nsIAtom* HTML_LOCAL;
     PRInt32 mode;
     PRInt32 originalMode;
     PRInt32 foreignFlag;
@@ -198,6 +199,7 @@ class nsHtml5TreeBuilder
 
 #ifdef nsHtml5TreeBuilder_cpp__
 jArray<nsString*,PRInt32> nsHtml5TreeBuilder::QUIRKY_PUBLIC_IDS = nsnull;
+nsIAtom* nsHtml5TreeBuilder::HTML_LOCAL = nsnull;
 #endif
 
 #define NS_HTML5TREE_BUILDER_OTHER 0

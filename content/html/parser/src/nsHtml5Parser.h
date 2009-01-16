@@ -309,6 +309,7 @@ class nsHtml5Parser : public nsIParser,
   private:
     void ExecuteScript();
     void MaybePostContinueEvent();
+    nsresult PerformCharsetSwitch();
     /**
      * Parse until pending data is exhausted or tree builder suspends
      */
@@ -343,6 +344,7 @@ class nsHtml5Parser : public nsIParser,
     // encoding-related stuff
     PRInt32                      mCharsetSource;
     nsCString                    mCharset;
+    nsCString                    mPendingCharset;
     nsCOMPtr<nsIUnicodeDecoder>  mUnicodeDecoder;
         
     // Portable parser objects    

@@ -62,6 +62,8 @@ REQUIRES	= \
 		uconv \
 		xpconnect \
 		util \
+		webshell \
+		docshell \
 		$(NULL)
 
 CPPSRCS		= \
