@@ -50,7 +50,6 @@
 #include "nsISimpleEnumerator.h"
 #include "nsITimelineService.h"
 #include "nsVoidArray.h"
-#include "nsTArray.h"
 
 #include "plbase64.h"
 #include "prmem.h"
@@ -457,7 +456,7 @@ NS_IMETHODIMP nsLocalFile::Create(PRUint32 type, PRUint32 permissions)
   // Check we are correctly initialized.
   CHECK_mBaseRef();
   
-  nsTArray<nsString> nonExtantNodes;
+  nsStringArray nonExtantNodes;
   CFURLRef pathURLRef = mBaseRef;
   FSRef pathFSRef;
   CFStringRef leafStrRef = nsnull;
@@ -476,7 +475,7 @@ NS_IMETHODIMP nsLocalFile::Create(PRUint32 type, PRUint32 permissions)
       break;
     ::CFStringGetCharacters(leafStrRef, CFRangeMake(0, leafLen), buffer.Elements());
     buffer[leafLen] = '\0';
-    nonExtantNodes.AppendElement(nsString(nsDependentString(buffer.Elements())));
+    nonExtantNodes.AppendString(nsString(nsDependentString(buffer.Elements())));
     ::CFRelease(leafStrRef);
     leafStrRef = nsnull;
     
@@ -494,14 +493,14 @@ NS_IMETHODIMP nsLocalFile::Create(PRUint32 type, PRUint32 permissions)
     ::CFRelease(leafStrRef);
   if (!success)
     return NS_ERROR_FAILURE;
-  PRInt32 nodesToCreate = PRInt32(nonExtantNodes.Length());
+  PRInt32 nodesToCreate = nonExtantNodes.Count();
   if (nodesToCreate == 0)
     return NS_ERROR_FILE_ALREADY_EXISTS;
   
   OSErr err;    
   nsAutoString nextNodeName;
   for (PRInt32 i = nodesToCreate - 1; i > 0; i--) {
-    nextNodeName = nonExtantNodes[i];
+    nonExtantNodes.StringAt(i, nextNodeName);
     err = ::FSCreateDirectoryUnicode(&pathFSRef,
                                       nextNodeName.Length(),
                                       (const UniChar *)nextNodeName.get(),
@@ -510,7 +509,7 @@ NS_IMETHODIMP nsLocalFile::Create(PRUint32 type, PRUint32 permissions)
     if (err != noErr)
       return MacErrorMapper(err);
   }
-  nextNodeName = nonExtantNodes[0];
+  nonExtantNodes.StringAt(0, nextNodeName);
   if (type == NORMAL_FILE_TYPE) {
     err = ::FSCreateFileUnicode(&pathFSRef,
                                 nextNodeName.Length(),

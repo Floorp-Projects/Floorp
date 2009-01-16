@@ -58,7 +58,6 @@
 #include "nsISimpleEnumerator.h"
 #include "nsAutoPtr.h"
 #include "nsIMutableArray.h"
-#include "nsTArray.h"
 
 #include "nsWildCard.h"
 
@@ -76,7 +75,7 @@ public:
   NS_DECL_ISUPPORTS
   NS_DECL_NSIAUTOCOMPLETERESULT
 
-  nsTArray<nsString> mValues;
+  nsStringArray mValues;
   nsAutoString mSearchString;
   PRUint16 mSearchResult;
 };
@@ -116,7 +115,7 @@ nsFileResult::nsFileResult(const nsAString& aSearchString,
       nextFile->GetLeafName(fileName);
       if (StringBeginsWith(fileName, prefix)) {
         fileName.Insert(parent, 0);
-        mValues.AppendElement(fileName);
+        mValues.AppendString(fileName);
         if (mSearchResult == RESULT_NOMATCH && fileName.Equals(mSearchString))
           mSearchResult = RESULT_IGNORED;
         else
@@ -156,13 +155,13 @@ NS_IMETHODIMP nsFileResult::GetErrorDescription(nsAString & aErrorDescription)
 NS_IMETHODIMP nsFileResult::GetMatchCount(PRUint32 *aMatchCount)
 {
   NS_ENSURE_ARG_POINTER(aMatchCount);
-  *aMatchCount = mValues.Length();
+  *aMatchCount = mValues.Count();
   return NS_OK;
 }
 
 NS_IMETHODIMP nsFileResult::GetValueAt(PRInt32 index, nsAString & aValue)
 {
-  aValue = mValues[index];
+  mValues.StringAt(index, aValue);
   return NS_OK;
 }
 

@@ -53,7 +53,6 @@
 #include "nsNetUtil.h"
 #include "nsUnicharUtils.h"
 #include "nsVoidArray.h"
-#include "nsTArray.h"
 #include "nsXPCOMCID.h"
 #include "plstr.h"
 
@@ -100,11 +99,11 @@ protected:
   nsresult EnumerateHandlers(EnumerateHandlersCallback aCallback, void *aClosure);
   nsresult EnumerateValidators(EnumerateValidatorsCallback aCallback, void *aClosure);
 
-  nsTArray<nsString>      mArgs;
-  PRUint32                mState;
-  nsCOMPtr<nsIFile>       mWorkingDir;
-  nsCOMPtr<nsIDOMWindow>  mWindowContext;
-  PRBool                  mPreventDefault;
+  nsStringArray     mArgs;
+  PRUint32          mState;
+  nsCOMPtr<nsIFile> mWorkingDir;
+  nsCOMPtr<nsIDOMWindow> mWindowContext;
+  PRBool            mPreventDefault;
 };
 
 nsCommandLine::nsCommandLine() :
@@ -122,7 +121,7 @@ NS_IMPL_ISUPPORTS2_CI(nsCommandLine,
 NS_IMETHODIMP
 nsCommandLine::GetLength(PRInt32 *aResult)
 {
-  *aResult = PRInt32(mArgs.Length());
+  *aResult = mArgs.Count();
   return NS_OK;
 }
 
@@ -130,9 +129,9 @@ NS_IMETHODIMP
 nsCommandLine::GetArgument(PRInt32 aIndex, nsAString& aResult)
 {
   NS_ENSURE_ARG_MIN(aIndex, 0);
-  NS_ENSURE_ARG_MAX(aIndex, mArgs.Length());
+  NS_ENSURE_ARG_MAX(aIndex, mArgs.Count());
 
-  aResult = mArgs[aIndex];
+  mArgs.StringAt(aIndex, aResult);
   return NS_OK;
 }
 
@@ -141,14 +140,16 @@ nsCommandLine::FindFlag(const nsAString& aFlag, PRBool aCaseSensitive, PRInt32 *
 {
   NS_ENSURE_ARG(!aFlag.IsEmpty());
 
+  PRInt32 f;
+
   nsDefaultStringComparator caseCmp;
   nsCaseInsensitiveStringComparator caseICmp;
   nsStringComparator& c = aCaseSensitive ?
     static_cast<nsStringComparator&>(caseCmp) :
     static_cast<nsStringComparator&>(caseICmp);
 
-  for (PRUint32 f = 0; f < mArgs.Length(); f++) {
-    const nsString &arg = mArgs[f];
+  for (f = 0; f < mArgs.Count(); ++f) {
+    const nsString &arg = *mArgs[f];
 
     if (arg.Length() >= 2 && arg.First() == PRUnichar('-')) {
       if (aFlag.Equals(Substring(arg, 1), c)) {
@@ -166,10 +167,10 @@ NS_IMETHODIMP
 nsCommandLine::RemoveArguments(PRInt32 aStart, PRInt32 aEnd)
 {
   NS_ENSURE_ARG_MIN(aStart, 0);
-  NS_ENSURE_ARG_MAX(aEnd, mArgs.Length() - 1);
+  NS_ENSURE_ARG_MAX(aEnd, mArgs.Count() - 1);
 
   for (PRInt32 i = aEnd; i >= aStart; --i) {
-    mArgs.RemoveElementAt(i);
+    mArgs.RemoveStringAt(i);
   }
 
   return NS_OK;
@@ -211,17 +212,17 @@ nsCommandLine::HandleFlagWithParam(const nsAString& aFlag, PRBool aCaseSensitive
     return NS_OK;
   }
 
-  if (found == PRInt32(mArgs.Length()) - 1) {
+  if (found == mArgs.Count() - 1) {
     return NS_ERROR_INVALID_ARG;
   }
 
   ++found;
 
-  if (mArgs[found].First() == '-') {
+  if (mArgs[found]->First() == '-') {
     return NS_ERROR_INVALID_ARG;
   }
 
-  aResult = mArgs[found];
+  mArgs.StringAt(found, aResult);
   RemoveArguments(found - 1, found);
 
   return NS_OK;
@@ -484,7 +485,7 @@ nsCommandLine::appendArg(const char* arg)
   NS_CopyNativeToUnicode(nsDependentCString(arg), warg);
 #endif
 
-  mArgs.AppendElement(warg);
+  mArgs.AppendString(warg);
 }
 
 void

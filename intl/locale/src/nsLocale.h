@@ -53,9 +53,10 @@
 #define nsLocale_h__
 
 #include "nsString.h"
-#include "nsTArray.h"
 #include "nsILocale.h"
 #include "plhash.h"
+
+class nsStringArray;
 
 class nsLocale : public nsILocale {
 	friend class nsLocaleService;
@@ -63,7 +64,7 @@ class nsLocale : public nsILocale {
 
 public:
 	nsLocale(void);
-	nsLocale(const nsTArray<nsString>& categoryList, const nsTArray<nsString>& valueList);
+	nsLocale(const nsStringArray& categoryList, const nsStringArray& valueList);
 	nsLocale(nsLocale* other);
 	virtual ~nsLocale(void);
 	

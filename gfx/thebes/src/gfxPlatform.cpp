@@ -60,7 +60,6 @@
 
 #include "nsIPref.h"
 #include "nsServiceManagerUtils.h"
-#include "nsTArray.h"
 
 #include "nsWeakReference.h"
 
@@ -305,7 +304,7 @@ gfxPlatform::OptimizeImage(gfxImageSurface *aSurface,
 nsresult
 gfxPlatform::GetFontList(const nsACString& aLangGroup,
                          const nsACString& aGenericFamily,
-                         nsTArray<nsString>& aListOfFonts)
+                         nsStringArray& aListOfFonts)
 {
     return NS_ERROR_NOT_IMPLEMENTED;
 }
