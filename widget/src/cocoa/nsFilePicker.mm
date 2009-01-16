@@ -444,7 +444,7 @@ nsFilePicker::GenerateFilterList()
         continue;
       }
       
-      if (filterWide && filterWide.Length() > 0)
+      if (filterWide.Length() > 0)
         [giantFilterString appendString:[NSString stringWithCharacters:filterWide.get() length:filterWide.Length()]];
     }
     
@@ -564,7 +564,7 @@ NS_IMETHODIMP
 nsFilePicker::AppendFilter(const nsAString& aTitle, const nsAString& aFilter)
 {
   mFilters.AppendElement(aFilter);
-  mTitles.AppendElemet(aTitle);
+  mTitles.AppendElement(aTitle);
   
   return NS_OK;
 }
