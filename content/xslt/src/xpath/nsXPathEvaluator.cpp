@@ -170,14 +170,14 @@ nsXPathEvaluator::SetDocument(nsIDOMDocument* aDocument)
 NS_IMETHODIMP
 nsXPathEvaluator::CreateExpression(const nsAString & aExpression,
                                    nsIDOMXPathNSResolver *aResolver,
-                                   nsStringArray *aNamespaceURIs,
+                                   nsTArray<nsString> *aNamespaceURIs,
                                    nsCStringArray *aContractIDs,
                                    nsCOMArray<nsISupports> *aState,
                                    nsIDOMXPathExpression **aResult)
 {
     nsTArray<PRInt32> namespaceIDs;
     if (aNamespaceURIs) {
-        PRInt32 count = aNamespaceURIs->Count();
+        PRUint32 count = aNamespaceURIs->Length();
 
         if (!aContractIDs || aContractIDs->Count() != count) {
             return NS_ERROR_FAILURE;
@@ -187,13 +187,13 @@ nsXPathEvaluator::CreateExpression(const nsAString & aExpression,
             return NS_ERROR_OUT_OF_MEMORY;
         }
 
-        PRInt32 i;
+        PRUint32 i;
         for (i = 0; i < count; ++i) {
             if (aContractIDs->CStringAt(i)->IsEmpty()) {
                 return NS_ERROR_FAILURE;
             }
 
-            nsContentUtils::NameSpaceManager()->RegisterNameSpace(*aNamespaceURIs->StringAt(i), namespaceIDs[i]);
+            nsContentUtils::NameSpaceManager()->RegisterNameSpace(aNamespaceURIs->ElementAt(i), namespaceIDs[i]);
         }
     }
 

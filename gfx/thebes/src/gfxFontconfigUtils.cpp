@@ -47,6 +47,7 @@
 #include "nsIPrefService.h"
 #include "nsServiceManagerUtils.h"
 #include "nsILanguageAtomService.h"
+#include "nsTArray.h"
 
 #include "nsIAtom.h"
 #include "nsCRT.h"
@@ -273,7 +274,7 @@ gfxFontconfigUtils::gfxFontconfigUtils()
 nsresult
 gfxFontconfigUtils::GetFontList(const nsACString& aLangGroup,
                                 const nsACString& aGenericFamily,
-                                nsStringArray& aListOfFonts)
+                                nsTArray<nsString>& aListOfFonts)
 {
     aListOfFonts.Clear();
 
@@ -283,7 +284,7 @@ gfxFontconfigUtils::GetFontList(const nsACString& aLangGroup,
         return rv;
 
     for (PRInt32 i = 0; i < fonts.Count(); ++i) {
-        aListOfFonts.AppendString(NS_ConvertUTF8toUTF16(*fonts.CStringAt(i)));
+        aListOfFonts.AppendElement(NS_ConvertUTF8toUTF16(*fonts.CStringAt(i)));
     }
 
     aListOfFonts.Sort();
@@ -310,11 +311,11 @@ gfxFontconfigUtils::GetFontList(const nsACString& aLangGroup,
     // gFontsDialog.readFontSelection() if the preference-selected font is not
     // available, so put system configured defaults first.
     if (monospace)
-        aListOfFonts.InsertStringAt(NS_LITERAL_STRING("monospace"), 0);
+        aListOfFonts.InsertElementAt(0, NS_LITERAL_STRING("monospace"));
     if (sansSerif)
-        aListOfFonts.InsertStringAt(NS_LITERAL_STRING("sans-serif"), 0);
+        aListOfFonts.InsertElementAt(0, NS_LITERAL_STRING("sans-serif"));
     if (serif)
-        aListOfFonts.InsertStringAt(NS_LITERAL_STRING("serif"), 0);
+        aListOfFonts.InsertElementAt(0, NS_LITERAL_STRING("serif"));
 
     return NS_OK;
 }

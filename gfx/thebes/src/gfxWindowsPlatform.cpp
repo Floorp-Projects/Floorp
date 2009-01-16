@@ -47,6 +47,7 @@
 
 #include "nsIPref.h"
 #include "nsServiceManagerUtils.h"
+#include "nsTArray.h"
 
 #include "nsIWindowsRegKey.h"
 #include "nsILocalFile.h"
@@ -150,11 +151,11 @@ gfxWindowsPlatform::FontEnumProc(const ENUMLOGFONTEXW *lpelfe,
 // general cmap reading routines moved to gfxFontUtils.cpp
 
 struct FontListData {
-    FontListData(const nsACString& aLangGroup, const nsACString& aGenericFamily, nsStringArray& aListOfFonts) :
+    FontListData(const nsACString& aLangGroup, const nsACString& aGenericFamily, nsTArray<nsString>& aListOfFonts) :
         mLangGroup(aLangGroup), mGenericFamily(aGenericFamily), mStringArray(aListOfFonts) {}
     const nsACString& mLangGroup;
     const nsACString& mGenericFamily;
-    nsStringArray& mStringArray;
+    nsTArray<nsString>& mStringArray;
 };
 
 PLDHashOperator
@@ -185,7 +186,7 @@ gfxWindowsPlatform::HashEnumFunc(nsStringHashKey::KeyType aKey,
 nsresult
 gfxWindowsPlatform::GetFontList(const nsACString& aLangGroup,
                                 const nsACString& aGenericFamily,
-                                nsStringArray& aListOfFonts)
+                                nsTArray<nsString>& aListOfFonts)
 {
     FontListData data(aLangGroup, aGenericFamily, aListOfFonts);
 
@@ -270,7 +271,7 @@ gfxWindowsPlatform::UpdateFontList()
         if (!actualFontName.IsEmpty() && mFonts.Get(actualFontName, &ff))
             mFontSubstitutes.Put(substituteName, ff);
         else
-            mNonExistingFonts.AppendString(substituteName);
+            mNonExistingFonts.AppendElement(substituteName);
     }
 
     // initialize ranges of characters for which system-wide font search should be skipped
@@ -374,7 +375,7 @@ gfxWindowsPlatform::ResolveFontName(const nsAString& aFontName,
         return NS_OK;
     }
 
-    if (mNonExistingFonts.IndexOf(keyName) >= 0) {
+    if (mNonExistingFonts.Contains(keyName)) {
         aAborted = PR_FALSE;
         return NS_OK;
     }
@@ -395,7 +396,7 @@ gfxWindowsPlatform::ResolveFontName(const nsAString& aFontName,
                                     (FONTENUMPROCW)gfxWindowsPlatform::FontResolveProc,
                                     (LPARAM)&data, 0);
     if (data.mFoundCount == 0)
-        mNonExistingFonts.AppendString(keyName);
+        mNonExistingFonts.AppendElement(keyName);
     ::ReleaseDC(nsnull, dc);
 
     return NS_OK;
