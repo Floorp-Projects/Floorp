@@ -42,7 +42,10 @@ Tester.prototype = {
   },
 
   start: function Tester_start() {
-    this.execTest();
+    if (this.tests.length)
+      this.execTest();
+    else
+      this.finish();
   },
 
   finish: function Tester_finish() {
