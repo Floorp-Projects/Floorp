@@ -43,6 +43,9 @@
 #include "nsNetUtil.h"
 #include "nsIStyleSheetLinkingElement.h"
 #include "nsICharsetConverterManager.h"
+#include "nsICharsetAlias.h"
+#include "nsIWebShellServices.h"
+#include "nsIDocShell.h"
 
 #include "nsHtml5DocumentMode.h"
 #include "nsHtml5Tokenizer.h"
@@ -51,6 +54,7 @@
 
 #include "nsHtml5Parser.h"
 
+static NS_DEFINE_CID(kCharsetAliasCID, NS_CHARSETALIAS_CID);
 static NS_DEFINE_CID(kHtml5ParserCID, NS_HTML5_PARSER_CID);
 
 //-------------- Begin ParseContinue Event Definition ------------------------
@@ -501,8 +505,10 @@ nsHtml5Parser::OnStopRequest(nsIRequest* aRequest, nsISupports* aContext,
 {
   NS_ASSERTION((mRequest == aRequest), "Got Stop on wrong stream.");
   nsresult rv = NS_OK;
-
-  mLifeCycle = STREAM_ENDING;
+  
+  if (mLifeCycle < STREAM_ENDING) {
+    mLifeCycle = STREAM_ENDING;
+  }
 
 //  if (eOnStart == mStreamListenerState) {
     // If you're here, then OnDataAvailable() never got called.  Prior
@@ -586,7 +592,42 @@ nsHtml5Parser::OnDataAvailable(nsIRequest* aRequest,
 void
 nsHtml5Parser::internalEncodingDeclaration(nsString* aEncoding)
 {
-  // XXX implement
+  if (mCharsetSource >= kCharsetFromMetaTag) { // this threshold corresponds to "confident" in the HTML5 spec
+    return;
+  }
+  nsresult res = NS_OK;
+  nsCOMPtr<nsICharsetAlias> calias(do_GetService(kCharsetAliasCID, &res));
+  if (NS_FAILED(res)) {
+    return;
+  }
+
+  nsCAutoString newEncoding;
+  CopyUTF16toUTF8(*aEncoding, newEncoding);
+  PRBool eq;
+  res = calias->Equals(newEncoding, mCharset, &eq);
+  if (NS_FAILED(res)) {
+    return;
+  }
+  if (eq) {
+    mCharsetSource = kCharsetFromMetaTag; // just becoming confident
+    return;
+  }
+  // XXX check HTML5 non-IANA aliases here
+
+  // The encodings are different. We want to reparse.
+  nsCOMPtr<nsIHttpChannel> httpChannel(do_QueryInterface(mRequest,&res));
+    if (NS_SUCCEEDED(res)) {
+      nsCAutoString method;
+      httpChannel->GetRequestMethod(method);
+      if (!method.EqualsLiteral("GET")) {
+        return; // Can't reparse. 
+        // XXX does Necko have a way to renavigate POST, etc. without hitting 
+        // the network?
+    }
+  }
+  // we are still want to reparse
+  mNeedsCharsetSwitch = PR_TRUE;
+  mPendingCharset.Assign(newEncoding);
 }
 
 // DocumentModeHandler
@@ -764,8 +805,7 @@ void
 nsHtml5Parser::ParseUntilSuspend()
 {
   NS_PRECONDITION((!mNeedsCharsetSwitch), "ParseUntilSuspend called when charset switch needed.");
-//  NS_PRECONDITION((!mTerminated), "ParseUntilSuspend called when parser had been terminated.");
-  if (mBlocked) {
+  if (mBlocked || (mLifeCycle == TERMINATED)) {
     return;
   }
   
@@ -796,6 +836,9 @@ nsHtml5Parser::ParseUntilSuspend()
         continue;
       }
     }
+    if (mBlocked || (mLifeCycle == TERMINATED)) {
+      return;
+    }
     // now we have a non-empty buffer
     mFirstBuffer->adjust(mLastWasCR);
     mLastWasCR = PR_FALSE;
@@ -805,8 +848,12 @@ nsHtml5Parser::ParseUntilSuspend()
         ExecuteScript();
       }
       if (mNeedsCharsetSwitch) {
-        // XXX setup immediate reparse
-        return;
+        if (PerformCharsetSwitch() == NS_ERROR_HTMLPARSER_STOPPARSING) {
+          return;        
+        } else {
+          // let's continue if we failed to restart
+          mNeedsCharsetSwitch = PR_FALSE;
+        }
       }
       if (mBlocked) {
         NS_ASSERTION((!mFragmentMode), "Script blocked the parser but we are in the fragment mode.");
@@ -824,6 +871,35 @@ nsHtml5Parser::ParseUntilSuspend()
       continue;
     }
   }
+}
+
+nsresult
+nsHtml5Parser::PerformCharsetSwitch()
+{
+  // this code comes from nsObserverBase.cpp
+  nsresult rv = NS_OK;
+  nsCOMPtr<nsIWebShellServices> wss = do_QueryInterface(mDocShell);
+  if (!wss) {
+    return NS_ERROR_HTMLPARSER_CONTINUE;
+  }
+#ifndef DONT_INFORM_WEBSHELL
+  // ask the webshellservice to load the URL
+  if (NS_FAILED( rv = wss->SetRendering(PR_FALSE) )) {
+    // XXX nisheeth, uncomment the following two line to see the reent problem
+  } else if (NS_FAILED(rv = wss->StopDocumentLoad())) {
+    rv = wss->SetRendering(PR_TRUE); // turn on the rendering so at least we will see something.
+  } else if (NS_FAILED(rv = wss->ReloadDocument(mPendingCharset.get(), kCharsetFromMetaTag))) {
+    rv = wss->SetRendering(PR_TRUE); // turn on the rendering so at least we will see something.
+  } else {
+    rv = NS_ERROR_HTMLPARSER_STOPPARSING; // We're reloading a new document...stop loading the current.
+  }
+#endif
+
+   //if our reload request is not accepted, we should tell parser to go on
+  if (rv != NS_ERROR_HTMLPARSER_STOPPARSING) 
+    rv = NS_ERROR_HTMLPARSER_CONTINUE;
+
+  return rv;
 }
 
 /**

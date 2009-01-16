@@ -58,7 +58,9 @@ jArray<PRUnichar,PRInt32> nsHtml5TreeBuilder::ISINDEX_PROMPT = jArray<PRUnichar,
 nsHtml5TreeBuilder::nsHtml5TreeBuilder(nsHtml5Parser* aParser)
   : MARKER(new nsHtml5StackNode(0, nsHtml5ElementName::NULL_ELEMENT_NAME, nsnull)),
     fragment(PR_FALSE),
-    mParser(aParser)
+    mParser(aParser),
+    formPointer(nsnull),
+    headPointer(nsnull)
 {
 }
 
