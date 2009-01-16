@@ -81,14 +81,11 @@ nsSVGForeignObjectFrame::nsSVGForeignObjectFrame(nsStyleContext* aContext)
 }
 
 //----------------------------------------------------------------------
-// nsISupports methods
-
-NS_INTERFACE_MAP_BEGIN(nsSVGForeignObjectFrame)
-  NS_INTERFACE_MAP_ENTRY(nsISVGChildFrame)
-NS_INTERFACE_MAP_END_INHERITING(nsSVGForeignObjectFrameBase)
-
-//----------------------------------------------------------------------
 // nsIFrame methods
+
+NS_QUERYFRAME_HEAD(nsSVGForeignObjectFrame)
+  NS_QUERYFRAME_ENTRY(nsISVGChildFrame)
+NS_QUERYFRAME_TAIL_INHERITING(nsSVGForeignObjectFrameBase)
 
 NS_IMETHODIMP
 nsSVGForeignObjectFrame::Init(nsIContent* aContent,
@@ -690,8 +687,7 @@ nsSVGForeignObjectFrame::InvalidateDirtyRect(nsSVGOuterSVGFrame* aOuter,
 
   nsPresContext* presContext = PresContext();
   nsCOMPtr<nsIDOMSVGMatrix> tm = GetTMIncludingOffset();
-  nsIntRect r = aRect;
-  r.ScaleRoundOut(1.0f / presContext->AppUnitsPerDevPixel());
+  nsIntRect r = nsRect::ToOutsidePixels(aRect, presContext->AppUnitsPerDevPixel());
   float x = r.x, y = r.y, w = r.width, h = r.height;
   nsRect rect = GetTransformedRegion(x, y, w, h, tm, presContext);
 

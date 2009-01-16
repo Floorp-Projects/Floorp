@@ -82,7 +82,7 @@ protected:
   // nsSVGElement overrides
   virtual PRBool IsEventName(nsIAtom* aName);
 
-  already_AddRefed<nsISVGTextContentMetrics> GetTextContentMetrics();
+  nsISVGTextContentMetrics* GetTextContentMetrics();
 
   // nsIDOMSVGTextPositioning properties:
   nsCOMPtr<nsIDOMSVGAnimatedLengthList> mX;
@@ -253,7 +253,7 @@ NS_IMETHODIMP nsSVGTSpanElement::GetLengthAdjust(nsIDOMSVGAnimatedEnumeration * 
 /* long getNumberOfChars (); */
 NS_IMETHODIMP nsSVGTSpanElement::GetNumberOfChars(PRInt32 *_retval)
 {
-  nsCOMPtr<nsISVGTextContentMetrics> metrics = GetTextContentMetrics();
+  nsISVGTextContentMetrics *metrics = GetTextContentMetrics();
 
   if (metrics)
     return metrics->GetNumberOfChars(_retval);
@@ -265,7 +265,7 @@ NS_IMETHODIMP nsSVGTSpanElement::GetNumberOfChars(PRInt32 *_retval)
 /* float getComputedTextLength (); */
 NS_IMETHODIMP nsSVGTSpanElement::GetComputedTextLength(float *_retval)
 {
-  nsCOMPtr<nsISVGTextContentMetrics> metrics = GetTextContentMetrics();
+  nsISVGTextContentMetrics *metrics = GetTextContentMetrics();
 
   if (metrics)
     return metrics->GetComputedTextLength(_retval);
@@ -277,7 +277,7 @@ NS_IMETHODIMP nsSVGTSpanElement::GetComputedTextLength(float *_retval)
 /* float getSubStringLength (in unsigned long charnum, in unsigned long nchars); */
 NS_IMETHODIMP nsSVGTSpanElement::GetSubStringLength(PRUint32 charnum, PRUint32 nchars, float *_retval)
 {
-  nsCOMPtr<nsISVGTextContentMetrics> metrics = GetTextContentMetrics();
+  nsISVGTextContentMetrics *metrics = GetTextContentMetrics();
 
   if (metrics)
     return metrics->GetSubStringLength(charnum, nchars, _retval);
@@ -290,7 +290,7 @@ NS_IMETHODIMP nsSVGTSpanElement::GetSubStringLength(PRUint32 charnum, PRUint32 n
 NS_IMETHODIMP nsSVGTSpanElement::GetStartPositionOfChar(PRUint32 charnum, nsIDOMSVGPoint **_retval)
 {
   *_retval = nsnull;
-  nsCOMPtr<nsISVGTextContentMetrics> metrics = GetTextContentMetrics();
+  nsISVGTextContentMetrics *metrics = GetTextContentMetrics();
 
   if (!metrics) return NS_ERROR_FAILURE;
 
@@ -301,7 +301,7 @@ NS_IMETHODIMP nsSVGTSpanElement::GetStartPositionOfChar(PRUint32 charnum, nsIDOM
 NS_IMETHODIMP nsSVGTSpanElement::GetEndPositionOfChar(PRUint32 charnum, nsIDOMSVGPoint **_retval)
 {
   *_retval = nsnull;
-  nsCOMPtr<nsISVGTextContentMetrics> metrics = GetTextContentMetrics();
+  nsISVGTextContentMetrics *metrics = GetTextContentMetrics();
 
   if (!metrics) return NS_ERROR_FAILURE;
 
@@ -312,7 +312,7 @@ NS_IMETHODIMP nsSVGTSpanElement::GetEndPositionOfChar(PRUint32 charnum, nsIDOMSV
 NS_IMETHODIMP nsSVGTSpanElement::GetExtentOfChar(PRUint32 charnum, nsIDOMSVGRect **_retval)
 {
   *_retval = nsnull;
-  nsCOMPtr<nsISVGTextContentMetrics> metrics = GetTextContentMetrics();
+  nsISVGTextContentMetrics *metrics = GetTextContentMetrics();
 
   if (!metrics) return NS_ERROR_FAILURE;
 
@@ -324,7 +324,7 @@ NS_IMETHODIMP nsSVGTSpanElement::GetRotationOfChar(PRUint32 charnum, float *_ret
 {
   *_retval = 0.0;
 
-  nsCOMPtr<nsISVGTextContentMetrics> metrics = GetTextContentMetrics();
+  nsISVGTextContentMetrics *metrics = GetTextContentMetrics();
 
   if (!metrics) return NS_ERROR_FAILURE;
 
@@ -339,7 +339,7 @@ NS_IMETHODIMP nsSVGTSpanElement::GetCharNumAtPosition(nsIDOMSVGPoint *point,
   if (!point)
     return NS_ERROR_DOM_SVG_WRONG_TYPE_ERR;
 
-  nsCOMPtr<nsISVGTextContentMetrics> metrics = GetTextContentMetrics();
+  nsISVGTextContentMetrics *metrics = GetTextContentMetrics();
 
   if (metrics)
     return metrics->GetCharNumAtPosition(point, _retval);
@@ -385,7 +385,7 @@ nsSVGTSpanElement::IsEventName(nsIAtom* aName)
 //----------------------------------------------------------------------
 // implementation helpers:
 
-already_AddRefed<nsISVGTextContentMetrics>
+nsISVGTextContentMetrics*
 nsSVGTSpanElement::GetTextContentMetrics()
 {
   nsIFrame* frame = GetPrimaryFrame(Flush_Layout);
@@ -394,7 +394,6 @@ nsSVGTSpanElement::GetTextContentMetrics()
     return nsnull;
   }
   
-  nsISVGTextContentMetrics* metrics;
-  CallQueryInterface(frame, &metrics);
+  nsISVGTextContentMetrics* metrics = do_QueryFrame(frame);
   return metrics;
 }

@@ -75,6 +75,7 @@
             <![CDATA[ ({
                 debug : false,
                 video : null,
+                videocontrols : null,
                 controlBar : null,
                 playButton : null,
                 muteButton : null,
@@ -123,8 +124,12 @@
                     var isMouseOver = (event.type == "mouseover");
 
                     // Ignore events caused by transitions between child nodes.
-                    if (this.isChildNode(event.target) &&
-                        this.isChildNode(event.relatedTarget))
+                    // Note that the videocontrols element is the same
+                    // size as the *content area* of the video element,
+                    // but this is not the same as the video element's
+                    // border area if the video has border or padding.
+                    if (this.isControlsOrDescendant(event.target) &&
+                        this.isControlsOrDescendant(event.relatedTarget))
                         return;
 
                     // Don't show controls when they're disabled, but do allow a
@@ -202,13 +207,13 @@
                     // controlling volume.
                 },
 
-                isChildNode : function (node) {
+                isControlsOrDescendant : function (node) {
                     while (node) {
-                        if (node == this.video)
-                            break;
+                        if (node == this.videocontrols)
+                            return true;
                         node = node.parentNode;
                     }
-                    return (node == this.video);
+                    return false;
                 },
 
                 log : function (msg) {
@@ -223,6 +228,7 @@
             <![CDATA[
             var video = this.parentNode;
             this.Utils.video = video;
+            this.Utils.videocontrols = this;
 
             this.Utils.controlBar = document.getAnonymousElementByAttribute(this, "class", "controlBar");
             this.Utils.playButton = document.getAnonymousElementByAttribute(this, "class", "playButton");

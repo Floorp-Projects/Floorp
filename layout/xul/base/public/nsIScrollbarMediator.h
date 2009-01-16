@@ -40,28 +40,24 @@
 #ifndef nsIScrollbarMediator_h___
 #define nsIScrollbarMediator_h___
 
-// {b589027f-271b-4c68-91df-04f139885e9a}
-#define NS_ISCROLLBARMEDIATOR_IID \
-{ 0xb589027f, 0x271b, 0x4c68, { 0x91, 0xdf, 0x04, 0xf1, 0x39, 0x88, 0x5e, 0x9a } }
+#include "nsQueryFrame.h"
 
-static NS_DEFINE_IID(kIScrollbarMediatorIID, NS_ISCROLLBARMEDIATOR_IID);
+class nsIScrollbarFrame;
 
-class nsIScrollbarMediator : public nsISupports {
-
+class nsIScrollbarMediator
+{
 public:
-  NS_DECLARE_STATIC_IID_ACCESSOR(NS_ISCROLLBARMEDIATOR_IID)
+  NS_DECLARE_FRAME_ACCESSOR(nsIScrollbarMediator)
 
-  // The nsISupports aScrollbar argument below denotes the
+  // The nsIFrame aScrollbar argument below denotes the
   // scrollbar that's firing the notification. It should be
   // where the same object as where nsIScrollbarFrame is implemented
 
-  NS_IMETHOD PositionChanged(nsISupports* aScrollbar, PRInt32 aOldIndex, PRInt32& aNewIndex) = 0;
-  NS_IMETHOD ScrollbarButtonPressed(nsISupports* aScrollbar, PRInt32 aOldIndex, PRInt32 aNewIndex) = 0;
+  NS_IMETHOD PositionChanged(nsIScrollbarFrame* aScrollbar, PRInt32 aOldIndex, PRInt32& aNewIndex) = 0;
+  NS_IMETHOD ScrollbarButtonPressed(nsIScrollbarFrame* aScrollbar, PRInt32 aOldIndex, PRInt32 aNewIndex) = 0;
 
-  NS_IMETHOD VisibilityChanged(nsISupports* aScrollbar, PRBool aVisible) = 0;
+  NS_IMETHOD VisibilityChanged(PRBool aVisible) = 0;
 };
-
-NS_DEFINE_STATIC_IID_ACCESSOR(nsIScrollbarMediator, NS_ISCROLLBARMEDIATOR_IID)
 
 #endif
 

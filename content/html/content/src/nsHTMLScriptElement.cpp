@@ -432,9 +432,7 @@ nsHTMLScriptElement::Clone(nsINodeInfo *aNodeInfo, nsINode **aResult) const
   nsresult rv = CopyInnerTo(it);
   NS_ENSURE_SUCCESS(rv, rv);
 
-  // The clone should be marked evaluated if we are.  It should also be marked
-  // evaluated if we're evaluating, to handle the case when this script node's
-  // script clones the node.
+  // The clone should be marked evaluated if we are.
   it->mIsEvaluated = mIsEvaluated;
   it->mLineNumber = mLineNumber;
   it->mMalformed = mMalformed;

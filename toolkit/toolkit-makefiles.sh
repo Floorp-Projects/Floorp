@@ -999,6 +999,13 @@ if [ "$MOZ_SVG" ]; then
   "
 fi
 
+# smil
+if [ "$MOZ_SMIL" ]; then
+    MAKEFILES_content="$MAKEFILES_content
+	content/smil/Makefile
+"
+fi
+
 if [ "$MOZ_XTF" ]; then
   add_makefiles "
     content/xtf/Makefile

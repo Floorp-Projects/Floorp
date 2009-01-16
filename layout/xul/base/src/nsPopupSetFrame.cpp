@@ -180,7 +180,7 @@ nsPopupSetFrame::DoLayout(nsBoxLayoutState& aState)
 
       nsRect bounds(popupChild->GetRect());
 
-      nsCOMPtr<nsIScrollableFrame> scrollframe = do_QueryInterface(child);
+      nsIScrollableFrame *scrollframe = do_QueryFrame(child);
       if (scrollframe &&
           scrollframe->GetScrollbarStyles().mVertical == NS_STYLE_OVERFLOW_AUTO) {
         // if our pref height
@@ -365,8 +365,8 @@ nsPopupSetFrame::List(FILE* out, PRInt32 aIndent) const
         NS_ASSERTION(kid->GetParent() == (nsIFrame*)this, "bad parent frame pointer");
 
         // Have the child frame list
-        nsIFrameDebug*  frameDebug;
-        if (NS_SUCCEEDED(kid->QueryInterface(NS_GET_IID(nsIFrameDebug), (void**)&frameDebug))) {
+        nsIFrameDebug*  frameDebug = do_QueryFrame(kid);
+        if (frameDebug) {
           frameDebug->List(out, aIndent + 1);
         }
         kid = kid->GetNextSibling();
@@ -392,9 +392,8 @@ nsPopupSetFrame::List(FILE* out, PRInt32 aIndent) const
     fputs(" <\n", out);
     ++aIndent;
     for (nsPopupFrameList* l = mPopupList; l; l = l->mNextPopup) {
-      nsIFrameDebug* frameDebug;
-      if (l->mPopupFrame &&
-          NS_SUCCEEDED(CallQueryInterface(l->mPopupFrame, &frameDebug))) {
+      nsIFrameDebug* frameDebug = do_QueryFrame(l->mPopupFrame);
+      if (frameDebug) {
         frameDebug->List(out, aIndent);
       }
     }

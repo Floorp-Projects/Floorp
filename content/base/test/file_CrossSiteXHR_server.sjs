@@ -1,3 +1,8 @@
+const CC = Components.Constructor;
+const BinaryInputStream = CC("@mozilla.org/binaryinputstream;1",
+                             "nsIBinaryInputStream",
+                             "setInputStream");
+
 function handleRequest(request, response)
 {
   var query = {};
@@ -8,12 +13,28 @@ function handleRequest(request, response)
 
   var isPreflight = request.method == "OPTIONS";
 
+  var bodyStream = new BinaryInputStream(request.bodyInputStream);
+  var bodyBytes = [];
+  while ((bodyAvail = bodyStream.available()) > 0)
+    Array.prototype.push.apply(bodyBytes, bodyStream.readByteArray(bodyAvail));
+
+  var body = decodeURIComponent(
+    escape(String.fromCharCode.apply(null, bodyBytes)));
+
   // Check that request was correct
+
+  if (!isPreflight && query.body && body != query.body) {
+    sendHttp500(response, "Wrong body. Expected " + query.body + " got " +
+      body);
+    return;
+  }
 
   if (!isPreflight && "headers" in query) {
     headers = eval(query.headers);
     for(headerName in headers) {
-      if (request.getHeader(headerName) != headers[headerName]) {
+      // Content-Type is changed if there was a body 
+      if (!(headerName == "Content-Type" && body) &&
+          request.getHeader(headerName) != headers[headerName]) {
         sendHttp500(response,
           "Header " + headerName + " had wrong value. Expected " +
           headers[headerName] + " got " + request.getHeader(headerName));

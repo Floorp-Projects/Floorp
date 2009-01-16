@@ -16,10 +16,11 @@
 #
 # The Initial Developer of the Original Code is
 # Mozilla Foundation.
-# Portions created by the Initial Developer are Copyright (C) 2007
+# Portions created by the Initial Developer are Copyright (C) 2008
 # the Initial Developer. All Rights Reserved.
 #
 # Contributor(s):
+#   Heather Arthur <harthur@cmu.edu>
 #
 # Alternatively, the contents of this file may be used under the terms of
 # either of the GNU General Public License Version 2 or later (the "GPL"),
@@ -44,12 +45,33 @@ relativesrcdir	= dom/tests/mochitest/ajax/prototype/test/unit/fixtures
 include $(DEPTH)/config/autoconf.mk
 include $(topsrcdir)/config/rules.mk
 
-_TEST_FILES	= \
-		content.html \
-		empty.js \
-		hello.js \
-		logo.gif \
-		$(NULL)
+_TEST_FILES= \
+	ajax.html \
+	ajax.js \
+	array.html \
+	base.html \
+	base.js \
+	content.html \
+	data.json \
+	dom.css \
+	dom.html \
+	dom.js \
+	element_mixins.html \
+	element_mixins.js \
+	empty.html \
+	empty.js \
+	enumerable.html \
+	enumerable.js \
+	event.html \
+	form.html \
+	hash.js \
+	hello.js \
+	logo.gif \
+	position.html \
+	selector.html \
+	string.js \
+	unittest.html \
+	$(NULL)
 
 libs::	$(_TEST_FILES)
 	$(INSTALL) $(foreach f,$^,"$f") $(DEPTH)/_tests/testing/mochitest/tests/$(relativesrcdir)

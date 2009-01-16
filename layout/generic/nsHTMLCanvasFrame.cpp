@@ -59,7 +59,7 @@ nsHTMLCanvasFrame::~nsHTMLCanvasFrame()
 {
 }
 
-nsSize
+nsIntSize
 nsHTMLCanvasFrame::GetCanvasSize()
 {
   PRUint32 w, h;
@@ -76,7 +76,7 @@ nsHTMLCanvasFrame::GetCanvasSize()
     h = w = 1;
   }
 
-  return nsSize(w, h);
+  return nsIntSize(w, h);
 }
 
 /* virtual */ nscoord
@@ -102,7 +102,9 @@ nsHTMLCanvasFrame::GetPrefWidth(nsIRenderingContext *aRenderingContext)
 /* virtual */ nsSize
 nsHTMLCanvasFrame::GetIntrinsicRatio()
 {
-  return GetCanvasSize();
+  nsIntSize size(GetCanvasSize());
+  return nsSize(nsPresContext::CSSPixelsToAppUnits(size.width),
+                nsPresContext::CSSPixelsToAppUnits(size.height));
 }
 
 /* virtual */ nsSize
@@ -111,13 +113,13 @@ nsHTMLCanvasFrame::ComputeSize(nsIRenderingContext *aRenderingContext,
                                nsSize aMargin, nsSize aBorder, nsSize aPadding,
                                PRBool aShrinkWrap)
 {
-  nsSize size = GetCanvasSize();
+  nsIntSize size = GetCanvasSize();
 
   IntrinsicSize intrinsicSize;
   intrinsicSize.width.SetCoordValue(nsPresContext::CSSPixelsToAppUnits(size.width));
   intrinsicSize.height.SetCoordValue(nsPresContext::CSSPixelsToAppUnits(size.height));
 
-  nsSize& intrinsicRatio = size; // won't actually be used
+  nsSize intrinsicRatio = GetIntrinsicRatio(); // won't actually be used
 
   return nsLayoutUtils::ComputeSizeWithIntrinsicDimensions(
                             aRenderingContext, this,
@@ -197,7 +199,7 @@ nsHTMLCanvasFrame::PaintCanvas(nsIRenderingContext& aRenderingContext,
   if (inner.width == 0 || inner.height == 0)
     return;
 
-  nsSize canvasSize = GetCanvasSize();
+  nsIntSize canvasSize = GetCanvasSize();
   nsSize sizeAppUnits(PresContext()->DevPixelsToAppUnits(canvasSize.width),
                       PresContext()->DevPixelsToAppUnits(canvasSize.height));
 

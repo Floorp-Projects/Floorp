@@ -351,7 +351,7 @@ nsMenuPopupFrame::AdjustView()
     // if the popup has just opened, make sure the scrolled window is at 0,0
     if (mIsOpenChanged) {
       nsIBox* child = GetChildBox();
-      nsCOMPtr<nsIScrollableFrame> scrollframe(do_QueryInterface(child));
+      nsIScrollableFrame *scrollframe = do_QueryFrame(child);
       if (scrollframe)
         scrollframe->ScrollTo(nsPoint(0,0));
     }
@@ -910,7 +910,7 @@ nsMenuPopupFrame::SetPopupPosition(nsIFrame* aAnchorFrame)
   }
 
   // the dimensions of the anchor in its app units
-  nsSize parentSize = aAnchorFrame->GetSize();
+  nsRect parentRect = aAnchorFrame->GetScreenRectInAppUnits();
 
   // the anchor may be in a different document with a different scale,
   // so adjust the size so that it is in the app units of the popup instead
@@ -919,8 +919,7 @@ nsMenuPopupFrame::SetPopupPosition(nsIFrame* aAnchorFrame)
   // app units by multiplying by the popup's app units per device pixel.
   float adj = float(presContext->AppUnitsPerDevPixel()) /
               aAnchorFrame->PresContext()->AppUnitsPerDevPixel();
-  parentSize.width = NSToCoordCeil(parentSize.width * adj);
-  parentSize.height = NSToCoordCeil(parentSize.height * adj);
+  parentRect.ScaleRoundOut(adj);
 
   // Set the popup's size to the preferred size. Below, this size will be
   // adjusted to fit on the screen or within the content area. If the anchor
@@ -928,7 +927,7 @@ nsMenuPopupFrame::SetPopupPosition(nsIFrame* aAnchorFrame)
   // width. The preferred size should already be set by the parent frame.
   NS_ASSERTION(mPrefSize.width >= 0 || mPrefSize.height >= 0,
                "preferred size of popup not set");
-  mRect.width = sizedToPopup ? parentSize.width : mPrefSize.width;
+  mRect.width = sizedToPopup ? parentRect.width : mPrefSize.width;
   mRect.height = mPrefSize.height;
 
   // the screen position in app units where the popup should appear
@@ -936,7 +935,7 @@ nsMenuPopupFrame::SetPopupPosition(nsIFrame* aAnchorFrame)
 
   // For anchored popups, the anchor rectangle. For non-anchored popups, the
   // size will be 0.
-  nsRect anchorRect;
+  nsRect anchorRect = parentRect;
 
   // indicators of whether the popup should be flipped or resized.
   PRBool hFlip = PR_FALSE, vFlip = PR_FALSE;
@@ -960,9 +959,6 @@ nsMenuPopupFrame::SetPopupPosition(nsIFrame* aAnchorFrame)
     // the most room. The combination of anchor and alignment dictate if we 
     // readjust above/below or to the left/right.
     if (mAnchorContent) {
-      anchorRect = aAnchorFrame->GetScreenRectInAppUnits();
-      anchorRect.ScaleRoundOut(adj);
-
       // move the popup according to the anchor and alignment. This will also
       // tell us which axis the popup is flush against in case we have to move
       // it around later. The AdjustPositionForAnchorAlign method accounts for
@@ -1077,7 +1073,7 @@ nsMenuPopupFrame::SetPopupPosition(nsIFrame* aAnchorFrame)
   if (sizedToPopup) {
     nsBoxLayoutState state(PresContext());
     // XXXndeakin can parentSize.width still extend outside?
-    SetBounds(state, nsRect(mRect.x, mRect.y, parentSize.width, mRect.height));
+    SetBounds(state, nsRect(mRect.x, mRect.y, parentRect.width, mRect.height));
   }
 
   return NS_OK;
@@ -1119,9 +1115,8 @@ PRBool nsMenuPopupFrame::ConsumeOutsideClicks()
 
 static nsIScrollableView* GetScrollableViewForFrame(nsIFrame* aFrame)
 {
-  nsIScrollableFrame* sf;
-  nsresult rv = CallQueryInterface(aFrame, &sf);
-  if (NS_FAILED(rv))
+  nsIScrollableFrame* sf = do_QueryFrame(aFrame);
+  if (!sf)
     return nsnull;
   return sf->GetScrollableView();
 }

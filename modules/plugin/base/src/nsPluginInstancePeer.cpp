@@ -67,16 +67,11 @@
 
 nsPluginInstancePeerImpl::nsPluginInstancePeerImpl()
 {
-  mInstance = nsnull;
-  mOwner = nsnull;
   mMIMEType = nsnull;
 }
 
 nsPluginInstancePeerImpl::~nsPluginInstancePeerImpl()
 {
-  mInstance = nsnull;
-  NS_IF_RELEASE(mOwner);
-
   if (nsnull != mMIMEType) {
     PR_Free((void *)mMIMEType);
     mMIMEType = nsnull;
@@ -829,10 +824,6 @@ nsPluginInstancePeerImpl::Initialize(nsIPluginInstanceOwner *aOwner,
                                      const nsMIMEType aMIMEType)
 {
   mOwner = aOwner;
-  NS_IF_ADDREF(mOwner);
-
-  aOwner->GetInstance(mInstance);
-  NS_IF_RELEASE(mInstance);
 
   if (nsnull != aMIMEType) {
     mMIMEType = (nsMIMEType)PR_Malloc(PL_strlen(aMIMEType) + 1);
@@ -850,14 +841,7 @@ nsPluginInstancePeerImpl::Initialize(nsIPluginInstanceOwner *aOwner,
 nsresult
 nsPluginInstancePeerImpl::SetOwner(nsIPluginInstanceOwner *aOwner)
 {
-  // get rid of the previous owner
-  NS_IF_RELEASE(mOwner);
-
   mOwner = aOwner;
-  NS_IF_ADDREF(mOwner);
-
-  aOwner->GetInstance(mInstance);
-  NS_IF_RELEASE(mInstance);
   return NS_OK;
 }
 

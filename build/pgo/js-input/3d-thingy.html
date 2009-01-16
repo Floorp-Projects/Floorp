@@ -1,0 +1,390 @@
+<html>
+<head>
+<title>3d thingy</title>
+<style type="text/css">
+div.z2 { position:absolute; z-index:2; }
+div.z1 { position:absolute; z-index:1; }
+</style>
+<script type="text/javascript">
+/**************************************************************************
+JavaScript Graphics Library 0.0.1, Updated Source Code at Scriptersoft.com
+Copyright (C) 2005  Kurt L. Whicher
+November,13,2005
+
+This library is free software; you can redistribute it and/or
+modify it under the terms of the GNU Lesser General Public
+License as published by the Free Software Foundation; either
+version 2.1 of the License, or (at your option) any later version.
+
+This library is distributed in the hope that it will be useful,
+but WITHOUT ANY WARRANTY; without even the implied warranty of
+MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+Lesser General Public License for more details.
+
+You should have received a copy of the GNU Lesser General Public
+License along with this library; if not, write to the Free Software
+Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
+**************************************************************************/
+
+//________________________________________ global variables
+
+var S_piDoubled=Math.PI*2;
+var S_deg2Rad=Math.PI/180;
+
+//_______________________________________________ functions
+
+function S_matrix() {
+  return [1,0,0,0,
+          0,1,0,0,
+          0,0,1,0,
+          0,0,0,1];
+}
+function S_vec2D(x,y) { this.x=x; this.y=y; }
+function S_vec3D(x,y,z) { this.x=x; this.y=y; this.z=z; }
+function S_subVec2D(a,b) {
+  return new S_vec2D(a.x-b.x, a.y-b.y);
+}
+function S_subVec3D(a,b) {
+  return new S_vec3D(a.x-b.x, a.y-b.y, a.z-b.z);
+}
+function S_dotVec3D(a, b) { return a.x*b.x+a.y*b.y+a.z*b.z; }
+function S_cross(a,b) {
+  return new S_vec3D( a.y*b.z-a.z*b.y, a.z*b.x-a.x*b.z, a.x*b.y-a.y*b.x);
+}
+function S_lengthSquaredVec3D(v) { return S_dotVec3D(v,v); }
+function S_lengthVec3D(v) { return Math.sqrt(S_lengthSquaredVec3D(v)); }
+function S_normalizeVec3D(v) {
+  var l=S_lengthVec3D(v), nv=new S_vec3D(0,0,0);
+  if(l!=0) { nv.x=v.x/l; nv.y=v.y/l; nv.z=v.z/l; }
+  return nv;
+}
+function S_rotate(m,ax,a) { // transformation matrix, axis, angle
+  var i,j,ij=new Array(),v=new Array(),c=Math.cos(a),s=Math.sin(a);
+  if (ax=="x") ij=[1,2,5,6,9,10,13,14];
+  else if (ax=="y") ij=[2,0,6,4,10,8,14,12];
+  else if (ax=="z") ij=[0,1,4,5,8,9,12,13];
+  for (i=0;i<8;i++) v[i]=m[ij[i]];
+  for (i=0,j=1;i<8;i+=2,j+=2) {
+    m[ij[i]]=v[i]*c-v[j]*s;
+    m[ij[j]]=v[i]*s+v[j]*c
+  }
+}
+function S_checkBrowser() {
+  if (document.getElementById) return true; else return false;
+}
+function S_zIndex(e,z) { document.getElementById(e).style.zIndex=z; }
+function S_rgbColor(r,g,b) {
+  var i, c=[r,g,b];
+  for(i=0; i<3; i++) {
+    c[i]=Math.floor(c[i]);
+    if(c[i]<0) c[i]=0; else if(c[i]>255) c[i]=255;
+  }
+  return c;
+}
+function S_rgbColorString(c) {
+  return "rgb("+c[0]+","+c[1]+","+c[2]+")";
+}
+function S_vertice(x,y,z) {
+  this.x=x; this.y=y; this.z=z; this.w=1;
+  this.t=new S_vec3D(x,y,z); // transformed 3d
+  this.p=new S_vec2D(0,0); // projected 2d
+}
+function S_face(v0,v1,v2,c) { // 3 vertice faces
+  this.v=[v0,v1,v2]; this.c=c; this.b=0; // b:brightness
+  this.d=true; // display: true or false
+}
+// x coordinate, number of vertices, distance
+function S_verticeRing(x,nv,d) {
+  var i,a,v=new Array();
+  for(i=0;i<nv;i++) {
+    a=S_piDoubled*i/nv;
+    v[i]=new S_vertice(x,d*Math.sin(a),d*Math.cos(a));
+  }
+  return v;
+}
+function S_triangleRing(r1,r2,c,clr) { // rows 1 & 2, cols, color
+  var i,j,tr=new Array();
+  for(i=0,j=1;i<c;i++,j=++j%c) {
+    tr.push(new S_face(r1+i,r2+i,r2+j,clr));
+    tr.push(new S_face(r1+i,r2+j,r1+j,clr));
+  }
+  return tr;
+}
+function S_model(v,f) {
+  // vertice & face arrays, transformation matrix, display boolean
+  this.v=v; this.f=f, this.tm=S_matrix(), this.d=true;
+}
+S_model.prototype.S_rotateX=function(a) {
+  S_rotate(this.tm,"x",a*=S_deg2Rad);
+}
+S_model.prototype.S_rotateY=function(a) {
+  S_rotate(this.tm,"y",a*=S_deg2Rad);
+}
+S_model.prototype.S_rotateZ=function(a) {
+  S_rotate(this.tm,"z",a*=S_deg2Rad);
+}
+S_model.prototype.S_show=function() { this.d=true; }
+S_model.prototype.S_hide=function() { this.d=false; }
+function S_cube(d,c) { //distance & color
+  return new S_cone(d,d,Math.cos(Math.PI/4)*d*2,1,4,c);
+}
+function S_cylinder(w,h,r,c,clr,e) {
+  return new S_cone(w,w,h,r,c,clr,e);
+}
+// width, height, "rows", "columns", color, ends
+function S_cone(w1,w2,h,r,c,clr,e) {
+  var i,r1=0,r2=c,v=new Array(),t=new Array(),rxc=r*c;
+  for(i=0;i<=r;i++)
+    v=v.concat(S_verticeRing(h*(0.5-i/r),c,w1*i/r+w2*(r-i)/r));
+  for(i=0;i<r;i++,r1+=c,r2+=c)
+    t=t.concat(S_triangleRing(r1,r2,c,clr));
+  if (e!="hideEnds")
+    for(i=1;i<(c-1);i++) {
+      t.push(new S_face(0,i,i+1,clr));
+      t.push(new S_face(rxc,rxc+i+1,rxc+i,clr));
+    }
+  return new S_model(v,t);
+}
+function S_sphere(d,r,c,clr) {
+  // distance, "rows">=2, "columns">=3, color paramaters
+  var v=new Array(),t=new Array(),r_1xc=(r-1)*c,r_2xc=(r-2)*c;
+  var i,j,tmp,r1=0,r2=c;
+  for(i=1;i<r;i++) {
+    tmp=Math.PI*i/r;
+    v=v.concat(S_verticeRing(d*Math.cos(tmp),c,Math.sin(tmp)*d));
+  }
+  v.push(new S_vertice( d,0,0));
+  v.push(new S_vertice(-d,0,0));
+  for(i=0;i<(r-2);i++,r1+=c,r2+=c)
+    t=t.concat(S_triangleRing(r1,r2,c,clr));
+  for(i=0,j=1;i<c;i++,j=++j%c) {
+    t.push(new S_face(r_1xc,i,j,clr));
+    t.push(new S_face(r_1xc+1,r_2xc+j,r_2xc+i,clr));
+  }
+  return new S_model(v,t);
+}
+S_model.prototype.S_scale=function(x) { 
+  this.tm[0]*=x; this.tm[5]*=x; this.tm[10]*=x;
+}
+S_model.prototype.S_faceColor=function(i,c) { this.f[i].c=c; }
+S_model.prototype.S_scaleX=function(s) { this.tm[0]*=s; }
+S_model.prototype.S_scaleY=function(s) { this.tm[5]*=s; }
+S_model.prototype.S_scaleZ=function(s) { this.tm[10]*=s; }
+function S_scene(dv,l,t,w,h,cmra) { // left, top, width, height
+  this.dv=dv;
+  this.ps=1; // pixel size
+  this.l=l; this.t=t; this.w=w; this.h=h;
+  this.cx=l+w/2; this.cy=t+h/2; // center x, center y
+  this.dt="paint"; // output type
+  this.m=new Array(); // model array
+  this.lght=new S_light();
+  this.lc=S_rgbColor(255,255,255); // light color
+  this.cmra=-cmra; // camera on z axis
+  this.bfr=S_buffer(h,w);
+}
+function S_buffer(h,w) {
+  var i, j, b=new Array();
+  for(i=0;i<h;i++) {
+    b[i]=new Array();
+    for(j=0;j<w;j++) b[i][j]=new S_pixel();
+  }
+  return b;
+}
+function S_pixel() { // display boolean, color  
+  this.d=true; this.c=0;
+}
+S_pixel.prototype.S_setColor=function(c) {
+  this.d=true; this.c=c;
+}
+S_pixel.prototype.S_hide=function() { this.d=false; }
+S_scene.prototype.S_pixelSize=function(ps){ this.ps=ps; }
+S_scene.prototype.S_widthAndHeight=function(w,h){ this.w=w; this.h=h; }
+S_scene.prototype.S_center=function(cx,cy){ this.cx=cx; this.cy=cy; }
+S_scene.prototype.S_paint=function(){ this.dt="paint"; }
+S_scene.prototype.S_models=function() {
+  var i; this.m=new Array();
+  for(i=0;i<arguments.length;i++) this.m.push(arguments[i]);
+}
+S_scene.prototype.S_lightColor=function(c){ this.lc=c; }
+S_scene.prototype.S_project=function() {
+  var i, j, v, tm, d, m;
+  for(i=0;i<this.m.length;i++) {
+    m=this.m[i]; tm=this.m[i].tm;
+    for(j=0;j<m.v.length;j++) {
+      v=m.v[j];
+      v.t.x=v.x*tm[0]+v.y*tm[4]+v.z*tm[8]+v.w*tm[12];
+      v.t.y=v.x*tm[1]+v.y*tm[5]+v.z*tm[9]+v.w*tm[13];
+      v.t.z=v.x*tm[2]+v.y*tm[6]+v.z*tm[10]+v.w*tm[14];
+      d=(this.cmra-v.t.z/2);
+      if (d<0) {
+        v.p.x=(this.cmra*v.t.x/d)+this.cx;
+        v.p.y=-(this.cmra*v.t.y/d)+this.cy;
+      }
+    }
+  }
+}
+S_scene.prototype.S_display=function(disp){
+  var i, j, k, s="", ds, c, cnt=0; // ds:div start
+  this.tr=new Array(); // triangles ready to draw
+  this.S_project();
+  this.S_adjustLight();
+  this.S_clearBuffer();
+  for(i=0;i<this.m.length;i++) {
+    this.m[i].S_setupFaces(this.tr,this.lght.t);
+    for(j=0;j<this.tr.length;j++) { // loop through triangles
+      c=S_divColor(this.tr[j].c,this.lc,this.tr[j].b);
+      S_setupBuffer(this,this.tr[j].p,c);
+    }
+  }
+  for(i=0;i<this.h;i++) {
+    ds=-1;
+    for(j=0,k=1;j<this.w;j++,k++) {
+      if((this.bfr[i][j].d==true)&&(ds==-1)) ds=j;
+      if( (this.bfr[i][j].d==true)&&
+          ( (k==this.w)||
+            (this.bfr[i][k].d==false)||
+            (!S_sameColor(this.bfr[i][j].c, this.bfr[i][k].c)) ) ) {
+        s+=S_divString(S_rgbColorString(this.bfr[i][j].c),this.t+i*this.ps,this.l+ds*this.ps,this.ps,(k-ds)*this.ps);
+        ds=-1;
+        cnt++;
+      }
+    }
+  }
+  S_writeInnerHTML(this.dv,s);
+  if(disp=="ShowCount") alert(cnt);
+}
+S_scene.prototype.S_displayAndShowCount=function(){
+  this.S_display("ShowCount");
+}
+S_model.prototype.S_setupFaces=function(tr,lght) {
+  var i, j, fn, v, p=new Array(); // vertice & projection arrays
+  var z=new Array();
+  for(i=0;i<this.f.length;i++) { // loop through faces
+    v=this.f[i].v;
+    for(j=0;j<3;j++) { p[j]=this.v[v[j]].p; }
+    for(j=0;j<3;j++) { z[j]=this.v[v[j]].t.z; }
+    if (((p[1].x-p[0].x)*(p[2].y-p[0].y))<((p[2].x-p[0].x)*(p[1].y-p[0].y))) {
+      this.f[i].d=true;
+      fn=S_faceNormal(this.v[v[0]].t, this.v[v[1]].t, this.v[v[2]].t);
+      this.f[i].b=S_faceIntensity(fn,lght);
+      tr.push(new S_triangle(fn,this.f[i].b,p.slice(),this.f[i].c,z));
+    } else { this.f[i].d=false; }
+  }
+}
+// normal, brightness, array of 2D projection coordinates, and z depth
+function S_triangle(fn,b,p,c,z) {
+  this.fn=fn; this.b=b; this.p=p; this.z=z; this.c=c;
+}
+function S_faceNormal(a,b,c){
+  var cr=S_cross(S_subVec3D(b,a), S_subVec3D(b,c));
+  return S_normalizeVec3D(cr);
+}
+function S_faceIntensity(fn,lght) {
+  var i=S_dotVec3D(fn,lght); return (i>0)?i:0;
+}
+function S_divColor(c,lc,b) { // c:array of colors
+  var i, clr=new Array();
+  for(i=0;i<3;i++) clr[i]=Math.floor(c[i]+(lc[i]-c[i]+1)*b);
+  for(i=0;i<3;i++) if (clr[i]>lc[i]) { clr[i]=lc[i]; }
+  return S_rgbColor(clr[0],clr[1],clr[2]);
+}
+function S_sameColor(a,b) {
+  for(var i=0;i<3;i++) { if(a[i]!=b[i]) return false; }
+  return true;
+}
+function S_setupBuffer(scn,p,c) {
+  // temp, counters, min, max, scanline, vertice & slope arrays
+  var t,i,j,xmin=new Array(),xmax=new Array(),sl;
+  var v=new Array(), m=new Array();
+  p.sort(function(a,b) { return a.y-b.y; } );
+  for(i=0;i<3;i++) p[i].y=Math.floor(p[i].y);
+  v[0]=S_subVec2D(p[1],p[0]);
+  v[1]=S_subVec2D(p[2],p[0]);
+  v[2]=S_subVec2D(p[2],p[1]);
+  for(i=0;i<3;i++) { m[i]=(v[i].y!=0)?v[i].x/v[i].y:0; }
+  for(i=0,sl=scn.t;i<scn.h;i++,sl++) {
+    xmin[i]=1000;xmax[i]=0;
+    if((sl>=p[0].y)&&(sl<=p[2].y)) {
+      xmin[i]=xmax[i]=Math.floor(p[0].x+m[1]*(sl-p[0].y));
+    }
+    if((sl>=p[0].y)&&(sl<=p[1].y)) {
+      t=Math.floor(p[0].x+m[0]*(sl-p[0].y));
+      if(t<xmin[i]) xmin[i]=Math.floor(t);
+      else if(t>xmax[i]) xmax[i]=Math.floor(t);
+    }
+    if((sl>=p[1].y)&&(sl<=p[2].y)) {
+      t=Math.floor(p[1].x+m[2]*(sl-p[1].y));
+      if(t<xmin[i]) xmin[i]=Math.floor(t);
+      else if(t>xmax[i]) xmax[i]=Math.floor(t);
+    }
+    for(j=0;j<scn.w;j++)
+      if((j>=(xmin[i]-scn.l))&&(j<=(xmax[i]-scn.l))) {
+        scn.bfr[i][j].d=true; scn.bfr[i][j].c=c;          
+      }
+  }
+}
+function S_light() {
+  this.x=0; this.y=1; this.z=0; this.w=1; // original coordinates
+  this.t=new S_vec3D(0,1,0); // transformed coordinates
+  this.tm=new S_matrix();
+}
+S_scene.prototype.S_adjustLight=function() {
+  var m=this.lght.tm, l=this.lght;
+  l.t.x=l.x*m[0]+l.y*m[4]+ l.z*m[8]+l.w*m[12];
+  l.t.y=l.x*m[1]+l.y*m[5]+ l.z*m[9]+l.w*m[13];
+  l.t.z=l.x*m[2]+l.y*m[6]+ l.z*m[10]+l.w*m[14];
+  l.t=S_normalizeVec3D(l.t);
+}
+S_scene.prototype.S_lightRotateX=function(a) {
+  S_rotate(this.lght.tm,"x",a*=S_deg2Rad);
+}
+S_scene.prototype.S_lightRotateY=function(a) {
+  S_rotate(this.lght.tm,"y",a*=S_deg2Rad);
+}
+S_scene.prototype.S_lightRotateZ=function(a) {
+  S_rotate(this.lght.tm,"z",a*=S_deg2Rad);
+}
+S_scene.prototype.S_clearBuffer=function() {
+  for(var i=0;i<this.h;i++)
+    for(var j=0;j<this.w;j++) this.bfr[i][j].d=false;
+}
+function S_divString(b,t,l,h,w) {
+  var s='<div style="background-color:'+b+';position:absolute;';
+  s+='top:'+t+'px;left:'+l+'px;height:'+h+'px;width:'+w;
+  return s+'px;font-size:0;visibility:visible"></div>';
+}
+function S_writeInnerHTML(id,text) {
+  document.getElementById(id).innerHTML = text;
+}
+</script>
+</head>
+<body>
+<div class="z1" id="graphicsDiv">Text to be replaced with graphics.</div>
+<script type="text/javascript">
+if(S_checkBrowser()) {
+var intrvl;
+// Create a new scene with parameters for
+// div id, left, top, width, height, and camera distance
+var scn=new S_scene("graphicsDiv",75,25,100,100,300);
+scn.S_pixelSize(3); // set scene pixel size
+var c=S_rgbColor(0,0,127); // color
+var c2=S_rgbColor(0,127,127); // color
+var m=new S_cube(18,c); // model
+m.S_faceColor(4,c2);
+m.S_faceColor(5,c2);
+m.S_scaleX(2.5); // scale model along x axis
+scn.S_models(m); // add model(s) to scene
+scn.S_lightRotateX(-25); // adjust light
+function r(){ // rotation function
+m.S_rotateX(11); // rotate model around y axis
+m.S_rotateY(5); // rotate model around y axis
+m.S_rotateZ(7); // rotate model around z axis
+scn.S_display(); // display scene
+} // end rotation function
+intrvl=setInterval('r();',75);
+}
+</script>
+
+</body>
+</html>
+

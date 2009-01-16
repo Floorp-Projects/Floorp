@@ -41,6 +41,8 @@
 
 
 <!DOCTYPE bindings [
+<!ENTITY % globalDTD SYSTEM "chrome://global/locale/global.dtd" >
+%globalDTD;
 <!ENTITY % browserDTD SYSTEM "chrome://browser/locale/browser.dtd" >
 %browserDTD;
 ]>
@@ -78,6 +80,7 @@
                            mousethrough="never"
                            collapsed="true"
                            tooltiptext="&bookmarksToolbarChevron.tooltip;"
+                           chromedir="&locale.dir;"
                            onpopupshowing="chevronPopupShowing(event);">
           <xul:menupopup anonid="chevronPopup"
                          xbl:inherits="tooltip"

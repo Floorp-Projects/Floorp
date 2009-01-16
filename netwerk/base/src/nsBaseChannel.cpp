@@ -257,7 +257,8 @@ nsBaseChannel::HandleAsyncRedirect(nsIChannel* newChannel)
   NS_ASSERTION(!mPump, "Shouldn't have gotten here");
   PRBool doNotify = PR_TRUE;
   if (NS_SUCCEEDED(mStatus)) {
-      nsresult rv = Redirect(newChannel, nsIChannelEventSink::REDIRECT_INTERNAL,
+      nsresult rv = Redirect(newChannel,
+                             nsIChannelEventSink::REDIRECT_TEMPORARY,
                              PR_TRUE);
       if (NS_FAILED(rv))
           Cancel(rv);

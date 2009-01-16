@@ -895,6 +895,32 @@ PRBool test_voided_autostr()
     return PR_TRUE;
   }
 
+struct ToIntegerTest
+{
+  const char *str;
+  PRUint32 radix;
+  PRInt32 result;
+  nsresult rv;
+};
+
+static const ToIntegerTest kToIntegerTests[] = {
+  { "123", 10, 123, NS_OK },
+  { "7b", 16, 123, NS_OK },
+  { "90194313659", 10, 0, NS_ERROR_ILLEGAL_VALUE },
+  { nsnull, 0, 0, 0 }
+};
+
+PRBool test_string_tointeger()
+{
+  PRInt32 rv;
+  for (const ToIntegerTest* t = kToIntegerTests; t->str; ++t) {
+    PRInt32 result = nsCAutoString(t->str).ToInteger(&rv, t->radix);
+    if (rv != t->rv || result != t->result)
+      return PR_FALSE;
+  }
+  return PR_TRUE;
+}
+
 //----
 
 typedef PRBool (*TestFunc)();
@@ -938,6 +964,7 @@ tests[] =
     { "test_stringbuffer", test_stringbuffer },
     { "test_voided", test_voided },
     { "test_voided_autostr", test_voided_autostr },
+    { "test_string_tointeger", test_string_tointeger },
     { nsnull, nsnull }
   };
 

@@ -155,7 +155,7 @@ NS_IMETHODIMP nsSVGTextPathElement::GetLengthAdjust(nsIDOMSVGAnimatedEnumeration
 /* long getNumberOfChars (); */
 NS_IMETHODIMP nsSVGTextPathElement::GetNumberOfChars(PRInt32 *_retval)
 {
-  nsCOMPtr<nsISVGTextContentMetrics> metrics = GetTextContentMetrics();
+  nsISVGTextContentMetrics *metrics = GetTextContentMetrics();
 
   if (metrics)
     return metrics->GetNumberOfChars(_retval);
@@ -167,7 +167,7 @@ NS_IMETHODIMP nsSVGTextPathElement::GetNumberOfChars(PRInt32 *_retval)
 /* float getComputedTextLength (); */
 NS_IMETHODIMP nsSVGTextPathElement::GetComputedTextLength(float *_retval)
 {
-  nsCOMPtr<nsISVGTextContentMetrics> metrics = GetTextContentMetrics();
+  nsISVGTextContentMetrics *metrics = GetTextContentMetrics();
 
   if (metrics)
     return metrics->GetComputedTextLength(_retval);
@@ -179,7 +179,7 @@ NS_IMETHODIMP nsSVGTextPathElement::GetComputedTextLength(float *_retval)
 /* float getSubStringLength (in unsigned long charnum, in unsigned long nchars); */
 NS_IMETHODIMP nsSVGTextPathElement::GetSubStringLength(PRUint32 charnum, PRUint32 nchars, float *_retval)
 {
-  nsCOMPtr<nsISVGTextContentMetrics> metrics = GetTextContentMetrics();
+  nsISVGTextContentMetrics *metrics = GetTextContentMetrics();
 
   if (metrics)
     return metrics->GetSubStringLength(charnum, nchars, _retval);
@@ -192,7 +192,7 @@ NS_IMETHODIMP nsSVGTextPathElement::GetSubStringLength(PRUint32 charnum, PRUint3
 NS_IMETHODIMP nsSVGTextPathElement::GetStartPositionOfChar(PRUint32 charnum, nsIDOMSVGPoint **_retval)
 {
   *_retval = nsnull;
-  nsCOMPtr<nsISVGTextContentMetrics> metrics = GetTextContentMetrics();
+  nsISVGTextContentMetrics *metrics = GetTextContentMetrics();
 
   if (!metrics) return NS_ERROR_FAILURE;
 
@@ -203,7 +203,7 @@ NS_IMETHODIMP nsSVGTextPathElement::GetStartPositionOfChar(PRUint32 charnum, nsI
 NS_IMETHODIMP nsSVGTextPathElement::GetEndPositionOfChar(PRUint32 charnum, nsIDOMSVGPoint **_retval)
 {
   *_retval = nsnull;
-  nsCOMPtr<nsISVGTextContentMetrics> metrics = GetTextContentMetrics();
+  nsISVGTextContentMetrics *metrics = GetTextContentMetrics();
 
   if (!metrics) return NS_ERROR_FAILURE;
 
@@ -214,7 +214,7 @@ NS_IMETHODIMP nsSVGTextPathElement::GetEndPositionOfChar(PRUint32 charnum, nsIDO
 NS_IMETHODIMP nsSVGTextPathElement::GetExtentOfChar(PRUint32 charnum, nsIDOMSVGRect **_retval)
 {
   *_retval = nsnull;
-  nsCOMPtr<nsISVGTextContentMetrics> metrics = GetTextContentMetrics();
+  nsISVGTextContentMetrics *metrics = GetTextContentMetrics();
 
   if (!metrics) return NS_ERROR_FAILURE;
 
@@ -226,7 +226,7 @@ NS_IMETHODIMP nsSVGTextPathElement::GetRotationOfChar(PRUint32 charnum, float *_
 {
   *_retval = 0.0;
 
-  nsCOMPtr<nsISVGTextContentMetrics> metrics = GetTextContentMetrics();
+  nsISVGTextContentMetrics *metrics = GetTextContentMetrics();
 
   if (!metrics) return NS_ERROR_FAILURE;
 
@@ -241,7 +241,7 @@ NS_IMETHODIMP nsSVGTextPathElement::GetCharNumAtPosition(nsIDOMSVGPoint *point,
   if (!point)
     return NS_ERROR_DOM_SVG_WRONG_TYPE_ERR;
 
-  nsCOMPtr<nsISVGTextContentMetrics> metrics = GetTextContentMetrics();
+  nsISVGTextContentMetrics *metrics = GetTextContentMetrics();
 
   if (metrics)
     return metrics->GetCharNumAtPosition(point, _retval);
@@ -307,7 +307,7 @@ nsSVGTextPathElement::GetStringInfo()
 //----------------------------------------------------------------------
 // implementation helpers:
 
-already_AddRefed<nsISVGTextContentMetrics>
+nsISVGTextContentMetrics*
 nsSVGTextPathElement::GetTextContentMetrics()
 {
   nsIFrame* frame = GetPrimaryFrame(Flush_Layout);
@@ -316,7 +316,6 @@ nsSVGTextPathElement::GetTextContentMetrics()
     return nsnull;
   }
   
-  nsISVGTextContentMetrics* metrics;
-  CallQueryInterface(frame, &metrics);
+  nsISVGTextContentMetrics* metrics = do_QueryFrame(frame);
   return metrics;
 }

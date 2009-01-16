@@ -177,8 +177,13 @@ nsScriptElement::MaybeProcessScript()
                "You forgot to add self as observer");
 
   if (mIsEvaluated || !mDoneAddingChildren || !cont->IsInDoc() ||
-      mMalformed || InNonScriptingContainer(cont) ||
-      !HasScriptContent()) {
+      mMalformed || !HasScriptContent()) {
+    return NS_OK;
+  }
+
+  if (InNonScriptingContainer(cont)) {
+    // Make sure to flag ourselves as evaluated
+    mIsEvaluated = PR_TRUE;
     return NS_OK;
   }
 

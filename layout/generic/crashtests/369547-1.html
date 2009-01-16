@@ -1,0 +1,16 @@
+<html class="reftest-wait"><head><script>
+function doe2() {
+document.getElementById('a').setAttribute('style', 'display: inline-block;');
+document.body.offsetHeight;
+document.getElementById('b').removeAttribute('style');
+document.body.offsetHeight;
+document.documentElement.className = '';
+}
+setTimeout(doe2,200,0);
+</script>
+</head>
+<body style="display: -moz-inline-box;"><span style="display: inline-block;"><span style="display: inline-block;"></span></span><span id="a">
+<iframe></iframe>
+<div id="b" style="display: table-footer-group;"></div>
+</span></body>
+</html>

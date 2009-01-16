@@ -67,7 +67,7 @@ nsNoDataProtocolContentPolicy::ShouldLoad(PRUint32 aContentType,
   *aDecision = nsIContentPolicy::ACCEPT;
 
   // Don't block for TYPE_OBJECT since such URIs are sometimes loaded by the
-  // plugin, so they don't neccesarily open external apps
+  // plugin, so they don't necessarily open external apps
   if (aContentType != TYPE_DOCUMENT &&
       aContentType != TYPE_SUBDOCUMENT &&
       aContentType != TYPE_OBJECT) {

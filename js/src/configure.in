@@ -593,6 +593,16 @@ if test -n "$_WIN32_MSVC"; then
     SKIP_PATH_CHECKS=1
     SKIP_COMPILER_CHECKS=1
     SKIP_LIBRARY_CHECKS=1
+
+    # Since we're skipping compiler and library checks, hard-code
+    # some facts here.
+
+    # Windows lacks <stdint.h>, but has __int8, and so on.
+    AC_DEFINE(JS_HAVE___INTN)
+    # Windows <stddef.h> defines intptr_t and uintptr_t.
+    # VS2005: http://msdn.microsoft.com/en-us/library/323b6b3k(VS.80).aspx
+    # VS2008: http://msdn.microsoft.com/en-us/library/323b6b3k.aspx
+    AC_DEFINE(JS_STDDEF_H_HAS_INTPTR_T)
 fi
 
 fi # COMPILE_ENVIRONMENT
@@ -2450,6 +2460,64 @@ if test -z "$COMPILE_ENVIRONMENT"; then
     SKIP_LIBRARY_CHECKS=1
 fi
 
+dnl Configure JIT support
+
+case "$target" in
+i?86-*)
+    ENABLE_JIT=1
+    NANOJIT_ARCH=i386
+    ;;
+arm*-*)
+    ENABLE_JIT=1
+    NANOJIT_ARCH=ARM
+    ;;
+esac
+
+MOZ_ARG_DISABLE_BOOL(jit,
+[  --disable-jit           Disable JIT support],
+  ENABLE_JIT=)
+
+if test "$ENABLE_JIT"; then
+
+AC_DEFINE(FEATURE_NANOJIT)
+AC_DEFINE(JS_TRACER)
+
+case "$target" in
+i?86-*)
+    AC_DEFINE(AVMPLUS_IA32)
+    ;;
+
+arm*-*)
+    AC_DEFINE(AVMPLUS_ARM)
+    ;;
+esac
+
+case "$target_os" in
+linux*)
+    AC_DEFINE(AVMPLUS_UNIX)
+    AC_DEFINE(AVMPLUS_LINUX)
+    ;;
+darwin*)
+    AC_DEFINE(AVMPLUS_UNIX)
+    ;;
+solaris*)
+    AC_DEFINE(AVMPLUS_UNIX)
+    ;;
+freebsd*|kfreebsd*)
+    AC_DEFINE(AVMPLUS_UNIX)
+    ;;
+*cygwin*|*mingw*|*mks*|*msvc*|*wince)
+    AC_DEFINE(AVMPLUS_WIN32)
+    ;;
+*)
+    AC_MSG_ERROR([Unrecognized nanojit platform])
+esac
+
+fi # ENABLE_JIT
+
+AC_SUBST(ENABLE_JIT)
+AC_SUBST(NANOJIT_ARCH)
+
 if test -z "$SKIP_COMPILER_CHECKS"; then
 dnl Checks for typedefs, structures, and compiler characteristics.
 dnl ========================================================
@@ -2473,6 +2541,28 @@ if test "$ac_cv_siginfo_t" = true ; then
   AC_MSG_RESULT(yes)
 else
   AC_MSG_RESULT(no)
+fi
+
+dnl Find exact-width integer types, or figure them out
+dnl ourselves.
+dnl ========================================================
+dnl Once this is working, we can delete the code for int16_t,
+dnl etc. below.
+
+AC_CHECK_HEADER(stdint.h)
+if test "$ac_cv_header_stdint_h" = yes; then
+    AC_DEFINE(JS_HAVE_STDINT_H)
+else
+    dnl We'll figure them out for ourselves.  List more likely types
+    dnl earlier.  If we ever really encounter a size for which none of
+    dnl the listed types are appropriate, we'll get a configure-time
+    dnl error; just add the right answer.
+    MOZ_N_BYTE_TYPE(JS_INT8_TYPE,  1, [char])
+    MOZ_N_BYTE_TYPE(JS_INT16_TYPE, 2, [short int long])
+    MOZ_N_BYTE_TYPE(JS_INT32_TYPE, 4, [int long 'long long' short])
+    MOZ_N_BYTE_TYPE(JS_INT64_TYPE, 8, [int long 'long long'])
+    MOZ_N_BYTE_TYPE(JS_INTPTR_TYPE, sizeof (void *),
+                                      [int long 'long long' short])
 fi
 
 dnl Check for int16_t, int32_t, int64_t, int64, uint, uint_t, and uint16_t.
@@ -2754,7 +2844,7 @@ EOF
                        ])
         if test "$ac_cv_have_visibility_builtin_bug" = "no" -a \
                 "$ac_cv_have_visibility_class_bug" = "no"; then
-          VISIBILITY_FLAGS='-I$(DIST)/include/system_wrappers -include $(topsrcdir)/config/gcc_hidden.h'
+          VISIBILITY_FLAGS='-I$(DIST)/include/system_wrappers_js -include $(topsrcdir)/config/gcc_hidden.h'
           WRAP_SYSTEM_INCLUDES=1
         else
           VISIBILITY_FLAGS='-fvisibility=hidden'
@@ -3804,7 +3894,6 @@ MOZ_ARG_HEADER(Application)
 BUILD_STATIC_LIBS=
 ENABLE_TESTS=1
 MOZ_DBGRINFO_MODULES=
-JS_STATIC_BUILD=
 
 dnl ========================================================
 dnl =
@@ -4222,6 +4311,17 @@ MOZ_ARG_ENABLE_BOOL(vtune,
     MOZ_VTUNE= )
 if test -n "$MOZ_VTUNE"; then
     AC_DEFINE(MOZ_VTUNE)
+fi
+
+dnl ========================================================
+dnl Zealous GC
+dnl ========================================================
+MOZ_ARG_ENABLE_BOOL(gczeal,
+[  --enable-gczeal          Enable zealous GCing],
+    JS_GC_ZEAL=1,
+    JS_GC_ZEAL= )
+if test -n "$JS_GC_ZEAL"; then
+    AC_DEFINE(JS_GC_ZEAL)
 fi
 
 dnl ========================================================
@@ -4742,23 +4842,33 @@ MOZ_ARG_ENABLE_BOOL(static,
     BUILD_STATIC_LIBS=)
 
 dnl ========================================================
-dnl = Force JS to be a static lib
+dnl = Link js shell to system readline
 dnl ========================================================
-MOZ_ARG_ENABLE_BOOL(js-static-build,
-[  --enable-js-static-build  Force js to be a static lib],
-    JS_STATIC_BUILD=1,
-    JS_STATIC_BUILD= )
+MOZ_ARG_ENABLE_BOOL(readline,
+[  --enable-readline  Link js shell to system readline library],
+    JS_WANT_READLINE=1,
+    JS_WANT_READLINE= )
 
-AC_SUBST(JS_STATIC_BUILD)
-        
-if test -n "$JS_STATIC_BUILD"; then
-    AC_DEFINE(EXPORT_JS_API)
+JS_NATIVE_EDITLINE=
+EDITLINE_LIBS=
 
-if test -z "$BUILD_STATIC_LIBS"; then
-    AC_MSG_ERROR([--enable-js-static-build is only compatible with --enable-static])
+dnl Conveniently, Win32 sets SKIP_LIBRARY_CHECKS...
+if test -z "$SKIP_LIBRARY_CHECKS"; then
+  if test -n "$JS_WANT_READLINE"; then
+    AC_CHECK_LIB(readline, readline,
+                 EDITLINE_LIBS="-lreadline",
+                 AC_MSG_ERROR([No system readline library found.]))
+  else
+    dnl By default, we use editline
+    JS_NATIVE_EDITLINE=1
+    EDITLINE_LIBS='$(DEPTH)/editline/$(LIB_PREFIX)editline.$(LIB_SUFFIX)'
+  fi
+
+  dnl Either way, we want to build with line editing support.
+  AC_DEFINE(EDITLINE)
 fi
-
-fi
+AC_SUBST(JS_NATIVE_EDITLINE)
+AC_SUBST(EDITLINE_LIBS)
 
 dnl ========================================================
 dnl =
@@ -5143,10 +5253,17 @@ mv confdefs.h.save confdefs.h
 
 MAKEFILES="
   Makefile
+  shell/Makefile
   config/Makefile
   config/autoconf.mk
   config/mkdepend/Makefile
 "
+
+if test -n "$JS_NATIVE_EDITLINE"; then
+   MAKEFILES="$MAKEFILES
+editline/Makefile
+"
+fi
 
 dnl 
 dnl Run a perl script to quickly create the makefiles.

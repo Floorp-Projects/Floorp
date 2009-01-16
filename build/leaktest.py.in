@@ -82,6 +82,8 @@ if __name__ == '__main__':
         browserEnv["MOZILLA_FIVE_HOME"] = os.path.join(SCRIPT_DIR, DIST_BIN)
         browserEnv["GNOME_DISABLE_CRASH_DIALOG"] = "1"
 
-    automation.runApp("http://localhost:%d/bloatcycle.html" % PORT, browserEnv,
-                      os.path.join(SCRIPT_DIR, automation.DEFAULT_APP),
-                      PROFILE_DIRECTORY, extraArgs)
+    url = "http://localhost:%d/bloatcycle.html" % PORT
+    appPath = os.path.join(SCRIPT_DIR, automation.DEFAULT_APP)
+    (status, start) = automation.runApp(url, browserEnv, appPath,
+                                        PROFILE_DIRECTORY, extraArgs)
+    sys.exit(status)

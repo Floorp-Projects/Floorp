@@ -1,6 +1,6 @@
 ================================================================================
 
-= = = = = = = = = = = = = =   Firefox Read Me    = = = = = = = = = = = = = = = =
+= = = = = = = = = = = = = =   Firefox Read Me      = = = = = = = = = = = = = = =
 
 ================================================================================
 
@@ -12,11 +12,11 @@ installation instructions for the OS/2 build of Firefox.
 
 For more info on Firefox, see http://www.mozilla.org/products/firefox/.
 For more info on the OS/2 port see http://www.mozilla.org/ports/os2. To submit
-bugs or other feedback check out Bugzilla at https://bugzilla.mozilla.org for
-links to known bugs, bug-writing guidelines, and more. You can also get help
-with Bugzilla by pointing your IRC client to #mozillazine at irc.mozilla.org,
-OS/2 specific problems are discussed in #warpzilla and in the newsgroup
-mozilla.dev.ports.os2 on news.mozilla.org.
+bugs reports go to Bugzilla at https://bugzilla.mozilla.org.
+
+For discussion and help for OS/2 specific problems, please use the newsgroup
+mozilla.dev.ports.os2 on news.mozilla.org.  You can also get help by pointing
+your IRC client to the #warpzilla channel on irc.mozilla.org.
 
 
 ================================================================================
@@ -27,12 +27,13 @@ mozilla.dev.ports.os2 on news.mozilla.org.
 
 Official Milestone builds of Firefox are published on the release page at
 
-  http://www.mozilla.org/products/firefox/releases/
+  http://www.mozilla.com/en-US/firefox/releases/
 
-OS/2 releases are not created by Mozilla.org staff and may appear on the page
-http://www.mozilla.org/ports/os2 before the releases page. Be sure to read the
-Firefox release notes linked on the releases page for information on known
-problems and installation issues with Firefox.
+OS/2 releases are not created by Mozilla staff and may appear on the
+page http://www.mozilla.org/ports/os2 before the releases page. Be sure to read
+the release notes linked on the releases page for information on known problems
+and installation issues.
+OS/2 specific problems with this version are listed below.
 
 
 ================================================================================
@@ -41,8 +42,8 @@ problems and installation issues with Firefox.
 
 ================================================================================
 
-- This release requires the C runtime DLLs (libc-0.6.3) from
-  ftp://ftp.netlabs.org/pub/gcc/libc-0.6.3-csd3.zip
+- This release requires the C runtime DLL (libc063.dll) from
+     ftp://ftp.netlabs.org/pub/gcc/libc-0.6.3-csd3.zip
   in order to run.  You can unpack them in the same directory as the
   Firefox executable or somewhere else in your LIBPATH.
 
@@ -74,6 +75,9 @@ problems and installation issues with Firefox.
   + Convenience Pack 2 or eComStation 1.0 or later meet these requirements
     out of the box.
 
+  + Only Java plugins of version 1.4.1 or 1.4.2 are supported.
+    (IBM Java 1.3.1 or earlier will crash the application!)
+
 - Useful optional software
   The following packages enable additional features in Firefox. Download
   locations are listed below with a detailed description of the features.
@@ -86,58 +90,67 @@ problems and installation issues with Firefox.
 
 ================================================================================
 
-For all platforms, unpack into a clean (new) directory.  Installing on top of
-previously released builds may cause problems with Firefox.
+Unpack into a clean (new) directory. Installing on top of previously released
+builds may cause problems with Firefox. It is therefore hightly recommended
+to follow the instructions under "Separating profiles from installation
+directory".
 
 Note: These instructions do not tell you how to build Firefox.
 For info on building the Firefox source, see
-
-  http://www.mozilla.org/build/
+  https://developer.mozilla.org/en/Build_Documentation
 
 
 OS/2 Installation Instructions
 ------------------------------
 
-   On OS/2, Firefox does not have an installation program. To install it,
-   download the .zip file and follow these steps:
+On OS/2, Firefox does not have an installation program. To install it,
+download the .zip file and follow these steps:
 
-     1. Click the "Zip" link on the site you're downloading Firefox from
-     to download the ZIP package to your machine. This file is typically called
-     firefox-x.x.x.en-US.os2.zip where the "x.x.x" is replaced by the Firefox
-     version.
+1. Click the "Zip" link on the site you're downloading Firefox from to
+   download the ZIP package to your machine. This file is typically called
+   firefox-x.x.x.en-US.os2.zip where the "x.x.x" is replaced by the
+   current Firefox version.
 
-     2. Navigate to where you downloaded the file and unpack it using your
-     favorite unzip tool.
+2. Navigate to where you downloaded the file and unpack it using your favorite
+   unzip tool.
 
-     3. Keep in mind that the unzip process creates a directory "firefox"
-     below the location you point it to, e.g.
-        unzip firefox-3.0.en-US.os2.zip -d c:\firefox-3.0
-     will unpack Firefox into c:\firefox-3.0\firefox.
+3. Keep in mind that the unzip process creates a directory "firefox" below
+   the location you point it to, e.g.
+      unzip firefox-3.1.en-US.os2.zip -d c:\firefox-3.1
+   will unpack Firefox into c:\firefox-3.1\firefox.
 
-     4. Make sure that you are _not_ unpacking over an old installation. This is
-     known to cause problems.
+4. Make sure that you are _not_ unpacking over an old installation. This is
+   known to cause problems.
 
-     5. To start Firefox, navigate to the directory you extracted
-     Firefox to, make sure that the C library DLLs are copied to the
-     installation directory or installed in the LIBPATH, and then double-click
-     the Firefox.exe object.
+5. To start Firefox, navigate to the directory you extracted Firefox to,
+   ensure that the C library DLL is copied to the installation directory or
+   installed in the LIBPATH, and then double-click the Firefox.exe object.
 
+
+================================================================================
+
+                      Tips and Problems
+
+================================================================================
 
 Running multiple versions concurrently
 --------------------------------------
 
-Because various members of the Mozilla family (i.e. Mozilla, Firefox,
+If you want to run more than one copy of Firefox, you have to use the
+-no-remote parameter or set MOZ_NO_REMOTE=1 in your environment.
+
+Because various members of the Mozilla family (i.e. SeaMonkey, Mozilla, Firefox,
 Thunderbird, IBM Web Browser) may use different, incompatible versions of the
 same DLL, some extra steps may be required to run them concurrently.
 
 One workaround is the LIBPATHSTRICT variable. To run Firefox one can create
 a CMD script like the following example (where an installation of Firefox
-exists in the directory d:\internet\firefox is assumed):
+in the directory d:\internet\firefox is assumed):
 
    set LIBPATHSTRICT=T
    rem The next line may be needed when a different Mozilla program is listed in LIBPATH
    rem set BEGINLIBPATH=d:\internet\firefox
-   rem The next line is only needed to run two different versions of Firefox
+   rem The next line is only needed to run two versions of the same program
    rem set MOZ_NO_REMOTE=1
    d:
    cd d:\internet\firefox
@@ -156,7 +169,7 @@ above depending on the system configuration.)
 Finally, the simplest method is to use the Run! utility by Rich Walsh that can
 be found in the Hobbes Software Archive:
 
-   http://hobbes.nmsu.edu/cgi-bin/h-search?key=Run!
+   http://hobbes.nmsu.edu/h-search.php?key=Run!
 
 Read its documentation for more information.
 
@@ -201,24 +214,24 @@ Find more information on this topic and other tips on
    http://www.os2bbs.com/os2news/Warpzilla.html
 
 
-Support for WPS objects in the browser
---------------------------------------
+Support for WPS objects
+-----------------------
 
-Firefox can make use of Rich Walsh's Remote Workplace Server (RWS) library to
-access Workplace Shell objects from the browser. This allows helper applications
-for downloaded files to be selected based on their default WPS association. In
-addition, the WPS icons of files will be displayed in the download dialog and in
-directory views.
+Firefox can make use of Rich Walsh's Remote Workplace Server (RWS) library
+to access Workplace Shell objects from the application. This allows helper
+applications for downloaded files to be selected based on their default WPS
+association. In addition, the WPS icons of files will be displayed in the
+download dialog and in directory views.
 
-To enable this functionality, Firefox has to find the RWS DLLs. They have to be
-located in a directory on the LIBPATH, in the Firefox directory, or already be
-registered as a WPS class. For eComStation 2 this is already the case. If RWS
-is not yet available on your system, download it from
-   http://hobbes.nmsu.edu/cgi-bin/h-search?key=rws08dll
+To enable this functionality, Firefox has to find the RWS DLLs. They have to
+be located in a directory on the LIBPATH, in the Firefox directory, or
+already be registered as a WPS class. For eComStation 2 this is already the
+case. If RWS is not yet available on your system, download it from
+   http://hobbes.nmsu.edu/h-search.php?key=rws08dll
 
-If RWS is found on the system, it is used by Firefox automatically. In case you
-need to disable RWS support, create an environment variable MOZ_NO_RWS and set
-it to 1.
+If RWS is found on the system, it is used by Firefox automatically. In case
+you need to disable RWS support, create an environment variable MOZ_NO_RWS and
+set it to 1.
 
 
 Idle timer for internal cleanups
@@ -242,13 +255,49 @@ executable can be selected. Any changes to these settings will be stored and
 reflected in all URL objects once the user presses the "Set Default" button.
 
 Two small applications make this change a bit easier and provide options to also
-set default programs for mail and news as well as internet chat services:
+set default programs for other types of internet-related activities:
 
 - ConfigApps
-     http://hobbes.nmsu.edu/cgi-bin/h-search?key=configapps&sort=date
+     http://hobbes.nmsu.edu/h-search.php?key=configapps1_1
 
 - Internet Application Integration
      http://7cities.net/~mckinnis/os2/
+
+
+Changed font handling
+---------------------
+
+To be able to display text, Firefox cannot make use of normal OS/2 routines
+but has to use FreeType and FontConfig. This has the advantage that text can
+be displayed with antialiasing, but at the same time has some caveats:
+
+- Firefox cannot make use of OS/2 fonts like WarpSans and others which
+  are not available in Type1 or TrueType format. It is therefore
+  recommended to install the "Workplace Sans" font from
+     http://users.socis.ca/~ataylo00/creative/fonts/
+  or
+     http://hobbes.nmsu.edu/h-search.php?key=wpsu_ttf
+  which Firefox will use as a replacement of WarpSans.
+
+- Display of text in some languages (e.g. Arabic) does not yet take into account
+  that different forms of some characters exist.
+
+To tweak the appearance of text, you can add two preferences, preferably using
+about:config.
+
+- gfx.os2.font.antialiasing (Boolean)
+  This preference controls whether antialiasing is enabled, and defaults to
+  true.
+
+- gfx.os2.font.hinting (Integer)
+  This preference controls the hinting level, and can be between 0 (no hinting)
+  and 3 (full hinting). The default value is 2.
+  Font hinting improves the contrast of displayed text, but may produce poor
+  results for certain characters of some fonts, most notably the OS/2 version
+  of "Times New Roman".
+
+Note that these preferences only take effect when a font gets used for the first
+time, so you may need to restart the application to see the full effect.
 
 
 Known Problems of the OS/2 version
@@ -257,18 +306,24 @@ Known Problems of the OS/2 version
 Cross-platform problems are usually listed in the release notes of each
 milestone release.
 
+- Printing to normal OS/2 printer queues had to be disabled. It was slow even
+  for simple pages and used huge amounts of RAM, so that in most cases the
+  application crashed, see https://bugzilla.mozilla.org/show_bug.cgi?id=415522.
+  While the queues are still displayed in the printing dialog, any printing
+  operation will instead create a PDF file. By default this file is placed on
+  the Desktop, with the name Firefox_<date>_<time>.pdf, where <date> and
+  <time> are replaced by the current system time. If you want to use another
+  name, select "Print to file" before pressing the Print button.
+  The resulting PDF file can be printed using applications like Lucide, Acrobat
+  Reader, or GSview.
+
+- Fonts with names containing special characters (like Asian Unicode names)
+  will not display correctly in the list of fonts in the Options panel.
+
 - Firefox will beep when copying more than 64 kB of text to the clipboard.
   This is to alert users that many applications (most notably the system
   editor, EPM, and applications running in VIO windows) cannot paste more
   than this.
-
-- Firefox cannot make use of OS/2 fonts like WarpSans and others which
-  are not available in Type1 or TrueType format. It is therefore
-  recommended to install the "Workplace Sans" font from
-     http://users.socis.ca/~ataylo00/creative/fonts/
-  or
-     http://hobbes.nmsu.edu/cgi-bin/h-search?key=wpsu_ttf
-  which Firefox will use as a replacement of WarpSans.
 
 Other known problems can be found by following the link "Current Open Warpzilla
 Bugs" on the OS/2 Mozilla page <http://www.mozilla.org/ports/os2/>.

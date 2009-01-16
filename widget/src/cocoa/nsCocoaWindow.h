@@ -183,7 +183,7 @@ public:
     NS_DECL_NSPIWIDGETCOCOA
       
     NS_IMETHOD              Create(nsNativeWidget aParent,
-                                   const nsRect &aRect,
+                                   const nsIntRect &aRect,
                                    EVENT_CALLBACK aHandleEventFunction,
                                    nsIDeviceContext *aContext,
                                    nsIAppShell *aAppShell = nsnull,
@@ -191,7 +191,7 @@ public:
                                    nsWidgetInitData *aInitData = nsnull);
 
     NS_IMETHOD              Create(nsIWidget* aParent,
-                                   const nsRect &aRect,
+                                   const nsIntRect &aRect,
                                    EVENT_CALLBACK aHandleEventFunction,
                                    nsIDeviceContext *aContext,
                                    nsIAppShell *aAppShell = nsnull,
@@ -203,7 +203,7 @@ public:
      // Create(nsNativeWidget...)
 
     virtual nsresult        StandardCreate(nsIWidget *aParent,
-                                    const nsRect &aRect,
+                                    const nsIntRect &aRect,
                                     EVENT_CALLBACK aHandleEventFunction,
                                     nsIDeviceContext *aContext,
                                     nsIAppShell *aAppShell,
@@ -222,8 +222,8 @@ public:
     NS_IMETHOD              SetMenuBar(void* aMenuBar);
     virtual nsMenuBarX*     GetMenuBar();
     NS_IMETHOD              ShowMenuBar(PRBool aShow);
-    NS_IMETHOD WidgetToScreen(const nsRect& aOldRect, nsRect& aNewRect);
-    NS_IMETHOD ScreenToWidget(const nsRect& aOldRect, nsRect& aNewRect);
+    NS_IMETHOD WidgetToScreen(const nsIntRect& aOldRect, nsIntRect& aNewRect);
+    NS_IMETHOD ScreenToWidget(const nsIntRect& aOldRect, nsIntRect& aNewRect);
     
     virtual void* GetNativeData(PRUint32 aDataType) ;
 
@@ -236,16 +236,16 @@ public:
 
     NS_IMETHOD              Resize(PRInt32 aWidth,PRInt32 aHeight, PRBool aRepaint);
     NS_IMETHOD              Resize(PRInt32 aX, PRInt32 aY, PRInt32 aWidth, PRInt32 aHeight, PRBool aRepaint);
-    NS_IMETHOD              GetScreenBounds(nsRect &aRect);
+    NS_IMETHOD              GetScreenBounds(nsIntRect &aRect);
     virtual PRBool          OnPaint(nsPaintEvent &event);
     void                    ReportSizeEvent(NSRect *overrideRect = nsnull);
 
     NS_IMETHOD              SetTitle(const nsAString& aTitle);
 
-    NS_IMETHOD Invalidate(const nsRect & aRect, PRBool aIsSynchronous);
+    NS_IMETHOD Invalidate(const nsIntRect &aRect, PRBool aIsSynchronous);
     NS_IMETHOD Invalidate(PRBool aIsSynchronous);
     NS_IMETHOD Update();
-    NS_IMETHOD Scroll(PRInt32 aDx, PRInt32 aDy, nsRect *alCipRect) { return NS_OK; }
+    NS_IMETHOD Scroll(PRInt32 aDx, PRInt32 aDy, nsIntRect *alCipRect) { return NS_OK; }
     NS_IMETHOD SetColorMap(nsColorMap *aColorMap) { return NS_OK; }
     NS_IMETHOD BeginResizingChildren(void) { return NS_OK; }
     NS_IMETHOD EndResizingChildren(void) { return NS_OK; }

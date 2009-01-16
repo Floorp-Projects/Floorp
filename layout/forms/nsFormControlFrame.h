@@ -64,7 +64,7 @@ public:
       ~(nsIFrame::eReplaced | nsIFrame::eReplacedContainsBlock));
   }
 
-  NS_IMETHOD QueryInterface(const nsIID& aIID, void** aInstancePtr);
+  NS_DECL_QUERYFRAME
 
   /** 
     * Respond to a gui event
@@ -124,11 +124,6 @@ protected:
     */
 
   void GetCurrentCheckState(PRBool* aState);
-
-private:
-  NS_IMETHOD_(nsrefcnt) AddRef() { return NS_OK; }
-  NS_IMETHOD_(nsrefcnt) Release() { return NS_OK; }
-
 };
 
 #endif

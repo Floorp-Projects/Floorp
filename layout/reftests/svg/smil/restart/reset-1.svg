@@ -1,0 +1,84 @@
+<!--
+  This tests reset behaviour (SMILANIM 3.3.7).
+
+  Reset behaviour is invoked when an element restarts. Some instance times
+  (DOM calls, event-based instance times etc.) should be cleared on a reset.
+  Other instance times should not. This test build up the following timegraph:
+
+    |...|  |...|  |...|  |...|
+    ^      ^      ^      ^
+    A      B      C      D
+
+  Instance times A and C are created by the begin spec and are offset time
+  values which should NOT be cleared on a reset, e.g. begin="1s; 3s"
+
+  Instance times B and D are created by DOM calls and SHOULD be cleared on
+  a reset.
+
+  A reset will occur when the interval beginning with begin instance time
+  B begins. At this time a reset is performed and only instance time D should
+  be cleared. That is, the animation should play THREE (3) times, not four.
+
+  We would like to inspect the result at each of the intervals. To do this
+  using a reftest we duplicate the animate four-times and adjust the timing so
+  that at the animation sample time we are mid-way through each of the four
+  intervals.
+
+ -->
+<svg xmlns="http://www.w3.org/2000/svg"
+  xmlns:xlink="http://www.w3.org/1999/xlink"
+  class="reftest-wait"
+  onload="addInstanceTimes()">
+  <script type="text/ecmascript"><![CDATA[
+    function addInstanceTimes() {
+      document.documentElement.setCurrentTime(0);
+      var animate1 = document.getElementById('animate1');
+      animate1.beginElementAt(10);
+      animate1.beginElementAt(4);
+      var animate2 = document.getElementById('animate2');
+      animate2.beginElementAt(1.8);
+      animate2.beginElementAt(3.8);
+      var animate3 = document.getElementById('animate3');
+      animate3.beginElementAt(1.2);
+      animate3.beginElementAt(2.4);
+      var animate4 = document.getElementById('animate4');
+      animate4.beginElementAt(0.6);
+      animate4.beginElementAt(1.8);
+      setTimeAndSnapshot(2, true);
+    }
+  ]]></script>
+  <script xlink:href="../smil-util.js" type="text/javascript"/>
+  <!--
+     Animation #1: Should be mid-way through first interval at t=2
+     Set up intervals: 1-3 4-6 7-9 10-12
+    -->
+  <circle cx="50" cy="50" r="30" fill="blue">
+    <animate attributeName="cx" attributeType="XML"
+      to="250" begin="1s; 7s" dur="2s" fill="remove" id="animate1"/>
+  </circle>
+  <!--
+     Animation #2: Should be mid-way through second interval at t=2
+     Set up intervals: 0.8-1.2 1.8-2.2 2.8-3.2 3.8-4.2
+    -->
+  <circle cx="50" cy="120" r="30" fill="blue">
+    <animate attributeName="cx" attributeType="XML"
+      to="250" begin="0.8; 2.8" dur="0.4s" fill="remove" id="animate2"/>
+  </circle>
+  <!--
+     Animation #3: Should be mid-way through third interval at t=2
+     Set up intervals: 0.6-1.0 1.2-1.6 1.8-2.2 2.4-2.8
+    -->
+  <circle cx="50" cy="190" r="30" fill="blue">
+    <animate attributeName="cx" attributeType="XML"
+      to="250" begin="0.6; 1.8" dur="0.4s" fill="remove" id="animate3"/>
+  </circle>
+  <!--
+     Animation #4: Would be mid-way through fourth interval at t=2 if the
+                   instance time wasn't cleared
+     Set up intervals: 0.1-0.5 0.6-1.0 1.2-1.6 1.8-2.2
+    -->
+  <circle cx="50" cy="260" r="30" fill="blue">
+    <animate attributeName="cx" attributeType="XML"
+      to="250" begin="0.1; 1.2" dur="0.4s" fill="remove" id="animate4"/>
+  </circle>
+</svg>

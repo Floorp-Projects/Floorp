@@ -49,14 +49,13 @@ struct nsHTMLReflowMetrics;
 class  nsIRenderingContext;
 struct nsRect;
 
-#define NS_LEGEND_FRAME_CID \
-{ 0x73805d40, 0x5a24, 0x11d2, { 0x80, 0x46, 0x0, 0x60, 0x8, 0x15, 0xa7, 0x91 } }
-
 class nsLegendFrame : public nsBlockFrame {
 public:
+  NS_DECLARE_FRAME_ACCESSOR(nsLegendFrame)
+
   nsLegendFrame(nsStyleContext* aContext) : nsBlockFrame(aContext) {}
 
-  NS_IMETHOD QueryInterface(const nsIID& aIID, void** aInstancePtr);
+  NS_DECL_QUERYFRAME
 
   NS_IMETHOD Reflow(nsPresContext*          aPresContext,
                     nsHTMLReflowMetrics&     aDesiredSize,

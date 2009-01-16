@@ -81,7 +81,7 @@ usage: test.sh -p product -b branch -T buildtype -x executablepath -N profilenam
 variable            description
 ===============     ============================================================
 -p product          required. firefox|thunderbird|js|fennec
--b branch           required. 1.8.0|1.8.1|1.9.0|1.9.1
+-b branch           required. one of 1.8.0 1.8.1 1.9.0 1.9.1 1.9.2
 -s jsshellsourcepath       required for shell. path to js shell source directory mozilla/js/src
 -T buildtype        required. one of opt debug
 -x executablepath   required for browser. directory-tree containing executable 'product'
@@ -320,6 +320,9 @@ if [[ -z "$includetests" ]]; then
             includetests="$includetests js1_7 js1_8"
             ;;
         1.9.1)
+            includetests="$includetests js1_7 js1_8 ecma_3_1 js1_8_1"
+            ;;
+        1.9.2)
             includetests="$includetests js1_7 js1_8 ecma_3_1 js1_8_1"
             ;;
     esac

@@ -186,18 +186,9 @@ nsImageFrame::~nsImageFrame()
 {
 }
 
-NS_IMETHODIMP
-nsImageFrame::QueryInterface(const nsIID& aIID, void** aInstancePtr)
-{
-  NS_PRECONDITION(aInstancePtr, "null out param");
-
-  if (aIID.Equals(NS_GET_IID(nsIImageFrame))) {
-    *aInstancePtr = static_cast<nsIImageFrame*>(this);
-    return NS_OK;
-  }
-
-  return ImageFrameSuper::QueryInterface(aIID, aInstancePtr);
-}
+NS_QUERYFRAME_HEAD(nsImageFrame)
+  NS_QUERYFRAME_ENTRY(nsIImageFrame)
+NS_QUERYFRAME_TAIL_INHERITING(ImageFrameSuper)
 
 #ifdef ACCESSIBILITY
 NS_IMETHODIMP nsImageFrame::GetAccessible(nsIAccessible** aAccessible)
@@ -303,7 +294,7 @@ nsImageFrame::UpdateIntrinsicSize(imgIContainer* aImage)
   PRBool intrinsicSizeChanged = PR_FALSE;
   
   if (aImage) {
-    nsSize imageSizeInPx;
+    nsIntSize imageSizeInPx;
     aImage->GetWidth(&imageSizeInPx.width);
     aImage->GetHeight(&imageSizeInPx.height);
     nsSize newSize(nsPresContext::CSSPixelsToAppUnits(imageSizeInPx.width),
@@ -387,7 +378,7 @@ nsImageFrame::IsPendingLoad(imgIContainer* aContainer) const
 }
 
 nsRect
-nsImageFrame::SourceRectToDest(const nsRect& aRect)
+nsImageFrame::SourceRectToDest(const nsIntRect& aRect)
 {
   // When scaling the image, row N of the source image may (depending on
   // the scaling function) be used to draw any row in the destination image
@@ -532,7 +523,7 @@ nsImageFrame::OnStartContainer(imgIRequest *aRequest, imgIContainer *aImage)
 nsresult
 nsImageFrame::OnDataAvailable(imgIRequest *aRequest,
                               gfxIImageFrame *aFrame,
-                              const nsRect *aRect)
+                              const nsIntRect *aRect)
 {
   // XXX do we need to make sure that the reflow from the
   // OnStartContainer has been processed before we start calling
@@ -644,7 +635,7 @@ nsImageFrame::OnStopDecode(imgIRequest *aRequest,
 nsresult
 nsImageFrame::FrameChanged(imgIContainer *aContainer,
                            gfxIImageFrame *aNewFrame,
-                           nsRect *aDirtyRect)
+                           nsIntRect *aDirtyRect)
 {
   if (!GetStyleVisibility()->IsVisible()) {
     return NS_OK;
@@ -1835,7 +1826,7 @@ NS_IMETHODIMP nsImageListener::OnStartContainer(imgIRequest *aRequest,
 
 NS_IMETHODIMP nsImageListener::OnDataAvailable(imgIRequest *aRequest,
                                                gfxIImageFrame *aFrame,
-                                               const nsRect *aRect)
+                                               const nsIntRect *aRect)
 {
   if (!mFrame)
     return NS_ERROR_FAILURE;
@@ -1855,7 +1846,7 @@ NS_IMETHODIMP nsImageListener::OnStopDecode(imgIRequest *aRequest,
 
 NS_IMETHODIMP nsImageListener::FrameChanged(imgIContainer *aContainer,
                                             gfxIImageFrame *newframe,
-                                            nsRect * dirtyRect)
+                                            nsIntRect * dirtyRect)
 {
   if (!mFrame)
     return NS_ERROR_FAILURE;

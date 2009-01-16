@@ -120,10 +120,7 @@ public:
   NS_IMETHOD GetFrameName(nsAString& aResult) const;
 #endif
 
-  // nsISupports
-  NS_IMETHOD QueryInterface(REFNSIID aIID, void** aInstancePtr);
-  NS_IMETHOD_(nsrefcnt) AddRef(void) { return 2; }
-  NS_IMETHOD_(nsrefcnt) Release(void) { return 1; }
+  NS_DECL_QUERYFRAME
 
   virtual nsIAtom* GetType() const;
 
@@ -191,7 +188,7 @@ public:
   virtual void ReflowCallbackCanceled();
 
 protected:
-  nsSize GetMargin();
+  nsIntSize GetMargin();
   PRBool IsInline() { return mIsInline; }
   nsresult ShowDocShell();
   nsresult CreateViewAndWidget(nsContentType aContentType);
@@ -242,20 +239,9 @@ NS_IMETHODIMP nsSubDocumentFrame::GetAccessible(nsIAccessible** aAccessible)
 }
 #endif
 
-//--------------------------------------------------------------
-// Frames are not refcounted, no need to AddRef
-NS_IMETHODIMP
-nsSubDocumentFrame::QueryInterface(const nsIID& aIID, void** aInstancePtr)
-{
-  NS_PRECONDITION(aInstancePtr, "null out param");
-
-  if (aIID.Equals(NS_GET_IID(nsIFrameFrame))) {
-    *aInstancePtr = static_cast<nsIFrameFrame*>(this);
-    return NS_OK;
-  }
-
-  return nsLeafFrame::QueryInterface(aIID, aInstancePtr);
-}
+NS_QUERYFRAME_HEAD(nsSubDocumentFrame)
+  NS_QUERYFRAME_ENTRY(nsIFrameFrame)
+NS_QUERYFRAME_TAIL_INHERITING(nsLeafFrame)
 
 NS_IMETHODIMP
 nsSubDocumentFrame::Init(nsIContent*     aContent,
@@ -656,10 +642,7 @@ nsSubDocumentFrame::AttributeChanged(PRInt32 aNameSpaceID,
       if (parentFrame) {
         // There is no interface for nsHTMLFramesetFrame so QI'ing to
         // concrete class, yay!
-        nsHTMLFramesetFrame* framesetFrame = nsnull;
-        parentFrame->QueryInterface(NS_GET_IID(nsHTMLFramesetFrame),
-                                    (void **)&framesetFrame);
-
+        nsHTMLFramesetFrame* framesetFrame = do_QueryFrame(parentFrame);
         if (framesetFrame) {
           framesetFrame->RecalculateBorderResize();
         }
@@ -789,9 +772,9 @@ nsSubDocumentFrame::HideViewer()
   }
 }
 
-nsSize nsSubDocumentFrame::GetMargin()
+nsIntSize nsSubDocumentFrame::GetMargin()
 {
-  nsSize result(-1, -1);
+  nsIntSize result(-1, -1);
   nsGenericHTMLElement *content = nsGenericHTMLElement::FromContent(mContent);
   if (content) {
     const nsAttrValue* attr = content->GetParsedAttr(nsGkAtoms::marginwidth);
@@ -905,7 +888,7 @@ nsSubDocumentFrame::ShowDocShell()
 
   // pass along marginwidth, marginheight, scrolling so sub document
   // can use it
-  nsSize margin = GetMargin();
+  nsIntSize margin = GetMargin();
   docShell->SetMarginWidth(margin.width);
   docShell->SetMarginHeight(margin.height);
 

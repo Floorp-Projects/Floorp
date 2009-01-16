@@ -21,6 +21,7 @@
 # Contributor(s):
 #  Brian Ryner <bryner@brianryner.com>
 #  Chase Phillips <cmp@mozilla.org>
+#  Ehsan Akhgari <ehsan.akhgari@gmail.com>
 #
 # Alternatively, the contents of this file may be used under the terms of
 # either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -52,15 +53,25 @@ PP_LOCALIZED_FILES = \
 	packages-static \
 	$(NULL)
 
-INSTALLER_FILES = \
-	app.tag \
+# All script and locale files used by the Unicode version of NSIS need to be
+# converted from UTF-8 to UTF-16LE
+INSTALLER_FILES_CONV = \
 	nsis/installer.nsi \
 	nsis/uninstaller.nsi \
 	nsis/shared.nsh \
 	$(NULL)
 
-BRANDING_FILES = \
+INSTALLER_FILES = \
+	app.tag \
+	$(NULL)
+
+# All script and locale files used by the Unicode version of NSIS need to be
+# converted from UTF-8 to UTF-16LE
+BRANDING_FILES_CONV = \
 	branding.nsi \
+	$(NULL)
+
+BRANDING_FILES = \
 	wizHeader.bmp \
 	wizHeaderRTL.bmp \
 	wizWatermark.bmp \
@@ -77,7 +88,6 @@ DEFINES += \
 	$(NULL)
 
 include $(topsrcdir)/config/config.mk
-include $(call EXPAND_LOCALE_SRCDIR,toolkit/locales)/installer/windows/charset.mk
 
 installer::
 	$(MAKE) -C .. installer-stage
@@ -87,21 +97,43 @@ installer::
 # included for mar file generation.
 uninstaller::
 	$(RM) -rf $(CONFIG_DIR) && mkdir $(CONFIG_DIR)
+	for i in $(INSTALLER_FILES_CONV); do \
+	  iconv -f UTF-8 -t UTF-16LE $(srcdir)/$$i | \
+	    cat $(MOZILLA_DIR)/toolkit/mozapps/installer/windows/nsis/utf16-le-bom.bin - > \
+	    $(CONFIG_DIR)/`basename $$i`; \
+	done
 	$(INSTALL) $(addprefix $(srcdir)/,$(INSTALLER_FILES)) $(CONFIG_DIR)
+	for i in $(BRANDING_FILES_CONV); do \
+	  iconv -f UTF-8 -t UTF-16LE $(DIST)/branding/$$i | \
+	    cat $(MOZILLA_DIR)/toolkit/mozapps/installer/windows/nsis/utf16-le-bom.bin - > \
+	    $(CONFIG_DIR)/$$i; \
+	done
 	$(INSTALL) $(addprefix $(DIST)/branding/,$(BRANDING_FILES)) $(CONFIG_DIR)
 	$(EXIT_ON_ERROR) \
 	for i in $(PP_LOCALIZED_FILES); do \
 	  $(PERL) $(topsrcdir)/config/preprocessor.pl $(DEFINES) $(ACDEFINES) $(srcdir)/$$i > $(CONFIG_DIR)/$$i; \
 	done
 	$(PERL) $(topsrcdir)/config/preprocessor.pl -Fsubstitution $(DEFINES) $(ACDEFINES) \
-	  $(srcdir)/nsis/defines.nsi.in > $(CONFIG_DIR)/defines.nsi
+	  $(srcdir)/nsis/defines.nsi.in | iconv -f UTF-8 -t UTF-16LE | \
+	  cat $(MOZILLA_DIR)/toolkit/mozapps/installer/windows/nsis/utf16-le-bom.bin - > \
+	  $(CONFIG_DIR)/defines.nsi
 	$(PERL) $(topsrcdir)/toolkit/mozapps/installer/windows/nsis/preprocess-locale.pl \
 	  $(topsrcdir) $(call EXPAND_LOCALE_SRCDIR,browser/locales)/installer $(AB_CD) \
-	  $(WIN_INSTALLER_CHARSET) $(CONFIG_DIR)
+	  $(CONFIG_DIR)
 
 $(CONFIG_DIR)/setup.exe::
 	$(RM) -rf $(CONFIG_DIR) && mkdir $(CONFIG_DIR)
+	for i in $(INSTALLER_FILES_CONV); do \
+	  iconv -f UTF-8 -t UTF-16LE $(srcdir)/$$i | \
+	    cat $(MOZILLA_DIR)/toolkit/mozapps/installer/windows/nsis/utf16-le-bom.bin - > \
+	    $(CONFIG_DIR)/`basename $$i`; \
+	done
 	$(INSTALL) $(addprefix $(srcdir)/,$(INSTALLER_FILES)) $(CONFIG_DIR)
+	for i in $(BRANDING_FILES_CONV); do \
+	  iconv -f UTF-8 -t UTF-16LE $(DIST)/branding/$$i | \
+	    cat $(MOZILLA_DIR)/toolkit/mozapps/installer/windows/nsis/utf16-le-bom.bin - > \
+	    $(CONFIG_DIR)/$$i; \
+	done
 	$(INSTALL) $(addprefix $(DIST)/branding/,$(BRANDING_FILES)) $(CONFIG_DIR)
 	$(EXIT_ON_ERROR) \
 	for i in $(PP_LOCALIZED_FILES); do \
@@ -110,10 +142,12 @@ $(CONFIG_DIR)/setup.exe::
 	$(PERL) $(topsrcdir)/toolkit/mozapps/installer/windows/nsis/make-installremoves.pl \
 	  ../removed-files > $(CONFIG_DIR)/removed-files.log
 	$(PERL) $(topsrcdir)/config/preprocessor.pl -Fsubstitution $(DEFINES) $(ACDEFINES) \
-	  $(srcdir)/nsis/defines.nsi.in > $(CONFIG_DIR)/defines.nsi
+	  $(srcdir)/nsis/defines.nsi.in | iconv -f UTF-8 -t UTF-16LE | \
+	  cat $(MOZILLA_DIR)/toolkit/mozapps/installer/windows/nsis/utf16-le-bom.bin - > \
+	  $(CONFIG_DIR)/defines.nsi
 	$(PERL) $(topsrcdir)/toolkit/mozapps/installer/windows/nsis/preprocess-locale.pl \
 	  $(topsrcdir) $(call EXPAND_LOCALE_SRCDIR,browser/locales)/installer $(AB_CD) \
-	  $(WIN_INSTALLER_CHARSET) $(CONFIG_DIR)
+	  $(CONFIG_DIR)
 
 include $(topsrcdir)/config/rules.mk
 include $(topsrcdir)/toolkit/mozapps/installer/windows/nsis/makensis.mk

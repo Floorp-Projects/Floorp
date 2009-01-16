@@ -119,7 +119,7 @@ nsNativeThemeWin::~nsNativeThemeWin() {
   nsUXThemeData::Invalidate();
 }
 
-static void GetNativeRect(const nsRect& aSrc, RECT& aDst) 
+static void GetNativeRect(const nsIntRect& aSrc, RECT& aDst)
 {
   aDst.top = aSrc.y;
   aDst.bottom = aSrc.y + aSrc.height;
@@ -130,9 +130,7 @@ static void GetNativeRect(const nsRect& aSrc, RECT& aDst)
 static PRBool IsTopLevelMenu(nsIFrame *aFrame)
 {
   PRBool isTopLevel(PR_FALSE);
-  nsIMenuFrame *menuFrame(nsnull);
-  CallQueryInterface(aFrame, &menuFrame);
-
+  nsIMenuFrame *menuFrame = do_QueryFrame(aFrame);
   if (menuFrame) {
     isTopLevel = menuFrame->IsOnMenuBar();
   }
@@ -466,7 +464,7 @@ nsNativeThemeWin::GetThemePartAndState(nsIFrame* aFrame, PRUint8 aWidgetType,
         /* Note: the NOSCROLL type has a rounded corner in each
          * corner.  The more specific HSCROLL, VSCROLL, HVSCROLL types
          * have side and/or top/bottom edges rendered as straight
-         * horizontal lines with sharp corners to accomodate a
+         * horizontal lines with sharp corners to accommodate a
          * scrollbar.  However, the scrollbar gets rendered on top of
          * this for us, so we don't care, and can just use NOSCROLL
          * here.
@@ -817,8 +815,7 @@ nsNativeThemeWin::GetThemePartAndState(nsIFrame* aFrame, PRUint8 aWidgetType,
 
       if (nsUXThemeData::sIsVistaOrLater) {
         if (isHTML) {
-          nsIComboboxControlFrame* ccf = nsnull;
-          CallQueryInterface(aFrame, &ccf);
+          nsIComboboxControlFrame* ccf = do_QueryFrame(aFrame);
           if (ccf && ccf->IsDroppedDown()) {
           /* Hover is propagated, but we need to know whether we're
            * hovering just the combobox frame, not the dropdown frame.
@@ -856,8 +853,7 @@ nsNativeThemeWin::GetThemePartAndState(nsIFrame* aFrame, PRUint8 aWidgetType,
       PRBool isTopLevel = PR_FALSE;
       PRBool isOpen = PR_FALSE;
       PRBool isHover = PR_FALSE;
-      nsIMenuFrame *menuFrame;
-      CallQueryInterface(aFrame, &menuFrame);
+      nsIMenuFrame *menuFrame = do_QueryFrame(aFrame);
 
       isTopLevel = IsTopLevelMenu(aFrame);
 
@@ -1199,7 +1195,7 @@ NS_IMETHODIMP
 nsNativeThemeWin::GetWidgetBorder(nsIDeviceContext* aContext, 
                                   nsIFrame* aFrame,
                                   PRUint8 aWidgetType,
-                                  nsMargin* aResult)
+                                  nsIntMargin* aResult)
 {
   HANDLE theme = GetTheme(aWidgetType);
   if (!theme)
@@ -1248,7 +1244,7 @@ nsNativeThemeWin::GetWidgetBorder(nsIDeviceContext* aContext,
     return NS_ERROR_FAILURE;
 
   // Now compute the delta in each direction and place it in our
-  // nsMargin struct.
+  // nsIntMargin struct.
   aResult->top = contentRect.top - outerRect.top;
   aResult->bottom = outerRect.bottom - contentRect.bottom;
   aResult->left = contentRect.left - outerRect.left;
@@ -1283,7 +1279,7 @@ PRBool
 nsNativeThemeWin::GetWidgetPadding(nsIDeviceContext* aContext, 
                                    nsIFrame* aFrame,
                                    PRUint8 aWidgetType,
-                                   nsMargin* aResult)
+                                   nsIntMargin* aResult)
 {
   switch (aWidgetType) {
     // Radios and checkboxes return a fixed size in GetMinimumWidgetSize
@@ -1427,7 +1423,7 @@ nsNativeThemeWin::GetWidgetOverflow(nsIDeviceContext* aContext,
 NS_IMETHODIMP
 nsNativeThemeWin::GetMinimumWidgetSize(nsIRenderingContext* aContext, nsIFrame* aFrame,
                                        PRUint8 aWidgetType,
-                                       nsSize* aResult, PRBool* aIsOverridable)
+                                       nsIntSize* aResult, PRBool* aIsOverridable)
 {
   (*aResult).width = (*aResult).height = 0;
   *aIsOverridable = PR_TRUE;
@@ -1756,7 +1752,7 @@ nsresult
 nsNativeThemeWin::ClassicGetWidgetBorder(nsIDeviceContext* aContext, 
                                   nsIFrame* aFrame,
                                   PRUint8 aWidgetType,
-                                  nsMargin* aResult)
+                                  nsIntMargin* aResult)
 {
   switch (aWidgetType) {
     case NS_THEME_BUTTON:
@@ -1833,7 +1829,7 @@ nsNativeThemeWin::ClassicGetWidgetBorder(nsIDeviceContext* aContext,
 nsresult
 nsNativeThemeWin::ClassicGetMinimumWidgetSize(nsIRenderingContext* aContext, nsIFrame* aFrame,
                                        PRUint8 aWidgetType,
-                                       nsSize* aResult, PRBool* aIsOverridable)
+                                       nsIntSize* aResult, PRBool* aIsOverridable)
 {
   (*aResult).width = (*aResult).height = 0;
   *aIsOverridable = PR_TRUE;
@@ -2042,8 +2038,7 @@ nsresult nsNativeThemeWin::ClassicGetThemePartAndState(nsIFrame* aFrame, PRUint8
       PRBool isTopLevel = PR_FALSE;
       PRBool isOpen = PR_FALSE;
       PRBool isContainer = PR_FALSE;
-      nsIMenuFrame *menuFrame = nsnull;
-      CallQueryInterface(aFrame, &menuFrame);
+      nsIMenuFrame *menuFrame = do_QueryFrame(aFrame);
 
       // We indicate top-level-ness using aPart. 0 is a normal menu item,
       // 1 is a top-level menu item. The state of the item is composed of
