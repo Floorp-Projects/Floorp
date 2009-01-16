@@ -45,17 +45,11 @@
 #include "nsString.h"
 #include "prtypes.h"
 #include "nsCOMPtr.h"
-#include "nsTArray.h"
 
 class nsAutoCompleteSimpleResult : public nsIAutoCompleteSimpleResult
 {
 public:
   nsAutoCompleteSimpleResult();
-  inline void CheckInvariants() {
-    NS_ASSERTION(mValues.Length() == mComments.Length(), "Arrays out of sync");
-    NS_ASSERTION(mValues.Length() == mImages.Length(),   "Arrays out of sync");
-    NS_ASSERTION(mValues.Length() == mStyles.Length(),   "Arrays out of sync");
-  }
 
   NS_DECL_ISUPPORTS
   NS_DECL_NSIAUTOCOMPLETERESULT
@@ -69,10 +63,10 @@ protected:
   // What we really want is an array of structs with value/comment/image/style contents.
   // But then we'd either have to use COM or manage object lifetimes ourselves.
   // Having four arrays of string simplifies this, but is stupid.
-  nsTArray<nsString> mValues;
-  nsTArray<nsString> mComments;
-  nsTArray<nsString> mImages;
-  nsTArray<nsString> mStyles;
+  nsStringArray mValues;
+  nsStringArray mComments;
+  nsStringArray mImages;
+  nsStringArray mStyles;
 
   nsString mSearchString;
   nsString mErrorDescription;

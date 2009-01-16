@@ -41,7 +41,6 @@
 #include "nsString.h"
 #include "nsHashtable.h"
 #include "nsVoidArray.h"
-#include "nsTArray.h"
 
 #include "nsIComponentManager.h"
 #include "nsIPersistentProperties2.h"
@@ -82,7 +81,7 @@ static PRInt32         gOperatorCount = 0;
 static OperatorData*   gOperatorArray = nsnull;
 static nsHashtable*    gOperatorTable = nsnull;
 static nsVoidArray*    gStretchyOperatorArray = nsnull;
-static nsTArray<nsString>*  gInvariantCharArray = nsnull;
+static nsStringArray*  gInvariantCharArray = nsnull;
 static PRBool          gInitialized   = PR_FALSE;
 
 static const PRUnichar kNullCh  = PRUnichar('\0');
@@ -308,7 +307,7 @@ InitOperators(void)
     key.Append(kMathVariant_name[i]);
     nsAutoString value;
     mathfontProp->GetStringProperty(key, value);
-    gInvariantCharArray->AppendElement(value); // i.e., gInvariantCharArray[i] holds this list
+    gInvariantCharArray->AppendString(value); // i.e., gInvariantCharArray[i] holds this list
   }
 
   // Parse the Operator Dictionary in two passes.
@@ -377,7 +376,7 @@ InitGlobals()
 {
   gInitialized = PR_TRUE;
   nsresult rv = NS_ERROR_OUT_OF_MEMORY;
-  gInvariantCharArray = new nsTArray<nsString>();
+  gInvariantCharArray = new nsStringArray();
   gStretchyOperatorArray = new nsVoidArray();
   if (gInvariantCharArray && gStretchyOperatorArray) {
     gOperatorTable = new nsHashtable();
@@ -621,11 +620,11 @@ nsMathMLOperators::LookupInvariantChar(const nsAString& aChar)
     InitGlobals();
   }
   if (gInvariantCharArray) {
-    for (PRUint32 i = gInvariantCharArray->Length()-1; i >= 0; --i) {
-      const nsString& list = gInvariantCharArray->ElementAt(i);
+    for (PRInt32 i = gInvariantCharArray->Count()-1; i >= 0; --i) {
+      nsString* list = gInvariantCharArray->StringAt(i);
       nsString::const_iterator start, end;
-      list.BeginReading(start);
-      list.EndReading(end);
+      list->BeginReading(start);
+      list->EndReading(end);
       // Style-invariant characters are at offset 3*j + 1.
       if (FindInReadable(aChar, start, end) &&
           start.size_backward() % 3 == 1) {
@@ -644,15 +643,15 @@ nsMathMLOperators::TransformVariantChar(const PRUnichar& aChar,
     InitGlobals();
   }
   if (gInvariantCharArray) {
-    nsString list = gInvariantCharArray->ElementAt(aVariant);
-    PRInt32 index = list.FindChar(aChar);
+    nsString* list = gInvariantCharArray->StringAt(aVariant);
+    PRInt32 index = list->FindChar(aChar);
     // BMP characters are at offset 3*j
-    if (index != kNotFound && index % 3 == 0 && list.Length() - index >= 2 ) {
+    if (index != kNotFound && index % 3 == 0 && list->Length() - index >= 2 ) {
       // The style-invariant character is the next character
       // (and list should contain padding if the next character is in the BMP).
       ++index;
-      PRUint32 len = NS_IS_HIGH_SURROGATE(list.CharAt(index)) ? 2 : 1;
-      return nsDependentSubstring(list, index, len);
+      PRUint32 len = NS_IS_HIGH_SURROGATE(list->CharAt(index)) ? 2 : 1;
+      return nsDependentSubstring(*list, index, len);
     }
   }
   return nsDependentSubstring(&aChar, &aChar + 1);  

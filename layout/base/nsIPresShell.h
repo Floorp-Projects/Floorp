@@ -79,6 +79,7 @@ class nsIRenderingContext;
 class nsIPageSequenceFrame;
 class nsString;
 class nsAString;
+class nsStringArray;
 class nsCaret;
 class nsStyleContext;
 class nsFrameSelection;

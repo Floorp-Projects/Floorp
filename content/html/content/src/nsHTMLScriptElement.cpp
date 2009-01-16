@@ -55,7 +55,6 @@
 #include "nsIDOMDocument.h"
 #include "nsContentErrors.h"
 #include "nsIArray.h"
-#include "nsTArray.h"
 #include "nsDOMJSUtils.h"
 
 //

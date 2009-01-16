@@ -270,7 +270,7 @@ ClearStorage(nsDOMStorageEntry* aEntry, void* userArg)
 }
 
 static nsresult
-GetOfflineDomains(nsTArray<nsString>& aDomains)
+GetOfflineDomains(nsStringArray& aDomains)
 {
   nsCOMPtr<nsIPermissionManager> permissionManager =
     do_GetService(NS_PERMISSIONMANAGER_CONTRACTID);
@@ -298,7 +298,7 @@ GetOfflineDomains(nsTArray<nsString>& aDomains)
           rv = perm->GetHost(host);
           NS_ENSURE_SUCCESS(rv, rv);
 
-          aDomains.AppendElement(NS_ConvertUTF8toUTF16(host));
+          aDomains.AppendString(NS_ConvertUTF8toUTF16(host));
         }
       }
     }
@@ -327,7 +327,7 @@ nsDOMStorageManager::Observe(nsISupports *aSubject,
     NS_ENSURE_SUCCESS(rv, rv);
 
     // Remove global storage for domains that aren't marked for offline use.
-    nsTArray<nsString> domains;
+    nsStringArray domains;
     rv = GetOfflineDomains(domains);
     NS_ENSURE_SUCCESS(rv, rv);
     return nsDOMStorage::gStorageDB->RemoveOwners(domains, PR_FALSE);
@@ -353,7 +353,7 @@ nsDOMStorageManager::ClearOfflineApps()
     nsresult rv = nsDOMStorage::InitDB();
     NS_ENSURE_SUCCESS(rv, rv);
 
-    nsTArray<nsString> domains;
+    nsStringArray domains;
     rv = GetOfflineDomains(domains);
     NS_ENSURE_SUCCESS(rv, rv);
     return nsDOMStorage::gStorageDB->RemoveOwners(domains, PR_TRUE);
@@ -1215,10 +1215,10 @@ nsDOMStorageList::GetStorageForDomain(const nsAString& aRequestedDomain,
                                       PRBool aNoCurrentDomainCheck,
                                       nsresult* aResult)
 {
-  nsTArray<nsString> requestedDomainArray;
+  nsStringArray requestedDomainArray;
   if ((!aNoCurrentDomainCheck &&
        !CanAccessDomain(aRequestedDomain, aCurrentDomain)) ||
-    !ConvertDomainToArray(aRequestedDomain, &requestedDomainArray)) {
+      !ConvertDomainToArray(aRequestedDomain, &requestedDomainArray)) {
     *aResult = NS_ERROR_DOM_SECURITY_ERR;
 
     return nsnull;
@@ -1226,12 +1226,12 @@ nsDOMStorageList::GetStorageForDomain(const nsAString& aRequestedDomain,
 
   // now rebuild a string for the domain.
   nsAutoString usedDomain;
-  PRUint32 requestedPos = 0;
-  for (requestedPos = 0; requestedPos < requestedDomainArray.Length();
+  PRInt32 requestedPos = 0;
+  for (requestedPos = 0; requestedPos < requestedDomainArray.Count();
        requestedPos++) {
     if (!usedDomain.IsEmpty())
       usedDomain.AppendLiteral(".");
-    usedDomain.Append(requestedDomainArray[requestedPos]);
+    usedDomain.Append(*requestedDomainArray[requestedPos]);
   }
 
   *aResult = NS_OK;
@@ -1252,7 +1252,7 @@ nsDOMStorageList::GetStorageForDomain(const nsAString& aRequestedDomain,
 // static
 PRBool
 nsDOMStorageList::ConvertDomainToArray(const nsAString& aDomain,
-                                       nsTArray<nsString> *aArray)
+                                       nsStringArray* aArray)
 {
   PRInt32 length = aDomain.Length();
   PRInt32 n = 0;
@@ -1268,7 +1268,7 @@ nsDOMStorageList::ConvertDomainToArray(const nsAString& aDomain,
       domain.Assign(Substring(aDomain, n, dotpos - n));
 
     ToLowerCase(domain);
-    aArray->AppendElement(domain);
+    aArray->AppendString(domain);
 
     if (dotpos == -1)
       break;

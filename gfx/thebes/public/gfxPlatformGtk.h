@@ -41,7 +41,6 @@
 
 #include "gfxPlatform.h"
 #include "nsAutoRef.h"
-#include "nsTArray.h"
 
 extern "C" {
     typedef struct _GdkDrawable GdkDrawable;
@@ -75,7 +74,7 @@ public:
 
     nsresult GetFontList(const nsACString& aLangGroup,
                          const nsACString& aGenericFamily,
-                         nsTArray<nsString>& aListOfFonts);
+                         nsStringArray& aListOfFonts);
 
     nsresult UpdateFontList();
 

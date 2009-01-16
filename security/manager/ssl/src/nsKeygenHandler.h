@@ -41,8 +41,6 @@
 #define _NSKEYGENHANDLER_H_
 // Form Processor 
 #include "nsIFormProcessor.h" 
-#include "nsVoidArray.h" 
-#include "nsTArray.h" 
 
 nsresult GetSlotWithMechanism(PRUint32 mechanism,
                               nsIInterfaceRequestor *ctx,
@@ -64,7 +62,7 @@ public:
                           nsAString& aValue); 
 
   NS_IMETHOD ProvideContent(const nsAString& aFormType, 
-                            nsTArray<nsString>& aContent, 
+                            nsStringArray& aContent, 
                             nsAString& aAttribute); 
   NS_DECL_ISUPPORTS 
 

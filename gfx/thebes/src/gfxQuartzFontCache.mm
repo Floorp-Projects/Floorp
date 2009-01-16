@@ -49,7 +49,6 @@
 
 #include "nsIPref.h"  // for pref changes callback notification
 #include "nsServiceManagerUtils.h"
-#include "nsTArray.h"
 
 #include "nsDirectoryServiceUtils.h"
 #include "nsDirectoryServiceDefs.h"
@@ -1102,12 +1101,12 @@ gfxQuartzFontCache::GetDefaultFont(const gfxFontStyle* aStyle, PRBool& aNeedsBol
 struct FontListData {
     FontListData(const nsACString& aLangGroup,
                  const nsACString& aGenericFamily,
-                 nsTArray<nsString>& aListOfFonts) :
+                 nsStringArray& aListOfFonts) :
         mLangGroup(aLangGroup), mGenericFamily(aGenericFamily),
         mListOfFonts(aListOfFonts) {}
     const nsACString& mLangGroup;
     const nsACString& mGenericFamily;
-    nsTArray<nsString>& mListOfFonts;
+    nsStringArray& mListOfFonts;
 };
 
 PLDHashOperator PR_CALLBACK
@@ -1119,14 +1118,14 @@ gfxQuartzFontCache::HashEnumFuncForFamilies(nsStringHashKey::KeyType aKey,
 
     nsAutoString localizedFamilyName;
     aFamilyEntry->LocalizedName(localizedFamilyName);
-    data->mListOfFonts.AppendElement(localizedFamilyName);
+    data->mListOfFonts.AppendString(localizedFamilyName);
     return PL_DHASH_NEXT;
 }
 
 void
 gfxQuartzFontCache::GetFontList (const nsACString& aLangGroup,
                                  const nsACString& aGenericFamily,
-                                 nsTArray<nsString>& aListOfFonts)
+                                 nsStringArray& aListOfFonts)
 {
     FontListData data(aLangGroup, aGenericFamily, aListOfFonts);
 
