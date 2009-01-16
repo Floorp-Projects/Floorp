@@ -80,6 +80,14 @@ nsStyleContext::nsStyleContext(nsStyleContext* aParent,
   if (mParent) {
     mParent->AddRef();
     mParent->AddChild(this);
+#ifdef DEBUG
+    nsRuleNode *r1 = mParent->GetRuleNode(), *r2 = aRuleNode;
+    while (r1->GetParent())
+      r1 = r1->GetParent();
+    while (r2->GetParent())
+      r2 = r2->GetParent();
+    NS_ABORT_IF_FALSE(r1 == r2, "must be in the same rule tree as parent");
+#endif
   }
 
   ApplyStyleFixups(aPresContext);
