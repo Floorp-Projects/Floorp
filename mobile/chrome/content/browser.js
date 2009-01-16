@@ -121,7 +121,7 @@ var Browser = {
       containerStyle.width = containerStyle.maxWidth = w + "px";
       containerStyle.height = containerStyle.maxHeight = h + "px";
 
-      ws.updateSize();
+      ws.updateSize(w, h);
     }
     window.addEventListener("resize", resizeHandler, false);
 
