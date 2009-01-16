@@ -1075,7 +1075,7 @@ nsObserverEntry::Notify(nsIParserNode* aNode,
       PRInt32 theAttrCount = aNode->GetAttributeCount(); 
       PRInt32 theObserversCount = theObservers->Count(); 
       if (0 < theObserversCount){
-        nsTArray<nsString> keys(theAttrCount + 4), values(theAttrCount + 4);
+        nsStringArray keys(theAttrCount+4), values(theAttrCount+4);
 
         // XXX this and the following code may be a performance issue.
         // Every key and value is copied and added to an voidarray (causing at
@@ -1083,21 +1083,21 @@ nsObserverEntry::Notify(nsIParserNode* aNode,
         // string (total = 2*(keys+3) + 2(or more) array allocations )).
         PRInt32 index;
         for (index = 0; index < theAttrCount; ++index) {
-          keys.AppendElement(aNode->GetKeyAt(index));
-          values.AppendElement(aNode->GetValueAt(index));
+          keys.AppendString(aNode->GetKeyAt(index));
+          values.AppendString(aNode->GetValueAt(index));
         } 
 
         nsAutoString intValue;
 
-        keys.AppendElement(NS_LITERAL_STRING("charset")); 
-        values.AppendElement(theCharsetValue);       
+        keys.AppendString(NS_LITERAL_STRING("charset")); 
+        values.AppendString(theCharsetValue);       
       
-        keys.AppendElement(NS_LITERAL_STRING("charsetSource")); 
+        keys.AppendString(NS_LITERAL_STRING("charsetSource")); 
         intValue.AppendInt(PRInt32(theCharsetSource),10);
-        values.AppendElement(intValue); 
+        values.AppendString(intValue); 
 
-        keys.AppendElement(NS_LITERAL_STRING("X_COMMAND"));
-        values.AppendElement(NS_LITERAL_STRING("text/html")); 
+        keys.AppendString(NS_LITERAL_STRING("X_COMMAND"));
+        values.AppendString(NS_LITERAL_STRING("text/html")); 
 
         nsCOMPtr<nsIChannel> channel;
         aParser->GetChannel(getter_AddRefs(channel));

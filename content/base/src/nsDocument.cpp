@@ -1222,7 +1222,7 @@ public:
 
 protected:
   // Rebuild our list of style sets
-  nsresult GetSets(nsTArray<nsString>& aStyleSets);
+  nsresult GetSets(nsStringArray& aStyleSets);
   
   nsIDocument* mDocument;  // Our document; weak ref.  It'll let us know if it
                            // dies.
@@ -1247,14 +1247,14 @@ nsDOMStyleSheetSetList::nsDOMStyleSheetSetList(nsIDocument* aDocument)
 NS_IMETHODIMP
 nsDOMStyleSheetSetList::Item(PRUint32 aIndex, nsAString& aResult)
 {
-  nsTArray<nsString> styleSets;
+  nsStringArray styleSets;
   nsresult rv = GetSets(styleSets);
   NS_ENSURE_SUCCESS(rv, rv);
   
-  if (aIndex >= styleSets.Length()) {
+  if (aIndex >= (PRUint32)styleSets.Count()) {
     SetDOMStringToNull(aResult);
   } else {
-    aResult = styleSets[aIndex];
+    styleSets.StringAt(aIndex, aResult);
   }
 
   return NS_OK;
@@ -1263,11 +1263,11 @@ nsDOMStyleSheetSetList::Item(PRUint32 aIndex, nsAString& aResult)
 NS_IMETHODIMP
 nsDOMStyleSheetSetList::GetLength(PRUint32 *aLength)
 {
-  nsTArray<nsString> styleSets;
+  nsStringArray styleSets;
   nsresult rv = GetSets(styleSets);
   NS_ENSURE_SUCCESS(rv, rv);
   
-  *aLength = styleSets.Length();
+  *aLength = (PRUint32)styleSets.Count();
 
   return NS_OK;
 }
@@ -1275,17 +1275,17 @@ nsDOMStyleSheetSetList::GetLength(PRUint32 *aLength)
 NS_IMETHODIMP
 nsDOMStyleSheetSetList::Contains(const nsAString& aString, PRBool *aResult)
 {
-  nsTArray<nsString> styleSets;
+  nsStringArray styleSets;
   nsresult rv = GetSets(styleSets);
   NS_ENSURE_SUCCESS(rv, rv);
   
-  *aResult = styleSets.Contains(aString);
+  *aResult = styleSets.IndexOf(aString) != -1;
 
   return NS_OK;
 }
 
 nsresult
-nsDOMStyleSheetSetList::GetSets(nsTArray<nsString>& aStyleSets)
+nsDOMStyleSheetSetList::GetSets(nsStringArray& aStyleSets)
 {
   if (!mDocument) {
     return NS_OK; // Spec says "no exceptions", and we have no style sets if we
@@ -1299,8 +1299,8 @@ nsDOMStyleSheetSetList::GetSets(nsTArray<nsString>& aStyleSets)
     nsIStyleSheet* sheet = mDocument->GetStyleSheetAt(index);
     NS_ASSERTION(sheet, "Null sheet in sheet list!");
     sheet->GetTitle(title);
-    if (!title.IsEmpty() && !aStyleSets.Contains(title) &&
-        !aStyleSets.AppendElement(title)) {
+    if (!title.IsEmpty() && aStyleSets.IndexOf(title) == -1 &&
+        !aStyleSets.AppendString(title)) {
       return NS_ERROR_OUT_OF_MEMORY;
     }
   }

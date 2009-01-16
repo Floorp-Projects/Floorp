@@ -44,7 +44,6 @@
 #include "gfxPlatform.h"
 #include "gfxOS2Fonts.h"
 #include "gfxFontUtils.h"
-#include "nsTArray.h"
 
 class gfxFontconfigUtils;
 
@@ -64,7 +63,7 @@ public:
 
     nsresult GetFontList(const nsACString& aLangGroup,
                          const nsACString& aGenericFamily,
-                         nsTArray<nsString>& aListOfFonts);
+                         nsStringArray& aListOfFonts);
     nsresult UpdateFontList();
     nsresult ResolveFontName(const nsAString& aFontName,
                              FontResolverCallback aCallback,

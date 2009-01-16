@@ -356,7 +356,7 @@ nsContentSink::ScriptAvailable(nsresult aResult,
   // aElement will not be in mScriptElements if a <script> was added
   // using the DOM during loading, or if the script was inline and thus
   // never blocked.
-  NS_ASSERTION(mScriptElements.IndexOf(aElement) == PRUint32(count - 1) ||
+  NS_ASSERTION(mScriptElements.IndexOf(aElement) == count - 1 ||
                mScriptElements.IndexOf(aElement) == PRUint32(-1),
                "script found at unexpected position");
 
@@ -719,25 +719,25 @@ nsContentSink::ProcessLink(nsIContent* aElement,
                            const nsSubstring& aMedia)
 {
   // XXX seems overkill to generate this string array
-  nsTArray<nsString> linkTypes;
+  nsStringArray linkTypes;
   nsStyleLinkElement::ParseLinkTypes(aRel, linkTypes);
 
-  PRBool hasPrefetch = linkTypes.Contains(NS_LITERAL_STRING("prefetch"));
+  PRBool hasPrefetch = (linkTypes.IndexOf(NS_LITERAL_STRING("prefetch")) != -1);
   // prefetch href if relation is "next" or "prefetch"
-  if (hasPrefetch || linkTypes.Contains(NS_LITERAL_STRING("next"))) {
+  if (hasPrefetch || linkTypes.IndexOf(NS_LITERAL_STRING("next")) != -1) {
     PrefetchHref(aHref, aElement, hasPrefetch);
   }
 
-  if ((!aHref.IsEmpty()) && linkTypes.Contains(NS_LITERAL_STRING("dns-prefetch"))) {
+  if ((!aHref.IsEmpty()) && linkTypes.IndexOf(NS_LITERAL_STRING("dns-prefetch")) != -1) {
     PrefetchDNS(aHref);
   }
 
   // is it a stylesheet link?
-  if (!linkTypes.Contains(NS_LITERAL_STRING("stylesheet"))) {
+  if (linkTypes.IndexOf(NS_LITERAL_STRING("stylesheet")) == -1) {
     return NS_OK;
   }
 
-  PRBool isAlternate = linkTypes.Contains(NS_LITERAL_STRING("alternate"));
+  PRBool isAlternate = linkTypes.IndexOf(NS_LITERAL_STRING("alternate")) != -1;
   return ProcessStyleLink(aElement, aHref, isAlternate, aTitle, aType,
                           aMedia);
 }

@@ -44,7 +44,6 @@
 #include "gfxOS2Platform.h"
 #include "gfxOS2Surface.h"
 #include "gfxOS2Fonts.h"
-#include "nsTArray.h"
 
 #include "nsIServiceManager.h"
 #include "nsIPlatformCharset.h"
@@ -484,7 +483,7 @@ gfxOS2FontGroup::gfxOS2FontGroup(const nsAString& aFamilies,
         mFamilies.Replace(pos, 8, NS_LITERAL_STRING("Workplace Sans"));
     }
 
-    nsTArray<nsString> familyArray;
+    nsStringArray familyArray;
     ForEachFont(FontCallback, &familyArray);
 
     // To be able to easily search for glyphs in other fonts, append a few good
@@ -500,12 +499,12 @@ gfxOS2FontGroup::gfxOS2FontGroup(const nsAString& aFamilies,
     // Should append some default font if there are no available fonts.
     // Let's use Helv which should be available on any OS/2 system; if
     // it's not there, Fontconfig replaces it with something else...
-    if (familyArray.Length() == 0) {
-        familyArray.AppendElement(NS_LITERAL_STRING("Helv"));
+    if (familyArray.Count() == 0) {
+        familyArray.AppendString(NS_LITERAL_STRING("Helv"));
     }
 
-    for (PRUint32 i = 0; i < familyArray.Length(); i++) {
-        nsRefPtr<gfxOS2Font> font = gfxOS2Font::GetOrMakeFont(familyArray[i], &mStyle);
+    for (int i = 0; i < familyArray.Count(); i++) {
+        nsRefPtr<gfxOS2Font> font = gfxOS2Font::GetOrMakeFont(*familyArray[i], &mStyle);
         if (font) {
             mFonts.AppendElement(font);
         }
@@ -821,9 +820,9 @@ PRBool gfxOS2FontGroup::FontCallback(const nsAString& aFontName,
                                      const nsACString& aGenericName,
                                      void *aClosure)
 {
-    nsTArray<nsString> *sa = static_cast<nsTArray<nsString>*>(aClosure);
-    if (!aFontName.IsEmpty() && !sa->Contains(aFontName)) {
-        sa->AppendElement(aFontName);
+    nsStringArray *sa = static_cast<nsStringArray*>(aClosure);
+    if (!aFontName.IsEmpty() && sa->IndexOf(aFontName) < 0) {
+        sa->AppendString(aFontName);
     }
     return PR_TRUE;
 }

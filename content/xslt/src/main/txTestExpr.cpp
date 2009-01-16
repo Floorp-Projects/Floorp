@@ -39,7 +39,6 @@
 #include "nsXPCOM.h"
 #include "txStandaloneXSLTProcessor.h"
 #include "nsString.h"
-#include "nsTArray.h"
 #include "txExprParser.h"
 #include "txIXPathContext.h"
 
@@ -117,27 +116,27 @@ int main(int argc, char** argv)
         return 1;
 
     nsAutoString exprOrig, expr;
-    nsTArray<nsString> exprHead, exprTail;
+    nsStringArray exprHead, exprTail;
     PRUint8 i, dropStart, dropEnd;
-    exprHead.AppendElement(NS_ConvertASCIItoUTF16(kTokens[0]));
-    exprTail.AppendiElement(NS_ConvertASCIItoUTF16(kTokens[kCount - 1]));
+    exprHead.AppendString(NS_ConvertASCIItoUTF16(kTokens[0]));
+    exprTail.AppendString(NS_ConvertASCIItoUTF16(kTokens[kCount - 1]));
     for (i = 2; i < kCount; ++i) {
-        exprHead.AppendElement(exprHead[i - 2] +
+        exprHead.AppendString(*exprHead[i - 2] +
                               NS_ConvertASCIItoUTF16(kTokens[i - 1]));
-        exprTail.AppendElement(NS_ConvertASCIItoUTF16(kTokens[kCount - i]) +
-                              exprTail[i - 2]);
+        exprTail.AppendString(NS_ConvertASCIItoUTF16(kTokens[kCount - i]) +
+                              *exprTail[i - 2]);
     }
-    exprOrig = NS_ConvertASCIItoUTF16(kTokens[0]) + exprTail[kCount - 2];
+    exprOrig = NS_ConvertASCIItoUTF16(kTokens[0]) + *exprTail[kCount - 2];
     cout << NS_LossyConvertUTF16toASCII(exprOrig).get() << endl << endl;
     for (dropStart = 0; dropStart < kCount - 2; ++dropStart) {
-        doTest(exprTail[kCount - 2 - dropStart]);
+        doTest(*exprTail[kCount - 2 - dropStart]);
         for (dropEnd = kCount - 3 - dropStart; dropEnd > 0; --dropEnd) {
-            expr = exprHead[dropStart] + exprTail[dropEnd];
+            expr = *exprHead[dropStart] + *exprTail[dropEnd];
             doTest(expr);
         }
-        doTest(exprHead[dropStart]);
+        doTest(*exprHead[dropStart]);
     }
-    doTest(exprHead[kCount - 2]);
+    doTest(*exprHead[kCount - 2]);
 
     txXSLTProcessor::shutdown();
     rv = NS_ShutdownXPCOM(nsnull);
