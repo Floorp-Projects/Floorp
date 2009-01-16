@@ -40,6 +40,7 @@
 #define GFX_PLATFORM_BEOS_H
 
 #include "gfxPlatform.h"
+#include "gfxTArray.h"
 
 class gfxFontconfigUtils;
 
@@ -59,7 +60,7 @@ public:
 
     nsresult GetFontList(const nsACString& aLangGroup,
                          const nsACString& aGenericFamily,
-                         nsStringArray& aListOfFonts);
+                         nsTArray<nsString>& aListOfFonts);
 
     nsresult UpdateFontList();
 

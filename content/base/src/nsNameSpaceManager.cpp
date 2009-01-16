@@ -45,6 +45,7 @@
 #include "nsAutoPtr.h"
 #include "nsINodeInfo.h"
 #include "nsCOMArray.h"
+#include "nsTArray.h"
 #include "nsContentCreatorFunctions.h"
 #include "nsDataHashtable.h"
 #include "nsString.h"
@@ -131,7 +132,7 @@ private:
   nsresult AddNameSpace(const nsAString& aURI, const PRInt32 aNameSpaceID);
 
   nsDataHashtable<nsNameSpaceKey,PRInt32> mURIToIDTable;
-  nsStringArray mURIArray;
+  nsTArray< nsAutoPtr<nsString> > mURIArray;
 };
 
 static NameSpaceManagerImpl* sNameSpaceManager = nsnull;
@@ -177,7 +178,7 @@ NameSpaceManagerImpl::RegisterNameSpace(const nsAString& aURI,
 
   nsresult rv = NS_OK;
   if (!mURIToIDTable.Get(&aURI, &aNameSpaceID)) {
-    aNameSpaceID = mURIArray.Count() + 1; // id is index + 1
+    aNameSpaceID = mURIArray.Length() + 1; // id is index + 1
 
     rv = AddNameSpace(aURI, aNameSpaceID);
     if (NS_FAILED(rv)) {
@@ -196,13 +197,13 @@ NameSpaceManagerImpl::GetNameSpaceURI(PRInt32 aNameSpaceID, nsAString& aURI)
   NS_PRECONDITION(aNameSpaceID >= 0, "Bogus namespace ID");
   
   PRInt32 index = aNameSpaceID - 1; // id is index + 1
-  if (index < 0 || index >= mURIArray.Count()) {
+  if (index < 0 || index >= PRInt32(mURIArray.Length())) {
     aURI.Truncate();
 
     return NS_ERROR_ILLEGAL_VALUE;
   }
 
-  mURIArray.StringAt(index, aURI);
+  aURI = *mURIArray.ElementAt(index);
 
   return NS_OK;
 }
@@ -286,16 +287,17 @@ nsresult NameSpaceManagerImpl::AddNameSpace(const nsAString& aURI,
     return NS_ERROR_OUT_OF_MEMORY;
   }
   
-  NS_ASSERTION(aNameSpaceID - 1 == mURIArray.Count(),
+  NS_ASSERTION(aNameSpaceID - 1 == mURIArray.Length(),
                "BAD! AddNameSpace not called in right order!");
 
-  if (!mURIArray.AppendString(aURI)) {
+  nsString* uri = new nsString(aURI);
+  if (!uri || !mURIArray.AppendElement(uri)) {
+    delete uri;
     return NS_ERROR_OUT_OF_MEMORY;
   }
 
-  const nsString* uri = mURIArray.StringAt(aNameSpaceID - 1);
   if (!mURIToIDTable.Put(uri, aNameSpaceID)) {
-    mURIArray.RemoveStringAt(aNameSpaceID - 1);
+    mURIArray.RemoveElementAt(aNameSpaceID - 1);
 
     return NS_ERROR_OUT_OF_MEMORY;
   }

@@ -81,7 +81,7 @@ public:
 
     nsresult GetFontList(const nsACString& aLangGroup,
                          const nsACString& aGenericFamily,
-                         nsStringArray& aListOfFonts);
+                         nsTArray<nsString>& aListOfFonts);
     nsresult UpdateFontList();
 
     // in some situations, need to make decisions about ambiguous characters, may need to look at multiple pref langs

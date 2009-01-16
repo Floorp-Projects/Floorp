@@ -48,6 +48,8 @@
 #include "nsIDOMDOMStringList.h"
 #include "nsIDOMNameList.h"
 #include "nsVoidArray.h"
+#include "nsTArray.h"
+#include "nsString.h"
 
 class nsDOMStringList : public nsIDOMDOMStringList
 {
@@ -60,11 +62,11 @@ public:
 
   PRBool Add(const nsAString& aName)
   {
-    return mNames.AppendString(aName);
+    return mNames.AppendElement(aName) != nsnull;
   }
 
 private:
-  nsStringArray mNames;
+  nsTArray<nsString> mNames;
 };
 
 class nsNameList : public nsIDOMNameList
@@ -79,8 +81,8 @@ public:
   PRBool Add(const nsAString& aNamespaceURI, const nsAString& aName);
 
 private:
-  nsStringArray mNamespaceURIs;
-  nsStringArray mNames;
+  nsTArray<nsString> mNamespaceURIs;
+  nsTArray<nsString> mNames;
 };
 
 #endif /* nsDOMLists_h___ */

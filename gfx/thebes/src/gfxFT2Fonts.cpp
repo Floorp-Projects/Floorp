@@ -48,6 +48,7 @@
 #include "cairo-ft.h"
 #include <freetype/tttables.h>
 #include "gfxFontUtils.h"
+#include "nsTArray.h"
 
 /**
  * FontEntry
@@ -177,10 +178,10 @@ gfxFT2FontGroup::FontCallback(const nsAString& fontName,
                              const nsACString& genericName,
                              void *closure)
 {
-    nsStringArray *sa = static_cast<nsStringArray*>(closure);
+    nsTArray<nsString> *sa = static_cast<nsTArray<nsString>*>(closure);
 
-    if (!fontName.IsEmpty() && sa->IndexOf(fontName) < 0) {
-        sa->AppendString(fontName);
+    if (!fontName.IsEmpty() && !sa->Contains(fontName)) {
+        sa->AppendElement(fontName);
 #ifdef DEBUG_pavlov
         printf(" - %s\n", NS_ConvertUTF16toUTF8(fontName).get());
 #endif
@@ -223,10 +224,10 @@ gfxFT2FontGroup::gfxFT2FontGroup(const nsAString& families,
 #ifdef DEBUG_pavlov
     printf("Looking for %s\n", NS_ConvertUTF16toUTF8(families).get());
 #endif
-    nsStringArray familyArray;
+    nsTArray<nsString> familyArray;
     ForEachFont(FontCallback, &familyArray);
 
-    if (familyArray.Count() == 0) {
+    if (familyArray.Length() == 0) {
         nsAutoString prefFamilies;
         gfxToolkitPlatform::GetPlatform()->GetPrefFonts(aStyle->langGroup.get(), prefFamilies, nsnull);
         if (!prefFamilies.IsEmpty()) {
@@ -234,17 +235,17 @@ gfxFT2FontGroup::gfxFT2FontGroup(const nsAString& families,
         }
     }
 #if defined(MOZ_WIDGET_QT) /* FIXME DFB */
-    if (familyArray.Count() == 0) {
+    if (familyArray.Length() == 0) {
         printf("failde to find a font. sadface\n");
         // We want to get rid of this entirely at some point, but first we need real lists of fonts.
         QFont defaultFont;
         QFontInfo fi (defaultFont);
-        familyArray.AppendString(nsDependentString(static_cast<const PRUnichar *>(fi.family().utf16())));
+        familyArray.AppendElement(nsDependentString(static_cast<const PRUnichar *>(fi.family().utf16())));
     }
 #endif
 
-    for (int i = 0; i < familyArray.Count(); i++) {
-        nsRefPtr<gfxFT2Font> font = GetOrMakeFont(*familyArray[i], &mStyle);
+    for (PRUint32 i = 0; i < familyArray.Length(); i++) {
+        nsRefPtr<gfxFT2Font> font = GetOrMakeFont(familyArray[i], &mStyle);
         if (font) {
             mFonts.AppendElement(font);
         }

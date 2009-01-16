@@ -76,16 +76,16 @@ nsTemplateCondition::nsTemplateCondition(nsIAtom* aSourceVariable,
         PRInt32 start = 0, end = 0;
         while ((end = aTargets.FindChar(',',start)) >= 0) {
             if (end > start) {
-                mTargetList.AppendString(Substring(aTargets, start, end - start));
+                mTargetList.AppendElement(Substring(aTargets, start, end - start));
             }
             start = end + 1;
         }
-        if (start < (PRInt32)aTargets.Length()) {
-            mTargetList.AppendString(Substring(aTargets, start));
+        if (start < PRInt32(aTargets.Length())) {
+            mTargetList.AppendElement(Substring(aTargets, start));
         }
     }
     else {
-        mTargetList.AppendString(aTargets);
+        mTargetList.AppendElement(aTargets);
     }
 
     MOZ_COUNT_CTOR(nsTemplateCondition);
@@ -150,9 +150,9 @@ nsTemplateCondition::CheckMatch(nsIXULTemplateResult* aResult)
     else {
         // iterate over the strings in the target and determine
         // whether there is a match.
-        PRInt32 length = mTargetList.Count();
-        for (PRInt32 t = 0; t < length; t++) {
-            match = CheckMatchStrings(leftString, *mTargetList[t]);
+        PRUint32 length = mTargetList.Length();
+        for (PRUint32 t = 0; t < length; t++) {
+            match = CheckMatchStrings(leftString, mTargetList[t]);
 
             // stop once a match is found. In negate mode, stop once a
             // target does not match.
