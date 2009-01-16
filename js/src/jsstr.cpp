@@ -2197,6 +2197,9 @@ str_concat(JSContext *cx, uintN argc, jsval *vp)
 
     NORMALIZE_THIS(cx, vp, str);
 
+    /* Set vp (aka rval) early to handle the argc == 0 case. */
+    *vp = STRING_TO_JSVAL(str);
+
     for (i = 0, argv = vp + 2; i < argc; i++) {
         str2 = js_ValueToString(cx, argv[i]);
         if (!str2)
@@ -2206,9 +2209,9 @@ str_concat(JSContext *cx, uintN argc, jsval *vp)
         str = js_ConcatStrings(cx, str, str2);
         if (!str)
             return JS_FALSE;
+        *vp = STRING_TO_JSVAL(str);
     }
 
-    *vp = STRING_TO_JSVAL(str);
     return JS_TRUE;
 }
 

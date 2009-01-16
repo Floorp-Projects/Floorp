@@ -145,7 +145,7 @@ static void onOptions(HWND hWnd, Logger * logger)
 
 static void onCommand(HWND hWnd, int id, HWND hWndCtl, UINT codeNotify)
 {
-  LoggerWin * logger = (LoggerWin *)GetWindowLong(hWnd, DWL_USER);
+  LoggerWin * logger = (LoggerWin *)GetWindowLongPtr(hWnd, DWLP_USER);
   switch (id)
   {
     case IDC_CHECK_MUTE:
@@ -167,7 +167,7 @@ static void onCommand(HWND hWnd, int id, HWND hWndCtl, UINT codeNotify)
 static BOOL onInitDialog(HWND hWnd, HWND hWndFocus, LPARAM lParam)
 {
   LoggerWin * logger = (LoggerWin *)lParam;
-  SetWindowLong(hWnd, DWL_USER, (long)logger);
+  SetWindowLongPtr(hWnd, DWLP_USER, (LONG_PTR)logger);
   SetWindowText(hWnd, szAppName);
   HFONT hFont = GetStockFont(ANSI_FIXED_FONT);
   SetWindowFont(GetDlgItem(hWnd, IDC_MAIN_OUTPUT), hFont, FALSE);
@@ -185,7 +185,7 @@ static BOOL onInitDialog(HWND hWnd, HWND hWndFocus, LPARAM lParam)
 
 static void onDestroy(HWND hWnd)
 {
-  LoggerWin * logger = (LoggerWin *)GetWindowLong(hWnd, DWL_USER);
+  LoggerWin * logger = (LoggerWin *)GetWindowLongPtr(hWnd, DWLP_USER);
   if(logger)
     logger->onDestroyWindow();
 }

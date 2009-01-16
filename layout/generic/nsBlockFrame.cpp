@@ -266,8 +266,6 @@ RecordReflowStatus(PRBool aChildIsBlock, nsReflowStatus aFrameReflowStatus)
 
 //----------------------------------------------------------------------
 
-const nsIID kBlockFrameCID = NS_BLOCK_FRAME_CID;
-
 nsIFrame*
 NS_NewBlockFrame(nsIPresShell* aPresShell, nsStyleContext* aContext, PRUint32 aFlags)
 {
@@ -330,17 +328,9 @@ nsBlockFrame::GetLineIterator()
   return it;
 }
 
-NS_IMETHODIMP
-nsBlockFrame::QueryInterface(const nsIID& aIID, void** aInstancePtr)
-{
-  NS_PRECONDITION(aInstancePtr, "null out param");
-
-  if (aIID.Equals(kBlockFrameCID)) {
-    *aInstancePtr = static_cast<void*>(static_cast<nsBlockFrame*>(this));
-    return NS_OK;
-  }
-  return nsBlockFrameSuper::QueryInterface(aIID, aInstancePtr);
-}
+NS_QUERYFRAME_HEAD(nsBlockFrame)
+  NS_QUERYFRAME_ENTRY(nsBlockFrame)
+NS_QUERYFRAME_TAIL_INHERITING(nsBlockFrameSuper)
 
 nsSplittableType
 nsBlockFrame::GetSplittableType() const
@@ -449,9 +439,8 @@ nsBlockFrame::List(FILE* out, PRInt32 aIndent) const
       }
       fputs("<\n", out);
       while (kid) {
-        nsIFrameDebug*  frameDebug;
-
-        if (NS_SUCCEEDED(CallQueryInterface(kid, &frameDebug))) {
+        nsIFrameDebug *frameDebug = do_QueryFrame(kid);
+        if (frameDebug) {
           frameDebug->List(out, aIndent + 1);
         }
         kid = kid->GetNextSibling();
@@ -832,8 +821,7 @@ CalculateContainingBlockSizeForAbsolutes(const nsHTMLReflowState& aReflowState,
     if (aLastRS != &aReflowState) {
       // Scrollbars need to be specifically excluded, if present, because they are outside the
       // padding-edge. We need better APIs for getting the various boxes from a frame.
-      nsIScrollableFrame* scrollFrame;
-      CallQueryInterface(aLastRS->frame, &scrollFrame);
+      nsIScrollableFrame* scrollFrame = do_QueryFrame(aLastRS->frame);
       nsMargin scrollbars(0,0,0,0);
       if (scrollFrame) {
         scrollbars =
@@ -4238,7 +4226,7 @@ nsBlockFrame::HandleOverflowPlaceholdersForPulledFrame(
 #ifdef DEBUG
   nsresult rv =
 #endif
-    parent->DoRemoveFrame(frame, PERSERVE_REMOVED_FRAMES);
+    parent->DoRemoveFrame(frame, PRESERVE_REMOVED_FRAMES);
   NS_ASSERTION(NS_SUCCEEDED(rv), "frame should be in parent's lists");
   
   nsIFrame* lastOverflowPlace = aState.mOverflowPlaceholders.LastChild();
@@ -5274,7 +5262,7 @@ static nsresult RemoveBlockChild(nsIFrame* aFrame, PRBool aDestroyFrames,
   NS_ASSERTION(nextBlock,
                "Our child's continuation's parent is not a block?");
   return nextBlock->DoRemoveFrame(aFrame,
-      (aDestroyFrames ? 0 : nsBlockFrame::PERSERVE_REMOVED_FRAMES) |
+      (aDestroyFrames ? 0 : nsBlockFrame::PRESERVE_REMOVED_FRAMES) |
       (aRemoveOnlyFluidContinuations ? 0 : nsBlockFrame::REMOVE_FIXED_CONTINUATIONS));
 }
 
@@ -5293,7 +5281,7 @@ nsBlockFrame::DoRemoveFrame(nsIFrame* aDeletedFrame, PRUint32 aFlags)
 
   nsPresContext* presContext = PresContext();
   if (NS_FRAME_IS_OVERFLOW_CONTAINER & aDeletedFrame->GetStateBits()) {
-    if (!(aFlags & PERSERVE_REMOVED_FRAMES)) {
+    if (!(aFlags & PRESERVE_REMOVED_FRAMES)) {
       nsIFrame* nif = aDeletedFrame->GetNextInFlow();
       if (nif)
         static_cast<nsContainerFrame*>(nif->GetParent())
@@ -5315,7 +5303,7 @@ nsBlockFrame::DoRemoveFrame(nsIFrame* aDeletedFrame, PRUint32 aFlags)
   }
 
   if (aDeletedFrame->GetStateBits() & NS_FRAME_OUT_OF_FLOW) {
-    NS_ASSERTION(!(aFlags & PERSERVE_REMOVED_FRAMES),
+    NS_ASSERTION(!(aFlags & PRESERVE_REMOVED_FRAMES),
                  "We can't not destroy out of flows");
     DoRemoveOutOfFlowFrame(aDeletedFrame);
     return NS_OK;
@@ -5328,12 +5316,12 @@ nsBlockFrame::DoRemoveFrame(nsIFrame* aDeletedFrame, PRUint32 aFlags)
     nsFrameList* overflowPlaceholders = GetOverflowPlaceholders();
     if (overflowPlaceholders && overflowPlaceholders->RemoveFrame(aDeletedFrame)) {
       nsIFrame* nif = aDeletedFrame->GetNextInFlow();
-      if (!(aFlags & PERSERVE_REMOVED_FRAMES)) {
+      if (!(aFlags & PRESERVE_REMOVED_FRAMES)) {
         aDeletedFrame->Destroy();
       } else {
         aDeletedFrame->SetNextSibling(nsnull);
       }
-      return RemoveBlockChild(nif, !(aFlags & PERSERVE_REMOVED_FRAMES),
+      return RemoveBlockChild(nif, !(aFlags & PRESERVE_REMOVED_FRAMES),
                               !(aFlags & REMOVE_FIXED_CONTINUATIONS));
     }
   }
@@ -5438,7 +5426,7 @@ found_frame:;
     printf(" prevSibling=%p deletedNextContinuation=%p\n", prevSibling, deletedNextContinuation);
 #endif
 
-    if (aFlags & PERSERVE_REMOVED_FRAMES) {
+    if (aFlags & PRESERVE_REMOVED_FRAMES) {
       aDeletedFrame->SetNextSibling(nsnull);
     } else {
       aDeletedFrame->Destroy();
@@ -5499,7 +5487,7 @@ found_frame:;
       // consecutive lines. So for placeholders, just continue the slow easy way.
       if (isPlaceholder) {
         return RemoveBlockChild(deletedNextContinuation,
-                                !(aFlags & PERSERVE_REMOVED_FRAMES),
+                                !(aFlags & PRESERVE_REMOVED_FRAMES),
                                 !(aFlags & REMOVE_FIXED_CONTINUATIONS));
       }
 
@@ -5549,7 +5537,7 @@ found_frame:;
 #endif
 
   // Advance to next flow block if the frame has more continuations
-  return RemoveBlockChild(aDeletedFrame, !(aFlags & PERSERVE_REMOVED_FRAMES),
+  return RemoveBlockChild(aDeletedFrame, !(aFlags & PRESERVE_REMOVED_FRAMES),
                           !(aFlags & REMOVE_FIXED_CONTINUATIONS));
 }
 

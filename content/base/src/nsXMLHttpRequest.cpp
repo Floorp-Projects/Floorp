@@ -143,7 +143,7 @@
 #define NS_BADCERTHANDLER_CONTRACTID \
   "@mozilla.org/content/xmlhttprequest-bad-cert-handler;1"
 
-#define NS_PROGRESS_EVENT_INTERVAL 350
+#define NS_PROGRESS_EVENT_INTERVAL 50
 
 NS_IMPL_CYCLE_COLLECTION_CLASS(nsDOMEventListenerWrapper)
 
@@ -2453,6 +2453,7 @@ nsXMLHttpRequest::Send(nsIVariant *aBody)
     nsXPIDLString serial;
     nsCOMPtr<nsIInputStream> postDataStream;
     nsCAutoString charset(NS_LITERAL_CSTRING("UTF-8"));
+    nsCAutoString defaultContentType(NS_LITERAL_CSTRING("text/plain"));
 
     PRUint16 dataType;
     rv = aBody->GetDataType(&dataType);
@@ -2474,6 +2475,8 @@ nsXMLHttpRequest::Send(nsIVariant *aBody)
         // document?
         nsCOMPtr<nsIDOMDocument> doc(do_QueryInterface(supports));
         if (doc) {
+          defaultContentType.AssignLiteral("application/xml");
+
           nsCOMPtr<nsIDOMSerializer> serializer(do_CreateInstance(NS_XMLSERIALIZER_CONTRACTID, &rv));
           if (NS_FAILED(rv)) return rv;
 
@@ -2481,9 +2484,7 @@ nsXMLHttpRequest::Send(nsIVariant *aBody)
           if (dom3doc) {
             nsAutoString inputEncoding;
             dom3doc->GetInputEncoding(inputEncoding);
-            if (DOMStringIsNull(inputEncoding)) {
-              charset.AssignLiteral("UTF-8");
-            } else {
+            if (!DOMStringIsNull(inputEncoding)) {
               CopyUTF16toUTF8(inputEncoding, charset);
             }
           }
@@ -2525,15 +2526,10 @@ nsXMLHttpRequest::Send(nsIVariant *aBody)
     case nsIDataType::VTYPE_EMPTY:
       // Makes us act as if !aBody, don't upload anything
       break;
-    case nsIDataType::VTYPE_EMPTY_ARRAY:
-    case nsIDataType::VTYPE_ARRAY:
-      // IE6 throws error here, so we do that as well
-      return NS_ERROR_INVALID_ARG;
     default:
       // try variant string
       rv = aBody->GetAsWString(getter_Copies(serial));
-      if (NS_FAILED(rv))
-        return rv;
+      NS_ENSURE_SUCCESS(rv, rv);
       break;
     }
 
@@ -2562,7 +2558,7 @@ nsXMLHttpRequest::Send(nsIVariant *aBody)
                       GetRequestHeader(NS_LITERAL_CSTRING("Content-Type"),
                                        contentType)) ||
           contentType.IsEmpty()) {
-        contentType = NS_LITERAL_CSTRING("application/xml");
+        contentType = defaultContentType;
       }
 
       // We don't want to set a charset for streams.
@@ -2573,25 +2569,21 @@ nsXMLHttpRequest::Send(nsIVariant *aBody)
         rv = NS_ExtractCharsetFromContentType(contentType, specifiedCharset,
                                               &haveCharset, &charsetStart,
                                               &charsetEnd);
-        if (NS_FAILED(rv)) {
-          contentType.AssignLiteral("application/xml");
-          specifiedCharset.Truncate();
-          charsetStart = charsetEnd = contentType.Length();
-        }
-
-        // If the content-type the page set already has a charset parameter,
-        // and it's the same charset, up to case, as |charset|, just send the
-        // page-set content-type header.  Apparently at least
-        // google-web-toolkit is broken and relies on the exact case of its
-        // charset parameter, which makes things break if we use |charset|
-        // (which is always a fully resolved charset per our charset alias
-        // table, hence might be differently cased).
-        if (!specifiedCharset.Equals(charset,
-                                     nsCaseInsensitiveCStringComparator())) {
-          nsCAutoString newCharset("; charset=");
-          newCharset.Append(charset);
-          contentType.Replace(charsetStart, charsetEnd - charsetStart,
-                              newCharset);
+        if (NS_SUCCEEDED(rv)) {
+          // If the content-type the page set already has a charset parameter,
+          // and it's the same charset, up to case, as |charset|, just send the
+          // page-set content-type header.  Apparently at least
+          // google-web-toolkit is broken and relies on the exact case of its
+          // charset parameter, which makes things break if we use |charset|
+          // (which is always a fully resolved charset per our charset alias
+          // table, hence might be differently cased).
+          if (!specifiedCharset.Equals(charset,
+                                       nsCaseInsensitiveCStringComparator())) {
+            nsCAutoString newCharset("; charset=");
+            newCharset.Append(charset);
+            contentType.Replace(charsetStart, charsetEnd - charsetStart,
+                                newCharset);
+          }
         }
       }
 

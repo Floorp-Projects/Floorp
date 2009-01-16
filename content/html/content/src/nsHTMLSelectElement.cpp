@@ -601,7 +601,7 @@ nsHTMLSelectElement::GetSelectFrame()
   nsISelectControlFrame *select_frame = nsnull;
 
   if (form_control_frame) {
-    CallQueryInterface(form_control_frame, &select_frame);
+    select_frame = do_QueryFrame(form_control_frame);
   }
 
   return select_frame;
@@ -1440,9 +1440,7 @@ nsHTMLSelectElement::PreHandleEvent(nsEventChainPreVisitor& aVisitor)
   nsIFrame* formFrame = nsnull;
 
   if (formControlFrame &&
-      NS_SUCCEEDED(CallQueryInterface(formControlFrame, &formFrame)) &&
-      formFrame)
-  {
+      (formFrame = do_QueryFrame(formControlFrame))) {
     const nsStyleUserInterface* uiStyle = formFrame->GetStyleUserInterface();
 
     if (uiStyle->mUserInput == NS_STYLE_USER_INPUT_NONE ||
@@ -1702,14 +1700,12 @@ void nsHTMLSelectElement::DispatchContentReset() {
     // Only dispatch content reset notification if this is a list control
     // frame or combo box control frame.
     if (IsCombobox()) {
-      nsIComboboxControlFrame* comboFrame = nsnull;
-      CallQueryInterface(formControlFrame, &comboFrame);
+      nsIComboboxControlFrame* comboFrame = do_QueryFrame(formControlFrame);
       if (comboFrame) {
         comboFrame->OnContentReset();
       }
     } else {
-      nsIListControlFrame* listFrame = nsnull;
-      CallQueryInterface(formControlFrame, &listFrame);
+      nsIListControlFrame* listFrame = do_QueryFrame(formControlFrame);
       if (listFrame) {
         listFrame->OnContentReset();
       }

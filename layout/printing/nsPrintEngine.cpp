@@ -361,7 +361,7 @@ nsPrintEngine::GetSeqFrameAndCountPagesInternal(nsPrintObject*  aPO,
   nsIPageSequenceFrame* seqFrame = nsnull;
   aPO->mPresShell->GetPageSequenceFrame(&seqFrame);
   if (seqFrame) {
-    CallQueryInterface(seqFrame, &aSeqFrame);
+    aSeqFrame = do_QueryFrame(seqFrame);
   } else {
     aSeqFrame = nsnull;
   }
@@ -1864,6 +1864,27 @@ nsPrintEngine::ReflowPrintObject(nsPrintObject * aPO)
     documentIsTopLevel = PR_TRUE;
   }
 
+  // Here we decide whether we need scrollbars and
+  // what the parent will be of the widget
+  // How this logic presently works: Print Preview is always as-is (as far
+  // as I can tell; not sure how it would work in other cases); only the root 
+  // is not eIFrame or eFrame.  The child documents get a parent widget from
+  // logic in nsFrameFrame.  In any case, a child widget is created for the root
+  // view of the document.
+  PRBool canCreateScrollbars = PR_FALSE;
+  nsIView* parentView;
+  // the top nsPrintObject's widget will always have scrollbars
+  if (frame) {
+    nsIView* view = frame->GetView();
+    NS_ENSURE_TRUE(view, NS_ERROR_FAILURE);
+    view = view->GetFirstChild();
+    NS_ENSURE_TRUE(view, NS_ERROR_FAILURE);
+    parentView = view;
+  } else {
+    canCreateScrollbars = PR_TRUE;
+    parentView = nsnull;
+  }
+
   // create the PresContext
   aPO->mPresContext = new nsPresContext(aPO->mDocument,
                                         mIsCreatingPrintPreview ?
@@ -1906,27 +1927,6 @@ nsPrintEngine::ReflowPrintObject(nsPrintObject * aPO)
 
   PR_PL(("In DV::ReflowPrintObject PO: %p (%9s) Setting w,h to %d,%d\n", aPO,
          gFrameTypesStr[aPO->mFrameType], adjSize.width, adjSize.height));
-
-  // Here we decide whether we need scrollbars and
-  // what the parent will be of the widget
-  // How this logic presently works: Print Preview is always as-is (as far
-  // as I can tell; not sure how it would work in other cases); only the root 
-  // is not eIFrame or eFrame.  The child documents get a parent widget from
-  // logic in nsFrameFrame.  In any case, a child widget is created for the root
-  // view of the document.
-  PRBool canCreateScrollbars = PR_FALSE;
-  nsIView* parentView;
-  // the top nsPrintObject's widget will always have scrollbars
-  if (frame) {
-    nsIView* view = frame->GetView();
-    NS_ENSURE_TRUE(view, NS_ERROR_FAILURE);
-    view = view->GetFirstChild();
-    NS_ENSURE_TRUE(view, NS_ERROR_FAILURE);
-    parentView = view;
-  } else {
-    canCreateScrollbars = PR_TRUE;
-    parentView = nsnull;
-  }
 
   // Create a child window of the parent that is our "root view/window"
   nsRect tbounds = nsRect(nsPoint(0, 0), adjSize);
@@ -2064,8 +2064,8 @@ nsPrintEngine::CalcNumPrintablePages(PRInt32& aNumPages)
     if (po->mPresContext && po->mPresContext->IsRootPaginatedDocument()) {
       nsIPageSequenceFrame* pageSequence;
       po->mPresShell->GetPageSequenceFrame(&pageSequence);
-      nsIFrame * seqFrame;
-      if (NS_SUCCEEDED(CallQueryInterface(pageSequence, &seqFrame))) {
+      nsIFrame * seqFrame = do_QueryFrame(pageSequence);
+      if (seqFrame) {
         nsIFrame* frame = seqFrame->GetFirstChild(nsnull);
         while (frame) {
           aNumPages++;
@@ -2148,10 +2148,9 @@ nsPrintEngine::DoPrint(nsPrintObject * aPO)
     if (nsnull != mPrt->mDebugFilePtr) {
 #ifdef NS_DEBUG
       // output the regression test
-      nsIFrameDebug* fdbg;
       nsIFrame* root = poPresShell->FrameManager()->GetRootFrame();
-
-      if (NS_SUCCEEDED(CallQueryInterface(root, &fdbg))) {
+      nsIFrameDebug* fdbg = do_QueryFrame(root);
+      if (fdbg) {
         fdbg->DumpRegressionData(poPresContext, mPrt->mDebugFilePtr, 0, PR_TRUE);
       }
       fclose(mPrt->mDebugFilePtr);
@@ -2201,8 +2200,8 @@ nsPrintEngine::DoPrint(nsPrintObject * aPO)
           if (NS_SUCCEEDED(rv)) {
             mPrt->mPrintSettings->SetStartPageRange(startPageNum);
             mPrt->mPrintSettings->SetEndPageRange(endPageNum);
-            nsMargin marginTwips(0,0,0,0);
-            nsMargin unwrtMarginTwips(0,0,0,0);
+            nsIntMargin marginTwips(0,0,0,0);
+            nsIntMargin unwrtMarginTwips(0,0,0,0);
             mPrt->mPrintSettings->GetMarginInTwips(marginTwips);
             mPrt->mPrintSettings->GetUnwriteableMarginInTwips(unwrtMarginTwips);
             nsMargin totalMargin = poPresContext->TwipsToAppUnits(marginTwips + 
@@ -2249,8 +2248,8 @@ nsPrintEngine::DoPrint(nsPrintObject * aPO)
           }
         }
 
-        nsIFrame * seqFrame;
-        if (NS_FAILED(CallQueryInterface(pageSequence, &seqFrame))) {
+        nsIFrame * seqFrame = do_QueryFrame(pageSequence);
+        if (!seqFrame) {
           SetIsPrinting(PR_FALSE);
           return NS_ERROR_FAILURE;
         }
@@ -2505,8 +2504,8 @@ nsPrintEngine::GetPageRangeForSelection(nsIPresShell *        aPresShell,
   NS_ASSERTION(aStartFrame, "Pointer is null!");
   NS_ASSERTION(aEndFrame, "Pointer is null!");
 
-  nsIFrame * seqFrame;
-  if (NS_FAILED(CallQueryInterface(aPageSeqFrame, &seqFrame))) {
+  nsIFrame * seqFrame = do_QueryFrame(aPageSeqFrame);
+  if (!seqFrame) {
     return NS_ERROR_FAILURE;
   }
 
@@ -3296,9 +3295,8 @@ static void RootFrameList(nsPresContext* aPresContext, FILE* out, PRInt32 aInden
   if (shell) {
     nsIFrame* frame = shell->FrameManager()->GetRootFrame();
     if (frame) {
-      nsIFrameDebug* debugFrame;
-      nsresult rv = CallQueryInterface(frame, &debugFrame);
-      if (NS_SUCCEEDED(rv))
+      nsIFrameDebug* debugFrame = do_QueryFrame(frame);
+      if (debugFrame)
         debugFrame->List(aPresContext, out, aIndent);
     }
   }
@@ -3324,9 +3322,9 @@ static void DumpFrames(FILE*                 out,
      fprintf(out, "  ");
     }
     nsAutoString tmp;
-    nsIFrameDebug*  frameDebug;
 
-    if (NS_SUCCEEDED(CallQueryInterface(child, &frameDebug))) {
+    nsIFrameDebug* frameDebug = do_QueryFrame(child);
+    if (frameDebug) {
       frameDebug->GetFrameName(tmp);
     }
     fputs(NS_LossyConvertUTF16toASCII(tmp).get(), out);
@@ -3461,8 +3459,8 @@ static void DumpPrintObjectsList(nsVoidArray * aDocList)
     if (po->mPresShell) {
       rootFrame = po->mPresShell->FrameManager()->GetRootFrame();
       while (rootFrame != nsnull) {
-        nsIPageSequenceFrame * sqf = nsnull;
-        if (NS_SUCCEEDED(CallQueryInterface(rootFrame, &sqf))) {
+        nsIPageSequenceFrame * sqf = do_QueryFrame(rootFrame);
+        if (sqf) {
           break;
         }
         rootFrame = rootFrame->GetFirstChild(nsnull);

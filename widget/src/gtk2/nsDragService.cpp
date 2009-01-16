@@ -211,7 +211,7 @@ nsDragService::InvokeDragSession(nsIDOMNode *aDOMNode,
                                                  &event);
 
         PRBool needsFallbackIcon = PR_FALSE;
-        nsRect dragRect;
+        nsIntRect dragRect;
         nsPresContext* pc;
         nsRefPtr<gfxASurface> surface;
         if (mHasImage || mSelection) {
@@ -223,8 +223,8 @@ nsDragService::InvokeDragSession(nsIDOMNode *aDOMNode,
           PRInt32 sx = mScreenX, sy = mScreenY;
           ConvertToUnscaledDevPixels(pc, &sx, &sy);
 
-          PRInt32 offsetX = sx - NSToIntRound(dragRect.x);
-          PRInt32 offsetY = sy - NSToIntRound(dragRect.y);
+          PRInt32 offsetX = sx - dragRect.x;
+          PRInt32 offsetY = sy - dragRect.y;
           if (!SetAlphaPixmap(surface, context, offsetX, offsetY, dragRect)) {
             GdkPixbuf* dragPixbuf =
               nsImageToPixbuf::SurfaceToPixbuf(surface, dragRect.width, dragRect.height);
@@ -251,7 +251,7 @@ nsDragService::SetAlphaPixmap(gfxASurface *aSurface,
                                  GdkDragContext *aContext,
                                  PRInt32 aXOffset,
                                  PRInt32 aYOffset,
-                                 const nsRect& dragRect)
+                                 const nsIntRect& dragRect)
 {
     GdkScreen* screen = gtk_widget_get_screen(mHiddenWidget);
 

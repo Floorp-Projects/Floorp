@@ -58,8 +58,8 @@ $SCRIPT -p product -b branch
 
 variable            description
 ===============     ===========================================================
--p product          required. one of firefox, thunderbird or fennec
--b branch           required. one of 1.8.0 1.8.1 1.9.0 1.9.1
+-p product          required. one of js firefox, thunderbird or fennec
+-b branch           required. one of 1.8.0 1.8.1 1.9.0 1.9.1 1.9.2
 -u url              optional. url where to download build
 -f filepath         optional. location to save downloaded build or to find
                     previously downloaded build. If not specified, the
@@ -136,10 +136,18 @@ TEST_BRANCH=$branch
 TEST_BUILDCOMMANDS=$buildcommands
 TEST_BUILDTYPE=$buildtype
 TEST_EXECUTABLEPATH=$executablepath
-TEST_PROFILENAME=$profilename
-TEST_PROFILETEMPLATE=$profiletemplate
-TEST_USERPREFERENCES=$userpreferences
-TEST_EXTENSIONDIR=$extensiondir
+if [[ -n "$profilename" ]]; then
+    TEST_PROFILENAME=$profilename
+fi
+if [[ -n "$profiletemplate" ]];then
+    TEST_PROFILETEMPLATE=$profiletemplate
+fi
+if [[ -n "$userpreferences" ]]; then
+    TEST_USERPREFERENCES=$userpreferences
+fi
+if [[ -n "$extensiondir" ]]; then
+    TEST_EXTENSIONDIR=$extensiondir
+fi
 TEST_DATAFILES=$datafiles
 
 dumpenvironment
@@ -149,6 +157,8 @@ if [[ -z "$product" || -z "$branch" ]]; then
     echo "product and branch are required"
     usage
 fi
+
+checkProductBranch $product $branch
 
 if [[ ( -n "$url" || -n "$filepath" ) && ( -n "$buildcommands" ) ]]; then
     echo "you can not both download and build cvs builds at the same time"

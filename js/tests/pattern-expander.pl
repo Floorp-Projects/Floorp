@@ -61,8 +61,8 @@ sub processfile
 
         $record = {};
 
-        my ($test_id, $test_branch, $test_repo, $test_buildtype, $test_type, $test_os, $test_kernel, $test_processortype, $test_memory, $test_cpuspeed, $test_timezone, $test_result, $test_exitstatus, $test_description) = $_ =~ 
-            /TEST_ID=([^,]*), TEST_BRANCH=([^,]*), TEST_REPO=([^,]*), TEST_BUILDTYPE=([^,]*), TEST_TYPE=([^,]*), TEST_OS=([^,]*), TEST_KERNEL=([^,]*), TEST_PROCESSORTYPE=([^,]*), TEST_MEMORY=([^,]*), TEST_CPUSPEED=([^,]*), TEST_TIMEZONE=([^,]*), TEST_RESULT=([^,]*), TEST_EXITSTATUS=([^,]*), TEST_DESCRIPTION=(.*)/;
+        my ($test_id, $test_branch, $test_repo, $test_buildtype, $test_type, $test_os, $test_kernel, $test_processortype, $test_memory, $test_cpuspeed, $test_timezone, $test_options, $test_result, $test_exitstatus, $test_description) = $_ =~ 
+            /TEST_ID=([^,]*), TEST_BRANCH=([^,]*), TEST_REPO=([^,]*), TEST_BUILDTYPE=([^,]*), TEST_TYPE=([^,]*), TEST_OS=([^,]*), TEST_KERNEL=([^,]*), TEST_PROCESSORTYPE=([^,]*), TEST_MEMORY=([^,]*), TEST_CPUSPEED=([^,]*), TEST_TIMEZONE=([^,]*), TEST_OPTIONS=([^,]*), TEST_RESULT=([^,]*), TEST_EXITSTATUS=([^,]*), TEST_DESCRIPTION=(.*)/;
 
         $record->{TEST_ID}            = $test_id;
         $record->{TEST_BRANCH}        = $test_branch;
@@ -75,11 +75,14 @@ sub processfile
         $record->{TEST_MEMORY}        = $test_memory;
         $record->{TEST_CPUSPEED}      = $test_cpuspeed;
         $record->{TEST_TIMEZONE}      = $test_timezone;
+        $record->{TEST_OPTIONS}       = $test_options;
         $record->{TEST_RESULT}        = $test_result;
         $record->{TEST_EXITSTATUS}    = $test_exitstatus;
         $record->{TEST_DESCRIPTION}   = $test_description;
 
-        dbg("processfile: \$_=$_");
+        if ($DEBUG) {
+            dbg("processfile: \$_=$_");
+        }
 
         my @list1 = ();
         my @list2 = ();
@@ -88,59 +91,78 @@ sub processfile
         my $universefield;
 
         $item1 = copyreference($record);
-        dbg("processfile: check copyreference");
-        dbg("processfile: \$record=" . recordtostring($record));
-        dbg("processfile: \$item1=" . recordtostring($item1));
-
+        if ($DEBUG) {
+            dbg("processfile: check copyreference");
+            dbg("processfile: \$record=" . recordtostring($record));
+            dbg("processfile: \$item1=" . recordtostring($item1));
+        }
         push @list1, ($item1);
 
         for ($iuniversefield = 0; $iuniversefield < @universefields; $iuniversefield++)
         {
             $universefield = $universefields[$iuniversefield];
 
-            dbg("processfile: \$universefields[$iuniversefield]=$universefield, \$record->{$universefield}=$record->{$universefield}");
+            if ($DEBUG) {
+                dbg("processfile: \$universefields[$iuniversefield]=$universefield, \$record->{$universefield}=$record->{$universefield}");
+            }
 
             for ($j = 0; $j < @list1; $j++)
             {
                 $item1 = $list1[$j];
-                dbg("processfile: item1 \$list1[$j]=" . recordtostring($item1));
+                if ($DEBUG) {
+                    dbg("processfile: item1 \$list1[$j]=" . recordtostring($item1));
+                }
                 # create a reference to a copy of the hash referenced by $item1
                 if ($item1->{$universefield} ne '.*')
                 {
-                    dbg("processfile: literal value");
+                    if ($DEBUG) {
+                        dbg("processfile: literal value");
+                    }
                     $item2 = copyreference($item1);
-                    dbg("processfile: check copyreference");
-                    dbg("processfile: \$item1=" . recordtostring($item1));
-                    dbg("processfile: \$item2=" . recordtostring($item2));
-                    dbg("processfile: pushing existing record to list 2: " . recordtostring($item2));
+                    if ($DEBUG) {
+                        dbg("processfile: check copyreference");
+                        dbg("processfile: \$item1=" . recordtostring($item1));
+                        dbg("processfile: \$item2=" . recordtostring($item2));
+                        dbg("processfile: pushing existing record to list 2: " . recordtostring($item2));
+                    }
                     push @list2, ($item2);
                 }
                 else
                 {
-                    dbg("processfile: wildcard value");
+                    if ($DEBUG) {                    
+                        dbg("processfile: wildcard value");
+                    }
                     $keyfielduniversekey = getuniversekey($item1, $universefield);
                     @keyfielduniverse = getuniverse($keyfielduniversekey, $universefield);
 
-                    dbg("processfile: \$keyfielduniversekey=$keyfielduniversekey, \@keyfielduniverse=" . join(',', @keyfielduniverse));
+                    if ($DEBUG) {
+                        dbg("processfile: \$keyfielduniversekey=$keyfielduniversekey, \@keyfielduniverse=" . join(',', @keyfielduniverse));
+                    }
 
                     for ($i = 0; $i < @keyfielduniverse; $i++)
                     {
                         $item2 = copyreference($item1);
-                        dbg("processfile: check copyreference");
-                        dbg("processfile: \$item1=" . recordtostring($item1));
-                        dbg("processfile: \$item2=" . recordtostring($item2));
+                        if ($DEBUG) {
+                            dbg("processfile: check copyreference");
+                            dbg("processfile: \$item1=" . recordtostring($item1));
+                            dbg("processfile: \$item2=" . recordtostring($item2));
+                        }
                         $item2->{$universefield} = $keyfielduniverse[$i];
-                        dbg("processfile: pushing new record to list 2 " . recordtostring($item2));
+                        if ($DEBUG) {
+                            dbg("processfile: pushing new record to list 2 " . recordtostring($item2));
+                        }
                         push @list2, ($item2);
                     }
                 }
-                for ($i = 0; $i < @list1; $i++)
-                {
-                    dbg("processfile: \$list1[$i]=" . recordtostring($list1[$i]));
-                }
-                for ($i = 0; $i < @list2; $i++)
-                {
-                    dbg("processfile: \$list2[$i]=" . recordtostring($list2[$i]));
+                if ($DEBUG) {
+                    for ($i = 0; $i < @list1; $i++)
+                    {
+                        dbg("processfile: \$list1[$i]=" . recordtostring($list1[$i]));
+                    }
+                    for ($i = 0; $i < @list2; $i++)
+                    {
+                        dbg("processfile: \$list2[$i]=" . recordtostring($list2[$i]));
+                    }
                 }
             }
 

@@ -164,23 +164,24 @@
       <method name="_updateVisibleText">
         <body><![CDATA[
           if (!this.hasAttribute("focused") &&
-              !this.hasAttribute("empty") &&
               !this.value &&
               this.emptyText) {
-            // This section is a wee bit hacky; without the timeout, the CSS
-            // style corresponding to the "empty" attribute doesn't kick in
-            // until the text has changed, leading to an unpleasant moment
-            // where the emptyText flashes black before turning gray.
-            this.setAttribute("empty", true);
 
-            setTimeout(function (textbox) {
-              if (textbox.hasAttribute("empty")) {
-                try {
-                  textbox.editor.transactionManager.beginBatch();
-                } catch (e) {}
-                textbox.inputField.value = textbox.emptyText;
-              }
-            }, 0, this);
+            if (!this.hasAttribute("empty")) {
+              this.setAttribute("empty", "true");
+
+              // Hide the emptytext for a bit, in case the textbox will be focused subsequently
+              this.inputField.setAttribute("emptytextdelay", "true");
+              setTimeout(function (textbox) {
+                textbox.inputField.removeAttribute("emptytextdelay");
+              }, 100, this);
+
+              try {
+                this.editor.transactionManager.beginBatch();
+              } catch (e) {}
+            }
+
+            this.inputField.value = this.emptyText;
           }
         ]]></body>
       </method>
@@ -204,13 +205,12 @@
           this.boxObject.removeProperty("value");
         }
 
-        // this.editor may not be initialized yet in
-        // bindings that inherit from xul:textbox, so
-        // do this after construction
-        setTimeout(function (a) {
-          a._updateVisibleText();
-          a._setNewlineHandling();
-        }, 0, this);
+        // Bindings that extend this one wouldn't inherit the
+        // chromedir attribute if it would only be set in <content>.
+        this.setAttribute("chromedir", "]]>&locale.dir;<![CDATA[");
+
+        this._updateVisibleText();
+        this._setNewlineHandling();
       ]]></constructor>
 
       <destructor>
@@ -226,27 +226,34 @@
     <handlers>
       <handler event="focus" phase="capturing">
         <![CDATA[
-          this._clearEmptyText();
+          if (this.hasAttribute("focused"))
+            return;
 
-          if (!this.hasAttribute("focused")) {
-            if (event.originalTarget == this)
-              this.inputField.focus(); // Forward focus to actual HTML input
-            else if (event.originalTarget != this.inputField)
-              return; // Allow other children (e.g. URL bar buttons) to get focus
-            else if (this.mIgnoreFocus)
-              this.mIgnoreFocus = false;
-            else if (this.clickSelectsAll) {
-              try {
-                const nsIEditorIMESupport =
-                        Components.interfaces.nsIEditorIMESupport;
-                var imeEditor = this.editor.QueryInterface(nsIEditorIMESupport);
-                if (!imeEditor || !imeEditor.composing)
-                  this.editor.selectAll();
-              } catch (e) {}
-            }
+          switch (event.originalTarget) {
+            case this:
+              // Forward focus to actual HTML input
+              this.inputField.focus();
+              break;
+            case this.inputField:
+              this._clearEmptyText();
 
-            this.setAttribute("focused", "true");
+              if (this.mIgnoreFocus) {
+                this.mIgnoreFocus = false;
+              } else if (this.clickSelectsAll) {
+                try {
+                  const nsIEditorIMESupport =
+                          Components.interfaces.nsIEditorIMESupport;
+                  let imeEditor = this.editor.QueryInterface(nsIEditorIMESupport);
+                  if (!imeEditor || !imeEditor.composing)
+                    this.editor.selectAll();
+                } catch (e) {}
+              }
+              break;
+            default:
+              // Allow other children (e.g. URL bar buttons) to get focus
+              return;
           }
+          this.setAttribute("focused", "true");
         ]]>
       </handler>
 
@@ -485,6 +492,8 @@
     <content context="_child">
       <children/>
       <xul:menupopup anonid="input-box-contextmenu"
+                     class="textbox-contextmenu"
+                     chromedir="&locale.dir;"
                      onpopupshowing="if (document.commandDispatcher.focusedElement != this.parentNode.firstChild)
                                        this.parentNode.firstChild.focus();
                                      this.parentNode._doPopupItemEnabling(this);"
@@ -546,6 +555,8 @@
     <content context="_child">
       <children/>
       <xul:menupopup anonid="input-box-contextmenu"
+                     class="textbox-contextmenu"
+                     chromedir="&locale.dir;"
                      onpopupshowing="if (document.commandDispatcher.focusedElement != this.parentNode.firstChild)
                                        this.parentNode.firstChild.focus();
                                      this.parentNode._doPopupItemEnablingSpell(this);"

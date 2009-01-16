@@ -54,6 +54,9 @@
 #include "nsNodeInfoManager.h"
 #include "nsIStreamListener.h"
 #include "nsIObserver.h"
+#ifdef MOZ_SMIL
+class nsSMILAnimationController;
+#endif // MOZ_SMIL
 
 class nsIContent;
 class nsPresContext;
@@ -620,6 +623,10 @@ public:
   virtual void EndUpdate(nsUpdateType aUpdateType) = 0;
   virtual void BeginLoad() = 0;
   virtual void EndLoad() = 0;
+
+  enum ReadyState { READYSTATE_UNINITIALIZED = 0, READYSTATE_LOADING = 1, READYSTATE_INTERACTIVE = 3, READYSTATE_COMPLETE = 4};
+  virtual void SetReadyStateInternal(ReadyState rs) = 0;
+
   // notify that one or two content nodes changed state
   // either may be nsnull, but not both
   virtual void ContentStatesChanged(nsIContent* aContent1,
@@ -1104,6 +1111,11 @@ public:
    * called yet.
    */
   PRBool IsShowing() { return mIsShowing; }
+
+#ifdef MOZ_SMIL
+  // Getter for this document's SMIL Animation Controller
+  virtual nsSMILAnimationController* GetAnimationController() = 0;
+#endif // MOZ_SMIL
 
 protected:
   ~nsIDocument()

@@ -354,6 +354,8 @@ LoginManagerPrompter.prototype = {
         var checkBoxLabel = null;
         var [hostname, realm, username] = this._getRealmInfo(aPasswordRealm);
 
+        username = decodeURIComponent(username);
+
         // If hostname is null, we can't save this login.
         if (hostname && !this._inPrivateBrowsing) {
           var canRememberLogin = (aSavePassword ==

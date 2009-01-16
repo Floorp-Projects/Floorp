@@ -46,9 +46,6 @@
 
 class nsAnonymousBlockFrame;
 
-#define NS_INLINE_FRAME_CID \
- { 0x88b298af, 0x8b0e, 0x4592,{0x9e, 0xc6, 0xea, 0x4c, 0x4b, 0x3f, 0xf7, 0xa4}}
-
 #define nsInlineFrameSuper nsHTMLContainerFrame
 
 // NS_INLINE_FRAME_HARD_TEXT_OFFSETS is used for access keys, where what
@@ -79,10 +76,10 @@ class nsAnonymousBlockFrame;
 class nsInlineFrame : public nsInlineFrameSuper
 {
 public:
-  friend nsIFrame* NS_NewInlineFrame(nsIPresShell* aPresShell, nsStyleContext* aContext);
+  NS_DECLARE_FRAME_ACCESSOR(nsInlineFrame)
+  NS_DECL_QUERYFRAME
 
-  // nsISupports overrides
-  NS_IMETHOD QueryInterface(const nsIID& aIID, void** aInstancePtr);
+  friend nsIFrame* NS_NewInlineFrame(nsIPresShell* aPresShell, nsStyleContext* aContext);
 
   // nsIFrame overrides
   NS_IMETHOD BuildDisplayList(nsDisplayListBuilder*   aBuilder,

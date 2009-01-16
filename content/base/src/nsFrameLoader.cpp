@@ -73,6 +73,7 @@
 #include "nsGUIEvent.h"
 #include "nsEventDispatcher.h"
 #include "nsISHistory.h"
+#include "nsISHistoryInternal.h"
 
 #include "nsIURI.h"
 #include "nsIURL.h"
@@ -215,8 +216,11 @@ nsFrameLoader::ReallyStartLoading()
   loadInfo->SetReferrer(referrer);
 
   // Kick off the load...
+  PRBool tmpState = mNeedsAsyncDestroy;
+  mNeedsAsyncDestroy = PR_TRUE;
   rv = mDocShell->LoadURI(mURIToLoad, loadInfo,
                           nsIWebNavigation::LOAD_FLAGS_NONE, PR_FALSE);
+  mNeedsAsyncDestroy = tmpState;
   mURIToLoad = nsnull;
 #ifdef DEBUG
   if (NS_FAILED(rv)) {
@@ -494,24 +498,23 @@ nsFrameLoader::SwapWithOtherLoader(nsFrameLoader* aOther,
   nsCOMPtr<nsIDocShellTreeItem> ourRootTreeItem, otherRootTreeItem;
   ourTreeItem->GetSameTypeRootTreeItem(getter_AddRefs(ourRootTreeItem));
   otherTreeItem->GetSameTypeRootTreeItem(getter_AddRefs(otherRootTreeItem));
-  if (ourRootTreeItem != ourTreeItem || otherRootTreeItem != otherTreeItem) {
-    nsCOMPtr<nsIWebNavigation> ourRootWebnav =
-      do_QueryInterface(ourRootTreeItem);
-    nsCOMPtr<nsIWebNavigation> otherRootWebnav =
-      do_QueryInterface(otherRootTreeItem);
+  nsCOMPtr<nsIWebNavigation> ourRootWebnav =
+    do_QueryInterface(ourRootTreeItem);
+  nsCOMPtr<nsIWebNavigation> otherRootWebnav =
+    do_QueryInterface(otherRootTreeItem);
 
-    if (!ourRootWebnav || !otherRootWebnav) {
-      return NS_ERROR_NOT_IMPLEMENTED;
-    }
+  if (!ourRootWebnav || !otherRootWebnav) {
+    return NS_ERROR_NOT_IMPLEMENTED;
+  }
 
-    nsCOMPtr<nsISHistory> ourHistory;
-    nsCOMPtr<nsISHistory> otherHistory;
-    ourRootWebnav->GetSessionHistory(getter_AddRefs(ourHistory));
-    otherRootWebnav->GetSessionHistory(getter_AddRefs(otherHistory));
+  nsCOMPtr<nsISHistory> ourHistory;
+  nsCOMPtr<nsISHistory> otherHistory;
+  ourRootWebnav->GetSessionHistory(getter_AddRefs(ourHistory));
+  otherRootWebnav->GetSessionHistory(getter_AddRefs(otherHistory));
 
-    if (ourHistory || otherHistory) {
-      return NS_ERROR_NOT_IMPLEMENTED;
-    }
+  if ((ourRootTreeItem != ourTreeItem || otherRootTreeItem != otherTreeItem) &&
+      (ourHistory || otherHistory)) {
+    return NS_ERROR_NOT_IMPLEMENTED;
   }
 
   // Also make sure that the two docshells are the same type. Otherwise
@@ -524,7 +527,7 @@ nsFrameLoader::SwapWithOtherLoader(nsFrameLoader* aOther,
     return NS_ERROR_NOT_IMPLEMENTED;
   }
 
-  // One more twist here.  Setting up the right treeowners in a heterogenous
+  // One more twist here.  Setting up the right treeowners in a heterogeneous
   // tree is a bit of a pain.  So make sure that if ourType is not
   // nsIDocShellTreeItem::typeContent then all of our descendants are the same
   // type as us.
@@ -635,8 +638,7 @@ nsFrameLoader::SwapWithOtherLoader(nsFrameLoader* aOther,
     return NS_ERROR_NOT_IMPLEMENTED;
   }
 
-  nsIFrameFrame* ourFrameFrame = nsnull;
-  CallQueryInterface(ourFrame, &ourFrameFrame);
+  nsIFrameFrame* ourFrameFrame = do_QueryFrame(ourFrame);
   if (!ourFrameFrame) {
     mInSwap = aOther->mInSwap = PR_FALSE;
     FirePageShowEvent(ourTreeItem, ourChromeEventHandler, PR_TRUE);
@@ -693,6 +695,18 @@ nsFrameLoader::SwapWithOtherLoader(nsFrameLoader* aOther,
 
   aFirstToSwap.swap(aSecondToSwap);
 
+  // Drop any cached content viewers in the two session histories.
+  nsCOMPtr<nsISHistoryInternal> ourInternalHistory =
+    do_QueryInterface(ourHistory);
+  nsCOMPtr<nsISHistoryInternal> otherInternalHistory =
+    do_QueryInterface(otherHistory);
+  if (ourInternalHistory) {
+    ourInternalHistory->EvictAllContentViewers();
+  }
+  if (otherInternalHistory) {
+    otherInternalHistory->EvictAllContentViewers();
+  }
+
   // We shouldn't have changed frames, but be really careful about it
   if (ourFrame == ourShell->GetPrimaryFrameFor(ourContent) &&
       otherFrame == otherShell->GetPrimaryFrameFor(otherContent)) {
@@ -747,7 +761,7 @@ nsFrameLoader::Destroy()
     win_private->SetFrameElementInternal(nsnull);
   }
 
-  if ((mInDestructor || !doc ||
+  if ((mNeedsAsyncDestroy || !doc ||
        NS_FAILED(doc->FinalizeFrameLoader(this))) && mDocShell) {
     nsCOMPtr<nsIRunnable> event = new nsAsyncDocShellDestroyer(mDocShell);
     NS_ENSURE_TRUE(event, NS_ERROR_OUT_OF_MEMORY);

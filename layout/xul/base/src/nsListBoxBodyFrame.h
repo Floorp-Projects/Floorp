@@ -51,10 +51,6 @@
 #include "nsThreadUtils.h"
 #include "nsPIBoxObject.h"
 
-#define NS_LISTBOXBODYFRAME_IID \
-{ 0x6e0acf13, 0x0b07, 0x481d, \
-  { 0xa3, 0x39, 0x4c, 0xb6, 0x44, 0xbc, 0x1b, 0xd8 } }
-
 class nsListScrollSmoother;
 nsIFrame* NS_NewListBoxBodyFrame(nsIPresShell* aPresShell,
                                  nsStyleContext* aContext,
@@ -69,9 +65,9 @@ class nsListBoxBodyFrame : public nsBoxFrame,
   virtual ~nsListBoxBodyFrame();
 
 public:
-  NS_DECLARE_STATIC_IID_ACCESSOR(NS_LISTBOXBODYFRAME_IID)
+  NS_DECLARE_FRAME_ACCESSOR(nsListBoxBodyFrame)
 
-  NS_DECL_ISUPPORTS
+  NS_DECL_QUERYFRAME
 
   // non-virtual nsIListBoxObject
   nsresult GetRowCount(PRInt32 *aResult);
@@ -97,9 +93,9 @@ public:
   NS_IMETHOD AttributeChanged(PRInt32 aNameSpaceID, nsIAtom* aAttribute, PRInt32 aModType);
 
   // nsIScrollbarMediator
-  NS_IMETHOD PositionChanged(nsISupports* aScrollbar, PRInt32 aOldIndex, PRInt32& aNewIndex);
-  NS_IMETHOD ScrollbarButtonPressed(nsISupports* aScrollbar, PRInt32 aOldIndex, PRInt32 aNewIndex);
-  NS_IMETHOD VisibilityChanged(nsISupports* aScrollbar, PRBool aVisible);
+  NS_IMETHOD PositionChanged(nsIScrollbarFrame* aScrollbar, PRInt32 aOldIndex, PRInt32& aNewIndex);
+  NS_IMETHOD ScrollbarButtonPressed(nsIScrollbarFrame* aScrollbar, PRInt32 aOldIndex, PRInt32 aNewIndex);
+  NS_IMETHOD VisibilityChanged(PRBool aVisible);
 
   // nsIReflowCallback
   virtual PRBool ReflowFinished();
@@ -225,7 +221,5 @@ protected:
 
   nsCOMPtr<nsPIBoxObject> mBoxObject;
 }; 
-
-NS_DEFINE_STATIC_IID_ACCESSOR(nsListBoxBodyFrame, NS_LISTBOXBODYFRAME_IID)
 
 #endif // nsListBoxBodyFrame_h

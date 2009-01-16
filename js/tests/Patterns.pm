@@ -43,11 +43,15 @@ sub getuniversekey
     my $i;
     my $key = '';
 
-    dbg("getuniversekey: \$machinerecord=" . recordtostring($machinerecord) . ", \$excludeduniversefield=$excludeduniversefield");
+    if ($DEBUG) {
+        dbg("getuniversekey: \$machinerecord=" . recordtostring($machinerecord) . ", \$excludeduniversefield=$excludeduniversefield");
+    }
 
     for ($i = 0; $i < @universefields; $i++)
     {
-        dbg("getuniversekey: \$universefields[$i]=$universefields[$i]");
+        if ($DEBUG) {
+            dbg("getuniversekey: \$universefields[$i]=$universefields[$i]");
+        }
 
         if ($universefields[$i] ne $excludeduniversefield)
         {
@@ -55,7 +59,9 @@ sub getuniversekey
         }
     }
 
-    dbg("getuniversekey=$key");
+    if ($DEBUG) {
+        dbg("getuniversekey=$key");
+    }
 
     return $key;
 }
@@ -69,31 +75,45 @@ sub getuniverse
     my @universe = ();
     my %universehash = ();
 
-    dbg("getuniverse: \$universekey=$universekey, \$excludeduniversefield=$excludeduniversefield");
+    if ($DEBUG) {
+        dbg("getuniverse: \$universekey=$universekey, \$excludeduniversefield=$excludeduniversefield");
+    }
 
     for ($i = 0; $i < @testruns; $i++)
     {
         $testrun = $testruns[$i];
-        dbg("getuniverse: \$testruns[$i]=" . recordtostring($testrun));
+        if ($DEBUG) {
+            dbg("getuniverse: \$testruns[$i]=" . recordtostring($testrun));
+        }
         $testrununiversekey = getuniversekey($testrun, $excludeduniversefield);
-        dbg("getuniverse: \$testrununiversekey=$testrununiversekey");
+        if ($DEBUG) {
+            dbg("getuniverse: \$testrununiversekey=$testrununiversekey");
+        }
         if ($testrununiversekey =~ /$universekey/)
         {
-            dbg("getuniverse: matched \$testrununiversekey=$testrununiversekey to \$universekey=$universekey");
+            if ($DEBUG) {
+                dbg("getuniverse: matched \$testrununiversekey=$testrununiversekey to \$universekey=$universekey");
+            }
             $value = $testrun->{$excludeduniversefield};
             
-            dbg("getuniverse: \$testrun->{$excludeduniversefield}=$value");
+            if ($DEBUG) {
+                dbg("getuniverse: \$testrun->{$excludeduniversefield}=$value");
+            }
 
             if (! $universehash{$value} )
             {
-                dbg("getuniverse: pushing $value");
+                if ($DEBUG) {
+                    dbg("getuniverse: pushing $value");
+                }
                 push @universe, ($value);
                 $universehash{$value} = 1;
             }
         }
     }
     @universe = sort @universe;
-    dbg("getuniverse=" . join(',', @universe));
+    if ($DEBUG) {
+        dbg("getuniverse=" . join(',', @universe));
+    }
     return @universe;
 }
 
@@ -107,11 +127,15 @@ sub recordtostring
     for ($j = 0; $j < @recordfields - 1; $j++)
     {
         $field = $recordfields[$j];
-        dbg("recordtostring: \$field=$field, \$record->{$field}=$record->{$field}");
+        if ($DEBUG) {
+            dbg("recordtostring: \$field=$field, \$record->{$field}=$record->{$field}");
+        }
         $line .= "$field=$record->{$field}, ";
     }
     $field = $recordfields[$#recordfields];
-    dbg("recordtodtring: \$field=$field, \$record->{$field}= $record->{$field}");
+    if ($DEBUG) {
+        dbg("recordtodtring: \$field=$field, \$record->{$field}= $record->{$field}");
+    }
     $line .= "$field=$record->{$field}";
 
     return $line;
@@ -124,7 +148,9 @@ sub dumprecords
     my $prevline = '';
     my $i;
 
-    dbg("dumping records");
+    if ($DEBUG) {
+        dbg("dumping records");
+    }
 
 #    @records = sort sortrecords @records;
 
@@ -178,9 +204,9 @@ BEGIN
 
     $DEBUG = $ENV{DEBUG};
 
-    @recordfields   = ('TEST_ID', 'TEST_BRANCH', 'TEST_REPO', 'TEST_BUILDTYPE', 'TEST_TYPE', 'TEST_OS', 'TEST_KERNEL', 'TEST_PROCESSORTYPE', 'TEST_MEMORY', 'TEST_CPUSPEED', 'TEST_TIMEZONE', 'TEST_RESULT', 'TEST_EXITSTATUS', 'TEST_DESCRIPTION');
-    @sortkeyfields  = ('TEST_ID', 'TEST_RESULT', 'TEST_EXITSTATUS', 'TEST_DESCRIPTION', 'TEST_BRANCH', 'TEST_REPO', 'TEST_BUILDTYPE', 'TEST_TYPE', 'TEST_OS', 'TEST_KERNEL', 'TEST_PROCESSORTYPE', 'TEST_MEMORY', 'TEST_CPUSPEED', 'TEST_TIMEZONE', );
-    @universefields = ('TEST_BRANCH', 'TEST_REPO', 'TEST_BUILDTYPE', 'TEST_TYPE', 'TEST_OS', 'TEST_KERNEL', 'TEST_PROCESSORTYPE', 'TEST_MEMORY', 'TEST_CPUSPEED', 'TEST_TIMEZONE');
+    @recordfields   = ('TEST_ID', 'TEST_BRANCH', 'TEST_REPO', 'TEST_BUILDTYPE', 'TEST_TYPE', 'TEST_OS', 'TEST_KERNEL', 'TEST_PROCESSORTYPE', 'TEST_MEMORY', 'TEST_CPUSPEED', 'TEST_TIMEZONE', 'TEST_OPTIONS', 'TEST_RESULT', 'TEST_EXITSTATUS', 'TEST_DESCRIPTION');
+    @sortkeyfields  = ('TEST_ID', 'TEST_RESULT', 'TEST_EXITSTATUS', 'TEST_DESCRIPTION', 'TEST_BRANCH', 'TEST_REPO', 'TEST_BUILDTYPE', 'TEST_TYPE', 'TEST_OS', 'TEST_KERNEL', 'TEST_PROCESSORTYPE', 'TEST_MEMORY', 'TEST_CPUSPEED', 'TEST_TIMEZONE', 'TEST_OPTIONS');
+    @universefields = ('TEST_BRANCH', 'TEST_REPO', 'TEST_BUILDTYPE', 'TEST_TYPE', 'TEST_OS', 'TEST_KERNEL', 'TEST_PROCESSORTYPE', 'TEST_MEMORY', 'TEST_CPUSPEED', 'TEST_TIMEZONE', 'TEST_OPTIONS');
 
     @records = ();
 
@@ -200,8 +226,8 @@ BEGIN
 
         my $record = {};
 
-        my ($test_os, $test_kernel, $test_processortype, $test_memory, $test_cpuspeed, $test_timezone, $test_branch, $test_repo, $test_buildtype, $test_type) = $_ =~ 
-            /^TEST_OS=([^,]*), TEST_KERNEL=([^,]*), TEST_PROCESSORTYPE=([^,]*), TEST_MEMORY=([^,]*), TEST_CPUSPEED=([^,]*), TEST_TIMEZONE=([^,]*), TEST_BRANCH=([^,]*), TEST_REPO=([^,]*), TEST_BUILDTYPE=([^,]*), TEST_TYPE=([^,]*)/;
+        my ($test_os, $test_kernel, $test_processortype, $test_memory, $test_cpuspeed, $test_timezone, $test_jsoptions, $test_branch, $test_repo, $test_buildtype, $test_type) = $_ =~ 
+            /^TEST_OS=([^,]*), TEST_KERNEL=([^,]*), TEST_PROCESSORTYPE=([^,]*), TEST_MEMORY=([^,]*), TEST_CPUSPEED=([^,]*), TEST_TIMEZONE=([^,]*), TEST_OPTIONS=([^,]*), TEST_BRANCH=([^,]*), TEST_REPO=([^,]*), TEST_BUILDTYPE=([^,]*), TEST_TYPE=([^,]*)/;
 
         $record->{TEST_ID}            = 'dummy';
         $record->{TEST_RESULT}        = 'dummy';
@@ -218,6 +244,7 @@ BEGIN
         $record->{TEST_MEMORY}        = $test_memory;
         $record->{TEST_CPUSPEED}      = $test_cpuspeed;
         $record->{TEST_TIMEZONE}      = $test_timezone;
+        $record->{TEST_OPTIONS}       = $test_jsoptions;
 
         dbg("BEGIN: testrun: " . recordtostring($record));
 

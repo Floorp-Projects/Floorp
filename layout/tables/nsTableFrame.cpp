@@ -196,21 +196,9 @@ nsTableFrame::nsTableFrame(nsStyleContext* aContext)
   mBits.mGeometryDirty          = PR_FALSE;
 }
 
-NS_IMPL_ADDREF_INHERITED(nsTableFrame, nsHTMLContainerFrame)
-NS_IMPL_RELEASE_INHERITED(nsTableFrame, nsHTMLContainerFrame)
-
-NS_IMETHODIMP
-nsTableFrame::QueryInterface(const nsIID& aIID, void** aInstancePtr)
-{
-  NS_PRECONDITION(aInstancePtr, "null out param");
-
-  if (aIID.Equals(NS_GET_IID(nsITableLayout))) {
-    *aInstancePtr = static_cast<nsITableLayout*>(this);
-    return NS_OK;
-  }
-
-  return nsHTMLContainerFrame::QueryInterface(aIID, aInstancePtr);
-}
+NS_QUERYFRAME_HEAD(nsTableFrame)
+  NS_QUERYFRAME_ENTRY(nsITableLayout)
+NS_QUERYFRAME_TAIL_INHERITING(nsHTMLContainerFrame)
 
 NS_IMETHODIMP
 nsTableFrame::Init(nsIContent*      aContent,
@@ -1116,9 +1104,8 @@ nsTableFrame::GetRowGroupFrame(nsIFrame* aFrame,
     rgFrame = aFrame;
   }
   else if (nsGkAtoms::scrollFrame == frameType) {
-    nsIScrollableFrame* scrollable = nsnull;
-    nsresult rv = CallQueryInterface(aFrame, &scrollable);
-    if (NS_SUCCEEDED(rv) && (scrollable)) {
+    nsIScrollableFrame* scrollable = do_QueryFrame(aFrame);
+    if (scrollable) {
       nsIFrame* scrolledFrame = scrollable->GetScrolledFrame();
       if (scrolledFrame) {
         if (nsGkAtoms::tableRowGroupFrame == scrolledFrame->GetType()) {

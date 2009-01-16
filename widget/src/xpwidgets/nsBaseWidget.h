@@ -119,12 +119,12 @@ public:
   NS_IMETHOD              SetWindowClass(const nsAString& xulWinType);
   NS_IMETHOD              SetBorderStyle(nsBorderStyle aBorderStyle); 
   NS_IMETHOD              AddEventListener(nsIEventListener * aListener);
-  NS_IMETHOD              SetBounds(const nsRect &aRect);
-  NS_IMETHOD              GetBounds(nsRect &aRect);
-  NS_IMETHOD              GetClientBounds(nsRect &aRect);
-  NS_IMETHOD              GetScreenBounds(nsRect &aRect);
+  NS_IMETHOD              SetBounds(const nsIntRect &aRect);
+  NS_IMETHOD              GetBounds(nsIntRect &aRect);
+  NS_IMETHOD              GetClientBounds(nsIntRect &aRect);
+  NS_IMETHOD              GetScreenBounds(nsIntRect &aRect);
   NS_IMETHOD              GetBorderSize(PRInt32 &aWidth, PRInt32 &aHeight);
-  NS_IMETHOD              ScrollRect(nsRect &aRect, PRInt32 aDx, PRInt32 aDy);
+  NS_IMETHOD              ScrollRect(nsIntRect &aRect, PRInt32 aDx, PRInt32 aDy);
   NS_IMETHOD              ScrollWidgets(PRInt32 aDx, PRInt32 aDy);
   NS_IMETHOD              EnableDragDrop(PRBool aEnable);
   NS_IMETHOD              GetAttention(PRInt32 aCycleCount);
@@ -154,7 +154,7 @@ protected:
                                           nsILocalFile **aResult);
   virtual void            OnDestroy();
   virtual void            BaseCreate(nsIWidget *aParent,
-                                     const nsRect &aRect,
+                                     const nsIntRect &aRect,
                                      EVENT_CALLBACK aHandleEventFunction,
                                      nsIDeviceContext *aContext,
                                      nsIAppShell *aAppShell,
@@ -189,8 +189,8 @@ protected:
   PRPackedBool      mIsAltDown;
   PRPackedBool      mIsDestroying;
   PRPackedBool      mOnDestroyCalled;
-  nsRect            mBounds;
-  nsRect*           mOriginalBounds;
+  nsIntRect         mBounds;
+  nsIntRect*        mOriginalBounds;
   PRInt32           mZIndex;
   nsSizeMode        mSizeMode;
 
@@ -217,7 +217,7 @@ protected:
 
   static void debug_DumpInvalidate(FILE *                aFileOut,
                                    nsIWidget *           aWidget,
-                                   const nsRect *        aRect,
+                                   const nsIntRect *     aRect,
                                    PRBool                aIsSynchronous,
                                    const nsCAutoString & aWidgetName,
                                    PRInt32               aWindowID);

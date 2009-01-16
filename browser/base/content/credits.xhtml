@@ -21,6 +21,7 @@
 # Contributor(s):
 #   Ben Goodger <ben@mozilla.org>
 #   David Baron <dbaron@mozilla.org>
+#   Ehsan Akhgari <ehsan.akhgari@gmail.com>
 #
 # Alternatively, the contents of this file may be used under the terms of
 # either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -45,6 +46,8 @@
     %creditsDTD;
     <!ENTITY % licenseDTD SYSTEM "chrome://global/locale/license.dtd">
     %licenseDTD;
+    <!ENTITY % globalDTD SYSTEM "chrome://global/locale/global.dtd">
+    %globalDTD;
   ]
 >
 
@@ -206,10 +209,10 @@
     </div>
 
     <div id="creditsBox">
-        <h2 class="title">&brandFullName;&trade;
+        <h2 class="title" dir="&locale.dir;">&brandFullName;&trade;
           <div class="motto">&brandMotto;</div>
         </h2>
-        <div class="links">
+        <div class="links" dir="&locale.dir;">
           &credit.thanks2; <a href="" link="about:credits" onclick="visitLink(event);">&credit.contributors2;</a>
         </div>
 
@@ -494,12 +497,14 @@
             <li>Matthew Zeier</li>
           </ul>
 
-          &credit.translation;
+          <div dir="&locale.dir;">
+            &credit.translation;
+          </div>
         </div>
 
         <!-- organizational supporters -->
         <div class="creditsGroup">
-          <h3>&credit.thanks;</h3>
+          <h3 dir="&locale.dir;">&credit.thanks;</h3>
           <ul>
             <li>Google</li>
             <li>Yahoo!</li>
@@ -526,9 +531,9 @@
           </ul>
         </div>
 
-        <p id="gecko" class="center">&credit.poweredByGeckoReg;</p>
+        <p id="gecko" class="center" dir="&locale.dir;">&credit.poweredByGeckoReg;</p>
 
-        <p class="footnote">
+        <p class="footnote" dir="&locale.dir;">
           &brandFullName;&trade; &license.part0; &copy;1998-2009 &license.part1;
           <a href="" link="about:credits" onclick="visitLink(event);">&license.contrib;</a>,
           &license.part2;

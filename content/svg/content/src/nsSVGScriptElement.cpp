@@ -101,10 +101,6 @@ protected:
   enum { HREF };
   nsSVGString mStringAttributes[1];
   static StringInfo sStringInfo[1];
-
-  PRUint32 mLineNumber;
-  PRPackedBool mIsEvaluated;
-  PRPackedBool mEvaluating;
 };
 
 nsSVGElement::StringInfo nsSVGScriptElement::sStringInfo[1] =
@@ -132,10 +128,7 @@ NS_INTERFACE_MAP_END_INHERITING(nsSVGScriptElementBase)
 // Implementation
 
 nsSVGScriptElement::nsSVGScriptElement(nsINodeInfo *aNodeInfo)
-  : nsSVGScriptElementBase(aNodeInfo),
-    mLineNumber(0),
-    mIsEvaluated(PR_FALSE),
-    mEvaluating(PR_FALSE)
+  : nsSVGScriptElementBase(aNodeInfo)
 {
   AddMutationObserver(this);
 }
@@ -143,7 +136,29 @@ nsSVGScriptElement::nsSVGScriptElement(nsINodeInfo *aNodeInfo)
 //----------------------------------------------------------------------
 // nsIDOMNode methods
 
-NS_IMPL_ELEMENT_CLONE_WITH_INIT(nsSVGScriptElement)
+nsresult
+nsSVGScriptElement::Clone(nsINodeInfo *aNodeInfo, nsINode **aResult) const
+{
+  *aResult = nsnull;
+
+  nsSVGScriptElement* it = new nsSVGScriptElement(aNodeInfo);
+  if (!it) {
+    return NS_ERROR_OUT_OF_MEMORY;
+  }
+
+  nsCOMPtr<nsINode> kungFuDeathGrip = it;
+  nsresult rv = CopyInnerTo(it);
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  // The clone should be marked evaluated if we are.
+  it->mIsEvaluated = mIsEvaluated;
+  it->mLineNumber = mLineNumber;
+  it->mMalformed = mMalformed;
+
+  kungFuDeathGrip.swap(*aResult);
+
+  return NS_OK;
+}
 
 //----------------------------------------------------------------------
 // nsIDOMSVGScriptElement methods

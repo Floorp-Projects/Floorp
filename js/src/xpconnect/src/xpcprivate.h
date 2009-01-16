@@ -728,6 +728,9 @@ public:
     nsresult RemoveJSHolder(void* aHolder);
 
     void UnrootContextGlobals();
+#ifdef DEBUG_CC
+    void RootContextGlobals();
+#endif
 
     void DebugDump(PRInt16 depth);
 

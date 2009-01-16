@@ -68,8 +68,6 @@
 
   <!-- test code goes here -->
   <script type="application/javascript"><![CDATA[
-    SimpleTest.waitForExplicitFinish();
-
     function doTest() {
       var t1 = $("t1");
       var t2 = $("t2");
@@ -79,19 +77,15 @@
       var t1CanUndo = {};
       t1.editor.canUndo(t1Enabled, t1CanUndo);
       ok(t1CanUndo.value, "undo correctly enabled when emptyText was not changed through property");
-      t2.emptyText = "reallyempty";
 
-      // Remaining tests after timeout - emptyText is displayed asynchronously.
-      setTimeout(function () {
-        is(t2.inputField.value, "reallyempty", "updated emptyText displayed");
-        t2.click();
-        synthesizeKey("2", {});
-        var t2Enabled = {};
-        var t2CanUndo = {};
-        t2.editor.canUndo(t2Enabled, t2CanUndo);
-        ok(t2CanUndo.value, "undo correctly enabled when emptyText explicitly changed through property");
-        SimpleTest.finish();
-      }, 100);
+      t2.emptyText = "reallyempty";
+      is(t2.inputField.value, "reallyempty", "updated emptyText displayed");
+      t2.click();
+      synthesizeKey("2", {});
+      var t2Enabled = {};
+      var t2CanUndo = {};
+      t2.editor.canUndo(t2Enabled, t2CanUndo);
+      ok(t2CanUndo.value, "undo correctly enabled when emptyText explicitly changed through property");
    }
 
   ]]></script>

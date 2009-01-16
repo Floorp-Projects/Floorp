@@ -298,8 +298,8 @@ num_toSource(JSContext *cx, uintN argc, jsval *vp)
 #endif
 
 /* The buf must be big enough for MIN_INT to fit including '-' and '\0'. */
-char *
-js_IntToCString(jsint i, jsint base, char *buf, size_t bufSize)
+static char *
+IntToCString(jsint i, jsint base, char *buf, size_t bufSize)
 {
     char *cp;
     jsuint u;
@@ -363,7 +363,7 @@ num_toString(JSContext *cx, uintN argc, jsval *vp)
             return JS_FALSE;
         if (base < 2 || base > 36) {
             char numBuf[12];
-            char *numStr = js_IntToCString(base, 10, numBuf, sizeof numBuf);
+            char *numStr = IntToCString(base, 10, numBuf, sizeof numBuf);
             JS_ReportErrorNumber(cx, js_GetErrorMessage, NULL, JSMSG_BAD_RADIX,
                                  numStr);
             return JS_FALSE;
@@ -787,15 +787,21 @@ js_NewNumberInRootedValue(JSContext *cx, jsdouble d, jsval *vp)
     return js_NewDoubleInRootedValue(cx, d, vp);
 }
 
-char *
-js_NumberToCString(JSContext *cx, jsdouble d, jsint base, char *buf, size_t bufSize)
+/*
+ * Convert a number to C string. The buf must be large enough to accommodate
+ * the result, including '-' and '\0', if base == 10 or d is an integer that
+ * fits in 32 bits. The caller must free the resulting pointer if it does not
+ * point into buf.
+ */
+static char *
+NumberToCString(JSContext *cx, jsdouble d, jsint base, char *buf, size_t bufSize)
 {
     jsint i;
     char *numStr;
 
     JS_ASSERT(bufSize >= DTOSTR_STANDARD_BUFFER_SIZE);
     if (JSDOUBLE_IS_INT(d, i)) {
-        numStr = js_IntToCString(i, base, buf, bufSize);
+        numStr = IntToCString(i, base, buf, bufSize);
     } else {
         if (base == 10)
             numStr = JS_dtostr(buf, bufSize, DTOSTR_STANDARD, 0, d);
@@ -812,15 +818,25 @@ js_NumberToCString(JSContext *cx, jsdouble d, jsint base, char *buf, size_t bufS
 static JSString * JS_FASTCALL
 NumberToStringWithBase(JSContext *cx, jsdouble d, jsint base)
 {
-    char buf[DTOSTR_STANDARD_BUFFER_SIZE];
+    /*
+     * The longest possible result here that would need to fit in buf is
+     * (-0x80000000).toString(2), which has length 33.  (This can produce
+     * longer results, but in those cases buf is not used; see comment at
+     * NumberToCString.)
+     */
+    char buf[34];
     char *numStr;
+    JSString *s;
 
     if (base < 2 || base > 36)
         return NULL;
-    numStr = js_NumberToCString(cx, d, base, buf, sizeof buf);
+    numStr = NumberToCString(cx, d, base, buf, sizeof buf);
     if (!numStr)
         return NULL;
-    return JS_NewStringCopyZ(cx, numStr);
+    s = JS_NewStringCopyZ(cx, numStr);
+    if (!(numStr >= buf && numStr < buf + sizeof buf))
+        free(numStr);
+    return s;
 }
 
 JSString * JS_FASTCALL

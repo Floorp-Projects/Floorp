@@ -69,7 +69,7 @@ STATIC_PASS_TESTCASES = \
 
 include $(topsrcdir)/config/rules.mk
 
-LOCAL_INCLUDES += -I$(srcdir)/..
+LOCAL_INCLUDES += -I$(srcdir)/.. -I..
 
 check:: \
   $(STATIC_FAILURE_TESTCASES:.cpp=.s-fail) \

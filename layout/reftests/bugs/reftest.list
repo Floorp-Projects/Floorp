@@ -213,6 +213,13 @@ random == 99850-1b.html 99850-1-ref.html # bug 471629
 == 271747-1a.html 271747-1-ref.html
 == 271747-1b.html 271747-1-ref.html
 == 273681-1.html 273681-1-ref.html
+== 278266-1a.html 278266-1-ref.html 
+== 278266-1b.html 278266-1-ref.html 
+fails == 280708-1a.html 280708-1-ref.html # bug 473824
+== 280708-1b.html 280708-1-ref.html
+== 283686-1.html about:blank
+== 283686-2.html 283686-2-ref.html
+== 283686-3.html about:blank
 fails-if(MOZ_WIDGET_TOOLKIT!="cocoa") HTTP == 289480.html#top 289480-ref.html # basically-verbatim acid2 test, HTTP for a 404 page -- bug 409329 for the non-Mac failures
 == 290129-1.html 290129-1-ref.html
 == 291078-1.html 291078-1-ref.html
