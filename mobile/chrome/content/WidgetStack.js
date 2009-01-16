@@ -717,12 +717,15 @@ WidgetStack.prototype = {
 
   // updateSize: tell the WidgetStack to update its size, because it
   // was either resized or some other event took place.
-  updateSize: function updateSize() {
+  updateSize: function updateSize(width, height) {
     // XXX assumes we can only be resized from the bottom left/bottom right
-    let rect = this._el.getBoundingClientRect();
-    this._viewingRect.width = rect.width;
-    this._viewingRect.height = rect.height;
-
+    if (width == undefined || height == undefined) {
+      let rect = this._el.getBoundingClientRect();
+      width = rect.width;
+      height = rect.height;
+    }
+    this._viewingRect.width = width;
+    this._viewingRect.height = height;
     this._adjustViewingRect();
   },
 
