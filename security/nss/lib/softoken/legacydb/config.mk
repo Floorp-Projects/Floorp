@@ -43,11 +43,10 @@ ifdef MOZILLA_SECURITY_BUILD
 	CRYPTODIR=../crypto
 endif
 
-EXTRA_LIBS +=	$(CRYPTOLIB) 
-
-ifndef NSS_DISABLE_DBM
-EXTRA_LIBS +=	$(DIST)/lib/$(LIB_PREFIX)dbm.$(LIB_SUFFIX) 
-endif
+EXTRA_LIBS += \
+	$(CRYPTOLIB) \
+	$(DIST)/lib/$(LIB_PREFIX)dbm.$(LIB_SUFFIX) \
+	$(NULL)
 
 # can't do this in manifest.mn because OS_TARGET isn't defined there.
 ifeq (,$(filter-out WIN%,$(OS_TARGET)))
@@ -97,15 +96,6 @@ ifeq ($(OS_TARGET),SunOS)
 # dependencies in the same directory where it resides.
 MKSHLIB += -R '$$ORIGIN'
 OS_LIBS += -lbsm 
-endif
-
-ifeq ($(OS_ARCH), HP-UX) 
-ifneq ($(OS_TEST), ia64)
-# pa-risc
-ifeq ($(USE_64), 1)
-MKSHLIB += +b '$$ORIGIN'
-endif
-endif
 endif
 
 ifeq ($(OS_TARGET),WINCE)

@@ -45,10 +45,12 @@ LIBRARY_NAME = cryptohi
 EXPORTS = \
 	cryptohi.h \
 	cryptoht.h \
+	hasht.h   \
 	key.h     \
 	keyhi.h   \
 	keyt.h    \
 	keythi.h  \
+	sechash.h \
 	$(NULL)
 
 PRIVATE_EXPORTS = \

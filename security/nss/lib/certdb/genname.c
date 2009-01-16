@@ -38,6 +38,7 @@
 #include "seccomon.h"
 #include "secitem.h"
 #include "secoidt.h"
+#include "mcom_db.h"
 #include "secasn1.h"
 #include "secder.h"
 #include "certt.h"

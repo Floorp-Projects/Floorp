@@ -37,7 +37,7 @@
 /*
  * Moved from secpkcs7.c
  *
- * $Id: crl.c,v 1.60 2008/10/31 23:02:36 alexei.volkov.bugs%sun.com Exp $
+ * $Id: crl.c,v 1.59 2008/03/25 05:02:22 julien.pierre.boogz%sun.com Exp $
  */
  
 #include "cert.h"
@@ -946,6 +946,10 @@ static SECStatus DPCache_AddCRL(CRLDPCache* cache, CachedCrl* crl,
 static SECStatus DPCache_FetchFromTokens(CRLDPCache* cache, PRTime vfdate,
                                          void* wincx);
 
+/* check if a particular SN is in the CRL cache and return its entry */
+static SECStatus DPCache_Lookup(CRLDPCache* cache, SECItem* sn,
+                                CERTCrlEntry** returned);
+
 /* update the content of the CRL cache, including fetching of CRLs, and
    reprocessing with specified issuer and date */
 static SECStatus DPCache_GetUpToDate(CRLDPCache* cache, CERTCertificate* issuer,
@@ -1709,7 +1713,7 @@ static SECStatus CachedCrl_GetEntry(CachedCrl* crl, SECItem* sn,
 }
 
 /* check if a particular SN is in the CRL cache and return its entry */
-SECStatus DPCache_Lookup(CRLDPCache* cache, SECItem* sn,
+static SECStatus DPCache_Lookup(CRLDPCache* cache, SECItem* sn,
                                 CERTCrlEntry** returned)
 {
     if (!cache || !sn || !returned)

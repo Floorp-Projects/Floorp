@@ -703,20 +703,6 @@ sftkdb_getAttributeFromTemplate(CK_ATTRIBUTE_TYPE attribute,
     return NULL;
 }
 
-static const CK_ATTRIBUTE *
-sftkdb_getAttributeFromConstTemplate(CK_ATTRIBUTE_TYPE attribute, 
-				const CK_ATTRIBUTE *ptemplate, CK_ULONG len)
-{
-    CK_ULONG i;
-
-    for (i=0; i < len; i++) {
-	if (attribute == ptemplate[i].type) {
-	    return &ptemplate[i];
-	}
-    }
-    return NULL;
-}
-
 
 /*
  * fetch a template which identifies 'unique' entries based on object type
@@ -837,227 +823,6 @@ sftkdb_lookupObject(SDB *db, CK_OBJECT_CLASS objectType,
     return CKR_OK;
 }
 
-
-/*
- * check to see if this template conflicts with others in our current database.
- */
-static CK_RV
-sftkdb_checkConflicts(SDB *db, CK_OBJECT_CLASS objectType, 
-			const CK_ATTRIBUTE *ptemplate, CK_ULONG len, 
-			CK_OBJECT_HANDLE sourceID)
-{
-    CK_ATTRIBUTE findTemplate[2];
-    unsigned char objTypeData[SDB_ULONG_SIZE];
-    /* we may need to allocate some temporaries. Keep track of what was 
-     * allocated so we can free it in the end */
-    unsigned char *temp1 = NULL; 
-    unsigned char *temp2 = NULL;
-    CK_ULONG objCount = 0;
-    SDBFind *find = NULL;
-    CK_OBJECT_HANDLE id;
-    const CK_ATTRIBUTE *attr, *attr2;
-    CK_RV crv;
-    CK_ATTRIBUTE subject;
-
-    /* Currently the only conflict is with nicknames pointing to the same 
-     * subject when creating or modifying a certificate. */
-    /* If the object is not a cert, no problem. */
-    if (objectType != CKO_CERTIFICATE) {
-	return CKR_OK;
-    }
-    /* if not setting a nickname then there's still no problem */
-    attr = sftkdb_getAttributeFromConstTemplate(CKA_LABEL, ptemplate, len);
-    if ((attr == NULL) || (attr->ulValueLen == 0)) {
-	return CKR_OK;
-    }
-    /* fetch the subject of the source. For creation and merge, this should
-     * be found in the template */
-    attr2 = sftkdb_getAttributeFromConstTemplate(CKA_SUBJECT, ptemplate, len);
-    if ((attr2 == NULL) || (attr2->ulValueLen == 0)) {
-	if (sourceID == CK_INVALID_HANDLE) {
-	    crv = CKR_TEMPLATE_INCOMPLETE; 
-	    goto done;
-	}
-
-	/* sourceID is set if we are trying to modify an existing entry instead
-	 * of creating a new one. In this case the subject may not be (probably
-	 * isn't) in the template, we have to read it from the database */
-    	subject.type = CKA_SUBJECT;
-    	subject.pValue = NULL;
-    	subject.ulValueLen = 0;
-    	crv = (*db->sdb_GetAttributeValue)(db, sourceID, &subject, 1);
-	if (crv != CKR_OK) {
-	    goto done;
-	}
-	if (subject.ulValueLen <= 0) {
-	    crv = CKR_DEVICE_ERROR; /* closest pkcs11 error to corrupted DB */
-	    goto done;
-	}
-	temp1 = subject.pValue = PORT_Alloc(subject.ulValueLen);
-	if (temp1 == NULL) {
-	    crv = CKR_HOST_MEMORY;
-	    goto done;
-	}
-    	crv = (*db->sdb_GetAttributeValue)(db, sourceID, &subject, 1);
-	if (crv != CKR_OK) {
-	    goto done;
-	}
-	attr2 = &subject;
-    }
-    
-    /* check for another cert in the database with the same nickname */
-    sftk_ULong2SDBULong(objTypeData, objectType);
-    findTemplate[0].type = CKA_CLASS;
-    findTemplate[0].pValue = objTypeData;
-    findTemplate[0].ulValueLen = SDB_ULONG_SIZE;
-    findTemplate[1] = *attr;
-
-    crv = (*db->sdb_FindObjectsInit)(db, findTemplate, 2, &find);
-    if (crv != CKR_OK) {
-	goto done;
-    }
-    (*db->sdb_FindObjects)(db, find, &id, 1, &objCount);
-    (*db->sdb_FindObjectsFinal)(db, find);
-
-    /* object count == 0 means no conflicting certs found, 
-     * go on with the operation */
-    if (objCount == 0) {
-	crv = CKR_OK;
-	goto done;
-    }
-
-    /* There is a least one cert that shares the nickname, make sure it also
-     * matches the subject. */
-    findTemplate[0] = *attr2;
-    /* we know how big the source subject was. Use that length to create the 
-     * space for the target. If it's not enough space, then it means the 
-     * source subject is too big, and therefore not a match. GetAttributeValue 
-     * will return CKR_BUFFER_TOO_SMALL. Otherwise it should be exactly enough 
-     * space (or enough space to be able to compare the result. */
-    temp2 = findTemplate[0].pValue = PORT_Alloc(attr2->ulValueLen);
-    if (temp2 == NULL) {
-	crv = CKR_HOST_MEMORY;
-	goto done;
-    }
-    crv = (*db->sdb_GetAttributeValue)(db, id, findTemplate, 1);
-    if (crv != CKR_OK) {
-	if (crv == CKR_BUFFER_TOO_SMALL) {
-	    /* if our buffer is too small, then the Subjects clearly do 
-	     * not match */
-	    crv = CKR_ATTRIBUTE_VALUE_INVALID;
-	    goto loser;
-	}
-	/* otherwise we couldn't get the value, just fail */
-	goto done;
-    }
-	
-    /* Ok, we have both subjects, make sure they are the same. 
-     * Compare the subjects */
-    if ((findTemplate[0].ulValueLen != attr2->ulValueLen) || 
-	(PORT_Memcmp(findTemplate[0].pValue,attr2->pValue,attr2->ulValueLen) != 0)) {
-    	crv = CKR_ATTRIBUTE_VALUE_INVALID; 
-	goto loser;
-    }
-    crv = CKR_OK;
-    
-done:
-    /* If we've failed for some other reason than a conflict, make sure we 
-     * return an error code other than CKR_ATTRIBUTE_VALUE_INVALID. 
-     * (NOTE: neither sdb_FindObjectsInit nor sdb_GetAttributeValue should 
-     * return CKR_ATTRIBUTE_VALUE_INVALID, so the following is paranoia).
-     */
-    if (crv == CKR_ATTRIBUTE_VALUE_INVALID) {
-	crv = CKR_GENERAL_ERROR; /* clearly a programming error */
-    }
-
-    /* exit point if we found a conflict */
-loser:
-    PORT_Free(temp1);
-    PORT_Free(temp2);
-    return crv;
-}
-
-/*
- * try to update the template to fix any errors. This is only done 
- * during update.
- *
- * NOTE: we must update the template or return an error, or the update caller 
- * will loop forever!
- *
- * Two copies of the source code for this algorithm exist in NSS.  
- * Changes must be made in both copies.
- * The other copy is in pk11_IncrementNickname() in pk11wrap/pk11merge.c.
- *
- */
-static CK_RV
-sftkdb_resolveConflicts(PRArenaPool *arena, CK_OBJECT_CLASS objectType, 
-			CK_ATTRIBUTE *ptemplate, CK_ULONG *plen)
-{
-    CK_ATTRIBUTE *attr;
-    char *nickname, *newNickname;
-    int end, digit;
-
-    /* sanity checks. We should never get here with these errors */
-    if (objectType != CKO_CERTIFICATE) {
-	return CKR_GENERAL_ERROR; /* shouldn't happen */
-    }
-    attr = sftkdb_getAttributeFromTemplate(CKA_LABEL, ptemplate, *plen);
-    if ((attr == NULL) || (attr->ulValueLen == 0)) {
-	return CKR_GENERAL_ERROR; /* shouldn't happen */
-    }
-
-    /* update the nickname */
-    /* is there a number at the end of the nickname already?
-     * if so just increment that number  */
-    nickname = (char *)attr->pValue;
-
-    /* does nickname end with " #n*" ? */
-    for (end = attr->ulValueLen - 1; 
-         end >= 2 && (digit = nickname[end]) <= '9' &&  digit >= '0'; 
-	 end--)  /* just scan */ ;
-    if (attr->ulValueLen >= 3 &&
-        end < (attr->ulValueLen - 1) /* at least one digit */ &&
-	nickname[end]     == '#'  && 
-	nickname[end - 1] == ' ') {
-    	/* Already has a suitable suffix string */
-    } else {
-	/* ... append " #2" to the name */
-	static const char num2[] = " #2";
-	newNickname = PORT_ArenaAlloc(arena, attr->ulValueLen + sizeof(num2));
-	if (!newNickname) {
-	    return CKR_HOST_MEMORY;
-	}
-	PORT_Memcpy(newNickname, nickname, attr->ulValueLen);
-	PORT_Memcpy(&newNickname[attr->ulValueLen], num2, sizeof(num2));
-	attr->pValue = newNickname; /* modifies ptemplate */
-	attr->ulValueLen += 3;      /* 3 is strlen(num2)  */
-	return CKR_OK;
-    }
-
-    for (end = attr->ulValueLen - 1; 
-	 end >= 0 && (digit = nickname[end]) <= '9' &&  digit >= '0'; 
-	 end--) {
-	if (digit < '9') {
-	    nickname[end]++;
-	    return CKR_OK;
-	}
-	nickname[end] = '0';
-    }
-
-    /* we overflowed, insert a new '1' for a carry in front of the number */
-    newNickname = PORT_ArenaAlloc(arena, attr->ulValueLen + 1);
-    if (!newNickname) {
-	return CKR_HOST_MEMORY;
-    }
-    /* PORT_Memcpy should handle len of '0' */
-    PORT_Memcpy(newNickname, nickname, ++end);
-    newNickname[end] = '1';
-    PORT_Memset(&newNickname[end+1],'0',attr->ulValueLen - end);
-    attr->pValue = newNickname;
-    attr->ulValueLen++;
-    return CKR_OK;
-}
-
 /*
  * set an attribute and sign it if necessary
  */
@@ -1114,28 +879,6 @@ sftkdb_write(SFTKDBHandle *handle, SFTKObject *object,
     }
     inTransaction = PR_TRUE;
 
-    /*
-     * We want to make the base database as free from object specific knowledge
-     * as possible. To maintain compatibility, keep some of the desirable
-     * object specific semantics of the old database.
-     * 
-     * These were 2 fold:
-     *  1) there were certain conflicts (like trying to set the same nickname 
-     * on two different subjects) that would return an error.
-     *  2) Importing the 'same' object would silently update that object.
-     *
-     * The following 2 functions mimic the desirable effects of these two
-     * semantics without pushing any object knowledge to the underlying database
-     * code.
-     */
-
-    /* make sure we don't have attributes that conflict with the existing DB */
-    crv = sftkdb_checkConflicts(db, object->objclass, template, count,
-				 CK_INVALID_HANDLE);
-    if (crv != CKR_OK) {
-	goto loser;
-    }
-    /* Find any copies that match this particular object */
     crv = sftkdb_lookupObject(db, object->objclass, &id, template, count);
     if (crv != CKR_OK) {
 	goto loser;
@@ -1304,14 +1047,13 @@ sftkdb_GetAttributeValue(SFTKDBHandle *handle, CK_OBJECT_HANDLE objectID,
 }
 
 CK_RV
-sftkdb_SetAttributeValue(SFTKDBHandle *handle, SFTKObject *object,
+sftkdb_SetAttributeValue(SFTKDBHandle *handle, CK_OBJECT_HANDLE objectID,
                                 const CK_ATTRIBUTE *template, CK_ULONG count)
 {
     CK_RV crv = CKR_OK;
     CK_ATTRIBUTE *ntemplate;
     unsigned char *data = NULL;
     PLArenaPool *arena = NULL;
-    CK_OBJECT_HANDLE objectID = (object->handle & SFTK_OBJ_ID_MASK);
     SDB *db;
 
     if (handle == NULL) {
@@ -1329,17 +1071,12 @@ sftkdb_SetAttributeValue(SFTKDBHandle *handle, SFTKObject *object,
 	return CKR_HOST_MEMORY;
     }
 
-    /* make sure we don't have attributes that conflict with the existing DB */
-    crv = sftkdb_checkConflicts(db, object->objclass, template, count, objectID);
-    if (crv != CKR_OK) {
-	return crv;
-    }
-
     arena = PORT_NewArena(256);
     if (arena ==  NULL) {
 	return CKR_HOST_MEMORY;
     }
 
+    objectID &= SFTK_OBJ_ID_MASK;
     crv = (*db->sdb_Begin)(db);
     if (crv != CKR_OK) {
 	goto loser;
@@ -2024,32 +1761,31 @@ sftkdb_updateObjectTemplate(PRArenaPool *arena, SDB *db,
 		    CK_ATTRIBUTE *ptemplate, CK_ULONG *plen,
 		    CK_OBJECT_HANDLE *targetID)
 {
-    PRBool done; /* should we repeat the loop? */
+    CK_ATTRIBUTE findTemplate[3];
+    CK_ULONG count = 1;
+    CK_ULONG objCount = 0;
     CK_OBJECT_HANDLE id;
-    CK_RV crv = CKR_OK;
+    SDBFind *find = NULL;
+    unsigned char objTypeData[SDB_ULONG_SIZE];
+    CK_RV crv;
 
-    do {
- 	crv = sftkdb_checkConflicts(db, objectType, ptemplate, 
-						*plen, CK_INVALID_HANDLE);
-	if (crv != CKR_ATTRIBUTE_VALUE_INVALID) {
-	    break;
-	}
-	crv = sftkdb_resolveConflicts(arena, objectType, ptemplate, plen);
-    } while (crv == CKR_OK);
-
+    crv = sftkdb_getFindTemplate(objectType, objTypeData,
+			findTemplate, &count, ptemplate, *plen);
     if (crv != CKR_OK) {
 	return SFTKDB_DO_NOTHING;
     }
 
     do {
-	done = PR_TRUE;
-	crv = sftkdb_lookupObject(db, objectType, &id, ptemplate, *plen);
+	/* use the raw find, so we get the correct database */
+	crv = (*db->sdb_FindObjectsInit)(db, findTemplate, count, &find);
 	if (crv != CKR_OK) {
 	    return SFTKDB_DO_NOTHING;
 	}
+	(*db->sdb_FindObjects)(db, find, &id, 1, &objCount);
+	(*db->sdb_FindObjectsFinal)(db, find);
 
-	/* This object already exists, merge it, don't update */
-	if (id != CK_INVALID_HANDLE) {
+	/* This object already exists, don't update */
+	if (objCount == 1) {
     	    CK_ATTRIBUTE *attr = NULL;
 	    /* special post processing for attributes */
 	    switch (objectType) {
@@ -2075,11 +1811,12 @@ sftkdb_updateObjectTemplate(PRArenaPool *arena, SDB *db,
 		attr = sftkdb_getAttributeFromTemplate(CKA_ID,ptemplate,*plen);
 		crv = sftkdb_incrementCKAID(arena, attr); 
 		/* in the extremely rare event that we needed memory and
-		 * couldn't get it, just drop the key */
+		 * couldn't get it, don't have, just drop the key */
 		if (crv != CKR_OK) {
 		    return SFTKDB_DO_NOTHING;
 		}
-		done = PR_FALSE; /* repeat this find loop */
+		findTemplate[1] = *attr;
+		objCount = 0; /* repeat this find loop */
 		break;
 	    default:
 		/* for all other objects, if we found the equivalent object,
@@ -2087,7 +1824,7 @@ sftkdb_updateObjectTemplate(PRArenaPool *arena, SDB *db,
 	        return SFTKDB_DO_NOTHING;
 	    }
 	}
-    } while (!done);
+    } while (objCount == 1);
 
     /* this object doesn't exist, update it */
     return SFTKDB_ADD_OBJECT;
@@ -2411,7 +2148,7 @@ sftk_NewDBHandle(SDB *sdb, int type)
    handle->passwordKey.len = 0;
    handle->passwordLock = NULL;
    if (type == SFTK_KEYDB_TYPE) {
-	handle->passwordLock = PZ_NewLock(nssILockAttribute);
+	handle->passwordLock = PZ_NewLock();
    }
    sdb->app_private = handle;
    return handle;

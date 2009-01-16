@@ -304,7 +304,6 @@ pkix_pl_Cert_DecodePolicyInfo(
                 PKIX_LISTSETIMMUTABLEFAILED);
 
         *pCertPolicyInfos = infos;
-        infos = NULL;
 
 cleanup:
         if (certPol) {
@@ -313,14 +312,16 @@ cleanup:
             CERT_DestroyCertificatePoliciesExtension(certPol);
         }
 
+        if (PKIX_ERROR_RECEIVED){
+                PKIX_DECREF(infos);
+        }
+
         PKIX_FREE(oidAscii);
-        PKIX_DECREF(infos);
         PKIX_DECREF(pkixOID);
         PKIX_DECREF(qualifiers);
         PKIX_DECREF(certPolicyInfo);
         PKIX_DECREF(certPolicyQualifier);
         PKIX_DECREF(qualifierArray);
-
         PKIX_RETURN(CERT);
 }
 
@@ -460,7 +461,6 @@ pkix_pl_Cert_DecodePolicyMapping(
                 PKIX_LISTSETIMMUTABLEFAILED);
 
         *pCertPolicyMaps = maps;
-        maps = NULL;
 
 cleanup:
         if (certPolMaps) {
@@ -471,7 +471,6 @@ cleanup:
 
         PKIX_FREE(issuerPolicyOIDAscii);
         PKIX_FREE(subjectPolicyOIDAscii);
-        PKIX_DECREF(maps);
         PKIX_DECREF(issuerDomainOID);
         PKIX_DECREF(subjectDomainOID);
         PKIX_DECREF(certPolicyMap);
@@ -2653,7 +2652,6 @@ PKIX_PL_Cert_GetPolicyInformation(
 
                 /* save a cached copy in case it is asked for again */
                 cert->certPolicyInfos = policyList;
-                policyList = NULL;
         }
 
         PKIX_INCREF(cert->certPolicyInfos);
@@ -2662,8 +2660,6 @@ PKIX_PL_Cert_GetPolicyInformation(
 
 cleanup:
 	PKIX_OBJECT_UNLOCK(lockedObject);
-
-        PKIX_DECREF(policyList);
         PKIX_RETURN(CERT);
 }
 
@@ -2703,17 +2699,14 @@ PKIX_PL_Cert_GetPolicyMappings(
                 PKIX_OBJECT_UNLOCK(cert);
 
                 /* save a cached copy in case it is asked for again */
-                cert->certPolicyMappings = policyMappings; 
-                policyMappings = NULL;
+                cert->certPolicyMappings = policyMappings;
         }
 
         PKIX_INCREF(cert->certPolicyMappings);
         *pPolicyMappings = cert->certPolicyMappings;
-        
+
 cleanup:
 	PKIX_OBJECT_UNLOCK(lockedObject);
-
-        PKIX_DECREF(policyMappings);
         PKIX_RETURN(CERT);
 }
 

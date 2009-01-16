@@ -39,7 +39,7 @@
  */
 
 #include "prtypes.h"
-#include <limits.h>     /* for LONG_MAX */
+#include "mcom_db.h"
 #include "seccomon.h"
 #include "secdert.h"
 #include "secoidt.h"

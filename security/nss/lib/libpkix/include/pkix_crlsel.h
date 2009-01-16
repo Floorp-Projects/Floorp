@@ -156,10 +156,10 @@ typedef PKIX_Error *
  *  the Object pointed to by "crlSelectorContext".
  *
  * PARAMETERS:
- *  "issue"
- *      crl issuer.
  *  "callback"
  *      The MatchCallback function to be used.
+ *  "crlSelectorContext"
+ *      Address of Object representing the CRLSelector's context (if any).
  *  "pSelector"
  *      Address where object pointer will be stored. Must be non-NULL.
  *  "plContext"
@@ -173,8 +173,8 @@ typedef PKIX_Error *
  */
 PKIX_Error *
 PKIX_CRLSelector_Create(
-        PKIX_PL_Cert *issuer,
-        PKIX_PL_Date *date,
+        PKIX_CRLSelector_MatchCallback callback,
+        PKIX_PL_Object *crlSelectorContext,
         PKIX_CRLSelector **pSelector,
         void *plContext);
 

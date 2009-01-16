@@ -673,8 +673,6 @@ typedef enum {
     bltestAES_CBC,        /* .                     */
     bltestCAMELLIA_ECB,   /* .                     */
     bltestCAMELLIA_CBC,   /* .                     */
-    bltestSEED_ECB,       /* SEED algorithm	   */
-    bltestSEED_CBC,       /* SEED algorithm	   */
     bltestRSA,		  /* Public Key Ciphers	   */
 #ifdef NSS_ENABLE_ECC
     bltestECDSA,	  /* . (Public Key Sig.)   */
@@ -704,8 +702,6 @@ static char *mode_strings[] =
     "aes_cbc",
     "camellia_ecb",
     "camellia_cbc",
-    "seed_ecb",
-    "seed_cbc",
     "rsa",
 #ifdef NSS_ENABLE_ECC
     "ecdsa",
@@ -821,7 +817,7 @@ PRBool
 is_symmkeyCipher(bltestCipherMode mode)
 {
     /* change as needed! */
-    if (mode >= bltestDES_ECB && mode <= bltestSEED_CBC)
+    if (mode >= bltestDES_ECB && mode <= bltestCAMELLIA_CBC)
 	return PR_TRUE;
     return PR_FALSE;
 }
@@ -863,8 +859,7 @@ cipher_requires_IV(bltestCipherMode mode)
     /* change as needed! */
     if (mode == bltestDES_CBC || mode == bltestDES_EDE_CBC ||
 	mode == bltestRC2_CBC || mode == bltestRC5_CBC     ||
-        mode == bltestAES_CBC || mode == bltestCAMELLIA_CBC||
-	mode == bltestSEED_CBC)
+        mode == bltestAES_CBC || mode == bltestCAMELLIA_CBC)
 	return PR_TRUE;
     return PR_FALSE;
 }
@@ -1116,24 +1111,6 @@ camellia_Decrypt(void *cx, unsigned char *output, unsigned int *outputLen,
     return Camellia_Decrypt((CamelliaContext *)cx, output, outputLen,
 			    maxOutputLen,
 			    input, inputLen);
-}
-
-SECStatus
-seed_Encrypt(void *cx, unsigned char *output, unsigned int *outputLen,
-            unsigned int maxOutputLen, const unsigned char *input,
-            unsigned int inputLen)
-{
-    return SEED_Encrypt((SEEDContext *)cx, output, outputLen, maxOutputLen,
-                       input, inputLen);
-}
-
-SECStatus
-seed_Decrypt(void *cx, unsigned char *output, unsigned int *outputLen,
-            unsigned int maxOutputLen, const unsigned char *input,
-            unsigned int inputLen)
-{
-    return SEED_Decrypt((SEEDContext *)cx, output, outputLen, maxOutputLen,
-                       input, inputLen);
 }
 
 SECStatus
@@ -1397,46 +1374,6 @@ bltest_camellia_init(bltestCipherInfo *cipherInfo, PRBool encrypt)
     else
 	cipherInfo->cipher.symmkeyCipher = camellia_Decrypt;
     return SECSuccess;
-}
-
-SECStatus
-bltest_seed_init(bltestCipherInfo *cipherInfo, PRBool encrypt)
-{
-    PRIntervalTime time1, time2;
-    bltestSymmKeyParams *seedp = &cipherInfo->params.sk;
-    int minorMode;
-    int i;
-
-    switch (cipherInfo->mode) {
-    case bltestSEED_ECB:	minorMode = NSS_SEED;		break;
-    case bltestSEED_CBC:	minorMode = NSS_SEED_CBC;	break;
-    default:
-	return SECFailure;
-    }
-    cipherInfo->cx = (void*)SEED_CreateContext(seedp->key.buf.data,
-					      seedp->iv.buf.data,
-					      minorMode, encrypt);
-    if (cipherInfo->cxreps > 0) {
-	SEEDContext **dummycx;
-	dummycx = PORT_Alloc(cipherInfo->cxreps * sizeof(SEEDContext *));
-	TIMESTART();
-	for (i=0; i<cipherInfo->cxreps; i++) {
-	    dummycx[i] = (void*)SEED_CreateContext(seedp->key.buf.data,
-					          seedp->iv.buf.data,
-					          minorMode, encrypt);
-	}
-	TIMEFINISH(cipherInfo->cxtime, 1.0);
-	for (i=0; i<cipherInfo->cxreps; i++) {
-	    SEED_DestroyContext(dummycx[i], PR_TRUE);
-	}
-	PORT_Free(dummycx);
-    }
-    if (encrypt)
-	cipherInfo->cipher.symmkeyCipher = seed_Encrypt;
-    else
-	cipherInfo->cipher.symmkeyCipher = seed_Decrypt;
-	
-	return SECSuccess;
 }
 
 SECStatus
@@ -1999,12 +1936,6 @@ cipherInit(bltestCipherInfo *cipherInfo, PRBool encrypt)
 			  cipherInfo->input.pBuf.len);
 	return bltest_camellia_init(cipherInfo, encrypt);
 	break;
-    case bltestSEED_ECB:
-    case bltestSEED_CBC:
-	SECITEM_AllocItem(cipherInfo->arena, &cipherInfo->output.buf,
-			  cipherInfo->input.pBuf.len);
-	return bltest_seed_init(cipherInfo, encrypt);
-	break;
     case bltestRSA:
 	SECITEM_AllocItem(cipherInfo->arena, &cipherInfo->output.buf,
 			  cipherInfo->input.pBuf.len);
@@ -2459,10 +2390,6 @@ cipherFinish(bltestCipherInfo *cipherInfo)
     case bltestCAMELLIA_CBC:
 	Camellia_DestroyContext((CamelliaContext *)cipherInfo->cx, PR_TRUE);
 	break;
-    case bltestSEED_ECB:
-    case bltestSEED_CBC:
-	SEED_DestroyContext((SEEDContext *)cipherInfo->cx, PR_TRUE);
-	break;
     case bltestRC2_ECB:
     case bltestRC2_CBC:
 	RC2_DestroyContext((RC2Context *)cipherInfo->cx, PR_TRUE);
@@ -2613,8 +2540,6 @@ print_td:
       case bltestAES_CBC:
       case bltestCAMELLIA_ECB:
       case bltestCAMELLIA_CBC:
-      case bltestSEED_ECB:
-      case bltestSEED_CBC:
       case bltestRC2_ECB:
       case bltestRC2_CBC:
       case bltestRC4:
@@ -2758,7 +2683,6 @@ get_params(PRArenaPool *arena, bltestParams *params,
     case bltestRC2_CBC:
     case bltestAES_CBC:
     case bltestCAMELLIA_CBC:
-    case bltestSEED_CBC: 
 	sprintf(filename, "%s/tests/%s/%s%d", testdir, modestr, "iv", j);
 	load_file_data(arena, &params->sk.iv, filename, bltestBinary);
     case bltestDES_ECB:
@@ -2767,7 +2691,6 @@ get_params(PRArenaPool *arena, bltestParams *params,
     case bltestRC4:
     case bltestAES_ECB:
     case bltestCAMELLIA_ECB:
-    case bltestSEED_ECB:
 	sprintf(filename, "%s/tests/%s/%s%d", testdir, modestr, "key", j);
 	load_file_data(arena, &params->sk.key, filename, bltestBinary);
 	break;

@@ -175,11 +175,6 @@
 #define CAMELLIA_ENCRYPT_OID MITSUBISHI_ALG,1
 #define CAMELLIA_WRAP_OID    MITSUBISHI_ALG,3
 
-/* for SEED : iso(1) member-body(2) korea(410)
- *    kisa(200004) algorithm(1)
- */
-#define SEED_OID		 0x2a,0x83,0x1a,0x8c,0x9a,0x44,0x01
-
 #define CONST_OID static const unsigned char
 
 CONST_OID md2[]        				= { DIGEST, 0x02 };
@@ -571,8 +566,6 @@ CONST_OID secgECsect409k1[] = {SECG_OID, 0x24 };
 CONST_OID secgECsect409r1[] = {SECG_OID, 0x25 };
 CONST_OID secgECsect571k1[] = {SECG_OID, 0x26 };
 CONST_OID secgECsect571r1[] = {SECG_OID, 0x27 };
-
-CONST_OID seed_CBC[]				= { SEED_OID, 4 };
 
 #define OI(x) { siDEROID, (unsigned char *)x, sizeof x }
 #ifndef SECOID_NO_STRINGS
@@ -1580,10 +1573,6 @@ const static SECOidData oids[] = {
     OD( isoSHA1WithRSASignature, SEC_OID_ISO_SHA1_WITH_RSA_SIGNATURE,
 	"ISO SHA1 with RSA Signature", 
 	CKM_INVALID_MECHANISM, INVALID_CERT_EXTENSION ),
-
-    /* SEED algorithm OIDs */
-    OD( seed_CBC, SEC_OID_SEED_CBC,
-	"SEED-CBC", CKM_SEED_CBC, INVALID_CERT_EXTENSION),
 
 };
 

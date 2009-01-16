@@ -79,9 +79,6 @@ static const PKIX_UInt32 crlfLen = 2; /* strlen(crlf) */
 static const char *httpprotocol = "HTTP/";
 static const PKIX_UInt32 httpprotocolLen = 5; /* strlen(httpprotocol) */
 
-
-#define HTTP_UNKNOWN_CONTENT_LENGTH -1
-
 /* --Private-HttpDefaultClient-Functions------------------------- */
 
 /*
@@ -121,9 +118,10 @@ pkix_pl_HttpDefaultClient_HdrCheckComplete(
         void *plContext)
 {
         PKIX_UInt32 alreadyScanned = 0;
+        PKIX_UInt32 searchOffset = 0;
         PKIX_UInt32 comp = 0;
         PKIX_UInt32 headerLength = 0;
-        PKIX_Int32 contentLength = HTTP_UNKNOWN_CONTENT_LENGTH;
+        PKIX_UInt32 contentLength = 0;
         char *eoh = NULL;
         char *statusLineEnd = NULL;
         char *space = NULL;
@@ -143,32 +141,33 @@ pkix_pl_HttpDefaultClient_HdrCheckComplete(
         *pKeepGoing = PKIX_FALSE;
 
         /* Does buffer contain end-of-header marker? */
-
-        /* Copy number of scanned bytes into a variable. */
-        alreadyScanned = client->filledupBytes;
+        alreadyScanned = client->alreadyScanned;
         /*
          * If this is the initial buffer, we have to scan from the beginning.
          * If we scanned, failed to find eohMarker, and read some more, we
          * only have to scan from where we left off.
          */
         if (alreadyScanned > eohMarkLen) {
-            /* Back up and restart scanning over a few bytes that were
-             * scanned before */
-            PKIX_UInt32 searchStartPos = alreadyScanned - eohMarkLen;
-            eoh = PL_strnstr(&(client->rcvBuf[searchStartPos]), eohMarker,
-                             bytesRead + searchStartPos);
+                searchOffset = alreadyScanned - eohMarkLen;
+                PKIX_PL_NSSCALLRV(HTTPDEFAULTCLIENT, eoh, PL_strnstr,
+                        (&(client->rcvBuf[searchOffset]),
+                        eohMarker,
+                        client->capacity - searchOffset));
         } else {
-            /* A search from the beginning of the buffer. */
-            eoh = PL_strnstr(client->rcvBuf, eohMarker, bytesRead);
+                PKIX_PL_NSSCALLRV(HTTPDEFAULTCLIENT, eoh, PL_strnstr,
+                        (client->rcvBuf, eohMarker, bytesRead));
         }
 
-        client->filledupBytes += bytesRead;
+        alreadyScanned += bytesRead;
+        client->alreadyScanned = alreadyScanned;
 
         if (eoh == NULL) { /* did we see end-of-header? */
+
                 /* No. Continue to read header data */
                 client->connectStatus = HTTP_RECV_HDR;
                 *pKeepGoing = PKIX_TRUE;
                 goto cleanup;
+
         }
 
         /* Yes. Calculate how many bytes in header (not counting eohMarker) */
@@ -180,48 +179,66 @@ pkix_pl_HttpDefaultClient_HdrCheckComplete(
 
         /* copy header data before we corrupt it (by storing NULLs) */
         PORT_Memcpy(copy, client->rcvBuf, headerLength);
+
 	/* Store the NULL terminator */
 	copy[headerLength] = '\0';
+
 	client->rcvHeaders = copy;
 
         /* Did caller want a pointer to header? */
         if (client->rcv_http_headers != NULL) {
+
                 /* store pointer for caller */
                 *(client->rcv_http_headers) = copy;
         }
 
         /* Check that message status is okay. */
-        statusLineEnd = PL_strnstr(client->rcvBuf, crlf, client->capacity);
+
+        PKIX_PL_NSSCALLRV(HTTPDEFAULTCLIENT, statusLineEnd, PL_strnstr,
+                (client->rcvBuf, crlf, client->capacity));
+
         if (statusLineEnd == NULL) {
                 client->connectStatus = HTTP_ERROR;
-                PORT_SetError(SEC_ERROR_OCSP_BAD_HTTP_RESPONSE);
+                PKIX_PL_NSSCALL(HTTPDEFAULTCLIENT, PORT_SetError,
+                        (SEC_ERROR_OCSP_BAD_HTTP_RESPONSE));
                 goto cleanup;
         }
 
         *statusLineEnd = '\0';
 
-        space = strchr((const char *)client->rcvBuf, ' ');
+        PKIX_PL_NSSCALLRV(HTTPDEFAULTCLIENT, space, strchr,
+                ((const char *)client->rcvBuf, ' '));
+        
         if (space == NULL) {
                 client->connectStatus = HTTP_ERROR;
                 goto cleanup;
         }
 
-        comp = PORT_Strncasecmp((const char *)client->rcvBuf, httpprotocol,
-                                httpprotocolLen);
+        PKIX_PL_NSSCALLRV(HTTPDEFAULTCLIENT, comp, PORT_Strncasecmp,
+                ((const char *)client->rcvBuf,
+                httpprotocol,
+                httpprotocolLen));
+        
         if (comp != 0) {
                 client->connectStatus = HTTP_ERROR;
                 goto cleanup;
         }
 
         httpcode = space + 1;
-        space = strchr(httpcode, ' ');
+
+        PKIX_PL_NSSCALLRV(HTTPDEFAULTCLIENT, space, strchr,
+                (httpcode, ' '));
+
         if (space == NULL) {
                 client->connectStatus = HTTP_ERROR;
                 goto cleanup;
         }
+
         *space = '\0';
 
-        client->responseCode = atoi(httpcode);
+        PKIX_PL_NSSCALLRV(HTTPDEFAULTCLIENT, client->responseCode, atoi,
+                (httpcode));
+
         if (client->responseCode != 200) {
                 client->connectStatus = HTTP_ERROR;
                 goto cleanup;
@@ -233,12 +250,14 @@ pkix_pl_HttpDefaultClient_HdrCheckComplete(
         do {
                 thisHeaderEnd = NULL;
                 value = NULL;
+                PKIX_PL_NSSCALLRV(HTTPDEFAULTCLIENT, colon, strchr,
+                        (nextHeader, ':'));
 
-                colon = strchr(nextHeader, ':');
                 if (colon == NULL) {
                         client->connectStatus = HTTP_ERROR;
                         goto cleanup;
                 }
+
                 *colon = '\0';
                 value = colon + 1;
                 if (*value != ' ') {
@@ -246,15 +265,23 @@ pkix_pl_HttpDefaultClient_HdrCheckComplete(
                         goto cleanup;
                 }
                 value++;
-                thisHeaderEnd = strstr(value, crlf);
+                PKIX_PL_NSSCALLRV
+                        (HTTPDEFAULTCLIENT, thisHeaderEnd, strstr,
+                        (value, crlf));
                 if (thisHeaderEnd != NULL) {
                         *thisHeaderEnd = '\0';
                 }
-                comp = PORT_Strcasecmp(nextHeader, "content-type");
+                PKIX_PL_NSSCALLRV
+                        (HTTPDEFAULTCLIENT, comp, PORT_Strcasecmp,
+                        (nextHeader, "content-type"));
                 if (comp == 0) {
                         client->rcvContentType = value;
                 } else {
-                        comp = PORT_Strcasecmp(nextHeader, "content-length");
+                        PKIX_PL_NSSCALLRV
+                                (HTTPDEFAULTCLIENT,
+                                comp,
+                                PORT_Strcasecmp,
+                                (nextHeader, "content-length"));
                         if (comp == 0) {
                                 contentLength = atoi(value);
                         }
@@ -275,78 +302,68 @@ pkix_pl_HttpDefaultClient_HdrCheckComplete(
                 client->connectStatus = HTTP_ERROR;
                 goto cleanup;
         }
+#if 0
+/* XXX move this code into ocsp checker */
+ else {
+                PKIX_PL_NSSCALLRV
+                        (HTTPDEFAULTCLIENT,
+                        comp,
+                        PORT_Strcasecmp,
+                        (client->rcvContentType, "application/ocsp-response"));
+                if (comp != 0) {
+                        client->connectStatus = HTTP_ERROR;
+                        goto cleanup;
+                }
+        }
+#endif
 
-         /* How many bytes remain in current buffer, beyond the header? */
-         headerLength += eohMarkLen;
-         client->filledupBytes -= headerLength;
- 
-         /*
-          * The headers have passed validation. Now figure out whether the
-          * message is within the caller's size limit (if one was specified).
-          */
-         switch (contentLength) {
-         case 0:
-             client->rcv_http_data_len = 0;
-             client->connectStatus = HTTP_COMPLETE;
-             *pKeepGoing = PKIX_FALSE;
-             break;
- 
-         case HTTP_UNKNOWN_CONTENT_LENGTH:
-             /* Unknown contentLength indicator.Will be set by
-              * pkix_pl_HttpDefaultClient_RecvBody whey connection get closed */
-             client->rcv_http_data_len = HTTP_UNKNOWN_CONTENT_LENGTH;
-             contentLength =                 /* Try to reserve 4K+ buffer */
-                 client->filledupBytes + HTTP_DATA_BUFSIZE;
-             if (client->maxResponseLen > 0 &&
-                 contentLength > client->maxResponseLen) {
-                 if (client->filledupBytes < client->maxResponseLen) {
-                     contentLength = client->maxResponseLen;
-                 } else {
-                     client->connectStatus = HTTP_ERROR;
-                     goto cleanup;
-                 }
-             }
-             /* set available number of bytes in the buffer */
-             client->capacity = contentLength;
-             client->connectStatus = HTTP_RECV_BODY;
-             *pKeepGoing = PKIX_TRUE;
-             break;
- 
-         default:
-             client->rcv_http_data_len = contentLength;
-             if (client->maxResponseLen > 0 &&
-                 client->maxResponseLen < contentLength) {
-                 client->connectStatus = HTTP_ERROR;
-                 goto cleanup;
-             }
-             
-             /*
-              * Do we have all of the message body, or do we need to read some more?
-              */
-             if (client->filledupBytes < contentLength) {
-                 client->connectStatus = HTTP_RECV_BODY;
-                 *pKeepGoing = PKIX_TRUE;
-             } else {
-                 client->connectStatus = HTTP_COMPLETE;
-                 *pKeepGoing = PKIX_FALSE;
-             }
-         }
- 
-         if (contentLength > 0) {
-             /* allocate a buffer of size contentLength  for the content */
-             PKIX_CHECK(PKIX_PL_Malloc(contentLength, (void **)&body, plContext),
-                        PKIX_MALLOCFAILED);
-             
-             /* copy any remaining bytes in current buffer into new buffer */
-             if (client->filledupBytes > 0) {
-                 PORT_Memcpy(body, &(client->rcvBuf[headerLength]),
-                             client->filledupBytes);
-             }
-         }
- 
-         PKIX_CHECK(PKIX_PL_Free(client->rcvBuf, plContext),
-                    PKIX_FREEFAILED);
-         client->rcvBuf = body;
+        /*
+         * The headers have passed validation. Now figure out whether the
+         * message is within the caller's size limit (if one was specified).
+         */
+
+        client->rcv_http_data_len = contentLength;
+        if (client->maxResponseLen > 0) {
+                if (client->maxResponseLen < contentLength) {
+                        client->connectStatus = HTTP_ERROR;
+                        goto cleanup;
+                }
+        }
+
+        /* allocate a buffer of size contentLength  for the content */
+        PKIX_CHECK(PKIX_PL_Malloc(contentLength, (void **)&body, plContext),
+                PKIX_MALLOCFAILED);
+
+        /* How many bytes remain in current buffer, beyond the header? */
+        headerLength += eohMarkLen;
+        client->currentBytesAvailable -= headerLength;
+
+        /* copy any remaining bytes in current buffer into new buffer */
+        if (client->currentBytesAvailable > 0) {
+                PORT_Memcpy(body, &(client->rcvBuf[headerLength]),
+                                     client->currentBytesAvailable);
+        }
+
+        PKIX_CHECK(PKIX_PL_Free(client->rcvBuf, plContext),
+                PKIX_FREEFAILED);
+        client->rcvBuf = body;
+
+        /*
+         * Do we have all of the message body, or do we need to read some more?
+         */
+
+        if (client->currentBytesAvailable < contentLength) {
+                client->bytesToRead =
+                        contentLength - client->currentBytesAvailable;
+		client->alreadyScanned = 0;
+                client->connectStatus = HTTP_RECV_BODY;
+        } else {
+                client->connectStatus = HTTP_COMPLETE;
+                *pKeepGoing = PKIX_FALSE;
+                goto cleanup;
+        }
+
+        *pKeepGoing = PKIX_TRUE;
 
 cleanup:
 
@@ -403,16 +420,16 @@ pkix_pl_HttpDefaultClient_Create(
                 plContext),
                 PKIX_COULDNOTCREATEHTTPDEFAULTCLIENTOBJECT);
 
-        /* Client timeout is overwritten in HttpDefaultClient_RequestCreate
-         * function. Default value will be ignored. */
-        client->timeout = 0;
         client->connectStatus = HTTP_NOT_CONNECTED;
         client->portnum = portnum;
+        client->timeout = PR_INTERVAL_NO_WAIT; /* PR_INTERVAL_NO_TIMEOUT; */
         client->bytesToWrite = 0;
+        client->bytesToRead = 0;
         client->send_http_data_len = 0;
         client->rcv_http_data_len = 0;
         client->capacity = 0;
-        client->filledupBytes = 0;
+        client->alreadyScanned = 0;
+        client->currentBytesAvailable = 0;
         client->responseCode = 0;
         client->maxResponseLen = 0;
         client->GETLen = 0;
@@ -476,10 +493,8 @@ pkix_pl_HttpDefaultClient_Destroy(
 
         client = (PKIX_PL_HttpDefaultClient *)object;
 
-        if (client->rcvHeaders) {
-            PKIX_PL_Free(client->rcvHeaders, plContext);
-            client->rcvHeaders = NULL;
-        }
+        PKIX_PL_Free(client->rcvHeaders, plContext);
+        client->rcvHeaders = NULL;
 
         if (client->GETBuf != NULL) {
                 PR_smprintf_free(client->GETBuf);
@@ -526,16 +541,24 @@ PKIX_Error *
 pkix_pl_HttpDefaultClient_RegisterSelf(void *plContext)
 {
         extern pkix_ClassTable_Entry systemClasses[PKIX_NUMTYPES];
-        pkix_ClassTable_Entry *entry =
-            &systemClasses[PKIX_HTTPDEFAULTCLIENT_TYPE];
+        pkix_ClassTable_Entry entry;
 
-        PKIX_ENTER(HTTPDEFAULTCLIENT,
+        PKIX_ENTER
+                (HTTPDEFAULTCLIENT,
                 "pkix_pl_HttpDefaultClient_RegisterSelf");
 
-        entry->description = "HttpDefaultClient";
-        entry->typeObjectSize = sizeof(PKIX_PL_HttpDefaultClient);
-        entry->destructor = pkix_pl_HttpDefaultClient_Destroy;
- 
+        entry.description = "HttpDefaultClient";
+        entry.objCounter = 0;
+        entry.typeObjectSize = sizeof(PKIX_PL_HttpDefaultClient);
+        entry.destructor = pkix_pl_HttpDefaultClient_Destroy;
+        entry.equalsFunction = NULL;
+        entry.hashcodeFunction = NULL;
+        entry.toStringFunction = NULL;
+        entry.comparator = NULL;
+        entry.duplicateFunction = NULL;
+
+        systemClasses[PKIX_HTTPDEFAULTCLIENT_TYPE] = entry;
+
         httpClient.version = 1;
         httpClient.fcnTable.ftable1 = vtable;
         (void)SEC_RegisterDefaultHttpClient(&httpClient);
@@ -675,7 +698,8 @@ pkix_pl_HttpDefaultClient_Send(
 
                 client->rcvBuf = NULL;
                 client->capacity = 0;
-                client->filledupBytes = 0;
+                client->alreadyScanned = 0;
+                client->currentBytesAvailable = 0;
 
                 /*
                  * If the send completed we can proceed to try for the
@@ -806,13 +830,13 @@ pkix_pl_HttpDefaultClient_RecvHdr(
         PKIX_NULLCHECK_TWO(client, pKeepGoing);
 
         /*
-         * rcvbuf, capacity, and filledupBytes were
+         * rcvbuf, capacity, alreadyScanned, and currentBytesAvailable were
          * initialized when we wrote the headers. We begin by reading
-         * HTTP_HEADER_BUFSIZE bytes, repeatedly increasing the buffersize and
+         * HTTP_OCSP_BUFSIZE bytes, repeatedly increasing the buffersize and
          * reading again if necessary, until we have read the end-of-header
          * marker, "\r\n\r\n", or have reached our maximum.
          */
-        client->capacity += HTTP_HEADER_BUFSIZE;
+        client->capacity += HTTP_OCSP_BUFSIZE;
         PKIX_CHECK(PKIX_PL_Realloc
                 (client->rcvBuf,
                 client->capacity,
@@ -820,29 +844,31 @@ pkix_pl_HttpDefaultClient_RecvHdr(
                 plContext),
                 PKIX_REALLOCFAILED);
 
-        bytesToRead = client->capacity - client->filledupBytes;
+        bytesToRead = client->capacity - client->alreadyScanned;
 
         callbackList = (PKIX_PL_Socket_Callback *)client->callbackList;
 
         PKIX_CHECK(callbackList->recvCallback
                 (client->socket,
-                (void *)&(client->rcvBuf[client->filledupBytes]),
+                (void *)&(client->rcvBuf[client->alreadyScanned]),
                 bytesToRead,
                 &bytesRead,
                 plContext),
                 PKIX_SOCKETRECVFAILED);
 
         if (bytesRead > 0) {
-            /* client->filledupBytes will be adjusted by
-             * pkix_pl_HttpDefaultClient_HdrCheckComplete */
-            PKIX_CHECK(
-                pkix_pl_HttpDefaultClient_HdrCheckComplete(client, bytesRead,
-                                                           pKeepGoing,
-                                                           plContext),
-                       PKIX_HTTPDEFAULTCLIENTHDRCHECKCOMPLETEFAILED);
+
+                client->currentBytesAvailable += bytesRead;
+
+                PKIX_CHECK(pkix_pl_HttpDefaultClient_HdrCheckComplete
+                        (client, bytesRead, pKeepGoing, plContext),
+                        PKIX_HTTPDEFAULTCLIENTHDRCHECKCOMPLETEFAILED);
+
         } else {
-            client->connectStatus = HTTP_RECV_HDR_PENDING;
-            *pKeepGoing = PKIX_FALSE;
+
+                client->connectStatus = HTTP_RECV_HDR_PENDING;
+                *pKeepGoing = PKIX_FALSE;
+
         }
 
 cleanup:
@@ -895,7 +921,7 @@ pkix_pl_HttpDefaultClient_RecvHdrContinue(
                 PKIX_SOCKETPOLLFAILED);
 
         if (bytesRead > 0) {
-                client->filledupBytes += bytesRead;
+                client->currentBytesAvailable += bytesRead;
 
                 PKIX_CHECK(pkix_pl_HttpDefaultClient_HdrCheckComplete
                         (client, bytesRead, pKeepGoing, plContext),
@@ -944,7 +970,7 @@ pkix_pl_HttpDefaultClient_RecvBody(
         void *plContext)
 {
         PKIX_Int32 bytesRead = 0;
-        PKIX_Int32 bytesToRead = 0;
+
         PKIX_PL_Socket_Callback *callbackList = NULL;
 
         PKIX_ENTER(HTTPDEFAULTCLIENT, "pkix_pl_HttpDefaultClient_RecvBody");
@@ -952,95 +978,102 @@ pkix_pl_HttpDefaultClient_RecvBody(
 
         callbackList = (PKIX_PL_Socket_Callback *)client->callbackList;
 
-        if (client->rcv_http_data_len != HTTP_UNKNOWN_CONTENT_LENGTH) {
-            bytesToRead = client->rcv_http_data_len -
-                client->filledupBytes;
+        PKIX_CHECK(callbackList->recvCallback
+                (client->socket,
+                (void *)&(client->rcvBuf[client->currentBytesAvailable]),
+                client->bytesToRead,
+                &bytesRead,
+                plContext),
+                PKIX_SOCKETRECVFAILED);
+
+        if (bytesRead > 0) {
+
+		/* We got something. Did we get it all? */
+                client->currentBytesAvailable += bytesRead;
+
+		if (client->bytesToRead > (PKIX_UInt32)bytesRead) {
+                	client->bytesToRead -= (PKIX_UInt32)bytesRead;
+			*pKeepGoing = PKIX_TRUE;
+		} else {
+	                client->connectStatus = HTTP_COMPLETE;
+	                *pKeepGoing = PKIX_FALSE;
+		}
+
         } else {
-            /* Reading till the EOF. Context length is not known.*/
-            /* Check the buffer capacity: increase and
-             * reallocate if it is low. */
-            int freeBuffSize = client->capacity - client->filledupBytes;
-            if (freeBuffSize < HTTP_MIN_AVAILABLE_BUFFER_SIZE) {
-                /* New length will be consist of available(downloaded) bytes,
-                 * plus remaining capacity, plus new expansion. */
-                int currBuffSize = client->capacity;
-                /* Try to increase the buffer by 4K */
-                int newLength = currBuffSize + HTTP_DATA_BUFSIZE;
-                if (client->maxResponseLen > 0 &&
-                    newLength > client->maxResponseLen) {
-                        newLength = client->maxResponseLen;
-                }
-                /* Check if we can grow the buffer and report an error if
-                 * new size is not larger than the current size of the buffer.*/
-                if (newLength <= client->filledupBytes) {
-                    client->rcv_http_data_len = client->filledupBytes;
-                    client->connectStatus = HTTP_ERROR;
-                    *pKeepGoing = PKIX_FALSE;
-                    goto cleanup;
-                }
-                if (client->capacity < newLength) {
-                    client->capacity = newLength;
-                    PKIX_CHECK(
-                        PKIX_PL_Realloc(client->rcvBuf, newLength,
-                                        (void**)&client->rcvBuf, plContext),
-                        PKIX_REALLOCFAILED);
-                    freeBuffSize = client->capacity -
-                        client->filledupBytes;
-                }
-            }
-            bytesToRead = freeBuffSize;
+
+                client->connectStatus = HTTP_RECV_BODY_PENDING;
+                *pKeepGoing = PKIX_TRUE;
         }
 
-        /* Use poll callback if waiting on non-blocking IO */
-        if (client->connectStatus == HTTP_RECV_BODY_PENDING) {
-            PKIX_CHECK(callbackList->pollCallback
-                       (client->socket, NULL, &bytesRead, plContext),
-                       PKIX_SOCKETPOLLFAILED);
-        } else {
-            PKIX_CHECK(callbackList->recvCallback
-                       (client->socket,
-                        (void *)&(client->rcvBuf[client->filledupBytes]),
-                        bytesToRead,
-                        &bytesRead,
-                        plContext),
-                       PKIX_SOCKETRECVFAILED);
+cleanup:
+
+        PKIX_RETURN(HTTPDEFAULTCLIENT);
+}
+
+/*
+ * FUNCTION: pkix_pl_HttpDefaultClient_RecvBodyContinue
+ * DESCRIPTION:
+ *
+ *  This function checks for completion of a read of a response HTTP-protocol
+ *  message for the HttpDefaultClient "client", and stores in "pKeepGoing" a
+ *  flag indicating whether processing can continue without further input.
+ *
+ * PARAMETERS:
+ *  "client"
+ *      The address of the HttpDefaultClient object. Must be non-NULL.
+ *  "pKeepGoing"
+ *      The address at which the Boolean state machine flag is stored to
+ *      indicate whether processing can continue without further input.
+ *      Must be non-NULL.
+ *  "plContext"
+ *      Platform-specific context pointer.
+ * THREAD SAFETY:
+ *  Thread Safe (see Thread Safety Definitions in Programmer's Guide)
+ * RETURNS:
+ *  Returns NULL if the function succeeds.
+ *  Returns a HttpDefaultClient Error if the function fails in a
+ *      non-fatal way.
+ *  Returns a Fatal Error if the function fails in an unrecoverable way.
+ */
+static PKIX_Error *
+pkix_pl_HttpDefaultClient_RecvBodyContinue(
+        PKIX_PL_HttpDefaultClient *client,
+        PKIX_Boolean *pKeepGoing,
+        void *plContext)
+{
+        PKIX_Int32 bytesRead = 0;
+        PKIX_PL_Socket_Callback *callbackList = NULL;
+
+        PKIX_ENTER
+                (HTTPDEFAULTCLIENT,
+                "pkix_pl_HttpDefaultClient_RecvBodyContinue");
+        PKIX_NULLCHECK_TWO(client, pKeepGoing);
+
+        callbackList = (PKIX_PL_Socket_Callback *)client->callbackList;
+
+        PKIX_CHECK(callbackList->pollCallback
+                (client->socket, NULL, &bytesRead, plContext),
+                PKIX_SOCKETPOLLFAILED);
+
+
+        if (bytesRead > 0) {
+
+		/* We got something. Did we get it all? */
+                client->currentBytesAvailable += bytesRead;
+                client->bytesToRead -= bytesRead;
+
+		if (client->bytesToRead > 0) {
+                	client->connectStatus = HTTP_RECV_BODY;
+			*pKeepGoing = PKIX_TRUE;
+		} else {
+	                client->connectStatus = HTTP_COMPLETE;
+	                *pKeepGoing = PKIX_FALSE;
+		}
         }
 
-        /* If bytesRead < 0, an error will be thrown by recvCallback, so
-         * need to handle >= 0 cases. */
-
-        /* bytesRead == 0 - IO was blocked. */
-        if (bytesRead == 0) {
-            client->connectStatus = HTTP_RECV_BODY_PENDING;
-            *pKeepGoing = PKIX_TRUE;
-            goto cleanup;
-        }
-        
-        /* We got something. Did we get it all? */
-        client->filledupBytes += bytesRead;
-
-        /* continue if not enough bytes read or if complete size of
-         * transfer is unknown */
-        if (bytesToRead > bytesRead ||
-            client->rcv_http_data_len == HTTP_UNKNOWN_CONTENT_LENGTH) {
-            *pKeepGoing = PKIX_TRUE;
-            goto cleanup;
-        }
-        client->connectStatus = HTTP_COMPLETE;
         *pKeepGoing = PKIX_FALSE;
 
 cleanup:
-        if (pkixErrorResult && pkixErrorResult->errCode ==
-            PKIX_PRRECVREPORTSNETWORKCONNECTIONCLOSED) {
-            if (client->rcv_http_data_len == HTTP_UNKNOWN_CONTENT_LENGTH) {
-                client->rcv_http_data_len = client->filledupBytes;
-                client->connectStatus = HTTP_COMPLETE;
-                *pKeepGoing = PKIX_FALSE;
-                PKIX_DECREF(pkixErrorResult);
-            } else {
-                client->connectStatus = HTTP_ERROR;
-            }
-        }
 
         PKIX_RETURN(HTTPDEFAULTCLIENT);
 }
@@ -1105,10 +1138,14 @@ pkix_pl_HttpDefaultClient_Dispatch(
                         PKIX_HTTPDEFAULTCLIENTRECVHDRCONTINUEFAILED);
                     break;
                 case HTTP_RECV_BODY:
-                case HTTP_RECV_BODY_PENDING:
                     PKIX_CHECK(pkix_pl_HttpDefaultClient_RecvBody
                         (client, &keepGoing, plContext),
                         PKIX_HTTPDEFAULTCLIENTRECVBODYFAILED);
+                    break;
+                case HTTP_RECV_BODY_PENDING:
+                    PKIX_CHECK(pkix_pl_HttpDefaultClient_RecvBodyContinue
+                        (client, &keepGoing, plContext),
+                        PKIX_HTTPDEFAULTCLIENTRECVBODYCONTINUEFAILED);
                     break;
                 case HTTP_ERROR:
                 case HTTP_COMPLETE:
@@ -1391,16 +1428,20 @@ pkix_pl_HttpDefaultClient_TrySendAndReceive(
 
                 /* prepare the message */
                 if (client->send_http_method == HTTP_POST_METHOD) {
-                        sendbuf = PR_smprintf
+                        PKIX_PL_NSSCALLRV
+                            (HTTPDEFAULTCLIENT, sendbuf, PR_smprintf,
                             ("POST %s HTTP/1.0\r\nHost: %s:%d\r\n"
                             "Content-Type: %s\r\nContent-Length: %u\r\n\r\n",
                             client->path,
                             client->host,
                             client->portnum,
                             client->send_http_content_type,
-                            client->send_http_data_len);
-                        postLen = PORT_Strlen(sendbuf);
-                            
+                            client->send_http_data_len));
+
+                        PKIX_PL_NSSCALLRV
+                                (HTTPDEFAULTCLIENT, postLen, PORT_Strlen,
+                                (sendbuf));
+
                         client->POSTLen = postLen + client->send_http_data_len;
 
                         /* allocate postBuffer big enough for header + data */
@@ -1419,16 +1460,23 @@ pkix_pl_HttpDefaultClient_TrySendAndReceive(
                                     client->send_http_data_len);
 
                         /* PR_smprintf_free original header buffer */
-                        PR_smprintf_free(sendbuf);
+                        PKIX_PL_NSSCALL
+                                (HTTPDEFAULTCLIENT, PR_smprintf_free,
+                                (sendbuf));
                         
                 } else if (client->send_http_method == HTTP_GET_METHOD) {
-                        sendbuf = PR_smprintf
+                        PKIX_PL_NSSCALLRV
+                            (HTTPDEFAULTCLIENT, sendbuf, PR_smprintf,
                             ("GET %s HTTP/1.1\r\nHost: %s:%d\r\n\r\n",
                             client->path,
                             client->host,
-                            client->portnum);
+                            client->portnum));
+
                         client->GETBuf = sendbuf;
-                        client->GETLen = PORT_Strlen(sendbuf);
+
+                        PKIX_PL_NSSCALLRV
+                                (HTTPDEFAULTCLIENT, client->GETLen, PORT_Strlen,
+                                (sendbuf));
                 }
 
         }
@@ -1449,10 +1497,8 @@ pkix_pl_HttpDefaultClient_TrySendAndReceive(
                         /* Did caller provide a pointer for length? */
                         if (client->pRcv_http_data_len != NULL) {
                                 /* Was error "response too big?" */
-                                if (client->rcv_http_data_len !=
-                                            HTTP_UNKNOWN_CONTENT_LENGTH &&
-                                    client->maxResponseLen >=
-                                                client->rcv_http_data_len) {
+                                if (client->maxResponseLen >=
+                                        client->rcv_http_data_len) {
                                         /* Yes, report needed space */
                                         *(client->pRcv_http_data_len) =
                                                  client->rcv_http_data_len;

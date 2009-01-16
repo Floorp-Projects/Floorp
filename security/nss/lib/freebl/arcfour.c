@@ -38,10 +38,6 @@
 
 /* See NOTES ON UMRs, Unititialized Memory Reads, below. */
 
-#ifdef FREEBL_NO_DEPEND
-#include "stubs.h"
-#endif
-
 #include "prerr.h"
 #include "secerr.h"
 

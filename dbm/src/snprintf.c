@@ -15,14 +15,15 @@
 
 #include <ncompat.h>
 
-#ifdef __STDC__
+/* The OS/2 VAC compiler doesn't appear to define __STDC__ and won't let us define it either */
+#if defined(__STDC__) || defined(XP_OS2_VACPP)
 #include <stdarg.h>
 #else
 #include <varargs.h>
 #endif
 
 int
-#ifdef __STDC__
+#if defined(__STDC__) || defined(XP_OS2_VACPP)
 snprintf(char *str, size_t n, const char *fmt, ...)
 #else
 snprintf(str, n, fmt, va_alist)
@@ -38,7 +39,7 @@ snprintf(str, n, fmt, va_alist)
 #else
 	int rval;
 #endif
-#ifdef __STDC__
+#if defined(__STDC__) || defined(XP_OS2_VACPP)
 	va_start(ap, fmt);
 #else
 	va_start(ap);

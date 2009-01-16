@@ -37,7 +37,7 @@
  * the terms of any one of the MPL, the GPL or the LGPL.
  *
  * ***** END LICENSE BLOCK ***** */
-/* $Id: sslt.h,v 1.12 2008/12/17 06:09:19 nelson%bolyard.com Exp $ */
+/* $Id: sslt.h,v 1.11 2008/03/06 20:16:22 wtc%google.com Exp $ */
 
 #ifndef __sslt_h_
 #define __sslt_h_
@@ -113,8 +113,7 @@ typedef enum {
     ssl_calg_idea     = 5,
     ssl_calg_fortezza = 6,      /* deprecated, now unused */
     ssl_calg_aes      = 7,      /* coming soon */
-    ssl_calg_camellia = 8,
-    ssl_calg_seed     = 9
+    ssl_calg_camellia = 8
 } SSLCipherAlgorithm;
 
 typedef enum { 

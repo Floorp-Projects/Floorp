@@ -37,7 +37,7 @@
 /*
  * cert.h - public data structures and prototypes for the certificate library
  *
- * $Id: cert.h,v 1.75 2008/11/21 21:02:38 wtc%google.com Exp $
+ * $Id: cert.h,v 1.74 2008/08/04 22:31:54 nelson%bolyard.com Exp $
  */
 
 #ifndef _CERT_H_
@@ -1108,7 +1108,7 @@ char *CERT_FixupEmailAddr(const char *emailAddr);
 
 /* decode string representation of trust flags into trust struct */
 SECStatus
-CERT_DecodeTrustString(CERTCertTrust *trust, const char *trusts);
+CERT_DecodeTrustString(CERTCertTrust *trust, char *trusts);
 
 /* encode trust struct into string representation of trust flags */
 char *

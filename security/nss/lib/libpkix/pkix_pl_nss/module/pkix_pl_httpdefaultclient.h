@@ -50,9 +50,7 @@
 extern "C" {
 #endif
 
-#define HTTP_DATA_BUFSIZE 4096
-#define HTTP_HEADER_BUFSIZE 1024
-#define HTTP_MIN_AVAILABLE_BUFFER_SIZE 512
+#define HTTP_OCSP_BUFSIZE 1024
 
 typedef enum {
         HTTP_NOT_CONNECTED,
@@ -77,10 +75,12 @@ struct PKIX_PL_HttpDefaultClientStruct {
         PRUint16 portnum;
         PRIntervalTime timeout;
         PKIX_UInt32 bytesToWrite;
+        PKIX_UInt32 bytesToRead;
         PKIX_UInt32 send_http_data_len;
         PKIX_UInt32 rcv_http_data_len;
         PKIX_UInt32 capacity;
-        PKIX_UInt32 filledupBytes;
+        PKIX_UInt32 alreadyScanned;
+        PKIX_UInt32 currentBytesAvailable;
         PKIX_UInt32 responseCode;
         PKIX_UInt32 maxResponseLen;
         PKIX_UInt32 GETLen;

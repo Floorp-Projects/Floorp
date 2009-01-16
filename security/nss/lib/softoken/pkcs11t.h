@@ -429,8 +429,6 @@ typedef CK_ULONG          CK_KEY_TYPE;
 /* Camellia is proposed for v2.20 Amendment 3 */
 #define CKK_CAMELLIA        0x00000025
 
-#define CKK_SEED	    0x00000026
-
 #define CKK_VENDOR_DEFINED  0x80000000
 
 
@@ -934,15 +932,6 @@ typedef CK_ULONG          CK_MECHANISM_TYPE;
 #define CKM_CAMELLIA_CBC_PAD           0x00000555
 #define CKM_CAMELLIA_ECB_ENCRYPT_DATA  0x00000556
 #define CKM_CAMELLIA_CBC_ENCRYPT_DATA  0x00000557
-
-#define CKM_SEED_KEY_GEN	       0x00000650    
-#define CKM_SEED_ECB		       0x00000651
-#define CKM_SEED_CBC		       0x00000652
-#define CKM_SEED_MAC		       0x00000653
-#define CKM_SEED_MAC_GENERAL	       0x00000654
-#define CKM_SEED_CBC_PAD	       0x00000655
-#define CKM_SEED_ECB_ENCRYPT_DATA      0x00000656
-#define CKM_SEED_CBC_ENCRYPT_DATA      0x00000657
 
 /* CKM_xxx_ENCRYPT_DATA mechanisms are new for v2.20 */
 #define CKM_DES_ECB_ENCRYPT_DATA       0x00001100

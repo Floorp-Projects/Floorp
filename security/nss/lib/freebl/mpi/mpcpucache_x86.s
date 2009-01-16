@@ -592,9 +592,8 @@ CacheMap:
 	.byte	0
 	.text
 	.align	4
-.globl freebl_cpuid
-	.type	freebl_cpuid, @function
-freebl_cpuid:
+	.type	cpuid, @function
+cpuid:
 	pushl	%ebp
 	pushl	%edi
 	pushl	%esi
@@ -619,7 +618,7 @@ freebl_cpuid:
 	popl	%edi
 	popl	%ebp
 	ret
-	.size	freebl_cpuid, .-freebl_cpuid
+	.size	cpuid, .-cpuid
 	.align	4
 	.type	changeFlag, @function
 changeFlag:
@@ -781,7 +780,7 @@ s_mpi_getProcessorLineSize:
 	pushl	%eax
 	leal	-120(%ebp), %edx
 	xorl	%eax, %eax
-	call	freebl_cpuid
+	call	cpuid
 	movl	-120(%ebp), %eax
 	movl	%eax, -164(%ebp)
 	movl	-116(%ebp), %eax
@@ -827,7 +826,7 @@ s_mpi_getProcessorLineSize:
 	movl	$2, %eax
 	pushl	%edx
 	leal	-136(%ebp), %edx
-	call	freebl_cpuid
+	call	cpuid
 	movl	-136(%ebp), %eax
 	movl	%eax, %edi
 	andl	$15, %edi
@@ -882,7 +881,7 @@ s_mpi_getProcessorLineSize:
 	pushl	-180(%ebp)
 	leal	-136(%ebp), %edx
 	movl	$2, %eax
-	call	freebl_cpuid
+	call	cpuid
 	addl	$12, %esp
 .L34:
 	cmpl	%edi, %esi
@@ -913,7 +912,7 @@ s_mpi_getProcessorLineSize:
 	pushl	%esi
 	leal	-160(%ebp), %edx
 	movl	$-2147483648, %eax
-	call	freebl_cpuid
+	call	cpuid
 	addl	$12, %esp
 	cmpl	$-2147483644, -160(%ebp)
 	ja	.L51
@@ -926,7 +925,7 @@ s_mpi_getProcessorLineSize:
 	pushl	%esi
 	leal	-160(%ebp), %edx
 	movl	$-2147483643, %eax
-	call	freebl_cpuid
+	call	cpuid
 	movzbl	-152(%ebp), %edx
 	addl	$12, %esp
 	movl	%edx, -172(%ebp)

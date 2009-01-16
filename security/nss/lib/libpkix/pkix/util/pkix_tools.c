@@ -221,14 +221,10 @@ pkix_Throw(
 #ifdef PKIX_OBJECT_LEAK_TEST        
         noErrorState = PKIX_TRUE;
         if (pkixLog) {
-#ifdef PKIX_ERROR_DESCRIPTION            
             PR_LOG(pkixLog, 4, ("Error in function \"%s\":\"%s\" with cause \"%s\"\n",
                                 funcName, PKIX_ErrorText[errorCode],
                                 (cause ? PKIX_ErrorText[cause->errCode] : "null")));
-#else
-            PR_LOG(pkixLog, 4, ("Error in function \"%s\": error code \"%d\"\n",
-                                funcName, errorCode));
-#endif /* PKIX_ERROR_DESCRIPTION */
+
             PORT_Assert(strcmp(funcName, "PKIX_PL_Object_DecRef"));
         }
 #endif /* PKIX_OBJECT_LEAK_TEST */
@@ -1540,7 +1536,6 @@ pkix_CheckForGeneratedError(PKIX_StdVars * stdVars,
     while(fnStackNameArr[pos]) {
         strLen += PORT_Strlen(fnStackNameArr[pos++]) + 1;
     }
-    strLen += 1; /* end of line. */
     pos = 0;
     errorFnStackString = PORT_ZAlloc(strLen);
     while(fnStackNameArr[pos]) {

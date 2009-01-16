@@ -41,10 +41,6 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-#ifdef FREEBL_NO_DEPEND
-#include "stubs.h"
-#endif
-
 #include "des.h"
 #include <stddef.h>
 #include "secerr.h"

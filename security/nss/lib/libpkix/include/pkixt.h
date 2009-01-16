@@ -121,6 +121,7 @@ typedef struct PKIX_ListStruct PKIX_List;
 typedef struct PKIX_ForwardBuilderStateStruct PKIX_ForwardBuilderState;
 typedef struct PKIX_DefaultRevocationCheckerStruct
                         PKIX_DefaultRevocationChecker;
+typedef struct PKIX_OcspCheckerStruct PKIX_OcspChecker;
 typedef struct PKIX_VerifyNodeStruct PKIX_VerifyNode;
 
 /* Portability Layer (PL) data types
@@ -129,7 +130,6 @@ typedef struct PKIX_VerifyNodeStruct PKIX_VerifyNode;
  * consistently across platforms
  */
 
-typedef struct PKIX_PL_NssContextStruct PKIX_PL_NssContext;
 typedef struct PKIX_PL_ObjectStruct PKIX_PL_Object;
 typedef struct PKIX_PL_ByteArrayStruct PKIX_PL_ByteArray;
 typedef struct PKIX_PL_HashTableStruct PKIX_PL_HashTable;
@@ -221,7 +221,8 @@ typedef int PKIX_Boolean;
     TYPEMACRO(CRLENTRY), \
     TYPEMACRO(CRLSELECTOR), \
     TYPEMACRO(DATE), \
-    TYPEMACRO(CRLCHECKER), \
+    TYPEMACRO(DEFAULTCRLCHECKERSTATE), \
+    TYPEMACRO(DEFAULTREVOCATIONCHECKER), \
     TYPEMACRO(EKUCHECKER), \
     TYPEMACRO(ERROR), \
     TYPEMACRO(FORWARDBUILDERSTATE), \
@@ -243,10 +244,10 @@ typedef int PKIX_Boolean;
     TYPEMACRO(OCSPREQUEST), \
     TYPEMACRO(OCSPRESPONSE), \
     TYPEMACRO(OID), \
-    TYPEMACRO(REVOCATIONCHECKER), \
     TYPEMACRO(PROCESSINGPARAMS), \
     TYPEMACRO(PUBLICKEY), \
     TYPEMACRO(RESOURCELIMITS), \
+    TYPEMACRO(REVOCATIONCHECKER), \
     TYPEMACRO(RWLOCK), \
     TYPEMACRO(SIGNATURECHECKERSTATE), \
     TYPEMACRO(SOCKET), \
@@ -312,8 +313,9 @@ typedef enum {     /* Now invoke all those TYPEMACROs to assign the numbers */
    ERRMACRO(CRL), \
    ERRMACRO(CRLENTRY), \
    ERRMACRO(CRLSELECTOR), \
-   ERRMACRO(CRLCHECKER), \
    ERRMACRO(DATE), \
+   ERRMACRO(DEFAULTCRLCHECKERSTATE), \
+   ERRMACRO(DEFAULTREVOCATIONCHECKER), \
    ERRMACRO(EKUCHECKER), \
    ERRMACRO(ERROR), \
    ERRMACRO(FATAL), \
@@ -342,7 +344,6 @@ typedef enum {     /* Now invoke all those TYPEMACROs to assign the numbers */
    ERRMACRO(PROCESSINGPARAMS), \
    ERRMACRO(PUBLICKEY), \
    ERRMACRO(RESOURCELIMITS), \
-   ERRMACRO(REVOCATIONMETHOD), \
    ERRMACRO(REVOCATIONCHECKER), \
    ERRMACRO(RWLOCK), \
    ERRMACRO(SIGNATURECHECKERSTATE), \
@@ -485,21 +486,6 @@ PKIX_Error* PKIX_ALLOC_ERROR(void);
 #define PKIX_EXTENDEDKEYUSAGE_OID              "2.5.29.37"
 #define PKIX_INHIBITANYPOLICY_OID              "2.5.29.54"
 #define PKIX_NSCERTTYPE_OID "2.16.840.1.113730.1.1"
-
-/* Available revocation method types. */
-typedef enum PKIX_RevocationMethodTypeEnum {
-    PKIX_RevocationMethod_CRL = 0,
-    PKIX_RevocationMethod_OCSP,
-    PKIX_RevocationMethod_MAX,
-} PKIX_RevocationMethodType;
-
-/* A set of statuses revocation checker operates on */
-typedef enum PKIX_RevocationStatusEnum {
-    PKIX_RevStatus_NoInfo = 0,
-    PKIX_RevStatus_Revoked,
-    PKIX_RevStatus_Success,
-} PKIX_RevocationStatus;
-
 
 #ifdef __cplusplus
 }

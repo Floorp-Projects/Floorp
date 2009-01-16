@@ -43,6 +43,7 @@ EXPORTS = \
 PRIVATE_EXPORTS = \
 	pkix_pl_aiamgr.h \
 	pkix_pl_colcertstore.h \
+	pkix_pl_ekuchecker.h \
 	pkix_pl_httpcertstore.h \
 	pkix_pl_httpdefaultclient.h \
 	pkix_pl_ldapt.h \
@@ -62,6 +63,7 @@ DEFINES += -DSHLIB_SUFFIX=\"$(DLL_SUFFIX)\" -DSHLIB_PREFIX=\"$(DLL_PREFIX)\" -DS
 
 CSRCS = \
 	pkix_pl_aiamgr.c \
+	pkix_pl_ekuchecker.c \
 	pkix_pl_colcertstore.c \
 	pkix_pl_httpcertstore.c \
 	pkix_pl_httpdefaultclient.c \
