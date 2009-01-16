@@ -44,7 +44,6 @@
 #include "gfxFont.h"
 
 #include "nsAutoRef.h"
-#include "nsTArray.h"
 
 #include <pango/pango.h>
 

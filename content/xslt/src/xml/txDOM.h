@@ -58,7 +58,6 @@
 #include "nsDoubleHashtable.h"
 #include "nsString.h"
 #include "nsVoidArray.h"
-#include "nsTArray.h"
 #include "txCore.h"
 #include "nsAutoPtr.h"
 
@@ -423,7 +422,7 @@ public:
                      "called without matching shutdown()");
         if (mNamespaces)
             return MB_TRUE;
-        mNamespaces = new nsTArray<nsString>();
+        mNamespaces = new nsStringArray();
         if (!mNamespaces)
             return MB_FALSE;
         /*
@@ -453,10 +452,10 @@ public:
     }
 
 private:
-    static nsTArray<nsString>* mNamespaces;
+    static nsStringArray* mNamespaces;
 };
 
 #define TX_IMPL_DOM_STATICS \
-    nsTArray<nsString>* txStandaloneNamespaceManager::mNamespaces = 0
+    nsStringArray* txStandaloneNamespaceManager::mNamespaces = 0
 
 #endif

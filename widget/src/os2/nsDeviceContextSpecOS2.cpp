@@ -43,7 +43,6 @@
 
 #include "nsReadableUtils.h"
 #include "nsISupportsArray.h"
-#include "nsTArray.h"
 
 #include "nsIPrefService.h"
 #include "nsIPrefBranch.h"
@@ -90,14 +89,14 @@ protected:
   GlobalPrinters() {}
 
   static GlobalPrinters mGlobalPrinters;
-  static nsTArray<nsString>* mGlobalPrinterList;
+  static nsStringArray* mGlobalPrinterList;
   static ULONG          mGlobalNumPrinters;
 
 };
 //---------------
 // static members
 GlobalPrinters GlobalPrinters::mGlobalPrinters;
-nsTArray<nsString>* GlobalPrinters::mGlobalPrinterList = nsnull;
+nsStringArray* GlobalPrinters::mGlobalPrinterList = nsnull;
 ULONG          GlobalPrinters::mGlobalNumPrinters = 0;
 //---------------
 
@@ -576,7 +575,7 @@ NS_IMETHODIMP nsPrinterEnumeratorOS2::GetPrinterNameList(nsIStringEnumerator **a
   }
 
   ULONG numPrinters = GlobalPrinters::GetInstance()->GetNumPrinters();
-  nsTArray<nsString> *printers = new nsTArray<nsString>(numPrinters);
+  nsStringArray *printers = new nsStringArray(numPrinters);
   if (!printers) {
     GlobalPrinters::GetInstance()->FreeGlobalPrinters();
     return NS_ERROR_OUT_OF_MEMORY;
@@ -585,7 +584,7 @@ NS_IMETHODIMP nsPrinterEnumeratorOS2::GetPrinterNameList(nsIStringEnumerator **a
   ULONG count = 0;
   while( count < numPrinters )
   {
-    printers->AppendElement(*GlobalPrinters::GetInstance()->GetStringAt(count++));
+    printers->AppendString(*GlobalPrinters::GetInstance()->GetStringAt(count++));
   }
   GlobalPrinters::GetInstance()->FreeGlobalPrinters();
 
@@ -655,7 +654,7 @@ nsresult GlobalPrinters::InitializeGlobalPrinters ()
   if (!mGlobalNumPrinters) 
     return NS_ERROR_GFX_PRINTER_NO_PRINTER_AVAILABLE; 
 
-  mGlobalPrinterList = new nsTArray<nsString>();
+  mGlobalPrinterList = new nsStringArray();
   if (!mGlobalPrinterList) 
      return NS_ERROR_OUT_OF_MEMORY;
 
@@ -671,7 +670,7 @@ nsresult GlobalPrinters::InitializeGlobalPrinters ()
     PRInt32 printerNameLength;
     rv = MultiByteToWideChar(0, printer, strlen(printer),
                              printerName, printerNameLength);
-    mGlobalPrinterList->AppendElement(nsDependentString(printerName.Elements()));
+    mGlobalPrinterList->AppendString(nsDependentString(printerName.Elements()));
 
     // store printer description in prefs for the print dialog
     if (!prefFailed) {

@@ -45,7 +45,6 @@
 #include "nsIServiceManager.h"
 #include "nsReadableUtils.h"
 #include "nsStringEnumerator.h"
-#include "nsTArray.h"
 #include "nsCRT.h"
 
 //----------------------------------------------------------------------------------
@@ -70,14 +69,14 @@ protected:
   GlobalPrinters() {}
 
   static GlobalPrinters mGlobalPrinters;
-  static nsTArray<nsString>* mGlobalPrinterList;
+  static nsStringArray* mGlobalPrinterList;
   static int            mGlobalNumPrinters;
 
 };
 //---------------
 // static members
 GlobalPrinters GlobalPrinters::mGlobalPrinters;
-nsTArray<nsString>* GlobalPrinters::mGlobalPrinterList = nsnull;
+nsStringArray* GlobalPrinters::mGlobalPrinterList = nsnull;
 int            GlobalPrinters::mGlobalNumPrinters = 0;
 
 nsDeviceContextSpecBeOS::nsDeviceContextSpecBeOS()
@@ -152,7 +151,7 @@ NS_IMETHODIMP nsPrinterEnumeratorBeOS::GetPrinterNameList(nsIStringEnumerator **
   }
 
   PRInt32 numPrinters = GlobalPrinters::GetInstance()->GetNumPrinters();
-  nsTArray<nsString> *printers = new nsTArray<nsString>(numPrinters);
+  nsStringArray *printers = new nsStringArray(numPrinters);
   if (!printers) {
     GlobalPrinters::GetInstance()->FreeGlobalPrinters();
     return NS_ERROR_OUT_OF_MEMORY;
@@ -161,7 +160,7 @@ NS_IMETHODIMP nsPrinterEnumeratorBeOS::GetPrinterNameList(nsIStringEnumerator **
   int count = 0;
   while( count < numPrinters )
   {
-    printers->AppendElement(*GlobalPrinters::GetInstance()->GetStringAt(count++));
+    printers->AppendString(*GlobalPrinters::GetInstance()->GetStringAt(count++));
   }
   GlobalPrinters::GetInstance()->FreeGlobalPrinters();
 
@@ -196,12 +195,12 @@ nsresult GlobalPrinters::InitializeGlobalPrinters ()
   mGlobalNumPrinters = 0;
 
 #ifdef USE_POSTSCRIPT
-  mGlobalPrinterList = new nsTArray<nsString>();
+  mGlobalPrinterList = new nsStringArray();
   if (!mGlobalPrinterList) 
     return NS_ERROR_OUT_OF_MEMORY;
 
   /* add an entry for the default printer (see nsPostScriptObj.cpp) */
-  mGlobalPrinterList->AppendElement(
+  mGlobalPrinterList->AppendString(
     nsString(NS_ConvertASCIItoUTF16(NS_POSTSCRIPT_DRIVER_NAME "default")));
   mGlobalNumPrinters++;
 
@@ -233,7 +232,7 @@ nsresult GlobalPrinters::InitializeGlobalPrinters ()
          name != nsnull ; 
          name = PL_strtok_r(nsnull, " ", &tok_lasts) )
     {
-      mGlobalPrinterList->AppendElement(
+      mGlobalPrinterList->AppendString(
         nsString(NS_ConvertASCIItoUTF16(NS_POSTSCRIPT_DRIVER_NAME)) + 
         nsString(NS_ConvertASCIItoUTF16(name)));
       mGlobalNumPrinters++;      

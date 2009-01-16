@@ -46,7 +46,6 @@
 #include "nsIContent.h"
 #include "nsIDOMNode.h"
 #include "nsVoidArray.h"
-#include "nsTArray.h"
 #include "nsString.h"
 #include "nsIXULTemplateRuleFilter.h"
 #include "nsCycleCollectionParticipant.h"
@@ -114,7 +113,7 @@ protected:
     nsString            mSource;
     ConditionRelation   mRelation;
     nsCOMPtr<nsIAtom>   mTargetVariable;
-    nsTArray<nsString>  mTargetList;
+    nsStringArray       mTargetList;
     PRPackedBool        mIgnoreCase;
     PRPackedBool        mNegate;
 

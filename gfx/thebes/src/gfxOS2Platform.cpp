@@ -41,7 +41,6 @@
 #include "gfxOS2Surface.h"
 #include "gfxImageSurface.h"
 #include "gfxOS2Fonts.h"
-#include "nsTArray.h"
 
 #include "gfxFontconfigUtils.h"
 //#include <fontconfig/fontconfig.h>
@@ -112,7 +111,7 @@ gfxOS2Platform::CreateOffscreenSurface(const gfxIntSize& aSize,
 nsresult
 gfxOS2Platform::GetFontList(const nsACString& aLangGroup,
                             const nsACString& aGenericFamily,
-                            nsTArray<nsString>& aListOfFonts)
+                            nsStringArray& aListOfFonts)
 {
 #ifdef DEBUG_thebes
     char *langgroup = ToNewCString(aLangGroup),
@@ -185,18 +184,18 @@ gfxOS2Platform::FindFontForChar(PRUint32 aCh, gfxOS2Font *aFont)
     // (one should instead cache the charmaps as done on Mac and Win)
 
     // just continue to append all fonts known to the system
-    nsTArray<nsString> fontList;
+    nsStringArray fontList;
     nsCAutoString generic;
     nsresult rv = GetFontList(aFont->GetStyle()->langGroup, generic, fontList);
     if (NS_SUCCEEDED(rv)) {
         // start at 3 to skip over the generic entries
-        for (PRUint32 i = 3; i < fontList.Length(); i++) {
+        for (int i = 3; i < fontList.Count(); i++) {
 #ifdef DEBUG_thebes
             printf("searching in entry i=%d (%s)\n",
-                   i, NS_LossyConvertUTF16toASCII(fontList[i]).get());
+                   i, NS_LossyConvertUTF16toASCII(*fontList[i]).get());
 #endif
             nsRefPtr<gfxOS2Font> font =
-                gfxOS2Font::GetOrMakeFont(fontList[i], aFont->GetStyle());
+                gfxOS2Font::GetOrMakeFont(*fontList[i], aFont->GetStyle());
             if (!font)
                 continue;
             FT_Face face = cairo_ft_scaled_font_lock_face(font->CairoScaledFont());

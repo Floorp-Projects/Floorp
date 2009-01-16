@@ -440,9 +440,9 @@ nsDOMStorageDB::RemoveOwner(const nsAString& aOwner)
 
 
 nsresult
-nsDOMStorageDB::RemoveOwners(const nsTArray<nsString> &aOwners, PRBool aMatch)
+nsDOMStorageDB::RemoveOwners(const nsStringArray &aOwners, PRBool aMatch)
 {
-  if (aOwners.Length() == 0) {
+  if (aOwners.Count() == 0) {
     if (aMatch) {
       return NS_OK;
     }
@@ -460,7 +460,7 @@ nsDOMStorageDB::RemoveOwners(const nsTArray<nsString> &aOwners, PRBool aMatch)
                                          "WHERE owner NOT IN (?"));
   }
 
-  for (PRUint32 i = 1; i < aOwners.Length(); i++) {
+  for (PRInt32 i = 1; i < aOwners.Count(); i++) {
     expression.Append(", ?");
   }
   expression.Append(")");
@@ -471,8 +471,8 @@ nsDOMStorageDB::RemoveOwners(const nsTArray<nsString> &aOwners, PRBool aMatch)
                                              getter_AddRefs(statement));
   NS_ENSURE_SUCCESS(rv, rv);
 
-  for (PRUint32 i = 0; i < aOwners.Length(); i++) {
-    rv = statement->BindStringParameter(i, aOwners[i]);
+  for (PRInt32 i = 0; i < aOwners.Count(); i++) {
+    rv = statement->BindStringParameter(i, *aOwners[i]);
     NS_ENSURE_SUCCESS(rv, rv);
   }
 
