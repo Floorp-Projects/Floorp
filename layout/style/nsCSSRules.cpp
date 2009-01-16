@@ -1257,6 +1257,10 @@ nsCSSDocumentRule::UseForPresentation(nsPresContext* aPresContext,
   return PR_FALSE;
 }
 
+nsCSSDocumentRule::URL::~URL()
+{
+  NS_CSS_DELETE_LIST_MEMBER(nsCSSDocumentRule::URL, this, next);
+}
 
 // -------------------------------------------
 // nsICSSNameSpaceRule
