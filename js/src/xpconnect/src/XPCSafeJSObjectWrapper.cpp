@@ -396,10 +396,11 @@ UnwrapJSValue(jsval val)
 // create a new one and cache it in that same slot. The source of the
 // script is passed in funScript, and the resulting (new or cached)
 // scripted function is returned through scriptedFunVal.
+/* Keep GetScriptedFunction prototype in sync with corresponding macro */
 static JSBool
 GetScriptedFunction(JSContext *cx, JSObject *obj, JSObject *unsafeObj,
                     uint32 slotIndex, const nsAFlatCString& funScript,
-                    jsval *scriptedFunVal)
+                    jsval *scriptedFunVal, uintN lineno)
 {
   if (!::JS_GetReservedSlot(cx, obj, slotIndex, scriptedFunVal)) {
     return JS_FALSE;
@@ -442,7 +443,7 @@ GetScriptedFunction(JSContext *cx, JSObject *obj, JSObject *unsafeObj,
                                         jsprin, nsnull, 0, nsnull,
                                         funScript.get(), funScript.Length(),
                                         "XPCSafeJSObjectWrapper.cpp",
-                                        __LINE__);
+                                        lineno);
 
     JSPRINCIPALS_DROP(cx, jsprin);
 
@@ -461,6 +462,8 @@ GetScriptedFunction(JSContext *cx, JSObject *obj, JSObject *unsafeObj,
   return JS_TRUE;
 }
 
+#define GetScriptedFunction(cx, obj, unsafeObj, slotIndex, funScript, scriptedFunVal) \
+  (GetScriptedFunction)(cx, obj, unsafeObj, slotIndex, funScript, scriptedFunVal, __LINE__)
 
 static JSBool
 XPC_SJOW_AddProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
