@@ -245,7 +245,9 @@ const char nsXPLookAndFeel::sColorPrefs[][38] =
   "ui.-moz-mac-secondaryhighlight",
   "ui.-moz-win-mediatext",
   "ui.-moz-win-communicationstext",
-  "ui.-moz-nativehyperlinktext"
+  "ui.-moz-nativehyperlinktext",
+  "ui.-moz-comboboxtext",
+  "ui.-moz-combobox"
 };
 
 PRInt32 nsXPLookAndFeel::sCachedColors[nsILookAndFeel::eColor_LAST_COLOR] = {0};
