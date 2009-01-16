@@ -151,7 +151,7 @@ public:
   // Called by the decoder to indicate that the media stream has closed.
   void StreamEnded();
 
-  // Main state machine loop.  Runs forever, until shutdown state is reached.
+  // Main state machine loop. Runs forever, until shutdown state is reached.
   NS_IMETHOD Run();
 
   // Called by the decoder when the SeekStarted event runs.  This ensures
@@ -615,11 +615,27 @@ nsWaveStateMachine::Run()
         PRInt64 position = RoundDownToSample(TimeToBytes(seekTime));
         NS_ABORT_IF_FALSE(position >= 0 && position <= mWaveLength, "Invalid seek position");
 
+        // If position==0, instead of seeking to position+mWavePCMOffset,
+        // we want to first seek to 0 before seeking to
+        // position+mWavePCMOffset. This allows the request's data to come
+        // from the netwerk cache (non-zero byte-range requests can't be cached
+        // yet). The second seek will simply advance the read cursor, it won't
+        // start a new HTTP request.
+        PRBool seekToZeroFirst = position == 0 &&
+                                 (mWavePCMOffset < SEEK_VS_READ_THRESHOLD);
+
         // Convert to absolute offset within stream.
         position += mWavePCMOffset;
 
         monitor.Exit();
-        nsresult rv = mStream->Seek(nsISeekableStream::NS_SEEK_SET, position);
+        nsresult rv;
+        if (seekToZeroFirst) {
+          rv = mStream->Seek(nsISeekableStream::NS_SEEK_SET, 0);
+          if (NS_FAILED(rv)) {
+            NS_WARNING("Seek to zero failed");
+          }
+        }
+        rv = mStream->Seek(nsISeekableStream::NS_SEEK_SET, position);
         if (NS_FAILED(rv)) {
           NS_WARNING("Seek failed");
         }
