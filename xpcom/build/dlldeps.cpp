@@ -204,7 +204,7 @@ void XXXNeverCalled()
     new nsVariant();
     nsUnescape(nsnull);
     nsEscape(nsnull, url_XAlphas);
-    nsTArray<nsString> array;
+    nsStringArray array;
     NS_NewStringEnumerator(nsnull, &array);
     NS_NewAdoptingStringEnumerator(nsnull, &array);
     nsCStringArray carray;
