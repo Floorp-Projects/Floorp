@@ -42,9 +42,7 @@
  * the terms of any one of the MPL, the GPL or the LGPL.
  *
  * ***** END LICENSE BLOCK ***** */
-/* $Id: win32err.c,v 1.4 2004/04/27 23:04:39 gerv%gerv.net Exp $ */
-
-#if !defined(_WIN32_WCE)
+/* $Id: win32err.c,v 1.5 2008/11/20 04:39:59 nelson%bolyard.com Exp $ */
 
 #include "prerror.h"
 #include "prlog.h"
@@ -376,4 +374,3 @@ void nss_MD_win32_map_default_error(PRInt32 err)
     PR_SetError(prError, err);
 }
 
-#endif

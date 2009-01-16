@@ -61,6 +61,7 @@
 #include "secport.h"
 #include "prmon.h"
 #include "prenv.h"
+#include "prsystem.h" /* for PR_GetDirectorySeparator() */
 
 #ifdef SQLITE_UNSAFE_THREADS
 #include "prlock.h"
@@ -246,6 +247,7 @@ sdb_getTempDirCallback(void *arg, int columnCount, char **cval, char **cname)
     int found = 0;
     char *file = NULL;
     char *end, *dir;
+    char dirsep;
 
     /* we've already found the temp directory, don't look at any more records*/
     if (*(char **)arg) {
@@ -274,7 +276,8 @@ sdb_getTempDirCallback(void *arg, int columnCount, char **cval, char **cname)
     }
 
     /* drop of the database file name and just return the directory */
-    end = PORT_Strrchr(file, '/');
+    dirsep = PR_GetDirectorySeparator();
+    end = PORT_Strrchr(file, dirsep);
     if (!end) {
 	return SQLITE_OK;
     }
@@ -363,38 +366,40 @@ static char *sdb_BuildFileName(const char * directory,
 
 /*
  * find out how expensive the access system call is for non-existant files
- * in the given directory.
+ * in the given directory.  Return the number of operations done in 33 ms.
  */
-PRIntervalTime
+static PRUint32
 sdb_measureAccess(const char *directory)
 {
-    char *temp;
+    PRUint32 i;
     PRIntervalTime time;
     PRIntervalTime delta;
-    PRIntervalTime next;
-    int i;
+    PRIntervalTime duration = PR_MillisecondsToInterval(33);
 
     /* no directory, just return one */
     if (directory == NULL) {
 	return 1;
     }
 
-    /* measure 200 iterations so we have some resolution in the timer
-     * to work with. This code tries to open 200 unique files so that
-     * any caching code is defeated and we can get a reasonable idea about
-     * how well the underlying file system works */
+    /* measure number of Access operations that can be done in 33 milliseconds
+     * (1/30'th of a second), or 10000 operations, which ever comes first.
+     */
     time =  PR_IntervalNow();
-    for (i=0; i < 200; i++) { 
+    for (i=0; i < 10000u; i++) { 
+	char *temp;
+	PRIntervalTime next;
+
         temp  = sdb_BuildFileName(directory,"","._dOeSnotExist_", time+i, 0);
 	PR_Access(temp,PR_ACCESS_EXISTS);
         sqlite3_free(temp);
-    } 
-    next = PR_IntervalNow();
-    delta = next - time;
+	next = PR_IntervalNow();
+	delta = next - time;
+	if (delta >= duration)
+	    break;
+    }
 
     /* always return 1 or greater */
-    if (delta == 0) delta = 1;
-    return delta;
+    return i ? i : 1u;
 }
 
 /*
@@ -1658,7 +1663,7 @@ static const char ALTER_CMD[] =
 
 CK_RV 
 sdb_init(char *dbname, char *table, sdbDataType type, int *inUpdate,
-	 int *newInit, int flags, PRIntervalTime accessTime, SDB **pSdb)
+	 int *newInit, int flags, PRUint32 accessOps, SDB **pSdb)
 {
     int i;
     char *initStr = NULL;
@@ -1671,8 +1676,6 @@ sdb_init(char *dbname, char *table, sdbDataType type, int *inUpdate,
     CK_RV error = CKR_OK;
     char *cacheTable = NULL;
     PRIntervalTime now = 0;
-    PRIntervalTime tempAccess = 0;
-    char *tempDir = NULL;
     char *env;
     PRBool enableCache = PR_FALSE;
 
@@ -1827,20 +1830,22 @@ sdb_init(char *dbname, char *table, sdbDataType type, int *inUpdate,
      } else if (env && PORT_Strcasecmp(env,"yes") == 0) {
 	enableCache = PR_TRUE;
      } else {
+	char *tempDir = NULL;
+	PRUint32 tempOps = 0;
 	/*
 	 *  Use PR_Access to determine how expensive it
 	 * is to check for the existance of a local file compared to the same
 	 * check in the temp directory. If the temp directory is faster, cache
 	 * the database there. */
 	tempDir = sdb_getTempDir(sqlDB);
-	tempAccess = sdb_measureAccess(tempDir);
-	PORT_Free(tempDir);
-	tempDir = NULL;
+	if (tempDir) {
+	    tempOps = sdb_measureAccess(tempDir);
+	    PORT_Free(tempDir);
 
-	/* there is a cost to continually copying the database, account for
-	 * that cost in the temp access time with the arbitrary factor of 4 */
-	tempAccess = tempAccess*4;
-	enableCache = (tempAccess < accessTime) ? PR_TRUE : PR_FALSE;
+	    /* There is a cost to continually copying the database. 
+	     * Account for that cost  with the arbitrary factor of 10 */
+	    enableCache = (PRBool)(tempOps > accessOps * 10);
+	}
     }
 
     if (enableCache) {
@@ -1943,7 +1948,7 @@ s_open(const char *directory, const char *certPrefix, const char *keyPrefix,
 				   "key", key_version, flags);
     CK_RV error = CKR_OK;
     int inUpdate;
-    PRIntervalTime accessTime;
+    PRUint32 accessOps;
 
     *certdb = NULL;
     *keydb = NULL;
@@ -1961,7 +1966,7 @@ s_open(const char *directory, const char *certPrefix, const char *keyPrefix,
 
     /* how long does it take to test for a non-existant file in our working
      * directory? Allows us to test if we may be on a network file system */
-    accessTime = sdb_measureAccess(directory);
+    accessOps = sdb_measureAccess(directory);
 
     /*
      * open the cert data base
@@ -1969,7 +1974,7 @@ s_open(const char *directory, const char *certPrefix, const char *keyPrefix,
     if (certdb) {
 	/* initialize Certificate database */
 	error = sdb_init(cert, "nssPublic", SDB_CERT, &inUpdate,
-			 newInit, flags, accessTime, certdb);
+			 newInit, flags, accessOps, certdb);
 	if (error != CKR_OK) {
 	    goto loser;
 	}
@@ -1986,7 +1991,7 @@ s_open(const char *directory, const char *certPrefix, const char *keyPrefix,
     if (keydb) {
 	/* initialize the Key database */
 	error = sdb_init(key, "nssPrivate", SDB_KEY, &inUpdate, 
-			newInit, flags, accessTime, keydb);
+			newInit, flags, accessOps, keydb);
 	if (error != CKR_OK) {
 	    goto loser;
 	} 

@@ -74,6 +74,12 @@ endif
 
 SQLITE=-lsqlite3
 
+ifdef NSS_DISABLE_DBM
+DBMLIB = $(NULL)
+else
+DBMLIB = $(DIST)/lib/$(LIB_PREFIX)dbm.$(LIB_SUFFIX) 
+endif
+
 ifdef USE_STATIC_LIBS
 
 # can't do this in manifest.mn because OS_ARCH isn't defined there.
@@ -117,13 +123,13 @@ EXTRA_LIBS += \
 	$(DIST)/lib/$(LIB_PREFIX)certdb.$(LIB_SUFFIX) \
 	$(DIST)/lib/$(LIB_PREFIX)softokn.$(LIB_SUFFIX) \
 	$(CRYPTOLIB) \
-	$(DIST)/lib/$(LIB_PREFIX)nssutil.$(LIB_SUFFIX) \
 	$(DIST)/lib/$(LIB_PREFIX)nsspki.$(LIB_SUFFIX) \
 	$(DIST)/lib/$(LIB_PREFIX)nssdev.$(LIB_SUFFIX) \
 	$(DIST)/lib/$(LIB_PREFIX)nssb.$(LIB_SUFFIX) \
 	$(PKIXLIB) \
-	$(DIST)/lib/$(LIB_PREFIX)dbm.$(LIB_SUFFIX) \
+	$(DBMLIB) \
 	$(DIST)/lib/$(LIB_PREFIX)sqlite3.$(LIB_SUFFIX) \
+	$(DIST)/lib/$(LIB_PREFIX)nssutil3.$(LIB_SUFFIX) \
 	$(NSPR_LIB_DIR)/$(NSPR31_LIB_PREFIX)plc4.$(LIB_SUFFIX) \
 	$(NSPR_LIB_DIR)/$(NSPR31_LIB_PREFIX)plds4.$(LIB_SUFFIX) \
 	$(NSPR_LIB_DIR)/$(NSPR31_LIB_PREFIX)nspr4.$(LIB_SUFFIX) \
@@ -180,8 +186,7 @@ EXTRA_LIBS += \
 	$(DIST)/lib/$(LIB_PREFIX)nssdev.$(LIB_SUFFIX) \
 	$(DIST)/lib/$(LIB_PREFIX)nssb.$(LIB_SUFFIX) \
 	$(CRYPTOLIB) \
-	$(DIST)/lib/$(LIB_PREFIX)nssutil.$(LIB_SUFFIX) \
-	$(DIST)/lib/$(LIB_PREFIX)dbm.$(LIB_SUFFIX) \
+	$(DBMLIB) \
 	$(PKIXLIB) \
 	$(DIST)/lib/$(LIB_PREFIX)nss.$(LIB_SUFFIX) \
 	$(DIST)/lib/$(LIB_PREFIX)pk11wrap.$(LIB_SUFFIX) \
@@ -197,6 +202,7 @@ endif
 EXTRA_SHARED_LIBS += \
 	-L$(DIST)/lib \
 	$(SQLITE) \
+	-lnssutil3 \
 	-L$(NSPR_LIB_DIR) \
 	-lplc4 \
 	-lplds4 \
