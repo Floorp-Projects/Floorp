@@ -8716,6 +8716,8 @@ nsCSSFrameConstructor::ContentInserted(nsIContent*            aContainer,
   else {
     // No previous or next sibling, so treat this like an appended frame.
     isAppend = PR_TRUE;
+    // Get continuation that parents the last child
+    parentFrame = nsLayoutUtils::GetLastContinuationWithChild(parentFrame);
     // Deal with fieldsets
     parentFrame = ::GetAdjustedParentFrame(parentFrame, parentFrame->GetType(),
                                            aContainer, aIndexInContainer);
