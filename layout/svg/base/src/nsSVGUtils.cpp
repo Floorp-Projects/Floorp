@@ -870,28 +870,6 @@ nsSVGUtils::NotifyChildrenOfSVGChange(nsIFrame *aFrame, PRUint32 aFlags)
   }
 }
 
-void
-nsSVGUtils::AddObserver(nsISupports *aObserver, nsISupports *aTarget)
-{
-  nsISVGValueObserver *observer = nsnull;
-  nsISVGValue *v = nsnull;
-  CallQueryInterface(aObserver, &observer);
-  CallQueryInterface(aTarget, &v);
-  if (observer && v)
-    v->AddObserver(observer);
-}
-
-void
-nsSVGUtils::RemoveObserver(nsISupports *aObserver, nsISupports *aTarget)
-{
-  nsISVGValueObserver *observer = nsnull;
-  nsISVGValue *v = nsnull;
-  CallQueryInterface(aObserver, &observer);
-  CallQueryInterface(aTarget, &v);
-  if (observer && v)
-    v->RemoveObserver(observer);
-}
-
 // ************************************************************
 
 class SVGPaintCallback : public nsSVGFilterPaintCallback
