@@ -44,6 +44,11 @@
 #include "nsIURI.h"
 #include "prlock.h"
 
+// For HTTP seeking, if number of bytes needing to be
+// seeked forward is less than this value then a read is
+// done rather than a byte range request.
+#define SEEK_VS_READ_THRESHOLD (32*1024)
+
 class nsMediaDecoder;
 
 // An abstract class that implements the low level functionality of nsMediaStream to open, close,

@@ -52,11 +52,6 @@
 #include "nsIScriptSecurityManager.h"
 #include "nsChannelToPipeListener.h"
 
-// For HTTP seeking, if number of bytes needing to be
-// seeked forward is less than this value then a read is
-// done rather than a byte range request.
-#define SEEK_VS_READ_THRESHOLD (32*1024)
-
 class nsDefaultStreamStrategy : public nsStreamStrategy
 {
 public:

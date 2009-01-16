@@ -104,14 +104,19 @@ nsresult nsChannelToPipeListener::OnStartRequest(nsIRequest* aRequest, nsISuppor
   mDecoder->UpdateBytesDownloaded(mOffset);
   nsCOMPtr<nsIHttpChannel> hc = do_QueryInterface(aRequest);
   if (hc) {
+    nsCAutoString ranges;
+    nsresult rv = hc->GetResponseHeader(NS_LITERAL_CSTRING("Accept-Ranges"),
+                                        ranges);
+    PRBool acceptsRanges = ranges.EqualsLiteral("bytes"); 
+
     PRUint32 responseStatus = 0; 
     hc->GetResponseStatus(&responseStatus);
     if (mSeeking && responseStatus == HTTP_OK_CODE) {
-      // If we get an OK response but we were seeking,
-      // and therefore expecting a partial response of
-      // HTTP_PARTIAL_RESPONSE_CODE, tell the decoder
-      // we don't support seeking.
-      mDecoder->SetSeekable(PR_FALSE);
+      // If we get an OK response but we were seeking, and therefore
+      // expecting a partial response of HTTP_PARTIAL_RESPONSE_CODE,
+      // seeking should still be possible if the server is sending
+      // Accept-Ranges:bytes.
+      mDecoder->SetSeekable(acceptsRanges);
     }
     else if (!mSeeking && 
              (responseStatus == HTTP_OK_CODE ||
@@ -122,9 +127,11 @@ nsresult nsChannelToPipeListener::OnStartRequest(nsIRequest* aRequest, nsISuppor
       hc->GetContentLength(&cl);
       mDecoder->SetTotalBytes(cl);
 
-      // If we get an HTTP_OK_CODE response to our byte range
-      // request, then we don't support seeking.
-      mDecoder->SetSeekable(responseStatus == HTTP_PARTIAL_RESPONSE_CODE);
+      // If we get an HTTP_OK_CODE response to our byte range request,
+      // and the server isn't sending Accept-Ranges:bytes then we don't
+      // support seeking.
+      mDecoder->SetSeekable(responseStatus == HTTP_PARTIAL_RESPONSE_CODE ||
+                            acceptsRanges);
     }
   }
 
@@ -132,7 +139,6 @@ nsresult nsChannelToPipeListener::OnStartRequest(nsIRequest* aRequest, nsISuppor
   if (cc) {
     PRBool fromCache = PR_FALSE;
     nsresult rv = cc->IsFromCache(&fromCache);
-
     if (NS_SUCCEEDED(rv) && !fromCache) {
       cc->SetCacheAsFile(PR_TRUE);
     }
