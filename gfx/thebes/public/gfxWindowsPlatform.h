@@ -45,6 +45,7 @@
 #include "gfxPlatform.h"
 
 #include "nsVoidArray.h"
+#include "nsTArray.h"
 #include "nsDataHashtable.h"
 
 #include <windows.h>
@@ -62,7 +63,7 @@ public:
 
     nsresult GetFontList(const nsACString& aLangGroup,
                          const nsACString& aGenericFamily,
-                         nsStringArray& aListOfFonts);
+                         nsTArray<nsString>& aListOfFonts);
 
     nsresult UpdateFontList();
 
@@ -159,7 +160,7 @@ private:
     FontTable mFonts;
     FontTable mFontAliases;
     FontTable mFontSubstitutes;
-    nsStringArray mNonExistingFonts;
+    nsTArray<nsString> mNonExistingFonts;
 
     // when system-wide font lookup fails for a character, cache it to skip future searches
     gfxSparseBitSet mCodepointsWithNoFonts;

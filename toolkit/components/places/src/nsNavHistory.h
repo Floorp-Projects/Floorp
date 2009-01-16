@@ -740,7 +740,7 @@ protected:
   nsString mOrigSearchString;
   // Search string and tokens for case-insensitive matching
   nsString mCurrentSearchString;
-  nsStringArray mCurrentSearchTokens;
+  nsTArray<nsString> mCurrentSearchTokens;
   void GenerateSearchTokens();
   void AddSearchToken(nsAutoString &aToken);
   void ProcessTokensForSpecialSearch();

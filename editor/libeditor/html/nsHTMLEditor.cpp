@@ -214,14 +214,9 @@ nsHTMLEditor::~nsHTMLEditor()
   // free any default style propItems
   RemoveAllDefaultProperties();
 
-  while (mStyleSheetURLs.Count())
+  while (mStyleSheetURLs.Length())
   {
-    nsAString* strp = mStyleSheetURLs.StringAt(0);
-
-    if (strp)
-    {
-      RemoveOverrideStyleSheet(*strp);
-    }
+    RemoveOverrideStyleSheet(mStyleSheetURLs[0]);
   }
 
   if (mLinkHandler && mPresShellWeak)
@@ -2184,10 +2179,8 @@ nsHTMLEditor::SetParagraphFormat(const nsAString& aParagraphFormat)
 // XXX: ERROR_HANDLING -- this method needs a little work to ensure all error codes are 
 //                        checked properly, all null pointers are checked, and no memory leaks occur
 NS_IMETHODIMP 
-nsHTMLEditor::GetParentBlockTags(nsStringArray *aTagList, PRBool aGetLists)
+nsHTMLEditor::GetParentBlockTags(nsTArray<nsString> *aTagList, PRBool aGetLists)
 {
-  if (!aTagList) { return NS_ERROR_NULL_POINTER; }
-
   nsresult res;
   nsCOMPtr<nsISelection>selection;
   res = GetSelection(getter_AddRefs(selection));
@@ -2227,7 +2220,7 @@ nsHTMLEditor::GetParentBlockTags(nsStringArray *aTagList, PRBool aGetLists)
     {
       nsAutoString blockParentTag;
       blockParentElem->GetTagName(blockParentTag);
-      aTagList->AppendString(blockParentTag);
+      aTagList->AppendElement(blockParentTag);
     }
     
     return res;
@@ -2276,8 +2269,8 @@ nsHTMLEditor::GetParentBlockTags(nsStringArray *aTagList, PRBool aGetLists)
             blockParent->GetTagName(blockParentTag);
             PRBool isRoot;
             IsRootTag(blockParentTag, isRoot);
-            if ((!isRoot) && (-1==aTagList->IndexOf(blockParentTag))) {
-              aTagList->AppendString(blockParentTag);
+            if ((!isRoot) && !aTagList->Contains(blockParentTag)) {
+              aTagList->AppendElement(blockParentTag);
             }
           }
         }
@@ -3719,12 +3712,12 @@ nsHTMLEditor::AddNewStyleSheetToList(const nsAString &aURL,
                                      nsICSSStyleSheet *aStyleSheet)
 {
   PRInt32 countSS = mStyleSheets.Count();
-  PRInt32 countU = mStyleSheetURLs.Count();
+  PRUint32 countU = mStyleSheetURLs.Length();
 
   if (countU < 0 || countSS != countU)
     return NS_ERROR_UNEXPECTED;
 
-  if (!mStyleSheetURLs.AppendString(aURL))
+  if (!mStyleSheetURLs.AppendElement(aURL))
     return NS_ERROR_UNEXPECTED;
 
   return mStyleSheets.AppendObject(aStyleSheet) ? NS_OK : NS_ERROR_UNEXPECTED;
@@ -3743,8 +3736,7 @@ nsHTMLEditor::RemoveStyleSheetFromList(const nsAString &aURL)
   nsresult rv = NS_OK;
   if (!mStyleSheets.RemoveObjectAt(foundIndex))
     rv = NS_ERROR_FAILURE;
-  if (!mStyleSheetURLs.RemoveStringAt(foundIndex))
-    rv = NS_ERROR_FAILURE;
+  mStyleSheetURLs.RemoveElementAt(foundIndex);
 
   return rv;
 }
@@ -3783,10 +3775,7 @@ nsHTMLEditor::GetURLForStyleSheet(nsICSSStyleSheet *aStyleSheet,
     return NS_OK;
 
   // Found it in the list!
-  nsAString* strp = mStyleSheetURLs.StringAt(foundIndex);
-  if (!strp)
-    return NS_ERROR_UNEXPECTED;
-  aURL = *strp;
+  aURL = mStyleSheetURLs[foundIndex];
   return NS_OK;
 }
 
