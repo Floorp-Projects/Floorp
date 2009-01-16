@@ -601,9 +601,9 @@ TextRunWordCache::MakeTextRun(const PRUnichar *aText, PRUint32 aLength,
         PRUnichar ch = i < aLength ? aText[i] : ' ';
         if (!seenDigitToModify && needsNumeralProcessing) {
             // check if there is a digit that needs to be transformed
-            if (HandleNumberInChar(ch, i > 0 ?
+            if (HandleNumberInChar(ch, !!(i > 0 ?
                                        IS_ARABIC_CHAR(aText[i-1]) :
-                                       (aFlags & gfxTextRunWordCache::TEXT_INCOMING_ARABICCHAR),
+                                       (aFlags & gfxTextRunWordCache::TEXT_INCOMING_ARABICCHAR)),
                                    mBidiNumeral) != ch)
                 seenDigitToModify = PR_TRUE;
         }
@@ -617,9 +617,9 @@ TextRunWordCache::MakeTextRun(const PRUnichar *aText, PRUint32 aLength,
                 numString = new PRUnichar[length];
                 for (PRUint32 j = 0; j < length; ++j) {
                     numString[j] = HandleNumberInChar(aText[wordStart+j],
-                                                      wordStart+j > 0 ?
+                                                      !!(wordStart+j > 0 ?
                                                           IS_ARABIC_CHAR(numString[j-1]) :
-                                                          (aFlags & gfxTextRunWordCache::TEXT_INCOMING_ARABICCHAR),
+                                                          (aFlags & gfxTextRunWordCache::TEXT_INCOMING_ARABICCHAR)),
                                                       mBidiNumeral);
                 }
                 // now we make a transient textRun for the transformed word; this will not be cached
@@ -737,9 +737,9 @@ TextRunWordCache::MakeTextRun(const PRUint8 *aText, PRUint32 aLength,
                 numString = new PRUnichar[length];
                 for (PRUint32 j = 0; j < length; ++j) {
                     numString[j] = HandleNumberInChar(aText[wordStart+j],
-                                                      wordStart+j > 0 ?
+                                                      !!(wordStart+j > 0 ?
                                                           IS_ARABIC_CHAR(numString[j-1]) :
-                                                          (aFlags & gfxTextRunWordCache::TEXT_INCOMING_ARABICCHAR),
+                                                          (aFlags & gfxTextRunWordCache::TEXT_INCOMING_ARABICCHAR)),
                                                       mBidiNumeral);
                 }
                 // now we make a transient textRun for the transformed word; this will not be cached

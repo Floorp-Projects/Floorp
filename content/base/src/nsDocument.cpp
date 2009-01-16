@@ -171,6 +171,11 @@ static NS_DEFINE_CID(kDOMEventGroupCID, NS_DOMEVENTGROUP_CID);
 
 #include "mozAutoDocUpdate.h"
 
+#ifdef MOZ_SMIL
+#include "nsSMILAnimationController.h"
+#include "imgIContainer.h"
+#endif // MOZ_SMIL
+
 
 #ifdef MOZ_LOGGING
 // so we can get logging even in release builds
@@ -896,7 +901,7 @@ nsExternalResourceMap::AddExternalResource(nsIURI* aURI,
     } else {
       doc->SetDisplayDocument(aDisplayDocument);
 
-      rv = aViewer->Init(nsnull, nsRect(0, 0, 0, 0));
+      rv = aViewer->Init(nsnull, nsIntRect(0, 0, 0, 0));
       if (NS_SUCCEEDED(rv)) {
         rv = aViewer->Open(nsnull, nsnull);
       }
@@ -1777,6 +1782,13 @@ NS_IMPL_CYCLE_COLLECTION_TRAVERSE_BEGIN(nsDocument)
   NS_IMPL_CYCLE_COLLECTION_TRAVERSE_NSCOMARRAY(mCatalogSheets)
   NS_IMPL_CYCLE_COLLECTION_TRAVERSE_NSCOMARRAY(mVisitednessChangedURIs)
 
+#ifdef MOZ_SMIL
+  // Traverse animation components
+  if (tmp->mAnimationController) {
+    tmp->mAnimationController->Traverse(&cb);
+  }
+#endif // MOZ_SMIL
+
   NS_IMPL_CYCLE_COLLECTION_TRAVERSE_PRESERVED_WRAPPER
 
   if (tmp->mSubDocuments && tmp->mSubDocuments->ops) {
@@ -2176,6 +2188,8 @@ nsDocument::StartDocumentLoad(const char* aCommand, nsIChannel* aChannel,
     PR_LogPrint("DOCUMENT %p StartDocumentLoad %s", this, spec.get());
   }
 #endif
+
+  SetReadyStateInternal(READYSTATE_LOADING);
 
   if (nsCRT::strcmp(kLoadAsData, aCommand) == 0) {
     mLoadedAsData = PR_TRUE;
@@ -2675,6 +2689,10 @@ nsDocument::GetElementsByClassName(const nsAString& aClasses,
   return GetElementsByClassNameHelper(this, aClasses, aReturn);
 }
 
+struct ClassMatchingInfo {
+  nsCOMArray<nsIAtom> mClasses;
+  nsCaseTreatment mCaseTreatment;
+};
 
 // static GetElementsByClassName helpers
 nsresult
@@ -2687,26 +2705,31 @@ nsDocument::GetElementsByClassNameHelper(nsINode* aRootNode,
   nsAttrValue attrValue;
   attrValue.ParseAtomArray(aClasses);
   // nsAttrValue::Equals is sensitive to order, so we'll send an array
-  nsCOMArray<nsIAtom>* classes = new nsCOMArray<nsIAtom>;
-  NS_ENSURE_TRUE(classes, NS_ERROR_OUT_OF_MEMORY);
+  ClassMatchingInfo* info = new ClassMatchingInfo;
+  NS_ENSURE_TRUE(info, NS_ERROR_OUT_OF_MEMORY);
 
   if (attrValue.Type() == nsAttrValue::eAtomArray) {
-    classes->AppendObjects(*(attrValue.GetAtomArrayValue()));
+    info->mClasses.AppendObjects(*(attrValue.GetAtomArrayValue()));
   } else if (attrValue.Type() == nsAttrValue::eAtom) {
-    classes->AppendObject(attrValue.GetAtomValue());
+    info->mClasses.AppendObject(attrValue.GetAtomValue());
   }
-  
+
   nsBaseContentList* elements;
-  if (classes->Count() > 0) {
+  if (info->mClasses.Count() > 0) {
+    info->mCaseTreatment =
+      aRootNode->GetOwnerDoc()->GetCompatibilityMode() ==
+        eCompatibility_NavQuirks ?
+          eIgnoreCase : eCaseMatters;
+  
     elements = new nsContentList(aRootNode, MatchClassNames,
-                                 DestroyClassNameArray, classes);
+                                 DestroyClassNameArray, info);
   } else {
-    delete classes;
-    classes = nsnull;
+    delete info;
+    info = nsnull;
     elements = new nsBaseContentList();
   }
   if (!elements) {
-    delete classes;
+    delete info;
     return NS_ERROR_OUT_OF_MEMORY;
   }
 
@@ -2729,11 +2752,12 @@ nsDocument::MatchClassNames(nsIContent* aContent,
   }
   
   // need to match *all* of the classes
-  nsCOMArray<nsIAtom>* classes = static_cast<nsCOMArray<nsIAtom>*>(aData);
-  PRInt32 length = classes->Count();
+  ClassMatchingInfo* info = static_cast<ClassMatchingInfo*>(aData);
+  PRInt32 length = info->mClasses.Count();
   PRInt32 i;
   for (i = 0; i < length; ++i) {
-    if (!classAttr->Contains(classes->ObjectAt(i), eCaseMatters)) {
+    if (!classAttr->Contains(info->mClasses.ObjectAt(i),
+                             info->mCaseTreatment)) {
       return PR_FALSE;
     }
   }
@@ -2745,8 +2769,8 @@ nsDocument::MatchClassNames(nsIContent* aContent,
 void
 nsDocument::DestroyClassNameArray(void* aData)
 {
-  nsCOMArray<nsIAtom>* classes = static_cast<nsCOMArray<nsIAtom>*>(aData);
-  delete classes;
+  ClassMatchingInfo* info = static_cast<ClassMatchingInfo*>(aData);
+  delete info;
 }
 
 nsresult
@@ -3961,6 +3985,8 @@ nsDocument::EndLoad()
   }
   
   NS_DOCUMENT_NOTIFY_OBSERVERS(EndLoad, (this));
+  
+  SetReadyStateInternal(READYSTATE_INTERACTIVE);
 
   if (!mSynchronousDOMContentLoaded) {
     nsRefPtr<nsIRunnable> ev =
@@ -5240,6 +5266,32 @@ nsDocument::EnumerateExternalResources(nsSubDocEnumFunc aCallback, void* aData)
 {
   mExternalResourceMap.EnumerateResources(aCallback, aData);
 }
+
+#ifdef MOZ_SMIL
+nsSMILAnimationController*
+nsDocument::GetAnimationController()
+{
+  // We create the animation controller lazily because most documents won't want
+  // one and only SVG documents and the like will call this
+  if (mAnimationController)
+    return mAnimationController;
+
+  mAnimationController = NS_NewSMILAnimationController(this);
+  
+  // If there's a presContext then check the animation mode and pause if
+  // necessary.
+  nsIPresShell *shell = GetPrimaryShell();
+  if (mAnimationController && shell) {
+    nsPresContext *context = shell->GetPresContext();
+    if (context &&
+        context->ImageAnimationMode() == imgIContainer::kDontAnimMode) {
+      mAnimationController->Pause(nsSMILTimeContainer::PAUSE_USERPREF);
+    }
+  }
+
+  return mAnimationController;
+}
+#endif // MOZ_SMIL
 
 struct DirTable {
   const char* mName;
@@ -7089,6 +7141,12 @@ nsDocument::OnPageShow(PRBool aPersisted)
   // Set mIsShowing before firing events, in case those event handlers
   // move us around.
   mIsShowing = PR_TRUE;
+
+#ifdef MOZ_SMIL
+  if (mAnimationController) {
+    mAnimationController->OnPageShow();
+  }
+#endif
   
   nsPageTransitionEvent event(PR_TRUE, NS_PAGE_SHOW, aPersisted);
   DispatchEventToWindow(&event);
@@ -7119,6 +7177,12 @@ nsDocument::OnPageHide(PRBool aPersisted)
   // Set mIsShowing before firing events, in case those event handlers
   // move us around.
   mIsShowing = PR_FALSE;
+
+#ifdef MOZ_SMIL
+  if (mAnimationController) {
+    mAnimationController->OnPageHide();
+  }
+#endif
   
   // Now send out a PageHide event.
   nsPageTransitionEvent event(PR_TRUE, NS_PAGE_HIDE, aPersisted);
@@ -7377,6 +7441,32 @@ nsDocument::CloneDocHelper(nsDocument* clone) const
   clone->mIsRegularHTML = mIsRegularHTML;
   clone->mXMLDeclarationBits = mXMLDeclarationBits;
   clone->mBaseTarget = mBaseTarget;
+  return NS_OK;
+}
 
+void
+nsDocument::SetReadyStateInternal(ReadyState rs)
+{
+  mReadyState = rs;
+  // TODO fire "readystatechange"
+}
+
+
+NS_IMETHODIMP
+nsDocument::GetReadyState(nsAString& aReadyState)
+{
+  switch(mReadyState) {
+  case READYSTATE_LOADING :
+    aReadyState.Assign(NS_LITERAL_STRING("loading"));
+    break;
+  case READYSTATE_INTERACTIVE :
+    aReadyState.Assign(NS_LITERAL_STRING("interactive"));
+    break;
+  case READYSTATE_COMPLETE :
+    aReadyState.Assign(NS_LITERAL_STRING("complete"));
+    break;  
+  default:
+    aReadyState.Assign(NS_LITERAL_STRING("uninitialized"));
+  }
   return NS_OK;
 }

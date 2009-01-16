@@ -371,6 +371,15 @@ protected:
     return mPlayState;
   }
 
+  // Stop updating the bytes downloaded for progress notifications. Called
+  // when seeking to prevent wild changes to the progress notification.
+  // Must be called with the decoder monitor held.
+  void StopProgressUpdates();
+
+  // Allow updating the bytes downloaded for progress notifications. Must
+  // be called with the decoder monitor held.
+  void StartProgressUpdates();
+
   /****** 
    * The following methods must only be called on the main
    * thread.
@@ -512,6 +521,17 @@ private:
   // when writing to the state, or when reading from a non-main thread.
   // Any change to the state must call NotifyAll on the monitor.
   PlayState mNextState;	
+
+  // True when the media resource has completely loaded. Accessed on
+  // the main thread only.
+  PRPackedBool mResourceLoaded;
+
+  // True when seeking or otherwise moving the play position around in
+  // such a manner that progress event data is inaccurate. This is set
+  // before a seek or during loading of metadata to prevent the progress indicator
+  // from jumping around. Read/Write from any thread. Must have decode monitor
+  // locked before accessing.
+  PRPackedBool mIgnoreProgressData;
 };
 
 #endif

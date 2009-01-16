@@ -3404,12 +3404,8 @@ ContextHolder::ContextHolder(JSContext *aOuterCx, JSObject *aSandbox)
                       JSOPTION_PRIVATE_IS_NSISUPPORTS);
         JS_SetGlobalObject(mJSContext, aSandbox);
         JS_SetContextPrivate(mJSContext, this);
-
-        if(JS_GetOperationCallback(aOuterCx))
-        {
-            JS_SetOperationCallback(mJSContext, ContextHolderOperationCallback,
-                                    JS_GetOperationLimit(aOuterCx));
-        }
+        JS_SetOperationCallback(mJSContext, ContextHolderOperationCallback,
+                                JS_GetOperationLimit(aOuterCx));
     }
 }
 
@@ -3424,19 +3420,8 @@ ContextHolder::ContextHolderOperationCallback(JSContext *cx)
     JSOperationCallback callback = JS_GetOperationCallback(origCx);
     JSBool ok = JS_TRUE;
     if(callback)
-    {
         ok = callback(origCx);
-        callback = JS_GetOperationCallback(origCx);
-        if(callback)
-        {
-            // If the callback is still set in the original context, reflect
-            // a possibly updated operation limit into cx.
-            JS_SetOperationLimit(cx, JS_GetOperationLimit(origCx));
-            return ok;
-        }
-    }
-
-    JS_ClearOperationCallback(cx);
+    JS_SetOperationLimit(cx, JS_GetOperationLimit(origCx));
     return ok;
 }
 

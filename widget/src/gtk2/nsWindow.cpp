@@ -517,7 +517,7 @@ nsWindow::DispatchLostFocusEvent(void)
 
 
 void
-nsWindow::DispatchResizeEvent(nsRect &aRect, nsEventStatus &aStatus)
+nsWindow::DispatchResizeEvent(nsIntRect &aRect, nsEventStatus &aStatus)
 {
     nsSizeEvent event(PR_TRUE, NS_SIZE, this);
 
@@ -610,7 +610,7 @@ nsWindow::AreBoundsSane(void)
 
 NS_IMETHODIMP
 nsWindow::Create(nsIWidget        *aParent,
-                 const nsRect     &aRect,
+                 const nsIntRect  &aRect,
                  EVENT_CALLBACK   aHandleEventFunction,
                  nsIDeviceContext *aContext,
                  nsIAppShell      *aAppShell,
@@ -624,7 +624,7 @@ nsWindow::Create(nsIWidget        *aParent,
 
 NS_IMETHODIMP
 nsWindow::Create(nsNativeWidget aParent,
-                 const nsRect     &aRect,
+                 const nsIntRect  &aRect,
                  EVENT_CALLBACK   aHandleEventFunction,
                  nsIDeviceContext *aContext,
                  nsIAppShell      *aAppShell,
@@ -894,7 +894,7 @@ nsWindow::Show(PRBool aState)
 NS_IMETHODIMP
 nsWindow::Resize(PRInt32 aWidth, PRInt32 aHeight, PRBool aRepaint)
 {
-    mBounds.SizeTo(GetSafeWindowSize(nsSize(aWidth, aHeight)));
+    mBounds.SizeTo(GetSafeWindowSize(nsIntSize(aWidth, aHeight)));
 
     if (!mCreated)
         return NS_OK;
@@ -953,7 +953,7 @@ nsWindow::Resize(PRInt32 aWidth, PRInt32 aHeight, PRBool aRepaint)
 
     // synthesize a resize event if this isn't a toplevel
     if (mIsTopLevel || mListenForResizes) {
-        nsRect rect(mBounds.x, mBounds.y, aWidth, aHeight);
+        nsIntRect rect(mBounds.x, mBounds.y, aWidth, aHeight);
         nsEventStatus status;
         DispatchResizeEvent(rect, status);
     }
@@ -967,7 +967,7 @@ nsWindow::Resize(PRInt32 aX, PRInt32 aY, PRInt32 aWidth, PRInt32 aHeight,
 {
     mBounds.x = aX;
     mBounds.y = aY;
-    mBounds.SizeTo(GetSafeWindowSize(nsSize(aWidth, aHeight)));
+    mBounds.SizeTo(GetSafeWindowSize(nsIntSize(aWidth, aHeight)));
 
     mPlaced = PR_TRUE;
 
@@ -1018,7 +1018,7 @@ nsWindow::Resize(PRInt32 aX, PRInt32 aY, PRInt32 aWidth, PRInt32 aHeight,
 
     if (mIsTopLevel || mListenForResizes) {
         // synthesize a resize event
-        nsRect rect(aX, aY, aWidth, aHeight);
+        nsIntRect rect(aX, aY, aWidth, aHeight);
         nsEventStatus status;
         DispatchResizeEvent(rect, status);
     }
@@ -1348,9 +1348,9 @@ nsWindow::SetFocus(PRBool aRaise)
 }
 
 NS_IMETHODIMP
-nsWindow::GetScreenBounds(nsRect &aRect)
+nsWindow::GetScreenBounds(nsIntRect &aRect)
 {
-    nsRect origin(0, 0, mBounds.width, mBounds.height);
+    nsIntRect origin(0, 0, mBounds.width, mBounds.height);
     WidgetToScreen(origin, aRect);
     LOG(("GetScreenBounds %d %d | %d %d | %d %d\n",
          aRect.x, aRect.y,
@@ -1618,8 +1618,8 @@ nsWindow::Invalidate(PRBool aIsSynchronous)
 }
 
 NS_IMETHODIMP
-nsWindow::Invalidate(const nsRect &aRect,
-                     PRBool        aIsSynchronous)
+nsWindow::Invalidate(const nsIntRect &aRect,
+                     PRBool           aIsSynchronous)
 {
     GdkRectangle rect;
 
@@ -1685,9 +1685,9 @@ nsWindow::SetColorMap(nsColorMap *aColorMap)
 }
 
 NS_IMETHODIMP
-nsWindow::Scroll(PRInt32  aDx,
-                 PRInt32  aDy,
-                 nsRect  *aClipRect)
+nsWindow::Scroll(PRInt32     aDx,
+                 PRInt32     aDy,
+                 nsIntRect  *aClipRect)
 {
     if (!mDrawingarea)
         return NS_OK;
@@ -1703,7 +1703,7 @@ nsWindow::Scroll(PRInt32  aDx,
 
     // Update bounds on our child windows
     for (nsIWidget* kid = mFirstChild; kid; kid = kid->GetNextSibling()) {
-        nsRect bounds;
+        nsIntRect bounds;
         kid->GetBounds(bounds);
         bounds.x += aDx;
         bounds.y += aDy;
@@ -1727,9 +1727,9 @@ nsWindow::ScrollWidgets(PRInt32 aDx,
 }
 
 NS_IMETHODIMP
-nsWindow::ScrollRect(nsRect  &aSrcRect,
-                     PRInt32  aDx,
-                     PRInt32  aDy)
+nsWindow::ScrollRect(nsIntRect  &aSrcRect,
+                     PRInt32     aDx,
+                     PRInt32     aDy)
 {
     return NS_ERROR_NOT_IMPLEMENTED;
 }
@@ -1854,7 +1854,7 @@ nsWindow::ShowMenuBar(PRBool aShow)
 }
 
 NS_IMETHODIMP
-nsWindow::WidgetToScreen(const nsRect& aOldRect, nsRect& aNewRect)
+nsWindow::WidgetToScreen(const nsIntRect& aOldRect, nsIntRect& aNewRect)
 {
     gint x = 0, y = 0;
 
@@ -1877,7 +1877,7 @@ nsWindow::WidgetToScreen(const nsRect& aOldRect, nsRect& aNewRect)
 }
 
 NS_IMETHODIMP
-nsWindow::ScreenToWidget(const nsRect& aOldRect, nsRect& aNewRect)
+nsWindow::ScreenToWidget(const nsIntRect& aOldRect, nsIntRect& aNewRect)
 {
     gint x = 0, y = 0;
 
@@ -2214,7 +2214,7 @@ nsWindow::OnExposeEvent(GtkWidget *aWidget, GdkEventExpose *aEvent)
         }
 
         // Make sure we won't create something that will overload the X server
-        nsSize safeSize = GetSafeWindowSize(boundsRect.Size());
+        nsIntSize safeSize = GetSafeWindowSize(boundsRect.Size());
         boundsRect.width = safeSize.width;
         boundsRect.height = safeSize.height;
 
@@ -2254,7 +2254,7 @@ nsWindow::OnExposeEvent(GtkWidget *aWidget, GdkEventExpose *aEvent)
 
         if (bufferPixmap) {
             bufferPixmapSurface = GetSurfaceForGdkDrawable(GDK_DRAWABLE(bufferPixmap),
-                                                           nsSize(bufferPixmapSize.width, bufferPixmapSize.height));
+                                                           nsIntSize(bufferPixmapSize.width, bufferPixmapSize.height));
 
             if (bufferPixmapSurface && bufferPixmapSurface->CairoStatus()) {
                 bufferPixmapSurface = nsnull;
@@ -2328,8 +2328,8 @@ nsWindow::OnExposeEvent(GtkWidget *aWidget, GdkEventExpose *aEvent)
                         imgCtx->Paint();
                     }
 
-                    UpdateTranslucentWindowAlphaInternal(nsRect(boundsRect.x, boundsRect.y,
-                                                                boundsRect.width, boundsRect.height),
+                    UpdateTranslucentWindowAlphaInternal(nsIntRect(boundsRect.x, boundsRect.y,
+                                                                   boundsRect.width, boundsRect.height),
                                                          img->Data(), img->Stride());
                 }
             } else {
@@ -2380,7 +2380,7 @@ nsWindow::OnConfigureEvent(GtkWidget *aWidget, GdkEventConfigure *aEvent)
     if (mIsTopLevel) {
         mPlaced = PR_TRUE;
         // Need to translate this into the right coordinates
-        nsRect oldrect, newrect;
+        nsIntRect oldrect, newrect;
         WidgetToScreen(oldrect, newrect);
         mBounds.x = newrect.x;
         mBounds.y = newrect.y;
@@ -2406,8 +2406,8 @@ nsWindow::OnSizeAllocate(GtkWidget *aWidget, GtkAllocation *aAllocation)
          (void *)this, aAllocation->x, aAllocation->y,
          aAllocation->width, aAllocation->height));
 
-    nsRect rect(aAllocation->x, aAllocation->y,
-                aAllocation->width, aAllocation->height);
+    nsIntRect rect(aAllocation->x, aAllocation->y,
+                   aAllocation->width, aAllocation->height);
 
     ResizeTransparencyBitmap(rect.width, rect.height);
 
@@ -2637,8 +2637,8 @@ nsWindow::OnMotionNotifyEvent(GtkWidget *aWidget, GdkEventMotion *aEvent)
             event.refPoint.x = nscoord(aEvent->x);
             event.refPoint.y = nscoord(aEvent->y);
         } else {
-            nsRect windowRect;
-            ScreenToWidget(nsRect(nscoord(aEvent->x_root), nscoord(aEvent->y_root), 1, 1), windowRect);
+            nsIntRect windowRect;
+            ScreenToWidget(nsIntRect(NSToIntFloor(aEvent->x_root), NSToIntFloor(aEvent->y_root), 1, 1), windowRect);
 
             event.refPoint.x = windowRect.x;
             event.refPoint.y = windowRect.y;
@@ -2668,8 +2668,8 @@ nsWindow::InitButtonEvent(nsMouseEvent &aEvent,
         aEvent.refPoint.x = nscoord(aGdkEvent->x);
         aEvent.refPoint.y = nscoord(aGdkEvent->y);
     } else {
-        nsRect windowRect;
-        ScreenToWidget(nsRect(nscoord(aGdkEvent->x_root), nscoord(aGdkEvent->y_root), 1, 1), windowRect);
+        nsIntRect windowRect;
+        ScreenToWidget(nsIntRect(NSToIntFloor(aGdkEvent->x_root), NSToIntFloor(aGdkEvent->y_root), 1, 1), windowRect);
 
         aEvent.refPoint.x = windowRect.x;
         aEvent.refPoint.y = windowRect.y;
@@ -3230,8 +3230,8 @@ nsWindow::OnScrollEvent(GtkWidget *aWidget, GdkEventScroll *aEvent)
         // XXX we're never quite sure which GdkWindow the event came from due to our custom bubbling
         // in scroll_event_cb(), so use ScreenToWidget to translate the screen root coordinates into
         // coordinates relative to this widget.
-        nsRect windowRect;
-        ScreenToWidget(nsRect(nscoord(aEvent->x_root), nscoord(aEvent->y_root), 1, 1), windowRect);
+        nsIntRect windowRect;
+        ScreenToWidget(nsIntRect(NSToIntFloor(aEvent->x_root), NSToIntFloor(aEvent->y_root), 1, 1), windowRect);
 
         event.refPoint.x = windowRect.x;
         event.refPoint.y = windowRect.y;
@@ -3668,7 +3668,7 @@ GetBrandName(nsXPIDLString& brandName)
 nsresult
 nsWindow::NativeCreate(nsIWidget        *aParent,
                        nsNativeWidget    aNativeParent,
-                       const nsRect     &aRect,
+                       const nsIntRect  &aRect,
                        EVENT_CALLBACK    aHandleEventFunction,
                        nsIDeviceContext *aContext,
                        nsIAppShell      *aAppShell,
@@ -4266,10 +4266,10 @@ nsWindow::NativeShow (PRBool  aAction)
     }
 }
 
-nsSize
-nsWindow::GetSafeWindowSize(nsSize aSize)
+nsIntSize
+nsWindow::GetSafeWindowSize(nsIntSize aSize)
 {
-    nsSize result = aSize;
+    nsIntSize result = aSize;
     const PRInt32 kInt16Max = 32767;
     if (result.width > kInt16Max) {
         NS_WARNING("Clamping huge window width");
@@ -4395,7 +4395,7 @@ nsWindow::ResizeTransparencyBitmap(PRInt32 aNewWidth, PRInt32 aNewHeight)
 
 static PRBool
 ChangedMaskBits(gchar* aMaskBits, PRInt32 aMaskWidth, PRInt32 aMaskHeight,
-        const nsRect& aRect, PRUint8* aAlphas, PRInt32 aStride)
+        const nsIntRect& aRect, PRUint8* aAlphas, PRInt32 aStride)
 {
     PRInt32 x, y, xMax = aRect.XMost(), yMax = aRect.YMost();
     PRInt32 maskBytesPerRow = (aMaskWidth + 7)/8;
@@ -4421,7 +4421,7 @@ ChangedMaskBits(gchar* aMaskBits, PRInt32 aMaskWidth, PRInt32 aMaskHeight,
 
 static
 void UpdateMaskBits(gchar* aMaskBits, PRInt32 aMaskWidth, PRInt32 aMaskHeight,
-        const nsRect& aRect, PRUint8* aAlphas, PRInt32 aStride)
+        const nsIntRect& aRect, PRUint8* aAlphas, PRInt32 aStride)
 {
     PRInt32 x, y, xMax = aRect.XMost(), yMax = aRect.YMost();
     PRInt32 maskBytesPerRow = (aMaskWidth + 7)/8;
@@ -4456,7 +4456,7 @@ nsWindow::ApplyTransparencyBitmap()
 }
 
 nsresult
-nsWindow::UpdateTranslucentWindowAlphaInternal(const nsRect& aRect,
+nsWindow::UpdateTranslucentWindowAlphaInternal(const nsIntRect& aRect,
                                                PRUint8* aAlphas, PRInt32 aStride)
 {
     if (!mShell) {
@@ -5908,7 +5908,7 @@ void
 key_event_to_context_menu_event(nsMouseEvent &aEvent,
                                 GdkEventKey *aGdkEvent)
 {
-    aEvent.refPoint = nsPoint(0, 0);
+    aEvent.refPoint = nsIntPoint(0, 0);
     aEvent.isShift = PR_FALSE;
     aEvent.isControl = PR_FALSE;
     aEvent.isAlt = PR_FALSE;
@@ -6726,7 +6726,7 @@ IM_preedit_changed_cb(GtkIMContext *aContext,
 
     // if gFocusWindow is null, use the last focused gIMEFocusWindow
     nsRefPtr<nsWindow> window = gFocusWindow ? gFocusWindow : gIMEFocusWindow;
-    if (!window)
+    if (!window || IM_get_input_context(window) != aContext)
         return;
 
     // Should use cursor_pos ?
@@ -6789,7 +6789,7 @@ IM_commit_cb(GtkIMContext *aContext,
     // if gFocusWindow is null, use the last focused gIMEFocusWindow
     nsRefPtr<nsWindow> window = gFocusWindow ? gFocusWindow : gIMEFocusWindow;
 
-    if (!window)
+    if (!window || IM_get_input_context(window) != aContext)
         return;
 
     /* If IME doesn't change they keyevent that generated this commit,
@@ -6995,7 +6995,7 @@ IM_get_input_context(nsWindow *aWindow)
 #ifdef MOZ_X11
 /* static */ already_AddRefed<gfxASurface>
 nsWindow::GetSurfaceForGdkDrawable(GdkDrawable* aDrawable,
-                                   const nsSize& aSize)
+                                   const nsIntSize& aSize)
 {
     GdkVisual* visual = gdk_drawable_get_visual(aDrawable);
     Display* xDisplay = gdk_x11_drawable_get_xdisplay(aDrawable);

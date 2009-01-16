@@ -94,10 +94,10 @@ typedef nsEventStatus (* EVENT_CALLBACK)(nsGUIEvent *event);
 #define NS_NATIVE_PLUGIN_PORT_CG    101
 #endif
 
-// 7E01D11D-DAFC-4A5E-8C0A-7442A2E17252
+// a85944af-7fce-4e45-bf04-ac12c823394b
 #define NS_IWIDGET_IID \
-{ 0x7E01D11D, 0xDAFC, 0x4A5E, \
-  { 0x8C, 0x0A, 0x74, 0x42, 0xA2, 0xE1, 0x72, 0x52 } }
+{ 0xa85944af, 0x7fce, 0x4e45, \
+  { 0xbf, 0x04, 0xac, 0x12, 0xc8, 0x23, 0x39, 0x4b } }
 
 // Hide the native window systems real window type so as to avoid
 // including native window system types and APIs. This is necessary
@@ -315,7 +315,7 @@ class nsIWidget : public nsISupports {
      *
      */
     NS_IMETHOD Create(nsIWidget        *aParent,
-                        const nsRect     &aRect,
+                        const nsIntRect  &aRect,
                         EVENT_CALLBACK   aHandleEventFunction,
                         nsIDeviceContext *aContext,
                         nsIAppShell      *aAppShell = nsnull,
@@ -342,7 +342,7 @@ class nsIWidget : public nsISupports {
      * @param     aHandleEventFunction the event handler callback function
      */
     NS_IMETHOD Create(nsNativeWidget aParent,
-                        const nsRect     &aRect,
+                        const nsIntRect  &aRect,
                         EVENT_CALLBACK   aHandleEventFunction,
                         nsIDeviceContext *aContext,
                         nsIAppShell      *aAppShell = nsnull,
@@ -586,7 +586,7 @@ class nsIWidget : public nsISupports {
      * @param aRect on return it holds the  x, y, width and height of this widget
      *
      */
-    NS_IMETHOD GetBounds(nsRect &aRect) = 0;
+    NS_IMETHOD GetBounds(nsIntRect &aRect) = 0;
 
 
     /**
@@ -599,7 +599,7 @@ class nsIWidget : public nsISupports {
      * @param aRect on return it holds the  x, y, width and height of this widget
      *
      */
-    NS_IMETHOD GetScreenBounds(nsRect &aRect) = 0;
+    NS_IMETHOD GetScreenBounds(nsIntRect &aRect) = 0;
 
 
     /**
@@ -609,7 +609,7 @@ class nsIWidget : public nsISupports {
      * @param aRect on return it holds the  x. y, width and height of the client area of this widget
      *
      */
-    NS_IMETHOD GetClientBounds(nsRect &aRect) = 0;
+    NS_IMETHOD GetClientBounds(nsIntRect &aRect) = 0;
 
     /**
      * Gets the width and height of the borders
@@ -753,7 +753,7 @@ class nsIWidget : public nsISupports {
      * @see #Update()
      */
 
-    NS_IMETHOD Invalidate(const nsRect & aRect, PRBool aIsSynchronous) = 0;
+    NS_IMETHOD Invalidate(const nsIntRect & aRect, PRBool aIsSynchronous) = 0;
 
     /**
      * Invalidate a specified region for a widget and repaints it.
@@ -810,7 +810,7 @@ class nsIWidget : public nsISupports {
      *
      */
 
-    NS_IMETHOD Scroll(PRInt32 aDx, PRInt32 aDy, nsRect *aClipRect) = 0;
+    NS_IMETHOD Scroll(PRInt32 aDx, PRInt32 aDy, nsIntRect *aClipRect) = 0;
 
     /**
      * Scroll the contents of the widget. 
@@ -834,7 +834,7 @@ class nsIWidget : public nsISupports {
      *
      */
 
-    NS_IMETHOD ScrollRect(nsRect &aSrcRect, PRInt32 aDx, PRInt32 aDy) = 0;
+    NS_IMETHOD ScrollRect(nsIntRect &aSrcRect, PRInt32 aDx, PRInt32 aDy) = 0;
 
     /** 
      * Internal methods
@@ -904,7 +904,7 @@ class nsIWidget : public nsISupports {
      * @param  aNewRect  screen coordinates stored in the x,y members
      */
 
-    NS_IMETHOD WidgetToScreen(const nsRect& aOldRect, nsRect& aNewRect) = 0;
+    NS_IMETHOD WidgetToScreen(const nsIntRect& aOldRect, nsIntRect& aNewRect) = 0;
 
     /**
      * Convert from screen coordinates to this widget's coordinates.
@@ -913,7 +913,7 @@ class nsIWidget : public nsISupports {
      * @param  aNewRect  widget's coordinates stored in the x,y members
      */
 
-    NS_IMETHOD ScreenToWidget(const nsRect& aOldRect, nsRect& aNewRect) = 0;
+    NS_IMETHOD ScreenToWidget(const nsIntRect& aOldRect, nsIntRect& aNewRect) = 0;
 
     /**
      * When adjustments are to made to a whole set of child widgets, call this
@@ -1158,7 +1158,7 @@ class nsIWidget : public nsISupports {
     virtual nsresult ForceUpdateNativeMenuAt(const nsAString& indexString) = 0;
 
     /*
-     * Force Input Method Editor to commit the uncommited input
+     * Force Input Method Editor to commit the uncommitted input
      */
     NS_IMETHOD ResetInputState()=0;
 

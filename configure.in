@@ -132,7 +132,7 @@ LIBGNOME_VERSION=2.0
 STARTUP_NOTIFICATION_VERSION=0.8
 DBUS_VERSION=0.60
 LCMS_VERSION=1.17
-SQLITE_VERSION=3.6.6.2
+SQLITE_VERSION=3.6.7
 LIBNOTIFY_VERSION=0.4
 
 MSMANIFEST_TOOL=
@@ -4381,7 +4381,6 @@ NECKO_COOKIES=1
 NECKO_DISK_CACHE=1
 NECKO_PROTOCOLS_DEFAULT="about data file ftp gopher http res viewsource"
 NECKO_SMALL_BUFFERS=
-JS_STATIC_BUILD=
 XPC_IDISPATCH_SUPPORT=
 
 
@@ -4474,7 +4473,6 @@ basic)
   NECKO_SMALL_BUFFERS=1
   NS_DISABLE_LOGGING=1
   NS_PRINTING=
-  JS_STATIC_BUILD=1
   ;;
 
 minimal)
@@ -4522,7 +4520,6 @@ minimal)
   NECKO_SMALL_BUFFERS=1
   NS_DISABLE_LOGGING=1
   NS_PRINTING=
-  JS_STATIC_BUILD=1
   ;;
 
 *)
@@ -5763,6 +5760,17 @@ if test -n "$MOZ_SVG"; then
 fi
 
 dnl ========================================================
+dnl SMIL
+dnl ========================================================
+MOZ_ARG_ENABLE_BOOL(smil,
+[  --enable-smil            Enable SMIL animation support],
+    MOZ_SMIL=1,
+    MOZ_SMIL= )
+if test -n "$MOZ_SMIL"; then
+  AC_DEFINE(MOZ_SMIL)
+fi
+
+dnl ========================================================
 dnl Installer
 dnl ========================================================
 case "$target_os" in
@@ -6544,6 +6552,17 @@ if test -n "$MOZ_VTUNE"; then
 fi
 
 dnl ========================================================
+dnl Zealous JavaScript GC
+dnl ========================================================
+MOZ_ARG_ENABLE_BOOL(gczeal,
+[  --enable-gczeal          Enable zealous JavaScript GCing],
+    JS_GC_ZEAL=1,
+    JS_GC_ZEAL= )
+if test -n "$JS_GC_ZEAL"; then
+    AC_DEFINE(JS_GC_ZEAL)
+fi
+
+dnl ========================================================
 dnl = Enable static checking using gcc-dehydra
 dnl ========================================================
 
@@ -7208,25 +7227,6 @@ else
 fi
 
 dnl ========================================================
-dnl = Force JS to be a static lib
-dnl ========================================================
-MOZ_ARG_ENABLE_BOOL(js-static-build,
-[  --enable-js-static-build  Force js to be a static lib],
-    JS_STATIC_BUILD=1,
-    JS_STATIC_BUILD= )
-
-AC_SUBST(JS_STATIC_BUILD)
-        
-if test -n "$JS_STATIC_BUILD"; then
-    AC_DEFINE(EXPORT_JS_API)
-
-if test -z "$BUILD_STATIC_LIBS"; then
-    AC_MSG_ERROR([--enable-js-static-build is only compatible with --enable-static])
-fi
-
-fi
-
-dnl ========================================================
 dnl =
 dnl = Standalone module options
 dnl = 
@@ -7818,6 +7818,7 @@ AC_SUBST(MOZ_XTF)
 AC_SUBST(MOZ_NO_INSPECTOR_APIS)
 AC_SUBST(MOZ_PREF_EXTENSIONS)
 AC_SUBST(MOZ_SVG)
+AC_SUBST(MOZ_SMIL)
 AC_SUBST(MOZ_XSLT_STANDALONE)
 AC_SUBST(MOZ_JS_LIBS)
 AC_SUBST(MOZ_PSM)

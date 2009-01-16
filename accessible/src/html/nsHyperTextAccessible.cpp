@@ -159,7 +159,10 @@ NS_IMETHODIMP nsHyperTextAccessible::GetRole(PRUint32 *aRole)
   }
   else {
     nsIFrame *frame = GetFrame();
-    if (frame && frame->GetType() == nsAccessibilityAtoms::blockFrame) {
+    if (frame && frame->GetType() == nsAccessibilityAtoms::blockFrame &&
+        frame->GetContent()->Tag() != nsAccessibilityAtoms::input) {
+      // An html:input @type="file" is the only input that is exposed as a
+      // blockframe. It must be exposed as ROLE_TEXT_CONTAINER for JAWS.
       *aRole = nsIAccessibleRole::ROLE_PARAGRAPH;
     }
     else {
@@ -291,13 +294,13 @@ nsIntRect nsHyperTextAccessible::GetBoundsForString(nsIFrame *aFrame, PRUint32 a
     // Add the point where the string starts to the frameScreenRect
     nsPoint frameTextStartPoint;
     rv = frame->GetPointFromOffset(startContentOffset, &frameTextStartPoint);
-    NS_ENSURE_SUCCESS(rv, nsRect());   
+    NS_ENSURE_SUCCESS(rv, nsIntRect());
     frameScreenRect.x += context->AppUnitsToDevPixels(frameTextStartPoint.x);
 
     // Use the point for the end offset to calculate the width
     nsPoint frameTextEndPoint;
     rv = frame->GetPointFromOffset(startContentOffset + frameSubStringLength, &frameTextEndPoint);
-    NS_ENSURE_SUCCESS(rv, nsRect());   
+    NS_ENSURE_SUCCESS(rv, nsIntRect());
     frameScreenRect.width = context->AppUnitsToDevPixels(frameTextEndPoint.x - frameTextStartPoint.x);
 
     screenRect.UnionRect(frameScreenRect, screenRect);
@@ -1346,12 +1349,12 @@ nsHyperTextAccessible::GetOffsetAtPoint(PRInt32 aX, PRInt32 aY,
   if (!frameScreenRect.Contains(coords.x, coords.y)) {
     return NS_OK;   // Not found, will return -1
   }
-  nsPoint pointInHyperText(coords.x - frameScreenRect.x,
+  nsIntPoint pxInHyperText(coords.x - frameScreenRect.x,
                            coords.y - frameScreenRect.y);
   nsPresContext *context = GetPresContext();
   NS_ENSURE_TRUE(context, NS_ERROR_FAILURE);
-  pointInHyperText.x = context->DevPixelsToAppUnits(pointInHyperText.x);
-  pointInHyperText.y = context->DevPixelsToAppUnits(pointInHyperText.y);
+  nsPoint pointInHyperText(context->DevPixelsToAppUnits(pxInHyperText.x),
+                           context->DevPixelsToAppUnits(pxInHyperText.y));
 
   // Go through the frames to check if each one has the point.
   // When one does, add up the character offsets until we have a match
@@ -2044,8 +2047,7 @@ nsHyperTextAccessible::ScrollSubstringToPoint(PRInt32 aStartIndex,
   PRBool initialScrolled = PR_FALSE;
   nsIFrame *parentFrame = frame;
   while ((parentFrame = parentFrame->GetParent())) {
-    nsIScrollableFrame *scrollableFrame = nsnull;
-    CallQueryInterface(parentFrame, &scrollableFrame);
+    nsIScrollableFrame *scrollableFrame = do_QueryFrame(parentFrame);
     if (scrollableFrame) {
       if (!initialScrolled) {
         // Scroll substring to the given point. Turn the point into percents
@@ -2097,7 +2099,7 @@ nsresult nsHyperTextAccessible::ContentToRenderedOffset(nsIFrame *aFrame, PRInt3
 
   gfxSkipChars skipChars;
   gfxSkipCharsIterator iter;
-  // Only get info up to original ofset, we know that will be larger than skipped offset
+  // Only get info up to original offset, we know that will be larger than skipped offset
   nsresult rv = aFrame->GetRenderedText(nsnull, &skipChars, &iter, 0, aContentOffset);
   NS_ENSURE_SUCCESS(rv, rv);
 

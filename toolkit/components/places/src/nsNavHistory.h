@@ -349,25 +349,20 @@ public:
 
   // Import-friendly version of AddVisit.
   // This method adds a page to history along with a single last visit.
-  // It is an error to call this method if aURI might already be in history.
-  // The given aVisitCount should include the given last-visit date.
   // aLastVisitDate can be -1 if there is no last visit date to record.
   //
-  // NOTE: This will *replace* existing records for a given URI, creating a
-  // new place id, and breaking all existing relationships with for that
-  // id, eg: bookmarks, annotations, tags, etc. This is only for use by
-  // the import of history.dat on first-run of Places, which currently occurs
-  // if no places.sqlite file previously exists.
-  nsresult AddPageWithVisit(nsIURI *aURI,
-                            const nsString &aTitle,
-                            PRBool aHidden, PRBool aTyped,
-                            PRInt32 aVisitCount,
-                            PRInt32 aLastVisitTransition,
-                            PRTime aLastVisitDate);
+  // This is only for use by the import of history.dat on first-run of Places,
+  // which currently occurs if no places.sqlite file previously exists.
+  nsresult AddPageWithVisits(nsIURI *aURI,
+                             const nsString &aTitle,
+                             PRInt32 aVisitCount,
+                             PRInt32 aTransitionType,
+                             PRTime aFirstVisitDate,
+                             PRTime aLastVisitDate);
 
   // Checks the database for any duplicate URLs.  If any are found,
   // all but the first are removed.  This must be called after using
-  // AddPageWithVisit, to ensure that the database is in a consistent state.
+  // AddPageWithVisits, to ensure that the database is in a consistent state.
   nsresult RemoveDuplicateURIs();
 
   // sets the schema version in the database to match SCHEMA_VERSION

@@ -67,6 +67,7 @@ _TEST_FILES += \
 		test_ended1.html \
 		test_ended2.html \
 		test_onloadedmetadata.html \
+		test_progress3.html \
 		test_seek1.html \
 		test_seek3.html \
 		test_seek4.html \
@@ -82,6 +83,7 @@ _TEST_FILES += \
 		bug461281.ogg \
 		seek.ogg \
 		$(NULL)
+#		test_progress1.html    disabled while we figure out the random failure
 else
 _TEST_FILES += \
 		test_can_play_type_no_ogg.html \
@@ -90,10 +92,13 @@ endif
 
 ifdef MOZ_WAVE
 _TEST_FILES += \
+		big.wav \
 		test_bug463162.xhtml \
 		test_can_play_type_wave.html \
 		test_wav_8bit.html \
 		test_wav_ended1.html \
+		test_progress2.html \
+		test_progress4.html \
 		test_wav_seek3.html \
 		test_wav_seek4.html \
 		test_wav_seek5.html \

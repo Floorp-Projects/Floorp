@@ -54,6 +54,11 @@
 #include "nsWeakReference.h"
 #include "nsICSSStyleRule.h"
 
+#ifdef MOZ_SMIL
+#include "nsISMILAttr.h"
+#include "nsSMILAnimationController.h"
+#endif
+
 class nsSVGSVGElement;
 class nsSVGLength2;
 class nsSVGNumber2;
@@ -142,9 +147,15 @@ public:
   virtual void DidChangePreserveAspectRatio(PRBool aDoSetAttr);
   virtual void DidChangeString(PRUint8 aAttrEnum, PRBool aDoSetAttr);
 
+  void DidAnimateLength(PRUint8 aAttrEnum);
+
   void GetAnimatedLengthValues(float *aFirst, ...);
   void GetAnimatedNumberValues(float *aFirst, ...);
   void GetAnimatedIntegerValues(PRInt32 *aFirst, ...);
+
+#ifdef MOZ_SMIL
+  virtual nsISMILAttr* GetAnimatedAttr(const nsIAtom* aName);
+#endif
 
   virtual void RecompileScriptEventListeners();
 
@@ -155,6 +166,9 @@ protected:
                                 const nsAString* aValue, PRBool aNotify);
   virtual PRBool ParseAttribute(PRInt32 aNamespaceID, nsIAtom* aAttribute,
                                 const nsAString& aValue, nsAttrValue& aResult);
+  static nsresult ReportAttributeParseFailure(nsIDocument* aDocument,
+                                              nsIAtom* aAttribute,
+                                              const nsAString& aValue);
 
   // Hooks for subclasses
   virtual PRBool IsEventName(nsIAtom* aName);
@@ -328,10 +342,6 @@ private:
   nsresult
   ParseIntegerOptionalInteger(const nsAString& aValue,
                               PRUint32 aIndex1, PRUint32 aIndex2);
-
-  static nsresult ReportAttributeParseFailure(nsIDocument* aDocument,
-                                              nsIAtom* aAttribute,
-                                              const nsAString& aValue);
 
   void ResetOldStyleBaseType(nsISVGValue *svg_value);
 

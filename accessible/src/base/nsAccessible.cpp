@@ -1337,7 +1337,7 @@ NS_IMETHODIMP nsAccessible::GetBounds(PRInt32 *x, PRInt32 *y, PRInt32 *width, PR
 
   // We have the union of the rectangle, now we need to put it in absolute screen coords
 
-  nsRect orgRectPixels = aBoundingFrame->GetScreenRectExternal();
+  nsIntRect orgRectPixels = aBoundingFrame->GetScreenRectExternal();
   *x += orgRectPixels.x;
   *y += orgRectPixels.y;
 
@@ -1902,9 +1902,9 @@ NS_IMETHODIMP nsAccessible::GetFinalRole(PRUint32 *aRole)
     if (*aRole == nsIAccessibleRole::ROLE_PUSHBUTTON) {
       nsCOMPtr<nsIContent> content = do_QueryInterface(mDOMNode);
       if (content) {
-        if (content->HasAttr(kNameSpaceID_None, nsAccessibilityAtoms::aria_pressed)) {
-          // For aria-pressed="false" or aria-pressed="true"
-          // For simplicity, any pressed attribute indicates it's a toggle button
+        if (nsAccUtils::HasDefinedARIAToken(content, nsAccessibilityAtoms::aria_pressed)) {
+          // For simplicity, any existing pressed attribute except "", or "undefined"
+          // indicates a toggle
           *aRole = nsIAccessibleRole::ROLE_TOGGLE_BUTTON;
         }
         else if (content->AttrValueIs(kNameSpaceID_None, nsAccessibilityAtoms::aria_haspopup,
@@ -2181,6 +2181,17 @@ PRBool nsAccessible::MappedAttrState(nsIContent *aContent, PRUint32 *aStateInOut
     return PR_FALSE;  // Stop looking -- no more states
   }
 
+  // We only have attribute state mappings for NMTOKEN (and boolean) based
+  // ARIA attributes. According to spec, a value of "undefined" is to be
+  // treated equivalent to "", or the absence of the attribute. We bail out
+  // for this case here.
+  // Note: If this method happens to be called with a non-token based
+  // attribute, for example: aria-label="" or aria-label="undefined", we will
+  // bail out and not explore a state mapping, which is safe.
+  if (!nsAccUtils::HasDefinedARIAToken(aContent, *aStateMapEntry->attributeName)) {
+    return PR_TRUE;
+  }
+  
   nsAutoString attribValue;
   if (aContent->GetAttr(kNameSpaceID_None, *aStateMapEntry->attributeName, attribValue)) {
     if (aStateMapEntry->attributeValue == kBoolState) {
@@ -2774,8 +2785,7 @@ NS_IMETHODIMP nsAccessible::GetAccessibleRelated(PRUint32 aRelationType, nsIAcce
       if (frame) {
         nsIView *view = frame->GetViewExternal();
         if (view) {
-          nsIScrollableFrame *scrollFrame = nsnull;
-          CallQueryInterface(frame, &scrollFrame);
+          nsIScrollableFrame *scrollFrame = do_QueryFrame(frame);
           if (scrollFrame || view->GetWidget()) {
             return GetParent(aRelated);
           }

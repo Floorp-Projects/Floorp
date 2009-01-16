@@ -87,8 +87,12 @@
 #include "nsIDOMSVGAnimTransformList.h"
 #include "nsIDOMSVGAnimatedRect.h"
 #include "nsSVGRect.h"
+#include "nsIFrame.h"
 #include "prdtoa.h"
 #include <stdarg.h>
+#ifdef MOZ_SMIL
+#include "nsIDOMSVGTransformable.h"
+#endif // MOZ_SMIL
 
 nsSVGEnumMapping nsSVGElement::sSVGUnitTypesMap[] = {
   {&nsGkAtoms::userSpaceOnUse, nsIDOMSVGUnitTypes::SVG_UNIT_TYPE_USERSPACEONUSE},
@@ -1212,6 +1216,19 @@ nsSVGElement::DidChangeLength(PRUint8 aAttrEnum, PRBool aDoSetAttr)
 }
 
 void
+nsSVGElement::DidAnimateLength(PRUint8 aAttrEnum)
+{
+  nsIFrame* frame = GetPrimaryFrame();
+
+  if (frame) {
+    LengthAttributesInfo info = GetLengthInfo();
+    frame->AttributeChanged(kNameSpaceID_None,
+                            *info.mLengthInfo[aAttrEnum].mName,
+                            nsIDOMMutationEvent::MODIFICATION);
+  }
+}
+
+void
 nsSVGElement::GetAnimatedLengthValues(float *aFirst, ...)
 {
   LengthAttributesInfo info = GetLengthInfo();
@@ -1620,3 +1637,19 @@ nsSVGElement::RecompileScriptEventListeners()
     AddScriptEventListener(GetEventNameForAttr(attr), value, PR_TRUE);
   }
 }
+
+#ifdef MOZ_SMIL
+nsISMILAttr*
+nsSVGElement::GetAnimatedAttr(const nsIAtom* aName)
+{
+  // Lengths:
+  LengthAttributesInfo info = GetLengthInfo();
+  for (PRUint32 i = 0; i < info.mLengthCount; i++) {
+    if (aName == *info.mLengthInfo[i].mName) {
+      return info.mLengths[i].ToSMILAttr(this);
+    }
+  }
+
+  return nsnull;
+}
+#endif // MOZ_SMIL

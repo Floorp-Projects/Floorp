@@ -38,24 +38,17 @@
 #ifndef nsIRadioControlFrame_h___
 #define nsIRadioControlFrame_h___
 
-#include "nsISupports.h"
+#include "nsQueryFrame.h"
 class nsStyleContext;
-
-// IID for the nsIRadioControlFrame class
-// {06450E00-24D9-11d3-966B-00105A1B1B76}
-#define NS_IRADIOCONTROLFRAME_IID    \
-{ 0x6450e00, 0x24d9, 0x11d3,  \
-  { 0x96, 0x6b, 0x0, 0x10, 0x5a, 0x1b, 0x1b, 0x76 } }
-
 
 /** 
   * nsIRadioControlFrame is the common interface radio buttons.
   * @see nsFormControlFrame and its base classes for more info
   */
-class nsIRadioControlFrame : public nsISupports {
-
+class nsIRadioControlFrame
+{
 public:
-  NS_DECLARE_STATIC_IID_ACCESSOR(NS_IRADIOCONTROLFRAME_IID)
+  NS_DECLARE_FRAME_ACCESSOR(nsIRadioControlFrame)
 
   /**
    * Sets the Pseudo Style Contexts for the Radio button
@@ -68,8 +61,6 @@ public:
     */
    NS_IMETHOD OnChecked(nsPresContext* aPresContext, PRBool aChecked) = 0;
 };
-
-NS_DEFINE_STATIC_IID_ACCESSOR(nsIRadioControlFrame, NS_IRADIOCONTROLFRAME_IID)
 
 #endif
 

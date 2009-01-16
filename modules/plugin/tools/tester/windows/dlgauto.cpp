@@ -52,7 +52,7 @@ static CScripter * pScripter = NULL;
 
 static void onCommand(HWND hWnd, int id, HWND hWndCtl, UINT codeNotify)
 {
-  CPlugin * pPlugin = (CPlugin *)GetWindowLong(hWnd, DWL_USER);
+  CPlugin * pPlugin = (CPlugin *)GetWindowLongPtr(hWnd, DWLP_USER);
   if(!pPlugin)
     return;
 
@@ -197,7 +197,7 @@ static void onCommand(HWND hWnd, int id, HWND hWndCtl, UINT codeNotify)
 static BOOL onInitDialog(HWND hWnd, HWND hWndFocus, LPARAM lParam)
 {
   CPlugin * pPlugin = (CPlugin *)lParam;
-  SetWindowLong(hWnd, DWL_USER, (long)pPlugin);
+  SetWindowLongPtr(hWnd, DWLP_USER, (LONG_PTR)pPlugin);
 
   int iTopMargin = 188;
   SetWindowPos(hWnd, NULL, 0,iTopMargin, 0,0, SWP_NOZORDER | SWP_NOSIZE);

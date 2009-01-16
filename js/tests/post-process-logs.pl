@@ -69,6 +69,7 @@ local ($test_id,
        $test_type, 
        $tmp_test_type,
        $test_description, 
+       $test_jsoptions,
        @messages,
        $test_processortype, 
        $test_kernel, 
@@ -83,6 +84,8 @@ local $test_memory = 0;
 local $test_cpuspeed = 0;
 local %test_reported = ();
 local $test_repo = 'CVS';
+
+$test_jsoptions = 'none';
 
 while ($file = shift @ARGV)
 {
@@ -140,9 +143,9 @@ while ($file = shift @ARGV)
             dbg "\nINPUT: $_";
         }
 
-        last if ( $_ =~ /^arguments:/);
+        last if ( $_ =~ /^include:/);
 
-        if (($envval) = $_ =~ /^environment: TEST_MOZILLA_HG=http:\/\/hg.mozilla.org\/(.*)/ )
+        if (($envval) = $_ =~ /^environment: TEST_MOZILLA_HG=http:\/\/hg.mozilla.org.*\/([^\/]+)/ )
         {
             $test_repo = $envval;
         }
@@ -161,6 +164,20 @@ while ($file = shift @ARGV)
         elsif (($envval) = $_ =~ /^environment: OSID=(.*)/ )
         {
             $test_os = $envval;
+        }
+
+        if ($_ =~ /^arguments: javascriptoptions/)
+        {
+            my ($o, @s, $j);
+
+            ($o) = $_ =~ /^arguments: javascriptoptions=(.*)/;
+            $o =~ s/(-\w) (\w)/$1$2/g; 
+            @s = sort split / /, $o; 
+            $j = join(" ", @s); 
+            $j =~ s/(-\w)(\w)/$1 $2/g; 
+
+            $test_jsoptions = $j || "none";
+            dbg "javascriptoptions: $test_jsoptions";
         }
     }
 
@@ -579,6 +596,7 @@ sub outputrecord
         "TEST_MEMORY=$test_memory, " .
         "TEST_CPUSPEED=$test_cpuspeed, " . 
         "TEST_TIMEZONE=$test_timezone, " . 
+        "TEST_OPTIONS=$test_jsoptions, " .
         "TEST_RESULT=$test_result, " .
         "TEST_EXITSTATUS=$test_exit_status, " .
         "TEST_DESCRIPTION=$test_description, " .

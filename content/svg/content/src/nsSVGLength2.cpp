@@ -42,6 +42,10 @@
 #include "nsSVGSVGElement.h"
 #include "nsIFrame.h"
 #include "nsSVGIntegrationUtils.h"
+#ifdef MOZ_SMIL
+#include "nsSMILValue.h"
+#include "nsSMILFloatType.h"
+#endif // MOZ_SMIL
 
 NS_SVG_VAL_IMPL_CYCLE_COLLECTION(nsSVGLength2::DOMBaseVal, mSVGElement)
 
@@ -408,6 +412,13 @@ nsSVGLength2::SetBaseValue(float aValue, nsSVGElement *aSVGElement)
   aSVGElement->DidChangeLength(mAttrEnum, PR_TRUE);
 }
 
+void
+nsSVGLength2::SetAnimValue(float aValue, nsSVGElement *aSVGElement)
+{
+  mAnimVal = aValue * GetUnitScaleFactor(aSVGElement);
+  aSVGElement->DidAnimateLength(mAttrEnum);
+}
+
 nsresult
 nsSVGLength2::ToDOMAnimatedLength(nsIDOMSVGAnimatedLength **aResult,
                                   nsSVGElement *aSVGElement)
@@ -419,3 +430,44 @@ nsSVGLength2::ToDOMAnimatedLength(nsIDOMSVGAnimatedLength **aResult,
   NS_ADDREF(*aResult);
   return NS_OK;
 }
+
+#ifdef MOZ_SMIL
+nsISMILAttr*
+nsSVGLength2::ToSMILAttr(nsSVGElement *aSVGElement)
+{
+  return new SMILLength(this, aSVGElement);
+}
+
+nsresult
+nsSVGLength2::SMILLength::ValueFromString(const nsAString& aStr,
+                                 const nsISMILAnimationElement* /*aSrcElement*/,
+                                 nsSMILValue& aValue) const
+{
+  nsSVGLength2 tmp;
+  tmp.SetBaseValueString(aStr, mSVGElement, PR_FALSE);
+
+  nsSMILValue val(&nsSMILFloatType::sSingleton);
+  val.mU.mDouble = tmp.GetBaseValue(mSVGElement);
+  aValue = val;
+  return NS_OK;
+}
+
+nsSMILValue
+nsSVGLength2::SMILLength::GetBaseValue() const
+{
+  nsSMILValue val(&nsSMILFloatType::sSingleton);
+  val.mU.mDouble = mVal->GetBaseValue(mSVGElement);
+  return val;
+}
+
+nsresult
+nsSVGLength2::SMILLength::SetAnimValue(const nsSMILValue& aValue)
+{
+  NS_ASSERTION(aValue.mType == &nsSMILFloatType::sSingleton,
+    "Unexpected type to assign animated value");
+  if (aValue.mType == &nsSMILFloatType::sSingleton) {
+    mVal->SetAnimValue((float)aValue.mU.mDouble, mSVGElement);
+  }
+  return NS_OK;
+}
+#endif // MOZ_SMIL

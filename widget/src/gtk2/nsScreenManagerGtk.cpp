@@ -264,7 +264,7 @@ nsScreenManagerGtk :: Init()
 // Returns the screen that contains the rectangle. If the rect overlaps
 // multiple screens, it picks the screen with the greatest area of intersection.
 //
-// The coordinates are in pixels (not twips) and in screen coordinates.
+// The coordinates are in pixels (not app units) and in screen coordinates.
 //
 NS_IMETHODIMP
 nsScreenManagerGtk :: ScreenForRect ( PRInt32 aX, PRInt32 aY,
@@ -286,13 +286,13 @@ nsScreenManagerGtk :: ScreenForRect ( PRInt32 aX, PRInt32 aY,
     // walk the list of screens and find the one that has the most
     // surface area.
     PRUint32 area = 0;
-    nsRect   windowRect(aX, aY, aWidth, aHeight);
+    nsIntRect windowRect(aX, aY, aWidth, aHeight);
     for (PRInt32 i = 0, i_end = mCachedScreenArray.Count(); i < i_end; ++i) {
       PRInt32  x, y, width, height;
       x = y = width = height = 0;
       mCachedScreenArray[i]->GetRect(&x, &y, &width, &height);
       // calculate the surface area
-      nsRect screenRect(x, y, width, height);
+      nsIntRect screenRect(x, y, width, height);
       screenRect.IntersectRect(screenRect, windowRect);
       PRUint32 tempArea = screenRect.width * screenRect.height;
       if (tempArea >= area) {

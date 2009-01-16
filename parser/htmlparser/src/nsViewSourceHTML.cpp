@@ -1046,13 +1046,19 @@ void CViewSourceHTML::WriteHrefAttribute(nsTokenAllocator* allocator,
   CreateViewSourceURL(hrefProper, viewSourceUrl);
 
   // Construct the HTML that will represent the HREF.
-  NS_NAMED_LITERAL_STRING(HREF, "href");
-  if (fullPrecedingText.Length() > 0) {
-    WriteTextInSpan(fullPrecedingText, allocator, EmptyString(), EmptyString());
-  }
-  WriteTextInAnchor(hrefProper, allocator, HREF, viewSourceUrl);
-  if (succeedingText.Length() > 0) {
-    WriteTextInSpan(succeedingText, allocator, EmptyString(), EmptyString());
+  if (viewSourceUrl.IsEmpty()) {
+    nsAutoString equalsHref(kEqual);
+    equalsHref.Append(href);
+    WriteTextInSpan(equalsHref, allocator, EmptyString(), EmptyString());
+  } else {
+    NS_NAMED_LITERAL_STRING(HREF, "href");
+    if (fullPrecedingText.Length() > 0) {
+      WriteTextInSpan(fullPrecedingText, allocator, EmptyString(), EmptyString());
+    }
+    WriteTextInAnchor(hrefProper, allocator, HREF, viewSourceUrl);
+    if (succeedingText.Length() > 0) {
+      WriteTextInSpan(succeedingText, allocator, EmptyString(), EmptyString());
+    }
   }
 }
 
@@ -1062,9 +1068,7 @@ nsresult CViewSourceHTML::CreateViewSourceURL(const nsAString& linkUrl,
   nsCOMPtr<nsIURI> hrefURI;
   nsresult rv;
 
-  // Default the view source URL to the empty string in case we fail.  Links
-  // with empty HREFs are essentially non-functional, at least as of Firefox
-  // 3.03.  This is preferrable behavior to links that look good but then 404.
+  // Default the view source URL to the empty string in case we fail.
   viewSourceUrl.Truncate();
   
   // Get the character set.
@@ -1084,8 +1088,29 @@ nsresult CViewSourceHTML::CreateViewSourceURL(const nsAString& linkUrl,
   nsCString absoluteLinkUrl;
   hrefURI->GetSpec(absoluteLinkUrl);
 
-  // Prepend "view-source:" onto the absolute URL and store it in the out param.
-  viewSourceUrl.AssignLiteral("view-source:");
+  // URLs that execute script (e.g. "javascript:" URLs) should just be
+  // ignored.  There's nothing reasonable we can do with them, and allowing
+  // them to execute in the context of the view-source window presents a
+  // security risk.  Just return the empty string in this case.
+  PRBool openingExecutesScript = PR_FALSE;
+  rv = NS_URIChainHasFlags(hrefURI, nsIProtocolHandler::URI_OPENING_EXECUTES_SCRIPT,
+                           &openingExecutesScript);
+  NS_ENSURE_SUCCESS(rv, NS_OK); // if there's an error, return the empty string
+  if (openingExecutesScript) {
+    return NS_OK;
+  }
+
+  // URLs that return data (e.g. "http:" URLs) should be prefixed with
+  // "view-source:".  URLs that don't return data should just be returned
+  // undecorated.
+  PRBool doesNotReturnData = PR_FALSE;
+  rv = NS_URIChainHasFlags(hrefURI, nsIProtocolHandler::URI_DOES_NOT_RETURN_DATA,
+                           &doesNotReturnData);
+  NS_ENSURE_SUCCESS(rv, NS_OK);  // if there's an error, return the empty string
+  if (!doesNotReturnData) {
+    viewSourceUrl.AssignLiteral("view-source:");    
+  }
+
   viewSourceUrl.AppendWithConversion(absoluteLinkUrl);
 
   return NS_OK;

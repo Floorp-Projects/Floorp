@@ -40,16 +40,12 @@
 #ifndef nsICanvasFrame_h__
 #define nsICanvasFrame_h__
 
-#include "nsISupports.h"
+#include "nsQueryFrame.h"
 
-// IID for the nsICanvasFrame interface
-#define NS_ICANVASFRAME_IID       \
-{ 0x9df7db77, 0x49a2, 0x11d5, {0x97, 0x92, 0x0, 0x60, 0xb0, 0xfb, 0x99, 0x56} }
-
-class nsICanvasFrame : public nsISupports
+class nsICanvasFrame
 {
 public:
-  NS_DECLARE_STATIC_IID_ACCESSOR(NS_ICANVASFRAME_IID)
+  NS_DECLARE_FRAME_ACCESSOR(nsICanvasFrame)
 
   /** SetHasFocus tells the CanvasFrame to draw with focus ring
    *  @param aHasFocus PR_TRUE to show focus ring, PR_FALSE to hide it
@@ -57,8 +53,6 @@ public:
   NS_IMETHOD SetHasFocus(PRBool aHasFocus) = 0;
 
 };
-
-NS_DEFINE_STATIC_IID_ACCESSOR(nsICanvasFrame, NS_ICANVASFRAME_IID)
 
 #endif  // nsICanvasFrame_h__
 

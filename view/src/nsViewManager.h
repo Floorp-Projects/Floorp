@@ -193,7 +193,7 @@ public:
    *                        otherwise it returns an enum indicating why not
    */
   NS_IMETHOD GetRectVisibility(nsIView *aView, const nsRect &aRect, 
-                               PRUint16 aMinTwips, 
+                               nscoord aMinTwips,
                                nsRectVisibility *aRectVisibility);
 
   NS_IMETHOD SynthesizeMouseMove(PRBool aFromScroll);
@@ -291,7 +291,7 @@ private:
    * system of the widget attached to aWidgetView, which should be an ancestor
    * of aView.
    */
-  void ViewToWidget(nsView *aView, nsView* aWidgetView, nsRect &aRect) const;
+  nsIntRect ViewToWidget(nsView *aView, nsView* aWidgetView, const nsRect &aRect) const;
 
   /**
    * Transforms a rectangle from specified view's coordinate system to
@@ -428,7 +428,7 @@ private:
   nsIViewObserver   *mObserver;
   nsIScrollableView *mRootScrollable;
   nscolor           mDefaultBackgroundColor;
-  nsPoint           mMouseLocation; // device units, relative to mRootView
+  nsIntPoint        mMouseLocation; // device units, relative to mRootView
 
   // The size for a resize that we delayed until the root view becomes
   // visible again.
