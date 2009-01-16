@@ -328,7 +328,7 @@ HistoryStore.prototype = {
 
   changeItemID: function HStore_changeItemID(oldID, newID) {
     try {
-      let uri = Utils.makeURI(this._findURLByGUID(oldID).uri);
+      let uri = Utils.makeURI(this._findURLByGUID(oldID).url);
       this._anno.setPageAnnotation(uri, "weave/guid", newID, 0, 0);
     } catch (e) {
       this._log.debug("Could not change item ID: " + e);
