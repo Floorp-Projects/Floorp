@@ -77,11 +77,8 @@ def installDbFiles(path, dest):
 
 
 def runUtil(util, args, inputdata = None):
-  if inputdata:
-    proc = automation.Process([util] + args, env = automation.environment(), stdin = automation.PIPE)
-    proc.communicate(inputdata)
-    return proc.returncode
-  return automation.Process([util] + args, env = automation.environment()).wait()
+  proc = automation.Process(util, args, automation.environment(), inputdata)
+  return proc.wait()
 
 
 def createRandomFile(randomFile):
