@@ -980,7 +980,7 @@ PK11_UnwrapPrivKey(PK11SlotInfo *slot, PK11SymKey *wrappingKey,
     }
 
     if (wrappingKey->slot != slot) {
-	newKey = pk11_CopyToSlot(slot,wrapType,CKA_UNWRAP,wrappingKey);
+	newKey = pk11_CopyToSlot(slot,wrapType,CKA_WRAP,wrappingKey);
     } else {
 	newKey = PK11_ReferenceSymKey(wrappingKey);
     }

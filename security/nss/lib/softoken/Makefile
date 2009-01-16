@@ -70,9 +70,7 @@ include $(CORE_DEPTH)/coreconf/rules.mk
 # (6) Execute "component" rules. (OPTIONAL)                           #
 #######################################################################
 
-ifdef NSS_DISABLE_DBM
-DIRS= dummy
-endif
+
 
 #######################################################################
 # (7) Execute "local" rules. (OPTIONAL).                              #

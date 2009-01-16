@@ -47,8 +47,9 @@ CK_RV sftkdb_FindObjects(SFTKDBHandle *sdb, SDBFind *find,
 CK_RV sftkdb_FindObjectsFinal(SFTKDBHandle *sdb, SDBFind *find);
 CK_RV sftkdb_GetAttributeValue(SFTKDBHandle *handle,
 	 CK_OBJECT_HANDLE object_id, CK_ATTRIBUTE *template, CK_ULONG count);
-CK_RV sftkdb_SetAttributeValue(SFTKDBHandle *handle, SFTKObject *object, 
-	 		const CK_ATTRIBUTE *template, CK_ULONG count);
+CK_RV sftkdb_SetAttributeValue(SFTKDBHandle *handle, 
+	 CK_OBJECT_HANDLE object_id, const CK_ATTRIBUTE *template, 
+	 CK_ULONG count);
 CK_RV sftkdb_DestroyObject(SFTKDBHandle *handle, CK_OBJECT_HANDLE object_id);
 CK_RV sftkdb_closeDB(SFTKDBHandle *handle);
 

@@ -39,7 +39,7 @@
  * Implementation of OCSP services, for both client and server.
  * (XXX, really, mostly just for client right now, but intended to do both.)
  *
- * $Id: ocsp.c,v 1.56 2008/10/31 23:02:37 alexei.volkov.bugs%sun.com Exp $
+ * $Id: ocsp.c,v 1.55 2008/10/06 23:37:55 julien.pierre.boogz%sun.com Exp $
  */
 
 #include "prerror.h"
@@ -4473,8 +4473,7 @@ loser:
 
 /*
  * Figure out where we should go to find out the status of the given cert
- * via OCSP.  If allowed to use a default responder uri and a default
- * responder is set up, then that is our answer.
+ * via OCSP.  If a default responder is set up, that is our answer.
  * If not, see if the certificate has an Authority Information Access (AIA)
  * extension for OCSP, and return the value of that.  Otherwise return NULL.
  * We also let our caller know whether or not the responder chosen was
@@ -4486,13 +4485,11 @@ loser:
  */
 char *
 ocsp_GetResponderLocation(CERTCertDBHandle *handle, CERTCertificate *cert,
-			  PRBool canUseDefault, PRBool *isDefault)
+			  PRBool *isDefault)
 {
-    ocspCheckingContext *ocspcx = NULL;
+    ocspCheckingContext *ocspcx;
 
-    if (canUseDefault) {
-        ocspcx = ocsp_GetCheckingContext(handle);
-    }
+    ocspcx = ocsp_GetCheckingContext(handle);
     if (ocspcx != NULL && ocspcx->useDefaultResponder) {
 	/*
 	 * A default responder wins out, if specified.
@@ -4627,18 +4624,6 @@ ocsp_GetCachedOCSPResponseStatusIfFresh(CERTOCSPCertID *certID,
     return rv;
 }
 
-PRBool
-ocsp_FetchingFailureIsVerificationFailure()
-{
-    PRBool isFailure;
-
-    PR_EnterMonitor(OCSP_Global.monitor);
-    isFailure =
-        OCSP_Global.ocspFailureMode == ocspMode_FailureIsVerificationFailure;
-    PR_ExitMonitor(OCSP_Global.monitor);
-    return isFailure;
-}
-
 /*
  * FUNCTION: CERT_CheckOCSPStatus
  *   Checks the status of a certificate via OCSP.  Will only check status for
@@ -4716,10 +4701,12 @@ CERT_CheckOCSPStatus(CERTCertDBHandle *handle, CERTCertificate *cert,
                                        &certIDWasConsumed, 
                                        &rvOcsp);
     if (rv != SECSuccess) {
-        /* we were unable to obtain ocsp status. Check if we should
-         * return cert status revoked. */
-        rvOcsp = ocsp_FetchingFailureIsVerificationFailure() ?
-            SECFailure : SECSuccess;
+        /* we were unable to obtain ocsp status */
+        PR_EnterMonitor(OCSP_Global.monitor);
+        rvOcsp = (OCSP_Global.ocspFailureMode 
+                  == ocspMode_FailureIsVerificationFailure)
+            ? SECFailure : SECSuccess;
+        PR_ExitMonitor(OCSP_Global.monitor);
     }
     if (!certIDWasConsumed) {
         CERT_DestroyOCSPCertID(certID);
@@ -4768,8 +4755,7 @@ ocsp_GetOCSPStatusFromNetwork(CERTCertDBHandle *handle,
      * a true failure that we unfortunately have to treat as an overall
      * failure here.
      */
-    location = ocsp_GetResponderLocation(handle, cert, PR_TRUE,
-                                         &locationIsDefault);
+    location = ocsp_GetResponderLocation(handle, cert, &locationIsDefault);
     if (location == NULL) {
        int err = PORT_GetError();
        if (err == SEC_ERROR_EXTENSION_NOT_FOUND ||

@@ -38,6 +38,7 @@ CORE_DEPTH = ../../..
 
 EXPORTS = \
 	secmod.h \
+	secmodt.h \
 	secpkcs5.h \
 	pk11func.h \
 	pk11pub.h \
@@ -48,6 +49,7 @@ EXPORTS = \
 
 PRIVATE_EXPORTS = \
 	secmodi.h \
+	pk11init.h \
 	dev3hack.h \
 	$(NULL)
 

@@ -556,9 +556,11 @@ pk11_loadPrivKeyWithFlags(PK11SlotInfo *slot,SECKEYPrivateKey *privKey,
 	{ CKA_CLASS, NULL, 0 },
 	{ CKA_KEY_TYPE, NULL, 0 },
 	{ CKA_ID, NULL, 0 },
-	/* RSA - the attributes below will be replaced for other 
-	 *       key types.
-	 */
+#ifdef notdef
+	{ CKA_LABEL, NULL, 0 },
+	{ CKA_SUBJECT, NULL, 0 },
+#endif
+	/* RSA */
 	{ CKA_MODULUS, NULL, 0 },
 	{ CKA_PRIVATE_EXPONENT, NULL, 0 },
 	{ CKA_PUBLIC_EXPONENT, NULL, 0 },
@@ -567,11 +569,6 @@ pk11_loadPrivKeyWithFlags(PK11SlotInfo *slot,SECKEYPrivateKey *privKey,
 	{ CKA_EXPONENT_1, NULL, 0 },
 	{ CKA_EXPONENT_2, NULL, 0 },
 	{ CKA_COEFFICIENT, NULL, 0 },
-	{ CKA_DECRYPT, NULL, 0 },
-	{ CKA_DERIVE, NULL, 0 },
-	{ CKA_SIGN, NULL, 0 },
-	{ CKA_SIGN_RECOVER, NULL, 0 },
-	{ CKA_UNWRAP, NULL, 0 },
 	/* reserve space for the attributes that may be
 	 * specified in attrFlags */
 	{ CKA_TOKEN, NULL, 0 },
@@ -623,19 +620,15 @@ pk11_loadPrivKeyWithFlags(PK11SlotInfo *slot,SECKEYPrivateKey *privKey,
 	ap->type = CKA_SUBPRIME; ap++; count++; extra_count++;
 	ap->type = CKA_BASE; ap++; count++; extra_count++;
 	ap->type = CKA_VALUE; ap++; count++; extra_count++;
-	ap->type = CKA_SIGN; ap++; count++; extra_count++;
 	break;
     case dhKey:
 	ap->type = CKA_PRIME; ap++; count++; extra_count++;
 	ap->type = CKA_BASE; ap++; count++; extra_count++;
 	ap->type = CKA_VALUE; ap++; count++; extra_count++;
-	ap->type = CKA_DERIVE; ap++; count++; extra_count++;
 	break;
     case ecKey:
 	ap->type = CKA_EC_PARAMS; ap++; count++; extra_count++;
 	ap->type = CKA_VALUE; ap++; count++; extra_count++;
-	ap->type = CKA_DERIVE; ap++; count++; extra_count++;
-	ap->type = CKA_SIGN; ap++; count++; extra_count++;
 	break;
      default:
 	count = 0;

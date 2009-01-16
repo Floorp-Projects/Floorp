@@ -107,7 +107,6 @@ pkix_List_Destroy(
         void *plContext)
 {
         PKIX_List *list = NULL;
-        PKIX_List *nextItem = NULL;
 
         PKIX_ENTER(LIST, "pkix_List_Destroy");
         PKIX_NULLCHECK_ONE(object);
@@ -120,11 +119,7 @@ pkix_List_Destroy(
 
         /* We have a valid list. DecRef its item and recurse on next */
         PKIX_DECREF(list->item);
-        while (nextItem = list->next) {
-            list->next = nextItem->next;
-            nextItem->next = NULL;
-            PKIX_DECREF(nextItem);
-        }      
+        PKIX_DECREF(list->next);
         list->immutable = PKIX_FALSE;
         list->length = 0;
         list->isHeader = PKIX_FALSE;
@@ -1277,10 +1272,9 @@ pkix_List_BubbleSort(
         }
 
         *pSortedList = sortedList;
-        sortedList = NULL;
+
 cleanup:
 
-        PKIX_DECREF(sortedList);
         PKIX_DECREF(leastObj);
         PKIX_DECREF(cmpObj);
 

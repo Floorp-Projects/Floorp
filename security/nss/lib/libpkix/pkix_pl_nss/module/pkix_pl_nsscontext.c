@@ -44,10 +44,6 @@
 
 #include "pkix_pl_nsscontext.h"
 
-#define PKIX_DEFAULT_MAX_RESPONSE_LENGTH               64 * 1024
-#define PKIX_DEFAULT_COMM_TIMEOUT_SECONDS              60
-
-
 /* --Public-NSSContext-Functions--------------------------- */
 
 /*
@@ -80,8 +76,6 @@ PKIX_PL_NssContext_Create(
         context->arena = arena;
         context->certificateUsage = (SECCertificateUsage)certificateUsage;
         context->wincx = wincx;
-        context->timeoutSeconds = PKIX_DEFAULT_COMM_TIMEOUT_SECONDS;
-        context->maxResponseLength = PKIX_DEFAULT_MAX_RESPONSE_LENGTH;
 
         *pNssContext = context;
 
@@ -254,49 +248,6 @@ pkix_pl_NssContext_SetWincx(
         PKIX_NULLCHECK_ONE(nssContext);
 
         nssContext->wincx = wincx;
-
-        PKIX_RETURN(CONTEXT);
-}
-
-/*
- * FUNCTION: pkix_pl_NssContext_SetTimeout
- * DESCRIPTION:
- *
- * Sets user defined socket timeout for the validation
- * session. Default is 60 seconds.
- *
- */
-PKIX_Error *
-PKIX_PL_NssContext_SetTimeout(PKIX_UInt32 timeout,
-                              PKIX_PL_NssContext *nssContext)
-{
-        void *plContext = NULL;
-
-        PKIX_ENTER(CONTEXT, "pkix_pl_NssContext_SetTimeout");
-        PKIX_NULLCHECK_ONE(nssContext);
-
-        nssContext->timeoutSeconds = timeout;
-
-        PKIX_RETURN(CONTEXT);
-}
-
-/*
- * FUNCTION: pkix_pl_NssContext_SetMaxResponseLen
- * DESCRIPTION:
- *
- * Sets user defined maximum transmission length of a message.
- *
- */
-PKIX_Error *
-PKIX_PL_NssContext_SetMaxResponseLen(PKIX_UInt32 len,
-                                     PKIX_PL_NssContext *nssContext)
-{
-        void *plContext = NULL;
-
-        PKIX_ENTER(CONTEXT, "pkix_pl_NssContext_SetMaxResponseLen");
-        PKIX_NULLCHECK_ONE(nssContext);
-
-        nssContext->maxResponseLength = len;
 
         PKIX_RETURN(CONTEXT);
 }

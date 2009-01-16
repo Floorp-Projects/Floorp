@@ -288,7 +288,6 @@ pkix_pl_OcspRequest_Create(
         PKIX_PL_OcspCertID *cid,
         PKIX_PL_Date *validity,
         PKIX_PL_Cert *signerCert,
-        PKIX_UInt32 methodFlags,
         PKIX_Boolean *pURIFound,
         PKIX_PL_OcspRequest **pRequest,
         void *plContext)
@@ -305,7 +304,6 @@ pkix_pl_OcspRequest_Create(
         CERTCertificate *nssSignerCert = NULL;
         char *location = NULL;
         PRErrorCode locError = 0;
-        PKIX_Boolean canUseDefaultSource = PKIX_FALSE;
 
         PKIX_ENTER(OCSPREQUEST, "pkix_pl_OcspRequest_Create");
         PKIX_NULLCHECK_TWO(cert, pRequest);
@@ -339,12 +337,7 @@ pkix_pl_OcspRequest_Create(
          * the URI of an OCSP responder?
          */
         handle = CERT_GetDefaultCertDB();
-
-        if (!(methodFlags & PKIX_REV_M_IGNORE_IMPLICIT_DEFAULT_SOURCE)) {
-            canUseDefaultSource = PKIX_TRUE;
-        }
         location = ocsp_GetResponderLocation(handle, nssCert,
-                                             canUseDefaultSource,
                                              &addServiceLocatorExtension);
         if (location == NULL) {
                 locError = PORT_GetError();

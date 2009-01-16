@@ -92,7 +92,7 @@
 #include "pkix_basicconstraintschecker.h"
 #include "pkix_policynode.h"
 #include "pkix_policychecker.h"
-#include "pkix_crlchecker.h"
+#include "pkix_defaultcrlchecker.h"
 #include "pkix_signaturechecker.h"
 #include "pkix_buildresult.h"
 #include "pkix_build.h"

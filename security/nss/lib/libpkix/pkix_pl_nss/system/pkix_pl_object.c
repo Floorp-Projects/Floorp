@@ -401,10 +401,22 @@ pkix_pl_Object_Hashcode_Default(
         PKIX_UInt32 *pValue,
         void *plContext)
 {
+#ifdef NSS_USE_64
+	union {
+		void *pointer;
+		PKIX_UInt32 hilo[2];
+	} extracter;
+#endif
+
         PKIX_ENTER(OBJECT, "pkix_pl_Object_Hashcode_Default");
         PKIX_NULLCHECK_TWO(object, pValue);
 
+#ifdef NSS_USE_64
+	extracter.pointer = object;
+        *pValue = extracter.hilo[1];
+#else
         *pValue = (PKIX_UInt32)object;
+#endif
 
         PKIX_RETURN(OBJECT);
 }

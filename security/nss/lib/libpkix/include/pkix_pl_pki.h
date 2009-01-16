@@ -2559,15 +2559,64 @@ PKIX_PL_AIAMgr_GetAIACerts(
         void *plContext);
 
 typedef PKIX_Error *
-(*PKIX_PL_VerifyCallback)(
-        PKIX_PL_Object *signedObject,
-        PKIX_PL_Cert *signerCert, /* can be unknown */
+(*PKIX_PL_OcspResponse_VerifyCallback)(
+        PKIX_PL_Cert *signerCert,
         PKIX_PL_Date *producedAt,
         PKIX_ProcessingParams *procParams,
         void **pNBIOContext,
         void **pState,
         PKIX_BuildResult **pBuildResult,
         PKIX_VerifyNode **pVerifyTree,
+        void *plContext);
+
+PKIX_Error *
+pkix_pl_OcspRequest_Create(
+        PKIX_PL_Cert *cert,
+        PKIX_PL_OcspCertID *cid,
+        PKIX_PL_Date *validity,
+        PKIX_PL_Cert *signerCert,
+        PKIX_Boolean *pURIFound,
+        PKIX_PL_OcspRequest **pRequest,
+        void *plContext);
+
+PKIX_Error *
+pkix_pl_OcspResponse_Create(
+        PKIX_PL_OcspRequest *request,
+        void *responder,
+        PKIX_PL_OcspResponse_VerifyCallback verifyFcn,
+        void **pNBIOContext,
+        PKIX_PL_OcspResponse **pResponse,
+        void *plContext);
+
+PKIX_Error *
+pkix_pl_OcspResponse_Decode(
+        PKIX_PL_OcspResponse *response,
+        PKIX_Boolean *passed,
+        SECErrorCodes *pReturnCode,
+        void *plContext);
+
+PKIX_Error *
+pkix_pl_OcspResponse_GetStatus(
+        PKIX_PL_OcspResponse *response,
+        PKIX_Boolean *passed,
+        SECErrorCodes *pReturnCode,
+        void *plContext);
+
+PKIX_Error *
+pkix_pl_OcspResponse_VerifySignature(
+        PKIX_PL_OcspResponse *response,
+        PKIX_PL_Cert *cert,
+        PKIX_ProcessingParams *procParams,
+        PKIX_Boolean *pPassed,
+        void **pNBIOContext,
+        void *plContext);
+
+PKIX_Error *
+pkix_pl_OcspResponse_GetStatusForCert(
+        PKIX_PL_OcspCertID *cid,
+        PKIX_PL_OcspResponse *response,
+        PKIX_Boolean *pPassed,
+        SECErrorCodes *pReturnCode,
         void *plContext);
 
 #ifdef __cplusplus

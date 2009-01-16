@@ -45,52 +45,51 @@
 #define _PKIX_OCSPCHECKER_H
 
 #include "pkix_tools.h"
-#include "pkix_revocationmethod.h"
 
 #ifdef __cplusplus
 extern "C" {
 #endif
 
-/* NOTE: nbio logic removed. Will be replaced later. */
-
-PKIX_Error *
-pkix_OcspChecker_CheckLocal(
-        PKIX_PL_Cert *cert,
-        PKIX_PL_Cert *issuer,
-        PKIX_PL_Date *date,
-        pkix_RevocationMethod *checkerObject,
-        PKIX_ProcessingParams *procParams,
-        PKIX_UInt32 methodFlags,
-        PKIX_RevocationStatus *pRevStatus,
-        PKIX_UInt32 *reasonCode,
-        void *plContext);
-
-PKIX_Error *
-pkix_OcspChecker_CheckExternal(
-        PKIX_PL_Cert *cert,
-        PKIX_PL_Cert *issuer,
-        PKIX_PL_Date *date,
-        pkix_RevocationMethod *checkerObject,
-        PKIX_ProcessingParams *procParams,
-        PKIX_UInt32 methodFlags,
-        PKIX_RevocationStatus *pRevStatus,
-        PKIX_UInt32 *reasonCode,
-        void **pNBIOContext,
-        void *plContext);
-
-PKIX_Error *
-pkix_OcspChecker_Create(PKIX_RevocationMethodType methodType,
-                        PKIX_UInt32 flags,
-                        PKIX_UInt32 priority,
-                        pkix_LocalRevocationCheckFn localRevChecker,
-                        pkix_ExternalRevocationCheckFn externalRevChecker,
-                        PKIX_PL_VerifyCallback certVerifyFn,
-                        pkix_RevocationMethod **pChecker,
-                        void *plContext);
+struct PKIX_OcspCheckerStruct {
+        PKIX_PL_OcspResponse *response;
+        PKIX_PL_Date *validityTime;
+        PKIX_Boolean clientIsDefault;
+        void *passwordInfo;
+        void *responder;
+        PKIX_PL_OcspResponse_VerifyCallback verifyFcn;
+        void *nbioContext;
+        PKIX_PL_Cert *cert;
+};
 
 /* see source file for function documentation */
 
 PKIX_Error *pkix_OcspChecker_RegisterSelf(void *plContext);
+
+PKIX_Error *
+PKIX_OcspChecker_SetPasswordInfo(
+        PKIX_OcspChecker *checker,
+        void *passwordInfo,
+        void *plContext);
+
+PKIX_Error *
+PKIX_OcspChecker_SetOCSPResponder(
+        PKIX_OcspChecker *checker,
+        void *ocspResponder,
+        void *plContext);
+
+PKIX_Error *
+PKIX_OcspChecker_SetVerifyFcn(
+        PKIX_OcspChecker *checker,
+        PKIX_PL_OcspResponse_VerifyCallback verifyFcn,
+        void *plContext);
+
+PKIX_Error *
+PKIX_OcspChecker_Initialize(
+        PKIX_PL_Date *validityTime,
+        void *passwordInfo,
+        void *responder,
+        PKIX_RevocationChecker **pChecker,
+        void *plContext);
 
 #ifdef __cplusplus
 }

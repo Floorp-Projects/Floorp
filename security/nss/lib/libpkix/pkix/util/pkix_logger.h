@@ -70,15 +70,6 @@ pkix_Logger_Check(
         PKIX_UInt32 maxLevel,
         void *plContext);
 
-PKIX_Error *
-pkix_Logger_CheckWithCode(
-        PKIX_List *pkixLoggersList,
-        PKIX_UInt32 errorCode,
-        const char *message2,
-        PKIX_ERRORCLASS logComponent,
-        PKIX_UInt32 maxLevel,
-        void *plContext);
-
 /* see source file for function documentation */
 
 PKIX_Error *pkix_Logger_RegisterSelf(void *plContext);

@@ -232,9 +232,3 @@ NSS_Get_sgn_DigestInfoTemplate_Util;
 ;+    local:
 ;+       *;
 ;+};
-;+NSSUTIL_3.12.3 {       # NSS Utilities 3.12.3 release
-;+    global:
-SECITEM_ReallocItem;
-;+    local:
-;+       *;
-;+};

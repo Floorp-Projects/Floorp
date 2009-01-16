@@ -42,7 +42,6 @@
  */
 
 #include "pkix_revocationchecker.h"
-#include "pkix_tools.h"
 
 /* --Private-Functions-------------------------------------------- */
 
@@ -67,10 +66,8 @@ pkix_RevocationChecker_Destroy(
 
         checker = (PKIX_RevocationChecker *)object;
 
-        PKIX_DECREF(checker->date);
-        PKIX_DECREF(checker->leafMethodList);
-        PKIX_DECREF(checker->chainMethodList);
-        
+        PKIX_DECREF(checker->revCheckerContext);
+
 cleanup:
 
         PKIX_RETURN(REVOCATIONCHECKER);
@@ -88,8 +85,7 @@ pkix_RevocationChecker_Duplicate(
 {
         PKIX_RevocationChecker *checker = NULL;
         PKIX_RevocationChecker *checkerDuplicate = NULL;
-        PKIX_List *dupLeafList = NULL;
-        PKIX_List *dupChainList = NULL;
+        PKIX_PL_Object *contextDuplicate = NULL;
 
         PKIX_ENTER(REVOCATIONCHECKER, "pkix_RevocationChecker_Duplicate");
         PKIX_NULLCHECK_TWO(object, pNewObject);
@@ -100,39 +96,26 @@ pkix_RevocationChecker_Duplicate(
 
         checker = (PKIX_RevocationChecker *)object;
 
-        if (checker->leafMethodList){
+        if (checker->revCheckerContext){
                 PKIX_CHECK(PKIX_PL_Object_Duplicate
-                            ((PKIX_PL_Object *)checker->leafMethodList,
-                            (PKIX_PL_Object **)&dupLeafList,
-                            plContext),
-                            PKIX_OBJECTDUPLICATEFAILED);
-        }
-        if (checker->chainMethodList){
-                PKIX_CHECK(PKIX_PL_Object_Duplicate
-                            ((PKIX_PL_Object *)checker->chainMethodList,
-                            (PKIX_PL_Object **)&dupChainList,
+                            ((PKIX_PL_Object *)checker->revCheckerContext,
+                            (PKIX_PL_Object **)&contextDuplicate,
                             plContext),
                             PKIX_OBJECTDUPLICATEFAILED);
         }
 
-        PKIX_CHECK(
-            PKIX_RevocationChecker_Create(checker->date,
-                                          checker->leafMethodListFlags,
-                                          checker->chainMethodListFlags,
-                                          &checkerDuplicate,
-                                          plContext),
-            PKIX_REVOCATIONCHECKERCREATEFAILED);
-
-        checkerDuplicate->leafMethodList = dupLeafList;
-        checkerDuplicate->chainMethodList = dupChainList;
-        dupLeafList = NULL;
-        dupChainList = NULL;
+        PKIX_CHECK(PKIX_RevocationChecker_Create
+                    (checker->checkCallback,
+                    contextDuplicate,
+                    &checkerDuplicate,
+                    plContext),
+                    PKIX_REVOCATIONCHECKERCREATEFAILED);
 
         *pNewObject = (PKIX_PL_Object *)checkerDuplicate;
 
 cleanup:
-        PKIX_DECREF(dupLeafList);
-        PKIX_DECREF(dupChainList);
+
+        PKIX_DECREF(contextDuplicate);
 
         PKIX_RETURN(REVOCATIONCHECKER);
 }
@@ -172,323 +155,84 @@ pkix_RevocationChecker_RegisterSelf(void *plContext)
         PKIX_RETURN(REVOCATIONCHECKER);
 }
 
-/* Sort methods by theirs priorities */
-static PKIX_Error *
-pkix_RevocationChecker_SortComparator(
-        PKIX_PL_Object *obj1,
-        PKIX_PL_Object *obj2,
-        PKIX_Int32 *pResult,
-        void *plContext)
-{
-    pkix_RevocationMethod *method1 = NULL, *method2 = NULL;
-    
-    PKIX_ENTER(BUILD, "pkix_RevocationChecker_SortComparator");
-    
-    method1 = (pkix_RevocationMethod *)obj1;
-    method2 = (pkix_RevocationMethod *)obj2;
-    
-    *pResult = (method1->priority > method2->priority);
-    
-    PKIX_RETURN(BUILD);
-}
-
-
 /* --Public-Functions--------------------------------------------- */
 
 
 /*
- * FUNCTION: PKIX_RevocationChecker_Create (see comments in pkix_revchecker.h)
+ * FUNCTION: PKIX_RevocationChecker_Create (see comments in pkix_checker.h)
  */
 PKIX_Error *
 PKIX_RevocationChecker_Create(
-    PKIX_PL_Date *revDate,
-    PKIX_UInt32 leafMethodListFlags,
-    PKIX_UInt32 chainMethodListFlags,
+    PKIX_RevocationChecker_RevCallback callback,
+    PKIX_PL_Object *revCheckerContext,
     PKIX_RevocationChecker **pChecker,
     void *plContext)
 {
-    PKIX_RevocationChecker *checker = NULL;
-    
-    PKIX_ENTER(REVOCATIONCHECKER, "PKIX_RevocationChecker_Create");
-    PKIX_NULLCHECK_ONE(pChecker);
-    
-    PKIX_CHECK(
-        PKIX_PL_Object_Alloc(PKIX_REVOCATIONCHECKER_TYPE,
-                             sizeof (PKIX_RevocationChecker),
-                             (PKIX_PL_Object **)&checker,
-                             plContext),
-        PKIX_COULDNOTCREATECERTCHAINCHECKEROBJECT);
-    
-    PKIX_INCREF(revDate);
-    checker->date = revDate;
+        PKIX_RevocationChecker *checker = NULL;
 
-    checker->leafMethodListFlags = leafMethodListFlags;
-    checker->chainMethodListFlags = chainMethodListFlags;
-    checker->leafMethodList = NULL;
-    checker->chainMethodList = NULL;
-    
-    *pChecker = checker;
-    checker = NULL;
-    
+        PKIX_ENTER(REVOCATIONCHECKER, "PKIX_RevocationChecker_Create");
+        PKIX_NULLCHECK_ONE(pChecker);
+
+        PKIX_CHECK(PKIX_PL_Object_Alloc
+                    (PKIX_REVOCATIONCHECKER_TYPE,
+                    sizeof (PKIX_RevocationChecker),
+                    (PKIX_PL_Object **)&checker,
+                    plContext),
+                    PKIX_COULDNOTCREATECERTCHAINCHECKEROBJECT);
+
+        /* initialize fields */
+        checker->checkCallback = callback;
+
+        PKIX_INCREF(revCheckerContext);
+        checker->revCheckerContext = revCheckerContext;
+
+        *pChecker = checker;
+
 cleanup:
-    PKIX_DECREF(checker);
-    
-    PKIX_RETURN(REVOCATIONCHECKER);
+
+        PKIX_RETURN(REVOCATIONCHECKER);
+
 }
 
 /*
- * FUNCTION: PKIX_RevocationChecker_CreateAndAddMethod
+ * FUNCTION: PKIX_RevocationChecker_GetCheckCallback
+ *      (see comments in pkix_checker.h)
  */
 PKIX_Error *
-PKIX_RevocationChecker_CreateAndAddMethod(
-    PKIX_RevocationChecker *revChecker,
-    PKIX_ProcessingParams *params,
-    PKIX_RevocationMethodType methodType,
-    PKIX_UInt32 flags,
-    PKIX_UInt32 priority,
-    PKIX_PL_VerifyCallback verificationFn,
-    PKIX_Boolean isLeafMethod,
-    void *plContext)
+PKIX_RevocationChecker_GetRevCallback(
+        PKIX_RevocationChecker *checker,
+        PKIX_RevocationChecker_RevCallback *pCallback,
+        void *plContext)
 {
-    PKIX_List **methodList = NULL;
-    PKIX_List  *unsortedList = NULL;
-    PKIX_List  *certStores = NULL;
-    pkix_RevocationMethod *method = NULL;
-    pkix_LocalRevocationCheckFn *localRevChecker = NULL;
-    pkix_ExternalRevocationCheckFn *externRevChecker = NULL;
-    
-    PKIX_ENTER(REVOCATIONCHECKER, "PKIX_RevocationChecker_CreateAndAddMethod");
-    PKIX_NULLCHECK_ONE(revChecker);
+        PKIX_ENTER
+                (REVOCATIONCHECKER, "PKIX_RevocationChecker_GetRevCallback");
+        PKIX_NULLCHECK_TWO(checker, pCallback);
 
-    switch (methodType) {
-    case PKIX_RevocationMethod_CRL:
-        localRevChecker = pkix_CrlChecker_CheckLocal;
-        externRevChecker = pkix_CrlChecker_CheckExternal;
-        PKIX_CHECK(
-            PKIX_ProcessingParams_GetCertStores(params, &certStores,
-                                                plContext),
-            PKIX_PROCESSINGPARAMSGETCERTSTORESFAILED);
-        PKIX_CHECK(
-            pkix_CrlChecker_Create(methodType, flags, priority,
-                                   localRevChecker, externRevChecker,
-                                   certStores, verificationFn,
-                                   &method,
-                                   plContext),
-            PKIX_COULDNOTCREATECRLCHECKEROBJECT);
-        break;
-    case PKIX_RevocationMethod_OCSP:
-        localRevChecker = pkix_OcspChecker_CheckLocal;
-        externRevChecker = pkix_OcspChecker_CheckExternal;
-        PKIX_CHECK(
-            pkix_OcspChecker_Create(methodType, flags, priority,
-                                    localRevChecker, externRevChecker,
-                                    verificationFn,
-                                    &method,
-                                    plContext),
-            PKIX_COULDNOTCREATEOCSPCHECKEROBJECT);
-        break;
-    default:
-        PKIX_ERROR(PKIX_INVALIDREVOCATIONMETHOD);
-    }
+        *pCallback = checker->checkCallback;
 
-    if (isLeafMethod) {
-        methodList = &revChecker->leafMethodList;
-    } else {
-        methodList = &revChecker->chainMethodList;
-    }
-    
-    if (*methodList == NULL) {
-        PKIX_CHECK(
-            PKIX_List_Create(methodList, plContext),
-            PKIX_LISTCREATEFAILED);
-    }
-    unsortedList = *methodList;
-    PKIX_CHECK(
-        PKIX_List_AppendItem(unsortedList, (PKIX_PL_Object*)method, plContext),
-        PKIX_LISTAPPENDITEMFAILED);
-    PKIX_CHECK(
-        pkix_List_BubbleSort(unsortedList, 
-                             pkix_RevocationChecker_SortComparator,
-                             methodList, plContext),
-        PKIX_LISTBUBBLESORTFAILED);
-
-cleanup:
-    PKIX_DECREF(method);
-    PKIX_DECREF(unsortedList);
-    PKIX_DECREF(certStores);
-    
-    PKIX_RETURN(REVOCATIONCHECKER);
+        PKIX_RETURN(REVOCATIONCHECKER);
 }
 
 /*
- * FUNCTION: PKIX_RevocationChecker_Check
+ * FUNCTION: PKIX_RevocationChecker_GetRevCheckerContext
+ *      (see comments in pkix_checker.h)
  */
 PKIX_Error *
-PKIX_RevocationChecker_Check(
-    PKIX_PL_Cert *cert,
-    PKIX_PL_Cert *issuer,
-    PKIX_RevocationChecker *revChecker,
-    PKIX_ProcessingParams *procParams,
-    PKIX_Boolean chainVerificationState,
-    PKIX_Boolean testingLeafCert,
-    PKIX_RevocationStatus *pRevStatus,
-    PKIX_UInt32 *pReasonCode,
-    void **pNbioContext,
-    void *plContext)
+PKIX_RevocationChecker_GetRevCheckerContext(
+        PKIX_RevocationChecker *checker,
+        PKIX_PL_Object **pRevCheckerContext,
+        void *plContext)
 {
-    PKIX_RevocationStatus overallStatus = PKIX_RevStatus_NoInfo;
-    PKIX_RevocationStatus methodStatus[PKIX_RevocationMethod_MAX];
-    PKIX_Boolean onlyUseRemoteMethods = PKIX_FALSE;
-    PKIX_UInt32 revFlags = 0;
-    PKIX_List *revList = NULL;
-    pkix_RevocationMethod *method = NULL;
-    void *nbioContext;
-    int tries;
-    
-    PKIX_ENTER(REVOCATIONCHECKER, "PKIX_RevocationChecker_Check");
-    PKIX_NULLCHECK_ONE(revChecker);
+        PKIX_ENTER(REVOCATIONCHECKER,
+                    "PKIX_RevocationChecker_GetRevCheckerContext");
 
-    nbioContext = *pNbioContext;
-    *pNbioContext = NULL;
-    
-    if (testingLeafCert) {
-        revList = revChecker->leafMethodList;
-        revFlags = revChecker->leafMethodListFlags;        
-    } else {
-        revList = revChecker->chainMethodList;
-        revFlags = revChecker->chainMethodListFlags;
-    }
-    if (!revList) {
-        /* Return NoInfo status */
-        goto cleanup;
-    }
+        PKIX_NULLCHECK_TWO(checker, pRevCheckerContext);
 
-    PORT_Memset(methodStatus, PKIX_RevStatus_NoInfo,
-                sizeof(PKIX_RevocationStatus) * PKIX_RevocationMethod_MAX);
+        PKIX_INCREF(checker->revCheckerContext);
 
-    /* Need to have two loops if we testing all local info first:
-     *    first we are going to test all local(cached) info
-     *    second, all remote info(fetching) */
-    for (tries = 0;tries < 2;tries++) {
-        int methodNum = 0;
-        for (;methodNum < revList->length;methodNum++) {
-            PKIX_UInt32 methodFlags = 0;
-
-            PKIX_DECREF(method);
-            pkixErrorResult = PKIX_List_GetItem(revList, methodNum,
-                                                (PKIX_PL_Object**)&method,
-                                                plContext);
-            if (pkixErrorResult) {
-                /* Return error. Should not shappen in normal conditions. */
-                goto cleanup;
-            }
-            methodFlags = method->flags;
-            if (!(methodFlags & PKIX_REV_M_TEST_USING_THIS_METHOD)) {
-                /* Will not check with this method. Skipping... */
-                continue;
-            }
-            if (!onlyUseRemoteMethods &&
-                methodStatus[methodNum] == PKIX_RevStatus_NoInfo) {
-                PKIX_RevocationStatus revStatus = PKIX_RevStatus_NoInfo;
-
-                pkixErrorResult =
-                    (*method->localRevChecker)(cert, issuer,
-                                               revChecker->date,
-                                               method, procParams,
-                                               methodFlags, &revStatus,
-                                               pReasonCode, plContext);
-                methodStatus[methodNum] = revStatus;
-                if (pkixErrorResult) {
-                    /* Disregard errors. Only returned revStatus matters. */
-                    PKIX_PL_Object_DecRef((PKIX_PL_Object*)pkixErrorResult,
-                                          plContext);
-                    pkixErrorResult = NULL;
-                }
-                if (revStatus == PKIX_RevStatus_Revoked) {
-                    overallStatus = PKIX_RevStatus_Revoked;
-                    goto cleanup;
-                }
-            }
-            if ((!(revFlags & PKIX_REV_MI_TEST_ALL_LOCAL_INFORMATION_FIRST) ||
-                 onlyUseRemoteMethods) &&
-                chainVerificationState &&
-                methodStatus[methodNum] == PKIX_RevStatus_NoInfo) {
-                if (!(methodFlags & PKIX_REV_M_FORBID_NETWORK_FETCHING)) {
-                    PKIX_RevocationStatus revStatus = PKIX_RevStatus_NoInfo;
-                    pkixErrorResult =
-                        (*method->externalRevChecker)(cert, issuer,
-                                                      revChecker->date,
-                                                      method,
-                                                      procParams, methodFlags,
-                                                      &revStatus, pReasonCode,
-                                                      &nbioContext, plContext);
-                    methodStatus[methodNum] = revStatus;
-                    if (pkixErrorResult) {
-                        /* Disregard errors. Only returned revStatus matters. */
-                        PKIX_PL_Object_DecRef((PKIX_PL_Object*)pkixErrorResult,
-                                              plContext);
-                        pkixErrorResult = NULL;
-                    }
-                    if (revStatus == PKIX_RevStatus_Revoked) {
-                        overallStatus = PKIX_RevStatus_Revoked;
-                        goto cleanup;
-                    }
-                } else if (methodFlags &
-                           PKIX_REV_M_FAIL_ON_MISSING_FRESH_INFO) {
-                    /* Info is not in the local cache. Network fetching is not
-                     * allowed. If need to fail on missing fresh info for the
-                     * the method, then we should fail right here.*/
-                    overallStatus = PKIX_RevStatus_Revoked;
-                    goto cleanup;
-                }
-            }
-            /* If success and we should not check the next method, then
-             * return a success. */
-            if (methodStatus[methodNum] == PKIX_RevStatus_Success &&
-                !(methodFlags & PKIX_REV_M_CONTINUE_TESTING_ON_FRESH_INFO)) {
-                overallStatus = PKIX_RevStatus_Success;
-                goto cleanup;
-            }
-        } /* inner loop */
-        if (!onlyUseRemoteMethods &&
-            revFlags & PKIX_REV_MI_TEST_ALL_LOCAL_INFORMATION_FIRST &&
-            chainVerificationState) {
-            onlyUseRemoteMethods = PKIX_TRUE;
-            continue;
-        }
-        break;
-    } /* outer loop */
-    
-    if (overallStatus == PKIX_RevStatus_NoInfo &&
-        chainVerificationState) {
-        /* The following check makes sence only for chain
-         * validation step, sinse we do not fetch info while
-         * in the process of finding trusted anchor. 
-         * For chain building step it is enough to know, that
-         * the cert was not directly revoked by any of the
-         * methods. */
-
-        /* Still have no info. But one of the method could
-         * have returned success status(possible if CONTINUE
-         * TESTING ON FRESH INFO flag was used).
-         * If any of the methods have returned Success status,
-         * the overallStatus should be success. */
-        int methodNum = 0;
-        for (;methodNum < PKIX_RevocationMethod_MAX;methodNum++) {
-            if (methodStatus[methodNum] == PKIX_RevStatus_Success) {
-                overallStatus = PKIX_RevStatus_Success;
-                goto cleanup;
-            }
-        }
-        if (revFlags & PKIX_REV_MI_REQUIRE_SOME_FRESH_INFO_AVAILABLE) {
-            overallStatus = PKIX_RevStatus_Revoked;
-        }
-    }
+        *pRevCheckerContext = checker->revCheckerContext;
 
 cleanup:
-    *pRevStatus = overallStatus;
-    PKIX_DECREF(method);
+        PKIX_RETURN(REVOCATIONCHECKER);
 
-    PKIX_RETURN(REVOCATIONCHECKER);
 }
-

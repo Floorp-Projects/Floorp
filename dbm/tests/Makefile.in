@@ -44,8 +44,6 @@ include $(DEPTH)/config/autoconf.mk
 
 MODULE		= dbm
 
-PACKAGE_FILE = dbmtest.pkg
-
 PROGRAM		= lots$(BIN_SUFFIX)
 
 CSRCS		= lots.c

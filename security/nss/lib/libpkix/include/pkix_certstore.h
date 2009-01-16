@@ -39,6 +39,7 @@
  *
  */
 
+
 #ifndef _PKIX_CERTSTORE_H
 #define _PKIX_CERTSTORE_H
 
@@ -275,82 +276,6 @@ typedef PKIX_Error *
         void *plContext);
 
 /*
- * FUNCTION: PKIX_CertStore_ImportCrlCallback
- * DESCRIPTION:
- *
- * The function imports crl list into a cert store. Stores that
- * have local cache may only have that function defined.
- *
- * PARAMETERS:
- *  "store"
- *      Address of CertStore from which CRLs are to be retrieved.
- *      Must be non-NULL.
- *  "crlList"
- *      Address on the importing crl list.
- *  "plContext"
- *      Platform-specific context pointer.
- * THREAD SAFETY:
- *  Thread Safe
- *
- *  Multiple threads must be able to safely call this function without
- *  worrying about conflicts, even if they're operating on the same object.
- * RETURNS:
- *  Returns NULL if the function succeeds.
- *  Returns a CertStore Error if the function fails in a non-fatal way.
- *  Returns a Fatal Error if the function fails in an unrecoverable way.
- */
-typedef PKIX_Error *
-(*PKIX_CertStore_ImportCrlCallback)(
-        PKIX_CertStore *store,
-        PKIX_List *crlList,
-        void *plContext);
-
-/*
- * FUNCTION: PKIX_CertStore_CheckRevokationByCrlCallback
- * DESCRIPTION:
- *
- * The function checks revocation status of a cert with specified
- * issuer, date. It returns revocation status of a cert and
- * a reason code(if any) if a cert was revoked.
- * 
- * PARAMETERS:
- *  "store"
- *      Address of CertStore from which CRLs are to be retrieved.
- *      Must be non-NULL.
- *  "cert"
- *      Certificate which revocation status will be checked.
- *  "issuer"
- *      Issuer certificate of the "crl".
- *  "date"
- *      Date of the revocation check.
- *  "reasonCode"
- *      If cert is revoked, returned reason code for  which a cert was revoked.
- *  "revStatus"
- *      Returned revocation status of the cert. See PKIX_RevocationStatus
- *      for more details
- *  "plContext"
- *      Platform-specific context pointer.
- * THREAD SAFETY:
- *  Thread Safe
- *
- *  Multiple threads must be able to safely call this function without
- *  worrying about conflicts, even if they're operating on the same object.
- * RETURNS:
- *  Returns NULL if the function succeeds.
- *  Returns a CertStore Error if the function fails in a non-fatal way.
- *  Returns a Fatal Error if the function fails in an unrecoverable way.
- */
-typedef PKIX_Error *
-(*PKIX_CertStore_CheckRevokationByCrlCallback)(
-        PKIX_CertStore *store,
-        PKIX_PL_Cert *cert,
-        PKIX_PL_Cert *issuer,
-        PKIX_PL_Date *date,
-        PKIX_UInt32 *reasonCode,
-        PKIX_RevocationStatus *revStatus,
-        void *plContext);
-
-/*
  * FUNCTION: PKIX_CertStore_CrlContinue
  * DESCRIPTION:
  *
@@ -502,8 +427,6 @@ PKIX_CertStore_Create(
         PKIX_CertStore_CertContinueFunction certContinue,
         PKIX_CertStore_CrlContinueFunction crlContinue,
         PKIX_CertStore_CheckTrustCallback trustCallback,
-        PKIX_CertStore_ImportCrlCallback importCrlCallback,
-        PKIX_CertStore_CheckRevokationByCrlCallback checkRevByCrlCallback,
         PKIX_PL_Object *certStoreContext,
         PKIX_Boolean cachedFlag,
         PKIX_Boolean localFlag,
@@ -562,60 +485,6 @@ PKIX_Error *
 PKIX_CertStore_GetCRLCallback(
         PKIX_CertStore *store,
         PKIX_CertStore_CRLCallback *pCallback,
-        void *plContext);
-
-/*
- * FUNCTION: PKIX_CertStore_GetImportCrlCallback
- * DESCRIPTION:
- *
- *  Retrieves a pointer to "store's" Import CRL callback function and put it in
- *  "pCallback".
- *
- * PARAMETERS:
- *  "store"
- *      The CertStore whose CRL callback is desired. Must be non-NULL.
- *  "pCallback"
- *      Address where CRL callback function pointer will be stored.
- *      Must be non-NULL.
- *  "plContext"
- *      Platform-specific context pointer.
- * THREAD SAFETY:
- *  Thread Safe (see Thread Safety Definitions in Programmer's Guide)
- * RETURNS:
- *  Returns NULL if the function succeeds.
- *  Returns a Fatal Error if the function fails in an unrecoverable way.
- */
-PKIX_Error *
-PKIX_CertStore_GetImportCrlCallback(
-        PKIX_CertStore *store,
-        PKIX_CertStore_ImportCrlCallback *pCallback,
-        void *plContext);
-
-/*
- * FUNCTION: PKIX_CertStore_GetCheckRevByCrl
- * DESCRIPTION:
- *
- *  Retrieves a pointer to "store's" CRL revocation checker callback function
- *  and put it in "pCallback".
- *
- * PARAMETERS:
- *  "store"
- *      The CertStore whose CRL callback is desired. Must be non-NULL.
- *  "pCallback"
- *      Address where CRL callback function pointer will be stored.
- *      Must be non-NULL.
- *  "plContext"
- *      Platform-specific context pointer.
- * THREAD SAFETY:
- *  Thread Safe (see Thread Safety Definitions in Programmer's Guide)
- * RETURNS:
- *  Returns NULL if the function succeeds.
- *  Returns a Fatal Error if the function fails in an unrecoverable way.
- */
-PKIX_Error *
-PKIX_CertStore_GetCrlCheckerFn(
-        PKIX_CertStore *store,
-        PKIX_CertStore_CheckRevokationByCrlCallback *pCallback,
         void *plContext);
 
 /*

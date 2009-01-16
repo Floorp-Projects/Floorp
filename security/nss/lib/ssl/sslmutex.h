@@ -33,7 +33,7 @@
  * the terms of any one of the MPL, the GPL or the LGPL.
  *
  * ***** END LICENSE BLOCK ***** */
-/* $Id: sslmutex.h,v 1.11 2008/12/02 06:36:59 nelson%bolyard.com Exp $ */
+/* $Id: sslmutex.h,v 1.10 2004/04/27 23:04:39 gerv%gerv.net Exp $ */
 #ifndef __SSLMUTEX_H_
 #define __SSLMUTEX_H_ 1
 
@@ -59,10 +59,6 @@
 #include "prtypes.h"
 #include "prlock.h"
 
-#if defined(NETBSD)
-#include <sys/param.h> /* for __NetBSD_Version__ */
-#endif
-
 #if defined(WIN32)
 
 #include <wtypes.h>
@@ -83,7 +79,7 @@ typedef struct
 
 typedef int    sslPID;
 
-#elif defined(LINUX) || defined(AIX) || defined(VMS) || defined(BEOS) || defined(BSDI) || (defined(NETBSD) && __NetBSD_Version__ < 500000000) || defined(OPENBSD)
+#elif defined(LINUX) || defined(AIX) || defined(VMS) || defined(BEOS) || defined(BSDI) || defined(NETBSD) || defined(OPENBSD)
 
 #include <sys/types.h>
 #include "prtypes.h"

@@ -202,10 +202,13 @@ struct SECKEYPublicKeyStr {
 };
 typedef struct SECKEYPublicKeyStr SECKEYPublicKey;
 
+#define CachedAttribute(attribute,setbit) \
+static const PRUint32 SECKEY_##attribute = 1 << setbit;
+
 /* bit flag definitions for staticflags */
 #define SECKEY_Attributes_Cached 0x1    /* bit 0 states
                                            whether attributes are cached */
-#define SECKEY_CKA_PRIVATE (1U << 1)    /* bit 1 is the value of CKA_PRIVATE */
+CachedAttribute(CKA_PRIVATE,1) /* bit 1 is the value of CKA_PRIVATE */
 
 #define SECKEY_ATTRIBUTES_CACHED(key) \
      (0 != (key->staticflags & SECKEY_Attributes_Cached))

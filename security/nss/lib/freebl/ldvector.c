@@ -37,15 +37,10 @@
  * the terms of any one of the MPL, the GPL or the LGPL.
  *
  * ***** END LICENSE BLOCK ***** */
-/* $Id: ldvector.c,v 1.19 2008/12/17 06:09:12 nelson%bolyard.com Exp $ */
-
-#ifdef FREEBL_NO_DEPEND
-extern int FREEBL_InitStubs(void);
-#endif
+/* $Id: ldvector.c,v 1.17 2008/05/13 01:19:59 wtc%google.com Exp $ */
 
 #include "loader.h"
 #include "alghmac.h"
-
 
 static const struct FREEBLVectorStr vector = 
 {
@@ -239,19 +234,9 @@ static const struct FREEBLVectorStr vector =
     Camellia_Encrypt,
     Camellia_Decrypt,
 
+    /* End of Version 3.010. */
     PQG_DestroyParams,
     PQG_DestroyVerify,
-
-    /* End of Version 3.010. */
-
-    SEED_InitContext,
-    SEED_AllocateContext,
-    SEED_CreateContext,
-    SEED_DestroyContext,
-    SEED_Encrypt,
-    SEED_Decrypt
-
-    /* End of Version 3.011. */
 
 };
 
@@ -265,9 +250,6 @@ FREEBL_GetVector(void)
     volatile char c;
 
     c = __nss_freebl_rcsid[0] + __nss_freebl_sccsid[0]; 
-#ifdef FREEBL_NO_DEPEND
-    FREEBL_InitStubs();
-#endif
     return &vector;
 }
 

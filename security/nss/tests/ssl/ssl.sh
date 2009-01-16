@@ -91,9 +91,6 @@ ssl_init()
   fi
 
   PORT=${PORT-8443}
-  NSS_SSL_TESTS=${NSS_SSL_TESTS:-normal_normal}
-  nss_ssl_run="cov auth stress"
-  NSS_SSL_RUN=${NSS_SSL_RUN:-$nss_ssl_run}
 
   # Test case files
   SSLCOV=${QADIR}/ssl/sslcov.txt
