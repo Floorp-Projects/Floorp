@@ -63,7 +63,6 @@
 #include "nsHTMLCSSUtils.h"
 
 #include "nsVoidArray.h"
-#include "nsTArray.h"
 
 #include "nsHTMLObjectResizer.h"
 #include "nsIHTMLAbsPosEditor.h"
@@ -172,7 +171,7 @@ public:
 
   NS_IMETHOD LoadHTML(const nsAString &aInputString);
 
-  NS_IMETHOD GetParentBlockTags(nsTArray<nsString> *aTagList, PRBool aGetLists);
+  NS_IMETHOD GetParentBlockTags(nsStringArray *aTagList, PRBool aGetLists);
 
   nsresult GetCSSBackgroundColorState(PRBool *aMixed, nsAString &aOutColor,
                                       PRBool aBlockLevel);
@@ -780,7 +779,7 @@ protected:
   nsString mLastOverrideStyleSheetURL;
 
   // Maintain a list of associated style sheets and their urls.
-  nsTArray<nsString> mStyleSheetURLs;
+  nsStringArray mStyleSheetURLs;
   nsCOMArray<nsICSSStyleSheet> mStyleSheets;
   
   // an array for holding default style settings

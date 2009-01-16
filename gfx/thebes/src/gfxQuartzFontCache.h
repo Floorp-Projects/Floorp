@@ -51,7 +51,6 @@
 
 #include "nsUnicharUtils.h"
 #include "nsVoidArray.h"
-#include "nsTArray.h"
 
 // used when picking fallback font
 struct FontSearch {
@@ -211,7 +210,7 @@ public:
     
     void GetFontList (const nsACString& aLangGroup,
                       const nsACString& aGenericFamily,
-                      nsTArray<nsString>& aListOfFonts);
+                      nsStringArray& aListOfFonts);
     PRBool ResolveFontName(const nsAString& aFontName,
                            nsAString& aResolvedFontName);
     PRBool GetStandardFamilyName(const nsAString& aFontName, nsAString& aFamilyName);

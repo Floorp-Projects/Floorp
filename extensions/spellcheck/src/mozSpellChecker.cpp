@@ -84,7 +84,7 @@ mozSpellChecker::SetDocument(nsITextServicesDocument *aDoc, PRBool aFromStartofD
 
 
 NS_IMETHODIMP 
-mozSpellChecker::NextMisspelledWord(nsAString &aWord, nsTArray<nsString> *aSuggestions)
+mozSpellChecker::NextMisspelledWord(nsAString &aWord, nsStringArray *aSuggestions)
 {
   if(!aSuggestions||!mConverter)
     return NS_ERROR_NULL_POINTER;
@@ -128,7 +128,7 @@ mozSpellChecker::NextMisspelledWord(nsAString &aWord, nsTArray<nsString> *aSugge
 }
 
 NS_IMETHODIMP 
-mozSpellChecker::CheckWord(const nsAString &aWord, PRBool *aIsMisspelled, nsTArray<nsString> *aSuggestions)
+mozSpellChecker::CheckWord(const nsAString &aWord, PRBool *aIsMisspelled, nsStringArray *aSuggestions)
 {
   nsresult result;
   PRBool correct;
@@ -152,7 +152,7 @@ mozSpellChecker::CheckWord(const nsAString &aWord, PRBool *aIsMisspelled, nsTArr
       result = mSpellCheckingEngine->Suggest(PromiseFlatString(aWord).get(), &words, &count);
       NS_ENSURE_SUCCESS(result, result); 
       for(i=0;i<count;i++){
-        aSuggestions->AppendElement(nsDependentString(words[i]));
+        aSuggestions->AppendString(nsDependentString(words[i]));
       }
       
       if (count)
@@ -287,7 +287,7 @@ mozSpellChecker::RemoveWordFromPersonalDictionary(const nsAString &aWord)
 }
 
 NS_IMETHODIMP 
-mozSpellChecker::GetPersonalDictionary(nsTArray<nsString> *aWordList)
+mozSpellChecker::GetPersonalDictionary(nsStringArray *aWordList)
 {
   if(!aWordList || !mPersonalDictionary)
     return NS_ERROR_NULL_POINTER;
@@ -299,14 +299,14 @@ mozSpellChecker::GetPersonalDictionary(nsTArray<nsString> *aWordList)
   nsAutoString word;
   while (NS_SUCCEEDED(words->HasMore(&hasMore)) && hasMore) {
     words->GetNext(word);
-    aWordList->AppendElement(word);
+    aWordList->AppendString(word);
   }
   return NS_OK;
 }
 
 struct AppendNewStruct
 {
-  nsTArray<nsString> *dictionaryList;
+  nsStringArray *dictionaryList;
   PRBool failed;
 };
 
@@ -315,7 +315,7 @@ AppendNewString(const nsAString& aString, nsCString*, void* aClosure)
 {
   AppendNewStruct *ans = (AppendNewStruct*) aClosure;
 
-  if (!ans->dictionaryList->AppendElement(aString))
+  if (!ans->dictionaryList->AppendString(aString))
   {
     ans->failed = PR_TRUE;
     return PL_DHASH_STOP;
@@ -325,7 +325,7 @@ AppendNewString(const nsAString& aString, nsCString*, void* aClosure)
 }
 
 NS_IMETHODIMP 
-mozSpellChecker::GetDictionaryList(nsTArray<nsString> *aDictionaryList)
+mozSpellChecker::GetDictionaryList(nsStringArray *aDictionaryList)
 {
   AppendNewStruct ans = {aDictionaryList, PR_FALSE};
 

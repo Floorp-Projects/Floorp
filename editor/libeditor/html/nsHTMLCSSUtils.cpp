@@ -851,7 +851,7 @@ nsHTMLCSSUtils::GetCSSPropertyAtom(nsCSSEditableProperty aProperty, nsIAtom ** a
 // value aValue according to the equivalence table aEquivTable
 void
 nsHTMLCSSUtils::BuildCSSDeclarations(nsVoidArray & aPropertyArray,
-                                     nsTArray<nsString> & aValueArray,
+                                     nsStringArray & aValueArray,
                                      const CSSEquivTable * aEquivTable,
                                      const nsAString * aValue,
                                      PRBool aGetOrRemoveRequest)
@@ -883,7 +883,7 @@ nsHTMLCSSUtils::BuildCSSDeclarations(nsVoidArray & aPropertyArray,
                                                  aEquivTable[index].appendValue);
       GetCSSPropertyAtom(cssProperty, &cssPropertyAtom);
       aPropertyArray.AppendElement(cssPropertyAtom);
-      aValueArray.AppendElement(cssValue);
+      aValueArray.AppendString(cssValue);
     }
     index++;
     cssProperty = aEquivTable[index].cssProperty;
@@ -898,7 +898,7 @@ nsHTMLCSSUtils::GenerateCSSDeclarationsFromHTMLStyle(nsIDOMNode * aNode,
                                                      const nsAString * aAttribute,
                                                      const nsAString * aValue,
                                                      nsVoidArray & cssPropertyArray,
-                                                     nsTArray<nsString> & cssValueArray,
+                                                     nsStringArray & cssValueArray,
                                                      PRBool aGetOrRemoveRequest)
 {
   nsCOMPtr<nsIDOMNode> node = aNode;
@@ -1001,7 +1001,7 @@ nsHTMLCSSUtils::SetCSSEquivalentToHTMLStyle(nsIDOMNode * aNode,
 
     // Find the CSS equivalence to the HTML style
     nsVoidArray cssPropertyArray;
-    nsTArray<nsString> cssValueArray;
+    nsStringArray cssValueArray;
     GenerateCSSDeclarationsFromHTMLStyle(aNode, aHTMLProperty, aAttribute, aValue,
                                          cssPropertyArray, cssValueArray, PR_FALSE);
 
@@ -1009,9 +1009,11 @@ nsHTMLCSSUtils::SetCSSEquivalentToHTMLStyle(nsIDOMNode * aNode,
     *aCount = cssPropertyArray.Count();
     PRInt32 index;
     for (index = 0; index < *aCount; index++) {
+      nsAutoString valueString;
+      cssValueArray.StringAt(index, valueString);
       nsCOMPtr<nsIDOMElement> theElement = do_QueryInterface(aNode);
       res = SetCSSProperty(theElement, (nsIAtom *)cssPropertyArray.ElementAt(index),
-                           cssValueArray[index], aSuppressTransaction);
+                           valueString, aSuppressTransaction);
       if (NS_FAILED(res)) return res;
     }
   }
@@ -1035,7 +1037,7 @@ nsHTMLCSSUtils::RemoveCSSEquivalentToHTMLStyle(nsIDOMNode * aNode,
 
     // Find the CSS equivalence to the HTML style
     nsVoidArray cssPropertyArray;
-    nsTArray<nsString> cssValueArray;
+    nsStringArray cssValueArray;
     GenerateCSSDeclarationsFromHTMLStyle(aNode, aHTMLProperty, aAttribute, aValue,
                                          cssPropertyArray, cssValueArray, PR_TRUE);
 
@@ -1043,10 +1045,10 @@ nsHTMLCSSUtils::RemoveCSSEquivalentToHTMLStyle(nsIDOMNode * aNode,
     count = cssPropertyArray.Count();
     PRInt32 index;
     for (index = 0; index < count; index++) {
-      res = RemoveCSSProperty(theElement, 
-                      (nsIAtom *)cssPropertyArray.ElementAt(index), 
-                      cssValueArray[index],
-                      aSuppressTransaction);
+      nsAutoString valueString;
+      cssValueArray.StringAt(index, valueString);
+      res = RemoveCSSProperty(theElement, (nsIAtom *)cssPropertyArray.ElementAt(index), valueString,
+                              aSuppressTransaction);
       if (NS_FAILED(res)) return res;
     }
   }
@@ -1098,7 +1100,7 @@ nsHTMLCSSUtils::GetCSSEquivalentToHTMLInlineStyleSet(nsIDOMNode * aNode,
       if (NS_FAILED(res)) return res;
     }
     nsVoidArray cssPropertyArray;
-    nsTArray<nsString> cssValueArray;
+    nsStringArray cssValueArray;
     // get the CSS equivalence with last param PR_TRUE indicating we want only the
     // "gettable" properties
     GenerateCSSDeclarationsFromHTMLStyle(theElement, aHTMLProperty, aAttribute, nsnull,

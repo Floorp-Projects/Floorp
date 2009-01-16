@@ -43,7 +43,6 @@
 #include "nsIObserver.h"
 #include "nsObserverBase.h"
 #include "nsWeakReference.h"
-#include "nsTArray.h"
 
 //========================================================================== 
 //
@@ -77,8 +76,8 @@ public:
   NS_IMETHOD Notify(nsISupports* aWebShell, 
                     nsISupports* aChannel,
                     const PRUnichar* aTag, 
-                    const nsTArray<nsString>* keys, 
-                    const nsTArray<nsString>* values,
+                    const nsStringArray* keys, 
+                    const nsStringArray* values,
                     const PRUint32 aFlags);
 
   NS_DECL_ISUPPORTS
@@ -97,11 +96,11 @@ private:
 
   NS_IMETHOD Notify(nsISupports* aWebShell, 
                     nsISupports* aChannel,
-                    const nsTArray<nsString>* keys, 
-                    const nsTArray<nsString>* values);
+                    const nsStringArray* keys, 
+                    const nsStringArray* values);
 
-  NS_IMETHOD GetCharsetFromCompatibilityTag(const nsTArray<nsString>* keys, 
-                                            const nsTArray<nsString>* values, 
+  NS_IMETHOD GetCharsetFromCompatibilityTag(const nsStringArray* keys, 
+                                            const nsStringArray* values, 
                                             nsAString& aCharset);
 
   nsCOMPtr<nsICharsetAlias> mAlias;
