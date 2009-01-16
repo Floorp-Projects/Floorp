@@ -597,12 +597,24 @@ if test -n "$_WIN32_MSVC"; then
     # Since we're skipping compiler and library checks, hard-code
     # some facts here.
 
+    # Common to all MSVC environments:
     # Windows lacks <stdint.h>, but has __int8, and so on.
     AC_DEFINE(JS_HAVE___INTN)
-    # Windows <stddef.h> defines intptr_t and uintptr_t.
-    # VS2005: http://msdn.microsoft.com/en-us/library/323b6b3k(VS.80).aspx
-    # VS2008: http://msdn.microsoft.com/en-us/library/323b6b3k.aspx
-    AC_DEFINE(JS_STDDEF_H_HAS_INTPTR_T)
+
+    case "$target" in
+    *-wince)
+        AC_DEFINE(HAVE_SYSTEMTIMETOFILETIME)
+        AC_DEFINE(JS_CRTDEFS_H_HAS_INTPTR_T)
+        ;;
+    *)
+        AC_DEFINE(HAVE_SYSTEMTIMETOFILETIME)
+        AC_DEFINE(HAVE_GETSYSTEMTIMEASFILETIME)
+        # Windows <stddef.h> defines intptr_t and uintptr_t.
+        # VS2005: http://msdn.microsoft.com/en-us/library/323b6b3k(VS.80).aspx
+        # VS2008: http://msdn.microsoft.com/en-us/library/323b6b3k.aspx
+        AC_DEFINE(JS_STDDEF_H_HAS_INTPTR_T)
+        ;;
+    esac
 fi
 
 fi # COMPILE_ENVIRONMENT

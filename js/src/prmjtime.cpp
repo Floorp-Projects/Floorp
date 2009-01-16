@@ -153,7 +153,16 @@ PRMJ_ToExtendedTime(JSInt32 base_time)
     return exttime;
 }
 
-#ifdef XP_WIN
+#ifdef HAVE_SYSTEMTIMETOFILETIME
+
+static const JSInt64 win2un = JSLL_INIT(0x19DB1DE, 0xD53E8000);
+
+#define FILETIME2INT64(ft) (((JSInt64)ft.dwHighDateTime) << 32LL | (JSInt64)ft.dwLowDateTime)
+
+#endif
+
+#ifdef HAVE_GETSYSTEMTIMEASFILETIME
+
 typedef struct CalibrationData
 {
     long double freq;         /* The performance counter frequency */
@@ -171,11 +180,7 @@ typedef struct CalibrationData
 #endif
 } CalibrationData;
 
-static const JSInt64 win2un = JSLL_INIT(0x19DB1DE, 0xD53E8000);
-
 static CalibrationData calibration = { 0 };
-
-#define FILETIME2INT64(ft) (((JSInt64)ft.dwHighDateTime) << 32LL | (JSInt64)ft.dwLowDateTime)
 
 static void
 NowCalibrate()
@@ -262,8 +267,7 @@ static PRCallOnceType calibrationOnce = { 0 };
 
 #endif
 
-
-#endif /* XP_WIN */
+#endif /* HAVE_GETSYSTEMTIMEASFILETIME */
 
 
 #if defined(XP_OS2)
@@ -304,7 +308,7 @@ PRMJ_Now(void)
     return s;
 }
 
-#elif defined(XP_WIN)
+#elif defined(HAVE_GETSYSTEMTIMEASFILETIME)
 /*
 
 Win32 python-esque pseudo code
@@ -506,6 +510,18 @@ PRMJ_Now(void)
 
     return returnedTime;
 }
+
+#elif defined (HAVE_SYSTEMTIMETOFILETIME)
+JSInt64
+PRMJ_Now(void)
+{
+    FILETIME ft;
+    SYSTEMTIME st;
+    GetSystemTime(&st);
+    SystemTimeToFileTime(&st,&ft);
+    return (FILETIME2INT64(ft)-win2un)/10L;
+}
+
 #else
 #error "No implementation of PRMJ_Now was selected."
 #endif
