@@ -293,7 +293,7 @@ class nsOggDecoder : public nsMediaDecoder
 
   nsOggDecoder();
   ~nsOggDecoder();
-  PRBool Init();
+  virtual PRBool Init(nsHTMLMediaElement* aElement);
 
   // This method must be called by the owning object before that
   // object disposes of this decoder object.
