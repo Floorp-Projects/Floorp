@@ -426,16 +426,6 @@ PKIX_TrustAnchor_CreateWithNameKeyPair(
         PKIX_TrustAnchor *anchor = NULL;
 
         PKIX_ENTER(TRUSTANCHOR, "PKIX_TrustAnchor_CreateWithNameKeyPair");
-
-#ifndef BUILD_LIBPKIX_TESTS
-        /* Nss creates trust anchors by using PKIX_TrustAnchor_CreateWithCert
-         * function as the complete trusted cert structure, and not only cert
-         * public key, is required for chain building and validation processes. 
-         * Restricting this function for been used only in libpkix unit
-         * tests. */
-        PKIX_ERROR(PKIX_FUNCTIONMUSTNOTBEUSED);
-#endif
-
         PKIX_NULLCHECK_THREE(name, pubKey, pAnchor);
 
         PKIX_CHECK(PKIX_PL_Object_Alloc

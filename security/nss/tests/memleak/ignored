@@ -17,27 +17,23 @@
 **/pr_LoadLibraryByPathname/**
 **/PR_LoadLibrary/**
 
+#393181
+ocspclnt/main/CERT_SetOCSPDefaultResponder/**
+
+#397483
+**/PR_CallOnce/InitializeArenas/PR_NewLock/**
+
 #397487
 **/__rpc_getconfip/setnetconfig/**
+
+#401072
+**/sftkdb_ReadSecmodDB/sftk_getOldSecmodName/**
+**/sftkdb_ReadSecmodDB/PR_smprintf/**
 
 #401100
 **/testThreadLockingBehavior/pthread_create@@GLIBC_2.1/**
 **/findLockInfo/pthread_create@@GLIBC_2.1/**
 
-#430544
-**/PR_CallOnce/InitializeArenas/PR_NewLock/**
-
-#458905
-**/cert_createObject/nssTrustDomain_AddCertsToCache/add_cert_to_cache/**
-**/cert_createObject/nssTrustDomain_AddCertsToCache/nssArena_Create/**
-
-#459237
-**/PR_FormatTime/strftime/**
-**/PR_FormatTime/__strftime_std/**
-
-#463208
-**/sqlite3UnixFullPathname/_getcwd/**
-
-#463631
-vfychain/main/PL_CreateOptState/**
+#418365
+#selfserv/main/PR_NewTCPSocket/**
 

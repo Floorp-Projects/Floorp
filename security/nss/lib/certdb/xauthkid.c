@@ -40,6 +40,7 @@
  */
 
 #include "prtypes.h"
+#include "mcom_db.h"
 #include "seccomon.h"
 #include "secdert.h"
 #include "secoidt.h"

@@ -63,7 +63,7 @@ endif
 #######################################################################
 
 TARGET_OSES = FreeBSD BSD_OS NetBSD OpenUNIX OS2 QNX Darwin BeOS OpenBSD \
-              OpenVMS AIX RISCOS WINCE
+              OpenVMS AIX RISCOS
 
 ifeq (,$(filter-out $(TARGET_OSES),$(OS_TARGET)))
 include $(CORE_DEPTH)/coreconf/$(OS_TARGET).mk
@@ -188,10 +188,6 @@ endif
 
 ifdef BUILD_LIBPKIX_TESTS
 DEFINES += -DBUILD_LIBPKIX_TESTS
-endif
-
-ifdef NSS_DISABLE_DBM
-DEFINES += -DNSS_DISABLE_DBM
 endif
 
 # Avoid building object leak test code for optimized library

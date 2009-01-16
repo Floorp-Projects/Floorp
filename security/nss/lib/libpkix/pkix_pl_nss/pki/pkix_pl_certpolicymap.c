@@ -95,10 +95,8 @@ pkix_pl_CertPolicyMap_Create(
         policyMap->subjectDomainPolicy = subjectDomainPolicy;
 
         *pCertPolicyMap = policyMap;
-        policyMap = NULL;
 
 cleanup:
-        PKIX_DECREF(policyMap);
 
         PKIX_RETURN(CERTPOLICYMAP);
 }

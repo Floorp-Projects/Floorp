@@ -85,12 +85,12 @@ ListCerts(char *key, int list_certs)
 
     num_trav_certs = 0;
 
-    /* Traverse ALL tokens in all slots, authenticating to them all */
+    /* Traverse non-internal DBs */
     rv = PK11_TraverseSlotCerts(cert_trav_callback, (void * )&list_certs,
          		&pwdata);
 
     if (rv) {
-	PR_fprintf(outputFD, "**Traverse of ALL slots & tokens failed**\n");
+	PR_fprintf(outputFD, "**Traverse of non-internal DBs failed**\n");
 	return - 1;
     }
 
@@ -180,67 +180,96 @@ ListCerts(char *key, int list_certs)
 static SECStatus
 cert_trav_callback(CERTCertificate *cert, SECItem *k, void *data)
 {
+    int	isSigningCert;
     int	list_certs = 1;
-    char *name;
+
+    char	*name, *issuerCN, *expires;
+    CERTCertificate * issuerCert = NULL;
 
     if (data) {
 	list_certs = *((int * )data);
     }
 
-#define LISTING_USER_SIGNING_CERTS (list_certs == 1)
-#define LISTING_ALL_CERTS          (list_certs == 2)
-
-    name = cert->nickname;
-    if (name) {
-    	int     isSigningCert;
+    if (cert->nickname) {
+	name = cert->nickname;
 
 	isSigningCert = cert->nsCertType & NS_CERT_TYPE_OBJECT_SIGNING;
-	if (!isSigningCert && LISTING_USER_SIGNING_CERTS)
+	issuerCert = CERT_FindCertIssuer (cert, PR_Now(), certUsageObjectSigner);
+	issuerCN = CERT_GetCommonName (&cert->issuer);
+
+	if (!isSigningCert && list_certs == 1)
 	    return (SECSuccess);
 
-	/* Display this name or email address */
-	num_trav_certs++;
+	/* Add this name or email to list */
 
-	if (LISTING_ALL_CERTS) {
-	    PR_fprintf(outputFD, "%s ", isSigningCert ? "*" : " ");
-	}
-	PR_fprintf(outputFD, "%s\n", name);
+	if (name) {
+	    int	rv;
 
-	if (LISTING_USER_SIGNING_CERTS) {
-	    int rv = SECFailure;
-	    if (rv) {
-		CERTCertificate * issuerCert;
-		issuerCert = CERT_FindCertIssuer(cert, PR_Now(),
-						 certUsageObjectSigner);
-		if (issuerCert) {
-		    if (issuerCert->nickname && issuerCert->nickname[0]) {
-			PR_fprintf(outputFD, "    Issued by: %s\n",
-			     issuerCert->nickname);
-			rv = SECSuccess;
-		    }
-		    CERT_DestroyCertificate(issuerCert);
+	    num_trav_certs++;
+	    if (list_certs == 2) {
+		PR_fprintf(outputFD, "%s ", isSigningCert ? "*" : " ");
+	    }
+	    PR_fprintf(outputFD, "%s\n", name);
+
+	    if (list_certs == 1) {
+		if (issuerCert == NULL) {
+		    PR_fprintf(outputFD,
+		        "\t++ Error ++ Unable to find issuer certificate\n");
+		    return SECSuccess; 
+			   /*function was a success even if cert is bogus*/
 		}
-	    }
-	    if (rv && cert->issuerName && cert->issuerName[0]) {
-		PR_fprintf(outputFD, "    Issued by: %s \n", cert->issuerName);
-	    }
-	    {
-		char *expires;
+		if (issuerCN == NULL)
+		    PR_fprintf(outputFD, "    Issued by: %s\n",
+		         issuerCert->nickname);
+		else
+		    PR_fprintf(outputFD,
+		        "    Issued by: %s (%s)\n", issuerCert->nickname,
+		         issuerCN);
+
 		expires = DER_TimeChoiceDayToAscii(&cert->validity.notAfter);
-		if (expires) {
+
+		if (expires)
 		    PR_fprintf(outputFD, "    Expires: %s\n", expires);
-		    PORT_Free(expires);
+
+		rv = CERT_CertTimesValid (cert);
+
+		if (rv != SECSuccess)
+		    PR_fprintf(outputFD, 
+			"    ++ Error ++ THIS CERTIFICATE IS EXPIRED\n");
+
+		if (rv == SECSuccess) {
+		    rv = CERT_VerifyCertNow (cert->dbhandle, cert,
+		        PR_TRUE, certUsageObjectSigner, &pwdata);
+
+		    if (rv != SECSuccess) {
+			rv = PORT_GetError();
+			PR_fprintf(outputFD,
+			"    ++ Error ++ THIS CERTIFICATE IS NOT VALID (%s)\n",
+			     				secErrorString(rv));            
+		    }
 		}
-	    }
 
-	    rv = CERT_VerifyCertNow (cert->dbhandle, cert,
-		PR_TRUE, certUsageObjectSigner, &pwdata);
+		expires = DER_TimeChoiceDayToAscii(&issuerCert->validity.notAfter);
+		if (expires == NULL) 
+		    expires = "(unknown)";
 
-	    if (rv != SECSuccess) {
-		rv = PORT_GetError();
-		PR_fprintf(outputFD,
-		"    ++ Error ++ THIS CERTIFICATE IS NOT VALID (%s)\n",
-						secErrorString(rv));            
+		rv = CERT_CertTimesValid (issuerCert);
+
+		if (rv != SECSuccess)
+		    PR_fprintf(outputFD,
+		        "    ++ Error ++ ISSUER CERT \"%s\" EXPIRED ON %s\n",
+			issuerCert->nickname, expires);
+
+		if (rv == SECSuccess) {
+		    rv = CERT_VerifyCertNow (issuerCert->dbhandle, issuerCert, 
+		        PR_TRUE, certUsageVerifyCA, &pwdata);
+		    if (rv != SECSuccess) {
+			rv = PORT_GetError();
+			PR_fprintf(outputFD,
+			"    ++ Error ++ ISSUER CERT \"%s\" IS NOT VALID (%s)\n",
+			     issuerCert->nickname, secErrorString(rv));
+		    }
+		}
 	    }
 	}
     }

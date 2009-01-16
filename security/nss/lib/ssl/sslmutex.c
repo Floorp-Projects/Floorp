@@ -33,11 +33,11 @@
  * the terms of any one of the MPL, the GPL or the LGPL.
  *
  * ***** END LICENSE BLOCK ***** */
-/* $Id: sslmutex.c,v 1.23 2008/12/02 06:36:59 nelson%bolyard.com Exp $ */
+/* $Id: sslmutex.c,v 1.20 2006/06/07 18:36:26 nelson%bolyard.com Exp $ */
 
 #include "seccomon.h"
 /* This ifdef should match the one in sslsnce.c */
-#if defined(XP_UNIX) || defined(XP_WIN32) || defined (XP_OS2) || defined(XP_BEOS)
+#if (defined(XP_UNIX) || defined(XP_WIN32) || defined (XP_OS2) || defined(XP_BEOS)) && !defined(_WIN32_WCE)
 
 #include "sslmutex.h"
 #include "prerr.h"
@@ -89,7 +89,7 @@ static SECStatus single_process_sslMutex_Lock(sslMutex* pMutex)
     return SECSuccess;
 }
 
-#if defined(LINUX) || defined(AIX) || defined(VMS) || defined(BEOS) || defined(BSDI) || (defined(NETBSD) && __NetBSD_Version__ < 500000000) || defined(OPENBSD)
+#if defined(LINUX) || defined(AIX) || defined(VMS) || defined(BEOS) || defined(BSDI) || defined(NETBSD) || defined(OPENBSD)
 
 #include <unistd.h>
 #include <fcntl.h>
@@ -141,7 +141,6 @@ sslMutex_Init(sslMutex *pMutex, int shared)
 
     err = pipe(pMutex->u.pipeStr.mPipes);
     if (err) {
-	nss_MD_unix_map_default_error(errno);
 	return err;
     }
 #if NONBLOCKING_POSTS

@@ -41,60 +41,68 @@
  *
  */
 
-#ifndef _PKIX_CRLCHECKER_H
-#define _PKIX_CRLCHECKER_H
+#ifndef _PKIX_DEFAULTCRLCHECKER_H
+#define _PKIX_DEFAULTCRLCHECKER_H
 
-#include "pkixt.h"
-#include "pkix_revocationmethod.h"
-#include "pkix_crlsel.h"
+#include "pkix_tools.h"
 
 #ifdef __cplusplus
 extern "C" {
 #endif
 
-/* NOTE: nbio logic removed. Will be replaced later. */
+typedef struct pkix_DefaultCRLCheckerState pkix_DefaultCRLCheckerState;
+
+struct pkix_DefaultCRLCheckerState {
+        PKIX_List *certStores; /* list of CertStore */
+        PKIX_PL_Date *testDate;
+        PKIX_Boolean certHasValidCrl;
+        PKIX_Boolean nistCRLPolicyEnabled;
+        PKIX_Boolean prevCertCrlSign;
+        PKIX_PL_PublicKey *prevPublicKey; /* Subject PubKey of last cert */
+        PKIX_List *prevPublicKeyList; /* of PKIX_PL_PublicKey */
+        PKIX_UInt32 reasonCodeMask;
+        PKIX_UInt32 certsRemaining;
+        PKIX_PL_OID *crlReasonCodeOID;
+
+        PKIX_PL_X500Name *certIssuer;
+        PKIX_PL_BigInt *certSerialNumber;
+        PKIX_CRLSelector *crlSelector;
+        PKIX_UInt32 crlStoreIndex;
+        PKIX_UInt32 numCrlStores;
+};
 
 PKIX_Error *
-pkix_CrlChecker_CheckLocal(
-        PKIX_PL_Cert *cert,
-        PKIX_PL_Cert *issuer,
-        PKIX_PL_Date *date,
-        pkix_RevocationMethod *checkerObject,
-        PKIX_ProcessingParams *procParams,
-        PKIX_UInt32 methodFlags,
-        PKIX_RevocationStatus *pRevStatus,
-        PKIX_UInt32 *reasonCode,
+pkix_DefaultCRLChecker_Initialize(
+        PKIX_List *certStores,
+        PKIX_PL_Date *testDate,
+        PKIX_PL_PublicKey *trustedPubKey,
+        PKIX_UInt32 certsRemaining,
+        PKIX_Boolean nistCRLPolicyEnabled,
+        PKIX_CertChainChecker **pChecker,
         void *plContext);
 
 PKIX_Error *
-pkix_CrlChecker_CheckExternal(
+pkix_DefaultCRLChecker_Check_Helper(
+        PKIX_CertChainChecker *checker,
         PKIX_PL_Cert *cert,
-        PKIX_PL_Cert *issuer,
-        PKIX_PL_Date *date,
-        pkix_RevocationMethod *checkerObject,
-        PKIX_ProcessingParams *procParams,
-        PKIX_UInt32 methodFlags,
-        PKIX_RevocationStatus *pRevStatus,
-        PKIX_UInt32 *reasonCode,
+        PKIX_PL_PublicKey *prevPublicKey,
+        pkix_DefaultCRLCheckerState *state,
+        PKIX_List *unresolvedCriticalExtensions,
+        PKIX_Boolean useOnlyLocal,
         void **pNBIOContext,
         void *plContext);
 
 PKIX_Error *
-pkix_CrlChecker_Create(PKIX_RevocationMethodType methodType,
-                       PKIX_UInt32 flags,
-                       PKIX_UInt32 priority,
-                       pkix_LocalRevocationCheckFn localRevChecker,
-                       pkix_ExternalRevocationCheckFn externalRevChecker,
-                       PKIX_List *certStores,
-                       PKIX_PL_VerifyCallback crlVerifyFn,
-                       pkix_RevocationMethod **pChecker,
-                       void *plContext);
+pkix_DefaultCRLChecker_Check_SetSelector(
+        PKIX_PL_Cert *cert,
+        pkix_DefaultCRLCheckerState *state,
+        void *plContext);
 
 PKIX_Error *
-pkix_CrlChecker_RegisterSelf(void *plContext);
+pkix_DefaultCRLCheckerState_RegisterSelf(void *plContext);
 
 #ifdef __cplusplus
 }
 #endif
 
-#endif /* _PKIX_CRLCHECKER_H */
+#endif /* _PKIX_DEFAULTCRLCHECKER_H */

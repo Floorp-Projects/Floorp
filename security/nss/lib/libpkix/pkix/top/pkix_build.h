@@ -45,7 +45,6 @@
 #define _PKIX_BUILD_H
 #include "pkix_tools.h"
 #include "pkix_pl_ldapt.h"
-#include "pkix_ekuchecker.h"
 
 #ifdef __cplusplus
 extern "C" {
@@ -99,7 +98,7 @@ struct BuildConstantsStruct {
         PKIX_List *anchors;
         PKIX_List *userCheckers;
         PKIX_List *hintCerts;
-        PKIX_RevocationChecker *revChecker;
+        PKIX_CertChainChecker *crlChecker;
         PKIX_PL_AIAMgr *aiaMgr;
         PKIX_Boolean useAIAForCertFetching;
 };
@@ -136,6 +135,7 @@ struct PKIX_ForwardBuilderStateStruct{
         PKIX_List *reversedCertChain;
         PKIX_List *checkedCritExtOIDs;
         PKIX_List *checkerChain;
+        PKIX_List *revCheckers;
         PKIX_CertSelector *certSel;
         PKIX_VerifyNode *verifyNode;
         void *client; /* messageHandler, such as LDAPClient */

@@ -592,9 +592,8 @@ CacheMap:
 	.byte	0
 	.text
 	.align	16
-.globl freebl_cpuid
-	.type	freebl_cpuid, @function
-freebl_cpuid:
+	.type	cpuid, @function
+cpuid:
 .LFB2:
 	movq	%rdx, %r10
 	pushq	%rbx
@@ -612,7 +611,7 @@ freebl_cpuid:
 	movq	%rdx, (%r8)
 	ret
 .LFE2:
-	.size	freebl_cpuid, .-freebl_cpuid
+	.size	cpuid, .-cpuid
 	.align	16
 	.type	getIntelCacheEntryLineSize, @function
 getIntelCacheEntryLineSize:
@@ -744,7 +743,7 @@ s_mpi_getProcessorLineSize:
 	xorl	%ebx, %ebx
 	subq	$200, %rsp
 .LCFI14:
-	call	freebl_cpuid
+	call	cpuid
 	movq	-152(%rbp), %rax
 	movq	-160(%rbp), %r15
 	movb	$0, -116(%rbp)
@@ -777,7 +776,7 @@ s_mpi_getProcessorLineSize:
 	leaq	-192(%rbp), %rsi
 	movl	$2, %edi
 	xorl	%ebx, %ebx
-	call	freebl_cpuid
+	call	cpuid
 	movq	-192(%rbp), %rdi
 	movl	%edi, %r12d
 	andl	$15, %r12d
@@ -806,7 +805,7 @@ s_mpi_getProcessorLineSize:
 	leaq	-184(%rbp), %rdx
 	leaq	-192(%rbp), %rsi
 	movl	$2, %edi
-	call	freebl_cpuid
+	call	cpuid
 .L24:
 	cmpl	%r12d, %ebx
 	jge	.L38
@@ -863,7 +862,7 @@ s_mpi_getProcessorLineSize:
 	leaq	-240(%rbp), %rsi
 	movl	$2147483648, %edi
 	xorl	%ebx, %ebx
-	call	freebl_cpuid
+	call	cpuid
 	movl	$2147483652, %eax
 	cmpq	%rax, -240(%rbp)
 	ja	.L43
@@ -887,7 +886,7 @@ s_mpi_getProcessorLineSize:
 	leaq	-232(%rbp), %rdx
 	leaq	-240(%rbp), %rsi
 	movl	$2147483653, %edi
-	call	freebl_cpuid
+	call	cpuid
 	movzbq	-224(%rbp), %rbx
 	jmp	.L32
 .LFE7:

@@ -36,7 +36,7 @@
 /*
  * certt.h - public data structures for the certificate library
  *
- * $Id: certt.h,v 1.48 2008/10/31 23:02:36 alexei.volkov.bugs%sun.com Exp $
+ * $Id: certt.h,v 1.47 2008/06/20 16:57:03 nelson%bolyard.com Exp $
  */
 #ifndef _CERTT_H_
 #define _CERTT_H_
@@ -1059,7 +1059,7 @@ typedef enum {
 /*
  * Defines the behavior if we are unable to obtain fresh information.
  * INGORE means:
- *      Return "cert status unknown"
+ *        Return "test succeded, not revoked"
  * FAIL means:
  *      Return "cert revoked".
  */

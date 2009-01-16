@@ -33,11 +33,6 @@
  * the terms of any one of the MPL, the GPL or the LGPL.
  *
  * ***** END LICENSE BLOCK ***** */
-
-#ifdef FREEBL_NO_DEPEND
-#include "stubs.h"
-#endif
-
 #include <memory.h>
 #include "blapi.h"
 #include "sha_fast.h"

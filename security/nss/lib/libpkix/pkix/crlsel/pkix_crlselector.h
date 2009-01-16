@@ -67,12 +67,6 @@ pkix_CRLSelector_Select(
 	PKIX_List **pAfter,
 	void *plContext);
 
-
-PKIX_Error *
-PKIX_CrlSelector_Create(PKIX_PL_Cert *issuer,
-                        PKIX_PL_Date *date,
-                        PKIX_CRLSelector **pCrlSelector,
-                        void *plContext);
 #ifdef __cplusplus
 }
 #endif

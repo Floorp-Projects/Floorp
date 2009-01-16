@@ -220,21 +220,23 @@ PKIX_ProcessingParams_AddCertChainChecker(
         void *plContext);
 
 /*
- * FUNCTION: PKIX_ProcessingParams_GetRevocationChecker
+ * FUNCTION: PKIX_ProcessingParams_GetRevocationCheckers
  * DESCRIPTION:
  *
- *  Retrieves a pointer to the RevocationChecker that are set
+ *  Retrieves a pointer to the List of RevocationCheckers (if any) that are set
  *  in the ProcessingParams pointed to by "params" and stores it at
- *  "pRevChecker". Each RevocationChecker represents a revocation
+ *  "pRevCheckers". Each RevocationChecker represents a custom revocation
  *  check used by PKIX_ValidateChain or PKIX_BuildChain as needed during the
  *  validation or building process. If "params" does not have any
- *  RevocationCheckers, this function stores an empty List at "pRevChecker".
+ *  RevocationCheckers, this function stores an empty List at "pRevCheckers".
+ *  See the description of RevocationCheckers in pkix_revchecker.h for more
+ *  details.
  *
  * PARAMETERS:
  *  "params"
  *      Address of ProcessingParams whose List of RevocationCheckers
  *      is to be stored. Must be non-NULL.
- *  "pRevChecker"
+ *  "pRevCheckers"
  *      Address where object pointer will be stored. Must be non-NULL.
  *  "plContext"
  *      Platform-specific context pointer.
@@ -247,27 +249,31 @@ PKIX_ProcessingParams_AddCertChainChecker(
  *  Returns a Fatal Error if the function fails in an unrecoverable way.
  */
 PKIX_Error *
-PKIX_ProcessingParams_GetRevocationChecker(
+PKIX_ProcessingParams_GetRevocationCheckers(
         PKIX_ProcessingParams *params,
-        PKIX_RevocationChecker **pChecker,
+        PKIX_List **pRevCheckers, /* list of PKIX_RevocationChecker */
         void *plContext);
 
 /*
- * FUNCTION: PKIX_ProcessingParams_SetRevocationChecker
+ * FUNCTION: PKIX_ProcessingParams_SetRevocationCheckers
  * DESCRIPTION:
  *
- *  Sets the ProcessingParams pointed to by "params" with a 
- *  RevocationChecker pointed to by "revChecker". Revocation
- *  checker object should be created and assigned to processing
- *  parameters before chain build or validation can begin.
+ *  Sets the ProcessingParams pointed to by "params" with a List of
+ *  RevocationCheckers pointed to by "revCheckers". Each RevocationChecker
+ *  represents a custom revocation check used by PKIX_ValidateChain or
+ *  PKIX_BuildChain as needed during the validation or building process.
+ *  If "revCheckers" is NULL, no custom RevocationCheckers will be used.
+ *  Note that standard CRL revocation checking is not affected by this
+ *  parameter. See the description of RevocationCheckers in pkix_revchecker.h
+ *  for more details.
  *
  * PARAMETERS:
  *  "params"
  *      Address of ProcessingParams whose List of RevocationCheckers is to be
  *      set. Must be non-NULL.
- *  "revChecker"
- *      Address of RevocationChecker to be set. Must be set before chain
- *      building or validation.
+ *  "revCheckers"
+ *      Address of List of RevocationCheckers to be set. If NULL, no custom
+ *      RevocationCheckers will be used.
  *  "plContext"
  *      Platform-specific context pointer.
  * THREAD SAFETY:
@@ -279,9 +285,40 @@ PKIX_ProcessingParams_GetRevocationChecker(
  *  Returns a Fatal Error if the function fails in an unrecoverable way.
  */
 PKIX_Error *
-PKIX_ProcessingParams_SetRevocationChecker(
+PKIX_ProcessingParams_SetRevocationCheckers(
         PKIX_ProcessingParams *params,
-        PKIX_RevocationChecker *revChecker,
+        PKIX_List *revCheckers,  /* list of PKIX_RevocationChecker */
+        void *plContext);
+
+/*
+ * FUNCTION: PKIX_ProcessingParams_AddRevocationChecker
+ * DESCRIPTION:
+ *
+ *  Adds the RevocationChecker pointed to by "checker" to the ProcessingParams
+ *  pointed to by "params". The RevocationChecker represents a custom
+ *  revocation check used by PKIX_ValidateChain or PKIX_BuildChain as needed
+ *  during the validation or building process. See the description of
+ *  RevocationCheckers in pkix_revchecker.h for more details.
+ *
+ * PARAMETERS:
+ *  "params"
+ *      Address of ProcessingParams to be added to. Must be non-NULL.
+ *  "checker"
+ *      Address of RevocationChecker to be added. Must be non-NULL.
+ *  "plContext"
+ *      Platform-specific context pointer.
+ * THREAD SAFETY:
+ *  Not Thread Safe - assumes exclusive access to "params"
+ *  (see Thread Safety Definitions in Programmer's Guide)
+ * RETURNS:
+ *  Returns NULL if the function succeeds.
+ *  Returns a Params Error if the function fails in a non-fatal way.
+ *  Returns a Fatal Error if the function fails in an unrecoverable way.
+ */
+PKIX_Error *
+PKIX_ProcessingParams_AddRevocationChecker(
+        PKIX_ProcessingParams *params,
+        PKIX_RevocationChecker *checker,
         void *plContext);
 
 /*
@@ -1048,6 +1085,139 @@ PKIX_Error *
 PKIX_ProcessingParams_SetPolicyMappingInhibited(
         PKIX_ProcessingParams *params,
         PKIX_Boolean inhibited,
+        void *plContext);
+
+/*
+ * FUNCTION: PKIX_ProcessingParams_IsCRLRevocationCheckingEnabled
+ * DESCRIPTION:
+ *
+ *  Checks whether the ProcessingParams pointed to by "params" indicate that
+ *  CRL revocation checking is enabled and stores the Boolean result at
+ *  "pEnabled".
+ *
+ *  Note that this only applies to the default CRL revocation checking
+ *  provided by libpkix. Disabling CRL revocation checking will not apply to
+ *  any RevocationCheckers that have been added to the ProcessingParams by the
+ *  caller. By default, CRL revocation checking is enabled. See the
+ *  description of RevocationCheckers in pkix_revchecker.h for more details.
+ *
+ * PARAMETERS:
+ *  "params"
+ *      Address of ProcessingParams used to determine whether or not CRL
+ *      revocation checking is enabled. Must be non-NULL.
+ *  "pEnabled"
+ *      Address where Boolean will be stored. Must be non-NULL.
+ *  "plContext"
+ *      Platform-specific context pointer.
+ * THREAD SAFETY:
+ *  Conditionally Thread Safe
+ *      (see Thread Safety Definitions in Programmer's Guide)
+ * RETURNS:
+ *  Returns NULL if the function succeeds.
+ *  Returns a Params Error if the function fails in a non-fatal way.
+ *  Returns a Fatal Error if the function fails in an unrecoverable way.
+ */
+PKIX_Error *
+PKIX_ProcessingParams_IsCRLRevocationCheckingEnabled(
+        PKIX_ProcessingParams *params,
+        PKIX_Boolean *pEnabled,
+        void *plContext);
+
+/*
+ * FUNCTION: PKIX_ProcessingParams_SetCRLRevocationCheckingEnabled
+ * DESCRIPTION:
+ *
+ *  Specifies in the ProcessingParams pointed to by "params" whether CRL
+ *  revocation checking is enabled using the Boolean value of "enabled".
+ *
+ *  Note that this only applies to the default CRL revocation checking
+ *  provided by libpkix. Disabling CRL revocation revocation will not apply to
+ *  any RevocationCheckers that have been added to the ProcessingParams by the
+ *  caller. By default, CRL revocation checking is enabled. See the
+ *  description of RevocationCheckers in pkix_revchecker.h for more details.
+ *
+ * PARAMETERS:
+ *  "params"
+ *      Address of ProcessingParams to be set. Must be non-NULL.
+ *  "enabled"
+ *      Boolean value indicating whether CRL revocation checking is to
+ *      be enabled.
+ *  "plContext"
+ *      Platform-specific context pointer.
+ * THREAD SAFETY:
+ *  Not Thread Safe - assumes exclusive access to "params"
+ *  (see Thread Safety Definitions in Programmer's Guide)
+ * RETURNS:
+ *  Returns NULL if the function succeeds.
+ *  Returns a Params Error if the function fails in a non-fatal way.
+ *  Returns a Fatal Error if the function fails in an unrecoverable way.
+ */
+PKIX_Error *
+PKIX_ProcessingParams_SetRevocationEnabled(
+        PKIX_ProcessingParams *params,
+        PKIX_Boolean enabled,
+        void *plContext);
+
+/*
+ * FUNCTION: PKIX_ProcessingParams_IsNISTRevocationPolicyEnabled
+ * DESCRIPTION:
+ *
+ *  Checks whether the ProcessingParams pointed to by "params" indicate that
+ *  CRL revocation checking is enabled and revocation is done according to NIST
+ *  CRL policy which states that a valid CRL with nextUpdate field must be
+ *  available for certificate revocation checking.
+ *
+ * PARAMETERS:
+ *  "params"
+ *      Address of ProcessingParams used to determine whether or not NIST CRL
+ *      revocation policy is enabled. Must be non-NULL.
+ *  "pEnabled"
+ *      Address where Boolean will be stored. Must be non-NULL.
+ *  "plContext"
+ *      Platform-specific context pointer.
+ * THREAD SAFETY:
+ *  Conditionally Thread Safe
+ *      (see Thread Safety Definitions in Programmer's Guide)
+ * RETURNS:
+ *  Returns NULL if the function succeeds.
+ *  Returns a Params Error if the function fails in a non-fatal way.
+ *  Returns a Fatal Error if the function fails in an unrecoverable way.
+ */
+PKIX_Error *
+PKIX_ProcessingParams_IsNISTRevocationPolicyEnabled(
+        PKIX_ProcessingParams *params,
+        PKIX_Boolean *pEnabled,
+        void *plContext);
+
+/*
+ * FUNCTION: PKIX_ProcessingParams_SetNISTRevocationPolicyEnabled
+ * DESCRIPTION:
+ *
+ *  Specifies in the ProcessingParams pointed to by "params" whether NIST CRL
+ *  revocation checking is enabled using the Boolean value of "enabled".
+ *  (See PKIX_ProcessingParams_IsNISTRevocationPolicyEnabled function
+ *  description)
+ *
+ * PARAMETERS:
+ *  "params"
+ *      Address of ProcessingParams to be set. Must be non-NULL.
+ *  "enabled"
+ *      Boolean value indicating whether nist CRL revocation checking is to
+ *      be enabled.
+ *  "plContext"
+ *      Platform-specific context pointer.
+ * THREAD SAFETY:
+ *  Not Thread Safe - assumes exclusive access to "params"
+ *  (see Thread Safety Definitions in Programmer's Guide)
+ * RETURNS:
+ *  Returns NULL if the function succeeds.
+ *  Returns a Params Error if the function fails in a non-fatal way.
+ *  Returns a Fatal Error if the function fails in an unrecoverable way.
+ */
+PKIX_Error *
+PKIX_ProcessingParams_SetNISTRevocationPolicyEnabled(
+        PKIX_ProcessingParams *params,
+        PKIX_Boolean enabled,
         void *plContext);
 
 

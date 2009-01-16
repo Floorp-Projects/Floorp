@@ -58,20 +58,20 @@
 #include "pkix_comcertselparams.h"
 #include "pkix_comcrlselparams.h"
 #include "pkix_crlselector.h"
+#include "pkix_defaultcrlchecker.h"
+#include "pkix_defaultrevchecker.h"
 #include "pkix_error.h"
 #include "pkix_expirationchecker.h"
 #include "pkix_list.h"
 #include "pkix_logger.h"
 #include "pkix_namechainingchecker.h"
 #include "pkix_nameconstraintschecker.h"
+#include "pkix_ocspchecker.h"
 #include "pkix_policychecker.h"
 #include "pkix_policynode.h"
 #include "pkix_procparams.h"
 #include "pkix_resourcelimits.h"
-#include "pkix_revocationmethod.h"
 #include "pkix_revocationchecker.h"
-#include "pkix_crlchecker.h"
-#include "pkix_ocspchecker.h"
 #include "pkix_signaturechecker.h"
 #include "pkix_store.h"
 #include "pkix_targetcertchecker.h"
@@ -89,6 +89,7 @@ typedef struct pkixStdVarsStr {
     PKIX_Error        *aPkixTempResult;
     PKIX_Error        *aPkixReturnResult;
     PKIX_ERRORCODE     aPkixErrorCode;
+    const char        *aPkixErrorMsg;
     PKIX_Boolean       aPkixErrorReceived;
     PKIX_Boolean       aPkixTempErrorReceived;
     PKIX_ERRORCLASS    aPkixErrorClass;
@@ -103,6 +104,7 @@ typedef struct pkixStdVarsStr {
 #define pkixTempResult              stdVars->aPkixTempResult
 #define pkixReturnResult            stdVars->aPkixReturnResult
 #define pkixErrorCode               stdVars->aPkixErrorCode
+#define pkixErrorMsg                stdVars->aPkixErrorMsg
 #define pkixErrorReceived           stdVars->aPkixErrorReceived
 #define pkixTempErrorReceived       stdVars->aPkixTempErrorReceived 
 #define pkixErrorClass              stdVars->aPkixErrorClass
@@ -116,6 +118,7 @@ typedef struct pkixStdVarsStr {
 #define pkixTempResult              stdVars.aPkixTempResult
 #define pkixReturnResult            stdVars.aPkixReturnResult
 #define pkixErrorCode               stdVars.aPkixErrorCode
+#define pkixErrorMsg                stdVars.aPkixErrorMsg
 #define pkixErrorReceived           stdVars.aPkixErrorReceived
 #define pkixTempErrorReceived       stdVars.aPkixTempErrorReceived 
 #define pkixErrorClass              stdVars.aPkixErrorClass
@@ -235,10 +238,10 @@ extern PLHashNumber PR_CALLBACK pkix_ErrorGen_Hash (const void *key);
 #define _PKIX_DEBUG_TRACE(cond, prefix, level) 
 #endif
 
-#define _PKIX_LOG_ERROR(code, level) \
+#define _PKIX_LOG_ERROR(msg, level) \
     { \
 	if (pkixLoggersErrors) { \
-	    pkix_Logger_CheckWithCode(pkixLoggersErrors, code, \
+	    pkix_Logger_Check(pkixLoggersErrors, msg, \
 	                      NULL, pkixType, level, plContext); \
 	} \
     }
@@ -344,6 +347,7 @@ extern PLHashNumber PR_CALLBACK pkix_ErrorGen_Hash (const void *key);
             TRACE_CHECK_FAILURE((func), PKIX_ErrorText[descNum]) \
 	    pkixErrorClass = pkixErrorResult->errClass; \
 	    pkixErrorCode = descNum; \
+	    pkixErrorMsg = PKIX_ErrorText[descNum]; \
 	    goto cleanup; \
 	} \
     } while (0)
@@ -364,13 +368,14 @@ extern PLHashNumber PR_CALLBACK pkix_ErrorGen_Hash (const void *key);
     } while (0)
 
 #define PKIX_LOG_ERROR(descNum) \
-    _PKIX_LOG_ERROR(descNum, PKIX_LOGGER_LEVEL_ERROR)
+    _PKIX_LOG_ERROR(PKIX_ErrorText[descNum], PKIX_LOGGER_LEVEL_ERROR)
 
 #define PKIX_ERROR(descNum) \
     { \
 	PKIX_LOG_ERROR(descNum) \
 	pkixErrorReceived = PKIX_TRUE; \
 	pkixErrorCode = descNum; \
+	pkixErrorMsg = PKIX_ErrorText[descNum]; \
 	goto cleanup; \
     }
 
@@ -385,9 +390,10 @@ extern PLHashNumber PR_CALLBACK pkix_ErrorGen_Hash (const void *key);
 #define PKIX_ERROR_FATAL(descNum) \
     { \
 	pkixErrorReceived = PKIX_TRUE; \
+	pkixErrorMsg = PKIX_ErrorText[descNum]; \
 	pkixErrorCode = descNum; \
 	pkixErrorClass = PKIX_FATAL_ERROR; \
-	_PKIX_LOG_ERROR(pkixErrorCode, PKIX_LOGGER_LEVEL_FATALERROR); \
+	_PKIX_LOG_ERROR(pkixErrorMsg, PKIX_LOGGER_LEVEL_FATALERROR); \
 	goto cleanup; \
     }
 
@@ -397,9 +403,10 @@ extern PLHashNumber PR_CALLBACK pkix_ErrorGen_Hash (const void *key);
 	if (pkixErrorResult) { \
                 TRACE_CHECK_FAILURE((func), PKIX_ErrorText[descNum]) \
 		pkixErrorReceived = PKIX_TRUE; \
+		pkixErrorMsg = PKIX_ErrorText[descNum]; \
 		pkixErrorCode = descNum; \
 		pkixErrorClass = PKIX_FATAL_ERROR; \
-		_PKIX_LOG_ERROR(pkixErrorCode, PKIX_LOGGER_LEVEL_FATALERROR); \
+		_PKIX_LOG_ERROR(pkixErrorMsg, PKIX_LOGGER_LEVEL_FATALERROR); \
 		goto fatal; \
 	} \
     } while (0)
@@ -408,6 +415,7 @@ extern PLHashNumber PR_CALLBACK pkix_ErrorGen_Hash (const void *key);
     do { \
 	if ((a) == NULL){ \
 	    pkixErrorReceived = PKIX_TRUE; \
+	    pkixErrorMsg = PKIX_ErrorText[PKIX_NULLARGUMENT]; \
 	    pkixErrorCode = PKIX_NULLARGUMENT; \
 	    PKIX_RETURN(FATAL); \
 	} \
@@ -417,6 +425,7 @@ extern PLHashNumber PR_CALLBACK pkix_ErrorGen_Hash (const void *key);
     do { \
 	if (((a) == NULL) || ((b) == NULL)){ \
 	    pkixErrorReceived = PKIX_TRUE; \
+	    pkixErrorMsg = PKIX_ErrorText[PKIX_NULLARGUMENT]; \
 	    pkixErrorCode = PKIX_NULLARGUMENT; \
 	    PKIX_RETURN(FATAL); \
 	} \
@@ -426,6 +435,7 @@ extern PLHashNumber PR_CALLBACK pkix_ErrorGen_Hash (const void *key);
     do { \
 	if (((a) == NULL) || ((b) == NULL) || ((c) == NULL)){ \
 	    pkixErrorReceived = PKIX_TRUE; \
+	    pkixErrorMsg = PKIX_ErrorText[PKIX_NULLARGUMENT]; \
 	    pkixErrorCode = PKIX_NULLARGUMENT; \
 	    PKIX_RETURN(FATAL); \
 	} \
@@ -436,6 +446,7 @@ extern PLHashNumber PR_CALLBACK pkix_ErrorGen_Hash (const void *key);
 	if (((a) == NULL) || ((b) == NULL) || \
 	    ((c) == NULL) || ((d) == NULL)){ \
 	    pkixErrorReceived = PKIX_TRUE; \
+	    pkixErrorMsg = PKIX_ErrorText[PKIX_NULLARGUMENT]; \
 	    pkixErrorCode = PKIX_NULLARGUMENT; \
 	    PKIX_RETURN(FATAL); \
 	} \
@@ -942,16 +953,6 @@ extern PLHashNumber PR_CALLBACK pkix_ErrorGen_Hash (const void *key);
 #define PKIX_REVOCATIONCHECKER_DEBUG_ARG(expr, arg)
 #endif
 
-#if PKIX_REVOCATIONMETHODDEBUG
-#define PKIX_REVOCATIONMETHOD_DEBUG(expr) \
-        PKIX_DEBUG(expr)
-#define PKIX_REVOCATIONMETHOD_DEBUG_ARG(expr, arg) \
-        PKIX_DEBUG_ARG(expr, arg)
-#else
-#define PKIX_REVOCATIONMETHOD_DEBUG(expr)
-#define PKIX_REVOCATIONMETHOD_DEBUG_ARG(expr, arg)
-#endif
-
 #if PKIX_CERTSELECTORDEBUG
 #define PKIX_CERTSELECTOR_DEBUG(expr) \
         PKIX_DEBUG(expr)
@@ -1162,14 +1163,14 @@ extern PLHashNumber PR_CALLBACK pkix_ErrorGen_Hash (const void *key);
 #define PKIX_COLLECTIONCERTSTORECONTEXT_DEBUG_ARG(expr, arg)
 #endif
 
-#if PKIX_CRLCHECKERDEBUG
-#define PKIX_CRLCHECKER_DEBUG(expr) \
+#if PKIX_DEFAULTCRLCHECKERSTATEDEBUG
+#define PKIX_DEFAULTCRLCHECKERSTATE_DEBUG(expr) \
         PKIX_DEBUG(expr)
-#define PKIX_CRLCHECKER_DEBUG_ARG(expr, arg) \
+#define PKIX_DEFAULTCRLCHECKERSTATE_DEBUG_ARG(expr, arg) \
         PKIX_DEBUG_ARG(expr, arg)
 #else
-#define PKIX_CRLCHECKER_DEBUG(expr)
-#define PKIX_CRLCHECKER_DEBUG_ARG(expr, arg)
+#define PKIX_DEFAULTCRLCHECKERSTATE_DEBUG(expr)
+#define PKIX_DEFAULTCRLCHECKERSTATE_DEBUG_ARG(expr, arg)
 #endif
 
 #if PKIX_CERTPOLICYMAPDEBUG
@@ -1232,14 +1233,14 @@ extern PLHashNumber PR_CALLBACK pkix_ErrorGen_Hash (const void *key);
 #define PKIX_CONTEXT_DEBUG_ARG(expr, arg)
 #endif
 
-#if PKIX_REVOCATIONCHECKERDEBUG
-#define PKIX_REVOCATIONCHECKER_DEBUG(expr) \
+#if PKIX_DEFAULTREVOCATIONCHECKERDEBUG
+#define PKIX_DEFAULTREVOCATIONCHECKER_DEBUG(expr) \
         PKIX_DEBUG(expr)
-#define PKIX_REVOCATIONCHECKER_DEBUG_ARG(expr, arg) \
+#define PKIX_DEFAULTREVOCATIONCHECKER_DEBUG_ARG(expr, arg) \
         PKIX_DEBUG_ARG(expr, arg)
 #else
-#define PKIX_REVOCATIONCHECKER_DEBUG(expr)
-#define PKIX_REVOCATIONCHECKER_DEBUG_ARG(expr, arg)
+#define PKIX_DEFAULTREVOCATIONCHECKER_DEBUG(expr)
+#define PKIX_DEFAULTREVOCATIONCHECKER_DEBUG_ARG(expr, arg)
 #endif
 
 #if PKIX_LDAPREQUESTDEBUG

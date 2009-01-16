@@ -37,7 +37,7 @@
  * the terms of any one of the MPL, the GPL or the LGPL.
  *
  * ***** END LICENSE BLOCK ***** */
-/* $Id: blapi.h,v 1.28 2008/12/17 06:09:12 nelson%bolyard.com Exp $ */
+/* $Id: blapi.h,v 1.27 2007/11/09 18:49:32 wtc%google.com Exp $ */
 
 #ifndef _BLAPI_H_
 #define _BLAPI_H_
@@ -515,30 +515,6 @@ extern SECStatus DES_Encrypt(DESContext *cx, unsigned char *output,
 extern SECStatus DES_Decrypt(DESContext *cx, unsigned char *output,
 			    unsigned int *outputLen, unsigned int maxOutputLen,
 			    const unsigned char *input, unsigned int inputLen);
-
-/******************************************/
-/* 
-** SEED symmetric block cypher		  
-*/
-extern SEEDContext *
-SEED_CreateContext(const unsigned char *key, const unsigned char *iv, 
-		   int mode, PRBool encrypt);
-extern SEEDContext *SEED_AllocateContext(void);
-extern SECStatus   SEED_InitContext(SEEDContext *cx, 
-				    const unsigned char *key, 
-				    unsigned int keylen, 
-				    const unsigned char *iv, 
-				    int mode, unsigned int encrypt, 
-				    unsigned int );
-extern void SEED_DestroyContext(SEEDContext *cx, PRBool freeit);
-extern SECStatus 
-SEED_Encrypt(SEEDContext *cx, unsigned char *output, 
-	     unsigned int *outputLen, unsigned int maxOutputLen, 
-	     const unsigned char *input, unsigned int inputLen);
-extern SECStatus 
-SEED_Decrypt(SEEDContext *cx, unsigned char *output, 
-	     unsigned int *outputLen, unsigned int maxOutputLen, 
-             const unsigned char *input, unsigned int inputLen);
 
 /******************************************/
 /*

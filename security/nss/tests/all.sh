@@ -64,7 +64,6 @@
 #   ocsp.sh      - OCSP testing
 #   merge.sh     - tests merging old and new shareable databases
 #   pkits.sh     - NIST/PKITS tests 
-#   chains.sh    - PKIX cert chains tests 
 #   dbupgrade.sh - upgrade databases to new shareable version (used
 #                  only in upgrade test cycle)
 #   memleak.sh   - memory leak testing (optional)
@@ -234,7 +233,7 @@ run_cycle_upgrade_db()
 
     # run the subset of tests with the upgraded database
     TESTS="${ALL_TESTS}"
-    TESTS_SKIP="cipher libpkix cert dbtests sdr ocsp pkits chains"
+    TESTS_SKIP="cipher libpkix cert dbtests sdr ocsp pkits"
 
     echo "${NSS_SSL_TESTS}" | grep "_" > /dev/null
     RET=$?
@@ -306,9 +305,13 @@ run_cycles()
 cycles="standard pkix upgradedb sharedb"
 CYCLES=${NSS_CYCLES:-$cycles}
 
-tests="cipher libpkix cert dbtests tools fips sdr crmf smime ssl ocsp merge pkits chains"
+tests="cipher libpkix cert dbtests tools fips sdr crmf smime ssl ocsp merge pkits"
 TESTS=${NSS_TESTS:-$tests}
 
+# FIXME: move check for ${BUILD_LIBPKIX_TESTS} to libpkix.sh
+if [ -z "${BUILD_LIBPKIX_TESTS}" ] ; then
+    TESTS=`echo "${TESTS}" | sed -e "s/libpkix//"`
+fi
 ALL_TESTS=${TESTS}
 
 nss_ssl_tests="crl bypass_normal normal_bypass fips_normal normal_fips iopr"

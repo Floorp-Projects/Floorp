@@ -34,7 +34,7 @@
  * the terms of any one of the MPL, the GPL or the LGPL.
  *
  * ***** END LICENSE BLOCK ***** */
-/* $Id: sslinfo.c,v 1.18 2008/12/17 06:09:19 nelson%bolyard.com Exp $ */
+/* $Id: sslinfo.c,v 1.17 2008/01/03 19:04:37 wtc%google.com Exp $ */
 #include "ssl.h"
 #include "sslimpl.h"
 #include "sslproto.h"
@@ -110,7 +110,6 @@ SSL_GetChannelInfo(PRFileDesc *fd, SSLChannelInfo *info, PRUintn len)
 #define K_ECDH	"ECDH", kt_ecdh
 #define K_ECDHE	"ECDHE", kt_ecdh
 
-#define C_SEED 	"SEED", calg_seed
 #define C_CAMELLIA	"CAMELLIA", calg_camellia
 #define C_AES	"AES", calg_aes
 #define C_RC4	"RC4", calg_rc4
@@ -146,7 +145,6 @@ static const SSLCipherSuiteInfo suiteInfo[] = {
 {0,CS(TLS_DHE_DSS_WITH_RC4_128_SHA),          S_DSA, K_DHE, C_RC4, B_128, M_SHA, 0, 0, 0, },
 {0,CS(TLS_DHE_RSA_WITH_AES_128_CBC_SHA),      S_RSA, K_DHE, C_AES, B_128, M_SHA, 1, 0, 0, },
 {0,CS(TLS_DHE_DSS_WITH_AES_128_CBC_SHA),      S_DSA, K_DHE, C_AES, B_128, M_SHA, 1, 0, 0, },
-{0,CS(TLS_RSA_WITH_SEED_CBC_SHA),             S_RSA, K_RSA, C_SEED,B_128, M_SHA, 1, 0, 0, },
 {0,CS(TLS_RSA_WITH_CAMELLIA_128_CBC_SHA),     S_RSA, K_RSA, C_CAMELLIA, B_128, M_SHA, 0, 0, 0, },
 {0,CS(SSL_RSA_WITH_RC4_128_MD5),              S_RSA, K_RSA, C_RC4, B_128, M_MD5, 0, 0, 0, },
 {0,CS(SSL_RSA_WITH_RC4_128_SHA),              S_RSA, K_RSA, C_RC4, B_128, M_SHA, 0, 0, 0, },
