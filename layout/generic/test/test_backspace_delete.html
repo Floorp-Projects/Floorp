@@ -50,6 +50,8 @@ function test() {
   var wordSelModifiers =
       (navigator.platform.indexOf("Mac") >= 0) ?
         {shiftKey:true, altKey:true} : {shiftKey:true, ctrlKey:true};
+  var wordModifiers =
+      (navigator.platform.indexOf("Mac") >= 0) ? {altKey:true} : {ctrlKey:true};
   var sel = window.getSelection();
   var editor = document.getElementById("editor");
 
@@ -84,6 +86,18 @@ function test() {
     is(sel.anchorNode, node, "Backspace broken in \"" + editor.innerHTML + "\"");
     is(sel.anchorOffset, offset, "Backspace broken in \"" + editor.innerHTML + "\"");
     is(editor.textContent, text, "Backspace broken in \"" + editor.innerHTML + "\"");
+  }
+
+  function testDeletePrevWord(node, offset, text) {
+    synthesizeKey("VK_BACK_SPACE", wordModifiers);
+    is(sel.anchorNode, node, "Delete previous word broken in \"" + editor.innerHTML + "\"");
+    is(sel.anchorOffset, offset, "Delete previous word broken in \"" + editor.innerHTML + "\"");
+  }
+
+  function testDeleteNextWord(node, offset, text) {
+    synthesizeKey("VK_DELETE", wordModifiers);
+    is(sel.anchorNode, node, "Delete next word broken in \"" + editor.innerHTML + "\"");
+    is(sel.anchorOffset, offset, "Delete next word broken in \"" + editor.innerHTML + "\"");
   }
 
   // Test cell-wise deletion of Delete
@@ -168,6 +182,26 @@ function test() {
   sel.collapse(editor.firstChild, 4);
   testRight(editor.firstChild, 5);
   testDelete(editor.firstChild, 5, "helloשלום");
+
+  // Tests for Bug 462188
+
+  editor.innerHTML = "You should not see this text.";
+  sel.collapse(editor.firstChild, 29);
+  testDeletePrevWord(editor.firstChild, 24, "You should not see this ");
+  testDeletePrevWord(editor.firstChild, 19, "You should not see ");
+  testDeletePrevWord(editor.firstChild, 15, "You should not ");
+  testDeletePrevWord(editor.firstChild, 11, "You should ");
+  testDeletePrevWord(editor.firstChild,  4, "You ");
+  testDeletePrevWord(editor,  0, "");
+
+  editor.innerHTML = "You should not see this text.";
+  sel.collapse(editor.firstChild, 0);
+  testDeleteNextWord(editor.firstChild, 0, " should not see this text.");
+  testDeleteNextWord(editor.firstChild, 0, " not see this text.");
+  testDeleteNextWord(editor.firstChild, 0, " see this text.");
+  testDeleteNextWord(editor.firstChild, 0, " this text.");
+  testDeleteNextWord(editor.firstChild, 0, " text.");
+  testDeleteNextWord(editor, 0, "");
 
   SimpleTest.finish();
 }
