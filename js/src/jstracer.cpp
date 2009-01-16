@@ -111,6 +111,9 @@ static const char tagChar[]  = "OIDISIBI";
 /* Max call stack size. */
 #define MAX_CALL_STACK_ENTRIES 64
 
+/* Max memory you can allocate in a LIR buffer via a single skip() call. */
+#define MAX_SKIP_BYTES (NJ_PAGE_SIZE - LIR_FAR_SLOTS)
+
 /* Max memory needed to rebuild the interpreter stack when falling off trace. */
 #define MAX_INTERP_STACK_BYTES                                                \
     (MAX_NATIVE_STACK_SLOTS * sizeof(jsval) +                                 \
@@ -1939,6 +1942,8 @@ TraceRecorder::snapshot(ExitType exitType)
     }
     intptr_t ip_adj = ENCODE_IP_ADJ(fp, pc);
 
+    JS_STATIC_ASSERT (sizeof(GuardRecord) + sizeof(VMSideExit) < MAX_SKIP_BYTES);
+
     /* Check if we already have a matching side exit. If so use that side exit structure,
        otherwise we have to create our own. */
     VMSideExit** exits = treeInfo->sideExits.data();
@@ -1959,6 +1964,22 @@ TraceRecorder::snapshot(ExitType exitType)
                 return data;
             }
         }
+    }
+
+    if (sizeof(GuardRecord) +
+        sizeof(VMSideExit) + 
+        (stackSlots + ngslots) * sizeof(uint8) >= MAX_SKIP_BYTES) {
+        /**
+         * ::snapshot() is infallible in the sense that callers don't
+         * expect errors; but this is a trace-aborting error condition. So
+         * mangle the request to consume zero slots, and mark the tree as
+         * to-be-trashed. This should be safe as the trace will be aborted
+         * before assembly or execution due to the call to
+         * trackNativeStackUse above.
+         */
+        stackSlots = 0;
+        ngslots = 0;
+        trashSelf = true;
     }
 
     /* We couldn't find a matching side exit, so create our own side exit structure. */
@@ -6709,6 +6730,8 @@ TraceRecorder::interpretedFunctionCall(jsval& fval, JSFunction* fun, uintN argc,
 
     // Generate a type map for the outgoing frame and stash it in the LIR
     unsigned stackSlots = js_NativeStackSlots(cx, 0/*callDepth*/);
+    if (sizeof(FrameInfo) + stackSlots * sizeof(uint8) > MAX_SKIP_BYTES)
+        ABORT_TRACE("interpreted function call requires saving too much stack");
     LIns* data = lir_buf_writer->skip(sizeof(FrameInfo) + stackSlots * sizeof(uint8));
     FrameInfo* fi = (FrameInfo*)data->payload();
     uint8* typemap = (uint8 *)(fi + 1);
@@ -8385,6 +8408,8 @@ TraceRecorder::record_JSOP_GENERATOR()
 
     // Generate a type map for the outgoing frame and stash it in the LIR
     unsigned stackSlots = js_NativeStackSlots(cx, 0/*callDepth*/);
+    if (stackSlots > MAX_SKIP_BYTES) 
+        ABORT_TRACE("generator requires saving too much stack");
     LIns* data = lir_buf_writer->skip(stackSlots * sizeof(uint8));
     uint8* typemap = (uint8 *)data->payload();
     uint8* m = typemap;
