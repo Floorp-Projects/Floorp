@@ -53,6 +53,10 @@ public:
                                      nsIContentSink*     aSink = nsnull);
 
 protected:
+
+  // Sets document <title> to reflect the file name and description.
+  void UpdateTitle(nsIChannel* aChannel);
+
   nsresult CreateSyntheticVideoDocument(nsIChannel* aChannel,
                                         nsIStreamListener** aListener);
 
@@ -111,12 +115,22 @@ nsVideoDocument::CreateSyntheticVideoDocument(nsIChannel* aChannel,
     static_cast<nsHTMLMediaElement*>(NS_NewHTMLVideoElement(nodeInfo, PR_FALSE));
   if (!element)
     return NS_ERROR_OUT_OF_MEMORY;
-
   element->SetAutoplay(PR_TRUE);
   element->SetControls(PR_TRUE);
   element->LoadWithChannel(aChannel, aListener);
-
+  UpdateTitle(aChannel);
   return body->AppendChildTo(element, PR_FALSE);
+}
+
+void
+nsVideoDocument::UpdateTitle(nsIChannel* aChannel)
+{
+  if (!aChannel)
+    return;
+
+  nsAutoString fileName;
+  GetFileName(fileName);
+  SetTitle(fileName);
 }
 
 nsresult
