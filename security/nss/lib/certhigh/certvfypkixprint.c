@@ -147,10 +147,10 @@ pkix_Cert2ASCII(PKIX_PL_Cert *cert)
                 PR_snprintf
                 (asciiString,
                 200,
-                "Ref: %d   Issuer=%s\nSubject=%s\n",
+                "Ref: %d   Subject=%s\nIssuer=%s\n",
                  refCount,
-                issuerAscii,
-                subjectAscii);
+                subjectAscii,
+                issuerAscii);
 
         if (!numChars) goto cleanup;
 
