@@ -210,6 +210,17 @@ function ReadManifest(aURL)
                             "product", "productSub", "productComment",
                             "platform", "oscpu", "language", "misc" ])
         sandbox.http[prop] = hh[prop];
+    // see if we have the test plugin available,
+    // and set a sandox prop accordingly
+    sandbox.haveTestPlugin = false;
+    for (var i = 0; i < navigator.mimeTypes.length; i++) {
+        if (navigator.mimeTypes[i].type == "application/x-test" &&
+            navigator.mimeTypes[i].enabledPlugin != null &&
+            navigator.mimeTypes[i].enabledPlugin.name == "Test Plug-in") {
+            sandbox.haveTestPlugin = true;
+            break;
+        }
+    }
 
     var line = {value:null};
     var lineNo = 0;
