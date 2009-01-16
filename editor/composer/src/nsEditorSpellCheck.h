@@ -66,12 +66,12 @@ public:
 protected:
   nsCOMPtr<nsISpellChecker> mSpellChecker;
 
-  nsTArray<nsString>  mSuggestedWordList;
+  nsStringArray  mSuggestedWordList;
   PRInt32        mSuggestedWordIndex;
 
   // these are the words in the current personal dictionary,
   // GetPersonalDictionary must be called to load them.
-  nsTArray<nsString>  mDictionaryList;
+  nsStringArray  mDictionaryList;
   PRInt32        mDictionaryIndex;
 
   nsresult       DeleteSuggestedWordList();

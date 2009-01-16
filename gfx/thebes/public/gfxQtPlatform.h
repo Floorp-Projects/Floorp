@@ -41,7 +41,6 @@
 
 #include "gfxPlatform.h"
 #include "nsDataHashtable.h"
-#include "nsTArray.h"
 
 typedef struct FT_LibraryRec_ *FT_Library;
 
@@ -63,7 +62,7 @@ public:
 
     nsresult GetFontList(const nsACString& aLangGroup,
                          const nsACString& aGenericFamily,
-                         nsTArray<nsString>& aListOfFonts);
+                         nsStringArray& aListOfFonts);
 
     nsresult UpdateFontList();
 

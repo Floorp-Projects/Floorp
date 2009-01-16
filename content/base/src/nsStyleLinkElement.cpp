@@ -161,7 +161,7 @@ nsStyleLinkElement::SetLineNumber(PRUint32 aLineNumber)
 }
 
 void nsStyleLinkElement::ParseLinkTypes(const nsAString& aTypes,
-                                        nsTArray<nsString>& aResult)
+                                        nsStringArray& aResult)
 {
   nsAString::const_iterator start, done;
   aTypes.BeginReading(start);
@@ -177,7 +177,7 @@ void nsStyleLinkElement::ParseLinkTypes(const nsAString& aTypes,
     if (nsCRT::IsAsciiSpace(*current)) {
       if (inString) {
         ToLowerCase(Substring(start, current), subString);
-        aResult.AppendElement(subString);
+        aResult.AppendString(subString);
         inString = PR_FALSE;
       }
     }
@@ -191,7 +191,7 @@ void nsStyleLinkElement::ParseLinkTypes(const nsAString& aTypes,
   }
   if (inString) {
     ToLowerCase(Substring(start, current), subString);
-    aResult.AppendElement(subString);
+    aResult.AppendString(subString);
   }
 }
 

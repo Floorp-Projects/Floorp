@@ -137,8 +137,8 @@ NS_IMETHODIMP nsMetaCharsetObserver::Notify(
                      nsISupports* aWebShell,
                      nsISupports* aChannel,
                      const PRUnichar* aTag, 
-                     const nsTArray<nsString>* keys, 
-                     const nsTArray<nsString>* values,
+                     const nsStringArray* keys, 
+                     const nsStringArray* values,
                      const PRUint32 aFlags)
 {
   nsresult result = NS_OK;
@@ -159,13 +159,13 @@ NS_IMETHODIMP nsMetaCharsetObserver::Notify(
 NS_IMETHODIMP nsMetaCharsetObserver::Notify(
                     nsISupports* aWebShell,
                     nsISupports* aChannel,
-                    const nsTArray<nsString>* keys, 
-                    const nsTArray<nsString>* values)
+                    const nsStringArray* keys, 
+                    const nsStringArray* values)
 {
     NS_PRECONDITION(keys!=nsnull && values!=nsnull,"Need key-value pair");
 
-    PRUint32 numOfAttributes = keys->Length();
-    NS_ASSERTION( numOfAttributes == values->Length(), "size mismatch");
+    PRInt32 numOfAttributes = keys->Count();
+    NS_ASSERTION( numOfAttributes == values->Count(), "size mismatch");
     nsresult res=NS_OK;
 #ifdef DEBUG
 
@@ -174,9 +174,9 @@ NS_IMETHODIMP nsMetaCharsetObserver::Notify(
     PRUnichar Ucharset[]={'c','h','a','r','s','e','t','\0'};
     
     NS_ASSERTION(numOfAttributes >= 3, "should have at least 3 private attribute");
-    NS_ASSERTION(0==nsCRT::strcmp(Uxcommand,(keys->ElementAt(numOfAttributes-1)).get()),"last name should be 'X_COMMAND'" );
-    NS_ASSERTION(0==nsCRT::strcmp(UcharsetSource,(keys->ElementAt(numOfAttributes-2)).get()),"2nd last name should be 'charsetSource'" );
-    NS_ASSERTION(0==nsCRT::strcmp(Ucharset,(keys->ElementAt(numOfAttributes-3)).get()),"3rd last name should be 'charset'" );
+    NS_ASSERTION(0==nsCRT::strcmp(Uxcommand,(keys->StringAt(numOfAttributes-1))->get()),"last name should be 'X_COMMAND'" );
+    NS_ASSERTION(0==nsCRT::strcmp(UcharsetSource,(keys->StringAt(numOfAttributes-2))->get()),"2nd last name should be 'charsetSource'" );
+    NS_ASSERTION(0==nsCRT::strcmp(Ucharset,(keys->StringAt(numOfAttributes-3))->get()),"3rd last name should be 'charset'" );
 
 #endif
     NS_ASSERTION(mAlias, "Didn't get nsICharsetAlias in constructor");
@@ -187,8 +187,10 @@ NS_IMETHODIMP nsMetaCharsetObserver::Notify(
     // we need at least 5 - HTTP-EQUIV, CONTENT and 3 private
     if(numOfAttributes >= 5 ) 
     {
-      const nsString& srcStr =  values->ElementAt(numOfAttributes-2);
+      const PRUnichar *charset = (values->StringAt(numOfAttributes-3))->get();
+      const PRUnichar *source =  (values->StringAt(numOfAttributes-2))->get();
       PRInt32 err;
+      nsAutoString srcStr(source);
       PRInt32  src = srcStr.ToInteger(&err);
       // if we cannot convert the string into PRInt32, return error
       NS_ASSERTION(NS_SUCCEEDED(err), "cannot get charset source");
@@ -198,14 +200,15 @@ NS_IMETHODIMP nsMetaCharsetObserver::Notify(
       if(kCharsetFromMetaTag <= src)
           return NS_OK; // current charset has higher priority. don't bother to do the following
 
+      PRInt32 i;
       const PRUnichar *httpEquivValue=nsnull;
       const PRUnichar *contentValue=nsnull;
       const PRUnichar *charsetValue=nsnull;
 
-      for (PRUint32 i = 0; i < numOfAttributes - 3; i++)
+      for(i=0;i<(numOfAttributes-3);i++)
       {
         const PRUnichar *keyStr;
-        keyStr = keys->ElementAt(i).get();
+        keyStr = (keys->StringAt(i))->get();
 
         //Change 3.190 in nsHTMLTokens.cpp allow  ws/tab/cr/lf exist before 
         // and after text value, this need to be skipped before comparison
@@ -213,11 +216,11 @@ NS_IMETHODIMP nsMetaCharsetObserver::Notify(
           keyStr++;
 
         if(Substring(keyStr, keyStr+10).LowerCaseEqualsLiteral("http-equiv"))
-              httpEquivValue = values->ElementAt(i).get();
+              httpEquivValue = values->StringAt(i)->get();
         else if(Substring(keyStr, keyStr+7).LowerCaseEqualsLiteral("content"))
-              contentValue = values->ElementAt(i).get();
+              contentValue = values->StringAt(i)->get();
         else if (Substring(keyStr, keyStr+7).LowerCaseEqualsLiteral("charset"))
-              charsetValue = values->ElementAt(i).get();
+              charsetValue = values->StringAt(i)->get();
       }
       NS_NAMED_LITERAL_STRING(contenttype, "Content-Type");
       NS_NAMED_LITERAL_STRING(texthtml, "text/html");
@@ -275,8 +278,7 @@ NS_IMETHODIMP nsMetaCharsetObserver::Notify(
              LossyCopyUTF16toASCII(nsDependentString(charsetValue), newCharset);
          } 
 
-         nsCAutoString charsetString;
-         charsetString.AssignWithConversion(values->ElementAt(numOfAttributes-3));
+         nsCAutoString charsetString; charsetString.AssignWithConversion(charset);
          
          if (!newCharset.IsEmpty())
          {    
@@ -331,8 +333,8 @@ NS_IMETHODIMP nsMetaCharsetObserver::Notify(
 
 //-------------------------------------------------------------------------
 NS_IMETHODIMP nsMetaCharsetObserver::GetCharsetFromCompatibilityTag(
-                     const nsTArray<nsString>* keys, 
-                     const nsTArray<nsString>* values, 
+                     const nsStringArray* keys, 
+                     const nsStringArray* values, 
                      nsAString& aCharset)
 {
     if (!mAlias)
@@ -344,11 +346,11 @@ NS_IMETHODIMP nsMetaCharsetObserver::GetCharsetFromCompatibilityTag(
 
     // support for non standard case for compatibility
     // e.g. <META charset="ISO-8859-1">
-    PRUint32 numOfAttributes = keys->Length();
+    PRInt32 numOfAttributes = keys->Count();
     if ((numOfAttributes >= 3) &&
-        (keys->ElementAt(0).LowerCaseEqualsLiteral("charset")))
+        (keys->StringAt(0)->LowerCaseEqualsLiteral("charset")))
     {
-      const nsString& srcStr = values->ElementAt(numOfAttributes-2);
+      nsAutoString srcStr((values->StringAt(numOfAttributes-2))->get());
       PRInt32 err;
       PRInt32  src = srcStr.ToInteger(&err);
       // if we cannot convert the string into PRInt32, return error
@@ -359,7 +361,7 @@ NS_IMETHODIMP nsMetaCharsetObserver::GetCharsetFromCompatibilityTag(
       if (kCharsetFromMetaTag > src)
       {
           nsCAutoString newCharset;
-          newCharset.AssignWithConversion(values->ElementAt(0).get());
+          newCharset.AssignWithConversion(values->StringAt(0)->get());
           
           nsCAutoString preferred;
           res = mAlias->GetPreferred(newCharset,
@@ -369,8 +371,8 @@ NS_IMETHODIMP nsMetaCharsetObserver::GetCharsetFromCompatibilityTag(
               // compare against the current charset, 
               // also some charsets which should have been found in
               // the BOM detection.
-              const nsString& currentCharset = values->ElementAt(numOfAttributes-3);
-              if (!preferred.Equals(NS_LossyConvertUTF16toASCII(currentCharset)) &&
+              nsString* currentCharset = values->StringAt(numOfAttributes-3);
+              if (!preferred.Equals(NS_LossyConvertUTF16toASCII(*currentCharset)) &&
                   !preferred.EqualsLiteral("UTF-16") &&
                   !preferred.EqualsLiteral("UTF-16BE") &&
                   !preferred.EqualsLiteral("UTF-16LE") &&

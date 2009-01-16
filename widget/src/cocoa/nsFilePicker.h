@@ -48,7 +48,6 @@
 #include "nsIFileChannel.h"
 #include "nsILocalFile.h"
 #include "nsCOMArray.h"
-#include "nsTArray.h"
 
 class nsILocalFileMac;
 @class NSArray;
@@ -102,8 +101,8 @@ protected:
   nsCOMArray<nsILocalFile> mFiles;
   nsString               mDefault;
 
-  nsTArray<nsString>     mFilters; 
-  nsTArray<nsString>     mTitles;
+  nsStringArray          mFilters; 
+  nsStringArray          mTitles;
 
   PRInt32                mSelectedTypeIndex;
 };
