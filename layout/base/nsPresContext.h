@@ -508,9 +508,16 @@ public:
 
   float TextZoom() { return mTextZoom; }
   void SetTextZoom(float aZoom) {
+    if (aZoom == mTextZoom)
+      return;
+
     mTextZoom = aZoom;
-    if (HasCachedStyleData())
+    if (HasCachedStyleData()) {
+      // Media queries could have changed since we changed the meaning
+      // of 'em' units in them.
+      MediaFeatureValuesChanged(PR_TRUE);
       RebuildAllStyleData(NS_STYLE_HINT_REFLOW);
+    }
   }
 
   float GetFullZoom() { return mFullZoom; }
