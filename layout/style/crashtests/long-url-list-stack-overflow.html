@@ -1,0 +1,23 @@
+<!DOCTYPE html>
+<html>
+<head>
+<style id="s"></style>
+<script type="text/javascript">
+
+// Duplicates the string 2^n times
+function exp(s, n)
+{
+  for (var i = 0; i < n; ++i)
+    s += s;
+  return s;
+}
+
+var stylesheet = "@-moz-document url(http://www.w3.org/)" + exp(", url-prefix(file:///)", 20) + " { }";
+document.getElementById("s").textContent = stylesheet;
+
+</script>
+</head>
+<body>
+<div></div>
+</body>
+</html>
