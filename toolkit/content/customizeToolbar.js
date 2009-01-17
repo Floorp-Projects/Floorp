@@ -235,8 +235,11 @@ function unwrapToolbarItems()
     if (paletteItem.hasAttribute("itemdisabled"))
       toolbarItem.disabled = true;
 
-    if (paletteItem.hasAttribute("itemcommand"))
-      toolbarItem.setAttribute("command", paletteItem.getAttribute("itemcommand"));
+    if (paletteItem.hasAttribute("itemcommand")) {
+      let commandID = paletteItem.getAttribute("itemcommand");
+      toolbarItem.setAttribute("command", commandID);
+      toolbarItem.disabled = gToolboxDocument.getElementById(commandID).disabled;
+    }
 
     paletteItem.parentNode.replaceChild(toolbarItem, paletteItem);
   }
