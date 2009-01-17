@@ -983,21 +983,21 @@ PRInt32 nsNavHistoryContainerResultNode::SortComparison_KeywordLess(
   PRInt32 value = 0;
   if (a->mItemId != -1 || b->mItemId != -1) {
     // compare the keywords
-    nsAutoString aKeyword, bKeyword;
+    nsAutoString keywordA, keywordB;
     nsNavBookmarks* bookmarks = nsNavBookmarks::GetBookmarksService();
     NS_ENSURE_TRUE(bookmarks, 0);
 
     nsresult rv;
     if (a->mItemId != -1) {
-      rv = bookmarks->GetKeywordForBookmark(a->mItemId, aKeyword);
+      rv = bookmarks->GetKeywordForBookmark(a->mItemId, keywordA);
       NS_ENSURE_SUCCESS(rv, 0);
     }
     if (b->mItemId != -1) {
-      rv = bookmarks->GetKeywordForBookmark(b->mItemId, aKeyword);
+      rv = bookmarks->GetKeywordForBookmark(b->mItemId, keywordB);
       NS_ENSURE_SUCCESS(rv, 0);
     }
 
-    value = SortComparison_StringLess(aKeyword, bKeyword);
+    value = SortComparison_StringLess(keywordA, keywordB);
   }
 
   // fall back to title sorting
