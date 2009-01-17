@@ -577,7 +577,7 @@
                         accesskey="&errorConsoleCmd.accesskey;"
                         key="key_errorConsole"
                         oncommand="toJavaScriptConsole();"/>
-              <menuitem id="menu_viewPageInfo"
+              <menuitem id="menu_pageInfo"
                         accesskey="&pageInfoCmd.accesskey;"
                         label="&pageInfoCmd.label;"
 #ifndef XP_WIN
