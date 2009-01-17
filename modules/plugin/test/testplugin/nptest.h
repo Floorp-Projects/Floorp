@@ -39,6 +39,7 @@
 #include "npapi.h"
 #include "npfunctions.h"
 #include "npruntime.h"
+#include "prtypes.h"
 
 typedef enum  {
   DM_DEFAULT,
