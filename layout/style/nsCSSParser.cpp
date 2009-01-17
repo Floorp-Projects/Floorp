@@ -1357,59 +1357,57 @@ PRBool
 CSSParserImpl::ParseAtRule(RuleAppendFunc aAppendFunc,
                            void* aData)
 {
+  nsCSSSection newSection;
+  PRBool (CSSParserImpl::*parseFunc)(RuleAppendFunc, void*);
+
   if ((mSection <= eCSSSection_Charset) &&
       (mToken.mIdent.LowerCaseEqualsLiteral("charset"))) {
-    if (ParseCharsetRule(aAppendFunc, aData)) {
-      mSection = eCSSSection_Import;  // only one charset allowed
-      return PR_TRUE;
+    parseFunc = &CSSParserImpl::ParseCharsetRule;
+    newSection = eCSSSection_Import;  // only one charset allowed
+
+  } else if ((mSection <= eCSSSection_Import) &&
+             mToken.mIdent.LowerCaseEqualsLiteral("import")) {
+    parseFunc = &CSSParserImpl::ParseImportRule;
+    newSection = eCSSSection_Import;
+
+  } else if ((mSection <= eCSSSection_NameSpace) &&
+             mToken.mIdent.LowerCaseEqualsLiteral("namespace")) {
+    parseFunc = &CSSParserImpl::ParseNameSpaceRule;
+    newSection = eCSSSection_NameSpace;
+
+  } else if (mToken.mIdent.LowerCaseEqualsLiteral("media")) {
+    parseFunc = &CSSParserImpl::ParseMediaRule;
+    newSection = eCSSSection_General;
+
+  } else if (mToken.mIdent.LowerCaseEqualsLiteral("-moz-document")) {
+    parseFunc = &CSSParserImpl::ParseMozDocumentRule;
+    newSection = eCSSSection_General;
+
+  } else if (mToken.mIdent.LowerCaseEqualsLiteral("font-face")) {
+    parseFunc = &CSSParserImpl::ParseFontFaceRule;
+    newSection = eCSSSection_General;
+
+  } else if (mToken.mIdent.LowerCaseEqualsLiteral("page")) {
+    parseFunc = &CSSParserImpl::ParsePageRule;
+    newSection = eCSSSection_General;
+
+  } else {
+    if (!NonMozillaVendorIdentifier(mToken.mIdent)) {
+      REPORT_UNEXPECTED_TOKEN(PEUnknownAtRule);
+      OUTPUT_ERROR();
     }
-  }
-  if ((mSection <= eCSSSection_Import) &&
-      mToken.mIdent.LowerCaseEqualsLiteral("import")) {
-    if (ParseImportRule(aAppendFunc, aData)) {
-      mSection = eCSSSection_Import;
-      return PR_TRUE;
-    }
-  }
-  if ((mSection <= eCSSSection_NameSpace) &&
-      mToken.mIdent.LowerCaseEqualsLiteral("namespace")) {
-    if (ParseNameSpaceRule(aAppendFunc, aData)) {
-      mSection = eCSSSection_NameSpace;
-      return PR_TRUE;
-    }
-  }
-  if (mToken.mIdent.LowerCaseEqualsLiteral("media")) {
-    if (ParseMediaRule(aAppendFunc, aData)) {
-      mSection = eCSSSection_General;
-      return PR_TRUE;
-    }
-  }
-  if (mToken.mIdent.LowerCaseEqualsLiteral("-moz-document")) {
-    if (ParseMozDocumentRule(aAppendFunc, aData)) {
-      mSection = eCSSSection_General;
-      return PR_TRUE;
-    }
-  }
-  if (mToken.mIdent.LowerCaseEqualsLiteral("font-face")) {
-    if (ParseFontFaceRule(aAppendFunc, aData)) {
-      mSection = eCSSSection_General;
-      return PR_TRUE;
-    }
-  }
-  if (mToken.mIdent.LowerCaseEqualsLiteral("page")) {
-    if (ParsePageRule(aAppendFunc, aData)) {
-      mSection = eCSSSection_General;
-      return PR_TRUE;
-    }
+    // Skip over unsupported at rule, don't advance section
+    return SkipAtRule();
   }
 
-  if (!NonMozillaVendorIdentifier(mToken.mIdent)) {
-    REPORT_UNEXPECTED_TOKEN(PEUnknownAtRule);
+  if (!(this->*parseFunc)(aAppendFunc, aData)) {
+    // Skip over invalid at rule, don't advance section
     OUTPUT_ERROR();
+    return SkipAtRule();
   }
 
-  // Skip over unsupported at rule, don't advance section
-  return SkipAtRule();
+  mSection = newSection;
+  return PR_TRUE;
 }
 
 PRBool
@@ -2040,8 +2038,10 @@ CSSParserImpl::ProcessNameSpace(const nsString& aPrefix,
 PRBool
 CSSParserImpl::ParseFontFaceRule(RuleAppendFunc aAppendFunc, void* aData)
 {
-  if (!ExpectSymbol('{', PR_TRUE))
+  if (!ExpectSymbol('{', PR_TRUE)) {
+    REPORT_UNEXPECTED_TOKEN(PEBadDeclBlockStart);
     return PR_FALSE;
+  }
 
   nsRefPtr<nsCSSFontFaceRule> rule(new nsCSSFontFaceRule());
   if (!rule) {
@@ -2070,8 +2070,10 @@ CSSParserImpl::ParseFontFaceRule(RuleAppendFunc aAppendFunc, void* aData)
         break;
     }
   }
-  if (!ExpectSymbol('}', PR_TRUE))
+  if (!ExpectSymbol('}', PR_TRUE)) {
+    REPORT_UNEXPECTED_TOKEN(PEBadDeclOrRuleEnd2);
     return PR_FALSE;
+  }
   (*aAppendFunc)(rule, aData);
   return PR_TRUE;
 }
