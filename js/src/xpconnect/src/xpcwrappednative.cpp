@@ -1444,8 +1444,8 @@ return_tearoff:
 
         if(XPCNativeWrapper::IsNativeWrapperClass(clazz))
         {
-            XPCWrappedNative* wrapper;
-            if(XPCNativeWrapper::GetWrappedNative(cx, cur, &wrapper) && wrapper)
+            XPCWrappedNative* wrapper = XPCNativeWrapper::GetWrappedNative(cur);
+            if(wrapper)
                 return GetWrappedNativeOfJSObject(cx, wrapper->GetFlatJSObject(),
                                                   funobj, pobj2, pTearOff);
         }
