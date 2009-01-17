@@ -1379,9 +1379,10 @@ DocumentViewerImpl::Destroy()
   NS_ASSERTION(mDocument, "No document in Destroy()!");
 
 #ifdef NS_PRINTING
-  // Here is where we check to see if the docment was still being prepared 
+  // Here is where we check to see if the document was still being prepared 
   // for printing when it was asked to be destroy from someone externally
-  // This usually happens if the document is unloaded while the user is in the Print Dialog
+  // This usually happens if the document is unloaded while the user is in the
+  // Print Dialog
   //
   // So we flip the bool to remember that the document is going away
   // and we can clean up and abort later after returning from the Print Dialog
