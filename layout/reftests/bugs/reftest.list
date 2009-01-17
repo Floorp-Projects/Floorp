@@ -132,6 +132,7 @@ random == 99850-1b.html 99850-1-ref.html # bug 471629
 == 201293-1d.html 201293-1-ref.html
 == 203727.html 203727-ref.html
 == 206516-1.html 206516-1-ref.html
+== 206631-1.html 206631-1-ref.html
 == 210094-1a.html 210094-1-ref.html
 == 210094-1b.html 210094-1-ref.html
 != 210094-1c.html 210094-1-ref.html
