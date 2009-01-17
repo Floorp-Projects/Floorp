@@ -83,11 +83,11 @@
 + (nsMacCursor *) cursorWithFrames: (NSArray *) aCursorFrames;
 
 /*! @method     cocoaCursorWithImageNamed:hotSpot:
- @abstract   Create a Cocoa NSCursor object with a Gecko image resource name and a hotspot point.
- @discussion Create a Cocoa NSCursor object with a Gecko image resource name and a hotspot point.
- @param      imageName the name of the gecko image resource, "tiff" extension is assumed, do not append.
- @param      aPoint the point within the cursor to use as the hotspot
- @result     an autoreleased instance of <code>nsMacCursor</code> that will animate the given cursor frames
+    @abstract   Create a Cocoa NSCursor object with a Gecko image resource name and a hotspot point.
+    @discussion Create a Cocoa NSCursor object with a Gecko image resource name and a hotspot point.
+    @param      imageName the name of the gecko image resource, "tiff" extension is assumed, do not append.
+    @param      aPoint the point within the cursor to use as the hotspot
+    @result     an autoreleased instance of <code>nsMacCursor</code> that will animate the given cursor frames
  */
 + (NSCursor *) cocoaCursorWithImageNamed: (NSString *) imageName hotSpot: (NSPoint) aPoint;
 
