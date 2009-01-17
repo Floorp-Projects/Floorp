@@ -61,10 +61,15 @@ public:
     return STOBJ_GET_CLASS(obj) == &sXPC_NW_JSClass.base;
   }
 
-  static XPCWrappedNative *GetWrappedNative(JSObject *obj)
+  static JSBool GetWrappedNative(JSContext *cx, JSObject *obj,
+                                 XPCWrappedNative **aWrappedNative);
+
+  // NB: Use the following carefully.
+  static XPCWrappedNative *SafeGetWrappedNative(JSObject *obj)
   {
-    return (XPCWrappedNative *)xpc_GetJSPrivate(obj);
+      return static_cast<XPCWrappedNative *>(xpc_GetJSPrivate(obj));
   }
+
 
   static JSClass *GetJSClass()
   {
