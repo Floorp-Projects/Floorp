@@ -844,14 +844,6 @@ nsChangeHint nsStyleSVG::CalcDifference(const nsStyleSVG& aOther) const
     NS_UpdateHint(hint, nsChangeHint_ReflowFrame);
   }
 
-  if (!EqualURIs(mMarkerEnd, aOther.mMarkerEnd) ||
-      !EqualURIs(mMarkerMid, aOther.mMarkerMid) ||
-      !EqualURIs(mMarkerStart, aOther.mMarkerStart)) {
-    NS_UpdateHint(hint, nsChangeHint_RepaintFrame);
-    NS_UpdateHint(hint, nsChangeHint_UpdateEffects);
-    return hint;
-  }
-
   if (mFill != aOther.mFill ||
       mStroke != aOther.mStroke) {
     NS_UpdateHint(hint, nsChangeHint_RepaintFrame);
@@ -863,7 +855,11 @@ nsChangeHint nsStyleSVG::CalcDifference(const nsStyleSVG& aOther) const
     return hint;
   }
 
-  if ( mStrokeDashoffset      != aOther.mStrokeDashoffset      ||
+  if ( !EqualURIs(mMarkerEnd, aOther.mMarkerEnd)               ||
+       !EqualURIs(mMarkerMid, aOther.mMarkerMid)               ||
+       !EqualURIs(mMarkerStart, aOther.mMarkerStart)           ||
+
+       mStrokeDashoffset      != aOther.mStrokeDashoffset      ||
        mStrokeWidth           != aOther.mStrokeWidth           ||
 
        mFillOpacity           != aOther.mFillOpacity           ||
