@@ -1213,13 +1213,13 @@ private:
   PRBool AdjustContextMenuKeyEvent(nsMouseEvent* aEvent);
 
   // 
-  PRBool PrepareToUseCaretPosition(nsIWidget* aEventWidget, nsPoint& aTargetPt);
+  PRBool PrepareToUseCaretPosition(nsIWidget* aEventWidget, nsIntPoint& aTargetPt);
 
   // Get the selected item and coordinates in device pixels relative to root
   // view for element, first ensuring the element is onscreen
   void GetCurrentItemAndPositionForElement(nsIDOMElement *aCurrentEl,
                                            nsIContent **aTargetToUse,
-                                           nsPoint& aTargetPt);
+                                           nsIntPoint& aTargetPt);
 
   void FireResizeEvent();
   nsRevocableEventPtr<nsRunnableMethod<PresShell> > mResizeEvent;
@@ -6015,7 +6015,7 @@ PresShell::AdjustContextMenuKeyEvent(nsMouseEvent* aEvent)
   aEvent->refPoint.y = 0;
 
   // see if we should use the caret position for the popup
-  nsPoint caretPoint;
+  nsIntPoint caretPoint;
   // Beware! This may flush notifications via synchronous
   // ScrollSelectionIntoView.
   if (PrepareToUseCaretPosition(aEvent->widget, caretPoint)) {
