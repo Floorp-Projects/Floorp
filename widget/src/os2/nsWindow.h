@@ -109,14 +109,14 @@ class nsWindow : public nsBaseWidget,
 
    // Creation from native (eh?) or widget parent, destroy
    NS_IMETHOD Create( nsIWidget *aParent,
-                      const nsRect &aRect,
+                      const nsIntRect &aRect,
                       EVENT_CALLBACK aHandleEventFunction,
                       nsIDeviceContext *aContext,
                       nsIAppShell *aAppShell = nsnull,
                       nsIToolkit *aToolkit = nsnull,
                       nsWidgetInitData *aInitData = nsnull);
    NS_IMETHOD Create( nsNativeWidget aParent,
-                      const nsRect &aRect,
+                      const nsIntRect &aRect,
                       EVENT_CALLBACK aHandleEventFunction,
                       nsIDeviceContext *aContext,
                       nsIAppShell *aAppShell = nsnull,
@@ -142,11 +142,11 @@ class nsWindow : public nsBaseWidget,
                       PRInt32 aWidth,
                       PRInt32 aHeight,
                       PRBool   aRepaint);
-   NS_IMETHOD GetClientBounds( nsRect &aRect);
+   NS_IMETHOD GetClientBounds( nsIntRect &aRect);
    NS_IMETHOD Enable( PRBool aState);
    NS_IMETHOD IsEnabled(PRBool *aState);
    NS_IMETHOD SetFocus(PRBool aRaise);
-   NS_IMETHOD GetBounds(nsRect &aRect);
+   NS_IMETHOD GetBounds(nsIntRect &aRect);
    NS_IMETHOD IsVisible( PRBool &aState);
    NS_IMETHOD PlaceBehind(nsTopLevelWidgetZPlacement aPlacement,
                           nsIWidget *aWidget, PRBool aActivate);
@@ -162,8 +162,8 @@ class nsWindow : public nsBaseWidget,
 
    NS_IMETHOD BeginResizingChildren();
    NS_IMETHOD EndResizingChildren();
-   NS_IMETHOD WidgetToScreen( const nsRect &aOldRect, nsRect &aNewRect);
-   NS_IMETHOD ScreenToWidget( const nsRect &aOldRect, nsRect &aNewRect);
+   NS_IMETHOD WidgetToScreen( const nsIntRect &aOldRect, nsIntRect &aNewRect);
+   NS_IMETHOD ScreenToWidget( const nsIntRect &aOldRect, nsIntRect &aNewRect);
    NS_IMETHOD DispatchEvent( struct nsGUIEvent *event, nsEventStatus &aStatus);
    NS_IMETHOD CaptureRollupEvents(nsIRollupListener * aListener, PRBool aDoCapture, PRBool aConsumeRollupEvent);
 
@@ -180,12 +180,12 @@ class nsWindow : public nsBaseWidget,
    NS_IMETHOD              SetMenuBar(void * aMenuBar) { return NS_ERROR_FAILURE; } 
    NS_IMETHOD              ShowMenuBar(PRBool aShow)         { return NS_ERROR_FAILURE; } 
    NS_IMETHOD              Invalidate( PRBool aIsSynchronous);
-   NS_IMETHOD              Invalidate( const nsRect & aRect, PRBool aIsSynchronous);
+   NS_IMETHOD              Invalidate( const nsIntRect & aRect, PRBool aIsSynchronous);
    NS_IMETHOD              InvalidateRegion(const nsIRegion *aRegion, PRBool aIsSynchronous);
    NS_IMETHOD              Update();
-   NS_IMETHOD              Scroll( PRInt32 aDx, PRInt32 aDy, nsRect *aClipRect);
+   NS_IMETHOD              Scroll( PRInt32 aDx, PRInt32 aDy, nsIntRect *aClipRect);
    NS_IMETHOD              ScrollWidgets(PRInt32 aDx, PRInt32 aDy);
-   NS_IMETHOD              ScrollRect(nsRect &aRect, PRInt32 aDx, PRInt32 aDy);
+   NS_IMETHOD              ScrollRect(nsIntRect &aRect, PRInt32 aDx, PRInt32 aDy);
 
    // Get a HWND or a HPS.
    virtual void  *GetNativeData( PRUint32 aDataType);
@@ -284,13 +284,13 @@ protected:
    nsRefPtr<gfxOS2Surface> mThebesSurface;
 
    // Implementation ------------------------------
-   void DoCreate( HWND hwndP, nsWindow *wndP, const nsRect &rect,
+   void DoCreate( HWND hwndP, nsWindow *wndP, const nsIntRect &rect,
                   EVENT_CALLBACK aHandleEventFunction,
                   nsIDeviceContext *aContext, nsIAppShell *aAppShell,
                   nsIToolkit *aToolkit, nsWidgetInitData *aInitData);
 
    virtual void RealDoCreate( HWND hwndP, nsWindow *aParent,
-                              const nsRect &aRect,
+                              const nsIntRect &aRect,
                               EVENT_CALLBACK aHandleEventFunction,
                               nsIDeviceContext *aContext,
                               nsIAppShell *aAppShell,
@@ -304,7 +304,7 @@ protected:
 
    PRBool  ConvertStatus( nsEventStatus aStatus)
                         { return aStatus == nsEventStatus_eConsumeNoDefault; }
-   void    InitEvent( nsGUIEvent &event, nsPoint *pt = 0);
+   void    InitEvent( nsGUIEvent &event, nsIntPoint *pt = 0);
    virtual PRBool DispatchWindowEvent(nsGUIEvent* event);
    virtual PRBool DispatchWindowEvent(nsGUIEvent*event, nsEventStatus &aStatus);
    PRBool  DispatchStandardEvent( PRUint32 aMsg);
@@ -314,7 +314,7 @@ protected:
                                      PRBool aIsContextMenuKey = PR_FALSE,
                                      PRInt16 aButton = nsMouseEvent::eLeftButton);
    virtual PRBool DispatchResizeEvent( PRInt32 aClientX, PRInt32 aClientY);
-   void GetNonClientBounds(nsRect &aRect);
+   void GetNonClientBounds(nsIntRect &aRect);
    void    DeferPosition( HWND, HWND, long, long, long, long, ULONG);
    void ConstrainZLevel(HWND *aAfter);
 

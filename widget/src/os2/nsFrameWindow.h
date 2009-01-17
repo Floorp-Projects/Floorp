@@ -64,7 +64,7 @@ class nsFrameWindow : public nsWindow
 
    // So we can create the frame, parent the client & position it right
    virtual void RealDoCreate( HWND hwndP, nsWindow *aParent,
-                              const nsRect &aRect,
+                              const nsIntRect &aRect,
                               EVENT_CALLBACK aHandleEventFunction,
                               nsIDeviceContext *aContext,
                               nsIAppShell *aAppShell,
@@ -84,7 +84,7 @@ class nsFrameWindow : public nsWindow
    void SetWindowListVisibility( PRBool bState);
 
    // We have client
-   NS_IMETHOD GetClientBounds( nsRect &aRect);
+   NS_IMETHOD GetClientBounds( nsIntRect &aRect);
 
    friend MRESULT EXPENTRY fnwpFrame( HWND, ULONG, MPARAM, MPARAM);
    static BOOL fHiddenWindowCreated;
