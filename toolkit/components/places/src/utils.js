@@ -53,6 +53,9 @@ const POST_DATA_ANNO = "bookmarkProperties/POSTData";
 const READ_ONLY_ANNO = "placesInternal/READ_ONLY";
 const LMANNO_FEEDURI = "livemark/feedURI";
 const LMANNO_SITEURI = "livemark/siteURI";
+const LMANNO_EXPIRATION = "livemark/expiration";
+const LMANNO_LOADFAILED = "livemark/loadfailed";
+const LMANNO_LOADING = "livemark/loading";
 
 #ifdef XP_MACOSX
 // On Mac OSX, the transferable system converts "\r\n" to "\n\n", where we
@@ -1015,13 +1018,13 @@ var PlacesUtils = {
     stream.init(aFile, 0x01, 0, 0);
     var converted = Cc["@mozilla.org/intl/converter-input-stream;1"].
                     createInstance(Ci.nsIConverterInputStream);
-    converted.init(stream, "UTF-8", 1024,
+    converted.init(stream, "UTF-8", 8192,
                    Ci.nsIConverterInputStream.DEFAULT_REPLACEMENT_CHARACTER);
 
     // read in contents
     var str = {};
     var jsonStr = "";
-    while (converted.readString(4096, str) != 0)
+    while (converted.readString(8192, str) != 0)
       jsonStr += str.value;
     converted.close();
 
@@ -1144,7 +1147,10 @@ var PlacesUtils = {
             node.children.forEach(function(child) {
               var index = child.index;
               var [folders, searches] = this.importJSONNode(child, container, index);
-              folderIdMap = folderIdMap.concat(folders);
+              for (var i = 0; i < folders.length; i++) {
+                if (folders[i])
+                  folderIdMap[i] = folders[i];
+              }
               searchIds = searchIds.concat(searches);
             }, this);
           }
@@ -1187,6 +1193,7 @@ var PlacesUtils = {
     switch (aData.type) {
       case this.TYPE_X_MOZ_PLACE_CONTAINER:
         if (aContainer == PlacesUtils.bookmarks.tagsFolder) {
+          // node is a tag
           if (aData.children) {
             aData.children.forEach(function(aChild) {
               try {
@@ -1203,30 +1210,41 @@ var PlacesUtils = {
           var feedURI = null;
           var siteURI = null;
           aData.annos = aData.annos.filter(function(aAnno) {
-            if (aAnno.name == LMANNO_FEEDURI) {
-              feedURI = this._uri(aAnno.value);
-              return false;
+            switch (aAnno.name) {
+              case LMANNO_FEEDURI:
+                feedURI = this._uri(aAnno.value);
+                return false;
+              case LMANNO_SITEURI:
+                siteURI = this._uri(aAnno.value);
+                return false;
+              case LMANNO_EXPIRATION:
+              case LMANNO_LOADING:
+              case LMANNO_LOADFAILED:
+                return false;
+              default:
+                return true;
             }
-            else if (aAnno.name == LMANNO_SITEURI) {
-              siteURI = this._uri(aAnno.value);
-              return false;
-            }
-            return true;
           }, this);
 
-          if (feedURI)
-            id = this.livemarks.createLivemark(aContainer, aData.title, siteURI, feedURI, aIndex);
+          if (feedURI) {
+            id = this.livemarks.createLivemarkFolderOnly(aContainer,
+                                                         aData.title,
+                                                         siteURI, feedURI,
+                                                         aIndex);
+          }
         }
         else {
           id = this.bookmarks.createFolder(aContainer, aData.title, aIndex);
-          folderIdMap.push([aData.id, id]);
+          folderIdMap[aData.id] = id;
           // process children
           if (aData.children) {
-            aData.children.every(function(aChild, aIndex) {
-              var [folderIds, searches] = this.importJSONNode(aChild, id, aIndex);
-              folderIdMap = folderIdMap.concat(folderIds);
+            aData.children.forEach(function(aChild, aIndex) {
+              var [folders, searches] = this.importJSONNode(aChild, id, aIndex);
+              for (var i = 0; i < folders.length; i++) {
+                if (folders[i])
+                  folderIdMap[i] = folders[i];
+              }
               searchIds = searchIds.concat(searches);
-              return true;
             }, this);
           }
         }
@@ -1242,20 +1260,23 @@ var PlacesUtils = {
         }
         if (aData.charset)
           this.history.setCharsetForURI(this._uri(aData.uri), aData.charset);
-        if (aData.uri.match(/^place:/))
+        if (aData.uri.substr(0, 6) == "place:")
           searchIds.push(id);
         break;
       case this.TYPE_X_MOZ_PLACE_SEPARATOR:
         id = this.bookmarks.insertSeparator(aContainer, aIndex);
         break;
       default:
+        // Unknown node type
     }
 
-    // set generic properties
+    // set generic properties, valid for all nodes
     if (id != -1) {
-      this.bookmarks.setItemDateAdded(id, aData.dateAdded);
-      this.bookmarks.setItemLastModified(id, aData.lastModified);
-      if (aData.annos)
+      if (aData.dateAdded)
+        this.bookmarks.setItemDateAdded(id, aData.dateAdded);
+      if (aData.lastModified)
+        this.bookmarks.setItemLastModified(id, aData.lastModified);
+      if (aData.annos && aData.annos.length)
         this.setAnnotationsForItem(id, aData.annos);
     }
 
@@ -1274,28 +1295,10 @@ var PlacesUtils = {
    *          returns the input URI unchanged.
    */
   _fixupQuery: function PU__fixupQuery(aQueryURI, aFolderIdMap) {
-    var queries = {};
-    var options = {};
-    this.history.queryStringToQueries(aQueryURI.spec, queries, {}, options);
-
-    var fixedQueries = [];
-    queries.value.forEach(function(aQuery) {
-      var folders = aQuery.getFolders({});
-
-      var newFolders = [];
-      aFolderIdMap.forEach(function(aMapping) {
-        if (folders.indexOf(aMapping[0]) != -1)
-          newFolders.push(aMapping[1]);
-      });
-
-      if (newFolders.length)
-        aQuery.setFolders(newFolders, newFolders.length);
-      fixedQueries.push(aQuery);
-    });
-
-    var stringURI = this.history.queriesToQueryString(fixedQueries,
-                                                      fixedQueries.length,
-                                                      options.value);
+    function convert(str, p1, offset, s) {
+      return "folder=" + aFolderIdMap[p1];
+    }
+    var stringURI = aQueryURI.spec.replace(/folder=([0-9]+)/g, convert);
     return this._uri(stringURI);
   },
 
