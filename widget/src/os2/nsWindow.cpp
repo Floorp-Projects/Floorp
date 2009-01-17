@@ -367,7 +367,7 @@ NS_METHOD nsWindow::EndResizingChildren(void)
    return NS_OK;
 }
 
-NS_METHOD nsWindow::WidgetToScreen(const nsRect &aOldRect, nsRect &aNewRect)
+NS_METHOD nsWindow::WidgetToScreen(const nsIntRect &aOldRect, nsIntRect &aNewRect)
 {
   POINTL point = { aOldRect.x, aOldRect.y };
   NS2PM( point);
@@ -381,7 +381,7 @@ NS_METHOD nsWindow::WidgetToScreen(const nsRect &aOldRect, nsRect &aNewRect)
   return NS_OK;
 }
 
-NS_METHOD nsWindow::ScreenToWidget( const nsRect &aOldRect, nsRect &aNewRect)
+NS_METHOD nsWindow::ScreenToWidget( const nsIntRect &aOldRect, nsIntRect &aNewRect)
 {
   POINTL point = { aOldRect.x,
                    WinQuerySysValue( HWND_DESKTOP, SV_CYSCREEN) - aOldRect.y - 1 };
@@ -401,7 +401,7 @@ NS_METHOD nsWindow::ScreenToWidget( const nsRect &aOldRect, nsRect &aNewRect)
 // Initialize an event to dispatch
 //
 //-------------------------------------------------------------------------
-void nsWindow::InitEvent(nsGUIEvent& event, nsPoint* aPoint)
+void nsWindow::InitEvent(nsGUIEvent& event, nsIntPoint* aPoint)
 {
   // if no point was supplied, calculate it
   if (nsnull == aPoint) {
@@ -794,7 +794,7 @@ MRESULT EXPENTRY fnwpNSWindow( HWND hwnd, ULONG msg, MPARAM mp1, MPARAM mp2)
 // Create(nsNativeWidget...)
 //-------------------------------------------------------------------------
 void nsWindow::DoCreate( HWND hwndP, nsWindow *aParent,
-                      const nsRect &aRect,
+                      const nsIntRect &aRect,
                       EVENT_CALLBACK aHandleEventFunction,
                       nsIDeviceContext *aContext,
                       nsIAppShell *aAppShell,
@@ -859,7 +859,7 @@ void nsWindow::DoCreate( HWND hwndP, nsWindow *aParent,
 
 void nsWindow::RealDoCreate( HWND              hwndP,
                              nsWindow         *aParent,
-                             const nsRect     &aRect,
+                             const nsIntRect  &aRect,
                              EVENT_CALLBACK    aHandleEventFunction,
                              nsIDeviceContext *aContext,
                              nsIAppShell      *aAppShell,
@@ -1003,7 +1003,7 @@ void nsWindow::RealDoCreate( HWND              hwndP,
 //
 //-------------------------------------------------------------------------
 NS_METHOD nsWindow::Create(nsIWidget *aParent,
-                      const nsRect &aRect,
+                      const nsIntRect &aRect,
                       EVENT_CALLBACK aHandleEventFunction,
                       nsIDeviceContext *aContext,
                       nsIAppShell *aAppShell,
@@ -1027,7 +1027,7 @@ NS_METHOD nsWindow::Create(nsIWidget *aParent,
 //-------------------------------------------------------------------------
 
 NS_METHOD nsWindow::Create(nsNativeWidget aParent,
-                         const nsRect &aRect,
+                         const nsIntRect &aRect,
                          EVENT_CALLBACK aHandleEventFunction,
                          nsIDeviceContext *aContext,
                          nsIAppShell *aAppShell,
@@ -1554,7 +1554,7 @@ NS_METHOD nsWindow::SetFocus(PRBool aRaise)
 // Get this component dimension
 //
 //-------------------------------------------------------------------------
-NS_METHOD nsWindow::GetBounds(nsRect &aRect)
+NS_METHOD nsWindow::GetBounds(nsIntRect &aRect)
 {
   if (mFrameWnd) {
     SWP swp;
@@ -1575,7 +1575,7 @@ NS_METHOD nsWindow::GetBounds(nsRect &aRect)
 // Get this component dimension
 //
 //-------------------------------------------------------------------------
-NS_METHOD nsWindow::GetClientBounds(nsRect &aRect)
+NS_METHOD nsWindow::GetClientBounds(nsIntRect &aRect)
 {
 
    // nsFrameWindow overrides this...
@@ -1588,7 +1588,7 @@ NS_METHOD nsWindow::GetClientBounds(nsRect &aRect)
 
 //get the bounds, but don't take into account the client size
 
-void nsWindow::GetNonClientBounds(nsRect &aRect)
+void nsWindow::GetNonClientBounds(nsIntRect &aRect)
 {
   if (mWnd) {
       RECTL r;
@@ -2078,7 +2078,7 @@ NS_METHOD nsWindow::Invalidate(PRBool aIsSynchronous)
 // Invalidate this component visible area
 //
 //-------------------------------------------------------------------------
-NS_METHOD nsWindow::Invalidate(const nsRect &aRect, PRBool aIsSynchronous)
+NS_METHOD nsWindow::Invalidate(const nsIntRect &aRect, PRBool aIsSynchronous)
 {
   if (mWnd)
   {
@@ -2237,7 +2237,7 @@ void nsWindow::ScrollChildWindows(PRInt32 aX, PRInt32 aY)
 {
   nsIWidget *child = GetFirstChild();
   while (child) {
-    nsRect rect;
+    nsIntRect rect;
     child->GetBounds(rect);
     child->Resize(rect.x + aX, rect.y + aY, rect.width, rect.height, PR_FALSE);
     child = child->GetNextSibling();
@@ -2249,7 +2249,7 @@ void nsWindow::ScrollChildWindows(PRInt32 aX, PRInt32 aY)
 //
 //-------------------------------------------------------------------------
 //XXX Scroll is obsolete and should go away soon
-NS_METHOD nsWindow::Scroll(PRInt32 aDx, PRInt32 aDy, nsRect *aClipRect)
+NS_METHOD nsWindow::Scroll(PRInt32 aDx, PRInt32 aDy, nsIntRect *aClipRect)
 {
   RECTL rcl;
 
@@ -2300,7 +2300,7 @@ NS_IMETHODIMP nsWindow::ScrollWidgets(PRInt32 aDx, PRInt32 aDy)
   return NS_OK;
 }
 
-NS_IMETHODIMP nsWindow::ScrollRect(nsRect &aRect, PRInt32 aDx, PRInt32 aDy)
+NS_IMETHODIMP nsWindow::ScrollRect(nsIntRect &aRect, PRInt32 aDx, PRInt32 aDy)
 {
   RECTL rcl;
 
@@ -2343,7 +2343,7 @@ BOOL nsWindow::CallMethod(MethodInfo *info)
             NS_ASSERTION(info->nArgs == 7, "Wrong number of arguments to CallMethod Create");
             DoCreate( (HWND)               info->args[0],
                       (nsWindow*)          info->args[1],
-                      (const nsRect&)*(nsRect*) (info->args[2]),
+                      (const nsIntRect&)*(nsIntRect*) (info->args[2]),
                       (EVENT_CALLBACK)    (info->args[3]), 
                       (nsIDeviceContext*) (info->args[4]),
                       (nsIAppShell*)      (info->args[5]),
@@ -2430,7 +2430,7 @@ PRBool nsWindow::OnKey(MPARAM mp1, MPARAM mp2)
 
   // Now dispatch a keyup/keydown event.  This one is *not* meant to
   // have the unicode charcode in.
-  nsPoint point(0,0);
+  nsIntPoint point(0,0);
   nsKeyEvent event(PR_TRUE, (fsFlags & KC_KEYUP) ? NS_KEY_UP : NS_KEY_DOWN,
                    this);
   InitEvent(event, &point);
@@ -2644,7 +2644,7 @@ PRBool nsWindow::ProcessMessage( ULONG msg, MPARAM mp1, MPARAM mp2, MRESULT &rc)
           {
             PRECTL pCursorRect = (PRECTL)mp1;
             nsCompositionEvent event(PR_TRUE, NS_COMPOSITION_QUERY, this);
-            nsPoint point;
+            nsIntPoint point;
             point.x = 0;
             point.y = 0;
             InitEvent(event,&point);
@@ -2739,7 +2739,7 @@ PRBool nsWindow::ProcessMessage( ULONG msg, MPARAM mp1, MPARAM mp2, MRESULT &rc)
             }
 
             nsKeyEvent event(PR_TRUE, NS_KEY_PRESS, this);
-            nsPoint point(0,0);
+            nsIntPoint point(0,0);
             InitEvent( event, &point);
 
             event.keyCode   = NS_VK_INSERT;
@@ -3086,7 +3086,7 @@ PRBool nsWindow::OnPaint()
         InitEvent(event);
 
         // build XP rect from in-ex window rect
-        nsRect rect;
+        nsIntRect rect;
         rect.x = rcl.xLeft;
         rect.y = GetClientHeight() - rcl.yTop;
         rect.width = rcl.xRight - rcl.xLeft;
@@ -3194,7 +3194,7 @@ PRBool nsWindow::DispatchResizeEvent( PRInt32 aX, PRInt32 aY)
 {
    // call the event callback 
    nsSizeEvent event(PR_TRUE, NS_SIZE, this);
-   nsRect      rect( 0, 0, aX, aY);
+   nsIntRect   rect( 0, 0, aX, aY);
 
    InitEvent( event);
    event.windowSize = &rect;             // this is the *client* rectangle
@@ -3236,7 +3236,7 @@ PRBool nsWindow::DispatchMouseEvent(PRUint32 aEventType, MPARAM mp1, MPARAM mp2,
       ptl.y = (SHORT)SHORT2FROMMP(mp1);
     }
     PM2NS(ptl);
-    nsPoint pt( ptl.x, ptl.y);
+    nsIntPoint pt( ptl.x, ptl.y);
     InitEvent( event, &pt);
 
     USHORT usFlags = SHORT2FROMMP( mp2);
