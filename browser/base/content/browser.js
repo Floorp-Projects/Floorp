@@ -3303,25 +3303,6 @@ function BrowserToolboxCustomizeDone(aToolboxChanged) {
   var cmd = document.getElementById("cmd_CustomizeToolbars");
   cmd.removeAttribute("disabled");
 
-  // XXXmano bug 287105: wallpaper to bug 309953,
-  // the reload button isn't in sync with the reload command.
-  var reloadButton = document.getElementById("reload-button");
-  if (reloadButton) {
-    reloadButton.disabled =
-      document.getElementById("Browser:Reload").getAttribute("disabled") == "true";
-  }
-  //bug 440702: the back and forward buttons also suffer from bug 309953.
-  var backButton = document.getElementById("back-button");
-  if (backButton) {
-    backButton.disabled =
-      document.getElementById("Browser:Back").getAttribute("disabled") == "true";
-  }
-  var forwardButton = document.getElementById("forward-button");
-  if (forwardButton) {
-    forwardButton.disabled =
-      document.getElementById("Browser:Forward").getAttribute("disabled") == "true";
-  }
-
 #ifdef XP_MACOSX
   // make sure to re-enable click-and-hold
   if (!getBoolPref("ui.click_hold_context_menus", false))
