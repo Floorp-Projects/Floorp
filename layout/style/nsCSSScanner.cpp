@@ -853,23 +853,6 @@ nsCSSScanner::NextURL(nsCSSToken& aToken)
     (void) EatWhiteSpace();
     return PR_TRUE;
   }
-  if (ch == '/') {
-    PRInt32 nextChar = Peek();
-    if (nextChar == '*') {
-      (void) Read();
-#if 0
-      // If we change our storage data structures such that comments are
-      // stored (for Editor), we should reenable this code, condition it
-      // on being in editor mode, and apply glazou's patch from bug
-      // 60290.
-      aToken.mIdent.SetCapacity(2);
-      aToken.mIdent.Assign(PRUnichar(ch));
-      aToken.mIdent.Append(PRUnichar(nextChar));
-      return ParseCComment(aToken);
-#endif
-      return SkipCComment() && Next(aToken);
-    }
-  }
 
   // Process a url lexical token. A CSS1 url token can contain
   // characters beyond identifier characters (e.g. '/', ':', etc.)
