@@ -2271,6 +2271,7 @@ nsJSContext::GetGlobalObject()
 
   if (!c || ((~c->flags) & (JSCLASS_HAS_PRIVATE |
                             JSCLASS_PRIVATE_IS_NSISUPPORTS))) {
+    NS_WARNING("Global is not an nsISupports.");
     return nsnull;
   }
 
