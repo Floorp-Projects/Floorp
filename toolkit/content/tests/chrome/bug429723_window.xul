@@ -39,18 +39,14 @@
 
 <?xml-stylesheet href="chrome://global/skin" type="text/css"?>
 
-<window id="263683test"
+<window id="429723Test"
         xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
         width="600"
         height="600"
         onload="onLoad();"
-        title="263683 test">
+        title="429723 test">
 
   <script type="application/javascript"><![CDATA[
-    const Ci = Components.interfaces;
-    const Cc = Components.classes;
-    const Cr = Components.results;
-
     var gFindBar = null;
     var gBrowser;
 
@@ -68,56 +64,54 @@
         gFindBar = document.getElementById("FindToolbar");
         gBrowser = document.getElementById("content");
         gBrowser.addEventListener("pageshow", onPageShow, false);
-        gBrowser.loadURI('data:text/html,<h2>Text mozilla</h2><input id="inp" type="text" />');
+        gBrowser.loadURI("data:text/html,<h2 id='h2'>mozilla</h2>");
       }
-      let tm = Cc["@mozilla.org/thread-manager;1"].
-               getService(Ci.nsIThreadManager);
-      tm.mainThread.dispatch({
-        run: function() _delayedOnLoad()
-      }, Ci.nsIThread.DISPATCH_NORMAL);
+      setTimeout(_delayedOnLoad, 1000);
+    }
+
+    function enterStringIntoFindField(aString) {
+      for (var i=0; i < aString.length; i++) {
+        var event = document.createEvent("KeyEvents");
+        event.initKeyEvent("keypress", true, true, null, false, false,
+                           false, false, 0, aString.charCodeAt(i));
+        gFindBar._findField.inputField.dispatchEvent(event);
+      }
     }
 
     function onPageShow() {
-      gBrowser.removeEventListener("load", onPageShow, true);
-      gFindBar.open();
-      var search = "mozilla";
-      gFindBar._findField.value = search;
-      var matchCase = gFindBar.getElement("find-case-sensitive");
-      if (matchCase.checked)
-        matchCase.doCommand();
+      gBrowser.removeEventListener("pageshow", onPageShow, false);
+      var findField = gFindBar._findField;
+      document.getElementById("cmd_find").doCommand();
 
-      gFindBar._find();
-      var highlightButton = gFindBar.getElement("highlight");
-      if (!highlightButton.checked)
-        highlightButton.click();
+      var matchCaseCheckbox = gFindBar.getElement("find-case-sensitive");
+      if (!matchCaseCheckbox.hidden & matchCaseCheckbox.checked)
+        matchCaseCheckbox.click();
 
-      var controller = gFindBar.browser.docShell.QueryInterface(Ci.nsIInterfaceRequestor)
-                                       .getInterface(Ci.nsISelectionDisplay)
-                                       .QueryInterface(Ci.nsISelectionController);
-      ok('SELECTION_FIND' in controller, "Correctly detects new selection type");
-      var selection = controller.getSelection(controller.SELECTION_FIND);
-      
-      ok(selection.rangeCount == 1, "Correctly added a match to the selection type");
-      ok(selection.getRangeAt(0).toString().toLowerCase() == search, "Added the correct match");
-      highlightButton.click();
-      ok(selection.rangeCount == 0, "Correctly removed the range");
+      // Perform search
+      var searchStr = "z";
+      enterStringIntoFindField(searchStr);
 
-      var input = gBrowser.contentDocument.getElementById("inp");
-      input.value = search;
- 
-      highlightButton.click();
+      // Highlight search term
+      var highlight = gFindBar.getElement("highlight");
+      if (!highlight.checked)
+        highlight.click();
 
-      var inputController = input.editor.selectionController;
-      var inputSelection = inputController.getSelection(inputController.SELECTION_FIND);
+      // Delete search term
+      var event = document.createEvent("KeyEvents");
+      event.initKeyEvent("keypress", true, true, null, false, false,
+                         false, false, KeyEvent.DOM_VK_BACK_SPACE, 0);
+      gFindBar._findField.inputField.dispatchEvent(event);
 
-      ok(inputSelection.rangeCount == 1, "Correctly added a match from input to the selection type");
-      ok(inputSelection.getRangeAt(0).toString().toLowerCase() == search, "Added the correct match");
-      highlightButton.click();
-      ok(inputSelection.rangeCount == 0, "Correctly removed the range");
+      var notRed = !findField.hasAttribute("status") || 
+                   (findField.getAttribute("status") != "notfound");
+      ok(notRed, "Find Bar textbox is correct colour");
       finish();
     }
   ]]></script>
 
+  <commandset>
+    <command id="cmd_find" oncommand="document.getElementById('FindToolbar').onFindCommand();"/>
+  </commandset>
   <browser type="content-primary" flex="1" id="content" src="about:blank"/>
   <findbar id="FindToolbar" browserid="content"/>
 </window>
