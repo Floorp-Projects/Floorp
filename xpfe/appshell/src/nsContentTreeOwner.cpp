@@ -1,4 +1,5 @@
 /* -*- Mode: C++; tab-width: 3; indent-tabs-mode: nil; c-basic-offset: 2 -*-
+ * vim: set ts=2 sw=2 et tw=79:
  *
  * ***** BEGIN LICENSE BLOCK *****
  * Version: MPL 1.1/GPL 2.0/LGPL 2.1
@@ -66,6 +67,7 @@
 #include "nsIPrefService.h"
 #include "nsIPrefBranch.h"
 #include "nsIWebNavigation.h"
+#include "nsIJSContextStack.h"
 
 #include "nsIDOMDocument.h"
 #include "nsIScriptObjectPrincipal.h"
@@ -73,6 +75,8 @@
 
 // CIDs
 static NS_DEFINE_CID(kWindowMediatorCID, NS_WINDOWMEDIATOR_CID);
+
+static const char *sJSStackContractID="@mozilla.org/js/xpc/ContextStack;1";
 
 //*****************************************************************************
 //*** nsSiteWindow2 declaration
@@ -780,6 +784,34 @@ NS_IMETHODIMP nsContentTreeOwner::SetTitle(const PRUnichar* aTitle)
   return mXULWindow->SetTitle(title.get());
 }
 
+NS_STACK_CLASS class NullJSContextPusher {
+public:
+  NullJSContextPusher() {
+    mService = do_GetService(sJSStackContractID);
+    if (mService) {
+#ifdef DEBUG
+      nsresult rv =
+#endif
+        mService->Push(nsnull);
+      NS_ASSERTION(NS_SUCCEEDED(rv), "Mismatched push/pop");
+    }
+  }
+
+  ~NullJSContextPusher() {
+    if (mService) {
+#ifdef DEBUG
+      JSContext *cx;
+      nsresult rv =
+#endif
+        mService->Pop(&cx);
+      NS_ASSERTION(NS_SUCCEEDED(rv) && !cx, "Bad pop!");
+    }
+  }
+
+private:
+  nsCOMPtr<nsIThreadJSContextStack> mService;
+};
+
 //*****************************************************************************
 // nsContentTreeOwner: nsIWindowProvider
 //*****************************************************************************   
@@ -878,10 +910,14 @@ nsContentTreeOwner::ProvideWindow(nsIDOMWindow* aParent,
 
   *aWindowIsNew = (containerPref != nsIBrowserDOMWindow::OPEN_CURRENTWINDOW);
 
-  // Get a new rendering area from the browserDOMWin.  We don't want
-  // to be starting any loads here, so get it with a null URI.
-  return browserDOMWin->OpenURI(nsnull, aParent, containerPref,
-                                nsIBrowserDOMWindow::OPEN_NEW, aReturn);
+  {
+    NullJSContextPusher pusher;
+
+    // Get a new rendering area from the browserDOMWin.  We don't want
+    // to be starting any loads here, so get it with a null URI.
+    return browserDOMWin->OpenURI(nsnull, aParent, containerPref,
+                                  nsIBrowserDOMWindow::OPEN_NEW, aReturn);
+  }
 }
 
 //*****************************************************************************
