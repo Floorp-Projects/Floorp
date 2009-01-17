@@ -1161,6 +1161,7 @@ void CViewSourceHTML::WriteTextInElement(const nsAString& tagName,
     AddAttrToNode(startNode, allocator, attrName, attrValue);
   }
   mSink->OpenContainer(startNode);
+  IF_FREE(startToken, theAllocator);
 
   // Add the text node.
   CTextToken textToken(text);
