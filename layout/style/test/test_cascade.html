@@ -76,7 +76,7 @@ function do_test(sel1, imp1, sel2, imp2, winning) {
     sel2 + " { z-index: " + ind2 + (imp2 ? "!important" :"") + " } ";
   var result = cs.zIndex;
   is(result, (winning == 1) ? ind1 : ind2,
-     "cascading of " + style_element.data);
+     "cascading of " + style_contents.data);
 }
 
 // Test order, and order combined with !important
@@ -98,6 +98,24 @@ do_test("div.content_class", false, "div", false, 1);
 do_test("div.content_class", true, "div", false, 1);
 do_test("div.content_class", false, "div", true, 2);
 do_test("div.content_class", true, "div", true, 1);
+
+function do_test_greater(sel1, sel2) {
+  do_test(sel1, false, sel2, false, 1);
+  do_test(sel2, false, sel1, false, 2);
+}
+
+function do_test_equal(sel1, sel2) {
+  do_test(sel1, false, sel2, false, 2);
+  do_test(sel2, false, sel1, false, 2);
+}
+
+// Test specificity of contents of :not()
+do_test_equal("div.content_class", "div:not(.wrong_class)");
+do_test_greater("div.content_class.content_class", "div.content_class");
+do_test_greater("div.content_class", "div");
+do_test_greater("div:not(.wrong_class)", "div");
+do_test_greater("div:not(.wrong_class):not(.wrong_class)",
+                "div:not(.wrong_class)");
 
 </script>
 </pre>
