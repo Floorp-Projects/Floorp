@@ -238,6 +238,8 @@ function unwrapToolbarItems()
     if (paletteItem.hasAttribute("itemcommand")) {
       let commandID = paletteItem.getAttribute("itemcommand");
       toolbarItem.setAttribute("command", commandID);
+
+      //XXX Bug 309953 - toolbarbuttons aren't in sync with their commands after customizing
       toolbarItem.disabled = gToolboxDocument.getElementById(commandID).disabled;
     }
 
